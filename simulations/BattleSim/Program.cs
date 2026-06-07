@@ -26,7 +26,6 @@ static class GameData
         ["筑基"] = new(400, 100, 120, 120, 100, 100, 50, 4, 8),
         ["金丹"] = new(3000, 2000, 1000, 1000, 800, 800, 300, 5, 15),
     };
-    // v3.2: 移力系数移除，移力改为纯境界固定值
     public record RealmFactor(double HP, double MP, double 攻, double 防, double 反应, double 神识);
     public static readonly Dictionary<string, RealmFactor> Factor = new()
     {
@@ -35,7 +34,6 @@ static class GameData
         ["筑基"] = new(9, 7, 6.5, 4, 1.5, 0.25),
         ["金丹"] = new(22, 14, 12, 8, 3.0, 0.35),
     };
-    // v3.4: 小境界一级属性成长基准表（★权重=0.6时，每级增量）
     public record SubGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 移力, double 神识);
     public static readonly Dictionary<string, SubGrowth> SubGrowthBase = new()
     {
@@ -44,9 +42,46 @@ static class GameData
         ["金丹"] = new(800, 700, 350, 320, 280, 250, 90, 0.8, 4.0),
     };
 
-    // 大境界突破先天成长（上品功法=14/突破）
     public const int InnatePerBreakthrough = 14;
 
+    // ═══════════════════════════════════════
+    // 道基品级体系 (v3.5)
+    // ═══════════════════════════════════════
+    public static readonly Dictionary<string, int> DFSpiritBase = new()
+    {
+        ["凡品"] = 10, ["下品"] = 20, ["中品"] = 30, ["上品"] = 40, ["极品"] = 50
+    };
+    public static readonly Dictionary<string, int> DFTechMod = new()
+    {
+        ["凡品"] = 0, ["下品"] = 5, ["中品"] = 10, ["上品"] = 15, ["极品"] = 20
+    };
+    // (下限, 上限) — 下限可<=上限
+    public static readonly Dictionary<string, (string min, string max)> DFLimits = new()
+    {
+        ["凡品"] = ("无道基", "黄品"),
+        ["下品"] = ("黄品",   "玄品"),
+        ["中品"] = ("黄品",   "地品"),
+        ["上品"] = ("玄品",   "地品"),
+        ["极品"] = ("地品",   "天品"),
+    };
+    public static readonly string[] DFQualities = ["无道基", "黄品", "玄品", "地品", "天品"];
+    public static int DFQualityRank(string q) => Array.IndexOf(DFQualities, q);
+
+    // 凝聚值→品级阈值
+    public static string DFQualityFromScore(int score) => score switch
+    {
+        >= 80 => "天品",
+        >= 50 => "地品",
+        >= 25 => "玄品",
+        >= 15 => "黄品",
+        _     => "无道基"
+    };
+
+    // 道基倍率（应用时乘到功法道基效果上）
+    public static readonly Dictionary<string, double> DFMultiplier = new()
+    {
+        ["天品"] = 1.30, ["地品"] = 1.10, ["玄品"] = 1.00, ["黄品"] = 0.85, ["无道基"] = 0.0
+    };
 
     public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (string, int, int)[]
     {
@@ -72,6 +107,11 @@ class Character
 {
     public string Name, Realm, Style;
     public int SubIndex;
+    // v3.5: 道基
+    public string DFQuality = "无道基";   // 天品/地品/玄品/黄品/无道基
+    public double DFMult = 0.0;            // 道基效果倍率
+    public int DFScore = 0;                // 凝聚值 (调试用)
+
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
     public Dictionary<string, double> Secondary = new();
@@ -84,11 +124,10 @@ class Character
         return c;
     }
 
-    // v3.4: 先天属性仅在大境界突破时成长
     public void ApplyGrowth(string realm, string techGrade, Dictionary<string, double> weights)
     {
         int realmIdx = Array.IndexOf(GameData.RealmOrder, realm);
-        int breakthroughs = realmIdx;  // 凡人=0, 练气=1, 筑基=2, ...
+        int breakthroughs = realmIdx;
         if (breakthroughs == 0) return;
         int totalPts = breakthroughs * GameData.InnatePerBreakthrough;
         double tw = weights.Values.Sum();
@@ -100,89 +139,89 @@ class Character
         foreach (var k in InnateKeys) Innate[k] += add[k];
     }
 
-    // v3.4: 按功法权重+风格决定二级属性（仅权重>0.15的属性参与，最多2种）
     static (string[] types, double pctPerChapter) ResolveSecondary(Dictionary<string, double> w)
     {
         var map = new Dictionary<string, string[]> {
             ["根骨"] = new[] { "格挡率" }, ["魂魄"] = new[] { "魂盾率" },
-            ["神识"] = new[] { "命中率", "暴击率" }, ["资质"] = new[] { "暴击伤害" },
-            ["气运"] = new[] { "闪避率" },
+            ["神识"] = new[] { "命中率" }, ["资质"] = new[] { "暴击伤害" }, ["气运"] = new[] { "闪避率" }
         };
-        // Only attributes with meaningful weight
-        var valid = w.Where(kv => kv.Value > 0.15).OrderByDescending(kv => kv.Value).ToList();
-        var picked = new List<string>();
-        int limit = Math.Min(2, valid.Count);
-        for (int i = 0; i < limit; i++) {
-            foreach (var c in map[valid[i].Key]) {
-                if (!picked.Contains(c) && picked.Count < 2) picked.Add(c);
-            }
-        }
-        double pct = picked.Count == 1 ? 5.0 : 3.0;
-        return (picked.ToArray(), pct);
+        var ordered = w.Where(kv => kv.Value > 0.15).OrderByDescending(kv => kv.Value).Take(2).ToList();
+        if (ordered.Count == 0) ordered.Add(new("根骨", 1.0));
+        var types = ordered.Select(kv => map[kv.Key][0]).ToArray();
+        double pct = types.Length == 1 ? 5.0 : 3.0;
+        return (types, pct);
     }
-    // v3.4: 一级属性 = 境界基础 + Σ小境界成长 + 先天×系数×(权重/0.6)
+
     public void FinalizeStats(string realm, int subIdx, string spiritGrade, Dictionary<string, double> weights)
     {
         Realm = realm; SubIndex = subIdx;
-        var b = GameData.Base[realm]; var f = GameData.Factor[realm];
-        double mod = GameData.SpiritMod[spiritGrade];
+        var rb = GameData.Base[realm];
+        var rf = GameData.Factor[realm];
+        double sm = GameData.SpiritMod[spiritGrade];
+        var (secTypes, secPctPerChapter) = ResolveSecondary(weights);
 
-        double guMul = weights["根骨"] / 0.6, hunMul = weights["魂魄"] / 0.6, shenMul = weights["神识"] / 0.6;
+        // 一级属性 = 境界基础 + sum(小境界成长) + 先天×系数×权重
+        Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights) + Innate["根骨"] * rf.HP * weights["根骨"] * 2.2) * sm);
+        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["魂魄"] * rf.MP * weights["魂魄"]) * sm);
+        Primary["肉攻"] = (int)Math.Round((rb.肉攻 + SubGrowthSum("肉攻", realm, subIdx, weights) + Innate["根骨"] * rf.攻 * weights["根骨"]) * sm);
+        Primary["神攻"] = (int)Math.Round((rb.神攻 + SubGrowthSum("神攻", realm, subIdx, weights) + Innate["魂魄"] * rf.攻 * weights["魂魄"]) * sm);
+        Primary["肉防"] = (int)Math.Round((rb.肉防 + SubGrowthSum("肉防", realm, subIdx, weights) + Innate["根骨"] * rf.防 * weights["根骨"]) * sm);
+        Primary["神防"] = (int)Math.Round((rb.神防 + SubGrowthSum("神防", realm, subIdx, weights) + Innate["魂魄"] * rf.防 * weights["魂魄"]) * sm);
+        Primary["反应"] = (int)Math.Round((rb.反应 + SubGrowthSum("反应", realm, subIdx, weights) + (Innate["根骨"] * weights["根骨"] + Innate["魂魄"] * weights["魂魄"] + Innate["神识"] * weights["神识"]) * rf.反应 / 3.0) * sm);
+        Primary["移力"] = rb.移力;
+        Primary["神识"] = (int)Math.Round((rb.神识 + SubGrowthSum("神识", realm, subIdx, weights) + Innate["神识"] * rf.神识 * weights["神识"]) * sm);
 
-        // Accumulate per-realm sub-growth
-        double hpG = 0, mpG = 0, rgG = 0, sgG = 0, rfG = 0, sfG = 0, fyG = 0, ylG = 0, ssG = 0;
-        int curIdx = Array.IndexOf(GameData.RealmOrder, realm);
+        // 二级属性
+        int chapters = GameData.TotalSubs(realm, subIdx) / 4 + 1;
+        foreach (var t in secTypes) Secondary[t] = chapters * secPctPerChapter;
+        Secondary["格挡减伤率"] = Secondary.GetValueOrDefault("格挡率", 0) * 0.8;
+        Secondary["魂盾减伤率"] = Secondary.GetValueOrDefault("魂盾率", 0) * 0.8;
+        Secondary["闪避率"] = Secondary.GetValueOrDefault("闪避率", 0) + Innate["气运"] * 0.3;
+        Secondary["命中率"] = Secondary.GetValueOrDefault("命中率", 0);
+        Secondary["暴击率"] = Secondary.GetValueOrDefault("暴击率", 0) + Innate["神识"] * 0.3;
+        Secondary["暴击伤害"] = Secondary.GetValueOrDefault("暴击伤害", 0) + Innate["资质"] * 0.8;
+        Secondary["物抗率"] = 0; Secondary["魂抗率"] = 0;
+    }
+
+    double SubGrowthSum(string attr, string realm, int subIdx, Dictionary<string, double> w)
+    {
+        double sum = 0; int totalSubs = GameData.TotalSubs(realm, subIdx);
+        int prevSubs = 0;
         foreach (var r in GameData.RealmOrder)
         {
             if (r == "凡人") continue;
-            int rIdx = Array.IndexOf(GameData.RealmOrder, r);
-            int subs = rIdx < curIdx ? GameData.Sublevels[r] : rIdx == curIdx ? subIdx : 0;
-            if (subs <= 0) break;
-            var sg = GameData.SubGrowthBase[r];
-            hpG += subs * sg.HP * guMul;   mpG += subs * sg.MP * hunMul;
-            rgG += subs * sg.肉攻 * guMul;  sgG += subs * sg.神攻 * hunMul;
-            rfG += subs * sg.肉防 * guMul;  sfG += subs * sg.神防 * shenMul;
-            fyG += subs * sg.反应 * shenMul; ylG += subs * sg.移力;
-            ssG += subs * sg.神识 * shenMul;
+            int subsHere = GameData.Sublevels[r];
+            int effective = Math.Min(subsHere, Math.Max(0, totalSubs - prevSubs));
+            if (effective <= 0) break;
+            var sgb = GameData.SubGrowthBase[r];
+            double val = attr switch
+            {
+                "HP" => sgb.HP, "MP" => sgb.MP, "肉攻" => sgb.肉攻, "神攻" => sgb.神攻,
+                "肉防" => sgb.肉防, "神防" => sgb.神防, "反应" => sgb.反应, "神识" => sgb.神识, _ => 0
+            };
+            string innateKey = attr switch { "HP" or "肉攻" or "肉防" => "根骨", "MP" or "神攻" or "神防" => "魂魄", "神识" => "神识", "反应" => "根骨", _ => "根骨" };
+            double scale = w[innateKey] / 0.6;
+            sum += val * scale * effective;
+            prevSubs += subsHere;
+            if (r == realm) break;
         }
-
-        Primary["HP"]   = (int)Math.Round((b.HP + hpG + Innate["根骨"] * f.HP * (weights["根骨"]/0.6)) * mod);
-        Primary["MP"]   = (int)Math.Round((b.MP + mpG + Innate["魂魄"] * f.MP * (weights["魂魄"]/0.6)) * mod);
-        Primary["肉攻"] = (int)Math.Round((b.肉攻 + rgG + Innate["根骨"] * f.攻 * (weights["根骨"]/0.6)) * mod);
-        Primary["神攻"] = (int)Math.Round((b.神攻 + sgG + Innate["魂魄"] * f.攻 * (weights["魂魄"]/0.6)) * mod);
-        Primary["肉防"] = (int)Math.Round((b.肉防 + rfG + Innate["根骨"] * f.防 * (weights["根骨"]/0.6)) * mod);
-        Primary["神防"] = (int)Math.Round((b.神防 + sfG + Innate["神识"] * f.防 * (weights["神识"]/0.6)) * mod);
-        Primary["反应"] = (int)Math.Round((b.反应 + fyG + Innate["神识"] * f.反应 * (weights["神识"]/0.6)) * mod);
-        Primary["移力"] = b.移力;
-        Primary["神识"] = (int)Math.Round(b.神识 + ssG + Innate["神识"] * f.神识 * (weights["神识"]/0.6));
-
-        // v3.4: 二级属性按功法权重聚焦1-2种（单种5%/篇章，两种各3%/篇章）
-        int chapters = curIdx;  // 境界数=已解锁篇章数
-        var (secTypes, secPct) = ResolveSecondary(weights);
-        double chTotal = chapters * secPct;
-        Secondary["生命恢复"] = Primary["HP"] * 2.0 / 100;
-        Secondary["格挡率"]   = secTypes.Contains("格挡率") ? chTotal : 0;
-        Secondary["魂盾率"]   = secTypes.Contains("魂盾率") ? chTotal : 0;
-        Secondary["格挡减伤率"] = Secondary["格挡率"] > 0 ? 55 : 0;
-        Secondary["魂盾减伤率"] = Secondary["魂盾率"] > 0 ? 55 : 0;
-        Secondary["命中率"]   = secTypes.Contains("命中率") ? chTotal : 12;
-        Secondary["暴击率"]   = secTypes.Contains("暴击率") ? chTotal : 10;
-        Secondary["暴击伤害"] = secTypes.Contains("暴击伤害") ? (170 + chTotal) : 170;
-        Secondary["闪避率"]   = secTypes.Contains("闪避率") ? chTotal : 12;
-        Secondary["物抗率"]   = 12;
-        Secondary["魂抗率"]   = 12;
+        return sum;
     }
-    static double Clamp(double v, double lo, double hi) => Math.Max(lo, Math.Min(hi, v));
 }
 
 static class Cultivation
 {
-    public static (string realm, int subIdx, int totalSubs) Simulate(
-        Dictionary<string, int> baseInnate, Dictionary<string, double> weights, int seed)
+    public record Result(string Realm, int SubIdx, int TotalSubs, string DFQuality, int DFScore);
+
+    public static Result Simulate(
+        Dictionary<string, int> baseInnate, Dictionary<string, double> weights, int seed,
+        string spiritGrade = "中品", string techGrade = "上品", string treasureGrade = "")
     {
         var rng = new Random(seed);
         double cpp = 0;
         string realm = "凡人"; int subIdx = 0;
+        string dfQuality = "无道基"; int dfScore = 0;
+        bool dfGenerated = false;
 
         double 资质 = baseInnate["资质"], 气运 = baseInnate["气运"];
         double 修炼速度 = 1.0 + 资质 * 0.03;
@@ -201,13 +240,60 @@ static class Cultivation
                 if (cpp < ms.cpp) { progressed = false; break; }
                 if (rng.NextDouble() < 突破率)
                 {
+                    string prevRealm = realm;
                     realm = ms.realm; subIdx = ms.subIdx; cpp -= ms.cpp;
                     nextMs = FindNext(realm, subIdx);
+
+                    // v3.5: 突破到筑基初阶时生成道基
+                    if (!dfGenerated && realm == "筑基" && subIdx == 0)
+                    {
+                        dfGenerated = true;
+                        double overflowCpp = Math.Max(0, cpp); // 突破后剩余灵力视为超额
+                        (dfQuality, dfScore) = GenerateDaoFoundation(
+                            baseInnate, spiritGrade, techGrade, overflowCpp, treasureGrade, rng);
+                    }
                 }
                 else { double penalty = ms.cpp * (0.10 + rng.NextDouble() * 0.10); cpp = Math.Max(0, cpp - penalty); progressed = false; }
             }
         }
-        return (realm, subIdx, GameData.TotalSubs(realm, subIdx));
+        return new Result(realm, subIdx, GameData.TotalSubs(realm, subIdx), dfQuality, dfScore);
+    }
+
+    // ═══════════════════════════════════════
+    // 道基凝聚值计算 + 品级判定 (v3.5)
+    // ═══════════════════════════════════════
+    static (string quality, int score) GenerateDaoFoundation(
+        Dictionary<string, int> innate, string spiritGrade, string techGrade,
+        double overflowCpp, string treasureGrade, Random rng)
+    {
+        // ① 灵根基数
+        int spiritBase = GameData.DFSpiritBase.GetValueOrDefault(spiritGrade, 30);
+        // ② 功法修正
+        int techMod = GameData.DFTechMod.GetValueOrDefault(techGrade, 10);
+        // ③ 灵力超额修正
+        int overflowMod = (int)Math.Floor(overflowCpp / 50.0);
+        // ④ 随机骰 1d30
+        int dice = rng.Next(1, 31);
+        // ⑤ 天材地宝加成
+        int treasureBonus = treasureGrade switch
+        {
+            "下品" => 10, "中品" => 20, "上品" => 30, "极品" => 40, _ => 0
+        };
+
+        int score = spiritBase + techMod + overflowMod + dice + treasureBonus;
+        string tentative = GameData.DFQualityFromScore(score);
+
+        // 功法品级上下限钳制
+        if (GameData.DFLimits.TryGetValue(techGrade, out var limits))
+        {
+            int tRank = GameData.DFQualityRank(tentative);
+            int minRank = GameData.DFQualityRank(limits.min);
+            int maxRank = GameData.DFQualityRank(limits.max);
+            int clamped = Math.Max(minRank, Math.Min(maxRank, tRank));
+            tentative = GameData.DFQualities[clamped];
+        }
+
+        return (tentative, score);
     }
 
     static int FindNext(string realm, int subIdx)
@@ -246,40 +332,43 @@ static class Combat
             {
                 if (ctA <= ctB)
                 {
-                    int dmg = ca.Style == "physical" ? Dmg(ca.Primary["肉攻"], cb.Primary["肉防"], cb.Secondary["物抗率"])
-                                                      : Dmg(ca.Primary["神攻"], cb.Primary["神防"], cb.Secondary["魂抗率"]);
-                    // v3.2: 格挡/魂盾改为减伤率制
-                    double blockRate = ca.Style == "physical" ? cb.Secondary["格挡率"] : cb.Secondary["魂盾率"];
+                    int dmg = ca.Style == "physical" ? Dmg(ca.Primary["肉攻"], cb.Primary["肉防"], cb.Secondary.GetValueOrDefault("物抗率", 0))
+                                                      : Dmg(ca.Primary["神攻"], cb.Primary["神防"], cb.Secondary.GetValueOrDefault("魂抗率", 0));
+                    double blockRate = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("格挡率", 0) : cb.Secondary.GetValueOrDefault("魂盾率", 0);
                     if (Rng.NextDouble() * 100 < blockRate)
                     {
-                        double reduction = ca.Style == "physical" ? cb.Secondary["格挡减伤率"] : cb.Secondary["魂盾减伤率"];
+                        double reduction = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("格挡减伤率", 0) : cb.Secondary.GetValueOrDefault("魂盾减伤率", 0);
                         dmg = (int)Math.Round(dmg * (1 - reduction / 100));
                     }
-                    if (Rng.NextDouble() * 100 < Math.Max(0, cb.Secondary["闪避率"] - ca.Secondary["命中率"])) dmg = 0;
-                    if (dmg > 0 && Rng.NextDouble() * 100 < ca.Secondary["暴击率"]) dmg = (int)Math.Round(dmg * ca.Secondary["暴击伤害"] / 100);
-                    hpB -= dmg; hpA += (int)ca.Secondary["生命恢复"]; ctA += sA;
+                    if (Rng.NextDouble() * 100 < Math.Max(0, cb.Secondary.GetValueOrDefault("闪避率", 0) - ca.Secondary.GetValueOrDefault("命中率", 0))) dmg = 0;
+                    if (Rng.NextDouble() * 100 < ca.Secondary.GetValueOrDefault("暴击率", 0))
+                        dmg = (int)Math.Round(dmg * (1 + ca.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
+                    hpB -= dmg;
+                    ctA += sA;
                 }
                 else
                 {
                     int dmg = cb.Style == "physical" ? Dmg(cb.Primary["肉攻"], ca.Primary["肉防"], ca.Secondary["物抗率"])
                                                       : Dmg(cb.Primary["神攻"], ca.Primary["神防"], ca.Secondary["魂抗率"]);
-                    double blockRate = cb.Style == "physical" ? ca.Secondary["格挡率"] : ca.Secondary["魂盾率"];
+                    double blockRate = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("格挡率", 0) : ca.Secondary.GetValueOrDefault("魂盾率", 0);
                     if (Rng.NextDouble() * 100 < blockRate)
                     {
-                        double reduction = cb.Style == "physical" ? ca.Secondary["格挡减伤率"] : ca.Secondary["魂盾减伤率"];
+                        double reduction = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("格挡减伤率", 0) : ca.Secondary.GetValueOrDefault("魂盾减伤率", 0);
                         dmg = (int)Math.Round(dmg * (1 - reduction / 100));
                     }
-                    if (Rng.NextDouble() * 100 < Math.Max(0, ca.Secondary["闪避率"] - cb.Secondary["命中率"])) dmg = 0;
-                    if (dmg > 0 && Rng.NextDouble() * 100 < cb.Secondary["暴击率"]) dmg = (int)Math.Round(dmg * cb.Secondary["暴击伤害"] / 100);
-                    hpA -= dmg; hpB += (int)cb.Secondary["生命恢复"]; ctB += sB;
+                    if (Rng.NextDouble() * 100 < Math.Max(0, ca.Secondary["闪避率"] - cb.Secondary.GetValueOrDefault("命中率", 0))) dmg = 0;
+                    if (Rng.NextDouble() * 100 < cb.Secondary.GetValueOrDefault("暴击率", 0))
+                        dmg = (int)Math.Round(dmg * (1 + cb.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
+                    hpA -= dmg;
+                    ctB += sB;
                 }
-                if (hpA <= 0) { winsB++; break; }
-                if (hpB <= 0) { winsA++; break; }
             }
+            if (hpA > 0) winsA++; else winsB++;
         }
         return (winsA * 100.0 / rounds, winsB * 100.0 / rounds);
     }
 }
+
 class Program
 {
     record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, Dictionary<string, double> Weights);
@@ -311,27 +400,54 @@ class Program
         };
         int N = buildDefs.Length;
 
-        Console.WriteLine($"修炼模拟 ({SEEDS}种子 × {GameData.CultivationCycles}轮)...");
+        Console.WriteLine($"修炼模拟 ({SEEDS}种子 x {GameData.CultivationCycles}轮, 灵根={SPIRIT}, 功法={TECH})...");
         var pool = new List<Character>[N];
         var realmDist = new Dictionary<string, int>[N];
-        for (int i = 0; i < N; i++) { pool[i] = new List<Character>(); realmDist[i] = new Dictionary<string, int> { ["练气"] = 0, ["筑基"] = 0, ["金丹"] = 0 }; }
+        // v3.5: 道基分布统计
+        var dfDist = new Dictionary<string, int>[N];
+        for (int i = 0; i < N; i++)
+        {
+            pool[i] = new List<Character>();
+            realmDist[i] = new Dictionary<string, int> { ["练气"] = 0, ["筑基"] = 0, ["金丹"] = 0 };
+            dfDist[i] = new Dictionary<string, int>();
+            foreach (var q in GameData.DFQualities) dfDist[i][q] = 0;
+        }
 
         for (int seed = 0; seed < SEEDS; seed++)
         {
             for (int i = 0; i < N; i++)
             {
                 var bd = buildDefs[i];
-                var (realm, subIdx, totalSubs) = Cultivation.Simulate(bd.Innate, bd.Weights, seed * 100 + i);
+                var result = Cultivation.Simulate(bd.Innate, bd.Weights, seed * 100 + i, SPIRIT, TECH);
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
-                c.ApplyGrowth(realm, TECH, bd.Weights);
-                c.FinalizeStats(realm, subIdx, SPIRIT, bd.Weights);
+                c.ApplyGrowth(result.Realm, TECH, bd.Weights);
+                c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights);
+                // v3.5: 记录道基
+                c.DFQuality = result.DFQuality;
+                c.DFMult = GameData.DFMultiplier[result.DFQuality];
+                c.DFScore = result.DFScore;
                 pool[i].Add(c);
                 realmDist[i][c.Realm]++;
+                dfDist[i][c.DFQuality]++;
             }
         }
         Console.WriteLine("完成");
 
-        // v3.4: 详细子境界分布
+        // v3.5: 道基品质分布
+        Console.WriteLine();
+        Console.WriteLine("【道基品质分布】");
+        Console.WriteLine($"{"Build",-10} {"无道基",-6} {"黄品",-6} {"玄品",-6} {"地品",-6} {"天品",-6} {"平均凝聚值",-8}");
+        Console.WriteLine(new string('-', 52));
+        for (int i = 0; i < N; i++)
+        {
+            double avgScore = pool[i].Average(c => (double)c.DFScore);
+            Console.Write($"  {buildDefs[i].Name,-8}");
+            foreach (var q in GameData.DFQualities)
+                Console.Write($" {dfDist[i][q],4} ");
+            Console.WriteLine($" {avgScore,7:F0}");
+        }
+
+        // 详细子境界分布
         Console.WriteLine();
         Console.WriteLine("【详细境界分布】");
         for (int i = 0; i < N; i++)
@@ -357,7 +473,7 @@ class Program
         Console.WriteLine();
 
         // 战斗矩阵
-        Console.WriteLine($"正在计算 {N}×{N} 矩阵...");
+        Console.WriteLine($"正在计算 {N}x{N} 矩阵...");
         var rng = new Random(12345);
         double[,] mat = new double[N, N];
         for (int i = 0; i < N; i++)
@@ -382,7 +498,7 @@ class Program
 
         Console.WriteLine();
         Console.WriteLine($"================================================================================");
-        Console.WriteLine($"  修炼后战斗胜率矩阵 ({SEEDS}次修炼 × {SIM}轮, {sw.ElapsedMilliseconds}ms)");
+        Console.WriteLine($"  修炼后战斗胜率矩阵 ({SEEDS}次修炼 x {SIM}轮, {sw.ElapsedMilliseconds}ms)");
         Console.WriteLine($"================================================================================");
         Console.WriteLine();
 
@@ -411,28 +527,27 @@ class Program
         Console.WriteLine();
 
         Console.WriteLine("================================================================================");
-        
-        // DEBUG: print key stats for one character pair
+
+        // DEBUG
         Console.WriteLine();
         Console.WriteLine("【调试：物·均衡 vs 物·纯战 属性对比（seed=0）】");
-        var c_wl_jh = pool[1][0]; // 物·均衡
-        var c_wl_cz = pool[0][0]; // 物·纯战
+        var c_wl_jh = pool[1][0];
+        var c_wl_cz = pool[0][0];
         void PrintStats(Character c) {
-            Console.Write($"  {c.Name} ({c.Realm}{c.SubIndex}):");
+            Console.Write($"  {c.Name} ({c.Realm}{c.SubIndex}) 道基={c.DFQuality}({c.DFScore}):");
             foreach (var k in new[]{"HP","MP","肉攻","神攻","肉防","神防","反应"})
                 Console.Write($" {k}={c.Primary[k]}");
             Console.Write("  二级:");
             foreach (var k in new[]{"格挡率","格挡减伤率","魂盾率","魂盾减伤率","闪避率","命中率","暴击率","暴击伤害"})
-                Console.Write($" {k}={c.Secondary[k]:F0}");
+                Console.Write($" {k}={c.Secondary.GetValueOrDefault(k, 0):F0}");
             Console.WriteLine();
         }
         PrintStats(c_wl_jh);
         PrintStats(c_wl_cz);
-        // Run 100 fights
         var (wa, wb) = Combat.Simulate(c_wl_jh, c_wl_cz, 100);
         var (wa2, wb2) = Combat.Simulate(c_wl_cz, c_wl_jh, 100);
         Console.WriteLine($"  均衡先手: {wa:F0}%  纯战先手: {wb2:F0}%  均: {(wa+wb2)/2:F0}%");
-Console.WriteLine("  v3.4: 属性双轨成长（大境界突破→先天/小级别→一级）+ 二级属性聚焦");
+        Console.WriteLine("  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）");
         Console.WriteLine("================================================================================");
     }
 }
