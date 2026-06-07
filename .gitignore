@@ -78,3 +78,5 @@ releases/
 *.zip
 *.7z
 *.rar
+
+# Project documentation (local only)
