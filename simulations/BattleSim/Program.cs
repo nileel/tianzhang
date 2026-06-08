@@ -23,8 +23,8 @@ static class GameData
     {
         ["凡人"] = new(30, 0, 5, 5, 3, 3, 5, 2, 3),
         ["练气"] = new(100, 10, 25, 25, 20, 20, 15, 3, 5),
-        ["筑基"] = new(400, 100, 120, 120, 100, 100, 50, 4, 8),
-        ["金丹"] = new(3000, 2000, 1000, 1000, 800, 800, 300, 5, 15),
+        ["筑基"] = new(600, 100, 120, 120, 100, 100, 50, 4, 8),
+        ["金丹"] = new(7000, 2000, 1000, 1000, 800, 800, 300, 5, 15),
     };
     public record RealmFactor(double HP, double MP, double 攻, double 防, double 反应, double 神识);
     public static readonly Dictionary<string, RealmFactor> Factor = new()
@@ -37,9 +37,9 @@ static class GameData
     public record SubGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 移力, double 神识);
     public static readonly Dictionary<string, SubGrowth> SubGrowthBase = new()
     {
-        ["练气"] = new(8, 3, 4, 3, 3, 2, 2, 0.2, 0.3),
-        ["筑基"] = new(80, 35, 30, 25, 25, 20, 12, 0.5, 1.0),
-        ["金丹"] = new(800, 700, 350, 320, 280, 250, 90, 0.8, 4.0),
+        ["练气"] = new(8, 3, 4, 4, 3, 3, 2, 0.2, 0.3),
+        ["筑基"] = new(120, 35, 30, 30, 25, 25, 12, 0.5, 1.0),
+        ["金丹"] = new(1800, 700, 350, 350, 280, 280, 90, 0.8, 4.0),
     };
 
     public const int InnatePerBreakthrough = 14;
@@ -151,6 +151,17 @@ class Character
     public int GCScore = 0;               // 凝聚值 (调试用)
     public string GCType = "";            // 金丹类型
     public double GCTypeMult = 1.0;       // 金丹类型被动倍率
+    // v4.1: 术法与神通
+    public string ArtName = "";          // 术法名称
+    public string ArtType = "";          // "物理" or "神魂"
+    public double ArtMult = 1.0;         // 术法倍率
+    public int ArtMPCost = 0;            // 术法灵力消耗
+    public int ArtCooldown = 3;          // 术法冷却回合数
+    public string DivineName = "";       // 神通名称
+    public string DivineType = "";       // "物理" or "神魂"
+    public double DivineMult = 1.0;      // 神通倍率
+    public double DivineDefPen = 0;      // 神通防御穿透%
+    public int DivineCooldown = 5;       // 神通冷却回合数
 
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
@@ -246,6 +257,27 @@ class Character
             if (r == realm) break;
         }
         return sum;
+    }
+
+    // v4.1: 根据风格和境界分配术法与神通
+    public void AssignArts()
+    {
+        if (Style == "physical")
+        {
+            ArtName = "裂石拳"; ArtType = "物理"; ArtMult = 1.3; ArtMPCost = 20; ArtCooldown = 3;
+            if (Realm == "金丹" && GCQuality != "")
+            {
+                DivineName = "碎岳"; DivineType = "物理"; DivineMult = 1.5; DivineDefPen = 10; DivineCooldown = 5;
+            }
+        }
+        else
+        {
+            ArtName = "灵光闪"; ArtType = "神魂"; ArtMult = 1.2; ArtMPCost = 20; ArtCooldown = 3;
+            if (Realm == "金丹" && GCQuality != "")
+            {
+                DivineName = "灵光贯日"; DivineType = "神魂"; DivineMult = 1.4; DivineDefPen = 10; DivineCooldown = 5;
+            }
+        }
     }
 }
 
@@ -419,59 +451,120 @@ static class Cultivation
 static class Combat
 {
     static readonly Random Rng = new();
-    static int Dmg(int atk, int def, double resist)
+    // v4.1: 合并攻击结算（含穿透）
+    static int Dmg(int atk, int def, double resist, double defPen = 0, double mult = 1.0)
     {
-        double df = atk / (double)(atk + def);
-        return (int)Math.Max(0, Math.Round(atk * df * (1 - resist / 100.0)));
+        int effectiveDef = (int)Math.Round(def * (1 - defPen / 100));
+        double df = atk / (double)(atk + effectiveDef);
+        return (int)Math.Max(0, Math.Round(atk * df * (1 - resist / 100.0) * mult));
     }
 
-    public static (double winsA, double winsB) Simulate(Character ca, Character cb, int rounds)
+    // 格挡/魂盾/闪避/暴击 统一结算
+    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType)
+    {
+        bool isPhysical = atkType == "物理";
+        double blockRate = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡率" : "魂盾率", 0);
+        if (Rng.NextDouble() * 100 < blockRate)
+        {
+            double reduction = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡减伤率" : "魂盾减伤率", 0);
+            rawDmg = (int)Math.Round(rawDmg * (1 - reduction / 100));
+        }
+        if (Rng.NextDouble() * 100 < Math.Max(0, defender.Secondary.GetValueOrDefault("闪避率", 0) - attacker.Secondary.GetValueOrDefault("命中率", 0)))
+            rawDmg = 0;
+        if (rawDmg > 0 && Rng.NextDouble() * 100 < attacker.Secondary.GetValueOrDefault("暴击率", 0))
+            rawDmg = (int)Math.Round(rawDmg * (1 + attacker.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
+        return rawDmg;
+    }
+
+    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
         int winsA = 0, winsB = 0;
+        int totalTurns = 0;
         for (int r = 0; r < rounds; r++)
         {
             int hpA = ca.Primary["HP"], hpB = cb.Primary["HP"];
+            int mpA = ca.Primary["MP"], mpB = cb.Primary["MP"];
+            int artCdA = 0, artCdB = 0;
+            int divineCdA = 0, divineCdB = 0;
+            double rangePenaltyA = 1.0, rangePenaltyB = 1.0; // 远程优势: 对方下轮伤害折扣
             double ctA = 0, ctB = 0;
             double sA = 100.0 / ca.Primary["反应"], sB = 100.0 / cb.Primary["反应"];
 
+            int turns = 0;
             while (hpA > 0 && hpB > 0)
             {
+                turns++;
+                if (artCdA > 0) artCdA--;
+                if (artCdB > 0) artCdB--;
+                if (divineCdA > 0) divineCdA--;
+                if (divineCdB > 0) divineCdB--;
+
                 if (ctA <= ctB)
                 {
-                    int dmg = ca.Style == "physical" ? Dmg(ca.Primary["肉攻"], cb.Primary["肉防"], cb.Secondary.GetValueOrDefault("物抗率", 0))
-                                                      : Dmg(ca.Primary["神攻"], cb.Primary["神防"], cb.Secondary.GetValueOrDefault("魂抗率", 0));
-                    double blockRate = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("格挡率", 0) : cb.Secondary.GetValueOrDefault("魂盾率", 0);
-                    if (Rng.NextDouble() * 100 < blockRate)
+                    // AI决策: 神通 > 术法 > 平A
+                    string atkType; double mult, defPen; int atk, def; double resist;
+                    if (ca.DivineName != "" && divineCdA == 0)
                     {
-                        double reduction = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("格挡减伤率", 0) : cb.Secondary.GetValueOrDefault("魂盾减伤率", 0);
-                        dmg = (int)Math.Round(dmg * (1 - reduction / 100));
+                        atkType = ca.DivineType; mult = ca.DivineMult; defPen = ca.DivineDefPen;
+                        divineCdA = ca.DivineCooldown;
                     }
-                    if (Rng.NextDouble() * 100 < Math.Max(0, cb.Secondary.GetValueOrDefault("闪避率", 0) - ca.Secondary.GetValueOrDefault("命中率", 0))) dmg = 0;
-                    if (Rng.NextDouble() * 100 < ca.Secondary.GetValueOrDefault("暴击率", 0))
-                        dmg = (int)Math.Round(dmg * (1 + ca.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
+                    else if (mpA >= ca.ArtMPCost && artCdA == 0)
+                    {
+                        atkType = ca.ArtType; mult = ca.ArtMult; defPen = 0;
+                        mpA -= ca.ArtMPCost; artCdA = ca.ArtCooldown;
+                    }
+                    else
+                    {
+                        atkType = ca.Style == "physical" ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    }
+                    atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];
+                    def = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
+                    resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
+                    int dmg = Dmg(atk, def, resist, defPen, mult);
+                    // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
+                    dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
+                    dmg = ApplyDefenses(dmg, ca, cb, atkType);
+                    // 远程优势: 术法/神通出手后对方需要拉近距离
+                    bool isRanged = ca.Style == "magic";
+                    if (isRanged) rangePenaltyB = 0.35;
                     hpB -= dmg;
                     ctA += sA;
                 }
                 else
                 {
-                    int dmg = cb.Style == "physical" ? Dmg(cb.Primary["肉攻"], ca.Primary["肉防"], ca.Secondary["物抗率"])
-                                                      : Dmg(cb.Primary["神攻"], ca.Primary["神防"], ca.Secondary["魂抗率"]);
-                    double blockRate = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("格挡率", 0) : ca.Secondary.GetValueOrDefault("魂盾率", 0);
-                    if (Rng.NextDouble() * 100 < blockRate)
+                    string atkType; double mult, defPen; int atk, def; double resist;
+                    if (cb.DivineName != "" && divineCdB == 0)
                     {
-                        double reduction = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("格挡减伤率", 0) : ca.Secondary.GetValueOrDefault("魂盾减伤率", 0);
-                        dmg = (int)Math.Round(dmg * (1 - reduction / 100));
+                        atkType = cb.DivineType; mult = cb.DivineMult; defPen = cb.DivineDefPen;
+                        divineCdB = cb.DivineCooldown;
                     }
-                    if (Rng.NextDouble() * 100 < Math.Max(0, ca.Secondary["闪避率"] - cb.Secondary.GetValueOrDefault("命中率", 0))) dmg = 0;
-                    if (Rng.NextDouble() * 100 < cb.Secondary.GetValueOrDefault("暴击率", 0))
-                        dmg = (int)Math.Round(dmg * (1 + cb.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
+                    else if (mpB >= cb.ArtMPCost && artCdB == 0)
+                    {
+                        atkType = cb.ArtType; mult = cb.ArtMult; defPen = 0;
+                        mpB -= cb.ArtMPCost; artCdB = cb.ArtCooldown;
+                    }
+                    else
+                    {
+                        atkType = cb.Style == "physical" ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    }
+                    atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];
+                    def = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
+                    resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
+                    int dmg = Dmg(atk, def, resist, defPen, mult);
+                    // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
+                    dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
+                    dmg = ApplyDefenses(dmg, cb, ca, atkType);
+                    // 远程优势: B使用术法/神通后A需要拉近距离
+                    bool bRanged = cb.Style == "magic";
+                    if (bRanged) rangePenaltyA = 0.35;
                     hpA -= dmg;
                     ctB += sB;
                 }
             }
+            totalTurns += turns;
             if (hpA > 0) winsA++; else winsB++;
         }
-        return (winsA * 100.0 / rounds, winsB * 100.0 / rounds);
+        return (winsA * 100.0 / rounds, winsB * 100.0 / rounds, (double)totalTurns / rounds);
     }
 }
 
@@ -536,7 +629,8 @@ class Program
                 c.DFQuality = result.DFQuality;
                 c.DFMult = GameData.DFMultiplier[result.DFQuality];
                 c.DFScore = result.DFScore;
-                c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0); c.GCScore = result.GCScore; c.GCType = result.GCType;
+                c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0); c.GCScore = result.GCScore;
+                c.GCType = result.GCType; c.AssignArts(); c.GCType = result.GCType;
                 c.GCTypeMult = GameData.GCTypeScaling.GetValueOrDefault(result.GCQuality, 1.0);
                 pool[i].Add(c);
                 realmDist[i][c.Realm]++;
@@ -614,8 +708,8 @@ class Program
                 {
                     var ci = pool[i][s]; var cj = pool[j][s];
                     int h = SIM / SEEDS / 2;
-                    var (wi, wj) = Combat.Simulate(ci, cj, h);
-                    var (wi2, wj2) = Combat.Simulate(cj, ci, h);
+                    var (wi, wj, _) = Combat.Simulate(ci, cj, h);
+                    var (wi2, wj2, _) = Combat.Simulate(cj, ci, h);
                     wI += (int)Math.Round((wi + wj2) / 2.0 * h * 2 / 100.0);
                     tot += h * 2;
                 }
@@ -659,6 +753,29 @@ class Program
 
         // DEBUG
         Console.WriteLine();
+        // 平均回合数
+        Console.WriteLine();
+        Console.WriteLine("【金丹同境平均战斗回合数（含术法/神通）】");
+        Console.WriteLine("（每对Build取前5个角色互搏，每场5轮）");
+        Console.WriteLine();
+        double totalTurnsAll = 0; int turnCombats = 0;
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = i + 1; j < N; j++)
+            {
+                foreach (var ci in pool[i].Take(5))
+                    foreach (var cj in pool[j].Take(5))
+                    {
+                        var (_, _, t) = Combat.Simulate(ci, cj, 5);
+                        var (_, _, t2) = Combat.Simulate(cj, ci, 5);
+                        totalTurnsAll += t + t2; turnCombats += 2;
+                    }
+            }
+        }
+        Console.WriteLine("  总平均回合数: {0:F1} (样本={1}场)", totalTurnsAll / turnCombats, turnCombats);
+        Console.WriteLine();
+
+        // DEBUG
         Console.WriteLine("【调试：物·均衡 vs 物·纯战 属性对比（seed=0）】");
         var c_wl_jh = pool[1][0];
         var c_wl_cz = pool[0][0];
@@ -673,8 +790,8 @@ class Program
         }
         PrintStats(c_wl_jh);
         PrintStats(c_wl_cz);
-        var (wa, wb) = Combat.Simulate(c_wl_jh, c_wl_cz, 100);
-        var (wa2, wb2) = Combat.Simulate(c_wl_cz, c_wl_jh, 100);
+        var (wa, wb, _) = Combat.Simulate(c_wl_jh, c_wl_cz, 100);
+        var (wa2, wb2, _) = Combat.Simulate(c_wl_cz, c_wl_jh, 100);
         Console.WriteLine($"  均衡先手: {wa:F0}%  纯战先手: {wb2:F0}%  均: {(wa+wb2)/2:F0}%");
         Console.WriteLine("  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）");
         Console.WriteLine("================================================================================");
