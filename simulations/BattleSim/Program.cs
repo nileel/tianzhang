@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,87 +8,121 @@ static class GameData
 {
     public static readonly Dictionary<string, int> Sublevels = new()
     {
-        ["å‡¡äºº"] = 1, ["ç»ƒæ°”"] = 9, ["ç­‘åŸº"] = 4, ["é‡‘ä¸¹"] = 4,
-        ["å…ƒå©´"] = 4, ["åŒ–ç¥"] = 4, ["ç‚¼è™š"] = 4
+        ["·²ÈË"] = 1, ["Á·Æø"] = 9, ["Öş»ù"] = 4, ["½ğµ¤"] = 4,
+        ["ÔªÓ¤"] = 4, ["»¯Éñ"] = 4, ["Á¶Ğé"] = 4
     };
-    public static readonly string[] RealmOrder = ["å‡¡äºº", "ç»ƒæ°”", "ç­‘åŸº", "é‡‘ä¸¹", "å…ƒå©´", "åŒ–ç¥", "ç‚¼è™š"];
-    public static readonly Dictionary<string, int> TechInnate = new() { ["ä¸Šå“"] = 4 };
+    public static readonly string[] RealmOrder = ["·²ÈË", "Á·Æø", "Öş»ù", "½ğµ¤", "ÔªÓ¤", "»¯Éñ", "Á¶Ğé"];
+    public static readonly Dictionary<string, int> TechInnate = new() { ["ÉÏÆ·"] = 4 };
     public static readonly Dictionary<string, double> SpiritMod = new()
     {
-        ["å‡¡å“"] = 0.70, ["ä¸‹å“"] = 0.85, ["ä¸­å“"] = 1.00, ["ä¸Šå“"] = 1.20, ["æå“"] = 1.50
+        ["·²Æ·"] = 0.70, ["ÏÂÆ·"] = 0.85, ["ÖĞÆ·"] = 1.00, ["ÉÏÆ·"] = 1.20, ["¼«Æ·"] = 1.50
     };
 
-    public record RealmBase(int HP, int MP, int è‚‰æ”», int ç¥æ”», int è‚‰é˜², int ç¥é˜², int ååº”, int ç§»åŠ›, int ç¥è¯†);
+    public record RealmBase(int HP, int MP, int Èâ¹¥, int Éñ¹¥, int Èâ·À, int Éñ·À, int ·´Ó¦, int ÒÆÁ¦, int ÉñÊ¶);
     public static readonly Dictionary<string, RealmBase> Base = new()
     {
-        ["å‡¡äºº"] = new(30, 0, 5, 5, 3, 3, 5, 2, 3),
-        ["ç»ƒæ°”"] = new(100, 10, 25, 25, 20, 20, 15, 3, 5),
-        ["ç­‘åŸº"] = new(400, 100, 120, 120, 100, 100, 50, 4, 8),
-        ["é‡‘ä¸¹"] = new(3000, 2000, 1000, 1000, 800, 800, 300, 5, 15),
+        ["·²ÈË"] = new(30, 0, 5, 5, 3, 3, 5, 2, 3),
+        ["Á·Æø"] = new(100, 10, 25, 25, 20, 20, 15, 3, 5),
+        ["Öş»ù"] = new(400, 100, 120, 120, 100, 100, 50, 4, 8),
+        ["½ğµ¤"] = new(3000, 2000, 1000, 1000, 800, 800, 300, 5, 15),
     };
-    public record RealmFactor(double HP, double MP, double æ”», double é˜², double ååº”, double ç¥è¯†);
+    public record RealmFactor(double HP, double MP, double ¹¥, double ·À, double ·´Ó¦, double ÉñÊ¶);
     public static readonly Dictionary<string, RealmFactor> Factor = new()
     {
-        ["å‡¡äºº"] = new(4, 0.5, 1, 0.8, 0.6, 0.15),
-        ["ç»ƒæ°”"] = new(8, 2, 3, 2, 0.75, 0.20),
-        ["ç­‘åŸº"] = new(9, 7, 6.5, 4, 1.5, 0.25),
-        ["é‡‘ä¸¹"] = new(22, 14, 12, 8, 3.0, 0.35),
+        ["·²ÈË"] = new(4, 0.5, 1, 0.8, 0.6, 0.15),
+        ["Á·Æø"] = new(8, 2, 3, 2, 0.75, 0.20),
+        ["Öş»ù"] = new(9, 7, 6.5, 4, 1.5, 0.25),
+        ["½ğµ¤"] = new(22, 14, 12, 8, 3.0, 0.35),
     };
-    public record SubGrowth(double HP, double MP, double è‚‰æ”», double ç¥æ”», double è‚‰é˜², double ç¥é˜², double ååº”, double ç§»åŠ›, double ç¥è¯†);
+    public record SubGrowth(double HP, double MP, double Èâ¹¥, double Éñ¹¥, double Èâ·À, double Éñ·À, double ·´Ó¦, double ÒÆÁ¦, double ÉñÊ¶);
     public static readonly Dictionary<string, SubGrowth> SubGrowthBase = new()
     {
-        ["ç»ƒæ°”"] = new(8, 3, 4, 3, 3, 2, 2, 0.2, 0.3),
-        ["ç­‘åŸº"] = new(80, 35, 30, 25, 25, 20, 12, 0.5, 1.0),
-        ["é‡‘ä¸¹"] = new(800, 700, 350, 320, 280, 250, 90, 0.8, 4.0),
+        ["Á·Æø"] = new(8, 3, 4, 3, 3, 2, 2, 0.2, 0.3),
+        ["Öş»ù"] = new(80, 35, 30, 25, 25, 20, 12, 0.5, 1.0),
+        ["½ğµ¤"] = new(800, 700, 350, 320, 280, 250, 90, 0.8, 4.0),
     };
 
     public const int InnatePerBreakthrough = 14;
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // é“åŸºå“çº§ä½“ç³» (v3.5)
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
+    // µÀ»ùÆ·¼¶ÌåÏµ (v3.5)
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
     public static readonly Dictionary<string, int> DFSpiritBase = new()
     {
-        ["å‡¡å“"] = 10, ["ä¸‹å“"] = 20, ["ä¸­å“"] = 30, ["ä¸Šå“"] = 40, ["æå“"] = 50
+        ["·²Æ·"] = 10, ["ÏÂÆ·"] = 20, ["ÖĞÆ·"] = 30, ["ÉÏÆ·"] = 40, ["¼«Æ·"] = 50
     };
     public static readonly Dictionary<string, int> DFTechMod = new()
     {
-        ["å‡¡å“"] = 0, ["ä¸‹å“"] = 5, ["ä¸­å“"] = 10, ["ä¸Šå“"] = 15, ["æå“"] = 20
+        ["·²Æ·"] = 0, ["ÏÂÆ·"] = 5, ["ÖĞÆ·"] = 10, ["ÉÏÆ·"] = 15, ["¼«Æ·"] = 20
     };
-    // (ä¸‹é™, ä¸Šé™) â€” ä¸‹é™å¯<=ä¸Šé™
+    // (ÏÂÏŞ, ÉÏÏŞ) ¡ª ÏÂÏŞ¿É<=ÉÏÏŞ
     public static readonly Dictionary<string, (string min, string max)> DFLimits = new()
     {
-        ["å‡¡å“"] = ("æ— é“åŸº", "é»„å“"),
-        ["ä¸‹å“"] = ("é»„å“",   "ç„å“"),
-        ["ä¸­å“"] = ("é»„å“",   "åœ°å“"),
-        ["ä¸Šå“"] = ("ç„å“",   "åœ°å“"),
-        ["æå“"] = ("åœ°å“",   "å¤©å“"),
+        ["·²Æ·"] = ("ÎŞµÀ»ù", "»ÆÆ·"),
+        ["ÏÂÆ·"] = ("»ÆÆ·",   "ĞşÆ·"),
+        ["ÖĞÆ·"] = ("»ÆÆ·",   "µØÆ·"),
+        ["ÉÏÆ·"] = ("ĞşÆ·",   "µØÆ·"),
+        ["¼«Æ·"] = ("µØÆ·",   "ÌìÆ·"),
     };
-    public static readonly string[] DFQualities = ["æ— é“åŸº", "é»„å“", "ç„å“", "åœ°å“", "å¤©å“"];
+    public static readonly string[] DFQualities = ["ÎŞµÀ»ù", "»ÆÆ·", "ĞşÆ·", "µØÆ·", "ÌìÆ·"];
     public static int DFQualityRank(string q) => Array.IndexOf(DFQualities, q);
 
-    // å‡èšå€¼â†’å“çº§é˜ˆå€¼
+    // Äı¾ÛÖµ¡úÆ·¼¶ãĞÖµ
     public static string DFQualityFromScore(int score) => score switch
     {
-        >= 80 => "å¤©å“",
-        >= 50 => "åœ°å“",
-        >= 25 => "ç„å“",
-        >= 15 => "é»„å“",
-        _     => "æ— é“åŸº"
+        >= 80 => "ÌìÆ·",
+        >= 50 => "µØÆ·",
+        >= 25 => "ĞşÆ·",
+        >= 15 => "»ÆÆ·",
+        _     => "ÎŞµÀ»ù"
     };
 
-    // é“åŸºå€ç‡ï¼ˆåº”ç”¨æ—¶ä¹˜åˆ°åŠŸæ³•é“åŸºæ•ˆæœä¸Šï¼‰
-    public static readonly Dictionary<string, double> DFMultiplier = new()
+    // µÀ»ù±¶ÂÊ£¨Ó¦ÓÃÊ±³Ëµ½¹¦·¨µÀ»ùĞ§¹ûÉÏ£©
+        public static readonly Dictionary<string, double> DFMultiplier = new()
     {
-        ["å¤©å“"] = 1.30, ["åœ°å“"] = 1.10, ["ç„å“"] = 1.00, ["é»„å“"] = 0.85, ["æ— é“åŸº"] = 0.0
+        ["ÌìÆ·"] = 1.30, ["µØÆ·"] = 1.10, ["ĞşÆ·"] = 1.00, ["»ÆÆ·"] = 0.85, ["ÎŞµÀ»ù"] = 0.0
     };
 
-    public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (string, int, int)[]
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
+    // ½ğµ¤Æ·¼¶ÌåÏµ (v4.0)
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
+    public static readonly string[] GCQualities = ["", "¾ÅÆ·", "°ËÆ·", "ÆßÆ·", "ÁùÆ·", "ÎåÆ·", "ËÄÆ·", "ÈıÆ·", "¶şÆ·", "Ò»Æ·"];
+    public static int GCQualityRank(string q) => Array.IndexOf(GCQualities, q);
+    public static readonly Dictionary<string, double> GCMultiplier = new()
     {
-        ("ç»ƒæ°”", 0, 10), ("ç»ƒæ°”", 1, 22), ("ç»ƒæ°”", 2, 36), ("ç»ƒæ°”", 3, 52),
-        ("ç»ƒæ°”", 4, 70), ("ç»ƒæ°”", 5, 90), ("ç»ƒæ°”", 6, 112), ("ç»ƒæ°”", 7, 136), ("ç»ƒæ°”", 8, 162),
-        ("ç­‘åŸº", 0, 200), ("ç­‘åŸº", 1, 250), ("ç­‘åŸº", 2, 310), ("ç­‘åŸº", 3, 390),
-        ("é‡‘ä¸¹", 0, 500), ("é‡‘ä¸¹", 1, 650), ("é‡‘ä¸¹", 2, 830), ("é‡‘ä¸¹", 3, 1050),
+        ["Ò»Æ·"] = 3.0, ["¶şÆ·"] = 2.5, ["ÈıÆ·"] = 2.0, ["ËÄÆ·"] = 1.7,
+        ["ÎåÆ·"] = 1.4, ["ÁùÆ·"] = 1.2, ["ÆßÆ·"] = 1.0, ["°ËÆ·"] = 0.85, ["¾ÅÆ·"] = 0.70
+    };
+    public static readonly Dictionary<string, double> GCTypeScaling = new()
+    {
+        ["Ò»Æ·"] = 1.3, ["¶şÆ·"] = 1.2, ["ÈıÆ·"] = 1.1, ["ËÄÆ·"] = 1.0,
+        ["ÎåÆ·"] = 0.9, ["ÁùÆ·"] = 0.8, ["ÆßÆ·"] = 0.7, ["°ËÆ·"] = 0.6, ["¾ÅÆ·"] = 0.5
+    };
+    public static readonly Dictionary<string, string> GCDFCap = new()
+    {
+        ["ÌìÆ·"] = "Ò»Æ·", ["µØÆ·"] = "ÈıÆ·", ["ĞşÆ·"] = "ÎåÆ·", ["»ÆÆ·"] = "°ËÆ·", ["ÎŞµÀ»ù"] = ""
+    };
+    public static readonly Dictionary<string, int> GCDFContinue = new()
+    {
+        ["ÌìÆ·"] = 60, ["µØÆ·"] = 40, ["ĞşÆ·"] = 25, ["»ÆÆ·"] = 10
+    };
+    public static readonly Dictionary<string, int> GCTreasure = new()
+    {
+        ["ÏÂÆ·"] = 5, ["ÖĞÆ·"] = 10, ["ÉÏÆ·"] = 20, ["¼«Æ·"] = 30, [""] = 0
+    };
+    public static string GCQualityFromScore(int score) => score switch
+    {
+        >= 120 => "Ò»Æ·", >= 105 => "¶şÆ·", >= 90 => "ÈıÆ·", >= 75 => "ËÄÆ·",
+        >= 60  => "ÎåÆ·", >= 48  => "ÁùÆ·", >= 36 => "ÆßÆ·", >= 25 => "°ËÆ·",
+        >= 15  => "¾ÅÆ·", _      => ""
+    };
+    public const double GCMinMP = 1200.0;
+public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (string, int, int)[]
+    {
+        ("Á·Æø", 0, 10), ("Á·Æø", 1, 22), ("Á·Æø", 2, 36), ("Á·Æø", 3, 52),
+        ("Á·Æø", 4, 70), ("Á·Æø", 5, 90), ("Á·Æø", 6, 112), ("Á·Æø", 7, 136), ("Á·Æø", 8, 162),
+        ("Öş»ù", 0, 200), ("Öş»ù", 1, 250), ("Öş»ù", 2, 310), ("Öş»ù", 3, 390),
+        ("½ğµ¤", 0, 500), ("½ğµ¤", 1, 650), ("½ğµ¤", 2, 830), ("½ğµ¤", 3, 1050),
     };
 
     public const double BaseGainPerCycle = 10.0;
@@ -107,19 +141,25 @@ class Character
 {
     public string Name, Realm, Style;
     public int SubIndex;
-    // v3.5: é“åŸº
-    public string DFQuality = "æ— é“åŸº";   // å¤©å“/åœ°å“/ç„å“/é»„å“/æ— é“åŸº
-    public double DFMult = 0.0;            // é“åŸºæ•ˆæœå€ç‡
-    public int DFScore = 0;                // å‡èšå€¼ (è°ƒè¯•ç”¨)
+    // v3.5: µÀ»ù
+    public string DFQuality = "ÎŞµÀ»ù";   // ÌìÆ·/µØÆ·/ĞşÆ·/»ÆÆ·/ÎŞµÀ»ù
+    public double DFMult = 0.0;            // µÀ»ùĞ§¹û±¶ÂÊ
+    public int DFScore = 0;                // Äı¾ÛÖµ (µ÷ÊÔÓÃ)
+    // v4.0: ½ğµ¤
+    public string GCQuality = "";         // Ò»Æ·~¾ÅÆ·
+    public double GCMult = 1.0;           // MPÉÏÏŞ±¶ÂÊ
+    public int GCScore = 0;               // Äı¾ÛÖµ (µ÷ÊÔÓÃ)
+    public string GCType = "";            // ½ğµ¤ÀàĞÍ
+    public double GCTypeMult = 1.0;       // ½ğµ¤ÀàĞÍ±»¶¯±¶ÂÊ
 
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
     public Dictionary<string, double> Secondary = new();
-    public static string[] InnateKeys = ["æ ¹éª¨", "é­‚é­„", "ç¥è¯†", "èµ„è´¨", "æ°”è¿"];
+    public static string[] InnateKeys = ["¸ù¹Ç", "»êÆÇ", "ÉñÊ¶", "×ÊÖÊ", "ÆøÔË"];
 
     public static Character Create(string name, Dictionary<string, int> innate, string style)
     {
-        var c = new Character { Name = name, Realm = "å‡¡äºº", SubIndex = 0, Style = style };
+        var c = new Character { Name = name, Realm = "·²ÈË", SubIndex = 0, Style = style };
         foreach (var k in InnateKeys) c.Innate[k] = innate[k];
         return c;
     }
@@ -142,11 +182,11 @@ class Character
     static (string[] types, double pctPerChapter) ResolveSecondary(Dictionary<string, double> w)
     {
         var map = new Dictionary<string, string[]> {
-            ["æ ¹éª¨"] = new[] { "æ ¼æŒ¡ç‡" }, ["é­‚é­„"] = new[] { "é­‚ç›¾ç‡" },
-            ["ç¥è¯†"] = new[] { "å‘½ä¸­ç‡" }, ["èµ„è´¨"] = new[] { "æš´å‡»ä¼¤å®³" }, ["æ°”è¿"] = new[] { "é—ªé¿ç‡" }
+            ["¸ù¹Ç"] = new[] { "¸ñµ²ÂÊ" }, ["»êÆÇ"] = new[] { "»ê¶ÜÂÊ" },
+            ["ÉñÊ¶"] = new[] { "ÃüÖĞÂÊ" }, ["×ÊÖÊ"] = new[] { "±©»÷ÉËº¦" }, ["ÆøÔË"] = new[] { "ÉÁ±ÜÂÊ" }
         };
         var ordered = w.Where(kv => kv.Value > 0.15).OrderByDescending(kv => kv.Value).Take(2).ToList();
-        if (ordered.Count == 0) ordered.Add(new("æ ¹éª¨", 1.0));
+        if (ordered.Count == 0) ordered.Add(new("¸ù¹Ç", 1.0));
         var types = ordered.Select(kv => map[kv.Key][0]).ToArray();
         double pct = types.Length == 1 ? 5.0 : 3.0;
         return (types, pct);
@@ -160,27 +200,27 @@ class Character
         double sm = GameData.SpiritMod[spiritGrade];
         var (secTypes, secPctPerChapter) = ResolveSecondary(weights);
 
-        // ä¸€çº§å±æ€§ = å¢ƒç•ŒåŸºç¡€ + sum(å°å¢ƒç•Œæˆé•¿) + å…ˆå¤©Ã—ç³»æ•°Ã—æƒé‡
-        Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights) + Innate["æ ¹éª¨"] * rf.HP * weights["æ ¹éª¨"] * 2.2) * sm);
-        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["é­‚é­„"] * rf.MP * weights["é­‚é­„"]) * sm);
-        Primary["è‚‰æ”»"] = (int)Math.Round((rb.è‚‰æ”» + SubGrowthSum("è‚‰æ”»", realm, subIdx, weights) + Innate["æ ¹éª¨"] * rf.æ”» * weights["æ ¹éª¨"]) * sm);
-        Primary["ç¥æ”»"] = (int)Math.Round((rb.ç¥æ”» + SubGrowthSum("ç¥æ”»", realm, subIdx, weights) + Innate["é­‚é­„"] * rf.æ”» * weights["é­‚é­„"]) * sm);
-        Primary["è‚‰é˜²"] = (int)Math.Round((rb.è‚‰é˜² + SubGrowthSum("è‚‰é˜²", realm, subIdx, weights) + Innate["æ ¹éª¨"] * rf.é˜² * weights["æ ¹éª¨"]) * sm);
-        Primary["ç¥é˜²"] = (int)Math.Round((rb.ç¥é˜² + SubGrowthSum("ç¥é˜²", realm, subIdx, weights) + Innate["é­‚é­„"] * rf.é˜² * weights["é­‚é­„"]) * sm);
-        Primary["ååº”"] = (int)Math.Round((rb.ååº” + SubGrowthSum("ååº”", realm, subIdx, weights) + (Innate["æ ¹éª¨"] * weights["æ ¹éª¨"] + Innate["é­‚é­„"] * weights["é­‚é­„"] + Innate["ç¥è¯†"] * weights["ç¥è¯†"]) * rf.ååº” / 3.0) * sm);
-        Primary["ç§»åŠ›"] = rb.ç§»åŠ›;
-        Primary["ç¥è¯†"] = (int)Math.Round((rb.ç¥è¯† + SubGrowthSum("ç¥è¯†", realm, subIdx, weights) + Innate["ç¥è¯†"] * rf.ç¥è¯† * weights["ç¥è¯†"]) * sm);
+        // Ò»¼¶ÊôĞÔ = ¾³½ç»ù´¡ + sum(Ğ¡¾³½ç³É³¤) + ÏÈÌì¡ÁÏµÊı¡ÁÈ¨ÖØ
+        Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights) + Innate["¸ù¹Ç"] * rf.HP * weights["¸ù¹Ç"] * 2.2) * sm);
+        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["»êÆÇ"] * rf.MP * weights["»êÆÇ"]) * sm * GCMult);
+        Primary["Èâ¹¥"] = (int)Math.Round((rb.Èâ¹¥ + SubGrowthSum("Èâ¹¥", realm, subIdx, weights) + Innate["¸ù¹Ç"] * rf.¹¥ * weights["¸ù¹Ç"]) * sm);
+        Primary["Éñ¹¥"] = (int)Math.Round((rb.Éñ¹¥ + SubGrowthSum("Éñ¹¥", realm, subIdx, weights) + Innate["»êÆÇ"] * rf.¹¥ * weights["»êÆÇ"]) * sm);
+        Primary["Èâ·À"] = (int)Math.Round((rb.Èâ·À + SubGrowthSum("Èâ·À", realm, subIdx, weights) + Innate["¸ù¹Ç"] * rf.·À * weights["¸ù¹Ç"]) * sm);
+        Primary["Éñ·À"] = (int)Math.Round((rb.Éñ·À + SubGrowthSum("Éñ·À", realm, subIdx, weights) + Innate["»êÆÇ"] * rf.·À * weights["»êÆÇ"]) * sm);
+        Primary["·´Ó¦"] = (int)Math.Round((rb.·´Ó¦ + SubGrowthSum("·´Ó¦", realm, subIdx, weights) + (Innate["¸ù¹Ç"] * weights["¸ù¹Ç"] + Innate["»êÆÇ"] * weights["»êÆÇ"] + Innate["ÉñÊ¶"] * weights["ÉñÊ¶"]) * rf.·´Ó¦ / 3.0) * sm);
+        Primary["ÒÆÁ¦"] = rb.ÒÆÁ¦;
+        Primary["ÉñÊ¶"] = (int)Math.Round((rb.ÉñÊ¶ + SubGrowthSum("ÉñÊ¶", realm, subIdx, weights) + Innate["ÉñÊ¶"] * rf.ÉñÊ¶ * weights["ÉñÊ¶"]) * sm);
 
-        // äºŒçº§å±æ€§
+        // ¶ş¼¶ÊôĞÔ
         int chapters = GameData.TotalSubs(realm, subIdx) / 4 + 1;
         foreach (var t in secTypes) Secondary[t] = chapters * secPctPerChapter;
-        Secondary["æ ¼æŒ¡å‡ä¼¤ç‡"] = Secondary.GetValueOrDefault("æ ¼æŒ¡ç‡", 0) * 0.8;
-        Secondary["é­‚ç›¾å‡ä¼¤ç‡"] = Secondary.GetValueOrDefault("é­‚ç›¾ç‡", 0) * 0.8;
-        Secondary["é—ªé¿ç‡"] = Secondary.GetValueOrDefault("é—ªé¿ç‡", 0) + Innate["æ°”è¿"] * 0.3;
-        Secondary["å‘½ä¸­ç‡"] = Secondary.GetValueOrDefault("å‘½ä¸­ç‡", 0);
-        Secondary["æš´å‡»ç‡"] = Secondary.GetValueOrDefault("æš´å‡»ç‡", 0) + Innate["ç¥è¯†"] * 0.3;
-        Secondary["æš´å‡»ä¼¤å®³"] = Secondary.GetValueOrDefault("æš´å‡»ä¼¤å®³", 0) + Innate["èµ„è´¨"] * 0.8;
-        Secondary["ç‰©æŠ—ç‡"] = 0; Secondary["é­‚æŠ—ç‡"] = 0;
+        Secondary["¸ñµ²¼õÉËÂÊ"] = Secondary.GetValueOrDefault("¸ñµ²ÂÊ", 0) * 0.8;
+        Secondary["»ê¶Ü¼õÉËÂÊ"] = Secondary.GetValueOrDefault("»ê¶ÜÂÊ", 0) * 0.8;
+        Secondary["ÉÁ±ÜÂÊ"] = Secondary.GetValueOrDefault("ÉÁ±ÜÂÊ", 0) + Innate["ÆøÔË"] * 0.3;
+        Secondary["ÃüÖĞÂÊ"] = Secondary.GetValueOrDefault("ÃüÖĞÂÊ", 0);
+        Secondary["±©»÷ÂÊ"] = Secondary.GetValueOrDefault("±©»÷ÂÊ", 0) + Innate["ÉñÊ¶"] * 0.3;
+        Secondary["±©»÷ÉËº¦"] = Secondary.GetValueOrDefault("±©»÷ÉËº¦", 0) + Innate["×ÊÖÊ"] * 0.8;
+        Secondary["Îï¿¹ÂÊ"] = 0; Secondary["»ê¿¹ÂÊ"] = 0;
     }
 
     double SubGrowthSum(string attr, string realm, int subIdx, Dictionary<string, double> w)
@@ -189,17 +229,17 @@ class Character
         int prevSubs = 0;
         foreach (var r in GameData.RealmOrder)
         {
-            if (r == "å‡¡äºº") continue;
+            if (r == "·²ÈË") continue;
             int subsHere = GameData.Sublevels[r];
             int effective = Math.Min(subsHere, Math.Max(0, totalSubs - prevSubs));
             if (effective <= 0) break;
             var sgb = GameData.SubGrowthBase[r];
             double val = attr switch
             {
-                "HP" => sgb.HP, "MP" => sgb.MP, "è‚‰æ”»" => sgb.è‚‰æ”», "ç¥æ”»" => sgb.ç¥æ”»,
-                "è‚‰é˜²" => sgb.è‚‰é˜², "ç¥é˜²" => sgb.ç¥é˜², "ååº”" => sgb.ååº”, "ç¥è¯†" => sgb.ç¥è¯†, _ => 0
+                "HP" => sgb.HP, "MP" => sgb.MP, "Èâ¹¥" => sgb.Èâ¹¥, "Éñ¹¥" => sgb.Éñ¹¥,
+                "Èâ·À" => sgb.Èâ·À, "Éñ·À" => sgb.Éñ·À, "·´Ó¦" => sgb.·´Ó¦, "ÉñÊ¶" => sgb.ÉñÊ¶, _ => 0
             };
-            string innateKey = attr switch { "HP" or "è‚‰æ”»" or "è‚‰é˜²" => "æ ¹éª¨", "MP" or "ç¥æ”»" or "ç¥é˜²" => "é­‚é­„", "ç¥è¯†" => "ç¥è¯†", "ååº”" => "æ ¹éª¨", _ => "æ ¹éª¨" };
+            string innateKey = attr switch { "HP" or "Èâ¹¥" or "Èâ·À" => "¸ù¹Ç", "MP" or "Éñ¹¥" or "Éñ·À" => "»êÆÇ", "ÉñÊ¶" => "ÉñÊ¶", "·´Ó¦" => "¸ù¹Ç", _ => "¸ù¹Ç" };
             double scale = w[innateKey] / 0.6;
             sum += val * scale * effective;
             prevSubs += subsHere;
@@ -211,44 +251,55 @@ class Character
 
 static class Cultivation
 {
-    public record Result(string Realm, int SubIdx, int TotalSubs, string DFQuality, int DFScore);
+    public record Result(string Realm, int SubIdx, int TotalSubs, string DFQuality, int DFScore, string GCQuality = "", int GCScore = 0, string GCType = "");
 
     public static Result Simulate(
         Dictionary<string, int> baseInnate, Dictionary<string, double> weights, int seed,
-        string spiritGrade = "ä¸­å“", string techGrade = "ä¸Šå“", string treasureGrade = "")
+        string spiritGrade = "ÖĞÆ·", string techGrade = "ÉÏÆ·", string treasureGrade = "")
     {
         var rng = new Random(seed);
         double cpp = 0;
-        string realm = "å‡¡äºº"; int subIdx = 0;
-        string dfQuality = "æ— é“åŸº"; int dfScore = 0;
-        bool dfGenerated = false;
+        string realm = "·²ÈË"; int subIdx = 0;
+        string dfQuality = "ÎŞµÀ»ù"; int dfScore = 0; string gcQuality = ""; int gcScore = 0; string gcType = "";
+        bool dfGenerated = false; bool gcGenerated = false;
 
-        double èµ„è´¨ = baseInnate["èµ„è´¨"], æ°”è¿ = baseInnate["æ°”è¿"];
-        double ä¿®ç‚¼é€Ÿåº¦ = 1.0 + èµ„è´¨ * 0.03;
-        double æ‚Ÿæ€§ = 1.0 + èµ„è´¨ * 0.015;
-        double çªç ´ç‡ = Clamp(GameData.BreakthroughBaseRate * 100 + (æ‚Ÿæ€§ - 1.0) * 50 + æ°”è¿ * 0.05, 20, 95) / 100.0;
+        double ×ÊÖÊ = baseInnate["×ÊÖÊ"], ÆøÔË = baseInnate["ÆøÔË"];
+        double ĞŞÁ¶ËÙ¶È = 1.0 + ×ÊÖÊ * 0.03;
+        double ÎòĞÔ = 1.0 + ×ÊÖÊ * 0.015;
+        double Í»ÆÆÂÊ = Clamp(GameData.BreakthroughBaseRate * 100 + (ÎòĞÔ - 1.0) * 50 + ÆøÔË * 0.05, 20, 95) / 100.0;
         int nextMs = 0;
 
         for (int cycle = 0; cycle < GameData.CultivationCycles; cycle++)
         {
-            double gain = GameData.BaseGainPerCycle * ä¿®ç‚¼é€Ÿåº¦ * (0.85 + rng.NextDouble() * 0.30);
+            double gain = GameData.BaseGainPerCycle * ĞŞÁ¶ËÙ¶È * (0.85 + rng.NextDouble() * 0.30);
             cpp += gain;
             bool progressed = true;
             while (progressed && nextMs < GameData.Milestones.Length)
             {
                 var ms = GameData.Milestones[nextMs];
                 if (cpp < ms.cpp) { progressed = false; break; }
-                if (rng.NextDouble() < çªç ´ç‡)
+                if (rng.NextDouble() < Í»ÆÆÂÊ)
                 {
                     string prevRealm = realm;
                     realm = ms.realm; subIdx = ms.subIdx; cpp -= ms.cpp;
                     nextMs = FindNext(realm, subIdx);
 
-                    // v3.5: çªç ´åˆ°ç­‘åŸºåˆé˜¶æ—¶ç”Ÿæˆé“åŸº
-                    if (!dfGenerated && realm == "ç­‘åŸº" && subIdx == 0)
+                    // v4.0: Í»ÆÆµ½½ğµ¤³õ½×Ê±Äı½á½ğµ¤
+                    if (!gcGenerated && realm == "½ğµ¤" && subIdx == 0)
+                    {
+                        gcGenerated = true;
+                        // totalCpp = Àï³Ì±®ÏûºÄ + Ê£ÓàÒç³ö£¨·´Ó³×Ü»ıÀÛ£©
+                        double totalCpp = ms.cpp + Math.Max(0, cpp);
+                        (gcQuality, gcScore) = GenerateGoldenCore(
+                            baseInnate, spiritGrade, techGrade, dfQuality, totalCpp, treasureGrade, rng);
+                        gcType = ResolveGCType(weights);
+                    }
+
+                    // v3.5: Í»ÆÆµ½Öş»ù³õ½×Ê±Éú³ÉµÀ»ù
+                    if (!dfGenerated && realm == "Öş»ù" && subIdx == 0)
                     {
                         dfGenerated = true;
-                        double overflowCpp = Math.Max(0, cpp); // çªç ´åå‰©ä½™çµåŠ›è§†ä¸ºè¶…é¢
+                        double overflowCpp = Math.Max(0, cpp); // Í»ÆÆºóÊ£ÓàÁéÁ¦ÊÓÎª³¬¶î
                         (dfQuality, dfScore) = GenerateDaoFoundation(
                             baseInnate, spiritGrade, techGrade, overflowCpp, treasureGrade, rng);
                     }
@@ -256,34 +307,34 @@ static class Cultivation
                 else { double penalty = ms.cpp * (0.10 + rng.NextDouble() * 0.10); cpp = Math.Max(0, cpp - penalty); progressed = false; }
             }
         }
-        return new Result(realm, subIdx, GameData.TotalSubs(realm, subIdx), dfQuality, dfScore);
+        return new Result(realm, subIdx, GameData.TotalSubs(realm, subIdx), dfQuality, dfScore, gcQuality, gcScore, gcType);
     }
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // é“åŸºå‡èšå€¼è®¡ç®— + å“çº§åˆ¤å®š (v3.5)
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
+    // µÀ»ùÄı¾ÛÖµ¼ÆËã + Æ·¼¶ÅĞ¶¨ (v3.5)
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
     static (string quality, int score) GenerateDaoFoundation(
         Dictionary<string, int> innate, string spiritGrade, string techGrade,
         double overflowCpp, string treasureGrade, Random rng)
     {
-        // â‘  çµæ ¹åŸºæ•°
+        // ¢Ù Áé¸ù»ùÊı
         int spiritBase = GameData.DFSpiritBase.GetValueOrDefault(spiritGrade, 30);
-        // â‘¡ åŠŸæ³•ä¿®æ­£
+        // ¢Ú ¹¦·¨ĞŞÕı
         int techMod = GameData.DFTechMod.GetValueOrDefault(techGrade, 10);
-        // â‘¢ çµåŠ›è¶…é¢ä¿®æ­£
+        // ¢Û ÁéÁ¦³¬¶îĞŞÕı
         int overflowMod = (int)Math.Floor(overflowCpp / 50.0);
-        // â‘£ éšæœºéª° 1d30
+        // ¢Ü Ëæ»ú÷» 1d30
         int dice = rng.Next(1, 31);
-        // â‘¤ å¤©æåœ°å®åŠ æˆ
+        // ¢İ Ìì²ÄµØ±¦¼Ó³É
         int treasureBonus = treasureGrade switch
         {
-            "ä¸‹å“" => 10, "ä¸­å“" => 20, "ä¸Šå“" => 30, "æå“" => 40, _ => 0
+            "ÏÂÆ·" => 10, "ÖĞÆ·" => 20, "ÉÏÆ·" => 30, "¼«Æ·" => 40, _ => 0
         };
 
         int score = spiritBase + techMod + overflowMod + dice + treasureBonus;
         string tentative = GameData.DFQualityFromScore(score);
 
-        // åŠŸæ³•å“çº§ä¸Šä¸‹é™é’³åˆ¶
+        // ¹¦·¨Æ·¼¶ÉÏÏÂÏŞÇ¯ÖÆ
         if (GameData.DFLimits.TryGetValue(techGrade, out var limits))
         {
             int tRank = GameData.DFQualityRank(tentative);
@@ -294,6 +345,61 @@ static class Cultivation
         }
 
         return (tentative, score);
+    }
+
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
+    // ½ğµ¤Äı¾ÛÖµ¼ÆËã + Æ·¼¶ÅĞ¶¨ (v4.0)
+    // ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
+    static (string quality, int score) GenerateGoldenCore(
+        Dictionary<string, int> innate, string spiritGrade, string techGrade,
+        string dfQuality, double overflowCpp, string treasureGrade, Random rng)
+    {
+        // ¢Ù µÀ»ùÑÓĞø·Ö
+        int dfContinue = GameData.GCDFContinue.GetValueOrDefault(dfQuality, 0);
+        // ¢Ú Áé¸ù»ùÊı
+        int spiritBase = GameData.DFSpiritBase.GetValueOrDefault(spiritGrade, 30);
+        // ¢Û ÁéÁ¦Í¶Èë·Ö (·Ö¶Î: <=2000Ã¿100ÁéÁ¦+3, >2000Ã¿100ÁéÁ¦+1)
+        // cpp¡úÓĞĞ§ÁéÁ¦×ª»»: ½ğµ¤³õ½×ÃÅ¼÷=1200ÁéÁ¦¶ÔÓ¦cpp¡Ö500, ±ÈÂÊ¡Ö2.4
+        double mpOver = overflowCpp * 2.4;
+        int mpScore = 0;
+        if (mpOver <= 2000)
+            mpScore = (int)Math.Floor((mpOver - GameData.GCMinMP) / 100.0 * 3);
+        else
+            mpScore = (int)Math.Floor((2000 - GameData.GCMinMP) / 100.0 * 3 +
+                                       (mpOver - 2000) / 100.0 * 1);
+        mpScore = Math.Max(0, mpScore);
+        // ¢Ü Ëæ»ú÷» 1d30
+        int dice = rng.Next(1, 31);
+        // ¢İ Ìì²ÄµØ±¦
+        int treasureBonus = GameData.GCTreasure.GetValueOrDefault(treasureGrade, 0);
+
+        int score = dfContinue + spiritBase + mpScore + dice + treasureBonus;
+
+        string tentative = GameData.GCQualityFromScore(score);
+
+        // µÀ»ùÓ²ÉÏÏŞÇ¯ÖÆ
+        if (GameData.GCDFCap.TryGetValue(dfQuality, out var cap) && cap != "")
+        {
+            int tRank = GameData.GCQualityRank(tentative);
+            int maxRank = GameData.GCQualityRank(cap);
+            if (tRank > maxRank) tentative = GameData.GCQualities[maxRank];
+        }
+        // ÎŞµÀ»ùÎŞ·¨Äı½á
+        if (dfQuality == "ÎŞµÀ»ù") tentative = "";
+
+        return (tentative, score);
+    }
+
+    // ¼ò»¯½ğµ¤ÀàĞÍÅĞ¶¨£ºÈ¡È¨ÖØ×î¸ßµÄÏÈÌìÊôĞÔÓ³Éä
+    static string ResolveGCType(Dictionary<string, double> weights)
+    {
+        var ordered = weights.OrderByDescending(kv => kv.Value).ToList();
+        string top = ordered[0].Key;
+        return top switch
+        {
+            "¸ù¹Ç" => "ÍÁ", "»êÆÇ" => "»ğ", "ÉñÊ¶" => "ĞÇ",
+            "×ÊÖÊ" => "Ä¾", "ÆøÔË" => "Ë®", _ => "½ğ"
+        };
     }
 
     static int FindNext(string realm, int subIdx)
@@ -326,39 +432,39 @@ static class Combat
         {
             int hpA = ca.Primary["HP"], hpB = cb.Primary["HP"];
             double ctA = 0, ctB = 0;
-            double sA = 100.0 / ca.Primary["ååº”"], sB = 100.0 / cb.Primary["ååº”"];
+            double sA = 100.0 / ca.Primary["·´Ó¦"], sB = 100.0 / cb.Primary["·´Ó¦"];
 
             while (hpA > 0 && hpB > 0)
             {
                 if (ctA <= ctB)
                 {
-                    int dmg = ca.Style == "physical" ? Dmg(ca.Primary["è‚‰æ”»"], cb.Primary["è‚‰é˜²"], cb.Secondary.GetValueOrDefault("ç‰©æŠ—ç‡", 0))
-                                                      : Dmg(ca.Primary["ç¥æ”»"], cb.Primary["ç¥é˜²"], cb.Secondary.GetValueOrDefault("é­‚æŠ—ç‡", 0));
-                    double blockRate = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("æ ¼æŒ¡ç‡", 0) : cb.Secondary.GetValueOrDefault("é­‚ç›¾ç‡", 0);
+                    int dmg = ca.Style == "physical" ? Dmg(ca.Primary["Èâ¹¥"], cb.Primary["Èâ·À"], cb.Secondary.GetValueOrDefault("Îï¿¹ÂÊ", 0))
+                                                      : Dmg(ca.Primary["Éñ¹¥"], cb.Primary["Éñ·À"], cb.Secondary.GetValueOrDefault("»ê¿¹ÂÊ", 0));
+                    double blockRate = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("¸ñµ²ÂÊ", 0) : cb.Secondary.GetValueOrDefault("»ê¶ÜÂÊ", 0);
                     if (Rng.NextDouble() * 100 < blockRate)
                     {
-                        double reduction = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("æ ¼æŒ¡å‡ä¼¤ç‡", 0) : cb.Secondary.GetValueOrDefault("é­‚ç›¾å‡ä¼¤ç‡", 0);
+                        double reduction = ca.Style == "physical" ? cb.Secondary.GetValueOrDefault("¸ñµ²¼õÉËÂÊ", 0) : cb.Secondary.GetValueOrDefault("»ê¶Ü¼õÉËÂÊ", 0);
                         dmg = (int)Math.Round(dmg * (1 - reduction / 100));
                     }
-                    if (Rng.NextDouble() * 100 < Math.Max(0, cb.Secondary.GetValueOrDefault("é—ªé¿ç‡", 0) - ca.Secondary.GetValueOrDefault("å‘½ä¸­ç‡", 0))) dmg = 0;
-                    if (Rng.NextDouble() * 100 < ca.Secondary.GetValueOrDefault("æš´å‡»ç‡", 0))
-                        dmg = (int)Math.Round(dmg * (1 + ca.Secondary.GetValueOrDefault("æš´å‡»ä¼¤å®³", 0) / 100));
+                    if (Rng.NextDouble() * 100 < Math.Max(0, cb.Secondary.GetValueOrDefault("ÉÁ±ÜÂÊ", 0) - ca.Secondary.GetValueOrDefault("ÃüÖĞÂÊ", 0))) dmg = 0;
+                    if (Rng.NextDouble() * 100 < ca.Secondary.GetValueOrDefault("±©»÷ÂÊ", 0))
+                        dmg = (int)Math.Round(dmg * (1 + ca.Secondary.GetValueOrDefault("±©»÷ÉËº¦", 0) / 100));
                     hpB -= dmg;
                     ctA += sA;
                 }
                 else
                 {
-                    int dmg = cb.Style == "physical" ? Dmg(cb.Primary["è‚‰æ”»"], ca.Primary["è‚‰é˜²"], ca.Secondary["ç‰©æŠ—ç‡"])
-                                                      : Dmg(cb.Primary["ç¥æ”»"], ca.Primary["ç¥é˜²"], ca.Secondary["é­‚æŠ—ç‡"]);
-                    double blockRate = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("æ ¼æŒ¡ç‡", 0) : ca.Secondary.GetValueOrDefault("é­‚ç›¾ç‡", 0);
+                    int dmg = cb.Style == "physical" ? Dmg(cb.Primary["Èâ¹¥"], ca.Primary["Èâ·À"], ca.Secondary["Îï¿¹ÂÊ"])
+                                                      : Dmg(cb.Primary["Éñ¹¥"], ca.Primary["Éñ·À"], ca.Secondary["»ê¿¹ÂÊ"]);
+                    double blockRate = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("¸ñµ²ÂÊ", 0) : ca.Secondary.GetValueOrDefault("»ê¶ÜÂÊ", 0);
                     if (Rng.NextDouble() * 100 < blockRate)
                     {
-                        double reduction = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("æ ¼æŒ¡å‡ä¼¤ç‡", 0) : ca.Secondary.GetValueOrDefault("é­‚ç›¾å‡ä¼¤ç‡", 0);
+                        double reduction = cb.Style == "physical" ? ca.Secondary.GetValueOrDefault("¸ñµ²¼õÉËÂÊ", 0) : ca.Secondary.GetValueOrDefault("»ê¶Ü¼õÉËÂÊ", 0);
                         dmg = (int)Math.Round(dmg * (1 - reduction / 100));
                     }
-                    if (Rng.NextDouble() * 100 < Math.Max(0, ca.Secondary["é—ªé¿ç‡"] - cb.Secondary.GetValueOrDefault("å‘½ä¸­ç‡", 0))) dmg = 0;
-                    if (Rng.NextDouble() * 100 < cb.Secondary.GetValueOrDefault("æš´å‡»ç‡", 0))
-                        dmg = (int)Math.Round(dmg * (1 + cb.Secondary.GetValueOrDefault("æš´å‡»ä¼¤å®³", 0) / 100));
+                    if (Rng.NextDouble() * 100 < Math.Max(0, ca.Secondary["ÉÁ±ÜÂÊ"] - cb.Secondary.GetValueOrDefault("ÃüÖĞÂÊ", 0))) dmg = 0;
+                    if (Rng.NextDouble() * 100 < cb.Secondary.GetValueOrDefault("±©»÷ÂÊ", 0))
+                        dmg = (int)Math.Round(dmg * (1 + cb.Secondary.GetValueOrDefault("±©»÷ÉËº¦", 0) / 100));
                     hpA -= dmg;
                     ctB += sB;
                 }
@@ -376,41 +482,45 @@ class Program
     static void Main()
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        const string TECH = "ä¸Šå“", SPIRIT = "ä¸­å“";
+        const string TECH = "ÉÏÆ·", SPIRIT = "ÖĞÆ·";
         const int SEEDS = 20, SIM = 2000;
 
         var buildDefs = new BuildDef[]
         {
-            new("ç‰©Â·çº¯æˆ˜", "èµ„è´¨3æ ¹éª¨25", new() { ["æ ¹éª¨"]=25,["é­‚é­„"]=8,["ç¥è¯†"]=5,["èµ„è´¨"]=3,["æ°”è¿"]=5 }, "physical",
-                new() { ["æ ¹éª¨"]=0.8,["é­‚é­„"]=0.1,["ç¥è¯†"]=0.1,["èµ„è´¨"]=0.0,["æ°”è¿"]=0.0 }),
-            new("ç‰©Â·å‡è¡¡", "èµ„è´¨11æ ¹éª¨20", new() { ["æ ¹éª¨"]=20,["é­‚é­„"]=8,["ç¥è¯†"]=8,["èµ„è´¨"]=11,["æ°”è¿"]=8 }, "physical",
-                new() { ["æ ¹éª¨"]=0.4,["é­‚é­„"]=0.1,["ç¥è¯†"]=0.1,["èµ„è´¨"]=0.2,["æ°”è¿"]=0.2 }),
-            new("ç‰©Â·ä¿®ç‚¼", "èµ„è´¨19æ ¹éª¨15", new() { ["æ ¹éª¨"]=15,["é­‚é­„"]=8,["ç¥è¯†"]=8,["èµ„è´¨"]=19,["æ°”è¿"]=8 }, "physical",
-                new() { ["æ ¹éª¨"]=0.3,["é­‚é­„"]=0.1,["ç¥è¯†"]=0.1,["èµ„è´¨"]=0.4,["æ°”è¿"]=0.1 }),
-            new("è‚‰ç›¾å‹",  "æ ¹éª¨43æé™", new() { ["æ ¹éª¨"]=43,["é­‚é­„"]=5,["ç¥è¯†"]=5,["èµ„è´¨"]=5,["æ°”è¿"]=5 }, "physical",
-                new() { ["æ ¹éª¨"]=1.0,["é­‚é­„"]=0.0,["ç¥è¯†"]=0.0,["èµ„è´¨"]=0.0,["æ°”è¿"]=0.0 }),
-            new("æ³•Â·çº¯æˆ˜", "èµ„è´¨3é­‚é­„25", new() { ["æ ¹éª¨"]=5,["é­‚é­„"]=25,["ç¥è¯†"]=8,["èµ„è´¨"]=3,["æ°”è¿"]=5 }, "magic",
-                new() { ["æ ¹éª¨"]=0.0,["é­‚é­„"]=0.8,["ç¥è¯†"]=0.1,["èµ„è´¨"]=0.0,["æ°”è¿"]=0.1 }),
-            new("æ³•Â·å‡è¡¡", "èµ„è´¨11é­‚é­„20", new() { ["æ ¹éª¨"]=8,["é­‚é­„"]=20,["ç¥è¯†"]=8,["èµ„è´¨"]=11,["æ°”è¿"]=8 }, "magic",
-                new() { ["æ ¹éª¨"]=0.1,["é­‚é­„"]=0.4,["ç¥è¯†"]=0.1,["èµ„è´¨"]=0.2,["æ°”è¿"]=0.2 }),
-            new("æ³•Â·ä¿®ç‚¼", "èµ„è´¨19é­‚é­„15", new() { ["æ ¹éª¨"]=8,["é­‚é­„"]=15,["ç¥è¯†"]=8,["èµ„è´¨"]=19,["æ°”è¿"]=8 }, "magic",
-                new() { ["æ ¹éª¨"]=0.1,["é­‚é­„"]=0.3,["ç¥è¯†"]=0.1,["èµ„è´¨"]=0.4,["æ°”è¿"]=0.1 }),
-            new("çµä¿®å‹",  "é­‚é­„43æé™", new() { ["æ ¹éª¨"]=5,["é­‚é­„"]=43,["ç¥è¯†"]=5,["èµ„è´¨"]=5,["æ°”è¿"]=5 }, "magic",
-                new() { ["æ ¹éª¨"]=0.0,["é­‚é­„"]=1.0,["ç¥è¯†"]=0.0,["èµ„è´¨"]=0.0,["æ°”è¿"]=0.0 }),
+            new("Îï¡¤´¿Õ½", "×ÊÖÊ3¸ù¹Ç25", new() { ["¸ù¹Ç"]=25,["»êÆÇ"]=8,["ÉñÊ¶"]=5,["×ÊÖÊ"]=3,["ÆøÔË"]=5 }, "physical",
+                new() { ["¸ù¹Ç"]=0.8,["»êÆÇ"]=0.1,["ÉñÊ¶"]=0.1,["×ÊÖÊ"]=0.0,["ÆøÔË"]=0.0 }),
+            new("Îï¡¤¾ùºâ", "×ÊÖÊ11¸ù¹Ç20", new() { ["¸ù¹Ç"]=20,["»êÆÇ"]=8,["ÉñÊ¶"]=8,["×ÊÖÊ"]=11,["ÆøÔË"]=8 }, "physical",
+                new() { ["¸ù¹Ç"]=0.4,["»êÆÇ"]=0.1,["ÉñÊ¶"]=0.1,["×ÊÖÊ"]=0.2,["ÆøÔË"]=0.2 }),
+            new("Îï¡¤ĞŞÁ¶", "×ÊÖÊ19¸ù¹Ç15", new() { ["¸ù¹Ç"]=15,["»êÆÇ"]=8,["ÉñÊ¶"]=8,["×ÊÖÊ"]=19,["ÆøÔË"]=8 }, "physical",
+                new() { ["¸ù¹Ç"]=0.3,["»êÆÇ"]=0.1,["ÉñÊ¶"]=0.1,["×ÊÖÊ"]=0.4,["ÆøÔË"]=0.1 }),
+            new("Èâ¶ÜĞÍ",  "¸ù¹Ç43¼«ÏŞ", new() { ["¸ù¹Ç"]=43,["»êÆÇ"]=5,["ÉñÊ¶"]=5,["×ÊÖÊ"]=5,["ÆøÔË"]=5 }, "physical",
+                new() { ["¸ù¹Ç"]=1.0,["»êÆÇ"]=0.0,["ÉñÊ¶"]=0.0,["×ÊÖÊ"]=0.0,["ÆøÔË"]=0.0 }),
+            new("·¨¡¤´¿Õ½", "×ÊÖÊ3»êÆÇ25", new() { ["¸ù¹Ç"]=5,["»êÆÇ"]=25,["ÉñÊ¶"]=8,["×ÊÖÊ"]=3,["ÆøÔË"]=5 }, "magic",
+                new() { ["¸ù¹Ç"]=0.0,["»êÆÇ"]=0.8,["ÉñÊ¶"]=0.1,["×ÊÖÊ"]=0.0,["ÆøÔË"]=0.1 }),
+            new("·¨¡¤¾ùºâ", "×ÊÖÊ11»êÆÇ20", new() { ["¸ù¹Ç"]=8,["»êÆÇ"]=20,["ÉñÊ¶"]=8,["×ÊÖÊ"]=11,["ÆøÔË"]=8 }, "magic",
+                new() { ["¸ù¹Ç"]=0.1,["»êÆÇ"]=0.4,["ÉñÊ¶"]=0.1,["×ÊÖÊ"]=0.2,["ÆøÔË"]=0.2 }),
+            new("·¨¡¤ĞŞÁ¶", "×ÊÖÊ19»êÆÇ15", new() { ["¸ù¹Ç"]=8,["»êÆÇ"]=15,["ÉñÊ¶"]=8,["×ÊÖÊ"]=19,["ÆøÔË"]=8 }, "magic",
+                new() { ["¸ù¹Ç"]=0.1,["»êÆÇ"]=0.3,["ÉñÊ¶"]=0.1,["×ÊÖÊ"]=0.4,["ÆøÔË"]=0.1 }),
+            new("ÁéĞŞĞÍ",  "»êÆÇ43¼«ÏŞ", new() { ["¸ù¹Ç"]=5,["»êÆÇ"]=43,["ÉñÊ¶"]=5,["×ÊÖÊ"]=5,["ÆøÔË"]=5 }, "magic",
+                new() { ["¸ù¹Ç"]=0.0,["»êÆÇ"]=1.0,["ÉñÊ¶"]=0.0,["×ÊÖÊ"]=0.0,["ÆøÔË"]=0.0 }),
         };
         int N = buildDefs.Length;
 
-        Console.WriteLine($"ä¿®ç‚¼æ¨¡æ‹Ÿ ({SEEDS}ç§å­ x {GameData.CultivationCycles}è½®, çµæ ¹={SPIRIT}, åŠŸæ³•={TECH})...");
+        Console.WriteLine($"ĞŞÁ¶Ä£Äâ ({SEEDS}ÖÖ×Ó x {GameData.CultivationCycles}ÂÖ, Áé¸ù={SPIRIT}, ¹¦·¨={TECH})...");
         var pool = new List<Character>[N];
         var realmDist = new Dictionary<string, int>[N];
-        // v3.5: é“åŸºåˆ†å¸ƒç»Ÿè®¡
-        var dfDist = new Dictionary<string, int>[N];
+        // v3.5: µÀ»ù·Ö²¼Í³¼Æ
+                var dfDist = new Dictionary<string, int>[N];
+        var gcDist = new Dictionary<string, int>[N];
         for (int i = 0; i < N; i++)
         {
             pool[i] = new List<Character>();
-            realmDist[i] = new Dictionary<string, int> { ["ç»ƒæ°”"] = 0, ["ç­‘åŸº"] = 0, ["é‡‘ä¸¹"] = 0 };
+            realmDist[i] = new Dictionary<string, int> { ["Á·Æø"] = 0, ["Öş»ù"] = 0, ["½ğµ¤"] = 0 };
             dfDist[i] = new Dictionary<string, int>();
-            foreach (var q in GameData.DFQualities) dfDist[i][q] = 0;
+                        foreach (var q in GameData.DFQualities) dfDist[i][q] = 0;
+            gcDist[i] = new Dictionary<string, int>();
+            foreach (var q in GameData.GCQualities.Skip(1)) gcDist[i][q] = 0;
+            gcDist[i][""] = 0;
         }
 
         for (int seed = 0; seed < SEEDS; seed++)
@@ -422,21 +532,25 @@ class Program
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
                 c.ApplyGrowth(result.Realm, TECH, bd.Weights);
                 c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights);
-                // v3.5: è®°å½•é“åŸº
+                // v3.5: ¼ÇÂ¼µÀ»ù
                 c.DFQuality = result.DFQuality;
                 c.DFMult = GameData.DFMultiplier[result.DFQuality];
                 c.DFScore = result.DFScore;
+                c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0); c.GCScore = result.GCScore; c.GCType = result.GCType;
+                c.GCTypeMult = GameData.GCTypeScaling.GetValueOrDefault(result.GCQuality, 1.0);
                 pool[i].Add(c);
                 realmDist[i][c.Realm]++;
                 dfDist[i][c.DFQuality]++;
+                    if (c.GCQuality != "") gcDist[i][c.GCQuality]++;
+                    else gcDist[i][""]++;
             }
         }
-        Console.WriteLine("å®Œæˆ");
+        Console.WriteLine("Íê³É");
 
-        // v3.5: é“åŸºå“è´¨åˆ†å¸ƒ
+        // v3.5: µÀ»ùÆ·ÖÊ·Ö²¼
         Console.WriteLine();
-        Console.WriteLine("ã€é“åŸºå“è´¨åˆ†å¸ƒã€‘");
-        Console.WriteLine($"{"Build",-10} {"æ— é“åŸº",-6} {"é»„å“",-6} {"ç„å“",-6} {"åœ°å“",-6} {"å¤©å“",-6} {"å¹³å‡å‡èšå€¼",-8}");
+        Console.WriteLine("¡¾µÀ»ùÆ·ÖÊ·Ö²¼¡¿");
+        Console.WriteLine($"{"Build",-10} {"ÎŞµÀ»ù",-6} {"»ÆÆ·",-6} {"ĞşÆ·",-6} {"µØÆ·",-6} {"ÌìÆ·",-6} {"Æ½¾ùÄı¾ÛÖµ",-8}");
         Console.WriteLine(new string('-', 52));
         for (int i = 0; i < N; i++)
         {
@@ -447,9 +561,24 @@ class Program
             Console.WriteLine($" {avgScore,7:F0}");
         }
 
-        // è¯¦ç»†å­å¢ƒç•Œåˆ†å¸ƒ
+        // ½ğµ¤Æ·¼¶·Ö²¼
         Console.WriteLine();
-        Console.WriteLine("ã€è¯¦ç»†å¢ƒç•Œåˆ†å¸ƒã€‘");
+        Console.WriteLine("¡¾½ğµ¤Æ·¼¶·Ö²¼£¨ÒÑ½áµ¤½ÇÉ«£©¡¿");
+        Console.Write("{0,-10}", "Build");
+        foreach (var q in GameData.GCQualities.Skip(1)) Console.Write("{0,5}", q);
+        Console.WriteLine(" {0,-6} {1,-8}", "ÎŞ½ğµ¤", "Æ½¾ùÄı¾ÛÖµ");
+        Console.WriteLine(new string('-', 10 + 6 * GameData.GCQualities.Length + 12));
+        for (int i = 0; i < N; i++)
+        {
+            Console.Write("{0,-10}", buildDefs[i].Name);
+            foreach (var q in GameData.GCQualities.Skip(1)) Console.Write("{0,5}", gcDist[i].GetValueOrDefault(q, 0));
+            Console.Write(" {0,5}", gcDist[i].GetValueOrDefault("", 0));
+            double avgGc = pool[i].Where(c => c.GCScore > 0).Select(c => (double)c.GCScore).DefaultIfEmpty(0).Average();
+            Console.WriteLine(" {0,8:F0}", avgGc);
+        }
+        // ÏêÏ¸×Ó¾³½ç·Ö²¼
+        Console.WriteLine();
+        Console.WriteLine("¡¾ÏêÏ¸¾³½ç·Ö²¼¡¿");
         for (int i = 0; i < N; i++)
         {
             var groups = pool[i].GroupBy(c => $"{c.Realm}{c.SubIndex}").OrderBy(g => g.Key);
@@ -457,23 +586,23 @@ class Program
         }
         Console.WriteLine();
 
-        // ç»Ÿè®¡
-        Console.WriteLine("ã€å¢ƒç•Œ & å±æ€§åˆ†å¸ƒã€‘");
-        Console.WriteLine($"{"Build",-10} {"èµ„è´¨",-5} {"ç»ƒæ°”%",-7} {"ç­‘åŸº%",-7} {"é‡‘ä¸¹%",-7} {"å¹³å‡HP",-7} {"æˆé•¿ç‡",-7}");
+        // Í³¼Æ
+        Console.WriteLine("¡¾¾³½ç & ÊôĞÔ·Ö²¼¡¿");
+        Console.WriteLine($"{"Build",-10} {"×ÊÖÊ",-5} {"Á·Æø%",-7} {"Öş»ù%",-7} {"½ğµ¤%",-7} {"Æ½¾ùHP",-7} {"³É³¤ÂÊ",-7}");
         Console.WriteLine(new string('-', 65));
         for (int i = 0; i < N; i++)
         {
             double avgHp = pool[i].Average(c => (double)c.Primary["HP"]);
-            double avgèµ„ = pool[i].Average(c => (double)c.Innate["èµ„è´¨"]);
-            double lq = realmDist[i]["ç»ƒæ°”"] * 100.0 / SEEDS;
-            double zj = realmDist[i]["ç­‘åŸº"] * 100.0 / SEEDS;
-            double jd = realmDist[i]["é‡‘ä¸¹"] * 100.0 / SEEDS;
-            Console.WriteLine($"  {buildDefs[i].Name,-8} {avgèµ„,4:F0}  {lq,5:F0}%  {zj,5:F0}%  {jd,5:F0}%  {avgHp,6:F0}  {buildDefs[i].Desc}");
+            double avg×Ê = pool[i].Average(c => (double)c.Innate["×ÊÖÊ"]);
+            double lq = realmDist[i]["Á·Æø"] * 100.0 / SEEDS;
+            double zj = realmDist[i]["Öş»ù"] * 100.0 / SEEDS;
+            double jd = realmDist[i]["½ğµ¤"] * 100.0 / SEEDS;
+            Console.WriteLine($"  {buildDefs[i].Name,-8} {avg×Ê,4:F0}  {lq,5:F0}%  {zj,5:F0}%  {jd,5:F0}%  {avgHp,6:F0}  {buildDefs[i].Desc}");
         }
         Console.WriteLine();
 
-        // æˆ˜æ–—çŸ©é˜µ
-        Console.WriteLine($"æ­£åœ¨è®¡ç®— {N}x{N} çŸ©é˜µ...");
+        // Õ½¶·¾ØÕó
+        Console.WriteLine($"ÕıÔÚ¼ÆËã {N}x{N} ¾ØÕó...");
         var rng = new Random(12345);
         double[,] mat = new double[N, N];
         for (int i = 0; i < N; i++)
@@ -498,7 +627,7 @@ class Program
 
         Console.WriteLine();
         Console.WriteLine($"================================================================================");
-        Console.WriteLine($"  ä¿®ç‚¼åæˆ˜æ–—èƒœç‡çŸ©é˜µ ({SEEDS}æ¬¡ä¿®ç‚¼ x {SIM}è½®, {sw.ElapsedMilliseconds}ms)");
+        Console.WriteLine($"  ĞŞÁ¶ºóÕ½¶·Ê¤ÂÊ¾ØÕó ({SEEDS}´ÎĞŞÁ¶ x {SIM}ÂÖ, {sw.ElapsedMilliseconds}ms)");
         Console.WriteLine($"================================================================================");
         Console.WriteLine();
 
@@ -523,22 +652,22 @@ class Program
             }
             Console.WriteLine();
         }
-        Console.WriteLine("  CR=ç¢¾å‹ FV=ä¼˜åŠ¿ EV=å‡åŠ¿ WK=åŠ£åŠ¿");
+        Console.WriteLine("  CR=ÄëÑ¹ FV=ÓÅÊÆ EV=¾ùÊÆ WK=ÁÓÊÆ");
         Console.WriteLine();
 
         Console.WriteLine("================================================================================");
 
         // DEBUG
         Console.WriteLine();
-        Console.WriteLine("ã€è°ƒè¯•ï¼šç‰©Â·å‡è¡¡ vs ç‰©Â·çº¯æˆ˜ å±æ€§å¯¹æ¯”ï¼ˆseed=0ï¼‰ã€‘");
+        Console.WriteLine("¡¾µ÷ÊÔ£ºÎï¡¤¾ùºâ vs Îï¡¤´¿Õ½ ÊôĞÔ¶Ô±È£¨seed=0£©¡¿");
         var c_wl_jh = pool[1][0];
         var c_wl_cz = pool[0][0];
         void PrintStats(Character c) {
-            Console.Write($"  {c.Name} ({c.Realm}{c.SubIndex}) é“åŸº={c.DFQuality}({c.DFScore}):");
-            foreach (var k in new[]{"HP","MP","è‚‰æ”»","ç¥æ”»","è‚‰é˜²","ç¥é˜²","ååº”"})
+            Console.Write($"  {c.Name} ({c.Realm}{c.SubIndex}) µÀ»ù={c.DFQuality}({c.DFScore}) ½ğµ¤={c.GCQuality}({c.GCScore}):");
+            foreach (var k in new[]{"HP","MP","Èâ¹¥","Éñ¹¥","Èâ·À","Éñ·À","·´Ó¦"})
                 Console.Write($" {k}={c.Primary[k]}");
-            Console.Write("  äºŒçº§:");
-            foreach (var k in new[]{"æ ¼æŒ¡ç‡","æ ¼æŒ¡å‡ä¼¤ç‡","é­‚ç›¾ç‡","é­‚ç›¾å‡ä¼¤ç‡","é—ªé¿ç‡","å‘½ä¸­ç‡","æš´å‡»ç‡","æš´å‡»ä¼¤å®³"})
+            Console.Write("  ¶ş¼¶:");
+            foreach (var k in new[]{"¸ñµ²ÂÊ","¸ñµ²¼õÉËÂÊ","»ê¶ÜÂÊ","»ê¶Ü¼õÉËÂÊ","ÉÁ±ÜÂÊ","ÃüÖĞÂÊ","±©»÷ÂÊ","±©»÷ÉËº¦"})
                 Console.Write($" {k}={c.Secondary.GetValueOrDefault(k, 0):F0}");
             Console.WriteLine();
         }
@@ -546,8 +675,8 @@ class Program
         PrintStats(c_wl_cz);
         var (wa, wb) = Combat.Simulate(c_wl_jh, c_wl_cz, 100);
         var (wa2, wb2) = Combat.Simulate(c_wl_cz, c_wl_jh, 100);
-        Console.WriteLine($"  å‡è¡¡å…ˆæ‰‹: {wa:F0}%  çº¯æˆ˜å…ˆæ‰‹: {wb2:F0}%  å‡: {(wa+wb2)/2:F0}%");
-        Console.WriteLine("  v3.5: å±æ€§åŒè½¨æˆé•¿ + é“åŸºå“çº§ï¼ˆå‡èšå€¼åˆ¤å®š+åŠŸæ³•ä¸Šä¸‹é™é’³åˆ¶ï¼‰");
+        Console.WriteLine($"  ¾ùºâÏÈÊÖ: {wa:F0}%  ´¿Õ½ÏÈÊÖ: {wb2:F0}%  ¾ù: {(wa+wb2)/2:F0}%");
+        Console.WriteLine("  v3.5: ÊôĞÔË«¹ì³É³¤ + µÀ»ùÆ·¼¶£¨Äı¾ÛÖµÅĞ¶¨+¹¦·¨ÉÏÏÂÏŞÇ¯ÖÆ£©");
         Console.WriteLine("================================================================================");
     }
 }
