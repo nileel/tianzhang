@@ -22,6 +22,8 @@
 # 工作规则
 - 思考时尽量使用中文进行推理和分析。
 - 设计生成时，非规则描述类的设计内容完成品（如术法、神通、功法、角色等）每个都单独一个文件，不要合并。
+- **下一步建议清理**：下一步建议中已完成的条目在提交 git 时写入 commit 备注，然后从 AGENTS.md 中移除，保持文件精简。
+
 # 技术经验
 
 - **文件编码陷阱**：Program.cs 和多数 docs/*.txt 是 GBK 编码而非 UTF-8。编辑时不能直接 ReadAllText/WriteAllText，必须用 [System.Text.Encoding]::GetEncoding('gbk') 的字节级往返（读字节→GBK解码→编辑→GBK编码→写字节）。一旦用 UTF-8 写入，中文全部变 �，文件报废。
