@@ -135,6 +135,16 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         foreach (var r in RealmOrder) { if (r == realm) { t += subIdx + 1; break; } t += Sublevels[r]; }
         return t;
     }
+
+    // 术法与神通配置
+    public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown);
+    public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown);
+    public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3);
+    public static readonly ArtConfig MagicArt = new("灵光闪", "神魂", 1.2, 20, 3);
+    public static readonly DivineConfig PhysicalDivine = new("碎岳", "物理", 1.5, 10, 5);
+    public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3);
+    public static readonly DivineConfig WaterDivine = new("逝水千击", "物理", 1.5, 10, 5);
+    public static readonly DivineConfig MagicDivine = new("灵光贯日", "神魂", 1.4, 10, 5);
 }
 
 class Character
@@ -262,34 +272,26 @@ class Character
     // v4.1: 根据风格和境界分配术法与神通
     public void AssignArts()
     {
-        if (Style == "physical")
+        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, _ => GameData.MagicArt };
+        ArtName = artCfg.Name; ArtType = artCfg.Type; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
+        if (Realm == "金丹" && GCQuality != "")
         {
-            ArtName = "裂石拳"; ArtType = "物理"; ArtMult = 1.3; ArtMPCost = 20; ArtCooldown = 3;
-            if (Realm == "金丹" && GCQuality != "")
-            {
-                DivineName = "碎岳"; DivineType = "物理"; DivineMult = 1.5; DivineDefPen = 10; DivineCooldown = 5;
-            }
-        }
-        else
-        {
-            ArtName = "灵光闪"; ArtType = "神魂"; ArtMult = 1.2; ArtMPCost = 20; ArtCooldown = 3;
-            if (Realm == "金丹" && GCQuality != "")
-            {
-                DivineName = "灵光贯日"; DivineType = "神魂"; DivineMult = 1.4; DivineDefPen = 10; DivineCooldown = 5;
-            }
+            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, _ => GameData.MagicDivine };
+            DivineName = divCfg.Name; DivineType = divCfg.Type; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
         }
     }
-}
 
+}
 static class Cultivation
 {
     public record Result(string Realm, int SubIdx, int TotalSubs, string DFQuality, int DFScore, string GCQuality = "", int GCScore = 0, string GCType = "");
 
     public static Result Simulate(
         Dictionary<string, int> baseInnate, Dictionary<string, double> weights, int seed,
-        string spiritGrade = "中品", string techGrade = "上品", string treasureGrade = "")
+        string spiritGrade = "中品", string techGrade = "上品", string treasureGrade = "", int maxCycles = -1)
     {
         var rng = new Random(seed);
+        int cycles = maxCycles < 0 ? GameData.CultivationCycles : maxCycles;
         double cpp = 0;
         string realm = "凡人"; int subIdx = 0;
         string dfQuality = "无道基"; int dfScore = 0; string gcQuality = ""; int gcScore = 0; string gcType = "";
@@ -301,7 +303,7 @@ static class Cultivation
         double 突破率 = Clamp(GameData.BreakthroughBaseRate * 100 + (悟性 - 1.0) * 50 + 气运 * 0.05, 20, 95) / 100.0;
         int nextMs = 0;
 
-        for (int cycle = 0; cycle < GameData.CultivationCycles; cycle++)
+        for (int cycle = 0; cycle < cycles; cycle++)
         {
             double gain = GameData.BaseGainPerCycle * 修炼速度 * (0.85 + rng.NextDouble() * 0.30);
             cpp += gain;
@@ -515,7 +517,7 @@ static class Combat
                     }
                     else
                     {
-                        atkType = ca.Style == "physical" ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    bool isPhysicalA = ca.Style == "physical" || ca.Style == "water_physical"; atkType = isPhysicalA ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];
                     def = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
@@ -545,7 +547,7 @@ static class Combat
                     }
                     else
                     {
-                        atkType = cb.Style == "physical" ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];
                     def = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
@@ -596,6 +598,8 @@ class Program
                 new() { ["根骨"]=0.1,["魂魄"]=0.3,["神识"]=0.1,["资质"]=0.4,["气运"]=0.1 }),
             new("灵修型",  "魂魄43极限", new() { ["根骨"]=5,["魂魄"]=43,["神识"]=5,["资质"]=5,["气运"]=5 }, "magic",
                 new() { ["根骨"]=0.0,["魂魄"]=1.0,["神识"]=0.0,["资质"]=0.0,["气运"]=0.0 }),
+            new("水·散修", "资质18气运14", new() { ["根骨"]=10,["魂魄"]=9,["神识"]=9,["资质"]=18,["气运"]=14 }, "water_physical",
+                new() { ["根骨"]=0.15,["魂魄"]=0.15,["神识"]=0.15,["资质"]=0.35,["气运"]=0.20 }),
         };
         int N = buildDefs.Length;
 
@@ -752,6 +756,76 @@ class Program
         Console.WriteLine("================================================================================");
 
         // DEBUG
+
+        // 练气快照
+        const int EARLY_CYCLES = 40;
+        Console.WriteLine();
+        Console.WriteLine("[练气快照 同境对战]");
+        var earlyPool = new List<Character>[N];
+        for (int i = 0; i < N; i++) earlyPool[i] = new List<Character>();
+        for (int seed = 0; seed < SEEDS; seed++)
+        {
+            for (int i = 0; i < N; i++)
+            {
+                var bd = buildDefs[i];
+                var result = Cultivation.Simulate(bd.Innate, bd.Weights, seed * 100 + i + 10000, SPIRIT, TECH, maxCycles: EARLY_CYCLES);
+                var c = Character.Create(bd.Name, bd.Innate, bd.Style);
+                c.ApplyGrowth(result.Realm, TECH, bd.Weights);
+                c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights);
+                c.DFQuality = result.DFQuality; c.DFMult = GameData.DFMultiplier[result.DFQuality];
+                c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0);
+                c.GCType = result.GCType; c.AssignArts(); c.GCType = result.GCType;
+                c.GCTypeMult = GameData.GCTypeScaling.GetValueOrDefault(result.GCQuality, 1.0);
+                earlyPool[i].Add(c);
+            }
+        }
+        Console.WriteLine("  练气角色境界分布:");
+        for (int i = 0; i < N; i++)
+        {
+            var groups = earlyPool[i].GroupBy(c => $"{c.Realm}{c.SubIndex}").OrderBy(g => g.Key);
+            Console.WriteLine($"    {buildDefs[i].Name,-8}: {string.Join(", ", groups.Select(g => $"{g.Key}({g.Count()})"))}");
+        }
+        double earlyTotalTurns = 0; int earlyTurnCombats = 0;
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = i + 1; j < N; j++)
+            {
+                var ciList = earlyPool[i].Where(c => c.Realm == "练气").Take(5).ToList();
+                var cjList = earlyPool[j].Where(c => c.Realm == "练气").Take(5).ToList();
+                foreach (var ci in ciList)
+                    foreach (var cj in cjList)
+                    {
+                        var (_, _, t) = Combat.Simulate(ci, cj, 5);
+                        var (_, _, t2) = Combat.Simulate(cj, ci, 5);
+                        earlyTotalTurns += t + t2; earlyTurnCombats += 2;
+                    }
+            }
+        }
+        if (earlyTurnCombats > 0)
+            Console.WriteLine("  练气同境平均回合数: {0:F1} (样本={1}场)", earlyTotalTurns / earlyTurnCombats, earlyTurnCombats);
+        else
+            Console.WriteLine("  练气同境: 无练气角色可对战 (当前40轮均已突破至筑基+)");
+        // 筑基同境（使用主池200轮数据）
+        double baseTotalTurns = 0; int baseTurnCombats = 0;
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = i + 1; j < N; j++)
+            {
+                var ciList = pool[i].Where(c => c.Realm == "筑基").Take(5).ToList();
+                var cjList = pool[j].Where(c => c.Realm == "筑基").Take(5).ToList();
+                foreach (var ci in ciList)
+                    foreach (var cj in cjList)
+                    {
+                        var (_, _, t) = Combat.Simulate(ci, cj, 5);
+                        var (_, _, t2) = Combat.Simulate(cj, ci, 5);
+                        baseTotalTurns += t + t2; baseTurnCombats += 2;
+                    }
+            }
+        }
+        if (baseTurnCombats > 0)
+            Console.WriteLine("  筑基同境平均回合数: {0:F1} (样本={1}场)", baseTotalTurns / baseTurnCombats, baseTurnCombats);
+        else
+            Console.WriteLine("  筑基同境: 无筑基角色可对战");
         Console.WriteLine();
         // 平均回合数
         Console.WriteLine();
