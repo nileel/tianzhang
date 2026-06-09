@@ -145,6 +145,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3);
     public static readonly DivineConfig WaterDivine = new("逝水千击", "物理", 1.5, 10, 5);
     public static readonly DivineConfig MagicDivine = new("灵光贯日", "神魂", 1.4, 10, 5);
+    public static readonly ArtConfig TaiyiArt = new("玄元正气诀", "神魂", 1.4, 25, 3);
+    public static readonly DivineConfig TaiyiDivine = new("万法归宗", "神魂", 1.8, 15, 5);
 }
 
 class Character
@@ -272,11 +274,11 @@ class Character
     // v4.1: 根据风格和境界分配术法与神通
     public void AssignArts()
     {
-        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, _ => GameData.MagicArt };
+        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi" => GameData.TaiyiArt, _ => GameData.MagicArt };
         ArtName = artCfg.Name; ArtType = artCfg.Type; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
         if (Realm == "金丹" && GCQuality != "")
         {
-            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, _ => GameData.MagicDivine };
+            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi" => GameData.TaiyiDivine, _ => GameData.MagicDivine };
             DivineName = divCfg.Name; DivineType = divCfg.Type; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
         }
     }
@@ -600,6 +602,8 @@ class Program
                 new() { ["根骨"]=0.0,["魂魄"]=1.0,["神识"]=0.0,["资质"]=0.0,["气运"]=0.0 }),
             new("水·散修", "资质18气运14", new() { ["根骨"]=10,["魂魄"]=9,["神识"]=9,["资质"]=18,["气运"]=14 }, "water_physical",
                 new() { ["根骨"]=0.15,["魂魄"]=0.15,["神识"]=0.15,["资质"]=0.35,["气运"]=0.20 }),
+            new("太一·法修", "资质14魂魄18", new() { ["根骨"]=6,["魂魄"]=18,["神识"]=10,["资质"]=14,["气运"]=8 }, "taiyi",
+                new() { ["根骨"]=0.05,["魂魄"]=0.45,["神识"]=0.15,["资质"]=0.25,["气运"]=0.10 }),
         };
         int N = buildDefs.Length;
 
