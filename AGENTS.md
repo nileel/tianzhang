@@ -29,6 +29,9 @@
 - **模拟器即真理**：任何数值平衡讨论必须先跑 dotnet run -c Release --project simulations/BattleSim 看矩阵输出，不要凭感觉判断。
 - **文档跟着模拟器走**：模拟器参数调完，必须同步更新对应的 docs 设计文档（术法/神通倍率等），否则下次对话会出现两边不一致。
 
+- **AGENTS.md 是 UTF-8**：与 docs/*.txt（GBK）不同，AGENTS.md 是 UTF-8 with BOM。编辑时用 UTF-8 读写，不要用 GBK。
+- **Program.cs 行级编辑优于字符串替换**：GBK 编码文件做 `Replace` 容易因换行符(`\r\n` vs `\n`)或空格差异静默失败。拆成数组 `$lines` 按行号精准 `Insert` 更可靠。
+- **BuildDef 追加后 N 自动增长**：`int N = buildDefs.Length` 是动态的，新增 Build 无需手动改 N。
 # 当前状态
 
 - **模拟器已接入术法/神通 AI**：神通(CD5)>术法(CD3,MP20)>平A，法系有远程优势（对方下轮伤害×0.35）
@@ -40,12 +43,6 @@
 - **术法/神通参数**：已从 AssignArts() 提取到 GameData 顶部（ArtConfig/DivineConfig 记录），新增 TaiyiArt/TaiyiDivine
 - **练气对战**：已加入40轮快照模式，Cultivation.Simulate 支持 maxCycles 可选参数
 - **上次提交**：dfccb2a — 太一道庭接入BattleSim + 门派统计更新 + 符修功法
-
-# 技术经验
-
-- **AGENTS.md 是 UTF-8**：与 docs/*.txt（GBK）不同，AGENTS.md 是 UTF-8 with BOM。编辑时用 UTF-8 读写，不要用 GBK。
-- **Program.cs 行级编辑优于字符串替换**：GBK 编码文件做 `Replace` 容易因换行符(`\r\n` vs `\n`)或空格差异静默失败。拆成数组 `$lines` 按行号精准 `Insert` 更可靠。
-- **BuildDef 追加后 N 自动增长**：`int N = buildDefs.Length` 是动态的，新增 Build 无需手动改 N。
 
 # 下一步建议
 
