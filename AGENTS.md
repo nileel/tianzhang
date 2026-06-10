@@ -33,6 +33,11 @@
 
 - **行级编辑优于字符串替换**：做 `Replace` 容易因换行符或空格差异静默失败。拆成数组 `$lines` 按行号精准编辑更可靠。
 - **BuildDef 追加后 N 自动增长**：`int N = buildDefs.Length` 是动态的，新增 Build 无需手动改 N。
+- **PowerShell 批量写 txt**：多行中文内容用 `@'...'@ | Out-File -Encoding UTF8` 写入，`@'` 内可含单引号无需转义。注意结尾 `'@` 必须顶格。
+- **模拟器修改先 build 再 run**：修改 Program.cs 后先 `dotnet build --no-restore -c Release` 排查编译错误，再 `dotnet run --no-build` 验证默认参数下输出应与修改前一致（treasureGrade="" 时 bonus=0）。
+- **下一步建议清理时机**：条目完成并推送远端后，从 AGENTS.md 移除该条→重编号剩余条目→在当前状态追加新项。不要在提交前删除（万一回退会丢记录）。
+- **已有参数优于新增参数**：treasureGrade 已在 Simulate 签名中存在（仅用于道基/金丹品质计算），任务是将其接入突破率公式，而非新增参数——优先利用现有接口。
+
 # 当前状态
 
 - **模拟器已接入术法/神通 AI**：神通(CD5)>术法(CD3,MP20)>平A，法系有远程优势（对方下轮伤害×0.35）
