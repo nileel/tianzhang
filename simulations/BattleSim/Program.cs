@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -496,11 +496,23 @@ static class Combat
             double rangePenaltyA = 1.0, rangePenaltyB = 1.0; // 远程优势: 对方下轮伤害折扣
             double ctA = 0, ctB = 0;
             double sA = 100.0 / ca.Primary["反应"], sB = 100.0 / cb.Primary["反应"];
+            // v4.2: 水系机制 & 眩晕
+            int chuanliuA = 0, chuanliuB = 0;       // 川流之势: 下次受击减伤35%
+            int shishuiOnB = 0, shishuiOnA = 0;     // 逝水印记层数(每层-5%物防)
+            int maxShishui(string realm) => realm switch { "化神" => 99, "元婴" => 5, _ => 3 };
+            bool stunnedA = false, stunnedB = false; // 眩晕: 跳过下回合
+            int qiushuiA = 0, qiushuiB = 0;          // 秋水护盾剩余触发次数
+            int qiushuiMax(string realm) => realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 };
+            if (ca.Style == "water_physical") qiushuiA = qiushuiMax(ca.Realm);
+            if (cb.Style == "water_physical") qiushuiB = qiushuiMax(cb.Realm);
 
             int turns = 0;
             while (hpA > 0 && hpB > 0)
             {
                 turns++;
+                // 秋水回血: water_physical每回合恢复1.5%最大HP
+                if (ca.Style == "water_physical") hpA = Math.Min(ca.Primary["HP"], hpA + (int)(ca.Primary["HP"] * 0.015));
+                if (cb.Style == "water_physical") hpB = Math.Min(cb.Primary["HP"], hpB + (int)(cb.Primary["HP"] * 0.015));
                 if (artCdA > 0) artCdA--;
                 if (artCdB > 0) artCdB--;
                 if (divineCdA > 0) divineCdA--;
@@ -508,63 +520,91 @@ static class Combat
 
                 if (ctA <= ctB)
                 {
+                    // 眩晕: 跳过回合, CT归零, 眩晕标记被消耗
+                    if (stunnedA) { stunnedA = false; ctA += sA; continue; }
                     // AI决策: 神通 > 术法 > 平A
                     string atkType; double mult, defPen; int atk, def; double resist;
+                    bool waterSkillA = false;
                     if (ca.DivineName != "" && divineCdA == 0)
                     {
                         atkType = ca.DivineType; mult = ca.DivineMult; defPen = ca.DivineDefPen;
                         divineCdA = ca.DivineCooldown;
+                        waterSkillA = ca.Style == "water_physical";
+                        if (waterSkillA) { shishuiOnB = Math.Min(shishuiOnB + 1, maxShishui(ca.Realm)); chuanliuA = 1; }
                     }
                     else if (mpA >= ca.ArtMPCost && artCdA == 0)
                     {
                         atkType = ca.ArtType; mult = ca.ArtMult; defPen = 0;
                         mpA -= ca.ArtMPCost; artCdA = ca.ArtCooldown;
+                        waterSkillA = ca.Style == "water_physical";
+
+
                     }
                     else
                     {
                     bool isPhysicalA = ca.Style == "physical" || ca.Style == "water_physical"; atkType = isPhysicalA ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];
-                    def = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
+                    // 逝水印记: 降低目标物防 (每层-5%)
+                    int rawDef = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
+                    def = atkType == "物理" ? (int)(rawDef * (1 - shishuiOnB * 0.05)) : rawDef;
                     resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
                     dmg = ApplyDefenses(dmg, ca, cb, atkType);
+                    // 川流之势: B若持有则减伤35%并消耗
+                    if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
                     // 远程优势: 术法/神通出手后对方需要拉近距离
                     bool isRanged = ca.Style == "magic";
                     if (isRanged) rangePenaltyB = 0.35;
                     hpB -= dmg;
+                    // 秋水护盾: B濒死触发 (HP<30%且还有触发次数)
+                    if (qiushuiB > 0 && hpB > 0 && hpB < cb.Primary["HP"] * 0.30)
+                    { hpB += (int)(cb.Primary["HP"] * 0.15); qiushuiB--; }
+
+
                     ctA += sA;
                 }
                 else
                 {
+                    if (stunnedB) { stunnedB = false; ctB += sB; continue; }
                     string atkType; double mult, defPen; int atk, def; double resist;
+                    bool waterSkillB = false;
                     if (cb.DivineName != "" && divineCdB == 0)
                     {
                         atkType = cb.DivineType; mult = cb.DivineMult; defPen = cb.DivineDefPen;
                         divineCdB = cb.DivineCooldown;
+                        waterSkillB = cb.Style == "water_physical";
+                        if (waterSkillB) { shishuiOnA = Math.Min(shishuiOnA + 1, maxShishui(cb.Realm)); chuanliuB = 1; }
                     }
                     else if (mpB >= cb.ArtMPCost && artCdB == 0)
                     {
                         atkType = cb.ArtType; mult = cb.ArtMult; defPen = 0;
                         mpB -= cb.ArtMPCost; artCdB = cb.ArtCooldown;
+                        waterSkillB = cb.Style == "water_physical";
+
                     }
                     else
                     {
                     bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];
-                    def = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
+                    int rawDefB = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
+                    def = atkType == "物理" ? (int)(rawDefB * (1 - shishuiOnA * 0.05)) : rawDefB;
                     resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
                     dmg = ApplyDefenses(dmg, cb, ca, atkType);
+                    if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
                     bool bRanged = cb.Style == "magic";
                     if (bRanged) rangePenaltyA = 0.35;
                     hpA -= dmg;
+                    if (qiushuiA > 0 && hpA > 0 && hpA < ca.Primary["HP"] * 0.30)
+                    { hpA += (int)(ca.Primary["HP"] * 0.15); qiushuiA--; }
+
                     ctB += sB;
                 }
             }
