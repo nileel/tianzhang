@@ -575,7 +575,7 @@ static class Combat
     }
 
     // 格挡/魂盾/闪避/暴击 统一结算
-    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType)
+    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false)
     {
         bool isPhysical = atkType == "物理";
         double blockRate = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡率" : "魂盾率", 0);
@@ -584,7 +584,7 @@ static class Combat
             double reduction = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡减伤率" : "魂盾减伤率", 0);
             rawDmg = (int)Math.Round(rawDmg * (1 - reduction / 100));
         }
-        if (Rng.NextDouble() * 100 < Math.Max(0, defender.Secondary.GetValueOrDefault("闪避率", 0) - attacker.Secondary.GetValueOrDefault("命中率", 0)))
+        if (!ignoreDodge && Rng.NextDouble() * 100 < Math.Max(0, defender.Secondary.GetValueOrDefault("闪避率", 0) - attacker.Secondary.GetValueOrDefault("命中率", 0)))
             rawDmg = 0;
         if (rawDmg > 0 && Rng.NextDouble() * 100 < attacker.Secondary.GetValueOrDefault("暴击率", 0))
             rawDmg = (int)Math.Round(rawDmg * (1 + attacker.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
@@ -665,19 +665,30 @@ static class Combat
                     }
                     // 守一: 神魂攻击加成 (金丹致虚篇: 每层+5%)
                     if (ca.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiA * 0.05);
-                    // 符胆: 符箓术法效果加成(消耗全部) (金丹度人篇: 每层+15%)
-                    if (ca.Style == "taiyi_fuxiu") { mult *= (1 + fudanA * 0.15); fudanA = 0; }
+                    // 符胆: 符箓术法效果加成(消耗全部) (按境界:筑基12%/金丹15%/元婴18%/化神22%)
+                    bool fudanMaxA = false;
+                    if (ca.Style == "taiyi_fuxiu") 
+                    { 
+                        fudanMaxA = fudanA == maxFudan(ca.Realm);
+                        double fdpA = ca.Realm switch { "筑基" => 0.12, "金丹" => 0.15, "元婴" => 0.18, "化神" => 0.22, _ => 0.15 };
+                        mult *= (1 + fudanA * fdpA); 
+                        fudanA = ca.Realm == "化神" ? 2 : 0;
+                    }
                     atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];
+                    // 云篆篇: 符胆满层时神识+30%加成
+                    if (ca.Style == "taiyi_fuxiu" && fudanMaxA) atk += (int)(ca.Primary["神识"] * 0.30);
                     // 逝水印记: 降低目标物防 (每层-5%)
                     int rawDef = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
                     def = atkType == "物理" ? (int)(rawDef * (1 - shishuiOnB * 0.05)) : rawDef;
                     resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
                     // 守一满层: 神魂防御+15% (金丹致虚篇)
                     if (cb.Style == "taiyi" && shouyiB == maxShouyi(cb.Realm) && atkType == "神魂") resist += 15;
+                    // 天书篇: 符胆满层时无视30%魂防
+                    if (ca.Style == "taiyi_fuxiu" && fudanMaxA && atkType == "神魂") defPen = 30;
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
-                    dmg = ApplyDefenses(dmg, ca, cb, atkType);
+                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA);
                     // 川流之势: B若持有则减伤35%并消耗
                     if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
                     // 守一减伤: 受击消耗1层减伤20%
@@ -721,16 +732,28 @@ static class Combat
                     bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     if (cb.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiB * 0.05);
-                    if (cb.Style == "taiyi_fuxiu") { mult *= (1 + fudanB * 0.15); fudanB = 0; }
+                    // 符胆: 符箓术法效果加成(消耗全部) (按境界:筑基12%/金丹15%/元婴18%/化神22%)
+                    bool fudanMaxB = false;
+                    if (cb.Style == "taiyi_fuxiu") 
+                    { 
+                        fudanMaxB = fudanB == maxFudan(cb.Realm);
+                        double fdpB = cb.Realm switch { "筑基" => 0.12, "金丹" => 0.15, "元婴" => 0.18, "化神" => 0.22, _ => 0.15 };
+                        mult *= (1 + fudanB * fdpB); 
+                        fudanB = cb.Realm == "化神" ? 2 : 0;
+                    }
                     atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];
+                    // 云篆篇: 符胆满层时神识+30%加成
+                    if (cb.Style == "taiyi_fuxiu" && fudanMaxB) atk += (int)(cb.Primary["神识"] * 0.30);
                     int rawDefB = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
                     def = atkType == "物理" ? (int)(rawDefB * (1 - shishuiOnA * 0.05)) : rawDefB;
                     resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
                     if (ca.Style == "taiyi" && shouyiA == maxShouyi(ca.Realm) && atkType == "神魂") resist += 15;
+                    // 天书篇: 符胆满层时无视30%魂防
+                    if (cb.Style == "taiyi_fuxiu" && fudanMaxB && atkType == "神魂") defPen = 30;
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
-                    dmg = ApplyDefenses(dmg, cb, ca, atkType);
+                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB);
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
