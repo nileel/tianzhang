@@ -506,6 +506,16 @@ static class Combat
             if (ca.Style == "water_physical") qiushuiA = qiushuiMax(ca.Realm);
             if (cb.Style == "water_physical") qiushuiB = qiushuiMax(cb.Realm);
 
+            // v5.0: 太一道庭守一 & 符胆机制
+            int shouyiA = 0, shouyiB = 0;
+            int maxShouyi(string realm) => realm switch { "金丹" => 5, "筑基" => 4, "练气" => 3, _ => 5 };
+            if (ca.Style == "taiyi") { shouyiA = 2; }
+            if (cb.Style == "taiyi") { shouyiB = 2; }
+            int fudanA = 0, fudanB = 0;
+            int maxFudan(string realm) => realm switch { "金丹" => 5, "筑基" => 3, _ => 5 };
+            if (ca.Style == "taiyi_fuxiu") { fudanA = 2; }
+            if (cb.Style == "taiyi_fuxiu") { fudanB = 2; }
+
             int turns = 0;
             while (hpA > 0 && hpB > 0)
             {
@@ -525,6 +535,7 @@ static class Combat
                     // AI决策: 神通 > 术法 > 平A
                     string atkType; double mult, defPen; int atk, def; double resist;
                     bool waterSkillA = false;
+                    int artMPCostA = (ca.Style == "taiyi_fuxiu" && fudanA == maxFudan(ca.Realm)) ? 0 : ca.ArtMPCost;
                     if (ca.DivineName != "" && divineCdA == 0)
                     {
                         atkType = ca.DivineType; mult = ca.DivineMult; defPen = ca.DivineDefPen;
@@ -532,10 +543,10 @@ static class Combat
                         waterSkillA = ca.Style == "water_physical";
                         if (waterSkillA) { shishuiOnB = Math.Min(shishuiOnB + 1, maxShishui(ca.Realm)); chuanliuA = 1; }
                     }
-                    else if (mpA >= ca.ArtMPCost && artCdA == 0)
+                    else if (mpA >= artMPCostA && artCdA == 0)
                     {
                         atkType = ca.ArtType; mult = ca.ArtMult; defPen = 0;
-                        mpA -= ca.ArtMPCost; artCdA = ca.ArtCooldown;
+                        mpA -= artMPCostA; artCdA = ca.ArtCooldown;
                         waterSkillA = ca.Style == "water_physical";
 
 
@@ -544,17 +555,25 @@ static class Combat
                     {
                     bool isPhysicalA = ca.Style == "physical" || ca.Style == "water_physical"; atkType = isPhysicalA ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
+                    // 守一: 神魂攻击加成 (金丹致虚篇: 每层+5%)
+                    if (ca.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiA * 0.05);
+                    // 符胆: 符箓术法效果加成(消耗全部) (金丹度人篇: 每层+15%)
+                    if (ca.Style == "taiyi_fuxiu") { mult *= (1 + fudanA * 0.15); fudanA = 0; }
                     atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];
                     // 逝水印记: 降低目标物防 (每层-5%)
                     int rawDef = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
                     def = atkType == "物理" ? (int)(rawDef * (1 - shishuiOnB * 0.05)) : rawDef;
                     resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
+                    // 守一满层: 神魂防御+15% (金丹致虚篇)
+                    if (cb.Style == "taiyi" && shouyiB == maxShouyi(cb.Realm) && atkType == "神魂") resist += 15;
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
                     dmg = ApplyDefenses(dmg, ca, cb, atkType);
                     // 川流之势: B若持有则减伤35%并消耗
                     if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
+                    // 守一减伤: 受击消耗1层减伤20%
+                    if (cb.Style == "taiyi" && shouyiB > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiB--; }
                     // 远程优势: 术法/神通出手后对方需要拉近距离
                     bool isRanged = ca.Style == "magic";
                     if (isRanged) rangePenaltyB = 0.35;
@@ -564,6 +583,9 @@ static class Combat
                     { hpB += (int)(cb.Primary["HP"] * 0.15); qiushuiB--; }
 
 
+                    // 守一&符胆: 回合结束印记+1
+                    if (ca.Style == "taiyi") shouyiA = Math.Min(shouyiA + 1, maxShouyi(ca.Realm));
+                    if (ca.Style == "taiyi_fuxiu") fudanA = Math.Min(fudanA + 1, maxFudan(ca.Realm));
                     ctA += sA;
                 }
                 else
@@ -571,6 +593,7 @@ static class Combat
                     if (stunnedB) { stunnedB = false; ctB += sB; continue; }
                     string atkType; double mult, defPen; int atk, def; double resist;
                     bool waterSkillB = false;
+                    int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : cb.ArtMPCost;
                     if (cb.DivineName != "" && divineCdB == 0)
                     {
                         atkType = cb.DivineType; mult = cb.DivineMult; defPen = cb.DivineDefPen;
@@ -578,10 +601,10 @@ static class Combat
                         waterSkillB = cb.Style == "water_physical";
                         if (waterSkillB) { shishuiOnA = Math.Min(shishuiOnA + 1, maxShishui(cb.Realm)); chuanliuB = 1; }
                     }
-                    else if (mpB >= cb.ArtMPCost && artCdB == 0)
+                    else if (mpB >= artMPCostB && artCdB == 0)
                     {
                         atkType = cb.ArtType; mult = cb.ArtMult; defPen = 0;
-                        mpB -= cb.ArtMPCost; artCdB = cb.ArtCooldown;
+                        mpB -= artMPCostB; artCdB = cb.ArtCooldown;
                         waterSkillB = cb.Style == "water_physical";
 
                     }
@@ -589,15 +612,19 @@ static class Combat
                     {
                     bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
+                    if (cb.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiB * 0.05);
+                    if (cb.Style == "taiyi_fuxiu") { mult *= (1 + fudanB * 0.15); fudanB = 0; }
                     atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];
                     int rawDefB = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
                     def = atkType == "物理" ? (int)(rawDefB * (1 - shishuiOnA * 0.05)) : rawDefB;
                     resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
+                    if (ca.Style == "taiyi" && shouyiA == maxShouyi(ca.Realm) && atkType == "神魂") resist += 15;
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
                     dmg = ApplyDefenses(dmg, cb, ca, atkType);
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
+                    if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
                     bool bRanged = cb.Style == "magic";
                     if (bRanged) rangePenaltyA = 0.35;
@@ -605,6 +632,8 @@ static class Combat
                     if (qiushuiA > 0 && hpA > 0 && hpA < ca.Primary["HP"] * 0.30)
                     { hpA += (int)(ca.Primary["HP"] * 0.15); qiushuiA--; }
 
+                    if (cb.Style == "taiyi") shouyiB = Math.Min(shouyiB + 1, maxShouyi(cb.Realm));
+                    if (cb.Style == "taiyi_fuxiu") fudanB = Math.Min(fudanB + 1, maxFudan(cb.Realm));
                     ctB += sB;
                 }
             }
