@@ -140,6 +140,66 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown);
     public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown);
     public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3);
+
+    // ═══════════════════════════════════════
+    // v5.1: 功法小境界成长表（来源：docs/角色养成/功法/）
+    // ═══════════════════════════════════════
+    public record GongFaGrowth(int HP, int MP, int 肉攻, int 神攻, int 肉防, int 神防, int 反应, double 移力, double 神识);
+    public static readonly Dictionary<string, Dictionary<string, GongFaGrowth>> GongFaTables = new()
+    {
+        // 玉清崖
+        ["疾雷破山经"] = new() {
+            ["练气"] = new(13, 5, 7, 5, 5, 3, 3, 0.2, 0.5),
+            ["筑基"] = new(133, 58, 50, 42, 42, 33, 20, 0.5, 1.7),
+            ["金丹"] = new(633, 583, 250, 233, 200, 183, 75, 0.8, 3.3),
+            ["元婴"] = new(3000, 2333, 1000, 917, 833, 750, 250, 1, 5),
+        },
+        // 混元山
+        ["含弘光大典"] = new() {
+            ["练气"] = new(11, 4, 5, 4, 4, 2, 2, 0.2, 0.2),
+            ["筑基"] = new(107, 47, 40, 33, 33, 17, 10, 0.5, 0.8),
+            ["金丹"] = new(507, 467, 200, 187, 160, 92, 38, 0.8, 1.7),
+            ["元婴"] = new(2400, 1867, 800, 733, 667, 375, 125, 1, 2.5),
+        },
+        ["白屋青云录"] = new() {
+            ["练气"] = new(11, 4, 5, 4, 4, 3, 3, 0.2, 0.4),
+            ["筑基"] = new(107, 47, 40, 33, 33, 27, 16, 0.5, 1.3),
+            ["金丹"] = new(507, 467, 200, 187, 160, 147, 60, 0.8, 2.7),
+            ["元婴"] = new(2400, 1867, 800, 733, 667, 600, 200, 1, 4),
+        },
+        ["混元同尘典"] = new() {
+            ["练气"] = new(13, 2, 7, 2, 5, 2, 2, 0.2, 0.2),
+            ["筑基"] = new(133, 29, 50, 21, 42, 17, 10, 0.5, 0.8),
+            ["金丹"] = new(633, 292, 250, 117, 200, 92, 38, 0.8, 1.7),
+            ["元婴"] = new(3000, 1167, 1000, 458, 833, 375, 125, 1, 2.5),
+        },
+        // 太虚观
+        ["万物不迁法"] = new() {
+            ["练气"] = new(5, 2, 3, 2, 2, 1, 1, 0.2, 0.2),
+            ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7),
+            ["金丹"] = new(253, 233, 100, 93, 80, 73, 30, 0.8, 1.3),
+            ["元婴"] = new(1200, 933, 400, 367, 333, 300, 100, 1, 2),
+        },
+        // 散修
+        ["秋水游心经"] = new() {
+            ["练气"] = new(7, 3, 4, 3, 3, 2, 2, 0.2, 0.3),
+            ["筑基"] = new(67, 29, 25, 21, 21, 17, 10, 0.5, 0.8),
+            ["金丹"] = new(317, 292, 125, 117, 100, 92, 38, 0.8, 1.7),
+            ["元婴"] = new(1500, 1167, 500, 458, 417, 375, 125, 1, 2.5),
+        },
+        // 太一道庭
+        ["抱元守一经"] = new() {
+            ["练气"] = new(3, 3, 2, 3, 1, 2, 1, 0.2, 0.3),
+            ["筑基"] = new(40, 30, 15, 23, 13, 20, 8, 0.5, 1.0),
+            ["金丹"] = new(200, 267, 73, 107, 67, 87, 30, 0.8, 1.7),
+            ["元婴"] = new(1000, 1067, 300, 433, 267, 367, 100, 1, 2),
+        },
+        ["云篆度人经"] = new() {
+            ["筑基"] = new(47, 23, 13, 20, 13, 17, 8, 0.5, 1.3),
+            ["金丹"] = new(233, 233, 73, 100, 67, 80, 30, 0.8, 2.0),
+            ["元婴"] = new(1067, 933, 300, 400, 267, 333, 100, 1, 3),
+        },
+    };
     public static readonly ArtConfig MagicArt = new("灵光闪", "神魂", 1.2, 20, 3);
     public static readonly DivineConfig PhysicalDivine = new("碎岳", "物理", 1.5, 10, 5);
     public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3);
@@ -165,6 +225,8 @@ class Character
     public int GCScore = 0;               // 凝聚值 (调试用)
     public string GCType = "";            // 金丹类型
     public double GCTypeMult = 1.0;       // 金丹类型被动倍率
+    // v5.1: 功法名称（用于读取实际小境界成长表）
+    public string GongFaName = "";
     // v4.1: 术法与神通
     public string ArtName = "";          // 术法名称
     public string ArtType = "";          // "物理" or "神魂"
@@ -226,7 +288,7 @@ class Character
         var (secTypes, secPctPerChapter) = ResolveSecondary(weights);
 
         // 一级属性 = 境界基础 + sum(小境界成长) + 先天×系数×权重
-        Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights) + Innate["根骨"] * rf.HP * weights["根骨"] * 2.2) * sm);
+        Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.HP * weights["根骨"] * 2.2) * sm);
         Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["魂魄"] * rf.MP * weights["魂魄"]) * sm * GCMult);
         Primary["肉攻"] = (int)Math.Round((rb.肉攻 + SubGrowthSum("肉攻", realm, subIdx, weights) + Innate["根骨"] * rf.攻 * weights["根骨"]) * sm);
         Primary["神攻"] = (int)Math.Round((rb.神攻 + SubGrowthSum("神攻", realm, subIdx, weights) + Innate["魂魄"] * rf.攻 * weights["魂魄"]) * sm);
@@ -248,15 +310,39 @@ class Character
         Secondary["物抗率"] = 0; Secondary["魂抗率"] = 0;
     }
 
-    double SubGrowthSum(string attr, string realm, int subIdx, Dictionary<string, double> w)
+    double SubGrowthSum(string attr, string realm, int subIdx, Dictionary<string, double> w, string gongFaName = "")
     {
-        double sum = 0; int totalSubs = GameData.TotalSubs(realm, subIdx);
-        int prevSubs = 0;
+        // v5.1: 优先使用功法实际成长表
+        if (!string.IsNullOrEmpty(gongFaName) && GameData.GongFaTables.TryGetValue(gongFaName, out var table))
+        {
+            double sum = 0; int totalSubs = GameData.TotalSubs(realm, subIdx);
+            int prevSubs = 0;
+            foreach (var r in GameData.RealmOrder)
+            {
+                if (r == "凡人") continue;
+                int subsHere = GameData.Sublevels[r];
+                int effective = Math.Min(subsHere, Math.Max(0, totalSubs - prevSubs));
+                if (effective <= 0) break;
+                if (!table.TryGetValue(r, out var grow)) break;
+                double val = attr switch
+                {
+                    "HP" => grow.HP, "MP" => grow.MP, "肉攻" => grow.肉攻, "神攻" => grow.神攻,
+                    "肉防" => grow.肉防, "神防" => grow.神防, "反应" => grow.反应, "神识" => grow.神识, _ => 0
+                };
+                sum += val * effective;
+                prevSubs += subsHere;
+                if (r == realm) break;
+            }
+            return sum;
+        }
+        // 回退：原有权重近似计算
+        double wsum = 0; int wtotalSubs = GameData.TotalSubs(realm, subIdx);
+        int wprevSubs = 0;
         foreach (var r in GameData.RealmOrder)
         {
             if (r == "凡人") continue;
             int subsHere = GameData.Sublevels[r];
-            int effective = Math.Min(subsHere, Math.Max(0, totalSubs - prevSubs));
+            int effective = Math.Min(subsHere, Math.Max(0, wtotalSubs - wprevSubs));
             if (effective <= 0) break;
             var sgb = GameData.SubGrowthBase[r];
             double val = attr switch
@@ -266,11 +352,11 @@ class Character
             };
             string innateKey = attr switch { "HP" or "肉攻" or "肉防" => "根骨", "MP" or "神攻" or "神防" => "魂魄", "神识" => "神识", "反应" => "根骨", _ => "根骨" };
             double scale = w[innateKey] / 0.6;
-            sum += val * scale * effective;
-            prevSubs += subsHere;
+            wsum += val * scale * effective;
+            wprevSubs += subsHere;
             if (r == realm) break;
         }
-        return sum;
+        return wsum;
     }
 
     // v4.1: 根据风格和境界分配术法与神通
@@ -646,7 +732,7 @@ static class Combat
 
 class Program
 {
-    record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, Dictionary<string, double> Weights);
+    record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, Dictionary<string, double> Weights, string GongFaName = "");
 
     static void Main()
     {
@@ -657,27 +743,27 @@ class Program
         var buildDefs = new BuildDef[]
         {
             new("物·纯战", "资质3根骨25", new() { ["根骨"]=25,["魂魄"]=8,["神识"]=5,["资质"]=3,["气运"]=5 }, "physical",
-                new() { ["根骨"]=0.8,["魂魄"]=0.1,["神识"]=0.1,["资质"]=0.0,["气运"]=0.0 }),
+                new() { ["根骨"]=0.8,["魂魄"]=0.1,["神识"]=0.1,["资质"]=0.0,["气运"]=0.0 }, "疾雷破山经"),
             new("物·均衡", "资质11根骨20", new() { ["根骨"]=20,["魂魄"]=8,["神识"]=8,["资质"]=11,["气运"]=8 }, "physical",
-                new() { ["根骨"]=0.4,["魂魄"]=0.1,["神识"]=0.1,["资质"]=0.2,["气运"]=0.2 }),
+                new() { ["根骨"]=0.4,["魂魄"]=0.1,["神识"]=0.1,["资质"]=0.2,["气运"]=0.2 }, "含弘光大典"),
             new("物·修炼", "资质19根骨15", new() { ["根骨"]=15,["魂魄"]=8,["神识"]=8,["资质"]=19,["气运"]=8 }, "physical",
-                new() { ["根骨"]=0.3,["魂魄"]=0.1,["神识"]=0.1,["资质"]=0.4,["气运"]=0.1 }),
+                new() { ["根骨"]=0.3,["魂魄"]=0.1,["神识"]=0.1,["资质"]=0.4,["气运"]=0.1 }, "白屋青云录"),
             new("肉盾型",  "根骨43极限", new() { ["根骨"]=43,["魂魄"]=5,["神识"]=5,["资质"]=5,["气运"]=5 }, "physical",
-                new() { ["根骨"]=1.0,["魂魄"]=0.0,["神识"]=0.0,["资质"]=0.0,["气运"]=0.0 }),
+                new() { ["根骨"]=1.0,["魂魄"]=0.0,["神识"]=0.0,["资质"]=0.0,["气运"]=0.0 }, "混元同尘典"),
             new("法·纯战", "资质3魂魄25", new() { ["根骨"]=5,["魂魄"]=25,["神识"]=8,["资质"]=3,["气运"]=5 }, "magic",
-                new() { ["根骨"]=0.0,["魂魄"]=0.8,["神识"]=0.1,["资质"]=0.0,["气运"]=0.1 }),
+                new() { ["根骨"]=0.0,["魂魄"]=0.8,["神识"]=0.1,["资质"]=0.0,["气运"]=0.1 }, "抱元守一经"),
             new("法·均衡", "资质11魂魄20", new() { ["根骨"]=8,["魂魄"]=20,["神识"]=8,["资质"]=11,["气运"]=8 }, "magic",
-                new() { ["根骨"]=0.1,["魂魄"]=0.4,["神识"]=0.1,["资质"]=0.2,["气运"]=0.2 }),
+                new() { ["根骨"]=0.1,["魂魄"]=0.4,["神识"]=0.1,["资质"]=0.2,["气运"]=0.2 }, "万物不迁法"),
             new("法·修炼", "资质19魂魄15", new() { ["根骨"]=8,["魂魄"]=15,["神识"]=8,["资质"]=19,["气运"]=8 }, "magic",
-                new() { ["根骨"]=0.1,["魂魄"]=0.3,["神识"]=0.1,["资质"]=0.4,["气运"]=0.1 }),
+                new() { ["根骨"]=0.1,["魂魄"]=0.3,["神识"]=0.1,["资质"]=0.4,["气运"]=0.1 }, "万物不迁法"),
             new("灵修型",  "魂魄43极限", new() { ["根骨"]=5,["魂魄"]=43,["神识"]=5,["资质"]=5,["气运"]=5 }, "magic",
-                new() { ["根骨"]=0.0,["魂魄"]=1.0,["神识"]=0.0,["资质"]=0.0,["气运"]=0.0 }),
+                new() { ["根骨"]=0.0,["魂魄"]=1.0,["神识"]=0.0,["资质"]=0.0,["气运"]=0.0 }, "万物不迁法"),
             new("水·散修", "资质18气运14", new() { ["根骨"]=10,["魂魄"]=9,["神识"]=9,["资质"]=18,["气运"]=14 }, "water_physical",
-                new() { ["根骨"]=0.15,["魂魄"]=0.15,["神识"]=0.15,["资质"]=0.35,["气运"]=0.20 }),
+                new() { ["根骨"]=0.15,["魂魄"]=0.15,["神识"]=0.15,["资质"]=0.35,["气运"]=0.20 }, "秋水游心经"),
             new("太一·法修", "资质14魂魄18", new() { ["根骨"]=6,["魂魄"]=18,["神识"]=10,["资质"]=14,["气运"]=8 }, "taiyi",
-                new() { ["根骨"]=0.05,["魂魄"]=0.45,["神识"]=0.15,["资质"]=0.25,["气运"]=0.10 }),
+                new() { ["根骨"]=0.05,["魂魄"]=0.45,["神识"]=0.15,["资质"]=0.25,["气运"]=0.10 }, "抱元守一经"),
             new("太一·符修", "神识18魂魄14", new() { ["根骨"]=5,["魂魄"]=14,["神识"]=18,["资质"]=12,["气运"]=10 }, "taiyi_fuxiu",
-                new() { ["根骨"]=0.05,["魂魄"]=0.30,["神识"]=0.40,["资质"]=0.15,["气运"]=0.10 }),
+                new() { ["根骨"]=0.05,["魂魄"]=0.30,["神识"]=0.40,["资质"]=0.15,["气运"]=0.10 }, "云篆度人经"),
         };
         int N = buildDefs.Length;
 
@@ -706,6 +792,7 @@ class Program
                 var result = Cultivation.Simulate(bd.Innate, bd.Weights, seed * 100 + i, SPIRIT, TECH);
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
                 c.ApplyGrowth(result.Realm, TECH, bd.Weights);
+                c.GongFaName = bd.GongFaName;
                 c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights);
                 // v3.5: 记录道基
                 c.DFQuality = result.DFQuality;
@@ -849,6 +936,7 @@ class Program
                 var result = Cultivation.Simulate(bd.Innate, bd.Weights, seed * 100 + i + 10000, SPIRIT, TECH, maxCycles: EARLY_CYCLES);
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
                 c.ApplyGrowth(result.Realm, TECH, bd.Weights);
+                c.GongFaName = bd.GongFaName;
                 c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights);
                 c.DFQuality = result.DFQuality; c.DFMult = GameData.DFMultiplier[result.DFQuality];
                 c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0);
