@@ -199,6 +199,19 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             ["金丹"] = new(233, 233, 73, 100, 67, 80, 30, 0.8, 2.0),
             ["元婴"] = new(1067, 933, 300, 400, 267, 333, 100, 1, 3),
         },
+        // 太虚观（续）
+        ["不真自虚法"] = new() {
+            ["练气"] = new(5, 2, 3, 2, 2, 1, 1, 0.2, 0.2),
+            ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7),
+            ["金丹"] = new(253, 233, 100, 93, 80, 73, 30, 0.8, 1.3),
+            ["元婴"] = new(1200, 933, 400, 367, 333, 300, 100, 1, 2),
+            ["化神"] = new(4667, 4333, 1667, 1533, 1333, 1200, 300, 1.2, 3),
+        },
+        ["心无性有法"] = new() {
+            ["练气"] = new(5, 2, 3, 2, 2, 1, 1, 0.2, 0.2),
+            ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7),
+            ["金丹"] = new(253, 233, 100, 93, 80, 73, 30, 0.8, 1.3),
+        },
     };
 
     // v5.2: 功法属性倾向星数（来源：docs/角色养成/功法/）
@@ -212,6 +225,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         ["秋水游心经"] = new() { ["根骨"]=3, ["魂魄"]=3, ["神识"]=3, ["资质"]=4, ["气运"]=4 },
         ["抱元守一经"] = new() { ["根骨"]=2, ["魂魄"]=4, ["神识"]=4, ["资质"]=3, ["气运"]=3 },
         ["云篆度人经"] = new() { ["根骨"]=2, ["魂魄"]=3, ["神识"]=5, ["资质"]=4, ["气运"]=3 },
+        ["不真自虚法"] = new() { ["根骨"]=1, ["魂魄"]=3, ["神识"]=3, ["资质"]=2, ["气运"]=1 },
+        ["心无性有法"] = new() { ["根骨"]=1, ["魂魄"]=3, ["神识"]=2, ["资质"]=3, ["气运"]=1 },
     };
 
     // 星数→归一化权重
@@ -231,6 +246,10 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public static readonly ArtConfig TaiyiFuxiuArt = new("安神符", "神魂", 0.5, 20, 3);
     public static readonly DivineConfig TaiyiDivine = new("万法归宗", "神魂", 1.8, 15, 5);
     public static readonly DivineConfig TaiyiFuxiuDivine = new("天符镇岳", "神魂", 1.5, 20, 5);
+    public static readonly ArtConfig TaixuArt = new("业火咒", "神魂", 1.5, 25, 3);
+    public static readonly DivineConfig TaixuDivine = new("魂归彼岸", "神魂", 1.8, 15, 5);
+    public static readonly ArtConfig YuqingArt = new("九霄太乙斩", "物理", 1.5, 25, 3);
+    public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5);
 }
 
 class Character
@@ -384,11 +403,11 @@ class Character
     // v4.1: 根据风格和境界分配术法与神通
     public void AssignArts()
     {
-        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, _ => GameData.MagicArt };
+        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, _ => GameData.MagicArt };
         ArtName = artCfg.Name; ArtType = artCfg.Type; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
         if (Realm == "金丹" && GCQuality != "")
         {
-            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, _ => GameData.MagicDivine };
+            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, _ => GameData.MagicDivine };
             DivineName = divCfg.Name; DivineType = divCfg.Type; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
         }
     }
@@ -798,6 +817,13 @@ class Program
             new("水·散修", "资质18气运14", new() { ["根骨"]=10,["魂魄"]=9,["神识"]=9,["资质"]=18,["气运"]=14 }, "water_physical", "秋水游心经"),
             new("太一·法修", "资质14魂魄18", new() { ["根骨"]=6,["魂魄"]=18,["神识"]=10,["资质"]=14,["气运"]=8 }, "taiyi", "抱元守一经"),
             new("太一·符修", "神识18魂魄14", new() { ["根骨"]=5,["魂魄"]=14,["神识"]=18,["资质"]=12,["气运"]=10 }, "taiyi_fuxiu", "云篆度人经"),
+            // v5.3: 太虚观（暗系神魂）
+            new("太虚·魂修", "魂魄25神识14", new() { ["根骨"]=5,["魂魄"]=25,["神识"]=14,["资质"]=14,["气运"]=5 }, "taixu", "不真自虚法"),
+            new("太虚·均衡", "魂魄18神识14", new() { ["根骨"]=8,["魂魄"]=18,["神识"]=14,["资质"]=12,["气运"]=5 }, "taixu", "万物不迁法"),
+            new("太虚·宿慧", "资质16神识18", new() { ["根骨"]=5,["魂魄"]=12,["神识"]=18,["资质"]=16,["气运"]=8 }, "taixu", "心无性有法"),
+            // v5.3: 玉清崖（雷剑双修）
+            new("玉清·剑修", "根骨22神识18", new() { ["根骨"]=22,["魂魄"]=8,["神识"]=18,["资质"]=12,["气运"]=3 }, "yuqing", "疾雷破山经"),
+            new("玉清·雷修", "根骨18魂魄12", new() { ["根骨"]=18,["魂魄"]=12,["神识"]=14,["资质"]=8,["气运"]=3 }, "yuqing", "疾雷破山经"),
         };
         int N = buildDefs.Length;
 
