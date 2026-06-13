@@ -1,0 +1,12 @@
+﻿# CHM build intermediates (keep scripts + final .chm)
+htmlhelp.exe
+htmlhelp.cab
+htmlhelp_clean.cab
+hhw/
+html/
+test/
+test2/
+test3/
+test4/
+test5/
+test6/
