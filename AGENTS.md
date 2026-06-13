@@ -42,6 +42,12 @@
 - 规划下一步工作时，先查阅对应分类的下一步建议文件
 - 条目完成并推送远端后，从下一步建议中移除→重编号→在设计当前状态追加新项
 
+## Unity 项目
+
+- 路径：`src/`（``D:\天章游戏开发\src\``）
+- 引擎版本：Unity 2022
+- 打开方式：Unity Hub → Add project from disk → 选择 ``D:\天章游戏开发\src``
+
 ## CLI 模式
 
 - 已安装 Codex CLI v0.139.0（``%APPDATA%\npm\codex.cmd``），PATH 已配置。
