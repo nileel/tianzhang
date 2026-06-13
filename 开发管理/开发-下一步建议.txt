@@ -6,34 +6,21 @@
 
 ## Unity 原型完善
 
-1. **~~UI 面板~~** ✅ 2026-06-13 完成
-   - ~~当前只有 Debug.Log 输出，需加 Canvas + Text 显示 HP/MP/CT/状态~~
-   - ~~术法/神通按钮（当前仅键盘快捷键）~~
-   - ~~战斗日志滚动面板~~
-   - → 已创建 `BattleUIManager.cs`（Canvas + HP/MP/CT条 + 按钮 + 日志滚动）
-   - → `BattleSceneController.cs` 已重构接入 UIManager
-
-2. **~~输入系统升级~~** ✅ 2026-06-13 完成（暂不切 Unity Input System）
-   - ~~当前 Update 轮询，小规模够用~~
-   - ~~正式版建议接入 Unity Input System~~
-   - → 键盘快捷键保留在 `BattleUIManager.Update()` + UI 按钮点击，1v1 原型够用
-   - → Unity Input System 需 Editor 交互，后续正式版再切
-
-3. **Tile 素材替换**
+1. **Tile 素材替换**
    - 当前用程序化圆形占位
    - 换美术六角格 Sprite 后，只需改 SceneBuilder 的 MakeTile 逻辑
 
-4. **BattleSim 数值同步**
+2. **BattleSim 数值同步**
    - Unity 端 DamageCalculator 已和 BattleSim 公式对齐
    - 后续调数值先在模拟器验证，再同步到 Unity CharacterData/SpellData
 
-5. **场景扩展**
+3. **场景扩展**
    - 当前仅一个 1v1 场景
    - 后续加角色选择、地图选择、修炼场景
 
 ## 工程管理
 
-6. **版本管理节奏**
+4. **版本管理节奏**
    - 每个 v5.x 版本对应 AGENTS.md 新增一条状态条目
    - 功能完成后更新 `开发管理/设计-当前状态.txt` 和对应下一步建议
    - 提交时附带设计总结更新
