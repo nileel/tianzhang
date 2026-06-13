@@ -250,6 +250,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public static readonly DivineConfig TaixuDivine = new("魂归彼岸", "神魂", 1.8, 15, 5);
     public static readonly ArtConfig YuqingArt = new("九霄太乙斩", "物理", 1.5, 25, 3);
     public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5);
+    public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3);
+    public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5);
 }
 
 class Character
@@ -403,11 +405,11 @@ class Character
     // v4.1: 根据风格和境界分配术法与神通
     public void AssignArts()
     {
-        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, _ => GameData.MagicArt };
+        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "taixu_xuangan" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, "yuqing_kuxing" => GameData.YuqingArt, "yuqing_leijie" => GameData.YuqingLeijieArt, _ => GameData.MagicArt };
         ArtName = artCfg.Name; ArtType = artCfg.Type; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
         if (Realm == "金丹" && GCQuality != "")
         {
-            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, _ => GameData.MagicDivine };
+            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
             DivineName = divCfg.Name; DivineType = divCfg.Type; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
         }
     }
@@ -594,11 +596,11 @@ static class Combat
     }
 
     // 格挡/魂盾/闪避/暴击 统一结算
-    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false)
+    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false, bool ignoreBlock = false)
     {
         bool isPhysical = atkType == "物理";
         double blockRate = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡率" : "魂盾率", 0);
-        if (Rng.NextDouble() * 100 < blockRate)
+        if (!ignoreBlock && Rng.NextDouble() * 100 < blockRate)
         {
             double reduction = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡减伤率" : "魂盾减伤率", 0);
             rawDmg = (int)Math.Round(rawDmg * (1 - reduction / 100));
@@ -627,12 +629,7 @@ static class Combat
             int chuanliuA = 0, chuanliuB = 0;       // 川流之势: 下次受击减伤35%
             int shishuiOnB = 0, shishuiOnA = 0;     // 逝水印记层数(每层-5%物防)
             int maxShishui(string realm) => realm switch { "化神" => 99, "元婴" => 5, _ => 3 };
-            bool stunnedA = false, stunnedB = false; // 眩晕: 跳过下回合
-            int qiushuiA = 0, qiushuiB = 0;          // 秋水护盾剩余触发次数
-            int qiushuiMax(string realm) => realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 };
-            if (ca.Style == "water_physical") qiushuiA = qiushuiMax(ca.Realm);
-            if (cb.Style == "water_physical") qiushuiB = qiushuiMax(cb.Realm);
-
+            bool stunnedA = false, stunnedB = false;
             // v5.0: 太一道庭守一 & 符胆机制
             int shouyiA = 0, shouyiB = 0;
             int maxShouyi(string realm) => realm switch { "金丹" => 5, "筑基" => 4, "练气" => 3, _ => 5 };
@@ -640,10 +637,34 @@ static class Combat
             if (cb.Style == "taiyi") { shouyiB = 2; }
             int fudanA = 0, fudanB = 0;
             int maxFudan(string realm) => realm switch { "金丹" => 5, "筑基" => 3, _ => 5 };
-            if (ca.Style == "taiyi_fuxiu") { fudanA = 2; }
+            if (cb.Style == "taiyi_fuxiu") { fudanB = 2; }
+            if (cb.Style == "taiyi_fuxiu") { fudanB = 2; } // 眩晕: 跳过下回合
+            int qiushuiA = 0, qiushuiB = 0;          // 秋水护盾剩余触发次数
+            int qiushuiMax(string realm) => realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 };
+            if (ca.Style == "water_physical") qiushuiA = qiushuiMax(ca.Realm);
+            if (cb.Style == "water_physical") qiushuiB = qiushuiMax(cb.Realm);
             if (cb.Style == "taiyi_fuxiu") { fudanB = 2; }
 
-            int turns = 0;
+
+            int kuxingDefReduceA = 0, kuxingDefReduceB = 0;
+
+            // v5.6: 玉清崖 雷劫印记机制（受击叠层→出手消耗→满层魂防-20%）
+            int leijieA = 0, leijieB = 0;
+            int maxLeijie(string realm) => realm switch { "筑基" => 3, "金丹" => 5, "元婴" => 5, "化神" => 5, "炼虚" => 5, _ => 3 };
+            double leijiePerStack(string realm) => realm switch { "筑基" => 0.15, "金丹" => 0.18, "元婴" => 0.22, "化神" => 0.30, "炼虚" => 0.35, _ => 0.15 };
+            // v5.7: 太虚观 玄感机制（debuff清除+神识强度+玄同免疫+HP恢复）
+            int xuanganShenshiA = 0, xuanganShenshiB = 0;
+            int xuantongA = 0, xuantongB = 0;
+            double xuanganClearRate(string realm) => realm switch { "元婴" => 0.80, "金丹" => 0.50, "筑基" => 0.30, "练气" => 0.20, _ => 0.20 };
+            int xuanganShenshiVal(string realm) => realm switch { "元婴" => 12, "金丹" => 8, "筑基" => 5, "练气" => 3, _ => 3 };
+            int xuanganXuantongDur(string realm) => realm switch { "元婴" => 2, "金丹" => 1, _ => 0 };
+            bool xuanganCanHeal(string realm) => realm switch { "元婴" => true, "金丹" => true, "筑基" => true, _ => false };
+            if (ca.Style == "taixu_xuangan") xuanganShenshiA = xuanganShenshiVal(ca.Realm);
+            if (cb.Style == "taixu_xuangan") xuanganShenshiB = xuanganShenshiVal(cb.Realm);            // v5.8: 苦行剑典 血剑气机制
+            double kuxingMult(string realm) => realm switch { "化神" => 3.5, "元婴" => 2.8, "金丹" => 2.2, "筑基" => 1.8, _ => 1.5 };
+            double kuxingHpCostRate(string realm) => realm switch { "化神" => 0.25, "元婴" => 0.20, "金丹" => 0.20, "筑基" => 0.15, _ => 0.10 };
+            bool kuxingHasRecover(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, _ => false };
+            bool kuxingHasDuanLong(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, "筑基" => true, _ => false };            int turns = 0;
             while (hpA > 0 && hpB > 0)
             {
                 turns++;
@@ -658,11 +679,13 @@ static class Combat
                 if (ctA <= ctB)
                 {
                     // 眩晕: 跳过回合, CT归零, 眩晕标记被消耗
-                    if (stunnedA) { stunnedA = false; ctA += sA; continue; }
+
+                    // 玄感: 回合开始 debuff清除
+                    if (ca.Style == "taixu_xuangan" && stunnedA && Rng.NextDouble() < xuanganClearRate(ca.Realm)) { stunnedA = false; if (xuanganCanHeal(ca.Realm)) hpA = Math.Min(ca.Primary["HP"], hpA + (int)(ca.Primary["HP"] * 0.05)); xuantongA = xuanganXuantongDur(ca.Realm); }                    if (stunnedA) { stunnedA = false; ctA += sA; continue; }
                     // AI决策: 神通 > 术法 > 平A
                     string atkType; double mult, defPen; int atk, def; double resist;
-                    bool waterSkillA = false;
-                    int artMPCostA = (ca.Style == "taiyi_fuxiu" && fudanA == maxFudan(ca.Realm)) ? 0 : ca.ArtMPCost;
+                    bool waterSkillA = false;                    bool kuxingUsedA = false; int kuxingHpRecoverA = 0; bool kuxingIgnoreBlockA = false;
+                    int artMPCostA = (ca.Style == "taiyi_fuxiu" && fudanA == maxFudan(ca.Realm)) ? 0 : (xuantongA > 0 ? (int)(ca.ArtMPCost * 0.70) : ca.ArtMPCost);
                     if (ca.DivineName != "" && divineCdA == 0)
                     {
                         atkType = ca.DivineType; mult = ca.DivineMult; defPen = ca.DivineDefPen;
@@ -670,7 +693,17 @@ static class Combat
                         waterSkillA = ca.Style == "water_physical";
                         if (waterSkillA) { shishuiOnB = Math.Min(shishuiOnB + 1, maxShishui(ca.Realm)); chuanliuA = 1; }
                     }
-                    else if (mpA >= artMPCostA && artCdA == 0)
+                    else if (ca.Style == "yuqing_kuxing" && hpA > 2 && hpB > 0)
+                    {
+                        kuxingUsedA = true;
+                        int hpCost = Math.Min(hpA - 1, (int)(hpA * kuxingHpCostRate(ca.Realm)));
+                        hpA -= hpCost;
+                        atkType = "物理"; mult = kuxingMult(ca.Realm); defPen = 0;
+                        if (kuxingHasDuanLong(ca.Realm) && hpB < cb.Primary["HP"] * 0.50) mult *= 1.3;
+                        if (kuxingHasRecover(ca.Realm)) kuxingHpRecoverA = (int)(hpCost * 0.30);
+                        kuxingIgnoreBlockA = true;
+                        kuxingDefReduceA = (int)(ca.Primary["肉防"] * 0.30);
+                    }                    else if (mpA >= artMPCostA && artCdA == 0)
                     {
                         atkType = ca.ArtType; mult = ca.ArtMult; defPen = 0;
                         mpA -= artMPCostA; artCdA = ca.ArtCooldown;
@@ -680,7 +713,7 @@ static class Combat
                     }
                     else
                     {
-                    bool isPhysicalA = ca.Style == "physical" || ca.Style == "water_physical"; atkType = isPhysicalA ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    bool isPhysicalA = ca.Style == "physical" || ca.Style == "water_physical" || ca.Style == "yuqing_leijie" || ca.Style == "yuqing_kuxing"; atkType = isPhysicalA ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     // 守一: 神魂攻击加成 (金丹致虚篇: 每层+5%)
                     if (ca.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiA * 0.05);
@@ -693,13 +726,17 @@ static class Combat
                         mult *= (1 + fudanA * fdpA); 
                         fudanA = ca.Realm == "化神" ? 2 : 0;
                     }
-                    atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];
+                    // 雷劫印记: 物理出手消耗全部印记, 每层伤害加成
+                    if (ca.Style == "yuqing_leijie" && atkType == "物理" && leijieA > 0) { mult *= (1 + leijieA * leijiePerStack(ca.Realm)); leijieA = 0; }                    atk = atkType == "物理" ? ca.Primary["肉攻"] : ca.Primary["神攻"];                    if (ca.Style == "taixu_xuangan") atk += xuanganShenshiA;
                     // 云篆篇: 符胆满层时神识+30%加成
                     if (ca.Style == "taiyi_fuxiu" && fudanMaxA) atk += (int)(ca.Primary["神识"] * 0.30);
                     // 逝水印记: 降低目标物防 (每层-5%)
                     int rawDef = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
+                    // 血剑气防御惩罚: B若使用了血剑气则物防降低
+                    if (kuxingDefReduceB > 0 && atkType == "物理") { rawDef -= kuxingDefReduceB; kuxingDefReduceB = 0; }
                     def = atkType == "物理" ? (int)(rawDef * (1 - shishuiOnB * 0.05)) : rawDef;
-                    resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
+                    // 雷劫印记满层: 魂防-20%
+                    if (cb.Style == "yuqing_leijie" && leijieB == maxLeijie(cb.Realm) && atkType == "神魂") def = (int)(rawDef * 0.80);                    resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
                     // 守一满层: 神魂防御+15% (金丹致虚篇)
                     if (cb.Style == "taiyi" && shouyiB == maxShouyi(cb.Realm) && atkType == "神魂") resist += 15;
                     // 天书篇: 符胆满层时无视30%魂防
@@ -707,7 +744,7 @@ static class Combat
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
-                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA);
+                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA, ignoreBlock: kuxingIgnoreBlockA);
                     // 川流之势: B若持有则减伤35%并消耗
                     if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
                     // 守一减伤: 受击消耗1层减伤20%
@@ -716,6 +753,12 @@ static class Combat
                     bool isRanged = ca.Style == "magic";
                     if (isRanged) rangePenaltyB = 0.35;
                     hpB -= dmg;
+                    // 川流劲眩晕: 10%概率, 玄同免疫 (v4.2补全)
+                    if (waterSkillA && dmg > 0 && Rng.NextDouble() < 0.10) { if (xuantongB == 0) stunnedB = true; }
+                    // 雷劫印记: 受伤叠1层
+                    if (cb.Style == "yuqing_leijie" && dmg > 0) leijieB = Math.Min(leijieB + 1, maxLeijie(cb.Realm));
+                    // 血剑气: HP恢复
+                    if (kuxingUsedA) hpA = Math.Min(ca.Primary["HP"], hpA + kuxingHpRecoverA);
                     // 秋水护盾: B濒死触发 (HP<30%且还有触发次数)
                     if (qiushuiB > 0 && hpB > 0 && hpB < cb.Primary["HP"] * 0.30)
                     { hpB += (int)(cb.Primary["HP"] * 0.15); qiushuiB--; }
@@ -724,14 +767,16 @@ static class Combat
                     // 守一&符胆: 回合结束印记+1
                     if (ca.Style == "taiyi") shouyiA = Math.Min(shouyiA + 1, maxShouyi(ca.Realm));
                     if (ca.Style == "taiyi_fuxiu") fudanA = Math.Min(fudanA + 1, maxFudan(ca.Realm));
-                    ctA += sA;
+                    if (xuantongA > 0) xuantongA--;                    ctA += sA;
                 }
                 else
                 {
-                    if (stunnedB) { stunnedB = false; ctB += sB; continue; }
+
+                    // 玄感: 回合开始 debuff清除
+                    if (cb.Style == "taixu_xuangan" && stunnedB && Rng.NextDouble() < xuanganClearRate(cb.Realm)) { stunnedB = false; if (xuanganCanHeal(cb.Realm)) hpB = Math.Min(cb.Primary["HP"], hpB + (int)(cb.Primary["HP"] * 0.05)); xuantongB = xuanganXuantongDur(cb.Realm); }                    if (stunnedB) { stunnedB = false; ctB += sB; continue; }
                     string atkType; double mult, defPen; int atk, def; double resist;
-                    bool waterSkillB = false;
-                    int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : cb.ArtMPCost;
+                    bool waterSkillB = false;                    bool kuxingUsedB = false; int kuxingHpRecoverB = 0; bool kuxingIgnoreBlockB = false;
+                    int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : (xuantongB > 0 ? (int)(cb.ArtMPCost * 0.70) : cb.ArtMPCost);
                     if (cb.DivineName != "" && divineCdB == 0)
                     {
                         atkType = cb.DivineType; mult = cb.DivineMult; defPen = cb.DivineDefPen;
@@ -739,7 +784,17 @@ static class Combat
                         waterSkillB = cb.Style == "water_physical";
                         if (waterSkillB) { shishuiOnA = Math.Min(shishuiOnA + 1, maxShishui(cb.Realm)); chuanliuB = 1; }
                     }
-                    else if (mpB >= artMPCostB && artCdB == 0)
+                    else if (cb.Style == "yuqing_kuxing" && hpB > 2 && hpA > 0)
+                    {
+                        kuxingUsedB = true;
+                        int hpCost = Math.Min(hpB - 1, (int)(hpB * kuxingHpCostRate(cb.Realm)));
+                        hpB -= hpCost;
+                        atkType = "物理"; mult = kuxingMult(cb.Realm); defPen = 0;
+                        if (kuxingHasDuanLong(cb.Realm) && hpA < ca.Primary["HP"] * 0.50) mult *= 1.3;
+                        if (kuxingHasRecover(cb.Realm)) kuxingHpRecoverB = (int)(hpCost * 0.30);
+                        kuxingIgnoreBlockB = true;
+                        kuxingDefReduceB = (int)(cb.Primary["肉防"] * 0.30);
+                    }                    else if (mpB >= artMPCostB && artCdB == 0)
                     {
                         atkType = cb.ArtType; mult = cb.ArtMult; defPen = 0;
                         mpB -= artMPCostB; artCdB = cb.ArtCooldown;
@@ -748,7 +803,7 @@ static class Combat
                     }
                     else
                     {
-                    bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical" || cb.Style == "yuqing_leijie" || cb.Style == "yuqing_kuxing"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
                     }
                     if (cb.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiB * 0.05);
                     // 符胆: 符箓术法效果加成(消耗全部) (按境界:筑基12%/金丹15%/元婴18%/化神22%)
@@ -760,10 +815,13 @@ static class Combat
                         mult *= (1 + fudanB * fdpB); 
                         fudanB = cb.Realm == "化神" ? 2 : 0;
                     }
-                    atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];
+                    // 雷劫印记: 物理出手消耗全部印记（B方向）
+                    if (cb.Style == "yuqing_leijie" && atkType == "物理" && leijieB > 0) { mult *= (1 + leijieB * leijiePerStack(cb.Realm)); leijieB = 0; }                    atk = atkType == "物理" ? cb.Primary["肉攻"] : cb.Primary["神攻"];                    if (cb.Style == "taixu_xuangan") atk += xuanganShenshiB;
                     // 云篆篇: 符胆满层时神识+30%加成
                     if (cb.Style == "taiyi_fuxiu" && fudanMaxB) atk += (int)(cb.Primary["神识"] * 0.30);
                     int rawDefB = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
+                    // 血剑气防御惩罚: A若使用了血剑气则物防降低
+                    if (kuxingDefReduceA > 0 && atkType == "物理") { rawDefB -= kuxingDefReduceA; kuxingDefReduceA = 0; }
                     def = atkType == "物理" ? (int)(rawDefB * (1 - shishuiOnA * 0.05)) : rawDefB;
                     resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
                     if (ca.Style == "taiyi" && shouyiA == maxShouyi(ca.Realm) && atkType == "神魂") resist += 15;
@@ -772,19 +830,21 @@ static class Combat
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
-                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB);
+                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB, ignoreBlock: kuxingIgnoreBlockB);
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
                     bool bRanged = cb.Style == "magic";
                     if (bRanged) rangePenaltyA = 0.35;
                     hpA -= dmg;
+                    // 血剑气: HP恢复
+                    if (kuxingUsedB) hpB = Math.Min(cb.Primary["HP"], hpB + kuxingHpRecoverB);
                     if (qiushuiA > 0 && hpA > 0 && hpA < ca.Primary["HP"] * 0.30)
                     { hpA += (int)(ca.Primary["HP"] * 0.15); qiushuiA--; }
 
                     if (cb.Style == "taiyi") shouyiB = Math.Min(shouyiB + 1, maxShouyi(cb.Realm));
                     if (cb.Style == "taiyi_fuxiu") fudanB = Math.Min(fudanB + 1, maxFudan(cb.Realm));
-                    ctB += sB;
+                    if (xuantongB > 0) xuantongB--;                    ctB += sB;
                 }
             }
             totalTurns += turns;
@@ -824,6 +884,13 @@ class Program
             // v5.3: 玉清崖（雷剑双修）
             new("玉清·剑修", "根骨22神识18", new() { ["根骨"]=22,["魂魄"]=8,["神识"]=18,["资质"]=12,["气运"]=3 }, "yuqing", "疾雷破山经"),
             new("玉清·雷修", "根骨18魂魄12", new() { ["根骨"]=18,["魂魄"]=12,["神识"]=14,["资质"]=8,["气运"]=3 }, "yuqing", "疾雷破山经"),
+            // v5.4: 玉清崖 BuildDef 补全
+            new("玉清·雷劫", "根骨18神识18", new() { ["根骨"]=18,["魂魄"]=10,["神识"]=18,["资质"]=10,["气运"]=3 }, "yuqing_leijie", "九霄雷劫录"),
+            new("玉清·苦行", "神识20资质14", new() { ["根骨"]=16,["魂魄"]=6,["神识"]=20,["资质"]=14,["气运"]=5 }, "yuqing_kuxing", "苦行剑典"),
+            new("玉清·雷体", "根骨30神识12", new() { ["根骨"]=30,["魂魄"]=5,["神识"]=12,["资质"]=8,["气运"]=5 }, "yuqing", "雷池淬体功"),
+            // 太虚观 / 混元山 BuildDef 补全
+            new("太虚·玄感", "魂魄18神识14", new() { ["根骨"]=5,["魂魄"]=18,["神识"]=14,["资质"]=12,["气运"]=8 }, "taixu_xuangan", "南华玄感录"),
+            new("混元·正法", "神识16根骨14", new() { ["根骨"]=14,["魂魄"]=12,["神识"]=16,["资质"]=10,["气运"]=8 }, "physical", "绳墨正法录"),
         };
         int N = buildDefs.Length;
 
