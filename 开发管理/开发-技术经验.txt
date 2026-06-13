@@ -1,0 +1,40 @@
+﻿# 开发技术经验
+
+> 来源：AGENTS.md §技术经验 | 最后更新：2026-06-13
+
+---
+
+## 编码与文件
+
+- **编码已统一**：项目所有源文件（.cs, .txt, .md）已统一为 UTF-8 with BOM。直接用 ReadAllText/WriteAllText 即可，无需特殊编码处理。obj/ 下构建产物为自动生成，忽略。
+- **PowerShell 批量写 txt**：多行中文内容用 `@'...'@ | Out-File -Encoding UTF8` 写入，`@'` 内可含单引号无需转义。注意结尾 `'@` 必须顶格。
+
+## 编辑原则
+
+- **行级编辑优于字符串替换**：`Replace` 易因换行符/空格差异静默失败。拆成数组 `$lines` 按行号精准编辑更可靠。
+- **已有参数优于新增参数**：发现现成接口参数时优先接入，避免新增签名。
+- **复杂编辑直接重写整个文件**：多次用正则替换改代码容易导致括号丢失、方法截断。重写比部分替换更可靠、更快。
+
+## 模拟器
+
+- **模拟器即真理**：任何数值平衡讨论必须先跑 `dotnet run -c Release --project simulations/BattleSim` 看矩阵输出，不要凭感觉判断。
+- **模拟器修改先 build 再 run**：修改 Program.cs 后先 `dotnet build --no-restore -c Release` 排查编译错误，再 `dotnet run --no-build` 验证默认参数下输出应与修改前一致（treasureGrade="" 时 bonus=0）。
+- **文档跟着模拟器走**：模拟器参数调完，必须同步更新对应的 docs 设计文档（术法/神通倍率等），否则下次对话会出现两边不一致。
+
+## BattleSim 建模模式
+
+- **功法成长表优先于权重**：SubGrowthSum 新增 gongFaName 可选参数，有功法名时直接读取 GongFaTables 字典（值=每境每级点数×小境界数，无需权重缩放），无功法名时回退原有权重近似。BuildDef 新增 GongFaName 字段。
+- **BuildDef 追加后 N 自动增长**：`int N = buildDefs.Length` 是动态的，新增 Build 无需手动改 N。
+- **守一/符胆建模经验**：守一是"累积型buff"（叠层不消耗，受击消耗1层减伤），适合持续作战；符胆是"消耗型爆发"（使用即清零，需重新叠），金丹期偏弱但元婴/化神解锁更强机制后起飞。两者都应在 `Combat.Simulate` 内用局部变量建模，与川流/逝水/秋水保持一致的初始化模式。
+
+## 流程管理
+
+- **下一步建议清理时机**：条目完成并推送远端后，从相应下一步建议文件移除该条→重编号剩余条目。不要在提交前删除（万一回退会丢记录）。
+
+## Unity 开发经验
+
+- **命名空间不与 Unity 类型冲突**：如 `TianZhang.Tilemap` 与 `UnityEngine.Tilemaps.Tilemap` 冲突 → CS0118。避免用常用 Unity 类名做命名空间。
+- **C# 版本兼容**：避免 `:=` 等 C# 9+ 语法，Unity 2022 不完全支持。
+- **六角格坐标转换**：不要手写 offset 公式。Unity Grid 的 `GetCellCenterWorld` / `WorldToCell` 是唯一可靠来源。点击检测用全量缓存 + 最近邻查找最稳妥。
+- **场景生成**：用 Editor 脚本 (`MenuItem`) 程序化生成，永远不要手写 .unity YAML。
+- **视觉反馈**：角色移动需实时更新 Transform；受击加 Coroutine 闪烁；死亡改色。

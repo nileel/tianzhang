@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
+  m_Name: Char_Enemy
+  m_EditorClassIdentifier: 
+  charName: "\u6563\u4FEE"
+  baseLevel: 1
+  rootBone: 12
+  physique: 12
+  spirit: 10
+  mind: 10
+  reaction: 12
+  talent: 10
+  hpBonus: 0
+  mpBonus: 0
+  physAtkBonus: 0
+  magAtkBonus: 0
+  physDefBonus: 0
+  magDefBonus: 0
+  blockRate: 6
+  blockReduction: 0
+  soulShieldRate: 4
+  soulShieldReduction: 0
+  dodgeRate: 0
+  critRate: 4
+  critDamage: 10
+  hitRateBonus: 0
+  realmMultiplier: 1.5
+  equippedSpells:
+  - "\u6697\u8680"
+  equippedSkills: []

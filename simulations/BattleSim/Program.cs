@@ -664,7 +664,42 @@ static class Combat
             double kuxingMult(string realm) => realm switch { "化神" => 3.5, "元婴" => 2.8, "金丹" => 2.2, "筑基" => 1.8, _ => 1.5 };
             double kuxingHpCostRate(string realm) => realm switch { "化神" => 0.25, "元婴" => 0.20, "金丹" => 0.20, "筑基" => 0.15, _ => 0.10 };
             bool kuxingHasRecover(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, _ => false };
-            bool kuxingHasDuanLong(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, "筑基" => true, _ => false };            int turns = 0;
+            bool kuxingHasDuanLong(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, "筑基" => true, _ => false };
+            // v5.9: 含弘光大典 机制
+            double hanhongPhysDefBonus(string realm) => realm switch { "化神" => 0.30, "元婴" => 0.25, "金丹" => 0.20, "筑基" => 0.15, "练气" => 0.10, _ => 0.10 };
+            double hanhongZaiwuCap(string realm) => realm switch { "化神" => 0.40, "元婴" => 0.30, _ => 0.20 };
+            double hanhongCounterMult(string realm) => realm switch { "化神" => 1.30, "元婴" => 1.15, _ => 1.0 };
+            // v5.9: 万物不迁法 机制 (不迁:受大伤害减半; 物理抗性)
+            int buqianMaxTriggers(string realm) => realm switch { "元婴" => 5, "金丹" => 3, _ => 0 };
+            int buqianA = buqianMaxTriggers(ca.Realm), buqianB = buqianMaxTriggers(cb.Realm);
+            double buqianPhysResist(string realm) => realm switch { "元婴" => 10, "金丹" => 5, _ => 0 };
+            // v5.9: 不真自虚法 机制 (虚化:伤害概率归零+反弹)
+            double buzhenVoidRate(string realm) => realm switch { "化神" => 0.40, "元婴" => 0.25, _ => 0 };
+            bool buzhenFirstVoidA = true, buzhenFirstVoidB = true; // 化神首虚必中
+            // v5.9: 心无性有法 机制 (神识优势:命中/神攻/无法闪避)
+            int xinwuShenshiBonus(string realm) => realm switch { "金丹" => 8, "筑基" => 5, _ => 0 };
+            int xinwuShenshiA = ca.GongFaName == "心无性有法" ? xinwuShenshiBonus(ca.Realm) : 0;
+            int xinwuShenshiB = cb.GongFaName == "心无性有法" ? xinwuShenshiBonus(cb.Realm) : 0;
+            // v5.9: 元素克制表 (含弘光大典 克制增伤用)
+            string gongFaElement(string name) => name switch {
+                "含弘光大典" => "土", "白屋青云录" => "土", "混元同尘典" => "土", "绳墨正法录" => "土",
+                "疾雷破山经" => "金", "九霄雷劫录" => "金", "雷池淬体功" => "金", "苦行剑典" => "金",
+                "抱元守一经" => "火", "云篆度人经" => "火",
+                "不真自虚法" => "水", "万物不迁法" => "水", "心无性有法" => "水", "南华玄感录" => "水",
+                "秋水游心经" => "水",
+                _ => ""
+            };
+            bool isElementCounter(string atkElem, string defElem) => (atkElem, defElem) switch {
+                ("土", "水") => true, ("水", "火") => true, ("火", "金") => true, ("金", "土") => true, _ => false
+            };
+            // v5.9: 混元同尘典 过载机制 (元婴+)
+            double tongchenOverloadRate(string realm) => realm switch { "炼虚" => 0.05, "化神" => 0.25, "元婴" => 0.15, _ => 0 };
+            double tongchenOverloadMult(string realm) => realm switch { "炼虚" => 3.5, "化神" => 2.5, "元婴" => 2.0, _ => 1.0 };
+            // v5.9: 白屋青云录 元素切换增伤 (金丹+)
+            double baiwuSwitchDmg = 0; // A方累积切换增伤
+            double baiwuSwitchDmgB = 0; // B方累积切换增伤
+            double baiwuSwitchMax(string realm) => realm switch { "元婴" => 0.30, "金丹" => 0.25, _ => 0 };
+            int turns = 0;
             while (hpA > 0 && hpB > 0)
             {
                 turns++;
@@ -734,17 +769,52 @@ static class Combat
                     int rawDef = atkType == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
                     // 血剑气防御惩罚: B若使用了血剑气则物防降低
                     if (kuxingDefReduceB > 0 && atkType == "物理") { rawDef -= kuxingDefReduceB; kuxingDefReduceB = 0; }
+                    // v5.9: 含弘光大典 肉身防御+载物被动 (B防御方)
+                    if (cb.GongFaName == "含弘光大典" && atkType == "物理") { rawDef = (int)(rawDef * (1 + hanhongPhysDefBonus(cb.Realm))); }
+                    if (cb.GongFaName == "含弘光大典") { double hpLostB = 1.0 - (double)hpB / cb.Primary["HP"]; double zaiwuB = Math.Min(hpLostB * 20 / 100, hanhongZaiwuCap(cb.Realm)); rawDef = (int)(rawDef * (1 + zaiwuB)); }
                     def = atkType == "物理" ? (int)(rawDef * (1 - shishuiOnB * 0.05)) : rawDef;
                     // 雷劫印记满层: 魂防-20%
                     if (cb.Style == "yuqing_leijie" && leijieB == maxLeijie(cb.Realm) && atkType == "神魂") def = (int)(rawDef * 0.80);                    resist = atkType == "物理" ? cb.Secondary.GetValueOrDefault("物抗率", 0) : cb.Secondary.GetValueOrDefault("魂抗率", 0);
+                    // v5.9: 万物不迁法 物理抗性 (B防御方)
+                    if (cb.GongFaName == "万物不迁法" && atkType == "物理") resist += buqianPhysResist(cb.Realm);
                     // 守一满层: 神魂防御+15% (金丹致虚篇)
                     if (cb.Style == "taiyi" && shouyiB == maxShouyi(cb.Realm) && atkType == "神魂") resist += 15;
                     // 天书篇: 符胆满层时无视30%魂防
                     if (ca.Style == "taiyi_fuxiu" && fudanMaxA && atkType == "神魂") defPen = 30;
+                    // v5.9: 白屋青云录 元素切换增伤 (A攻击方, 金丹+)
+                    if (ca.GongFaName == "白屋青云录" && ca.Realm is "金丹" or "元婴") { baiwuSwitchDmg = Math.Min(baiwuSwitchDmg + 0.05, baiwuSwitchMax(ca.Realm)); mult *= (1 + baiwuSwitchDmg); }
+                    // v5.9: 白屋青云录 寒门傲骨 (A攻击方, HP<阈值时暴伤+50%)
+                    if (ca.GongFaName == "白屋青云录") { double baiwuHpThreshA = ca.Realm switch { "元婴" => 0.40, "金丹" => 0.35, "筑基" => 0.30, _ => 0.30 }; if ((double)hpA / ca.Primary["HP"] < baiwuHpThreshA) mult *= 1.50; }
+                    // v5.9: 混元同尘典 同尘一击+过载 (A攻击方, 元婴+)
+                    if (ca.GongFaName == "混元同尘典" && ca.Realm is "元婴" or "化神" or "炼虚") {
+                        mult *= tongchenOverloadMult(ca.Realm);
+                        if (Rng.NextDouble() < tongchenOverloadRate(ca.Realm)) { int selfDmg = (int)(hpA * 0.15); hpA -= selfDmg; }
+                    }
+                    // v5.9: 含弘光大典 属性克制增伤 (A攻击方, 元婴+)
+                    if (ca.GongFaName == "含弘光大典" && (ca.Realm == "元婴" || ca.Realm == "化神")) {
+                        string elemA = gongFaElement(ca.GongFaName); string elemB = gongFaElement(cb.GongFaName);
+                        if (isElementCounter(elemA, elemB)) mult *= hanhongCounterMult(ca.Realm);
+                    }
+                    // v5.9: 心无性有法 神识优势:神攻+无法闪避 (A攻击方)
+                    int effShenshiA = ca.Primary["神识"] + xinwuShenshiA;
+                    int effShenshiB = cb.Primary["神识"] + xinwuShenshiB;
+                    bool xinwuAdvA = ca.GongFaName == "心无性有法" && effShenshiA > effShenshiB;
+                    if (xinwuAdvA && atkType == "神魂" && ca.Realm == "金丹") { atk = (int)(atk * 1.25); }
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
-                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA, ignoreBlock: kuxingIgnoreBlockA);
+                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA || xinwuAdvA, ignoreBlock: kuxingIgnoreBlockA);
+                    // v5.9: 不真自虚法 虚化 (B防御方:伤害概率归零)
+                    if (cb.GongFaName == "不真自虚法" && dmg > 0) {
+                        double voidRateB = buzhenVoidRate(cb.Realm);
+                        if (buzhenFirstVoidB) { voidRateB = 1.0; buzhenFirstVoidB = false; }
+                        if (Rng.NextDouble() < voidRateB) {
+                            if (cb.Realm == "化神") { int reflectDmg = (int)(dmg * 0.30); dmg = 0; hpA -= reflectDmg; }
+                            else dmg = 0;
+                        }
+                    }
+                    // v5.9: 万物不迁法 不迁 (B防御方:受30%HP以上伤害减半)
+                    if (cb.GongFaName == "万物不迁法" && buqianB > 0 && dmg > cb.Primary["HP"] * 0.30) { int origDmg = dmg; dmg /= 2; buqianB--; if (cb.Realm == "元婴") hpA -= (int)(origDmg * 0.50); }
                     // 川流之势: B若持有则减伤35%并消耗
                     if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
                     // 守一减伤: 受击消耗1层减伤20%
@@ -822,15 +892,50 @@ static class Combat
                     int rawDefB = atkType == "物理" ? ca.Primary["肉防"] : ca.Primary["神防"];
                     // 血剑气防御惩罚: A若使用了血剑气则物防降低
                     if (kuxingDefReduceA > 0 && atkType == "物理") { rawDefB -= kuxingDefReduceA; kuxingDefReduceA = 0; }
+                    // v5.9: 含弘光大典 肉身防御+载物被动 (A防御方)
+                    if (ca.GongFaName == "含弘光大典" && atkType == "物理") { rawDefB = (int)(rawDefB * (1 + hanhongPhysDefBonus(ca.Realm))); }
+                    if (ca.GongFaName == "含弘光大典") { double hpLostA = 1.0 - (double)hpA / ca.Primary["HP"]; double zaiwuA = Math.Min(hpLostA * 20 / 100, hanhongZaiwuCap(ca.Realm)); rawDefB = (int)(rawDefB * (1 + zaiwuA)); }
                     def = atkType == "物理" ? (int)(rawDefB * (1 - shishuiOnA * 0.05)) : rawDefB;
                     resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
+                    // v5.9: 万物不迁法 物理抗性 (A防御方)
+                    if (ca.GongFaName == "万物不迁法" && atkType == "物理") resist += buqianPhysResist(ca.Realm);
                     if (ca.Style == "taiyi" && shouyiA == maxShouyi(ca.Realm) && atkType == "神魂") resist += 15;
                     // 天书篇: 符胆满层时无视30%魂防
                     if (cb.Style == "taiyi_fuxiu" && fudanMaxB && atkType == "神魂") defPen = 30;
+                    // v5.9: 白屋青云录 元素切换增伤 (B攻击方, 金丹+)
+                    if (cb.GongFaName == "白屋青云录" && cb.Realm is "金丹" or "元婴") { baiwuSwitchDmgB = Math.Min(baiwuSwitchDmgB + 0.05, baiwuSwitchMax(cb.Realm)); mult *= (1 + baiwuSwitchDmgB); }
+                    // v5.9: 白屋青云录 寒门傲骨 (B攻击方, HP<阈值时暴伤+50%)
+                    if (cb.GongFaName == "白屋青云录") { double baiwuHpThreshB = cb.Realm switch { "元婴" => 0.40, "金丹" => 0.35, "筑基" => 0.30, _ => 0.30 }; if ((double)hpB / cb.Primary["HP"] < baiwuHpThreshB) mult *= 1.50; }
+                    // v5.9: 混元同尘典 同尘一击+过载 (B攻击方, 元婴+)
+                    if (cb.GongFaName == "混元同尘典" && cb.Realm is "元婴" or "化神" or "炼虚") {
+                        mult *= tongchenOverloadMult(cb.Realm);
+                        if (Rng.NextDouble() < tongchenOverloadRate(cb.Realm)) { int selfDmg = (int)(hpB * 0.15); hpB -= selfDmg; }
+                    }
+                    // v5.9: 含弘光大典 属性克制增伤 (B攻击方, 元婴+)
+                    if (cb.GongFaName == "含弘光大典" && (cb.Realm == "元婴" || cb.Realm == "化神")) {
+                        string elemB2 = gongFaElement(cb.GongFaName); string elemA2 = gongFaElement(ca.GongFaName);
+                        if (isElementCounter(elemB2, elemA2)) mult *= hanhongCounterMult(cb.Realm);
+                    }
+                    // v5.9: 心无性有法 神识优势 (B攻击方)
+                    int effShenshiB2 = cb.Primary["神识"] + xinwuShenshiB;
+                    int effShenshiA2 = ca.Primary["神识"] + xinwuShenshiA;
+                    bool xinwuAdvB = cb.GongFaName == "心无性有法" && effShenshiB2 > effShenshiA2;
+                    if (xinwuAdvB && atkType == "神魂" && cb.Realm == "金丹") { atk = (int)(atk * 1.25); }
                     int dmg = Dmg(atk, def, resist, defPen, mult);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
-                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB, ignoreBlock: kuxingIgnoreBlockB);
+                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB || xinwuAdvB, ignoreBlock: kuxingIgnoreBlockB);
+                    // v5.9: 不真自虚法 虚化 (A防御方:伤害概率归零)
+                    if (ca.GongFaName == "不真自虚法" && dmg > 0) {
+                        double voidRateA = buzhenVoidRate(ca.Realm);
+                        if (buzhenFirstVoidA) { voidRateA = 1.0; buzhenFirstVoidA = false; }
+                        if (Rng.NextDouble() < voidRateA) {
+                            if (ca.Realm == "化神") { int reflectDmg = (int)(dmg * 0.30); dmg = 0; hpB -= reflectDmg; }
+                            else dmg = 0;
+                        }
+                    }
+                    // v5.9: 万物不迁法 不迁 (A防御方:受30%HP以上伤害减半)
+                    if (ca.GongFaName == "万物不迁法" && buqianA > 0 && dmg > ca.Primary["HP"] * 0.30) { int origDmg2 = dmg; dmg /= 2; buqianA--; if (ca.Realm == "元婴") hpB -= (int)(origDmg2 * 0.50); }
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
