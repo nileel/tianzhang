@@ -6,6 +6,7 @@ using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.HexTile;
 using TianZhang.Game;
+using TianZhang.Map;
 
 namespace TianZhang.Editor
 {
@@ -198,6 +199,98 @@ namespace TianZhang.Editor
         {
             if (!System.IO.Directory.Exists(path))
                 System.IO.Directory.CreateDirectory(path);
+        }
+
+        [MenuItem("Tools/天章/生成探索场景")]
+        public static void BuildExplorationScene()
+        {
+            CreateDemoData();
+
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+                UnityEditor.SceneManagement.NewSceneMode.Single);
+
+            // Camera
+            var camGo = new GameObject("Main Camera");
+            camGo.tag = "MainCamera";
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = 12f;
+            cam.backgroundColor = new Color(0.08f, 0.1f, 0.14f);
+            cam.transform.position = new Vector3(0, 0, -10);
+            camGo.AddComponent<AudioListener>();
+
+            // Hex Grid (复用战斗场景基础设施)
+            var gridGo = new GameObject("HexGrid");
+            var grid = gridGo.AddComponent<Grid>();
+            grid.cellLayout = GridLayout.CellLayout.Hexagon;
+            grid.cellSize = new Vector3(1, 1, 0);
+
+            var groundGo = new GameObject("Ground");
+            groundGo.transform.SetParent(gridGo.transform);
+            var groundTml = groundGo.AddComponent<Tilemap>();
+            var groundRnd = groundGo.AddComponent<TilemapRenderer>();
+            groundTml.color = new Color(0.35f, 0.4f, 0.45f);
+
+            var overlayGo = new GameObject("Overlay");
+            overlayGo.transform.SetParent(gridGo.transform);
+            var overlayTml = overlayGo.AddComponent<Tilemap>();
+            var overlayRnd = overlayGo.AddComponent<TilemapRenderer>();
+            overlayRnd.sortingOrder = 1;
+
+            var unitGo = new GameObject("Units");
+            unitGo.transform.SetParent(gridGo.transform);
+            var unitTml = unitGo.AddComponent<Tilemap>();
+            var unitRnd = unitGo.AddComponent<TilemapRenderer>();
+            unitRnd.sortingOrder = 2;
+
+            // TilemapManager
+            var mgrGo = new GameObject("TilemapManager");
+            var mgr = mgrGo.AddComponent<HexTilemapManager>();
+            mgr.groundTilemap = groundTml;
+            mgr.overlayTilemap = overlayTml;
+            mgr.unitTilemap = unitTml;
+            mgr.gridRadius = 15;
+            mgr.groundTile = MakeTile("GroundTile", new Color(0.3f, 0.5f, 0.2f));
+            mgr.moveHighlightTile = MakeTile("MoveHighlight", new Color(0.2f, 0.8f, 0.2f, 0.4f));
+            mgr.attackHighlightTile = MakeTile("AttackHighlight", new Color(0.8f, 0.2f, 0.2f, 0.4f));
+            mgr.selectedTile = MakeTile("Selected", new Color(1f, 0.8f, 0.2f, 0.5f));
+            mgr.unitPrefab = MakeUnitPrefab();
+
+            // Exploration Controller
+            var explGo = new GameObject("ExplorationController");
+            var explCtrl = explGo.AddComponent<TianZhang.Map.ExplorationController>();
+            explCtrl.tilemapManager = mgr;
+            explCtrl.mapRadius = 12;
+            explCtrl.obstaclePercent = 15;
+            explCtrl.enemyCount = 4;
+            explCtrl.playerSpells = new[] {
+                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Jinguang.asset"),
+                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Huoling.asset"),
+            };
+
+            // Battle UI
+            var uiGo = new GameObject("BattleUI");
+                        var canvas = uiGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 0;
+            uiGo.AddComponent<UnityEngine.UI.CanvasScaler>();
+            uiGo.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            var ui = uiGo.AddComponent<BattleUIManager>();
+            explCtrl.uiManager = ui;
+
+            // EventSystem
+            var evGo = new GameObject("EventSystem");
+            evGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            evGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+
+            // GameManager
+            var gmGo = new GameObject("GameManager");
+            gmGo.AddComponent<GameManager>();
+
+            string scenePath = "Assets/Scenes/ExplorationScene.unity";
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
+            Debug.Log("<color=cyan>天章探索场景已生成</color>");
         }
     }
 }

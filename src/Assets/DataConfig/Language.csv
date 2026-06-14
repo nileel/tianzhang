@@ -98,3 +98,7 @@ desc_enemy_shijiahou,低阶妖兽，皮糙肉厚，适合新手练手
 desc_enemy_yanweihu,火系妖兽，远程法术攻击，掉落火系素材
 desc_enemy_xueyingmoxiu,筑基期魔修，善用暗系术法，掉落魔道材料
 desc_enemy_huangyesanxiu,练气期散修，以水法自保，掉落散修通用物品
+enemy_fengsun,风隼
+item_fengsun_feather,风隼翎羽
+desc_enemy_fengsun,风系妖兽，迅捷灵动擅长闪避，以翎羽为刃伤敌
+desc_enemy_huangyesanxiu,练气期散修，以水法自保，掉落散修通用物品

@@ -38,3 +38,10 @@
 - **六角格坐标转换**：不要手写 offset 公式。Unity Grid 的 `GetCellCenterWorld` / `WorldToCell` 是唯一可靠来源。点击检测用全量缓存 + 最近邻查找最稳妥。
 - **场景生成**：用 Editor 脚本 (`MenuItem`) 程序化生成，永远不要手写 .unity YAML。
 - **视觉反馈**：角色移动需实时更新 Transform；受击加 Coroutine 闪烁；死亡改色。
+
+## PowerShell 批量编辑大文件
+
+- **括号平衡验证**：多次 `Out-File` + 行级替换后务必验证 `{` `}` 数量一致。
+  `($content -replace '"[\""]*"', '').ToCharArray() | Group-Object | ? Name -match '[{}]'`
+- **替换残留检查**：替换方法体后检查旧代码是否完全移除（可能出现新旧代码并存）。
+- **字符串插值干扰**：统计括号时先移除字符串字面量（包括 `$"..."` 内括号）。

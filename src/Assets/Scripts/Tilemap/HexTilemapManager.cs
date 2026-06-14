@@ -28,7 +28,7 @@ namespace TianZhang.HexTile
 
         // 记录所有合法六角格及其世界坐标
         private Dictionary<HexCoord, Vector3> hexWorldPositions = new Dictionary<HexCoord, Vector3>();
-        private List<HexCoord> allHexCoords = new List<HexCoord>();
+        public List<HexCoord> allHexCoords = new List<HexCoord>();
 
         private void Awake()
         {

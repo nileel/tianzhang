@@ -1,0 +1,758 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TianZhang.Core;
+using TianZhang.Entity;
+using TianZhang.Combat;
+using TianZhang.HexTile;
+
+namespace TianZhang.Map
+{
+    /// <summary>
+    /// 地图探索控制器 — 阶段二：最小可玩循环
+    /// 职责：生成可探索地图 + 敌人生成 + 探索→战斗循环
+    /// 操作：鼠标点击移动，接近敌人触发战斗
+    /// </summary>
+    public class ExplorationController : MonoBehaviour
+    {
+        [Header("引用")]
+        public HexTilemapManager tilemapManager;
+        public Game.BattleUIManager uiManager;
+
+        [Header("地图参数")]
+        public int mapRadius = 12;
+        public int obstaclePercent = 15;       // 障碍覆盖率(%)
+
+        [Header("敌人配置")]
+        public int enemyCount = 4;
+        public CharacterData[] enemyTemplates; // 从 Enemies.csv 导入的敌人模板池
+
+        [Header("术法/神通")]
+        public SpellData[] playerSpells;
+        public DivineSkillData[] playerSkills;
+
+        [Header("视野")]
+        public int playerSightRange = 8;       // 玩家视野范围(格)
+
+        // ---- 核心系统 ----
+        private CTBEngine ctbEngine;
+        private CombatResolver resolver;
+        private SimpleAI aiController;
+        private Character player;
+        private List<EnemyUnit> enemies = new List<EnemyUnit>();
+
+        // ---- 视觉标记 ----
+        private GameObject playerMarker;
+        private Dictionary<int, GameObject> enemyMarkers = new Dictionary<int, GameObject>();
+
+        // ---- 状态机 ----
+        public enum GameState { Loading, Exploration, BattlePrep, Combat, Ended }
+        private GameState state = GameState.Loading;
+        private Character currentCombatTarget;
+
+        // ---- 玩家移动 ----
+        private bool waitingForMoveInput;
+        private bool hasMovedThisTurn;
+        private int hexesMovedThisTurn;
+
+        // ---- CT消耗常量 ----
+        public const float CtPerMoveHex = 25f;
+        public const float CtPerAction = 100f;
+        public const float CtPerGuard = 60f;
+
+        // ---- 阵营标记 ----
+        private int nextUnitId = 0;
+
+        // ---- 地形标记（HexGrid blocked）----
+        private HashSet<HexCoord> blockedTiles = new HashSet<HexCoord>();
+
+        private class EnemyUnit
+        {
+            public Character character;
+            public CharacterData data;
+            public SpellData[] spells;
+            public DivineSkillData[] skills;
+            public GameObject marker;
+            public bool defeated;
+        }
+
+        private void Start()
+        {
+            StartCoroutine(InitExploration());
+        }
+
+        private void Update()
+        {
+            if (state == GameState.Exploration && waitingForMoveInput)
+            {
+                HandleKeyboardInput();
+                HandleMouseClick();
+            }
+            else if (state == GameState.Combat)
+            {
+                HandleCombatKeyboardInput();
+            }
+        }
+
+        // ==================== 初始化 ====================
+
+        private IEnumerator InitExploration()
+        {
+            state = GameState.Loading;
+            ctbEngine = new CTBEngine();
+            resolver = new CombatResolver { Engine = ctbEngine };
+            aiController = new SimpleAI();
+
+            // 生成地图（地形 + 六角格）
+            GenerateTerrain();
+            tilemapManager.GenerateHexGrid();
+
+            // 创建玩家
+            var playerStart = new HexCoord(0, 0);
+            player = CreatePlayer(playerStart);
+            player.CTBUnit = ctbEngine.RegisterUnit(player.Reaction, player);
+            player.CTBUnit.Id = nextUnitId++;
+            tilemapManager.Grid.SetOccupied(playerStart, player.CTBUnit.Id);
+
+            playerMarker = tilemapManager.PlaceUnitMarker(playerStart, Color.cyan, "玩家");
+
+            // 生成敌人
+            SpawnEnemies();
+
+            // 刷新UI
+            if (uiManager != null)
+            {
+                uiManager.SetTurnBanner("探索地图");
+                uiManager.ClearLog();
+            }
+            RefreshUI();
+
+            state = GameState.Exploration;
+            waitingForMoveInput = true;
+
+            Debug.Log($"探索地图已生成: {tilemapManager.allHexCoords?.Count ?? 0} 格, {enemies.Count} 个敌人");
+            yield break;
+        }
+
+        // ==================== 地形生成 ====================
+
+        private void GenerateTerrain()
+        {
+            var rng = new System.Random(42); // 固定种子，可重复
+            blockedTiles.Clear();
+
+            // 扩大 tilemapManager 的半径
+            tilemapManager.gridRadius = mapRadius;
+
+            // 预计算所有坐标，随机放置障碍
+            for (int q = -mapRadius; q <= mapRadius; q++)
+            {
+                for (int r = Mathf.Max(-mapRadius, -q - mapRadius);
+                         r <= Mathf.Min(mapRadius, -q + mapRadius); r++)
+                {
+                    var coord = new HexCoord(q, r);
+
+                    // 边缘6格强制留空（地图边界）
+                    int distFromCenter = coord.Distance(new HexCoord(0, 0));
+                    if (distFromCenter >= mapRadius - 1)
+                    {
+                        blockedTiles.Add(coord);
+                        tilemapManager.Grid.SetBlocked(coord, true);
+                        continue;
+                    }
+
+                    // 玩家起点周围清空
+                    if (coord.Distance(new HexCoord(0, 0)) <= 1) continue;
+
+                    // 按概率放置障碍
+                    if (rng.Next(100) < obstaclePercent)
+                    {
+                        blockedTiles.Add(coord);
+                        tilemapManager.Grid.SetBlocked(coord, true);
+                    }
+                }
+            }
+
+            Debug.Log($"地形: {blockedTiles.Count} 个障碍格");
+        }
+
+        // ==================== 玩家创建 ====================
+
+        private Character CreatePlayer(HexCoord startPos)
+        {
+            var cd = ScriptableObject.CreateInstance<CharacterData>();
+            cd.charName = "太一修士";
+            cd.rootBone = 14; cd.physique = 14; cd.spirit = 14; cd.mind = 14; cd.reaction = 14; cd.talent = 14;
+            cd.blockRate = 10; cd.soulShieldRate = 13; cd.critRate = 5; cd.critDamage = 15;
+            cd.realmMultiplier = 1.5f;
+            cd.equippedSpells = playerSpells != null
+                ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "")
+                : new string[0];
+            cd.equippedSkills = playerSkills != null
+                ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "")
+                : new string[0];
+
+            var c = Character.FromData(cd, startPos);
+            c.SpellCooldowns = new int[playerSpells?.Length ?? 0];
+            c.AvailableSpells = new string[] { "玄水咒", "沧浪击", "安神符", "金光破岳", "流火灵符" };
+            c.CombatSwapsUsed = 0;
+            c.SkillCooldowns = new int[playerSkills?.Length ?? 0];
+            return c;
+        }
+
+        // ==================== 敌人生成 ====================
+
+        private void SpawnEnemies()
+        {
+            var rng = new System.Random(123);
+            int spawned = 0;
+            int maxAttempts = 500;
+
+            for (int attempt = 0; attempt < maxAttempts && spawned < enemyCount; attempt++)
+            {
+                int q = rng.Next(-mapRadius + 2, mapRadius - 1);
+                int r = rng.Next(-mapRadius + 2, mapRadius - 1);
+                var coord = new HexCoord(q, r);
+                int s = -q - r;
+                if (s < -mapRadius + 2 || s > mapRadius - 2) continue;
+
+                // 不与玩家重叠，不在障碍上，不与其他敌人重叠
+                if (coord.Distance(player.Position) < 5) continue;
+                if (blockedTiles.Contains(coord)) continue;
+                if (tilemapManager.Grid.IsOccupied(coord)) continue;
+
+                // 选择一个敌人模板
+                CharacterData template = null;
+                if (enemyTemplates != null && enemyTemplates.Length > 0)
+                    template = enemyTemplates[spawned % enemyTemplates.Length];
+                else
+                    template = CreateFallbackEnemy(spawned);
+
+                var enemy = Character.FromData(template, coord);
+                enemy.SpellCooldowns = new int[template.equippedSpells?.Length ?? 0];
+                enemy.SkillCooldowns = new int[0];
+                enemy.CTBUnit = ctbEngine.RegisterUnit(enemy.Reaction, enemy);
+                enemy.CTBUnit.Id = nextUnitId++;
+                tilemapManager.Grid.SetOccupied(coord, enemy.CTBUnit.Id);
+
+                var spells = new SpellData[template.equippedSpells?.Length ?? 0];
+                for (int i = 0; i < spells.Length; i++)
+                {
+                    spells[i] = CreateFallbackSpell(template.equippedSpells[i]);
+                }
+
+                var marker = tilemapManager.PlaceUnitMarker(coord, Color.red, template.charName);
+                marker.transform.localScale = Vector3.one * 0.6f;
+
+                enemies.Add(new EnemyUnit
+                {
+                    character = enemy,
+                    data = template,
+                    spells = spells,
+                    skills = new DivineSkillData[0],
+                    marker = marker,
+                    defeated = false,
+                });
+
+                spawned++;
+            }
+
+            Debug.Log($"敌人生成: {spawned}/{enemyCount}");
+        }
+
+        private CharacterData CreateFallbackEnemy(int index)
+        {
+            var data = ScriptableObject.CreateInstance<CharacterData>();
+            string[] names = { "石甲兽", "风隼", "焰尾狐", "荒野散修" };
+            int[] rootBones = { 18, 7, 8, 12 };
+            int[] physiques = { 16, 5, 6, 12 };
+            int[] spirits = { 6, 13, 16, 10 };
+            int[] minds = { 6, 8, 12, 10 };
+            int[] reactions = { 6, 20, 14, 10 };
+            float[] multis = { 1.2f, 1.4f, 1.3f, 1.5f };
+
+            int i = index % names.Length;
+            data.charName = names[i];
+            data.rootBone = rootBones[i]; data.physique = physiques[i];
+            data.spirit = spirits[i]; data.mind = minds[i];
+            data.reaction = reactions[i]; data.talent = 8;
+            data.realmMultiplier = multis[i];
+            data.blockRate = i == 0 ? 15 : 5;
+            data.soulShieldRate = i == 2 ? 8 : 0;
+            data.dodgeRate = i == 1 ? 18 : 5;
+            data.critRate = 5; data.critDamage = i == 2 ? 15 : 10;
+            return data;
+        }
+
+        private SpellData CreateFallbackSpell(string name)
+        {
+            var s = ScriptableObject.CreateInstance<SpellData>();
+            s.spellName = name;
+            s.minRange = 1; s.maxRange = 3;
+            s.mpCost = 15; s.cooldownTicks = 30;
+            s.damageMultiplier = 1.2f;
+            return s;
+        }
+
+        // ==================== 探索输入 ====================
+
+        private void HandleKeyboardInput()
+        {
+            if (Input.GetKeyDown(KeyCode.W))
+                PlayerWait();
+            else if (Input.GetKeyDown(KeyCode.E))
+                PlayerEndExplorationTurn();
+        }
+
+        private void HandleMouseClick()
+        {
+            if (!Input.GetMouseButtonDown(0)) return;
+            if (uiManager != null && uiManager.IsPointerOverUI()) return;
+            if (Camera.main == null || tilemapManager == null) return;
+
+            var coord = tilemapManager.ScreenToHex(Input.mousePosition);
+
+            // 检查是否点击敌人（战斗触发）
+            foreach (var eu in enemies)
+            {
+                if (eu.defeated) continue;
+                if (eu.character.Position == coord)
+                {
+                    // 检查玩家是否在相邻格
+                    if (player.Position.Distance(coord) <= 1)
+                    {
+                        StartBattle(eu);
+                        return;
+                    }
+                    // 太远，先移动到相邻位置
+                    var adjacent = FindAdjacentFreeTile(coord);
+                    if (adjacent.HasValue)
+                    {
+                        var path = tilemapManager.Grid.FindPath(player.Position, adjacent.Value, player.MovePoints);
+                        if (path != null && path.Count > 0)
+                        {
+                            MovePlayer(path);
+                            // 移动后检查是否可以攻击
+                            if (player.Position.Distance(coord) <= 1)
+                                StartBattle(eu);
+                        }
+                    }
+                    return;
+                }
+            }
+
+            // 普通移动
+            var movePath = tilemapManager.Grid.FindPath(player.Position, coord, player.MovePoints);
+            if (movePath != null && movePath.Count > 0)
+            {
+                MovePlayer(movePath);
+            }
+        }
+
+        private void MovePlayer(List<HexCoord> path)
+        {
+            if (path == null || path.Count == 0) return;
+
+            tilemapManager.Grid.ClearOccupied(player.Position);
+            foreach (var step in path)
+                tilemapManager.Grid.SetOccupied(step, player.CTBUnit.Id);
+            tilemapManager.Grid.ClearOccupied(path[path.Count - 1]);
+            player.Position = path[path.Count - 1];
+            tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
+
+            // 更新标记位置
+            if (playerMarker != null)
+                playerMarker.transform.position = tilemapManager.HexToWorld(player.Position);
+
+            hasMovedThisTurn = true;
+            hexesMovedThisTurn += path.Count;
+
+            // 检查视野内敌人（自动触发战斗提示）
+            CheckEnemyProximity();
+
+            RefreshUI();
+        }
+
+        private HexCoord? FindAdjacentFreeTile(HexCoord target)
+        {
+            foreach (var dir in HexCoord.Directions)
+            {
+                var adj = target + dir;
+                if (!tilemapManager.Grid.IsBlocked(adj)
+                    && !tilemapManager.Grid.IsOccupied(adj)
+                    && adj.Distance(player.Position) <= player.MovePoints)
+                {
+                    return adj;
+                }
+            }
+            return null;
+        }
+
+        private void CheckEnemyProximity()
+        {
+            foreach (var eu in enemies)
+            {
+                if (eu.defeated) continue;
+                int dist = player.Position.Distance(eu.character.Position);
+                if (dist <= 1 && !eu.defeated)
+                {
+                    AddLog($"发现敌人: {eu.character.Name}！点击敌人发起攻击");
+                }
+                else if (dist <= 3)
+                {
+                    AddLog($"前方有 {eu.character.Name} 出没（距离 {dist} 格）");
+                }
+            }
+        }
+
+        public void PlayerWait()
+        {
+            if (!waitingForMoveInput) return;
+            AddLog("待机观察...");
+            hasMovedThisTurn = true;
+            CheckEnemyProximity();
+            RefreshUI();
+        }
+
+        public void PlayerEndExplorationTurn()
+        {
+            if (!waitingForMoveInput) return;
+            AddLog("结束探索回合");
+            hasMovedThisTurn = true;
+            RefreshUI();
+        }
+
+        // ==================== 战斗 ====================
+
+        private void StartBattle(EnemyUnit enemy)
+        {
+            if (enemy.defeated) return;
+
+            state = GameState.BattlePrep;
+            waitingForMoveInput = false;
+            currentCombatTarget = enemy.character;
+
+            // 面对面
+            player.FaceTarget(enemy.character.Position);
+            enemy.character.FaceTarget(player.Position);
+
+            // 注册CTB
+            if (enemy.character.CTBUnit == null)
+                enemy.character.CTBUnit = ctbEngine.RegisterUnit(enemy.character.Reaction, enemy.character);
+
+            // 设置 resolver 的 grid
+            resolver.Grid = tilemapManager.Grid;
+
+            AddLog($"=== 战斗开始！{player.Name} VS {enemy.character.Name} ===");
+            SetStatus($"⚔ {enemy.character.Name}");
+
+            if (uiManager != null)
+                uiManager.RefreshSpellButtons(
+                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
+                    player.SpellCooldowns,
+                    player.CurrentMP,
+                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0], player.MaxSpellSlots);
+
+            state = GameState.Combat;
+            StartCoroutine(CombatLoop(enemy));
+        }
+
+        private IEnumerator CombatLoop(EnemyUnit enemyUnit)
+        {
+            while (state == GameState.Combat && player.IsAlive && enemyUnit.character.IsAlive)
+            {
+                // 推进CTB直到有人获得行动权
+                var (readyUnit, ticks) = ctbEngine.AdvanceUntilAction();
+                if (readyUnit == null) continue;
+
+                if (readyUnit.UserData is Character ch)
+                {
+                    if (ch == player)
+                    {
+                        // 玩家回合
+                        hasMovedThisTurn = false;
+                        hexesMovedThisTurn = 0;
+                        SetStatus("你的回合");
+                        RefreshUI();
+
+                        if (uiManager != null)
+                            uiManager.RefreshSpellButtons(
+                                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
+                                player.SpellCooldowns,
+                                player.CurrentMP,
+                                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0], player.MaxSpellSlots);
+
+                        // 等待玩家输入（最多6秒）
+                        float waitTime = 0;
+                        while (waitTime < 60f)
+                        {
+                            if (hasMovedThisTurn) break;
+                            yield return new WaitForSeconds(0.1f);
+                            waitTime += 0.1f;
+                        }
+
+                        // 超时自动AI代打
+                        if (!hasMovedThisTurn)
+                            ExecutePlayerAI(enemyUnit);
+
+                        ctbEngine.ConsumeAction(readyUnit);
+                    }
+                    else
+                    {
+                        // 敌人回合
+                        hasMovedThisTurn = false;
+                        hexesMovedThisTurn = 0;
+                        SetStatus($"{enemyUnit.character.Name} 行动中...");
+                        RefreshUI();
+
+                        yield return new WaitForSeconds(0.5f);
+
+                        ExecuteEnemyAI(enemyUnit, ch);
+                        ctbEngine.ConsumeAction(readyUnit);
+                    }
+
+                    RefreshUI();
+                    yield return new WaitForSeconds(0.3f);
+                }
+            }
+
+            // 战斗结束处理
+            EndBattle(enemyUnit);
+        }
+        private void ExecutePlayerAI(EnemyUnit enemyUnit)
+        {
+            int dist = player.Position.Distance(enemyUnit.character.Position);
+            player.FaceTarget(enemyUnit.character.Position);
+
+            // 优先术法
+            if (playerSpells != null)
+            {
+                for (int i = 0; i < playerSpells.Length; i++)
+                {
+                    if (player.SpellCooldowns[i] <= 0
+                        && player.CurrentMP >= playerSpells[i].mpCost
+                        && dist >= playerSpells[i].minRange
+                        && dist <= playerSpells[i].maxRange)
+                    {
+                        var result = resolver.CastSpell(player, enemyUnit.character, i, playerSpells[i]);
+                        AddLog(result.Message);
+                        hasMovedThisTurn = true;
+                        return;
+                    }
+                }
+            }
+
+            // 移动到敌人相邻
+            if (dist > 1)
+            {
+                var path = tilemapManager.Grid.FindPath(player.Position, enemyUnit.character.Position, player.MovePoints);
+                if (path != null && path.Count > 0)
+                {
+                    int steps = Mathf.Min(path.Count, dist - 1);
+                    var movePath = path.GetRange(0, steps);
+                    tilemapManager.Grid.ClearOccupied(player.Position);
+                    player.Position = movePath[movePath.Count - 1];
+                    tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
+                    if (playerMarker != null)
+                        playerMarker.transform.position = tilemapManager.HexToWorld(player.Position);
+                    AddLog($"{player.Name} 移动 {steps} 格");
+                }
+            }
+
+            // 攻击
+            if (player.Position.Distance(enemyUnit.character.Position) <= 1)
+            {
+                bool useMagic = player.MagAtk > player.PhysAtk;
+                var result = resolver.BasicAttack(player, enemyUnit.character, useMagic);
+                AddLog(result.Message);
+            }
+
+            hasMovedThisTurn = true;
+        }
+
+        private void ExecuteEnemyAI(EnemyUnit enemyUnit, Character ch)
+        {
+            var result = aiController.ExecuteTurn(
+                enemyUnit.character, player,
+                enemyUnit.spells.Length > 0 ? enemyUnit.spells : null,
+                enemyUnit.skills.Length > 0 ? enemyUnit.skills : null,
+                resolver, tilemapManager.Grid);
+
+            AddLog($"{enemyUnit.character.Name}: {result}");
+            hasMovedThisTurn = true;
+        }
+
+        private void HandleCombatKeyboardInput()
+        {
+            if (Input.GetKeyDown(KeyCode.A))
+                PlayerBasicAttack();
+            else if (Input.GetKeyDown(KeyCode.G))
+                PlayerGuard();
+            else if (Input.GetKeyDown(KeyCode.W))
+                PlayerCombatWait();
+            else if (Input.GetKeyDown(KeyCode.S))
+                PlayerSwapSpell();
+            else if (Input.GetKeyDown(KeyCode.Alpha1)) PlayerCastSpell(0);
+            else if (Input.GetKeyDown(KeyCode.Alpha2)) PlayerCastSpell(1);
+            else if (Input.GetKeyDown(KeyCode.Alpha3)) PlayerCastSpell(2);
+        }
+
+        private void PlayerSwapSpell()
+        {
+            if (currentCombatTarget == null || !player.IsAlive) return;
+            if (player.CombatSwapsUsed >= Character.MaxCombatSwaps)
+            {
+                AddLog("本场战斗换法次数已用完");
+                return;
+            }
+
+            var swappable = player.GetSwappableSpells();
+            if (swappable.Length == 0)
+            {
+                AddLog("无可换入的术法");
+                return;
+            }
+
+            // 换入第一个可用术法到槽位0
+            string newSpell = swappable[0];
+            string oldSpell = player.SwapSpellInCombat(0, newSpell);
+            if (oldSpell != null)
+            {
+                AddLog($"临阵换法: {oldSpell} → {newSpell} (CD×2, 剩余{Character.MaxCombatSwaps - player.CombatSwapsUsed}次)");
+                hasMovedThisTurn = true;
+                RefreshUI();
+            }
+        }
+
+        private void PlayerBasicAttack()
+        {
+            if (currentCombatTarget == null || !player.IsAlive) return;
+            bool useMagic = player.MagAtk > player.PhysAtk;
+            var result = resolver.BasicAttack(player, currentCombatTarget, useMagic);
+            AddLog(result.Message);
+            hasMovedThisTurn = true;
+            RefreshUI();
+        }
+
+        private void PlayerGuard()
+        {
+            if (!player.IsAlive) return;
+            var result = resolver.Guard(player);
+            AddLog(result.Message);
+            hasMovedThisTurn = true;
+            RefreshUI();
+        }
+
+        private void PlayerCombatWait()
+        {
+            if (!player.IsAlive) return;
+            AddLog($"{player.Name} 待机");
+            hasMovedThisTurn = true;
+            RefreshUI();
+        }
+
+        private void PlayerCastSpell(int index)
+        {
+            if (currentCombatTarget == null || !player.IsAlive) return;
+            if (playerSpells == null || index >= playerSpells.Length) return;
+            if (player.SpellCooldowns[index] > 0) { AddLog("术法冷却中"); return; }
+            if (player.CurrentMP < playerSpells[index].mpCost) { AddLog("灵力不足"); return; }
+
+            int dist = player.Position.Distance(currentCombatTarget.Position);
+            if (dist < playerSpells[index].minRange || dist > playerSpells[index].maxRange)
+            {
+                AddLog("超出射程");
+                return;
+            }
+
+            var result = resolver.CastSpell(player, currentCombatTarget, index, playerSpells[index]);
+            AddLog(result.Message);
+            hasMovedThisTurn = true;
+            RefreshUI();
+        }
+
+        // ==================== 掉落 ====================
+
+        private void HandleDrop(EnemyUnit enemyUnit)
+        {
+            // 简易掉落：显示信息
+            var dropItems = new List<string> { "灵石×5" };
+            if (enemyUnit.data.realmMultiplier >= 2.0f)
+                dropItems.Add("中品丹药×1");
+            else if (enemyUnit.data.realmMultiplier >= 1.3f)
+                dropItems.Add("下品丹药×1");
+
+            AddLog($"掉落: {string.Join(", ", dropItems)}");
+        }
+
+        private void EndBattle(EnemyUnit enemyUnit)
+        {
+            if (!player.IsAlive)
+            {
+                AddLog("玩家被击败！游戏结束");
+                SetStatus("败北");
+                state = GameState.Ended;
+            }
+            else if (!enemyUnit.character.IsAlive)
+            {
+                AddLog($"击败了 {enemyUnit.character.Name}！");
+                SetStatus("胜利");
+                enemyUnit.defeated = true;
+                enemyUnit.marker?.SetActive(false);
+                tilemapManager.Grid.ClearOccupied(enemyUnit.character.Position);
+
+                // 掉落
+                HandleDrop(enemyUnit);
+
+                // 回到探索模式
+                state = GameState.Exploration;
+                waitingForMoveInput = true;
+                currentCombatTarget = null;
+                tilemapManager.ClearOverlay();
+                RefreshUI();
+            }
+        }
+
+        // ==================== UI工具 ====================
+
+        private void RefreshUI()
+        {
+            if (uiManager == null) return;
+            float ct = player.CTBUnit != null ? player.CTBUnit.CT / CTBEngine.ActionThreshold : 0;
+            string status = "";
+            if (!player.IsAlive) status = "阵亡";
+            else if (state == GameState.Exploration) status = "探索中";
+            else if (state == GameState.Combat) status = "战斗中";
+            uiManager.UpdatePlayerInfo(player.Name, player.CurrentHP, player.MaxHP,
+                player.CurrentMP, player.MaxMP, ct, status);
+
+            if (currentCombatTarget != null && currentCombatTarget.IsAlive)
+            {
+                float ect = currentCombatTarget.CTBUnit != null
+                    ? currentCombatTarget.CTBUnit.CT / CTBEngine.ActionThreshold : 0;
+                uiManager.UpdateEnemyInfo(currentCombatTarget.Name,
+                    currentCombatTarget.CurrentHP, currentCombatTarget.MaxHP,
+                    currentCombatTarget.CurrentMP, currentCombatTarget.MaxMP,
+                    ect, "");
+            }
+        }
+
+        private void SetStatus(string text)
+        {
+            if (uiManager != null)
+                uiManager.SetTurnBanner(text);
+        }
+
+        private void AddLog(string message)
+        {
+            if (uiManager != null)
+                uiManager.AddLog(message);
+        }
+
+        // ==================== 公共查询 ====================
+
+        public Character GetPlayer() => player;
+        public GameState GetState() => state;
+        public HexGrid GetGrid() => tilemapManager?.Grid;
+    }
+}

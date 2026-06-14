@@ -46,5 +46,13 @@ namespace TianZhang.Entity
         [Header("术法槽位")]
         public string[] equippedSpells; // 装备的术法名称
         public string[] equippedSkills; // 装备的神通名称
+
+        [Header("术法/神通库")]
+        public string[] availableSpells;   // 已学会的全部术法
+        public string[] availableSkills;   // 已学会的全部神通
+
+        [Header("槽位上限（0=按境界自动计算）")]
+        public int maxSpellSlots;          // 术法槽位上限（0时从境界推算）
+        public int maxSkillSlots;          // 神通槽位上限
     }
 }

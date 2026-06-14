@@ -48,6 +48,7 @@ namespace TianZhang.Game
         private Button attackButton;
         private Button guardButton;
         private Button waitButton;
+        private Transform actionBarParent; // 动作栏父节点
 
         // ---- 战斗日志 ----
         private GameObject logPanel;
@@ -281,6 +282,7 @@ namespace TianZhang.Game
                 new Vector2(0, 0), new Vector2(1, 0),
                 new Vector2(panelMargin, 0), new Vector2(-360, 140),
                 new Color(0, 0, 0, 0.5f));
+            actionBarParent = bar.transform;
 
             var layout = bar.AddComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(16, 16, 16, 16);
@@ -477,9 +479,14 @@ namespace TianZhang.Game
             logLineCount = 0;
         }
 
-        public void RefreshSpellButtons(string[] spellNames, int[] cooldowns, int currentMP, int[] mpCosts)
+        public void RefreshSpellButtons(string[] spellNames, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1)
         {
-            RefreshButtonRow(spellButtons, spellNames, cooldowns, currentMP, mpCosts);
+            RefreshButtonRow(spellButtons, spellNames, cooldowns, currentMP, mpCosts, maxSlots);
+        }
+
+        public void RefreshSkillButtons(string[] skillNames, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1)
+        {
+            RefreshButtonRow(skillButtons, skillNames, cooldowns, currentMP, mpCosts, maxSlots);
         }
 
         public void RefreshSkillButtons(string[] skillNames, int[] cooldowns, int currentMP, int[] mpCosts)
@@ -487,27 +494,69 @@ namespace TianZhang.Game
             RefreshButtonRow(skillButtons, skillNames, cooldowns, currentMP, mpCosts);
         }
 
-        private void RefreshButtonRow(List<GameObject> buttons, string[] names, int[] cooldowns, int currentMP, int[] mpCosts)
+
+        private GameObject CreateActionButton(string name, string label, UnityEngine.Events.UnityAction onClick)
         {
-            int count = Mathf.Min(buttons.Count, names?.Length ?? 0);
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(actionBarParent, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(100, 36);
+            var img = go.GetComponent<Image>();
+            img.color = new Color(0.2f, 0.2f, 0.25f, 0.9f);
+            var btn = go.GetComponent<Button>();
+            if (onClick != null) btn.onClick.AddListener(onClick);
+            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            labelGo.transform.SetParent(go.transform, false);
+            var labelRt = labelGo.GetComponent<RectTransform>();
+            labelRt.anchorMin = Vector2.zero; labelRt.anchorMax = Vector2.one;
+            labelRt.sizeDelta = Vector2.zero;
+            var labelTxt = labelGo.GetComponent<Text>();
+            labelTxt.text = label; labelTxt.fontSize = 13; labelTxt.color = Color.white;
+            labelTxt.alignment = TextAnchor.MiddleCenter; labelTxt.font = sharedFont;
+            return go;
+        }
+        private void RefreshButtonRow(List<GameObject> buttons, string[] names, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1)
+        {
+            int equippedCount = names?.Length ?? 0;
+            int showCount = maxSlots > 0 ? Mathf.Max(equippedCount, maxSlots) : equippedCount;
+
+            // 确保按钮数量足够
+            while (buttons.Count < showCount)
+            {
+                var newBtn = CreateActionButton("Slot" + buttons.Count, "", null);
+                buttons.Add(newBtn);
+            }
+
             for (int i = 0; i < buttons.Count; i++)
             {
                 var btn = buttons[i];
-                bool active = i < count;
+                bool active = i < showCount;
                 btn.SetActive(active);
                 if (!active) continue;
 
                 var txt = btn.GetComponentInChildren<Text>();
+                var button = btn.GetComponent<Button>();
                 if (txt == null) continue;
 
-                bool onCooldown = cooldowns != null && i < cooldowns.Length && cooldowns[i] > 0;
-                bool noMP = mpCosts != null && i < mpCosts.Length && currentMP < mpCosts[i];
-                string cdStr = onCooldown ? " (CD" + cooldowns[i] + ")" : "";
-                txt.text = names[i] + cdStr;
-                txt.color = (onCooldown || noMP) ? Color.gray : Color.white;
+                bool isEmptySlot = i >= equippedCount;
 
-                var button = btn.GetComponent<Button>();
-                if (button != null) button.interactable = !onCooldown && !noMP;
+                if (isEmptySlot)
+                {
+                    // 空槽显示为灰色"+"
+                    txt.text = "[空]";
+                    txt.color = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+                    if (button != null) button.interactable = false;
+                }
+                else
+                {
+                    bool onCooldown = cooldowns != null && i < cooldowns.Length && cooldowns[i] > 0;
+                    bool noMP = mpCosts != null && i < mpCosts.Length && currentMP < mpCosts[i];
+                    string cdStr = onCooldown ? " (CD" + cooldowns[i] + ")" : "";
+                    string slotLabel = showCount > 1 ? (i + 1) + ": " : "";
+                    txt.text = slotLabel + names[i] + cdStr;
+                    txt.color = (onCooldown || noMP) ? Color.gray : Color.white;
+                    if (button != null) button.interactable = !onCooldown && !noMP;
+                }
             }
         }
 

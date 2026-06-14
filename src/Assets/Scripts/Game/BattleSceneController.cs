@@ -400,7 +400,7 @@ namespace TianZhang.Game
                 spellNames[i] = playerSpells[i].spellName;
                 spellMpCosts[i] = playerSpells[i].mpCost;
             }
-            uiManager.RefreshSpellButtons(spellNames, player.SpellCooldowns, player.CurrentMP, spellMpCosts);
+            uiManager.RefreshSpellButtons(spellNames, player.SpellCooldowns, player.CurrentMP, spellMpCosts, player.MaxSpellSlots);
 
             int kl = playerSkills?.Length ?? 0;
             var skillNames = new string[kl];
@@ -410,7 +410,7 @@ namespace TianZhang.Game
                 skillNames[i] = playerSkills[i].skillName;
                 skillMpCosts[i] = playerSkills[i].mpCost;
             }
-            uiManager.RefreshSkillButtons(skillNames, player.SkillCooldowns, player.CurrentMP, skillMpCosts);
+            uiManager.RefreshSkillButtons(skillNames, player.SkillCooldowns, player.CurrentMP, skillMpCosts, player.MaxSpellSlots);
         }
 
         // ==================== 视觉 ====================

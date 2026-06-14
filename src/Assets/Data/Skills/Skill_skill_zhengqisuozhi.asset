@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
+  m_Name: Skill_skill_zhengqisuozhi
+  m_EditorClassIdentifier: 
+  skillName: "\u65E0\u540D\u795E\u901A"
+  type: 0
+  range: 1
+  minRange: 1
+  maxRange: 2
+  mpCost: 50
+  cooldownTicks: 50
+  damageMultiplier: 2.2
+  healAmount: 0
+  buffMultiplier: 1
+  cannotBlock: 1
+  cannotDodge: 0
+  penetratingShield: 0
+  stunChance: 20
+  stunDuration: 1
+  isDomain: 0
+  isBloodline: 0
+  specialEffectDesc: "\u5F81\u8BA8\u76EE\u6807\uFF0C\u65E0\u89C6\u683C\u6321"
+  realmScaleBase: 1
