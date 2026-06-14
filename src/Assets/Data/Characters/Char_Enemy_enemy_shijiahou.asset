@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
   m_Name: Char_Enemy_enemy_shijiahou
   m_EditorClassIdentifier: 
-  charName: "\u65E0\u540D\u4FEE\u58EB"
+  charName: "\u77F3\u7532\u517D"
   baseLevel: 1
   rootBone: 18
   physique: 16
@@ -38,3 +38,7 @@ MonoBehaviour:
   gongFaName: 
   equippedSpells: []
   equippedSkills: []
+  availableSpells: []
+  availableSkills: []
+  maxSpellSlots: 0
+  maxSkillSlots: 0

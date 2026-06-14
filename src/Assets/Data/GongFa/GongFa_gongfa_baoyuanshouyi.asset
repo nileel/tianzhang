@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_baoyuanshouyi
   m_EditorClassIdentifier: 
-  gongFaName: "\u65E0\u540D\u529F\u6CD5"
+  gongFaName: "\u62B1\u5143\u5B88\u4E00\u7ECF"
   affiliation: "\u592A\u4E00\u9053\u5EAD"
   grade: "\u4E2D\u54C1"
   elementMain: "\u6C34"
@@ -24,5 +24,89 @@ MonoBehaviour:
   starReaction: 1
   starTalent: 3
   starFortune: 3
-  subGrowth: []
-  chapters: []
+  subGrowth:
+  - realm: "\u7EC3\u6C14"
+    hp: 3
+    mp: 3
+    physAtk: 2
+    magAtk: 3
+    physDef: 1
+    magDef: 2
+    reaction: 1
+    movePoints: 0.2
+    mindGrowth: 0.3
+  - realm: "\u7B51\u57FA"
+    hp: 40
+    mp: 30
+    physAtk: 15
+    magAtk: 23
+    physDef: 13
+    magDef: 20
+    reaction: 8
+    movePoints: 0.5
+    mindGrowth: 1
+  - realm: "\u91D1\u4E39"
+    hp: 200
+    mp: 267
+    physAtk: 73
+    magAtk: 107
+    physDef: 67
+    magDef: 87
+    reaction: 30
+    movePoints: 0.8
+    mindGrowth: 1.7
+  - realm: "\u5143\u5A74"
+    hp: 1000
+    mp: 1067
+    physAtk: 300
+    magAtk: 433
+    physDef: 267
+    magDef: 367
+    reaction: 100
+    movePoints: 1
+    mindGrowth: 2
+  chapters:
+  - chapterName: "\u5B88\u4E00\u7BC7"
+    realm: "\u7EC3\u6C14"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u5B88\u4E00\u5370\u8BB0\uFF1A\u6BCF\u56DE\u5408\u672A\u79FB\u52A8\u83B71\u5C42\uFF0C\u6BCF\u5C42\u795E\u9B42\u653B\u51FB+4%"
+  - chapterName: "\u62B1\u5143\u7BC7"
+    realm: "\u7B51\u57FA"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u5B88\u4E00\u4E0A\u9650+2\uFF0C\u53D7\u51FB\u6D88\u80171\u5C42\u51CF\u4F2420%"
+  - chapterName: "\u81F4\u865A\u7BC7"
+    realm: "\u91D1\u4E39"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u6EE1\u5C42\u795E\u9B42\u9632\u5FA1+15%\uFF0C\u5F00\u5C40\u83B72\u5C42"
+  - chapterName: "\u5B88\u9759\u7BC7"
+    realm: "\u5143\u5A74"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u6BCF\u5C42\u989D\u5916\u795E\u9B42\u9632\u5FA1+3%\uFF0C\u6EE1\u5C42MP\u6D88\u8017-25%\uFF0C\u51CF\u4F2420%\u219230%"

@@ -1,6 +1,6 @@
 ﻿# 设计当前状态
 
-> 来源：AGENTS.md §当前状态 | 最后更新：2026-06-14
+> 来源：AGENTS.md §当前状态 | 最后更新：2026-06-14 (17:00)
 
 ---
 
@@ -87,3 +87,4 @@
 | v0.5 | 地图探索系统 | ExplorationController（半径12六角格+障碍生成+4敌人+探索→战斗循环） |
 | v0.5 | 敌人生成 | 从Enemies.csv模板池/内置回退生成，含掉落提示 |
 | v0.5 | 术法槽位系统 | Character.MaxSpellSlots(境界推算)、EquipSpell/UnequipSpell/SwapSpellInCombat、UI空槽灰显 |
+| v0.6 | 三门派数据导入 | 玉清崖(4/13/6)+混元山(4/14/6)+太虚观(4/15/7)全部通过DataConfigImporter导入 ✅ |

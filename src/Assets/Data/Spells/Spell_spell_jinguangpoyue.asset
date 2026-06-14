@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_jinguangpoyue
   m_EditorClassIdentifier: 
-  spellName: "\u65E0\u540D\u672F\u6CD5"
+  spellName: "\u91D1\u5149\u7834\u5CB3"
   type: 0
-  range: 1
+  range: 0
   minRange: 1
   maxRange: 1
   mpCost: 15

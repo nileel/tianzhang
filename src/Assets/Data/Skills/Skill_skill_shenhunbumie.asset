@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
+  m_Name: Skill_skill_shenhunbumie
+  m_EditorClassIdentifier: 
+  skillName: "\u795E\u9B42\u4E0D\u706D"
+  type: 0
+  range: 1
+  minRange: 0
+  maxRange: 0
+  mpCost: 0
+  cooldownTicks: 0
+  damageMultiplier: 3
+  healAmount: 0
+  buffMultiplier: 1
+  cannotBlock: 0
+  cannotDodge: 0
+  penetratingShield: 0
+  stunChance: 0
+  stunDuration: 1
+  isDomain: 0
+  isBloodline: 0
+  specialEffectDesc: 
+  realmScaleBase: 1

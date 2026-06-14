@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_zhengqisuozhi
   m_EditorClassIdentifier: 
-  skillName: "\u65E0\u540D\u795E\u901A"
+  skillName: "\u5F81\u65D7\u6240\u6307"
   type: 0
   range: 1
   minRange: 1

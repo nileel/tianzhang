@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
+  m_Name: Spell_spell_toubianduanliu
+  m_EditorClassIdentifier: 
+  spellName: "\u6295\u97AD\u65AD\u6D41"
+  type: 0
+  range: 0
+  minRange: 0
+  maxRange: 0
+  mpCost: 40
+  cooldownTicks: 30
+  damageMultiplier: 1.2
+  healAmount: 0
+  buffMultiplier: 1
+  cannotBlock: 0
+  cannotDodge: 0
+  penetratingShield: 0
+  stunChance: 0
+  stunDuration: 1
+  realmScaleBase: 1

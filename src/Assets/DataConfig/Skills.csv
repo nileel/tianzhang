@@ -1,4 +1,29 @@
-﻿# 神通配置表（所有文本字段使用 Language.csv 中的 ID）
+﻿# Skills config (2026-06-14)
 name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,realmReq,affiliation
 skill_jiuzhuanhuandan,1,1,4,60,50,2.0,0,0,0,1,0,0,0,desc_danhuo_penetration,realm_jindan,faction_taiyidaoting
 skill_zhengqisuozhi,0,1,2,50,50,2.2,0,1,0,0,20,0,0,desc_zhengtao_wushi,realm_jindan,faction_taiyidaoting
+
+# === Yuqingya (6) ===
+skill_jianxintongming,0,0,0,0,0,0,0,0,0,0,0,0,0,,realm_jindan,faction_yuqingya
+skill_tianjieyinji,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_zhuji,faction_yuqingya
+skill_leijiandianxu,0,0,0,0,0,1.5,0,0,0,0,0,0,0,,realm_jindan,faction_yuqingya
+skill_leijieyimai,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_jindan,faction_yuqingya
+skill_kuxingshiyue,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_zhuji,faction_yuqingya
+skill_jianyu_wanguizong,0,1,5,0,0,0,0,0,0,0,0,1,0,,realm_lianxu,faction_yuqingya
+
+# === Hunyuanshan (6) ===
+skill_bumiejinshen,0,0,0,0,0,0,0,0,0,0,0,0,0,,realm_jindan,faction_hunyuanshan
+skill_tiexuezhengqi,0,0,1,0,0,2.0,0,0,0,0,0,0,0,,realm_jindan,faction_hunyuanshan
+skill_zhanchangzhijue,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_zhuji,faction_hunyuanshan
+skill_tiexuejunhun,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_jindan,faction_hunyuanshan
+skill_wanjuntongling,0,0,1,0,0,1.5,0,0,0,0,0,0,1,,realm_jindan,faction_hunyuanshan
+skill_zhanyu_tiexuezhengqi,0,1,4,0,0,0,0,0,0,0,0,1,0,,realm_lianxu,faction_hunyuanshan
+
+# === Taixuguan (7) ===
+skill_yinguodaozhuan,0,0,0,0,0,0,0,0,0,0,0,0,0,,realm_jindan,faction_taixuguan
+skill_mengjiexingzhou,0,0,0,0,0,2.0,0,0,0,0,0,0,0,,realm_jindan,faction_taixuguan
+skill_shenhunbumie,0,0,0,0,0,3.0,0,0,0,0,0,0,0,,realm_jindan,faction_taixuguan
+skill_shuanghuntongti,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_jindan,faction_taixuguan
+skill_suhuilunhui,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_zhuji,faction_taixuguan
+skill_yinguokehen,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_jindan,faction_taixuguan
+skill_hunyu_huangquan,0,1,5,0,0,0,0,0,0,0,0,1,0,,realm_lianxu,faction_taixuguan

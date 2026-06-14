@@ -29,7 +29,7 @@ namespace TianZhang.Editor
             var lines = File.ReadAllLines(path);
             foreach (var line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
                 if (cols.Length >= 2 && !string.IsNullOrEmpty(cols[0]))
                     _lang[cols[0]] = cols[1];
@@ -65,7 +65,7 @@ namespace TianZhang.Editor
 
             foreach (var line in lines.Skip(1))
             {
-                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
                 if (cols.Length < 14) continue;
 
@@ -89,7 +89,7 @@ namespace TianZhang.Editor
                 {
                     var parts = realmEntry.Split(':');
                     if (parts.Length < 2) continue;
-                    var values = parts[1].Split(',');
+                    var values = parts[1].Split('/');
                     if (values.Length < 9) continue;
                     growthList.Add(new GongFaGrowthData.SubGrowthPerRealm
                     {
@@ -151,7 +151,7 @@ namespace TianZhang.Editor
 
             foreach (var line in lines.Skip(1))
             {
-                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
                 if (cols.Length < 14) continue;
 
@@ -187,7 +187,7 @@ namespace TianZhang.Editor
 
             foreach (var line in lines.Skip(1))
             {
-                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
                 if (cols.Length < 16) continue;
 
@@ -225,7 +225,7 @@ namespace TianZhang.Editor
 
             foreach (var line in lines.Skip(1))
             {
-                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
                 if (cols.Length < 19) continue;
 
@@ -267,7 +267,7 @@ namespace TianZhang.Editor
 
             foreach (var line in lines.Skip(1))
             {
-                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
                 if (cols.Length < 22) continue;
 

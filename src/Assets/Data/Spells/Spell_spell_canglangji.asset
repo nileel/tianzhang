@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_canglangji
   m_EditorClassIdentifier: 
-  spellName: "\u65E0\u540D\u672F\u6CD5"
+  spellName: "\u6CA7\u6D6A\u51FB"
   type: 1
-  range: 1
+  range: 0
   minRange: 1
   maxRange: 4
   mpCost: 25

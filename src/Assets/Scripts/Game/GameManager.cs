@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using TianZhang.Entity;
 
 namespace TianZhang.Game
 {
@@ -27,6 +28,17 @@ namespace TianZhang.Game
             if (showDebugLog)
                 Debug.Log("天章 — 六角格CTB战棋原型启动");
         }
+
+        /// <summary>门派选择后启动游戏（由 SectSelectionManager 调用）</summary>
+        public void StartGameWithSect(CharacterData charData)
+        {
+            Debug.Log($"[GameManager] Starting game with sect: {charData.charName}, 功法: {charData.gongFaName}");
+            PlayerCharData = charData;
+            // SectSelectionManager handles player reconfiguration after scene loads
+        }
+
+        /// <summary>玩家门派选择后的角色数据</summary>
+        [HideInInspector] public CharacterData PlayerCharData;
 
         private void Update()
         {

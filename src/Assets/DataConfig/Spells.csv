@@ -1,5 +1,4 @@
-﻿# 术法配置表（所有文本字段使用 Language.csv 中的 ID）
-# name → 文本ID, realmReq/elementReq/affiliation → 文本ID
+﻿# Spells config (2026-06-14)
 name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,realmReq,elementReq,affiliation
 spell_xuanshuizhou,1,1,4,12,8,1.2,0,0,0,0,0,realm_lianqi,element_water_root,faction_taiyidaoting
 spell_canglangji,1,1,4,25,20,1.6,0,0,0,0,0,realm_zhuji,element_water_root,faction_taiyidaoting
@@ -7,3 +6,51 @@ spell_anshenfu,4,0,3,8,6,0.2,0,0,0,0,15,realm_lianqi,element_water_or_wind,facti
 spell_jinguangpoyue,0,1,1,15,30,1.6,0,0,0,0,0,realm_zhuji,element_metal_root,faction_taiyidaoting
 spell_liuhuolingfu,1,1,3,18,15,1.3,0,0,0,0,0,realm_lianqi,element_fire_root,faction_taiyidaoting
 spell_anshi,1,1,4,20,18,1.4,0,0,0,0,0,realm_zhuji,element_any_root,faction_sanxiu
+
+# === Yuqingya (13) ===
+spell_yinleijue,0,1,3,11,8,0.8,0,0,0,0,0,realm_lianqi,element_thunder_root,faction_yuqingya
+spell_kuxingjianshi,0,0,1,10,8,1.4,0,0,0,0,0,realm_lianqi,element_metal_root,faction_yuqingya
+spell_jianganghuti,2,0,0,18,12,0.2,0,0,0,0,0,realm_zhuji,element_metal_root,faction_yuqingya
+spell_tianleiyin,2,1,5,20,14,1.2,0,0,0,0,0,realm_zhuji,element_thunder_root,faction_yuqingya
+spell_leidunbu,5,0,0,14,12,0.3,0,0,0,0,0,realm_zhuji,element_thunder_root,faction_yuqingya
+spell_jiuxiaotaiyizhan,2,0,2,35,22,1.8,0,0,0,0,0,realm_jindan,element_thunder_root,faction_yuqingya
+spell_wuleihongding,2,2,5,40,24,1.5,0,0,0,0,0,realm_jindan,element_thunder_root,faction_yuqingya
+spell_leicnicuiti_spell,1,0,0,30,20,0.2,0,0,0,0,0,realm_jindan,element_thunder_root,faction_yuqingya
+spell_wanjianchaozong,0,1,5,65,35,2.5,0,0,0,0,0,realm_yuanying,element_metal_root,faction_yuqingya
+spell_tianjieyin,2,1,6,75,40,2.0,0,0,0,0,0,realm_yuanying,element_thunder_root,faction_yuqingya
+spell_renjianheyi,0,0,3,70,40,3.0,0,0,0,0,0,realm_huashen,element_metal_root,faction_yuqingya
+spell_jiuxiaoleifa,2,2,7,85,45,2.5,0,0,0,0,0,realm_huashen,element_thunder_root,faction_yuqingya
+spell_leijiankaitian,2,0,4,130,50,3.5,0,0,0,0,0,realm_lianxu,element_thunder_root,faction_yuqingya
+
+# === Hunyuanshan (14) ===
+spell_tiegugong,0,0,0,8,6,0.2,0,0,0,0,0,realm_lianqi,element_earth_root,faction_hunyuanshan
+spell_pozhenchongfeng,0,0,0,12,10,1.3,0,0,0,0,0,realm_lianqi,element_metal_root,faction_hunyuanshan
+spell_menshice,1,0,6,20,5,0.2,0,0,0,0,0,realm_zhuji,element_earth_root,faction_hunyuanshan
+spell_xuanjiatiebi,1,1,1,30,15,0.2,0,0,0,0,0,realm_zhuji,element_earth_root,faction_hunyuanshan
+spell_mingjinhaoling,1,0,0,16,12,0.2,0,0,0,0,0,realm_zhuji,element_earth_root,faction_hunyuanshan
+spell_hengshaoqianjun,0,0,1,30,18,1.8,0,0,0,0,0,realm_jindan,element_metal_root,faction_hunyuanshan
+spell_shuwurushan,1,1,1,35,20,0.2,0,0,0,0,0,realm_jindan,element_earth_root,faction_hunyuanshan
+spell_tiesuolianzhou,1,0,3,25,16,0.2,0,0,0,0,0,realm_jindan,element_earth_root,faction_hunyuanshan
+spell_jindaoduanyan,2,1,4,35,25,1.6,0,0,0,0,0,realm_jindan,element_metal_root,faction_hunyuanshan
+spell_toubianduanliu,0,0,0,40,30,1.2,0,0,0,0,0,realm_yuanying,element_earth_root,faction_hunyuanshan
+spell_hufubingce,2,1,4,55,30,0.8,0,0,0,0,0,realm_yuanying,element_metal_root,faction_hunyuanshan
+spell_wanchengtianwei,0,0,2,80,40,2.8,0,0,0,0,0,realm_huashen,element_earth_root,faction_hunyuanshan
+spell_jianbiqingye,2,0,0,70,45,0.2,0,0,0,0,0,realm_huashen,element_earth_root,faction_hunyuanshan
+spell_hunyunguiyi,2,0,3,120,50,2.5,0,0,0,0,0,realm_lianxu,element_earth_root,faction_hunyuanshan
+
+# === Taixuguan (15) ===
+spell_tx_anshi,1,1,4,10,6,1.1,0,0,0,0,0,realm_lianqi,element_dark_root,faction_taixuguan
+spell_youmingyin,1,1,5,10,8,0.3,0,0,0,0,0,realm_lianqi,element_dark_root,faction_taixuguan
+spell_rumengjue,1,2,5,12,10,0.2,0,0,0,0,0,realm_lianqi,element_dark_root,faction_taixuguan
+spell_yehuozhou,1,1,5,20,15,1.5,0,0,0,0,0,realm_zhuji,element_dark_root,faction_taixuguan
+spell_dimafengling,2,0,0,22,16,0.2,0,0,0,0,0,realm_zhuji,element_dark_root,faction_taixuguan
+spell_huangquanzhaoying,1,2,5,18,14,0.3,0,0,0,0,0,realm_zhuji,element_dark_root,faction_taixuguan
+spell_mengyanxixin,1,2,5,35,20,1.8,0,0,0,0,0,realm_jindan,element_dark_root,faction_taixuguan
+spell_yinguosilv,1,2,6,28,18,0.3,0,0,0,0,0,realm_jindan,element_dark_root,faction_taixuguan
+spell_lunhuichanxiang,1,0,0,30,30,0.2,0,0,0,0,0,realm_jindan,element_dark_root,faction_taixuguan
+spell_hunguibian,1,2,6,45,30,2.2,0,0,0,0,0,realm_jindan,element_dark_root,faction_taixuguan
+spell_yongjiehuilang,1,2,6,60,35,2.5,0,0,0,0,0,realm_yuanying,element_dark_root,faction_taixuguan
+spell_suhuijuexing,1,0,0,50,40,0.2,0,0,0,0,0,realm_yuanying,element_dark_root,faction_taixuguan
+spell_sanqianmengjie,1,3,7,70,45,0.5,0,0,0,0,0,realm_huashen,element_dark_root,faction_taixuguan
+spell_yinguodaoxuan,1,2,7,75,40,2.8,0,0,0,0,0,realm_huashen,element_dark_root,faction_taixuguan
+spell_lunhuibian,1,1,8,100,50,3.5,0,0,0,0,0,realm_lianxu,element_dark_root,faction_taixuguan

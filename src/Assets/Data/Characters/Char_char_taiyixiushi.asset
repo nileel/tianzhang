@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
   m_Name: Char_char_taiyixiushi
   m_EditorClassIdentifier: 
-  charName: "\u65E0\u540D\u4FEE\u58EB"
+  charName: "\u592A\u4E00\u4FEE\u58EB"
   baseLevel: 1
   rootBone: 10
   physique: 10
@@ -36,5 +36,14 @@ MonoBehaviour:
   hitRateBonus: 3
   realmMultiplier: 1.5
   gongFaName: "\u62B1\u5143\u5B88\u4E00\u7ECF"
-  equippedSpells: []
-  equippedSkills: []
+  equippedSpells:
+  - spell_xuanshuizhou
+  - spell_canglangji
+  - spell_anshenfu
+  equippedSkills:
+  - skill_jiuzhuanhuandan
+  - skill_zhengqisuozhi
+  availableSpells: []
+  availableSkills: []
+  maxSpellSlots: 0
+  maxSkillSlots: 0

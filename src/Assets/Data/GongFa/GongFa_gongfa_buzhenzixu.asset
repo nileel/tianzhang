@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
+  m_Name: GongFa_gongfa_buzhenzixu
+  m_EditorClassIdentifier: 
+  gongFaName: "\u4E0D\u771F\u81EA\u865A\u6CD5"
+  affiliation: "\u592A\u865A\u89C2"
+  grade: "\u4E2D\u54C1"
+  elementMain: "\u6697"
+  elementSub: 
+  starRootBone: 1
+  starPhysique: 1
+  starSpirit: 3
+  starMind: 3
+  starReaction: 1
+  starTalent: 2
+  starFortune: 1
+  subGrowth:
+  - realm: "\u7EC3\u6C14"
+    hp: 5
+    mp: 2
+    physAtk: 3
+    magAtk: 2
+    physDef: 2
+    magDef: 1
+    reaction: 1
+    movePoints: 0.2
+    mindGrowth: 0.2
+  - realm: "\u7B51\u57FA"
+    hp: 53
+    mp: 23
+    physAtk: 20
+    magAtk: 17
+    physDef: 17
+    magDef: 13
+    reaction: 8
+    movePoints: 0.5
+    mindGrowth: 0.7
+  - realm: "\u91D1\u4E39"
+    hp: 253
+    mp: 233
+    physAtk: 100
+    magAtk: 93
+    physDef: 80
+    magDef: 73
+    reaction: 30
+    movePoints: 0.8
+    mindGrowth: 1.3
+  - realm: "\u5143\u5A74"
+    hp: 1200
+    mp: 933
+    physAtk: 400
+    magAtk: 367
+    physDef: 333
+    magDef: 300
+    reaction: 100
+    movePoints: 1
+    mindGrowth: 2
+  - realm: "\u5316\u795E"
+    hp: 4667
+    mp: 4333
+    physAtk: 1667
+    magAtk: 1533
+    physDef: 1333
+    magDef: 1200
+    reaction: 300
+    movePoints: 1.2
+    mindGrowth: 3
+  chapters: []

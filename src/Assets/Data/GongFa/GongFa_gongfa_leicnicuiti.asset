@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
+  m_Name: GongFa_gongfa_leicnicuiti
+  m_EditorClassIdentifier: 
+  gongFaName: "\u96F7\u6C60\u6DEC\u4F53\u529F"
+  affiliation: "\u7389\u6E05\u5D16"
+  grade: "\u4E0B\u54C1"
+  elementMain: "\u96F7"
+  elementSub: 
+  starRootBone: 5
+  starPhysique: 4
+  starSpirit: 2
+  starMind: 4
+  starReaction: 1
+  starTalent: 2
+  starFortune: 2
+  subGrowth:
+  - realm: "\u7EC3\u6C14"
+    hp: 14
+    mp: 3
+    physAtk: 4
+    magAtk: 2
+    physDef: 6
+    magDef: 3
+    reaction: 2
+    movePoints: 0.2
+    mindGrowth: 0.3
+  - realm: "\u7B51\u57FA"
+    hp: 133
+    mp: 23
+    physAtk: 33
+    magAtk: 16
+    physDef: 50
+    magDef: 20
+    reaction: 12
+    movePoints: 0.5
+    mindGrowth: 1
+  - realm: "\u91D1\u4E39"
+    hp: 633
+    mp: 233
+    physAtk: 166
+    magAtk: 93
+    physDef: 250
+    magDef: 116
+    reaction: 45
+    movePoints: 0.8
+    mindGrowth: 2
+  - realm: "\u5143\u5A74"
+    hp: 3000
+    mp: 933
+    physAtk: 666
+    magAtk: 366
+    physDef: 1000
+    magDef: 466
+    reaction: 150
+    movePoints: 1
+    mindGrowth: 3
+  chapters:
+  - chapterName: chapter_ganlei
+    realm: "\u51E1\u4EBA"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 3
+    magDefBonus: 0
+    specialEffect: "\u96F7\u611F\uFF1A\u96F7\u6C60\u4FEE\u70BC\u901F\u5EA6x3\uFF0C\u88AB\u5288+0.1%\u96F7\u6297"
+  - chapterName: chapter_yinlei2
+    realm: "\u7EC3\u6C14"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 3
+    magDefBonus: 0
+    specialEffect: "\u5F15\u96F7\u6DEC\u4F53\uFF1A\u4FEE\u70BCx3.5\uFF0CHP\u4E0A\u9650+1%/3\u6B21"
+  - chapterName: chapter_cuiti
+    realm: "\u7B51\u57FA"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 3
+    magDefBonus: 0
+    specialEffect: "\u96F7\u808C\u94C1\u9AA8\uFF1A\u4FEE\u70BCx4\uFF0CHP\u4E0A\u9650+1%/2\u6B21\uFF0C\u7269\u9632+15%"
+  - chapterName: chapter_leiji
+    realm: "\u91D1\u4E39"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 3
+    magDefBonus: 0
+    specialEffect: "\u96F7\u9706\u4E4B\u8EAF\uFF1A\u4FEE\u70BCx4.5"
+  - chapterName: chapter_buhuai
+    realm: "\u5143\u5A74"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 3
+    magDefBonus: 0
+    specialEffect: "\u4E0D\u574F\uFF1A\u4FEE\u70BCx5"

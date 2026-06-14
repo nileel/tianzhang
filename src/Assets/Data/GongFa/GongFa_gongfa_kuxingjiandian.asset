@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
+  m_Name: GongFa_gongfa_kuxingjiandian
+  m_EditorClassIdentifier: 
+  gongFaName: "\u82E6\u884C\u5251\u5178"
+  affiliation: "\u7389\u6E05\u5D16"
+  grade: "\u4E2D\u54C1"
+  elementMain: "\u91D1"
+  elementSub: 
+  starRootBone: 4
+  starPhysique: 3
+  starSpirit: 2
+  starMind: 5
+  starReaction: 1
+  starTalent: 4
+  starFortune: 2
+  subGrowth:
+  - realm: "\u7EC3\u6C14"
+    hp: 10
+    mp: 2
+    physAtk: 6
+    magAtk: 2
+    physDef: 5
+    magDef: 2
+    reaction: 3
+    movePoints: 0.2
+    mindGrowth: 0.5
+  - realm: "\u7B51\u57FA"
+    hp: 100
+    mp: 16
+    physAtk: 50
+    magAtk: 16
+    physDef: 41
+    magDef: 13
+    reaction: 20
+    movePoints: 0.5
+    mindGrowth: 1.7
+  - realm: "\u91D1\u4E39"
+    hp: 475
+    mp: 116
+    physAtk: 250
+    magAtk: 93
+    physDef: 200
+    magDef: 75
+    reaction: 75
+    movePoints: 0.8
+    mindGrowth: 3.3
+  - realm: "\u5143\u5A74"
+    hp: 2250
+    mp: 466
+    physAtk: 1000
+    magAtk: 366
+    physDef: 833
+    magDef: 300
+    reaction: 250
+    movePoints: 1
+    mindGrowth: 5
+  - realm: "\u5316\u795E"
+    hp: 8750
+    mp: 2166
+    physAtk: 4167
+    magAtk: 1533
+    physDef: 3333
+    magDef: 1200
+    reaction: 750
+    movePoints: 1.2
+    mindGrowth: 7.5
+  chapters:
+  - chapterName: chapter_mojian
+    realm: "\u7EC3\u6C14"
+    soulShieldRate: 0
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 3
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u8840\u5251\u6C14\uFF1A\u6D88\u8017HP10%\u9020\u6210\u8089\u653Bx1.5\u7269\u4F24\uFF0C\u65E0\u89C6\u683C\u6321"
+  - chapterName: chapter_duanlong
+    realm: "\u7B51\u57FA"
+    soulShieldRate: 0
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 3
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u500D\u73871.8\uFF0CHP<50%\u65F6x1.3"
+  - chapterName: chapter_wujuan
+    realm: "\u91D1\u4E39"
+    soulShieldRate: 0
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 3
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u500D\u73872.2"
+  - chapterName: chapter_xuefeng
+    realm: "\u5143\u5A74"
+    soulShieldRate: 0
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 3
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u500D\u73872.8\uFF0CHP<20%\u65F6\u53EF\u6D88\u8017\u51CF\u534A"
+  - chapterName: chapter_gujian
+    realm: "\u5316\u795E"
+    soulShieldRate: 0
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 3
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u500D\u73873.5\uFF0C\u65E0\u89C6\u6240\u6709\u9632\u5FA1\u6548\u679C\uFF0C\u5B64\u5251\u8BC0"

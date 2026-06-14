@@ -34,6 +34,10 @@
 
 ## Unity 开发经验
 
+- **UI 统一画布**：所有 UI 面板（战斗 UI、门派选择等）必须挂载到同一个 UICanvas 下，不要各自创建独立 Canvas。BattleUIManager 在 BuildUI 时创建名为 "UICanvas" 的根 Canvas（DontDestroyOnLoad），其他 UI 组件通过 `GameObject.Find("UICanvas")` 找到并挂载。SectSelectionManager.Start() 已内置此逻辑。
+
+- **VerticalLayoutGroup**：使用自动布局时必须同时勾选 childForceExpandWidth 和 childForceExpandHeight，否则动态创建的按钮不会显示。
+
 - **命名空间不与 Unity 类型冲突**：如 `TianZhang.Tilemap` 与 `UnityEngine.Tilemaps.Tilemap` 冲突 → CS0118。避免用常用 Unity 类名做命名空间。
 - **C# 版本兼容**：避免 `:=` 等 C# 9+ 语法，Unity 2022 不完全支持。
 - **六角格坐标转换**：不要手写 offset 公式。Unity Grid 的 `GetCellCenterWorld` / `WorldToCell` 是唯一可靠来源。点击检测用全量缓存 + 最近邻查找最稳妥。
