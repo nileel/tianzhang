@@ -33,6 +33,9 @@ namespace TianZhang.Combat
         public int minRange = 1;
         public int maxRange = 1;
 
+        [Header("五行属性")]
+        public string element = ""; // 金/木/水/火/土，空字符串表示无属性
+
         [Header("消耗")]
         public int mpCost = 20;
         public int cooldownTicks = 30; // 冷却刻数（术法通常CD3=30刻）

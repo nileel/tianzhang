@@ -62,6 +62,14 @@ namespace TianZhang.Entity
         public string[] AvailableSkills; // 神通库
         public int CombatSwapsUsed;     // 本场战斗已换法次数
         public const int MaxCombatSwaps = 2; // 每场最多临阵换法次数
+
+        // ---- 印记状态 ----
+        public int ShouyiStacks;     // 守一印记层数（抱元守一经）
+        public int FudanStacks;      // 符胆印记层数（云篆度人经）
+
+        // ---- 功法 ----
+        public string GongFaName;
+
         // ---- 姓名 ----
         public string Name;
 
@@ -70,6 +78,7 @@ namespace TianZhang.Entity
             var c = new Character
             {
                 Name = data.charName,
+                GongFaName = data.gongFaName,
                 RootBone = data.rootBone,
                 Physique = data.physique,
                 Spirit = data.spirit,
@@ -290,7 +299,34 @@ namespace TianZhang.Entity
             return swappable.ToArray();
         }
 
-        public override string ToString() =>
+        /// <summary>守一印记最大层数（按境界）</summary>
+    public int MaxShouyi()
+    {
+        return Mathf.RoundToInt(Cultivation.CultivationEngine.GetRealmMultiplier(m_Realm ?? "")) switch
+        {
+            >= 6 => 5,   // 金丹+
+            >= 3 => 4,   // 筑基
+            >= 2 => 3,   // 练气
+            _ => 3
+        };
+    }
+
+    /// <summary>符胆印记最大层数（按境界）</summary>
+    public int MaxFudan()
+    {
+        return Mathf.RoundToInt(Cultivation.CultivationEngine.GetRealmMultiplier(m_Realm ?? "")) switch
+        {
+            >= 6 => 5,   // 金丹+
+            >= 3 => 3,   // 筑基
+            _ => 5
+        };
+    }
+
+    private string m_Realm;
+    public void SetRealm(string realm) => m_Realm = realm;
+    public string GetRealm() => m_Realm;
+
+    public override string ToString() =>
             $"{Name} HP={CurrentHP}/{MaxHP} MP={CurrentMP}/{MaxMP} " +
             $"PAtk={PhysAtk} MAtk={MagAtk} PDef={PhysDef} MDef={MagDef} " +
             $"Pos={Position} Face={Facing}";

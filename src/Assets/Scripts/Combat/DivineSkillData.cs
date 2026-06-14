@@ -16,6 +16,9 @@ namespace TianZhang.Combat
         public int minRange = 1;
         public int maxRange = 3;
 
+        [Header("五行属性")]
+        public string element = ""; // 金/木/水/火/土，空字符串=继承功法属性
+
         [Header("消耗")]
         public int mpCost = 40;
         public int cooldownTicks = 50; // 神通通常CD5=50刻

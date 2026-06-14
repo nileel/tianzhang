@@ -221,6 +221,7 @@ namespace TianZhang.Map
             cd.rootBone = 14; cd.physique = 14; cd.spirit = 14; cd.mind = 14; cd.reaction = 14; cd.talent = 14;
             cd.blockRate = 10; cd.soulShieldRate = 13; cd.critRate = 5; cd.critDamage = 15;
             cd.realmMultiplier = 1.5f;
+            cd.gongFaName = "抱元守一经"; // 默认太一道庭功法（对应五行=水）
             cd.equippedSpells = playerSpells != null
                 ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "")
                 : new string[0];
@@ -317,6 +318,9 @@ namespace TianZhang.Map
             data.soulShieldRate = i == 2 ? 8 : 0;
             data.dodgeRate = i == 1 ? 18 : 5;
             data.critRate = 5; data.critDamage = i == 2 ? 15 : 10;
+            // 五行属性：石甲兽(土)、风隼(金)、焰尾狐(火)、荒野散修(水)
+            string[] gongfas = { "含弘光大典", "疾雷破山经", "南华玄感录", "秋水游心经" };
+            data.gongFaName = gongfas[i];
             return data;
         }
 
@@ -327,6 +331,15 @@ namespace TianZhang.Map
             s.minRange = 1; s.maxRange = 3;
             s.mpCost = 15; s.cooldownTicks = 30;
             s.damageMultiplier = 1.2f;
+            // 五行推测：根据术法名中的关键字
+            if (name != null)
+            {
+                if (name.Contains("水") || name.Contains("川") || name.Contains("浪")) s.element = "水";
+                else if (name.Contains("火") || name.Contains("焰") || name.Contains("丹")) s.element = "火";
+                else if (name.Contains("金") || name.Contains("雷") || name.Contains("剑") || name.Contains("电")) s.element = "金";
+                else if (name.Contains("土") || name.Contains("石") || name.Contains("山") || name.Contains("岩")) s.element = "土";
+                else if (name.Contains("木") || name.Contains("草") || name.Contains("藤")) s.element = "木";
+            }
             return s;
         }
 
@@ -506,12 +519,24 @@ namespace TianZhang.Map
             player.SpellCooldowns = new int[Mathf.Max(playerSpells?.Length ?? 0, player.MaxSpellSlots)];
             player.SkillCooldowns = new int[Mathf.Max(playerSkills?.Length ?? 0, player.MaxSkillSlots)];
 
+            // 初始化印记状态（守一/符胆：开局各2层）
+            if (player.GongFaName == "抱元守一经") player.ShouyiStacks = 2;
+            if (player.GongFaName == "云篆度人经") player.FudanStacks = 2;
+            if (enemy.character.GongFaName == "抱元守一经") enemy.character.ShouyiStacks = 2;
+            if (enemy.character.GongFaName == "云篆度人经") enemy.character.FudanStacks = 2;
+
             if (uiManager != null)
+            {
+                uiManager.SetPlayerElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName));
+                uiManager.SetEnemyElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(enemy.character.GongFaName));
                 uiManager.RefreshSpellButtons(
                     playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
                     player.SpellCooldowns,
                     player.CurrentMP,
-                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0], player.MaxSpellSlots);
+                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
+                    player.MaxSpellSlots,
+                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+            }
 
             state = GameState.Combat;
             StartCoroutine(CombatLoop(enemy));
@@ -539,12 +564,16 @@ namespace TianZhang.Map
                         playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
                         player.SpellCooldowns,
                         player.CurrentMP,
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0], player.MaxSpellSlots);
+                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
+                        player.MaxSpellSlots,
+                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
                     uiManager.RefreshSkillButtons(
                         playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "?") : new string[0],
                         player.SkillCooldowns,
                         player.CurrentMP,
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0]);
+                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0],
+                        -1,
+                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
                     uiManager.SetActionButtonsInteractable(true);
                 }
 
@@ -561,12 +590,16 @@ namespace TianZhang.Map
                         playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
                         player.SpellCooldowns,
                         player.CurrentMP,
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0], player.MaxSpellSlots);
+                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
+                        player.MaxSpellSlots,
+                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
                     uiManager.RefreshSkillButtons(
                         playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "?") : new string[0],
                         player.SkillCooldowns,
                         player.CurrentMP,
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0]);
+                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0],
+                        -1,
+                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
                 }
                 uiManager?.SetActionButtonsInteractable(false);
 
@@ -833,11 +866,13 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
             if (!player.IsAlive) status = "阵亡";
             else if (state == GameState.Exploration) status = "探索中";
             else if (state == GameState.Combat) status = "战斗中";
+            uiManager.SetPlayerElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName));
             uiManager.UpdatePlayerInfo(player.Name, player.CurrentHP, player.MaxHP,
                 player.CurrentMP, player.MaxMP, ct, status);
 
             if (currentCombatTarget != null && currentCombatTarget.IsAlive)
             {
+                uiManager.SetEnemyElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(currentCombatTarget.GongFaName));
                 float ect = currentCombatTarget.CTBUnit != null
                     ? currentCombatTarget.CTBUnit.CT / CTBEngine.ActionThreshold : 0;
                 uiManager.UpdateEnemyInfo(currentCombatTarget.Name,

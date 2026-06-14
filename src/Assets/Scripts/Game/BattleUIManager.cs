@@ -39,6 +39,11 @@ namespace TianZhang.Game
         private Image enemyCTFill;
         private Text enemyCTText;
         private Text enemyStatusText;
+        // 五行元素标签
+        private string playerElement = "";
+        private string enemyElement = "";
+        private Text playerElementText;
+        private Text enemyElementText;
 
         // ---- 回合提示 ----
         private Text turnBanner;
@@ -229,6 +234,9 @@ namespace TianZhang.Game
             playerNameText = CreateText(playerPanel.transform, "Name", "玩家", 20, TextAnchor.UpperLeft, Color.cyan);
             playerNameText.rectTransform.sizeDelta = new Vector2(0, 28);
 
+            playerElementText = CreateText(playerPanel.transform, "Element", "", 16, TextAnchor.UpperLeft, Color.yellow);
+            playerElementText.rectTransform.sizeDelta = new Vector2(0, 22);
+
             var (hpFill, hpLabel) = CreateBar(playerPanel.transform, "HP", Color.red, new Color(0.3f, 0, 0));
             playerHPFill = hpFill; playerHPText = hpLabel;
 
@@ -262,6 +270,9 @@ namespace TianZhang.Game
 
             enemyNameText = CreateText(enemyPanel.transform, "Name", "敌方", 20, TextAnchor.UpperRight, Color.red);
             enemyNameText.rectTransform.sizeDelta = new Vector2(0, 28);
+
+            enemyElementText = CreateText(enemyPanel.transform, "Element", "", 16, TextAnchor.UpperRight, Color.yellow);
+            enemyElementText.rectTransform.sizeDelta = new Vector2(0, 22);
 
             var (hpFill, hpLabel) = CreateBar(enemyPanel.transform, "HP", Color.red, new Color(0.3f, 0, 0));
             enemyHPFill = hpFill; enemyHPText = hpLabel;
@@ -439,6 +450,7 @@ namespace TianZhang.Game
         public void UpdatePlayerInfo(string name, int hp, int maxHp, int mp, int maxMp, float ctPct, string status)
         {
             if (playerNameText != null) playerNameText.text = name;
+            if (playerElementText != null) playerElementText.text = ResolveElementDisplay(playerElement);
             UpdateBar(playerHPFill, playerHPText, hp, maxHp, "HP");
             UpdateBar(playerMPFill, playerMPText, mp, maxMp, "MP");
             UpdateBar(playerCTFill, playerCTText, ctPct, 1f, "CT");
@@ -449,11 +461,21 @@ namespace TianZhang.Game
         public void UpdateEnemyInfo(string name, int hp, int maxHp, int mp, int maxMp, float ctPct, string status)
         {
             if (enemyNameText != null) enemyNameText.text = name;
+            if (enemyElementText != null) enemyElementText.text = ResolveElementDisplay(enemyElement);
             UpdateBar(enemyHPFill, enemyHPText, hp, maxHp, "HP");
             UpdateBar(enemyMPFill, enemyMPText, mp, maxMp, "MP");
             UpdateBar(enemyCTFill, enemyCTText, ctPct, 1f, "CT");
             if (enemyStatusText != null)
                 enemyStatusText.text = string.IsNullOrEmpty(status) ? "" : "状态: " + status;
+        }
+
+        public void SetPlayerElement(string elem) { playerElement = elem ?? ""; if (playerElementText != null) playerElementText.text = ResolveElementDisplay(elem); }
+        public void SetEnemyElement(string elem) { enemyElement = elem ?? ""; if (enemyElementText != null) enemyElementText.text = ResolveElementDisplay(elem); }
+
+        private static string ResolveElementDisplay(string elem)
+        {
+            if (string.IsNullOrEmpty(elem)) return "";
+            return "[" + elem + "]";
         }
 
         public void SetTurnBanner(string text, Color? color = null)
@@ -493,19 +515,19 @@ namespace TianZhang.Game
             logLineCount = 0;
         }
 
-        public void RefreshSpellButtons(string[] spellNames, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1)
+        public void RefreshSpellButtons(string[] spellNames, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1, string[] elements = null)
         {
-            RefreshButtonRow(spellButtons, spellNames, cooldowns, currentMP, mpCosts, maxSlots);
+            RefreshButtonRow(spellButtons, spellNames, cooldowns, currentMP, mpCosts, maxSlots, elements);
         }
 
-        public void RefreshSkillButtons(string[] skillNames, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1)
+        public void RefreshSkillButtons(string[] skillNames, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1, string[] elements = null)
         {
-            RefreshButtonRow(skillButtons, skillNames, cooldowns, currentMP, mpCosts, maxSlots);
+            RefreshButtonRow(skillButtons, skillNames, cooldowns, currentMP, mpCosts, maxSlots, elements);
         }
 
         public void RefreshSkillButtons(string[] skillNames, int[] cooldowns, int currentMP, int[] mpCosts)
         {
-            RefreshButtonRow(skillButtons, skillNames, cooldowns, currentMP, mpCosts);
+            RefreshButtonRow(skillButtons, skillNames, cooldowns, currentMP, mpCosts, -1, null);
         }
 
 
@@ -529,7 +551,7 @@ namespace TianZhang.Game
             labelTxt.alignment = TextAnchor.MiddleCenter; labelTxt.font = sharedFont;
             return go;
         }
-        private void RefreshButtonRow(List<GameObject> buttons, string[] names, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1)
+        private void RefreshButtonRow(List<GameObject> buttons, string[] names, int[] cooldowns, int currentMP, int[] mpCosts, int maxSlots = -1, string[] elements = null)
         {
             int equippedCount = names?.Length ?? 0;
             int showCount = maxSlots > 0 ? Mathf.Max(equippedCount, maxSlots) : equippedCount;
@@ -567,7 +589,8 @@ namespace TianZhang.Game
                     bool noMP = mpCosts != null && i < mpCosts.Length && currentMP < mpCosts[i];
                     string cdStr = onCooldown ? " (CD" + cooldowns[i] + ")" : "";
                     string slotLabel = showCount > 1 ? (i + 1) + ": " : "";
-                    txt.text = slotLabel + names[i] + cdStr;
+                    string elemTag = (elements != null && i < elements.Length && !string.IsNullOrEmpty(elements[i])) ? " [" + elements[i] + "]" : "";
+                    txt.text = slotLabel + names[i] + elemTag + cdStr;
                     txt.color = (onCooldown || noMP) ? Color.gray : Color.white;
                     if (button != null) button.interactable = !onCooldown && !noMP;
                 }

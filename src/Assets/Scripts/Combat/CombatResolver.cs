@@ -66,13 +66,24 @@ namespace TianZhang.Combat
             attacker.FaceTarget(defender.Position);
 
             DamageCalculator.DamageResult damage;
+            float mult = 1f;
+            if (useMagic && attacker.GongFaName == "抱元守一经")
+                mult = 1f + attacker.ShouyiStacks * 0.05f;
+
             if (useMagic)
-                damage = DamageCalculator.CalcMagic(attacker.MagAtk, 1f, attacker, defender);
+                damage = DamageCalculator.CalcMagic((int)(attacker.MagAtk * mult), mult, attacker, defender);
             else
-                damage = DamageCalculator.CalcPhysical(attacker.PhysAtk, 1f, attacker, defender);
+                damage = DamageCalculator.CalcPhysical(attacker.PhysAtk, mult, attacker, defender);
 
             if (damage.IsHit)
                 defender.TakeDamage(damage.FinalDamage);
+
+            // 守一：出手后+1层
+            if (attacker.GongFaName == "抱元守一经")
+                attacker.ShouyiStacks = Mathf.Min(attacker.ShouyiStacks + 1, attacker.MaxShouyi());
+            // 符胆：出手后+1层
+            if (attacker.GongFaName == "云篆度人经")
+                attacker.FudanStacks = Mathf.Min(attacker.FudanStacks + 1, attacker.MaxFudan());
 
             string log = $"{attacker.Name} {(useMagic ? "神魂" : "物理")}攻击 {defender.Name}: {damage.Log}";
             BattleLog.Add(log);
@@ -89,8 +100,10 @@ namespace TianZhang.Combat
             if (caster.SpellCooldowns[spellIndex] > 0)
                 return new ActionResult { Success = false, Message = $"{spell.spellName} 冷却中" };
 
-            // MP检查
-            if (!caster.ConsumeMP(spell.mpCost))
+            // MP检查（符胆满层：零耗MP）
+            bool fudanMax = caster.GongFaName == "云篆度人经" && caster.FudanStacks == caster.MaxFudan();
+            int effectiveMpCost = fudanMax ? 0 : spell.mpCost;
+            if (!caster.ConsumeMP(effectiveMpCost))
                 return new ActionResult { Success = false, Message = "灵力不足" };
 
             // 射程检查（自指向术法 minRange=0 maxRange=0 跳过）
@@ -124,8 +137,26 @@ namespace TianZhang.Combat
                     break;
 
                 case SpellType.Magic:
-                    damage = DamageCalculator.CalcMagic(caster.MagAtk, spell.damageMultiplier,
-                        caster, target);
+                    float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
+
+                    // 符胆印记：消耗全部层数换伤害加成 + 满层无视30%魂防
+                    float fdMult = 1f;
+                    if (caster.GongFaName == "云篆度人经" && caster.FudanStacks > 0)
+                    {
+                        // 境界加成率：筑基12%/金丹15%/元婴18%/化神22%
+                        float realmMult = Cultivation.CultivationEngine.GetRealmMultiplier(caster.GetRealm());
+                        float fdRate = realmMult >= 24f ? 0.22f : realmMult >= 12f ? 0.18f :
+                                       realmMult >= 6f ? 0.15f : realmMult >= 3f ? 0.12f : 0.15f;
+                        fdMult = 1f + caster.FudanStacks * fdRate;
+                        // 满层：无视30%魂防（通过defPen传入CalcMagic，暂时用MagDef降低模拟）
+                        if (fudanMax) fdMult *= 1.30f;
+                        // 消耗层数（化神保留2层）
+                        float mr = Cultivation.CultivationEngine.GetRealmMultiplier(caster.GetRealm());
+                        caster.FudanStacks = mr >= 24f ? 2 : 0;
+                    }
+
+                    damage = DamageCalculator.CalcMagic((int)(caster.MagAtk * syMult * fdMult),
+                        spell.damageMultiplier, caster, target);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
@@ -148,6 +179,14 @@ namespace TianZhang.Combat
                     msg = $"{caster.Name} 施放 {spell.spellName}";
                     break;
             }
+
+            // 守一：出手后+1层
+            if (caster.GongFaName == "抱元守一经")
+                caster.ShouyiStacks = Mathf.Min(caster.ShouyiStacks + 1, caster.MaxShouyi());
+            // 符胆：出手后+1层（但术法已消耗，仅平A和神通有效）
+            // 注意：术法case中已消耗Fudan，此处不再+1
+            if (caster.GongFaName == "云篆度人经" && spell.type != SpellType.Magic)
+                caster.FudanStacks = Mathf.Min(caster.FudanStacks + 1, caster.MaxFudan());
 
             // 眩晕判定
             if (spell.stunChance > 0 && Random.value * 100f < spell.stunChance)
@@ -188,11 +227,19 @@ namespace TianZhang.Combat
             }
             else
             {
-                damage = DamageCalculator.CalcMagic(caster.MagAtk, skill.damageMultiplier,
+                float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
+                damage = DamageCalculator.CalcMagic((int)(caster.MagAtk * syMult), skill.damageMultiplier * syMult,
                     caster, target);
             }
 
             if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
+
+            // 守一：出手后+1层
+            if (caster.GongFaName == "抱元守一经")
+                caster.ShouyiStacks = Mathf.Min(caster.ShouyiStacks + 1, caster.MaxShouyi());
+            // 符胆：出手后+1层
+            if (caster.GongFaName == "云篆度人经")
+                caster.FudanStacks = Mathf.Min(caster.FudanStacks + 1, caster.MaxFudan());
 
             string msg = $"{caster.Name} 神通·{skill.skillName} → {target.Name}: {damage.Log}";
             BattleLog.Add(msg);

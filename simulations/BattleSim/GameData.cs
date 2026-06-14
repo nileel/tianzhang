@@ -25,6 +25,8 @@ static class GameData
         ["练气"] = new(100, 10, 25, 25, 20, 20, 15, 3, 5),
         ["筑基"] = new(600, 100, 120, 120, 100, 100, 50, 4, 8),
         ["金丹"] = new(7000, 2000, 1000, 1000, 800, 800, 300, 5, 15),
+        ["元婴"] = new(15000, 4500, 2200, 2200, 1800, 1800, 600, 6, 18),
+        ["化神"] = new(45000, 13000, 6500, 6500, 5500, 5500, 1500, 7, 25),
     };
     public record RealmFactor(double HP, double MP, double 攻, double 防, double 反应, double 神识);
     public static readonly Dictionary<string, RealmFactor> Factor = new()
@@ -33,6 +35,8 @@ static class GameData
         ["练气"] = new(8, 2, 3, 2, 0.75, 0.20),
         ["筑基"] = new(9, 7, 6.5, 4, 1.5, 0.25),
         ["金丹"] = new(22, 14, 12, 8, 3.0, 0.35),
+        ["元婴"] = new(25, 16, 15, 10, 4, 0.18),
+        ["化神"] = new(50, 25, 28, 18, 7, 0.20),
     };
     public record SubGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 移力, double 神识);
     public static readonly Dictionary<string, SubGrowth> SubGrowthBase = new()
@@ -40,6 +44,8 @@ static class GameData
         ["练气"] = new(8, 3, 4, 4, 3, 3, 2, 0.2, 0.3),
         ["筑基"] = new(120, 35, 30, 30, 25, 25, 12, 0.5, 1.0),
         ["金丹"] = new(1800, 700, 350, 350, 280, 280, 90, 0.8, 4.0),
+        ["元婴"] = new(1300, 1000, 450, 420, 380, 340, 110, 1.0, 2.3),
+        ["化神"] = new(4000, 3500, 1400, 1300, 1100, 1000, 280, 1.2, 2.8),
     };
 
     public const int InnatePerBreakthrough = 14;
@@ -123,6 +129,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         ("练气", 4, 70), ("练气", 5, 90), ("练气", 6, 112), ("练气", 7, 136), ("练气", 8, 162),
         ("筑基", 0, 200), ("筑基", 1, 250), ("筑基", 2, 310), ("筑基", 3, 390),
         ("金丹", 0, 500), ("金丹", 1, 650), ("金丹", 2, 830), ("金丹", 3, 1050),
+        ("元婴", 0, 1350), ("元婴", 1, 1620), ("元婴", 2, 1940), ("元婴", 3, 2320),
+        ("化神", 0, 2780), ("化神", 1, 3340), ("化神", 2, 4010), ("化神", 3, 4810),
     };
 
     public const double BaseGainPerCycle = 10.0;

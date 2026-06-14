@@ -168,6 +168,9 @@ namespace TianZhang.Editor
                 asset.cannotDodge = cols[9] == "1";
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
+                // 五行属性（从 elementReq 解析为标准五行）
+                if (cols.Length > 13)
+                    asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[13]);
                 // realmReq, elementReq, affiliation stored for reference (already in name)
 
                 string assetPath = $"Assets/Data/Spells/Spell_{SanitizeName(cols[0])}.asset";
@@ -204,6 +207,9 @@ namespace TianZhang.Editor
                 asset.cannotDodge = cols[9] == "1";
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
+                // 五行属性（神通继承功法属性，优先查CSV显式字段）
+                if (cols.Length > 16)
+                    asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[16]);
                 asset.isDomain = cols[12] == "1";
                 asset.isBloodline = cols[13] == "1";
                 asset.specialEffectDesc = T(cols[14]);
