@@ -1,6 +1,6 @@
 ﻿# 开发技术经验
 
-> 来源：AGENTS.md §技术经验 | 最后更新：2026-06-13
+> 来源：AGENTS.md §技术经验 | 最后更新：2026-06-14
 
 ---
 
@@ -8,6 +8,7 @@
 
 - **编码已统一**：项目所有源文件（.cs, .txt, .md）已统一为 UTF-8 with BOM。直接用 ReadAllText/WriteAllText 即可，无需特殊编码处理。obj/ 下构建产物为自动生成，忽略。
 - **PowerShell 批量写 txt**：多行中文内容用 `@'...'@ | Out-File -Encoding UTF8` 写入，`@'` 内可含单引号无需转义。注意结尾 `'@` 必须顶格。
+- **注意**：部分历史 .cs 文件可能仍为 GBK 编码（如曾被旧工具编辑过），读写前需检测编码或先转换为 UTF-8 with BOM。
 
 ## 编辑原则
 
@@ -38,6 +39,14 @@
 - **六角格坐标转换**：不要手写 offset 公式。Unity Grid 的 `GetCellCenterWorld` / `WorldToCell` 是唯一可靠来源。点击检测用全量缓存 + 最近邻查找最稳妥。
 - **场景生成**：用 Editor 脚本 (`MenuItem`) 程序化生成，永远不要手写 .unity YAML。
 - **视觉反馈**：角色移动需实时更新 Transform；受击加 Coroutine 闪烁；死亡改色。
+
+## Python 文件编辑
+
+- **Python 已接入**：复杂文件编辑（多文件、精确替换、编码转换）优先用 Python 脚本而非 PowerShell 正则替换，避免中文/emoji 编码损坏。
+- **.cs 文件编码处理**：优先用 `open(path, "r", encoding="utf-8-sig")` 读取，`utf-8-sig` 写入。如果解码失败则回退到 GBK：先用 `open(path, "rb")` 读原始字节，`raw.decode("gbk")` 解码，修改后用 `content.encode("gbk")` 写回，最后用 PowerShell 转 UTF-8 with BOM。
+- **控制台输出编码**：PowerShell 管道到 Python 时 stdout 默认 GBK，遇到 emoji 会崩溃。设 `$env:PYTHONIOENCODING="utf-8"` 解决。Python 内部避免 print 含 emoji 的字符串，改用 `repr()`。
+- **方法体替换策略**：字符串 `replace` 容易因换行符（`\n` vs `\r\n`）差异静默失败。改用索引定位 + 括号匹配切割：`content.find("方法签名")` 定位起点，扫描 `{` `}` 计数找到方法体终点，整体替换。比正则或字符串匹配可靠得多。
+- **Script 文件方式编辑**：中文路径/emoji 在 PowerShell heredoc 传 Python 时容易损坏。改为 `Out-File -Encoding UTF8 tmp.py` 写入脚本文件再 `python tmp.py` 执行，执行完删除临时文件。
 
 ## PowerShell 批量编辑大文件
 
