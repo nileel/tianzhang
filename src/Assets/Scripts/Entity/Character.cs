@@ -174,6 +174,21 @@ namespace TianZhang.Entity
             CurrentMP = Mathf.Min(MaxMP, CurrentMP + amount);
         }
 
+        /// <summary>应用功法篇章加成（永久二级属性）</summary>
+        public void ApplyGongFaBonuses(Cultivation.GongFaGrowthData gongFa, string realm)
+        {
+            if (gongFa == null) return;
+            var bonus = gongFa.GetCumulativeBonus(realm);
+            SoulShieldRate += bonus.soulShieldRate;
+            HitRateBonus += bonus.hitRate;
+            BlockRate += bonus.blockRate;
+            CritRate += bonus.critRate;
+            CritDamage += bonus.critDamage;
+            DodgeRate += bonus.dodgeRate;
+            MagAtk += Mathf.RoundToInt(bonus.magAtkBonus);
+            MagDef += Mathf.RoundToInt(bonus.magDefBonus);
+        }
+
         public override string ToString() =>
             $"{Name} HP={CurrentHP}/{MaxHP} MP={CurrentMP}/{MaxMP} " +
             $"PAtk={PhysAtk} MAtk={MagAtk} PDef={PhysDef} MDef={MagDef} " +

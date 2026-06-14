@@ -1,0 +1,9 @@
+﻿# 神通配置表
+# 字段说明：
+#   name=神通名, type=类型, minRange/maxRange=射程, mpCost=消耗, cooldownTicks=冷却
+#   damageMultiplier=倍率, healAmount=治疗, cannotBlock/cannotDodge/penetratingShield=特殊穿透
+#   stunChance=眩晕%, isDomain=领域(0/1), isBloodline=血脉(0/1), specialEffectDesc=特殊效果描述
+#   realmReq=境界要求, affiliation=门派
+name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,realmReq,affiliation
+九转还丹,1,1,4,60,50,2.0,0,0,0,1,0,0,0,丹火穿透魂盾,金丹,太一道庭
+征旗所指,0,1,2,50,50,2.2,0,1,0,0,20,0,0,征讨目标/无视格挡,金丹,太一道庭

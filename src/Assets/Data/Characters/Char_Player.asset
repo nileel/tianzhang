@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
   m_Name: Char_Player
   m_EditorClassIdentifier: 
-  charName: "\u592A\u4E00\u4FEE\u58EB"
+  charName: "\u592A\u4E00\u4FEE\u58EB(\u62B1\u5143\u5B88\u4E00\u7ECF)"
   baseLevel: 1
-  rootBone: 14
-  physique: 14
-  spirit: 14
+  rootBone: 10
+  physique: 10
+  spirit: 16
   mind: 14
-  reaction: 14
+  reaction: 12
   talent: 14
   hpBonus: 0
   mpBonus: 0
@@ -26,16 +26,20 @@ MonoBehaviour:
   magAtkBonus: 0
   physDefBonus: 0
   magDefBonus: 0
-  blockRate: 8
+  blockRate: 5
   blockReduction: 0
-  soulShieldRate: 10
+  soulShieldRate: 13
   soulShieldReduction: 0
   dodgeRate: 0
   critRate: 5
   critDamage: 15
-  hitRateBonus: 0
+  hitRateBonus: 3
   realmMultiplier: 1.5
+  gongFaName: "\u62B1\u5143\u5B88\u4E00\u7ECF"
   equippedSpells:
-  - "\u91D1\u5149\u7834\u5CB3"
-  - "\u6D41\u706B\u7075\u7B26"
-  equippedSkills: []
+  - "\u7384\u6C34\u5492"
+  - "\u6CA7\u6D6A\u51FB"
+  - "\u5B89\u795E\u7B26"
+  equippedSkills:
+  - "\u4E5D\u8F6C\u8FD8\u4E39"
+  - "\u5F81\u65D7\u6240\u6307"

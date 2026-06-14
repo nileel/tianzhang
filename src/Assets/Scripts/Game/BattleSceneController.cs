@@ -9,8 +9,9 @@ using TianZhang.HexTile;
 namespace TianZhang.Game
 {
     /// <summary>
-    /// 战斗场景控制器 — CTB六角格战棋原型
+    /// 战斗场景控制器 — CTB六角格战棋原型 v0.3
     /// 操作：鼠标点击移动/攻击 | UI按钮施法/神通 | 键盘快捷键兼容
+    /// 新增：AI分离(SimpleAI) / 移动拆分 / CT消耗细化
     /// </summary>
     public class BattleSceneController : MonoBehaviour
     {
@@ -29,6 +30,7 @@ namespace TianZhang.Game
         // ---- 核心系统 ----
         private CTBEngine ctbEngine;
         private CombatResolver resolver;
+        private SimpleAI aiController;
         private Character player;
         private Character enemy;
 
@@ -42,6 +44,14 @@ namespace TianZhang.Game
 
         // ---- 玩家输入 ----
         private bool waitingForInput;
+        private bool hasMovedThisTurn;      // 本回合是否已移动过
+        private int hexesMovedThisTurn;      // 本回合已移动格数
+
+        // ---- CT消耗常量 ----
+        public const float CtPerMoveHex = 25f;   // 每移动1格消耗CT
+        public const float CtPerAction = 100f;   // 完整行动消耗CT
+        public const float CtPerGuard = 60f;     // 防御消耗CT
+        public const float CtRemainThreshold = 10f; // CT低于此值视为回合结束
 
         private void Start()
         {
@@ -50,10 +60,7 @@ namespace TianZhang.Game
 
         private void Update()
         {
-            // 键盘快捷键
             HandleKeyboardInput();
-
-            // 鼠标点击移动
             HandleMouseClick();
         }
 
@@ -67,6 +74,8 @@ namespace TianZhang.Game
                 PlayerGuard();
             else if (Input.GetKeyDown(KeyCode.W))
                 PlayerWait();
+            else if (Input.GetKeyDown(KeyCode.E))
+                PlayerEndTurn();
             else if (Input.GetKeyDown(KeyCode.Alpha1)) PlayerCastSpell(0);
             else if (Input.GetKeyDown(KeyCode.Alpha2)) PlayerCastSpell(1);
             else if (Input.GetKeyDown(KeyCode.Alpha3)) PlayerCastSpell(2);
@@ -77,18 +86,11 @@ namespace TianZhang.Game
 
         private void HandleMouseClick()
         {
-            // 只在玩家回合且等待输入时响应
             if (state != BattleState.PlayerTurn || !waitingForInput) return;
-
-            // 左键点击
             if (!Input.GetMouseButtonDown(0)) return;
-
-            // 点击在 UI 上则不触发地图移动（防止按钮穿透）
             if (uiManager != null && uiManager.IsPointerOverUI()) return;
-
             if (Camera.main == null || tilemapManager == null) return;
 
-            var worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             var coord = tilemapManager.ScreenToHex(Input.mousePosition);
             HandleTileClick(coord);
         }
@@ -98,6 +100,7 @@ namespace TianZhang.Game
             state = BattleState.Animating;
             ctbEngine = new CTBEngine();
             resolver = new CombatResolver { Grid = tilemapManager.Grid, Engine = ctbEngine };
+            aiController = new SimpleAI();
 
             tilemapManager.GenerateHexGrid();
 
@@ -124,7 +127,6 @@ namespace TianZhang.Game
             player.FaceTarget(enemyStart);
             enemy.FaceTarget(playerStart);
 
-            // 初始化 UI
             if (uiManager != null)
             {
                 uiManager.SetController(this);
@@ -133,8 +135,9 @@ namespace TianZhang.Game
                 RefreshAllUI();
             }
 
-            Debug.Log("战斗初始化: " + player + " | " + enemy);
-            SetStatus("准备战斗 — [H]帮助");
+            Debug.Log("战斗初始化完成。CTB引擎就绪。");
+            Debug.Log($"玩家: {player}");
+            Debug.Log($"敌方: {enemy}");
 
             yield return new WaitForSeconds(0.3f);
             StartCoroutine(BattleLoop());
@@ -154,6 +157,8 @@ namespace TianZhang.Game
                 if (character == null || !character.IsAlive) continue;
 
                 character.IsGuarding = false;
+                hasMovedThisTurn = false;
+                hexesMovedThisTurn = 0;
 
                 if (character == player)
                 {
@@ -173,10 +178,14 @@ namespace TianZhang.Game
                     SetStatus("敌方回合", Color.red);
                     state = BattleState.EnemyTurn;
                     yield return new WaitForSeconds(0.3f);
-                    EnemyAI(enemy, player);
+
+                    var aiMsg = aiController.ExecuteTurn(enemy, player,
+                        enemySpells, enemySkills, resolver, tilemapManager.Grid);
+                    AddLog(aiMsg);
+                    UpdateMarkers();
+                    ctbEngine.ConsumePartialCT(enemy.CTBUnit, CtPerAction);
                 }
 
-                ctbEngine.ConsumeAction(unit);
                 RefreshAllUI();
                 yield return new WaitForSeconds(0.15f);
 
@@ -208,7 +217,7 @@ namespace TianZhang.Game
 
             int dist = player.Position.Distance(coord);
 
-            // 点击敌方 → 相邻普攻
+            // 点击敌方 → 近战攻击
             if (coord.Equals(enemy.Position))
             {
                 if (dist <= 1)
@@ -218,18 +227,45 @@ namespace TianZhang.Game
                 return;
             }
 
-            // 移动
-            var path = tilemapManager.Grid.FindPath(player.Position, coord, player.MovePoints);
+            // 移动（支持拆分移动）
+            int remainingMove = player.MovePoints - hexesMovedThisTurn;
+            if (remainingMove <= 0)
+            {
+                SetStatus("本回合移动力已耗尽");
+                return;
+            }
+
+            var path = tilemapManager.Grid.FindPath(player.Position, coord, remainingMove);
             if (path != null && path.Count > 0)
             {
-                var reachable = path.GetRange(0, Mathf.Min(path.Count, player.MovePoints));
+                var reachable = path.GetRange(0, Mathf.Min(path.Count, remainingMove));
                 HexCoord final = reachable[reachable.Count - 1];
                 if (!tilemapManager.Grid.IsOccupied(final))
                 {
                     var result = resolver.Move(player, reachable);
                     AddLog(result.Message);
                     UpdateMarkers();
-                    FinishPlayerAction();
+                    hasMovedThisTurn = true;
+                    hexesMovedThisTurn += reachable.Count;
+
+                    // 移动消耗CT（每格25）
+                    ctbEngine.ConsumePartialCT(player.CTBUnit, CtPerMoveHex * reachable.Count);
+
+                    // 检查是否还能继续行动
+                    float remainingCT = player.CTBUnit.CT;
+                    if (remainingCT < CtRemainThreshold || hexesMovedThisTurn >= player.MovePoints)
+                    {
+                        // CT不足或移动力耗尽 → 结束回合
+                        SetStatus("移动完毕，回合结束");
+                        FinishPlayerAction();
+                    }
+                    else
+                    {
+                        // 还可以继续行动
+                        float remPct = remainingCT / CTBEngine.ActionThreshold;
+                        SetStatus($"移动 {reachable.Count} 格，剩余CT {remPct:P0}（可继续行动）");
+                        RefreshSpellSkillButtons();
+                    }
                     return;
                 }
             }
@@ -243,7 +279,12 @@ namespace TianZhang.Game
             var result = resolver.BasicAttack(player, enemy);
             SetStatus(result.Message);
             AddLog(result.Message);
-            if (result.Success) { StartCoroutine(Flash(enemyMarker, Color.white)); FinishPlayerAction(); }
+            if (result.Success)
+            {
+                StartCoroutine(Flash(enemyMarker, Color.white));
+                ctbEngine.ConsumePartialCT(player.CTBUnit, CtPerAction);
+                FinishPlayerAction();
+            }
         }
 
         public void PlayerCastSpell(int index)
@@ -253,7 +294,12 @@ namespace TianZhang.Game
             var result = resolver.CastSpell(player, enemy, index, playerSpells[index]);
             SetStatus(result.Message);
             AddLog(result.Message);
-            if (result.Success) { StartCoroutine(Flash(enemyMarker, Color.yellow)); FinishPlayerAction(); }
+            if (result.Success)
+            {
+                StartCoroutine(Flash(enemyMarker, Color.yellow));
+                ctbEngine.ConsumePartialCT(player.CTBUnit, CtPerAction);
+                FinishPlayerAction();
+            }
         }
 
         public void PlayerUseSkill(int index)
@@ -263,7 +309,12 @@ namespace TianZhang.Game
             var result = resolver.UseSkill(player, enemy, index, playerSkills[index]);
             SetStatus(result.Message);
             AddLog(result.Message);
-            if (result.Success) { StartCoroutine(Flash(enemyMarker, Color.magenta)); FinishPlayerAction(); }
+            if (result.Success)
+            {
+                StartCoroutine(Flash(enemyMarker, Color.magenta));
+                ctbEngine.ConsumePartialCT(player.CTBUnit, CtPerAction);
+                FinishPlayerAction();
+            }
         }
 
         public void PlayerGuard()
@@ -273,6 +324,7 @@ namespace TianZhang.Game
             SetStatus(result.Message);
             AddLog(result.Message);
             StartCoroutine(Flash(playerMarker, Color.blue));
+            ctbEngine.ConsumePartialCT(player.CTBUnit, CtPerGuard);
             FinishPlayerAction();
         }
 
@@ -285,6 +337,15 @@ namespace TianZhang.Game
             FinishPlayerAction();
         }
 
+        public void PlayerEndTurn()
+        {
+            if (!waitingForInput) return;
+            ctbEngine.ConsumePartialCT(player.CTBUnit, CtPerAction);
+            SetStatus("回合结束");
+            AddLog($"{player.Name} 提前结束回合");
+            FinishPlayerAction();
+        }
+
         private void FinishPlayerAction()
         {
             waitingForInput = false;
@@ -292,56 +353,6 @@ namespace TianZhang.Game
             tilemapManager.ClearOverlay();
             if (uiManager != null)
                 uiManager.SetActionButtonsInteractable(false);
-        }
-
-        // ==================== 敌方 AI ====================
-
-        private void EnemyAI(Character self, Character target)
-        {
-            int dist = self.Position.Distance(target.Position);
-
-            if (enemySpells != null)
-            {
-                for (int i = 0; i < enemySpells.Length; i++)
-                {
-                    if (self.SpellCooldowns[i] <= 0 && self.CurrentMP >= enemySpells[i].mpCost
-                        && dist >= enemySpells[i].minRange && dist <= enemySpells[i].maxRange)
-                    {
-                        var result = resolver.CastSpell(self, target, i, enemySpells[i]);
-                        AddLog(result.Message);
-                        StartCoroutine(Flash(playerMarker, Color.yellow));
-                        UpdateMarkers();
-                        return;
-                    }
-                }
-            }
-
-            if (dist > 1)
-            {
-                var path = tilemapManager.Grid.FindPath(self.Position, target.Position, self.MovePoints);
-                if (path != null && path.Count > 0)
-                {
-                    int steps = Mathf.Min(path.Count, dist - 1);
-                    var result = resolver.Move(self, path.GetRange(0, steps));
-                    AddLog(result.Message);
-                    UpdateMarkers();
-                    return;
-                }
-            }
-
-            if (dist <= 1)
-            {
-                bool useMagic = self.MagAtk > self.PhysAtk;
-                var result = resolver.BasicAttack(self, target, useMagic);
-                AddLog(result.Message);
-                StartCoroutine(Flash(playerMarker, Color.white));
-                UpdateMarkers();
-                return;
-            }
-
-            var guardResult = resolver.Guard(self);
-            AddLog(guardResult.Message);
-            UpdateMarkers();
         }
 
         // ==================== UI 更新 ====================

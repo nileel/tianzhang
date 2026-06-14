@@ -1,0 +1,8 @@
+﻿# 角色配置表
+# 字段说明：
+#   name=角色名, realmMultiplier=境界倍率, rootBone~talent=一级属性
+#   blockRate~hitRateBonus=二级概率(%), gongFaName=装备功法
+#   equippedSpells=装备术法(名称,用|分隔), equippedSkills=装备神通(名称,用|分隔)
+name,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,gongFaName,equippedSpells,equippedSkills
+太一修士,1.5,10,10,16,14,12,14,5,0,13,0,0,5,15,3,抱元守一经,玄水咒|沧浪击|安神符,九转还丹|征旗所指
+散修强盗,1.5,14,14,10,10,10,8,10,20,5,0,5,8,20,0,,玄水咒|沧浪击,

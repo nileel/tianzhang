@@ -41,6 +41,7 @@ namespace TianZhang.Entity
 
         [Header("境界倍率")]
         public float realmMultiplier = 1f; // 境界属性倍率（凡人1.0→练气1.5→筑基3.0→...）
+        public string gongFaName = "";         // 装备的功法名称
 
         [Header("术法槽位")]
         public string[] equippedSpells; // 装备的术法名称

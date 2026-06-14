@@ -77,6 +77,13 @@ namespace TianZhang.Core
             unit.CT -= ActionThreshold;
         }
 
+        /// <summary>消耗指定量CT（用于移动拆分等部分行动）</summary>
+        public void ConsumePartialCT(CTBUnit unit, float amount)
+        {
+            unit.CT -= amount;
+            if (unit.CT < 0) unit.CT = 0;
+        }
+
         /// <summary>待机：保留50%CT</summary>
         public void WaitAction(CTBUnit unit)
         {
@@ -117,4 +124,3 @@ namespace TianZhang.Core
         public CTBUnit GetUnit(int id) => units.Find(u => u.Id == id);
     }
 }
-
