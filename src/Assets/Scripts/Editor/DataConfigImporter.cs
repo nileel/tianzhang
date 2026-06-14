@@ -11,15 +11,40 @@ using TianZhang.Cultivation;
 namespace TianZhang.Editor
 {
     /// <summary>
-    /// CSV 配置导入工具
-    /// 从 Assets/DataConfig/*.csv 读取数据，生成 ScriptableObject .asset 文件
-    /// 菜单：天章/导入全部配置
+    /// CSV 配置导入工具（v2 — 支持文本 ID 解析）
+    /// 从 Assets/DataConfig/*.csv 读取数据，通过 Language.csv 解析文本 ID
+    /// 生成 ScriptableObject .asset 文件
     /// </summary>
     public class DataConfigImporter : EditorWindow
     {
+        private static Dictionary<string, string> _lang;
+
+        /// <summary>加载语言表</summary>
+        static Dictionary<string, string> LoadLanguage()
+        {
+            if (_lang != null) return _lang;
+            _lang = new Dictionary<string, string>();
+            string path = "Assets/DataConfig/Language.csv";
+            if (!File.Exists(path)) { Debug.LogWarning($"[Importer] Language.csv not found, IDs will be used as-is"); return _lang; }
+            var lines = File.ReadAllLines(path);
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                var cols = ParseCSV(line);
+                if (cols.Length >= 2 && !string.IsNullOrEmpty(cols[0]))
+                    _lang[cols[0]] = cols[1];
+            }
+            Debug.Log($"[Importer] Loaded {_lang.Count} language entries");
+            return _lang;
+        }
+
+        /// <summary>解析文本 ID → 显示文本</summary>
+        static string T(string id) => LoadLanguage().TryGetValue(id, out var text) ? text : id;
+
         [MenuItem("天章/导入全部配置")]
         static void ImportAll()
         {
+            _lang = null; LoadLanguage();
             ImportGongFa();
             ImportSpells();
             ImportSkills();
@@ -33,6 +58,7 @@ namespace TianZhang.Editor
         [MenuItem("天章/导入功法配置")]
         static void ImportGongFa()
         {
+            _lang = null;
             string path = "Assets/DataConfig/GongFa.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
@@ -44,11 +70,11 @@ namespace TianZhang.Editor
                 if (cols.Length < 14) continue;
 
                 var asset = ScriptableObject.CreateInstance<GongFaGrowthData>();
-                asset.gongFaName = cols[0];
-                asset.affiliation = cols[1];
-                asset.grade = cols[2];
-                asset.elementMain = cols[3];
-                asset.elementSub = cols[4];
+                asset.gongFaName = T(cols[0]);
+                asset.affiliation = T(cols[1]);
+                asset.grade = T(cols[2]);
+                asset.elementMain = T(cols[3]);
+                asset.elementSub = T(cols[4]);
                 asset.starRootBone = int.Parse(cols[5]);
                 asset.starPhysique = int.Parse(cols[6]);
                 asset.starSpirit = int.Parse(cols[7]);
@@ -57,7 +83,7 @@ namespace TianZhang.Editor
                 asset.starTalent = int.Parse(cols[10]);
                 asset.starFortune = int.Parse(cols[11]);
 
-                // 境界成长表: 练气:3,3,2,3,1,2,1,0.2,0.3|筑基:...
+                // 境界成长表
                 var growthList = new List<GongFaGrowthData.SubGrowthPerRealm>();
                 foreach (var realmEntry in cols[12].Split('|'))
                 {
@@ -67,7 +93,7 @@ namespace TianZhang.Editor
                     if (values.Length < 9) continue;
                     growthList.Add(new GongFaGrowthData.SubGrowthPerRealm
                     {
-                        realm = parts[0],
+                        realm = T(parts[0]),
                         hp = float.Parse(values[0]),
                         mp = float.Parse(values[1]),
                         physAtk = float.Parse(values[2]),
@@ -81,7 +107,7 @@ namespace TianZhang.Editor
                 }
                 asset.subGrowth = growthList.ToArray();
 
-                // 篇章加成: 守一篇:练气:3:3:0:0:0:0:0:0:守一印记/每回合未移动...
+                // 篇章加成
                 if (cols.Length > 13)
                 {
                     var chapterList = new List<GongFaGrowthData.ChapterBonus>();
@@ -91,8 +117,8 @@ namespace TianZhang.Editor
                         if (parts.Length < 10) continue;
                         chapterList.Add(new GongFaGrowthData.ChapterBonus
                         {
-                            chapterName = parts[0],
-                            realm = parts[1],
+                            chapterName = T(parts[0]),
+                            realm = T(parts[1]),
                             soulShieldRate = float.Parse(parts[2]),
                             hitRate = float.Parse(parts[3]),
                             blockRate = float.Parse(parts[4]),
@@ -101,22 +127,24 @@ namespace TianZhang.Editor
                             dodgeRate = float.Parse(parts[7]),
                             magAtkBonus = float.Parse(parts[8]),
                             magDefBonus = float.Parse(parts[9]),
-                            specialEffect = parts.Length > 10 ? parts[10] : ""
+                            specialEffect = parts.Length > 10 ? T(parts[10]) : ""
                         });
                     }
                     asset.chapters = chapterList.ToArray();
                 }
 
+                // 文件名用 ID（不用解析）
                 string assetPath = $"Assets/Data/GongFa/GongFa_{SanitizeName(cols[0])}.asset";
                 EnsureDirectory(assetPath);
                 AssetDatabase.CreateAsset(asset, assetPath);
-                Debug.Log($"  功法: {cols[0]} → {assetPath}");
+                Debug.Log($"  功法: {asset.gongFaName} ← {assetPath}");
             }
         }
 
         [MenuItem("天章/导入术法配置")]
         static void ImportSpells()
         {
+            _lang = null;
             string path = "Assets/DataConfig/Spells.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
@@ -128,7 +156,7 @@ namespace TianZhang.Editor
                 if (cols.Length < 14) continue;
 
                 var asset = ScriptableObject.CreateInstance<SpellData>();
-                asset.spellName = cols[0];
+                asset.spellName = T(cols[0]);
                 asset.type = (SpellType)int.Parse(cols[1]);
                 asset.minRange = int.Parse(cols[2]);
                 asset.maxRange = int.Parse(cols[3]);
@@ -140,17 +168,19 @@ namespace TianZhang.Editor
                 asset.cannotDodge = cols[9] == "1";
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
+                // realmReq, elementReq, affiliation stored for reference (already in name)
 
                 string assetPath = $"Assets/Data/Spells/Spell_{SanitizeName(cols[0])}.asset";
                 EnsureDirectory(assetPath);
                 AssetDatabase.CreateAsset(asset, assetPath);
-                Debug.Log($"  术法: {cols[0]} → {assetPath}");
+                Debug.Log($"  术法: {asset.spellName} ← {assetPath}");
             }
         }
 
         [MenuItem("天章/导入神通配置")]
         static void ImportSkills()
         {
+            _lang = null;
             string path = "Assets/DataConfig/Skills.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
@@ -162,7 +192,7 @@ namespace TianZhang.Editor
                 if (cols.Length < 16) continue;
 
                 var asset = ScriptableObject.CreateInstance<DivineSkillData>();
-                asset.skillName = cols[0];
+                asset.skillName = T(cols[0]);
                 asset.type = (SpellType)int.Parse(cols[1]);
                 asset.minRange = int.Parse(cols[2]);
                 asset.maxRange = int.Parse(cols[3]);
@@ -176,18 +206,19 @@ namespace TianZhang.Editor
                 asset.stunChance = float.Parse(cols[11]);
                 asset.isDomain = cols[12] == "1";
                 asset.isBloodline = cols[13] == "1";
-                asset.specialEffectDesc = cols[14];
+                asset.specialEffectDesc = T(cols[14]);
 
                 string assetPath = $"Assets/Data/Skills/Skill_{SanitizeName(cols[0])}.asset";
                 EnsureDirectory(assetPath);
                 AssetDatabase.CreateAsset(asset, assetPath);
-                Debug.Log($"  神通: {cols[0]} → {assetPath}");
+                Debug.Log($"  神通: {asset.skillName} ← {assetPath}");
             }
         }
 
         [MenuItem("天章/导入角色配置")]
         static void ImportCharacters()
         {
+            _lang = null;
             string path = "Assets/DataConfig/Characters.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
@@ -199,7 +230,7 @@ namespace TianZhang.Editor
                 if (cols.Length < 19) continue;
 
                 var asset = ScriptableObject.CreateInstance<CharacterData>();
-                asset.charName = cols[0];
+                asset.charName = T(cols[0]);
                 asset.realmMultiplier = float.Parse(cols[1]);
                 asset.rootBone = int.Parse(cols[2]);
                 asset.physique = int.Parse(cols[3]);
@@ -215,20 +246,21 @@ namespace TianZhang.Editor
                 asset.critRate = float.Parse(cols[13]);
                 asset.critDamage = float.Parse(cols[14]);
                 asset.hitRateBonus = float.Parse(cols[15]);
-                asset.gongFaName = cols[16];
+                asset.gongFaName = T(cols[16]);
                 asset.equippedSpells = cols[17].Length > 0 ? cols[17].Split('|') : new string[0];
                 asset.equippedSkills = cols[18].Length > 0 ? cols[18].Split('|') : new string[0];
 
                 string assetPath = $"Assets/Data/Characters/Char_{SanitizeName(cols[0])}.asset";
                 EnsureDirectory(assetPath);
                 AssetDatabase.CreateAsset(asset, assetPath);
-                Debug.Log($"  角色: {cols[0]} → {assetPath}");
+                Debug.Log($"  角色: {asset.charName} ← {assetPath}");
             }
         }
 
         [MenuItem("天章/导入敌人配置")]
         static void ImportEnemies()
         {
+            _lang = null;
             string path = "Assets/DataConfig/Enemies.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
@@ -240,7 +272,7 @@ namespace TianZhang.Editor
                 if (cols.Length < 22) continue;
 
                 var asset = ScriptableObject.CreateInstance<CharacterData>();
-                asset.charName = cols[0];
+                asset.charName = T(cols[0]);
                 asset.realmMultiplier = float.Parse(cols[4]);
                 asset.rootBone = int.Parse(cols[5]);
                 asset.physique = int.Parse(cols[6]);
@@ -262,7 +294,7 @@ namespace TianZhang.Editor
                 string assetPath = $"Assets/Data/Characters/Char_Enemy_{SanitizeName(cols[0])}.asset";
                 EnsureDirectory(assetPath);
                 AssetDatabase.CreateAsset(asset, assetPath);
-                Debug.Log($"  敌人: {cols[0]} ({cols[1]}/{cols[2]}) → {assetPath}");
+                Debug.Log($"  敌人: {asset.charName} ← {assetPath}");
             }
         }
 

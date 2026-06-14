@@ -1,8 +1,6 @@
-﻿# 功法配置表
-# 字段说明：
-#   name=功法名, affiliation=门派, grade=品级, elementMain=主属性, elementSub=辅属性
-#   starRootBone~starFortune=属性倾向(1-5)
-#   growth=境界成长表, 格式: 境界:HP,MP,肉攻,神攻,肉防,神防,反应,移力,神识|...
-#   chapters=篇章加成, 格式: 篇章名:解锁境界:魂盾率:命中率:格挡率:暴击率:暴伤:闪避:神攻加成:神防加成:特殊效果|...
+﻿# 功法配置表（所有文本字段使用 Language.csv 中的 ID）
+# name/affiliation/grade/elementMain/elementSub → 文本ID
+# growth 境界名 → 文本ID
+# chapters 篇章名/境界名/特殊效果 → 文本ID
 name,affiliation,grade,elementMain,elementSub,starRootBone,starPhysique,starSpirit,starMind,starReaction,starTalent,starFortune,growth,chapters
-抱元守一经,太一道庭,中品,水,风,2,1,4,4,1,3,3,练气:3,3,2,3,1,2,1,0.2,0.3|筑基:40,30,15,23,13,20,8,0.5,1.0|金丹:200,267,73,107,67,87,30,0.8,1.7|元婴:1000,1067,300,433,267,367,100,1,2,守一篇:练气:3:3:0:0:0:0:0:0:守一印记/每回合未移动获1层/每层神魂攻击+4%|抱元篇:筑基:3:3:0:0:0:0:0:0:守一上限+2/受击消耗1层减伤20%|致虚篇:金丹:3:3:0:0:0:0:0:0:满层神魂防御+15%/开局获2层|守静篇:元婴:3:3:0:0:0:0:0:0:每层额外神魂防御+3%/满层MP消耗-25%/减伤20%→30%
+gongfa_baoyuanshouyi,faction_taiyidaoting,grade_mid,element_water,element_wind,2,1,4,4,1,3,3,realm_lianqi:3,3,2,3,1,2,1,0.2,0.3|realm_zhuji:40,30,15,23,13,20,8,0.5,1.0|realm_jindan:200,267,73,107,67,87,30,0.8,1.7|realm_yuanying:1000,1067,300,433,267,367,100,1,2,chapter_shouyi:realm_lianqi:3:3:0:0:0:0:0:0:desc_shouyi_stack|chapter_baoyuan:realm_zhuji:3:3:0:0:0:0:0:0:desc_shouyi_block|chapter_zhixu:realm_jindan:3:3:0:0:0:0:0:0:desc_shouyi_full|chapter_shoujing:realm_yuanying:3:3:0:0:0:0:0:0:desc_shouyi_extra

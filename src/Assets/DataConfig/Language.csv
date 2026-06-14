@@ -1,0 +1,100 @@
+﻿# 多语言文本映射表
+# 格式: id, zh_CN
+# 所有其他 CSV 表中的文本字段均使用此表中的 ID 引用
+#
+# === 门派/势力 ===
+faction_taiyidaoting,太一道庭
+faction_sanxiu,散修
+#
+# === 品级 ===
+grade_low,下品
+grade_mid,中品
+grade_high,上品
+grade_top,极品
+#
+# === 元素/灵根 ===
+element_water,水
+element_fire,火
+element_wind,风
+element_earth,土
+element_metal,金
+element_water_or_wind,风灵根或水灵根
+element_water_root,水灵根
+element_fire_root,火灵根
+element_metal_root,金灵根
+element_any_root,任意灵根
+#
+# === 境界 ===
+realm_fanren,凡人
+realm_lianqi,练气
+realm_zhuji,筑基
+realm_jindan,金丹
+realm_yuanying,元婴
+realm_huashen,化神
+realm_lianxu,炼虚
+#
+# === 敌人类型 ===
+type_yaoshou,妖兽
+type_moxiu,魔修
+#
+# === AI 类型 ===
+ai_melee,近战
+ai_ranged,远程
+ai_magic,法术
+#
+# === 功法 ===
+gongfa_baoyuanshouyi,抱元守一经
+#
+# === 功法篇章 ===
+chapter_shouyi,守一篇
+chapter_baoyuan,抱元篇
+chapter_zhixu,致虚篇
+chapter_shoujing,守静篇
+chapter_guigen,归根篇
+chapter_fuming,复命篇
+#
+# === 术法 ===
+spell_xuanshuizhou,玄水咒
+spell_canglangji,沧浪击
+spell_anshenfu,安神符
+spell_jinguangpoyue,金光破岳
+spell_liuhuolingfu,流火灵符
+spell_anshi,暗噬
+#
+# === 神通 ===
+skill_jiuzhuanhuandan,九转还丹
+skill_zhengqisuozhi,征旗所指
+#
+# === 角色 ===
+char_taiyixiushi,太一修士
+char_sanxiuqiangdao,散修强盗
+#
+# === 敌人 ===
+enemy_shijiahou,石甲兽
+enemy_yanweihu,焰尾狐
+enemy_xueyingmoxiu,血影魔修
+enemy_huangyesanxiu,荒野散修
+#
+# === 物品/掉落 ===
+item_shijia_piece,石甲碎片
+item_lingshi_low,劣质灵石
+item_yanwei_fur,焰尾毛
+item_huoling_crystal,火灵晶
+item_mohe_piece,魔核碎片
+item_xuelian_stone,血炼石
+item_sanxiu_token,散修令牌
+item_lingshi_bag,灵石袋
+#
+# === 特殊效果描述 ===
+desc_shouyi_stack,守一印记：每回合未移动获1层，每层神魂攻击+4%
+desc_shouyi_block,守一上限+2，受击消耗1层减伤20%
+desc_shouyi_full,满层神魂防御+15%，开局获2层
+desc_shouyi_extra,每层额外神魂防御+3%，满层MP消耗-25%，减伤20%→30%
+desc_danhuo_penetration,丹火穿透魂盾
+desc_zhengtao_wushi,征讨目标，无视格挡
+#
+# === 敌人描述 ===
+desc_enemy_shijiahou,低阶妖兽，皮糙肉厚，适合新手练手
+desc_enemy_yanweihu,火系妖兽，远程法术攻击，掉落火系素材
+desc_enemy_xueyingmoxiu,筑基期魔修，善用暗系术法，掉落魔道材料
+desc_enemy_huangyesanxiu,练气期散修，以水法自保，掉落散修通用物品

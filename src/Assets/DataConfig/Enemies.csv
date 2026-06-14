@@ -1,12 +1,6 @@
-﻿# 敌人/怪物模板配置表
-# 字段说明：
-#   name=名称, type=类型(妖兽/散修/魔修), aiType=AI类型(近战/远程/法术)
-#   realm=境界, realmMultiplier=境界倍率
-#   rootBone~talent=一级属性, blockRate~hitRateBonus=二级概率(%)
-#   equippedSpells=装备术法, dropTable=掉落表(格式: 物品:概率%|...)
-#   description=描述
+﻿# 敌人/怪物模板配置表（所有文本字段使用 Language.csv 中的 ID）
 name,type,aiType,realm,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,equippedSpells,dropTable,description
-石甲兽,妖兽,近战,练气,1.2,18,16,6,6,6,4,15,25,0,0,0,5,10,0,,石甲碎片:30|劣质灵石:50,低阶妖兽/皮糙肉厚/适合新手练手
-焰尾狐,妖兽,法术,练气,1.3,8,6,16,12,14,8,0,0,8,15,10,5,15,5,流火灵符,焰尾毛:25|火灵晶:15,火系妖兽/远程法术攻击/掉落火系素材
-血影魔修,魔修,法术,筑基,2.0,12,10,18,16,14,10,5,0,10,15,5,10,25,5,暗噬,魔核碎片:40|血炼石:20,筑基期魔修/善用暗系术法/掉落魔道材料
-荒野散修,散修,远程,练气,1.5,12,12,10,10,10,8,8,15,5,0,5,8,15,0,玄水咒,散修令牌:60|灵石袋:30,练气期散修/以水法自保/掉落散修通用物品
+enemy_shijiahou,type_yaoshou,ai_melee,realm_lianqi,1.2,18,16,6,6,6,4,15,25,0,0,0,5,10,0,,item_shijia_piece:30|item_lingshi_low:50,desc_enemy_shijiahou
+enemy_yanweihu,type_yaoshou,ai_magic,realm_lianqi,1.3,8,6,16,12,14,8,0,0,8,15,10,5,15,5,spell_liuhuolingfu,item_yanwei_fur:25|item_huoling_crystal:15,desc_enemy_yanweihu
+enemy_xueyingmoxiu,type_moxiu,ai_magic,realm_zhuji,2.0,12,10,18,16,14,10,5,0,10,15,5,10,25,5,spell_anshi,item_mohe_piece:40|item_xuelian_stone:20,desc_enemy_xueyingmoxiu
+enemy_huangyesanxiu,faction_sanxiu,ai_ranged,realm_lianqi,1.5,12,12,10,10,10,8,8,15,5,0,5,8,15,0,spell_xuanshuizhou,item_sanxiu_token:60|item_lingshi_bag:30,desc_enemy_huangyesanxiu
