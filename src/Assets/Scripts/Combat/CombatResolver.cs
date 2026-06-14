@@ -93,10 +93,14 @@ namespace TianZhang.Combat
             if (!caster.ConsumeMP(spell.mpCost))
                 return new ActionResult { Success = false, Message = "灵力不足" };
 
-            // 射程检查
-            int range = caster.Position.Distance(target.Position);
-            if (range < spell.minRange || range > spell.maxRange)
-                return new ActionResult { Success = false, Message = "目标不在射程范围" };
+            // 射程检查（自指向术法 minRange=0 maxRange=0 跳过）
+            bool isSelfTarget = spell.minRange == 0 && spell.maxRange == 0;
+            if (!isSelfTarget)
+            {
+                int range = caster.Position.Distance(target.Position);
+                if (range < spell.minRange || range > spell.maxRange)
+                    return new ActionResult { Success = false, Message = "目标不在射程范围" };
+            }
 
             // 设置冷却
             caster.SpellCooldowns[spellIndex] = spell.cooldownTicks;

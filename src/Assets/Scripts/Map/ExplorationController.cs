@@ -728,19 +728,26 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         public void PlayerCastSpell(int index)
         {
-            if (currentCombatTarget == null || !player.IsAlive) return;
+            if (!player.IsAlive) return;
             if (playerSpells == null || index >= playerSpells.Length) return;
             if (player.SpellCooldowns[index] > 0) { AddLog("术法冷却中"); return; }
             if (player.CurrentMP < playerSpells[index].mpCost) { AddLog("灵力不足"); return; }
 
-            int dist = player.Position.Distance(currentCombatTarget.Position);
-            if (dist < playerSpells[index].minRange || dist > playerSpells[index].maxRange)
+            // 自指向术法（minRange=0, maxRange=0）跳过射程检查，目标为自身
+            bool isSelfTarget = playerSpells[index].minRange == 0 && playerSpells[index].maxRange == 0;
+            if (!isSelfTarget)
             {
-                AddLog("超出射程");
-                return;
+                if (currentCombatTarget == null) return;
+                int dist = player.Position.Distance(currentCombatTarget.Position);
+                if (dist < playerSpells[index].minRange || dist > playerSpells[index].maxRange)
+                {
+                    AddLog("超出射程");
+                    return;
+                }
             }
 
-            var result = resolver.CastSpell(player, currentCombatTarget, index, playerSpells[index]);
+            var target = isSelfTarget ? player : currentCombatTarget;
+            var result = resolver.CastSpell(player, target, index, playerSpells[index]);
             AddLog(result.Message);
             hasMovedThisTurn = true;
             RefreshUI();
