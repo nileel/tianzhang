@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MoveHighlight
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 6ba4e32782e4a3741bfc9c49ffa13cad, type: 3}
-  m_Color: {r: 0.2, g: 0.8, b: 0.2, a: 0.5}
+  m_Color: {r: 0.2, g: 0.8, b: 0.2, a: 0.4}
   m_Transform:
     e00: 1
     e01: 0

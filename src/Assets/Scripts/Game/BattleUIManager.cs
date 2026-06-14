@@ -1,4 +1,4 @@
-ï»¿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,17 +7,18 @@ namespace TianZhang.Game
 {
     public class BattleUIManager : MonoBehaviour
     {
-        [Header("å¼•ç”¨")]
+        [Header("ÒıÓÃ")]
         private BattleSceneController controller;
+        private TianZhang.Map.ExplorationController exploreController;
 
-        [Header("Canvas è®¾ç½®")]
+        [Header("Canvas ÉèÖÃ")]
         public float panelMargin = 16f;
         public float barHeight = 18f;
 
         private Font sharedFont;
-        private static Sprite whiteSprite; // Barå¡«å……ç”¨
+        private static Sprite whiteSprite; // BarÌî³äÓÃ
 
-        // ---- ç©å®¶é¢æ¿ ----
+        // ---- Íæ¼ÒÃæ°å ----
         private GameObject playerPanel;
         private Text playerNameText;
         private Image playerHPFill;
@@ -28,7 +29,7 @@ namespace TianZhang.Game
         private Text playerCTText;
         private Text playerStatusText;
 
-        // ---- æ•Œæ–¹é¢æ¿ ----
+        // ---- µĞ·½Ãæ°å ----
         private GameObject enemyPanel;
         private Text enemyNameText;
         private Image enemyHPFill;
@@ -39,29 +40,30 @@ namespace TianZhang.Game
         private Text enemyCTText;
         private Text enemyStatusText;
 
-        // ---- å›åˆæç¤º ----
+        // ---- »ØºÏÌáÊ¾ ----
         private Text turnBanner;
 
-        // ---- åŠ¨ä½œæŒ‰é’® ----
+        // ---- ¶¯×÷°´Å¥ ----
         private List<GameObject> spellButtons = new List<GameObject>();
         private List<GameObject> skillButtons = new List<GameObject>();
         private Button attackButton;
         private Button guardButton;
         private Button waitButton;
-        private Transform actionBarParent; // åŠ¨ä½œæ çˆ¶èŠ‚ç‚¹
+        private Transform actionBarParent; // ¶¯×÷À¸¸¸½Úµã
 
-        // ---- æˆ˜æ–—æ—¥å¿— ----
+        // ---- Õ½¶·ÈÕÖ¾ ----
         private GameObject logPanel;
         private ScrollRect logScroll;
         private Text logText;
         private int logLineCount;
         private const int MaxLogLines = 200;
 
-        // ---- å¸®åŠ©é¢æ¿ ----
+        // ---- °ïÖúÃæ°å ----
         private GameObject helpPanel;
         private bool helpVisible;
 
         public void SetController(BattleSceneController ctrl) { controller = ctrl; }
+        public void SetExplorationController(TianZhang.Map.ExplorationController ctrl) { exploreController = ctrl; }
 
         private void Awake()
         {
@@ -75,7 +77,7 @@ namespace TianZhang.Game
             if (Input.GetKeyDown(KeyCode.H)) ToggleHelp();
         }
 
-        // ==================== æ„å»º UI ====================
+        // ==================== ¹¹½¨ UI ====================
 
         private void BuildUI()
         {
@@ -194,13 +196,13 @@ namespace TianZhang.Game
             return btn;
         }
 
-        // ---- ç©å®¶é¢æ¿ï¼ˆå·¦ä¸Šï¼‰----
+        // ---- Íæ¼ÒÃæ°å£¨×óÉÏ£©----
 
         private void BuildPlayerPanel(Transform canvas)
         {
             playerPanel = CreatePanel(canvas, "PlayerPanel",
                 new Vector2(0, 1), new Vector2(0, 1),
-                new Vector2(panelMargin, -220), new Vector2(280, -panelMargin),
+                new Vector2(40, -200), new Vector2(260, -40),
                 new Color(0, 0, 0, 0.6f));
 
             var layout = playerPanel.AddComponent<VerticalLayoutGroup>();
@@ -212,7 +214,7 @@ namespace TianZhang.Game
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            playerNameText = CreateText(playerPanel.transform, "Name", "ç©å®¶", 20, TextAnchor.UpperLeft, Color.cyan);
+            playerNameText = CreateText(playerPanel.transform, "Name", "Íæ¼Ò", 20, TextAnchor.UpperLeft, Color.cyan);
             playerNameText.rectTransform.sizeDelta = new Vector2(0, 28);
 
             var (hpFill, hpLabel) = CreateBar(playerPanel.transform, "HP", Color.red, new Color(0.3f, 0, 0));
@@ -224,17 +226,17 @@ namespace TianZhang.Game
             var (ctFill, ctLabel) = CreateBar(playerPanel.transform, "CT", Color.yellow, new Color(0.3f, 0.3f, 0));
             playerCTFill = ctFill; playerCTText = ctLabel;
 
-            playerStatusText = CreateText(playerPanel.transform, "Status", "", 13, TextAnchor.UpperLeft, Color.gray);
-            playerStatusText.rectTransform.sizeDelta = new Vector2(0, 18);
+            playerStatusText = CreateText(playerPanel.transform, "Status", "", 14, TextAnchor.UpperLeft, Color.gray);
+            playerStatusText.rectTransform.sizeDelta = new Vector2(0, 22);
         }
 
-        // ---- æ•Œæ–¹é¢æ¿ï¼ˆå³ä¸Šï¼‰----
+        // ---- µĞ·½Ãæ°å£¨ÓÒÉÏ£©----
 
         private void BuildEnemyPanel(Transform canvas)
         {
             enemyPanel = CreatePanel(canvas, "EnemyPanel",
                 new Vector2(1, 1), new Vector2(1, 1),
-                new Vector2(-280, -220), new Vector2(-panelMargin, -panelMargin),
+                new Vector2(-260, -200), new Vector2(-40, -40),
                 new Color(0, 0, 0, 0.6f));
 
             var layout = enemyPanel.AddComponent<VerticalLayoutGroup>();
@@ -246,7 +248,7 @@ namespace TianZhang.Game
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            enemyNameText = CreateText(enemyPanel.transform, "Name", "æ•Œæ–¹", 20, TextAnchor.UpperRight, Color.red);
+            enemyNameText = CreateText(enemyPanel.transform, "Name", "µĞ·½", 20, TextAnchor.UpperRight, Color.red);
             enemyNameText.rectTransform.sizeDelta = new Vector2(0, 28);
 
             var (hpFill, hpLabel) = CreateBar(enemyPanel.transform, "HP", Color.red, new Color(0.3f, 0, 0));
@@ -258,11 +260,11 @@ namespace TianZhang.Game
             var (ctFill, ctLabel) = CreateBar(enemyPanel.transform, "CT", Color.yellow, new Color(0.3f, 0.3f, 0));
             enemyCTFill = ctFill; enemyCTText = ctLabel;
 
-            enemyStatusText = CreateText(enemyPanel.transform, "Status", "", 13, TextAnchor.UpperRight, Color.gray);
-            enemyStatusText.rectTransform.sizeDelta = new Vector2(0, 18);
+            enemyStatusText = CreateText(enemyPanel.transform, "Status", "", 14, TextAnchor.UpperRight, Color.gray);
+            enemyStatusText.rectTransform.sizeDelta = new Vector2(0, 22);
         }
 
-        // ---- å›åˆæç¤º ----
+        // ---- »ØºÏÌáÊ¾ ----
 
         private void BuildTurnBanner(Transform canvas)
         {
@@ -270,11 +272,11 @@ namespace TianZhang.Game
                 new Vector2(0.5f, 1), new Vector2(0.5f, 1),
                 new Vector2(-250, -48), new Vector2(250, -panelMargin));
             go.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 36);
-            turnBanner = CreateText(go.transform, "BannerText", "å‡†å¤‡æˆ˜æ–—", 22, TextAnchor.MiddleCenter, Color.white);
+            turnBanner = CreateText(go.transform, "BannerText", "×¼±¸Õ½¶·", 22, TextAnchor.MiddleCenter, Color.white);
             turnBanner.rectTransform.sizeDelta = new Vector2(0, 36);
         }
 
-        // ---- åŠ¨ä½œæŒ‰é’®æ ï¼ˆåº•éƒ¨ï¼‰----
+        // ---- ¶¯×÷°´Å¥À¸£¨µ×²¿£©----
 
         private void BuildActionBar(Transform canvas)
         {
@@ -291,33 +293,33 @@ namespace TianZhang.Game
             layout.childControlWidth = false;
             layout.childControlHeight = false;
 
-            attackButton = CreateButton(bar.transform, "BtnAttack", "æ™®æ”» [A]");
-            attackButton.onClick.AddListener(() => { if (controller != null) controller.PlayerBasicAttack(); });
+            attackButton = CreateButton(bar.transform, "BtnAttack", "ÆÕ¹¥ [A]");
+            attackButton.onClick.AddListener(() => { if (controller != null) controller.PlayerBasicAttack(); else if (exploreController != null) exploreController.PlayerBasicAttack(); });
 
             for (int i = 0; i < 4; i++)
             {
                 int idx = i;
-                var btn = CreateButton(bar.transform, "BtnSpell" + i, "æœ¯æ³•" + (i + 1) + " [" + (idx + 1) + "]");
-                btn.onClick.AddListener(() => { if (controller != null) controller.PlayerCastSpell(idx); });
+                var btn = CreateButton(bar.transform, "BtnSpell" + i, "Êõ·¨" + (i + 1) + " [" + (idx + 1) + "]");
+                btn.onClick.AddListener(() => { if (controller != null) controller.PlayerCastSpell(idx); else if (exploreController != null) exploreController.PlayerCastSpell(idx); });
                 spellButtons.Add(btn.gameObject);
             }
 
             for (int i = 0; i < 2; i++)
             {
                 int idx = i;
-                var btn = CreateButton(bar.transform, "BtnSkill" + i, "ç¥é€š" + (i + 1) + " [" + (idx + 5) + "]");
+                var btn = CreateButton(bar.transform, "BtnSkill" + i, "ÉñÍ¨" + (i + 1) + " [" + (idx + 5) + "]");
                 btn.onClick.AddListener(() => { if (controller != null) controller.PlayerUseSkill(idx); });
                 skillButtons.Add(btn.gameObject);
             }
 
-            guardButton = CreateButton(bar.transform, "BtnGuard", "é˜²å¾¡ [G]");
-            guardButton.onClick.AddListener(() => { if (controller != null) controller.PlayerGuard(); });
+            guardButton = CreateButton(bar.transform, "BtnGuard", "·ÀÓù [G]");
+            guardButton.onClick.AddListener(() => { if (controller != null) controller.PlayerGuard(); else if (exploreController != null) exploreController.PlayerGuard(); });
 
-            waitButton = CreateButton(bar.transform, "BtnWait", "å¾…æœº [W]");
-            waitButton.onClick.AddListener(() => { if (controller != null) controller.PlayerWait(); });
+            waitButton = CreateButton(bar.transform, "BtnWait", "´ı»ú [W]");
+            waitButton.onClick.AddListener(() => { if (controller != null) controller.PlayerWait(); else if (exploreController != null) exploreController.PlayerCombatWait(); });
         }
 
-        // ---- æˆ˜æ–—æ—¥å¿—ï¼ˆå³ä¾§ï¼‰----
+        // ---- Õ½¶·ÈÕÖ¾£¨ÓÒ²à£©----
 
         private void BuildLogPanel(Transform canvas)
         {
@@ -326,7 +328,7 @@ namespace TianZhang.Game
                 new Vector2(-340, 250), new Vector2(-panelMargin, -250),
                 new Color(0, 0, 0, 0.5f));
 
-            // æ ‡é¢˜
+            // ±êÌâ
             var titleRt = new GameObject("LogTitle", typeof(RectTransform)).GetComponent<RectTransform>();
             titleRt.SetParent(logPanel.transform, false);
             titleRt.anchorMin = new Vector2(0, 1);
@@ -334,13 +336,13 @@ namespace TianZhang.Game
             titleRt.sizeDelta = new Vector2(0, 28);
             titleRt.anchoredPosition = Vector2.zero;
             var titleTxt = titleRt.gameObject.AddComponent<Text>();
-            titleTxt.text = "â€”â€” æˆ˜æ–—æ—¥å¿— â€”â€”";
+            titleTxt.text = "¡ª¡ª Õ½¶·ÈÕÖ¾ ¡ª¡ª";
             titleTxt.fontSize = 14;
             titleTxt.alignment = TextAnchor.MiddleCenter;
             titleTxt.color = new Color(0.7f, 0.7f, 0.3f);
             titleTxt.font = sharedFont;
 
-            // ScrollRect å®¹å™¨
+            // ScrollRect ÈİÆ÷
             var scrollGo = new GameObject("LogScroll", typeof(RectTransform), typeof(ScrollRect), typeof(Image));
             scrollGo.transform.SetParent(logPanel.transform, false);
             var scrollRt = scrollGo.GetComponent<RectTransform>();
@@ -351,7 +353,7 @@ namespace TianZhang.Game
             scrollGo.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.05f, 0.8f);
             logScroll = scrollGo.GetComponent<ScrollRect>();
 
-            // Viewportï¼ˆé®ç½©è£å‰ªåŒºåŸŸï¼‰
+            // Viewport£¨ÕÚÕÖ²Ã¼ôÇøÓò£©
             var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
             viewport.transform.SetParent(scrollGo.transform, false);
             var vpRt = viewport.GetComponent<RectTransform>();
@@ -360,7 +362,7 @@ namespace TianZhang.Game
             vpRt.sizeDelta = Vector2.zero;
             viewport.GetComponent<Image>().color = Color.clear;
 
-            // æ—¥å¿—æ–‡æœ¬ï¼ˆç›´æ¥ä½œä¸º ScrollRect çš„å†…å®¹ï¼Œè‡ªåŠ¨æ‰©å±•é«˜åº¦ï¼‰
+            // ÈÕÖ¾ÎÄ±¾£¨Ö±½Ó×÷Îª ScrollRect µÄÄÚÈİ£¬×Ô¶¯À©Õ¹¸ß¶È£©
             var logGo = new GameObject("LogText", typeof(RectTransform));
             logGo.transform.SetParent(viewport.transform, false);
             var logRt = logGo.GetComponent<RectTransform>();
@@ -390,7 +392,7 @@ namespace TianZhang.Game
             logScroll.movementType = ScrollRect.MovementType.Clamped;
         }
 
-        // ---- å¸®åŠ©é¢æ¿ ----
+        // ---- °ïÖúÃæ°å ----
 
         private void BuildHelpPanel(Transform canvas)
         {
@@ -400,13 +402,13 @@ namespace TianZhang.Game
                 new Color(0, 0, 0, 0.85f));
 
             var txt = CreateText(helpPanel.transform, "HelpText",
-                "=== æ“ä½œè¯´æ˜ ===\n\n" +
-                "é¼ æ ‡ç‚¹å‡» â†’ ç§»åŠ¨/é€‰æ‹©ç›®æ ‡\n" +
-                "é”®ç›˜ [A] æ™®æ”»  [G] é˜²å¾¡  [W] å¾…æœº\n" +
-                "é”®ç›˜ [1-4] æœ¯æ³•  [5-6] ç¥é€š\n" +
-                "é”®ç›˜ [H] æ˜¾éšå¸®åŠ©  [Esc] é€€å‡º\n\n" +
-                "å…­è§’æ ¼æœå‘ç³»ç»Ÿ:\n" +
-                "æ­£é¢ -15%å‘½ä¸­ | ä¾§é¢æ­£å¸¸ | èƒŒé¢ +15%å‘½ä¸­ +30%ä¼¤å®³",
+                "=== ²Ù×÷ËµÃ÷ ===\n\n" +
+                "Êó±êµã»÷ ¡ú ÒÆ¶¯/Ñ¡ÔñÄ¿±ê\n" +
+                "¼üÅÌ [A] ÆÕ¹¥  [G] ·ÀÓù  [W] ´ı»ú\n" +
+                "¼üÅÌ [1-4] Êõ·¨  [5-6] ÉñÍ¨\n" +
+                "¼üÅÌ [H] ÏÔÒş°ïÖú  [Esc] ÍË³ö\n\n" +
+                "Áù½Ç¸ñ³¯ÏòÏµÍ³:\n" +
+                "ÕıÃæ -15%ÃüÖĞ | ²àÃæÕı³£ | ±³Ãæ +15%ÃüÖĞ +30%ÉËº¦",
                 15, TextAnchor.UpperLeft, Color.white);
             txt.rectTransform.offsetMin = new Vector2(12, 12);
             txt.rectTransform.offsetMax = new Vector2(-12, -12);
@@ -420,7 +422,7 @@ namespace TianZhang.Game
             helpPanel.SetActive(helpVisible);
         }
 
-        // ==================== å…¬å¼€æ›´æ–°æ–¹æ³• ====================
+        // ==================== ¹«¿ª¸üĞÂ·½·¨ ====================
 
         public void UpdatePlayerInfo(string name, int hp, int maxHp, int mp, int maxMp, float ctPct, string status)
         {
@@ -429,7 +431,7 @@ namespace TianZhang.Game
             UpdateBar(playerMPFill, playerMPText, mp, maxMp, "MP");
             UpdateBar(playerCTFill, playerCTText, ctPct, 1f, "CT");
             if (playerStatusText != null)
-                playerStatusText.text = string.IsNullOrEmpty(status) ? "" : "çŠ¶æ€: " + status;
+                playerStatusText.text = string.IsNullOrEmpty(status) ? "" : "×´Ì¬: " + status;
         }
 
         public void UpdateEnemyInfo(string name, int hp, int maxHp, int mp, int maxMp, float ctPct, string status)
@@ -439,7 +441,7 @@ namespace TianZhang.Game
             UpdateBar(enemyMPFill, enemyMPText, mp, maxMp, "MP");
             UpdateBar(enemyCTFill, enemyCTText, ctPct, 1f, "CT");
             if (enemyStatusText != null)
-                enemyStatusText.text = string.IsNullOrEmpty(status) ? "" : "çŠ¶æ€: " + status;
+                enemyStatusText.text = string.IsNullOrEmpty(status) ? "" : "×´Ì¬: " + status;
         }
 
         public void SetTurnBanner(string text, Color? color = null)
@@ -520,7 +522,7 @@ namespace TianZhang.Game
             int equippedCount = names?.Length ?? 0;
             int showCount = maxSlots > 0 ? Mathf.Max(equippedCount, maxSlots) : equippedCount;
 
-            // ç¡®ä¿æŒ‰é’®æ•°é‡è¶³å¤Ÿ
+            // È·±£°´Å¥ÊıÁ¿×ã¹»
             while (buttons.Count < showCount)
             {
                 var newBtn = CreateActionButton("Slot" + buttons.Count, "", null);
@@ -542,8 +544,8 @@ namespace TianZhang.Game
 
                 if (isEmptySlot)
                 {
-                    // ç©ºæ§½æ˜¾ç¤ºä¸ºç°è‰²"+"
-                    txt.text = "[ç©º]";
+                    // ¿Õ²ÛÏÔÊ¾Îª»ÒÉ«"+"
+                    txt.text = "[¿Õ]";
                     txt.color = new Color(0.3f, 0.3f, 0.3f, 0.5f);
                     if (button != null) button.interactable = false;
                 }
@@ -577,7 +579,7 @@ namespace TianZhang.Game
             return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
         }
 
-        // ---- å†…éƒ¨å·¥å…· ----
+        // ---- ÄÚ²¿¹¤¾ß ----
 
         private void UpdateBar(Image fill, Text label, float current, float max, string prefix)
         {

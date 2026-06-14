@@ -65,6 +65,7 @@ namespace TianZhang.Map
 
         // ---- 地形标记（HexGrid blocked）----
         private HashSet<HexCoord> blockedTiles = new HashSet<HexCoord>();
+        private UnityEngine.Tilemaps.Tile blockedTile; // 障碍格素材
 
         private class EnemyUnit
         {
@@ -103,9 +104,12 @@ namespace TianZhang.Map
             resolver = new CombatResolver { Engine = ctbEngine };
             aiController = new SimpleAI();
 
+            // 创建障碍格素材（深灰色）
+            blockedTile = CreateColoredTile("BlockedTile", new Color(0.25f, 0.22f, 0.2f, 1f));
             // 生成地图（地形 + 六角格）
             GenerateTerrain();
             tilemapManager.GenerateHexGrid();
+            ApplyBlockedTiles();
 
             // 创建玩家
             var playerStart = new HexCoord(0, 0);
@@ -122,7 +126,8 @@ namespace TianZhang.Map
             // 刷新UI
             if (uiManager != null)
             {
-                uiManager.SetTurnBanner("探索地图");
+            uiManager.SetExplorationController(this);
+                            uiManager.SetTurnBanner("探索地图");
                 uiManager.ClearLog();
             }
             RefreshUI();
@@ -136,6 +141,37 @@ namespace TianZhang.Map
 
         // ==================== 地形生成 ====================
 
+
+        private void ApplyBlockedTiles()
+        {
+            if (blockedTile == null || tilemapManager?.groundTilemap == null) return;
+            foreach (var coord in blockedTiles)
+            {
+                var cell = new Vector3Int(coord.q, coord.r, 0);
+                tilemapManager.groundTilemap.SetTile(cell, blockedTile);
+            }
+        }
+
+        private UnityEngine.Tilemaps.Tile CreateColoredTile(string name, Color color)
+        {
+            int s = 64;
+            var tex = new Texture2D(s, s, TextureFormat.RGBA32, false);
+            var px = new Color[s * s];
+            float r = s / 2f - 1f;
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                    px[y * s + x] = ((x - s / 2f) * (x - s / 2f) + (y - s / 2f) * (y - s / 2f) <= r * r)
+                        ? Color.white : Color.clear;
+            tex.SetPixels(px);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.Apply();
+
+            var tile = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+            tile.name = name;
+            tile.sprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
+            tile.color = color;
+            return tile;
+        }
         private void GenerateTerrain()
         {
             var rng = new System.Random(42); // 固定种子，可重复
@@ -347,16 +383,22 @@ namespace TianZhang.Map
             {
                 MovePlayer(movePath);
             }
+            else
+            {
+                // 点击不可达格子时给出反馈
+                if (tilemapManager.Grid.IsBlocked(coord))
+                    AddLog("此处是障碍，无法通行");
+                else if (player.Position.Distance(coord) > player.MovePoints)
+                    AddLog("距离太远，走不到");
+            }
         }
 
         private void MovePlayer(List<HexCoord> path)
         {
             if (path == null || path.Count == 0) return;
 
+            // 只更新起点和终点，不污染中间格子
             tilemapManager.Grid.ClearOccupied(player.Position);
-            foreach (var step in path)
-                tilemapManager.Grid.SetOccupied(step, player.CTBUnit.Id);
-            tilemapManager.Grid.ClearOccupied(path[path.Count - 1]);
             player.Position = path[path.Count - 1];
             tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
 
@@ -367,7 +409,7 @@ namespace TianZhang.Map
             hasMovedThisTurn = true;
             hexesMovedThisTurn += path.Count;
 
-            // 检查视野内敌人（自动触发战斗提示）
+            // 检查视野内敌人
             CheckEnemyProximity();
 
             RefreshUI();
@@ -624,7 +666,7 @@ namespace TianZhang.Map
             }
         }
 
-        private void PlayerBasicAttack()
+        public void PlayerBasicAttack()
         {
             if (currentCombatTarget == null || !player.IsAlive) return;
             bool useMagic = player.MagAtk > player.PhysAtk;
@@ -634,7 +676,7 @@ namespace TianZhang.Map
             RefreshUI();
         }
 
-        private void PlayerGuard()
+        public void PlayerGuard()
         {
             if (!player.IsAlive) return;
             var result = resolver.Guard(player);
@@ -643,7 +685,7 @@ namespace TianZhang.Map
             RefreshUI();
         }
 
-        private void PlayerCombatWait()
+        public void PlayerCombatWait()
         {
             if (!player.IsAlive) return;
             AddLog($"{player.Name} 待机");
@@ -651,7 +693,7 @@ namespace TianZhang.Map
             RefreshUI();
         }
 
-        private void PlayerCastSpell(int index)
+        public void PlayerCastSpell(int index)
         {
             if (currentCombatTarget == null || !player.IsAlive) return;
             if (playerSpells == null || index >= playerSpells.Length) return;
