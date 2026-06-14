@@ -19,7 +19,6 @@ namespace TianZhang.Core
         private int unitIdCounter;
 
         // 事件
-        public event Action<CTBUnit> OnUnitActionReady;
         public event Action<int> OnTickAdvanced;
 
         public class CTBUnit

@@ -13,92 +13,7 @@ namespace TianZhang.Editor
     public static class SceneBuilder
     {
         private const string DataPath = "Assets/Data";
-        private const string ScenePath = "Assets/Scenes/BattleScene.unity";
-
-        [MenuItem("Tools/天章/生成战斗场景")]
-        public static void BuildBattleScene()
-        {
-            CreateDemoData();
-
-            var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
-                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
-                UnityEditor.SceneManagement.NewSceneMode.Single);
-
-            // Camera
-            var camGo = new GameObject("Main Camera");
-            camGo.tag = "MainCamera";
-            var cam = camGo.AddComponent<Camera>();
-            cam.orthographic = true;
-            cam.orthographicSize = 8f;
-            cam.backgroundColor = new Color(0.1f, 0.12f, 0.18f);
-            cam.transform.position = new Vector3(0, 0, -10);
-            camGo.AddComponent<AudioListener>();
-
-            // Hex Grid
-            var gridGo = new GameObject("HexGrid");
-            var grid = gridGo.AddComponent<Grid>();
-            grid.cellLayout = GridLayout.CellLayout.Hexagon;
-            grid.cellSize = new Vector3(1, 1, 0);
-
-            var groundGo = new GameObject("Ground");
-            groundGo.transform.SetParent(gridGo.transform);
-            var groundTml = groundGo.AddComponent<Tilemap>();
-            var groundRnd = groundGo.AddComponent<TilemapRenderer>();
-            groundTml.color = new Color(0.35f, 0.4f, 0.45f);
-
-            var overlayGo = new GameObject("Overlay");
-            overlayGo.transform.SetParent(gridGo.transform);
-            var overlayTml = overlayGo.AddComponent<Tilemap>();
-            var overlayRnd = overlayGo.AddComponent<TilemapRenderer>();
-            overlayRnd.sortingOrder = 1;
-
-            var unitGo = new GameObject("Units");
-            unitGo.transform.SetParent(gridGo.transform);
-            var unitTml = unitGo.AddComponent<Tilemap>();
-            var unitRnd = unitGo.AddComponent<TilemapRenderer>();
-            unitRnd.sortingOrder = 2;
-
-            // TilemapManager
-            var mgrGo = new GameObject("TilemapManager");
-            var mgr = mgrGo.AddComponent<HexTilemapManager>();
-            mgr.groundTilemap = groundTml;
-            mgr.overlayTilemap = overlayTml;
-            mgr.unitTilemap = unitTml;
-            mgr.gridRadius = 5;
-            mgr.groundTile = MakeTile("GroundTile", new Color(0.3f, 0.35f, 0.4f));
-            mgr.moveHighlightTile = MakeTile("MoveHighlight", new Color(0.2f, 0.8f, 0.2f, 0.4f));
-            mgr.attackHighlightTile = MakeTile("AttackHighlight", new Color(0.8f, 0.2f, 0.2f, 0.4f));
-            mgr.selectedTile = MakeTile("Selected", new Color(1f, 0.8f, 0.2f, 0.5f));
-            mgr.unitPrefab = MakeUnitPrefab();
-
-            // BattleController
-            var ctrlGo = new GameObject("BattleController");
-            var ctrl = ctrlGo.AddComponent<BattleSceneController>();
-            ctrl.tilemapManager = mgr;
-            ctrl.playerData = AssetDatabase.LoadAssetAtPath<CharacterData>($"{DataPath}/Characters/Char_Player.asset");
-            ctrl.enemyData = AssetDatabase.LoadAssetAtPath<CharacterData>($"{DataPath}/Characters/Char_Enemy.asset");
-            ctrl.playerSpells = new[] {
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Jinguang.asset"),
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Huoling.asset"),
-            };
-            ctrl.enemySpells = new[] {
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Anshi.asset"),
-            };
-
-            // EventSystem
-            var evGo = new GameObject("EventSystem");
-            evGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            evGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-
-            // GameManager
-            var gmGo = new GameObject("GameManager");
-            gmGo.AddComponent<GameManager>();
-
-            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log("<color=green>天章战斗场景已生成</color>");
-        }
-
-        private static void CreateDemoData()
+                private static void CreateDemoData()
         {
             EnsureDir($"{DataPath}/Characters");
             EnsureDir($"{DataPath}/Spells");
@@ -269,13 +184,8 @@ namespace TianZhang.Editor
                 AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Huoling.asset"),
             };
 
-            // Battle UI
-            var uiGo = new GameObject("BattleUI");
-                        var canvas = uiGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 0;
-            uiGo.AddComponent<UnityEngine.UI.CanvasScaler>();
-            uiGo.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            // UI Manager（Canvas 由 BattleUIManager.Awake 自动创建）
+            var uiGo = new GameObject("UIManager");
             var ui = uiGo.AddComponent<BattleUIManager>();
             explCtrl.uiManager = ui;
 
