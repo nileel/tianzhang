@@ -59,7 +59,6 @@ spell_canglangji,沧浪击
 spell_anshenfu,安神符
 spell_jinguangpoyue,金光破岳
 spell_liuhuolingfu,流火灵符
-spell_anshi,暗噬
 #
 # === 神通 ===
 skill_jiuzhuanhuandan,九转还丹
@@ -164,7 +163,6 @@ spell_jianbiqingye,坚壁清野
 spell_hunyunguiyi,混元归一
 
 # === 太虚观术法 ===
-spell_anshi,暗蚀
 spell_youmingyin,幽冥引
 spell_rumengjue,入梦诀
 spell_yehuozhou,业火咒
@@ -267,3 +265,136 @@ desc_chuanliu,川流减伤35%
 desc_shishui,逝水叠防
 desc_qiushui,秋水回血1%/回合
 desc_linshui,濒死护盾
+gongfa_yunzhuandurenjing,云篆度人经
+chapter_lingbao,灵宝篇
+desc_lingbao_fudan,云篆度人经·灵宝篇 效果描述
+chapter_duren,度人篇
+desc_duren_evolution,云篆度人经·度人篇 效果描述
+chapter_yunzhuan,云篆篇
+desc_yunzhuan_taixu,云篆度人经·云篆篇 效果描述
+chapter_tianshu,天书篇
+desc_tianshu_duer,云篆度人经·天书篇 效果描述
+gongfa_nanhuadamengshu,南华大梦书
+chapter_xiaoyaoyou,逍遥游篇
+desc_xiaoyao_dodge,南华大梦书·逍遥游篇 效果描述
+chapter_qiwulun,齐物论篇
+desc_qiwu_diehua,南华大梦书·齐物论篇 效果描述
+chapter_dazongshi,大宗师篇
+desc_dazongshi_qiankun,南华大梦书·大宗师篇 效果描述
+chapter_yingdiwang,应帝王篇
+desc_yingdiwang_huapeng,南华大梦书·应帝王篇 效果描述
+chapter_qiushui,秋水篇
+desc_qiushui_mengdie,南华大梦书·秋水篇 效果描述
+chapter_tianxia,天下篇
+desc_tianxia_wudai,南华大梦书·天下篇 效果描述
+gongfa_nanhuachanyandian,南华阐衍典
+chapter_duhua,独化篇
+desc_duhua_zisheng,南华阐衍典·独化篇 效果描述
+chapter_xingfen,性分篇
+desc_xingfen_ziran,南华阐衍典·性分篇 效果描述
+chapter_xuanming,玄冥篇
+desc_xuanming_duhua,南华阐衍典·玄冥篇 效果描述
+gongfa_dadonglianzhenjing,大洞炼真经
+chapter_fuqi,服气篇
+desc_fuqi_danhuo,大洞炼真经·服气篇 效果描述
+chapter_caiyao,采药篇
+desc_caiyao_evolution,大洞炼真经·采药篇 效果描述
+chapter_jiuzhuan,九转篇
+desc_jiuzhuan_evolution,大洞炼真经·九转篇 效果描述
+chapter_huandan,还丹篇
+desc_huandan_evolution,大洞炼真经·还丹篇 效果描述
+chapter_taiqing,太清篇
+desc_taiqing_evolution,大洞炼真经·太清篇 效果描述
+gongfa_taiyishancangjing,太易山藏经
+chapter_zhouyi,周易篇
+desc_zhouyi_yishu,太易山藏经·周易篇 效果描述
+chapter_lianshan,连山篇
+desc_lianshan_evolution,太易山藏经·连山篇 效果描述
+chapter_guicang,归藏篇
+desc_guicang_evolution,太易山藏经·归藏篇 效果描述
+chapter_taiji,太极篇
+desc_taiji_evolution,太易山藏经·太极篇 效果描述
+gongfa_taiyixuanyijian,太易玄义笺
+chapter_mingtuan,明彖篇
+desc_mingtuan_zhiyi,太易玄义笺·明彖篇 效果描述
+chapter_mingxiang,明象篇
+desc_mingxiang_wangxiang,太易玄义笺·明象篇 效果描述
+chapter_mingyao,明爻篇
+desc_mingyao_tongbian,太易玄义笺·明爻篇 效果描述
+chapter_gualue,卦略篇
+desc_gualue_wufang,太易玄义笺·卦略篇 效果描述
+gongfa_xuanpindaocang,玄牝道藏
+chapter_daokedao,道可道篇
+desc_daokedao_dao,玄牝道藏·道可道篇 效果描述
+chapter_xuanpin,玄牝篇
+desc_xuanpin_zhimen,玄牝道藏·玄牝篇 效果描述
+gongfa_kongwuborejing,空无般若经
+chapter_kongguan,空观篇
+desc_kongguan_zhaojian,空无般若经·空观篇 效果描述
+chapter_wuxiang,无相篇
+desc_wuxiang_kongseyiru,空无般若经·无相篇 效果描述
+chapter_zhenru,真如篇
+desc_zhenru_borezhenru,空无般若经·真如篇 效果描述
+gongfa_jiansubaopujing,见素抱朴经
+chapter_jindanpian,金丹篇
+desc_jindanpian_huangbai,见素抱朴经·金丹篇 效果描述
+chapter_xianyaopian,仙药篇
+desc_xianyao_yuye,见素抱朴经·仙药篇 效果描述
+chapter_zhilipian,至理篇
+desc_zhili_shouyi,见素抱朴经·至理篇 效果描述
+chapter_dizhenpian,地真篇
+desc_dizhen_cunsi,见素抱朴经·地真篇 效果描述
+chapter_xialanpian,遐览篇
+desc_xialan_wanjuan,见素抱朴经·遐览篇 效果描述
+chapter_quhuopian,祛惑篇
+desc_quhuo_bianzhen,见素抱朴经·祛惑篇 效果描述
+gongfa_tongshensanxuanlilu,通神三玄礼录
+chapter_zhouli,周礼篇
+desc_zhouli_liuguan,通神三玄礼录·周礼篇 效果描述
+chapter_yili,仪礼篇
+desc_yili_sanjia,通神三玄礼录·仪礼篇 效果描述
+chapter_liji,礼记篇
+desc_liji_liyun,通神三玄礼录·礼记篇 效果描述
+chapter_tongshen,通神篇
+desc_tongshen_sanxuanheyi,通神三玄礼录·通神篇 效果描述
+spell_wanjunyinxian,万军引弦
+spell_wanliuguizong,万流归宗
+spell_buhuaijinshen,不坏金身
+spell_jiuyuanhanquan,九渊寒泉
+spell_jiuzhuandanhuo,九转丹火
+spell_wuleifuchi,五雷符敕
+spell_junshirushan,军势如山
+spell_dadaoxuanyin,大道玄音
+spell_tianshuyunzhuan,天书云篆
+spell_tiangangfuzhen,天罡符阵
+spell_taiqingyuye,太清玉液
+spell_yufenglingxu,御风凌虚
+spell_jiangliutiandi,江流天地
+spell_qingfengjue,清风诀
+spell_lingfumiaofa,灵符妙法
+spell_xuanyuanzhengqijue,玄元正气诀
+spell_pozhenci,破阵突刺
+spell_panshizhuang,磐石桩
+spell_naqiguiyuan,纳气归元
+spell_jingangpoyue,金刚破岳
+spell_zhenyuefu,镇岳符
+spell_dingshenshu,定身术
+spell_chuanliujin,川流劲
+spell_lingguangshan,灵光闪
+spell_shennianci,神念刺
+spell_suodichengcun,缩地成寸
+spell_julingshu,聚灵术
+spell_lieshiquan,裂石拳
+skill_wanfaguizong,万法归宗
+skill_lantingyimo,兰亭遗墨
+skill_tianfuzhenyue,天符镇岳
+skill_yiqiguanshi,弈棋观势
+skill_fayu_wanxiangxuanmen,法域·万象玄门
+skill_sulizhengyi,肃礼正仪
+skill_roushengchengsheng,肉身成圣
+skill_lingguangguanri,灵光贯日
+skill_lingyu_wanxiangguiyuan,灵域 · 万象归元
+skill_suiyue,碎岳
+skill_shennianguanchuan,神念贯穿
+skill_jiweizhu,积微成著
+skill_shishuiji,逝水千击

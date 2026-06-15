@@ -27,3 +27,16 @@ skill_shuanghuntongti,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_jindan,faction_taixuguan
 skill_suhuilunhui,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_zhuji,faction_taixuguan
 skill_yinguokehen,0,0,0,0,0,0,0,0,0,0,0,0,1,,realm_jindan,faction_taixuguan
 skill_hunyu_huangquan,0,1,5,0,0,0,0,0,0,0,0,1,0,,realm_lianxu,faction_taixuguan
+skill_wanfaguizong,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_wanfaguizong,realm_jindan,faction_taiyidaoting
+skill_lantingyimo,3,0,0,0,0,0,0,0,0,0,0,0,1,desc_skill_lantingyimo,realm_jindan,faction_taiyidaoting
+skill_tianfuzhenyue,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_tianfuzhenyue,realm_jindan,faction_taiyidaoting
+skill_yiqiguanshi,3,0,0,0,0,0,0,0,0,0,0,0,1,desc_skill_yiqiguanshi,realm_jindan,faction_taiyidaoting
+skill_fayu_wanxiangxuanmen,2,0,0,0,50,0,0,0,0,0,0,1,0,desc_skill_fayu_wanxiangxuanmen,realm_lianshen,faction_taiyidaoting
+skill_sulizhengyi,3,0,0,0,0,0,0,0,0,0,0,0,1,desc_skill_sulizhengyi,realm_jindan,faction_taiyidaoting
+skill_roushengchengsheng,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_roushengchengsheng,realm_jindan,faction_taiyidaoting
+skill_lingguangguanri,1,2,6,0,40,1.4,0,1,0,0,0,0,0,desc_skill_lingguangguanri,realm_jindan,faction_sanxiu
+skill_lingyu_wanxiangguiyuan,2,0,0,0,50,0,0,0,0,0,0,1,0,desc_skill_lingyu_wanxiangguiyuan,realm_lianshen,faction_sanxiu
+skill_suiyue,1,0,2,0,40,1.5,0,0,0,0,0,0,0,desc_skill_suiyue,realm_jindan,faction_sanxiu
+skill_shennianguanchuan,1,1,8,0,40,1.5,0,0,0,0,0,0,0,desc_skill_shennianguanchuan,realm_jindan,faction_sanxiu
+skill_jiweizhu,3,0,0,0,0,0,0,0,0,0,0,0,1,desc_skill_jiweizhu,realm_jindan,faction_sanxiu
+skill_shishuiji,1,0,3,0,40,1.5,2,0,0,0,0,0,0,desc_skill_shishuiji,realm_jindan,faction_sanxiu
