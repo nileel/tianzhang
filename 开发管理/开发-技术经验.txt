@@ -21,6 +21,9 @@
 - **模拟器即真理**：任何数值平衡讨论必须先跑 `dotnet run -c Release --project simulations/BattleSim` 看矩阵输出，不要凭感觉判断。
 - **模拟器修改先 build 再 run**：修改 Program.cs 后先 `dotnet build --no-restore -c Release` 排查编译错误，再 `dotnet run --no-build` 验证默认参数下输出应与修改前一致（treasureGrade="" 时 bonus=0）。
 - **文档跟着模拟器走**：模拟器参数调完，必须同步更新对应的 docs 设计文档（术法/神通倍率等），否则下次对话会出现两边不一致。
+- **同境矩阵必须过滤境界**：输出标题写“金丹同境”时，参与样本必须双方均为金丹；如果修炼池里有筑基/练气角色，必须过滤或在标题中标注“混境”。平均回合数同理。
+- **对称性改动要双向检查**：`Combat.Simulate` 中 A/B 两套分支必须同时接入同一机制。符胆、雷劫、受击减防、抗性键名这类状态尤其容易只改一边。
+- **1v1/2v2 键名必须共用**：二级属性字典不要同时出现 `物抗率/魂抗率` 与 `物理抗性/神魂抗性` 两套键。新增属性时先定义常量或统一 helper，再在 1v1 和 2v2 同时使用。
 
 ## BattleSim 建模模式
 
@@ -34,6 +37,12 @@
 
 ## Unity 开发经验
 
+- **先决定战斗框架再写功能**：当前项目目标是 CTB 战棋。若代码使用严格交替回合制，必须明确是临时原型还是正式改设计；不要让 UI 显示 CTB、底层却按交替回合跑。
+- **CTB 量纲要可验算**：文档写“每刻 CT += 反应，CT≥100行动”时，反应100应一刻行动。实现若使用归一化速度，必须同步文档或在代码注释中写明换算。
+- **冷却惩罚不是冷却倒计时**：文档中的术法冷却惩罚是下次行动门槛/行动轴惩罚，不应简单等同于按钮 CD 或把 CT 扣到0。UI CD、行动轴惩罚、技能可用性要分层。
+- **DamageCalculator 注释必须真实**：只有公式、判定顺序、参数量纲与 BattleSim 一致时，才能写“与 BattleSim 对齐”。临时公式要标明“原型公式”，避免误导数值判断。
+- **五行实现以 v5.10 为准**：Unity 后续应实现“术法/神通属性 vs 施法者功法属性（内圈）+ 术法/神通属性 vs 目标功法属性（外圈）”，不要再只做功法对功法 ±25%。
+- **槽位数组先算上限再初始化**：`MaxSpellSlots/MaxSkillSlots` 必须先确定，再创建冷却数组和按钮数据；否则空装备角色会得到0长度冷却数组。
 - **UI 统一画布**：所有 UI 面板（战斗 UI、门派选择等）必须挂载到同一个 UICanvas 下，不要各自创建独立 Canvas。BattleUIManager 在 BuildUI 时创建名为 "UICanvas" 的根 Canvas（DontDestroyOnLoad），其他 UI 组件通过 `GameObject.Find("UICanvas")` 找到并挂载。SectSelectionManager.Start() 已内置此逻辑。
 
 - **VerticalLayoutGroup**：使用自动布局时必须同时勾选 childForceExpandWidth 和 childForceExpandHeight，否则动态创建的按钮不会显示。
