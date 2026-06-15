@@ -57,13 +57,12 @@ static class Combat
             if (cb.Style == "taiyi") { shouyiB = 2; }
             int fudanA = 0, fudanB = 0;
             int maxFudan(string realm) => realm switch { "金丹" => 5, "筑基" => 3, _ => 5 };
+            if (ca.Style == "taiyi_fuxiu") { fudanA = 2; }
             if (cb.Style == "taiyi_fuxiu") { fudanB = 2; }
-            if (cb.Style == "taiyi_fuxiu") { fudanB = 2; } // 眩晕: 跳过下回合
             int qiushuiA = 0, qiushuiB = 0;          // 秋水护盾剩余触发次数
             int qiushuiMax(string realm) => realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 };
             if (ca.Style == "water_physical") qiushuiA = qiushuiMax(ca.Realm);
             if (cb.Style == "water_physical") qiushuiB = qiushuiMax(cb.Realm);
-            if (cb.Style == "taiyi_fuxiu") { fudanB = 2; }
 
 
             int kuxingDefReduceA = 0, kuxingDefReduceB = 0;
@@ -243,6 +242,7 @@ static class Combat
                     // 血剑气防御惩罚: A若使用了血剑气则物防降低
                     if (kuxingDefReduceA > 0 && atkType == "物理") { rawDefB -= kuxingDefReduceA; kuxingDefReduceA = 0; }
                     def = atkType == "物理" ? (int)(rawDefB * (1 - shishuiOnA * 0.05)) : rawDefB;
+                    if (ca.Style == "yuqing_leijie" && leijieA == maxLeijie(ca.Realm) && atkType == "神魂") def = (int)(rawDefB * 0.80);
                     resist = atkType == "物理" ? ca.Secondary.GetValueOrDefault("物抗率", 0) : ca.Secondary.GetValueOrDefault("魂抗率", 0);
                     if (ca.Style == "taiyi" && shouyiA == maxShouyi(ca.Realm) && atkType == "神魂") resist += 15;
                     // 天书篇: 符胆满层时无视30%魂防
@@ -301,6 +301,7 @@ static class Combat
                 units[i] = new UnitState { Char = c, HP = c.Primary["HP"], MP = c.Primary["MP"],
                     Shouyi = c.Style == "taiyi" ? 2 : 0, Fudan = c.Style == "taiyi_fuxiu" ? 2 : 0,
                     Qiushui = c.Style == "water_physical" ? (c.Realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 }) : 0,
+                    Buqian = c.GongFaName == "万物不迁法" ? (c.Realm switch { "元婴" => 5, "化神" => 5, "金丹" => 3, _ => 0 }) : 0,
                     BuzhenFirstVoid = c.GongFaName == "不真自虚法" };
             }
             int turns = 0;
@@ -325,7 +326,7 @@ static class Combat
                 string atkType = useMagic ? "神魂" : "物理";
                 int atk = useMagic ? ca.Primary["神攻"] : ca.Primary["肉攻"];
                 int def = useMagic ? cb.Primary["神防"] : cb.Primary["肉防"];
-                double resist = useMagic ? cb.Secondary.GetValueOrDefault("神魂抗性", 0) : cb.Secondary.GetValueOrDefault("物理抗性", 0);
+                double resist = useMagic ? cb.Secondary.GetValueOrDefault("魂抗率", 0) : cb.Secondary.GetValueOrDefault("物抗率", 0);
                 double mult = 1.0;
                 // 阵型光环 (绳墨正法录)
                 for (int i = 0; i < 4; i++) if (units[i].IsAlive && team[i] == team[actor] && units[i].Char.GongFaName == "绳墨正法录")
@@ -360,7 +361,20 @@ static class Combat
                 }
                 units[actor] = au; units[target] = du;
             }
-            if (units[0].IsAlive || units[1].IsAlive) winsA++; else winsB++;
+            bool finalAAlive = units[0].IsAlive || units[1].IsAlive;
+            bool finalBAlive = units[2].IsAlive || units[3].IsAlive;
+            if (finalAAlive && !finalBAlive) winsA++;
+            else if (!finalAAlive && finalBAlive) winsB++;
+            else
+            {
+                double hpRatioA =
+                    Math.Max(0, units[0].HP) / (double)units[0].Char.Primary["HP"] +
+                    Math.Max(0, units[1].HP) / (double)units[1].Char.Primary["HP"];
+                double hpRatioB =
+                    Math.Max(0, units[2].HP) / (double)units[2].Char.Primary["HP"] +
+                    Math.Max(0, units[3].HP) / (double)units[3].Char.Primary["HP"];
+                if (hpRatioA >= hpRatioB) winsA++; else winsB++;
+            }
             totalTurns += turns;
         }
         return (winsA * 100.0 / rounds, winsB * 100.0 / rounds, (double)totalTurns / rounds);

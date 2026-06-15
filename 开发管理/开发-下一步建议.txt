@@ -87,15 +87,16 @@
 
 ### 3.2.5 稳定化校准（当前优先）
 
-A1. **修复 BattleSim 1v1 对称性问题**
-    - `Combat.Simulate` 中太一·符修开局符胆层数需同时初始化 A/B。
-    - 雷劫满层魂防-20%需在 A→B 与 B→A 两个方向一致处理。
-    - 修复后 `dotnet build -c Release --no-restore` + `dotnet run --no-build -c Release`，记录矩阵变化。
+A1. **修复 BattleSim 1v1 对称性问题** ✅ (2026-06-15)
+    - 已完成：`Combat.Simulate` 中太一·符修开局符胆层数同时初始化 A/B。
+    - 已完成：雷劫满层魂防-20%在 A→B 与 B→A 两个方向一致处理。
+    - 已验证：`dotnet build -c Release --no-restore` + `dotnet run --no-build -c Release` 默认模拟通过。
 
-A2. **修复 BattleSim 2v2 抗性键名与同境口径**
-    - 统一二级属性键名：`物抗率/魂抗率` 与 `物理抗性/神魂抗性` 只能保留一套，1v1/2v2 共用。
-    - “金丹同境”矩阵必须过滤双方均为金丹的样本；不足样本时在输出中明确标注。
-    - 重新输出 1v1、2v2、练气、筑基平均回合数，更新 `设计-当前状态.txt`。
+A2. **修复 BattleSim 2v2 抗性键名与同境口径** ✅ (2026-06-15)
+    - 已完成：2v2 统一使用 `物抗率/魂抗率`，不再读取不存在的 `物理抗性/神魂抗性`。
+    - 已完成：“金丹同境”矩阵过滤双方均为金丹的样本；不足样本在 1v1/2v2 输出中标注 `NA`。
+    - 已完成：2v2 初始化万物不迁法大伤害减半层数，并用双方剩余 HP 比例处理超时胜负，避免默认 A 方获胜。
+    - 已记录：`设计-当前状态.txt` 更新为 v6.0.1 金丹过滤矩阵，金丹平均回合数 14.6（样本 6,800 场）。
 
 A3. **Unity 战斗循环决策与 CTB 修复**
     - 决定保留 CTB 还是改为交替回合；若保留 CTB，`ExplorationController.CombatLoop` 应改回按 `CTBEngine.AdvanceUntilAction` 驱动。

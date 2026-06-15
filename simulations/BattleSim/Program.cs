@@ -142,18 +142,30 @@ class Program
         Console.WriteLine();
 
         // 战斗矩阵
-        Console.WriteLine($"正在计算 {N}x{N} 矩阵...");
-        var rng = new Random(12345);
+        string[] tags = buildDefs.Select(b => b.Name).ToArray();
+        var goldPools = pool.Select(p => p.Where(c => c.Realm == "金丹").ToList()).ToArray();
+        Console.WriteLine("【金丹样本数】");
+        for (int i = 0; i < N; i++) Console.WriteLine($"  {tags[i],-8}: {goldPools[i].Count}/{SEEDS}");
+        Console.WriteLine($"正在计算 {N}x{N} 金丹同境矩阵...");
         double[,] mat = new double[N, N];
         for (int i = 0; i < N; i++)
         {
             for (int j = i + 1; j < N; j++)
             {
                 int wI = 0, tot = 0;
-                for (int s = 0; s < SEEDS; s++)
+                var left = goldPools[i];
+                var right = goldPools[j];
+                int pairs = Math.Min(left.Count, right.Count);
+                if (pairs == 0)
                 {
-                    var ci = pool[i][s]; var cj = pool[j][s];
-                    int h = SIM / SEEDS / 2;
+                    mat[i, j] = double.NaN;
+                    mat[j, i] = double.NaN;
+                    continue;
+                }
+                int h = Math.Max(1, SIM / pairs / 2);
+                for (int s = 0; s < pairs; s++)
+                {
+                    var ci = left[s]; var cj = right[s];
                     var (wi, wj, _) = Combat.Simulate(ci, cj, h);
                     var (wi2, wj2, _) = Combat.Simulate(cj, ci, h);
                     wI += (int)Math.Round((wi + wj2) / 2.0 * h * 2 / 100.0);
@@ -167,11 +179,10 @@ class Program
 
         Console.WriteLine();
         Console.WriteLine($"================================================================================");
-        Console.WriteLine($"  修炼后战斗胜率矩阵 ({SEEDS}次修炼 x {SIM}轮, {sw.ElapsedMilliseconds}ms)");
+        Console.WriteLine($"  修炼后金丹同境战斗胜率矩阵 (仅统计双方均为金丹的样本, {SIM}轮, {sw.ElapsedMilliseconds}ms)");
         Console.WriteLine($"================================================================================");
         Console.WriteLine();
 
-        string[] tags = buildDefs.Select(b => b.Name).ToArray();
         Console.Write($"{"",-10}");
         for (int j = 0; j < N; j++) Console.Write($"{tags[j],-8}");
         Console.WriteLine();
@@ -186,20 +197,24 @@ class Program
                 else
                 {
                     double p = mat[i, j];
-                    string tag = p switch { >= 80 => "CR", >= 60 => "FV", >= 40 => "EV", _ => "WK" };
-                    Console.Write($"{tag}{p,4:F0}% ");
+                    if (double.IsNaN(p)) Console.Write($"{"NA",-8}");
+                    else
+                    {
+                        string tag = p switch { >= 80 => "CR", >= 60 => "FV", >= 40 => "EV", _ => "WK" };
+                        Console.Write($"{tag}{p,4:F0}% ");
+                    }
                 }
             }
             Console.WriteLine();
         }
-        Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势");
+        Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=金丹样本不足");
 
         // ═══════════════════════════════════════
         // 2v2 群战矩阵 (v6.0)
         // ═══════════════════════════════════════
         Console.WriteLine();
         Console.WriteLine(new string('=', 80));
-        Console.WriteLine("  2v2 群战胜率矩阵 (同Build两人组队)");
+        Console.WriteLine("  2v2 群战胜率矩阵 (同Build两人组队，仅金丹样本)");
         Console.WriteLine(new string('=', 80));
         Console.WriteLine();
 
@@ -209,12 +224,23 @@ class Program
             for (int j = i + 1; j < N; j++)
             {
                 int wI = 0, tot = 0;
-                for (int s = 0; s < SEEDS; s++)
+                var left = goldPools[i];
+                var right = goldPools[j];
+                int pairs = Math.Min(left.Count, right.Count);
+                if (left.Count < 2 || right.Count < 2 || pairs == 0)
                 {
-                    int s2 = (s + SEEDS / 2) % SEEDS;
-                    var (wi, wj, t) = Combat.Simulate2v2(pool[i][s], pool[i][s2], pool[j][s], pool[j][s2], sim2v2 / SEEDS);
-                    wI += (int)Math.Round(wi * sim2v2 / SEEDS / 100.0);
-                    tot += sim2v2 / SEEDS;
+                    mat2v2[i, j] = double.NaN;
+                    mat2v2[j, i] = double.NaN;
+                    continue;
+                }
+                int roundsPerPair = Math.Max(1, sim2v2 / pairs);
+                for (int s = 0; s < pairs; s++)
+                {
+                    int a2 = (s + left.Count / 2) % left.Count;
+                    int b2 = (s + right.Count / 2) % right.Count;
+                    var (wi, wj, t) = Combat.Simulate2v2(left[s], left[a2], right[s], right[b2], roundsPerPair);
+                    wI += (int)Math.Round(wi * roundsPerPair / 100.0);
+                    tot += roundsPerPair;
                 }
                 mat2v2[i, j] = wI * 100.0 / Math.Max(1, tot);
                 mat2v2[j, i] = 100.0 - mat2v2[i, j];
@@ -230,11 +256,20 @@ class Program
             for (int j = 0; j < N; j++)
             {
                 if (i == j) Console.Write($"{"---",-8}");
-                else { double p = mat2v2[i, j]; string tag = p switch { >= 80 => "CR", >= 60 => "FV", >= 40 => "EV", _ => "WK" }; Console.Write($"{tag}{p,4:F0}% "); }
+                else
+                {
+                    double p = mat2v2[i, j];
+                    if (double.IsNaN(p)) Console.Write($"{"NA",-8}");
+                    else
+                    {
+                        string tag = p switch { >= 80 => "CR", >= 60 => "FV", >= 40 => "EV", _ => "WK" };
+                        Console.Write($"{tag}{p,4:F0}% ");
+                    }
+                }
             }
             Console.WriteLine();
         }
-        Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势");
+        Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=金丹样本不足");
         Console.WriteLine();
 
         // 群战增益分析
@@ -244,9 +279,19 @@ class Program
         for (int i = 0; i < N; i++)
         {
             double a1 = 0, a2 = 0; int c = 0;
-            for (int j = 0; j < N; j++) if (i != j) { a1 += mat[i, j]; a2 += mat2v2[i, j]; c++; }
-            a1 /= c; a2 /= c;
-            Console.WriteLine($"  {tags[i],-8} {a1,5:F1}% {a2,5:F1}% {a2-a1,6:+#;-#}%");
+            for (int j = 0; j < N; j++)
+                if (i != j && !double.IsNaN(mat[i, j]) && !double.IsNaN(mat2v2[i, j]))
+                {
+                    a1 += mat[i, j];
+                    a2 += mat2v2[i, j];
+                    c++;
+                }
+            if (c == 0) Console.WriteLine($"  {tags[i],-8} {"NA",5} {"NA",6} {"NA",7}");
+            else
+            {
+                a1 /= c; a2 /= c;
+                Console.WriteLine($"  {tags[i],-8} {a1,5:F1}% {a2,5:F1}% {a2-a1,6:+0.0;-0.0;0.0}%");
+            }
         }
         Console.WriteLine();
 
@@ -335,8 +380,10 @@ class Program
         {
             for (int j = i + 1; j < N; j++)
             {
-                foreach (var ci in pool[i].Take(5))
-                    foreach (var cj in pool[j].Take(5))
+                var ciList = goldPools[i].Take(5).ToList();
+                var cjList = goldPools[j].Take(5).ToList();
+                foreach (var ci in ciList)
+                    foreach (var cj in cjList)
                     {
                         var (_, _, t) = Combat.Simulate(ci, cj, 5);
                         var (_, _, t2) = Combat.Simulate(cj, ci, 5);
@@ -344,7 +391,10 @@ class Program
                     }
             }
         }
-        Console.WriteLine("  总平均回合数: {0:F1} (样本={1}场)", totalTurnsAll / turnCombats, turnCombats);
+        if (turnCombats > 0)
+            Console.WriteLine("  总平均回合数: {0:F1} (样本={1}场)", totalTurnsAll / turnCombats, turnCombats);
+        else
+            Console.WriteLine("  金丹同境: 无金丹角色可对战");
         Console.WriteLine();
 
         // DEBUG
