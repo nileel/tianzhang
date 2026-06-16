@@ -1,4 +1,4 @@
-﻿# 多语言文本映射表
+# 多语言文本映射表
 # 格式: id, zh_CN
 # 所有其他 CSV 表中的文本字段均使用此表中的 ID 引用
 #
@@ -100,7 +100,6 @@ desc_enemy_huangyesanxiu,练气期散修，以水法自保，掉落散修通用�
 enemy_fengsun,风隼
 item_fengsun_feather,风隼翎羽
 desc_enemy_fengsun,风系妖兽，迅捷灵动擅长闪避，以翎羽为刃伤敌
-desc_enemy_huangyesanxiu,练气期散修，以水法自保，掉落散修通用物品
 # === 新增门派 ===
 faction_yuqingya,玉清崖
 faction_hunyuanshan,混元山
@@ -283,7 +282,6 @@ chapter_dazongshi,大宗师篇
 desc_dazongshi_qiankun,南华大梦书·大宗师篇 效果描述
 chapter_yingdiwang,应帝王篇
 desc_yingdiwang_huapeng,南华大梦书·应帝王篇 效果描述
-chapter_qiushui,秋水篇
 desc_qiushui_mengdie,南华大梦书·秋水篇 效果描述
 chapter_tianxia,天下篇
 desc_tianxia_wudai,南华大梦书·天下篇 效果描述
