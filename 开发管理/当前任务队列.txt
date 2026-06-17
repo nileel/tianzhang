@@ -1,6 +1,6 @@
-# 当前任务队列（⚠️ 已修改/未审核）
+# 当前任务队列（✅ 已审核）
 
-> 2026-06-17 Codex / ChatGPT5.5 新增：作为用户发送 `1` 和日常推进的短入口，待后续复审。
+> 2026-06-17 Codex / ChatGPT5.5 复审通过：作为用户发送 `1` 和日常推进的短入口。TQ-001/TQ-002 已通过复审并从队列移除。依据：26e8210。
 
 ## 使用规则
 
@@ -13,8 +13,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-001 | P0 | Codex / ChatGPT5.5 | 复审 | 待处理 | 复审提交 `40d5887` 与后续工作流瘦身文档，判断是否可从 ⚠️ 改为 ✅ |
-| TQ-002 | P0 | Codex / ChatGPT5.5 | 复审 | 待处理 | 复审本轮新增的 `当前任务队列`、状态/建议维护规则与检查脚本 |
 | TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待处理 | 修复 `未通过审核清单.txt` #1/#4/#5：docs-csv-asset 对齐清单与管理文档口径 |
 | TQ-004 | P0 | Codex / ChatGPT5.5 | 架构判断 | 待处理 | Unity 战斗循环决策：保留真 CTB 或正式改交替回合，并给出最小实现切片 |
 | TQ-005 | P0 | Codex / ChatGPT5.5 | 架构/实现 | 待处理 | Unity `DamageCalculator` 与 BattleSim/五行 v5.10 对齐方案和影响面拆分 |
@@ -23,20 +21,6 @@
 | TQ-008 | P1 | Codex / ChatGPT5.5 | 数值评估 | 待处理 | `角色数值设计.txt` 与 BattleSim GameData 差异表，决定回写文档或调整代码 |
 
 ## 任务卡片
-
-### TQ-001 · 复审审核流程瘦身提交
-
-- 来源：提交 `40d5887`。
-- 必读：`AGENTS.md`、`开发管理/审核入口.txt`、`开发管理/审核规则.txt`、`开发管理/AI协作规则.txt`、`开发管理/DeepSeek工作提示词.txt`。
-- 验证命令：`git show --stat 40d5887`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,dev-mgmt`
-- 完成条件：确认短入口、未通过清单拆分、交接归档和任务卡路由没有断链；通过后按审核规则处理状态标记。
-
-### TQ-002 · 复审工作流二阶段优化
-
-- 来源：本文件与 `状态与建议维护规则.txt`、`tools/check-review-text.ps1`、`tools/check-data-chain.ps1`。
-- 必读：`开发管理/状态与建议维护规则.txt`、`开发管理/当前任务队列.txt`、两个脚本文件、相关 diff。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,dev-mgmt,tools`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
-- 完成条件：确认 `1` 入口默认读队列，状态/建议分层明确，两个脚本可运行且输出可用于审核。
 
 ### TQ-003 · 数据链路口径修复
 

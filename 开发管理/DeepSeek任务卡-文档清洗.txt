@@ -1,6 +1,6 @@
-# DeepSeek任务卡：文档清洗（⚠️ 已修改/未审核）
+# DeepSeek任务卡：文档清洗（✅ 已审核）
 
-> 2026-06-17 Codex / ChatGPT5.5 新增：由 `DeepSeek工作提示词.txt` 拆分，待后续复审。
+> 2026-06-17 Codex / ChatGPT5.5 复审通过：由 `DeepSeek工作提示词.txt` 拆分。依据：40d5887。
 
 ## 适用范围
 
