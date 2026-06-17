@@ -53,6 +53,7 @@ namespace TianZhang.Map
         // ---- 玩家移动 ----
         private bool waitingForMoveInput;
         private bool hasMovedThisTurn;
+        private bool waitingForPlayerCombatAction;
         private int hexesMovedThisTurn;
 
         // ---- CT消耗常量 ----
@@ -91,7 +92,8 @@ namespace TianZhang.Map
             }
             else if (state == GameState.Combat)
             {
-                HandleCombatKeyboardInput();
+                if (waitingForPlayerCombatAction)
+                    HandleCombatKeyboardInput();
             }
         }
 
@@ -501,6 +503,8 @@ namespace TianZhang.Map
             // 注册CTB
             if (enemy.character.CTBUnit == null)
                 enemy.character.CTBUnit = ctbEngine.RegisterUnit(enemy.character.Reaction, enemy.character);
+            ctbEngine.ResetUnitCT(player.CTBUnit);
+            ctbEngine.ResetUnitCT(enemy.character.CTBUnit);
 
             // 设置 resolver 的 grid
             resolver.Grid = tilemapManager.Grid;
@@ -529,13 +533,7 @@ namespace TianZhang.Map
             {
                 uiManager.SetPlayerElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName));
                 uiManager.SetEnemyElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(enemy.character.GongFaName));
-                uiManager.RefreshSpellButtons(
-                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
-                    player.SpellCooldowns,
-                    player.CurrentMP,
-                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
-                    player.MaxSpellSlots,
-                    playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+                RefreshCombatButtons(false);
             }
 
             state = GameState.Combat;
@@ -544,84 +542,88 @@ namespace TianZhang.Map
 
         private IEnumerator CombatLoop(EnemyUnit enemyUnit)
         {
-            // === 严格交替回合制 ===
+            var activeUnits = new List<CTBEngine.CTBUnit> { player.CTBUnit, enemyUnit.character.CTBUnit };
+            waitingForPlayerCombatAction = false;
+            uiManager?.SetActionButtonsInteractable(false);
+
             while (state == GameState.Combat && player.IsAlive && enemyUnit.character.IsAlive)
             {
-                // --- 玩家回合 ---
-                hasMovedThisTurn = false;
-                hexesMovedThisTurn = 0;
-
-                // 推进冷却（每轮20刻）
-                resolver.AdvanceCooldowns(player, 20);
-                resolver.AdvanceCooldowns(enemyUnit.character, 20);
-
-                SetStatus("你的回合");
+                var (nextUnit, ticksElapsed) = ctbEngine.AdvanceUntilAction(activeUnits);
+                resolver.AdvanceCooldowns(player, ticksElapsed);
+                resolver.AdvanceCooldowns(enemyUnit.character, ticksElapsed);
                 RefreshUI();
 
-                if (uiManager != null)
+                if (nextUnit == null)
                 {
-                    uiManager.RefreshSpellButtons(
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
-                        player.SpellCooldowns,
-                        player.CurrentMP,
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
-                        player.MaxSpellSlots,
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
-                    uiManager.RefreshSkillButtons(
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "?") : new string[0],
-                        player.SkillCooldowns,
-                        player.CurrentMP,
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0],
-                        -1,
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
-                    uiManager.SetActionButtonsInteractable(true);
+                    AddLog("CTB推进超时，战斗中止");
+                    SetStatus("CTB异常");
+                    state = GameState.Ended;
+                    break;
                 }
 
-                // 等待玩家操作
-                while (!hasMovedThisTurn && state == GameState.Combat && player.IsAlive && enemyUnit.character.IsAlive)
-                    yield return null;
-
-                if (!player.IsAlive || !enemyUnit.character.IsAlive) break;
-
-                // 玩家行动后刷新按钮（显示CD）
-                if (uiManager != null)
+                var actor = nextUnit.UserData as Character;
+                if (actor == player)
                 {
-                    uiManager.RefreshSpellButtons(
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
-                        player.SpellCooldowns,
-                        player.CurrentMP,
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
-                        player.MaxSpellSlots,
-                        playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
-                    uiManager.RefreshSkillButtons(
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "?") : new string[0],
-                        player.SkillCooldowns,
-                        player.CurrentMP,
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0],
-                        -1,
-                        playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+                    hasMovedThisTurn = false;
+                    hexesMovedThisTurn = 0;
+                    waitingForPlayerCombatAction = true;
+                    SetStatus($"你的行动（推进{ticksElapsed}刻）");
+                    RefreshCombatButtons(true);
+
+                    while (!hasMovedThisTurn && state == GameState.Combat && player.IsAlive && enemyUnit.character.IsAlive)
+                        yield return null;
+
+                    waitingForPlayerCombatAction = false;
+                    RefreshCombatButtons(false);
+
+                    if (!player.IsAlive || !enemyUnit.character.IsAlive) break;
+
+                    RefreshUI();
+                    yield return new WaitForSeconds(0.2f);
                 }
-                uiManager?.SetActionButtonsInteractable(false);
+                else if (actor == enemyUnit.character)
+                {
+                    hasMovedThisTurn = false;
+                    hexesMovedThisTurn = 0;
+                    waitingForPlayerCombatAction = false;
+                    RefreshCombatButtons(false);
+                    SetStatus($"{enemyUnit.character.Name} 行动中...（推进{ticksElapsed}刻）");
+                    RefreshUI();
 
-                RefreshUI();
-                yield return new WaitForSeconds(0.2f);
+                    yield return new WaitForSeconds(0.5f);
 
-                // --- 敌人回合 ---
-                if (!enemyUnit.character.IsAlive) break;
-                hasMovedThisTurn = false;
-                hexesMovedThisTurn = 0;
-                SetStatus(enemyUnit.character.Name + " 行动中...");
-                RefreshUI();
+                    ExecuteEnemyAI(enemyUnit, enemyUnit.character);
+                    ctbEngine.ConsumeAction(enemyUnit.character.CTBUnit);
 
-                yield return new WaitForSeconds(0.5f);
-
-                ExecuteEnemyAI(enemyUnit, enemyUnit.character);
-
-                RefreshUI();
-                yield return new WaitForSeconds(0.3f);
+                    RefreshUI();
+                    yield return new WaitForSeconds(0.3f);
+                }
             }
 
+            waitingForPlayerCombatAction = false;
+            uiManager?.SetActionButtonsInteractable(false);
             EndBattle(enemyUnit);
+        }
+
+        private void RefreshCombatButtons(bool interactable)
+        {
+            if (uiManager == null) return;
+
+            uiManager.RefreshSpellButtons(
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
+                player.SpellCooldowns,
+                player.CurrentMP,
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
+                player.MaxSpellSlots,
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+            uiManager.RefreshSkillButtons(
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "?") : new string[0],
+                player.SkillCooldowns,
+                player.CurrentMP,
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0],
+                -1,
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+            uiManager.SetActionButtonsInteractable(interactable);
         }
         
 private void ExecutePlayerAI(EnemyUnit enemyUnit)
@@ -707,6 +709,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void PlayerSwapSpell()
         {
+            if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
             if (player.CombatSwapsUsed >= Character.MaxCombatSwaps)
             {
@@ -727,6 +730,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
             if (oldSpell != null)
             {
                 AddLog($"临阵换法: {oldSpell} → {newSpell} (CD×2, 剩余{Character.MaxCombatSwaps - player.CombatSwapsUsed}次)");
+                ctbEngine.ConsumeAction(player.CTBUnit);
                 hasMovedThisTurn = true;
                 RefreshUI();
             }
@@ -734,33 +738,50 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         public void PlayerBasicAttack()
         {
+            if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
             bool useMagic = player.MagAtk > player.PhysAtk;
             var result = resolver.BasicAttack(player, currentCombatTarget, useMagic);
             AddLog(result.Message);
+            if (!result.Success)
+            {
+                RefreshUI();
+                return;
+            }
+            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
 
         public void PlayerGuard()
         {
+            if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
             var result = resolver.Guard(player);
             AddLog(result.Message);
+            if (!result.Success)
+            {
+                RefreshUI();
+                return;
+            }
+            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
 
         public void PlayerCombatWait()
         {
+            if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            AddLog($"{player.Name} 待机");
+            var result = resolver.Wait(player);
+            AddLog(result.Message);
             hasMovedThisTurn = true;
             RefreshUI();
         }
 
         public void PlayerCastSpell(int index)
         {
+            if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
             if (playerSpells == null || index >= playerSpells.Length) return;
             if (player.SpellCooldowns[index] > 0) { AddLog("术法冷却中"); return; }
@@ -782,12 +803,19 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
             var target = isSelfTarget ? player : currentCombatTarget;
             var result = resolver.CastSpell(player, target, index, playerSpells[index]);
             AddLog(result.Message);
+            if (!result.Success)
+            {
+                RefreshUI();
+                return;
+            }
+            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
 
         public void PlayerUseSkill(int index)
         {
+            if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
             if (playerSkills == null || index >= playerSkills.Length) return;
             if (player.SkillCooldowns[index] > 0) { AddLog("神通冷却中"); return; }
@@ -802,6 +830,12 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
             var result = resolver.UseSkill(player, currentCombatTarget, index, playerSkills[index]);
             AddLog(result.Message);
+            if (!result.Success)
+            {
+                RefreshUI();
+                return;
+            }
+            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
@@ -861,7 +895,8 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         private void RefreshUI()
         {
             if (uiManager == null) return;
-            float ct = player.CTBUnit != null ? player.CTBUnit.CT / CTBEngine.ActionThreshold : 0;
+            float playerThreshold = player.CTBUnit != null ? Mathf.Max(CTBEngine.ActionThreshold, player.CTBUnit.NextActionThreshold) : CTBEngine.ActionThreshold;
+            float ct = player.CTBUnit != null ? player.CTBUnit.CT / playerThreshold : 0;
             string status = "";
             if (!player.IsAlive) status = "阵亡";
             else if (state == GameState.Exploration) status = "探索中";
@@ -873,8 +908,9 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
             if (currentCombatTarget != null && currentCombatTarget.IsAlive)
             {
                 uiManager.SetEnemyElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(currentCombatTarget.GongFaName));
+                float enemyThreshold = currentCombatTarget.CTBUnit != null ? Mathf.Max(CTBEngine.ActionThreshold, currentCombatTarget.CTBUnit.NextActionThreshold) : CTBEngine.ActionThreshold;
                 float ect = currentCombatTarget.CTBUnit != null
-                    ? currentCombatTarget.CTBUnit.CT / CTBEngine.ActionThreshold : 0;
+                    ? currentCombatTarget.CTBUnit.CT / enemyThreshold : 0;
                 uiManager.UpdateEnemyInfo(currentCombatTarget.Name,
                     currentCombatTarget.CurrentHP, currentCombatTarget.MaxHP,
                     currentCombatTarget.CurrentMP, currentCombatTarget.MaxMP,

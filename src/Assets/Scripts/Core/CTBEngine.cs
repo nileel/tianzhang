@@ -26,19 +26,23 @@ namespace TianZhang.Core
             public int Id;
             public float CT;
             public int Speed;       // 反应（决定CT增长速度）
-            public float CtPerTick; // 每刻CT增量 = Speed / BaseSpeed
+            public float CtPerTick; // 每刻CT增量 = Speed
+            public float NextActionThreshold = ActionThreshold;
+            public int PendingCooldownPenalty;
             public bool IsAlive = true;
             public object UserData; // 挂载角色引用
         }
 
         public CTBUnit RegisterUnit(int speed, object userData = null)
         {
+            int safeSpeed = Mathf.Max(1, speed);
             var unit = new CTBUnit
             {
                 Id = unitIdCounter++,
                 CT = 0,
-                Speed = Mathf.Max(1, speed),
-                CtPerTick = speed / 100f, // 反应100 = 1刻满CT
+                Speed = safeSpeed,
+                CtPerTick = safeSpeed, // 反应100 = 1刻满CT
+                NextActionThreshold = ActionThreshold,
                 UserData = userData
             };
             units.Add(unit);
@@ -51,29 +55,39 @@ namespace TianZhang.Core
         }
 
         /// <summary>推进1刻，返回获得行动权的单位列表</summary>
-        public List<CTBUnit> AdvanceTick()
+        public List<CTBUnit> AdvanceTick(List<CTBUnit> activeUnits = null)
         {
             CurrentTick++;
             OnTickAdvanced?.Invoke(CurrentTick);
 
+            var tickUnits = activeUnits ?? units;
             var readyUnits = new List<CTBUnit>();
-            foreach (var unit in units)
+            foreach (var unit in tickUnits)
             {
-                if (!unit.IsAlive) continue;
+                if (unit == null || !unit.IsAlive) continue;
                 unit.CT += unit.CtPerTick;
 
-                if (unit.CT >= ActionThreshold)
+                if (unit.CT >= unit.NextActionThreshold)
                 {
                     readyUnits.Add(unit);
                 }
             }
+            readyUnits.Sort((a, b) =>
+            {
+                int speedCompare = b.Speed.CompareTo(a.Speed);
+                return speedCompare != 0 ? speedCompare : b.CT.CompareTo(a.CT);
+            });
             return readyUnits;
         }
 
-        /// <summary>消耗CT执行行动（-100）</summary>
+        /// <summary>消耗CT执行行动，并把本次行动产生的冷却惩罚写入下次行动门槛</summary>
         public void ConsumeAction(CTBUnit unit)
         {
-            unit.CT -= ActionThreshold;
+            float threshold = Mathf.Max(ActionThreshold, unit.NextActionThreshold);
+            unit.CT -= threshold;
+            if (unit.CT < 0) unit.CT = 0;
+            unit.NextActionThreshold = ActionThreshold + unit.PendingCooldownPenalty;
+            unit.PendingCooldownPenalty = 0;
         }
 
         /// <summary>消耗指定量CT（用于移动拆分等部分行动）</summary>
@@ -87,22 +101,23 @@ namespace TianZhang.Core
         public void WaitAction(CTBUnit unit)
         {
             unit.CT *= CtRetentionOnWait;
+            unit.NextActionThreshold = ActionThreshold;
+            unit.PendingCooldownPenalty = 0;
         }
 
-        /// <summary>术法冷却推进（在 CT 上叠加冷却惩罚）</summary>
+        /// <summary>术法冷却惩罚：提高下次行动门槛，而不是直接扣当前CT</summary>
         public void ApplySpellCooldown(CTBUnit unit, int cooldownPenalty)
         {
-            unit.CT -= cooldownPenalty;
-            if (unit.CT < 0) unit.CT = 0;
+            unit.PendingCooldownPenalty = Mathf.Max(unit.PendingCooldownPenalty, cooldownPenalty);
         }
 
         /// <summary>推进直到有单位获得行动权</summary>
-        public (CTBUnit unit, int ticksElapsed) AdvanceUntilAction()
+        public (CTBUnit unit, int ticksElapsed) AdvanceUntilAction(List<CTBUnit> activeUnits = null)
         {
             int ticks = 0;
             while (true)
             {
-                var ready = AdvanceTick();
+                var ready = AdvanceTick(activeUnits);
                 ticks++;
                 if (ready.Count > 0)
                     return (ready[0], ticks);
@@ -115,7 +130,15 @@ namespace TianZhang.Core
         public void ResetAllCT()
         {
             foreach (var unit in units)
-                unit.CT = 0;
+                ResetUnitCT(unit);
+        }
+
+        public void ResetUnitCT(CTBUnit unit)
+        {
+            if (unit == null) return;
+            unit.CT = 0;
+            unit.NextActionThreshold = ActionThreshold;
+            unit.PendingCooldownPenalty = 0;
         }
 
         public List<CTBUnit> GetAllUnits() => units;
