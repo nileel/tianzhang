@@ -1,6 +1,6 @@
-# 设计当前状态（⚠️ 已修改/未审核）
+# 设计当前状态
 
-> 来源：AGENTS.md §当前状态 | 最后更新：2026-06-17 (Unity CTB 战斗循环修复，⚠️ 已修改/未审核)
+> 来源：AGENTS.md §当前状态 | 最后更新：2026-06-17 (Unity CTB 战斗循环修复，✅ 已审核)
 > 维护说明：本文件只记录事实状态、验证快照和当前风险；短期任务放入 `开发管理/当前任务队列.txt`，长期建议放入对应下一步建议文件。详见 `开发管理/状态与建议维护规则.txt`。
 
 ---
@@ -119,14 +119,14 @@
 | v0.6 | 三门派数据导入 | 玉清崖(4/13/6)+混元山(4/14/6)+太虚观(4/15/7)全部通过DataConfigImporter导入 ✅ |
 | v0.7 | 境界扩展 + 印记 + 五行 | 元婴/化神里程碑 + 守一/符胆印记 + 五行元素克制 ✅ |
 | v0.8 | 术法/神通五行属性 + 匹配规则 | 107文件补充五行属性字段 + 灵根设定§8匹配规则 |
-| v0.9 | CTB 战斗循环修复 | ⚠️ 已修改/未审核：1v1 战斗改由 `CTBEngine.AdvanceUntilAction` 驱动；`CtPerTick=反应`；术法/神通冷却写入下次行动门槛；行动后 CT 归零；同刻多单位达标时按反应降序排入待行动队列；`dotnet build src/Assembly-CSharp.csproj` 0警告0错误 |
+| v0.9 | CTB 战斗循环修复 | ✅ 已审核：1v1 战斗改由 `CTBEngine.AdvanceUntilAction` 驱动；`CtPerTick=反应`；术法/神通冷却写入下次行动门槛；行动后 CT 归零；同刻多单位达标时按反应降序排入待行动队列；`dotnet build src/Assembly-CSharp.csproj` 0警告0错误 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 
 | 优先级 | 问题 | 影响 |
 |--------|------|------|
-| ⚠️ 待复审 | `ExplorationController.CombatLoop` 当前为严格玩家/敌人交替回合制，不是真 CTB | 2026-06-17 已改为按 `CTBEngine.AdvanceUntilAction` 选取行动者；需 Unity Play Mode 复核手感 |
-| ⚠️ 待复审 | `CTBEngine.CtPerTick = speed / 100f` 与文档“每刻 CT += 反应”不一致 | 2026-06-17 已改为 `CtPerTick=反应`，并按当前行动门槛显示 CT 百分比；需实机复核 UI 表现 |
+| ✅ | `ExplorationController.CombatLoop` 当前为严格玩家/敌人交替回合制，不是真 CTB | 已修复：2026-06-17 改为按 `CTBEngine.AdvanceUntilAction` 选取行动者；代码复审与 Unity 工程编译通过 |
+| ✅ | `CTBEngine.CtPerTick = speed / 100f` 与文档“每刻 CT += 反应”不一致 | 已修复：2026-06-17 改为 `CtPerTick=反应`，行动后 CT 归零，冷却惩罚提高下次行动门槛 |
 | P0 | `DamageCalculator` 注释称与 BattleSim 对齐，但公式、命中流程、五行倍率均不同 | Unity 手感与模拟器结论不可直接互证 |
 | P1 | Unity 五行仍为功法对功法 ±25%，未实现 v5.10 术法属性内外圈规则 | v0.8 状态需降级为“设计已补，代码未完整接入” |
 | P1 | `Character.FromData` 在 `MaxSpellSlots` 赋值前创建冷却数组 | 空装备/槽位 UI 可能出现 0 长度数组和按钮状态异常 |

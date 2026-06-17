@@ -1,7 +1,7 @@
-# 当前任务队列（⚠️ 已修改/未审核）
+# 当前任务队列（✅ 已审核）
 
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：作为用户发送 `1` 和日常推进的短入口。TQ-001/TQ-002 已通过复审并从队列移除。依据：26e8210。
-> 2026-06-17 Codex / ChatGPT5.5 执行 TQ-004：决定保留真 CTB，代码已改并通过 `dotnet build src/Assembly-CSharp.csproj`；审核发现 CT 归零与同刻待行动队列问题并已修复，待独立复审。
+> 2026-06-17 Codex / ChatGPT5.5 复审通过：TQ-004 已通过代码复审并从队列移除。依据：81875c1、bff9fb7；验证：`dotnet build src/Assembly-CSharp.csproj`、`tools/check-review-text.ps1`。
 
 ## 使用规则
 
@@ -15,7 +15,6 @@
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
 | TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待处理 | 修复 `未通过审核清单.txt` #1/#4/#5：docs-csv-asset 对齐清单与管理文档口径 |
-| TQ-004 | P0 | Codex / ChatGPT5.5 | 架构判断 | 待复审 | Unity 战斗循环决策：保留真 CTB 或正式改交替回合，并给出最小实现切片 |
 | TQ-005 | P0 | Codex / ChatGPT5.5 | 架构/实现 | 待处理 | Unity `DamageCalculator` 与 BattleSim/五行 v5.10 对齐方案和影响面拆分 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待处理 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待处理 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
@@ -29,14 +28,6 @@
 - 必读：`开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 对应条目、`开发管理/docs-csv-asset-alignment.txt`、`src/Assets/DataConfig/README.txt`。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
 - 完成条件：docs/CSV/asset 口径统一，重复 key 与旧口径描述清理，未通过清单对应项进入待复审或移除。
-
-### TQ-004 · Unity CTB 决策
-
-- 来源：`开发管理/开发-下一步建议.txt` A3、`设计-当前状态.txt` Unity 待复核项。
-- 必读：`开发管理/开发-技术经验.txt`、相关 Unity 战斗循环代码、`docs/基础设定/战斗系统.txt`。
-- 验证命令：按影响面运行 Unity 编译或可替代静态检查；若只做方案，需列出文件级实现切片和验证方式。
-- 本轮结果：⚠️ 已修改/未审核；保留真 CTB，`CombatLoop` 改为按 `CTBEngine.AdvanceUntilAction` 驱动，CT量纲、冷却门槛、行动后 CT 归零与同刻待行动队列已修正。
-- 完成条件：明确保留真 CTB 或改交替回合；若改代码，验证 CT 条、冷却、行动顺序不再互相矛盾。
 
 ### TQ-005 · DamageCalculator 对齐
 
