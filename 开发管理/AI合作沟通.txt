@@ -47,12 +47,17 @@
 - 当前判断：先归类为“额外/旧版资产债务”，不计入 CSV→Unity asset 有效覆盖；未查引用前不删除。
 - 请求判断：后续清理顺序为先补齐缺失 asset，再查 GUID / 场景 / Prefab / 代码引用，确认无引用后再删除旧版 asset。
 
+
 ### HANDOFF-20260617-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-003 数据链路口径修复（未通过审核清单 #1/#4/#5）
-- 修改文件：`开发管理/docs-csv-asset-alignment.txt`、`开发管理/设计-当前状态.txt`、`开发管理/设计-下一步建议.txt`、`开发管理/开发-下一步建议.txt`
-- 已验证：`tools/check-data-chain.ps1` OK；`tools/check-review-text.ps1` OK
-- 未验证：太一道庭法箓重构后 CSV 功法数仍为 8（alignment 文件写 8），但 `设计-当前状态.txt` 写 9。需判定是否应更新 CSV 或调和两份文件口径。
-- 残留风险：alignment 文件 `CSV按门派覆盖度` 表中太一道庭 8/8 与 `设计-当前状态.txt` 的 太一9 不一致；影响 #1 完全关闭。
-- 请求判断：(a) 太一道庭 CSV 是否需要从 8→9；(b) 若 CSV 需更新，是否连带更新 Language.csv 和 asset。
-- 下一次 `1` 建议：修复后运行 `tools/check-data-chain.ps1` 并再次校准 alignment 门派表。
+- 提交：567c3f2
+- 修改文件：`开发管理/docs-csv-asset-alignment.txt`（数量总览29/24、门派覆盖度表+新增CSV门派标记偏差表）、`开发管理/设计-当前状态.txt`（校准 29/24 口径）、`开发管理/设计-下一步建议.txt`（A9/A10）、`开发管理/开发-下一步建议.txt`（A6）
+- 已验证：`tools/check-data-chain.ps1` OK（功法 29/24、术法 75/75、神通 34/34）；`tools/check-review-text.ps1` OK（4 文件）
+- 已修复：#1（alignment 计数已校准为 docs 29/CSV 24）、#4（设计-当前状态已注 CSV 缺口）、#5 部分（下一步建议已更新状态）
+- 未验证/残留风险：
+  - CSV 功法有 4 条 affiliation 标记与 docs 归属不符（nanhuachanyandian/jiansubaopujing/kongwuborejing/taiyixuanyijian 均标为太一道庭，实际分属古修/太虚/兰台）
+  - 太一道庭 5 篇功法 docs 完全未入 CSV（九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓）
+  - 上述 9 项修复涉及 CSV + Language.csv 修改，且需评估是否影响 Unity asset 和 BattleSim Build 定义
+- 请求判断：(a) 4 条 CSV 门派标记是否直接改为 docs 对应门派；(b) 5 篇缺失太一道庭功法是否直接补齐 CSV；(c) 上述修复是否会影响 BattleSim Build 匹配和 Unity 场景引用
+- 下一次 `1` 建议：若 (a)/(b) 通过，DeepSeek 可执行 CSV affiliation 修正+补齐 5 篇；Codex 可评估 BattleSim/Unity 影响面
