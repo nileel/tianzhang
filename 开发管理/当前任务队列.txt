@@ -14,7 +14,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待处理 | 修复 `未通过审核清单.txt` #1/#4/#5：docs-csv-asset 对齐清单与管理文档口径 |
+| TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待复审 | 修复 `未通过审核清单.txt` #1/#4/#5：docs-csv-asset 对齐清单与管理文档口径（commit 567c3f2；docs 24→29 ✅；门派表+CSV偏差标注 ✅；待Codex复审） |
 | TQ-005 | P0 | Codex / ChatGPT5.5 | 架构/实现 | 待处理 | Unity `DamageCalculator` 与 BattleSim/五行 v5.10 对齐方案和影响面拆分 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待处理 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待处理 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
