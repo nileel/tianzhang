@@ -83,9 +83,7 @@ namespace TianZhang.Core
         /// <summary>消耗CT执行行动，并把本次行动产生的冷却惩罚写入下次行动门槛</summary>
         public void ConsumeAction(CTBUnit unit)
         {
-            float threshold = Mathf.Max(ActionThreshold, unit.NextActionThreshold);
-            unit.CT -= threshold;
-            if (unit.CT < 0) unit.CT = 0;
+            unit.CT = 0;
             unit.NextActionThreshold = ActionThreshold + unit.PendingCooldownPenalty;
             unit.PendingCooldownPenalty = 0;
         }
@@ -117,10 +115,21 @@ namespace TianZhang.Core
             int ticks = 0;
             while (true)
             {
+                while (actionQueue.Count > 0)
+                {
+                    var queued = actionQueue.Dequeue();
+                    if (queued != null && queued.IsAlive)
+                        return (queued, ticks);
+                }
+
                 var ready = AdvanceTick(activeUnits);
                 ticks++;
                 if (ready.Count > 0)
+                {
+                    for (int i = 1; i < ready.Count; i++)
+                        actionQueue.Enqueue(ready[i]);
                     return (ready[0], ticks);
+                }
                 if (ticks > 10000) // 安全阀
                     return (null, ticks);
             }
@@ -129,6 +138,7 @@ namespace TianZhang.Core
         /// <summary>重置所有单位CT</summary>
         public void ResetAllCT()
         {
+            ClearActionQueue();
             foreach (var unit in units)
                 ResetUnitCT(unit);
         }
@@ -139,6 +149,11 @@ namespace TianZhang.Core
             unit.CT = 0;
             unit.NextActionThreshold = ActionThreshold;
             unit.PendingCooldownPenalty = 0;
+        }
+
+        public void ClearActionQueue()
+        {
+            actionQueue.Clear();
         }
 
         public List<CTBUnit> GetAllUnits() => units;

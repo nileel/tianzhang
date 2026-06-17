@@ -119,7 +119,7 @@
 | v0.6 | 三门派数据导入 | 玉清崖(4/13/6)+混元山(4/14/6)+太虚观(4/15/7)全部通过DataConfigImporter导入 ✅ |
 | v0.7 | 境界扩展 + 印记 + 五行 | 元婴/化神里程碑 + 守一/符胆印记 + 五行元素克制 ✅ |
 | v0.8 | 术法/神通五行属性 + 匹配规则 | 107文件补充五行属性字段 + 灵根设定§8匹配规则 |
-| v0.9 | CTB 战斗循环修复 | ⚠️ 已修改/未审核：1v1 战斗改由 `CTBEngine.AdvanceUntilAction` 驱动；`CtPerTick=反应`；术法/神通冷却写入下次行动门槛；`dotnet build src/Assembly-CSharp.csproj` 0警告0错误 |
+| v0.9 | CTB 战斗循环修复 | ⚠️ 已修改/未审核：1v1 战斗改由 `CTBEngine.AdvanceUntilAction` 驱动；`CtPerTick=反应`；术法/神通冷却写入下次行动门槛；行动后 CT 归零；同刻多单位达标时按反应降序排入待行动队列；`dotnet build src/Assembly-CSharp.csproj` 0警告0错误 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 

@@ -505,6 +505,7 @@ namespace TianZhang.Map
                 enemy.character.CTBUnit = ctbEngine.RegisterUnit(enemy.character.Reaction, enemy.character);
             ctbEngine.ResetUnitCT(player.CTBUnit);
             ctbEngine.ResetUnitCT(enemy.character.CTBUnit);
+            ctbEngine.ClearActionQueue();
 
             // 设置 resolver 的 grid
             resolver.Grid = tilemapManager.Grid;

@@ -1,7 +1,7 @@
 # 当前任务队列（⚠️ 已修改/未审核）
 
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：作为用户发送 `1` 和日常推进的短入口。TQ-001/TQ-002 已通过复审并从队列移除。依据：26e8210。
-> 2026-06-17 Codex / ChatGPT5.5 执行 TQ-004：决定保留真 CTB，代码已改并通过 `dotnet build src/Assembly-CSharp.csproj`；待复审。
+> 2026-06-17 Codex / ChatGPT5.5 执行 TQ-004：决定保留真 CTB，代码已改并通过 `dotnet build src/Assembly-CSharp.csproj`；审核发现 CT 归零与同刻待行动队列问题并已修复，待独立复审。
 
 ## 使用规则
 
@@ -35,7 +35,7 @@
 - 来源：`开发管理/开发-下一步建议.txt` A3、`设计-当前状态.txt` Unity 待复核项。
 - 必读：`开发管理/开发-技术经验.txt`、相关 Unity 战斗循环代码、`docs/基础设定/战斗系统.txt`。
 - 验证命令：按影响面运行 Unity 编译或可替代静态检查；若只做方案，需列出文件级实现切片和验证方式。
-- 本轮结果：⚠️ 已修改/未审核；保留真 CTB，`CombatLoop` 改为按 `CTBEngine.AdvanceUntilAction` 驱动，CT量纲与冷却门槛已修正。
+- 本轮结果：⚠️ 已修改/未审核；保留真 CTB，`CombatLoop` 改为按 `CTBEngine.AdvanceUntilAction` 驱动，CT量纲、冷却门槛、行动后 CT 归零与同刻待行动队列已修正。
 - 完成条件：明确保留真 CTB 或改交替回合；若改代码，验证 CT 条、冷却、行动顺序不再互相矛盾。
 
 ### TQ-005 · DamageCalculator 对齐

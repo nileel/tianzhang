@@ -109,6 +109,7 @@ A3. **Unity 战斗循环决策与 CTB 修复** ⚠️ 已修改/未审核 (2026-
     - 决策：保留真 CTB，不改为正式交替回合制。
     - 已改：`ExplorationController.CombatLoop` 改为按 `CTBEngine.AdvanceUntilAction` 驱动玩家/当前敌人的行动顺序。
     - 已改：`CTBEngine.CtPerTick=反应`，术法/神通冷却惩罚写入下次行动门槛，不再直接扣当前 CT。
+    - 审核修复：行动后 CT 归零；同刻多个单位达标时按反应降序排入待行动队列，避免第二个单位多推进一刻。
     - 已验证：`dotnet build src/Assembly-CSharp.csproj` 0 警告 0 错误。
     - 待复审：Unity Play Mode 检查 CT 条表现、玩家输入窗口、敌我高低反应行动顺序与术法冷却手感。
 
