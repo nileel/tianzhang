@@ -1,19 +1,19 @@
-⚠️ 已修改/未审核 — 2026-06-16 按未通过审核清单修复（修改方: DeepSeek；待 Codex / ChatGPT5.5 复审）
-修正：docs 术法 73→75、太一道庭 26、Unity asset 非零统计、CSV 口径校准
+⚠️ 已修改/未审核 — 2026-06-17 按 check-data-chain.ps1 输出校准 asset 缺口口径（修改方: DeepSeek V4 Pro；待 Codex / ChatGPT5.5 复审）
+修正：asset 缺口改用有效 .asset 数计算（功法缺11/术法缺28/神通缺13），增加额外/旧版计数
 
 # docs → CSV → Unity Asset 对齐清单
 
-> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
+> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 修订: 2026-06-17 (按 check-data-chain.ps1 校准 asset 缺口；修改方: DeepSeek V4 Pro) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
 
 ## 数量总览
 
-| 类别 | docs (.txt) | CSV (.csv) | Unity (.asset) | 缺口 (docs−CSV) |
-|------|------------|------------|----------------|-----------------|
-| 功法 | 24 | 24 | 14 | 0 (CSV与docs对齐；asset缺10) |
-| 术法 | 75 | 75 | 54 | 0 (CSV与docs对齐；asset缺21) |
-| 神通 | 34 | 34 | 23 | 0 (CSV与docs对齐；asset缺11) |
+| 类别 | docs (.txt) | CSV (.csv) | Unity .asset (总数/有效) | 额外/旧版 | CSV→asset 缺失 |
+|------|------------|------------|--------------------------|-----------|----------------|
+| 功法 | 24 | 24 | 14 / 13 | 1 | 11 |
+| 术法 | 75 | 75 | 54 / 47 | 7 | 28 |
+| 神通 | 34 | 34 | 23 / 21 | 2 | 13 |
 
-> **注**: 2026-06-15 已补齐全部 docs → CSV 映射。功法 24/24、术法 75/75、神通 34/34 完全对齐。Unity `.asset` 已部分生成（功法 14/24、术法 54/75、神通 23/34）。Language.csv 重复 key 已于 2026-06-16 修复（移除 desc_enemy_huangyesanxiu、chapter_qiushui 各一条重复）。
+> **注**: 2026-06-15 已补齐全部 docs → CSV 映射。功法 24/24、术法 75/75、神通 34/34 完全对齐。Unity `.asset` 已部分生成（功法 14 条中有效 13 条、术法 54 条中有效 47 条、神通 23 条中有效 21 条；额外/旧版 asset 待判定保留或清理）。Language.csv 重复 key 已于 2026-06-16 修复（移除 desc_enemy_huangyesanxiu、chapter_qiushui 各一条重复）。
 
 ## 功法缺口 — 已补齐 ✅ (CSV 端)
 
@@ -29,11 +29,11 @@
 
 ## CSV → Unity .asset 缺口（当前未补齐）
 
-| 类别 | docs | CSV | .asset | 缺口 | 备注 |
-|------|------|-----|--------|------|------|
-| 功法 | 24 | 24 | 14 | 10 | 古修 3 本 + 太一道庭 7 本未生成 |
-| 术法 | 75 | 75 | 54 | 21 | 部分旧版 asset（无 spell_ 前缀）需判定保留或清理 |
-| 神通 | 34 | 34 | 23 | 11 | 有旧版/额外 asset（如 Jiuzhuanhuandan.asset / Zhengqisuozhi.asset 与 skill_ 前缀版共存） |
+| 类别 | docs | CSV | .asset (总数/有效) | 缺失 | 额外/旧版 | 备注 |
+|------|------|-----|-------------------|------|-----------|------|
+| 功法 | 24 | 24 | 14 / 13 | 11 | 1 | 古修 3 本 + 太一道庭 7 本未生成 |
+| 术法 | 75 | 75 | 54 / 47 | 28 | 7 | 部分旧版 asset（无 spell_ 前缀）需判定保留或清理 |
+| 神通 | 34 | 34 | 23 / 21 | 13 | 2 | 有旧版/额外 asset（如 Jiuzhuanhuandan.asset / Zhengqisuozhi.asset 与 skill_ 前缀版共存） |
 
 ## CSV 按门派覆盖度
 
@@ -56,6 +56,6 @@
 2. ✅ 补齐太一道庭 CSV（2026-06-15 已完成）
 3. ✅ 补齐散修及其他门派缺口（2026-06-15 已完成）
 4. 🔲 **修复 `leicnicuiti` ID typo** → `leichicuiti` 并同步更新 Language.csv、代码引用
-5. 🔲 **ScriptableObject 批量补齐**：CSV 已齐备，运行 DataConfigImporter 补全功法10+术法21+神通11 条 `.asset`
+5. 🔲 **ScriptableObject 批量补齐**：CSV 已齐备，运行 DataConfigImporter 补全功法11+术法28+神通13 条 `.asset`（以有效计数为准）
 6. 🔲 **旧版 asset 清理**：Data/ 下无 spell_/skill_ 前缀的旧版 asset 需判定保留或删除（如 Anshenfu.asset、Xuanshuizhou.asset、Jiuzhuanhuandan.asset 等）
 7. 🔲 **自动化检查**：后续在 Editor 菜单新增「检查数据链路」一键输出 docs/CSV/asset 差异

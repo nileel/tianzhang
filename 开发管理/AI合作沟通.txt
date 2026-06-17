@@ -46,3 +46,13 @@
 - 任务：判定无前缀旧版 asset 是否保留或清理。
 - 当前判断：先归类为“额外/旧版资产债务”，不计入 CSV→Unity asset 有效覆盖；未查引用前不删除。
 - 请求判断：后续清理顺序为先补齐缺失 asset，再查 GUID / 场景 / Prefab / 代码引用，确认无引用后再删除旧版 asset。
+
+### HANDOFF-20260617-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-003 数据链路口径修复（未通过审核清单 #1/#4/#5）
+- 修改文件：`开发管理/docs-csv-asset-alignment.txt`、`开发管理/设计-当前状态.txt`、`开发管理/设计-下一步建议.txt`、`开发管理/开发-下一步建议.txt`
+- 已验证：`tools/check-data-chain.ps1` OK；`tools/check-review-text.ps1` OK
+- 未验证：太一道庭法箓重构后 CSV 功法数仍为 8（alignment 文件写 8），但 `设计-当前状态.txt` 写 9。需判定是否应更新 CSV 或调和两份文件口径。
+- 残留风险：alignment 文件 `CSV按门派覆盖度` 表中太一道庭 8/8 与 `设计-当前状态.txt` 的 太一9 不一致；影响 #1 完全关闭。
+- 请求判断：(a) 太一道庭 CSV 是否需要从 8→9；(b) 若 CSV 需更新，是否连带更新 Language.csv 和 asset。
+- 下一次 `1` 建议：修复后运行 `tools/check-data-chain.ps1` 并再次校准 alignment 门派表。
