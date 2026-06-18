@@ -99,7 +99,7 @@ nodeRepl.write(model || 'unknown');
 ## Unity 项目
 
 - 路径：`src/`（`D:\天章游戏开发\src\`）
-- 引擎版本：Unity 2022
+- 引擎版本：Unity 6（6000.3.18f1）
 - 打开方式：Unity Hub → Add project from disk → 选择 `D:\天章游戏开发\src`
 
 ## CLI 模式

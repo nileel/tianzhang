@@ -1,6 +1,7 @@
 ﻿# 开发技术经验
 
-> 来源：AGENTS.md §技术经验 | 最后更新：2026-06-15
+> 2026-06-19 Codex / gpt-5.5 审核通过：Unity 项目迁移到 Unity 6 / 6000.3.18f1，版本口径已同步。
+> 来源：AGENTS.md §技术经验 | 最后更新：2026-06-19
 
 ---
 
@@ -50,7 +51,7 @@
 - **VerticalLayoutGroup**：使用自动布局时必须同时勾选 childForceExpandWidth 和 childForceExpandHeight，否则动态创建的按钮不会显示。
 
 - **命名空间不与 Unity 类型冲突**：如 `TianZhang.Tilemap` 与 `UnityEngine.Tilemaps.Tilemap` 冲突 → CS0118。避免用常用 Unity 类名做命名空间。
-- **C# 版本兼容**：避免 `:=` 等 C# 9+ 语法，Unity 2022 不完全支持。
+- **C# 版本兼容**：项目已迁移到 Unity 6，但仍优先使用保守、已验证的 C# 语法；不要为了语法糖引入 Unity 编译链尚未验证的新特性。
 - **六角格坐标转换**：不要手写 offset 公式。Unity Grid 的 `GetCellCenterWorld` / `WorldToCell` 是唯一可靠来源。点击检测用全量缓存 + 最近邻查找最稳妥。
 - **场景生成**：用 Editor 脚本 (`MenuItem`) 程序化生成，永远不要手写 .unity YAML。
 - **视觉反馈**：角色移动需实时更新 Transform；受击加 Coroutine 闪烁；死亡改色。
