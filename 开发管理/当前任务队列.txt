@@ -23,7 +23,7 @@
 | TQ-009 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |
 | TQ-011 | P0 | Codex / ChatGPT5.5 | 设计/架构 | 待处理 | 境界体系重构第一轮锁口径：玩家主线、筑基/紫府包装、金丹丹籍、神通门槛与固定丹籍出口 |
 | TQ-012 | P0 | DeepSeek V4 Pro | 文档重构 | 待前置 | 按 TQ-011 口径重写 `修行境界.txt`、`境界特性.txt`、`术法槽位设计.txt` 与三类设计规范中的境界/本命/领域定义 |
-| TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待处理 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
+| TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待复审 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待处理 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
 | TQ-008 | P1 | Codex / ChatGPT5.5 | 数值评估 | 待处理 | `角色数值设计.txt` 与 BattleSim GameData 差异表，决定回写文档或调整代码 |
 | TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 待处理 | CSV/Unity asset 补独立术法/神通五行属性字段，不再用 `elementReq` 兼任技能属性 |

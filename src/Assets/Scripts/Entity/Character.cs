@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using TianZhang.Core;
 
@@ -126,16 +126,20 @@ namespace TianZhang.Entity
             c.CritDamage = data.critDamage;
             c.HitRateBonus = data.hitRateBonus;
 
+            // 术法/神通槽位上限（须在冷却数组之前赋值）
+            c.MaxSpellSlots = data.maxSpellSlots > 0 ? data.maxSpellSlots : GetDefaultSpellSlots(realm);
+            c.MaxSkillSlots = data.maxSkillSlots > 0 ? data.maxSkillSlots : GetDefaultSkillSlots(realm);
             // 术法/神通冷却初始化
             c.SpellCooldowns = new int[Mathf.Max(data.equippedSpells?.Length ?? 0, c.MaxSpellSlots)];
             c.EquippedSpellIds = data.equippedSpells != null ? (string[])data.equippedSpells.Clone() : new string[0];
             c.EquippedSkillIds = data.equippedSkills != null ? (string[])data.equippedSkills.Clone() : new string[0];
             c.SkillCooldowns = new int[Mathf.Max(data.equippedSkills?.Length ?? 0, c.MaxSkillSlots)];
-            c.MaxSpellSlots = data.maxSpellSlots > 0 ? data.maxSpellSlots : GetDefaultSpellSlots(realm);
-            c.MaxSkillSlots = data.maxSkillSlots > 0 ? data.maxSkillSlots : GetDefaultSkillSlots(realm);
             c.AvailableSpells = data.availableSpells ?? new string[0];
             c.AvailableSkills = data.availableSkills ?? new string[0];
             c.CombatSwapsUsed = 0;
+            // 回归检查：冷却数组尺寸不应小于槽位上限
+            if (SpellCooldowns.Length < MaxSpellSlots || SkillCooldowns.Length < MaxSkillSlots)
+                Debug.LogError($"Character.FromData [{Name}]: 冷却数组尺寸不足 SpellCooldowns={SpellCooldowns.Length}/{MaxSpellSlots} SkillCooldowns={SkillCooldowns.Length}/{MaxSkillSlots}");
 
             return c;
         }
