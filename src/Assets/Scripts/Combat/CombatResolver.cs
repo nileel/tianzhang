@@ -71,7 +71,7 @@ namespace TianZhang.Combat
                 mult = 1f + attacker.ShouyiStacks * 0.05f;
 
             if (useMagic)
-                damage = DamageCalculator.CalcMagic((int)(attacker.MagAtk * mult), mult, attacker, defender);
+                damage = DamageCalculator.CalcMagic(attacker.MagAtk, mult, attacker, defender);
             else
                 damage = DamageCalculator.CalcPhysical(attacker.PhysAtk, mult, attacker, defender);
 
@@ -131,7 +131,7 @@ namespace TianZhang.Combat
             {
                 case SpellType.Physical:
                     damage = DamageCalculator.CalcPhysical(caster.PhysAtk, spell.damageMultiplier,
-                        caster, target, spell.cannotBlock);
+                        caster, target, spell.cannotBlock, spell.element, spell.cannotDodge);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
@@ -148,15 +148,16 @@ namespace TianZhang.Combat
                         float fdRate = realmMult >= 24f ? 0.22f : realmMult >= 12f ? 0.18f :
                                        realmMult >= 6f ? 0.15f : realmMult >= 3f ? 0.12f : 0.15f;
                         fdMult = 1f + caster.FudanStacks * fdRate;
-                        // 满层：无视30%魂防（通过defPen传入CalcMagic，暂时用MagDef降低模拟）
+                        // 满层：当前以伤害补偿近似无视魂防；防御穿透同源化留给后续战斗公式切片。
                         if (fudanMax) fdMult *= 1.30f;
                         // 消耗层数（化神保留2层）
                         float mr = Cultivation.CultivationEngine.GetRealmMultiplier(caster.GetRealm());
                         caster.FudanStacks = mr >= 24f ? 2 : 0;
                     }
 
-                    damage = DamageCalculator.CalcMagic((int)(caster.MagAtk * syMult * fdMult),
-                        spell.damageMultiplier, caster, target);
+                    damage = DamageCalculator.CalcMagic(caster.MagAtk,
+                        spell.damageMultiplier * syMult * fdMult,
+                        caster, target, spell.element, spell.cannotDodge, spell.penetratingShield);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
@@ -223,13 +224,13 @@ namespace TianZhang.Combat
             if (skill.type == SpellType.Physical)
             {
                 damage = DamageCalculator.CalcPhysical(caster.PhysAtk, skill.damageMultiplier,
-                    caster, target, skill.cannotBlock);
+                    caster, target, skill.cannotBlock, skill.element, skill.cannotDodge);
             }
             else
             {
                 float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
-                damage = DamageCalculator.CalcMagic((int)(caster.MagAtk * syMult), skill.damageMultiplier * syMult,
-                    caster, target);
+                damage = DamageCalculator.CalcMagic(caster.MagAtk, skill.damageMultiplier * syMult,
+                    caster, target, skill.element, skill.cannotDodge, skill.penetratingShield);
             }
 
             if (damage.IsHit) target.TakeDamage(damage.FinalDamage);

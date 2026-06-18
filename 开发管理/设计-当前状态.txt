@@ -1,5 +1,6 @@
 # 设计当前状态
 
+> 2026-06-18 Codex / gpt-5.5 复审通过：Unity `DamageCalculator` 已审核为双线公式 + v5.10 五行内外圈运行时匹配支持；BattleSim 同源化与 CSV 独立属性字段仍列后续任务。
 > 来源：AGENTS.md §当前状态 | 最后更新：2026-06-17 (Unity CTB 战斗循环修复，✅ 已审核)
 > 维护说明：本文件只记录事实状态、验证快照和当前风险；短期任务放入 `开发管理/当前任务队列.txt`，长期建议放入对应下一步建议文件。详见 `开发管理/状态与建议维护规则.txt`。
 
@@ -112,7 +113,7 @@
 | v0.3 | 朝向命中/伤害修正 | 正面85%/侧面100%/背面115%命中率 + 侧面+15%/背面+30%伤害 |
 | v0.4 | 修炼引擎 CultivationEngine | 与 BattleSim 对齐（修炼循环+突破率+道基/金丹生成+丹药加成） |
 | v0.4 | 功法成长体系 | GongFaGrowthData + 抱元守一经资产 + Character.ApplyGongFaBonuses |
-| v0.1 | DamageCalculator | 与 BattleSim 公式对齐（格挡/魂盾/闪避/暴击/抗性） |
+| v0.1 | DamageCalculator | ✅ 已审核：2026-06-18 改为双线公式 + v5.10 五行内外圈运行时匹配支持；BattleSim 同源化与 CSV 独立属性字段仍待后续任务推进 |
 | v0.5 | 地图探索系统 | ExplorationController（半径12六角格+障碍生成+4敌人+探索→战斗循环） |
 | v0.5 | 敌人生成 | 从Enemies.csv模板池/内置回退生成，含掉落提示 |
 | v0.5 | 术法槽位系统 | Character.MaxSpellSlots(境界推算)、EquipSpell/UnequipSpell/SwapSpellInCombat、UI空槽灰显 |
@@ -127,6 +128,7 @@
 |--------|------|------|
 | ✅ | `ExplorationController.CombatLoop` 当前为严格玩家/敌人交替回合制，不是真 CTB | 已修复：2026-06-17 改为按 `CTBEngine.AdvanceUntilAction` 选取行动者；代码复审与 Unity 工程编译通过 |
 | ✅ | `CTBEngine.CtPerTick = speed / 100f` 与文档“每刻 CT += 反应”不一致 | 已修复：2026-06-17 改为 `CtPerTick=反应`，行动后 CT 归零，冷却惩罚提高下次行动门槛 |
-| P0 | `DamageCalculator` 注释称与 BattleSim 对齐，但公式、命中流程、五行倍率均不同 | Unity 手感与模拟器结论不可直接互证 |
-| P1 | Unity 五行仍为功法对功法 ±25%，未实现 v5.10 术法属性内外圈规则 | v0.8 状态需降级为“设计已补，代码未完整接入” |
+| ✅ | `DamageCalculator` 已移除“与 BattleSim 对齐”误导注释，并接入双线公式、境界比、单次命中/闪避、暴击、格挡/魂盾、守一减伤与 v5.10 内外圈倍率 | Unity 运行时口径已审核；实机手感仍随后续玩法调参复测 |
+| P0 | BattleSim 1v1/2v2 仍未完整实现 v5.10 三方匹配 | 模拟器矩阵暂不能验证 Unity v5.10 五行手感，已拆为 TQ-009 |
+| P1 | CSV/asset 缺独立术法/神通五行属性字段，`Spells.csv` 仍以 `elementReq` 临时代入，`Skills.csv` 暂为空属性 | 需拆分数据链路任务，避免学习门槛与技能属性长期混用，已拆为 TQ-010 |
 | P1 | `Character.FromData` 在 `MaxSpellSlots` 赋值前创建冷却数组 | 空装备/槽位 UI 可能出现 0 长度数组和按钮状态异常 |

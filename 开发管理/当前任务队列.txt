@@ -1,5 +1,6 @@
 # 当前任务队列（✅ 已审核）
 
+> 2026-06-18 Codex / gpt-5.5 复审通过：TQ-005 Unity `DamageCalculator` 运行时口径已审核并从队列移除；BattleSim 五行同源化与 CSV/asset 独立属性字段保留为 TQ-009/TQ-010。
 > 2026-06-18 Codex / gpt-5.5 复审通过：补充 `1` 自动推进选题规则：先确认身份；更高优先级任务若已执行完成但待复审，不阻塞继续选择下一条待处理任务。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：作为用户发送 `1` 和日常推进的短入口。TQ-001/TQ-002 已通过复审并从队列移除。依据：26e8210。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：TQ-004 已通过代码复审并从队列移除。依据：81875c1、bff9fb7；验证：`dotnet build src/Assembly-CSharp.csproj`、`tools/check-review-text.ps1`。
@@ -17,10 +18,11 @@
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
 | TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待复审 | 修复 `未通过审核清单.txt` #1/#4/#5：docs-csv-asset 对齐清单与管理文档口径（commit 567c3f2；docs 24→29 ✅；门派表+CSV偏差标注 ✅；待Codex复审） |
-| TQ-005 | P0 | Codex / ChatGPT5.5 | 架构/实现 | 待处理 | Unity `DamageCalculator` 与 BattleSim/五行 v5.10 对齐方案和影响面拆分 |
+| TQ-009 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待处理 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待处理 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
 | TQ-008 | P1 | Codex / ChatGPT5.5 | 数值评估 | 待处理 | `角色数值设计.txt` 与 BattleSim GameData 差异表，决定回写文档或调整代码 |
+| TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 待处理 | CSV/Unity asset 补独立术法/神通五行属性字段，不再用 `elementReq` 兼任技能属性 |
 
 ## 任务卡片
 
@@ -30,13 +32,6 @@
 - 必读：`开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 对应条目、`开发管理/docs-csv-asset-alignment.txt`、`src/Assets/DataConfig/README.txt`。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
 - 完成条件：docs/CSV/asset 口径统一，重复 key 与旧口径描述清理，未通过清单对应项进入待复审或移除。
-
-### TQ-005 · DamageCalculator 对齐
-
-- 来源：`开发管理/开发-下一步建议.txt` A4、`设计-当前状态.txt` Unity 待复核项。
-- 必读：`docs/基础设定/伤害公式.txt`、`docs/基础设定/战斗系统.txt`、`docs/基础设定/灵根设定.txt`、BattleSim 相关伤害代码、Unity `DamageCalculator`。
-- 验证命令：BattleSim build + run；Unity 端按可用测试或静态检查验证。
-- 完成条件：双线伤害、命中/闪避/格挡/魂盾/暴击顺序和五行 v5.10 口径有明确实现或拆分计划。
 
 ### TQ-006 · 槽位冷却数组修复
 
@@ -58,3 +53,17 @@
 - 必读：`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/Program.cs`、`开发管理/设计-当前状态.txt`。
 - 验证命令：`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
 - 完成条件：列出文档与 GameData 差异，并明确每项建议“回写文档 / 调整代码 / 保留调参覆盖”。
+
+### TQ-009 · BattleSim 五行 v5.10 同源化
+
+- 来源：TQ-005 拆分。
+- 必读：`docs/基础设定/灵根设定.txt` 第八节、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/Character.cs`、`simulations/BattleSim/GameData.cs`、Unity `DamageCalculator` 本轮 diff。
+- 验证命令：BattleSim build + run；重点复核 1v1/2v2 A/B 对称性和金丹过滤矩阵。
+- 完成条件：BattleSim 伤害倍率读取技能属性、施法者功法属性、目标功法属性三方匹配；不再保留局部旧克制链作为通用五行口径。
+
+### TQ-010 · CSV/asset 独立技能属性字段
+
+- 来源：TQ-005 拆分。
+- 必读：`docs/基础设定/灵根设定.txt` 第八节、术法/神通设计模板、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`DataConfigImporter.cs`。
+- 验证命令：导入完整性检查 + Unity 编译；必要时用 `rg "element_"` 核对 75 术法、34 神通覆盖。
+- 完成条件：术法/神通拥有独立五行属性列，学习门槛 `elementReq` 不再兼任技能属性；重导 `.asset` 后不丢失 12 属性与混沌/无属性语义。

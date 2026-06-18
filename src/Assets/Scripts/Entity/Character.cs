@@ -69,6 +69,7 @@ namespace TianZhang.Entity
 
         // ---- 功法 ----
         public string GongFaName;
+        public float RealmMultiplier = 1f;
 
         // ---- 姓名 ----
         public string Name;
@@ -91,6 +92,8 @@ namespace TianZhang.Entity
 
             // 境界倍率（从 data 读取，或默认值）
             float realm = data.realmMultiplier > 0 ? data.realmMultiplier : 1f;
+            c.RealmMultiplier = realm;
+            c.m_Realm = RealmNameFromMultiplier(realm);
 
             // ---- 次线性HP公式（v3.4：根骨^0.75 × 境界倍率 × 基础值）----
             float hpBase = Mathf.Pow(c.RootBone, 0.75f) * realm * 80f;
@@ -300,33 +303,57 @@ namespace TianZhang.Entity
         }
 
         /// <summary>守一印记最大层数（按境界）</summary>
-    public int MaxShouyi()
-    {
-        return Mathf.RoundToInt(Cultivation.CultivationEngine.GetRealmMultiplier(m_Realm ?? "")) switch
+        public int MaxShouyi()
         {
-            >= 6 => 5,   // 金丹+
-            >= 3 => 4,   // 筑基
-            >= 2 => 3,   // 练气
-            _ => 3
-        };
-    }
+            return Mathf.RoundToInt(GetEffectiveRealmMultiplier()) switch
+            {
+                >= 6 => 5,   // 金丹+
+                >= 3 => 4,   // 筑基
+                >= 2 => 3,   // 练气
+                _ => 3
+            };
+        }
 
-    /// <summary>符胆印记最大层数（按境界）</summary>
-    public int MaxFudan()
-    {
-        return Mathf.RoundToInt(Cultivation.CultivationEngine.GetRealmMultiplier(m_Realm ?? "")) switch
+        /// <summary>符胆印记最大层数（按境界）</summary>
+        public int MaxFudan()
         {
-            >= 6 => 5,   // 金丹+
-            >= 3 => 3,   // 筑基
-            _ => 5
-        };
-    }
+            return Mathf.RoundToInt(GetEffectiveRealmMultiplier()) switch
+            {
+                >= 6 => 5,   // 金丹+
+                >= 3 => 3,   // 筑基
+                _ => 5
+            };
+        }
 
-    private string m_Realm;
-    public void SetRealm(string realm) => m_Realm = realm;
-    public string GetRealm() => m_Realm;
+        private string m_Realm;
 
-    public override string ToString() =>
+        public void SetRealm(string realm)
+        {
+            m_Realm = realm;
+            RealmMultiplier = Cultivation.CultivationEngine.GetRealmMultiplier(realm);
+        }
+
+        public string GetRealm() => m_Realm;
+
+        private float GetEffectiveRealmMultiplier()
+        {
+            if (!string.IsNullOrEmpty(m_Realm))
+                return Cultivation.CultivationEngine.GetRealmMultiplier(m_Realm);
+            return RealmMultiplier > 0f ? RealmMultiplier : 1f;
+        }
+
+        private static string RealmNameFromMultiplier(float realmMultiplier)
+        {
+            if (realmMultiplier >= 48f) return "炼虚";
+            if (realmMultiplier >= 24f) return "化神";
+            if (realmMultiplier >= 12f) return "元婴";
+            if (realmMultiplier >= 6f) return "金丹";
+            if (realmMultiplier >= 3f) return "筑基";
+            if (realmMultiplier >= 1.5f) return "练气";
+            return "凡人";
+        }
+
+        public override string ToString() =>
             $"{Name} HP={CurrentHP}/{MaxHP} MP={CurrentMP}/{MaxMP} " +
             $"PAtk={PhysAtk} MAtk={MagAtk} PDef={PhysDef} MDef={MagDef} " +
             $"Pos={Position} Face={Facing}";

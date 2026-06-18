@@ -338,7 +338,8 @@ namespace TianZhang.Map
             {
                 if (name.Contains("水") || name.Contains("川") || name.Contains("浪")) s.element = "水";
                 else if (name.Contains("火") || name.Contains("焰") || name.Contains("丹")) s.element = "火";
-                else if (name.Contains("金") || name.Contains("雷") || name.Contains("剑") || name.Contains("电")) s.element = "金";
+                else if (name.Contains("雷") || name.Contains("电")) s.element = "雷";
+                else if (name.Contains("金") || name.Contains("剑")) s.element = "金";
                 else if (name.Contains("土") || name.Contains("石") || name.Contains("山") || name.Contains("岩")) s.element = "土";
                 else if (name.Contains("木") || name.Contains("草") || name.Contains("藤")) s.element = "木";
             }

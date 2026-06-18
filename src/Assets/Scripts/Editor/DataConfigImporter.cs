@@ -207,9 +207,8 @@ namespace TianZhang.Editor
                 asset.cannotDodge = cols[9] == "1";
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
-                // 五行属性（神通继承功法属性，优先查CSV显式字段）
-                if (cols.Length > 16)
-                    asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[16]);
+                // Skills.csv 当前没有独立五行属性列；后续补列后再写入 asset.element。
+                asset.element = "";
                 asset.isDomain = cols[12] == "1";
                 asset.isBloodline = cols[13] == "1";
                 asset.specialEffectDesc = T(cols[14]);

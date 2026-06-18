@@ -17,7 +17,7 @@ namespace TianZhang.Combat
         public int maxRange = 3;
 
         [Header("五行属性")]
-        public string element = ""; // 金/木/水/火/土，空字符串=继承功法属性
+        public string element = ""; // 金/木/水/火/土/风/雷/冰/暗/星/毒/混沌，空字符串表示无属性或待数据补齐
 
         [Header("消耗")]
         public int mpCost = 40;
