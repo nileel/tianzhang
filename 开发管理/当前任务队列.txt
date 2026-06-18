@@ -19,7 +19,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待处理 | 复审部分通过后的数据链路返工：补齐 GongFa.csv/Language.csv 缺口、修正 4 条 affiliation、补 faction 语言 key，并处理 Unity asset 严格覆盖缺口 |
+| TQ-003 | P0 | DeepSeek V4 Pro | 数据链路 | 待复审 | 复审部分通过后的数据链路返工：补齐 GongFa.csv/Language.csv 缺口、修正 4 条 affiliation、补 faction 语言 key，并处理 Unity asset 严格覆盖缺口 |
 | TQ-009 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |
 | TQ-011 | P0 | Codex / ChatGPT5.5 | 设计/架构 | 待处理 | 境界体系重构第一轮锁口径：玩家主线、筑基/紫府包装、金丹丹籍、神通门槛与固定丹籍出口 |
 | TQ-012 | P0 | DeepSeek V4 Pro | 文档重构 | 待前置 | 按 TQ-011 口径重写 `修行境界.txt`、`境界特性.txt`、`术法槽位设计.txt` 与三类设计规范中的境界/本命/领域定义 |

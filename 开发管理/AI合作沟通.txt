@@ -69,3 +69,14 @@
 - 未通过/待返工：`check-data-chain.ps1 -FailOnMissingAssets` 仍失败（GongFa 11、Spells 28、Skills 13）；4 条 GongFa `affiliation` 偏差未修；5 篇太一道庭功法未入 CSV；`Language.csv` 缺 `faction_guxiu` 与 `faction_lantaishuyuan`。
 - 决策：(a) 4 条 affiliation 应直接改为 docs 归属；(b) 5 篇缺失太一道庭功法应补齐到 `GongFa.csv` + `Language.csv`；(c) BattleSim 当前不读取 `GongFa.csv`，不影响现有 Build 矩阵；Unity 会在重导时按 CSV 生成/覆盖 `.asset`，因此需同步补 faction 与新增功法文本 key，并通过 Unity `天章/导入全部配置` 或等价导入流程验证 asset 覆盖。
 - 下一次 `1` 建议：DeepSeek 处理 CSV/Language 补齐与 affiliation 修正；若使用 `tools/import_csv.ps1` 生成 asset，须先复核其 GongFa growth 分隔符解析，避免生成空成长表。
+
+### HANDOFF-20260619-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-003 数据链路返工（4条affiliation修正+5篇太一道庭功法补齐+Language补faction key）
+- 提交：f7f6944
+- 修改文件：src/Assets/DataConfig/GongFa.csv（4行修正+5行新增，24→29）、src/Assets/DataConfig/Language.csv（+61条key，369→389）
+- 已验证：check-data-chain.ps1 OK（GongFa 29/29、Spells 75/75、Skills 34/34）；check-review-text.ps1 OK；spot-check 4条affiliation + 5篇功法 + faction key + 19个desc全部正确
+- 未验证：新功法CSV数值是否与docs字段完全一致（由docs文本手动提取，未做机械化校验）；check-data-chain.ps1 -FailOnMissingAssets仍FAILED（GongFa缺16、Spells缺28、Skills缺13——含本次5篇新增，待Unity 天章/导入全部配置 补齐asset后复审）
+- 残留风险：新功法ID（如jiujiangshuifulu等）未经验证是否与BattleSim/Unity代码中的Build定义或其他引用冲突
+- 请求判断：(a) 本次CSV数值与docs一致性是否通过复审；(b) 新功法ID是否需调整命名规则；(c) Asset补齐建议优先级
+- 下一次1建议：Codex可复审本次TQ-003返工；DeepSeek下一轮可取TQ-006（Character.FromData修复）或TQ-007（太一道庭法箓映射表）

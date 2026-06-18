@@ -9,12 +9,12 @@
 
 ## 当前未通过项
 
-1. 数据链路仍未完全闭合（TQ-003 567c3f2 复审部分通过）：
-   - `GongFa.csv` 仍为 24 条，docs 功法为 29 篇；太一道庭 5 篇（九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓）仍未入 CSV。
-   - 4 条功法 `affiliation` 仍与 docs 归属不符：`gongfa_nanhuachanyandian`、`gongfa_jiansubaopujing` 应为古修，`gongfa_kongwuborejing` 应为太虚观，`gongfa_taiyixuanyijian` 应为兰台书院。
-   - `Language.csv` 当前缺少 `faction_guxiu` 与 `faction_lantaishuyuan`；若直接修正 affiliation，Unity 导入器会把缺失 faction key 原样写入 asset。
-   - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 仍失败：GongFa 缺 11、Spells 缺 28、Skills 缺 13；Unity `.asset` 有效覆盖尚未收口。
-   - A9/A10/A6 相关条目需继续保留「⚠️ 已修改/未审核」，直到上述 CSV/Language/asset 缺口完成并复审。
+1. 数据链路仍未完全闭合（TQ-003 567c3f2→f7f6944 复审部分通过，CSV/Language已修复但asset仍有缺口）：
+   - `GongFa.csv` 已对齐为 29/29 ✅；太一道庭 5 篇已于 f7f6944 补齐。
+   - 4 条功法 `affiliation` 已于 f7f6944 修正 ✅：`nanhuachanyandian`/`jiansubaopujing`→古修，`kongwuborejing`→太虚观，`taiyixuanyijian`→兰台书院。
+   - `Language.csv` 已于 f7f6944 补入 `faction_guxiu`、`faction_lantaishuyuan` 及新功法/篇章/desc 共 61 条 key ✅。
+   - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 仍失败：GongFa 缺 16（含新增 5 篇）、Spells 缺 28、Skills 缺 13；Unity `.asset` 有效覆盖尚未收口。
+   - A9/A10/A6 相关条目 CSV/Language 部分已完成；Unity asset 补齐（`天章/导入全部配置`）后需复审解锁「⚠️ 已修改/未审核」标记。
 2. `docs/角色养成/术法设计规范.txt` 未清洁：
    - 第 26 行仍有 `` `n `` 转义残留。
    - 第 28 行仍有 `本命升格\ —\` 反斜杠残留。
