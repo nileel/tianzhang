@@ -104,6 +104,8 @@ desc_enemy_fengsun,风系妖兽，迅捷灵动擅长闪避，以翎羽为刃伤�
 faction_yuqingya,玉清崖
 faction_hunyuanshan,混元山
 faction_taixuguan,太虚观
+faction_guxiu,古修
+faction_lantaishuyuan,兰台书院
 # === 新增元素 ===
 element_thunder,雷
 element_dark,暗
@@ -347,6 +349,11 @@ desc_xialan_wanjuan,见素抱朴经·遐览篇 效果描述
 chapter_quhuopian,祛惑篇
 desc_quhuo_bianzhen,见素抱朴经·祛惑篇 效果描述
 gongfa_tongshensanxuanlilu,通神三玄礼录
+gongfa_jiujiangshuifulu,九江水府箓
+gongfa_sandongfajilu,三洞法籍录
+gongfa_taiyiyugedian,太一玉格典
+gongfa_wanfadulujing,万法都箓经
+gongfa_zhengyimengweilu,正一盟威箓
 chapter_zhouli,周礼篇
 desc_zhouli_liuguan,通神三玄礼录·周礼篇 效果描述
 chapter_yili,仪礼篇
@@ -354,7 +361,47 @@ desc_yili_sanjia,通神三玄礼录·仪礼篇 效果描述
 chapter_liji,礼记篇
 desc_liji_liyun,通神三玄礼录·礼记篇 效果描述
 chapter_tongshen,通神篇
+chapter_shuifu,水府篇
+chapter_qiju,棋局篇
+chapter_lingzhou,灵舟篇
+chapter_shuicao,水曹篇
+chapter_xuanjiang,玄江篇
+chapter_dongshen,洞神篇
+chapter_dongxuan,洞玄篇
+chapter_dongzhen,洞真篇
+chapter_duji,都籍篇
+chapter_lige,立格篇
+chapter_mingling,明令篇
+chapter_zhengfa,正法篇
+chapter_yuge,玉格篇
+chapter_dulu,都箓篇
+chapter_shefa,摄法篇
+chapter_zhengtong,正统篇
+chapter_wanxiang,万象篇
+chapter_mengwei,盟威篇
+chapter_xueshi,血誓篇
+chapter_dugong,都功篇
 desc_tongshen_sanxuanheyi,通神三玄礼录·通神篇 效果描述
+desc_shuifu_jiujiang,九江水府箓·水府篇 效果描述
+desc_qiju_feishui,九江水府箓·棋局篇 效果描述
+desc_lingzhou_jiujiang,九江水府箓·灵舟篇 效果描述
+desc_shuicao_duling,九江水府箓·水曹篇 效果描述
+desc_xuanjiang_fayu,九江水府箓·玄江篇 效果描述
+desc_dongshen_sandong,三洞法籍录·洞神篇 效果描述
+desc_dongxuan_jielu,三洞法籍录·洞玄篇 效果描述
+desc_dongzhen_jiaoji,三洞法籍录·洞真篇 效果描述
+desc_duji_zongjiao,三洞法籍录·都籍篇 效果描述
+desc_lige_yuge,太一玉格典·立格篇 效果描述
+desc_mingling_yuge,太一玉格典·明令篇 效果描述
+desc_zhengfa_yuge,太一玉格典·正法篇 效果描述
+desc_yuge_tiancao,太一玉格典·玉格篇 效果描述
+desc_dulu_wanfa,万法都箓经·都箓篇 效果描述
+desc_shefa_guizong,万法都箓经·摄法篇 效果描述
+desc_zhengtong_chifa,万法都箓经·正统篇 效果描述
+desc_wanxiang_xuanmen,万法都箓经·万象篇 效果描述
+desc_mengwei_zhenlu,正一盟威箓·盟威篇 效果描述
+desc_xueshi_xuemeng,正一盟威箓·血誓篇 效果描述
+desc_dugong_zhengyi,正一盟威箓·都功篇 效果描述
 spell_wanjunyinxian,万军引弦
 spell_wanliuguizong,万流归宗
 spell_buhuaijinshen,不坏金身
