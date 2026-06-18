@@ -1,5 +1,6 @@
 # 未通过审核清单（✅ 已审核）
 
+> 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 部分通过。旧 #3 Language 重复 key、旧 #4 管理状态校准、旧 #5 未审核状态保留已复核通过；数据链路剩余问题合并为当前 #1。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：从 `开发管理/审核规则.txt` 拆出为动态清单，内容沿用原未通过项；清单内条目仍需逐项修复。依据：40d5887、26e8210。
 
 ## 用途
@@ -8,21 +9,15 @@
 
 ## 当前未通过项
 
-1. `开发管理/docs-csv-asset-alignment.txt` 口径错误：
-   - 实际 docs/CSV 内容数量为功法 24、术法 75、神通 34；清单仍写术法 73、CSV 76、CSV 多 3 条无 doc。
-   - Unity 资产不应只统计 `src/Assets/DataConfig`，实际生成目标在 `src/Assets/Data/`；当前约为功法 14、术法 54、神通 23，不是 0。
-   - CSV→Unity `.asset` 仍缺功法 11、术法 28、神通 13；另有旧版/额外 asset 需判定保留或清理。
+1. 数据链路仍未完全闭合（TQ-003 567c3f2 复审部分通过）：
+   - `GongFa.csv` 仍为 24 条，docs 功法为 29 篇；太一道庭 5 篇（九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓）仍未入 CSV。
+   - 4 条功法 `affiliation` 仍与 docs 归属不符：`gongfa_nanhuachanyandian`、`gongfa_jiansubaopujing` 应为古修，`gongfa_kongwuborejing` 应为太虚观，`gongfa_taiyixuanyijian` 应为兰台书院。
+   - `Language.csv` 当前缺少 `faction_guxiu` 与 `faction_lantaishuyuan`；若直接修正 affiliation，Unity 导入器会把缺失 faction key 原样写入 asset。
+   - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 仍失败：GongFa 缺 11、Spells 缺 28、Skills 缺 13；Unity `.asset` 有效覆盖尚未收口。
+   - A9/A10/A6 相关条目需继续保留「⚠️ 已修改/未审核」，直到上述 CSV/Language/asset 缺口完成并复审。
 2. `docs/角色养成/术法设计规范.txt` 未清洁：
    - 第 26 行仍有 `` `n `` 转义残留。
    - 第 28 行仍有 `本命升格\ —\` 反斜杠残留。
-3. `src/Assets/DataConfig/Language.csv` 有重复 key：
-   - `desc_enemy_huangyesanxiu` 重复。
-   - `chapter_qiushui` 重复。
-4. `开发管理/设计-当前状态.txt` 统计与状态需校准：
-   - 养成体系规模仍写术法 73、太一道庭 24；应按当前文件与 CSV 口径校准为术法 75、太一道庭 26。
-   - “Unity `.asset` 仍为 0”“Language.csv 同步”“术法设计规范确认清洁”等说法与复核结果不一致。
-5. `开发管理/设计-下一步建议.txt` 与 `开发管理/开发-下一步建议.txt` 的未审核条目需保留未通过状态：
-   - A8 基础设定文本清洗、A9 docs→CSV→Unity asset 对齐清单、A10 管理文档状态校准、开发 A6 导入完整性检查，均需在上述问题修复并复核后再标 ✅。
 
 ## 后续复核建议
 

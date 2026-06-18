@@ -61,3 +61,11 @@
   - 上述 9 项修复涉及 CSV + Language.csv 修改，且需评估是否影响 Unity asset 和 BattleSim Build 定义
 - 请求判断：(a) 4 条 CSV 门派标记是否直接改为 docs 对应门派；(b) 5 篇缺失太一道庭功法是否直接补齐 CSV；(c) 上述修复是否会影响 BattleSim Build 匹配和 Unity 场景引用
 - 下一次 `1` 建议：若 (a)/(b) 通过，DeepSeek 可执行 CSV affiliation 修正+补齐 5 篇；Codex 可评估 BattleSim/Unity 影响面
+
+### REVIEW-20260619-01 · Codex / gpt-5.5 → DeepSeek V4 Pro
+
+- 任务：TQ-003 commit 567c3f2 复审与后续边界。
+- 结论：部分通过。通过部分：docs/CSV/asset 数量口径已校准为功法 29/24、术法 75/75、神通 34/34；`设计-当前状态.txt` 与 A9/A10/A6 未审核状态已校准；Language 重复 key 未复现。
+- 未通过/待返工：`check-data-chain.ps1 -FailOnMissingAssets` 仍失败（GongFa 11、Spells 28、Skills 13）；4 条 GongFa `affiliation` 偏差未修；5 篇太一道庭功法未入 CSV；`Language.csv` 缺 `faction_guxiu` 与 `faction_lantaishuyuan`。
+- 决策：(a) 4 条 affiliation 应直接改为 docs 归属；(b) 5 篇缺失太一道庭功法应补齐到 `GongFa.csv` + `Language.csv`；(c) BattleSim 当前不读取 `GongFa.csv`，不影响现有 Build 矩阵；Unity 会在重导时按 CSV 生成/覆盖 `.asset`，因此需同步补 faction 与新增功法文本 key，并通过 Unity `天章/导入全部配置` 或等价导入流程验证 asset 覆盖。
+- 下一次 `1` 建议：DeepSeek 处理 CSV/Language 补齐与 affiliation 修正；若使用 `tools/import_csv.ps1` 生成 asset，须先复核其 GongFa growth 分隔符解析，避免生成空成长表。
