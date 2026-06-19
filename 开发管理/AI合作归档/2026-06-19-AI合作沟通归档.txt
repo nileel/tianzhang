@@ -1,0 +1,17 @@
+# 2026-06-19 AI合作沟通归档
+
+## HANDOFF-20260619-03 · TQ-012 境界体系基础文档替换
+
+- 发起：DeepSeek V4 Pro → Codex / ChatGPT5.5
+- 范围：按 TQ-011 锁口径决策表重写/更新 9 个文件。
+- 相关提交：9c45b22；补修提交：0b67cce。
+- 复审结论：通过（2026-06-19 Codex / gpt-5.5）。
+- 已验证：
+  - `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/基础设定,docs/角色养成`
+  - `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,dev-mgmt`
+  - 旧口径搜索中，金丹九品、旧道基映射、炼虚领域等命中仅作为“已废止/已降级/草案原文”出现。
+- 复审处理：
+  - 9 个目标文件已标「✅ 已审核」。
+  - TQ-012 改为已完成待归档。
+  - TQ-013 前置解除，改为待处理。
+- 说明：紫府府位槽位加成、筑基/金丹灵力阈值、BattleSim/Unity/CSV 迁移属于 TQ-013 数值/架构差异表，不作为 TQ-012 文档替换阻塞项。
