@@ -2,6 +2,7 @@
 
 > 2026-06-19 Codex / gpt-5.5：TQ-012 境界体系基础文档替换已复审通过；长期事实更新为玩家主线到金丹、筑基五段/紫府包装、金丹丹籍三层表达，数据/模拟迁移进入 TQ-013。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-013 `开发管理/境界体系数据模拟迁移差异表.txt` 已审核；BattleSim build/run 基线通过。BattleSim、Unity 与 CSV 迁移实现尚未执行。
+> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 数据链路收口已审核；docs/CSV/asset 数量口径为功法 29/29/29、术法 75/75/75、神通 34/34/34，Missing 0，ExtraOrLegacy 0。
 > 2026-06-18 Codex / gpt-5.5 复审通过：Unity `DamageCalculator` 已审核为双线公式 + v5.10 五行内外圈运行时匹配支持；BattleSim 同源化与 CSV 独立属性字段仍列后续任务。
 > 来源：AGENTS.md §当前状态 | 最后更新：2026-06-17 (Unity CTB 战斗循环修复，✅ 已审核)
 > 维护说明：本文件只记录事实状态、验证快照和当前风险；短期任务放入 `开发管理/当前任务队列.txt`，长期建议放入对应下一步建议文件。详见 `开发管理/状态与建议维护规则.txt`。
@@ -83,8 +84,8 @@
 - ⚠️ `docs/基础设定/修行境界.txt`、`docs/基础设定/境界特性.txt` 文本污染已修复（?→−），状态：已修改/未审核 (2026-06-15)
 - ⚠️ `docs/基础设定/角色属性_先天.txt`、`docs/基础设定/战斗系统.txt` 换行残留已修复（`r`n→真实换行），状态：已修改/未审核 (2026-06-15)
 - ✅ TQ-012 9 个目标文档已复审通过：`修行境界.txt`、`境界特性.txt`、`术法槽位设计.txt`、功法/术法/神通三类规范与三类模板均已标「✅ 已审核」。太一道庭9、兰台书院1 的统计口径保留；后续数据化进入 TQ-013 或法箓映射任务。
-- ⚠️ docs/CSV/asset 对齐清单已建立（`开发管理/docs-csv-asset-alignment.txt`），docs 功法 29 篇与 CSV 29 条已对齐，术法 75/75、神通 34/34 对齐；Unity `.asset` 严格覆盖已机械闭合为功法 29/29、术法 75/75、神通 34/34，Missing 0，ExtraOrLegacy 0。本轮补齐新增 `.asset` 的 57 个 `.meta`，修正 `spell_tx_anshi` asset 字段与 `SceneBuilder` 旧路径；待复审。状态：⚠️ 已修改/未审核 (2026-06-19; TQ-003 机械验证通过，待复审)
-- ⚠️ CSV 补齐完成：功法+15、术法+28、神通+13，Language.csv 同步（当前有效 key 389；2026-06-16 已去重 desc_enemy_huangyesanxiu、chapter_qiushui；2026-06-19 补 faction_guxiu/faction_lantaishuyuan 与 5 篇太一功法文本 key，修正太一玉格典资质星级）。逆向补充 2 篇缺失术法文档（流火灵符/金光破岳），清除重复条目（spell_anshi）。状态：⚠️ 已修改/未审核 (2026-06-19; 待复审)
+- ✅ docs/CSV/asset 对齐清单已建立并复审通过（`开发管理/docs-csv-asset-alignment.txt`）：docs 功法 29 篇与 CSV 29 条已对齐，术法 75/75、神通 34/34 对齐；Unity `.asset` 严格覆盖已机械闭合为功法 29/29、术法 75/75、神通 34/34，Missing 0，ExtraOrLegacy 0。新增 `.asset` 的 57 个 `.meta`、`spell_tx_anshi` asset 字段与 `SceneBuilder` 旧路径均已校准。状态：✅ 已审核 (2026-06-19; TQ-003)
+- ✅ CSV 补齐完成并复审通过：功法+15、术法+28、神通+13，Language.csv 同步（当前有效 key 389；2026-06-16 已去重 desc_enemy_huangyesanxiu、chapter_qiushui；2026-06-19 补 faction_guxiu/faction_lantaishuyuan 与 5 篇太一功法文本 key，修正太一玉格典资质星级）。逆向补充 2 篇缺失术法文档（流火灵符/金光破岳），清除重复条目（spell_anshi）。状态：✅ 已审核 (2026-06-19; TQ-003)
 
 ## 功法特有机制接入状态（v5.9 全扫描）
 

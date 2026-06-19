@@ -15,3 +15,22 @@
   - TQ-012 改为已完成待归档。
   - TQ-013 前置解除，改为待处理。
 - 说明：紫府府位槽位加成、筑基/金丹灵力阈值、BattleSim/Unity/CSV 迁移属于 TQ-013 数值/架构差异表，不作为 TQ-012 文档替换阻塞项。
+
+## TQ-003 · 数据链路口径修复与 Unity asset 覆盖收口
+
+- 发起：DeepSeek V4 Pro → Codex / ChatGPT5.5；后续含 Codex / gpt-5.5 补修。
+- 范围：docs/CSV/Language/Unity asset 数量口径、4 条功法 affiliation、5 篇太一道庭功法、57 个缺失 `.asset` 与 `.meta`、`spell_tx_anshi` 字段、`SceneBuilder` 旧 asset 路径。
+- 相关提交：567c3f2、f7f6944、43d0a92；补修/复审目标提交：767f93d。
+- 复审结论：通过（2026-06-19 Codex / gpt-5.5）。
+- 已验证：
+  - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
+  - meta 配对检查：GongFa/Spells/Skills 的 `.asset` 与 `.asset.meta` 一一对应。
+  - 关键字段一致性检查：GongFa 29、Spells 75、Skills 34 的可机械比对字段与 CSV 一致。
+  - 旧路径扫描：无 `Spell_Jinguang` / `Spell_Huoling` / `Spell_Anshi` 旧式 asset 引用。
+  - `dotnet build src/Assembly-CSharp.csproj` 通过；仅 `SectSelectionManager` 两个既有过时 API warning。
+  - `git diff --check 767f93d^ 767f93d` 通过。
+- 复审处理：
+  - `未通过审核清单.txt` 当前项清零。
+  - `docs-csv-asset-alignment.txt` 标为已审核。
+  - `设计-当前状态.txt`、`设计-下一步建议.txt` A9/A10、`开发-下一步建议.txt` A6 与 `当前任务队列.txt` TQ-003 状态已同步。
+- 边界：本次未在 Unity Editor 中手动点击 `天章/导入全部配置`；结论基于当前 repo 内 CSV、YAML asset、meta 文件、静态扫描与 C# 编译。TQ-006 槽位冷却回归仍保留为单独待复审项。

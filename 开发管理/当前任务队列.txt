@@ -12,6 +12,7 @@
 > 2026-06-19 Codex / gpt-5.5：按用户确认的场景架构方案，新增 TQ-014 作为首个场景架构工程切片；完整拆分已排入 `开发管理/开发-下一步建议.txt` 3.2.7。
 > 2026-06-19 Codex / gpt-5.5：TQ-003 commit 43d0a92 复审发现新增 asset 缺 57 个 `.meta`、`spell_tx_anshi` asset 字段与 CSV 不一致、`SceneBuilder` 仍引用旧 asset 路径；本轮已补修并通过严格覆盖、meta、字段、旧路径、Unity C# build 验证。因本轮有 Codex 修改，状态仍为待复审。
 > 2026-06-19 Codex / gpt-5.5：TQ-006 复审发现 `Character.FromData` 回归检查漏 `c.` 前缀导致 `dotnet build src/Assembly-CSharp.csproj` 失败；本轮已补修并通过 build。因本轮有 Codex 修改，状态仍为待复审。
+> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 满足数据链路收口条件；严格覆盖、meta 配对、关键字段一致性、旧路径扫描与 Unity C# build 均通过。TQ-003 状态改为已完成待归档。
 > 2026-06-19 Codex / gpt-5.5 复审通过：按 `docs/基础设定/境界体系重构草案.txt` 第七节新增 TQ-011/TQ-012/TQ-013，作为境界体系重构后续锁口径、文档替换和数据/模拟迁移的短期切片。
 > 2026-06-18 Codex / gpt-5.5 复审通过：TQ-005 Unity `DamageCalculator` 运行时口径已审核并从队列移除；BattleSim 五行同源化与 CSV/asset 独立属性字段保留为 TQ-009/TQ-010。
 > 2026-06-18 Codex / gpt-5.5 复审通过：补充 `1` 自动推进选题规则：先确认身份；更高优先级任务若已执行完成但待复审，不阻塞继续选择下一条待处理任务。
@@ -33,7 +34,7 @@
 | TQ-011 | P0 | Codex / ChatGPT5.5 | 设计/架构 | 已完成待归档 | 当前最高优先：境界体系重构第一轮锁口径，含玩家主线、筑基/紫府包装、金丹丹籍、神通门槛、固定丹籍出口与元婴锚点倒推法 |
 | TQ-012 | P0 | DeepSeek V4 Pro | 文档重构 | 已完成待归档 | ✅ 已审核：境界体系基础文档替换已通过复审；9 个目标文件按 TQ-011 口径收口 |
 | TQ-013 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 已完成待归档 | ✅ 已审核：重构第三轮迁移差异表已通过复审；后续实现按 TQ-013A-D 拆分 |
-| TQ-003 | P1 | DeepSeek V4 Pro | 数据链路 | 待复审 | ⚠️ 已修改/未审核：DeepSeek 批量生成 57 缺失 asset 后，Codex 补齐 57 个 `.meta`、修正 `spell_tx_anshi` asset 字段、更新 `SceneBuilder` 旧路径；GongFa 29/29、Spells 75/75、Skills 34/34，0 missing 0 extra。待 Codex / ChatGPT5.5 复审。
+| TQ-003 | P1 | DeepSeek V4 Pro | 数据链路 | 已完成待归档 | ✅ 已审核：数据链路收口已通过复审；GongFa 29/29、Spells 75/75、Skills 34/34，0 missing 0 extra，新增 `.asset` 均有 `.meta`，`spell_tx_anshi` 字段与 `SceneBuilder` 旧路径已校准。 |
 | TQ-009 | P1 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待复审 | ⚠️ 已修改/未审核：`Character.FromData` 槽位冷却数组初始化顺序已修，Codex 补修回归检查实例前缀后 build 通过；待 Codex / ChatGPT5.5 复审 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待复审 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
@@ -47,7 +48,7 @@
 
 - 来源：`开发管理/未通过审核清单.txt` #1/#4/#5。
 - 当前优先级：P1。境界体系重构锁口径期间后置；若涉及重构文档替换所需的数据链路，再临时提升。
-- 当前结论：2026-06-19 Codex / gpt-5.5 对 43d0a92 复审时发现 asset `.meta`、字段一致性和旧路径问题并已补修；严格覆盖、meta、字段、旧路径和 Unity C# build 均通过。因本轮有 Codex 修改，仍待复审。
+- 当前结论：2026-06-19 Codex / gpt-5.5 对 767f93d 复审通过；严格覆盖、meta 配对、关键字段一致性、旧路径扫描、`git diff --check 767f93d^ 767f93d` 与 Unity C# build 均通过。TQ-003 已完成待归档。
 - 必读：`开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 对应条目、`开发管理/docs-csv-asset-alignment.txt`、`src/Assets/DataConfig/README.txt`。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；严格收口时追加 `-FailOnMissingAssets`；管理文本检查用 `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,dev-mgmt`
 - 完成条件：`GongFa.csv` 与 docs 功法 29/29 对齐、4 条 affiliation 改为 docs 归属、`Language.csv` 补 `faction_guxiu`/`faction_lantaishuyuan` 以及新增功法/篇章/描述 key（均已完成）；剩余 Unity `.asset` 有效覆盖收口或明确拆成单独任务，未通过清单剩余数据链路项进入待复审或移除。
