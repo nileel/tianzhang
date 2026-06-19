@@ -1,7 +1,8 @@
-# 未通过审核清单（✅ 已审核）
+# 未通过审核清单（⚠️ 已修改/未审核）
 
-> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 规范/模板补修项已通过复审并从清单移除；当前清单仅保留 TQ-003 Unity asset 覆盖缺口。
-> 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3 后，数据链路剩余问题收窄为 Unity asset 覆盖缺口。
+> 2026-06-19 Codex / gpt-5.5：复审 TQ-003 commit 43d0a92 时发现新增 asset 缺 57 个 `.meta`、`spell_tx_anshi` asset 字段与 CSV 不一致、`SceneBuilder` 仍引用旧 asset 路径；本轮已补修并通过严格覆盖、meta、字段、旧路径和 Unity C# build 验证。因本轮有 Codex 修改，当前项保留为待复审。
+> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 规范/模板补修项已通过复审并从清单移除；当时清单仅保留 TQ-003 Unity asset 覆盖缺口，现已进入本轮补修待复审状态。
+> 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3 后，当时数据链路剩余问题收窄为 Unity asset 覆盖缺口。
 > 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 部分通过。旧 #3 Language 重复 key、旧 #4 管理状态校准、旧 #5 未审核状态保留已复核通过；数据链路剩余问题合并为当前 #1。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：从 `开发管理/审核规则.txt` 拆出为动态清单，内容沿用原未通过项；清单内条目仍需逐项修复。依据：40d5887、26e8210。
 
@@ -9,16 +10,17 @@
 
 记录 2026-06-16 对既有未审核内容复核后的未通过项，方便后续逐项修复。处理并审核通过后，应按 `开发管理/审核规则.txt` 的“审核记录归档”规则从本清单移除。
 
-## 当前未通过项
+## 当前未通过/待复审项
 
-1. 数据链路仍未完全闭合（TQ-003 567c3f2→f7f6944→本轮修正，CSV/Language 已收口但 asset 仍有缺口）：
+1. 数据链路已机械闭合但仍待复审（TQ-003 567c3f2→f7f6944→43d0a92→本轮 Codex 补修）：
    - `GongFa.csv` 已对齐为 29/29 ✅；太一道庭 5 篇已于 f7f6944 补齐；本轮机械核对修正 `gongfa_taiyiyugedian` 资质星级 2→3。
    - 4 条功法 `affiliation` 已于 f7f6944 修正 ✅：`nanhuachanyandian`/`jiansubaopujing`→古修，`kongwuborejing`→太虚观，`taiyixuanyijian`→兰台书院。
    - `Language.csv` 已于 f7f6944 补入 `faction_guxiu`、`faction_lantaishuyuan` 及新功法/篇章/desc key；当前有效 key 389，无重复 ✅。
-   - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 仍失败：GongFa 缺 16（含新增 5 篇）、Spells 缺 28、Skills 缺 13；Unity `.asset` 有效覆盖尚未收口。
-   - A9/A10/A6 相关条目 CSV/Language 部分已完成；Unity asset 补齐（`天章/导入全部配置`）后需复审解锁「⚠️ 已修改/未审核」标记。
+   - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 已通过：GongFa 29/29、Spells 75/75、Skills 34/34，Missing 0，ExtraOrLegacy 0。
+   - 本轮补修新增 57 个 `.asset.meta`，修正 `src/Assets/Data/Spells/Spell_spell_tx_anshi.asset` 的 `type`，并把 `SceneBuilder` demo/探索场景旧 asset 路径改为 ID 化路径。
+   - 因本轮补修由 Codex 执行，A9/A10/A6 与 TQ-003 仍保持「⚠️ 已修改/未审核」，待下一轮按 diff 与验证输出复审后再移除本项。
 
 ## 后续复核建议
 
-1. 修复 TQ-003 后重新运行 CSV 行数、docs 文件数、Language 重复 key、CSV→asset 覆盖率检查。
-2. 若涉及 Unity asset 生成，应通过 Unity `天章/导入全部配置` 或等价导入流程验证。
+1. 复审本轮 diff：57 个新增 `.meta`、`spell_tx_anshi` asset 字段、`SceneBuilder` 路径、`Character.FromData` 编译补修。
+2. 复跑 `tools/check-data-chain.ps1 -FailOnMissingAssets`、meta 完整性检查、字段一致性检查、旧路径扫描与 `dotnet build src/Assembly-CSharp.csproj`。

@@ -11,9 +11,9 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_tx_anshi
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   spellName: "\u6697\u8680"
-  type: 1
+  type: 2
   range: 0
   minRange: 1
   maxRange: 4

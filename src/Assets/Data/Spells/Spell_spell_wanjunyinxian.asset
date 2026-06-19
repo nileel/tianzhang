@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_wanjunyinxian
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   spellName: "\u4E07\u519B\u5F15\u5F26"
   type: 1
   range: 2

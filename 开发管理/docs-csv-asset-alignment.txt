@@ -1,22 +1,23 @@
-⚠️ 已修改/未审核 — 2026-06-19 复审修订：CSV/Language 已对齐 docs 功法 29/29；本轮修正 `太一玉格典` 资质星级 2→3；Unity asset 覆盖缺口仍未闭合（修改方: Codex / gpt-5.5；待复审）
-修正①：asset 缺口改用有效 .asset 数计算；当前严格覆盖缺口为功法缺16/术法缺28/神通缺13，增加额外/旧版计数
+⚠️ 已修改/未审核 — 2026-06-19 复审补修：CSV/Language 已对齐 docs 功法 29/29；Unity asset 严格覆盖已机械闭合为 0 missing / 0 extra；本轮补齐 57 个 `.meta`、修正 `spell_tx_anshi` asset 字段与 `SceneBuilder` 旧路径（修改方: Codex / gpt-5.5；待复审）
+修正①（历史）：asset 缺口改用有效 .asset 数计算；当时严格覆盖缺口为功法缺16/术法缺28/神通缺13，增加额外/旧版计数
 修正②：docs 功法数从 24 更正为 29；门派覆盖度按 docs 实际归属校准，标注 CSV 缺失与门派标记偏差
-修正③：TQ-003 返工后功法 CSV 29/29、Language 389 key；严格 asset 检查仍缺 GongFa 16、Spells 28、Skills 13
+修正③（历史）：TQ-003 f7f6944 返工后功法 CSV 29/29、Language 389 key；当时严格 asset 检查仍缺 GongFa 16、Spells 28、Skills 13
+修正④：TQ-003 43d0a92 + 本轮 Codex 补修后，GongFa/Spells/Skills asset 覆盖均为 0 missing / 0 extra，新增 `.asset` 均已有 `.meta`
 
 # docs → CSV → Unity Asset 对齐清单
 
-> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 修订: 2026-06-17 (按 check-data-chain.ps1 校准 asset 缺口；修改方: DeepSeek V4 Pro) | 二次修订: 2026-06-17 (docs 计数与门派表口径校准；修改方: DeepSeek V4 Pro) | 复审修订: 2026-06-19 (Codex / gpt-5.5 校准 CSV/Language 当前事实) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
+> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 修订: 2026-06-17 (按 check-data-chain.ps1 校准 asset 缺口；修改方: DeepSeek V4 Pro) | 二次修订: 2026-06-17 (docs 计数与门派表口径校准；修改方: DeepSeek V4 Pro) | 复审修订: 2026-06-19 (Codex / gpt-5.5 校准 CSV/Language 当前事实) | 覆盖补修: 2026-06-19 (Codex / gpt-5.5 补齐 meta 与字段/路径问题，待复审) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
 
 ## 数量总览
 
 | 类别 | docs (.txt) | CSV (.csv) | Unity .asset (总数/有效) | 额外/旧版 | CSV→asset 缺失 |
 |------|------------|------------|--------------------------|-----------|----------------|
-| 功法 | 29 | 29 | 14 / 13 | 1 | 16 |
-| 术法 | 75 | 75 | 54 / 47 | 7 | 28 |
-| 神通 | 34 | 34 | 23 / 21 | 2 | 13 |
+| 功法 | 29 | 29 | 29 / 29 | 0 | 0 |
+| 术法 | 75 | 75 | 75 / 75 | 0 | 0 |
+| 神通 | 34 | 34 | 34 / 34 | 0 | 0 |
 
 > **注**: 2026-06-15 补齐 CSV 后功法 24/24、术法 75/75、神通 34/34 与当时 docs 对齐；此后 docs 新增 5 篇功法。TQ-003 返工已补齐 5 篇太一道庭功法并修正 4 条 affiliation；本轮复审修正 `太一玉格典` 资质星级后，当前功法 CSV 为 29/29。
-> Unity `.asset` 已部分生成（功法 14 条中有效 13 条、术法 54 条中有效 47 条、神通 23 条中有效 21 条；额外/旧版 asset 待判定保留或清理）。Language.csv 重复 key 已于 2026-06-16 修复（移除 `desc_enemy_huangyesanxiu`、`chapter_qiushui` 各一条重复）。
+> Unity `.asset` 严格覆盖已机械闭合：功法 29/29、术法 75/75、神通 34/34，额外/旧版 0；本轮新增 `.asset` 已补齐 `.meta`。Language.csv 重复 key 已于 2026-06-16 修复（移除 `desc_enemy_huangyesanxiu`、`chapter_qiushui` 各一条重复）。当前状态仍待复审。
 
 ## 功法缺口 — 已补齐 ✅ (CSV / Language 端)
 
@@ -30,13 +31,13 @@
 
 全部 13 项已于 2026-06-15 补齐至 Skills.csv + Language.csv。
 
-## CSV → Unity .asset 缺口（当前未补齐）
+## CSV → Unity .asset 覆盖（当前已机械闭合，待复审）
 
 | 类别 | docs | CSV | .asset (总数/有效) | 缺失 | 额外/旧版 | 备注 |
 |------|------|-----|-------------------|------|-----------|------|
-| 功法 | 29 | 29 | 14 / 13 | 16 | 1 | CSV 已补齐 29/29；新增 5 篇尚未生成有效 GongFa asset，既有有效 asset 仍为 13 |
-| 术法 | 75 | 75 | 54 / 47 | 28 | 7 | 部分旧版 asset（无 spell_ 前缀）需判定保留或清理 |
-| 神通 | 34 | 34 | 23 / 21 | 13 | 2 | 有旧版/额外 asset（如 Jiuzhuanhuandan.asset / Zhengqisuozhi.asset 与 skill_ 前缀版共存） |
+| 功法 | 29 | 29 | 29 / 29 | 0 | 0 | 新增 16 个功法 asset 均已有 `.meta` |
+| 术法 | 75 | 75 | 75 / 75 | 0 | 0 | 旧版/额外 asset 已清理；新增 28 个术法 asset 均已有 `.meta` |
+| 神通 | 34 | 34 | 34 / 34 | 0 | 0 | 旧版/额外 asset 已清理；新增 13 个神通 asset 均已有 `.meta` |
 
 ## CSV 按门派覆盖度
 
@@ -75,6 +76,6 @@
 4. ✅ **CSV 门派标记修正**：4 条功法 affiliation 字段偏差已修正（`nanhuachanyandian`/`jiansubaopujing`→古修, `kongwuborejing`→太虚观, `taiyixuanyijian`→兰台书院）
 5. ✅ **补齐缺失 5 篇功法至 CSV**：太一道庭 5 篇（九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓）已写入 GongFa.csv + Language.csv
 6. 🔲 **修复 `leicnicuiti` ID typo** → `leichicuiti` 并同步更新 Language.csv、代码引用
-7. 🔲 **ScriptableObject 批量补齐**：CSV 齐备后运行 DataConfigImporter 补全功法+术法+神通 `.asset`
-8. 🔲 **旧版 asset 清理**：Data/ 下无 spell_/skill_ 前缀的旧版 asset 需判定保留或删除（如 Anshenfu.asset、Xuanshuizhou.asset、Jiuzhuanhuandan.asset 等）
+7. ⚠️ **ScriptableObject 批量补齐**：TQ-003 43d0a92 已补齐功法+术法+神通 `.asset`；本轮 Codex 补齐 `.meta` 与字段/路径问题，待复审
+8. ⚠️ **旧版 asset 清理**：Data/ 下无 spell_/skill_ 前缀的旧版 asset 已清理至 ExtraOrLegacy 0；`SceneBuilder` 旧路径已改为 ID 化路径，待复审
 9. 🔲 **自动化检查**：后续在 Editor 菜单新增「检查数据链路」一键输出 docs/CSV/asset 差异

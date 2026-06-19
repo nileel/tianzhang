@@ -138,8 +138,8 @@ namespace TianZhang.Entity
             c.AvailableSkills = data.availableSkills ?? new string[0];
             c.CombatSwapsUsed = 0;
             // 回归检查：冷却数组尺寸不应小于槽位上限
-            if (SpellCooldowns.Length < MaxSpellSlots || SkillCooldowns.Length < MaxSkillSlots)
-                Debug.LogError($"Character.FromData [{Name}]: 冷却数组尺寸不足 SpellCooldowns={SpellCooldowns.Length}/{MaxSpellSlots} SkillCooldowns={SkillCooldowns.Length}/{MaxSkillSlots}");
+            if (c.SpellCooldowns.Length < c.MaxSpellSlots || c.SkillCooldowns.Length < c.MaxSkillSlots)
+                Debug.LogError($"Character.FromData [{c.Name}]: 冷却数组尺寸不足 SpellCooldowns={c.SpellCooldowns.Length}/{c.MaxSpellSlots} SkillCooldowns={c.SkillCooldowns.Length}/{c.MaxSkillSlots}");
 
             return c;
         }

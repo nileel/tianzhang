@@ -37,17 +37,17 @@ namespace TianZhang.Editor
             var s1 = ScriptableObject.CreateInstance<SpellData>();
             s1.spellName = "金光破岳"; s1.type = SpellType.Physical; s1.range = SpellRange.Melee;
             s1.minRange = 1; s1.maxRange = 1; s1.mpCost = 15; s1.cooldownTicks = 30; s1.damageMultiplier = 1.6f;
-            AssetDatabase.CreateAsset(s1, $"{DataPath}/Spells/Spell_Jinguang.asset");
+            AssetDatabase.CreateAsset(s1, $"{DataPath}/Spells/Spell_spell_jinguangpoyue.asset");
 
             var s2 = ScriptableObject.CreateInstance<SpellData>();
             s2.spellName = "流火灵符"; s2.type = SpellType.Magic; s2.range = SpellRange.Ranged;
             s2.minRange = 1; s2.maxRange = 3; s2.mpCost = 20; s2.cooldownTicks = 35; s2.damageMultiplier = 1.5f;
-            AssetDatabase.CreateAsset(s2, $"{DataPath}/Spells/Spell_Huoling.asset");
+            AssetDatabase.CreateAsset(s2, $"{DataPath}/Spells/Spell_spell_liuhuolingfu.asset");
 
             var s3 = ScriptableObject.CreateInstance<SpellData>();
             s3.spellName = "暗蚀"; s3.type = SpellType.Magic; s3.range = SpellRange.Melee;
             s3.minRange = 1; s3.maxRange = 1; s3.mpCost = 15; s3.cooldownTicks = 30; s3.damageMultiplier = 1.4f;
-            AssetDatabase.CreateAsset(s3, $"{DataPath}/Spells/Spell_Anshi.asset");
+            AssetDatabase.CreateAsset(s3, $"{DataPath}/Spells/Spell_spell_tx_anshi.asset");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -180,8 +180,8 @@ namespace TianZhang.Editor
             explCtrl.obstaclePercent = 15;
             explCtrl.enemyCount = 4;
             explCtrl.playerSpells = new[] {
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Jinguang.asset"),
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_Huoling.asset"),
+                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_spell_jinguangpoyue.asset"),
+                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_spell_liuhuolingfu.asset"),
             };
 
             // UI Manager（Canvas 由 BattleUIManager.Awake 自动创建）

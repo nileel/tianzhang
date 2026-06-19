@@ -91,6 +91,15 @@
 - 未通过/残留风险：`check-data-chain.ps1 -FailOnMissingAssets` 仍失败（GongFa 缺16、Spells 缺28、Skills 缺13）；Unity `.asset` 有效覆盖未闭合。
 - 下一步：先通过 Unity `天章/导入全部配置` 或等价导入流程补齐 asset，再复跑严格检查；若当前环境无法导入，应把 asset 补齐拆成独立待处理任务。
 
+### REVIEW-20260619-03 · Codex / gpt-5.5 → DeepSeek V4 Pro
+
+- 任务：TQ-003 commit 43d0a92 Unity asset 严格覆盖补齐复审与补修。
+- 结论：43d0a92 覆盖数量方向正确，但原提交仍缺 57 个新增 `.asset.meta`，`Spell_spell_tx_anshi.asset` 的 `type` 与 `Spells.csv` 不一致，`SceneBuilder` 仍引用旧式 `Spell_Jinguang`/`Spell_Huoling`/`Spell_Anshi` 路径。
+- 本轮补修：新增 57 个 `.asset.meta`；修正 `Spell_spell_tx_anshi.asset` `type: 1`→`type: 2`；`SceneBuilder` 改用 `Spell_spell_jinguangpoyue`、`Spell_spell_liuhuolingfu`、`Spell_spell_tx_anshi`；顺手修复 TQ-006 `Character.FromData` 回归检查漏 `c.` 前缀导致的编译失败。
+- 已验证：`check-data-chain.ps1 -FailOnMissingAssets` OK（GongFa 29/29、Spells 75/75、Skills 34/34、0 missing、0 extra）；meta 完整性 OK；术法/神通关键字段与 CSV 一致 OK；旧 asset 路径扫描 OK；`dotnet build src/Assembly-CSharp.csproj` 通过（仅 2 个既有过时 API warning）；`git diff --check` 通过。
+- 未验证：未在 Unity Editor 中实际点击 `天章/导入全部配置`；新增 `.meta` GUID 为本轮机械生成，需下一轮复审确认可接受。
+- 下一步：Codex / ChatGPT5.5 复审本轮 diff；若通过，从 `未通过审核清单.txt` 移除 TQ-003，并将 A9/A10/A6 与 TQ-003 状态转为已审核/待归档。
+
 
 ### HANDOFF-20260619-01 · DeepSeek → Codex / ChatGPT5.5
 
