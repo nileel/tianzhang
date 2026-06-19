@@ -8,6 +8,7 @@
 > 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 结论为部分通过；docs/CSV/asset 数量口径、`设计-当前状态.txt` 与 A9/A10/A6 未审核状态已校准，但 `GongFa.csv` 仍为 24/29、4 条 affiliation 偏差未修、`faction_guxiu`/`faction_lantaishuyuan` 语言 key 缺失，且 `check-data-chain.ps1 -FailOnMissingAssets` 仍因 Unity asset 缺口失败。
 > 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮补修 `gongfa_taiyiyugedian` 资质星级 2→3 后，GongFa 29/29、Spells 75/75、Skills 34/34 与 Language 389 key 通过普通检查；严格 asset 覆盖仍失败（GongFa 缺16、Spells 缺28、Skills 缺13）。
 > 2026-06-19 Codex / gpt-5.5：TQ-013 已产出 `开发管理/境界体系数据模拟迁移差异表.txt`；BattleSim build/run 基线通过，状态改为待复审。后续代码/数据改动按 TQ-013A-D 拆分。
+> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-013 commit 06ced05 满足迁移差异表完成条件；`开发管理/境界体系数据模拟迁移差异表.txt` 标为已审核，后续实现按 TQ-013A-D 拆分。
 > 2026-06-19 Codex / gpt-5.5 复审通过：按 `docs/基础设定/境界体系重构草案.txt` 第七节新增 TQ-011/TQ-012/TQ-013，作为境界体系重构后续锁口径、文档替换和数据/模拟迁移的短期切片。
 > 2026-06-18 Codex / gpt-5.5 复审通过：TQ-005 Unity `DamageCalculator` 运行时口径已审核并从队列移除；BattleSim 五行同源化与 CSV/asset 独立属性字段保留为 TQ-009/TQ-010。
 > 2026-06-18 Codex / gpt-5.5 复审通过：补充 `1` 自动推进选题规则：先确认身份；更高优先级任务若已执行完成但待复审，不阻塞继续选择下一条待处理任务。
@@ -28,7 +29,7 @@
 |----|--------|------|------|------|------|
 | TQ-011 | P0 | Codex / ChatGPT5.5 | 设计/架构 | 已完成待归档 | 当前最高优先：境界体系重构第一轮锁口径，含玩家主线、筑基/紫府包装、金丹丹籍、神通门槛、固定丹籍出口与元婴锚点倒推法 |
 | TQ-012 | P0 | DeepSeek V4 Pro | 文档重构 | 已完成待归档 | ✅ 已审核：境界体系基础文档替换已通过复审；9 个目标文件按 TQ-011 口径收口 |
-| TQ-013 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待复审 | ⚠️ 已修改/未审核：重构第三轮迁移差异表已产出，覆盖 BattleSim、Unity CultivationEngine、CSV realmReq 与筑基/金丹压制测试 |
+| TQ-013 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 已完成待归档 | ✅ 已审核：重构第三轮迁移差异表已通过复审；后续实现按 TQ-013A-D 拆分 |
 | TQ-003 | P1 | DeepSeek V4 Pro | 数据链路 | 待复审 | ⚠️ 已修改/未审核：2026-06-19 DeepSeek V4 Pro 批量生成 57 缺失 asset + 清理 10 遗留资产；GongFa 29/29、Spells 75/75、Skills 34/34，0 missing 0 extra。待 Codex / ChatGPT5.5 复审。
 | TQ-009 | P1 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待复审 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
@@ -103,8 +104,8 @@
 ### TQ-013 · 境界体系数据/模拟迁移差异表
 
 - 来源：`docs/基础设定/境界体系重构草案.txt` 第七节第三轮；前置：TQ-012。
-- 当前优先级：P0，待复审。已产出 `开发管理/境界体系数据模拟迁移差异表.txt`，本轮未直接修改 BattleSim、Unity 或 CSV。
+- 当前优先级：P0，已完成待归档。`开发管理/境界体系数据模拟迁移差异表.txt` 已于 2026-06-19 复审通过；本任务未直接修改 BattleSim、Unity 或 CSV。
 - 必读：TQ-011/TQ-012 输出、`simulations/BattleSim/Program.cs`、BattleSim `GameData`/修炼/战斗相关代码、Unity `CultivationEngine`、`src/Assets/DataConfig/*.csv`、`DataConfigImporter.cs`、`开发管理/开发-技术经验.txt`。
 - 验证命令：`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；涉及 CSV/asset 时追加 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
-- 完成条件：列出 BattleSim 境界表/里程碑、Unity CultivationEngine、CSV `realmReq`、功法篇章、术法/神通高阶内容、筑基/紫府同境矩阵与“筑基 vs 金丹压制战”测试的迁移差异；为每项明确“直接改代码 / 先建兼容层 / 仅标 NPC 或资料片 / 拆给 DeepSeek 数据整理”的后续任务。（已完成，待复审）
+- 完成条件：列出 BattleSim 境界表/里程碑、Unity CultivationEngine、CSV `realmReq`、功法篇章、术法/神通高阶内容、筑基/紫府同境矩阵与“筑基 vs 金丹压制战”测试的迁移差异；为每项明确“直接改代码 / 先建兼容层 / 仅标 NPC 或资料片 / 拆给 DeepSeek 数据整理”的后续任务。（已完成并通过复审）
 
