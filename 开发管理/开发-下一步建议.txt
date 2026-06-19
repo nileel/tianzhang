@@ -1,4 +1,4 @@
-# 开发下一步建议（⚠️ 已修改/未审核）
+﻿# 开发下一步建议（⚠️ 已修改/未审核）
 
 > 2026-06-19 Codex / gpt-5.5：按用户要求提高境界体系重构相关工程优先级；3.2.6 境界体系重构工程迁移提升为当前最高优先后续工程线，等待 TQ-011 锁口径后优先推进。
 > 2026-06-19 Codex / gpt-5.5 复审通过：按 `docs/基础设定/境界体系重构草案.txt` 增加 3.2.6 境界体系重构工程迁移计划。
@@ -163,6 +163,53 @@ B3. **重构后数值验证切片（P1）**
     - 新增筑基挑战金丹压制场景：默认不可正面对抗，但能通过削位、破府、封丹、阵法或剧情条件制造战术出口。
     - 金丹优势优先体现行动规则、本命神通、丹域和低阶术法压制，不只做 HP/攻击倍率堆高。
     - 验证结论回写 `设计-当前状态.txt` 或继续拆成当前任务队列卡片。
+
+### 3.2.7 场景架构与 2.5D 战棋表现（已排入 TQ-014）
+
+说明：本线来自 `docs/superpowers/specs/2026-06-19-scene-architecture-design.md`。当前决策为：主世界先做节点式；城市/宗门共用通用场景；副本与普通战斗同场景；战斗规则保持 2D 六角格模型，渲染层先复用 Tilemap，后续用 2.5D 原型验证表现上限。
+
+当前执行顺序：
+
+1. TQ-014 先产出可执行实施计划，锁定文件边界、验证命令和最小代码切片。
+2. 计划通过后，再按下列 S1-S7 逐步拆入 `当前任务队列.txt`，避免一次性塞满近期队列。
+
+S1. **TacticalGridModel 与渲染接口兼容层（P1）**
+    - 新增 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`。
+    - 当前 `HexTilemapManager` 的坐标转换、格子占用、障碍和高亮逻辑逐步迁入或包装到渲染接口。
+    - 规则层只认 `HexCoord`、`heightLevel` 和通行标签，不读取 Unity Transform 作为规则来源。
+    - 验证：Unity 编译；现有探索地图的移动、高亮、障碍判断表现不变。
+
+S2. **GameSession 与 SceneFlowManager（P1）**
+    - 新增跨场景 `GameSession`，保存玩家数据、当前节点、返回点、遭遇上下文。
+    - 新增 `SceneFlowManager`，统一处理 StartMenu/World/Settlement/Adventure/可选 CombatScene 的加载和返回。
+    - 验证：连续切换场景不会重复创建 `GameSession` 或 `UICanvas`。
+
+S3. **StartMenuScene 与门派选择迁移（P1）**
+    - 新建 `StartMenuScene`，把 `SectSelectionManager` 从探索场景迁出。
+    - 选择结果写入 `GameSession.PlayerProfile`，`AdventureScene` 创建玩家时直接读取会话数据。
+    - 验证：新游戏选择门派后进入主世界或测试副本，玩家属性和术法池正确。
+
+S4. **WorldScene 节点式主世界原型（P1）**
+    - 新建 `WorldScene`，先用 4 个区域节点：江左天域、关陇玄域、陇西雷域、中州天域。
+    - 节点点击进入 `SettlementScene` 或 `AdventureScene`，并记录 `CurrentWorldNodeId`。
+    - 验证：进入/返回后仍停留在正确节点。
+
+S5. **SettlementScene 通用城市/宗门原型（P1）**
+    - 新建 `SettlementScene`，用 `SettlementDefinition` 区分城池、宗门、洞府、坊市。
+    - 第一版只做功能入口，不做复杂室内地图。
+    - 验证：宗门/城市两类配置可复用同一场景并返回主世界。
+
+S6. **AdventureScene 与 TacticalCombatController 拆分（P1）**
+    - 将当前 `ExplorationScene` 定位为 `AdventureScene` 原型。
+    - 从 `ExplorationController` 拆出 `AdventureSceneController` 和 `TacticalCombatController`。
+    - 普通遭遇仍在同场景切换 Combat 状态，不加载独立战斗场景。
+    - 验证：探索→战斗→掉落→继续探索流程行为不变。
+
+S7. **2.5D 战棋表现原型（P2，S1-S6 后执行）**
+    - 选半径 5-7 的小型副本验证 `Hybrid2_5D`。
+    - 使用同一份 `TacticalGridModel` 生成 2.5D 地形，角色仍用 2D sprite/billboard。
+    - 验证飞行高度、障碍穿越、高低差、视线遮挡、点击拾取和技能范围显示。
+    - 完成条件：2.5D 原型不改变 CTB、寻路、射程、技能范围的规则结果。
 
 ### 3.3 完整游戏循环（远期）
 

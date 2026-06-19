@@ -1,4 +1,4 @@
-# 当前任务队列（⚠️ 已修改/未审核）
+﻿# 当前任务队列（⚠️ 已修改/未审核）
 
 > 2026-06-19 Codex / gpt-5.5：按用户要求提高境界体系重构相关工作优先级；TQ-011/TQ-012/TQ-013 调整为当前最高优先组，TQ-009/TQ-010 等非重构任务后置。
 > 2026-06-19 Codex / gpt-5.5：同步 TQ-011 增加“元婴锚点倒推法”锁口径要求；原已审核任务队列内容仍保留为历史依据。
@@ -9,6 +9,7 @@
 > 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮补修 `gongfa_taiyiyugedian` 资质星级 2→3 后，GongFa 29/29、Spells 75/75、Skills 34/34 与 Language 389 key 通过普通检查；严格 asset 覆盖仍失败（GongFa 缺16、Spells 缺28、Skills 缺13）。
 > 2026-06-19 Codex / gpt-5.5：TQ-013 已产出 `开发管理/境界体系数据模拟迁移差异表.txt`；BattleSim build/run 基线通过，状态改为待复审。后续代码/数据改动按 TQ-013A-D 拆分。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-013 commit 06ced05 满足迁移差异表完成条件；`开发管理/境界体系数据模拟迁移差异表.txt` 标为已审核，后续实现按 TQ-013A-D 拆分。
+> 2026-06-19 Codex / gpt-5.5：按用户确认的场景架构方案，新增 TQ-014 作为首个场景架构工程切片；完整拆分已排入 `开发管理/开发-下一步建议.txt` 3.2.7。
 > 2026-06-19 Codex / gpt-5.5 复审通过：按 `docs/基础设定/境界体系重构草案.txt` 第七节新增 TQ-011/TQ-012/TQ-013，作为境界体系重构后续锁口径、文档替换和数据/模拟迁移的短期切片。
 > 2026-06-18 Codex / gpt-5.5 复审通过：TQ-005 Unity `DamageCalculator` 运行时口径已审核并从队列移除；BattleSim 五行同源化与 CSV/asset 独立属性字段保留为 TQ-009/TQ-010。
 > 2026-06-18 Codex / gpt-5.5 复审通过：补充 `1` 自动推进选题规则：先确认身份；更高优先级任务若已执行完成但待复审，不阻塞继续选择下一条待处理任务。
@@ -36,6 +37,7 @@
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待复审 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
 | TQ-008 | P1 | Codex / ChatGPT5.5 | 数值评估 | 待处理 | `角色数值设计.txt` 与 BattleSim GameData 差异表，决定回写文档或调整代码 |
 | TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 待处理 | CSV/Unity asset 补独立术法/神通五行属性字段，不再用 `elementReq` 兼任技能属性 |
+| TQ-014 | P1 | Codex / ChatGPT5.5 | 架构/计划 | 待处理 | 场景架构与 2.5D 战棋表现实施计划：把已确认规格拆成可执行 Unity 工程切片，锁定首轮不强切 2.5D 的落地顺序 |
 
 ## 任务卡片
 
@@ -83,6 +85,14 @@
 - 必读：`docs/基础设定/灵根设定.txt` 第八节、术法/神通设计模板、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`DataConfigImporter.cs`。
 - 验证命令：导入完整性检查 + Unity 编译；必要时用 `rg "element_"` 核对 75 术法、34 神通覆盖。
 - 完成条件：术法/神通拥有独立五行属性列，学习门槛 `elementReq` 不再兼任技能属性；重导 `.asset` 后不丢失 12 属性与混沌/无属性语义。
+
+### TQ-014 · 场景架构与 2.5D 战棋表现实施计划
+
+- 来源：用户确认的场景架构方案；`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`；`开发管理/开发-下一步建议.txt` 3.2.7。
+- 当前优先级：P1。作为场景架构线首个切片，默认不抢占 TQ-009/TQ-010 等稳定化任务；若用户明确要求推进场景架构，则优先执行本任务。
+- 必读：`开发管理/开发-技术经验.txt`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、Unity `SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
+- 验证命令：计划文档自检 `rg -n "TBD|TODO|待定|placeholder|占位" docs/superpowers/plans`；涉及代码路径判断时追加 `dotnet build src/Assembly-CSharp.csproj`。
+- 完成条件：输出可执行实施计划，明确 `GameSession/SceneFlowManager`、`TacticalGridModel/ITacticalRenderer`、StartMenu/World/Settlement/Adventure 四类场景、`TacticalCombatController` 拆分、2.5D 原型验证的任务顺序、文件边界和验证命令；后续代码切片按计划拆入队列。
 
 ### TQ-011 · 境界体系重构锁口径
 
