@@ -23,11 +23,13 @@ class Character
     // v4.1: 术法与神通
     public string ArtName = "";          // 术法名称
     public string ArtType = "";          // "物理" or "神魂"
+    public string ArtElement = "";       // 术法五行属性
     public double ArtMult = 1.0;         // 术法倍率
     public int ArtMPCost = 0;            // 术法灵力消耗
     public int ArtCooldown = 3;          // 术法冷却回合数
     public string DivineName = "";       // 神通名称
     public string DivineType = "";       // "物理" or "神魂"
+    public string DivineElement = "";    // 神通五行属性
     public double DivineMult = 1.0;      // 神通倍率
     public double DivineDefPen = 0;      // 神通防御穿透%
     public int DivineCooldown = 5;       // 神通冷却回合数
@@ -156,11 +158,11 @@ class Character
     public void AssignArts()
     {
         var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "taixu_xuangan" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, "yuqing_kuxing" => GameData.YuqingArt, "yuqing_leijie" => GameData.YuqingLeijieArt, _ => GameData.MagicArt };
-        ArtName = artCfg.Name; ArtType = artCfg.Type; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
+        ArtName = artCfg.Name; ArtType = artCfg.Type; ArtElement = artCfg.Element; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
         if (Realm == "金丹" && GCQuality != "")
         {
             var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
-            DivineName = divCfg.Name; DivineType = divCfg.Type; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
+            DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
         }
     }
 

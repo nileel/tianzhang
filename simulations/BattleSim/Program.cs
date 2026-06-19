@@ -8,8 +8,11 @@ class Program
 {
     record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, string GongFaName = "", Dictionary<string, double> Weights = null);
 
-    static void Main()
+    static int Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--self-test")
+            return BattleSimSelfTests.Run(args[1]);
+
         var sw = System.Diagnostics.Stopwatch.StartNew();
         const string TECH = "上品", SPIRIT = "中品";
         const int SEEDS = 20, SIM = 2000;
@@ -417,5 +420,6 @@ class Program
         Console.WriteLine($"  均衡先手: {wa:F0}%  纯战先手: {wb2:F0}%  均: {(wa+wb2)/2:F0}%");
         Console.WriteLine("  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）");
         Console.WriteLine("================================================================================");
+        return 0;
     }
 }

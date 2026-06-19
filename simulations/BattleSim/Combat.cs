@@ -16,7 +16,7 @@ static class Combat
     }
 
     // 格挡/魂盾/闪避/暴击 统一结算
-    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false, bool ignoreBlock = false)
+    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false, bool ignoreBlock = false, double critRateBonus = 0, double critDamageBonus = 0)
     {
         bool isPhysical = atkType == "物理";
         double blockRate = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡率" : "魂盾率", 0);
@@ -27,8 +27,8 @@ static class Combat
         }
         if (!ignoreDodge && Rng.NextDouble() * 100 < Math.Max(0, defender.Secondary.GetValueOrDefault("闪避率", 0) - attacker.Secondary.GetValueOrDefault("命中率", 0)))
             rawDmg = 0;
-        if (rawDmg > 0 && Rng.NextDouble() * 100 < attacker.Secondary.GetValueOrDefault("暴击率", 0))
-            rawDmg = (int)Math.Round(rawDmg * (1 + attacker.Secondary.GetValueOrDefault("暴击伤害", 0) / 100));
+        if (rawDmg > 0 && Rng.NextDouble() * 100 < attacker.Secondary.GetValueOrDefault("暴击率", 0) + critRateBonus)
+            rawDmg = (int)Math.Round(rawDmg * (1 + (attacker.Secondary.GetValueOrDefault("暴击伤害", 0) + critDamageBonus) / 100));
         return rawDmg;
     }
 
@@ -102,12 +102,12 @@ static class Combat
                     // 玄感: 回合开始 debuff清除
                     if (ca.Style == "taixu_xuangan" && stunnedA && Rng.NextDouble() < xuanganClearRate(ca.Realm)) { stunnedA = false; if (xuanganCanHeal(ca.Realm)) hpA = Math.Min(ca.Primary["HP"], hpA + (int)(ca.Primary["HP"] * 0.05)); xuantongA = xuanganXuantongDur(ca.Realm); }                    if (stunnedA) { stunnedA = false; ctA += sA; continue; }
                     // AI决策: 神通 > 术法 > 平A
-                    string atkType; double mult, defPen; int atk, def; double resist;
+                    string atkType, skillElement = ""; double mult, defPen; int atk, def; double resist;
                     bool waterSkillA = false;                    bool kuxingUsedA = false; int kuxingHpRecoverA = 0; bool kuxingIgnoreBlockA = false;
                     int artMPCostA = (ca.Style == "taiyi_fuxiu" && fudanA == maxFudan(ca.Realm)) ? 0 : (xuantongA > 0 ? (int)(ca.ArtMPCost * 0.70) : ca.ArtMPCost);
                     if (ca.DivineName != "" && divineCdA == 0)
                     {
-                        atkType = ca.DivineType; mult = ca.DivineMult; defPen = ca.DivineDefPen;
+                        atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen;
                         divineCdA = ca.DivineCooldown;
                         waterSkillA = ca.Style == "water_physical";
                         if (waterSkillA) { shishuiOnB = Math.Min(shishuiOnB + 1, maxShishui(ca.Realm)); chuanliuA = 1; }
@@ -124,7 +124,7 @@ static class Combat
                         kuxingDefReduceA = (int)(ca.Primary["肉防"] * 0.30);
                     }                    else if (mpA >= artMPCostA && artCdA == 0)
                     {
-                        atkType = ca.ArtType; mult = ca.ArtMult; defPen = 0;
+                        atkType = ca.ArtType; skillElement = ca.ArtElement; mult = ca.ArtMult; defPen = 0;
                         mpA -= artMPCostA; artCdA = ca.ArtCooldown;
                         waterSkillA = ca.Style == "water_physical";
 
@@ -160,10 +160,11 @@ static class Combat
                     if (cb.Style == "taiyi" && shouyiB == maxShouyi(cb.Realm) && atkType == "神魂") resist += 15;
                     // 天书篇: 符胆满层时无视30%魂防
                     if (ca.Style == "taiyi_fuxiu" && fudanMaxA && atkType == "神魂") defPen = 30;
-                    int dmg = Dmg(atk, def, resist, defPen, mult);
+                    var elementMatch = GameData.GetElementMatch(skillElement, ca.GongFaName, cb.GongFaName);
+                    int dmg = Dmg(atk, def, resist, defPen, mult * elementMatch.DamageMultiplier);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
-                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA, ignoreBlock: kuxingIgnoreBlockA);
+                    dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA, ignoreBlock: kuxingIgnoreBlockA, critRateBonus: elementMatch.CritRateBonus, critDamageBonus: elementMatch.CritDamageBonus);
                     // 川流之势: B若持有则减伤35%并消耗
                     if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
                     // 守一减伤: 受击消耗1层减伤20%
@@ -193,12 +194,12 @@ static class Combat
 
                     // 玄感: 回合开始 debuff清除
                     if (cb.Style == "taixu_xuangan" && stunnedB && Rng.NextDouble() < xuanganClearRate(cb.Realm)) { stunnedB = false; if (xuanganCanHeal(cb.Realm)) hpB = Math.Min(cb.Primary["HP"], hpB + (int)(cb.Primary["HP"] * 0.05)); xuantongB = xuanganXuantongDur(cb.Realm); }                    if (stunnedB) { stunnedB = false; ctB += sB; continue; }
-                    string atkType; double mult, defPen; int atk, def; double resist;
+                    string atkType, skillElement = ""; double mult, defPen; int atk, def; double resist;
                     bool waterSkillB = false;                    bool kuxingUsedB = false; int kuxingHpRecoverB = 0; bool kuxingIgnoreBlockB = false;
                     int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : (xuantongB > 0 ? (int)(cb.ArtMPCost * 0.70) : cb.ArtMPCost);
                     if (cb.DivineName != "" && divineCdB == 0)
                     {
-                        atkType = cb.DivineType; mult = cb.DivineMult; defPen = cb.DivineDefPen;
+                        atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen;
                         divineCdB = cb.DivineCooldown;
                         waterSkillB = cb.Style == "water_physical";
                         if (waterSkillB) { shishuiOnA = Math.Min(shishuiOnA + 1, maxShishui(cb.Realm)); chuanliuB = 1; }
@@ -215,7 +216,7 @@ static class Combat
                         kuxingDefReduceB = (int)(cb.Primary["肉防"] * 0.30);
                     }                    else if (mpB >= artMPCostB && artCdB == 0)
                     {
-                        atkType = cb.ArtType; mult = cb.ArtMult; defPen = 0;
+                        atkType = cb.ArtType; skillElement = cb.ArtElement; mult = cb.ArtMult; defPen = 0;
                         mpB -= artMPCostB; artCdB = cb.ArtCooldown;
                         waterSkillB = cb.Style == "water_physical";
 
@@ -247,10 +248,11 @@ static class Combat
                     if (ca.Style == "taiyi" && shouyiA == maxShouyi(ca.Realm) && atkType == "神魂") resist += 15;
                     // 天书篇: 符胆满层时无视30%魂防
                     if (cb.Style == "taiyi_fuxiu" && fudanMaxB && atkType == "神魂") defPen = 30;
-                    int dmg = Dmg(atk, def, resist, defPen, mult);
+                    var elementMatch = GameData.GetElementMatch(skillElement, cb.GongFaName, ca.GongFaName);
+                    int dmg = Dmg(atk, def, resist, defPen, mult * elementMatch.DamageMultiplier);
                     // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
                     dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
-                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB, ignoreBlock: kuxingIgnoreBlockB);
+                    dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB, ignoreBlock: kuxingIgnoreBlockB, critRateBonus: elementMatch.CritRateBonus, critDamageBonus: elementMatch.CritDamageBonus);
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
@@ -324,6 +326,7 @@ static class Combat
                 var ca = au.Char; var cb = du.Char;
                 bool useMagic = ca.Style is "magic" or "taiyi" or "taiyi_fuxiu" or "taixu" or "taixu_xuangan";
                 string atkType = useMagic ? "神魂" : "物理";
+                string skillElement = ca.ArtElement;
                 int atk = useMagic ? ca.Primary["神攻"] : ca.Primary["肉攻"];
                 int def = useMagic ? cb.Primary["神防"] : cb.Primary["肉防"];
                 double resist = useMagic ? cb.Secondary.GetValueOrDefault("魂抗率", 0) : cb.Secondary.GetValueOrDefault("物抗率", 0);
@@ -339,12 +342,9 @@ static class Combat
                 // 万钧 (混元同尘典)
                 if (ca.GongFaName == "混元同尘典" && ca.Realm is "元婴" or "化神")
                     for (int i = 0; i < 4; i++) if (i != actor && units[i].IsAlive && team[i] == team[actor] && (double)units[i].HP / units[i].Char.Primary["HP"] > 0.6) mult *= 1.25;
-                // 属性克制
-                string GElem(string n) => n switch { "含弘光大典" => "土", "白屋青云录" => "土", "混元同尘典" => "土", "绳墨正法录" => "土", "疾雷破山经" => "金", "九霄雷劫录" => "金", "雷池淬体功" => "金", "苦行剑典" => "金", _ => "" };
-                bool IsCtr(string ae, string de) => (ae, de) switch { ("土","水")=>true, ("水","火")=>true, ("火","金")=>true, ("金","土")=>true, _=>false };
-                if (ca.GongFaName == "含弘光大典" && ca.Realm is "元婴" or "化神") { string ea = GElem(ca.GongFaName), eb = GElem(cb.GongFaName); if (!string.IsNullOrEmpty(ea) && !string.IsNullOrEmpty(eb) && IsCtr(ea, eb)) mult *= ca.Realm == "化神" ? 1.30 : 1.15; }
-                int dmg = Dmg(atk, def, resist, 0, mult);
-                dmg = ApplyDefenses(dmg, ca, cb, atkType);
+                var elementMatch = GameData.GetElementMatch(skillElement, ca.GongFaName, cb.GongFaName);
+                int dmg = Dmg(atk, def, resist, 0, mult * elementMatch.DamageMultiplier);
+                dmg = ApplyDefenses(dmg, ca, cb, atkType, critRateBonus: elementMatch.CritRateBonus, critDamageBonus: elementMatch.CritDamageBonus);
                 // 守一减伤
                 if (cb.Style == "taiyi" && du.Shouyi > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); du.Shouyi--; }
                 if (cb.GongFaName == "万物不迁法" && du.Buqian > 0 && dmg > cb.Primary["HP"] * 0.30) { dmg /= 2; du.Buqian--; }

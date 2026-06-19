@@ -145,9 +145,10 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     }
 
     // 术法与神通配置
-    public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown);
-    public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown);
-    public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3);
+    public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown, string Element = "");
+    public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown, string Element = "");
+    public readonly record struct ElementMatch(double DamageMultiplier, double CritRateBonus, double CritDamageBonus);
+    public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3, "土");
 
     // ═══════════════════════════════════════
     // v5.1: 功法小境界成长表（来源：docs/角色养成/功法/）
@@ -245,19 +246,158 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         double sum = stars.Values.Sum();
         return stars.ToDictionary(kv => kv.Key, kv => Math.Round(kv.Value / sum, 2));
     }
-    public static readonly ArtConfig MagicArt = new("灵光闪", "神魂", 1.2, 20, 3);
-    public static readonly DivineConfig PhysicalDivine = new("碎岳", "物理", 1.5, 10, 5);
-    public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3);
-    public static readonly DivineConfig WaterDivine = new("逝水千击", "物理", 1.5, 10, 5);
-    public static readonly DivineConfig MagicDivine = new("灵光贯日", "神魂", 1.4, 10, 5);
-    public static readonly ArtConfig TaiyiArt = new("玄元正气诀", "神魂", 1.4, 25, 3);
-    public static readonly ArtConfig TaiyiFuxiuArt = new("安神符", "神魂", 0.5, 20, 3);
-    public static readonly DivineConfig TaiyiDivine = new("万法归宗", "神魂", 1.8, 15, 5);
-    public static readonly DivineConfig TaiyiFuxiuDivine = new("天符镇岳", "神魂", 1.5, 20, 5);
-    public static readonly ArtConfig TaixuArt = new("业火咒", "神魂", 1.5, 25, 3);
-    public static readonly DivineConfig TaixuDivine = new("魂归彼岸", "神魂", 1.8, 15, 5);
-    public static readonly ArtConfig YuqingArt = new("九霄太乙斩", "物理", 1.5, 25, 3);
-    public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5);
-    public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3);
-    public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5);
+
+    public static readonly Dictionary<string, string> GongFaElements = new()
+    {
+        ["抱元守一经"] = "水",
+        ["云篆度人经"] = "风",
+        ["秋水游心经"] = "水",
+        ["九霄雷劫录"] = "雷",
+        ["苦行剑典"] = "金",
+        ["疾雷破山经"] = "雷",
+        ["雷池淬体功"] = "雷",
+        ["含弘光大典"] = "土",
+        ["白屋青云录"] = "土",
+        ["混元同尘典"] = "土",
+        ["绳墨正法录"] = "土",
+        ["万物不迁法"] = "暗",
+        ["不真自虚法"] = "暗",
+        ["南华玄感录"] = "暗",
+        ["心无性有法"] = "暗",
+        ["南华大梦书"] = "水",
+        ["南华阐衍典"] = "风",
+        ["大洞炼真经"] = "土",
+        ["太易山藏经"] = "土",
+        ["太易玄义笺"] = "土",
+        ["玄牝道藏"] = "混沌",
+        ["空无般若经"] = "水",
+        ["见素抱朴经"] = "木",
+        ["通神三玄礼录"] = "金",
+    };
+
+    public static string GetGongFaElement(string gongFaName)
+    {
+        if (string.IsNullOrEmpty(gongFaName)) return "";
+        return GongFaElements.TryGetValue(gongFaName, out var element) ? element : "";
+    }
+
+    public static double ElementDamageMultiplier(string skillElement, string attackerGongFa, string defenderGongFa) =>
+        GetElementMatch(skillElement, attackerGongFa, defenderGongFa).DamageMultiplier;
+
+    public static ElementMatch GetElementMatch(string skillElement, string attackerGongFa, string defenderGongFa)
+    {
+        string actionElement = NormalizeElement(skillElement);
+        if (string.IsNullOrEmpty(actionElement) || actionElement == "混沌")
+            return new ElementMatch(1.0, 0.0, 0.0);
+
+        double damageMultiplier = 1.0;
+        double critRateBonus = 0.0;
+        double critDamageBonus = 0.0;
+
+        string attackerElement = NormalizeElement(GetGongFaElement(attackerGongFa));
+        if (!string.IsNullOrEmpty(attackerElement) && attackerElement != "混沌")
+        {
+            string attackerBase = ToBaseElement(attackerElement);
+            string actionBase = ToBaseElement(actionElement);
+            if (attackerBase != actionBase)
+            {
+                if (Generates(attackerBase, actionBase))
+                {
+                    damageMultiplier *= 1.10;
+                }
+                else if (Overcomes(attackerBase, actionBase))
+                {
+                    damageMultiplier *= 0.90;
+                    critRateBonus += 5.0;
+                    critDamageBonus += 10.0;
+                }
+            }
+        }
+
+        string defenderElement = NormalizeElement(GetGongFaElement(defenderGongFa));
+        if (!string.IsNullOrEmpty(defenderElement) && defenderElement != "混沌")
+        {
+            string actionBase = ToBaseElement(actionElement);
+            string defenderBase = ToBaseElement(defenderElement);
+            bool variant = IsVariantElement(actionElement);
+
+            if (actionBase != defenderBase)
+            {
+                if (Overcomes(actionBase, defenderBase))
+                    damageMultiplier *= variant ? 1.15 : 1.10;
+                else if (Overcomes(defenderBase, actionBase))
+                    damageMultiplier *= variant ? 0.85 : 0.90;
+                else if (Generates(actionBase, defenderBase))
+                    damageMultiplier *= 0.95;
+                else if (Generates(defenderBase, actionBase))
+                    damageMultiplier *= 1.05;
+            }
+        }
+
+        return new ElementMatch(damageMultiplier, critRateBonus, critDamageBonus);
+    }
+
+    public static string NormalizeElement(string element)
+    {
+        if (string.IsNullOrWhiteSpace(element)) return "";
+        return element.Trim() switch
+        {
+            "金" or "木" or "水" or "火" or "土" or "风" or "雷" or "冰" or "暗" or "星" or "毒" or "混沌" => element.Trim(),
+            "element_metal" or "element_metal_root" => "金",
+            "element_wood" or "element_wood_root" => "木",
+            "element_water" or "element_water_root" => "水",
+            "element_fire" or "element_fire_root" => "火",
+            "element_earth" or "element_earth_root" => "土",
+            "element_wind" or "element_wind_root" => "风",
+            "element_thunder" or "element_thunder_root" => "雷",
+            "element_ice" or "element_ice_root" => "冰",
+            "element_dark" or "element_dark_root" => "暗",
+            "element_star" or "element_star_root" => "星",
+            "element_poison" or "element_poison_root" => "毒",
+            "element_chaos" or "element_chaos_root" => "混沌",
+            "element_none" or "-" => "",
+            _ => ""
+        };
+    }
+
+    static string ToBaseElement(string element) => element switch
+    {
+        "风" or "毒" => "木",
+        "雷" => "金",
+        "冰" => "水",
+        "暗" => "土",
+        "星" => "火",
+        _ => element,
+    };
+
+    static bool IsVariantElement(string element) =>
+        element is "风" or "雷" or "冰" or "暗" or "星";
+
+    static bool Generates(string source, string target) => (source, target) switch
+    {
+        ("木", "火") or ("火", "土") or ("土", "金") or ("金", "水") or ("水", "木") => true,
+        _ => false
+    };
+
+    static bool Overcomes(string source, string target) => (source, target) switch
+    {
+        ("木", "土") or ("土", "水") or ("水", "火") or ("火", "金") or ("金", "木") => true,
+        _ => false
+    };
+
+    public static readonly ArtConfig MagicArt = new("灵光闪", "神魂", 1.2, 20, 3, "");
+    public static readonly DivineConfig PhysicalDivine = new("碎岳", "物理", 1.5, 10, 5, "土");
+    public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3, "水");
+    public static readonly DivineConfig WaterDivine = new("逝水千击", "物理", 1.5, 10, 5, "水");
+    public static readonly DivineConfig MagicDivine = new("灵光贯日", "神魂", 1.4, 10, 5, "");
+    public static readonly ArtConfig TaiyiArt = new("玄元正气诀", "神魂", 1.4, 25, 3, "");
+    public static readonly ArtConfig TaiyiFuxiuArt = new("安神符", "神魂", 0.5, 20, 3, "风");
+    public static readonly DivineConfig TaiyiDivine = new("万法归宗", "神魂", 1.8, 15, 5, "");
+    public static readonly DivineConfig TaiyiFuxiuDivine = new("天符镇岳", "神魂", 1.5, 20, 5, "土");
+    public static readonly ArtConfig TaixuArt = new("业火咒", "神魂", 1.5, 25, 3, "暗");
+    public static readonly DivineConfig TaixuDivine = new("魂归彼岸", "神魂", 1.8, 15, 5, "暗");
+    public static readonly ArtConfig YuqingArt = new("九霄太乙斩", "物理", 1.5, 25, 3, "雷");
+    public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5, "金");
+    public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3, "雷");
+    public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5, "雷");
 }
