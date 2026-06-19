@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
+  m_Name: Spell_spell_wanliuguizong
+  m_EditorClassIdentifier: 
+  spellName: "\u4E07\u6D41\u5F52\u5B97"
+  type: 2
+  range: 1
+  minRange: 3
+  maxRange: 10
+  element: "element_water_root"
+  mpCost: 120
+  cooldownTicks: 60
+  damageMultiplier: 3
+  healAmount: 0
+  buffMultiplier: 1
+  cannotBlock: 0
+  cannotDodge: 0
+  penetratingShield: 0
+  stunChance: 0
+  stunDuration: 1
+  realmScaleBase: 1

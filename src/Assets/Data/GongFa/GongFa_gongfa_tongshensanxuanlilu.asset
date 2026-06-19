@@ -1,0 +1,112 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
+  m_Name: GongFa_gongfa_tongshensanxuanlilu
+  m_EditorClassIdentifier: 
+  gongFaName: "\u901A\u795E\u4E09\u7384\u793C\u5F55"
+  affiliation: "\u592A\u4E00\u9053\u5EAD"
+  grade: "\u4E2D\u54C1"
+  elementMain: "\u91D1"
+  elementSub: "\u571F"
+  starRootBone: 3
+  starPhysique: 1
+  starSpirit: 2
+  starMind: 2
+  starReaction: 3
+  starTalent: 2
+  starFortune: 2
+  subGrowth:
+  - realm: "\u7B51\u57FA"
+    hp: 53
+    mp: 15
+    physAtk: 20
+    magAtk: 11
+    physDef: 17
+    magDef: 9
+    reaction: 5
+    movePoints: 0.5
+    mindGrowth: 0.5
+  - realm: "\u91D1\u4E39"
+    hp: 253
+    mp: 156
+    physAtk: 100
+    magAtk: 62
+    physDef: 80
+    magDef: 49
+    reaction: 20
+    movePoints: 0.8
+    mindGrowth: 0.9
+  - realm: "\u5143\u5A74"
+    hp: 1200
+    mp: 625
+    physAtk: 400
+    magAtk: 246
+    physDef: 333
+    magDef: 201
+    reaction: 67
+    movePoints: 1
+    mindGrowth: 1.3
+  - realm: "\u5316\u795E"
+    hp: 4667
+    mp: 2903
+    physAtk: 1667
+    magAtk: 1027
+    physDef: 1333
+    magDef: 804
+    reaction: 201
+    movePoints: 1.2
+    mindGrowth: 2
+  chapters:
+  - chapterName: "\u5468\u793C\u7BC7"
+    realm: "\u7B51\u57FA"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u901A\u795E\u4E09\u7384\u793C\u5F55\u00B7\u5468\u793C\u7BC7 \u6548\u679C\u63CF\u8FF0"
+  - chapterName: "\u4EEA\u793C\u7BC7"
+    realm: "\u91D1\u4E39"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u901A\u795E\u4E09\u7384\u793C\u5F55\u00B7\u4EEA\u793C\u7BC7 \u6548\u679C\u63CF\u8FF0"
+  - chapterName: "\u793C\u8BB0\u7BC7"
+    realm: "\u5143\u5A74"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u901A\u795E\u4E09\u7384\u793C\u5F55\u00B7\u793C\u8BB0\u7BC7 \u6548\u679C\u63CF\u8FF0"
+  - chapterName: "\u901A\u795E\u7BC7"
+    realm: "\u5316\u795E"
+    soulShieldRate: 3
+    hitRate: 3
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u901A\u795E\u4E09\u7384\u793C\u5F55\u00B7\u901A\u795E\u7BC7 \u6548\u679C\u63CF\u8FF0"

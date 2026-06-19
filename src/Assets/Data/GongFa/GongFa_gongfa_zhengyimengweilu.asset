@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
+  m_Name: GongFa_gongfa_zhengyimengweilu
+  m_EditorClassIdentifier: 
+  gongFaName: "\u6B63\u4E00\u76DF\u5A01\u7B93"
+  affiliation: "\u592A\u4E00\u9053\u5EAD"
+  grade: "\u6781\u54C1"
+  elementMain: "\u98CE"
+  elementSub: "\u96F7"
+  starRootBone: 2
+  starPhysique: 1
+  starSpirit: 4
+  starMind: 5
+  starReaction: 2
+  starTalent: 5
+  starFortune: 4
+  subGrowth:
+  - realm: "\u5143\u5A74"
+    hp: 1000
+    mp: 1067
+    physAtk: 300
+    magAtk: 433
+    physDef: 267
+    magDef: 450
+    reaction: 125
+    movePoints: 1
+    mindGrowth: 3
+  - realm: "\u5316\u795E"
+    hp: 4000
+    mp: 5000
+    physAtk: 1200
+    magAtk: 1800
+    physDef: 1067
+    magDef: 1800
+    reaction: 375
+    movePoints: 1.2
+    mindGrowth: 5
+  - realm: "\u70BC\u865A"
+    hp: 17333
+    mp: 21333
+    physAtk: 4667
+    magAtk: 7000
+    physDef: 4000
+    magDef: 7000
+    reaction: 1250
+    movePoints: 1.5
+    mindGrowth: 7
+  chapters:
+  - chapterName: "\u76DF\u5A01\u7BC7"
+    realm: "\u5143\u5A74"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u6B63\u4E00\u76DF\u5A01\u7B93\u00B7\u76DF\u5A01\u7BC7 \u6548\u679C\u63CF\u8FF0"
+  - chapterName: "\u8840\u8A93\u7BC7"
+    realm: "\u5316\u795E"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u6B63\u4E00\u76DF\u5A01\u7B93\u00B7\u8840\u8A93\u7BC7 \u6548\u679C\u63CF\u8FF0"
+  - chapterName: "\u90FD\u529F\u7BC7"
+    realm: "\u70BC\u865A"
+    soulShieldRate: 3
+    hitRate: 0
+    blockRate: 0
+    critRate: 0
+    critDamage: 0
+    dodgeRate: 0
+    magAtkBonus: 0
+    magDefBonus: 0
+    specialEffect: "\u6B63\u4E00\u76DF\u5A01\u7B93\u00B7\u90FD\u529F\u7BC7 \u6548\u679C\u63CF\u8FF0"
