@@ -1,0 +1,80 @@
+# 境界体系数据/模拟迁移差异表
+
+状态：⚠️ 已修改/未审核（2026-06-19 Codex / gpt-5.5 执行；待复审）
+任务：TQ-013 · 境界体系数据/模拟迁移差异表
+用途：承接 TQ-011/TQ-012 已审核新口径，判断 BattleSim、Unity 与 CSV 数据迁移范围。本文件只锁迁移差异与后续动作，不直接改代码或数据。
+
+## 一、依据与验证快照
+
+### 事实源
+
+- `开发管理/境界体系重构锁口径决策表.txt`
+- `docs/基础设定/修行境界.txt`
+- `docs/基础设定/境界特性.txt`
+- `docs/角色养成/术法槽位设计.txt`
+- `docs/基础设定/角色数值设计.txt`
+- `开发管理/设计-当前状态.txt`
+- `开发管理/开发-技术经验.txt`
+- BattleSim：`simulations/BattleSim/Program.cs`、`GameData.cs`、`Cultivation.cs`、`Character.cs`、`Combat.cs`
+- Unity：`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Entity/Character.cs`、`CharacterData.cs`、`GongFaGrowthData.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`
+- CSV：`src/Assets/DataConfig/GongFa.csv`、`Spells.csv`、`Skills.csv`、`Characters.csv`、`Enemies.csv`、`Language.csv`
+
+### 验证命令
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过，默认模拟完整跑通。
+
+### 当前基线观察
+
+- BattleSim 仍输出“金丹品级分布（已结丹角色）”，并按一品至九品统计。
+- 默认 21 Build 中 4 个 Build 在 200 轮后金丹样本为 `0/20`：物·纯战、肉盾型、法·纯战、灵修型。
+- 金丹同境矩阵样本数为 6800 场；筑基同境快照样本为 880 场，仍是附属快照，不足以验证新筑基/紫府主循环。
+- 练气快照平均 11.2 回合，筑基同境平均 13.9 回合，金丹同境平均 14.6 回合。
+- CSV 统计：功法 29 条、术法 75 条、神通 34 条；高阶 `realmReq` 仍大量存在。
+- `realm_lianshen` 出现在功法成长/篇章、术法、神通数据中，但 `Language.csv`、BattleSim 与 Unity 境界表没有该键。
+
+## 二、迁移总原则
+
+1. 不直接删除元婴、化神、炼虚内容。高阶内容先标为 NPC、世界背景、后续资料片、金丹丹籍技或元婴锚点。
+2. 当前玩家主线必须收束为：凡人 -> 练气 -> 筑基五段（含紫府包装）-> 金丹三段。
+3. 金丹九品不再作为主表达。旧凝聚值迁移为“成丹判定值”，旧品级倍率迁移为兼容层或删除。
+4. 紫府不是独立大境界。代码与数据应把紫府作为筑基后半段阶段/里程碑处理。
+5. BattleSim 先服务数值判断，优先迁移默认模拟目标与测试矩阵；Unity 运行时再跟随新口径落地。
+6. CSV 改动宜拆给 DeepSeek V4 Pro 做批量标注；Codex / ChatGPT5.5 负责字段口径、兼容层和数值验证复审。
+
+## 三、差异表
+
+| 范围 | 当前实现/数据 | 新口径差异 | 后续动作 | 主责 |
+|------|---------------|------------|----------|------|
+| BattleSim 境界表 | `GameData.Sublevels` 为凡人1、练气9、筑基4、金丹4、元婴4、化神4、炼虚4；`RealmOrder` 默认包含高阶。 | 玩家主线应为练气9、筑基5、金丹3；高阶不进入默认玩家模拟链。 | 直接改代码：新增当前玩家境界表；高阶保留为 NPC/扩展表，默认 `Cultivation.Simulate` 停在金丹圆满或冲婴入口。 | Codex / ChatGPT5.5 |
+| BattleSim 里程碑 | `Milestones` 中筑基4段、金丹4段，并继续到元婴/化神。 | 筑基需五段：筑基初期、中期、后期、紫府初开、紫府圆满；金丹需三段：初期、中期/温养、圆满。 | 直接改代码：重建 CPP 里程碑；紫府用筑基子阶段名/枚举，不新增大境界。 | Codex / ChatGPT5.5 |
+| BattleSim 金丹逻辑 | `GCQualities`、`GCMultiplier`、`GCTypeScaling`、`GCDFCap` 仍是一品至九品；`Cultivation.GenerateGoldenCore` 以旧品级输出。 | 金丹表达改为丹籍 + 丹名 + 丹性；凝聚值只回答能否成丹、是否稳固、能否承接目标丹籍。 | 先建兼容层：保留 `GCScore`，新增 `DanJiType`/`DanName`/`DanNature`；删除道基硬上限到九品的判定；旧 `GCQuality` 仅作历史输出或过渡字段。 | Codex / ChatGPT5.5 |
+| BattleSim 角色与战斗 | `Character.GCQuality` 控制神通分配；`GCMult` 影响 MP；部分机制按元婴/化神/炼虚 switch 扩展。 | 神通与金丹强度应由根本神通闭环、丹籍位格、丹性决定；高阶 switch 只服务 NPC/远期。 | 直接改代码：将“有金丹品级”条件改为“成丹状态/丹籍状态”；高阶战斗分支保留但从默认矩阵剥离。 | Codex / ChatGPT5.5 |
+| BattleSim 默认矩阵 | 主矩阵为 21x21 金丹同境；筑基同境只是 200 轮主池残留样本。 | 新主循环需要验证筑基五段、紫府经营和筑基 vs 金丹压制战。 | 直接改代码：增加筑基/紫府同境矩阵；增加“紫府圆满 vs 金丹初期”压制战；保留金丹同境矩阵但不作为唯一主指标。 | Codex / ChatGPT5.5 |
+| Unity `CultivationEngine` 境界链 | `Sublevels` 与 `Milestones` 同样是筑基4、金丹4、高阶线性链；`GetRealmMultiplier` 提供到炼虚。 | Unity 运行时应跟随筑基五段、金丹三段；高阶只保留兼容与 NPC 入口。 | 直接改代码：同步新里程碑；公开阶段显示名；避免默认玩家模拟继续冲元婴/化神。 | Codex / ChatGPT5.5 |
+| Unity `CultivationEngine` 金丹结果 | `CultivationResult.GCQuality` 和 `GenerateGoldenCore` 输出九转/上品/中品/下品/虚丹。 | 这些不是 TQ-012 审核后的丹籍体系。 | 先建兼容层：新增成丹判定值、丹籍类型、寄丹状态；旧 `GCQuality` 可临时映射为历史显示字段。 | Codex / ChatGPT5.5 |
+| Unity 槽位默认值 | `Character.GetDefaultSpellSlots/GetDefaultSkillSlots` 仍按旧线性高阶表：金丹6/2、元婴7/3、化神8/3、炼虚8/4。 | 槽位应为练气4/1、筑基5/2，再由紫府府位与丹籍加成；高阶不再默认增长。 | 直接改代码：`CharacterData` 补 `developedMansions`、`danJiType`；新增 `RecalculateSlots`；导入时超过槽位只警告/截断。 | Codex / ChatGPT5.5 |
+| Unity 数据导入 | `DataConfigImporter` 对术法/神通的 `realmReq` 基本只用于读取或注释，运行时 `SpellData`/`DivineSkillData` 不保留解锁境界/内容定位。 | 后续需要区分玩家当前可学、紫府候选、丹籍技、NPC 专属、资料片预留。 | 先建兼容层：为 Spell/Skill asset 增加 `realmReq` 与 `contentScope` 字段；CSV 增列后重导。 | Codex / ChatGPT5.5 + DeepSeek |
+| CSV `realmReq` | 术法：练气15、筑基17、金丹19、元婴11、化神8、炼虚3、`realm_lianshen`2。神通：筑基4、金丹25、炼虚3、`realm_lianshen`2。 | 元婴以上不能默认作为玩家线性解锁；`realm_lianshen` 不在当前境界表。 | 拆给 DeepSeek：逐条标注为紫府候选/丹籍技/NPC/资料片/需改名；`realm_lianshen` 单独核来源后统一处理。 | DeepSeek V4 Pro 起草，Codex 复审 |
+| CSV 功法篇章 | 29 功法中高阶成长/篇章大量存在：成长含元婴27、化神20、炼虚6、`realm_lianshen`4；篇章含元婴28、化神21、炼虚8、`realm_lianshen`4。 | 当前版本不应把高阶篇章作为默认玩家成长链，但可保留为元婴锚点或资料片内容。 | 拆给 DeepSeek：新增篇章定位表；金丹以前密集化，元婴以上标 NPC/锚点/资料片，不直接删行。 | DeepSeek V4 Pro 起草，Codex 复审 |
+| CSV `realm_lianshen` | `Language.csv` 无 `realm_lianshen`；BattleSim/Unity 也无该境界。资产中已有对应 `.asset` 残留。 | 这是独立数据一致性风险，不能混同为炼虚。 | 先查 docs 原文后决定：若为旧“炼神”口径则降级为资料片/NPC；若为炼虚拼写偏差则迁移到 `realm_lianxu`；需要数据链路检查。 | DeepSeek V4 Pro 起草，Codex 复审 |
+| `Characters.csv` / `Enemies.csv` | 角色用 `realmMultiplier` 表达境界，敌人用 `realm` + `realmMultiplier`；当前角色全为练气倍率，敌人只有练气/筑基。 | 新筑基五段、紫府显示包装和金丹丹籍不能靠倍率精确表达。 | 先建兼容层：新增可选 `realmStage`/`danJiType`，倍率仅作战斗强度兼容，不作境界事实源。 | Codex / ChatGPT5.5 |
+| `GongFaGrowthData` | `GetCumulativeBonus` 境界顺序包含练气、筑基、金丹、元婴、化神、炼虚。 | 需要支持紫府作为筑基内部阶段，并识别高阶内容定位。 | 直接改代码：保留大境界顺序，但篇章解锁增加 `stageReq/contentScope`；紫府不作为 `RealmOrder` 大境界。 | Codex / ChatGPT5.5 |
+| 文档/数值对齐 | `角色数值设计.txt` 仍有旧子等级表：筑基4、金丹4、高阶4；BattleSim 数值表也明显偏离文档。 | TQ-012 已改 `修行境界.txt`，但数值设计文档和模拟器仍待统一。 | 关联 TQ-008：先以本差异表锁结构，再单独决定“回写文档 / 调整代码 / 保留调参覆盖”。 | Codex / ChatGPT5.5 |
+
+## 四、建议拆分任务
+
+| 新任务建议 | 内容 | 验证 |
+|------------|------|------|
+| TQ-013A | BattleSim 境界表、里程碑、默认矩阵迁移：筑基五段、金丹三段、紫府同境与筑基 vs 金丹压制战。 | BattleSim build + run；新增矩阵输出含筑基/紫府/金丹压制战。 |
+| TQ-013B | BattleSim 金丹九品兼容层：成丹判定值、丹籍类型、丹名、丹性、寄丹状态。 | BattleSim build + run；输出不再以一至九品为主表。 |
+| TQ-013C | Unity `CultivationEngine` 与槽位计算迁移：阶段显示、丹籍/府位槽位、旧倍率兼容。 | `dotnet build src/Assembly-CSharp.csproj`；槽位数组回归检查。 |
+| TQ-013D | CSV 高阶内容定位表：`realmReq`、功法篇章、`realm_lianshen` 清理方案。 | `tools/check-data-chain.ps1`；必要时严格 asset 覆盖检查。 |
+
+## 五、复审检查清单
+
+- [ ] 差异表是否覆盖 BattleSim 境界表、金丹逻辑、Unity `CultivationEngine`、CSV `realmReq`、功法篇章、术法/神通和测试矩阵。
+- [ ] 是否明确旧金丹九品、`GCDFCap`、金丹 MP 品级倍率是待迁移旧口径。
+- [ ] 是否保留高阶内容为 NPC/世界背景/资料片，而不是直接删除。
+- [ ] 是否识别 `realm_lianshen` 为独立数据风险。
+- [ ] 是否为每项给出“直接改代码 / 先建兼容层 / 仅标 NPC 或资料片 / 拆给 DeepSeek 数据整理”的后续动作。
