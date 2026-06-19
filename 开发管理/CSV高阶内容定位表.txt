@@ -1,0 +1,207 @@
+# CSV 高阶内容定位表
+
+状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：新建文件
+任务：TQ-013D · CSV 高阶内容定位表
+用途：逐条标注功法/术法/神通中 realmReq≥元婴（含 realm_lianshen）的内容定位，
+      不直接改 CSV 或 asset；作为后续 Codex/ChatGPT5.5 复审与迁移输入。
+
+## 一、依据来源
+
+- `开发管理/境界体系重构锁口径决策表.txt`（✅ 已审核）
+- `开发管理/境界体系数据模拟迁移差异表.txt`（✅ 已审核）
+- `src/Assets/DataConfig/GongFa.csv`（32 条，含注释行）
+- `src/Assets/DataConfig/Spells.csv`（78 条）
+- `src/Assets/DataConfig/Skills.csv`（37 条）
+- `src/Assets/DataConfig/Language.csv`
+- `docs/基础设定/修行境界.txt`
+- `docs/基础设定/境界特性.txt`
+- `docs/天章设定.txt`
+
+## 二、realm_lianshen 专项调查
+
+### 出现范围
+
+| 文件 | 条目数 | 具体 ID |
+|------|--------|---------|
+| Spells.csv | 2 | spell_wanliuguizong, spell_tianshuyunzhuan |
+| Skills.csv | 2 | skill_fayu_wanxiangxuanmen, skill_lingyu_wanxiangguiyuan |
+| GongFa.csv (growth+chapters) | 4 | gongfa_nanhuadamengshu, gongfa_taiyishancangjing, gongfa_xuanpindaocang, gongfa_jiansubaopujing |
+
+### 关键发现
+
+1. **Language.csv 无 realm_lianshen key**：当前仅注册 realm_fanren/realm_lianqi/realm_zhuji/realm_jindan/realm_yuanying/realm_huashen/realm_lianxu。
+2. **BattleSim/Unity 境界表无 realm_lianshen**：`GameData.RealmOrder` 和 Unity `CultivationEngine` 均不包含。
+3. **唯一 docs 出处**：`docs/天章设定.txt` 中出现"修n魂"（疑似"修炼神魂"乱码），语境为太虚观与地藏寺最强能力。
+4. **古修专属倾向**：4 条含 realm_lianshen 的功法全部为 `faction_guxiu`（古修），grade 为 top 或 high。
+5. **修行境界.txt 有"魂府"概念**：紫府五府之一（魂府：魂魄、神魂攻击、魂盾、心魔、梦境），但魂府是筑基子阶段概念，不是独立大境界。
+
+### 结论
+
+`realm_lianshen` 是**炼神**概念的早期实现残留，语义上区别于炼虚，更接近古修路线中的神魂修炼维度。它不是拼写偏差，不应直接合并为 realm_lianxu。建议方案：
+
+- **短期**：4 条古修功法 + 2 术法 + 2 神通统一标注为"资料片保留/古修炼神路线"，暂不改 CSV。
+- **中期**：若决定保留炼神概念，需先在 `修行境界.txt` 和 `境界特性.txt` 中明确其定位（NPC/古修专属/资料片），再补入 Language.csv。
+- **长期**：若确认炼神无需独立存在，再将所有 realm_lianshen 迁移为 realm_lianxu 或删除。
+
+## 三、术法高阶内容定位表（24 条）
+
+按宗门分组，逐条标注。
+
+### 玉清崖（5 条）
+
+| ID | 名称 | realmReq | 五行 | 类型 | 建议定位 | 理由 |
+|----|------|----------|------|------|----------|------|
+| spell_wanjianchaozong | 万剑朝宗 | 元婴 | 金 | 伤害(0) | 资料片保留 | 剑修经典高阶群伤，与金丹丹籍技无关 |
+| spell_tianjieyin | 天劫引 | 元婴 | 雷 | 辅助(2) | 资料片保留 | 劫雷机制，远超当前金丹主循环 |
+| spell_renjianheyi | 人剑合一 | 化神 | 金 | 伤害(0) | 资料片保留 | 剑修极致境界，不应降级 |
+| spell_jiuxiaoleifa | 九霄雷罚 | 化神 | 雷 | 辅助(2) | 资料片保留 | 高位格雷法，远超玩家主线 |
+| spell_leijiankaitian | 雷剑开天 | 炼虚 | 雷 | 辅助(2) | 资料片保留 | 极高位格，当前无对战场景 |
+
+### 混元山（5 条）
+
+| ID | 名称 | realmReq | 五行 | 类型 | 建议定位 | 理由 |
+|----|------|----------|------|------|----------|------|
+| spell_toubianduanliu | 投鞭断流 | 元婴 | 土 | 伤害(0) | 资料片保留 | 兵家高阶术法 |
+| spell_hufubingce | 虎符兵策 | 元婴 | 金 | 辅助(2) | 资料片保留 | 兵家调度术 |
+| spell_wanchengtianwei | 万乘天威 | 化神 | 土 | 伤害(0) | 资料片保留 | 天子威仪级，位格极高 |
+| spell_jianbiqingye | 坚壁清野 | 化神 | 土 | 辅助(2) | 资料片保留 | 战略级术法 |
+| spell_hunyunguiyi | 混元归一 | 炼虚 | 土 | 辅助(2) | 资料片保留 | 混元山终极术法 |
+
+### 太虚观（5 条）
+
+| ID | 名称 | realmReq | 五行 | 类型 | 建议定位 | 理由 |
+|----|------|----------|------|------|----------|------|
+| spell_yongjiehuilang | 永劫回廊 | 元婴 | 暗 | debuff(1) | 资料片保留 | 时空/因果系，远超常规战斗 |
+| spell_suhuijuexing | 宿慧觉醒 | 元婴 | 暗 | debuff(1) | 资料片保留 | 转世/宿慧机制 |
+| spell_sanqianmengjie | 三千梦界 | 化神 | 暗 | debuff(1) | 资料片保留 | 梦境领域级 |
+| spell_yinguodaoxuan | 因果倒悬 | 化神 | 暗 | debuff(1) | 资料片保留 | 因果律级术法 |
+| spell_lunhuibian | 轮回彼岸 | 炼虚 | 暗 | debuff(1) | 资料片保留 | 轮回级，终局内容 |
+
+### 太一道庭（9 条）
+
+| ID | 名称 | realmReq | 五行 | 类型 | 建议定位 | 理由 |
+|----|------|----------|------|------|----------|------|
+| spell_wanjunyinxian | 万军引弦 | 元婴 | 金 | debuff(1) | 资料片保留 | 宗门军阵术，可同时标注"宗门秘术" |
+| spell_buhuaijinshen | 不坏金身 | 元婴 | 金 | debuff(1) | 资料片保留 | 防御型高阶术法 |
+| spell_tiangangfuzhen | 天罡符阵 | 元婴 | 无 | 辅助(2) | 资料片保留 | 符箓系高阶 |
+| spell_taiqingyuye | 太清玉液 | 元婴 | 木 | 辅助(2) | 资料片保留 | 炼丹/治愈系 |
+| spell_jiangliutiandi | 江流天地 | 元婴 | 水 | 辅助(2) | 资料片保留 | 水道高阶 |
+| spell_wuleifuchi | 五雷符敕 | 化神 | 雷 | 辅助(2) | 资料片保留 | 符敕雷法，太一特色 |
+| spell_dadaoxuanyin | 大道玄音 | 化神 | 无 | 辅助(2) | 资料片保留 | 道音系，位格极高 |
+| spell_wanliuguizong | 万流归宗 | realm_lianshen | 水 | 辅助(2) | 资料片保留/古修炼神 | realm_lianshen→见第二节方案 |
+| spell_tianshuyunzhuan | 天书云篆 | realm_lianshen | 水 | 辅助(2) | 资料片保留/古修炼神 | realm_lianshen→见第二节方案 |
+
+## 四、神通高阶内容定位表（5 条）
+
+所有 5 条高阶神通均为领域级（isDomain=1），属于元婴以上世界观内容。
+
+| ID | 名称 | realmReq | 领域 | 宗门 | 建议定位 | 理由 |
+|----|------|----------|------|------|----------|------|
+| skill_jianyu_wanguizong | 剑域·万剑归宗 | 炼虚 | 是 | 玉清崖 | 资料片保留 | 领域级神通，远超金丹主循环 |
+| skill_zhanyu_tiexuezhengqi | 战域·铁血征旗 | 炼虚 | 是 | 混元山 | 资料片保留 | 领域级神通 |
+| skill_hunyu_huangquan | 魂域·黄泉幻界 | 炼虚 | 是 | 太虚观 | 资料片保留 | 领域级神通 |
+| skill_fayu_wanxiangxuanmen | 法域·万象玄门 | realm_lianshen | 是 | 太一道庭 | 资料片保留/古修炼神 | realm_lianshen→见第二节方案 |
+| skill_lingyu_wanxiangguiyuan | 灵域·万象归元 | realm_lianshen | 是 | 散修 | 资料片保留/古修炼神 | realm_lianshen→见第二节方案 |
+
+## 五、功法高阶内容定位表（29 条有效条目中 28 条含高阶）
+
+> 注：GongFa.csv 共 32 行（含 3 行注释），有效功法 29 条。
+> 仅 gongfa_xinwuxingyou（心无性有法）终点为金丹；其余 28 条 growth 均含元婴及以上。
+
+### 建议定位汇总
+
+按"功法篇章密集化"原则，金丹及以下篇章保留为玩家可用；元婴及以上篇章和 growth 阶段标注定位：
+
+| ID | 名称 | 最高 growth | 宗门 | 定位 | 备注 |
+|----|------|------------|------|------|------|
+| gongfa_baoyuanshouyi | 抱元守一经 | 元婴 | 太一道庭 | 资料片保留 | 金丹以下篇章可保留 |
+| gongfa_qiushuiyouxin | 秋水游心经 | 元婴 | 散修 | 资料片保留 | |
+| gongfa_leicnicuiti | 雷池淬体功 | 元婴 | 玉清崖 | 资料片保留 | |
+| gongfa_baiwuqingyun | 白屋青云录 | 元婴 | 混元山 | 资料片保留 | |
+| gongfa_shengmozhengfa | 绳墨正法录 | 元婴 | 混元山 | 资料片保留 | |
+| gongfa_wanwubuqian | 万物不迁法 | 元婴 | 混元山 | 资料片保留 | |
+| gongfa_nanhuaxuangan | 南华玄感录 | 元婴 | 地藏寺 | 资料片保留 | |
+| gongfa_kongwuborejing | 空无般若经 | 元婴 | 太虚观 | 资料片保留 | |
+| gongfa_kuxingjiandian | 苦行剑典 | 化神 | 玉清崖 | 资料片保留 | |
+| gongfa_hanhongguangda | 含弘光大典 | 化神 | 混元山 | 资料片保留 | |
+| gongfa_buzhenzixu | 不真自虚法 | 化神 | 太虚观 | 资料片保留 | |
+| gongfa_yunzhuandurenjing | 云篆度人经 | 化神 | 太一道庭 | 资料片保留 | |
+| gongfa_nanhuachanyandian | 南华阐衍典 | 化神 | 地藏寺 | 资料片保留 | |
+| gongfa_dadonglianzhenjing | 大洞炼真经 | 化神 | 太一道庭 | 资料片保留 | |
+| gongfa_taiyixuanyijian | 太易玄义笺 | 化神 | 古修 | 资料片保留 | |
+| gongfa_tongshensanxuanlilu | 通神三玄礼录 | 化神 | 太一道庭 | 资料片保留 | |
+| gongfa_sandongfajilu | 三洞法籍录 | 化神 | 太一道庭 | 资料片保留 | |
+| gongfa_taiyiyugedian | 太一玉格典 | 化神 | 太一道庭 | 资料片保留 | |
+| gongfa_jiuxiaoleijie | 九霄雷劫录 | 炼虚 | 玉清崖 | 资料片保留 | |
+| gongfa_jileiposhan | 疾雷破山经 | 炼虚 | 玉清崖 | 资料片保留 | |
+| gongfa_hunyuantongchen | 混元同尘典 | 炼虚 | 混元山 | 资料片保留 | |
+| gongfa_jiujiangshuifulu | 九江水府箓 | 炼虚 | 太一道庭 | 资料片保留 | |
+| gongfa_wanfadulujing | 万法都箓经 | 炼虚 | 太一道庭 | 资料片保留 | |
+| gongfa_zhengyimengweilu | 正一盟威箓 | 炼虚 | 太一道庭 | 资料片保留 | |
+| gongfa_nanhuadamengshu | 南华大梦书 | realm_lianshen | 古修 | 资料片保留/古修炼神 | realm_lianshen→见第二节 |
+| gongfa_taiyishancangjing | 太易山藏经 | realm_lianshen | 古修 | 资料片保留/古修炼神 | realm_lianshen→见第二节 |
+| gongfa_xuanpindaocang | 玄牝道藏 | realm_lianshen | 古修 | 资料片保留/古修炼神 | realm_lianshen→见第二节 |
+| gongfa_jiansubaopujing | 见素抱朴经 | realm_lianshen | 古修 | 资料片保留/古修炼神 | realm_lianshen→见第二节 |
+| gongfa_xinwuxingyou | 心无性有法 | 金丹 | 太虚观 | **玩家可用** | 唯一终点为金丹的功法 |
+
+## 六、统计汇总
+
+| 类型 | 高阶条目 | 元婴 | 化神 | 炼虚 | realm_lianshen | 金丹(玩家) |
+|------|----------|------|------|------|----------------|------------|
+| 术法 | 24 | 11 | 8 | 3 | 2 | 54（非高阶） |
+| 神通 | 5 | 0 | 0 | 3 | 2 | 32（非高阶） |
+| 功法 | 28 | 8 | 9 | 7 | 4 | 1 |
+| 合计 | 57 | 19 | 17 | 13 | 8 | ~87 |
+
+### 定位类型分布
+
+| 定位 | 条目数 | 说明 |
+|------|--------|------|
+| 资料片保留 | 49 | 默认定位，元婴~炼虚全部标记 |
+| 资料片保留/古修炼神 | 8 | 含 realm_lianshen 的 2术法+2神通+4功法 |
+| 玩家可用 | 1 | 仅 gongfa_xinwuxingyou（金丹终点） |
+
+> 注：本次未发现适合降级为"紫府候选"或"金丹丹籍技"的条目。
+> 所有高阶术法/神通的名称和机制（领域级、因果律、劫雷等）均远超紫府/金丹位格，
+> 强行降级会破坏世界观一致性。建议在后续设计轮次中专门设计紫府候选术法和丹籍技，
+> 而非从现有高阶池中挑选迁移。
+
+## 七、建议后续动作
+
+| 优先级 | 动作 | 主责 | 依赖 |
+|--------|------|------|------|
+| P0 | Codex 复审本定位表结论 | Codex/ChatGPT5.5 | 本文件 |
+| P1 | 决定 realm_lianshen 最终处理方案（保留/合并/删除） | Codex/ChatGPT5.5 | 复审结论 |
+| P2 | 功法 CSV 新增 `contentScope` 列（player/npc/reserved），逐条标注 | DeepSeek（起草）+ Codex（复审） | P0 |
+| P2 | 术法/神通 CSV 新增 `contentScope` 列 | DeepSeek（起草）+ Codex（复审） | P0 |
+| P3 | 若保留炼神概念，补入 Language.csv 与境界设定文档 | DeepSeek（起草）+ Codex（复审） | P1 |
+| P4 | `check-data-chain.ps1` 追加 realm_lianshen 告警 | DeepSeek | P1 |
+
+## 八、验证命令
+
+```powershell
+# 检查本文件格式
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/CSV高阶内容定位表.txt
+
+# 复核 realm_lianshen 影响面
+rg -n "realm_lianshen" src/Assets/DataConfig/GongFa.csv src/Assets/DataConfig/Spells.csv src/Assets/DataConfig/Skills.csv
+
+# 数据链路检查
+powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
+```
+
+## 九、自检清单
+
+- [x] 是否读取了本任务必需的入口、任务卡、规范或事实源（是）
+- [x] 是否误把自己的修改标为「✅ 已审核」（否，标为 ⚠️ 已修改/未审核）
+- [x] 是否有未说明的事实源假设、未验证项或残留风险（见"残留风险"）
+- [x] 是否只 stage/commit 本轮相关文件（仅本文件）
+- [x] 是否需要更新 AI合作沟通.txt（是，见下）
+
+**残留风险**：
+1. 未逐条阅读 29 条功法的 growth 数值合理性——此项超出 TQ-013D 范围，属于 TQ-008（数值差异表）。
+2. 未运行 `check-data-chain.ps1`——本任务不修改 CSV/asset，仅产出定位表；复审时可按需运行。
+3. 术法/神通总数（78+37）与差异表所述（75+34）略有偏差，可能是注释行或后续追加条目差异，但不影响高阶定位判断。
+
+**未验证项**：
+- Unity asset 中 realm_lianshen 对应的 `.asset` 文件残留（差异表提及但未确认路径）。
