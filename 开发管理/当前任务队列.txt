@@ -22,7 +22,7 @@
 | TQ-013C | P1 | Codex / ChatGPT5.5 | Unity实现 | 待处理 | Unity `CultivationEngine` 与槽位计算迁移：阶段显示、丹籍/府位槽位、旧倍率兼容 |
 | TQ-013D | P1 | DeepSeek V4 Pro | 数据整理 | 待复审 / 已完成待归档 | CSV 高阶内容定位表：`realmReq`、功法篇章、`realm_lianshen` 清理方案 |
 | TQ-008 | P1 | Codex / ChatGPT5.5 | 数值评估 | 待处理 | `角色数值设计.txt` 与 BattleSim GameData 差异表，决定回写文档或调整代码 |
-| TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 待处理 | CSV/Unity asset 补独立术法/神通五行属性字段，不再用 `elementReq` 兼任技能属性 |
+| TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 待复审 / 已完成待归档 | CSV/Unity asset 补独立术法/神通五行属性字段，不再用 `elementReq` 兼任技能属性 |
 | TQ-014 | P1 | Codex / ChatGPT5.5 | 架构/计划 | 待处理 | 场景架构与 2.5D 战棋表现实施计划：把已确认规格拆成可执行 Unity 工程切片，锁定首轮不强切 2.5D 的落地顺序 |
 
 ## 任务卡片
