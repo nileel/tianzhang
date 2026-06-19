@@ -1,5 +1,6 @@
 # 未通过审核清单（✅ 已审核）
 
+> 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3 后，数据链路剩余问题收窄为 Unity asset 覆盖缺口。
 > 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 部分通过。旧 #3 Language 重复 key、旧 #4 管理状态校准、旧 #5 未审核状态保留已复核通过；数据链路剩余问题合并为当前 #1。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：从 `开发管理/审核规则.txt` 拆出为动态清单，内容沿用原未通过项；清单内条目仍需逐项修复。依据：40d5887、26e8210。
 
@@ -9,10 +10,10 @@
 
 ## 当前未通过项
 
-1. 数据链路仍未完全闭合（TQ-003 567c3f2→f7f6944 复审部分通过，CSV/Language已修复但asset仍有缺口）：
-   - `GongFa.csv` 已对齐为 29/29 ✅；太一道庭 5 篇已于 f7f6944 补齐。
+1. 数据链路仍未完全闭合（TQ-003 567c3f2→f7f6944→本轮修正，CSV/Language 已收口但 asset 仍有缺口）：
+   - `GongFa.csv` 已对齐为 29/29 ✅；太一道庭 5 篇已于 f7f6944 补齐；本轮机械核对修正 `gongfa_taiyiyugedian` 资质星级 2→3。
    - 4 条功法 `affiliation` 已于 f7f6944 修正 ✅：`nanhuachanyandian`/`jiansubaopujing`→古修，`kongwuborejing`→太虚观，`taiyixuanyijian`→兰台书院。
-   - `Language.csv` 已于 f7f6944 补入 `faction_guxiu`、`faction_lantaishuyuan` 及新功法/篇章/desc 共 61 条 key ✅。
+   - `Language.csv` 已于 f7f6944 补入 `faction_guxiu`、`faction_lantaishuyuan` 及新功法/篇章/desc key；当前有效 key 389，无重复 ✅。
    - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 仍失败：GongFa 缺 16（含新增 5 篇）、Spells 缺 28、Skills 缺 13；Unity `.asset` 有效覆盖尚未收口。
    - A9/A10/A6 相关条目 CSV/Language 部分已完成；Unity asset 补齐（`天章/导入全部配置`）后需复审解锁「⚠️ 已修改/未审核」标记。
 2. `docs/角色养成/术法设计规范.txt` 未清洁：

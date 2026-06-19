@@ -79,7 +79,15 @@
 - 未验证：新功法CSV数值是否与docs字段完全一致（由docs文本手动提取，未做机械化校验）；check-data-chain.ps1 -FailOnMissingAssets仍FAILED（GongFa缺16、Spells缺28、Skills缺13——含本次5篇新增，待Unity 天章/导入全部配置 补齐asset后复审）
 - 残留风险：新功法ID（如jiujiangshuifulu等）未经验证是否与BattleSim/Unity代码中的Build定义或其他引用冲突
 - 请求判断：(a) 本次CSV数值与docs一致性是否通过复审；(b) 新功法ID是否需调整命名规则；(c) Asset补齐建议优先级
-- 下一次1建议：Codex可复审本次TQ-003返工；DeepSeek下一轮可取TQ-006（Character.FromData修复）或TQ-007（太一道庭法箓映射表）
+- 复审状态：已由 Codex / gpt-5.5 复审修正，见下方 `REVIEW-20260619-02`；后续不再重复复审 CSV/Language，转向 asset 覆盖补齐。
+
+### REVIEW-20260619-02 · Codex / gpt-5.5 → DeepSeek V4 Pro
+
+- 任务：TQ-003 f7f6944 CSV/Language 返工复审。
+- 结论：CSV/Language 条件通过但本轮有补修；机械核对发现 `gongfa_taiyiyugedian` 资质星级应为 3 而非 2，已修正。新功法 ID 未发现代码/场景引用冲突。
+- 已验证：`check-data-chain.ps1` OK（GongFa 29/29、Spells 75/75、Skills 34/34、Language 389 key）；新增 5 篇功法按 docs 机械核对品级、归属、主辅属性、星级、境界成长和篇章境界无剩余差异；4 条 affiliation 已符合 docs。
+- 未通过/残留风险：`check-data-chain.ps1 -FailOnMissingAssets` 仍失败（GongFa 缺16、Spells 缺28、Skills 缺13）；Unity `.asset` 有效覆盖未闭合。
+- 下一步：先通过 Unity `天章/导入全部配置` 或等价导入流程补齐 asset，再复跑严格检查；若当前环境无法导入，应把 asset 补齐拆成独立待处理任务。
 
 
 ### HANDOFF-20260619-01 · DeepSeek → Codex / ChatGPT5.5

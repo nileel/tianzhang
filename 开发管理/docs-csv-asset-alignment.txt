@@ -1,25 +1,26 @@
-⚠️ 已修改/未审核 — 2026-06-17 二次修订：校准 docs 功法总数(24→29)、门派覆盖度表与实际 docs 对齐、标注 CSV 门派标记偏差与缺失项（修改方: DeepSeek V4 Pro；待 Codex / ChatGPT5.5 复审）
-修正①：asset 缺口改用有效 .asset 数计算（功法缺11/术法缺28/神通缺13），增加额外/旧版计数
+⚠️ 已修改/未审核 — 2026-06-19 复审修订：CSV/Language 已对齐 docs 功法 29/29；本轮修正 `太一玉格典` 资质星级 2→3；Unity asset 覆盖缺口仍未闭合（修改方: Codex / gpt-5.5；待复审）
+修正①：asset 缺口改用有效 .asset 数计算；当前严格覆盖缺口为功法缺16/术法缺28/神通缺13，增加额外/旧版计数
 修正②：docs 功法数从 24 更正为 29；门派覆盖度按 docs 实际归属校准，标注 CSV 缺失与门派标记偏差
+修正③：TQ-003 返工后功法 CSV 29/29、Language 389 key；严格 asset 检查仍缺 GongFa 16、Spells 28、Skills 13
 
 # docs → CSV → Unity Asset 对齐清单
 
-> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 修订: 2026-06-17 (按 check-data-chain.ps1 校准 asset 缺口；修改方: DeepSeek V4 Pro) | 二次修订: 2026-06-17 (docs 计数与门派表口径校准；修改方: DeepSeek V4 Pro) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
+> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 修订: 2026-06-17 (按 check-data-chain.ps1 校准 asset 缺口；修改方: DeepSeek V4 Pro) | 二次修订: 2026-06-17 (docs 计数与门派表口径校准；修改方: DeepSeek V4 Pro) | 复审修订: 2026-06-19 (Codex / gpt-5.5 校准 CSV/Language 当前事实) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
 
 ## 数量总览
 
 | 类别 | docs (.txt) | CSV (.csv) | Unity .asset (总数/有效) | 额外/旧版 | CSV→asset 缺失 |
 |------|------------|------------|--------------------------|-----------|----------------|
-| 功法 | 29 | 24 | 14 / 13 | 1 | 11 |
+| 功法 | 29 | 29 | 14 / 13 | 1 | 16 |
 | 术法 | 75 | 75 | 54 / 47 | 7 | 28 |
 | 神通 | 34 | 34 | 23 / 21 | 2 | 13 |
 
-> **注**: 2026-06-15 补齐 CSV 后功法 24/24、术法 75/75、神通 34/34 与当时 docs 对齐；此后 docs 新增 5 篇功法（古修+2、太一道庭+1、太虚观+1、兰台书院+1），当前 docs 功法 29 篇，CSV 仍为 24 条（缺失 5 篇）。
+> **注**: 2026-06-15 补齐 CSV 后功法 24/24、术法 75/75、神通 34/34 与当时 docs 对齐；此后 docs 新增 5 篇功法。TQ-003 返工已补齐 5 篇太一道庭功法并修正 4 条 affiliation；本轮复审修正 `太一玉格典` 资质星级后，当前功法 CSV 为 29/29。
 > Unity `.asset` 已部分生成（功法 14 条中有效 13 条、术法 54 条中有效 47 条、神通 23 条中有效 21 条；额外/旧版 asset 待判定保留或清理）。Language.csv 重复 key 已于 2026-06-16 修复（移除 `desc_enemy_huangyesanxiu`、`chapter_qiushui` 各一条重复）。
 
-## 功法缺口 — 已补齐 ✅ (CSV 端，基于当时 24 篇 docs)
+## 功法缺口 — 已补齐 ✅ (CSV / Language 端)
 
-2026-06-15 补 10 本至 GongFa.csv + Language.csv。此后 docs 新增 5 篇未录入 CSV，见下方「CSV 门派标记偏差」和「行动建议」。
+2026-06-15 补 10 本至 GongFa.csv + Language.csv；TQ-003 返工补齐新增 5 篇太一道庭功法，并补入 `faction_guxiu`、`faction_lantaishuyuan` 与新增功法/篇章/描述 key。当前 CSV 端功法 29/29，Language 有效 key 389。
 
 ## 术法缺口 — 已补齐 ✅ (CSV 端)
 
@@ -33,7 +34,7 @@
 
 | 类别 | docs | CSV | .asset (总数/有效) | 缺失 | 额外/旧版 | 备注 |
 |------|------|-----|-------------------|------|-----------|------|
-| 功法 | 29 | 24 | 14 / 13 | 11 | 1 | docs 比 CSV 多 5 篇；CSV 按门派标记覆盖 8(太一)+3(古修)+4(太虚)+1(散修)+4(混元)+4(玉清)=24 |
+| 功法 | 29 | 29 | 14 / 13 | 16 | 1 | CSV 已补齐 29/29；新增 5 篇尚未生成有效 GongFa asset，既有有效 asset 仍为 13 |
 | 术法 | 75 | 75 | 54 / 47 | 28 | 7 | 部分旧版 asset（无 spell_ 前缀）需判定保留或清理 |
 | 神通 | 34 | 34 | 23 / 21 | 13 | 2 | 有旧版/额外 asset（如 Jiuzhuanhuandan.asset / Zhengqisuozhi.asset 与 skill_ 前缀版共存） |
 
@@ -41,26 +42,26 @@
 
 | 门派 | 功法(docs/CSV) | 术法(docs/CSV) | 神通(docs/CSV) | 状态 |
 |------|---------------|---------------|---------------|------|
-| 古修 | 5/3 | 0/0 | 0/0 | ⚠️ docs 5, CSV 3; `jiansubaopujing`/`nanhuachanyandian` 在 CSV 误标为太一道庭 |
-| 太一道庭 | 9/8 | 26/26 | 9/9 | ⚠️ docs 9, CSV 8; CSV 缺 5 篇(九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓)且含 4 篇门派标记偏差 |
-| 太虚观 | 5/4 | 15/15 | 7/7 | ⚠️ docs 5, CSV 4; `kongwuborejing` 在 CSV 误标为太一道庭 |
-| 兰台书院 | 1/0 | 0/0 | 0/0 | ⚠️ docs 1, CSV 0; `taiyixuanyijian` 在 CSV 误标为太一道庭 |
+| 古修 | 5/5 | 0/0 | 0/0 | ✅ CSV 已按 docs 归属修正 |
+| 太一道庭 | 9/9 | 26/26 | 9/9 | ✅ CSV 已补齐 5 篇太一功法 |
+| 太虚观 | 5/5 | 15/15 | 7/7 | ✅ CSV 已按 docs 归属修正 |
+| 兰台书院 | 1/1 | 0/0 | 0/0 | ✅ CSV 已按 docs 归属修正 |
 | 散修 | 1/1 | 7/7 | 6/6 | ✅ CSV ✅ 术法 ✅ 神通 |
 | 混元山 | 4/4 | 14/14 | 6/6 | ✅ CSV ✅ 术法 ✅ 神通 |
 | 玉清崖 | 4/4 | 13/13 | 6/6 | ✅ CSV ✅ 术法 ✅ 神通 |
 
-## CSV 门派标记偏差（功法 GongFa.csv）
+## CSV 门派标记偏差（功法 GongFa.csv）— 已修正 ✅
 
-以下条目 CSV 中 `affiliation` 字段与 docs 实际归属不一致：
+以下条目曾在 CSV 中 `affiliation` 字段与 docs 实际归属不一致；TQ-003 返工已修正：
 
-| CSV ID | CSV 门派 | docs 实际门派 | 备注 |
+| CSV ID | 当前 CSV 门派 | docs 实际门派 | 备注 |
 |--------|----------|--------------|------|
-| `gongfa_nanhuachanyandian` | faction_taiyidaoting | 古修 | 南华阐衍典 ∈ docs/古修/ |
-| `gongfa_jiansubaopujing` | faction_taiyidaoting | 古修 | 见素抱朴经 ∈ docs/古修/ |
-| `gongfa_kongwuborejing` | faction_taiyidaoting | 太虚观 | 空无般若经 ∈ docs/太虚观/ |
-| `gongfa_taiyixuanyijian` | faction_taiyidaoting | 兰台书院 | 太易玄义笺 ∈ docs/兰台书院/ |
+| `gongfa_nanhuachanyandian` | faction_guxiu | 古修 | 南华阐衍典 ∈ docs/古修/ |
+| `gongfa_jiansubaopujing` | faction_guxiu | 古修 | 见素抱朴经 ∈ docs/古修/ |
+| `gongfa_kongwuborejing` | faction_taixuguan | 太虚观 | 空无般若经 ∈ docs/太虚观/ |
+| `gongfa_taiyixuanyijian` | faction_lantaishuyuan | 兰台书院 | 太易玄义笺 ∈ docs/兰台书院/ |
 
-> 以上 4 条的 affiliation 应修正为 docs 对应门派。另有 5 篇 docs 功法完全未入 CSV（太一道庭 5 篇），需新增 CSV 行和 Language 条目。
+> 以上 4 条已修正为 docs 对应门派；5 篇太一道庭功法已新增至 GongFa.csv + Language.csv。
 
 ## ID 命名问题
 
@@ -71,8 +72,8 @@
 1. ✅ 补齐古修 CSV（2026-06-15 已完成）
 2. ✅ 补齐太一道庭 CSV（2026-06-15 已完成）
 3. ✅ 补齐散修及其他门派缺口（2026-06-15 已完成）
-4. 🔲 **CSV 门派标记修正**：修正 4 条功法 affiliation 字段偏差（`nanhuachanyandian`/`jiansubaopujing`→古修, `kongwuborejing`→太虚观, `taiyixuanyijian`→兰台书院）
-5. 🔲 **补齐缺失 5 篇功法至 CSV**：太一道庭 5 篇（九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓）→ GongFa.csv + Language.csv
+4. ✅ **CSV 门派标记修正**：4 条功法 affiliation 字段偏差已修正（`nanhuachanyandian`/`jiansubaopujing`→古修, `kongwuborejing`→太虚观, `taiyixuanyijian`→兰台书院）
+5. ✅ **补齐缺失 5 篇功法至 CSV**：太一道庭 5 篇（九江水府箓/三洞法籍录/太一玉格典/万法都箓经/正一盟威箓）已写入 GongFa.csv + Language.csv
 6. 🔲 **修复 `leicnicuiti` ID typo** → `leichicuiti` 并同步更新 Language.csv、代码引用
 7. 🔲 **ScriptableObject 批量补齐**：CSV 齐备后运行 DataConfigImporter 补全功法+术法+神通 `.asset`
 8. 🔲 **旧版 asset 清理**：Data/ 下无 spell_/skill_ 前缀的旧版 asset 需判定保留或删除（如 Anshenfu.asset、Xuanshuizhou.asset、Jiuzhuanhuandan.asset 等）

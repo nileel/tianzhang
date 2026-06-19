@@ -5,6 +5,7 @@
 > 2026-06-19 Codex / gpt-5.5：TQ-011 已产出 `开发管理/境界体系重构锁口径决策表.txt`，状态改为待复审；TQ-012/TQ-013 仍以前置复审通过为准。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-011 commit 20299b6 满足锁口径完成条件，`开发管理/境界体系重构锁口径决策表.txt` 标为已审核；TQ-012 前置解除，状态改为待处理。
 > 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 结论为部分通过；docs/CSV/asset 数量口径、`设计-当前状态.txt` 与 A9/A10/A6 未审核状态已校准，但 `GongFa.csv` 仍为 24/29、4 条 affiliation 偏差未修、`faction_guxiu`/`faction_lantaishuyuan` 语言 key 缺失，且 `check-data-chain.ps1 -FailOnMissingAssets` 仍因 Unity asset 缺口失败。
+> 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮补修 `gongfa_taiyiyugedian` 资质星级 2→3 后，GongFa 29/29、Spells 75/75、Skills 34/34 与 Language 389 key 通过普通检查；严格 asset 覆盖仍失败（GongFa 缺16、Spells 缺28、Skills 缺13）。
 > 2026-06-19 Codex / gpt-5.5 复审通过：按 `docs/基础设定/境界体系重构草案.txt` 第七节新增 TQ-011/TQ-012/TQ-013，作为境界体系重构后续锁口径、文档替换和数据/模拟迁移的短期切片。
 > 2026-06-18 Codex / gpt-5.5 复审通过：TQ-005 Unity `DamageCalculator` 运行时口径已审核并从队列移除；BattleSim 五行同源化与 CSV/asset 独立属性字段保留为 TQ-009/TQ-010。
 > 2026-06-18 Codex / gpt-5.5 复审通过：补充 `1` 自动推进选题规则：先确认身份；更高优先级任务若已执行完成但待复审，不阻塞继续选择下一条待处理任务。
@@ -26,7 +27,7 @@
 | TQ-011 | P0 | Codex / ChatGPT5.5 | 设计/架构 | 已完成待归档 | 当前最高优先：境界体系重构第一轮锁口径，含玩家主线、筑基/紫府包装、金丹丹籍、神通门槛、固定丹籍出口与元婴锚点倒推法 |
 | TQ-012 | P0 | DeepSeek V4 Pro | 文档重构 | 待处理 | 重构第二轮：按 TQ-011 口径重写 `修行境界.txt`、`境界特性.txt`、`术法槽位设计.txt` 与三类设计规范中的境界/本命/领域定义 |
 | TQ-013 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待前置 | 重构第三轮：BattleSim、Unity CultivationEngine、CSV realmReq 与筑基/金丹压制测试迁移差异表 |
-| TQ-003 | P1 | DeepSeek V4 Pro | 数据链路 | 待复审 | 复审部分通过后的数据链路返工：补齐 GongFa.csv/Language.csv 缺口、修正 4 条 affiliation、补 faction 语言 key，并处理 Unity asset 严格覆盖缺口 |
+| TQ-003 | P1 | DeepSeek V4 Pro | 数据链路 | 待处理 | CSV/Language 已复审修正；剩余 Unity asset 严格覆盖缺口需通过导入补齐或拆成单独任务 |
 | TQ-009 | P1 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 待复审 | 修复 `Character.FromData` 槽位冷却数组初始化顺序并补回归检查 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 待复审 | 太一道庭法箓体系数据化映射表：9功法、26术法、9神通字段整理 |
@@ -39,10 +40,10 @@
 
 - 来源：`开发管理/未通过审核清单.txt` #1/#4/#5。
 - 当前优先级：P1。境界体系重构锁口径期间后置；若涉及重构文档替换所需的数据链路，再临时提升。
-- 复审结论：2026-06-19 Codex / gpt-5.5 对 567c3f2 部分通过；数量口径、管理状态和未审核标记已校准，剩余 CSV/Language/asset 缺口继续返工。
+- 复审结论：2026-06-19 Codex / gpt-5.5 对 f7f6944 复审修正；CSV/Language 条件已收口（本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3），剩余 Unity asset 严格覆盖缺口继续返工。
 - 必读：`开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 对应条目、`开发管理/docs-csv-asset-alignment.txt`、`src/Assets/DataConfig/README.txt`。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；严格收口时追加 `-FailOnMissingAssets`；管理文本检查用 `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,dev-mgmt`
-- 完成条件：`GongFa.csv` 与 docs 功法 29/29 对齐；4 条 affiliation 改为 docs 归属；`Language.csv` 补 `faction_guxiu`、`faction_lantaishuyuan` 以及新增功法/篇章/描述 key；Unity `.asset` 有效覆盖收口或明确拆成单独任务，未通过清单剩余数据链路项进入待复审或移除。
+- 完成条件：`GongFa.csv` 与 docs 功法 29/29 对齐、4 条 affiliation 改为 docs 归属、`Language.csv` 补 `faction_guxiu`/`faction_lantaishuyuan` 以及新增功法/篇章/描述 key（均已完成）；剩余 Unity `.asset` 有效覆盖收口或明确拆成单独任务，未通过清单剩余数据链路项进入待复审或移除。
 
 ### TQ-006 · 槽位冷却数组修复
 
