@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -153,7 +153,7 @@ namespace TianZhang.Editor
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
-                if (cols.Length < 14) continue;
+                if (cols.Length < 15) continue;
 
                 var asset = ScriptableObject.CreateInstance<SpellData>();
                 asset.spellName = T(cols[0]);
@@ -168,9 +168,9 @@ namespace TianZhang.Editor
                 asset.cannotDodge = cols[9] == "1";
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
-                // 五行属性（从 elementReq 解析为标准五行）
-                if (cols.Length > 13)
-                    asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[13]);
+                // 五行属性（从独立 element 列解析）
+                if (cols.Length > 14)
+                    asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[14]);
                 // realmReq, elementReq, affiliation stored for reference (already in name)
 
                 string assetPath = $"Assets/Data/Spells/Spell_{SanitizeName(cols[0])}.asset";
@@ -192,7 +192,7 @@ namespace TianZhang.Editor
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
-                if (cols.Length < 16) continue;
+                if (cols.Length < 17) continue;
 
                 var asset = ScriptableObject.CreateInstance<DivineSkillData>();
                 asset.skillName = T(cols[0]);
@@ -207,8 +207,8 @@ namespace TianZhang.Editor
                 asset.cannotDodge = cols[9] == "1";
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
-                // Skills.csv 当前没有独立五行属性列；后续补列后再写入 asset.element。
-                asset.element = "";
+                // 五行属性（从独立 element 列解析）
+                asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[15]);
                 asset.isDomain = cols[12] == "1";
                 asset.isBloodline = cols[13] == "1";
                 asset.specialEffectDesc = T(cols[14]);
