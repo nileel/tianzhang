@@ -39,7 +39,8 @@ flowchart TD
 2. 城市和宗门共用 `SettlementScene`，由地点数据决定界面、功能入口和视觉主题。
 3. 副本、野外遭遇、秘境和洞府共用 `AdventureScene`，由副本配置决定地形、敌人、事件和奖励。
 4. 普通战斗不切换场景，直接在 `AdventureScene` 内切换到战斗模式。
-5. 独立 `CombatScene` 只用于剧情战、Boss 战、竞技场、演出战或需要特殊战场资源隔离的战斗。
+5. `AdventureScene` 的规则层保持 2D 六角格坐标，渲染层允许从当前 2D Tilemap 演进到 2.5D 战棋表现。
+6. 独立 `CombatScene` 只用于剧情战、Boss 战、竞技场、演出战或需要特殊战场资源隔离的战斗。
 
 ## 场景职责
 
@@ -105,8 +106,15 @@ flowchart TD
 3. 触发遭遇后进入同场景战斗模式。
 4. 战斗结束后回到探索模式，保留地图状态。
 5. 完成副本后返回来源场景。
+6. 长期支持 2.5D 战棋表现，但不让战斗规则依赖 Unity 3D 坐标。
 
 当前 `ExplorationScene` 应定位为 `AdventureScene` 原型。
+
+表现路线：
+
+1. 第一阶段继续使用当前 2D Tilemap，优先跑通场景流转、飞行规则、障碍穿越、战斗状态隔离。
+2. 第二阶段制作 2.5D `AdventureScene` 原型：3D 地形块或伪 3D 网格、斜俯视正交相机、2D 角色纸片、地面影子和高度演出。
+3. 2.5D 只作为渲染和演出层，寻路、射程、技能范围、CTB、AI 仍使用 `HexCoord(q, r)` 和规则高度计算。
 
 状态模式：
 
@@ -181,6 +189,49 @@ public void ReturnToPreviousScene();
 `BattleUIManager` 可作为战斗 UI 原型继续使用，但不应长期负责探索、地点或菜单 UI。
 
 ## 数据定义
+
+### TacticalGridModel
+
+职责：
+
+1. 作为战斗和探索的逻辑网格。
+2. 保存六角格坐标、地形标签、单位占用、高度和通行规则。
+3. 向 2D Tilemap 渲染器或 2.5D 战棋渲染器提供同一份格子数据。
+
+字段：
+
+1. `HexCoord coord`
+2. `TerrainType terrainType`
+3. `int heightLevel`
+4. `bool blocksGroundMove`
+5. `bool blocksFlyingMove`
+6. `bool blocksLineOfSight`
+7. `bool blocksLanding`
+8. `int occupiedUnitId`
+
+原则：
+
+1. 规则层只认 `HexCoord`、`heightLevel` 和通行标签。
+2. Unity 世界坐标只由渲染器换算，不参与战斗规则判断。
+3. 后续飞行、雷遁、缩地、浮空地形都接入该模型。
+
+### TacticalRenderer
+
+职责：
+
+1. 把 `TacticalGridModel` 画成具体场景。
+2. 提供屏幕点击到 `HexCoord` 的转换。
+3. 显示移动范围、攻击范围、选中格、单位高度和技能演出。
+
+第一版实现：
+
+1. `TilemapTacticalRenderer`：复用当前 `HexTilemapManager` 思路，使用 2D Tilemap。
+
+第二版验证：
+
+1. `HybridTacticalRenderer`：使用 3D 地形块或平面网格承载地形，使用 2D sprite/billboard 承载角色。
+2. 正交斜俯视相机负责呈现纵深，不改变规则距离。
+3. 角色飞行时通过 sprite 垂直偏移、影子、拖尾、特效和高度标记表现。
 
 ### WorldRegionDefinition
 
@@ -258,8 +309,17 @@ public void ReturnToPreviousScene();
 8. `eventPoolId`
 9. `rewardPoolId`
 10. `exitRule`
+11. `rendererMode`
+12. `cameraProfile`
 
 当前 `ExplorationController` 的 `mapRadius`、`obstaclePercent`、`enemyCount`、`enemyTemplates` 可以逐步迁入该定义。
+
+`rendererMode` 第一版包括：
+
+1. `Tilemap2D`
+2. `Hybrid2_5D`
+
+默认使用 `Tilemap2D`。`Hybrid2_5D` 只用于原型验证或少量重点副本，验证通过后再扩大使用范围。
 
 ### EncounterContext
 
@@ -347,12 +407,16 @@ public void ReturnToPreviousScene();
 4. `Assets/Scripts/Settlement/SettlementSceneController.cs`
 5. `Assets/Scripts/Adventure/AdventureSceneController.cs`
 6. `Assets/Scripts/Combat/TacticalCombatController.cs`
+7. `Assets/Scripts/Grid/TacticalGridModel.cs`
+8. `Assets/Scripts/Grid/ITacticalRenderer.cs`
+9. `Assets/Scripts/Grid/TilemapTacticalRenderer.cs`
 
 迁移原则：
 
 1. 先不改战斗公式和 CTB 规则。
 2. 先把 `ExplorationController` 的职责切开，但保留行为一致。
-3. 每一步都保持 Unity 编译通过。
+3. 先保留 2D Tilemap 渲染，不在第一轮迁移中切 2.5D。
+4. 每一步都保持 Unity 编译通过。
 
 ### 第三步：门派选择迁出探索场景
 
@@ -380,6 +444,15 @@ public void ReturnToPreviousScene();
 2. `AdventureSceneController` 保留探索状态和敌人状态。
 3. 战斗结束只清理战斗上下文，不重载场景。
 
+### 第七步：2.5D 战斗表现原型
+
+1. 选择一个小型副本作为验证场景，规模控制在半径 5 到 7 的六角格。
+2. 使用同一份 `TacticalGridModel` 数据生成 2.5D 地形。
+3. 角色仍使用 2D sprite 或 billboard，不先制作完整 3D 角色。
+4. 鼠标点击通过射线命中地形块后换算回 `HexCoord`。
+5. 验证移动范围、攻击范围、障碍、飞行高度、视线遮挡和 UI 选中反馈。
+6. 只有当该原型操作手感和制作成本可接受时，才把 `Hybrid2_5D` 扩展到更多副本。
+
 ## 测试与验证
 
 第一版验证清单：
@@ -394,6 +467,8 @@ public void ReturnToPreviousScene();
 8. `GameSession` 在多次切场景后不重复创建。
 9. `UICanvas` 不重复创建。
 10. Unity 编译无错误。
+11. `TacticalGridModel` 在 2D 渲染下仍能正确表达障碍、占用和格子距离。
+12. 2.5D 原型不改变 CTB、寻路、射程和技能范围的规则结果。
 
 ## 风险与约束
 
@@ -402,8 +477,9 @@ public void ReturnToPreviousScene();
 3. 普通战斗放在副本场景内能减少加载，但要求探索状态和战斗状态隔离清楚，避免战斗输入穿透到探索输入。
 4. 独立 `CombatScene` 如果过早引入，会增加返回点、玩家快照、敌人状态和 UI 同步复杂度。
 5. 主世界若第一版直接做连续沙盒地图，会阻塞城市、宗门、副本和战斗循环整合。节点式大地图更适合当前阶段。
+6. 2.5D 表现会提高地形、相机、点击拾取、遮挡排序和特效制作成本，不能在场景架构第一轮同时强切。
+7. 2.5D 只能作为渲染层替换，不允许让战斗规则散落到 Unity Transform 或碰撞体里，否则 BattleSim/Unity 规则对齐会变得不可控。
 
 ## 结论
 
-第一版采用节点式主世界、通用城市/宗门场景、通用副本/探索场景，以及副本内同场景战斗。该方案能最大程度复用当前 `ExplorationScene` 原型，同时为后续连续沙盒世界、特殊战斗场景、宗门经营和丹域玩法保留扩展点。
-
+第一版采用节点式主世界、通用城市/宗门场景、通用副本/探索场景，以及副本内同场景战斗。副本/战斗的底层规则保持 2D 六角格模型，表现层先复用当前 Tilemap，后续以 2.5D 战棋原型验证飞行、高低差、浮空秘境和 Boss 演出的表现上限。该方案能最大程度复用当前 `ExplorationScene` 原型，同时为后续连续沙盒世界、特殊战斗场景、宗门经营和丹域玩法保留扩展点。
