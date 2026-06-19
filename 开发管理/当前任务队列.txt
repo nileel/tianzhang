@@ -4,6 +4,7 @@
 > 2026-06-19 Codex / gpt-5.5：同步 TQ-011 增加“元婴锚点倒推法”锁口径要求；原已审核任务队列内容仍保留为历史依据。
 > 2026-06-19 Codex / gpt-5.5：TQ-011 已产出 `开发管理/境界体系重构锁口径决策表.txt`，状态改为待复审；TQ-012/TQ-013 仍以前置复审通过为准。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-011 commit 20299b6 满足锁口径完成条件，`开发管理/境界体系重构锁口径决策表.txt` 标为已审核；TQ-012 前置解除，状态改为待处理。
+> 2026-06-19 Codex / gpt-5.5：复审 TQ-012 时补修 3 个规范/模板旧口径残留：删除 `术法设计规范.txt` 顶部临时注释残留；将功法规范当前版本突破/小阶段校准为 3 次/17 段、筑基 5 段/金丹 3 段；将术法本命升格改为当前版本至少写金丹期效果，元婴/化神仅 NPC 或资料片预留。因本轮已直接修改文档，TQ-012 继续待复审。
 > 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 结论为部分通过；docs/CSV/asset 数量口径、`设计-当前状态.txt` 与 A9/A10/A6 未审核状态已校准，但 `GongFa.csv` 仍为 24/29、4 条 affiliation 偏差未修、`faction_guxiu`/`faction_lantaishuyuan` 语言 key 缺失，且 `check-data-chain.ps1 -FailOnMissingAssets` 仍因 Unity asset 缺口失败。
 > 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮补修 `gongfa_taiyiyugedian` 资质星级 2→3 后，GongFa 29/29、Spells 75/75、Skills 34/34 与 Language 389 key 通过普通检查；严格 asset 覆盖仍失败（GongFa 缺16、Spells 缺28、Skills 缺13）。
 > 2026-06-19 Codex / gpt-5.5 复审通过：按 `docs/基础设定/境界体系重构草案.txt` 第七节新增 TQ-011/TQ-012/TQ-013，作为境界体系重构后续锁口径、文档替换和数据/模拟迁移的短期切片。
@@ -27,6 +28,7 @@
 | TQ-011 | P0 | Codex / ChatGPT5.5 | 设计/架构 | 已完成待归档 | 当前最高优先：境界体系重构第一轮锁口径，含玩家主线、筑基/紫府包装、金丹丹籍、神通门槛、固定丹籍出口与元婴锚点倒推法 |
 | TQ-012 | P0 | DeepSeek V4 Pro | 文档重构 | 待复审 | 重构第二轮：按 TQ-011 口径重写 `修行境界.txt`、`境界特性.txt`、`术法槽位设计.txt` 与三类设计规范中的境界/本命/领域定义
 > 2026-06-19 DeepSeek V4 Pro：TQ-012 已执行完成，9 个文件已按决策表重写/更新并标「⚠️ 已修改/未审核」，待 Codex / ChatGPT5.5 复审。修改文件见 HANDOFF-20260619-03。 |
+> 2026-06-19 Codex / gpt-5.5：本轮补修 `功法设计规范.txt`、`术法设计规范.txt`、`术法/术法设计.txt` 的旧口径残留；TQ-012 仍待后续复审，不解除 TQ-013 前置。 |
 | TQ-013 | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待前置 | 重构第三轮：BattleSim、Unity CultivationEngine、CSV realmReq 与筑基/金丹压制测试迁移差异表 |
 | TQ-003 | P1 | DeepSeek V4 Pro | 数据链路 | 待复审 | ⚠️ 已修改/未审核：2026-06-19 DeepSeek V4 Pro 批量生成 57 缺失 asset + 清理 10 遗留资产；GongFa 29/29、Spells 75/75、Skills 34/34，0 missing 0 extra。待 Codex / ChatGPT5.5 复审。
 | TQ-009 | P1 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 1v1/2v2 五行 v5.10 同源化：技能属性、施法功法、目标功法三方匹配 |

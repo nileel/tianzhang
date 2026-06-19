@@ -1,5 +1,6 @@
-# 未通过审核清单（✅ 已审核）
+# 未通过审核清单（⚠️ 已修改/未审核）
 
+> 2026-06-19 Codex / gpt-5.5：本轮补修旧 #2 相关文本问题，并额外校准 TQ-012 规范/模板中残留的旧突破次数、本命升格高阶默认要求；因本轮直接修改文档，保留为待后续复审项，暂不标通过。
 > 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3 后，数据链路剩余问题收窄为 Unity asset 覆盖缺口。
 > 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 部分通过。旧 #3 Language 重复 key、旧 #4 管理状态校准、旧 #5 未审核状态保留已复核通过；数据链路剩余问题合并为当前 #1。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：从 `开发管理/审核规则.txt` 拆出为动态清单，内容沿用原未通过项；清单内条目仍需逐项修复。依据：40d5887、26e8210。
@@ -16,9 +17,11 @@
    - `Language.csv` 已于 f7f6944 补入 `faction_guxiu`、`faction_lantaishuyuan` 及新功法/篇章/desc key；当前有效 key 389，无重复 ✅。
    - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 仍失败：GongFa 缺 16（含新增 5 篇）、Spells 缺 28、Skills 缺 13；Unity `.asset` 有效覆盖尚未收口。
    - A9/A10/A6 相关条目 CSV/Language 部分已完成；Unity asset 补齐（`天章/导入全部配置`）后需复审解锁「⚠️ 已修改/未审核」标记。
-2. `docs/角色养成/术法设计规范.txt` 未清洁：
-   - 第 26 行仍有 `` `n `` 转义残留。
-   - 第 28 行仍有 `本命升格\ —\` 反斜杠残留。
+2. TQ-012 规范/模板补修待复审：
+   - 本轮已删除 `docs/角色养成/术法设计规范.txt` 顶部临时审核注释中的字面残留。
+   - 本轮已将 `docs/角色养成/功法设计规范.txt` 中当前版本突破次数、小阶段总数和基准表级数校准为 3 次、17 段、筑基 5 段/金丹 3 段。
+   - 本轮已将 `docs/角色养成/术法设计规范.txt` 与 `docs/角色养成/术法/术法设计.txt` 中本命升格要求改为当前版本至少写金丹期效果，元婴/化神增强仅限 NPC 或资料片预留。
+   - 已运行 `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/基础设定,docs/角色养成` 通过；待后续复审确认后再移除此项。
 
 ## 后续复核建议
 
