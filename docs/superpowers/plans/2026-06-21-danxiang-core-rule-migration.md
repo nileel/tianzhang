@@ -134,7 +134,7 @@
   - Run: `git diff --check`
   - Expected: no malformed text, control characters, or whitespace errors.
 
-- [ ] **Step 3: Commit the migration**
+- [x] **Step 3: Commit the migration**
   - Stage only the eleven documents in Tasks 1-5.
   - Commit message: `docs: migrate danxiang core rules`.
 
