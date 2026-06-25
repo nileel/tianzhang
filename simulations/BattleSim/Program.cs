@@ -124,7 +124,7 @@ class Program
         Console.WriteLine("【详细境界分布】");
         for (int i = 0; i < N; i++)
         {
-            var groups = pool[i].GroupBy(c => $"{c.Realm}{c.SubIndex}").OrderBy(g => g.Key);
+            var groups = pool[i].GroupBy(c => GameData.StageName(c.Realm, c.SubIndex)).OrderBy(g => g.Key);
             Console.WriteLine($"  {buildDefs[i].Name,-8}: {string.Join(", ", groups.Select(g => $"{g.Key}({g.Count()})"))}");
         }
         Console.WriteLine();
@@ -211,6 +211,48 @@ class Program
             Console.WriteLine();
         }
         Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=金丹样本不足");
+
+        var zifuPools = pool.Select(p => p.Where(c => c.Realm == "筑基" && c.SubIndex == 4).ToList()).ToArray();
+        Console.WriteLine();
+        Console.WriteLine("【紫府圆满样本数】");
+        for (int i = 0; i < N; i++) Console.WriteLine($"  {tags[i],-8}: {zifuPools[i].Count}/{SEEDS}");
+        Console.WriteLine($"正在计算 {N}x{N} 紫府圆满同境矩阵...");
+        var zifuMat = ComputeSymmetricMatrix(zifuPools, Math.Max(400, SIM / 2));
+        PrintWinRateMatrix("紫府圆满同境战斗胜率矩阵", tags, zifuMat);
+
+        Console.WriteLine();
+        Console.WriteLine("【紫府圆满 vs 金丹初期压制战】");
+        Console.WriteLine($"{"Build",-10} {"紫府样本",-8} {"金丹样本",-8} {"紫府胜率",-8} {"平均回合",-8}");
+        Console.WriteLine(new string('-', 50));
+        for (int i = 0; i < N; i++)
+        {
+            var zifu = zifuPools[i];
+            var goldEarly = goldPools[i].Where(c => c.SubIndex == 0).ToList();
+            if (zifu.Count == 0 || goldEarly.Count == 0)
+            {
+                Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {"NA",8} {"NA",8}");
+                continue;
+            }
+
+            int pairs = Math.Min(zifu.Count, goldEarly.Count);
+            int roundsPerPair = Math.Max(1, SIM / pairs / 4);
+            double totalWin = 0;
+            double totalTurns = 0;
+            int combats = 0;
+            for (int s = 0; s < pairs; s++)
+            {
+                var z = zifu[s];
+                var g = goldEarly[s];
+                var (zw, _, t1) = Combat.Simulate(z, g, roundsPerPair);
+                var (_, zwSecond, t2) = Combat.Simulate(g, z, roundsPerPair);
+                totalWin += zw + zwSecond;
+                totalTurns += t1 + t2;
+                combats += 2;
+            }
+
+            Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {totalWin / combats,7:F1}% {totalTurns / combats,7:F1}");
+        }
+        Console.WriteLine("  说明：同 Build 内紫府圆满挑战金丹初期，验证金丹压制是否明显但仍保留战术出口。");
 
         // ═══════════════════════════════════════
         // 2v2 群战矩阵 (v6.0)
@@ -328,7 +370,7 @@ class Program
         Console.WriteLine("  练气角色境界分布:");
         for (int i = 0; i < N; i++)
         {
-            var groups = earlyPool[i].GroupBy(c => $"{c.Realm}{c.SubIndex}").OrderBy(g => g.Key);
+            var groups = earlyPool[i].GroupBy(c => GameData.StageName(c.Realm, c.SubIndex)).OrderBy(g => g.Key);
             Console.WriteLine($"    {buildDefs[i].Name,-8}: {string.Join(", ", groups.Select(g => $"{g.Key}({g.Count()})"))}");
         }
         double earlyTotalTurns = 0; int earlyTurnCombats = 0;
@@ -405,7 +447,7 @@ class Program
         var c_wl_jh = pool[1][0];
         var c_wl_cz = pool[0][0];
         void PrintStats(Character c) {
-            Console.Write($"  {c.Name} ({c.Realm}{c.SubIndex}) 道基={c.DFQuality}({c.DFScore}) 金丹={c.GCQuality}({c.GCScore}):");
+            Console.Write($"  {c.Name} ({GameData.StageName(c.Realm, c.SubIndex)}) 道基={c.DFQuality}({c.DFScore}) 金丹={c.GCQuality}({c.GCScore}):");
             foreach (var k in new[]{"HP","MP","肉攻","神攻","肉防","神防","反应"})
                 Console.Write($" {k}={c.Primary[k]}");
             Console.Write("  二级:");
@@ -421,5 +463,79 @@ class Program
         Console.WriteLine("  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）");
         Console.WriteLine("================================================================================");
         return 0;
+    }
+
+    static double[,] ComputeSymmetricMatrix(IReadOnlyList<Character>[] pools, int sim)
+    {
+        int n = pools.Length;
+        double[,] mat = new double[n, n];
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = i + 1; j < n; j++)
+            {
+                int wI = 0, tot = 0;
+                var left = pools[i];
+                var right = pools[j];
+                int pairs = Math.Min(left.Count, right.Count);
+                if (pairs == 0)
+                {
+                    mat[i, j] = double.NaN;
+                    mat[j, i] = double.NaN;
+                    continue;
+                }
+
+                int h = Math.Max(1, sim / pairs / 2);
+                for (int s = 0; s < pairs; s++)
+                {
+                    var ci = left[s];
+                    var cj = right[s];
+                    var (wi, _, _) = Combat.Simulate(ci, cj, h);
+                    var (_, wj2, _) = Combat.Simulate(cj, ci, h);
+                    wI += (int)Math.Round((wi + wj2) / 2.0 * h * 2 / 100.0);
+                    tot += h * 2;
+                }
+
+                mat[i, j] = wI * 100.0 / tot;
+                mat[j, i] = 100.0 - mat[i, j];
+            }
+        }
+
+        return mat;
+    }
+
+    static void PrintWinRateMatrix(string title, string[] tags, double[,] mat)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"================================================================================");
+        Console.WriteLine($"  {title}");
+        Console.WriteLine($"================================================================================");
+        Console.WriteLine();
+
+        int n = tags.Length;
+        Console.Write($"{"",-10}");
+        for (int j = 0; j < n; j++) Console.Write($"{tags[j],-8}");
+        Console.WriteLine();
+        Console.WriteLine(new string('-', 10 + 8 * n));
+
+        for (int i = 0; i < n; i++)
+        {
+            Console.Write($"{tags[i],-10}");
+            for (int j = 0; j < n; j++)
+            {
+                if (i == j) Console.Write($"{"---",-8}");
+                else
+                {
+                    double p = mat[i, j];
+                    if (double.IsNaN(p)) Console.Write($"{"NA",-8}");
+                    else
+                    {
+                        string tag = p switch { >= 80 => "CR", >= 60 => "FV", >= 40 => "EV", _ => "WK" };
+                        Console.Write($"{tag}{p,4:F0}% ");
+                    }
+                }
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=样本不足");
     }
 }

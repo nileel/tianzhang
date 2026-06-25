@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace BattleSim;
@@ -7,23 +9,63 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "realm-tq013a")
+            return RunChecked(suite, RunRealmTq013A);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
             return 2;
         }
 
+        return RunChecked(suite, RunElementV510);
+    }
+
+    static int RunChecked(string suite, Action body)
+    {
         try
         {
-            RunElementV510();
-            Console.WriteLine("SELFTEST element-v510 PASS");
+            body();
+            Console.WriteLine($"SELFTEST {suite} PASS");
             return 0;
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"SELFTEST element-v510 FAIL: {ex.Message}");
+            Console.Error.WriteLine($"SELFTEST {suite} FAIL: {ex.Message}");
             return 1;
         }
+    }
+
+    static void RunRealmTq013A()
+    {
+        AssertSequence(new[] { "凡人", "练气", "筑基", "金丹" }, GameData.RealmOrder, "default player realm order");
+        AssertEqual(1, GameData.Sublevels["凡人"], "凡人 sublevels");
+        AssertEqual(9, GameData.Sublevels["练气"], "练气 sublevels");
+        AssertEqual(5, GameData.Sublevels["筑基"], "筑基 sublevels");
+        AssertEqual(3, GameData.Sublevels["金丹"], "金丹 sublevels");
+
+        var stageName = typeof(GameData).GetMethod(
+            "StageName",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(string), typeof(int) },
+            modifiers: null);
+        if (stageName == null)
+            throw new InvalidOperationException("GameData.StageName is missing.");
+
+        string Stage(string realm, int subIdx) => (string)stageName.Invoke(null, new object[] { realm, subIdx })!;
+        AssertEqual("筑基初期", Stage("筑基", 0), "筑基 stage 0");
+        AssertEqual("筑基中期", Stage("筑基", 1), "筑基 stage 1");
+        AssertEqual("筑基后期", Stage("筑基", 2), "筑基 stage 2");
+        AssertEqual("紫府初开", Stage("筑基", 3), "筑基 stage 3");
+        AssertEqual("紫府圆满", Stage("筑基", 4), "筑基 stage 4");
+        AssertEqual("初结金丹", Stage("金丹", 0), "金丹 stage 0");
+        AssertEqual("温养金丹", Stage("金丹", 1), "金丹 stage 1");
+        AssertEqual("金丹圆满", Stage("金丹", 2), "金丹 stage 2");
+
+        if (GameData.Milestones.Any(ms => ms.realm is "元婴" or "化神" or "炼虚"))
+            throw new InvalidOperationException("default player milestones still include high realms.");
+        AssertEqual(("金丹", 2), (GameData.Milestones[^1].realm, GameData.Milestones[^1].subIdx), "last default milestone");
     }
 
     static void RunElementV510()
@@ -66,6 +108,12 @@ static class BattleSimSelfTests
     {
         if (!Equals(expected, actual))
             throw new InvalidOperationException($"{label}: expected {expected}, got {actual ?? "<null>"}.");
+    }
+
+    static void AssertSequence<T>(IReadOnlyList<T> expected, IReadOnlyList<T> actual, string label)
+    {
+        if (expected.Count != actual.Count || expected.Where((t, i) => !Equals(t, actual[i])).Any())
+            throw new InvalidOperationException($"{label}: expected [{string.Join(", ", expected)}], got [{string.Join(", ", actual)}].");
     }
 
     static void AssertClose(double expected, double actual, double tolerance, string label)

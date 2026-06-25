@@ -8,10 +8,14 @@ static class GameData
 {
     public static readonly Dictionary<string, int> Sublevels = new()
     {
-        ["凡人"] = 1, ["练气"] = 9, ["筑基"] = 4, ["金丹"] = 4,
-        ["元婴"] = 4, ["化神"] = 4, ["炼虚"] = 4
+        ["凡人"] = 1, ["练气"] = 9, ["筑基"] = 5, ["金丹"] = 3
     };
-    public static readonly string[] RealmOrder = ["凡人", "练气", "筑基", "金丹", "元婴", "化神", "炼虚"];
+    public static readonly string[] RealmOrder = ["凡人", "练气", "筑基", "金丹"];
+    public static readonly Dictionary<string, int> ExtensionSublevels = new()
+    {
+        ["元婴"] = 4, ["化神"] = 4
+    };
+    public static readonly string[] ExtensionRealmOrder = ["元婴", "化神"];
     public static readonly Dictionary<string, int> TechInnate = new() { ["上品"] = 4 };
     public static readonly Dictionary<string, double> SpiritMod = new()
     {
@@ -123,14 +127,34 @@ static class GameData
         >= 15  => "九品", _      => ""
     };
     public const double GCMinMP = 1200.0;
+    public static string StageName(string realm, int subIdx) => realm switch
+    {
+        "筑基" => subIdx switch
+        {
+            0 => "筑基初期",
+            1 => "筑基中期",
+            2 => "筑基后期",
+            3 => "紫府初开",
+            4 => "紫府圆满",
+            _ => $"筑基{subIdx}"
+        },
+        "金丹" => subIdx switch
+        {
+            0 => "初结金丹",
+            1 => "温养金丹",
+            2 => "金丹圆满",
+            _ => $"金丹{subIdx}"
+        },
+        "练气" => $"练气{subIdx + 1}层",
+        _ => realm
+    };
+
 public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (string, int, int)[]
     {
         ("练气", 0, 10), ("练气", 1, 22), ("练气", 2, 36), ("练气", 3, 52),
         ("练气", 4, 70), ("练气", 5, 90), ("练气", 6, 112), ("练气", 7, 136), ("练气", 8, 162),
-        ("筑基", 0, 200), ("筑基", 1, 250), ("筑基", 2, 310), ("筑基", 3, 390),
-        ("金丹", 0, 500), ("金丹", 1, 650), ("金丹", 2, 830), ("金丹", 3, 1050),
-        ("元婴", 0, 1350), ("元婴", 1, 1620), ("元婴", 2, 1940), ("元婴", 3, 2320),
-        ("化神", 0, 2780), ("化神", 1, 3340), ("化神", 2, 4010), ("化神", 3, 4810),
+        ("筑基", 0, 200), ("筑基", 1, 250), ("筑基", 2, 310), ("筑基", 3, 390), ("筑基", 4, 490),
+        ("金丹", 0, 620), ("金丹", 1, 800), ("金丹", 2, 1020),
     };
 
     public const double BaseGainPerCycle = 10.0;
