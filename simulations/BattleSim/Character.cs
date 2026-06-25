@@ -12,12 +12,16 @@ class Character
     public string DFQuality = "无道基";   // 天品/地品/玄品/黄品/无道基
     public double DFMult = 0.0;            // 道基效果倍率
     public int DFScore = 0;                // 凝聚值 (调试用)
-    // v4.0: 金丹
-    public string GCQuality = "";         // 一品~九品
-    public double GCMult = 1.0;           // MP上限倍率
-    public int GCScore = 0;               // 凝聚值 (调试用)
-    public string GCType = "";            // 金丹类型
-    public double GCTypeMult = 1.0;       // 金丹类型被动倍率
+    // TQ-013B: 金丹兼容层。LegacyGCGrade 只用于调试回看，不驱动战斗强度。
+    public string FormedState { get; set; } = "未成丹";
+    public string DanJiType { get; set; } = "";
+    public string OccupancyState { get; set; } = "未成丹";
+    public string DanName { get; set; } = "";
+    public string DanNature { get; set; } = "";
+    public string LegacyGCGrade { get; set; } = "";
+    public double DanJiStabilityMult { get; set; } = 1.0;
+    public int GCScore = 0;               // 成丹判定值 (调试用)
+    public double DanJiArtAffinityMult { get; set; } = 1.0;
     // v5.1: 功法名称（用于读取实际小境界成长表）
     public string GongFaName = "";
     // v4.1: 术法与神通
@@ -84,7 +88,7 @@ class Character
 
         // 一级属性 = 境界基础 + sum(小境界成长) + 先天×系数×权重
         Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.HP * weights["根骨"] * 2.2) * sm);
-        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["魂魄"] * rf.MP * weights["魂魄"]) * sm * GCMult);
+        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["魂魄"] * rf.MP * weights["魂魄"]) * sm * DanJiStabilityMult);
         Primary["肉攻"] = (int)Math.Round((rb.肉攻 + SubGrowthSum("肉攻", realm, subIdx, weights) + Innate["根骨"] * rf.攻 * weights["根骨"]) * sm);
         Primary["神攻"] = (int)Math.Round((rb.神攻 + SubGrowthSum("神攻", realm, subIdx, weights) + Innate["魂魄"] * rf.攻 * weights["魂魄"]) * sm);
         Primary["肉防"] = (int)Math.Round((rb.肉防 + SubGrowthSum("肉防", realm, subIdx, weights) + Innate["根骨"] * rf.防 * weights["根骨"]) * sm);
@@ -159,7 +163,7 @@ class Character
     {
         var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "taixu_xuangan" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, "yuqing_kuxing" => GameData.YuqingArt, "yuqing_leijie" => GameData.YuqingLeijieArt, _ => GameData.MagicArt };
         ArtName = artCfg.Name; ArtType = artCfg.Type; ArtElement = artCfg.Element; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
-        if (Realm == "金丹" && GCQuality != "")
+        if (Realm == "金丹" && FormedState == "成丹" && !string.IsNullOrEmpty(DanJiType))
         {
             var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
             DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;

@@ -94,24 +94,58 @@ static class GameData
     };
 
     // ═══════════════════════════════════════
-    // 金丹品级体系 (v4.0)
+    // 金丹成丹兼容层 (TQ-013B)
     // ═══════════════════════════════════════
-    public static readonly string[] GCQualities = ["", "九品", "八品", "七品", "六品", "五品", "四品", "三品", "二品", "一品"];
-    public static int GCQualityRank(string q) => Array.IndexOf(GCQualities, q);
-    public static readonly Dictionary<string, double> GCMultiplier = new()
+    public record GoldenCoreProfile(
+        string FormedState,
+        string DanJiType,
+        string OccupancyState,
+        string DanName,
+        string DanNature,
+        string LegacyGrade,
+        double StabilityMultiplier,
+        double ArtAffinityMultiplier);
+
+    // 历史兼容：旧一至九品只用于调试回看，不再钳制道基，也不再驱动主输出或战斗强度。
+    public static string LegacyGoldenCoreGradeFromScore(int score) => score switch
     {
-        ["一品"] = 3.0, ["二品"] = 2.5, ["三品"] = 2.0, ["四品"] = 1.7,
-        ["五品"] = 1.4, ["六品"] = 1.2, ["七品"] = 1.0, ["八品"] = 0.85, ["九品"] = 0.70
+        >= 120 => "一品", >= 105 => "二品", >= 90 => "三品", >= 75 => "四品",
+        >= 60  => "五品", >= 48  => "六品", >= 36 => "七品", >= 25 => "八品",
+        >= 15  => "九品", _      => ""
     };
-    public static readonly Dictionary<string, double> GCTypeScaling = new()
+
+    public static GoldenCoreProfile ResolveGoldenCoreProfile(int score, string dfQuality, Dictionary<string, double> weights)
     {
-        ["一品"] = 1.3, ["二品"] = 1.2, ["三品"] = 1.1, ["四品"] = 1.0,
-        ["五品"] = 0.9, ["六品"] = 0.8, ["七品"] = 0.7, ["八品"] = 0.6, ["九品"] = 0.5
-    };
-    public static readonly Dictionary<string, string> GCDFCap = new()
+        if (score < 15)
+            return new("未成丹", "", "未成丹", "", "", "", 1.0, 1.0);
+
+        var (danName, danNature) = ResolveGoldenCoreTheme(weights);
+        string legacyGrade = LegacyGoldenCoreGradeFromScore(score);
+        bool hasFoundation = dfQuality != "无道基";
+
+        if (!hasFoundation || score < 60)
+            return new("成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, 0.92, 0.95);
+
+        if (score >= 90)
+            return new("成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, 1.08, 1.10);
+
+        return new("成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, 1.0, 1.0);
+    }
+
+    static (string danName, string danNature) ResolveGoldenCoreTheme(Dictionary<string, double> weights)
     {
-        ["天品"] = "一品", ["地品"] = "三品", ["玄品"] = "五品", ["黄品"] = "八品", ["无道基"] = ""
-    };
+        var top = weights.OrderByDescending(kv => kv.Value).First().Key;
+        return top switch
+        {
+            "根骨" => ("坤岳丹", "土"),
+            "魂魄" => ("烛魂丹", "火"),
+            "神识" => ("星识丹", "星"),
+            "资质" => ("青华丹", "木"),
+            "气运" => ("沧流丹", "水"),
+            _ => ("素真丹", "金")
+        };
+    }
+
     public static readonly Dictionary<string, int> GCDFContinue = new()
     {
         ["天品"] = 60, ["地品"] = 40, ["玄品"] = 25, ["黄品"] = 10
@@ -119,12 +153,6 @@ static class GameData
     public static readonly Dictionary<string, int> GCTreasure = new()
     {
         ["下品"] = 5, ["中品"] = 10, ["上品"] = 20, ["极品"] = 30, [""] = 0
-    };
-    public static string GCQualityFromScore(int score) => score switch
-    {
-        >= 120 => "一品", >= 105 => "二品", >= 90 => "三品", >= 75 => "四品",
-        >= 60  => "五品", >= 48  => "六品", >= 36 => "七品", >= 25 => "八品",
-        >= 15  => "九品", _      => ""
     };
     public const double GCMinMP = 1200.0;
     public static string StageName(string realm, int subIdx) => realm switch

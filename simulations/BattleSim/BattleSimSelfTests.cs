@@ -12,6 +12,9 @@ static class BattleSimSelfTests
         if (suite == "realm-tq013a")
             return RunChecked(suite, RunRealmTq013A);
 
+        if (suite == "golden-core-tq013b")
+            return RunChecked(suite, RunGoldenCoreTq013B);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -102,6 +105,65 @@ static class BattleSimSelfTests
         AssertClose(1.045, WaterThunderVsWood(), 0.0001, "雷功法施水术打木功法");
         AssertClose(1.0, Chaos(), 0.0001, "混沌属性不参与匹配");
         AssertClose(1.0, None(), 0.0001, "无属性不参与匹配");
+    }
+
+    static void RunGoldenCoreTq013B()
+    {
+        var resolver = typeof(GameData).GetMethod(
+            "ResolveGoldenCoreProfile",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(int), typeof(string), typeof(Dictionary<string, double>) },
+            modifiers: null);
+        if (resolver == null)
+            throw new InvalidOperationException("GameData.ResolveGoldenCoreProfile is missing.");
+
+        var physicalWeights = new Dictionary<string, double>
+        {
+            ["根骨"] = 0.45, ["魂魄"] = 0.15, ["神识"] = 0.15, ["资质"] = 0.15, ["气运"] = 0.10
+        };
+        var profile = resolver.Invoke(null, new object[] { 130, "黄品", physicalWeights })!;
+        AssertProfile(profile, "成丹", "自然丹籍", "稳定占据", "坤岳丹", "土", "一品");
+
+        var temporary = resolver.Invoke(null, new object[] { 52, "无道基", physicalWeights })!;
+        AssertProfile(temporary, "成丹", "暂寄丹籍", "暂寄", "坤岳丹", "土", "六品");
+
+        var failed = resolver.Invoke(null, new object[] { 12, "无道基", physicalWeights })!;
+        AssertProfile(failed, "未成丹", "", "未成丹", "", "", "");
+
+        var character = Character.Create("TQ-013B", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        character.Realm = "金丹";
+        WriteProperty(character, "FormedState", "成丹");
+        WriteProperty(character, "DanJiType", "暂寄丹籍");
+        character.AssignArts();
+        if (string.IsNullOrEmpty(character.DivineName))
+            throw new InvalidOperationException("Character.AssignArts still depends on legacy golden core grade.");
+    }
+
+    static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)
+    {
+        AssertEqual(formedState, ReadProperty(profile, "FormedState"), "golden core formed state");
+        AssertEqual(danJiType, ReadProperty(profile, "DanJiType"), "danji type");
+        AssertEqual(occupancyState, ReadProperty(profile, "OccupancyState"), "occupancy state");
+        AssertEqual(danName, ReadProperty(profile, "DanName"), "dan name");
+        AssertEqual(danNature, ReadProperty(profile, "DanNature"), "dan nature");
+        AssertEqual(legacyGrade, ReadProperty(profile, "LegacyGrade"), "legacy grade");
+    }
+
+    static object ReadProperty(object instance, string propertyName)
+    {
+        var prop = instance.GetType().GetProperty(propertyName);
+        if (prop == null)
+            throw new InvalidOperationException($"{instance.GetType().Name}.{propertyName} is missing.");
+        return prop.GetValue(instance) ?? "";
+    }
+
+    static void WriteProperty(object instance, string propertyName, object value)
+    {
+        var prop = instance.GetType().GetProperty(propertyName);
+        if (prop == null)
+            throw new InvalidOperationException($"{instance.GetType().Name}.{propertyName} is missing.");
+        prop.SetValue(instance, value);
     }
 
     static void AssertEqual<T>(T expected, object actual, string label)

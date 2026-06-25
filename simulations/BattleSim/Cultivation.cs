@@ -6,7 +6,21 @@ namespace BattleSim;
 
 static class Cultivation
 {
-    public record Result(string Realm, int SubIdx, int TotalSubs, string DFQuality, int DFScore, string GCQuality = "", int GCScore = 0, string GCType = "");
+    public record Result(
+        string Realm,
+        int SubIdx,
+        int TotalSubs,
+        string DFQuality,
+        int DFScore,
+        string LegacyGCGrade = "",
+        int GCScore = 0,
+        string FormedState = "未成丹",
+        string DanJiType = "",
+        string OccupancyState = "未成丹",
+        string DanName = "",
+        string DanNature = "",
+        double DanJiStabilityMultiplier = 1.0,
+        double DanJiArtAffinityMultiplier = 1.0);
 
     public static Result Simulate(
         Dictionary<string, int> baseInnate, Dictionary<string, double> weights, int seed,
@@ -16,7 +30,8 @@ static class Cultivation
         int cycles = maxCycles < 0 ? GameData.CultivationCycles : maxCycles;
         double cpp = 0;
         string realm = "凡人"; int subIdx = 0;
-        string dfQuality = "无道基"; int dfScore = 0; string gcQuality = ""; int gcScore = 0; string gcType = "";
+        string dfQuality = "无道基"; int dfScore = 0; int gcScore = 0;
+        var goldenCore = new GameData.GoldenCoreProfile("未成丹", "", "未成丹", "", "", "", 1.0, 1.0);
         bool dfGenerated = false; bool gcGenerated = false;
 
         double 资质 = baseInnate["资质"], 气运 = baseInnate["气运"];
@@ -47,9 +62,8 @@ static class Cultivation
                         gcGenerated = true;
                         // totalCpp = 里程碑消耗 + 剩余溢出（反映总积累）
                         double totalCpp = ms.cpp + Math.Max(0, cpp);
-                        (gcQuality, gcScore) = GenerateGoldenCore(
-                            baseInnate, spiritGrade, techGrade, dfQuality, totalCpp, treasureGrade, rng);
-                        gcType = ResolveGCType(weights);
+                        (goldenCore, gcScore) = GenerateGoldenCore(
+                            baseInnate, spiritGrade, techGrade, dfQuality, totalCpp, treasureGrade, rng, weights);
                     }
 
                     // v3.5: 突破到筑基初阶时生成道基
@@ -64,7 +78,21 @@ static class Cultivation
                 else { double penalty = ms.cpp * (0.10 + rng.NextDouble() * 0.10); cpp = Math.Max(0, cpp - penalty); progressed = false; }
             }
         }
-        return new Result(realm, subIdx, GameData.TotalSubs(realm, subIdx), dfQuality, dfScore, gcQuality, gcScore, gcType);
+        return new Result(
+            realm,
+            subIdx,
+            GameData.TotalSubs(realm, subIdx),
+            dfQuality,
+            dfScore,
+            goldenCore.LegacyGrade,
+            gcScore,
+            goldenCore.FormedState,
+            goldenCore.DanJiType,
+            goldenCore.OccupancyState,
+            goldenCore.DanName,
+            goldenCore.DanNature,
+            goldenCore.StabilityMultiplier,
+            goldenCore.ArtAffinityMultiplier);
     }
 
     // ═══════════════════════════════════════
@@ -105,11 +133,11 @@ static class Cultivation
     }
 
     // ═══════════════════════════════════════
-    // 金丹凝聚值计算 + 品级判定 (v4.0)
+    // 金丹成丹判定值 + 丹籍兼容层 (TQ-013B)
     // ═══════════════════════════════════════
-    static (string quality, int score) GenerateGoldenCore(
+    static (GameData.GoldenCoreProfile profile, int score) GenerateGoldenCore(
         Dictionary<string, int> innate, string spiritGrade, string techGrade,
-        string dfQuality, double overflowCpp, string treasureGrade, Random rng)
+        string dfQuality, double overflowCpp, string treasureGrade, Random rng, Dictionary<string, double> weights)
     {
         // ① 道基延续分
         int dfContinue = GameData.GCDFContinue.GetValueOrDefault(dfQuality, 0);
@@ -132,31 +160,7 @@ static class Cultivation
 
         int score = dfContinue + spiritBase + mpScore + dice + treasureBonus;
 
-        string tentative = GameData.GCQualityFromScore(score);
-
-        // 道基硬上限钳制
-        if (GameData.GCDFCap.TryGetValue(dfQuality, out var cap) && cap != "")
-        {
-            int tRank = GameData.GCQualityRank(tentative);
-            int maxRank = GameData.GCQualityRank(cap);
-            if (tRank > maxRank) tentative = GameData.GCQualities[maxRank];
-        }
-        // 无道基无法凝结
-        if (dfQuality == "无道基") tentative = "";
-
-        return (tentative, score);
-    }
-
-    // 简化金丹类型判定：取权重最高的先天属性映射
-    static string ResolveGCType(Dictionary<string, double> weights)
-    {
-        var ordered = weights.OrderByDescending(kv => kv.Value).ToList();
-        string top = ordered[0].Key;
-        return top switch
-        {
-            "根骨" => "土", "魂魄" => "火", "神识" => "星",
-            "资质" => "木", "气运" => "水", _ => "金"
-        };
+        return (GameData.ResolveGoldenCoreProfile(score, dfQuality, weights), score);
     }
 
     static int FindNext(string realm, int subIdx)

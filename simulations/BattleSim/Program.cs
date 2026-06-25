@@ -52,16 +52,20 @@ class Program
         var realmDist = new Dictionary<string, int>[N];
         // v3.5: 道基分布统计
                 var dfDist = new Dictionary<string, int>[N];
-        var gcDist = new Dictionary<string, int>[N];
+        var danJiDist = new Dictionary<string, int>[N];
         for (int i = 0; i < N; i++)
         {
             pool[i] = new List<Character>();
             realmDist[i] = new Dictionary<string, int> { ["练气"] = 0, ["筑基"] = 0, ["金丹"] = 0 };
             dfDist[i] = new Dictionary<string, int>();
                         foreach (var q in GameData.DFQualities) dfDist[i][q] = 0;
-            gcDist[i] = new Dictionary<string, int>();
-            foreach (var q in GameData.GCQualities.Skip(1)) gcDist[i][q] = 0;
-            gcDist[i][""] = 0;
+            danJiDist[i] = new Dictionary<string, int>
+            {
+                ["未成丹"] = 0,
+                ["暂寄丹籍"] = 0,
+                ["敕封丹籍"] = 0,
+                ["自然丹籍"] = 0
+            };
         }
 
         for (int seed = 0; seed < SEEDS; seed++)
@@ -73,19 +77,18 @@ class Program
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
                 c.ApplyGrowth(result.Realm, TECH, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
                 c.GongFaName = bd.GongFaName;
-                c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
                 // v3.5: 记录道基
                 c.DFQuality = result.DFQuality;
                 c.DFMult = GameData.DFMultiplier[result.DFQuality];
                 c.DFScore = result.DFScore;
-                c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0); c.GCScore = result.GCScore;
-                c.GCType = result.GCType; c.AssignArts(); c.GCType = result.GCType;
-                c.GCTypeMult = GameData.GCTypeScaling.GetValueOrDefault(result.GCQuality, 1.0);
+                ApplyGoldenCoreResult(c, result);
+                c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
+                c.AssignArts();
                 pool[i].Add(c);
                 realmDist[i][c.Realm]++;
                 dfDist[i][c.DFQuality]++;
-                    if (c.GCQuality != "") gcDist[i][c.GCQuality]++;
-                    else gcDist[i][""]++;
+                var danJiKey = string.IsNullOrEmpty(c.DanJiType) ? "未成丹" : c.DanJiType;
+                danJiDist[i][danJiKey]++;
             }
         }
         Console.WriteLine("完成");
@@ -104,20 +107,21 @@ class Program
             Console.WriteLine($" {avgScore,7:F0}");
         }
 
-        // 金丹品级分布
+        // 金丹成丹状态分布
         Console.WriteLine();
-        Console.WriteLine("【金丹品级分布（已结丹角色）】");
-        Console.Write("{0,-10}", "Build");
-        foreach (var q in GameData.GCQualities.Skip(1)) Console.Write("{0,5}", q);
-        Console.WriteLine(" {0,-6} {1,-8}", "无金丹", "平均凝聚值");
-        Console.WriteLine(new string('-', 10 + 6 * GameData.GCQualities.Length + 12));
+        Console.WriteLine("【金丹成丹状态分布（TQ-013B兼容层）】");
+        Console.WriteLine($"{"Build",-10} {"未成丹",-6} {"暂寄",-6} {"敕封",-6} {"自然",-6} {"平均判定值",-8} {"主要丹性",-8}");
+        Console.WriteLine(new string('-', 62));
         for (int i = 0; i < N; i++)
         {
-            Console.Write("{0,-10}", buildDefs[i].Name);
-            foreach (var q in GameData.GCQualities.Skip(1)) Console.Write("{0,5}", gcDist[i].GetValueOrDefault(q, 0));
-            Console.Write(" {0,5}", gcDist[i].GetValueOrDefault("", 0));
             double avgGc = pool[i].Where(c => c.GCScore > 0).Select(c => (double)c.GCScore).DefaultIfEmpty(0).Average();
-            Console.WriteLine(" {0,8:F0}", avgGc);
+            var majorNature = pool[i]
+                .Where(c => !string.IsNullOrEmpty(c.DanNature))
+                .GroupBy(c => c.DanNature)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault() ?? "-";
+            Console.WriteLine($"  {buildDefs[i].Name,-8} {danJiDist[i]["未成丹"],4} {danJiDist[i]["暂寄丹籍"],7} {danJiDist[i]["敕封丹籍"],6} {danJiDist[i]["自然丹籍"],6} {avgGc,10:F0} {majorNature,-8}");
         }
         // 详细子境界分布
         Console.WriteLine();
@@ -359,11 +363,10 @@ class Program
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
                 c.ApplyGrowth(result.Realm, TECH, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
                 c.GongFaName = bd.GongFaName;
-                c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
                 c.DFQuality = result.DFQuality; c.DFMult = GameData.DFMultiplier[result.DFQuality];
-                c.GCQuality = result.GCQuality; c.GCMult = GameData.GCMultiplier.GetValueOrDefault(result.GCQuality, 1.0);
-                c.GCType = result.GCType; c.AssignArts(); c.GCType = result.GCType;
-                c.GCTypeMult = GameData.GCTypeScaling.GetValueOrDefault(result.GCQuality, 1.0);
+                ApplyGoldenCoreResult(c, result);
+                c.FinalizeStats(result.Realm, result.SubIdx, SPIRIT, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
+                c.AssignArts();
                 earlyPool[i].Add(c);
             }
         }
@@ -447,7 +450,10 @@ class Program
         var c_wl_jh = pool[1][0];
         var c_wl_cz = pool[0][0];
         void PrintStats(Character c) {
-            Console.Write($"  {c.Name} ({GameData.StageName(c.Realm, c.SubIndex)}) 道基={c.DFQuality}({c.DFScore}) 金丹={c.GCQuality}({c.GCScore}):");
+            string goldenCoreLabel = string.IsNullOrEmpty(c.DanJiType)
+                ? "未成丹"
+                : $"{c.DanJiType}/{c.OccupancyState}/{c.DanName}/{c.DanNature}";
+            Console.Write($"  {c.Name} ({GameData.StageName(c.Realm, c.SubIndex)}) 道基={c.DFQuality}({c.DFScore}) 金丹={goldenCoreLabel}({c.GCScore}):");
             foreach (var k in new[]{"HP","MP","肉攻","神攻","肉防","神防","反应"})
                 Console.Write($" {k}={c.Primary[k]}");
             Console.Write("  二级:");
@@ -463,6 +469,19 @@ class Program
         Console.WriteLine("  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）");
         Console.WriteLine("================================================================================");
         return 0;
+    }
+
+    static void ApplyGoldenCoreResult(Character c, Cultivation.Result result)
+    {
+        c.LegacyGCGrade = result.LegacyGCGrade;
+        c.GCScore = result.GCScore;
+        c.FormedState = result.FormedState;
+        c.DanJiType = result.DanJiType;
+        c.OccupancyState = result.OccupancyState;
+        c.DanName = result.DanName;
+        c.DanNature = result.DanNature;
+        c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
+        c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
     }
 
     static double[,] ComputeSymmetricMatrix(IReadOnlyList<Character>[] pools, int sim)
