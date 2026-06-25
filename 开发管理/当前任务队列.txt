@@ -9,7 +9,7 @@
 > 2026-06-21 Codex / gpt-5.5：TQ-015A 审核通过并归档至 `开发管理/任务归档/2026-06-21-TQ-015A-元婴位格事实源归档.txt`；TQ-015B/C 保留待处理。
 > 2026-06-21 Codex / gpt-5.5：TQ-015B-1 已审核通过（依据：f3ebf04）。丹相规格、金丹/紫府、槽位及功法/术法/神通规范与模板统一为“目标源化界席位 + 占据状态 + 丹名 + 丹性 + 丹相”；丹枢固定为矩阵允许的个性化接口，紫府神通为丹相输入。成丹阈值、槽位数与运行时字段实现仍属 TQ-015C/TQ-013C。
 > 2026-06-25 Codex / gpt-5.5：TQ-014 审核通过。场景架构与 2.5D 战棋表现实施计划已输出并拆出 DeepSeek 执行型切片；首轮明确不强切 2.5D，不改 CTB/伤害/冷却/槽位语义。
-> 2026-06-25 Codex / gpt-5.5：TQ-013A 已完成待复审。BattleSim 默认玩家境界链迁移为凡人→练气→筑基五段（含紫府）→金丹三段；默认输出新增紫府圆满同境矩阵与紫府圆满 vs 金丹初期压制战。验证：BattleSim build、`--self-test realm-tq013a`、默认 run 通过。TQ-013B 金丹九品兼容层仍待处理。
+> 2026-06-25 Codex / gpt-5.5：TQ-013A 审核通过并归档至 `开发管理/任务归档/2026-06-25-TQ-013A-BattleSim境界表迁移归档.txt`。TQ-013B 金丹九品兼容层仍待处理。
 
 ## 使用规则
 
@@ -23,7 +23,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-013A | P0 | Codex / ChatGPT5.5 | 数值/架构 | 已完成待复审 | BattleSim 境界表、里程碑与默认矩阵迁移：筑基五段、金丹三段、紫府同境、筑基 vs 金丹压制战 |
 | TQ-013B | P0 | Codex / ChatGPT5.5 | 数值/架构 | 待处理 | BattleSim 金丹九品兼容层：成丹判定值、丹籍类型、丹名、丹性、寄丹状态，输出不再以一至九品为主表 |
 | TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 复审不通过 / 待返工 | `Character.FromData` 本体已修，但调用点仍覆盖为装备数长度；见未通过清单 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 复审不通过 / 待返工 | 太一道庭法箓体系映射表存在 `?` 符号污染和 TXT 截断风险；见未通过清单 |
@@ -35,15 +34,6 @@
 | TQ-015C | P1 | Codex / ChatGPT5.5 | 数据/数值架构 | 待处理 | 源化界数据模型迁移差异表、成丹/竞争数值方案与全仓炼虚清理路线；数值必须以 BattleSim 验证 |
 
 ## 任务卡片
-
-### TQ-013A · BattleSim 境界表、里程碑与默认矩阵迁移
-
-- 来源：TQ-013 `开发管理/境界体系数据模拟迁移差异表.txt`。
-- 当前优先级：P0。境界体系工程迁移首个代码切片，优先于一般稳定化和新内容扩展。
-- 必读：`开发管理/境界体系重构锁口径决策表.txt`、`开发管理/境界体系数据模拟迁移差异表.txt`、`simulations/BattleSim/Program.cs`、`simulations/BattleSim/GameData.cs`、`simulations/BattleSim/Cultivation.cs`、`simulations/BattleSim/Character.cs`、`simulations/BattleSim/Combat.cs`、`开发管理/开发-技术经验.txt`。
-- 验证命令：`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；必要时新增自检并用 `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test <name>` 运行。
-- 完成条件：BattleSim 默认玩家模拟链收束为凡人→练气→筑基五段（含紫府包装）→金丹三段；高阶保留为 NPC/扩展兼容表而非默认玩家链；默认输出新增或明确包含筑基/紫府同境矩阵与“紫府圆满 vs 金丹初期”压制战；原金丹同境矩阵仍可运行但不再是唯一主指标。
-- 执行记录：2026-06-25 已完成待复审；新增 `realm-tq013a` 自检，默认输出含紫府圆满同境矩阵与紫府圆满 vs 金丹初期压制战。
 
 ### TQ-013B · BattleSim 金丹九品兼容层
 

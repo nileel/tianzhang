@@ -1,0 +1,28 @@
+# TQ-013A · BattleSim 境界表、里程碑与默认矩阵迁移归档（✅ 已审核）
+
+审核日期：2026-06-25
+审核方：Codex / gpt-5.5
+目标提交：2fa7b0b
+结论：通过。
+
+## 交付范围
+
+- BattleSim 默认玩家境界链收束为凡人 -> 练气 -> 筑基五段（筑基初期、筑基中期、筑基后期、紫府初开、紫府圆满）-> 金丹三段（初结金丹、温养金丹、金丹圆满）。
+- 元婴、化神从默认玩家 `RealmOrder` 与默认里程碑中移出，保留为扩展表与既有高阶数据兼容项；炼虚未进入 BattleSim 默认链。
+- 默认输出保留金丹同境矩阵，并新增紫府圆满同境矩阵与紫府圆满 vs 金丹初期压制战。
+- 新增 `realm-tq013a` 自检，覆盖默认境界顺序、阶段显示名、高阶默认里程碑移除和金丹终点。
+
+## 审核依据与验证
+
+- 复核 `开发管理/境界体系重构锁口径决策表.txt` 与 `开发管理/境界体系数据模拟迁移差异表.txt` 的 TQ-013A 边界。
+- 复核目标提交 `2fa7b0b` 的 BattleSim 代码 diff：`BattleSimSelfTests.cs`、`GameData.cs`、`Program.cs`。
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test realm-tq013a`：通过。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过；输出含紫府圆满同境矩阵与紫府圆满 vs 金丹初期压制战。
+- `git diff --check`：通过。
+
+## 边界与后续
+
+- 金丹九品、`GCQuality`、`GCDFCap`、`GCMultiplier` 仍是旧兼容层，本次不判为失败；它们属于 TQ-013B 的待处理范围。
+- 当前压制战的非 NA 样本中紫府胜率均为 0.0%，说明金丹压制非常强，但“保留战术出口”的数值空间仍需后续 TQ-008/TQ-013B 结合 BattleSim 继续评估。
+- Unity `CultivationEngine`、槽位计算、CSV 高阶内容定位不属于本任务，分别保留给 TQ-013C 与已归档的 TQ-013D 后续链路。
