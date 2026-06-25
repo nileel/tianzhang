@@ -1,6 +1,7 @@
 # 未通过审核清单（✅ 已审核）
 
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 已通过严格覆盖、meta 配对、关键字段一致性、旧路径扫描、Unity C# build 与 `git diff --check`；当前未通过/待复审项清零。
+> 2026-06-25 Codex / gpt-5.5 批量复审：TQ-006、TQ-007、TQ-010、TQ-015B-2/3 未通过；TQ-013D 与金丹位格三字命名替换通过并已归档。
 > 2026-06-19 Codex / gpt-5.5 复审补修历史：复审 TQ-003 commit 43d0a92 时发现新增 asset 缺 57 个 `.meta`、`spell_tx_anshi` asset 字段与 CSV 不一致、`SceneBuilder` 仍引用旧 asset 路径；后续已在 767f93d 复审通过。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 规范/模板补修项已通过复审并从清单移除；当时清单仅保留 TQ-003 Unity asset 覆盖缺口，现已清零。
 > 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3 后，当时数据链路剩余问题收窄为 Unity asset 覆盖缺口。
@@ -13,8 +14,39 @@
 
 ## 当前未通过/待复审项
 
-暂无。
+### REVIEW-20260625-01 · TQ-006 槽位冷却数组修复
+
+- 结论：不通过。
+- 目标提交：354215f；后续 767f93d 曾补 build 与相关数据链路。
+- 已通过部分：`Character.FromData` 内部已先设置 `MaxSpellSlots` / `MaxSkillSlots`，再初始化 `SpellCooldowns` / `SkillCooldowns`；`dotnet build src/Assembly-CSharp.csproj` 通过。
+- 未通过问题：`src/Assets/Scripts/Map/ExplorationController.cs` 创建玩家和敌人后仍把冷却数组覆盖为装备数量长度，少于槽位时仍可能违反“冷却数组长度与槽位数一致”的完成条件。
+- 返工建议：统一移除或改造调用点覆盖逻辑，至少覆盖空装备、少于槽位、临阵换法、冷却灰显四类回归；返工后重新运行 `dotnet build src/Assembly-CSharp.csproj`。
+
+### REVIEW-20260625-02 · TQ-007 太一道庭法箓字段映射表
+
+- 结论：不通过。
+- 目标提交：c8cb56d。
+- 已通过部分：9 功法 / 26 术法 / 9 神通覆盖数正确；通神三玄礼录归属核对源文件后应为“四大道脉 / 桓氏兵马坛”；`tools/check-review-text.ps1 -Paths docs/角色养成` 通过。
+- 未通过问题：TXT 与 JSON 中仍有多处 `?` 符号污染，疑似应为负号或向下箭头；TXT 表中多行字段截断仍不适合作为可导入字段依据。
+- 返工建议：以源文件重新抽取或人工校准所有 `?` 污染字段；TXT 明确定位为摘要预览或补全关键字段，JSON 保持完整字段；返工后运行 `tools/check-review-text.ps1 -Paths docs/角色养成` 并用 `rg -n "\?|�|``n|``r"` 复核目标文件。
+
+### REVIEW-20260625-03 · TQ-010 CSV/asset 独立技能属性字段
+
+- 结论：不通过。
+- 目标提交：0f629ce。
+- 已通过部分：`Spells.csv` 与 `Skills.csv` 均新增独立 `element` 列，行宽一致且无空 element；`DataConfigImporter.cs` 已改为读取独立列；`tools/check-data-chain.ps1` 与 `dotnet build src/Assembly-CSharp.csproj` 通过。
+- 未通过问题：当前 Unity asset 未完整重导或未提交。`src/Assets/Data/Skills` 中 21 个 asset 缺少 `element` 字段，13 个 asset 的 `element` 仍为空；`src/Assets/Data/Spells` 中也有 47 个旧 asset 缺少 `element` 字段。
+- 返工建议：用导入器重导 Spells/Skills asset 或提交等效 asset 字段补齐；复核 CSV 75 术法 + 34 神通到 asset 的 element 覆盖；运行 `tools/check-data-chain.ps1` 与 `dotnet build src/Assembly-CSharp.csproj`。
+
+### REVIEW-20260625-04 · TQ-015B-2/3 NPC 与批量生产模板迁移
+
+- 结论：不通过。
+- 目标提交：95055c1；后续 2823643 对批量生产模板做过三字命名同步，但不修复 NPC 迁移问题。
+- 已通过部分：文本检查通过；批量生产模板总体能约束 DeepSeek 不越过 17 分支 × 51 席矩阵；世界背景故事已新增旧体系废止说明。
+- 未通过问题：部分 NPC 未按任务要求显式使用“位格状态”字段；姚观寂缺少源/化/界席位回指；多个 NPC 正文仍保留现行语境下的“丹籍/丹籍模式/丹籍真空”等旧口径表述，未完全迁移为位格 + 丹枢口径。
+- 返工建议：13 份 NPC 统一为“元婴分支 + 位格状态（源/化/界席位 + 占据方式 + 空位/持有状态）+ 丹枢”字段；将非历史说明的丹籍旧词迁移为位格、丹枢或席位；保留历史旧称时必须标明“旧体系/历史称谓”。
 
 ## 后续复核建议
 
-暂无。
+- 优先返工 TQ-010 与 TQ-006，二者影响 Unity 运行时。
+- TQ-015B-2/3 返工前先统一“丹籍”是否允许作为历史称谓；返工时不得扩大到 TQ-015C 数值方案。

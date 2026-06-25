@@ -1,6 +1,6 @@
 # CSV 高阶内容定位表
 
-状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：新建文件
+状态：✅ 已审核；修改方：DeepSeek V4 Pro；审核方：Codex / gpt-5.5；审核日期：2026-06-25；依据：be84ea5
 任务：TQ-013D · CSV 高阶内容定位表
 用途：逐条标注功法/术法/神通中 realmReq≥元婴（含 realm_lianshen）的内容定位，
       不直接改 CSV 或 asset；作为后续 Codex/ChatGPT5.5 复审与迁移输入。
@@ -193,7 +193,7 @@ powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
 ## 九、自检清单
 
 - [x] 是否读取了本任务必需的入口、任务卡、规范或事实源（是）
-- [x] 是否误把自己的修改标为「✅ 已审核」（否，标为 ⚠️ 已修改/未审核）
+- [x] 是否误把自己的修改标为「✅ 已审核」（DeepSeek 创建时否；2026-06-25 已由 Codex / gpt-5.5 复审后标为 ✅ 已审核）
 - [x] 是否有未说明的事实源假设、未验证项或残留风险（见"残留风险"）
 - [x] 是否只 stage/commit 本轮相关文件（仅本文件）
 - [x] 是否需要更新 AI合作沟通.txt（是，见下）

@@ -1,0 +1,25 @@
+# TQ-013D · CSV 高阶内容定位表归档（✅ 已审核）
+
+审核日期：2026-06-25
+审核方：Codex / gpt-5.5
+结论：通过。
+
+## 交付范围
+
+- 新增 `开发管理/CSV高阶内容定位表.txt`。
+- 定位 `realm_lianshen` 影响面为 Spells 2 条、Skills 2 条、GongFa 4 条。
+- 逐条标注术法高阶 24 条、神通高阶 5 条、功法高阶 28 条。
+- 所有高阶内容暂归为“资料片保留”或“资料片保留/古修炼神”，不直接删除或降级。
+
+## 审核依据与验证
+
+- 目标提交：be84ea5。
+- 复核 `src/Assets/DataConfig/GongFa.csv`、`Spells.csv`、`Skills.csv` 中 `realm_lianshen` 与高阶境界影响面。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,docs/角色养成,docs/基础设定,开发管理`：通过。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过。
+- `git diff --check`：通过。
+
+## 边界
+
+- `realm_lianshen` 的最终处理方案仍未拍板；本归档只确认定位表可作为后续 TQ-013B/TQ-015C/数据字段迁移输入。
+- 本任务未修改 CSV、Unity asset 或运行时逻辑。
