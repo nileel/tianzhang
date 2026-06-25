@@ -15,6 +15,26 @@
 
 ## 当前交接队列
 
+### TQ-014-DS-20260625-01 · Codex / ChatGPT5.5 -> DeepSeek V4 Pro
+
+- 任务：场景架构与 2.5D 战棋表现后续执行型切片。Codex 已输出实施计划 `docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`，DeepSeek 后续优先按计划承担可机械验证、低风险包装和场景脚手架工作。
+- 任务选择原因：用户明确要求推进 TQ-014，并要求拆分时尽可能多分给 DeepSeek；但 `TacticalCombatController` 战斗循环拆分、CTB 语义、伤害/冷却/槽位语义仍由 Codex / ChatGPT5.5 负责或复审。
+- DeepSeek 可执行顺序：
+  1. `TQ-014-DS-01` 现状清单：产出 `开发管理/场景架构Unity现状清单.txt`，按计划 Task 1 记录场景资产、脚本职责、后续归属和风险；运行 `dotnet build src/Assembly-CSharp.csproj`，失败则记录错误不改 C#。
+  2. `TQ-014-DS-02` Tilemap 渲染包装：在 Codex 完成 `TacticalGridModel/ITacticalRenderer` 后，新增 `TilemapTacticalRenderer` 并只包装 `HexTilemapManager` 现有行为，不删除旧 API。
+  3. `TQ-014-DS-03` 会话流转骨架：按计划新增 `SceneReturnTarget`、`GameSession`、`SceneFlowManager`，只做 StartMenu/World/Settlement/Adventure 字符串场景名与玩家档案传递，不改 CTB。
+  4. `TQ-014-DS-04` 四场景脚手架：扩展 `SceneBuilder`，用 Editor 菜单生成 `StartMenuScene`、`WorldScene`、`SettlementScene`、`AdventureScene`，不得手写 `.unity` YAML。
+  5. `TQ-014-DS-05` World/Settlement 数据壳：新增 `WorldNodeDefinition`、`WorldSceneController`、`SettlementDefinition`、`SettlementSceneController` 的静态样例与返回入口。
+  6. `TQ-014-DS-06` StartMenu 迁移低风险入口：在 `SceneFlowManager` 已通过 Codex 复审后，让 `SectSelectionManager` 优先走 `SceneFlowManager.StartNewGame`，保留旧 `ExplorationController` fallback。
+  7. `TQ-014-DS-07` 2.5D 验证清单：产出 `开发管理/2.5D战棋原型验证清单.txt`，只列证据和必测项，不接入正式副本、不替换规则层。
+- DeepSeek 禁止范围：不得删除 `ExplorationScene.unity`；不得改 `CTBEngine`、`CombatResolver`、`DamageCalculator`、`Character.FromData`；不得重写 `ExplorationController.CombatLoop`；不得改伤害、冷却、五行、槽位、修炼数值；不得重命名 GUID 资产；不得写 `✅ 已审核` 或替 Codex 下复审结论。
+- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/当前任务队列.txt`、本条交接、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`开发管理/开发-技术经验.txt`。
+- 已验证：Codex 已读取 TQ-014 规格、`SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`，并基于实际路径修正计划中的文件边界。
+- 未验证：计划尚未执行 Unity 代码修改；四场景尚未生成；后续 DeepSeek 每个切片都必须单独运行计划内验证命令。
+- 残留风险：`BattleUIManager` 当前无条件创建 `UICanvas`，`SectSelectionManager` 当前延迟查找 `ExplorationController`，`ExplorationController` 当前集中承担战斗循环和探索状态；这些问题需小步拆分并由 Codex 复审。
+- 请求 DeepSeek 下一步：优先执行 `TQ-014-DS-01`，若 build baseline 已通过且 Codex 已先提交 `TacticalGridModel/ITacticalRenderer`，再执行 `TQ-014-DS-02`。
+- 完成后交接要求：DeepSeek 提交只能标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」，并在本文件新增 `DeepSeek -> Codex / ChatGPT5.5` 条目，写明修改文件、验证命令、未验证项、残留风险和请求复审点。
+
 ### EXPAND-20260625-01 · Codex / ChatGPT5.5 -> DeepSeek V4 Pro
 
 - 任务：扩大 DeepSeek 后续执行型任务池。当前 `当前任务队列.txt` 中 DeepSeek 主责的 TQ-006/TQ-007/TQ-010 已复审不通过并待返工，TQ-013D 已审核归档；DeepSeek 下一轮不要重复推进已归档项，应从下列新任务或未通过清单中选一个最小可提交切片。
