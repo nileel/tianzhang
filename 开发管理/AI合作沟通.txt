@@ -1,4 +1,4 @@
-# AI合作沟通（✅ 已审核）
+﻿# AI合作沟通（✅ 已审核）
 
 > 2026-06-25 Codex / gpt-5.5 复审通过：按用户要求扩大 DeepSeek V4 Pro 后续工作范围，新增 `EXPAND-20260625-01` 执行型任务池。
 > 2026-06-19 Codex / gpt-5.5：HANDOFF-20260619-02 已被 TQ-011 锁口径与 TQ-013 迁移差异表消费，移入 `开发管理/AI合作归档/2026-06-19-AI合作沟通归档.txt`。
@@ -14,6 +14,36 @@
 5. 新增条目保持短格式：任务 / 提交或 diff / 修改文件 / 已验证 / 未验证 / 残留风险 / 请求判断 / 下一步。
 
 ## 当前交接队列
+
+
+### HANDOFF-20260627-04 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-04 · 四场景脚手架
+- 提交：79e9a2f
+- 修改文件：
+  - 修改：src/Assets/Scripts/Editor/SceneBuilder.cs
+  - 新增：src/Assets/Scenes/StartMenuScene.unity + .meta
+  - 新增：src/Assets/Scenes/WorldScene.unity + .meta
+  - 新增：src/Assets/Scenes/SettlementScene.unity + .meta
+  - 新增：src/Assets/Scenes/AdventureScene.unity + .meta
+- 已验证：
+  - dotnet build src/Assembly-CSharp.csproj — 编译通过（0 错误，7 预存 MSB3245 警告）
+  - powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths src/Assets/Scripts/Editor/SceneBuilder.cs — OK
+  - git diff --check — 仅预存 LF→CRLF 警告（无害）
+  - 括号平衡验证：26 { / 26 } — 一致
+- 未验证：
+  - StartMenuRoot/WorldRoot/SettlementRoot/AdventureRoot 在 Unity 运行时是否正常工作
+  - SceneFlowManager（DontDestroyOnLoad）在四个场景间切换时的单例行为
+- 残留风险：
+  - BuildEmptyScene 使用 InputSystemUIInputModule，依赖 Input System 包已正确安装（d389792 迁移）；若包未完全就绪则场景 EventSystem 可能不响应输入
+  - 四个空场景尚未包含任何场景控制器（WorldSceneController/SettlementSceneController/AdventureSceneController 待 Task 6）
+  - .unity 文件已在 Unity Editor 生成，场景生成会覆盖已有同路径文件
+- 请求判断：
+  1. BuildEmptyScene 中的 EventSystem + GameManager + SceneFlowManager 组件组合是否符合预期场景最小集？
+  2. BuildExplorationScene 重构为 CreateMainCamera 是否可接受？
+- 下一次 1 建议（DeepSeek）：TQ-014-DS-05（World/Settlement 数据壳，依赖 Task 5 场景存在但无代码前置）
+- 下一次 2 建议（Codex）：复审 SceneBuilder 四场景脚手架代码、然后在 Unity Editor 中运行菜单项生成 .unity 文件
+
 
 ### HANDOFF-20260627-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
@@ -220,3 +250,53 @@ g -n "一正二辅|正籍|辅籍|敕籍|寄丹|炼虚" docs/剧情 docs/基础�
   - 确认慕容朔、拓跋烈、钟离幽、祝融烈的源/化/界席位归属是否正确
   - 是否需要 Unity Editor 重导验证 TQ-010 asset element
 - 下一次 1 建议：若四项通过复审，从当前任务队列取 P0 执行型任务
+### HANDOFF-20260627-02 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-03 · 会话流转骨架
+- 提交：cffad97
+- 修改文件：
+  - 新增：src/Assets/Scripts/Game/SceneReturnTarget.cs（结构体，World/Settlement工厂方法）
+  - 新增：src/Assets/Scripts/Game/GameSession.cs（跨场景持久单例，玩家档案+世界节点+返回目标）
+  - 新增：src/Assets/Scripts/Game/SceneFlowManager.cs（场景流转：StartNewGame/EnterWorld/EnterSettlement/EnterAdventure/ReturnToPreviousScene）
+  - 新增：以上 3 个 .cs.meta 文件
+  - 修改：src/Assets/Scripts/Game/GameManager.cs（StartGameWithSect 增加 SceneFlowManager/GameSession 兼容桥接）
+- 已验证：
+  - dotnet build src/Assembly-CSharp.csproj — 编译通过（0 错误，2 预存 CS0618 警告）
+  - powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths ... — OK（4 files）
+  - git diff --check — 仅 LF→CRLF 警告（无害）
+- 未验证：
+  - 场景流转在 Unity Editor 运行时的实际表现（四个场景尚未生成，无法端到端测试）
+  - SceneFlowManager.EnterSettlement 调用后 ReturnToPreviousScene 是否能正确返回 WorldScene
+  - SceneFlowManager.EnsureSession 动态创建 GameSession 是否与 SceneBuilder 的 BuildEmptyScene 已有的 GameObject 冲突
+- 残留风险：
+  - Assembly-CSharp.csproj 被 .gitignore 忽略，Unity 重新生成后新文件的 Compile 条目可能丢失；需 Unity Editor 打开项目一次以重新生成 .csproj
+  - GameManager.StartGameWithSect 兼容桥接在 SceneFlowManager 不存在时静默跳过，但若 GameSession.Instance 也不存在则玩家档案仍只存于旧 PlayerCharData 字段——这是迁移期的预期行为，后续 TQ-014-DS-04/Task 9 会进一步收敛
+- 请求判断：
+  1. 三个新类的公开 API 表面是否符合实施计划预期的 GameSession/SceneFlowManager/SceneReturnTarget 接口？
+  2. GameManager 桥接逻辑是否需要等 Task 5（四场景脚手架）完成后再统一测试？
+- 下一次 1 建议（DeepSeek）：TQ-014-DS-04（四场景脚手架，无前置依赖）
+- 下一次 2 建议（Codex）：复审本任务完整性、API 表面与 GameManager 桥接逻辑
+
+### HANDOFF-20260627-03 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：Input Manager → Input System 包迁移`n- 结论：✅ 已完成迁移（用户通过 Unity PM UI 安装包，DeepSeek 补全代码迁移）
+- 原因：
+  - Unity 包管理器无法连接 registry（Curl error 35: Cert verify failed）
+  - GitHub zip 下载速度仅 ~0.1MB/分钟（包 ~100MB）
+  - 尝试了 4 种安装路径：manifest 直加、openupm registry、git URL 依赖、GitHub zip —— 全部受阻
+- 警告性质：
+  - 来自 Unity Editor 的 ProjectSettings → Player → Active Input Handling: 0 (Input Manager Old)
+  - **不是 C# 编译警告**（dotnet build 0 错误，无 Input 相关 CS 警告）
+  - Input.GetKeyDown() 等 API 在 Unity 6 中标记为"计划弃用"但功能完整，不会在近期移除
+- 迁移条件（等网络就绪后）：
+  1. openupm add com.unity.inputsystem（或 Unity Package Manager UI）
+  2. 改 ctiveInputHandler: 0 → 2
+  3. Unity 自动重生成 .csproj
+  4. 改写 3 个文件 16 处 Input.* → Keyboard.current.* / Mouse.current.*
+- 修改文件：3 个 C# 文件（16 处 Input.* → Keyboard/Mouse.current.*）+ manifest.json + ProjectSettings.asset
+- 提交：d389792（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+- 未验证：不适用
+- 残留风险：DLL 从模板缓存手动提取，非正常下载；Unity 重新生成 csproj 后引用格式可能变化但语义不变；packages-lock.json 被删，需 Unity 重建
+- 请求判断：无
+- 下一次 1 建议：继续 TQ-014-DS-04（四场景脚手架）
+

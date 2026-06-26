@@ -14,6 +14,12 @@ namespace TianZhang.Editor
     public static class SceneBuilder
     {
         private const string DataPath = "Assets/Data";
+
+        // 场景路径常量（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+        private const string StartMenuScenePath = "Assets/Scenes/StartMenuScene.unity";
+        private const string WorldScenePath = "Assets/Scenes/WorldScene.unity";
+        private const string SettlementScenePath = "Assets/Scenes/SettlementScene.unity";
+        private const string AdventureScenePath = "Assets/Scenes/AdventureScene.unity";
                 private static void CreateDemoData()
         {
             EnsureDir($"{DataPath}/Characters");
@@ -52,6 +58,22 @@ namespace TianZhang.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// 创建正交主相机（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+        /// </summary>
+        private static Camera CreateMainCamera(float orthographicSize, Color background)
+        {
+            var camGo = new GameObject("Main Camera");
+            camGo.tag = "MainCamera";
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = orthographicSize;
+            cam.backgroundColor = background;
+            cam.transform.position = new Vector3(0, 0, -10);
+            camGo.AddComponent<AudioListener>();
+            return cam;
         }
 
         private static TileBase MakeTile(string name, Color color)
@@ -117,6 +139,39 @@ namespace TianZhang.Editor
                 System.IO.Directory.CreateDirectory(path);
         }
 
+        [MenuItem("Tools/天章/生成场景架构空场景")]
+        public static void BuildSceneArchitectureShells()
+        {
+            BuildEmptyScene(StartMenuScenePath, "StartMenuRoot", new Color(0.05f, 0.05f, 0.08f));
+            BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.04f, 0.08f, 0.1f));
+            BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.08f, 0.07f, 0.05f));
+            BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f));
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// 生成空场景外壳（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+        /// </summary>
+        private static void BuildEmptyScene(string scenePath, string rootName, Color background)
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+                UnityEditor.SceneManagement.NewSceneMode.Single);
+
+            CreateMainCamera(12f, background);
+            new GameObject(rootName);
+
+            var eventSystem = new GameObject("EventSystem");
+            eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            eventSystem.AddComponent<InputSystemUIInputModule>();
+
+            var gameManager = new GameObject("GameManager");
+            gameManager.AddComponent<TianZhang.Game.GameManager>();
+            gameManager.AddComponent<TianZhang.Game.SceneFlowManager>();
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
+        }
+
         [MenuItem("Tools/天章/生成探索场景")]
         public static void BuildExplorationScene()
         {
@@ -127,14 +182,7 @@ namespace TianZhang.Editor
                 UnityEditor.SceneManagement.NewSceneMode.Single);
 
             // Camera
-            var camGo = new GameObject("Main Camera");
-            camGo.tag = "MainCamera";
-            var cam = camGo.AddComponent<Camera>();
-            cam.orthographic = true;
-            cam.orthographicSize = 12f;
-            cam.backgroundColor = new Color(0.08f, 0.1f, 0.14f);
-            cam.transform.position = new Vector3(0, 0, -10);
-            camGo.AddComponent<AudioListener>();
+            CreateMainCamera(12f, new Color(0.08f, 0.1f, 0.14f));
 
             // Hex Grid (复用战斗场景基础设施)
             var gridGo = new GameObject("HexGrid");
