@@ -1,0 +1,26 @@
+# TQ-014 · 场景架构与 2.5D 战棋表现实施计划归档（✅ 已审核）
+
+审核日期：2026-06-26
+审核方：Codex / gpt-5.5
+目标提交：600394c
+结论：通过。
+
+## 交付范围
+
+- 输出实施计划：`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`。
+- 锁定首轮架构边界：不强切 2.5D，不改 CTB、伤害、冷却、槽位语义。
+- 明确 `GameSession` / `SceneFlowManager`、`TacticalGridModel` / `ITacticalRenderer`、StartMenu/World/Settlement/Adventure 四类场景、`TacticalCombatController` 拆分与 2.5D 原型验证顺序。
+- 将低风险执行型切片拆给 DeepSeek V4 Pro，写入 `开发管理/AI合作沟通.txt` 的 `TQ-014-DS-20260625-01`。
+
+## 审核依据与验证
+
+- 复核 `docs/superpowers/specs/2026-06-19-scene-architecture-design.md` 与实际 Unity 文件边界。
+- 复核 `SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs` 的职责分布。
+- `rg -n "TBD|TODO|待定|placeholder|占位" docs/superpowers/plans`：计划文件无阻塞占位。
+- `git show --check --oneline --no-renames 600394c`：通过。
+
+## 边界与后续
+
+- 本归档只确认计划通过，不代表四场景、会话流转或 2.5D 原型已实现。
+- DeepSeek 后续优先执行现状清单、低风险包装、场景脚手架和验证清单；所有 DeepSeek 修改仍需标 `⚠️ 已修改/未审核` 并交由 Codex / ChatGPT5.5 复审。
+- Codex / ChatGPT5.5 保留 `TacticalGridModel` 规则层、战斗循环拆分、CTB/伤害/冷却/槽位语义复审职责。

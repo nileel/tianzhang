@@ -17,6 +17,7 @@
 > 2026-06-26 Codex / gpt-5.5：TQ-013C Unity 首轮代码迁移已完成并验证：玩家默认修炼链收束为凡人/练气/筑基五段/金丹三段；`CultivationResult` 增补成丹状态、丹籍类型、占据状态、丹名、丹性与旧品级兼容字段；`CharacterData` 增补紫府/金丹兼容字段；槽位计算改为练气/筑基基线 + 紫府府位加成，高阶倍率不再线性加槽；`ExplorationController` 不再用装备数量覆盖冷却数组。金丹槽位具体数值仍待 TQ-015C BattleSim 验证后再接入。
 > 2026-06-26 Codex / gpt-5.5：TQ-015C-1 BattleSim 源/化/界兼容字段已完成并验证：`GoldenCoreProfile`、`Cultivation.Result`、`Character` 增补 `targetBranch/targetSeat/seatName/danPivot`，主模拟输出主要位格；本轮不调整成丹数值和战斗倍率。
 > 2026-06-26 Codex / gpt-5.5：TQ-015C-2 成丹与席位竞争数值验证方案已产出：`开发管理/成丹与席位竞争数值验证方案.txt`。BattleSim build + run 通过；本轮只锁验证边界，不新增运行时阈值、不调整战斗倍率。下一步建议拆分 BattleSim 字段：自然丹籍候选与席位竞争状态分离。
+> 2026-06-26 Codex / gpt-5.5：按维护规则归档 TQ-013C/TQ-014；TQ-006 的冷却数组覆盖问题已随 TQ-013C 代码迁移补修，保留为待 `2` 复核清理项；当前 `1` 优先推进 TQ-015C-3 或场景架构执行型切片。
 
 ## 使用规则
 
@@ -32,23 +33,22 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-006 | P1 | DeepSeek V4 Pro | 局部实现 | 复审不通过 / 待返工 | `Character.FromData` 本体已修，但调用点仍覆盖为装备数长度；见未通过清单 |
+| TQ-006 | P1 | Codex / ChatGPT5.5（补修）；DeepSeek V4 Pro（原返工） | Unity实现 | 已返工 / 待复核清理 | 冷却数组调用点覆盖问题已随 TQ-013C 移除；待 `2` 复核后清理未通过清单 |
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 复审不通过 / 待返工 | 太一道庭法箓体系映射表存在 `?` 符号污染和 TXT 截断风险；见未通过清单 |
-| TQ-013C | P1 | Codex / ChatGPT5.5 | Unity实现 | 已完成 / 待归档 | Unity `CultivationEngine` 与槽位计算迁移首轮完成；金丹槽位具体数值待 TQ-015C 验证后接入 |
 | TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 复审不通过 / 待返工 | CSV/导入器已有独立技能属性字段，但 Unity asset 未重导完整；见未通过清单 |
-| TQ-014 | P1 | Codex / ChatGPT5.5 | 架构/计划 | ✅已审核 / 已完成待归档 | 场景架构与 2.5D 战棋表现实施计划已输出：`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`；后续切片优先按 `AI合作沟通.txt` 的 TQ-014-DS 派工交给 DeepSeek，Codex 保留战斗循环拆分和复审 |
 | TQ-015B | P0 | Codex / ChatGPT5.5（TQ-015B-1已审核）；DeepSeek V4 Pro（TQ-015B-2/3 NPC+模板已完成） | 文档迁移/批量生产 | TQ-015B-1✅已审核 / TQ-015B-2/3复审不通过 | NPC 字段与旧口径残留需返工；见未通过清单 |
-| TQ-015C | P1 | Codex / ChatGPT5.5 | 数据/数值架构 | TQ-015C-1/2已完成 / 后续切片待处理 | BattleSim 已增补源/化/界兼容字段并输出主要位格；成丹与席位竞争验证方案已产出，下一步优先拆分自然丹籍候选与席位竞争状态字段；全仓炼虚清理代码/数据切片继续按 `1` 拆分推进，数值必须以 BattleSim 验证 |
+| TQ-015C-3 | P1 | Codex / ChatGPT5.5 | BattleSim字段迁移 | 待处理 | 拆分自然丹籍候选与席位竞争状态字段；不调整战斗倍率，数值必须跑 BattleSim |
+| TQ-014-DS-01 | P1 | DeepSeek V4 Pro | 场景架构清单 | 待处理 | 产出 `开发管理/场景架构Unity现状清单.txt`，只记录现状、职责归属和风险，不改 C# |
 
 ## 任务卡片
 
 ### TQ-006 · 槽位冷却数组修复
 
 - 来源：`开发管理/开发-下一步建议.txt` A5。
-- 当前状态：复审不通过，待返工。`Character.FromData` 初始化顺序已修，但 `ExplorationController` 创建玩家/敌人后仍用装备数量覆盖冷却数组，可能再次小于槽位上限。
+- 当前状态：已返工 / 待复核清理。`Character.FromData` 初始化顺序已修；`ExplorationController` 创建玩家/敌人后用装备数量覆盖冷却数组的问题已随 TQ-013C 移除。
 - 必读：`开发管理/开发-技术经验.txt`、Unity `Character.FromData` 相关代码、术法槽位设计文档。
-- 验证命令：覆盖空装备、少于槽位、临阵换法、冷却灰显四类回归；至少运行 `dotnet build src/Assembly-CSharp.csproj`。
-- 完成条件：冷却数组长度与槽位数一致，不再因初始化顺序产生 0 长度或 UI 状态异常；复审通过后从队列归档。
+- 验证命令：覆盖空装备、少于槽位、临阵换法、冷却灰显四类回归；至少运行 `dotnet build src/Assembly-CSharp.csproj`；复核 TQ-013C 提交 `49b6d93`。
+- 完成条件：`2` 复核确认冷却数组长度与槽位数一致后，从未通过清单和本队列清理或归档。
 
 ### TQ-007 · 法箓映射表
 
@@ -58,15 +58,6 @@
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/角色养成`；必要时用 `rg` 核对 9 功法、26 术法、9 神通覆盖。
 - 完成条件：映射表字段满足后续导入方案输入，通神三玄礼录归属明确，本命升格/特殊效果是否补全文本有结论；若通过复审，更新归档和后续 CSV 字段任务。
 
-### TQ-013C · Unity CultivationEngine 与槽位计算迁移
-
-- 来源：TQ-013 `开发管理/境界体系数据模拟迁移差异表.txt`。
-- 当前状态：已完成 / 待归档。2026-06-26 Codex / gpt-5.5 已完成首轮代码迁移与验证；金丹槽位具体数值不在本轮硬编码，待 TQ-015C BattleSim 验证后再接入。
-- 当前优先级：P1。建议在 TQ-006 复审通过、TQ-013A/B 锁定 BattleSim 口径后执行。
-- 必读：`开发管理/境界体系重构锁口径决策表.txt`、`开发管理/境界体系数据模拟迁移差异表.txt`、`开发管理/开发-技术经验.txt`、`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Data/CharacterData.cs`、`src/Assets/Scripts/Data/GongFaGrowthData.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`。
-- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；覆盖练气入门、筑基五段/紫府显示、金丹三段、寄丹/丹籍状态、槽位数组回归。
-- 完成条件：Unity 玩家境界显示与默认修炼链对齐新口径；槽位计算支持紫府府位与丹籍加成；元婴以上保留兼容/NPC 入口但不作为默认线性玩家成长；旧倍率字段仅作兼容，不再充当境界事实源。
-
 ### TQ-010 · CSV/asset 独立技能属性字段
 
 - 来源：TQ-005/TQ-009 拆分；TQ-009 已完成 BattleSim 五行 v5.10 同源化首轮实现，本任务只处理数据字段独立化。
@@ -74,15 +65,6 @@
 - 必读：`docs/基础设定/灵根设定.txt` 第八节、术法/神通设计模板、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`DataConfigImporter.cs`。
 - 验证命令：导入完整性检查 + Unity 编译；必要时用 `rg "element_"` 核对 75 术法、34 神通覆盖。
 - 完成条件：术法/神通拥有独立五行属性列，学习门槛 `elementReq` 不再兼任技能属性；重导 `.asset` 后不丢失 12 属性与混沌/无属性语义。
-
-### TQ-014 · 场景架构与 2.5D 战棋表现实施计划
-
-- 来源：用户确认的场景架构方案；`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`；`开发管理/开发-下一步建议.txt` 3.2.7。
-- 当前状态：✅ 已审核 / 已完成待归档。Codex / ChatGPT5.5 已按用户要求输出实施计划，并将可拆给 DeepSeek V4 Pro 的执行型任务写入 `开发管理/AI合作沟通.txt` 的 `TQ-014-DS-20260625-01`。
-- 当前优先级：P1。作为场景架构线首个切片，默认不抢占境界体系 P0 迁移；若用户明确要求推进场景架构，则优先执行本任务。
-- 必读：`开发管理/开发-技术经验.txt`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、Unity `SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
-- 验证命令：计划文档自检 `rg -n "TBD|TODO|待定|placeholder|占位" docs/superpowers/plans`；涉及代码路径判断时追加 `dotnet build src/Assembly-CSharp.csproj`。
-- 完成条件：输出可执行实施计划，明确 `GameSession/SceneFlowManager`、`TacticalGridModel/ITacticalRenderer`、StartMenu/World/Settlement/Adventure 四类场景、`TacticalCombatController` 拆分、2.5D 原型验证的任务顺序、文件边界和验证命令；后续代码切片优先按计划和交接条目进入 DeepSeek 执行队列，核心战斗拆分由 Codex / ChatGPT5.5 执行或复审。
 
 ### TQ-015B · NPC 与批量生产迁移
 
@@ -93,10 +75,18 @@
 - TQ-015B-1 本轮范围：`docs/superpowers/specs/2026-06-19-jindan-danxiang-design.md`、两份金丹/紫府核心设定、术法槽位设计、三类设计规范与模板。已锁定：丹相为金丹能力总称；丹枢仅为矩阵允许的个性化接口；紫府神通为丹相输入；暂寄不生成丹相主枢。未锁定：数量阈值、槽位数、数值成长和运行时迁移。
 - 完成条件：核心规则余项不再把旧词作为现行层级或数值规则；NPC 统一使用“分支 + 源/化/界 + 占据方式 + 丹枢”字段；历史参考不复制；太一道庭不垄断丹系；模板能约束 DeepSeek 批量内容不越过矩阵边界；DeepSeek 提交只标 `⚠️ 已修改/未审核`，交由 Codex / ChatGPT5.5 复审。
 
-### TQ-015C · 源化界数据模型与炼虚清理路线
+### TQ-015C-3 · BattleSim 自然丹籍候选与席位竞争状态字段
 
 - 来源：TQ-015A；`docs/superpowers/plans/2026-06-21-yuanying-position-migration.md` 任务 5。
-- 当前优先级：P1。迁移差异表与 BattleSim 源/化/界兼容字段已完成；未经数值验证不直接改 Unity/CSV 成丹/竞争数值。
+- 当前优先级：P1。TQ-015C-1 已补源/化/界兼容字段；TQ-015C-2 已产出数值验证方案；下一步只拆字段语义，不直接调战斗倍率。
 - 必读：`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`开发管理/境界体系重构锁口径决策表.txt`、`开发管理/境界体系数据模拟迁移差异表.txt`、`simulations/BattleSim/Program.cs`、`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Data/CharacterData.cs`。
 - 验证命令：`rg -n "炼虚|realm_lianxu" docs src simulations 开发管理`；`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
-- 完成条件：逐项记录旧字段到源/化/界、占据状态与丹枢字段的迁移；炼虚全部具备删除或降级去向；任何成丹/竞争/本命神通数值均有 BattleSim 输出支撑。
+- 完成条件：BattleSim 明确区分自然丹籍候选、席位竞争状态、最终占据状态与丹枢字段；主输出能解释未成丹、暂寄、敕封、自然丹籍和争席结果；默认 run 通过且不新增未经验证的成丹阈值或战斗倍率。
+
+### TQ-014-DS-01 · 场景架构 Unity 现状清单
+
+- 来源：`开发管理/AI合作沟通.txt` 的 `TQ-014-DS-20260625-01`；TQ-014 实施计划归档。
+- 当前优先级：P1。DeepSeek V4 Pro 可执行，Codex / ChatGPT5.5 负责后续复审和规则层判断。
+- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/开发-技术经验.txt`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`；`git diff --check`。
+- 完成条件：产出 `开发管理/场景架构Unity现状清单.txt`，按场景资产、脚本职责、后续归属、阻塞风险和建议切片分类；本任务不改 C#、不生成 `.unity` 场景、不改 CTB/伤害/冷却/槽位语义。

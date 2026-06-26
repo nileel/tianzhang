@@ -1,0 +1,29 @@
+# TQ-013C · Unity 境界与槽位迁移归档（✅ 已审核）
+
+审核日期：2026-06-26
+审核方：Codex / gpt-5.5
+目标提交：49b6d93
+结论：通过。
+
+## 交付范围
+
+- Unity 默认修炼链收束为凡人、练气、筑基五段、金丹三段，元婴以上不再作为玩家默认线性成长链。
+- `CultivationResult` 增补成丹状态、丹籍类型、占据状态、丹名、丹性与旧品级兼容字段。
+- `CharacterData` 增补紫府/金丹兼容字段，保留旧字段作为兼容入口。
+- 术法/神通槽位计算改为练气/筑基基线 + 紫府府位加成，高阶境界倍率不再线性加槽。
+- `ExplorationController` 不再用已装备数量覆盖冷却数组长度，避免少装备时冷却数组小于槽位上限。
+- 新增 `TQ013CRealmAndSlotVerification` 编辑器验证入口，覆盖默认境界链、成丹兼容字段与槽位/冷却数组口径。
+
+## 审核依据与验证
+
+- 复核 `开发管理/当前任务队列.txt` 中 TQ-013C 完成条件。
+- 复核 `src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Entity/CharacterData.cs`、`src/Assets/Scripts/Map/ExplorationController.cs` 与新增编辑器验证脚本。
+- `dotnet build src/Assembly-CSharp.csproj`：通过。
+- 编辑器验证脚本可作为后续 Unity 内回归入口。
+- `git show --check --oneline --no-renames 49b6d93`：通过。
+
+## 边界与后续
+
+- 金丹槽位具体数值仍未在本任务中硬编码，等待 TQ-015C 的 BattleSim 成丹/席位竞争数值验证后再接入。
+- 本任务不调整战斗倍率、成丹阈值、丹枢数量或源/化/界席位竞争规则。
+- 后续 Unity 若接入自然丹籍候选、席位竞争状态或丹枢字段，应先由 BattleSim 输出稳定字段口径。
