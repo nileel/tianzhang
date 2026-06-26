@@ -1,0 +1,36 @@
+# TQ-013B · BattleSim 金丹九品兼容层归档（✅ 已审核）
+
+审核日期：2026-06-26
+审核方：Codex / gpt-5.5
+目标提交：31a4895
+结论：通过。
+
+## 交付范围
+
+- BattleSim 金丹输出从旧“金丹品级分布”迁移为“金丹成丹状态分布”，按未成丹、暂寄丹籍、敕封丹籍、自然丹籍统计，并输出平均成丹判定值与主要丹性。
+- `GCQuality`、`GCMultiplier`、`GCTypeScaling` 与 `GCDFCap` 不再作为主输出、神通分配或 MP 强度来源。
+- 新增 `GoldenCoreProfile`，表达成丹状态、丹籍类型、占据状态、丹名、丹性、旧品级兼容字段、稳定倍率与丹籍术法亲和倍率。
+- 旧一至九品只保留为 `LegacyGrade` 历史兼容调试字段，并在代码注释中明确不再钳制道基、不驱动主输出或战斗强度。
+- 角色神通分配改为读取 `FormedState == "成丹"` 与非空 `DanJiType`，不再依赖旧 `GCQuality`。
+- 新增 `golden-core-tq013b` 自检，覆盖 profile 解析、暂寄丹籍、未成丹出口与神通分配不依赖旧品级。
+
+## 审核依据与验证
+
+- 复核 `开发管理/审核入口.txt`、`开发管理/审核规则.txt`、`开发管理/当前任务队列.txt` 中 TQ-013B 完成条件。
+- 复核 `开发管理/开发-技术经验.txt` 的 BattleSim 验证规则。
+- 复核 `docs/基础设定/角色数值设计.txt`，确认该提交属于 BattleSim 代码与数值表达迁移，需运行 BattleSim。
+- 复核目标提交 `31a4895` 的 BattleSim 代码 diff：`BattleSimSelfTests.cs`、`GameData.cs`、`Cultivation.cs`、`Character.cs`、`Program.cs`。
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-tq013b`：通过。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test realm-tq013a`：通过。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test element-v510`：通过。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过；输出含“金丹成丹状态分布（TQ-013B兼容层）”。
+- `rg -n "GCDFCap|GCQuality|GCMultiplier|一品|九品|金丹品级" simulations/BattleSim`：残留仅 `LegacyGoldenCoreGradeFromScore` 历史兼容映射与对应自检断言。
+- `git show --check --oneline --no-renames 31a4895`：通过。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths "开发管理/当前任务队列.txt"`：通过。
+
+## 边界与后续
+
+- 成丹阈值、紫府神通数量、席位竞争与丹相主枢/辅枢数量仍未在本任务中最终锁定，继续归 TQ-015C 与 TQ-013C 处理。
+- Unity `CultivationEngine`、槽位计算、丹籍字段运行时落地仍不属于本任务，保留给 TQ-013C。
+- `docs/基础设定/角色数值设计.txt` 与 BattleSim 的数值差异仍由 TQ-008 单独评估。
