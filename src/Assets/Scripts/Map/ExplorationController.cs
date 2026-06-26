@@ -232,10 +232,9 @@ namespace TianZhang.Map
                 : new string[0];
 
             var c = Character.FromData(cd, startPos);
-            c.SpellCooldowns = new int[playerSpells?.Length ?? 0];
             c.AvailableSpells = new string[] { "玄水咒", "沧浪击", "安神符", "金光破岳", "流火灵符" };
             c.CombatSwapsUsed = 0;
-            c.SkillCooldowns = new int[playerSkills?.Length ?? 0];
+            c.EnsureCooldownArraySize();
             return c;
         }
 
@@ -268,8 +267,7 @@ namespace TianZhang.Map
                     template = CreateFallbackEnemy(spawned);
 
                 var enemy = Character.FromData(template, coord);
-                enemy.SpellCooldowns = new int[template.equippedSpells?.Length ?? 0];
-                enemy.SkillCooldowns = new int[0];
+                enemy.EnsureCooldownArraySize();
                 enemy.CTBUnit = ctbEngine.RegisterUnit(enemy.Reaction, enemy);
                 enemy.CTBUnit.Id = nextUnitId++;
                 tilemapManager.Grid.SetOccupied(coord, enemy.CTBUnit.Id);

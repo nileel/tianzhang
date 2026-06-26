@@ -40,7 +40,8 @@ namespace TianZhang.Entity
         public float hitRateBonus;      // 命中率加成
 
         [Header("境界倍率")]
-        public float realmMultiplier = 1f; // 境界属性倍率（凡人1.0→练气1.5→筑基3.0→...）
+        public float realmMultiplier = 1f; // 战斗强度兼容倍率，不作为境界事实源
+        public string realmStage = "";     // 可选显示阶段：筑基初期/紫府初开/金丹圆满等
         public string gongFaName = "";         // 装备的功法名称
 
         [Header("术法槽位")]
@@ -54,5 +55,15 @@ namespace TianZhang.Entity
         [Header("槽位上限（0=按境界自动计算）")]
         public int maxSpellSlots;          // 术法槽位上限（0时从境界推算）
         public int maxSkillSlots;          // 神通槽位上限
+
+        [Header("紫府/金丹兼容字段")]
+        public string[] developedMansions;     // 已主修府位：命府/魂府/识府/气府/运府
+        public string targetPosition = "";     // 目标源/化/界席位 ID
+        public string positionOccupationState = ""; // 夺取/继承/敕封/暂寄/自辟
+        public string danXiangId = "";         // 丹相 ID
+        public string danPivotRole = "";       // none/main/auxiliary
+        public string[] mansionBindings;       // 紫府神通绑定府位
+        public string danArtifactForm = "";    // 丹器显化形态
+        public string legacyDanJiType = "";    // 旧 danJiType 兼容读取字段
     }
 }

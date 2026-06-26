@@ -20,12 +20,12 @@ namespace TianZhang.Cultivation
         // 小境界数量
         public static readonly Dictionary<string, int> Sublevels = new()
         {
-            ["凡人"] = 1, ["练气"] = 9, ["筑基"] = 4, ["金丹"] = 4,
-            ["元婴"] = 4, ["化神"] = 4, ["炼虚"] = 4
+            ["凡人"] = 1, ["练气"] = 9, ["筑基"] = 5, ["金丹"] = 3
         };
 
         // 境界顺序
-        public static readonly string[] RealmOrder = { "凡人", "练气", "筑基", "金丹", "元婴", "化神", "炼虚" };
+        public static readonly string[] RealmOrder = { "凡人", "练气", "筑基", "金丹" };
+        public static readonly string[] NpcExpansionRealmOrder = { "元婴", "化神" };
 
         // 灵根品级灵力修正
         public static readonly Dictionary<string, float> SpiritMod = new()
@@ -38,10 +38,8 @@ namespace TianZhang.Cultivation
         {
             ("练气", 0, 10f), ("练气", 1, 22f), ("练气", 2, 36f), ("练气", 3, 52f),
             ("练气", 4, 70f), ("练气", 5, 90f), ("练气", 6, 112f), ("练气", 7, 136f), ("练气", 8, 162f),
-            ("筑基", 0, 200f), ("筑基", 1, 250f), ("筑基", 2, 310f), ("筑基", 3, 390f),
-            ("金丹", 0, 500f), ("金丹", 1, 650f), ("金丹", 2, 830f), ("金丹", 3, 1050f),
-            ("元婴", 0, 1350f), ("元婴", 1, 1620f), ("元婴", 2, 1940f), ("元婴", 3, 2320f),
-            ("化神", 0, 2780f), ("化神", 1, 3340f), ("化神", 2, 4010f), ("化神", 3, 4810f),
+            ("筑基", 0, 200f), ("筑基", 1, 250f), ("筑基", 2, 310f), ("筑基", 3, 390f), ("筑基", 4, 500f),
+            ("金丹", 0, 650f), ("金丹", 1, 830f), ("金丹", 2, 1050f),
         };
 
         /// <summary>修炼结果</summary>
@@ -54,8 +52,16 @@ namespace TianZhang.Cultivation
             public float NextMilestoneCPP;    // 下一突破所需CPP
             public string DFQuality;          // 道基品级
             public int DFScore;
-            public string GCQuality;          // 金丹品级
+            public string GCQuality;          // 历史兼容显示；不再驱动金丹能力
+            public string LegacyGCGrade;
             public int GCScore;
+            public string FormedState;
+            public string DanJiType;
+            public string OccupancyState;
+            public string DanName;
+            public string DanNature;
+            public float DanJiStabilityMultiplier;
+            public float DanJiArtAffinityMultiplier;
             public int Breakthroughs;         // 成功突破次数
             public int Failures;              // 突破失败次数
             public List<string> Log;
@@ -82,7 +88,7 @@ namespace TianZhang.Cultivation
             int subIdx = 0;
             string dfQuality = "无道基";
             int dfScore = 0;
-            string gcQuality = "";
+            GoldenCoreProfile goldenCore = GoldenCoreProfile.Unformed;
             int gcScore = 0;
             bool dfGenerated = false;
             bool gcGenerated = false;
@@ -140,9 +146,9 @@ namespace TianZhang.Cultivation
                         {
                             gcGenerated = true;
                             float totalCpp = msCpp + Mathf.Max(0, cpp);
-                            (gcQuality, gcScore) = GenerateGoldenCore(
-                                character.Talent, spiritGrade, techGrade, dfQuality, totalCpp, treasureGrade, rng);
-                            result.Log.Add($"金丹凝结: {gcQuality} (评分{gcScore})");
+                            (goldenCore, gcScore) = GenerateGoldenCore(
+                                character, spiritGrade, techGrade, dfQuality, totalCpp, treasureGrade, rng);
+                            result.Log.Add($"金丹凝结: {goldenCore.DanJiType}/{goldenCore.OccupancyState}/{goldenCore.DanName}/{goldenCore.DanNature} (评分{gcScore})");
                         }
 
                         // 应用突破属性成长
@@ -169,8 +175,16 @@ namespace TianZhang.Cultivation
             result.NextMilestoneCPP = nextMs < Milestones.Length ? Milestones[nextMs].cpp : float.MaxValue;
             result.DFQuality = dfQuality;
             result.DFScore = dfScore;
-            result.GCQuality = gcQuality;
+            result.GCQuality = goldenCore.LegacyGrade;
+            result.LegacyGCGrade = goldenCore.LegacyGrade;
             result.GCScore = gcScore;
+            result.FormedState = goldenCore.FormedState;
+            result.DanJiType = goldenCore.DanJiType;
+            result.OccupancyState = goldenCore.OccupancyState;
+            result.DanName = goldenCore.DanName;
+            result.DanNature = goldenCore.DanNature;
+            result.DanJiStabilityMultiplier = goldenCore.StabilityMultiplier;
+            result.DanJiArtAffinityMultiplier = goldenCore.ArtAffinityMultiplier;
             result.Breakthroughs = breakthroughs;
             result.Failures = failures;
 
@@ -207,8 +221,30 @@ namespace TianZhang.Cultivation
             "金丹" => 6.0f,
             "元婴" => 12.0f,
             "化神" => 24.0f,
-            "炼虚" => 48.0f,
             _ => 1.0f
+        };
+
+        public static string StageName(string realm, int subIdx) => realm switch
+        {
+            "筑基" => subIdx switch
+            {
+                0 => "筑基初期",
+                1 => "筑基中期",
+                2 => "筑基后期",
+                3 => "紫府初开",
+                4 => "紫府圆满",
+                _ => $"筑基{subIdx}"
+            },
+            "金丹" => subIdx switch
+            {
+                0 => "初结金丹",
+                1 => "温养金丹",
+                2 => "金丹圆满",
+                _ => $"金丹{subIdx}"
+            },
+            "练气" => $"练气{subIdx + 1}层",
+            "凡人" => "凡人",
+            _ => $"{realm}{subIdx}"
         };
 
         /// <summary>道基生成（与 BattleSim 一致）</summary>
@@ -243,9 +279,43 @@ namespace TianZhang.Cultivation
             return (quality, score);
         }
 
-        /// <summary>金丹生成</summary>
-        private static (string quality, int score) GenerateGoldenCore(
-            int talent, string spiritGrade, string techGrade,
+        private readonly struct GoldenCoreProfile
+        {
+            public static readonly GoldenCoreProfile Unformed = new("未成丹", "", "未成丹", "", "", "", 1f, 1f);
+
+            public readonly string FormedState;
+            public readonly string DanJiType;
+            public readonly string OccupancyState;
+            public readonly string DanName;
+            public readonly string DanNature;
+            public readonly string LegacyGrade;
+            public readonly float StabilityMultiplier;
+            public readonly float ArtAffinityMultiplier;
+
+            public GoldenCoreProfile(
+                string formedState,
+                string danJiType,
+                string occupancyState,
+                string danName,
+                string danNature,
+                string legacyGrade,
+                float stabilityMultiplier,
+                float artAffinityMultiplier)
+            {
+                FormedState = formedState;
+                DanJiType = danJiType;
+                OccupancyState = occupancyState;
+                DanName = danName;
+                DanNature = danNature;
+                LegacyGrade = legacyGrade;
+                StabilityMultiplier = stabilityMultiplier;
+                ArtAffinityMultiplier = artAffinityMultiplier;
+            }
+        }
+
+        /// <summary>金丹成丹判定值 + 丹籍兼容层</summary>
+        private static (GoldenCoreProfile profile, int score) GenerateGoldenCore(
+            Character character, string spiritGrade, string techGrade,
             string dfQuality, float totalCpp, string treasureGrade, System.Random rng)
         {
             int spiritBase = spiritGrade switch
@@ -264,15 +334,47 @@ namespace TianZhang.Cultivation
             };
 
             int score = spiritBase + dfBonus + cppBonus + dice + treasureBonus;
-            string quality = score switch
+            return (ResolveGoldenCoreProfile(score, dfQuality, character), score);
+        }
+
+        private static GoldenCoreProfile ResolveGoldenCoreProfile(int score, string dfQuality, Character character)
+        {
+            if (score < 15)
+                return GoldenCoreProfile.Unformed;
+
+            var (danName, danNature) = ResolveGoldenCoreTheme(character);
+            string legacyGrade = score switch
             {
-                >= 180 => "九转金丹",
-                >= 130 => "上品金丹",
-                >= 80 => "中品金丹",
-                >= 40 => "下品金丹",
-                _ => "虚丹"
+                >= 120 => "一品",
+                >= 105 => "二品",
+                >= 90 => "三品",
+                >= 75 => "四品",
+                >= 60 => "五品",
+                >= 48 => "六品",
+                >= 36 => "七品",
+                >= 25 => "八品",
+                _ => "九品"
             };
-            return (quality, score);
+
+            bool hasFoundation = dfQuality != "无道基";
+            if (!hasFoundation || score < 60)
+                return new GoldenCoreProfile("成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, 0.92f, 0.95f);
+
+            if (score >= 90)
+                return new GoldenCoreProfile("成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, 1.08f, 1.10f);
+
+            return new GoldenCoreProfile("成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, 1.0f, 1.0f);
+        }
+
+        private static (string danName, string danNature) ResolveGoldenCoreTheme(Character character)
+        {
+            int max = Mathf.Max(character.RootBone, character.Spirit, character.Mind, character.Talent, character.Reaction);
+            if (max == character.RootBone) return ("坤岳丹", "土");
+            if (max == character.Spirit) return ("烛魂丹", "火");
+            if (max == character.Mind) return ("星识丹", "星");
+            if (max == character.Talent) return ("青华丹", "木");
+            if (max == character.Reaction) return ("沧流丹", "水");
+            return ("素真丹", "金");
         }
 
         private static int FindNextMilestone(string realm, int subIdx)

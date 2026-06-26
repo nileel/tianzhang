@@ -62,6 +62,15 @@ namespace TianZhang.Entity
         public string[] AvailableSkills; // 神通库
         public int CombatSwapsUsed;     // 本场战斗已换法次数
         public const int MaxCombatSwaps = 2; // 每场最多临阵换法次数
+        public string[] DevelopedMansions; // 已主修紫府府位
+        public string RealmStage;
+        public string TargetPosition;
+        public string PositionOccupationState;
+        public string DanXiangId;
+        public string DanPivotRole;
+        public string[] MansionBindings;
+        public string DanArtifactForm;
+        public string LegacyDanJiType;
 
         // ---- 印记状态 ----
         public int ShouyiStacks;     // 守一印记层数（抱元守一经）
@@ -93,7 +102,18 @@ namespace TianZhang.Entity
             // 境界倍率（从 data 读取，或默认值）
             float realm = data.realmMultiplier > 0 ? data.realmMultiplier : 1f;
             c.RealmMultiplier = realm;
-            c.m_Realm = RealmNameFromMultiplier(realm);
+            c.RealmStage = data.realmStage;
+            c.m_Realm = !string.IsNullOrWhiteSpace(data.realmStage)
+                ? NormalizeRealmFromStage(data.realmStage)
+                : RealmNameFromMultiplier(realm);
+            c.DevelopedMansions = data.developedMansions != null ? (string[])data.developedMansions.Clone() : new string[0];
+            c.TargetPosition = data.targetPosition;
+            c.PositionOccupationState = data.positionOccupationState;
+            c.DanXiangId = data.danXiangId;
+            c.DanPivotRole = data.danPivotRole;
+            c.MansionBindings = data.mansionBindings != null ? (string[])data.mansionBindings.Clone() : new string[0];
+            c.DanArtifactForm = data.danArtifactForm;
+            c.LegacyDanJiType = data.legacyDanJiType;
 
             // ---- 次线性HP公式（v3.4：根骨^0.75 × 境界倍率 × 基础值）----
             float hpBase = Mathf.Pow(c.RootBone, 0.75f) * realm * 80f;
@@ -127,13 +147,14 @@ namespace TianZhang.Entity
             c.HitRateBonus = data.hitRateBonus;
 
             // 术法/神通槽位上限（须在冷却数组之前赋值）
-            c.MaxSpellSlots = data.maxSpellSlots > 0 ? data.maxSpellSlots : GetDefaultSpellSlots(realm);
-            c.MaxSkillSlots = data.maxSkillSlots > 0 ? data.maxSkillSlots : GetDefaultSkillSlots(realm);
+            var (spellSlots, skillSlots) = CalculateSlotLimits(realm, c.DevelopedMansions);
+            c.MaxSpellSlots = data.maxSpellSlots > 0 ? data.maxSpellSlots : spellSlots;
+            c.MaxSkillSlots = data.maxSkillSlots > 0 ? data.maxSkillSlots : skillSlots;
+            c.EquippedSpellIds = CloneAndTrim(data.equippedSpells, c.MaxSpellSlots, "术法", c.Name);
+            c.EquippedSkillIds = CloneAndTrim(data.equippedSkills, c.MaxSkillSlots, "神通", c.Name);
             // 术法/神通冷却初始化
-            c.SpellCooldowns = new int[Mathf.Max(data.equippedSpells?.Length ?? 0, c.MaxSpellSlots)];
-            c.EquippedSpellIds = data.equippedSpells != null ? (string[])data.equippedSpells.Clone() : new string[0];
-            c.EquippedSkillIds = data.equippedSkills != null ? (string[])data.equippedSkills.Clone() : new string[0];
-            c.SkillCooldowns = new int[Mathf.Max(data.equippedSkills?.Length ?? 0, c.MaxSkillSlots)];
+            c.SpellCooldowns = new int[Mathf.Max(c.EquippedSpellIds.Length, c.MaxSpellSlots)];
+            c.SkillCooldowns = new int[Mathf.Max(c.EquippedSkillIds.Length, c.MaxSkillSlots)];
             c.AvailableSpells = data.availableSpells ?? new string[0];
             c.AvailableSkills = data.availableSkills ?? new string[0];
             c.CombatSwapsUsed = 0;
@@ -224,28 +245,76 @@ namespace TianZhang.Entity
         }
 
 
-        /// <summary>根据境界倍率推算默认术法槽位上限</summary>
+        /// <summary>按当前玩家主线推算基础术法槽位；高阶倍率只作为兼容强度，不继续线性加槽。</summary>
         public static int GetDefaultSpellSlots(float realmMultiplier)
         {
-            if (realmMultiplier >= 50f) return 8;   // 炼虚
-            if (realmMultiplier >= 25f) return 8;   // 化神
-            if (realmMultiplier >= 12f) return 7;   // 元婴
-            if (realmMultiplier >= 6f)  return 6;   // 金丹
-            if (realmMultiplier >= 3f)  return 5;   // 筑基
+            if (realmMultiplier >= 3f) return 5;    // 筑基基准；金丹/高阶无通用加槽
             if (realmMultiplier >= 1.5f) return 4;  // 练气
             return 0;                                // 凡人
         }
 
-        /// <summary>根据境界倍率推算默认神通槽位上限</summary>
+        /// <summary>按当前玩家主线推算基础神通槽位；高阶倍率只作为兼容强度，不继续线性加槽。</summary>
         public static int GetDefaultSkillSlots(float realmMultiplier)
         {
-            if (realmMultiplier >= 50f) return 4;   // 炼虚
-            if (realmMultiplier >= 25f) return 3;   // 化神
-            if (realmMultiplier >= 12f) return 3;   // 元婴
-            if (realmMultiplier >= 6f)  return 2;   // 金丹
-            if (realmMultiplier >= 3f)  return 2;   // 筑基
+            if (realmMultiplier >= 3f) return 2;    // 筑基基准；金丹/高阶无通用加槽
             if (realmMultiplier >= 1.5f) return 1;  // 练气
             return 0;                                // 凡人
+        }
+
+        public void RecalculateSlots()
+        {
+            var (spellSlots, skillSlots) = CalculateSlotLimits(GetEffectiveRealmMultiplier(), DevelopedMansions);
+            MaxSpellSlots = spellSlots;
+            MaxSkillSlots = skillSlots;
+            EnsureCooldownArraySize();
+        }
+
+        public void EnsureCooldownArraySize()
+        {
+            if (SpellCooldowns == null || SpellCooldowns.Length < MaxSpellSlots)
+                System.Array.Resize(ref SpellCooldowns, MaxSpellSlots);
+            if (SkillCooldowns == null || SkillCooldowns.Length < MaxSkillSlots)
+                System.Array.Resize(ref SkillCooldowns, MaxSkillSlots);
+        }
+
+        private static (int spellSlots, int skillSlots) CalculateSlotLimits(float realmMultiplier, string[] developedMansions)
+        {
+            int spellSlots = GetDefaultSpellSlots(realmMultiplier);
+            int skillSlots = GetDefaultSkillSlots(realmMultiplier);
+
+            if (developedMansions == null || developedMansions.Length == 0)
+                return (spellSlots, skillSlots);
+
+            var seen = new HashSet<string>();
+            int spellBonus = 0;
+            int skillBonus = 0;
+            foreach (var mansion in developedMansions)
+            {
+                if (string.IsNullOrWhiteSpace(mansion) || !seen.Add(mansion))
+                    continue;
+
+                if ((mansion == "命府" || mansion == "魂府" || mansion == "气府") && spellBonus < 3)
+                    spellBonus++;
+                else if ((mansion == "识府" || mansion == "运府") && skillBonus < 2)
+                    skillBonus++;
+            }
+
+            return (spellSlots + spellBonus, skillSlots + skillBonus);
+        }
+
+        private static string[] CloneAndTrim(string[] source, int maxSlots, string slotType, string characterName)
+        {
+            if (source == null || source.Length == 0)
+                return new string[0];
+            if (maxSlots <= 0)
+                return new string[0];
+            if (source.Length <= maxSlots)
+                return (string[])source.Clone();
+
+            Debug.LogWarning($"Character.FromData [{characterName}]: 装备{slotType}数 {source.Length} 超过槽位 {maxSlots}，已截断。");
+            var trimmed = new string[maxSlots];
+            System.Array.Copy(source, trimmed, maxSlots);
+            return trimmed;
         }
 
         /// <summary>检查是否可以装备更多术法</summary>
@@ -335,6 +404,7 @@ namespace TianZhang.Entity
         {
             m_Realm = realm;
             RealmMultiplier = Cultivation.CultivationEngine.GetRealmMultiplier(realm);
+            RecalculateSlots();
         }
 
         public string GetRealm() => m_Realm;
@@ -348,12 +418,21 @@ namespace TianZhang.Entity
 
         private static string RealmNameFromMultiplier(float realmMultiplier)
         {
-            if (realmMultiplier >= 48f) return "炼虚";
             if (realmMultiplier >= 24f) return "化神";
             if (realmMultiplier >= 12f) return "元婴";
             if (realmMultiplier >= 6f) return "金丹";
             if (realmMultiplier >= 3f) return "筑基";
             if (realmMultiplier >= 1.5f) return "练气";
+            return "凡人";
+        }
+
+        private static string NormalizeRealmFromStage(string realmStage)
+        {
+            if (realmStage.Contains("化神")) return "化神";
+            if (realmStage.Contains("元婴")) return "元婴";
+            if (realmStage.Contains("金丹")) return "金丹";
+            if (realmStage.Contains("筑基") || realmStage.Contains("紫府")) return "筑基";
+            if (realmStage.Contains("练气")) return "练气";
             return "凡人";
         }
 
