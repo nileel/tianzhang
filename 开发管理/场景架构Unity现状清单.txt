@@ -1,0 +1,127 @@
+# 场景架构 Unity 现状清单（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+
+> 产出日期：2026-06-27
+> 任务：TQ-014-DS-01 · 场景架构 Unity 现状清单
+> 依据：`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md` Task 1
+> 编译基线：`dotnet build src/Assembly-CSharp.csproj` — 通过（0 错误，2 弃用警告）
+
+---
+
+## 一、场景资产
+
+| 场景文件 | 大小 | 用途 | 后续归属 |
+|----------|------|------|----------|
+| `Assets/Scenes/ExplorationScene.unity` | 25,889 B | 当前唯一场景，同时承载探索+战斗+门派选择 | 迁移后保留为备份，由 `AdventureScene` 替代 |
+
+**现状**：只有 1 个 `.unity` 场景，由 `SceneBuilder.BuildExplorationScene()` 程序化生成。设计了 HexGrid + 3 层 Tilemap（Ground/Overlay/Units）+ Camera + EventSystem + GameManager + ExplorationController + HexTilemapManager + BattleUIManager + Demo Data 创建。
+
+---
+
+## 二、脚本职责清单
+
+### 2.1 场景生成（Editor）
+
+| 脚本 | 命名空间 | 职责 | 后续归属 |
+|------|----------|------|----------|
+| `Editor/SceneBuilder.cs` | `TianZhang.Editor` | 通过 `[MenuItem("Tools/天章/生成探索场景")]` 程序化生成 `ExplorationScene`；同时创建 Demo Data（3 Spell asset + 2 CharacterData asset）+ 瓦片素材 + UnitMarker prefab | 扩展为多场景生成入口（`BuildEmptyScene` 通用方法 → 生成 StartMenu/World/Settlement/Adventure） |
+| `Editor/SectSelectionSetup.cs` | `TianZhang.Editor` | `[MenuItem("天章/搭建门派选择UI")]` 创建门派选择面板；自动查找/创建 UICanvas | 归入 StartMenu 场景脚手架 |
+
+### 2.2 地图与探索
+
+| 脚本 | 命名空间 | 职责 | 阻塞风险 | 后续归属 |
+|------|----------|------|----------|----------|
+| `Map/ExplorationController.cs` | `TianZhang.Map` | **职责过重**（~900 行）：地图生成、玩家/敌人生成、探索输入、战斗触发、CTB 战斗循环、掉落、UI 刷新。状态机含 Loading/Exploration/BattlePrep/Combat/Ended 五态 | **高风险**：战斗循环与探索状态耦合在同一类中；`CombatLoop()` 是 `while(battleActive)` 主循环，拆分时需精确保留行为 | 拆为 `AdventureSceneController`（探索+地图）+ `TacticalCombatController`（战斗循环） |
+| `Tilemap/HexTilemapManager.cs` | `TianZhang.HexTile` | 六角格坐标缓存、网格生成、屏幕↔六角格转换、高亮范围、角色标记放置。暴露 `HexGrid Grid` 公共属性 | **中风险**：无 `ITacticalRenderer` 接口抽象；战斗规则通过 `tilemapManager.Grid` 直接依赖 Tilemap 层 | 包装为 `TilemapTacticalRenderer : ITacticalRenderer`，保留现有公共 API |
+
+### 2.3 游戏管理
+
+| 脚本 | 命名空间 | 职责 | 阻塞风险 | 后续归属 |
+|------|----------|------|----------|----------|
+| `Game/GameManager.cs` | `TianZhang.Game` | 单例 + DontDestroyOnLoad；存储 `PlayerCharData`；`StartGameWithSect()` 设置门派数据；ESC 退出 | **中风险**：无场景流转逻辑、无 `GameSession`、无会话存档 | 降级为兼容入口；新逻辑走 `GameSession` + `SceneFlowManager` |
+| `Game/SectSelectionManager.cs` | `TianZhang.Game` | 5 门派预设 + 动态按钮创建 + `OnStartGame()` 创建 CharacterData → 延迟 `FindObjectOfType<ExplorationController>` → `ReconfigurePlayerInExploration` | **高风险**：硬依赖 `ExplorationController` 存在；`FindObjectOfType` 已弃用（CS0618 警告）；不适合非探索场景 | 门派选择迁入 `StartMenuScene`；选择结果写入 `GameSession`；保留旧 fallback |
+| `Game/BattleUIManager.cs` | `TianZhang.Game` | Awake 中无条件 `CreateCanvas()`（DontDestroyOnLoad 的 UICanvas）+ 全部 UI 面板构建；战斗动作按钮绑定 `ExplorationController` 公共方法 | **高风险**：无条件创建 UICanvas（跨场景可能出现重复）；动作按钮硬绑定 `ExplorationController` 方法名 | 拆出 UI 创建条件判断；按钮回调改为接口/事件驱动 |
+
+### 2.4 战斗系统（本任务不改）
+
+| 脚本 | 命名空间 | 职责 |
+|------|----------|------|
+| `Core/CTBEngine.cs` | `TianZhang.Core` | CTB 行动队列引擎 |
+| `Combat/CombatResolver.cs` | `TianZhang.Combat` | 战斗结算（攻击/术法/神通） |
+| `Combat/DamageCalculator.cs` | `TianZhang.Combat` | 伤害计算（五行修正等） |
+| `Combat/EnemyAI.cs` | `TianZhang.Combat` | 敌人 AI 决策 |
+
+### 2.5 核心/实体（本任务不改）
+
+| 脚本 | 命名空间 | 职责 |
+|------|----------|------|
+| `Core/HexCoord.cs` | `TianZhang.Core` | 六角格坐标（q, r）+ 距离计算 |
+| `Core/HexGrid.cs` | `TianZhang.Core` | 六角格网格（占用/障碍状态） |
+| `Entity/Character.cs` | `TianZhang.Entity` | 角色运行时数据 |
+| `Entity/CharacterData.cs` | `TianZhang.Entity` | 角色 ScriptableObject 数据 |
+| `Cultivation/CultivationEngine.cs` | `TianZhang.Cultivation` | 修炼引擎 |
+| `Cultivation/GongFaGrowthData.cs` | `TianZhang.Cultivation` | 功法成长数据 |
+
+### 2.6 数据导入（Editor）
+
+| 脚本 | 命名空间 | 职责 |
+|------|----------|------|
+| `Editor/DataConfigImporter.cs` | `TianZhang.Editor` | CSV→ScriptableObject asset 导入 |
+| `Editor/TQ013CRealmAndSlotVerification.cs` | `TianZhang.Editor` | TQ-013C 境界/槽位验证 |
+
+---
+
+## 三、场景流转现状
+
+**当前无任何场景流转机制**：所有功能在单一 `ExplorationScene` 中运行。
+
+- `GameManager` 只做 DontDestroyOnLoad，无 `LoadScene`/`UnloadScene` 调用
+- `SectSelectionManager.OnStartGame` 不在 StartMenu 场景中执行，而是在探索场景内动态创建门派面板
+- 战斗不切换场景：`ExplorationController.CombatLoop` 原地切换 `GameState.Combat`
+- 无 `GameSession`、`SceneFlowManager`、`SceneReturnTarget` 等流转基础设施
+
+---
+
+## 四、阻塞风险汇总
+
+| 风险 | 等级 | 描述 | 影响的任务 |
+|------|------|------|------------|
+| ExplorationController 职责耦合 | **高** | 探索+战斗+UI 刷新在同一类中，拆分 `CombatLoop` 时行为一致性难以保证 | TQ-014 Task 8（TacticalCombatController） |
+| 无 ITacticalRenderer 抽象 | **中** | 战斗规则直接依赖 `HexTilemapManager.Grid`，2.5D 渲染替换需要先建接口 | TQ-014 Task 2（TacticalGridModel/ITacticalRenderer） |
+| UICanvas 重复创建 | **高** | `BattleUIManager.Awake` 无条件创建；`SectSelectionSetup` 也创建。跨场景时需统一判断 | TQ-014 Task 4（会话流转骨架） |
+| SectSelectionManager 硬依赖 ExplorationController | **高** | 门派选择通过 `FindObjectOfType<ExplorationController>` 延迟查找；已弃用 API（CS0618） | TQ-014 Task 9（StartMenu 迁移） |
+| 无场景生成通用方法 | **中** | `SceneBuilder` 只有 `BuildExplorationScene()`，无参数化 `BuildEmptyScene(rootName)` | TQ-014 Task 5（四场景脚手架） |
+| GameManager 无会话管理 | **中** | 只存 `PlayerCharData` 不存存档/场景状态/返回点 | TQ-014 Task 4（会话流转骨架） |
+
+---
+
+## 五、建议切片执行顺序
+
+按实施计划 Task 编号，DeepSeek V4 Pro 可执行（不改 CTB/伤害/五行/槽位/修炼/战斗公式）：
+
+| 序号 | 任务 | DeepSeek 可做 | 前置条件 |
+|------|------|--------------|----------|
+| 1 | TQ-014-DS-01 现状清单（本文件） | ✅ 已完成 | 无 |
+| 2 | TQ-014 Task 2 `TacticalGridModel` + `ITacticalRenderer` | ❌ Codex 主责 | 无 |
+| 3 | TQ-014-DS-02 Tilemap 渲染包装 | ✅ 可做 | Task 2 完成后 |
+| 4 | TQ-014 Task 3 `SceneReturnTarget` / `GameSession` / `SceneFlowManager` 接口定义 | ❌ Codex 主责 | 无 |
+| 5 | TQ-014-DS-03 会话流转骨架实现 | ✅ 可做 | Task 3 接口定义后 |
+| 6 | TQ-014-DS-04 四场景脚手架 | ✅ 可做 | 无（独立 Editor 脚本） |
+| 7 | TQ-014-DS-05 World/Settlement 数据壳 | ✅ 可做 | DS-04 场景就绪后 |
+| 8 | TQ-014 Task 8 `TacticalCombatController` 战斗循环拆分 | ❌ Codex 主责 | Task 2 完成后 |
+| 9 | TQ-014-DS-06 StartMenu 迁移 | ✅ 可做（仅低风险入口） | DS-03 会话骨架 + Codex 复审后 |
+| 10 | TQ-014-DS-07 2.5D 验证清单 | ✅ 可做 | 无 |
+
+---
+
+## 六、验证命令
+
+```powershell
+# 编译检查
+dotnet build src/Assembly-CSharp.csproj --no-restore
+
+# 文本检查（本文档）
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/场景架构Unity现状清单.txt
+
+# Diff 检查
+git diff --check
+```
