@@ -103,8 +103,18 @@ static class GameData
         string DanName,
         string DanNature,
         string LegacyGrade,
+        string TargetBranch,
+        string TargetSeat,
+        string SeatName,
+        string DanPivot,
         double StabilityMultiplier,
         double ArtAffinityMultiplier);
+
+    public record GoldenCoreSeatProfile(
+        string TargetBranch,
+        string TargetSeat,
+        string SeatName,
+        string DanPivot);
 
     // 历史兼容：旧一至九品只用于调试回看，不再钳制道基，也不再驱动主输出或战斗强度。
     public static string LegacyGoldenCoreGradeFromScore(int score) => score switch
@@ -117,19 +127,34 @@ static class GameData
     public static GoldenCoreProfile ResolveGoldenCoreProfile(int score, string dfQuality, Dictionary<string, double> weights)
     {
         if (score < 15)
-            return new("未成丹", "", "未成丹", "", "", "", 1.0, 1.0);
+            return new("未成丹", "", "未成丹", "", "", "", "", "", "", "", 1.0, 1.0);
 
         var (danName, danNature) = ResolveGoldenCoreTheme(weights);
+        var seat = ResolveGoldenCoreSeat(weights);
         string legacyGrade = LegacyGoldenCoreGradeFromScore(score);
         bool hasFoundation = dfQuality != "无道基";
 
         if (!hasFoundation || score < 60)
-            return new("成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, 0.92, 0.95);
+            return new("成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot, 0.92, 0.95);
 
         if (score >= 90)
-            return new("成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, 1.08, 1.10);
+            return new("成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot, 1.08, 1.10);
 
-        return new("成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, 1.0, 1.0);
+        return new("成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot, 1.0, 1.0);
+    }
+
+    public static GoldenCoreSeatProfile ResolveGoldenCoreSeat(Dictionary<string, double> weights)
+    {
+        var top = weights.OrderByDescending(kv => kv.Value).First().Key;
+        return top switch
+        {
+            "根骨" => new("土", "source", "土·源位（安忍地）", "承接范围、排异规则与过载症状"),
+            "魂魄" => new("火", "transform", "火·化位（周天焰）", "传递载体、放大对象与反噬路径"),
+            "神识" => new("识", "domain", "识·界位（共见证）", "存证方式、遗忘机制与公开层级"),
+            "资质" => new("木", "source", "木·源位（报春根）", "种子来源、续生媒介与反哺比例"),
+            "气运" => new("水", "domain", "水·界位（永动泉）", "余裕规模、启封条件与低潮策略"),
+            _ => new("金", "source", "金·源位（分真鉴）", "标准来源、容错尺度与待定区")
+        };
     }
 
     static (string danName, string danNature) ResolveGoldenCoreTheme(Dictionary<string, double> weights)

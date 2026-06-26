@@ -19,6 +19,10 @@ static class Cultivation
         string OccupancyState = "未成丹",
         string DanName = "",
         string DanNature = "",
+        string TargetBranch = "",
+        string TargetSeat = "",
+        string SeatName = "",
+        string DanPivot = "",
         double DanJiStabilityMultiplier = 1.0,
         double DanJiArtAffinityMultiplier = 1.0);
 
@@ -31,7 +35,7 @@ static class Cultivation
         double cpp = 0;
         string realm = "凡人"; int subIdx = 0;
         string dfQuality = "无道基"; int dfScore = 0; int gcScore = 0;
-        var goldenCore = new GameData.GoldenCoreProfile("未成丹", "", "未成丹", "", "", "", 1.0, 1.0);
+        var goldenCore = new GameData.GoldenCoreProfile("未成丹", "", "未成丹", "", "", "", "", "", "", "", 1.0, 1.0);
         bool dfGenerated = false; bool gcGenerated = false;
 
         double 资质 = baseInnate["资质"], 气运 = baseInnate["气运"];
@@ -91,6 +95,10 @@ static class Cultivation
             goldenCore.OccupancyState,
             goldenCore.DanName,
             goldenCore.DanNature,
+            goldenCore.TargetBranch,
+            goldenCore.TargetSeat,
+            goldenCore.SeatName,
+            goldenCore.DanPivot,
             goldenCore.StabilityMultiplier,
             goldenCore.ArtAffinityMultiplier);
     }

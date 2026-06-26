@@ -109,9 +109,9 @@ class Program
 
         // 金丹成丹状态分布
         Console.WriteLine();
-        Console.WriteLine("【金丹成丹状态分布（TQ-013B兼容层）】");
-        Console.WriteLine($"{"Build",-10} {"未成丹",-6} {"暂寄",-6} {"敕封",-6} {"自然",-6} {"平均判定值",-8} {"主要丹性",-8}");
-        Console.WriteLine(new string('-', 62));
+        Console.WriteLine("【金丹成丹状态分布（TQ-013B/TQ-015C兼容层）】");
+        Console.WriteLine($"{"Build",-10} {"未成丹",-6} {"暂寄",-6} {"敕封",-6} {"自然",-6} {"平均判定值",-8} {"主要丹性",-8} {"主要位格",-14}");
+        Console.WriteLine(new string('-', 78));
         for (int i = 0; i < N; i++)
         {
             double avgGc = pool[i].Where(c => c.GCScore > 0).Select(c => (double)c.GCScore).DefaultIfEmpty(0).Average();
@@ -121,7 +121,13 @@ class Program
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
                 .FirstOrDefault() ?? "-";
-            Console.WriteLine($"  {buildDefs[i].Name,-8} {danJiDist[i]["未成丹"],4} {danJiDist[i]["暂寄丹籍"],7} {danJiDist[i]["敕封丹籍"],6} {danJiDist[i]["自然丹籍"],6} {avgGc,10:F0} {majorNature,-8}");
+            var majorSeat = pool[i]
+                .Where(c => !string.IsNullOrEmpty(c.SeatName))
+                .GroupBy(c => c.SeatName)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault() ?? "-";
+            Console.WriteLine($"  {buildDefs[i].Name,-8} {danJiDist[i]["未成丹"],4} {danJiDist[i]["暂寄丹籍"],7} {danJiDist[i]["敕封丹籍"],6} {danJiDist[i]["自然丹籍"],6} {avgGc,10:F0} {majorNature,-8} {majorSeat,-14}");
         }
         // 详细子境界分布
         Console.WriteLine();
@@ -452,7 +458,7 @@ class Program
         void PrintStats(Character c) {
             string goldenCoreLabel = string.IsNullOrEmpty(c.DanJiType)
                 ? "未成丹"
-                : $"{c.DanJiType}/{c.OccupancyState}/{c.DanName}/{c.DanNature}";
+                : $"{c.DanJiType}/{c.OccupancyState}/{c.DanName}/{c.DanNature}/{c.SeatName}";
             Console.Write($"  {c.Name} ({GameData.StageName(c.Realm, c.SubIndex)}) 道基={c.DFQuality}({c.DFScore}) 金丹={goldenCoreLabel}({c.GCScore}):");
             foreach (var k in new[]{"HP","MP","肉攻","神攻","肉防","神防","反应"})
                 Console.Write($" {k}={c.Primary[k]}");
@@ -480,6 +486,10 @@ class Program
         c.OccupancyState = result.OccupancyState;
         c.DanName = result.DanName;
         c.DanNature = result.DanNature;
+        c.TargetBranch = result.TargetBranch;
+        c.TargetSeat = result.TargetSeat;
+        c.SeatName = result.SeatName;
+        c.DanPivot = result.DanPivot;
         c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
         c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
     }

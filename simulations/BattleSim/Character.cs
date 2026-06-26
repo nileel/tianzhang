@@ -18,6 +18,10 @@ class Character
     public string OccupancyState { get; set; } = "未成丹";
     public string DanName { get; set; } = "";
     public string DanNature { get; set; } = "";
+    public string TargetBranch { get; set; } = "";
+    public string TargetSeat { get; set; } = "";
+    public string SeatName { get; set; } = "";
+    public string DanPivot { get; set; } = "";
     public string LegacyGCGrade { get; set; } = "";
     public double DanJiStabilityMult { get; set; } = 1.0;
     public int GCScore = 0;               // 成丹判定值 (调试用)

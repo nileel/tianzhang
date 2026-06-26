@@ -103,7 +103,7 @@
 
 | ID | 建议切片 | 主责 | 验证 |
 |----|----------|------|------|
-| TQ-015C-1 | BattleSim 增补 `targetBranch/targetSeat/seatName/danPivot` 兼容字段，只输出不调数值 | Codex / ChatGPT5.5 | `dotnet build` + `dotnet run` BattleSim |
+| TQ-015C-1 | ✅ 已完成：BattleSim 增补 `targetBranch/targetSeat/seatName/danPivot` 兼容字段，只输出不调数值 | Codex / ChatGPT5.5 | `dotnet build` + `dotnet run` BattleSim |
 | TQ-015C-2 | Unity `CultivationResult` 增补成丹状态、占据状态、丹名、丹性，旧 `GCQuality` 降级兼容 | Codex / ChatGPT5.5 | `dotnet build src/Assembly-CSharp.csproj` |
 | TQ-015C-3 | CSV/asset 增加 `contentScope` 与源化界候选字段方案，不立即重导 | DeepSeek 起草，Codex 复审 | `tools/check-data-chain.ps1` |
 | TQ-015C-4 | 炼虚全仓清理候选表：把运行时、CSV、文档、旧脚本、道具分桶 | DeepSeek 起草，Codex 复审 | `rg -n "炼虚|realm_lianxu"` + 文本检查 |

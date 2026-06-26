@@ -15,6 +15,7 @@
 > 2026-06-26 Codex / gpt-5.5：TQ-008 审核通过并归档至 `开发管理/任务归档/2026-06-26-TQ-008-角色数值设计与BattleSim差异表归档.txt`；数值文档应优先回写当前 BattleSim 基线，战斗二级属性先天直加另拆代码候选问题。
 > 2026-06-26 Codex / gpt-5.5：TQ-015C 首版源化界数据模型迁移差异表已产出：`开发管理/源化界数据模型迁移差异表.txt`。按新规则，Codex 自产且已运行文本检查的首版差异表不再进入复审队列；后续继续拆 BattleSim/Unity/数据链路代码切片。
 > 2026-06-26 Codex / gpt-5.5：TQ-013C Unity 首轮代码迁移已完成并验证：玩家默认修炼链收束为凡人/练气/筑基五段/金丹三段；`CultivationResult` 增补成丹状态、丹籍类型、占据状态、丹名、丹性与旧品级兼容字段；`CharacterData` 增补紫府/金丹兼容字段；槽位计算改为练气/筑基基线 + 紫府府位加成，高阶倍率不再线性加槽；`ExplorationController` 不再用装备数量覆盖冷却数组。金丹槽位具体数值仍待 TQ-015C BattleSim 验证后再接入。
+> 2026-06-26 Codex / gpt-5.5：TQ-015C-1 BattleSim 源/化/界兼容字段已完成并验证：`GoldenCoreProfile`、`Cultivation.Result`、`Character` 增补 `targetBranch/targetSeat/seatName/danPivot`，主模拟输出主要位格；本轮不调整成丹数值和战斗倍率。
 
 ## 使用规则
 
@@ -36,7 +37,7 @@
 | TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 复审不通过 / 待返工 | CSV/导入器已有独立技能属性字段，但 Unity asset 未重导完整；见未通过清单 |
 | TQ-014 | P1 | Codex / ChatGPT5.5 | 架构/计划 | ✅已审核 / 已完成待归档 | 场景架构与 2.5D 战棋表现实施计划已输出：`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`；后续切片优先按 `AI合作沟通.txt` 的 TQ-014-DS 派工交给 DeepSeek，Codex 保留战斗循环拆分和复审 |
 | TQ-015B | P0 | Codex / ChatGPT5.5（TQ-015B-1已审核）；DeepSeek V4 Pro（TQ-015B-2/3 NPC+模板已完成） | 文档迁移/批量生产 | TQ-015B-1✅已审核 / TQ-015B-2/3复审不通过 | NPC 字段与旧口径残留需返工；见未通过清单 |
-| TQ-015C | P1 | Codex / ChatGPT5.5 | 数据/数值架构 | 首版差异表已完成 / 后续切片待处理 | 源化界数据模型迁移差异表已产出；成丹/竞争数值方案与全仓炼虚清理代码/数据切片继续按 `1` 拆分推进，数值必须以 BattleSim 验证 |
+| TQ-015C | P1 | Codex / ChatGPT5.5 | 数据/数值架构 | TQ-015C-1已完成 / 后续切片待处理 | BattleSim 已增补源/化/界兼容字段并输出主要位格；成丹/竞争数值方案与全仓炼虚清理代码/数据切片继续按 `1` 拆分推进，数值必须以 BattleSim 验证 |
 
 ## 任务卡片
 
@@ -94,7 +95,7 @@
 ### TQ-015C · 源化界数据模型与炼虚清理路线
 
 - 来源：TQ-015A；`docs/superpowers/plans/2026-06-21-yuanying-position-migration.md` 任务 5。
-- 当前优先级：P1。先形成迁移差异表与 BattleSim 方案，未经数值验证不直接改 Unity/CSV。
+- 当前优先级：P1。迁移差异表与 BattleSim 源/化/界兼容字段已完成；未经数值验证不直接改 Unity/CSV 成丹/竞争数值。
 - 必读：`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`开发管理/境界体系重构锁口径决策表.txt`、`开发管理/境界体系数据模拟迁移差异表.txt`、`simulations/BattleSim/Program.cs`、`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Data/CharacterData.cs`。
 - 验证命令：`rg -n "炼虚|realm_lianxu" docs src simulations 开发管理`；`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
 - 完成条件：逐项记录旧字段到源/化/界、占据状态与丹枢字段的迁移；炼虚全部具备删除或降级去向；任何成丹/竞争/本命神通数值均有 BattleSim 输出支撑。

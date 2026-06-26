@@ -15,6 +15,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-tq013b")
             return RunChecked(suite, RunGoldenCoreTq013B);
 
+        if (suite == "golden-core-tq015c")
+            return RunChecked(suite, RunGoldenCoreTq015C);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -138,6 +141,36 @@ static class BattleSimSelfTests
         character.AssignArts();
         if (string.IsNullOrEmpty(character.DivineName))
             throw new InvalidOperationException("Character.AssignArts still depends on legacy golden core grade.");
+    }
+
+    static void RunGoldenCoreTq015C()
+    {
+        var resolver = typeof(GameData).GetMethod(
+            "ResolveGoldenCoreProfile",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(int), typeof(string), typeof(Dictionary<string, double>) },
+            modifiers: null);
+        if (resolver == null)
+            throw new InvalidOperationException("GameData.ResolveGoldenCoreProfile is missing.");
+
+        var physicalWeights = new Dictionary<string, double>
+        {
+            ["根骨"] = 0.45, ["魂魄"] = 0.15, ["神识"] = 0.15, ["资质"] = 0.15, ["气运"] = 0.10
+        };
+        var profile = resolver.Invoke(null, new object[] { 130, "黄品", physicalWeights })!;
+        AssertEqual("土", ReadProperty(profile, "TargetBranch"), "golden core target branch");
+        AssertEqual("source", ReadProperty(profile, "TargetSeat"), "golden core target seat");
+        AssertEqual("土·源位（安忍地）", ReadProperty(profile, "SeatName"), "golden core seat name");
+        AssertEqual("承接范围、排异规则与过载症状", ReadProperty(profile, "DanPivot"), "golden core dan pivot");
+
+        var character = Character.Create("TQ-015C", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        AssertEqual("", ReadProperty(character, "TargetBranch"), "character target branch default");
+        WriteProperty(character, "TargetBranch", "土");
+        WriteProperty(character, "TargetSeat", "source");
+        WriteProperty(character, "SeatName", "土·源位（安忍地）");
+        WriteProperty(character, "DanPivot", "承接范围、排异规则与过载症状");
+        AssertEqual("土·源位（安忍地）", ReadProperty(character, "SeatName"), "character stores seat name");
     }
 
     static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)
