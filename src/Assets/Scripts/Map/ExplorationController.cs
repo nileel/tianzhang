@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TianZhang.Core;
@@ -519,9 +519,10 @@ namespace TianZhang.Map
                 uiManager.SetActionBarVisible(true);
             }
 
-            // 重置冷却（防止跨战斗残留）
-            player.SpellCooldowns = new int[Mathf.Max(playerSpells?.Length ?? 0, player.MaxSpellSlots)];
-            player.SkillCooldowns = new int[Mathf.Max(playerSkills?.Length ?? 0, player.MaxSkillSlots)];
+            // 重置冷却（防止跨战斗残留，使用槽位数确保长度一致）
+            player.EnsureCooldownArraySize();
+            System.Array.Clear(player.SpellCooldowns, 0, player.SpellCooldowns.Length);
+            System.Array.Clear(player.SkillCooldowns, 0, player.SkillCooldowns.Length);
 
             // 初始化印记状态（守一/符胆：开局各2层）
             if (player.GongFaName == "抱元守一经") player.ShouyiStacks = 2;
