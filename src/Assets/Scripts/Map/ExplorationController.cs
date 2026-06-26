@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Combat;
@@ -348,19 +349,19 @@ namespace TianZhang.Map
 
         private void HandleKeyboardInput()
         {
-            if (Input.GetKeyDown(KeyCode.W))
+            if (Keyboard.current != null && Keyboard.current.wKey.wasPressedThisFrame)
                 PlayerWait();
-            else if (Input.GetKeyDown(KeyCode.E))
+            else if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
                 PlayerEndExplorationTurn();
         }
 
         private void HandleMouseClick()
         {
-            if (!Input.GetMouseButtonDown(0)) return;
+            if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
             if (uiManager != null && uiManager.IsPointerOverUI()) return;
             if (Camera.main == null || tilemapManager == null) return;
 
-            var coord = tilemapManager.ScreenToHex(Input.mousePosition);
+            var coord = tilemapManager.ScreenToHex((Vector3)Mouse.current.position.ReadValue());
 
             // 检查是否点击敌人（战斗触发）
             foreach (var eu in enemies)
@@ -692,20 +693,20 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void HandleCombatKeyboardInput()
         {
-            if (Input.GetKeyDown(KeyCode.A))
+            if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame)
                 PlayerBasicAttack();
-            else if (Input.GetKeyDown(KeyCode.G))
+            else if (Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame)
                 PlayerGuard();
-            else if (Input.GetKeyDown(KeyCode.W))
+            else if (Keyboard.current != null && Keyboard.current.wKey.wasPressedThisFrame)
                 PlayerCombatWait();
-            else if (Input.GetKeyDown(KeyCode.S))
+            else if (Keyboard.current != null && Keyboard.current.sKey.wasPressedThisFrame)
                 PlayerSwapSpell();
-            else if (Input.GetKeyDown(KeyCode.Alpha1)) PlayerCastSpell(0);
-            else if (Input.GetKeyDown(KeyCode.Alpha2)) PlayerCastSpell(1);
-            else if (Input.GetKeyDown(KeyCode.Alpha3)) PlayerCastSpell(2);
-            else if (Input.GetKeyDown(KeyCode.Alpha4)) PlayerCastSpell(3);
-            else if (Input.GetKeyDown(KeyCode.Alpha5)) PlayerUseSkill(0);
-            else if (Input.GetKeyDown(KeyCode.Alpha6)) PlayerUseSkill(1);
+            else if (Keyboard.current != null && Keyboard.current.digit1Key.wasPressedThisFrame) PlayerCastSpell(0);
+            else if (Keyboard.current != null && Keyboard.current.digit2Key.wasPressedThisFrame) PlayerCastSpell(1);
+            else if (Keyboard.current != null && Keyboard.current.digit3Key.wasPressedThisFrame) PlayerCastSpell(2);
+            else if (Keyboard.current != null && Keyboard.current.digit4Key.wasPressedThisFrame) PlayerCastSpell(3);
+            else if (Keyboard.current != null && Keyboard.current.digit5Key.wasPressedThisFrame) PlayerUseSkill(0);
+            else if (Keyboard.current != null && Keyboard.current.digit6Key.wasPressedThisFrame) PlayerUseSkill(1);
         }
 
         private void PlayerSwapSpell()

@@ -1,5 +1,6 @@
 using UnityEngine;
 using TianZhang.Entity;
+using UnityEngine.InputSystem;
 
 namespace TianZhang.Game
 {
@@ -51,7 +52,7 @@ namespace TianZhang.Game
         private void Update()
         {
             // 全局快捷键
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;

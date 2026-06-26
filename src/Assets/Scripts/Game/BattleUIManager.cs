@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
@@ -78,7 +79,7 @@ namespace TianZhang.Game
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.H)) ToggleHelp();
+            if (Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame) ToggleHelp();
         }
 
         // ==================== 构建 UI ====================
