@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
@@ -89,7 +90,7 @@ namespace TianZhang.Game
             // 确保 EventSystem 存在（否则 IsPointerOverUI 失效）
             if (UnityEngine.EventSystems.EventSystem.current == null)
             {
-                var esGo = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
+                var esGo = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(InputSystemUIInputModule));
                 esGo.transform.SetParent(transform);
             }
 

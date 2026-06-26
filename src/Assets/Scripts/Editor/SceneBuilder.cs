@@ -192,7 +192,7 @@ namespace TianZhang.Editor
             // EventSystem
             var evGo = new GameObject("EventSystem");
             evGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            evGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            evGo.AddComponent<InputSystemUIInputModule>();
 
             // GameManager
             var gmGo = new GameObject("GameManager");
