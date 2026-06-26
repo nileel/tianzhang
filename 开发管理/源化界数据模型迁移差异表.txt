@@ -1,0 +1,140 @@
+# 源化界数据模型迁移差异表
+
+状态：已完成 / 已验证（2026-06-26 Codex / gpt-5.5 自产；按最新规则不进入复审队列）
+任务：TQ-015C · 源化界数据模型与炼虚清理路线
+用途：承接已审核的境界体系锁口径、TQ-013A/B BattleSim 迁移和 TQ-013D 高阶内容定位表，明确源/化/界、占据状态、丹枢与旧炼虚/炼神字段在 BattleSim、Unity、CSV/asset 和文档中的迁移去向。本文件只锁迁移路线，不直接改运行时代码、CSV 或 asset。
+
+## 一、依据来源
+
+- `开发管理/境界体系重构锁口径决策表.txt`（✅ 已审核）
+- `开发管理/境界体系数据模拟迁移差异表.txt`（✅ 已审核）
+- `开发管理/CSV高阶内容定位表.txt`（✅ 已审核）
+- `docs/基础设定/修行境界.txt`、`docs/基础设定/境界特性.txt`
+- `docs/基础设定/元婴锚点与金丹位格矩阵.txt`
+- `docs/基础设定/角色数值设计.txt`
+- BattleSim：`simulations/BattleSim/Program.cs`
+- Unity：`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Entity/CharacterData.cs`、`src/Assets/Scripts/Cultivation/GongFaGrowthData.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`
+- CSV/asset：`src/Assets/DataConfig/GongFa.csv`、`Spells.csv`、`Skills.csv`、`Language.csv`、`src/Assets/Data/`
+
+## 二、已锁口径
+
+1. 当前玩家主线只要求完整支持到金丹；金丹是当前版本阶段终局。
+2. 元婴、化神保留为世界背景、NPC 压迫感、远期资料片和顶层锚点；化神为世界最高境界。
+3. 炼虚不属于太玄界现行境界体系，不应继续作为当前或远期境界层级保留。
+4. 金丹核心表达是：目标源/化/界席位、占据状态、丹名、丹性、丹相。
+5. 每条元婴分支天然只有源、化、界三席；夺取、继承、敕封、暂寄、自辟只是占据方式或状态，不是第四种位格。
+6. 丹枢是席位允许的个性化接口，只能调整媒介、偏向对象、代价分配、丹域景象、战斗表现和宗门叙事，不能改写矩阵定义的变量、边界或不可替代项。
+7. `realm_lianshen` 已由 TQ-013D 判定为早期“炼神/古修神魂路线”残留，不是 `realm_lianxu` 拼写偏差，不能直接合并为炼虚。
+
+## 三、目标字段模型
+
+| 字段 | 最小类型 | 来源 | 运行时用途 | 迁移说明 |
+|------|----------|------|------------|----------|
+| `targetBranch` | 枚举/字符串 | 17 条元婴分支 | 指向木、火、土、金、水、阴、阳、宇、宙、色、受、想、行、识、业、缘、轮回之一 | 新增。不能从五行属性自动推断，避免太一道庭或单一宗门垄断整条分支。 |
+| `targetSeat` | 枚举：`source`/`transform`/`domain` | 源/化/界三席 | 决定世界变量、变化方式或稳定边界 | 新增。对应中文显示为源位、化位、界位。 |
+| `seatName` | 字符串 | 位格矩阵正式名称 | UI、文档、内容生产引用 | 新增。必须引用矩阵括号内正式名称，如“木·源位（报春根）”。 |
+| `occupancyState` | 枚举 | 夺取/继承/敕封/暂寄/自辟 | 决定稳定度、权限边界、事件出口 | BattleSim 已有 `OccupancyState`；Unity/CSV 待补。 |
+| `danName` | 字符串 | 角色道途命名 | 影响叙事标签、NPC 态度、资源偏好 | BattleSim 已有 `DanName`；Unity/CSV 待补。 |
+| `danNature` | 枚举/字符串 | 五行、变异属性或特殊道途 | 决定个人、宗门、地脉和丹域长期回响 | BattleSim 已有 `DanNature`；Unity/CSV 待补。 |
+| `danAspect` | 派生字段 | 席位 + 状态 + 丹名 + 丹性 + 紫府神通 | 金丹能力总称 | 不建议手填成独立事实源；应由上游字段生成或显示。 |
+| `danPivot` | 字符串/结构 | 丹枢接口 | 记录媒介、偏向对象、代价分配、战斗表现 | 新增。不得改变矩阵的变量、对象、边界与不可替代项。 |
+| `formedState` | 枚举 | 成丹判定 | 未成丹/暂寄/敕封/自然等兼容状态 | BattleSim 已有 `FormedState`/`DanJiType`；Unity 待迁移。 |
+| `gcScore` | 数值 | 成丹判定值 | 只回答能否成丹、是否稳固、是否具备承接目标席位的基础 | 保留。不得再映射为一至九品主表达。 |
+| `legacyGCGrade` | 字符串/可空 | 历史兼容 | 旧存档、调试输出、过渡显示 | BattleSim 已保留为 `LegacyGCGrade`；Unity `GCQuality` 应降级为兼容字段。 |
+
+## 四、旧字段去向
+
+| 旧字段/口径 | 当前位置 | 处理方式 | 责任 |
+|-------------|----------|----------|------|
+| 金丹一至九品 / 上中下品 / 虚丹 | Unity `CultivationEngine.GCQuality`、`GenerateGoldenCore`；历史文档残留 | 降级为历史显示或兼容字段，不再决定金丹核心能力 | Codex / ChatGPT5.5 |
+| `GCScore` | BattleSim、Unity | 保留为成丹判定值；不直接推出位格等级 | Codex / ChatGPT5.5 |
+| `DanJiType` | BattleSim | 过渡显示字段，后续应拆清“是否成丹/占据状态/自然或临时承位” | Codex / ChatGPT5.5 |
+| `OccupancyState` | BattleSim | 保留并同步到 Unity/CSV；枚举限定为夺取、继承、敕封、暂寄、自辟 | Codex / ChatGPT5.5 |
+| `DanName`、`DanNature` | BattleSim | 保留并同步到 Unity/CSV；丹名/丹性不可替代目标席位字段 | Codex / ChatGPT5.5 |
+| `realmMultiplier` | Unity `CharacterData`/`Character`、CSV 角色数据 | 保留为战斗强度兼容；不得作为境界事实源或源/化/界字段来源 | Codex / ChatGPT5.5 |
+| 高阶 `realmReq` | CSV、asset、文档 | 元婴/化神标资料片/NPC/锚点；炼虚必须清理或降级为历史说明；`realm_lianshen` 标古修炼神路线候选 | DeepSeek 起草，Codex 复审 |
+| 线性高阶槽位 | Unity `Character.GetDefaultSpellSlots/GetDefaultSkillSlots` | 当前主循环只保留练气/筑基基础槽位，金丹以上由紫府府位、丹籍/席位和丹枢加成决定 | Codex / ChatGPT5.5 |
+
+## 五、范围差异表
+
+| 范围 | 当前状态 | 目标状态 | 下一步 |
+|------|----------|----------|--------|
+| BattleSim 金丹兼容层 | 已有 `FormedState`、`DanJiType`、`OccupancyState`、`DanName`、`DanNature`、`DanJiStabilityMult`、`DanJiArtAffinityMult`，输出“金丹成丹状态分布” | 增加目标分支、目标席位、正式席位名、丹枢字段；将 `DanJiType` 拆成更精确的成丹/承位状态 | TQ-015C 后续代码切片。修改数值前必须 build + run BattleSim。 |
+| BattleSim 境界链 | TQ-013A/B 已将默认统计收束到练气/筑基/金丹，并输出紫府圆满 vs 金丹初期压制战 | 继续保留元婴/化神仅作 NPC/扩展，不引入炼虚 | 后续如改成丹阈值或竞争公式，必须重新跑 21 Build 矩阵。 |
+| Unity `CultivationEngine` | 仍有筑基4段、金丹4段、元婴/化神/炼虚线性链；`GCQuality` 仍输出旧品级 | 同步筑基五段、金丹三段；新增成丹状态、占据状态、丹名、丹性；炼虚从玩家链删除 | TQ-013C 或 TQ-015C 代码切片。需先处理 TQ-006 槽位冷却返工风险。 |
+| Unity `Character` | 槽位按 `realmMultiplier` 线性推到炼虚；`RealmNameFromMultiplier` 可返回炼虚 | 槽位由基础槽位 + 紫府府位 + 金丹席位/丹枢加成计算；倍率只保留强度兼容 | TQ-013C。避免调用点覆盖冷却数组。 |
+| Unity `CharacterData` | 角色数据主要用倍率和手填槽位表达境界/战斗强度 | 新增可选 `realmStage`、`targetBranch`、`targetSeat`、`occupancyState`、`danName`、`danNature`、`danPivot` | 先加兼容字段，不强制旧 asset 立刻全量重导。 |
+| Unity `GongFaGrowthData` | 境界顺序含练气、筑基、金丹、元婴、化神、炼虚 | 金丹以前服务玩家；元婴/化神作为锚点/资料片；炼虚篇章需迁移或废止标记 | 与 CSV `contentScope` 同步。 |
+| CSV/asset 术法神通 | `realmReq` 保留高阶和 `realm_lianshen`；Importer 不保留 `realmReq/contentScope` 到 asset | 追加 `contentScope`、保留 `realmReq` 作为来源字段；asset 可检查玩家可学/NPC/资料片/古修炼神 | DeepSeek 可执行字段整理；Codex 复审字段口径。 |
+| 文档 | `修行境界.txt`、`境界特性.txt` 已删除炼虚境界；`角色数值设计.txt` 仍含炼虚数值表和旧子等级表 | 数值文档回写当前 BattleSim 基线；炼虚表改为历史废止或移出当前数值体系 | 关联 TQ-008 后续文档回写。 |
+
+## 六、炼虚清理路线
+
+| 分类 | 判定标准 | 处理方式 | 示例 |
+|------|----------|----------|------|
+| 当前规则冲突 | 把炼虚写成太玄界境界、当前最高境界或玩家可达境界 | 删除、改写为历史废止说明，或迁移到元婴/化神背景锚点 | `修行境界.txt` 已完成；`角色数值设计.txt` 仍待回写 |
+| 运行时字段 | 代码或倍率表允许默认玩家成长/显示到炼虚 | 从玩家链删除；必要时保留 NPC/调试兼容入口但不得自动进入 | Unity `CultivationEngine`、`Character` |
+| CSV/asset 高阶内容 | `realm_lianxu` 作为术法/神通/功法要求 | 先标资料片/废止候选，不直接删除；若机制仍有价值，后续重写为化神锚点、NPC秘术或全新金丹位格内容 | TQ-013D 已列 13 条 |
+| 文档内容生产 | 炼虚作为术法、神通、功法原型描述 | 新内容不得继续引用炼虚；旧文件可先标待迁移，后续按内容类型重写 | 角色养成高阶术法/领域神通 |
+| 旧模拟脚本 | `simulations/*.ps1`、`battle_sim.js` 等旧脚本包含炼虚 | 非当前 BattleSim 主项目；先标历史脚本，不作为数值事实源 | `simulations/battle_sim*.ps1` |
+| 道具分类 | 道具目录存在炼虚条目 | 作为旧内容候选，后续由道具清单决定迁移到化神、资料片或废止 | `docs/道具/天材地宝/炼虚.txt`、`docs/道具/丹药/炼虚.txt` |
+
+本轮影响面扫描快照：`realm_lianxu|炼虚` 在限定范围内仍有 265 处命中，主要集中于高阶内容、CSV/asset、Unity 旧境界链、旧模拟脚本和数值文档。该数字只用于标示清理规模，不等同于待删除数量。
+
+## 七、realm_lianshen 处理路线
+
+| 分类 | 判定 | 处理方式 |
+|------|------|----------|
+| 数据字段 | `realm_lianshen` 不存在于 Language、BattleSim、Unity 境界表 | 不作为正式境界加入当前玩家链。 |
+| 语义来源 | TQ-013D 判断为古修“炼神/神魂路线”残留 | 短期标为 `资料片保留/古修炼神路线`。 |
+| 与炼虚关系 | 不是 `realm_lianxu` 拼写偏差 | 禁止批量替换成炼虚。 |
+| 后续决策 | 是否保留炼神概念仍未锁定 | 若保留，只能作为古修/NPC/资料片路线，并补文档与 Language；若删除，需逐条迁移或废止。 |
+
+本轮影响面扫描快照：`realm_lianshen|炼神` 在限定范围内有 48 处命中。TQ-013D 已核出 4 功法、2 术法、2 神通为核心数据条目；其余多为管理文件、asset 或讨论记录。
+
+## 八、数值验证边界
+
+1. 本文件不新增成丹阈值、竞争公式、丹枢槽位数或本命神通数量。
+2. 凡涉及成丹判定值、丹籍稳定倍率、丹枢战斗表现、紫府/金丹压制关系的后续改动，必须运行 BattleSim build + run。
+3. `docs/基础设定/角色数值设计.txt` 当前仍含炼虚数值表、筑基4段和金丹4段等旧结构；应按 TQ-008 原则优先回写当前 BattleSim 基线，而不是先手改代码去迎合旧文档。
+4. Unity 代码迁移前，TQ-006 的冷却数组覆盖风险需要复审通过或在同切片内显式回归，避免槽位字段迁移扩大旧 bug。
+
+## 九、后续任务建议
+
+| ID | 建议切片 | 主责 | 验证 |
+|----|----------|------|------|
+| TQ-015C-1 | BattleSim 增补 `targetBranch/targetSeat/seatName/danPivot` 兼容字段，只输出不调数值 | Codex / ChatGPT5.5 | `dotnet build` + `dotnet run` BattleSim |
+| TQ-015C-2 | Unity `CultivationResult` 增补成丹状态、占据状态、丹名、丹性，旧 `GCQuality` 降级兼容 | Codex / ChatGPT5.5 | `dotnet build src/Assembly-CSharp.csproj` |
+| TQ-015C-3 | CSV/asset 增加 `contentScope` 与源化界候选字段方案，不立即重导 | DeepSeek 起草，Codex 复审 | `tools/check-data-chain.ps1` |
+| TQ-015C-4 | 炼虚全仓清理候选表：把运行时、CSV、文档、旧脚本、道具分桶 | DeepSeek 起草，Codex 复审 | `rg -n "炼虚|realm_lianxu"` + 文本检查 |
+| TQ-015C-5 | `realm_lianshen` 专项：核对 asset 路径、Language 缺口和古修路线保留/删除选项 | DeepSeek 起草，Codex 复审 | `rg -n "realm_lianshen|炼神"` + 数据链路检查 |
+
+## 十、本轮验证命令
+
+```powershell
+rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管理
+dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"
+powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/源化界数据模型迁移差异表.txt,开发管理/当前任务队列.txt
+git diff --check
+```
+
+验证结果（2026-06-26 Codex / gpt-5.5）：
+
+- `rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管理 | Measure-Object`：418 处命中，用于确认后续清理影响面。
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过，默认 21 Build 模拟、金丹/紫府矩阵与压制战输出完成。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过，GongFa/Spells/Skills CSV 与 asset 覆盖均为 0 缺失、0 额外旧版。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/源化界数据模型迁移差异表.txt,开发管理/当前任务队列.txt`：通过，2 files checked。
+- `git diff --check`：通过；仅提示工作区中文文本文件 LF/CRLF 转换警告，无空白错误。
+
+## 十一、自检清单
+
+- [x] 是否确认当前模型身份：是，`x-codex-turn-metadata.model = gpt-5.5`。
+- [x] 是否读取 `审核入口.txt`、`当前任务队列.txt` 与 `AI合作沟通.txt`：是。
+- [x] 是否读取 TQ-015C 任务卡要求的事实源：已读取锁口径决策表、TQ-013 差异表、CSV 高阶内容定位表、位格矩阵、境界文档、BattleSim/Unity 关键字段。
+- [x] 是否新增数值结论：否。
+- [x] 是否直接修改 C#、CSV 或 asset：否。
+- [x] 是否误标为“✅ 已审核”：否。按最新规则，本轮 Codex / gpt-5.5 自产内容完成验证后标为“已完成 / 已验证”，不进入复审队列。
+- [x] 是否完成本轮验证命令：是，见上方验证结果。
