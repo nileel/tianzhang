@@ -186,7 +186,7 @@ namespace TianZhang.Game
             charData.availableSpells = preset.startingSpells;
 
             if (gameManager == null)
-                gameManager = FindObjectOfType<GameManager>();
+                gameManager = FindFirstObjectByType<GameManager>();
             if (gameManager != null)
                 gameManager.StartGameWithSect(charData);
             else
@@ -204,7 +204,7 @@ namespace TianZhang.Game
         {
             yield return new WaitForSeconds(0.5f);
 
-            var exploreCtrl = FindObjectOfType<ExplorationController>();
+            var exploreCtrl = FindFirstObjectByType<ExplorationController>();
             if (exploreCtrl == null)
             {
                 Debug.LogWarning("[SectSelection] ExplorationController not found");

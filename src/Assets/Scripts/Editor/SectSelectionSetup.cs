@@ -15,7 +15,7 @@ namespace TianZhang.Editor
         static void SetupSectSelectionUI()
         {
             // 确保 GameManager 存在
-            var gm = Object.FindObjectOfType<GameManager>();
+            var gm = Object.FindFirstObjectByType<GameManager>();
             if (gm == null)
             {
                 var gmGo = new GameObject("GameManager", typeof(GameManager));
