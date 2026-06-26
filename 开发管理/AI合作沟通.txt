@@ -15,6 +15,34 @@
 
 ## 当前交接队列
 
+### HANDOFF-20260627-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-01 · 场景架构Unity现状清单
+- 提交：cc30bd0
+- 修改文件：
+  - 新增：`开发管理/场景架构Unity现状清单.txt`
+- 已验证：
+  - `dotnet build src/Assembly-CSharp.csproj` — 编译通过（0 错误，2 弃用警告 CS0618）
+  - `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/场景架构Unity现状清单.txt` — OK（1 file）
+  - `git diff --check` — 仅 LF→CRLF 警告（无害）
+  - 已逐文件读取 6 个 C# 脚本 + `SceneBuilder.cs` + `SectSelectionSetup.cs` 并核实代码结构
+  - 已用 `rg` 搜索 `SceneManager|SceneFlow|LoadScene|DontDestroyOnLoad|UICanvas|CreateCanvas` 确认无遗漏场景引用
+- 未验证：
+  - 清单中职责归类是否遗漏间接引用（如 `ExplorationController` 中通过 `tilemapManager.Grid` 间接访问 HexGrid）
+  - `SectSelectionManager` 延迟协程中的 `FindObjectOfType` 是否有其他调用点依赖此行为
+  - 是否还有其他 Editor 脚本需纳入场景生成体系
+- 残留风险：
+  - `ExplorationController` 职责边界为人工判断，部分私有方法（如 `ApplyBlockedTiles`、`CreateColoredTile`）可能更适合归入 Tilemap 层或 SceneBuilder
+  - `SectSelectionSetup.cs` 直接创建 UICanvas 与 `BattleUIManager.Awake` 可能冲突，已记录但未修
+- 请求判断：
+  1. 清单中阻塞风险分级与建议切片顺序是否准确？
+  2. `SceneBuilder.BuildExplorationScene` 中的 `CreateDemoData` 在四场景脚手架中是否需要拆出为独立方法？
+- 下一次 `1` 建议：
+  - 若 Codex 已完成 TQ-014 Task 2（TacticalGridModel/ITacticalRenderer）→ 执行 TQ-014-DS-02（Tilemap 渲染包装）
+  - 否则 → 执行 TQ-014-DS-04（四场景脚手架，无前置依赖）或 TQ-014-DS-07（2.5D 验证清单）
+- 下一次 `2` 建议（Codex）：复审本清单的完整性、风险分级和切片建议
+
+
 ### TQ-014-DS-20260625-01 · Codex / ChatGPT5.5 -> DeepSeek V4 Pro
 
 - 任务：场景架构与 2.5D 战棋表现后续执行型切片。Codex 已输出实施计划 `docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`，DeepSeek 后续优先按计划承担可机械验证、低风险包装和场景脚手架工作。
