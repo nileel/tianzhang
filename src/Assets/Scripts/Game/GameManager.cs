@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using TianZhang.Entity;
 
 namespace TianZhang.Game
@@ -34,6 +34,14 @@ namespace TianZhang.Game
         {
             Debug.Log($"[GameManager] Starting game with sect: {charData.charName}, 功法: {charData.gongFaName}");
             PlayerCharData = charData;
+
+            // ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：SceneFlowManager兼容桥接
+            var flow = SceneFlowManager.Instance;
+            if (flow != null)
+                flow.StartNewGame(charData);
+            else if (GameSession.Instance != null)
+                GameSession.Instance.SetPlayerProfile(charData);
+
             // SectSelectionManager handles player reconfiguration after scene loads
         }
 
