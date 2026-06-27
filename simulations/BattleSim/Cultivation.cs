@@ -23,6 +23,12 @@ static class Cultivation
         string TargetSeat = "",
         string SeatName = "",
         string DanPivot = "",
+        string NaturalDanJiCandidateState = "非自然候选",
+        string SeatAccessState = "none",
+        string SeatCompetitionState = "未进入",
+        string FinalOccupancyState = "未成丹",
+        int SeatCompetitionScore = 0,
+        string ZifuEligibilityNote = "未接入紫府神通/府位闭环",
         double DanJiStabilityMultiplier = 1.0,
         double DanJiArtAffinityMultiplier = 1.0);
 
@@ -35,7 +41,10 @@ static class Cultivation
         double cpp = 0;
         string realm = "凡人"; int subIdx = 0;
         string dfQuality = "无道基"; int dfScore = 0; int gcScore = 0;
-        var goldenCore = new GameData.GoldenCoreProfile("未成丹", "", "未成丹", "", "", "", "", "", "", "", 1.0, 1.0);
+        var goldenCore = new GameData.GoldenCoreProfile(
+            "未成丹", "", "未成丹", "", "", "", "", "", "", "",
+            "非自然候选", "none", "未进入", "未成丹", 0, "未接入紫府神通/府位闭环",
+            1.0, 1.0);
         bool dfGenerated = false; bool gcGenerated = false;
 
         double 资质 = baseInnate["资质"], 气运 = baseInnate["气运"];
@@ -99,6 +108,12 @@ static class Cultivation
             goldenCore.TargetSeat,
             goldenCore.SeatName,
             goldenCore.DanPivot,
+            goldenCore.NaturalDanJiCandidateState,
+            goldenCore.SeatAccessState,
+            goldenCore.SeatCompetitionState,
+            goldenCore.FinalOccupancyState,
+            goldenCore.SeatCompetitionScore,
+            goldenCore.ZifuEligibilityNote,
             goldenCore.StabilityMultiplier,
             goldenCore.ArtAffinityMultiplier);
     }

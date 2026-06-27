@@ -129,6 +129,28 @@ class Program
                 .FirstOrDefault() ?? "-";
             Console.WriteLine($"  {buildDefs[i].Name,-8} {danJiDist[i]["未成丹"],4} {danJiDist[i]["暂寄丹籍"],7} {danJiDist[i]["敕封丹籍"],6} {danJiDist[i]["自然丹籍"],6} {avgGc,10:F0} {majorNature,-8} {majorSeat,-14}");
         }
+
+        Console.WriteLine();
+        Console.WriteLine("【席位竞争状态分布（TQ-015C-3字段拆分）】");
+        Console.WriteLine($"{"Build",-10} {"自然候选",-8} {"待争席",-8} {"受敕承位",-8} {"暂寄",-6} {"已占据",-8} {"主要最终状态",-12} {"最高争席分",-8}");
+        Console.WriteLine(new string('-', 84));
+        for (int i = 0; i < N; i++)
+        {
+            int naturalCandidates = pool[i].Count(c => c.NaturalDanJiCandidateState == "自然候选");
+            int pendingCompetition = pool[i].Count(c => c.SeatCompetitionState == "待争席");
+            int grantedSeats = pool[i].Count(c => c.FinalOccupancyState == "受敕承位");
+            int temporarySeats = pool[i].Count(c => c.FinalOccupancyState == "暂寄");
+            int occupiedSeats = pool[i].Count(c => c.FinalOccupancyState == "已占据");
+            int bestCompetitionScore = pool[i].Select(c => c.SeatCompetitionScore).DefaultIfEmpty(0).Max();
+            var majorFinalState = pool[i]
+                .GroupBy(c => c.FinalOccupancyState)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault() ?? "-";
+            Console.WriteLine($"  {buildDefs[i].Name,-8} {naturalCandidates,6} {pendingCompetition,8} {grantedSeats,8} {temporarySeats,6} {occupiedSeats,8} {majorFinalState,-12} {bestCompetitionScore,8}");
+        }
+        Console.WriteLine("  说明：自然丹籍列仍表示成丹类型；自然候选/待争席表示尚未结算席位竞争，当前不把候选直接视为已占据。");
+        Console.WriteLine("  席位竞争分只用于同一目标席位候选排序，不改变成丹阈值、战斗倍率或紫府神通门槛。");
         // 详细子境界分布
         Console.WriteLine();
         Console.WriteLine("【详细境界分布】");
@@ -458,7 +480,7 @@ class Program
         void PrintStats(Character c) {
             string goldenCoreLabel = string.IsNullOrEmpty(c.DanJiType)
                 ? "未成丹"
-                : $"{c.DanJiType}/{c.OccupancyState}/{c.DanName}/{c.DanNature}/{c.SeatName}";
+                : $"{c.DanJiType}/{c.NaturalDanJiCandidateState}/{c.SeatCompetitionState}/{c.FinalOccupancyState}/{c.DanName}/{c.DanNature}/{c.SeatName}";
             Console.Write($"  {c.Name} ({GameData.StageName(c.Realm, c.SubIndex)}) 道基={c.DFQuality}({c.DFScore}) 金丹={goldenCoreLabel}({c.GCScore}):");
             foreach (var k in new[]{"HP","MP","肉攻","神攻","肉防","神防","反应"})
                 Console.Write($" {k}={c.Primary[k]}");
@@ -490,6 +512,12 @@ class Program
         c.TargetSeat = result.TargetSeat;
         c.SeatName = result.SeatName;
         c.DanPivot = result.DanPivot;
+        c.NaturalDanJiCandidateState = result.NaturalDanJiCandidateState;
+        c.SeatAccessState = result.SeatAccessState;
+        c.SeatCompetitionState = result.SeatCompetitionState;
+        c.FinalOccupancyState = result.FinalOccupancyState;
+        c.SeatCompetitionScore = result.SeatCompetitionScore;
+        c.ZifuEligibilityNote = result.ZifuEligibilityNote;
         c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
         c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
     }

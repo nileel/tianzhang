@@ -1,0 +1,66 @@
+# TQ-015C-3 · BattleSim 席位竞争字段拆分归档
+
+状态：已完成 / 已验证（2026-06-27 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 一、任务范围
+
+- 来源：`开发管理/当前任务队列.txt` 的 TQ-015C-3。
+- 目标：在 BattleSim 中拆分自然丹籍候选、席位竞争状态、最终占据状态与丹枢字段。
+- 边界：不调整成丹阈值，不锁紫府神通数量门槛，不调整丹枢数值，不调整战斗倍率。
+
+## 二、修改文件
+
+- `simulations/BattleSim/GameData.cs`
+  - `GoldenCoreProfile` 增补：
+    - `NaturalDanJiCandidateState`
+    - `SeatAccessState`
+    - `SeatCompetitionState`
+    - `FinalOccupancyState`
+    - `SeatCompetitionScore`
+    - `ZifuEligibilityNote`
+  - `ResolveGoldenCoreProfile` 保留旧成丹阈值；`>=90` 输出为自然丹籍候选、待争席、未占据。
+  - 新增 `SeatCompetitionScore` 排序分，仅用于同一目标席位候选排序，不参与战斗倍率。
+- `simulations/BattleSim/Cultivation.cs`
+  - `Cultivation.Result` 增补上述字段并传递 `GoldenCoreProfile` 结果。
+- `simulations/BattleSim/Character.cs`
+  - `Character` 增补上述字段，供模拟输出和后续竞争/紫府字段接入。
+- `simulations/BattleSim/Program.cs`
+  - `ApplyGoldenCoreResult` 同步传递新字段。
+  - 主输出新增“席位竞争状态分布”表，解释自然候选、待争席、受敕承位、暂寄、已占据与最高争席分。
+  - 调试输出不再把自然丹籍候选写成已完成争席。
+- `simulations/BattleSim/BattleSimSelfTests.cs`
+  - 新增 `golden-core-tq015c-3` self-test。
+- `开发管理/设计-当前状态.txt`
+  - 记录 TQ-015C-3 已验证事实和默认模拟快照。
+- `开发管理/当前任务队列.txt`
+  - 移出 TQ-015C-3，补入 TQ-015C-4。
+
+## 三、验证结果
+
+- `dotnet run -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-tq015c-3`
+  - 通过：`SELFTEST golden-core-tq015c-3 PASS`
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-tq013b`
+  - 通过：`SELFTEST golden-core-tq013b PASS`
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-tq015c`
+  - 通过：`SELFTEST golden-core-tq015c PASS`
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：默认模拟完整跑通。
+  - 快照：自然丹籍 31，均输出为自然候选 / 待争席 / 未占据；敕封承位 19；暂寄 0；未成丹 370。
+  - 金丹同境平均回合数：约 25.1-25.2；紫府圆满 vs 金丹初期压制战仍为 0.0% 紫府胜率。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+  - 通过：docs/CSV/asset 覆盖 OK。
+- `rg -n "炼虚|realm_lianxu" docs src simulations 开发管理`
+  - 已运行；仍有既存历史/高阶内容命中，本轮未处理清理。
+
+## 四、残留风险
+
+- `SeatCompetitionScore` 目前只是候选排序字段，不代表最终争席结果。
+- 紫府神通数量、府位覆盖、根本神通闭环尚未接入运行时；默认说明仍为 `未接入紫府神通/府位闭环`。
+- `OccupancyState` 继续保留旧兼容值，避免破坏 TQ-013B；新语义以后续 `FinalOccupancyState` 为准。
+- `炼虚` 与 `realm_lianxu` 的历史/高阶残留仍按后续高阶清理任务处理。
+
+## 五、后续任务
+
+- TQ-015C-4：增加紫府神通/府位闭环输入字段与 self-test；不锁数量阈值，不调整战斗倍率。

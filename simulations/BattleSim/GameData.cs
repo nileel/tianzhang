@@ -107,6 +107,12 @@ static class GameData
         string TargetSeat,
         string SeatName,
         string DanPivot,
+        string NaturalDanJiCandidateState,
+        string SeatAccessState,
+        string SeatCompetitionState,
+        string FinalOccupancyState,
+        int SeatCompetitionScore,
+        string ZifuEligibilityNote,
         double StabilityMultiplier,
         double ArtAffinityMultiplier);
 
@@ -127,7 +133,10 @@ static class GameData
     public static GoldenCoreProfile ResolveGoldenCoreProfile(int score, string dfQuality, Dictionary<string, double> weights)
     {
         if (score < 15)
-            return new("未成丹", "", "未成丹", "", "", "", "", "", "", "", 1.0, 1.0);
+            return new(
+                "未成丹", "", "未成丹", "", "", "", "", "", "", "",
+                "非自然候选", "none", "未进入", "未成丹", 0, "未接入紫府神通/府位闭环",
+                1.0, 1.0);
 
         var (danName, danNature) = ResolveGoldenCoreTheme(weights);
         var seat = ResolveGoldenCoreSeat(weights);
@@ -135,12 +144,27 @@ static class GameData
         bool hasFoundation = dfQuality != "无道基";
 
         if (!hasFoundation || score < 60)
-            return new("成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot, 0.92, 0.95);
+            return new(
+                "成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
+                "非自然候选", "temporary", "不参与自然争席", "暂寄", 0, "未接入紫府神通/府位闭环",
+                0.92, 0.95);
 
         if (score >= 90)
-            return new("成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot, 1.08, 1.10);
+            return new(
+                "成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
+                "自然候选", "natural_candidate", "待争席", "未占据", SeatCompetitionScore(score, weights), "未接入紫府神通/府位闭环",
+                1.08, 1.10);
 
-        return new("成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot, 1.0, 1.0);
+        return new(
+            "成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
+            "非自然候选", "granted", "不参与自然争席", "受敕承位", 0, "未接入紫府神通/府位闭环",
+            1.0, 1.0);
+    }
+
+    static int SeatCompetitionScore(int score, Dictionary<string, double> weights)
+    {
+        double topWeight = weights.Count == 0 ? 0 : weights.Values.Max();
+        return score + (int)Math.Round(topWeight * 20);
     }
 
     public static GoldenCoreSeatProfile ResolveGoldenCoreSeat(Dictionary<string, double> weights)

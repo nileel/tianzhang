@@ -18,6 +18,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-tq015c")
             return RunChecked(suite, RunGoldenCoreTq015C);
 
+        if (suite == "golden-core-tq015c-3")
+            return RunChecked(suite, RunGoldenCoreTq015C3);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -171,6 +174,57 @@ static class BattleSimSelfTests
         WriteProperty(character, "SeatName", "土·源位（安忍地）");
         WriteProperty(character, "DanPivot", "承接范围、排异规则与过载症状");
         AssertEqual("土·源位（安忍地）", ReadProperty(character, "SeatName"), "character stores seat name");
+    }
+
+    static void RunGoldenCoreTq015C3()
+    {
+        var resolver = typeof(GameData).GetMethod(
+            "ResolveGoldenCoreProfile",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(int), typeof(string), typeof(Dictionary<string, double>) },
+            modifiers: null);
+        if (resolver == null)
+            throw new InvalidOperationException("GameData.ResolveGoldenCoreProfile is missing.");
+
+        var physicalWeights = new Dictionary<string, double>
+        {
+            ["根骨"] = 0.45, ["魂魄"] = 0.15, ["神识"] = 0.15, ["资质"] = 0.15, ["气运"] = 0.10
+        };
+
+        var natural = resolver.Invoke(null, new object[] { 130, "黄品", physicalWeights })!;
+        AssertEqual("自然候选", ReadProperty(natural, "NaturalDanJiCandidateState"), "natural candidate state");
+        AssertEqual("natural_candidate", ReadProperty(natural, "SeatAccessState"), "natural seat access state");
+        AssertEqual("待争席", ReadProperty(natural, "SeatCompetitionState"), "natural seat competition state");
+        AssertEqual("未占据", ReadProperty(natural, "FinalOccupancyState"), "natural final occupancy state");
+        AssertEqual("未接入紫府神通/府位闭环", ReadProperty(natural, "ZifuEligibilityNote"), "zifu eligibility note");
+
+        var naturalScore = ReadProperty(natural, "SeatCompetitionScore");
+        if (naturalScore is not int naturalScoreInt || naturalScoreInt <= 0)
+            throw new InvalidOperationException($"natural seat competition score should be positive, got {naturalScore}.");
+
+        var granted = resolver.Invoke(null, new object[] { 75, "黄品", physicalWeights })!;
+        AssertEqual("非自然候选", ReadProperty(granted, "NaturalDanJiCandidateState"), "granted natural candidate state");
+        AssertEqual("granted", ReadProperty(granted, "SeatAccessState"), "granted seat access state");
+        AssertEqual("不参与自然争席", ReadProperty(granted, "SeatCompetitionState"), "granted competition state");
+        AssertEqual("受敕承位", ReadProperty(granted, "FinalOccupancyState"), "granted final occupancy state");
+
+        var temporary = resolver.Invoke(null, new object[] { 52, "无道基", physicalWeights })!;
+        AssertEqual("temporary", ReadProperty(temporary, "SeatAccessState"), "temporary seat access state");
+        AssertEqual("暂寄", ReadProperty(temporary, "FinalOccupancyState"), "temporary final occupancy state");
+
+        var failed = resolver.Invoke(null, new object[] { 12, "无道基", physicalWeights })!;
+        AssertEqual("none", ReadProperty(failed, "SeatAccessState"), "failed seat access state");
+        AssertEqual("未成丹", ReadProperty(failed, "FinalOccupancyState"), "failed final occupancy state");
+
+        var character = Character.Create("TQ-015C-3", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        WriteProperty(character, "NaturalDanJiCandidateState", "自然候选");
+        WriteProperty(character, "SeatAccessState", "natural_candidate");
+        WriteProperty(character, "SeatCompetitionState", "待争席");
+        WriteProperty(character, "FinalOccupancyState", "未占据");
+        WriteProperty(character, "SeatCompetitionScore", naturalScoreInt);
+        WriteProperty(character, "ZifuEligibilityNote", "未接入紫府神通/府位闭环");
+        AssertEqual("待争席", ReadProperty(character, "SeatCompetitionState"), "character stores competition state");
     }
 
     static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)

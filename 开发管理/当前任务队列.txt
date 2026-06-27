@@ -19,6 +19,7 @@
 > 2026-06-26 Codex / gpt-5.5：TQ-015C-2 成丹与席位竞争数值验证方案已产出：`开发管理/成丹与席位竞争数值验证方案.txt`。BattleSim build + run 通过；本轮只锁验证边界，不新增运行时阈值、不调整战斗倍率。下一步建议拆分 BattleSim 字段：自然丹籍候选与席位竞争状态分离。
 > 2026-06-26 Codex / gpt-5.5：按维护规则归档 TQ-013C/TQ-014；当前 `1` 优先推进 TQ-015C-3 或场景架构执行型切片。
 > 2026-06-27 Codex / gpt-5.5：复审 b674f79 后确认 TQ-006 冷却数组项通过并从队列清理；TQ-007/TQ-010/TQ-015B-2/3 继续不通过，失败原因见 `开发管理/未通过审核清单.txt`。
+> 2026-06-27 Codex / gpt-5.5：TQ-015C-3 已完成并归档至 `开发管理/任务归档/2026-06-27-TQ-015C-3-BattleSim席位竞争字段拆分归档.txt`。BattleSim 已拆分自然丹籍候选、席位准入、席位竞争状态与最终占据状态；self-test、build、默认 run、数据链路检查通过。下一步补入 TQ-015C-4 紫府神通/府位闭环字段结构。
 
 ## 使用规则
 
@@ -37,7 +38,7 @@
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 复审不通过 / 待返工 | b674f79 只修了 TXT 局部，JSON 仍有 `?` 污染；见未通过清单 |
 | TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 复审不通过 / 待返工 | b674f79 追加 asset 字段后出现重复 `element` 和空旧字段；见未通过清单 |
 | TQ-015B | P0 | Codex / ChatGPT5.5（TQ-015B-1已审核）；DeepSeek V4 Pro（TQ-015B-2/3 NPC+模板已完成） | 文档迁移/批量生产 | TQ-015B-1✅已审核 / TQ-015B-2/3复审不通过 | b674f79 的 NPC 批量替换引入“建/道”错字污染，席位归属仍需事实源复核；见未通过清单 |
-| TQ-015C-3 | P1 | Codex / ChatGPT5.5 | BattleSim字段迁移 | 待处理 | 拆分自然丹籍候选与席位竞争状态字段；不调整战斗倍率，数值必须跑 BattleSim |
+| TQ-015C-4 | P1 | Codex / ChatGPT5.5 | BattleSim字段迁移 | 待处理 | 增加紫府神通/府位闭环输入字段与自测；不锁数量阈值、不调整战斗倍率 |
 | TQ-014-DS-01 | P1 | DeepSeek V4 Pro | 场景架构清单 | 待处理 | 产出 `开发管理/场景架构Unity现状清单.txt`，只记录现状、职责归属和风险，不改 C# |
 
 ## 任务卡片
@@ -67,13 +68,13 @@
 - TQ-015B-1 本轮范围：`docs/superpowers/specs/2026-06-19-jindan-danxiang-design.md`、两份金丹/紫府核心设定、术法槽位设计、三类设计规范与模板。已锁定：丹相为金丹能力总称；丹枢仅为矩阵允许的个性化接口；紫府神通为丹相输入；暂寄不生成丹相主枢。未锁定：数量阈值、槽位数、数值成长和运行时迁移。
 - 完成条件：核心规则余项不再把旧词作为现行层级或数值规则；NPC 统一使用“分支 + 源/化/界 + 占据方式 + 丹枢”字段；历史参考不复制；太一道庭不垄断丹系；模板能约束 DeepSeek 批量内容不越过矩阵边界；DeepSeek 提交只标 `⚠️ 已修改/未审核`，交由 Codex / ChatGPT5.5 复审。
 
-### TQ-015C-3 · BattleSim 自然丹籍候选与席位竞争状态字段
+### TQ-015C-4 · BattleSim 紫府神通/府位闭环输入字段
 
 - 来源：TQ-015A；`docs/superpowers/plans/2026-06-21-yuanying-position-migration.md` 任务 5。
-- 当前优先级：P1。TQ-015C-1 已补源/化/界兼容字段；TQ-015C-2 已产出数值验证方案；下一步只拆字段语义，不直接调战斗倍率。
-- 必读：`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`开发管理/境界体系重构锁口径决策表.txt`、`开发管理/境界体系数据模拟迁移差异表.txt`、`simulations/BattleSim/Program.cs`、`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`src/Assets/Scripts/Data/CharacterData.cs`。
-- 验证命令：`rg -n "炼虚|realm_lianxu" docs src simulations 开发管理`；`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
-- 完成条件：BattleSim 明确区分自然丹籍候选、席位竞争状态、最终占据状态与丹枢字段；主输出能解释未成丹、暂寄、敕封、自然丹籍和争席结果；默认 run 通过且不新增未经验证的成丹阈值或战斗倍率。
+- 当前优先级：P1。TQ-015C-1 已补源/化/界兼容字段；TQ-015C-2 已产出数值验证方案；TQ-015C-3 已拆分自然丹籍候选、席位竞争状态与最终占据状态。下一步只补紫府资格输入字段，不直接锁四道/五道数量阈值。
+- 必读：`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`docs/基础设定/境界特性.txt`、`开发管理/成丹与席位竞争数值验证方案.txt`、`开发管理/境界体系重构锁口径决策表.txt`、`simulations/BattleSim/GameData.cs`、`simulations/BattleSim/Cultivation.cs`、`simulations/BattleSim/Character.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`。
+- 验证命令：`dotnet run -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-tq015c-4`；`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- 完成条件：BattleSim 结构能记录紫府神通数量、府位覆盖、根本神通闭环和资格说明；默认输出明确这些字段仍为 `未接入/待验证`，不把未锁定阈值当成现行规则；self-test 与默认 run 通过且不调整战斗倍率。
 
 ### TQ-014-DS-01 · 场景架构 Unity 现状清单
 

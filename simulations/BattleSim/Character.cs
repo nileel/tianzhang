@@ -22,6 +22,12 @@ class Character
     public string TargetSeat { get; set; } = "";
     public string SeatName { get; set; } = "";
     public string DanPivot { get; set; } = "";
+    public string NaturalDanJiCandidateState { get; set; } = "非自然候选";
+    public string SeatAccessState { get; set; } = "none";
+    public string SeatCompetitionState { get; set; } = "未进入";
+    public string FinalOccupancyState { get; set; } = "未成丹";
+    public int SeatCompetitionScore { get; set; } = 0;
+    public string ZifuEligibilityNote { get; set; } = "未接入紫府神通/府位闭环";
     public string LegacyGCGrade { get; set; } = "";
     public double DanJiStabilityMult { get; set; } = 1.0;
     public int GCScore = 0;               // 成丹判定值 (调试用)
