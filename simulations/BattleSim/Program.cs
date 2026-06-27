@@ -153,6 +153,16 @@ class Program
         Console.WriteLine("  席位竞争分只用于同一目标席位候选排序，不改变成丹阈值、战斗倍率或紫府神通门槛。");
 
         Console.WriteLine();
+        Console.WriteLine("【席位竞争样本统计（TQ-015C-6按位格汇总）】");
+        Console.WriteLine($"{"SeatName",-18} {"样本",-6} {"自然候选",-8} {"敕封",-6} {"暂寄",-6} {"未成丹",-6} {"NA原因",-14} {"紫府未接入",-10}");
+        Console.WriteLine(new string('-', 92));
+        foreach (var row in SeatCompetitionSampleStats.Summarize(pool.SelectMany(p => p), minimumSamples: 2))
+        {
+            Console.WriteLine($"  {row.SeatName,-16} {row.SampleCount,4} {row.NaturalCandidateCount,8} {row.GrantedCount,6} {row.TemporaryCount,6} {row.UnformedCount,6} {row.NaReason,-14} {row.ZifuPendingCount,6}/{row.SampleCount,-3} {row.ZifuInputState}");
+        }
+        Console.WriteLine("  说明：本表只按目标 SeatName 汇总样本分布与 NA 原因；不结算席位胜者，不改变成丹阈值、战斗倍率或金丹样本筛选规则。");
+
+        Console.WriteLine();
         Console.WriteLine("【紫府神通/府位闭环输入状态（TQ-015C-4占位字段）】");
         Console.WriteLine($"{"Build",-10} {"神通数",-8} {"府位覆盖",-8} {"闭环状态",-8} {"资格说明",-24}");
         Console.WriteLine(new string('-', 66));

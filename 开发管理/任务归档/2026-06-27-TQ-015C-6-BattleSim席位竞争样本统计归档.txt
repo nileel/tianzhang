@@ -1,0 +1,57 @@
+# TQ-015C-6 · BattleSim 席位竞争样本统计归档
+
+状态：已完成 / 已验证（2026-06-27 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 一、任务范围
+
+- 来源：`开发管理/当前任务队列.txt` 的 TQ-015C-6。
+- 目标：在 BattleSim 默认输出中按 `SeatName` 汇总自然候选、敕封承位、暂寄、未成丹/样本不足原因和紫府字段未接入状态。
+- 边界：不结算席位胜者，不调整成丹阈值、席位竞争分、最终占据状态、战斗倍率或金丹样本筛选规则。
+
+## 二、修改文件
+
+- `simulations/BattleSim/SeatCompetitionSampleStats.cs`
+  - 新增 `SeatCompetitionSampleStats.Summarize`。
+  - 按目标 `SeatName` 汇总样本数、自然候选、敕封承位、暂寄、未成丹、NA 原因和紫府未接入计数。
+  - 空 `SeatName` 统一归入 `未成丹/无目标席位`。
+- `simulations/BattleSim/Program.cs`
+  - 默认输出新增“席位竞争样本统计（TQ-015C-6按位格汇总）”表。
+  - 输出说明明确本表只做统计，不结算胜者或改变任何数值机制。
+- `simulations/BattleSim/BattleSimSelfTests.cs`
+  - 新增 `golden-core-tq015c-6` self-test。
+  - 覆盖自然候选、受敕承位、暂寄、样本不足、未成丹与紫府未接入计数。
+- `开发管理/设计-当前状态.txt`
+  - 记录 TQ-015C-6 已验证事实和默认模拟快照。
+- `开发管理/当前任务队列.txt`
+  - 移出 TQ-015C-6。
+- `开发管理/开发-下一步建议.txt`
+  - 更新境界工程线状态，TQ-015C-6 已完成，后续从 B3 数值验证继续拆分。
+
+## 三、验证结果
+
+- `dotnet run -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-tq015c-6`
+  - 先红灯：`SELFTEST golden-core-tq015c-6 FAIL: SeatCompetitionSampleStats is missing.`
+  - 实现后通过：`SELFTEST golden-core-tq015c-6 PASS`
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：默认模拟完整跑通。
+  - 席位统计快照：
+    - `火·化位（周天焰）`：19 样本，自然候选 11，敕封 8，暂寄 0，NA 原因 `样本可用`，紫府未接入 19/19。
+    - `木·源位（报春根）`：31 样本，自然候选 20，敕封 11，暂寄 0，NA 原因 `样本可用`，紫府未接入 31/31。
+    - `未成丹/无目标席位`：370 样本，未成丹 370，NA 原因 `未成丹`，紫府未接入 370/370。
+  - 金丹同境平均回合数：约 25.0；紫府圆满 vs 金丹初期压制战仍为 0.0% 紫府胜率。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+  - 通过：docs/CSV/asset 覆盖 OK，language keys 389。
+- `git diff --check`
+  - 通过；仅提示本工作区 LF/CRLF 归一化警告。
+
+## 四、残留风险
+
+- 统计结果显示当前只有 `火·化位（周天焰）` 与 `木·源位（报春根）` 形成有效金丹席位样本，其余 Build 仍因未成丹或样本不足显示 NA。
+- 紫府神通数量、府位覆盖和闭环字段仍全量为 `未接入`，尚未驱动成丹资格或席位竞争。
+- 自然丹籍仍只表示自然候选；最终占据状态继续保持 `未占据`，不自动视为赢得席位。
+
+## 五、后续任务
+
+- 从 `开发管理/开发-下一步建议.txt` 的 B3 继续拆分：筑基/紫府同境矩阵、金丹压制战出口和后续数值验证切片。

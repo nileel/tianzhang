@@ -24,6 +24,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-tq015c-4")
             return RunChecked(suite, RunGoldenCoreTq015C4);
 
+        if (suite == "golden-core-tq015c-6")
+            return RunChecked(suite, RunGoldenCoreTq015C6);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -257,6 +260,71 @@ static class BattleSimSelfTests
         AssertEqual(0, ReadProperty(character, "ZifuPalaceCoverageCount"), "character zifu palace coverage count default");
         AssertEqual("未接入", ReadProperty(character, "ZifuCoreLoopState"), "character zifu core loop default");
         AssertEqual("未接入紫府神通/府位闭环，阈值待验证", ReadProperty(character, "ZifuEligibilityNote"), "character zifu note default");
+    }
+
+    static void RunGoldenCoreTq015C6()
+    {
+        var statsType = Type.GetType("BattleSim.SeatCompetitionSampleStats");
+        if (statsType == null)
+            throw new InvalidOperationException("SeatCompetitionSampleStats is missing.");
+
+        var summarize = statsType.GetMethod(
+            "Summarize",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(IEnumerable<Character>), typeof(int) },
+            modifiers: null);
+        if (summarize == null)
+            throw new InvalidOperationException("SeatCompetitionSampleStats.Summarize is missing.");
+
+        var natural = Character.Create("natural", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        WriteProperty(natural, "FormedState", "成丹");
+        WriteProperty(natural, "SeatName", "土·源位（安忍地）");
+        WriteProperty(natural, "NaturalDanJiCandidateState", "自然候选");
+        WriteProperty(natural, "SeatAccessState", "natural_candidate");
+        WriteProperty(natural, "SeatCompetitionState", "待争席");
+        WriteProperty(natural, "FinalOccupancyState", "未占据");
+        WriteProperty(natural, "ZifuCoreLoopState", "未接入");
+        WriteProperty(natural, "ZifuEligibilityNote", "未接入紫府神通/府位闭环，阈值待验证");
+
+        var granted = Character.Create("granted", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        WriteProperty(granted, "FormedState", "成丹");
+        WriteProperty(granted, "SeatName", "土·源位（安忍地）");
+        WriteProperty(granted, "SeatAccessState", "granted");
+        WriteProperty(granted, "FinalOccupancyState", "受敕承位");
+
+        var temporary = Character.Create("temporary", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        WriteProperty(temporary, "FormedState", "成丹");
+        WriteProperty(temporary, "SeatName", "土·源位（安忍地）");
+        WriteProperty(temporary, "SeatAccessState", "temporary");
+        WriteProperty(temporary, "FinalOccupancyState", "暂寄");
+
+        var sparse = Character.Create("sparse", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 20, ["气运"] = 8 }, "physical");
+        WriteProperty(sparse, "FormedState", "成丹");
+        WriteProperty(sparse, "SeatName", "木·源位（报春根）");
+        WriteProperty(sparse, "NaturalDanJiCandidateState", "自然候选");
+        WriteProperty(sparse, "SeatAccessState", "natural_candidate");
+
+        var unformed = Character.Create("unformed", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+
+        var rows = (System.Collections.IEnumerable)summarize.Invoke(null, new object[] { new[] { natural, granted, temporary, sparse, unformed }, 2 })!;
+        var bySeat = rows.Cast<object>().ToDictionary(row => (string)ReadProperty(row, "SeatName"));
+
+        var earth = bySeat["土·源位（安忍地）"];
+        AssertEqual(3, ReadProperty(earth, "SampleCount"), "earth seat sample count");
+        AssertEqual(1, ReadProperty(earth, "NaturalCandidateCount"), "earth natural candidates");
+        AssertEqual(1, ReadProperty(earth, "GrantedCount"), "earth granted count");
+        AssertEqual(1, ReadProperty(earth, "TemporaryCount"), "earth temporary count");
+        AssertEqual(0, ReadProperty(earth, "UnformedCount"), "earth unformed count");
+        AssertEqual("样本可用", ReadProperty(earth, "NaReason"), "earth NA reason");
+        AssertEqual(3, ReadProperty(earth, "ZifuPendingCount"), "earth zifu pending count");
+
+        var wood = bySeat["木·源位（报春根）"];
+        AssertEqual("样本不足(<2)", ReadProperty(wood, "NaReason"), "wood NA reason");
+
+        var missing = bySeat["未成丹/无目标席位"];
+        AssertEqual(1, ReadProperty(missing, "UnformedCount"), "unformed row count");
+        AssertEqual("未成丹", ReadProperty(missing, "NaReason"), "unformed NA reason");
     }
 
     static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)
