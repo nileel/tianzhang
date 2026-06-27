@@ -21,6 +21,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-tq015c-3")
             return RunChecked(suite, RunGoldenCoreTq015C3);
 
+        if (suite == "golden-core-tq015c-4")
+            return RunChecked(suite, RunGoldenCoreTq015C4);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -197,7 +200,7 @@ static class BattleSimSelfTests
         AssertEqual("natural_candidate", ReadProperty(natural, "SeatAccessState"), "natural seat access state");
         AssertEqual("待争席", ReadProperty(natural, "SeatCompetitionState"), "natural seat competition state");
         AssertEqual("未占据", ReadProperty(natural, "FinalOccupancyState"), "natural final occupancy state");
-        AssertEqual("未接入紫府神通/府位闭环", ReadProperty(natural, "ZifuEligibilityNote"), "zifu eligibility note");
+        AssertEqual("未接入紫府神通/府位闭环，阈值待验证", ReadProperty(natural, "ZifuEligibilityNote"), "zifu eligibility note");
 
         var naturalScore = ReadProperty(natural, "SeatCompetitionScore");
         if (naturalScore is not int naturalScoreInt || naturalScoreInt <= 0)
@@ -223,8 +226,37 @@ static class BattleSimSelfTests
         WriteProperty(character, "SeatCompetitionState", "待争席");
         WriteProperty(character, "FinalOccupancyState", "未占据");
         WriteProperty(character, "SeatCompetitionScore", naturalScoreInt);
-        WriteProperty(character, "ZifuEligibilityNote", "未接入紫府神通/府位闭环");
+        WriteProperty(character, "ZifuEligibilityNote", "未接入紫府神通/府位闭环，阈值待验证");
         AssertEqual("待争席", ReadProperty(character, "SeatCompetitionState"), "character stores competition state");
+    }
+
+    static void RunGoldenCoreTq015C4()
+    {
+        var resolver = typeof(GameData).GetMethod(
+            "ResolveGoldenCoreProfile",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(int), typeof(string), typeof(Dictionary<string, double>) },
+            modifiers: null);
+        if (resolver == null)
+            throw new InvalidOperationException("GameData.ResolveGoldenCoreProfile is missing.");
+
+        var physicalWeights = new Dictionary<string, double>
+        {
+            ["根骨"] = 0.45, ["魂魄"] = 0.15, ["神识"] = 0.15, ["资质"] = 0.15, ["气运"] = 0.10
+        };
+
+        var natural = resolver.Invoke(null, new object[] { 130, "黄品", physicalWeights })!;
+        AssertEqual(0, ReadProperty(natural, "ZifuDivineArtCount"), "natural zifu divine art count");
+        AssertEqual(0, ReadProperty(natural, "ZifuPalaceCoverageCount"), "natural zifu palace coverage count");
+        AssertEqual("未接入", ReadProperty(natural, "ZifuCoreLoopState"), "natural zifu core loop state");
+        AssertEqual("未接入紫府神通/府位闭环，阈值待验证", ReadProperty(natural, "ZifuEligibilityNote"), "natural zifu eligibility note");
+
+        var character = Character.Create("TQ-015C-4", new() { ["根骨"] = 20, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 11, ["气运"] = 8 }, "physical");
+        AssertEqual(0, ReadProperty(character, "ZifuDivineArtCount"), "character zifu divine art count default");
+        AssertEqual(0, ReadProperty(character, "ZifuPalaceCoverageCount"), "character zifu palace coverage count default");
+        AssertEqual("未接入", ReadProperty(character, "ZifuCoreLoopState"), "character zifu core loop default");
+        AssertEqual("未接入紫府神通/府位闭环，阈值待验证", ReadProperty(character, "ZifuEligibilityNote"), "character zifu note default");
     }
 
     static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)

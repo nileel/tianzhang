@@ -151,6 +151,28 @@ class Program
         }
         Console.WriteLine("  说明：自然丹籍列仍表示成丹类型；自然候选/待争席表示尚未结算席位竞争，当前不把候选直接视为已占据。");
         Console.WriteLine("  席位竞争分只用于同一目标席位候选排序，不改变成丹阈值、战斗倍率或紫府神通门槛。");
+
+        Console.WriteLine();
+        Console.WriteLine("【紫府神通/府位闭环输入状态（TQ-015C-4占位字段）】");
+        Console.WriteLine($"{"Build",-10} {"神通数",-8} {"府位覆盖",-8} {"闭环状态",-8} {"资格说明",-24}");
+        Console.WriteLine(new string('-', 66));
+        for (int i = 0; i < N; i++)
+        {
+            double avgDivineArtCount = pool[i].Average(c => (double)c.ZifuDivineArtCount);
+            double avgPalaceCoverage = pool[i].Average(c => (double)c.ZifuPalaceCoverageCount);
+            string majorLoopState = pool[i]
+                .GroupBy(c => c.ZifuCoreLoopState)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault() ?? "-";
+            string majorEligibilityNote = pool[i]
+                .GroupBy(c => c.ZifuEligibilityNote)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault() ?? "-";
+            Console.WriteLine($"  {buildDefs[i].Name,-8} {avgDivineArtCount,6:F1} {avgPalaceCoverage,8:F1} {majorLoopState,-8} {majorEligibilityNote,-24}");
+        }
+        Console.WriteLine("  说明：本表只记录紫府神通、府位覆盖和闭环输入状态；当前阈值待验证，不参与成丹、争席或战斗倍率。");
         // 详细子境界分布
         Console.WriteLine();
         Console.WriteLine("【详细境界分布】");
@@ -517,6 +539,9 @@ class Program
         c.SeatCompetitionState = result.SeatCompetitionState;
         c.FinalOccupancyState = result.FinalOccupancyState;
         c.SeatCompetitionScore = result.SeatCompetitionScore;
+        c.ZifuDivineArtCount = result.ZifuDivineArtCount;
+        c.ZifuPalaceCoverageCount = result.ZifuPalaceCoverageCount;
+        c.ZifuCoreLoopState = result.ZifuCoreLoopState;
         c.ZifuEligibilityNote = result.ZifuEligibilityNote;
         c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
         c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;

@@ -112,6 +112,9 @@ static class GameData
         string SeatCompetitionState,
         string FinalOccupancyState,
         int SeatCompetitionScore,
+        int ZifuDivineArtCount,
+        int ZifuPalaceCoverageCount,
+        string ZifuCoreLoopState,
         string ZifuEligibilityNote,
         double StabilityMultiplier,
         double ArtAffinityMultiplier);
@@ -121,6 +124,9 @@ static class GameData
         string TargetSeat,
         string SeatName,
         string DanPivot);
+
+    public const string ZifuCoreLoopPendingState = "未接入";
+    public const string ZifuEligibilityPendingNote = "未接入紫府神通/府位闭环，阈值待验证";
 
     // 历史兼容：旧一至九品只用于调试回看，不再钳制道基，也不再驱动主输出或战斗强度。
     public static string LegacyGoldenCoreGradeFromScore(int score) => score switch
@@ -135,7 +141,7 @@ static class GameData
         if (score < 15)
             return new(
                 "未成丹", "", "未成丹", "", "", "", "", "", "", "",
-                "非自然候选", "none", "未进入", "未成丹", 0, "未接入紫府神通/府位闭环",
+                "非自然候选", "none", "未进入", "未成丹", 0, 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
                 1.0, 1.0);
 
         var (danName, danNature) = ResolveGoldenCoreTheme(weights);
@@ -146,18 +152,18 @@ static class GameData
         if (!hasFoundation || score < 60)
             return new(
                 "成丹", "暂寄丹籍", "暂寄", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
-                "非自然候选", "temporary", "不参与自然争席", "暂寄", 0, "未接入紫府神通/府位闭环",
+                "非自然候选", "temporary", "不参与自然争席", "暂寄", 0, 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
                 0.92, 0.95);
 
         if (score >= 90)
             return new(
                 "成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
-                "自然候选", "natural_candidate", "待争席", "未占据", SeatCompetitionScore(score, weights), "未接入紫府神通/府位闭环",
+                "自然候选", "natural_candidate", "待争席", "未占据", SeatCompetitionScore(score, weights), 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
                 1.08, 1.10);
 
         return new(
             "成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
-            "非自然候选", "granted", "不参与自然争席", "受敕承位", 0, "未接入紫府神通/府位闭环",
+            "非自然候选", "granted", "不参与自然争席", "受敕承位", 0, 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
             1.0, 1.0);
     }
 

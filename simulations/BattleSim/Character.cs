@@ -27,7 +27,10 @@ class Character
     public string SeatCompetitionState { get; set; } = "未进入";
     public string FinalOccupancyState { get; set; } = "未成丹";
     public int SeatCompetitionScore { get; set; } = 0;
-    public string ZifuEligibilityNote { get; set; } = "未接入紫府神通/府位闭环";
+    public int ZifuDivineArtCount { get; set; } = 0;
+    public int ZifuPalaceCoverageCount { get; set; } = 0;
+    public string ZifuCoreLoopState { get; set; } = "未接入";
+    public string ZifuEligibilityNote { get; set; } = "未接入紫府神通/府位闭环，阈值待验证";
     public string LegacyGCGrade { get; set; } = "";
     public double DanJiStabilityMult { get; set; } = 1.0;
     public int GCScore = 0;               // 成丹判定值 (调试用)
