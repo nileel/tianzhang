@@ -27,6 +27,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-tq015c-6")
             return RunChecked(suite, RunGoldenCoreTq015C6);
 
+        if (suite == "stage-matrix-b3")
+            return RunChecked(suite, RunStageMatrixB3);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -325,6 +328,59 @@ static class BattleSimSelfTests
         var missing = bySeat["未成丹/无目标席位"];
         AssertEqual(1, ReadProperty(missing, "UnformedCount"), "unformed row count");
         AssertEqual("未成丹", ReadProperty(missing, "NaReason"), "unformed NA reason");
+    }
+
+    static void RunStageMatrixB3()
+    {
+        var reportType = Type.GetType("BattleSim.StageCombatReport");
+        if (reportType == null)
+            throw new InvalidOperationException("StageCombatReport is missing.");
+
+        var selectPools = reportType.GetMethod(
+            "SelectPools",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(IEnumerable<IReadOnlyList<Character>>), typeof(string), typeof(int?) },
+            modifiers: null);
+        if (selectPools == null)
+            throw new InvalidOperationException("StageCombatReport.SelectPools is missing.");
+
+        var pools = new[]
+        {
+            new List<Character>
+            {
+                StageCharacter("a", "筑基", 0),
+                StageCharacter("b", "筑基", 4),
+                StageCharacter("c", "金丹", 0)
+            },
+            new List<Character>
+            {
+                StageCharacter("d", "筑基", 4),
+                StageCharacter("e", "练气", 8)
+            }
+        };
+
+        var zhujiPools = ((System.Collections.IEnumerable)selectPools.Invoke(null, new object[] { pools, "筑基", null })!)
+            .Cast<IReadOnlyList<Character>>()
+            .ToArray();
+        AssertEqual(2, zhujiPools[0].Count, "zhuji pool 0 count");
+        AssertEqual(1, zhujiPools[1].Count, "zhuji pool 1 count");
+
+        var zifuPools = ((System.Collections.IEnumerable)selectPools.Invoke(null, new object[] { pools, "筑基", 4 })!)
+            .Cast<IReadOnlyList<Character>>()
+            .ToArray();
+        AssertEqual(1, zifuPools[0].Count, "zifu pool 0 count");
+        AssertEqual("b", zifuPools[0][0].Name, "zifu pool 0 sample");
+        AssertEqual(1, zifuPools[1].Count, "zifu pool 1 count");
+        AssertEqual("d", zifuPools[1][0].Name, "zifu pool 1 sample");
+    }
+
+    static Character StageCharacter(string name, string realm, int subIndex)
+    {
+        var character = Character.Create(name, new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+        character.Realm = realm;
+        character.SubIndex = subIndex;
+        return character;
     }
 
     static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)

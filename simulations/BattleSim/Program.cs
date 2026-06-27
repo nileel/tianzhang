@@ -210,9 +210,9 @@ class Program
 
         // 战斗矩阵
         string[] tags = buildDefs.Select(b => b.Name).ToArray();
-        var goldPools = pool.Select(p => p.Where(c => c.Realm == "金丹").ToList()).ToArray();
-        Console.WriteLine("【金丹样本数】");
-        for (int i = 0; i < N; i++) Console.WriteLine($"  {tags[i],-8}: {goldPools[i].Count}/{SEEDS}");
+        var stagePoolSource = pool.Cast<IReadOnlyList<Character>>().ToArray();
+        var goldPools = StageCombatReport.SelectPools(stagePoolSource, "金丹");
+        StageCombatReport.PrintSampleCounts("金丹样本数", tags, goldPools, SEEDS);
         Console.WriteLine($"正在计算 {N}x{N} 金丹同境矩阵...");
         double[,] mat = new double[N, N];
         for (int i = 0; i < N; i++)
@@ -276,10 +276,17 @@ class Program
         }
         Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=金丹样本不足");
 
-        var zifuPools = pool.Select(p => p.Where(c => c.Realm == "筑基" && c.SubIndex == 4).ToList()).ToArray();
+        var zhujiPools = StageCombatReport.SelectPools(stagePoolSource, "筑基");
         Console.WriteLine();
-        Console.WriteLine("【紫府圆满样本数】");
-        for (int i = 0; i < N; i++) Console.WriteLine($"  {tags[i],-8}: {zifuPools[i].Count}/{SEEDS}");
+        StageCombatReport.PrintSampleCounts("筑基样本数", tags, zhujiPools, SEEDS);
+        Console.WriteLine($"正在计算 {N}x{N} 筑基同境矩阵...");
+        var zhujiMat = ComputeSymmetricMatrix(zhujiPools, Math.Max(400, SIM / 2));
+        PrintWinRateMatrix("筑基同境战斗胜率矩阵（筑基五段混合样本）", tags, zhujiMat);
+        Console.WriteLine("  说明：本表只验证筑基主游戏期 Build 差异，不引入紫府/金丹新倍率或改变金丹样本筛选。");
+
+        var zifuPools = StageCombatReport.SelectPools(stagePoolSource, "筑基", 4);
+        Console.WriteLine();
+        StageCombatReport.PrintSampleCounts("紫府圆满样本数", tags, zifuPools, SEEDS);
         Console.WriteLine($"正在计算 {N}x{N} 紫府圆满同境矩阵...");
         var zifuMat = ComputeSymmetricMatrix(zifuPools, Math.Max(400, SIM / 2));
         PrintWinRateMatrix("紫府圆满同境战斗胜率矩阵", tags, zifuMat);

@@ -1,0 +1,45 @@
+# TQ-015C-7 · BattleSim 筑基同境矩阵归档
+
+状态：已完成 / 已验证（2026-06-27 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 一、任务范围
+
+- 来源：`开发管理/开发-下一步建议.txt` B3。
+- 目标：把筑基主游戏期同境矩阵加入 BattleSim 默认报告，避免只看金丹同境矩阵和紫府圆满矩阵。
+- 边界：不调整成丹阈值、席位竞争分、最终占据状态、战斗倍率、金丹样本筛选或压制战结算规则。
+
+## 二、修改文件
+
+- `simulations/BattleSim/StageCombatReport.cs`
+  - 新增 `StageCombatReport.SelectPools`，统一按境界与可选子阶段筛选样本池。
+  - 新增 `StageCombatReport.PrintSampleCounts`，复用金丹、筑基、紫府样本数输出。
+- `simulations/BattleSim/Program.cs`
+  - 金丹样本数改为复用阶段报告 helper，原金丹矩阵语义不变。
+  - 默认输出新增“筑基样本数”与“筑基同境战斗胜率矩阵（筑基五段混合样本）”。
+  - 紫府圆满样本筛选改为复用同一 helper。
+- `simulations/BattleSim/BattleSimSelfTests.cs`
+  - 新增 `stage-matrix-b3` self-test。
+  - 覆盖筑基全阶段筛选与紫府圆满子阶段筛选，防止后续报告误把金丹或练气样本混入。
+
+## 三、验证结果
+
+- `dotnet run -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test stage-matrix-b3`
+  - 先红灯：`SELFTEST stage-matrix-b3 FAIL: StageCombatReport is missing.`
+  - 实现后通过：`SELFTEST stage-matrix-b3 PASS`
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：默认模拟完整跑通。
+  - 新增筑基样本快照：18 个 Build 为 20/20 筑基样本，物·修炼 4/20，法·修炼 3/20，水·散修 5/20。
+  - 新增筑基同境矩阵已输出；由于混合筑基五段样本，部分低资质 Build 与高资质紫府圆满 Build 差距明显，矩阵仅作为主游戏期差异观察，不作为新平衡结论。
+  - 金丹同境平均回合数：约 25.1；紫府圆满 vs 金丹初期压制战非 NA 项仍为 0.0% 紫府胜率，平均 1.6-2.1 回合。
+
+## 四、残留风险
+
+- 筑基矩阵混合“紫府初开”和“紫府圆满”样本，适合观察主游戏期整体差异，但不等同于严格同子阶段平衡结论。
+- 当前压制战仍显示金丹初期对紫府圆满压制极强；“削位、破府、封丹、阵法或剧情条件”战术出口尚未建模。
+- 紫府神通数量、府位覆盖和闭环输入仍全量 `未接入`，未驱动成丹资格或战斗规则。
+
+## 五、后续任务
+
+- B3 后续继续拆“金丹压制战战术出口”切片：先规划削位/破府/封丹/阵法等测试开关，再接入 BattleSim 验证，不直接堆 HP/攻击倍率。
