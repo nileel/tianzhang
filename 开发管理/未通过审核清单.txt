@@ -1,6 +1,7 @@
 # 未通过审核清单（✅ 已审核）
 
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 已通过严格覆盖、meta 配对、关键字段一致性、旧路径扫描、Unity C# build 与 `git diff --check`；当前未通过/待复审项清零。
+> 2026-06-27 Codex / gpt-5.5 复审 b674f79：TQ-006 通过并从清单移除；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，失败原因更新为本轮证据。
 > 2026-06-25 Codex / gpt-5.5 批量复审：TQ-006、TQ-007、TQ-010、TQ-015B-2/3 未通过；TQ-013D 与金丹位格三字命名替换通过并已归档。
 > 2026-06-19 Codex / gpt-5.5 复审补修历史：复审 TQ-003 commit 43d0a92 时发现新增 asset 缺 57 个 `.meta`、`spell_tx_anshi` asset 字段与 CSV 不一致、`SceneBuilder` 仍引用旧 asset 路径；后续已在 767f93d 复审通过。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 规范/模板补修项已通过复审并从清单移除；当时清单仅保留 TQ-003 Unity asset 覆盖缺口，现已清零。
@@ -14,39 +15,31 @@
 
 ## 当前未通过/待复审项
 
-### REVIEW-20260625-01 · TQ-006 槽位冷却数组修复
-
-- 结论：不通过。
-- 目标提交：354215f；后续 767f93d 曾补 build 与相关数据链路。
-- 已通过部分：`Character.FromData` 内部已先设置 `MaxSpellSlots` / `MaxSkillSlots`，再初始化 `SpellCooldowns` / `SkillCooldowns`；`dotnet build src/Assembly-CSharp.csproj` 通过。
-- 未通过问题：`src/Assets/Scripts/Map/ExplorationController.cs` 创建玩家和敌人后仍把冷却数组覆盖为装备数量长度，少于槽位时仍可能违反“冷却数组长度与槽位数一致”的完成条件。
-- 返工建议：统一移除或改造调用点覆盖逻辑，至少覆盖空装备、少于槽位、临阵换法、冷却灰显四类回归；返工后重新运行 `dotnet build src/Assembly-CSharp.csproj`。
-
 ### REVIEW-20260625-02 · TQ-007 太一道庭法箓字段映射表
 
 - 结论：不通过。
-- 目标提交：c8cb56d。
+- 目标提交：c8cb56d；返工提交：b674f79。
 - 已通过部分：9 功法 / 26 术法 / 9 神通覆盖数正确；通神三玄礼录归属核对源文件后应为“四大道脉 / 桓氏兵马坛”；`tools/check-review-text.ps1 -Paths docs/角色养成` 通过。
-- 未通过问题：TXT 与 JSON 中仍有多处 `?` 符号污染，疑似应为负号或向下箭头；TXT 表中多行字段截断仍不适合作为可导入字段依据。
-- 返工建议：以源文件重新抽取或人工校准所有 `?` 污染字段；TXT 明确定位为摘要预览或补全关键字段，JSON 保持完整字段；返工后运行 `tools/check-review-text.ps1 -Paths docs/角色养成` 并用 `rg -n "\?|�|``n|``r"` 复核目标文件。
+- 未通过问题：b674f79 只修复了 TXT 中 5 处 `?` 污染，JSON 仍有多处 `?`，例如 `docs/角色养成/太一道庭法箓字段映射表.json` 中不坏金身、五雷符敕、军势如山、天书云篆、金刚破岳等字段仍疑似应为负号或向下箭头；TXT 表中多行字段截断风险仍未整体校准。
+- 返工建议：以源文件重新抽取或人工校准 TXT 与 JSON 的全部 `?` 污染字段；TXT 明确定位为摘要预览或补全关键字段，JSON 保持完整字段；返工后运行 `tools/check-review-text.ps1 -Paths docs/角色养成` 并用 `rg -n "\?|�|``n|``r" docs/角色养成/太一道庭法箓字段映射表.txt docs/角色养成/太一道庭法箓字段映射表.json` 复核。
 
 ### REVIEW-20260625-03 · TQ-010 CSV/asset 独立技能属性字段
 
 - 结论：不通过。
-- 目标提交：0f629ce。
+- 目标提交：0f629ce；返工提交：b674f79。
 - 已通过部分：`Spells.csv` 与 `Skills.csv` 均新增独立 `element` 列，行宽一致且无空 element；`DataConfigImporter.cs` 已改为读取独立列；`tools/check-data-chain.ps1` 与 `dotnet build src/Assembly-CSharp.csproj` 通过。
-- 未通过问题：当前 Unity asset 未完整重导或未提交。`src/Assets/Data/Skills` 中 21 个 asset 缺少 `element` 字段，13 个 asset 的 `element` 仍为空；`src/Assets/Data/Spells` 中也有 47 个旧 asset 缺少 `element` 字段。
-- 返工建议：用导入器重导 Spells/Skills asset 或提交等效 asset 字段补齐；复核 CSV 75 术法 + 34 神通到 asset 的 element 覆盖；运行 `tools/check-data-chain.ps1` 与 `dotnet build src/Assembly-CSharp.csproj`。
+- 未通过问题：b674f79 以 YAML 追加方式补字段，但没有重导并清理旧序列化字段。109 个 Spell/Skill asset 中有 41 个存在两个 `element` 字段；其中 13 个 Skill asset 仍保留旧的空 `element: ""`，例如 `Skill_skill_fayu_wanxiangxuanmen.asset` 同时存在空值与 `element_water_root`。这不满足 Unity asset 单字段一致性要求，且 `tools/check-data-chain.ps1` 目前未捕捉重复字段。
+- 返工建议：用 Unity 导入器重导 Spells/Skills asset，或用结构化脚本把每个 asset 收敛为唯一 `element` 字段；复核 CSV 75 术法 + 34 神通到 asset 的 element 覆盖且每个有效 asset 恰好 1 个非空字段；运行 `tools/check-data-chain.ps1`、`dotnet build src/Assembly-CSharp.csproj`，并追加 `Select-String '^  element:'` 计数检查。
 
 ### REVIEW-20260625-04 · TQ-015B-2/3 NPC 与批量生产模板迁移
 
 - 结论：不通过。
-- 目标提交：95055c1；后续 2823643 对批量生产模板做过三字命名同步，但不修复 NPC 迁移问题。
+- 目标提交：95055c1；后续 2823643 对批量生产模板做过三字命名同步；返工提交：b674f79。
 - 已通过部分：文本检查通过；批量生产模板总体能约束 DeepSeek 不越过 17 分支 × 51 席矩阵；世界背景故事已新增旧体系废止说明。
-- 未通过问题：部分 NPC 未按任务要求显式使用“位格状态”字段；姚观寂缺少源/化/界席位回指；多个 NPC 正文仍保留现行语境下的“丹籍/丹籍模式/丹籍真空”等旧口径表述，未完全迁移为位格 + 丹枢口径。
-- 返工建议：13 份 NPC 统一为“元婴分支 + 位格状态（源/化/界席位 + 占据方式 + 空位/持有状态）+ 丹枢”字段；将非历史说明的丹籍旧词迁移为位格、丹枢或席位；保留历史旧称时必须标明“旧体系/历史称谓”。
+- 未通过问题：b674f79 已补齐“位格状态”字样并清掉 `丹籍` 旧词，但批量替换引入新的正文污染：`拓跋烈.txt` 出现“建蹈”“承受建击”“双建提升”“位格建建路径”“建步兵/建甲骑修”等错字；`祝融烈.txt` 出现“统道替换”“道张”“道个”“道年”“道圈”“道层”“道次”等错字。另有慕容朔、拓跋烈、钟离幽、祝融烈的源/化/界席位归属仍需对照矩阵原文复核，不能只按推断写定论。
+- 返工建议：先回滚或人工校准 b674f79 对 NPC 的机械替换污染，再复核 13 份 NPC 是否统一为“元婴分支 + 位格状态（源/化/界席位 + 占据方式 + 空位/持有状态）+ 丹枢”字段；保留历史旧称时必须标明“旧体系/历史称谓”；对席位归属逐项引用 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 事实源。
 
 ## 后续复核建议
 
-- 优先返工 TQ-010 与 TQ-006，二者影响 Unity 运行时。
+- 优先返工 TQ-010；TQ-006 已于 2026-06-27 复审通过并清理。
 - TQ-015B-2/3 返工前先统一“丹籍”是否允许作为历史称谓；返工时不得扩大到 TQ-015C 数值方案。

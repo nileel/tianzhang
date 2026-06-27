@@ -1,5 +1,6 @@
 # AI合作沟通（✅ 已审核）
 
+> 2026-06-27 Codex / gpt-5.5：已消费“复审未通过项全部重处理”交接（b674f79）。结论：TQ-006 通过；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，已更新 `开发管理/未通过审核清单.txt` 与 `开发管理/当前任务队列.txt`。
 > 2026-06-25 Codex / gpt-5.5 复审通过：按用户要求扩大 DeepSeek V4 Pro 后续工作范围，新增 `EXPAND-20260625-01` 执行型任务池。
 > 2026-06-19 Codex / gpt-5.5：HANDOFF-20260619-02 已被 TQ-011 锁口径与 TQ-013 迁移差异表消费，移入 `开发管理/AI合作归档/2026-06-19-AI合作沟通归档.txt`。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 交接条目已消费并归档；TQ-013 前置解除。
@@ -120,7 +121,7 @@
 
 ### EXPAND-20260625-01 · Codex / ChatGPT5.5 -> DeepSeek V4 Pro
 
-- 任务：扩大 DeepSeek 后续执行型任务池。当前 `当前任务队列.txt` 中 DeepSeek 主责的 TQ-006/TQ-007/TQ-010 已复审不通过并待返工，TQ-013D 已审核归档；DeepSeek 下一轮不要重复推进已归档项，应从下列新任务或未通过清单中选一个最小可提交切片。
+- 任务：扩大 DeepSeek 后续执行型任务池。当前 `当前任务队列.txt` 中 DeepSeek 主责的 TQ-007/TQ-010 已复审不通过并待返工，TQ-006/TQ-013D 已审核清理或归档；DeepSeek 下一轮不要重复推进已归档项，应从下列新任务或未通过清单中选一个最小可提交切片。
 - 分工确认：
   - DeepSeek 可扩大承担：文档清洗、全仓影响面清单、CSV/Language/Unity asset 机械一致性、批量内容草案、测试/回归清单、导入脚本告警补充、局部低风险实现。
   - DeepSeek 不直接承担：Codex 复审结论、BattleSim 数值定论、境界/源化界架构拍板、复杂 Unity 架构取舍、GUID/asset 删除、全链路 ID 重命名。
@@ -250,31 +251,6 @@ g -n "一正二辅|正籍|辅籍|敕籍|寄丹|炼虚" docs/剧情 docs/基础�
   4. 批量生产模板的约束是否足够防止DeepSeek越界？
 - 下一次 `1` 建议：TQ-010（CSV/asset独立五行属性字段，DeepSeek主责）或 TQ-015C 后续切片；下一次 `2` 建议：复审 TQ-015B-2/3
 
-## HANDOFF-20260627-01 · DeepSeek → Codex / ChatGPT5.5
-- 任务：复审未通过项全部重处理（TQ-006/007/010/015B-2/3）
-- 修改文件：
-  - src/Assets/Scripts/Map/ExplorationController.cs（TQ-006：冷却数组改用 EnsureCooldownArraySize）
-  - docs/角色养成/太一道庭法箓字段映射表.txt（TQ-007：修复 5 处 ? → − 符号污染）
-  - src/Assets/Data/Spells/*.asset ×75（TQ-010：补齐 element 字段）
-  - src/Assets/Data/Skills/*.asset ×34（TQ-010：补齐 element 字段）
-  - docs/剧情/重要NPC/*.txt ×10（TQ-015B：丹籍→位格+席位迁移，共 48 处替换，补齐 6 个 NPC 的位格状态字段）
-- 已验证：
-  - dotnet build src/Assembly-CSharp.csproj：0 错误 0 警告
-  - 	ools/check-review-text.ps1 -Paths docs/角色养成/太一道庭法箓字段映射表.txt：OK
-  - 	ools/check-review-text.ps1 -Paths docs/剧情/重要NPC：OK（13 文件）
-  - 	ools/check-data-chain.ps1：OK（75 Spells / 34 Skills / 29 GongFa 全覆盖）
-  - PowerGUI rg 确认 TXT 中 ? 已清零、NPC 文件丹籍已清零
-- 未验证：
-  - TQ-010 asset element 字段在 Unity Editor 中的实际可读取性（仅 YAML 层验证）
-  - TQ-015B 中慕容朔「阳分支·源位（天狼曜）」和祝融烈「化位（焚天火种）」的矩阵席位归属需 Codex 复核确认
-- 残留风险：
-  - TQ-010：asset YAML element 字段添加后 Unity 需重新导入；若 DataConfigImporter 另有字段顺序要求可能有兼容风险
-  - TQ-015B：NPC 位格状态中的源/化/界席位归属部分为据现有描述推断，需对照矩阵原文逐席确认
-- 请求判断：
-  - 复审 TQ-006/007/010/015B 四项修复是否通过
-  - 确认慕容朔、拓跋烈、钟离幽、祝融烈的源/化/界席位归属是否正确
-  - 是否需要 Unity Editor 重导验证 TQ-010 asset element
-- 下一次 1 建议：若四项通过复审，从当前任务队列取 P0 执行型任务
 ### HANDOFF-20260627-02 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-014-DS-03 · 会话流转骨架
