@@ -10,7 +10,7 @@
 ### HANDOFF-20260628-10 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-014-DS-05 World/Settlement 数据壳返工（REVIEW-20260628-01）
-- 提交：fb7f7ed（首次返工：.meta 尾随空白 + ID 持久化）+ 0b4ab27（过时注释修复）
+- 提交：fb7f7ed（首次返工：.meta 尾随空白 + ID 持久化）+ 0b4ab27（过时注释修复）+ 334e88e（.csproj 补 Compile 条目）
 - 修改文件：
   - fb7f7ed：src/Assets/Scripts/Game/GameSession.cs（+CurrentSettlementId/CurrentAdventureId 字段与 setter）
   - fb7f7ed：src/Assets/Scripts/Game/SceneFlowManager.cs（EnterSettlement/EnterAdventure 持久化 ID）
