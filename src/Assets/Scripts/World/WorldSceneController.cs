@@ -19,9 +19,8 @@ namespace TianZhang.World
         }
 
         /// <summary>
-        /// settlementId 传入 SceneFlowManager 但不持久化；SettlementSceneController 启动时查自身定义列表。
-        /// ID 持久化方案延后至 TQ-014 Task 7（开始菜单迁移）统一处理。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：补 ID 传递边界注释
+        /// settlementId 经 SceneFlowManager 持久化到 GameSession.CurrentSettlementId。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 更新注释反映 fb7f7ed 已持久化
         /// </summary>
         public void EnterSettlement(string settlementId)
         {
@@ -30,9 +29,8 @@ namespace TianZhang.World
         }
 
         /// <summary>
-        /// adventureId 传入 SceneFlowManager 但不持久化；AdventureSceneController 通过 returnTarget 恢复上下文。
-        /// ID 持久化方案延后至 TQ-014 Task 7（开始菜单迁移）统一处理。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：补 ID 传递边界注释
+        /// adventureId 经 SceneFlowManager 持久化到 GameSession.CurrentAdventureId。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 更新注释反映 fb7f7ed 已持久化
         /// </summary>
         public void EnterAdventure(string adventureId)
         {
