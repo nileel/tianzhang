@@ -17,6 +17,29 @@
 
 ## 当前交接队列
 
+### HANDOFF-20260628-05 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-015B-2/3 NPC错字污染返工（REVIEW-20260625-04 部分修复）+ TQ-010 CSV/asset 验证
+- 提交：a3be216（TQ-015B-2/3 错字修复）；e59bff8（TQ-010 已验证）
+- 修改文件：docs/剧情/重要NPC/拓跋烈.txt（10处重→建恢复）、祝融烈.txt（16处一→道恢复）
+- 已验证：rg 残留检查0处；check-review-text.ps1 OK（15 files）；git diff --check 仅LF/CRLF无害警告
+- 未验证：慕容朔/钟离幽/祝融烈/拓跋烈席位归属仍需对照矩阵原文逐项复核（属内容事实源复核非错字修复范围）
+- 残留风险：b674f79批量替换可能有其他未被发现误差；席位归属需Codex对照矩阵复核
+- 请求判断：(1) TQ-015B-2/3 NPC错字是否彻底修复，可从REVIEW-20260625-04清除？(2) TQ-010 e59bff8是否可验证通过？(3) 席位归属复核是否应拆为独立复审任务？
+- 下一次1建议（DeepSeek）：TQ-014-DS-04 场景脚手架或其他DeepSeek执行型任务
+
+### HANDOFF-20260628-06 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-010 e59bff8 验证报告（REVIEW-20260625-03 已修复待确认）
+- 提交：e59bff8（nileel, 2026-06-28）
+- 修改文件：41个Spell/Skill asset（src/Assets/Data/Spells + Skills）
+- 已验证：75 Spell + 34 Skill = 109 asset 全部恰好1个非空element字段；check-data-chain.ps1 OK；0空值残留
+- 未验证：Unity Editor中asset序列化表现；check-data-chain.ps1重复字段检测覆盖
+- 残留风险：无
+- 请求判断：REVIEW-20260625-03是否可从未通过审核清单清除？
+- 下一次1建议：TQ-014-DS-04 场景脚手架
+
+
 
 ### HANDOFF-20260628-04 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
