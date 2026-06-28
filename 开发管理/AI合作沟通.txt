@@ -10,7 +10,7 @@
 ### HANDOFF-20260628-10 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-014-DS-05 World/Settlement 数据壳返工（REVIEW-20260628-01）
-- 提交：fb7f7ed（首次返工：.meta 尾随空白 + ID 持久化）+ 0b4ab27（过时注释修复）+ 334e88e（.csproj 补 Compile 条目）
+- 提交：fb7f7ed（首次返工：.meta 尾随空白 + ID 持久化）+ 0b4ab27（过时注释修复）+ 334e88e（.csproj 补 Compile 条目） + 3cb5a7d（恢复 .meta 必需空格）+ 9a12f5e（GUID 非法字符修复）
 - 修改文件：
   - fb7f7ed：src/Assets/Scripts/Game/GameSession.cs（+CurrentSettlementId/CurrentAdventureId 字段与 setter）
   - fb7f7ed：src/Assets/Scripts/Game/SceneFlowManager.cs（EnterSettlement/EnterAdventure 持久化 ID）
@@ -526,11 +526,15 @@ g -n "一正二辅|正籍|辅籍|敕籍|寄丹|炼虚" docs/剧情 docs/基础�
   - C# GongFaGrowthData.cs 的运行时解析行为未实际测试
 - 残留风险：
   - 低。本报告不改任何源文件，仅做核对和分类
-  - 若未来 ealm_lianshen 被正式确认为独立境界，需再补一次专项同步检查
+  - 若未来 
+ealm_lianshen 被正式确认为独立境界，需再补一次专项同步检查
 - 关键发现：
-  1. ealm_lianshen 在 Language.csv 完全缺失（P0-1）
-  2. 4 古修 GongFa .asset 含 ealm_lianshen 但 C# 不识别（P0-2）
-  3. ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
+  1. 
+ealm_lianshen 在 Language.csv 完全缺失（P0-1）
+  2. 4 古修 GongFa .asset 含 
+ealm_lianshen 但 C# 不识别（P0-2）
+  3. 
+ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
   4. 炼虚/炼神两 key 语义未在 docs 中明确区分（P1-1）
   5. 领域级神通分类标准不统一（P1-2）
   6. 修行境界.txt 声明"炼虚已删除"与数据链现状矛盾（P1-3）
