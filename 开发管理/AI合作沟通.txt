@@ -458,3 +458,33 @@ g -n "一正二辅|正籍|辅籍|敕籍|寄丹|炼虚" docs/剧情 docs/基础�
 - 请求判断：无
 - 下一次 1 建议：继续 TQ-014-DS-04（四场景脚手架）
 
+
+### HANDOFF-20260628-08 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：DS-NEW-02 realm_lianshen数据链路专项检查
+- 提交：fb2ae37
+- 产出：开发管理/realm_lianshen专项检查.txt（新增，160行）
+- 修改文件：开发管理/realm_lianshen专项检查.txt
+- 已验证：
+  - check-review-text.ps1：OK（1 file）
+  - git diff --check：OK（无尾随空白）
+- 未验证：
+  - 数据链路核对基于静态 rg/文件读取；未运行 Unity Editor 验证导入行为
+  - C# GongFaGrowthData.cs 的运行时解析行为未实际测试
+- 残留风险：
+  - 低。本报告不改任何源文件，仅做核对和分类
+  - 若未来 ealm_lianshen 被正式确认为独立境界，需再补一次专项同步检查
+- 关键发现：
+  1. ealm_lianshen 在 Language.csv 完全缺失（P0-1）
+  2. 4 古修 GongFa .asset 含 ealm_lianshen 但 C# 不识别（P0-2）
+  3. ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
+  4. 炼虚/炼神两 key 语义未在 docs 中明确区分（P1-1）
+  5. 领域级神通分类标准不统一（P1-2）
+  6. 修行境界.txt 声明"炼虚已删除"与数据链现状矛盾（P1-3）
+- 处理选项：A(统一lianxu) / B(双key并存) / C(标注资料片) / D(全部移除)
+- 请求判断：
+  1. F1 问题：realm_lianshen 是否正式确认为独立境界？还是应统一为 realm_lianxu？
+  2. 若确认为独立，是否补入 Language.csv + C# realm order？
+  3. 短期处理方案选 A/B/C/D 哪个？
+- 下一次 1 建议（DeepSeek）：DS-NEW-03 高阶内容定位表补强 或 TQ-014-DS-05 E类污染修复
+- 下一次 2 建议（Codex）：审查本报告 P0-P2 并给出 F1 架构决策
