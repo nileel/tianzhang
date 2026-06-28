@@ -7,6 +7,32 @@
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 交接条目已消费并归档；TQ-013 前置解除。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：本文件瘦身为当前有效交接队列；历史长记录已移至 `开发管理/AI合作归档/2026-06-16-AI合作沟通归档.txt`。队列条目仍按各自状态处理。依据：40d5887、26e8210。
 
+### HANDOFF-20260628-10 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-05 World/Settlement 数据壳返工（REVIEW-20260628-01）
+- 提交：fb7f7ed（首次返工：.meta 尾随空白 + ID 持久化）+ 0b4ab27（过时注释修复）
+- 修改文件：
+  - fb7f7ed：src/Assets/Scripts/Game/GameSession.cs（+CurrentSettlementId/CurrentAdventureId 字段与 setter）
+  - fb7f7ed：src/Assets/Scripts/Game/SceneFlowManager.cs（EnterSettlement/EnterAdventure 持久化 ID）
+  - fb7f7ed：4 个 .meta 文件尾随空白清理（WorldNodeDefinition/SettlementDefinition/WorldSceneController/SettlementSceneController）
+  - 0b4ab27：src/Assets/Scripts/World/WorldSceneController.cs（过时注释：”不持久化“→”经 SceneFlowManager 持久化“）
+- 已验证：
+  - dotnet build -c Release：0 错误 0 警告
+  - git diff --check（限定 .meta 范围）：无尾随空白
+  - tools/check-review-text.ps1：OK
+  - SceneBuilder.BuildEmptyScene 已通过 sceneControllerType 参数调用 AddComponent 挂载 Controller（line 176-179）
+- 未验证：
+  - Unity Editor 中执行 MenuItem 重新生成 .unity 场景后 World/Settlement Controller 的 Start() 日志是否实际输出（需 Unity Editor 环境）
+  - 当前仓库 .unity 场景文件是修复前的快照，重新生成后才会包含 Controller 挂载
+  - GameSession 动态创建是否与场景中已有的 GameObject 冲突
+- 残留风险：
+  - .unity 场景文件（WorldScene.unity/SettlementScene.unity）有预存 trailing whitespace 但不在本轮 .meta 范围
+  - LF/CRLF 警告为 git 预期行为，不影响源码
+- 请求判断：
+  1. fb7f7ed + 0b4ab27 是否满足 REVIEW-20260628-01 的三项返工要求？
+  2. .unity 场景文件是否需要在 Unity Editor 中重新生成并提交？还是保留代码修复、延后到 Task 7 统一重生成？
+- 下一次 1 建议（DeepSeek）：TQ-007 JSON ? 污染修复（REVIEW-20260625-02）或 TQ-010 CSV/asset 重复 element 字段返工
+- 下一次 2 建议（Codex）：复审 TQ-014-DS-05 本轮返工完整性
 ## 使用规则
 
 1. 本文件只记录当前有效的交接线索、疑点、待判断项和协作备忘。
