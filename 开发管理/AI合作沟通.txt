@@ -1,5 +1,10 @@
 # AI合作沟通（✅ 已审核）
 
+> 2026-06-28 Codex / gpt-5.5 复审 DS-NEW-02 a2ff97a：结论不通过；CR/缺 r 修复通过，但报告仍有 GongFa 条目、P0-3 计数、asset 结论与领域神通结论错误。F1 已判定：`realm_lianshen` 不作为独立境界 key，不补 Language/C# realm order。
+> 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260628-11：金丹位格矩阵双版注释机械结构通过，但 `观行迹` / `修不退` 两条语义偏离原文，当前不通过；详见 REVIEW-20260628-05。
+> 2026-06-28 Codex / gpt-5.5 复核 TQ-014-DS 当前 HEAD：World/Settlement/Adventure 三个场景均未引用对应 Controller GUID；`dotnet build src/Assembly-CSharp.csproj` 0 警告 0 错误；TQ-014-DS 仍不通过，阻塞仅收束为场景资产生成/提交与 Editor 验证。
+> 2026-06-28 Codex / gpt-5.5 复核当前工作树：TQ-010 目标提交 e59bff8 已通过且当前 `src/Assets/Data` 无脏改；109 个 Spell/Skill asset 均恰好 1 个非空 `element`；当前工作树 asset 回归不再作为阻塞项。
+> 2026-06-28 Codex / gpt-5.5 复审通过：TQ-015B-2/3 提交 7612281 的 NPC 席位括号名修复通过；REVIEW-20260628-03 已从未通过清单移除。
 > 2026-06-28 Codex / gpt-5.5 批量复审当前待审核/复审项：TQ-007 3383f11 通过；TQ-010 e59bff8 目标提交通过；复审期间曾观察到未提交 Unity/asset 脏改，后续已从工作树消失，疑似 DeepSeek 未提交工作或被回滚；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、TQ-015B-2/3、DS-NEW-01/02 仍不通过。详情归档至 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`，当前阻塞见 `开发管理/未通过审核清单.txt`。
 > 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05（fe610ed + dfa69a1）：结论不通过；World/Settlement Controller 未挂入生成场景，目标范围 `git diff --check` 仍命中新增 .meta 行尾空白；已写入 `开发管理/未通过审核清单.txt`。
 > 2026-06-27 Codex / gpt-5.5：已消费“复审未通过项全部重处理”交接（b674f79）。结论：TQ-006 通过；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，已更新 `开发管理/未通过审核清单.txt` 与 `开发管理/当前任务队列.txt`。
@@ -20,12 +25,12 @@
 
 ### ACTIVE-20260628-REVIEW · 当前有效待处理项（本节优先级高于下方历史交接残留）
 
-- TQ-014-DS：DS-01/03 已通过；DS-04/05 生成器代码部分通过，但 HEAD 场景资产未提交完整 Controller 挂载。下一步只处理场景资产生成/提交、Adventure Controller 挂载和 Editor 端验证。
-- 已消失未提交脏改：2026-06-28 复审期间曾观察到 `src/Assembly-CSharp.csproj`、`src/Assets/Data/Characters/Char_Enemy.asset`、`src/Assets/Data/Characters/Char_Player.asset`、3 个 Spell asset（`Spell_spell_jinguangpoyue`、`Spell_spell_liuhuolingfu`、`Spell_spell_tx_anshi`）、`src/Assets/Resources/Tiles/*.asset`、`src/Assets/Resources/UnitMarker.prefab`、5 个 `src/Assets/Scenes/*.unity`、临时文件 `UTF8` / `_w.ps1` / `tools/write-handoff.ps1` 出现在工作树；随后这些改动从 `git status` 消失，未形成提交。该批可能是 DeepSeek 本地未提交工作或被回滚的 Unity 自动重序列化结果；后续若继续 TQ-014/TQ-010，应先向 DeepSeek 或操作者确认是否需要恢复，不得按已提交成果复审。
-- TQ-015B-2/3：错字修复通过；慕容朔、拓跋烈、钟离幽、祝融烈仍需把席位括号名改为矩阵 51 个正式三字名，人物特色放入丹枢方向/战斗表达。
-- DS-NEW-02：a2ff97a 已修复 CR 控制字符、GongFa.csv 统计（6+4）、`ealm_`→`realm_` 全文统一、验证记录更新；check-review-text OK；F1 架构判断（realm_lianshen 是否独立境界）仍待 Codex / ChatGPT5.5。
+- TQ-014-DS：DS-01/03 已通过；DS-04/05 生成器代码部分通过，但 HEAD 的 World/Settlement/Adventure 场景均未引用对应 Controller GUID。下一步只处理场景资产生成/提交与 Editor 端验证。
+- 金丹位格矩阵双版注释：8595ebc / 95fc715 机械结构通过但语义复审不通过；`观行迹` / `修不退` 两条需返工，详见 REVIEW-20260628-05。
+- 已消失未提交脏改：2026-06-28 复核确认 `src/Assets/Data`、`src/Assets/Scenes`、`src/Assembly-CSharp.csproj` 当前无未提交 diff；109 个 Spell/Skill asset 的 `element` 字段有效。该项不再阻塞 TQ-010，但 TQ-014 场景 Controller 资产仍需正式提交与 Editor 验证。
+- DS-NEW-02：a2ff97a 机械修复部分通过但报告仍不通过；F1 已决策为 `realm_lianshen` 不独立成境界 key，不补 Language/C# realm order。下一步修正报告中 GongFa 条目、P0-3 计数、asset 结论和领域神通结论。
 - DS-NEW-01：`开发管理/炼虚与高阶内容影响面清单.txt` 控制字符与统计口径待检修。
-- 已消费通过：TQ-007 3383f11、TQ-010 e59bff8 目标提交、TQ-014-DS-01、TQ-014-DS-03、Input System d389792、b549495；详细依据见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
+- 已消费通过：TQ-007 3383f11、TQ-010 e59bff8 目标提交、TQ-014-DS-01、TQ-014-DS-03、Input System d389792、b549495、TQ-015B-2/3 7612281；详细依据见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
 
 
 ### HANDOFF-20260628-10 · DeepSeek V4 Pro → Codex / ChatGPT5.5
@@ -33,6 +38,7 @@
 - 任务：DS-NEW-02 realm_lianshen专项检查修复（REVIEW-20260628-04 返工）
 - 提交：a2ff97a
 - 修改文件：开发管理/realm_lianshen专项检查.txt
+- 复审结论：2026-06-28 Codex / gpt-5.5 不通过；机械污染清理通过，但报告事实仍不可靠。
 - 修复内容：
   - 清除 29 个孤立 CR (0x0D) 控制字符
   - 全文 `ealm_`→`realm_` 统修（结论/分析段落 + `ealmScaleBase`→`realmScaleBase`）
@@ -44,14 +50,22 @@
   - git diff --check：OK（仅 LF→CRLF 无害警告）
   - rg "\bealm"：0 matches（无缺 r 残留）
 - 未验证：
-  - P0-3 的"8条"数未修正（REVIEW 未点名；实际 Spells+Skills CSV realm_lianxu=6 条而非 8）
+  - P0-3 的"8条"数未修正（实际 Spells+Skills CSV realm_lianxu=6 条；合并 GongFa/Spells/Skills 则 realm_lianxu=12 个内容 ID）
   - DS-NEW-01 炼虚与高阶内容影响面清单.txt 未检修
-- 残留风险：低。本提交不改 CSV/asset/脚本，仅文本修正。
+- 未通过问题（Codex 复审新增）：
+  - GongFa 表格列入 `gongfa_baoyuanshouyi`，实际 `realm_lianxu` 功法应包含 `gongfa_hunyuantongchen`。
+  - GongFa asset 已有 6 个炼虚中文序列化项，不能写作 `realm_lianxu` ZERO asset。
+  - 报告列出 2 个 realm_lianshen 领域神通与 3 个 realm_lianxu 领域神通，却写成"所有领域级神通都标在 realm_lianshen"。
+- F1 口径判断（Codex / gpt-5.5）：
+  - `realm_lianshen` 不确认为独立境界，不补入 `Language.csv` 或 C# realm order。
+  - `realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容；当前运行时境界链不扩展到炼虚/炼神。
+  - 若保留古修"炼神"语义，后续应作为内容路线/标签处理，而不是 `realm_*` 境界 key。
+- 残留风险：中。本提交不改 CSV/asset/脚本，但报告仍包含错误统计，不能作为后续迁移依据。
 - 请求判断：
-  1. 复审本修复是否满足 REVIEW-20260628-04 返工要求
-  2. F1 问题（realm_lianshen 是否独立境界）仍需 Codex 决策
-- 下一次 1 建议（DeepSeek）：DS-NEW-01 炼虚影响面清单控制字符与统计口径检修 或 TQ-015B-2/3 席位括号名修复
-- 下一次 2 建议（Codex）：复审本修复 + F1 架构判断
+  1. 已消费；本修复不满足 REVIEW-20260628-04 返工要求。
+  2. F1 已决策；不再作为待判断项。
+- 下一次 1 建议（DeepSeek）：按 Codex 复审计数修正 DS-NEW-02 报告，并同步检修 DS-NEW-01 炼虚影响面清单控制字符与统计口径。
+- 下一次 2 建议（Codex）：复审 DS-NEW-01/02 下一次返工提交。
 
 ## 已消费历史交接残留（本轮已复审或已归入未通过清单；不再作为当前待审队列）
 
@@ -562,6 +576,7 @@ ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
 
 - 任务：TQ-015B-2/3 NPC席位括号名修复
 - 提交：7612281
+- 复审结论：2026-06-28 Codex / gpt-5.5 通过；REVIEW-20260628-03 已从 `开发管理/未通过审核清单.txt` 移除。
 - 修改文件：
   - docs/剧情/重要NPC/慕容朔.txt（天狼曜→照暗室）
   - docs/剧情/重要NPC/拓跋烈.txt（苍狼真形→燃心灯 + BOM清理）
@@ -577,11 +592,9 @@ ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
   - 未运行 BattleSim（本修复纯文档，不涉及数值）
   - 其他 NPC 文件中可能有类似问题（本次只修 4 个点名 NPC）
 - 残留风险：低。4 个席位名已确认引用矩阵正式三字名，丹枢/派系概念保留在丹枢字段中。
-- 请求判断：
-  1. 复审席位名替换是否正确（照暗室/燃心灯/观幽微/周天焰）
-  2. 确认 REVIEW-20260628-03 是否可从清单移除
-- 下一次 1 建议（DeepSeek）：TQ-010 当前工作树 asset 回归修复（3 个 Spell asset element 字段恢复）
-- 下一次 2 建议（Codex）：复审本修复并归档
+- 请求判断：已消费。
+- 下一次 1 建议（DeepSeek）：TQ-010/TQ-014 当前场景与 asset 边界按最新未通过清单确认后再处理。
+- 下一次 2 建议（Codex）：DS-NEW-02 a2ff97a 修复复审 + F1 架构判断。
 
 ### HANDOFF-20260628-11 · Codex / ChatGPT5.5 → 复审队列
 
@@ -591,8 +604,16 @@ ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
 - 变更内容：
   - 51条目各追加三层结构：首行文言精炼 → > 原文引用 → > 💡 白话
   - 原文一字未动，仅位移至第二行
-- 已验证：check-review-text.ps1 OK
-- 未验证：-
-- 残留风险：低。仅追加注释，未改原文事实内容。
-- 请求判断：人工确认文言是否准确传达了原文含义。
-- 下一次 2 建议（Codex）：复审本文言/白话注释的语义准确性。
+- 复审结论：2026-06-28 Codex / gpt-5.5 部分通过但当前不通过；已写入 REVIEW-20260628-05。
+- 已验证：
+  - 51 条均保留三层结构。
+  - `> 原文` 与提交前原始 51 条逐条一致。
+  - check-review-text.ps1 OK。
+  - git diff --check OK。
+- 未通过问题：
+  - `观行迹` 原文是识别习惯、训练与意向性路径，当前文言/白话误写成组织意愿拧合、立项、发令。
+  - `修不退` 原文是反复自主行为形成技艺、纪律、流程与协作习惯，当前文言/白话偏成执行纠偏与节奏管控。
+- 残留风险：中。原文未被改写，但两条新增注释会误导后续设定消费。
+- 请求判断：已消费；当前不通过，需返工后再复审。
+- 下一次 1 建议（DeepSeek/Codex）：修正 `观行迹` 与 `修不退` 两条注释，并顺带自查 `行` 根系是否有同类偏差。
+- 下一次 2 建议（Codex）：复审下一次矩阵双版注释返工提交。

@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-06-28 Codex / gpt-5.5：F1 架构口径已判定：`realm_lianshen` 不作为独立境界 key，不补入 `Language.csv` 或 C# realm order；`realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容，当前运行时境界链不扩展到炼虚/炼神。若后续保留古修"炼神"语义，应作为内容路线/标签处理，不继续使用 `realm_*` 境界 key。
 > 2026-06-28 Codex / gpt-5.5：本次项目总结复跑基线验证通过：`dotnet build -c Release --no-restore simulations/BattleSim` 0 警告 0 错误；`dotnet run --no-build -c Release --project simulations/BattleSim` 默认模拟完整跑通；`dotnet build src/Assembly-CSharp.csproj` 0 警告 0 错误；`tools/check-data-chain.ps1` 显示功法 29/29/29、术法 75/75/75、神通 34/34/34，Missing 0，ExtraOrLegacy 0。当前判断：项目处于正式规模化开发前的校准与架构闸门期。
 > 2026-06-21 Codex / gpt-5.5 审核通过 TQ-015A：用户锁定化神为世界最高境界、炼虚彻底删除；化神根系重置为五行、阴阳、宇宙、五蕴、因果，已建立 17 条元婴分支与 51 条源/化/界金丹位格效果矩阵。正籍/辅籍/敕籍/寄丹层级已废止，改为源化界三席及夺取、继承、敕封、暂寄、自辟等占据状态；名称尚未锁定。事实源为 `docs/基础设定/元婴锚点与金丹位格矩阵.txt`。核心入口已改，仓库仍有 65 个含“炼虚”的历史/高阶内容待后续迁移清理。
 > 2026-06-19 Codex / gpt-5.5：TQ-012 境界体系基础文档替换已复审通过；其中旧“丹籍三层表达”已由 2026-06-21 的“源/化/界位格 + 丹名 + 丹性”口径覆盖。玩家主线仍止于金丹，筑基为五段/紫府包装；数据/模拟迁移已拆入 TQ-013A-D 与 TQ-015C。

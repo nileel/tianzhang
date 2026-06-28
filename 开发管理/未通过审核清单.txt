@@ -1,6 +1,9 @@
 # 未通过审核清单（✅ 已审核）
 
-> 2026-06-28 Codex / gpt-5.5 批量复审：TQ-007 目标提交 3383f11 通过；TQ-010 目标提交 e59bff8 通过但当前工作树有新 asset 回归；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、TQ-015B-2/3、DS-NEW-01/02 与当前工作树仍不通过。详见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
+> 2026-06-28 Codex / gpt-5.5 复核当前工作树：`src/Assets/Data`、`src/Assets/Scenes`、`src/Assembly-CSharp.csproj` 无未提交 diff；109 个 Spell/Skill asset 均恰好 1 个非空 `element`；`tools/check-data-chain.ps1` OK。REVIEW-20260628-02 已从当前清单移除。
+> 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260628-11：金丹位格矩阵双版注释机械结构通过，但 `观行迹` / `修不退` 两条文言与白话偏离原文语义；新增 REVIEW-20260628-05。
+> 2026-06-28 Codex / gpt-5.5 复审通过：TQ-015B-2/3 提交 7612281 已将四名 NPC 席位括号名替换为矩阵正式名（照暗室/燃心灯/观幽微/周天焰）；REVIEW-20260628-03 已从当前清单移除。
+> 2026-06-28 Codex / gpt-5.5 批量复审：TQ-007 目标提交 3383f11 通过；TQ-010 目标提交 e59bff8 通过但当前工作树有新 asset 回归；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、DS-NEW-01/02 与当前工作树仍不通过。详见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
 > 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05：TQ-014-DS-05 不通过；新增控制器未挂入 World/Settlement 场景，目标范围 `git diff --check` 仍失败。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 已通过严格覆盖、meta 配对、关键字段一致性、旧路径扫描、Unity C# build 与 `git diff --check`；当前未通过/待复审项清零。
 > 2026-06-27 Codex / gpt-5.5 复审 b674f79：TQ-006 通过并从清单移除；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，失败原因更新为本轮证据。
@@ -23,51 +26,48 @@
 - 目标提交：fe610ed、959fbda、fb7f7ed、0b4ab27、334e88e、3cb5a7d、9a12f5e；历史修补 dfa69a1 / 82ab968 已被后续提交覆盖。
 - 已通过部分：`SceneBuilder.BuildEmptyScene` 已支持 `sceneControllerType` 并在 World/Settlement/Adventure 菜单入口挂载对应 Controller；`GameSession` 与 `SceneFlowManager` 已保存 `CurrentSettlementId` / `CurrentAdventureId`；新增 `.meta` 均为多行 Unity YAML 且 GUID 为 32 位 hex；`Assembly-CSharp.csproj` 当前包含新增脚本；`dotnet build src/Assembly-CSharp.csproj` 通过。
 - 未通过问题：
-  1. HEAD 中 `WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity` 仍未提交 Controller 引用；当前工作树只有 World/Settlement 场景含 Controller，Adventure 场景仍无 `AdventureSceneController`。
-  2. 当前工作树存在未提交 Unity/asset 脏改，全量 `git diff --check` 失败；其中 3 个 Spell asset 被改回空 `element`，已另列当前工作树阻塞。
-  3. Unity Editor 端到端生成、加载、返回尚未验证；当前 `.unity` 变更不能直接视为已通过。
-- 返工建议：用 Unity Editor 重新执行 SceneBuilder 菜单，提交 World/Settlement/Adventure 场景资产中的 Controller 挂载；清理或回滚当前工作树里无关 asset 数值回归；重新运行 `dotnet build src/Assembly-CSharp.csproj`、场景/asset 专项检查与可接受范围的 diff 检查。
-
-### REVIEW-20260628-02 · 当前工作树 Unity/asset 脏改
-
-- 结论：不通过。
-- 范围：当前未提交 diff，不归咎于 TQ-010 目标提交 e59bff8。
-- 已通过部分：`e59bff8` 目标提交自身已通过，109 个 Spell/Skill asset 在该提交树中均恰好 1 个非空 `element`。
-- 未通过问题：
-  1. 当前工作树的 `Spell_spell_jinguangpoyue.asset`、`Spell_spell_liuhuolingfu.asset`、`Spell_spell_tx_anshi.asset` 各只有 1 个但为空的 `element` 字段。
-  2. `Spell_spell_liuhuolingfu.asset` 与 `Spell_spell_tx_anshi.asset` 当前 diff 同时改动了 `type`、`range`、`mpCost`、`cooldownTicks`、`damageMultiplier` 等数值字段，超出 TQ-010 去重范围。
-  3. 当前工作树全量 `git diff --check` 失败，失败来自未提交 Unity/asset YAML 空值行与上述 asset 回归。
-- 返工建议：回滚或按 CSV 重新导入 3 个 Spell asset，确保 109 个 Spell/Skill asset 每个恰好 1 个非空 `element`；再决定是否保留并提交 Unity 场景生成 diff。
-
-
-> 2026-06-28 DeepSeek V4 Pro：TQ-015B-2/3 NPC席位括号名修复已提交 7612281；check-review-text OK、旧词无残留、diff --check OK；4 个席位名均已改为矩阵正式名（照暗室/燃心灯/观幽微/周天焰），等待 Codex / ChatGPT5.5 复审。
-
-### REVIEW-20260628-03 · TQ-015B-2/3 NPC 与批量生产模板迁移
-
-- 结论：部分通过，当前仍不通过。
-- 目标提交：95055c1；错字修复提交：a3be216。
-- 已通过部分：`a3be216` 已清理点名的“建/道”机械错字；旧 `丹籍`、`一正二辅`、`正籍/辅籍/敕籍/寄丹` 在当前目标范围内仅保留为历史说明或模板禁用项。
-- 未通过问题：慕容朔、拓跋烈、钟离幽、祝融烈仍把人物丹枢/派系概念写入席位括号名，未引用 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 的正式三字名：`天狼曜`、`苍狼真形`、`地脉阴河`、`焚天火种` 均不在 51 个正式席位名中。
-- 返工建议：把“元婴分支 + 源/化/界席位”改为矩阵正式名；把人物特色放入“丹枢方向/战斗表达”，不得放进席位括号名；返工后用脚本比对 NPC 中 `源位（...）/化位（...）/界位（...）` 是否均属于矩阵 51 名。
+  1. 2026-06-28 复核 HEAD：`WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity` 均未引用对应 `WorldSceneController` / `SettlementSceneController` / `AdventureSceneController` GUID。
+  2. 当前 `src/Assets/Scenes` 无未提交 diff，说明场景 Controller 挂载结果尚未形成可复审提交。
+  3. Unity Editor 端到端生成、加载、返回尚未验证；当前 `.unity` 资产不能直接视为已通过。
+- 返工建议：用 Unity Editor 重新执行 SceneBuilder 菜单或手工挂载并保存 World/Settlement/Adventure 三个场景资产；提交场景中的 Controller GUID 引用；重新运行 `dotnet build src/Assembly-CSharp.csproj`、场景 GUID 专项检查与可接受范围的 diff 检查。
 
 ### REVIEW-20260628-04 · DS-NEW-01/02 炼虚与 realm_lianshen 报告
 
-- 结论：DS-NEW-02 部分修复（a2ff97a），待 Codex / ChatGPT5.5 复审；DS-NEW-01 仍待检修。
+- 结论：DS-NEW-02 修复提交 a2ff97a 部分通过但仍不通过；DS-NEW-01 仍待检修。
 - 目标提交：c7396fe、fb2ae37；修复提交：a2ff97a（⚠️ 已修改/未审核；DeepSeek V4 Pro）。
 - 已修复（a2ff97a）：
   1. ✅ CR 控制字符已清除（29 个 0x0D）
-  2. ✅ GongFa.csv 统计已修正（9→10 本功法、5→6 本 realm_lianxu）
+  2. ✅ GongFa.csv 总数口径已修正为 6 本 realm_lianxu + 4 本 realm_lianshen
   3. ✅ 验证记录已更新（check-review-text.ps1: OK）
   4. ✅ 全文 `ealm_`→`realm_` 统修 + `ealmScaleBase`→`realmScaleBase`
 - 仍待处理：
-  1. P0-3 的"8条"数未修正（REVIEW 未点名；实际 Spells+Skills CSV realm_lianxu=6 条而非 8）
-  2. DS-NEW-01 `炼虚与高阶内容影响面清单.txt` 控制字符与统计口径未检修
-  3. F1 架构判断（realm_lianshen 是否独立境界）仍待 Codex / ChatGPT5.5 决策
-- 返工建议：Codex 复审 a2ff97a 并判断 REVIEW-20260628-04 是否可从清单移除；F1 决定后再修 DS-NEW-01。
+  1. `GongFa.csv` 表格条目仍错误：报告列入 `gongfa_baoyuanshouyi`，但实际应为 `gongfa_hunyuantongchen`。
+  2. P0-3 的"8条"数未修正；实际 Spells+Skills CSV 的 realm_lianxu 为 6 条，若合并 GongFa/Spells/Skills 则 realm_lianxu 为 12 个内容 ID。
+  3. P0-3 的 "ZERO .asset" 结论不成立：GongFa asset 中已有 6 个炼虚中文序列化项，另有 4 个 `realm_lianshen` 项。
+  4. P1-2/术法神通结论自相矛盾：报告列出 2 个 realm_lianshen 领域神通与 3 个 realm_lianxu 领域神通，却写成"所有领域级神通都标在 realm_lianshen"。
+  5. DS-NEW-01 `炼虚与高阶内容影响面清单.txt` 控制字符与统计口径未检修。
+- F1 口径判断（2026-06-28 Codex / gpt-5.5）：
+  1. `realm_lianshen` 不确认为独立境界，不补入 `Language.csv` 或 C# realm order。
+  2. 当前版本以"化神为世界最高境界、炼虚已删除、玩家主线止于金丹"为准；`realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容，不能作为当前运行时境界链扩展。
+  3. 若后续需要保留古修"炼神"语义，应另建内容路线/标签（如 contentScope 或古修神魂路线），不得继续使用 `realm_*` 境界 key 表达。
+- 返工建议：DeepSeek 先按上述精确计数修正 `realm_lianshen专项检查.txt` 与 DS-NEW-01 清单；后续若改 CSV/asset/脚本，必须同步运行 `tools/check-data-chain.ps1`。
+
+### REVIEW-20260628-05 · 金丹位格矩阵文言/白话双版注释
+
+- 结论：部分通过，当前仍不通过。
+- 目标提交：8595ebc；状态提交：95fc715。
+- 已通过部分：
+  1. 51 个矩阵条目均具备“首行文言 → `> 原文` → `> 💡 通俗解释`”结构。
+  2. `> 原文` 与 8595ebc 之前的原始 51 条说明逐条一致，未发现原文被改写。
+  3. `tools/check-review-text.ps1 -Paths docs/基础设定/元婴锚点与金丹位格矩阵.txt` 通过；目标范围 `git diff --check` 通过。
+- 未通过问题：
+  1. `观行迹` 的文言与白话偏离原文。原文是“识别个体或组织的习惯、训练和意向性路径”，当前注释写成“合散志为定向之众行 / 立项、发令”，把识别型能力误读为组织动员或发令能力。
+  2. `修不退` 的文言与白话偏离原文。原文核心是“把反复自主行为变成技艺、纪律、流程与协作习惯”，当前注释写成“调行之节序偏习 / 管执行、调整节奏、纠正偏差”，弱化了反复自主训练成型的机制，转向一次性执行纠偏。
+- 返工建议：先修正 `观行迹` 与 `修不退` 两条注释；修正后再复审 `行` 根系上下文是否仍存在“识别/训练机制被改写成执行命令”的同类偏差。
 
 ## 后续复核建议
 
-- 优先清理当前工作树 asset 回归与场景资产提交边界；否则 TQ-010 目标提交虽通过，当前数据闸门仍不干净。
+- 优先处理 TQ-014-DS 场景资产提交边界；TQ-010 当前工作树 asset 回归已复核清除。
 - TQ-014-DS 下一轮只处理场景资产生成/提交、Adventure Controller 挂载与 Editor 端验证，不扩大到 CTB/伤害/冷却/槽位语义。
-- TQ-015B-2/3 返工只改 NPC 席位正式名与丹枢表达，不扩大到 TQ-015C 数值方案。
 - DS-NEW-01/02 修正前，不以其 F 类统计作为架构决策依据。
+- 金丹位格矩阵双版注释修正前，不把 `观行迹` / `修不退` 当前文言或白话作为后续 NPC、功法或神通设定依据。
