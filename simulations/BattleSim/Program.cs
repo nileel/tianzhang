@@ -293,15 +293,15 @@ class Program
 
         Console.WriteLine();
         Console.WriteLine("【紫府圆满 vs 金丹初期压制战】");
-        Console.WriteLine($"{"Build",-10} {"紫府样本",-8} {"金丹样本",-8} {"紫府胜率",-8} {"平均回合",-8}");
-        Console.WriteLine(new string('-', 50));
+        Console.WriteLine($"{"Build",-10} {"紫府样本",-8} {"金丹样本",-8} {"紫府胜率",-8} {"平均回合",-8} {"出口%",-7} {"主要出口",-12}");
+        Console.WriteLine(new string('-', 72));
         for (int i = 0; i < N; i++)
         {
             var zifu = zifuPools[i];
             var goldEarly = goldPools[i].Where(c => c.SubIndex == 0).ToList();
             if (zifu.Count == 0 || goldEarly.Count == 0)
             {
-                Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {"NA",8} {"NA",8}");
+                Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {"NA",8} {"NA",8} {"NA",7} {"-",-12}");
                 continue;
             }
 
@@ -310,10 +310,17 @@ class Program
             double totalWin = 0;
             double totalTurns = 0;
             int combats = 0;
+            int tacticalExitCount = 0;
+            var routeCounts = new Dictionary<string, int>();
             for (int s = 0; s < pairs; s++)
             {
                 var z = zifu[s];
                 var g = goldEarly[s];
+                var route = GoldenCoreSuppressionExitStats.ClassifyExit(z, g);
+                if (route.IsTacticalExit)
+                    tacticalExitCount++;
+                routeCounts[route.ExitRoute] = routeCounts.GetValueOrDefault(route.ExitRoute, 0) + 1;
+
                 var (zw, _, t1) = Combat.Simulate(z, g, roundsPerPair);
                 var (_, zwSecond, t2) = Combat.Simulate(g, z, roundsPerPair);
                 totalWin += zw + zwSecond;
@@ -321,9 +328,20 @@ class Program
                 combats += 2;
             }
 
-            Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {totalWin / combats,7:F1}% {totalTurns / combats,7:F1}");
+            var majorExitSource = tacticalExitCount > 0
+                ? routeCounts.Where(kv => kv.Key is not "剧情条件" and not "NA")
+                : routeCounts;
+            string majorExit = majorExitSource
+                .OrderByDescending(kv => kv.Value)
+                .ThenBy(kv => kv.Key)
+                .Select(kv => kv.Key)
+                .FirstOrDefault() ?? "-";
+            double exitRate = tacticalExitCount * 100.0 / pairs;
+
+            Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {totalWin / combats,7:F1}% {totalTurns / combats,7:F1} {exitRate,6:F0}% {majorExit,-12}");
         }
         Console.WriteLine("  说明：同 Build 内紫府圆满挑战金丹初期，验证金丹压制是否明显但仍保留战术出口。");
+        Console.WriteLine("  出口统计只分类削位/破府/封丹/阵法/剧情条件，不修改战斗结算、成丹阈值或金丹倍率。");
 
         // ═══════════════════════════════════════
         // 2v2 群战矩阵 (v6.0)

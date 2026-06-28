@@ -30,6 +30,9 @@ static class BattleSimSelfTests
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
 
+        if (suite == "golden-core-suppression-tq015c-8")
+            return RunChecked(suite, RunGoldenCoreSuppressionTq015C8);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -373,6 +376,38 @@ static class BattleSimSelfTests
         AssertEqual("b", zifuPools[0][0].Name, "zifu pool 0 sample");
         AssertEqual(1, zifuPools[1].Count, "zifu pool 1 count");
         AssertEqual("d", zifuPools[1][0].Name, "zifu pool 1 sample");
+    }
+
+    static void RunGoldenCoreSuppressionTq015C8()
+    {
+        var statsType = Type.GetType("BattleSim.GoldenCoreSuppressionExitStats");
+        if (statsType == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats is missing.");
+
+        var classify = statsType.GetMethod(
+            "ClassifyExit",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(Character), typeof(Character) },
+            modifiers: null);
+        if (classify == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats.ClassifyExit is missing.");
+
+        var zifu = StageCharacter("zifu", "筑基", 4);
+        zifu.Style = "taiyi_fuxiu";
+        zifu.GongFaName = "云篆度人经";
+        zifu.ArtElement = "风";
+
+        var gold = StageCharacter("gold", "金丹", 0);
+        WriteProperty(gold, "FormedState", "成丹");
+        WriteProperty(gold, "DanJiType", "自然丹籍");
+        WriteProperty(gold, "SeatCompetitionState", "待争席");
+        WriteProperty(gold, "FinalOccupancyState", "未占据");
+
+        var route = classify.Invoke(null, new object[] { zifu, gold })!;
+        AssertEqual("削位+封丹", ReadProperty(route, "ExitRoute"), "suppression exit route");
+        AssertEqual("待争席丹籍可被削位；符修具备封丹手段", ReadProperty(route, "Reason"), "suppression exit reason");
+        AssertEqual(true, ReadProperty(route, "IsTacticalExit"), "suppression exit flag");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)

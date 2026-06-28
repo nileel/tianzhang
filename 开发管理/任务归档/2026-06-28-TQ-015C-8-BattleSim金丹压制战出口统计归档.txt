@@ -1,0 +1,43 @@
+﻿# TQ-015C-8 · BattleSim 金丹压制战出口统计归档
+
+状态：已完成 / 已验证（2026-06-28 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 一、任务范围
+
+- 来源：`开发管理/开发-下一步建议.txt` B3。
+- 目标：在 BattleSim 默认报告中，把“紫府圆满 vs 金丹初期压制战”从单纯胜率表扩展为可观察战术出口统计。
+- 边界：只分类削位、破府、封丹、阵法、剧情条件等出口资格；不修改 `Combat.Simulate`、成丹阈值、席位竞争分、最终占据状态、金丹倍率或紫府神通门槛。
+
+## 二、修改文件
+
+- `simulations/BattleSim/GoldenCoreSuppressionExitStats.cs`
+  - 新增 `GoldenCoreSuppressionExitStats.ClassifyExit`。
+  - 当前规则：待争席/未占据/自然候选金丹可进入“削位”；太一符修或云篆度人经紫府可进入“封丹”；已接入且府位覆盖足够的紫府闭环可进入“破府”；绳墨正法录可进入“阵法”；无机械出口时降为“剧情条件”。
+- `simulations/BattleSim/Program.cs`
+  - “紫府圆满 vs 金丹初期压制战”表新增 `出口%` 与 `主要出口`。
+  - 输出说明明确：出口统计不改变战斗结算、成丹阈值或金丹倍率。
+- `simulations/BattleSim/BattleSimSelfTests.cs`
+  - 新增 `golden-core-suppression-tq015c-8` self-test。
+  - 覆盖“待争席金丹 + 太一符修紫府”应识别为 `削位+封丹`。
+
+## 三、验证结果
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：0 警告，0 错误。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-8`
+  - 先红灯：`SELFTEST golden-core-suppression-tq015c-8 FAIL: GoldenCoreSuppressionExitStats is missing.`
+  - 实现后通过：`SELFTEST golden-core-suppression-tq015c-8 PASS`
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
+  - 通过：默认模拟完整跑通。
+  - 压制战仍显示紫府正面对抗金丹初期胜率 0.0%，平均约 1.5-2.1 回合。
+  - 新增出口统计快照：物·修炼 75%（主要削位）、法·修炼 67%（主要削位）、水·散修 20%（主要削位）、太虚·宿慧 0%（剧情条件）。
+
+## 四、残留风险
+
+- 本轮只建立“出口资格分类”，未把削位、封丹、破府、阵法做成战斗内可触发开关。
+- 紫府神通数量、府位覆盖和闭环输入仍默认 `未接入`，因此“破府”在当前默认样本中不会出现。
+- “剧情条件”是无机械出口时的兜底分类，不应被当作已接入的可玩机制。
+
+## 五、后续任务
+
+- B3 后续继续拆金丹压制战实战开关：优先把削位/封丹做成可控模拟参数，再验证是否能在不堆 HP/攻击倍率的前提下制造低概率战术窗口。
