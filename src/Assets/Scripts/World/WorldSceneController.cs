@@ -18,12 +18,22 @@ namespace TianZhang.World
             Debug.Log("[WorldScene] nodes=" + nodes.Length);
         }
 
+        /// <summary>
+        /// settlementId 传入 SceneFlowManager 但不持久化；SettlementSceneController 启动时查自身定义列表。
+        /// ID 持久化方案延后至 TQ-014 Task 7（开始菜单迁移）统一处理。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：补 ID 传递边界注释
+        /// </summary>
         public void EnterSettlement(string settlementId)
         {
             if (SceneFlowManager.Instance != null)
                 SceneFlowManager.Instance.EnterSettlement(settlementId);
         }
 
+        /// <summary>
+        /// adventureId 传入 SceneFlowManager 但不持久化；AdventureSceneController 通过 returnTarget 恢复上下文。
+        /// ID 持久化方案延后至 TQ-014 Task 7（开始菜单迁移）统一处理。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：补 ID 传递边界注释
+        /// </summary>
         public void EnterAdventure(string adventureId)
         {
             if (SceneFlowManager.Instance != null)

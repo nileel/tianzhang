@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using UnityEngine.Tilemaps;
 using TianZhang.Core;
@@ -143,16 +143,16 @@ namespace TianZhang.Editor
         public static void BuildSceneArchitectureShells()
         {
             BuildEmptyScene(StartMenuScenePath, "StartMenuRoot", new Color(0.05f, 0.05f, 0.08f));
-            BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.04f, 0.08f, 0.1f));
-            BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.08f, 0.07f, 0.05f));
+            BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.04f, 0.08f, 0.1f), typeof(TianZhang.World.WorldSceneController));
+            BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.08f, 0.07f, 0.05f), typeof(TianZhang.Settlement.SettlementSceneController));
             BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f));
             AssetDatabase.Refresh();
         }
-
         /// <summary>
-        /// 生成空场景外壳（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+
+        /// 生成空场景外壳。sceneControllerType 为可选场景专属控制器（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
         /// </summary>
-        private static void BuildEmptyScene(string scenePath, string rootName, Color background)
+        private static void BuildEmptyScene(string scenePath, string rootName, Color background, System.Type sceneControllerType = null)
         {
             var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
                 UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
@@ -169,6 +169,12 @@ namespace TianZhang.Editor
             gameManager.AddComponent<TianZhang.Game.GameManager>();
             gameManager.AddComponent<TianZhang.Game.SceneFlowManager>();
 
+
+            if (sceneControllerType != null)
+            {
+                var controllerGo = new GameObject("SceneController");
+                controllerGo.AddComponent(sceneControllerType);
+            }
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
         }
 

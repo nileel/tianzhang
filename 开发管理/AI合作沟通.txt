@@ -16,6 +16,35 @@
 5. 新增条目保持短格式：任务 / 提交或 diff / 修改文件 / 已验证 / 未验证 / 残留风险 / 请求判断 / 下一步。
 
 ## 当前交接队列
+
+### HANDOFF-20260628-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-05 返工（REVIEW-20260628-01 三项问题修复）
+- 提交：82ab968
+- 修改文件：
+  - 修改：src/Assets/Scripts/Editor/SceneBuilder.cs（BuildEmptyScene 新增可选 sceneControllerType；World/Settlement 场景挂载对应 Controller）
+  - 修改：src/Assets/Scripts/Game/SceneFlowManager.cs（EnterSettlement/EnterAdventure 补 ID 传递边界注释）
+  - 修改：src/Assets/Scripts/World/WorldSceneController.cs（EnterSettlement/EnterAdventure 补边界注释）
+  - 修改：src/Assets/Scripts/World/WorldNodeDefinition.cs.meta（清理行尾空白）
+  - 修改：src/Assets/Scripts/World/WorldSceneController.cs.meta（清理行尾空白）
+  - 修改：src/Assets/Scripts/Settlement/SettlementDefinition.cs.meta（清理行尾空白）
+  - 修改：src/Assets/Scripts/Settlement/SettlementSceneController.cs.meta（清理行尾空白）
+- 已验证：
+  - dotnet build src/Assembly-CSharp.csproj — 0 错误，0 警告
+  - git diff --check — 仅 LF→CRLF 警告（无害），不再报告 World/Settlement .meta 行尾空白
+  - powershell check-review-text.ps1 -Paths 开发管理 — OK（44 文件）
+- 未验证：
+  - Unity Editor 中 SceneBuilder 菜单生成场景后 WorldSceneController/SettlementSceneController 是否随场景加载执行
+  - 场景间跳转的端到端表现
+- 残留风险：
+  - 当前 settlementId/adventureId 不持久化，延后至 TQ-014 Task 7（开始菜单迁移）统一处理
+  - SceneBuilder 生成场景后需在 Unity Editor 手动验证 Controller 挂载
+- 请求判断：
+  1. REVIEW-20260628-01 三项问题是否全部修复？
+  2. ID 传递边界注释方案（延后至 Task 7）是否可接受？
+  3. DS-01/03/04 后续是否继续 Codex 复审？
+- 下一次 1 建议（DeepSeek）：TQ-010 CSV/asset 独立技能属性字段返工（REVIEW-20260625-03）或 TQ-007 太一道庭法箓字段映射表返工
+- 下一次 2 建议（Codex）：复审本提交 DS-05 返工结果；若不通过继续修复，若通过继续 DS-01/03/04 复审
 ### HANDOFF-20260627-05 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-014-DS-05 · World/Settlement 数据壳
