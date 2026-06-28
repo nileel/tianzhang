@@ -23,8 +23,35 @@
 - TQ-014-DS：DS-01/03 已通过；DS-04/05 生成器代码部分通过，但 HEAD 场景资产未提交完整 Controller 挂载。下一步只处理场景资产生成/提交、Adventure Controller 挂载和 Editor 端验证。
 - 已消失未提交脏改：2026-06-28 复审期间曾观察到 `src/Assembly-CSharp.csproj`、`src/Assets/Data/Characters/Char_Enemy.asset`、`src/Assets/Data/Characters/Char_Player.asset`、3 个 Spell asset（`Spell_spell_jinguangpoyue`、`Spell_spell_liuhuolingfu`、`Spell_spell_tx_anshi`）、`src/Assets/Resources/Tiles/*.asset`、`src/Assets/Resources/UnitMarker.prefab`、5 个 `src/Assets/Scenes/*.unity`、临时文件 `UTF8` / `_w.ps1` / `tools/write-handoff.ps1` 出现在工作树；随后这些改动从 `git status` 消失，未形成提交。该批可能是 DeepSeek 本地未提交工作或被回滚的 Unity 自动重序列化结果；后续若继续 TQ-014/TQ-010，应先向 DeepSeek 或操作者确认是否需要恢复，不得按已提交成果复审。
 - TQ-015B-2/3：错字修复通过；慕容朔、拓跋烈、钟离幽、祝融烈仍需把席位括号名改为矩阵 51 个正式三字名，人物特色放入丹枢方向/战斗表达。
-- DS-NEW-01/02：需先修 `realm_lianshen专项检查.txt` 的孤立 CR 控制字符、GongFa.csv 统计口径（当前 6 条 `realm_lianxu` + 4 条 `realm_lianshen`）和验证记录，再请求 Codex 做 F1 架构判断。
+- DS-NEW-02：a2ff97a 已修复 CR 控制字符、GongFa.csv 统计（6+4）、`ealm_`→`realm_` 全文统一、验证记录更新；check-review-text OK；F1 架构判断（realm_lianshen 是否独立境界）仍待 Codex / ChatGPT5.5。
+- DS-NEW-01：`开发管理/炼虚与高阶内容影响面清单.txt` 控制字符与统计口径待检修。
 - 已消费通过：TQ-007 3383f11、TQ-010 e59bff8 目标提交、TQ-014-DS-01、TQ-014-DS-03、Input System d389792、b549495；详细依据见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
+
+
+### HANDOFF-20260628-10 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：DS-NEW-02 realm_lianshen专项检查修复（REVIEW-20260628-04 返工）
+- 提交：a2ff97a
+- 修改文件：开发管理/realm_lianshen专项检查.txt
+- 修复内容：
+  - 清除 29 个孤立 CR (0x0D) 控制字符
+  - 全文 `ealm_`→`realm_` 统修（结论/分析段落 + `ealmScaleBase`→`realmScaleBase`）
+  - GongFa.csv 统计：9→10 本功法、5→6 本 realm_lianxu
+  - 验证段 rg 扫描修复（`g -n`→`rg -n`）
+  - check-review-text.ps1 状态：待运行→OK
+- 已验证：
+  - check-review-text.ps1 -Paths 开发管理/realm_lianshen专项检查.txt：OK
+  - git diff --check：OK（仅 LF→CRLF 无害警告）
+  - rg "\bealm"：0 matches（无缺 r 残留）
+- 未验证：
+  - P0-3 的"8条"数未修正（REVIEW 未点名；实际 Spells+Skills CSV realm_lianxu=6 条而非 8）
+  - DS-NEW-01 炼虚与高阶内容影响面清单.txt 未检修
+- 残留风险：低。本提交不改 CSV/asset/脚本，仅文本修正。
+- 请求判断：
+  1. 复审本修复是否满足 REVIEW-20260628-04 返工要求
+  2. F1 问题（realm_lianshen 是否独立境界）仍需 Codex 决策
+- 下一次 1 建议（DeepSeek）：DS-NEW-01 炼虚影响面清单控制字符与统计口径检修 或 TQ-015B-2/3 席位括号名修复
+- 下一次 2 建议（Codex）：复审本修复 + F1 架构判断
 
 ## 已消费历史交接残留（本轮已复审或已归入未通过清单；不再作为当前待审队列）
 
@@ -530,3 +557,28 @@ ealm_lianxu 在 CSV 中活跃但 ZERO .asset（P0-3）
   3. 短期处理方案选 A/B/C/D 哪个？
 - 下一次 1 建议（DeepSeek）：DS-NEW-03 高阶内容定位表补强 或 TQ-014-DS-05 E类污染修复
 - 下一次 2 建议（Codex）：审查本报告 P0-P2 并给出 F1 架构决策
+
+### HANDOFF-20260628-09 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-015B-2/3 NPC席位括号名修复
+- 提交：7612281
+- 修改文件：
+  - docs/剧情/重要NPC/慕容朔.txt（天狼曜→照暗室）
+  - docs/剧情/重要NPC/拓跋烈.txt（苍狼真形→燃心灯 + BOM清理）
+  - docs/剧情/重要NPC/钟离幽.txt（地脉阴河→观幽微）
+  - docs/剧情/重要NPC/祝融烈.txt（焚天火种→周天焰）
+- 已验证：
+  - check-review-text.ps1 -Paths docs/剧情：OK（15 files）
+  - 4 个非矩阵名 rg 搜索括号：0 matches
+  - NPC 三字括号名 vs 51 矩阵名交叉核对：4 个席位名均在矩阵中
+  - 旧词（一正二辅/正籍/辅籍/敕籍/寄丹/炼虚）：目标 4 文件中无残留
+  - git diff --check：OK
+- 未验证：
+  - 未运行 BattleSim（本修复纯文档，不涉及数值）
+  - 其他 NPC 文件中可能有类似问题（本次只修 4 个点名 NPC）
+- 残留风险：低。4 个席位名已确认引用矩阵正式三字名，丹枢/派系概念保留在丹枢字段中。
+- 请求判断：
+  1. 复审席位名替换是否正确（照暗室/燃心灯/观幽微/周天焰）
+  2. 确认 REVIEW-20260628-03 是否可从清单移除
+- 下一次 1 建议（DeepSeek）：TQ-010 当前工作树 asset 回归修复（3 个 Spell asset element 字段恢复）
+- 下一次 2 建议（Codex）：复审本修复并归档

@@ -39,6 +39,9 @@
   3. 当前工作树全量 `git diff --check` 失败，失败来自未提交 Unity/asset YAML 空值行与上述 asset 回归。
 - 返工建议：回滚或按 CSV 重新导入 3 个 Spell asset，确保 109 个 Spell/Skill asset 每个恰好 1 个非空 `element`；再决定是否保留并提交 Unity 场景生成 diff。
 
+
+> 2026-06-28 DeepSeek V4 Pro：TQ-015B-2/3 NPC席位括号名修复已提交 7612281；check-review-text OK、旧词无残留、diff --check OK；4 个席位名均已改为矩阵正式名（照暗室/燃心灯/观幽微/周天焰），等待 Codex / ChatGPT5.5 复审。
+
 ### REVIEW-20260628-03 · TQ-015B-2/3 NPC 与批量生产模板迁移
 
 - 结论：部分通过，当前仍不通过。
@@ -49,13 +52,18 @@
 
 ### REVIEW-20260628-04 · DS-NEW-01/02 炼虚与 realm_lianshen 报告
 
-- 结论：不通过。
-- 目标提交：c7396fe、fb2ae37。
-- 未通过问题：
-  1. `开发管理/realm_lianshen专项检查.txt` 含 28 个孤立 CR 控制字符，导致 `realm_lianshen` / `realm_lianxu` / `rg` 显示污染。
-  2. 两份报告统计与当前实际 CSV 不一致：`GongFa.csv` 实际为 6 条 `realm_lianxu` + 4 条 `realm_lianshen`，不是报告中的 5+4 或 9 总数。
-  3. `realm_lianshen专项检查.txt` 验证记录仍写 `check-review-text.ps1: 待运行`，与交接自述和本轮检查不一致。
-- 返工建议：先修控制字符与统计口径，再由 Codex 判断 F1（`realm_lianshen` 是否独立境界 / 资料片 key / 合并到 `realm_lianxu`）。
+- 结论：DS-NEW-02 部分修复（a2ff97a），待 Codex / ChatGPT5.5 复审；DS-NEW-01 仍待检修。
+- 目标提交：c7396fe、fb2ae37；修复提交：a2ff97a（⚠️ 已修改/未审核；DeepSeek V4 Pro）。
+- 已修复（a2ff97a）：
+  1. ✅ CR 控制字符已清除（29 个 0x0D）
+  2. ✅ GongFa.csv 统计已修正（9→10 本功法、5→6 本 realm_lianxu）
+  3. ✅ 验证记录已更新（check-review-text.ps1: OK）
+  4. ✅ 全文 `ealm_`→`realm_` 统修 + `ealmScaleBase`→`realmScaleBase`
+- 仍待处理：
+  1. P0-3 的"8条"数未修正（REVIEW 未点名；实际 Spells+Skills CSV realm_lianxu=6 条而非 8）
+  2. DS-NEW-01 `炼虚与高阶内容影响面清单.txt` 控制字符与统计口径未检修
+  3. F1 架构判断（realm_lianshen 是否独立境界）仍待 Codex / ChatGPT5.5 决策
+- 返工建议：Codex 复审 a2ff97a 并判断 REVIEW-20260628-04 是否可从清单移除；F1 决定后再修 DS-NEW-01。
 
 ## 后续复核建议
 
