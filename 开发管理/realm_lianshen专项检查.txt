@@ -1,5 +1,5 @@
 # realm_lianshen 数据链路专项检查
-# 生成: 2026-06-28 | 修改方: DeepSeek V4 Pro | 状态: ⚠️ 已修改/未审核；变更范围：新增文件，数据链路核对
+# 生成: 2026-06-28 | 修改方: DeepSeek V4 Pro | 状态: ⚠️ 已修改/未审核；变更范围：新增文件，数据链路核对；2026-06-29 DeepSeek V4 Pro 按 REVIEW-20260628-04 修正5项统计错误
 # 任务: DS-NEW-02（来源：EXPAND-20260625-01）
 # 扫描: rg -n "realm_lianshen|realm_lianxu|炼神|炼虚" docs src simulations 开发管理
 # 依据: AGENTS.md、修行境界.txt、DS-NEW-01影响面清单、CSV/asset/脚本实际状态
@@ -30,7 +30,7 @@
 | gongfa_wanfadulujing | 太一道庭 | 上品 | realm_lianxu |
 | gongfa_jiujiangshuifulu | 太一道庭 | 上品 | realm_lianxu |
 | gongfa_zhengyimengweilu | 太一道庭 | 极品 | realm_lianxu |
-| gongfa_baoyuanshouyi | 太一道庭 | 中品 | realm_lianxu |
+| gongfa_hunyuantongchen | 混元山 | 极品 | realm_lianxu |
 | gongfa_jiuxiaoleijie | 玉清崖 | 上品 | realm_lianxu |
 | gongfa_jileiposhan | 玉清崖 | 极品 | realm_lianxu |
 | gongfa_nanhuadamengshu | 古修 | 极品 | **realm_lianshen** |
@@ -55,7 +55,7 @@
 | Skills | skill_zhanyu_tiexuezhengqi (战域·铁血征旗) | 混元山 | realm_lianxu |
 | Skills | skill_hunyu_huangquan (魂域·黄泉幻界) | 太虚观 | realm_lianxu |
 
-**结论**: 2 术法 + 2 神通使用 realm_lianshen——值得注意的是这 4 个不全来自古修阵营（太一道庭也用了）。另外 3 术法 + 3 神通使用 realm_lianxu。所有领域级神通都标在 realm_lianshen，而非领域级神通标在 realm_lianxu。
+**结论**: 2 术法 + 2 神通使用 realm_lianshen——值得注意的是这 4 个不全来自古修阵营（太一道庭也用了）。另外 3 术法 + 3 神通使用 realm_lianxu。领域级神通分布不均：2 个标 realm_lianshen（法域/灵域），3 个标 realm_lianxu（剑域/战域/魂域），分类标准不统一。
 
 ### 4. Unity .asset（序列化资产）
 
@@ -100,7 +100,7 @@
 |---|------|---------|
 | P0-1 | realm_lianshen 在 Language.csv 中完全缺失 | GongFa/Spells/Skills CSV 中 8 条数据 (+ 4 asset) 运行时无法获取显示名 |
 | P0-2 | 4 部古修功法 GongFa .asset 含 realm_lianshen 但 C# 不识别 | 导入/运行时解析失败，境界成长数据无法读取 |
-| P0-3 | realm_lianxu 在 CSV 中活跃使用（8 条）但 ZERO .asset | 仙门功法境界数据链路断裂；asset 不会在 Unity 中出现 |
+| P0-3 | realm_lianxu 在 CSV 中活跃使用（Spells+Skills 合计 6 条；全部 CSV 合计 12 条内容 ID） | 仙门功法 asset 中以中文“炼虚”序列化存在（6 个文件），但以 key realm_lianxu 搜索为 0 |
 
 ### 🟡 P1 级
 
