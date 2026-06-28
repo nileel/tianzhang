@@ -149,6 +149,28 @@
   3. DS-01/03/04 后续是否继续 Codex 复审？
 - 下一次 1 建议（DeepSeek）：TQ-010 CSV/asset 独立技能属性字段返工（REVIEW-20260625-03）或 TQ-007 太一道庭法箓字段映射表返工
 - 下一次 2 建议（Codex）：复审本提交 DS-05 返工结果；若不通过继续修复，若通过继续 DS-01/03/04 复审
+
+### HANDOFF-20260628-07 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：DS-NEW-01 炼虚与高阶内容全仓影响面清单
+- 产出：`开发管理/炼虚与高阶内容影响面清单.txt`（新增）
+- 扫描：rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管理 → 412条命中，112文件
+- 分类：6类（必须迁移~95条、历史/废止说明~45条、资料片保留~155条、NPC/世界背景~20条、疑似污染~5条、需Codex判断~90条）
+- 已验证：
+  - check-review-text.ps1：OK（1 file）
+  - git diff --check：OK（无尾随空白）
+- 未验证：
+  - 分类基于单行上下文，A/F类需Codex逐项确认（6个判断项）
+  - E类4处疑似污染的具体内容（天章设定.txt修n魂、战斗系统.txt领域描述等）
+- 残留风险：
+  - 极低。本清单只做分类标注，不改任何源文件；可能有个别文件因跨行上下文被误分类。
+- 请求判断：
+  1. F类6个判断项（realm_lianshen区分/BattleSim炼虚硬编码/旧脚本清理/旧口径一致性/GongFa炼虚行处理/GongFaGrowthData兼容）哪些可做架构决策？
+  2. E类4处疑似污染是否可交由DeepSeek后续修复？
+  3. 本清单格式/分类维度是否需要调整？
+- 下一次 1 建议（DeepSeek）：DS-NEW-02 realm_lianshen数据链路专项 或 E类污染修复
+- 下一次 2 建议（Codex）：审查 F 类判断项并给出架构决策
+
 ### HANDOFF-20260627-05 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-014-DS-05 · World/Settlement 数据壳
