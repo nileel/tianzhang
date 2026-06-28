@@ -1,0 +1,48 @@
+# TQ-015C-10 BattleSim 削位强度扫描归档
+
+状态：已完成 / 已验证（2026-06-28 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 任务目标
+
+在不改变默认 Combat、成丹阈值、金丹倍率、紫府 HP/攻击的前提下，验证“削位 + 封丹”若提升战术开关强度，是否会破坏金丹初期对紫府圆满的正面压制基线。
+
+## 本轮改动
+
+- `simulations/BattleSim/GoldenCoreSuppressionExitStats.cs`
+  - 新增 `GoldenCoreSuppressionSwitchProfile`。
+  - 新增 `DefaultSwitchProfiles()`，默认扫描 `削位15`、`削位30`、`削位45` 三档，均搭配封丹。
+  - `CreateTacticalScenario` 增加 Profile 重载；旧 `GoldenCoreSuppressionSwitches(bool,bool)` 入口保持兼容。
+  - 削位强度只调整金丹 MP 保留率，不改变金丹 HP、攻击、防御或紫府面板。
+- `simulations/BattleSim/Program.cs`
+  - 压制战表从单一 `开关胜率` 扩展为 `削位15` 与 `强扫最佳`。
+  - `强扫最佳` 扫描削位15/30/45 + 封丹；全档无胜场时输出 `全档0.0%`。
+- `simulations/BattleSim/BattleSimSelfTests.cs`
+  - 新增 `golden-core-suppression-tq015c-10` 自测，锁定 Profile、档位、强度与不污染原角色对象。
+
+## 验证结果
+
+命令：
+
+```powershell
+dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-8
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-9
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-10
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"
+```
+
+结果：
+
+- Build：通过，0 警告，0 错误。
+- Self-test：TQ-015C-8 / TQ-015C-9 / TQ-015C-10 均 PASS。
+- 默认压制战快照：
+  - 物·修炼：紫府胜率 0.0%，削位15 0.0%，强扫最佳 `全档0.0%`，出口 75% 削位。
+  - 法·修炼：紫府胜率 0.0%，削位15 0.0%，强扫最佳 `全档0.0%`，出口 67% 削位。
+  - 水·散修：紫府胜率 0.0%，削位15 0.0%，强扫最佳 `全档0.0%`，出口 20% 削位。
+  - 太虚·宿慧：紫府胜率 0.0%，无机械出口，仍为剧情条件。
+
+## 结论
+
+削位/封丹强度扫描仍不能形成紫府圆满对金丹初期的低概率胜场。结合用户反馈，这一结果符合“金丹应对筑基/紫府形成强度碾压”的设计目标；TQ-015C-10 的闭环意义从“寻找低概率胜场”调整为“确认削位/封丹不会破坏金丹正面压制基线”。
+
+取消 TQ-015C-11 作为正式开发前 P0 数值闸门。后续若继续接入破府输入或战术触发概率，应服务战略削弱、剧情条件、席位/府位争夺或高阶反制展示，继续保持默认 Combat、成丹阈值、金丹倍率和紫府 HP/攻击不变，且不以紫府正面击败金丹为目标。

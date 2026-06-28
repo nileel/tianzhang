@@ -8,14 +8,38 @@ static class GoldenCoreSuppressionExitStats
 {
     public record ExitClassification(string ExitRoute, string Reason, bool IsTacticalExit);
 
+    public static IReadOnlyList<GoldenCoreSuppressionSwitchProfile> DefaultSwitchProfiles()
+    {
+        var switches = new GoldenCoreSuppressionSwitches(EnableSeatErosion: true, EnableDanSeal: true);
+        return new[]
+        {
+            new GoldenCoreSuppressionSwitchProfile("削位15", switches, 0.85),
+            new GoldenCoreSuppressionSwitchProfile("削位30", switches, 0.70),
+            new GoldenCoreSuppressionSwitchProfile("削位45", switches, 0.55),
+        };
+    }
+
     public static GoldenCoreSuppressionTacticalScenario CreateTacticalScenario(
         Character zifu,
         Character gold,
         GoldenCoreSuppressionSwitches switches)
     {
+        return CreateTacticalScenario(
+            zifu,
+            gold,
+            new GoldenCoreSuppressionSwitchProfile("默认", switches, 0.85));
+    }
+
+    public static GoldenCoreSuppressionTacticalScenario CreateTacticalScenario(
+        Character zifu,
+        Character gold,
+        GoldenCoreSuppressionSwitchProfile profile)
+    {
         var route = ClassifyExit(zifu, gold);
         var scenarioZifu = CloneCharacter(zifu);
         var scenarioGold = CloneCharacter(gold);
+        var switches = profile.Switches;
+        double seatErosionMpRetainRate = Math.Clamp(profile.SeatErosionMpRetainRate, 0, 1);
         if (!route.IsTacticalExit || (!switches.EnableSeatErosion && !switches.EnableDanSeal))
         {
             return new GoldenCoreSuppressionTacticalScenario(
@@ -23,7 +47,10 @@ static class GoldenCoreSuppressionExitStats
                 scenarioGold,
                 "未启用",
                 route.IsTacticalExit ? "未启用战术开关" : route.Reason,
-                false);
+                false)
+            {
+                ProfileLabel = profile.Label
+            };
         }
 
         var routeSet = route.ExitRoute.Split('+', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
@@ -33,9 +60,9 @@ static class GoldenCoreSuppressionExitStats
         if (switches.EnableSeatErosion && routeSet.Contains("削位"))
         {
             if (scenarioGold.Primary.ContainsKey("MP"))
-                scenarioGold.Primary["MP"] = (int)Math.Round(scenarioGold.Primary["MP"] * 0.85);
+                scenarioGold.Primary["MP"] = (int)Math.Round(scenarioGold.Primary["MP"] * seatErosionMpRetainRate);
             applied.Add("削位");
-            reasons.Add("削位开关：压低金丹灵力承载，不改HP/攻击");
+            reasons.Add($"削位开关：金丹MP保留{seatErosionMpRetainRate:P0}，不改HP/攻击");
         }
 
         if (switches.EnableDanSeal && routeSet.Contains("封丹"))
@@ -57,7 +84,10 @@ static class GoldenCoreSuppressionExitStats
                 scenarioGold,
                 "未启用",
                 "已启用开关但当前样本无匹配机械出口",
-                false);
+                false)
+            {
+                ProfileLabel = profile.Label
+            };
         }
 
         return new GoldenCoreSuppressionTacticalScenario(
@@ -65,7 +95,10 @@ static class GoldenCoreSuppressionExitStats
             scenarioGold,
             string.Join("+", applied.Distinct()),
             string.Join("；", reasons.Distinct()),
-            true);
+            true)
+        {
+            ProfileLabel = profile.Label
+        };
     }
 
     public static ExitClassification ClassifyExit(Character zifu, Character gold)
@@ -168,9 +201,17 @@ static class GoldenCoreSuppressionExitStats
 
 readonly record struct GoldenCoreSuppressionSwitches(bool EnableSeatErosion, bool EnableDanSeal);
 
+readonly record struct GoldenCoreSuppressionSwitchProfile(
+    string Label,
+    GoldenCoreSuppressionSwitches Switches,
+    double SeatErosionMpRetainRate);
+
 record GoldenCoreSuppressionTacticalScenario(
     Character Zifu,
     Character Gold,
     string AppliedRoutes,
     string Reason,
-    bool HasActiveSwitch);
+    bool HasActiveSwitch)
+{
+    public string ProfileLabel { get; init; } = "默认";
+}

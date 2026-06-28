@@ -36,6 +36,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-suppression-tq015c-9")
             return RunChecked(suite, RunGoldenCoreSuppressionTq015C9);
 
+        if (suite == "golden-core-suppression-tq015c-10")
+            return RunChecked(suite, RunGoldenCoreSuppressionTq015C10);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -465,6 +468,78 @@ static class BattleSimSelfTests
         AssertEqual(120, enabledGold.Primary["肉攻"], "tactical switches do not change gold physical attack");
         AssertEqual("丹域镇压", gold.DivineName, "tactical scenario does not mutate source gold");
         AssertEqual(100, gold.Primary["MP"], "tactical scenario keeps source gold MP");
+    }
+
+    static void RunGoldenCoreSuppressionTq015C10()
+    {
+        var statsType = Type.GetType("BattleSim.GoldenCoreSuppressionExitStats");
+        if (statsType == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats is missing.");
+
+        var switchesType = Type.GetType("BattleSim.GoldenCoreSuppressionSwitches");
+        if (switchesType == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionSwitches is missing.");
+
+        var profileType = Type.GetType("BattleSim.GoldenCoreSuppressionSwitchProfile");
+        if (profileType == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionSwitchProfile is missing.");
+
+        var defaultProfiles = statsType.GetMethod(
+            "DefaultSwitchProfiles",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: Type.EmptyTypes,
+            modifiers: null);
+        if (defaultProfiles == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats.DefaultSwitchProfiles is missing.");
+
+        var profileRows = ((System.Collections.IEnumerable)defaultProfiles.Invoke(null, Array.Empty<object>())!)
+            .Cast<object>()
+            .ToArray();
+        AssertSequence(
+            new[] { "削位15", "削位30", "削位45" },
+            profileRows.Select(row => (string)ReadProperty(row, "Label")).ToArray(),
+            "default switch profile labels");
+        AssertClose(0.85, (double)ReadProperty(profileRows[0], "SeatErosionMpRetainRate"), 0.0001, "default light profile retain rate");
+        AssertClose(0.70, (double)ReadProperty(profileRows[1], "SeatErosionMpRetainRate"), 0.0001, "default middle profile retain rate");
+        AssertClose(0.55, (double)ReadProperty(profileRows[2], "SeatErosionMpRetainRate"), 0.0001, "default heavy profile retain rate");
+
+        var createScenario = statsType.GetMethod(
+            "CreateTacticalScenario",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(Character), typeof(Character), profileType },
+            modifiers: null);
+        if (createScenario == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats.CreateTacticalScenario profile overload is missing.");
+
+        var enabledSwitches = Activator.CreateInstance(switchesType, new object[] { true, true })!;
+        var heavyProfile = Activator.CreateInstance(profileType, new object[] { "削位45", enabledSwitches, 0.45 })!;
+
+        var zifu = StageCharacter("zifu", "筑基", 4);
+        zifu.Style = "taiyi_fuxiu";
+        zifu.GongFaName = "云篆度人经";
+
+        var gold = StageCharacter("gold", "金丹", 0);
+        gold.Primary["HP"] = 1000;
+        gold.Primary["MP"] = 100;
+        gold.Primary["肉攻"] = 120;
+        gold.Primary["神攻"] = 160;
+        gold.DivineName = "丹域镇压";
+        WriteProperty(gold, "SeatCompetitionState", "待争席");
+        WriteProperty(gold, "FinalOccupancyState", "未占据");
+
+        var scenario = createScenario.Invoke(null, new object[] { zifu, gold, heavyProfile })!;
+        AssertEqual(true, ReadProperty(scenario, "HasActiveSwitch"), "profile switch active flag");
+        AssertEqual("削位+封丹", ReadProperty(scenario, "AppliedRoutes"), "profile switch routes");
+        AssertEqual("削位45", ReadProperty(scenario, "ProfileLabel"), "profile label");
+        var scenarioGold = (Character)ReadProperty(scenario, "Gold");
+        AssertEqual("", scenarioGold.DivineName, "profile dan seal disables gold divine art");
+        AssertEqual(45, scenarioGold.Primary["MP"], "profile seat erosion strength reduces gold MP");
+        AssertEqual(1000, scenarioGold.Primary["HP"], "profile strength does not change gold HP");
+        AssertEqual(120, scenarioGold.Primary["肉攻"], "profile strength does not change gold physical attack");
+        AssertEqual("丹域镇压", gold.DivineName, "profile scenario does not mutate source gold");
+        AssertEqual(100, gold.Primary["MP"], "profile scenario keeps source gold MP");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)
