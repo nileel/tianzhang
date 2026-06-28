@@ -23,6 +23,18 @@
 
 ## 当前交接队列
 
+### HANDOFF-20260629-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-021 基础战斗口径清理
+- 提交：未提交（当前工作树 diff）
+- 修改文件：docs/基础设定/战斗系统.txt / 伤害公式.txt / 灵根设定.txt
+- 已验证：check-review-text.ps1 OK(61 files)；git diff --check 3个全角误报；rg ±20% 无旧规则残留
+- 未验证：BattleSim / Unity（纯文档口径，不涉数值代码）
+- 残留风险：低。三处修改均为文档口径对齐；伤害顺序与 DamageCalculator.cs 一致
+- 请求判断：复审是否与 BattleSim/Unity 实际一致；是否需进一步清理角色数值设计.txt旧口径
+- 下一次 1 建议（DeepSeek）：DS-NEW-01/02 修复 或 TQ-017 人物库
+- 下一次 2 建议（Codex）：复审本 TQ-021 修改
+
 ### ACTIVE-20260628-REVIEW · 当前有效待处理项（本节优先级高于下方历史交接残留）
 
 - TQ-014-DS：DS-01/03 已通过；DS-04/05 生成器代码部分通过，但 HEAD 的 World/Settlement/Adventure 场景均未引用对应 Controller GUID。下一步只处理场景资产生成/提交与 Editor 端验证。

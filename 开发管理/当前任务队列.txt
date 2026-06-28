@@ -1,6 +1,7 @@
 # 当前任务队列（✅ 已审核）
 
 > 2026-06-26 Codex / gpt-5.5：按用户要求拆分快捷流程：`1` 只执行工作计划任务，`2` 只执行复审任务；Codex / ChatGPT5.5 自产任务完成必要验证后不再进入复审队列。
+> 2026-06-29 DeepSeek V4 Pro：TQ-021 基础战斗口径清理完成（3文件/7行增13行删）；⚠️ 已修改/未审核，待 Codex / ChatGPT5.5 复审。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
@@ -58,7 +59,7 @@
 | TQ-018 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待处理 | 新增 TacticalGridModel/ITacticalRenderer/TilemapTacticalRenderer 兼容层，不改变 CTB、伤害、寻路和技能范围规则结果 |
 | TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待 TQ-016 或 TQ-018 后执行 | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
 | TQ-020 | P1 | Codex / ChatGPT5.5 | 机制回归 | 待处理 | 对守一、符胆、雷劫、玄感、含弘等 Unity 已接入机制做 BattleSim 语义回归与最小修复 |
-| TQ-021 | P1 | DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 复审 | 设计口径清理 | 待处理 | 清理基础战斗文档中的伤害顺序、暴击倍率与旧五行 ±20% 口径，为 TQ-010 字段语义提供依据 |
+| TQ-021 | P1 | DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 复审 | 设计口径清理 | ⚠️ 已修改/未审核 | 清理基础战斗文档中的伤害顺序、暴击倍率与旧五行 ±20% 口径，为 TQ-010 字段语义提供依据 |
 
 ## 任务卡片
 
