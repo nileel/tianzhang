@@ -1,5 +1,6 @@
 # 未通过审核清单（✅ 已审核）
 
+> 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05：TQ-014-DS-05 不通过；新增控制器未挂入 World/Settlement 场景，目标范围 `git diff --check` 仍失败。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 已通过严格覆盖、meta 配对、关键字段一致性、旧路径扫描、Unity C# build 与 `git diff --check`；当前未通过/待复审项清零。
 > 2026-06-27 Codex / gpt-5.5 复审 b674f79：TQ-006 通过并从清单移除；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，失败原因更新为本轮证据。
 > 2026-06-25 Codex / gpt-5.5 批量复审：TQ-006、TQ-007、TQ-010、TQ-015B-2/3 未通过；TQ-013D 与金丹位格三字命名替换通过并已归档。
@@ -14,6 +15,17 @@
 记录 2026-06-16 对既有未审核内容复核后的未通过项，方便后续逐项修复。处理并审核通过后，应按 `开发管理/审核规则.txt` 的“审核记录归档”规则从本清单移除。
 
 ## 当前未通过/待复审项
+
+### REVIEW-20260628-01 · TQ-014-DS-05 World/Settlement 数据壳
+
+- 结论：不通过。
+- 目标提交：fe610ed；后续修补提交：dfa69a1（修复 .meta GUID 连字符格式）。
+- 已通过部分：`WorldNodeDefinition` / `SettlementDefinition` 字段与 TQ-014 Task 6 基础模板一致；当前 C# 编译通过；新增 .meta GUID 当前已是 Unity 常用的 32 位无连字符格式。
+- 未通过问题：
+  1. 新增 `WorldSceneController` / `SettlementSceneController` 没有挂到 `WorldScene.unity` / `SettlementScene.unity`，`SceneBuilder.BuildEmptyScene` 也只创建空 `WorldRoot` / `SettlementRoot`，不会自动 `AddComponent`；因此 `Start()` 日志、`EnterSettlement` / `EnterAdventure` / `ReturnToWorld` 入口在生成场景中不会执行。
+  2. 目标范围 `git diff --check fe610ed^ dfa69a1 -- src/Assets/Scripts/World src/Assets/Scripts/Settlement` 仍失败，4 个新增 `.meta` 的 `assetBundleVariant:` 行保留 trailing whitespace；fe610ed 原始提交的 `userData:` / `assetBundleName:` / `assetBundleVariant:` 也均命中。
+  3. `SceneFlowManager.EnterSettlement` / `EnterAdventure` 仍不保存 `settlementId` / `adventureId`；本轮可作为会话流转骨架遗留风险，但在 DS-05 后继续推进开始菜单迁移前必须给出当前地点/副本 ID 的传递方案。
+- 返工建议：修改 `SceneBuilder` 或场景资产，把 World/Settlement Controller 挂到对应 root 或独立 GameObject；清理新增 `.meta` 行尾空白并重新跑目标范围 `git diff --check`；在 `GameSession` / `SceneFlowManager` 中补当前 Settlement/Adventure ID 或明确 Task 7 前的占位边界；运行 `dotnet build src/Assembly-CSharp.csproj`，可用时在 Unity Editor 生成场景并验证 World/Settlement 加载和返回。
 
 ### REVIEW-20260625-02 · TQ-007 太一道庭法箓字段映射表
 

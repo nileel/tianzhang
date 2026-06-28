@@ -25,6 +25,8 @@
 > 2026-06-27 Codex / gpt-5.5：TQ-015C-7 已完成并归档至 `开发管理/任务归档/2026-06-27-TQ-015C-7-BattleSim筑基同境矩阵归档.txt`。BattleSim 默认输出新增筑基全阶段样本数与筑基同境胜率矩阵；self-test、build、默认 run 通过。本轮不调整成丹阈值、战斗倍率、金丹样本筛选或压制战规则；后续 B3 继续拆金丹压制战战术出口。
 > 2026-06-28 Codex / gpt-5.5：TQ-015C-8 已完成并归档至 `开发管理/任务归档/2026-06-28-TQ-015C-8-BattleSim金丹压制战出口统计归档.txt`。BattleSim 默认输出新增金丹压制战 `出口%` 与 `主要出口` 统计；self-test、build、默认 run 通过。本轮只分类削位/破府/封丹/阵法/剧情条件，不改 Combat 结算、成丹阈值、金丹倍率或紫府门槛；后续 B3 继续拆削位/封丹实战开关。
 > 2026-06-28 Codex / gpt-5.5：TQ-015C-9 已完成并归档至 `开发管理/任务归档/2026-06-28-TQ-015C-9-BattleSim削位封丹开关归档.txt`。BattleSim 压制战表新增 `开关胜率`，显式启用削位/封丹时只压低金丹 MP、禁用金丹神通，不提升紫府 HP/攻击；self-test、build、默认 run 通过。当前物·修炼/法·修炼/水·散修开关胜率仍为 0.0%，后续 B3 若继续应拆破府输入或战术触发强度扫描。
+> 2026-06-28 Codex / gpt-5.5：项目总结时同步队列状态。`AI合作沟通.txt` 已记录 DeepSeek 提交 TQ-014-DS-01/03/04/05；本文件将原 TQ-014-DS-01“待处理”调整为 TQ-014 场景架构待复审集合项。此处不代表审核通过，后续由 `2` 流程复审。
+> 2026-06-28 Codex / gpt-5.5：`2` 流程复审 TQ-014-DS-05，结论不通过；World/Settlement Controller 未挂入生成场景，目标范围 `git diff --check` 仍失败。详见 `开发管理/未通过审核清单.txt` REVIEW-20260628-01。
 
 ## 使用规则
 
@@ -43,7 +45,7 @@
 | TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 复审不通过 / 待返工 | b674f79 只修了 TXT 局部，JSON 仍有 `?` 污染；见未通过清单 |
 | TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 复审不通过 / 待返工 | b674f79 追加 asset 字段后出现重复 `element` 和空旧字段；见未通过清单 |
 | TQ-015B | P0 | Codex / ChatGPT5.5（TQ-015B-1已审核）；DeepSeek V4 Pro（TQ-015B-2/3 NPC+模板已完成） | 文档迁移/批量生产 | TQ-015B-1✅已审核 / TQ-015B-2/3复审不通过 | b674f79 的 NPC 批量替换引入“建/道”错字污染，席位归属仍需事实源复核；见未通过清单 |
-| TQ-014-DS-01 | P1 | DeepSeek V4 Pro | 场景架构清单 | 待处理 | 产出 `开发管理/场景架构Unity现状清单.txt`，只记录现状、职责归属和风险，不改 C# |
+| TQ-014-DS | P1 | Codex / ChatGPT5.5 / DeepSeek V4 Pro | 场景架构复审/返工 | DS-05复审不通过；DS-01/03/04待复审 | DS-05 需先返工：Controller 未挂入 World/Settlement 场景且新增 .meta 行尾空白未清；其余 DeepSeek 场景切片仍待 Codex 复审 |
 
 ## 任务卡片
 
@@ -72,10 +74,10 @@
 - TQ-015B-1 本轮范围：`docs/superpowers/specs/2026-06-19-jindan-danxiang-design.md`、两份金丹/紫府核心设定、术法槽位设计、三类设计规范与模板。已锁定：丹相为金丹能力总称；丹枢仅为矩阵允许的个性化接口；紫府神通为丹相输入；暂寄不生成丹相主枢。未锁定：数量阈值、槽位数、数值成长和运行时迁移。
 - 完成条件：核心规则余项不再把旧词作为现行层级或数值规则；NPC 统一使用“分支 + 源/化/界 + 占据方式 + 丹枢”字段；历史参考不复制；太一道庭不垄断丹系；模板能约束 DeepSeek 批量内容不越过矩阵边界；DeepSeek 提交只标 `⚠️ 已修改/未审核`，交由 Codex / ChatGPT5.5 复审。
 
-### TQ-014-DS-01 · 场景架构 Unity 现状清单
+### TQ-014-DS · 场景架构待复审集合项
 
-- 来源：`开发管理/AI合作沟通.txt` 的 `TQ-014-DS-20260625-01`；TQ-014 实施计划归档。
-- 当前优先级：P1。DeepSeek V4 Pro 可执行，Codex / ChatGPT5.5 负责后续复审和规则层判断。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/开发-技术经验.txt`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
-- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`；`git diff --check`。
-- 完成条件：产出 `开发管理/场景架构Unity现状清单.txt`，按场景资产、脚本职责、后续归属、阻塞风险和建议切片分类；本任务不改 C#、不生成 `.unity` 场景、不改 CTB/伤害/冷却/槽位语义。
+- 来源：`开发管理/AI合作沟通.txt` 的 HANDOFF-20260627-01/02/04/05；TQ-014 实施计划归档。
+- 当前优先级：P1。DeepSeek 已提交现状清单、会话流转骨架、四场景脚手架、World/Settlement 数据壳；2026-06-28 复审 DS-05 不通过，DS-01/03/04 仍待 Codex / ChatGPT5.5 复审和规则层判断。
+- 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 对应 HANDOFF、`开发管理/开发-技术经验.txt`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`SceneBuilder.cs`、`GameSession.cs`、`SceneFlowManager.cs`、`WorldSceneController.cs`、`SettlementSceneController.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；`git diff --check`；可用时在 Unity Editor 中执行 SceneBuilder 菜单并验证 StartMenu/World/Settlement/Adventure 加载与返回。
+- 完成条件：明确 DS-01/03/04/05 哪些通过、哪些需返工；DS-05 返工须挂载 World/Settlement Controller、清理新增 `.meta` 行尾空白并说明 Settlement/Adventure ID 传递边界；场景生成、加载、返回、UICanvas/GameSession 单例和 Input System 风险有结论；不得改 CTB/伤害/冷却/槽位语义。
