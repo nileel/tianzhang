@@ -33,6 +33,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-suppression-tq015c-8")
             return RunChecked(suite, RunGoldenCoreSuppressionTq015C8);
 
+        if (suite == "golden-core-suppression-tq015c-9")
+            return RunChecked(suite, RunGoldenCoreSuppressionTq015C9);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -408,6 +411,60 @@ static class BattleSimSelfTests
         AssertEqual("削位+封丹", ReadProperty(route, "ExitRoute"), "suppression exit route");
         AssertEqual("待争席丹籍可被削位；符修具备封丹手段", ReadProperty(route, "Reason"), "suppression exit reason");
         AssertEqual(true, ReadProperty(route, "IsTacticalExit"), "suppression exit flag");
+    }
+
+    static void RunGoldenCoreSuppressionTq015C9()
+    {
+        var statsType = Type.GetType("BattleSim.GoldenCoreSuppressionExitStats");
+        if (statsType == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats is missing.");
+
+        var switchesType = Type.GetType("BattleSim.GoldenCoreSuppressionSwitches");
+        if (switchesType == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionSwitches is missing.");
+
+        var createScenario = statsType.GetMethod(
+            "CreateTacticalScenario",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(Character), typeof(Character), switchesType },
+            modifiers: null);
+        if (createScenario == null)
+            throw new InvalidOperationException("GoldenCoreSuppressionExitStats.CreateTacticalScenario is missing.");
+
+        var disabledSwitches = Activator.CreateInstance(switchesType, new object[] { false, false })!;
+        var enabledSwitches = Activator.CreateInstance(switchesType, new object[] { true, true })!;
+
+        var zifu = StageCharacter("zifu", "筑基", 4);
+        zifu.Style = "taiyi_fuxiu";
+        zifu.GongFaName = "云篆度人经";
+
+        var gold = StageCharacter("gold", "金丹", 0);
+        gold.Primary["HP"] = 1000;
+        gold.Primary["MP"] = 100;
+        gold.Primary["肉攻"] = 120;
+        gold.Primary["神攻"] = 160;
+        gold.DivineName = "丹域镇压";
+        WriteProperty(gold, "SeatCompetitionState", "待争席");
+        WriteProperty(gold, "FinalOccupancyState", "未占据");
+
+        var disabled = createScenario.Invoke(null, new object[] { zifu, gold, disabledSwitches })!;
+        AssertEqual(false, ReadProperty(disabled, "HasActiveSwitch"), "disabled switch active flag");
+        AssertEqual("未启用", ReadProperty(disabled, "AppliedRoutes"), "disabled switch routes");
+        var disabledGold = (Character)ReadProperty(disabled, "Gold");
+        AssertEqual("丹域镇压", disabledGold.DivineName, "disabled switch keeps gold divine art");
+        AssertEqual(100, disabledGold.Primary["MP"], "disabled switch keeps gold MP");
+
+        var enabled = createScenario.Invoke(null, new object[] { zifu, gold, enabledSwitches })!;
+        AssertEqual(true, ReadProperty(enabled, "HasActiveSwitch"), "enabled switch active flag");
+        AssertEqual("削位+封丹", ReadProperty(enabled, "AppliedRoutes"), "enabled switch routes");
+        var enabledGold = (Character)ReadProperty(enabled, "Gold");
+        AssertEqual("", enabledGold.DivineName, "dan seal disables gold divine art");
+        AssertEqual(85, enabledGold.Primary["MP"], "seat erosion reduces gold MP only");
+        AssertEqual(1000, enabledGold.Primary["HP"], "tactical switches do not change gold HP");
+        AssertEqual(120, enabledGold.Primary["肉攻"], "tactical switches do not change gold physical attack");
+        AssertEqual("丹域镇压", gold.DivineName, "tactical scenario does not mutate source gold");
+        AssertEqual(100, gold.Primary["MP"], "tactical scenario keeps source gold MP");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)

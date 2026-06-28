@@ -293,23 +293,26 @@ class Program
 
         Console.WriteLine();
         Console.WriteLine("【紫府圆满 vs 金丹初期压制战】");
-        Console.WriteLine($"{"Build",-10} {"紫府样本",-8} {"金丹样本",-8} {"紫府胜率",-8} {"平均回合",-8} {"出口%",-7} {"主要出口",-12}");
-        Console.WriteLine(new string('-', 72));
+        Console.WriteLine($"{"Build",-10} {"紫府样本",-8} {"金丹样本",-8} {"紫府胜率",-8} {"开关胜率",-8} {"平均回合",-8} {"出口%",-7} {"主要出口",-12}");
+        Console.WriteLine(new string('-', 82));
+        var suppressionSwitches = new GoldenCoreSuppressionSwitches(EnableSeatErosion: true, EnableDanSeal: true);
         for (int i = 0; i < N; i++)
         {
             var zifu = zifuPools[i];
             var goldEarly = goldPools[i].Where(c => c.SubIndex == 0).ToList();
             if (zifu.Count == 0 || goldEarly.Count == 0)
             {
-                Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {"NA",8} {"NA",8} {"NA",7} {"-",-12}");
+                Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {"NA",8} {"NA",8} {"NA",8} {"NA",7} {"-",-12}");
                 continue;
             }
 
             int pairs = Math.Min(zifu.Count, goldEarly.Count);
             int roundsPerPair = Math.Max(1, SIM / pairs / 4);
             double totalWin = 0;
+            double totalSwitchWin = 0;
             double totalTurns = 0;
             int combats = 0;
+            int switchCombats = 0;
             int tacticalExitCount = 0;
             var routeCounts = new Dictionary<string, int>();
             for (int s = 0; s < pairs; s++)
@@ -326,6 +329,15 @@ class Program
                 totalWin += zw + zwSecond;
                 totalTurns += t1 + t2;
                 combats += 2;
+
+                var scenario = GoldenCoreSuppressionExitStats.CreateTacticalScenario(z, g, suppressionSwitches);
+                if (scenario.HasActiveSwitch)
+                {
+                    var (switchZw, _, _) = Combat.Simulate(scenario.Zifu, scenario.Gold, roundsPerPair);
+                    var (_, switchZwSecond, _) = Combat.Simulate(scenario.Gold, scenario.Zifu, roundsPerPair);
+                    totalSwitchWin += switchZw + switchZwSecond;
+                    switchCombats += 2;
+                }
             }
 
             var majorExitSource = tacticalExitCount > 0
@@ -337,11 +349,13 @@ class Program
                 .Select(kv => kv.Key)
                 .FirstOrDefault() ?? "-";
             double exitRate = tacticalExitCount * 100.0 / pairs;
+            string switchWinRate = switchCombats > 0 ? $"{totalSwitchWin / switchCombats:F1}%" : "NA";
 
-            Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {totalWin / combats,7:F1}% {totalTurns / combats,7:F1} {exitRate,6:F0}% {majorExit,-12}");
+            Console.WriteLine($"  {tags[i],-8} {zifu.Count,6} {goldEarly.Count,8} {totalWin / combats,7:F1}% {switchWinRate,8} {totalTurns / combats,7:F1} {exitRate,6:F0}% {majorExit,-12}");
         }
         Console.WriteLine("  说明：同 Build 内紫府圆满挑战金丹初期，验证金丹压制是否明显但仍保留战术出口。");
-        Console.WriteLine("  出口统计只分类削位/破府/封丹/阵法/剧情条件，不修改战斗结算、成丹阈值或金丹倍率。");
+        Console.WriteLine("  出口统计只分类削位/破府/封丹/阵法/剧情条件，不修改默认战斗结算、成丹阈值或金丹倍率。");
+        Console.WriteLine("  开关胜率仅在本表临时启用削位/封丹：削位压低金丹MP，封丹禁用金丹神通；不提升紫府HP/攻击。");
 
         // ═══════════════════════════════════════
         // 2v2 群战矩阵 (v6.0)

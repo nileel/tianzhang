@@ -1,0 +1,70 @@
+# TQ-015C-9 · BattleSim 削位/封丹实战开关归档
+
+状态：已完成 / 已验证（2026-06-28 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 任务来源
+
+- 用户发送纯 `1`。
+- `开发管理/当前任务队列.txt` 中无适合 Codex / ChatGPT5.5 的非复审执行型任务后，按规则转入 `开发管理/开发-下一步建议.txt` B3。
+- B3 上一轮结论要求把削位/封丹拆成可控模拟参数，验证是否能在不堆 HP/攻击倍率的前提下制造低概率战术窗口。
+
+## 本轮范围
+
+1. 新增 `GoldenCoreSuppressionSwitches`：
+   - `EnableSeatErosion`：削位开关。
+   - `EnableDanSeal`：封丹开关。
+2. 新增 `GoldenCoreSuppressionExitStats.CreateTacticalScenario(...)`：
+   - 开关默认关闭时不改变样本。
+   - 削位只压低金丹 MP，不改 HP/攻击。
+   - 封丹只禁用金丹神通，不改基础倍率。
+   - 方法克隆角色，不修改源样本。
+3. 默认压制战表新增 `开关胜率`：
+   - 基线 `紫府胜率` 仍使用原样本。
+   - `开关胜率` 只在显式启用削位/封丹且样本有机械出口时模拟。
+
+## 修改文件
+
+- `simulations/BattleSim/GoldenCoreSuppressionExitStats.cs`
+- `simulations/BattleSim/BattleSimSelfTests.cs`
+- `simulations/BattleSim/Program.cs`
+- `开发管理/当前任务队列.txt`
+- `开发管理/开发-下一步建议.txt`
+- `开发管理/设计-当前状态.txt`
+
+## 验证命令
+
+```powershell
+dotnet run -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-9
+dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-8
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test golden-core-suppression-tq015c-9
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test stage-matrix-b3
+dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"
+```
+
+## 验证结果
+
+- `golden-core-suppression-tq015c-9`：先按 TDD 跑出失败，失败原因为 `GoldenCoreSuppressionSwitches is missing`；实现后通过。
+- Build：通过，0 警告，0 错误。
+- `golden-core-suppression-tq015c-8`：通过，旧出口分类语义未破坏。
+- `stage-matrix-b3`：通过。
+- 默认模拟：通过。
+
+## 默认模拟快照
+
+- 金丹样本：物·修炼 16/20、法·修炼 17/20、水·散修 15/20、太虚·宿慧 2/20。
+- 紫府圆满 vs 金丹初期基线胜率：有机械样本的 Build 仍为 0.0%。
+- 开关胜率：
+  - 物·修炼：0.0%
+  - 法·修炼：0.0%
+  - 水·散修：0.0%
+  - 太虚·宿慧：NA（仅剧情条件，无机械出口）
+- 金丹同境平均回合数：约 25 回（样本 210 场；提交前多次输出在约 24.9-25.3 间小幅浮动）。
+
+## 结论
+
+削位/封丹开关已成为可控模拟参数，但当前强度不足以制造低概率战术窗口。后续 B3 不应直接堆紫府 HP/攻击或降低金丹基础倍率，应继续拆：
+
+- 破府输入字段与府位承载弱点。
+- 战术触发概率或前置条件。
+- 削位/封丹开关强度扫描。
