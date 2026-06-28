@@ -17,6 +17,33 @@
 
 ## 当前交接队列
 
+### HANDOFF-20260628-09 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-04 四场景脚手架
+- 提交：959fbda
+- 修改文件：
+  - 修改：src/Assets/Scripts/Editor/SceneBuilder.cs（+3 using World/Settlement/Adventure、+buildIndexOffset 参数、+4 MenuItem 入口：开始菜单/主世界/据点/副本）
+  - 新增：src/Assets/Scripts/Adventure/AdventureSceneController.cs（Start/ReturnToSource/ReturnToWorld）
+  - 新增：src/Assets/Scripts/Adventure.meta（文件夹 GUID）
+  - 新增：src/Assets/Scripts/Adventure/AdventureSceneController.cs.meta（脚本 GUID）
+- 已验证：
+  - dotnet build -c Release：0 错误 0 警告
+  - git diff --check（新增文件范围）：无尾随空白
+  - tools/check-review-text.ps1 -Paths 开发管理：OK（46 files）
+- 未验证：
+  - Unity Editor 中执行 MenuItem 生成场景并验证流转（需 Unity Editor 环境）
+  - AdventureSceneController 在场景实际流转中的行为
+  - BuildEmptyScene 新增 buildIndexOffset 参数暂未消费（保留为 Task 7 准备）
+- 残留风险：
+  - AdventureSceneController 缺少 AdventureDefinition 数据驱动层（按 Task 6 计划后续补）
+  - .unity 场景文件的 DS-05 pre-existing 行尾空白不在本轮范围
+- 请求判断：
+  1. SceneBuilder 泛化 API 是否符合实施计划 Task 4 预期？
+  2. 四个场景背景色与 rootName 选择是否合理？
+  3. AdventureSceneController 公开 API 是否符合设计预期？
+- 下一次 1 建议（DeepSeek）：TQ-007 JSON ? 污染修复（REVIEW-20260625-02）或 TQ-014-DS-05 E类污染修复
+- 下一次 2 建议（Codex）：复审本任务完整性、API 表面与 AdventureSceneController 接口
+
 ### HANDOFF-20260628-05 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-015B-2/3 NPC错字污染返工（REVIEW-20260625-04 部分修复）+ TQ-010 CSV/asset 验证
