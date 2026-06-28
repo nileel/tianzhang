@@ -17,6 +17,30 @@
 
 ## 当前交接队列
 
+
+### HANDOFF-20260628-02 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-010 CSV/asset 独立技能属性字段返工（REVIEW-20260625-03）
+- 提交：e59bff8
+- 修改文件：
+  - 修改：src/Assets/Data/Spells/ 下 28 个 Spell_*.asset（删除第一行带引号 element，保留新增独立字段）
+  - 修改：src/Assets/Data/Skills/ 下 13 个 Skill_*.asset（删除空 element: ""，保留新增独立字段）
+- 已验证：
+  - Select-String element 计数：109 asset 各恰好 1 个非空 element 字段
+  - tools/check-data-chain.ps1：OK
+  - tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Data/Spells,src/Assets/Data/Skills：OK（44 files）
+  - dotnet build src/Assembly-CSharp.csproj：0 错误 0 警告
+  - git diff --check：无问题
+- 未验证：
+  - Unity Editor 中 Spell/Skill asset inspector 显示（41 文件 YAML element 去重后 Unity 重导是否会引入格式差异）
+- 残留风险：
+  - 极低：仅删除重复 YAML 行，asset GUID/引用/其他字段完全不变
+  - 旧有 element 为 YAML 行首 2 空格缩进；已确保与周围字段缩进风格一致
+- 请求判断：
+  1. REVIEW-20260625-03 三项问题（重复 element / 空 element / 检查脚本未捕获）是否全部修复？
+  2. 是否可通过并从未通过审核清单清理？
+- 下一次 1 建议（DeepSeek）：TQ-007 太一道庭法箓字段映射表返工（REVIEW-20260625-02）
+
 ### HANDOFF-20260628-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-014-DS-05 返工（REVIEW-20260628-01 三项问题修复）
