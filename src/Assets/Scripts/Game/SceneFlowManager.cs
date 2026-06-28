@@ -39,26 +39,26 @@ namespace TianZhang.Game
         }
 
         /// <summary>
-        /// 进入据点场景。settlementId 当前不持久化到 GameSession；
-        /// SettlementSceneController 启动时使用自身硬编码定义列表定位据点。
-        /// ID 持久化方案延后至 TQ-014 Task 7（开始菜单迁移）统一处理。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：补 ID 传递边界注释
+        /// 进入据点场景（持久化 settlementId 到 GameSession）。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 补 ID 持久化
         /// </summary>
         public void EnterSettlement(string settlementId)
         {
-            EnsureSession().SetReturnTarget(SceneReturnTarget.World(EnsureSession().CurrentWorldNodeId));
+            var session = EnsureSession();
+            session.SetSettlementId(settlementId);
+            session.SetReturnTarget(SceneReturnTarget.World(session.CurrentWorldNodeId));
             SceneManager.LoadScene("SettlementScene");
         }
 
         /// <summary>
-        /// 进入副本/战斗场景。adventureId 当前不持久化到 GameSession；
-        /// AdventureScene 启动时由 AdventureSceneController 按传入的 returnTarget 恢复上下文。
-        /// ID 持久化方案延后至 TQ-014 Task 7（开始菜单迁移）统一处理。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：补 ID 传递边界注释
+        /// 进入副本/战斗场景（持久化 adventureId 到 GameSession）。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 补 ID 持久化
         /// </summary>
         public void EnterAdventure(string adventureId, SceneReturnTarget returnTarget)
         {
-            EnsureSession().SetReturnTarget(returnTarget);
+            var session = EnsureSession();
+            session.SetAdventureId(adventureId);
+            session.SetReturnTarget(returnTarget);
             SceneManager.LoadScene("AdventureScene");
         }
 
