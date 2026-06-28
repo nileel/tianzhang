@@ -70,3 +70,42 @@
   `($content -replace '"[\""]*"', '').ToCharArray() | Group-Object | ? Name -match '[{}]'`
 - **替换残留检查**：替换方法体后检查旧代码是否完全移除（可能出现新旧代码并存）。
 - **字符串插值干扰**：统计括号时先移除字符串字面量（包括 `$"..."` 内括号）。
+
+## DeepSeek 工作经验（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+
+> 2026-06-28 DeepSeek V4 Pro：TQ-014-DS-05 返工经验总结；提交 ab4f882。
+
+### .meta 文件绝不可写成单行
+- Unity 的 `.meta` 文件是 YAML 格式，必须包含换行符。单行 `.meta` 会导致 Unity 完全无法解析该脚本——不会加入 csproj、不会编译、运行时报找不到命名空间。
+- 正确模板（保留尾随空格，那是 YAML 空值占位符）：
+```
+fileFormatVersion: 2
+guid: <32位hex>
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+```
+- 写入方式：`[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))`（无 BOM，LF 换行）。不要用 PowerShell 的 `Set-Content` 写 `.meta`——它对字符串列表的处理不可靠。
+
+### .meta 尾随空格是必需的
+- `userData: `、`assetBundleName: `、`assetBundleVariant: ` 行末的空格是 YAML 空值语法，删掉会导致 Unity 解析异常。
+- `git diff --check` 对此的 trailing whitespace 报错是误报（对比对象是单行版 `.meta` 时尤其如此）。不要为了通过 `git diff --check` 而删除这些空格。
+
+### 新增脚本后 csproj 排查
+- `Assembly-CSharp.csproj` 被 `.gitignore` 忽略，不随 git 同步。新增目录/脚本后 Unity 需重新生成 csproj（关闭 Unity → 删除 csproj → 重新打开项目）。
+- 编译报 `namespace does not exist` 时，先 `rg "新脚本路径" Assembly-CSharp.csproj` 确认文件是否在编译列表中。不在列表中 → csproj 需重建。
+
+### PowerShell 写文件陷阱
+- `Set-Content -Value [List[string]]` 会将列表序列化为单行 `ToString()` 而非逐行写入。逐行写入用 `[System.IO.File]::WriteAllLines` 或 `$array | Set-Content`。
+- 字符串 `Replace` 对换行符（`\n` vs `\r\n`）和缩进空格极为敏感，跨行匹配失败时静默不报错。复杂编辑拆为行数组按索引操作更可靠（已有经验：见"行级编辑优于字符串替换"）。
+- `Get-Content` + `Set-Content -Encoding UTF8 -NoNewline` 的管道组合对 `.meta` 小文件可能吞掉换行符。写 `.meta` 一律用 `[System.IO.File]::WriteAllText/WriteAllLines`。
+
+### Unity 场景验证注意
+- Hierarchy 只显示当前打开的 .unity 文件。磁盘上场景已更新但 Hierarchy 无变化 → 在 Project 窗口双击该场景重新打开。
+- Editor 脚本生成的场景写入磁盘后，不会自动替换编辑器中已打开的同名场景。
