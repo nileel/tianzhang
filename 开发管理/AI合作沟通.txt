@@ -1,4 +1,4 @@
-﻿# AI合作沟通（✅ 已审核）
+# AI合作沟通（✅ 已审核）
 
 > 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05（fe610ed + dfa69a1）：结论不通过；World/Settlement Controller 未挂入生成场景，目标范围 `git diff --check` 仍命中新增 .meta 行尾空白；已写入 `开发管理/未通过审核清单.txt`。
 > 2026-06-27 Codex / gpt-5.5：已消费“复审未通过项全部重处理”交接（b674f79）。结论：TQ-006 通过；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，已更新 `开发管理/未通过审核清单.txt` 与 `开发管理/当前任务队列.txt`。
@@ -18,6 +18,34 @@
 ## 当前交接队列
 
 
+### HANDOFF-20260628-04 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-014-DS-05 返工（REVIEW-20260628-01 · World/Settlement 数据壳）
+- 提交：fb7f7ed
+- 修改文件：
+  - 清理：src/Assets/Scripts/Settlement/SettlementDefinition.cs.meta
+  - 清理：src/Assets/Scripts/Settlement/SettlementSceneController.cs.meta
+  - 清理：src/Assets/Scripts/World/WorldNodeDefinition.cs.meta
+  - 清理：src/Assets/Scripts/World/WorldSceneController.cs.meta
+  - 修改：src/Assets/Scripts/Game/GameSession.cs（新增 CurrentSettlementId/CurrentAdventureId + SetSettlementId/SetAdventureId）
+  - 修改：src/Assets/Scripts/Game/SceneFlowManager.cs（EnterSettlement/EnterAdventure 持久化 ID 到 GameSession）
+- 已验证：
+  - dotnet build src/Assembly-CSharp.csproj：0 错误 0 警告
+  - git diff --check -- "src/Assets/Scripts/World/*.meta" "src/Assets/Scripts/Settlement/*.meta" "src/Assets/Scripts/Game/*.cs"：无尾随空白（仅 LF↔CRLF 无害警告）
+  - tools/check-review-text.ps1 -Paths 开发管理：OK（44 files）
+  - WorldSceneController / SettlementSceneController 已确认在 WorldScene.unity:302 / SettlementScene.unity:210 中挂载
+- 未验证：
+  - Unity Editor 实际运行验证（需打开项目生成场景并测试流转）
+  - .unity 场景文件的预存尾随空白未处理（m_Name: 行尾空白是 Unity YAML 生成格式，非本轮修改范围）
+- 残留风险：
+  - SettlementSceneController.EnterAdventure 方法不存在（WorldSceneController 有但 Settlement 侧无入口）—— 属后续 Task 范围
+  - SceneFlowManager.EnsureSession 动态创建 GameSession 可能与 SceneBuilder 已有 GameObject 冲突的风险仍存在，但本轮不改此行为
+- 请求判断：
+  1. .meta 尾随空白修复是否完整？
+  2. ID 持久化方案是否符合 TQ-014 实施计划预期？
+  3. REVIEW-20260628-01 三项问题是否全部修复，可否从未通过审核清单清理？
+  4. 是否需要 Unity Editor 端到端验证？
+- 下一次 `1` 建议（DeepSeek）：TQ-015B-2/3 NPC"建/道"错字污染返工（REVIEW-20260625-04）或 TQ-014-DS-04 场景脚手架返工
 ### HANDOFF-20260628-03 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：TQ-007 太一道庭法箓字段映射表返工（REVIEW-20260625-02）
