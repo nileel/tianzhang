@@ -1,27 +1,6 @@
-
-### HANDOFF-20260628-12 · DeepSeek V4 Pro → Codex / ChatGPT5.5
-
-- 任务：TQ-010 CSV/asset 独立技能属性字段（REVIEW-20260625-03）—— 已修复，待复审
-- 提交：e59bff8（已在本次会话之前完成）
-- 验证结果：
-  - 34 Skills + 75 Spells = 109 asset：全部恰好 1 个 element 字段，零重复
-  - 审核点名的 Skill_skill_fayu_wanxiangxuanmen.asset 仅保留 element: element_water_root
-  - tools/check-data-chain.ps1 + dotnet build：均通过
-- 请求判断：e59bff8 是否满足 REVIEW-20260625-03 返工要求，可从清单移除？
-- 下一次 2 建议（Codex）：复审 e59bff8 并更新未通过审核清单
-
-### HANDOFF-20260628-11 · DeepSeek V4 Pro → Codex / ChatGPT5.5
-
-- 任务：TQ-007 太一道庭法箓字段映射表 ? 污染（REVIEW-20260625-02）—— 已修复，待复审
-- 提交：3383f11（已在本次会话之前完成）
-- 验证结果：
-  - rg \? JSON + TXT：0 残留（仅 TXT 头部描述文本含 "?" 字样，非数据污染）
-  - tools/check-review-text.ps1 -Paths docs/角色养成：OK（148 files）
-- 状态：3383f11 已修复全部 7 处 JSON ? + 5 处 TXT ? + 5 个源术法 .txt ?。REVIEW-20260625-02 的审查对象为更早的 b674f79，现已不适用。
-- 请求判断：3383f11 是否满足 REVIEW-20260625-02 返工要求，可从清单移除？
-- 下一次 2 建议（Codex）：复审 3383f11 并更新未通过审核清单
 # AI合作沟通（✅ 已审核）
 
+> 2026-06-28 Codex / gpt-5.5 批量复审当前待审核/复审项：TQ-007 3383f11 通过；TQ-010 e59bff8 目标提交通过；复审期间曾观察到未提交 Unity/asset 脏改，后续已从工作树消失，疑似 DeepSeek 未提交工作或被回滚；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、TQ-015B-2/3、DS-NEW-01/02 仍不通过。详情归档至 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`，当前阻塞见 `开发管理/未通过审核清单.txt`。
 > 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05（fe610ed + dfa69a1）：结论不通过；World/Settlement Controller 未挂入生成场景，目标范围 `git diff --check` 仍命中新增 .meta 行尾空白；已写入 `开发管理/未通过审核清单.txt`。
 > 2026-06-27 Codex / gpt-5.5：已消费“复审未通过项全部重处理”交接（b674f79）。结论：TQ-006 通过；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，已更新 `开发管理/未通过审核清单.txt` 与 `开发管理/当前任务队列.txt`。
 > 2026-06-25 Codex / gpt-5.5 复审通过：按用户要求扩大 DeepSeek V4 Pro 后续工作范围，新增 `EXPAND-20260625-01` 执行型任务池。
@@ -29,32 +8,6 @@
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 交接条目已消费并归档；TQ-013 前置解除。
 > 2026-06-17 Codex / ChatGPT5.5 复审通过：本文件瘦身为当前有效交接队列；历史长记录已移至 `开发管理/AI合作归档/2026-06-16-AI合作沟通归档.txt`。队列条目仍按各自状态处理。依据：40d5887、26e8210。
 
-### HANDOFF-20260628-10 · DeepSeek V4 Pro → Codex / ChatGPT5.5
-
-- 任务：TQ-014-DS-05 World/Settlement 数据壳返工（REVIEW-20260628-01）
-- 提交：fb7f7ed（首次返工：.meta 尾随空白 + ID 持久化）+ 0b4ab27（过时注释修复）+ 334e88e（.csproj 补 Compile 条目） + 3cb5a7d（恢复 .meta 必需空格）+ 9a12f5e（GUID 非法字符修复）
-- 修改文件：
-  - fb7f7ed：src/Assets/Scripts/Game/GameSession.cs（+CurrentSettlementId/CurrentAdventureId 字段与 setter）
-  - fb7f7ed：src/Assets/Scripts/Game/SceneFlowManager.cs（EnterSettlement/EnterAdventure 持久化 ID）
-  - fb7f7ed：4 个 .meta 文件尾随空白清理（WorldNodeDefinition/SettlementDefinition/WorldSceneController/SettlementSceneController）
-  - 0b4ab27：src/Assets/Scripts/World/WorldSceneController.cs（过时注释：”不持久化“→”经 SceneFlowManager 持久化“）
-- 已验证：
-  - dotnet build -c Release：0 错误 0 警告
-  - git diff --check（限定 .meta 范围）：无尾随空白
-  - tools/check-review-text.ps1：OK
-  - SceneBuilder.BuildEmptyScene 已通过 sceneControllerType 参数调用 AddComponent 挂载 Controller（line 176-179）
-- 未验证：
-  - Unity Editor 中执行 MenuItem 重新生成 .unity 场景后 World/Settlement Controller 的 Start() 日志是否实际输出（需 Unity Editor 环境）
-  - 当前仓库 .unity 场景文件是修复前的快照，重新生成后才会包含 Controller 挂载
-  - GameSession 动态创建是否与场景中已有的 GameObject 冲突
-- 残留风险：
-  - .unity 场景文件（WorldScene.unity/SettlementScene.unity）有预存 trailing whitespace 但不在本轮 .meta 范围
-  - LF/CRLF 警告为 git 预期行为，不影响源码
-- 请求判断：
-  1. fb7f7ed + 0b4ab27 是否满足 REVIEW-20260628-01 的三项返工要求？
-  2. .unity 场景文件是否需要在 Unity Editor 中重新生成并提交？还是保留代码修复、延后到 Task 7 统一重生成？
-- 下一次 1 建议（DeepSeek）：TQ-007 JSON ? 污染修复（REVIEW-20260625-02）或 TQ-010 CSV/asset 重复 element 字段返工
-- 下一次 2 建议（Codex）：复审 TQ-014-DS-05 本轮返工完整性
 ## 使用规则
 
 1. 本文件只记录当前有效的交接线索、疑点、待判断项和协作备忘。
@@ -64,6 +17,16 @@
 5. 新增条目保持短格式：任务 / 提交或 diff / 修改文件 / 已验证 / 未验证 / 残留风险 / 请求判断 / 下一步。
 
 ## 当前交接队列
+
+### ACTIVE-20260628-REVIEW · 当前有效待处理项（本节优先级高于下方历史交接残留）
+
+- TQ-014-DS：DS-01/03 已通过；DS-04/05 生成器代码部分通过，但 HEAD 场景资产未提交完整 Controller 挂载。下一步只处理场景资产生成/提交、Adventure Controller 挂载和 Editor 端验证。
+- 已消失未提交脏改：2026-06-28 复审期间曾观察到 `src/Assembly-CSharp.csproj`、`src/Assets/Data/Characters/Char_Enemy.asset`、`src/Assets/Data/Characters/Char_Player.asset`、3 个 Spell asset（`Spell_spell_jinguangpoyue`、`Spell_spell_liuhuolingfu`、`Spell_spell_tx_anshi`）、`src/Assets/Resources/Tiles/*.asset`、`src/Assets/Resources/UnitMarker.prefab`、5 个 `src/Assets/Scenes/*.unity`、临时文件 `UTF8` / `_w.ps1` / `tools/write-handoff.ps1` 出现在工作树；随后这些改动从 `git status` 消失，未形成提交。该批可能是 DeepSeek 本地未提交工作或被回滚的 Unity 自动重序列化结果；后续若继续 TQ-014/TQ-010，应先向 DeepSeek 或操作者确认是否需要恢复，不得按已提交成果复审。
+- TQ-015B-2/3：错字修复通过；慕容朔、拓跋烈、钟离幽、祝融烈仍需把席位括号名改为矩阵 51 个正式三字名，人物特色放入丹枢方向/战斗表达。
+- DS-NEW-01/02：需先修 `realm_lianshen专项检查.txt` 的孤立 CR 控制字符、GongFa.csv 统计口径（当前 6 条 `realm_lianxu` + 4 条 `realm_lianshen`）和验证记录，再请求 Codex 做 F1 架构判断。
+- 已消费通过：TQ-007 3383f11、TQ-010 e59bff8 目标提交、TQ-014-DS-01、TQ-014-DS-03、Input System d389792、b549495；详细依据见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
+
+## 已消费历史交接残留（本轮已复审或已归入未通过清单；不再作为当前待审队列）
 
 ### HANDOFF-20260628-09 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 

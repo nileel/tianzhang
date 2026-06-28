@@ -1,5 +1,6 @@
 # 未通过审核清单（✅ 已审核）
 
+> 2026-06-28 Codex / gpt-5.5 批量复审：TQ-007 目标提交 3383f11 通过；TQ-010 目标提交 e59bff8 通过但当前工作树有新 asset 回归；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、TQ-015B-2/3、DS-NEW-01/02 与当前工作树仍不通过。详见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
 > 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05：TQ-014-DS-05 不通过；新增控制器未挂入 World/Settlement 场景，目标范围 `git diff --check` 仍失败。
 > 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 已通过严格覆盖、meta 配对、关键字段一致性、旧路径扫描、Unity C# build 与 `git diff --check`；当前未通过/待复审项清零。
 > 2026-06-27 Codex / gpt-5.5 复审 b674f79：TQ-006 通过并从清单移除；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，失败原因更新为本轮证据。
@@ -16,42 +17,49 @@
 
 ## 当前未通过/待复审项
 
-### REVIEW-20260628-01 · TQ-014-DS-05 World/Settlement 数据壳
+### REVIEW-20260628-01 · TQ-014-DS-04/05 场景脚手架与 World/Settlement 数据壳
 
-- 结论：不通过。
-- 目标提交：fe610ed；后续修补提交：dfa69a1（修复 .meta GUID 连字符格式）。
-- 已通过部分：`WorldNodeDefinition` / `SettlementDefinition` 字段与 TQ-014 Task 6 基础模板一致；当前 C# 编译通过；新增 .meta GUID 当前已是 Unity 常用的 32 位无连字符格式。
+- 结论：部分通过，当前仍不通过。
+- 目标提交：fe610ed、959fbda、fb7f7ed、0b4ab27、334e88e、3cb5a7d、9a12f5e；历史修补 dfa69a1 / 82ab968 已被后续提交覆盖。
+- 已通过部分：`SceneBuilder.BuildEmptyScene` 已支持 `sceneControllerType` 并在 World/Settlement/Adventure 菜单入口挂载对应 Controller；`GameSession` 与 `SceneFlowManager` 已保存 `CurrentSettlementId` / `CurrentAdventureId`；新增 `.meta` 均为多行 Unity YAML 且 GUID 为 32 位 hex；`Assembly-CSharp.csproj` 当前包含新增脚本；`dotnet build src/Assembly-CSharp.csproj` 通过。
 - 未通过问题：
-  1. 新增 `WorldSceneController` / `SettlementSceneController` 没有挂到 `WorldScene.unity` / `SettlementScene.unity`，`SceneBuilder.BuildEmptyScene` 也只创建空 `WorldRoot` / `SettlementRoot`，不会自动 `AddComponent`；因此 `Start()` 日志、`EnterSettlement` / `EnterAdventure` / `ReturnToWorld` 入口在生成场景中不会执行。
-  2. 目标范围 `git diff --check fe610ed^ dfa69a1 -- src/Assets/Scripts/World src/Assets/Scripts/Settlement` 仍失败，4 个新增 `.meta` 的 `assetBundleVariant:` 行保留 trailing whitespace；fe610ed 原始提交的 `userData:` / `assetBundleName:` / `assetBundleVariant:` 也均命中。
-  3. `SceneFlowManager.EnterSettlement` / `EnterAdventure` 仍不保存 `settlementId` / `adventureId`；本轮可作为会话流转骨架遗留风险，但在 DS-05 后继续推进开始菜单迁移前必须给出当前地点/副本 ID 的传递方案。
-- 返工建议：修改 `SceneBuilder` 或场景资产，把 World/Settlement Controller 挂到对应 root 或独立 GameObject；清理新增 `.meta` 行尾空白并重新跑目标范围 `git diff --check`；在 `GameSession` / `SceneFlowManager` 中补当前 Settlement/Adventure ID 或明确 Task 7 前的占位边界；运行 `dotnet build src/Assembly-CSharp.csproj`，可用时在 Unity Editor 生成场景并验证 World/Settlement 加载和返回。
+  1. HEAD 中 `WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity` 仍未提交 Controller 引用；当前工作树只有 World/Settlement 场景含 Controller，Adventure 场景仍无 `AdventureSceneController`。
+  2. 当前工作树存在未提交 Unity/asset 脏改，全量 `git diff --check` 失败；其中 3 个 Spell asset 被改回空 `element`，已另列当前工作树阻塞。
+  3. Unity Editor 端到端生成、加载、返回尚未验证；当前 `.unity` 变更不能直接视为已通过。
+- 返工建议：用 Unity Editor 重新执行 SceneBuilder 菜单，提交 World/Settlement/Adventure 场景资产中的 Controller 挂载；清理或回滚当前工作树里无关 asset 数值回归；重新运行 `dotnet build src/Assembly-CSharp.csproj`、场景/asset 专项检查与可接受范围的 diff 检查。
 
-### REVIEW-20260625-02 · TQ-007 太一道庭法箓字段映射表
-
-- 结论：不通过。
-- 目标提交：c8cb56d；返工提交：b674f79。
-- 已通过部分：9 功法 / 26 术法 / 9 神通覆盖数正确；通神三玄礼录归属核对源文件后应为“四大道脉 / 桓氏兵马坛”；`tools/check-review-text.ps1 -Paths docs/角色养成` 通过。
-- 未通过问题：b674f79 只修复了 TXT 中 5 处 `?` 污染，JSON 仍有多处 `?`，例如 `docs/角色养成/太一道庭法箓字段映射表.json` 中不坏金身、五雷符敕、军势如山、天书云篆、金刚破岳等字段仍疑似应为负号或向下箭头；TXT 表中多行字段截断风险仍未整体校准。
-- 返工建议：以源文件重新抽取或人工校准 TXT 与 JSON 的全部 `?` 污染字段；TXT 明确定位为摘要预览或补全关键字段，JSON 保持完整字段；返工后运行 `tools/check-review-text.ps1 -Paths docs/角色养成` 并用 `rg -n "\?|�|``n|``r" docs/角色养成/太一道庭法箓字段映射表.txt docs/角色养成/太一道庭法箓字段映射表.json` 复核。
-
-### REVIEW-20260625-03 · TQ-010 CSV/asset 独立技能属性字段
+### REVIEW-20260628-02 · 当前工作树 Unity/asset 脏改
 
 - 结论：不通过。
-- 目标提交：0f629ce；返工提交：b674f79。
-- 已通过部分：`Spells.csv` 与 `Skills.csv` 均新增独立 `element` 列，行宽一致且无空 element；`DataConfigImporter.cs` 已改为读取独立列；`tools/check-data-chain.ps1` 与 `dotnet build src/Assembly-CSharp.csproj` 通过。
-- 未通过问题：b674f79 以 YAML 追加方式补字段，但没有重导并清理旧序列化字段。109 个 Spell/Skill asset 中有 41 个存在两个 `element` 字段；其中 13 个 Skill asset 仍保留旧的空 `element: ""`，例如 `Skill_skill_fayu_wanxiangxuanmen.asset` 同时存在空值与 `element_water_root`。这不满足 Unity asset 单字段一致性要求，且 `tools/check-data-chain.ps1` 目前未捕捉重复字段。
-- 返工建议：用 Unity 导入器重导 Spells/Skills asset，或用结构化脚本把每个 asset 收敛为唯一 `element` 字段；复核 CSV 75 术法 + 34 神通到 asset 的 element 覆盖且每个有效 asset 恰好 1 个非空字段；运行 `tools/check-data-chain.ps1`、`dotnet build src/Assembly-CSharp.csproj`，并追加 `Select-String '^  element:'` 计数检查。
+- 范围：当前未提交 diff，不归咎于 TQ-010 目标提交 e59bff8。
+- 已通过部分：`e59bff8` 目标提交自身已通过，109 个 Spell/Skill asset 在该提交树中均恰好 1 个非空 `element`。
+- 未通过问题：
+  1. 当前工作树的 `Spell_spell_jinguangpoyue.asset`、`Spell_spell_liuhuolingfu.asset`、`Spell_spell_tx_anshi.asset` 各只有 1 个但为空的 `element` 字段。
+  2. `Spell_spell_liuhuolingfu.asset` 与 `Spell_spell_tx_anshi.asset` 当前 diff 同时改动了 `type`、`range`、`mpCost`、`cooldownTicks`、`damageMultiplier` 等数值字段，超出 TQ-010 去重范围。
+  3. 当前工作树全量 `git diff --check` 失败，失败来自未提交 Unity/asset YAML 空值行与上述 asset 回归。
+- 返工建议：回滚或按 CSV 重新导入 3 个 Spell asset，确保 109 个 Spell/Skill asset 每个恰好 1 个非空 `element`；再决定是否保留并提交 Unity 场景生成 diff。
 
-### REVIEW-20260625-04 · TQ-015B-2/3 NPC 与批量生产模板迁移
+### REVIEW-20260628-03 · TQ-015B-2/3 NPC 与批量生产模板迁移
+
+- 结论：部分通过，当前仍不通过。
+- 目标提交：95055c1；错字修复提交：a3be216。
+- 已通过部分：`a3be216` 已清理点名的“建/道”机械错字；旧 `丹籍`、`一正二辅`、`正籍/辅籍/敕籍/寄丹` 在当前目标范围内仅保留为历史说明或模板禁用项。
+- 未通过问题：慕容朔、拓跋烈、钟离幽、祝融烈仍把人物丹枢/派系概念写入席位括号名，未引用 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 的正式三字名：`天狼曜`、`苍狼真形`、`地脉阴河`、`焚天火种` 均不在 51 个正式席位名中。
+- 返工建议：把“元婴分支 + 源/化/界席位”改为矩阵正式名；把人物特色放入“丹枢方向/战斗表达”，不得放进席位括号名；返工后用脚本比对 NPC 中 `源位（...）/化位（...）/界位（...）` 是否均属于矩阵 51 名。
+
+### REVIEW-20260628-04 · DS-NEW-01/02 炼虚与 realm_lianshen 报告
 
 - 结论：不通过。
-- 目标提交：95055c1；后续 2823643 对批量生产模板做过三字命名同步；返工提交：b674f79。
-- 已通过部分：文本检查通过；批量生产模板总体能约束 DeepSeek 不越过 17 分支 × 51 席矩阵；世界背景故事已新增旧体系废止说明。
-- 未通过问题：b674f79 已补齐“位格状态”字样并清掉 `丹籍` 旧词，但批量替换引入新的正文污染：`拓跋烈.txt` 出现“建蹈”“承受建击”“双建提升”“位格建建路径”“建步兵/建甲骑修”等错字；`祝融烈.txt` 出现“统道替换”“道张”“道个”“道年”“道圈”“道层”“道次”等错字。另有慕容朔、拓跋烈、钟离幽、祝融烈的源/化/界席位归属仍需对照矩阵原文复核，不能只按推断写定论。
-- 返工建议：先回滚或人工校准 b674f79 对 NPC 的机械替换污染，再复核 13 份 NPC 是否统一为“元婴分支 + 位格状态（源/化/界席位 + 占据方式 + 空位/持有状态）+ 丹枢”字段；保留历史旧称时必须标明“旧体系/历史称谓”；对席位归属逐项引用 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 事实源。
+- 目标提交：c7396fe、fb2ae37。
+- 未通过问题：
+  1. `开发管理/realm_lianshen专项检查.txt` 含 28 个孤立 CR 控制字符，导致 `realm_lianshen` / `realm_lianxu` / `rg` 显示污染。
+  2. 两份报告统计与当前实际 CSV 不一致：`GongFa.csv` 实际为 6 条 `realm_lianxu` + 4 条 `realm_lianshen`，不是报告中的 5+4 或 9 总数。
+  3. `realm_lianshen专项检查.txt` 验证记录仍写 `check-review-text.ps1: 待运行`，与交接自述和本轮检查不一致。
+- 返工建议：先修控制字符与统计口径，再由 Codex 判断 F1（`realm_lianshen` 是否独立境界 / 资料片 key / 合并到 `realm_lianxu`）。
 
 ## 后续复核建议
 
-- 优先返工 TQ-010；TQ-006 已于 2026-06-27 复审通过并清理。
-- TQ-015B-2/3 返工前先统一“丹籍”是否允许作为历史称谓；返工时不得扩大到 TQ-015C 数值方案。
+- 优先清理当前工作树 asset 回归与场景资产提交边界；否则 TQ-010 目标提交虽通过，当前数据闸门仍不干净。
+- TQ-014-DS 下一轮只处理场景资产生成/提交、Adventure Controller 挂载与 Editor 端验证，不扩大到 CTB/伤害/冷却/槽位语义。
+- TQ-015B-2/3 返工只改 NPC 席位正式名与丹枢表达，不扩大到 TQ-015C 数值方案。
+- DS-NEW-01/02 修正前，不以其 F 类统计作为架构决策依据。

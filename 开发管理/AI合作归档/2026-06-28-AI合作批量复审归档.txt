@@ -1,0 +1,85 @@
+# 2026-06-28 AI 合作批量复审归档
+
+审核方：Codex / gpt-5.5
+身份确认：Node REPL `x-codex-turn-metadata.model` = `gpt-5.5`
+范围：用户要求“将所有待审核和复审的工作都审了”时，消费 `AI合作沟通.txt` 当前队列、`未通过审核清单.txt` 当前条目与相关目标提交。
+
+## 通过
+
+### TQ-007 · 太一道庭法箓字段映射表
+
+- 目标：`3383f11`
+- 结论：通过。
+- 依据：JSON 可解析；覆盖 9 功法 / 26 术法 / 9 神通；指定 JSON/TXT/源术法文件无 `?` 数据污染、无 U+FFFD 替换字符、无转义残留；TXT 已声明完整数据见 JSON 或源文件，截断风险不再阻塞本轮。
+- 记录：`docs/角色养成/太一道庭法箓字段映射表.txt` 可改为已审核；`REVIEW-20260625-02` 可移除。
+
+### TQ-010 · CSV/asset 独立技能属性字段（目标提交）
+
+- 目标：`e59bff8`
+- 结论：目标提交通过。
+- 依据：在 `e59bff8` 树中 75 Spell + 34 Skill 共 109 个 asset 均恰好 1 个非空 `element` 字段；`git diff --check e59bff8^ e59bff8 -- src/Assets/Data/Spells src/Assets/Data/Skills` 通过。
+- 限制：当前工作树另有未提交 Unity/asset 改动，已把 3 个 Spell asset 改回空 `element`，这是新的当前工作树阻塞，不归咎于 `e59bff8`。
+
+### TQ-014-DS-01 · 场景架构 Unity 现状清单
+
+- 目标：`cc30bd0`
+- 结论：作为实施前基线清单通过。
+- 依据：文件结构符合计划 Task 1，风险拆分与后续切片顺序和实际代码地图一致。
+- 限制：该清单描述的是 DS-03/04/05 前的基线状态，不代表当前 Unity 场景现状。
+
+### TQ-014-DS-03 · 会话流转骨架
+
+- 目标：`cffad97`
+- 结论：通过。
+- 依据：`SceneReturnTarget` / `GameSession` / `SceneFlowManager` 公共 API 基本符合实施计划；`GameManager.StartGameWithSect` 保留兼容桥接；`dotnet build src/Assembly-CSharp.csproj` 通过。
+- 限制：Unity Editor 端到端流转仍需随 DS-04/05 场景资产一并验证。
+
+### Input Manager → Input System 迁移
+
+- 目标：`d389792`
+- 结论：通过。
+- 依据：`manifest.json` 含 `com.unity.inputsystem`；`ProjectSettings.asset` 的 `activeInputHandler: 1`；脚本引用已迁移到 `Keyboard.current` / `Mouse.current` / `InputSystemUIInputModule`；`dotnet build src/Assembly-CSharp.csproj` 通过。
+
+### 历史 b549495 审核方预填修复
+
+- 目标：`b549495`
+- 结论：通过。
+- 依据：当前正文未再检出 `审核方：ChatGPT5.5` 或 `复核已修复` 作为待审内容；历史提交说明残留不改写，后续若 squash/PR 再清理。
+
+## 部分通过 / 不通过
+
+### TQ-014-DS-04/05 · 场景脚手架与 World/Settlement 数据壳
+
+- 目标：`959fbda`、`fb7f7ed`、`0b4ab27`、`334e88e`、`3cb5a7d`、`9a12f5e`
+- 结论：部分通过；当前仍不通过。
+- 已通过：`SceneBuilder.BuildEmptyScene` 支持 `sceneControllerType` 并在 World/Settlement/Adventure 菜单入口挂载对应 Controller；`GameSession` 已持久化 `CurrentSettlementId` / `CurrentAdventureId`；5 个新增脚本 `.meta` 均为多行 Unity YAML 且 GUID 为 32 位 hex；`Assembly-CSharp.csproj` 当前包含 5 个新增脚本；`dotnet build src/Assembly-CSharp.csproj` 通过。
+- 未通过：HEAD 中 `WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity` 仍未提交 Controller 引用；当前工作树虽已有 World/Settlement Controller 引用，但 AdventureScene 仍无 `AdventureSceneController`，且当前工作树未提交并存在 asset 回归与 `git diff --check` 报错。
+- 判定：生成器代码可接受；实际场景资产与当前工作树状态不能通过。
+
+### TQ-015B-2/3 · NPC 与批量生产迁移
+
+- 目标：`95055c1` + `a3be216`
+- 结论：部分通过；当前仍不通过。
+- 已通过：点名的“建/道”机械错字已清；旧 `丹籍`、`一正二辅`、`正籍/辅籍/敕籍/寄丹` 在当前目标范围内仅保留为历史说明或模板禁用项。
+- 未通过：慕容朔、拓跋烈、钟离幽、祝融烈仍把人物丹枢/派系概念写进席位括号名，未引用矩阵正式三字名：`天狼曜`、`苍狼真形`、`地脉阴河`、`焚天火种` 均不在 51 个正式席位名中。
+- 事实源：`docs/基础设定/元婴锚点与金丹位格矩阵.txt` 要求引用正式名称，如 `源位（报春根）`。
+
+### DS-NEW-01/02 · 炼虚与 realm_lianshen 报告
+
+- 目标：`c7396fe`、`fb2ae37`
+- 结论：不通过。
+- 问题：`realm_lianshen专项检查.txt` 含 28 个孤立 CR 控制字符，导致 `realm_lianshen` / `realm_lianxu` / `rg` 显示污染；两份报告统计与实际 CSV 不一致，当前 `GongFa.csv` 为 6 条 `realm_lianxu` + 4 条 `realm_lianshen`，不是报告中的 5+4 或 9 总数。
+- 建议：先修正控制字符和统计口径，再谈 F1 架构决策；否则交接材料本身不能作为可靠事实源。
+
+### 当前工作树未提交 Unity/asset 改动
+
+- 结论：不通过；不属于已审目标提交。
+- 问题：`Spell_spell_jinguangpoyue.asset`、`Spell_spell_liuhuolingfu.asset`、`Spell_spell_tx_anshi.asset` 当前工作树各只有 1 个但为空的 `element` 字段，并且两处术法数值被改动；全量 `git diff --check` 因当前 Unity/asset 脏改报错。
+- 建议：回滚或按 CSV 重新导入这 3 个 Spell asset；再统一提交场景资产变更。
+
+## 本轮验证
+
+- `dotnet build src/Assembly-CSharp.csproj`：通过，0 错误 0 警告。
+- `tools/check-data-chain.ps1`：通过。
+- `tools/check-review-text.ps1 -Paths 开发管理,docs/角色养成,docs/剧情,src/Assets/Scripts`：通过。
+- `git diff --check`：不通过，原因是当前未提交 Unity/asset 脏改；目标提交级别的 TQ-007/TQ-010 diff check 通过。

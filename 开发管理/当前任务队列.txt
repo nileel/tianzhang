@@ -27,6 +27,8 @@
 > 2026-06-28 Codex / gpt-5.5：TQ-015C-9 已完成并归档至 `开发管理/任务归档/2026-06-28-TQ-015C-9-BattleSim削位封丹开关归档.txt`。BattleSim 压制战表新增 `开关胜率`，显式启用削位/封丹时只压低金丹 MP、禁用金丹神通，不提升紫府 HP/攻击；self-test、build、默认 run 通过。当前物·修炼/法·修炼/水·散修开关胜率仍为 0.0%，后续 B3 若继续应拆破府输入或战术触发强度扫描。
 > 2026-06-28 Codex / gpt-5.5：项目总结时同步队列状态。`AI合作沟通.txt` 已记录 DeepSeek 提交 TQ-014-DS-01/03/04/05；本文件将原 TQ-014-DS-01“待处理”调整为 TQ-014 场景架构待复审集合项。此处不代表审核通过，后续由 `2` 流程复审。
 > 2026-06-28 Codex / gpt-5.5：`2` 流程复审 TQ-014-DS-05，结论不通过；World/Settlement Controller 未挂入生成场景，目标范围 `git diff --check` 仍失败。详见 `开发管理/未通过审核清单.txt` REVIEW-20260628-01。
+> 2026-06-28 Codex / gpt-5.5：按用户要求根据项目总结重排优先级。正式开发前优先级改为：TQ-014-DS 场景架构返工/复审与 Editor 验证 → TQ-010 技能属性字段独立化 → TQ-015C-10 破府/触发概率数值验证 → TQ-015B NPC 源化界返工 → TQ-007 法箓映射表返工。
+> 2026-06-28 Codex / gpt-5.5：批量复审当前待审核/复审项。TQ-007 目标提交 3383f11 通过；TQ-010 目标提交 e59bff8 通过但当前工作树有 3 个 Spell asset 空 `element` 回归；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、TQ-015B-2/3、DS-NEW-01/02 与当前工作树仍有阻塞。详见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt` 与 `开发管理/未通过审核清单.txt`。
 
 ## 使用规则
 
@@ -42,17 +44,18 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-007 | P1 | DeepSeek V4 Pro | 数据整理 | 复审不通过 / 待返工 | b674f79 只修了 TXT 局部，JSON 仍有 `?` 污染；见未通过清单 |
-| TQ-010 | P1 | DeepSeek V4 Pro | 数据链路 | 复审不通过 / 待返工 | b674f79 追加 asset 字段后出现重复 `element` 和空旧字段；见未通过清单 |
-| TQ-015B | P0 | Codex / ChatGPT5.5（TQ-015B-1已审核）；DeepSeek V4 Pro（TQ-015B-2/3 NPC+模板已完成） | 文档迁移/批量生产 | TQ-015B-1✅已审核 / TQ-015B-2/3复审不通过 | b674f79 的 NPC 批量替换引入“建/道”错字污染，席位归属仍需事实源复核；见未通过清单 |
-| TQ-014-DS | P1 | Codex / ChatGPT5.5 / DeepSeek V4 Pro | 场景架构复审/返工 | DS-05复审不通过；DS-01/03/04待复审 | DS-05 需先返工：Controller 未挂入 World/Settlement 场景且新增 .meta 行尾空白未清；其余 DeepSeek 场景切片仍待 Codex 复审 |
+| TQ-014-DS | P0 | DeepSeek V4 Pro 返工；Codex / ChatGPT5.5 复审 | 场景架构返工/复审 | DS-01/03通过；DS-04/05部分通过但场景资产与当前工作树仍不通过 | 正式开发前首要闸门：提交 World/Settlement/Adventure 场景 Controller 挂载，清理当前 asset 回归，再做 Unity Editor 生成/加载/返回验证 |
+| TQ-010 | P0 | DeepSeek V4 Pro | 数据链路 | 目标提交 e59bff8 通过；当前工作树不通过 | 正式开发前数据闸门：当前 3 个 Spell asset 被未提交改动改回空 `element` 并改动术法数值，须回滚或重导；见未通过清单 |
+| TQ-015C-10 | P0 | Codex / ChatGPT5.5 | 数值验证 | 待处理 | 在 BattleSim 中继续拆破府输入、战术触发概率或开关强度扫描，目标是验证紫府对金丹的低概率战术出口，不改基础 HP/攻击倍率 |
+| TQ-015B | P1 | DeepSeek V4 Pro 返工；Codex / ChatGPT5.5 复审 | 文档迁移/批量生产 | TQ-015B-1✅已审核；TQ-015B-2/3错字修复通过但席位正式名不通过 | NPC 须引用矩阵 51 个正式三字席位名，人物特色放入丹枢方向/战斗表达；见未通过清单 |
+| TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
 
 ## 任务卡片
 
 ### TQ-007 · 法箓映射表
 
 - 来源：`开发管理/设计-下一步建议.txt` A0；`开发管理/AI合作沟通.txt` HANDOFF-20260619-01。
-- 当前状态：复审不通过，待返工。覆盖数量与通神三玄礼录归属核实通过；b674f79 只修了 TXT 局部，JSON 仍有 `?` 符号污染，TXT 展示仍有多行字段截断风险。
+- 当前状态：目标提交 3383f11 复审通过，待归档清理。覆盖数量、通神三玄礼录归属、JSON/TXT `?` 污染修复均已通过；TXT 摘要截断以“完整数据见 JSON 或源文件”收束。
 - 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` HANDOFF-20260619-01、`docs/角色养成/太一道庭法箓规则.txt`、太一功法/术法/神通文件、对应设计规范。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/角色养成`；必要时用 `rg` 核对 9 功法、26 术法、9 神通覆盖。
 - 完成条件：映射表字段满足后续导入方案输入，通神三玄礼录归属明确，本命升格/特殊效果是否补全文本有结论；若通过复审，更新归档和后续 CSV 字段任务。
@@ -60,15 +63,24 @@
 ### TQ-010 · CSV/asset 独立技能属性字段
 
 - 来源：TQ-005/TQ-009 拆分；TQ-009 已完成 BattleSim 五行 v5.10 同源化首轮实现，本任务只处理数据字段独立化。
-- 当前状态：复审不通过，待返工。b674f79 追加 asset 字段后仍有重复 `element` 和空旧字段；可参考已通过归档的 TQ-013D 字段口径，避免同一批 CSV/asset 重复迁移。
+- 当前状态：目标提交 e59bff8 复审通过，但当前工作树不通过。正式开发前 P0 数据闸门仍阻塞于未提交 Unity/asset 脏改：3 个 Spell asset 的 `element` 为空且数值字段被改动。
 - 必读：`docs/基础设定/灵根设定.txt` 第八节、术法/神通设计模板、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`DataConfigImporter.cs`。
 - 验证命令：导入完整性检查 + Unity 编译；必要时用 `rg "element_"` 核对 75 术法、34 神通覆盖。
 - 完成条件：术法/神通拥有独立五行属性列，学习门槛 `elementReq` 不再兼任技能属性；重导 `.asset` 后不丢失 12 属性与混沌/无属性语义。
 
+### TQ-015C-10 · 破府/战术触发数值验证
+
+- 来源：`开发管理/开发-下一步建议.txt` B3；TQ-015C-9 归档结论；2026-06-28 项目总结后的正式开发前数值闸门。
+- 当前状态：待处理。Codex / ChatGPT5.5 主责，属于 `1` 可执行的 P0 数值验证切片；不消费复审队列。
+- 必读：`开发管理/设计-当前状态.txt` 的 TQ-015C-8/9 快照、`开发管理/开发-下一步建议.txt` B3、`开发管理/成丹与席位竞争数值验证方案.txt`、`simulations/BattleSim/Program.cs`、`docs/基础设定/角色数值设计.txt`。
+- 范围：在 BattleSim 内继续拆“破府输入、战术触发概率或开关强度扫描”之一；保持默认 Combat、成丹阈值、金丹倍率和紫府 HP/攻击不变，避免用基础倍率硬补胜率。
+- 验证命令：`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`；`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；如改管理文本再运行 `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`。
+- 完成条件：默认输出能解释紫府圆满 vs 金丹初期的战术出口是否存在低概率窗口；若仍为 0.0%，必须给出下一轮只改触发/开关/输入而不改基础倍率的判断；结论回写 `设计-当前状态.txt` 和本队列/归档。
+
 ### TQ-015B · NPC 与批量生产迁移
 
 - 来源：TQ-015A 事实源与 `docs/superpowers/plans/2026-06-21-yuanying-position-migration.md` 任务 2—4。
-- 当前优先级：P0。TQ-015B-1 已由 Codex 完成文档迁移并审核通过；TQ-015B-2/3 复审不通过，b674f79 的 NPC 批量替换引入“建/道”错字污染，席位归属仍需事实源复核，避免以未复审矩阵扩散错误口径。
+- 当前优先级：P1。TQ-015B-1 已由 Codex 完成文档迁移并审核通过；TQ-015B-2/3 的“建/道”错字污染已由 a3be216 修复通过，但慕容朔、拓跋烈、钟离幽、祝融烈仍使用非矩阵正式名作为席位括号名，避免以未复审矩阵扩散错误口径。
 - 必读：`开发管理/AI协作规则.txt`、`开发管理/DeepSeek工作提示词.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/重要NPC/` 下 13 份独立档案、角色养成设计规范与模板。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,docs/角色养成`；`rg -n "一正二辅|正籍|辅籍|敕籍|寄丹|炼虚" docs/剧情/世界背景故事.txt docs/剧情/重要NPC docs/角色养成`；`git diff --check`。
 - TQ-015B-1 本轮范围：`docs/superpowers/specs/2026-06-19-jindan-danxiang-design.md`、两份金丹/紫府核心设定、术法槽位设计、三类设计规范与模板。已锁定：丹相为金丹能力总称；丹枢仅为矩阵允许的个性化接口；紫府神通为丹相输入；暂寄不生成丹相主枢。未锁定：数量阈值、槽位数、数值成长和运行时迁移。
@@ -77,7 +89,7 @@
 ### TQ-014-DS · 场景架构待复审集合项
 
 - 来源：`开发管理/AI合作沟通.txt` 的 HANDOFF-20260627-01/02/04/05；TQ-014 实施计划归档。
-- 当前优先级：P1。DeepSeek 已提交现状清单、会话流转骨架、四场景脚手架、World/Settlement 数据壳；2026-06-28 复审 DS-05 不通过，DS-01/03/04 仍待 Codex / ChatGPT5.5 复审和规则层判断。
+- 当前优先级：P0。DeepSeek 已提交现状清单、会话流转骨架、四场景脚手架、World/Settlement 数据壳；2026-06-28 批量复审确认 DS-01/03 通过，DS-04/05 生成器代码部分通过，但实际 `.unity` 场景资产未提交完整 Controller 挂载且当前工作树有 asset 回归。正式开发前先清工作树、提交场景资产，再做 Editor 验证。
 - 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 对应 HANDOFF、`开发管理/开发-技术经验.txt`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`SceneBuilder.cs`、`GameSession.cs`、`SceneFlowManager.cs`、`WorldSceneController.cs`、`SettlementSceneController.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；`git diff --check`；可用时在 Unity Editor 中执行 SceneBuilder 菜单并验证 StartMenu/World/Settlement/Adventure 加载与返回。
 - 完成条件：明确 DS-01/03/04/05 哪些通过、哪些需返工；DS-05 返工须挂载 World/Settlement Controller、清理新增 `.meta` 行尾空白并说明 Settlement/Adventure ID 传递边界；场景生成、加载、返回、UICanvas/GameSession 单例和 Input System 风险有结论；不得改 CTB/伤害/冷却/槽位语义。
