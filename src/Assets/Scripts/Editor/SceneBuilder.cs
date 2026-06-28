@@ -7,6 +7,9 @@ using TianZhang.Combat;
 using TianZhang.HexTile;
 using TianZhang.Game;
 using TianZhang.Map;
+using TianZhang.World;
+using TianZhang.Settlement;
+using TianZhang.Adventure;
 using UnityEngine.InputSystem.UI;
 
 namespace TianZhang.Editor
@@ -152,7 +155,7 @@ namespace TianZhang.Editor
 
         /// 生成空场景外壳。sceneControllerType 为可选场景专属控制器（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
         /// </summary>
-        private static void BuildEmptyScene(string scenePath, string rootName, Color background, System.Type sceneControllerType = null)
+        private static void BuildEmptyScene(string scenePath, string rootName, Color background, System.Type sceneControllerType = null, int buildIndexOffset = 0)
         {
             var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
                 UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
@@ -176,6 +179,34 @@ namespace TianZhang.Editor
                 controllerGo.AddComponent(sceneControllerType);
             }
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
+        }
+
+        [MenuItem("Tools/天章/生成开始菜单场景")]
+        public static void BuildStartMenuScene()
+        {
+            BuildEmptyScene(StartMenuScenePath, "StartMenuRoot", new Color(0.05f, 0.05f, 0.1f));
+            Debug.Log("<color=cyan>天章开始菜单场景已生成</color>");
+        }
+
+        [MenuItem("Tools/天章/生成主世界场景")]
+        public static void BuildWorldScene()
+        {
+            BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.1f, 0.15f, 0.08f), typeof(TianZhang.World.WorldSceneController));
+            Debug.Log("<color=cyan>天章主世界场景已生成</color>");
+        }
+
+        [MenuItem("Tools/天章/生成据点场景")]
+        public static void BuildSettlementScene()
+        {
+            BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.12f, 0.1f, 0.08f), typeof(TianZhang.Settlement.SettlementSceneController));
+            Debug.Log("<color=cyan>天章据点场景已生成</color>");
+        }
+
+        [MenuItem("Tools/天章/生成副本场景")]
+        public static void BuildAdventureScene()
+        {
+            BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f), typeof(TianZhang.Adventure.AdventureSceneController));
+            Debug.Log("<color=cyan>天章副本场景已生成</color>");
         }
 
         [MenuItem("Tools/天章/生成探索场景")]
