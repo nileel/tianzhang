@@ -37,6 +37,7 @@
 ## 流程管理
 
 - **下一步建议清理时机**：条目完成并推送远端后，从相应下一步建议文件移除该条→重编号剩余条目。不要在提交前删除（万一回退会丢记录）。
+- **角色立绘生成工作流**：生成或整理角色立绘时，先读 `assets/generated-character-art/README.md`；无字原版提示词在 `assets/generated-character-art/no-title/prompts.md`，题字版提示词在 `assets/generated-character-art/titled/prompts.md`。题字版可让 image2 生成书法氛围，但必须人工放大检查中文准确性和朱砂篆刻印章形态；写错字时改走无字图 + 真实字体本地叠字。
 
 ## Unity 开发经验
 
