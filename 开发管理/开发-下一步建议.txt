@@ -102,6 +102,7 @@
 说明：下列稳定化任务仍保留；境界体系锁口径、基础文档替换、迁移差异表、BattleSim 境界表/金丹兼容层、Unity 首轮迁移与 CSV 高阶内容定位均已闭环。当前工程主线转为 TQ-015C 后续字段/数值验证，并与 TQ-010 技能属性字段独立化、TQ-014 场景架构切片协调字段边界。
 
 A0. **太一道庭法箓体系工程接入前置（P0）**
+    - 前置映射表已审核：`docs/角色养成/太一道庭法箓体系导入映射表.txt` 覆盖 9 功法、26 术法、9 神通，可作为后续 CSV/BattleSim/Unity 字段方案输入。
     - 基于已审核文档新增数据字段方案，不直接把“法箓”硬塞进旧道基/金丹类型字段。
     - BattleSim 侧先设计兼容层：太一 Build 仍按通用境界突破，但筑基/金丹核心读取法箓阶段、本命符箓、本命法坛。
     - Unity/CSV 侧需评估新增表或扩展现有 GongFa/Spells/Skills 字段：faLuId、faLuStage、faLuLineage、nativeCoreType、bloodOathRequired。

@@ -1,0 +1,25 @@
+# 2026-06-29 待审工作批量复审归档
+
+- 审核方：Codex / gpt-5.5（通过 Node REPL 读取 `x-codex-turn-metadata.model` 确认）
+- 范围：TQ-021 基础战斗口径清理（0cb534e）、A0 太一道庭法箓体系导入映射表（82b7769）、当前未通过清单 REVIEW-20260628-01/04 复核
+
+## 结论
+
+1. TQ-021：通过。DeepSeek 提交清除了 `战斗系统.txt` 的旧 ±20% 简表并补充暴击基础值；Codex 复审时补齐两个小修：结算顺序改为命中→五行匹配→暴击→基础伤害→格挡/魂盾→护盾/附加效果，暴击口径改为技能倍率乘以暴击伤害倍率。未运行 BattleSim/Unity，原因：本轮只改文档口径，不改代码、CSV、asset 或数值参数。
+2. A0：通过。`docs/角色养成/太一道庭法箓体系导入映射表.txt` 覆盖 9 功法、26 术法、9 神通；功法公箓/家箓 5/4 与太一道庭门派文档一致。Codex 复审时修正 `金光破岳/金刚破岳` ID 消歧，改为沿用现有 CSV 内容 ID 后缀；同步修正本命符箓路线 16 条、导入建议 26 条本命核心相关术法的计数。
+3. REVIEW-20260628-01：仍不通过。当前 World/Settlement/Adventure 场景文件仍未引用 `WorldSceneController`、`SettlementSceneController`、`AdventureSceneController` 的脚本 GUID；仍需 Unity Editor 生成/挂载并提交场景资产。
+4. REVIEW-20260628-04：仍不通过。`realm_lianshen专项检查.txt` 仍保留 “6 本含 realm_lianxu 的宗门功法在 asset 层完全缺失” 与 `GongFa 4 realm_lianshen + 0 realm_lianxu` 旧表述；`炼虚与高阶内容影响面清单.txt` F5 仍写 9 条功法行，当前实际口径应为 10 个相关 GongFa 内容 ID。
+
+## 验证
+
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths "docs/基础设定,docs/角色养成/太一道庭法箓体系导入映射表.txt,开发管理"`：OK（63 files checked）。
+- `git diff --check`：无尾随空白/补丁格式错误；仅输出工作区 CRLF 规范化警告。
+- `rg` 复核 TQ-021：确认 `战斗系统.txt` 已指向 v5.10 内外圈规则，且暴击/五行顺序与 `DamageCalculator.cs` 的依赖一致。
+- `rg` 复核 A0：确认 9/26/9 文件数存在，旧 `jgpy_2` 与 12/22 旧计数已清除。
+- `rg` 复核 REVIEW-20260628-01：场景文件未出现三类 Controller GUID。
+- `rg` 复核 REVIEW-20260628-04：旧 asset 与 F5 计数表述仍存在。
+
+## 后续
+
+- 当前复审队列只保留 REVIEW-20260628-01 与 REVIEW-20260628-04。
+- `角色数值设计.txt` 中旧五行/历史验证段仍需后续 A5 文档版本清理；本轮未纳入 TQ-021 通过范围。

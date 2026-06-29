@@ -1,11 +1,11 @@
 # 当前任务队列（✅ 已审核）
 
 > 2026-06-26 Codex / gpt-5.5：按用户要求拆分快捷流程：`1` 只执行工作计划任务，`2` 只执行复审任务；Codex / ChatGPT5.5 自产任务完成必要验证后不再进入复审队列。
-> 2026-06-29 DeepSeek V4 Pro：TQ-021 基础战斗口径清理完成（3文件/7行增13行删）；⚠️ 已修改/未审核，待 Codex / ChatGPT5.5 复审。
+> 2026-06-29 Codex / gpt-5.5：批量审核待审工作。TQ-021 基础战斗口径清理与 A0 太一道庭法箓体系导入映射表已复审通过，并归档至 `开发管理/任务归档/2026-06-29-待审工作批量复审归档.txt`；当前待复审阻塞仍为 TQ-014-DS 场景资产挂载与 DS-NEW-01/02 报告旧口径残留。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
-> 2026-06-21 DeepSeek V4 Pro：TQ-015B-2/3 NPC档案迁移+批量生产模板完成，提交 95055c1；待 Codex / ChatGPT5.5 复审。TQ-015B-1 核心规则余项仍由 Codex / ChatGPT5.5 处理。
+> 2026-06-21 DeepSeek V4 Pro：TQ-015B-2/3 NPC档案迁移+批量生产模板完成，提交 95055c1；后续错字与席位正式名返工已由 Codex / gpt-5.5 复审通过。TQ-015B-1 核心规则余项仍由 Codex / ChatGPT5.5 处理。
 > 2026-06-25 Codex / gpt-5.5：批量审核待复审项。TQ-013D 通过并归档；TQ-006/TQ-007/TQ-010/TQ-015B-2/3 复审不通过，问题进入 `开发管理/未通过审核清单.txt`。
 
 > 2026-06-19 Codex / gpt-5.5：按用户要求归档已完成任务 TQ-011/TQ-012/TQ-013/TQ-003/TQ-009；归档记录见 `开发管理/任务归档/2026-06-19-当前任务队列归档.txt`；队列补入 TQ-013A-D。
@@ -59,7 +59,6 @@
 | TQ-018 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待处理 | 新增 TacticalGridModel/ITacticalRenderer/TilemapTacticalRenderer 兼容层，不改变 CTB、伤害、寻路和技能范围规则结果 |
 | TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待 TQ-016 或 TQ-018 后执行 | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
 | TQ-020 | P1 | Codex / ChatGPT5.5 | 机制回归 | 待处理 | 对守一、符胆、雷劫、玄感、含弘等 Unity 已接入机制做 BattleSim 语义回归与最小修复 |
-| TQ-021 | P1 | DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 复审 | 设计口径清理 | ⚠️ 已修改/未审核 | 清理基础战斗文档中的伤害顺序、暴击倍率与旧五行 ±20% 口径，为 TQ-010 字段语义提供依据 |
 
 ## 任务卡片
 
@@ -135,11 +134,3 @@
 - 必读：`simulations/BattleSim/Program.cs`、`src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、对应功法/术法/神通 docs 与 CSV。
 - 验证命令：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`dotnet build src/Assembly-CSharp.csproj`；必要时补 Unity 侧调试入口或最小回归日志。
 - 完成条件：列出每项机制 Unity 当前状态、与 BattleSim 语义差异、是否需要代码修复；若修复，只做最小闭环并保留 BattleSim 现行数值不变；结果回写 `开发管理/设计-当前状态.txt` 或归档。
-
-### TQ-021 · 基础战斗口径清理
-
-- 来源：`开发管理/设计-下一步建议.txt` A2/A3；为 TQ-010 技能属性字段语义提供文档依据。
-- 当前状态：待处理。适合 DeepSeek V4 Pro 做文本清理与对照表，Codex / ChatGPT5.5 复审；若本轮由 Codex 执行，可直接按事实源验证闭环。
-- 必读：`docs/基础设定/战斗系统.txt`、`docs/基础设定/伤害公式.txt`、`docs/基础设定/灵根设定.txt` 第八节、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`simulations/BattleSim/Program.cs`、`开发管理/设计-当前状态.txt`。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/基础设定,开发管理`；`rg -n "±20%|相生|相克|暴击.*替换|格挡.*魂盾|魂盾.*格挡" docs/基础设定`；必要时运行 BattleSim build + run 确认未改数值代码。
-- 完成条件：伤害顺序统一为命中/暴击标记→基础伤害→五行/地形/境界修正→格挡/魂盾→护盾/附加效果；暴击倍率口径明确；旧五行 ±20% 描述改为指向 v5.10 内外圈规则；不引入新数值。
