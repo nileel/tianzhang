@@ -2,6 +2,7 @@
 
 > 2026-06-29 DeepSeek V4 Pro 按用户要求处理全部未通过审核项。REVIEW-20260628-05（金丹位格）和 REVIEW-20260628-04（DS-NEW-01/02）已返工，⚠️ 已修改/未审核，待 Codex / ChatGPT5.5 复审。REVIEW-20260628-01（场景Controller）确认为 Unity Editor 任务，DeepSeek 无法执行，已写入 AI合作沟通。
 
+> 2026-06-29 Codex / gpt-5.5 复审 f4345e5 / HANDOFF-20260629-02：结论部分通过。REVIEW-20260628-05（金丹位格矩阵 `观行迹` / `修不退` 返工）通过并从当前清单移除；REVIEW-20260628-04（DS-NEW-01/02）仍不通过，残留为 asset 结论旧表述与 DS-NEW-01 F5 计数未同步；REVIEW-20260628-01 仍为 Unity Editor 场景资产任务。
 > 2026-06-28 Codex / gpt-5.5 复核当前工作树：`src/Assets/Data`、`src/Assets/Scenes`、`src/Assembly-CSharp.csproj` 无未提交 diff；109 个 Spell/Skill asset 均恰好 1 个非空 `element`；`tools/check-data-chain.ps1` OK。REVIEW-20260628-02 已从当前清单移除。
 > 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260628-11：金丹位格矩阵双版注释机械结构通过，但 `观行迹` / `修不退` 两条文言与白话偏离原文语义；新增 REVIEW-20260628-05。
 > 2026-06-28 Codex / gpt-5.5 复审通过：TQ-015B-2/3 提交 7612281 已将四名 NPC 席位括号名替换为矩阵正式名（照暗室/燃心灯/观幽微/周天焰）；REVIEW-20260628-03 已从当前清单移除。
@@ -35,41 +36,28 @@
 
 ### REVIEW-20260628-04 · DS-NEW-01/02 炼虚与 realm_lianshen 报告
 
-- 结论：DS-NEW-02 修复提交 a2ff97a 部分通过但仍不通过；DS-NEW-01 仍待检修。
-- 目标提交：c7396fe、fb2ae37；修复提交：a2ff97a（⚠️ 已修改/未审核；DeepSeek V4 Pro）。
-- 已修复（a2ff97a）：
+- 结论：f4345e5 返工后部分通过，当前仍不通过。
+- 目标提交：c7396fe、fb2ae37；修复提交：a2ff97a、f4345e5（⚠️ 已修改/未审核；DeepSeek V4 Pro）。
+- 已修复：
   1. ✅ CR 控制字符已清除（29 个 0x0D）
-  2. ✅ GongFa.csv 总数口径已修正为 6 本 realm_lianxu + 4 本 realm_lianshen
-  3. ✅ 验证记录已更新（check-review-text.ps1: OK）
-  4. ✅ 全文 `ealm_`→`realm_` 统修 + `ealmScaleBase`→`realmScaleBase`
+  2. ✅ 全文 `ealm_`→`realm_` 统修 + `ealmScaleBase`→`realmScaleBase`
+  3. ✅ GongFa.csv 表格条目已改为 `gongfa_hunyuantongchen`，并与实际 6 本 `realm_lianxu` 功法匹配
+  4. ✅ P0-3 主表述已改为 Spells+Skills 合计 6 条、全部 CSV 合计 12 个 `realm_lianxu` 内容 ID
+  5. ✅ 领域神通结论已改为 2 个 `realm_lianshen`、3 个 `realm_lianxu`，不再写“所有领域级神通都标在 realm_lianshen”
+  6. ✅ DS-NEW-01 A4 已改为 6 本 `realm_lianxu` + 4 本 `realm_lianshen`
+  7. ✅ 验证记录已更新（check-review-text.ps1: OK）
 - 仍待处理：
-  1. `GongFa.csv` 表格条目仍错误：报告列入 `gongfa_baoyuanshouyi`，但实际应为 `gongfa_hunyuantongchen`。
-  2. P0-3 的"8条"数未修正；实际 Spells+Skills CSV 的 realm_lianxu 为 6 条，若合并 GongFa/Spells/Skills 则 realm_lianxu 为 12 个内容 ID。
-  3. P0-3 的 "ZERO .asset" 结论不成立：GongFa asset 中已有 6 个炼虚中文序列化项，另有 4 个 `realm_lianshen` 项。
-  4. P1-2/术法神通结论自相矛盾：报告列出 2 个 realm_lianshen 领域神通与 3 个 realm_lianxu 领域神通，却写成"所有领域级神通都标在 realm_lianshen"。
-  5. DS-NEW-01 `炼虚与高阶内容影响面清单.txt` 控制字符与统计口径未检修。
+  1. `realm_lianshen专项检查.txt` 的 Unity asset 小节仍写“6 本含 realm_lianxu 的宗门功法在 asset 层完全缺失”，但实际 6 个宗门 GongFa asset 均含 `\u70BC\u865A`（炼虚）序列化项；该旧表述与同文件 P0-3 新结论冲突。
+  2. 同文件验证记录仍只写 `GongFa 4 realm_lianshen + 0 realm_lianxu`，未说明 `realm_lianxu` 是按原始 key 搜索为 0，而按 Unity 转义中文“炼虚”实际存在 6 个 asset，容易继续误导为 ZERO asset。
+  3. `炼虚与高阶内容影响面清单.txt` F5 仍写“9条功法行含 realm_lianxu 或 realm_lianshen 境界行”，实际 GongFa.csv 中相关内容 ID 为 10 个（6 个 `realm_lianxu` + 4 个 `realm_lianshen`）。
 - F1 口径判断（2026-06-28 Codex / gpt-5.5）：
   1. `realm_lianshen` 不确认为独立境界，不补入 `Language.csv` 或 C# realm order。
   2. 当前版本以"化神为世界最高境界、炼虚已删除、玩家主线止于金丹"为准；`realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容，不能作为当前运行时境界链扩展。
   3. 若后续需要保留古修"炼神"语义，应另建内容路线/标签（如 contentScope 或古修神魂路线），不得继续使用 `realm_*` 境界 key 表达。
-- 返工建议：DeepSeek 先按上述精确计数修正 `realm_lianshen专项检查.txt` 与 DS-NEW-01 清单；后续若改 CSV/asset/脚本，必须同步运行 `tools/check-data-chain.ps1`。
-
-### REVIEW-20260628-05 · 金丹位格矩阵文言/白话双版注释
-
-- 结论：部分通过，当前仍不通过。
-- 目标提交：8595ebc；状态提交：95fc715。
-- 已通过部分：
-  1. 51 个矩阵条目均具备“首行文言 → `> 原文` → `> 💡 通俗解释`”结构。
-  2. `> 原文` 与 8595ebc 之前的原始 51 条说明逐条一致，未发现原文被改写。
-  3. `tools/check-review-text.ps1 -Paths docs/基础设定/元婴锚点与金丹位格矩阵.txt` 通过；目标范围 `git diff --check` 通过。
-- 未通过问题：
-  1. `观行迹` 的文言与白话偏离原文。原文是“识别个体或组织的习惯、训练和意向性路径”，当前注释写成“合散志为定向之众行 / 立项、发令”，把识别型能力误读为组织动员或发令能力。
-  2. `修不退` 的文言与白话偏离原文。原文核心是“把反复自主行为变成技艺、纪律、流程与协作习惯”，当前注释写成“调行之节序偏习 / 管执行、调整节奏、纠正偏差”，弱化了反复自主训练成型的机制，转向一次性执行纠偏。
-- 返工建议：先修正 `观行迹` 与 `修不退` 两条注释；修正后再复审 `行` 根系上下文是否仍存在“识别/训练机制被改写成执行命令”的同类偏差。
+- 返工建议：DeepSeek 先把 asset 小节、验证记录和 F5 计数统一到上述口径；后续若改 CSV/asset/脚本，必须同步运行 `tools/check-data-chain.ps1`。
 
 ## 后续复核建议
 
 - 优先处理 TQ-014-DS 场景资产提交边界；TQ-010 当前工作树 asset 回归已复核清除。
 - TQ-014-DS 下一轮只处理场景资产生成/提交、Adventure Controller 挂载与 Editor 端验证，不扩大到 CTB/伤害/冷却/槽位语义。
 - DS-NEW-01/02 修正前，不以其 F 类统计作为架构决策依据。
-- 金丹位格矩阵双版注释修正前，不把 `观行迹` / `修不退` 当前文言或白话作为后续 NPC、功法或神通设定依据。
