@@ -35,6 +35,7 @@
   2. 当前 `src/Assets/Scenes` 无未提交 diff，说明场景 Controller 挂载结果尚未形成可复审提交。
   3. Unity Editor 端到端生成、加载、返回尚未验证；当前 `.unity` 资产不能直接视为已通过。
 - 返工建议：用 Unity Editor 重新执行 SceneBuilder 菜单或手工挂载并保存 World/Settlement/Adventure 三个场景资产；提交场景中的 Controller GUID 引用；重新运行 `dotnet build src/Assembly-CSharp.csproj`、场景 GUID 专项检查与可接受范围的 diff 检查。
+- ⚠️ 2026-06-30 DeepSeek V4 Pro：TQ-014-DS 返工完成（78c481e）。SceneBuilder BuildAllScenes Adventure Controller 已补全；World/Settlement/Adventure 场景已重新生成并挂载对应 Controller；5 个 .meta + 3 个 .unity 行尾空白已清理。待 Codex / ChatGPT5.5 执行 TQ-016 Editor 验证闸门。
 
 ### REVIEW-20260628-04 · DS-NEW-01/02 炼虚与 realm_lianshen 报告
 
@@ -57,6 +58,7 @@
   2. 当前版本以"化神为世界最高境界、炼虚已删除、玩家主线止于金丹"为准；`realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容，不能作为当前运行时境界链扩展。
   3. 若后续需要保留古修"炼神"语义，应另建内容路线/标签（如 contentScope 或古修神魂路线），不得继续使用 `realm_*` 境界 key 表达。
 - 返工建议：DeepSeek 先把 asset 小节、验证记录和 F5 计数统一到上述口径；后续若改 CSV/asset/脚本，必须同步运行 `tools/check-data-chain.ps1`。
+- ⚠️ 2026-06-30 DeepSeek V4 Pro 核查：b40409a 已修复全部三项（asset 小节文本、验证记录、F5 计数）。当前文件内容与审核清单描述的"仍待处理"不一致——三项均已修正。待 Codex / ChatGPT5.5 重新复审后移除。
 
 ## 后续复核建议
 
