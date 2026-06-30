@@ -1,6 +1,6 @@
-# CSV 高阶内容定位表
+﻿# CSV 高阶内容定位表
 
-状态：✅ 已审核；修改方：DeepSeek V4 Pro；审核方：Codex / gpt-5.5；审核日期：2026-06-25；依据：be84ea5
+状态：⚠️ 已修改/未审核（2026-06-30 DeepSeek V4 Pro：P2 contentScope列已新增至三个CSV，待Codex复审）；原审核状态：✅ 已审核（2026-06-25 Codex / gpt-5.5）
 任务：TQ-013D · CSV 高阶内容定位表
 用途：逐条标注功法/术法/神通中 realmReq≥元婴（含 realm_lianshen）的内容定位，
       不直接改 CSV 或 asset；作为后续 Codex/ChatGPT5.5 复审与迁移输入。
@@ -170,10 +170,11 @@
 
 | 优先级 | 动作 | 主责 | 依赖 |
 |--------|------|------|------|
+| P2 | 功法 CSV 新增 `contentScope` 列 | DeepSeek + Codex复审 | ⚠️ 已执行提交 643efda；待Codex复审 |
+| P2 | 术法/神通 CSV 新增 `contentScope` 列 | DeepSeek + Codex复审 | ⚠️ 已执行提交 643efda；待Codex复审 |
 | P0 | Codex 复审本定位表结论 | Codex/ChatGPT5.5 | 本文件 |
 | P1 | 决定 realm_lianshen 最终处理方案（保留/合并/删除） | Codex/ChatGPT5.5 | 复审结论 |
-| P2 | 功法 CSV 新增 `contentScope` 列（player/npc/reserved），逐条标注 | DeepSeek（起草）+ Codex（复审） | P0 |
-| P2 | 术法/神通 CSV 新增 `contentScope` 列 | DeepSeek（起草）+ Codex（复审） | P0 |
+
 | P3 | 若保留炼神概念，补入 Language.csv 与境界设定文档 | DeepSeek（起草）+ Codex（复审） | P1 |
 | P4 | `check-data-chain.ps1` 追加 realm_lianshen 告警 | DeepSeek | P1 |
 
