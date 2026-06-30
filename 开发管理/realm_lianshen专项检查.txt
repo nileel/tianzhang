@@ -3,13 +3,9 @@
 # 任务: DS-NEW-02（来源：EXPAND-20260625-01）
 # 扫描: rg -n "realm_lianshen|realm_lianxu|炼神|炼虚" docs src simulations 开发管理
 # 依据: AGENTS.md、修行境界.txt、DS-NEW-01影响面清单、CSV/asset/脚本实际状态
-
 ---
-
 ## 一、数据链路逐层核对
-
 ### 1. Language.csv（权威 key 注册源）
-
 | Key | Display | 状态 |
 |-----|---------|------|
 | realm_fanren | 凡人 | ✅ |
@@ -20,11 +16,8 @@
 | realm_huashen | 化神 | ✅ |
 | realm_lianxu | 炼虚 | ✅ |
 | realm_lianshen | — | ❌ 缺失！ |
-
 **结论**: realm_lianshen 未在 Language.csv 注册。任何尝试通过 realm_lianshen key 查找显示名的代码都会失败。
-
 ### 2. GongFa.csv（功法数据）
-
 | 功法ID | 阵营 | 品级 | 使用境界 |
 |--------|------|------|----------|
 | gongfa_wanfadulujing | 太一道庭 | 上品 | realm_lianxu |
@@ -37,11 +30,8 @@
 | gongfa_taiyishancangjing | 古修 | 极品 | **realm_lianshen** |
 | gongfa_xuanpindaocang | 古修 | 极品 | **realm_lianshen** |
 | gongfa_jiansubaopujing | 古修 | 上品 | **realm_lianshen** |
-
 **结论**: 10 本功法含高阶境界行；4 本古修功法使用 realm_lianshen，6 本宗门功法使用 realm_lianxu。古修/非古修分界线明显。
-
 ### 3. Spells.csv + Skills.csv
-
 | CSV | 术法/神通ID | 阵营 | 使用境界 |
 |-----|------------|------|----------|
 | Spells | spell_wanliuguizong (万流归宗) | 太一道庭 | **realm_lianshen** |
@@ -54,107 +44,77 @@
 | Skills | skill_jianyu_wanguizong (剑域·万剑归宗) | 玉清崖 | realm_lianxu |
 | Skills | skill_zhanyu_tiexuezhengqi (战域·铁血征旗) | 混元山 | realm_lianxu |
 | Skills | skill_hunyu_huangquan (魂域·黄泉幻界) | 太虚观 | realm_lianxu |
-
 **结论**: 2 术法 + 2 神通使用 realm_lianshen——值得注意的是这 4 个不全来自古修阵营（太一道庭也用了）。另外 3 术法 + 3 神通使用 realm_lianxu。领域级神通分布不均：2 个标 realm_lianshen（法域/灵域），3 个标 realm_lianxu（剑域/战域/魂域），分类标准不统一。
-
 ### 4. Unity .asset（序列化资产）
-
 | 目录 | realm_lianxu asset | realm_lianshen asset | 说明 |
 |------|-------------------|---------------------|------|
-| GongFa/ | 0 个 | 4 个（古修功法） | 不对等！ |
+| GongFa/ | 6 个（Unicode "炼虚"） | 4 个（"realm_lianshen"） | 全部 10 本功法 asset 均存在 |
 | Spells/ | 0 个 | 0 个 | Spell asset 用 realmScaleBase 数字字段 |
 | Skills/ | 0 个 | 0 个 | Skill asset 用 realmScaleBase 数字字段 |
-
-**结论**: 
-- GongFa asset 中 realm 以文本字段存储（subGrowth[].realm），4 本古修 asset 含有 "realm_lianshen"。
-- 6 本含 realm_lianxu 的宗门功法在 asset 层完全缺失——可能是从未被导入，或导入时跳过了不支持的境界行。
+**结论**:
+- GongFa asset 中 realm 以文本字段存储（subGrowth[].realm）。
+- 4 本古修 asset 含字符串 "realm_lianshen"。
+- 6 本宗门功法 asset 含 Unicode 转义 "\u70BC\u865A"（炼虚），但以 key "realm_lianxu" 搜索时为 0（Unity YAML 序列化将中文转为 Unicode 转义）。
 - Spell/Skill asset 使用 realmScaleBase 数字字段，不受 CSV 中 realm key 字符串影响。
-
 ### 5. C# 脚本
-
 | 文件 | realm_lianxu | realm_lianshen | 说明 |
 |------|-------------|---------------|------|
 | GongFaGrowthData.cs | ✅（注释提及） | ❌ | realm order 含"炼虚"不含"炼神" |
 | TQ013CRealmAndSlotVerification.cs | ✅（断言） | ❌ | 断言"炼虚不应在玩家链" |
 | 其他所有脚本 | ❌ | ❌ | — |
-
 **结论**: C# 代码完全不知道 realm_lianshen 的存在。运行时解析 realm_lianshen 会失败，因为它不在任何 realm order 或 switch 分支中。
-
 ### 6. docs 原文
-
 | 搜索词 | 命中文件数 | 说明 |
 |--------|-----------|------|
 | "炼虚" | ~50 文件 | 大量使用；已被修行境界.txt 声明删除 |
 | "炼神" | 3 文件 | 天章设定.txt(1)、辽海寒域.txt(1)、关陇玄域.txt(2) |
 | "realm_lianshen" | 0 docs | docs 中无此 key |
-
 **结论**: "炼神"作为中文词在 docs 中极少出现，仅作为背景描述。"炼虚"虽已宣布删除但仍在大量文档中存在。
-
 ---
-
 ## 二、不一致总结
-
 ### 🔴 P0 级
-
 | # | 问题 | 影响范围 |
 |---|------|---------|
 | P0-1 | realm_lianshen 在 Language.csv 中完全缺失 | GongFa/Spells/Skills CSV 中 8 条数据 (+ 4 asset) 运行时无法获取显示名 |
 | P0-2 | 4 部古修功法 GongFa .asset 含 realm_lianshen 但 C# 不识别 | 导入/运行时解析失败，境界成长数据无法读取 |
-| P0-3 | realm_lianxu 在 CSV 中活跃使用（Spells+Skills 合计 6 条；全部 CSV 合计 12 条内容 ID） | 仙门功法 asset 中以中文“炼虚”序列化存在（6 个文件），但以 key realm_lianxu 搜索为 0 |
-
+| P0-3 | realm_lianxu 在 CSV 中活跃使用（Spells+Skills 合计 6 条；全部 CSV 合计 12 条内容 ID） | 仙门功法 asset 中以 Unicode "\u70BC\u865A"（炼虚）序列化存在（6 个文件），但以 key realm_lianxu 搜索为 0 |
 ### 🟡 P1 级
-
 | # | 问题 | 影响范围 |
 |---|------|---------|
 | P1-1 | realm_lianshen vs realm_lianxu 语义不明确 | 炼神=古修神魂维度 vs 炼虚=通用高阶，两个 key 并存但设计文档未区分 |
 | P1-2 | 领域级神通（法域/灵域/剑域/战域/魂域）部分标 realm_lianshen 部分标 realm_lianxu | 分类标准不统一 |
 | P1-3 | 修行境界.txt 声明"炼虚已删除"但数据链仍大量依赖 | 口径与实现冲突 |
-
 ### 🟢 P2 级
-
 | # | 问题 | 影响范围 |
 |---|------|---------|
 | P2-1 | C# GongFaGrowthData.cs realm order 含"炼虚"但可能接受 realm_lianshen 为未知字符串 | 取决于解析器是否做严格校验 |
 | P2-2 | docs 中"炼神"仅 3 处，不足以支撑 realm_lianshen 作为独立境界的设定基础 | 设定文档需要先明确区分 |
-
 ---
-
 ## 三、处理选项（不决定，仅列出）
-
 ### 选项A：统一为 realm_lianxu（删除 realm_lianshen）
 - 优点：单一 key，与 Language.csv 一致，与 C# 注释一致
 - 缺点：丢失古修"炼神"的语义区分
 - 需做：GongFa.csv 4 行 + Spells.csv 2 行 + Skills.csv 2 行 + 4 个 .asset 改为 realm_lianxu
-
 ### 选项B：注册 realm_lianshen 为独立 key（双 key 并存）
 - 优点：保留古修炼神 semantic 区分，符合部分设计意图
 - 缺点：需补 Language.csv、C# realm order、docs 规范
 - 需做：Language.csv 加 realm_lianshen,炼神；GongFaGrowthData.cs 补 realm order；补设定文档
-
 ### 选项C：短期保留 CSV 原样，标注"资料片/NPC专用"
 - 优点：不做数据迁移，零风险
 - 缺点：数据链断裂持续存在；导入器可能报错或跳过
 - 需做：在每个使用 realm_lianshen 的 CSV 行旁标注 # 资料片保留，当前未启用
-
 ### 选项D：全部暂时移除（清空所有 realm_lianxu/lianshen 行）
 - 优点：数据链完全干净
 - 缺点：丢失已有设计数据；后续恢复需手动重建
-
 ---
-
 ## 四、与 DS-NEW-01 的关系
-
 DS-NEW-01 已产出 炼虚与高阶内容影响面清单.txt，将 ~90 条标为"需 Codex 判断"（F 类）。本专项检查聚焦于 F 类中最核心的 F1 问题（realm_lianshen vs realm_lianxu 区分），从数据链路逐层验证了两个 key 的实际存在状态和断裂点。
-
 本报告的 P0/P1/P2 分类可作为 Codex F1 判断的输入证据。
-
 ---
-
 ## 五、验证记录
-
 - rg 扫描: rg -n "realm_lianshen" docs src → 0 docs, 12 CSV/asset, 0 scripts
 - rg 扫描: rg -n "realm_lianxu" docs src → 2 docs(superpowers), 13 CSV, 0 asset, 2 scripts
 - Language.csv 全量 key: 7 个 realm 已注册（fanren→lianxu），无 realm_lianshen
-- asset 统计: GongFa 4 realm_lianshen + 0 realm_lianxu; Spell/Skill 0+0 (用 realmScaleBase)
+- asset 统计: GongFa 4 realm_lianshen + 6 Unicode "\u70BC\u865A"（即 realm_lianxu 的 6 本宗门功法，以 \u70BC\u865A 序列化）; Spell/Skill 0+0 (用 realmScaleBase)
 - 修行境界.txt: 明确"炼虚已删除""炼虚不属于太玄界境界体系"
 - check-review-text.ps1: OK（2026-06-28 DeepSeek V4 Pro 修复后运行通过）
