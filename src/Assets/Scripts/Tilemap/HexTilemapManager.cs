@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using TianZhang.Core;
+using TianZhang.Tactical;
 
 namespace TianZhang.HexTile
 {
@@ -25,6 +26,8 @@ namespace TianZhang.HexTile
         public int gridRadius = 5;
 
         public HexGrid Grid { get; private set; } = new HexGrid();
+        public TacticalGridModel TacticalGrid { get; private set; } = new TacticalGridModel();
+        public TilemapTacticalRenderer TacticalRenderer { get; private set; }
 
         // 记录所有合法六角格及其世界坐标
         private Dictionary<HexCoord, Vector3> hexWorldPositions = new Dictionary<HexCoord, Vector3>();
@@ -32,7 +35,20 @@ namespace TianZhang.HexTile
 
         private void Awake()
         {
+            EnsureTacticalRenderer();
             CacheAllHexPositions();
+            RebuildTacticalGridModel();
+        }
+
+        private void EnsureTacticalRenderer()
+        {
+            if (TacticalRenderer == null)
+                TacticalRenderer = GetComponent<TilemapTacticalRenderer>();
+
+            if (TacticalRenderer == null)
+                TacticalRenderer = gameObject.AddComponent<TilemapTacticalRenderer>();
+
+            TacticalRenderer.Initialize(this);
         }
 
         /// <summary>预计算所有六角格的世界坐标</summary>
@@ -57,20 +73,18 @@ namespace TianZhang.HexTile
 
         public void GenerateHexGrid()
         {
-            groundTilemap.ClearAllTiles();
-            overlayTilemap.ClearAllTiles();
-            groundTilemap.color = new Color(0.45f, 0.5f, 0.55f, 1f);
-
-            foreach (var coord in allHexCoords)
-            {
-                var cell = new Vector3Int(coord.q, coord.r, 0);
-                groundTilemap.SetTile(cell, groundTile);
-            }
-
-            // 刷新缓存（Grid 可能刚生成）
+            EnsureTacticalRenderer();
             CacheAllHexPositions();
+            RebuildTacticalGridModel();
+            TacticalRenderer.RenderGrid(TacticalGrid);
 
             Debug.Log($"六角格: {allHexCoords.Count} 格, 坐标已缓存");
+        }
+
+        public TacticalGridModel RebuildTacticalGridModel()
+        {
+            TacticalGrid = TacticalGridModel.FromHexGrid(allHexCoords, Grid);
+            return TacticalGrid;
         }
 
         /// <summary>屏幕坐标 → 最近的六角格（精确匹配）</summary>

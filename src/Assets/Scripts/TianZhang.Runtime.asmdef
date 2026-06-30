@@ -1,0 +1,8 @@
+{
+    "name": "TianZhang.Runtime",
+    "references": [
+        "Unity.InputSystem",
+        "Unity.InputSystem.ForUI",
+        "UnityEngine.UI"
+    ]
+}

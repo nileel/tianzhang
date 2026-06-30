@@ -1,0 +1,65 @@
+# TQ-018 TacticalGridModel 与渲染接口兼容层归档
+
+状态：已完成 / 已验证（2026-06-30 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 任务目标
+
+在不改变 CTB、伤害、寻路、冷却、技能范围和探索战斗流程结果的前提下，建立战棋规则层与渲染层的第一层兼容边界，为后续 2D Tilemap 与 2.5D 表现共用规则数据做准备。
+
+## 本轮改动
+
+- `src/Assets/Scripts/Grid/TacticalGridModel.cs`
+  - 新增 `TacticalGridModel`、`TacticalTileData`、`TacticalTerrainType`。
+  - 支持 `HexCoord` 格子、地形类型、高度、地面/飞行/视线/落点阻挡、单位占用。
+  - 提供 `FromHexGrid` / `ToHexGrid` 兼容入口，保持现有 `HexGrid` 规则可迁移。
+- `src/Assets/Scripts/Grid/ITacticalRenderer.cs`
+  - 新增渲染接口，统一网格渲染、屏幕坐标换算、高亮、清理覆盖层和单位标记放置入口。
+- `src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs`
+  - 新增 Tilemap 适配器，复用现有 `HexTilemapManager` 与 2D Tilemap，不引入 2.5D 实现。
+- `src/Assets/Scripts/Tilemap/HexTilemapManager.cs`
+  - 暴露 `TacticalGrid` 快照和 `TilemapTacticalRenderer`。
+  - `GenerateHexGrid` 改为先从当前 `HexGrid` 重建 `TacticalGridModel`，再交给 Tilemap renderer 绘制。
+  - 旧的 `ScreenToHex`、`HexToWorld`、高亮、单位标记和 `HexGrid` API 保持可用。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+  - 新增 Unity/NUnit EditMode 规则层测试，覆盖 `HexGrid` 到 `TacticalGridModel` 的阻挡/占用/高度默认值映射，以及反向导出到 `HexGrid`。
+- `src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`
+  - 新增 Unity Test Framework 测试程序集。首次将测试放在普通脚本目录时，Unity Test Runner 显示 `No tests to show`；已迁移到标准 EditMode 测试程序集。
+- `src/Assets/Scripts/TianZhang.Runtime.asmdef`
+  - 新增运行时代码显式程序集，解决 EditMode 测试 asmdef 不能可靠引用预定义 `Assembly-CSharp` 导致的 `TianZhang.Core` 不可见问题。
+  - 显式引用 `Unity.InputSystem`、`Unity.InputSystem.ForUI`、`UnityEngine.UI`，修复 runtime asmdef 下 `UnityEngine.InputSystem` / UGUI 命名空间不可见问题。
+- `src/Assets/Scripts/Editor/TianZhang.Editor.asmdef`
+  - 新增 Editor 工具程序集并引用 runtime 与对应 Unity 包程序集，避免 `Assets/Scripts/Editor` 下工具脚本混入运行时程序集。
+- `src/Assembly-CSharp.csproj`
+  - 加入新增 Grid 运行时脚本；测试脚本移出业务程序集，由 Unity Test Runner 的 EditMode asmdef 管理。
+
+## 验证结果
+
+命令：
+
+```powershell
+dotnet build src/Assembly-CSharp.csproj
+dotnet build -c Release --no-restore src/Assembly-CSharp.csproj
+git diff --check
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests
+```
+
+结果：
+
+- TDD RED：先加入 `TacticalGridModelTests` 后执行 `dotnet build src/Assembly-CSharp.csproj`，按预期失败于缺少 `TianZhang.Tactical` 命名空间。
+- Debug build：通过，0 警告，0 错误。
+- Release build：通过，0 警告，0 错误。
+- `git diff --check`：通过，仅提示 CRLF 工作区换行警告。
+- `check-review-text`：通过，49 files checked。
+- 测试程序集迁移后复查：Debug build 通过；`git diff --check` 通过；`check-review-text` 通过，50 files checked。
+- asmdef 修正后复查：`TianZhang.Runtime.asmdef`、`TianZhang.Editor.asmdef`、`TianZhang.EditModeTests.asmdef` 均逐个 JSON 解析通过；`dotnet build src/Assembly-CSharp.csproj` 和 `dotnet build src/Assembly-CSharp-Editor.csproj` 通过；`git diff --check` 通过；`check-review-text` 通过，50 files checked。
+
+限制：
+
+- 本环境没有直接可用的 NUnit console runner；尝试通过 PowerShell 反射执行新增 NUnit 测试时被工具层拒绝访问。
+- 该反射验证命令包含 `Assembly.LoadFrom`、`AppDomain.AssemblyResolve` 与动态方法调用，已触发 Microsoft Defender 启发式检测 `Trojan:Win32/Steanoz.Z!MTB`。Defender 记录显示命中对象是一次性 `pwsh` 命令行，`DidThreatExecute=False`、`IsActive=False`，并非仓库中的 `.cs` 源文件。后续不再使用此类反射命令作为测试替代方案。
+- Unity Editor Test Runner：用户在 Unity Editor 中刷新并执行后回报全部通过。
+
+## 结论
+
+TQ-018 的第一轮边界已建立：规则层拥有可独立表达的战棋格子数据，Tilemap 表现通过 `ITacticalRenderer` 适配，当前探索战斗流程仍继续使用原有 `HexTilemapManager`/`HexGrid` API。后续 TQ-019 可在此基础上拆分 `AdventureSceneController` 与 `TacticalCombatController`，但仍需保持探索、遭遇、战斗、掉落和继续探索行为不回退。

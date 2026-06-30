@@ -2,6 +2,7 @@
 
 > 2026-06-26 Codex / gpt-5.5：按用户要求拆分快捷流程：`1` 只执行工作计划任务，`2` 只执行复审任务；Codex / ChatGPT5.5 自产任务完成必要验证后不再进入复审队列。
 > 2026-06-29 Codex / gpt-5.5：批量审核待审工作。TQ-021 基础战斗口径清理与 A0 太一道庭法箓体系导入映射表已复审通过，并归档至 `开发管理/任务归档/2026-06-29-待审工作批量复审归档.txt`；当前待复审阻塞仍为 TQ-014-DS 场景资产挂载与 DS-NEW-01/02 报告旧口径残留。
+> 2026-06-30 Codex / gpt-5.5：TQ-018 TacticalGridModel 与渲染接口兼容层已完成并归档至 `开发管理/任务归档/2026-06-30-TQ-018-TacticalGridModel渲染接口兼容层归档.txt`。新增 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`、runtime/editor asmdef 与 EditMode 规则层测试程序集；Debug/Release build、Editor build、asmdef JSON、文本检查、`git diff --check` 通过；Unity Editor Test Runner 经用户刷新执行后确认全部通过。本轮不改 CTB、伤害、冷却、寻路或技能范围语义。手动反射执行 NUnit 测试的临时 `pwsh` 命令触发 Defender 启发式拦截，确认命中对象为命令行而非仓库源文件，后续不再使用该验证方式。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
@@ -56,8 +57,7 @@
 | TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
 | TQ-016 | P1 | Codex / ChatGPT5.5 | 场景架构验证 | 待 TQ-014-DS 场景挂载返工后执行 | Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统 |
 | TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | 待 TQ-016 通过后执行 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
-| TQ-018 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待处理 | 新增 TacticalGridModel/ITacticalRenderer/TilemapTacticalRenderer 兼容层，不改变 CTB、伤害、寻路和技能范围规则结果 |
-| TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待 TQ-016 或 TQ-018 后执行 | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
+| TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待处理（TQ-018 已完成；TQ-016 仍阻塞 Editor 场景验证） | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
 | TQ-020 | P1 | Codex / ChatGPT5.5 | 机制回归 | 待处理 | 对守一、符胆、雷劫、玄感、含弘等 Unity 已接入机制做 BattleSim 语义回归与最小修复 |
 
 ## 任务卡片
@@ -111,18 +111,10 @@
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；Unity Editor 中从 StartMenu 选择门派并进入 World 或 Adventure。
 - 完成条件：门派选择结果写入 `GameSession.PlayerProfile`；Adventure 创建玩家时读取会话数据；返回主菜单或重新开局不残留旧会话；现有测试副本入口仍可用于快速验证。
 
-### TQ-018 · TacticalGridModel 与渲染接口兼容层
-
-- 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S1；后续 2.5D 表现原型前置。
-- 当前状态：待处理。第一轮只建立规则层与渲染层边界，不重写 `HexTilemapManager` 全部逻辑，不改变寻路、障碍、高亮、射程和技能范围结果。
-- 必读：`src/Assets/Scripts/Core/HexCoord.cs`、`src/Assets/Scripts/Core/HexGrid.cs`、`src/Assets/Scripts/Tilemap/HexTilemapManager.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`。
-- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；必要时在 Unity Editor 中验证探索地图移动、高亮、障碍和敌人占位表现；`git diff --check`。
-- 完成条件：新增或包装 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`；规则层只通过 `HexCoord`、通行/占用状态和高度标签读取战棋数据；现有探索战斗流程行为不变。
-
 ### TQ-019 · AdventureScene 与 TacticalCombatController 拆分
 
 - 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S6。
-- 当前状态：待 TQ-016 或 TQ-018 后执行。目标是降低 `ExplorationController` 同时负责地图、遭遇、战斗、掉落和 UI 驱动的耦合；不拆独立 BattleScene，不改变普通遭遇仍在同场景切换 Combat 状态的决策。
+- 当前状态：待处理。TQ-018 已提供规则层/渲染层兼容边界；TQ-016 仍被 TQ-014-DS 场景挂载返工阻塞。目标是降低 `ExplorationController` 同时负责地图、遭遇、战斗、掉落和 UI 驱动的耦合；不拆独立 BattleScene，不改变普通遭遇仍在同场景切换 Combat 状态的决策。
 - 必读：`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Tilemap/HexTilemapManager.cs`、`src/Assets/Scripts/Core/CTBEngine.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Game/BattleUIManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；Unity Editor 中验证探索→战斗→掉落→继续探索；必要时保留旧 `ExplorationController` 作为薄门面逐步迁移。
 - 完成条件：`AdventureSceneController` 负责场景状态与遭遇入口；`TacticalCombatController` 负责 CTB 战斗循环与结算调度；现有玩家移动、敌人生成、战斗日志、掉落提示和冷却 UI 行为不回退。

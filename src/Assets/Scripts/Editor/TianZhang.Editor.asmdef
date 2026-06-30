@@ -1,0 +1,13 @@
+{
+    "name": "TianZhang.Editor",
+    "references": [
+        "TianZhang.Runtime",
+        "Unity.InputSystem",
+        "Unity.InputSystem.ForUI",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
