@@ -148,7 +148,7 @@ namespace TianZhang.Editor
             BuildEmptyScene(StartMenuScenePath, "StartMenuRoot", new Color(0.05f, 0.05f, 0.08f));
             BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.04f, 0.08f, 0.1f), typeof(TianZhang.World.WorldSceneController));
             BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.08f, 0.07f, 0.05f), typeof(TianZhang.Settlement.SettlementSceneController));
-            BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f));
+            BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f), typeof(TianZhang.Adventure.AdventureSceneController));
             AssetDatabase.Refresh();
         }
         /// <summary>
