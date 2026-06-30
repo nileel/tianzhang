@@ -149,6 +149,7 @@
 | v0.9 | CTB 战斗循环修复 | ✅ 已审核：1v1 战斗改由 `CTBEngine.AdvanceUntilAction` 驱动；`CtPerTick=反应`；术法/神通冷却写入下次行动门槛；行动后 CT 归零；同刻多单位达标时按反应降序排入待行动队列；`dotnet build src/Assembly-CSharp.csproj` 0警告0错误 |
 | v0.10 | 修炼主线与槽位首轮迁移 | ✅ TQ-013C：玩家默认链收束为凡人/练气/筑基五段/金丹三段；成丹/丹籍/占据状态/丹名/丹性兼容字段与槽位计算已接入；金丹槽位具体数值仍待 TQ-015C 后续验证 |
 | v0.11 | 场景会话与四场景脚手架 | ⚠️ DeepSeek 提交：GameSession/SceneFlowManager、StartMenu/World/Settlement/Adventure 场景壳、World/Settlement 数据壳已出现；仍待 Codex 复审与 Unity Editor 端验证，不算正式架构完成 |
+| v0.12 | 符胆神魂行动回归 | ✅ TQ-020 首轮：Unity 普通神魂攻击、神魂术法、神魂神通共用符胆增伤；满层符胆提供 30% 神防穿透并视为必中；消耗后按行动结束补 1 层。雷劫、玄感、含弘/载物仍未独立运行时接入，后续另拆机制切片 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 

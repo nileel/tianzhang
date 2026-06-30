@@ -1,0 +1,61 @@
+# TQ-020 Unity 已接入机制回归首轮归档
+
+状态：已完成 / 已验证（2026-06-30 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 任务目标
+
+对守一、符胆、雷劫、玄感、含弘/载物等已在 BattleSim 或 Unity 数据层出现的机制做首轮语义回归；本轮只修复确定、低风险的 Unity 运行时偏差，不改变 BattleSim 现行数值、成丹阈值、CTB 行动轴、冷却、槽位或伤害主公式。
+
+## 机制状态
+
+- 守一：Unity 已有出手叠层、神魂增伤、满层神魂防御加成、受击消耗减伤。当前玩家链止于金丹，Unity 的练气/筑基/金丹口径与 BattleSim 关键口径一致；高阶上限继续作为后续高阶内容处理。
+- 符胆：Unity 原实现只在神魂术法中消耗并增伤，满层以额外伤害近似魂防穿透，神通不触发符胆，神魂术法消耗后也不回合补层。已修复为神魂行动共用符胆结算：按境界倍率增伤，满层给予 30% 神防穿透并视为必中，消耗后按行动结束补 1 层；覆盖普通神魂攻击、神魂术法和神魂神通。
+- 雷劫：BattleSim 有受击叠层、物理出手消耗增伤、满层被神魂攻击时魂防降低等机制；Unity 当前只在数据/元素映射层出现九霄雷劫录与雷属性，未实现独立雷劫印记运行时状态。本轮不补新机制。
+- 玄感：BattleSim 有 debuff 清除、神识加成、玄同免疫和恢复；Unity 当前只在数据/元素映射层出现南华玄感录，未实现独立玄感运行时状态。本轮不补新机制。
+- 含弘/载物：Unity 当前有含弘光大典的门派选择、数据和元素映射；未发现独立的载物被动运行时结算入口。本轮不补新机制。
+
+## 本轮改动
+
+- `src/Assets/Scripts/Combat/CombatResolver.cs`
+  - 新增 `FudanActionBonus` 与 `ConsumeFudanForMagicAction`。
+  - 普通神魂攻击、神魂术法、神魂神通统一读取符胆层数、计算境界倍率、满层 30% 神防穿透和必中、消耗层数。
+  - 云篆度人经行动结束统一回补 1 层符胆，修复金丹满层符胆神魂行动后应从 5 → 0 → 1 的状态流转。
+- `src/Assets/Scripts/Combat/DamageCalculator.cs`
+  - `CalcMagic` 增加可选 `magicDefensePenetrationPercent` 参数，实际降低神防参与双线公式，而不是用额外伤害近似穿透。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+  - 新增 `CombatMechanismTests.FullFudanBoostsAndConsumesMagicDivineSkill`。
+  - 覆盖满层符胆神魂神通伤害高于无符胆，并在行动后剩余 1 层符胆。
+
+## 验证结果
+
+命令：
+
+```powershell
+dotnet build src\TianZhang.EditModeTests.csproj
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe' -batchmode -projectPath 'D:\天章游戏开发\src' -runTests -testPlatform EditMode -testFilter 'TianZhang.Tests.CombatMechanismTests.FullFudanBoostsAndConsumesMagicDivineSkill' -testResults 'D:\天章游戏开发\src\Temp\codex-fudan-test-results.xml' -logFile 'D:\天章游戏开发\src\Temp\codex-fudan-test.log'
+dotnet build -c Release --no-restore simulations\BattleSim
+dotnet run --no-build -c Release --project simulations\BattleSim
+dotnet build src\TianZhang.Runtime.csproj
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe' -batchmode -projectPath 'D:\天章游戏开发\src' -runTests -testPlatform EditMode -testResults 'D:\天章游戏开发\src\Temp\codex-editmode-results.xml' -logFile 'D:\天章游戏开发\src\Temp\codex-editmode.log'
+git diff --check -- src\Assets\Scripts\Combat\CombatResolver.cs src\Assets\Scripts\Combat\DamageCalculator.cs src\Assets\Tests\EditMode\TacticalGridModelTests.cs
+```
+
+结果：
+
+- TDD RED：新增用例在修复前执行失败，日志显示无符胆与满符胆神通伤害均为 133，符胆神通未获得增伤/消耗闭环。
+- `dotnet build src\TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- 目标 Unity EditMode 用例：修复后通过，日志显示 `Exiting with code 0 (Ok)`。
+- BattleSim Release build：通过，0 警告，0 错误。
+- BattleSim 默认 run：完整跑通；金丹同境、筑基同境、紫府压制战与 2v2 输出完成。
+- `dotnet build src\TianZhang.Runtime.csproj`：通过，0 警告，0 错误。
+- Unity EditMode 全量测试：通过，日志显示 `Exiting with code 0 (Ok)`。
+- `git diff --check`：通过，仅提示工作区 LF/CRLF 转换警告，无 whitespace error。
+
+限制：
+
+- Unity 命令行日志显示写入 `codex-*-results.xml`，但本地未保留对应 XML 文件；本轮以 Unity log 中的 Test Runner 退出码和 `code 0` 作为测试证据。
+- `tools/check-review-text.ps1 -Paths src\Assets\Scripts,src\Assets\Tests` 本轮返回 `OK (0 files checked)`，未实际覆盖本轮 `.cs` 文件，因此不作为主要验证依据。
+
+## 结论
+
+TQ-020 首轮机制回归已闭环：Unity 符胆神魂行动语义补齐到 BattleSim 当前口径，不改变 BattleSim 基线和其他战斗主流程。雷劫、玄感、含弘/载物仍是后续独立运行时机制切片，不在本轮标记为 Unity 已接入。

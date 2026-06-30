@@ -154,7 +154,8 @@ namespace TianZhang.Combat
 
         public static DamageResult CalcMagic(int rawAtk, float skillMultiplier,
             Character attacker, Character defender, string skillElement = "",
-            bool cannotDodge = false, bool penetratingShield = false)
+            bool cannotDodge = false, bool penetratingShield = false,
+            float magicDefensePenetrationPercent = 0f)
         {
             var result = new DamageResult();
 
@@ -165,11 +166,12 @@ namespace TianZhang.Combat
             float soulResist = 0f;
             if (defender.GongFaName == "抱元守一经" && defender.ShouyiStacks == defender.MaxShouyi())
                 soulResist += 15f;
+            float effectiveMagDef = defender.MagDef * (1f - Mathf.Clamp(magicDefensePenetrationPercent, 0f, 100f) / 100f);
 
             float critMultiplier = RollCrit(attacker, elementMatch, ref result);
             float damage = CalculateLineDamage(
                 rawAtk,
-                defender.MagDef,
+                Mathf.RoundToInt(effectiveMagDef),
                 soulResist,
                 skillMultiplier * critMultiplier,
                 attacker.RealmMultiplier,

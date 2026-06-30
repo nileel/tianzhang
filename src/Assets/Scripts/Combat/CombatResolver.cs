@@ -34,6 +34,20 @@ namespace TianZhang.Combat
             public string Message;
         }
 
+        private readonly struct FudanActionBonus
+        {
+            public readonly float DamageMultiplier;
+            public readonly float MagicDefensePenetrationPercent;
+            public readonly bool WasFull;
+
+            public FudanActionBonus(float damageMultiplier, float magicDefensePenetrationPercent, bool wasFull)
+            {
+                DamageMultiplier = damageMultiplier;
+                MagicDefensePenetrationPercent = magicDefensePenetrationPercent;
+                WasFull = wasFull;
+            }
+        }
+
         /// <summary>移动角色</summary>
         public ActionResult Move(Character mover, List<HexCoord> path)
         {
@@ -70,8 +84,21 @@ namespace TianZhang.Combat
             if (useMagic && attacker.GongFaName == "抱元守一经")
                 mult = 1f + attacker.ShouyiStacks * 0.05f;
 
+            FudanActionBonus fudanBonus = new FudanActionBonus(1f, 0f, false);
             if (useMagic)
-                damage = DamageCalculator.CalcMagic(attacker.MagAtk, mult, attacker, defender);
+            {
+                fudanBonus = ConsumeFudanForMagicAction(attacker);
+                mult *= fudanBonus.DamageMultiplier;
+            }
+
+            if (useMagic)
+                damage = DamageCalculator.CalcMagic(
+                    attacker.MagAtk,
+                    mult,
+                    attacker,
+                    defender,
+                    cannotDodge: fudanBonus.WasFull,
+                    magicDefensePenetrationPercent: fudanBonus.MagicDefensePenetrationPercent);
             else
                 damage = DamageCalculator.CalcPhysical(attacker.PhysAtk, mult, attacker, defender);
 
@@ -138,26 +165,16 @@ namespace TianZhang.Combat
 
                 case SpellType.Magic:
                     float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
-
-                    // 符胆印记：消耗全部层数换伤害加成 + 满层无视30%魂防
-                    float fdMult = 1f;
-                    if (caster.GongFaName == "云篆度人经" && caster.FudanStacks > 0)
-                    {
-                        // 境界加成率：筑基12%/金丹15%/元婴18%/化神22%
-                        float realmMult = Cultivation.CultivationEngine.GetRealmMultiplier(caster.GetRealm());
-                        float fdRate = realmMult >= 24f ? 0.22f : realmMult >= 12f ? 0.18f :
-                                       realmMult >= 6f ? 0.15f : realmMult >= 3f ? 0.12f : 0.15f;
-                        fdMult = 1f + caster.FudanStacks * fdRate;
-                        // 满层：当前以伤害补偿近似无视魂防；防御穿透同源化留给后续战斗公式切片。
-                        if (fudanMax) fdMult *= 1.30f;
-                        // 消耗层数（化神保留2层）
-                        float mr = Cultivation.CultivationEngine.GetRealmMultiplier(caster.GetRealm());
-                        caster.FudanStacks = mr >= 24f ? 2 : 0;
-                    }
+                    FudanActionBonus spellFudanBonus = ConsumeFudanForMagicAction(caster);
 
                     damage = DamageCalculator.CalcMagic(caster.MagAtk,
-                        spell.damageMultiplier * syMult * fdMult,
-                        caster, target, spell.element, spell.cannotDodge, spell.penetratingShield);
+                        spell.damageMultiplier * syMult * spellFudanBonus.DamageMultiplier,
+                        caster,
+                        target,
+                        spell.element,
+                        spell.cannotDodge || spellFudanBonus.WasFull,
+                        spell.penetratingShield,
+                        spellFudanBonus.MagicDefensePenetrationPercent);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
@@ -184,9 +201,8 @@ namespace TianZhang.Combat
             // 守一：出手后+1层
             if (caster.GongFaName == "抱元守一经")
                 caster.ShouyiStacks = Mathf.Min(caster.ShouyiStacks + 1, caster.MaxShouyi());
-            // 符胆：出手后+1层（但术法已消耗，仅平A和神通有效）
-            // 注意：术法case中已消耗Fudan，此处不再+1
-            if (caster.GongFaName == "云篆度人经" && spell.type != SpellType.Magic)
+            // 符胆：行动结束补1层；若本次神魂行动已消耗符胆，则从消耗后的层数开始回补。
+            if (caster.GongFaName == "云篆度人经")
                 caster.FudanStacks = Mathf.Min(caster.FudanStacks + 1, caster.MaxFudan());
 
             // 眩晕判定
@@ -229,8 +245,16 @@ namespace TianZhang.Combat
             else
             {
                 float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
-                damage = DamageCalculator.CalcMagic(caster.MagAtk, skill.damageMultiplier * syMult,
-                    caster, target, skill.element, skill.cannotDodge, skill.penetratingShield);
+                FudanActionBonus fudanBonus = ConsumeFudanForMagicAction(caster);
+                damage = DamageCalculator.CalcMagic(
+                    caster.MagAtk,
+                    skill.damageMultiplier * syMult * fudanBonus.DamageMultiplier,
+                    caster,
+                    target,
+                    skill.element,
+                    skill.cannotDodge || fudanBonus.WasFull,
+                    skill.penetratingShield,
+                    fudanBonus.MagicDefensePenetrationPercent);
             }
 
             if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
@@ -247,6 +271,24 @@ namespace TianZhang.Combat
             Debug.Log(msg);
 
             return new ActionResult { Success = true, Damage = damage, Message = msg };
+        }
+
+        private static FudanActionBonus ConsumeFudanForMagicAction(Character character)
+        {
+            if (character.GongFaName != "云篆度人经" || character.FudanStacks <= 0)
+                return new FudanActionBonus(1f, 0f, false);
+
+            bool wasFull = character.FudanStacks == character.MaxFudan();
+            float realmMult = Cultivation.CultivationEngine.GetRealmMultiplier(character.GetRealm());
+            float rate = realmMult >= 24f ? 0.22f :
+                         realmMult >= 12f ? 0.18f :
+                         realmMult >= 6f ? 0.15f :
+                         realmMult >= 3f ? 0.12f :
+                         0.15f;
+            float damageMultiplier = 1f + character.FudanStacks * rate;
+            character.FudanStacks = realmMult >= 24f ? 2 : 0;
+
+            return new FudanActionBonus(damageMultiplier, wasFull ? 30f : 0f, wasFull);
         }
 
         /// <summary>防御姿态</summary>
