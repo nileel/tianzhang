@@ -728,15 +728,13 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            bool useMagic = player.MagAtk > player.PhysAtk;
-            var result = resolver.BasicAttack(player, currentCombatTarget, useMagic);
-            AddLog(result.Message);
+            var result = tacticalCombatController.ExecutePlayerBasicAttack();
+            AddActionLog(result);
             if (!result.Success)
             {
                 RefreshUI();
                 return;
             }
-            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
@@ -745,14 +743,13 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = resolver.Guard(player);
-            AddLog(result.Message);
+            var result = tacticalCombatController.ExecutePlayerGuard();
+            AddActionLog(result);
             if (!result.Success)
             {
                 RefreshUI();
                 return;
             }
-            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
@@ -761,8 +758,13 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = resolver.Wait(player);
-            AddLog(result.Message);
+            var result = tacticalCombatController.ExecutePlayerWait();
+            AddActionLog(result);
+            if (!result.Success)
+            {
+                RefreshUI();
+                return;
+            }
             hasMovedThisTurn = true;
             RefreshUI();
         }
@@ -771,32 +773,13 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            if (playerSpells == null || index >= playerSpells.Length) return;
-            if (player.SpellCooldowns[index] > 0) { AddLog("术法冷却中"); return; }
-            if (player.CurrentMP < playerSpells[index].mpCost) { AddLog("灵力不足"); return; }
-
-            // 自指向术法（minRange=0, maxRange=0）跳过射程检查，目标为自身
-            bool isSelfTarget = playerSpells[index].minRange == 0 && playerSpells[index].maxRange == 0;
-            if (!isSelfTarget)
-            {
-                if (currentCombatTarget == null) return;
-                int dist = player.Position.Distance(currentCombatTarget.Position);
-                if (dist < playerSpells[index].minRange || dist > playerSpells[index].maxRange)
-                {
-                    AddLog("超出射程");
-                    return;
-                }
-            }
-
-            var target = isSelfTarget ? player : currentCombatTarget;
-            var result = resolver.CastSpell(player, target, index, playerSpells[index]);
-            AddLog(result.Message);
+            var result = tacticalCombatController.ExecutePlayerSpell(index, playerSpells);
+            AddActionLog(result);
             if (!result.Success)
             {
                 RefreshUI();
                 return;
             }
-            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
@@ -805,25 +788,13 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            if (playerSkills == null || index >= playerSkills.Length) return;
-            if (player.SkillCooldowns[index] > 0) { AddLog("神通冷却中"); return; }
-            if (player.CurrentMP < playerSkills[index].mpCost) { AddLog("灵力不足"); return; }
-
-            int dist = player.Position.Distance(currentCombatTarget.Position);
-            if (dist < playerSkills[index].minRange || dist > playerSkills[index].maxRange)
-            {
-                AddLog("超出射程");
-                return;
-            }
-
-            var result = resolver.UseSkill(player, currentCombatTarget, index, playerSkills[index]);
-            AddLog(result.Message);
+            var result = tacticalCombatController.ExecutePlayerSkill(index, playerSkills);
+            AddActionLog(result);
             if (!result.Success)
             {
                 RefreshUI();
                 return;
             }
-            ctbEngine.ConsumeAction(player.CTBUnit);
             hasMovedThisTurn = true;
             RefreshUI();
         }
@@ -832,13 +803,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void HandleDrop(EnemyUnit enemyUnit)
         {
-            // 简易掉落：显示信息
-            var dropItems = new List<string> { "灵石×5" };
-            if (enemyUnit.data.realmMultiplier >= 2.0f)
-                dropItems.Add("中品丹药×1");
-            else if (enemyUnit.data.realmMultiplier >= 1.3f)
-                dropItems.Add("下品丹药×1");
-
+            var dropItems = TacticalCombatController.CreateDropItems(enemyUnit.data);
             AddLog($"掉落: {string.Join(", ", dropItems)}");
         }
 
@@ -921,6 +886,12 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (uiManager != null)
                 uiManager.AddLog(message);
+        }
+
+        private void AddActionLog(CombatResolver.ActionResult result)
+        {
+            if (!string.IsNullOrEmpty(result.Message))
+                AddLog(result.Message);
         }
 
         // ==================== 公共查询 ====================

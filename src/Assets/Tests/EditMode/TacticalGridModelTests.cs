@@ -210,6 +210,127 @@ namespace TianZhang.Tests
             Assert.AreEqual(4, slow.SpellCooldowns[0]);
         }
 
+        [Test]
+        public void PlayerBasicAttackConsumesActionOnlyWhenAttackSucceeds()
+        {
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
+            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
+
+            controller.BeginCombat(player, enemy, grid);
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+
+            var hit = controller.ExecutePlayerBasicAttack();
+
+            Assert.IsTrue(hit.Success);
+            Assert.AreEqual(0f, player.CTBUnit.CT);
+            Assert.Less(enemy.CurrentHP, enemy.MaxHP);
+
+            enemy.Position = new HexCoord(3, 0);
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+
+            var outOfRange = controller.ExecutePlayerBasicAttack();
+
+            Assert.IsFalse(outOfRange.Success);
+            Assert.AreEqual("目标不在近战范围", outOfRange.Message);
+            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
+        }
+
+        [Test]
+        public void PlayerSpellPreservesPrecheckFailuresAndConsumesActionOnSuccess()
+        {
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
+            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(3, 0), controller.Engine);
+            var spell = ScriptableObject.CreateInstance<SpellData>();
+            try
+            {
+                spell.spellName = "测试术法";
+                spell.type = SpellType.Magic;
+                spell.minRange = 1;
+                spell.maxRange = 1;
+                spell.mpCost = 10;
+                spell.cooldownTicks = 20;
+                spell.damageMultiplier = 1f;
+
+                controller.BeginCombat(player, enemy, grid);
+                player.CTBUnit.CT = CTBEngine.ActionThreshold;
+                int mpBefore = player.CurrentMP;
+
+                var outOfRange = controller.ExecutePlayerSpell(0, new[] { spell });
+
+                Assert.IsFalse(outOfRange.Success);
+                Assert.AreEqual("超出射程", outOfRange.Message);
+                Assert.AreEqual(mpBefore, player.CurrentMP);
+                Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
+
+                enemy.Position = new HexCoord(1, 0);
+
+                var cast = controller.ExecutePlayerSpell(0, new[] { spell });
+
+                Assert.IsTrue(cast.Success);
+                Assert.AreEqual(0f, player.CTBUnit.CT);
+                Assert.AreEqual(20, player.SpellCooldowns[0]);
+                Assert.Less(player.CurrentMP, mpBefore);
+            }
+            finally
+            {
+                Object.DestroyImmediate(spell);
+            }
+        }
+
+        [Test]
+        public void PlayerGuardConsumesFullActionAndWaitRetainsHalfCt()
+        {
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
+            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
+
+            controller.BeginCombat(player, enemy, grid);
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+
+            var guard = controller.ExecutePlayerGuard();
+
+            Assert.IsTrue(guard.Success);
+            Assert.IsTrue(player.IsGuarding);
+            Assert.AreEqual(0f, player.CTBUnit.CT);
+
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+
+            var wait = controller.ExecutePlayerWait();
+
+            Assert.IsTrue(wait.Success);
+            Assert.IsFalse(player.IsGuarding);
+            Assert.AreEqual(CTBEngine.ActionThreshold * CTBEngine.CtRetentionOnWait, player.CTBUnit.CT);
+        }
+
+        [Test]
+        public void CreateDropItemsUsesDefeatedEnemyRealmThresholds()
+        {
+            var weak = ScriptableObject.CreateInstance<CharacterData>();
+            var middle = ScriptableObject.CreateInstance<CharacterData>();
+            var strong = ScriptableObject.CreateInstance<CharacterData>();
+            try
+            {
+                weak.realmMultiplier = 1.2f;
+                middle.realmMultiplier = 1.3f;
+                strong.realmMultiplier = 2.0f;
+
+                CollectionAssert.AreEqual(new[] { "灵石×5" }, TacticalCombatController.CreateDropItems(weak));
+                CollectionAssert.AreEqual(new[] { "灵石×5", "下品丹药×1" }, TacticalCombatController.CreateDropItems(middle));
+                CollectionAssert.AreEqual(new[] { "灵石×5", "中品丹药×1" }, TacticalCombatController.CreateDropItems(strong));
+            }
+            finally
+            {
+                Object.DestroyImmediate(weak);
+                Object.DestroyImmediate(middle);
+                Object.DestroyImmediate(strong);
+            }
+        }
+
         private static Character CreateCombatant(string name, string gongFa, HexCoord position, CTBEngine engine)
         {
             var character = new Character
@@ -226,6 +347,7 @@ namespace TianZhang.Tests
                 MagAtk = 20,
                 PhysDef = 5,
                 MagDef = 5,
+                HitRateBonus = 100f,
                 SpellCooldowns = new int[1],
                 SkillCooldowns = new int[1],
             };

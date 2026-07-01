@@ -102,6 +102,110 @@ namespace TianZhang.Combat
             Resolver.AdvanceCooldowns(currentSession.Enemy, ticks);
         }
 
+        public CombatResolver.ActionResult ExecutePlayerBasicAttack()
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            var enemy = currentSession.Enemy;
+            if (!CanPlayerAct(player) || enemy == null)
+                return NoAction();
+
+            bool useMagic = player.MagAtk > player.PhysAtk;
+            var result = Resolver.BasicAttack(player, enemy, useMagic);
+            ConsumeActionIfSuccessful(player, result);
+            return result;
+        }
+
+        public CombatResolver.ActionResult ExecutePlayerGuard()
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            if (!CanPlayerAct(player))
+                return NoAction();
+
+            var result = Resolver.Guard(player);
+            ConsumeActionIfSuccessful(player, result);
+            return result;
+        }
+
+        public CombatResolver.ActionResult ExecutePlayerWait()
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            if (!CanPlayerAct(player))
+                return NoAction();
+
+            return Resolver.Wait(player);
+        }
+
+        public CombatResolver.ActionResult ExecutePlayerSpell(int index, SpellData[] spells)
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            if (!CanPlayerAct(player) || spells == null || index < 0 || index >= spells.Length || spells[index] == null)
+                return NoAction();
+            if (player.SpellCooldowns == null || index >= player.SpellCooldowns.Length)
+                return NoAction();
+
+            var spell = spells[index];
+            if (player.SpellCooldowns[index] > 0)
+                return Failure("术法冷却中");
+            if (player.CurrentMP < spell.mpCost)
+                return Failure("灵力不足");
+
+            bool isSelfTarget = spell.minRange == 0 && spell.maxRange == 0;
+            var target = isSelfTarget ? player : currentSession.Enemy;
+            if (target == null)
+                return NoAction();
+            if (!isSelfTarget)
+            {
+                int dist = player.Position.Distance(target.Position);
+                if (dist < spell.minRange || dist > spell.maxRange)
+                    return Failure("超出射程");
+            }
+
+            var result = Resolver.CastSpell(player, target, index, spell);
+            ConsumeActionIfSuccessful(player, result);
+            return result;
+        }
+
+        public CombatResolver.ActionResult ExecutePlayerSkill(int index, DivineSkillData[] skills)
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            var enemy = currentSession.Enemy;
+            if (!CanPlayerAct(player) || enemy == null || skills == null || index < 0 || index >= skills.Length || skills[index] == null)
+                return NoAction();
+            if (player.SkillCooldowns == null || index >= player.SkillCooldowns.Length)
+                return NoAction();
+
+            var skill = skills[index];
+            if (player.SkillCooldowns[index] > 0)
+                return Failure("神通冷却中");
+            if (player.CurrentMP < skill.mpCost)
+                return Failure("灵力不足");
+
+            int dist = player.Position.Distance(enemy.Position);
+            if (dist < skill.minRange || dist > skill.maxRange)
+                return Failure("超出射程");
+
+            var result = Resolver.UseSkill(player, enemy, index, skill);
+            ConsumeActionIfSuccessful(player, result);
+            return result;
+        }
+
+        public static IReadOnlyList<string> CreateDropItems(CharacterData enemyData)
+        {
+            var dropItems = new List<string> { "灵石×5" };
+            float realmMultiplier = enemyData != null ? enemyData.realmMultiplier : 0f;
+            if (realmMultiplier >= 2.0f)
+                dropItems.Add("中品丹药×1");
+            else if (realmMultiplier >= 1.3f)
+                dropItems.Add("下品丹药×1");
+
+            return dropItems;
+        }
+
         public string ExecuteEnemyTurn(Character enemy, Character target, SpellData[] spells, DivineSkillData[] skills, HexGrid grid)
         {
             if (enemy == null) throw new ArgumentNullException(nameof(enemy));
@@ -133,6 +237,27 @@ namespace TianZhang.Combat
                 character.ShouyiStacks = 2;
             if (character.GongFaName == "云篆度人经")
                 character.FudanStacks = 2;
+        }
+
+        private static bool CanPlayerAct(Character player)
+        {
+            return player != null && player.IsAlive;
+        }
+
+        private void ConsumeActionIfSuccessful(Character character, CombatResolver.ActionResult result)
+        {
+            if (result.Success)
+                ConsumeAction(character);
+        }
+
+        private static CombatResolver.ActionResult NoAction()
+        {
+            return new CombatResolver.ActionResult { Success = false };
+        }
+
+        private static CombatResolver.ActionResult Failure(string message)
+        {
+            return new CombatResolver.ActionResult { Success = false, Message = message };
         }
 
         private void EnsureSession()
