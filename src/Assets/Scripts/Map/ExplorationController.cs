@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TianZhang.Adventure;
 using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Combat;
@@ -38,7 +39,8 @@ namespace TianZhang.Map
         // ---- 核心系统 ----
         private CTBEngine ctbEngine;
         private CombatResolver resolver;
-        private SimpleAI aiController;
+        private TacticalCombatController tacticalCombatController;
+        private AdventureSceneController adventureSceneController;
         private Character player;
         private List<EnemyUnit> enemies = new List<EnemyUnit>();
 
@@ -105,7 +107,8 @@ namespace TianZhang.Map
             state = GameState.Loading;
             ctbEngine = new CTBEngine();
             resolver = new CombatResolver { Engine = ctbEngine };
-            aiController = new SimpleAI();
+            tacticalCombatController = new TacticalCombatController(ctbEngine, resolver);
+            adventureSceneController = FindFirstObjectByType<AdventureSceneController>();
 
             // 创建障碍格素材（深灰色）
             blockedTile = CreateColoredTile("BlockedTile", new Color(0.25f, 0.22f, 0.2f, 1f));
@@ -137,6 +140,7 @@ namespace TianZhang.Map
 
             state = GameState.Exploration;
             waitingForMoveInput = true;
+            adventureSceneController?.MarkExplorationReady();
 
             Debug.Log($"探索地图已生成: {tilemapManager.allHexCoords?.Count ?? 0} 格, {enemies.Count} 个敌人");
             yield break;
@@ -495,20 +499,8 @@ namespace TianZhang.Map
             state = GameState.BattlePrep;
             waitingForMoveInput = false;
             currentCombatTarget = enemy.character;
-
-            // 面对面
-            player.FaceTarget(enemy.character.Position);
-            enemy.character.FaceTarget(player.Position);
-
-            // 注册CTB
-            if (enemy.character.CTBUnit == null)
-                enemy.character.CTBUnit = ctbEngine.RegisterUnit(enemy.character.Reaction, enemy.character);
-            ctbEngine.ResetUnitCT(player.CTBUnit);
-            ctbEngine.ResetUnitCT(enemy.character.CTBUnit);
-            ctbEngine.ClearActionQueue();
-
-            // 设置 resolver 的 grid
-            resolver.Grid = tilemapManager.Grid;
+            adventureSceneController?.BeginEncounter();
+            tacticalCombatController.BeginCombat(player, enemy.character, tilemapManager.Grid);
 
             AddLog($"=== 战斗开始！{player.Name} VS {enemy.character.Name} ===");
             SetStatus($"⚔ {enemy.character.Name}");
@@ -525,12 +517,6 @@ namespace TianZhang.Map
             System.Array.Clear(player.SpellCooldowns, 0, player.SpellCooldowns.Length);
             System.Array.Clear(player.SkillCooldowns, 0, player.SkillCooldowns.Length);
 
-            // 初始化印记状态（守一/符胆：开局各2层）
-            if (player.GongFaName == "抱元守一经") player.ShouyiStacks = 2;
-            if (player.GongFaName == "云篆度人经") player.FudanStacks = 2;
-            if (enemy.character.GongFaName == "抱元守一经") enemy.character.ShouyiStacks = 2;
-            if (enemy.character.GongFaName == "云篆度人经") enemy.character.FudanStacks = 2;
-
             if (uiManager != null)
             {
                 uiManager.SetPlayerElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName));
@@ -544,15 +530,15 @@ namespace TianZhang.Map
 
         private IEnumerator CombatLoop(EnemyUnit enemyUnit)
         {
-            var activeUnits = new List<CTBEngine.CTBUnit> { player.CTBUnit, enemyUnit.character.CTBUnit };
             waitingForPlayerCombatAction = false;
             uiManager?.SetActionButtonsInteractable(false);
 
             while (state == GameState.Combat && player.IsAlive && enemyUnit.character.IsAlive)
             {
-                var (nextUnit, ticksElapsed) = ctbEngine.AdvanceUntilAction(activeUnits);
-                resolver.AdvanceCooldowns(player, ticksElapsed);
-                resolver.AdvanceCooldowns(enemyUnit.character, ticksElapsed);
+                var nextAction = tacticalCombatController.AdvanceUntilAction();
+                var nextUnit = nextAction.Unit;
+                int ticksElapsed = nextAction.TicksElapsed;
+                tacticalCombatController.AdvanceCooldowns(ticksElapsed);
                 RefreshUI();
 
                 if (nextUnit == null)
@@ -563,7 +549,7 @@ namespace TianZhang.Map
                     break;
                 }
 
-                var actor = nextUnit.UserData as Character;
+                var actor = nextAction.Actor;
                 if (actor == player)
                 {
                     hasMovedThisTurn = false;
@@ -595,7 +581,7 @@ namespace TianZhang.Map
                     yield return new WaitForSeconds(0.5f);
 
                     ExecuteEnemyAI(enemyUnit, enemyUnit.character);
-                    ctbEngine.ConsumeAction(enemyUnit.character.CTBUnit);
+                    tacticalCombatController.ConsumeAction(enemyUnit.character);
 
                     RefreshUI();
                     yield return new WaitForSeconds(0.3f);
@@ -681,11 +667,11 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void ExecuteEnemyAI(EnemyUnit enemyUnit, Character ch)
         {
-            var result = aiController.ExecuteTurn(
+            var result = tacticalCombatController.ExecuteEnemyTurn(
                 enemyUnit.character, player,
                 enemyUnit.spells.Length > 0 ? enemyUnit.spells : null,
                 enemyUnit.skills.Length > 0 ? enemyUnit.skills : null,
-                resolver, tilemapManager.Grid);
+                tilemapManager.Grid);
 
             AddLog($"{enemyUnit.character.Name}: {result}");
             hasMovedThisTurn = true;
@@ -879,6 +865,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
                 state = GameState.Exploration;
                 waitingForMoveInput = true;
                 currentCombatTarget = null;
+                adventureSceneController?.CompleteEncounter();
                 tilemapManager.ClearOverlay();
 
                 // 隐藏战斗UI

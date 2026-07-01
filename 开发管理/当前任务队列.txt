@@ -4,6 +4,7 @@
 > 2026-06-29 Codex / gpt-5.5：批量审核待审工作。TQ-021 基础战斗口径清理与 A0 太一道庭法箓体系导入映射表已复审通过，并归档至 `开发管理/任务归档/2026-06-29-待审工作批量复审归档.txt`；当前待复审阻塞仍为 TQ-014-DS 场景资产挂载与 DS-NEW-01/02 报告旧口径残留。
 > 2026-06-30 Codex / gpt-5.5：TQ-018 TacticalGridModel 与渲染接口兼容层已完成并归档至 `开发管理/任务归档/2026-06-30-TQ-018-TacticalGridModel渲染接口兼容层归档.txt`。新增 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`、runtime/editor asmdef 与 EditMode 规则层测试程序集；Debug/Release build、Editor build、asmdef JSON、文本检查、`git diff --check` 通过；Unity Editor Test Runner 经用户刷新执行后确认全部通过。本轮不改 CTB、伤害、冷却、寻路或技能范围语义。手动反射执行 NUnit 测试的临时 `pwsh` 命令触发 Defender 启发式拦截，确认命中对象为命令行而非仓库源文件，后续不再使用该验证方式。
 > 2026-06-30 Codex / gpt-5.5：TQ-020 Unity 已接入机制回归首轮已完成并归档至 `开发管理/任务归档/2026-06-30-TQ-020-Unity已接入机制回归首轮归档.txt`。本轮只修复 Unity 符胆神魂行动语义：神魂攻击/术法/神通共用符胆增伤、满层 30% 神防穿透与必中、消耗后行动结束补 1 层；BattleSim build/run、Unity runtime/EditMode build、Unity EditMode 全量测试、`git diff --check` 通过。雷劫、玄感、含弘/载物仍作为后续独立运行时机制切片，不在本轮标记为 Unity 已接入。
+> 2026-07-01 Codex / gpt-5.5：TQ-019 首切片已完成。新增 `TacticalCombatController`，把 CTB/Resolver/AI 的战斗准备、推进、冷却推进与敌方行动调度从 `ExplorationController` 抽出；`AdventureSceneController` 增补 Loading/Exploration/Combat/Returning 状态入口；`ExplorationController` 仅委托战斗调度，不改 CTB、伤害、冷却、槽位、寻路或掉落语义。Debug/Release `Assembly-CSharp`、`TianZhang.Runtime`、`TianZhang.EditModeTests` build、文本检查与 `git diff --check` 通过；Unity batchmode 能完成脚本编译但未生成 Test Runner 结果 XML，后续仍需在 Unity Editor Test Runner 中确认新增 EditMode 测试。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
@@ -58,7 +59,7 @@
 | TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
 | TQ-016 | P1 | Codex / ChatGPT5.5 | 场景架构验证 | 待 TQ-014-DS 场景挂载返工后执行 | Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统 |
 | TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | 待 TQ-016 通过后执行 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
-| TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 待处理（TQ-018 已完成；TQ-016 仍阻塞 Editor 场景验证） | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
+| TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 首切片已完成；待继续迁移玩家行动/掉落与 Unity Editor Test Runner 确认 | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
 
 ## 任务卡片
 
@@ -114,7 +115,7 @@
 ### TQ-019 · AdventureScene 与 TacticalCombatController 拆分
 
 - 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S6。
-- 当前状态：待处理。TQ-018 已提供规则层/渲染层兼容边界；TQ-016 仍被 TQ-014-DS 场景挂载返工阻塞。目标是降低 `ExplorationController` 同时负责地图、遭遇、战斗、掉落和 UI 驱动的耦合；不拆独立 BattleScene，不改变普通遭遇仍在同场景切换 Combat 状态的决策。
+- 当前状态：首切片已完成。已新增 `TacticalCombatController`，承接单场遭遇的 CTB 引擎、Resolver、AI、战斗准备、行动推进与冷却推进；`AdventureSceneController` 已具备 Loading/Exploration/Combat/Returning 状态入口；`ExplorationController` 已委托战斗准备、推进与敌方行动调度。TQ-018 已提供规则层/渲染层兼容边界；TQ-016 仍被 TQ-014-DS 场景挂载返工阻塞。后续继续迁移玩家行动、战斗结束/掉落调度与 UI 绑定边界；不拆独立 BattleScene，不改变普通遭遇仍在同场景切换 Combat 状态的决策。
 - 必读：`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Tilemap/HexTilemapManager.cs`、`src/Assets/Scripts/Core/CTBEngine.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Game/BattleUIManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；Unity Editor 中验证探索→战斗→掉落→继续探索；必要时保留旧 `ExplorationController` 作为薄门面逐步迁移。
 - 完成条件：`AdventureSceneController` 负责场景状态与遭遇入口；`TacticalCombatController` 负责 CTB 战斗循环与结算调度；现有玩家移动、敌人生成、战斗日志、掉落提示和冷却 UI 行为不回退。

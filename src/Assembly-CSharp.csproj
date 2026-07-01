@@ -74,9 +74,13 @@
     <Compile Include="Assets\Scripts\Game\SectSelectionManager.cs" />
     <Compile Include="Assets\Scripts\Core\HexGrid.cs" />
     <Compile Include="Assets\Scripts\Game\SceneFlowManager.cs" />
+    <Compile Include="Assets\Scripts\Grid\ITacticalRenderer.cs" />
+    <Compile Include="Assets\Scripts\Grid\TacticalGridModel.cs" />
+    <Compile Include="Assets\Scripts\Grid\TilemapTacticalRenderer.cs" />
     <Compile Include="Assets\Scripts\Game\BattleUIManager.cs" />
     <Compile Include="Assets\Scripts\Game\SceneReturnTarget.cs" />
     <Compile Include="Assets\Scripts\Combat\CombatResolver.cs" />
+    <Compile Include="Assets\Scripts\Combat\TacticalCombatController.cs" />
     <Compile Include="Assets\Scripts\Entity\CharacterData.cs" />
     <Compile Include="Assets\Scripts\Combat\EnemyAI.cs" />
     <Compile Include="Assets\Scripts\Combat\SpellData.cs" />

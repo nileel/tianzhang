@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.TestTools;
+using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Core;
 using TianZhang.Entity;
@@ -148,6 +149,115 @@ namespace TianZhang.Tests
             character.SetRealm("金丹");
             character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
             return character;
+        }
+    }
+
+    public class TacticalCombatControllerTests
+    {
+        [Test]
+        public void BeginCombatResetsCtbLinksGridFacesTargetsAndInitializesGongFaStacks()
+        {
+            var grid = new HexGrid();
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver();
+            var controller = new TacticalCombatController(engine, resolver);
+
+            var player = CreateCombatant("太一修士", "云篆度人经", new HexCoord(0, 0), engine);
+            var enemy = CreateCombatant("守一敌", "抱元守一经", new HexCoord(1, 0), engine);
+            player.CTBUnit.CT = 250f;
+            player.CTBUnit.PendingCooldownPenalty = 30;
+            player.CTBUnit.NextActionThreshold = 130f;
+            enemy.CTBUnit.CT = 150f;
+
+            var session = controller.BeginCombat(player, enemy, grid);
+
+            Assert.AreSame(player, session.Player);
+            Assert.AreSame(enemy, session.Enemy);
+            Assert.AreSame(grid, controller.Resolver.Grid);
+            Assert.AreEqual(0f, player.CTBUnit.CT);
+            Assert.AreEqual(0, player.CTBUnit.PendingCooldownPenalty);
+            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.NextActionThreshold);
+            Assert.AreEqual(0f, enemy.CTBUnit.CT);
+            Assert.AreEqual(0, player.Facing);
+            Assert.AreEqual(3, enemy.Facing);
+            Assert.AreEqual(2, player.FudanStacks);
+            Assert.AreEqual(2, enemy.ShouyiStacks);
+        }
+
+        [Test]
+        public void AdvanceUntilActionReturnsNextActorAndAdvancesCooldowns()
+        {
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var fast = CreateCombatant("快修", "抱元守一经", new HexCoord(0, 0), controller.Engine);
+            var slow = CreateCombatant("慢修", "含弘光大典", new HexCoord(1, 0), controller.Engine);
+            fast.Reaction = 100;
+            fast.CTBUnit.Speed = 100;
+            fast.CTBUnit.CtPerTick = 100f;
+            slow.Reaction = 10;
+            slow.CTBUnit.Speed = 10;
+            slow.CTBUnit.CtPerTick = 10f;
+            fast.SpellCooldowns[0] = 5;
+            slow.SpellCooldowns[0] = 5;
+
+            controller.BeginCombat(fast, slow, grid);
+            var next = controller.AdvanceUntilAction();
+            controller.AdvanceCooldowns(next.TicksElapsed);
+
+            Assert.AreSame(fast, next.Actor);
+            Assert.AreEqual(1, next.TicksElapsed);
+            Assert.AreEqual(4, fast.SpellCooldowns[0]);
+            Assert.AreEqual(4, slow.SpellCooldowns[0]);
+        }
+
+        private static Character CreateCombatant(string name, string gongFa, HexCoord position, CTBEngine engine)
+        {
+            var character = new Character
+            {
+                Name = name,
+                GongFaName = gongFa,
+                Position = position,
+                Reaction = 30,
+                MaxHP = 100,
+                CurrentHP = 100,
+                MaxMP = 100,
+                CurrentMP = 100,
+                PhysAtk = 20,
+                MagAtk = 20,
+                PhysDef = 5,
+                MagDef = 5,
+                SpellCooldowns = new int[1],
+                SkillCooldowns = new int[1],
+            };
+            character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
+            return character;
+        }
+    }
+
+    public class AdventureSceneControllerTests
+    {
+        [Test]
+        public void EncounterStateMovesBetweenExplorationCombatAndReturning()
+        {
+            var go = new GameObject("AdventureSceneControllerTests");
+            try
+            {
+                var controller = go.AddComponent<AdventureSceneController>();
+
+                Assert.AreEqual(AdventureSceneState.Loading, controller.CurrentState);
+                controller.MarkExplorationReady();
+                Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
+                controller.BeginEncounter();
+                Assert.AreEqual(AdventureSceneState.Combat, controller.CurrentState);
+                controller.CompleteEncounter();
+                Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
+                controller.MarkReturning();
+                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
         }
     }
 }
