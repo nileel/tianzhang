@@ -1,5 +1,6 @@
 ﻿# 未通过审核清单（✅ 已审核）
 
+> 2026-07-01 Codex / gpt-5.5 复审 78c481e / b40409a：REVIEW-20260628-01 静态场景 Controller GUID 与 Unity batchmode 编译/导入通过，但 TQ-016 Editor 端生成、加载、返回验证未闭环，仍保留；REVIEW-20260628-04 通过并从当前清单移除。
 > 2026-06-29 Codex / gpt-5.5 批量审核待审工作：当前清单两项复核后仍保留。REVIEW-20260628-01 仍缺 World/Settlement/Adventure 场景对三类 Controller GUID 的引用与 Unity Editor 端验证；REVIEW-20260628-04 当前文件仍保留 `realm_lianxu` asset 完全缺失旧表述、验证记录 `GongFa 4 realm_lianshen + 0 realm_lianxu` 与 F5 “9条功法行”旧计数。
 
 > 2026-06-29 DeepSeek V4 Pro 按用户要求处理全部未通过审核项。后续 Codex / gpt-5.5 复审确认：REVIEW-20260628-05（金丹位格）通过并移除；REVIEW-20260628-04（DS-NEW-01/02）仍不通过；REVIEW-20260628-01（场景Controller）确认为 Unity Editor 任务，DeepSeek 无法执行，已写入 AI合作沟通。
@@ -27,41 +28,18 @@
 
 ### REVIEW-20260628-01 · TQ-014-DS-04/05 场景脚手架与 World/Settlement 数据壳
 
-- 结论：部分通过，当前仍不通过。
-- 目标提交：fe610ed、959fbda、fb7f7ed、0b4ab27、334e88e、3cb5a7d、9a12f5e；历史修补 dfa69a1 / 82ab968 已被后续提交覆盖。
-- 已通过部分：`SceneBuilder.BuildEmptyScene` 已支持 `sceneControllerType` 并在 World/Settlement/Adventure 菜单入口挂载对应 Controller；`GameSession` 与 `SceneFlowManager` 已保存 `CurrentSettlementId` / `CurrentAdventureId`；新增 `.meta` 均为多行 Unity YAML 且 GUID 为 32 位 hex；`Assembly-CSharp.csproj` 当前包含新增脚本；`dotnet build src/Assembly-CSharp.csproj` 通过。
+- 结论：78c481e 静态修复通过；TQ-016 Editor 端到端验证未闭环，当前仍部分通过。
+- 目标提交：fe610ed、959fbda、fb7f7ed、0b4ab27、334e88e、3cb5a7d、9a12f5e、78c481e；历史修补 dfa69a1 / 82ab968 已被后续提交覆盖。
+- 已通过部分：`SceneBuilder.BuildEmptyScene` 已支持 `sceneControllerType` 并在 World/Settlement/Adventure 批量与单场景菜单入口挂载对应 Controller；`GameSession` 与 `SceneFlowManager` 已保存 `CurrentSettlementId` / `CurrentAdventureId`；新增 `.meta` 均为多行 Unity YAML 且 GUID 为 32 位 hex；78c481e 中 World/Settlement/Adventure 三个场景均各自包含对应 Controller GUID；三场景各有 1 个 `SceneController` / `GameManager` / `EventSystem` / `Main Camera`，无空 GUID；Unity 6000.3.18f1 batchmode 编译/导入通过。
 - 未通过问题：
-  1. 2026-06-28 复核 HEAD：`WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity` 均未引用对应 `WorldSceneController` / `SettlementSceneController` / `AdventureSceneController` GUID。
-  2. 当前 `src/Assets/Scenes` 无未提交 diff，说明场景 Controller 挂载结果尚未形成可复审提交。
-  3. Unity Editor 端到端生成、加载、返回尚未验证；当前 `.unity` 资产不能直接视为已通过。
-- 返工建议：用 Unity Editor 重新执行 SceneBuilder 菜单或手工挂载并保存 World/Settlement/Adventure 三个场景资产；提交场景中的 Controller GUID 引用；重新运行 `dotnet build src/Assembly-CSharp.csproj`、场景 GUID 专项检查与可接受范围的 diff 检查。
-- ⚠️ 2026-06-30 DeepSeek V4 Pro：TQ-014-DS 返工完成（78c481e）。SceneBuilder BuildAllScenes Adventure Controller 已补全；World/Settlement/Adventure 场景已重新生成并挂载对应 Controller；5 个 .meta + 3 个 .unity 行尾空白已清理。待 Codex / ChatGPT5.5 执行 TQ-016 Editor 验证闸门。
-
-### REVIEW-20260628-04 · DS-NEW-01/02 炼虚与 realm_lianshen 报告
-
-- 结论：f4345e5 返工后部分通过，当前仍不通过。
-- 目标提交：c7396fe、fb2ae37；修复提交：a2ff97a、f4345e5（⚠️ 已修改/未审核；DeepSeek V4 Pro）。
-- 已修复：
-  1. ✅ CR 控制字符已清除（29 个 0x0D）
-  2. ✅ 全文 `ealm_`→`realm_` 统修 + `ealmScaleBase`→`realmScaleBase`
-  3. ✅ GongFa.csv 表格条目已改为 `gongfa_hunyuantongchen`，并与实际 6 本 `realm_lianxu` 功法匹配
-  4. ✅ P0-3 主表述已改为 Spells+Skills 合计 6 条、全部 CSV 合计 12 个 `realm_lianxu` 内容 ID
-  5. ✅ 领域神通结论已改为 2 个 `realm_lianshen`、3 个 `realm_lianxu`，不再写“所有领域级神通都标在 realm_lianshen”
-  6. ✅ DS-NEW-01 A4 已改为 6 本 `realm_lianxu` + 4 本 `realm_lianshen`
-  7. ✅ 验证记录已更新（check-review-text.ps1: OK）
-- 仍待处理：
-  1. `realm_lianshen专项检查.txt` 的 Unity asset 小节仍写“6 本含 realm_lianxu 的宗门功法在 asset 层完全缺失”，但实际 6 个宗门 GongFa asset 均含 `\u70BC\u865A`（炼虚）序列化项；该旧表述与同文件 P0-3 新结论冲突。
-  2. 同文件验证记录仍只写 `GongFa 4 realm_lianshen + 0 realm_lianxu`，未说明 `realm_lianxu` 是按原始 key 搜索为 0，而按 Unity 转义中文“炼虚”实际存在 6 个 asset，容易继续误导为 ZERO asset。
-  3. `炼虚与高阶内容影响面清单.txt` F5 仍写“9条功法行含 realm_lianxu 或 realm_lianshen 境界行”，实际 GongFa.csv 中相关内容 ID 为 10 个（6 个 `realm_lianxu` + 4 个 `realm_lianshen`）。
-- F1 口径判断（2026-06-28 Codex / gpt-5.5）：
-  1. `realm_lianshen` 不确认为独立境界，不补入 `Language.csv` 或 C# realm order。
-  2. 当前版本以"化神为世界最高境界、炼虚已删除、玩家主线止于金丹"为准；`realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容，不能作为当前运行时境界链扩展。
-  3. 若后续需要保留古修"炼神"语义，应另建内容路线/标签（如 contentScope 或古修神魂路线），不得继续使用 `realm_*` 境界 key 表达。
-- 返工建议：DeepSeek 先把 asset 小节、验证记录和 F5 计数统一到上述口径；后续若改 CSV/asset/脚本，必须同步运行 `tools/check-data-chain.ps1`。
-- ⚠️ 2026-06-30 DeepSeek V4 Pro 核查：b40409a 已修复全部三项（asset 小节文本、验证记录、F5 计数）。当前文件内容与审核清单描述的"仍待处理"不一致——三项均已修正。待 Codex / ChatGPT5.5 重新复审后移除。
+  1. 尚未执行会重写场景资产的 Unity Editor `SceneBuilder` 菜单或等价验证，未确认生成流程在 Editor 端稳定产出当前场景资产。
+  2. 尚未进行 World/Settlement/Adventure 实际加载、进入、返回的端到端验证。
+- 返工建议：下一轮只执行 TQ-016 Editor 验证闸门：在 Unity Editor 中执行 `Tools/天章/生成场景架构空场景` 或等价流程，验证 World/Settlement/Adventure 可生成、加载、返回；若场景文件被 Editor 重写，提交对应 diff 并复跑场景 GUID 专项检查与可接受范围的 diff 检查。
+- 2026-06-30 DeepSeek V4 Pro：TQ-014-DS 返工完成（78c481e）。SceneBuilder BuildAllScenes Adventure Controller 已补全；World/Settlement/Adventure 场景已重新生成并挂载对应 Controller；5 个 .meta + 3 个 .unity 行尾空白已清理。
+- 2026-07-01 Codex / gpt-5.5 复审：78c481e 静态资产与 batchmode 编译/导入通过；`dotnet build src/Assembly-CSharp.csproj` 当前因 TQ-018 `TacticalGridModel/TilemapTacticalRenderer` asmdef/csproj 同步问题失败，不作为 78c481e 新增失败依据。
 
 ## 后续复核建议
 
 - 优先处理 TQ-014-DS 场景资产提交边界；TQ-010 当前工作树 asset 回归已复核清除。
 - TQ-014-DS 下一轮只处理场景资产生成/提交、Adventure Controller 挂载与 Editor 端验证，不扩大到 CTB/伤害/冷却/槽位语义。
-- DS-NEW-01/02 修正前，不以其 F 类统计作为架构决策依据。
+- DS-NEW-01/02 统计口径已通过；后续 F 类架构决策仍以 2026-06-28 F1 口径为准：`realm_lianshen` 不作为独立境界 key，`realm_lianxu` / `realm_lianshen` 均按旧高阶/NPC/资料片保留内容处理。

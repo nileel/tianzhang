@@ -1,4 +1,4 @@
-# realm_lianshen 数据链路专项检查
+﻿# realm_lianshen 数据链路专项检查
 # 生成: 2026-06-28 | 修改方: DeepSeek V4 Pro | 状态: ⚠️ 已修改/未审核；变更范围：新增文件，数据链路核对；2026-06-29 DeepSeek V4 Pro 按 REVIEW-20260628-04 修正5项统计错误
 # 任务: DS-NEW-02（来源：EXPAND-20260625-01）
 # 扫描: rg -n "realm_lianshen|realm_lianxu|炼神|炼虚" docs src simulations 开发管理
