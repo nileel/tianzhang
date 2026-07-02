@@ -310,6 +310,39 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void PlayerSwapSpellConsumesActionOnSuccessAndPreservesFailure()
+        {
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
+            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
+            player.EquippedSpellIds = new[] { "old-spell" };
+            player.AvailableSpells = new[] { "old-spell", "new-spell", "backup-spell" };
+
+            controller.BeginCombat(player, enemy, grid);
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+
+            var swapped = controller.ExecutePlayerSwapSpell(0, "new-spell");
+
+            Assert.IsTrue(swapped.Success);
+            Assert.AreEqual("临阵换法: old-spell → new-spell (CD×2, 剩余1次)", swapped.Message);
+            Assert.AreEqual("new-spell", player.EquippedSpellIds[0]);
+            Assert.AreEqual(60, player.SpellCooldowns[0]);
+            Assert.AreEqual(1, player.CombatSwapsUsed);
+            Assert.AreEqual(0f, player.CTBUnit.CT);
+
+            player.CombatSwapsUsed = Character.MaxCombatSwaps;
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+
+            var exhausted = controller.ExecutePlayerSwapSpell(0, "backup-spell");
+
+            Assert.IsFalse(exhausted.Success);
+            Assert.AreEqual("本场战斗换法次数已用完", exhausted.Message);
+            Assert.AreEqual("new-spell", player.EquippedSpellIds[0]);
+            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
+        }
+
+        [Test]
         public void CreateDropItemsUsesDefeatedEnemyRealmThresholds()
         {
             var weak = ScriptableObject.CreateInstance<CharacterData>();

@@ -203,6 +203,27 @@ namespace TianZhang.Combat
             return result;
         }
 
+        public CombatResolver.ActionResult ExecutePlayerSwapSpell(int slotIndex, string newSpellId)
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            if (!CanPlayerAct(player))
+                return NoAction();
+            if (player.CombatSwapsUsed >= Character.MaxCombatSwaps)
+                return Failure("本场战斗换法次数已用完");
+
+            string oldSpell = player.SwapSpellInCombat(slotIndex, newSpellId);
+            if (oldSpell == null)
+                return Failure("换法失败");
+
+            ConsumeAction(player);
+            return new CombatResolver.ActionResult
+            {
+                Success = true,
+                Message = $"临阵换法: {oldSpell} → {newSpellId} (CD×2, 剩余{Character.MaxCombatSwaps - player.CombatSwapsUsed}次)"
+            };
+        }
+
         public static IReadOnlyList<string> CreateDropItems(CharacterData enemyData)
         {
             var dropItems = new List<string> { "灵石×5" };

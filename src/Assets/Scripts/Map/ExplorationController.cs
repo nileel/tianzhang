@@ -714,11 +714,10 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
             // 换入第一个可用术法到槽位0
             string newSpell = swappable[0];
-            string oldSpell = player.SwapSpellInCombat(0, newSpell);
-            if (oldSpell != null)
+            var result = tacticalCombatController.ExecutePlayerSwapSpell(0, newSpell);
+            AddActionLog(result);
+            if (result.Success)
             {
-                AddLog($"临阵换法: {oldSpell} → {newSpell} (CD×2, 剩余{Character.MaxCombatSwaps - player.CombatSwapsUsed}次)");
-                ctbEngine.ConsumeAction(player.CTBUnit);
                 hasMovedThisTurn = true;
                 RefreshUI();
             }
