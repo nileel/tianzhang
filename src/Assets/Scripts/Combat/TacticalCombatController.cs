@@ -5,6 +5,15 @@ using TianZhang.Entity;
 
 namespace TianZhang.Combat
 {
+    public interface ICombatCommandHandler
+    {
+        void RequestBasicAttack();
+        void RequestGuard();
+        void RequestWait();
+        void RequestSpell(int index);
+        void RequestSkill(int index);
+    }
+
     public struct TacticalCombatSession
     {
         public Character Player { get; }

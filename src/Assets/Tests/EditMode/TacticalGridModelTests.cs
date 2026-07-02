@@ -2,10 +2,12 @@ using NUnit.Framework;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Core;
 using TianZhang.Entity;
+using TianZhang.Game;
 using TianZhang.Tactical;
 
 namespace TianZhang.Tests
@@ -380,6 +382,70 @@ namespace TianZhang.Tests
             {
                 Object.DestroyImmediate(go);
             }
+        }
+    }
+
+    public class BattleUIManagerTests
+    {
+        [Test]
+        public void ActionBarButtonsRouteThroughCombatCommandHandlerWhenBound()
+        {
+            var host = new GameObject("BattleUIManagerCommandTest");
+            try
+            {
+                var ui = host.AddComponent<BattleUIManager>();
+                typeof(BattleUIManager)
+                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(ui, null);
+                var handler = new RecordingCombatCommandHandler();
+                ui.SetCombatCommandHandler(handler);
+
+                FindButton("BtnAttack").onClick.Invoke();
+                FindButton("BtnGuard").onClick.Invoke();
+                FindButton("BtnWait").onClick.Invoke();
+                FindButton("BtnSpell2").onClick.Invoke();
+                FindButton("BtnSkill1").onClick.Invoke();
+
+                Assert.AreEqual(1, handler.BasicAttackRequests);
+                Assert.AreEqual(1, handler.GuardRequests);
+                Assert.AreEqual(1, handler.WaitRequests);
+                Assert.AreEqual(2, handler.LastSpellIndex);
+                Assert.AreEqual(1, handler.LastSkillIndex);
+            }
+            finally
+            {
+                var canvas = GameObject.Find("UICanvas");
+                if (canvas != null)
+                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        private static Button FindButton(string name)
+        {
+            foreach (var button in Resources.FindObjectsOfTypeAll<Button>())
+            {
+                if (button.name == name)
+                    return button;
+            }
+
+            Assert.Fail(name);
+            return null;
+        }
+
+        private sealed class RecordingCombatCommandHandler : ICombatCommandHandler
+        {
+            public int BasicAttackRequests { get; private set; }
+            public int GuardRequests { get; private set; }
+            public int WaitRequests { get; private set; }
+            public int LastSpellIndex { get; private set; } = -1;
+            public int LastSkillIndex { get; private set; } = -1;
+
+            public void RequestBasicAttack() => BasicAttackRequests++;
+            public void RequestGuard() => GuardRequests++;
+            public void RequestWait() => WaitRequests++;
+            public void RequestSpell(int index) => LastSpellIndex = index;
+            public void RequestSkill(int index) => LastSkillIndex = index;
         }
     }
 }

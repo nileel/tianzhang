@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TianZhang.Combat;
 
 namespace TianZhang.Game
 {
@@ -12,6 +13,7 @@ namespace TianZhang.Game
     {
         [Header("引用")]
         private TianZhang.Map.ExplorationController exploreController;
+        private ICombatCommandHandler combatCommandHandler;
 
         [Header("Canvas 设置")]
         public float panelMargin = 16f;
@@ -69,7 +71,16 @@ namespace TianZhang.Game
         private GameObject helpPanel;
         private bool helpVisible;
 
-        public void SetExplorationController(TianZhang.Map.ExplorationController ctrl) { exploreController = ctrl; }
+        public void SetExplorationController(TianZhang.Map.ExplorationController ctrl)
+        {
+            exploreController = ctrl;
+            combatCommandHandler = ctrl as ICombatCommandHandler;
+        }
+
+        public void SetCombatCommandHandler(ICombatCommandHandler handler)
+        {
+            combatCommandHandler = handler;
+        }
 
         private void Awake()
         {
@@ -112,7 +123,8 @@ namespace TianZhang.Game
             var go = new GameObject("UICanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             // Canvas 作为根级对象，不挂在 BattleUIManager 下
             go.transform.SetParent(null);
-            UnityEngine.Object.DontDestroyOnLoad(go);
+            if (Application.isPlaying)
+                UnityEngine.Object.DontDestroyOnLoad(go);
             var canvas = go.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
@@ -319,13 +331,13 @@ namespace TianZhang.Game
             layout.childControlHeight = false;
 
             attackButton = CreateButton(bar.transform, "BtnAttack", "普攻 [A]");
-            attackButton.onClick.AddListener(() => { if (exploreController != null) exploreController.PlayerBasicAttack(); });
+            attackButton.onClick.AddListener(RequestBasicAttack);
 
             for (int i = 0; i < 4; i++)
             {
                 int idx = i;
                 var btn = CreateButton(bar.transform, "BtnSpell" + i, "术法" + (i + 1) + " [" + (idx + 1) + "]");
-                btn.onClick.AddListener(() => { if (exploreController != null) exploreController.PlayerCastSpell(idx); });
+                btn.onClick.AddListener(() => RequestSpell(idx));
                 spellButtons.Add(btn.gameObject);
             }
 
@@ -333,15 +345,55 @@ namespace TianZhang.Game
             {
                 int idx = i;
                 var btn = CreateButton(bar.transform, "BtnSkill" + i, "神通" + (i + 1) + " [" + (idx + 5) + "]");
-                btn.onClick.AddListener(() => { if (exploreController != null) exploreController.PlayerUseSkill(idx); });
+                btn.onClick.AddListener(() => RequestSkill(idx));
                 skillButtons.Add(btn.gameObject);
             }
 
             guardButton = CreateButton(bar.transform, "BtnGuard", "防御 [G]");
-            guardButton.onClick.AddListener(() => { if (exploreController != null) exploreController.PlayerGuard(); });
+            guardButton.onClick.AddListener(RequestGuard);
 
             waitButton = CreateButton(bar.transform, "BtnWait", "待机 [W]");
-            waitButton.onClick.AddListener(() => { if (exploreController != null) exploreController.PlayerCombatWait(); });
+            waitButton.onClick.AddListener(RequestWait);
+        }
+
+        private void RequestBasicAttack()
+        {
+            if (combatCommandHandler != null)
+                combatCommandHandler.RequestBasicAttack();
+            else if (exploreController != null)
+                exploreController.PlayerBasicAttack();
+        }
+
+        private void RequestGuard()
+        {
+            if (combatCommandHandler != null)
+                combatCommandHandler.RequestGuard();
+            else if (exploreController != null)
+                exploreController.PlayerGuard();
+        }
+
+        private void RequestWait()
+        {
+            if (combatCommandHandler != null)
+                combatCommandHandler.RequestWait();
+            else if (exploreController != null)
+                exploreController.PlayerCombatWait();
+        }
+
+        private void RequestSpell(int index)
+        {
+            if (combatCommandHandler != null)
+                combatCommandHandler.RequestSpell(index);
+            else if (exploreController != null)
+                exploreController.PlayerCastSpell(index);
+        }
+
+        private void RequestSkill(int index)
+        {
+            if (combatCommandHandler != null)
+                combatCommandHandler.RequestSkill(index);
+            else if (exploreController != null)
+                exploreController.PlayerUseSkill(index);
         }
 
         // ---- 战斗日志（右侧）----

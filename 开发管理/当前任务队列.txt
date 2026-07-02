@@ -6,6 +6,7 @@
 > 2026-06-30 Codex / gpt-5.5：TQ-020 Unity 已接入机制回归首轮已完成并归档至 `开发管理/任务归档/2026-06-30-TQ-020-Unity已接入机制回归首轮归档.txt`。本轮只修复 Unity 符胆神魂行动语义：神魂攻击/术法/神通共用符胆增伤、满层 30% 神防穿透与必中、消耗后行动结束补 1 层；BattleSim build/run、Unity runtime/EditMode build、Unity EditMode 全量测试、`git diff --check` 通过。雷劫、玄感、含弘/载物仍作为后续独立运行时机制切片，不在本轮标记为 Unity 已接入。
 > 2026-07-01 Codex / gpt-5.5：TQ-019 首切片已完成。新增 `TacticalCombatController`，把 CTB/Resolver/AI 的战斗准备、推进、冷却推进与敌方行动调度从 `ExplorationController` 抽出；`AdventureSceneController` 增补 Loading/Exploration/Combat/Returning 状态入口；`ExplorationController` 仅委托战斗调度，不改 CTB、伤害、冷却、槽位、寻路或掉落语义。Debug/Release `Assembly-CSharp`、`TianZhang.Runtime`、`TianZhang.EditModeTests` build、文本检查与 `git diff --check` 通过；Unity batchmode 能完成脚本编译但未生成 Test Runner 结果 XML，后续仍需在 Unity Editor Test Runner 中确认新增 EditMode 测试。
 > 2026-07-01 Codex / gpt-5.5：TQ-019 第二切片已完成。`TacticalCombatController` 新增玩家普攻/防御/待机/术法/神通执行 API 与掉落表生成，`ExplorationController` 对应公共战斗方法改为委托规则层并仅负责日志、UI 刷新和协程状态；新增 EditMode 测试覆盖成功/失败行动 CT 消费、术法前置失败消息、待机 CT 保留与掉落阈值。Debug/Release `Assembly-CSharp`、`TianZhang.Runtime`、`TianZhang.EditModeTests` build、Unity EditMode Test Runner（10/10）、文本检查与 `git diff --check` 通过；本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或掉落数值语义。临阵换法、战斗结束调度与 BattleUI 直接绑定仍留后续切片。
+> 2026-07-02 Codex / gpt-5.5：TQ-019 第三切片已完成。新增 `ICombatCommandHandler`，`BattleUIManager` 动作栏改为优先走战斗命令接口并保留 `ExplorationController` 回退；`ExplorationController` 暂作为兼容适配器实现接口；EditMode 下 `UICanvas` 不再调用 PlayMode-only 的 `DontDestroyOnLoad`，便于 Test Runner 初始化验证。Debug/Release `Assembly-CSharp`、`TianZhang.EditModeTests` Release、Unity EditMode Test Runner（11/11）、文本检查与 `git diff --check` 通过；本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或掉落数值语义。临阵换法与战斗结束调度仍留后续切片。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
@@ -60,7 +61,7 @@
 | TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
 | TQ-016 | P1 | Codex / ChatGPT5.5 | 场景架构验证 | 待 TQ-014-DS 场景挂载返工后执行 | Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统 |
 | TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | 待 TQ-016 通过后执行 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
-| TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 第二切片已完成；待继续迁移临阵换法、战斗结束调度与 BattleUI 绑定边界 | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
+| TQ-019 | P1 | Codex / ChatGPT5.5 | 战棋架构 | 第三切片已完成；待继续迁移临阵换法与战斗结束调度 | 拆分 AdventureSceneController 与 TacticalCombatController，保持探索→战斗→掉落→继续探索流程行为不变 |
 
 ## 任务卡片
 
@@ -116,7 +117,7 @@
 ### TQ-019 · AdventureScene 与 TacticalCombatController 拆分
 
 - 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S6。
-- 当前状态：第二切片已完成。已新增 `TacticalCombatController`，承接单场遭遇的 CTB 引擎、Resolver、AI、战斗准备、行动推进、冷却推进、敌方行动、玩家普攻/防御/待机/术法/神通执行与掉落表生成；`AdventureSceneController` 已具备 Loading/Exploration/Combat/Returning 状态入口；`ExplorationController` 已委托战斗准备、推进、敌方行动、玩家公共战斗行动与掉落表生成，仅保留日志、UI 刷新、协程状态和场景对象处理。TQ-018 已提供规则层/渲染层兼容边界；TQ-016 仍被 TQ-014-DS 场景挂载返工阻塞。后续继续迁移临阵换法、战斗结束调度与 BattleUI 绑定边界；不拆独立 BattleScene，不改变普通遭遇仍在同场景切换 Combat 状态的决策。
+- 当前状态：第三切片已完成。已新增 `TacticalCombatController`，承接单场遭遇的 CTB 引擎、Resolver、AI、战斗准备、行动推进、冷却推进、敌方行动、玩家普攻/防御/待机/术法/神通执行与掉落表生成；`BattleUIManager` 动作栏已通过 `ICombatCommandHandler` 收束直接绑定边界，并保留 `ExplorationController` 兼容回退；`AdventureSceneController` 已具备 Loading/Exploration/Combat/Returning 状态入口；`ExplorationController` 已委托战斗准备、推进、敌方行动、玩家公共战斗行动、UI 命令入口与掉落表生成，仅保留日志、UI 刷新、协程状态和场景对象处理。TQ-018 已提供规则层/渲染层兼容边界；TQ-016 仍被 TQ-014-DS 场景挂载返工阻塞。后续继续迁移临阵换法与战斗结束调度；不拆独立 BattleScene，不改变普通遭遇仍在同场景切换 Combat 状态的决策。
 - 必读：`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Tilemap/HexTilemapManager.cs`、`src/Assets/Scripts/Core/CTBEngine.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Game/BattleUIManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；Unity EditMode Test Runner；Unity Editor 中验证探索→战斗→掉落→继续探索；必要时保留旧 `ExplorationController` 作为薄门面逐步迁移。
 - 完成条件：`AdventureSceneController` 负责场景状态与遭遇入口；`TacticalCombatController` 负责 CTB 战斗循环与结算调度；现有玩家移动、敌人生成、战斗日志、掉落提示和冷却 UI 行为不回退。

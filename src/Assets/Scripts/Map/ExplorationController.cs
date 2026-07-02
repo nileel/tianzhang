@@ -15,7 +15,7 @@ namespace TianZhang.Map
     /// 职责：生成可探索地图 + 敌人生成 + 探索→战斗循环
     /// 操作：鼠标点击移动，接近敌人触发战斗
     /// </summary>
-    public class ExplorationController : MonoBehaviour
+    public class ExplorationController : MonoBehaviour, ICombatCommandHandler
     {
         [Header("引用")]
         public HexTilemapManager tilemapManager;
@@ -723,6 +723,12 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
                 RefreshUI();
             }
         }
+
+        public void RequestBasicAttack() => PlayerBasicAttack();
+        public void RequestGuard() => PlayerGuard();
+        public void RequestWait() => PlayerCombatWait();
+        public void RequestSpell(int index) => PlayerCastSpell(index);
+        public void RequestSkill(int index) => PlayerUseSkill(index);
 
         public void PlayerBasicAttack()
         {
