@@ -45,6 +45,32 @@ namespace TianZhang.Combat
         }
     }
 
+    public enum TacticalCombatEndOutcome
+    {
+        Ongoing,
+        Victory,
+        Defeat,
+    }
+
+    public struct TacticalCombatEndResult
+    {
+        public TacticalCombatEndOutcome Outcome { get; }
+        public string Message { get; }
+        public IReadOnlyList<string> DropItems { get; }
+
+        public bool IsEnded => Outcome != TacticalCombatEndOutcome.Ongoing;
+
+        public TacticalCombatEndResult(
+            TacticalCombatEndOutcome outcome,
+            string message,
+            IReadOnlyList<string> dropItems = null)
+        {
+            Outcome = outcome;
+            Message = message ?? string.Empty;
+            DropItems = dropItems ?? Array.Empty<string>();
+        }
+    }
+
     /// <summary>
     /// CTB 战斗调度边界：持有战斗引擎、解析器与 AI，并封装单场遭遇的准备和推进。
     /// </summary>
@@ -234,6 +260,34 @@ namespace TianZhang.Combat
                 dropItems.Add("下品丹药×1");
 
             return dropItems;
+        }
+
+        public TacticalCombatEndResult ResolveBattleEnd(CharacterData enemyData, HexGrid grid)
+        {
+            EnsureSession();
+            var player = currentSession.Player;
+            var enemy = currentSession.Enemy;
+
+            if (player == null || !player.IsAlive)
+            {
+                if (player?.CTBUnit != null)
+                    player.CTBUnit.IsAlive = false;
+                return new TacticalCombatEndResult(
+                    TacticalCombatEndOutcome.Defeat,
+                    "玩家被击败！游戏结束");
+            }
+
+            if (enemy == null || enemy.IsAlive)
+                return new TacticalCombatEndResult(TacticalCombatEndOutcome.Ongoing, string.Empty);
+
+            if (enemy.CTBUnit != null)
+                enemy.CTBUnit.IsAlive = false;
+            grid?.ClearOccupied(enemy.Position);
+
+            return new TacticalCombatEndResult(
+                TacticalCombatEndOutcome.Victory,
+                $"击败了 {enemy.Name}！",
+                CreateDropItems(enemyData));
         }
 
         public string ExecuteEnemyTurn(Character enemy, Character target, SpellData[] spells, DivineSkillData[] skills, HexGrid grid)

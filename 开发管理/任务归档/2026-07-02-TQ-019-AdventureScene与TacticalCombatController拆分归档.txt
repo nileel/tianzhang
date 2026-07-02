@@ -1,0 +1,60 @@
+# TQ-019 AdventureScene 与 TacticalCombatController 拆分归档
+
+状态：已完成 / 已验证（2026-07-02 Codex / gpt-5.5 自产；不进入复审队列）
+
+## 任务目标
+
+在不改变 CTB、伤害、冷却、槽位、寻路、技能范围、掉落数值或普通遭遇仍在同场景切换 Combat 状态这一决策的前提下，逐步拆分 `ExplorationController` 的战斗职责，让 `AdventureSceneController` 承接副本场景状态，让 `TacticalCombatController` 承接单场遭遇的规则层战斗调度。
+
+## 已完成切片
+
+- 首切片：新增 `TacticalCombatController`，承接 CTB 引擎、`CombatResolver`、AI、战斗准备、行动推进、冷却推进与敌方行动调度；新增 `AdventureSceneController` 的 Loading/Exploration/Combat/Returning 状态入口。
+- 第二切片：`TacticalCombatController` 新增玩家普攻、防御、待机、术法、神通执行 API 与掉落表生成；`ExplorationController` 对应公共战斗方法改为委托规则层，只保留日志、UI 刷新和协程状态。
+- 第三切片：新增 `ICombatCommandHandler`，`BattleUIManager` 动作栏优先走战斗命令接口并保留 `ExplorationController` 回退；修复 EditMode 下 `UICanvas` 的 PlayMode-only `DontDestroyOnLoad` 调用。
+- 第四切片：`TacticalCombatController` 新增玩家临阵换法入口，统一处理换法次数上限、换入结果消息与成功后 CT 消耗；`ExplorationController` 的换法输入只保留候选选择、日志和 UI 刷新。
+- 第五切片：`TacticalCombatController` 新增 `TacticalCombatEndOutcome`、`TacticalCombatEndResult` 与 `ResolveBattleEnd`，统一输出胜负、掉落与规则层占位清理；`ExplorationController.EndBattle` 改为消费结算结果，仅保留日志、UI、敌人 marker 和场景状态收尾。
+
+## 本轮改动
+
+- `src/Assets/Scripts/Combat/TacticalCombatController.cs`
+  - 新增战斗结束结果类型。
+  - 新增 `ResolveBattleEnd(CharacterData enemyData, HexGrid grid)`。
+  - 玩家阵亡时返回 Defeat 和败北消息。
+  - 敌人阵亡时返回 Victory、胜利消息、掉落列表，并清理敌人所在格子的规则层占位。
+- `src/Assets/Scripts/Map/ExplorationController.cs`
+  - `EndBattle` 改为读取 `TacticalCombatController.ResolveBattleEnd` 结果。
+  - 胜负消息、掉落内容和占位清理由规则层结果驱动。
+  - 保留敌人 marker 隐藏、UI 面板隐藏、日志、`AdventureSceneController.CompleteEncounter()`、返回探索状态等 Unity 场景收尾。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+  - 新增 `ResolveBattleEndClearsDefeatedEnemyOccupancyAndReportsDrops`。
+  - 覆盖敌人阵亡后的 Victory 结果、胜利消息、掉落阈值与 `HexGrid` 占位清理。
+
+## 验证结果
+
+命令：
+
+```powershell
+dotnet build -c Release src/TianZhang.EditModeTests.csproj
+dotnet build -c Release src/Assembly-CSharp.csproj
+dotnet build -c Debug src/Assembly-CSharp.csproj
+dotnet build -c Release src/TianZhang.EditModeTests.csproj
+dotnet build -c Debug src/TianZhang.EditModeTests.csproj
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests
+git diff --check
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe' -batchmode -projectPath 'D:\天章游戏开发\src' -runTests -testPlatform EditMode -testResults 'D:\天章游戏开发\unity-test-tq019-end.xml' -logFile 'D:\天章游戏开发\unity-test-tq019-end.log' -quit
+```
+
+结果：
+
+- TDD RED：新增测试先执行失败，错误为 `TacticalCombatController` 缺少 `ResolveBattleEnd`，且缺少 `TacticalCombatEndOutcome`。
+- `dotnet build -c Release src/TianZhang.EditModeTests.csproj`：修复后通过，0 警告，0 错误。
+- `dotnet build -c Release src/Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- `dotnet build -c Debug src/Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- `dotnet build -c Debug src/TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- `tools/check-review-text.ps1`：通过，`OK (51 files checked)`。
+- `git diff --check`：通过，仅提示工作区 LF/CRLF 转换警告，无 whitespace error。
+- Unity batchmode：返回 0，完成脚本编译；未生成 `unity-test-tq019-end.xml`，日志没有实际 Test Runner 结果段。
+
+## 结论
+
+TQ-019 的近期拆分目标已闭环：`AdventureSceneController` 已承接副本场景状态，`TacticalCombatController` 已承接单场遭遇的 CTB 引擎、Resolver、AI、玩家/敌方行动、临阵换法、掉落与战斗结束规则层结算。`ExplorationController` 仍作为同场景普通遭遇的 MonoBehaviour 门面，保留输入、日志、UI、协程等待和场景对象处理，符合本轮“不拆独立 BattleScene”的边界。后续如果继续把 `CombatLoop` 协程壳从 `ExplorationController` 中抽离，应另拆新任务，不再沿用 TQ-019。

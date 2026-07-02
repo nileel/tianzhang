@@ -366,6 +366,34 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void ResolveBattleEndClearsDefeatedEnemyOccupancyAndReportsDrops()
+        {
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
+            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
+            var enemyData = ScriptableObject.CreateInstance<CharacterData>();
+            try
+            {
+                enemyData.realmMultiplier = 2.0f;
+                grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
+                controller.BeginCombat(player, enemy, grid);
+                enemy.TakeDamage(enemy.CurrentHP);
+
+                var result = controller.ResolveBattleEnd(enemyData, grid);
+
+                Assert.AreEqual(TacticalCombatEndOutcome.Victory, result.Outcome);
+                Assert.AreEqual("击败了 敌人！", result.Message);
+                CollectionAssert.AreEqual(new[] { "灵石×5", "中品丹药×1" }, result.DropItems);
+                Assert.IsFalse(grid.IsOccupied(enemy.Position));
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemyData);
+            }
+        }
+
         private static Character CreateCombatant(string name, string gongFa, HexCoord position, CTBEngine engine)
         {
             var character = new Character

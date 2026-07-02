@@ -806,30 +806,30 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         // ==================== 掉落 ====================
 
-        private void HandleDrop(EnemyUnit enemyUnit)
+        private void HandleDrop(IReadOnlyList<string> dropItems)
         {
-            var dropItems = TacticalCombatController.CreateDropItems(enemyUnit.data);
+            if (dropItems == null || dropItems.Count == 0) return;
             AddLog($"掉落: {string.Join(", ", dropItems)}");
         }
 
         private void EndBattle(EnemyUnit enemyUnit)
         {
-            if (!player.IsAlive)
+            var endResult = tacticalCombatController.ResolveBattleEnd(enemyUnit.data, tilemapManager.Grid);
+            if (endResult.Outcome == TacticalCombatEndOutcome.Defeat)
             {
-                AddLog("玩家被击败！游戏结束");
+                AddLog(endResult.Message);
                 SetStatus("败北");
                 state = GameState.Ended;
             }
-            else if (!enemyUnit.character.IsAlive)
+            else if (endResult.Outcome == TacticalCombatEndOutcome.Victory)
             {
-                AddLog($"击败了 {enemyUnit.character.Name}！");
+                AddLog(endResult.Message);
                 SetStatus("胜利");
                 enemyUnit.defeated = true;
                 enemyUnit.marker?.SetActive(false);
-                tilemapManager.Grid.ClearOccupied(enemyUnit.character.Position);
 
                 // 掉落
-                HandleDrop(enemyUnit);
+                HandleDrop(endResult.DropItems);
 
                 // 回到探索模式
                 state = GameState.Exploration;
