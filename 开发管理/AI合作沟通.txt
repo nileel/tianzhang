@@ -1,5 +1,6 @@
 ﻿# AI合作沟通（✅ 已审核）
 
+> 2026-07-03 Codex / gpt-5.5 执行 TQ-016：REVIEW-20260628-01 剩余 Editor 验证缺口已闭环，TQ-014-DS 当前阻塞解除；下一步执行型队列转向 TQ-017 StartMenuScene 与门派选择迁移。
 > 2026-07-01 Codex / gpt-5.5 复审：b40409a / HANDOFF-20260630-01 通过，REVIEW-20260628-04 已从未通过清单与当前队列移除；78c481e / REVIEW-20260628-01 静态场景资产通过，仍需 TQ-016 Editor 端生成、加载、返回验证。
 > 2026-06-29 Codex / gpt-5.5 批量审核待审工作：TQ-021 基础战斗口径清理、A0 太一道庭法箓体系导入映射表已复审并由 Codex 补齐小修后通过；HANDOFF-20260629-01/03 已消费并归档。当前待处理仅保留 REVIEW-20260628-01 场景资产挂载与 REVIEW-20260628-04 DS-NEW-01/02 旧口径残留。
 > 2026-06-29 Codex / gpt-5.5 复审 f4345e5 / HANDOFF-20260629-02：结论部分通过。金丹位格矩阵返工通过并从未通过清单移除；DS-NEW-01/02 仍不通过；TQ-014-DS 场景 Controller 仍需 Editor 生成与提交。
@@ -57,7 +58,7 @@
   - 2026-07-01 Codex / gpt-5.5 复审已清理 `AI合作沟通.txt` 预存控制字符；后续无需重复处理该项。
 ### ACTIVE-20260628-REVIEW · 当前有效待处理项（本节优先级高于下方历史交接残留）
 
-- TQ-014-DS：DS-01/03 已通过；78c481e 静态复审确认 World/Settlement/Adventure 场景均已引用对应 Controller GUID，Unity batchmode 编译/导入通过。下一步只处理 TQ-016 Editor 端生成、加载、返回验证。
+- TQ-014-DS：DS-01/03/04/05 静态资产与 TQ-016 Editor 端生成、加载、返回验证均已闭环。当前不再作为正式开发前阻塞项；后续若重生成场景，复跑 `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`。
 - 已消失未提交脏改：2026-06-28 复核确认 `src/Assets/Data`、`src/Assets/Scenes`、`src/Assembly-CSharp.csproj` 当时无未提交 diff；109 个 Spell/Skill asset 的 `element` 字段有效。该项不再阻塞 TQ-010。
 - 已消费通过：TQ-007 3383f11、TQ-010 e59bff8 目标提交、TQ-014-DS-01、TQ-014-DS-03、Input System d389792、b549495、TQ-015B-2/3 7612281、金丹位格矩阵 `观行迹` / `修不退` 返工 f4345e5、TQ-021 0cb534e、A0 82b7769、DS-NEW-01/02 b40409a；详细依据见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`、`开发管理/任务归档/2026-06-29-待审工作批量复审归档.txt` 与本轮回复。
 

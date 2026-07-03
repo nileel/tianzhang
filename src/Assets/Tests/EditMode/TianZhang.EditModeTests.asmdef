@@ -3,7 +3,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "TianZhang.Runtime"
+        "TianZhang.Runtime",
+        "TianZhang.Editor"
     ],
     "includePlatforms": [
         "Editor"

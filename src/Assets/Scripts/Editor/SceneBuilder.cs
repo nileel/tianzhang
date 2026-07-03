@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Tilemaps;
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
 using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Combat;
@@ -132,7 +136,7 @@ namespace TianZhang.Editor
             sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(p);
             sr.sortingOrder = 5;
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, "Assets/Resources/UnitMarker.prefab");
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
             return prefab;
         }
 
@@ -149,7 +153,77 @@ namespace TianZhang.Editor
             BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.04f, 0.08f, 0.1f), typeof(TianZhang.World.WorldSceneController));
             BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.08f, 0.07f, 0.05f), typeof(TianZhang.Settlement.SettlementSceneController));
             BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f), typeof(TianZhang.Adventure.AdventureSceneController));
+            RegisterBuildScenes(StartMenuScenePath, WorldScenePath, SettlementScenePath, AdventureScenePath);
             AssetDatabase.Refresh();
+        }
+
+        private static void RegisterBuildScenes(params string[] scenePaths)
+        {
+            var scenePathSet = scenePaths.ToHashSet();
+            var scenes = scenePaths
+                .Select(path => new EditorBuildSettingsScene(path, true))
+                .Concat(EditorBuildSettings.scenes.Where(scene => !scenePathSet.Contains(scene.path)))
+                .ToArray();
+
+            EditorBuildSettings.scenes = scenes;
+        }
+
+        public static void ValidateSceneArchitectureShellsForBatchMode()
+        {
+            BuildSceneArchitectureShells();
+
+            ValidateBuildScenes(StartMenuScenePath, WorldScenePath, SettlementScenePath, AdventureScenePath);
+            ValidateSceneShell(StartMenuScenePath, "StartMenuRoot", null);
+            ValidateSceneShell(WorldScenePath, "WorldRoot", typeof(TianZhang.World.WorldSceneController));
+            ValidateSceneShell(SettlementScenePath, "SettlementRoot", typeof(TianZhang.Settlement.SettlementSceneController));
+            ValidateSceneShell(AdventureScenePath, "AdventureRoot", typeof(TianZhang.Adventure.AdventureSceneController));
+
+            Debug.Log("[TQ-016] Scene architecture shells generated, registered, and loaded successfully.");
+        }
+
+        private static void ValidateBuildScenes(params string[] scenePaths)
+        {
+            var enabledScenePaths = EditorBuildSettings.scenes
+                .Where(scene => scene.enabled)
+                .Select(scene => scene.path)
+                .ToArray();
+
+            if (!scenePaths.SequenceEqual(enabledScenePaths.Take(scenePaths.Length)))
+                throw new InvalidOperationException("Scene architecture scenes are not registered first in EditorBuildSettings.");
+        }
+
+        private static void ValidateSceneShell(string scenePath, string rootName, Type sceneControllerType)
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                scenePath,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+
+            Require(scene.IsValid(), $"{scenePath} is not a valid scene.");
+            Require(scene.isLoaded, $"{scenePath} is not loaded.");
+            Require(GameObject.Find(rootName) != null, $"{scenePath} missing {rootName}.");
+            Require(GameObject.Find("Main Camera") != null, $"{scenePath} missing Main Camera.");
+            Require(GameObject.Find("EventSystem") != null, $"{scenePath} missing EventSystem.");
+
+            var gameManager = GameObject.Find("GameManager");
+            Require(gameManager != null, $"{scenePath} missing GameManager.");
+            Require(gameManager.GetComponent<TianZhang.Game.GameManager>() != null, $"{scenePath} missing GameManager component.");
+            Require(gameManager.GetComponent<TianZhang.Game.SceneFlowManager>() != null, $"{scenePath} missing SceneFlowManager component.");
+
+            var controller = GameObject.Find("SceneController");
+            if (sceneControllerType == null)
+            {
+                Require(controller == null, $"{scenePath} should not contain SceneController.");
+                return;
+            }
+
+            Require(controller != null, $"{scenePath} missing SceneController.");
+            Require(controller.GetComponent(sceneControllerType) != null, $"{scenePath} missing {sceneControllerType.Name}.");
+        }
+
+        private static void Require(bool condition, string message)
+        {
+            if (!condition)
+                throw new InvalidOperationException(message);
         }
         /// <summary>
 
@@ -179,6 +253,21 @@ namespace TianZhang.Editor
                 controllerGo.AddComponent(sceneControllerType);
             }
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
+            NormalizeGeneratedSceneYaml(scenePath);
+        }
+
+        private static void NormalizeGeneratedSceneYaml(string scenePath)
+        {
+            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            var fullPath = Path.Combine(projectRoot, scenePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(fullPath))
+                return;
+
+            var content = File.ReadAllText(fullPath, Encoding.UTF8);
+            var newline = content.Contains("\r\n") ? "\r\n" : "\n";
+            var lines = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            var normalized = string.Join(newline, lines.Select(line => line.TrimEnd()));
+            File.WriteAllText(fullPath, normalized, new UTF8Encoding(false));
         }
 
         [MenuItem("Tools/天章/生成开始菜单场景")]

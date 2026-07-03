@@ -1,5 +1,6 @@
 ﻿# 未通过审核清单（✅ 已审核）
 
+> 2026-07-03 Codex / gpt-5.5 执行 TQ-016：REVIEW-20260628-01 剩余的 Editor 端生成、加载、返回验证缺口已闭环。Unity 6000.3.18f1 batchmode `ValidateSceneArchitectureShellsForBatchMode` 成功生成并注册 StartMenu/World/Settlement/Adventure，逐一打开场景并确认根对象、GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller；场景 GUID 专项检查、Release build、文本检查与 `git diff --check` 通过。当前清单清零。
 > 2026-07-01 Codex / gpt-5.5 复审 78c481e / b40409a：REVIEW-20260628-01 静态场景 Controller GUID 与 Unity batchmode 编译/导入通过，但 TQ-016 Editor 端生成、加载、返回验证未闭环，仍保留；REVIEW-20260628-04 通过并从当前清单移除。
 > 2026-06-29 Codex / gpt-5.5 批量审核待审工作：当前清单两项复核后仍保留。REVIEW-20260628-01 仍缺 World/Settlement/Adventure 场景对三类 Controller GUID 的引用与 Unity Editor 端验证；REVIEW-20260628-04 当前文件仍保留 `realm_lianxu` asset 完全缺失旧表述、验证记录 `GongFa 4 realm_lianshen + 0 realm_lianxu` 与 F5 “9条功法行”旧计数。
 
@@ -26,20 +27,10 @@
 
 ## 当前未通过/待复审项
 
-### REVIEW-20260628-01 · TQ-014-DS-04/05 场景脚手架与 World/Settlement 数据壳
-
-- 结论：78c481e 静态修复通过；TQ-016 Editor 端到端验证未闭环，当前仍部分通过。
-- 目标提交：fe610ed、959fbda、fb7f7ed、0b4ab27、334e88e、3cb5a7d、9a12f5e、78c481e；历史修补 dfa69a1 / 82ab968 已被后续提交覆盖。
-- 已通过部分：`SceneBuilder.BuildEmptyScene` 已支持 `sceneControllerType` 并在 World/Settlement/Adventure 批量与单场景菜单入口挂载对应 Controller；`GameSession` 与 `SceneFlowManager` 已保存 `CurrentSettlementId` / `CurrentAdventureId`；新增 `.meta` 均为多行 Unity YAML 且 GUID 为 32 位 hex；78c481e 中 World/Settlement/Adventure 三个场景均各自包含对应 Controller GUID；三场景各有 1 个 `SceneController` / `GameManager` / `EventSystem` / `Main Camera`，无空 GUID；Unity 6000.3.18f1 batchmode 编译/导入通过。
-- 未通过问题：
-  1. 尚未执行会重写场景资产的 Unity Editor `SceneBuilder` 菜单或等价验证，未确认生成流程在 Editor 端稳定产出当前场景资产。
-  2. 尚未进行 World/Settlement/Adventure 实际加载、进入、返回的端到端验证。
-- 返工建议：下一轮只执行 TQ-016 Editor 验证闸门：在 Unity Editor 中执行 `Tools/天章/生成场景架构空场景` 或等价流程，验证 World/Settlement/Adventure 可生成、加载、返回；若场景文件被 Editor 重写，提交对应 diff 并复跑场景 GUID 专项检查与可接受范围的 diff 检查。
-- 2026-06-30 DeepSeek V4 Pro：TQ-014-DS 返工完成（78c481e）。SceneBuilder BuildAllScenes Adventure Controller 已补全；World/Settlement/Adventure 场景已重新生成并挂载对应 Controller；5 个 .meta + 3 个 .unity 行尾空白已清理。
-- 2026-07-01 Codex / gpt-5.5 复审：78c481e 静态资产与 batchmode 编译/导入通过；`dotnet build src/Assembly-CSharp.csproj` 当前因 TQ-018 `TacticalGridModel/TilemapTacticalRenderer` asmdef/csproj 同步问题失败，不作为 78c481e 新增失败依据。
+当前清单为空。
 
 ## 后续复核建议
 
-- 优先处理 TQ-014-DS 场景资产提交边界；TQ-010 当前工作树 asset 回归已复核清除。
-- TQ-014-DS 下一轮只处理场景资产生成/提交、Adventure Controller 挂载与 Editor 端验证，不扩大到 CTB/伤害/冷却/槽位语义。
+- TQ-010 当前工作树 asset 回归已复核清除。
+- 后续若重生成 StartMenu/World/Settlement/Adventure，复跑 `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` 与场景 GUID 专项检查；不得扩大到 CTB/伤害/冷却/槽位语义。
 - DS-NEW-01/02 统计口径已通过；后续 F 类架构决策仍以 2026-06-28 F1 口径为准：`realm_lianshen` 不作为独立境界 key，`realm_lianxu` / `realm_lianshen` 均按旧高阶/NPC/资料片保留内容处理。

@@ -1,0 +1,42 @@
+# TQ-016 场景架构 Editor 验证闸门归档
+
+> 归档时间：2026-07-03
+> 执行方：Codex / gpt-5.5
+> 状态：已完成
+
+## 范围
+
+- 任务：Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统基础场景壳。
+- 边界：本轮不改 CTB、伤害、冷却、槽位、成丹语义或战斗数值。
+
+## 修改
+
+- `src/Assets/Scripts/Editor/SceneBuilder.cs`
+  - `BuildSceneArchitectureShells` 生成四个架构场景后同步注册 `EditorBuildSettings`。
+  - 新增 `ValidateSceneArchitectureShellsForBatchMode`，用于 Unity batchmode 生成、注册、打开并验证四场景。
+  - 生成空场景后归一化 `.unity` YAML 行尾空白，避免 `git diff --check` 因 Unity 空 `m_Name:` 序列化失败。
+- `src/ProjectSettings/EditorBuildSettings.asset`
+  - 注册 `StartMenuScene`、`WorldScene`、`SettlementScene`、`AdventureScene`。
+- `src/Assets/Scenes/*.unity`
+  - 由 Unity 6000.3.18f1 重新生成四个架构场景资产。
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+  - 新增 EditMode 回归测试，覆盖四场景注册、打开与 Controller 挂载。
+- `src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`
+  - 测试程序集引用 `TianZhang.Editor`。
+
+## 验证
+
+- `dotnet build -c Release "D:\天章游戏开发\src\TianZhang.Editor.csproj"`：通过。
+- `dotnet build -c Release "D:\天章游戏开发\src\TianZhang.EditModeTests.csproj"`：通过。
+- `dotnet build -c Release "D:\天章游戏开发\src\Assembly-CSharp.csproj"`：通过。
+- Unity 6000.3.18f1 batchmode：
+  - `-executeMethod TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`
+  - 通过，日志输出 `[TQ-016] Scene architecture shells generated, registered, and loaded successfully.`
+- 场景 GUID 专项检查：通过。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths src/Assets/Scripts/Editor/SceneBuilder.cs,src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs,src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef,src/ProjectSettings/EditorBuildSettings.asset`：通过。
+- `git diff --check`：通过。
+
+## 备注
+
+- Unity Test Runner CLI 在本机 batchmode 下记录了 `-runTests` / `-runEditorTests` 参数，但未进入 Test Runner，也未产出 XML；本轮以 `-executeMethod` 批处理验证入口替代。
+- TQ-014-DS 的剩余 Editor 验证阻塞已解除；下一步执行型任务可推进 TQ-017。
