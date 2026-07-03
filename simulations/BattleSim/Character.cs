@@ -55,6 +55,9 @@ class Character
     public Dictionary<string, int> Primary = new();
     public Dictionary<string, double> Secondary = new();
     public static string[] InnateKeys = ["根骨", "魂魄", "神识", "资质", "气运"];
+    const double WeightDodgeScale = 30.0;
+    const double WeightCritRateScale = 30.0;
+    const double WeightCritDamageScale = 80.0;
 
     public static Character Create(string name, Dictionary<string, int> innate, string style)
     {
@@ -115,10 +118,10 @@ class Character
         foreach (var t in secTypes) Secondary[t] = chapters * secPctPerChapter;
         Secondary["格挡减伤率"] = Secondary.GetValueOrDefault("格挡率", 0) * 0.8;
         Secondary["魂盾减伤率"] = Secondary.GetValueOrDefault("魂盾率", 0) * 0.8;
-        Secondary["闪避率"] = Secondary.GetValueOrDefault("闪避率", 0) + Innate["气运"] * 0.3;
+        Secondary["闪避率"] = Secondary.GetValueOrDefault("闪避率", 0) + weights["气运"] * WeightDodgeScale;
         Secondary["命中率"] = Secondary.GetValueOrDefault("命中率", 0);
-        Secondary["暴击率"] = Secondary.GetValueOrDefault("暴击率", 0) + Innate["神识"] * 0.3;
-        Secondary["暴击伤害"] = Secondary.GetValueOrDefault("暴击伤害", 0) + Innate["资质"] * 0.8;
+        Secondary["暴击率"] = Secondary.GetValueOrDefault("暴击率", 0) + weights["神识"] * WeightCritRateScale;
+        Secondary["暴击伤害"] = Secondary.GetValueOrDefault("暴击伤害", 0) + weights["资质"] * WeightCritDamageScale;
         Secondary["物抗率"] = 0; Secondary["魂抗率"] = 0;
     }
 

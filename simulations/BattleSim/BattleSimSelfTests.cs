@@ -30,6 +30,9 @@ static class BattleSimSelfTests
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
 
+        if (suite == "secondary-detach-a4")
+            return RunChecked(suite, RunSecondaryDetachA4);
+
         if (suite == "golden-core-suppression-tq015c-8")
             return RunChecked(suite, RunGoldenCoreSuppressionTq015C8);
 
@@ -382,6 +385,46 @@ static class BattleSimSelfTests
         AssertEqual("b", zifuPools[0][0].Name, "zifu pool 0 sample");
         AssertEqual(1, zifuPools[1].Count, "zifu pool 1 count");
         AssertEqual("d", zifuPools[1][0].Name, "zifu pool 1 sample");
+    }
+
+    static void RunSecondaryDetachA4()
+    {
+        var weights = new Dictionary<string, double>
+        {
+            ["根骨"] = 0.45,
+            ["魂魄"] = 0.30,
+            ["神识"] = 0.10,
+            ["资质"] = 0.10,
+            ["气运"] = 0.05
+        };
+
+        Character Finalized(string name, int mind, int talent, int luck)
+        {
+            var character = Character.Create(name, new()
+            {
+                ["根骨"] = 12,
+                ["魂魄"] = 12,
+                ["神识"] = mind,
+                ["资质"] = talent,
+                ["气运"] = luck
+            }, "physical");
+            character.FinalizeStats("筑基", 0, "中品", weights);
+            return character;
+        }
+
+        var baseline = Finalized("baseline", 3, 3, 3);
+        var highInnate = Finalized("high-innate", 40, 40, 40);
+
+        AssertClose(9.0, highInnate.Secondary.GetValueOrDefault("格挡率", 0), 0.0001, "gongfa-derived block remains");
+        AssertClose(9.0, highInnate.Secondary.GetValueOrDefault("魂盾率", 0), 0.0001, "gongfa-derived soul shield remains");
+        AssertClose(1.5, highInnate.Secondary.GetValueOrDefault("闪避率", 0), 0.0001, "gongfa luck affinity adds dodge");
+        AssertClose(3.0, highInnate.Secondary.GetValueOrDefault("暴击率", 0), 0.0001, "gongfa mind affinity adds crit rate");
+        AssertClose(8.0, highInnate.Secondary.GetValueOrDefault("暴击伤害", 0), 0.0001, "gongfa talent affinity adds crit damage");
+        AssertClose(
+            baseline.Secondary.GetValueOrDefault("闪避率", 0),
+            highInnate.Secondary.GetValueOrDefault("闪避率", 0),
+            0.0001,
+            "dodge is independent from innate luck");
     }
 
     static void RunGoldenCoreSuppressionTq015C8()
