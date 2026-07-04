@@ -1,0 +1,42 @@
+# 内容设计任务列表（✅ 已审核）
+
+> 本文件保存功法、术法、神通、NPC、门派内容、经济和叙事内容的分线 backlog。近期执行项复制到 `开发管理/当前任务队列.txt`。
+
+## 当前状态
+
+- 太一道庭、玉清崖、混元山、太虚观、散修基础内容已有数据链。
+- 太一道庭法箓规则与导入映射表已审核，可作为后续 CSV/BattleSim/Unity 字段方案输入。
+- 古修功法已有文档但术法/神通缺口大；散修内容较少，后续需要补可玩性。
+- 高阶内容不批量删除；先按 NPC、资料片、宗门秘术或历史说明分类。
+
+## 任务
+
+| ID | 优先级 | 建议主责 | 状态 | 摘要 |
+|----|--------|----------|------|------|
+| C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 待处理 | 太一道庭法箓 CSV/BattleSim/Unity 字段方案 |
+| C-GUXIU-01 | P2 | DeepSeek | 待处理 | 古修功法配套术法/神通缺口清单 |
+| C-GUXIU-02 | P2 | DeepSeek | 待处理 | 古修第一批术法，每个完成品单独文件 |
+| C-GUXIU-03 | P2 | DeepSeek | 待处理 | 古修第一批神通，每个完成品单独文件 |
+| C-SANXIU-01 | P2 | DeepSeek | 待处理 | 散修通用内容可玩性补强清单 |
+| C-NPC-01 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 重要 NPC 源/化/界字段后的叙事扩写 |
+| C-ECON-01 | P3 | Codex 规划 | 待处理 | 灵石、丹药、天材地宝、掉落表经济基线 |
+| C-HIGH-01 | P3 | Codex | 待处理 | 高阶内容按 NPC/资料片/历史说明分类收口 |
+
+## 必读规范
+
+- 功法：`docs/角色养成/功法设计规范.txt` + `docs/角色养成/功法/功法设计.txt`
+- 术法：`docs/角色养成/术法设计规范.txt` + `docs/角色养成/术法/术法设计.txt`
+- 神通：`docs/角色养成/神通设计规范.txt` + `docs/角色养成/神通/神通设计.txt`
+- NPC：`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`
+
+## 默认验证
+
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
+- 涉及 CSV 或 asset 时加 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+- 涉及数值强度时必须运行 BattleSim。
+
+## 边界
+
+- 非规则描述类完成品每个单独一个文件，不合并。
+- DeepSeek 批量内容不得自审为 `✅ 已审核`。
+- 不把 reserved 高阶内容直接接入当前玩家主循环。

@@ -1,0 +1,32 @@
+# 审核与交接任务列表（✅ 已审核）
+
+> 本文件保存 `2` 流程候选项、DeepSeek 交接复审项和当前未通过项。执行复审前必须先读 `开发管理/审核入口.txt`。
+
+## 当前状态
+
+- `开发管理/未通过审核清单.txt` 当前为空。
+- `开发管理/AI合作沟通.txt` 当前只保留两个有效交接：f6546d8 高阶旧口径标注、643efda CSV `contentScope` 列。
+
+## 复审任务
+
+| ID | 优先级 | 主责 | 状态 | 摘要 |
+|----|--------|------|------|------|
+| R-20260630-04 | P1 | Codex / ChatGPT5.5 | 待复审 | 复审 643efda：三类 CSV 新增 `contentScope` 列 |
+| R-20260630-02 | P2 | Codex / ChatGPT5.5 | 待复审 | 复审 f6546d8：E1-E4 高阶/炼虚旧口径标注 |
+
+## R-20260630-04 · contentScope CSV 列复审
+
+- 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` HANDOFF-20260630-04、目标提交 `643efda`、`开发管理/CSV高阶内容定位表.txt`、三类 CSV、`src/Assets/Scripts/Editor/DataConfigImporter.cs`。
+- 最小验证：`git show --stat --name-only 643efda`；目标文件 patch；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`git diff --check` 或 `git show --check 643efda`。
+- 结论要求：判断 CSV 标注是否合理；判断导入器是否必须适配；若通过，再推进或保留 TQ-026。
+
+## R-20260630-02 · 高阶旧口径标注复审
+
+- 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` HANDOFF-20260630-02、目标提交 `f6546d8`、`开发管理/炼虚与高阶内容影响面清单.txt`、被改 docs 文件必要段落。
+- 最小验证：`git show --stat --name-only f6546d8`；目标文件 patch；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/基础设定`；`git show --check f6546d8`。
+- 结论要求：判断标注措辞是否符合 F1 口径；若需要扩大范围，拆新任务，不在复审中顺手重写大批文档。
+
+## 归档规则
+
+- 通过后把条目从本文件和 `AI合作沟通.txt` 移除，并写入 `任务归档/` 或 `AI合作归档/`。
+- 不通过时写入 `未通过审核清单.txt`，条目只保留问题编号、事实依据、目标提交和建议修复范围。

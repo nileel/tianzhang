@@ -1,0 +1,120 @@
+# 当前任务队列（✅ 已审核）
+
+> 2026-06-26 Codex / gpt-5.5：按用户要求拆分快捷流程：`1` 只执行工作计划任务，`2` 只执行复审任务；Codex / ChatGPT5.5 自产任务完成必要验证后不再进入复审队列。
+> 2026-06-29 Codex / gpt-5.5：批量审核待审工作。TQ-021 基础战斗口径清理与 A0 太一道庭法箓体系导入映射表已复审通过，并归档至 `开发管理/任务归档/2026-06-29-待审工作批量复审归档.txt`；当前待复审阻塞仍为 TQ-014-DS 场景资产挂载与 DS-NEW-01/02 报告旧口径残留。
+> 2026-06-30 Codex / gpt-5.5：TQ-018 TacticalGridModel 与渲染接口兼容层已完成并归档至 `开发管理/任务归档/2026-06-30-TQ-018-TacticalGridModel渲染接口兼容层归档.txt`。新增 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`、runtime/editor asmdef 与 EditMode 规则层测试程序集；Debug/Release build、Editor build、asmdef JSON、文本检查、`git diff --check` 通过；Unity Editor Test Runner 经用户刷新执行后确认全部通过。本轮不改 CTB、伤害、冷却、寻路或技能范围语义。手动反射执行 NUnit 测试的临时 `pwsh` 命令触发 Defender 启发式拦截，确认命中对象为命令行而非仓库源文件，后续不再使用该验证方式。
+> 2026-06-30 Codex / gpt-5.5：TQ-020 Unity 已接入机制回归首轮已完成并归档至 `开发管理/任务归档/2026-06-30-TQ-020-Unity已接入机制回归首轮归档.txt`。本轮只修复 Unity 符胆神魂行动语义：神魂攻击/术法/神通共用符胆增伤、满层 30% 神防穿透与必中、消耗后行动结束补 1 层；BattleSim build/run、Unity runtime/EditMode build、Unity EditMode 全量测试、`git diff --check` 通过。雷劫、玄感、含弘/载物仍作为后续独立运行时机制切片，不在本轮标记为 Unity 已接入。
+> 2026-07-01 Codex / gpt-5.5：TQ-019 首切片已完成。新增 `TacticalCombatController`，把 CTB/Resolver/AI 的战斗准备、推进、冷却推进与敌方行动调度从 `ExplorationController` 抽出；`AdventureSceneController` 增补 Loading/Exploration/Combat/Returning 状态入口；`ExplorationController` 仅委托战斗调度，不改 CTB、伤害、冷却、槽位、寻路或掉落语义。Debug/Release `Assembly-CSharp`、`TianZhang.Runtime`、`TianZhang.EditModeTests` build、文本检查与 `git diff --check` 通过；Unity batchmode 能完成脚本编译但未生成 Test Runner 结果 XML，后续仍需在 Unity Editor Test Runner 中确认新增 EditMode 测试。
+> 2026-07-01 Codex / gpt-5.5：TQ-019 第二切片已完成。`TacticalCombatController` 新增玩家普攻/防御/待机/术法/神通执行 API 与掉落表生成，`ExplorationController` 对应公共战斗方法改为委托规则层并仅负责日志、UI 刷新和协程状态；新增 EditMode 测试覆盖成功/失败行动 CT 消费、术法前置失败消息、待机 CT 保留与掉落阈值。Debug/Release `Assembly-CSharp`、`TianZhang.Runtime`、`TianZhang.EditModeTests` build、Unity EditMode Test Runner（10/10）、文本检查与 `git diff --check` 通过；本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或掉落数值语义。临阵换法、战斗结束调度与 BattleUI 直接绑定仍留后续切片。
+> 2026-07-02 Codex / gpt-5.5：TQ-019 第三切片已完成。新增 `ICombatCommandHandler`，`BattleUIManager` 动作栏改为优先走战斗命令接口并保留 `ExplorationController` 回退；`ExplorationController` 暂作为兼容适配器实现接口；EditMode 下 `UICanvas` 不再调用 PlayMode-only 的 `DontDestroyOnLoad`，便于 Test Runner 初始化验证。Debug/Release `Assembly-CSharp`、`TianZhang.EditModeTests` Release、Unity EditMode Test Runner（11/11）、文本检查与 `git diff --check` 通过；本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或掉落数值语义。临阵换法与战斗结束调度仍留后续切片。
+> 2026-07-02 Codex / gpt-5.5：TQ-019 第四切片已完成。`TacticalCombatController` 新增玩家临阵换法入口，统一处理换法次数上限、换入结果消息与成功后 CT 消耗；`ExplorationController` 的换法输入仅保留候选选择、日志和 UI 刷新。新增 EditMode 测试覆盖换法成功消耗行动、CD×2、次数累加与次数耗尽失败不消耗 CT。Release/Debug `Assembly-CSharp` 与 `TianZhang.EditModeTests` build、Unity batchmode 脚本编译、文本检查与 `git diff --check` 通过；Unity batchmode 仍未生成 Test Runner XML，需后续在 Unity Editor Test Runner 中确认新增测试。本轮不改 CTB、伤害、冷却数值、槽位上限、寻路或技能范围语义。战斗结束调度仍留后续切片。
+> 2026-07-02 Codex / gpt-5.5：TQ-019 第五切片已完成并归档至 `开发管理/任务归档/2026-07-02-TQ-019-AdventureScene与TacticalCombatController拆分归档.txt`。`TacticalCombatController` 新增 `TacticalCombatEndOutcome`、`TacticalCombatEndResult` 与 `ResolveBattleEnd`，统一输出胜负、掉落与规则层占位清理；`ExplorationController.EndBattle` 改为消费结算结果，仅保留日志、UI、敌人 marker 和场景状态收尾。新增 EditMode 测试覆盖敌人阵亡结算、掉落与格子占位清理。Release/Debug `Assembly-CSharp` 与 `TianZhang.EditModeTests` build、Unity batchmode 脚本编译、文本检查与 `git diff --check` 通过；Unity batchmode 仍未生成 Test Runner XML。TQ-019 从近期队列移出，后续若继续抽离 CombatLoop 协程壳另拆新任务。
+> 2026-07-02 Codex / gpt-5.5：A4/A5 数值旧口径清理与 BattleSim 二级属性脱钩校准完成。新增 `secondary-detach-a4` self-test，BattleSim 裸先天气运/神识/资质不再直加闪避率/暴击率/暴击伤害，改为功法倾向权重补偿；`角色属性_先天.txt` 与 `角色数值设计.txt` 已同步当前基线。self-test、Release build、默认 run、文本检查与 `git diff --check` 均通过，按 Codex 自产闭环处理；后续矩阵极化另拆平衡调参。
+> 2026-07-03 Codex / gpt-5.5：TQ-016 场景架构 Editor 验证闸门完成并归档至 `开发管理/任务归档/2026-07-03-TQ-016-场景架构Editor验证闸门归档.txt`。`SceneBuilder` 生成 StartMenu/World/Settlement/Adventure 后会注册 `EditorBuildSettings`，并提供 batchmode 验证入口；四场景已由 Unity 6000.3.18f1 生成、注册、打开并验证根对象、GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller。Release build、Unity batchmode 验证、场景 GUID 专项检查、文本检查与 `git diff --check` 通过；Unity Test Runner CLI 本机仍不产出 XML，已用 `-executeMethod` 验证入口替代。TQ-014-DS 当前阻塞解除，下一次 `1` 可推进 TQ-017。
+> 2026-07-04 Codex / gpt-5.5：TQ-017 StartMenuScene 与门派选择迁移完成并归档至 `开发管理/任务归档/2026-07-04-TQ-017-StartMenuScene门派选择迁移归档.txt`。`SceneBuilder` 生成的 StartMenuScene 已内置 UICanvas、SectSelectionPanel 与绑定后的 `SectSelectionManager`；门派选择经 `SceneFlowManager.StartNewGame` 写入 `GameSession.PlayerProfile`，重新开局会清理旧据点/副本/返回上下文；`ExplorationController` 创建玩家时优先读取会话档案，旧 Exploration 快速验证入口保留为无 SceneFlow 时的回退。`Assembly-CSharp`/`TianZhang.EditModeTests` Release build、Unity EditMode 目标测试、文本检查与 `git diff --check` 通过；本轮不新增门派内容，不调整功法、术法、神通、CTB、伤害、冷却、槽位或掉落语义。
+> 2026-07-04 Codex / gpt-5.5：TQ-022 WorldScene 节点式主世界原型完成并归档至 `开发管理/任务归档/2026-07-04-TQ-022-WorldScene节点式主世界原型归档.txt`。`WorldSceneController` 现公开四个原型节点、节点查询与选择 API，选择节点会写入 `GameSession.CurrentWorldNodeId`；WorldScene 启动时生成 `UICanvas/WorldNodePanel`、四个节点按钮与进入地点按钮，主入口可进入据点或副本。`Assembly-CSharp`/`TianZhang.EditModeTests` Release/Debug build、文本检查与目标 `git diff --check` 通过；Unity Test Runner CLI 仍未产出 XML，最终复跑因已有 Unity 实例打开同项目而未执行。本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。下一次 `1` 可推进 S5 SettlementScene 通用城市/宗门原型。
+> 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
+> 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
+> 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
+> 2026-06-21 DeepSeek V4 Pro：TQ-015B-2/3 NPC档案迁移+批量生产模板完成，提交 95055c1；后续错字与席位正式名返工已由 Codex / gpt-5.5 复审通过。TQ-015B-1 核心规则余项仍由 Codex / ChatGPT5.5 处理。
+> 2026-06-25 Codex / gpt-5.5：批量审核待复审项。TQ-013D 通过并归档；TQ-006/TQ-007/TQ-010/TQ-015B-2/3 复审不通过，问题进入 `开发管理/未通过审核清单.txt`。
+
+> 2026-06-19 Codex / gpt-5.5：按用户要求归档已完成任务 TQ-011/TQ-012/TQ-013/TQ-003/TQ-009；归档记录见 `开发管理/任务归档/2026-06-19-当前任务队列归档.txt`；队列补入 TQ-013A-D。
+> 2026-06-19 Codex / gpt-5.5：当前 P0 为境界体系工程迁移 TQ-013A/TQ-013B；TQ-006/TQ-007 属待复审项，不阻塞继续选择下一条待处理任务。
+> 2026-06-21 Codex：用户确认五根系、十七元婴分支与五十一条源/化/界席位效果；新增 TQ-015A-C。完整执行顺序见 `docs/superpowers/plans/2026-06-21-yuanying-position-migration.md`；名称与成丹数值尚未锁定。
+> 2026-06-21 Codex / gpt-5.5：TQ-015A 审核通过并归档至 `开发管理/任务归档/2026-06-21-TQ-015A-元婴位格事实源归档.txt`；TQ-015B/C 保留待处理。
+> 2026-06-21 Codex / gpt-5.5：TQ-015B-1 已审核通过（依据：f3ebf04）。丹相规格、金丹/紫府、槽位及功法/术法/神通规范与模板统一为“目标源化界席位 + 占据状态 + 丹名 + 丹性 + 丹相”；丹枢固定为矩阵允许的个性化接口，紫府神通为丹相输入。成丹阈值、槽位数与运行时字段实现仍属 TQ-015C/TQ-013C。
+> 2026-06-25 Codex / gpt-5.5：TQ-014 审核通过。场景架构与 2.5D 战棋表现实施计划已输出并拆出 DeepSeek 执行型切片；首轮明确不强切 2.5D，不改 CTB/伤害/冷却/槽位语义。
+> 2026-06-25 Codex / gpt-5.5：TQ-013A 审核通过并归档至 `开发管理/任务归档/2026-06-25-TQ-013A-BattleSim境界表迁移归档.txt`，解除 TQ-013B 前置。
+> 2026-06-26 Codex / gpt-5.5：TQ-013B 审核通过并归档至 `开发管理/任务归档/2026-06-26-TQ-013B-BattleSim金丹兼容层归档.txt`；BattleSim 金丹九品兼容层已迁移为成丹判定值、丹籍类型、占据状态、丹名与丹性。
+> 2026-06-26 Codex / gpt-5.5：TQ-008 审核通过并归档至 `开发管理/任务归档/2026-06-26-TQ-008-角色数值设计与BattleSim差异表归档.txt`；数值文档应优先回写当前 BattleSim 基线，战斗二级属性先天直加另拆代码候选问题（2026-07-02 已由 A4/A5 闭环处理）。
+> 2026-06-26 Codex / gpt-5.5：TQ-015C 首版源化界数据模型迁移差异表已产出：`开发管理/源化界数据模型迁移差异表.txt`。按新规则，Codex 自产且已运行文本检查的首版差异表不再进入复审队列；后续继续拆 BattleSim/Unity/数据链路代码切片。
+> 2026-06-26 Codex / gpt-5.5：TQ-013C Unity 首轮代码迁移已完成并验证：玩家默认修炼链收束为凡人/练气/筑基五段/金丹三段；`CultivationResult` 增补成丹状态、丹籍类型、占据状态、丹名、丹性与旧品级兼容字段；`CharacterData` 增补紫府/金丹兼容字段；槽位计算改为练气/筑基基线 + 紫府府位加成，高阶倍率不再线性加槽；`ExplorationController` 不再用装备数量覆盖冷却数组。金丹槽位具体数值仍待 TQ-015C BattleSim 验证后再接入。
+> 2026-06-26 Codex / gpt-5.5：TQ-015C-1 BattleSim 源/化/界兼容字段已完成并验证：`GoldenCoreProfile`、`Cultivation.Result`、`Character` 增补 `targetBranch/targetSeat/seatName/danPivot`，主模拟输出主要位格；本轮不调整成丹数值和战斗倍率。
+> 2026-06-26 Codex / gpt-5.5：TQ-015C-2 成丹与席位竞争数值验证方案已产出：`开发管理/成丹与席位竞争数值验证方案.txt`。BattleSim build + run 通过；本轮只锁验证边界，不新增运行时阈值、不调整战斗倍率。下一步建议拆分 BattleSim 字段：自然丹籍候选与席位竞争状态分离。
+> 2026-06-26 Codex / gpt-5.5：按维护规则归档 TQ-013C/TQ-014；当前 `1` 优先推进 TQ-015C 后续字段/统计切片或场景架构执行型切片。
+> 2026-06-27 Codex / gpt-5.5：复审 b674f79 后确认 TQ-006 冷却数组项通过并从队列清理；TQ-007/TQ-010/TQ-015B-2/3 继续不通过，失败原因见 `开发管理/未通过审核清单.txt`。
+> 2026-06-27 Codex / gpt-5.5：TQ-015C-3 已完成并归档至 `开发管理/任务归档/2026-06-27-TQ-015C-3-BattleSim席位竞争字段拆分归档.txt`。BattleSim 已拆分自然丹籍候选、席位准入、席位竞争状态与最终占据状态；self-test、build、默认 run、数据链路检查通过。下一步补入 TQ-015C-4 紫府神通/府位闭环字段结构。
+> 2026-06-27 Codex / gpt-5.5：TQ-015C-4 已完成并归档至 `开发管理/任务归档/2026-06-27-TQ-015C-4-BattleSim紫府闭环输入字段归档.txt`。BattleSim 已增加紫府神通数量、府位覆盖、根本神通闭环和资格说明字段；默认输出仍明确为未接入/阈值待验证，不调整成丹阈值或战斗倍率。下一步补入 TQ-015C-6 席位竞争样本统计。
+> 2026-06-27 Codex / gpt-5.5：TQ-015C-6 已完成并归档至 `开发管理/任务归档/2026-06-27-TQ-015C-6-BattleSim席位竞争样本统计归档.txt`。BattleSim 默认输出已新增按 `SeatName` 汇总的席位竞争样本统计；self-test、build、默认 run、数据链路检查通过。本轮不结算席位胜者、不调整成丹阈值或战斗倍率；后续 Codex 执行型任务从 `开发管理/开发-下一步建议.txt` 的 B3 继续拆分。
+> 2026-06-27 Codex / gpt-5.5：TQ-015C-7 已完成并归档至 `开发管理/任务归档/2026-06-27-TQ-015C-7-BattleSim筑基同境矩阵归档.txt`。BattleSim 默认输出新增筑基全阶段样本数与筑基同境胜率矩阵；self-test、build、默认 run 通过。本轮不调整成丹阈值、战斗倍率、金丹样本筛选或压制战规则；后续 B3 继续拆金丹压制战战术出口。
+> 2026-06-28 Codex / gpt-5.5：TQ-015C-8 已完成并归档至 `开发管理/任务归档/2026-06-28-TQ-015C-8-BattleSim金丹压制战出口统计归档.txt`。BattleSim 默认输出新增金丹压制战 `出口%` 与 `主要出口` 统计；self-test、build、默认 run 通过。本轮只分类削位/破府/封丹/阵法/剧情条件，不改 Combat 结算、成丹阈值、金丹倍率或紫府门槛；后续 B3 继续拆削位/封丹实战开关。
+> 2026-06-28 Codex / gpt-5.5：TQ-015C-9 已完成并归档至 `开发管理/任务归档/2026-06-28-TQ-015C-9-BattleSim削位封丹开关归档.txt`。BattleSim 压制战表新增 `开关胜率`，显式启用削位/封丹时只压低金丹 MP、禁用金丹神通，不提升紫府 HP/攻击；self-test、build、默认 run 通过。当前物·修炼/法·修炼/水·散修开关胜率仍为 0.0%，后续解释由 TQ-015C-10 与用户确认覆盖：该结果符合金丹境界压制目标。
+> 2026-06-28 Codex / gpt-5.5：TQ-015C-10 已完成并归档至 `开发管理/任务归档/2026-06-28-TQ-015C-10-BattleSim削位强度扫描归档.txt`。BattleSim 压制战表新增 `削位15` 与 `强扫最佳`，扫描削位15/30/45 + 封丹；self-test、build、默认 run 通过。当前物·修炼/法·修炼/水·散修强扫最佳均为 `全档0.0%`。结合用户反馈，该结果已确认为合理金丹压制，不再补入 TQ-015C-11 作为 P0。
+> 2026-06-28 Codex / gpt-5.5：项目总结时同步队列状态。`AI合作沟通.txt` 已记录 DeepSeek 提交 TQ-014-DS-01/03/04/05；本文件将原 TQ-014-DS-01“待处理”调整为 TQ-014 场景架构待复审集合项。此处不代表审核通过，后续由 `2` 流程复审。
+> 2026-06-28 Codex / gpt-5.5：`2` 流程复审 TQ-014-DS-05，结论不通过；World/Settlement Controller 未挂入生成场景，目标范围 `git diff --check` 仍失败。详见 `开发管理/未通过审核清单.txt` REVIEW-20260628-01。
+> 2026-06-28 Codex / gpt-5.5：用户确认“紫府圆满正面对抗金丹初期、削位/封丹开关胜率 0.0%”符合设计预期，金丹应对筑基/紫府形成强度碾压。TQ-015C 后续不再以“制造低概率正面胜场”为正式开发前 P0；破府/削位/封丹改为战略出口、剧情条件或削弱目标，不作为紫府直接击败金丹的数值闸门。
+> 2026-06-28 Codex / gpt-5.5：批量复审当前待审核/复审项。TQ-007 目标提交 3383f11 通过；TQ-010 目标提交 e59bff8 通过但当前工作树有 3 个 Spell asset 空 `element` 回归；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、TQ-015B-2/3、DS-NEW-01/02 与当前工作树仍有阻塞。详见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt` 与 `开发管理/未通过审核清单.txt`。
+> 2026-06-28 Codex / gpt-5.5：按用户要求扩充近期任务队列；从 `开发管理/开发-下一步建议.txt` 与 `开发管理/设计-下一步建议.txt` 补入 TQ-016—TQ-021，覆盖场景架构实机验证、StartMenu 迁移、战棋渲染接口、Adventure/Combat 拆分、Unity 机制回归与基础战斗口径清理。
+
+## 使用规则
+
+1. 本文件只保留近期最高优先级、可验证、可提交的任务切片，建议 5-10 条。
+2. 用户发送纯 `1` 时，先确认当前 AI 身份，再从本队列选择匹配当前 AI 主责、且非复审型的 P0/P1 任务；队列为空或不适用时，再读取设计/开发下一步建议。
+3. 用户发送纯 `2` 时，先确认当前 AI 身份，再选择待复审项、未通过清单返工项或 DeepSeek 交接复审项；不新开执行型任务。
+4. 状态为“待复审”的任务视为执行方已完成；`1` 流程不处理，`2` 流程才处理。
+5. Codex / ChatGPT5.5 自产任务完成后，按验证结果直接改为“已完成待归档”或拆出后续任务，不再先改为“待复审”；DeepSeek V4 Pro 或外部交接任务完成后仍改为“待复审”。
+6. 任务审核通过或 Codex 自产任务验证闭环后写入归档并移出队列；长期事实写入 `设计-当前状态.txt`，暂不执行的任务移回对应下一步建议。
+7. 不在本文件保存长过程、详细审核记录或历史说明；这些内容写入回复、commit log、PR 描述或归档。
+
+## 队列表头
+
+| ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
+|----|--------|------|------|------|------|
+| TQ-014-DS | P2 | DeepSeek V4 Pro 返工；Codex / ChatGPT5.5 复审 | 场景架构返工/复审 | DS-01/03/04/05 静态资产与 TQ-016 Editor 验证均已闭环 | 原阻塞已解除；后续若重生成场景，按 TQ-016 验证入口复跑 |
+| TQ-010 | P2 | DeepSeek V4 Pro | 数据链路 | 目标提交 e59bff8 通过；当前工作树 asset 回归已清除 | 数据闸门当前无阻塞；后续若重导 asset，再按 TQ-010 检查 element 去重与属性字段 |
+| TQ-015B | P2 | DeepSeek V4 Pro 返工；Codex / ChatGPT5.5 复审 | 文档迁移/批量生产 | TQ-015B-1✅已审核；TQ-015B-2/3 提交 7612281 复审通过 | 当前阻塞解除；后续 NPC 扩写或批量生产作为新切片处理 |
+| TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
+| TQ-016 | P2 | Codex / ChatGPT5.5 | 场景架构验证 | ✅ 已完成并归档 | Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统 |
+| TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | ✅ 已完成并归档 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
+| TQ-022 | P1 | Codex / ChatGPT5.5 | 场景迁移 | ✅ 已完成并归档 | WorldScene 节点式主世界原型：四节点数据、节点选择写入 GameSession、节点按钮与进入地点按钮 |
+## 任务卡片
+
+### TQ-007 · 法箓映射表
+
+- 来源：`开发管理/设计-下一步建议.txt` A0；`开发管理/AI合作沟通.txt` HANDOFF-20260619-01。
+- 当前状态：目标提交 3383f11 复审通过，待归档清理。覆盖数量、通神三玄礼录归属、JSON/TXT `?` 污染修复均已通过；TXT 摘要截断以“完整数据见 JSON 或源文件”收束。
+- 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` HANDOFF-20260619-01、`docs/角色养成/太一道庭法箓规则.txt`、太一功法/术法/神通文件、对应设计规范。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/角色养成`；必要时用 `rg` 核对 9 功法、26 术法、9 神通覆盖。
+- 完成条件：映射表字段满足后续导入方案输入，通神三玄礼录归属明确，本命升格/特殊效果是否补全文本有结论；若通过复审，更新归档和后续 CSV 字段任务。
+
+### TQ-010 · CSV/asset 独立技能属性字段
+
+- 来源：TQ-005/TQ-009 拆分；TQ-009 已完成 BattleSim 五行 v5.10 同源化首轮实现，本任务只处理数据字段独立化。
+- 当前状态：目标提交 e59bff8 复审通过；当前工作树 asset 回归已清除。`src/Assets/Data` 无未提交 diff，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，数据链路检查 OK。
+- 必读：`docs/基础设定/灵根设定.txt` 第八节、术法/神通设计模板、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`DataConfigImporter.cs`。
+- 验证命令：导入完整性检查 + Unity 编译；必要时用 `rg "element_"` 核对 75 术法、34 神通覆盖。
+- 完成条件：术法/神通拥有独立五行属性列，学习门槛 `elementReq` 不再兼任技能属性；重导 `.asset` 后不丢失 12 属性与混沌/无属性语义。
+
+### TQ-015B · NPC 与批量生产迁移
+
+- 来源：TQ-015A 事实源与 `docs/superpowers/plans/2026-06-21-yuanying-position-migration.md` 任务 2—4。
+- 当前优先级：P2。TQ-015B-1 已由 Codex 完成文档迁移并审核通过；TQ-015B-2/3 的“建/道”错字污染已由 a3be216 修复通过，席位正式名问题已由 7612281 修复并经 Codex / gpt-5.5 复审通过。后续 NPC 扩写或批量生产不再沿用本阻塞项，需另拆新切片。
+- 必读：`开发管理/AI协作规则.txt`、`开发管理/DeepSeek工作提示词.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/重要NPC/` 下 13 份独立档案、角色养成设计规范与模板。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,docs/角色养成`；`rg -n "一正二辅|正籍|辅籍|敕籍|寄丹|炼虚" docs/剧情/世界背景故事.txt docs/剧情/重要NPC docs/角色养成`；`git diff --check`。
+- TQ-015B-1 本轮范围：`docs/superpowers/specs/2026-06-19-jindan-danxiang-design.md`、两份金丹/紫府核心设定、术法槽位设计、三类设计规范与模板。已锁定：丹相为金丹能力总称；丹枢仅为矩阵允许的个性化接口；紫府神通为丹相输入；暂寄不生成丹相主枢。未锁定：数量阈值、槽位数、数值成长和运行时迁移。
+- 完成条件：核心规则余项不再把旧词作为现行层级或数值规则；NPC 统一使用“分支 + 源/化/界 + 占据方式 + 丹枢”字段；历史参考不复制；太一道庭不垄断丹系；模板能约束 DeepSeek 批量内容不越过矩阵边界；DeepSeek 提交只标 `⚠️ 已修改/未审核`，交由 Codex / ChatGPT5.5 复审。
+
+### TQ-014-DS · 场景架构待复审集合项
+
+- 来源：`开发管理/AI合作沟通.txt` 的 HANDOFF-20260627-01/02/04/05；TQ-014 实施计划归档。
+- 当前优先级：P0。DeepSeek 已提交现状清单、会话流转骨架、四场景脚手架、World/Settlement 数据壳；2026-06-28 批量复审确认 DS-01/03 通过，DS-04/05 生成器代码部分通过，但实际 `.unity` 场景资产未提交完整 Controller 挂载且当前工作树有 asset 回归。正式开发前先清工作树、提交场景资产，再做 Editor 验证。
+- 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 对应 HANDOFF、`开发管理/开发-技术经验.txt`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`SceneBuilder.cs`、`GameSession.cs`、`SceneFlowManager.cs`、`WorldSceneController.cs`、`SettlementSceneController.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；`git diff --check`；可用时在 Unity Editor 中执行 SceneBuilder 菜单并验证 StartMenu/World/Settlement/Adventure 加载与返回。
+- 完成条件：明确 DS-01/03/04/05 哪些通过、哪些需返工；DS-05 返工须挂载 World/Settlement Controller、清理新增 `.meta` 行尾空白并说明 Settlement/Adventure ID 传递边界；场景生成、加载、返回、UICanvas/GameSession 单例和 Input System 风险有结论；不得改 CTB/伤害/冷却/槽位语义。
+
+### TQ-016 · 场景架构 Editor 验证闸门
+
+- 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S2/S4/S5；`开发管理/开发优先级.txt` 正式开发前 P0 场景架构闸门。
+- 当前状态：已完成并归档。本任务完成 Unity batchmode 等价验证：生成并注册 StartMenu/World/Settlement/Adventure，逐一打开场景并确认根对象、GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller；本轮不改 CTB、伤害、冷却、槽位或成丹语义。
+- 必读：`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/World/WorldSceneController.cs`、`src/Assets/Scripts/Settlement/SettlementSceneController.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；`git diff --check`；Unity Editor 中执行 SceneBuilder 菜单并逐一加载 StartMenu/World/Settlement/Adventure。
+- 完成条件：四场景可生成、可加载、可返回；World/Settlement/Adventure Controller 均已挂载；`GameSession` 与 `UICanvas` 不重复创建；Input System 无阻塞；验证记录写入回复或归档文件。
+
+### TQ-017 · StartMenuScene 与门派选择迁移
+
+- 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S3。
+- 当前状态：已完成并归档。本任务把开局门派选择迁入 StartMenuScene 会话流，选择结果写入 `GameSession.PlayerProfile` 并供 Adventure/Exploration 玩家创建读取；不新增门派内容、不调整功法/术法/神通数值。
+- 必读：`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`src/Assets/Scripts/Game/SectSelectionManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/Game/GameManager.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；Unity Editor 中从 StartMenu 选择门派并进入 World 或 Adventure。
+- 完成条件：门派选择结果写入 `GameSession.PlayerProfile`；Adventure 创建玩家时读取会话数据；返回主菜单或重新开局不残留旧会话；现有测试副本入口仍可用于快速验证。

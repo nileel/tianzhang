@@ -1,29 +1,10 @@
-﻿# 未通过审核清单（✅ 已审核）
+# 未通过审核清单（✅ 已审核）
 
-> 2026-07-03 Codex / gpt-5.5 执行 TQ-016：REVIEW-20260628-01 剩余的 Editor 端生成、加载、返回验证缺口已闭环。Unity 6000.3.18f1 batchmode `ValidateSceneArchitectureShellsForBatchMode` 成功生成并注册 StartMenu/World/Settlement/Adventure，逐一打开场景并确认根对象、GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller；场景 GUID 专项检查、Release build、文本检查与 `git diff --check` 通过。当前清单清零。
-> 2026-07-01 Codex / gpt-5.5 复审 78c481e / b40409a：REVIEW-20260628-01 静态场景 Controller GUID 与 Unity batchmode 编译/导入通过，但 TQ-016 Editor 端生成、加载、返回验证未闭环，仍保留；REVIEW-20260628-04 通过并从当前清单移除。
-> 2026-06-29 Codex / gpt-5.5 批量审核待审工作：当前清单两项复核后仍保留。REVIEW-20260628-01 仍缺 World/Settlement/Adventure 场景对三类 Controller GUID 的引用与 Unity Editor 端验证；REVIEW-20260628-04 当前文件仍保留 `realm_lianxu` asset 完全缺失旧表述、验证记录 `GongFa 4 realm_lianshen + 0 realm_lianxu` 与 F5 “9条功法行”旧计数。
-
-> 2026-06-29 DeepSeek V4 Pro 按用户要求处理全部未通过审核项。后续 Codex / gpt-5.5 复审确认：REVIEW-20260628-05（金丹位格）通过并移除；REVIEW-20260628-04（DS-NEW-01/02）仍不通过；REVIEW-20260628-01（场景Controller）确认为 Unity Editor 任务，DeepSeek 无法执行，已写入 AI合作沟通。
-
-> 2026-06-29 Codex / gpt-5.5 复审 f4345e5 / HANDOFF-20260629-02：结论部分通过。REVIEW-20260628-05（金丹位格矩阵 `观行迹` / `修不退` 返工）通过并从当前清单移除；REVIEW-20260628-04（DS-NEW-01/02）仍不通过，残留为 asset 结论旧表述与 DS-NEW-01 F5 计数未同步；REVIEW-20260628-01 仍为 Unity Editor 场景资产任务。
-> 2026-06-28 Codex / gpt-5.5 复核当前工作树：`src/Assets/Data`、`src/Assets/Scenes`、`src/Assembly-CSharp.csproj` 无未提交 diff；109 个 Spell/Skill asset 均恰好 1 个非空 `element`；`tools/check-data-chain.ps1` OK。REVIEW-20260628-02 已从当前清单移除。
-> 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260628-11：金丹位格矩阵双版注释机械结构通过，但 `观行迹` / `修不退` 两条文言与白话偏离原文语义；新增 REVIEW-20260628-05。
-> 2026-06-28 Codex / gpt-5.5 复审通过：TQ-015B-2/3 提交 7612281 已将四名 NPC 席位括号名替换为矩阵正式名（照暗室/燃心灯/观幽微/周天焰）；REVIEW-20260628-03 已从当前清单移除。
-> 2026-06-28 Codex / gpt-5.5 批量复审：TQ-007 目标提交 3383f11 通过；TQ-010 目标提交 e59bff8 通过但当前工作树有新 asset 回归；TQ-014-DS-01/03/Input/b549495 通过；TQ-014-DS-04/05、DS-NEW-01/02 与当前工作树仍不通过。详见 `开发管理/AI合作归档/2026-06-28-AI合作批量复审归档.txt`。
-> 2026-06-28 Codex / gpt-5.5 复审 HANDOFF-20260627-05：TQ-014-DS-05 不通过；新增控制器未挂入 World/Settlement 场景，目标范围 `git diff --check` 仍失败。
-> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-003 commit 767f93d 已通过严格覆盖、meta 配对、关键字段一致性、旧路径扫描、Unity C# build 与 `git diff --check`；当前未通过/待复审项清零。
-> 2026-06-27 Codex / gpt-5.5 复审 b674f79：TQ-006 通过并从清单移除；TQ-007/TQ-010/TQ-015B-2/3 仍不通过，失败原因更新为本轮证据。
-> 2026-06-25 Codex / gpt-5.5 批量复审：TQ-006、TQ-007、TQ-010、TQ-015B-2/3 未通过；TQ-013D 与金丹位格三字命名替换通过并已归档。
-> 2026-06-19 Codex / gpt-5.5 复审补修历史：复审 TQ-003 commit 43d0a92 时发现新增 asset 缺 57 个 `.meta`、`spell_tx_anshi` asset 字段与 CSV 不一致、`SceneBuilder` 仍引用旧 asset 路径；后续已在 767f93d 复审通过。
-> 2026-06-19 Codex / gpt-5.5 复审通过：TQ-012 规范/模板补修项已通过复审并从清单移除；当时清单仅保留 TQ-003 Unity asset 覆盖缺口，现已清零。
-> 2026-06-19 Codex / gpt-5.5 复审修正：TQ-003 commit f7f6944 的 CSV/Language 返工已机械核对；本轮修正 `gongfa_taiyiyugedian` 资质星级 2→3 后，当时数据链路剩余问题收窄为 Unity asset 覆盖缺口。
-> 2026-06-19 Codex / gpt-5.5 复审：TQ-003 commit 567c3f2 部分通过。旧 #3 Language 重复 key、旧 #4 管理状态校准、旧 #5 未审核状态保留已复核通过；数据链路剩余问题合并为当前 #1。
-> 2026-06-17 Codex / ChatGPT5.5 复审通过：从 `开发管理/审核规则.txt` 拆出为动态清单，内容沿用原未通过项；清单内条目仍需逐项修复。依据：40d5887、26e8210。
+> 2026-07-04 Codex / gpt-5.5：当前清单为空；瘦身前全文已归档至 `开发管理/任务归档/2026-07-04-未通过审核清单瘦身前归档.txt`。
 
 ## 用途
 
-记录 2026-06-16 对既有未审核内容复核后的未通过项，方便后续逐项修复。处理并审核通过后，应按 `开发管理/审核规则.txt` 的“审核记录归档”规则从本清单移除。
+记录当前仍未通过、已返工待复核或必须由 `2` 流程处理的审核项。历史审核过程不写在本文件正文；查旧记录时读 `开发管理/任务归档/` 与 `开发管理/AI合作归档/`。
 
 ## 当前未通过/待复审项
 
@@ -31,6 +12,6 @@
 
 ## 后续复核建议
 
-- TQ-010 当前工作树 asset 回归已复核清除。
-- 后续若重生成 StartMenu/World/Settlement/Adventure，复跑 `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` 与场景 GUID 专项检查；不得扩大到 CTB/伤害/冷却/槽位语义。
-- DS-NEW-01/02 统计口径已通过；后续 F 类架构决策仍以 2026-06-28 F1 口径为准：`realm_lianshen` 不作为独立境界 key，`realm_lianxu` / `realm_lianshen` 均按旧高阶/NPC/资料片保留内容处理。
+- 复审 DeepSeek 交接或外部提交时，先读 `开发管理/审核入口.txt`，再读 `开发管理/AI合作沟通.txt` 当前条目与 `开发管理/任务列表/审核与交接任务.txt`。
+- 若重生成 StartMenu/World/Settlement/Adventure，复跑 `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` 与场景 GUID 专项检查；不得扩大到 CTB、伤害、冷却、槽位语义。
+- F1 口径仍以 2026-06-28 Codex / gpt-5.5 结论为准：`realm_lianshen` 不作为当前独立境界 key，`realm_lianxu` / `realm_lianshen` 均按旧高阶/NPC/资料片保留内容处理。
