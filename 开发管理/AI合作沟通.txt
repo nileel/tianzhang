@@ -28,6 +28,37 @@
 ## 当前交接队列
 
 
+### HANDOFF-20260704-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：DS-NEW-03 CSV高阶内容定位表补强（来自 EXPAND-20260625-01 DS-NEW-03，HANDOFF-20260630-04 下一步建议）
+- 提交：cb5d783（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
+- 修改文件：
+  - 修改：开发管理/CSV高阶内容定位表.txt（新增第十节"DS-NEW-03 补强附录"）
+- 具体变更：
+  - 术法 24 条：逐一补全 asset 路径（24/24 ✅）、docs 原文路径（23/24 ✅，spell_tianjieyin 无专用文档）、CSV 行号（24/24 ✅）、待 Codex 判断列
+  - 神通 5 条：全部补全（5/5 ✅）
+  - 功法 28 条：全部补全（28/28 ✅）
+  - 新增补强汇总表、验证记录
+- 已验证：
+  - tools/check-data-chain.ps1：OK（docs 29/75/34 + asset 29/75/34 + Language 389 keys）
+  - tools/check-review-text.ps1 -Paths 开发管理/CSV高阶内容定位表.txt：OK（1 file）
+  - git diff --check：通过（无尾随空白）
+  - Asset 目录逐一核对：Spells 75/75、Skills 34/34、GongFa 29/29 全部存在
+  - Docs 原文 Glob 匹配：56/57 存在
+  - CSV 行号：逐条通过 rg -n 确认
+- 未验证：
+  - spell_tianjieyin（Spells.csv:19，realm_yuanying）无对应 docs/ 专用文档，当前仅有 CSV 定义
+  - 补强表未运行 BattleSim 或 Unity（纯文档/数据链路补强，不改数值/公式/代码）
+- 残留风险：
+  - 极低。本补强只新增证据列和交叉引用，不改变原定位表的定位结论或统计数字。
+  - spell_tianjieyin 缺失 docs 原文，可能与低阶 tianleiyin 重复定义或属数据不一致。
+- 请求判断：
+  1. spell_tianjieyin 是否需要补 docs 文档？还是标记为数据不一致并清理？
+  2. 补强附录格式（三张逐条补强表 + 汇总表 + 验证记录）是否满足 DS-NEW-03 预期？
+  3. realm_lianshen 的 8 个条目（2 术法 + 2 神通 + 4 功法）的"待 Codex 判断"列是否需要补充更多上下文？
+- 下一次 1 建议（DeepSeek）：DS-NEW-04 金丹位格批量生产试跑，或 DS-NEW-05 古修/散修内容缺口清单
+- 下一次 2 建议（Codex）：复审 cb5d783 补强内容；确认 spell_tianjieyin 处理方案；消费后建议更新 CSV高阶内容定位表 状态头
+
 ### HANDOFF-20260630-02 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：E1-E4 疑似污染修复（来自 炼虚与高阶内容影响面清单.txt）
