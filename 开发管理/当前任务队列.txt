@@ -27,7 +27,7 @@
 | TQ-030 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 内容检查 | 待处理 | 重要 NPC 叙事字段与旧口径污染清单 |
 | TQ-028 | P2 | Codex / ChatGPT5.5 | Unity 机制 | 待处理 | Unity 已接入机制第二轮回归：雷劫/玄感/含弘载物 |
 | TQ-029 | P2 | Codex / ChatGPT5.5 | 数值验证 | 待处理 | 筑基/紫府 Build 极化诊断，不直接调参 |
-| TQ-031 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 剧情设计 | 待处理 | 第一章主线剧情骨架：龙脊余震 |
+| TQ-031 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 剧情设计 | ⚠️ 已修改/未审核 | 第一章主线剧情骨架：龙脊余震 |
 | TQ-032 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | NPC 设计 | 待处理 | 据点/宗门普通 NPC 模板与首批候选清单 |
 
 ## 任务卡片
