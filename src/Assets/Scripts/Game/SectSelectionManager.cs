@@ -185,6 +185,20 @@ namespace TianZhang.Game
             charData.equippedSkills = new string[0];
             charData.availableSpells = preset.startingSpells;
 
+            var flow = SceneFlowManager.Instance;
+            if (flow != null)
+            {
+                if (gameManager == null)
+                    gameManager = FindFirstObjectByType<GameManager>();
+                if (gameManager != null)
+                    gameManager.PlayerCharData = charData;
+
+                flow.StartNewGame(charData);
+                if (selectionPanel != null)
+                    selectionPanel.SetActive(false);
+                return;
+            }
+
             if (gameManager == null)
                 gameManager = FindFirstObjectByType<GameManager>();
             if (gameManager != null)

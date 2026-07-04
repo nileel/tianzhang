@@ -1,0 +1,63 @@
+# TQ-017 StartMenuScene 与门派选择迁移归档（✅ 已审核）
+
+归档日期：2026-07-04
+执行：Codex / gpt-5.5
+
+## 范围
+
+- 将 StartMenuScene 生成路径补齐为可承载门派选择的入口场景。
+- 将开局门派选择结果写入 `GameSession.PlayerProfile`，由 `SceneFlowManager.StartNewGame` 统一进入 WorldScene。
+- 让 Adventure/Exploration 玩家创建优先读取会话档案，保留无 SceneFlow 时的旧 Exploration 快速验证回退。
+- 补齐重新开局/返回主菜单时的会话清理入口，避免旧据点、旧副本和返回目标残留。
+
+## 代码与资产
+
+- `src/Assets/Scripts/Editor/SceneBuilder.cs`
+  - StartMenuScene 生成 `UICanvas`、`SectSelectionPanel`、门派选择说明文本、开始按钮和已绑定的 `SectSelectionManager`。
+  - batchmode 场景验证入口新增 StartMenu 门派选择挂载检查。
+- `src/Assets/Scenes/StartMenuScene.unity`
+  - 由 Unity 6000.3.18f1 重新生成，包含 StartMenuRoot、GameManager、SceneFlowManager、EventSystem、UICanvas 与 SectSelectionPanel。
+- `src/Assets/Scripts/Game/GameSession.cs`
+  - 新增 `BeginNewGame`、`ClearSession`。
+  - 单例 getter 可从当前场景恢复实例，`OnDestroy` 清理 backing field。
+- `src/Assets/Scripts/Game/SceneFlowManager.cs`
+  - `StartNewGame` 改为调用 `GameSession.BeginNewGame`。
+  - 新增 `ReturnToMainMenu` 清理会话并加载 StartMenuScene。
+  - 单例 getter 与销毁清理与 `GameSession` 对齐。
+- `src/Assets/Scripts/Game/SectSelectionManager.cs`
+  - 有 `SceneFlowManager` 时直接走会话流，不再继续运行旧 Exploration 延迟重配协程。
+  - 无 `SceneFlowManager` 时保留旧 `GameManager` + Exploration 快速验证回退。
+- `src/Assets/Scripts/Map/ExplorationController.cs`
+  - `CreatePlayer` 优先读取 `GameSession.PlayerProfile`，无会话档案时生成原默认太一修士数据。
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+  - 新增 StartMenuScene 门派选择挂载测试。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+  - 新增会话重开清理与 Adventure/Exploration 玩家读取会话档案测试。
+
+## 验证
+
+- `dotnet build src\TianZhang.EditModeTests.csproj -c Release`
+  - 通过，0 警告，0 错误。
+- `dotnet build src\Assembly-CSharp.csproj -c Release`
+  - 通过，0 警告，0 错误。
+- Unity 6000.3.18f1 EditMode 目标测试：
+  - `TianZhang.Tests.SceneArchitectureEditorTests.StartMenuSceneContainsSectSelectionFlow`
+  - 结果：Passed，1/1。
+- Unity 6000.3.18f1 EditMode 目标测试：
+  - `TianZhang.Tests.AdventureSceneControllerTests`
+  - 结果：Passed，3/3。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`
+  - OK。
+- `git diff --check`
+  - 通过；仅输出 Git 换行转换提示，无 whitespace error。
+
+## 非目标
+
+- 不新增门派、功法、术法或神通内容。
+- 不调整 CTB、伤害、冷却、槽位、掉落或五行数值语义。
+- 不重写 WorldScene/SettlementScene/AdventureScene 数据原型。
+
+## 残留风险与后续
+
+- StartMenuScene 当前为代码生成的基础 UI，满足入口和数据流验证；视觉细化、继续游戏、读档、设置等菜单功能另拆任务。
+- WorldScene 节点点击、Settlement 功能入口和 Adventure 正式场景承载仍属后续场景玩法切片。

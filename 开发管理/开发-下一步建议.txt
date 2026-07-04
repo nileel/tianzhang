@@ -190,8 +190,8 @@ B3. **重构后数值验证切片（P1/P2；由 TQ-015C 后续承接）**
 
 1. TQ-014 实施计划已审核通过并归档，文件边界、验证命令和最小代码切片已锁定。
 2. DeepSeek 已提交 `TQ-014-DS-01` 场景架构现状清单、`TQ-014-DS-03` 会话流转骨架、`TQ-014-DS-04` 四场景脚手架、`TQ-014-DS-05` World/Settlement 数据壳。
-3. 2026-06-28 复审确认 `TQ-014-DS-05` 不通过：World/Settlement Controller 未挂入生成场景，新增 `.meta` 仍有尾随空白，地点/副本 ID 传递边界未交代。下一步不得直接推进开始菜单迁移，先返工 DS-05。
-4. DS-05 返工后再执行复审与 Unity Editor 端验证：确认 `SceneBuilder` 菜单生成场景、`SceneFlowManager` 加载/返回、`GameSession` 单例、`UICanvas` 复用和 Input System 表现。通过后再按 S1/S3/S6 拆正式迁移切片。
+3. 2026-07-03 TQ-016 已完成并归档：四场景可由 `SceneBuilder` 生成、注册、打开并验证 Controller 挂载，DS-05 阻塞解除。
+4. 2026-07-04 TQ-017 已完成并归档：StartMenuScene 门派选择迁入会话流，`GameSession.PlayerProfile` 可供 Adventure/Exploration 创建玩家读取。
 
 S1. **TacticalGridModel 与渲染接口兼容层（P1）**
     - 新增 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`。
@@ -204,10 +204,10 @@ S2. **GameSession 与 SceneFlowManager（P1）**
     - 复审重点：公开 API、返回目标语义、动态创建 `GameSession` 与场景内预置对象是否冲突。
     - 验证：连续切换场景不会重复创建 `GameSession` 或 `UICanvas`。
 
-S3. **StartMenuScene 与门派选择迁移（P1）**
-    - 新建 `StartMenuScene`，把 `SectSelectionManager` 从探索场景迁出。
-    - 选择结果写入 `GameSession.PlayerProfile`，`AdventureScene` 创建玩家时直接读取会话数据。
-    - 验证：新游戏选择门派后进入主世界或测试副本，玩家属性和术法池正确。
+S3. **StartMenuScene 与门派选择迁移（P1）** ✅ 已完成（2026-07-04；TQ-017）
+    - `StartMenuScene` 已生成 `UICanvas` 与绑定后的 `SectSelectionManager`。
+    - 选择结果已写入 `GameSession.PlayerProfile`，Adventure/Exploration 创建玩家时优先读取会话数据。
+    - 验证：Unity EditMode 目标测试覆盖 StartMenu 挂载、重新开局清理和玩家档案读取。
 
 S4. **WorldScene 节点式主世界原型（P1）**
     - ⚠️ 四场景脚手架与 World 数据壳已有 DeepSeek 提交；DS-05 不通过，需先挂载 `WorldSceneController`。

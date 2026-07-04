@@ -11,6 +11,7 @@
 > 2026-07-02 Codex / gpt-5.5：TQ-019 第五切片已完成并归档至 `开发管理/任务归档/2026-07-02-TQ-019-AdventureScene与TacticalCombatController拆分归档.txt`。`TacticalCombatController` 新增 `TacticalCombatEndOutcome`、`TacticalCombatEndResult` 与 `ResolveBattleEnd`，统一输出胜负、掉落与规则层占位清理；`ExplorationController.EndBattle` 改为消费结算结果，仅保留日志、UI、敌人 marker 和场景状态收尾。新增 EditMode 测试覆盖敌人阵亡结算、掉落与格子占位清理。Release/Debug `Assembly-CSharp` 与 `TianZhang.EditModeTests` build、Unity batchmode 脚本编译、文本检查与 `git diff --check` 通过；Unity batchmode 仍未生成 Test Runner XML。TQ-019 从近期队列移出，后续若继续抽离 CombatLoop 协程壳另拆新任务。
 > 2026-07-02 Codex / gpt-5.5：A4/A5 数值旧口径清理与 BattleSim 二级属性脱钩校准完成。新增 `secondary-detach-a4` self-test，BattleSim 裸先天气运/神识/资质不再直加闪避率/暴击率/暴击伤害，改为功法倾向权重补偿；`角色属性_先天.txt` 与 `角色数值设计.txt` 已同步当前基线。self-test、Release build、默认 run、文本检查与 `git diff --check` 均通过，按 Codex 自产闭环处理；后续矩阵极化另拆平衡调参。
 > 2026-07-03 Codex / gpt-5.5：TQ-016 场景架构 Editor 验证闸门完成并归档至 `开发管理/任务归档/2026-07-03-TQ-016-场景架构Editor验证闸门归档.txt`。`SceneBuilder` 生成 StartMenu/World/Settlement/Adventure 后会注册 `EditorBuildSettings`，并提供 batchmode 验证入口；四场景已由 Unity 6000.3.18f1 生成、注册、打开并验证根对象、GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller。Release build、Unity batchmode 验证、场景 GUID 专项检查、文本检查与 `git diff --check` 通过；Unity Test Runner CLI 本机仍不产出 XML，已用 `-executeMethod` 验证入口替代。TQ-014-DS 当前阻塞解除，下一次 `1` 可推进 TQ-017。
+> 2026-07-04 Codex / gpt-5.5：TQ-017 StartMenuScene 与门派选择迁移完成并归档至 `开发管理/任务归档/2026-07-04-TQ-017-StartMenuScene门派选择迁移归档.txt`。`SceneBuilder` 生成的 StartMenuScene 已内置 UICanvas、SectSelectionPanel 与绑定后的 `SectSelectionManager`；门派选择经 `SceneFlowManager.StartNewGame` 写入 `GameSession.PlayerProfile`，重新开局会清理旧据点/副本/返回上下文；`ExplorationController` 创建玩家时优先读取会话档案，旧 Exploration 快速验证入口保留为无 SceneFlow 时的回退。`Assembly-CSharp`/`TianZhang.EditModeTests` Release build、Unity EditMode 目标测试、文本检查与 `git diff --check` 通过；本轮不新增门派内容，不调整功法、术法、神通、CTB、伤害、冷却、槽位或掉落语义。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
@@ -64,7 +65,7 @@
 | TQ-015B | P2 | DeepSeek V4 Pro 返工；Codex / ChatGPT5.5 复审 | 文档迁移/批量生产 | TQ-015B-1✅已审核；TQ-015B-2/3 提交 7612281 复审通过 | 当前阻塞解除；后续 NPC 扩写或批量生产作为新切片处理 |
 | TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
 | TQ-016 | P2 | Codex / ChatGPT5.5 | 场景架构验证 | ✅ 已完成并归档 | Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统 |
-| TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | 待处理 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
+| TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | ✅ 已完成并归档 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
 ## 任务卡片
 
 ### TQ-007 · 法箓映射表
@@ -111,7 +112,7 @@
 ### TQ-017 · StartMenuScene 与门派选择迁移
 
 - 来源：`开发管理/开发-下一步建议.txt` 3.2.7 S3。
-- 当前状态：待处理。目标是把开局门派选择从探索场景迁出，形成稳定的新游戏入口；不新增门派内容、不调整功法/术法/神通数值。
+- 当前状态：已完成并归档。本任务把开局门派选择迁入 StartMenuScene 会话流，选择结果写入 `GameSession.PlayerProfile` 并供 Adventure/Exploration 玩家创建读取；不新增门派内容、不调整功法/术法/神通数值。
 - 必读：`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`src/Assets/Scripts/Game/SectSelectionManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/Game/GameManager.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts`；Unity Editor 中从 StartMenu 选择门派并进入 World 或 Adventure。
 - 完成条件：门派选择结果写入 `GameSession.PlayerProfile`；Adventure 创建玩家时读取会话数据；返回主菜单或重新开局不残留旧会话；现有测试副本入口仍可用于快速验证。

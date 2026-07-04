@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-04 Codex / gpt-5.5：TQ-017 StartMenuScene 与门派选择迁移完成。StartMenuScene 生成器已内置 UICanvas 与 SectSelectionManager，门派选择经 SceneFlowManager 写入 GameSession.PlayerProfile；重新开局清理旧据点/副本/返回上下文；Adventure/Exploration 玩家创建优先读取会话档案。验证：Assembly-CSharp、TianZhang.EditModeTests Release build，Unity EditMode 目标测试 1/1 与 3/3，文本检查与 git diff --check 通过。本轮不改 CTB、伤害、冷却、槽位或门派内容。
 > 2026-07-02 Codex / gpt-5.5：A4/A5 数值旧口径清理与 BattleSim 二级属性脱钩校准完成。`Character.FinalizeStats` 已取消裸先天气运/神识/资质对闪避率/暴击率/暴击伤害的直加，改为功法倾向权重补偿；新增 `secondary-detach-a4` self-test。`角色属性_先天.txt` 不再声明根骨/魂魄/神识直接提供战斗二级属性；`角色数值设计.txt` 已重写为 v3.4.1 当前 BattleSim 基线。验证：BattleSim self-test、Release build、默认 run 通过；当前筑基/紫府矩阵仍有明显 Build 极化，后续属于平衡调参问题，不再是旧口径污染问题。
 > 2026-06-29 Codex / gpt-5.5：复审 TQ-021 与 A0 待审成果并补齐小修。基础战斗三份文档已对齐 Unity `DamageCalculator` 的结算顺序、暴击乘法口径与 v5.10 五行内外圈规则；太一道庭法箓体系导入映射表已覆盖 9 功法、26 术法、9 神通并通过法箓ID消歧与计数复核。`角色数值设计.txt` 中旧五行/历史验证段仍列后续文档清理，不作为本轮通过项。
 > 2026-06-28 Codex / gpt-5.5：F1 架构口径已判定：`realm_lianshen` 不作为独立境界 key，不补入 `Language.csv` 或 C# realm order；`realm_lianxu` 与 `realm_lianshen` 都归入旧高阶/NPC/资料片保留内容，当前运行时境界链不扩展到炼虚/炼神。若后续保留古修"炼神"语义，应作为内容路线/标签处理，不继续使用 `realm_*` 境界 key。
@@ -149,8 +150,9 @@
 | v0.8 | 术法/神通五行属性 + 匹配规则 | 107文件补充五行属性字段 + 灵根设定§8匹配规则 |
 | v0.9 | CTB 战斗循环修复 | ✅ 已审核：1v1 战斗改由 `CTBEngine.AdvanceUntilAction` 驱动；`CtPerTick=反应`；术法/神通冷却写入下次行动门槛；行动后 CT 归零；同刻多单位达标时按反应降序排入待行动队列；`dotnet build src/Assembly-CSharp.csproj` 0警告0错误 |
 | v0.10 | 修炼主线与槽位首轮迁移 | ✅ TQ-013C：玩家默认链收束为凡人/练气/筑基五段/金丹三段；成丹/丹籍/占据状态/丹名/丹性兼容字段与槽位计算已接入；金丹槽位具体数值仍待 TQ-015C 后续验证 |
-| v0.11 | 场景会话与四场景脚手架 | ⚠️ DeepSeek 提交：GameSession/SceneFlowManager、StartMenu/World/Settlement/Adventure 场景壳、World/Settlement 数据壳已出现；仍待 Codex 复审与 Unity Editor 端验证，不算正式架构完成 |
+| v0.11 | 场景会话与四场景脚手架 | ✅ TQ-016：SceneBuilder 可生成、注册并打开 StartMenu/World/Settlement/Adventure；GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller 挂载已由 Unity batchmode 验证 |
 | v0.12 | 符胆神魂行动回归 | ✅ TQ-020 首轮：Unity 普通神魂攻击、神魂术法、神魂神通共用符胆增伤；满层符胆提供 30% 神防穿透并视为必中；消耗后按行动结束补 1 层。雷劫、玄感、含弘/载物仍未独立运行时接入，后续另拆机制切片 |
+| v0.13 | StartMenu 门派选择迁移 | ✅ TQ-017：StartMenuScene 生成 UICanvas 与 SectSelectionManager；选择结果写入 GameSession.PlayerProfile；重新开局清理旧场景上下文；Adventure/Exploration 创建玩家优先读取会话档案 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 
@@ -162,4 +164,4 @@
 | ✅ | BattleSim 1v1/2v2 五行 v5.10 三方匹配 | TQ-009 已通过复审；模拟器伤害结算已读取技能属性、施法者功法属性与目标功法属性 |
 | P1 | CSV/asset 缺独立术法/神通五行属性字段，`Spells.csv` 仍以 `elementReq` 临时代入，`Skills.csv` 暂为空属性 | 需拆分数据链路任务，避免学习门槛与技能属性长期混用，已拆为 TQ-010 |
 | P1 | `Character.FromData` 与 `ExplorationController` 冷却数组长度问题已随 TQ-013C 补修 | 待 `2` 复核清理未通过清单；仍需覆盖空装备、少于槽位、临阵换法、冷却灰显四类回归 |
-| P1 | TQ-014 场景会话、四场景和 World/Settlement 数据壳已有 DeepSeek 提交 | 需 Codex 复审代码语义，并在 Unity Editor 中验证场景生成、加载、返回、UICanvas/GameSession 单例和输入系统 |
+| ✅ | TQ-014/TQ-016/TQ-017 场景会话、四场景脚手架与 StartMenu 门派选择迁移已闭环 | 场景生成、StartMenu 门派选择挂载、GameSession 单例恢复、重新开局清理和 Adventure 玩家读取会话档案均有目标测试覆盖；World/Settlement 具体玩法入口仍另拆任务 |

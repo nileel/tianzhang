@@ -41,7 +41,7 @@ namespace TianZhang.Game
             if (flow != null)
                 flow.StartNewGame(charData);
             else if (GameSession.Instance != null)
-                GameSession.Instance.SetPlayerProfile(charData);
+                GameSession.Instance.BeginNewGame(charData, "jiangzuo_hub");
 
             // SectSelectionManager handles player reconfiguration after scene loads
         }

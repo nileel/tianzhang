@@ -11,11 +11,22 @@ namespace TianZhang.Game
     /// </summary>
     public class SceneFlowManager : MonoBehaviour
     {
-        public static SceneFlowManager Instance { get; private set; }
+        private static SceneFlowManager instance;
+
+        public static SceneFlowManager Instance
+        {
+            get
+            {
+                if (instance == null)
+                    instance = UnityEngine.Object.FindFirstObjectByType<SceneFlowManager>();
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         private void Awake()
         {
-            if (Instance != null)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
@@ -28,7 +39,7 @@ namespace TianZhang.Game
 
         public void StartNewGame(CharacterData profile)
         {
-            EnsureSession().SetPlayerProfile(profile);
+            EnsureSession().BeginNewGame(profile, "jiangzuo_hub");
             EnterWorld("jiangzuo_hub");
         }
 
@@ -71,6 +82,12 @@ namespace TianZhang.Game
                 SceneManager.LoadScene("WorldScene");
         }
 
+        public void ReturnToMainMenu()
+        {
+            EnsureSession().ClearSession();
+            SceneManager.LoadScene("StartMenuScene");
+        }
+
         private static GameSession EnsureSession()
         {
             if (GameSession.Instance != null)
@@ -78,6 +95,12 @@ namespace TianZhang.Game
 
             var go = new GameObject("GameSession");
             return go.AddComponent<GameSession>();
+        }
+
+        private void OnDestroy()
+        {
+            if (instance == this)
+                instance = null;
         }
     }
 }

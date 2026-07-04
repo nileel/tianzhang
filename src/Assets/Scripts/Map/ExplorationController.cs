@@ -223,6 +223,18 @@ namespace TianZhang.Map
 
         private Character CreatePlayer(HexCoord startPos)
         {
+            var cd = Game.GameSession.Instance != null && Game.GameSession.Instance.PlayerProfile != null
+                ? Game.GameSession.Instance.PlayerProfile
+                : CreateDefaultPlayerData();
+
+            var c = Character.FromData(cd, startPos);
+            c.CombatSwapsUsed = 0;
+            c.EnsureCooldownArraySize();
+            return c;
+        }
+
+        private CharacterData CreateDefaultPlayerData()
+        {
             var cd = ScriptableObject.CreateInstance<CharacterData>();
             cd.charName = "太一修士";
             cd.rootBone = 14; cd.physique = 14; cd.spirit = 14; cd.mind = 14; cd.reaction = 14; cd.talent = 14;
@@ -235,12 +247,8 @@ namespace TianZhang.Map
             cd.equippedSkills = playerSkills != null
                 ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "")
                 : new string[0];
-
-            var c = Character.FromData(cd, startPos);
-            c.AvailableSpells = new string[] { "玄水咒", "沧浪击", "安神符", "金光破岳", "流火灵符" };
-            c.CombatSwapsUsed = 0;
-            c.EnsureCooldownArraySize();
-            return c;
+            cd.availableSpells = new string[] { "玄水咒", "沧浪击", "安神符", "金光破岳", "流火灵符" };
+            return cd;
         }
 
         // ==================== 敌人生成 ====================

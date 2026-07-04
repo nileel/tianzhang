@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 using System;
 using System.IO;
 using System.Linq;
@@ -174,6 +175,7 @@ namespace TianZhang.Editor
 
             ValidateBuildScenes(StartMenuScenePath, WorldScenePath, SettlementScenePath, AdventureScenePath);
             ValidateSceneShell(StartMenuScenePath, "StartMenuRoot", null);
+            ValidateStartMenuShell(StartMenuScenePath);
             ValidateSceneShell(WorldScenePath, "WorldRoot", typeof(TianZhang.World.WorldSceneController));
             ValidateSceneShell(SettlementScenePath, "SettlementRoot", typeof(TianZhang.Settlement.SettlementSceneController));
             ValidateSceneShell(AdventureScenePath, "AdventureRoot", typeof(TianZhang.Adventure.AdventureSceneController));
@@ -252,8 +254,118 @@ namespace TianZhang.Editor
                 var controllerGo = new GameObject("SceneController");
                 controllerGo.AddComponent(sceneControllerType);
             }
+
+            if (rootName == "StartMenuRoot")
+                CreateStartMenuSectSelection(gameManager.GetComponent<GameManager>());
+
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
             NormalizeGeneratedSceneYaml(scenePath);
+        }
+
+        private static void CreateStartMenuSectSelection(GameManager gameManager)
+        {
+            var canvasGo = new GameObject("UICanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasGo.GetComponent<RectTransform>().localScale = Vector3.one;
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+
+            var panelGo = new GameObject("SectSelectionPanel", typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(canvasGo.transform, false);
+            var panelRt = panelGo.GetComponent<RectTransform>();
+            panelRt.anchorMin = Vector2.zero;
+            panelRt.anchorMax = Vector2.one;
+            panelRt.sizeDelta = Vector2.zero;
+            panelGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.85f);
+
+            var title = CreateText("Title", panelGo.transform, "选择门派", 36, Color.white, TextAnchor.MiddleCenter);
+            var titleRt = title.GetComponent<RectTransform>();
+            titleRt.anchorMin = new Vector2(0.5f, 1f);
+            titleRt.anchorMax = new Vector2(0.5f, 1f);
+            titleRt.anchoredPosition = new Vector2(0, -60);
+            titleRt.sizeDelta = new Vector2(400, 50);
+
+            var buttonContainerGo = new GameObject("ButtonContainer", typeof(RectTransform));
+            buttonContainerGo.transform.SetParent(panelGo.transform, false);
+            var buttonRt = buttonContainerGo.GetComponent<RectTransform>();
+            buttonRt.anchorMin = new Vector2(0.5f, 0.5f);
+            buttonRt.anchorMax = new Vector2(0.5f, 0.5f);
+            buttonRt.anchoredPosition = new Vector2(0, 60);
+            buttonRt.sizeDelta = new Vector2(300, 300);
+
+            var selectedText = CreateText("SelectedText", panelGo.transform, "", 18, Color.yellow, TextAnchor.MiddleCenter);
+            var selectedRt = selectedText.GetComponent<RectTransform>();
+            selectedRt.anchorMin = new Vector2(0.5f, 0f);
+            selectedRt.anchorMax = new Vector2(0.5f, 0f);
+            selectedRt.anchoredPosition = new Vector2(0, 180);
+            selectedRt.sizeDelta = new Vector2(500, 30);
+
+            var descText = CreateText("DescText", panelGo.transform, "", 14, Color.gray, TextAnchor.MiddleCenter);
+            var descRt = descText.GetComponent<RectTransform>();
+            descRt.anchorMin = new Vector2(0.5f, 0f);
+            descRt.anchorMax = new Vector2(0.5f, 0f);
+            descRt.anchoredPosition = new Vector2(0, 140);
+            descRt.sizeDelta = new Vector2(600, 50);
+
+            var startButton = CreateButton("StartButton", panelGo.transform, "开始游戏", new Color(0.3f, 0.5f, 0.3f, 1f));
+            var startRt = startButton.GetComponent<RectTransform>();
+            startRt.anchorMin = new Vector2(0.5f, 0f);
+            startRt.anchorMax = new Vector2(0.5f, 0f);
+            startRt.anchoredPosition = new Vector2(0, 80);
+            startRt.sizeDelta = new Vector2(200, 50);
+
+            var selection = panelGo.AddComponent<SectSelectionManager>();
+            selection.selectionPanel = panelGo;
+            selection.buttonContainer = buttonContainerGo.transform;
+            selection.startButton = startButton.GetComponent<Button>();
+            selection.selectedSectText = selectedText.GetComponent<Text>();
+            selection.selectedSectDesc = descText.GetComponent<Text>();
+            selection.gameManager = gameManager;
+        }
+
+        private static GameObject CreateText(string name, Transform parent, string text, int fontSize, Color color, TextAnchor anchor)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var label = go.GetComponent<Text>();
+            label.text = text;
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = fontSize;
+            label.color = color;
+            label.alignment = anchor;
+            return go;
+        }
+
+        private static GameObject CreateButton(string name, Transform parent, string labelText, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            go.GetComponent<Image>().color = color;
+
+            var label = CreateText("Label", go.transform, labelText, 20, Color.white, TextAnchor.MiddleCenter);
+            var labelRt = label.GetComponent<RectTransform>();
+            labelRt.anchorMin = Vector2.zero;
+            labelRt.anchorMax = Vector2.one;
+            labelRt.sizeDelta = Vector2.zero;
+            return go;
+        }
+
+        private static void ValidateStartMenuShell(string scenePath)
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                scenePath,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+
+            Require(GameObject.Find("UICanvas") != null, $"{scenePath} missing UICanvas.");
+            var selection = UnityEngine.Object.FindFirstObjectByType<SectSelectionManager>();
+            Require(selection != null, $"{scenePath} missing SectSelectionManager.");
+            Require(selection.selectionPanel != null, $"{scenePath} missing selection panel reference.");
+            Require(selection.buttonContainer != null, $"{scenePath} missing button container reference.");
+            Require(selection.startButton != null, $"{scenePath} missing start button reference.");
+            Require(selection.gameManager != null, $"{scenePath} missing GameManager reference.");
         }
 
         private static void NormalizeGeneratedSceneYaml(string scenePath)

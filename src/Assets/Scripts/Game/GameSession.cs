@@ -9,7 +9,18 @@ namespace TianZhang.Game
     /// </summary>
     public class GameSession : MonoBehaviour
     {
-        public static GameSession Instance { get; private set; }
+        private static GameSession instance;
+
+        public static GameSession Instance
+        {
+            get
+            {
+                if (instance == null)
+                    instance = UnityEngine.Object.FindFirstObjectByType<GameSession>();
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         public CharacterData PlayerProfile { get; private set; }
         public string CurrentWorldNodeId { get; private set; } = "jiangzuo_hub";
@@ -25,7 +36,7 @@ namespace TianZhang.Game
 
         private void Awake()
         {
-            if (Instance != null)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
@@ -38,6 +49,24 @@ namespace TianZhang.Game
         public void SetPlayerProfile(CharacterData profile)
         {
             PlayerProfile = profile;
+        }
+
+        public void BeginNewGame(CharacterData profile, string startNodeId)
+        {
+            PlayerProfile = profile;
+            CurrentWorldNodeId = string.IsNullOrEmpty(startNodeId) ? "jiangzuo_hub" : startNodeId;
+            CurrentSettlementId = null;
+            CurrentAdventureId = null;
+            LastReturnTarget = default;
+        }
+
+        public void ClearSession()
+        {
+            PlayerProfile = null;
+            CurrentWorldNodeId = "jiangzuo_hub";
+            CurrentSettlementId = null;
+            CurrentAdventureId = null;
+            LastReturnTarget = default;
         }
 
         public void SetWorldNode(string nodeId)
@@ -66,6 +95,12 @@ namespace TianZhang.Game
         public void SetReturnTarget(SceneReturnTarget target)
         {
             LastReturnTarget = target;
+        }
+
+        private void OnDestroy()
+        {
+            if (instance == this)
+                instance = null;
         }
     }
 }

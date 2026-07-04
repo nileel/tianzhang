@@ -37,6 +37,24 @@ namespace TianZhang.Tests
             AssertSceneHasObjects(ScenePaths[3], "AdventureRoot", typeof(AdventureSceneController));
         }
 
+        [Test]
+        public void StartMenuSceneContainsSectSelectionFlow()
+        {
+            SceneBuilder.BuildStartMenuScene();
+
+            EditorSceneManager.OpenScene(ScenePaths[0], OpenSceneMode.Single);
+
+            var uiCanvas = GameObject.Find("UICanvas");
+            var sectSelection = Object.FindFirstObjectByType<TianZhang.Game.SectSelectionManager>();
+
+            Assert.IsNotNull(uiCanvas);
+            Assert.IsNotNull(sectSelection);
+            Assert.IsNotNull(sectSelection.selectionPanel);
+            Assert.IsNotNull(sectSelection.buttonContainer);
+            Assert.IsNotNull(sectSelection.startButton);
+            Assert.AreSame(GameObject.Find("GameManager").GetComponent<TianZhang.Game.GameManager>(), sectSelection.gameManager);
+        }
+
         private static void AssertSceneHasObjects(string scenePath, string rootName, System.Type expectedControllerType)
         {
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);

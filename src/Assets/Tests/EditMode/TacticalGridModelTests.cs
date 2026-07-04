@@ -444,6 +444,96 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(go);
             }
         }
+
+        [Test]
+        public void NewGameSessionClearsPreviousSceneContext()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var oldProfile = ScriptableObject.CreateInstance<CharacterData>();
+            var newProfile = ScriptableObject.CreateInstance<CharacterData>();
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                oldProfile.charName = "旧档角色";
+                newProfile.charName = "新档角色";
+
+                session.SetPlayerProfile(oldProfile);
+                session.SetWorldNode("old_node");
+                session.SetSettlementId("old_settlement");
+                session.SetAdventureId("old_adventure");
+                session.SetReturnTarget(SceneReturnTarget.Settlement("old_settlement"));
+
+                session.BeginNewGame(newProfile, "jiangzuo_hub");
+
+                Assert.AreSame(newProfile, session.PlayerProfile);
+                Assert.AreEqual("jiangzuo_hub", session.CurrentWorldNodeId);
+                Assert.IsNull(session.CurrentSettlementId);
+                Assert.IsNull(session.CurrentAdventureId);
+                Assert.IsTrue(string.IsNullOrEmpty(session.LastReturnTarget.SceneName));
+            }
+            finally
+            {
+                Object.DestroyImmediate(newProfile);
+                Object.DestroyImmediate(oldProfile);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void ExplorationPlayerUsesGameSessionProfileWhenAvailable()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var controllerGo = new GameObject("ExplorationControllerTest");
+            var profile = ScriptableObject.CreateInstance<CharacterData>();
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                profile.charName = "玉清崖";
+                profile.gongFaName = "苦行剑典";
+                profile.rootBone = 16;
+                profile.physique = 14;
+                profile.spirit = 8;
+                profile.mind = 14;
+                profile.reaction = 20;
+                profile.talent = 10;
+                profile.realmMultiplier = 1.5f;
+                profile.equippedSpells = new[] { "引雷诀", "苦行剑式" };
+                profile.availableSpells = new[] { "引雷诀", "苦行剑式", "剑罡护体" };
+                session.BeginNewGame(profile, "jiangzuo_hub");
+
+                var controller = controllerGo.AddComponent<TianZhang.Map.ExplorationController>();
+                var method = typeof(TianZhang.Map.ExplorationController).GetMethod(
+                    "CreatePlayer",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                var player = (Character)method.Invoke(controller, new object[] { new HexCoord(0, 0) });
+
+                Assert.AreEqual("玉清崖", player.Name);
+                Assert.AreEqual("苦行剑典", player.GongFaName);
+                Assert.AreEqual(16, player.RootBone);
+                Assert.AreEqual(20, player.Reaction);
+                CollectionAssert.AreEqual(new[] { "引雷诀", "苦行剑式" }, player.EquippedSpellIds);
+                CollectionAssert.AreEqual(new[] { "引雷诀", "苦行剑式", "剑罡护体" }, player.AvailableSpells);
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        private static void DestroyExistingSceneFlowAndSession()
+        {
+            if (SceneFlowManager.Instance != null)
+                Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
+            if (GameSession.Instance != null)
+                Object.DestroyImmediate(GameSession.Instance.gameObject);
+        }
     }
 
     public class BattleUIManagerTests
