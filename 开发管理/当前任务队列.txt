@@ -12,6 +12,7 @@
 > 2026-07-02 Codex / gpt-5.5：A4/A5 数值旧口径清理与 BattleSim 二级属性脱钩校准完成。新增 `secondary-detach-a4` self-test，BattleSim 裸先天气运/神识/资质不再直加闪避率/暴击率/暴击伤害，改为功法倾向权重补偿；`角色属性_先天.txt` 与 `角色数值设计.txt` 已同步当前基线。self-test、Release build、默认 run、文本检查与 `git diff --check` 均通过，按 Codex 自产闭环处理；后续矩阵极化另拆平衡调参。
 > 2026-07-03 Codex / gpt-5.5：TQ-016 场景架构 Editor 验证闸门完成并归档至 `开发管理/任务归档/2026-07-03-TQ-016-场景架构Editor验证闸门归档.txt`。`SceneBuilder` 生成 StartMenu/World/Settlement/Adventure 后会注册 `EditorBuildSettings`，并提供 batchmode 验证入口；四场景已由 Unity 6000.3.18f1 生成、注册、打开并验证根对象、GameManager/SceneFlowManager 与 World/Settlement/Adventure Controller。Release build、Unity batchmode 验证、场景 GUID 专项检查、文本检查与 `git diff --check` 通过；Unity Test Runner CLI 本机仍不产出 XML，已用 `-executeMethod` 验证入口替代。TQ-014-DS 当前阻塞解除，下一次 `1` 可推进 TQ-017。
 > 2026-07-04 Codex / gpt-5.5：TQ-017 StartMenuScene 与门派选择迁移完成并归档至 `开发管理/任务归档/2026-07-04-TQ-017-StartMenuScene门派选择迁移归档.txt`。`SceneBuilder` 生成的 StartMenuScene 已内置 UICanvas、SectSelectionPanel 与绑定后的 `SectSelectionManager`；门派选择经 `SceneFlowManager.StartNewGame` 写入 `GameSession.PlayerProfile`，重新开局会清理旧据点/副本/返回上下文；`ExplorationController` 创建玩家时优先读取会话档案，旧 Exploration 快速验证入口保留为无 SceneFlow 时的回退。`Assembly-CSharp`/`TianZhang.EditModeTests` Release build、Unity EditMode 目标测试、文本检查与 `git diff --check` 通过；本轮不新增门派内容，不调整功法、术法、神通、CTB、伤害、冷却、槽位或掉落语义。
+> 2026-07-04 Codex / gpt-5.5：TQ-022 WorldScene 节点式主世界原型完成并归档至 `开发管理/任务归档/2026-07-04-TQ-022-WorldScene节点式主世界原型归档.txt`。`WorldSceneController` 现公开四个原型节点、节点查询与选择 API，选择节点会写入 `GameSession.CurrentWorldNodeId`；WorldScene 启动时生成 `UICanvas/WorldNodePanel`、四个节点按钮与进入地点按钮，主入口可进入据点或副本。`Assembly-CSharp`/`TianZhang.EditModeTests` Release/Debug build、文本检查与目标 `git diff --check` 通过；Unity Test Runner CLI 仍未产出 XML，最终复跑因已有 Unity 实例打开同项目而未执行。本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。下一次 `1` 可推进 S5 SettlementScene 通用城市/宗门原型。
 > 2026-06-28 Codex / gpt-5.5：TQ-014-DS 当前 HEAD 复核不通过；World/Settlement/Adventure 三个场景均未引用对应 Controller GUID，但 `dotnet build src/Assembly-CSharp.csproj` 通过。
 > 2026-06-28 Codex / gpt-5.5：TQ-010 当前工作树 asset 回归复核清除；`src/Assets/Data` 无脏改，109 个 Spell/Skill asset 均恰好 1 个非空 `element`，`tools/check-data-chain.ps1` OK。
 > 2026-06-28 Codex / gpt-5.5：TQ-015B-2/3 提交 7612281 复审通过；四名 NPC 席位括号名已改为矩阵 51 个正式三字名，TQ-015B 当前阻塞解除。
@@ -66,6 +67,7 @@
 | TQ-007 | P2 | DeepSeek V4 Pro | 数据整理 | 目标提交 3383f11 复审通过，待归档清理 | 法箓映射表 `?` 污染已修复；后续若做可导入性补强，应作为新切片处理 |
 | TQ-016 | P2 | Codex / ChatGPT5.5 | 场景架构验证 | ✅ 已完成并归档 | Unity Editor 端生成并加载 StartMenu/World/Settlement/Adventure，验证 SceneFlow、GameSession、UICanvas 与输入系统 |
 | TQ-017 | P1 | Codex / ChatGPT5.5 | 场景迁移 | ✅ 已完成并归档 | StartMenuScene 与门派选择迁移，把开局选择结果写入 GameSession 并供 World/Adventure 读取 |
+| TQ-022 | P1 | Codex / ChatGPT5.5 | 场景迁移 | ✅ 已完成并归档 | WorldScene 节点式主世界原型：四节点数据、节点选择写入 GameSession、节点按钮与进入地点按钮 |
 ## 任务卡片
 
 ### TQ-007 · 法箓映射表

@@ -1,0 +1,42 @@
+# TQ-022 WorldScene 节点式主世界原型归档
+
+日期：2026-07-04
+执行：Codex / gpt-5.5
+状态：✅ 已完成
+
+## 本轮范围
+
+- 为 `WorldSceneController` 补齐 4 个主世界原型节点：江左天域、关陇玄域、陇西雷域、中州天域。
+- 新增节点查询、节点选择和当前节点状态 API：
+  - `Nodes`
+  - `SelectedNodeId`
+  - `SelectedNode`
+  - `TryGetNode`
+  - `SelectNode`
+- 节点选择写入 `GameSession.CurrentWorldNodeId`，用于后续从据点或副本返回主世界时保留节点位置。
+- WorldScene 启动时生成 `UICanvas/WorldNodePanel`、4 个节点按钮和 `EnterLocationButton`。
+- `EnterSelectedLocation` 会按当前节点优先进入据点；无据点但有副本入口时进入副本。
+
+## 修改文件
+
+- `src/Assets/Scripts/World/WorldSceneController.cs`
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+- `开发管理/当前任务队列.txt`
+- `开发管理/开发-下一步建议.txt`
+- `开发管理/设计-当前状态.txt`
+
+## 验证
+
+- `dotnet build -c Release src/TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- `dotnet build -c Release src/Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- `dotnet build -c Debug src/Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- `dotnet build -c Debug src/TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- Unity 6000.3.18f1 batchmode `-runTests`：本机仍未产出 Test Runner XML；最终复跑因已有 Unity 实例打开同项目而未执行。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths src/Assets/Scripts/World/WorldSceneController.cs,src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`：通过。
+- `git diff --check -- src/Assets/Scripts/World/WorldSceneController.cs src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`：通过，仅 Git 提示 LF/CRLF 规范化。
+
+## 边界
+
+- 不改 CTB、伤害、冷却、槽位、寻路、技能范围或掉落语义。
+- 不新增门派内容、数值参数、CSV 字段或 Unity asset 数据。
+- SettlementScene 通用城市/宗门功能入口仍留后续 S5 切片。

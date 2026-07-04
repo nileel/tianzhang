@@ -192,6 +192,7 @@ B3. **重构后数值验证切片（P1/P2；由 TQ-015C 后续承接）**
 2. DeepSeek 已提交 `TQ-014-DS-01` 场景架构现状清单、`TQ-014-DS-03` 会话流转骨架、`TQ-014-DS-04` 四场景脚手架、`TQ-014-DS-05` World/Settlement 数据壳。
 3. 2026-07-03 TQ-016 已完成并归档：四场景可由 `SceneBuilder` 生成、注册、打开并验证 Controller 挂载，DS-05 阻塞解除。
 4. 2026-07-04 TQ-017 已完成并归档：StartMenuScene 门派选择迁入会话流，`GameSession.PlayerProfile` 可供 Adventure/Exploration 创建玩家读取。
+5. 2026-07-04 TQ-022 已完成并归档：WorldScene 节点式主世界原型提供四个节点、节点选择写入 `GameSession.CurrentWorldNodeId`，并生成主世界节点按钮与进入地点按钮。
 
 S1. **TacticalGridModel 与渲染接口兼容层（P1）**
     - 新增 `TacticalGridModel`、`ITacticalRenderer`、`TilemapTacticalRenderer`。
@@ -209,11 +210,11 @@ S3. **StartMenuScene 与门派选择迁移（P1）** ✅ 已完成（2026-07-04�
     - 选择结果已写入 `GameSession.PlayerProfile`，Adventure/Exploration 创建玩家时优先读取会话数据。
     - 验证：Unity EditMode 目标测试覆盖 StartMenu 挂载、重新开局清理和玩家档案读取。
 
-S4. **WorldScene 节点式主世界原型（P1）**
-    - ⚠️ 四场景脚手架与 World 数据壳已有 DeepSeek 提交；DS-05 不通过，需先挂载 `WorldSceneController`。
-    - 先用 4 个区域节点：江左天域、关陇玄域、陇西雷域、中州天域。
-    - 节点点击进入 `SettlementScene` 或 `AdventureScene`，并记录 `CurrentWorldNodeId`。
-    - 验证：进入/返回后仍停留在正确节点。
+S4. **WorldScene 节点式主世界原型（P1）** ✅ 已完成（2026-07-04；TQ-022）
+    - `WorldSceneController` 已内置 4 个原型节点：江左天域、关陇玄域、陇西雷域、中州天域。
+    - 节点选择会写入 `GameSession.CurrentWorldNodeId`，并可从主入口进入节点绑定的 `SettlementScene` 或 `AdventureScene`。
+    - WorldScene 启动时生成 `UICanvas/WorldNodePanel`、四个节点按钮与进入地点按钮。
+    - 验证：`Assembly-CSharp`/`TianZhang.EditModeTests` Release/Debug build、文本检查与目标 `git diff --check` 通过；Unity Test Runner CLI 仍未产出 XML，最终复跑因已有 Unity 实例打开同项目而未执行。
 
 S5. **SettlementScene 通用城市/宗门原型（P1）**
     - ⚠️ Settlement 场景壳与数据壳已有 DeepSeek 提交；DS-05 不通过，需先挂载 `SettlementSceneController`。
