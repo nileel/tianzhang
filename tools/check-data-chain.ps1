@@ -178,6 +178,77 @@ foreach ($check in $dupChecks) {
 
 "language keys: $($languageIds.Count)"
 
+# === TQ-027: realm/contentScope alert layer (⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：check-data-chain.ps1 新增告警段) ===
+"`n=== realm/contentScope alert (TQ-027) ==="
+
+# -- realm_lianshen (P0: missing from Language.csv) --
+$lianshenGongFa = @($gongfaRows | Where-Object { $_ -match 'realm_lianshen' })
+$lianshenSpells = @($spellRows | Where-Object { $_ -match 'realm_lianshen' })
+$lianshenSkills = @($skillRows | Where-Object { $_ -match 'realm_lianshen' })
+$lianshenGongFaIds = Get-FirstFieldIds $lianshenGongFa
+$lianshenSpellIds = Get-FirstFieldIds $lianshenSpells
+$lianshenSkillIds = Get-FirstFieldIds $lianshenSkills
+$lianshenTotal = $lianshenGongFa.Count + $lianshenSpells.Count + $lianshenSkills.Count
+
+$hasLianshenInLang = ($languageRows | Where-Object { $_ -match '^realm_lianshen,' }).Count -gt 0
+
+"realm_lianshen alert (P0: no Language key | F1: reserved/NPC/古修炼神):"
+"  Language.csv has realm_lianshen: $hasLianshenInLang"
+"  GongFa.csv rows: $($lianshenGongFa.Count) | IDs: $($lianshenGongFaIds -join ', ')"
+"  Spells.csv rows: $($lianshenSpells.Count) | IDs: $($lianshenSpellIds -join ', ')"
+"  Skills.csv rows: $($lianshenSkills.Count) | IDs: $($lianshenSkillIds -join ', ')"
+"  TOTAL realm_lianshen: $lianshenTotal (8 expected: 4 GongFa + 2 Spells + 2 Skills)"
+if (-not $hasLianshenInLang) {
+  "  ** WARNING: realm_lianshen missing from Language.csv — runtime display-name lookup will fail **"
+}
+
+# -- realm_lianxu (P1: active in CSV but declared deleted in docs) --
+$lianxuGongFa = @($gongfaRows | Where-Object { $_ -match 'realm_lianxu' })
+$lianxuSpells = @($spellRows | Where-Object { $_ -match 'realm_lianxu' })
+$lianxuSkills = @($skillRows | Where-Object { $_ -match 'realm_lianxu' })
+$lianxuGongFaIds = Get-FirstFieldIds $lianxuGongFa
+$lianxuSpellIds = Get-FirstFieldIds $lianxuSpells
+$lianxuSkillIds = Get-FirstFieldIds $lianxuSkills
+$lianxuTotal = $lianxuGongFa.Count + $lianxuSpells.Count + $lianxuSkills.Count
+
+$hasLianxuInLang = ($languageRows | Where-Object { $_ -match '^realm_lianxu,' }).Count -gt 0
+
+"realm_lianxu alert (P1: declared deleted but active in CSV; Language key exists):"
+"  Language.csv has realm_lianxu: $hasLianxuInLang"
+"  GongFa.csv rows: $($lianxuGongFa.Count) | IDs: $($lianxuGongFaIds -join ', ')"
+"  Spells.csv rows: $($lianxuSpells.Count) | IDs: $($lianxuSpellIds -join ', ')"
+"  Skills.csv rows: $($lianxuSkills.Count) | IDs: $($lianxuSkillIds -join ', ')"
+"  TOTAL realm_lianxu: $lianxuTotal (12 expected: 6 GongFa + 3 Spells + 3 Skills)"
+
+# -- contentScope distribution --
+function Get-ContentScopeDist {
+  param([string[]]$Rows)
+  $dist = @{}
+  foreach ($row in $Rows) {
+    $parts = $row -split ','
+    $last = $parts[-1].Trim()
+    if ($last.Length -eq 0) { $last = "(empty)" }
+    if (-not $dist.ContainsKey($last)) { $dist[$last] = 0 }
+    $dist[$last]++
+  }
+  return $dist
+}
+
+$gongfaScope = Get-ContentScopeDist $gongfaRows
+$spellScope = Get-ContentScopeDist $spellRows
+$skillScope = Get-ContentScopeDist $skillRows
+
+"contentScope distribution:"
+"  GongFa.csv: $(($gongfaScope.Keys | ForEach-Object { "$_=$($gongfaScope[$_])" }) -join ', ')"
+"  Spells.csv: $(($spellScope.Keys | ForEach-Object { "$_=$($spellScope[$_])" }) -join ', ')"
+"  Skills.csv: $(($skillScope.Keys | ForEach-Object { "$_=$($skillScope[$_])" }) -join ', ')"
+
+# -- Risk summary (read-only, never fails the check) --
+"risk summary (TQ-027):"
+"  realm_lianshen: $lianshenTotal rows across CSVs without Language key — runtime display-name failure risk"
+"  realm_lianxu:   $lianxuTotal rows still active despite spec declaring it deleted — spec/implementation conflict"
+"  contentScope:   reserved + (empty) rows should not leak into player-accessible content without review"
+
 if ($failures.Count -gt 0) {
   "check-data-chain: FAILED"
   $failures | Sort-Object

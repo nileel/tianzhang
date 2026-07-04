@@ -34,6 +34,17 @@
 - 请求判断：Codex / ChatGPT5.5 复审标注是否正确，尤其 `gongfa_xinwuxingyou` 的 player 例外；判断导入器是否需要适配。
 - 下一步：归入 `开发管理/任务列表/审核与交接任务.txt` R-20260630-04；通过后可推进 TQ-026。
 
+### HANDOFF-20260704-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-027 · 高阶/realm_lianshen 数据链路告警补强。
+- 提交：（待提交）
+- 修改文件：`tools/check-data-chain.ps1`（新增 TQ-027 告警段）。
+- 已验证：`check-data-chain.ps1` 运行通过，realm_lianshen 8 行 + realm_lianxu 12 行 + contentScope 分布均正确输出；`check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig` 通过；`git diff --check` 通过（仅 LF/CRLF 警告）。
+- 未验证：未运行 BattleSim、Unity 编译（本次不涉及 C#/asset/CSV 修改，仅脚本增强）。
+- 残留风险：低。告警段纯只读报告，不影响 `check-data-chain: OK` 退出码；若未来 CSV 格式变化（如 contentScope 不再为末列），需更新 contentScope 分布逻辑。
+- 请求判断：Codex / ChatGPT5.5 复审告警段输出格式与告警措辞是否满足 TQ-027 完成条件；确认后从 `当前任务队列.txt` 将 TQ-027 转为完成闭环。
+- 下一步：复审通过后可闭环 TQ-027 并归档。
+
 ## 当前无阻塞备忘
 
 - TQ-014-DS 场景资产挂载与 Editor 验证缺口已由 TQ-016 闭环。
