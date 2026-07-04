@@ -24,8 +24,11 @@
 | TQ-025 | P1 | Codex / ChatGPT5.5 | 战斗架构 | 待处理 | Adventure/Combat 协程壳与 UI 绑定继续拆分 |
 | TQ-026 | P1 | Codex / ChatGPT5.5 | 数据链路 | 待处理 | contentScope 运行时字段与导入器适配 |
 | TQ-027 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 数据检查 | 待处理 | 高阶/realm_lianshen 数据链路告警补强 |
+| TQ-030 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 内容检查 | 待处理 | 重要 NPC 叙事字段与旧口径污染清单 |
 | TQ-028 | P2 | Codex / ChatGPT5.5 | Unity 机制 | 待处理 | Unity 已接入机制第二轮回归：雷劫/玄感/含弘载物 |
 | TQ-029 | P2 | Codex / ChatGPT5.5 | 数值验证 | 待处理 | 筑基/紫府 Build 极化诊断，不直接调参 |
+| TQ-031 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 剧情设计 | 待处理 | 第一章主线剧情骨架：龙脊余震 |
+| TQ-032 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | NPC 设计 | 待处理 | 据点/宗门普通 NPC 模板与首批候选清单 |
 
 ## 任务卡片
 
@@ -74,6 +77,15 @@
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig`；`git diff --check`。
 - 完成条件：检查输出能明确提示当前高阶内容是 reserved/NPC/资料片口径；若由 DeepSeek 执行，完成后标 `⚠️ 已修改/未审核` 并写入 `AI合作沟通.txt`，由 Codex / ChatGPT5.5 复审。
 
+### TQ-030 · 重要 NPC 叙事字段与旧口径污染清单
+
+- 来源：`开发管理/任务列表/内容设计任务.txt` C-NPC-02。
+- 当前状态：待处理。`docs/剧情/世界背景故事.txt` 与 13 个重要 NPC 文件已有 DeepSeek 旧口径迁移痕迹，当前多处仍标 `⚠️ 已修改/未审核`；后续扩写前需要先形成可复审清单。
+- 必读：`开发管理/AI协作规则.txt`、`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`docs/剧情/重要NPC/*.txt`。
+- 范围：新增或更新 `开发管理/NPC叙事字段检查清单.txt`，逐项检查世界背景与 13 个重要 NPC 是否满足六字段、强关系不超过三条、源/化/界席位与占据方式唯一、旧正籍/辅籍/敕籍/寄丹/妖血敕籍等词只在历史说明中出现；本任务只做清单和疑点定位，不直接改 NPC 正文、不新增剧情结论。
+- 验证命令：`rg -n "正籍|辅籍|敕籍|寄丹|妖血敕|炼虚" docs/剧情`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`git diff --check`。
+- 完成条件：清单覆盖 `世界背景故事.txt` 与全部重要 NPC 文件，按“阻塞复审/可后续处理/仅历史说明”分级列疑点；若由 DeepSeek 执行，清单和交接条目标 `⚠️ 已修改/未审核` 并写入 `AI合作沟通.txt`。
+
 ### TQ-028 · Unity 已接入机制第二轮回归
 
 - 来源：`开发管理/任务列表/场景与Unity任务.txt` U-MECH-01 至 U-MECH-03。
@@ -91,3 +103,21 @@
 - 范围：先产出诊断，不直接调参；统计极端 Build 的胜率、回合数、主要失败出口与二级属性来源。
 - 验证命令：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；必要时新增 self-test；文本检查；`git diff --check`。
 - 完成条件：明确极化来自功法成长、二级属性分配、AI 行为还是样本筛选；后续调参另拆任务。
+
+### TQ-031 · 第一章主线剧情骨架：龙脊余震
+
+- 来源：`开发管理/任务列表/内容设计任务.txt` C-STORY-01。
+- 当前状态：待处理。世界背景已有龙脊之变、九域格局与游戏开端，但尚无可供后续任务/据点/NPC 对话拆分的第一章主线骨架。
+- 必读：`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`开发管理/设计-当前状态.txt`；若 TQ-030 已完成，优先读取 `开发管理/NPC叙事字段检查清单.txt`。
+- 范围：新增 `docs/剧情/主线/第一章-龙脊余震.txt`，写清章节定位、玩家入口、3-5 个任务节拍、涉及势力/NPC、信息分层、失败代价与后续章节钩子；不写具体对白全文、不写战斗数值、不改 NPC 正文、不把玩家主线推进到金丹以上。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`git diff --check`。
+- 完成条件：第一章骨架能服务太一道庭/混元山/太虚观/玄荒殿/散修至少三类入口；不出现全知 NPC；时间锚点保持 387 年秋；若由 DeepSeek 执行，文件和交接条目标 `⚠️ 已修改/未审核`。
+
+### TQ-032 · 据点/宗门普通 NPC 模板与首批候选清单
+
+- 来源：`开发管理/任务列表/内容设计任务.txt` C-NPC-03。
+- 当前状态：待处理。重要 NPC 已有文件，但 Settlement/World 后续需要低阶可交互 NPC；目前缺少普通 NPC 的轻量模板、字段边界和首批候选。
+- 必读：`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/场景与Unity任务.txt`；若 TQ-031 已完成，读取 `docs/剧情/主线/第一章-龙脊余震.txt`。
+- 范围：新增 `docs/剧情/普通NPC设计模板.txt` 与 `开发管理/普通NPC首批候选清单.txt`；模板限定普通 NPC 字段、称谓、可交互职责、任务钩子、关系强度和禁止项；候选清单至少覆盖宗门执事、坊市商贩、散修委托、情报中介、治疗/丹药、冒险入口六类。首轮不创建正式 NPC 人物志，不写具体战斗数值，不让普通 NPC 占据源/化/界席位。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`git diff --check`。
+- 完成条件：模板可直接指导后续“一 NPC 一文件”的批量生产；候选清单每项有据点、功能、剧情钩子和复用限制；若由 DeepSeek 执行，新增文件和交接条目标 `⚠️ 已修改/未审核`。
