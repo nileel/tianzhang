@@ -1,0 +1,39 @@
+# TQ-025 Adventure/Combat UI 命令绑定拆分归档
+
+日期：2026-07-05
+执行：Codex / gpt-5.5
+状态：✅ 已完成
+
+## 本轮范围
+
+- 选择 TQ-025 中的“UI 命令绑定”最小切片，不处理战斗协程壳、日志适配或战斗规则。
+- `ICombatCommandHandler` 增加 `RequestSwapSpell`，让换法与普攻、防御、待机、术法、神通同属动作栏命令接口。
+- `BattleUIManager` 动作栏新增 `BtnSwap` 换法按钮，点击后通过 `ICombatCommandHandler.RequestSwapSpell` 发出命令。
+- `BattleUIManager` 不再保存 `ExplorationController` 具体类型，也不再回退调用 `PlayerBasicAttack` / `PlayerGuard` / `PlayerCombatWait` / `PlayerCastSpell` / `PlayerUseSkill` 等具体方法。
+- `ExplorationController` 初始化 UI 时改为 `SetCombatCommandHandler(this)`，并实现 `RequestSwapSpell` 转发到既有临阵换法逻辑。
+
+## 修改文件
+
+- `src/Assets/Scripts/Combat/TacticalCombatController.cs`
+- `src/Assets/Scripts/Game/BattleUIManager.cs`
+- `src/Assets/Scripts/Map/ExplorationController.cs`
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+- `开发管理/当前任务队列.txt`
+- `开发管理/任务列表/场景与Unity任务.txt`
+- `开发管理/设计-当前状态.txt`
+
+## 验证
+
+- TDD 测试先行：先新增 `BattleUIManagerTests` 覆盖 `BtnSwap` 绑定成功路径，以及无 `ICombatCommandHandler` 时点击动作按钮不抛异常的失败路径。
+- Unity EditMode RED 尝试：`Unity.exe -batchmode -runTests -testFilter TianZhang.Tests.BattleUIManagerTests.ActionBarButtonsRouteThroughCombatCommandHandlerWhenBound` 未能执行，原因是当前已有 Unity Editor 实例打开同一工程，batchmode 报错“another Unity instance is running with this project open”。
+- `dotnet build src/Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- Unity EditMode GREEN 尝试：`Unity.exe -batchmode -runTests -testFilter TianZhang.Tests.BattleUIManagerTests` 未能执行，原因同上。
+- `rg -n "SetExplorationController|exploreController|TianZhang\\.Map\\.ExplorationController" src/Assets/Scripts src/Assets/Tests`：确认 `BattleUIManager` 无直接地图控制器引用；剩余命中为测试反射创建 `ExplorationController` 与 `SceneBuilder` 场景挂载。
+
+## 边界
+
+- 不改 CTB 推进、行动门槛、冷却推进或行动后 CT 消耗。
+- 不改 AI 选择、伤害公式、命中/闪避、格挡/魂盾、五行匹配、掉落或寻路规则。
+- 不改临阵换法本身的槽位选择、次数限制、冷却惩罚或日志语义；本轮只让 UI 也能发出既有换法命令。
+- `ExplorationController` 仍保留战斗协程调度、日志和 UI 刷新职责；后续可另拆 U-S6-03 继续处理协程壳或日志适配。

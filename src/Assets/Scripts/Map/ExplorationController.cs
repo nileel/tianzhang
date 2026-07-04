@@ -132,8 +132,8 @@ namespace TianZhang.Map
             // 刷新UI
             if (uiManager != null)
             {
-            uiManager.SetExplorationController(this);
-                            uiManager.SetTurnBanner("探索地图");
+                uiManager.SetCombatCommandHandler(this);
+                uiManager.SetTurnBanner("探索地图");
                 uiManager.ClearLog();
             }
             RefreshUI();
@@ -734,6 +734,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         public void RequestBasicAttack() => PlayerBasicAttack();
         public void RequestGuard() => PlayerGuard();
         public void RequestWait() => PlayerCombatWait();
+        public void RequestSwapSpell() => PlayerSwapSpell();
         public void RequestSpell(int index) => PlayerCastSpell(index);
         public void RequestSkill(int index) => PlayerUseSkill(index);
 

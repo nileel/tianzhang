@@ -12,7 +12,6 @@ namespace TianZhang.Game
     public class BattleUIManager : MonoBehaviour
     {
         [Header("引用")]
-        private TianZhang.Map.ExplorationController exploreController;
         private ICombatCommandHandler combatCommandHandler;
 
         [Header("Canvas 设置")]
@@ -58,6 +57,7 @@ namespace TianZhang.Game
         private Button attackButton;
         private Button guardButton;
         private Button waitButton;
+        private Button swapButton;
         private Transform actionBarParent; // 动作栏父节点
 
         // ---- 战斗日志 ----
@@ -70,12 +70,6 @@ namespace TianZhang.Game
         // ---- 帮助面板 ----
         private GameObject helpPanel;
         private bool helpVisible;
-
-        public void SetExplorationController(TianZhang.Map.ExplorationController ctrl)
-        {
-            exploreController = ctrl;
-            combatCommandHandler = ctrl as ICombatCommandHandler;
-        }
 
         public void SetCombatCommandHandler(ICombatCommandHandler handler)
         {
@@ -341,6 +335,9 @@ namespace TianZhang.Game
                 spellButtons.Add(btn.gameObject);
             }
 
+            swapButton = CreateButton(bar.transform, "BtnSwap", "换法 [S]");
+            swapButton.onClick.AddListener(RequestSwapSpell);
+
             for (int i = 0; i < 2; i++)
             {
                 int idx = i;
@@ -358,42 +355,32 @@ namespace TianZhang.Game
 
         private void RequestBasicAttack()
         {
-            if (combatCommandHandler != null)
-                combatCommandHandler.RequestBasicAttack();
-            else if (exploreController != null)
-                exploreController.PlayerBasicAttack();
+            combatCommandHandler?.RequestBasicAttack();
         }
 
         private void RequestGuard()
         {
-            if (combatCommandHandler != null)
-                combatCommandHandler.RequestGuard();
-            else if (exploreController != null)
-                exploreController.PlayerGuard();
+            combatCommandHandler?.RequestGuard();
         }
 
         private void RequestWait()
         {
-            if (combatCommandHandler != null)
-                combatCommandHandler.RequestWait();
-            else if (exploreController != null)
-                exploreController.PlayerCombatWait();
+            combatCommandHandler?.RequestWait();
+        }
+
+        private void RequestSwapSpell()
+        {
+            combatCommandHandler?.RequestSwapSpell();
         }
 
         private void RequestSpell(int index)
         {
-            if (combatCommandHandler != null)
-                combatCommandHandler.RequestSpell(index);
-            else if (exploreController != null)
-                exploreController.PlayerCastSpell(index);
+            combatCommandHandler?.RequestSpell(index);
         }
 
         private void RequestSkill(int index)
         {
-            if (combatCommandHandler != null)
-                combatCommandHandler.RequestSkill(index);
-            else if (exploreController != null)
-                exploreController.PlayerUseSkill(index);
+            combatCommandHandler?.RequestSkill(index);
         }
 
         // ---- 战斗日志（右侧）----
@@ -670,6 +657,7 @@ namespace TianZhang.Game
             if (attackButton != null) attackButton.interactable = interactable;
             if (guardButton != null) guardButton.interactable = interactable;
             if (waitButton != null) waitButton.interactable = interactable;
+            if (swapButton != null) swapButton.interactable = interactable;
             foreach (var btn in spellButtons)
                 if (btn.TryGetComponent<Button>(out var b)) b.interactable = interactable;
             foreach (var btn in skillButtons)

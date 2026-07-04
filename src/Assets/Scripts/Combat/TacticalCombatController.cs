@@ -10,6 +10,7 @@ namespace TianZhang.Combat
         void RequestBasicAttack();
         void RequestGuard();
         void RequestWait();
+        void RequestSwapSpell();
         void RequestSpell(int index);
         void RequestSkill(int index);
     }

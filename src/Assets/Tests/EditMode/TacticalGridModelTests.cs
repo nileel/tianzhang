@@ -554,14 +554,46 @@ namespace TianZhang.Tests
                 FindButton("BtnAttack").onClick.Invoke();
                 FindButton("BtnGuard").onClick.Invoke();
                 FindButton("BtnWait").onClick.Invoke();
+                FindButton("BtnSwap").onClick.Invoke();
                 FindButton("BtnSpell2").onClick.Invoke();
                 FindButton("BtnSkill1").onClick.Invoke();
 
                 Assert.AreEqual(1, handler.BasicAttackRequests);
                 Assert.AreEqual(1, handler.GuardRequests);
                 Assert.AreEqual(1, handler.WaitRequests);
+                Assert.AreEqual(1, handler.SwapSpellRequests);
                 Assert.AreEqual(2, handler.LastSpellIndex);
                 Assert.AreEqual(1, handler.LastSkillIndex);
+            }
+            finally
+            {
+                var canvas = GameObject.Find("UICanvas");
+                if (canvas != null)
+                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ActionBarButtonsIgnoreClicksWhenNoCombatCommandHandlerIsBound()
+        {
+            var host = new GameObject("BattleUIManagerNoCommandHandlerTest");
+            try
+            {
+                var ui = host.AddComponent<BattleUIManager>();
+                typeof(BattleUIManager)
+                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(ui, null);
+
+                Assert.DoesNotThrow(() =>
+                {
+                    FindButton("BtnAttack").onClick.Invoke();
+                    FindButton("BtnGuard").onClick.Invoke();
+                    FindButton("BtnWait").onClick.Invoke();
+                    FindButton("BtnSwap").onClick.Invoke();
+                    FindButton("BtnSpell0").onClick.Invoke();
+                    FindButton("BtnSkill0").onClick.Invoke();
+                });
             }
             finally
             {
@@ -589,12 +621,14 @@ namespace TianZhang.Tests
             public int BasicAttackRequests { get; private set; }
             public int GuardRequests { get; private set; }
             public int WaitRequests { get; private set; }
+            public int SwapSpellRequests { get; private set; }
             public int LastSpellIndex { get; private set; } = -1;
             public int LastSkillIndex { get; private set; } = -1;
 
             public void RequestBasicAttack() => BasicAttackRequests++;
             public void RequestGuard() => GuardRequests++;
             public void RequestWait() => WaitRequests++;
+            public void RequestSwapSpell() => SwapSpellRequests++;
             public void RequestSpell(int index) => LastSpellIndex = index;
             public void RequestSkill(int index) => LastSkillIndex = index;
         }
