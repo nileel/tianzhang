@@ -1,6 +1,6 @@
 ﻿# CSV 高阶内容定位表
 
-状态：⚠️ 已修改/未审核（2026-06-30 DeepSeek V4 Pro：P2 contentScope列已新增至三个CSV，待Codex复审）；原审核状态：✅ 已审核（2026-06-25 Codex / gpt-5.5）
+状态：⚠️ 已修改/未审核（2026-07-04 DeepSeek V4 Pro：DS-NEW-03 补强 — 新增 asset路径/docs原文路径/CSV行号/待Codex判断列，运行 check-data-chain.ps1 通过）；原：⚠️ 已修改/未审核（2026-06-30 DeepSeek V4 Pro：P2 contentScope列已新增至三个CSV，待Codex复审）；原审核状态：✅ 已审核（2026-06-25 Codex / gpt-5.5）
 任务：TQ-013D · CSV 高阶内容定位表
 用途：逐条标注功法/术法/神通中 realmReq≥元婴（含 realm_lianshen）的内容定位，
       不直接改 CSV 或 asset；作为后续 Codex/ChatGPT5.5 复审与迁移输入。
@@ -206,3 +206,111 @@ powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
 
 **未验证项**：
 - Unity asset 中 realm_lianshen 对应的 `.asset` 文件残留（差异表提及但未确认路径）。
+
+## 十、DS-NEW-03 补强附录（2026-07-04 DeepSeek V4 Pro 新增）
+
+> 状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：新增本附录
+> 依据：EXPAND-20260625-01 DS-NEW-03，HANDOFF-20260630-04 下一步建议
+> 验证：`tools/check-data-chain.ps1` 运行结果 → OK（docs 29/75/34 + asset 29/75/34 + Language 389 keys）
+
+### 补强说明
+
+本附录为原定位表第三节（术法 24 条）、第四节（神通 5 条）、第五节（功法 28 条）逐条补全以下字段：
+
+- **Asset 路径**：`src/Assets/Data/Spells/Spell_{id}.asset` 等，逐一核实目录存在
+- **Docs 原文路径**：`docs/角色养成/{类型}/{宗门}/{中文名}.txt`
+- **CSV 行号**：在 `Spells.csv` / `Skills.csv` / `GongFa.csv` 中的实际行号
+- **待 Codex 判断**：该条目是否存在需要 Codex 确认的归属或边界问题
+
+### 术法高阶内容补强表（24 条）
+
+| ID | Asset 路径（存在均✅） | Docs 原文路径 | CSV行号 | 待 Codex 判断 |
+|----|----------------------|--------------|---------|---------------|
+| spell_wanjianchaozong | ✅ | `docs/角色养成/术法/玉清崖/万剑朝宗.txt` | Spells.csv:18 | — |
+| spell_tianjieyin | ✅ | ⚠️ 未找到专用文件；与 `天劫引.txt`（ID=tianleiyin）不同 | Spells.csv:19 | 是否需补文档？当前仅 CSV 有定义无 docs 原文 |
+| spell_renjianheyi | ✅ | `docs/角色养成/术法/玉清崖/人剑合一.txt` | Spells.csv:20 | — |
+| spell_jiuxiaoleifa | ✅ | `docs/角色养成/术法/玉清崖/九霄雷罚.txt` | Spells.csv:21 | — |
+| spell_leijiankaitian | ✅ | `docs/角色养成/术法/玉清崖/雷剑开天.txt` | Spells.csv:22 | — |
+| spell_toubianduanliu | ✅ | `docs/角色养成/术法/混元山/投鞭断流.txt` | Spells.csv:34 | — |
+| spell_hufubingce | ✅ | `docs/角色养成/术法/混元山/虎符兵策.txt` | Spells.csv:35 | — |
+| spell_wanchengtianwei | ✅ | `docs/角色养成/术法/混元山/万乘天威.txt` | Spells.csv:36 | — |
+| spell_jianbiqingye | ✅ | `docs/角色养成/术法/混元山/坚壁清野.txt` | Spells.csv:37 | — |
+| spell_hunyunguiyi | ✅ | `docs/角色养成/术法/混元山/混元归一.txt` | Spells.csv:38 | — |
+| spell_yongjiehuilang | ✅ | `docs/角色养成/术法/太虚观/永劫回廊.txt` | Spells.csv:51 | — |
+| spell_suhuijuexing | ✅ | `docs/角色养成/术法/太虚观/宿慧觉醒.txt` | Spells.csv:52 | — |
+| spell_sanqianmengjie | ✅ | `docs/角色养成/术法/太虚观/三千梦界.txt` | Spells.csv:53 | — |
+| spell_yinguodaoxuan | ✅ | `docs/角色养成/术法/太虚观/因果倒悬.txt` | Spells.csv:54 | — |
+| spell_lunhuibian | ✅ | `docs/角色养成/术法/太虚观/轮回彼岸.txt` | Spells.csv:55 | — |
+| spell_wanjunyinxian | ✅ | `docs/角色养成/术法/太一道庭/万军引弦.txt` | Spells.csv:56 | — |
+| spell_buhuaijinshen | ✅ | `docs/角色养成/术法/太一道庭/不坏金身.txt` | Spells.csv:58 | — |
+| spell_tiangangfuzhen | ✅ | `docs/角色养成/术法/太一道庭/天罡符阵.txt` | Spells.csv:65 | — |
+| spell_taiqingyuye | ✅ | `docs/角色养成/术法/太一道庭/太清玉液.txt` | Spells.csv:66 | — |
+| spell_jiangliutiandi | ✅ | `docs/角色养成/术法/太一道庭/江流天地.txt` | Spells.csv:68 | — |
+| spell_wuleifuchi | ✅ | `docs/角色养成/术法/太一道庭/五雷符敕.txt` | Spells.csv:61 | — |
+| spell_dadaoxuanyin | ✅ | `docs/角色养成/术法/太一道庭/大道玄音.txt` | Spells.csv:63 | — |
+| spell_wanliuguizong | ✅ | `docs/角色养成/术法/太一道庭/万流归宗.txt` | Spells.csv:57 | realm_lianshen 条目；定位需等 F1 决策 |
+| spell_tianshuyunzhuan | ✅ | `docs/角色养成/术法/太一道庭/天书云篆.txt` | Spells.csv:64 | realm_lianshen 条目；定位需等 F1 决策 |
+
+> ⚠️ `spell_tianjieyin`（Spells.csv:19，realm_yuanying，玉清崖）：CSV 中存在但 `docs/角色养成/术法/玉清崖/` 下无对应中文名文档。该条目与另一低阶 `tianleiyin`（Spells.csv:13）共享"天劫引"中文名——可能是重复定义或历史残留。请求 Codex 判断是否需补文档或标记为数据不一致。
+
+### 神通高阶内容补强表（5 条）
+
+| ID | Asset 路径（存在均✅） | Docs 原文路径 | CSV行号 | 待 Codex 判断 |
+|----|----------------------|--------------|---------|---------------|
+| skill_jianyu_wanguizong | ✅ | `docs/角色养成/神通/玉清崖/剑域·万剑归宗.txt` | Skills.csv:12 | — |
+| skill_zhanyu_tiexuezhengqi | ✅ | `docs/角色养成/神通/混元山/战域·铁血征旗.txt` | Skills.csv:20 | — |
+| skill_hunyu_huangquan | ✅ | `docs/角色养成/神通/太虚观/魂域·黄泉幻界.txt` | Skills.csv:29 | — |
+| skill_fayu_wanxiangxuanmen | ✅ | `docs/角色养成/神通/太一道庭/法域·万象玄门.txt` | Skills.csv:34 | realm_lianshen 条目；定位需等 F1 决策 |
+| skill_lingyu_wanxiangguiyuan | ✅ | `docs/角色养成/神通/散修/灵域 · 万象归元.txt` | Skills.csv:38 | realm_lianshen 条目；定位需等 F1 决策 |
+
+### 功法高阶内容补强表（28 条）
+
+| ID | Asset 路径（存在均✅） | Docs 原文路径 | CSV行号 | 待 Codex 判断 |
+|----|----------------------|--------------|---------|---------------|
+| gongfa_baoyuanshouyi | ✅ | `docs/角色养成/功法/太一道庭/抱元守一经.txt` | GongFa.csv:3 | — |
+| gongfa_qiushuiyouxin | ✅ | `docs/角色养成/功法/散修/秋水游心经.txt` | GongFa.csv:4 | — |
+| gongfa_leicnicuiti | ✅ | `docs/角色养成/功法/玉清崖/雷池淬体功.txt` | GongFa.csv:11 | — |
+| gongfa_baiwuqingyun | ✅ | `docs/角色养成/功法/混元山/白屋青云录.txt` | GongFa.csv:15 | — |
+| gongfa_shengmozhengfa | ✅ | `docs/角色养成/功法/混元山/绳墨正法录.txt` | GongFa.csv:17 | — |
+| gongfa_wanwubuqian | ✅ | `docs/角色养成/功法/太虚观/万物不迁法.txt` | GongFa.csv:20 | — |
+| gongfa_nanhuaxuangan | ✅ | `docs/角色养成/功法/太虚观/南华玄感录.txt` | GongFa.csv:22 | — |
+| gongfa_kongwuborejing | ✅ | `docs/角色养成/功法/太虚观/空无般若经.txt` | GongFa.csv:31 | — |
+| gongfa_kuxingjiandian | ✅ | `docs/角色养成/功法/玉清崖/苦行剑典.txt` | GongFa.csv:9 | — |
+| gongfa_hanhongguangda | ✅ | `docs/角色养成/功法/混元山/含弘光大典.txt` | GongFa.csv:14 | — |
+| gongfa_buzhenzixu | ✅ | `docs/角色养成/功法/太虚观/不真自虚法.txt` | GongFa.csv:21 | — |
+| gongfa_yunzhuandurenjing | ✅ | `docs/角色养成/功法/太一道庭/云篆度人经.txt` | GongFa.csv:24 | — |
+| gongfa_nanhuachanyandian | ✅ | `docs/角色养成/功法/古修/南华阐衍典.txt` | GongFa.csv:26 | — |
+| gongfa_dadonglianzhenjing | ✅ | `docs/角色养成/功法/太一道庭/大洞炼真经.txt` | GongFa.csv:27 | — |
+| gongfa_taiyixuanyijian | ✅ | `docs/角色养成/功法/兰台书院/太易玄义笺.txt` | GongFa.csv:29 | — |
+| gongfa_tongshensanxuanlilu | ✅ | `docs/角色养成/功法/太一道庭/通神三玄礼录.txt` | GongFa.csv:33 | — |
+| gongfa_sandongfajilu | ✅ | `docs/角色养成/功法/太一道庭/三洞法籍录.txt` | GongFa.csv:35 | — |
+| gongfa_taiyiyugedian | ✅ | `docs/角色养成/功法/太一道庭/太一玉格典.txt` | GongFa.csv:36 | — |
+| gongfa_jiuxiaoleijie | ✅ | `docs/角色养成/功法/玉清崖/九霄雷劫录.txt` | GongFa.csv:8 | — |
+| gongfa_jileiposhan | ✅ | `docs/角色养成/功法/玉清崖/疾雷破山经.txt` | GongFa.csv:10 | — |
+| gongfa_hunyuantongchen | ✅ | `docs/角色养成/功法/混元山/混元同尘典.txt` | GongFa.csv:16 | — |
+| gongfa_jiujiangshuifulu | ✅ | `docs/角色养成/功法/太一道庭/九江水府箓.txt` | GongFa.csv:34 | — |
+| gongfa_wanfadulujing | ✅ | `docs/角色养成/功法/太一道庭/万法都箓经.txt` | GongFa.csv:37 | — |
+| gongfa_zhengyimengweilu | ✅ | `docs/角色养成/功法/太一道庭/正一盟威箓.txt` | GongFa.csv:38 | — |
+| gongfa_nanhuadamengshu | ✅ | `docs/角色养成/功法/古修/南华大梦书.txt` | GongFa.csv:25 | realm_lianshen 条目；定位需等 F1 决策 |
+| gongfa_taiyishancangjing | ✅ | `docs/角色养成/功法/古修/太易山藏经.txt` | GongFa.csv:28 | realm_lianshen 条目；定位需等 F1 决策 |
+| gongfa_xuanpindaocang | ✅ | `docs/角色养成/功法/古修/玄牝道藏.txt` | GongFa.csv:30 | realm_lianshen 条目；定位需等 F1 决策 |
+| gongfa_jiansubaopujing | ✅ | `docs/角色养成/功法/古修/见素抱朴经.txt` | GongFa.csv:32 | realm_lianshen 条目；定位需等 F1 决策 |
+
+### 补强汇总
+
+| 类型 | 条目 | Asset 存在 | Docs 原文存在 | Docs 缺失 | CSV 行号可追溯 |
+|------|------|------------|--------------|-----------|---------------|
+| 术法 | 24 | 24/24 ✅ | 23/24 ⚠️ | 1（spell_tianjieyin） | 24/24 ✅ |
+| 神通 | 5 | 5/5 ✅ | 5/5 ✅ | 0 | 5/5 ✅ |
+| 功法 | 28 | 28/28 ✅ | 28/28 ✅ | 0 | 28/28 ✅ |
+| 合计 | 57 | 57/57 ✅ | 56/57 ⚠️ | 1 | 57/57 ✅ |
+
+### 验证记录
+
+```
+2026-07-04 DS-NEW-03：
+  - tools/check-data-chain.ps1 → OK（docs 29/75/34 + asset 29/75/34 + Language 389 keys）
+  - Asset 目录逐一核实：Spells 75/75、Skills 34/34、GongFa 29/29 全部存在
+  - Docs 原文 GLob 匹配：56/57 存在；spell_tianjieyin 无专用文档
+  - CSV 行号：逐条通过 rg -n 确认
+```
