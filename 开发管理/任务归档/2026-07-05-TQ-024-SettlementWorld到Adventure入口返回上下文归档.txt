@@ -1,0 +1,44 @@
+# TQ-024 Settlement/World → Adventure 入口与返回上下文归档
+
+日期：2026-07-05
+执行：Codex / gpt-5.5
+状态：✅ 已完成
+
+## 本轮范围
+
+- `SceneFlowManager` 拆出不触发场景加载的上下文准备方法：
+  - `PrepareWorldEntry`
+  - `PrepareSettlementEntry`
+  - `PrepareAdventureEntry`
+  - `PrepareReturnToPreviousScene`
+- WorldScene 进入 Adventure 时继续写入 `GameSession.CurrentAdventureId`，并通过 `BuildAdventureReturnTarget` 返回到当前主世界节点。
+- SettlementScene 的 `adventureEntrances` 从禁用占位按钮改为可点击入口；进入 Adventure 时返回目标为当前据点。
+- AdventureScene 启动时生成 `UICanvas/AdventurePanel`，展示当前副本 ID、来源说明和返回来源按钮。
+- 返回来源时恢复 World 或 Settlement 上下文，并清理 `CurrentAdventureId` 与 `LastReturnTarget`。
+- `GameSession.BeginNewGame` 既有清理逻辑被新增测试覆盖，确认重新开局不残留旧 Adventure/ReturnTarget。
+
+## 修改文件
+
+- `src/Assets/Scripts/Game/SceneFlowManager.cs`
+- `src/Assets/Scripts/World/WorldSceneController.cs`
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs`
+- `src/Assets/Scripts/Adventure/AdventureSceneController.cs`
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+- `开发管理/当前任务队列.txt`
+- `开发管理/任务列表/场景与Unity任务.txt`
+- `开发管理/设计-当前状态.txt`
+
+## 验证
+
+- TDD RED：新增测试先要求 `PrepareAdventureEntry`、`PrepareReturnToPreviousScene`、`BuildAdventureReturnTarget`、`CurrentAdventureId` 与 `BuildSourceDescription`；修复前 `dotnet build src\TianZhang.EditModeTests.csproj` 失败，错误为缺少上述 API。
+- `dotnet build src\TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- `dotnet build src\Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- Unity 6000.3.18f1 batchmode `-runTests`：未执行，原因是当前已有 Unity Editor 进程运行（PID 33596），本机同项目第二个 batchmode 实例不可用。
+- `powershell -ExecutionPolicy Bypass -File tools\check-review-text.ps1 -Paths 开发管理,src\Assets\Scripts,src\Assets\Tests`：通过。
+- `git diff --check`：通过，仅 Git 提示 LF/CRLF 规范化，无 whitespace error。
+
+## 边界
+
+- 不改探索地图生成、敌人生成、移动、触发遭遇、战斗协程、掉落或战斗 UI 命令语义。
+- 不改 CTB、伤害、冷却、槽位、寻路、技能范围、AI、BattleSim 或任何数值参数。
+- 不新增 CSV 字段、Unity asset 数据、门派内容或剧情结论。

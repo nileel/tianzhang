@@ -75,6 +75,20 @@ namespace TianZhang.Settlement
                 SceneFlowManager.Instance.EnterWorld(nodeId);
         }
 
+        public bool EnterAdventure(string adventureId)
+        {
+            if (string.IsNullOrEmpty(adventureId) || SceneFlowManager.Instance == null)
+                return false;
+
+            SceneFlowManager.Instance.EnterAdventure(adventureId, BuildAdventureReturnTarget());
+            return true;
+        }
+
+        public SceneReturnTarget BuildAdventureReturnTarget()
+        {
+            return SceneReturnTarget.Settlement(CurrentSettlementId);
+        }
+
         public string ResolveReturnWorldNodeId()
         {
             return GameSession.Instance != null ? GameSession.Instance.CurrentWorldNodeId : "jiangzuo_hub";
@@ -183,8 +197,9 @@ namespace TianZhang.Settlement
 
             foreach (var adventureId in entrances)
             {
-                var button = CreateButton("SettlementAdventure_" + adventureId, adventureListParent, "副本入口: " + adventureId + " (占位)", new Color(0.18f, 0.18f, 0.24f, 1f)).GetComponent<Button>();
-                button.interactable = false;
+                var button = CreateButton("SettlementAdventure_" + adventureId, adventureListParent, "进入副本: " + adventureId, new Color(0.18f, 0.18f, 0.24f, 1f)).GetComponent<Button>();
+                var capturedAdventureId = adventureId;
+                button.onClick.AddListener(() => EnterAdventure(capturedAdventureId));
             }
         }
 

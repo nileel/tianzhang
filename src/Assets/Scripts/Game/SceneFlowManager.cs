@@ -45,8 +45,7 @@ namespace TianZhang.Game
 
         public void EnterWorld(string nodeId)
         {
-            EnsureSession().SetWorldNode(nodeId);
-            SceneManager.LoadScene("WorldScene");
+            SceneManager.LoadScene(PrepareWorldEntry(nodeId));
         }
 
         /// <summary>
@@ -55,10 +54,7 @@ namespace TianZhang.Game
         /// </summary>
         public void EnterSettlement(string settlementId)
         {
-            var session = EnsureSession();
-            session.SetSettlementId(settlementId);
-            session.SetReturnTarget(SceneReturnTarget.World(session.CurrentWorldNodeId));
-            SceneManager.LoadScene("SettlementScene");
+            SceneManager.LoadScene(PrepareSettlementEntry(settlementId));
         }
 
         /// <summary>
@@ -67,19 +63,53 @@ namespace TianZhang.Game
         /// </summary>
         public void EnterAdventure(string adventureId, SceneReturnTarget returnTarget)
         {
-            var session = EnsureSession();
-            session.SetAdventureId(adventureId);
-            session.SetReturnTarget(returnTarget);
-            SceneManager.LoadScene("AdventureScene");
+            SceneManager.LoadScene(PrepareAdventureEntry(adventureId, returnTarget));
         }
 
         public void ReturnToPreviousScene()
         {
+            SceneManager.LoadScene(PrepareReturnToPreviousScene());
+        }
+
+        public string PrepareWorldEntry(string nodeId)
+        {
+            EnsureSession().SetWorldNode(nodeId);
+            return "WorldScene";
+        }
+
+        public string PrepareSettlementEntry(string settlementId)
+        {
+            var session = EnsureSession();
+            session.SetSettlementId(settlementId);
+            session.SetReturnTarget(SceneReturnTarget.World(session.CurrentWorldNodeId));
+            return "SettlementScene";
+        }
+
+        public string PrepareAdventureEntry(string adventureId, SceneReturnTarget returnTarget)
+        {
+            var session = EnsureSession();
+            session.SetAdventureId(adventureId);
+            session.SetReturnTarget(returnTarget);
+            return "AdventureScene";
+        }
+
+        public string PrepareReturnToPreviousScene()
+        {
             var target = EnsureSession().LastReturnTarget;
             if (target.SceneName == "SettlementScene")
-                SceneManager.LoadScene("SettlementScene");
-            else
-                SceneManager.LoadScene("WorldScene");
+            {
+                var session = EnsureSession();
+                session.SetSettlementId(target.SettlementId);
+                session.SetAdventureId(null);
+                session.SetReturnTarget(default);
+                return "SettlementScene";
+            }
+
+            var returnSession = EnsureSession();
+            returnSession.SetWorldNode(target.WorldNodeId);
+            returnSession.SetAdventureId(null);
+            returnSession.SetReturnTarget(default);
+            return "WorldScene";
         }
 
         public void ReturnToMainMenu()

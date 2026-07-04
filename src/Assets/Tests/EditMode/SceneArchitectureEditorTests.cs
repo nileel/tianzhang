@@ -71,7 +71,7 @@ namespace TianZhang.Tests
 
                 Assert.AreEqual(4, controller.Nodes.Count);
                 Assert.IsTrue(controller.TryGetNode("jiangzuo_hub", out var jiangzuo));
-                Assert.AreEqual("太一道庭", jiangzuo.settlementId);
+                Assert.AreEqual("taiyi_sect", jiangzuo.settlementId);
                 CollectionAssert.Contains(jiangzuo.connectedNodeIds, "guanzhong_hub");
                 Assert.IsTrue(controller.TryGetNode("longxi_hub", out var longxi));
                 CollectionAssert.AreEqual(new[] { "longxi_trial" }, longxi.adventureIds);
@@ -147,7 +147,7 @@ namespace TianZhang.Tests
                 StringAssert.Contains("城池", GameObject.Find("SettlementTypeText")?.GetComponent<Text>()?.text);
                 StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementReturnContextText")?.GetComponent<Text>()?.text);
                 Assert.AreEqual(4, CountButtonsWithPrefix("SettlementService_"));
-                Assert.IsFalse(GameObject.Find("SettlementAdventure_guanzhong_wild").GetComponent<Button>().interactable);
+                Assert.IsTrue(GameObject.Find("SettlementAdventure_guanzhong_wild").GetComponent<Button>().interactable);
                 Assert.IsNotNull(GameObject.Find("ReturnToWorldButton"));
             }
             finally
@@ -181,6 +181,117 @@ namespace TianZhang.Tests
             finally
             {
                 DestroySettlementUi();
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void SceneFlowManagerPreparesAdventureAndReturnContextsWithoutSceneLoad()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var flowGo = new GameObject("SceneFlowManagerTest");
+            try
+            {
+                var flow = flowGo.AddComponent<SceneFlowManager>();
+                var session = GameSession.Instance;
+                session.SetWorldNode("longxi_hub");
+
+                Assert.AreEqual(
+                    "AdventureScene",
+                    flow.PrepareAdventureEntry("longxi_trial", SceneReturnTarget.World("longxi_hub")));
+                Assert.AreEqual("longxi_trial", session.CurrentAdventureId);
+                Assert.AreEqual("WorldScene", session.LastReturnTarget.SceneName);
+                Assert.AreEqual("longxi_hub", session.LastReturnTarget.WorldNodeId);
+
+                Assert.AreEqual("WorldScene", flow.PrepareReturnToPreviousScene());
+                Assert.AreEqual("longxi_hub", session.CurrentWorldNodeId);
+                Assert.IsNull(session.CurrentAdventureId);
+                Assert.IsNull(session.LastReturnTarget.SceneName);
+
+                session.SetSettlementId("taiyi_sect");
+                Assert.AreEqual(
+                    "AdventureScene",
+                    flow.PrepareAdventureEntry("taiyi_trial", SceneReturnTarget.Settlement("taiyi_sect")));
+                Assert.AreEqual("taiyi_trial", session.CurrentAdventureId);
+                Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
+                Assert.AreEqual("taiyi_sect", session.LastReturnTarget.SettlementId);
+
+                Assert.AreEqual("SettlementScene", flow.PrepareReturnToPreviousScene());
+                Assert.AreEqual("taiyi_sect", session.CurrentSettlementId);
+                Assert.IsNull(session.CurrentAdventureId);
+                Assert.IsNull(session.LastReturnTarget.SceneName);
+
+                session.SetAdventureId("old_trial");
+                session.SetReturnTarget(SceneReturnTarget.Settlement("taiyi_sect"));
+                session.BeginNewGame(null, "jiangzuo_hub");
+                Assert.IsNull(session.CurrentAdventureId);
+                Assert.IsNull(session.LastReturnTarget.SceneName);
+            }
+            finally
+            {
+                Object.DestroyImmediate(flowGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void SettlementSceneControllerBuildsClickableAdventureEntrances()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var controllerGo = new GameObject("SettlementSceneControllerTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetSettlementId("taiyi_sect");
+                var controller = controllerGo.AddComponent<SettlementSceneController>();
+
+                InvokeStart(controller);
+
+                var target = controller.BuildAdventureReturnTarget();
+                Assert.AreEqual("SettlementScene", target.SceneName);
+                Assert.AreEqual("taiyi_sect", target.SettlementId);
+
+                var entranceButton = GameObject.Find("SettlementAdventure_taiyi_trial")?.GetComponent<Button>();
+                Assert.IsNotNull(entranceButton);
+                Assert.IsTrue(entranceButton.interactable);
+                StringAssert.Contains("taiyi_trial", entranceButton.GetComponentInChildren<Text>().text);
+            }
+            finally
+            {
+                DestroySettlementUi();
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void AdventureSceneControllerDisplaysCurrentAdventureAndSource()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var controllerGo = new GameObject("AdventureSceneControllerTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId("taiyi_trial");
+                session.SetReturnTarget(SceneReturnTarget.Settlement("taiyi_sect"));
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+
+                InvokeStart(controller);
+
+                Assert.AreEqual("taiyi_trial", controller.CurrentAdventureId);
+                StringAssert.Contains("taiyi_sect", controller.BuildSourceDescription());
+                StringAssert.Contains("taiyi_trial", GameObject.Find("AdventureIdText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("taiyi_sect", GameObject.Find("AdventureSourceText")?.GetComponent<Text>()?.text);
+                Assert.IsNotNull(GameObject.Find("ReturnToSourceButton"));
+            }
+            finally
+            {
+                DestroyAdventureUi();
                 Object.DestroyImmediate(controllerGo);
                 Object.DestroyImmediate(sessionGo);
                 DestroyExistingSceneFlowAndSession();
@@ -234,6 +345,13 @@ namespace TianZhang.Tests
         }
 
         private static void DestroySettlementUi()
+        {
+            var canvas = GameObject.Find("UICanvas");
+            if (canvas != null)
+                Object.DestroyImmediate(canvas);
+        }
+
+        private static void DestroyAdventureUi()
         {
             var canvas = GameObject.Find("UICanvas");
             if (canvas != null)

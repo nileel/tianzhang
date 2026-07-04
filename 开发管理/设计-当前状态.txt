@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-05 Codex / gpt-5.5：TQ-024 Settlement/World → Adventure 入口与返回上下文完成。`SceneFlowManager` 已拆出不触发场景加载的上下文准备方法用于测试；World/Settlement 进入 Adventure 会写入 `GameSession.CurrentAdventureId` 与来源返回目标；AdventureScene 生成 `UICanvas/AdventurePanel` 展示当前副本 ID/来源并提供返回来源按钮；返回来源时清理当前 Adventure/ReturnTarget 并恢复 World 或 Settlement 上下文。验证：TDD RED、`Assembly-CSharp` 与 `TianZhang.EditModeTests` build 通过；Unity Test Runner 因已有 Unity 实例运行未执行。本轮不改探索地图、战斗循环、掉落、寻路、技能范围或数值语义。
 > 2026-07-04 Codex / gpt-5.5：TQ-023 SettlementScene 通用据点/宗门原型完成。`SettlementSceneController` 读取 `GameSession.CurrentSettlementId`，公开据点查询/选择 API；未知据点回退到 `taiyi_sect`；SettlementScene 启动时生成 `UICanvas/SettlementPanel`，展示据点名称、类型、区域、所属势力、服务列表、副本入口占位和返回主世界按钮。验证：`Assembly-CSharp`、`TianZhang.EditModeTests` build，文本检查与 `git diff --check` 通过；Unity Test Runner 因已有 Unity 实例打开同项目而未执行。本轮不接入 Adventure 跳转，不改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。
 > 2026-07-04 Codex / gpt-5.5：TQ-022 WorldScene 节点式主世界原型完成。`WorldSceneController` 公开四个原型节点、节点查询与选择 API；节点选择会写入 `GameSession.CurrentWorldNodeId`；WorldScene 启动时生成 `UICanvas/WorldNodePanel`、四个节点按钮与进入地点按钮，主入口可按节点进入据点或副本。验证：`Assembly-CSharp`、`TianZhang.EditModeTests` Release/Debug build，文本检查与目标 `git diff --check` 通过；Unity Test Runner CLI 本机仍未产出 XML，最终复跑因已有 Unity 实例打开同项目而未执行。本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。
 > 2026-07-04 Codex / gpt-5.5：TQ-017 StartMenuScene 与门派选择迁移完成。StartMenuScene 生成器已内置 UICanvas 与 SectSelectionManager，门派选择经 SceneFlowManager 写入 GameSession.PlayerProfile；重新开局清理旧据点/副本/返回上下文；Adventure/Exploration 玩家创建优先读取会话档案。验证：Assembly-CSharp、TianZhang.EditModeTests Release build，Unity EditMode 目标测试 1/1 与 3/3，文本检查与 git diff --check 通过。本轮不改 CTB、伤害、冷却、槽位或门派内容。
@@ -157,6 +158,7 @@
 | v0.13 | StartMenu 门派选择迁移 | ✅ TQ-017：StartMenuScene 生成 UICanvas 与 SectSelectionManager；选择结果写入 GameSession.PlayerProfile；重新开局清理旧场景上下文；Adventure/Exploration 创建玩家优先读取会话档案 |
 | v0.14 | WorldScene 节点式主世界原型 | ✅ TQ-022：WorldSceneController 提供四个原型节点、节点查询/选择 API、`CurrentWorldNodeId` 会话写入，以及节点按钮/进入地点按钮；主入口可进入据点或副本 |
 | v0.15 | SettlementScene 通用据点/宗门原型 | ✅ TQ-023：SettlementSceneController 读取 `CurrentSettlementId`，展示据点名称/类型/服务/副本入口占位，未知据点回退默认宗门，并通过返回按钮保留主世界节点 |
+| v0.16 | Settlement/World → Adventure 返回上下文 | ✅ TQ-024：World/Settlement 进入 Adventure 写入 `CurrentAdventureId` 与来源返回目标；AdventureScene 展示当前副本 ID/来源并提供返回来源按钮；返回后清理当前副本上下文 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 

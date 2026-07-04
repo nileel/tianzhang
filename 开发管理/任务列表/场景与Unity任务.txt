@@ -11,6 +11,7 @@
 - ✅ TQ-020：符胆神魂行动语义已回归。
 - ✅ TQ-022：WorldScene 节点式主世界原型已完成。
 - ✅ TQ-023：SettlementScene 通用据点/宗门原型已完成。
+- ✅ TQ-024：Settlement/World → Adventure 入口与返回上下文已完成。
 
 ## 近期任务
 
@@ -18,8 +19,8 @@
 |----|--------|----------|------|------|
 | U-S5-01 / TQ-023 | P1 | Codex | ✅ 已完成 | SettlementScene 通用据点/宗门原型 |
 | U-S5-02 | P1 | Codex | 待处理 | 据点服务入口占位：修炼、功法、任务、坊市只做按钮与日志 |
-| U-S5-03 / TQ-024 | P1 | Codex | 待处理 | 据点进入 Adventure 与返回上下文 |
-| U-S6-01 / TQ-024 | P1 | Codex | 待处理 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
+| U-S5-03 / TQ-024 | P1 | Codex | ✅ 已完成 | 据点进入 Adventure 与返回上下文 |
+| U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
 | U-S6-02 / TQ-025 | P1 | Codex | 待处理 | `ExplorationController` 战斗协程壳继续拆分 |
 | U-MECH-01 / TQ-028 | P2 | Codex | 待处理 | 雷劫印记 Unity 回归 |
 | U-MECH-02 / TQ-028 | P2 | Codex | 待处理 | 玄感清除链 Unity 回归 |

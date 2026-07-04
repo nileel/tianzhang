@@ -98,7 +98,12 @@ namespace TianZhang.World
             if (SceneFlowManager.Instance != null)
                 SceneFlowManager.Instance.EnterAdventure(
                     adventureId,
-                    SceneReturnTarget.World(GameSession.Instance?.CurrentWorldNodeId ?? SelectedNodeId));
+                    BuildAdventureReturnTarget());
+        }
+
+        public SceneReturnTarget BuildAdventureReturnTarget()
+        {
+            return SceneReturnTarget.World(GameSession.Instance?.CurrentWorldNodeId ?? SelectedNodeId);
         }
 
         private void BuildWorldNodeUi()
