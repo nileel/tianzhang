@@ -5,20 +5,21 @@
 ## 当前状态
 
 - `开发管理/未通过审核清单.txt` 当前为空。
-- `开发管理/AI合作沟通.txt` 当前只保留两个有效交接：f6546d8 高阶旧口径标注、643efda CSV `contentScope` 列。
+- 643efda 三类 CSV `contentScope` 标注已于 2026-07-04 复审通过；归档见 `开发管理/任务归档/2026-07-04-R-20260630-04-contentScope列复审归档.txt`。
+- `开发管理/AI合作沟通.txt` 当前保留 f6546d8、f1adc3b、cbefff8、6f63f6b 等有效交接。
 
 ## 复审任务
 
 | ID | 优先级 | 主责 | 状态 | 摘要 |
 |----|--------|------|------|------|
-| R-20260630-04 | P1 | Codex / ChatGPT5.5 | 待复审 | 复审 643efda：三类 CSV 新增 `contentScope` 列 |
+| R-20260704-01 | P1 | Codex / ChatGPT5.5 | 待复审 | 复审 f1adc3b：高阶/realm_lianshen 数据链路告警补强 |
+| R-20260704-02 | P1 | Codex / ChatGPT5.5 | 待复审 | 复审 cbefff8：重要 NPC 叙事字段与旧口径污染清单 |
 | R-20260630-02 | P2 | Codex / ChatGPT5.5 | 待复审 | 复审 f6546d8：E1-E4 高阶/炼虚旧口径标注 |
+| R-20260704-03 | P2 | Codex / ChatGPT5.5 | 待复审 | 复审 6f63f6b：第一章主线剧情骨架 |
 
-## R-20260630-04 · contentScope CSV 列复审
+## 新近交接任务
 
-- 必读：`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` HANDOFF-20260630-04、目标提交 `643efda`、`开发管理/CSV高阶内容定位表.txt`、三类 CSV、`src/Assets/Scripts/Editor/DataConfigImporter.cs`。
-- 最小验证：`git show --stat --name-only 643efda`；目标文件 patch；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`git diff --check` 或 `git show --check 643efda`。
-- 结论要求：判断 CSV 标注是否合理；判断导入器是否必须适配；若通过，再推进或保留 TQ-026。
+- R-20260704-01 / R-20260704-02 / R-20260704-03 的任务详情以 `开发管理/AI合作沟通.txt` 对应 HANDOFF 为准；复审时按 `开发管理/审核入口.txt` 读取目标 diff、必要事实源和最小验证命令。
 
 ## R-20260630-02 · 高阶旧口径标注复审
 

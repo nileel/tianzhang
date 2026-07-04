@@ -1,6 +1,6 @@
 ﻿# CSV 高阶内容定位表
 
-状态：⚠️ 已修改/未审核（2026-06-30 DeepSeek V4 Pro：P2 contentScope列已新增至三个CSV，待Codex复审）；DS-NEW-03 补强附录：✅ 已复审（2026-07-04 Codex / gpt-5.5：补齐 asset 实际路径，修正 spell_tianjieyin docs 误判，check-data-chain/check-review-text/git show --check 通过）；原审核状态：✅ 已审核（2026-06-25 Codex / gpt-5.5）
+状态：✅ 已复审（2026-07-04 Codex / gpt-5.5：643efda 三类 CSV `contentScope` 标注通过；运行时字段保存仍归 TQ-026）；DS-NEW-03 补强附录：✅ 已复审（2026-07-04 Codex / gpt-5.5：补齐 asset 实际路径，修正 spell_tianjieyin docs 误判，check-data-chain/check-review-text/git show --check 通过）；原审核状态：✅ 已审核（2026-06-25 Codex / gpt-5.5）
 任务：TQ-013D · CSV 高阶内容定位表
 用途：逐条标注功法/术法/神通中 realmReq≥元婴（含 realm_lianshen）的内容定位，
       不直接改 CSV 或 asset；作为后续 Codex/ChatGPT5.5 复审与迁移输入。
@@ -170,8 +170,8 @@
 
 | 优先级 | 动作 | 主责 | 依赖 |
 |--------|------|------|------|
-| P2 | 功法 CSV 新增 `contentScope` 列 | DeepSeek + Codex复审 | ⚠️ 已执行提交 643efda；待Codex复审 |
-| P2 | 术法/神通 CSV 新增 `contentScope` 列 | DeepSeek + Codex复审 | ⚠️ 已执行提交 643efda；待Codex复审 |
+| P2 | 功法 CSV 新增 `contentScope` 列 | DeepSeek + Codex复审 | ✅ 643efda 已复审通过；运行时字段保存另见 TQ-026 |
+| P2 | 术法/神通 CSV 新增 `contentScope` 列 | DeepSeek + Codex复审 | ✅ 643efda 已复审通过；运行时字段保存另见 TQ-026 |
 | P0 | Codex 复审本定位表结论 | Codex/ChatGPT5.5 | 本文件 |
 | P1 | 决定 realm_lianshen 最终处理方案（保留/合并/删除） | Codex/ChatGPT5.5 | 复审结论 |
 

@@ -1,0 +1,41 @@
+# R-20260630-04 · contentScope CSV 列复审归档
+
+时间：2026-07-04
+复审方：Codex / gpt-5.5
+目标提交：643efdaab3c32892844ef17af812c8f4e3000cc7
+结论：通过
+
+## 复审范围
+
+- `src/Assets/DataConfig/GongFa.csv`
+- `src/Assets/DataConfig/Spells.csv`
+- `src/Assets/DataConfig/Skills.csv`
+- `开发管理/CSV高阶内容定位表.txt`
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs`
+- 三类数据对象：`GongFaGrowthData`、`SpellData`、`DivineSkillData`
+
+## 结论依据
+
+- CSV 标注与提交说明一致：GongFa 为 `player=1, reserved=28`；Spells 为 `player=51, reserved=24`；Skills 为 `player=29, reserved=5`。
+- 结构化复核未发现误标：术法/神通按 `realm_yuanying`、`realm_huashen`、`realm_lianxu`、`realm_lianshen` 标为 `reserved`；其余标为 `player`。功法按 `growth` 中是否含高阶境界判定，唯一 `player` 为 `gongfa_xinwuxingyou`。
+- `contentScope` 位于三类 CSV 末尾；现有 `DataConfigImporter` 固定读取既有列索引，末尾追加列不会破坏当前导入。
+- 当前 C# 数据对象尚无 `contentScope` 字段，因此本次通过不代表运行时可读取该字段；后续继续由 TQ-026 处理。
+
+## 已运行验证
+
+- `git show --stat --name-only --format=fuller 643efda`
+- `git show --patch --no-ext-diff --find-renames 643efda -- src/Assets/DataConfig/GongFa.csv src/Assets/DataConfig/Spells.csv src/Assets/DataConfig/Skills.csv`
+- 结构化 CSV 统计：三类 CSV 的 `player/reserved` 计数与高阶规则全部匹配，误标数为 0。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK。
+- `git show --check 643efda`：无空白错误。
+
+## 未运行项
+
+- 未运行 Unity Editor 重新导入：本次复审只确认 CSV 末尾增列和现有导入器兼容性；asset 字段保存属于 TQ-026。
+- 未运行 BattleSim：本次不修改数值参数、战斗代码或新平衡结论。
+
+## 后续
+
+- 从 `开发管理/AI合作沟通.txt` 移除 HANDOFF-20260630-04。
+- `开发管理/任务列表/数据链路任务.txt` 中 D-CONTENT-01 标为已复审。
+- TQ-026 继续保留：为三类数据对象与导入器保存 `contentScope` 字段，并提供缺列/空值默认值。

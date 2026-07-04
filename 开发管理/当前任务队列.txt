@@ -52,8 +52,8 @@
 
 ### TQ-026 · contentScope 运行时字段与导入器适配
 
-- 来源：`开发管理/任务列表/数据链路任务.txt` D-CONTENT-02；DeepSeek 提交 643efda 已新增 CSV 列，复审另见审核任务列表。
-- 当前状态：待处理。`GongFa.csv`、`Spells.csv`、`Skills.csv` 已有 `contentScope` 列；当前 C# 数据对象和导入器尚未保存该字段。
+- 来源：`开发管理/任务列表/数据链路任务.txt` D-CONTENT-02；DeepSeek 提交 643efda 已新增 CSV 列，并已于 2026-07-04 通过 Codex / gpt-5.5 复审。
+- 当前状态：待处理。`GongFa.csv`、`Spells.csv`、`Skills.csv` 已有已复审的 `contentScope` 列；当前 C# 数据对象和导入器尚未保存该字段。
 - 必读：`开发管理/CSV高阶内容定位表.txt`、`src/Assets/DataConfig/GongFa.csv`、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Scripts/Cultivation/GongFaGrowthData.cs`、`src/Assets/Scripts/Combat/SpellData.cs`、`src/Assets/Scripts/Combat/DivineSkillData.cs`、`tools/check-data-chain.ps1`。
 - 范围：新增只读/序列化字段以保留 `player/reserved` 标记；导入器按列名或末尾列安全解析；不改变当前玩家可学内容、不自动删除高阶内容、不扩展运行时境界链。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/DataConfig`；`git diff --check`。
