@@ -24,7 +24,7 @@
 | TQ-025 | P1 | Codex / ChatGPT5.5 | 战斗架构 | 待处理 | Adventure/Combat 协程壳与 UI 绑定继续拆分 |
 | TQ-026 | P1 | Codex / ChatGPT5.5 | 数据链路 | 待处理 | contentScope 运行时字段与导入器适配 |
 | TQ-027 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 数据检查 | 待处理 | 高阶/realm_lianshen 数据链路告警补强 |
-| TQ-030 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 内容检查 | 待处理 | 重要 NPC 叙事字段与旧口径污染清单 |
+| TQ-030 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 内容检查 | 部分通过/待返工 | 重要 NPC 叙事字段与旧口径污染清单 |
 | TQ-028 | P2 | Codex / ChatGPT5.5 | Unity 机制 | 待处理 | Unity 已接入机制第二轮回归：雷劫/玄感/含弘载物 |
 | TQ-029 | P2 | Codex / ChatGPT5.5 | 数值验证 | 待处理 | 筑基/紫府 Build 极化诊断，不直接调参 |
 | TQ-031 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 剧情设计 | ⚠️ 已修改/未审核 | 第一章主线剧情骨架：龙脊余震 |
