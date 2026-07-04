@@ -5,8 +5,8 @@
 
 ## 当前开发判断
 
-- 场景架构线已完成 TQ-016、TQ-017、TQ-022：四场景可生成/注册，StartMenu 门派选择已迁入会话流，WorldScene 已有节点式主世界原型。
-- 下一条开发主线是 SettlementScene 与 AdventureScene 的可玩入口闭环，然后继续拆 `ExplorationController` 中的战斗调度壳。
+- 场景架构线已完成 TQ-016、TQ-017、TQ-022、TQ-023：四场景可生成/注册，StartMenu 门派选择已迁入会话流，WorldScene 已有节点式主世界原型，SettlementScene 已有通用据点/宗门信息面板。
+- 下一条开发主线是 Settlement/World → Adventure 入口与返回上下文闭环，然后继续拆 `ExplorationController` 中的战斗调度壳。
 - 数据链路线已具备独立 `element` 列与 `contentScope` 列；后续重点是导入器/运行时字段保存、检查脚本告警与高阶内容保留边界。
 - Unity 机制线已完成符胆首轮回归；雷劫、玄感、含弘/载物仍按独立切片处理。
 - 数值线不再把紫府正面对抗金丹 0.0% 当缺口；当前可做的是筑基/紫府 Build 极化诊断，再决定是否调功法成长或 AI 行为。

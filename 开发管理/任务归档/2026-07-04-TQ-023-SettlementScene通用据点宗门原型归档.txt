@@ -1,0 +1,42 @@
+# TQ-023 SettlementScene 通用据点/宗门原型归档
+
+日期：2026-07-04
+执行：Codex / gpt-5.5
+状态：✅ 已完成
+
+## 本轮范围
+
+- `SettlementSceneController` 从 `GameSession.CurrentSettlementId` 读取当前据点；未知或空据点 ID 安全回退到默认 `taiyi_sect`。
+- 新增据点查询与当前据点状态 API：
+  - `Settlements`
+  - `CurrentSettlement`
+  - `CurrentSettlementId`
+  - `TryGetSettlement`
+  - `SelectSettlement`
+  - `ResolveReturnWorldNodeId`
+- SettlementScene 启动时生成 `UICanvas/SettlementPanel`，展示据点名称、类型、区域、所属势力、可用服务、副本入口占位和返回主世界按钮。
+- 宗门与城市复用同一场景和同一 UI 生成流程；据点服务与副本入口仍为占位，不接入商店、背包、NPC 对话、经济数值、室内地图或 Adventure 跳转。
+- `ReturnToWorld` 继续通过 `GameSession.CurrentWorldNodeId` 返回主世界节点，保留 WorldScene 当前位置上下文。
+
+## 修改文件
+
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs`
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+- `开发管理/当前任务队列.txt`
+- `开发管理/任务列表/场景与Unity任务.txt`
+- `开发管理/设计-当前状态.txt`
+
+## 验证
+
+- TDD RED：新增测试先要求 `CurrentSettlement` 与 `TryGetSettlement`；修复前 `dotnet build src\TianZhang.EditModeTests.csproj` 失败，错误为 `SettlementSceneController` 缺少 `CurrentSettlement` / `TryGetSettlement`。
+- `dotnet build src\TianZhang.EditModeTests.csproj`：通过，0 警告，0 错误。
+- `dotnet build src\Assembly-CSharp.csproj`：通过，0 警告，0 错误。
+- Unity 6000.3.18f1 batchmode `-runTests`：未执行成功，原因是同项目已有 Unity 实例打开，Unity 拒绝第二个 batchmode 实例。
+- `powershell -ExecutionPolicy Bypass -File tools\check-review-text.ps1 -Paths 开发管理,src\Assets\Scripts,src\Assets\Tests`：通过，66 files checked。
+- `git diff --check`：通过，仅 Git 提示 LF/CRLF 规范化，无 whitespace error。
+
+## 边界
+
+- 不改 CTB、伤害、冷却、槽位、寻路、技能范围、掉落或 BattleSim 数值语义。
+- 不新增 CSV 字段、Unity asset 数据、门派内容或剧情结论。
+- 据点进入 Adventure 与 Adventure 来源/返回上下文仍留 TQ-024。

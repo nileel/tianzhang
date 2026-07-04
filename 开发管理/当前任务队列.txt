@@ -1,6 +1,7 @@
 # 当前任务队列（✅ 已审核）
 
 > 2026-07-04 Codex / gpt-5.5：按“短入口 + 分线任务列表”重建本文件。瘦身前全文已归档至 `开发管理/任务归档/2026-07-04-当前任务队列瘦身前归档.txt`。验证：`check-review-text.ps1 -Paths AGENTS.md,开发管理` 通过；`git diff --check` 无尾随空白错误。
+> 2026-07-04 Codex / gpt-5.5：TQ-023 SettlementScene 通用据点/宗门原型完成并归档至 `开发管理/任务归档/2026-07-04-TQ-023-SettlementScene通用据点宗门原型归档.txt`。`SettlementSceneController` 已读取 `GameSession.CurrentSettlementId`，展示据点信息/服务/副本入口占位并提供返回主世界按钮；本轮不接入 Adventure 跳转、不改战斗或数值语义。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
 
 ## 使用规则
@@ -19,7 +20,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-023 | P1 | Codex / ChatGPT5.5 | Unity 场景 | 待处理 | SettlementScene 通用据点/宗门原型 |
 | TQ-024 | P1 | Codex / ChatGPT5.5 | Unity 场景 | 待处理 | Settlement/World → Adventure 入口与返回上下文 |
 | TQ-025 | P1 | Codex / ChatGPT5.5 | 战斗架构 | 待处理 | Adventure/Combat 协程壳与 UI 绑定继续拆分 |
 | TQ-026 | P1 | Codex / ChatGPT5.5 | 数据链路 | 待处理 | contentScope 运行时字段与导入器适配 |
@@ -32,20 +32,11 @@
 
 ## 任务卡片
 
-### TQ-023 · SettlementScene 通用据点/宗门原型
-
-- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-S5-01。
-- 当前状态：待处理。WorldScene 已能进入 `SettlementScene`，`SettlementSceneController` 仅有数据壳与返回主世界方法。
-- 必读：`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`src/Assets/Scripts/Settlement/SettlementSceneController.cs`、`src/Assets/Scripts/Settlement/SettlementDefinition.cs`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`。
-- 范围：读取 `GameSession.CurrentSettlementId`，展示当前据点名称/类型/服务/副本入口占位，提供返回主世界按钮；第一版不做商店、背包、NPC 对话、经济数值或室内地图。
-- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；可用时跑 Unity EditMode 目标测试；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`；`git diff --check`。
-- 完成条件：宗门/城市两类配置复用同一场景；未知据点有安全回退；返回主世界保留当前世界节点；不改 CTB、伤害、冷却、槽位、寻路或技能范围语义。
-
 ### TQ-024 · Settlement/World → Adventure 入口与返回上下文
 
 - 来源：`开发管理/任务列表/场景与Unity任务.txt` U-S5-03、U-S6-01。
-- 当前状态：待处理。WorldScene 可进入节点绑定副本，Settlement 数据壳已有 `adventureEntrances`，但据点内入口和 Adventure 来源展示未闭环。
-- 必读：TQ-023 必读文件、`src/Assets/Scripts/Adventure/AdventureSceneController.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Game/SceneReturnTarget.cs`。
+- 当前状态：待处理。WorldScene 可进入节点绑定副本，SettlementScene 已展示 `adventureEntrances` 占位，但据点内入口跳转和 Adventure 来源展示未闭环。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`开发管理/任务归档/2026-07-04-TQ-023-SettlementScene通用据点宗门原型归档.txt`、`src/Assets/Scripts/World/WorldSceneController.cs`、`src/Assets/Scripts/Settlement/SettlementSceneController.cs`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/Game/SceneReturnTarget.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`。
 - 范围：从 World 或 Settlement 进入 Adventure 时写入 `GameSession.CurrentAdventureId` 与返回目标；AdventureScene 第一版只显示当前副本 ID/来源并提供返回按钮；不拆地图玩法、不改战斗结算。
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；可用时跑 Unity EditMode 目标测试；文本检查；`git diff --check`。
 - 完成条件：World→Adventure→World、Settlement→Adventure→Settlement 两条返回链可由测试覆盖；重新开局不残留旧 Adventure/ReturnTarget。

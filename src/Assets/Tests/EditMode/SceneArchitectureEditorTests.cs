@@ -123,6 +123,70 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void SettlementSceneControllerBuildsCurrentSettlementUiFromSession()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var controllerGo = new GameObject("SettlementSceneControllerTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetWorldNode("guanzhong_hub");
+                session.SetSettlementId("guanzhong_city");
+                var controller = controllerGo.AddComponent<SettlementSceneController>();
+
+                InvokeStart(controller);
+
+                Assert.AreEqual("guanzhong_city", controller.CurrentSettlement.id);
+                Assert.IsTrue(controller.TryGetSettlement("taiyi_sect", out var sect));
+                Assert.AreEqual(SettlementType.Sect, sect.settlementType);
+                Assert.IsTrue(controller.TryGetSettlement("guanzhong_city", out var city));
+                Assert.AreEqual(SettlementType.City, city.settlementType);
+                Assert.AreEqual("关中城", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("城池", GameObject.Find("SettlementTypeText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementReturnContextText")?.GetComponent<Text>()?.text);
+                Assert.AreEqual(4, CountButtonsWithPrefix("SettlementService_"));
+                Assert.IsFalse(GameObject.Find("SettlementAdventure_guanzhong_wild").GetComponent<Button>().interactable);
+                Assert.IsNotNull(GameObject.Find("ReturnToWorldButton"));
+            }
+            finally
+            {
+                DestroySettlementUi();
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void SettlementSceneControllerFallsBackToDefaultSettlementWhenSessionIdIsUnknown()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var controllerGo = new GameObject("SettlementSceneControllerTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetSettlementId("missing_settlement");
+                var controller = controllerGo.AddComponent<SettlementSceneController>();
+
+                InvokeStart(controller);
+
+                Assert.AreEqual("taiyi_sect", controller.CurrentSettlement.id);
+                Assert.AreEqual("太一道庭", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("宗门", GameObject.Find("SettlementTypeText")?.GetComponent<Text>()?.text);
+                Assert.IsNotNull(GameObject.Find("SettlementAdventure_taiyi_trial"));
+            }
+            finally
+            {
+                DestroySettlementUi();
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
         private static void AssertSceneHasObjects(string scenePath, string rootName, System.Type expectedControllerType)
         {
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
@@ -154,6 +218,26 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
             if (GameSession.Instance != null)
                 Object.DestroyImmediate(GameSession.Instance.gameObject);
+        }
+
+        private static void InvokeStart(MonoBehaviour controller)
+        {
+            controller.GetType()
+                .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(controller, null);
+        }
+
+        private static int CountButtonsWithPrefix(string prefix)
+        {
+            return Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Count(button => button.name.StartsWith(prefix));
+        }
+
+        private static void DestroySettlementUi()
+        {
+            var canvas = GameObject.Find("UICanvas");
+            if (canvas != null)
+                Object.DestroyImmediate(canvas);
         }
     }
 }

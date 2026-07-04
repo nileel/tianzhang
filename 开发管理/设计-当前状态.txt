@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-04 Codex / gpt-5.5：TQ-023 SettlementScene 通用据点/宗门原型完成。`SettlementSceneController` 读取 `GameSession.CurrentSettlementId`，公开据点查询/选择 API；未知据点回退到 `taiyi_sect`；SettlementScene 启动时生成 `UICanvas/SettlementPanel`，展示据点名称、类型、区域、所属势力、服务列表、副本入口占位和返回主世界按钮。验证：`Assembly-CSharp`、`TianZhang.EditModeTests` build，文本检查与 `git diff --check` 通过；Unity Test Runner 因已有 Unity 实例打开同项目而未执行。本轮不接入 Adventure 跳转，不改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。
 > 2026-07-04 Codex / gpt-5.5：TQ-022 WorldScene 节点式主世界原型完成。`WorldSceneController` 公开四个原型节点、节点查询与选择 API；节点选择会写入 `GameSession.CurrentWorldNodeId`；WorldScene 启动时生成 `UICanvas/WorldNodePanel`、四个节点按钮与进入地点按钮，主入口可按节点进入据点或副本。验证：`Assembly-CSharp`、`TianZhang.EditModeTests` Release/Debug build，文本检查与目标 `git diff --check` 通过；Unity Test Runner CLI 本机仍未产出 XML，最终复跑因已有 Unity 实例打开同项目而未执行。本轮不改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。
 > 2026-07-04 Codex / gpt-5.5：TQ-017 StartMenuScene 与门派选择迁移完成。StartMenuScene 生成器已内置 UICanvas 与 SectSelectionManager，门派选择经 SceneFlowManager 写入 GameSession.PlayerProfile；重新开局清理旧据点/副本/返回上下文；Adventure/Exploration 玩家创建优先读取会话档案。验证：Assembly-CSharp、TianZhang.EditModeTests Release build，Unity EditMode 目标测试 1/1 与 3/3，文本检查与 git diff --check 通过。本轮不改 CTB、伤害、冷却、槽位或门派内容。
 > 2026-07-02 Codex / gpt-5.5：A4/A5 数值旧口径清理与 BattleSim 二级属性脱钩校准完成。`Character.FinalizeStats` 已取消裸先天气运/神识/资质对闪避率/暴击率/暴击伤害的直加，改为功法倾向权重补偿；新增 `secondary-detach-a4` self-test。`角色属性_先天.txt` 不再声明根骨/魂魄/神识直接提供战斗二级属性；`角色数值设计.txt` 已重写为 v3.4.1 当前 BattleSim 基线。验证：BattleSim self-test、Release build、默认 run 通过；当前筑基/紫府矩阵仍有明显 Build 极化，后续属于平衡调参问题，不再是旧口径污染问题。
@@ -155,6 +156,7 @@
 | v0.12 | 符胆神魂行动回归 | ✅ TQ-020 首轮：Unity 普通神魂攻击、神魂术法、神魂神通共用符胆增伤；满层符胆提供 30% 神防穿透并视为必中；消耗后按行动结束补 1 层。雷劫、玄感、含弘/载物仍未独立运行时接入，后续另拆机制切片 |
 | v0.13 | StartMenu 门派选择迁移 | ✅ TQ-017：StartMenuScene 生成 UICanvas 与 SectSelectionManager；选择结果写入 GameSession.PlayerProfile；重新开局清理旧场景上下文；Adventure/Exploration 创建玩家优先读取会话档案 |
 | v0.14 | WorldScene 节点式主世界原型 | ✅ TQ-022：WorldSceneController 提供四个原型节点、节点查询/选择 API、`CurrentWorldNodeId` 会话写入，以及节点按钮/进入地点按钮；主入口可进入据点或副本 |
+| v0.15 | SettlementScene 通用据点/宗门原型 | ✅ TQ-023：SettlementSceneController 读取 `CurrentSettlementId`，展示据点名称/类型/服务/副本入口占位，未知据点回退默认宗门，并通过返回按钮保留主世界节点 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 
