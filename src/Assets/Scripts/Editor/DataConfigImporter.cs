@@ -7,6 +7,7 @@ using UnityEditor;
 using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.Cultivation;
+using TianZhang.Game.CharacterCreation;
 
 namespace TianZhang.Editor
 {
@@ -50,9 +51,57 @@ namespace TianZhang.Editor
             ImportSkills();
             ImportCharacters();
             ImportEnemies();
+            ImportCharacterCreationPointBuy();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[DataConfigImporter] 全部配置导入完成");
+        }
+
+        [MenuItem("天章/导入角色创建点购配置")]
+        static void ImportCharacterCreationPointBuy()
+        {
+            string path = "Assets/DataConfig/CharacterCreationPointBuy.csv";
+            if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
+
+            var rows = File.ReadAllLines(path)
+                .Skip(1)
+                .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"))
+                .Select(ParseCSV)
+                .Where(cols => cols.Length >= 8 && cols[0] == "default")
+                .ToArray();
+
+            if (rows.Length == 0)
+            {
+                Debug.LogError("[DataConfigImporter] CharacterCreationPointBuy.csv missing default config rows.");
+                return;
+            }
+
+            string assetPath = "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
+            EnsureDirectory(assetPath);
+
+            var asset = AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(assetPath);
+            bool isNew = asset == null;
+            if (isNew)
+                asset = ScriptableObject.CreateInstance<CharacterCreationPointBuyConfig>();
+
+            var first = rows[0];
+            asset.purchasePointLimit = int.Parse(first[1]);
+            asset.minValue = int.Parse(first[2]);
+            asset.baseValue = int.Parse(first[3]);
+            asset.maxValue = int.Parse(first[4]);
+            asset.costRanges = rows.Select(cols => new CharacterCreationPointBuyConfig.CostRange
+            {
+                fromValue = int.Parse(cols[5]),
+                toValue = int.Parse(cols[6]),
+                costPerLevel = int.Parse(cols[7])
+            }).ToArray();
+
+            if (isNew)
+                AssetDatabase.CreateAsset(asset, assetPath);
+            else
+                EditorUtility.SetDirty(asset);
+
+            Debug.Log($"  角色创建点购配置: {asset.purchasePointLimit}点 ← {assetPath}");
         }
 
         [MenuItem("天章/导入功法配置")]

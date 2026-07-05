@@ -310,6 +310,29 @@ namespace TianZhang.Editor
             descRt.anchoredPosition = new Vector2(0, 140);
             descRt.sizeDelta = new Vector2(600, 50);
 
+            var summaryGo = new GameObject("CharacterCreationSummary", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            summaryGo.transform.SetParent(panelGo.transform, false);
+            var summaryRt = summaryGo.GetComponent<RectTransform>();
+            summaryRt.anchorMin = new Vector2(1f, 0.5f);
+            summaryRt.anchorMax = new Vector2(1f, 0.5f);
+            summaryRt.anchoredPosition = new Vector2(-340, 90);
+            summaryRt.sizeDelta = new Vector2(420, 190);
+            var summaryLayout = summaryGo.GetComponent<VerticalLayoutGroup>();
+            summaryLayout.spacing = 8;
+            summaryLayout.childAlignment = TextAnchor.UpperLeft;
+            summaryLayout.childControlWidth = true;
+            summaryLayout.childControlHeight = true;
+            summaryLayout.childForceExpandWidth = true;
+            summaryLayout.childForceExpandHeight = false;
+
+            var innateBudgetText = CreateText("InnateBudgetText", summaryGo.transform, "先天购买点剩余：0/25", 16, new Color(0.86f, 0.9f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            var visibleRootText = CreateText("VisibleRootText", summaryGo.transform, "显性灵根：中品水灵根", 16, new Color(0.86f, 0.9f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            var hiddenRootSeedText = CreateText("HiddenRootSeedText", summaryGo.transform, "隐藏灵根种子：无", 16, new Color(0.86f, 0.9f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            var creationBudgetText = CreateText("CreationBudgetText", summaryGo.transform, "创建预算剩余：10/10", 16, new Color(0.86f, 0.9f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            var craftSkillText = CreateText("CraftSkillText", summaryGo.transform, "技艺点剩余：0/3", 16, new Color(0.86f, 0.9f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            foreach (var summaryText in new[] { innateBudgetText, visibleRootText, hiddenRootSeedText, creationBudgetText, craftSkillText })
+                summaryText.GetComponent<RectTransform>().sizeDelta = new Vector2(420, 28);
+
             var startButton = CreateButton("StartButton", panelGo.transform, "开始游戏", new Color(0.3f, 0.5f, 0.3f, 1f));
             var startRt = startButton.GetComponent<RectTransform>();
             startRt.anchorMin = new Vector2(0.5f, 0f);
@@ -323,6 +346,11 @@ namespace TianZhang.Editor
             selection.startButton = startButton.GetComponent<Button>();
             selection.selectedSectText = selectedText.GetComponent<Text>();
             selection.selectedSectDesc = descText.GetComponent<Text>();
+            selection.innateBudgetText = innateBudgetText.GetComponent<Text>();
+            selection.visibleRootText = visibleRootText.GetComponent<Text>();
+            selection.hiddenRootSeedText = hiddenRootSeedText.GetComponent<Text>();
+            selection.creationBudgetText = creationBudgetText.GetComponent<Text>();
+            selection.craftSkillText = craftSkillText.GetComponent<Text>();
             selection.gameManager = gameManager;
         }
 
@@ -366,6 +394,11 @@ namespace TianZhang.Editor
             Require(selection.buttonContainer != null, $"{scenePath} missing button container reference.");
             Require(selection.startButton != null, $"{scenePath} missing start button reference.");
             Require(selection.gameManager != null, $"{scenePath} missing GameManager reference.");
+            Require(selection.innateBudgetText != null, $"{scenePath} missing innate budget text reference.");
+            Require(selection.visibleRootText != null, $"{scenePath} missing visible root text reference.");
+            Require(selection.hiddenRootSeedText != null, $"{scenePath} missing hidden root seed text reference.");
+            Require(selection.creationBudgetText != null, $"{scenePath} missing creation budget text reference.");
+            Require(selection.craftSkillText != null, $"{scenePath} missing craft skill text reference.");
         }
 
         private static void NormalizeGeneratedSceneYaml(string scenePath)

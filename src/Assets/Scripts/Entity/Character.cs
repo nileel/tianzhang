@@ -17,6 +17,7 @@ namespace TianZhang.Entity
         public int Mind;
         public int Reaction;
         public int Talent;
+        public int Fortune;
 
         // ---- 二级属性 ----
         public int MaxHP;
@@ -71,6 +72,8 @@ namespace TianZhang.Entity
         public string[] MansionBindings;
         public string DanArtifactForm;
         public string LegacyDanJiType;
+        public string VisibleRootId;
+        public string HiddenRootState;
 
         // ---- 印记状态 ----
         public int ShouyiStacks;     // 守一印记层数（抱元守一经）
@@ -95,6 +98,7 @@ namespace TianZhang.Entity
                 Mind = data.mind,
                 Reaction = data.reaction,
                 Talent = data.talent,
+                Fortune = data.fortune,
                 Position = startPos,
                 Facing = 0,
             };
@@ -114,6 +118,8 @@ namespace TianZhang.Entity
             c.MansionBindings = data.mansionBindings != null ? (string[])data.mansionBindings.Clone() : new string[0];
             c.DanArtifactForm = data.danArtifactForm;
             c.LegacyDanJiType = data.legacyDanJiType;
+            c.VisibleRootId = data.visibleRootId;
+            c.HiddenRootState = data.hiddenRootState;
 
             // ---- 次线性HP公式（v3.4：根骨^0.75 × 境界倍率 × 基础值）----
             float hpBase = Mathf.Pow(c.RootBone, 0.75f) * realm * 80f;

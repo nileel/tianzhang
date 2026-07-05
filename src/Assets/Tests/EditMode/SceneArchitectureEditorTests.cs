@@ -55,6 +55,12 @@ namespace TianZhang.Tests
             Assert.IsNotNull(sectSelection.buttonContainer);
             Assert.IsNotNull(sectSelection.startButton);
             Assert.AreSame(GameObject.Find("GameManager").GetComponent<TianZhang.Game.GameManager>(), sectSelection.gameManager);
+            Assert.IsNotNull(sectSelection.innateBudgetText);
+            Assert.IsNotNull(sectSelection.visibleRootText);
+            Assert.IsNotNull(sectSelection.hiddenRootSeedText);
+            Assert.IsNotNull(sectSelection.creationBudgetText);
+            Assert.IsNotNull(sectSelection.craftSkillText);
+            Assert.IsNotNull(GameObject.Find("CharacterCreationSummary"));
         }
 
         [Test]

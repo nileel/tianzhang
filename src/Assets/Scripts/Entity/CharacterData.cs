@@ -20,6 +20,7 @@ namespace TianZhang.Entity
         public int mind = 10;           // 神识 → 神防
         public int reaction = 10;       // 反应 → CT速度
         public int talent = 10;         // 资质 → 修炼速度
+        public int fortune = 10;        // 气运 → 非战斗创角/事件权重
 
         [Header("二级属性（派生，可覆盖）")]
         public float hpBonus;
@@ -51,6 +52,44 @@ namespace TianZhang.Entity
         [Header("术法/神通库")]
         public string[] availableSpells;   // 已学会的全部术法
         public string[] availableSkills;   // 已学会的全部神通
+
+        [Header("角色创建")]
+        public int innatePurchasePointsLimit;
+        public int innatePurchasePointsUsed;
+        public int creationBudgetLimit;
+        public int creationBudgetUsed;
+        public int creationBudgetRefunded;
+        public string originId = "";
+        public string[] fateTagIds;
+        public string[] craftSkillIds;
+        public int[] craftSkillLevels;
+
+        [Header("显性灵根")]
+        public string visibleRootId = "";
+        public string visibleRootKind = "";
+        public string visibleRootGrade = "";
+        public string visibleRootElement = "";
+        public string visibleRootMotherElement = "";
+        public float visibleRootCultivationMultiplier = 1f;
+        public float visibleRootMpMultiplier = 1f;
+        public string visibleRootRealmCap = "";
+        public string visibleRootRegionAffinity = "";
+        public string[] visibleRootLearnTags;
+
+        [Header("隐藏灵根")]
+        public string hiddenRootSeedId = "";
+        public string hiddenRootId = "";
+        public string hiddenRootKind = "";
+        public string hiddenRootGrade = "";
+        public string hiddenRootElement = "";
+        public string hiddenRootMotherElement = "";
+        public float hiddenRootCultivationMultiplier;
+        public float hiddenRootMpMultiplier = 1f;
+        public string hiddenRootRealmCap = "";
+        public string hiddenRootRegionAffinity = "";
+        public string[] hiddenRootLearnTags;
+        public string hiddenRootState = "";
+        public int hiddenRootRollSeed;
 
         [Header("槽位上限（0=按境界自动计算）")]
         public int maxSpellSlots;          // 术法槽位上限（0时从境界推算）

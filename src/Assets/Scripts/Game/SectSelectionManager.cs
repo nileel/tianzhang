@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TianZhang.Entity;
+using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
 
 namespace TianZhang.Game
@@ -14,9 +15,15 @@ namespace TianZhang.Game
         public Button startButton;
         public Text selectedSectText;
         public Text selectedSectDesc;
+        public Text innateBudgetText;
+        public Text visibleRootText;
+        public Text hiddenRootSeedText;
+        public Text creationBudgetText;
+        public Text craftSkillText;
         public GameManager gameManager;
 
         private string _selectedSect = "";
+        private CharacterCreationDraft _draft;
 
         private static readonly Dictionary<string, SectPreset> Sects = new()
         {
@@ -99,6 +106,10 @@ namespace TianZhang.Game
                 if (existing != null) startButton = existing.GetComponent<Button>();
             }
 
+            EnsureCreationDraft();
+            EnsureCreationSummaryTexts();
+            UpdateCreationSummary();
+
             selectionPanel.SetActive(true);
             CreateSectButtons();
         }
@@ -154,36 +165,119 @@ namespace TianZhang.Game
         public void SelectSect(string sectName)
         {
             _selectedSect = sectName;
+            EnsureCreationDraft();
+            _draft.SectRouteId = GetSectRouteId(sectName);
+            _draft.CharacterName = sectName;
+
             if (selectedSectText != null)
                 selectedSectText.text = "Selected: " + sectName;
             if (selectedSectDesc != null && Sects.TryGetValue(sectName, out var preset))
                 selectedSectDesc.text = preset.desc;
             if (startButton != null)
                 startButton.interactable = true;
+
+            UpdateCreationSummary();
+        }
+
+        private void EnsureCreationDraft()
+        {
+            if (_draft == null)
+                _draft = CharacterCreationCatalog.CreateDefaultDraft();
+        }
+
+        private void EnsureCreationSummaryTexts()
+        {
+            var parent = selectionPanel != null ? selectionPanel.transform : transform;
+            var summary = parent.Find("CharacterCreationSummary");
+            if (summary == null)
+            {
+                var summaryGo = new GameObject("CharacterCreationSummary", typeof(RectTransform));
+                summaryGo.transform.SetParent(parent, false);
+                var summaryRt = summaryGo.GetComponent<RectTransform>();
+                summaryRt.anchorMin = new Vector2(1f, 0.5f);
+                summaryRt.anchorMax = new Vector2(1f, 0.5f);
+                summaryRt.anchoredPosition = new Vector2(-340, 90);
+                summaryRt.sizeDelta = new Vector2(420, 190);
+
+                var layout = summaryGo.AddComponent<VerticalLayoutGroup>();
+                layout.spacing = 8;
+                layout.childAlignment = TextAnchor.UpperLeft;
+                layout.childControlWidth = true;
+                layout.childControlHeight = true;
+                layout.childForceExpandWidth = true;
+                layout.childForceExpandHeight = false;
+                summary = summaryGo.transform;
+            }
+
+            if (innateBudgetText == null)
+                innateBudgetText = FindOrCreateSummaryText(summary, "InnateBudgetText");
+            if (visibleRootText == null)
+                visibleRootText = FindOrCreateSummaryText(summary, "VisibleRootText");
+            if (hiddenRootSeedText == null)
+                hiddenRootSeedText = FindOrCreateSummaryText(summary, "HiddenRootSeedText");
+            if (creationBudgetText == null)
+                creationBudgetText = FindOrCreateSummaryText(summary, "CreationBudgetText");
+            if (craftSkillText == null)
+                craftSkillText = FindOrCreateSummaryText(summary, "CraftSkillText");
+        }
+
+        private static Text FindOrCreateSummaryText(Transform parent, string name)
+        {
+            var existing = parent.Find(name);
+            if (existing != null && existing.TryGetComponent<Text>(out var existingText))
+                return existingText;
+
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(420, 28);
+            var text = go.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 16;
+            text.color = new Color(0.86f, 0.9f, 0.78f, 1f);
+            text.alignment = TextAnchor.MiddleLeft;
+            return text;
+        }
+
+        private void UpdateCreationSummary()
+        {
+            EnsureCreationDraft();
+            var result = CharacterCreationRules.Validate(_draft);
+            var visibleRoot = CharacterCreationCatalog.FindVisibleRoot(_draft.VisibleSpiritRootId);
+            var hiddenSeed = CharacterCreationCatalog.FindHiddenRootSeed(_draft.HiddenRootSeedId);
+
+            if (innateBudgetText != null)
+                innateBudgetText.text = $"先天购买点剩余：{result.InnatePurchasePointsRemaining}/{result.InnatePurchasePointLimit}";
+            if (visibleRootText != null)
+                visibleRootText.text = $"显性灵根：{(visibleRoot != null ? visibleRoot.DisplayName : "未选择")}";
+            if (hiddenRootSeedText != null)
+                hiddenRootSeedText.text = $"隐藏灵根种子：{(hiddenSeed != null ? hiddenSeed.DisplayName : "无")}";
+            if (creationBudgetText != null)
+                creationBudgetText.text = $"创建预算剩余：{result.BudgetAvailable}/{result.BudgetLimit}";
+            if (craftSkillText != null)
+                craftSkillText.text = $"技艺点剩余：{CharacterCreationCatalog.CraftSkillStartingPoints - result.CraftSkillPointsUsed}/{CharacterCreationCatalog.CraftSkillStartingPoints}";
         }
 
         private void OnStartGame()
         {
             if (string.IsNullOrEmpty(_selectedSect)) return;
-            if (!Sects.TryGetValue(_selectedSect, out var preset)) return;
+            if (!Sects.ContainsKey(_selectedSect)) return;
 
-            var charData = ScriptableObject.CreateInstance<CharacterData>();
-            charData.charName = preset.name;
-            charData.realmMultiplier = 1.5f;
-            charData.rootBone = preset.rootBone;
-            charData.physique = preset.physique;
-            charData.spirit = preset.spirit;
-            charData.mind = preset.mind;
-            charData.reaction = preset.reaction;
-            charData.talent = preset.talent;
-            charData.blockRate = preset.blockRate;
-            charData.soulShieldRate = preset.soulShieldRate;
-            charData.critRate = preset.critRate;
-            charData.critDamage = preset.critDamage;
-            charData.gongFaName = preset.gongFaName;
-            charData.equippedSpells = preset.startingSpells;
-            charData.equippedSkills = new string[0];
-            charData.availableSpells = preset.startingSpells;
+            EnsureCreationDraft();
+            _draft.SectRouteId = GetSectRouteId(_selectedSect);
+            _draft.CharacterName = _selectedSect;
+            var validation = CharacterCreationRules.Validate(_draft);
+            if (!validation.IsValid)
+            {
+                var message = string.Join("\n", validation.Errors);
+                if (selectedSectDesc != null)
+                    selectedSectDesc.text = message;
+                Debug.LogError("[SectSelection] Character creation draft invalid: " + message);
+                UpdateCreationSummary();
+                return;
+            }
+
+            var charData = CharacterCreationRules.BuildCharacterData(_draft);
 
             var flow = SceneFlowManager.Instance;
             if (flow != null)
@@ -316,6 +410,18 @@ namespace TianZhang.Game
             Debug.Log($"[SectSelection] Loaded {spellList.Count} spells for ExplorationController");
         }
 
+        private static string GetSectRouteId(string sectName)
+        {
+            return sectName switch
+            {
+                "太一道庭" => "route_taiyi",
+                "玉清崖" => "route_yuqing",
+                "混元山" => "route_hunyuan",
+                "太虚观" => "route_taixu",
+                _ => "route_sanxiu",
+            };
+        }
+
         // Spell Chinese name -> CSV ID mapping
         private static readonly Dictionary<string, string> SpellAssetIds = new()
         {
@@ -324,6 +430,7 @@ namespace TianZhang.Game
             ["引雷诀"] = "yinleijue", ["苦行剑式"] = "kuxingjianshi", ["剑罡护体"] = "jianganghuti",
             ["铁骨功"] = "tiegugong", ["破阵冲锋"] = "pozhenchongfeng", ["玄甲铁壁"] = "xuanjiatiebi",
             ["暗蚀"] = "tx_anshi", ["幽冥引"] = "youmingyin", ["入梦诀"] = "rumengjue",
+            ["聚灵术"] = "julingshu", ["川流劲"] = "chuanliujin", ["灵光闪"] = "lingguangshan",
             ["暗噬"] = "anshi",
         };
 

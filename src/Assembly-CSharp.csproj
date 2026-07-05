@@ -71,6 +71,11 @@
     <Compile Include="Assets\Scripts\Cultivation\CultivationEngine.cs" />
     <Compile Include="Assets\Scripts\Game\GameManager.cs" />
     <Compile Include="Assets\Scripts\Combat\DamageCalculator.cs" />
+    <Compile Include="Assets\Scripts\Game\CharacterCreation\CharacterCreationModels.cs" />
+    <Compile Include="Assets\Scripts\Game\CharacterCreation\CharacterCreationCatalog.cs" />
+    <Compile Include="Assets\Scripts\Game\CharacterCreation\CharacterCreationPointBuyConfig.cs" />
+    <Compile Include="Assets\Scripts\Game\CharacterCreation\CharacterCreationRules.cs" />
+    <Compile Include="Assets\Scripts\Game\CharacterCreation\CharacterCreationManager.cs" />
     <Compile Include="Assets\Scripts\Game\SectSelectionManager.cs" />
     <Compile Include="Assets\Scripts\Core\HexGrid.cs" />
     <Compile Include="Assets\Scripts\Game\SceneFlowManager.cs" />
