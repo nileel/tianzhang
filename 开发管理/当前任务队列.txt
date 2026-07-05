@@ -5,7 +5,8 @@
 > 2026-07-05 Codex / gpt-5.5：TQ-024 Settlement/World → Adventure 入口与返回上下文完成并归档至 `开发管理/任务归档/2026-07-05-TQ-024-SettlementWorld到Adventure入口返回上下文归档.txt`。World/Settlement 进入 Adventure 会写入 `CurrentAdventureId` 与来源返回目标；AdventureScene 展示当前副本 ID/来源并提供返回来源按钮；本轮不改探索地图、战斗结算、掉落或数值语义。
 > 2026-07-05 Codex / gpt-5.5：TQ-025 Adventure/Combat UI 命令绑定拆分切片完成并归档至 `开发管理/任务归档/2026-07-05-TQ-025-AdventureCombatUI命令绑定拆分归档.txt`。`BattleUIManager` 不再保存或回退到 `ExplorationController` 具体类型，动作栏统一经 `ICombatCommandHandler` 发命令，并新增 `BtnSwap` 换法按钮；`ExplorationController` 改为接口注入。本轮不改 CTB、AI、伤害、冷却、掉落或寻路规则。
 > 2026-07-05 Codex / gpt-5.5：TQ-027 高阶/realm_lianshen 数据链路告警补强复审通过并归档至 `开发管理/任务归档/2026-07-05-R-20260704-01-TQ-027数据链路告警复审归档.txt`。`check-data-chain.ps1` 已输出 realm_lianshen 8 行、realm_lianxu 12 行与 contentScope 分布；Codex 本轮将新增告警输出改为 ASCII，避免 Windows PowerShell 输出乱码。
-> 2026-07-05 Codex / gpt-5.5：TQ-031 第一章主线剧情骨架复审通过并归档至 `开发管理/任务归档/2026-07-05-R-20260704-03-TQ-031第一章主线骨架复审归档.txt`。骨架覆盖五入口、五节拍、NPC 出场限制与信息分层；后续 TQ-032 可引用其新增普通 NPC 类型。
+> 2026-07-05 DeepSeek V4 Pro：TQ-032 普通NPC设计模板与首批候选清单完成。新增 `docs/剧情/普通NPC设计模板.txt`（六字段轻量模板+10类可交互职责+7条禁止项）和 `开发管理/普通NPC首批候选清单.txt`（42名候选覆盖10类职责和7大据点区域，含5批建议）。验证：`check-review-text.ps1` OK（90 files）；`git diff --check` OK；旧口径 rg 检查仅在禁止规则中元引用。待 Codex / ChatGPT5.5 复审。
+6	> 2026-07-05 Codex / gpt-5.5：TQ-031 第一章主线剧情骨架复审通过并归档至 `开发管理/任务归档/2026-07-05-R-20260704-03-TQ-031第一章主线骨架复审归档.txt`。骨架覆盖五入口、五节拍、NPC 出场限制与信息分层；后续 TQ-032 可引用其新增普通 NPC 类型。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
 
 ## 使用规则
@@ -28,7 +29,7 @@
 | TQ-030 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 内容检查 | 待复审（d2a2fd2 返工修正已提交） | 重要 NPC 叙事字段与旧口径污染清单 |
 | TQ-028 | P2 | Codex / ChatGPT5.5 | Unity 机制 | 待处理 | Unity 已接入机制第二轮回归：雷劫/玄感/含弘载物 |
 | TQ-029 | P2 | Codex / ChatGPT5.5 | 数值验证 | 待处理 | 筑基/紫府 Build 极化诊断，不直接调参 |
-| TQ-032 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | NPC 设计 | 待处理 | 据点/宗门普通 NPC 模板与首批候选清单 |
+| TQ-032 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | NPC 设计 | 待复审（92ddae2 模板与候选清单已提交） | 据点/宗门普通 NPC 模板与首批候选清单 |
 
 ## 任务卡片
 
