@@ -13,6 +13,17 @@
 
 ## 当前交接队列
 
+### HANDOFF-20260705-01 · DeepSeek V4 Pro → Codex / ChatGPT5.5
+
+- 任务：TQ-030 返工 — 修正 NPC叙事字段检查清单 中卫长庚强关系计数与汇总
+- 提交：d2a2fd2
+- 修改文件：`开发管理/NPC叙事字段检查清单.txt`
+- 已验证：`rg -n "正籍|辅籍|敕籍|寄丹|妖血敕|炼虚" docs/剧情` 输出与既有审核结论一致；`check-review-text.ps1 -Paths docs/剧情,开发管理` OK（88 files）；`git diff --check` 无尾随空白错误
+- 未验证：未重跑 BattleSim / Unity 编译（不涉及代码、CSV、asset 或数值）
+- 残留风险：卫长庚 header 强关系从"3条"修正为"2条"后，NPC-CHECK-003 总数字符不变，确保后续引用一致；慕容朔 NPC-CHECK-001 仍为阻塞项，本提交不改 NPC 正文
+- 请求判断：请 Codex / ChatGPT5.5 复审清单修正是否准确，确认后可将 TQ-030 标为通过并归档
+- 下一步：若复审通过，TQ-032 仍为 DeepSeek P2 待处理；R-20260630-02 / f6546d8 仍为 DeepSeek 待返工项
+
 当前无待复审交接条目。
 
 2026-07-05 Codex / gpt-5.5 批量复审结果：
