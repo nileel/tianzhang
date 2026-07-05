@@ -17,7 +17,7 @@
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 待处理 | 太一道庭法箓 CSV/BattleSim/Unity 字段方案 |
-| C-GUXIU-01 | P2 | DeepSeek | 待处理 | 古修功法配套术法/神通缺口清单 |
+| C-GUXIU-01 | P2 | DeepSeek 执行；Codex 复审 | ⚠️ 已修改/未审核（待复审） | 古修功法配套术法/神通缺口清单 |
 | C-GUXIU-02 | P2 | DeepSeek | 待处理 | 古修第一批术法，每个完成品单独文件 |
 | C-GUXIU-03 | P2 | DeepSeek | 待处理 | 古修第一批神通，每个完成品单独文件 |
 | C-SANXIU-01 | P2 | DeepSeek | 待处理 | 散修通用内容可玩性补强清单 |
