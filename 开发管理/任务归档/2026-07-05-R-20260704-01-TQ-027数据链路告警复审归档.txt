@@ -1,0 +1,29 @@
+# R-20260704-01 / TQ-027 数据链路告警复审归档
+
+复审时间：2026-07-05
+复审方：Codex / gpt-5.5
+执行方：DeepSeek V4 Pro
+复审对象：`f1adc3b`，本轮 Codex 追加清理 `tools/check-data-chain.ps1` 输出文本。
+
+## 结论
+
+通过。
+
+`tools/check-data-chain.ps1` 已输出：
+- `realm_lianshen`：8 行，Language key 缺失，作为 P0 风险提示。
+- `realm_lianxu`：12 行，Language key 存在但已从当前主循环删除，作为 P1 口径冲突提示。
+- `contentScope`：GongFa `player=1, reserved=28`；Spells `player=51, reserved=24`；Skills `player=29, reserved=5`。
+
+Codex 本轮将新增告警输出改为 ASCII，避免 Windows PowerShell 输出中出现中文/破折号乱码；该改动不改变脚本检查逻辑。
+
+## 验证
+
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过，输出 `check-data-chain: OK`。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig`：通过。
+- `git show --check f1adc3b`：通过。
+
+未运行 BattleSim / Unity 编译：本项只修改数据链路检查脚本输出，不改数值、C#、CSV 或 asset。
+
+## 后续
+
+TQ-027 已闭环。后续仍需 TQ-026 保存 `contentScope` 到运行时数据对象与导入器。

@@ -7,6 +7,7 @@
 - 术法/神通已有独立 `element` 列；`elementReq` 只作为学习门槛。
 - 三类 CSV 已新增 `contentScope` 列，643efda 标注已通过 Codex / ChatGPT5.5 复审；当前仍待运行时字段适配。
 - F1 口径已定：`realm_lianshen` 不作为当前独立境界 key；高阶内容按 NPC/资料片/保留内容隔离。
+- TQ-027 已于 2026-07-05 复审通过：`check-data-chain.ps1` 输出 realm_lianshen / realm_lianxu / contentScope 告警；归档见 `开发管理/任务归档/2026-07-05-R-20260704-01-TQ-027数据链路告警复审归档.txt`。
 - docs/CSV/Unity asset 覆盖当前为功法 29/29/29、术法 75/75/75、神通 34/34/34，Missing 0。
 
 ## 任务
@@ -16,7 +17,7 @@
 | D-CONTENT-01 | P1 | Codex 复审 | ✅ 已复审 | 643efda 的 `contentScope` CSV 标注已通过；归档见 `任务归档/2026-07-04-R-20260630-04-contentScope列复审归档.txt` |
 | D-CONTENT-02 / TQ-026 | P1 | Codex | 待处理 | C# 数据对象与导入器保存 `contentScope` |
 | D-ELEMENT-01 | P1 | Codex | 待处理 | 为独立 `element` 字段补导入器 schema 断言，防止列序错读 |
-| D-REALM-01 / TQ-027 | P1 | DeepSeek 执行；Codex 复审 | 待处理 | `check-data-chain.ps1` 输出 realm_lianshen / reserved 告警 |
+| D-REALM-01 / TQ-027 | P1 | DeepSeek 执行；Codex 复审 | ✅ 已复审 | `check-data-chain.ps1` 输出 realm_lianshen / realm_lianxu / contentScope 告警 |
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离 |
 | D-ASSET-01 | P2 | DeepSeek | 待处理 | CSV 重导后 asset 字段完整性复查，禁止改设计语义 |
 | D-IMPORT-01 | P2 | Codex | 待处理 | 导入器按列名/表头解析，降低末尾加列风险 |

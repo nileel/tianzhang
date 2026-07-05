@@ -178,7 +178,7 @@ foreach ($check in $dupChecks) {
 
 "language keys: $($languageIds.Count)"
 
-# === TQ-027: realm/contentScope alert layer (⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：check-data-chain.ps1 新增告警段) ===
+# === TQ-027: realm/contentScope alert layer ===
 "`n=== realm/contentScope alert (TQ-027) ==="
 
 # -- realm_lianshen (P0: missing from Language.csv) --
@@ -192,14 +192,14 @@ $lianshenTotal = $lianshenGongFa.Count + $lianshenSpells.Count + $lianshenSkills
 
 $hasLianshenInLang = ($languageRows | Where-Object { $_ -match '^realm_lianshen,' }).Count -gt 0
 
-"realm_lianshen alert (P0: no Language key | F1: reserved/NPC/古修炼神):"
+"realm_lianshen alert (P0: no Language key | F1: reserved/NPC/ancient-cultivation route):"
 "  Language.csv has realm_lianshen: $hasLianshenInLang"
 "  GongFa.csv rows: $($lianshenGongFa.Count) | IDs: $($lianshenGongFaIds -join ', ')"
 "  Spells.csv rows: $($lianshenSpells.Count) | IDs: $($lianshenSpellIds -join ', ')"
 "  Skills.csv rows: $($lianshenSkills.Count) | IDs: $($lianshenSkillIds -join ', ')"
 "  TOTAL realm_lianshen: $lianshenTotal (8 expected: 4 GongFa + 2 Spells + 2 Skills)"
 if (-not $hasLianshenInLang) {
-  "  ** WARNING: realm_lianshen missing from Language.csv — runtime display-name lookup will fail **"
+  "  ** WARNING: realm_lianshen missing from Language.csv - runtime display-name lookup will fail **"
 }
 
 # -- realm_lianxu (P1: active in CSV but declared deleted in docs) --
@@ -245,8 +245,8 @@ $skillScope = Get-ContentScopeDist $skillRows
 
 # -- Risk summary (read-only, never fails the check) --
 "risk summary (TQ-027):"
-"  realm_lianshen: $lianshenTotal rows across CSVs without Language key — runtime display-name failure risk"
-"  realm_lianxu:   $lianxuTotal rows still active despite spec declaring it deleted — spec/implementation conflict"
+"  realm_lianshen: $lianshenTotal rows across CSVs without Language key - runtime display-name failure risk"
+"  realm_lianxu:   $lianxuTotal rows still active despite spec declaring it deleted - spec/implementation conflict"
 "  contentScope:   reserved + (empty) rows should not leak into player-accessible content without review"
 
 if ($failures.Count -gt 0) {
