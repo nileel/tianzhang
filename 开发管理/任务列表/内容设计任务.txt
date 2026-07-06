@@ -28,7 +28,7 @@
 | C-NPC-04 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 太一道庭/混元山首批普通 NPC，一 NPC 一文件 |
 | C-NPC-05 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 散修/坊市首批普通 NPC，一 NPC 一文件 |
 | C-STORY-02 | P1 | Codex 规划；DeepSeek 执行；Codex 复审 | 待处理 | 第一章主线 L1→L2 任务链拆分包：补剧情ID、状态变量、演出等级、玩法接口和拆分清单 |
-| C-LORE-01 | P1 | Codex 规划；DeepSeek 执行；Codex 复审 | 待处理 | 新位格体系旧口径二轮迁移：地图、总设定与非本轮重要 NPC |
+| C-LORE-01 | P1 | Codex 规划；DeepSeek 执行；Codex 复审 | ⚠️ 阻塞（等待 Codex 产出旧→新术语映射表，见 HANDOFF-20260706-03） | 新位格体系旧口径二轮迁移：地图、总设定与非本轮重要 NPC |
 | C-STORY-03 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 第一章首批 L3 单任务样例，一任务一文件，承接 C-STORY-02 |
 | C-QUEST-01 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 宗门入门支线任务首批，一任务一文件 |
 | C-QUEST-02 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 龙脊紊乱区探索支线首批，一任务一文件 |
