@@ -1,6 +1,8 @@
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Combat;
+using TianZhang.Cultivation;
 using TianZhang.Editor;
 using TianZhang.Game;
 using TianZhang.Settlement;
@@ -362,6 +364,65 @@ namespace TianZhang.Tests
             var canvas = GameObject.Find("UICanvas");
             if (canvas != null)
                 Object.DestroyImmediate(canvas);
+        }
+    }
+
+    public class DataConfigImporterContentScopeTests
+    {
+        [Test]
+        public void RuntimeDataObjectsKeepPlayerContentScopeDefault()
+        {
+            var gongFa = ScriptableObject.CreateInstance<GongFaGrowthData>();
+            var spell = ScriptableObject.CreateInstance<SpellData>();
+            var skill = ScriptableObject.CreateInstance<DivineSkillData>();
+            try
+            {
+                Assert.AreEqual("player", gongFa.contentScope);
+                Assert.AreEqual("player", spell.contentScope);
+                Assert.AreEqual("player", skill.contentScope);
+            }
+            finally
+            {
+                Object.DestroyImmediate(gongFa);
+                Object.DestroyImmediate(spell);
+                Object.DestroyImmediate(skill);
+            }
+        }
+
+        [Test]
+        public void ContentScopeLookupUsesHeaderAndDefaultsMissingOrEmptyValues()
+        {
+            Assert.AreEqual(
+                "reserved",
+                DataConfigImporter.GetColumnValueOrDefault(
+                    new[] { "name", "contentScope" },
+                    new[] { "spell_test", "reserved" },
+                    "contentScope",
+                    "player"));
+
+            Assert.AreEqual(
+                "reserved",
+                DataConfigImporter.GetColumnValueOrDefault(
+                    new[] { "contentScope", "name" },
+                    new[] { "reserved", "spell_test" },
+                    "contentScope",
+                    "player"));
+
+            Assert.AreEqual(
+                "player",
+                DataConfigImporter.GetColumnValueOrDefault(
+                    new[] { "name", "contentScope" },
+                    new[] { "spell_test", "" },
+                    "contentScope",
+                    "player"));
+
+            Assert.AreEqual(
+                "player",
+                DataConfigImporter.GetColumnValueOrDefault(
+                    new[] { "name" },
+                    new[] { "spell_test" },
+                    "contentScope",
+                    "player"));
         }
     }
 }

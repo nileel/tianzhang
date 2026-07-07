@@ -18,6 +18,7 @@ namespace TianZhang.Cultivation
         public string grade = "中品";              // 品级
         public string elementMain = "水";          // 主属性
         public string elementSub = "风";           // 辅属性
+        public string contentScope = "player";     // player/reserved
 
         [Header("属性倾向（★1-5）")]
         public int starRootBone = 2;

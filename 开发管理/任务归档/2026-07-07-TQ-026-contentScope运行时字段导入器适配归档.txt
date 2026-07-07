@@ -1,0 +1,54 @@
+# TQ-026 · contentScope 运行时字段与导入器适配归档
+
+状态：✅ 已完成（2026-07-07 Codex / gpt-5.5）
+
+## 任务来源
+
+- `开发管理/当前任务队列.txt`：TQ-026
+- `开发管理/任务列表/数据链路任务.txt`：D-CONTENT-02 / TQ-026
+- 前置复审：643efda 三类 CSV `contentScope` 标注已于 2026-07-04 通过 Codex / gpt-5.5 复审
+
+## 本轮改动
+
+1. `GongFaGrowthData`、`SpellData`、`DivineSkillData` 新增序列化字段：
+   - `contentScope = "player"`
+   - 用于保留 CSV 中的 `player/reserved` 标记。
+2. `DataConfigImporter` 新增按表头读取列值的辅助方法：
+   - `GetColumnValueOrDefault(headers, cols, "contentScope", "player")`
+   - 列缺失、行长度不足或空值时稳定回退 `player`。
+3. 三类导入流程均在创建 ScriptableObject 时写入 `contentScope`：
+   - 功法：`GongFa.csv`
+   - 术法：`Spells.csv`
+   - 神通：`Skills.csv`
+4. 新增 EditMode 编译级目标测试，覆盖：
+   - 三类运行时数据对象默认 `contentScope=player`
+   - 导入器按表头读取 `contentScope`
+   - 缺列或空值回退 `player`
+
+## 范围边界
+
+- 不重导现有 `.asset` 文件。
+- 不删除或迁移高阶 CSV/docs/asset 内容。
+- 不补 `realm_lianshen` Language key。
+- 不扩展 Unity 或 BattleSim 运行时境界链。
+- 不改变玩家当前可学内容与战斗、修炼、掉落、AI、冷却或数值语义。
+
+## 验证记录
+
+- `dotnet build "D:\天章游戏开发\src\TianZhang.EditModeTests.csproj"`
+  - RED：缺少三个 `contentScope` 字段与 `DataConfigImporter.GetColumnValueOrDefault`
+  - GREEN：0 警告，0 错误
+- `dotnet build "D:\天章游戏开发\src\Assembly-CSharp.csproj"`
+  - 0 警告，0 错误
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+  - `check-data-chain: OK`
+  - contentScope 分布：GongFa `player=1, reserved=28`；Spells `player=51, reserved=24`；Skills `player=29, reserved=5`
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/DataConfig`
+  - OK
+- `git diff --check`
+  - 通过；仅输出现有 CRLF/LF 提示
+
+## 残留事项
+
+- 若后续需要让现有 Unity `.asset` 文件实际写入 `reserved` 标记，需要单独执行 CSV 重导与 asset 字段完整性复查，可沿用 `D-ASSET-01`。
+- `D-ELEMENT-01` 与 `D-IMPORT-01` 仍保留：本轮只为 `contentScope` 建立表头读取与默认值，不做完整导入器 schema 断言。

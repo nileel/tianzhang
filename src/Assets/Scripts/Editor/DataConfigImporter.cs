@@ -111,6 +111,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/GongFa.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headers = FindHeader(lines);
 
             foreach (var line in lines.Skip(1))
             {
@@ -124,6 +125,7 @@ namespace TianZhang.Editor
                 asset.grade = T(cols[2]);
                 asset.elementMain = T(cols[3]);
                 asset.elementSub = T(cols[4]);
+                asset.contentScope = GetColumnValueOrDefault(headers, cols, "contentScope", "player");
                 asset.starRootBone = int.Parse(cols[5]);
                 asset.starPhysique = int.Parse(cols[6]);
                 asset.starSpirit = int.Parse(cols[7]);
@@ -197,6 +199,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/Spells.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headers = FindHeader(lines);
 
             foreach (var line in lines.Skip(1))
             {
@@ -209,6 +212,7 @@ namespace TianZhang.Editor
                 asset.type = (SpellType)int.Parse(cols[1]);
                 asset.minRange = int.Parse(cols[2]);
                 asset.maxRange = int.Parse(cols[3]);
+                asset.contentScope = GetColumnValueOrDefault(headers, cols, "contentScope", "player");
                 asset.mpCost = int.Parse(cols[4]);
                 asset.cooldownTicks = int.Parse(cols[5]);
                 asset.damageMultiplier = float.Parse(cols[6]);
@@ -236,6 +240,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/Skills.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headers = FindHeader(lines);
 
             foreach (var line in lines.Skip(1))
             {
@@ -248,6 +253,7 @@ namespace TianZhang.Editor
                 asset.type = (SpellType)int.Parse(cols[1]);
                 asset.minRange = int.Parse(cols[2]);
                 asset.maxRange = int.Parse(cols[3]);
+                asset.contentScope = GetColumnValueOrDefault(headers, cols, "contentScope", "player");
                 asset.mpCost = int.Parse(cols[4]);
                 asset.cooldownTicks = int.Parse(cols[5]);
                 asset.damageMultiplier = float.Parse(cols[6]);
@@ -367,6 +373,36 @@ namespace TianZhang.Editor
             }
             result.Add(current);
             return result.ToArray();
+        }
+
+        static string[] FindHeader(string[] lines)
+        {
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                var cols = ParseCSV(line);
+                if (cols.Length > 0 && cols[0] == "name")
+                    return cols;
+            }
+            return Array.Empty<string>();
+        }
+
+        public static string GetColumnValueOrDefault(
+            string[] headers,
+            string[] cols,
+            string columnName,
+            string defaultValue)
+        {
+            if (headers == null || cols == null)
+                return defaultValue;
+
+            int index = Array.FindIndex(headers, header =>
+                string.Equals(header?.Trim(), columnName, StringComparison.OrdinalIgnoreCase));
+            if (index < 0 || index >= cols.Length)
+                return defaultValue;
+
+            var value = cols[index]?.Trim();
+            return string.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
         static string SanitizeName(string name)

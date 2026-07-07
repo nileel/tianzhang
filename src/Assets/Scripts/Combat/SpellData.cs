@@ -32,6 +32,7 @@ namespace TianZhang.Combat
         public SpellRange range = SpellRange.Melee;
         public int minRange = 1;
         public int maxRange = 1;
+        public string contentScope = "player"; // player/reserved
 
         [Header("五行属性")]
         public string element = ""; // 金/木/水/火/土/风/雷/冰/暗/星/毒/混沌，空字符串表示无属性或待数据补齐
