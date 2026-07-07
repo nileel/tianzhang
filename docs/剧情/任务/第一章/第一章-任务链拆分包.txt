@@ -1,0 +1,346 @@
+# 第一章 · 龙脊余震 L2 任务链拆分包
+
+状态：TQ-033 交付稿（Codex / gpt-5.5 自产；完成后按本轮验证记录闭环）
+依据文件：
+- `docs/剧情/剧情生产规范.txt`
+- `docs/剧情/主线/第一章-龙脊余震.txt`
+- `docs/剧情/背景与重要NPC设计规范.txt`
+- `docs/剧情/世界背景故事.txt`
+- `docs/基础设定/元婴锚点与金丹位格矩阵.txt`
+- `开发管理/任务归档/2026-07-05-第一章主线骨架按剧情生产规范复核.txt`
+
+服务对象：后续 L3 单任务、据点对话、副本叙事、事件池、任务系统与第二章接续条件。
+
+设计边界：
+- 本文件是 L2 任务链拆分包，不写具体对白，不创建正式 NPC 文件，不改第一章 L1 骨架事实。
+- 玩家境界边界保持为凡人到筑基初期，不开放金丹位格，不解释完整自辟元婴真相。
+- 不写战斗倍率、掉落概率或未经 BattleSim 验证的数值。
+- 苻渊不出关，司马承景不出现，谢观微不在第一章陨落。
+- 普通 NPC 只使用模板类型占位，待 C-NPC-04/C-NPC-05 首批普通 NPC 文件完成后回填。
+
+## 一、章节级数据字段
+
+| 字段 | 建议值 |
+|------|--------|
+| storyId | `story_ch01_longji_aftershock` |
+| contentType | `chapter_l2_quest_chain` |
+| chapterId | `ch01_longji_aftershock` |
+| regionId | `region_longji_edge` |
+| timeAnchor | `haotian_387_autumn` |
+| playerRealmRange | `mortal_to_zhuji_early` |
+| triggerCondition | `new_game_origin_selected` |
+| unlockCondition | `player_origin in [taiyi, hunyuan, taixu, xuanhuang, sanxiu]` |
+| failCondition | 主线链不整体失败；单任务失败进入补线或延迟路线 |
+| completionCondition | `quest_ch01_final_choice.completed == true` |
+| repeatRule | 主线唯一；失败补线任务可限次重复 |
+| exclusiveWith | 其他第一章入口身份互斥；章末三组抉择各自二选一 |
+| performanceTier | 全章 D-A；不使用 S 级 CG |
+| gameplayHooks | `WorldScene`, `SettlementScene`, `AdventureScene`, `Combat`, `CultivationUnlock`, `Reputation`, `ClueItem`, `WorldState` |
+
+章节级状态变量：
+
+| 变量 | 写入时机 | 用途 |
+|------|----------|------|
+| `story_ch01_started` | 入口任务接取 | 标记第一章主线开始 |
+| `story_ch01_origin_taiyi` | 选择太一道庭入口 | 锁定太一入口任务与称谓 |
+| `story_ch01_origin_hunyuan` | 选择混元山/龙骧军府外围入口 | 锁定军府外围与混元边缘任务 |
+| `story_ch01_origin_taixu` | 选择太虚观入口 | 锁定业痕/宿慧试炼任务 |
+| `story_ch01_origin_xuanhuang` | 选择玄荒殿入口 | 锁定血脉试炼任务 |
+| `story_ch01_origin_sanxiu` | 选择散修入口 | 锁定散修互保网络任务 |
+| `story_ch01_beat01_intro_done` | 完成入口低风险试炼 | 开放余震扩散节拍 |
+| `story_ch01_beat02_aftershock_seen` | 查明本地余震并记录首个误读解释 | 开放安全节点争夺 |
+| `story_ch01_beat03_safe_node_resolved` | 处理一处安全节点争夺 | 开放信息碎片 |
+| `story_ch01_beat04_fragment_acquired` | 获得入口对应信息碎片 | 开放章末抉择 |
+| `story_ch01_final_choice_locked` | 完成章末抉择 | 供第二章读取 |
+
+低阶势力状态变量：
+
+| 变量 | 写入时机 | 用途 |
+|------|----------|------|
+| `story_ch01_local_faction_bound` | 玩家选择绑定中小门派、分院、家族、军府外围或散修营地 | 第二章读取玩家的低阶共同体归属、称谓和补给来源 |
+| `story_ch01_local_faction_guest` | 玩家以客卿、供奉、雇佣或临时盟友身份协助地方势力 | 保留转投空间，降低所属势力独占信任 |
+| `story_ch01_local_faction_node_secured` | 绑定或协助的地方势力守住安全节点 | 后续提供地区声望、补线 NPC、低阶资源或终局见证锚点 |
+| `story_ch01_local_faction_node_lost` | 地方势力节点失守但玩家取得证据 | 后续增加补线成本、关系压力或救援支线 |
+| `story_ch01_local_faction_anchor_candidate` | 章末选择继续扶持地方共同体 | 供第二章/中后期判断该势力是否可成长为地区锚点候选 |
+
+章末抉择状态变量：
+
+| 抉择组 | 选项状态 | 第二章读取用途 |
+|--------|----------|----------------|
+| 信息态度 | `story_ch01_info_shared` / `story_ch01_info_held` | 影响跨势力信任、情报开放度与所属势力态度 |
+| 探索方向 | `story_ch01_route_deeper_longji` / `story_ch01_route_secure_node` | 影响第二章起始地点、风险等级与安全节点资源 |
+| 位格倾向 | `story_ch01_faction_bound` / `story_ch01_faction_open` | 影响修行资源来源、路线提示与后续自辟可能性提示 |
+
+## 二、入口任务拆分
+
+五个入口都承担节拍一“初涉修真”的功能。每条入口任务只提供本地视角，不提供完整真相。
+
+低阶势力入口说明：
+- 五个主入口仍是第一章主线解释框架；中小门派、分院、修士家族、军府外围和散修营地作为这些入口下的具体出生身份或据点绑定，不新增第六类世界真相解释框架。
+- 玩家可选择“正式拜入/挂名绑定”或“客卿协助/临时盟友”两类低阶势力关系。前者写入 `story_ch01_local_faction_bound`，后者写入 `story_ch01_local_faction_guest`。
+- 低阶势力只提供任务、声望、低阶修炼资源、服务入口、节点归属和见证资格，不独占主线线索，不授予金丹位格，不创建完整宗门经营系统。
+
+| 入口 | questId | 触发条件 | 玩家目标 | 普通 NPC 占位 | 完成条件 | 演出等级 | 玩法接口 |
+|------|---------|----------|----------|----------------|----------|----------|----------|
+| 太一道庭 | `quest_ch01_taiyi_outer_trial` | `story_ch01_origin_taiyi` | 完成外门试炼，获得临时法箓接口或节点使用权 | `npc_tpl_taiyi_low_clerk`, `npc_tpl_taiyi_trial_senior` | 试炼完成并记录云川边缘水脉波纹异常 | C | `SettlementQuest`, `DialogueScene`, `CultivationUnlock`, `ClueItem` |
+| 混元山/龙骧军府外围 | `quest_ch01_hunyuan_supply_fault` | `story_ch01_origin_hunyuan` | 在封锁线外修复或调查失效补给节点 | `npc_tpl_hunyuan_veteran`, `npc_tpl_longxiang_quartermaster` | 确认失效与旧军约、安置承诺和地脉残痕有关 | C | `WorldEvent`, `SettlementQuest`, `AdventureExploration`, `ClueItem` |
+| 太虚观 | `quest_ch01_taixu_karma_trial` | `story_ch01_origin_taixu` | 通过因果试炼，识别不属于自身的旧业回响 | `npc_tpl_taixu_disciple`, `npc_tpl_karma_observer` | 试炼完成并留下“承诺断裂”线索 | B | `DialogueScene`, `AdventureExploration`, `WorldState`, `ClueItem` |
+| 玄荒殿 | `quest_ch01_xuanhuang_blood_echo` | `story_ch01_origin_xuanhuang` | 完成血脉共鸣试炼，定位龙脊北麓异常波动 | `npc_tpl_xuanhuang_warrior`, `npc_tpl_blood_ritual_keeper` | 血脉节点记录旧军约与沉旧回响并存 | C | `SettlementQuest`, `WorldEvent`, `CombatEncounter`, `ClueItem` |
+| 散修 | `quest_ch01_sanxiu_mutual_mark` | `story_ch01_origin_sanxiu` | 寻找未被宗门垄断的安全通道 | `npc_tpl_old_sanxiu`, `npc_tpl_market_runner` | 读出散修互保记号“别欠无名之债”的含义 | C | `WorldScene`, `DialogueScene`, `Reputation`, `ClueItem` |
+
+入口任务统一状态变化：
+- 添加：对应 `story_ch01_origin_*`、`story_ch01_started`、`story_ch01_beat01_intro_done`
+- 添加入口线索：`clue_ch01_origin_taiyi_water_echo`、`clue_ch01_origin_hunyuan_old_oath`、`clue_ch01_origin_taixu_broken_vow`、`clue_ch01_origin_xuanhuang_blood_echo`、`clue_ch01_origin_sanxiu_mutual_mark`
+- 不移除入口身份变量；第二章仍可读取玩家出身。
+
+## 三、五节拍主链
+
+### Beat 01：初涉修真
+
+主任务：入口任务五选一，见第二节。
+
+完成后开放：
+- `quest_ch01_aftershock_trace`
+- 对应入口据点传闻组：`dialogue_ch01_origin_rumors_*`
+- 对应入口世界事件池：`event_pool_ch01_aftershock_*`
+
+失败与回退：
+- 试炼失败不锁死主线，添加 `story_ch01_origin_retry_unlocked`。
+- 允许通过资源消耗、等待冷却或接受普通 NPC 帮助重试。
+- 重试 L3 文件建议：`quest_ch01_origin_retry_<origin>.txt`。
+
+### Beat 02：余震扩散
+
+| 字段 | 建议值 |
+|------|--------|
+| questId | `quest_ch01_aftershock_trace` |
+| triggerCondition | `story_ch01_beat01_intro_done` |
+| 目标 | 调查本地据点余震，并识别至少一个“只解释一部分”的误读来源 |
+| 冲突 | 各势力低阶 NPC 将余震归因于自身熟悉的框架，玩家必须保留疑点 |
+| completionCondition | 记录入口线索与一条反证，添加 `story_ch01_beat02_aftershock_seen` |
+| performanceTier | C |
+| gameplayHooks | `SettlementQuest`, `WorldEvent`, `DialogueScene`, `ClueItem`, `WorldState` |
+| rewardTier | 低阶修炼资源、地区声望小幅提升、余震线索；不写具体数值 |
+
+入口差异：
+
+| 入口 | 表层异常 | 误读来源 | 反证状态 |
+|------|----------|----------|----------|
+| 太一 | 阵法与水脉波纹失真 | 低阶修士称为地脉紊乱 | `clue_ch01_taiyi_promise_chain_unverified` |
+| 混元 | 补给节点承压失效 | 旧部称为苻渊未醒 | `clue_ch01_hunyuan_oath_pressure` |
+| 太虚 | 因果试炼出现外来旧业 | 观中弟子称为旧业未了 | `clue_ch01_taixu_karma_not_enough` |
+| 玄荒 | 血脉节点躁动 | 试炼者称为血脉复苏 | `clue_ch01_xuanhuang_oath_blood_overlap` |
+| 散修 | 互保记号失效或反噬 | 散修称为宗门暗手 | `clue_ch01_sanxiu_debt_echo` |
+
+失败与回退：
+- 若玩家误判或任务失败，添加 `story_ch01_aftershock_misread`，不移除主线入口。
+- 补线来源为天机楼观测记录、旧报告或第二名普通 NPC 见证；建议 L3 文件：`quest_ch01_aftershock_second_clue.txt`。
+- 补线完成后仍可添加 `story_ch01_beat02_aftershock_seen`，但第二章可读取 `story_ch01_aftershock_misread` 作为信任或成本差异。
+
+### Beat 03：安全节点争夺
+
+| 字段 | 建议值 |
+|------|--------|
+| questId | `quest_ch01_safe_node_contest` |
+| triggerCondition | `story_ch01_beat02_aftershock_seen` |
+| 目标 | 选择并处理一处龙脊边缘安全节点争夺 |
+| 冲突 | 各方争夺的不是强灵脉，而是暂时隔离德业反噬、允许低阶修士稳定修行的局部条件 |
+| completionCondition | 至少一处节点争夺有结果，添加 `story_ch01_beat03_safe_node_resolved` |
+| performanceTier | B |
+| gameplayHooks | `WorldScene`, `AdventureScene`, `CombatEncounter`, `Reputation`, `WorldState`, `ClueItem` |
+| rewardTier | 节点访问权、势力声望、路线线索；不写具体数值 |
+
+节点分配建议：
+
+| nodeId | 适配入口 | 表层玩法 | 深层线索 | L3 文件 |
+|--------|----------|----------|----------|---------|
+| `node_ch01_cangtai` | 太一、混元 | 稳定阵基争夺、低阶战棋遭遇或谈判 | 王玄略曾标注“承压未定” | `quest_ch01_node_cangtai.txt` |
+| `node_ch01_langhou` | 混元、玄荒 | 血脉试炼外缘与军府旧约冲突 | 血脉回响与旧军约同时出现 | `quest_ch01_node_langhou.txt` |
+| `node_ch01_huiboxia` | 太虚、散修 | 业痕回波探索、环境事件 | 谢观微推演模型无法完整解释 | `quest_ch01_node_huiboxia.txt` |
+| `node_ch01_kurongping` | 散修、太一 | 空白节点调查、散修旧记号核对 | 坤舆谱残篇与散修旧记号互相矛盾 | `quest_ch01_node_kurongping.txt` |
+
+状态变化：
+- 添加对应节点结果：`story_ch01_node_cangtai_resolved`、`story_ch01_node_langhou_resolved`、`story_ch01_node_huiboxia_resolved`、`story_ch01_node_kurongping_resolved`
+- 若玩家保住节点：添加 `world_longji_safe_node_secured`
+- 若节点落入其他势力：添加 `world_longji_safe_node_lost`
+- 若节点关联玩家绑定或协助的低阶势力：同步添加 `story_ch01_local_faction_node_secured` 或 `story_ch01_local_faction_node_lost`
+- 无论胜负，只要取得节点异常证据，即可推进到 Beat 04。
+
+失败与回退：
+- 战斗失败、谈判失败或撤退时，不软锁主线，添加 `story_ch01_safe_node_lost_or_delayed`。
+- 玩家可通过次级节点、残留碑文、被救低阶修士或敌方遗落报告取得同等主线线索。
+- 补线 L3 文件建议：`quest_ch01_node_after_loss_clue.txt`。
+
+### Beat 04：信息碎片
+
+| 字段 | 建议值 |
+|------|--------|
+| questId | `quest_ch01_info_fragment` |
+| triggerCondition | `story_ch01_beat03_safe_node_resolved` |
+| 目标 | 从节点结果中获得无法单独解释的信息碎片 |
+| 冲突 | 入口解释框架无法覆盖碎片全貌，重要 NPC 或其代理只能给局部判断 |
+| completionCondition | 获得入口碎片，添加 `story_ch01_beat04_fragment_acquired` |
+| performanceTier | B |
+| gameplayHooks | `AdventureScene`, `DialogueScene`, `ClueItem`, `Relationship`, `WorldState` |
+| rewardTier | 关键线索、跨势力弱联系、第二章钩子 |
+
+入口碎片：
+
+| 入口 | clueId | 信息边界 | 可接触对象 |
+|------|--------|----------|--------------|
+| 太一 | `clue_ch01_fragment_taiyi_unverified_promise_chain` | 谢观微早期推演中有“不可验证承诺链”，但不解释全因果 | 谢观微可短接触一次，或由谢氏低阶执事转述 |
+| 混元 | `clue_ch01_fragment_hunyuan_kunyupu_pressure` | 坤舆谱残篇标出地脉、人群迁移与旧约压力交叉 | 吕星枢线索或王玄略旧弟子报告 |
+| 太虚 | `clue_ch01_fragment_taixu_common_burden` | 回溯显示有人把共同体责任强行上承 | 姚观寂可做一次不完整回溯 |
+| 玄荒 | `clue_ch01_fragment_xuanhuang_old_echo` | 血脉节点听见不属于苍狼古神的沉旧回响 | 姚观寂线索或巴蜀后续线索 |
+| 散修 | `clue_ch01_fragment_sanxiu_debt_mark` | 古老互保记号提示“不要只看灵脉，看谁欠谁” | 卫长庚线索或散修网络中介 |
+
+重要 NPC 出场限制：
+- 谢观微仅太一入口可短接触，不给完整答案。
+- 姚观寂仅太虚入口可做不完整回溯；玄荒入口只接到线索，不必本人出场。
+- 苻渊、司马承景不出现。
+- 拓跋烈、卫长庚、吕星枢、钟离幽只可用书信、报告、中介或一次短场景承接，不得全知解答。
+
+失败与回退：
+- 若碎片被截获或玩家撤退，添加 `story_ch01_fragment_intercepted`。
+- 补线方式为残片副本、次级见证者、节点环境叙事或所属势力誊录；建议 L3 文件：`quest_ch01_fragment_recover_copy.txt`。
+- 补线得到的碎片可降低某一势力信任，但不得阻断 Beat 05。
+
+### Beat 05：章末抉择
+
+| 字段 | 建议值 |
+|------|--------|
+| questId | `quest_ch01_final_choice` |
+| triggerCondition | `story_ch01_beat04_fragment_acquired` |
+| 目标 | 决定信息处理方式、第二章探索方向和位格倾向 |
+| 冲突 | 所属势力、安全节点、跨势力弱联系与玩家未来道路之间产生取舍 |
+| completionCondition | 三组抉择各选择一项，添加 `story_ch01_final_choice_locked` |
+| performanceTier | A |
+| gameplayHooks | `DialogueScene`, `WorldState`, `Reputation`, `ClueItem`, `ChapterTransition` |
+| rewardTier | 章节结算、第二章入口差异、路线提示；不写具体数值 |
+
+抉择数据化：
+
+| 抉择组 | 选项 | stateFlagsAdded | 短期结果 | 长期读取 |
+|--------|------|-----------------|----------|----------|
+| 信息态度 | 分享给更多势力 | `story_ch01_info_shared` | 跨势力弱联系增加，所属势力独占收益降低 | 第二章开放更多外部情报，但本势力信任增长较慢 |
+| 信息态度 | 只交给所属势力 | `story_ch01_info_held` | 所属势力信任更高，外部 NPC 获知较慢 | 第二章外部补线成本上升 |
+| 探索方向 | 向龙脊深处推进 | `story_ch01_route_deeper_longji` | 风险上升，深层线索更早出现 | 第二章起始危险等级更高 |
+| 探索方向 | 巩固当前安全节点 | `story_ch01_route_secure_node` | 节点收益和当地声望更稳 | 第二章深层线索延后，但资源压力更低 |
+| 位格倾向 | 寻求势力支持 | `story_ch01_faction_bound` | 获得清晰修行资源和保护 | 第二章路线更依赖所属势力解释框架 |
+| 位格倾向 | 保留自辟可能 | `story_ch01_faction_open` | 资源更不稳定，但保留多路线线索 | 第二章自辟相关疑问更早出现 |
+
+低阶势力延伸选择：
+
+| 选择 | stateFlagsAdded | 短期结果 | 长期读取 |
+|------|-----------------|----------|----------|
+| 继续扶持绑定/协助的地方势力 | `story_ch01_local_faction_anchor_candidate` | 该势力成为第二章可回访补给点或证词来源 | 中后期可升级为地区锚点候选，但需后续任务链验证 |
+| 暂不押注地方势力 | 无新增锚点候选 | 玩家保留更高流动性，地方势力只保留普通声望关系 | 后续仍可通过代价任务重建联系 |
+
+失败与回退：
+- 章末抉择不设置失败，只允许暂缓。
+- 暂缓时添加 `story_ch01_final_choice_pending`，保留当前节点状态，直到玩家完成三组选择。
+- 选择锁定后不在第一章内反悔；第二章可以通过代价任务改变部分关系，但不改写第一章选择事实。
+
+## 四、玩法接口汇总
+
+| 接口 | 第一章任务链使用方式 |
+|------|----------------------|
+| WorldScene | 龙脊边缘节点移动、节点封锁、世界事件池、入口路线差异 |
+| SettlementScene | 宗门/军府/坊市/分院据点接取任务、传闻组、服务入口提示 |
+| AdventureScene | 安全节点探索、阵基/业痕/血脉/旧记号环境叙事 |
+| Combat | 低阶战棋遭遇、节点守卫、妖兽或抢夺者；只写类型，不写数值 |
+| 修炼/境界 | 入口任务授予低阶修炼资源或临时节点使用权；不突破金丹 |
+| 经济/奖励 | 奖励只写类别和强度档，具体数量进入后续数据文件 |
+| 关系/声望 | 所属势力、低阶地方势力、跨势力弱联系、散修网络、节点相关 NPC 关系变化 |
+| 道具/线索 | 五类入口线索、四处节点线索、五类信息碎片 |
+| 世界状态 | 节点归属、地方共同体锚点候选、封锁升级、余震被记录、第二章入口差异 |
+
+## 五、普通 NPC 回填占位
+
+当前只保留 NPC 类型，不创建正式 NPC 文件。C-NPC-04/C-NPC-05 完成后，按以下字段回填 L3 任务：
+
+| 占位类型 | 用途 | 回填来源 |
+|----------|------|----------|
+| `npc_tpl_taiyi_low_clerk` | 太一入口接取、误读地脉异常 | C-NPC-04 |
+| `npc_tpl_taiyi_trial_senior` | 太一试炼指导、法箓接口说明 | C-NPC-04 |
+| `npc_tpl_hunyuan_veteran` | 军府旧约侧面呈现 | C-NPC-04 |
+| `npc_tpl_longxiang_quartermaster` | 补给节点任务接取/提交 | C-NPC-04 |
+| `npc_tpl_taixu_disciple` | 太虚试炼引导 | 后续太虚普通 NPC 批次 |
+| `npc_tpl_karma_observer` | 业痕记录与误读来源 | 后续太虚普通 NPC 批次 |
+| `npc_tpl_xuanhuang_warrior` | 玄荒试炼同伴或竞争者 | 后续玄荒普通 NPC 批次 |
+| `npc_tpl_blood_ritual_keeper` | 血脉节点看守 | 后续玄荒普通 NPC 批次 |
+| `npc_tpl_old_sanxiu` | 散修互保记号解释者之一 | C-NPC-05 |
+| `npc_tpl_market_runner` | 坊市/通道传闻与补线 | C-NPC-05 |
+| `npc_tpl_minor_sect_steward` | 中小门派/分院/修士家族的低阶任务、入门或客卿关系 | 后续低阶势力生态批次 |
+| `npc_tpl_local_faction_witness` | 节点争夺后的证词、补线与见证资格记录 | 后续低阶势力生态批次 |
+
+约束：
+- 普通 NPC 不掌握完整主线真相。
+- 普通 NPC 不占据源/化/界席位，不成为重要 NPC 亲传。
+- 主线必要信息不能只由一个可错过普通 NPC 独占。
+- 中小门派或地方共同体 NPC 只能提供本地解释、资源服务和见证，不提供完整宗门经营、终局答案或高阶传承。
+
+## 六、后续 L3/L4 文件清单
+
+优先 L3 单任务：
+
+| 优先级 | 文件 | 作用 |
+|--------|------|------|
+| P1 | `docs/剧情/任务/第一章/quest_ch01_taiyi_outer_trial.txt` | 太一入口样例任务，验证入口任务字段格式 |
+| P1 | `docs/剧情/任务/第一章/quest_ch01_sanxiu_mutual_mark.txt` | 散修入口样例任务，验证无宗门路线字段格式 |
+| P1 | `docs/剧情/任务/第一章/quest_ch01_aftershock_trace.txt` | 余震扩散通用任务，验证误读与补线结构 |
+| P1 | `docs/剧情/任务/第一章/quest_ch01_safe_node_contest.txt` | 安全节点争夺总任务，必要时拆四个节点子任务 |
+| P1 | `docs/剧情/任务/第一章/quest_ch01_info_fragment.txt` | 信息碎片任务，验证重要 NPC 出场限制 |
+| P1 | `docs/剧情/任务/第一章/quest_ch01_final_choice.txt` | 章末抉择任务，供第二章读取状态变量 |
+| P1 | `docs/剧情/任务/第一章/quest_ch01_local_faction_binding.txt` | 低阶势力绑定/客卿样例任务，验证中小门派开放边界 |
+
+节点与副本叙事：
+
+| 优先级 | 文件 | 作用 |
+|--------|------|------|
+| P2 | `docs/剧情/任务/第一章/quest_ch01_node_cangtai.txt` | 苍台节点 L3 任务 |
+| P2 | `docs/剧情/任务/第一章/quest_ch01_node_langhou.txt` | 狼喉节点 L3 任务 |
+| P2 | `docs/剧情/任务/第一章/quest_ch01_node_huiboxia.txt` | 回波峡节点 L3 任务 |
+| P2 | `docs/剧情/任务/第一章/quest_ch01_node_kurongping.txt` | 枯荣坪节点 L3 任务 |
+| P2 | `docs/剧情/副本叙事/adventure_ch01_cangtai_node.txt` | 苍台节点 AdventureScene 叙事 |
+| P2 | `docs/剧情/副本叙事/adventure_ch01_langhou_node.txt` | 狼喉节点 AdventureScene 叙事 |
+| P2 | `docs/剧情/副本叙事/adventure_ch01_huiboxia_node.txt` | 回波峡节点 AdventureScene 叙事 |
+| P2 | `docs/剧情/副本叙事/adventure_ch01_kurongping_node.txt` | 枯荣坪节点 AdventureScene 叙事 |
+
+对话与演出：
+
+| 优先级 | 文件 | 作用 |
+|--------|------|------|
+| P2 | `docs/剧情/对话文案/dialogue_ch01_origin_rumors.txt` | 五入口据点传闻组 |
+| P2 | `docs/剧情/对话文案/dialogue_ch01_cross_faction_contact.txt` | 跨势力弱联系对话摘要 |
+| P2 | `docs/剧情/对话文案/dialogue_ch01_local_faction_services.txt` | 中小门派/分院/家族/散修营地的服务、称谓与节点状态反馈 |
+| P2 | `docs/剧情/演出/performance_ch01_fragment_contact.txt` | Beat 04 重要 NPC 或代理短接触 B 级演出 |
+| P2 | `docs/剧情/演出/performance_ch01_final_choice.txt` | Beat 05 章末抉择 A 级演出 |
+
+不在本轮创建：
+- 以上 L3/L4 文件只列清单，不在本 TQ-033 中落稿。
+- 正式普通 NPC 文件等待 C-NPC-04/C-NPC-05。
+- 第二章 L2/L3 文件等待世界主线后续拆分任务。
+
+## 七、复核清单
+
+| 来源缺口 | 本文件对应位置 | 结论 |
+|----------|----------------|------|
+| P1-1 统一剧情 ID 与状态变量 | 第一节、第二节、第三节 | 已补 `storyId`、入口状态、节拍状态和章末状态 |
+| P1-2 演出等级 | 第二节、第三节、第六节 | 已标 D-A；第一章不使用 S 级 CG |
+| P1-3 玩法接口 | 第一节、第三节、第四节 | 已拆 `WorldScene`、`SettlementScene`、`AdventureScene`、`Combat` 等接口 |
+| P1-4 一任务一文件拆分清单 | 第六节 | 已列 L3/L4 后续文件清单，本轮不合并具体任务 |
+| P2-1 普通 NPC 占位 | 第五节 | 已明确依赖 C-NPC-04/C-NPC-05 回填 |
+| P2-2 失败恢复方式 | 第三节各 Beat | 已给重试、补线、延迟、替代线索和对应 L3 建议 |
+| P2-3 章末抉择数据化 | 第一节、第三节 Beat 05 | 已定义三组二选一状态变量和第二章读取用途 |
+| P2-4 低阶势力开放边界 | 第一节、第二节、第三节、第四节、第五节、第六节 | 已限定中小门派为入口身份、服务、声望、节点归属和地区锚点候选，不扩展为全量宗门经营 |
+
+## 八、禁止项复核
+
+- 未写具体对白。
+- 未写战斗倍率、掉落概率或未验证数值。
+- 未让玩家突破金丹或取得金丹位格。
+- 未让普通 NPC 掌握完整主线真相。
+- 未把中小门派或地方共同体写成可直接经营到世界巅峰的全量系统。
+- 未让苻渊出关，未让司马承景出现，未让谢观微陨落。
+- 未使用旧北地统合口径。
