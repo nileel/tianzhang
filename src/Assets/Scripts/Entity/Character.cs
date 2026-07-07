@@ -431,6 +431,21 @@ namespace TianZhang.Entity
             };
         }
 
+        public int XuanganMindStrengthBonus()
+        {
+            if (GongFaName != "南华玄感录")
+                return 0;
+
+            return Mathf.RoundToInt(GetEffectiveRealmMultiplier()) switch
+            {
+                >= 12 => 12, // 元婴
+                >= 6 => 8,   // 金丹
+                >= 3 => 5,   // 筑基
+                >= 2 => 3,   // 练气
+                _ => 3
+            };
+        }
+
         private string m_Realm;
 
         public void SetRealm(string realm)

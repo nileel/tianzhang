@@ -158,6 +158,7 @@ namespace TianZhang.Combat
             float magicDefensePenetrationPercent = 0f)
         {
             var result = new DamageResult();
+            rawAtk += attacker.XuanganMindStrengthBonus();
 
             if (!RollHit(attacker, defender, cannotDodge, ref result))
                 return result;

@@ -1,0 +1,50 @@
+# TQ-028 / U-MECH-02A 玄感神识强度 Unity 回归归档
+
+时间：2026-07-07
+执行：Codex / gpt-5.5
+状态：完成并自验。本轮为 Codex 自产执行切片，不进入复审队列。
+
+## 范围
+
+- 接入《南华玄感录》在 Unity 神魂伤害中的“神识强度”被动：
+  - 练气 +3
+  - 筑基 +5
+  - 金丹 +8
+  - 元婴 +12
+- 加值统一进入 `DamageCalculator.CalcMagic` 的 rawAtk，因此覆盖神魂普攻、神魂术法与神魂神通。
+- 本轮不接入 debuff 清除、玄同免控、清除后回血、玄同 MP 消耗降低；这些需要 Unity 侧先有统一状态/debuff 流程后另拆。
+- 本轮不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
+
+## 文件
+
+- `src/Assets/Scripts/Entity/Character.cs`
+  - 新增 `XuanganMindStrengthBonus()`，按当前有效境界倍率返回南华玄感录神识强度加值。
+- `src/Assets/Scripts/Combat/DamageCalculator.cs`
+  - 神魂伤害入口将攻击方玄感神识强度加到 rawAtk。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+  - 新增 `XuanganAddsRealmMindStrengthToMagicDamage`。
+  - 新增 `CombatMechanismBatchRunner.RunXuanganMindStrength`，用于 Unity batchmode 无法产出 Test Runner XML 时执行目标断言。
+
+## TDD 记录
+
+- RED：`CombatMechanismBatchRunner.RunXuanganMindStrength` 在实现前失败。
+  - 普通神魂伤害：225
+  - 玄感神魂伤害：225
+  - 断言：`Expected: greater than 225 But was: 225`
+- GREEN：实现后同一入口通过。
+  - 普通神魂伤害：225
+  - 玄感神魂伤害：233
+  - 日志：`CombatMechanismBatchRunner.RunXuanganMindStrength passed.`
+
+## 验证
+
+- `Unity.exe -batchmode -projectPath D:\天章游戏开发\src -executeMethod TianZhang.Tests.CombatMechanismBatchRunner.RunXuanganMindStrength -logFile D:\天章游戏开发\src\Temp\codex-xuangan-green-exec.log -quit`：目标断言通过。
+- `dotnet build -c Release --no-restore simulations/BattleSim`：0 警告 0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：默认模拟完整跑通。
+- `dotnet build src/Assembly-CSharp.csproj -c Release --no-restore`：0 警告 0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj -c Release --no-restore`：0 警告 0 错误。
+
+## 后续
+
+- U-MECH-02B：玄感 debuff 清除、玄同免控、清除后回血、玄同 MP 消耗降低，需要先建立或复用 Unity 统一状态/debuff 处理流程。
+- U-MECH-03：含弘/载物 Unity 回归仍待处理。

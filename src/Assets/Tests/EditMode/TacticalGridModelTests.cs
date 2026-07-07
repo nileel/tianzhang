@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Text.RegularExpressions;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -155,6 +156,34 @@ namespace TianZhang.Tests
             Assert.Greater(chargedResult.Damage.FinalDamage, freshResult.Damage.FinalDamage);
         }
 
+        [Test]
+        public void XuanganAddsRealmMindStrengthToMagicDamage()
+        {
+            AssertXuanganAddsRealmMindStrengthToMagicDamage(expectLogs: true);
+        }
+
+        internal static void AssertXuanganAddsRealmMindStrengthToMagicDamage(bool expectLogs)
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine };
+
+            var normalCaster = CreateMagicCaster(engine, "普通神魂", new HexCoord(0, 0), "含弘光大典");
+            var normalTarget = CreateTarget(engine, "普通目标");
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("普通神魂 神魂攻击 普通目标"));
+            var normalResult = resolver.BasicAttack(normalCaster, normalTarget, true);
+
+            var xuanganCaster = CreateMagicCaster(engine, "玄感神魂", new HexCoord(0, 0), "南华玄感录");
+            var xuanganTarget = CreateTarget(engine, "玄感目标");
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("玄感神魂 神魂攻击 玄感目标"));
+            var xuanganResult = resolver.BasicAttack(xuanganCaster, xuanganTarget, true);
+
+            Assert.IsTrue(normalResult.Success);
+            Assert.IsTrue(xuanganResult.Success);
+            Assert.Greater(xuanganResult.Damage.FinalDamage, normalResult.Damage.FinalDamage);
+        }
+
         private static Character CreateFudanCaster(CTBEngine engine, string name, int fudanStacks)
         {
             var character = new Character
@@ -212,10 +241,15 @@ namespace TianZhang.Tests
 
         private static Character CreateMagicCaster(CTBEngine engine, string name, HexCoord position)
         {
+            return CreateMagicCaster(engine, name, position, "南华玄感录");
+        }
+
+        private static Character CreateMagicCaster(CTBEngine engine, string name, HexCoord position, string gongFaName)
+        {
             var character = new Character
             {
                 Name = name,
-                GongFaName = "南华玄感录",
+                GongFaName = gongFaName,
                 MaxHP = 1000,
                 CurrentHP = 1000,
                 MaxMP = 100,
@@ -258,6 +292,24 @@ namespace TianZhang.Tests
             character.SetRealm("金丹");
             character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
             return character;
+        }
+    }
+
+    public static class CombatMechanismBatchRunner
+    {
+        public static void RunXuanganMindStrength()
+        {
+            try
+            {
+                CombatMechanismTests.AssertXuanganAddsRealmMindStrengthToMagicDamage(expectLogs: false);
+                Debug.Log("CombatMechanismBatchRunner.RunXuanganMindStrength passed.");
+                EditorApplication.Exit(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                EditorApplication.Exit(1);
+            }
         }
     }
 
