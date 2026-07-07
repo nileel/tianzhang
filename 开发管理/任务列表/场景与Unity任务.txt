@@ -13,6 +13,7 @@
 - ✅ TQ-023：SettlementScene 通用据点/宗门原型已完成。
 - ✅ TQ-024：Settlement/World → Adventure 入口与返回上下文已完成。
 - ✅ TQ-025：Adventure/Combat UI 命令绑定拆分切片已完成；战斗动作栏统一通过 `ICombatCommandHandler` 发命令，新增 `BtnSwap` 换法按钮，`BattleUIManager` 不再直接依赖 `ExplorationController`。
+- ✅ TQ-028 / U-MECH-01：雷劫印记 Unity 回归已完成；九霄雷劫录受击叠层、物理出手消耗增伤、满层神魂受击魂防降低已接入运行时。
 
 ## 近期任务
 
@@ -24,7 +25,7 @@
 | U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
 | U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |
 | U-S6-03 | P1 | Codex | 待处理 | `ExplorationController` 战斗协程壳或日志适配继续拆分 |
-| U-MECH-01 / TQ-028 | P2 | Codex | 待处理 | 雷劫印记 Unity 回归 |
+| U-MECH-01 / TQ-028 | P2 | Codex | ✅ 已完成 | 雷劫印记 Unity 回归 |
 | U-MECH-02 / TQ-028 | P2 | Codex | 待处理 | 玄感清除链 Unity 回归 |
 | U-MECH-03 / TQ-028 | P2 | Codex | 待处理 | 含弘/载物 Unity 回归 |
 | U-2_5D-01 | P2 | Codex | 待处理 | 2.5D 战棋表现小场景原型，需 S1-S6 后执行 |

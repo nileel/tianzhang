@@ -322,6 +322,8 @@ namespace TianZhang.Combat
                 character.ShouyiStacks = 2;
             if (character.GongFaName == "云篆度人经")
                 character.FudanStacks = 2;
+            if (character.GongFaName == "九霄雷劫录")
+                character.LeijieStacks = 0;
         }
 
         private static bool CanPlayerAct(Character player)

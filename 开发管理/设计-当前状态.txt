@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-01 雷劫印记 Unity 回归完成。Unity 运行时新增 `LeijieStacks`，九霄雷劫录受击叠层、物理出手消耗增伤、满层被神魂攻击时按 80% 神防结算；`BeginCombat` 会清零雷劫战斗状态。验证：TDD RED/Unity 目标测试 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build、文本检查、`git diff --check` 通过。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路或掉落。
 > 2026-07-07 Codex / gpt-5.5：TQ-026 contentScope 运行时字段与导入器适配完成。`GongFaGrowthData`、`SpellData`、`DivineSkillData` 均新增默认 `contentScope=player` 序列化字段；`DataConfigImporter` 按 CSV 表头读取 `contentScope`，缺列或空值稳定回退 `player`。验证：TDD RED/目标构建、`Assembly-CSharp` build、`check-data-chain.ps1`、`check-review-text.ps1`、`git diff --check` 通过；本轮不重导 asset、不扩展 `realm_lianshen` 或 `realm_lianxu` 运行时境界链、不改变玩家可学内容。
 > 2026-07-05 Codex / gpt-5.5：TQ-025 Adventure/Combat UI 命令绑定拆分切片完成。`BattleUIManager` 不再保存或回退到 `ExplorationController` 具体类型，动作栏统一通过 `ICombatCommandHandler` 发出普攻/防御/待机/换法/术法/神通命令；新增 `BtnSwap` 换法按钮，`ExplorationController` 改为 `SetCombatCommandHandler(this)` 接口注入。验证：TDD 目标测试已补成功与无 handler 失败路径；`Assembly-CSharp` 与 `TianZhang.EditModeTests` build 通过；Unity Test Runner 因已有 Unity 实例运行未执行。本轮不改 CTB、AI、伤害、冷却、掉落、寻路或战斗结算语义。
 > 2026-07-05 Codex / gpt-5.5：TQ-024 Settlement/World → Adventure 入口与返回上下文完成。`SceneFlowManager` 已拆出不触发场景加载的上下文准备方法用于测试；World/Settlement 进入 Adventure 会写入 `GameSession.CurrentAdventureId` 与来源返回目标；AdventureScene 生成 `UICanvas/AdventurePanel` 展示当前副本 ID/来源并提供返回来源按钮；返回来源时清理当前 Adventure/ReturnTarget 并恢复 World 或 Settlement 上下文。验证：TDD RED、`Assembly-CSharp` 与 `TianZhang.EditModeTests` build 通过；Unity Test Runner 因已有 Unity 实例运行未执行。本轮不改探索地图、战斗循环、掉落、寻路、技能范围或数值语义。
@@ -162,6 +163,7 @@
 | v0.15 | SettlementScene 通用据点/宗门原型 | ✅ TQ-023：SettlementSceneController 读取 `CurrentSettlementId`，展示据点名称/类型/服务/副本入口占位，未知据点回退默认宗门，并通过返回按钮保留主世界节点 |
 | v0.16 | Settlement/World → Adventure 返回上下文 | ✅ TQ-024：World/Settlement 进入 Adventure 写入 `CurrentAdventureId` 与来源返回目标；AdventureScene 展示当前副本 ID/来源并提供返回来源按钮；返回后清理当前副本上下文 |
 | v0.17 | Adventure/Combat UI 命令绑定接口化 | ✅ TQ-025：BattleUIManager 动作栏统一经 `ICombatCommandHandler` 发送命令，新增 `BtnSwap` 换法按钮；ExplorationController 仅作为接口实现者注入，UI 不再直接保存地图控制器引用 |
+| v0.18 | 雷劫印记运行时回归 | ✅ TQ-028 / U-MECH-01：九霄雷劫录受击叠加雷劫印记，普通物理攻击/物理术法/物理神通出手消耗印记并增伤，满层被神魂攻击时按 80% 神防结算；玄感、含弘/载物仍为后续独立切片 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 

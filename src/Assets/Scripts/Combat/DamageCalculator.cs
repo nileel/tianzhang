@@ -166,7 +166,10 @@ namespace TianZhang.Combat
             float soulResist = 0f;
             if (defender.GongFaName == "抱元守一经" && defender.ShouyiStacks == defender.MaxShouyi())
                 soulResist += 15f;
-            float effectiveMagDef = defender.MagDef * (1f - Mathf.Clamp(magicDefensePenetrationPercent, 0f, 100f) / 100f);
+            float effectiveMagDef = defender.MagDef;
+            if (defender.GongFaName == "九霄雷劫录" && defender.LeijieStacks == defender.MaxLeijie())
+                effectiveMagDef *= 0.80f;
+            effectiveMagDef *= 1f - Mathf.Clamp(magicDefensePenetrationPercent, 0f, 100f) / 100f;
 
             float critMultiplier = RollCrit(attacker, elementMatch, ref result);
             float damage = CalculateLineDamage(

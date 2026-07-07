@@ -78,6 +78,7 @@ namespace TianZhang.Entity
         // ---- 印记状态 ----
         public int ShouyiStacks;     // 守一印记层数（抱元守一经）
         public int FudanStacks;      // 符胆印记层数（云篆度人经）
+        public int LeijieStacks;     // 雷劫印记层数（九霄雷劫录）
 
         // ---- 功法 ----
         public string GongFaName;
@@ -217,6 +218,9 @@ namespace TianZhang.Entity
 
         public void TakeDamage(int amount)
         {
+            if (amount > 0 && GongFaName == "九霄雷劫录")
+                LeijieStacks = Mathf.Min(LeijieStacks + 1, MaxLeijie());
+
             CurrentHP -= amount;
             if (CurrentHP <= 0)
             {
@@ -401,6 +405,29 @@ namespace TianZhang.Entity
                 >= 6 => 5,   // 金丹+
                 >= 3 => 3,   // 筑基
                 _ => 5
+            };
+        }
+
+        /// <summary>雷劫印记最大层数（按 BattleSim 当前境界口径）。</summary>
+        public int MaxLeijie()
+        {
+            return Mathf.RoundToInt(GetEffectiveRealmMultiplier()) switch
+            {
+                >= 6 => 5,   // 金丹+
+                >= 3 => 3,   // 筑基
+                _ => 3
+            };
+        }
+
+        public float LeijieDamageBonusPerStack()
+        {
+            return Mathf.RoundToInt(GetEffectiveRealmMultiplier()) switch
+            {
+                >= 24 => 0.30f, // 化神
+                >= 12 => 0.22f, // 元婴
+                >= 6 => 0.18f,  // 金丹
+                >= 3 => 0.15f,  // 筑基
+                _ => 0.15f
             };
         }
 

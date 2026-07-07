@@ -1,0 +1,40 @@
+# TQ-028 / U-MECH-01 雷劫印记 Unity 回归归档
+
+时间：2026-07-07
+执行：Codex / gpt-5.5
+
+## 范围
+
+- 本轮只处理 U-MECH-01：九霄雷劫录的雷劫印记 Unity 运行时回归。
+- 不处理玄感清除链、含弘/载物、CTB 行动轴、AI、冷却、寻路、掉落或 BattleSim 数值调参。
+
+## 实现
+
+- `Character` 新增 `LeijieStacks`，受击入口 `TakeDamage` 对九霄雷劫录按伤害次数叠加雷劫印记，并按境界限制上限。
+- `CombatResolver` 在普通物理攻击、物理术法、物理神通中消耗雷劫印记并加入伤害倍率。
+- `DamageCalculator` 在神魂伤害结算时检测满层雷劫印记，使九霄雷劫录目标按当前 BattleSim 口径以 80% 神防参与结算。
+- `TacticalCombatController.BeginCombat` 初始化九霄雷劫录的战斗内雷劫印记为 0，避免跨遭遇残留。
+
+## 测试
+
+- 新增 `CombatMechanismTests.LeijieDamageTakenBoostsNextPhysicalAttackAndThenConsumes`：
+  - RED：旧实现中受击后物理伤害仍为 173，未高于基准 173。
+  - GREEN：受击叠层后的下一次物理攻击高于基准，随后再次攻击回落到基准伤害。
+- 新增 `CombatMechanismTests.FullLeijieStackReducesMagicDefenseAgainstMagicAttack`：
+  - RED：旧实现中满层雷劫被神魂攻击伤害仍为 180，未高于未满层 180。
+  - GREEN：满层雷劫被神魂攻击时承受伤害高于未满层。
+
+## 验证
+
+- Unity EditMode 目标测试：`TianZhang.Tests.CombatMechanismTests` 通过，Unity 日志显示 `Test run completed. Exiting with code 0 (Ok). Run completed.`
+- `dotnet build -c Release --no-restore simulations/BattleSim`：0 警告 0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：默认模拟完整跑通，总平均回合数约 25.3。
+- `dotnet build src/Assembly-CSharp.csproj -c Release --no-restore`：0 警告 0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj -c Release --no-restore`：0 警告 0 错误。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：终检通过。
+- `git diff --check`：终检通过。
+
+## 后续
+
+- TQ-028 继续保留 U-MECH-02 玄感清除链 Unity 回归。
+- TQ-028 继续保留 U-MECH-03 含弘/载物 Unity 回归。

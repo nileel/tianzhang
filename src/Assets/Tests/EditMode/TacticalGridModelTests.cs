@@ -101,6 +101,60 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void LeijieDamageTakenBoostsNextPhysicalAttackAndThenConsumes()
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine };
+
+            var baseAttacker = CreateLeijieCombatant(engine, "未蓄雷", new HexCoord(0, 0));
+            var baseTarget = CreateTarget(engine, "基准目标");
+            LogAssert.Expect(LogType.Log, new Regex("未蓄雷 物理攻击 基准目标"));
+            var baseResult = resolver.BasicAttack(baseAttacker, baseTarget, false);
+
+            var chargedAttacker = CreateLeijieCombatant(engine, "已蓄雷", new HexCoord(0, 0));
+            chargedAttacker.TakeDamage(1);
+            chargedAttacker.TakeDamage(1);
+            chargedAttacker.TakeDamage(1);
+
+            var chargedTarget = CreateTarget(engine, "蓄雷目标");
+            LogAssert.Expect(LogType.Log, new Regex("已蓄雷 物理攻击 蓄雷目标"));
+            var chargedResult = resolver.BasicAttack(chargedAttacker, chargedTarget, false);
+
+            var spentTarget = CreateTarget(engine, "耗尽目标");
+            LogAssert.Expect(LogType.Log, new Regex("已蓄雷 物理攻击 耗尽目标"));
+            var spentResult = resolver.BasicAttack(chargedAttacker, spentTarget, false);
+
+            Assert.IsTrue(baseResult.Success);
+            Assert.IsTrue(chargedResult.Success);
+            Assert.IsTrue(spentResult.Success);
+            Assert.Greater(chargedResult.Damage.FinalDamage, baseResult.Damage.FinalDamage);
+            Assert.AreEqual(baseResult.Damage.FinalDamage, spentResult.Damage.FinalDamage);
+        }
+
+        [Test]
+        public void FullLeijieStackReducesMagicDefenseAgainstMagicAttack()
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine };
+            var caster = CreateMagicCaster(engine, "神魂测试者", new HexCoord(0, 0));
+
+            var freshDefender = CreateLeijieCombatant(engine, "未满雷劫", new HexCoord(1, 0));
+            LogAssert.Expect(LogType.Log, new Regex("神魂测试者 神魂攻击 未满雷劫"));
+            var freshResult = resolver.BasicAttack(caster, freshDefender, true);
+
+            var chargedDefender = CreateLeijieCombatant(engine, "满层雷劫", new HexCoord(1, 0));
+            for (int i = 0; i < 5; i++)
+                chargedDefender.TakeDamage(1);
+
+            LogAssert.Expect(LogType.Log, new Regex("神魂测试者 神魂攻击 满层雷劫"));
+            var chargedResult = resolver.BasicAttack(caster, chargedDefender, true);
+
+            Assert.IsTrue(freshResult.Success);
+            Assert.IsTrue(chargedResult.Success);
+            Assert.Greater(chargedResult.Damage.FinalDamage, freshResult.Damage.FinalDamage);
+        }
+
         private static Character CreateFudanCaster(CTBEngine engine, string name, int fudanStacks)
         {
             var character = new Character
@@ -124,6 +178,59 @@ namespace TianZhang.Tests
             };
             character.SetRealm("金丹");
             character.SkillCooldowns = new int[1];
+            character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
+            return character;
+        }
+
+        private static Character CreateLeijieCombatant(CTBEngine engine, string name, HexCoord position)
+        {
+            var character = new Character
+            {
+                Name = name,
+                GongFaName = "九霄雷劫录",
+                MaxHP = 1000,
+                CurrentHP = 1000,
+                MaxMP = 100,
+                CurrentMP = 100,
+                PhysAtk = 200,
+                MagAtk = 50,
+                PhysDef = 100,
+                MagDef = 200,
+                Reaction = 100,
+                HitRateBonus = 100f,
+                CritRate = 0f,
+                CritDamage = 0f,
+                BlockRate = 0f,
+                SoulShieldRate = 0f,
+                DodgeRate = 0f,
+                Position = position,
+            };
+            character.SetRealm("金丹");
+            character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
+            return character;
+        }
+
+        private static Character CreateMagicCaster(CTBEngine engine, string name, HexCoord position)
+        {
+            var character = new Character
+            {
+                Name = name,
+                GongFaName = "南华玄感录",
+                MaxHP = 1000,
+                CurrentHP = 1000,
+                MaxMP = 100,
+                CurrentMP = 100,
+                PhysAtk = 50,
+                MagAtk = 300,
+                PhysDef = 50,
+                MagDef = 50,
+                Reaction = 100,
+                HitRateBonus = 100f,
+                CritRate = 0f,
+                CritDamage = 0f,
+                Position = position,
+            };
+            character.SetRealm("金丹");
             character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
             return character;
         }

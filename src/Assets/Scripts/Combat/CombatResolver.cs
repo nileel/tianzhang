@@ -100,7 +100,11 @@ namespace TianZhang.Combat
                     cannotDodge: fudanBonus.WasFull,
                     magicDefensePenetrationPercent: fudanBonus.MagicDefensePenetrationPercent);
             else
-                damage = DamageCalculator.CalcPhysical(attacker.PhysAtk, mult, attacker, defender);
+                damage = DamageCalculator.CalcPhysical(
+                    attacker.PhysAtk,
+                    mult * ConsumeLeijieForPhysicalAction(attacker),
+                    attacker,
+                    defender);
 
             if (damage.IsHit)
                 defender.TakeDamage(damage.FinalDamage);
@@ -157,7 +161,8 @@ namespace TianZhang.Combat
             switch (spell.type)
             {
                 case SpellType.Physical:
-                    damage = DamageCalculator.CalcPhysical(caster.PhysAtk, spell.damageMultiplier,
+                    damage = DamageCalculator.CalcPhysical(caster.PhysAtk,
+                        spell.damageMultiplier * ConsumeLeijieForPhysicalAction(caster),
                         caster, target, spell.cannotBlock, spell.element, spell.cannotDodge);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
@@ -239,7 +244,8 @@ namespace TianZhang.Combat
             DamageCalculator.DamageResult damage;
             if (skill.type == SpellType.Physical)
             {
-                damage = DamageCalculator.CalcPhysical(caster.PhysAtk, skill.damageMultiplier,
+                damage = DamageCalculator.CalcPhysical(caster.PhysAtk,
+                    skill.damageMultiplier * ConsumeLeijieForPhysicalAction(caster),
                     caster, target, skill.cannotBlock, skill.element, skill.cannotDodge);
             }
             else
@@ -289,6 +295,16 @@ namespace TianZhang.Combat
             character.FudanStacks = realmMult >= 24f ? 2 : 0;
 
             return new FudanActionBonus(damageMultiplier, wasFull ? 30f : 0f, wasFull);
+        }
+
+        private static float ConsumeLeijieForPhysicalAction(Character character)
+        {
+            if (character.GongFaName != "九霄雷劫录" || character.LeijieStacks <= 0)
+                return 1f;
+
+            float damageMultiplier = 1f + character.LeijieStacks * character.LeijieDamageBonusPerStack();
+            character.LeijieStacks = 0;
+            return damageMultiplier;
         }
 
         /// <summary>防御姿态</summary>
