@@ -13,6 +13,7 @@
 > 2026-07-07 Codex / gpt-5.5：TQ-033 第一章主线 L1→L2 任务链拆分包完成并归档至 `开发管理/任务归档/2026-07-07-TQ-033-第一章任务链拆分包归档.txt`。`docs/剧情/任务/第一章/第一章-任务链拆分包.txt` 已补齐剧情 ID、任务 ID、状态变量、演出等级、玩法接口、失败回退、章末抉择变量、低阶势力状态变量和后续 L3/L4 清单；本轮不写具体对白、不创建正式 NPC、不写战斗数值。
 > 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-01 雷劫印记 Unity 回归完成并归档至 `开发管理/任务归档/2026-07-07-TQ-028-U-MECH-01-雷劫印记Unity回归归档.txt`。九霄雷劫录在 Unity 运行时已支持受击叠层、物理出手消耗增伤、满层受神魂攻击时魂防降低；玄感、含弘/载物仍留在 TQ-028 后续切片。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路或掉落。
 > 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-02A 玄感神识强度 Unity 回归完成并归档至 `开发管理/任务归档/2026-07-07-TQ-028-U-MECH-02A-玄感神识强度Unity回归归档.txt`。南华玄感录在 Unity 神魂伤害入口按境界获得神识强度加值（练气+3、筑基+5、金丹+8、元婴+12），覆盖神魂普攻/术法/神通；玄感 debuff 清除链与玄同免控需统一状态系统后另拆，含弘/载物仍留在 TQ-028 后续切片。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
+> 2026-07-08 Codex / gpt-5.5：TQ-028 / U-MECH-03 含弘/载物 Unity 回归完成并归档至 `开发管理/任务归档/2026-07-08-TQ-028-U-MECH-03-含弘载物Unity回归归档.txt`。含弘光大典在 Unity 运行时已支持按境界提高物理防御，并按损失 HP 触发载物全防御加成；本轮不接入群战坤元守护，不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
 
 ## 使用规则
@@ -31,19 +32,9 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-028 | P2 | Codex / ChatGPT5.5 | Unity 机制 | 待处理 | Unity 已接入机制第二轮回归：含弘/载物 |
 | TQ-029 | P2 | Codex / ChatGPT5.5 | 数值验证 | 待处理 | 筑基/紫府 Build 极化诊断，不直接调参 |
 
 ## 任务卡片
-
-### TQ-028 · Unity 已接入机制第二轮回归
-
-- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-MECH-01 至 U-MECH-03。
-- 当前状态：待处理。TQ-020 已闭环符胆神魂行动语义；U-MECH-01 雷劫印记 Unity 回归已完成；U-MECH-02A 玄感神识强度 Unity 回归已完成。玄感 debuff 清除链与玄同免控需统一状态系统后另拆；含弘/载物仍需独立回归。
-- 必读：`开发管理/设计-当前状态.txt`、`simulations/BattleSim/Combat.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、相关功法/术法/神通文档。
-- 范围：每轮只选一个机制做最小回归；若涉及数值平衡或 BattleSim 对齐，必须运行 BattleSim。
-- 验证命令：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`dotnet build src/Assembly-CSharp.csproj`；Unity/EditMode 可用时跑目标测试；文本检查；`git diff --check`。
-- 完成条件：目标机制在 Unity 运行时有测试或可复核路径；不顺手调整其他机制强度。
 
 ### TQ-029 · 筑基/紫府 Build 极化诊断
 

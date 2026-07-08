@@ -1,0 +1,59 @@
+# TQ-028 / U-MECH-03 含弘/载物 Unity 回归归档
+
+时间：2026-07-08
+执行：Codex / gpt-5.5
+状态：完成并自验。本轮为 Codex 自产执行切片，不进入复审队列。
+
+## 范围
+
+- 接入《含弘光大典》在 Unity 运行时的防御机制：
+  - 练气：物理防御 +10%
+  - 筑基：物理防御 +15%，解锁载物
+  - 金丹：物理防御 +20%，载物上限 30%
+  - 元婴：物理防御 +25%，载物上限沿用 30%
+  - 化神：物理防御 +30%，载物上限 40%
+- 载物：自身每损失 10% HP，物理与神魂防御 +2%，按境界上限封顶。
+- 本轮只处理 1v1 伤害入口的防御收益，不接入群战「坤元守护」分摊、分摊转回血/灵力或友方获得载物。
+- 本轮不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
+
+## 文件
+
+- `src/Assets/Scripts/Entity/Character.cs`
+  - 新增 `HanhongDefenseMultiplier(bool physical)`，集中计算含弘物理防御与载物全防御倍率。
+- `src/Assets/Scripts/Combat/DamageCalculator.cs`
+  - 物理伤害使用含弘有效物防。
+  - 神魂伤害使用载物有效魂防。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+  - 新增 `HanhongPhysicalDefenseBonusReducesPhysicalDamageAtFullHp`。
+  - 新增 `ZaiwuMissingHpIncreasesPhysicalAndMagicDefense`。
+  - 新增 `CombatMechanismBatchRunner.RunHanhongZaiwuDefense`，用于 Unity batchmode 执行目标断言。
+
+## TDD 记录
+
+- RED：`CombatMechanismBatchRunner.RunHanhongZaiwuDefense` 在实现前失败。
+  - 普通物防伤害：173
+  - 含弘满血物防伤害：173
+  - 断言：`Expected: less than 173 But was: 173`
+- GREEN：实现后同一入口通过。
+  - 普通物防伤害：173
+  - 含弘满血物防伤害：162
+  - 载物满血物理伤害：162
+  - 载物半血物理伤害：157
+  - 载物满血神魂伤害：225
+  - 载物半血神魂伤害：220
+  - 日志：`CombatMechanismBatchRunner.RunHanhongZaiwuDefense passed.`
+
+## 验证
+
+- `Unity.exe -batchmode -projectPath D:\天章游戏开发\src -executeMethod TianZhang.Tests.CombatMechanismBatchRunner.RunHanhongZaiwuDefense -logFile D:\天章游戏开发\src\Temp\hanhong-zaiwu-green.log -quit`：目标断言通过。
+- `dotnet build -c Release --no-restore simulations/BattleSim`：0 警告 0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：默认模拟完整跑通。
+- `dotnet build src/Assembly-CSharp.csproj -c Release --no-restore`：0 警告 0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj -c Release --no-restore`：0 警告 0 错误。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：OK（84 files checked）。
+- `git diff --check`：0 错误（仅输出 CRLF/LF 提示）。
+
+## 后续
+
+- U-MECH-02B：玄感 debuff 清除、玄同免控、清除后回血、玄同 MP 消耗降低，需要先建立或复用 Unity 统一状态/debuff 处理流程。
+- 混元山群战机制：坤元守护分摊伤害、分摊回血/回灵与友方载物半效需要另拆群战/状态切片，不在本轮处理。

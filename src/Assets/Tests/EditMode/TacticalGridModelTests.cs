@@ -162,6 +162,18 @@ namespace TianZhang.Tests
             AssertXuanganAddsRealmMindStrengthToMagicDamage(expectLogs: true);
         }
 
+        [Test]
+        public void HanhongPhysicalDefenseBonusReducesPhysicalDamageAtFullHp()
+        {
+            AssertHanhongPhysicalDefenseBonusReducesPhysicalDamageAtFullHp(expectLogs: true);
+        }
+
+        [Test]
+        public void ZaiwuMissingHpIncreasesPhysicalAndMagicDefense()
+        {
+            AssertZaiwuMissingHpIncreasesPhysicalAndMagicDefense(expectLogs: true);
+        }
+
         internal static void AssertXuanganAddsRealmMindStrengthToMagicDamage(bool expectLogs)
         {
             var engine = new CTBEngine();
@@ -182,6 +194,65 @@ namespace TianZhang.Tests
             Assert.IsTrue(normalResult.Success);
             Assert.IsTrue(xuanganResult.Success);
             Assert.Greater(xuanganResult.Damage.FinalDamage, normalResult.Damage.FinalDamage);
+        }
+
+        internal static void AssertHanhongPhysicalDefenseBonusReducesPhysicalDamageAtFullHp(bool expectLogs)
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine };
+            var attacker = CreateLeijieCombatant(engine, "物理测试者", new HexCoord(0, 0));
+
+            var neutralDefender = CreateTarget(engine, "普通防御", "秋水游心经");
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("物理测试者 物理攻击 普通防御"));
+            var neutralResult = resolver.BasicAttack(attacker, neutralDefender, false);
+
+            var hanhongDefender = CreateTarget(engine, "含弘防御", "含弘光大典");
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("物理测试者 物理攻击 含弘防御"));
+            var hanhongResult = resolver.BasicAttack(attacker, hanhongDefender, false);
+
+            Assert.IsTrue(neutralResult.Success);
+            Assert.IsTrue(hanhongResult.Success);
+            Assert.Less(hanhongResult.Damage.FinalDamage, neutralResult.Damage.FinalDamage);
+        }
+
+        internal static void AssertZaiwuMissingHpIncreasesPhysicalAndMagicDefense(bool expectLogs)
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine };
+
+            var physicalAttacker = CreateLeijieCombatant(engine, "载物物理", new HexCoord(0, 0));
+            var fullPhysicalTarget = CreateTarget(engine, "满血物防", "含弘光大典");
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("载物物理 物理攻击 满血物防"));
+            var fullPhysical = resolver.BasicAttack(physicalAttacker, fullPhysicalTarget, false);
+
+            var lowPhysicalTarget = CreateTarget(engine, "残血物防", "含弘光大典");
+            lowPhysicalTarget.CurrentHP = lowPhysicalTarget.MaxHP / 2;
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("载物物理 物理攻击 残血物防"));
+            var lowPhysical = resolver.BasicAttack(physicalAttacker, lowPhysicalTarget, false);
+
+            var fullMagicCaster = CreateMagicCaster(engine, "载物神魂满", new HexCoord(0, 0), "抱元守一经");
+            var fullMagicTarget = CreateTarget(engine, "满血魂防", "含弘光大典");
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("载物神魂满 神魂攻击 满血魂防"));
+            var fullMagic = resolver.BasicAttack(fullMagicCaster, fullMagicTarget, true);
+
+            var lowMagicCaster = CreateMagicCaster(engine, "载物神魂残", new HexCoord(0, 0), "抱元守一经");
+            var lowMagicTarget = CreateTarget(engine, "残血魂防", "含弘光大典");
+            lowMagicTarget.CurrentHP = lowMagicTarget.MaxHP / 2;
+            if (expectLogs)
+                LogAssert.Expect(LogType.Log, new Regex("载物神魂残 神魂攻击 残血魂防"));
+            var lowMagic = resolver.BasicAttack(lowMagicCaster, lowMagicTarget, true);
+
+            Assert.IsTrue(fullPhysical.Success);
+            Assert.IsTrue(lowPhysical.Success);
+            Assert.IsTrue(fullMagic.Success);
+            Assert.IsTrue(lowMagic.Success);
+            Assert.Less(lowPhysical.Damage.FinalDamage, fullPhysical.Damage.FinalDamage);
+            Assert.Less(lowMagic.Damage.FinalDamage, fullMagic.Damage.FinalDamage);
         }
 
         private static Character CreateFudanCaster(CTBEngine engine, string name, int fudanStacks)
@@ -269,12 +340,12 @@ namespace TianZhang.Tests
             return character;
         }
 
-        private static Character CreateTarget(CTBEngine engine, string name)
+        private static Character CreateTarget(CTBEngine engine, string name, string gongFaName = "含弘光大典")
         {
             var character = new Character
             {
                 Name = name,
-                GongFaName = "含弘光大典",
+                GongFaName = gongFaName,
                 MaxHP = 1000,
                 CurrentHP = 1000,
                 MaxMP = 100,
@@ -303,6 +374,22 @@ namespace TianZhang.Tests
             {
                 CombatMechanismTests.AssertXuanganAddsRealmMindStrengthToMagicDamage(expectLogs: false);
                 Debug.Log("CombatMechanismBatchRunner.RunXuanganMindStrength passed.");
+                EditorApplication.Exit(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        public static void RunHanhongZaiwuDefense()
+        {
+            try
+            {
+                CombatMechanismTests.AssertHanhongPhysicalDefenseBonusReducesPhysicalDamageAtFullHp(expectLogs: false);
+                CombatMechanismTests.AssertZaiwuMissingHpIncreasesPhysicalAndMagicDefense(expectLogs: false);
+                Debug.Log("CombatMechanismBatchRunner.RunHanhongZaiwuDefense passed.");
                 EditorApplication.Exit(0);
             }
             catch (System.Exception ex)

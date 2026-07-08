@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-08 Codex / gpt-5.5：TQ-028 / U-MECH-03 含弘/载物 Unity 回归完成。Unity 物理伤害入口按《含弘光大典》境界提高目标物理防御（练气+10%、筑基+15%、金丹+20%、元婴+25%、化神+30%），并按损失 HP 提供载物全防御加成（每损失10% HP，全防御+2%；筑基上限20%、金丹/元婴上限30%、化神上限40%）。验证：TDD RED/Unity 批处理目标断言 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build、文本检查、`git diff --check` 通过。本轮不接入群战坤元守护，不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
 > 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-02A 玄感神识强度 Unity 回归完成。Unity 神魂伤害入口现按《南华玄感录》境界提供神识强度加值：练气+3、筑基+5、金丹+8、元婴+12，覆盖神魂普攻、神魂术法与神魂神通。验证：TDD RED/Unity 批处理目标断言 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build 通过。本轮不接入玄感 debuff 清除链、玄同免控、清除后回血或玄同 MP 消耗降低；这些需统一状态/debuff 流程后另拆。
 > 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-01 雷劫印记 Unity 回归完成。Unity 运行时新增 `LeijieStacks`，九霄雷劫录受击叠层、物理出手消耗增伤、满层被神魂攻击时按 80% 神防结算；`BeginCombat` 会清零雷劫战斗状态。验证：TDD RED/Unity 目标测试 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build、文本检查、`git diff --check` 通过。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路或掉落。
 > 2026-07-07 Codex / gpt-5.5：TQ-026 contentScope 运行时字段与导入器适配完成。`GongFaGrowthData`、`SpellData`、`DivineSkillData` 均新增默认 `contentScope=player` 序列化字段；`DataConfigImporter` 按 CSV 表头读取 `contentScope`，缺列或空值稳定回退 `player`。验证：TDD RED/目标构建、`Assembly-CSharp` build、`check-data-chain.ps1`、`check-review-text.ps1`、`git diff --check` 通过；本轮不重导 asset、不扩展 `realm_lianshen` 或 `realm_lianxu` 运行时境界链、不改变玩家可学内容。
@@ -165,7 +166,8 @@
 | v0.16 | Settlement/World → Adventure 返回上下文 | ✅ TQ-024：World/Settlement 进入 Adventure 写入 `CurrentAdventureId` 与来源返回目标；AdventureScene 展示当前副本 ID/来源并提供返回来源按钮；返回后清理当前副本上下文 |
 | v0.17 | Adventure/Combat UI 命令绑定接口化 | ✅ TQ-025：BattleUIManager 动作栏统一经 `ICombatCommandHandler` 发送命令，新增 `BtnSwap` 换法按钮；ExplorationController 仅作为接口实现者注入，UI 不再直接保存地图控制器引用 |
 | v0.18 | 雷劫印记运行时回归 | ✅ TQ-028 / U-MECH-01：九霄雷劫录受击叠加雷劫印记，普通物理攻击/物理术法/物理神通出手消耗印记并增伤，满层被神魂攻击时按 80% 神防结算；玄感、含弘/载物仍为后续独立切片 |
-| v0.19 | 玄感神识强度运行时回归 | ✅ TQ-028 / U-MECH-02A：南华玄感录在神魂伤害入口按境界获得神识强度加值，覆盖神魂普攻/术法/神通；玄感 debuff 清除链、玄同免控、清除后回血与玄同 MP 消耗降低需统一状态系统后另拆；含弘/载物仍为后续独立切片 |
+| v0.19 | 玄感神识强度运行时回归 | ✅ TQ-028 / U-MECH-02A：南华玄感录在神魂伤害入口按境界获得神识强度加值，覆盖神魂普攻/术法/神通；玄感 debuff 清除链、玄同免控、清除后回血与玄同 MP 消耗降低需统一状态系统后另拆；含弘/载物已在 v0.20 独立回归 |
+| v0.20 | 含弘/载物防御运行时回归 | ✅ TQ-028 / U-MECH-03：含弘光大典在物理伤害入口按境界提高物理防御；载物按损失 HP 提供物理与神魂防御加成；群战坤元守护仍未接入 |
 
 ### 2026-06-15 审视发现：Unity 待复核项
 

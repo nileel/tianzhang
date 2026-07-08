@@ -124,10 +124,11 @@ namespace TianZhang.Combat
                 return result;
 
             ElementMatch elementMatch = GetElementMatch(skillElement, attacker.GongFaName, defender.GongFaName);
+            int effectivePhysDef = Mathf.RoundToInt(defender.PhysDef * defender.HanhongDefenseMultiplier(physical: true));
             float critMultiplier = RollCrit(attacker, elementMatch, ref result);
             float damage = CalculateLineDamage(
                 rawAtk,
-                defender.PhysDef,
+                effectivePhysDef,
                 0f,
                 skillMultiplier * critMultiplier,
                 attacker.RealmMultiplier,
@@ -167,7 +168,7 @@ namespace TianZhang.Combat
             float soulResist = 0f;
             if (defender.GongFaName == "抱元守一经" && defender.ShouyiStacks == defender.MaxShouyi())
                 soulResist += 15f;
-            float effectiveMagDef = defender.MagDef;
+            float effectiveMagDef = defender.MagDef * defender.HanhongDefenseMultiplier(physical: false);
             if (defender.GongFaName == "九霄雷劫录" && defender.LeijieStacks == defender.MaxLeijie())
                 effectiveMagDef *= 0.80f;
             effectiveMagDef *= 1f - Mathf.Clamp(magicDefensePenetrationPercent, 0f, 100f) / 100f;

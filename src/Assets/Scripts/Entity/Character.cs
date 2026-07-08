@@ -446,6 +446,46 @@ namespace TianZhang.Entity
             };
         }
 
+        public float HanhongDefenseMultiplier(bool physical)
+        {
+            if (GongFaName != "含弘光大典")
+                return 1f;
+
+            float multiplier = 1f + ZaiwuAllDefenseBonus();
+            if (physical)
+                multiplier *= 1f + HanhongPhysicalDefenseBonus();
+            return multiplier;
+        }
+
+        private float HanhongPhysicalDefenseBonus()
+        {
+            float realm = GetEffectiveRealmMultiplier();
+            if (realm >= 24f) return 0.30f; // 光大
+            if (realm >= 12f) return 0.25f; // 含弘
+            if (realm >= 6f) return 0.20f;  // 载物
+            if (realm >= 3f) return 0.15f;  // 厚德
+            if (realm >= 1.5f) return 0.10f; // 含章
+            return 0f;
+        }
+
+        private float ZaiwuAllDefenseBonus()
+        {
+            if (MaxHP <= 0 || CurrentHP >= MaxHP)
+                return 0f;
+
+            float realm = GetEffectiveRealmMultiplier();
+            float cap = realm >= 24f ? 0.40f :
+                        realm >= 6f ? 0.30f :
+                        realm >= 3f ? 0.20f :
+                        0f;
+            if (cap <= 0f)
+                return 0f;
+
+            float missingHpRate = Mathf.Clamp01((MaxHP - CurrentHP) / (float)MaxHP);
+            float bonus = Mathf.Floor(missingHpRate * 10f) * 0.02f;
+            return Mathf.Min(bonus, cap);
+        }
+
         private string m_Realm;
 
         public void SetRealm(string realm)
