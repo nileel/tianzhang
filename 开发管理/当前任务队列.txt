@@ -33,7 +33,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-034 | P1 | DeepSeek V4 Pro | 内容生产 | 待处理 | C-NPC-04A：太一道庭/混元山首批普通 NPC，一 NPC 一文件 |
+| TQ-034 | P1 | DeepSeek V4 Pro | 内容生产 | 已完成执行，待 Codex 复审 | C-NPC-04A：太一道庭/混元山首批普通 NPC，一 NPC 一文件 |
 | TQ-035 | P1 | DeepSeek V4 Pro | 内容生产 | 待处理 | C-NPC-05A：散修/坊市首批普通 NPC，一 NPC 一文件 |
 | TQ-036 | P1 | DeepSeek V4 Pro | 剧情任务 | 待处理 | C-STORY-03A：第一章入口 L3 单任务样例首批 |
 | TQ-037 | P2 | DeepSeek V4 Pro | 剧情任务 | 待处理 | C-QUEST-02A：龙脊安全节点 L3 任务首批 |
@@ -47,7 +47,7 @@
 ### TQ-034 · C-NPC-04A 太一道庭/混元山首批普通 NPC
 
 - 来源：`开发管理/任务列表/内容设计任务.txt` C-NPC-04。
-- 当前状态：待处理。
+- 当前状态：已完成执行，待 Codex 复审。提交：`07d9acf`。
 - 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
 - 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/剧情生产规范.txt`、`docs/剧情/普通NPC设计模板.txt`、`开发管理/普通NPC首批候选清单.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/门派/江左天域/太一道庭.txt`、`docs/门派/关陇玄域/混元山.txt`、`docs/门派/关陇玄域/龙骧军府.txt`、`docs/地图/江左天域.txt`、`docs/地图/关陇玄域.txt`。
 - 范围：从候选清单中选择 4 个与太一道庭、混元山或龙骧军府外围相关的普通 NPC，建议优先 `NPC-STEWARD-01`、`NPC-STEWARD-02`、`NPC-HEALER-01`、`NPC-GUIDE-05`；每个 NPC 单独文件，建议放入 `docs/剧情/普通NPC/`。
