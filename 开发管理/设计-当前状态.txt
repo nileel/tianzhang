@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-09 Codex / gpt-5.5：TQ-029 筑基/紫府 Build 极化诊断完成。验证：BattleSim Release build 0 警告 0 错误，默认 run 完整跑通。结论：金丹矩阵 NA 与紫府样本缺口主要来自样本筛选；筑基/紫府同境大量 0/100 极化主要来自功法成长表完整性、功法星级 0.2 回退和固定 AI 行为。`云篆度人经` 缺练气成长，当前 `SubGrowthSum` 遇到缺前序境界直接中断，导致太一·符修筑基成长链归零，是其同境 0% 的直接问题；后续应优先拆 N-BAL-02A 修复成长表/回退策略，再做倍率调参。本轮不改 BattleSim 数值或代码。
 > 2026-07-08 Codex / gpt-5.5：TQ-028 / U-MECH-03 含弘/载物 Unity 回归完成。Unity 物理伤害入口按《含弘光大典》境界提高目标物理防御（练气+10%、筑基+15%、金丹+20%、元婴+25%、化神+30%），并按损失 HP 提供载物全防御加成（每损失10% HP，全防御+2%；筑基上限20%、金丹/元婴上限30%、化神上限40%）。验证：TDD RED/Unity 批处理目标断言 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build、文本检查、`git diff --check` 通过。本轮不接入群战坤元守护，不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
 > 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-02A 玄感神识强度 Unity 回归完成。Unity 神魂伤害入口现按《南华玄感录》境界提供神识强度加值：练气+3、筑基+5、金丹+8、元婴+12，覆盖神魂普攻、神魂术法与神魂神通。验证：TDD RED/Unity 批处理目标断言 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build 通过。本轮不接入玄感 debuff 清除链、玄同免控、清除后回血或玄同 MP 消耗降低；这些需统一状态/debuff 流程后另拆。
 > 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-01 雷劫印记 Unity 回归完成。Unity 运行时新增 `LeijieStacks`，九霄雷劫录受击叠层、物理出手消耗增伤、满层被神魂攻击时按 80% 神防结算；`BeginCombat` 会清零雷劫战斗状态。验证：TDD RED/Unity 目标测试 GREEN、BattleSim build/run、Assembly-CSharp/TianZhang.EditModeTests build、文本检查、`git diff --check` 通过。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路或掉落。
