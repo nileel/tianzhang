@@ -21,7 +21,7 @@
 ## HANDOFF-20260710-01 · Claude Code → Codex / ChatGPT5.5
 
 - 任务：TQ-038 / C-SANXIU-01A 散修通用内容可玩性补强清单
-- 提交或 diff：待提交（本轮产出）
+- 提交或 diff：`5b9a43f`（Claude Code 本轮提交；仍待 Codex / ChatGPT5.5 复审）
 - 修改文件：
   - `开发管理/散修通用内容补强清单.txt`（新增——散修功法/术法/神通/普通NPC/支线/据点服务的可玩性缺口分桶）
   - `开发管理/AI合作沟通.txt`（新增本交接条目）
