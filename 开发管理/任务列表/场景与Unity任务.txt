@@ -11,6 +11,7 @@
 - ✅ TQ-020：符胆神魂行动语义已回归。
 - ✅ TQ-022：WorldScene 节点式主世界原型已完成。
 - ✅ TQ-023：SettlementScene 通用据点/宗门原型已完成。
+- ✅ U-S5-02：SettlementScene 据点服务入口占位已完成；修炼、功法、任务、坊市等服务按钮可点击并仅写占位日志。
 - ✅ TQ-024：Settlement/World → Adventure 入口与返回上下文已完成。
 - ✅ TQ-025：Adventure/Combat UI 命令绑定拆分切片已完成；战斗动作栏统一通过 `ICombatCommandHandler` 发命令，新增 `BtnSwap` 换法按钮，`BattleUIManager` 不再直接依赖 `ExplorationController`。
 - ✅ TQ-028 / U-MECH-01：雷劫印记 Unity 回归已完成；九霄雷劫录受击叠层、物理出手消耗增伤、满层神魂受击魂防降低已接入运行时。
@@ -22,7 +23,7 @@
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | U-S5-01 / TQ-023 | P1 | Codex | ✅ 已完成 | SettlementScene 通用据点/宗门原型 |
-| U-S5-02 | P1 | Codex | 待处理 | 据点服务入口占位：修炼、功法、任务、坊市只做按钮与日志 |
+| U-S5-02 | P1 | Codex | ✅ 已完成（2026-07-09） | 据点服务入口占位：修炼、功法、任务、坊市只做按钮与日志 |
 | U-S5-03 / TQ-024 | P1 | Codex | ✅ 已完成 | 据点进入 Adventure 与返回上下文 |
 | U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
 | U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |

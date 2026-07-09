@@ -178,8 +178,14 @@ namespace TianZhang.Settlement
             foreach (var service in services)
             {
                 var button = CreateButton("SettlementService_" + service, serviceListParent, service, new Color(0.18f, 0.22f, 0.18f, 1f)).GetComponent<Button>();
-                button.interactable = false;
+                var capturedService = service;
+                button.onClick.AddListener(() => LogServicePlaceholder(capturedService));
             }
+        }
+
+        private void LogServicePlaceholder(string service)
+        {
+            Debug.Log("[SettlementScene] service=" + service + " settlement=" + CurrentSettlementId + " placeholder");
         }
 
         private void RebuildAdventureList()

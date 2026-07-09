@@ -1,0 +1,35 @@
+# U-S5-02 据点服务入口占位归档
+
+- 日期：2026-07-09
+- 执行方：Codex / gpt-5.5
+- 任务来源：`开发管理/任务列表/场景与Unity任务.txt` U-S5-02
+- 范围：SettlementScene 据点服务入口占位；修炼、功法、任务、坊市等服务按钮只做点击入口与日志。
+
+## 修改文件
+
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs`
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+- `开发管理/任务列表/场景与Unity任务.txt`
+- `开发管理/当前任务队列.txt`
+- `开发管理/开发-下一步建议.txt`
+
+## 完成内容
+
+- Settlement 服务列表按钮由禁用展示改为可点击占位入口。
+- 点击服务按钮时输出 `[SettlementScene] service=<服务名> settlement=<据点ID> placeholder` 日志。
+- 新增 EditMode 测试覆盖太一道庭的修炼、功法、任务入口，以及关中城的坊市入口。
+
+## 验证记录
+
+- 红灯：Unity EditMode 过滤测试 `SettlementSceneControllerBuildsClickableServicePlaceholders` 在旧实现下失败，失败点为 `修炼` 服务按钮 `interactable == false`。
+- 绿灯：同一过滤测试通过，结果 `total=1 passed=1 failed=0`。
+- 编译：`dotnet build src/Assembly-CSharp.csproj` 通过，0 警告 0 错误。
+- 编译：`dotnet build src/TianZhang.EditModeTests.csproj` 通过，0 警告 0 错误。
+- 文本检查：`check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 通过。
+- 空白检查：`git diff --check` 通过。
+
+## 边界
+
+- 本轮不接入修炼、功法、任务、坊市实际业务逻辑。
+- 本轮不改 Adventure 跳转、战斗、CTB、伤害、冷却、数值、CSV 或 asset。
+- DeepSeek / 外部交接未参与，本任务不进入待复审队列。

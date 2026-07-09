@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TianZhang.Adventure;
 using TianZhang.Combat;
@@ -11,6 +12,7 @@ using TianZhang.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace TianZhang.Tests
@@ -278,6 +280,36 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void SettlementSceneControllerBuildsClickableServicePlaceholders()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var sessionGo = new GameObject("GameSessionTest");
+            var controllerGo = new GameObject("SettlementSceneControllerTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetSettlementId("taiyi_sect");
+                var controller = controllerGo.AddComponent<SettlementSceneController>();
+
+                InvokeStart(controller);
+
+                AssertServiceButtonLogsPlaceholder("修炼", "taiyi_sect");
+                AssertServiceButtonLogsPlaceholder("功法", "taiyi_sect");
+                AssertServiceButtonLogsPlaceholder("任务", "taiyi_sect");
+
+                Assert.IsTrue(controller.SelectSettlement("guanzhong_city"));
+                AssertServiceButtonLogsPlaceholder("坊市", "guanzhong_city");
+            }
+            finally
+            {
+                DestroySettlementUi();
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void AdventureSceneControllerDisplaysCurrentAdventureAndSource()
         {
             DestroyExistingSceneFlowAndSession();
@@ -351,6 +383,18 @@ namespace TianZhang.Tests
         {
             return Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .Count(button => button.name.StartsWith(prefix));
+        }
+
+        private static void AssertServiceButtonLogsPlaceholder(string service, string settlementId)
+        {
+            var button = GameObject.Find("SettlementService_" + service)?.GetComponent<Button>();
+            Assert.IsNotNull(button, service);
+            Assert.IsTrue(button.interactable, service);
+
+            LogAssert.Expect(
+                LogType.Log,
+                new Regex("\\[SettlementScene\\].*service=" + Regex.Escape(service) + ".*settlement=" + Regex.Escape(settlementId)));
+            button.onClick.Invoke();
         }
 
         private static void DestroySettlementUi()
