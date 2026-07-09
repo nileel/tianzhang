@@ -23,6 +23,7 @@
 > 2026-07-09 Codex / gpt-5.5：TQ-034 与 TQ-035 批量复审通过，目标 8 个普通 NPC 均已标为已审核；归档见 `开发管理/任务归档/2026-07-09-待审核工作批量复审归档.txt`。下一步建议优先 TQ-036，用已审核 NPC 回填第一章 L3 单任务样例。
 > 2026-07-10 Codex / gpt-5.5：TQ-037 / C-QUEST-02A 龙脊安全节点 L3 任务首批复审通过；Codex 补修未验证数值和重要 NPC 边界表述后闭环。归档见 `开发管理/任务归档/2026-07-10-TQ-037龙脊安全节点L3任务复审归档.txt`。TQ-036 仍保留待复审状态。
 > 2026-07-10 Codex / gpt-5.5：按纯 `1` 流程从 backlog 推进 C-STORY-WM-P0 子项 C-STORY-WM-01，新增 `docs/基础设定/寿元与时间尺度设定.txt`，并在世界主线拆分清单中标记该子项完成；C-STORY-WM-P0 总包仍保留进行中。
+> 2026-07-10 Codex / gpt-5.5：根据当前项目进度整理近期任务队列。移出已复审的 TQ-034、TQ-035、TQ-037；TQ-036 转入 `2` 复审入口；补入 C-STORY-WM-02/03、D-IMPORT-01、N-BAL-02A、U-MECH-02B 等 Codex 可执行切片，并保留 TQ-038 至 TQ-040 DeepSeek 执行项。本轮只整理任务，不改设计正文、代码、CSV 或 asset。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
 
 ## 使用规则
@@ -41,59 +42,77 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-034 | P1 | DeepSeek V4 Pro | 内容生产 | ✅ 已复审（2026-07-09） | C-NPC-04A：太一道庭/混元山首批普通 NPC，一 NPC 一文件 |
-| TQ-035 | P1 | DeepSeek V4 Pro | 内容生产 | ✅ 已复审（2026-07-09） | C-NPC-05A：散修/坊市首批普通 NPC，一 NPC 一文件 |
-| TQ-036 | P1 | DeepSeek V4 Pro | 剧情任务 | ⚠️ 已修改/未审核（2026-07-09） | C-STORY-03A：第一章入口 L3 单任务样例首批 |
-| TQ-037 | P2 | DeepSeek V4 Pro | 剧情任务 | ✅ 已复审（2026-07-10） | C-QUEST-02A：龙脊安全节点 L3 任务首批 |
+| TQ-041 | P0 | Codex / gpt-5.5 | 剧情规则 | 待处理 | C-STORY-WM-02：出生地与主线接入规则 |
+| TQ-042 | P0 | Codex / gpt-5.5 | 基础设定 | 待处理 | C-STORY-WM-03：真形体系说明 |
+| TQ-043 | P2 | Codex / gpt-5.5 | 数据链路 | 待处理 | D-IMPORT-01：导入器按列名/表头解析 |
+| TQ-044 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | N-BAL-02A：成长表完整性与星级回退策略修复 |
+| TQ-045 | P2 | Codex / gpt-5.5 | Unity 机制 | 待处理 | U-MECH-02B：玄感清除链/玄同状态 Unity 回归 |
 | TQ-038 | P2 | DeepSeek V4 Pro | 内容整理 | 待处理 | C-SANXIU-01A：散修通用内容可玩性补强清单 |
 | TQ-039 | P3 | DeepSeek V4 Pro | 文案生产 | 待处理 | C-DIALOGUE-01A：据点通用称谓、寒暄和任务入口文案表 |
 | TQ-040 | P2 | DeepSeek V4 Pro | 数据复查 | 待处理 | D-ASSET-01A：CSV/asset 字段完整性复查清单，不改设计语义 |
 
+## 不进入 `1` 队列的当前事项
+
+- TQ-036 / HANDOFF-20260709-01：第一章入口 L3 单任务样例首批，状态为待 Codex / ChatGPT5.5 复审；用户发送纯 `2` 时按 `开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与 `开发管理/任务列表/审核与交接任务.txt` 处理。
+- C-STORY-WM-04/05/06：仍属世界主线 P0 总包后续项，但 C-STORY-WM-04 依赖 C-STORY-WM-03，C-STORY-WM-05 依赖 C-STORY-WM-03/04，C-STORY-WM-06 依赖 C-STORY-WM-02；暂不放入近期 `1` 队列，待前置完成后再补任务卡。
+- D-REALM-02、N-SLOT-01、N-SEAT-01、U-2_5D-01、C-GUXIU-03、C-QUEST-01 等保留在分线 backlog，当前优先级低于上表任务。
+
 ## 任务卡片
 
-### TQ-034 · C-NPC-04A 太一道庭/混元山首批普通 NPC
+### TQ-041 · C-STORY-WM-02 出生地与主线接入规则
 
-- 来源：`开发管理/任务列表/内容设计任务.txt` C-NPC-04。
-- 当前状态：✅ 已复审（2026-07-09 Codex / gpt-5.5）。提交：`07d9acf`；交接更新 `745f980`。
-- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/剧情生产规范.txt`、`docs/剧情/普通NPC设计模板.txt`、`开发管理/普通NPC首批候选清单.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/门派/江左天域/太一道庭.txt`、`docs/门派/关陇玄域/混元山.txt`、`docs/门派/关陇玄域/龙骧军府.txt`、`docs/地图/江左天域.txt`、`docs/地图/关陇玄域.txt`。
-- 范围：从候选清单中选择 4 个与太一道庭、混元山或龙骧军府外围相关的普通 NPC，建议优先 `NPC-STEWARD-01`、`NPC-STEWARD-02`、`NPC-HEALER-01`、`NPC-GUIDE-05`；每个 NPC 单独文件，建议放入 `docs/剧情/普通NPC/`。
-- 边界：不得创建重要 NPC，不得让普通 NPC 占据源/化/界席位、成为重要 NPC 亲传或独占主线必要信息；不写战斗数值，不改第一章主线事实。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`rg -n "坤元体系|丹枢接入|关陇灵脉共振|血敕|妖血敕|正籍|辅籍|敕籍|寄丹" docs/剧情/普通NPC 开发管理/AI合作沟通.txt`；`git diff --check`。
-- 完成条件：4 个普通 NPC 文件满足模板字段；每个文件标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」；更新 `开发管理/AI合作沟通.txt` 写明修改文件、验证命令、未验证项、残留风险和请求复审点。
+- 来源：`docs/剧情/主线/世界主线-后续拆分工作清单.txt` C-STORY-WM-02。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`docs/剧情/剧情生产规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/主线/世界主线-总纲.txt`、`docs/剧情/主线/世界主线-后续拆分工作清单.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/基础设定/寿元与时间尺度设定.txt`、`docs/地图/*.txt`。
+- 范围：新增 `docs/剧情/设定补充/出生地与主线接入规则.txt`，明确可选出生地不含中州；为每个出生地列出第一章本地异常、跨域线索、进入第二至第五章的路径和不可越界信息。
+- 边界：不写具体 L3 任务、对白、战斗数值或完整章节重写；不得把世界主线默认成单一起始地区。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,docs/基础设定,开发管理`；`git diff --check`。
+- 完成条件：文件满足剧情生产规范中世界主线/章节主线的出生地接入要求；更新世界主线拆分清单中 C-STORY-WM-02 状态；必要时同步 `设计-当前状态.txt` 事实快照。
 
-### TQ-035 · C-NPC-05A 散修/坊市首批普通 NPC
+### TQ-042 · C-STORY-WM-03 真形体系说明
 
-- 来源：`开发管理/任务列表/内容设计任务.txt` C-NPC-05。
-- 当前状态：✅ 已复审（2026-07-09 Codex / gpt-5.5）。提交：`67b02e4`；交接更新 `b1083cc`。
-- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/剧情生产规范.txt`、`docs/剧情/普通NPC设计模板.txt`、`开发管理/普通NPC首批候选清单.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/设定补充/低阶势力开放规则.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/门派/中州天域/九霄盟.txt`、`docs/门派/河西星域/天机楼.txt`、`docs/地图/中州天域.txt`、`docs/地图/关陇玄域.txt`。
-- 范围：从候选清单中选择 4 个散修、坊市或跨域服务 NPC，建议优先 `NPC-STEWARD-05`、`NPC-VENDOR-03`、`NPC-QUESTER-02`、`NPC-SCOUT-03`；每个 NPC 单独文件，建议放入 `docs/剧情/普通NPC/`。
-- 边界：散修/坊市 NPC 只能提供入口、服务、声望、情报碎片或地方锚点候选线索；不得掌握完整龙脊真相，不扩展为全量宗门经营系统。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`rg -n "坤元体系|丹枢接入|关陇灵脉共振|血敕|妖血敕|正籍|辅籍|敕籍|寄丹" docs/剧情/普通NPC 开发管理/AI合作沟通.txt`；`git diff --check`。
-- 完成条件：4 个普通 NPC 文件满足模板字段；每个文件标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」；更新 `开发管理/AI合作沟通.txt` 并明确后续可回填到哪些第一章任务占位。
+- 来源：`docs/剧情/主线/世界主线-后续拆分工作清单.txt` C-STORY-WM-03。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`docs/剧情/剧情生产规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/主线/世界主线-总纲.txt`、`docs/剧情/主线/世界主线-后续拆分工作清单.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、玄荒/玄冥相关 `docs/门派/**/*.txt` 与相关重要 NPC 文件。
+- 范围：新增 `docs/剧情/设定补充/真形体系说明.txt`，解释苍狼真形、万灵真形、真形种子、金丹丹枢表现和元婴高位方向边界。
+- 边界：不正式命名未经论证的新元婴方向；不新增金丹位格；不把玄荒写成简单血缘融合宗门，不把玄冥写成单纯反派。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,docs/基础设定,开发管理`；`rg -n "正籍|辅籍|敕籍|寄丹|妖血敕|弱金丹|弱元婴" docs/剧情/设定补充 docs/基础设定/元婴锚点与金丹位格矩阵.txt`；`git diff --check`。
+- 完成条件：文件可作为 C-STORY-WM-04 和 C-STORY-WM-05 前置事实源；拆分清单中 C-STORY-WM-03 标记完成；本轮不写 L3 任务或演出脚本。
 
-### TQ-036 · C-STORY-03A 第一章入口 L3 单任务样例首批
+### TQ-043 · D-IMPORT-01 导入器按列名/表头解析
 
-- 来源：`开发管理/任务列表/内容设计任务.txt` C-STORY-03。
-- 当前状态：⚠️ 已修改/未审核（2026-07-09 DeepSeek V4 Pro；仍待 Codex / ChatGPT5.5 复审）。
-- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/剧情生产规范.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/剧情/任务/第一章/第一章-任务链拆分包.txt`、`docs/剧情/设定补充/低阶势力开放规则.txt`、`docs/剧情/普通NPC设计模板.txt`、`开发管理/普通NPC首批候选清单.txt`。
-- 范围：创建 `docs/剧情/任务/第一章/quest_ch01_taiyi_outer_trial.txt` 与 `docs/剧情/任务/第一章/quest_ch01_sanxiu_mutual_mark.txt` 两个 L3 单任务样例；补触发条件、状态变化、失败回退、玩法接口、奖励强度档和对话需求。
-- 边界：普通 NPC 文件未完成时可保留 `npc_tpl_*` 或候选 NPC ID 占位，但必须标注待回填条件；不得写章末真相揭示，不得让一个可错过 NPC 独占主线推进信息。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`rg -n "quest_ch01_taiyi_outer_trial|quest_ch01_sanxiu_mutual_mark" docs/剧情/任务/第一章`；`git diff --check`。
-- 完成条件：两个任务文件均满足剧情生产规范 L3 单任务模板；文件标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」；更新 `开发管理/AI合作沟通.txt` 写明引用的状态变量、NPC 占位和待 Codex 复审点。
+- 来源：`开发管理/任务列表/数据链路任务.txt` D-IMPORT-01。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/任务列表/数据链路任务.txt`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode` 中 DataConfigImporter 相关测试、`src/Assets/DataConfig/README.txt`、三类 CSV 表头。
+- 范围：在不改变 CSV 语义的前提下，将仍依赖硬编码列序的导入读取路径改为按表头/列名解析；补测试覆盖末尾加列、列序调整、缺必要列报错。
+- 边界：不重导 asset，不改 CSV 内容，不删除 reserved/high-level 内容，不新增 `realm_lianshen` 运行时境界。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`git diff --check`。
+- 完成条件：导入器对 GongFa/Spells/Skills 的核心字段读取不再因列序变化错读；缺必要列有稳定失败信息；数据链路检查保持通过。
 
-### TQ-037 · C-QUEST-02A 龙脊安全节点 L3 任务首批
+### TQ-044 · N-BAL-02A 成长表完整性与星级回退策略修复
 
-- 来源：`开发管理/任务列表/内容设计任务.txt` C-QUEST-02 与 `docs/剧情/任务/第一章/第一章-任务链拆分包.txt` 后续 L3 清单。
-- 当前状态：✅ 已复审（2026-07-10 Codex / gpt-5.5；Codex 补修未验证数值与重要 NPC 边界表述后通过）。
-- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/剧情生产规范.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/剧情/任务/第一章/第一章-任务链拆分包.txt`、`docs/地图/关陇玄域.txt`、`docs/门派/关陇玄域/混元山.txt`、`docs/门派/河西星域/天机楼.txt`。
-- 范围：创建 `docs/剧情/任务/第一章/quest_ch01_node_cangtai.txt` 与 `docs/剧情/任务/第一章/quest_ch01_node_huiboxia.txt` 两个安全节点 L3 任务；分别覆盖苍台节点与回波峡节点的探索、争夺或误读结构。
-- 边界：关陇玄域仍属重度骨架待重写文件，引用时只采用已审核世界背景和任务拆分包中的稳定事实；不得新增旧“坤元体系/丹枢接入/关陇灵脉共振席位”口径。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`rg -n "坤元体系|丹枢接入|关陇灵脉共振|血敕|妖血敕|正籍|辅籍|敕籍|寄丹" docs/剧情/任务/第一章 开发管理/AI合作沟通.txt`；`git diff --check`。
-- 完成条件：两个 L3 任务均有触发条件、目标、状态变化、失败回退、玩法接口、奖励强度档和信息边界；文件标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」；更新 `开发管理/AI合作沟通.txt`。
+- 来源：`开发管理/任务列表/数值与战斗任务.txt` N-BAL-02，承接 TQ-029 诊断。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`开发管理/任务归档/2026-07-09-TQ-029-筑基紫府Build极化诊断归档.txt`、`开发管理/任务列表/数值与战斗任务.txt`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/Program.cs`、相关功法成长表。
+- 范围：优先修复 `云篆度人经` 缺练气成长导致太一·符修筑基成长链归零的问题；审视功法星级 0.2 回退策略，给出最小代码或数据修复切片；必要时拆出后续倍率调参任务。
+- 边界：不以旧文档回退 BattleSim；不同时大改 AI 行为、战斗倍率、成丹阈值或金丹压制口径。
+- 验证命令：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`；`git diff --check`。
+- 完成条件：BattleSim 默认运行完整通过；筑基/紫府输出中太一·符修成长链归零问题消失或被明确隔离；回复和归档说明是否仍需 N-BAL-02B 微调。
+
+### TQ-045 · U-MECH-02B 玄感清除链/玄同状态 Unity 回归
+
+- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-MECH-02B / TQ-028。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/任务归档/2026-07-07-TQ-028-U-MECH-02A-玄感神识强度Unity回归归档.txt`、`simulations/BattleSim/Program.cs` 中南华玄感录机制、Unity 战斗状态与伤害入口相关 C# 文件。
+- 范围：梳理并接入玄感 debuff 清除链、玄同免控、清除后回血或玄同 MP 消耗降低中的最小可验证切片；若需要通用状态/debuff 流程，先建立轻量接口和目标测试。
+- 边界：不顺手修改 CTB、AI、伤害倍率、冷却、寻路、掉落或 BattleSim 数值；一次只处理玄感相关运行时机制。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；可用时运行 Unity EditMode 目标测试；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`；`git diff --check`。
+- 完成条件：新增或更新的目标测试覆盖玄感状态链最小行为；Unity 工程编译通过；若通用 debuff 流程仍不足，拆出明确后续任务而不混入本轮。
 
 ### TQ-038 · C-SANXIU-01A 散修通用内容可玩性补强清单
 
