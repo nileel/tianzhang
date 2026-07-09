@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-10 Codex / gpt-5.5：C-STORY-WM-02 出生地与主线接入规则完成。新增 `docs/剧情/设定补充/出生地与主线接入规则.txt`，明确可选出生地为关陇、江左、漠北、辽海、河西、陇西、太行、蜀川八域，中州不开放出生；八个出生地均锁定第一章本地异常、跨域线索、第二至第五章路径和不可越界信息；世界主线拆分清单已将 C-STORY-WM-02 标记完成。C-STORY-WM-P0 总包仍需继续推进真形体系、矩阵占位、玄荒新路天才人物志和第一章兼容复核。本轮不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
 > 2026-07-10 Codex / gpt-5.5：C-STORY-WM-01 寿元与时间尺度 L0 设定完成。新增 `docs/基础设定/寿元与时间尺度设定.txt`，锁定凡人至化神寿元上限、健康活动期、闭关跳年、NPC 换代、低阶势力换代和任务/演出使用规则；世界主线拆分清单已将 C-STORY-WM-01 标记完成。C-STORY-WM-P0 总包仍需继续推进出生地接入、真形体系、矩阵占位、玄荒新路天才人物志和第一章兼容复核。本轮不写战斗数值、突破概率、CSV、Unity 或 BattleSim 代码。
 > 2026-07-09 Codex / gpt-5.5：U-S6-03 战斗日志适配拆分完成。新增 `CombatLogAdapter` 集中格式化战斗开始、行动结果和掉落日志；`ExplorationController` 仅保留 UI 委托、刷新和协程状态收尾。验证：TDD RED/Unity batchmode 目标断言 GREEN、`Assembly-CSharp` build、`TianZhang.EditModeTests` build 通过。本轮不改 CTB、AI、伤害、冷却、槽位、寻路、掉落表、胜负结算、场景跳转或 BattleSim 数值。
 > 2026-07-09 Codex / gpt-5.5：D-ELEMENT-01 element 字段导入器 schema 断言完成。`DataConfigImporter` 导入 Spells/Skills 时先断言独立 `element` 表头存在，并按表头读取 `element` 值，避免 `elementReq` 学习门槛列与技能五行属性列因列序变化被错读；新增 EditMode 编译期测试覆盖 `elementReq` 与 `element` 换序及缺列失败场景。验证：TDD RED、`Assembly-CSharp` build、`TianZhang.EditModeTests` build、`check-data-chain.ps1`、`check-data-chain.ps1 -FailOnMissingAssets` 通过；`dotnet test --list-tests` 未发现 Unity 测试明细，不作为 Unity Test Runner 通过证明。本轮不改 CSV、asset、数值或玩家内容语义。
