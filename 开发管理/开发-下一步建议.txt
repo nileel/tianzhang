@@ -5,11 +5,11 @@
 
 ## 当前开发判断
 
-- 场景架构线已完成 TQ-016、TQ-017、TQ-022、TQ-023、TQ-024、TQ-025 与 U-S5-02：四场景可生成/注册，StartMenu 门派选择已迁入会话流，WorldScene/SettlementScene/AdventureScene 已具备基础会话流，据点服务入口已有按钮与日志占位。
-- 下一条 Codex P1 开发切片是 U-S6-03：继续拆 `ExplorationController` 中的战斗协程壳或日志适配。
+- 场景架构线已完成 TQ-016、TQ-017、TQ-022、TQ-023、TQ-024、TQ-025、U-S5-02 与 U-S6-03：四场景可生成/注册，StartMenu 门派选择已迁入会话流，WorldScene/SettlementScene/AdventureScene 已具备基础会话流，据点服务入口已有按钮与日志占位，战斗日志适配已从 `ExplorationController` 拆出。
+- 当前场景/UI 线暂无新的 P1 拆分项；下一批 Codex 开发可从 U-MECH-02B、U-2_5D-01、D-IMPORT-01 或 N-BAL-02 中按优先级补入近期队列。
 - 数据链路线已具备独立 `element` 列与 `contentScope` 列；后续重点是导入器/运行时字段保存、检查脚本告警与高阶内容保留边界。
-- Unity 机制线已完成符胆首轮回归；雷劫、玄感、含弘/载物仍按独立切片处理。
-- 数值线不再把紫府正面对抗金丹 0.0% 当缺口；当前可做的是筑基/紫府 Build 极化诊断，再决定是否调功法成长或 AI 行为。
+- Unity 机制线已完成符胆、雷劫、玄感神识强度、含弘/载物首轮回归；玄感清除链/玄同状态仍需统一状态/debuff 流程后另拆。
+- 数值线不再把紫府正面对抗金丹 0.0% 当缺口；TQ-029 已定位筑基/紫府 Build 极化主因，后续可拆 N-BAL-02 修复成长表/回退策略，再决定是否调功法成长或 AI 行为。
 
 ## Backlog 路由
 

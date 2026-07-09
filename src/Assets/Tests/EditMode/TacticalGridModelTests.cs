@@ -665,6 +665,50 @@ namespace TianZhang.Tests
         }
     }
 
+    public class CombatLogAdapterTests
+    {
+        [Test]
+        public void AdapterFormatsBattleStartActionResultAndDrops()
+        {
+            var logs = new System.Collections.Generic.List<string>();
+            string status = null;
+            var adapter = new CombatLogAdapter(logs.Add, value => status = value);
+
+            adapter.AnnounceBattleStart("玩家", "石甲兽");
+            adapter.AppendActionResult(new CombatResolver.ActionResult { Success = true, Message = "玩家 物理攻击 石甲兽" });
+            adapter.AppendActionResult(new CombatResolver.ActionResult { Success = false, Message = "" });
+            adapter.AppendDropItems(new[] { "灵石×5", "下品丹药×1" });
+
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    "=== 战斗开始！玩家 VS 石甲兽 ===",
+                    "玩家 物理攻击 石甲兽",
+                    "掉落: 灵石×5, 下品丹药×1",
+                },
+                logs);
+            Assert.AreEqual("⚔ 石甲兽", status);
+        }
+    }
+
+    public static class CombatLogAdapterBatchRunner
+    {
+        public static void RunCombatLogAdapter()
+        {
+            try
+            {
+                new CombatLogAdapterTests().AdapterFormatsBattleStartActionResultAndDrops();
+                Debug.Log("CombatLogAdapterBatchRunner.RunCombatLogAdapter passed.");
+                EditorApplication.Exit(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                EditorApplication.Exit(1);
+            }
+        }
+    }
+
     public class AdventureSceneControllerTests
     {
         [Test]

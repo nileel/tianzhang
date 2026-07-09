@@ -17,6 +17,7 @@
 > 2026-07-09 Codex / gpt-5.5：TQ-029 筑基/紫府 Build 极化诊断完成并归档至 `开发管理/任务归档/2026-07-09-TQ-029-筑基紫府Build极化诊断归档.txt`。结论：金丹/紫府 NA 主要由样本筛选造成，但筑基/紫府同境 0/100 极化主因是功法成长表完整性、功法星级回退和 AI 行为；`云篆度人经` 缺练气成长导致太一·符修筑基成长归零链路需优先拆修。本轮不调参、不改 BattleSim 代码。
 > 2026-07-09 Codex / gpt-5.5：D-ELEMENT-01 element 字段导入器 schema 断言完成并归档至 `开发管理/任务归档/2026-07-09-D-ELEMENT-01-element字段导入器schema断言归档.txt`。`DataConfigImporter` 导入 Spells/Skills 前会断言独立 `element` 表头存在，并按表头读取 `element`，新增测试覆盖 `elementReq` 与 `element` 换序场景；本轮不改 CSV、asset、数值或玩家内容语义。
 > 2026-07-09 Codex / gpt-5.5：U-S5-02 据点服务入口占位完成并归档至 `开发管理/任务归档/2026-07-09-U-S5-02-据点服务入口占位归档.txt`。SettlementScene 服务按钮已从纯展示改为可点击占位入口，点击仅输出服务名与当前据点 ID 日志；本轮不接入修炼、功法、任务、坊市实际业务，不改 Adventure 跳转、战斗、数值、CSV 或 asset。
+> 2026-07-09 Codex / gpt-5.5：U-S6-03 战斗日志适配拆分完成并归档至 `开发管理/任务归档/2026-07-09-U-S6-03-战斗日志适配拆分归档.txt`。`CombatLogAdapter` 集中格式化战斗开始、行动结果和掉落日志；`ExplorationController` 仅委托日志输出并保留 UI 刷新/协程状态。本轮不改 CTB、AI、伤害、冷却、寻路、掉落或场景跳转语义。
 > 2026-07-08 Codex / gpt-5.5：按用户要求补入 DeepSeek V4 Pro 近期执行型任务。新增 TQ-034 至 TQ-040，覆盖普通 NPC、第一章 L3 任务、散修内容补强、据点文案和数据资产复查；均需标「⚠️ 已修改/未审核」并写入 `AI合作沟通.txt`，由 Codex / ChatGPT5.5 后续 `2` 复审。
 > 2026-07-08 DeepSeek V4 Pro：TQ-035 / C-NPC-05A 散修/坊市首批4个普通NPC完成。NPC-STEWARD-05（营地管事·老关）、NPC-VENDOR-03（符箓贩·小六）、NPC-QUESTER-02（矿工·石根）、NPC-SCOUT-03（消息通·黑耳），一 NPC 一文件。待 Codex / ChatGPT5.5 复审。
 > 2026-07-09 Codex / gpt-5.5：TQ-034 与 TQ-035 批量复审通过，目标 8 个普通 NPC 均已标为已审核；归档见 `开发管理/任务归档/2026-07-09-待审核工作批量复审归档.txt`。下一步建议优先 TQ-036，用已审核 NPC 回填第一章 L3 单任务样例。

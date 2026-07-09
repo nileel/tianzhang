@@ -40,6 +40,7 @@ namespace TianZhang.Map
         private CTBEngine ctbEngine;
         private CombatResolver resolver;
         private TacticalCombatController tacticalCombatController;
+        private CombatLogAdapter combatLogAdapter;
         private AdventureSceneController adventureSceneController;
         private Character player;
         private List<EnemyUnit> enemies = new List<EnemyUnit>();
@@ -108,6 +109,7 @@ namespace TianZhang.Map
             ctbEngine = new CTBEngine();
             resolver = new CombatResolver { Engine = ctbEngine };
             tacticalCombatController = new TacticalCombatController(ctbEngine, resolver);
+            combatLogAdapter = new CombatLogAdapter(AddLog, SetStatus);
             adventureSceneController = FindFirstObjectByType<AdventureSceneController>();
 
             // 创建障碍格素材（深灰色）
@@ -510,8 +512,7 @@ namespace TianZhang.Map
             adventureSceneController?.BeginEncounter();
             tacticalCombatController.BeginCombat(player, enemy.character, tilemapManager.Grid);
 
-            AddLog($"=== 战斗开始！{player.Name} VS {enemy.character.Name} ===");
-            SetStatus($"⚔ {enemy.character.Name}");
+            GetCombatLogAdapter().AnnounceBattleStart(player.Name, enemy.character.Name);
 
             // 显示战斗UI
             if (uiManager != null)
@@ -817,8 +818,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void HandleDrop(IReadOnlyList<string> dropItems)
         {
-            if (dropItems == null || dropItems.Count == 0) return;
-            AddLog($"掉落: {string.Join(", ", dropItems)}");
+            GetCombatLogAdapter().AppendDropItems(dropItems);
         }
 
         private void EndBattle(EnemyUnit enemyUnit)
@@ -904,8 +904,14 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void AddActionLog(CombatResolver.ActionResult result)
         {
-            if (!string.IsNullOrEmpty(result.Message))
-                AddLog(result.Message);
+            GetCombatLogAdapter().AppendActionResult(result);
+        }
+
+        private CombatLogAdapter GetCombatLogAdapter()
+        {
+            if (combatLogAdapter == null)
+                combatLogAdapter = new CombatLogAdapter(AddLog, SetStatus);
+            return combatLogAdapter;
         }
 
         // ==================== 公共查询 ====================

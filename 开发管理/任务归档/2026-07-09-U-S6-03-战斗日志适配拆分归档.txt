@@ -1,0 +1,36 @@
+# U-S6-03 战斗日志适配拆分归档
+
+- 日期：2026-07-09
+- 执行：Codex / gpt-5.5
+- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-S6-03；`开发管理/开发-下一步建议.txt`
+- 目标：继续拆 `ExplorationController` 中的战斗协程壳或日志适配。
+
+## 修改文件
+
+- `src/Assets/Scripts/Combat/TacticalCombatController.cs`
+- `src/Assets/Scripts/Map/ExplorationController.cs`
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`
+
+## 实现内容
+
+1. 新增 `CombatLogAdapter`，集中格式化战斗开始、行动结果与掉落日志。
+2. `ExplorationController` 新增 `combatLogAdapter` 字段，并把战斗开始状态、`CombatResolver.ActionResult` 日志、掉落日志委托给适配器。
+3. 新增 `CombatLogAdapterTests.AdapterFormatsBattleStartActionResultAndDrops` 与 `CombatLogAdapterBatchRunner.RunCombatLogAdapter`，用于 Unity batchmode 目标断言。
+
+## TDD 记录
+
+- RED：`Unity.exe -batchmode -projectPath D:\天章游戏开发\src -executeMethod TianZhang.Tests.CombatLogAdapterBatchRunner.RunCombatLogAdapter -logFile D:\天章游戏开发\src\Temp\combat-log-adapter-red.log -quit` 失败，断言 `CombatLogAdapter` 不存在。
+- GREEN：同目标复跑通过，日志显示 `CombatLogAdapterBatchRunner.RunCombatLogAdapter passed.`
+
+## 验证
+
+- `dotnet build src/Assembly-CSharp.csproj`：通过，0 警告 0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告 0 错误。
+- Unity batchmode 目标断言：`CombatLogAdapterBatchRunner.RunCombatLogAdapter passed.`
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，90 files checked。
+- `git diff --check`：通过；仅有 Git LF/CRLF 规范化提示，无空白错误。
+
+## 边界
+
+- 本轮不改 CTB 推进、AI、伤害公式、冷却、槽位、寻路、掉落表、战斗胜负结算或场景跳转语义。
+- 本轮未运行 BattleSim：未涉及数值平衡、角色成长或战斗参数结论。

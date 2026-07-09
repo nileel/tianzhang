@@ -14,6 +14,7 @@
 - ✅ U-S5-02：SettlementScene 据点服务入口占位已完成；修炼、功法、任务、坊市等服务按钮可点击并仅写占位日志。
 - ✅ TQ-024：Settlement/World → Adventure 入口与返回上下文已完成。
 - ✅ TQ-025：Adventure/Combat UI 命令绑定拆分切片已完成；战斗动作栏统一通过 `ICombatCommandHandler` 发命令，新增 `BtnSwap` 换法按钮，`BattleUIManager` 不再直接依赖 `ExplorationController`。
+- ✅ U-S6-03：战斗日志适配拆分已完成；`CombatLogAdapter` 集中格式化战斗开始、行动结果和掉落日志，`ExplorationController` 仅委托输出。
 - ✅ TQ-028 / U-MECH-01：雷劫印记 Unity 回归已完成；九霄雷劫录受击叠层、物理出手消耗增伤、满层神魂受击魂防降低已接入运行时。
 - ✅ TQ-028 / U-MECH-02A：玄感神识强度 Unity 回归已完成；南华玄感录神魂伤害入口按境界获得神识强度加值。
 - ✅ TQ-028 / U-MECH-03：含弘/载物 Unity 回归已完成；含弘光大典按境界获得物理防御加成，载物按损失 HP 提供全防御加成。
@@ -27,7 +28,7 @@
 | U-S5-03 / TQ-024 | P1 | Codex | ✅ 已完成 | 据点进入 Adventure 与返回上下文 |
 | U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
 | U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |
-| U-S6-03 | P1 | Codex | 待处理 | `ExplorationController` 战斗协程壳或日志适配继续拆分 |
+| U-S6-03 | P1 | Codex | ✅ 已完成（2026-07-09） | 战斗日志适配拆分：`CombatLogAdapter` 集中处理战斗开始、行动结果和掉落日志 |
 | U-MECH-01 / TQ-028 | P2 | Codex | ✅ 已完成 | 雷劫印记 Unity 回归 |
 | U-MECH-02A / TQ-028 | P2 | Codex | ✅ 已完成 | 玄感神识强度 Unity 回归 |
 | U-MECH-02B / TQ-028 | P2 | Codex | 待处理 | 玄感清除链/玄同状态 Unity 回归，需统一状态/debuff 流程 |

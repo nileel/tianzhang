@@ -15,6 +15,39 @@ namespace TianZhang.Combat
         void RequestSkill(int index);
     }
 
+    /// <summary>
+    /// Formats combat presentation messages without depending on Unity UI objects.
+    /// </summary>
+    public sealed class CombatLogAdapter
+    {
+        private readonly Action<string> addLog;
+        private readonly Action<string> setStatus;
+
+        public CombatLogAdapter(Action<string> addLog, Action<string> setStatus)
+        {
+            this.addLog = addLog;
+            this.setStatus = setStatus;
+        }
+
+        public void AnnounceBattleStart(string playerName, string enemyName)
+        {
+            addLog?.Invoke($"=== 战斗开始！{playerName} VS {enemyName} ===");
+            setStatus?.Invoke($"⚔ {enemyName}");
+        }
+
+        public void AppendActionResult(CombatResolver.ActionResult result)
+        {
+            if (!string.IsNullOrEmpty(result.Message))
+                addLog?.Invoke(result.Message);
+        }
+
+        public void AppendDropItems(IReadOnlyList<string> dropItems)
+        {
+            if (dropItems == null || dropItems.Count == 0) return;
+            addLog?.Invoke($"掉落: {string.Join(", ", dropItems)}");
+        }
+    }
+
     public struct TacticalCombatSession
     {
         public Character Player { get; }
