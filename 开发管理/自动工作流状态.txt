@@ -15,19 +15,20 @@
 
 | 字段 | 值 |
 |------|----|
-| 当前轮次 | 未开始 |
+| 当前轮次 | WF1-20260710-032405 |
 | 全局锁 | IDLE |
 | 锁持有者 | 无 |
 | 锁开始时间 | 无 |
-| 最近完成阶段 | 无 |
+| 最近完成阶段 | commit_completed |
 | 最近中断原因 | 无 |
 | 当前恢复指针 | 无 |
+| 本轮身份模型 | unknown（Node REPL 调用失败，未返回 `x-codex-turn-metadata.model`） |
 
 ## 工作流状态
 
 | 工作流 | 计划时间 | 状态 | 当前任务/对象 | 检查点 | 恢复次数 | 最近结果 |
 |--------|----------|------|----------------|--------|----------|----------|
-| WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 无 | 无 | 0 | 未运行 |
+| WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：补入 TQ-046/TQ-047，验证通过 |
 | WF2-CODEX-ONE | T+30 | IDLE | 无 | 无 | 0 | 未运行 |
 | WF3-CLAUDE-ONE | T+90 | IDLE | 无 | 无 | 0 | 未运行 |
 | WF4-CODEX-TWO | T+150 | IDLE | 无 | 无 | 0 | 未运行 |
