@@ -17,6 +17,7 @@
 - 2026-07-09 Codex / gpt-5.5 批量复审 C-GUXIU-02 当前 11 个古修术法通过：首批 8 个 R-20260708-01 返工通过，第二批南华阐衍典 3 个术法由 Codex 补 `范围参数` 后通过。归档见 `开发管理/任务归档/2026-07-09-待审核工作批量复审归档.txt`。
 - 2026-07-09 Codex / gpt-5.5 批量复审 C-NPC-04 / C-NPC-05 通过，8 个普通 NPC 均已标为已审核；下一步可推进 C-STORY-03 / TQ-036 回填第一章 L3 单任务样例。
 - 2026-07-10 Codex / gpt-5.5 复审 C-QUEST-02A / TQ-037 通过：`quest_ch01_node_cangtai.txt` 与 `quest_ch01_node_huiboxia.txt` 满足 L3 单任务字段；Codex 补修未验证数值和重要 NPC 边界表述后闭环。归档见 `开发管理/任务归档/2026-07-10-TQ-037龙脊安全节点L3任务复审归档.txt`。
+- 2026-07-10 WF4-CODEX-TWO / unknown 复审 C-STORY-03A / TQ-036 通过：`quest_ch01_taiyi_outer_trial.txt` 与 `quest_ch01_sanxiu_mutual_mark.txt` 满足 L3 单任务字段、第一章入口边界和普通 NPC 知识边界。归档见 `开发管理/任务归档/2026-07-10-TQ-036第一章入口L3任务复审归档.txt`。
 
 ## 任务
 
@@ -39,7 +40,7 @@
 | C-STORY-WM-L2 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 待处理 | 世界主线 L2/L3/L4 拆分包：地区主线、势力线、NPC 分支和终局演出 |
 | C-STORY-04 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 待处理 | 低阶势力生态与样板成长线拆分包：中小门派/分院/家族/散修营地模板 + 1 条样板地区锚点成长线 |
 | C-LORE-01 | P1 | Codex 规划；DeepSeek 执行；Codex 复审 | ✅ 轻/中迁移已复审（2bfb3e7 + Codex补修） | 新位格体系旧口径二轮迁移：地图、总设定与非本轮重要 NPC |
-| C-STORY-03 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 第一章首批 L3 单任务样例，一任务一文件，承接 C-STORY-02 |
+| C-STORY-03 | P2 | DeepSeek 执行；Codex 复审 | ✅ 已复审（TQ-036，2026-07-10） | 第一章首批 L3 单任务样例，一任务一文件，承接 C-STORY-02 |
 | C-QUEST-01 | P2 | DeepSeek 执行；Codex 复审 | 待处理 | 宗门入门支线任务首批，一任务一文件 |
 | C-QUEST-02 | P2 | DeepSeek 执行；Codex 复审 | ✅ 首批已复审（TQ-037，2026-07-10） | 龙脊安全节点 L3 任务首批：苍台节点与回波峡节点 |
 | C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 待处理 | 据点通用称谓、寒暄和任务入口文案表 |
