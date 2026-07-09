@@ -1,0 +1,74 @@
+# Codex 技能筛选结果
+
+> 记录时间：2026-07-08
+> 目的：根据当前项目状态筛选适合后续开发的 GitHub / 官方 skill，并记录已安装项。
+> 当前项目阶段：Unity 场景/战斗链路已跑通，近期重点是 Unity 运行时机制回归、数据链路字段校验、BattleSim 数值诊断、后续 2v2 群战/AI/UI/存档等正式开发前后续切片。
+
+## 已安装
+
+| skill | 来源 | 安装路径 | 适用范围 |
+|------|------|----------|----------|
+| `unity-agent-workflows` | `AUN-PN/unity-agent-workflows` | `C:\Users\WINDOWS\.codex\skills\unity-agent-workflows` | Unity 运行时/场景/UI/Prefab 任务的 owner 证明、可见结果验证、Unity 验证流程、避免误改非真实责任文件 |
+| `code-review-unity` | `jinda-li/code-review-unity` | `C:\Users\WINDOWS\.codex\skills\code-review-unity` | Unity C# 代码复查，重点覆盖 MonoBehaviour 生命周期、GC/热路径、GetComponent 使用、SRP、Unity 6 风格 |
+
+安装命令：
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo AUN-PN/unity-agent-workflows --path skills/unity-agent-workflows
+python "$env:USERPROFILE\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo jinda-li/code-review-unity --ref master --path .claude/skills/code-review-unity
+```
+
+使用说明：安装后需要重启 Codex 才会在技能列表中加载。
+
+## 工作类型到 skill 路由规则
+
+总原则：先按 `AGENTS.md` 与 `开发管理/` 的项目规则确定事实源、任务边界和验证命令，再选择最少必要的 skill 辅助执行；skill 不覆盖项目规则、用户当次明确指令或 BattleSim/Unity 实际验证结果。
+
+| 工作类型 | 优先使用的 skill / 规则 | 使用边界 |
+|----------|--------------------------|----------|
+| 会话开始、判断是否需要 skill | `using-superpowers` | 先检查是否有适用 skill；若没有，按项目规则直接处理 |
+| 安装、列出、更新 skill | `skill-installer` | 安装后记录来源、路径、用途；提醒重启 Codex |
+| Unity 运行时、场景、Prefab、UI 可见结果、Inspector/序列化 owner 证明 | `unity-agent-workflows` | 先证明真实 owner 链，再编辑；涉及可见结果时按 Unity 验证流程闭环 |
+| Unity C# 代码实现 | 项目规则 + `unity-agent-workflows`；后续可加 `unity-csharp-scripting` | 不因通用 Unity 建议改动 CTB、伤害、槽位、寻路、掉落等非本轮范围 |
+| Unity C# 复查 | `code-review-unity` | 用于复查生命周期、热路径、GC、SRP、Unity 6 风格；不替代项目测试 |
+| BattleSim、C# 数值模拟、.NET 代码 | 项目 BattleSim 规则；后续可加 `managedcode/dotnet-skills` 的 `dotnet`、`modern-csharp`、`code-review`、`run-tests` | 讨论或验证平衡必须运行 BattleSim；诊断与调参分开 |
+| CSV、asset、导入器、数据链路 | 项目数据链路规则；后续可加 `unity-scriptableobjects` | 先跑 `check-data-chain.ps1`；不得因字段补齐自动删除高阶/保留内容 |
+| 战棋 AI、Boss、2v2/群战决策 | 后续可加 `game-ai` | 只辅助决策模型与寻路/行为结构；数值结论仍回 BattleSim |
+| HUD、菜单、动作栏、据点/冒险 UI | `unity-agent-workflows`；后续可加 `game-ui-ux` | 运行时可见 UI 必须证明 owner、布局来源和实际验证；不只看静态代码 |
+| 地图、关卡、Tilemap、格子表现 | 后续可加 `unity-tilemap-2d`、`level-design`、`procedural-gen` | 手工关卡先用 level-design；程序生成才用 procedural-gen；Unity 落地再用 Tilemap skill |
+| 存档、世界状态、剧情变量持久化 | 后续可加 `save-systems` | 只用于持久化方案；剧情变量命名和章节事实仍按项目剧情规范 |
+| 剧情、NPC、功法、术法、神通等内容生产 | 项目 docs 规范优先 | 外部叙事/对话 skill 只能辅助系统化，不替代 `docs/剧情/剧情生产规范.txt` 或角色养成规范 |
+| 性能、卡顿、GC、Profiler | 后续可加 `performance-optimization` | 先测量再优化；无 profiler 或复现数据时不做猜测式性能改动 |
+| GitHub PR、CI、发布 | 现有 GitHub / `gh-*` / `yeet` 类 skill | 只在用户要求 GitHub/PR/CI/发布时使用；本地任务不默认引入 |
+
+不建议的用法：
+
+- 不为一次普通文档修改安装大型技能包。
+- 不把 `Besty0728/Unity-Skills` 当作默认 Unity skill；只有需要 Unity Editor REST 自动化时再接入。
+- 不用 `Donchitos/Claude-Code-Game-Studios` 替代本项目已有的双 AI 协作规则和任务队列。
+- 不让通用游戏设计 skill 覆盖本项目已经审核的世界观、境界、数值和内容模板。
+
+## 建议后续按需安装
+
+| 优先级 | skill / 仓库路径 | 适用范围 | 建议 |
+|--------|------------------|----------|------|
+| P1 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/unity/unity-csharp-scripting` | Unity C# / MonoBehaviour 基础改动 | 后续频繁改 Unity 运行时代码时安装 |
+| P1 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/unity/unity-scriptableobjects` | CSV、asset、ScriptableObject 数据链路 | 推进导入器、asset 字段、数据配置时安装 |
+| P1 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/disciplines/game-ai` | 敌人 AI、门派策略、Boss、2v2 群战决策 | 启动 N-AI-01 或 Unity 群战 AI 前安装 |
+| P1 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/disciplines/game-ui-ux` | HUD、菜单、战斗动作栏、据点 UI | 推进 UI 结构或多分辨率适配前安装 |
+| P2 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/unity/unity-tilemap-2d` | 2D 地图、Tilemap、格子表现 | 做正式地图/关卡表现前安装 |
+| P2 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/disciplines/performance-optimization` | Unity 性能、热路径、GC、Profiler 流程 | 出现帧率/卡顿/热路径问题时安装 |
+| P2 | `gamedev-skills/awesome-gamedev-agent-skills` / `skills/disciplines/save-systems` | 存档、世界状态、剧情变量持久化 | 做存档系统前安装 |
+
+## 可选增强包
+
+| 仓库 | 判断 | 适用时机 |
+|------|------|----------|
+| `Besty0728/Unity-Skills` | Unity Editor REST 自动化套件，能力强但接入成本较高 | 需要 Codex 直接操作 Unity Editor、批量建场景/Prefab、检查 Inspector/引用时再引入 |
+| `managedcode/dotnet-skills` | .NET skill catalog，适合 BattleSim 与 C# 质量流程 | 后续要加强 BattleSim 测试、覆盖率、复杂度、.NET 代码复查时按需安装 `dotnet`、`modern-csharp`、`code-review`、`run-tests` |
+
+## 当前不建议优先安装
+
+- `TerminalSkills/skills`：覆盖面过宽，噪声较大；没有针对当前 Unity/BattleSim 缺口形成明显优势。
+- `Donchitos/Claude-Code-Game-Studios`：规模很大，偏 Claude Code 多代理工作室体系；当前项目已有明确双 AI 分工与任务队列，直接引入会增加流程冲突风险。
+- OpenAI 官方 curated 中的 `playwright`、`screenshot`、`security-*`：对浏览器前端或安全审查有价值，但当前 Unity/BattleSim 项目不是近期主线。
