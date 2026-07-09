@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Adventure;
@@ -423,6 +424,33 @@ namespace TianZhang.Tests
                     new[] { "spell_test" },
                     "contentScope",
                     "player"));
+        }
+
+        [Test]
+        public void ElementLookupRequiresIndependentElementColumnAndUsesHeaderOrder()
+        {
+            Assert.AreEqual(
+                "water",
+                DataConfigImporter.GetRequiredColumnValue(
+                    new[] { "name", "elementReq", "element" },
+                    new[] { "spell_test", "fire_req", "water" },
+                    "element",
+                    "Spells.csv"));
+
+            Assert.AreEqual(
+                "water",
+                DataConfigImporter.GetRequiredColumnValue(
+                    new[] { "name", "element", "elementReq" },
+                    new[] { "spell_test", "water", "fire_req" },
+                    "element",
+                    "Spells.csv"));
+
+            Assert.Throws<InvalidDataException>(() =>
+                DataConfigImporter.GetRequiredColumnValue(
+                    new[] { "name", "elementReq" },
+                    new[] { "spell_test", "fire_req" },
+                    "element",
+                    "Spells.csv"));
         }
     }
 }

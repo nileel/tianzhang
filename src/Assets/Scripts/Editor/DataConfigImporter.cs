@@ -200,6 +200,7 @@ namespace TianZhang.Editor
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
             var headers = FindHeader(lines);
+            RequireColumns(headers, path, "element");
 
             foreach (var line in lines.Skip(1))
             {
@@ -222,8 +223,8 @@ namespace TianZhang.Editor
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
                 // 五行属性（从独立 element 列解析）
-                if (cols.Length > 14)
-                    asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[14]);
+                asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(
+                    GetRequiredColumnValue(headers, cols, "element", path));
                 // realmReq, elementReq, affiliation stored for reference (already in name)
 
                 string assetPath = $"Assets/Data/Spells/Spell_{SanitizeName(cols[0])}.asset";
@@ -241,6 +242,7 @@ namespace TianZhang.Editor
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
             var headers = FindHeader(lines);
+            RequireColumns(headers, path, "element");
 
             foreach (var line in lines.Skip(1))
             {
@@ -263,7 +265,8 @@ namespace TianZhang.Editor
                 asset.penetratingShield = cols[10] == "1";
                 asset.stunChance = float.Parse(cols[11]);
                 // 五行属性（从独立 element 列解析）
-                asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(cols[15]);
+                asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(
+                    GetRequiredColumnValue(headers, cols, "element", path));
                 asset.isDomain = cols[12] == "1";
                 asset.isBloodline = cols[13] == "1";
                 asset.specialEffectDesc = T(cols[14]);
@@ -396,13 +399,49 @@ namespace TianZhang.Editor
             if (headers == null || cols == null)
                 return defaultValue;
 
-            int index = Array.FindIndex(headers, header =>
-                string.Equals(header?.Trim(), columnName, StringComparison.OrdinalIgnoreCase));
+            int index = FindColumnIndex(headers, columnName);
             if (index < 0 || index >= cols.Length)
                 return defaultValue;
 
             var value = cols[index]?.Trim();
             return string.IsNullOrEmpty(value) ? defaultValue : value;
+        }
+
+        public static string GetRequiredColumnValue(
+            string[] headers,
+            string[] cols,
+            string columnName,
+            string sourceName)
+        {
+            int index = FindColumnIndex(headers, columnName);
+            if (index < 0)
+                throw new InvalidDataException($"{sourceName} missing required column '{columnName}'.");
+            if (cols == null || index >= cols.Length)
+                throw new InvalidDataException($"{sourceName} row missing required column '{columnName}'.");
+
+            var value = cols[index]?.Trim();
+            if (string.IsNullOrEmpty(value))
+                throw new InvalidDataException($"{sourceName} row has empty required column '{columnName}'.");
+
+            return value;
+        }
+
+        static void RequireColumns(string[] headers, string sourceName, params string[] columnNames)
+        {
+            foreach (var columnName in columnNames)
+            {
+                if (FindColumnIndex(headers, columnName) < 0)
+                    throw new InvalidDataException($"{sourceName} missing required column '{columnName}'.");
+            }
+        }
+
+        static int FindColumnIndex(string[] headers, string columnName)
+        {
+            if (headers == null)
+                return -1;
+
+            return Array.FindIndex(headers, header =>
+                string.Equals(header?.Trim(), columnName, StringComparison.OrdinalIgnoreCase));
         }
 
         static string SanitizeName(string name)

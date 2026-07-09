@@ -1,0 +1,47 @@
+# D-ELEMENT-01 element 字段导入器 schema 断言归档
+
+完成时间：2026-07-09
+执行方：Codex / gpt-5.5
+来源：`开发管理/任务列表/数据链路任务.txt`
+
+## 目标
+
+为术法/神通独立 `element` 字段补导入器 schema 断言，防止 `elementReq` 学习门槛列与技能五行属性列因列序变化被错读。
+
+## 修改范围
+
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs`
+  - 新增 `GetRequiredColumnValue`，按表头读取必填列，缺表头、缺单元格或空值时抛出 `InvalidDataException`。
+  - 新增 `RequireColumns` 与 `FindColumnIndex`，统一表头定位逻辑。
+  - `ImportSpells` 与 `ImportSkills` 导入前断言 `element` 表头存在。
+  - `ImportSpells` 与 `ImportSkills` 读取技能五行属性时改为按 `element` 表头读取，不再使用硬编码列号。
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
+  - 新增 `ElementLookupRequiresIndependentElementColumnAndUsesHeaderOrder`，覆盖：
+    - `elementReq` 在 `element` 前时仍读取 `element`。
+    - `element` 在 `elementReq` 前时仍读取 `element`。
+    - 缺少 `element` 表头时抛出 `InvalidDataException`。
+- `开发管理/任务列表/数据链路任务.txt`
+  - 标记 D-ELEMENT-01 已完成。
+- `开发管理/当前任务队列.txt`、`开发管理/设计-当前状态.txt`
+  - 记录本轮完成事实。
+
+## 边界
+
+- 不修改 `Spells.csv`、`Skills.csv`、`GongFa.csv`。
+- 不重导 Unity asset。
+- 不改变玩家可学内容、高阶保留内容、数值、CTB、AI、冷却、寻路或掉落语义。
+- 不补 `realm_lianshen` Language key，不扩展 C# realm order。
+
+## 验证
+
+- TDD RED：`dotnet build src/TianZhang.EditModeTests.csproj` 先因 `DataConfigImporter.GetRequiredColumnValue` 不存在失败，符合预期。
+- GREEN：`dotnet build src/TianZhang.EditModeTests.csproj` 通过，0 警告 0 错误。
+- `dotnet build src/Assembly-CSharp.csproj` 通过，0 警告 0 错误。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 通过，Missing 0，ExtraOrLegacy 0。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets` 通过，Missing 0，ExtraOrLegacy 0。
+- `dotnet test src/TianZhang.EditModeTests.csproj --no-build --list-tests` 返回 0 但未输出 Unity 测试明细，不作为 Unity Test Runner 通过证明。
+
+## 后续
+
+- D-IMPORT-01 仍可继续把更多导入字段迁移为按表头解析，降低末尾加列或列序调整风险。
+- D-REALM-02 仍负责高阶内容最终处理方案；本轮未消费。
