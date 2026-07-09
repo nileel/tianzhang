@@ -15,7 +15,7 @@
 
 | 字段 | 值 |
 |------|----|
-| 当前轮次 | WF1-20260710-032405 |
+| 当前轮次 | WF2-20260710-033354 |
 | 全局锁 | IDLE |
 | 锁持有者 | 无 |
 | 锁开始时间 | 无 |
@@ -29,7 +29,7 @@
 | 工作流 | 计划时间 | 状态 | 当前任务/对象 | 检查点 | 恢复次数 | 最近结果 |
 |--------|----------|------|----------------|--------|----------|----------|
 | WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：补入 TQ-046/TQ-047，验证通过 |
-| WF2-CODEX-ONE | T+30 | IDLE | 无 | 无 | 0 | 未运行 |
+| WF2-CODEX-ONE | T+30 | IDLE | TQ-046 / C-STORY-WM-04 | commit_completed | 0 | commit_completed：TQ-046 矩阵占位完成，验证通过 |
 | WF3-CLAUDE-ONE | T+90 | IDLE | 无 | 无 | 0 | 未运行 |
 | WF4-CODEX-TWO | T+150 | IDLE | 无 | 无 | 0 | 未运行 |
 
