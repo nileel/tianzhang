@@ -652,6 +652,8 @@ git commit -m "docs: register data semantics gate tasks"
 
 **Files:**
 
+- Verify: `docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md`
+- Verify: `docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md`
 - Verify: `开发管理/当前任务队列.txt`
 - Verify: `开发管理/开发优先级.txt`
 - Verify: `开发管理/任务列表/场景与Unity任务.txt`
@@ -665,11 +667,16 @@ git commit -m "docs: register data semantics gate tasks"
 Run:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
-git diff --check HEAD~5..HEAD
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理,docs/superpowers/plans
+git diff --check 3c8c1cd..HEAD
+$placeholderPattern = @('T' + 'BD', 'T' + 'ODO', 'implement ' + 'later', 'fill in ' + 'details', '待' + '定', '以后' + '再说', '视情' + '况') -join '|'
+rg -n -i -- $placeholderPattern docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
+$placeholderExit = $LASTEXITCODE
+if ($placeholderExit -ne 1) { throw 'The spec/plan placeholder scan must return 1 (no matches).' }
+Write-Output 'placeholder matches=0'
 ```
 
-Expected: review-text script passes; no whitespace errors in the five implementation commits.
+Expected: review-text script passes; every commit after the complete task-system baseline `3c8c1cd` has no whitespace errors. The constructed placeholder scan exits `1` with no matches in this specification and plan; historical game-content prose is intentionally outside this scan.
 
 - [ ] **Step 2: Verify all task IDs and no claimable frozen content**
 
@@ -678,20 +685,69 @@ Run:
 ```powershell
 rg -n "TQ-0(39|40|43|44|45|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71)" 开发管理/当前任务队列.txt 开发管理/任务列表 开发管理/开发优先级.txt
 rg -n "\| (C-TAIYI-01|C-GUXIU-03|C-SANXIU-01|C-NPC-01|C-STORY-WM-L1|C-STORY-WM-L2|C-STORY-04|C-QUEST-01|C-DIALOGUE-01|C-ECON-01|C-HIGH-01) .*\| 待处理 \|" 开发管理/任务列表/内容设计任务.txt
+
+$sceneFile = '开发管理/任务列表/场景与Unity任务.txt'
+$sceneIds = @('TQ-049', 'TQ-050', 'TQ-051', 'TQ-060', 'TQ-061', 'TQ-062', 'TQ-063', 'TQ-064', 'TQ-065', 'TQ-066', 'TQ-067', 'TQ-068', 'TQ-069', 'TQ-070')
+foreach ($id in $sceneIds) {
+    $count = @(Select-String -LiteralPath $sceneFile -Pattern "^\| [^|]+ / $id \|").Count
+    Write-Output "$id scene rows=$count"
+    if ($count -ne 1) { throw "$id must have exactly one scene activity row." }
+}
+
+$balanceFile = '开发管理/任务列表/数值与战斗任务.txt'
+$balanceIds = @('TQ-044', 'TQ-052', 'TQ-053', 'TQ-054', 'TQ-055')
+foreach ($id in $balanceIds) {
+    $count = @(Select-String -LiteralPath $balanceFile -Pattern "^\| [^|]+ / $id \|").Count
+    Write-Output "$id balance rows=$count"
+    if ($count -ne 1) { throw "$id must have exactly one balance activity row." }
+}
+$oldBalanceCount = @(Select-String -LiteralPath $balanceFile -Pattern '^\| N-BAL-02 /').Count
+Write-Output "old N-BAL-02 rows=$oldBalanceCount"
+if ($oldBalanceCount -ne 0) { throw 'The old N-BAL-02 activity row must be absent.' }
+
+$dataFile = '开发管理/任务列表/数据链路任务.txt'
+$dataIds = @('TQ-040', 'TQ-043', 'TQ-056', 'TQ-057', 'TQ-058', 'TQ-059')
+foreach ($id in $dataIds) {
+    $count = @(Select-String -LiteralPath $dataFile -Pattern "^\| [^|]+ / $id \|").Count
+    Write-Output "$id data rows=$count"
+    if ($count -ne 1) { throw "$id must have exactly one data activity row." }
+}
+if (@(Select-String -LiteralPath $dataFile -Pattern '^\| [^|]+ / TQ-043 \| [^|]+ \| [^|]+ \| ⚠️ 已修改/待复审（HANDOFF-20260710-02） \|').Count -ne 1) { throw 'TQ-043 must remain pending review.' }
+if (@(Select-String -LiteralPath $dataFile -Pattern '^\| [^|]+ / TQ-056 \| [^|]+ \| [^|]+ \| 阻塞（TQ-043 复审） \|').Count -ne 1) { throw 'TQ-056 must wait for the TQ-043 review.' }
+if (@(Select-String -LiteralPath $dataFile -Pattern '^\| [^|]+ / TQ-040 \| [^|]+ \| [^|]+ \| 已合并至 TQ-057 \|').Count -ne 1) { throw 'TQ-040 must remain non-claimable and absorbed by TQ-057.' }
+
+$contentFile = '开发管理/任务列表/内容设计任务.txt'
+$gateExitCount = @(Select-String -LiteralPath $contentFile -Pattern '^\| [^|]+ / TQ-071 \|').Count
+Write-Output "TQ-071 content rows=$gateExitCount"
+if ($gateExitCount -ne 1) { throw 'TQ-071 must have exactly one content activity row.' }
+$frozenContentIds = @('C-TAIYI-01', 'C-GUXIU-03', 'C-SANXIU-01', 'C-NPC-01', 'C-STORY-WM-L1', 'C-STORY-WM-L2', 'C-STORY-04', 'C-QUEST-01', 'C-DIALOGUE-01', 'C-ECON-01', 'C-HIGH-01')
+foreach ($id in $frozenContentIds) {
+    $count = @(Select-String -LiteralPath $contentFile -Pattern "^\| $([regex]::Escape($id)) \| P[123] \| [^|]+ \| 内容冻结（TQ-071 前） \|").Count
+    Write-Output "$id frozen activity rows=$count"
+    if ($count -ne 1) { throw "$id must have exactly one frozen activity row and no pending activity row." }
+}
 ```
 
-Expected: first search finds the designed task dispositions; second search has no matches.
+Expected: the task-ID search finds the designed dispositions and the frozen-content search exits `1` with no pending matches. Scene TQ-049～TQ-051 and TQ-060～TQ-070 each have exactly one activity row. Balance TQ-044 and TQ-052～TQ-055 each have exactly one activity row, with zero old N-BAL-02 rows. Data TQ-040、TQ-043、TQ-056～TQ-059 each have exactly one activity row; TQ-043 remains pending review, TQ-056 waits for that review, and TQ-040 is not separately claimable. Content TQ-071 has exactly one activity row, and all eleven named content activities each have exactly one frozen row and no pending row.
 
 - [ ] **Step 3: Verify the current queue is short and dependency-safe**
 
 Run:
 
 ```powershell
-(Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-' | Measure-Object).Count
-Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-.*\| 待处理 \|'
+$queueFile = '开发管理/当前任务队列.txt'
+$queueRows = @(Select-String -LiteralPath $queueFile -Pattern '^\| TQ-')
+Write-Output "queue rows=$($queueRows.Count)"
+if ($queueRows.Count -ne 6) { throw 'The current queue must contain exactly six task rows.' }
+$claimableRows = @(Select-String -LiteralPath $queueFile -Pattern '^\| TQ-.*\| 待处理 \|')
+$claimableIds = @($claimableRows | ForEach-Object { if ($_.Line -match '^\| (TQ-\d{3}) \|') { $Matches[1] } })
+$claimableRows
+if (@(Compare-Object -ReferenceObject @('TQ-049', 'TQ-052') -DifferenceObject $claimableIds).Count -ne 0) { throw 'Only TQ-049 and TQ-052 may be claimable.' }
+$priorityRulePattern = '^3\. 内容冻结期间 P0 闸门任务始终优先；当没有主责匹配且依赖已满足的 P0 闸门任务时，才可补已登记、依赖满足的 P1 架构/状态任务或 TQ-045 等明确后置非内容任务；禁止补冻结内容或提前执行 TQ-071。$'
+if (@(Select-String -LiteralPath $queueFile -Pattern $priorityRulePattern).Count -ne 1) { throw 'The P0-first and frozen-content guard rule must appear exactly once.' }
 ```
 
-Expected: count is `6`; claimable rows are only TQ-049、TQ-052.
+Expected: queue count is `6`; claimable rows are exactly TQ-049 and TQ-052. The queue states that eligible P0 gates take priority, and only when no matching dependency-ready P0 is claimable may a registered dependency-ready P1 architecture/state task or an explicit later non-content task such as TQ-045 be added; frozen content and premature TQ-071 are forbidden.
 
 - [ ] **Step 4: Confirm no product files changed**
 
@@ -699,10 +755,24 @@ Run:
 
 ```powershell
 git diff --name-only 3c8c1cd..HEAD
+$allowedPaths = @(
+    'docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md'
+    '开发管理/当前任务队列.txt'
+    '开发管理/开发优先级.txt'
+    '开发管理/任务列表/场景与Unity任务.txt'
+    '开发管理/任务列表/数值与战斗任务.txt'
+    '开发管理/任务列表/数据链路任务.txt'
+    '开发管理/任务列表/内容设计任务.txt'
+    '开发管理/任务归档/2026-07-10-可信度闸门重排前队列归档.txt'
+)
+$changedPaths = @(git -c core.quotepath=false diff --name-only 3c8c1cd..HEAD)
+$pathDelta = @(Compare-Object -ReferenceObject ($allowedPaths | Sort-Object) -DifferenceObject ($changedPaths | Sort-Object))
+if ($pathDelta.Count -ne 0) { $pathDelta | Format-Table | Out-String | Write-Output; throw 'Changed paths do not exactly match the Task 6 allowlist.' }
 git status --short
+if (@(git status --short).Count -ne 0) { throw 'The worktree must be clean.' }
 ```
 
-Expected: changes after the task-system implementation baseline `3c8c1cd` are limited to the plan, the six management files, and the one queue archive; worktree is clean. No path begins with `src/`, `simulations/`, `data/`, or a game-design content directory.
+Expected: `git diff --name-only 3c8c1cd..HEAD` contains exactly the plan file, current queue, priority document, scene/Unity backlog, balance/combat backlog, data-chain backlog, content-design backlog, and dated queue archive listed above—no other path. The worktree is clean, so no `src/`, `simulations/`, `data/`, or game-content prose changed.
 
 - [ ] **Step 5: Record the activation result**
 
@@ -713,5 +783,6 @@ G1/G2/G3 task system: activated
 Current queue rows: 6
 Claimable tasks: TQ-049, TQ-052
 Content expansion: frozen until TQ-071
+TQ-043: pending review; TQ-056: blocked
 Product files changed: no
 ```
