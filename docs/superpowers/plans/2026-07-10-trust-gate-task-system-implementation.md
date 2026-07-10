@@ -95,7 +95,7 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 
 1. 用户发送纯 `1` 时，先确认身份，再选择主责匹配、状态为“待处理”、依赖已满足的最高优先级任务。
 2. 状态为“阻塞”的任务不得执行；前置完成后由队列维护工作流改为“待处理”。
-3. 内容冻结期间，队列维护工作流只能从 G1/G2/G3 未完成任务中补位。
+3. 内容冻结期间 P0 闸门任务始终优先；当没有主责匹配且依赖已满足的 P0 闸门任务时，才可补已登记、依赖满足的 P1 架构/状态任务或 TQ-045 等明确后置非内容任务；禁止补冻结内容或提前执行 TQ-071。
 4. 本文件保持 5–10 条任务；完成项归档，长期事实写入 `开发管理/设计-当前状态.txt`。
 5. 用户发送纯 `2` 时读取 `开发管理/审核入口.txt`，不从本文件领取执行任务。
 
@@ -189,10 +189,13 @@ Run:
 ```powershell
 rg -n "^\| TQ-" 开发管理/当前任务队列.txt
 rg -n "TQ-039：内容冻结|TQ-040：不单独执行；仅在 TQ-057 已登记且前置满足后由其吸收|TQ-045：G1 通过后|TQ-054～TQ-071：仅在对应分线 backlog 已登记且依赖满足时补位；当前未登记项不得补位" 开发管理/当前任务队列.txt
+rg -n "内容冻结期间 P0 闸门任务始终优先|没有主责匹配且依赖已满足的 P0 闸门任务|禁止补冻结内容或提前执行 TQ-071" 开发管理/当前任务队列.txt
+(Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-' | Measure-Object).Count
+Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-.*\| 待处理 \|'
 git diff --check
 ```
 
-Expected: exactly six table rows; only TQ-049、TQ-052 are `待处理`; TQ-050、TQ-051、TQ-053、TQ-056 are blocked by explicit dependencies, and TQ-056 specifically waits for TQ-043 review; the TQ-040 line requires TQ-057 to be registered with prerequisites satisfied before absorption; the TQ-054～TQ-071 line forbids unregistered IDs from backfilling the active queue.
+Expected: exactly six table rows; only TQ-049、TQ-052 are `待处理`; TQ-050、TQ-051、TQ-053、TQ-056 are blocked by explicit dependencies, and TQ-056 specifically waits for TQ-043 review; the TQ-040 line requires TQ-057 to be registered with prerequisites satisfied before absorption; the TQ-054～TQ-071 line forbids unregistered IDs from backfilling the active queue. The queue rule keeps every eligible P0 gate above registered, dependency-ready P1 architecture/state or TQ-045 backfills, while frozen content and premature TQ-071 remain forbidden.
 
 - [ ] **Step 5: Commit the queue activation**
 
@@ -386,17 +389,35 @@ Insert these rows before U-MECH-01, and change U-MECH-02B state to `阻塞（G1 
 | S-SAVE-01 / TQ-070 | P1 | Codex | 阻塞（TQ-068、TQ-069） | 存档版本、新旧档、非法档和重置迁移基础 |
 ```
 
-- [ ] **Step 3: Add explicit G1 exit criteria**
+- [ ] **Step 3: Add explicit task boundaries and tightened G1 exit criteria**
 
 Insert before `## 默认验证`:
 
 ```text
+## G1/P1 任务执行边界
+
+- **TQ-060 运行时所有者证明**：产物必须列出正式 Build Settings → `AdventureScene` / `ExplorationScene` / `SceneBuilder` / 战斗 / 返回的真实调用与所有者链，为每个竞争入口写明迁移、适配或淘汰结论，并锁定后续切片允许修改与禁止修改的文件清单；仅推测或仅写迁移计划不通过。
+- **TQ-061 最小冒险战斗闭环**：必须复用 TQ-060 已证明的网格与战斗所有者；不得新增超过 500 行的类，也不得向现有超过 500 行的 Hub 类新增无关职责；胜利与失败两条结算路径都必须返回合法的据点/世界上下文。
+- **TQ-062 出身起点**：当前两个可选出身必须进入各自起点；非法值或旧值必须有显式记录并走专用回退路径，不得写回、展示或伪装为合法出身值。
+- **TQ-063 正式构建冒烟**：必须提供可重复的自动或半自动步骤、运行日志和结果；从创建角色到返回据点，玩家档案、出身、起点、Adventure 上下文和返回上下文全程不丢失。
+- **TQ-064 结构事实图**：`UNITY_STRUCTURE.md` 必须来自对当前工作树的实时扫描，至少包含文件路径、场景、运行时所有者、asmdef 边界、验证入口和 open gaps；不得用旧文档推断代替扫描证据。
+- **TQ-065 探索/场景职责拆分**：至少移除一条真实依赖边，或提取一个有独立测试的协作者；不得新增超过 500 行的类，不得继续增长现有 Hub 的职责。
+- **TQ-066 UI/领域边界**：UI 展示状态与战斗/角色领域状态的所有者和写入路径必须明确；改造不得破坏 Unity 序列化字段、资产 GUID 或已有场景/预制体引用兼容。
+- **TQ-067 asmdef 边界**：不得存在 sibling feature 直接依赖，不得有实现层向上反向引用；项目派生 asmdef 的编译和 Unity 序列化兼容验证必须通过。
+- **TQ-068 最小会话状态**：`GameSession`、世界时间和起点状态在新游戏初始化、场景切换、战斗返回后必须一致，且有对应回归证据。
+- **TQ-069 状态步骤与快照**：`shown != clicked`，`shown` / `clicked` / `opened` / `selected` / `applied` / `completed` / `persisted` 不得压成一个 bool；最小任务、背包和 NPC 快照必须各有明确持久化所有者。
+- **TQ-070 存档迁移**：新档、旧档、非法档和重置路径都必须有确定行为，并提供存档版本判定与迁移前后的可复核证据。
+
+- **补位调度说明**：TQ-064～TQ-070 与 TQ-045 在各自依赖满足后，仅作为低于任何未完成 P0 闸门任务的候选；G1 通过只解除相应依赖，不等于它们立即进入或抢占 `当前任务队列.txt`。
+
 ## G1 出口条件
 
 - TQ-049、TQ-050、TQ-051、TQ-060、TQ-061、TQ-062、TQ-063 全部完成。
 - 权威 Unity 测试入口报告全部测试通过，且执行前后工作区一致。
+- TQ-051 必须从干净隔离工作区开始；Git 跟踪的 `src/Assets/Scenes/*.unity` 与 `src/ProjectSettings/EditorBuildSettings.asset` 在成功和异常路径前后 SHA256 相同，且 `git status --short --untracked-files=all` 证明 tracked/untracked 零残留。
 - 正式 Build Settings 能连续完成“创建角色 → 世界节点 → 据点 → 冒险 → 战斗 → 结算 → 返回据点”。
-- 旧 `ExplorationScene` 不再作为隐藏的唯一可玩入口；竞争运行时所有者有明确迁移或淘汰结论。
+- TQ-063 必须提供可重复的自动或半自动步骤、运行日志和结果；玩家档案、出身、起点、Adventure 上下文和返回上下文在正式构建链路全程不丢失。
+- 正式 Build Settings 只有一个可达冒险运行时；旧 `ExplorationScene` 必须已迁入该所有者、从正式链路不可达或删除，不得与 `AdventureScene` 保持两个竞争可达入口；只写迁移计划不算 G1 通过。
 ```
 
 - [ ] **Step 4: Verify all G1/P1 IDs and dependency states**
@@ -406,10 +427,12 @@ Run:
 ```powershell
 rg -n "TQ-0(49|50|51|60|61|62|63|64|65|66|67|68|69|70)" 开发管理/任务列表/场景与Unity任务.txt
 rg -n "U-MECH-02B.*阻塞（G1 通过后）" 开发管理/任务列表/场景与Unity任务.txt
+rg -n "G1/P1 任务执行边界|不得新增超过 500 行|shown != clicked|只有一个可达冒险运行时" 开发管理/任务列表/场景与Unity任务.txt
+rg -n "干净隔离工作区|SHA256|tracked/untracked 零残留|可重复的自动或半自动步骤|运行日志和结果|玩家档案、出身、起点" 开发管理/任务列表/场景与Unity任务.txt
 git diff --check
 ```
 
-Expected: every listed ID occurs exactly once in the active task table; U-MECH-02B is blocked by G1.
+Expected: every listed ID occurs exactly once in the active task table; U-MECH-02B is blocked by G1; TQ-060～TQ-070 each has an explicit minimum deliverable and acceptance boundary; P1/TQ-045 backfills remain below unfinished P0 gates; TQ-051 proves SHA256 and zero-residue cleanup from a clean isolated worktree; TQ-063 preserves all named state with repeatable evidence; and formal Build Settings has only one reachable adventure runtime.
 
 - [ ] **Step 5: Commit the G1/P1 backlog**
 
