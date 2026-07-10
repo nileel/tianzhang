@@ -30,9 +30,11 @@
 
 ## G2 工具链前置
 
-- 干净 checkout 必须存在受版本控制的 `simulations/BattleSim/BattleSim.csproj`；该项目使用 `.NET 10`、零外部依赖，并能运行项目规定的 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- 干净 checkout 必须存在受版本控制的 `simulations/BattleSim/BattleSim.csproj`；该项目使用 `.NET 10`、零外部依赖，且不得包含任何 `PackageReference`。
 - 当前事实是干净 worktree 缺少该文件，且 `.gitignore` 的 `*.csproj` 会忽略它；因此现有 BattleSim 入口不可复现。
-- TQ-052 的首个切片和首个提交必须先纳入该 `BattleSim.csproj`，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。必须在干净 worktree 验证上述 build/run 命令后，才可进入 CT 修正。
+- TQ-052 的首个切片和首个提交必须先纳入该 `BattleSim.csproj`，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。
+- 在该提交的干净 checkout 中，首次必须运行 `dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources`；预期成功并生成被忽略的 `simulations/BattleSim/obj/project.assets.json`。restore 成功后，再连续运行项目规定的 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- restore → build → run 必须在干净 worktree 连续成功；restore 失败或项目含 `PackageReference` 时均不得进入 CT 修复。
 - 任一 G2 任务标记完成前，该工具链前置都必须通过；本轮任务治理只登记要求，不创建 `BattleSim.csproj`。
 
 ## G2 任务执行边界
@@ -45,7 +47,7 @@
 
 ## G2 出口条件
 
-- 受版本控制的 `simulations/BattleSim/BattleSim.csproj` 与 `.gitignore` 窄例外已提交；`.NET 10`、零外部依赖项目已在干净 worktree 通过规定 build/run 命令。
+- 受版本控制的 `simulations/BattleSim/BattleSim.csproj` 与 `.gitignore` 窄例外已提交；`.NET 10`、零外部依赖项目不含任何 `PackageReference`，并已在干净 worktree 连续通过 restore → build → run，restore 生成的 `obj/project.assets.json` 保持被忽略。
 - TQ-052、TQ-053、TQ-054、TQ-044、TQ-055 全部完成。
 - 21 个 Build 全部满足角色创建规则，非法输入在进入矩阵前失败。
 - Unity 与 BattleSim 的固定样例一致：零加成 = 1.50，`critDamage = 15` = 1.65；CT 增长对反应严格单调，反应 20 必须早于反应 10 到达首次行动阈值，同值顺序稳定可复现。

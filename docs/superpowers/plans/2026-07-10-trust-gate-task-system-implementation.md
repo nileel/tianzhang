@@ -157,9 +157,9 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 当前状态：待处理；依赖：无。
 - 主责：Codex / gpt-5.5。
 - 必读：`.gitignore`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/BattleSim.csproj`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`。
-- 范围：首个切片和首个提交必须先把 `.NET 10`、零外部依赖的 `simulations/BattleSim/BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。在干净 worktree 通过规定 build/run 命令后，才可修正 2v2 CT 并增加确定性首次行动顺序测试。
-- 验证：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功，`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 不得返回 0；干净 worktree 运行 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`；再验证 CT 增长对反应严格单调和同值顺序；`git diff --check`。
-- 完成条件：工具链前置先通过；CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值；同值顺序稳定可复现。
+- 范围：首个切片和首个提交必须先把 `.NET 10`、零外部依赖且不含任何 `PackageReference` 的 `simulations/BattleSim/BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。在该提交的干净 worktree 连续通过 restore → build → run 后，才可修正 2v2 CT 并增加确定性首次行动顺序测试。
+- 验证：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功，`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 不得返回 0，项目中无 `PackageReference`；干净 checkout 首次运行 `dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources`，预期成功并生成被忽略的 `simulations/BattleSim/obj/project.assets.json`；随后运行 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`；再验证 CT 增长对反应严格单调和同值顺序；`git diff --check`。
+- 完成条件：无 `PackageReference` 的工具链提交已在干净 worktree 连续通过 restore → build → run；restore 失败或项目含 `PackageReference` 时不得进入 CT 修复。其后 CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值；同值顺序稳定可复现。
 
 ### TQ-053 · N-TRUST-02 统一暴击倍率语义
 
@@ -479,9 +479,11 @@ Insert before `## 默认验证`:
 ```text
 ## G2 工具链前置
 
-- 干净 checkout 必须存在受版本控制的 `simulations/BattleSim/BattleSim.csproj`；该项目使用 `.NET 10`、零外部依赖，并能运行项目规定的 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- 干净 checkout 必须存在受版本控制的 `simulations/BattleSim/BattleSim.csproj`；该项目使用 `.NET 10`、零外部依赖，且不得包含任何 `PackageReference`。
 - 当前事实是干净 worktree 缺少该文件，且 `.gitignore` 的 `*.csproj` 会忽略它；因此现有 BattleSim 入口不可复现。
-- TQ-052 的首个切片和首个提交必须先纳入该 `BattleSim.csproj`，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。必须在干净 worktree 验证上述 build/run 命令后，才可进入 CT 修正。
+- TQ-052 的首个切片和首个提交必须先纳入该 `BattleSim.csproj`，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。
+- 在该提交的干净 checkout 中，首次必须运行 `dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources`；预期成功并生成被忽略的 `simulations/BattleSim/obj/project.assets.json`。restore 成功后，再连续运行项目规定的 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- restore → build → run 必须在干净 worktree 连续成功；restore 失败或项目含 `PackageReference` 时均不得进入 CT 修复。
 - 任一 G2 任务标记完成前，该工具链前置都必须通过；本轮任务治理只登记要求，不创建 `BattleSim.csproj`。
 
 ## G2 任务执行边界
@@ -494,7 +496,7 @@ Insert before `## 默认验证`:
 
 ## G2 出口条件
 
-- 受版本控制的 `simulations/BattleSim/BattleSim.csproj` 与 `.gitignore` 窄例外已提交；`.NET 10`、零外部依赖项目已在干净 worktree 通过规定 build/run 命令。
+- 受版本控制的 `simulations/BattleSim/BattleSim.csproj` 与 `.gitignore` 窄例外已提交；`.NET 10`、零外部依赖项目不含任何 `PackageReference`，并已在干净 worktree 连续通过 restore → build → run，restore 生成的 `obj/project.assets.json` 保持被忽略。
 - TQ-052、TQ-053、TQ-054、TQ-044、TQ-055 全部完成。
 - 21 个 Build 全部满足角色创建规则，非法输入在进入矩阵前失败。
 - Unity 与 BattleSim 的固定样例一致：零加成 = 1.50，`critDamage = 15` = 1.65；CT 增长对反应严格单调，反应 20 必须早于反应 10 到达首次行动阈值，同值顺序稳定可复现。
@@ -513,19 +515,20 @@ foreach ($row in $g2Rows) { if ((Select-String -Path 开发管理/任务列表/�
 rg -n "\| N-BAL-02 \|" 开发管理/任务列表/数值与战斗任务.txt
 rg -n "阻塞（TQ-052）|阻塞（TQ-053）|阻塞（TQ-054）|阻塞（TQ-052、TQ-053、TQ-054、TQ-044）" 开发管理/任务列表/数值与战斗任务.txt
 rg -n "G2 工具链前置|BattleSim.csproj|.NET 10|零外部依赖|仅针对该文件的窄例外|首个提交只恢复工具链" 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt
+rg -n "dotnet restore|--ignore-failed-sources|PackageReference|project.assets.json|restore → build → run" 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt
 rg -n "G2 任务执行边界|CT 增长对反应严格单调|反应 20 必须早于反应 10|战斗系统.txt|零加成 = 1.50|critDamage = 15.*1.65|每个矩阵 Build 的成长输入都必须可追溯" 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt
 rg -n "200 个确定性修炼种子|20 对不同角色配对|2000 场战斗|95% Wilson 置信区间|INSUFFICIENT|缺陷必须修复并重跑" 开发管理/任务列表/数值与战斗任务.txt
 rg -n "G2 出口条件|21 个 Build 全部满足角色创建规则|存在未解释结果时 G2 保持阻塞" 开发管理/任务列表/数值与战斗任务.txt
 git diff --check
 ```
 
-Expected: all five G2 rows occur exactly once; the standalone N-BAL-02 search has no match; the exact dependency states form an acyclic TQ-052 → TQ-053 → TQ-054 → TQ-044 → TQ-055 chain; TQ-052 first restores a tracked `.NET 10` BattleSim entry point and proves strict CT monotonicity; TQ-053 uses the correct two-document authority split and 1.50/1.65 samples; TQ-055 enforces 200 seeds, 20 pairings, 2,000 battles, Wilson intervals, and blocking `INSUFFICIENT` outcomes. The complete Task 1 queue template must remain text-identical to `开发管理/当前任务队列.txt`, and this Task 4 G2 block must remain text-identical to the backlog section; historical rows remain unchanged.
+Expected: all five G2 rows occur exactly once; the standalone N-BAL-02 search has no match; the exact dependency states form an acyclic TQ-052 → TQ-053 → TQ-054 → TQ-044 → TQ-055 chain; TQ-052 first restores a tracked `.NET 10` BattleSim entry point with no `PackageReference`, then proves clean restore → build → run before strict CT monotonicity; TQ-053 uses the correct two-document authority split and 1.50/1.65 samples; TQ-055 enforces 200 seeds, 20 pairings, 2,000 battles, Wilson intervals, and blocking `INSUFFICIENT` outcomes. The complete Task 1 queue template must remain text-identical to `开发管理/当前任务队列.txt`, and this Task 4 G2 block must remain text-identical to the backlog section; historical rows remain unchanged.
 
 - [ ] **Step 5: Commit the G2 backlog**
 
 ```powershell
 git add -- 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
-git commit -m "docs: make G2 evidence reproducible"
+git commit -m "docs: add BattleSim clean restore gate"
 ```
 
 ### Task 5: Register G3 data semantics tasks and absorb TQ-040

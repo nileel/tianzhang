@@ -70,9 +70,9 @@
 - 当前状态：待处理；依赖：无。
 - 主责：Codex / gpt-5.5。
 - 必读：`.gitignore`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/BattleSim.csproj`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`。
-- 范围：首个切片和首个提交必须先把 `.NET 10`、零外部依赖的 `simulations/BattleSim/BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。在干净 worktree 通过规定 build/run 命令后，才可修正 2v2 CT 并增加确定性首次行动顺序测试。
-- 验证：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功，`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 不得返回 0；干净 worktree 运行 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`；再验证 CT 增长对反应严格单调和同值顺序；`git diff --check`。
-- 完成条件：工具链前置先通过；CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值；同值顺序稳定可复现。
+- 范围：首个切片和首个提交必须先把 `.NET 10`、零外部依赖且不含任何 `PackageReference` 的 `simulations/BattleSim/BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。在该提交的干净 worktree 连续通过 restore → build → run 后，才可修正 2v2 CT 并增加确定性首次行动顺序测试。
+- 验证：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功，`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 不得返回 0，项目中无 `PackageReference`；干净 checkout 首次运行 `dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources`，预期成功并生成被忽略的 `simulations/BattleSim/obj/project.assets.json`；随后运行 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`；再验证 CT 增长对反应严格单调和同值顺序；`git diff --check`。
+- 完成条件：无 `PackageReference` 的工具链提交已在干净 worktree 连续通过 restore → build → run；restore 失败或项目含 `PackageReference` 时不得进入 CT 修复。其后 CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值；同值顺序稳定可复现。
 
 ### TQ-053 · N-TRUST-02 统一暴击倍率语义
 
