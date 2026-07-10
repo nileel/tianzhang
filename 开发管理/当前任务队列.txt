@@ -69,20 +69,20 @@
 - 来源：可信度闸门规格 §5。
 - 当前状态：待处理；依赖：无。
 - 主责：Codex / gpt-5.5。
-- 必读：`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`。
-- 范围：修正 2v2 CT 中 `100.0 / 反应` 导致低反应更快的问题，增加确定性首次行动顺序测试。
-- 验证：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`git diff --check`。
-- 完成条件：其余条件相同时，高反应单位不晚于低反应单位取得首次行动；同值顺序稳定可复现。
+- 必读：`.gitignore`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/BattleSim.csproj`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`。
+- 范围：首个切片和首个提交必须先把 `.NET 10`、零外部依赖的 `simulations/BattleSim/BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。在干净 worktree 通过规定 build/run 命令后，才可修正 2v2 CT 并增加确定性首次行动顺序测试。
+- 验证：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功，`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 不得返回 0；干净 worktree 运行 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`；再验证 CT 增长对反应严格单调和同值顺序；`git diff --check`。
+- 完成条件：工具链前置先通过；CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值；同值顺序稳定可复现。
 
 ### TQ-053 · N-TRUST-02 统一暴击倍率语义
 
 - 来源：可信度闸门规格 §5。
 - 当前状态：阻塞（TQ-052）；依赖：TQ-052。
 - 主责：Codex / gpt-5.5。
-- 必读：`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
-- 范围：统一基础暴击倍率和 `critDamage` 加成字段语义，确保相同输入在 Unity 与 BattleSim 得到相同倍率。
-- 验证：Unity 与 BattleSim 分别覆盖零加成和一个非零加成断言；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
-- 完成条件：文档、Unity、BattleSim 使用同一字段含义，两个固定样例结果一致。
+- 必读：`docs/基础设定/战斗系统.txt`、`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
+- 范围：以 `docs/基础设定/战斗系统.txt` 为基础暴击倍率事实源，基础暴击为 1.5 倍；`docs/基础设定/角色数值设计.txt` 管理二级属性和加成来源。`critDamage` 表示在 1.5 倍基础上的附加百分比点，不是总倍率；元素附加另按百分比点加入。
+- 验证：Unity 与 BattleSim 分别固定断言零加成 = 1.50、`critDamage = 15` = 1.65；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
+- 完成条件：文档、Unity、BattleSim 使用同一字段含义；两侧相同输入的 1.50/1.65 固定样例一致，禁止同一字段表达不同含义。
 
 ### TQ-056 · D-TRUST-01 数据检查器错误分级
 

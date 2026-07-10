@@ -156,20 +156,20 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 来源：可信度闸门规格 §5。
 - 当前状态：待处理；依赖：无。
 - 主责：Codex / gpt-5.5。
-- 必读：`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`。
-- 范围：修正 2v2 CT 中 `100.0 / 反应` 导致低反应更快的问题，增加确定性首次行动顺序测试。
-- 验证：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`git diff --check`。
-- 完成条件：其余条件相同时，高反应单位不晚于低反应单位取得首次行动；同值顺序稳定可复现。
+- 必读：`.gitignore`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/BattleSim.csproj`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`。
+- 范围：首个切片和首个提交必须先把 `.NET 10`、零外部依赖的 `simulations/BattleSim/BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。在干净 worktree 通过规定 build/run 命令后，才可修正 2v2 CT 并增加确定性首次行动顺序测试。
+- 验证：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功，`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 不得返回 0；干净 worktree 运行 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`；再验证 CT 增长对反应严格单调和同值顺序；`git diff --check`。
+- 完成条件：工具链前置先通过；CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值；同值顺序稳定可复现。
 
 ### TQ-053 · N-TRUST-02 统一暴击倍率语义
 
 - 来源：可信度闸门规格 §5。
 - 当前状态：阻塞（TQ-052）；依赖：TQ-052。
 - 主责：Codex / gpt-5.5。
-- 必读：`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
-- 范围：统一基础暴击倍率和 `critDamage` 加成字段语义，确保相同输入在 Unity 与 BattleSim 得到相同倍率。
-- 验证：Unity 与 BattleSim 分别覆盖零加成和一个非零加成断言；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
-- 完成条件：文档、Unity、BattleSim 使用同一字段含义，两个固定样例结果一致。
+- 必读：`docs/基础设定/战斗系统.txt`、`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
+- 范围：以 `docs/基础设定/战斗系统.txt` 为基础暴击倍率事实源，基础暴击为 1.5 倍；`docs/基础设定/角色数值设计.txt` 管理二级属性和加成来源。`critDamage` 表示在 1.5 倍基础上的附加百分比点，不是总倍率；元素附加另按百分比点加入。
+- 验证：Unity 与 BattleSim 分别固定断言零加成 = 1.50、`critDamage = 15` = 1.65；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
+- 完成条件：文档、Unity、BattleSim 使用同一字段含义；两侧相同输入的 1.50/1.65 固定样例一致，禁止同一字段表达不同含义。
 
 ### TQ-056 · D-TRUST-01 数据检查器错误分级
 
@@ -446,7 +446,8 @@ git commit -m "docs: register formal build gate tasks"
 **Files:**
 
 - Modify: `开发管理/任务列表/数值与战斗任务.txt`
-- Modify: `docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md`（仅同步本 Task 4）
+- Modify: `开发管理/当前任务队列.txt`（同步 TQ-052 / TQ-053 卡片）
+- Modify: `docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md`（同步 Task 1 完整队列模板与本 Task 4）
 
 - [ ] **Step 1: Record the invalidated assumptions**
 
@@ -471,25 +472,35 @@ Replace the N-BAL-02 row and add the other rows immediately after it:
 
 Remove the old standalone `N-BAL-02` row so the same work has only one active definition.
 
-- [ ] **Step 3: Add G2 execution boundaries and exit criteria**
+- [ ] **Step 3: Add the G2 toolchain prerequisite, execution boundaries, and exit criteria**
 
 Insert before `## 默认验证`:
 
 ```text
+## G2 工具链前置
+
+- 干净 checkout 必须存在受版本控制的 `simulations/BattleSim/BattleSim.csproj`；该项目使用 `.NET 10`、零外部依赖，并能运行项目规定的 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- 当前事实是干净 worktree 缺少该文件，且 `.gitignore` 的 `*.csproj` 会忽略它；因此现有 BattleSim 入口不可复现。
+- TQ-052 的首个切片和首个提交必须先纳入该 `BattleSim.csproj`，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。必须在干净 worktree 验证上述 build/run 命令后，才可进入 CT 修正。
+- 任一 G2 任务标记完成前，该工具链前置都必须通过；本轮任务治理只登记要求，不创建 `BattleSim.csproj`。
+
 ## G2 任务执行边界
 
-- **TQ-052 CT 反应方向**：修正公式，增加确定性行动顺序测试，并产出修复前后对比；其余条件相同时，高反应单位取得首次行动不得晚于低反应单位，同值顺序必须稳定可复现。
-- **TQ-053 暴击倍率语义**：以 `docs/基础设定/角色数值设计.txt` 为事实源；产出口径决策、Unity/BattleSim 对齐，以及零加成和一个非零加成固定样例；两侧相同输入的倍率必须一致，禁止同一字段在两侧表达不同含义。
+- **TQ-052 CT 反应方向**：先完成 G2 工具链前置，再修正公式、增加确定性行动顺序测试并产出修复前后对比；CT 增长对反应严格单调，其余条件相同时，反应 20 必须早于反应 10 到达首次行动阈值，同值顺序必须稳定可复现。
+- **TQ-053 暴击倍率语义**：`docs/基础设定/战斗系统.txt` 是基础暴击倍率事实源，基础暴击为 1.5 倍；`docs/基础设定/角色数值设计.txt` 管理二级属性和加成来源。`critDamage` 表示在 1.5 倍基础上的附加百分比点，不是总倍率；固定样例为零加成 = 1.50、`critDamage = 15` = 1.65，元素附加另按百分比点加入。产出口径决策和 Unity/BattleSim 对齐，两侧固定样例必须一致，禁止同一字段在两侧表达不同含义。
 - **TQ-054 21 Build 合法化**：复用或严格镜像实际角色创建的点数预算、上限和非线性成本；产出合法 Build 校验器、迁移表和非法输入测试；21 个 Build 必须全部合法，非法输入必须在进入矩阵前失败。
 - **TQ-044 成长输入完整性**：产出成长表完整性断言、显式星级回退和回归；缺表、缺星级或非法组合必须明确失败或走批准的回退路径，每个矩阵 Build 的成长输入都必须可追溯，不得用静默 `0.2` 回退掩盖缺失。
-- **TQ-055 G2 重验**：重跑修炼与 CTB 矩阵，产出可复现输出、境界样本覆盖、极端结果分类和 G2 结论；21 个 Build 均须具有规定样本，每个 0%/100% 结果必须归类为设计预期、样本不足或缺陷，存在未解释结果时不得通过。
+- **TQ-055 G2 重验**：重跑修炼与 CTB 矩阵，产出可复现输出、境界样本覆盖、极端结果分类和 G2 结论。每个 Build 至少使用 200 个确定性修炼种子；每个目标矩阵格至少覆盖 20 对不同角色配对、总计至少 2000 场战斗，并输出胜率与 95% Wilson 置信区间。任一目标境界池少于 20、任一矩阵格配对少于 20 或场次少于 2000，一律记为 `INSUFFICIENT` 并继续阻塞；必须增加种子或配对后重跑，不能仅分类为“样本不足”就通过。0%/100% 结果只有满足上述覆盖且报告区间后才可判为设计极端；若归类为缺陷，必须修复并重跑。
 
 ## G2 出口条件
 
+- 受版本控制的 `simulations/BattleSim/BattleSim.csproj` 与 `.gitignore` 窄例外已提交；`.NET 10`、零外部依赖项目已在干净 worktree 通过规定 build/run 命令。
 - TQ-052、TQ-053、TQ-054、TQ-044、TQ-055 全部完成。
 - 21 个 Build 全部满足角色创建规则，非法输入在进入矩阵前失败。
-- Unity 与 BattleSim 的零加成和一个非零加成暴击固定样例一致；其余条件相同时，高反应单位的首次行动不晚于低反应单位。
-- 所有 0%/100% 极端结果均已归类为设计预期、样本不足或缺陷；存在未解释结果时 G2 保持阻塞。
+- Unity 与 BattleSim 的固定样例一致：零加成 = 1.50，`critDamage = 15` = 1.65；CT 增长对反应严格单调，反应 20 必须早于反应 10 到达首次行动阈值，同值顺序稳定可复现。
+- 每个 Build 至少有 200 个确定性修炼种子；每个目标矩阵格至少有 20 对不同角色配对、总计至少 2000 场战斗，并报告胜率与 95% Wilson 置信区间。
+- 任一目标境界池少于 20、任一矩阵格配对少于 20 或场次少于 2000 时必须标记 `INSUFFICIENT` 并保持 G2 阻塞，增加种子或配对后重跑；不得仅以“样本不足”分类通过。
+- 所有 0%/100% 极端结果只有满足覆盖门槛并报告区间后才可判为设计极端；缺陷必须修复并重跑，存在未解释结果时 G2 保持阻塞。
 ```
 
 - [ ] **Step 4: Verify the G2 chain and single TQ-044 definition**
@@ -501,18 +512,20 @@ $g2Rows = @('N-TRUST-01 / TQ-052', 'N-TRUST-02 / TQ-053', 'N-TRUST-03 / TQ-054',
 foreach ($row in $g2Rows) { if ((Select-String -Path 开发管理/任务列表/数值与战斗任务.txt -SimpleMatch "| $row |").Count -ne 1) { throw "$row must occur exactly once" } }
 rg -n "\| N-BAL-02 \|" 开发管理/任务列表/数值与战斗任务.txt
 rg -n "阻塞（TQ-052）|阻塞（TQ-053）|阻塞（TQ-054）|阻塞（TQ-052、TQ-053、TQ-054、TQ-044）" 开发管理/任务列表/数值与战斗任务.txt
-rg -n "G2 任务执行边界|21 个 Build 必须全部合法|零加成和一个非零加成固定样例|每个矩阵 Build 的成长输入都必须可追溯|存在未解释结果时不得通过" 开发管理/任务列表/数值与战斗任务.txt
-rg -n "G2 出口条件|21 个 Build 全部满足角色创建规则|零加成和一个非零加成暴击固定样例一致|存在未解释结果时 G2 保持阻塞" 开发管理/任务列表/数值与战斗任务.txt
+rg -n "G2 工具链前置|BattleSim.csproj|.NET 10|零外部依赖|仅针对该文件的窄例外|首个提交只恢复工具链" 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt
+rg -n "G2 任务执行边界|CT 增长对反应严格单调|反应 20 必须早于反应 10|战斗系统.txt|零加成 = 1.50|critDamage = 15.*1.65|每个矩阵 Build 的成长输入都必须可追溯" 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt
+rg -n "200 个确定性修炼种子|20 对不同角色配对|2000 场战斗|95% Wilson 置信区间|INSUFFICIENT|缺陷必须修复并重跑" 开发管理/任务列表/数值与战斗任务.txt
+rg -n "G2 出口条件|21 个 Build 全部满足角色创建规则|存在未解释结果时 G2 保持阻塞" 开发管理/任务列表/数值与战斗任务.txt
 git diff --check
 ```
 
-Expected: all five G2 rows occur exactly once; the standalone N-BAL-02 search has no match; the exact dependency states form an acyclic TQ-052 → TQ-053 → TQ-054 → TQ-044 → TQ-055 chain; execution boundaries require legal 21 Build inputs, zero/non-zero crit samples, traceable growth inputs, and block unexplained extreme results; the G2 exit repeats these non-bypassable requirements, while historical rows remain unchanged.
+Expected: all five G2 rows occur exactly once; the standalone N-BAL-02 search has no match; the exact dependency states form an acyclic TQ-052 → TQ-053 → TQ-054 → TQ-044 → TQ-055 chain; TQ-052 first restores a tracked `.NET 10` BattleSim entry point and proves strict CT monotonicity; TQ-053 uses the correct two-document authority split and 1.50/1.65 samples; TQ-055 enforces 200 seeds, 20 pairings, 2,000 battles, Wilson intervals, and blocking `INSUFFICIENT` outcomes. The complete Task 1 queue template must remain text-identical to `开发管理/当前任务队列.txt`, and this Task 4 G2 block must remain text-identical to the backlog section; historical rows remain unchanged.
 
 - [ ] **Step 5: Commit the G2 backlog**
 
 ```powershell
-git add -- 开发管理/任务列表/数值与战斗任务.txt docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
-git commit -m "docs: register BattleSim trust gate tasks"
+git add -- 开发管理/任务列表/数值与战斗任务.txt 开发管理/当前任务队列.txt docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
+git commit -m "docs: make G2 evidence reproducible"
 ```
 
 ### Task 5: Register G3 data semantics tasks and absorb TQ-040
