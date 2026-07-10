@@ -115,9 +115,9 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - HANDOFF-20260710-01 / TQ-038：维持现有 `2` 复审入口。
 - HANDOFF-20260710-02 / TQ-043：Claude Code / WF3 已提交，维持 `⚠️ 已修改/待复审`，不得从纯 `1` 领取。
 - TQ-039：内容冻结。
-- TQ-040：由 TQ-057 吸收，不单独执行。
+- TQ-040：不单独执行；仅在 TQ-057 已登记且前置满足后由其吸收。
 - TQ-045：G1 通过后再作为 P2 机制回归。
-- TQ-054～TQ-071：除已进入短队列的 TQ-056 外，保留在对应分线 backlog，按依赖补位。
+- TQ-054～TQ-071：仅在对应分线 backlog 已登记且依赖满足时补位；当前未登记项不得补位。
 
 ## 任务卡片
 
@@ -141,6 +141,16 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 验证：成功 XML 返回 0；失败、缺失、不可解析或零测试 XML 返回非 0；`powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
 - 完成条件：统一入口在成功与四类失败样例上均返回正确退出码。
 
+### TQ-051 · Q-UNITY-03 测试路径恢复场景与 Build Settings
+
+- 来源：可信度闸门规格 §4。
+- 当前状态：阻塞（TQ-050）；依赖：TQ-050。
+- 主责：Codex / gpt-5.5。
+- 必读：`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`tools/run-unity-editmode-tests.ps1` 及 TQ-050 引入的相关测试脚本。
+- 范围：覆盖权威 Unity 测试入口的成功与异常路径，确保两类路径都恢复执行前的场景和 Build Settings；必须从干净隔离工作区开始，不得依赖人工清理。
+- 验证：分别执行成功路径和异常路径；每条路径测试前保存、测试后比较 `src/Assets/Scenes/*.unity` 与 `src/ProjectSettings/EditorBuildSettings.asset` 中存在且受 Git 跟踪文件的 SHA256 快照，可用 PowerShell `git ls-files 'src/Assets/Scenes/*.unity' 'src/ProjectSettings/EditorBuildSettings.asset' | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { Get-FileHash -Algorithm SHA256 -LiteralPath $_ }` 生成；每条路径前后的 `git status --short --untracked-files=all` 必须都为空；最后运行 `git diff --check`。
+- 完成条件：成功与异常路径各自执行前后的场景与 Build Settings 内容哈希一致，且无 tracked 或 untracked 残留。
+
 ### TQ-052 · N-TRUST-01 修正 CT 反应方向并建立回归
 
 - 来源：可信度闸门规格 §5。
@@ -151,15 +161,15 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 验证：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`git diff --check`。
 - 完成条件：其余条件相同时，高反应单位不晚于低反应单位取得首次行动；同值顺序稳定可复现。
 
-### TQ-051 · Q-UNITY-03 测试路径恢复场景与 Build Settings
+### TQ-053 · N-TRUST-02 统一暴击倍率语义
 
-- 来源：可信度闸门规格 §4。
-- 当前状态：阻塞（TQ-050）；依赖：TQ-050。
+- 来源：可信度闸门规格 §5。
+- 当前状态：阻塞（TQ-052）；依赖：TQ-052。
 - 主责：Codex / gpt-5.5。
-- 必读：`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`tools/run-unity-editmode-tests.ps1` 及 TQ-050 引入的相关测试脚本。
-- 范围：覆盖权威 Unity 测试入口的成功与异常路径，确保两类路径都恢复执行前的场景和 Build Settings；不得依赖人工清理。
-- 验证：分别执行成功路径和异常路径，保存执行前后的 `git status --short` 并逐字比较；两条路径结束后运行 `git diff --check`。
-- 完成条件：成功与异常路径执行前后的 `git status --short` 均一致，场景和 Build Settings 无残留改动。
+- 必读：`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
+- 范围：统一基础暴击倍率和 `critDamage` 加成字段语义，确保相同输入在 Unity 与 BattleSim 得到相同倍率。
+- 验证：Unity 与 BattleSim 分别覆盖零加成和一个非零加成断言；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
+- 完成条件：文档、Unity、BattleSim 使用同一字段含义，两个固定样例结果一致。
 
 ### TQ-056 · D-TRUST-01 数据检查器错误分级
 
@@ -170,16 +180,6 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 范围：把数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；保留明确批准的警告。
 - 验证：构造或使用已知错误输入时返回非 0；仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
 - 完成条件：检查脚本能真实区分成功、警告和错误，不再输出风险后仍无条件 `OK`。
-
-### TQ-053 · N-TRUST-02 统一暴击倍率语义
-
-- 来源：可信度闸门规格 §5。
-- 当前状态：阻塞（TQ-052）；依赖：TQ-052。
-- 主责：Codex / gpt-5.5。
-- 必读：`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
-- 范围：统一基础暴击倍率和 `critDamage` 加成字段语义，确保相同输入在 Unity 与 BattleSim 得到相同倍率。
-- 验证：Unity 与 BattleSim 分别覆盖零加成和一个非零加成断言；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
-- 完成条件：文档、Unity、BattleSim 使用同一字段含义，两个固定样例结果一致。
 ```
 
 - [ ] **Step 4: Verify queue size, dependency states, and frozen IDs**
@@ -188,11 +188,11 @@ Run:
 
 ```powershell
 rg -n "^\| TQ-" 开发管理/当前任务队列.txt
-rg -n "TQ-039：内容冻结|TQ-040：由 TQ-057 吸收|TQ-045：G1 通过后" 开发管理/当前任务队列.txt
+rg -n "TQ-039：内容冻结|TQ-040：不单独执行；仅在 TQ-057 已登记且前置满足后由其吸收|TQ-045：G1 通过后|TQ-054～TQ-071：仅在对应分线 backlog 已登记且依赖满足时补位；当前未登记项不得补位" 开发管理/当前任务队列.txt
 git diff --check
 ```
 
-Expected: exactly six table rows; only TQ-049、TQ-052 are `待处理`; TQ-050、TQ-051、TQ-053、TQ-056 are blocked by explicit dependencies, and TQ-056 specifically waits for TQ-043 review.
+Expected: exactly six table rows; only TQ-049、TQ-052 are `待处理`; TQ-050、TQ-051、TQ-053、TQ-056 are blocked by explicit dependencies, and TQ-056 specifically waits for TQ-043 review; the TQ-040 line requires TQ-057 to be registered with prerequisites satisfied before absorption; the TQ-054～TQ-071 line forbids unregistered IDs from backfilling the active queue.
 
 - [ ] **Step 5: Commit the queue activation**
 
