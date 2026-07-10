@@ -27,7 +27,7 @@
 - `开发管理/开发优先级.txt`：把当前阶段改为三道可信度闸门，废止旧“闸门已解除”的执行结论。
 - `开发管理/任务列表/场景与Unity任务.txt`：登记 G1、P1 架构与状态基础任务。
 - `开发管理/任务列表/数值与战斗任务.txt`：登记 G2，提升 TQ-044。
-- `开发管理/任务列表/数据链路任务.txt`：登记 G3，提升 TQ-043，并合并 TQ-040。
+- `开发管理/任务列表/数据链路任务.txt`：登记 G3，把 TQ-043 记为待复审前置，并合并 TQ-040。
 - `开发管理/任务列表/内容设计任务.txt`：冻结新增内容并登记 TQ-071 解冻判定。
 
 **Do not modify:**
@@ -37,6 +37,12 @@
 - `data/`、CSV、Unity asset
 - `docs/` 下除本计划与已提交规格之外的游戏设计/剧情正文
 - `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt`、`开发管理/AI合作沟通.txt`
+
+## 2026-07-10 执行修订：TQ-043 外部交接
+
+- 本计划写完后，Claude Code / WF3 已提交 TQ-043 / D-IMPORT-01，并登记为 `HANDOFF-20260710-02`；当前实际 HEAD 为 `3c8c1cd`。
+- TQ-043 当前状态为 `⚠️ 已修改/待复审`，必须由 Codex / ChatGPT5.5 独立复审；不得再从纯 `1` 流程领取，也不得写成复审通过。
+- TQ-043 仍是 G3 的前置和复审对象；TQ-056 必须保持阻塞，直至 TQ-043 复审通过。
 
 ### Task 1: Archive the old queue and activate the six-task P0 queue
 
@@ -55,7 +61,7 @@ git status --short
 rg -n "TQ-0(39|40|43|44|45|48)" 开发管理/当前任务队列.txt
 ```
 
-Expected: worktree is clean; current queue contains TQ-043、TQ-044、TQ-045、TQ-039、TQ-040, while TQ-048 appears only in history.
+Expected: worktree is clean at HEAD `3c8c1cd`; the current queue marks TQ-043 as completed by Claude Code, while its history records `HANDOFF-20260710-02` and pending Codex / ChatGPT5.5 review. TQ-044、TQ-045、TQ-039、TQ-040 remain in the old queue, while TQ-048 appears only in history.
 
 - [ ] **Step 2: Move the complete old queue into the dated archive**
 
@@ -98,18 +104,19 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 |----|--------|------|------|------|------|
 | TQ-049 | P0 | Codex / gpt-5.5 | G1 验证 | 待处理 | Q-UNITY-01：修复 Unity EditMode 基线失败 |
 | TQ-050 | P0 | Codex / gpt-5.5 | G1 验证 | 阻塞（TQ-049） | Q-UNITY-02：建立权威 Unity 测试入口 |
+| TQ-051 | P0 | Codex / gpt-5.5 | G1 验证 | 阻塞（TQ-050） | Q-UNITY-03：测试路径恢复场景与 Build Settings |
 | TQ-052 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-01：修正 CT 反应方向并建立回归 |
-| TQ-043 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-IMPORT-01：导入器按列名/表头解析 |
-| TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-043） | D-TRUST-01：数据检查器错误分级 |
 | TQ-053 | P0 | Codex / gpt-5.5 | G2 数值 | 阻塞（TQ-052） | N-TRUST-02：统一暴击倍率语义 |
+| TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-043 复审） | D-TRUST-01：数据检查器错误分级 |
 
 ## 不进入 `1` 队列的当前事项
 
 - HANDOFF-20260710-01 / TQ-038：维持现有 `2` 复审入口。
+- HANDOFF-20260710-02 / TQ-043：Claude Code / WF3 已提交，维持 `⚠️ 已修改/待复审`，不得从纯 `1` 领取。
 - TQ-039：内容冻结。
 - TQ-040：由 TQ-057 吸收，不单独执行。
 - TQ-045：G1 通过后再作为 P2 机制回归。
-- TQ-051、TQ-054～TQ-071：保留在对应分线 backlog，按依赖补位。
+- TQ-054～TQ-071：除已进入短队列的 TQ-056 外，保留在对应分线 backlog，按依赖补位。
 
 ## 任务卡片
 
@@ -143,20 +150,20 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 验证：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`git diff --check`。
 - 完成条件：其余条件相同时，高反应单位不晚于低反应单位取得首次行动；同值顺序稳定可复现。
 
-### TQ-043 · D-IMPORT-01 导入器按列名/表头解析
+### TQ-051 · Q-UNITY-03 测试路径恢复场景与 Build Settings
 
-- 来源：`开发管理/任务列表/数据链路任务.txt` 与可信度闸门规格 §6。
-- 当前状态：待处理；依赖：无。
+- 来源：可信度闸门规格 §4。
+- 当前状态：阻塞（TQ-050）；依赖：TQ-050。
 - 主责：Codex / gpt-5.5。
-- 必读：`开发管理/开发-技术经验.txt`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/DataConfig/README.txt`、三类 CSV 表头。
-- 范围：将剩余硬编码列序改为按表头读取，增加必需列缺失、重复列名和未知列诊断；不改变 CSV 设计语义。
-- 验证：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`git diff --check`。
-- 完成条件：换序正确导入；缺必需列和重复列稳定失败；未知列按记录的兼容策略处理。
+- 必读：`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`tools/run-unity-editmode-tests.ps1` 及 TQ-050 引入的相关测试脚本。
+- 范围：覆盖权威 Unity 测试入口的成功与异常路径，确保两类路径都恢复执行前的场景和 Build Settings；不得依赖人工清理。
+- 验证：分别执行成功路径和异常路径，保存执行前后的 `git status --short` 并逐字比较；两条路径结束后运行 `git diff --check`。
+- 完成条件：成功与异常路径执行前后的 `git status --short` 均一致，场景和 Build Settings 无残留改动。
 
 ### TQ-056 · D-TRUST-01 数据检查器错误分级
 
 - 来源：可信度闸门规格 §6。
-- 当前状态：阻塞（TQ-043）；依赖：TQ-043。
+- 当前状态：阻塞（TQ-043 复审）；依赖：TQ-043 经 Codex / ChatGPT5.5 复审通过。
 - 主责：Codex / gpt-5.5。
 - 必读：`tools/check-data-chain.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/realm_lianshen专项检查.txt`、三类 CSV 与 Unity 数据对象定义。
 - 范围：把数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；保留明确批准的警告。
@@ -184,7 +191,7 @@ rg -n "TQ-039：内容冻结|TQ-040：由 TQ-057 吸收|TQ-045：G1 通过后" �
 git diff --check
 ```
 
-Expected: exactly six table rows; only TQ-049、TQ-052、TQ-043 are `待处理`; TQ-050、TQ-056、TQ-053 are blocked by explicit dependencies.
+Expected: exactly six table rows; only TQ-049、TQ-052 are `待处理`; TQ-050、TQ-051、TQ-053、TQ-056 are blocked by explicit dependencies, and TQ-056 specifically waits for TQ-043 review.
 
 - [ ] **Step 5: Commit the queue activation**
 
@@ -450,8 +457,8 @@ Replace the existing D-ASSET-01 and D-IMPORT-01 rows with:
 
 ```text
 | D-ASSET-01 / TQ-040 | P2 | DeepSeek | 已合并至 TQ-057 | CSV/asset 字段完整性复查由 D-TRUST-02 统一执行，不再单独领取 |
-| D-IMPORT-01 / TQ-043 | P0 | Codex | 待处理 | 按表头解析全部核心字段；缺必需列/重复列失败，未知列按显式兼容策略处理 |
-| D-TRUST-01 / TQ-056 | P0 | Codex | 阻塞（TQ-043） | 检查脚本区分错误和警告；语义错误必须非零退出 |
+| D-IMPORT-01 / TQ-043 | P0 | Codex | ⚠️ 已修改/待复审（HANDOFF-20260710-02） | 按表头解析全部核心字段；缺必需列/重复列失败，未知列按显式兼容策略处理 |
+| D-TRUST-01 / TQ-056 | P0 | Codex | 阻塞（TQ-043 复审） | 检查脚本区分错误和警告；语义错误必须非零退出 |
 | D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 阻塞（TQ-056） | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
 | D-TRUST-03 / TQ-058 | P0 | Codex | 阻塞（TQ-043、TQ-056） | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
 | D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-043、TQ-056、TQ-058） | 接通 `realmReq`、`elementReq`、`affiliation` 资产字段与运行时允许/拒绝测试 |
@@ -492,7 +499,7 @@ rg -n "已合并至 TQ-057|不把 `realm_lianshen` 扩展为当前玩家境界|G
 git diff --check
 ```
 
-Expected: all G3 rows exist; TQ-040 is non-claimable; the old “do not add Language key” boundary is absent.
+Expected: all G3 rows exist; TQ-043 remains pending review under `HANDOFF-20260710-02`; TQ-056 waits for TQ-043 review; TQ-040 is non-claimable; the old “do not add Language key” boundary is absent.
 
 - [ ] **Step 5: Commit the G3 backlog**
 
@@ -544,7 +551,7 @@ Run:
 Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-.*\| 待处理 \|'
 ```
 
-Expected: count is `6`; claimable rows are only TQ-049、TQ-052、TQ-043.
+Expected: count is `6`; claimable rows are only TQ-049、TQ-052.
 
 - [ ] **Step 4: Confirm no product files changed**
 
@@ -564,7 +571,7 @@ No additional commit is needed when Steps 1–4 pass. Report:
 ```text
 G1/G2/G3 task system: activated
 Current queue rows: 6
-Claimable tasks: TQ-049, TQ-052, TQ-043
+Claimable tasks: TQ-049, TQ-052
 Content expansion: frozen until TQ-071
 Product files changed: no
 ```
