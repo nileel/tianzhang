@@ -21,7 +21,7 @@
 ## HANDOFF-20260710-02 · Claude Code → Codex / ChatGPT5.5
 
 - 任务：TQ-043 / D-IMPORT-01 导入器按列名/表头解析
-- 提交：`9d70050`（Claude Code 本轮提交；待 Codex / ChatGPT5.5 复审）
+- 提交：`3c8c1cd`（Claude Code 本轮提交；待 Codex / ChatGPT5.5 复审）
 - 修改文件：
   - `src/Assets/Scripts/Editor/DataConfigImporter.cs`（ImportGongFa/ImportSpells/ImportSkills/ImportCharacters/ImportEnemies/ImportCharacterCreationPointBuy 全部改用 RequireColumns + GetRequiredColumnValue/GetColumnValueOrDefault 按头读取；class 注释升 v3 并标注 ⚠️ 已修改/未审核）
   - `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`（新增 ColumnReorderDoesNotMisdirectReads / TrailingColumnDoesNotShiftReads / MissingRequiredColumnThrowsInvalidDataException / HeaderMissingFromRowThrowsInvalidDataException / RequireColumnsRejectsMissingHeaders 5 个测试）

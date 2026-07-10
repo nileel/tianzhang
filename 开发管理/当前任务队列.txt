@@ -32,7 +32,7 @@
 > 2026-07-10 WF2-CODEX-ONE / unknown：TQ-047 / C-STORY-WM-06 第一章时间/出生地/境界边界兼容复核完成并归档至 `开发管理/任务归档/2026-07-10-TQ-047-第一章时间出生地境界边界复核归档.txt`。第一章 L1 已补齐 387-430 年长时间线、八出生地本地异常、跨域线索、非关陇补线和筑基初期上限；C-STORY-WM-24 仍作为 L2 后续修订项。本轮不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
 > 2026-07-10 WF1-QUEUE-MAINTENANCE / gpt-5.5：TQ-038 已由 Claude Code 提交并进入 HANDOFF-20260710-01 待复审队列，移出当前 `1` 执行队列；补入 TQ-048 / C-STORY-WM-05A 作为世界主线 P0 总包下一步人物志规划骨架切片。本轮只维护队列，不执行设计、代码或复审任务。
 > 2026-07-10 WF2-CODEX-ONE / gpt-5.5：TQ-048 / C-STORY-WM-05A 玄荒新路天才人物志规划骨架完成并归档至 `开发管理/任务归档/2026-07-10-TQ-048-玄荒新路天才人物志规划骨架归档.txt`。`docs/剧情/重要NPC/玄荒新路天才.txt` 已锁定身份锚点、万灵真形路线、章节接口、知识边界、不可越界项和待 DeepSeek 扩写字段；本轮不写个人分支、L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
-> 2026-07-10 WF3-CLAUDE-ONE / Claude Code：TQ-043 / D-IMPORT-01 导入器按列名/表头解析完成。全部 6 个导入方法不再依赖硬编码列序，改用 RequireColumns + GetRequiredColumnValue/GetColumnValueOrDefault；新增列序调整/末尾加列/缺必要列/行过短测试覆盖。提交 `9d70050`，标 ⚠️ 已修改/未审核；修改方：Claude Code。TQ-043 入 HANDOFF-20260710-02 待 Codex / ChatGPT5.5 复审。
+> 2026-07-10 WF3-CLAUDE-ONE / Claude Code：TQ-043 / D-IMPORT-01 导入器按列名/表头解析完成。全部 6 个导入方法不再依赖硬编码列序，改用 RequireColumns + GetRequiredColumnValue/GetColumnValueOrDefault；新增列序调整/末尾加列/缺必要列/行过短测试覆盖。提交 `3c8c1cd`，标 ⚠️ 已修改/未审核；修改方：Claude Code。TQ-043 入 HANDOFF-20260710-02 待 Codex / ChatGPT5.5 复审。
 
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
 
