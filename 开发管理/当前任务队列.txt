@@ -30,6 +30,7 @@
 > 2026-07-10 WF2-CODEX-ONE / gpt-5.5：TQ-046 / C-STORY-WM-04 万灵真形元婴方向矩阵占位完成并归档至 `开发管理/任务归档/2026-07-10-TQ-046-万灵真形元婴方向矩阵占位归档.txt`。矩阵已补入【名称待定】万灵真形元婴方向，推荐归属五蕴·色，并明确不新增金丹位格、不正式命名、不替代法箓/德业/宿慧/阴河/星术/封禁体系。本轮不写人物志、L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
 > 2026-07-10 WF4-CODEX-TWO / unknown：TQ-036 / HANDOFF-20260709-01 第一章入口 L3 单任务样例首批复审通过，两个任务文件已标为已审核并归档；TQ-036 不再作为 `2` 待复审入口。
 > 2026-07-10 WF2-CODEX-ONE / unknown：TQ-047 / C-STORY-WM-06 第一章时间/出生地/境界边界兼容复核完成并归档至 `开发管理/任务归档/2026-07-10-TQ-047-第一章时间出生地境界边界复核归档.txt`。第一章 L1 已补齐 387-430 年长时间线、八出生地本地异常、跨域线索、非关陇补线和筑基初期上限；C-STORY-WM-24 仍作为 L2 后续修订项。本轮不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+> 2026-07-10 WF1-QUEUE-MAINTENANCE / gpt-5.5：TQ-038 已由 Claude Code 提交并进入 HANDOFF-20260710-01 待复审队列，移出当前 `1` 执行队列；补入 TQ-048 / C-STORY-WM-05A 作为世界主线 P0 总包下一步人物志规划骨架切片。本轮只维护队列，不执行设计、代码或复审任务。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
 
 ## 使用规则
@@ -51,13 +52,13 @@
 | TQ-043 | P2 | Codex / gpt-5.5 | 数据链路 | 待处理 | D-IMPORT-01：导入器按列名/表头解析 |
 | TQ-044 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | N-BAL-02A：成长表完整性与星级回退策略修复 |
 | TQ-045 | P2 | Codex / gpt-5.5 | Unity 机制 | 待处理 | U-MECH-02B：玄感清除链/玄同状态 Unity 回归 |
-| TQ-038 | P2 | DeepSeek V4 Pro | 内容整理 | 待处理 | C-SANXIU-01A：散修通用内容可玩性补强清单 |
+| TQ-048 | P0 | Codex / gpt-5.5 | 内容规划 | 待处理 | C-STORY-WM-05A：玄荒新路天才人物志规划骨架 |
 | TQ-039 | P3 | DeepSeek V4 Pro | 文案生产 | 待处理 | C-DIALOGUE-01A：据点通用称谓、寒暄和任务入口文案表 |
 | TQ-040 | P2 | DeepSeek V4 Pro | 数据复查 | 待处理 | D-ASSET-01A：CSV/asset 字段完整性复查清单，不改设计语义 |
 
 ## 不进入 `1` 队列的当前事项
 
-- C-STORY-WM-05：仍属世界主线 P0 总包后续项，C-STORY-WM-04 前置已完成；本轮只闭环 TQ-046，后续由队列维护或明确 `1` 任务补入人物志规划/扩写切片。
+- HANDOFF-20260710-01 / TQ-038：已由 Claude Code 完成并进入 `2` 待复审入口，不再作为当前 `1` 执行任务。
 - D-REALM-02、N-SLOT-01、N-SEAT-01、U-2_5D-01、C-GUXIU-03、C-QUEST-01 等保留在分线 backlog，当前优先级低于上表任务。
 
 ## 任务卡片
@@ -95,16 +96,16 @@
 - 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；可用时运行 Unity EditMode 目标测试；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`；`git diff --check`。
 - 完成条件：新增或更新的目标测试覆盖玄感状态链最小行为；Unity 工程编译通过；若通用 debuff 流程仍不足，拆出明确后续任务而不混入本轮。
 
-### TQ-038 · C-SANXIU-01A 散修通用内容可玩性补强清单
+### TQ-048 · C-STORY-WM-05A 玄荒新路天才人物志规划骨架
 
-- 来源：`开发管理/任务列表/内容设计任务.txt` C-SANXIU-01。
+- 来源：`开发管理/任务列表/内容设计任务.txt` C-STORY-WM-P0；`docs/剧情/主线/世界主线-后续拆分工作清单.txt` C-STORY-WM-05。
 - 当前状态：待处理。
-- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/设定补充/低阶势力开放规则.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`、`docs/角色养成/功法/散修/秋水游心经.txt`、`docs/角色养成/术法/散修/`、`docs/角色养成/神通/散修/`、`src/Assets/DataConfig/GongFa.csv`、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`。
-- 范围：新增或更新 `开发管理/散修通用内容补强清单.txt`，整理散修当前功法/术法/神通/普通 NPC/支线/坊市服务/低阶势力入口的可玩性缺口；只做清单和批次建议，不批量生成正式内容。
-- 边界：不得改 CSV、asset 或正式设计文件；不得把资料片/高阶保留内容接入玩家主循环；涉及数值强度只列待 Codex 验证，不下平衡结论。
-- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/角色养成,docs/剧情`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`git diff --check`。
-- 完成条件：清单按“可立即生产 / 需 Codex 先定规则 / 资料片或 NPC 保留”分桶；给出下一批 3-5 个 DeepSeek 可执行任务候选；更新 `开发管理/AI合作沟通.txt`。
+- 主责：Codex / gpt-5.5 先规划；后续可拆 DeepSeek 扩写与 Codex 复审。
+- 必读：`docs/剧情/剧情生产规范.txt`、`docs/剧情/背景与重要NPC设计规范.txt`、`docs/剧情/世界背景故事.txt`、`docs/剧情/主线/世界主线-总纲.txt`、`docs/剧情/设定补充/真形体系说明.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`docs/剧情/主线/世界主线-后续拆分工作清单.txt`、玄荒/玄冥相关门派与地图事实源。
+- 范围：为 `docs/剧情/重要NPC/玄荒新路天才.txt` 建立人物志规划骨架，锁定身份锚点、真形路线、章节接口、NPC 知识边界、不可越界项和待 DeepSeek 扩写字段。
+- 边界：不让该角色成为主角或全知旁白；不照抄真实历史人物结局或台词；不正式命名未经论证的新元婴方向；不写个人分支、L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,docs/基础设定,开发管理`；`git diff --check`。
+- 完成条件：人物志骨架可作为 C-STORY-WM-12 第四章 L1 与后续 NPC 分支输入；明确哪些段落由 DeepSeek 扩写、哪些结论必须保留 Codex 判断；归档说明本轮未写数值和玩法实现。
 
 ### TQ-039 · C-DIALOGUE-01A 据点通用称谓、寒暄和任务入口文案表
 
