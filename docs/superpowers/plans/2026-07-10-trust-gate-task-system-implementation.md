@@ -446,6 +446,7 @@ git commit -m "docs: register formal build gate tasks"
 **Files:**
 
 - Modify: `开发管理/任务列表/数值与战斗任务.txt`
+- Modify: `docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md`（仅同步本 Task 4）
 
 - [ ] **Step 1: Record the invalidated assumptions**
 
@@ -470,17 +471,25 @@ Replace the N-BAL-02 row and add the other rows immediately after it:
 
 Remove the old standalone `N-BAL-02` row so the same work has only one active definition.
 
-- [ ] **Step 3: Add G2 exit criteria**
+- [ ] **Step 3: Add G2 execution boundaries and exit criteria**
 
 Insert before `## 默认验证`:
 
 ```text
+## G2 任务执行边界
+
+- **TQ-052 CT 反应方向**：修正公式，增加确定性行动顺序测试，并产出修复前后对比；其余条件相同时，高反应单位取得首次行动不得晚于低反应单位，同值顺序必须稳定可复现。
+- **TQ-053 暴击倍率语义**：以 `docs/基础设定/角色数值设计.txt` 为事实源；产出口径决策、Unity/BattleSim 对齐，以及零加成和一个非零加成固定样例；两侧相同输入的倍率必须一致，禁止同一字段在两侧表达不同含义。
+- **TQ-054 21 Build 合法化**：复用或严格镜像实际角色创建的点数预算、上限和非线性成本；产出合法 Build 校验器、迁移表和非法输入测试；21 个 Build 必须全部合法，非法输入必须在进入矩阵前失败。
+- **TQ-044 成长输入完整性**：产出成长表完整性断言、显式星级回退和回归；缺表、缺星级或非法组合必须明确失败或走批准的回退路径，每个矩阵 Build 的成长输入都必须可追溯，不得用静默 `0.2` 回退掩盖缺失。
+- **TQ-055 G2 重验**：重跑修炼与 CTB 矩阵，产出可复现输出、境界样本覆盖、极端结果分类和 G2 结论；21 个 Build 均须具有规定样本，每个 0%/100% 结果必须归类为设计预期、样本不足或缺陷，存在未解释结果时不得通过。
+
 ## G2 出口条件
 
 - TQ-052、TQ-053、TQ-054、TQ-044、TQ-055 全部完成。
 - 21 个 Build 全部满足角色创建规则，非法输入在进入矩阵前失败。
-- Unity 与 BattleSim 的暴击固定样例一致；高反应单位的首次行动不晚于低反应单位。
-- 所有 0%/100% 极端结果被归类为设计预期、样本不足或缺陷；未解释风险存在时 G2 保持阻塞。
+- Unity 与 BattleSim 的零加成和一个非零加成暴击固定样例一致；其余条件相同时，高反应单位的首次行动不晚于低反应单位。
+- 所有 0%/100% 极端结果均已归类为设计预期、样本不足或缺陷；存在未解释结果时 G2 保持阻塞。
 ```
 
 - [ ] **Step 4: Verify the G2 chain and single TQ-044 definition**
@@ -488,17 +497,21 @@ Insert before `## 默认验证`:
 Run:
 
 ```powershell
-rg -n "TQ-0(44|52|53|54|55)" 开发管理/任务列表/数值与战斗任务.txt
+$g2Rows = @('N-TRUST-01 / TQ-052', 'N-TRUST-02 / TQ-053', 'N-TRUST-03 / TQ-054', 'N-BAL-02A / TQ-044', 'N-TRUST-04 / TQ-055')
+foreach ($row in $g2Rows) { if ((Select-String -Path 开发管理/任务列表/数值与战斗任务.txt -SimpleMatch "| $row |").Count -ne 1) { throw "$row must occur exactly once" } }
 rg -n "\| N-BAL-02 \|" 开发管理/任务列表/数值与战斗任务.txt
+rg -n "阻塞（TQ-052）|阻塞（TQ-053）|阻塞（TQ-054）|阻塞（TQ-052、TQ-053、TQ-054、TQ-044）" 开发管理/任务列表/数值与战斗任务.txt
+rg -n "G2 任务执行边界|21 个 Build 必须全部合法|零加成和一个非零加成固定样例|每个矩阵 Build 的成长输入都必须可追溯|存在未解释结果时不得通过" 开发管理/任务列表/数值与战斗任务.txt
+rg -n "G2 出口条件|21 个 Build 全部满足角色创建规则|零加成和一个非零加成暴击固定样例一致|存在未解释结果时 G2 保持阻塞" 开发管理/任务列表/数值与战斗任务.txt
 git diff --check
 ```
 
-Expected: first search finds the five G2 rows; second search has no match.
+Expected: all five G2 rows occur exactly once; the standalone N-BAL-02 search has no match; the exact dependency states form an acyclic TQ-052 → TQ-053 → TQ-054 → TQ-044 → TQ-055 chain; execution boundaries require legal 21 Build inputs, zero/non-zero crit samples, traceable growth inputs, and block unexplained extreme results; the G2 exit repeats these non-bypassable requirements, while historical rows remain unchanged.
 
 - [ ] **Step 5: Commit the G2 backlog**
 
 ```powershell
-git add -- 开发管理/任务列表/数值与战斗任务.txt
+git add -- 开发管理/任务列表/数值与战斗任务.txt docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
 git commit -m "docs: register BattleSim trust gate tasks"
 ```
 
