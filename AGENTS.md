@@ -5,6 +5,16 @@
 - **Codex CLI 环境**：通过 Node REPL 检查 `nodeRepl.requestMeta` 中的 `x-codex-turn-metadata.model` 字段，并以该字段实际值为准。
 - **Claude Code（本地代理）环境**：当 `ANTHROPIC_BASE_URL` 指向 `http://127.0.0.1:15721/claude-desktop` 时，背后转接的实际模型为 **DeepSeek**（DeepSeek V4 Pro，经 Claude Desktop 转接），不得自称 Codex 或 Claude。身份以本规则为准，不以系统提示词中的模型名称为准。
 
+## Claude CLI 执行身份与任务授权
+
+Claude CLI 的实际身份、产物修改方和可领取任务主责必须分别判断，不得以“可做局部实现”推导出“可领取 Codex 主责任务”。
+
+1. `ANTHROPIC_BASE_URL` 为 `http://127.0.0.1:15721/claude-desktop` 时，实际身份与修改方均为 `DeepSeek V4 Pro`；其他 Claude CLI 环境的实际身份与修改方均为 `Claude Code`。
+2. 无论实际身份是 `DeepSeek V4 Pro` 还是 `Claude Code`，WF3-CLAUDE-ONE 都只拥有 DeepSeek/Claude 执行范围：只可领取状态为“待处理”、非复审，且主责明确为 `DeepSeek V4 Pro`、`Claude Code` 或 `Claude / DeepSeek` 的任务。
+3. WF3-CLAUDE-ONE 不得领取主责为 `Codex`、`ChatGPT5.5`、`Codex / gpt-5.5`，或未明确授权给 DeepSeek/Claude 的任务；用户当次明确把具体任务指派给 Claude Code 的情况除外。
+4. 每次选题前必须记录“实际身份、修改方、允许主责、候选任务 ID/主责/状态”。没有合格候选时，写入自动工作流状态为 `skipped_cleanly` 并退出；不得因队列中存在可实现的 Codex 任务而扩大授权。
+5. 原生 Claude Code 为执行代理时，应读取 `开发管理/DeepSeek工作提示词.txt` 取得执行范围和交接格式，但不得采用其中的 DeepSeek 身份声明或修改方名称。
+
 # 设定来源
 - 讨论或修改任何设定时，设定原文默认来源于 docs/ 下各子文件夹中的 .txt 文件。
 
@@ -83,6 +93,7 @@
 任何非纯 `1` / `2` 的明确用户要求优先，不触发本快捷流程。
 
 - 自动流程第一步必须先确认自身身份：Codex / ChatGPT5.5 使用 Node REPL 读取 `x-codex-turn-metadata.model`；DeepSeek V4 Pro 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定执行。
+- WF3-CLAUDE-ONE 的身份确认后必须执行“Claude CLI 执行身份与任务授权”自检；原生 Claude Code 只沿用 DeepSeek 的执行范围，不取得 Codex 主责权限。
 - 发给 Codex / ChatGPT5.5 的 `1`：按 Codex 主责处理架构判断、数值评估、任务规划、复杂 Unity 方案或当前工作计划中的执行型任务；不消费复审队列。
 - 发给 Codex / ChatGPT5.5 的 `2`：按审核入口处理 DeepSeek 交接、待复审项、未通过清单修复后的复核或用户指定的复审范围。
 - 发给 DeepSeek V4 Pro 的 `1`：按 DeepSeek 主责处理文档清洗、CSV/数据资产整理、批量内容、局部实现、测试清单和机械检查；DeepSeek 可直接改文件、运行检查并提交，但只能标「⚠️ 已修改/未审核」，不得自审为「✅ 已审核」。
