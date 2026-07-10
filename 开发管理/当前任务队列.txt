@@ -90,6 +90,6 @@
 - 当前状态：阻塞（TQ-043 复审）；依赖：TQ-043 经 Codex / ChatGPT5.5 复审通过。
 - 主责：Codex / gpt-5.5。
 - 必读：`tools/check-data-chain.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/realm_lianshen专项检查.txt`、三类 CSV 与 Unity 数据对象定义。
-- 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；允许警告必须有版本控制的明确规则和理由，不能无条件 `OK`。
-- 验证：产出成功与失败测试样例，负例不得修改生产数据；错误或缺失结果必须返回非 0，仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
-- 完成条件：检查脚本能真实区分成功、警告和错误；正例返回 0、负例返回非 0，且仅版本控制规则批准的警告可返回 0。
+- 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；每个批准警告豁免必须在版本控制中精确绑定 `ruleId + contentId/文件/行键`，记录理由、负责人、移除或到期条件；禁止通配符、类别级、前缀匹配或自动覆盖未来记录。
+- 验证：产出成功与失败测试样例，负例不得修改生产数据；新增同类但未精确列入的警告必须返回非 0 并作为回归负例；错误或缺失结果必须返回非 0，仅剩精确批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
+- 完成条件：检查脚本能真实区分成功、警告和错误；正例返回 0、负例返回非 0，且仅精确绑定并记录完整的批准警告可返回 0。

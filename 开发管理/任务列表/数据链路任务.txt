@@ -27,23 +27,23 @@
 | D-TRUST-01 / TQ-056 | P0 | Codex | 阻塞（TQ-043 复审） | 检查脚本区分错误和警告；语义错误必须非零退出 |
 | D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 阻塞（TQ-056） | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
 | D-TRUST-03 / TQ-058 | P0 | Codex | 阻塞（TQ-043、TQ-056） | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
-| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-043、TQ-056、TQ-058） | 接通 `realmReq`、`elementReq`、`affiliation` 资产字段与运行时允许/拒绝测试 |
+| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-043、TQ-056、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only` |
 
 ## G3 任务执行边界
 
 - TQ-043：仅在 HANDOFF-20260710-02 经 Codex / ChatGPT5.5 独立复审通过后解阻；复审核对必需列、重复列、未知列、换序和短行，不得把外部提交直接当作完成。
-- TQ-056：错误级必须包括无批准豁免的 docs/CSV/asset 数量矛盾、必填缺失、删除内容激活、玩家边界失守和 schema 错配；允许警告必须有版本控制的明确规则和理由，不能无条件 `OK`。产出成功/失败测试样例，负例不得修改生产数据；错误或缺失结果必须非 0，仅批准警告可返回 0。
+- TQ-056：错误级必须包括无批准豁免的 docs/CSV/asset 数量矛盾、必填缺失、删除内容激活、玩家边界失守和 schema 错配；每个批准警告豁免必须在版本控制中精确绑定 `ruleId + contentId/文件/行键`，并记录理由、负责人、移除或到期条件。禁止通配符、类别级、前缀匹配或自动覆盖未来记录；新增同类但未精确列入的警告必须非 0，并加入回归负例。产出成功/失败测试样例，负例不得修改生产数据；错误或缺失结果必须非 0，仅精确批准的警告可返回 0。
 - TQ-057：机械清理由 DeepSeek 执行，但必须标 `⚠️ 已修改/未审核` 并交接；产出数据修复、差异清单和交接材料；术法数量、语言键、删除激活和原 TQ-040 字段完整性均须处理。差异要么清零，要么有批准的显式排除；不得扩展设计语义。
 - TQ-058：缺失或非法 `contentScope` 必须导入失败；reserved 不会进入玩家获得池，player 仍可用；既有空字段 asset 必须迁移、隔离或令检查失败，禁止静默视为 player。证明 CSV→asset→运行时 consumer 全链路并建立回归。
-- TQ-059：`realmReq`、`elementReq`、`affiliation` 必须成为真实 asset 字段并接入 runtime 校验，每项各有一个允许样例和拒绝样例；若某字段不执行，必须改成明确的非运行时元数据命名，并阻止被误当作限制，不能只加字段不接行为。
+- TQ-059：对 `realmReq`、`elementReq`、`affiliation` 逐字段记录模式，每个字段必须恰好选择一条：`runtime_gate` 要求真实 asset 字段和 runtime consumer，并有一个允许样例和一个拒绝样例；`metadata_only` 要求改成明确不含 Req/限制含义的元数据命名，导入器和运行时限制 consumer 均不得读取它，测试证明不会被当作限制，且检查器拒绝“仍叫 `*Req` 但无 handler”的状态。任一字段无模式或两种模式同时存在均阻塞。
 
 ## G3 出口条件
 
 - TQ-043 经 Codex / ChatGPT5.5 独立复审通过，TQ-056、TQ-057、TQ-058、TQ-059 全部完成，且 TQ-057 经 Codex 复审通过。
 - 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配等错误类别均让检查脚本非 0 退出。
-- 检查结果只剩版本控制规则明确批准的警告。
+- 每个残留批准警告豁免都在版本控制中精确绑定 `ruleId + contentId/文件/行键`，并记录理由、负责人、移除或到期条件；禁止通配符、类别级、前缀匹配或自动覆盖未来记录，新增同类但未精确列入的警告必须非 0。
 - reserved 不进入玩家获得池，缺失或非法 `contentScope` 不会默认成为 player。
-- `realmReq`、`elementReq`、`affiliation` 各有一个运行时允许样例和拒绝样例。
+- `realmReq`、`elementReq`、`affiliation` 各自完成其记录模式的验收并恰好选择 `runtime_gate` 或 `metadata_only`；任一字段无模式或两种模式同时存在均阻塞。`runtime_gate` 必须有运行时允许/拒绝样例；`metadata_only` 必须完成无 Req/限制含义重命名、导入器与运行时限制 consumer 不读取证明、不会被当作限制的测试，以及对“仍叫 `*Req` 但无 handler”状态的检查器拒绝。
 - `check-data-chain.ps1` 正例返回 0、负例返回非 0，且负例不得修改生产数据。
 
 ## 默认验证
