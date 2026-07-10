@@ -209,9 +209,10 @@ Expected: one commit containing only the new queue and archive.
 
 - Modify: `开发管理/开发优先级.txt`
 - Modify: `开发管理/任务列表/内容设计任务.txt`
+- Modify: `docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md`（同步本 Task 2 的复核修订指令）
 - Reference: `docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md`
 
-- [ ] **Step 1: Update the priority document title and current execution decision**
+- [ ] **Step 1: Update the priority document title, current decision, and historicalize stale conclusions**
 
 Use `apply_patch` to replace the title exactly:
 
@@ -232,6 +233,39 @@ Then insert this section before `## 设计资产盘点`:
 - 任务编号、依赖和验收标准以 `docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md` 为准。
 ```
 
+Immediately after the current decision and before the old asset inventory, insert this exact warning:
+
+```text
+> ⚠️ 历史快照总警示：以下资产盘点/三阶段路线/设计缺口/BattleSim → Unity 状态均为 2026-07-06 及更早历史快照；其中“当前阶段/已完成/闸门已解除”仅描述当时结论，凡与 2026-07-10 当前执行决策冲突者失效，不得用于任务选择、闸门判断或内容解冻。
+```
+
+Historicalize the stale section and stage headings exactly:
+
+```text
+## 设计资产盘点（2026-07-06 历史快照）
+## 三阶段推进路线（历史路线）
+### 阶段二：旧探索原型循环（历史完成；正式构建闭环待 G1）
+### 阶段三：规模化填充与正式开发前校准（历史阶段；现行已收缩为 G1/G2/G3）
+#### 3.2.7 场景架构与 2.5D 战棋表现（历史 Editor 壳验证已完成；G1 正式构建链未通过）
+**历史进入条件（已被 2026-07-10 当前执行决策取代）**
+## 2026-07-06 设计缺口快照（历史）
+## BattleSim → Unity 同步状态（历史快照）
+## 与上一版（v3.2）主要变化（历史记录）
+```
+
+Replace the two false-green rows in the historical design-gap table with:
+
+```text
+| ⚠️ | BattleSim 矩阵可信度待 G2 重验 | **G2 / TQ-052～TQ-055、TQ-044** | 旧校准因 2v2 CT 反应方向、非法 Build 输入、暴击口径问题失效，按 TQ-052～TQ-055 / TQ-044 重验 |
+| ⚠️ | 正式构建链待 G1 重验 | **G1 / TQ-049～TQ-051、TQ-060～TQ-063** | 旧 Editor 壳验证不能证明正式 Adventure 可玩，按 TQ-049～TQ-051 / TQ-060～TQ-063 重验 |
+```
+
+Replace the later bold `**策略**` paragraph with:
+
+```text
+**策略**：冻结新增内容，先完成 G1/G2/G3；旧 TQ-016/TQ-010 只能作为历史证据，不能解除新闸门。
+```
+
 Replace the paragraph beginning `**结论：项目已经过了` and the following numbered priority list with:
 
 ```text
@@ -246,7 +280,7 @@ Replace the paragraph beginning `**结论：项目已经过了` and the followin
 5. **内容解冻**：TQ-071 复核三门通过后，只允许一地区、一出身、一据点、一场战斗的薄内容切片。
 ```
 
-Expected: the top-level priority no longer says the relevant gates are already cleared.
+Expected: the current decision is authoritative; every old route/status section is visibly historical, the two false-green rows require G1/G2 revalidation, and the current strategy cannot use TQ-016/TQ-010 to clear the new gates.
 
 - [ ] **Step 2: Add a content freeze banner and gate-exit task**
 
@@ -263,7 +297,7 @@ Replace the affected active rows with this exact block; leave completed rows unc
 | C-GUXIU-03 | P2 | DeepSeek | 内容冻结（TQ-071 前） | 古修第一批神通，每个完成品单独文件 |
 | C-SANXIU-01 | P2 | DeepSeek | 内容冻结（TQ-071 前） | 散修通用内容可玩性补强清单 |
 | C-NPC-01 | P2 | DeepSeek 执行；Codex 复审 | 内容冻结（TQ-071 前） | 重要 NPC 源/化/界字段后的叙事扩写 |
-| C-STORY-WM-P0 | P0 | Codex | 冻结（已完成 01/02/03/04/05A/06） | 世界主线 P0 前置包：寿元时间尺度、出生地接入、真形体系、矩阵占位、玄荒新路天才人物志规划骨架、低阶势力开放规则和第一章兼容复核 |
+| C-STORY-WM-P0 | P0 | Codex | 冻结（01/02/03/04/05A/06 已完成；05完整扩写未完成） | 世界主线 P0 前置包：寿元时间尺度、出生地接入、真形体系、矩阵占位、玄荒新路天才人物志规划骨架、低阶势力开放规则和第一章兼容复核 |
 | GATE-EXIT-01 / TQ-071 | P0 | Codex / gpt-5.5 | 阻塞（G1/G2/G3） | 独立复核三道闸门证据；只批准一个“一地区、一出身、一据点、一场战斗”运行时薄内容切片 |
 | C-STORY-WM-L1 | P1 | Codex | 内容冻结（TQ-071 前） | 世界主线第二至第七章 L1 章节骨架拆分，按 `docs/剧情/主线/世界主线-后续拆分工作清单.txt` 推进 |
 | C-STORY-WM-L2 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 内容冻结（TQ-071 前） | 世界主线 L2/L3/L4 拆分包：地区主线、势力线、NPC 分支和终局演出 |
@@ -272,6 +306,12 @@ Replace the affected active rows with this exact block; leave completed rows unc
 | C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 内容冻结（TQ-071 前） | 据点通用称谓、寒暄和任务入口文案表 |
 | C-ECON-01 | P3 | Codex 规划 | 内容冻结（TQ-071 前） | 灵石、丹药、天材地宝、掉落表经济基线 |
 | C-HIGH-01 | P3 | Codex | 内容冻结（TQ-071 前） | 高阶内容按 NPC/资料片/历史说明分类收口 |
+```
+
+In `## 当前状态`, replace the WF2-CODEX-ONE follow-up clause so the historical recommendation cannot be executed during the freeze:
+
+```text
+“后续可拆 DeepSeek 扩写与 Codex 复审”是冻结前历史建议，当前不得执行，需 TQ-071 指定后才可恢复。
 ```
 
 Replace the sentence `后续可继续拆世界主线 L1 或将 C-STORY-WM-05 扩写交给 DeepSeek` with:
@@ -294,19 +334,21 @@ Run:
 ```powershell
 rg -n "\| (C-TAIYI-01|C-GUXIU-03|C-SANXIU-01|C-NPC-01|C-STORY-WM-L1|C-STORY-WM-L2|C-STORY-04|C-QUEST-01|C-DIALOGUE-01|C-ECON-01|C-HIGH-01) .*\| 待处理 \|" 开发管理/任务列表/内容设计任务.txt
 rg -n "TQ-071|内容冻结|G1/G2/G3" 开发管理/开发优先级.txt 开发管理/任务列表/内容设计任务.txt
+rg -n "历史快照总警示|待 G1 重验|待 G2 重验|05完整扩写未完成" 开发管理/开发优先级.txt 开发管理/任务列表/内容设计任务.txt
+rg -n "^## 设计资产盘点$|^## 三阶段推进路线$|^### 阶段二：最小可玩循环 ✅ 已完成|^### 阶段三：规模化填充与正式开发前校准 ← 当前阶段|^#### 3\.2\.7 .*闸门已解除|^\*\*进入条件\*\*|^## 当前设计缺口|^## BattleSim → Unity 同步状态$|^\*\*策略\*\*：现在不宜" 开发管理/开发优先级.txt
 git diff --check
 ```
 
-Expected: first search has no matches; second search finds the new priority and freeze rules.
+Expected: the first and fourth searches have no matches; the second and third searches find the trust-gate, freeze, historical-warning, G1/G2 revalidation, and unfinished C-STORY-WM-05 wording.
 
 - [ ] **Step 4: Commit priority and freeze rules**
 
 ```powershell
-git add -- 开发管理/开发优先级.txt 开发管理/任务列表/内容设计任务.txt
-git commit -m "docs: freeze content behind trust gates"
+git add -- 开发管理/开发优先级.txt 开发管理/任务列表/内容设计任务.txt docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
+git commit -m "docs: retire stale pre-gate conclusions"
 ```
 
-Expected: one commit containing only global priority and content backlog changes.
+Expected: one commit containing only the global priority, content backlog, and synchronized Task 2 plan changes.
 
 ### Task 3: Register G1 and P1 Unity/system tasks
 
