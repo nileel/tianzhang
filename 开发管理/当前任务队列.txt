@@ -90,6 +90,6 @@
 - 当前状态：阻塞（TQ-043 复审）；依赖：TQ-043 经 Codex / ChatGPT5.5 复审通过。
 - 主责：Codex / gpt-5.5。
 - 必读：`tools/check-data-chain.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/realm_lianshen专项检查.txt`、三类 CSV 与 Unity 数据对象定义。
-- 范围：把数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；保留明确批准的警告。
-- 验证：构造或使用已知错误输入时返回非 0；仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
-- 完成条件：检查脚本能真实区分成功、警告和错误，不再输出风险后仍无条件 `OK`。
+- 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；允许警告必须有版本控制的明确规则和理由，不能无条件 `OK`。
+- 验证：产出成功与失败测试样例，负例不得修改生产数据；错误或缺失结果必须返回非 0，仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
+- 完成条件：检查脚本能真实区分成功、警告和错误；正例返回 0、负例返回非 0，且仅版本控制规则批准的警告可返回 0。

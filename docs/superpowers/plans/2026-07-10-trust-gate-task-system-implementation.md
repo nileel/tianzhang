@@ -177,9 +177,9 @@ Use `apply_patch` to create `开发管理/当前任务队列.txt` with exactly t
 - 当前状态：阻塞（TQ-043 复审）；依赖：TQ-043 经 Codex / ChatGPT5.5 复审通过。
 - 主责：Codex / gpt-5.5。
 - 必读：`tools/check-data-chain.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/realm_lianshen专项检查.txt`、三类 CSV 与 Unity 数据对象定义。
-- 范围：把数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；保留明确批准的警告。
-- 验证：构造或使用已知错误输入时返回非 0；仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
-- 完成条件：检查脚本能真实区分成功、警告和错误，不再输出风险后仍无条件 `OK`。
+- 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；允许警告必须有版本控制的明确规则和理由，不能无条件 `OK`。
+- 验证：产出成功与失败测试样例，负例不得修改生产数据；错误或缺失结果必须返回非 0，仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
+- 完成条件：检查脚本能真实区分成功、警告和错误；正例返回 0、负例返回非 0，且仅版本控制规则批准的警告可返回 0。
 ```
 
 - [ ] **Step 4: Verify queue size, dependency states, and frozen IDs**
@@ -536,14 +536,16 @@ git commit -m "docs: add BattleSim clean restore gate"
 **Files:**
 
 - Modify: `开发管理/任务列表/数据链路任务.txt`
+- Modify: `开发管理/当前任务队列.txt`（仅强化 TQ-056 卡片，不改六行或状态）
+- Modify: `docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md`（同步 Task 1 模板与本 Task 5）
 
 - [ ] **Step 1: Replace the stale data-chain status claim**
 
 Append under `## 当前状态`:
 
 ```text
-- ⚠️ 2026-07-10 审视：当前检查输出存在术法 docs 86 与 CSV/asset 75 的数量矛盾、realm_lianshen 语言键缺失、realm_lianxu 已删除内容仍激活等语义风险；脚本仍返回 `OK`，因此 Missing 0 不能等同于数据链可信。
-- ⚠️ `contentScope` 缺失时当前默认 `player`，运行时未证明 reserved 过滤；`realmReq`、`elementReq`、`affiliation` 也未形成完整运行时限制链。G3 未通过前禁止按数据规模继续扩写。
+- ⚠️ 2026-07-10 审视：当前检查存在术法 docs 86 与 CSV/asset 75 的数量矛盾、`realm_lianshen` 语言键缺失、`realm_lianxu` 已删除内容仍激活；脚本仍返回 `OK`，因此 Missing 0 不等于数据链可信。
+- ⚠️ `contentScope` 缺失时当前默认 `player`，运行时未证明 reserved 过滤；`realmReq`、`elementReq`、`affiliation` 也未形成完整限制链。G3 通过前禁止按数据规模继续扩写。
 ```
 
 - [ ] **Step 2: Replace D-ASSET/D-IMPORT rows and add the G3 chain**
@@ -559,7 +561,42 @@ Replace the existing D-ASSET-01 and D-IMPORT-01 rows with:
 | D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-043、TQ-056、TQ-058） | 接通 `realmReq`、`elementReq`、`affiliation` 资产字段与运行时允许/拒绝测试 |
 ```
 
-- [ ] **Step 3: Replace the contradictory high-realm boundary and add G3 exit criteria**
+- [ ] **Step 3: Write the approved G3 execution boundaries, queue card, and exit criteria**
+
+Insert before `## 默认验证`:
+
+```text
+## G3 任务执行边界
+
+- TQ-043：仅在 HANDOFF-20260710-02 经 Codex / ChatGPT5.5 独立复审通过后解阻；复审核对必需列、重复列、未知列、换序和短行，不得把外部提交直接当作完成。
+- TQ-056：错误级必须包括无批准豁免的 docs/CSV/asset 数量矛盾、必填缺失、删除内容激活、玩家边界失守和 schema 错配；允许警告必须有版本控制的明确规则和理由，不能无条件 `OK`。产出成功/失败测试样例，负例不得修改生产数据；错误或缺失结果必须非 0，仅批准警告可返回 0。
+- TQ-057：机械清理由 DeepSeek 执行，但必须标 `⚠️ 已修改/未审核` 并交接；产出数据修复、差异清单和交接材料；术法数量、语言键、删除激活和原 TQ-040 字段完整性均须处理。差异要么清零，要么有批准的显式排除；不得扩展设计语义。
+- TQ-058：缺失或非法 `contentScope` 必须导入失败；reserved 不会进入玩家获得池，player 仍可用；既有空字段 asset 必须迁移、隔离或令检查失败，禁止静默视为 player。证明 CSV→asset→运行时 consumer 全链路并建立回归。
+- TQ-059：`realmReq`、`elementReq`、`affiliation` 必须成为真实 asset 字段并接入 runtime 校验，每项各有一个允许样例和拒绝样例；若某字段不执行，必须改成明确的非运行时元数据命名，并阻止被误当作限制，不能只加字段不接行为。
+
+## G3 出口条件
+
+- TQ-043 经 Codex / ChatGPT5.5 独立复审通过，TQ-056、TQ-057、TQ-058、TQ-059 全部完成，且 TQ-057 经 Codex 复审通过。
+- 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配等错误类别均让检查脚本非 0 退出。
+- 检查结果只剩版本控制规则明确批准的警告。
+- reserved 不进入玩家获得池，缺失或非法 `contentScope` 不会默认成为 player。
+- `realmReq`、`elementReq`、`affiliation` 各有一个运行时允许样例和拒绝样例。
+- `check-data-chain.ps1` 正例返回 0、负例返回非 0，且负例不得修改生产数据。
+```
+
+Replace the TQ-056 card in `开发管理/当前任务队列.txt`, and make the Task 1 queue template text-identical:
+
+```text
+### TQ-056 · D-TRUST-01 数据检查器错误分级
+
+- 来源：可信度闸门规格 §6。
+- 当前状态：阻塞（TQ-043 复审）；依赖：TQ-043 经 Codex / ChatGPT5.5 复审通过。
+- 主责：Codex / gpt-5.5。
+- 必读：`tools/check-data-chain.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/realm_lianshen专项检查.txt`、三类 CSV 与 Unity 数据对象定义。
+- 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；允许警告必须有版本控制的明确规则和理由，不能无条件 `OK`。
+- 验证：产出成功与失败测试样例，负例不得修改生产数据；错误或缺失结果必须返回非 0，仅剩批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
+- 完成条件：检查脚本能真实区分成功、警告和错误；正例返回 0、负例返回非 0，且仅版本控制规则批准的警告可返回 0。
+```
 
 Replace:
 
@@ -570,18 +607,7 @@ Replace:
 with:
 
 ```text
-- 不把 `realm_lianshen` 扩展为当前玩家境界；缺失 Language key 必须补齐、隔离或停用对应行，不能保持激活且只告警。
-```
-
-Insert before `## 默认验证`:
-
-```text
-## G3 出口条件
-
-- TQ-043、TQ-056、TQ-057、TQ-058、TQ-059 全部完成并通过规定复审。
-- 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配都会让检查脚本非零退出。
-- reserved 内容不会进入玩家池；缺失/非法 `contentScope` 不能默认成为 player。
-- `realmReq`、`elementReq`、`affiliation` 各有一个运行时允许样例和拒绝样例。
+- 不把 `realm_lianshen` 扩为玩家境界；缺失 Language key 必须补齐、隔离或停用，不能保持激活且只告警。
 ```
 
 - [ ] **Step 4: Verify G3 IDs, merge state, and updated boundary**
@@ -589,17 +615,36 @@ Insert before `## 默认验证`:
 Run:
 
 ```powershell
-rg -n "TQ-0(40|43|56|57|58|59)" 开发管理/任务列表/数据链路任务.txt
-rg -n "已合并至 TQ-057|不把 `realm_lianshen` 扩展为当前玩家境界|G3 出口条件" 开发管理/任务列表/数据链路任务.txt
+$g3Rows = @('D-ASSET-01 / TQ-040', 'D-IMPORT-01 / TQ-043', 'D-TRUST-01 / TQ-056', 'D-TRUST-02 / TQ-057', 'D-TRUST-03 / TQ-058', 'D-TRUST-04 / TQ-059')
+foreach ($row in $g3Rows) { if ((Select-String -Path 开发管理/任务列表/数据链路任务.txt -SimpleMatch "| $row |").Count -ne 1) { throw "$row must occur exactly once" } }
+if (Select-String -Path 开发管理/任务列表/数据链路任务.txt -Pattern '^\| D-ASSET-01 \|' -Quiet) { throw 'stale D-ASSET-01 row remains' }
+if (Select-String -Path 开发管理/任务列表/数据链路任务.txt -Pattern '^\| D-IMPORT-01 \|' -Quiet) { throw 'stale D-IMPORT-01 row remains' }
+rg -n "已合并至 TQ-057|⚠️ 已修改/待复审（HANDOFF-20260710-02）|阻塞（TQ-043 复审）" 开发管理/任务列表/数据链路任务.txt
+rg -n "G3 任务执行边界|版本控制|负例不得修改生产数据|既有空字段 asset|非运行时元数据|正例返回 0、负例返回非 0" 开发管理/任务列表/数据链路任务.txt 开发管理/当前任务队列.txt
+rg -n "不把 `realm_lianshen` 扩为玩家境界|缺失 Language key 必须补齐、隔离或停用|G3 出口条件|check-data-chain.ps1.*正例返回 0、负例返回非 0" 开发管理/任务列表/数据链路任务.txt
+rg -n "TQ-040：不单独执行；仅在 TQ-057 已登记且前置满足后由其吸收" 开发管理/当前任务队列.txt
+(Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-' | Measure-Object).Count
+Select-String -Path 开发管理/当前任务队列.txt -Pattern '^\| TQ-.*\| 待处理 \|'
+$planText = Get-Content -Raw docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
+$templateMatch = [regex]::Match($planText, '(?s)Use `apply_patch` to create `开发管理/当前任务队列\.txt` with exactly this content:\s*```text\r?\n(?<queue>.*?)\r?\n```')
+if (-not $templateMatch.Success) { throw 'Task 1 queue template not found' }
+$templateQueue = ($templateMatch.Groups['queue'].Value -replace "`r`n", "`n").TrimEnd("`n")
+$currentQueue = ((Get-Content -Raw 开发管理/当前任务队列.txt) -replace "`r`n", "`n").TrimEnd("`n")
+if (-not [string]::Equals($templateQueue, $currentQueue, [System.StringComparison]::Ordinal)) { throw 'Task 1 queue template differs from current queue' }
+$allowedFiles = @('docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md', '开发管理/任务列表/数据链路任务.txt', '开发管理/当前任务队列.txt') | Sort-Object
+$changedFiles = @(git -c core.quotepath=false diff --name-only) | Sort-Object
+if (($allowedFiles -join "`n") -ne ($changedFiles -join "`n")) { throw 'Task 5 must modify exactly the three allowed files' }
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/plans
 git diff --check
+git status --short
 ```
 
-Expected: all G3 rows exist; TQ-043 remains pending review under `HANDOFF-20260710-02`; TQ-056 waits for TQ-043 review; TQ-040 is non-claimable; the old “do not add Language key” boundary is absent.
+Expected: all six G3 rows occur exactly once; no stale standalone D-ASSET-01/D-IMPORT-01 row remains; TQ-043 remains pending review under `HANDOFF-20260710-02`; TQ-056 waits for TQ-043 review; TQ-040 cannot be claimed separately. The approved execution boundaries and G3 exit criteria contain every required phrase; the old “do not add Language key” boundary is absent. The active queue still has exactly six rows with only TQ-049 and TQ-052 pending, and its complete text remains identical to the Task 1 template. Review-text and diff checks pass, and only the three files listed for this task are modified.
 
 - [ ] **Step 5: Commit the G3 backlog**
 
 ```powershell
-git add -- 开发管理/任务列表/数据链路任务.txt
+git add -- 开发管理/任务列表/数据链路任务.txt 开发管理/当前任务队列.txt docs/superpowers/plans/2026-07-10-trust-gate-task-system-implementation.md
 git commit -m "docs: register data semantics gate tasks"
 ```
 
