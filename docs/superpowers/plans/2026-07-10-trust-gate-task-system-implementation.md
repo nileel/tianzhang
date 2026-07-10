@@ -670,6 +670,8 @@ Run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理,docs/superpowers/plans
+$reviewExit = $LASTEXITCODE
+if ($reviewExit -ne 0) { throw "check-review-text failed with exit code $reviewExit" }
 $commitShas = @(git rev-list --reverse 3c8c1cd..HEAD)
 foreach ($sha in $commitShas) {
     git show --check --format= --no-ext-diff $sha
@@ -690,16 +692,32 @@ switch ($placeholderExit) {
 }
 ```
 
-Expected: review-text passes; every SHA returned by `git rev-list --reverse 3c8c1cd..HEAD` returns `0` from its own `git show --check`, and the net `git diff --check 3c8c1cd..HEAD` also returns `0`. The constructed placeholder scan takes the explicit no-match branch for this specification and plan; a match or tool error fails the step, while historical game-content prose remains outside this scan.
+Expected: review-text returns `0` and is checked immediately through `$reviewExit`, so later Git commands cannot hide a failure. Every SHA returned by `git rev-list --reverse 3c8c1cd..HEAD` returns `0` from its own `git show --check`, and the net `git diff --check 3c8c1cd..HEAD` also returns `0`. The constructed placeholder scan takes the explicit no-match branch for this specification and plan; a match or tool error fails the step, while historical game-content prose remains outside this scan.
 
 - [ ] **Step 2: Verify all task IDs and no claimable frozen content**
 
 Run:
 
 ```powershell
-rg -n "TQ-0(39|40|43|44|45|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71)" 开发管理/当前任务队列.txt 开发管理/任务列表 开发管理/开发优先级.txt
-$taskIdSearchExit = $LASTEXITCODE
-if ($taskIdSearchExit -ne 0) { throw "Task-ID search failed or found no designed dispositions; exit $taskIdSearchExit." }
+$requiredIds = @(
+    'TQ-039', 'TQ-040', 'TQ-043', 'TQ-044', 'TQ-045',
+    'TQ-049', 'TQ-050', 'TQ-051', 'TQ-052', 'TQ-053', 'TQ-054', 'TQ-055', 'TQ-056', 'TQ-057', 'TQ-058', 'TQ-059',
+    'TQ-060', 'TQ-061', 'TQ-062', 'TQ-063', 'TQ-064', 'TQ-065', 'TQ-066', 'TQ-067', 'TQ-068', 'TQ-069', 'TQ-070', 'TQ-071'
+)
+$taskIdFiles = @(
+    '开发管理/当前任务队列.txt',
+    '开发管理/任务列表/场景与Unity任务.txt',
+    '开发管理/任务列表/数值与战斗任务.txt',
+    '开发管理/任务列表/数据链路任务.txt',
+    '开发管理/任务列表/内容设计任务.txt',
+    '开发管理/任务列表/审核与交接任务.txt',
+    '开发管理/开发优先级.txt'
+)
+$taskIdText = ($taskIdFiles | ForEach-Object { Get-Content -Raw -LiteralPath $_ }) -join "`n"
+foreach ($id in $requiredIds) {
+    if (-not $taskIdText.Contains($id)) { throw "Required task ID $id is absent from the current queue, five task backlogs, and priority document." }
+    Write-Output "$id presence=1+"
+}
 rg -n "\| (C-TAIYI-01|C-GUXIU-03|C-SANXIU-01|C-NPC-01|C-STORY-WM-L1|C-STORY-WM-L2|C-STORY-04|C-QUEST-01|C-DIALOGUE-01|C-ECON-01|C-HIGH-01) .*\| 待处理 \|" 开发管理/任务列表/内容设计任务.txt
 $frozenPendingExit = $LASTEXITCODE
 switch ($frozenPendingExit) {
@@ -765,7 +783,7 @@ $worldMainPackagePattern = '^\| C-STORY-WM-P0 \| P0 \| [^|]+ \| 冻结（01/02/0
 if (@(Select-String -LiteralPath $contentFile -Pattern $worldMainPackagePattern).Count -ne 1) { throw 'C-STORY-WM-P0 must have exactly one frozen aggregate-package activity row.' }
 ```
 
-Expected: the task-ID search succeeds. The frozen-content search takes only the explicit exit-`1` no-match branch; either matches or a tool error fail closed. Scene TQ-049～TQ-051 and TQ-060～TQ-070 each have exactly one activity row. Balance TQ-044 and TQ-052～TQ-055 each have exactly one activity row, with zero old N-BAL-02 rows. Data TQ-040、TQ-043、TQ-056～TQ-059 each have exactly one activity row; TQ-043 remains pending review, TQ-056 waits for that review, and TQ-040 is not separately claimable. HANDOFF-20260710-02 / TQ-043 has exactly one active handoff in both the read-only AI cooperation queue and the formal review backlog, while the current queue keeps it outside the active table. Content TQ-071 has exactly one activity row; all eleven named content activities each have exactly one row whose status is `内容冻结（TQ-071 前）`; C-STORY-WM-P0 separately has exactly one frozen aggregate-package row.
+Expected: every entry in `$requiredIds` is proved present by an individual `Contains` check over the current queue, all five task backlogs, and the priority document; one broad search cannot create a false pass. The frozen-content search takes only the explicit exit-`1` no-match branch; either matches or a tool error fail closed. Scene TQ-049～TQ-051 and TQ-060～TQ-070 each have exactly one activity row. Balance TQ-044 and TQ-052～TQ-055 each have exactly one activity row, with zero old N-BAL-02 rows. Data TQ-040、TQ-043、TQ-056～TQ-059 each have exactly one activity row; TQ-043 remains pending review, TQ-056 waits for that review, and TQ-040 is not separately claimable. HANDOFF-20260710-02 / TQ-043 has exactly one active handoff in both the read-only AI cooperation queue and the formal review backlog, while the current queue keeps it outside the active table. Content TQ-071 has exactly one activity row; all eleven named content activities each have exactly one row whose status is `内容冻结（TQ-071 前）`; C-STORY-WM-P0 separately has exactly one frozen aggregate-package row.
 
 - [ ] **Step 3: Verify the current queue is short and dependency-safe**
 
@@ -825,11 +843,13 @@ $allowedPaths = @(
 $changedPaths = @(git -c core.quotepath=false diff --name-only 3c8c1cd..HEAD)
 $pathDelta = @(Compare-Object -ReferenceObject ($allowedPaths | Sort-Object) -DifferenceObject ($changedPaths | Sort-Object))
 if ($pathDelta.Count -ne 0) { $pathDelta | Format-Table | Out-String | Write-Output; throw 'Changed paths do not exactly match the Task 6 allowlist.' }
-git status --short
-if (@(git status --short).Count -ne 0) { throw 'The worktree must be clean.' }
+$statusLines = @(git status --short)
+$statusExit = $LASTEXITCODE
+if ($statusExit -ne 0) { throw "git status --short failed with exit code $statusExit" }
+if ($statusLines.Count -ne 0) { $statusLines; throw 'The worktree must be clean.' }
 ```
 
-Expected: `git diff --name-only 3c8c1cd..HEAD` contains exactly the nine listed paths: plan, current queue, priority document, scene/Unity backlog, balance/combat backlog, data-chain backlog, content-design backlog, review/handoff backlog, and dated queue archive. The read-only `开发管理/AI合作沟通.txt` and every other path are absent. The worktree is clean, so no `src/`, `simulations/`, `data/`, or game-content prose changed.
+Expected: `git diff --name-only 3c8c1cd..HEAD` contains exactly the nine listed paths: plan, current queue, priority document, scene/Unity backlog, balance/combat backlog, data-chain backlog, content-design backlog, review/handoff backlog, and dated queue archive. The read-only `开发管理/AI合作沟通.txt` and every other path are absent. `git status --short` runs once; `$statusExit` must be `0` and the captured output must be empty, so both a command error and dirty rows fail closed. No `src/`, `simulations/`, `data/`, or game-content prose changed.
 
 - [ ] **Step 5: Record the activation result**
 
