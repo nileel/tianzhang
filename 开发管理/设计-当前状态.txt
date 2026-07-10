@@ -1,5 +1,6 @@
 # 设计当前状态（✅ 已审核）
 
+> 2026-07-10 WF2-CODEX-ONE / gpt-5.5：TQ-048 / C-STORY-WM-05A 玄荒新路天才人物志规划骨架完成。新增 `docs/剧情/重要NPC/玄荒新路天才.txt`，锁定该人物作为万灵真形成功样本的身份锚点、真形路线、章节接口、知识边界、不可越界项和待 DeepSeek 扩写字段；世界主线拆分清单已将 C-STORY-WM-05 记录为规划骨架完成、扩写待拆。本轮不写个人分支、L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
 > 2026-07-10 Codex / gpt-5.5：C-STORY-WM-02 出生地与主线接入规则完成。新增 `docs/剧情/设定补充/出生地与主线接入规则.txt`，明确可选出生地为关陇、江左、漠北、辽海、河西、陇西、太行、蜀川八域，中州不开放出生；八个出生地均锁定第一章本地异常、跨域线索、第二至第五章路径和不可越界信息；世界主线拆分清单已将 C-STORY-WM-02 标记完成。C-STORY-WM-P0 总包仍需继续推进真形体系、矩阵占位、玄荒新路天才人物志和第一章兼容复核。本轮不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
 > 2026-07-10 Codex / gpt-5.5：C-STORY-WM-01 寿元与时间尺度 L0 设定完成。新增 `docs/基础设定/寿元与时间尺度设定.txt`，锁定凡人至化神寿元上限、健康活动期、闭关跳年、NPC 换代、低阶势力换代和任务/演出使用规则；世界主线拆分清单已将 C-STORY-WM-01 标记完成。C-STORY-WM-P0 总包仍需继续推进出生地接入、真形体系、矩阵占位、玄荒新路天才人物志和第一章兼容复核。本轮不写战斗数值、突破概率、CSV、Unity 或 BattleSim 代码。
 > 2026-07-09 Codex / gpt-5.5：U-S6-03 战斗日志适配拆分完成。新增 `CombatLogAdapter` 集中格式化战斗开始、行动结果和掉落日志；`ExplorationController` 仅保留 UI 委托、刷新和协程状态收尾。验证：TDD RED/Unity batchmode 目标断言 GREEN、`Assembly-CSharp` build、`TianZhang.EditModeTests` build 通过。本轮不改 CTB、AI、伤害、冷却、槽位、寻路、掉落表、胜负结算、场景跳转或 BattleSim 数值。

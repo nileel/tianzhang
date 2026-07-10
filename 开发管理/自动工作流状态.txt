@@ -15,7 +15,7 @@
 
 | 字段 | 值 |
 |------|----|
-| 当前轮次 | WF1-20260710-110941 |
+| 当前轮次 | WF2-20260710-113557 |
 | 全局锁 | IDLE |
 | 锁持有者 | 无 |
 | 锁开始时间 | 无 |
@@ -29,7 +29,7 @@
 | 工作流 | 计划时间 | 状态 | 当前任务/对象 | 检查点 | 恢复次数 | 最近结果 |
 |--------|----------|------|----------------|--------|----------|----------|
 | WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：移出已交接 TQ-038，补入 TQ-048，验证通过 |
-| WF2-CODEX-ONE | T+30 | IDLE | TQ-047 / C-STORY-WM-06 | commit_completed | 0 | commit_completed：TQ-047 第一章时间/出生地/境界边界兼容复核完成，验证通过 |
+| WF2-CODEX-ONE | T+30 | IDLE | TQ-048 / C-STORY-WM-05A | commit_completed | 0 | commit_completed：TQ-048 玄荒新路天才人物志规划骨架完成，验证通过 |
 | WF3-CLAUDE-ONE | T+90 | IDLE | TQ-038 / C-SANXIU-01A | commit_completed | 0 | commit_completed：Claude Code 完成 TQ-038，提交 `5b9a43f`，待 Codex / ChatGPT5.5 复审 |
 | WF4-CODEX-TWO | T+150 | IDLE | HANDOFF-20260710-01 / TQ-038 | skipped_cleanly | 0 | skipped_cleanly：6小时内已有 WF2-CODEX-ONE RUNNING 锁，未启动复审 |
 
