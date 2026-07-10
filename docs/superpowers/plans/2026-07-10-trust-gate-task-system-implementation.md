@@ -40,7 +40,7 @@
 
 ## 2026-07-10 执行修订：TQ-043 外部交接
 
-- 本计划写完后，Claude Code / WF3 已提交 TQ-043 / D-IMPORT-01，并登记为 `HANDOFF-20260710-02`；当前实际 HEAD 为 `3c8c1cd`。
+- 本计划写完后，Claude Code / WF3 已提交 TQ-043 / D-IMPORT-01，并登记为 `HANDOFF-20260710-02`；`3c8c1cd` 是 TQ-043 已落地且进入待复审状态的执行基线提交，不代表后续执行时的当前 HEAD。
 - TQ-043 当前状态为 `⚠️ 已修改/待复审`，必须由 Codex / ChatGPT5.5 独立复审；不得再从纯 `1` 流程领取，也不得写成复审通过。
 - TQ-043 仍是 G3 的前置和复审对象；TQ-056 必须保持阻塞，直至 TQ-043 复审通过。
 
@@ -58,10 +58,11 @@ Run:
 
 ```powershell
 git status --short
+git merge-base --is-ancestor 3c8c1cd HEAD
 rg -n "TQ-0(39|40|43|44|45|48)" 开发管理/当前任务队列.txt
 ```
 
-Expected: worktree is clean at HEAD `3c8c1cd`; the current queue marks TQ-043 as completed by Claude Code, while its history records `HANDOFF-20260710-02` and pending Codex / ChatGPT5.5 review. TQ-044、TQ-045、TQ-039、TQ-040 remain in the old queue, while TQ-048 appears only in history.
+Expected: worktree is clean; `git merge-base --is-ancestor 3c8c1cd HEAD` succeeds; the current queue marks TQ-043 as completed by Claude Code and pending Codex / ChatGPT5.5 review under `HANDOFF-20260710-02`, while TQ-048 appears only in history.
 
 - [ ] **Step 2: Move the complete old queue into the dated archive**
 
@@ -558,11 +559,11 @@ Expected: count is `6`; claimable rows are only TQ-049、TQ-052.
 Run:
 
 ```powershell
-git diff --name-only 1d6c6e2..HEAD
+git diff --name-only 3c8c1cd..HEAD
 git status --short
 ```
 
-Expected: changed paths are limited to the plan, the six management files, and the one queue archive; worktree is clean. No path begins with `src/`, `simulations/`, `data/`, or a game-design content directory.
+Expected: changes after the task-system implementation baseline `3c8c1cd` are limited to the plan, the six management files, and the one queue archive; worktree is clean. No path begins with `src/`, `simulations/`, `data/`, or a game-design content directory.
 
 - [ ] **Step 5: Record the activation result**
 
