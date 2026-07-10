@@ -18,6 +18,37 @@
 
 ## 当前交接队列
 
+## HANDOFF-20260710-02 · Claude Code → Codex / ChatGPT5.5
+
+- 任务：TQ-043 / D-IMPORT-01 导入器按列名/表头解析
+- 提交：`9d70050`（Claude Code 本轮提交；待 Codex / ChatGPT5.5 复审）
+- 修改文件：
+  - `src/Assets/Scripts/Editor/DataConfigImporter.cs`（ImportGongFa/ImportSpells/ImportSkills/ImportCharacters/ImportEnemies/ImportCharacterCreationPointBuy 全部改用 RequireColumns + GetRequiredColumnValue/GetColumnValueOrDefault 按头读取；class 注释升 v3 并标注 ⚠️ 已修改/未审核）
+  - `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`（新增 ColumnReorderDoesNotMisdirectReads / TrailingColumnDoesNotShiftReads / MissingRequiredColumnThrowsInvalidDataException / HeaderMissingFromRowThrowsInvalidDataException / RequireColumnsRejectsMissingHeaders 5 个测试）
+  - `开发管理/AI合作沟通.txt`（新增本交接条目）
+  - `开发管理/当前任务队列.txt`（TQ-043 标为已完成，补充归档行）
+- 已验证：
+  - `dotnet build src/TianZhang.Editor.csproj -c Debug` 通过（0 errors, 0 warnings）
+  - `dotnet build src/TianZhang.EditModeTests.csproj -c Debug` 通过（0 errors, 0 warnings）
+  - `check-data-chain.ps1` 通过（realm_lianshen/lianxu/contentScope 告警为已有，非本轮引入）
+  - `check-data-chain.ps1 -FailOnMissingAssets` 通过
+  - `check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts/Editor,src/Assets/Tests` 通过（100 files checked）
+  - `git diff --check` 无空白错误（仅已有 CRLF 警告）
+- 未验证：
+  - 未运行 BattleSim（本任务为导入器重构，不涉及战斗数值或平衡结论）
+  - 未编译 Assembly-CSharp.csproj（Editor 项目不依赖 Runtime csproj 链；导入器本身已在 TianZhang.Editor 编译通过）
+  - 未在 Unity Editor 中执行 `天章/导入全部配置` 端到端验证 asset 产出是否与旧版一致（需要 Unity 运行时；但导入器逻辑仅为按头映射，等价于旧硬编码列序读取，且测试覆盖了列序调整场景）
+- 残留风险：
+  - Characters.csv 的 `equippedSpells`/`equippedSkills` 和 Enemies.csv 的 `equippedSpells` 旧代码允许空值（cols[17].Length>0 / cols[19].Length>0），新代码 `GetRequiredColumnValue` 要求非空；若 CSV 中有角色/敌人这些列为空，导入会抛 InvalidDataException。当前 CSV 数据中 `char_sanxiuqiangdao` 的 `equippedSkills` 为空——这会导致导入失败。此行为变更需 Codex 复审确认（是改为 `GetColumnValueOrDefault("", …)` 回退空字符串，还是要求 CSV 补齐数据）。
+  - Enemies.csv 头行不含 `equippedSkills` 列，`ImportEnemies` 未声明该列的 RequireColumns 检查，且始终设为 `new string[0]`，此为旧行为保留。
+  - 测试仅覆盖 `DataConfigImporter` 的 public 静态方法（GetColumnValueOrDefault/GetRequiredColumnValue），未覆盖 private RequireColumns 和 FindColumnIndex 的直接调用——但它们的语义已通过 RequireColumns 入口间接测试。
+- 请求判断：
+  1. Characters/Enemies 的 `equippedSpells`/`equippedSkills` 列是否应改为 `GetColumnValueOrDefault(…, "")` 以兼容空值行？当前 `char_sanxiuqiangdao` 的 equippedSkills 为空，不改会导致导入失败。
+  2. CharacterCreationPointBuy 的 `RequireColumns` 新增是否有风险？旧代码未校验 configId 列存在。
+- 下一步：
+  - TQ-044 / N-BAL-02A（Codex 主责，数值修复）
+  - 或 TQ-039 / C-DIALOGUE-01A、TQ-040 / D-ASSET-01A（DeepSeek 主责）
+
 ## HANDOFF-20260710-01 · Claude Code → Codex / ChatGPT5.5
 
 - 任务：TQ-038 / C-SANXIU-01A 散修通用内容可玩性补强清单

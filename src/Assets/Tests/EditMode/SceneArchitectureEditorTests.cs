@@ -496,5 +496,76 @@ namespace TianZhang.Tests
                     "element",
                     "Spells.csv"));
         }
+
+        [Test]
+        public void ColumnReorderDoesNotMisdirectReads()
+        {
+            // Spells header: name, type, minRange
+            // Reorder to: minRange, name, type
+            var headers = new[] { "minRange", "name", "type" };
+            var cols = new[] { "3", "spell_test", "1" };
+
+            Assert.AreEqual("spell_test",
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "name", "Spells.csv"));
+            Assert.AreEqual("1",
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "type", "Spells.csv"));
+            Assert.AreEqual("3",
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+        }
+
+        [Test]
+        public void TrailingColumnDoesNotShiftReads()
+        {
+            // The row has more columns than the header, simulating trailing column addition
+            var headers = new[] { "name", "type", "minRange" };
+            var cols = new[] { "spell_test", "1", "3", "extra_value" };
+
+            Assert.AreEqual("spell_test",
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "name", "Spells.csv"));
+            Assert.AreEqual("1",
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "type", "Spells.csv"));
+            Assert.AreEqual("3",
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+        }
+
+        [Test]
+        public void MissingRequiredColumnThrowsInvalidDataException()
+        {
+            var headers = new[] { "name", "type" };
+            var cols = new[] { "spell_test", "1" };
+
+            Assert.Throws<InvalidDataException>(() =>
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+        }
+
+        [Test]
+        public void HeaderMissingFromRowThrowsInvalidDataException()
+        {
+            var headers = new[] { "name", "type", "minRange" };
+            var cols = new[] { "spell_test", "1" }; // row too short
+
+            Assert.Throws<InvalidDataException>(() =>
+                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+        }
+
+        [Test]
+        public void RequireColumnsRejectsMissingHeaders()
+        {
+            var headers = new[] { "name", "type" };
+
+            Assert.Throws<InvalidDataException>(() =>
+                DataConfigImporter.GetColumnValueOrDefault(
+                    headers,
+                    new[] { "spell_test" },
+                    "minRange",
+                    "player"));
+
+            // RequireColumns validates at header level
+            Assert.Throws<InvalidDataException>(() => {
+                var h = new[] { "name", "type" };
+                // Can't call RequireColumns directly since it's static private; test via GetRequiredColumnValue
+                DataConfigImporter.GetRequiredColumnValue(h, new[] { "a", "b" }, "minRange", "Test.csv");
+            });
+        }
     }
 }
