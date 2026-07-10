@@ -1,0 +1,121 @@
+# 当前任务队列（可信度闸门重排前归档）
+
+> 2026-07-04 Codex / gpt-5.5：按“短入口 + 分线任务列表”重建本文件。瘦身前全文已归档至 `开发管理/任务归档/2026-07-04-当前任务队列瘦身前归档.txt`。验证：`check-review-text.ps1 -Paths AGENTS.md,开发管理` 通过；`git diff --check` 无尾随空白错误。
+> 2026-07-04 Codex / gpt-5.5：TQ-023 SettlementScene 通用据点/宗门原型完成并归档至 `开发管理/任务归档/2026-07-04-TQ-023-SettlementScene通用据点宗门原型归档.txt`。`SettlementSceneController` 已读取 `GameSession.CurrentSettlementId`，展示据点信息/服务/副本入口占位并提供返回主世界按钮；本轮不接入 Adventure 跳转、不改战斗或数值语义。
+> 2026-07-05 Codex / gpt-5.5：TQ-024 Settlement/World → Adventure 入口与返回上下文完成并归档至 `开发管理/任务归档/2026-07-05-TQ-024-SettlementWorld到Adventure入口返回上下文归档.txt`。World/Settlement 进入 Adventure 会写入 `CurrentAdventureId` 与来源返回目标；AdventureScene 展示当前副本 ID/来源并提供返回来源按钮；本轮不改探索地图、战斗结算、掉落或数值语义。
+> 2026-07-05 Codex / gpt-5.5：TQ-025 Adventure/Combat UI 命令绑定拆分切片完成并归档至 `开发管理/任务归档/2026-07-05-TQ-025-AdventureCombatUI命令绑定拆分归档.txt`。`BattleUIManager` 不再保存或回退到 `ExplorationController` 具体类型，动作栏统一经 `ICombatCommandHandler` 发命令，并新增 `BtnSwap` 换法按钮；`ExplorationController` 改为接口注入。本轮不改 CTB、AI、伤害、冷却、掉落或寻路规则。
+> 2026-07-05 Codex / gpt-5.5：TQ-027 高阶/realm_lianshen 数据链路告警补强复审通过并归档至 `开发管理/任务归档/2026-07-05-R-20260704-01-TQ-027数据链路告警复审归档.txt`。`check-data-chain.ps1` 已输出 realm_lianshen 8 行、realm_lianxu 12 行与 contentScope 分布；Codex 本轮将新增告警输出改为 ASCII，避免 Windows PowerShell 输出乱码。
+> 2026-07-07 Codex / gpt-5.5：TQ-032 / df3c0e1 返工复审通过，普通NPC设计模板与首批候选清单已从当前未通过清单移除，可用于 C-NPC-04/C-NPC-05。
+> 2026-07-07 Codex / gpt-5.5：批量复审当前待审核内容。R-20260706-01 / TQ-032、R-20260706-02 / C-GUXIU-01、R-20260706-03 / C-LORE-01 均通过；`开发管理/未通过审核清单.txt` 当前为空。
+> 2026-07-05 Codex / gpt-5.5：TQ-031 第一章主线剧情骨架复审通过并归档至 `开发管理/任务归档/2026-07-05-R-20260704-03-TQ-031第一章主线骨架复审归档.txt`。骨架覆盖五入口、五节拍、NPC 出场限制与信息分层；后续 TQ-032 可引用其新增普通 NPC 类型。
+> 2026-07-05 Codex：新增 `docs/剧情/剧情生产规范.txt` 并按该规范复核第一章主线骨架；结论为 L1 骨架可用，但缺剧情 ID、状态变量、演出等级、玩法接口与任务拆分清单。已转化为 TQ-033 / C-STORY-02 近期任务。
+> 2026-07-07 Codex / gpt-5.5：TQ-026 contentScope 运行时字段与导入器适配完成并归档至 `开发管理/任务归档/2026-07-07-TQ-026-contentScope运行时字段导入器适配归档.txt`。三类数据对象新增默认 `contentScope=player` 字段；`DataConfigImporter` 按 CSV 表头读取 `contentScope`，空值或缺列回退 `player`；本轮不重导 asset、不改变玩家可学内容、不扩展境界链。
+> 2026-07-07 Codex / gpt-5.5：TQ-033 第一章主线 L1→L2 任务链拆分包完成并归档至 `开发管理/任务归档/2026-07-07-TQ-033-第一章任务链拆分包归档.txt`。`docs/剧情/任务/第一章/第一章-任务链拆分包.txt` 已补齐剧情 ID、任务 ID、状态变量、演出等级、玩法接口、失败回退、章末抉择变量、低阶势力状态变量和后续 L3/L4 清单；本轮不写具体对白、不创建正式 NPC、不写战斗数值。
+> 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-01 雷劫印记 Unity 回归完成并归档至 `开发管理/任务归档/2026-07-07-TQ-028-U-MECH-01-雷劫印记Unity回归归档.txt`。九霄雷劫录在 Unity 运行时已支持受击叠层、物理出手消耗增伤、满层受神魂攻击时魂防降低；玄感、含弘/载物仍留在 TQ-028 后续切片。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路或掉落。
+> 2026-07-07 Codex / gpt-5.5：TQ-028 / U-MECH-02A 玄感神识强度 Unity 回归完成并归档至 `开发管理/任务归档/2026-07-07-TQ-028-U-MECH-02A-玄感神识强度Unity回归归档.txt`。南华玄感录在 Unity 神魂伤害入口按境界获得神识强度加值（练气+3、筑基+5、金丹+8、元婴+12），覆盖神魂普攻/术法/神通；玄感 debuff 清除链与玄同免控需统一状态系统后另拆，含弘/载物仍留在 TQ-028 后续切片。本轮不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
+> 2026-07-08 Codex / gpt-5.5：TQ-028 / U-MECH-03 含弘/载物 Unity 回归完成并归档至 `开发管理/任务归档/2026-07-08-TQ-028-U-MECH-03-含弘载物Unity回归归档.txt`。含弘光大典在 Unity 运行时已支持按境界提高物理防御，并按损失 HP 触发载物全防御加成；本轮不接入群战坤元守护，不改 BattleSim 数值、CTB、AI、冷却、寻路、掉落、CSV 或 asset。
+> 2026-07-09 Codex / gpt-5.5：TQ-029 筑基/紫府 Build 极化诊断完成并归档至 `开发管理/任务归档/2026-07-09-TQ-029-筑基紫府Build极化诊断归档.txt`。结论：金丹/紫府 NA 主要由样本筛选造成，但筑基/紫府同境 0/100 极化主因是功法成长表完整性、功法星级回退和 AI 行为；`云篆度人经` 缺练气成长导致太一·符修筑基成长归零链路需优先拆修。本轮不调参、不改 BattleSim 代码。
+> 2026-07-09 Codex / gpt-5.5：D-ELEMENT-01 element 字段导入器 schema 断言完成并归档至 `开发管理/任务归档/2026-07-09-D-ELEMENT-01-element字段导入器schema断言归档.txt`。`DataConfigImporter` 导入 Spells/Skills 前会断言独立 `element` 表头存在，并按表头读取 `element`，新增测试覆盖 `elementReq` 与 `element` 换序场景；本轮不改 CSV、asset、数值或玩家内容语义。
+> 2026-07-09 Codex / gpt-5.5：U-S5-02 据点服务入口占位完成并归档至 `开发管理/任务归档/2026-07-09-U-S5-02-据点服务入口占位归档.txt`。SettlementScene 服务按钮已从纯展示改为可点击占位入口，点击仅输出服务名与当前据点 ID 日志；本轮不接入修炼、功法、任务、坊市实际业务，不改 Adventure 跳转、战斗、数值、CSV 或 asset。
+> 2026-07-09 Codex / gpt-5.5：U-S6-03 战斗日志适配拆分完成并归档至 `开发管理/任务归档/2026-07-09-U-S6-03-战斗日志适配拆分归档.txt`。`CombatLogAdapter` 集中格式化战斗开始、行动结果和掉落日志；`ExplorationController` 仅委托日志输出并保留 UI 刷新/协程状态。本轮不改 CTB、AI、伤害、冷却、寻路、掉落或场景跳转语义。
+> 2026-07-08 Codex / gpt-5.5：按用户要求补入 DeepSeek V4 Pro 近期执行型任务。新增 TQ-034 至 TQ-040，覆盖普通 NPC、第一章 L3 任务、散修内容补强、据点文案和数据资产复查；均需标「⚠️ 已修改/未审核」并写入 `AI合作沟通.txt`，由 Codex / ChatGPT5.5 后续 `2` 复审。
+> 2026-07-08 DeepSeek V4 Pro：TQ-035 / C-NPC-05A 散修/坊市首批4个普通NPC完成。NPC-STEWARD-05（营地管事·老关）、NPC-VENDOR-03（符箓贩·小六）、NPC-QUESTER-02（矿工·石根）、NPC-SCOUT-03（消息通·黑耳），一 NPC 一文件。待 Codex / ChatGPT5.5 复审。
+> 2026-07-09 Codex / gpt-5.5：TQ-034 与 TQ-035 批量复审通过，目标 8 个普通 NPC 均已标为已审核；归档见 `开发管理/任务归档/2026-07-09-待审核工作批量复审归档.txt`。下一步建议优先 TQ-036，用已审核 NPC 回填第一章 L3 单任务样例。
+> 2026-07-10 Codex / gpt-5.5：TQ-037 / C-QUEST-02A 龙脊安全节点 L3 任务首批复审通过；Codex 补修未验证数值和重要 NPC 边界表述后闭环。归档见 `开发管理/任务归档/2026-07-10-TQ-037龙脊安全节点L3任务复审归档.txt`。当时 TQ-036 仍在待复审队列，后续已由 WF4 复审通过。
+> 2026-07-10 Codex / gpt-5.5：按纯 `1` 流程从 backlog 推进 C-STORY-WM-P0 子项 C-STORY-WM-01，新增 `docs/基础设定/寿元与时间尺度设定.txt`，并在世界主线拆分清单中标记该子项完成；C-STORY-WM-P0 总包仍保留进行中。
+> 2026-07-10 Codex / gpt-5.5：根据当前项目进度整理近期任务队列。移出已复审的 TQ-034、TQ-035、TQ-037；TQ-036 转入 `2` 复审入口；补入 C-STORY-WM-02/03、D-IMPORT-01、N-BAL-02A、U-MECH-02B 等 Codex 可执行切片，并保留 TQ-038 至 TQ-040 DeepSeek 执行项。本轮只整理任务，不改设计正文、代码、CSV 或 asset。
+> 2026-07-10 Codex / gpt-5.5：TQ-041 / C-STORY-WM-02 出生地与主线接入规则完成并归档至 `开发管理/任务归档/2026-07-10-TQ-041-出生地与主线接入规则归档.txt`。`docs/剧情/设定补充/出生地与主线接入规则.txt` 已明确中州不作为出生地，并为八个可选出生地列出第一章本地异常、跨域线索、第二至第五章路径和不可越界信息；本轮不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+> 2026-07-10 Codex / gpt-5.5：TQ-042 / C-STORY-WM-03 真形体系说明完成并归档至 `开发管理/任务归档/2026-07-10-TQ-042-真形体系说明归档.txt`。`docs/剧情/设定补充/真形体系说明.txt` 已解释苍狼真形、万灵真形、真形种子、金丹丹枢表现和元婴高位方向边界；世界主线拆分清单已标记 C-STORY-WM-03 完成。本轮不正式命名新元婴方向、不新增金丹位格、不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+> 2026-07-10 WF1-QUEUE-MAINTENANCE：C-STORY-WM-03 已完成，解除 C-STORY-WM-04 前置；从世界主线 P0 backlog 补入 TQ-046 / C-STORY-WM-04 与 TQ-047 / C-STORY-WM-06。本轮只维护队列，不执行设计、代码或复审任务。
+> 2026-07-10 WF2-CODEX-ONE / gpt-5.5：TQ-046 / C-STORY-WM-04 万灵真形元婴方向矩阵占位完成并归档至 `开发管理/任务归档/2026-07-10-TQ-046-万灵真形元婴方向矩阵占位归档.txt`。矩阵已补入【名称待定】万灵真形元婴方向，推荐归属五蕴·色，并明确不新增金丹位格、不正式命名、不替代法箓/德业/宿慧/阴河/星术/封禁体系。本轮不写人物志、L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+> 2026-07-10 WF4-CODEX-TWO / unknown：TQ-036 / HANDOFF-20260709-01 第一章入口 L3 单任务样例首批复审通过，两个任务文件已标为已审核并归档；TQ-036 不再作为 `2` 待复审入口。
+> 2026-07-10 WF2-CODEX-ONE / unknown：TQ-047 / C-STORY-WM-06 第一章时间/出生地/境界边界兼容复核完成并归档至 `开发管理/任务归档/2026-07-10-TQ-047-第一章时间出生地境界边界复核归档.txt`。第一章 L1 已补齐 387-430 年长时间线、八出生地本地异常、跨域线索、非关陇补线和筑基初期上限；C-STORY-WM-24 仍作为 L2 后续修订项。本轮不写 L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+> 2026-07-10 WF1-QUEUE-MAINTENANCE / gpt-5.5：TQ-038 已由 Claude Code 提交并进入 HANDOFF-20260710-01 待复审队列，移出当前 `1` 执行队列；补入 TQ-048 / C-STORY-WM-05A 作为世界主线 P0 总包下一步人物志规划骨架切片。本轮只维护队列，不执行设计、代码或复审任务。
+> 2026-07-10 WF2-CODEX-ONE / gpt-5.5：TQ-048 / C-STORY-WM-05A 玄荒新路天才人物志规划骨架完成并归档至 `开发管理/任务归档/2026-07-10-TQ-048-玄荒新路天才人物志规划骨架归档.txt`。`docs/剧情/重要NPC/玄荒新路天才.txt` 已锁定身份锚点、万灵真形路线、章节接口、知识边界、不可越界项和待 DeepSeek 扩写字段；本轮不写个人分支、L3 任务、对白、战斗数值、CSV、Unity 或 BattleSim 代码。
+> 2026-07-10 WF3-CLAUDE-ONE / Claude Code：TQ-043 / D-IMPORT-01 导入器按列名/表头解析完成。全部 6 个导入方法不再依赖硬编码列序，改用 RequireColumns + GetRequiredColumnValue/GetColumnValueOrDefault；新增列序调整/末尾加列/缺必要列/行过短测试覆盖。提交 `3c8c1cd`，标 ⚠️ 已修改/未审核；修改方：Claude Code。TQ-043 入 HANDOFF-20260710-02 待 Codex / ChatGPT5.5 复审。
+
+> 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务移至 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/AI合作沟通.txt`。
+
+## 使用规则
+
+1. 用户发送纯 `1` 时，先确认自身身份，再从本文件选择匹配当前 AI 主责、且状态为“待处理”的最高优先级任务。
+2. 本文件不放待复审任务；用户发送纯 `2` 时读取 `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt`、`开发管理/AI合作沟通.txt` 与 `开发管理/任务列表/审核与交接任务.txt`。
+3. 每条任务必须能在一轮或少数几轮内提交；完成后写归档，长期事实写入 `开发管理/设计-当前状态.txt`。
+4. 更完整的 backlog 见 `开发管理/任务列表/`：
+   - `场景与Unity任务.txt`
+   - `数据链路任务.txt`
+   - `数值与战斗任务.txt`
+   - `内容设计任务.txt`
+   - `审核与交接任务.txt`
+
+## 队列表头
+
+| ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
+|----|--------|------|------|------|------|
+| TQ-043 | P2 | Codex / gpt-5.5 | 数据链路 | ✅ 已完成（2026-07-10 Claude Code） | D-IMPORT-01：导入器按列名/表头解析 |
+| TQ-044 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | N-BAL-02A：成长表完整性与星级回退策略修复 |
+| TQ-045 | P2 | Codex / gpt-5.5 | Unity 机制 | 待处理 | U-MECH-02B：玄感清除链/玄同状态 Unity 回归 |
+| TQ-039 | P3 | DeepSeek V4 Pro | 文案生产 | 待处理 | C-DIALOGUE-01A：据点通用称谓、寒暄和任务入口文案表 |
+| TQ-040 | P2 | DeepSeek V4 Pro | 数据复查 | 待处理 | D-ASSET-01A：CSV/asset 字段完整性复查清单，不改设计语义 |
+
+## 不进入 `1` 队列的当前事项
+
+- HANDOFF-20260710-01 / TQ-038：已由 Claude Code 完成并进入 `2` 待复审入口，不再作为当前 `1` 执行任务。
+- D-REALM-02、N-SLOT-01、N-SEAT-01、U-2_5D-01、C-GUXIU-03、C-QUEST-01 等保留在分线 backlog，当前优先级低于上表任务。
+
+## 任务卡片
+
+### TQ-043 · D-IMPORT-01 导入器按列名/表头解析
+
+- 来源：`开发管理/任务列表/数据链路任务.txt` D-IMPORT-01。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/任务列表/数据链路任务.txt`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode` 中 DataConfigImporter 相关测试、`src/Assets/DataConfig/README.txt`、三类 CSV 表头。
+- 范围：在不改变 CSV 语义的前提下，将仍依赖硬编码列序的导入读取路径改为按表头/列名解析；补测试覆盖末尾加列、列序调整、缺必要列报错。
+- 边界：不重导 asset，不改 CSV 内容，不删除 reserved/high-level 内容，不新增 `realm_lianshen` 运行时境界。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`git diff --check`。
+- 完成条件：导入器对 GongFa/Spells/Skills 的核心字段读取不再因列序变化错读；缺必要列有稳定失败信息；数据链路检查保持通过。
+
+### TQ-044 · N-BAL-02A 成长表完整性与星级回退策略修复
+
+- 来源：`开发管理/任务列表/数值与战斗任务.txt` N-BAL-02，承接 TQ-029 诊断。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`开发管理/任务归档/2026-07-09-TQ-029-筑基紫府Build极化诊断归档.txt`、`开发管理/任务列表/数值与战斗任务.txt`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/Program.cs`、相关功法成长表。
+- 范围：优先修复 `云篆度人经` 缺练气成长导致太一·符修筑基成长链归零的问题；审视功法星级 0.2 回退策略，给出最小代码或数据修复切片；必要时拆出后续倍率调参任务。
+- 边界：不以旧文档回退 BattleSim；不同时大改 AI 行为、战斗倍率、成丹阈值或金丹压制口径。
+- 验证命令：`dotnet build -c Release --no-restore simulations/BattleSim`；`dotnet run --no-build -c Release --project simulations/BattleSim`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`；`git diff --check`。
+- 完成条件：BattleSim 默认运行完整通过；筑基/紫府输出中太一·符修成长链归零问题消失或被明确隔离；回复和归档说明是否仍需 N-BAL-02B 微调。
+
+### TQ-045 · U-MECH-02B 玄感清除链/玄同状态 Unity 回归
+
+- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-MECH-02B / TQ-028。
+- 当前状态：待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/任务归档/2026-07-07-TQ-028-U-MECH-02A-玄感神识强度Unity回归归档.txt`、`simulations/BattleSim/Program.cs` 中南华玄感录机制、Unity 战斗状态与伤害入口相关 C# 文件。
+- 范围：梳理并接入玄感 debuff 清除链、玄同免控、清除后回血或玄同 MP 消耗降低中的最小可验证切片；若需要通用状态/debuff 流程，先建立轻量接口和目标测试。
+- 边界：不顺手修改 CTB、AI、伤害倍率、冷却、寻路、掉落或 BattleSim 数值；一次只处理玄感相关运行时机制。
+- 验证命令：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；可用时运行 Unity EditMode 目标测试；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`；`git diff --check`。
+- 完成条件：新增或更新的目标测试覆盖玄感状态链最小行为；Unity 工程编译通过；若通用 debuff 流程仍不足，拆出明确后续任务而不混入本轮。
+
+### TQ-039 · C-DIALOGUE-01A 据点通用称谓、寒暄和任务入口文案表
+
+- 来源：`开发管理/任务列表/内容设计任务.txt` C-DIALOGUE-01。
+- 当前状态：待处理。
+- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
+- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`docs/剧情/剧情生产规范.txt`、`docs/剧情/普通NPC设计模板.txt`、`开发管理/普通NPC首批候选清单.txt`、`docs/剧情/设定补充/低阶势力开放规则.txt`、`docs/剧情/主线/第一章-龙脊余震.txt`。
+- 范围：新增 `docs/剧情/据点对话/据点通用称谓与入口文案表.txt`；覆盖至少 6 类 NPC 职责的称谓、短寒暄、任务入口、服务拒绝、信息不足和后续回填占位文案。
+- 边界：文案不得推进主线唯一信息；不得写固定重要 NPC 台词；不得替代正式任务对白；如新建目录，保持一类文案表一个文件，不合并到主线文件。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理`；`rg -n "坤元体系|丹枢接入|关陇灵脉共振|血敕|妖血敕|正籍|辅籍|敕籍|寄丹" docs/剧情/据点对话 开发管理/AI合作沟通.txt`；`git diff --check`。
+- 完成条件：文案表覆盖至少 6 类 NPC 职责、每类不少于 5 条可复用短句或入口句；文件标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」；更新 `开发管理/AI合作沟通.txt`。
+
+### TQ-040 · D-ASSET-01A CSV/asset 字段完整性复查清单
+
+- 来源：`开发管理/任务列表/数据链路任务.txt` D-ASSET-01。
+- 当前状态：待处理。
+- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
+- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/CSV高阶内容定位表.txt`、`src/Assets/DataConfig/README.txt`、`src/Assets/DataConfig/GongFa.csv`、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`tools/check-data-chain.ps1`。
+- 范围：新增或更新 `开发管理/CSV-asset字段完整性复查清单.txt`，复查 GongFa/Spells/Skills CSV 与 Unity asset 字段覆盖，重点看 `element`、`elementReq`、`realmReq`、`contentScope`、文本 key、docs 路径和 asset 路径；不重导 asset，不改 CSV 语义。
+- 边界：不得删除 reserved/high-level 内容；不得新增 `realm_lianshen` 运行时境界；不得扩展 C# realm order；发现缺口只列清单并请求 Codex 判断。
+- 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig`；`git diff --check`。
+- 完成条件：复查清单列出通过项、疑点项、需 Codex 判断项和可交给 DeepSeek 机械修复项；更新 `开发管理/AI合作沟通.txt`，若无缺口也明确“无新增交接项”。

@@ -18,6 +18,8 @@
 - ✅ TQ-028 / U-MECH-01：雷劫印记 Unity 回归已完成；九霄雷劫录受击叠层、物理出手消耗增伤、满层神魂受击魂防降低已接入运行时。
 - ✅ TQ-028 / U-MECH-02A：玄感神识强度 Unity 回归已完成；南华玄感录神魂伤害入口按境界获得神识强度加值。
 - ✅ TQ-028 / U-MECH-03：含弘/载物 Unity 回归已完成；含弘光大典按境界获得物理防御加成，载物按损失 HP 提供全防御加成。
+- ⚠️ 2026-07-10 审视：正式 Build Settings 中的 `AdventureScene` 仍是入口/返回壳，旧 `ExplorationScene` 才承载主要可玩探索战斗循环；G1 未通过前不得再写“正式最小可玩循环已完成”。
+- ⚠️ Unity EditMode 当前基线为 47 个测试中 1 个失败；仅看带 `-quit` 的进程退出码可能产生假绿，TQ-049～TQ-051 先修复验证可信度。
 
 ## 近期任务
 
@@ -29,11 +31,50 @@
 | U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
 | U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |
 | U-S6-03 | P1 | Codex | ✅ 已完成（2026-07-09） | 战斗日志适配拆分：`CombatLogAdapter` 集中处理战斗开始、行动结果和掉落日志 |
+| Q-UNITY-01 / TQ-049 | P0 | Codex | 待处理 | 修复 `SceneFlowManagerPreparesAdventureAndReturnContextsWithoutSceneLoad`，保持 47 个 EditMode 测试全部执行 |
+| Q-UNITY-02 / TQ-050 | P0 | Codex | 阻塞（TQ-049） | 建立权威 Unity EditMode 入口；缺失/失败/不可解析/零测试 XML 必须非零退出 |
+| Q-UNITY-03 / TQ-051 | P0 | Codex | 阻塞（TQ-050） | 测试成功与异常路径都恢复场景和 Build Settings，前后工作区一致 |
+| U-SLICE-01 / TQ-060 | P0 | Codex | 阻塞（TQ-051） | 证明 Adventure/Exploration/SceneBuilder 调用链并锁定唯一冒险运行时所有者 |
+| U-SLICE-02 / TQ-061 | P0 | Codex | 阻塞（TQ-060） | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
+| U-SLICE-03 / TQ-062 | P0 | Codex | 阻塞（TQ-060） | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
+| U-SLICE-04 / TQ-063 | P0 | Codex | 阻塞（TQ-061、TQ-062） | 正式 Build Settings 端到端冒烟；通过后 G1 才可标记通过 |
+| M-ARCH-01 / TQ-064 | P1 | Codex | 阻塞（G1） | 建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
+| U-ARCH-01 / TQ-065 | P1 | Codex | 阻塞（TQ-064） | 拆分 `ExplorationController` / `SceneBuilder` 至少一个真实职责和依赖边 |
+| U-ARCH-02 / TQ-066 | P1 | Codex | 阻塞（TQ-064） | 拆分 `BattleUIManager` / `Character` 的 UI 与领域职责 |
+| U-ARCH-03 / TQ-067 | P1 | Codex | 阻塞（TQ-065、TQ-066） | 建立项目派生 asmdef 边界并保持序列化兼容 |
+| S-STATE-01 / TQ-068 | P1 | Codex | 阻塞（G1） | 最小 GameSession、世界时间和起点状态模型 |
+| S-STATE-02 / TQ-069 | P1 | Codex | 阻塞（TQ-068） | 最小任务、背包和 NPC 状态快照，分离状态步骤 |
+| S-SAVE-01 / TQ-070 | P1 | Codex | 阻塞（TQ-068、TQ-069） | 存档版本、新旧档、非法档和重置迁移基础 |
 | U-MECH-01 / TQ-028 | P2 | Codex | ✅ 已完成 | 雷劫印记 Unity 回归 |
 | U-MECH-02A / TQ-028 | P2 | Codex | ✅ 已完成 | 玄感神识强度 Unity 回归 |
-| U-MECH-02B / TQ-028 | P2 | Codex | 待处理 | 玄感清除链/玄同状态 Unity 回归，需统一状态/debuff 流程 |
+| U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（G1 通过后） | 玄感清除链/玄同状态 Unity 回归，需统一状态/debuff 流程 |
 | U-MECH-03 / TQ-028 | P2 | Codex | ✅ 已完成 | 含弘/载物 Unity 回归 |
 | U-2_5D-01 | P2 | Codex | 待处理 | 2.5D 战棋表现小场景原型，需 S1-S6 后执行 |
+
+## G1/P1 任务执行边界
+
+- **TQ-060 运行时所有者证明**：产物必须列出正式 Build Settings → `AdventureScene` / `ExplorationScene` / `SceneBuilder` / 战斗 / 返回的真实调用与所有者链，为每个竞争入口写明迁移、适配或淘汰结论，并锁定后续切片允许修改与禁止修改的文件清单；仅推测或仅写迁移计划不通过。
+- **TQ-061 最小冒险战斗闭环**：必须复用 TQ-060 已证明的网格与战斗所有者；不得新增超过 500 行的类，也不得向现有超过 500 行的 Hub 类新增无关职责；胜利与失败两条结算路径都必须返回合法的据点/世界上下文。
+- **TQ-062 出身起点**：当前两个可选出身必须进入各自起点；非法值或旧值必须有显式记录并走专用回退路径，不得写回、展示或伪装为合法出身值。
+- **TQ-063 正式构建冒烟**：必须提供可重复的自动或半自动步骤、运行日志和结果；从创建角色到返回据点，玩家档案、出身、起点、Adventure 上下文和返回上下文全程不丢失。
+- **TQ-064 结构事实图**：`UNITY_STRUCTURE.md` 必须来自对当前工作树的实时扫描，至少包含文件路径、场景、运行时所有者、asmdef 边界、验证入口和 open gaps；不得用旧文档推断代替扫描证据。
+- **TQ-065 探索/场景职责拆分**：至少移除一条真实依赖边，或提取一个有独立测试的协作者；不得新增超过 500 行的类，不得继续增长现有 Hub 的职责。
+- **TQ-066 UI/领域边界**：UI 展示状态与战斗/角色领域状态的所有者和写入路径必须明确；改造不得破坏 Unity 序列化字段、资产 GUID 或已有场景/预制体引用兼容。
+- **TQ-067 asmdef 边界**：不得存在 sibling feature 直接依赖，不得有实现层向上反向引用；项目派生 asmdef 的编译和 Unity 序列化兼容验证必须通过。
+- **TQ-068 最小会话状态**：`GameSession`、世界时间和起点状态在新游戏初始化、场景切换、战斗返回后必须一致，且有对应回归证据。
+- **TQ-069 状态步骤与快照**：`shown != clicked`，`shown` / `clicked` / `opened` / `selected` / `applied` / `completed` / `persisted` 不得压成一个 bool；最小任务、背包和 NPC 快照必须各有明确持久化所有者。
+- **TQ-070 存档迁移**：新档、旧档、非法档和重置路径都必须有确定行为，并提供存档版本判定与迁移前后的可复核证据。
+
+- **补位调度说明**：TQ-064～TQ-070 与 TQ-045 在各自依赖满足后，仅作为低于任何未完成 P0 闸门任务的候选；G1 通过只解除相应依赖，不等于它们立即进入或抢占 `当前任务队列.txt`。
+
+## G1 出口条件
+
+- TQ-049、TQ-050、TQ-051、TQ-060、TQ-061、TQ-062、TQ-063 全部完成。
+- 权威 Unity 测试入口报告全部测试通过，且执行前后工作区一致。
+- TQ-051 必须从干净隔离工作区开始；Git 跟踪的 `src/Assets/Scenes/*.unity` 与 `src/ProjectSettings/EditorBuildSettings.asset` 在成功和异常路径前后 SHA256 相同，且 `git status --short --untracked-files=all` 证明 tracked/untracked 零残留。
+- 正式 Build Settings 能连续完成“创建角色 → 世界节点 → 据点 → 冒险 → 战斗 → 结算 → 返回据点”。
+- TQ-063 必须提供可重复的自动或半自动步骤、运行日志和结果；玩家档案、出身、起点、Adventure 上下文和返回上下文在正式构建链路全程不丢失。
+- 正式 Build Settings 只有一个可达冒险运行时；旧 `ExplorationScene` 必须已迁入该所有者、从正式链路不可达或删除，不得与 `AdventureScene` 保持两个竞争可达入口；只写迁移计划不算 G1 通过。
 
 ## 默认验证
 

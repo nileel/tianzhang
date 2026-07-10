@@ -10,6 +10,8 @@
 - F1 口径已定：`realm_lianshen` 不作为当前独立境界 key；高阶内容按 NPC/资料片/保留内容隔离。
 - TQ-027 已于 2026-07-05 复审通过：`check-data-chain.ps1` 输出 realm_lianshen / realm_lianxu / contentScope 告警；归档见 `开发管理/任务归档/2026-07-05-R-20260704-01-TQ-027数据链路告警复审归档.txt`。
 - docs/CSV/Unity asset 覆盖当前为功法 29/29/29、术法 75/75/75、神通 34/34/34，Missing 0。
+- ⚠️ 2026-07-10 审视：当前检查存在术法 docs 86 与 CSV/asset 75 的数量矛盾、`realm_lianshen` 语言键缺失、`realm_lianxu` 已删除内容仍激活；脚本仍返回 `OK`，因此 Missing 0 不等于数据链可信。
+- ⚠️ `contentScope` 缺失时当前默认 `player`，运行时未证明 reserved 过滤；`realmReq`、`elementReq`、`affiliation` 也未形成完整限制链。G3 通过前禁止按数据规模继续扩写。
 
 ## 任务
 
@@ -20,8 +22,29 @@
 | D-ELEMENT-01 | P1 | Codex | ✅ 已完成（2026-07-09） | 为独立 `element` 字段补导入器 schema 断言，防止列序错读；归档见 `任务归档/2026-07-09-D-ELEMENT-01-element字段导入器schema断言归档.txt` |
 | D-REALM-01 / TQ-027 | P1 | DeepSeek 执行；Codex 复审 | ✅ 已复审 | `check-data-chain.ps1` 输出 realm_lianshen / realm_lianxu / contentScope 告警 |
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离 |
-| D-ASSET-01 | P2 | DeepSeek | 待处理 | CSV 重导后 asset 字段完整性复查，禁止改设计语义 |
-| D-IMPORT-01 | P2 | Codex | 待处理 | 导入器按列名/表头解析，降低末尾加列风险 |
+| D-ASSET-01 / TQ-040 | P2 | DeepSeek | 已合并至 TQ-057 | CSV/asset 字段完整性复查由 D-TRUST-02 统一执行，不再单独领取 |
+| D-IMPORT-01 / TQ-043 | P0 | Codex | ⚠️ 已修改/待复审（HANDOFF-20260710-02） | 按表头解析全部核心字段；缺必需列/重复列失败，未知列按显式兼容策略处理 |
+| D-TRUST-01 / TQ-056 | P0 | Codex | 阻塞（TQ-043 复审） | 检查脚本区分错误和警告；语义错误必须非零退出 |
+| D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 阻塞（TQ-056） | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
+| D-TRUST-03 / TQ-058 | P0 | Codex | 阻塞（TQ-043、TQ-056） | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
+| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-043、TQ-056、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only` |
+
+## G3 任务执行边界
+
+- TQ-043：仅在 HANDOFF-20260710-02 经 Codex / ChatGPT5.5 独立复审通过后解阻；复审核对必需列、重复列、未知列、换序和短行，不得把外部提交直接当作完成。
+- TQ-056：错误级必须包括无批准豁免的 docs/CSV/asset 数量矛盾、必填缺失、删除内容激活、玩家边界失守和 schema 错配；每个批准警告豁免必须在版本控制中精确绑定 `ruleId + contentId/文件/行键`，并记录理由、负责人、移除或到期条件。禁止通配符、类别级、前缀匹配或自动覆盖未来记录；新增同类但未精确列入的警告必须非 0，并加入回归负例。产出成功/失败测试样例，负例不得修改生产数据；错误或缺失结果必须非 0，仅精确批准的警告可返回 0。
+- TQ-057：机械清理由 DeepSeek 执行，但必须标 `⚠️ 已修改/未审核` 并交接；产出数据修复、差异清单和交接材料；术法数量、语言键、删除激活和原 TQ-040 字段完整性均须处理。差异要么清零，要么有批准的显式排除；不得扩展设计语义。
+- TQ-058：缺失或非法 `contentScope` 必须导入失败；reserved 不会进入玩家获得池，player 仍可用；既有空字段 asset 必须迁移、隔离或令检查失败，禁止静默视为 player。证明 CSV→asset→运行时 consumer 全链路并建立回归。
+- TQ-059：对 `realmReq`、`elementReq`、`affiliation` 逐字段记录模式，每个字段必须恰好选择一条：`runtime_gate` 要求真实 asset 字段和 runtime consumer，并有一个允许样例和一个拒绝样例；`metadata_only` 要求改成明确不含 Req/限制含义的元数据命名，导入器和运行时限制 consumer 均不得读取它，测试证明不会被当作限制，且检查器拒绝“仍叫 `*Req` 但无 handler”的状态。任一字段无模式或两种模式同时存在均阻塞。
+
+## G3 出口条件
+
+- TQ-043 经 Codex / ChatGPT5.5 独立复审通过，TQ-056、TQ-057、TQ-058、TQ-059 全部完成，且 TQ-057 经 Codex 复审通过。
+- 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配等错误类别均让检查脚本非 0 退出。
+- 每个残留批准警告豁免都在版本控制中精确绑定 `ruleId + contentId/文件/行键`，并记录理由、负责人、移除或到期条件；禁止通配符、类别级、前缀匹配或自动覆盖未来记录，新增同类但未精确列入的警告必须非 0。
+- reserved 不进入玩家获得池，缺失或非法 `contentScope` 不会默认成为 player。
+- `realmReq`、`elementReq`、`affiliation` 各自完成其记录模式的验收并恰好选择 `runtime_gate` 或 `metadata_only`；任一字段无模式或两种模式同时存在均阻塞。`runtime_gate` 必须有运行时允许/拒绝样例；`metadata_only` 必须完成无 Req/限制含义重命名、导入器与运行时限制 consumer 不读取证明、不会被当作限制的测试，以及对“仍叫 `*Req` 但无 handler”状态的检查器拒绝。
+- `check-data-chain.ps1` 正例返回 0、负例返回非 0，且负例不得修改生产数据。
 
 ## 默认验证
 
@@ -34,5 +57,5 @@
 ## 边界
 
 - 不因 `contentScope` 自动删除 CSV、asset 或 docs 内容。
-- 不补 `realm_lianshen` Language key，不扩展 C# realm order，除非 Codex / ChatGPT5.5 重新给出架构决策。
+- 不把 `realm_lianshen` 扩为玩家境界；缺失 Language key 必须补齐、隔离或停用，不能保持激活且只告警。
 - DeepSeek 执行数据清洗后只能标 `⚠️ 已修改/未审核`。
