@@ -31,7 +31,7 @@
 | WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：补入 TQ-046/TQ-047，验证通过 |
 | WF2-CODEX-ONE | T+30 | IDLE | TQ-046 / C-STORY-WM-04 | commit_completed | 0 | commit_completed：TQ-046 矩阵占位完成，验证通过 |
 | WF3-CLAUDE-ONE | T+90 | IDLE | TQ-038 / C-SANXIU-01A | commit_completed | 0 | commit_completed：Claude Code 完成 TQ-038，提交 `5b9a43f`，待 Codex / ChatGPT5.5 复审 |
-| WF4-CODEX-TWO | T+150 | IDLE | HANDOFF-20260709-01 / TQ-036 | commit_completed | 0 | commit_completed：TQ-036 复审通过，验证通过 |
+| WF4-CODEX-TWO | T+150 | IDLE | HANDOFF-20260710-01 / TQ-038 | skipped_cleanly | 0 | skipped_cleanly：6小时内已有 WF2-CODEX-ONE RUNNING 锁，未启动复审 |
 
 ## 检查点枚举
 
