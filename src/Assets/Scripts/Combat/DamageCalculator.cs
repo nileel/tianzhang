@@ -13,6 +13,7 @@ namespace TianZhang.Combat
         private const float MinHitRate = 5f;
         private const float MaxHitRate = 100f;
         private const float BaseHitRate = 100f;
+        public const float BaseCritMultiplier = 1.5f;
 
         private static readonly Dictionary<string, string> GongFaElement = new()
         {
@@ -78,6 +79,12 @@ namespace TianZhang.Combat
         public static float GetElementDamageMultiplier(string skillElement, string attackerGongFa, string defenderGongFa)
         {
             return GetElementMatch(skillElement, attackerGongFa, defenderGongFa).DamageMultiplier;
+        }
+
+        /// <summary>将基础150%暴击倍率与附加百分比点转换为最终倍率。</summary>
+        public static float GetCritMultiplier(float critDamage, float elementCritDamageBonus = 0f)
+        {
+            return BaseCritMultiplier + (critDamage + elementCritDamageBonus) / 100f;
         }
 
         /// <summary>解析CSV字段为标准五行/变异/特殊属性。</summary>
@@ -224,7 +231,7 @@ namespace TianZhang.Combat
             if (Random.value * 100f >= critRate) return 1f;
 
             result.IsCrit = true;
-            return 1f + (attacker.CritDamage + elementMatch.CritDamageBonus) / 100f;
+            return GetCritMultiplier(attacker.CritDamage, elementMatch.CritDamageBonus);
         }
 
         private static float CalculateLineDamage(int atk, int def, float resistPercent,

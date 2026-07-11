@@ -1,0 +1,18 @@
+# TQ-053 · N-TRUST-02 统一暴击倍率语义归档（✅ 已审核）
+
+## 完成结果
+
+- `docs/基础设定/战斗系统.txt` 锁定基础暴击倍率为 ×1.50；`critDamage` 与五行内圈暴击伤害修正均定义为在此基础上的附加百分比点。
+- Unity `DamageCalculator` 以 `BaseCritMultiplier = 1.5f` 和 `GetCritMultiplier` 集中结算；BattleSim `Combat` 使用同名的 `BaseCritMultiplier = 1.5` 与 `GetCritMultiplier`。两条真实暴击结算路径均调用该助手。
+- Unity EditMode 与 BattleSim 自测分别锁定：零加成为 ×1.50、`critDamage = 15` 为 ×1.65、元素额外 +10 为 ×1.75。
+
+## 验证依据
+
+- RED：新增测试后，两端构建均因缺少 `GetCritMultiplier` 定义而失败，确认测试约束的是待实现 API。
+- Unity：`dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj` 返回 0；`powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 返回 0，结果 XML 为 `total=55, passed=55, failed=0, inconclusive=0, skipped=0`。
+- BattleSim：`dotnet build -c Release --no-restore simulations/BattleSim` 为 0 警告/0 错误；`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test crit-multiplier-tq053` 输出 PASS；默认模拟返回 0。
+- 卫生检查：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 通过（108 files）；`git diff --check` 通过。
+
+## 后续
+
+- TQ-054 已解除阻塞并补入近期队列；G2 仍受 TQ-054、TQ-044 与 TQ-055 阻塞，当前矩阵不能作为平衡结论。

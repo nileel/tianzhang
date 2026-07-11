@@ -7,6 +7,13 @@ namespace BattleSim;
 static class Combat
 {
     static readonly Random Rng = new();
+    public const double BaseCritMultiplier = 1.5;
+
+    public static double GetCritMultiplier(double critDamage, double elementCritDamageBonus = 0)
+    {
+        return BaseCritMultiplier + (critDamage + elementCritDamageBonus) / 100;
+    }
+
     // v4.1: 合并攻击结算（含穿透）
     static int Dmg(int atk, int def, double resist, double defPen = 0, double mult = 1.0)
     {
@@ -28,7 +35,7 @@ static class Combat
         if (!ignoreDodge && Rng.NextDouble() * 100 < Math.Max(0, defender.Secondary.GetValueOrDefault("闪避率", 0) - attacker.Secondary.GetValueOrDefault("命中率", 0)))
             rawDmg = 0;
         if (rawDmg > 0 && Rng.NextDouble() * 100 < attacker.Secondary.GetValueOrDefault("暴击率", 0) + critRateBonus)
-            rawDmg = (int)Math.Round(rawDmg * (1 + (attacker.Secondary.GetValueOrDefault("暴击伤害", 0) + critDamageBonus) / 100));
+            rawDmg = (int)Math.Round(rawDmg * GetCritMultiplier(attacker.Secondary.GetValueOrDefault("暴击伤害", 0), critDamageBonus));
         return rawDmg;
     }
 

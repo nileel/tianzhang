@@ -9,6 +9,7 @@
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-051 已完成；权威入口在通过结果后会限时等待 Unity 退出并恢复快照，真实 EditMode 54/54 通过且场景、Build Settings 哈希与工作区均无残留。TQ-060 解除阻塞，待下一轮队列维护补位。
 > 2026-07-11 Codex / gpt-5.6-terra：队列维护将已解除阻塞的 TQ-060 及其已登记后继 TQ-061、TQ-062 补入近期队列；当前共 6 条，内容冻结保持不变。
 > 2026-07-11 Codex / gpt-5.5：TQ-052 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-052-2v2CT反应方向归档.txt`；独立工具链提交 `0452830` 与本轮 CT 回归均已验证，TQ-053 解除阻塞。
+> 2026-07-11 Codex / gpt-5.6-terra：TQ-053 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-053-统一暴击倍率语义归档.txt`；Unity EditMode 55/55、BattleSim 自测和默认模拟均通过，TQ-054 解除阻塞并补入近期队列；G2 尚未通过。
 
 ## 使用规则
 
@@ -22,7 +23,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-053 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-02：统一暴击倍率语义 |
+| TQ-054 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-03：让模拟 Build 输入符合角色创建规则 |
 | TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-01：数据检查器错误分级 |
 | TQ-060 | P0 | Codex / gpt-5.5 | G1 Unity | 待处理 | U-SLICE-01：锁定冒险运行时唯一所有者 |
 | TQ-061 | P0 | Codex / gpt-5.5 | G1 Unity | 阻塞（TQ-060） | U-SLICE-02：接通正式冒险与单场战斗闭环 |
@@ -37,15 +38,15 @@
 
 ## 任务卡片
 
-### TQ-053 · N-TRUST-02 统一暴击倍率语义
+### TQ-054 · N-TRUST-03 让模拟 Build 输入符合角色创建规则
 
-- 来源：可信度闸门规格 §5。
-- 当前状态：待处理；依赖：TQ-052 已完成（`0452830` + 本轮 CT 回归提交）。
+- 来源：可信度闸门规格 §5、`开发管理/任务列表/数值与战斗任务.txt`。
+- 当前状态：待处理；依赖：TQ-053 已完成。
 - 主责：Codex / gpt-5.5。
-- 必读：`docs/基础设定/战斗系统.txt`、`docs/基础设定/角色数值设计.txt`、`src/Assets/Scripts/Combat/DamageCalculator.cs`、`src/Assets/Scripts/Entity/Character.cs`、`simulations/BattleSim/Combat.cs`、两侧相关测试。
-- 范围：以 `docs/基础设定/战斗系统.txt` 为基础暴击倍率事实源，基础暴击为 1.5 倍；`docs/基础设定/角色数值设计.txt` 管理二级属性和加成来源。`critDamage` 表示在 1.5 倍基础上的附加百分比点，不是总倍率；元素附加另按百分比点加入。
-- 验证：Unity 与 BattleSim 分别固定断言零加成 = 1.50、`critDamage = 15` = 1.65；两侧编译通过；BattleSim 默认运行通过；`git diff --check`。
-- 完成条件：文档、Unity、BattleSim 使用同一字段含义；两侧相同输入的 1.50/1.65 固定样例一致，禁止同一字段表达不同含义。
+- 必读：角色创建点数预算、上限与非线性成本实现；`simulations/BattleSim/Program.cs` 的 `BuildDef`；BattleSim 角色构建与相关自测。
+- 范围：复用或严格镜像实际角色创建规则，校验或转换 21 个 `BuildDef` 初始属性；非法 Build 必须在进入矩阵前明确失败，不得静默钳制或改变角色创建规则。
+- 验证：建立合法与非法输入回归；21 个 Build 全部通过同一校验；`dotnet build -c Release --no-restore simulations/BattleSim`、默认模拟与 `git diff --check` 通过。
+- 完成条件：每个矩阵 Build 都能由角色创建规则生成；预算、上限或非线性成本违例会得到确定诊断，不能进入矩阵。
 
 ### TQ-056 · D-TRUST-01 数据检查器错误分级
 

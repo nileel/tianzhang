@@ -37,7 +37,7 @@ namespace TianZhang.Entity
         public float soulShieldReduction; // 魂盾减伤率
         public float dodgeRate;         // 闪避率
         public float critRate;          // 暴击率
-        public float critDamage;        // 暴击伤害加成
+        public float critDamage;        // 基础150%暴击倍率之上的附加百分比点
         public float hitRateBonus;      // 命中率加成
 
         [Header("境界倍率")]

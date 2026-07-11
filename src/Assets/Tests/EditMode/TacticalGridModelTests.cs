@@ -66,6 +66,14 @@ namespace TianZhang.Tests
     public class CombatMechanismTests
     {
         [Test]
+        public void CritDamageUsesBaseOnePointFivePlusPercentagePointBonuses()
+        {
+            Assert.AreEqual(1.50f, DamageCalculator.GetCritMultiplier(0f), 0.0001f);
+            Assert.AreEqual(1.65f, DamageCalculator.GetCritMultiplier(15f), 0.0001f);
+            Assert.AreEqual(1.75f, DamageCalculator.GetCritMultiplier(15f, 10f), 0.0001f);
+        }
+
+        [Test]
         public void FullFudanBoostsAndConsumesMagicDivineSkill()
         {
             var engine = new CTBEngine();

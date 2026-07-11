@@ -45,6 +45,9 @@ static class BattleSimSelfTests
         if (suite == "ct-reaction-tq052")
             return RunChecked(suite, RunCtReactionTq052);
 
+        if (suite == "crit-multiplier-tq053")
+            return RunChecked(suite, RunCritMultiplierTq053);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -609,6 +612,13 @@ static class BattleSimSelfTests
 
         AssertEqual(100.0, firstWins, "equal reaction resolves in input order");
         AssertEqual(0.0, secondWins, "equal reaction order is stable");
+    }
+
+    static void RunCritMultiplierTq053()
+    {
+        AssertClose(1.50, Combat.GetCritMultiplier(0), 0.0001, "zero critDamage keeps base multiplier");
+        AssertClose(1.65, Combat.GetCritMultiplier(15), 0.0001, "15 critDamage adds percentage points");
+        AssertClose(1.75, Combat.GetCritMultiplier(15, 10), 0.0001, "element bonus adds percentage points");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)
