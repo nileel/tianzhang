@@ -41,7 +41,8 @@ function New-FakeUnityExecutable {
     param(
         [string]$Path,
         [int]$ExitCode,
-        [int]$DelaySeconds = 0
+        [int]$DelaySeconds = 0,
+        [string]$AdditionalMutationRelativePath = ''
     )
 
     $script = @'
@@ -64,13 +65,14 @@ goto parse
 :parsed
 > "%project%\Assets\Scenes\StartMenuScene.unity" echo mutated-by-fake-unity
 > "%project%\ProjectSettings\EditorBuildSettings.asset" echo mutated-by-fake-unity
+if not "__ADDITIONAL_MUTATION_PATH__"=="" > "%project%\__ADDITIONAL_MUTATION_PATH__" echo mutated-by-fake-unity
 if "__EXIT_CODE__"=="0" (
     > "%results%" echo ^<test-run total="1" passed="1" failed="0" inconclusive="0" skipped="0" result="Passed" /^>
 )
 for /l %%i in (1,1,__DELAY_SECONDS__) do ping 127.0.0.1 -n 2 > nul
 exit /b __EXIT_CODE__
 '@
-    $script = $script.Replace('__EXIT_CODE__', [string]$ExitCode).Replace('__DELAY_SECONDS__', [string]$DelaySeconds)
+    $script = $script.Replace('__EXIT_CODE__', [string]$ExitCode).Replace('__DELAY_SECONDS__', [string]$DelaySeconds).Replace('__ADDITIONAL_MUTATION_PATH__', $AdditionalMutationRelativePath.Replace('/', '\\'))
     [IO.File]::WriteAllText($Path, $script, [Text.UTF8Encoding]::new($false))
 }
 
@@ -117,6 +119,35 @@ function Invoke-CompletedResultExitGraceCase {
     Assert-ProtectedFilesUnchanged -Before $before -ProjectPath $ProjectPath -Name 'completed-result-delayed-exit'
 }
 
+function Invoke-NonSceneRestoreCase {
+    param([string]$ProjectPath)
+
+    $relativePath = 'Assets/Resources/Tiles/AdventureGround.asset.meta'
+    $targetPath = Join-Path $ProjectPath $relativePath
+    $beforeHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $targetPath).Hash
+    $originalContents = [IO.File]::ReadAllBytes($targetPath)
+    $fakeUnityPath = Join-Path $temporaryRoot 'non-scene-mutation-fake-unity.cmd'
+    $resultPath = Join-Path $temporaryRoot 'non-scene-mutation-results.xml'
+    try {
+        New-FakeUnityExecutable -Path $fakeUnityPath -ExitCode 0 -AdditionalMutationRelativePath $relativePath
+
+        $previousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        & $scriptPath -UnityExecutable $fakeUnityPath -ProjectPath $ProjectPath -ResultXmlPath $resultPath -ErrorAction Continue
+        $ErrorActionPreference = $previousErrorActionPreference
+        if ($LASTEXITCODE -ne 0) {
+            throw "non-scene-mutation expected exit code 0 but got $LASTEXITCODE."
+        }
+
+        if ((Get-FileHash -Algorithm SHA256 -LiteralPath $targetPath).Hash -ne $beforeHash) {
+            throw 'non-scene-mutation changed a tracked Unity asset meta file.'
+        }
+    }
+    finally {
+        [IO.File]::WriteAllBytes($targetPath, $originalContents)
+    }
+}
+
 function Invoke-ResultCase {
     param(
         [string]$Name,
@@ -156,6 +187,7 @@ try {
     Invoke-RestoreCase -Name 'success' -FakeExitCode 0 -ExpectedExitCode 0 -ProjectPath $projectPath
     Invoke-RestoreCase -Name 'exception' -FakeExitCode 23 -ExpectedExitCode 1 -ProjectPath $projectPath
     Invoke-CompletedResultExitGraceCase -ProjectPath $projectPath
+    Invoke-NonSceneRestoreCase -ProjectPath $projectPath
 
     Write-Host 'All Unity EditMode result validation cases passed.'
 }

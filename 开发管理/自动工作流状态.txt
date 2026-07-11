@@ -15,11 +15,12 @@
 | 迁移前最后结果 | 已保留在旧自动化 memory 与 Git 历史，不复制为滚动状态 |
 | 单控制器部署 | 2026-07-11 首次真实小时轮次已完成：复审 HANDOFF-20260710-01 / TQ-038，通过并提交 |
 | 最近队列校验 | 2026-07-12 队列维护完成：因队列降至 4 条，补入已登记的 TQ-063；其仍准确标为阻塞（TQ-062），队列恢复为 5 条，内容冻结保持不变 |
-| 最近执行结果 | 2026-07-12 TQ-062 实现与测试改动仍在恢复指针中，尚未提交；TQ-063 的解除阻塞结论须待 TQ-062 成功提交后方可生效 |
+| 最近执行结果 | 2026-07-12 TQ-062 已由提交 `197e607` 完成：新游戏按 `PlayerProfile.originId` 选择江左或关陇起点；未知/旧出身记录专用回退且不改写档案。TQ-063 已解除阻塞 |
+| 最近控制器加固 | 2026-07-12 Unity EditMode 运行器已扩展为恢复全部追踪的 `Assets/**` 与 `ProjectSettings/**`，避免 `.asset.meta` 测试副作用中断工作流 |
 
 ## 当前阻塞
 
-`tzg-hourly-controller` 已在恢复 TQ-062 时达到第二次恢复失败阈值并进入 `AUTO-BLOCKED`。原因：Unity 留下的 4 个资源元数据改动不在本轮 `expectedPaths` 中：`AdventureAttackHighlight.asset.meta`、`AdventureGround.asset.meta`、`AdventureMoveHighlight.asset.meta`、`AdventureSelected.asset.meta`。人工应先检查并移除或明确纳入这些改动；处理原因后，再用 `tools/automation-controller-state.ps1 ResetBlocked -ErrorMessage '<处理说明>'` 重置控制器。
+当前无 `AUTO-BLOCKED` 项。
 
 ## 运行证据
 

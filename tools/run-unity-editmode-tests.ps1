@@ -14,10 +14,10 @@ function Get-UnityWorkspaceSnapshot {
     param([string]$ProjectPath)
 
     $relativePaths = @(
-        & git -C $ProjectPath ls-files -- 'Assets/Scenes/*.unity' 'ProjectSettings/EditorBuildSettings.asset'
+        & git -C $ProjectPath ls-files -- 'Assets/**' 'ProjectSettings/**'
     )
     if ($relativePaths.Count -eq 0) {
-        throw 'No tracked Unity scenes or EditorBuildSettings.asset were found to protect.'
+        throw 'No tracked Unity workspace files were found to protect.'
     }
 
     return @($relativePaths | Sort-Object | ForEach-Object {
