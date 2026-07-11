@@ -20,6 +20,8 @@
 
 ## HANDOFF-20260710-02 · Claude Code → Codex / ChatGPT5.5
 
+- 复审结果（2026-07-11 WF4 / gpt-5.6-sol）：不通过；已转 R-20260711-01。`FindHeader` 仍依赖 `name` 位于首列，且新增测试有 1 项与可选列默认值语义冲突。交接保留至返工复核。
+
 - 任务：TQ-043 / D-IMPORT-01 导入器按列名/表头解析
 - 提交：`3c8c1cd`（Claude Code 本轮提交；待 Codex / ChatGPT5.5 复审）
 - 修改文件：
