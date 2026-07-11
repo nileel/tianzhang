@@ -66,13 +66,14 @@ namespace TianZhang.Editor
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
 
             var lines = File.ReadAllLines(path);
+            var headerLineIndex = FindHeaderIndex(lines);
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "configId", "purchasePointLimit", "minValue", "baseValue", "maxValue",
                 "fromValue", "toValue", "costPerLevel");
 
             var rows = lines
-                .Skip(1)
+                .Skip(headerLineIndex + 1)
                 .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"))
                 .Select(ParseCSV)
                 .Where(cols => cols.Length >= headers.Length
@@ -120,13 +121,14 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/GongFa.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headerLineIndex = FindHeaderIndex(lines);
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "name", "affiliation", "grade", "elementMain", "elementSub",
                 "starRootBone", "starPhysique", "starSpirit", "starMind",
                 "starReaction", "starTalent", "starFortune", "growth");
 
-            foreach (var line in lines.Skip(1))
+            foreach (var line in lines.Skip(headerLineIndex + 1))
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
@@ -218,6 +220,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/Spells.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headerLineIndex = FindHeaderIndex(lines);
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "name", "type", "minRange", "maxRange", "mpCost",
@@ -225,7 +228,7 @@ namespace TianZhang.Editor
                 "cannotBlock", "cannotDodge", "penetratingShield", "stunChance",
                 "element");
 
-            foreach (var line in lines.Skip(1))
+            foreach (var line in lines.Skip(headerLineIndex + 1))
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
@@ -267,6 +270,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/Skills.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headerLineIndex = FindHeaderIndex(lines);
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "name", "type", "minRange", "maxRange", "mpCost",
@@ -275,7 +279,7 @@ namespace TianZhang.Editor
                 "isDomain", "isBloodline", "specialEffectDesc",
                 "element");
 
-            foreach (var line in lines.Skip(1))
+            foreach (var line in lines.Skip(headerLineIndex + 1))
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
@@ -320,6 +324,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/Characters.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headerLineIndex = FindHeaderIndex(lines);
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "name", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
@@ -328,7 +333,7 @@ namespace TianZhang.Editor
                 "critRate", "critDamage", "hitRateBonus", "gongFaName",
                 "equippedSpells", "equippedSkills");
 
-            foreach (var line in lines.Skip(1))
+            foreach (var line in lines.Skip(headerLineIndex + 1))
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
@@ -375,6 +380,7 @@ namespace TianZhang.Editor
             string path = "Assets/DataConfig/Enemies.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
             var lines = File.ReadAllLines(path);
+            var headerLineIndex = FindHeaderIndex(lines);
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "name", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
@@ -382,7 +388,7 @@ namespace TianZhang.Editor
                 "soulShieldRate", "soulShieldReduction", "dodgeRate",
                 "critRate", "critDamage", "hitRateBonus", "equippedSpells");
 
-            foreach (var line in lines.Skip(1))
+            foreach (var line in lines.Skip(headerLineIndex + 1))
             {
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") || line.StartsWith("name,")) continue;
                 var cols = ParseCSV(line);
@@ -439,14 +445,23 @@ namespace TianZhang.Editor
 
         static string[] FindHeader(string[] lines)
         {
-            foreach (var line in lines)
+            int headerLineIndex = FindHeaderIndex(lines);
+            return headerLineIndex >= 0 ? ParseCSV(lines[headerLineIndex]) : Array.Empty<string>();
+        }
+
+        static int FindHeaderIndex(string[] lines)
+        {
+            if (lines == null)
+                return -1;
+
+            for (int index = 0; index < lines.Length; index++)
             {
+                var line = lines[index];
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
-                var cols = ParseCSV(line);
-                if (cols.Length > 0 && cols[0] == "name")
-                    return cols;
+                return index;
             }
-            return Array.Empty<string>();
+
+            return -1;
         }
 
         public static string GetColumnValueOrDefault(

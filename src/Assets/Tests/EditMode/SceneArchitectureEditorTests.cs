@@ -516,6 +516,67 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FindHeaderDiscoversReorderedRealHeaderWithoutNameInFirstColumn()
+        {
+            var findHeader = typeof(DataConfigImporter).GetMethod(
+                "FindHeader",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var lines = new[]
+            {
+                "# Characters.csv",
+                "realmMultiplier,name,rootBone,equippedSpells,equippedSkills",
+                "1.5,char_test,10,,"
+            };
+
+            var headers = (string[])findHeader.Invoke(null, new object[] { lines });
+            var findHeaderIndex = typeof(DataConfigImporter).GetMethod(
+                "FindHeaderIndex",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+
+            CollectionAssert.AreEqual(
+                new[] { "realmMultiplier", "name", "rootBone", "equippedSpells", "equippedSkills" },
+                headers);
+            Assert.AreEqual(1, (int)findHeaderIndex.Invoke(null, new object[] { lines }));
+        }
+
+        [Test]
+        public void ImportCharactersReadsReorderedHeaderAndKeepsEmptyEquipment()
+        {
+            const string sourceAssetPath = "Assets/DataConfig/Characters.csv";
+            const string importedAssetPath = "Assets/Data/Characters/Char_tq043_reordered.asset";
+            string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/Characters.csv");
+            byte[] originalContents = File.ReadAllBytes(sourceFilePath);
+
+            try
+            {
+                AssetDatabase.DeleteAsset(importedAssetPath);
+                File.WriteAllText(sourceFilePath,
+                    "# TQ-043 temporary test fixture\n" +
+                    "realmMultiplier,name,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,gongFaName,equippedSpells,equippedSkills\n" +
+                    "1.5,tq043_reordered,10,10,16,14,12,14,5,0,13,0,0,5,15,3,gongfa_baoyuanshouyi,,,\n");
+                AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
+
+                var importCharacters = typeof(DataConfigImporter).GetMethod(
+                    "ImportCharacters",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+                importCharacters.Invoke(null, null);
+
+                var asset = AssetDatabase.LoadAssetAtPath<TianZhang.Entity.CharacterData>(importedAssetPath);
+                Assert.IsNotNull(asset);
+                Assert.AreEqual("tq043_reordered", asset.charName);
+                Assert.AreEqual(1.5f, asset.realmMultiplier);
+                Assert.IsEmpty(asset.equippedSpells);
+                Assert.IsEmpty(asset.equippedSkills);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(importedAssetPath);
+                File.WriteAllBytes(sourceFilePath, originalContents);
+                AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
+            }
+        }
+
+        [Test]
         public void TrailingColumnDoesNotShiftReads()
         {
             // The row has more columns than the header, simulating trailing column addition
@@ -551,23 +612,52 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void RequireColumnsRejectsMissingHeaders()
+        public void OptionalColumnsDefaultWhileRequiredColumnsRejectMissingHeaders()
         {
             var headers = new[] { "name", "type" };
 
-            Assert.Throws<InvalidDataException>(() =>
+            Assert.AreEqual(
+                "player",
                 DataConfigImporter.GetColumnValueOrDefault(
                     headers,
                     new[] { "spell_test" },
-                    "minRange",
+                    "contentScope",
                     "player"));
 
-            // RequireColumns validates at header level
-            Assert.Throws<InvalidDataException>(() => {
-                var h = new[] { "name", "type" };
-                // Can't call RequireColumns directly since it's static private; test via GetRequiredColumnValue
-                DataConfigImporter.GetRequiredColumnValue(h, new[] { "a", "b" }, "minRange", "Test.csv");
-            });
+            var requireColumns = typeof(DataConfigImporter).GetMethod(
+                "RequireColumns",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var exception = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                requireColumns.Invoke(null, new object[]
+                {
+                    headers,
+                    "Test.csv",
+                    new[] { "name", "minRange" }
+                }));
+            Assert.IsInstanceOf<InvalidDataException>(exception.InnerException);
+        }
+    }
+
+    public static class DataConfigImporterBatchRunner
+    {
+        public static void RunReorderedHeaderRegression()
+        {
+            try
+            {
+                new DataConfigImporterContentScopeTests()
+                    .ImportCharactersReadsReorderedHeaderAndKeepsEmptyEquipment();
+                new DataConfigImporterContentScopeTests()
+                    .FindHeaderDiscoversReorderedRealHeaderWithoutNameInFirstColumn();
+                new DataConfigImporterContentScopeTests()
+                    .OptionalColumnsDefaultWhileRequiredColumnsRejectMissingHeaders();
+                Debug.Log("DataConfigImporterBatchRunner.RunReorderedHeaderRegression passed.");
+                EditorApplication.Exit(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                EditorApplication.Exit(1);
+            }
         }
     }
 }
