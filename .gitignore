@@ -34,6 +34,7 @@ Desktop.ini
 
 # Unity generated files
 *.csproj
+!simulations/BattleSim/BattleSim.csproj
 *.unityproj
 *.sln
 *.sln.docstates
