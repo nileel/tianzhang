@@ -1,0 +1,26 @@
+# TQ-049 · Unity EditMode 基线修复归档
+
+- 执行：2026-07-11 WF2-CODEX-ONE / `gpt-5.6-sol`。
+- 任务：Q-UNITY-01，修复 `SceneFlowManagerPreparesAdventureAndReturnContextsWithoutSceneLoad` 空引用。
+
+## 根因
+
+目标测试在 EditMode 中只创建 `SceneFlowManager`，随后直接读取 `GameSession.Instance`，错误依赖 Play Mode 的 `Awake -> EnsureSession` 生命周期完成会话创建。目标 RED 精确落在 `SceneArchitectureEditorTests.cs:210` 的 `session.SetWorldNode(...)`；同文件其他 EditMode 测试均显式创建 `GameSession` 夹具。
+
+运行时所有者 `SceneFlowManager.Awake -> EnsureSession` 没有错误，不应为测试环境改变生产语义。修复仅在测试中显式创建并清理 `GameSessionTest`，保留原测试、测试名和全部断言。
+
+## 验证
+
+- RED：目标测试 `testcasecount=1, passed=0, failed=1`，`NullReferenceException` 位于原第 210 行。
+- GREEN：目标测试 `testcasecount=1, passed=1, failed=0`。
+- `dotnet build src/Assembly-CSharp.csproj`：通过，0 warning / 0 error。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 warning / 0 error。
+- 冻结基线：排除待复审提交 `3c8c1cd` 新增的 5 项后，Unity EditMode `testcasecount=47, passed=47, failed=0`；XML 见 `开发管理/验证结果/2026-07-11-TQ-049-EditMode-47.xml`。
+- 当前分支完整 52 项另有 `TianZhang.Tests.DataConfigImporterContentScopeTests.RequireColumnsRejectsMissingHeaders` 失败；它来自 TQ-043 待复审提交，不属于本次纯 `1` 范围，未修改。
+- Unity 测试生成的四个场景与 `EditorBuildSettings.asset` 改动已清理，未纳入提交。
+
+## 范围证明
+
+- 运行时所有者：`SceneFlowManager.Awake -> EnsureSession -> GameSession`。
+- 本轮允许修改：目标 EditMode 测试夹具、队列/分线/归档/自动化状态、验证 XML。
+- 未修改：`SceneFlowManager.cs`、`GameSession.cs`、场景、Build Settings、TQ-043 待复审代码与测试。

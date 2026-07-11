@@ -19,7 +19,7 @@
 - ✅ TQ-028 / U-MECH-02A：玄感神识强度 Unity 回归已完成；南华玄感录神魂伤害入口按境界获得神识强度加值。
 - ✅ TQ-028 / U-MECH-03：含弘/载物 Unity 回归已完成；含弘光大典按境界获得物理防御加成，载物按损失 HP 提供全防御加成。
 - ⚠️ 2026-07-10 审视：正式 Build Settings 中的 `AdventureScene` 仍是入口/返回壳，旧 `ExplorationScene` 才承载主要可玩探索战斗循环；G1 未通过前不得再写“正式最小可玩循环已完成”。
-- ⚠️ Unity EditMode 当前基线为 47 个测试中 1 个失败；仅看带 `-quit` 的进程退出码可能产生假绿，TQ-049～TQ-051 先修复验证可信度。
+- ✅ TQ-049：冻结的 Unity EditMode 基线 47/47 通过；当前分支另有 TQ-043 待复审提交新增 5 项，其中 1 项失败，不计入 TQ-049 冻结基线，交由 `2` 流程处理。
 
 ## 近期任务
 
@@ -31,8 +31,8 @@
 | U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
 | U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |
 | U-S6-03 | P1 | Codex | ✅ 已完成（2026-07-09） | 战斗日志适配拆分：`CombatLogAdapter` 集中处理战斗开始、行动结果和掉落日志 |
-| Q-UNITY-01 / TQ-049 | P0 | Codex | 待处理 | 修复 `SceneFlowManagerPreparesAdventureAndReturnContextsWithoutSceneLoad`，保持 47 个 EditMode 测试全部执行 |
-| Q-UNITY-02 / TQ-050 | P0 | Codex | 阻塞（TQ-049） | 建立权威 Unity EditMode 入口；缺失/失败/不可解析/零测试 XML 必须非零退出 |
+| Q-UNITY-01 / TQ-049 | P0 | Codex | ✅ 已完成（2026-07-11） | 显式创建 `GameSession` 测试夹具；冻结基线 47/47 通过 |
+| Q-UNITY-02 / TQ-050 | P0 | Codex | 待处理 | 建立权威 Unity EditMode 入口；缺失/失败/不可解析/零测试 XML 必须非零退出 |
 | Q-UNITY-03 / TQ-051 | P0 | Codex | 阻塞（TQ-050） | 测试成功与异常路径都恢复场景和 Build Settings，前后工作区一致 |
 | U-SLICE-01 / TQ-060 | P0 | Codex | 阻塞（TQ-051） | 证明 Adventure/Exploration/SceneBuilder 调用链并锁定唯一冒险运行时所有者 |
 | U-SLICE-02 / TQ-061 | P0 | Codex | 阻塞（TQ-060） | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |

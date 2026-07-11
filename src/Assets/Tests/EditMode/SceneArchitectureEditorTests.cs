@@ -203,10 +203,11 @@ namespace TianZhang.Tests
         {
             DestroyExistingSceneFlowAndSession();
             var flowGo = new GameObject("SceneFlowManagerTest");
+            var sessionGo = new GameObject("GameSessionTest");
             try
             {
+                var session = sessionGo.AddComponent<GameSession>();
                 var flow = flowGo.AddComponent<SceneFlowManager>();
-                var session = GameSession.Instance;
                 session.SetWorldNode("longxi_hub");
 
                 Assert.AreEqual(
@@ -243,6 +244,7 @@ namespace TianZhang.Tests
             finally
             {
                 Object.DestroyImmediate(flowGo);
+                Object.DestroyImmediate(sessionGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }

@@ -3,6 +3,7 @@
 > 2026-07-10 Codex / gpt-5.5：用户批准启用“三道 P0 可信度闸门 + 最小纵向切片”任务体系。重排前全文归档至 `开发管理/任务归档/2026-07-10-可信度闸门重排前队列归档.txt`；设计规格见 `docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md`。
 > 内容冻结：G1 正式构建链、G2 BattleSim 数值可信度、G3 数据链路语义可信度全部通过且 TQ-071 完成前，禁止把新的剧情、角色、功法、术法、神通或世界设定扩写补入本队列。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务走 `开发管理/审核入口.txt`。
+> 2026-07-11 Codex / gpt-5.6-sol：TQ-049 已完成；修正 EditMode 夹具对 `Awake` 的错误依赖，冻结基线 47/47 通过，TQ-050 解除阻塞。
 
 ## 使用规则
 
@@ -16,8 +17,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-049 | P0 | Codex / gpt-5.5 | G1 验证 | 待处理 | Q-UNITY-01：修复 Unity EditMode 基线失败 |
-| TQ-050 | P0 | Codex / gpt-5.5 | G1 验证 | 阻塞（TQ-049） | Q-UNITY-02：建立权威 Unity 测试入口 |
+| TQ-050 | P0 | Codex / gpt-5.5 | G1 验证 | 待处理 | Q-UNITY-02：建立权威 Unity 测试入口 |
 | TQ-051 | P0 | Codex / gpt-5.5 | G1 验证 | 阻塞（TQ-050） | Q-UNITY-03：测试路径恢复场景与 Build Settings |
 | TQ-052 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-01：修正 CT 反应方向并建立回归 |
 | TQ-053 | P0 | Codex / gpt-5.5 | G2 数值 | 阻塞（TQ-052） | N-TRUST-02：统一暴击倍率语义 |
@@ -34,20 +34,10 @@
 
 ## 任务卡片
 
-### TQ-049 · Q-UNITY-01 修复 Unity EditMode 基线失败
-
-- 来源：可信度闸门规格 §4。
-- 当前状态：待处理；依赖：无。
-- 主责：Codex / gpt-5.5。
-- 必读：`开发管理/开发-技术经验.txt`、可信度闸门规格、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`。
-- 范围：定位并修复 `SceneFlowManagerPreparesAdventureAndReturnContextsWithoutSceneLoad` 空引用；禁止删除断言、忽略测试或减少测试数量。
-- 验证：`dotnet build src/Assembly-CSharp.csproj`；`dotnet build src/TianZhang.EditModeTests.csproj`；Unity EditMode 结果必须为 47/47 通过；`git diff --check`。
-- 完成条件：根因已记录，47 个测试全部执行且全部通过，工作区无非预期场景或 Build Settings 改动。
-
 ### TQ-050 · Q-UNITY-02 建立权威 Unity 测试入口
 
 - 来源：可信度闸门规格 §4。
-- 当前状态：阻塞（TQ-049）；依赖：TQ-049。
+- 当前状态：待处理；依赖：TQ-049（已完成）。
 - 主责：Codex / gpt-5.5。
 - 必读：`开发管理/开发-技术经验.txt`、可信度闸门规格、现有 Unity 测试日志与 `src/Assets/Tests/EditMode/`。
 - 范围：新增 `tools/run-unity-editmode-tests.ps1`；等待测试完成并解析结果 XML，禁止以进程退出码代替测试结果。

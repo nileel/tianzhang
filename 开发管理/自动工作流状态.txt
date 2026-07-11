@@ -15,21 +15,21 @@
 
 | 字段 | 值 |
 |------|----|
-| 当前轮次 | WF1-20260711-QUEUE |
+| 当前轮次 | WF2-20260711-TQ049 |
 | 全局锁 | IDLE |
 | 锁持有者 | 无 |
 | 锁开始时间 | 无 |
 | 最近完成阶段 | commit_completed |
 | 最近中断原因 | 无 |
 | 当前恢复指针 | 无 |
-| 本轮身份模型 | unknown |
+| 本轮身份模型 | gpt-5.6-sol |
 
 ## 工作流状态
 
 | 工作流 | 计划时间 | 状态 | 当前任务/对象 | 检查点 | 恢复次数 | 最近结果 |
 |--------|----------|------|----------------|--------|----------|----------|
 | WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：队列维持 6 条；同步 TQ-038、TQ-043 待复审摘要，验证通过 |
-| WF2-CODEX-ONE | T+30 | IDLE | TQ-048 / C-STORY-WM-05A | commit_completed | 0 | commit_completed：TQ-048 玄荒新路天才人物志规划骨架完成，验证通过 |
+| WF2-CODEX-ONE | T+30 | IDLE | TQ-049 / Q-UNITY-01 | commit_completed | 0 | commit_completed：目标 1/1、冻结基线 47/47、两项 dotnet build 通过；当前 52 项中的 TQ-043 待复审测试另有 1 项失败 |
 | WF3-CLAUDE-ONE | T+90 | IDLE | TQ-043 / D-IMPORT-01 | commit_completed | 0 | commit_completed：Claude Code 提交 `3c8c1cd` 并进入 HANDOFF-20260710-02；注意本轮选择了 Codex 主责任务，需 WF4/`2` 复审 |
 | WF4-CODEX-TWO | T+150 | IDLE | HANDOFF-20260710-01 / TQ-038 | skipped_cleanly | 0 | skipped_cleanly：6小时内已有 WF2-CODEX-ONE RUNNING 锁，未启动复审 |
 
