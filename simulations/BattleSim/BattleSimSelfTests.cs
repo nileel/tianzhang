@@ -42,6 +42,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-suppression-tq015c-10")
             return RunChecked(suite, RunGoldenCoreSuppressionTq015C10);
 
+        if (suite == "ct-reaction-tq052")
+            return RunChecked(suite, RunCtReactionTq052);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -585,11 +588,48 @@ static class BattleSimSelfTests
         AssertEqual(100, gold.Primary["MP"], "profile scenario keeps source gold MP");
     }
 
+    static void RunCtReactionTq052()
+    {
+        var (fastWins, slowWins, _) = Combat.Simulate2v2(
+            CtTestCharacter("fast-1", 20),
+            CtTestCharacter("fast-2", 20),
+            CtTestCharacter("slow-1", 10),
+            CtTestCharacter("slow-2", 10),
+            rounds: 1);
+
+        AssertEqual(100.0, fastWins, "higher reaction team takes the first action");
+        AssertEqual(0.0, slowWins, "lower reaction team cannot take the first action");
+
+        var (firstWins, secondWins, _) = Combat.Simulate2v2(
+            CtTestCharacter("first-1", 10),
+            CtTestCharacter("first-2", 10),
+            CtTestCharacter("second-1", 10),
+            CtTestCharacter("second-2", 10),
+            rounds: 1);
+
+        AssertEqual(100.0, firstWins, "equal reaction resolves in input order");
+        AssertEqual(0.0, secondWins, "equal reaction order is stable");
+    }
+
     static Character StageCharacter(string name, string realm, int subIndex)
     {
         var character = Character.Create(name, new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
         character.Realm = realm;
         character.SubIndex = subIndex;
+        return character;
+    }
+
+    static Character CtTestCharacter(string name, int reaction)
+    {
+        var character = Character.Create(name, new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+        character.Realm = "练气";
+        character.Primary["HP"] = 1;
+        character.Primary["MP"] = 0;
+        character.Primary["肉攻"] = 1000;
+        character.Primary["神攻"] = 0;
+        character.Primary["肉防"] = 0;
+        character.Primary["神防"] = 0;
+        character.Primary["反应"] = reaction;
         return character;
     }
 

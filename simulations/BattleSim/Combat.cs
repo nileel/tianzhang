@@ -312,7 +312,8 @@ static class Combat
                 bool aAlive = units[0].IsAlive || units[1].IsAlive;
                 bool bAlive = units[2].IsAlive || units[3].IsAlive;
                 if (!aAlive || !bAlive) break;
-                for (int i = 0; i < 4; i++) if (units[i].IsAlive) { var u = units[i]; u.CT += 100.0 / u.Char.Primary["反应"]; units[i] = u; }
+                // 2v2 uses an accumulated-action-meter model: higher reaction fills CT faster.
+                for (int i = 0; i < 4; i++) if (units[i].IsAlive) { var u = units[i]; u.CT += u.Char.Primary["反应"]; units[i] = u; }
                 int actor = -1; double maxCT = -1;
                 for (int i = 0; i < 4; i++) if (units[i].IsAlive && !units[i].Stunned && units[i].CT >= 100 && units[i].CT > maxCT) { maxCT = units[i].CT; actor = i; }
                 if (actor < 0) continue;

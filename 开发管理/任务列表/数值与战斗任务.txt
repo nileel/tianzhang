@@ -9,7 +9,7 @@
 - A4/A5 已完成：裸先天气运/神识/资质不再直加闪避、暴击率、暴击伤害。
 - TQ-029 诊断已完成：Build 极化优先来自功法成长表完整性、功法星级 0.2 回退和固定 AI 行为；`云篆度人经` 缺练气成长导致太一·符修筑基成长链归零，后续调参应先修成长表/回退策略。
 - 席位竞争、紫府闭环输入、压制战出口、削位/封丹扫描均已有 BattleSim 输出，但尚未形成正式运行时结算。
-- ⚠️ 2026-07-10 审视：2v2 CT 使用 `100.0 / 反应`，导致低反应更快；该缺陷修复前，2v2 结果不能作为平衡依据。
+- ✅ 2026-07-11 TQ-052：2v2 CT 改为每推进周期直接累加反应值；`ct-reaction-tq052` 锁定反应 20 先于 10，且同值按输入顺序稳定。2v2 反应方向缺陷已消除。
 - ⚠️ 当前 BuildDefs 存在角色创建规则下不可生成的初始属性，Unity/BattleSim 暴击伤害字段也与设计文档基础倍率口径不一致；G2 未通过前不得用矩阵结果确认平衡。
 
 ## 任务
@@ -17,8 +17,8 @@
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | N-BAL-01 / TQ-029 | P2 | Codex | 已完成（2026-07-09） | 筑基/紫府 Build 极化诊断，归档：`开发管理/任务归档/2026-07-09-TQ-029-筑基紫府Build极化诊断归档.txt` |
-| N-TRUST-01 / TQ-052 | P0 | Codex | 待处理 | 修正 2v2 CT 反应快慢方向并增加确定性首次行动回归 |
-| N-TRUST-02 / TQ-053 | P0 | Codex | 阻塞（TQ-052） | 统一文档、Unity、BattleSim 基础暴击倍率与 `critDamage` 语义 |
+| N-TRUST-01 / TQ-052 | P0 | Codex | 已完成（2026-07-11） | 2v2 CT 直接累加反应值，并以 `ct-reaction-tq052` 回归锁定先手与同值顺序；归档：`开发管理/任务归档/2026-07-11-TQ-052-2v2CT反应方向归档.txt` |
+| N-TRUST-02 / TQ-053 | P0 | Codex | 待处理 | 统一文档、Unity、BattleSim 基础暴击倍率与 `critDamage` 语义 |
 | N-TRUST-03 / TQ-054 | P0 | Codex | 阻塞（TQ-053） | 让 21 Build 输入符合角色创建点数预算、上限和非线性成本 |
 | N-BAL-02A / TQ-044 | P0 | Codex | 阻塞（TQ-054） | 修复成长表完整性与星级回退；缺失输入不得静默掩盖 |
 | N-TRUST-04 / TQ-055 | P0 | Codex | 阻塞（TQ-052、TQ-053、TQ-054、TQ-044） | 重跑 21 Build，审计样本覆盖与 0%/100% 极端结果；通过后 G2 才可标记通过 |
@@ -31,11 +31,9 @@
 ## G2 工具链前置
 
 - 干净 checkout 必须存在受版本控制的 `simulations/BattleSim/BattleSim.csproj`；该项目使用 `.NET 10`、零外部依赖，且不得包含任何 `PackageReference`。
-- 当前事实是干净 worktree 缺少该文件，且 `.gitignore` 的 `*.csproj` 会忽略它；因此现有 BattleSim 入口不可复现。
-- TQ-052 的首个切片和首个提交必须先纳入该 `BattleSim.csproj`，并在 `.gitignore` 增加仅针对该文件的窄例外；首个提交只恢复工具链，不得同时修改 CT。
-- 在该提交的干净 checkout 中，首次必须运行 `dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources`；预期成功并生成被忽略的 `simulations/BattleSim/obj/project.assets.json`。restore 成功后，再连续运行项目规定的 `dotnet build -c Release --no-restore simulations/BattleSim` 与 `dotnet run --no-build -c Release --project simulations/BattleSim`。
-- restore → build → run 必须在干净 worktree 连续成功；restore 失败或项目含 `PackageReference` 时均不得进入 CT 修复。
-- 任一 G2 任务标记完成前，该工具链前置都必须通过；本轮任务治理只登记要求，不创建 `BattleSim.csproj`。
+- `0452830` 已将该 `BattleSim.csproj` 纳入版本控制，并在 `.gitignore` 保留仅针对该文件的窄例外；该提交不含 CT 修改。
+- 2026-07-11 已确认项目不含 `PackageReference`，且在干净工作区连续通过 `dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources` → `dotnet build -c Release --no-restore simulations/BattleSim` → `dotnet run --no-build -c Release --project simulations/BattleSim`；restore 生成的 `obj/project.assets.json` 保持被忽略。
+- 后续任一 G2 任务仍须保持该工具链前置可复现。
 
 ## G2 任务执行边界
 

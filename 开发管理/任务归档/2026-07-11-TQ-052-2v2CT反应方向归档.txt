@@ -1,0 +1,22 @@
+# TQ-052 · N-TRUST-01 2v2 CT 反应方向归档（✅ 已审核）
+
+> 工具链前置提交：`0452830`（2026-07-11，Codex / gpt-5.5）
+> 本轮产物：2v2 CT 修复、`ct-reaction-tq052` 回归与任务状态同步
+
+## 完成结果
+
+- `Combat.Simulate2v2` 的 CT 行动槽改为每推进周期直接累加角色反应值；该模拟器以 CT 达到 100 后取最高值行动，因此反应越高会越早取得首次行动。
+- 新增 `ct-reaction-tq052` 自测：两队仅反应不同且首击必杀时，反应 20 队必定先于反应 10 队行动；全员同为反应 10 时，输入靠前的队伍稳定先行动。
+- 保留 1v1 的“下一次行动时间取最小值”模型不变；它以 `100 / 反应` 表示下一次行动间隔，方向与 2v2 的累积行动槽不同。
+
+## 验证依据
+
+- 工具链：`git ls-files --error-unmatch simulations/BattleSim/BattleSim.csproj` 成功；`git check-ignore -q simulations/BattleSim/BattleSim.csproj` 返回 1；项目中无 `PackageReference`；`dotnet restore simulations/BattleSim/BattleSim.csproj --ignore-failed-sources`、`dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim` 均返回 0。
+- RED：未修复时运行 `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test ct-reaction-tq052` 失败，报告 `expected 100, got 0`。
+- GREEN：修复后 Release build 0 警告/0 错误；`ct-reaction-tq052` 通过。
+- 回归：现有 11 个 self-test 加新增 CT 自测共 12 个全部通过；默认 21 Build 模拟返回 0。
+
+## 边界与后续
+
+- 本轮不改 1v1 CT 模型、伤害、暴击倍率、角色创建规则、成长表、Unity 代码、CSV 或 asset。
+- G2 尚未通过：TQ-053 统一暴击倍率语义已解除阻塞；TQ-054、TQ-044 与 TQ-055 仍依赖其完成，当前矩阵不可用作平衡结论。
