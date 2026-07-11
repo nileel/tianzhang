@@ -1,0 +1,19 @@
+# TQ-043 · D-IMPORT-01 按表头解析导入器修复归档（✅ 已审核）
+
+> 完成提交：`fa31b73`（2026-07-11，Codex / gpt-5.6-terra）
+> 问题基线：Claude Code 提交 `3c8c1cd`；复审结论 R-20260711-01。
+
+## 完成结果
+
+- `FindHeader` 现在取首个非空、非注释行，不再要求 `name` 位于首列；所有六个导入入口从发现到的表头行之后开始读取数据，避免将换位后的表头误作记录。
+- 新增真实 `Characters.csv` 换位夹具：临时写入、调用 `ImportCharacters` 并在 finally 中以原始字节恢复；验证导入首条记录与空装备列兼容，且不保留 CSV 或 asset 改动。
+- 修正可选列缺失的测试为 `contentScope` 默认值回退；同时直接验证 `RequireColumns` 对必要表头缺失抛出 `InvalidDataException`。
+
+## 验证依据
+
+- RED：临时恢复旧 `FindHeader` 后，Unity 批处理集成回归以 `Characters.csv missing required column 'name'` 失败。
+- GREEN：`Unity.exe -batchmode -projectPath D:\天章游戏开发\src -executeMethod TianZhang.Tests.DataConfigImporterBatchRunner.RunReorderedHeaderRegression` 返回 0 并输出 passed。
+- `dotnet build src/TianZhang.Editor.csproj -c Debug`：0 警告、0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj -c Debug`：0 警告、0 错误。
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 及 `-FailOnMissingAssets`：返回 0（仅保留既有 realm_lianshen / realm_lianxu 风险提示）。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`：通过；`git diff --check`：通过。

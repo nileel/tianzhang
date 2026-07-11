@@ -4,6 +4,7 @@
 > 内容冻结：G1 正式构建链、G2 BattleSim 数值可信度、G3 数据链路语义可信度全部通过且 TQ-071 完成前，禁止把新的剧情、角色、功法、术法、神通或世界设定扩写补入本队列。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务走 `开发管理/审核入口.txt`。
 > 2026-07-11 Codex / gpt-5.6-sol：TQ-049 已完成；修正 EditMode 夹具对 `Awake` 的错误依赖，冻结基线 47/47 通过，TQ-050 解除阻塞。
+> 2026-07-11 Codex / gpt-5.6-terra：TQ-043 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-043-按表头解析导入器修复归档.txt`；TQ-056 解除阻塞。
 
 ## 使用规则
 
@@ -17,32 +18,20 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-043 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-IMPORT-01：接管并修复按表头解析导入器；修正真实表头换位与错误测试 |
 | TQ-050 | P0 | Codex / gpt-5.5 | G1 验证 | 待处理 | Q-UNITY-02：建立权威 Unity 测试入口 |
 | TQ-051 | P0 | Codex / gpt-5.5 | G1 验证 | 阻塞（TQ-050） | Q-UNITY-03：测试路径恢复场景与 Build Settings |
 | TQ-052 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-01：修正 CT 反应方向并建立回归 |
 | TQ-053 | P0 | Codex / gpt-5.5 | G2 数值 | 阻塞（TQ-052） | N-TRUST-02：统一暴击倍率语义 |
-| TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-043） | D-TRUST-01：数据检查器错误分级 |
+| TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-01：数据检查器错误分级 |
 
 ## 不进入 `1` 队列的当前事项
 
-- TQ-043：2026-07-11 经用户确认由 Codex 接管；原 Claude Code / WF3 交接 `3c8c1cd` 仅作为问题基线，不再退回 DeepSeek/Claude 返工。
 - TQ-039：内容冻结。
 - TQ-040：不单独执行；仅在 TQ-057 已登记且前置满足后由其吸收。
 - TQ-045：G1 通过后再作为 P2 机制回归。
 - TQ-054～TQ-071：仅在对应分线 backlog 已登记且依赖满足时补位；当前未登记项不得补位。
 
 ## 任务卡片
-
-### TQ-043 · D-IMPORT-01 接管并修复按表头解析导入器
-
-- 来源：用户于 2026-07-11 指定 Codex 接管；问题基线为 Claude Code 提交 `3c8c1cd` 与复审结论 `890328c`。
-- 当前状态：待处理；依赖：无。
-- 主责：Codex / gpt-5.5。
-- 必读：`开发管理/开发-技术经验.txt`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、三类 CSV 表头与 CharacterCreationPointBuy CSV。
-- 范围：让 `FindHeader` 不依赖 `name` 的固定列位；修正 `RequireColumnsRejectsMissingHeaders` 对可选列默认值语义的错误断言；增加经过真实表头发现/导入路径的列换位覆盖。保留 Characters/Enemies 空装备列兼容；不得修改 CSV 内容、asset、战斗数值或 BattleSim。
-- 验证：`dotnet build src/TianZhang.Editor.csproj -c Debug`；`dotnet build src/TianZhang.EditModeTests.csproj -c Debug`；权威 Unity EditMode 目标或全量测试；`check-data-chain.ps1` 及 `-FailOnMissingAssets`；文本检查；`git diff --check`。
-- 完成条件：真实表头列换位不导致找不到表头或错读；必要列缺失明确失败，可选列缺失/空值按既定默认值回退；相关 Unity 测试无失败。
 
 ### TQ-050 · Q-UNITY-02 建立权威 Unity 测试入口
 
@@ -87,7 +76,7 @@
 ### TQ-056 · D-TRUST-01 数据检查器错误分级
 
 - 来源：可信度闸门规格 §6。
-- 当前状态：阻塞（TQ-043）；依赖：Codex 完成并验证 TQ-043。
+- 当前状态：待处理；依赖：TQ-043 已由 Codex 完成并验证（`fa31b73`）。
 - 主责：Codex / gpt-5.5。
 - 必读：`tools/check-data-chain.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/realm_lianshen专项检查.txt`、三类 CSV 与 Unity 数据对象定义。
 - 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；每个批准警告豁免必须在版本控制中精确绑定 `ruleId + contentId/文件/行键`，记录理由、负责人、移除或到期条件；禁止通配符、类别级、前缀匹配或自动覆盖未来记录。
