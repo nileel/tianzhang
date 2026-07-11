@@ -18,9 +18,9 @@
 | 当前轮次 | WF3-20260711-AUTHCHECK |
 | 全局锁 | IDLE |
 | 锁持有者 | 无 |
-| 锁开始时间 | 2026-07-11 12:34:39 +08:00 |
+| 锁开始时间 | 无 |
 | 最近完成阶段 | skipped_cleanly |
-| 最近中断原因 | 无 |
+| 最近中断原因 | 首次 Claude 调用 124 秒超时后恢复成功 |
 | 当前恢复指针 | 无 |
 | 本轮身份模型 | Claude Code（ANTHROPIC_BASE_URL=http://127.0.0.1:15721，非 /claude-desktop，属原生 Claude CLI） |
 
@@ -30,7 +30,7 @@
 |--------|----------|------|----------------|--------|----------|----------|
 | WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：队列维持 6 条；同步 TQ-038、TQ-043 待复审摘要，验证通过 |
 | WF2-CODEX-ONE | T+30 | IDLE | TQ-049 / Q-UNITY-01 | commit_completed | 0 | commit_completed：目标 1/1、冻结基线 47/47、两项 dotnet build 通过；当前 52 项中的 TQ-043 待复审测试另有 1 项失败 |
-| WF3-CLAUDE-ONE | T+90 | IDLE | 无 | identity_checked | 0 | skipped_cleanly：身份=Claude Code；允许主责=DeepSeek V4 Pro / Claude Code / Claude / DeepSeek；候选 TQ-050(Codex/gpt-5.5/待处理)、TQ-051(Codex/gpt-5.5/阻塞)、TQ-052(Codex/gpt-5.5/待处理)、TQ-053(Codex/gpt-5.5/阻塞)、TQ-056(Codex/gpt-5.5/阻塞)；AI合作沟通2条目均为待复审非执行型；未通过审核清单空；五个分线backlog无Claude/DeepSeek主责匹配 — 无合格候选 |
+| WF3-CLAUDE-ONE | T+90 | IDLE | 无 | identity_checked | 1 | skipped_cleanly：身份=Claude Code；修改方=Claude Code；允许主责=DeepSeek V4 Pro / Claude Code / Claude / DeepSeek；候选 TQ-050(Codex/gpt-5.5/待处理)、TQ-051(Codex/gpt-5.5/阻塞)、TQ-052(Codex/gpt-5.5/待处理)、TQ-053(Codex/gpt-5.5/阻塞)、TQ-056(Codex/gpt-5.5/阻塞) 全部主责不匹配；AI合作沟通 TQ-038/TQ-043 均待复审（纯 1 不消费）；未通过审核清单空；五个分线backlog无Claude/DeepSeek主责匹配 — 无合格候选 |
 | WF4-CODEX-TWO | T+150 | IDLE | HANDOFF-20260710-01 / TQ-038 | skipped_cleanly | 0 | skipped_cleanly：6小时内已有 WF2-CODEX-ONE RUNNING 锁，未启动复审 |
 
 ## 检查点枚举
