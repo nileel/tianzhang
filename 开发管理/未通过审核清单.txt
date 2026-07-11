@@ -10,6 +10,7 @@
 > 2026-07-10 Codex / gpt-5.5：复审 HANDOFF-20260709-02 / TQ-037 通过；无新增未通过项。当前待复审 DeepSeek 交接见 `开发管理/AI合作沟通.txt`。
 > 2026-07-10 WF4-CODEX-TWO / unknown：复审 HANDOFF-20260709-01 / TQ-036 通过；无新增未通过项。归档见 `开发管理/任务归档/2026-07-10-TQ-036第一章入口L3任务复审归档.txt`。
 > 2026-07-11 WF4-CODEX-TWO / gpt-5.6-sol：复审 HANDOFF-20260710-02 / TQ-043 不通过；新增 R-20260711-01，等待修正真实表头换位与失败测试。
+> 2026-07-11 用户指定：TQ-043 属 Codex 主责，R-20260711-01 转为 Codex P0 执行任务；从本清单移出，不再要求 DeepSeek/Claude 返工后复审。
 
 ## 用途
 
@@ -17,14 +18,7 @@
 
 ## 当前未通过/待复审项
 
-### R-20260711-01 · TQ-043 导入器按表头解析返工
-
-- 结论：不通过。
-- 目标提交：`3c8c1cd`（当前分支可达实现）。
-- 问题 1：`DataConfigImporter.FindHeader` 仍只接受首列为 `name` 的行；若真实 CSV 将 `name` 换到其他列，表头解析返回空数组，六个导入入口会在 `RequireColumns` 处失败，与“列序调整不误读”的完成条件冲突。
-- 问题 2：`RequireColumnsRejectsMissingHeaders` 断言 `GetColumnValueOrDefault` 在可选列缺失时抛出 `InvalidDataException`，但该 API 的既定语义是返回默认值；当前 Unity EditMode 全量结果因此有 1 项失败，测试未验证真实 `FindHeader` / 导入入口。
-- 修复范围：让表头识别不依赖 `name` 的固定列位；将失败测试改为分别验证可选列缺失回退和必要列缺失失败，并新增至少一个经过真实表头发现路径的列换位用例。不得扩大到 CSV 内容、asset、战斗数值或 BattleSim。
-- 复核要求：相关 Editor/EditMode build、Unity EditMode 目标测试或全量测试、`check-data-chain.ps1`、`check-data-chain.ps1 -FailOnMissingAssets`、文本检查与 `git diff --check` 均通过。
+当前无未通过或返工待复核项。TQ-043 的既有问题已转入 `开发管理/当前任务队列.txt`，由 Codex 直接接管修复。
 
 ## 后续复核建议
 
