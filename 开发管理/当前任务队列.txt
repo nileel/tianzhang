@@ -14,6 +14,7 @@
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-056 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-056-数据检查器错误分级归档.txt`；夹具正反例通过，生产检查器已失败关闭并显式列出历史数据矛盾。TQ-057、TQ-058 解除阻塞，TQ-059 仍等待二者。
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-060 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-060-冒险运行时所有者归档.txt`；`AdventureScene` 锁定为唯一正式冒险入口，`ExplorationScene` 定性为不可达旧原型。TQ-061、TQ-062 解除阻塞，必须先读 `开发管理/运行时所有者记录-TQ-060.txt`。
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-061 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-061-正式冒险战斗闭环归档.txt`；正式 `AdventureScene` 已接入最小六角地图、单敌遭遇、既有 `TacticalCombatController` 与胜败返回来源上下文。TQ-063 仍等待 TQ-062。
+> 2026-07-12 Codex / gpt-5.6-terra：队列维护补入已登记的 TQ-063；其依赖 TQ-062 尚未完成，保持阻塞。近期队列恢复为 5 条，内容冻结保持不变。
 
 ## 使用规则
 
@@ -28,6 +29,7 @@
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
 | TQ-062 | P0 | Codex / gpt-5.5 | G1 Unity | 待处理 | U-SLICE-03：角色出身驱动起始节点 |
+| TQ-063 | P0 | Codex / gpt-5.5 | G1 Unity | 阻塞（TQ-062） | U-SLICE-04：正式 Build Settings 端到端冒烟 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-058 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-03：contentScope 失败关闭与运行时过滤 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057、TQ-058） | D-TRUST-04：接通境界、元素和阵营限制 |
@@ -88,3 +90,13 @@
 - 范围：移除新游戏流程对江左起点的硬编码；由角色创建的出身数据映射起始世界节点，并为非法或旧存档值提供显式回退。
 - 验证：对当前两个可选出身和非法/旧值分别建立回归；运行相关 Unity 编译与 EditMode 测试、`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、`git diff --check`。
 - 完成条件：当前两个可选出身进入各自起始节点；非法值走被记录的专用回退路径，不能静默伪装为合法出身值。
+
+### TQ-063 · U-SLICE-04 正式 Build Settings 端到端冒烟
+
+- 来源：可信度闸门规格 §4、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/运行时所有者记录-TQ-060.txt`。
+- 当前状态：阻塞（TQ-062）；依赖：TQ-061 已完成、TQ-062 待处理。
+- 主责：Codex / gpt-5.5。
+- 必读：TQ-060 的运行时所有者记录、TQ-061 归档、角色创建、世界/据点/冒险场景流转和 `GameSession.PlayerProfile` 实现。
+- 范围：提供可重复的自动或半自动正式构建链步骤与运行结果，从创建角色到返回据点验证玩家档案、出身、起点、Adventure 上下文和返回上下文全程不丢失。
+- 验证：运行相关 Unity 编译与 EditMode 测试；执行 `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` 或等效正式构建场景验证；运行 `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 与 `git diff --check`。
+- 完成条件：正式 Build Settings 可连续完成“创建角色 → 世界节点 → 据点 → 冒险 → 战斗 → 结算 → 返回据点”，且旧 `ExplorationScene` 不重新成为可达竞争入口；G1 才可标记通过。
