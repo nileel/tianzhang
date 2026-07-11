@@ -14,7 +14,8 @@
 2. 用 `tools/automation-controller-state.ps1` 获取三小时本机租约。
 3. 检查恢复状态和完整 Git 工作区；来源不明脏改只读退出。
 4. 单轮只选择一个分支：恢复中断任务 → 最高风险待复审 → 必要队列维护 → 一个 Codex 待处理任务 → 安静退出。
-5. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检，再执行 `git add`；仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮，不得为此失败关闭或留待下一轮。任何非文本、路径外或复检仍失败的问题仍按失败关闭。暂存后必须运行 `git diff --cached --check`。前者覆盖未跟踪新文件，后者保留 Git 原生二次校验。
+5. 选定真实工作对象后、读取实施细则前，调用 Codex 的对话标题更新能力：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用 TQ/HANDOFF 编号；无候选、锁占用、身份失败或人工脏工作区不改名。改名失败只记录 automation memory，不影响任务路由、验证、提交或失败关闭。
+6. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检，再执行 `git add`；仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮，不得为此失败关闭或留待下一轮。任何非文本、路径外或复检仍失败的问题仍按失败关闭。暂存后必须运行 `git diff --cached --check`。前者覆盖未跟踪新文件，后者保留 Git 原生二次校验。
 
 ## 动态选题
 
