@@ -1,0 +1,28 @@
+# TQ-060 · 冒险运行时唯一所有者（完成归档）
+
+- 完成日期：2026-07-12
+- 执行方：Codex / gpt-5.6-terra
+- 范围：实时扫描正式场景、Build Settings、流转代码、旧探索原型与 EditMode 证据；未修改 Unity 行为、场景、数据或数值。
+
+## 结论与交付
+
+- 新增 `开发管理/运行时所有者记录-TQ-060.txt`，锁定 `AdventureScene` + `AdventureSceneController` 为唯一正式冒险运行时所有者。
+- 正式调用链为 StartMenu → World/Settlement → `SceneFlowManager.EnterAdventure` → `AdventureScene`；返回由 `SceneReturnTarget` 驱动回 World 或 Settlement。
+- `ExplorationScene` 不在 Build Settings，且仓库内没有加载它的运行时引用；但它仍承载实际网格、遭遇和 `TacticalCombatController` 接入。它被定性为不可达旧可玩原型，而不是第二个正式入口。
+- TQ-061 已获得单向迁入边界：把最小玩法协作迁入或适配至 `AdventureScene`，不新增正式场景反跳 `ExplorationScene` 的路径，不复制 CTB/结算逻辑。
+
+## 验证
+
+- `dotnet build src/Assembly-CSharp.csproj`
+- `dotnet build src/TianZhang.EditModeTests.csproj`
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`
+- `powershell -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本轮预期文件>`
+- `git diff --check`
+- `git diff --cached --check`
+
+以上命令在本任务提交前运行；其结果是本归档所述事实和管理文件可提交的验证证据。前一轮曾因未跟踪的新记录含 Markdown 双空格行尾而在 cached diff 阶段失败；根因是普通 `git diff --check` 不检查未跟踪文件。本轮新增的预暂存检查已覆盖该缺口。
+
+## 后续依赖
+
+- TQ-061、TQ-062 解除阻塞；它们必须以运行时所有者记录为事实源。
+- G1 尚未通过：TQ-061、TQ-062、TQ-063 仍须完成，且正式构建中不能保留两个竞争的可达冒险入口。

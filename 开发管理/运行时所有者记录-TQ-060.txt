@@ -1,0 +1,69 @@
+# TQ-060 · 冒险运行时唯一所有者记录
+
+> 记录日期：2026-07-12
+> 证据范围：当前工作树的正式 Build Settings、四个正式场景、场景流转脚本、场景构建器与 EditMode 回归。本文是后续 TQ-061、TQ-062 的事实源，不是迁移计划的替代品。
+
+## 结论
+
+正式冒险运行时唯一所有者确定为 **`AdventureScene` + `AdventureSceneController`**。它是 `SceneFlowManager.PrepareAdventureEntry` 返回的唯一场景名，也是 `EditorBuildSettings.asset` 中唯一已启用的冒险场景。
+
+旧 `ExplorationScene` 不在正式 Build Settings，仓库内也没有任何运行时 `LoadScene` 调用会加载它；但该场景目前仍独占 `ExplorationController`、六角网格、敌人生成和 `TacticalCombatController` 接入。因此它是**不可从正式链路抵达的旧可玩原型**，不能被视为第二个正式入口，也不能被删除后宣称战斗已迁入正式链路。
+
+唯一可接受的后续方向是：在 TQ-061 中把旧原型的最小网格/遭遇/结算协作能力迁入或适配到 `AdventureScene`，保留 `TacticalCombatController` 作为单场战斗所有者；之后让 `ExplorationScene` 从构建器菜单与资产中淘汰，或保持仅编辑器样例且不可从游戏运行时进入。禁止新增从正式场景跳转到 `ExplorationScene` 的适配层。
+
+## 已扫描的正式调用链
+
+```text
+EditorBuildSettings.asset
+  StartMenuScene -> WorldScene -> SettlementScene -> AdventureScene
+
+StartMenuScene / 场景中的 SceneFlowManager
+  StartNewGame(profile) -> GameSession.BeginNewGame(...) -> EnterWorld(...)
+  WorldSceneController.EnterAdventure(...) 或 SettlementSceneController.EnterAdventure(...)
+    -> SceneFlowManager.EnterAdventure(adventureId, returnTarget)
+    -> PrepareAdventureEntry(...) 记录 adventureId + returnTarget
+    -> SceneManager.LoadScene("AdventureScene")
+      -> AdventureSceneController 读取 GameSession 并展示来源/返回入口
+      -> （TQ-061 待接入）最小网格、单敌遭遇和 TacticalCombatController
+
+返回：AdventureSceneController.ReturnToSource()
+  -> SceneFlowManager.PrepareReturnToPreviousScene()
+  -> SettlementScene 或 WorldScene，随后清理 CurrentAdventureId 与 returnTarget
+```
+
+## 竞争候选的处理结论
+
+| 候选 | 实时证据 | 结论 |
+|---|---|---|
+| `AdventureScene` / `AdventureSceneController` | 已启用 Build Settings 场景；`PrepareAdventureEntry` 的唯一返回值；场景挂载控制器与持久 `SceneFlowManager`；来源/返回上下文已有 EditMode 回归。 | 保留为正式唯一所有者。|
+| `ExplorationScene` / `ExplorationController` | 不在 Build Settings；仅 `SceneBuilder.BuildExplorationScene` 创建它；无运行时场景名引用。它仍拥有六角网格、敌人、遭遇、`TacticalCombatController` 调度和胜利回探索状态。 | 迁移其最小玩法协作能力；不得成为可达正式入口。|
+| `SceneBuilder` | 正式壳生成与注册只包含 StartMenu/World/Settlement/Adventure；仍暴露旧“生成探索场景”菜单。 | 保留正式四场景职责；TQ-061 完成迁入后淘汰旧菜单或明确其仅编辑器样例。|
+| `TacticalCombatController` | 由 `ExplorationController` 创建并拥有单场战斗准备、推进和结算。 | 保留为战斗所有者；TQ-061 仅改变其由正式 Adventure 入口接入的位置，不复制 CTB/结算逻辑。|
+
+## 迁移边界
+
+### TQ-061 允许修改的候选范围
+
+- `src/Assets/Scenes/AdventureScene.unity`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs`：承载正式场景的最小探索/遭遇协调。
+- `src/Assets/Scripts/Map/ExplorationController.cs` 及其直接网格协作者：提取或适配最小地图与单敌遭遇，不能把正式入口反指向旧场景。
+- `src/Assets/Scripts/Combat/TacticalCombatController.cs`：仅在正式接入所需的窄接口处修改，保持单场战斗所有权。
+- `src/Assets/Scripts/Editor/SceneBuilder.cs`、相关 EditMode/PlayMode 测试和此记录：同步正式场景构建与回归证据。
+
+### 本切片明确禁止修改
+
+- `src/ProjectSettings/EditorBuildSettings.asset` 中新增或重新启用 `ExplorationScene`。
+- `simulations/BattleSim/`、CSV、ScriptableObject 数据、剧情与数值规则。
+- CTB、伤害、冷却、槽位、寻路、技能范围、掉落数值的语义；TQ-061 只复用现有行为。
+- 以 `SceneManager.LoadScene("ExplorationScene")`、编辑器手动跳场景或隐藏测试前置条件冒充正式闭环。
+
+## 验证证据
+
+- `src/ProjectSettings/EditorBuildSettings.asset` 仅启用 StartMenu、World、Settlement、Adventure 四场景；其中只有 `AdventureScene` 是冒险场景。
+- `rg -n --glob '*.cs' --glob '*.unity' --glob '*.asset' 'ExplorationScene' src` 仅返回旧构建器方法与旧场景路径；未发现可达运行时加载引用。
+- `SceneFlowManager.PrepareAdventureEntry` 返回 `AdventureScene`；`WorldSceneController` 与 `SettlementSceneController` 都经该入口写入 `SceneReturnTarget`。
+- `SceneArchitectureEditorTests.SceneFlowManagerPreparesAdventureAndReturnContextsWithoutSceneLoad` 验证 World/Settlement 两条进入与返回上下文；`AdventureSceneControllerDisplaysCurrentAdventureAndSource` 验证正式场景显示该上下文。
+
+## 后续任务读取要求
+
+- TQ-061 必须先读本文，并以 `AdventureScene` 为唯一正式运行时入口；完成后要提供胜利与失败两条路径返回合法上下文的运行证据。
+- TQ-062 必须保留本文所列 `SceneFlowManager` / `GameSession` 所有权链；它只能改变新游戏起始世界节点选择，不能重启旧 `ExplorationScene` 路径。

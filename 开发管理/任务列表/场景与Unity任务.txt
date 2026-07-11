@@ -34,9 +34,9 @@
 | Q-UNITY-01 / TQ-049 | P0 | Codex | ✅ 已完成（2026-07-11） | 显式创建 `GameSession` 测试夹具；冻结基线 47/47 通过 |
 | Q-UNITY-02 / TQ-050 | P0 | Codex | ✅ 已完成（2026-07-11） | 权威 EditMode 入口已验证 XML 成功/失败/缺失/不可解析/零测试退出码；完整运行 54/54 通过 |
 | Q-UNITY-03 / TQ-051 | P0 | Codex | ✅ 已完成（2026-07-11） | 成功、异常与结果已就绪但退出延迟路径均恢复场景和 Build Settings；真实 EditMode 54/54 通过，前后工作区一致 |
-| U-SLICE-01 / TQ-060 | P0 | Codex | 待处理 | 证明 Adventure/Exploration/SceneBuilder 调用链并锁定唯一冒险运行时所有者 |
-| U-SLICE-02 / TQ-061 | P0 | Codex | 阻塞（TQ-060） | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
-| U-SLICE-03 / TQ-062 | P0 | Codex | 阻塞（TQ-060） | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
+| U-SLICE-01 / TQ-060 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式所有者锁定为 `AdventureScene`；`ExplorationScene` 为不可达旧原型，记录见 `开发管理/运行时所有者记录-TQ-060.txt` |
+| U-SLICE-02 / TQ-061 | P0 | Codex | 待处理 | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
+| U-SLICE-03 / TQ-062 | P0 | Codex | 待处理 | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
 | U-SLICE-04 / TQ-063 | P0 | Codex | 阻塞（TQ-061、TQ-062） | 正式 Build Settings 端到端冒烟；通过后 G1 才可标记通过 |
 | M-ARCH-01 / TQ-064 | P1 | Codex | 阻塞（G1） | 建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
 | U-ARCH-01 / TQ-065 | P1 | Codex | 阻塞（TQ-064） | 拆分 `ExplorationController` / `SceneBuilder` 至少一个真实职责和依赖边 |
