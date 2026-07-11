@@ -13,6 +13,7 @@
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-054 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-054-模拟Build输入角色创建规则归档.txt`；21 个 BattleSim Build 现在均通过镜像的创建点购校验，非法输入在矩阵前确定失败，TQ-044 解除阻塞；G2 尚未通过。
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-056 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-056-数据检查器错误分级归档.txt`；夹具正反例通过，生产检查器已失败关闭并显式列出历史数据矛盾。TQ-057、TQ-058 解除阻塞，TQ-059 仍等待二者。
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-060 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-060-冒险运行时所有者归档.txt`；`AdventureScene` 锁定为唯一正式冒险入口，`ExplorationScene` 定性为不可达旧原型。TQ-061、TQ-062 解除阻塞，必须先读 `开发管理/运行时所有者记录-TQ-060.txt`。
+> 2026-07-12 Codex / gpt-5.6-terra：TQ-061 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-061-正式冒险战斗闭环归档.txt`；正式 `AdventureScene` 已接入最小六角地图、单敌遭遇、既有 `TacticalCombatController` 与胜败返回来源上下文。TQ-063 仍等待 TQ-062。
 
 ## 使用规则
 
@@ -26,7 +27,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-061 | P0 | Codex / gpt-5.5 | G1 Unity | 待处理 | U-SLICE-02：接通正式冒险与单场战斗闭环 |
 | TQ-062 | P0 | Codex / gpt-5.5 | G1 Unity | 待处理 | U-SLICE-03：角色出身驱动起始节点 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-058 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-03：contentScope 失败关闭与运行时过滤 |
@@ -78,16 +78,6 @@
 - 范围：证明正式 Build Settings、`AdventureScene`、旧 `ExplorationScene`、`SceneBuilder`、冒险控制器和战斗入口的真实调用链；为竞争入口决定迁移、适配或淘汰路径，禁止保留两个竞争的可达运行时入口。
 - 验证：基于实时扫描产出运行时所有者记录、场景迁移边界及允许/禁止修改清单；运行 `dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、`git diff --check`。
 - 完成条件：能从 StartMenu 的实际调用链唯一定位冒险场景、战斗入口和返回上下文；每个竞争候选都有保留或淘汰理由，且产物不得只靠推测或迁移计划。
-
-### TQ-061 · U-SLICE-02 接通正式冒险与单场战斗闭环
-
-- 来源：可信度闸门规格 §4、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/运行时所有者记录-TQ-060.txt`。
-- 当前状态：待处理；依赖：TQ-060 已完成。
-- 主责：Codex / gpt-5.5。
-- 必读：TQ-060 的运行时所有者记录、已锁定的网格与战斗所有者、场景流转和返回上下文实现。
-- 范围：在唯一正式冒险入口中接通最小地图、一个敌方单位、一场可结束战斗、结算和返回据点；复用已证明的网格与战斗所有者，不向大型控制器堆入无关职责。
-- 验证：运行相关 EditMode 或 PlayMode 回归以及 `powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；检查成功和异常路径均无场景或 Build Settings 残留；`git diff --check`。
-- 完成条件：无需在编辑器手动跳场景即可进入并结束一场战斗，胜负两条结算路径都返回合法场景上下文。
 
 ### TQ-062 · U-SLICE-03 角色出身驱动起始节点
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TianZhang.Combat;
 using TianZhang.Game;
 
 namespace TianZhang.Adventure
@@ -15,6 +16,7 @@ namespace TianZhang.Adventure
     public class AdventureSceneController : MonoBehaviour
     {
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
+        public TacticalCombatEndOutcome LastEncounterOutcome { get; private set; } = TacticalCombatEndOutcome.Ongoing;
         public string CurrentAdventureId => GameSession.Instance?.CurrentAdventureId ?? "prototype_adventure";
 
         private Text adventureIdText;
@@ -45,6 +47,17 @@ namespace TianZhang.Adventure
         {
             if (CurrentState == AdventureSceneState.Combat)
                 CurrentState = AdventureSceneState.Exploration;
+        }
+
+        public void ResolveEncounterAndReturn(TacticalCombatEndOutcome outcome)
+        {
+            if (outcome != TacticalCombatEndOutcome.Victory && outcome != TacticalCombatEndOutcome.Defeat)
+                throw new System.ArgumentOutOfRangeException(nameof(outcome), outcome, "Only completed encounter outcomes may return to the source scene.");
+
+            LastEncounterOutcome = outcome;
+            MarkReturning();
+            if (SceneFlowManager.Instance != null)
+                SceneFlowManager.Instance.ReturnToPreviousScene();
         }
 
         public void MarkReturning()

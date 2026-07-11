@@ -45,6 +45,20 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void AdventureSceneShellIncludesTheFormalSingleEncounterOwners()
+        {
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+            Assert.IsNotNull(Object.FindFirstObjectByType<AdventureSceneController>());
+            Assert.IsNotNull(Object.FindFirstObjectByType<TianZhang.HexTile.HexTilemapManager>());
+            Assert.IsNotNull(exploration);
+            Assert.IsNotNull(Object.FindFirstObjectByType<BattleUIManager>());
+            Assert.AreEqual(1, exploration.enemyCount);
+        }
+
+        [Test]
         public void StartMenuSceneContainsSectSelectionFlow()
         {
             SceneBuilder.BuildStartMenuScene();

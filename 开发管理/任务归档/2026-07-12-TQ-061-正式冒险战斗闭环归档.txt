@@ -1,0 +1,27 @@
+# TQ-061 · 正式冒险战斗闭环（完成归档）
+
+- 完成日期：2026-07-12
+- 执行方：Codex / gpt-5.6-terra
+- 范围：将最小六角地图、单敌遭遇和既有战斗所有者接入唯一正式 `AdventureScene`；未改变 CTB、伤害、冷却、槽位、寻路、技能范围或掉落数值语义。
+
+## 结论与交付
+
+- `SceneBuilder.BuildAdventureScene` 现在在正式 `AdventureScene` 构建六角网格、`HexTilemapManager`、单敌 `ExplorationController` 与 `BattleUIManager`；`ExplorationScene` 未被加入正式调用链。
+- 正式场景继续使用既有 `ExplorationController` 与 `TacticalCombatController` 处理遭遇和结算，不复制战斗实现。
+- 胜利与失败均通过 `AdventureSceneController.ResolveEncounterAndReturn` 标记返回状态，并委托 `SceneFlowManager.ReturnToPreviousScene` 使用已登记的 World 或 Settlement 返回上下文。
+- 新增回归锁定正式场景的单场所有者，以及胜利/失败两个结算结果进入返回状态。
+
+## 验证
+
+- 测试先行：新增接口在实现前的 `dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 预期失败，报缺少 `ResolveEncounterAndReturn` 与 `LastEncounterOutcome`。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`
+- `dotnet build src/Assembly-CSharp.csproj --no-restore`
+- `powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ResultExitGraceSeconds 30`
+- Unity batch `TianZhang.Editor.SceneBuilder.BuildAdventureScene`（退出码 0）生成正式场景与所需 tile 资源。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`
+- `git diff --check`
+
+## 后续依赖
+
+- TQ-062 仍待处理；TQ-063 继续等待 TQ-062，之后才验证正式 Build Settings 的完整端到端路径。
+- G1 尚未通过；本切片证明正式冒险单场闭环，不替代 TQ-063 的全链路冒烟证据。

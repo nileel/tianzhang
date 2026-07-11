@@ -622,7 +622,7 @@ namespace TianZhang.Map
                 playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
             uiManager.SetActionButtonsInteractable(interactable);
         }
-        
+
 private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             int dist = player.Position.Distance(enemyUnit.character.Position);
@@ -829,6 +829,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
                 AddLog(endResult.Message);
                 SetStatus("败北");
                 state = GameState.Ended;
+                adventureSceneController?.ResolveEncounterAndReturn(endResult.Outcome);
             }
             else if (endResult.Outcome == TacticalCombatEndOutcome.Victory)
             {
@@ -840,11 +841,10 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
                 // 掉落
                 HandleDrop(endResult.DropItems);
 
-                // 回到探索模式
-                state = GameState.Exploration;
-                waitingForMoveInput = true;
+                // 正式 AdventureScene 的单场闭环在结算后立即返回来源上下文。
+                state = GameState.Ended;
+                waitingForMoveInput = false;
                 currentCombatTarget = null;
-                adventureSceneController?.CompleteEncounter();
                 tilemapManager.ClearOverlay();
 
                 // 隐藏战斗UI
@@ -855,6 +855,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
                 }
 
                 RefreshUI();
+                adventureSceneController?.ResolveEncounterAndReturn(endResult.Outcome);
             }
         }
 

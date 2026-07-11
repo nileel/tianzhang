@@ -14,7 +14,7 @@
 2. 用 `tools/automation-controller-state.ps1` 获取三小时本机租约。
 3. 检查恢复状态和完整 Git 工作区；来源不明脏改只读退出。
 4. 单轮只选择一个分支：恢复中断任务 → 最高风险待复审 → 必要队列维护 → 一个 Codex 待处理任务 → 安静退出。
-5. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>'`，再执行 `git add`；暂存后必须运行 `git diff --cached --check`。前者覆盖未跟踪新文件，后者保留 Git 原生二次校验。
+5. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检，再执行 `git add`；仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮，不得为此失败关闭或留待下一轮。任何非文本、路径外或复检仍失败的问题仍按失败关闭。暂存后必须运行 `git diff --cached --check`。前者覆盖未跟踪新文件，后者保留 Git 原生二次校验。
 
 ## 动态选题
 

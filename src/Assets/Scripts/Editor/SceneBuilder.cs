@@ -153,7 +153,7 @@ namespace TianZhang.Editor
             BuildEmptyScene(StartMenuScenePath, "StartMenuRoot", new Color(0.05f, 0.05f, 0.08f));
             BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.04f, 0.08f, 0.1f), typeof(TianZhang.World.WorldSceneController));
             BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.08f, 0.07f, 0.05f), typeof(TianZhang.Settlement.SettlementSceneController));
-            BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f), typeof(TianZhang.Adventure.AdventureSceneController));
+            BuildAdventureScene();
             RegisterBuildScenes(StartMenuScenePath, WorldScenePath, SettlementScenePath, AdventureScenePath);
             AssetDatabase.Refresh();
         }
@@ -440,6 +440,58 @@ namespace TianZhang.Editor
         public static void BuildAdventureScene()
         {
             BuildEmptyScene(AdventureScenePath, "AdventureRoot", new Color(0.08f, 0.1f, 0.14f), typeof(TianZhang.Adventure.AdventureSceneController));
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                AdventureScenePath,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+
+            var gridGo = new GameObject("HexGrid");
+            var grid = gridGo.AddComponent<Grid>();
+            grid.cellLayout = GridLayout.CellLayout.Hexagon;
+            grid.cellSize = new Vector3(1f, 1f, 0f);
+
+            var groundGo = new GameObject("Ground");
+            groundGo.transform.SetParent(gridGo.transform);
+            var groundTilemap = groundGo.AddComponent<Tilemap>();
+            groundGo.AddComponent<TilemapRenderer>();
+
+            var overlayGo = new GameObject("Overlay");
+            overlayGo.transform.SetParent(gridGo.transform);
+            var overlayTilemap = overlayGo.AddComponent<Tilemap>();
+            var overlayRenderer = overlayGo.AddComponent<TilemapRenderer>();
+            overlayRenderer.sortingOrder = 1;
+
+            var unitsGo = new GameObject("Units");
+            unitsGo.transform.SetParent(gridGo.transform);
+            var unitTilemap = unitsGo.AddComponent<Tilemap>();
+            var unitRenderer = unitsGo.AddComponent<TilemapRenderer>();
+            unitRenderer.sortingOrder = 2;
+
+            var tilemapManagerGo = new GameObject("TilemapManager");
+            var tilemapManager = tilemapManagerGo.AddComponent<HexTilemapManager>();
+            tilemapManager.groundTilemap = groundTilemap;
+            tilemapManager.overlayTilemap = overlayTilemap;
+            tilemapManager.unitTilemap = unitTilemap;
+            tilemapManager.gridRadius = 6;
+            tilemapManager.groundTile = MakeTile("AdventureGround", new Color(0.3f, 0.5f, 0.2f));
+            tilemapManager.moveHighlightTile = MakeTile("AdventureMoveHighlight", new Color(0.2f, 0.8f, 0.2f, 0.4f));
+            tilemapManager.attackHighlightTile = MakeTile("AdventureAttackHighlight", new Color(0.8f, 0.2f, 0.2f, 0.4f));
+            tilemapManager.selectedTile = MakeTile("AdventureSelected", new Color(1f, 0.8f, 0.2f, 0.5f));
+            tilemapManager.unitPrefab = MakeUnitPrefab();
+
+            var explorationGo = new GameObject("AdventureEncounterController");
+            var exploration = explorationGo.AddComponent<ExplorationController>();
+            exploration.tilemapManager = tilemapManager;
+            exploration.mapRadius = 6;
+            exploration.obstaclePercent = 0;
+            exploration.enemyCount = 1;
+
+            var uiGo = new GameObject("BattleUIManager");
+            exploration.uiManager = uiGo.AddComponent<BattleUIManager>();
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
+                AdventureScenePath);
+            NormalizeGeneratedSceneYaml(AdventureScenePath);
             Debug.Log("<color=cyan>天章副本场景已生成</color>");
         }
 

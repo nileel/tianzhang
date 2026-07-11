@@ -743,6 +743,28 @@ namespace TianZhang.Tests
             }
         }
 
+        [TestCase(TacticalCombatEndOutcome.Victory)]
+        [TestCase(TacticalCombatEndOutcome.Defeat)]
+        public void CompletedEncounterRecordsOutcomeAndReturnsToSource(TacticalCombatEndOutcome outcome)
+        {
+            var go = new GameObject("AdventureSceneControllerTests");
+            try
+            {
+                var controller = go.AddComponent<AdventureSceneController>();
+                controller.MarkExplorationReady();
+                controller.BeginEncounter();
+
+                controller.ResolveEncounterAndReturn(outcome);
+
+                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
+                Assert.AreEqual(outcome, controller.LastEncounterOutcome);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
         [Test]
         public void NewGameSessionClearsPreviousSceneContext()
         {
