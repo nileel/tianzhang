@@ -1,0 +1,31 @@
+# TQ-038 散修通用内容补强清单复审归档
+
+## 对象与结论
+
+- 对象：HANDOFF-20260710-01 / TQ-038，Claude Code 提交 `5b9a43f`。
+- 结论：通过（Codex 已在复审中补正可验证的 CSV 事实与当前任务路由）。
+- 交接已消费：`开发管理/AI合作沟通.txt` 已移除当前 HANDOFF 正文。
+
+## 复核依据
+
+- `src/Assets/DataConfig/GongFa.csv` 中 `gongfa_qiushuiyouxin` 的 `contentScope` 为 `reserved`，与原清单写作 `player` 不一致；其辅属性为风，而设计文档为无。导入器会按表头保留两项 CSV 值。
+- 七个散修术法及六个散修神通的 CSV ID 均存在；`skill_lingyu_wanxiangguiyuan` 为 `reserved`。
+- `开发管理/当前任务队列.txt` 规定 G1/G2/G3 全部通过且 TQ-071 完成前冻结新增内容，因此原文的“可立即生产”和“下一批可执行”不能作为当前路由。
+- `docs/剧情/设定补充/低阶势力开放规则.txt` 已把散修营地/九霄盟外围定义为互保关系与样板成长线候选，未把九霄盟预设为已确认的样板。
+
+## 复审补正
+
+- 清单的功法基线改为“设计文档 1 个；当前 CSV 为 reserved”，显式标示辅属性的文档/CSV 不一致，并禁止把它计为当前玩家可用配置。
+- A 类与下一批任务均改为解除内容冻结后才可再评估的候选；先确认现有功法的 G3 数据链路语义。
+- 未改 CSV、Unity asset、C#、BattleSim 或正式内容设计；未新增未通过审核项。
+
+## 验证
+
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`
+- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+- `git diff --check`
+
+## 未运行
+
+- 未运行 BattleSim：本轮不改数值参数、战斗代码或平衡结论。
+- 未编译 Unity：本轮不改 C#、场景或 Unity asset。
