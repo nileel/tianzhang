@@ -1,0 +1,21 @@
+# TQ-051 · 测试路径恢复场景与 Build Settings（✅ 已完成）
+
+## 目标
+
+让权威 Unity EditMode 入口在成功、异常以及测试结果已写入但 Unity 退出延迟时，均恢复 Git 跟踪的场景与 `EditorBuildSettings.asset`。
+
+## 修改
+
+- `tools/run-unity-editmode-tests.ps1`：运行前保存 Git 跟踪的 `Assets/Scenes/*.unity` 与 `ProjectSettings/EditorBuildSettings.asset` 字节快照；在 `finally` 中恢复。结果 XML 已完整通过后，最多等待 30 秒让 Unity 退出；超时则终止该进程，再恢复快照并以合格 XML 作为成功结果。
+- `tools/test-run-unity-editmode-tests.ps1`：用临时伪 Unity 覆盖成功、进程异常和“合格结果已写入但进程延迟退出”三条路径，并对受保护文件 SHA256 逐条比较。
+
+## 验证证据
+
+- RED：旧运行器执行伪 Unity 成功路径后，`StartMenuScene.unity` 与 `EditorBuildSettings.asset` 哈希改变，测试按预期失败。
+- GREEN：`powershell -ExecutionPolicy Bypass -File tools/test-run-unity-editmode-tests.ps1` 退出 0；XML 失败、缺失、不可解析、零测试、伪进程异常和延迟退出均按预期处理。
+- 真实成功路径：隔离工作树中运行 `powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；结果为 `total=54, passed=54, failed=0, result=Passed`，受保护文件 SHA256 前后一致，`git status --short --untracked-files=all` 前后为空。
+- `git diff --check`：通过。
+
+## 后续
+
+TQ-060 已解除阻塞；正式 Adventure 垂直切片仍须在后续任务中验证。

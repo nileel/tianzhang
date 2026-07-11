@@ -6,6 +6,7 @@
 > 2026-07-11 Codex / gpt-5.6-sol：TQ-049 已完成；修正 EditMode 夹具对 `Awake` 的错误依赖，冻结基线 47/47 通过，TQ-050 解除阻塞。
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-043 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-043-按表头解析导入器修复归档.txt`；TQ-056 解除阻塞。
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-050 已完成；新增权威 EditMode 入口及 XML 正反例测试，完整 Unity EditMode 54/54 通过，TQ-051 解除阻塞。
+> 2026-07-11 Codex / gpt-5.6-terra：TQ-051 已完成；权威入口在通过结果后会限时等待 Unity 退出并恢复快照，真实 EditMode 54/54 通过且场景、Build Settings 哈希与工作区均无残留。TQ-060 解除阻塞，待下一轮队列维护补位。
 
 ## 使用规则
 
@@ -19,7 +20,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-051 | P0 | Codex / gpt-5.5 | G1 验证 | 待处理 | Q-UNITY-03：测试路径恢复场景与 Build Settings |
 | TQ-052 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-01：修正 CT 反应方向并建立回归 |
 | TQ-053 | P0 | Codex / gpt-5.5 | G2 数值 | 阻塞（TQ-052） | N-TRUST-02：统一暴击倍率语义 |
 | TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-01：数据检查器错误分级 |
@@ -32,16 +32,6 @@
 - TQ-054～TQ-071：仅在对应分线 backlog 已登记且依赖满足时补位；当前未登记项不得补位。
 
 ## 任务卡片
-
-### TQ-051 · Q-UNITY-03 测试路径恢复场景与 Build Settings
-
-- 来源：可信度闸门规格 §4。
-- 当前状态：待处理；依赖：TQ-050（已完成）。
-- 主责：Codex / gpt-5.5。
-- 必读：`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`tools/run-unity-editmode-tests.ps1` 及 TQ-050 引入的相关测试脚本。
-- 范围：覆盖权威 Unity 测试入口的成功与异常路径，确保两类路径都恢复执行前的场景和 Build Settings；必须从干净隔离工作区开始，不得依赖人工清理。
-- 验证：分别执行成功路径和异常路径；每条路径测试前保存、测试后比较 `src/Assets/Scenes/*.unity` 与 `src/ProjectSettings/EditorBuildSettings.asset` 中存在且受 Git 跟踪文件的 SHA256 快照，可用 PowerShell `git ls-files 'src/Assets/Scenes/*.unity' 'src/ProjectSettings/EditorBuildSettings.asset' | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { Get-FileHash -Algorithm SHA256 -LiteralPath $_ }` 生成；每条路径前后的 `git status --short --untracked-files=all` 必须都为空；最后运行 `git diff --check`。
-- 完成条件：成功与异常路径各自执行前后的场景与 Build Settings 内容哈希一致，且无 tracked 或 untracked 残留。
 
 ### TQ-052 · N-TRUST-01 修正 CT 反应方向并建立回归
 
