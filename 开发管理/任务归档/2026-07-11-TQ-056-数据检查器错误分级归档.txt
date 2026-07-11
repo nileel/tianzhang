@@ -1,0 +1,32 @@
+# TQ-056 · D-TRUST-01 数据检查器错误分级（完成归档）
+
+- 完成日期：2026-07-11
+- 执行方：Codex / gpt-5.6-terra
+- 范围：只修改 `tools/check-data-chain.ps1`、其夹具测试与精确豁免清单；不修改生产 CSV、Unity asset 或游戏设定正文。
+
+## 交付物
+
+- `tools/check-data-chain.ps1` 支持 `-ProjectRoot` 夹具根目录，并对三类 CSV 的表头、行列数、必填字段、`contentScope`、docs/CSV 数量、asset 覆盖、asset 序列化 scope、语言键和已删除的 `realm_lianxu` 激活进行失败关闭检查。
+- `tools/data-chain-warning-waivers.json` 是版本控制中的唯一豁免入口。每条记录都必须精确给出 `ruleId`、`subject`、`reason`、`owner` 与 `removalCondition`；通配符、分类或前缀豁免被拒绝。
+- `tools/tests/check-data-chain-tests.ps1` 在临时目录中验证：有效夹具、数量不一致、必填字段缺失、asset scope 缺失、已删除境界激活、精确豁免和新增未豁免差异。
+
+## 验证记录
+
+```text
+powershell -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1
+PASS valid fixture
+PASS docs CSV count mismatch
+PASS required field missing
+PASS asset scope missing
+PASS deleted realm active
+PASS exact approved warning
+PASS unwaived new warning
+```
+
+生产检查器现按预期非零退出，暴露待后续切片清理的真实错误：术法 docs/CSV 数量为 86/75、`realm_lianshen` 无语言键、`realm_lianxu` 仍激活、既有 asset 尚未序列化 `contentScope`，以及 CSV 必填字段空值。该非零结果是 TQ-056 的验收输出，不是本任务失败；清理范围由 TQ-057/TQ-058 接管。
+
+## 后续依赖
+
+- TQ-057：可开始清理当前已显式列出的数据矛盾。
+- TQ-058：可开始把 `contentScope` 的导入与运行时行为改为失败关闭，并补齐 asset/运行时链路。
+- TQ-059：继续等待 TQ-057 与 TQ-058。

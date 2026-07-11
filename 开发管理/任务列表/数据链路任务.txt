@@ -24,10 +24,10 @@
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离 |
 | D-ASSET-01 / TQ-040 | P2 | DeepSeek | 已合并至 TQ-057 | CSV/asset 字段完整性复查由 D-TRUST-02 统一执行，不再单独领取 |
 | D-IMPORT-01 / TQ-043 | P0 | Codex | 待处理（用户指定直接接管） | 按表头解析全部核心字段；修正真实表头换位与错误测试；缺必需列/重复列失败，未知列按显式兼容策略处理 |
-| D-TRUST-01 / TQ-056 | P0 | Codex | 阻塞（TQ-043） | 检查脚本区分错误和警告；语义错误必须非零退出 |
-| D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 阻塞（TQ-056） | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
-| D-TRUST-03 / TQ-058 | P0 | Codex | 阻塞（TQ-043、TQ-056） | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
-| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-043、TQ-056、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only` |
+| D-TRUST-01 / TQ-056 | P0 | Codex | ✅ 已完成（2026-07-11） | 检查脚本现以精确版本控制豁免区分错误和警告；归档见 `任务归档/2026-07-11-TQ-056-数据检查器错误分级归档.txt` |
+| D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 待处理 | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
+| D-TRUST-03 / TQ-058 | P0 | Codex | 待处理 | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
+| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only` |
 
 ## G3 任务执行边界
 

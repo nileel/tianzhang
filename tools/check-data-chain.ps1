@@ -1,258 +1,185 @@
+[CmdletBinding()]
 param(
-  [switch]$FailOnMissingAssets
+  [switch]$FailOnMissingAssets,
+  [string]$ProjectRoot = (Get-Location).Path
 )
 
-$ErrorActionPreference = "Stop"
-$root = (Get-Location).Path
-$failures = New-Object System.Collections.Generic.List[string]
+$ErrorActionPreference = 'Stop'
+$root = [System.IO.Path]::GetFullPath($ProjectRoot)
+if (-not (Test-Path -LiteralPath $root -PathType Container)) { throw "ProjectRoot does not exist: $ProjectRoot" }
+
+$errors = [System.Collections.Generic.List[string]]::new()
+$warnings = [System.Collections.Generic.List[string]]::new()
+$waivers = @()
+$findingKeys = [System.Collections.Generic.HashSet[string]]::new()
+
+function Add-Error {
+  param([string]$RuleId, [string]$Subject, [string]$Message)
+  $errors.Add("ERROR`t$RuleId`t$Subject`t$Message") | Out-Null
+}
+
+function Add-Finding {
+  param([string]$RuleId, [string]$Subject, [string]$Message)
+
+  if (-not $findingKeys.Add($RuleId + [char]0x1F + $Subject)) { return }
+
+  $waiver = @($waivers | Where-Object { $_.ruleId -ceq $RuleId -and $_.subject -ceq $Subject })
+  if ($waiver.Count -eq 1) {
+    $warnings.Add("WARNING`t$RuleId`t$Subject`tWAIVED: $Message") | Out-Null
+    return
+  }
+  Add-Error $RuleId $Subject $Message
+}
 
 function Join-ProjectPath {
   param([string[]]$Parts)
-
   $path = $root
-  foreach ($part in $Parts) {
-    $path = Join-Path $path $part
-  }
+  foreach ($part in $Parts) { $path = Join-Path $path $part }
   return $path
 }
 
-function Get-CultivationName {
-  return (-join @([char]0x89D2, [char]0x8272, [char]0x517B, [char]0x6210))
-}
-
-function Get-GongFaName {
-  return (-join @([char]0x529F, [char]0x6CD5))
-}
-
-function Get-SpellName {
-  return (-join @([char]0x672F, [char]0x6CD5))
-}
-
-function Get-SkillName {
-  return (-join @([char]0x795E, [char]0x901A))
-}
+function Get-CultivationName { return (-join @([char]0x89D2, [char]0x8272, [char]0x517B, [char]0x6210)) }
+function Get-GongFaName { return (-join @([char]0x529F, [char]0x6CD5)) }
+function Get-SpellName { return (-join @([char]0x672F, [char]0x6CD5)) }
+function Get-SkillName { return (-join @([char]0x795E, [char]0x901A)) }
 
 function Get-ContentDocs {
   param([string]$ContentKind)
-
-  $path = Join-ProjectPath @("docs", (Get-CultivationName), $ContentKind)
-  if (-not (Test-Path -Path $path -PathType Container)) {
-    $failures.Add("MISSING_DOC_DIR`t$ContentKind")
+  $path = Join-ProjectPath @('docs', (Get-CultivationName), $ContentKind)
+  if (-not (Test-Path -LiteralPath $path -PathType Container)) {
+    Add-Error 'MISSING_DOC_DIR' $ContentKind "Missing content document directory: $path"
     return @()
   }
-
-  return @(Get-ChildItem -Path $path -Recurse -File -Filter *.txt | Where-Object {
-    $_.DirectoryName -ne $path
-  })
+  return @(Get-ChildItem -LiteralPath $path -Recurse -File -Filter *.txt | Where-Object { $_.DirectoryName -ne $path })
 }
 
-function Get-CsvRows {
-  param([string]$RelativePath)
-
+function Get-CsvTable {
+  param([string]$RelativePath, [string[]]$ExpectedHeaders)
   $path = Join-Path $root $RelativePath
-  if (-not (Test-Path -Path $path -PathType Leaf)) {
-    $failures.Add("MISSING_CSV`t$RelativePath")
-    return @()
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+    Add-Error 'MISSING_CSV' $RelativePath "Missing CSV: $RelativePath"
+    return [pscustomobject]@{ Name = $RelativePath; Headers = @(); Rows = @() }
   }
 
-  $lines = Get-Content -Path $path -Encoding UTF8
-  $data = @()
-  $headerSeen = $false
-  foreach ($line in $lines) {
-    $trimmed = $line.Trim()
-    if ($trimmed.Length -eq 0 -or $trimmed.StartsWith("#")) {
+  $lines = @(Get-Content -LiteralPath $path -Encoding UTF8 | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
+  if ($lines.Count -eq 0) {
+    Add-Error 'CSV_HEADER_MISSING' $RelativePath 'CSV has no header row.'
+    return [pscustomobject]@{ Name = $RelativePath; Headers = @(); Rows = @() }
+  }
+
+  $headers = @($lines[0].Split(',') | ForEach-Object { $_.Trim() })
+  foreach ($duplicate in @($headers | Group-Object | Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name)) {
+    Add-Finding 'CSV_SCHEMA_DUPLICATE_COLUMN' "${RelativePath}:$duplicate" 'CSV header contains a duplicate column.'
+  }
+  foreach ($expected in $ExpectedHeaders) {
+    if ($headers -notcontains $expected) { Add-Finding 'CSV_SCHEMA_MISSING_COLUMN' "${RelativePath}:$expected" 'Required schema column is missing.' }
+  }
+  foreach ($actual in $headers) {
+    if ($actual -notin $ExpectedHeaders) { Add-Finding 'CSV_SCHEMA_UNKNOWN_COLUMN' "${RelativePath}:$actual" 'Unknown schema column is not approved.' }
+  }
+
+  $rows = @()
+  for ($index = 1; $index -lt $lines.Count; $index++) {
+    $values = @($lines[$index].Split(',') | ForEach-Object { $_.Trim() })
+    $rowKey = if ($values.Count -gt 0 -and $values[0]) { $values[0] } else { "line-$($index + 1)" }
+    if ($values.Count -ne $headers.Count) {
+      Add-Finding 'CSV_ROW_COLUMN_COUNT' "${RelativePath}:$rowKey" "Expected $($headers.Count) columns but found $($values.Count)."
       continue
     }
-    if (-not $headerSeen) {
-      $headerSeen = $true
-      continue
+    $row = [ordered]@{}
+    for ($column = 0; $column -lt $headers.Count; $column++) { $row[$headers[$column]] = $values[$column] }
+    foreach ($header in $ExpectedHeaders) {
+      if (-not $row.Contains($header) -or [string]::IsNullOrWhiteSpace($row[$header])) {
+        Add-Finding 'REQUIRED_FIELD_EMPTY' "${RelativePath}:${rowKey}:$header" 'Required field is empty.'
+      }
     }
-    $data += $trimmed
+    if ($row.Contains('contentScope') -and $row['contentScope'] -notin @('player', 'reserved')) {
+      Add-Finding 'CONTENT_SCOPE_INVALID' "${RelativePath}:$rowKey" "contentScope '$($row['contentScope'])' is not player or reserved."
+    }
+    $rows += [pscustomobject]$row
   }
-  return $data
+  return [pscustomobject]@{ Name = $RelativePath; Headers = $headers; Rows = $rows }
 }
 
-function Get-LanguageRows {
-  param([string]$RelativePath)
-
-  $path = Join-Path $root $RelativePath
-  if (-not (Test-Path -Path $path -PathType Leaf)) {
-    $failures.Add("MISSING_LANGUAGE`t$RelativePath")
-    return @()
-  }
-
-  return @(Get-Content -Path $path -Encoding UTF8 | ForEach-Object { $_.Trim() } | Where-Object {
-    $_.Length -gt 0 -and -not $_.StartsWith("#")
-  })
-}
-
-function Get-FirstFieldIds {
-  param([string[]]$Rows)
-
-  return @($Rows | ForEach-Object {
-    ($_ -split ",", 2)[0].Trim()
-  } | Where-Object { $_.Length -gt 0 })
-}
-
-function Find-Duplicates {
-  param([string[]]$Values)
-
-  return @($Values | Group-Object | Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name)
+function Get-LanguageIds {
+  $path = Join-Path $root 'src/Assets/DataConfig/Language.csv'
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Error 'MISSING_LANGUAGE' 'Language.csv' 'Language CSV is missing.'; return @() }
+  $lines = @(Get-Content -LiteralPath $path -Encoding UTF8 | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
+  if ($lines.Count -eq 0) { Add-Finding 'LANGUAGE_SCHEMA_INVALID' 'Language.csv' 'Language CSV has no data rows.'; return @() }
+  $ids = @($lines | ForEach-Object { ($_ -split ',', 2)[0].Trim() })
+  foreach ($duplicate in @($ids | Group-Object | Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name)) { Add-Finding 'DUPLICATE_ID' "Language.csv:$duplicate" 'Language ID is duplicated.' }
+  return $ids
 }
 
 function Test-AssetCoverage {
-  param(
-    [string]$Label,
-    [string[]]$Ids,
-    [string]$AssetDir,
-    [string]$AssetPrefix
-  )
-
+  param([string]$Label, [object[]]$Rows, [string]$AssetDir, [string]$AssetPrefix)
   $dir = Join-Path $root $AssetDir
-  if (-not (Test-Path -Path $dir -PathType Container)) {
-    $failures.Add("MISSING_ASSET_DIR`t$AssetDir")
-    return
-  }
-
-  $assetNames = @(Get-ChildItem -Path $dir -File -Filter *.asset | Select-Object -ExpandProperty Name)
-  $expected = @($Ids | ForEach-Object { "$AssetPrefix`_$_.asset" })
-  $missing = @($expected | Where-Object { $assetNames -notcontains $_ })
-  $extra = @($assetNames | Where-Object { $expected -notcontains $_ })
-  $valid = $expected.Count - $missing.Count
-
-  [PSCustomObject]@{
-    Category = $Label
-    CsvRows = $Ids.Count
-    AssetTotal = $assetNames.Count
-    ValidAssets = $valid
-    Missing = $missing.Count
-    ExtraOrLegacy = $extra.Count
-  }
-
-  if ($FailOnMissingAssets -and $missing.Count -gt 0) {
-    $failures.Add("MISSING_ASSETS`t$Label`t$($missing.Count)")
-  }
-}
-
-$gongfaDocs = Get-ContentDocs (Get-GongFaName)
-$spellDocs = Get-ContentDocs (Get-SpellName)
-$skillDocs = Get-ContentDocs (Get-SkillName)
-
-$gongfaRows = Get-CsvRows "src/Assets/DataConfig/GongFa.csv"
-$spellRows = Get-CsvRows "src/Assets/DataConfig/Spells.csv"
-$skillRows = Get-CsvRows "src/Assets/DataConfig/Skills.csv"
-$languageRows = Get-LanguageRows "src/Assets/DataConfig/Language.csv"
-
-$gongfaIds = Get-FirstFieldIds $gongfaRows
-$spellIds = Get-FirstFieldIds $spellRows
-$skillIds = Get-FirstFieldIds $skillRows
-$languageIds = Get-FirstFieldIds $languageRows
-
-$dupChecks = @(
-  @{ Label = "GongFa.csv"; Values = $gongfaIds },
-  @{ Label = "Spells.csv"; Values = $spellIds },
-  @{ Label = "Skills.csv"; Values = $skillIds },
-  @{ Label = "Language.csv"; Values = $languageIds }
-)
-
-foreach ($check in $dupChecks) {
-  $dups = Find-Duplicates $check.Values
-  foreach ($dup in $dups) {
-    $failures.Add("DUPLICATE_ID`t$($check.Label)`t$dup")
-  }
-}
-
-"docs/csv counts:"
-@(
-  [PSCustomObject]@{ Category = "GongFa"; Docs = $gongfaDocs.Count; CsvRows = $gongfaIds.Count },
-  [PSCustomObject]@{ Category = "Spells"; Docs = $spellDocs.Count; CsvRows = $spellIds.Count },
-  [PSCustomObject]@{ Category = "Skills"; Docs = $skillDocs.Count; CsvRows = $skillIds.Count }
-) | Format-Table -AutoSize | Out-String -Width 200
-
-"asset coverage:"
-@(
-  Test-AssetCoverage "GongFa" $gongfaIds "src/Assets/Data/GongFa" "GongFa"
-  Test-AssetCoverage "Spells" $spellIds "src/Assets/Data/Spells" "Spell"
-  Test-AssetCoverage "Skills" $skillIds "src/Assets/Data/Skills" "Skill"
-) | Format-Table -AutoSize | Out-String -Width 200
-
-"language keys: $($languageIds.Count)"
-
-# === TQ-027: realm/contentScope alert layer ===
-"`n=== realm/contentScope alert (TQ-027) ==="
-
-# -- realm_lianshen (P0: missing from Language.csv) --
-$lianshenGongFa = @($gongfaRows | Where-Object { $_ -match 'realm_lianshen' })
-$lianshenSpells = @($spellRows | Where-Object { $_ -match 'realm_lianshen' })
-$lianshenSkills = @($skillRows | Where-Object { $_ -match 'realm_lianshen' })
-$lianshenGongFaIds = Get-FirstFieldIds $lianshenGongFa
-$lianshenSpellIds = Get-FirstFieldIds $lianshenSpells
-$lianshenSkillIds = Get-FirstFieldIds $lianshenSkills
-$lianshenTotal = $lianshenGongFa.Count + $lianshenSpells.Count + $lianshenSkills.Count
-
-$hasLianshenInLang = ($languageRows | Where-Object { $_ -match '^realm_lianshen,' }).Count -gt 0
-
-"realm_lianshen alert (P0: no Language key | F1: reserved/NPC/ancient-cultivation route):"
-"  Language.csv has realm_lianshen: $hasLianshenInLang"
-"  GongFa.csv rows: $($lianshenGongFa.Count) | IDs: $($lianshenGongFaIds -join ', ')"
-"  Spells.csv rows: $($lianshenSpells.Count) | IDs: $($lianshenSpellIds -join ', ')"
-"  Skills.csv rows: $($lianshenSkills.Count) | IDs: $($lianshenSkillIds -join ', ')"
-"  TOTAL realm_lianshen: $lianshenTotal (8 expected: 4 GongFa + 2 Spells + 2 Skills)"
-if (-not $hasLianshenInLang) {
-  "  ** WARNING: realm_lianshen missing from Language.csv - runtime display-name lookup will fail **"
-}
-
-# -- realm_lianxu (P1: active in CSV but declared deleted in docs) --
-$lianxuGongFa = @($gongfaRows | Where-Object { $_ -match 'realm_lianxu' })
-$lianxuSpells = @($spellRows | Where-Object { $_ -match 'realm_lianxu' })
-$lianxuSkills = @($skillRows | Where-Object { $_ -match 'realm_lianxu' })
-$lianxuGongFaIds = Get-FirstFieldIds $lianxuGongFa
-$lianxuSpellIds = Get-FirstFieldIds $lianxuSpells
-$lianxuSkillIds = Get-FirstFieldIds $lianxuSkills
-$lianxuTotal = $lianxuGongFa.Count + $lianxuSpells.Count + $lianxuSkills.Count
-
-$hasLianxuInLang = ($languageRows | Where-Object { $_ -match '^realm_lianxu,' }).Count -gt 0
-
-"realm_lianxu alert (P1: declared deleted but active in CSV; Language key exists):"
-"  Language.csv has realm_lianxu: $hasLianxuInLang"
-"  GongFa.csv rows: $($lianxuGongFa.Count) | IDs: $($lianxuGongFaIds -join ', ')"
-"  Spells.csv rows: $($lianxuSpells.Count) | IDs: $($lianxuSpellIds -join ', ')"
-"  Skills.csv rows: $($lianxuSkills.Count) | IDs: $($lianxuSkillIds -join ', ')"
-"  TOTAL realm_lianxu: $lianxuTotal (12 expected: 6 GongFa + 3 Spells + 3 Skills)"
-
-# -- contentScope distribution --
-function Get-ContentScopeDist {
-  param([string[]]$Rows)
-  $dist = @{}
+  if (-not (Test-Path -LiteralPath $dir -PathType Container)) { Add-Error 'MISSING_ASSET_DIR' $AssetDir "Missing asset directory: $AssetDir"; return }
+  $expectedIds = @($Rows | ForEach-Object { $_.name })
+  foreach ($duplicate in @($expectedIds | Group-Object | Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name)) { Add-Finding 'DUPLICATE_ID' "${Label}:$duplicate" 'CSV content ID is duplicated.' }
+  $assetNames = @(Get-ChildItem -LiteralPath $dir -File -Filter *.asset | Select-Object -ExpandProperty Name)
+  $expectedNames = @($expectedIds | ForEach-Object { "$AssetPrefix`_$_.asset" })
+  foreach ($missing in @($expectedNames | Where-Object { $assetNames -notcontains $_ })) { Add-Finding 'ASSET_MISSING' "${Label}:$missing" 'CSV content has no matching asset.' }
+  foreach ($extra in @($assetNames | Where-Object { $expectedNames -notcontains $_ })) { Add-Finding 'ASSET_EXTRA' "${Label}:$extra" 'Asset has no matching CSV content.' }
   foreach ($row in $Rows) {
-    $parts = $row -split ','
-    $last = $parts[-1].Trim()
-    if ($last.Length -eq 0) { $last = "(empty)" }
-    if (-not $dist.ContainsKey($last)) { $dist[$last] = 0 }
-    $dist[$last]++
+    $assetName = "$AssetPrefix`_$($row.name).asset"
+    $assetPath = Join-Path $dir $assetName
+    if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) { continue }
+    $scopeLine = @(Select-String -LiteralPath $assetPath -Pattern '^\s*contentScope:\s*(\S+)\s*$').Matches
+    if ($scopeLine.Count -ne 1) { Add-Finding 'ASSET_CONTENT_SCOPE_MISSING' "${Label}:$($row.name)" 'Asset must serialize exactly one contentScope field.'; continue }
+    $assetScope = $scopeLine[0].Groups[1].Value
+    if ($assetScope -ne $row.contentScope) { Add-Finding 'ASSET_CONTENT_SCOPE_MISMATCH' "${Label}:$($row.name)" "Asset scope '$assetScope' differs from CSV scope '$($row.contentScope)'." }
   }
-  return $dist
 }
 
-$gongfaScope = Get-ContentScopeDist $gongfaRows
-$spellScope = Get-ContentScopeDist $spellRows
-$skillScope = Get-ContentScopeDist $skillRows
-
-"contentScope distribution:"
-"  GongFa.csv: $(($gongfaScope.Keys | ForEach-Object { "$_=$($gongfaScope[$_])" }) -join ', ')"
-"  Spells.csv: $(($spellScope.Keys | ForEach-Object { "$_=$($spellScope[$_])" }) -join ', ')"
-"  Skills.csv: $(($skillScope.Keys | ForEach-Object { "$_=$($skillScope[$_])" }) -join ', ')"
-
-# -- Risk summary (read-only, never fails the check) --
-"risk summary (TQ-027):"
-"  realm_lianshen: $lianshenTotal rows across CSVs without Language key - runtime display-name failure risk"
-"  realm_lianxu:   $lianxuTotal rows still active despite spec declaring it deleted - spec/implementation conflict"
-"  contentScope:   reserved + (empty) rows should not leak into player-accessible content without review"
-
-if ($failures.Count -gt 0) {
-  "check-data-chain: FAILED"
-  $failures | Sort-Object
-  exit 1
+function Load-Waivers {
+  $path = Join-Path $root 'tools/data-chain-warning-waivers.json'
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Error 'WAIVER_FILE_MISSING' 'tools/data-chain-warning-waivers.json' 'The precise-warning waiver file is required.'; return @() }
+  try { $items = @(Get-Content -Raw -LiteralPath $path -Encoding UTF8 | ConvertFrom-Json | Where-Object { $null -ne $_ }) } catch { Add-Error 'WAIVER_FILE_INVALID' 'tools/data-chain-warning-waivers.json' $_.Exception.Message; return @() }
+  foreach ($item in $items) {
+    if ($null -eq $item -or ($item -is [System.Array] -and $item.Count -eq 0)) { continue }
+    foreach ($field in @('ruleId', 'subject', 'reason', 'owner', 'removalCondition')) {
+      if ([string]::IsNullOrWhiteSpace([string]$item.$field)) { Add-Error 'WAIVER_RECORD_INVALID' "tools/data-chain-warning-waivers.json:$field" 'Waiver record has a missing required field.' }
+    }
+    if ([string]$item.subject -match '[*?]' -or [string]$item.subject -match '(^|:)(all|category|prefix)($|:)') { Add-Error 'WAIVER_RECORD_INVALID' ([string]$item.subject) 'Waiver subject must be an exact content/file/row key, not a wildcard or category.' }
+  }
+  return $items
 }
 
-"check-data-chain: OK"
+$waivers = Load-Waivers
+$schemas = [ordered]@{
+  GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
+  Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','affiliation','contentScope')
+  Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','affiliation','contentScope')
+}
+$tables = [ordered]@{
+  GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa
+  Spells = Get-CsvTable 'src/Assets/DataConfig/Spells.csv' $schemas.Spells
+  Skills = Get-CsvTable 'src/Assets/DataConfig/Skills.csv' $schemas.Skills
+}
+$docs = [ordered]@{ GongFa = Get-ContentDocs (Get-GongFaName); Spells = Get-ContentDocs (Get-SpellName); Skills = Get-ContentDocs (Get-SkillName) }
+foreach ($kind in $tables.Keys) {
+  if ($docs[$kind].Count -ne $tables[$kind].Rows.Count) { Add-Finding 'DOC_CSV_COUNT_MISMATCH' $kind "Docs=$($docs[$kind].Count); CSV=$($tables[$kind].Rows.Count)." }
+}
+
+$languageIds = Get-LanguageIds
+Test-AssetCoverage 'GongFa' $tables.GongFa.Rows 'src/Assets/Data/GongFa' 'GongFa'
+Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
+Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
+
+foreach ($table in $tables.Values) {
+  foreach ($row in $table.Rows) {
+    foreach ($field in @('growth', 'chapters', 'realmReq')) {
+      if (-not $row.PSObject.Properties.Name.Contains($field)) { continue }
+      $value = [string]$row.$field
+      if ($value -match 'realm_lianshen' -and $languageIds -notcontains 'realm_lianshen') { Add-Finding 'LANGUAGE_KEY_MISSING' 'realm_lianshen' 'Active content references realm_lianshen without a Language.csv key.' }
+      if ($value -match 'realm_lianxu') { Add-Finding 'DELETED_REALM_ACTIVE' "$($table.Name):$($row.name):realm_lianxu" 'Deleted realm_lianxu remains active in content data.' }
+    }
+  }
+}
+
+"docs/csv counts: GongFa=$($docs.GongFa.Count)/$($tables.GongFa.Rows.Count); Spells=$($docs.Spells.Count)/$($tables.Spells.Rows.Count); Skills=$($docs.Skills.Count)/$($tables.Skills.Rows.Count)"
+"language keys: $($languageIds.Count)"
+if ($warnings.Count -gt 0) { 'approved warnings:'; $warnings | Sort-Object }
+if ($errors.Count -gt 0) { 'check-data-chain: FAILED'; $errors | Sort-Object; exit 1 }
+'check-data-chain: OK'
