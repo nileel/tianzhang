@@ -1,50 +1,27 @@
 # 自动工作流状态（✅ 已审核）
 
-> 2026-07-10 Codex / gpt-5.5：新增三小时循环自动工作流状态文件。用途：记录 4 个自动工作流的运行锁、轮次、检查点、重试次数、中断原因和恢复指针；不承载任务事实源、审核结论或 AI 交接正文。
+> 2026-07-11 Codex：运行锁、检查点和恢复次数已迁移到本机 JSON；本文件只保存项目负责人需要看到的有效结果与阻塞，不记录空转轮次。
 
 ## 使用规则
 
-1. 本文件只记录自动化运行状态，不替代 `当前任务队列.txt`、`审核入口.txt`、`未通过审核清单.txt` 或 `AI合作沟通.txt`。
-2. 每个自动工作流启动前必须读取本文件和 `git status --short`。
-3. 若存在 6 小时内仍为 `RUNNING` 的锁，后续工作流不得并发修改同一批管理文件，应记录跳过原因并退出。
-4. 若上一轮因重连次数耗尽、超时或会话中断停在检查点，下一轮同一工作流优先恢复原任务，不重新选题。
-5. 同一任务最多自动恢复 2 次；第 3 次仍失败时标记 `AUTO-BLOCKED`，写明阻塞原因和人工处理入口。
-6. 自动化只能 stage 和提交本轮相关文件；遇到无关脏改时不得覆盖或回退。
+1. 调度、选题、锁与恢复规则见 `开发管理/自动工作流规则.txt`。
+2. 本文件不替代任务队列、审核入口、未通过审核清单或 AI 合作沟通。
+3. 无任务、有效锁、身份确认失败或人工脏工作区不更新本文件。
 
-## 当前全局状态
+## 最近有效结果
 
 | 字段 | 值 |
 |------|----|
-| 当前轮次 | WF1-20260711-QUEUE-MAINTENANCE |
-| 全局锁 | IDLE |
-| 锁持有者 | 无 |
-| 锁开始时间 | 无 |
-| 最近完成阶段 | commit_completed |
-| 最近中断原因 | 无 |
-| 当前恢复指针 | 无 |
-| 本轮身份模型 | unknown（Node REPL 元数据在本会话不可用） |
+| 迁移前最后结果 | 已保留在旧自动化 memory 与 Git 历史，不复制为滚动状态 |
+| 单控制器部署 | 配置迁移中；首次真实小时轮次尚未验收 |
+| 最近队列校验 | 新控制器尚未完成首次队列校验 |
 
-## 工作流状态
-
-| 工作流 | 计划时间 | 状态 | 当前任务/对象 | 检查点 | 恢复次数 | 最近结果 |
-|--------|----------|------|----------------|--------|----------|----------|
-| WF1-QUEUE-MAINTENANCE | T+00 | IDLE | 队列维护 | commit_completed | 0 | commit_completed：队列维持 6 条；无可归档/消费条目；同步 TQ-043 从外部待复审改为 Codex 直接接管，验证通过 |
-| WF2-CODEX-ONE | T+30 | IDLE | TQ-049 / Q-UNITY-01 | commit_completed | 0 | commit_completed：目标 1/1、冻结基线 47/47、两项 dotnet build 通过；当前 52 项中的 TQ-043 待复审测试另有 1 项失败 |
-| WF3-CLAUDE-ONE | T+90 | IDLE | 无 | identity_checked | 1 | skipped_cleanly：身份=Claude Code；修改方=Claude Code；允许主责=DeepSeek V4 Pro / Claude Code / Claude / DeepSeek；候选 TQ-050(Codex/gpt-5.5/待处理)、TQ-051(Codex/gpt-5.5/阻塞)、TQ-052(Codex/gpt-5.5/待处理)、TQ-053(Codex/gpt-5.5/阻塞)、TQ-056(Codex/gpt-5.5/阻塞) 全部主责不匹配；AI合作沟通 TQ-038/TQ-043 均待复审（纯 1 不消费）；未通过审核清单空；五个分线backlog无Claude/DeepSeek主责匹配 — 无合格候选 |
-| WF4-CODEX-TWO | T+150 | IDLE | HANDOFF-20260710-02 / TQ-043 | commit_completed | 0 | 不通过：`FindHeader` 仍依赖 `name` 首列；新增 EditMode 测试 1 项与可选列默认值语义冲突；已转 R-20260711-01 |
-
-## 检查点枚举
-
-| 检查点 | 含义 |
-|--------|------|
-| identity_checked | 已完成身份确认 |
-| queues_loaded | 已读取任务、审核和交接入口 |
-| task_selected | 已确定本轮任务或复审对象 |
-| mutation_started | 已开始修改文件 |
-| verification_completed | 已完成本轮必要验证 |
-| commit_completed | 已提交本轮相关文件 |
-| skipped_cleanly | 因无任务、锁冲突或前置缺失干净退出 |
-
-## 阻塞记录
+## 当前阻塞
 
 当前无 `AUTO-BLOCKED` 项。
+
+## 运行证据
+
+- 逐轮轨迹：Codex 自动化 `memory.md`。
+- 业务成果：Git 提交、任务归档和任务卡验证结果。
+- 本机租约：`tools/automation-controller-state.ps1 Show`。
