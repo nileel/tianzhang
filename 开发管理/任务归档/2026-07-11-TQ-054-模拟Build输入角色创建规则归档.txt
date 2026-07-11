@@ -1,0 +1,21 @@
+# TQ-054 · 模拟 Build 输入符合角色创建规则（已完成）
+
+完成日期：2026-07-11
+主责：Codex / gpt-5.6-terra
+
+## 变更
+
+- 在 `simulations/BattleSim/Program.cs` 建立零依赖的创建点购镜像：五项必填属性、范围 3–15、购买点上限 25，以及 4–8 / 9–12 / 13–15 分别每级 1 / 2 / 3 点的非线性成本。
+- 21 个矩阵 `BuildDef` 已改为合法的创建输入；模拟在进入培养与矩阵前逐项校验，任何违例都会以 Build 名称和确定诊断终止。
+- 新增 `build-input-tq054` 自测，覆盖合法均衡输入、上限越界、超预算、缺字段和全部 21 个矩阵输入。
+
+## 验证证据
+
+- RED：新增回归后 `dotnet build -c Release --no-restore simulations/BattleSim` 以缺少 `BuildInputRules` 与 `Program.MatrixBuildInputs` 失败。
+- GREEN：`dotnet build -c Release --no-restore simulations/BattleSim` 通过，0 warning / 0 error。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test build-input-tq054` 通过。
+- `dotnet run --no-build -c Release --project simulations/BattleSim` 通过，完整 21 Build 模拟完成。
+
+## 后续
+
+- TQ-044 已解除阻塞，但 G2 仍未通过；默认模拟仍显示金丹样本不足，这是后续成长表与星级回退任务的范围，不在本任务中调整。

@@ -8,6 +8,37 @@ class Program
 {
     record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, string GongFaName = "", Dictionary<string, double> Weights = null);
 
+    static readonly BuildDef[] BuildDefs =
+    {
+        new("物·纯战", "根骨15极限", new() { ["根骨"]=15,["魂魄"]=6,["神识"]=3,["资质"]=3,["气运"]=3 }, "physical", "疾雷破山经"),
+        new("物·均衡", "五维均衡8", new() { ["根骨"]=8,["魂魄"]=8,["神识"]=8,["资质"]=8,["气运"]=8 }, "physical", "含弘光大典"),
+        new("物·修炼", "资质15倾斜", new() { ["根骨"]=6,["魂魄"]=3,["神识"]=3,["资质"]=15,["气运"]=3 }, "physical", "白屋青云录"),
+        new("肉盾型",  "根骨15极限", new() { ["根骨"]=15,["魂魄"]=6,["神识"]=3,["资质"]=3,["气运"]=3 }, "physical", "混元同尘典"),
+        new("法·纯战", "魂魄15极限", new() { ["根骨"]=3,["魂魄"]=15,["神识"]=6,["资质"]=3,["气运"]=3 }, "magic", "抱元守一经"),
+        new("法·均衡", "五维均衡8", new() { ["根骨"]=8,["魂魄"]=8,["神识"]=8,["资质"]=8,["气运"]=8 }, "magic", "万物不迁法"),
+        new("法·修炼", "资质15倾斜", new() { ["根骨"]=3,["魂魄"]=6,["神识"]=3,["资质"]=15,["气运"]=3 }, "magic", "万物不迁法"),
+        new("灵修型",  "魂魄15极限", new() { ["根骨"]=3,["魂魄"]=15,["神识"]=6,["资质"]=3,["气运"]=3 }, "magic", "万物不迁法"),
+        new("水·散修", "资质9气运8", new() { ["根骨"]=8,["魂魄"]=7,["神识"]=7,["资质"]=9,["气运"]=8 }, "water_physical", "秋水游心经"),
+        new("太一·法修", "魂魄12资质9", new() { ["根骨"]=3,["魂魄"]=12,["神识"]=7,["资质"]=9,["气运"]=4 }, "taiyi", "抱元守一经"),
+        new("太一·符修", "神识15极限", new() { ["根骨"]=3,["魂魄"]=6,["神识"]=15,["资质"]=3,["气运"]=3 }, "taiyi_fuxiu", "云篆度人经"),
+        // v5.3: 太虚观（暗系神魂）
+        new("太虚·魂修", "魂魄15极限", new() { ["根骨"]=3,["魂魄"]=15,["神识"]=6,["资质"]=3,["气运"]=3 }, "taixu", "不真自虚法"),
+        new("太虚·均衡", "魂魄9气运8", new() { ["根骨"]=7,["魂魄"]=9,["神识"]=8,["资质"]=7,["气运"]=8 }, "taixu", "万物不迁法"),
+        new("太虚·宿慧", "神识12资质9", new() { ["根骨"]=3,["魂魄"]=6,["神识"]=12,["资质"]=9,["气运"]=5 }, "taixu", "心无性有法"),
+        // v5.3: 玉清崖（雷剑双修）
+        new("玉清·剑修", "根骨15极限", new() { ["根骨"]=15,["魂魄"]=3,["神识"]=6,["资质"]=3,["气运"]=3 }, "yuqing", "疾雷破山经"),
+        new("玉清·雷修", "根骨12魂魄9", new() { ["根骨"]=12,["魂魄"]=9,["神识"]=8,["资质"]=3,["气运"]=3 }, "yuqing", "疾雷破山经"),
+        // v5.4: 玉清崖 BuildDef 补全
+        new("玉清·雷劫", "根骨11神识10", new() { ["根骨"]=11,["魂魄"]=8,["神识"]=10,["资质"]=3,["气运"]=3 }, "yuqing_leijie", "九霄雷劫录"),
+        new("玉清·苦行", "神识12资质9", new() { ["根骨"]=7,["魂魄"]=3,["神识"]=12,["资质"]=9,["气运"]=4 }, "yuqing_kuxing", "苦行剑典"),
+        new("玉清·雷体", "根骨15极限", new() { ["根骨"]=15,["魂魄"]=3,["神识"]=6,["资质"]=3,["气运"]=3 }, "yuqing", "雷池淬体功"),
+        // 太虚观 / 混元山 BuildDef 补全
+        new("太虚·玄感", "魂魄12神识8", new() { ["根骨"]=6,["魂魄"]=12,["神识"]=8,["资质"]=7,["气运"]=3 }, "taixu_xuangan", "南华玄感录"),
+        new("混元·正法", "根骨10神识10", new() { ["根骨"]=10,["魂魄"]=8,["神识"]=10,["资质"]=3,["气运"]=5 }, "physical", "绳墨正法录"),
+    };
+
+    internal static IReadOnlyList<IReadOnlyDictionary<string, int>> MatrixBuildInputs => BuildDefs.Select(build => (IReadOnlyDictionary<string, int>)build.Innate).ToArray();
+
     static int Main(string[] args)
     {
         if (args.Length == 2 && args[0] == "--self-test")
@@ -17,34 +48,13 @@ class Program
         const string TECH = "上品", SPIRIT = "中品";
         const int SEEDS = 20, SIM = 2000;
 
-        var buildDefs = new BuildDef[]
+        var buildDefs = BuildDefs;
+        foreach (var build in buildDefs)
         {
-            new("物·纯战", "资质3根骨25", new() { ["根骨"]=25,["魂魄"]=8,["神识"]=5,["资质"]=3,["气运"]=5 }, "physical", "疾雷破山经"),
-            new("物·均衡", "资质11根骨20", new() { ["根骨"]=20,["魂魄"]=8,["神识"]=8,["资质"]=11,["气运"]=8 }, "physical", "含弘光大典"),
-            new("物·修炼", "资质19根骨15", new() { ["根骨"]=15,["魂魄"]=8,["神识"]=8,["资质"]=19,["气运"]=8 }, "physical", "白屋青云录"),
-            new("肉盾型",  "根骨43极限", new() { ["根骨"]=43,["魂魄"]=5,["神识"]=5,["资质"]=5,["气运"]=5 }, "physical", "混元同尘典"),
-            new("法·纯战", "资质3魂魄25", new() { ["根骨"]=5,["魂魄"]=25,["神识"]=8,["资质"]=3,["气运"]=5 }, "magic", "抱元守一经"),
-            new("法·均衡", "资质11魂魄20", new() { ["根骨"]=8,["魂魄"]=20,["神识"]=8,["资质"]=11,["气运"]=8 }, "magic", "万物不迁法"),
-            new("法·修炼", "资质19魂魄15", new() { ["根骨"]=8,["魂魄"]=15,["神识"]=8,["资质"]=19,["气运"]=8 }, "magic", "万物不迁法"),
-            new("灵修型",  "魂魄43极限", new() { ["根骨"]=5,["魂魄"]=43,["神识"]=5,["资质"]=5,["气运"]=5 }, "magic", "万物不迁法"),
-            new("水·散修", "资质18气运14", new() { ["根骨"]=10,["魂魄"]=9,["神识"]=9,["资质"]=18,["气运"]=14 }, "water_physical", "秋水游心经"),
-            new("太一·法修", "资质14魂魄18", new() { ["根骨"]=6,["魂魄"]=18,["神识"]=10,["资质"]=14,["气运"]=8 }, "taiyi", "抱元守一经"),
-            new("太一·符修", "神识18魂魄14", new() { ["根骨"]=5,["魂魄"]=14,["神识"]=18,["资质"]=12,["气运"]=10 }, "taiyi_fuxiu", "云篆度人经"),
-            // v5.3: 太虚观（暗系神魂）
-            new("太虚·魂修", "魂魄25神识14", new() { ["根骨"]=5,["魂魄"]=25,["神识"]=14,["资质"]=14,["气运"]=5 }, "taixu", "不真自虚法"),
-            new("太虚·均衡", "魂魄18神识14", new() { ["根骨"]=8,["魂魄"]=18,["神识"]=14,["资质"]=12,["气运"]=5 }, "taixu", "万物不迁法"),
-            new("太虚·宿慧", "资质16神识18", new() { ["根骨"]=5,["魂魄"]=12,["神识"]=18,["资质"]=16,["气运"]=8 }, "taixu", "心无性有法"),
-            // v5.3: 玉清崖（雷剑双修）
-            new("玉清·剑修", "根骨22神识18", new() { ["根骨"]=22,["魂魄"]=8,["神识"]=18,["资质"]=12,["气运"]=3 }, "yuqing", "疾雷破山经"),
-            new("玉清·雷修", "根骨18魂魄12", new() { ["根骨"]=18,["魂魄"]=12,["神识"]=14,["资质"]=8,["气运"]=3 }, "yuqing", "疾雷破山经"),
-            // v5.4: 玉清崖 BuildDef 补全
-            new("玉清·雷劫", "根骨18神识18", new() { ["根骨"]=18,["魂魄"]=10,["神识"]=18,["资质"]=10,["气运"]=3 }, "yuqing_leijie", "九霄雷劫录"),
-            new("玉清·苦行", "神识20资质14", new() { ["根骨"]=16,["魂魄"]=6,["神识"]=20,["资质"]=14,["气运"]=5 }, "yuqing_kuxing", "苦行剑典"),
-            new("玉清·雷体", "根骨30神识12", new() { ["根骨"]=30,["魂魄"]=5,["神识"]=12,["资质"]=8,["气运"]=5 }, "yuqing", "雷池淬体功"),
-            // 太虚观 / 混元山 BuildDef 补全
-            new("太虚·玄感", "魂魄18神识14", new() { ["根骨"]=5,["魂魄"]=18,["神识"]=14,["资质"]=12,["气运"]=8 }, "taixu_xuangan", "南华玄感录"),
-            new("混元·正法", "神识16根骨14", new() { ["根骨"]=14,["魂魄"]=12,["神识"]=16,["资质"]=10,["气运"]=8 }, "physical", "绳墨正法录"),
-        };
+            var validation = BuildInputRules.Validate(build.Innate);
+            if (!validation.IsValid)
+                throw new InvalidOperationException($"矩阵 Build 输入无效：{build.Name}：{validation.Error}");
+        }
         int N = buildDefs.Length;
 
         Console.WriteLine($"修炼模拟 ({SEEDS}种子 x {GameData.CultivationCycles}轮, 灵根={SPIRIT}, 功法={TECH})...");
@@ -685,5 +695,58 @@ class Program
             Console.WriteLine();
         }
         Console.WriteLine("  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=样本不足");
+    }
+}
+
+readonly record struct BuildInputValidationResult(bool IsValid, int PurchaseCost, string Error);
+
+static class BuildInputRules
+{
+    const int PurchasePointLimit = 25;
+    const int MinimumValue = 3;
+    const int MaximumValue = 15;
+
+    static readonly string[] RequiredAttributes = { "根骨", "魂魄", "神识", "资质", "气运" };
+
+    public static BuildInputValidationResult Validate(IReadOnlyDictionary<string, int> innate)
+    {
+        if (innate == null)
+            return new(false, 0, "先天属性不能为空。");
+
+        foreach (var attribute in RequiredAttributes)
+        {
+            if (!innate.ContainsKey(attribute))
+                return new(false, 0, $"缺少必填先天属性：{attribute}。");
+        }
+
+        foreach (var attribute in innate.Keys)
+        {
+            if (!RequiredAttributes.Contains(attribute))
+                return new(false, 0, $"未知先天属性：{attribute}。");
+        }
+
+        int purchaseCost = 0;
+        foreach (var attribute in RequiredAttributes)
+        {
+            int value = innate[attribute];
+            if (value < MinimumValue || value > MaximumValue)
+                return new(false, 0, $"{attribute}必须在{MinimumValue}到{MaximumValue}之间。");
+            purchaseCost += CalculateAttributeCost(value);
+        }
+
+        if (purchaseCost > PurchasePointLimit)
+            return new(false, purchaseCost, $"先天属性购买点数不能超过{PurchasePointLimit}。");
+
+        return new(true, purchaseCost, "");
+    }
+
+    static int CalculateAttributeCost(int value)
+    {
+        int cost = 0;
+        for (int current = MinimumValue + 1; current <= value; current++)
+        {
+            cost += current <= 8 ? 1 : current <= 12 ? 2 : 3;
+        }
+        return cost;
     }
 }

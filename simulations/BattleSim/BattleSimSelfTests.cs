@@ -48,6 +48,9 @@ static class BattleSimSelfTests
         if (suite == "crit-multiplier-tq053")
             return RunChecked(suite, RunCritMultiplierTq053);
 
+        if (suite == "build-input-tq054")
+            return RunChecked(suite, RunBuildInputTq054);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -619,6 +622,46 @@ static class BattleSimSelfTests
         AssertClose(1.50, Combat.GetCritMultiplier(0), 0.0001, "zero critDamage keeps base multiplier");
         AssertClose(1.65, Combat.GetCritMultiplier(15), 0.0001, "15 critDamage adds percentage points");
         AssertClose(1.75, Combat.GetCritMultiplier(15, 10), 0.0001, "element bonus adds percentage points");
+    }
+
+    static void RunBuildInputTq054()
+    {
+        var balanced = BuildInputRules.Validate(new Dictionary<string, int>
+        {
+            ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8
+        });
+        AssertEqual(true, balanced.IsValid, "balanced point-buy input is valid");
+        AssertEqual(25, balanced.PurchaseCost, "balanced input uses all purchase points");
+
+        var aboveCap = BuildInputRules.Validate(new Dictionary<string, int>
+        {
+            ["根骨"] = 16, ["魂魄"] = 6, ["神识"] = 3, ["资质"] = 3, ["气运"] = 3
+        });
+        AssertEqual(false, aboveCap.IsValid, "above-cap input is invalid");
+        AssertEqual("根骨必须在3到15之间。", aboveCap.Error, "above-cap input diagnostic");
+
+        var overBudget = BuildInputRules.Validate(new Dictionary<string, int>
+        {
+            ["根骨"] = 15, ["魂魄"] = 7, ["神识"] = 3, ["资质"] = 3, ["气运"] = 3
+        });
+        AssertEqual(false, overBudget.IsValid, "over-budget input is invalid");
+        AssertEqual("先天属性购买点数不能超过25。", overBudget.Error, "over-budget input diagnostic");
+
+        var missingAttribute = BuildInputRules.Validate(new Dictionary<string, int>
+        {
+            ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8
+        });
+        AssertEqual(false, missingAttribute.IsValid, "missing attribute input is invalid");
+        AssertEqual("缺少必填先天属性：气运。", missingAttribute.Error, "missing attribute diagnostic");
+
+        var matrixInputs = Program.MatrixBuildInputs;
+        AssertEqual(21, matrixInputs.Count, "matrix build input count");
+        foreach (var input in matrixInputs)
+        {
+            var result = BuildInputRules.Validate(input);
+            if (!result.IsValid)
+                throw new InvalidOperationException($"matrix input should be valid: {result.Error}");
+        }
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)
