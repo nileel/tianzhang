@@ -7,6 +7,7 @@
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-043 已完成并归档至 `开发管理/任务归档/2026-07-11-TQ-043-按表头解析导入器修复归档.txt`；TQ-056 解除阻塞。
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-050 已完成；新增权威 EditMode 入口及 XML 正反例测试，完整 Unity EditMode 54/54 通过，TQ-051 解除阻塞。
 > 2026-07-11 Codex / gpt-5.6-terra：TQ-051 已完成；权威入口在通过结果后会限时等待 Unity 退出并恢复快照，真实 EditMode 54/54 通过且场景、Build Settings 哈希与工作区均无残留。TQ-060 解除阻塞，待下一轮队列维护补位。
+> 2026-07-11 Codex / gpt-5.6-terra：队列维护将已解除阻塞的 TQ-060 及其已登记后继 TQ-061、TQ-062 补入近期队列；当前共 6 条，内容冻结保持不变。
 
 ## 使用规则
 
@@ -23,6 +24,9 @@
 | TQ-052 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-01：修正 CT 反应方向并建立回归 |
 | TQ-053 | P0 | Codex / gpt-5.5 | G2 数值 | 阻塞（TQ-052） | N-TRUST-02：统一暴击倍率语义 |
 | TQ-056 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-01：数据检查器错误分级 |
+| TQ-060 | P0 | Codex / gpt-5.5 | G1 Unity | 待处理 | U-SLICE-01：锁定冒险运行时唯一所有者 |
+| TQ-061 | P0 | Codex / gpt-5.5 | G1 Unity | 阻塞（TQ-060） | U-SLICE-02：接通正式冒险与单场战斗闭环 |
+| TQ-062 | P0 | Codex / gpt-5.5 | G1 Unity | 阻塞（TQ-060） | U-SLICE-03：角色出身驱动起始节点 |
 
 ## 不进入 `1` 队列的当前事项
 
@@ -62,3 +66,33 @@
 - 范围：把无批准豁免的 docs/CSV/asset 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配定义为错误并返回非 0；每个批准警告豁免必须在版本控制中精确绑定 `ruleId + contentId/文件/行键`，记录理由、负责人、移除或到期条件；禁止通配符、类别级、前缀匹配或自动覆盖未来记录。
 - 验证：产出成功与失败测试样例，负例不得修改生产数据；新增同类但未精确列入的警告必须返回非 0 并作为回归负例；错误或缺失结果必须返回非 0，仅剩精确批准警告时 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 返回 0；`git diff --check`。
 - 完成条件：检查脚本能真实区分成功、警告和错误；正例返回 0、负例返回非 0，且仅精确绑定并记录完整的批准警告可返回 0。
+
+### TQ-060 · U-SLICE-01 锁定冒险运行时唯一所有者
+
+- 来源：可信度闸门规格 §4、`开发管理/任务列表/场景与Unity任务.txt`。
+- 当前状态：待处理；依赖：TQ-051 已由 Codex 完成并验证（`37efe0e`、`9e9fe7d`）。
+- 主责：Codex / gpt-5.5。
+- 必读：`src/ProjectSettings/EditorBuildSettings.asset`、`src/Assets/Scenes/`、`src/Assets/Scripts/SceneBuilder.cs`、场景流转与冒险/探索/战斗入口相关脚本、`开发管理/任务列表/场景与Unity任务.txt`。
+- 范围：证明正式 Build Settings、`AdventureScene`、旧 `ExplorationScene`、`SceneBuilder`、冒险控制器和战斗入口的真实调用链；为竞争入口决定迁移、适配或淘汰路径，禁止保留两个竞争的可达运行时入口。
+- 验证：基于实时扫描产出运行时所有者记录、场景迁移边界及允许/禁止修改清单；运行 `dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、`git diff --check`。
+- 完成条件：能从 StartMenu 的实际调用链唯一定位冒险场景、战斗入口和返回上下文；每个竞争候选都有保留或淘汰理由，且产物不得只靠推测或迁移计划。
+
+### TQ-061 · U-SLICE-02 接通正式冒险与单场战斗闭环
+
+- 来源：可信度闸门规格 §4、`开发管理/任务列表/场景与Unity任务.txt`。
+- 当前状态：阻塞（TQ-060）；依赖：TQ-060。
+- 主责：Codex / gpt-5.5。
+- 必读：TQ-060 的运行时所有者记录、已锁定的网格与战斗所有者、场景流转和返回上下文实现。
+- 范围：在唯一正式冒险入口中接通最小地图、一个敌方单位、一场可结束战斗、结算和返回据点；复用已证明的网格与战斗所有者，不向大型控制器堆入无关职责。
+- 验证：运行相关 EditMode 或 PlayMode 回归以及 `powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；检查成功和异常路径均无场景或 Build Settings 残留；`git diff --check`。
+- 完成条件：无需在编辑器手动跳场景即可进入并结束一场战斗，胜负两条结算路径都返回合法场景上下文。
+
+### TQ-062 · U-SLICE-03 角色出身驱动起始节点
+
+- 来源：可信度闸门规格 §4、`开发管理/任务列表/场景与Unity任务.txt`。
+- 当前状态：阻塞（TQ-060）；依赖：TQ-060。
+- 主责：Codex / gpt-5.5。
+- 必读：TQ-060 的运行时所有者记录、角色创建与 `GameSession.PlayerProfile`、世界节点选择及场景流转实现。
+- 范围：移除新游戏流程对江左起点的硬编码；由角色创建的出身数据映射起始世界节点，并为非法或旧存档值提供显式回退。
+- 验证：对当前两个可选出身和非法/旧值分别建立回归；运行相关 Unity 编译与 EditMode 测试、`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、`git diff --check`。
+- 完成条件：当前两个可选出身进入各自起始节点；非法值走被记录的专用回退路径，不能静默伪装为合法出身值。
