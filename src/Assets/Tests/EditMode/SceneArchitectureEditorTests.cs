@@ -264,6 +264,45 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void SceneFlowManagerPreparesNewGameStartNodeFromOriginAndRecordsUnknownOriginFallback()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var flowGo = new GameObject("SceneFlowManagerTest");
+            var sessionGo = new GameObject("GameSessionTest");
+            var looseProfile = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
+            var clanProfile = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
+            var legacyProfile = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                var flow = flowGo.AddComponent<SceneFlowManager>();
+                looseProfile.originId = "origin_loose";
+                clanProfile.originId = "origin_minor_clan";
+                legacyProfile.originId = "legacy_removed_origin";
+
+                Assert.AreEqual("WorldScene", flow.PrepareNewGame(looseProfile));
+                Assert.AreEqual("jiangzuo_hub", session.CurrentWorldNodeId);
+
+                Assert.AreEqual("WorldScene", flow.PrepareNewGame(clanProfile));
+                Assert.AreEqual("guanzhong_hub", session.CurrentWorldNodeId);
+
+                LogAssert.Expect(LogType.Warning, "[SceneFlow] Unknown or legacy origin 'legacy_removed_origin'; using fallback start node 'jiangzuo_hub' without changing the profile.");
+                Assert.AreEqual("WorldScene", flow.PrepareNewGame(legacyProfile));
+                Assert.AreEqual("jiangzuo_hub", session.CurrentWorldNodeId);
+                Assert.AreEqual("legacy_removed_origin", legacyProfile.originId);
+            }
+            finally
+            {
+                Object.DestroyImmediate(looseProfile);
+                Object.DestroyImmediate(clanProfile);
+                Object.DestroyImmediate(legacyProfile);
+                Object.DestroyImmediate(flowGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void SettlementSceneControllerBuildsClickableAdventureEntrances()
         {
             DestroyExistingSceneFlowAndSession();

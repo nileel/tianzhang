@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TianZhang.Entity;
+using TianZhang.Game.CharacterCreation;
 
 namespace TianZhang.Game
 {
@@ -11,6 +12,8 @@ namespace TianZhang.Game
     /// </summary>
     public class SceneFlowManager : MonoBehaviour
     {
+        public const string LegacyOriginFallbackStartNodeId = "jiangzuo_hub";
+
         private static SceneFlowManager instance;
 
         public static SceneFlowManager Instance
@@ -39,8 +42,27 @@ namespace TianZhang.Game
 
         public void StartNewGame(CharacterData profile)
         {
-            EnsureSession().BeginNewGame(profile, "jiangzuo_hub");
-            EnterWorld("jiangzuo_hub");
+            SceneManager.LoadScene(PrepareNewGame(profile));
+        }
+
+        public string PrepareNewGame(CharacterData profile)
+        {
+            var startNodeId = ResolveStartNodeId(profile);
+            EnsureSession().BeginNewGame(profile, startNodeId);
+            return PrepareWorldEntry(startNodeId);
+        }
+
+        public static string ResolveStartNodeId(CharacterData profile)
+        {
+            var origin = profile == null ? null : CharacterCreationCatalog.FindOrigin(profile.originId);
+            if (origin != null && !string.IsNullOrWhiteSpace(origin.StartNodeId))
+                return origin.StartNodeId;
+
+            var originId = profile == null || string.IsNullOrWhiteSpace(profile.originId)
+                ? "(missing)"
+                : profile.originId;
+            Debug.LogWarning($"[SceneFlow] Unknown or legacy origin '{originId}'; using fallback start node '{LegacyOriginFallbackStartNodeId}' without changing the profile.");
+            return LegacyOriginFallbackStartNodeId;
         }
 
         public void EnterWorld(string nodeId)

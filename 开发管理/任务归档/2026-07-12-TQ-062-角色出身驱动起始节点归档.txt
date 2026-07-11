@@ -1,0 +1,25 @@
+# TQ-062 · 角色出身驱动起始节点（完成归档）
+
+- 完成日期：2026-07-12
+- 执行方：Codex / gpt-5.6-terra
+- 范围：移除新游戏流程对江左起点的硬编码；保留 TQ-060 锁定的 `GameSession` / `SceneFlowManager` 正式所有权链，不重新启用旧 `ExplorationScene`。
+
+## 结论与交付
+
+- `SceneFlowManager` 统一从 `PlayerProfile.originId` 查询 `CharacterCreationCatalog.Origins` 的 `StartNodeId`，并以 `PrepareNewGame` 作为不加载场景的可观察入口；正式 `StartNewGame` 继续仅加载 `WorldScene`。
+- 当前回归覆盖 `origin_loose -> jiangzuo_hub` 与 `origin_minor_clan -> guanzhong_hub` 两个不同起点；档案和 `GameSession.CurrentWorldNodeId` 保持同一条正式流转链。
+- 未知、缺失或旧 `originId` 会发出带原始值的警告，并专门回退 `jiangzuo_hub`；不会改写、展示或伪装该档案出身为有效值。
+- `GameManager` 在缺少 `SceneFlowManager` 的兼容分支复用同一解析方法，避免该分支重新引入江左硬编码。
+
+## 验证
+
+- 测试先行：新增 `PrepareNewGame` 回归后，`dotnet build src/TianZhang.EditModeTests.csproj` 预期失败，报 `SceneFlowManager` 缺少该方法。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`（0 警告、0 错误）。
+- `powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src -ResultXmlPath %TEMP%\tzg-tq062-editmode.xml`（59/59 通过）。
+- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- `git diff --check`。
+
+## 后续依赖
+
+- TQ-063 已解除阻塞；它必须在正式 Build Settings 中验证创建角色到据点、冒险、结算并返回据点的完整链路。
+- G1 尚未通过；本切片只证明出身起点选择与旧值回退，不替代端到端冒烟证据。
