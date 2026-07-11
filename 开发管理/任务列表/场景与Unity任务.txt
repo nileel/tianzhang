@@ -32,8 +32,8 @@
 | U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |
 | U-S6-03 | P1 | Codex | ✅ 已完成（2026-07-09） | 战斗日志适配拆分：`CombatLogAdapter` 集中处理战斗开始、行动结果和掉落日志 |
 | Q-UNITY-01 / TQ-049 | P0 | Codex | ✅ 已完成（2026-07-11） | 显式创建 `GameSession` 测试夹具；冻结基线 47/47 通过 |
-| Q-UNITY-02 / TQ-050 | P0 | Codex | 待处理 | 建立权威 Unity EditMode 入口；缺失/失败/不可解析/零测试 XML 必须非零退出 |
-| Q-UNITY-03 / TQ-051 | P0 | Codex | 阻塞（TQ-050） | 测试成功与异常路径都恢复场景和 Build Settings，前后工作区一致 |
+| Q-UNITY-02 / TQ-050 | P0 | Codex | ✅ 已完成（2026-07-11） | 权威 EditMode 入口已验证 XML 成功/失败/缺失/不可解析/零测试退出码；完整运行 54/54 通过 |
+| Q-UNITY-03 / TQ-051 | P0 | Codex | 待处理 | 测试成功与异常路径都恢复场景和 Build Settings，前后工作区一致 |
 | U-SLICE-01 / TQ-060 | P0 | Codex | 阻塞（TQ-051） | 证明 Adventure/Exploration/SceneBuilder 调用链并锁定唯一冒险运行时所有者 |
 | U-SLICE-02 / TQ-061 | P0 | Codex | 阻塞（TQ-060） | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
 | U-SLICE-03 / TQ-062 | P0 | Codex | 阻塞（TQ-060） | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
