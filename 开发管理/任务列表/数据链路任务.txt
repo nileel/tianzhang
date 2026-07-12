@@ -14,18 +14,14 @@
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离。 |
-| D-IMPORT-01 / TQ-043 | P0 | Codex | 待处理（用户指定直接接管） | 按表头解析全部核心字段；缺必需/重复列失败，未知列按显式兼容策略处理。 |
 | D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
-| D-TRUST-03 / TQ-058 | P0 | Codex | 待处理 | `contentScope` 缺失/非法失败关闭，并证明 CSV→asset→运行时过滤链。 |
-| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
+| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
 
 ## G3 任务执行边界
 
-- TQ-043 必须独立核对必需列、重复列、未知列、换序和短行；外部交接只可作问题线索。
 - TQ-057 的机械清理由 DeepSeek 执行时只能标 `⚠️ 已修改/未审核` 并交接；历史扫描报告的已知误差不得直接带入结论。
-- TQ-058：缺失或非法 `contentScope` 必须导入失败，reserved 不进入玩家获得池，既有空字段 asset 必须迁移、隔离或令检查失败。
 - TQ-059：每个 `*Req` 字段恰好选择一种模式；`runtime_gate` 须有允许/拒绝样例，`metadata_only` 须去除限制语义、证明无 consumer 并拒绝“仍叫 `*Req` 但无 handler”。
 - D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
 
