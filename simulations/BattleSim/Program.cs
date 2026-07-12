@@ -7,6 +7,8 @@ namespace BattleSim;
 class Program
 {
     record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, string GongFaName = "", Dictionary<string, double> Weights = null);
+    record G2CoverageResult(string Status, bool MeetsThreshold);
+    static IReadOnlyList<string> G2AuditTargetStages => ["金丹"];
 
     static readonly BuildDef[] BuildDefs =
     {
@@ -44,9 +46,28 @@ class Program
         if (args.Length == 2 && args[0] == "--self-test")
             return BattleSimSelfTests.Run(args[1]);
 
+        bool g2Audit = args.Length >= 1 && args[0] == "--g2-audit";
+        if (args.Length != 0 && !g2Audit)
+        {
+            Console.Error.WriteLine("Usage: BattleSim [--g2-audit [--cycles <positive-integer>] | --self-test <suite>]");
+            return 2;
+        }
+
+        int cultivationCycles;
+        try
+        {
+            cultivationCycles = g2Audit ? ParseG2AuditCycles(args) : GameData.CultivationCycles;
+        }
+        catch (ArgumentException ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 2;
+        }
+
         var sw = System.Diagnostics.Stopwatch.StartNew();
         const string TECH = "上品", SPIRIT = "中品";
-        const int SEEDS = 20, SIM = 2000;
+        int seeds = g2Audit ? 200 : 20;
+        const int SIM = 2000;
 
         var buildDefs = BuildDefs;
         foreach (var build in buildDefs)
@@ -57,7 +78,7 @@ class Program
         }
         int N = buildDefs.Length;
 
-        Console.WriteLine($"修炼模拟 ({SEEDS}种子 x {GameData.CultivationCycles}轮, 灵根={SPIRIT}, 功法={TECH})...");
+        Console.WriteLine($"修炼模拟 ({seeds}种子 x {cultivationCycles}轮, 灵根={SPIRIT}, 功法={TECH})...");
         var pool = new List<Character>[N];
         var realmDist = new Dictionary<string, int>[N];
         // v3.5: 道基分布统计
@@ -78,12 +99,12 @@ class Program
             };
         }
 
-        for (int seed = 0; seed < SEEDS; seed++)
+        for (int seed = 0; seed < seeds; seed++)
         {
             for (int i = 0; i < N; i++)
             {
                 var bd = buildDefs[i];
-                var result = Cultivation.Simulate(bd.Innate, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName), seed * 100 + i, SPIRIT, TECH);
+                var result = Cultivation.Simulate(bd.Innate, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName), seed * 100 + i, SPIRIT, TECH, maxCycles: cultivationCycles);
                 var c = Character.Create(bd.Name, bd.Innate, bd.Style);
                 c.ApplyGrowth(result.Realm, TECH, bd.Weights ?? GameData.WeightsFromGongFa(bd.GongFaName));
                 c.GongFaName = bd.GongFaName;
@@ -211,9 +232,9 @@ class Program
         {
             double avgHp = pool[i].Average(c => (double)c.Primary["HP"]);
             double avg资 = pool[i].Average(c => (double)c.Innate["资质"]);
-            double lq = realmDist[i]["练气"] * 100.0 / SEEDS;
-            double zj = realmDist[i]["筑基"] * 100.0 / SEEDS;
-            double jd = realmDist[i]["金丹"] * 100.0 / SEEDS;
+            double lq = realmDist[i]["练气"] * 100.0 / seeds;
+            double zj = realmDist[i]["筑基"] * 100.0 / seeds;
+            double jd = realmDist[i]["金丹"] * 100.0 / seeds;
             Console.WriteLine($"  {buildDefs[i].Name,-8} {avg资,4:F0}  {lq,5:F0}%  {zj,5:F0}%  {jd,5:F0}%  {avgHp,6:F0}  {buildDefs[i].Desc}");
         }
         Console.WriteLine();
@@ -222,7 +243,7 @@ class Program
         string[] tags = buildDefs.Select(b => b.Name).ToArray();
         var stagePoolSource = pool.Cast<IReadOnlyList<Character>>().ToArray();
         var goldPools = StageCombatReport.SelectPools(stagePoolSource, "金丹");
-        StageCombatReport.PrintSampleCounts("金丹样本数", tags, goldPools, SEEDS);
+        StageCombatReport.PrintSampleCounts("金丹样本数", tags, goldPools, seeds);
         Console.WriteLine($"正在计算 {N}x{N} 金丹同境矩阵...");
         double[,] mat = new double[N, N];
         for (int i = 0; i < N; i++)
@@ -288,18 +309,27 @@ class Program
 
         var zhujiPools = StageCombatReport.SelectPools(stagePoolSource, "筑基");
         Console.WriteLine();
-        StageCombatReport.PrintSampleCounts("筑基样本数", tags, zhujiPools, SEEDS);
+        StageCombatReport.PrintSampleCounts("筑基样本数", tags, zhujiPools, seeds);
         Console.WriteLine($"正在计算 {N}x{N} 筑基同境矩阵...");
-        var zhujiMat = ComputeSymmetricMatrix(zhujiPools, Math.Max(400, SIM / 2));
+        var zhujiMat = ComputeSymmetricMatrix(zhujiPools, SIM);
         PrintWinRateMatrix("筑基同境战斗胜率矩阵（筑基五段混合样本）", tags, zhujiMat);
         Console.WriteLine("  说明：本表只验证筑基主游戏期 Build 差异，不引入紫府/金丹新倍率或改变金丹样本筛选。");
 
         var zifuPools = StageCombatReport.SelectPools(stagePoolSource, "筑基", 4);
         Console.WriteLine();
-        StageCombatReport.PrintSampleCounts("紫府圆满样本数", tags, zifuPools, SEEDS);
+        StageCombatReport.PrintSampleCounts("紫府圆满样本数", tags, zifuPools, seeds);
         Console.WriteLine($"正在计算 {N}x{N} 紫府圆满同境矩阵...");
-        var zifuMat = ComputeSymmetricMatrix(zifuPools, Math.Max(400, SIM / 2));
+        var zifuMat = ComputeSymmetricMatrix(zifuPools, SIM);
         PrintWinRateMatrix("紫府圆满同境战斗胜率矩阵", tags, zifuMat);
+
+        bool g2CoveragePassed = true;
+        if (g2Audit)
+        {
+            g2CoveragePassed = PrintG2CoverageAudit("金丹", tags, goldPools, mat, SIM);
+            PrintG2CoverageAudit("筑基（诊断，不计入 G2 门槛）", tags, zhujiPools, zhujiMat, SIM);
+            PrintG2CoverageAudit("紫府圆满（诊断，不计入 G2 门槛）", tags, zifuPools, zifuMat, SIM);
+            Console.WriteLine($"G2 覆盖结论（金丹目标矩阵）：{(g2CoveragePassed ? "SUFFICIENT" : "INSUFFICIENT")}");
+        }
 
         Console.WriteLine();
         Console.WriteLine("【紫府圆满 vs 金丹初期压制战】");
@@ -480,7 +510,7 @@ class Program
         Console.WriteLine("[练气快照 同境对战]");
         var earlyPool = new List<Character>[N];
         for (int i = 0; i < N; i++) earlyPool[i] = new List<Character>();
-        for (int seed = 0; seed < SEEDS; seed++)
+        for (int seed = 0; seed < seeds; seed++)
         {
             for (int i = 0; i < N; i++)
             {
@@ -594,7 +624,7 @@ class Program
         Console.WriteLine($"  均衡先手: {wa:F0}%  纯战先手: {wb2:F0}%  均: {(wa+wb2)/2:F0}%");
         Console.WriteLine("  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）");
         Console.WriteLine("================================================================================");
-        return 0;
+        return g2Audit && !g2CoveragePassed ? 3 : 0;
     }
 
     static void ApplyGoldenCoreResult(Character c, Cultivation.Result result)
@@ -621,6 +651,78 @@ class Program
         c.ZifuEligibilityNote = result.ZifuEligibilityNote;
         c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
         c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
+    }
+
+    static G2CoverageResult EvaluateG2Coverage(int seedsPerBuild, int distinctPairs, int battlesPerCell)
+    {
+        bool meetsThreshold = seedsPerBuild >= 200 && distinctPairs >= 20 && battlesPerCell >= 2000;
+        return new G2CoverageResult(meetsThreshold ? "SUFFICIENT" : "INSUFFICIENT", meetsThreshold);
+    }
+
+    static int ParseG2AuditCycles(string[] args)
+    {
+        if (args.Length == 1 && args[0] == "--g2-audit")
+            return GameData.CultivationCycles;
+
+        if (args.Length == 3
+            && args[0] == "--g2-audit"
+            && args[1] == "--cycles"
+            && int.TryParse(args[2], out int cycles)
+            && cycles > 0)
+            return cycles;
+
+        throw new ArgumentException("Usage: BattleSim --g2-audit [--cycles <positive-integer>]");
+    }
+
+    static (double Lower, double Upper) Wilson95Percent(int wins, int total)
+    {
+        if (total <= 0 || wins < 0 || wins > total)
+            throw new ArgumentOutOfRangeException(nameof(total), "Wilson interval requires 0 <= wins <= total and total > 0.");
+
+        const double z = 1.959963984540054;
+        double n = total;
+        double p = wins / n;
+        double denominator = 1.0 + z * z / n;
+        double centre = (p + z * z / (2.0 * n)) / denominator;
+        double margin = z * Math.Sqrt((p * (1.0 - p) + z * z / (4.0 * n)) / n) / denominator;
+        return (Math.Max(0.0, centre - margin), Math.Min(1.0, centre + margin));
+    }
+
+    static bool PrintG2CoverageAudit(string stage, string[] tags, IReadOnlyList<Character>[] pools, double[,] matrix, int requestedBattles)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"【G2 覆盖审计：{stage}】");
+        bool passed = true;
+        for (int i = 0; i < pools.Length; i++)
+        {
+            var buildCoverage = EvaluateG2Coverage(pools[i].Count, 20, requestedBattles);
+            Console.WriteLine($"  样本 {tags[i]}：{pools[i].Count}，{buildCoverage.Status}");
+            passed &= buildCoverage.MeetsThreshold;
+        }
+
+        for (int i = 0; i < pools.Length; i++)
+        {
+            for (int j = i + 1; j < pools.Length; j++)
+            {
+                int pairs = Math.Min(pools[i].Count, pools[j].Count);
+                int battles = pairs == 0 ? 0 : Math.Max(1, requestedBattles / pairs / 2) * pairs * 2;
+                var coverage = EvaluateG2Coverage(Math.Min(pools[i].Count, pools[j].Count), pairs, battles);
+                if (double.IsNaN(matrix[i, j]) || battles == 0)
+                {
+                    Console.WriteLine($"  对局 {tags[i]} vs {tags[j]}：无有效样本，INSUFFICIENT");
+                    passed = false;
+                    continue;
+                }
+
+                int wins = (int)Math.Round(matrix[i, j] / 100.0 * battles);
+                var (lower, upper) = Wilson95Percent(wins, battles);
+                string extreme = wins == 0 || wins == battles ? "，极端结果" : "";
+                Console.WriteLine($"  对局 {tags[i]} vs {tags[j]}：胜率={matrix[i, j]:F2}% 95% Wilson=[{lower * 100:F2}%, {upper * 100:F2}%] 配对={pairs} 场次={battles} {coverage.Status}{extreme}");
+                passed &= coverage.MeetsThreshold;
+            }
+        }
+
+        return passed;
     }
 
     static double[,] ComputeSymmetricMatrix(IReadOnlyList<Character>[] pools, int sim)

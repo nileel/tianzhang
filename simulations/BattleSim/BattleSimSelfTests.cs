@@ -54,6 +54,12 @@ static class BattleSimSelfTests
         if (suite == "growth-integrity-tq044")
             return RunChecked(suite, RunGrowthIntegrityTq044);
 
+        if (suite == "g2-coverage-tq055")
+            return RunChecked(suite, RunG2CoverageTq055);
+
+        if (suite == "g2-audit-cycles-tq055")
+            return RunChecked(suite, RunG2AuditCyclesTq055);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -686,6 +692,55 @@ static class BattleSimSelfTests
         symbolCultivator.GongFaName = "云篆度人经";
         symbolCultivator.FinalizeStats("筑基", 0, "中品", GameData.WeightsFromGongFa(symbolCultivator.GongFaName));
         AssertEqual(false, symbolCultivator.Primary["HP"] <= 607, "筑基起始功法仍获得其筑基成长");
+    }
+
+    static void RunG2CoverageTq055()
+    {
+        var evaluator = typeof(Program).GetMethod(
+            "EvaluateG2Coverage",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        if (evaluator == null)
+            throw new InvalidOperationException("Program.EvaluateG2Coverage is missing.");
+
+        var sufficient = evaluator.Invoke(null, new object[] { 200, 20, 2000 })!;
+        AssertEqual("SUFFICIENT", ReadProperty(sufficient, "Status"), "threshold coverage status");
+        AssertEqual(true, ReadProperty(sufficient, "MeetsThreshold"), "threshold coverage is accepted");
+
+        var insufficient = evaluator.Invoke(null, new object[] { 199, 20, 2000 })!;
+        AssertEqual("INSUFFICIENT", ReadProperty(insufficient, "Status"), "under-seeded coverage status");
+        AssertEqual(false, ReadProperty(insufficient, "MeetsThreshold"), "under-seeded coverage is rejected");
+
+        var interval = typeof(Program).GetMethod(
+            "Wilson95Percent",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        if (interval == null)
+            throw new InvalidOperationException("Program.Wilson95Percent is missing.");
+
+        var bounds = ((ValueTuple<double, double>)interval.Invoke(null, new object[] { 0, 2000 })!);
+        AssertEqual(true, bounds.Item1 >= 0.0 && bounds.Item2 > 0.0 && bounds.Item2 < 1.0,
+            "zero-win Wilson interval remains bounded above zero");
+
+        var targetStages = typeof(Program).GetProperty(
+            "G2AuditTargetStages",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        if (targetStages == null)
+            throw new InvalidOperationException("Program.G2AuditTargetStages is missing.");
+        AssertSequence(new[] { "金丹" }, (IReadOnlyList<string>)targetStages.GetValue(null)!,
+            "G2 audit targets the long-horizon gold-core matrix");
+    }
+
+    static void RunG2AuditCyclesTq055()
+    {
+        var parser = typeof(Program).GetMethod(
+            "ParseG2AuditCycles",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        if (parser == null)
+            throw new InvalidOperationException("Program.ParseG2AuditCycles is missing.");
+
+        AssertEqual(200, parser.Invoke(null, new object[] { new[] { "--g2-audit" } }),
+            "G2 audit keeps the 200-cycle default");
+        AssertEqual(800, parser.Invoke(null, new object[] { new[] { "--g2-audit", "--cycles", "800" } }),
+            "G2 audit accepts an explicit cycle horizon");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)
