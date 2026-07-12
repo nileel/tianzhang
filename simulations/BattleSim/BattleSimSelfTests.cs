@@ -60,6 +60,9 @@ static class BattleSimSelfTests
         if (suite == "g2-audit-cycles-tq055")
             return RunChecked(suite, RunG2AuditCyclesTq055);
 
+        if (suite == "g2-attribution-tq055")
+            return RunChecked(suite, RunG2AttributionTq055);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -741,6 +744,38 @@ static class BattleSimSelfTests
             "G2 audit keeps the 200-cycle default");
         AssertEqual(800, parser.Invoke(null, new object[] { new[] { "--g2-audit", "--cycles", "800" } }),
             "G2 audit accepts an explicit cycle horizon");
+    }
+
+    static void RunG2AttributionTq055()
+    {
+        var parser = typeof(Program).GetMethod(
+            "ParseG2AttributionCycles",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        if (parser == null)
+            throw new InvalidOperationException("Program.ParseG2AttributionCycles is missing.");
+
+        AssertEqual(200, parser.Invoke(null, new object[] { new[] { "--g2-attribution" } }),
+            "attribution keeps the 200-cycle default");
+        AssertEqual(400, parser.Invoke(null, new object[] { new[] { "--g2-attribution", "--cycles", "400" } }),
+            "attribution accepts an explicit positive horizon");
+
+        AssertEqual(true, G2AttributionAudit.IsCoveredExtreme(200, 200, 2000, 0.0),
+            "covered zero result is selected");
+        AssertEqual(true, G2AttributionAudit.IsCoveredExtreme(200, 200, 2000, 100.0),
+            "covered full-win result is selected");
+        AssertEqual(false, G2AttributionAudit.IsCoveredExtreme(199, 200, 2000, 0.0),
+            "under-seeded result is rejected");
+        AssertEqual(false, G2AttributionAudit.IsCoveredExtreme(200, 200, 2000, 50.0),
+            "non-extreme result is rejected");
+
+        AssertEqual(false, Combat.HasRangedEligibility("taiyi_fuxiu", false),
+            "symbol cultivator is not ranged in the unchanged default");
+        AssertEqual(true, Combat.HasRangedEligibility("taiyi_fuxiu", true),
+            "symbol cultivator gains ranged eligibility only in attribution override");
+        AssertEqual(true, Combat.HasRangedEligibility("magic", false),
+            "existing magic eligibility is retained");
+        AssertEqual(false, Combat.HasRangedEligibility("yuqing", true),
+            "physical sword style is not promoted by caster override");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)

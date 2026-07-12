@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +8,11 @@ static class Combat
 {
     static readonly Random Rng = new();
     public const double BaseCritMultiplier = 1.5;
+
+    internal readonly record struct Options(bool ExtendCasterRangedEligibility = false);
+
+    internal static bool HasRangedEligibility(string style, bool extendCasterEligibility) =>
+        style == "magic" || (extendCasterEligibility && style is "taiyi" or "taiyi_fuxiu" or "taixu" or "taixu_xuangan");
 
     public static double GetCritMultiplier(double critDamage, double elementCritDamageBonus = 0)
     {
@@ -39,7 +44,10 @@ static class Combat
         return rawDmg;
     }
 
-    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
+    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds) =>
+        Simulate(ca, cb, rounds, new Options());
+
+    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds, Options options)
     {
         int winsA = 0, winsB = 0;
         int totalTurns = 0;
@@ -145,11 +153,11 @@ static class Combat
                     if (ca.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiA * 0.05);
                     // 符胆: 符箓术法效果加成(消耗全部) (按境界:筑基12%/金丹15%/元婴18%/化神22%)
                     bool fudanMaxA = false;
-                    if (ca.Style == "taiyi_fuxiu") 
-                    { 
+                    if (ca.Style == "taiyi_fuxiu")
+                    {
                         fudanMaxA = fudanA == maxFudan(ca.Realm);
                         double fdpA = ca.Realm switch { "筑基" => 0.12, "金丹" => 0.15, "元婴" => 0.18, "化神" => 0.22, _ => 0.15 };
-                        mult *= (1 + fudanA * fdpA); 
+                        mult *= (1 + fudanA * fdpA);
                         fudanA = ca.Realm == "化神" ? 2 : 0;
                     }
                     // 雷劫印记: 物理出手消耗全部印记, 每层伤害加成
@@ -177,7 +185,7 @@ static class Combat
                     // 守一减伤: 受击消耗1层减伤20%
                     if (cb.Style == "taiyi" && shouyiB > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiB--; }
                     // 远程优势: 术法/神通出手后对方需要拉近距离
-                    bool isRanged = ca.Style == "magic";
+                    bool isRanged = HasRangedEligibility(ca.Style, options.ExtendCasterRangedEligibility);
                     if (isRanged) rangePenaltyB = 0.35;
                     hpB -= dmg;
                     // 川流劲眩晕: 10%概率, 玄同免疫 (v4.2补全)
@@ -235,11 +243,11 @@ static class Combat
                     if (cb.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiB * 0.05);
                     // 符胆: 符箓术法效果加成(消耗全部) (按境界:筑基12%/金丹15%/元婴18%/化神22%)
                     bool fudanMaxB = false;
-                    if (cb.Style == "taiyi_fuxiu") 
-                    { 
+                    if (cb.Style == "taiyi_fuxiu")
+                    {
                         fudanMaxB = fudanB == maxFudan(cb.Realm);
                         double fdpB = cb.Realm switch { "筑基" => 0.12, "金丹" => 0.15, "元婴" => 0.18, "化神" => 0.22, _ => 0.15 };
-                        mult *= (1 + fudanB * fdpB); 
+                        mult *= (1 + fudanB * fdpB);
                         fudanB = cb.Realm == "化神" ? 2 : 0;
                     }
                     // 雷劫印记: 物理出手消耗全部印记（B方向）
@@ -263,7 +271,7 @@ static class Combat
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
                     // 远程优势: B使用术法/神通后A需要拉近距离
-                    bool bRanged = cb.Style == "magic";
+                    bool bRanged = HasRangedEligibility(cb.Style, options.ExtendCasterRangedEligibility);
                     if (bRanged) rangePenaltyA = 0.35;
                     hpA -= dmg;
                     // 血剑气: HP恢复
