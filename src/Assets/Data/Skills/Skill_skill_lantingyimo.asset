@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_lantingyimo
   m_EditorClassIdentifier:
+  contentScope: player
   skillName: "\u5170\u4EAD\u9057\u58A8"
   type: 3
   range: 2

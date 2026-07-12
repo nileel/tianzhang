@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_tianshuyunzhuan
   m_EditorClassIdentifier:
+  contentScope: reserved
   spellName: "\u5929\u4E66\u4E91\u7BC6"
   type: 2
   range: 2

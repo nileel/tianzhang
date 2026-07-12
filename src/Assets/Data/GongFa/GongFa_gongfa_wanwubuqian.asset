@@ -11,7 +11,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_wanwubuqian
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+  contentScope: reserved
   gongFaName: "\u4E07\u7269\u4E0D\u8FC1\u6CD5"
   affiliation: "\u592A\u865A\u89C2"
   grade: "\u4E2D\u54C1"

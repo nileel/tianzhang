@@ -11,12 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_leicnicuiti
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+  contentScope: reserved
   gongFaName: "\u96F7\u6C60\u6DEC\u4F53\u529F"
   affiliation: "\u7389\u6E05\u5D16"
   grade: "\u4E0B\u54C1"
   elementMain: "\u96F7"
-  elementSub: 
+  elementSub:
   starRootBone: 5
   starPhysique: 4
   starSpirit: 2

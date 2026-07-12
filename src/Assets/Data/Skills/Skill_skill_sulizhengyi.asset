@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_sulizhengyi
   m_EditorClassIdentifier:
+  contentScope: player
   skillName: "\u8083\u793C\u6B63\u4EEA"
   type: 3
   range: 2

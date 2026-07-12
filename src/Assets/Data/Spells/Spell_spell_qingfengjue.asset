@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_qingfengjue
   m_EditorClassIdentifier:
+  contentScope: player
   spellName: "\u6E05\u98CE\u8BC0"
   type: 2
   range: 2

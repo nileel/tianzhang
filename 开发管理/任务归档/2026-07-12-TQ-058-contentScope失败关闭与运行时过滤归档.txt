@@ -1,0 +1,31 @@
+# TQ-058 · D-TRUST-03 contentScope 失败关闭与运行时过滤（完成归档）
+
+- 完成日期：2026-07-12
+- 执行方：Codex / gpt-5.6-terra
+- 前置：TQ-043、TQ-056 已完成。
+
+## 交付物
+
+- `DataConfigImporter` 现将三类配置的 `contentScope` 设为必填，并只接受 `player`、`reserved`；缺失、空值或未知值均抛出 `InvalidDataException`，不再默认 `player`。
+- 新增 runtime 可用的 `ContentScopePolicy`；`SectSelectionManager` 的功法加成和术法装配均仅接纳显式 `player` 资产，对 `reserved` 写入可观察的 warning 并隔离。
+- 为 29 个功法、75 个术法、34 个神通 asset 补齐与 CSV 对齐的显式 `contentScope` 序列化字段。
+- EditMode 回归覆盖导入器拒绝缺失/未知 scope 与 runtime 策略仅接纳 `player`。
+
+## 验证记录
+
+```text
+dotnet build src/Assembly-CSharp.csproj
+dotnet build src/TianZhang.EditModeTests.csproj
+powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1
+# Unity EditMode: 62/62 通过
+
+powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
+# 不再出现 contentScope / ASSET_CONTENT_SCOPE_MISSING 错误。
+# 退出码 1 仅余 TQ-057 范围：DELETED_REALM_ACTIVE、DOC_CSV_COUNT_MISMATCH、
+# LANGUAGE_KEY_MISSING、REQUIRED_FIELD_EMPTY。
+```
+
+## 后续依赖
+
+- TQ-059 已解除对 TQ-058 的依赖，但仍等待 TQ-057 清理既有数据矛盾。
+- G3 尚未通过；不得将本次 contentScope 通过误表述为完整数据链通过。

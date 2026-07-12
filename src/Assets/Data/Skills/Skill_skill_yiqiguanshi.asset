@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_yiqiguanshi
   m_EditorClassIdentifier:
+  contentScope: player
   skillName: "\u5F08\u68CB\u89C2\u52BF"
   type: 3
   range: 2

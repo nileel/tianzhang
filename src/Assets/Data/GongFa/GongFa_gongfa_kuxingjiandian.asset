@@ -11,12 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_kuxingjiandian
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+  contentScope: reserved
   gongFaName: "\u82E6\u884C\u5251\u5178"
   affiliation: "\u7389\u6E05\u5D16"
   grade: "\u4E2D\u54C1"
   elementMain: "\u91D1"
-  elementSub: 
+  elementSub:
   starRootBone: 4
   starPhysique: 3
   starSpirit: 2

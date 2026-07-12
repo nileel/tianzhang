@@ -126,7 +126,7 @@ namespace TianZhang.Editor
             RequireColumns(headers, path,
                 "name", "affiliation", "grade", "elementMain", "elementSub",
                 "starRootBone", "starPhysique", "starSpirit", "starMind",
-                "starReaction", "starTalent", "starFortune", "growth");
+                "starReaction", "starTalent", "starFortune", "growth", "contentScope");
 
             foreach (var line in lines.Skip(headerLineIndex + 1))
             {
@@ -144,7 +144,7 @@ namespace TianZhang.Editor
                 asset.grade = T(GetRequiredColumnValue(headers, cols, "grade", path));
                 asset.elementMain = T(GetRequiredColumnValue(headers, cols, "elementMain", path));
                 asset.elementSub = T(GetRequiredColumnValue(headers, cols, "elementSub", path));
-                asset.contentScope = GetColumnValueOrDefault(headers, cols, "contentScope", "player");
+                asset.contentScope = GetRequiredContentScope(headers, cols, path);
                 asset.starRootBone = int.Parse(GetRequiredColumnValue(headers, cols, "starRootBone", path));
                 asset.starPhysique = int.Parse(GetRequiredColumnValue(headers, cols, "starPhysique", path));
                 asset.starSpirit = int.Parse(GetRequiredColumnValue(headers, cols, "starSpirit", path));
@@ -226,7 +226,7 @@ namespace TianZhang.Editor
                 "name", "type", "minRange", "maxRange", "mpCost",
                 "cooldownTicks", "damageMultiplier", "healAmount",
                 "cannotBlock", "cannotDodge", "penetratingShield", "stunChance",
-                "element");
+                "element", "contentScope");
 
             foreach (var line in lines.Skip(headerLineIndex + 1))
             {
@@ -243,7 +243,7 @@ namespace TianZhang.Editor
                 asset.type = (SpellType)int.Parse(GetRequiredColumnValue(headers, cols, "type", path));
                 asset.minRange = int.Parse(GetRequiredColumnValue(headers, cols, "minRange", path));
                 asset.maxRange = int.Parse(GetRequiredColumnValue(headers, cols, "maxRange", path));
-                asset.contentScope = GetColumnValueOrDefault(headers, cols, "contentScope", "player");
+                asset.contentScope = GetRequiredContentScope(headers, cols, path);
                 asset.mpCost = int.Parse(GetRequiredColumnValue(headers, cols, "mpCost", path));
                 asset.cooldownTicks = int.Parse(GetRequiredColumnValue(headers, cols, "cooldownTicks", path));
                 asset.damageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "damageMultiplier", path));
@@ -277,7 +277,7 @@ namespace TianZhang.Editor
                 "cooldownTicks", "damageMultiplier", "healAmount",
                 "cannotBlock", "cannotDodge", "penetratingShield", "stunChance",
                 "isDomain", "isBloodline", "specialEffectDesc",
-                "element");
+                "element", "contentScope");
 
             foreach (var line in lines.Skip(headerLineIndex + 1))
             {
@@ -294,7 +294,7 @@ namespace TianZhang.Editor
                 asset.type = (SpellType)int.Parse(GetRequiredColumnValue(headers, cols, "type", path));
                 asset.minRange = int.Parse(GetRequiredColumnValue(headers, cols, "minRange", path));
                 asset.maxRange = int.Parse(GetRequiredColumnValue(headers, cols, "maxRange", path));
-                asset.contentScope = GetColumnValueOrDefault(headers, cols, "contentScope", "player");
+                asset.contentScope = GetRequiredContentScope(headers, cols, path);
                 asset.mpCost = int.Parse(GetRequiredColumnValue(headers, cols, "mpCost", path));
                 asset.cooldownTicks = int.Parse(GetRequiredColumnValue(headers, cols, "cooldownTicks", path));
                 asset.damageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "damageMultiplier", path));
@@ -498,6 +498,21 @@ namespace TianZhang.Editor
                 throw new InvalidDataException($"{sourceName} row has empty required column '{columnName}'.");
 
             return value;
+        }
+
+        public static string GetRequiredContentScope(
+            string[] headers,
+            string[] cols,
+            string sourceName)
+        {
+            var contentScope = GetRequiredColumnValue(headers, cols, "contentScope", sourceName);
+            if (!ContentScopePolicy.IsKnown(contentScope))
+            {
+                throw new InvalidDataException(
+                    $"{sourceName} has invalid contentScope '{contentScope}'; expected player or reserved.");
+            }
+
+            return contentScope;
         }
 
         static void RequireColumns(string[] headers, string sourceName, params string[] columnNames)

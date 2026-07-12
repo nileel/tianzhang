@@ -4,6 +4,23 @@ using UnityEngine;
 
 namespace TianZhang.Cultivation
 {
+    public static class ContentScopePolicy
+    {
+        public const string Player = "player";
+        public const string Reserved = "reserved";
+
+        public static bool IsKnown(string contentScope)
+        {
+            return string.Equals(contentScope, Player, StringComparison.Ordinal)
+                || string.Equals(contentScope, Reserved, StringComparison.Ordinal);
+        }
+
+        public static bool IsPlayerAvailable(string contentScope)
+        {
+            return string.Equals(contentScope, Player, StringComparison.Ordinal);
+        }
+    }
+
     /// <summary>
     /// 功法成长数据（ScriptableObject）
     /// 每境界每小级的属性成长 + 篇章加成

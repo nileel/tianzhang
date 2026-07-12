@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_yufenglingxu
   m_EditorClassIdentifier:
+  contentScope: player
   spellName: "\u5FA1\u98CE\u51CC\u865A"
   type: 2
   range: 2

@@ -569,6 +569,55 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void ContentScopeImportRejectsMissingAndUnknownValues()
+        {
+            var getRequiredContentScope = typeof(DataConfigImporter).GetMethod(
+                "GetRequiredContentScope",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+
+            Assert.IsNotNull(getRequiredContentScope, "Importer must expose a required contentScope reader.");
+            Assert.AreEqual(
+                "reserved",
+                getRequiredContentScope.Invoke(null, new object[]
+                {
+                    new[] { "name", "contentScope" },
+                    new[] { "spell_test", "reserved" },
+                    "Spells.csv"
+                }));
+            Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                getRequiredContentScope.Invoke(null, new object[]
+                {
+                    new[] { "name" },
+                    new[] { "spell_test" },
+                    "Spells.csv"
+                }));
+            Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                getRequiredContentScope.Invoke(null, new object[]
+                {
+                    new[] { "name", "contentScope" },
+                    new[] { "spell_test", "legacy" },
+                    "Spells.csv"
+                }));
+        }
+
+        [Test]
+        public void PlayerContentScopePolicyOnlyAdmitsExplicitPlayerAssets()
+        {
+            var policyType = typeof(GongFaGrowthData).Assembly.GetType(
+                "TianZhang.Cultivation.ContentScopePolicy");
+            Assert.IsNotNull(policyType, "Runtime contentScope policy must be shared outside editor-only code.");
+
+            var isPlayerAvailable = policyType.GetMethod(
+                "IsPlayerAvailable",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+            Assert.IsNotNull(isPlayerAvailable);
+            Assert.IsTrue((bool)isPlayerAvailable.Invoke(null, new object[] { "player" }));
+            Assert.IsFalse((bool)isPlayerAvailable.Invoke(null, new object[] { "reserved" }));
+            Assert.IsFalse((bool)isPlayerAvailable.Invoke(null, new object[] { "" }));
+            Assert.IsFalse((bool)isPlayerAvailable.Invoke(null, new object[] { "legacy" }));
+        }
+
+        [Test]
         public void ElementLookupRequiresIndependentElementColumnAndUsesHeaderOrder()
         {
             Assert.AreEqual(

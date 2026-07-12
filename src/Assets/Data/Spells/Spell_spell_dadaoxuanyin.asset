@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_dadaoxuanyin
   m_EditorClassIdentifier:
+  contentScope: reserved
   spellName: "\u5927\u9053\u7384\u97F3"
   type: 2
   range: 1

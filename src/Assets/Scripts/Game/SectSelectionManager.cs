@@ -362,10 +362,14 @@ namespace TianZhang.Game
                 var gongFaAssetId = GetGongFaAssetId(charData.gongFaName);
                 var path = "Assets/Data/GongFa/" + gongFaAssetId + ".asset";
                 var gongFaAsset = LoadAsset<Cultivation.GongFaGrowthData>(path);
-                if (gongFaAsset != null)
+                if (gongFaAsset != null && Cultivation.ContentScopePolicy.IsPlayerAvailable(gongFaAsset.contentScope))
                 {
                     player.ApplyGongFaBonuses(gongFaAsset, "练气");
                     Debug.Log($"[SectSelection] Applied gongFa: {charData.gongFaName} ({gongFaAssetId})");
+                }
+                else if (gongFaAsset != null)
+                {
+                    Debug.LogWarning($"[SectSelection] Excluded non-player gongFa: {charData.gongFaName} ({gongFaAssetId}) scope={gongFaAsset.contentScope}");
                 }
                 else
                 {
@@ -396,9 +400,13 @@ namespace TianZhang.Game
                     var id = GetSpellAssetId(spellName);
                     var spath = "Assets/Data/Spells/Spell_spell_" + id + ".asset";
                     var asset = LoadAsset<Combat.SpellData>(spath);
-                    if (asset != null)
+                    if (asset != null && Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
                     {
                         spellList.Add(asset);
+                    }
+                    else if (asset != null)
+                    {
+                        Debug.LogWarning($"[SectSelection] Excluded non-player spell: {spellName} ({spath}) scope={asset.contentScope}");
                     }
                     else
                     {

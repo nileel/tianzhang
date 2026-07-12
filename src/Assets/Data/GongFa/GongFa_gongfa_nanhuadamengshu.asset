@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_nanhuadamengshu
   m_EditorClassIdentifier:
+  contentScope: reserved
   gongFaName: "\u5357\u534E\u5927\u68A6\u4E66"
   affiliation: "\u53E4\u4FEE"
   grade: "\u6781\u54C1"

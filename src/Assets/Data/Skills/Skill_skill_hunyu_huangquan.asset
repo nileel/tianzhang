@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -11,7 +11,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_hunyu_huangquan
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+  contentScope: reserved
   skillName: "\u9B42\u57DF\xB7\u9EC4\u6CC9\u5E7B\u754C"
   type: 0
   range: 1
@@ -29,6 +30,6 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 1
   isBloodline: 0
-  specialEffectDesc: 
+  specialEffectDesc:
   element: element_dark_root
   realmScaleBase: 1

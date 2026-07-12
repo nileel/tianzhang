@@ -18,6 +18,7 @@
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-062 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-062-角色出身驱动起始节点归档.txt`；新游戏按档案 `originId` 映射起始世界节点，未知/旧值会记录并走专用江左回退而不改写档案。TQ-063 解除阻塞。
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-063 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-063-正式BuildSettings端到端冒烟归档.txt`；正式 Build Settings 批处理验证与 Unity EditMode 60/60 通过，角色创建出身、起点、据点、Adventure 及返回上下文的连续回归已覆盖。G1 通过；TQ-064、TQ-068 的 G1 依赖解除，按后续队列维护补位。
 > 2026-07-12 自动控制器：队列维护确认 G1 已通过；补入已登记、依赖已满足的 TQ-064 与 TQ-068，近期队列由 3 条恢复为 5 条。TQ-059 继续准确标为阻塞，内容冻结不变。
+> 2026-07-12 Codex / gpt-5.6-terra：TQ-058 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-058-contentScope失败关闭与运行时过滤归档.txt`；CSV 导入改为拒绝缺失/非法 contentScope，138 个既有 asset 已显式序列化 scope，SectSelection 的功法/术法玩家入口会排除 reserved。Unity EditMode 62/62 与 .NET 编译通过；数据检查器已无 contentScope 项，其余 TQ-057 历史数据矛盾仍待处理。
 
 ## 使用规则
 
@@ -32,8 +33,7 @@
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
-| TQ-058 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-03：contentScope 失败关闭与运行时过滤 |
-| TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057、TQ-058） | D-TRUST-04：接通境界、元素和阵营限制 |
+| TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-064 | P1 | Codex / gpt-5.5 | 架构治理 | 待处理 | M-ARCH-01：建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
 
@@ -55,20 +55,10 @@
 - 验证：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 仅在剩余问题均有精确批准豁免或已清理时返回 0；`git diff --check`。
 - 完成条件：TQ-056 所列历史数据矛盾已清理或被精确批准豁免，交接材料标明仍需 Codex / ChatGPT5.5 复审。
 
-### TQ-058 · D-TRUST-03 contentScope 失败关闭与运行时过滤
-
-- 来源：可信度闸门规格 §6。
-- 当前状态：待处理；依赖：TQ-043、TQ-056 均已由 Codex 完成并验证。
-- 主责：Codex / gpt-5.5。
-- 必读：TQ-056 归档、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、三类数据对象与实际 runtime 内容池消费者。
-- 范围：缺失或非法 `contentScope` 必须导入失败；reserved 不进入玩家可获得池；补齐或隔离既有 asset 的缺失字段，不能静默默认为 player。
-- 验证：建立允许/拒绝回归，运行相关 Unity 编译与 EditMode 测试、`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`、`git diff --check`。
-- 完成条件：CSV→asset→runtime 过滤链可观察且可测试，非法/旧值走记录的失败或隔离路径。
-
 ### TQ-059 · D-TRUST-04 接通境界、元素和阵营限制
 
 - 来源：可信度闸门规格 §6。
-- 当前状态：阻塞（TQ-057、TQ-058）；依赖：TQ-043、TQ-056、TQ-057、TQ-058。
+- 当前状态：阻塞（TQ-057）；依赖：TQ-043、TQ-056、TQ-057（TQ-058 已完成）。
 - 主责：Codex / gpt-5.5。
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
 - 验证：每个 runtime gate 具有允许与拒绝样例；运行 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。

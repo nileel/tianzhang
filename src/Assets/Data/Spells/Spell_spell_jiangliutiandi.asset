@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_jiangliutiandi
   m_EditorClassIdentifier:
+  contentScope: reserved
   spellName: "\u6C5F\u6D41\u5929\u5730"
   type: 2
   range: 1
