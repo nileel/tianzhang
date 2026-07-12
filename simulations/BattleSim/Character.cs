@@ -37,6 +37,8 @@ class Character
     public double DanJiArtAffinityMult { get; set; } = 1.0;
     // v5.1: 功法名称（用于读取实际小境界成长表）
     public string GongFaName = "";
+    // 后续由主战法宝数据链路覆盖；无装备时使用徒手兜底。
+    public GameData.AttackProfile BasicAttackProfile = GameData.UnarmedBasicAttack;
     // v4.1: 术法与神通
     public string ArtName = "";          // 术法名称
     public string ArtType = "";          // "物理" or "神魂"
@@ -44,12 +46,16 @@ class Character
     public double ArtMult = 1.0;         // 术法倍率
     public int ArtMPCost = 0;            // 术法灵力消耗
     public int ArtCooldown = 3;          // 术法冷却回合数
+    public int ArtMinRange = 1;
+    public int ArtMaxRange = 1;
     public string DivineName = "";       // 神通名称
     public string DivineType = "";       // "物理" or "神魂"
     public string DivineElement = "";    // 神通五行属性
     public double DivineMult = 1.0;      // 神通倍率
     public double DivineDefPen = 0;      // 神通防御穿透%
     public int DivineCooldown = 5;       // 神通冷却回合数
+    public int DivineMinRange = 1;
+    public int DivineMaxRange = 1;
 
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
@@ -185,11 +191,11 @@ class Character
     public void AssignArts()
     {
         var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "taixu_xuangan" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, "yuqing_kuxing" => GameData.YuqingArt, "yuqing_leijie" => GameData.YuqingLeijieArt, _ => GameData.MagicArt };
-        ArtName = artCfg.Name; ArtType = artCfg.Type; ArtElement = artCfg.Element; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown;
+        ArtName = artCfg.Name; ArtType = artCfg.Type; ArtElement = artCfg.Element; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown; ArtMinRange = artCfg.MinRange; ArtMaxRange = artCfg.MaxRange;
         if (Realm == "金丹" && FormedState == "成丹" && !string.IsNullOrEmpty(DanJiType))
         {
             var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
-            DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown;
+            DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown; DivineMinRange = divCfg.MinRange; DivineMaxRange = divCfg.MaxRange;
         }
     }
 

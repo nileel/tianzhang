@@ -252,10 +252,12 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     }
 
     // 术法与神通配置
-    public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown, string Element = "");
-    public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown, string Element = "");
+    public record AttackProfile(string Name, string Type, double Mult, string Element, int MinRange, int MaxRange);
+    public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown, string Element = "", int MinRange = 1, int MaxRange = 1);
+    public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown, string Element = "", int MinRange = 1, int MaxRange = 1);
     public readonly record struct ElementMatch(double DamageMultiplier, double CritRateBonus, double CritDamageBonus);
-    public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3, "土");
+    public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3, "土", 1, 1);
+    public static readonly AttackProfile UnarmedBasicAttack = new("徒手", "物理", 1.0, "", 1, 1);
 
     // ═══════════════════════════════════════
     // v5.1: 功法小境界成长表（来源：docs/角色养成/功法/）
@@ -528,19 +530,19 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         _ => false
     };
 
-    public static readonly ArtConfig MagicArt = new("灵光闪", "神魂", 1.2, 20, 3, "");
-    public static readonly DivineConfig PhysicalDivine = new("碎岳", "物理", 1.5, 10, 5, "土");
-    public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3, "水");
-    public static readonly DivineConfig WaterDivine = new("逝水千击", "物理", 1.5, 10, 5, "水");
-    public static readonly DivineConfig MagicDivine = new("灵光贯日", "神魂", 1.4, 10, 5, "");
-    public static readonly ArtConfig TaiyiArt = new("玄元正气诀", "神魂", 1.4, 25, 3, "");
-    public static readonly ArtConfig TaiyiFuxiuArt = new("安神符", "神魂", 0.5, 20, 3, "风");
-    public static readonly DivineConfig TaiyiDivine = new("万法归宗", "神魂", 1.8, 15, 5, "");
-    public static readonly DivineConfig TaiyiFuxiuDivine = new("天符镇岳", "神魂", 1.5, 20, 5, "土");
-    public static readonly ArtConfig TaixuArt = new("业火咒", "神魂", 1.5, 25, 3, "暗");
-    public static readonly DivineConfig TaixuDivine = new("魂归彼岸", "神魂", 1.8, 15, 5, "暗");
-    public static readonly ArtConfig YuqingArt = new("九霄太乙斩", "物理", 1.5, 25, 3, "雷");
-    public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5, "金");
-    public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3, "雷");
-    public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5, "雷");
+    public static readonly ArtConfig MagicArt = new("灵光闪", "神魂", 1.2, 20, 3, "", 2, 4);
+    public static readonly DivineConfig PhysicalDivine = new("碎岳", "物理", 1.5, 10, 5, "土", 1, 1);
+    public static readonly ArtConfig WaterArt = new("川流劲", "物理", 1.25, 20, 3, "水", 1, 3);
+    public static readonly DivineConfig WaterDivine = new("逝水千击", "物理", 1.5, 10, 5, "水", 1, 3);
+    public static readonly DivineConfig MagicDivine = new("灵光贯日", "神魂", 1.4, 10, 5, "", 2, 4);
+    public static readonly ArtConfig TaiyiArt = new("玄元正气诀", "神魂", 1.4, 25, 3, "", 2, 4);
+    public static readonly ArtConfig TaiyiFuxiuArt = new("安神符", "神魂", 0.5, 20, 3, "风", 2, 4);
+    public static readonly DivineConfig TaiyiDivine = new("万法归宗", "神魂", 1.8, 15, 5, "", 2, 4);
+    public static readonly DivineConfig TaiyiFuxiuDivine = new("天符镇岳", "神魂", 1.5, 20, 5, "土", 2, 4);
+    public static readonly ArtConfig TaixuArt = new("业火咒", "神魂", 1.5, 25, 3, "暗", 2, 4);
+    public static readonly DivineConfig TaixuDivine = new("魂归彼岸", "神魂", 1.8, 15, 5, "暗", 2, 4);
+    public static readonly ArtConfig YuqingArt = new("九霄太乙斩", "物理", 1.5, 25, 3, "雷", 1, 3);
+    public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5, "金", 1, 3);
+    public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3, "雷", 1, 3);
+    public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5, "雷", 1, 3);
 }

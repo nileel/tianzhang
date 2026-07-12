@@ -63,6 +63,9 @@ static class BattleSimSelfTests
         if (suite == "g2-attribution-tq055")
             return RunChecked(suite, RunG2AttributionTq055);
 
+        if (suite == "distance-model-tq055")
+            return RunChecked(suite, RunDistanceModelTq055);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -768,14 +771,37 @@ static class BattleSimSelfTests
         AssertEqual(false, G2AttributionAudit.IsCoveredExtreme(200, 200, 2000, 50.0),
             "non-extreme result is rejected");
 
-        AssertEqual(false, Combat.HasRangedEligibility("taiyi_fuxiu", false),
-            "symbol cultivator is not ranged in the unchanged default");
-        AssertEqual(true, Combat.HasRangedEligibility("taiyi_fuxiu", true),
-            "symbol cultivator gains ranged eligibility only in attribution override");
-        AssertEqual(true, Combat.HasRangedEligibility("magic", false),
-            "existing magic eligibility is retained");
-        AssertEqual(false, Combat.HasRangedEligibility("yuqing", true),
-            "physical sword style is not promoted by caster override");
+        AssertEqual(false, G2AttributionAudit.Layers.Contains("远程资格统一"),
+            "distance model removes the retired range-eligibility counterfactual");
+        AssertSequence(new[] { "先天交换", "功法包交换" }, G2AttributionAudit.Layers,
+            "remaining attribution layers are ordered");
+    }
+
+    static void RunDistanceModelTq055()
+    {
+        var unarmed = GameData.UnarmedBasicAttack;
+        AssertEqual(1, unarmed.MinRange, "unarmed basic attack minimum range");
+        AssertEqual(1, unarmed.MaxRange, "unarmed basic attack maximum range");
+        AssertEqual(2, GameData.TaiyiFuxiuArt.MinRange, "symbol art keeps an independent minimum range");
+        AssertEqual(4, GameData.TaiyiFuxiuArt.MaxRange, "symbol art keeps an independent maximum range");
+        AssertEqual(1, GameData.WaterDivine.MinRange, "water divine keeps an independent minimum range");
+        AssertEqual(3, GameData.WaterDivine.MaxRange, "water divine keeps an independent maximum range");
+        var character = Character.Create("basic-profile", new() { ["根骨"] = 1, ["魂魄"] = 1, ["神识"] = 1, ["资质"] = 1, ["气运"] = 1 }, "physical");
+        AssertEqual(GameData.UnarmedBasicAttack, character.BasicAttackProfile, "unequipped character uses unarmed basic attack profile");
+        character.BasicAttackProfile = new("测试主战法宝", "神魂", 1.1, "火", 2, 3);
+        AssertEqual(3, character.BasicAttackProfile.MaxRange, "main combat artifact profile replaces unarmed fallback");
+        AssertEqual(6, Combat.InitialDistance, "distance-model opening separation");
+        AssertEqual(1, Combat.MoveIntoRange(6, 5, 1, 1), "melee moves before attacking");
+        AssertEqual(2, Combat.MoveIntoRange(1, 3, 2, 4), "minimum range forces retreat");
+        AssertEqual(6, Combat.MoveIntoRange(6, 0, 2, 4), "zero movement keeps distance");
+        int selected = Combat.SelectAction(4, true, 1, 1, false, true, 2, 4, GameData.UnarmedBasicAttack,
+            out int selectedMinRange, out int selectedMaxRange);
+        AssertEqual(Combat.ArtAction, selected, "legal art takes priority over out-of-range divine");
+        AssertEqual((2, 4), (selectedMinRange, selectedMaxRange), "selected art range is retained for movement");
+        int longRangeAction = Combat.SelectAction(6, false, 1, 1, false, true, 2, 6, GameData.UnarmedBasicAttack,
+            out int longRangeMin, out int longRangeMax);
+        AssertEqual(Combat.ArtAction, longRangeAction, "opening-range art is selected without a close-range fallback");
+        AssertEqual(6, Combat.MoveIntoRange(6, 5, longRangeMin, longRangeMax), "opening-range art needs no movement before casting");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)

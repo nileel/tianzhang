@@ -8,11 +8,44 @@ static class Combat
 {
     static readonly Random Rng = new();
     public const double BaseCritMultiplier = 1.5;
+    internal const int InitialDistance = 6;
+    internal const int DivineAction = 0;
+    internal const int KuxingAction = 1;
+    internal const int ArtAction = 2;
+    internal const int BasicAction = 3;
 
-    internal readonly record struct Options(bool ExtendCasterRangedEligibility = false);
+    static bool IsInRange(int distance, int minRange, int maxRange) =>
+        distance >= minRange && distance <= maxRange;
 
-    internal static bool HasRangedEligibility(string style, bool extendCasterEligibility) =>
-        style == "magic" || (extendCasterEligibility && style is "taiyi" or "taiyi_fuxiu" or "taixu" or "taixu_xuangan");
+    internal static int SelectAction(
+        int distance,
+        bool divineReady, int divineMinRange, int divineMaxRange,
+        bool kuxingReady,
+        bool artReady, int artMinRange, int artMaxRange,
+        GameData.AttackProfile basicAttack,
+        out int minRange, out int maxRange)
+    {
+        var actions = new[]
+        {
+            (Kind: DivineAction, Ready: divineReady, MinRange: divineMinRange, MaxRange: divineMaxRange),
+            (Kind: KuxingAction, Ready: kuxingReady, MinRange: 1, MaxRange: 1),
+            (Kind: ArtAction, Ready: artReady, MinRange: artMinRange, MaxRange: artMaxRange),
+            (Kind: BasicAction, Ready: true, MinRange: basicAttack.MinRange, MaxRange: basicAttack.MaxRange),
+        };
+        var selected = actions.FirstOrDefault(action => action.Ready && IsInRange(distance, action.MinRange, action.MaxRange));
+        if (!selected.Ready)
+            selected = actions.First(action => action.Ready);
+        minRange = selected.MinRange;
+        maxRange = selected.MaxRange;
+        return selected.Kind;
+    }
+
+    internal static int MoveIntoRange(int distance, int movePoints, int minRange, int maxRange)
+    {
+        if (distance > maxRange) return Math.Max(maxRange, distance - Math.Max(0, movePoints));
+        if (distance < minRange) return Math.Min(minRange, distance + Math.Max(0, movePoints));
+        return distance;
+    }
 
     public static double GetCritMultiplier(double critDamage, double elementCritDamageBonus = 0)
     {
@@ -44,10 +77,7 @@ static class Combat
         return rawDmg;
     }
 
-    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds) =>
-        Simulate(ca, cb, rounds, new Options());
-
-    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds, Options options)
+    public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
         int winsA = 0, winsB = 0;
         int totalTurns = 0;
@@ -57,7 +87,7 @@ static class Combat
             int mpA = ca.Primary["MP"], mpB = cb.Primary["MP"];
             int artCdA = 0, artCdB = 0;
             int divineCdA = 0, divineCdB = 0;
-            double rangePenaltyA = 1.0, rangePenaltyB = 1.0; // 远程优势: 对方下轮伤害折扣
+            int distance = InitialDistance;
             double ctA = 0, ctB = 0;
             double sA = 100.0 / ca.Primary["反应"], sB = 100.0 / cb.Primary["反应"];
             // v4.2: 水系机制 & 眩晕
@@ -117,29 +147,37 @@ static class Combat
                     // 玄感: 回合开始 debuff清除
                     if (ca.Style == "taixu_xuangan" && stunnedA && Rng.NextDouble() < xuanganClearRate(ca.Realm)) { stunnedA = false; if (xuanganCanHeal(ca.Realm)) hpA = Math.Min(ca.Primary["HP"], hpA + (int)(ca.Primary["HP"] * 0.05)); xuantongA = xuanganXuantongDur(ca.Realm); }                    if (stunnedA) { stunnedA = false; ctA += sA; continue; }
                     // AI决策: 神通 > 术法 > 平A
-                    string atkType, skillElement = ""; double mult, defPen; int atk, def; double resist;
+                    string atkType, skillElement = ""; double mult, defPen; int atk, def, minRange, maxRange; double resist;
                     bool waterSkillA = false;                    bool kuxingUsedA = false; int kuxingHpRecoverA = 0; bool kuxingIgnoreBlockA = false;
                     int artMPCostA = (ca.Style == "taiyi_fuxiu" && fudanA == maxFudan(ca.Realm)) ? 0 : (xuantongA > 0 ? (int)(ca.ArtMPCost * 0.70) : ca.ArtMPCost);
-                    if (ca.DivineName != "" && divineCdA == 0)
+                    bool divineReadyA = ca.DivineName != "" && divineCdA == 0;
+                    bool kuxingReadyA = ca.Style == "yuqing_kuxing" && hpA > 2 && hpB > 0;
+                    bool artReadyA = mpA >= artMPCostA && artCdA == 0;
+                    int actionA = SelectAction(distance, divineReadyA, ca.DivineMinRange, ca.DivineMaxRange,
+                        kuxingReadyA, artReadyA, ca.ArtMinRange, ca.ArtMaxRange, ca.BasicAttackProfile,
+                        out minRange, out maxRange);
+                    distance = MoveIntoRange(distance, ca.Primary["移力"], minRange, maxRange);
+                    if (!IsInRange(distance, minRange, maxRange)) { ctA += sA; continue; }
+                    if (actionA == DivineAction)
                     {
-                        atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen;
+                        atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen; minRange = ca.DivineMinRange; maxRange = ca.DivineMaxRange;
                         divineCdA = ca.DivineCooldown;
                         waterSkillA = ca.Style == "water_physical";
                         if (waterSkillA) { shishuiOnB = Math.Min(shishuiOnB + 1, maxShishui(ca.Realm)); chuanliuA = 1; }
                     }
-                    else if (ca.Style == "yuqing_kuxing" && hpA > 2 && hpB > 0)
+                    else if (actionA == KuxingAction)
                     {
                         kuxingUsedA = true;
                         int hpCost = Math.Min(hpA - 1, (int)(hpA * kuxingHpCostRate(ca.Realm)));
                         hpA -= hpCost;
-                        atkType = "物理"; mult = kuxingMult(ca.Realm); defPen = 0;
+                        atkType = "物理"; mult = kuxingMult(ca.Realm); defPen = 0; minRange = 1; maxRange = 1;
                         if (kuxingHasDuanLong(ca.Realm) && hpB < cb.Primary["HP"] * 0.50) mult *= 1.3;
                         if (kuxingHasRecover(ca.Realm)) kuxingHpRecoverA = (int)(hpCost * 0.30);
                         kuxingIgnoreBlockA = true;
                         kuxingDefReduceA = (int)(ca.Primary["肉防"] * 0.30);
-                    }                    else if (mpA >= artMPCostA && artCdA == 0)
+                    }                    else if (actionA == ArtAction)
                     {
-                        atkType = ca.ArtType; skillElement = ca.ArtElement; mult = ca.ArtMult; defPen = 0;
+                        atkType = ca.ArtType; skillElement = ca.ArtElement; mult = ca.ArtMult; defPen = 0; minRange = ca.ArtMinRange; maxRange = ca.ArtMaxRange;
                         mpA -= artMPCostA; artCdA = ca.ArtCooldown;
                         waterSkillA = ca.Style == "water_physical";
 
@@ -147,7 +185,8 @@ static class Combat
                     }
                     else
                     {
-                    bool isPhysicalA = ca.Style == "physical" || ca.Style == "water_physical" || ca.Style == "yuqing_leijie" || ca.Style == "yuqing_kuxing"; atkType = isPhysicalA ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    var basicAttack = ca.BasicAttackProfile;
+                    atkType = basicAttack.Type; skillElement = basicAttack.Element; mult = basicAttack.Mult; defPen = 0; minRange = basicAttack.MinRange; maxRange = basicAttack.MaxRange;
                     }
                     // 守一: 神魂攻击加成 (金丹致虚篇: 每层+5%)
                     if (ca.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiA * 0.05);
@@ -177,16 +216,11 @@ static class Combat
                     if (ca.Style == "taiyi_fuxiu" && fudanMaxA && atkType == "神魂") defPen = 30;
                     var elementMatch = GameData.GetElementMatch(skillElement, ca.GongFaName, cb.GongFaName);
                     int dmg = Dmg(atk, def, resist, defPen, mult * elementMatch.DamageMultiplier);
-                    // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
-                    dmg = (int)(dmg * rangePenaltyA); rangePenaltyA = 1.0;
                     dmg = ApplyDefenses(dmg, ca, cb, atkType, ignoreDodge: fudanMaxA, ignoreBlock: kuxingIgnoreBlockA, critRateBonus: elementMatch.CritRateBonus, critDamageBonus: elementMatch.CritDamageBonus);
                     // 川流之势: B若持有则减伤35%并消耗
                     if (chuanliuB > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuB = 0; }
                     // 守一减伤: 受击消耗1层减伤20%
                     if (cb.Style == "taiyi" && shouyiB > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiB--; }
-                    // 远程优势: 术法/神通出手后对方需要拉近距离
-                    bool isRanged = HasRangedEligibility(ca.Style, options.ExtendCasterRangedEligibility);
-                    if (isRanged) rangePenaltyB = 0.35;
                     hpB -= dmg;
                     // 川流劲眩晕: 10%概率, 玄同免疫 (v4.2补全)
                     if (waterSkillA && dmg > 0 && Rng.NextDouble() < 0.10) { if (xuantongB == 0) stunnedB = true; }
@@ -209,36 +243,45 @@ static class Combat
 
                     // 玄感: 回合开始 debuff清除
                     if (cb.Style == "taixu_xuangan" && stunnedB && Rng.NextDouble() < xuanganClearRate(cb.Realm)) { stunnedB = false; if (xuanganCanHeal(cb.Realm)) hpB = Math.Min(cb.Primary["HP"], hpB + (int)(cb.Primary["HP"] * 0.05)); xuantongB = xuanganXuantongDur(cb.Realm); }                    if (stunnedB) { stunnedB = false; ctB += sB; continue; }
-                    string atkType, skillElement = ""; double mult, defPen; int atk, def; double resist;
+                    string atkType, skillElement = ""; double mult, defPen; int atk, def, minRange, maxRange; double resist;
                     bool waterSkillB = false;                    bool kuxingUsedB = false; int kuxingHpRecoverB = 0; bool kuxingIgnoreBlockB = false;
                     int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : (xuantongB > 0 ? (int)(cb.ArtMPCost * 0.70) : cb.ArtMPCost);
-                    if (cb.DivineName != "" && divineCdB == 0)
+                    bool divineReadyB = cb.DivineName != "" && divineCdB == 0;
+                    bool kuxingReadyB = cb.Style == "yuqing_kuxing" && hpB > 2 && hpA > 0;
+                    bool artReadyB = mpB >= artMPCostB && artCdB == 0;
+                    int actionB = SelectAction(distance, divineReadyB, cb.DivineMinRange, cb.DivineMaxRange,
+                        kuxingReadyB, artReadyB, cb.ArtMinRange, cb.ArtMaxRange, cb.BasicAttackProfile,
+                        out minRange, out maxRange);
+                    distance = MoveIntoRange(distance, cb.Primary["移力"], minRange, maxRange);
+                    if (!IsInRange(distance, minRange, maxRange)) { ctB += sB; continue; }
+                    if (actionB == DivineAction)
                     {
-                        atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen;
+                        atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen; minRange = cb.DivineMinRange; maxRange = cb.DivineMaxRange;
                         divineCdB = cb.DivineCooldown;
                         waterSkillB = cb.Style == "water_physical";
                         if (waterSkillB) { shishuiOnA = Math.Min(shishuiOnA + 1, maxShishui(cb.Realm)); chuanliuB = 1; }
                     }
-                    else if (cb.Style == "yuqing_kuxing" && hpB > 2 && hpA > 0)
+                    else if (actionB == KuxingAction)
                     {
                         kuxingUsedB = true;
                         int hpCost = Math.Min(hpB - 1, (int)(hpB * kuxingHpCostRate(cb.Realm)));
                         hpB -= hpCost;
-                        atkType = "物理"; mult = kuxingMult(cb.Realm); defPen = 0;
+                        atkType = "物理"; mult = kuxingMult(cb.Realm); defPen = 0; minRange = 1; maxRange = 1;
                         if (kuxingHasDuanLong(cb.Realm) && hpA < ca.Primary["HP"] * 0.50) mult *= 1.3;
                         if (kuxingHasRecover(cb.Realm)) kuxingHpRecoverB = (int)(hpCost * 0.30);
                         kuxingIgnoreBlockB = true;
                         kuxingDefReduceB = (int)(cb.Primary["肉防"] * 0.30);
-                    }                    else if (mpB >= artMPCostB && artCdB == 0)
+                    }                    else if (actionB == ArtAction)
                     {
-                        atkType = cb.ArtType; skillElement = cb.ArtElement; mult = cb.ArtMult; defPen = 0;
+                        atkType = cb.ArtType; skillElement = cb.ArtElement; mult = cb.ArtMult; defPen = 0; minRange = cb.ArtMinRange; maxRange = cb.ArtMaxRange;
                         mpB -= artMPCostB; artCdB = cb.ArtCooldown;
                         waterSkillB = cb.Style == "water_physical";
 
                     }
                     else
                     {
-                    bool isPhysicalB = cb.Style == "physical" || cb.Style == "water_physical" || cb.Style == "yuqing_leijie" || cb.Style == "yuqing_kuxing"; atkType = isPhysicalB ? "物理" : "神魂"; mult = 1.0; defPen = 0;
+                    var basicAttack = cb.BasicAttackProfile;
+                    atkType = basicAttack.Type; skillElement = basicAttack.Element; mult = basicAttack.Mult; defPen = 0; minRange = basicAttack.MinRange; maxRange = basicAttack.MaxRange;
                     }
                     if (cb.Style == "taiyi" && atkType == "神魂") mult *= (1 + shouyiB * 0.05);
                     // 符胆: 符箓术法效果加成(消耗全部) (按境界:筑基12%/金丹15%/元婴18%/化神22%)
@@ -265,14 +308,9 @@ static class Combat
                     if (cb.Style == "taiyi_fuxiu" && fudanMaxB && atkType == "神魂") defPen = 30;
                     var elementMatch = GameData.GetElementMatch(skillElement, cb.GongFaName, ca.GongFaName);
                     int dmg = Dmg(atk, def, resist, defPen, mult * elementMatch.DamageMultiplier);
-                    // 远程惩罚: 对方上轮使用远程术法/神通, 本轮需拉近距离
-                    dmg = (int)(dmg * rangePenaltyB); rangePenaltyB = 1.0;
                     dmg = ApplyDefenses(dmg, cb, ca, atkType, ignoreDodge: fudanMaxB, ignoreBlock: kuxingIgnoreBlockB, critRateBonus: elementMatch.CritRateBonus, critDamageBonus: elementMatch.CritDamageBonus);
                     if (chuanliuA > 0 && dmg > 0) { dmg = (int)(dmg * 0.65); chuanliuA = 0; }
                     if (ca.Style == "taiyi" && shouyiA > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); shouyiA--; }
-                    // 远程优势: B使用术法/神通后A需要拉近距离
-                    bool bRanged = HasRangedEligibility(cb.Style, options.ExtendCasterRangedEligibility);
-                    if (bRanged) rangePenaltyA = 0.35;
                     hpA -= dmg;
                     // 血剑气: HP恢复
                     if (kuxingUsedB) hpB = Math.Min(cb.Primary["HP"], hpB + kuxingHpRecoverB);
