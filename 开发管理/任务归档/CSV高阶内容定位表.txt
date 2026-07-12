@@ -7,8 +7,8 @@
 
 ## 一、依据来源
 
-- `开发管理/境界体系重构锁口径决策表.txt`（✅ 已审核）
-- `开发管理/境界体系数据模拟迁移差异表.txt`（✅ 已审核）
+- `开发管理/任务归档/境界体系重构锁口径决策表.txt`（✅ 已审核）
+- `开发管理/任务归档/境界体系数据模拟迁移差异表.txt`（✅ 已审核）
 - `src/Assets/DataConfig/GongFa.csv`（32 条，含注释行）
 - `src/Assets/DataConfig/Spells.csv`（78 条）
 - `src/Assets/DataConfig/Skills.csv`（37 条）
@@ -182,7 +182,7 @@
 
 ```powershell
 # 检查本文件格式
-powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/CSV高阶内容定位表.txt
+powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/任务归档/CSV高阶内容定位表.txt
 
 # 复核 realm_lianshen 影响面
 rg -n "realm_lianshen" src/Assets/DataConfig/GongFa.csv src/Assets/DataConfig/Spells.csv src/Assets/DataConfig/Skills.csv

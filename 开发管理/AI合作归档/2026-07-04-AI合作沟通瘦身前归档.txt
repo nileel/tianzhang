@@ -38,7 +38,7 @@
   - docs/基础设定/战斗系统.txt（E2：领域神通行标注旧口径）
   - docs/基础设定/角色数值设计.txt（E3：4处炼虚行加资料片保留脚注）
   - docs/基础设定/灵根设定.txt（E4：极品灵根境界上限加旧口径脚注）
-  - 开发管理/炼虚与高阶内容影响面清单.txt（E1 状态更新 + 影响面清单文件本身行尾空白清理）
+  - 开发管理/任务归档/炼虚与高阶内容影响面清单.txt（E1 状态更新 + 影响面清单文件本身行尾空白清理）
 - 具体变更：
   - E1：核查 docs/天章设定.txt L763 确已为正常"修炼神魂"，无乱码，更新清单状态
   - E2："- 领域神通：炼虚期获得" → 标注 "[旧口径/资料片保留] ... （修行境界.txt 已声明炼虚删除，当前最高境界为化神）"
@@ -69,7 +69,7 @@
 
 - 任务：DS-NEW-02 realm_lianshen专项检查修复（REVIEW-20260628-04 返工）
 - 提交：a2ff97a
-- 修改文件：开发管理/realm_lianshen专项检查.txt
+- 修改文件：开发管理/任务归档/realm_lianshen专项检查.txt
 - 复审结论：2026-06-28 Codex / gpt-5.5 不通过；机械污染清理通过，但报告事实仍不可靠。
 - 修复内容：
   - 清除 29 个孤立 CR (0x0D) 控制字符
@@ -78,7 +78,7 @@
   - 验证段 rg 扫描修复（`g -n`→`rg -n`）
   - check-review-text.ps1 状态：待运行→OK
 - 已验证：
-  - check-review-text.ps1 -Paths 开发管理/realm_lianshen专项检查.txt：OK
+  - check-review-text.ps1 -Paths 开发管理/任务归档/realm_lianshen专项检查.txt：OK
   - git diff --check：OK（仅 LF→CRLF 无害警告）
   - rg "\bealm"：0 matches（无缺 r 残留）
 - 未验证：
@@ -264,7 +264,7 @@
 ### HANDOFF-20260628-07 · DeepSeek V4 Pro → Codex / ChatGPT5.5
 
 - 任务：DS-NEW-01 炼虚与高阶内容全仓影响面清单
-- 产出：`开发管理/炼虚与高阶内容影响面清单.txt`（新增）
+- 产出：`开发管理/任务归档/炼虚与高阶内容影响面清单.txt`（新增）
 - 扫描：rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管理 → 412条命中，112文件
 - 分类：6类（必须迁移~95条、历史/废止说明~45条、资料片保留~155条、NPC/世界背景~20条、疑似污染~5条、需Codex判断~90条）
 - 已验证：
@@ -378,7 +378,7 @@
   4. `TQ-014-DS-04` 四场景脚手架：扩展 `SceneBuilder`，用 Editor 菜单生成 `StartMenuScene`、`WorldScene`、`SettlementScene`、`AdventureScene`，不得手写 `.unity` YAML。
   5. `TQ-014-DS-05` World/Settlement 数据壳：新增 `WorldNodeDefinition`、`WorldSceneController`、`SettlementDefinition`、`SettlementSceneController` 的静态样例与返回入口。
   6. `TQ-014-DS-06` StartMenu 迁移低风险入口：在 `SceneFlowManager` 已通过 Codex 复审后，让 `SectSelectionManager` 优先走 `SceneFlowManager.StartNewGame`，保留旧 `ExplorationController` fallback。
-  7. `TQ-014-DS-07` 2.5D 验证清单：产出 `开发管理/2.5D战棋原型验证清单.txt`，只列证据和必测项，不接入正式副本、不替换规则层。
+  7. `TQ-014-DS-07` 2.5D 验证清单：产出 `2.5D战棋原型验证清单.txt`（历史产出未留存），只列证据和必测项，不接入正式副本、不替换规则层。
 - DeepSeek 禁止范围：不得删除 `ExplorationScene.unity`；不得改 `CTBEngine`、`CombatResolver`、`DamageCalculator`、`Character.FromData`；不得重写 `ExplorationController.CombatLoop`；不得改伤害、冷却、五行、槽位、修炼数值；不得重命名 GUID 资产；不得写 `✅ 已审核` 或替 Codex 下复审结论。
 - 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/当前任务队列.txt`、本条交接、`docs/superpowers/plans/2026-06-25-scene-architecture-2-5d-implementation.md`、`docs/superpowers/specs/2026-06-19-scene-architecture-design.md`、`开发管理/开发-技术经验.txt`。
 - 已验证：Codex 已读取 TQ-014 规格、`SceneBuilder.cs`、`ExplorationController.cs`、`HexTilemapManager.cs`、`GameManager.cs`、`SectSelectionManager.cs`、`BattleUIManager.cs`，并基于实际路径修正计划中的文件边界。
@@ -395,11 +395,11 @@
   - DeepSeek 不直接承担：Codex 复审结论、BattleSim 数值定论、境界/源化界架构拍板、复杂 Unity 架构取舍、GUID/asset 删除、全链路 ID 重命名。
   - DeepSeek 的所有新增修改只标「⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro」，完成后必须新增 `DeepSeek -> Codex / ChatGPT5.5` 交接条目。
 - 建议执行顺序：
-  1. `DS-NEW-01` 高阶境界与炼虚全仓影响面清单：基于 `rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管理`，产出 `开发管理/炼虚与高阶内容影响面清单.txt`。只分类和标注，不删除、不改 CSV/asset。分类至少包含：必须迁移、历史/废止说明、资料片保留、NPC/世界背景、疑似污染、需 Codex 判断。
-  2. `DS-NEW-02` `realm_lianshen` 数据链路专项：核对 CSV、Language、Unity `.asset`、docs 原文和导入脚本，补一份 `开发管理/realm_lianshen专项检查.txt`。可给处理选项和风险，不直接决定保留/合并/删除。
-  3. `DS-NEW-03` 高阶内容定位表补强：在不改现有 CSV 的前提下，补齐 `开发管理/CSV高阶内容定位表.txt` 的证据列、asset 路径列、docs 原文路径列和待 Codex 判断列；同时运行 `tools/check-data-chain.ps1`，记录结果。
+  1. `DS-NEW-01` 高阶境界与炼虚全仓影响面清单：基于 `rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管理`，产出 `开发管理/任务归档/炼虚与高阶内容影响面清单.txt`。只分类和标注，不删除、不改 CSV/asset。分类至少包含：必须迁移、历史/废止说明、资料片保留、NPC/世界背景、疑似污染、需 Codex 判断。
+  2. `DS-NEW-02` `realm_lianshen` 数据链路专项：核对 CSV、Language、Unity `.asset`、docs 原文和导入脚本，补一份 `开发管理/任务归档/realm_lianshen专项检查.txt`。可给处理选项和风险，不直接决定保留/合并/删除。
+  3. `DS-NEW-03` 高阶内容定位表补强：在不改现有 CSV 的前提下，补齐 `开发管理/任务归档/CSV高阶内容定位表.txt` 的证据列、asset 路径列、docs 原文路径列和待 Codex 判断列；同时运行 `tools/check-data-chain.ps1`，记录结果。
   4. `DS-NEW-04` 金丹位格批量生产试跑：读取 `docs/基础设定/金丹位格批量生产模板.txt` 与源/化/界事实源，任选 2 个低风险席位各产出 1 份草案文件，必须一内容一文件，显式标「试跑样稿 / ⚠️ 已修改/未审核」。不得新增规则、不得改 51 席名称、不得写数值定论。
-  5. `DS-NEW-05` 古修/散修内容缺口清单：读取对应设计规范和现有古修/散修文件，产出 `开发管理/古修散修内容缺口清单.txt`，列出缺少的术法/神通/功法篇章候选、所需事实源和建议批量生产批次；只做清单，不批量生成正式内容。
+  5. `DS-NEW-05` 古修/散修内容缺口清单：读取对应设计规范和现有古修/散修文件，产出 `古修散修内容缺口清单.txt`（历史产出未留存），列出缺少的术法/神通/功法篇章候选、所需事实源和建议批量生产批次；只做清单，不批量生成正式内容。
   6. `DS-NEW-06` 太一道庭法箓映射表可导入性修补：基于 `HANDOFF-20260619-01` 的未验证点，补全多行字段、前置条件、本命升格和特殊效果摘要，必要时调整 TXT 表展示；JSON 保留完整字段。不得决定通神三玄礼录归属，归属疑点交给 Codex。
   7. `DS-NEW-07` 文档旧口径机械清洗候选表：扫描 `战斗系统.txt`、`伤害公式.txt`、`角色属性_先天.txt`、`角色数值设计.txt` 中与已审核口径冲突的旧描述，产出候选表并标注事实源。除明确转义/格式污染外，不直接改规则正文。
   8. `DS-NEW-08` 数据链路检查脚本增强方案：检查 `tools/check-data-chain.ps1` 是否已覆盖 `realm_lianshen`、`contentScope` 候选列、docs/CSV/asset 数量回归；可先提交脚本增强计划或低风险告警补丁，不能强制失败现有未定口径。
@@ -573,8 +573,8 @@
 
 - 任务：DS-NEW-02 realm_lianshen数据链路专项检查
 - 提交：fb2ae37
-- 产出：开发管理/realm_lianshen专项检查.txt（新增，160行）
-- 修改文件：开发管理/realm_lianshen专项检查.txt
+- 产出：开发管理/任务归档/realm_lianshen专项检查.txt（新增，160行）
+- 修改文件：开发管理/任务归档/realm_lianshen专项检查.txt
 - 已验证：
   - check-review-text.ps1：OK（1 file）
   - git diff --check：OK（无尾随空白）

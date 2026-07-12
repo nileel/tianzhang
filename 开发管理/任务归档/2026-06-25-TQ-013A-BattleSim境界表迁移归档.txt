@@ -14,7 +14,7 @@
 
 ## 审核依据与验证
 
-- 复核 `开发管理/境界体系重构锁口径决策表.txt` 与 `开发管理/境界体系数据模拟迁移差异表.txt` 的 TQ-013A 边界。
+- 复核 `开发管理/任务归档/境界体系重构锁口径决策表.txt` 与 `开发管理/任务归档/境界体系数据模拟迁移差异表.txt` 的 TQ-013A 边界。
 - 复核目标提交 `2fa7b0b` 的 BattleSim 代码 diff：`BattleSimSelfTests.cs`、`GameData.cs`、`Program.cs`。
 - `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
 - `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim" -- --self-test realm-tq013a`：通过。

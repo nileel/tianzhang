@@ -8,9 +8,9 @@
 
 ## 一、依据来源
 
-- `开发管理/境界体系重构锁口径决策表.txt`（✅ 已审核）
-- `开发管理/境界体系数据模拟迁移差异表.txt`（✅ 已审核）
-- `开发管理/CSV高阶内容定位表.txt`（✅ 已审核）
+- `开发管理/任务归档/境界体系重构锁口径决策表.txt`（✅ 已审核）
+- `开发管理/任务归档/境界体系数据模拟迁移差异表.txt`（✅ 已审核）
+- `开发管理/任务归档/CSV高阶内容定位表.txt`（✅ 已审核）
 - `docs/基础设定/修行境界.txt`、`docs/基础设定/境界特性.txt`
 - `docs/基础设定/元婴锚点与金丹位格矩阵.txt`
 - `docs/基础设定/角色数值设计.txt`
@@ -118,7 +118,7 @@ rg -n "炼虚|realm_lianxu|realm_lianshen|炼神" docs src simulations 开发管
 dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"
 dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"
 powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/源化界数据模型迁移差异表.txt,开发管理/当前任务队列.txt
+`check-review-text.ps1` 覆盖 `开发管理/任务归档/源化界数据模型迁移差异表.txt` 与 `开发管理/当前任务队列.txt`。
 git diff --check
 ```
 
@@ -128,7 +128,7 @@ git diff --check
 - `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
 - `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过，默认 21 Build 模拟、金丹/紫府矩阵与压制战输出完成。
 - `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过，GongFa/Spells/Skills CSV 与 asset 覆盖均为 0 缺失、0 额外旧版。
-- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/源化界数据模型迁移差异表.txt,开发管理/当前任务队列.txt`：通过，2 files checked。
+- `check-review-text.ps1` 覆盖 `开发管理/任务归档/源化界数据模型迁移差异表.txt` 与 `开发管理/当前任务队列.txt`：通过，2 files checked。
 - `git diff --check`：通过；仅提示工作区中文文本文件 LF/CRLF 转换警告，无空白错误。
 
 ## 十一、自检清单

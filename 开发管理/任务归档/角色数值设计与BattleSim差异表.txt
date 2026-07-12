@@ -16,7 +16,7 @@
 - `simulations/BattleSim/Character.cs`
 - `simulations/BattleSim/Cultivation.cs`
 - `开发管理/设计-当前状态.txt`
-- `开发管理/境界体系数据模拟迁移差异表.txt`
+- `开发管理/任务归档/境界体系数据模拟迁移差异表.txt`
 
 ### 验证命令
 
