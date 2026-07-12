@@ -37,7 +37,7 @@
 ### TQ-059 · D-TRUST-04 接通境界、元素和阵营限制
 
 - 来源：可信度闸门规格 §6。
-- 当前状态：阻塞（TQ-057）；依赖：TQ-043、TQ-056、TQ-057（TQ-058 已完成）。
+- 当前状态：阻塞（TQ-057）；依赖：TQ-057。
 - 主责：Codex / gpt-5.5。
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
 - 验证：每个 runtime gate 具有允许与拒绝样例；运行 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
