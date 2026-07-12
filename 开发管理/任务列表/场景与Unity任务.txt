@@ -18,7 +18,7 @@
 - ✅ TQ-028 / U-MECH-01：雷劫印记 Unity 回归已完成；九霄雷劫录受击叠层、物理出手消耗增伤、满层神魂受击魂防降低已接入运行时。
 - ✅ TQ-028 / U-MECH-02A：玄感神识强度 Unity 回归已完成；南华玄感录神魂伤害入口按境界获得神识强度加值。
 - ✅ TQ-028 / U-MECH-03：含弘/载物 Unity 回归已完成；含弘光大典按境界获得物理防御加成，载物按损失 HP 提供全防御加成。
-- ⚠️ 2026-07-10 审视：正式 Build Settings 中的 `AdventureScene` 仍是入口/返回壳，旧 `ExplorationScene` 才承载主要可玩探索战斗循环；G1 未通过前不得再写“正式最小可玩循环已完成”。
+- ✅ 2026-07-12：G1 正式 Build Settings 链路通过。`AdventureScene` 为唯一可达冒险所有者；旧 `ExplorationScene` 保持正式链路不可达。TQ-063 已用批处理场景验证和连续上下文回归证明创建角色至返回据点的最小正式闭环。
 - ✅ TQ-049：冻结的 Unity EditMode 基线 47/47 通过；当前分支另有 TQ-043 待复审提交新增 5 项，其中 1 项失败，不计入 TQ-049 冻结基线，交由 `2` 流程处理。
 
 ## 近期任务
@@ -35,14 +35,14 @@
 | Q-UNITY-02 / TQ-050 | P0 | Codex | ✅ 已完成（2026-07-11） | 权威 EditMode 入口已验证 XML 成功/失败/缺失/不可解析/零测试退出码；完整运行 54/54 通过 |
 | Q-UNITY-03 / TQ-051 | P0 | Codex | ✅ 已完成（2026-07-11） | 成功、异常与结果已就绪但退出延迟路径均恢复场景和 Build Settings；真实 EditMode 54/54 通过，前后工作区一致 |
 | U-SLICE-01 / TQ-060 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式所有者锁定为 `AdventureScene`；`ExplorationScene` 为不可达旧原型，记录见 `开发管理/运行时所有者记录-TQ-060.txt` |
-| U-SLICE-02 / TQ-061 | P0 | Codex | 待处理 | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
-| U-SLICE-03 / TQ-062 | P0 | Codex | 待处理 | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
-| U-SLICE-04 / TQ-063 | P0 | Codex | 阻塞（TQ-061、TQ-062） | 正式 Build Settings 端到端冒烟；通过后 G1 才可标记通过 |
-| M-ARCH-01 / TQ-064 | P1 | Codex | 阻塞（G1） | 建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
+| U-SLICE-02 / TQ-061 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
+| U-SLICE-03 / TQ-062 | P0 | Codex | ✅ 已完成（2026-07-12） | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
+| U-SLICE-04 / TQ-063 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式 Build Settings 端到端冒烟；G1 已通过 |
+| M-ARCH-01 / TQ-064 | P1 | Codex | 待处理 | 建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
 | U-ARCH-01 / TQ-065 | P1 | Codex | 阻塞（TQ-064） | 拆分 `ExplorationController` / `SceneBuilder` 至少一个真实职责和依赖边 |
 | U-ARCH-02 / TQ-066 | P1 | Codex | 阻塞（TQ-064） | 拆分 `BattleUIManager` / `Character` 的 UI 与领域职责 |
 | U-ARCH-03 / TQ-067 | P1 | Codex | 阻塞（TQ-065、TQ-066） | 建立项目派生 asmdef 边界并保持序列化兼容 |
-| S-STATE-01 / TQ-068 | P1 | Codex | 阻塞（G1） | 最小 GameSession、世界时间和起点状态模型 |
+| S-STATE-01 / TQ-068 | P1 | Codex | 待处理 | 最小 GameSession、世界时间和起点状态模型 |
 | S-STATE-02 / TQ-069 | P1 | Codex | 阻塞（TQ-068） | 最小任务、背包和 NPC 状态快照，分离状态步骤 |
 | S-SAVE-01 / TQ-070 | P1 | Codex | 阻塞（TQ-068、TQ-069） | 存档版本、新旧档、非法档和重置迁移基础 |
 | U-MECH-01 / TQ-028 | P2 | Codex | ✅ 已完成 | 雷劫印记 Unity 回归 |

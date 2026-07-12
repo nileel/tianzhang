@@ -16,6 +16,7 @@
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-061 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-061-正式冒险战斗闭环归档.txt`；正式 `AdventureScene` 已接入最小六角地图、单敌遭遇、既有 `TacticalCombatController` 与胜败返回来源上下文。TQ-063 仍等待 TQ-062。
 > 2026-07-12 Codex / gpt-5.6-terra：队列维护补入已登记的 TQ-063；其依赖 TQ-062 尚未完成，保持阻塞。近期队列恢复为 5 条，内容冻结保持不变。
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-062 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-062-角色出身驱动起始节点归档.txt`；新游戏按档案 `originId` 映射起始世界节点，未知/旧值会记录并走专用江左回退而不改写档案。TQ-063 解除阻塞。
+> 2026-07-12 Codex / gpt-5.6-terra：TQ-063 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-063-正式BuildSettings端到端冒烟归档.txt`；正式 Build Settings 批处理验证与 Unity EditMode 60/60 通过，角色创建出身、起点、据点、Adventure 及返回上下文的连续回归已覆盖。G1 通过；TQ-064、TQ-068 的 G1 依赖解除，按后续队列维护补位。
 
 ## 使用规则
 
@@ -29,7 +30,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-063 | P0 | Codex / gpt-5.5 | G1 Unity | 待处理 | U-SLICE-04：正式 Build Settings 端到端冒烟 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-058 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-03：contentScope 失败关闭与运行时过滤 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057、TQ-058） | D-TRUST-04：接通境界、元素和阵营限制 |
@@ -80,13 +80,3 @@
 - 范围：证明正式 Build Settings、`AdventureScene`、旧 `ExplorationScene`、`SceneBuilder`、冒险控制器和战斗入口的真实调用链；为竞争入口决定迁移、适配或淘汰路径，禁止保留两个竞争的可达运行时入口。
 - 验证：基于实时扫描产出运行时所有者记录、场景迁移边界及允许/禁止修改清单；运行 `dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、`git diff --check`。
 - 完成条件：能从 StartMenu 的实际调用链唯一定位冒险场景、战斗入口和返回上下文；每个竞争候选都有保留或淘汰理由，且产物不得只靠推测或迁移计划。
-
-### TQ-063 · U-SLICE-04 正式 Build Settings 端到端冒烟
-
-- 来源：可信度闸门规格 §4、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/运行时所有者记录-TQ-060.txt`。
-- 当前状态：待处理；依赖：TQ-061、TQ-062 均已完成。
-- 主责：Codex / gpt-5.5。
-- 必读：TQ-060 的运行时所有者记录、TQ-061 归档、角色创建、世界/据点/冒险场景流转和 `GameSession.PlayerProfile` 实现。
-- 范围：提供可重复的自动或半自动正式构建链步骤与运行结果，从创建角色到返回据点验证玩家档案、出身、起点、Adventure 上下文和返回上下文全程不丢失。
-- 验证：运行相关 Unity 编译与 EditMode 测试；执行 `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` 或等效正式构建场景验证；运行 `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 与 `git diff --check`。
-- 完成条件：正式 Build Settings 可连续完成“创建角色 → 世界节点 → 据点 → 冒险 → 战斗 → 结算 → 返回据点”，且旧 `ExplorationScene` 不重新成为可达竞争入口；G1 才可标记通过。

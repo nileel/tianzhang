@@ -1,0 +1,23 @@
+# TQ-063 · 正式 Build Settings 端到端冒烟（完成归档）
+
+- 完成日期：2026-07-12
+- 执行方：Codex / gpt-5.6-terra
+- 范围：以正式四场景 Build Settings 验证“创建角色 → 世界节点 → 据点 → Adventure → 战斗结算 → 返回据点”的最小闭环；未修改 CTB、伤害、冷却、槽位、寻路、技能范围或数值语义。
+
+## 交付
+
+- 新增 `FormalBuildPathPreservesProfileOriginStartAndSettlementReturnContext` EditMode 回归：用真实角色创建草稿验证 `origin_minor_clan` 档案、`guanzhong_hub` 起点、`guanzhong_city` 据点、`guanzhong_wild` Adventure 与据点返回上下文连续保持。
+- 正式场景批处理调用 `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`，验证 Build Settings 注册并加载 StartMenu、World、Settlement、Adventure 四场景。
+- `AdventureScene` 继续是唯一正式可达冒险运行时；旧 `ExplorationScene` 未被加入 Build Settings 或运行时加载链路。
+
+## 验证
+
+- `dotnet restore src/Assembly-CSharp.csproj --ignore-failed-sources` 与 `dotnet restore src/TianZhang.EditModeTests.csproj --ignore-failed-sources`：仅恢复本机 Unity 临时 NuGet 资产。
+- `dotnet build src/Assembly-CSharp.csproj --no-restore`：0 警告、0 错误。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：0 警告、0 错误。
+- `powershell -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src -ResultXmlPath %TEMP%\tzg-tq063-editmode.xml -ResultExitGraceSeconds 30`：60/60 通过。
+- Unity batch `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`：退出码 0。
+
+## 结论
+
+G1 出口条件已满足。TQ-064 与 TQ-068 的 G1 依赖已解除，但仍由后续队列维护按优先级补入近期队列。

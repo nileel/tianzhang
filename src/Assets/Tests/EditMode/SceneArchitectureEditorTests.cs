@@ -303,6 +303,49 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FormalBuildPathPreservesProfileOriginStartAndSettlementReturnContext()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var flowGo = new GameObject("SceneFlowManagerTest");
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                var flow = flowGo.AddComponent<SceneFlowManager>();
+                var draft = TianZhang.Game.CharacterCreation.CharacterCreationCatalog.CreateDefaultDraft();
+                draft.OriginId = "origin_minor_clan";
+
+                var profile = TianZhang.Game.CharacterCreation.CharacterCreationManager.BeginNewGame(draft, session);
+                Assert.AreSame(profile, session.PlayerProfile);
+                Assert.AreEqual("origin_minor_clan", session.PlayerProfile.originId);
+                Assert.AreEqual("guanzhong_hub", session.CurrentWorldNodeId);
+                Assert.AreEqual("WorldScene", flow.PrepareWorldEntry(session.CurrentWorldNodeId));
+
+                Assert.AreEqual("SettlementScene", flow.PrepareSettlementEntry("guanzhong_city"));
+                Assert.AreEqual("guanzhong_city", session.CurrentSettlementId);
+                Assert.AreEqual("guanzhong_hub", session.LastReturnTarget.WorldNodeId);
+
+                Assert.AreEqual(
+                    "AdventureScene",
+                    flow.PrepareAdventureEntry("guanzhong_wild", SceneReturnTarget.Settlement("guanzhong_city")));
+                Assert.AreEqual("guanzhong_wild", session.CurrentAdventureId);
+                Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
+                Assert.AreEqual("guanzhong_city", session.LastReturnTarget.SettlementId);
+
+                Assert.AreEqual("SettlementScene", flow.PrepareReturnToPreviousScene());
+                Assert.AreEqual("guanzhong_city", session.CurrentSettlementId);
+                Assert.IsNull(session.CurrentAdventureId);
+                Assert.IsNull(session.LastReturnTarget.SceneName);
+            }
+            finally
+            {
+                Object.DestroyImmediate(flowGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void SettlementSceneControllerBuildsClickableAdventureEntrances()
         {
             DestroyExistingSceneFlowAndSession();
