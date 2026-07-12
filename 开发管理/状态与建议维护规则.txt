@@ -66,3 +66,4 @@
 - 文本/审核材料机械检查：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
 - docs/CSV/Unity asset 数据链路检查：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
 - 数据链路严格检查缺失 asset：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
+- 资产版本边界检查：当变更涉及 `.gitattributes`、`src/Assets/Art/` 或 `docs/资源管理/美术资源登记册.md` 时，运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`；其他变更不运行该检查。
