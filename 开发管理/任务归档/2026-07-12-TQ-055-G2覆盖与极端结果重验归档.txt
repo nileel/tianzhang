@@ -1,0 +1,19 @@
+# TQ-055 G2 覆盖与极端结果重验（诊断阶段记录）
+
+## 已验证证据
+
+- `--g2-audit --cycles 400`：21 个 Build 均有 200/200 金丹样本；每个金丹矩阵格有 200 个角色配对、2,000 场战斗，覆盖结论为 `SUFFICIENT`。
+- `--g2-attribution --cycles 400`：对 90 个覆盖充分的 0%/100% 金丹对局逐一输出先天交换、功法包交换和远程资格统一三种反事实；共 270 条反事实，平均绝对变化 25.87pp。
+- 审计显示，多个极端对局在交换功法包后翻转 100pp；部分法系对太一/太虚对局在统一远程资格后发生大幅变化。先天交换在已观察的代表性极端中通常接近 0pp。
+
+## 已运行验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test g2-attribution-tq055`
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --g2-attribution --cycles 400`
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test ct-reaction-tq052`
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test crit-multiplier-tq053`
+
+## 结论与边界
+
+归因工具已完成，但它不改变任何默认数值、Build、默认远程资格或 G2 判定。极端结果是否为设计预期或平衡缺陷仍需产品决策；在该决策前，TQ-055 和 G2 保持待处理/阻塞状态。
