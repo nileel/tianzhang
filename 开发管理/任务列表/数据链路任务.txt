@@ -28,6 +28,8 @@
 | D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 待处理 | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
 | D-TRUST-03 / TQ-058 | P0 | Codex | 待处理 | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
 | D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only` |
+| D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义主战法宝、普攻、术法和神通的统一攻击档案 schema 与导入边界 |
+| D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查 |
 
 ## G3 任务执行边界
 
@@ -36,6 +38,8 @@
 - TQ-057：机械清理由 DeepSeek 执行，但必须标 `⚠️ 已修改/未审核` 并交接；产出数据修复、差异清单和交接材料；术法数量、语言键、删除激活和原 TQ-040 字段完整性均须处理。差异要么清零，要么有批准的显式排除；不得扩展设计语义。
 - TQ-058：缺失或非法 `contentScope` 必须导入失败；reserved 不会进入玩家获得池，player 仍可用；既有空字段 asset 必须迁移、隔离或令检查失败，禁止静默视为 player。证明 CSV→asset→运行时 consumer 全链路并建立回归。
 - TQ-059：对 `realmReq`、`elementReq`、`affiliation` 逐字段记录模式，每个字段必须恰好选择一条：`runtime_gate` 要求真实 asset 字段和 runtime consumer，并有一个允许样例和一个拒绝样例；`metadata_only` 要求改成明确不含 Req/限制含义的元数据命名，导入器和运行时限制 consumer 均不得读取它，测试证明不会被当作限制，且检查器拒绝“仍叫 `*Req` 但无 handler”的状态。任一字段无模式或两种模式同时存在均阻塞。
+- D-COMBAT-01：依赖 N-GROUP-02 与 G3。必读现有 CSV/asset 表头、导入器、运行时数据对象和 BattleSim `AttackProfile`。先产出并批准唯一 schema，字段至少覆盖档案 ID、攻击类型、元素、倍率、最小/最大距离、资源/冷却、目标过滤与效果引用；不得把功法名称写成普攻来源。验证重复 ID、非法距离、未知效果、缺失主战法宝和 CSV/asset 映射均失败关闭。完成条件是 BattleSim 与 Unity 可以从同一语义载荷构造攻击档案。
+- D-COMBAT-02：依赖 D-COMBAT-01 与 U-COMBAT-01。建立版本控制的正反例 fixture、字段映射检查和跨端差异报告；同一档案必须在 BattleSim 与 Unity 解析为相同的类型、元素、距离和目标语义。验证包括新增档案无需修改战斗循环、坏数据非 0 退出、跨端字段差异可定位。完成条件是 CSV/asset 成为攻击档案的唯一权威来源，而不是并行手工配置。
 
 ## G3 出口条件
 
