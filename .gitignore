@@ -29,6 +29,12 @@ Desktop.ini
 [Bb]uild/
 [Bb]uilds/
 [Ll]ogs/
+# Keep the curated Unity validation-log index while ignoring its payloads.
+!artifacts/
+!artifacts/logs/
+!artifacts/logs/unity/
+!artifacts/logs/unity/2026-06_07/
+!artifacts/logs/unity/2026-06_07/README.md
 [Uu]ser[Ss]ettings/
 [Mm]emoryCaptures/
 
