@@ -82,6 +82,57 @@ try {
   $state = Read-TestState
   if ($state.state -ne 'IDLE' -or -not $state.lastQueueAuditAt) { throw 'complete did not clear the run or record the audit' }
 
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:04:00Z')
+  Assert-Code $r 0 'acquire decision lease'
+  $r = Invoke-StateTool @(
+    'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-7',
+    '-TaskKind', 'execute', '-TaskId', 'decision-task', '-TaskSummary', 'Choose restriction mode',
+    '-DecisionQuestion', 'Use runtime enforcement or metadata only?',
+    '-DecisionOptions', 'A=Runtime enforcement|B=Metadata only',
+    '-RecommendedOption', 'A', '-ImpactSummary', 'Affects content availability and test scope',
+    '-Now', '2026-07-11T05:05:00Z'
+  )
+  Assert-Code $r 0 'create decision'
+  $decision = (Read-TestState).pendingDecision
+  if ($decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2) {
+    throw 'create decision did not persist a pending decision'
+  }
+
+  $r = Invoke-StateTool @(
+    'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-7',
+    '-TaskKind', 'execute', '-TaskId', 'second-decision', '-TaskSummary', 'Duplicate request',
+    '-DecisionQuestion', 'A second request must be rejected', '-DecisionOptions', 'A=A|B=B',
+    '-RecommendedOption', 'A', '-ImpactSummary', 'none', '-Now', '2026-07-11T05:06:00Z'
+  )
+  Assert-Code $r 15 'second pending decision rejection'
+
+  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:07:00Z')
+  Assert-Code $r 0 'mark decision notified'
+  if ((Read-TestState).pendingDecision.status -ne 'NOTIFIED') { throw 'notification status was not persisted' }
+
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'C', '-ReplySource', 'email', '-Now', '2026-07-11T05:08:00Z')
+  Assert-Code $r 15 'unknown option rejection'
+
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'email', '-Now', '2026-07-11T05:09:00Z')
+  Assert-Code $r 0 'resolve decision'
+  if ((Read-TestState).pendingDecision.status -ne 'RESOLVED' -or (Read-TestState).pendingDecision.resolution.optionKey -ne 'A') {
+    throw 'valid decision resolution was not persisted'
+  }
+
+  $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:10:00Z')
+  Assert-Code $r 0 'complete with resolved decision'
+  if ((Read-TestState).pendingDecision.status -ne 'RESOLVED') { throw 'complete cleared a resolved decision' }
+
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:11:00Z')
+  Assert-Code $r 0 'acquire to clear resolved decision'
+  $r = Invoke-StateTool @('ClearResolvedDecision', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:12:00Z')
+  Assert-Code $r 0 'clear resolved decision'
+  if ($null -ne (Read-TestState).pendingDecision) { throw 'resolved decision was not cleared' }
+
+  [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
+  $legacy = Read-TestState
+  if ($legacy.schemaVersion -ne 2 -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') { throw 'schema v1 was not migrated safely' }
+
   $guard = [IO.File]::Open("$statePath.guard", [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
   try {
     $r = Invoke-StateTool @('Show', '-StatePath', $statePath)
