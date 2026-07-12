@@ -1,5 +1,7 @@
 # 角色数值设计与 BattleSim 差异表
 
+> 已归档；现行口径见 `开发管理/设计-当前状态.txt`、`开发管理/当前任务队列.txt` 与 `docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md`。本文件保留 TQ-008 的历史差异判断，不作为当前数值可信度结论。
+
 状态：✅ 已审核（2026-06-26 Codex / gpt-5.5 复审通过；TQ-008）
 任务：TQ-008 · `docs/基础设定/角色数值设计.txt` 与 BattleSim `GameData` 差异评估
 用途：决定每类差异应回写文档、调整代码，或保留为模拟器调参覆盖。本文件不直接改 BattleSim 数值。
@@ -14,7 +16,7 @@
 - `simulations/BattleSim/Character.cs`
 - `simulations/BattleSim/Cultivation.cs`
 - `开发管理/设计-当前状态.txt`
-- `开发管理/境界体系数据模拟迁移差异表.txt`
+- `开发管理/任务归档/境界体系数据模拟迁移差异表.txt`
 
 ### 验证命令
 

@@ -114,8 +114,8 @@
 - 来源：`开发管理/任务列表/数据链路任务.txt` D-ASSET-01。
 - 当前状态：待处理。
 - 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 后续复审。
-- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/CSV高阶内容定位表.txt`、`src/Assets/DataConfig/README.txt`、`src/Assets/DataConfig/GongFa.csv`、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`tools/check-data-chain.ps1`。
-- 范围：新增或更新 `开发管理/CSV-asset字段完整性复查清单.txt`，复查 GongFa/Spells/Skills CSV 与 Unity asset 字段覆盖，重点看 `element`、`elementReq`、`realmReq`、`contentScope`、文本 key、docs 路径和 asset 路径；不重导 asset，不改 CSV 语义。
+- 必读：`开发管理/DeepSeek工作提示词.txt`、`开发管理/AI协作规则.txt`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/任务归档/CSV高阶内容定位表.txt`、`src/Assets/DataConfig/README.txt`、`src/Assets/DataConfig/GongFa.csv`、`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`tools/check-data-chain.ps1`。
+- 范围：新增或更新 `CSV-asset字段完整性复查清单.txt`（当时计划产出，未建立），复查 GongFa/Spells/Skills CSV 与 Unity asset 字段覆盖，重点看 `element`、`elementReq`、`realmReq`、`contentScope`、文本 key、docs 路径和 asset 路径；不重导 asset，不改 CSV 语义。
 - 边界：不得删除 reserved/high-level 内容；不得新增 `realm_lianshen` 运行时境界；不得扩展 C# realm order；发现缺口只列清单并请求 Codex 判断。
 - 验证命令：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig`；`git diff --check`。
 - 完成条件：复查清单列出通过项、疑点项、需 Codex 判断项和可交给 DeepSeek 机械修复项；更新 `开发管理/AI合作沟通.txt`，若无缺口也明确“无新增交接项”。

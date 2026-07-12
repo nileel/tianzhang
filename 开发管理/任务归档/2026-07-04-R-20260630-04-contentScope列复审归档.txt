@@ -10,7 +10,7 @@
 - `src/Assets/DataConfig/GongFa.csv`
 - `src/Assets/DataConfig/Spells.csv`
 - `src/Assets/DataConfig/Skills.csv`
-- `开发管理/CSV高阶内容定位表.txt`
+- `开发管理/任务归档/CSV高阶内容定位表.txt`
 - `src/Assets/Scripts/Editor/DataConfigImporter.cs`
 - 三类数据对象：`GongFaGrowthData`、`SpellData`、`DivineSkillData`
 

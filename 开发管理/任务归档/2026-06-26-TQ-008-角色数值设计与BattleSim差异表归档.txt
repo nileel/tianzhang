@@ -7,7 +7,7 @@
 
 ## 交付范围
 
-- 新增 `开发管理/角色数值设计与BattleSim差异表.txt`，对照 `docs/基础设定/角色数值设计.txt` 与 BattleSim 当前 `GameData`、`Character`、`Cultivation` 实现。
+- 新增 `开发管理/任务归档/角色数值设计与BattleSim差异表.txt`，对照 `docs/基础设定/角色数值设计.txt` 与 BattleSim 当前 `GameData`、`Character`、`Cultivation` 实现。
 - 差异表覆盖默认境界链、子等级结构、境界基础值、境界系数、HP公式、小境界成长、大境界突破先天成长、战斗二级属性来源、抗性键名、修炼参数、成丹字段和历史模拟结论。
 - 每项均给出建议动作：回写文档、保留 BattleSim 调参覆盖，或拆为后续代码候选问题。
 - 明确 BattleSim 当前金丹样本不足、紫府胜率差异极端，本任务不宣称当前数值已完成全局平衡。
@@ -19,8 +19,8 @@
 - 复核 `simulations/BattleSim/GameData.cs`、`simulations/BattleSim/Character.cs`、`simulations/BattleSim/Program.cs`、`simulations/BattleSim/Cultivation.cs` 的关键常量与运行输出。
 - `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过，0 警告，0 错误。
 - `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过；输出确认默认 21 Build 中仅物·修炼、法·修炼、水·散修、太虚·宿慧进入金丹，且紫府圆满挑战同 Build 金丹初期的非 NA 项均为 0.0% 胜率。
-- `powershell -ExecutionPolicy Bypass -Command "& { .\tools\check-review-text.ps1 -Paths @('开发管理/角色数值设计与BattleSim差异表.txt','开发管理/当前任务队列.txt','开发管理/设计-当前状态.txt','设计总结.txt') }"`：通过。
-- `git diff --check -- '开发管理/角色数值设计与BattleSim差异表.txt' '开发管理/当前任务队列.txt' '开发管理/设计-当前状态.txt' '设计总结.txt'`：仅报告既有 LF/CRLF 提示，无空白错误。
+- `check-review-text.ps1` 覆盖 `开发管理/任务归档/角色数值设计与BattleSim差异表.txt`、`开发管理/当前任务队列.txt`、`开发管理/设计-当前状态.txt` 与 `设计总结.txt`：通过。
+- `git diff --check` 覆盖 `开发管理/任务归档/角色数值设计与BattleSim差异表.txt`、`开发管理/当前任务队列.txt`、`开发管理/设计-当前状态.txt` 与 `设计总结.txt`：仅报告既有 LF/CRLF 提示，无空白错误。
 
 ## 结论与后续
 
