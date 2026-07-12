@@ -30,6 +30,10 @@ $titleToolPattern = 'set_thread_title'
 $taskSummaryPattern = ConvertFrom-Utf8Base64 '5Lit5paH566A6L+w'
 $titleFormatPattern = ConvertFrom-Utf8Base64 'VFpH772cPOS4reaWh+eugOi/sD4='
 $titleFailurePattern = ConvertFrom-Utf8Base64 '5pS55ZCN5aSx6LSlfOagh+mimOabtOaWsOWksei0pQ=='
+$decisionBoundaryPattern = '待决策与邮件回执|CreateDecision|禁止自行决定'
+$decisionVisibilityPattern = '自动工作流状态\.txt|TZG｜待决策|需要决策'
+$decisionFallbackPattern = 'MarkDecisionDeliveryFailed|不得让控制器作出默认选择|继续正常动态路由'
+$emailLiteralPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 
 $rules = Join-Path $root (Join-Path $devMgmt $rulesName)
 $status = Join-Path $root (Join-Path $devMgmt $statusName)
@@ -61,6 +65,10 @@ Require-Match $controller $titleToolPattern 'controller does not rename its conv
 Require-Match $controller $taskSummaryPattern 'controller does not record the human-readable task summary in memory'
 Require-Match $controller $titleFormatPattern 'controller does not use a human-readable title format'
 Require-Match $controller $titleFailurePattern 'controller does not preserve execution when renaming fails'
+Require-Match $controller $decisionBoundaryPattern 'controller lacks a decision-request boundary'
+Require-Match $controller $decisionVisibilityPattern 'controller lacks decision visibility instructions'
+Require-Match $controller $decisionFallbackPattern 'controller lacks decision delivery fallback instructions'
+Reject-Match $controller $emailLiteralPattern 'controller prompt contains an email address'
 foreach ($id in $paused) {
   Require-Match (Join-Path $automationRoot "$id\automation.toml") '^status = "PAUSED"$' "$id is not paused"
 }

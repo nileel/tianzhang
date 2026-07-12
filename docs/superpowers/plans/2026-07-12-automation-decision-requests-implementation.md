@@ -41,7 +41,7 @@
     'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-7',
     '-TaskKind', 'execute', '-TaskId', 'decision-task', '-TaskSummary', '选择限制模式',
     '-DecisionQuestion', '限制字段应在运行时拦截还是仅标注元数据？',
-    '-OptionsJson', '[{"key":"A","label":"运行时拦截"},{"key":"B","label":"仅元数据"}]',
+    '-DecisionOptions', 'A=运行时拦截|B=仅元数据',
     '-RecommendedOption', 'A', '-ImpactSummary', '影响内容可用性与测试范围',
     '-Now', '2026-07-11T00:45:00Z'
   )
@@ -54,7 +54,7 @@
   $r = Invoke-StateTool @(
     'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-7',
     '-TaskKind', 'execute', '-TaskId', 'second-decision', '-TaskSummary', '重复项',
-    '-DecisionQuestion', '不应创建第二项', '-OptionsJson', '[{"key":"A","label":"A"}]',
+    '-DecisionQuestion', '不应创建第二项', '-DecisionOptions', 'A=A|B=B',
     '-RecommendedOption', 'A', '-ImpactSummary', 'none', '-Now', '2026-07-11T00:46:00Z'
   )
   Assert-Code $r 15 'second pending decision rejection'
@@ -78,7 +78,7 @@
   Run:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
   ```
 
   Expected: a nonzero exit with a `ValidateSet` or unknown-action error for `CreateDecision`.
@@ -94,7 +94,7 @@
   [string]$ExpectedPaths,
   [string]$TaskSummary,
   [string]$DecisionQuestion,
-  [string]$OptionsJson,
+  [string]$DecisionOptions,
   [string]$RecommendedOption,
   [string]$ImpactSummary,
   [string]$DecisionId,
@@ -136,14 +136,22 @@
     if ($null -eq $State.pendingDecision) { Exit-WithCode 'No pending decision exists' $script:ExitInvalidArguments }
   }
 
-  function Get-Options {
-    param([string]$Json)
-    try { $options = @($Json | ConvertFrom-Json) } catch { Exit-WithCode 'OptionsJson must be a JSON array' $script:ExitInvalidArguments }
-    if ($options.Count -lt 2 -or @($options | Where-Object { [string]::IsNullOrWhiteSpace($_.key) -or [string]::IsNullOrWhiteSpace($_.label) }).Count -gt 0) {
-      Exit-WithCode 'OptionsJson requires at least two keyed options' $script:ExitInvalidArguments
+  function Get-DecisionOptions {
+    param([string]$Value)
+    $entries = @($Value -split '\|')
+    if ($entries.Count -lt 2) { Exit-WithCode 'DecisionOptions requires at least two keyed options' $script:ExitInvalidArguments }
+    $options = @()
+    foreach ($entry in $entries) {
+      $separator = $entry.IndexOf('=')
+      if ($separator -le 0 -or $separator -eq $entry.Length - 1) { Exit-WithCode 'DecisionOptions entries must use key=label format' $script:ExitInvalidArguments }
+      $key = $entry.Substring(0, $separator).Trim()
+      $label = $entry.Substring($separator + 1).Trim()
+      if ([string]::IsNullOrWhiteSpace($key) -or [string]::IsNullOrWhiteSpace($label)) { Exit-WithCode 'DecisionOptions entries require non-empty key and label values' $script:ExitInvalidArguments }
+      $options += [ordered]@{ key = $key; label = $label }
     }
-    if (@($options.key | Sort-Object -Unique).Count -ne $options.Count) { Exit-WithCode 'Option keys must be unique' $script:ExitInvalidArguments }
-    @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } })
+    $keys = @($options | ForEach-Object { [string]$_.key })
+    if (@($keys | Sort-Object -Unique).Count -ne $keys.Count) { Exit-WithCode 'Option keys must be unique' $script:ExitInvalidArguments }
+    $options
   }
   ```
 
@@ -178,7 +186,7 @@
   Run:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
   git diff --check
   ```
 
@@ -229,7 +237,7 @@
   Run:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理
   git diff --check
   ```
 
@@ -269,7 +277,7 @@
   Run:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
   ```
 
   Expected: `check-automation-workflow: FAILED` with the three missing decision-policy messages. The email-address check must not fail.
@@ -333,7 +341,7 @@
   Run:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
   git diff --check
   ```
 
@@ -366,9 +374,9 @@
   Run:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
-  powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
-  powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,docs/superpowers/specs,docs/superpowers/plans
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
+  pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,docs/superpowers/specs,docs/superpowers/plans
   git diff --check
   git status --short --untracked-files=all
   ```
