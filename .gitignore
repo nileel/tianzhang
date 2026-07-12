@@ -62,6 +62,7 @@ node_modules/
 .vs/
 
 # Local environment and temporary files
+.worktrees/
 .env
 .env.*
 *.log
