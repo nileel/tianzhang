@@ -345,14 +345,50 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         ["心无性有法"] = new() { ["根骨"]=1, ["魂魄"]=3, ["神识"]=2, ["资质"]=3, ["气运"]=1 },
     };
 
+    // TQ-044：这些已进入矩阵、但尚未完成专属星级设计的功法使用可追溯的临时基准。
+    // N-BAL-02B 必须以各自的设计星级替换本表；未登记功法一律失败关闭。
+    public static readonly Dictionary<string, Dictionary<string, double>> ApprovedGongFaStarFallbacks = new()
+    {
+        ["九霄雷劫录"] = UniformStarFallback(),
+        ["苦行剑典"] = UniformStarFallback(),
+        ["雷池淬体功"] = UniformStarFallback(),
+        ["南华玄感录"] = UniformStarFallback(),
+        ["绳墨正法录"] = UniformStarFallback(),
+    };
+
+    // TQ-044：与星级回退相同，未建专属成长表的已入矩阵功法只能使用这份登记的基准成长回退。
+    public static readonly Dictionary<string, string> ApprovedGongFaGrowthFallbacks = new()
+    {
+        ["九霄雷劫录"] = "N-BAL-02B 待补专属成长表前，采用 SubGrowthBase 加权基准。",
+        ["苦行剑典"] = "N-BAL-02B 待补专属成长表前，采用 SubGrowthBase 加权基准。",
+        ["雷池淬体功"] = "N-BAL-02B 待补专属成长表前，采用 SubGrowthBase 加权基准。",
+        ["南华玄感录"] = "N-BAL-02B 待补专属成长表前，采用 SubGrowthBase 加权基准。",
+        ["绳墨正法录"] = "N-BAL-02B 待补专属成长表前，采用 SubGrowthBase 加权基准。",
+    };
+
     // 星数→归一化权重
     public static Dictionary<string, double> WeightsFromGongFa(string name)
     {
-        if (!GongFaStars.TryGetValue(name, out var stars))
-            return new() { ["根骨"]=0.2, ["魂魄"]=0.2, ["神识"]=0.2, ["资质"]=0.2, ["气运"]=0.2 };
+        if (!GongFaStars.TryGetValue(name, out var stars) && !ApprovedGongFaStarFallbacks.TryGetValue(name, out stars))
+            throw new InvalidOperationException($"功法「{name}」缺少星级权重；必须补齐星级表或登记显式回退。");
+        ValidateStars(name, stars);
         double sum = stars.Values.Sum();
         return stars.ToDictionary(kv => kv.Key, kv => Math.Round(kv.Value / sum, 2));
     }
+
+    static Dictionary<string, double> UniformStarFallback() => new()
+    {
+        ["根骨"] = 1, ["魂魄"] = 1, ["神识"] = 1, ["资质"] = 1, ["气运"] = 1
+    };
+
+    static void ValidateStars(string name, IReadOnlyDictionary<string, double> stars)
+    {
+        var required = Character.InnateKeys;
+        if (stars.Count != required.Length || required.Any(key => !stars.TryGetValue(key, out var value) || double.IsNaN(value) || double.IsInfinity(value) || value <= 0))
+            throw new InvalidOperationException($"功法「{name}」的星级权重必须完整且为有限正数。");
+    }
+
+    public static bool HasApprovedGrowthFallback(string name) => ApprovedGongFaGrowthFallbacks.ContainsKey(name);
 
     public static readonly Dictionary<string, string> GongFaElements = new()
     {

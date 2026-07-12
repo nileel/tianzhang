@@ -1,0 +1,22 @@
+# TQ-044 成长表完整性与星级回退归档
+
+状态：已完成（2026-07-12，Codex / gpt-5.6-terra）
+
+## 完成内容
+
+- 移除未知功法的静默 `0.2` 星级权重回退；未知、缺项或非法星级输入现在明确失败。
+- 为九霄雷劫录、苦行剑典、雷池淬体功、南华玄感录、绳墨正法录登记可追溯的临时星级与成长基准回退；后续专属设计必须替换这些条目。
+- 云篆度人经从筑基起修时会跳过练气空档，继续累计其已登记的筑基成长。
+- 所有一级属性统一读取功法成长表；缺专属成长表但未登记回退时明确失败。
+- 新增 `growth-integrity-tq044` 自测，锁定未知星级失败、登记式回退和云篆筑基成长不断链。
+
+## 验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
+- `dotnet run -c Release --project simulations/BattleSim -- --self-test growth-integrity-tq044`：通过。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：通过。
+
+## 后续边界
+
+- G2 仍由 TQ-055 负责覆盖重验与极端结果审计，不因本次输入完整性修复提前通过。
+- 5 个登记式基准回退仍需后续补成各自的专属星级与成长表；本次未调整 AI、战斗倍率、成丹阈值或金丹压制口径。

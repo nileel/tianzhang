@@ -104,14 +104,14 @@ class Character
 
         // 一级属性 = 境界基础 + sum(小境界成长) + 先天×系数×权重
         Primary["HP"] = (int)Math.Round((rb.HP + SubGrowthSum("HP", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.HP * weights["根骨"] * 2.2) * sm);
-        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights) + Innate["魂魄"] * rf.MP * weights["魂魄"]) * sm * DanJiStabilityMult);
-        Primary["肉攻"] = (int)Math.Round((rb.肉攻 + SubGrowthSum("肉攻", realm, subIdx, weights) + Innate["根骨"] * rf.攻 * weights["根骨"]) * sm);
-        Primary["神攻"] = (int)Math.Round((rb.神攻 + SubGrowthSum("神攻", realm, subIdx, weights) + Innate["魂魄"] * rf.攻 * weights["魂魄"]) * sm);
-        Primary["肉防"] = (int)Math.Round((rb.肉防 + SubGrowthSum("肉防", realm, subIdx, weights) + Innate["根骨"] * rf.防 * weights["根骨"]) * sm);
-        Primary["神防"] = (int)Math.Round((rb.神防 + SubGrowthSum("神防", realm, subIdx, weights) + Innate["魂魄"] * rf.防 * weights["魂魄"]) * sm);
-        Primary["反应"] = (int)Math.Round((rb.反应 + SubGrowthSum("反应", realm, subIdx, weights) + (Innate["根骨"] * weights["根骨"] + Innate["魂魄"] * weights["魂魄"] + Innate["神识"] * weights["神识"]) * rf.反应 / 3.0) * sm);
+        Primary["MP"] = (int)Math.Round((rb.MP + SubGrowthSum("MP", realm, subIdx, weights, GongFaName) + Innate["魂魄"] * rf.MP * weights["魂魄"]) * sm * DanJiStabilityMult);
+        Primary["肉攻"] = (int)Math.Round((rb.肉攻 + SubGrowthSum("肉攻", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.攻 * weights["根骨"]) * sm);
+        Primary["神攻"] = (int)Math.Round((rb.神攻 + SubGrowthSum("神攻", realm, subIdx, weights, GongFaName) + Innate["魂魄"] * rf.攻 * weights["魂魄"]) * sm);
+        Primary["肉防"] = (int)Math.Round((rb.肉防 + SubGrowthSum("肉防", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.防 * weights["根骨"]) * sm);
+        Primary["神防"] = (int)Math.Round((rb.神防 + SubGrowthSum("神防", realm, subIdx, weights, GongFaName) + Innate["魂魄"] * rf.防 * weights["魂魄"]) * sm);
+        Primary["反应"] = (int)Math.Round((rb.反应 + SubGrowthSum("反应", realm, subIdx, weights, GongFaName) + (Innate["根骨"] * weights["根骨"] + Innate["魂魄"] * weights["魂魄"] + Innate["神识"] * weights["神识"]) * rf.反应 / 3.0) * sm);
         Primary["移力"] = rb.移力;
-        Primary["神识"] = (int)Math.Round((rb.神识 + SubGrowthSum("神识", realm, subIdx, weights) + Innate["神识"] * rf.神识 * weights["神识"]) * sm);
+        Primary["神识"] = (int)Math.Round((rb.神识 + SubGrowthSum("神识", realm, subIdx, weights, GongFaName) + Innate["神识"] * rf.神识 * weights["神识"]) * sm);
 
         // 二级属性
         int chapters = GameData.TotalSubs(realm, subIdx) / 4 + 1;
@@ -138,7 +138,12 @@ class Character
                 int subsHere = GameData.Sublevels[r];
                 int effective = Math.Min(subsHere, Math.Max(0, totalSubs - prevSubs));
                 if (effective <= 0) break;
-                if (!table.TryGetValue(r, out var grow)) break;
+                if (!table.TryGetValue(r, out var grow))
+                {
+                    // 功法可从更高境界起修；缺少前序境界时不应截断后续已登记的成长。
+                    prevSubs += subsHere;
+                    continue;
+                }
                 double val = attr switch
                 {
                     "HP" => grow.HP, "MP" => grow.MP, "肉攻" => grow.肉攻, "神攻" => grow.神攻,
@@ -150,6 +155,8 @@ class Character
             }
             return sum;
         }
+        if (!string.IsNullOrEmpty(gongFaName) && !GameData.HasApprovedGrowthFallback(gongFaName))
+            throw new InvalidOperationException($"功法「{gongFaName}」缺少成长表；必须补齐成长表或登记显式回退。");
         // 回退：原有权重近似计算
         double wsum = 0; int wtotalSubs = GameData.TotalSubs(realm, subIdx);
         int wprevSubs = 0;

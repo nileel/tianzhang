@@ -20,6 +20,7 @@
 > 2026-07-12 自动控制器：队列维护确认 G1 已通过；补入已登记、依赖已满足的 TQ-064 与 TQ-068，近期队列由 3 条恢复为 5 条。TQ-059 继续准确标为阻塞，内容冻结不变。
 > 2026-07-12 Codex / gpt-5.6-terra：TQ-058 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-058-contentScope失败关闭与运行时过滤归档.txt`；CSV 导入改为拒绝缺失/非法 contentScope，138 个既有 asset 已显式序列化 scope，SectSelection 的功法/术法玩家入口会排除 reserved。Unity EditMode 62/62 与 .NET 编译通过；数据检查器已无 contentScope 项，其余 TQ-057 历史数据矛盾仍待处理。
 > 2026-07-12 自动控制器：队列维护发现近期表仅 4 条；补入依赖 TQ-054 已满足的 Codex P0 任务 TQ-044。近期队列恢复为 5 条，G2 与内容冻结状态不变。
+> 2026-07-12 Codex / gpt-5.6-terra：TQ-044 已完成并归档至 `开发管理/任务归档/2026-07-12-TQ-044-成长表完整性与星级回退归档.txt`；未知或非法星级输入改为失败关闭，5 个尚无专属设计的矩阵功法改为登记式基准回退，云篆度人经会跳过筑基前空档而继续读取筑基成长，所有一级属性统一使用功法成长输入。BattleSim Release build、TQ-044 self-test 与默认模拟通过；G2 仍等待 TQ-055 的覆盖重验。
 
 ## 使用规则
 
@@ -33,7 +34,6 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-044 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-BAL-02A：修复成长表完整性与星级回退 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-064 | P1 | Codex / gpt-5.5 | 架构治理 | 待处理 | M-ARCH-01：建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
@@ -56,16 +56,6 @@
 - 范围：对齐术法 docs/CSV/asset 数量，处理 `realm_lianshen` 缺失语言键与 `realm_lianxu` 删除后仍激活的数据，并吸收 TQ-040 的字段完整性复查；不得扩展内容或设定语义。
 - 验证：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 仅在剩余问题均有精确批准豁免或已清理时返回 0；`git diff --check`。
 - 完成条件：TQ-056 所列历史数据矛盾已清理或被精确批准豁免，交接材料标明仍需 Codex / ChatGPT5.5 复审。
-
-### TQ-044 · N-BAL-02A 修复成长表完整性与星级回退
-
-- 来源：可信度闸门规格 §5、`开发管理/任务列表/数值与战斗任务.txt`。
-- 当前状态：待处理；依赖：TQ-054 已由 Codex 完成并验证。
-- 主责：Codex / ChatGPT5.5。
-- 必读：`开发管理/任务列表/数值与战斗任务.txt`、`docs/基础设定/角色数值设计.txt`、`simulations/BattleSim/Program.cs` 与现有成长表数据。
-- 范围：建立成长表完整性断言与显式星级回退；缺表、缺星级或非法组合必须明确失败或走批准的可追溯回退，不得用静默 `0.2` 回退掩盖缺失输入。
-- 验证：先运行 `dotnet build -c Release --no-restore simulations/BattleSim`，再运行 `dotnet run --no-build -c Release --project simulations/BattleSim`；`git diff --check`。
-- 完成条件：每个矩阵 Build 的成长输入可追溯，缺失或非法输入有确定的失败或批准回退；TQ-055 依赖解除前 G2 仍不得标记通过。
 
 ### TQ-059 · D-TRUST-04 接通境界、元素和阵营限制
 

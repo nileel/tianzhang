@@ -51,6 +51,9 @@ static class BattleSimSelfTests
         if (suite == "build-input-tq054")
             return RunChecked(suite, RunBuildInputTq054);
 
+        if (suite == "growth-integrity-tq044")
+            return RunChecked(suite, RunGrowthIntegrityTq044);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -664,6 +667,27 @@ static class BattleSimSelfTests
         }
     }
 
+    static void RunGrowthIntegrityTq044()
+    {
+        AssertThrows<InvalidOperationException>(
+            () => GameData.WeightsFromGongFa("不存在功法"),
+            "unknown gongfa must not silently receive the generic 0.2 weight fallback");
+
+        foreach (var name in new[] { "九霄雷劫录", "苦行剑典", "雷池淬体功", "南华玄感录", "绳墨正法录" })
+        {
+            var weights = GameData.WeightsFromGongFa(name);
+            AssertEqual(5, weights.Count, $"approved fallback has all attributes for {name}");
+        }
+
+        var symbolCultivator = Character.Create("符修", new()
+        {
+            ["根骨"] = 3, ["魂魄"] = 3, ["神识"] = 3, ["资质"] = 3, ["气运"] = 3
+        }, "taiyi_fuxiu");
+        symbolCultivator.GongFaName = "云篆度人经";
+        symbolCultivator.FinalizeStats("筑基", 0, "中品", GameData.WeightsFromGongFa(symbolCultivator.GongFaName));
+        AssertEqual(false, symbolCultivator.Primary["HP"] <= 607, "筑基起始功法仍获得其筑基成长");
+    }
+
     static Character StageCharacter(string name, string realm, int subIndex)
     {
         var character = Character.Create(name, new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
@@ -728,5 +752,19 @@ static class BattleSimSelfTests
     {
         if (Math.Abs(expected - actual) > tolerance)
             throw new InvalidOperationException($"{label}: expected {expected:F4}, got {actual:F4}.");
+    }
+
+    static void AssertThrows<TException>(Action action, string label) where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException($"{label}: expected {typeof(TException).Name}.");
     }
 }
