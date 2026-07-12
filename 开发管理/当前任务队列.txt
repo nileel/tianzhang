@@ -11,6 +11,7 @@
 | TQ-055 | P0 | Codex / gpt-5.5 | G2 数值 | 待决策（DEC-20260712-42EECD7ECA53） | N-TRUST-04：G2 极端结果分类与结论 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
+| TQ-065 | P1 | Codex / gpt-5.5 | Unity 架构 | 待处理 | U-ARCH-01：拆分 ExplorationController / SceneBuilder 真实职责边 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
 
 ## 任务卡片
@@ -41,6 +42,16 @@
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
 - 验证：每个 runtime gate 具有允许与拒绝样例；运行 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
 - 完成条件：三个字段都有唯一、可观察的运行时或显式元数据口径，G3 才可进入出口检查。
+
+### TQ-065 · U-ARCH-01 拆分 ExplorationController / SceneBuilder 真实职责边
+
+- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-ARCH-01。
+- 当前状态：待处理；依赖：无已声明依赖。
+- 主责：Codex / ChatGPT5.5。
+- 必读：`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`，以及相关场景、预制体引用和 EditMode 测试。
+- 范围：从 `ExplorationController` / `SceneBuilder` 拆分至少一条真实职责与依赖边；不得增加或继续膨胀 Hub 类，必须保持 Unity 序列化字段、资产 GUID、场景和预制体引用兼容。
+- 验证：运行相关 .NET 编译、可用的 Unity EditMode 目标测试或 `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`，以及 `git diff --check`。
+- 完成条件：至少一条真实职责与依赖边已拆分，并有保持序列化与引用兼容的可重复验证证据。
 
 ### TQ-068 · S-STATE-01 最小会话状态模型
 
