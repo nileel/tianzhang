@@ -84,9 +84,9 @@
 最少运行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
-powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,docs/superpowers/specs
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 -ExpectControllerActive
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,docs/superpowers/specs
 git diff --check
 ```
 
