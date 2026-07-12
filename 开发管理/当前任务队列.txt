@@ -8,10 +8,9 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-055 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-04：G2 极端结果分类与结论 |
+| TQ-055 | P0 | Codex / gpt-5.5 | G2 数值 | 待决策（DEC-20260712-42EECD7ECA53） | N-TRUST-04：G2 极端结果分类与结论 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
-| TQ-064 | P1 | Codex / gpt-5.5 | 架构治理 | 待处理 | M-ARCH-01：建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
 
 ## 任务卡片
@@ -19,7 +18,7 @@
 ### TQ-055 · N-TRUST-04 G2 极端结果分类与结论
 
 - 来源：`开发管理/任务列表/数值与战斗任务.txt` G2 任务执行边界。
-- 当前状态：待处理；依赖：TQ-052、TQ-053、TQ-054、TQ-044 均已完成并验证；400 轮下 21 Build 金丹覆盖均为 200/200、每格 2,000 场，90 个覆盖充分的极端对局已产出反事实输出。
+- 当前状态：待决策（DEC-20260712-42EECD7ECA53）；依赖：TQ-052、TQ-053、TQ-054、TQ-044 均已完成并验证；400 轮下 21 Build 金丹覆盖均为 200/200、每格 2,000 场，90 个覆盖充分的极端对局已产出反事实输出。
 - 主责：Codex / ChatGPT5.5。
 - 范围：基于已完成的可复现审计输出，对 90 个覆盖充分的极端对局进行产品分类并形成 G2 结论；不得在诊断过程中直接调参，除非代码或数据变更使现有审计证据失效，不得重复昂贵的修炼与 CTB 覆盖运行。
 - 验证：逐项核对极端对局的先天交换、功法包交换和远程资格统一反事实输出；输出分类与 G2 结论，并运行 `git diff --check`。
@@ -42,16 +41,6 @@
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
 - 验证：每个 runtime gate 具有允许与拒绝样例；运行 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
 - 完成条件：三个字段都有唯一、可观察的运行时或显式元数据口径，G3 才可进入出口检查。
-
-### TQ-064 · M-ARCH-01 建立 Unity 结构事实图
-
-- 来源：`开发管理/任务列表/场景与Unity任务.txt`、可信度闸门规格 §7。
-- 当前状态：待处理；依赖：G1 已通过。
-- 主责：Codex / ChatGPT5.5。
-- 必读：`开发管理/运行时所有者记录-TQ-060.txt`、`src/Assets/`、`src/ProjectSettings/`、现有 asmdef 与验证入口的实时扫描结果。
-- 范围：从当前工作树扫描生成 `UNITY_STRUCTURE.md`，覆盖文件路径、场景、运行时所有者、runtime/content/assemblies 边界、验证入口与 open gaps；不得以旧文档推断代替扫描证据。
-- 验证：核对文档中的每项关键路径均能在当前工作树解析；`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`；`git diff --check`。
-- 完成条件：结构图可作为后续 TQ-065～TQ-067 的事实入口，且六类必填信息均有实时扫描依据。
 
 ### TQ-068 · S-STATE-01 最小会话状态模型
 

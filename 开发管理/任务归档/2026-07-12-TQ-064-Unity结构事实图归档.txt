@@ -1,0 +1,26 @@
+# TQ-064 Unity 结构事实图归档
+
+## 完成结果
+
+- 已根据当前工作树扫描新增根目录 `UNITY_STRUCTURE.md`，覆盖文件路径、场景、运行时所有者、runtime/content/assemblies 边界、验证入口与 open gaps 六类信息。
+- 正式 Build Settings 仍仅启用 StartMenu、World、Settlement、Adventure 四场景；`AdventureScene` 仍是唯一正式冒险入口，`ExplorationScene` 仍是不可达旧原型。
+- 已解除 TQ-065 与 TQ-066 对 TQ-064 的依赖阻塞；尚未实施两项重构。
+
+## 扫描证据
+
+- `src/ProjectSettings/EditorBuildSettings.asset`
+- `src/Assets/Scripts/TianZhang.Runtime.asmdef`
+- `src/Assets/Scripts/Editor/TianZhang.Editor.asmdef`
+- `src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`
+- `src/Assets/Scripts/Game/GameSession.cs`、`SceneFlowManager.cs`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs`
+- `src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Combat/TacticalCombatController.cs`
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` 与 `tools/run-unity-editmode-tests.ps1`
+
+## 验证
+
+- 已核对结构图列出的关键路径均存在于当前工作树。
+- 本轮还运行了管理文本检查、待暂存行尾空白检查、两份 Unity .NET 项目编译、Unity EditMode 测试与 `git diff --check`；具体输出以本提交和控制器记录为准。
+
+## 后续边界
+
+TQ-065、TQ-066、TQ-067 与 TQ-068 按各自任务卡继续；本任务未修改运行时、资产 GUID、场景、预制体、CSV 或任何数值规则。
