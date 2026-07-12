@@ -14,7 +14,7 @@
 2. 用 `tools/automation-controller-state.ps1` 获取三小时本机租约。
 3. 检查恢复状态和完整 Git 工作区；来源不明脏改只读退出。
 4. 单轮只选择一个分支：恢复中断任务 → 最高风险待复审 → 必要队列维护 → 一个 Codex 待处理任务 → 安静退出。
-5. 选定真实工作对象后、读取实施细则前，把当前任务卡或复审事实源的面向人中文简述写入 automation memory 与最终结果。独立 cron 作业不调用 `tools.codex_app__set_thread_title`，因为它不附着于可重命名 thread；无候选、锁占用、身份失败或人工脏工作区不记录任务简述。
+5. 选定真实工作对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用 TQ/HANDOFF 编号；无候选、锁占用、身份失败或人工脏工作区不改名。改名失败或超时只记录 automation memory，不影响任务路由、验证、提交或失败关闭。
 6. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检，再执行 `git add`；仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮，不得为此失败关闭或留待下一轮。任何非文本、路径外或复检仍失败的问题仍按失败关闭。暂存后必须运行 `git diff --cached --check`。前者覆盖未跟踪新文件，后者保留 Git 原生二次校验。
 
    Unity EditMode 通过 `tools/run-unity-editmode-tests.ps1` 运行时，脚本会在启动前快照全部已追踪的 `Assets/**` 与 `ProjectSettings/**` 文件，并在成功、失败或结果就绪后退出的所有路径精确恢复；这包含 Unity 重写的 `.asset.meta`，不得再把该类测试副作用当作控制器路径外脏改。
