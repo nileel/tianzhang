@@ -34,6 +34,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
+| TQ-055 | P0 | Codex / gpt-5.5 | G2 数值 | 待处理 | N-TRUST-04：G2 覆盖与极端结果重验 |
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-064 | P1 | Codex / gpt-5.5 | 架构治理 | 待处理 | M-ARCH-01：建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
@@ -47,6 +48,15 @@
 - TQ-055～TQ-071：仅在对应分线 backlog 已登记且依赖满足时补位；当前未登记项不得补位。
 
 ## 任务卡片
+
+### TQ-055 · N-TRUST-04 G2 覆盖与极端结果重验
+
+- 来源：`开发管理/任务列表/数值与战斗任务.txt` G2 任务执行边界。
+- 当前状态：待处理；依赖：TQ-052、TQ-053、TQ-054、TQ-044 均已完成并验证。
+- 主责：Codex / ChatGPT5.5。
+- 范围：重跑修炼与 CTB 矩阵，产出可复现输出、境界样本覆盖、极端结果分类和 G2 结论；不得在诊断过程中直接调参。
+- 验证：每个 Build 至少 200 个确定性修炼种子；每个目标矩阵格至少覆盖 20 对不同角色配对、总计至少 2000 场战斗，并输出胜率与 95% Wilson 置信区间；运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim` 与 `git diff --check`。
+- 完成条件：任何覆盖不足必须标为 `INSUFFICIENT` 并继续阻塞；0%/100% 结果只有满足覆盖门槛并报告区间后才能判为设计极端，缺陷须修复并重跑；满足全部 G2 出口条件后才可标记 G2 通过。
 
 ### TQ-057 · D-TRUST-02 清理现存数据矛盾
 
