@@ -6,13 +6,16 @@ namespace BattleSim;
 
 static class Combat
 {
-    static readonly Random Rng = new();
+    const int DeterministicRandomSeed = 20260712;
+    static Random Rng = new(DeterministicRandomSeed);
     public const double BaseCritMultiplier = 1.5;
     internal const int InitialDistance = 6;
     internal const int DivineAction = 0;
     internal const int KuxingAction = 1;
     internal const int ArtAction = 2;
     internal const int BasicAction = 3;
+
+    internal static void ResetDeterministicRandom() => Rng = new Random(DeterministicRandomSeed);
 
     static bool IsInRange(int distance, int minRange, int maxRange) =>
         distance >= minRange && distance <= maxRange;

@@ -19,8 +19,9 @@ param(
   [string]$ImpactSummary,
   [string]$DecisionId,
   [string]$OptionKey,
-  [ValidateSet('email')]
+  [ValidateSet('email','manual')]
   [string]$ReplySource,
+  [switch]$ManualOverride,
   [string]$NotificationError,
   [switch]$WasRecovery,
   [switch]$QueueAuditCompleted,
@@ -270,6 +271,7 @@ try {
       Require-DecisionInput $DecisionId 'DecisionId'
       Require-DecisionInput $OptionKey 'OptionKey'
       Require-DecisionInput $ReplySource 'ReplySource'
+      if ($ReplySource -eq 'manual' -and -not $ManualOverride) { Exit-WithCode 'Manual decision resolution requires -ManualOverride' $script:ExitInvalidArguments }
       if ($state.pendingDecision.decisionId -ne $DecisionId) { Exit-WithCode 'DecisionId does not match the pending decision' $script:ExitInvalidArguments }
       if ($state.pendingDecision.status -notin @('NOTIFIED', 'DELIVERY_FAILED', 'REPLY_INVALID')) { Exit-WithCode 'Decision cannot be resolved in its current status' $script:ExitInvalidArguments }
       if (@($state.pendingDecision.options | Where-Object { $_.key -eq $OptionKey }).Count -ne 1) { Exit-WithCode 'OptionKey is not valid for the pending decision' $script:ExitInvalidArguments }

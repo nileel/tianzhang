@@ -11,7 +11,7 @@ static class G2AttributionAudit
         internal double DeltaPercentagePoints => CounterfactualWinRate - BaselineWinRate;
     }
 
-    internal static IReadOnlyList<string> Layers => ["先天交换", "功法包交换"];
+    internal static IReadOnlyList<string> Layers => ["先天交换", "功法包交换", "风格机制交换"];
 
     internal static bool IsCoveredExtreme(int leftSamples, int rightSamples, int battles, double winRate) =>
         leftSamples >= 200
@@ -35,6 +35,9 @@ static class G2AttributionAudit
             AddResult(results, builds[i], builds[j], "功法包交换", baseline[i, j],
                 BuildGoldPool(builds[i], i, builds[i].Innate, builds[j].GongFaName, cycles),
                 BuildGoldPool(builds[j], j, builds[j].Innate, builds[i].GongFaName, cycles), battles);
+            AddResult(results, builds[i], builds[j], "风格机制交换", baseline[i, j],
+                BuildGoldPool(builds[i], i, builds[i].Innate, builds[i].GongFaName, cycles, builds[j].Style),
+                BuildGoldPool(builds[j], j, builds[j].Innate, builds[j].GongFaName, cycles, builds[i].Style), battles);
         }
         Console.WriteLine($"归因汇总：极端对局={results.Select(r => (r.LeftName, r.RightName)).Distinct().Count()}，反事实={results.Count}，平均绝对变化={results.Select(r => Math.Abs(r.DeltaPercentagePoints)).DefaultIfEmpty(0).Average():F2}pp，最大变化={results.OrderByDescending(r => Math.Abs(r.DeltaPercentagePoints)).Select(r => $"{r.LeftName} vs {r.RightName}/{r.Layer} {r.DeltaPercentagePoints:+0.00;-0.00;0.00}pp").FirstOrDefault() ?? "无"}");
     }
@@ -47,7 +50,7 @@ static class G2AttributionAudit
         Console.WriteLine($"  {layer}：{rate:F2}%（{row.DeltaPercentagePoints:+0.00;-0.00;0.00}pp）");
     }
 
-    static List<Character> BuildGoldPool(Program.BuildDef build, int buildIndex, IReadOnlyDictionary<string, int> innate, string gongFaName, int cycles)
+    static List<Character> BuildGoldPool(Program.BuildDef build, int buildIndex, IReadOnlyDictionary<string, int> innate, string gongFaName, int cycles, string style = null)
     {
         var weights = GameData.WeightsFromGongFa(gongFaName);
         var pool = new List<Character>();
@@ -55,7 +58,7 @@ static class G2AttributionAudit
         {
             var input = innate.ToDictionary(pair => pair.Key, pair => pair.Value);
             var result = Cultivation.Simulate(input, weights, seed * 100 + buildIndex, "中品", "上品", maxCycles: cycles);
-            var character = Character.Create(build.Name, input, build.Style);
+            var character = Character.Create(build.Name, input, style ?? build.Style);
             character.ApplyGrowth(result.Realm, "上品", weights);
             character.GongFaName = gongFaName;
             character.DFQuality = result.DFQuality; character.DFMult = GameData.DFMultiplier[result.DFQuality]; character.DFScore = result.DFScore;

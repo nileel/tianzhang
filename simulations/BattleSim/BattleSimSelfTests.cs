@@ -63,6 +63,9 @@ static class BattleSimSelfTests
         if (suite == "g2-attribution-tq055")
             return RunChecked(suite, RunG2AttributionTq055);
 
+        if (suite == "g2-reproducibility-tq055")
+            return RunChecked(suite, RunG2ReproducibilityTq055);
+
         if (suite == "distance-model-tq055")
             return RunChecked(suite, RunDistanceModelTq055);
 
@@ -773,8 +776,40 @@ static class BattleSimSelfTests
 
         AssertEqual(false, G2AttributionAudit.Layers.Contains("远程资格统一"),
             "distance model removes the retired range-eligibility counterfactual");
-        AssertSequence(new[] { "先天交换", "功法包交换" }, G2AttributionAudit.Layers,
+        AssertSequence(new[] { "先天交换", "功法包交换", "风格机制交换" }, G2AttributionAudit.Layers,
             "remaining attribution layers are ordered");
+    }
+
+    static void RunG2ReproducibilityTq055()
+    {
+        var resetRandom = typeof(Combat).GetMethod(
+            "ResetDeterministicRandom",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        if (resetRandom == null)
+            throw new InvalidOperationException("Combat.ResetDeterministicRandom is missing.");
+
+        var left = Character.Create("deterministic-left", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+        var right = Character.Create("deterministic-right", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+        foreach (var character in new[] { left, right })
+        {
+            character.Realm = "练气";
+            character.Primary["HP"] = 1000;
+            character.Primary["MP"] = 0;
+            character.Primary["肉攻"] = 100;
+            character.Primary["神攻"] = 0;
+            character.Primary["肉防"] = 100;
+            character.Primary["神防"] = 0;
+            character.Primary["反应"] = 20;
+            character.Primary["移力"] = 6;
+        }
+        left.Secondary["暴击率"] = 50;
+        right.Secondary["闪避率"] = 20;
+
+        resetRandom.Invoke(null, null);
+        var first = Combat.Simulate(left, right, 200);
+        resetRandom.Invoke(null, null);
+        var second = Combat.Simulate(left, right, 200);
+        AssertEqual(first, second, "reset deterministic random reproduces a combat result");
     }
 
     static void RunDistanceModelTq055()

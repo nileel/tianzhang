@@ -43,6 +43,8 @@ class Program
 
     static int Main(string[] args)
     {
+        Combat.ResetDeterministicRandom();
+
         if (args.Length == 2 && args[0] == "--self-test")
             return BattleSimSelfTests.Run(args[1]);
 

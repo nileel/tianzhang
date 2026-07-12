@@ -124,9 +124,9 @@ try {
   $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'C', '-ReplySource', 'email', '-Now', '2026-07-11T05:08:00Z')
   Assert-Code $r 15 'unknown option rejection'
 
-  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'email', '-Now', '2026-07-11T05:09:00Z')
-  Assert-Code $r 0 'resolve decision'
-  if ((Read-TestState).pendingDecision.status -ne 'RESOLVED' -or (Read-TestState).pendingDecision.resolution.optionKey -ne 'A') {
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'manual', '-ManualOverride', '-Now', '2026-07-11T05:09:00Z')
+  Assert-Code $r 0 'manual resolve decision'
+  if ((Read-TestState).pendingDecision.status -ne 'RESOLVED' -or (Read-TestState).pendingDecision.resolution.optionKey -ne 'A' -or (Read-TestState).pendingDecision.resolution.source -ne 'manual') {
     throw 'valid decision resolution was not persisted'
   }
 
