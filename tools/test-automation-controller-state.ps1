@@ -109,6 +109,17 @@ try {
   $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:07:00Z')
   Assert-Code $r 0 'mark decision notified'
   if ((Read-TestState).pendingDecision.status -ne 'NOTIFIED') { throw 'notification status was not persisted' }
+  if ((Read-TestState).pendingDecision.notification.attempts -ne 1) { throw 'first notification attempt was not recorded' }
+
+  $r = Invoke-StateTool @('MarkDecisionDeliveryFailed', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationError', 'smtp_unavailable', '-Now', '2026-07-11T05:07:30Z')
+  Assert-Code $r 0 'mark decision delivery failed'
+  if ((Read-TestState).pendingDecision.status -ne 'DELIVERY_FAILED' -or (Read-TestState).pendingDecision.notification.attempts -ne 2) {
+    throw 'delivery failure did not retain retry count'
+  }
+
+  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:07:45Z')
+  Assert-Code $r 0 'retry decision notification'
+  if ((Read-TestState).pendingDecision.notification.attempts -ne 3) { throw 'retry notification did not advance attempt count' }
 
   $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'C', '-ReplySource', 'email', '-Now', '2026-07-11T05:08:00Z')
   Assert-Code $r 15 'unknown option rejection'

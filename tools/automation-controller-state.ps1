@@ -144,6 +144,12 @@ function Require-DecisionInput {
   if ([string]::IsNullOrWhiteSpace($Value)) { Exit-WithCode "$Name is required" $script:ExitInvalidArguments }
 }
 
+function Get-NotificationAttemptCount {
+  param($Notification)
+  if ($null -eq $Notification -or $null -eq $Notification.attempts) { return 0 }
+  [int]$Notification.attempts
+}
+
 $nowValue = Get-NowValue
 $directory = Split-Path -Parent $StatePath
 New-Item -ItemType Directory -Path $directory -Force | Out-Null
@@ -239,7 +245,8 @@ try {
       Require-PendingDecision $state
       if ($state.pendingDecision.status -notin @('PENDING', 'DELIVERY_FAILED')) { Exit-WithCode 'Decision cannot be marked notified in its current status' $script:ExitInvalidArguments }
       $state.pendingDecision.status = 'NOTIFIED'
-      $state.pendingDecision.notification = [ordered]@{ status = 'NOTIFIED'; attemptedAt = $nowValue.ToString('o'); error = $null }
+      $attempts = (Get-NotificationAttemptCount $state.pendingDecision.notification) + 1
+      $state.pendingDecision.notification = [ordered]@{ status = 'NOTIFIED'; attemptedAt = $nowValue.ToString('o'); attempts = $attempts; error = $null }
       Set-Lease $state $nowValue
       Export-State $state
     }
@@ -248,11 +255,12 @@ try {
       Require-PendingDecision $state
       Require-DecisionInput $NotificationError 'NotificationError'
       if ($state.pendingDecision.status -eq 'RESOLVED') { Exit-WithCode 'Resolved decision cannot be marked failed' $script:ExitInvalidArguments }
-      $error = $NotificationError.Trim()
-      if ($error.Length -gt 240) { $error = $error.Substring(0, 240) }
-      $status = if ($error -eq 'invalid_reply') { 'REPLY_INVALID' } else { 'DELIVERY_FAILED' }
+      $errorSummary = $NotificationError.Trim()
+      if ($errorSummary.Length -gt 240) { $errorSummary = $errorSummary.Substring(0, 240) }
+      $status = if ($errorSummary -eq 'invalid_reply') { 'REPLY_INVALID' } else { 'DELIVERY_FAILED' }
       $state.pendingDecision.status = $status
-      $state.pendingDecision.notification = [ordered]@{ status = $status; attemptedAt = $nowValue.ToString('o'); error = $error }
+      $attempts = (Get-NotificationAttemptCount $state.pendingDecision.notification) + 1
+      $state.pendingDecision.notification = [ordered]@{ status = $status; attemptedAt = $nowValue.ToString('o'); attempts = $attempts; error = $errorSummary }
       Set-Lease $state $nowValue
       Export-State $state
     }
