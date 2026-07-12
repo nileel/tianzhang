@@ -1,54 +1,33 @@
 # 数据链路任务列表（✅ 已审核）
 
-> 本文件保存 CSV、Unity asset、导入器、检查脚本与高阶内容隔离的分线 backlog。近期执行项复制到 `开发管理/当前任务队列.txt`。
+> 本文件只保留未完成、阻塞或冻结的 CSV、Unity asset、导入器和检查器任务。当前可执行切片以 `开发管理/当前任务队列.txt` 为准；已完成记录可由 Git 与 `开发管理/任务归档/` 追溯。
 
-## 当前状态
+## 当前风险入口
 
-- 术法/神通已有独立 `element` 列；`elementReq` 只作为学习门槛。
-- D-ELEMENT-01 已完成：`DataConfigImporter` 导入 Spells/Skills 时先断言 `element` 表头存在，并按表头读取独立 `element`，不再依赖硬编码列序；新增 EditMode 编译期测试覆盖 `elementReq` 与 `element` 换序场景。
-- 三类 CSV 已新增 `contentScope` 列，643efda 标注已通过 Codex / ChatGPT5.5 复审；TQ-026 已完成运行时字段与导入器适配。
-- F1 口径已定：`realm_lianshen` 不作为当前独立境界 key；高阶内容按 NPC/资料片/保留内容隔离。
-- TQ-027 已于 2026-07-05 复审通过：`check-data-chain.ps1` 输出 realm_lianshen / realm_lianxu / contentScope 告警；归档见 `开发管理/任务归档/2026-07-05-R-20260704-01-TQ-027数据链路告警复审归档.txt`。
-- docs/CSV/Unity asset 覆盖当前为功法 29/29/29、术法 75/75/75、神通 34/34/34，Missing 0。
-- ⚠️ 2026-07-10 审视：当前检查存在术法 docs 86 与 CSV/asset 75 的数量矛盾、`realm_lianshen` 语言键缺失、`realm_lianxu` 已删除内容仍激活；脚本仍返回 `OK`，因此 Missing 0 不等于数据链可信。
-- ⚠️ `contentScope` 缺失时当前默认 `player`，运行时未证明 reserved 过滤；`realmReq`、`elementReq`、`affiliation` 也未形成完整限制链。G3 通过前禁止按数据规模继续扩写。
+- TQ-057 是当前数据矛盾的唯一处理入口：术法 docs 数量与 CSV/asset 数量不一致、`realm_lianshen` 语言键缺失、已删除内容仍激活，以及原 TQ-040 的字段完整性复查。
+- 三份历史扫描证据已归档：`开发管理/任务归档/CSV高阶内容定位表.txt`、`开发管理/任务归档/realm_lianshen专项检查.txt`、`开发管理/任务归档/炼虚与高阶内容影响面清单.txt`。它们只提供调查线索，不是当前事实源。
+- `check-data-chain.ps1` 的 `Missing 0` 只表示机械覆盖，不代表 G3 或数据链可信；当前对齐快照见 `开发管理/docs-csv-asset-alignment.txt`。
+- G3 通过前禁止按数据规模继续扩写；`contentScope`、`realmReq`、`elementReq`、`affiliation` 未完成全链路验证前不得假定运行时限制存在。
 
 ## 任务
 
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
-| D-CONTENT-01 | P1 | Codex 复审 | ✅ 已复审 | 643efda 的 `contentScope` CSV 标注已通过；归档见 `任务归档/2026-07-04-R-20260630-04-contentScope列复审归档.txt` |
-| D-CONTENT-02 / TQ-026 | P1 | Codex | ✅ 已完成 | C# 数据对象与导入器保存 `contentScope`；归档见 `任务归档/2026-07-07-TQ-026-contentScope运行时字段导入器适配归档.txt` |
-| D-ELEMENT-01 | P1 | Codex | ✅ 已完成（2026-07-09） | 为独立 `element` 字段补导入器 schema 断言，防止列序错读；归档见 `任务归档/2026-07-09-D-ELEMENT-01-element字段导入器schema断言归档.txt` |
-| D-REALM-01 / TQ-027 | P1 | DeepSeek 执行；Codex 复审 | ✅ 已复审 | `check-data-chain.ps1` 输出 realm_lianshen / realm_lianxu / contentScope 告警 |
-| D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离 |
-| D-ASSET-01 / TQ-040 | P2 | DeepSeek | 已合并至 TQ-057 | CSV/asset 字段完整性复查由 D-TRUST-02 统一执行，不再单独领取 |
-| D-IMPORT-01 / TQ-043 | P0 | Codex | 待处理（用户指定直接接管） | 按表头解析全部核心字段；修正真实表头换位与错误测试；缺必需列/重复列失败，未知列按显式兼容策略处理 |
-| D-TRUST-01 / TQ-056 | P0 | Codex | ✅ 已完成（2026-07-11） | 检查脚本现以精确版本控制豁免区分错误和警告；归档见 `任务归档/2026-07-11-TQ-056-数据检查器错误分级归档.txt` |
-| D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 待处理 | 对齐术法数量、补齐或隔离缺失语言键、处理已删除仍激活内容，并吸收 TQ-040 |
-| D-TRUST-03 / TQ-058 | P0 | Codex | 待处理 | `contentScope` 缺失/非法时失败关闭，并证明 CSV→asset→运行时过滤链 |
-| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only` |
-| D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义主战法宝、普攻、术法和神通的统一攻击档案 schema 与导入边界 |
-| D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查 |
+| D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离。 |
+| D-IMPORT-01 / TQ-043 | P0 | Codex | 待处理（用户指定直接接管） | 按表头解析全部核心字段；缺必需/重复列失败，未知列按显式兼容策略处理。 |
+| D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
+| D-TRUST-03 / TQ-058 | P0 | Codex | 待处理 | `contentScope` 缺失/非法失败关闭，并证明 CSV→asset→运行时过滤链。 |
+| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057、TQ-058） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
+| D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义统一攻击档案 schema 与导入边界。 |
+| D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
 
 ## G3 任务执行边界
 
-- TQ-043：用户已指定由 Codex 直接接管，外部 HANDOFF-20260710-02 仅作为问题基线；修复时仍须独立核对必需列、重复列、未知列、换序和短行，不得把外部提交直接当作完成。
-- TQ-056：错误级必须包括无批准豁免的 docs/CSV/asset 数量矛盾、必填缺失、删除内容激活、玩家边界失守和 schema 错配；每个批准警告豁免必须在版本控制中精确绑定 `ruleId + contentId/文件/行键`，并记录理由、负责人、移除或到期条件。禁止通配符、类别级、前缀匹配或自动覆盖未来记录；新增同类但未精确列入的警告必须非 0，并加入回归负例。产出成功/失败测试样例，负例不得修改生产数据；错误或缺失结果必须非 0，仅精确批准的警告可返回 0。
-- TQ-057：机械清理由 DeepSeek 执行，但必须标 `⚠️ 已修改/未审核` 并交接；产出数据修复、差异清单和交接材料；术法数量、语言键、删除激活和原 TQ-040 字段完整性均须处理。差异要么清零，要么有批准的显式排除；不得扩展设计语义。
-- TQ-058：缺失或非法 `contentScope` 必须导入失败；reserved 不会进入玩家获得池，player 仍可用；既有空字段 asset 必须迁移、隔离或令检查失败，禁止静默视为 player。证明 CSV→asset→运行时 consumer 全链路并建立回归。
-- TQ-059：对 `realmReq`、`elementReq`、`affiliation` 逐字段记录模式，每个字段必须恰好选择一条：`runtime_gate` 要求真实 asset 字段和 runtime consumer，并有一个允许样例和一个拒绝样例；`metadata_only` 要求改成明确不含 Req/限制含义的元数据命名，导入器和运行时限制 consumer 均不得读取它，测试证明不会被当作限制，且检查器拒绝“仍叫 `*Req` 但无 handler”的状态。任一字段无模式或两种模式同时存在均阻塞。
-- D-COMBAT-01：依赖 N-GROUP-02 与 G3。必读现有 CSV/asset 表头、导入器、运行时数据对象和 BattleSim `AttackProfile`。先产出并批准唯一 schema，字段至少覆盖档案 ID、攻击类型、元素、倍率、最小/最大距离、资源/冷却、目标过滤与效果引用；不得把功法名称写成普攻来源。验证重复 ID、非法距离、未知效果、缺失主战法宝和 CSV/asset 映射均失败关闭。完成条件是 BattleSim 与 Unity 可以从同一语义载荷构造攻击档案。
-- D-COMBAT-02：依赖 D-COMBAT-01 与 U-COMBAT-01。建立版本控制的正反例 fixture、字段映射检查和跨端差异报告；同一档案必须在 BattleSim 与 Unity 解析为相同的类型、元素、距离和目标语义。验证包括新增档案无需修改战斗循环、坏数据非 0 退出、跨端字段差异可定位。完成条件是 CSV/asset 成为攻击档案的唯一权威来源，而不是并行手工配置。
-
-## G3 出口条件
-
-- TQ-043 经 Codex 完成必要验证并闭环，TQ-056、TQ-057、TQ-058、TQ-059 全部完成，且 TQ-057 经 Codex 复审通过。
-- 数量矛盾、必填字段缺失、删除内容激活、玩家内容边界失守和 schema 不匹配等错误类别均让检查脚本非 0 退出。
-- 每个残留批准警告豁免都在版本控制中精确绑定 `ruleId + contentId/文件/行键`，并记录理由、负责人、移除或到期条件；禁止通配符、类别级、前缀匹配或自动覆盖未来记录，新增同类但未精确列入的警告必须非 0。
-- reserved 不进入玩家获得池，缺失或非法 `contentScope` 不会默认成为 player。
-- `realmReq`、`elementReq`、`affiliation` 各自完成其记录模式的验收并恰好选择 `runtime_gate` 或 `metadata_only`；任一字段无模式或两种模式同时存在均阻塞。`runtime_gate` 必须有运行时允许/拒绝样例；`metadata_only` 必须完成无 Req/限制含义重命名、导入器与运行时限制 consumer 不读取证明、不会被当作限制的测试，以及对“仍叫 `*Req` 但无 handler”状态的检查器拒绝。
-- `check-data-chain.ps1` 正例返回 0、负例返回非 0，且负例不得修改生产数据。
+- TQ-043 必须独立核对必需列、重复列、未知列、换序和短行；外部交接只可作问题线索。
+- TQ-057 的机械清理由 DeepSeek 执行时只能标 `⚠️ 已修改/未审核` 并交接；历史扫描报告的已知误差不得直接带入结论。
+- TQ-058：缺失或非法 `contentScope` 必须导入失败，reserved 不进入玩家获得池，既有空字段 asset 必须迁移、隔离或令检查失败。
+- TQ-059：每个 `*Req` 字段恰好选择一种模式；`runtime_gate` 须有允许/拒绝样例，`metadata_only` 须去除限制语义、证明无 consumer 并拒绝“仍叫 `*Req` 但无 handler”。
+- D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
 
 ## 默认验证
 
@@ -62,4 +41,4 @@
 
 - 不因 `contentScope` 自动删除 CSV、asset 或 docs 内容。
 - 不把 `realm_lianshen` 扩为玩家境界；缺失 Language key 必须补齐、隔离或停用，不能保持激活且只告警。
-- DeepSeek 执行数据清洗后只能标 `⚠️ 已修改/未审核`。
+- 不得扩展设计语义或把历史扫描报告当作当前闭环证据。

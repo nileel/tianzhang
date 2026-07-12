@@ -1,4 +1,10 @@
-✅ 已审核 — 2026-06-19 Codex / gpt-5.5 复审通过：CSV/Language 已对齐 docs 功法 29/29；Unity asset 严格覆盖已机械闭合为 0 missing / 0 extra；57 个新增 `.asset` 均已有 `.meta`，`spell_tx_anshi` asset 字段与 `SceneBuilder` 旧路径已校准。
+# docs → CSV → Unity Asset 对齐旧快照（非当前事实）
+
+> 本文件记录 2026-06-19 的机械对齐结果，**不是当前数据链闭环结论**。当前风险、待处理范围和主责见 `开发管理/任务列表/数据链路任务.txt` 的 TQ-057；执行当前检查使用 `tools/check-data-chain.ps1`。即使输出 `Missing 0`，也不代表数量、语言键、删除内容或运行时限制链已可信。
+
+> 历史快照保留原文以便追溯；后续不得以本文件中的“已闭合”“当前”措辞覆盖 TQ-057 的实时核查结果。
+
+✅ 历史复审 — 2026-06-19 Codex / gpt-5.5：当时 CSV/Language 与 Unity asset 的机械覆盖为 0 missing / 0 extra；此结论仅适用于当时快照范围。
 修正①（历史）：asset 缺口改用有效 .asset 数计算；当时严格覆盖缺口为功法缺16/术法缺28/神通缺13，增加额外/旧版计数
 修正②：docs 功法数从 24 更正为 29；门派覆盖度按 docs 实际归属校准，标注 CSV 缺失与门派标记偏差
 修正③（历史）：TQ-003 f7f6944 返工后功法 CSV 29/29、Language 389 key；当时严格 asset 检查仍缺 GongFa 16、Spells 28、Skills 13
@@ -6,7 +12,7 @@
 
 # docs → CSV → Unity Asset 对齐清单
 
-> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16 (按 ChatGPT5.5 初始审核意见修正；修改方: DeepSeek) | 修订: 2026-06-17 (按 check-data-chain.ps1 校准 asset 缺口；修改方: DeepSeek V4 Pro) | 二次修订: 2026-06-17 (docs 计数与门派表口径校准；修改方: DeepSeek V4 Pro) | 复审修订: 2026-06-19 (Codex / gpt-5.5 校准 CSV/Language 当前事实) | 覆盖补修复审: 2026-06-19 (Codex / gpt-5.5 复审通过) | 用途: 阶段 3.2.5 稳定化校准 — 数据链路校验
+> 生成: 2026-06-15 (DeepSeek V4 Pro) | 修订: 2026-06-16/17 | 最后复审: 2026-06-19 (Codex / gpt-5.5) | 用途: 阶段 3.2.5 的历史机械覆盖快照，非当前数据链路校验。
 
 ## 数量总览
 
@@ -16,12 +22,11 @@
 | 术法 | 75 | 75 | 75 / 75 | 0 | 0 |
 | 神通 | 34 | 34 | 34 / 34 | 0 | 0 |
 
-> **注**: 2026-06-15 补齐 CSV 后功法 24/24、术法 75/75、神通 34/34 与当时 docs 对齐；此后 docs 新增 5 篇功法。TQ-003 返工已补齐 5 篇太一道庭功法并修正 4 条 affiliation；本轮复审修正 `太一玉格典` 资质星级后，当前功法 CSV 为 29/29。
-> Unity `.asset` 严格覆盖已机械闭合：功法 29/29、术法 75/75、神通 34/34，额外/旧版 0；新增 `.asset` 均已有 `.meta`。Language.csv 重复 key 已于 2026-06-16 修复（移除 `desc_enemy_huangyesanxiu`、`chapter_qiushui` 各一条重复）。当前状态已复审通过。
+> **快照注记**: 2026-06-19 的机械计数为功法 29/29、术法 75/75、神通 34/34，asset 缺失和额外项均为 0；Language.csv 当时的重复 key 已修复。该计数不应用作当前数量或语义一致性的断言。
 
 ## 功法缺口 — 已补齐 ✅ (CSV / Language 端)
 
-2026-06-15 补 10 本至 GongFa.csv + Language.csv；TQ-003 返工补齐新增 5 篇太一道庭功法，并补入 `faction_guxiu`、`faction_lantaishuyuan` 与新增功法/篇章/描述 key。当前 CSV 端功法 29/29，Language 有效 key 389。
+2026-06-15 补 10 本至 GongFa.csv + Language.csv；TQ-003 返工补齐新增 5 篇太一道庭功法，并补入 `faction_guxiu`、`faction_lantaishuyuan` 与新增功法/篇章/描述 key。以上均为快照形成时记录。
 
 ## 术法缺口 — 已补齐 ✅ (CSV 端)
 
@@ -31,7 +36,7 @@
 
 全部 13 项已于 2026-06-15 补齐至 Skills.csv + Language.csv。
 
-## CSV → Unity .asset 覆盖（当前已机械闭合并复审通过）
+## CSV → Unity .asset 覆盖（2026-06-19 快照）
 
 | 类别 | docs | CSV | .asset (总数/有效) | 缺失 | 额外/旧版 | 备注 |
 |------|------|-----|-------------------|------|-----------|------|
@@ -55,7 +60,7 @@
 
 以下条目曾在 CSV 中 `affiliation` 字段与 docs 实际归属不一致；TQ-003 返工已修正：
 
-| CSV ID | 当前 CSV 门派 | docs 实际门派 | 备注 |
+| CSV ID | 快照中 CSV 门派 | docs 实际门派 | 备注 |
 |--------|----------|--------------|------|
 | `gongfa_nanhuachanyandian` | faction_guxiu | 古修 | 南华阐衍典 ∈ docs/古修/ |
 | `gongfa_jiansubaopujing` | faction_guxiu | 古修 | 见素抱朴经 ∈ docs/古修/ |

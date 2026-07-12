@@ -1,90 +1,36 @@
 # 场景与 Unity 任务列表（✅ 已审核）
 
-> 本文件保存场景架构、Unity 控制器、UI 与运行时机制的分线 backlog。近期执行项复制到 `开发管理/当前任务队列.txt`。
+> 本文件只保留未完成、阻塞或按条件触发的场景与运行时任务。当前可执行切片以 `开发管理/当前任务队列.txt` 为准；已完成记录可由 Git 和 `开发管理/任务归档/` 追溯。
 
-## 当前状态
+## 当前事实
 
-- ✅ TQ-016：SceneBuilder 可生成、注册、打开 StartMenu/World/Settlement/Adventure，并验证核心 Controller。
-- ✅ TQ-017：StartMenuScene 门派选择迁入 `GameSession.PlayerProfile`。
-- ✅ TQ-018：`TacticalGridModel` 与渲染接口兼容层已归档。
-- ✅ TQ-019：`TacticalCombatController` 已承接战斗准备、玩家行动、临阵换法、战斗结算。
-- ✅ TQ-020：符胆神魂行动语义已回归。
-- ✅ TQ-022：WorldScene 节点式主世界原型已完成。
-- ✅ TQ-023：SettlementScene 通用据点/宗门原型已完成。
-- ✅ U-S5-02：SettlementScene 据点服务入口占位已完成；修炼、功法、任务、坊市等服务按钮可点击并仅写占位日志。
-- ✅ TQ-024：Settlement/World → Adventure 入口与返回上下文已完成。
-- ✅ TQ-025：Adventure/Combat UI 命令绑定拆分切片已完成；战斗动作栏统一通过 `ICombatCommandHandler` 发命令，新增 `BtnSwap` 换法按钮，`BattleUIManager` 不再直接依赖 `ExplorationController`。
-- ✅ U-S6-03：战斗日志适配拆分已完成；`CombatLogAdapter` 集中格式化战斗开始、行动结果和掉落日志，`ExplorationController` 仅委托输出。
-- ✅ TQ-028 / U-MECH-01：雷劫印记 Unity 回归已完成；九霄雷劫录受击叠层、物理出手消耗增伤、满层神魂受击魂防降低已接入运行时。
-- ✅ TQ-028 / U-MECH-02A：玄感神识强度 Unity 回归已完成；南华玄感录神魂伤害入口按境界获得神识强度加值。
-- ✅ TQ-028 / U-MECH-03：含弘/载物 Unity 回归已完成；含弘光大典按境界获得物理防御加成，载物按损失 HP 提供全防御加成。
-- ✅ 2026-07-12：G1 正式 Build Settings 链路通过。`AdventureScene` 为唯一可达冒险所有者；旧 `ExplorationScene` 保持正式链路不可达。TQ-063 已用批处理场景验证和连续上下文回归证明创建角色至返回据点的最小正式闭环。
-- ✅ TQ-049：冻结的 Unity EditMode 基线 47/47 通过；当前分支另有 TQ-043 待复审提交新增 5 项，其中 1 项失败，不计入 TQ-049 冻结基线，交由 `2` 流程处理。
+- G1 已于 2026-07-12 通过：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者，最小正式闭环已验证。
+- 当前 P1 主线是结构边界与最小状态模型；不得把已完成的 G1 切片重新排入队列。
 
-## 近期任务
+## 任务
 
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
-| U-S5-01 / TQ-023 | P1 | Codex | ✅ 已完成 | SettlementScene 通用据点/宗门原型 |
-| U-S5-02 | P1 | Codex | ✅ 已完成（2026-07-09） | 据点服务入口占位：修炼、功法、任务、坊市只做按钮与日志 |
-| U-S5-03 / TQ-024 | P1 | Codex | ✅ 已完成 | 据点进入 Adventure 与返回上下文 |
-| U-S6-01 / TQ-024 | P1 | Codex | ✅ 已完成 | AdventureScene 读取 `CurrentAdventureId` 并显示来源 |
-| U-S6-02 / TQ-025 | P1 | Codex | ✅ 已完成 | Adventure/Combat UI 命令绑定接口化切片 |
-| U-S6-03 | P1 | Codex | ✅ 已完成（2026-07-09） | 战斗日志适配拆分：`CombatLogAdapter` 集中处理战斗开始、行动结果和掉落日志 |
-| Q-UNITY-01 / TQ-049 | P0 | Codex | ✅ 已完成（2026-07-11） | 显式创建 `GameSession` 测试夹具；冻结基线 47/47 通过 |
-| Q-UNITY-02 / TQ-050 | P0 | Codex | ✅ 已完成（2026-07-11） | 权威 EditMode 入口已验证 XML 成功/失败/缺失/不可解析/零测试退出码；完整运行 54/54 通过 |
-| Q-UNITY-03 / TQ-051 | P0 | Codex | ✅ 已完成（2026-07-11） | 成功、异常与结果已就绪但退出延迟路径均恢复场景和 Build Settings；真实 EditMode 54/54 通过，前后工作区一致 |
-| U-SLICE-01 / TQ-060 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式所有者锁定为 `AdventureScene`；`ExplorationScene` 为不可达旧原型，记录见 `开发管理/运行时所有者记录-TQ-060.txt` |
-| U-SLICE-02 / TQ-061 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式冒险入口接通最小地图、单敌人、战斗、结算和返回据点 |
-| U-SLICE-03 / TQ-062 | P0 | Codex | ✅ 已完成（2026-07-12） | 角色出身驱动起始世界节点，移除江左硬编码并定义非法值回退 |
-| U-SLICE-04 / TQ-063 | P0 | Codex | ✅ 已完成（2026-07-12） | 正式 Build Settings 端到端冒烟；G1 已通过 |
-| M-ARCH-01 / TQ-064 | P1 | Codex | 待处理 | 建立 `UNITY_STRUCTURE.md` 与 runtime/content/assemblies 聚焦图 |
-| U-ARCH-01 / TQ-065 | P1 | Codex | 阻塞（TQ-064） | 拆分 `ExplorationController` / `SceneBuilder` 至少一个真实职责和依赖边 |
-| U-ARCH-02 / TQ-066 | P1 | Codex | 阻塞（TQ-064） | 拆分 `BattleUIManager` / `Character` 的 UI 与领域职责 |
-| U-ARCH-03 / TQ-067 | P1 | Codex | 阻塞（TQ-065、TQ-066） | 建立项目派生 asmdef 边界并保持序列化兼容 |
-| S-STATE-01 / TQ-068 | P1 | Codex | 待处理 | 最小 GameSession、世界时间和起点状态模型 |
-| S-STATE-02 / TQ-069 | P1 | Codex | 阻塞（TQ-068） | 最小任务、背包和 NPC 状态快照，分离状态步骤 |
-| S-SAVE-01 / TQ-070 | P1 | Codex | 阻塞（TQ-068、TQ-069） | 存档版本、新旧档、非法档和重置迁移基础 |
-| AVM-01 / TQ-072 | P1 | Codex | ✅ 已完成（2026-07-12） | Git LFS 资产版本管理基线：属性规则、本地原始素材边界、规范与登记册 |
-| AVM-02 / TQ-073 | P1 | Codex | ✅ 已完成（2026-07-12） | 正式资源入库检查与条件化自动工作流 |
-| AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | 首批真实资源从原始文件、LFS、干净工作区恢复至 Unity 构建的闭环验证 |
-| AVM-04 | P2 | Codex | 按季度或阈值触发 | 复盘 LFS 容量、拉取耗时和百度网盘备份可靠性；仅凭实证决定是否评估 UVCS |
-| U-MECH-01 / TQ-028 | P2 | Codex | ✅ 已完成 | 雷劫印记 Unity 回归 |
-| U-MECH-02A / TQ-028 | P2 | Codex | ✅ 已完成 | 玄感神识强度 Unity 回归 |
-| U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（G1 通过后） | 玄感清除链/玄同状态 Unity 回归，需统一状态/debuff 流程 |
-| U-MECH-03 / TQ-028 | P2 | Codex | ✅ 已完成 | 含弘/载物 Unity 回归 |
-| U-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、D-COMBAT-01） | Unity 战斗运行时接入统一攻击档案与 2v2 空间语义 |
-| U-2_5D-01 | P2 | Codex | 待处理 | 2.5D 战棋表现小场景原型，需 S1-S6 后执行 |
+| M-ARCH-01 / TQ-064 | P1 | Codex | 待处理 | 扫描当前工作树，建立 `UNITY_STRUCTURE.md` 的 runtime/content/assemblies 事实图；完整定义见当前任务队列。 |
+| U-ARCH-01 / TQ-065 | P1 | Codex | 阻塞（TQ-064） | 拆分 `ExplorationController` / `SceneBuilder` 至少一条真实职责与依赖边。 |
+| U-ARCH-02 / TQ-066 | P1 | Codex | 阻塞（TQ-064） | 拆分 `BattleUIManager` / `Character` 的 UI 与领域职责。 |
+| U-ARCH-03 / TQ-067 | P1 | Codex | 阻塞（TQ-065、TQ-066） | 建立项目派生 asmdef 边界并保持序列化兼容。 |
+| S-STATE-01 / TQ-068 | P1 | Codex | 待处理 | 最小 GameSession、世界时间和起点状态模型；完整定义见当前任务队列。 |
+| S-STATE-02 / TQ-069 | P1 | Codex | 阻塞（TQ-068） | 最小任务、背包和 NPC 状态快照，分离状态步骤。 |
+| S-SAVE-01 / TQ-070 | P1 | Codex | 阻塞（TQ-068、TQ-069） | 存档版本、新旧档、非法档和重置迁移基础。 |
+| AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 |
+| AVM-04 | P2 | Codex | 按季度或阈值触发 | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 |
+| U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | 玄感清除链/玄同状态 Unity 回归。 |
+| U-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、D-COMBAT-01） | Unity 接入唯一攻击档案与 2v2 空间语义。 |
+| U-2_5D-01 | P2 | Codex | 待处理 | 2.5D 战棋表现小场景原型；仅在状态与结构前置完成后进入队列。 |
 
-## G1/P1 任务执行边界
+## 执行边界
 
-- **TQ-060 运行时所有者证明**：产物必须列出正式 Build Settings → `AdventureScene` / `ExplorationScene` / `SceneBuilder` / 战斗 / 返回的真实调用与所有者链，为每个竞争入口写明迁移、适配或淘汰结论，并锁定后续切片允许修改与禁止修改的文件清单；仅推测或仅写迁移计划不通过。
-- **TQ-061 最小冒险战斗闭环**：必须复用 TQ-060 已证明的网格与战斗所有者；不得新增超过 500 行的类，也不得向现有超过 500 行的 Hub 类新增无关职责；胜利与失败两条结算路径都必须返回合法的据点/世界上下文。
-- **TQ-062 出身起点**：当前两个可选出身必须进入各自起点；非法值或旧值必须有显式记录并走专用回退路径，不得写回、展示或伪装为合法出身值。
-- **TQ-063 正式构建冒烟**：必须提供可重复的自动或半自动步骤、运行日志和结果；从创建角色到返回据点，玩家档案、出身、起点、Adventure 上下文和返回上下文全程不丢失。
-- **TQ-064 结构事实图**：`UNITY_STRUCTURE.md` 必须来自对当前工作树的实时扫描，至少包含文件路径、场景、运行时所有者、asmdef 边界、验证入口和 open gaps；不得用旧文档推断代替扫描证据。
-- **TQ-065 探索/场景职责拆分**：至少移除一条真实依赖边，或提取一个有独立测试的协作者；不得新增超过 500 行的类，不得继续增长现有 Hub 的职责。
-- **TQ-066 UI/领域边界**：UI 展示状态与战斗/角色领域状态的所有者和写入路径必须明确；改造不得破坏 Unity 序列化字段、资产 GUID 或已有场景/预制体引用兼容。
-- **TQ-067 asmdef 边界**：不得存在 sibling feature 直接依赖，不得有实现层向上反向引用；项目派生 asmdef 的编译和 Unity 序列化兼容验证必须通过。
-- **TQ-068 最小会话状态**：`GameSession`、世界时间和起点状态在新游戏初始化、场景切换、战斗返回后必须一致，且有对应回归证据。
-- **TQ-069 状态步骤与快照**：`shown != clicked`，`shown` / `clicked` / `opened` / `selected` / `applied` / `completed` / `persisted` 不得压成一个 bool；最小任务、背包和 NPC 快照必须各有明确持久化所有者。
-- **TQ-070 存档迁移**：新档、旧档、非法档和重置路径都必须有确定行为，并提供存档版本判定与迁移前后的可复核证据。
-- **TQ-072 资产版本管理基线**：只建立 Git LFS、忽略规则、规范和登记册，不得创建假资源、空 `Art` 目录或虚构登记记录。
-- **TQ-073 正式资源入库检查**：必须有 LFS 覆盖通过、二进制遗漏失败、Unity 文本资产误入 LFS 失败三类 fixture；自动化只在资产相关变更时调用检查。
-- **TQ-074 首批真实资源闭环**：必须使用真实资源，验证原始路径登记、LFS 对象、干净工作区恢复与相关 Unity 构建；未出现真实资源时保持阻塞。
-- **AVM-04 规模复盘**：只有 LFS 容量、拉取耗时、备份可靠性或多人不可合并资源冲突出现实证问题，才评估 UVCS；不得因主观担忧迁移 SVN/UVCS。
-- **U-COMBAT-01 统一战斗档案运行时接入**：依赖 N-GROUP-02 和 D-COMBAT-01。必读运行时所有者记录、现有 `TacticalCombatController`、数据导入器与 BattleSim 对照 fixture。只让 Unity 消费已确定的攻击档案和 2v2 空间语义，保持场景/预制体序列化兼容；不得重造第二套距离、目标或伤害公式。验证 Unity EditMode 的距离、视线、占格、目标选择与导入失败 fixture，并与 BattleSim 同一输入结果逐项对照。完成条件是新增法宝或技能档案不需要改战斗循环代码。
-
-- **补位调度说明**：TQ-064～TQ-074 与 TQ-045 在各自依赖满足后，仅作为低于任何未完成 P0 闸门任务的候选；G1 通过只解除相应依赖，不等于它们立即进入或抢占 `当前任务队列.txt`。
-
-## G1 出口条件
-
-- TQ-049、TQ-050、TQ-051、TQ-060、TQ-061、TQ-062、TQ-063 全部完成。
-- 权威 Unity 测试入口报告全部测试通过，且执行前后工作区一致。
-- TQ-051 必须从干净隔离工作区开始；Git 跟踪的 `src/Assets/Scenes/*.unity` 与 `src/ProjectSettings/EditorBuildSettings.asset` 在成功和异常路径前后 SHA256 相同，且 `git status --short --untracked-files=all` 证明 tracked/untracked 零残留。
-- 正式 Build Settings 能连续完成“创建角色 → 世界节点 → 据点 → 冒险 → 战斗 → 结算 → 返回据点”。
-- TQ-063 必须提供可重复的自动或半自动步骤、运行日志和结果；玩家档案、出身、起点、Adventure 上下文和返回上下文在正式构建链路全程不丢失。
-- 正式 Build Settings 只有一个可达冒险运行时；旧 `ExplorationScene` 必须已迁入该所有者、从正式链路不可达或删除，不得与 `AdventureScene` 保持两个竞争可达入口；只写迁移计划不算 G1 通过。
+- TQ-064 必须以实时扫描证明路径、场景、运行时所有者、asmdef、验证入口与 open gaps；不得用旧文档推断代替扫描。
+- TQ-065/066 不得增加或继续膨胀 Hub 类；改造须保持 Unity 序列化字段、资产 GUID、场景和预制体引用兼容。
+- TQ-067 不得有 sibling feature 直接依赖或实现层向上反向引用。
+- TQ-068/069/070 必须区分 `shown`、`clicked`、`opened`、`selected`、`applied`、`completed`、`persisted`，并为各状态明确持久化所有者。
+- TQ-074 不得用假资源或虚构登记替代真实资源闭环。
 
 ## 默认验证
 
@@ -97,4 +43,4 @@
 ## 边界
 
 - 场景/UI 切片不得顺手修改 CTB、伤害、冷却、槽位、寻路、技能范围或掉落数值。
-- 运行时机制切片一次只处理一个机制；涉及数值结论必须同时跑 BattleSim。
+- 涉及数值结论必须同时运行 BattleSim。
