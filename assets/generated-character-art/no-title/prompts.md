@@ -28,7 +28,7 @@ no overly detailed background, no crowded composition, no copied reference chara
 Use case: stylized-concept
 Asset type: vertical full-body game character portrait / xianxia character standing illustration
 Primary request: Generate one full-body standing portrait of 苻渊 / Fu Yuan, the main character of 混元山 from the project's background story.
-Input images: The reference images in assets/参考图片 are style references only; do not copy any existing character, text, or composition exactly.
+Input images: The reference images in assets/source/参考图片 are style references only; do not copy any existing character, text, or composition exactly.
 Subject: A powerful older male xianxia cultivator, about late seventies but still imposing; broad shoulders, sturdy body, weathered calm face, white hair and beard after a catastrophic spiritual collapse, hair tied in a simple topknot. He wears one old black Daoist robe, worn and unornamented, with layered loose sleeves and a heavy grounded silhouette. He carries no weapon and no external magic artifact; his presence itself is the center of the earth-vein resonance system.
 Character identity notes: Kunyuan Zhenjun, former Yuanying master fallen back to Jindan, founder and ruined center of the Guanlong earth-vein resonance system. His visual language is containment, burden, boundary, earth, metal, collapsed order, and possible rebirth.
 Style/medium: Chinese xianxia ink-wash concept art, expressive dry-brush black linework, hand-drawn sketch quality, semi-transparent watercolor washes, pale matte paper texture, low-saturation palette, elegant but rough line economy, character-design sheet feeling.
@@ -45,7 +45,7 @@ Constraints: Full-body character portrait only, no readable text, no Chinese cal
 Use case: stylized-concept
 Asset type: vertical full-body game character portrait / xianxia character standing illustration
 Primary request: Generate one full-body standing portrait of 谢观微 / Xie Guanwei, the main character of 太一道庭 from the project's background story.
-Input images: The reference images in assets/参考图片 are style references only; do not copy any existing character, text, or composition exactly.
+Input images: The reference images in assets/source/参考图片 are style references only; do not copy any existing character, text, or composition exactly.
 Subject: A slender, tall older male xianxia cultivator, about eighty, elegant and visibly weakened but mentally sharp. He has neat silver hair tied behind his head, a pale calm face, restrained expression, and long narrow posture. He wears a plain white Daoist robe, clean and almost colorless, with very subtle water-blue inner lining. In one hand he holds a folding fan; the fan surface has an unfinished abstract water-ripple pattern, not text. His other sleeve falls softly.
 Character identity notes: Guanlan Zhenjun, Xie clan leader of Taiyi Dao Court, keeper of the water-observation divination method. His visual language is quiet water, reflection, fading lifespan, strategic foresight, restraint, and the final guardian of order.
 Style/medium: Chinese xianxia ink-wash concept art, expressive dry-brush black linework, hand-drawn sketch quality, semi-transparent watercolor washes, pale matte paper texture, low-saturation palette, elegant character-design sheet feeling.
