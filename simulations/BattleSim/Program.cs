@@ -6,7 +6,7 @@ namespace BattleSim;
 
 class Program
 {
-    record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, string GongFaName = "", Dictionary<string, double> Weights = null);
+    internal record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, string GongFaName = "", Dictionary<string, double> Weights = null);
     record G2CoverageResult(string Status, bool MeetsThreshold);
     static IReadOnlyList<string> G2AuditTargetStages => ["金丹"];
 
@@ -47,16 +47,21 @@ class Program
             return BattleSimSelfTests.Run(args[1]);
 
         bool g2Audit = args.Length >= 1 && args[0] == "--g2-audit";
-        if (args.Length != 0 && !g2Audit)
+        bool g2Attribution = args.Length >= 1 && args[0] == "--g2-attribution";
+        if (args.Length != 0 && !g2Audit && !g2Attribution)
         {
-            Console.Error.WriteLine("Usage: BattleSim [--g2-audit [--cycles <positive-integer>] | --self-test <suite>]");
+            Console.Error.WriteLine("Usage: BattleSim [--g2-audit [--cycles <positive-integer>] | --g2-attribution [--cycles <positive-integer>] | --self-test <suite>]");
             return 2;
         }
 
         int cultivationCycles;
         try
         {
-            cultivationCycles = g2Audit ? ParseG2AuditCycles(args) : GameData.CultivationCycles;
+            cultivationCycles = g2Audit
+                ? ParseG2AuditCycles(args)
+                : g2Attribution
+                    ? ParseG2AttributionCycles(args)
+                    : GameData.CultivationCycles;
         }
         catch (ArgumentException ex)
         {
@@ -66,7 +71,7 @@ class Program
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
         const string TECH = "上品", SPIRIT = "中品";
-        int seeds = g2Audit ? 200 : 20;
+        int seeds = g2Audit || g2Attribution ? 200 : 20;
         const int SIM = 2000;
 
         var buildDefs = BuildDefs;
@@ -330,6 +335,9 @@ class Program
             PrintG2CoverageAudit("紫府圆满（诊断，不计入 G2 门槛）", tags, zifuPools, zifuMat, SIM);
             Console.WriteLine($"G2 覆盖结论（金丹目标矩阵）：{(g2CoveragePassed ? "SUFFICIENT" : "INSUFFICIENT")}");
         }
+
+        if (g2Attribution)
+            G2AttributionAudit.Print(buildDefs, goldPools, mat, SIM, cultivationCycles);
 
         Console.WriteLine();
         Console.WriteLine("【紫府圆满 vs 金丹初期压制战】");
@@ -672,6 +680,21 @@ class Program
             return cycles;
 
         throw new ArgumentException("Usage: BattleSim --g2-audit [--cycles <positive-integer>]");
+    }
+
+    static int ParseG2AttributionCycles(string[] args)
+    {
+        if (args.Length == 1 && args[0] == "--g2-attribution")
+            return GameData.CultivationCycles;
+
+        if (args.Length == 3
+            && args[0] == "--g2-attribution"
+            && args[1] == "--cycles"
+            && int.TryParse(args[2], out int cycles)
+            && cycles > 0)
+            return cycles;
+
+        throw new ArgumentException("Usage: BattleSim --g2-attribution [--cycles <positive-integer>]");
     }
 
     static (double Lower, double Upper) Wilson95Percent(int wins, int total)
