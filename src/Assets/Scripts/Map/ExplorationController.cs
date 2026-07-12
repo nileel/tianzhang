@@ -528,8 +528,6 @@ namespace TianZhang.Map
 
             if (uiManager != null)
             {
-                uiManager.SetPlayerElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName));
-                uiManager.SetEnemyElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(enemy.character.GongFaName));
                 RefreshCombatButtons(false);
             }
 
@@ -870,20 +868,20 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
             if (!player.IsAlive) status = "阵亡";
             else if (state == GameState.Exploration) status = "探索中";
             else if (state == GameState.Combat) status = "战斗中";
-            uiManager.SetPlayerElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName));
-            uiManager.UpdatePlayerInfo(player.Name, player.CurrentHP, player.MaxHP,
-                player.CurrentMP, player.MaxMP, ct, status);
+            uiManager.UpdatePlayerInfo(player.BuildCombatantPanelState(
+                ct,
+                TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName),
+                status));
 
             if (currentCombatTarget != null && currentCombatTarget.IsAlive)
             {
-                uiManager.SetEnemyElement(TianZhang.Combat.DamageCalculator.GetGongFaElement(currentCombatTarget.GongFaName));
                 float enemyThreshold = currentCombatTarget.CTBUnit != null ? Mathf.Max(CTBEngine.ActionThreshold, currentCombatTarget.CTBUnit.NextActionThreshold) : CTBEngine.ActionThreshold;
                 float ect = currentCombatTarget.CTBUnit != null
                     ? currentCombatTarget.CTBUnit.CT / enemyThreshold : 0;
-                uiManager.UpdateEnemyInfo(currentCombatTarget.Name,
-                    currentCombatTarget.CurrentHP, currentCombatTarget.MaxHP,
-                    currentCombatTarget.CurrentMP, currentCombatTarget.MaxMP,
-                    ect, "");
+                uiManager.UpdateEnemyInfo(currentCombatTarget.BuildCombatantPanelState(
+                    ect,
+                    TianZhang.Combat.DamageCalculator.GetGongFaElement(currentCombatTarget.GongFaName),
+                    string.Empty));
             }
             else
             {

@@ -239,6 +239,22 @@ namespace TianZhang.Entity
             CurrentMP = Mathf.Min(MaxMP, CurrentMP + amount);
         }
 
+        /// <summary>
+        /// 将角色领域状态投影为可展示快照；不引用 UI 组件或动作入口。
+        /// </summary>
+        public CombatantPanelState BuildCombatantPanelState(float ctRatio, string element, string status)
+        {
+            return new CombatantPanelState(
+                Name,
+                CurrentHP,
+                MaxHP,
+                CurrentMP,
+                MaxMP,
+                ctRatio,
+                element,
+                status);
+        }
+
         /// <summary>应用功法篇章加成（永久二级属性）</summary>
         public void ApplyGongFaBonuses(Cultivation.GongFaGrowthData gongFa, string realm)
         {

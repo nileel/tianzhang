@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TianZhang.Combat;
+using TianZhang.Entity;
 
 namespace TianZhang.Game
 {
@@ -43,8 +44,6 @@ namespace TianZhang.Game
         private Text enemyCTText;
         private Text enemyStatusText;
         // 五行元素标签
-        private string playerElement = "";
-        private string enemyElement = "";
         private Text playerElementText;
         private Text enemyElementText;
 
@@ -488,30 +487,29 @@ namespace TianZhang.Game
 
         // ==================== 公开更新方法 ====================
 
-        public void UpdatePlayerInfo(string name, int hp, int maxHp, int mp, int maxMp, float ctPct, string status)
+        public void UpdatePlayerInfo(CombatantPanelState state)
         {
-            if (playerNameText != null) playerNameText.text = name;
-            if (playerElementText != null) playerElementText.text = ResolveElementDisplay(playerElement);
-            UpdateBar(playerHPFill, playerHPText, hp, maxHp, "HP");
-            UpdateBar(playerMPFill, playerMPText, mp, maxMp, "MP");
-            UpdateBar(playerCTFill, playerCTText, ctPct, 1f, "CT");
+            if (state == null) return;
+            if (playerNameText != null) playerNameText.text = state.Name;
+            if (playerElementText != null) playerElementText.text = ResolveElementDisplay(state.Element);
+            UpdateBar(playerHPFill, playerHPText, state.CurrentHP, state.MaxHP, "HP");
+            UpdateBar(playerMPFill, playerMPText, state.CurrentMP, state.MaxMP, "MP");
+            UpdateBar(playerCTFill, playerCTText, state.CTRatio, 1f, "CT");
             if (playerStatusText != null)
-                playerStatusText.text = string.IsNullOrEmpty(status) ? "" : "状态: " + status;
+                playerStatusText.text = string.IsNullOrEmpty(state.Status) ? "" : "状态: " + state.Status;
         }
 
-        public void UpdateEnemyInfo(string name, int hp, int maxHp, int mp, int maxMp, float ctPct, string status)
+        public void UpdateEnemyInfo(CombatantPanelState state)
         {
-            if (enemyNameText != null) enemyNameText.text = name;
-            if (enemyElementText != null) enemyElementText.text = ResolveElementDisplay(enemyElement);
-            UpdateBar(enemyHPFill, enemyHPText, hp, maxHp, "HP");
-            UpdateBar(enemyMPFill, enemyMPText, mp, maxMp, "MP");
-            UpdateBar(enemyCTFill, enemyCTText, ctPct, 1f, "CT");
+            if (state == null) return;
+            if (enemyNameText != null) enemyNameText.text = state.Name;
+            if (enemyElementText != null) enemyElementText.text = ResolveElementDisplay(state.Element);
+            UpdateBar(enemyHPFill, enemyHPText, state.CurrentHP, state.MaxHP, "HP");
+            UpdateBar(enemyMPFill, enemyMPText, state.CurrentMP, state.MaxMP, "MP");
+            UpdateBar(enemyCTFill, enemyCTText, state.CTRatio, 1f, "CT");
             if (enemyStatusText != null)
-                enemyStatusText.text = string.IsNullOrEmpty(status) ? "" : "状态: " + status;
+                enemyStatusText.text = string.IsNullOrEmpty(state.Status) ? "" : "状态: " + state.Status;
         }
-
-        public void SetPlayerElement(string elem) { playerElement = elem ?? ""; if (playerElementText != null) playerElementText.text = ResolveElementDisplay(elem); }
-        public void SetEnemyElement(string elem) { enemyElement = elem ?? ""; if (enemyElementText != null) enemyElementText.text = ResolveElementDisplay(elem); }
 
         private static string ResolveElementDisplay(string elem)
         {

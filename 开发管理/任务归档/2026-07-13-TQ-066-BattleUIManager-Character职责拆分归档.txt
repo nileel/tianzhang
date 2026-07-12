@@ -1,0 +1,17 @@
+# TQ-066 BattleUIManager / Character 职责拆分归档
+
+## 完成结果
+
+- 新增不可变的 `CombatantPanelState` 领域展示快照；它只保存角色名、生命、灵力、CT 比例、元素与状态文本，不持有 Unity UI 组件或动作命令。
+- `Character.BuildCombatantPanelState` 统一从运行时角色生成该快照；`ExplorationController` 仍负责战斗状态、CT 和元素的领域计算，再把快照交给 `BattleUIManager`。
+- `BattleUIManager` 只渲染快照，不再保留或接收单独的角色元素状态；原有动作按钮和 `ICombatCommandHandler` 命令入口未变，未修改战斗结算、数值、场景、预制体或序列化字段。
+
+## 回归证据
+
+- 新增 `CombatantPanelStateTests.CharacterBuildsPanelStateWithoutExposingUiComponents`，先验证缺少投影 API 时 Unity 编译失败，再在实现后通过。
+- Unity EditMode：63 通过、0 失败。
+- `dotnet build -c Release src/TianZhang.Runtime.csproj` 与 `dotnet build -c Release src/TianZhang.EditModeTests.csproj` 通过。
+
+## 后续边界
+
+本切片只收束显示数据边界。`ExplorationController` 的战斗流程、动作输入与场景所有权仍由 TQ-065、TQ-067 和后续状态任务分别处理。

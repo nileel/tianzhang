@@ -11,7 +11,6 @@
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-065 | P1 | Codex / gpt-5.5 | Unity 架构 | 待处理 | U-ARCH-01：拆分 ExplorationController / SceneBuilder 真实职责边 |
-| TQ-066 | P1 | Codex / gpt-5.5 | Unity 架构 | 待处理 | U-ARCH-02：拆分 BattleUIManager / Character 的 UI 与领域职责边 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
 
 ## 任务卡片
@@ -43,16 +42,6 @@
 - 范围：从 `ExplorationController` / `SceneBuilder` 拆分至少一条真实职责与依赖边；不得增加或继续膨胀 Hub 类，必须保持 Unity 序列化字段、资产 GUID、场景和预制体引用兼容。
 - 验证：运行相关 .NET 编译、可用的 Unity EditMode 目标测试或 `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`，以及 `git diff --check`。
 - 完成条件：至少一条真实职责与依赖边已拆分，并有保持序列化与引用兼容的可重复验证证据。
-
-### TQ-066 · U-ARCH-02 拆分 BattleUIManager / Character 的 UI 与领域职责边
-
-- 来源：`开发管理/任务列表/场景与Unity任务.txt` U-ARCH-02、`开发管理/场景架构Unity现状清单.txt` 的 BattleUIManager 风险记录。
-- 当前状态：待处理；依赖：无已声明依赖。
-- 主责：Codex / ChatGPT5.5。
-- 必读：`src/Assets/Scripts/Game/BattleUIManager.cs`、涉及 UI 调用或显示状态的 `Character` 脚本、`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs` 与相关 EditMode 测试。
-- 范围：从 `BattleUIManager` / `Character` 分离至少一条真实 UI 与领域职责边；保持动作入口通过既有命令处理边界，不得让 UI 直接承担战斗领域结算，不得破坏场景、预制体、序列化字段或资产 GUID 引用。
-- 验证：运行相关 .NET 编译、可用的 Unity EditMode 目标测试，`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`，以及 `git diff --check`。
-- 完成条件：至少一条 UI / 领域职责与依赖边已拆分；动作入口和既有场景引用保持可重复验证，且未扩大战斗数值或规则范围。
 
 ### TQ-068 · S-STATE-01 最小会话状态模型
 
