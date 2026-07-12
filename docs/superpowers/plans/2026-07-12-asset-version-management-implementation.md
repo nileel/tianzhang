@@ -28,7 +28,7 @@
 - Create: `tools/tests/check-asset-versioning-tests.ps1`
 - Test: `tools/check-asset-versioning.ps1`
 
-- [ ] **Step 1: 创建临时 Git fixture 和断言帮助函数**
+- [x] **Step 1: 创建临时 Git fixture 和断言帮助函数**
 
 在 `tools/tests/check-asset-versioning-tests.ps1` 写入以下完整测试骨架。它不修改工作区；每次运行创建并删除 `%TEMP%` 下唯一目录。
 
@@ -72,7 +72,7 @@ finally {
 }
 ```
 
-- [ ] **Step 2: 加入“正式二进制被 LFS 覆盖”通过用例，并运行测试确认红灯**
+- [x] **Step 2: 加入“正式二进制被 LFS 覆盖”通过用例，并运行测试确认红灯**
 
 在 `try` 内追加以下用例；此时检查器尚不存在，因此命令应以“缺少 checker”失败。
 
@@ -92,7 +92,7 @@ powershell -ExecutionPolicy Bypass -File tools/tests/check-asset-versioning-test
 
 预期：失败并包含 `Missing checker`，证明测试先于实现存在。
 
-- [ ] **Step 3: 加入两个失败关闭用例**
+- [x] **Step 3: 加入两个失败关闭用例**
 
 在通过用例后追加以下两段。第一段缺少 PNG 的 LFS 属性，第二段错误把 Unity 场景纳入 LFS；两者都必须返回退出码 `1`。
 
@@ -113,7 +113,7 @@ src/Assets/Scenes/**/*.unity filter=lfs diff=lfs merge=lfs -text
 Assert-ExitCode 1 $LASTEXITCODE 'Unity text asset fixture'
 ```
 
-- [ ] **Step 4: 提交测试先行变更**
+- [x] **Step 4: 提交测试先行变更**
 
 ```powershell
 & tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/tests/check-asset-versioning-tests.ps1'
@@ -129,7 +129,7 @@ git commit -m "test: define asset versioning checks"
 - Modify: `tools/tests/check-asset-versioning-tests.ps1`
 - Test: `tools/tests/check-asset-versioning-tests.ps1`
 
-- [ ] **Step 1: 实现检查器参数、路径和属性读取**
+- [x] **Step 1: 实现检查器参数、路径和属性读取**
 
 创建 `tools/check-asset-versioning.ps1`，使用以下完整实现。不要扫描 `assets/source/`；它是明确的本地忽略目录。
 
@@ -202,7 +202,7 @@ if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
 'check-asset-versioning: OK'
 ```
 
-- [ ] **Step 2: 运行测试确认绿灯**
+- [x] **Step 2: 运行测试确认绿灯**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/tests/check-asset-versioning-tests.ps1
@@ -210,7 +210,7 @@ powershell -ExecutionPolicy Bypass -File tools/tests/check-asset-versioning-test
 
 预期：退出码 `0`；通过 fixture 返回 `0`，遗漏 LFS 与 Unity 文本误入 LFS 两个 fixture 均被检查器拒绝。
 
-- [ ] **Step 3: 对当前工作树运行无资源目录基线检查**
+- [x] **Step 3: 对当前工作树运行无资源目录基线检查**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1
@@ -218,7 +218,7 @@ powershell -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1
 
 预期：退出码 `0`，输出 `src/Assets/Art does not exist yet`；不得创建空 `Art` 目录。
 
-- [ ] **Step 4: 提交检查器实现**
+- [x] **Step 4: 提交检查器实现**
 
 ```powershell
 & tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/check-asset-versioning.ps1|tools/tests/check-asset-versioning-tests.ps1'
@@ -236,7 +236,7 @@ git commit -m "feat: validate LFS asset boundaries"
 - Modify: `.gitignore`
 - Test: `tools/check-asset-versioning.ps1`
 
-- [ ] **Step 1: 新增 LFS 属性文件**
+- [x] **Step 1: 新增 LFS 属性文件**
 
 创建根目录 `.gitattributes`，内容必须精确限定在正式资源根目录：
 
@@ -263,7 +263,7 @@ src/Assets/Art/**/*.ttf filter=lfs diff=lfs merge=lfs -text
 src/Assets/Art/**/*.otf filter=lfs diff=lfs merge=lfs -text
 ```
 
-- [ ] **Step 2: 为本地原始素材增加忽略规则**
+- [x] **Step 2: 为本地原始素材增加忽略规则**
 
 在 `.gitignore` 的 `# Project documentation (local only)` 小节前插入：
 
@@ -272,7 +272,7 @@ src/Assets/Art/**/*.otf filter=lfs diff=lfs merge=lfs -text
 assets/source/
 ```
 
-- [ ] **Step 3: 创建资源规范与登记册模板**
+- [x] **Step 3: 创建资源规范与登记册模板**
 
 在 `docs/资源管理/美术资源版本管理规范.md` 写明以下不可省略规则：
 
@@ -309,7 +309,7 @@ assets/source/
 |------|----------|----------|------|----------|--------|----------------|--------------|
 ```
 
-- [ ] **Step 4: 初始化 LFS 并验证配置文件**
+- [x] **Step 4: 初始化 LFS 并验证配置文件**
 
 ```powershell
 git lfs install --local
@@ -320,7 +320,7 @@ powershell -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1
 
 预期：PNG 输出 `filter: lfs`；场景文件输出 `filter: unspecified`；检查器在尚无 `Art` 目录时返回 `0`。
 
-- [ ] **Step 5: 提交配置和文档**
+- [x] **Step 5: 提交配置和文档**
 
 ```powershell
 & tools/check-pending-whitespace.ps1 -ExpectedPaths '.gitattributes|.gitignore|docs/资源管理/美术资源版本管理规范.md|docs/资源管理/美术资源登记册.md'
@@ -339,7 +339,7 @@ git commit -m "docs: establish LFS asset workflow"
 - Modify: `开发管理/自动工作流规则.txt`
 - Test: `tools/check-review-text.ps1`
 
-- [ ] **Step 1: 在 Unity backlog 登记资产治理任务**
+- [x] **Step 1: 在 Unity backlog 登记资产治理任务**
 
 在 `开发管理/任务列表/场景与Unity任务.txt` 的近期任务表中，在 TQ-070 后增加：
 
@@ -352,17 +352,17 @@ git commit -m "docs: establish LFS asset workflow"
 
 在“G1/P1 任务执行边界”后新增“资产版本管理任务边界”：TQ-072 必须不创建假资源或空 `Art` 目录；TQ-073 必须有通过与失败 fixture；TQ-074 必须使用真实资源且验证干净工作区恢复；AVM-04 不得因主观担忧迁移 SVN/UVCS。
 
-- [ ] **Step 2: 保持当前队列只含既有 P0/P1 切片**
+- [x] **Step 2: 保持当前队列只含既有 P0/P1 切片**
 
 在 `开发管理/当前任务队列.txt` 的“不进入 `1` 队列的当前事项”中，将范围说明从 `TQ-055～TQ-071` 更新为 `TQ-055～TQ-074`，并追加“AVM-01～AVM-03 已登记于场景与 Unity backlog；在 G2/G3 P0 任务无可领取项时，才按依赖补位，当前不复制进近期表。”
 
-- [ ] **Step 3: 记录建议和验证入口**
+- [x] **Step 3: 记录建议和验证入口**
 
 在 `开发管理/开发-下一步建议.txt` 的“当前开发判断”追加：资产版本管理采用 GitHub + Git LFS；`assets/source/` 是本地忽略目录并以百度网盘备份；TQ-072～TQ-074 是不抢占 P0 的后续工程治理切片。
 
 在 `开发管理/状态与建议维护规则.txt` 的“检查脚本入口”追加：当变更涉及 `.gitattributes`、`src/Assets/Art/` 或 `docs/资源管理/美术资源登记册.md` 时，运行 `powershell -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`；没有这些路径时不要运行该检查。
 
-- [ ] **Step 4: 添加自动控制器条件规则**
+- [x] **Step 4: 添加自动控制器条件规则**
 
 在 `开发管理/自动工作流规则.txt` 的每轮第 6 步验证说明后追加：若本轮 `expectedPaths` 包含 `.gitattributes`、`src/Assets/Art/` 或 `docs/资源管理/美术资源登记册.md`，在暂存前运行：
 
@@ -372,7 +372,7 @@ powershell -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1
 
 否则跳过该检查；无论是否运行都保留现有行尾空白、`git diff --cached --check` 与任务自身验证要求。
 
-- [ ] **Step 5: 验证管理文本与路由**
+- [x] **Step 5: 验证管理文本与路由**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理
@@ -384,7 +384,7 @@ git diff --check
 
 预期：文本检查和差异检查返回 `0`；四条 AVM backlog 条目各出现一次；近期队列不新增 AVM 表格行。
 
-- [ ] **Step 6: 提交工作流与 backlog 路由**
+- [x] **Step 6: 提交工作流与 backlog 路由**
 
 ```powershell
 & tools/check-pending-whitespace.ps1 -ExpectedPaths '开发管理/任务列表/场景与Unity任务.txt|开发管理/当前任务队列.txt|开发管理/开发-下一步建议.txt|开发管理/状态与建议维护规则.txt|开发管理/自动工作流规则.txt'
@@ -392,6 +392,11 @@ git add -- 开发管理/任务列表/场景与Unity任务.txt 开发管理/当�
 git diff --cached --check
 git commit -m "docs: schedule asset versioning workflow"
 ```
+
+## 执行记录
+
+- 2026-07-12：Task 1 与 Task 2 先完成红绿验证，再合并为 `d010d95`，以避免将依赖尚不存在检查器的测试单独留在不可运行提交中。
+- 2026-07-12：Task 3 已由 `befc09a` 完成；Task 4 已由 `743b30d` 完成。
 
 ## 延后执行的真实资源闭环
 
