@@ -26,9 +26,8 @@ $maintenanceName = ConvertFrom-Utf8Base64 '54q25oCB5LiO5bu66K6u57u05oqk6KeE5YiZL
 $collaborationName = ConvertFrom-Utf8Base64 'QUnljY/kvZzop4TliJkudHh0'
 $rulePattern = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB6KeE5YiZXC50eHQ='
 $readOnlyPattern = (ConvertFrom-Utf8Base64 '5Y+q6K+7') + '|read-only'
-$titleRulePattern = ConvertFrom-Utf8Base64 '5a+56K+d5qCH6aKYfOagh+mimOabtOaWsA=='
-$titleFormatPattern = ConvertFrom-Utf8Base64 'VFpH772cPOS4reaWh+eugOi/sD4='
-$titleFailurePattern = ConvertFrom-Utf8Base64 '5pS55ZCN5aSx6LSlfOagh+mimOabtOaWsOWksei0pQ=='
+$titleToolPattern = 'set_thread_title'
+$taskSummaryPattern = ConvertFrom-Utf8Base64 '5Lit5paH566A6L+w'
 
 $rules = Join-Path $root (Join-Path $devMgmt $rulesName)
 $status = Join-Path $root (Join-Path $devMgmt $statusName)
@@ -52,12 +51,12 @@ $paused = @(
 )
 Require-Match $controller '^name = "TZG Hourly Controller"$' 'controller has not been renamed'
 Reject-Match $controller 'TQ-[0-9]+|HANDOFF-[0-9]+' 'controller prompt contains a hardcoded task id'
-Require-Match $rules $titleRulePattern 'workflow rules do not define conversation titles'
-Require-Match $reviewEntry $titleRulePattern 'review entry does not define manual conversation titles'
-Require-Match $collaboration $titleRulePattern 'collaboration rules do not define manual conversation titles'
-Require-Match $controller 'set_thread_title' 'controller prompt does not rename its conversation'
-Require-Match $controller $titleFormatPattern 'controller prompt does not use a human-readable title format'
-Require-Match $controller $titleFailurePattern 'controller prompt does not preserve execution when renaming fails'
+Require-Match (Join-Path $root 'AGENTS.md') 'tools\.codex_app__set_thread_title' 'AGENTS manual workflow does not call the title tool'
+Require-Match (Join-Path $root 'CLAUDE.md') 'tools\.codex_app__set_thread_title' 'CLAUDE manual workflow does not call the title tool'
+Require-Match $reviewEntry 'tools\.codex_app__set_thread_title' 'review entry does not call the title tool'
+Require-Match $collaboration 'tools\.codex_app__set_thread_title' 'collaboration rules do not call the title tool'
+Reject-Match $controller $titleToolPattern 'controller still attempts to rename a thread'
+Require-Match $controller $taskSummaryPattern 'controller does not record the human-readable task summary in memory'
 foreach ($id in $paused) {
   Require-Match (Join-Path $automationRoot "$id\automation.toml") '^status = "PAUSED"$' "$id is not paused"
 }
