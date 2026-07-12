@@ -72,6 +72,9 @@ node_modules/
 *.swp
 ~$*
 
+# Local source-art workspace; back up outside Git.
+assets/source/
+
 # Game build artifacts
 dist/
 out/
