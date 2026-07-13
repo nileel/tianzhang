@@ -11,7 +11,6 @@
 
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
-| U-ARCH-01 / TQ-065 | P1 | Codex | 待处理 | 拆分 `ExplorationController` / `SceneBuilder` 至少一条真实职责与依赖边。 |
 | U-ARCH-02 / TQ-066 | P1 | Codex | 待处理 | 拆分 `BattleUIManager` / `Character` 的 UI 与领域职责。 |
 | U-ARCH-03 / TQ-067 | P1 | Codex | 阻塞（TQ-065、TQ-066） | 建立项目派生 asmdef 边界并保持序列化兼容。 |
 | S-STATE-01 / TQ-068 | P1 | Codex | 待处理 | 最小 GameSession、世界时间和起点状态模型；完整定义见当前任务队列。 |

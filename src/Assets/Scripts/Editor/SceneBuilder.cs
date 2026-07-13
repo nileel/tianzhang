@@ -21,52 +21,11 @@ namespace TianZhang.Editor
 {
     public static class SceneBuilder
     {
-        private const string DataPath = "Assets/Data";
-
         // 场景路径常量（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
         private const string StartMenuScenePath = "Assets/Scenes/StartMenuScene.unity";
         private const string WorldScenePath = "Assets/Scenes/WorldScene.unity";
         private const string SettlementScenePath = "Assets/Scenes/SettlementScene.unity";
         private const string AdventureScenePath = "Assets/Scenes/AdventureScene.unity";
-                private static void CreateDemoData()
-        {
-            EnsureDir($"{DataPath}/Characters");
-            EnsureDir($"{DataPath}/Spells");
-
-            var p = ScriptableObject.CreateInstance<CharacterData>();
-            p.charName = "太一修士";
-            p.rootBone = 14; p.physique = 14; p.spirit = 14; p.mind = 14; p.reaction = 14; p.talent = 14;
-            p.blockRate = 8; p.soulShieldRate = 10; p.critRate = 5; p.critDamage = 15;
-            p.realmMultiplier = 1.5f;
-            p.equippedSpells = new[] { "金光破岳", "流火灵符" };
-            AssetDatabase.CreateAsset(p, $"{DataPath}/Characters/Char_Player.asset");
-
-            var e = ScriptableObject.CreateInstance<CharacterData>();
-            e.charName = "散修";
-            e.rootBone = 12; e.physique = 12; e.spirit = 10; e.mind = 10; e.reaction = 12; e.talent = 10;
-            e.blockRate = 6; e.soulShieldRate = 4; e.critRate = 4; e.critDamage = 10;
-            e.realmMultiplier = 1.5f;
-            e.equippedSpells = new[] { "暗蚀" };
-            AssetDatabase.CreateAsset(e, $"{DataPath}/Characters/Char_Enemy.asset");
-
-            var s1 = ScriptableObject.CreateInstance<SpellData>();
-            s1.spellName = "金光破岳"; s1.type = SpellType.Physical; s1.range = SpellRange.Melee;
-            s1.minRange = 1; s1.maxRange = 1; s1.mpCost = 15; s1.cooldownTicks = 30; s1.damageMultiplier = 1.6f;
-            AssetDatabase.CreateAsset(s1, $"{DataPath}/Spells/Spell_spell_jinguangpoyue.asset");
-
-            var s2 = ScriptableObject.CreateInstance<SpellData>();
-            s2.spellName = "流火灵符"; s2.type = SpellType.Magic; s2.range = SpellRange.Ranged;
-            s2.minRange = 1; s2.maxRange = 3; s2.mpCost = 20; s2.cooldownTicks = 35; s2.damageMultiplier = 1.5f;
-            AssetDatabase.CreateAsset(s2, $"{DataPath}/Spells/Spell_spell_liuhuolingfu.asset");
-
-            var s3 = ScriptableObject.CreateInstance<SpellData>();
-            s3.spellName = "暗蚀"; s3.type = SpellType.Magic; s3.range = SpellRange.Melee;
-            s3.minRange = 1; s3.maxRange = 1; s3.mpCost = 15; s3.cooldownTicks = 30; s3.damageMultiplier = 1.4f;
-            AssetDatabase.CreateAsset(s3, $"{DataPath}/Spells/Spell_spell_tx_anshi.asset");
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
 
         /// <summary>
         /// 创建正交主相机（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
@@ -495,84 +454,5 @@ namespace TianZhang.Editor
             Debug.Log("<color=cyan>天章副本场景已生成</color>");
         }
 
-        [MenuItem("Tools/天章/生成探索场景")]
-        public static void BuildExplorationScene()
-        {
-            CreateDemoData();
-
-            var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
-                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
-                UnityEditor.SceneManagement.NewSceneMode.Single);
-
-            // Camera
-            CreateMainCamera(12f, new Color(0.08f, 0.1f, 0.14f));
-
-            // Hex Grid (复用战斗场景基础设施)
-            var gridGo = new GameObject("HexGrid");
-            var grid = gridGo.AddComponent<Grid>();
-            grid.cellLayout = GridLayout.CellLayout.Hexagon;
-            grid.cellSize = new Vector3(1, 1, 0);
-
-            var groundGo = new GameObject("Ground");
-            groundGo.transform.SetParent(gridGo.transform);
-            var groundTml = groundGo.AddComponent<Tilemap>();
-            var groundRnd = groundGo.AddComponent<TilemapRenderer>();
-            groundTml.color = new Color(0.35f, 0.4f, 0.45f);
-
-            var overlayGo = new GameObject("Overlay");
-            overlayGo.transform.SetParent(gridGo.transform);
-            var overlayTml = overlayGo.AddComponent<Tilemap>();
-            var overlayRnd = overlayGo.AddComponent<TilemapRenderer>();
-            overlayRnd.sortingOrder = 1;
-
-            var unitGo = new GameObject("Units");
-            unitGo.transform.SetParent(gridGo.transform);
-            var unitTml = unitGo.AddComponent<Tilemap>();
-            var unitRnd = unitGo.AddComponent<TilemapRenderer>();
-            unitRnd.sortingOrder = 2;
-
-            // TilemapManager
-            var mgrGo = new GameObject("TilemapManager");
-            var mgr = mgrGo.AddComponent<HexTilemapManager>();
-            mgr.groundTilemap = groundTml;
-            mgr.overlayTilemap = overlayTml;
-            mgr.unitTilemap = unitTml;
-            mgr.gridRadius = 15;
-            mgr.groundTile = MakeTile("GroundTile", new Color(0.3f, 0.5f, 0.2f));
-            mgr.moveHighlightTile = MakeTile("MoveHighlight", new Color(0.2f, 0.8f, 0.2f, 0.4f));
-            mgr.attackHighlightTile = MakeTile("AttackHighlight", new Color(0.8f, 0.2f, 0.2f, 0.4f));
-            mgr.selectedTile = MakeTile("Selected", new Color(1f, 0.8f, 0.2f, 0.5f));
-            mgr.unitPrefab = MakeUnitPrefab();
-
-            // Exploration Controller
-            var explGo = new GameObject("ExplorationController");
-            var explCtrl = explGo.AddComponent<TianZhang.Map.ExplorationController>();
-            explCtrl.tilemapManager = mgr;
-            explCtrl.mapRadius = 12;
-            explCtrl.obstaclePercent = 15;
-            explCtrl.enemyCount = 4;
-            explCtrl.playerSpells = new[] {
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_spell_jinguangpoyue.asset"),
-                AssetDatabase.LoadAssetAtPath<SpellData>($"{DataPath}/Spells/Spell_spell_liuhuolingfu.asset"),
-            };
-
-            // UI Manager（Canvas 由 BattleUIManager.Awake 自动创建）
-            var uiGo = new GameObject("UIManager");
-            var ui = uiGo.AddComponent<BattleUIManager>();
-            explCtrl.uiManager = ui;
-
-            // EventSystem
-            var evGo = new GameObject("EventSystem");
-            evGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            evGo.AddComponent<InputSystemUIInputModule>();
-
-            // GameManager
-            var gmGo = new GameObject("GameManager");
-            gmGo.AddComponent<GameManager>();
-
-            string scenePath = "Assets/Scenes/ExplorationScene.unity";
-            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
-            Debug.Log("<color=cyan>天章探索场景已生成</color>");
-        }
     }
 }

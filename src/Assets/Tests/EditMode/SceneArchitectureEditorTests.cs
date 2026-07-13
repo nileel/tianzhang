@@ -59,6 +59,16 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void LegacyExplorationSceneGeneratorIsNotExposed()
+        {
+            var legacyGenerator = typeof(SceneBuilder).GetMethod(
+                "BuildExplorationScene",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+            Assert.IsNull(legacyGenerator);
+        }
+
+        [Test]
         public void StartMenuSceneContainsSectSelectionFlow()
         {
             SceneBuilder.BuildStartMenuScene();

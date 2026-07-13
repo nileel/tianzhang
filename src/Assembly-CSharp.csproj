@@ -92,6 +92,7 @@
     <Compile Include="Assets\Scripts\Map\ExplorationController.cs" />
     <Compile Include="Assets\Scripts\Cultivation\GongFaGrowthData.cs" />
     <Compile Include="Assets\Scripts\Entity\Character.cs" />
+    <Compile Include="Assets\Scripts\Entity\CombatantPanelState.cs" />
     <Compile Include="Assets\Scripts\Game\GameSession.cs" />
     <Compile Include="Assets\Scripts\World\WorldNodeDefinition.cs" />
     <Compile Include="Assets\Scripts\World\WorldSceneController.cs" />

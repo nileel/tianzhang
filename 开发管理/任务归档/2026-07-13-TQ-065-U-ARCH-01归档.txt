@@ -1,0 +1,20 @@
+# TQ-065 · U-ARCH-01 场景职责边归档（✅ 已审核）
+
+## 结论
+
+按 `DEC-20260712-5C82B96E9054` 的已解析选项 A，移除 `SceneBuilder` 中旧的“生成探索场景”菜单、`BuildExplorationScene` 构建入口及其仅为旧入口服务的 Demo Data 构建链。正式场景生成和注册仍只以 StartMenu、World、Settlement、Adventure 四个场景为边界，`AdventureScene` 继续承载单场探索/遭遇闭环。
+
+这消除了 `ExplorationScene` 与正式 `AdventureScene` 的竞争入口；未修改 `ExplorationController` 的序列化字段、场景或预制体资产 GUID。
+
+## 回归与编译清单
+
+- 新增 `LegacyExplorationSceneGeneratorIsNotExposed`：先在旧公共入口仍存在时失败，再在删除后通过。
+- `Assembly-CSharp.csproj` 原为已追踪的显式编译清单，但缺少已存在的 `Assets/Scripts/Entity/CombatantPanelState.cs`，导致与 Unity 编译入口不一致。补齐该条目后，独立 .NET 编译恢复通过；未改变运行时逻辑。
+
+## 验证证据
+
+- `dotnet build src/Assembly-CSharp.csproj --no-restore`：通过（0 警告、0 错误）。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：通过（0 警告、0 错误）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`：通过，64/64 EditMode。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过。
+- `git diff --check`：通过。
