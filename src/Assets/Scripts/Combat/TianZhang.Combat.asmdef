@@ -1,0 +1,7 @@
+{
+    "name": "TianZhang.Combat",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Domain"
+    ]
+}

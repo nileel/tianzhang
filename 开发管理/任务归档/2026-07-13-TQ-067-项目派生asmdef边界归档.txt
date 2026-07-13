@@ -1,0 +1,23 @@
+# TQ-067 · 项目派生 asmdef 边界（完成归档）
+
+- 完成日期：2026-07-13
+- 执行方：Codex / gpt-5.6-terra
+- 范围依据：`UNITY_STRUCTURE.md`、`开发管理/运行时所有者记录-TQ-060.txt` 与当前任务队列。
+
+## 结论与交付
+
+- 运行时程序集现在按 `Foundation → Domain → Combat → Gameplay` 单向引用：`Core` 是基础层；`Entity` 与 `Cultivation` 保持同一领域程序集；`Combat` 只向下引用；`Game`、正式场景控制器、旧探索原型及格位/渲染协作者保持在最上层 Gameplay，避免现有 `Game ↔ Adventure/Map` 与 `Entity ↔ Cultivation` 的同层循环跨越程序集边界。
+- `Cultivation` 与非连续的 Gameplay 目录通过 `.asmref` 加入所属程序集，因此所有现有脚本、`.meta` GUID、场景和预制体路径均未移动或重写。
+- Editor 与 EditMode 测试程序集改为显式引用四个项目程序集；旧根 `TianZhang.Runtime` 保留为非自动引用的空兼容定义，不再承载运行时代码。
+- 新增 EditMode 回归读取程序集定义和引用资产，锁定依赖方向与目录归属。
+
+## 回归证据
+
+- 测试先行：新增边界回归后，Unity EditMode 如预期因缺少 `TianZhang.Foundation.asmdef` 失败（65 通过、1 失败）。
+- `dotnet build -c Release --no-restore src/Assembly-CSharp.csproj` 与 `dotnet build -c Release --no-restore src/TianZhang.EditModeTests.csproj` 通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：66 通过、0 失败。
+
+## 后续边界
+
+- 本切片只建立程序集编译边界，不调整场景流转、战斗、数据语义或数值。
+- 更细粒度地拆分 Gameplay 之前，必须先消除其中现有的反向运行时引用并为新边界补充独立回归；不得以 sibling feature 直接引用绕过本层级。

@@ -3,7 +3,10 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "TianZhang.Runtime",
+        "TianZhang.Foundation",
+        "TianZhang.Domain",
+        "TianZhang.Combat",
+        "TianZhang.Gameplay",
         "TianZhang.Editor"
     ],
     "includePlatforms": [

@@ -1,16 +1,11 @@
 {
-    "name": "TianZhang.Editor",
+    "name": "TianZhang.Gameplay",
     "references": [
         "TianZhang.Foundation",
         "TianZhang.Domain",
         "TianZhang.Combat",
-        "TianZhang.Gameplay",
         "Unity.InputSystem",
         "Unity.InputSystem.ForUI",
         "UnityEngine.UI"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": []
+    ]
 }
