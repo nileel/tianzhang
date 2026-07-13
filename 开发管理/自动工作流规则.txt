@@ -17,6 +17,7 @@
 5. 选定真实工作对象后、读取实施细则前，从 Node REPL 本轮元数据取得并交叉校验 `currentThreadId`，再调用 `%USERPROFILE%\.codex\automation-tools\set-thread-name.mjs`：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用任务编号；不得调用 `list_threads` 猜测当前任务，不得硬编码或复用历史任务 ID。无候选、锁占用、身份失败或 `currentThreadId` 校验失败时不改名。改名失败或五秒超时只记录 automation memory，不影响路由、验证、提交或失败关闭。
 6. Codex 任务由控制器直接执行。只有合法 DeepSeek / Claude 主责候选已选中后，才预检 Claude CLI 与代理身份，并读取 `开发管理/DeepSeek工作提示词.txt` 和 `开发管理/AI协作规则.txt`；DeepSeek 子进程只修改 `expectedPaths`、标记未审核并写交接，不得 stage 或 commit。只有控制器拥有 stage/commit 权限并负责最终验证与提交。
 7. DeepSeek 预检在任何 mutation 前失败时调用 `RecordWorkerFailure`，记录有限退避并继续选择安全 Codex 候选；预检成功时调用 `ClearWorkerFailure`。配置执行器映射与本轮运行可用性是两个概念，不得因临时预检失败改派主责。
+   DeepSeek worker backoff 生效期间，从 runnable 候选和库存中排除 DeepSeek 候选；排除后重新计算低水位 2、高水位 5 的库存与补位判断。只有 backoff 过期或 `ClearWorkerFailure` 成功后才恢复并重新纳入 DeepSeek 候选。
 8. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。只对 `expectedPaths` 运行行尾空白修复与复检，只 `git add -- @expectedPaths`，并使用 `git commit --only -m "$commitMessage" -- @expectedPaths`。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
 9. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检。仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮；任何非文本、路径外或复检仍失败的问题按失败关闭。暂存后必须运行 `git diff --cached --check`。
 
@@ -62,6 +63,7 @@
 - 首次中断不计恢复次数，随后最多恢复两次；第二次恢复仍失败转 `AUTO-BLOCKED`。
 - 只有 Git 变更路径全部属于已记录 `expectedPaths` 时才能恢复；额外路径一律阻塞。
 - 控制器自有 pending decision 或有效阻塞必须在修改前登记状态文件 `expectedPaths` 和 checkpoint，验证后作为有效结果提交；若中断或提交失败，必须保留精确恢复指针。禁止出现 `IDLE + no recovery + controller-owned dirty file`。
+- 若在选题后追加控制器自有状态路径，必须先形成扩展后的完整 `expectedPaths`，再再次调用 workspace guard `Check`。若该状态路径与 baseline 冲突，不得写、暂存或提交该状态路径，并保留原任务的恢复或失败语义；冲突状态路径不得加入 `Verify` 的 `expectedPaths` 排除集合，不能借扩展范围隐藏人工差异。
 - `ResetBlocked` 只能由人工在处理原因后明确调用。
 
 ## 提交与失败关闭

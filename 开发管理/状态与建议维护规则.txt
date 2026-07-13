@@ -25,6 +25,8 @@
 
 runnable 必须同时满足：状态为待处理；所有前置任务已完成，任何 DeepSeek 前置产物已由 Codex 完成复审；主责唯一映射到已配置执行器；任务本身无待决策，存在 pending decision 时排除原任务及其全部传递后继；内容冻结与项目闸门均满足；修改前可推导完整 `expectedPaths`；`expectedPaths` 与 workspace baseline 不冲突。配置执行器映射只表示控制器有权调度，不等于执行器已通过本轮运行预检。
 
+DeepSeek worker backoff 生效期间，从 runnable 候选和库存中排除 DeepSeek 候选；排除后重新计算低水位 2、高水位 5 的库存与补位判断。只有 backoff 过期或 `ClearWorkerFailure` 成功后才恢复并重新纳入 DeepSeek 候选；不得因临时退避改派主责。
+
 ## 状态与队列
 
 1. `设计-当前状态.txt` 只写已验证结果、当前版本、已知风险和数据快照；未执行的下一步不写入正文。

@@ -19,6 +19,43 @@ function Reject-Match {
   if (Select-String -Quiet -LiteralPath $Path -Pattern $Pattern) { $findings.Add($Message) }
 }
 
+function Get-TomlTopLevelRawValue {
+  param([string]$Path, [string]$Key)
+  $escapedKey = [regex]::Escape($Key)
+  $matchingLines = @(Get-Content -LiteralPath $Path | Where-Object { $_ -match "^\s*$escapedKey\s*=" })
+  if ($matchingLines.Count -ne 1) {
+    $findings.Add("controller TOML must contain exactly one top-level $Key field")
+    return $null
+  }
+  if ($matchingLines[0] -notmatch "^\s*$escapedKey\s*=\s*(?<value>.+?)\s*$") {
+    $findings.Add("controller TOML has an invalid top-level $Key field")
+    return $null
+  }
+  $Matches['value']
+}
+
+function ConvertFrom-TomlBasicString {
+  param([AllowNull()][string]$RawValue, [string]$Label)
+  if ($null -eq $RawValue -or $RawValue -notmatch '^"(?:\\.|[^"\\])*"$') {
+    $findings.Add("controller TOML $Label must be a basic string")
+    return $null
+  }
+  try {
+    $RawValue | ConvertFrom-Json
+  } catch {
+    $findings.Add("controller TOML $Label contains an invalid basic string")
+    $null
+  }
+}
+
+function Require-TomlStringValue {
+  param([string]$Path, [string]$Key, [string]$Expected)
+  $actual = ConvertFrom-TomlBasicString (Get-TomlTopLevelRawValue $Path $Key) $Key
+  if ($null -ne $actual -and $actual -cne $Expected) {
+    $findings.Add("controller TOML $Key must equal $Expected")
+  }
+}
+
 $devMgmt = ConvertFrom-Utf8Base64 '5byA5Y+R566h55CG'
 $rulesName = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB6KeE5YiZLnR4dA=='
 $statusName = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB54q25oCBLnR4dA=='
@@ -66,6 +103,51 @@ $paused = @(
   'tzg-wf3-claude-execute-1',
   'tzg-wf4-codex-execute-2'
 )
+Require-TomlStringValue $controller 'id' 'tzg-hourly-controller'
+Require-TomlStringValue $controller 'kind' 'cron'
+Require-TomlStringValue $controller 'rrule' 'FREQ=HOURLY;INTERVAL=1;BYMINUTE=15'
+Require-TomlStringValue $controller 'model' 'gpt-5.6-terra'
+Require-TomlStringValue $controller 'reasoning_effort' 'high'
+Require-TomlStringValue $controller 'execution_environment' 'local'
+
+$projectRoot = 'D:\天章游戏开发'
+$targetRaw = Get-TomlTopLevelRawValue $controller 'target'
+if ($null -ne $targetRaw) {
+  if ($targetRaw -notmatch '^\{\s*type\s*=\s*(?<type>"(?:\\.|[^"\\])*")\s*,\s*project_id\s*=\s*(?<project>"(?:\\.|[^"\\])*")\s*\}$') {
+    $findings.Add('controller TOML target must contain only type and project_id')
+  } else {
+    $targetType = ConvertFrom-TomlBasicString $Matches['type'] 'target.type'
+    $targetProject = ConvertFrom-TomlBasicString $Matches['project'] 'target.project_id'
+    if ($null -ne $targetType -and $targetType -cne 'project') { $findings.Add('controller TOML target.type must equal project') }
+    if ($null -ne $targetProject -and $targetProject -cne $projectRoot) { $findings.Add("controller TOML target.project_id must equal $projectRoot") }
+  }
+}
+
+$cwdsRaw = Get-TomlTopLevelRawValue $controller 'cwds'
+if ($null -ne $cwdsRaw) {
+  if ($cwdsRaw -notmatch '^\[(?<items>.*)\]$') {
+    $findings.Add('controller TOML cwds must be an array')
+  } else {
+    $itemText = $Matches['items']
+    $cwdMatches = @([regex]::Matches($itemText, '"(?:\\.|[^"\\])*"'))
+    $remainder = [regex]::Replace($itemText, '"(?:\\.|[^"\\])*"', '') -replace '[,\s]', ''
+    if ($remainder.Length -ne 0 -or $cwdMatches.Count -ne 1) {
+      $findings.Add('controller TOML cwds must contain exactly one project path')
+    } else {
+      $cwdValue = ConvertFrom-TomlBasicString $cwdMatches[0].Value 'cwds[0]'
+      if ($null -ne $cwdValue -and $cwdValue -cne $projectRoot) { $findings.Add("controller TOML cwds must contain only $projectRoot") }
+    }
+  }
+}
+
+$controllerIdFiles = @(
+  Get-ChildItem -Path $automationRoot -Recurse -Filter 'automation.toml' -File |
+    Where-Object { Select-String -Quiet -LiteralPath $_.FullName -Pattern '^id\s*=\s*"tzg-hourly-controller"\s*$' }
+)
+if ($controllerIdFiles.Count -ne 1) {
+  $findings.Add("expected exactly one tzg-hourly-controller id, found $($controllerIdFiles.Count)")
+}
+
 Require-Match $controller '^name = "TZG Hourly Controller"$' 'controller has not been renamed'
 Reject-Match $controller 'TQ-[0-9]+|HANDOFF-[0-9]+|DEC-' 'controller prompt contains a hardcoded task, handoff, or decision id'
 Reject-Match $controller '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}' 'controller prompt contains a historical thread id'
@@ -91,7 +173,17 @@ foreach ($source in $v2Sources) {
   Require-Match $source.Path 'DeepSeek工作提示词\.txt' "$($source.Label) does not route DeepSeek workers through their prompt"
   Require-Match $source.Path 'git commit --only' "$($source.Label) does not require path-limited commits"
   Require-Match $source.Path '控制器自有[^\r\n]*(提交|恢复指针)|(提交|恢复指针)[^\r\n]*控制器自有' "$($source.Label) does not submit controller-owned state or preserve a recovery pointer"
+  Require-Match $source.Path '扩展后的完整[^\r\n]*expectedPaths[^\r\n]*(再次|重新)[^\r\n]*(workspace guard[^\r\n]*)?Check' "$($source.Label) does not re-check expanded controller-owned expectedPaths"
+  Require-Match $source.Path '冲突[^\r\n]*不得[^\r\n]*(写|暂存|提交)[^\r\n]*状态路径' "$($source.Label) does not protect a conflicting controller-owned state path"
+  Require-Match $source.Path '冲突[^\r\n]*状态路径[^\r\n]*不得[^\r\n]*(Verify|排除)' "$($source.Label) may hide a conflicting state path from workspace verification"
+  Require-Match $source.Path 'backoff[^\r\n]*(排除|不计入)[^\r\n]*DeepSeek[^\r\n]*(候选|库存)|DeepSeek[^\r\n]*backoff[^\r\n]*(排除|不计入)' "$($source.Label) does not exclude DeepSeek candidates during worker backoff"
+  Require-Match $source.Path '排除后[^\r\n]*重新计算[^\r\n]*(低水位[^\r\n]*2[^\r\n]*高水位[^\r\n]*5|2[^\r\n]*5)' "$($source.Label) does not recompute 2-to-5 runnable inventory after backoff exclusion"
+  Require-Match $source.Path '(backoff|退避)[^\r\n]*(过期|ClearWorkerFailure)[^\r\n]*(恢复|重新纳入)' "$($source.Label) restores DeepSeek candidates before backoff expiry or clear"
 }
+
+Require-Match $maintenance 'backoff[^\r\n]*(排除|不计入)[^\r\n]*DeepSeek[^\r\n]*(候选|库存)|DeepSeek[^\r\n]*backoff[^\r\n]*(排除|不计入)' 'maintenance rules do not exclude DeepSeek candidates during worker backoff'
+Require-Match $maintenance '排除后[^\r\n]*重新计算[^\r\n]*(低水位[^\r\n]*2[^\r\n]*高水位[^\r\n]*5|2[^\r\n]*5)' 'maintenance rules do not recompute 2-to-5 runnable inventory after backoff exclusion'
+Require-Match $maintenance '(backoff|退避)[^\r\n]*(过期|ClearWorkerFailure)[^\r\n]*(恢复|重新纳入)' 'maintenance rules restore DeepSeek candidates before backoff expiry or clear'
 
 Reject-Match $controller '无恢复指针[^\r\n]*工作区不干净[^\r\n]*Complete[^\r\n]*只读退出' 'controller still globally exits on a dirty workspace without a recovery pointer'
 Reject-Match $rules '当前?队列少于\s*5\s*条|队列少于\s*5\s*条' 'workflow rules still use total queue count below 5 as a maintenance trigger'
