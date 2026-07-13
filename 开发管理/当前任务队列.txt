@@ -12,7 +12,8 @@
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-065 | P1 | Codex / gpt-5.5 | Unity 架构 | 待处理 | U-ARCH-01：拆分 ExplorationController / SceneBuilder 真实职责边 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
-| N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 金丹槽位与丹枢加成数值方案 |
+| N-GC-BASE-01 | P1 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 金丹/紫府验证输入基座与回归诊断 |
+| N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-GC-BASE-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
 
@@ -54,10 +55,20 @@
 - 验证：补齐允许/回归样例；运行相关 .NET 编译和 Unity EditMode 测试；`git diff --check`。
 - 完成条件：三类状态在三条生命周期路径均有可观察的一致性回归证据，并为 TQ-069 的状态步骤模型保留明确边界。
 
+### N-GC-BASE-01 · 金丹/紫府验证输入基座与回归诊断
+
+- 来源：N-SLOT-01 执行前的验证缺口；当前默认 BattleSim 运行无金丹样本，且紫府神通/府位输入状态为“未接入”。
+- 当前状态：待处理；依赖：无。
+- 主责：Codex / ChatGPT5.5。
+- 必读：`开发管理/任务列表/数值与战斗任务.txt`、`开发管理/任务归档/2026-07-12-TQ-055-G2覆盖与极端结果重验归档.txt`、`docs/基础设定/角色数值设计.txt`、`docs/角色养成/术法槽位设计.txt` 与 `simulations/BattleSim/Program.cs`。
+- 范围：复现并解释当前默认 200 轮、21 Build 运行与已归档金丹样本结论之间的差异；建立仅用于 BattleSim 验证的、可重复的金丹/紫府输入状态与报告口径，使成丹状态、目标席位、占据状态、丹枢接口、紫府神通数量和府位覆盖能够逐项判定为“已接入”或“未接入”。不得为获得样本而调高修炼收益、突破率、成丹阈值或战斗数值；不得设定槽位数、丹枢倍率、席位胜者或削位概率。
+- 验证：`dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim`、针对新增诊断/夹具的最小可重复测试、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`，以及 `git diff --check`。
+- 完成条件：当前与归档样本差异有可复现的准确原因；报告逐项显示金丹/紫府输入的来源、可达性和缺口；至少一组不依赖调参的受控样本可覆盖后续任务所需的既有状态字段；未把候选数值或占据结算误写成正式规则。
+
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 
 - 来源：`开发管理/任务列表/数值与战斗任务.txt` N-SLOT-01。
-- 当前状态：待处理；依赖：无已声明依赖。
+- 当前状态：阻塞（N-GC-BASE-01）；依赖：N-GC-BASE-01。
 - 主责：Codex / ChatGPT5.5。
 - 必读：`docs/基础设定/角色数值设计.txt`、`docs/基础设定/境界特性.txt`、`docs/角色养成/术法槽位设计.txt` 与 `simulations/BattleSim/Program.cs`。
 - 范围：基于已通过的 G2 覆盖和当前 BattleSim 基线，提出并验证金丹槽位与丹枢加成的数值方案；不得把未验证的通用槽位数、紫府神通数量阈值或席位竞争公式写入运行时，也不得提前实施 N-SEAT-01 的占据结算、N-SUPPRESS-01 的触发概率或伤害表调整。
