@@ -11,7 +11,7 @@
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
-| TQ-066 | P1 | Codex / gpt-5.5 | 场景与 Unity | 待处理 | U-ARCH-02：拆分 BattleUIManager / Character 的 UI 与领域职责 |
+| TQ-067 | P1 | Codex / gpt-5.5 | 场景与 Unity | 待处理 | U-ARCH-03：建立项目派生 asmdef 边界 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
@@ -44,14 +44,15 @@
 - 验证：补齐允许/回归样例；运行相关 .NET 编译和 Unity EditMode 测试；`git diff --check`。
 - 完成条件：三类状态在三条生命周期路径均有可观察的一致性回归证据，并为 TQ-069 的状态步骤模型保留明确边界。
 
-### TQ-066 · U-ARCH-02 UI 与领域职责拆分
+### TQ-067 · U-ARCH-03 项目派生 asmdef 边界
 
-- 来源：`开发管理/任务列表/场景与Unity任务.txt`。
-- 当前状态：待处理；依赖：无。
+- 来源：`开发管理/任务列表/场景与Unity任务.txt`、`UNITY_STRUCTURE.md`、可信度闸门规格 §7。
+- 当前状态：待处理；依赖：TQ-065、TQ-066 均已归档。
 - 主责：Codex / ChatGPT5.5。
-- 范围：拆分 `BattleUIManager` / `Character` 的 UI 与领域职责；不得增加或继续膨胀 Hub 类，必须保持 Unity 序列化字段、资产 GUID、场景和预制体引用兼容。
-- 验证：运行 `dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、相关 Unity EditMode 测试、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 与 `git diff --check`。
-- 完成条件：UI 与领域职责边界已拆分，并保留可验证的 Unity 回归证据。
+- 必读：`UNITY_STRUCTURE.md`、`开发管理/运行时所有者记录-TQ-060.txt`、现有 `.asmdef`、相关运行时引用及 EditMode 测试。
+- 范围：建立项目派生的 asmdef 边界；不得存在 sibling feature 直接依赖或实现层向上反向引用，且必须保持 Unity 序列化字段、资产 GUID、场景和预制体引用兼容。
+- 验证：运行相关 .NET 编译、Unity EditMode 测试、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 与 `git diff --check`。
+- 完成条件：项目派生 asmdef 的编译和 Unity 序列化兼容验证通过，并有可复现的边界扫描与回归证据。
 
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 
