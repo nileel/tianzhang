@@ -537,6 +537,7 @@ try {
   $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $submoduleBaseline)
   Assert-Code $r 0 'clean submodule snapshot'
   $cleanSubmoduleHash = Get-FileHashText $submoduleBaseline
+  $submoduleCleanBytes = [System.IO.File]::ReadAllBytes((Join-Path $submoduleParent 'modules\local\a.txt'))
 
   [System.IO.File]::AppendAllText((Join-Path $submoduleParent 'modules\local\a.txt'), "dirty internal change`n")
   $newDirtySubmoduleBaseline = Join-Path $sandbox 'dirty-submodule-new.json'
@@ -567,6 +568,53 @@ try {
     $submoduleExpectedJson = $r.Output | ConvertFrom-Json
     if ($submoduleExpectedJson.reason -ne 'expected_path_enters_submodule' -or @($submoduleExpectedJson.expectedPaths).Count -ne 1 -or $submoduleExpectedJson.expectedPaths[0] -ne $submoduleExpected) {
       throw "submodule expected-path rejection was not structured precisely: $($r.Output)"
+    }
+  }
+
+  [System.IO.File]::WriteAllBytes((Join-Path $submoduleParent 'modules\local\a.txt'), $submoduleCleanBytes)
+  Invoke-GitAt $submoduleParent @('config', '-f', '.gitmodules', 'submodule.modules/local.ignore', 'all') | Out-Null
+  Invoke-GitAt $submoduleParent @('add', '--', '.gitmodules') | Out-Null
+  Invoke-GitAt $submoduleParent @('commit', '-m', 'test: configure gitmodules ignore all') | Out-Null
+  $gitmodulesIgnoreBaseline = Join-Path $sandbox 'submodule-gitmodules-ignore-baseline.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $gitmodulesIgnoreBaseline)
+  Assert-Code $r 0 'clean submodule snapshot with .gitmodules ignore=all'
+  [System.IO.File]::AppendAllText((Join-Path $submoduleParent 'modules\local\a.txt'), "dirty hidden by gitmodules`n")
+  $gitmodulesIgnoreDirtyBaseline = Join-Path $sandbox 'submodule-gitmodules-ignore-dirty.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $gitmodulesIgnoreDirtyBaseline)
+  if ($r.Code -eq 0 -or $r.Output -notmatch 'dirty_submodule_unsupported') {
+    throw ".gitmodules ignore=all hid dirty submodule from Snapshot: code=$($r.Code) output=$($r.Output)"
+  }
+  if (Test-Path -LiteralPath $gitmodulesIgnoreDirtyBaseline) { throw '.gitmodules ignore=all dirty Snapshot created a baseline' }
+  foreach ($action in @('Check', 'Verify')) {
+    $r = Invoke-Guard @($action, '-RepositoryRoot', $submoduleParent, '-BaselinePath', $gitmodulesIgnoreBaseline, '-ExpectedPaths', 'task.txt')
+    Assert-Code $r 21 "$action overrides .gitmodules submodule ignore=all"
+    Assert-JsonSafe $r $false @('<SUBMODULE>') "$action overrides .gitmodules submodule ignore=all"
+    if (($r.Output | ConvertFrom-Json).reason -ne 'dirty_submodule_unsupported') {
+      throw "$action gitmodules-ignore dirty-submodule reason was unstable: $($r.Output)"
+    }
+  }
+  [System.IO.File]::WriteAllBytes((Join-Path $submoduleParent 'modules\local\a.txt'), $submoduleCleanBytes)
+  Invoke-GitAt $submoduleParent @('config', '-f', '.gitmodules', '--unset', 'submodule.modules/local.ignore') | Out-Null
+  Invoke-GitAt $submoduleParent @('add', '--', '.gitmodules') | Out-Null
+  Invoke-GitAt $submoduleParent @('commit', '-m', 'test: clear gitmodules ignore') | Out-Null
+
+  Invoke-GitAt $submoduleParent @('config', 'submodule.modules/local.ignore', 'all') | Out-Null
+  $localIgnoreBaseline = Join-Path $sandbox 'submodule-local-ignore-baseline.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $localIgnoreBaseline)
+  Assert-Code $r 0 'clean submodule snapshot with local ignore=all'
+  [System.IO.File]::AppendAllText((Join-Path $submoduleParent 'modules\local\a.txt'), "dirty hidden by local config`n")
+  $localIgnoreDirtyBaseline = Join-Path $sandbox 'submodule-local-ignore-dirty.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $localIgnoreDirtyBaseline)
+  if ($r.Code -eq 0 -or $r.Output -notmatch 'dirty_submodule_unsupported') {
+    throw "local ignore=all hid dirty submodule from Snapshot: code=$($r.Code) output=$($r.Output)"
+  }
+  if (Test-Path -LiteralPath $localIgnoreDirtyBaseline) { throw 'local ignore=all dirty Snapshot created a baseline' }
+  foreach ($action in @('Check', 'Verify')) {
+    $r = Invoke-Guard @($action, '-RepositoryRoot', $submoduleParent, '-BaselinePath', $localIgnoreBaseline, '-ExpectedPaths', 'task.txt')
+    Assert-Code $r 21 "$action overrides local submodule ignore=all"
+    Assert-JsonSafe $r $false @('<SUBMODULE>') "$action overrides local submodule ignore=all"
+    if (($r.Output | ConvertFrom-Json).reason -ne 'dirty_submodule_unsupported') {
+      throw "$action local-ignore dirty-submodule reason was unstable: $($r.Output)"
     }
   }
 

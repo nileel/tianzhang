@@ -258,7 +258,7 @@ function Get-BaselinePayloadHash {
 function Get-WorkspaceSnapshot {
   param([string]$Repository)
 
-  $status = Invoke-GitRaw $Repository @('status', '--porcelain=v2', '-z', '--untracked-files=all')
+  $status = Invoke-GitRaw $Repository @('status', '--porcelain=v2', '-z', '--untracked-files=all', '--ignore-submodules=none')
   $text = [string]$status.Text
   $records = $text.Split([char]0)
   $entries = [System.Collections.Generic.List[object]]::new()
