@@ -274,6 +274,45 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void GameSessionOwnsWorldTimeAcrossNewGameSceneChangesAndBattleReturn()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var flowGo = new GameObject("SceneFlowManagerTest");
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                var flow = flowGo.AddComponent<SceneFlowManager>();
+
+                flow.PrepareNewGame(null);
+
+                Assert.AreEqual(387, session.WorldYear);
+                Assert.AreEqual("autumn", session.WorldSeasonId);
+                Assert.AreEqual(1, session.WorldDay);
+                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+
+                session.AdvanceWorldDay();
+                Assert.AreEqual(2, session.WorldDay);
+                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+
+                Assert.AreEqual("AdventureScene", flow.PrepareAdventureEntry(
+                    "time_test_adventure", SceneReturnTarget.World("jiangzuo_hub")));
+                Assert.AreEqual(2, session.WorldDay);
+                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+
+                Assert.AreEqual("WorldScene", flow.PrepareReturnToPreviousScene());
+                Assert.AreEqual(2, session.WorldDay);
+                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+            }
+            finally
+            {
+                Object.DestroyImmediate(flowGo);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void SceneFlowManagerPreparesNewGameStartNodeFromOriginAndRecordsUnknownOriginFallback()
         {
             DestroyExistingSceneFlowAndSession();

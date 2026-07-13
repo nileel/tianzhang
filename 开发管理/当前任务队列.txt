@@ -10,7 +10,6 @@
 |----|--------|------|------|------|------|
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
-| TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
 | TQ-067 | P1 | Codex / gpt-5.5 | 场景与 Unity | 待处理 | U-ARCH-03：建立项目派生 asmdef 边界 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 金丹槽位与丹枢加成数值方案 |
 
@@ -33,16 +32,6 @@
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
 - 验证：每个 runtime gate 具有允许与拒绝样例；运行 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
 - 完成条件：三个字段都有唯一、可观察的运行时或显式元数据口径，G3 才可进入出口检查。
-
-### TQ-068 · S-STATE-01 最小会话状态模型
-
-- 来源：`开发管理/任务列表/场景与Unity任务.txt`、可信度闸门规格 §7。
-- 当前状态：待处理；依赖：G1 已通过。
-- 主责：Codex / ChatGPT5.5。
-- 必读：`开发管理/运行时所有者记录-TQ-060.txt`、`src/Assets/Scripts/GameSession.cs`、新游戏、场景切换与战斗返回相关脚本及现有 EditMode 测试。
-- 范围：明确并实现最小 `GameSession`、世界时间和起点状态的唯一所有者；新游戏初始化、场景切换与战斗返回后三者必须一致，不扩展任务、背包、NPC 快照或存档迁移范围。
-- 验证：补齐允许/回归样例；运行相关 .NET 编译和 Unity EditMode 测试；`git diff --check`。
-- 完成条件：三类状态在三条生命周期路径均有可观察的一致性回归证据，并为 TQ-069 的状态步骤模型保留明确边界。
 
 ### TQ-067 · U-ARCH-03 项目派生 asmdef 边界
 

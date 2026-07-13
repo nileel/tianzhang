@@ -9,6 +9,10 @@ namespace TianZhang.Game
     /// </summary>
     public class GameSession : MonoBehaviour
     {
+        public const int InitialWorldYear = 387;
+        public const string InitialWorldSeasonId = "autumn";
+        public const string InitialWorldTimeOfDayId = "dawn";
+
         private static GameSession instance;
 
         public static GameSession Instance
@@ -24,6 +28,10 @@ namespace TianZhang.Game
 
         public CharacterData PlayerProfile { get; private set; }
         public string CurrentWorldNodeId { get; private set; } = "jiangzuo_hub";
+        public int WorldYear { get; private set; } = InitialWorldYear;
+        public string WorldSeasonId { get; private set; } = InitialWorldSeasonId;
+        public int WorldDay { get; private set; } = 1;
+        public string WorldTimeOfDayId { get; private set; } = InitialWorldTimeOfDayId;
 
         /// <summary>
         /// 当前据点/副本 ID（用于返回流转时传递上下文）。
@@ -55,6 +63,7 @@ namespace TianZhang.Game
         {
             PlayerProfile = profile;
             CurrentWorldNodeId = string.IsNullOrEmpty(startNodeId) ? "jiangzuo_hub" : startNodeId;
+            ResetWorldTime();
             CurrentSettlementId = null;
             CurrentAdventureId = null;
             LastReturnTarget = default;
@@ -64,9 +73,21 @@ namespace TianZhang.Game
         {
             PlayerProfile = null;
             CurrentWorldNodeId = "jiangzuo_hub";
+            ResetWorldTime();
             CurrentSettlementId = null;
             CurrentAdventureId = null;
             LastReturnTarget = default;
+        }
+
+        /// <summary>
+        /// 仅由显式游戏行为调用的世界时间推进入口。场景切换与战斗返回不会调用它。
+        /// </summary>
+        public void AdvanceWorldDay()
+        {
+            checked
+            {
+                WorldDay++;
+            }
         }
 
         public void SetWorldNode(string nodeId)
@@ -95,6 +116,14 @@ namespace TianZhang.Game
         public void SetReturnTarget(SceneReturnTarget target)
         {
             LastReturnTarget = target;
+        }
+
+        private void ResetWorldTime()
+        {
+            WorldYear = InitialWorldYear;
+            WorldSeasonId = InitialWorldSeasonId;
+            WorldDay = 1;
+            WorldTimeOfDayId = InitialWorldTimeOfDayId;
         }
 
         private void OnDestroy()

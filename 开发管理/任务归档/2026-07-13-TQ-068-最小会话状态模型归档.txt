@@ -1,0 +1,22 @@
+# TQ-068 · 最小 GameSession、世界时间和起点状态模型（完成归档）
+
+- 完成日期：2026-07-13
+- 执行方：Codex / gpt-5.6-terra
+- 决策依据：DEC-20260713-CE70F5D43F35 已由允许发件人邮件选择 A；初始世界时间固定为昊天历 387 年秋第 1 日黎明，场景切换和战斗返回不自动耗时。
+
+## 结论与交付
+
+- `GameSession` 继续作为跨场景唯一会话所有者，并新增世界年、季节、日和日内时段的只读状态；新游戏与清空会话都会恢复到固定起点。
+- `AdvanceWorldDay` 是唯一的显式按日推进入口；当前没有场景流转、主世界移动或战斗返回调用它。
+- 新增 EditMode 回归从新游戏进入副本再返回主世界，证明起点、世界时间和既有场景上下文始终由同一会话保持；该流程显式推进到第 2 日后仍保持黎明，且流转不再额外耗时。
+
+## 回归证据
+
+- 测试先行：新增生命周期回归后，`dotnet build src/TianZhang.EditModeTests.csproj` 如预期因缺少世界时间 API 失败。
+- `dotnet build src/TianZhang.Runtime.csproj --no-restore` 与 `dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 通过，均为 0 警告、0 错误。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`：65 通过、0 失败。
+
+## 后续边界
+
+- 不引入任务、背包、NPC 快照、存档版本或迁移；这些状态由 TQ-069、TQ-070 分别处理。
+- 不定义移动、战斗、修炼或事件的自动耗时；后续系统只能通过 `GameSession.AdvanceWorldDay` 显式推进，若需要更细的时段或跨季规则，必须先补充对应事实源和回归。
