@@ -1,21 +1,24 @@
 # 自动工作流规则（✅ 已审核）
 
-> 2026-07-11 Codex：按用户批准设计，将四条三小时写入工作流收束为一个每小时串行控制器。设计依据：`docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md`。
+> 2026-07-14 Codex：v1 已实施；当前队列水位、脏工作区隔离和 Codex / DeepSeek 串行执行规则由 `docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md` 继承并覆盖。
 
 ## 自动化拓扑
 
 - `tzg-hourly-controller` 是唯一写入型 `TZG Hourly Controller`，每小时第 15 分钟触发；旧记录 `tzg-wf2-codex-execute-1` 已在替换记录创建、邮件规则和真实运行验证后删除。
-- WF1、WF3、WF4 暂停但保留历史配置与 memory；不得与控制器同时启用。
+- WF1、WF3、WF4 保持 PAUSED 并保留历史配置与 memory；不得与控制器同时启用，尤其不得恢复 WF3 独立写入。
 - 每日简报只读，不修改项目、不 stage、不提交。
 
 ## 每轮顺序
 
-1. 通过 Node REPL 确认实际模型身份；失败则只读退出。
-2. 用 `tools/automation-controller-state.ps1` 获取三小时本机租约。
-3. 检查恢复状态和完整 Git 工作区；来源不明脏改只读退出。
-4. 单轮只选择一个分支：恢复中断任务 → 最高风险待复审 → 必要队列维护 → 一个 Codex 待处理任务 → 安静退出。
-5. 选定真实工作对象后、读取实施细则前，从 Node REPL 本轮元数据取得并交叉校验 `currentThreadId`，再调用 `%USERPROFILE%\.codex\automation-tools\set-thread-name.mjs`：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用 TQ/HANDOFF 编号；不得调用 `list_threads` 猜测当前任务，不得硬编码或复用历史任务 ID。无候选、锁占用、身份失败、人工脏工作区或 `currentThreadId` 校验失败时不改名。助手失败或五秒超时只记录 automation memory，不影响任务路由、验证、提交或失败关闭。
-6. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检，再执行 `git add`；仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮，不得为此失败关闭或留待下一轮。任何非文本、路径外或复检仍失败的问题仍按失败关闭。暂存后必须运行 `git diff --cached --check`。前者覆盖未跟踪新文件，后者保留 Git 原生二次校验。
+1. 通过 Node REPL 确认实际模型身份；失败则只读退出。用 `tools/automation-controller-state.ps1 Acquire` 获取三小时本机租约，随后读取恢复指针与待决策状态。
+2. Acquire 后立即调用 `tools/automation-workspace-guard.ps1 Snapshot` 记录 HEAD、索引、已暂存、未暂存、未跟踪、重命名、删除及子模块/gitlink 基线；Snapshot 发现 dirty submodule、gitlink 异常或工具失败时失败关闭。
+3. 先恢复能够证明属于原任务的工作，再选择最高风险待复审；其后从所有配置执行器候选中按优先级串行选择。存在安全执行候选时，队列补位不得抢占本轮；只有无安全候选、队列事实错误或必须提交的 12 小时审计修正才进入独立维护。
+4. 每个候选都必须在修改前推导完整、项目相对的 `expectedPaths`，再调用 workspace guard `Check`。退出码 20 表示路径冲突：跳过该候选并继续下一项；退出码 21 表示基线变化：安全退出并保留必要恢复证据；非法输入或工具失败按失败关闭。所有候选都冲突时才安静退出。
+5. 选定真实工作对象后、读取实施细则前，从 Node REPL 本轮元数据取得并交叉校验 `currentThreadId`，再调用 `%USERPROFILE%\.codex\automation-tools\set-thread-name.mjs`：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用任务编号；不得调用 `list_threads` 猜测当前任务，不得硬编码或复用历史任务 ID。无候选、锁占用、身份失败或 `currentThreadId` 校验失败时不改名。改名失败或五秒超时只记录 automation memory，不影响路由、验证、提交或失败关闭。
+6. Codex 任务由控制器直接执行。只有合法 DeepSeek / Claude 主责候选已选中后，才预检 Claude CLI 与代理身份，并读取 `开发管理/DeepSeek工作提示词.txt` 和 `开发管理/AI协作规则.txt`；DeepSeek 子进程只修改 `expectedPaths`、标记未审核并写交接，不得 stage 或 commit。只有控制器拥有 stage/commit 权限并负责最终验证与提交。
+7. DeepSeek 预检在任何 mutation 前失败时调用 `RecordWorkerFailure`，记录有限退避并继续选择安全 Codex 候选；预检成功时调用 `ClearWorkerFailure`。配置执行器映射与本轮运行可用性是两个概念，不得因临时预检失败改派主责。
+8. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。只对 `expectedPaths` 运行行尾空白修复与复检，只 `git add -- @expectedPaths`，并使用 `git commit --only -m "$commitMessage" -- @expectedPaths`。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
+9. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检。仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮；任何非文本、路径外或复检仍失败的问题按失败关闭。暂存后必须运行 `git diff --cached --check`。
 
    若本轮 `expectedPaths` 包含 `.gitattributes`、`src/Assets/Art/` 或 `docs/资源管理/美术资源登记册.md`，在暂存前追加运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`；其他路径变更跳过该检查，且无论是否运行都保留本步骤的行尾空白、暂存差异与任务自身验证要求。
 
@@ -31,22 +34,26 @@
 ## 动态选题
 
 - 禁止在自动化提示或本规则中硬编码具体 TQ、HANDOFF 或审核清单编号。
-- 复审走 `审核入口.txt`；执行走纯 `1` 的 Codex 路由。
+- 复审走 `审核入口.txt`；执行按任务主责映射到同一控制器配置的 Codex 或 DeepSeek / Claude 串行执行器。
 - 内容冻结、主责边界和 G1/G2/G3 依赖均为硬约束。
 - 每轮最多处理一个复审对象、一次维护或一个最小任务切片。
+
+任务只有同时满足以下条件才是 runnable：状态为待处理；全部前置已完成，且 DeepSeek 前置产物已通过 Codex 复审；主责能映射到配置执行器；原任务及其全部传递后继都没有未解决 pending decision；内容冻结与项目闸门均满足；修改前可推导完整 `expectedPaths`；workspace guard `Check` 确认与当前基线不冲突。配置了 DeepSeek 执行器不等于本轮运行预检已经可用。
 
 ## 待你决策
 
 - 当多个方案会改变架构、运行时行为、数据语义、对外体验、任务范围、冻结边界或主责，且事实源不能唯一推出结论时，控制器必须创建待决策项；删除真实资产、保存数据迁移、外部发送及覆盖有歧义人工改动也必须请求决定。
-- 待决策项不是失败关闭：控制器完成当前安全检查后释放租约，跳过该项及其依赖项，并继续选择其他主责匹配、依赖满足且不依赖该决定的候选。
+- 待决策项不是失败关闭：控制器完成当前安全检查后释放租约，排除原任务及其全部传递后继，并继续选择不受该决定影响的其他合法候选。
 - 每次仅保留一个未解决决策。它必须同时写入本机状态、`自动工作流状态.txt` 的“待你决策”区、自动化任务标题/消息，并尝试发送邮件；收件地址、回信地址和搜索条件只保存在本机私有配置。
 - 回信查询必须先在全邮箱按允许发件人和同一 `decisionId` 搜索；自定义标签只能作为可选缩小条件，不能作为有效回复的硬条件，也不得因标签缺失排除候选。
 - 自动路径只接受允许发件人对同一决策编号的严格回复 `DEC-…：选 A` 或 `DEC-…: 选择 A`。未知发件人、编号不符、多个选项或模糊回复均不得推进任务；负责人明确手动接管时，可由人工以 `ResolveDecision -ReplySource manual -ManualOverride` 记录选择后清除决策，不得伪造为邮件回复。
 - 邮件发送或读取失败时保留待决策状态并受限重试；不得自动选择、失败关闭、AUTO-BLOCKED 或制造空提交。有效回复恢复原任务后才清除该项。
 
-## 队列维护触发
+## 可执行库存与队列维护
 
-仅在队列少于 5 条、含完成未归档项、依赖状态错误、主责不匹配、冻结内容入队，或距上次成功校验超过 12 小时时维护。无项目内容变化时只更新本机校验时间和 memory，不提交时间戳。
+- 低水位：2；高水位：5。可执行库存大于 2 时不因数量维护；库存为 1 或 2 时只在任务成功收尾中从 backlog 补到最多 5；库存为 0 时优先在成功收尾中补位，否则下一轮可进入独立维护。
+- 存在安全执行候选时，补位不得抢占本轮。独立维护只允许在无安全候选、队列事实错误会影响路由，或 12 小时审计发现必须提交的事实修正时发生。
+- 无合格候选时调用 `RecordQueueState` 记录队列/backlog 指纹；事实未变化时不重复同一无效维护。仅更新时间或确认无变化只写本机状态与 memory，不制造提交。
 
 ## 锁与恢复
 
@@ -54,11 +61,12 @@
 - 租约三小时，在 `task_selected`、`mutation_started`、`verification_completed`、`commit_completed` 等检查点续期。
 - 首次中断不计恢复次数，随后最多恢复两次；第二次恢复仍失败转 `AUTO-BLOCKED`。
 - 只有 Git 变更路径全部属于已记录 `expectedPaths` 时才能恢复；额外路径一律阻塞。
+- 控制器自有 pending decision 或有效阻塞必须在修改前登记状态文件 `expectedPaths` 和 checkpoint，验证后作为有效结果提交；若中断或提交失败，必须保留精确恢复指针。禁止出现 `IDLE + no recovery + controller-owned dirty file`。
 - `ResetBlocked` 只能由人工在处理原因后明确调用。
 
 ## 提交与失败关闭
 
-- 只 stage 本轮相关文件，不覆盖、回退或提交人工改动，不自动推送远端。
+- 只 stage 本轮 `expectedPaths`，并以 `git commit --only` 路径限定提交；不覆盖、回退或提交人工改动，不自动推送远端。
 - 身份未知、状态损坏、主责/依赖不明、恢复路径不符或验证证据无效时失败关闭。
-- 无任务、有效锁和人工脏工作区只进入自动化 memory，不改项目状态、不制造提交。
+- 无任务、有效锁或所有合法候选均与人工脏路径冲突时，只进入自动化 memory，不改项目状态、不制造提交。
 - `开发管理/自动工作流状态.txt` 只在产生有效结果、队列路由变化或 `AUTO-BLOCKED` 时更新。
