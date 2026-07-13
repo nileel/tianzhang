@@ -24,6 +24,11 @@ function Assert-Code {
   }
 }
 
+function Remove-AnsiCsi {
+  param([string]$Text)
+  [regex]::Replace($Text, '\x1B\[[0-?]*[ -/]*[@-~]', '')
+}
+
 function Read-TestState {
   (Invoke-StateTool @('Show', '-StatePath', $statePath)).Output | ConvertFrom-Json
 }
@@ -111,13 +116,15 @@ try {
 
   $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'invalid minimum', '-BackoffMinutes', '0', '-Now', '2026-07-11T00:45:10Z')
   Assert-Code $r 1 'BackoffMinutes 0 parameter binding rejection'
-  if ($r.Output -notmatch 'BackoffMinutes' -or $r.Output -notmatch '0' -or $r.Output -notmatch '(?i)(ValidateRange|range|范围|最小|小于)') {
+  $bindingError = Remove-AnsiCsi $r.Output
+  if ($bindingError -notmatch 'BackoffMinutes' -or $bindingError -notmatch '(?<!\d)0(?!\d)' -or $bindingError -notmatch '(?i)(ValidateRange|range|范围|最小|小于)') {
     throw "BackoffMinutes 0 rejection did not include stable range evidence: $($r.Output)"
   }
 
   $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'invalid maximum', '-BackoffMinutes', '1441', '-Now', '2026-07-11T00:45:20Z')
   Assert-Code $r 1 'BackoffMinutes 1441 parameter binding rejection'
-  if ($r.Output -notmatch 'BackoffMinutes' -or $r.Output -notmatch '1441' -or $r.Output -notmatch '(?i)(ValidateRange|range|范围|最大|大于)') {
+  $bindingError = Remove-AnsiCsi $r.Output
+  if ($bindingError -notmatch 'BackoffMinutes' -or $bindingError -notmatch '(?<!\d)1441(?!\d)' -or $bindingError -notmatch '(?i)(ValidateRange|range|范围|最大|大于)') {
     throw "BackoffMinutes 1441 rejection did not include stable range evidence: $($r.Output)"
   }
 
