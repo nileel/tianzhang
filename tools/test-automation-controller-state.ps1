@@ -44,10 +44,39 @@ try {
   Assert-Code $r 0 'owner renew'
   if ((Read-TestState).leaseExpiresAt -ne '2026-07-11T03:30:00.0000000+00:00') { throw 'renew did not extend the lease by three hours' }
 
-  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskKind', 'execute', '-TaskId', 'sample-task', '-Checkpoint', 'mutation_started', '-ExpectedPaths', 'a.txt|b/c.txt', '-Now', '2026-07-11T00:40:00Z')
+  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskKind', 'execute', '-TaskId', 'sample-task', '-TaskExecutor', 'codex', '-Checkpoint', 'mutation_started', '-ExpectedPaths', 'a.txt|b/c.txt', '-Now', '2026-07-11T00:40:00Z')
   Assert-Code $r 0 'checkpoint'
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
+  if ($state.schemaVersion -ne 3 -or $state.taskExecutor -ne 'codex') { throw 'checkpoint did not persist schema v3 task executor fields' }
+
+  $r = Invoke-StateTool @('RecordQueueState', '-StatePath', $statePath, '-RunId', 'run-1', '-QueueFingerprint', 'queue-a', '-RunnableCount', '0', '-NoCandidate', '-QueueAuditCompleted', '-Now', '2026-07-11T00:41:00Z')
+  Assert-Code $r 0 'record empty runnable supply'
+  $state = Read-TestState
+  if ($state.lastQueueFingerprint -ne 'queue-a' -or $state.lastNoCandidateFingerprint -ne 'queue-a' -or $state.lastRunnableCount -ne 0 -or -not $state.lastQueueAuditAt) {
+    throw 'empty runnable supply was not persisted'
+  }
+
+  $r = Invoke-StateTool @('RecordQueueState', '-StatePath', $statePath, '-RunId', 'run-1', '-QueueFingerprint', 'queue-b', '-RunnableCount', '3', '-Now', '2026-07-11T00:42:00Z')
+  Assert-Code $r 0 'record available runnable supply'
+  $state = Read-TestState
+  if ($state.lastQueueFingerprint -ne 'queue-b' -or $state.lastRunnableCount -ne 3 -or $null -ne $state.lastNoCandidateFingerprint) {
+    throw 'available runnable supply did not clear the no-candidate fingerprint'
+  }
+
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'proxy unavailable', '-BackoffMinutes', '180', '-Now', '2026-07-11T00:43:00Z')
+  Assert-Code $r 0 'record DeepSeek worker failure'
+  $deepseek = (Read-TestState).workerState.deepseek
+  if ($deepseek.failureCount -ne 1 -or $deepseek.backoffUntil -ne '2026-07-11T03:43:00.0000000+00:00' -or $deepseek.lastError -ne 'proxy unavailable') {
+    throw 'DeepSeek worker backoff was not persisted'
+  }
+
+  $r = Invoke-StateTool @('ClearWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-Now', '2026-07-11T00:44:00Z')
+  Assert-Code $r 0 'clear DeepSeek worker failure'
+  $deepseek = (Read-TestState).workerState.deepseek
+  if ($deepseek.failureCount -ne 0 -or $null -ne $deepseek.backoffUntil -or $null -ne $deepseek.lastError) {
+    throw 'DeepSeek worker backoff was not cleared'
+  }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-2', '-Now', '2026-07-11T04:00:00Z')
   Assert-Code $r 0 'expired lease takeover'
@@ -142,7 +171,26 @@ try {
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
-  if ($legacy.schemaVersion -ne 2 -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') { throw 'schema v1 was not migrated safely' }
+  if ($legacy.schemaVersion -ne 3 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') {
+    throw 'schema v1 was not migrated safely'
+  }
+
+  $v2Fixture = @{
+    schemaVersion = 2
+    state = 'RUNNING'
+    controllerId = 'v2-controller'
+    runId = 'v2-run'
+    pendingDecision = @{
+      decisionId = 'DEC-V2'
+      status = 'RESOLVED'
+      resolution = @{ optionKey = 'A'; source = 'manual'; resolvedAt = '2026-07-10T00:00:00Z' }
+    }
+  } | ConvertTo-Json -Depth 6 -Compress
+  [System.IO.File]::WriteAllText($statePath, $v2Fixture)
+  $v2 = Read-TestState
+  if ($v2.schemaVersion -ne 3 -or $null -ne $v2.taskExecutor -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $v2.pendingDecision.decisionId -ne 'DEC-V2') {
+    throw 'schema v2 was not migrated safely'
+  }
 
   $guard = [IO.File]::Open("$statePath.guard", [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
   try {

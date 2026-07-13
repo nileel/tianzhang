@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Acquire','Renew','Checkpoint','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecision','ClearResolvedDecision','Complete','Fail','Show','ResetBlocked')]
+  [ValidateSet('Acquire','Renew','Checkpoint','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecision','ClearResolvedDecision','Complete','Fail','Show','ResetBlocked')]
   [string]$Action,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
   [string]$ControllerId = 'tzg-hourly-controller',
@@ -9,6 +9,8 @@ param(
   [ValidateSet('recovery','review','maintenance','execute')]
   [string]$TaskKind,
   [string]$TaskId,
+  [ValidateSet('codex','deepseek')]
+  [string]$TaskExecutor,
   [ValidateSet('identity_checked','queues_loaded','task_selected','mutation_started','verification_completed','commit_completed')]
   [string]$Checkpoint,
   [string]$ExpectedPaths,
@@ -25,6 +27,14 @@ param(
   [string]$NotificationError,
   [switch]$WasRecovery,
   [switch]$QueueAuditCompleted,
+  [string]$QueueFingerprint,
+  [int]$RunnableCount = -1,
+  [switch]$NoCandidate,
+  [ValidateSet('deepseek')]
+  [string]$WorkerId,
+  [string]$WorkerError,
+  [ValidateRange(1, 1440)]
+  [int]$BackoffMinutes = 180,
   [string]$ErrorMessage,
   [int]$LeaseMinutes = 180,
   [string]$Now
@@ -51,17 +61,28 @@ function Get-NowValue {
 
 function New-State {
   [ordered]@{
-    schemaVersion = 2
+    schemaVersion = 3
     controllerId = $ControllerId
     runId = $null
     state = 'IDLE'
     leaseExpiresAt = $null
     taskKind = $null
     taskId = $null
+    taskExecutor = $null
     checkpoint = $null
     expectedPaths = @()
     recoveryCount = 0
     lastQueueAuditAt = $null
+    lastQueueFingerprint = $null
+    lastNoCandidateFingerprint = $null
+    lastRunnableCount = $null
+    workerState = [ordered]@{
+      deepseek = [ordered]@{
+        failureCount = 0
+        backoffUntil = $null
+        lastError = $null
+      }
+    }
     lastError = $null
     pendingDecision = $null
   }
@@ -71,13 +92,25 @@ function Import-State {
   if (-not (Test-Path -LiteralPath $StatePath)) { return (New-State) }
   $raw = [IO.File]::ReadAllText($StatePath)
   $parsed = $raw | ConvertFrom-Json
-  if ($parsed.schemaVersion -notin @(1, 2)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
+  if ($parsed.schemaVersion -notin @(1, 2, 3)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
   $state = New-State
   foreach ($key in @($state.Keys)) {
     $property = $parsed.PSObject.Properties[$key]
     if ($null -ne $property) { $state[$key] = $property.Value }
   }
-  $state.schemaVersion = 2
+  $deepseek = [ordered]@{ failureCount = 0; backoffUntil = $null; lastError = $null }
+  $workerStateProperty = $parsed.PSObject.Properties['workerState']
+  if ($null -ne $workerStateProperty -and $null -ne $workerStateProperty.Value) {
+    $deepseekProperty = $workerStateProperty.Value.PSObject.Properties['deepseek']
+    if ($null -ne $deepseekProperty -and $null -ne $deepseekProperty.Value) {
+      foreach ($key in @($deepseek.Keys)) {
+        $property = $deepseekProperty.Value.PSObject.Properties[$key]
+        if ($null -ne $property) { $deepseek[$key] = $property.Value }
+      }
+    }
+  }
+  $state.workerState = [ordered]@{ deepseek = $deepseek }
+  $state.schemaVersion = 3
   $state
 }
 
@@ -182,6 +215,7 @@ try {
       if ($state.state -eq 'IDLE') {
         $state.taskKind = $null
         $state.taskId = $null
+        $state.taskExecutor = $null
         $state.checkpoint = $null
         $state.expectedPaths = @()
         $state.recoveryCount = 0
@@ -202,11 +236,44 @@ try {
       Require-Owner $state
       if ($TaskKind) { $state.taskKind = $TaskKind }
       if ($TaskId) { $state.taskId = $TaskId }
+      if ($PSBoundParameters.ContainsKey('TaskExecutor')) { $state.taskExecutor = $TaskExecutor }
       if ($Checkpoint) { $state.checkpoint = $Checkpoint }
       if ($PSBoundParameters.ContainsKey('ExpectedPaths')) {
         $paths = @($ExpectedPaths -split '\|' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
         $state.expectedPaths = @($paths | ForEach-Object { ([string]$_).Replace('\','/') } | Sort-Object -Unique)
       }
+      Set-Lease $state $nowValue
+      Export-State $state
+    }
+    'RecordQueueState' {
+      Require-Owner $state
+      if ([string]::IsNullOrWhiteSpace($QueueFingerprint)) { Exit-WithCode 'QueueFingerprint is required' $script:ExitInvalidArguments }
+      if ($RunnableCount -lt 0) { Exit-WithCode 'RunnableCount must be at least zero' $script:ExitInvalidArguments }
+      $state.lastQueueFingerprint = $QueueFingerprint
+      $state.lastRunnableCount = $RunnableCount
+      $state.lastNoCandidateFingerprint = if ($NoCandidate) { $QueueFingerprint } else { $null }
+      if ($QueueAuditCompleted) { $state.lastQueueAuditAt = $nowValue.ToString('o') }
+      Set-Lease $state $nowValue
+      Export-State $state
+    }
+    'RecordWorkerFailure' {
+      Require-Owner $state
+      if ($WorkerId -ne 'deepseek') { Exit-WithCode 'WorkerId is required' $script:ExitInvalidArguments }
+      if ([string]::IsNullOrWhiteSpace($WorkerError)) { Exit-WithCode 'WorkerError is required' $script:ExitInvalidArguments }
+      $errorSummary = $WorkerError.Trim()
+      if ($errorSummary.Length -gt 240) { $errorSummary = $errorSummary.Substring(0, 240) }
+      $state.workerState.deepseek.failureCount = [int]$state.workerState.deepseek.failureCount + 1
+      $state.workerState.deepseek.backoffUntil = $nowValue.AddMinutes($BackoffMinutes).ToString('o')
+      $state.workerState.deepseek.lastError = $errorSummary
+      Set-Lease $state $nowValue
+      Export-State $state
+    }
+    'ClearWorkerFailure' {
+      Require-Owner $state
+      if ($WorkerId -ne 'deepseek') { Exit-WithCode 'WorkerId is required' $script:ExitInvalidArguments }
+      $state.workerState.deepseek.failureCount = 0
+      $state.workerState.deepseek.backoffUntil = $null
+      $state.workerState.deepseek.lastError = $null
       Set-Lease $state $nowValue
       Export-State $state
     }
@@ -296,6 +363,7 @@ try {
       $state.leaseExpiresAt = $null
       $state.taskKind = $null
       $state.taskId = $null
+      $state.taskExecutor = $null
       $state.checkpoint = $null
       $state.expectedPaths = @()
       $state.recoveryCount = 0
@@ -324,6 +392,7 @@ try {
       $state.leaseExpiresAt = $null
       $state.taskKind = $null
       $state.taskId = $null
+      $state.taskExecutor = $null
       $state.checkpoint = $null
       $state.expectedPaths = @()
       $state.recoveryCount = 0
