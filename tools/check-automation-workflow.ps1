@@ -37,6 +37,7 @@ $emailLiteralPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 
 $rules = Join-Path $root (Join-Path $devMgmt $rulesName)
 $status = Join-Path $root (Join-Path $devMgmt $statusName)
+$maintenance = Join-Path $root (Join-Path $devMgmt $maintenanceName)
 $collaboration = Join-Path $root (Join-Path $devMgmt $collaborationName)
 if (-not (Test-Path -LiteralPath $rules)) { $findings.Add('missing workflow rules') }
 if (Test-Path -LiteralPath $status) {
@@ -46,6 +47,17 @@ if (Test-Path -LiteralPath $status) {
 foreach ($entry in @('AGENTS.md','CLAUDE.md',(Join-Path $devMgmt $maintenanceName),(Join-Path $devMgmt $collaborationName))) {
   Require-Match (Join-Path $root $entry) $rulePattern "$entry does not route to workflow rules"
 }
+
+Require-Match $maintenance '状态[^\r\n]*待处理' 'maintenance rules do not require runnable tasks to be pending'
+Require-Match $maintenance '前置[^\r\n]*完成[^\r\n]*DeepSeek[^\r\n]*Codex[^\r\n]*复审' 'maintenance rules do not require completed dependencies and reviewed DeepSeek prerequisites'
+Require-Match $maintenance '主责[^\r\n]*配置执行器' 'maintenance rules do not require an owner-to-configured-executor mapping'
+Require-Match $maintenance '待决策[^\r\n]*(全部传递后继|传递依赖)' 'maintenance rules do not exclude pending-decision tasks and their transitive successors'
+Require-Match $maintenance '(内容冻结|冻结)[^\r\n]*闸门' 'maintenance rules do not enforce content freezes and gates'
+Require-Match $maintenance '完整[^\r\n]*expectedPaths' 'maintenance rules do not require complete expectedPaths before mutation'
+Require-Match $maintenance 'workspace[^\r\n]*(baseline|基线)[^\r\n]*不冲突' 'maintenance rules do not require a conflict-free workspace baseline'
+
+$v1Spec = Join-Path $root 'docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md'
+Require-Match $v1Spec 'docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design\.md' 'v1 spec does not link to the exact v2 specification path'
 
 $automationRoot = Join-Path $env:USERPROFILE '.codex\automations'
 $controller = Join-Path $automationRoot 'tzg-hourly-controller\automation.toml'
