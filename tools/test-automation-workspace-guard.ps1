@@ -513,6 +513,63 @@ try {
   Assert-Code $r 0 'verify allows expected-only merge DAG'
   Assert-JsonSafe $r $true @() 'verify allows expected-only merge DAG'
 
+  $submoduleSource = Join-Path $sandbox 'submodule-source'
+  New-Item -ItemType Directory -Path $submoduleSource | Out-Null
+  Invoke-GitAt $submoduleSource @('init') | Out-Null
+  Invoke-GitAt $submoduleSource @('config', 'user.name', 'Workspace Guard Test') | Out-Null
+  Invoke-GitAt $submoduleSource @('config', 'user.email', 'workspace-guard@example.invalid') | Out-Null
+  [System.IO.File]::WriteAllText((Join-Path $submoduleSource 'a.txt'), "submodule base`n", [System.Text.UTF8Encoding]::new($false))
+  Invoke-GitAt $submoduleSource @('add', '--', 'a.txt') | Out-Null
+  Invoke-GitAt $submoduleSource @('commit', '-m', 'test: submodule source') | Out-Null
+
+  $submoduleParent = Join-Path $sandbox 'submodule-parent'
+  New-Item -ItemType Directory -Path $submoduleParent | Out-Null
+  Invoke-GitAt $submoduleParent @('init') | Out-Null
+  Invoke-GitAt $submoduleParent @('config', 'user.name', 'Workspace Guard Test') | Out-Null
+  Invoke-GitAt $submoduleParent @('config', 'user.email', 'workspace-guard@example.invalid') | Out-Null
+  [System.IO.File]::WriteAllText((Join-Path $submoduleParent 'task.txt'), "task`n", [System.Text.UTF8Encoding]::new($false))
+  Invoke-GitAt $submoduleParent @('add', '--', 'task.txt') | Out-Null
+  Invoke-GitAt $submoduleParent @('commit', '-m', 'test: submodule parent base') | Out-Null
+  Invoke-GitAt $submoduleParent @('-c', 'protocol.file.allow=always', 'submodule', 'add', $submoduleSource, 'modules/local') | Out-Null
+  Invoke-GitAt $submoduleParent @('add', '--', '.gitmodules', 'modules/local') | Out-Null
+  Invoke-GitAt $submoduleParent @('commit', '-m', 'test: add local submodule') | Out-Null
+  $submoduleBaseline = Join-Path $sandbox 'submodule-baseline.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $submoduleBaseline)
+  Assert-Code $r 0 'clean submodule snapshot'
+  $cleanSubmoduleHash = Get-FileHashText $submoduleBaseline
+
+  [System.IO.File]::AppendAllText((Join-Path $submoduleParent 'modules\local\a.txt'), "dirty internal change`n")
+  $newDirtySubmoduleBaseline = Join-Path $sandbox 'dirty-submodule-new.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $newDirtySubmoduleBaseline)
+  if ($r.Code -eq 0 -or $r.Output -notmatch 'dirty_submodule_unsupported') {
+    throw "dirty submodule Snapshot did not fail closed explicitly: code=$($r.Code) output=$($r.Output)"
+  }
+  if (Test-Path -LiteralPath $newDirtySubmoduleBaseline) { throw 'dirty submodule Snapshot created a new baseline' }
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $submoduleBaseline)
+  if ($r.Code -eq 0 -or $r.Output -notmatch 'dirty_submodule_unsupported') {
+    throw "dirty submodule Snapshot overwrite attempt was not rejected explicitly: code=$($r.Code) output=$($r.Output)"
+  }
+  if ((Get-FileHashText $submoduleBaseline) -ne $cleanSubmoduleHash) { throw 'dirty submodule Snapshot overwrote the valid baseline' }
+
+  foreach ($action in @('Check', 'Verify')) {
+    $r = Invoke-Guard @($action, '-RepositoryRoot', $submoduleParent, '-BaselinePath', $submoduleBaseline, '-ExpectedPaths', 'task.txt')
+    Assert-Code $r 21 "$action reports dirty submodule structurally"
+    Assert-JsonSafe $r $false @('<SUBMODULE>') "$action reports dirty submodule structurally"
+    if (($r.Output | ConvertFrom-Json).reason -ne 'dirty_submodule_unsupported') {
+      throw "$action dirty-submodule reason was unstable: $($r.Output)"
+    }
+  }
+
+  foreach ($submoduleExpected in @('modules/local', 'modules/local/a.txt')) {
+    $r = Invoke-Guard @('Check', '-RepositoryRoot', $submoduleParent, '-BaselinePath', $submoduleBaseline, '-ExpectedPaths', $submoduleExpected)
+    Assert-Code $r 15 "expected path enters submodule: $submoduleExpected"
+    Assert-JsonSafe $r $false @() "expected path enters submodule: $submoduleExpected"
+    $submoduleExpectedJson = $r.Output | ConvertFrom-Json
+    if ($submoduleExpectedJson.reason -ne 'expected_path_enters_submodule' -or @($submoduleExpectedJson.expectedPaths).Count -ne 1 -or $submoduleExpectedJson.expectedPaths[0] -ne $submoduleExpected) {
+      throw "submodule expected-path rejection was not structured precisely: $($r.Output)"
+    }
+  }
+
   'test-automation-workspace-guard: OK'
   exit 0
 } finally {

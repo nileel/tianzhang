@@ -137,10 +137,28 @@ function Assert-ExpectedPathsSafe {
   param([string]$Repository, [string[]]$Expected)
 
   $repositoryPrefix = $Repository.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+  $gitlinks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+  $indexRecords = ([string](Invoke-GitRaw $Repository @('ls-files', '--stage', '-z')).Text).Split([char]0)
+  foreach ($record in $indexRecords) {
+    if ([string]::IsNullOrEmpty($record)) { continue }
+    $tabIndex = $record.IndexOf([char]9)
+    if ($tabIndex -lt 0) { throw 'Malformed git ls-files --stage record.' }
+    $metadata = $record.Substring(0, $tabIndex)
+    if ($metadata.StartsWith('160000 ', [System.StringComparison]::Ordinal)) {
+      [void]$gitlinks.Add($record.Substring($tabIndex + 1).Replace('\', '/'))
+    }
+  }
+
   foreach ($path in $Expected) {
     if ($path.Equals('.git', [System.StringComparison]::OrdinalIgnoreCase) -or
         $path.StartsWith('.git/', [System.StringComparison]::OrdinalIgnoreCase)) {
       throw 'ExpectedPaths must not target Git administrative data.'
+    }
+    foreach ($gitlink in $gitlinks) {
+      if ($path.Equals($gitlink, [System.StringComparison]::OrdinalIgnoreCase) -or
+          $path.StartsWith($gitlink + '/', [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw 'expected_path_enters_submodule'
+      }
     }
 
     $current = $Repository
@@ -252,6 +270,7 @@ function Get-WorkspaceSnapshot {
       '1' {
         $fields = $record.Split(' ', 9)
         if ($fields.Length -ne 9) { throw "Malformed porcelain v2 ordinary record: $record" }
+        if ($fields[2] -ne 'N...') { throw 'dirty_submodule_unsupported' }
         $xy = $fields[1]
         $indexBlob = if ($xy[0] -ne '.') { $fields[7] } else { $null }
         $fingerprint = Get-Sha256Text ($record + [char]0)
@@ -260,6 +279,7 @@ function Get-WorkspaceSnapshot {
       '2' {
         $fields = $record.Split(' ', 10)
         if ($fields.Length -ne 10 -or $index + 1 -ge $records.Length) { throw "Malformed porcelain v2 rename/copy record: $record" }
+        if ($fields[2] -ne 'N...') { throw 'dirty_submodule_unsupported' }
         $xy = $fields[1]
         $newPath = $fields[9]
         $oldPath = $records[++$index]
@@ -273,6 +293,7 @@ function Get-WorkspaceSnapshot {
       'u' {
         $fields = $record.Split(' ', 11)
         if ($fields.Length -ne 11) { throw "Malformed porcelain v2 unmerged record: $record" }
+        if ($fields[2] -ne 'N...') { throw 'dirty_submodule_unsupported' }
         $xy = $fields[1]
         $fingerprint = Get-Sha256Text ($record + [char]0)
         $entries.Add((New-WorkspaceEntry $Repository $fields[10] 'unmerged' ([string]$xy[0]) ([string]$xy[1]) $fields[8] $fingerprint))
@@ -475,9 +496,19 @@ try {
       try {
         $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
         Assert-ExpectedPathsSafe $repository $expected
-      } catch { Write-SafetyResult $false $expected @() 'invalid_arguments'; exit $ExitInvalidArguments }
+      } catch {
+        $reason = if ($_.Exception.Message -eq 'expected_path_enters_submodule') { 'expected_path_enters_submodule' } else { 'invalid_arguments' }
+        Write-SafetyResult $false $expected @() $reason
+        exit $ExitInvalidArguments
+      }
       try { $baseline = Read-Baseline $BaselinePath $repository } catch { Write-SafetyResult $false $expected @() 'baseline_invalid'; exit 1 }
-      $fresh = Get-WorkspaceSnapshot $repository
+      try {
+        $fresh = Get-WorkspaceSnapshot $repository
+      } catch {
+        if ($_.Exception.Message -ne 'dirty_submodule_unsupported') { throw }
+        Write-SafetyResult $false $expected @('<SUBMODULE>') 'dirty_submodule_unsupported'
+        exit $ExitBaselineChanged
+      }
       $casChanged = Get-ChangedWorkspacePaths $baseline $fresh @()
       if (-not ([string]$baseline.head).Equals([string]$fresh.head, [System.StringComparison]::Ordinal)) {
         try {
@@ -504,9 +535,19 @@ try {
       try {
         $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
         Assert-ExpectedPathsSafe $repository $expected
-      } catch { Write-SafetyResult $false $expected @() 'invalid_arguments'; exit $ExitInvalidArguments }
+      } catch {
+        $reason = if ($_.Exception.Message -eq 'expected_path_enters_submodule') { 'expected_path_enters_submodule' } else { 'invalid_arguments' }
+        Write-SafetyResult $false $expected @() $reason
+        exit $ExitInvalidArguments
+      }
       try { $baseline = Read-Baseline $BaselinePath $repository } catch { Write-SafetyResult $false $expected @() 'baseline_invalid'; exit 1 }
-      $fresh = Get-WorkspaceSnapshot $repository
+      try {
+        $fresh = Get-WorkspaceSnapshot $repository
+      } catch {
+        if ($_.Exception.Message -ne 'dirty_submodule_unsupported') { throw }
+        Write-SafetyResult $false $expected @('<SUBMODULE>') 'dirty_submodule_unsupported'
+        exit $ExitBaselineChanged
+      }
       $changed = Get-ChangedWorkspacePaths $baseline $fresh $expected
       try {
         [void](Invoke-GitRaw $repository @('cat-file', '-e', "$($baseline.head)^{commit}"))
