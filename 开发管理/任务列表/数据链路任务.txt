@@ -14,7 +14,7 @@
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离。 |
-| D-TRUST-02 / TQ-057 | P0 | DeepSeek 执行；Codex 复审 | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
+| D-TRUST-02 / TQ-057 | P0 | Codex | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
 | D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |

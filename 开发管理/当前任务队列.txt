@@ -8,7 +8,7 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
+| TQ-057 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-069 | P1 | Codex / gpt-5.5 | 场景与 Unity | 待处理 | S-STATE-02：最小任务、背包和 NPC 状态快照 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 金丹槽位与丹枢加成数值方案 |
@@ -20,10 +20,10 @@
 
 - 来源：可信度闸门规格 §6。
 - 当前状态：待处理；依赖：TQ-056 已由 Codex 完成并验证。
-- 主责：DeepSeek V4 Pro 执行；Codex / ChatGPT5.5 复审。
+- 主责：Codex / ChatGPT5.5。
 - 范围：对齐术法 docs/CSV/asset 数量，处理 `realm_lianshen` 缺失语言键与 `realm_lianxu` 删除后仍激活的数据，并吸收 TQ-040 的字段完整性复查；不得扩展内容或设定语义。
 - 验证：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 仅在剩余问题均有精确批准豁免或已清理时返回 0；`git diff --check`。
-- 完成条件：TQ-056 所列历史数据矛盾已清理或被精确批准豁免，交接材料标明仍需 Codex / ChatGPT5.5 复审。
+- 完成条件：TQ-056 所列历史数据矛盾已清理或被精确批准豁免，并有 Codex / ChatGPT5.5 的直接验证证据。
 
 ### TQ-059 · D-TRUST-04 接通境界、元素和阵营限制
 
