@@ -49,10 +49,11 @@ function Invoke-GitRaw {
     if ($process.ExitCode -ne 0) {
       throw "git $($Arguments -join ' ') failed with exit $($process.ExitCode): $($stderr.Trim())"
     }
-    [pscustomobject]@{
-      Bytes = $stdout.ToArray()
-      Text = [System.Text.UTF8Encoding]::new($false, $true).GetString($stdout.ToArray()).TrimEnd("`r", "`n")
-    }
+    [byte[]]$stdoutBytes = $stdout.ToArray()
+    return ,([pscustomobject]@{
+      Bytes = $stdoutBytes
+      Text = [System.Text.UTF8Encoding]::new($false, $true).GetString($stdoutBytes).TrimEnd("`r", "`n")
+    })
   } finally {
     $stdout.Dispose()
     $process.Dispose()
@@ -183,7 +184,7 @@ function Get-WorkspaceSnapshot {
   param([string]$Repository)
 
   $status = Invoke-GitRaw $Repository @('status', '--porcelain=v2', '-z', '--untracked-files=all')
-  $text = [System.Text.UTF8Encoding]::new($false, $true).GetString($status.Bytes)
+  $text = [string]$status.Text
   $records = $text.Split([char]0)
   $entries = [System.Collections.Generic.List[object]]::new()
   for ($index = 0; $index -lt $records.Length; $index++) {
@@ -324,18 +325,22 @@ function Get-HeadRangePaths {
   if ($BaselineHead.Equals($CurrentHead, [System.StringComparison]::OrdinalIgnoreCase)) {
     return @()
   }
-  $diff = Invoke-GitRaw $Repository @('diff', '--name-status', '-z', '--find-renames', "$BaselineHead..$CurrentHead")
-  $text = [System.Text.UTF8Encoding]::new($false, $true).GetString($diff.Bytes)
-  $records = $text.Split([char]0)
+
+  $mergeBase = (Invoke-GitRaw $Repository @('merge-base', $BaselineHead, $CurrentHead)).Text
+  if (-not $BaselineHead.Equals($mergeBase, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw 'Current HEAD is not a descendant of the baseline HEAD.'
+  }
+
+  $revisionList = (Invoke-GitRaw $Repository @('rev-list', '--reverse', "$BaselineHead..$CurrentHead")).Text
   $paths = [System.Collections.Generic.List[string]]::new()
-  for ($index = 0; $index -lt $records.Length; $index++) {
-    $status = $records[$index]
-    if ([string]::IsNullOrEmpty($status)) { continue }
-    if ($index + 1 -ge $records.Length) { throw 'Malformed git diff --name-status output.' }
-    $paths.Add($records[++$index].Replace('\', '/'))
-    if (($status.StartsWith('R') -or $status.StartsWith('C'))) {
-      if ($index + 1 -ge $records.Length) { throw 'Malformed git diff rename/copy output.' }
-      $paths.Add($records[++$index].Replace('\', '/'))
+  foreach ($commit in @($revisionList -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+    $diff = Invoke-GitRaw $Repository @(
+      'diff-tree', '--root', '--no-commit-id', '--name-only', '-z', '-r', '-m', '--no-renames', $commit
+    )
+    foreach ($path in ([string]$diff.Text).Split([char]0)) {
+      if (-not [string]::IsNullOrEmpty($path)) {
+        $paths.Add($path.Replace('\', '/'))
+      }
     }
   }
   $paths.ToArray()

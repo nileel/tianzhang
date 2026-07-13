@@ -7,6 +7,7 @@ $tempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimE
 $sandbox = Join-Path $tempRoot ("tzg-workspace-guard-test-" + [guid]::NewGuid().ToString('N'))
 $repo = Join-Path $sandbox 'repo'
 $baseline = Join-Path $sandbox 'baseline.json'
+$cleanBaseline = Join-Path $sandbox 'clean-baseline.json'
 $safeToRemove = $false
 
 function Invoke-Guard {
@@ -96,6 +97,15 @@ try {
   }
   Invoke-Git add -- . | Out-Null
   Invoke-Git commit -m 'test: initial fixture' | Out-Null
+
+  $cleanHead = (Invoke-Git rev-parse HEAD) -join ''
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $repo, '-BaselinePath', $cleanBaseline)
+  Assert-Code $r 0 'clean repository snapshot'
+  if (-not (Test-Path -LiteralPath $cleanBaseline)) { throw 'clean repository snapshot did not create a baseline' }
+  $cleanSnapshot = Get-Content -Raw -LiteralPath $cleanBaseline | ConvertFrom-Json
+  if ($cleanSnapshot.schemaVersion -ne 1 -or $cleanSnapshot.repositoryRoot -ne $resolvedRepo -or $cleanSnapshot.head -ne $cleanHead -or @($cleanSnapshot.entries).Count -ne 0) {
+    throw 'clean repository snapshot metadata or empty entries were incorrect'
+  }
 
   [System.IO.File]::AppendAllText((Join-Path $repo 'human.txt'), "human unstaged`n")
   [System.IO.File]::AppendAllText((Join-Path $repo 'staged.txt'), "human staged`n")
@@ -197,9 +207,10 @@ try {
   [System.IO.File]::WriteAllText((Join-Path $repo 'intruder.txt'), "unexpected commit`n", [System.Text.UTF8Encoding]::new($false))
   Invoke-Git add -- intruder.txt | Out-Null
   Invoke-Git commit --only -m 'test: unexpected middle commit' -- intruder.txt | Out-Null
+  Remove-Item -LiteralPath (Join-Path $repo 'intruder.txt')
   [System.IO.File]::AppendAllText((Join-Path $repo 'task.txt'), "latest expected commit`n")
-  Invoke-Git add -- task.txt | Out-Null
-  Invoke-Git commit --only -m 'test: latest task commit' -- task.txt | Out-Null
+  Invoke-Git add -- intruder.txt task.txt | Out-Null
+  Invoke-Git commit --only -m 'test: latest task commit deletes intruder' -- intruder.txt task.txt | Out-Null
   $r = Invoke-Guard @('Verify', '-RepositoryRoot', $repo, '-BaselinePath', $baseline, '-ExpectedPaths', 'task.txt')
   Assert-Code $r 21 'verify scans the entire HEAD range'
   Assert-JsonSafe $r $false @('human.txt', 'intruder.txt') 'verify scans the entire HEAD range'
