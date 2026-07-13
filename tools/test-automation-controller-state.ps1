@@ -110,12 +110,16 @@ try {
   }
 
   $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'invalid minimum', '-BackoffMinutes', '0', '-Now', '2026-07-11T00:45:10Z')
-  if ($r.Code -eq 0) { throw 'BackoffMinutes 0 was not rejected by parameter binding' }
-  $backoffZeroExitCode = $r.Code
+  Assert-Code $r 1 'BackoffMinutes 0 parameter binding rejection'
+  if ($r.Output -notmatch 'BackoffMinutes' -or $r.Output -notmatch '0' -or $r.Output -notmatch '(?i)(ValidateRange|range|范围|最小|小于)') {
+    throw "BackoffMinutes 0 rejection did not include stable range evidence: $($r.Output)"
+  }
 
   $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'invalid maximum', '-BackoffMinutes', '1441', '-Now', '2026-07-11T00:45:20Z')
-  if ($r.Code -eq 0) { throw 'BackoffMinutes 1441 was not rejected by parameter binding' }
-  $backoffOverExitCode = $r.Code
+  Assert-Code $r 1 'BackoffMinutes 1441 parameter binding rejection'
+  if ($r.Output -notmatch 'BackoffMinutes' -or $r.Output -notmatch '1441' -or $r.Output -notmatch '(?i)(ValidateRange|range|范围|最大|大于)') {
+    throw "BackoffMinutes 1441 rejection did not include stable range evidence: $($r.Output)"
+  }
 
   $r = Invoke-StateTool @('ClearWorkerFailure', '-StatePath', $statePath, '-RunId', 'wrong-run', '-WorkerId', 'deepseek', '-Now', '2026-07-11T00:45:30Z')
   Assert-Code $r 12 'clear worker failure owner mismatch'
@@ -240,19 +244,59 @@ try {
     state = 'RUNNING'
     controllerId = 'v2-controller'
     runId = 'v2-run'
+    leaseExpiresAt = '2026-07-11T08:00:00Z'
+    taskKind = 'execute'
+    taskId = 'v2-recovery-task'
+    checkpoint = 'mutation_started'
+    expectedPaths = @('a.txt', 'b/c.txt')
+    recoveryCount = 1
+    lastQueueAuditAt = '2026-07-10T23:00:00Z'
+    lastError = 'recoverable interruption'
     pendingDecision = @{
       decisionId = 'DEC-V2'
-      status = 'RESOLVED'
-      resolution = @{ optionKey = 'A'; source = 'manual'; resolvedAt = '2026-07-10T00:00:00Z' }
+      createdAt = '2026-07-10T23:30:00Z'
+      taskKind = 'execute'
+      taskId = 'v2-decision-task'
+      taskSummary = 'Choose v2 recovery mode'
+      question = 'Resume mutation or inspect first?'
+      options = @(
+        @{ key = 'A'; label = 'Resume mutation' },
+        @{ key = 'B'; label = 'Inspect first' }
+      )
+      recommendedOption = 'B'
+      impactSummary = 'Changes recovery latency and mutation risk'
+      status = 'DELIVERY_FAILED'
+      notification = @{
+        status = 'DELIVERY_FAILED'
+        attemptedAt = '2026-07-10T23:31:00Z'
+        attempts = 2
+        error = 'smtp_unavailable'
+      }
+      resolution = $null
     }
   } | ConvertTo-Json -Depth 6 -Compress
   [System.IO.File]::WriteAllText($statePath, $v2Fixture)
+  $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v2-run', '-Now', '2026-07-11T06:00:00Z')
+  Assert-Code $r 0 'renew migrated schema v2 state'
   $v2 = Read-TestState
-  if ($v2.schemaVersion -ne 3 -or $null -ne $v2.taskExecutor -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $v2.pendingDecision.decisionId -ne 'DEC-V2') {
+  if ($v2.schemaVersion -ne 3 -or $null -ne $v2.taskExecutor -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError) {
     throw 'schema v2 was not migrated safely'
   }
-
-  if ($backoffZeroExitCode -eq 0 -or $backoffOverExitCode -eq 0) { throw 'backoff parameter binding exit codes were not recorded' }
+  if ($v2.runId -ne 'v2-run' -or $v2.state -ne 'RUNNING' -or $v2.leaseExpiresAt -ne '2026-07-11T09:00:00.0000000+00:00' -or $v2.taskKind -ne 'execute' -or $v2.taskId -ne 'v2-recovery-task' -or $v2.checkpoint -ne 'mutation_started' -or $v2.expectedPaths.Count -ne 2 -or $v2.expectedPaths[0] -ne 'a.txt' -or $v2.expectedPaths[1] -ne 'b/c.txt' -or $v2.recoveryCount -ne 1 -or $v2.lastError -ne 'recoverable interruption') {
+    throw 'schema v2 recovery fields were not preserved after write-back'
+  }
+  $v2Decision = $v2.pendingDecision
+  $v2CreatedAt = ([DateTimeOffset]$v2Decision.createdAt).ToUniversalTime().ToString('o')
+  if ($v2Decision.decisionId -ne 'DEC-V2' -or $v2CreatedAt -ne '2026-07-10T23:30:00.0000000+00:00' -or $v2Decision.taskKind -ne 'execute' -or $v2Decision.taskId -ne 'v2-decision-task' -or $v2Decision.taskSummary -ne 'Choose v2 recovery mode' -or $v2Decision.question -ne 'Resume mutation or inspect first?' -or $v2Decision.recommendedOption -ne 'B' -or $v2Decision.impactSummary -ne 'Changes recovery latency and mutation risk' -or $v2Decision.status -ne 'DELIVERY_FAILED') {
+    throw 'schema v2 pending decision fields were not preserved after write-back'
+  }
+  if ($v2Decision.options.Count -ne 2 -or $v2Decision.options[0].key -ne 'A' -or $v2Decision.options[0].label -ne 'Resume mutation' -or $v2Decision.options[1].key -ne 'B' -or $v2Decision.options[1].label -ne 'Inspect first') {
+    throw 'schema v2 pending decision options were not preserved after write-back'
+  }
+  $v2AttemptedAt = ([DateTimeOffset]$v2Decision.notification.attemptedAt).ToUniversalTime().ToString('o')
+  if ($v2Decision.notification.status -ne 'DELIVERY_FAILED' -or $v2AttemptedAt -ne '2026-07-10T23:31:00.0000000+00:00' -or $v2Decision.notification.attempts -ne 2 -or $v2Decision.notification.error -ne 'smtp_unavailable' -or $null -ne $v2Decision.resolution) {
+    throw 'schema v2 pending decision notification or resolution was not preserved after write-back'
+  }
 
   $guard = [IO.File]::Open("$statePath.guard", [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
   try {
