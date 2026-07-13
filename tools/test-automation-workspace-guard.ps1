@@ -86,6 +86,7 @@ try {
     'deleted.txt' = "delete base`n"
     'src/Assets/clean.txt' = "directory base`n"
     '中文 space.txt' = "unicode base`n"
+    ' leading.txt' = "leading-space base`n"
   }
   foreach ($item in $initial.GetEnumerator()) {
     $path = Join-Path $repo $item.Key
@@ -112,6 +113,7 @@ try {
   Invoke-Git add -- staged.txt | Out-Null
   [System.IO.File]::WriteAllText((Join-Path $repo 'untracked.txt'), "human untracked`n", [System.Text.UTF8Encoding]::new($false))
   [System.IO.File]::WriteAllText((Join-Path $repo '未跟踪 空格.txt'), "unicode untracked`n", [System.Text.UTF8Encoding]::new($false))
+  [System.IO.File]::AppendAllText((Join-Path $repo ' leading.txt'), "leading-space dirty`n")
   Invoke-Git mv -- renamed.txt renamed-by-human.txt | Out-Null
   Remove-Item -LiteralPath (Join-Path $repo 'deleted.txt')
   [System.IO.File]::AppendAllText((Join-Path $repo 'src\Assets\clean.txt'), "directory dirty`n")
@@ -129,7 +131,7 @@ try {
     throw 'snapshot metadata was not persisted correctly'
   }
   $entryPaths = @($snapshot.entries.path)
-  foreach ($required in @('human.txt', 'staged.txt', 'untracked.txt', '未跟踪 空格.txt', 'renamed.txt', 'renamed-by-human.txt', 'deleted.txt', 'src/Assets/clean.txt')) {
+  foreach ($required in @('human.txt', 'staged.txt', 'untracked.txt', '未跟踪 空格.txt', ' leading.txt', 'renamed.txt', 'renamed-by-human.txt', 'deleted.txt', 'src/Assets/clean.txt')) {
     if ($entryPaths -notcontains $required) { throw "snapshot omitted '$required'" }
   }
   $snapshotBytes = [System.IO.File]::ReadAllBytes($baseline)
@@ -145,6 +147,18 @@ try {
   $r = Invoke-Guard @('Check', '-RepositoryRoot', $repo, '-BaselinePath', $baseline, '-ExpectedPaths', '.\task.txt|TASK.txt')
   Assert-Code $r 0 'safe task check'
   Assert-JsonSafe $r $true @() 'safe task check'
+
+  $r = Invoke-Guard @('Check', '-RepositoryRoot', $repo, '-BaselinePath', $baseline, '-ExpectedPaths', ' leading.txt| leading.txt')
+  Assert-Code $r 20 'leading-space path conflict and dedupe'
+  Assert-JsonSafe $r $false @(' leading.txt') 'leading-space path conflict and dedupe'
+  $leadingJson = $r.Output | ConvertFrom-Json
+  if (@($leadingJson.conflictingPaths).Count -ne 1 -or @($leadingJson.conflictingPaths) -contains 'leading.txt') {
+    throw "leading-space path was trimmed or not deduplicated exactly: $($r.Output)"
+  }
+
+  $r = Invoke-Guard @('Check', '-RepositoryRoot', $repo, '-BaselinePath', $baseline, '-ExpectedPaths', '.\ leading.txt')
+  Assert-Code $r 20 'leading-dot normalization preserves path whitespace'
+  Assert-JsonSafe $r $false @(' leading.txt') 'leading-dot normalization preserves path whitespace'
 
   foreach ($case in @(
     @{ Paths = 'human.txt'; Conflicts = @('human.txt'); Label = 'unstaged conflict' },

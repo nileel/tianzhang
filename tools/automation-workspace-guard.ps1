@@ -87,7 +87,7 @@ function ConvertTo-NormalizedExpectedPaths {
     if ([string]::IsNullOrWhiteSpace($rawPath)) {
       throw 'ExpectedPaths contains an empty path.'
     }
-    $path = $rawPath.Trim().Replace('\', '/')
+    $path = $rawPath.Replace('\', '/')
     if ([System.IO.Path]::IsPathRooted($path) -or $path -match '^[A-Za-z]:') {
       throw "Expected path must be repository-relative: $rawPath"
     }
