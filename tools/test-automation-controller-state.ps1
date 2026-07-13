@@ -50,10 +50,23 @@ try {
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
   if ($state.schemaVersion -ne 3 -or $state.taskExecutor -ne 'codex') { throw 'checkpoint did not persist schema v3 task executor fields' }
 
+  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
+  Assert-Code $r 0 'checkpoint DeepSeek executor'
+  if ((Read-TestState).taskExecutor -ne 'deepseek') { throw 'checkpoint did not persist the DeepSeek task executor' }
+
+  $r = Invoke-StateTool @('RecordQueueState', '-StatePath', $statePath, '-RunId', 'wrong-run', '-QueueFingerprint', 'queue-a', '-RunnableCount', '0', '-Now', '2026-07-11T00:40:40Z')
+  Assert-Code $r 12 'queue state owner mismatch'
+
+  $r = Invoke-StateTool @('RecordQueueState', '-StatePath', $statePath, '-RunId', 'run-1', '-QueueFingerprint', ' ', '-RunnableCount', '0', '-Now', '2026-07-11T00:40:45Z')
+  Assert-Code $r 15 'empty queue fingerprint rejection'
+
+  $r = Invoke-StateTool @('RecordQueueState', '-StatePath', $statePath, '-RunId', 'run-1', '-QueueFingerprint', 'queue-a', '-RunnableCount', '-1', '-Now', '2026-07-11T00:40:50Z')
+  Assert-Code $r 15 'negative runnable count rejection'
+
   $r = Invoke-StateTool @('RecordQueueState', '-StatePath', $statePath, '-RunId', 'run-1', '-QueueFingerprint', 'queue-a', '-RunnableCount', '0', '-NoCandidate', '-QueueAuditCompleted', '-Now', '2026-07-11T00:41:00Z')
   Assert-Code $r 0 'record empty runnable supply'
   $state = Read-TestState
-  if ($state.lastQueueFingerprint -ne 'queue-a' -or $state.lastNoCandidateFingerprint -ne 'queue-a' -or $state.lastRunnableCount -ne 0 -or -not $state.lastQueueAuditAt) {
+  if ($state.lastQueueFingerprint -ne 'queue-a' -or $state.lastNoCandidateFingerprint -ne 'queue-a' -or $state.lastRunnableCount -ne 0 -or -not $state.lastQueueAuditAt -or $state.leaseExpiresAt -ne '2026-07-11T03:41:00.0000000+00:00') {
     throw 'empty runnable supply was not persisted'
   }
 
@@ -64,24 +77,61 @@ try {
     throw 'available runnable supply did not clear the no-candidate fingerprint'
   }
 
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'wrong-run', '-WorkerId', 'deepseek', '-WorkerError', 'proxy unavailable', '-Now', '2026-07-11T00:42:10Z')
+  Assert-Code $r 12 'worker failure owner mismatch'
+
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', ' ', '-Now', '2026-07-11T00:42:20Z')
+  Assert-Code $r 15 'empty worker error rejection'
+
   $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'proxy unavailable', '-BackoffMinutes', '180', '-Now', '2026-07-11T00:43:00Z')
   Assert-Code $r 0 'record DeepSeek worker failure'
-  $deepseek = (Read-TestState).workerState.deepseek
-  if ($deepseek.failureCount -ne 1 -or $deepseek.backoffUntil -ne '2026-07-11T03:43:00.0000000+00:00' -or $deepseek.lastError -ne 'proxy unavailable') {
+  $state = Read-TestState
+  $deepseek = $state.workerState.deepseek
+  if ($deepseek.failureCount -ne 1 -or $deepseek.backoffUntil -ne '2026-07-11T03:43:00.0000000+00:00' -or $deepseek.lastError -ne 'proxy unavailable' -or $state.leaseExpiresAt -ne '2026-07-11T03:43:00.0000000+00:00') {
     throw 'DeepSeek worker backoff was not persisted'
   }
 
-  $r = Invoke-StateTool @('ClearWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-Now', '2026-07-11T00:44:00Z')
+  $expectedWorkerError = ('x' * 240) -join ''
+  $longWorkerError = $expectedWorkerError + 'tail'
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', $longWorkerError, '-BackoffMinutes', '1', '-Now', '2026-07-11T00:44:00Z')
+  Assert-Code $r 0 'record repeated worker failure with minimum backoff'
+  $state = Read-TestState
+  $deepseek = $state.workerState.deepseek
+  if ($deepseek.failureCount -ne 2 -or $deepseek.backoffUntil -ne '2026-07-11T00:45:00.0000000+00:00' -or $deepseek.lastError.Length -ne 240 -or $deepseek.lastError -ne $expectedWorkerError -or $state.leaseExpiresAt -ne '2026-07-11T03:44:00.0000000+00:00') {
+    throw 'repeated DeepSeek worker failure did not apply truncation or minimum backoff'
+  }
+
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'maximum backoff', '-BackoffMinutes', '1440', '-Now', '2026-07-11T00:45:00Z')
+  Assert-Code $r 0 'record maximum worker backoff'
+  $state = Read-TestState
+  $deepseek = $state.workerState.deepseek
+  if ($deepseek.failureCount -ne 3 -or $deepseek.backoffUntil -ne '2026-07-12T00:45:00.0000000+00:00' -or $state.leaseExpiresAt -ne '2026-07-11T03:45:00.0000000+00:00') {
+    throw 'maximum DeepSeek worker backoff was not persisted'
+  }
+
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'invalid minimum', '-BackoffMinutes', '0', '-Now', '2026-07-11T00:45:10Z')
+  if ($r.Code -eq 0) { throw 'BackoffMinutes 0 was not rejected by parameter binding' }
+  $backoffZeroExitCode = $r.Code
+
+  $r = Invoke-StateTool @('RecordWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-WorkerError', 'invalid maximum', '-BackoffMinutes', '1441', '-Now', '2026-07-11T00:45:20Z')
+  if ($r.Code -eq 0) { throw 'BackoffMinutes 1441 was not rejected by parameter binding' }
+  $backoffOverExitCode = $r.Code
+
+  $r = Invoke-StateTool @('ClearWorkerFailure', '-StatePath', $statePath, '-RunId', 'wrong-run', '-WorkerId', 'deepseek', '-Now', '2026-07-11T00:45:30Z')
+  Assert-Code $r 12 'clear worker failure owner mismatch'
+
+  $r = Invoke-StateTool @('ClearWorkerFailure', '-StatePath', $statePath, '-RunId', 'run-1', '-WorkerId', 'deepseek', '-Now', '2026-07-11T00:46:00Z')
   Assert-Code $r 0 'clear DeepSeek worker failure'
-  $deepseek = (Read-TestState).workerState.deepseek
-  if ($deepseek.failureCount -ne 0 -or $null -ne $deepseek.backoffUntil -or $null -ne $deepseek.lastError) {
+  $state = Read-TestState
+  $deepseek = $state.workerState.deepseek
+  if ($deepseek.failureCount -ne 0 -or $null -ne $deepseek.backoffUntil -or $null -ne $deepseek.lastError -or $state.leaseExpiresAt -ne '2026-07-11T03:46:00.0000000+00:00') {
     throw 'DeepSeek worker backoff was not cleared'
   }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-2', '-Now', '2026-07-11T04:00:00Z')
   Assert-Code $r 0 'expired lease takeover'
   $state = Read-TestState
-  if ($state.runId -ne 'run-2' -or $state.taskId -ne 'sample-task') { throw 'takeover did not preserve recovery fields' }
+  if ($state.runId -ne 'run-2' -or $state.taskId -ne 'sample-task' -or $state.taskExecutor -ne 'deepseek') { throw 'takeover did not preserve recovery fields' }
 
   $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'run-2', '-ErrorMessage', 'initial interruption', '-Now', '2026-07-11T04:01:00Z')
   Assert-Code $r 0 'initial interruption'
@@ -104,12 +154,15 @@ try {
 
   $r = Invoke-StateTool @('ResetBlocked', '-StatePath', $statePath, '-ErrorMessage', 'manual test reset', '-Now', '2026-07-11T05:01:00Z')
   Assert-Code $r 0 'manual reset'
+  if ($null -ne (Read-TestState).taskExecutor) { throw 'manual reset did not clear the task executor' }
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-6', '-Now', '2026-07-11T05:02:00Z')
   Assert-Code $r 0 'acquire after reset'
+  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-6', '-TaskExecutor', 'codex', '-Now', '2026-07-11T05:02:30Z')
+  Assert-Code $r 0 'checkpoint executor before complete'
   $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-6', '-QueueAuditCompleted', '-Now', '2026-07-11T05:03:00Z')
   Assert-Code $r 0 'complete'
   $state = Read-TestState
-  if ($state.state -ne 'IDLE' -or -not $state.lastQueueAuditAt) { throw 'complete did not clear the run or record the audit' }
+  if ($state.state -ne 'IDLE' -or -not $state.lastQueueAuditAt -or $null -ne $state.taskExecutor) { throw 'complete did not clear the run or record the audit' }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:04:00Z')
   Assert-Code $r 0 'acquire decision lease'
@@ -169,6 +222,13 @@ try {
   Assert-Code $r 0 'clear resolved decision'
   if ($null -ne (Read-TestState).pendingDecision) { throw 'resolved decision was not cleared' }
 
+  [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":3,"state":"IDLE","controllerId":"fresh-idle","taskExecutor":"deepseek"}')
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'fresh-run', '-Now', '2026-07-11T05:13:00Z')
+  Assert-Code $r 0 'fresh IDLE acquire'
+  if ($null -ne (Read-TestState).taskExecutor) { throw 'fresh IDLE acquire did not clear the task executor' }
+  $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'fresh-run', '-Now', '2026-07-11T05:14:00Z')
+  Assert-Code $r 0 'complete fresh IDLE acquire'
+
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
   if ($legacy.schemaVersion -ne 3 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') {
@@ -191,6 +251,8 @@ try {
   if ($v2.schemaVersion -ne 3 -or $null -ne $v2.taskExecutor -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $v2.pendingDecision.decisionId -ne 'DEC-V2') {
     throw 'schema v2 was not migrated safely'
   }
+
+  if ($backoffZeroExitCode -eq 0 -or $backoffOverExitCode -eq 0) { throw 'backoff parameter binding exit codes were not recorded' }
 
   $guard = [IO.File]::Open("$statePath.guard", [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
   try {
