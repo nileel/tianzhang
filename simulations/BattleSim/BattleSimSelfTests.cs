@@ -27,6 +27,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-tq015c-6")
             return RunChecked(suite, RunGoldenCoreTq015C6);
 
+        if (suite == "golden-core-validation-base-n-gc-base-01")
+            return RunChecked(suite, RunGoldenCoreValidationBaseNgcBase01);
+
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
 
@@ -367,6 +370,38 @@ static class BattleSimSelfTests
         var missing = bySeat["未成丹/无目标席位"];
         AssertEqual(1, ReadProperty(missing, "UnformedCount"), "unformed row count");
         AssertEqual("未成丹", ReadProperty(missing, "NaReason"), "unformed NA reason");
+    }
+
+    static void RunGoldenCoreValidationBaseNgcBase01()
+    {
+        var fixtureType = Type.GetType("BattleSim.GoldenCoreValidationFixture");
+        if (fixtureType == null)
+            throw new InvalidOperationException("GoldenCoreValidationFixture is missing.");
+
+        var create = fixtureType.GetMethod("CreateNaturalCandidate", BindingFlags.Public | BindingFlags.Static);
+        if (create == null)
+            throw new InvalidOperationException("GoldenCoreValidationFixture.CreateNaturalCandidate is missing.");
+
+        var sample = create.Invoke(null, null)!;
+        var profile = ReadProperty(sample, "GoldenCore");
+        AssertEqual("成丹", ReadProperty(profile, "FormedState"), "fixture golden core formed state");
+        AssertEqual("自然候选", ReadProperty(profile, "NaturalDanJiCandidateState"), "fixture natural candidate state");
+        AssertEqual("未占据", ReadProperty(profile, "FinalOccupancyState"), "fixture occupancy remains unresolved");
+        AssertEqual("承接范围、排异规则与过载症状", ReadProperty(profile, "DanPivot"), "fixture dan pivot");
+
+        var describe = fixtureType.GetMethod("DescribeInputCoverage", BindingFlags.Public | BindingFlags.Static);
+        if (describe == null)
+            throw new InvalidOperationException("GoldenCoreValidationFixture.DescribeInputCoverage is missing.");
+
+        var rows = ((System.Collections.IEnumerable)describe.Invoke(null, new[] { sample })!)
+            .Cast<object>()
+            .ToDictionary(row => (string)ReadProperty(row, "Field"));
+        AssertEqual("已接入", ReadProperty(rows["成丹状态"], "Availability"), "formed state availability");
+        AssertEqual("已接入", ReadProperty(rows["目标席位"], "Availability"), "target seat availability");
+        AssertEqual("已接入", ReadProperty(rows["占据状态"], "Availability"), "occupancy availability");
+        AssertEqual("已接入", ReadProperty(rows["丹枢接口"], "Availability"), "dan pivot availability");
+        AssertEqual("未接入", ReadProperty(rows["紫府神通数量"], "Availability"), "divine art availability");
+        AssertEqual("未接入", ReadProperty(rows["府位覆盖"], "Availability"), "palace coverage availability");
     }
 
     static void RunStageMatrixB3()

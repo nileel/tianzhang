@@ -1,0 +1,35 @@
+# N-GC-BASE-01 金丹/紫府验证输入基座与回归诊断
+
+## 结论
+
+- 默认 `200` 轮、21 Build、每 Build 20 种子的运行中，全部 Build 均为 `0/20` 金丹样本；所有金丹矩阵格为 `NA`。
+- `--g2-audit --cycles 400` 使用每 Build 200 种子时，21 个 Build 均为 `200/200` 金丹样本，金丹目标矩阵覆盖结论为 `SUFFICIENT`。
+- 差异仅来自运行参数的轮数和种子规模：默认入口使用 `CultivationCycles = 200` 与 20 种子；G2 审计显式传入 400 轮与 200 种子。两条路径均复用同一修炼、成丹解析与固定随机序列，未改修炼收益、突破率、成丹阈值或战斗数值。
+
+## 验证夹具与字段口径
+
+`GoldenCoreValidationFixture.CreateNaturalCandidate()` 固定复用既有 `GameData.ResolveGoldenCoreProfile(130, "黄品", weights)` 的自然候选输入；它只用于 BattleSim 自检，不进入默认修炼、战斗、成丹或席位结算路径。
+
+| 字段 | 来源 | 当前口径 |
+|------|------|----------|
+| 成丹状态 | `GameData.ResolveGoldenCoreProfile` | 已接入 |
+| 目标席位 | `GameData.ResolveGoldenCoreProfile` | 已接入 |
+| 占据状态 | `GameData.ResolveGoldenCoreProfile` | 已接入；自然候选仍为“未占据”，不等于已结算胜者 |
+| 丹枢接口 | `GameData.ResolveGoldenCoreProfile` | 已接入 |
+| 紫府神通数量 | `GoldenCoreProfile.ZifuDivineArtCount` | 未接入；当前为 0，不设阈值 |
+| 府位覆盖 | `GoldenCoreProfile.ZifuPalaceCoverageCount` | 未接入；当前为 0，不设槽位数 |
+
+夹具自检固定验证以上六项，并明确不把候选分、候选位、占据结算、丹枢倍率、紫府神通数量或府位覆盖写成正式规则。
+
+## 验证记录
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`
+- `dotnet run --no-build -c Release --project simulations/BattleSim`
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --g2-audit --cycles 400`
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-validation-base-n-gc-base-01`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`
+- `git diff --check`
+
+## 后续边界
+
+N-SLOT-01 现可基于这个基座设计槽位与丹枢的候选数值，但仍须把可选阈值明确标为待决策，且不得提前实现席位胜者或削位概率。
