@@ -11,6 +11,7 @@
 | TQ-057 | P0 | DeepSeek V4 Pro | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | TQ-068 | P1 | Codex / gpt-5.5 | 状态 | 待处理 | S-STATE-01：最小 GameSession、世界时间和起点状态模型 |
+| TQ-066 | P1 | Codex / gpt-5.5 | 场景与 Unity | 待处理 | U-ARCH-02：拆分 BattleUIManager / Character 的 UI 与领域职责 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
@@ -43,10 +44,19 @@
 - 验证：补齐允许/回归样例；运行相关 .NET 编译和 Unity EditMode 测试；`git diff --check`。
 - 完成条件：三类状态在三条生命周期路径均有可观察的一致性回归证据，并为 TQ-069 的状态步骤模型保留明确边界。
 
+### TQ-066 · U-ARCH-02 UI 与领域职责拆分
+
+- 来源：`开发管理/任务列表/场景与Unity任务.txt`。
+- 当前状态：待处理；依赖：无。
+- 主责：Codex / ChatGPT5.5。
+- 范围：拆分 `BattleUIManager` / `Character` 的 UI 与领域职责；不得增加或继续膨胀 Hub 类，必须保持 Unity 序列化字段、资产 GUID、场景和预制体引用兼容。
+- 验证：运行 `dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、相关 Unity EditMode 测试、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests` 与 `git diff --check`。
+- 完成条件：UI 与领域职责边界已拆分，并保留可验证的 Unity 回归证据。
+
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 
 - 来源：`开发管理/任务列表/数值与战斗任务.txt` N-SLOT-01。
-- 当前状态：阻塞（N-GC-BASE-01）；依赖：N-GC-BASE-01。
+- 当前状态：待处理；依赖：N-GC-BASE-01 已完成。
 - 主责：Codex / ChatGPT5.5。
 - 必读：`docs/基础设定/角色数值设计.txt`、`docs/基础设定/境界特性.txt`、`docs/角色养成/术法槽位设计.txt` 与 `simulations/BattleSim/Program.cs`。
 - 范围：基于已通过的 G2 覆盖和当前 BattleSim 基线，提出并验证金丹槽位与丹枢加成的数值方案；不得把未验证的通用槽位数、紫府神通数量阈值或席位竞争公式写入运行时，也不得提前实施 N-SEAT-01 的占据结算、N-SUPPRESS-01 的触发概率或伤害表调整。
