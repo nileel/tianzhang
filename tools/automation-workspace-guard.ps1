@@ -133,6 +133,34 @@ function Test-OverlapsAnyExpectedPath {
   $false
 }
 
+function Assert-ExpectedPathsSafe {
+  param([string]$Repository, [string[]]$Expected)
+
+  $repositoryPrefix = $Repository.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+  foreach ($path in $Expected) {
+    if ($path.Equals('.git', [System.StringComparison]::OrdinalIgnoreCase) -or
+        $path.StartsWith('.git/', [System.StringComparison]::OrdinalIgnoreCase)) {
+      throw 'ExpectedPaths must not target Git administrative data.'
+    }
+
+    $current = $Repository
+    $segments = $path.Split('/')
+    for ($index = 0; $index -lt $segments.Length; $index++) {
+      $current = Join-Path $current $segments[$index]
+      if (-not (Test-Path -LiteralPath $current)) { break }
+      $item = Get-Item -LiteralPath $current -Force
+      if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "Expected path crosses a reparse point: $path"
+      }
+      $resolved = (Resolve-Path -LiteralPath $current).Path
+      if (-not $resolved.Equals($Repository, [System.StringComparison]::OrdinalIgnoreCase) -and
+          -not $resolved.StartsWith($repositoryPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Expected path resolves outside the repository: $path"
+      }
+    }
+  }
+}
+
 function Get-WorktreeHash {
   param([string]$Repository, [string]$Path)
 
@@ -150,7 +178,8 @@ function New-WorkspaceEntry {
     [string]$Kind,
     [string]$IndexStatus,
     [string]$WorktreeStatus,
-    [AllowNull()][string]$IndexBlob
+    [AllowNull()]$IndexBlob,
+    [string]$StatusFingerprint
   )
 
   [pscustomobject][ordered]@{
@@ -158,8 +187,9 @@ function New-WorkspaceEntry {
     kind = $Kind
     indexStatus = $IndexStatus
     worktreeStatus = $WorktreeStatus
-    indexBlob = $IndexBlob
+    indexBlob = if ($null -eq $IndexBlob) { $null } else { [string]$IndexBlob }
     worktreeHash = Get-WorktreeHash $Repository $Path
+    statusFingerprint = $StatusFingerprint
   }
 }
 
@@ -170,14 +200,41 @@ function Sort-WorkspaceEntries {
   foreach ($entry in $Entries) { $list.Add($entry) }
   $comparison = [System.Comparison[object]]{
     param($left, $right)
-    $result = [System.StringComparer]::OrdinalIgnoreCase.Compare([string]$left.path, [string]$right.path)
-    if ($result -eq 0) {
-      $result = [System.StringComparer]::Ordinal.Compare([string]$left.path, [string]$right.path)
-    }
-    $result
+    [System.StringComparer]::Ordinal.Compare([string]$left.path, [string]$right.path)
   }
   $list.Sort($comparison)
   $list.ToArray()
+}
+
+function Get-Sha256Text {
+  param([string]$Value)
+
+  $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($Value)
+  $hash = [System.Security.Cryptography.SHA256]::HashData($bytes)
+  [System.Convert]::ToHexString($hash).ToLowerInvariant()
+}
+
+function Get-BaselinePayloadHash {
+  param($Snapshot)
+
+  $canonicalEntries = @($Snapshot.entries | ForEach-Object {
+    [pscustomobject][ordered]@{
+      path = [string]$_.path
+      kind = [string]$_.kind
+      indexStatus = [string]$_.indexStatus
+      worktreeStatus = [string]$_.worktreeStatus
+      indexBlob = if ($null -eq $_.indexBlob) { $null } else { [string]$_.indexBlob }
+      worktreeHash = if ($null -eq $_.worktreeHash) { $null } else { [string]$_.worktreeHash }
+      statusFingerprint = [string]$_.statusFingerprint
+    }
+  })
+  $canonicalEntries = @(Sort-WorkspaceEntries $canonicalEntries)
+  $payload = [pscustomobject][ordered]@{
+    repositoryRoot = [string]$Snapshot.repositoryRoot
+    head = [string]$Snapshot.head
+    entries = $canonicalEntries
+  }
+  Get-Sha256Text ($payload | ConvertTo-Json -Depth 8 -Compress)
 }
 
 function Get-WorkspaceSnapshot {
@@ -197,7 +254,8 @@ function Get-WorkspaceSnapshot {
         if ($fields.Length -ne 9) { throw "Malformed porcelain v2 ordinary record: $record" }
         $xy = $fields[1]
         $indexBlob = if ($xy[0] -ne '.') { $fields[7] } else { $null }
-        $entries.Add((New-WorkspaceEntry $Repository $fields[8] 'ordinary' ([string]$xy[0]) ([string]$xy[1]) $indexBlob))
+        $fingerprint = Get-Sha256Text ($record + [char]0)
+        $entries.Add((New-WorkspaceEntry $Repository $fields[8] 'ordinary' ([string]$xy[0]) ([string]$xy[1]) $indexBlob $fingerprint))
       }
       '2' {
         $fields = $record.Split(' ', 10)
@@ -208,18 +266,21 @@ function Get-WorkspaceSnapshot {
         if ([string]::IsNullOrEmpty($oldPath)) { throw 'Malformed porcelain v2 rename/copy old path.' }
         $kind = if ($fields[8].StartsWith('C', [System.StringComparison]::Ordinal)) { 'copy' } else { 'rename' }
         $indexBlob = if ($xy[0] -ne '.') { $fields[7] } else { $null }
-        $entries.Add((New-WorkspaceEntry $Repository $newPath "$kind-new" ([string]$xy[0]) ([string]$xy[1]) $indexBlob))
-        $entries.Add((New-WorkspaceEntry $Repository $oldPath "$kind-old" ([string]$xy[0]) ([string]$xy[1]) $null))
+        $fingerprint = Get-Sha256Text ($record + [char]0 + $oldPath + [char]0)
+        $entries.Add((New-WorkspaceEntry $Repository $newPath "$kind-new" ([string]$xy[0]) ([string]$xy[1]) $indexBlob $fingerprint))
+        $entries.Add((New-WorkspaceEntry $Repository $oldPath "$kind-old" ([string]$xy[0]) ([string]$xy[1]) $null $fingerprint))
       }
       'u' {
         $fields = $record.Split(' ', 11)
         if ($fields.Length -ne 11) { throw "Malformed porcelain v2 unmerged record: $record" }
         $xy = $fields[1]
-        $entries.Add((New-WorkspaceEntry $Repository $fields[10] 'unmerged' ([string]$xy[0]) ([string]$xy[1]) $fields[8]))
+        $fingerprint = Get-Sha256Text ($record + [char]0)
+        $entries.Add((New-WorkspaceEntry $Repository $fields[10] 'unmerged' ([string]$xy[0]) ([string]$xy[1]) $fields[8] $fingerprint))
       }
       '?' {
         if ($record.Length -lt 3 -or $record[1] -ne ' ') { throw "Malformed porcelain v2 untracked record: $record" }
-        $entries.Add((New-WorkspaceEntry $Repository $record.Substring(2) 'untracked' '?' '?' $null))
+        $fingerprint = Get-Sha256Text ($record + [char]0)
+        $entries.Add((New-WorkspaceEntry $Repository $record.Substring(2) 'untracked' '?' '?' $null $fingerprint))
       }
       '!' { }
       default { throw "Unsupported porcelain v2 record: $record" }
@@ -227,12 +288,15 @@ function Get-WorkspaceSnapshot {
   }
 
   $head = (Invoke-GitRaw $Repository @('rev-parse', 'HEAD')).Text
-  [pscustomobject][ordered]@{
-    schemaVersion = 1
+  $snapshot = [pscustomobject][ordered]@{
+    schemaVersion = 2
     repositoryRoot = $Repository
     head = $head
     entries = @(Sort-WorkspaceEntries $entries.ToArray())
+    payloadHash = $null
   }
+  $snapshot.payloadHash = Get-BaselinePayloadHash $snapshot
+  $snapshot
 }
 
 function Write-JsonAtomically {
@@ -267,9 +331,34 @@ function Read-Baseline {
     throw "Baseline does not exist: $fullPath"
   }
   $baseline = [System.IO.File]::ReadAllText($fullPath, [System.Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json
-  if ($baseline.schemaVersion -ne 1 -or [string]::IsNullOrWhiteSpace([string]$baseline.repositoryRoot) -or
-      [string]::IsNullOrWhiteSpace([string]$baseline.head) -or $null -eq $baseline.entries) {
-    throw 'Baseline has an invalid or unsupported schema.'
+  if ($baseline.schemaVersion -isnot [long] -or $baseline.schemaVersion -ne 2 -or
+      $baseline.repositoryRoot -isnot [string] -or [string]::IsNullOrWhiteSpace($baseline.repositoryRoot) -or
+      $baseline.head -isnot [string] -or $baseline.head -notmatch '^[0-9a-f]{40,64}$' -or
+      $baseline.entries -isnot [System.Array] -or
+      $baseline.payloadHash -isnot [string] -or $baseline.payloadHash -notmatch '^[0-9a-f]{64}$') {
+    throw 'Baseline has an invalid or unsupported schema; create a new Snapshot.'
+  }
+  $requiredEntryProperties = @('path', 'kind', 'indexStatus', 'worktreeStatus', 'indexBlob', 'worktreeHash', 'statusFingerprint')
+  $paths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  foreach ($entry in @($baseline.entries)) {
+    foreach ($property in $requiredEntryProperties) {
+      if ($entry.PSObject.Properties.Name -notcontains $property) { throw "Baseline entry is missing '$property'." }
+    }
+    if ($entry.path -isnot [string] -or [string]::IsNullOrEmpty($entry.path) -or $entry.path.Contains('\') -or
+        [System.IO.Path]::IsPathRooted($entry.path) -or @($entry.path.Split('/') | Where-Object { $_ -eq '' -or $_ -eq '.' -or $_ -eq '..' }).Count -gt 0 -or
+        $entry.kind -isnot [string] -or [string]::IsNullOrEmpty($entry.kind) -or
+        $entry.indexStatus -isnot [string] -or $entry.indexStatus.Length -ne 1 -or
+        $entry.worktreeStatus -isnot [string] -or $entry.worktreeStatus.Length -ne 1 -or
+        ($null -ne $entry.indexBlob -and ($entry.indexBlob -isnot [string] -or $entry.indexBlob -notmatch '^[0-9a-f]{40,64}$')) -or
+        ($null -ne $entry.worktreeHash -and ($entry.worktreeHash -isnot [string] -or $entry.worktreeHash -notmatch '^[0-9a-f]{40,64}$')) -or
+        $entry.statusFingerprint -isnot [string] -or $entry.statusFingerprint -notmatch '^[0-9a-f]{64}$') {
+      throw 'Baseline entry has an invalid type or value.'
+    }
+    if (-not $paths.Add([string]$entry.path)) { throw "Baseline contains a duplicate path: $($entry.path)" }
+  }
+  $actualHash = Get-BaselinePayloadHash $baseline
+  if (-not $actualHash.Equals([string]$baseline.payloadHash, [System.StringComparison]::Ordinal)) {
+    throw 'Baseline payload hash does not match its contents.'
   }
   $baselineRoot = [System.IO.Path]::GetFullPath([string]$baseline.repositoryRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
   if (-not $baselineRoot.Equals($Repository, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -289,15 +378,16 @@ function Get-EntryFingerprint {
     [string]$Entry.indexStatus,
     [string]$Entry.worktreeStatus,
     $indexBlob,
-    $worktreeHash
+    $worktreeHash,
+    [string]$Entry.statusFingerprint
   ) -join "`u{001F}"
 }
 
 function Get-ChangedWorkspacePaths {
   param($Baseline, $Fresh, [string[]]$Expected)
 
-  $old = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-  $new = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+  $old = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
+  $new = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
   foreach ($entry in @($Baseline.entries)) {
     if (-not (Test-OverlapsAnyExpectedPath ([string]$entry.path) $Expected)) {
       $old[[string]$entry.path] = Get-EntryFingerprint $entry
@@ -309,7 +399,7 @@ function Get-ChangedWorkspacePaths {
     }
   }
 
-  $changed = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+  $changed = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
   foreach ($path in $old.Keys) {
     if (-not $new.ContainsKey($path) -or $old[$path] -ne $new[$path]) { [void]$changed.Add($path) }
   }
@@ -347,17 +437,24 @@ function Get-HeadRangePaths {
 }
 
 function Write-SafetyResult {
-  param([bool]$Safe, [string[]]$ConflictingPaths)
+  param(
+    [bool]$Safe,
+    [string[]]$Expected,
+    [string[]]$ConflictingPaths,
+    [AllowNull()][string]$Reason
+  )
 
-  $unique = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+  $unique = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
   foreach ($path in $ConflictingPaths) { [void]$unique.Add($path) }
   $sortedList = [System.Collections.Generic.List[string]]::new()
   foreach ($path in $unique) { $sortedList.Add($path) }
-  $sortedList.Sort([System.StringComparer]::OrdinalIgnoreCase)
+  $sortedList.Sort([System.StringComparer]::Ordinal)
   $sorted = $sortedList.ToArray()
   [pscustomobject][ordered]@{
     safe = $Safe
+    expectedPaths = @($Expected)
     conflictingPaths = $sorted
+    reason = if ([string]::IsNullOrEmpty($Reason)) { $null } else { $Reason }
   } | ConvertTo-Json -Compress
 }
 
@@ -374,29 +471,63 @@ try {
       exit 0
     }
     'Check' {
-      try { $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths } catch { [Console]::Error.WriteLine($_.Exception.Message); exit $ExitInvalidArguments }
-      $baseline = Read-Baseline $BaselinePath $repository
+      $expected = @()
+      try {
+        $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
+        Assert-ExpectedPathsSafe $repository $expected
+      } catch { Write-SafetyResult $false $expected @() 'invalid_arguments'; exit $ExitInvalidArguments }
+      try { $baseline = Read-Baseline $BaselinePath $repository } catch { Write-SafetyResult $false $expected @() 'baseline_invalid'; exit 1 }
+      $fresh = Get-WorkspaceSnapshot $repository
+      $casChanged = Get-ChangedWorkspacePaths $baseline $fresh @()
+      if (-not ([string]$baseline.head).Equals([string]$fresh.head, [System.StringComparison]::Ordinal)) {
+        try {
+          foreach ($path in (Get-HeadRangePaths $repository ([string]$baseline.head) ([string]$fresh.head))) { [void]$casChanged.Add($path) }
+        } catch {
+          [void]$casChanged.Add('<HEAD>')
+        }
+        if ($casChanged.Count -eq 0) { [void]$casChanged.Add('<HEAD>') }
+      }
+      if ($casChanged.Count -gt 0) {
+        Write-SafetyResult $false $expected @($casChanged) 'baseline_changed'
+        exit $ExitBaselineChanged
+      }
       $conflicts = @($baseline.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected } | ForEach-Object { [string]$_.path })
       if ($conflicts.Count -gt 0) {
-        Write-SafetyResult $false $conflicts
+        Write-SafetyResult $false $expected $conflicts 'candidate_conflict'
         exit $ExitCandidateConflict
       }
-      Write-SafetyResult $true @()
+      Write-SafetyResult $true $expected @() $null
       exit 0
     }
     'Verify' {
-      try { $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths } catch { [Console]::Error.WriteLine($_.Exception.Message); exit $ExitInvalidArguments }
-      $baseline = Read-Baseline $BaselinePath $repository
+      $expected = @()
+      try {
+        $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
+        Assert-ExpectedPathsSafe $repository $expected
+      } catch { Write-SafetyResult $false $expected @() 'invalid_arguments'; exit $ExitInvalidArguments }
+      try { $baseline = Read-Baseline $BaselinePath $repository } catch { Write-SafetyResult $false $expected @() 'baseline_invalid'; exit 1 }
       $fresh = Get-WorkspaceSnapshot $repository
       $changed = Get-ChangedWorkspacePaths $baseline $fresh $expected
-      foreach ($path in (Get-HeadRangePaths $repository ([string]$baseline.head) ([string]$fresh.head))) {
+      try {
+        [void](Invoke-GitRaw $repository @('cat-file', '-e', "$($baseline.head)^{commit}"))
+      } catch {
+        Write-SafetyResult $false $expected @('<HEAD>') 'baseline_head_missing'
+        exit $ExitBaselineChanged
+      }
+      try {
+        $headRangePaths = Get-HeadRangePaths $repository ([string]$baseline.head) ([string]$fresh.head)
+      } catch {
+        Write-SafetyResult $false $expected @('<HEAD>') 'head_not_descendant'
+        exit $ExitBaselineChanged
+      }
+      foreach ($path in $headRangePaths) {
         if (-not (Test-OverlapsAnyExpectedPath $path $expected)) { [void]$changed.Add($path) }
       }
       if ($changed.Count -gt 0) {
-        Write-SafetyResult $false @($changed)
+        Write-SafetyResult $false $expected @($changed) 'baseline_changed'
         exit $ExitBaselineChanged
       }
-      Write-SafetyResult $true @()
+      Write-SafetyResult $true $expected @() $null
       exit 0
     }
   }
