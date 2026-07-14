@@ -19,7 +19,6 @@ spell_wanjianchaozong,0,1,5,65,35,2.5,0,0,0,0,0,realm_yuanying,element_metal_roo
 spell_tianjieyin,2,1,6,75,40,2.0,0,0,0,0,0,realm_yuanying,element_thunder_root,element_thunder_root,faction_yuqingya,reserved
 spell_renjianheyi,0,0,3,70,40,3.0,0,0,0,0,0,realm_huashen,element_metal_root,element_metal_root,faction_yuqingya,reserved
 spell_jiuxiaoleifa,2,2,7,85,45,2.5,0,0,0,0,0,realm_huashen,element_thunder_root,element_thunder_root,faction_yuqingya,reserved
-spell_leijiankaitian,2,0,4,130,50,3.5,0,0,0,0,0,realm_lianxu,element_thunder_root,element_thunder_root,faction_yuqingya,reserved
 
 # === Hunyuanshan (14) ===
 spell_tiegugong,0,0,0,8,6,0.2,0,0,0,0,0,realm_lianqi,element_earth_root,element_earth_root,faction_hunyuanshan,player
@@ -35,7 +34,6 @@ spell_toubianduanliu,0,0,0,40,30,1.2,0,0,0,0,0,realm_yuanying,element_earth_root
 spell_hufubingce,2,1,4,55,30,0.8,0,0,0,0,0,realm_yuanying,element_metal_root,element_metal_root,faction_hunyuanshan,reserved
 spell_wanchengtianwei,0,0,2,80,40,2.8,0,0,0,0,0,realm_huashen,element_earth_root,element_earth_root,faction_hunyuanshan,reserved
 spell_jianbiqingye,2,0,0,70,45,0.2,0,0,0,0,0,realm_huashen,element_earth_root,element_earth_root,faction_hunyuanshan,reserved
-spell_hunyunguiyi,2,0,3,120,50,2.5,0,0,0,0,0,realm_lianxu,element_earth_root,element_earth_root,faction_hunyuanshan,reserved
 
 # === Taixuguan (15) ===
 spell_tx_anshi,2,1,4,10,6,1.1,0,0,0,0,0,realm_lianqi,element_dark_root,element_dark_root,faction_taixuguan,player
@@ -52,7 +50,6 @@ spell_yongjiehuilang,1,2,6,60,35,2.5,0,0,0,0,0,realm_yuanying,element_dark_root,
 spell_suhuijuexing,1,0,0,50,40,0.2,0,0,0,0,0,realm_yuanying,element_dark_root,element_dark_root,faction_taixuguan,reserved
 spell_sanqianmengjie,1,3,7,70,45,0.5,0,0,0,0,0,realm_huashen,element_dark_root,element_dark_root,faction_taixuguan,reserved
 spell_yinguodaoxuan,1,2,7,75,40,2.8,0,0,0,0,0,realm_huashen,element_dark_root,element_dark_root,faction_taixuguan,reserved
-spell_lunhuibian,1,1,8,100,50,3.5,0,0,0,0,0,realm_lianxu,element_dark_root,element_dark_root,faction_taixuguan,reserved
 spell_wanjunyinxian,1,0,0,50,16,0.8,0,0,0,0,0,realm_yuanying,element_metal_root,element_metal_root,faction_taiyidaoting,reserved
 spell_wanliuguizong,2,3,10,120,60,3.0,0,0,0,0,0,realm_lianshen,element_water_root,element_water_root,faction_taiyidaoting,reserved
 spell_buhuaijinshen,1,0,0,40,15,0.0,0,0,0,0,10,realm_yuanying,element_metal_root,element_metal_root,faction_taiyidaoting,reserved

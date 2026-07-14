@@ -9,7 +9,6 @@ skill_tianjieyinji,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_thunder_root,realm_zhuji,f
 skill_leijiandianxu,0,0,0,0,0,1.5,0,0,0,0,0,0,0,,element_thunder_root,realm_jindan,faction_yuqingya,player
 skill_leijieyimai,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_thunder_root,realm_jindan,faction_yuqingya,player
 skill_kuxingshiyue,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_metal_root,realm_zhuji,faction_yuqingya,player
-skill_jianyu_wanguizong,0,1,5,0,0,0,0,0,0,0,0,1,0,,element_metal_root,realm_lianxu,faction_yuqingya,reserved
 
 # === Hunyuanshan (6) ===
 skill_bumiejinshen,0,0,0,0,0,0,0,0,0,0,0,0,0,,element_metal_root,realm_jindan,faction_hunyuanshan,player
@@ -17,7 +16,6 @@ skill_tiexuezhengqi,0,0,1,0,0,2.0,0,0,0,0,0,0,0,,element_metal_root,realm_jindan
 skill_zhanchangzhijue,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_earth_root,realm_zhuji,faction_hunyuanshan,player
 skill_tiexuejunhun,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_earth_root,realm_jindan,faction_hunyuanshan,player
 skill_wanjuntongling,0,0,1,0,0,1.5,0,0,0,0,0,0,1,,element_earth_root,realm_jindan,faction_hunyuanshan,player
-skill_zhanyu_tiexuezhengqi,0,1,4,0,0,0,0,0,0,0,0,1,0,,element_earth_root,realm_lianxu,faction_hunyuanshan,reserved
 
 # === Taixuguan (7) ===
 skill_yinguodaozhuan,0,0,0,0,0,0,0,0,0,0,0,0,0,,element_dark_root,realm_jindan,faction_taixuguan,player
@@ -26,7 +24,6 @@ skill_shenhunbumie,0,0,0,0,0,3.0,0,0,0,0,0,0,0,,element_dark_root,realm_jindan,f
 skill_shuanghuntongti,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_dark_root,realm_jindan,faction_taixuguan,player
 skill_suhuilunhui,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_dark_root,realm_zhuji,faction_taixuguan,player
 skill_yinguokehen,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_dark_root,realm_jindan,faction_taixuguan,player
-skill_hunyu_huangquan,0,1,5,0,0,0,0,0,0,0,0,1,0,,element_dark_root,realm_lianxu,faction_taixuguan,reserved
 skill_wanfaguizong,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_wanfaguizong,element_none,realm_jindan,faction_taiyidaoting,player
 skill_lantingyimo,3,0,0,0,0,0,0,0,0,0,0,0,1,desc_skill_lantingyimo,element_water_root,realm_jindan,faction_taiyidaoting,player
 skill_tianfuzhenyue,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_tianfuzhenyue,element_earth_root,realm_jindan,faction_taiyidaoting,player
