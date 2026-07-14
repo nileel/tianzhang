@@ -137,3 +137,41 @@ Expected: 四项全部 OK；不运行 BattleSim 或 Unity 测试。
 - [ ] **Step 4: 重新激活并执行金丝雀**
 
 通过 `codex_app__automation_update` 保持全部字段不变，只把状态改为 `ACTIVE`。随后检查唯一活动写入者为 1、本机状态为 `IDLE`、Git 工作区无控制器遗留修改。金丝雀只验证写前路径：合法 `execute` 能完成 `task_selected` 后立即 `Complete`，不修改业务文件。
+
+### Task 4: 提交 helper 只处理实际变化子集
+
+**Files:**
+- Modify: `tools/test-automation-finalize-commit.ps1`
+- Modify: `tools/automation-finalize-commit.ps1`
+- Modify: `tools/check-automation-workflow.ps1`
+- Modify: `开发管理/自动工作流规则.txt`
+- Update through automation API: `%USERPROFILE%/.codex/automations/tzg-hourly-controller/automation.toml`
+
+- [ ] **Step 1: 写入范围副作用失败用例**
+
+在允许范围放入两个文件，只修改第一个；第二个在基线中保留历史行尾空白。调用 helper 后断言提交仅含第一个文件，且第二个文件 hash 不变。
+
+- [ ] **Step 2: 运行测试并确认 RED**
+
+Run: `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-finalize-commit.ps1`
+
+Expected: FAIL，旧 helper 会修复并提交第二个文件。
+
+- [ ] **Step 3: 推导实际变化路径并移除自动修复**
+
+对每个允许路径分别检查 cached diff、unstaged diff、untracked 文件和 tracked deletion；形成非空 `changedPaths`。行尾检查不传 `-Fix`，后续 `git add`、暂存断言、`git commit --only` 和索引隔离都只使用 `changedPaths`。
+
+- [ ] **Step 4: 固定规则与部署契约**
+
+项目规则和暂停的 prompt 同时写明：`expectedPaths` 是允许上界，只检查并提交其中的实际变化路径，不自动修复内容。静态检查要求两处存在同一契约。
+
+- [ ] **Step 5: 运行测试并确认 GREEN**
+
+Run:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-finalize-commit.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
+```
+
+Expected: 两项均输出 OK。

@@ -49,7 +49,7 @@ try {
   $unrelatedDirty = 'manual-dirty.txt'
   $unrelatedUntracked = 'manual-untracked.txt'
   Write-Utf8 (Join-Path $repo $expected) "expected base`n"
-  Write-Utf8 (Join-Path $repo $secondExpected) "second expected base`n"
+  Write-Utf8 (Join-Path $repo $secondExpected) "second expected base  `n"
   Write-Utf8 (Join-Path $repo $unrelatedStaged) "staged base`n"
   Write-Utf8 (Join-Path $repo $unrelatedDirty) "dirty base`n"
   Invoke-Git add -- . | Out-Null
@@ -71,6 +71,18 @@ try {
   if (((Invoke-Git rev-parse ":$unrelatedStaged") -join '') -ne $stagedBlobBefore) { throw 'unrelated staged blob changed' }
   if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $unrelatedDirty)).Hash -ne $dirtyHashBefore) { throw 'unrelated dirty file changed' }
   if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $unrelatedUntracked)).Hash -ne $untrackedHashBefore) { throw 'unrelated untracked file changed' }
+
+  $cleanAllowedHashBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $secondExpected)).Hash
+  Write-Utf8 (Join-Path $repo $expected) "expected allowed subset change`n"
+  $subsetResult = Invoke-Helper "$expected|$secondExpected" 'test: changed subset only'
+  if ($subsetResult.Code -ne 0) { throw "commit helper failed for changed subset: $($subsetResult.Output)" }
+  $subsetCommitted = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if ($subsetCommitted.Count -ne 1 -or $subsetCommitted[0] -ne $expected) {
+    throw "clean allowed path was added to the commit: $($subsetCommitted -join ', ')"
+  }
+  if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $secondExpected)).Hash -ne $cleanAllowedHashBefore) {
+    throw 'clean allowed path was rewritten by finalization'
+  }
 
   Write-Utf8 (Join-Path $repo $expected) "expected second change`n"
   Write-Utf8 (Join-Path $repo $secondExpected) "second expected change`n"

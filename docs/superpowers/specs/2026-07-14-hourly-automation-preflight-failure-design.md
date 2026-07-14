@@ -7,6 +7,7 @@
 1. 控制器提示只要求在 `task_selected` 写入 `taskKind`，没有固定业务分支到脚本枚举的映射。模型把“执行任务”翻译成 `execution`，而 `automation-controller-state.ps1` 只接受 `execute`，导致选题登记在任何项目修改前失败。
 2. `Fail` 对所有失败统一保留过期的 `RUNNING`。当失败发生在 `task_selected` 成功之前，状态中没有任务、预期路径或恢复证据，下一轮没有实际对象可恢复，却仍显示为运行中断。
 3. 现有部署检查只验证提示包含 `task_selected`，没有验证四种合法 `TaskKind` 值及其映射；状态测试也只覆盖已有恢复对象的失败。
+4. 固定提交 helper 把 `expectedPaths` 同时当成允许范围和必交文件集，并对所有现存路径执行行尾空白自动修复。待决策轮因此把 12 个原本未修改的任务文件改写并提交。
 
 ## 目标
 
@@ -14,6 +15,7 @@
 - 在没有任务身份、预期路径和恢复证据时，`Fail` 视为写前失败：释放租约、回到 `IDLE`，保留 `lastError` 供诊断。
 - 一旦已登记任务或恢复证据，继续沿用现有恢复计数、过期租约和 `AUTO-BLOCKED` 规则，不降低写入隔离强度。
 - 部署检查必须拒绝缺少固定映射或把 `execution` 当成 `TaskKind` 的控制器提示。
+- `expectedPaths` 只表示允许上界；提交 helper 只处理其中的实际变化路径，不得自动改写干净文件或修复内容。
 
 ## 设计
 
@@ -34,6 +36,12 @@
 
 并要求写前 `Checkpoint` 失败时调用 `Fail`。`check-automation-workflow.ps1` 同时检查四个映射和禁止 `TaskKind` 使用 `execution`，使部署配置无法再次遗漏该契约。
 
+### 提交范围与无副作用检查
+
+`automation-finalize-commit.ps1` 在任何行尾检查或暂存前，从 `expectedPaths` 中识别实际 staged、unstaged、untracked 和 tracked deletion 路径。只有这批实际变化路径参与行尾检查、`git add` 和 `git commit --only`；允许范围内未变化的文件按外部状态保护，不得改写或进入提交。
+
+行尾检查只验证，不使用 `-Fix`。检查失败时保留工作区内容并失败关闭，由任务执行阶段显式修正；提交 helper 不再隐式生产新内容。
+
 ### 当前残留状态
 
 控制器保持暂停。代码部署后，以当前 `runId` 对现有“无任务、无预期路径、无恢复证据”的失败状态再次调用 `Fail`，由新语义原子收敛到 `IDLE`。不得用 `ResetBlocked`，也不得修改业务文件。
@@ -43,11 +51,13 @@
 1. 状态测试先复现写前 `Fail` 留下 `RUNNING`，再验证修复后变为 `IDLE`、租约释放、错误保留。
 2. 保留已有“任务已登记后的 Fail 可恢复”和“两次恢复失败进入 AUTO-BLOCKED”测试，防止安全语义退化。
 3. 工作流检查先证明旧提示因缺少固定映射失败，再验证项目规则、部署提示与检查器一致。
-4. 运行现有状态、workspace guard、提交 helper 和工作流检查；不运行与控制面无关的 BattleSim 或 Unity 测试。
+4. 提交 helper 测试把一个带历史行尾空白但未修改的文件放入允许范围，证明它不会被改写或提交，同时保留真实多路径提交覆盖。
+5. 运行现有状态、workspace guard、提交 helper 和工作流检查；不运行与控制面无关的 BattleSim 或 Unity 测试。
 
 ## 非目标
 
 - 不接受 `execution` 作为兼容别名。
+- 不由提交 helper 自动修复行尾空白或把全部允许路径强制变成提交路径。
 - 不新增状态 schema、第二控制器或通用编排 wrapper。
 - 不改变恢复证据对 HEAD、路径外改动和目标文件指纹的严格校验。
 - 不重新实现今天已经通过测试的多路径提交和恢复证据功能。

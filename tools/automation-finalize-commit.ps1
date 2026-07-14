@@ -79,6 +79,28 @@ function Assert-ExternalIndexUnchanged {
   }
 }
 
+function Test-DiffChanged {
+  param([string[]]$Arguments)
+
+  & git -C $script:Repository @Arguments *> $null
+  if ($LASTEXITCODE -eq 0) { return $false }
+  if ($LASTEXITCODE -eq 1) { return $true }
+  throw "git $($Arguments -join ' ') failed with exit code $LASTEXITCODE"
+}
+
+function Test-PathChanged {
+  param([string]$Path)
+
+  & git -C $script:Repository ls-files --error-unmatch -- $Path *> $null
+  $isTracked = $LASTEXITCODE -eq 0
+  if (-not $isTracked) {
+    return Test-Path -LiteralPath (Join-Path $script:Repository $Path) -PathType Leaf
+  }
+  if (Test-DiffChanged @('diff', '--quiet', '--cached', '--', $Path)) { return $true }
+  if (Test-DiffChanged @('diff', '--quiet', '--', $Path)) { return $true }
+  $false
+}
+
 $script:Repository = [System.IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
 $gitRoot = ((& git -C $script:Repository rev-parse --show-toplevel 2>&1) -join '').Trim()
 if ($LASTEXITCODE -ne 0) { throw "RepositoryRoot is not a Git repository: $RepositoryRoot" }
@@ -89,44 +111,43 @@ if (-not $resolvedGitRoot.Equals($script:Repository, [System.StringComparison]::
 if ([string]::IsNullOrWhiteSpace($CommitMessage)) { throw 'CommitMessage must not be empty.' }
 
 $paths = ConvertTo-NormalizedPaths $ExpectedPaths
-$existingFiles = [System.Collections.Generic.List[string]]::new()
 foreach ($path in $paths) {
   $fullPath = [System.IO.Path]::GetFullPath((Join-Path $script:Repository $path))
   $prefix = $script:Repository + [System.IO.Path]::DirectorySeparatorChar
   if (-not $fullPath.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Expected path escapes the repository: $path" }
   if (Test-Path -LiteralPath $fullPath -PathType Container) { throw "Expected path must be a file: $path" }
-  if (Test-Path -LiteralPath $fullPath -PathType Leaf) {
-    [void]$existingFiles.Add($path)
-  } else {
+  if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
     & git -C $script:Repository ls-files --error-unmatch -- $path *> $null
     if ($LASTEXITCODE -ne 0) { throw "Expected path is neither an existing file nor a tracked deletion: $path" }
   }
 }
 
+$changedPaths = @($paths | Where-Object { Test-PathChanged $_ })
+if ($changedPaths.Count -eq 0) { throw 'No expected path has a staged, unstaged, untracked, or deleted change.' }
+$changedExistingFiles = @($changedPaths | Where-Object { Test-Path -LiteralPath (Join-Path $script:Repository $_) -PathType Leaf })
+
 $beforeIndex = Get-IndexEntries
 Push-Location $script:Repository
 try {
-  if ($existingFiles.Count -gt 0) {
-    & (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths ($existingFiles.ToArray() -join '|') -Fix
-    if ($LASTEXITCODE -ne 0) { throw 'Whitespace fix failed.' }
-    & (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths ($existingFiles.ToArray() -join '|')
+  if ($changedExistingFiles.Count -gt 0) {
+    & (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths ($changedExistingFiles -join '|')
     if ($LASTEXITCODE -ne 0) { throw 'Whitespace verification failed.' }
   }
 } finally {
   Pop-Location
 }
 
-[void](Invoke-GitRaw (@('add', '--') + $paths))
+[void](Invoke-GitRaw (@('add', '--') + $changedPaths))
 $afterAddIndex = Get-IndexEntries
-Assert-ExternalIndexUnchanged $beforeIndex $afterAddIndex $paths
+Assert-ExternalIndexUnchanged $beforeIndex $afterAddIndex $changedPaths
 
-$stagedPaths = @(Invoke-GitRaw (@('-c', 'core.quotepath=false', 'diff', '--cached', '--name-only', '--') + $paths) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Replace('\', '/') })
-foreach ($path in $paths) {
+$stagedPaths = @(Invoke-GitRaw (@('-c', 'core.quotepath=false', 'diff', '--cached', '--name-only', '--') + $changedPaths) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Replace('\', '/') })
+foreach ($path in $changedPaths) {
   if (-not @($stagedPaths | Where-Object { Test-OverlapsExpected $_ @($path) }).Count) { throw "Expected path has no staged change: $path" }
 }
 [void](Invoke-GitRaw @('diff', '--cached', '--check'))
-[void](Invoke-GitRaw (@('commit', '--only', '-m', $CommitMessage, '--') + $paths))
+[void](Invoke-GitRaw (@('commit', '--only', '-m', $CommitMessage, '--') + $changedPaths))
 
 $afterCommitIndex = Get-IndexEntries
-Assert-ExternalIndexUnchanged $beforeIndex $afterCommitIndex $paths
+Assert-ExternalIndexUnchanged $beforeIndex $afterCommitIndex $changedPaths
 ((Invoke-GitRaw @('rev-parse', 'HEAD')) -join '').Trim()

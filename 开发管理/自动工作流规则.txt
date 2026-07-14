@@ -19,8 +19,8 @@
 7. Codex 任务由控制器直接执行。只有合法 DeepSeek / Claude 主责候选已选中后，才预检 Claude CLI 与代理身份，并读取 `开发管理/DeepSeek工作提示词.txt` 和 `开发管理/AI协作规则.txt`；DeepSeek 子进程只修改 `expectedPaths`、标记未审核并写交接，不得 stage 或 commit。只有控制器拥有 stage/commit 权限并负责最终验证与提交。
 8. DeepSeek 预检在任何 mutation 前失败时调用 `RecordWorkerFailure`，记录有限退避并继续选择安全 Codex 候选；预检成功时调用 `ClearWorkerFailure`。配置执行器映射与本轮运行可用性是两个概念，不得因临时预检失败改派主责。
    DeepSeek worker backoff 生效期间，从 runnable 候选和库存中排除 DeepSeek 候选；排除后重新计算低水位 2、高水位 5 的库存与补位判断。只有 backoff 过期或 `ClearWorkerFailure` 成功后才恢复并重新纳入 DeepSeek 候选。
-9. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。`Verify` 通过后调用 workspace guard `CaptureRecoveryEvidence`，再把原始 baseline 路径、证据路径和证据 hash 与 `verification_completed` 检查点原子登记。随后只调用 `tools/automation-finalize-commit.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -CommitMessage '<提交信息>'` 完成行尾空白修复与复检、路径限定暂存、`git diff --cached --check` 和 `git commit --only`；不得由控制器临时拼装等价 PowerShell 单行命令。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
-10. 按检查点续期；验证通过才提交；结束时释放租约。`automation-finalize-commit.ps1` 只允许修复 `expectedPaths` 内文本行尾空白，并必须保持调用前所有路径外索引项不变；任何非文本、路径外索引变化、缺失预期差异或复检失败均按失败关闭。
+9. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。`Verify` 通过后调用 workspace guard `CaptureRecoveryEvidence`，再把原始 baseline 路径、证据路径和证据 hash 与 `verification_completed` 检查点原子登记。随后只调用 `tools/automation-finalize-commit.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -CommitMessage '<提交信息>'` 完成实际变化路径的行尾空白检查、路径限定暂存、`git diff --cached --check` 和 `git commit --only`；不得由控制器临时拼装等价 PowerShell 单行命令。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
+10. 按检查点续期；验证通过才提交；结束时释放租约。Finalizer 固定边界：expectedPaths 是允许上界，只检查并提交其中的实际变化路径，不自动修复内容。`automation-finalize-commit.ps1` 必须保持调用前所有未实际变化路径及路径外索引项不变；没有实际变化、行尾空白、路径外索引变化或复检失败均按失败关闭。
 
    验证遵循 `开发管理/AI协作规则.txt` 的“最小充分验证”：在选题时确定一次本轮必需检查，修改完成后尽量合并运行一次；相关代码、事实源、配置、依赖、Git 基线和执行目标没有变化时，不得因 checkpoint、提交前后或恢复阶段切换重复运行已经通过的同范围检查。普通局部任务不默认跑全项目回归或安排多轮独立复审；只有共享基础设施/控制面、安全与写入隔离、不可逆迁移、核心架构/公共数据语义、数值平衡、外部交接复审、已有失败/冲突或用户明确要求时才升级。workspace guard 提交前后验证、任务领域硬约束、行尾空白和 Git 差异检查仍保留，但不得扩展成无关检查。
 

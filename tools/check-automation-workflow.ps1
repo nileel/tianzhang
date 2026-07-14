@@ -71,6 +71,7 @@ $decisionBoundaryPattern = '待决策与邮件回执|CreateDecision|禁止自行
 $decisionVisibilityPattern = '自动工作流状态\.txt|TZG｜待决策|需要决策'
 $decisionFallbackPattern = 'MarkDecisionDeliveryFailed|不得让控制器作出默认选择|继续正常动态路由'
 $taskKindMappingPattern = 'TaskKind 固定映射：普通执行=`execute`、复审=`review`、维护=`maintenance`、恢复=`recovery`'
+$finalizerScopePattern = 'Finalizer 固定边界：expectedPaths 是允许上界，只检查并提交其中的实际变化路径，不自动修复内容。'
 $emailLiteralPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 
 $rules = Join-Path $root (Join-Path $devMgmt $rulesName)
@@ -167,6 +168,7 @@ $v2Sources = @(
 )
 foreach ($source in $v2Sources) {
   Require-Match $source.Path $taskKindMappingPattern "$($source.Label) lacks the fixed TaskKind mapping"
+  Require-Match $source.Path $finalizerScopePattern "$($source.Label) lacks the side-effect-free finalizer boundary"
   Reject-Match $source.Path '`execution`|-TaskKind\s+execution|TaskKind\s*[=:：]\s*execution' "$($source.Label) uses invalid execution TaskKind"
   Require-Match $source.Path '低水位[^\r\n]*2|low[^\r\n]*2' "$($source.Label) lacks the runnable low-water mark of 2"
   Require-Match $source.Path '高水位[^\r\n]*5|high[^\r\n]*5' "$($source.Label) lacks the runnable high-water mark of 5"
