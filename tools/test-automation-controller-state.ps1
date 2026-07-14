@@ -49,11 +49,11 @@ try {
   Assert-Code $r 0 'owner renew'
   if ((Read-TestState).leaseExpiresAt -ne '2026-07-11T03:30:00.0000000+00:00') { throw 'renew did not extend the lease by three hours' }
 
-  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskKind', 'execute', '-TaskId', 'sample-task', '-TaskExecutor', 'codex', '-Checkpoint', 'mutation_started', '-ExpectedPaths', 'a.txt|b/c.txt', '-Now', '2026-07-11T00:40:00Z')
+  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskKind', 'execute', '-TaskId', 'sample-task', '-TaskExecutor', 'codex', '-Checkpoint', 'verification_completed', '-ExpectedPaths', 'a.txt|b/c.txt', '-RecoveryBaselinePath', 'C:\state\baseline.json', '-RecoveryEvidencePath', 'C:\state\evidence.json', '-RecoveryEvidenceHash', ('a' * 64), '-Now', '2026-07-11T00:40:00Z')
   Assert-Code $r 0 'checkpoint'
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
-  if ($state.schemaVersion -ne 3 -or $state.taskExecutor -ne 'codex') { throw 'checkpoint did not persist schema v3 task executor fields' }
+  if ($state.schemaVersion -ne 4 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v4 recovery evidence fields' }
 
   $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
   Assert-Code $r 0 'checkpoint DeepSeek executor'
@@ -146,7 +146,9 @@ try {
 
   $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'run-2', '-ErrorMessage', 'initial interruption', '-Now', '2026-07-11T04:01:00Z')
   Assert-Code $r 0 'initial interruption'
-  if ((Read-TestState).recoveryCount -ne 0) { throw 'initial interruption consumed a recovery attempt' }
+  $state = Read-TestState
+  if ($state.recoveryCount -ne 0) { throw 'initial interruption consumed a recovery attempt' }
+  if ($state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'initial interruption did not preserve recovery evidence' }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-3', '-Now', '2026-07-11T04:02:00Z')
   Assert-Code $r 0 'first recovery acquire'
@@ -158,22 +160,25 @@ try {
   Assert-Code $r 0 'second recovery acquire'
   $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'run-4', '-WasRecovery', '-ErrorMessage', 'second recovery failed', '-Now', '2026-07-11T04:05:00Z')
   Assert-Code $r 0 'second recovery failure'
-  if ((Read-TestState).state -ne 'AUTO-BLOCKED') { throw 'second recovery failure did not block' }
+  $state = Read-TestState
+  if ($state.state -ne 'AUTO-BLOCKED') { throw 'second recovery failure did not block' }
+  if ($state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'AUTO-BLOCKED did not preserve recovery evidence' }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-5', '-Now', '2026-07-11T05:00:00Z')
   Assert-Code $r 11 'blocked acquire rejection'
 
   $r = Invoke-StateTool @('ResetBlocked', '-StatePath', $statePath, '-ErrorMessage', 'manual test reset', '-Now', '2026-07-11T05:01:00Z')
   Assert-Code $r 0 'manual reset'
-  if ($null -ne (Read-TestState).taskExecutor) { throw 'manual reset did not clear the task executor' }
+  $state = Read-TestState
+  if ($null -ne $state.taskExecutor -or $null -ne $state.recoveryBaselinePath -or $null -ne $state.recoveryEvidencePath -or $null -ne $state.recoveryEvidenceHash) { throw 'manual reset did not clear task and recovery evidence fields' }
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-6', '-Now', '2026-07-11T05:02:00Z')
   Assert-Code $r 0 'acquire after reset'
-  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-6', '-TaskExecutor', 'codex', '-Now', '2026-07-11T05:02:30Z')
+  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-6', '-TaskExecutor', 'codex', '-RecoveryBaselinePath', 'C:\state\complete-baseline.json', '-RecoveryEvidencePath', 'C:\state\complete-evidence.json', '-RecoveryEvidenceHash', ('b' * 64), '-Now', '2026-07-11T05:02:30Z')
   Assert-Code $r 0 'checkpoint executor before complete'
   $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-6', '-QueueAuditCompleted', '-Now', '2026-07-11T05:03:00Z')
   Assert-Code $r 0 'complete'
   $state = Read-TestState
-  if ($state.state -ne 'IDLE' -or -not $state.lastQueueAuditAt -or $null -ne $state.taskExecutor) { throw 'complete did not clear the run or record the audit' }
+  if ($state.state -ne 'IDLE' -or -not $state.lastQueueAuditAt -or $null -ne $state.taskExecutor -or $null -ne $state.recoveryBaselinePath -or $null -ne $state.recoveryEvidencePath -or $null -ne $state.recoveryEvidenceHash) { throw 'complete did not clear the run and recovery evidence or record the audit' }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:04:00Z')
   Assert-Code $r 0 'acquire decision lease'
@@ -242,7 +247,7 @@ try {
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
-  if ($legacy.schemaVersion -ne 3 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') {
+  if ($legacy.schemaVersion -ne 4 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') {
     throw 'schema v1 was not migrated safely'
   }
 
@@ -286,7 +291,7 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v2-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'renew migrated schema v2 state'
   $v2 = Read-TestState
-  if ($v2.schemaVersion -ne 3 -or $null -ne $v2.taskExecutor -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError) {
+  if ($v2.schemaVersion -ne 4 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError) {
     throw 'schema v2 was not migrated safely'
   }
   if ($v2.runId -ne 'v2-run' -or $v2.state -ne 'RUNNING' -or $v2.leaseExpiresAt -ne '2026-07-11T09:00:00.0000000+00:00' -or $v2.taskKind -ne 'execute' -or $v2.taskId -ne 'v2-recovery-task' -or $v2.checkpoint -ne 'mutation_started' -or $v2.expectedPaths.Count -ne 2 -or $v2.expectedPaths[0] -ne 'a.txt' -or $v2.expectedPaths[1] -ne 'b/c.txt' -or $v2.recoveryCount -ne 1 -or $v2.lastError -ne 'recoverable interruption') {
