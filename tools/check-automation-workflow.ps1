@@ -61,6 +61,7 @@ $rulesName = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB6KeE5YiZLnR4dA=='
 $statusName = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB54q25oCBLnR4dA=='
 $maintenanceName = ConvertFrom-Utf8Base64 '54q25oCB5LiO5bu66K6u57u05oqk6KeE5YiZLnR4dA=='
 $collaborationName = ConvertFrom-Utf8Base64 'QUnljY/kvZzop4TliJkudHh0'
+$controllerPromptName = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB5o6n5Yi25Zmo5o+Q56S66K+NLnR4dA=='
 $rulePattern = ConvertFrom-Utf8Base64 '6Ieq5Yqo5bel5L2c5rWB6KeE5YiZXC50eHQ='
 $readOnlyPattern = (ConvertFrom-Utf8Base64 '5Y+q6K+7') + '|read-only'
 $titleToolPattern = 'set-thread-name\.mjs'
@@ -78,6 +79,7 @@ $rules = Join-Path $root (Join-Path $devMgmt $rulesName)
 $status = Join-Path $root (Join-Path $devMgmt $statusName)
 $maintenance = Join-Path $root (Join-Path $devMgmt $maintenanceName)
 $collaboration = Join-Path $root (Join-Path $devMgmt $collaborationName)
+$controllerPromptSource = Join-Path $root (Join-Path $devMgmt $controllerPromptName)
 if (-not (Test-Path -LiteralPath $rules)) { $findings.Add('missing workflow rules') }
 if (Test-Path -LiteralPath $status) {
   Reject-Match $status 'WF1-QUEUE-MAINTENANCE|WF2-CODEX-ONE|WF3-CLAUDE-ONE|WF4-CODEX-TWO' 'project status still contains the legacy workflow table'
@@ -153,18 +155,17 @@ if ($controllerIdFiles.Count -ne 1) {
 Require-Match $controller '^name = "TZG Hourly Controller"$' 'controller has not been renamed'
 Reject-Match $controller 'TQ-[0-9]+|HANDOFF-[0-9]+|DEC-' 'controller prompt contains a hardcoded task, handoff, or decision id'
 Reject-Match $controller '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}' 'controller prompt contains a historical thread id'
-Require-Match $controller $titleToolPattern 'controller does not rename its conversation'
-Require-Match $controller $taskSummaryPattern 'controller does not record the human-readable task summary in memory'
-Require-Match $controller $titleFormatPattern 'controller does not use a human-readable title format'
-Require-Match $controller $titleFailurePattern 'controller does not preserve execution when renaming fails'
-Require-Match $controller $decisionBoundaryPattern 'controller lacks a decision-request boundary'
-Require-Match $controller $decisionVisibilityPattern 'controller lacks decision visibility instructions'
-Require-Match $controller $decisionFallbackPattern 'controller lacks decision delivery fallback instructions'
+Require-Match $rules $titleToolPattern 'workflow rules do not preserve conversation renaming'
+Require-Match $rules $taskSummaryPattern 'workflow rules do not record the human-readable task summary in memory'
+Require-Match $rules $titleFormatPattern 'workflow rules do not preserve the human-readable title format'
+Require-Match $rules $titleFailurePattern 'workflow rules do not preserve execution when renaming fails'
+Require-Match $rules $decisionBoundaryPattern 'workflow rules lack a decision-request boundary'
+Require-Match $rules $decisionVisibilityPattern 'workflow rules lack decision visibility instructions'
+Require-Match $rules $decisionFallbackPattern 'workflow rules lack decision delivery fallback instructions'
 Reject-Match $controller $emailLiteralPattern 'controller prompt contains an email address'
 
 $v2Sources = @(
-  @{ Path = $rules; Label = 'workflow rules' },
-  @{ Path = $controller; Label = 'controller prompt' }
+  @{ Path = $rules; Label = 'workflow rules' }
 )
 foreach ($source in $v2Sources) {
   Require-Match $source.Path $taskKindMappingPattern "$($source.Label) lacks the fixed TaskKind mapping"
@@ -189,16 +190,39 @@ foreach ($source in $v2Sources) {
   Require-Match $source.Path '(backoff|退避)[^\r\n]*(过期|ClearWorkerFailure)[^\r\n]*(恢复|重新纳入)' "$($source.Label) restores DeepSeek candidates before backoff expiry or clear"
 }
 
-Reject-Match $controller '先用 workspace guard Check 证明当前基线和路径安全' 'controller uses ordinary candidate Check for recovery ownership'
 Reject-Match $rules '先用 workspace guard Check 证明当前基线和路径安全' 'workflow rules use ordinary candidate Check for recovery ownership'
 
 Require-Match $maintenance 'backoff[^\r\n]*(排除|不计入)[^\r\n]*DeepSeek[^\r\n]*(候选|库存)|DeepSeek[^\r\n]*backoff[^\r\n]*(排除|不计入)' 'maintenance rules do not exclude DeepSeek candidates during worker backoff'
 Require-Match $maintenance '排除后[^\r\n]*重新计算[^\r\n]*(低水位[^\r\n]*2[^\r\n]*高水位[^\r\n]*5|2[^\r\n]*5)' 'maintenance rules do not recompute 2-to-5 runnable inventory after backoff exclusion'
 Require-Match $maintenance '(backoff|退避)[^\r\n]*(过期|ClearWorkerFailure)[^\r\n]*(恢复|重新纳入)' 'maintenance rules restore DeepSeek candidates before backoff expiry or clear'
 
-Reject-Match $controller '无恢复指针[^\r\n]*工作区不干净[^\r\n]*Complete[^\r\n]*只读退出' 'controller still globally exits on a dirty workspace without a recovery pointer'
 Reject-Match $rules '当前?队列少于\s*5\s*条|队列少于\s*5\s*条' 'workflow rules still use total queue count below 5 as a maintenance trigger'
-Reject-Match $controller '当前?队列少于\s*5\s*条|队列少于\s*5\s*条' 'controller still uses total queue count below 5 as a maintenance trigger'
+
+$deployedPrompt = ConvertFrom-TomlBasicString (Get-TomlTopLevelRawValue $controller 'prompt') 'prompt'
+if (-not (Test-Path -LiteralPath $controllerPromptSource -PathType Leaf)) {
+  $findings.Add('missing versioned controller prompt source')
+} elseif ($null -ne $deployedPrompt) {
+  $sourcePrompt = [IO.File]::ReadAllText($controllerPromptSource).TrimEnd("`r", "`n")
+  if ($sourcePrompt -cne $deployedPrompt) { $findings.Add('deployed controller prompt does not match the versioned source') }
+  if ($sourcePrompt.Length -gt 3000) { $findings.Add("controller prompt exceeds 3000 characters: $($sourcePrompt.Length)") }
+  $numberedSteps = [regex]::Matches($sourcePrompt, '(?m)^\s*\d+\.\s').Count
+  if ($numberedSteps -gt 10) { $findings.Add("controller prompt exceeds 10 numbered steps: $numberedSteps") }
+}
+
+foreach ($entryPoint in @('automation-controller\.ps1','Start','RegisterCandidate','BeginMutation','Finish','CompleteNoChange','Fail','requiredSources')) {
+  Require-Match $controller $entryPoint "controller prompt lacks v3 entry contract: $entryPoint"
+}
+foreach ($forbidden in @(
+  'automation-controller-state\.ps1',
+  'automation-workspace-guard\.ps1',
+  'automation-finalize-commit\.ps1',
+  '\bTaskKind\b',
+  'CaptureRecoveryEvidence',
+  'CheckRecovery',
+  'git commit'
+)) {
+  Reject-Match $controller $forbidden "controller prompt still implements deterministic internals: $forbidden"
+}
 Require-Match $controller '不得并行|禁止并行' 'controller prompt does not prohibit parallel workers'
 Require-Match $controller 'DeepSeek[^\r\n]*(不得|禁止)[^\r\n]*(stage|暂存)[^\r\n]*(commit|提交)|DeepSeek[^\r\n]*(不得|禁止)[^\r\n]*(commit|提交)[^\r\n]*(stage|暂存)' 'controller prompt does not forbid DeepSeek workers from staging and committing'
 Require-Match $controller '只有控制器|仅控制器[^\r\n]*(stage|暂存)[^\r\n]*(commit|提交)|控制器[^\r\n]*唯一[^\r\n]*(stage|暂存|提交)' 'controller prompt does not reserve staging and committing to the controller'

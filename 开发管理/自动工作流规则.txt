@@ -1,6 +1,6 @@
 # 自动工作流规则（✅ 已审核）
 
-> 2026-07-14 Codex：v1 已实施；当前队列水位、脏工作区隔离和 Codex / DeepSeek 串行执行规则由 `docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md` 继承并覆盖。
+> 2026-07-15 Codex：v3 采用薄提示词与确定性控制器门面；队列水位、脏工作区隔离和 Codex / DeepSeek 串行执行安全语义继续继承 v2 与 2026-07-14 加固规格。
 
 ## 自动化拓扑
 
@@ -8,7 +8,17 @@
 - WF1、WF3、WF4 保持 PAUSED 并保留历史配置与 memory；不得与控制器同时启用，尤其不得恢复 WF3 独立写入。
 - 每日简报只读，不修改项目、不 stage、不提交。
 
+## v3 确定性入口
+
+- `tools/automation-controller.ps1` 是模型唯一允许调用的控制器入口；版本化启动提示位于 `开发管理/自动工作流控制器提示词.txt`，部署 prompt 必须与该文件逐字一致。模型不得直接调用入口封装的状态、workspace guard、finalizer 或 Git 收尾命令。
+- 入口以单个 JSON 返回 `action`、`runId`、`branchKind`、`taskId`、`executor`、`expectedPaths`、`requiredSources`、`requiredChecks`、`nextCommand`、`failurePolicy` 与稳定错误码。模型只负责读取按分支返回的事实源、推导候选与允许路径、实施语义内容、判断事实冲突和选择任务直接相关的最小充分验证。
+- 外部工作类型由入口固定映射到内部状态枚举；checkpoint 顺序、租约、baseline、恢复证据、expectedPaths 与实际 changedPaths 分离、DeepSeek backoff、严格决策回复、finalizer 参数和所有失败关闭均由入口执行。模型不得自行解释内部枚举、恢复计数或 helper 退出码。
+- 执行、复审、维护/待决策与 DeepSeek 说明通过 `requiredSources` 按实际分支加载，不把全部细节复制回主 prompt。任何新增确定性分支必须先扩展入口测试与本规则，再更新薄 prompt；不得继续在 prompt 中实现自然语言状态机。
+- 待决策与邮件回执：CreateDecision 前必须登记项目可见状态路径；严格回复格式由入口校验。邮件发送、读取或标题能力失败调用 MarkDecisionDeliveryFailed，并继续正常动态路由不受决定影响的候选；不得让控制器作出默认选择、调用普通失败关闭或制造空提交。
+
 ## 每轮顺序
+
+以下顺序是 v3 门面的确定性实现契约。模型只能通过 `automation-controller.ps1` 的 Start、RegisterCandidate、BeginMutation、Finish、CompleteNoChange、Fail 及明确辅助动作驱动它，不得把下列内部步骤重新拼成命令。
 
 1. 通过 Node REPL 确认实际模型身份；失败则只读退出。用 `tools/automation-controller-state.ps1 Acquire` 获取三小时本机租约，随后读取恢复指针与待决策状态。
 2. Acquire 后立即调用 `tools/automation-workspace-guard.ps1 Snapshot` 记录 HEAD、索引、已暂存、未暂存、未跟踪、重命名、删除及子模块/gitlink 基线；Snapshot 发现 dirty submodule、gitlink 异常或工具失败时失败关闭。新任务通过普通 `Check` 后，`task_selected` 检查点必须同时保存本轮 baseline 路径。
