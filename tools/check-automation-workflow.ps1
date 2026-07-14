@@ -218,9 +218,19 @@ if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'Start\s+-Repository
 if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'InspectCandidate') {
   $findings.Add('controller prompt lacks candidate inspection')
 }
+if ($null -eq $deployedPrompt -or
+    $deployedPrompt -notmatch 'InspectCandidate\s+-RepositoryRoot\s+''D:\\天章游戏开发''\s+-RunId\s+"\$runId"\s+-TaskId\s+"\$taskId"') {
+  $findings.Add('controller prompt does not expose TaskId-only candidate inspection')
+}
+if ($null -ne $deployedPrompt -and $deployedPrompt -match 'InspectCandidate[^\r\n]*-(?:WorkType|Executor)\b') {
+  $findings.Add('controller prompt still asks the model to translate candidate protocol selectors')
+}
 if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'RegisterCandidate[^\r\n]*-ExpectedPaths') {
   $findings.Add('controller prompt does not register discovered paths explicitly')
 }
+Require-Match $rules 'fresh[^\r\n]*select_candidate[^\r\n]*固定[^\r\n]*workType=execution' 'workflow rules do not fix fresh queue candidates to execution'
+Require-Match $rules 'TaskId[^\r\n]*当前任务队列[^\r\n]*主责[^\r\n]*映射' 'workflow rules do not derive the executor from the current queue owner'
+Require-Match $rules '复审[^\r\n]*维护[^\r\n]*(独立|专用)[^\r\n]*(解析|分支)' 'workflow rules do not preserve separate review and maintenance candidate resolution'
 foreach ($forbidden in @(
   'automation-controller-state\.ps1',
   'automation-workspace-guard\.ps1',
