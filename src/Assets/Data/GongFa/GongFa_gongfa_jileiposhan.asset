@@ -76,16 +76,6 @@ MonoBehaviour:
     reaction: 750
     movePoints: 1.2
     mindGrowth: 7.5
-  - realm: "\u70BC\u865A"
-    hp: 50000
-    mp: 46667
-    physAtk: 16667
-    magAtk: 15000
-    physDef: 12500
-    magDef: 11667
-    reaction: 2500
-    movePoints: 1.5
-    mindGrowth: 10
   chapters:
   - chapterName: chapter_cuifeng
     realm: "\u7B51\u57FA"
@@ -131,25 +121,3 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u96F7\u9644\u4F24x40%\uFF0C\u66B4\u51FB\u540E\u51B7\u5374-10"
-  - chapterName: chapter_buxi
-    realm: "\u70BC\u865A"
-    soulShieldRate: 3
-    hitRate: 0
-    blockRate: 0
-    critRate: 0
-    critDamage: 3
-    dodgeRate: 0
-    magAtkBonus: 0
-    magDefBonus: 0
-    specialEffect: "\u4E0D\u606F\uFF1A\u60CA\u96F7\u95EACT\u9650\u5236\u79FB\u9664"
-  - chapterName: chapter_zhiren
-    realm: "\u70BC\u865A"
-    soulShieldRate: 3
-    hitRate: 0
-    blockRate: 0
-    critRate: 0
-    critDamage: 3
-    dodgeRate: 0
-    magAtkBonus: 0
-    magDefBonus: 0
-    specialEffect: "\u81F3\u4EBA\uFF1A\u96F7\u9644\u4F24x50%\uFF0C\u60CA\u96F7\u95EA\u53EF\u6BCF\u56DE\u5408\u91CA\u653E"

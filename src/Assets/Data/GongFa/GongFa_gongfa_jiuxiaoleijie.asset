@@ -76,16 +76,6 @@ MonoBehaviour:
     reaction: 750
     movePoints: 1.2
     mindGrowth: 7.5
-  - realm: "\u70BC\u865A"
-    hp: 45000
-    mp: 32667
-    physAtk: 15000
-    magAtk: 12000
-    physDef: 12500
-    magDef: 9333
-    reaction: 2500
-    movePoints: 1.5
-    mindGrowth: 10
   chapters:
   - chapterName: chapter_yinlei
     realm: "\u7B51\u57FA"
@@ -131,25 +121,3 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u4E07\u94A7\u5929\u5211\uFF1A\u6D88\u8017\u5370\u8BB0\u9020\u6210\u8089\u653Bx3.0\u4F24\u5BB3"
-  - chapterName: chapter_wanjun
-    realm: "\u70BC\u865A"
-    soulShieldRate: 0
-    hitRate: 0
-    blockRate: 0
-    critRate: 0
-    critDamage: 3
-    dodgeRate: 0
-    magAtkBonus: 0
-    magDefBonus: 0
-    specialEffect: "\u6BCF\u5C42+30%"
-  - chapterName: chapter_mimie
-    realm: "\u70BC\u865A"
-    soulShieldRate: 0
-    hitRate: 0
-    blockRate: 0
-    critRate: 0
-    critDamage: 3
-    dodgeRate: 0
-    magAtkBonus: 0
-    magDefBonus: 0
-    specialEffect: "\u5929\u5730\u4E3A\u7089\uFF1A\u4E0A\u56DE\u5408\u53D7\u4F24\u8F6C\u989D\u5916\u4F24\u5BB3"

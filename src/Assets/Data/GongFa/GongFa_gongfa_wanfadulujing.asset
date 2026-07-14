@@ -56,16 +56,6 @@ MonoBehaviour:
     reaction: 375
     movePoints: 1.2
     mindGrowth: 5
-  - realm: "\u70BC\u865A"
-    hp: 8667
-    mp: 21333
-    physAtk: 2333
-    magAtk: 7000
-    physDef: 2000
-    magDef: 7000
-    reaction: 1250
-    movePoints: 1.5
-    mindGrowth: 7
   chapters:
   - chapterName: "\u90FD\u7B93\u7BC7"
     realm: "\u91D1\u4E39"
@@ -100,14 +90,3 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u4E07\u6CD5\u90FD\u7B93\u7ECF\u00B7\u6B63\u7EDF\u7BC7 \u6548\u679C\u63CF\u8FF0"
-  - chapterName: "\u4E07\u8C61\u7BC7"
-    realm: "\u70BC\u865A"
-    soulShieldRate: 3
-    hitRate: 0
-    blockRate: 0
-    critRate: 0
-    critDamage: 0
-    dodgeRate: 0
-    magAtkBonus: 0
-    magDefBonus: 0
-    specialEffect: "\u4E07\u6CD5\u90FD\u7B93\u7ECF\u00B7\u4E07\u8C61\u7BC7 \u6548\u679C\u63CF\u8FF0"

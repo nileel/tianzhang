@@ -76,16 +76,6 @@ MonoBehaviour:
     reaction: 375
     movePoints: 1.2
     mindGrowth: 3.8
-  - realm: "\u70BC\u865A"
-    hp: 50000
-    mp: 23333
-    physAtk: 16667
-    magAtk: 7500
-    physDef: 12500
-    magDef: 5833
-    reaction: 1250
-    movePoints: 1.5
-    mindGrowth: 5
   chapters:
   - chapterName: chapter_tongchen
     realm: "\u91D1\u4E39"
@@ -120,14 +110,3 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u503E\u5CB3\uFF1A\u4E0A\u9650+80%\uFF0C\u540C\u5C18\u4E00\u51FBx3.0"
-  - chapterName: chapter_guizhen
-    realm: "\u70BC\u865A"
-    soulShieldRate: 3
-    hitRate: 3
-    blockRate: 0
-    critRate: 0
-    critDamage: 0
-    dodgeRate: 0
-    magAtkBonus: 0
-    magDefBonus: 0
-    specialEffect: "\u6267\u4E00\uFF1A\u4E0A\u9650+100%\uFF0C\u540C\u5C18\u4E00\u51FBx3.5\uFF0C\u8FC7\u8F7D\u9501\u5B9A5%"
