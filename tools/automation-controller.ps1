@@ -36,6 +36,8 @@ $script:ProtocolVersion = 1
 $script:StateTool = Join-Path $PSScriptRoot 'automation-controller-state.ps1'
 $script:GuardTool = Join-Path $PSScriptRoot 'automation-workspace-guard.ps1'
 $script:FinalizerTool = Join-Path $PSScriptRoot 'automation-finalize-commit.ps1'
+$script:ExecutionQueueRelativePath = '开发管理/当前任务队列.txt'
+$script:ExecutionCandidateResolver = 'current_task_queue_execution'
 $script:TaskKindMapping = [ordered]@{
   execution = 'execute'
   review = 'review'
@@ -269,6 +271,137 @@ function Get-BranchSources {
   @($sources | Select-Object -Unique)
 }
 
+function Get-ExecutorForQueueOwner {
+  param([string]$Owner)
+
+  $normalizedOwner = ([regex]::Replace(([string]$Owner).Trim().TrimEnd('。'), '\s*/\s*', ' / ')).Trim()
+  if (@(
+      'Codex',
+      'ChatGPT5.5',
+      'gpt-5.5',
+      'Codex / ChatGPT5.5',
+      'Codex / gpt-5.5'
+    ) -contains $normalizedOwner) {
+    return 'codex'
+  }
+  if (@(
+      'DeepSeek V4 Pro',
+      'Claude Code',
+      'Claude / DeepSeek'
+    ) -contains $normalizedOwner) {
+    return 'deepseek'
+  }
+  $null
+}
+
+function Resolve-ExecutionQueueCandidate {
+  param([string]$SelectedTaskId)
+
+  if ($SelectedTaskId -notmatch '^[A-Za-z0-9][A-Za-z0-9-]*$') {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $false; ErrorCode = 'candidate_not_found'
+      Message = 'TaskId is not a valid current-queue identifier.'
+    }
+  }
+
+  $queuePath = Join-Path $RepositoryRoot $script:ExecutionQueueRelativePath
+  if (-not (Test-Path -LiteralPath $queuePath -PathType Leaf)) {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $true; ErrorCode = 'queue_source_missing'
+      Message = "Current task queue is missing: $($script:ExecutionQueueRelativePath)"
+    }
+  }
+
+  try {
+    $lines = [IO.File]::ReadAllLines($queuePath, [Text.UTF8Encoding]::new($false, $true))
+  } catch {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $true; ErrorCode = 'queue_source_invalid'
+      Message = "Current task queue could not be read as UTF-8: $($_.Exception.Message)"
+    }
+  }
+
+  $insideTable = $false
+  $rows = [Collections.Generic.List[object]]::new()
+  foreach ($line in $lines) {
+    $trimmed = ([string]$line).Trim()
+    if ($trimmed -eq '## 队列表头') {
+      $insideTable = $true
+      continue
+    }
+    if ($insideTable -and $trimmed -match '^##\s+') { break }
+    if (-not $insideTable -or -not $trimmed.StartsWith('|', [StringComparison]::Ordinal)) { continue }
+
+    $cells = @(($trimmed.Trim('|') -split '\|') | ForEach-Object { $_.Trim() })
+    if ($cells.Count -ne 6) {
+      return [pscustomobject]@{
+        Ok = $false; Fatal = $true; ErrorCode = 'queue_source_invalid'
+        Message = 'Current task queue contains a malformed table row.'
+      }
+    }
+    if ($cells[0] -eq 'ID' -or $cells[0] -match '^-+$') { continue }
+    $rows.Add([pscustomobject]@{
+      TaskId = [string]$cells[0]
+      Priority = [string]$cells[1]
+      Owner = [string]$cells[2]
+      BusinessType = [string]$cells[3]
+      Status = [string]$cells[4]
+      Summary = [string]$cells[5]
+    })
+  }
+
+  if (-not $insideTable) {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $true; ErrorCode = 'queue_source_invalid'
+      Message = 'Current task queue does not contain the queue table section.'
+    }
+  }
+
+  $matches = @($rows | Where-Object { [string]$_.TaskId -ceq $SelectedTaskId })
+  if ($matches.Count -eq 0) {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $false; ErrorCode = 'candidate_not_found'
+      Message = 'TaskId is not present in the current task queue.'
+    }
+  }
+  if ($matches.Count -ne 1) {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $true; ErrorCode = 'queue_source_invalid'
+      Message = 'Current task queue contains duplicate task identifiers.'
+    }
+  }
+
+  $row = $matches[0]
+  if ([string]$row.Status -cne '待处理') {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $false; ErrorCode = 'candidate_not_runnable'
+      Message = "Queue task status is not runnable: $([string]$row.Status)"
+    }
+  }
+
+  $mappedExecutor = Get-ExecutorForQueueOwner ([string]$row.Owner)
+  if ([string]::IsNullOrWhiteSpace([string]$mappedExecutor)) {
+    return [pscustomobject]@{
+      Ok = $false; Fatal = $false; ErrorCode = 'candidate_executor_unmapped'
+      Message = "Queue task owner does not map to a configured executor: $([string]$row.Owner)"
+    }
+  }
+
+  [pscustomobject]@{
+    Ok = $true
+    Fatal = $false
+    ErrorCode = $null
+    Message = $null
+    WorkType = 'execution'
+    TaskId = [string]$row.TaskId
+    Executor = $mappedExecutor
+    Owner = [string]$row.Owner
+    BusinessType = [string]$row.BusinessType
+    Status = [string]$row.Status
+    Summary = [string]$row.Summary
+  }
+}
+
 function Get-ExternalWorkType {
   param([string]$InternalTaskKind)
 
@@ -469,13 +602,19 @@ try {
         workType = $null
         taskId = $null
         executor = $null
+        candidateResolver = $script:ExecutionCandidateResolver
       }
       Write-JsonAtomically ([pscustomobject]$session) (Get-SessionPath)
 
       $result = New-ProtocolResult $true 'select_candidate' 'selection' 'close_empty_run' $null 'Lease acquired and workspace baseline captured.'
       $result.nextCommand = 'InspectCandidate'
       $result.baselinePath = $currentBaselinePath
-      $result.requiredSources = @('开发管理/当前任务队列.txt')
+      $result.requiredSources = @($script:ExecutionQueueRelativePath)
+      $result.selectionPolicy = [ordered]@{
+        resolver = $script:ExecutionCandidateResolver
+        semanticInputs = @('TaskId')
+        protocolValues = 'controller_owned'
+      }
       $result.workerBackoff = $state.workerState.deepseek
       if ($null -ne $state.pendingDecision) {
         $result.action = 'inspect_pending_decision'
@@ -495,8 +634,24 @@ try {
       )
       $result.commandTemplates = [ordered]@{
         Start = "Start -RepositoryRoot 'D:\天章游戏开发' -RunId `$runId -ActualModel `$actualModel"
-        InspectCandidate = 'InspectCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -WorkType $workType -TaskId $taskId -Executor $executor'
+        InspectCandidate = 'InspectCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -TaskId $taskId'
         RegisterCandidate = 'RegisterCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -ExpectedPaths $expectedPaths'
+      }
+      $result.candidateResolvers = [ordered]@{
+        execution = [ordered]@{
+          action = 'InspectCandidate'
+          source = $script:ExecutionQueueRelativePath
+          semanticInputs = @('TaskId')
+          protocolValues = 'controller_owned'
+        }
+        review = [ordered]@{
+          source = '开发管理/审核入口.txt'
+          mode = 'separate_resolver_required'
+        }
+        maintenance = [ordered]@{
+          source = '开发管理/状态与建议维护规则.txt'
+          mode = 'separate_resolver_required'
+        }
       }
       Write-ProtocolResult $result
     }
@@ -506,12 +661,29 @@ try {
         $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'invalid_phase' 'InspectCandidate requires a pre-task phase.'
         Write-ProtocolResult $result 13
       }
-      if ($WorkType -notin @('execution', 'review', 'maintenance')) {
-        Close-EmptyRun 'invalid_arguments' 'WorkType must be execution, review, or maintenance.' 15
+      if (-not [string]::IsNullOrWhiteSpace($WorkType) -or -not [string]::IsNullOrWhiteSpace($Executor)) {
+        Close-EmptyRun 'candidate_selector_override_forbidden' 'InspectCandidate accepts only semantic TaskId; work type and executor are controller-owned.' 15
       }
       if ([string]::IsNullOrWhiteSpace($TaskId)) { Close-EmptyRun 'invalid_arguments' 'TaskId is required.' 15 }
-      if ($Executor -notin @('codex', 'deepseek')) { Close-EmptyRun 'invalid_arguments' 'Executor must be codex or deepseek.' 15 }
-      if ($Executor -eq 'deepseek') {
+      if ([string]$session.candidateResolver -cne $script:ExecutionCandidateResolver) {
+        Close-EmptyRun 'candidate_resolver_mismatch' 'InspectCandidate is reserved for fresh current-queue execution candidates.' 15
+      }
+
+      $candidate = Resolve-ExecutionQueueCandidate $TaskId
+      if (-not [bool]$candidate.Ok) {
+        if ([bool]$candidate.Fatal) {
+          Close-EmptyRun ([string]$candidate.ErrorCode) ([string]$candidate.Message) 15
+        }
+        $result = New-ProtocolResult $false 'select_candidate' 'selection' 'skip_candidate' ([string]$candidate.ErrorCode) ([string]$candidate.Message)
+        $result.taskId = $TaskId
+        $result.nextCommand = 'InspectCandidate'
+        Write-ProtocolResult $result 24
+      }
+
+      $selectedWorkType = [string]$candidate.WorkType
+      $selectedTaskId = [string]$candidate.TaskId
+      $selectedExecutor = [string]$candidate.Executor
+      if ($selectedExecutor -eq 'deepseek') {
         $workerState = Get-StateSnapshot
         if (Test-DeepSeekBackoffActive $workerState) {
           $result = New-ProtocolResult $false 'select_candidate' 'selection' 'skip_candidate' 'worker_backoff' 'DeepSeek worker is in backoff.'
@@ -522,16 +694,16 @@ try {
       }
 
       $session.phase = 'candidate_inspection'
-      $session.branchKind = $WorkType
-      $session.workType = $WorkType
-      $session.taskId = $TaskId
-      $session.executor = $Executor
+      $session.branchKind = $selectedWorkType
+      $session.workType = $selectedWorkType
+      $session.taskId = $selectedTaskId
+      $session.executor = $selectedExecutor
       Save-Session $session
 
-      $result = New-ProtocolResult $true 'inspect_candidate' $WorkType 'close_empty_run' $null 'Candidate facts may be inspected read-only before path registration.'
-      $result.taskId = $TaskId
-      $result.executor = $Executor
-      $result.requiredSources = @(Get-BranchSources $WorkType $Executor)
+      $result = New-ProtocolResult $true 'inspect_candidate' $selectedWorkType 'close_empty_run' $null 'Candidate facts may be inspected read-only before path registration.'
+      $result.taskId = $selectedTaskId
+      $result.executor = $selectedExecutor
+      $result.requiredSources = @(Get-BranchSources $selectedWorkType $selectedExecutor)
       $result.discoveryPolicy = [ordered]@{
         readOnlyProjectDiscovery = $true
         allowedCommands = @('rg', 'rg --files', 'Get-Content', 'git status', 'git diff', 'task-card required checks')
