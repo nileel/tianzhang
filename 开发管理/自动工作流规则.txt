@@ -11,15 +11,15 @@
 ## 每轮顺序
 
 1. 通过 Node REPL 确认实际模型身份；失败则只读退出。用 `tools/automation-controller-state.ps1 Acquire` 获取三小时本机租约，随后读取恢复指针与待决策状态。
-2. Acquire 后立即调用 `tools/automation-workspace-guard.ps1 Snapshot` 记录 HEAD、索引、已暂存、未暂存、未跟踪、重命名、删除及子模块/gitlink 基线；Snapshot 发现 dirty submodule、gitlink 异常或工具失败时失败关闭。
-3. 先恢复能够证明属于原任务的工作，再选择最高风险待复审；其后从所有配置执行器候选中按优先级串行选择。存在安全执行候选时，队列补位不得抢占本轮；只有无安全候选、队列事实错误或必须提交的 12 小时审计修正才进入独立维护。
+2. Acquire 后立即调用 `tools/automation-workspace-guard.ps1 Snapshot` 记录 HEAD、索引、已暂存、未暂存、未跟踪、重命名、删除及子模块/gitlink 基线；Snapshot 发现 dirty submodule、gitlink 异常或工具失败时失败关闭。新任务通过普通 `Check` 后，`task_selected` 检查点必须同时保存本轮 baseline 路径。
+3. 先恢复能够证明属于原任务的工作，再选择最高风险待复审；恢复任务必须使用状态中保存的原始 baseline、证据文件和完整 `expectedPaths` 调用 workspace guard `CheckRecovery`，不得用本轮新 Snapshot 的普通候选 `Check` 重新认领脏路径。证据缺失、损坏、预期路径指纹变化或路径外基线变化均失败关闭。其后从所有配置执行器候选中按优先级串行选择。存在安全执行候选时，队列补位不得抢占本轮；只有无安全候选、队列事实错误或必须提交的 12 小时审计修正才进入独立维护。
 4. 每个候选都必须在修改前推导完整、项目相对的 `expectedPaths`，再调用 workspace guard `Check`。退出码 20 表示路径冲突：跳过该候选并继续下一项；退出码 21 表示基线变化：安全退出并保留必要恢复证据；非法输入或工具失败按失败关闭。所有候选都冲突时才安静退出。
 5. 选定真实工作对象后、读取实施细则前，从 Node REPL 本轮元数据取得并交叉校验 `currentThreadId`，再调用 `%USERPROFILE%\.codex\automation-tools\set-thread-name.mjs`：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用任务编号；不得调用 `list_threads` 猜测当前任务，不得硬编码或复用历史任务 ID。无候选、锁占用、身份失败或 `currentThreadId` 校验失败时不改名。改名失败或五秒超时只记录 automation memory，不影响路由、验证、提交或失败关闭。
 6. Codex 任务由控制器直接执行。只有合法 DeepSeek / Claude 主责候选已选中后，才预检 Claude CLI 与代理身份，并读取 `开发管理/DeepSeek工作提示词.txt` 和 `开发管理/AI协作规则.txt`；DeepSeek 子进程只修改 `expectedPaths`、标记未审核并写交接，不得 stage 或 commit。只有控制器拥有 stage/commit 权限并负责最终验证与提交。
 7. DeepSeek 预检在任何 mutation 前失败时调用 `RecordWorkerFailure`，记录有限退避并继续选择安全 Codex 候选；预检成功时调用 `ClearWorkerFailure`。配置执行器映射与本轮运行可用性是两个概念，不得因临时预检失败改派主责。
    DeepSeek worker backoff 生效期间，从 runnable 候选和库存中排除 DeepSeek 候选；排除后重新计算低水位 2、高水位 5 的库存与补位判断。只有 backoff 过期或 `ClearWorkerFailure` 成功后才恢复并重新纳入 DeepSeek 候选。
-8. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。只对 `expectedPaths` 运行行尾空白修复与复检，只 `git add -- @expectedPaths`，并使用 `git commit --only -m "$commitMessage" -- @expectedPaths`。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
-9. 按检查点续期；验证通过才提交；结束时释放租约。暂存前必须在同一 PowerShell 会话运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -Fix`，随后不带 `-Fix` 复检。仅命中本轮 `expectedPaths` 内的文本行尾空白由 `-Fix` 直接清理并继续本轮；任何非文本、路径外或复检仍失败的问题按失败关闭。暂存后必须运行 `git diff --cached --check`。
+8. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。`Verify` 通过后调用 workspace guard `CaptureRecoveryEvidence`，再把原始 baseline 路径、证据路径和证据 hash 与 `verification_completed` 检查点原子登记。随后只调用 `tools/automation-finalize-commit.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -CommitMessage '<提交信息>'` 完成行尾空白修复与复检、路径限定暂存、`git diff --cached --check` 和 `git commit --only`；不得由控制器临时拼装等价 PowerShell 单行命令。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
+9. 按检查点续期；验证通过才提交；结束时释放租约。`automation-finalize-commit.ps1` 只允许修复 `expectedPaths` 内文本行尾空白，并必须保持调用前所有路径外索引项不变；任何非文本、路径外索引变化、缺失预期差异或复检失败均按失败关闭。
 
    验证遵循 `开发管理/AI协作规则.txt` 的“最小充分验证”：在选题时确定一次本轮必需检查，修改完成后尽量合并运行一次；相关代码、事实源、配置、依赖、Git 基线和执行目标没有变化时，不得因 checkpoint、提交前后或恢复阶段切换重复运行已经通过的同范围检查。普通局部任务不默认跑全项目回归或安排多轮独立复审；只有共享基础设施/控制面、安全与写入隔离、不可逆迁移、核心架构/公共数据语义、数值平衡、外部交接复审、已有失败/冲突或用户明确要求时才升级。workspace guard 提交前后验证、任务领域硬约束、行尾空白和 Git 差异检查仍保留，但不得扩展成无关检查。
 
@@ -63,7 +63,8 @@
 - 运行状态位于 `%USERPROFILE%\.codex\automation-state\tzg-hourly-controller.json`，不得写入 Git 锁。
 - 租约三小时，在 `task_selected`、`mutation_started`、`verification_completed`、`commit_completed` 等检查点续期。
 - 首次中断不计恢复次数，随后最多恢复两次；第二次恢复仍失败转 `AUTO-BLOCKED`。
-- 只有 Git 变更路径全部属于已记录 `expectedPaths` 时才能恢复；额外路径一律阻塞。
+- 只有 `CheckRecovery` 同时证明预期路径完整指纹与中断证据一致、原始 baseline 的路径外状态未变化时才能恢复；缺少证据、预期路径被继续修改或出现额外路径一律阻塞。
+- `verification_completed` 前必须先用 `CaptureRecoveryEvidence` 生成用户级原子证据文件；`Fail` 和 `AUTO-BLOCKED` 保留 baseline/证据引用，`Complete`、fresh `IDLE` 与人工 `ResetBlocked` 清除引用。
 - 控制器自有 pending decision 或有效阻塞必须在修改前登记状态文件 `expectedPaths` 和 checkpoint，验证后作为有效结果提交；若中断或提交失败，必须保留精确恢复指针。禁止出现 `IDLE + no recovery + controller-owned dirty file`。
 - 若在选题后追加控制器自有状态路径，必须先形成扩展后的完整 `expectedPaths`，再再次调用 workspace guard `Check`。若该状态路径与 baseline 冲突，不得写、暂存或提交该状态路径，并保留原任务的恢复或失败语义；冲突状态路径不得加入 `Verify` 的 `expectedPaths` 排除集合，不能借扩展范围隐藏人工差异。
 - `ResetBlocked` 只能由人工在处理原因后明确调用。

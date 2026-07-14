@@ -168,6 +168,9 @@ foreach ($source in $v2Sources) {
   Require-Match $source.Path '低水位[^\r\n]*2|low[^\r\n]*2' "$($source.Label) lacks the runnable low-water mark of 2"
   Require-Match $source.Path '高水位[^\r\n]*5|high[^\r\n]*5' "$($source.Label) lacks the runnable high-water mark of 5"
   Require-Match $source.Path 'automation-workspace-guard\.ps1' "$($source.Label) does not require the workspace guard"
+  Require-Match $source.Path 'automation-finalize-commit\.ps1' "$($source.Label) does not use the fixed commit helper"
+  Require-Match $source.Path 'CaptureRecoveryEvidence' "$($source.Label) does not capture recovery evidence"
+  Require-Match $source.Path 'CheckRecovery' "$($source.Label) does not use the recovery-specific guard"
   Require-Match $source.Path 'RecordQueueState' "$($source.Label) does not persist queue/backlog fingerprints"
   Require-Match $source.Path 'RecordWorkerFailure' "$($source.Label) does not record worker preflight failures"
   Require-Match $source.Path 'DeepSeek工作提示词\.txt' "$($source.Label) does not route DeepSeek workers through their prompt"
@@ -180,6 +183,9 @@ foreach ($source in $v2Sources) {
   Require-Match $source.Path '排除后[^\r\n]*重新计算[^\r\n]*(低水位[^\r\n]*2[^\r\n]*高水位[^\r\n]*5|2[^\r\n]*5)' "$($source.Label) does not recompute 2-to-5 runnable inventory after backoff exclusion"
   Require-Match $source.Path '(backoff|退避)[^\r\n]*(过期|ClearWorkerFailure)[^\r\n]*(恢复|重新纳入)' "$($source.Label) restores DeepSeek candidates before backoff expiry or clear"
 }
+
+Reject-Match $controller '先用 workspace guard Check 证明当前基线和路径安全' 'controller uses ordinary candidate Check for recovery ownership'
+Reject-Match $rules '先用 workspace guard Check 证明当前基线和路径安全' 'workflow rules use ordinary candidate Check for recovery ownership'
 
 Require-Match $maintenance 'backoff[^\r\n]*(排除|不计入)[^\r\n]*DeepSeek[^\r\n]*(候选|库存)|DeepSeek[^\r\n]*backoff[^\r\n]*(排除|不计入)' 'maintenance rules do not exclude DeepSeek candidates during worker backoff'
 Require-Match $maintenance '排除后[^\r\n]*重新计算[^\r\n]*(低水位[^\r\n]*2[^\r\n]*高水位[^\r\n]*5|2[^\r\n]*5)' 'maintenance rules do not recompute 2-to-5 runnable inventory after backoff exclusion'
