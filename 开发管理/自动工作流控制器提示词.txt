@@ -4,11 +4,11 @@
 
 2. 必须调用 mcp__node_repl__js 读取 nodeRepl.requestMeta：以 x-codex-turn-metadata.model 为实际模型，并校验顶层 threadId 与 turn.thread_id 完全一致。model 为 unknown 或 Node REPL 失败时只读退出；任务 ID 不一致时只禁用标题能力，不影响有效模型继续运行。不得用系统 node.exe 或 shell 代替 Node REPL。
 
-3. 生成 UUID runId，用 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller.ps1 Start 传入项目根目录、runId 和实际模型。只解析返回的单个 JSON；租约占用、AUTO-BLOCKED、身份或状态错误按 failurePolicy 退出，不自行修复本机状态。
+3. 设置 `$runId=[guid]::NewGuid().Guid`，并把 Node REPL 返回模型赋给 `$actualModel`，准确调用：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller.ps1 Start -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -ActualModel "$actualModel"。只解析单个 JSON；租约占用、AUTO-BLOCKED、身份或状态错误按 failurePolicy 退出，不自行修复本机状态。
 
-4. 对 select_candidate、inspect_pending_decision 或 resume_task，只读取 requiredSources 指定的分支事实源。模型负责语义判断：依赖、冻结、主责、审核风险、候选优先级和完整允许路径。路由顺序仍是安全恢复、最高风险待复审、最高优先级可执行任务、必要维护、安静退出；待决策只排除原任务及其传递后继。新候选只能用 RegisterCandidate 登记；candidate_conflict 继续下一个候选，baseline_changed 或其他失败按 JSON 关闭。选定对象后按规则设置中文任务标题；标题失败只记最小错误。
+4. select_candidate 时先读 requiredSources 选出候选，把任务卡的工作类型、任务 ID 和执行器分别赋给 `$workType/$taskId/$executor`，再准确调用 InspectCandidate -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -WorkType "$workType" -TaskId "$taskId" -Executor "$executor"。仅在返回 discoveryPolicy.readOnlyProjectDiscovery=true 时，按任务卡和 requiredSources 使用允许的只读发现命令推导完整项目相对路径；不得修改项目或派发 worker。路由顺序仍是安全恢复、最高风险待复审、最高优先级可执行任务、必要维护、安静退出。
 
-5. 只有 RegisterCandidate 成功后才能实施。修改前调用 BeginMutation；Codex 直接完成语义工作。DeepSeek 分支只有 requiredSources 已返回其工作提示词且主责合法时才串行调用；DeepSeek 不得 stage、commit、自审、扩大路径或并行派发，只有控制器拥有 stage/commit 权限。worker 预检结果只通过 RecordWorkerFailure 或 ClearWorkerFailure 写回入口，不改派主责。
+5. 路径完整后把以 `|` 分隔的项目相对路径赋给 `$expectedPaths`，准确调用 RegisterCandidate -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -ExpectedPaths "$expectedPaths"。candidate_conflict 按 nextCommand 回到 InspectCandidate；baseline_changed 或其他失败按 JSON 关闭。登记成功后才可设置标题、调用 BeginMutation 并实施。DeepSeek 分支只有 InspectCandidate 已返回其工作提示词且主责合法时才串行调用；DeepSeek 不得 stage、commit、自审、扩大路径或并行派发，只有控制器拥有 stage/commit 权限。
 
 6. 只运行任务直接相关的最小充分验证和 requiredChecks。领域硬约束仍执行；相关代码、事实源、配置、依赖和执行目标未变化时不重复同范围检查。发现事实冲突或需负责人选择时，只通过 CreateDecision、MarkDecisionNotified、MarkDecisionDeliveryFailed 或 ResolveDecisionReply 更新协议，并按规则维护项目可见状态。
 

@@ -209,8 +209,17 @@ if (-not (Test-Path -LiteralPath $controllerPromptSource -PathType Leaf)) {
   if ($numberedSteps -gt 10) { $findings.Add("controller prompt exceeds 10 numbered steps: $numberedSteps") }
 }
 
-foreach ($entryPoint in @('automation-controller\.ps1','Start','RegisterCandidate','BeginMutation','Finish','CompleteNoChange','Fail','requiredSources')) {
+foreach ($entryPoint in @('automation-controller\.ps1','Start','InspectCandidate','RegisterCandidate','BeginMutation','Finish','CompleteNoChange','Fail','requiredSources')) {
   Require-Match $controller $entryPoint "controller prompt lacks v3 entry contract: $entryPoint"
+}
+if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'Start\s+-RepositoryRoot\s+''D:\\天章游戏开发''\s+-RunId\s+"\$runId"\s+-ActualModel\s+"\$actualModel"') {
+  $findings.Add('controller prompt lacks the exact Start parameter contract')
+}
+if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'InspectCandidate') {
+  $findings.Add('controller prompt lacks candidate inspection')
+}
+if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'RegisterCandidate[^\r\n]*-ExpectedPaths') {
+  $findings.Add('controller prompt does not register discovered paths explicitly')
 }
 foreach ($forbidden in @(
   'automation-controller-state\.ps1',
