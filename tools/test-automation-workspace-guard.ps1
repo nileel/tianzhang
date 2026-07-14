@@ -618,6 +618,46 @@ try {
     }
   }
 
+  $recoveryRepo = Join-Path $sandbox 'recovery-repo'
+  New-Item -ItemType Directory -Path $recoveryRepo | Out-Null
+  Invoke-GitAt $recoveryRepo @('init') | Out-Null
+  Invoke-GitAt $recoveryRepo @('config', 'user.name', 'Recovery Guard Test') | Out-Null
+  Invoke-GitAt $recoveryRepo @('config', 'user.email', 'recovery-guard@example.invalid') | Out-Null
+  [System.IO.File]::WriteAllText((Join-Path $recoveryRepo 'task.txt'), "task base`n", [System.Text.UTF8Encoding]::new($false))
+  [System.IO.File]::WriteAllText((Join-Path $recoveryRepo 'human.txt'), "human base`n", [System.Text.UTF8Encoding]::new($false))
+  Invoke-GitAt $recoveryRepo @('add', '--', 'task.txt', 'human.txt') | Out-Null
+  Invoke-GitAt $recoveryRepo @('commit', '-m', 'test: recovery base') | Out-Null
+  $recoveryBaseline = Join-Path $sandbox 'recovery-baseline.json'
+  $recoveryEvidence = Join-Path $sandbox 'recovery-evidence.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $recoveryRepo, '-BaselinePath', $recoveryBaseline)
+  Assert-Code $r 0 'recovery baseline snapshot'
+  [System.IO.File]::WriteAllText((Join-Path $recoveryRepo 'task.txt'), "controller residue`n", [System.Text.UTF8Encoding]::new($false))
+  $controllerResidue = [System.IO.File]::ReadAllBytes((Join-Path $recoveryRepo 'task.txt'))
+
+  $r = Invoke-Guard @('CaptureRecoveryEvidence', '-RepositoryRoot', $recoveryRepo, '-BaselinePath', $recoveryBaseline, '-EvidencePath', $recoveryEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'capture recovery evidence'
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $recoveryRepo, '-BaselinePath', $recoveryBaseline, '-EvidencePath', $recoveryEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'exact controller residue recovers'
+  Assert-JsonSafe $r $true @() 'exact controller residue recovers'
+
+  [System.IO.File]::AppendAllText((Join-Path $recoveryRepo 'task.txt'), "human changed expected`n")
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $recoveryRepo, '-BaselinePath', $recoveryBaseline, '-EvidencePath', $recoveryEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 22 'recovery rejects changed expected path'
+  if (($r.Output | ConvertFrom-Json).reason -ne 'recovery_expected_changed') { throw "unexpected expected-path recovery reason: $($r.Output)" }
+  [System.IO.File]::WriteAllBytes((Join-Path $recoveryRepo 'task.txt'), $controllerResidue)
+
+  [System.IO.File]::AppendAllText((Join-Path $recoveryRepo 'human.txt'), "human changed outside`n")
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $recoveryRepo, '-BaselinePath', $recoveryBaseline, '-EvidencePath', $recoveryEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 21 'recovery rejects outside change'
+  if (($r.Output | ConvertFrom-Json).reason -ne 'baseline_changed') { throw "unexpected outside-change recovery reason: $($r.Output)" }
+  [System.IO.File]::WriteAllText((Join-Path $recoveryRepo 'human.txt'), "human base`n", [System.Text.UTF8Encoding]::new($false))
+
+  $tamperedEvidence = Get-Content -Raw -LiteralPath $recoveryEvidence | ConvertFrom-Json
+  $tamperedEvidence.head = '0000000000000000000000000000000000000000'
+  [System.IO.File]::WriteAllText($recoveryEvidence, ($tamperedEvidence | ConvertTo-Json -Depth 8), [System.Text.UTF8Encoding]::new($false))
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $recoveryRepo, '-BaselinePath', $recoveryBaseline, '-EvidencePath', $recoveryEvidence, '-ExpectedPaths', 'task.txt')
+  if ($r.Code -eq 0 -or ($r.Output | ConvertFrom-Json).reason -ne 'recovery_evidence_invalid') { throw "tampered recovery evidence was accepted: $($r.Output)" }
+
   'test-automation-workspace-guard: OK'
   exit 0
 } finally {

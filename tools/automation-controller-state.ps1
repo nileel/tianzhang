@@ -14,6 +14,10 @@ param(
   [ValidateSet('identity_checked','queues_loaded','task_selected','mutation_started','verification_completed','commit_completed')]
   [string]$Checkpoint,
   [string]$ExpectedPaths,
+  [string]$RecoveryBaselinePath,
+  [string]$RecoveryEvidencePath,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$RecoveryEvidenceHash,
   [string]$TaskSummary,
   [string]$DecisionQuestion,
   [string]$DecisionOptions,
@@ -61,7 +65,7 @@ function Get-NowValue {
 
 function New-State {
   [ordered]@{
-    schemaVersion = 3
+    schemaVersion = 4
     controllerId = $ControllerId
     runId = $null
     state = 'IDLE'
@@ -71,6 +75,9 @@ function New-State {
     taskExecutor = $null
     checkpoint = $null
     expectedPaths = @()
+    recoveryBaselinePath = $null
+    recoveryEvidencePath = $null
+    recoveryEvidenceHash = $null
     recoveryCount = 0
     lastQueueAuditAt = $null
     lastQueueFingerprint = $null
@@ -92,7 +99,7 @@ function Import-State {
   if (-not (Test-Path -LiteralPath $StatePath)) { return (New-State) }
   $raw = [IO.File]::ReadAllText($StatePath)
   $parsed = $raw | ConvertFrom-Json
-  if ($parsed.schemaVersion -notin @(1, 2, 3)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
+  if ($parsed.schemaVersion -notin @(1, 2, 3, 4)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
   $state = New-State
   foreach ($key in @($state.Keys)) {
     $property = $parsed.PSObject.Properties[$key]
@@ -110,7 +117,7 @@ function Import-State {
     }
   }
   $state.workerState = [ordered]@{ deepseek = $deepseek }
-  $state.schemaVersion = 3
+  $state.schemaVersion = 4
   $state
 }
 
@@ -218,6 +225,9 @@ try {
         $state.taskExecutor = $null
         $state.checkpoint = $null
         $state.expectedPaths = @()
+        $state.recoveryBaselinePath = $null
+        $state.recoveryEvidencePath = $null
+        $state.recoveryEvidenceHash = $null
         $state.recoveryCount = 0
         $state.lastError = $null
       }
@@ -241,6 +251,19 @@ try {
       if ($PSBoundParameters.ContainsKey('ExpectedPaths')) {
         $paths = @($ExpectedPaths -split '\|' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
         $state.expectedPaths = @($paths | ForEach-Object { ([string]$_).Replace('\','/') } | Sort-Object -Unique)
+      }
+      if ($PSBoundParameters.ContainsKey('RecoveryBaselinePath')) {
+        if ([string]::IsNullOrWhiteSpace($RecoveryBaselinePath)) { Exit-WithCode 'RecoveryBaselinePath must not be empty' $script:ExitInvalidArguments }
+        $state.recoveryBaselinePath = $RecoveryBaselinePath
+      }
+      $hasEvidencePath = $PSBoundParameters.ContainsKey('RecoveryEvidencePath')
+      $hasEvidenceHash = $PSBoundParameters.ContainsKey('RecoveryEvidenceHash')
+      if ($hasEvidencePath -xor $hasEvidenceHash) { Exit-WithCode 'RecoveryEvidencePath and RecoveryEvidenceHash must be provided together' $script:ExitInvalidArguments }
+      if ($hasEvidencePath) {
+        if ([string]::IsNullOrWhiteSpace($RecoveryEvidencePath)) { Exit-WithCode 'RecoveryEvidencePath must not be empty' $script:ExitInvalidArguments }
+        if ([string]::IsNullOrWhiteSpace([string]$state.recoveryBaselinePath)) { Exit-WithCode 'RecoveryBaselinePath must be set before recovery evidence' $script:ExitInvalidArguments }
+        $state.recoveryEvidencePath = $RecoveryEvidencePath
+        $state.recoveryEvidenceHash = $RecoveryEvidenceHash
       }
       Set-Lease $state $nowValue
       Export-State $state
@@ -366,6 +389,9 @@ try {
       $state.taskExecutor = $null
       $state.checkpoint = $null
       $state.expectedPaths = @()
+      $state.recoveryBaselinePath = $null
+      $state.recoveryEvidencePath = $null
+      $state.recoveryEvidenceHash = $null
       $state.recoveryCount = 0
       $state.lastError = $null
       Export-State $state
@@ -395,6 +421,9 @@ try {
       $state.taskExecutor = $null
       $state.checkpoint = $null
       $state.expectedPaths = @()
+      $state.recoveryBaselinePath = $null
+      $state.recoveryEvidencePath = $null
+      $state.recoveryEvidenceHash = $null
       $state.recoveryCount = 0
       $state.lastError = "Manual reset: $ErrorMessage"
       Export-State $state

@@ -1,6 +1,6 @@
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Snapshot', 'Check', 'Verify')]
+  [ValidateSet('Snapshot', 'Check', 'Verify', 'CaptureRecoveryEvidence', 'CheckRecovery')]
   [string]$Action,
 
   [string]$RepositoryRoot = (Get-Location).Path,
@@ -8,13 +8,16 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$BaselinePath,
 
-  [string]$ExpectedPaths
+  [string]$ExpectedPaths,
+
+  [string]$EvidencePath
 )
 
 $ErrorActionPreference = 'Stop'
 $ExitInvalidArguments = 15
 $ExitCandidateConflict = 20
 $ExitBaselineChanged = 21
+$ExitRecoveryExpectedChanged = 22
 
 function Invoke-GitRaw {
   param(
@@ -255,6 +258,30 @@ function Get-BaselinePayloadHash {
   Get-Sha256Text ($payload | ConvertTo-Json -Depth 8 -Compress)
 }
 
+function Get-RecoveryEvidencePayloadHash {
+  param($Evidence)
+
+  $canonicalEntries = @($Evidence.expectedEntries | ForEach-Object {
+    [pscustomobject][ordered]@{
+      path = [string]$_.path
+      kind = [string]$_.kind
+      indexStatus = [string]$_.indexStatus
+      worktreeStatus = [string]$_.worktreeStatus
+      indexBlob = if ($null -eq $_.indexBlob) { $null } else { [string]$_.indexBlob }
+      worktreeHash = if ($null -eq $_.worktreeHash) { $null } else { [string]$_.worktreeHash }
+      statusFingerprint = [string]$_.statusFingerprint
+    }
+  })
+  $payload = [pscustomobject][ordered]@{
+    repositoryRoot = [string]$Evidence.repositoryRoot
+    baselinePayloadHash = [string]$Evidence.baselinePayloadHash
+    head = [string]$Evidence.head
+    expectedPaths = @($Evidence.expectedPaths | ForEach-Object { [string]$_ })
+    expectedEntries = @(Sort-WorkspaceEntries $canonicalEntries)
+  }
+  Get-Sha256Text ($payload | ConvertTo-Json -Depth 8 -Compress)
+}
+
 function Get-WorkspaceSnapshot {
   param([string]$Repository)
 
@@ -388,6 +415,49 @@ function Read-Baseline {
   $baseline
 }
 
+function Read-RecoveryEvidence {
+  param([string]$Path, [string]$Repository)
+
+  if ([string]::IsNullOrWhiteSpace($Path)) { throw 'EvidencePath must not be empty.' }
+  $fullPath = [System.IO.Path]::GetFullPath($Path)
+  if (-not [System.IO.File]::Exists($fullPath)) { throw "Recovery evidence does not exist: $fullPath" }
+  $evidence = [System.IO.File]::ReadAllText($fullPath, [System.Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json
+  if ($evidence.schemaVersion -isnot [long] -or $evidence.schemaVersion -ne 1 -or
+      $evidence.repositoryRoot -isnot [string] -or [string]::IsNullOrWhiteSpace($evidence.repositoryRoot) -or
+      $evidence.baselinePayloadHash -isnot [string] -or $evidence.baselinePayloadHash -notmatch '^[0-9a-f]{64}$' -or
+      $evidence.head -isnot [string] -or $evidence.head -notmatch '^[0-9a-f]{40,64}$' -or
+      $evidence.expectedPaths -isnot [System.Array] -or @($evidence.expectedPaths).Count -eq 0 -or
+      $evidence.expectedEntries -isnot [System.Array] -or @($evidence.expectedEntries).Count -eq 0 -or
+      $evidence.payloadHash -isnot [string] -or $evidence.payloadHash -notmatch '^[0-9a-f]{64}$') {
+    throw 'Recovery evidence has an invalid or unsupported schema.'
+  }
+  foreach ($pathValue in @($evidence.expectedPaths)) {
+    if ($pathValue -isnot [string] -or [string]::IsNullOrWhiteSpace($pathValue) -or $pathValue.Contains('\') -or [System.IO.Path]::IsPathRooted($pathValue)) {
+      throw 'Recovery evidence contains an invalid expected path.'
+    }
+  }
+  $requiredEntryProperties = @('path', 'kind', 'indexStatus', 'worktreeStatus', 'indexBlob', 'worktreeHash', 'statusFingerprint')
+  foreach ($entry in @($evidence.expectedEntries)) {
+    foreach ($property in $requiredEntryProperties) {
+      if ($entry.PSObject.Properties.Name -notcontains $property) { throw "Recovery evidence entry is missing '$property'." }
+    }
+    if ($entry.path -isnot [string] -or [string]::IsNullOrEmpty($entry.path) -or $entry.path.Contains('\') -or
+        $entry.kind -isnot [string] -or [string]::IsNullOrEmpty($entry.kind) -or
+        $entry.indexStatus -isnot [string] -or $entry.indexStatus.Length -ne 1 -or
+        $entry.worktreeStatus -isnot [string] -or $entry.worktreeStatus.Length -ne 1 -or
+        ($null -ne $entry.indexBlob -and ($entry.indexBlob -isnot [string] -or $entry.indexBlob -notmatch '^[0-9a-f]{40,64}$')) -or
+        ($null -ne $entry.worktreeHash -and ($entry.worktreeHash -isnot [string] -or $entry.worktreeHash -notmatch '^[0-9a-f]{40,64}$')) -or
+        $entry.statusFingerprint -isnot [string] -or $entry.statusFingerprint -notmatch '^[0-9a-f]{64}$') {
+      throw 'Recovery evidence contains an invalid entry.'
+    }
+  }
+  $actualHash = Get-RecoveryEvidencePayloadHash $evidence
+  if (-not $actualHash.Equals([string]$evidence.payloadHash, [System.StringComparison]::Ordinal)) { throw 'Recovery evidence payload hash does not match.' }
+  $evidenceRoot = [System.IO.Path]::GetFullPath([string]$evidence.repositoryRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+  if (-not $evidenceRoot.Equals($Repository, [System.StringComparison]::OrdinalIgnoreCase)) { throw 'Recovery evidence repository root does not match.' }
+  $evidence
+}
+
 function Get-EntryFingerprint {
   param($Entry)
 
@@ -489,6 +559,93 @@ try {
     'Snapshot' {
       $snapshot = Get-WorkspaceSnapshot $repository
       Write-JsonAtomically $snapshot $BaselinePath
+      exit 0
+    }
+    'CaptureRecoveryEvidence' {
+      $expected = @()
+      try {
+        $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
+        Assert-ExpectedPathsSafe $repository $expected
+        if ([string]::IsNullOrWhiteSpace($EvidencePath)) { throw 'EvidencePath must not be empty.' }
+      } catch {
+        $reason = if ($_.Exception.Message -eq 'expected_path_enters_submodule') { 'expected_path_enters_submodule' } else { 'invalid_arguments' }
+        Write-SafetyResult $false $expected @() $reason
+        exit $ExitInvalidArguments
+      }
+      try { $baseline = Read-Baseline $BaselinePath $repository } catch { Write-SafetyResult $false $expected @() 'baseline_invalid'; exit 1 }
+      try { $fresh = Get-WorkspaceSnapshot $repository } catch {
+        if ($_.Exception.Message -ne 'dirty_submodule_unsupported') { throw }
+        Write-SafetyResult $false $expected @('<SUBMODULE>') 'dirty_submodule_unsupported'
+        exit $ExitBaselineChanged
+      }
+      $changed = Get-ChangedWorkspacePaths $baseline $fresh $expected
+      if (-not ([string]$baseline.head).Equals([string]$fresh.head, [System.StringComparison]::Ordinal)) { [void]$changed.Add('<HEAD>') }
+      if ($changed.Count -gt 0) {
+        Write-SafetyResult $false $expected @($changed) 'baseline_changed'
+        exit $ExitBaselineChanged
+      }
+      $expectedEntries = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected })
+      if ($expectedEntries.Count -eq 0) {
+        Write-SafetyResult $false $expected @() 'recovery_expected_missing'
+        exit $ExitRecoveryExpectedChanged
+      }
+      $evidence = [pscustomobject][ordered]@{
+        schemaVersion = 1
+        repositoryRoot = $repository
+        baselinePayloadHash = [string]$baseline.payloadHash
+        head = [string]$fresh.head
+        expectedPaths = @($expected)
+        expectedEntries = @(Sort-WorkspaceEntries $expectedEntries)
+        payloadHash = $null
+      }
+      $evidence.payloadHash = Get-RecoveryEvidencePayloadHash $evidence
+      Write-JsonAtomically $evidence $EvidencePath
+      [pscustomobject][ordered]@{
+        safe = $true
+        expectedPaths = @($expected)
+        conflictingPaths = @()
+        reason = $null
+        evidenceHash = [string]$evidence.payloadHash
+      } | ConvertTo-Json -Compress
+      exit 0
+    }
+    'CheckRecovery' {
+      $expected = @()
+      try {
+        $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
+        Assert-ExpectedPathsSafe $repository $expected
+      } catch {
+        $reason = if ($_.Exception.Message -eq 'expected_path_enters_submodule') { 'expected_path_enters_submodule' } else { 'invalid_arguments' }
+        Write-SafetyResult $false $expected @() $reason
+        exit $ExitInvalidArguments
+      }
+      try { $baseline = Read-Baseline $BaselinePath $repository } catch { Write-SafetyResult $false $expected @() 'baseline_invalid'; exit 1 }
+      try { $evidence = Read-RecoveryEvidence $EvidencePath $repository } catch { Write-SafetyResult $false $expected @() 'recovery_evidence_invalid'; exit 1 }
+      $requestedPaths = ($expected | ConvertTo-Json -Compress)
+      $recordedPaths = (@($evidence.expectedPaths) | ConvertTo-Json -Compress)
+      if ($evidence.baselinePayloadHash -cne $baseline.payloadHash -or $requestedPaths -cne $recordedPaths) {
+        Write-SafetyResult $false $expected @() 'recovery_evidence_invalid'
+        exit 1
+      }
+      try { $fresh = Get-WorkspaceSnapshot $repository } catch {
+        if ($_.Exception.Message -ne 'dirty_submodule_unsupported') { throw }
+        Write-SafetyResult $false $expected @('<SUBMODULE>') 'dirty_submodule_unsupported'
+        exit $ExitBaselineChanged
+      }
+      $changed = Get-ChangedWorkspacePaths $baseline $fresh $expected
+      if (-not ([string]$fresh.head).Equals([string]$evidence.head, [System.StringComparison]::Ordinal)) { [void]$changed.Add('<HEAD>') }
+      if ($changed.Count -gt 0) {
+        Write-SafetyResult $false $expected @($changed) 'baseline_changed'
+        exit $ExitBaselineChanged
+      }
+      $currentExpected = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected } | ForEach-Object { Get-EntryFingerprint $_ })
+      $recordedExpected = @($evidence.expectedEntries | ForEach-Object { Get-EntryFingerprint $_ })
+      if (($currentExpected | ConvertTo-Json -Compress) -cne ($recordedExpected | ConvertTo-Json -Compress)) {
+        $conflicts = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected } | ForEach-Object { [string]$_.path })
+        Write-SafetyResult $false $expected $conflicts 'recovery_expected_changed'
+        exit $ExitRecoveryExpectedChanged
+      }
+      Write-SafetyResult $true $expected @() $null
       exit 0
     }
     'Check' {
