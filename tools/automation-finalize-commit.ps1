@@ -88,7 +88,7 @@ if (-not $resolvedGitRoot.Equals($script:Repository, [System.StringComparison]::
 }
 if ([string]::IsNullOrWhiteSpace($CommitMessage)) { throw 'CommitMessage must not be empty.' }
 
-$paths = @(ConvertTo-NormalizedPaths $ExpectedPaths)
+$paths = ConvertTo-NormalizedPaths $ExpectedPaths
 $existingFiles = [System.Collections.Generic.List[string]]::new()
 foreach ($path in $paths) {
   $fullPath = [System.IO.Path]::GetFullPath((Join-Path $script:Repository $path))

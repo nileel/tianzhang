@@ -44,10 +44,12 @@ try {
   Invoke-Git config core.quotepath false | Out-Null
 
   $expected = '目录/决策 状态.txt'
+  $secondExpected = '目录/第二 状态.txt'
   $unrelatedStaged = 'manual-staged.txt'
   $unrelatedDirty = 'manual-dirty.txt'
   $unrelatedUntracked = 'manual-untracked.txt'
   Write-Utf8 (Join-Path $repo $expected) "expected base`n"
+  Write-Utf8 (Join-Path $repo $secondExpected) "second expected base`n"
   Write-Utf8 (Join-Path $repo $unrelatedStaged) "staged base`n"
   Write-Utf8 (Join-Path $repo $unrelatedDirty) "dirty base`n"
   Invoke-Git add -- . | Out-Null
@@ -69,6 +71,16 @@ try {
   if (((Invoke-Git rev-parse ":$unrelatedStaged") -join '') -ne $stagedBlobBefore) { throw 'unrelated staged blob changed' }
   if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $unrelatedDirty)).Hash -ne $dirtyHashBefore) { throw 'unrelated dirty file changed' }
   if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $unrelatedUntracked)).Hash -ne $untrackedHashBefore) { throw 'unrelated untracked file changed' }
+
+  Write-Utf8 (Join-Path $repo $expected) "expected second change`n"
+  Write-Utf8 (Join-Path $repo $secondExpected) "second expected change`n"
+  $multiResult = Invoke-Helper "$expected|$secondExpected" 'test: multiple expected paths'
+  if ($multiResult.Code -ne 0) { throw "commit helper failed for multiple paths: $($multiResult.Output)" }
+  $multiCommitted = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if ($multiCommitted.Count -ne 2 -or $multiCommitted -notcontains $expected -or $multiCommitted -notcontains $secondExpected) {
+    throw "unexpected multi-path commit: $($multiCommitted -join ', ')"
+  }
+  if (((Invoke-Git rev-parse ":$unrelatedStaged") -join '') -ne $stagedBlobBefore) { throw 'multi-path commit changed unrelated staged blob' }
 
   $headBeforeMissing = (Invoke-Git rev-parse HEAD) -join ''
   $missing = Invoke-Helper 'missing.txt' 'test: must not commit'
