@@ -103,7 +103,7 @@ try {
   Assert-Code $start 0 'fresh start'
   $startJson = $start.Output | ConvertFrom-Json
   if (-not $startJson.ok -or $startJson.action -ne 'select_candidate' -or
-      $startJson.branchKind -ne 'selection' -or $startJson.nextCommand -ne 'RegisterCandidate' -or
+      $startJson.branchKind -ne 'selection' -or $startJson.nextCommand -ne 'InspectCandidate' -or
       -not (Test-Path -LiteralPath $startJson.baselinePath)) {
     throw "fresh start protocol mismatch: $($start.Output)"
   }
@@ -114,27 +114,60 @@ try {
 
   $contract = Invoke-Controller @('Contract')
   Assert-Code $contract 0 'protocol contract'
-  $mapping = ($contract.Output | ConvertFrom-Json).taskKindMapping
+  $contractJson = $contract.Output | ConvertFrom-Json
+  $mapping = $contractJson.taskKindMapping
   if ($mapping.execution -ne 'execute' -or $mapping.review -ne 'review' -or
       $mapping.maintenance -ne 'maintenance' -or $mapping.recovery -ne 'recovery') {
     throw 'TaskKind mapping is not canonical'
   }
+  if ($contractJson.actions -notcontains 'InspectCandidate' -or
+      $contractJson.commandTemplates.Start -notmatch 'Start -RepositoryRoot .* -RunId .* -ActualModel') {
+    throw "protocol contract does not expose the exact candidate discovery entry: $($contract.Output)"
+  }
+
+  $uninspected = Invoke-Controller @(
+    'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
+    '-RunRoot', $runRoot, '-RunId', $runId, '-ExpectedPaths', 'task.txt'
+  )
+  if ($uninspected.Code -eq 0 -or ($uninspected.Output | ConvertFrom-Json).errorCode -ne 'invalid_phase' -or
+      ($uninspected.Output | ConvertFrom-Json).nextCommand -ne 'InspectCandidate' -or
+      (Read-State).checkpoint -ne 'identity_checked') {
+    throw "candidate registration succeeded without inspection: $($uninspected.Output)"
+  }
+
+  $inspectedConflict = Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
+    '-RunRoot', $runRoot, '-RunId', $runId, '-WorkType', 'execution',
+    '-TaskId', 'conflict-task', '-Executor', 'codex'
+  )
+  Assert-Code $inspectedConflict 0 'inspect conflict candidate'
+  $inspectJson = $inspectedConflict.Output | ConvertFrom-Json
+  if ($inspectJson.action -ne 'inspect_candidate' -or $inspectJson.nextCommand -ne 'RegisterCandidate' -or
+      $inspectJson.requiredSources -notcontains '开发管理/AI协作规则.txt' -or
+      -not $inspectJson.discoveryPolicy.readOnlyProjectDiscovery) {
+    throw "candidate inspection contract mismatch: $($inspectedConflict.Output)"
+  }
 
   $conflict = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $runId, '-WorkType', 'execution',
-    '-TaskId', 'conflict-task', '-Executor', 'codex', '-ExpectedPaths', 'human.txt'
+    '-RunRoot', $runRoot, '-RunId', $runId, '-ExpectedPaths', 'human.txt'
   )
   Assert-Code $conflict 20 'candidate conflict'
   $conflictJson = $conflict.Output | ConvertFrom-Json
-  if ($conflictJson.failurePolicy -ne 'skip_candidate' -or $conflictJson.errorCode -ne 'candidate_conflict' -or (Read-State).checkpoint -ne 'identity_checked') {
-    throw "candidate conflict was not safely skippable: $($conflict.Output)"
+  if ($conflictJson.nextCommand -ne 'InspectCandidate' -or $conflictJson.failurePolicy -ne 'skip_candidate' -or
+      $conflictJson.errorCode -ne 'candidate_conflict' -or (Read-State).checkpoint -ne 'identity_checked') {
+    throw "candidate conflict was not safely routed back to inspection: $($conflict.Output)"
   }
 
+  $inspected = Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
+    '-RunRoot', $runRoot, '-RunId', $runId, '-WorkType', 'execution',
+    '-TaskId', 'task-1', '-Executor', 'codex'
+  )
+  Assert-Code $inspected 0 'inspect execution candidate'
   $registered = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $runId, '-WorkType', 'execution',
-    '-TaskId', 'task-1', '-Executor', 'codex', '-ExpectedPaths', 'task.txt|second-task.txt'
+    '-RunRoot', $runRoot, '-RunId', $runId, '-ExpectedPaths', 'task.txt|second-task.txt'
   )
   Assert-Code $registered 0 'register execution candidate'
   $registeredJson = $registered.Output | ConvertFrom-Json
@@ -154,10 +187,14 @@ try {
     '-ActualModel', 'gpt-test', '-Now', '2026-07-15T00:00:00Z'
   )
   Assert-Code $invalidStart 0 'invalid-candidate fixture start'
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $invalidStatePath,
+    '-RunRoot', $invalidRunRoot, '-RunId', $invalidRunId, '-WorkType', 'execution',
+    '-TaskId', 'invalid-task', '-Executor', 'codex'
+  )) 0 'inspect invalid-path candidate'
   $invalid = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $invalidStatePath,
-    '-RunRoot', $invalidRunRoot, '-RunId', $invalidRunId, '-WorkType', 'execution',
-    '-TaskId', 'invalid-task', '-Executor', 'codex', '-ExpectedPaths', '../escape.txt'
+    '-RunRoot', $invalidRunRoot, '-RunId', $invalidRunId, '-ExpectedPaths', '../escape.txt'
   )
   if ($invalid.Code -eq 0) { throw 'unsafe expected path was accepted' }
   $invalidJson = $invalid.Output | ConvertFrom-Json
@@ -165,6 +202,29 @@ try {
   if ($invalidJson.failurePolicy -ne 'close_empty_run' -or $invalidJson.errorCode -ne 'invalid_arguments' -or
       $invalidState.state -ne 'IDLE' -or $null -ne $invalidState.runId) {
     throw "pre-task failure did not close the empty run: $($invalid.Output)"
+  }
+
+  $mismatchStatePath = Join-Path $sandbox 'mismatch-state.json'
+  $mismatchRunRoot = Join-Path $sandbox 'mismatch-runs'
+  $mismatchRunId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+  Assert-Code (Invoke-Controller @(
+    'Start', '-RepositoryRoot', $repo, '-StatePath', $mismatchStatePath,
+    '-RunRoot', $mismatchRunRoot, '-RunId', $mismatchRunId,
+    '-ActualModel', 'gpt-test', '-Now', '2026-07-15T00:00:00Z'
+  )) 0 'mismatch start'
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $mismatchStatePath,
+    '-RunRoot', $mismatchRunRoot, '-RunId', $mismatchRunId, '-WorkType', 'execution',
+    '-TaskId', 'mismatch-task', '-Executor', 'codex'
+  )) 0 'inspect mismatch candidate'
+  $mismatch = Invoke-Controller @(
+    'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $mismatchStatePath,
+    '-RunRoot', $mismatchRunRoot, '-RunId', $mismatchRunId,
+    '-TaskId', 'different-task', '-ExpectedPaths', 'task.txt'
+  )
+  if ($mismatch.Code -eq 0 -or ($mismatch.Output | ConvertFrom-Json).errorCode -ne 'candidate_identity_mismatch' -or
+      (Invoke-State @('Show', '-StatePath', $mismatchStatePath)).state -ne 'IDLE') {
+    throw "candidate identity mismatch did not close the empty run: $($mismatch.Output)"
   }
 
   $begin = Invoke-Controller @(
@@ -232,11 +292,15 @@ try {
     '-ActualModel', 'gpt-test', '-Now', '2026-07-15T00:00:00Z'
   )
   Assert-Code $baselineStart 0 'baseline-change fixture start'
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $baselineStatePath,
+    '-RunRoot', $baselineRunRoot, '-RunId', $baselineRunId, '-WorkType', 'execution',
+    '-TaskId', 'baseline-task', '-Executor', 'codex'
+  )) 0 'inspect baseline candidate'
   Write-Utf8 (Join-Path $repo 'base.txt') "changed outside expected paths`n"
   $baselineChanged = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $baselineStatePath,
-    '-RunRoot', $baselineRunRoot, '-RunId', $baselineRunId, '-WorkType', 'execution',
-    '-TaskId', 'baseline-task', '-Executor', 'codex', '-ExpectedPaths', 'second-task.txt'
+    '-RunRoot', $baselineRunRoot, '-RunId', $baselineRunId, '-ExpectedPaths', 'second-task.txt'
   )
   Assert-Code $baselineChanged 21 'baseline changed rejection'
   $baselineChangedJson = $baselineChanged.Output | ConvertFrom-Json
@@ -256,10 +320,14 @@ try {
     '-ActualModel', 'gpt-test', '-Now', '2026-07-15T00:00:00Z'
   )
   Assert-Code $decisionStart 0 'decision fixture start'
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId, '-WorkType', 'maintenance',
+    '-TaskId', 'decision-task', '-Executor', 'codex'
+  )) 0 'inspect decision candidate'
   $decisionCandidate = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId, '-WorkType', 'maintenance',
-    '-TaskId', 'decision-task', '-Executor', 'codex', '-ExpectedPaths', '开发管理/自动工作流状态.txt'
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId, '-ExpectedPaths', '开发管理/自动工作流状态.txt'
   )
   Assert-Code $decisionCandidate 0 'decision candidate registration'
   $decisionRegisteredState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
@@ -322,25 +390,35 @@ try {
     throw "DeepSeek backoff was not persisted: $($recordedWorkerState.workerState.deepseek | ConvertTo-Json -Compress)"
   }
   $backoffCandidate = Invoke-Controller @(
-    'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $workerStatePath,
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $workerStatePath,
     '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-WorkType', 'execution',
-    '-TaskId', 'deepseek-task', '-Executor', 'deepseek', '-ExpectedPaths', 'second-task.txt',
+    '-TaskId', 'deepseek-task', '-Executor', 'deepseek',
     '-Now', '2026-07-15T00:02:00Z'
   )
   if ($backoffCandidate.Code -eq 0 -or ($backoffCandidate.Output | ConvertFrom-Json).errorCode -ne 'worker_backoff' -or
+      ($backoffCandidate.Output | ConvertFrom-Json).nextCommand -ne 'InspectCandidate' -or
       (Invoke-State @('Show', '-StatePath', $workerStatePath)).checkpoint -ne 'identity_checked') {
-    throw "DeepSeek backoff did not exclude its candidate: $($backoffCandidate.Output)"
+    throw "DeepSeek backoff did not exclude inspection: $($backoffCandidate.Output)"
   }
   $workerCleared = Invoke-Controller @(
     'ClearWorkerFailure', '-StatePath', $workerStatePath, '-RunRoot', $workerRunRoot,
     '-RunId', $workerRunId, '-Now', '2026-07-15T00:03:00Z'
   )
   Assert-Code $workerCleared 0 'clear worker failure'
+  $deepseekInspection = Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $workerStatePath,
+    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-WorkType', 'execution',
+    '-TaskId', 'deepseek-task', '-Executor', 'deepseek', '-Now', '2026-07-15T00:04:00Z'
+  )
+  Assert-Code $deepseekInspection 0 'inspect DeepSeek after clearing backoff'
+  $deepseekInspectJson = $deepseekInspection.Output | ConvertFrom-Json
+  if ($deepseekInspectJson.requiredSources -notcontains '开发管理/DeepSeek工作提示词.txt') {
+    throw "DeepSeek branch sources were not loaded for inspection: $($deepseekInspection.Output)"
+  }
   $deepseekCandidate = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $workerStatePath,
-    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-WorkType', 'execution',
-    '-TaskId', 'deepseek-task', '-Executor', 'deepseek', '-ExpectedPaths', 'second-task.txt',
-    '-Now', '2026-07-15T00:04:00Z'
+    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-ExpectedPaths', 'second-task.txt',
+    '-Now', '2026-07-15T00:05:00Z'
   )
   Assert-Code $deepseekCandidate 0 'register DeepSeek after clearing backoff'
   $deepseekJson = $deepseekCandidate.Output | ConvertFrom-Json
@@ -375,10 +453,14 @@ try {
     '-ActualModel', 'gpt-test', '-Now', '2026-07-15T00:00:00Z'
   )) 0 'finish fixture start'
   Assert-Code (Invoke-Controller @(
-    'RegisterCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
+    'InspectCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
     '-RunRoot', $finishRunRoot, '-RunId', $finishRunId, '-WorkType', 'execution',
-    '-TaskId', 'finish-multi', '-Executor', 'codex', '-ExpectedPaths', 'a.txt|b.txt',
-    '-Now', '2026-07-15T00:01:00Z'
+    '-TaskId', 'finish-multi', '-Executor', 'codex', '-Now', '2026-07-15T00:01:00Z'
+  )) 0 'inspect multi-path finish candidate'
+  Assert-Code (Invoke-Controller @(
+    'RegisterCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
+    '-RunRoot', $finishRunRoot, '-RunId', $finishRunId, '-ExpectedPaths', 'a.txt|b.txt',
+    '-Now', '2026-07-15T00:01:30Z'
   )) 0 'finish candidate registration'
   Assert-Code (Invoke-Controller @(
     'BeginMutation', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
@@ -411,10 +493,14 @@ try {
     '-ActualModel', 'gpt-test', '-Now', '2026-07-15T04:00:00Z'
   )) 0 'single finish start'
   Assert-Code (Invoke-Controller @(
-    'RegisterCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
+    'InspectCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
     '-RunRoot', $finishRunRoot, '-RunId', $singleRunId, '-WorkType', 'execution',
-    '-TaskId', 'finish-single', '-Executor', 'codex', '-ExpectedPaths', 'b.txt',
-    '-Now', '2026-07-15T04:01:00Z'
+    '-TaskId', 'finish-single', '-Executor', 'codex', '-Now', '2026-07-15T04:01:00Z'
+  )) 0 'inspect single finish candidate'
+  Assert-Code (Invoke-Controller @(
+    'RegisterCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
+    '-RunRoot', $finishRunRoot, '-RunId', $singleRunId, '-ExpectedPaths', 'b.txt',
+    '-Now', '2026-07-15T04:01:30Z'
   )) 0 'single finish candidate'
   Assert-Code (Invoke-Controller @(
     'BeginMutation', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
