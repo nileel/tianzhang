@@ -74,6 +74,24 @@ function Write-Utf8 {
   [IO.File]::WriteAllText($Path, $Value, [Text.UTF8Encoding]::new($false))
 }
 
+function Write-QueueFixture {
+  param([string]$Repository, [string[]]$Rows)
+
+  $queuePath = Join-Path $Repository '开发管理\当前任务队列.txt'
+  $tableRows = $Rows -join "`n"
+  Write-Utf8 $queuePath @"
+# 当前任务队列（测试）
+
+## 队列表头
+
+| ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
+|----|--------|------|------|------|------|
+$tableRows
+
+## 任务卡片
+"@
+}
+
 New-Item -ItemType Directory -Path $repo, $runRoot -Force | Out-Null
 $resolvedRepo = (Resolve-Path -LiteralPath $repo).Path
 $tempPrefix = (Resolve-Path -LiteralPath $tempRoot).Path.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
@@ -90,7 +108,18 @@ try {
   Write-Utf8 (Join-Path $repo 'human.txt') "human base`n"
   Write-Utf8 (Join-Path $repo 'task.txt') "task base`n"
   Write-Utf8 (Join-Path $repo 'second-task.txt') "second base`n"
-  Invoke-Git add -- base.txt human.txt task.txt second-task.txt | Out-Null
+  Write-QueueFixture $repo @(
+    '| conflict-task | P0 | Codex / ChatGPT5.5 | G3 数据 | 待处理 | 冲突候选 |',
+    '| TQ-057 | P0 | Codex / ChatGPT5.5 | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |',
+    '| invalid-task | P1 | Codex / gpt-5.5 | 工具 | 待处理 | 非法路径候选 |',
+    '| mismatch-task | P1 | Codex / gpt-5.5 | 工具 | 待处理 | 身份不一致候选 |',
+    '| baseline-task | P1 | Codex / gpt-5.5 | 工具 | 待处理 | 基线变化候选 |',
+    '| decision-task | P1 | Codex / gpt-5.5 | 工具 | 待处理 | 决策候选 |',
+    '| deepseek-task | P1 | DeepSeek V4 Pro | 工具 | 待处理 | DeepSeek 候选 |',
+    '| blocked-task | P1 | Codex / gpt-5.5 | 工具 | 阻塞（TQ-057） | 阻塞候选 |',
+    '| unmapped-task | P1 | External Agent | 工具 | 待处理 | 未映射主责候选 |'
+  )
+  Invoke-Git add -- base.txt human.txt task.txt second-task.txt '开发管理/当前任务队列.txt' | Out-Null
   Invoke-Git commit -m 'test: base' | Out-Null
   Write-Utf8 (Join-Path $repo 'human.txt') "human dirty`n"
 
@@ -121,7 +150,13 @@ try {
     throw 'TaskKind mapping is not canonical'
   }
   if ($contractJson.actions -notcontains 'InspectCandidate' -or
-      $contractJson.commandTemplates.Start -notmatch 'Start -RepositoryRoot .* -RunId .* -ActualModel') {
+      $contractJson.commandTemplates.Start -notmatch 'Start -RepositoryRoot .* -RunId .* -ActualModel' -or
+      $contractJson.commandTemplates.InspectCandidate -notmatch 'InspectCandidate -RepositoryRoot .* -RunId .* -TaskId' -or
+      $contractJson.commandTemplates.InspectCandidate -match 'WorkType|Executor' -or
+      $contractJson.candidateResolvers.execution.source -ne '开发管理/当前任务队列.txt' -or
+      @($contractJson.candidateResolvers.execution.semanticInputs) -cnotcontains 'TaskId' -or
+      $contractJson.candidateResolvers.review.mode -ne 'separate_resolver_required' -or
+      $contractJson.candidateResolvers.maintenance.mode -ne 'separate_resolver_required') {
     throw "protocol contract does not expose the exact candidate discovery entry: $($contract.Output)"
   }
 
@@ -135,10 +170,31 @@ try {
     throw "candidate registration succeeded without inspection: $($uninspected.Output)"
   }
 
+  $blockedCandidate = Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
+    '-RunRoot', $runRoot, '-RunId', $runId, '-TaskId', 'blocked-task'
+  )
+  if ($blockedCandidate.Code -eq 0 -or
+      ($blockedCandidate.Output | ConvertFrom-Json).errorCode -ne 'candidate_not_runnable' -or
+      ($blockedCandidate.Output | ConvertFrom-Json).nextCommand -ne 'InspectCandidate' -or
+      (Read-State).checkpoint -ne 'identity_checked') {
+    throw "blocked queue task was accepted for inspection: $($blockedCandidate.Output)"
+  }
+
+  $unmappedCandidate = Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
+    '-RunRoot', $runRoot, '-RunId', $runId, '-TaskId', 'unmapped-task'
+  )
+  if ($unmappedCandidate.Code -eq 0 -or
+      ($unmappedCandidate.Output | ConvertFrom-Json).errorCode -ne 'candidate_executor_unmapped' -or
+      ($unmappedCandidate.Output | ConvertFrom-Json).nextCommand -ne 'InspectCandidate' -or
+      (Read-State).checkpoint -ne 'identity_checked') {
+    throw "unmapped queue owner was accepted for inspection: $($unmappedCandidate.Output)"
+  }
+
   $inspectedConflict = Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $runId, '-WorkType', 'execution',
-    '-TaskId', 'conflict-task', '-Executor', 'codex'
+    '-RunRoot', $runRoot, '-RunId', $runId, '-TaskId', 'conflict-task'
   )
   Assert-Code $inspectedConflict 0 'inspect conflict candidate'
   $inspectJson = $inspectedConflict.Output | ConvertFrom-Json
@@ -161,10 +217,13 @@ try {
 
   $inspected = Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $runId, '-WorkType', 'execution',
-    '-TaskId', 'task-1', '-Executor', 'codex'
+    '-RunRoot', $runRoot, '-RunId', $runId, '-TaskId', 'TQ-057'
   )
   Assert-Code $inspected 0 'inspect execution candidate'
+  $inspectedJson = $inspected.Output | ConvertFrom-Json
+  if ($inspectedJson.branchKind -ne 'execution' -or $inspectedJson.executor -ne 'codex') {
+    throw "realistic queue owner was not mapped deterministically: $($inspected.Output)"
+  }
   $registered = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $statePath,
     '-RunRoot', $runRoot, '-RunId', $runId, '-ExpectedPaths', 'task.txt|second-task.txt'
@@ -173,7 +232,7 @@ try {
   $registeredJson = $registered.Output | ConvertFrom-Json
   $state = Read-State
   if ($registeredJson.action -ne 'implement_task' -or $registeredJson.nextCommand -ne 'BeginMutation' -or
-      $state.taskKind -ne 'execute' -or $state.taskId -ne 'task-1' -or $state.taskExecutor -ne 'codex' -or
+      $state.taskKind -ne 'execute' -or $state.taskId -ne 'TQ-057' -or $state.taskExecutor -ne 'codex' -or
       $state.checkpoint -ne 'task_selected' -or @($state.expectedPaths).Count -ne 2) {
     throw "candidate registration did not persist the canonical work unit: $($registered.Output)"
   }
@@ -189,8 +248,7 @@ try {
   Assert-Code $invalidStart 0 'invalid-candidate fixture start'
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $invalidStatePath,
-    '-RunRoot', $invalidRunRoot, '-RunId', $invalidRunId, '-WorkType', 'execution',
-    '-TaskId', 'invalid-task', '-Executor', 'codex'
+    '-RunRoot', $invalidRunRoot, '-RunId', $invalidRunId, '-TaskId', 'invalid-task'
   )) 0 'inspect invalid-path candidate'
   $invalid = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $invalidStatePath,
@@ -214,8 +272,7 @@ try {
   )) 0 'mismatch start'
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $mismatchStatePath,
-    '-RunRoot', $mismatchRunRoot, '-RunId', $mismatchRunId, '-WorkType', 'execution',
-    '-TaskId', 'mismatch-task', '-Executor', 'codex'
+    '-RunRoot', $mismatchRunRoot, '-RunId', $mismatchRunId, '-TaskId', 'mismatch-task'
   )) 0 'inspect mismatch candidate'
   $mismatch = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $mismatchStatePath,
@@ -257,7 +314,7 @@ try {
   Assert-Code $recovery 0 'exact residue recovery'
   $recoveryJson = $recovery.Output | ConvertFrom-Json
   if ($recoveryJson.action -ne 'resume_task' -or $recoveryJson.branchKind -ne 'recovery' -or
-      $recoveryJson.taskId -ne 'task-1' -or $recoveryJson.executor -ne 'codex' -or
+      $recoveryJson.taskId -ne 'TQ-057' -or $recoveryJson.executor -ne 'codex' -or
       @($recoveryJson.expectedPaths).Count -ne 2 -or $recoveryJson.nextCommand -ne 'Finish') {
     throw "exact controller residue did not enter recovery: $($recovery.Output)"
   }
@@ -294,8 +351,7 @@ try {
   Assert-Code $baselineStart 0 'baseline-change fixture start'
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $baselineStatePath,
-    '-RunRoot', $baselineRunRoot, '-RunId', $baselineRunId, '-WorkType', 'execution',
-    '-TaskId', 'baseline-task', '-Executor', 'codex'
+    '-RunRoot', $baselineRunRoot, '-RunId', $baselineRunId, '-TaskId', 'baseline-task'
   )) 0 'inspect baseline candidate'
   Write-Utf8 (Join-Path $repo 'base.txt') "changed outside expected paths`n"
   $baselineChanged = Invoke-Controller @(
@@ -322,8 +378,7 @@ try {
   Assert-Code $decisionStart 0 'decision fixture start'
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId, '-WorkType', 'maintenance',
-    '-TaskId', 'decision-task', '-Executor', 'codex'
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId, '-TaskId', 'decision-task'
   )) 0 'inspect decision candidate'
   $decisionCandidate = Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
@@ -343,8 +398,27 @@ try {
   )
   Assert-Code $created 0 'create pending decision'
   $decision = (Invoke-State @('Show', '-StatePath', $decisionStatePath)).pendingDecision
-  if ($decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.taskKind -ne 'maintenance') {
+  if ($decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.taskKind -ne 'execute') {
     throw "CreateDecision did not use the registered work unit: $($created.Output)"
+  }
+
+  $overrideStatePath = Join-Path $sandbox 'override-state.json'
+  $overrideRunRoot = Join-Path $sandbox 'override-runs'
+  $overrideRunId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+  Assert-Code (Invoke-Controller @(
+    'Start', '-RepositoryRoot', $repo, '-StatePath', $overrideStatePath,
+    '-RunRoot', $overrideRunRoot, '-RunId', $overrideRunId,
+    '-ActualModel', 'gpt-test', '-Now', '2026-07-15T00:00:00Z'
+  )) 0 'selector override start'
+  $selectorOverride = Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $overrideStatePath,
+    '-RunRoot', $overrideRunRoot, '-RunId', $overrideRunId, '-WorkType', 'review',
+    '-TaskId', 'TQ-057', '-Executor', 'codex'
+  )
+  if ($selectorOverride.Code -eq 0 -or
+      ($selectorOverride.Output | ConvertFrom-Json).errorCode -ne 'candidate_selector_override_forbidden' -or
+      (Invoke-State @('Show', '-StatePath', $overrideStatePath)).state -ne 'IDLE') {
+    throw "execution inspection accepted model-supplied protocol selectors: $($selectorOverride.Output)"
   }
   $notified = Invoke-Controller @(
     'MarkDecisionNotified', '-StatePath', $decisionStatePath, '-RunRoot', $decisionRunRoot,
@@ -391,8 +465,7 @@ try {
   }
   $backoffCandidate = Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $workerStatePath,
-    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-WorkType', 'execution',
-    '-TaskId', 'deepseek-task', '-Executor', 'deepseek',
+    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-TaskId', 'deepseek-task',
     '-Now', '2026-07-15T00:02:00Z'
   )
   if ($backoffCandidate.Code -eq 0 -or ($backoffCandidate.Output | ConvertFrom-Json).errorCode -ne 'worker_backoff' -or
@@ -407,8 +480,8 @@ try {
   Assert-Code $workerCleared 0 'clear worker failure'
   $deepseekInspection = Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $workerStatePath,
-    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-WorkType', 'execution',
-    '-TaskId', 'deepseek-task', '-Executor', 'deepseek', '-Now', '2026-07-15T00:04:00Z'
+    '-RunRoot', $workerRunRoot, '-RunId', $workerRunId, '-TaskId', 'deepseek-task',
+    '-Now', '2026-07-15T00:04:00Z'
   )
   Assert-Code $deepseekInspection 0 'inspect DeepSeek after clearing backoff'
   $deepseekInspectJson = $deepseekInspection.Output | ConvertFrom-Json
@@ -435,7 +508,11 @@ try {
   Write-Utf8 (Join-Path $finishRepo 'b.txt') "b base  `n"
   Write-Utf8 (Join-Path $finishRepo 'manual-dirty.txt') "dirty base`n"
   Write-Utf8 (Join-Path $finishRepo 'manual-staged.txt') "staged base`n"
-  Invoke-GitAt $finishRepo @('add', '--', 'a.txt', 'b.txt', 'manual-dirty.txt', 'manual-staged.txt') | Out-Null
+  Write-QueueFixture $finishRepo @(
+    '| finish-multi | P0 | Codex / ChatGPT5.5 | 工具 | 待处理 | 多路径完成候选 |',
+    '| finish-single | P0 | Codex / ChatGPT5.5 | 工具 | 待处理 | 单路径完成候选 |'
+  )
+  Invoke-GitAt $finishRepo @('add', '--', 'a.txt', 'b.txt', 'manual-dirty.txt', 'manual-staged.txt', '开发管理/当前任务队列.txt') | Out-Null
   Invoke-GitAt $finishRepo @('commit', '-m', 'test: finish base') | Out-Null
   Write-Utf8 (Join-Path $finishRepo 'manual-dirty.txt') "manual dirty`n"
   Write-Utf8 (Join-Path $finishRepo 'manual-staged.txt') "manual staged`n"
@@ -454,8 +531,8 @@ try {
   )) 0 'finish fixture start'
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
-    '-RunRoot', $finishRunRoot, '-RunId', $finishRunId, '-WorkType', 'execution',
-    '-TaskId', 'finish-multi', '-Executor', 'codex', '-Now', '2026-07-15T00:01:00Z'
+    '-RunRoot', $finishRunRoot, '-RunId', $finishRunId, '-TaskId', 'finish-multi',
+    '-Now', '2026-07-15T00:01:00Z'
   )) 0 'inspect multi-path finish candidate'
   Assert-Code (Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
@@ -494,8 +571,8 @@ try {
   )) 0 'single finish start'
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
-    '-RunRoot', $finishRunRoot, '-RunId', $singleRunId, '-WorkType', 'execution',
-    '-TaskId', 'finish-single', '-Executor', 'codex', '-Now', '2026-07-15T04:01:00Z'
+    '-RunRoot', $finishRunRoot, '-RunId', $singleRunId, '-TaskId', 'finish-single',
+    '-Now', '2026-07-15T04:01:00Z'
   )) 0 'inspect single finish candidate'
   Assert-Code (Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $finishRepo, '-StatePath', $finishStatePath,
