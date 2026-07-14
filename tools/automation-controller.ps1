@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Contract','Start','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply')]
+  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply')]
   [string]$Action,
   [string]$RepositoryRoot = (Get-Location).Path,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
@@ -152,6 +152,7 @@ function New-ProtocolResult {
     expectedPaths = @()
     requiredSources = @()
     requiredChecks = @()
+    discoveryPolicy = $null
     nextCommand = $null
     failurePolicy = $FailurePolicy
     errorCode = $ErrorCode
@@ -472,7 +473,7 @@ try {
       Write-JsonAtomically ([pscustomobject]$session) (Get-SessionPath)
 
       $result = New-ProtocolResult $true 'select_candidate' 'selection' 'close_empty_run' $null 'Lease acquired and workspace baseline captured.'
-      $result.nextCommand = 'RegisterCandidate'
+      $result.nextCommand = 'InspectCandidate'
       $result.baselinePath = $currentBaselinePath
       $result.requiredSources = @('开发管理/当前任务队列.txt')
       $result.workerBackoff = $state.workerState.deepseek
@@ -487,25 +488,79 @@ try {
       $result = New-ProtocolResult $true 'contract' 'none' 'stop_read_only' $null 'Controller protocol contract.'
       $result.runId = $null
       $result.taskKindMapping = $script:TaskKindMapping
+      $result.actions = @(
+        'Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish',
+        'CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure',
+        'CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply'
+      )
+      $result.commandTemplates = [ordered]@{
+        Start = "Start -RepositoryRoot 'D:\天章游戏开发' -RunId `$runId -ActualModel `$actualModel"
+        InspectCandidate = 'InspectCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -WorkType $workType -TaskId $taskId -Executor $executor'
+        RegisterCandidate = 'RegisterCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -ExpectedPaths $expectedPaths'
+      }
       Write-ProtocolResult $result
     }
-    'RegisterCandidate' {
+    'InspectCandidate' {
       $session = Read-Session
-      if ($session.phase -ne 'identity_checked') {
-        $result = New-ProtocolResult $false 'stopped' 'none' 'preserve_recovery' 'invalid_phase' 'RegisterCandidate requires the identity_checked phase.'
+      if ($session.phase -notin @('identity_checked', 'candidate_inspection')) {
+        $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'invalid_phase' 'InspectCandidate requires a pre-task phase.'
         Write-ProtocolResult $result 13
       }
-      if (-not $script:TaskKindMapping.Contains($WorkType)) {
-        Close-EmptyRun 'invalid_arguments' 'WorkType must be execution, review, maintenance, or recovery.' 15
+      if ($WorkType -notin @('execution', 'review', 'maintenance')) {
+        Close-EmptyRun 'invalid_arguments' 'WorkType must be execution, review, or maintenance.' 15
       }
       if ([string]::IsNullOrWhiteSpace($TaskId)) { Close-EmptyRun 'invalid_arguments' 'TaskId is required.' 15 }
       if ($Executor -notin @('codex', 'deepseek')) { Close-EmptyRun 'invalid_arguments' 'Executor must be codex or deepseek.' 15 }
-      if ([string]::IsNullOrWhiteSpace($ExpectedPaths)) { Close-EmptyRun 'invalid_arguments' 'ExpectedPaths is required.' 15 }
       if ($Executor -eq 'deepseek') {
         $workerState = Get-StateSnapshot
         if (Test-DeepSeekBackoffActive $workerState) {
           $result = New-ProtocolResult $false 'select_candidate' 'selection' 'skip_candidate' 'worker_backoff' 'DeepSeek worker is in backoff.'
-          $result.nextCommand = 'RegisterCandidate'
+          $result.nextCommand = 'InspectCandidate'
+          $result.workerBackoff = $workerState.workerState.deepseek
+          Write-ProtocolResult $result 23
+        }
+      }
+
+      $session.phase = 'candidate_inspection'
+      $session.branchKind = $WorkType
+      $session.workType = $WorkType
+      $session.taskId = $TaskId
+      $session.executor = $Executor
+      Save-Session $session
+
+      $result = New-ProtocolResult $true 'inspect_candidate' $WorkType 'close_empty_run' $null 'Candidate facts may be inspected read-only before path registration.'
+      $result.taskId = $TaskId
+      $result.executor = $Executor
+      $result.requiredSources = @(Get-BranchSources $WorkType $Executor)
+      $result.discoveryPolicy = [ordered]@{
+        readOnlyProjectDiscovery = $true
+        allowedCommands = @('rg', 'rg --files', 'Get-Content', 'git status', 'git diff', 'task-card required checks')
+        prohibitedOperations = @('project writes', 'worker dispatch', 'stage', 'commit', 'controller helper calls')
+      }
+      $result.nextCommand = 'RegisterCandidate'
+      Write-ProtocolResult $result
+    }
+    'RegisterCandidate' {
+      $session = Read-Session
+      if ($session.phase -ne 'candidate_inspection') {
+        $result = New-ProtocolResult $false 'select_candidate' 'selection' 'skip_candidate' 'invalid_phase' 'RegisterCandidate requires InspectCandidate first.'
+        $result.nextCommand = 'InspectCandidate'
+        Write-ProtocolResult $result 13
+      }
+      $selectedWorkType = [string]$session.workType
+      $selectedTaskId = [string]$session.taskId
+      $selectedExecutor = [string]$session.executor
+      if ((-not [string]::IsNullOrWhiteSpace($WorkType) -and $WorkType -cne $selectedWorkType) -or
+          (-not [string]::IsNullOrWhiteSpace($TaskId) -and $TaskId -cne $selectedTaskId) -or
+          (-not [string]::IsNullOrWhiteSpace($Executor) -and $Executor -cne $selectedExecutor)) {
+        Close-EmptyRun 'candidate_identity_mismatch' 'RegisterCandidate identity does not match the inspected candidate.' 15
+      }
+      if ([string]::IsNullOrWhiteSpace($ExpectedPaths)) { Close-EmptyRun 'invalid_arguments' 'ExpectedPaths is required.' 15 }
+      if ($selectedExecutor -eq 'deepseek') {
+        $workerState = Get-StateSnapshot
+        if (Test-DeepSeekBackoffActive $workerState) {
+          $result = New-ProtocolResult $false 'select_candidate' 'selection' 'skip_candidate' 'worker_backoff' 'DeepSeek worker is in backoff.'
+          $result.nextCommand = 'InspectCandidate'
           $result.workerBackoff = $workerState.workerState.deepseek
           Write-ProtocolResult $result 23
         }
@@ -515,7 +570,7 @@ try {
       $checkJson = if ($check.Output) { Convert-ChildJson $check 'workspace Check' } else { $null }
       if ($check.Code -eq 20) {
         $result = New-ProtocolResult $false 'select_candidate' 'selection' 'skip_candidate' 'candidate_conflict' 'Candidate paths overlap the captured workspace baseline.'
-        $result.nextCommand = 'RegisterCandidate'
+        $result.nextCommand = 'InspectCandidate'
         $result.expectedPaths = @($checkJson.expectedPaths)
         $result.conflictingPaths = @($checkJson.conflictingPaths)
         Write-ProtocolResult $result 20
@@ -531,10 +586,10 @@ try {
       if ($queues.Code -ne 0) {
         Close-EmptyRun 'checkpoint_failed' $(if ($queues.Error) { $queues.Error } else { 'queues_loaded checkpoint failed.' }) $queues.Code
       }
-      $mappedTaskKind = [string]$script:TaskKindMapping[$WorkType]
+      $mappedTaskKind = [string]$script:TaskKindMapping[$selectedWorkType]
       $selected = Invoke-StateTool @(
         'Checkpoint', '-RunId', $RunId,
-        '-TaskKind', $mappedTaskKind, '-TaskId', $TaskId, '-TaskExecutor', $Executor,
+        '-TaskKind', $mappedTaskKind, '-TaskId', $selectedTaskId, '-TaskExecutor', $selectedExecutor,
         '-Checkpoint', 'task_selected', '-ExpectedPaths', ($normalizedPaths -join '|'),
         '-RecoveryBaselinePath', [string]$session.baselinePath
       )
@@ -543,17 +598,17 @@ try {
       }
 
       $session.phase = 'task_selected'
-      $session.branchKind = $WorkType
-      $session.workType = $WorkType
-      $session.taskId = $TaskId
-      $session.executor = $Executor
+      $session.branchKind = $selectedWorkType
+      $session.workType = $selectedWorkType
+      $session.taskId = $selectedTaskId
+      $session.executor = $selectedExecutor
       Save-Session $session
 
-      $result = New-ProtocolResult $true 'implement_task' $WorkType 'preserve_recovery' $null 'Candidate registered and isolated.'
-      $result.taskId = $TaskId
-      $result.executor = $Executor
+      $result = New-ProtocolResult $true 'implement_task' $selectedWorkType 'preserve_recovery' $null 'Candidate registered and isolated.'
+      $result.taskId = $selectedTaskId
+      $result.executor = $selectedExecutor
       $result.expectedPaths = $normalizedPaths
-      $result.requiredSources = @(Get-BranchSources $WorkType $Executor)
+      $result.requiredSources = @(Get-BranchSources $selectedWorkType $selectedExecutor)
       $result.nextCommand = 'BeginMutation'
       Write-ProtocolResult $result
     }
