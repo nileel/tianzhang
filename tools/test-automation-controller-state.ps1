@@ -245,6 +245,15 @@ try {
   $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'fresh-run', '-Now', '2026-07-11T05:14:00Z')
   Assert-Code $r 0 'complete fresh IDLE acquire'
 
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'preflight-run', '-Now', '2026-07-11T06:00:00Z')
+  Assert-Code $r 0 'preflight acquire'
+  $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'preflight-run', '-ErrorMessage', 'task_selected rejected invalid TaskKind', '-Now', '2026-07-11T06:01:00Z')
+  Assert-Code $r 0 'preflight failure cleanup'
+  $state = Read-TestState
+  if ($state.state -ne 'IDLE' -or $null -ne $state.runId -or $null -ne $state.leaseExpiresAt -or $state.recoveryCount -ne 0 -or $state.lastError -ne 'task_selected rejected invalid TaskKind') {
+    throw 'preflight failure did not release the empty run while preserving its diagnostic'
+  }
+
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
   if ($legacy.schemaVersion -ne 4 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') {

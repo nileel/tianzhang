@@ -400,6 +400,30 @@ try {
       Require-Owner $state
       if ([string]::IsNullOrWhiteSpace($ErrorMessage)) { Exit-WithCode 'ErrorMessage is required' $script:ExitInvalidArguments }
       $state.lastError = $ErrorMessage
+      $hasRecoverableWork = (
+        -not [string]::IsNullOrWhiteSpace([string]$state.taskKind) -or
+        -not [string]::IsNullOrWhiteSpace([string]$state.taskId) -or
+        @($state.expectedPaths).Count -gt 0 -or
+        -not [string]::IsNullOrWhiteSpace([string]$state.recoveryBaselinePath) -or
+        -not [string]::IsNullOrWhiteSpace([string]$state.recoveryEvidencePath) -or
+        -not [string]::IsNullOrWhiteSpace([string]$state.recoveryEvidenceHash)
+      )
+      if (-not $hasRecoverableWork) {
+        $state.state = 'IDLE'
+        $state.runId = $null
+        $state.leaseExpiresAt = $null
+        $state.taskKind = $null
+        $state.taskId = $null
+        $state.taskExecutor = $null
+        $state.checkpoint = $null
+        $state.expectedPaths = @()
+        $state.recoveryBaselinePath = $null
+        $state.recoveryEvidencePath = $null
+        $state.recoveryEvidenceHash = $null
+        $state.recoveryCount = 0
+        Export-State $state
+        break
+      }
       if ($WasRecovery) { $state.recoveryCount = [int]$state.recoveryCount + 1 }
       if ([int]$state.recoveryCount -ge 2) {
         $state.state = 'AUTO-BLOCKED'
