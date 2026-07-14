@@ -6,7 +6,7 @@
 
 3. 设置 `$runId=[guid]::NewGuid().Guid`，并把 Node REPL 返回模型赋给 `$actualModel`，准确调用：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller.ps1 Start -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -ActualModel "$actualModel"。只解析单个 JSON；租约占用、AUTO-BLOCKED、身份或状态错误按 failurePolicy 退出，不自行修复本机状态。
 
-4. select_candidate 时先读 requiredSources 选出候选，把任务卡的工作类型、任务 ID 和执行器分别赋给 `$workType/$taskId/$executor`，再准确调用 InspectCandidate -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -WorkType "$workType" -TaskId "$taskId" -Executor "$executor"。仅在返回 discoveryPolicy.readOnlyProjectDiscovery=true 时，按任务卡和 requiredSources 使用允许的只读发现命令推导完整项目相对路径；不得修改项目或派发 worker。路由顺序仍是安全恢复、最高风险待复审、最高优先级可执行任务、必要维护、安静退出。
+4. fresh select_candidate 只从当前任务队列选择可执行候选；读 requiredSources 后只把语义任务 ID 赋给 `$taskId`，准确调用 InspectCandidate -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -TaskId "$taskId"。不得从任务卡的业务类型或主责生成协议参数；入口会固定执行分支、校验“待处理”状态并把队列主责映射为配置执行器。复审和维护只在入口返回各自专用分支与 nextCommand 时处理，不得借此执行候选入口翻译或提交其内部枚举。仅在 discoveryPolicy.readOnlyProjectDiscovery=true 时，按任务卡和 requiredSources 使用允许的只读发现命令推导完整项目相对路径；不得修改项目或派发 worker。
 
 5. 路径完整后把以 `|` 分隔的项目相对路径赋给 `$expectedPaths`，准确调用 RegisterCandidate -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -ExpectedPaths "$expectedPaths"。candidate_conflict 按 nextCommand 回到 InspectCandidate；baseline_changed 或其他失败按 JSON 关闭。登记成功后才可设置标题、调用 BeginMutation 并实施。DeepSeek 分支只有 InspectCandidate 已返回其工作提示词且主责合法时才串行调用；DeepSeek 不得 stage、commit、自审、扩大路径或并行派发，只有控制器拥有 stage/commit 权限。
 
