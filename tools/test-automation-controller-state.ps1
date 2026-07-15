@@ -651,6 +651,71 @@ try {
     throw 'v5 resolved migration evidence was not deterministic across write-back'
   }
 
+  $repairFixture = @{
+    schemaVersion = 5
+    controllerId = 'repair-controller'
+    runId = 'repair-stale-run'
+    runMode = $null
+    state = 'AUTO-BLOCKED'
+    leaseExpiresAt = $null
+    taskKind = 'execute'
+    taskId = 'TQ-057'
+    taskExecutor = 'codex'
+    checkpoint = 'mutation_started'
+    expectedPaths = @('expected.txt')
+    recoveryBaselinePath = 'C:\redacted\baseline.json'
+    recoveryEvidencePath = $null
+    recoveryEvidenceHash = $null
+    recoveryCount = 2
+    lastError = 'interrupted'
+    pendingDecision = @{
+      decisionId = 'DEC-20260715-35ACB87E6C10'
+      createdAt = '2026-07-15T05:00:00Z'
+      taskKind = 'execute'
+      taskId = 'TQ-057'
+      taskSummary = 'Repair the interrupted decision flow'
+      question = 'Which repair option should be used?'
+      options = @(@{ key = 'A'; label = 'Wait' }, @{ key = 'B'; label = 'Repair' })
+      recommendedOption = 'B'
+      impactSummary = 'Operator repair coverage'
+      status = 'RESOLVED'
+      notification = @{ status = 'REPLY_INVALID'; attemptedAt = '2026-07-15T05:01:00Z'; attempts = 2; error = 'invalid_reply'; receiptHash = $null }
+      resolution = @{ optionKey = 'B'; source = 'email'; resolvedAt = '2026-07-15T05:02:00Z' }
+    }
+  }
+  [IO.File]::WriteAllText($statePath, ($repairFixture | ConvertTo-Json -Depth 8 -Compress))
+  $r = Invoke-StateTool @('RepairDecisionFlow', '-StatePath', $statePath, '-DecisionId', 'DEC-20260715-35ACB87E6C10', '-OptionKey', 'B', '-CorrectionReason', 'Correct the misclassified reply source', '-CorrectionEvidenceThreadId', 'repair-thread')
+  Assert-Code $r 15 'operator repair without manual override'
+  $r = Invoke-StateTool @('RepairDecisionFlow', '-StatePath', $statePath, '-RunId', 'repair-stale-run', '-DecisionId', 'DEC-20260715-35ACB87E6C10', '-OptionKey', 'B', '-CorrectionReason', 'Correct the misclassified reply source', '-CorrectionEvidenceThreadId', 'repair-thread', '-ManualOverride')
+  Assert-Code $r 15 'leased invocation cannot perform operator repair'
+  $r = Invoke-StateTool @('RepairDecisionFlow', '-StatePath', $statePath, '-DecisionId', 'DEC-20260715-35ACB87E6C10', '-OptionKey', 'A', '-CorrectionReason', 'Correct the misclassified reply source', '-CorrectionEvidenceThreadId', 'repair-thread', '-ManualOverride')
+  Assert-Code $r 15 'operator repair option mismatch'
+  $longReason = 'r' * 260
+  $r = Invoke-StateTool @('RepairDecisionFlow', '-StatePath', $statePath, '-DecisionId', 'DEC-20260715-35ACB87E6C10', '-OptionKey', 'B', '-CorrectionReason', $longReason, '-CorrectionEvidenceThreadId', ' repair-thread ', '-ManualOverride', '-Now', '2026-07-15T07:00:00Z')
+  Assert-Code $r 0 'operator repair'
+  $repaired = Read-TestState
+  $repairedDecision = $repaired.decisionFlow.resolvedDecisions[0]
+  $correction = $repaired.auditCorrections[0]
+  $threadHashBytes = [Text.UTF8Encoding]::new($false).GetBytes('repair-thread')
+  $expectedThreadHash = ([Security.Cryptography.SHA256]::HashData($threadHashBytes) | ForEach-Object { $_.ToString('x2') }) -join ''
+  if ($repaired.schemaVersion -ne 6 -or $repaired.state -ne 'IDLE' -or $null -ne $repaired.runId -or $null -ne $repaired.runMode -or
+      $null -ne $repaired.leaseExpiresAt -or $null -ne $repaired.taskKind -or $null -ne $repaired.taskId -or $null -ne $repaired.taskExecutor -or
+      $null -ne $repaired.checkpoint -or @($repaired.expectedPaths).Count -ne 0 -or $null -ne $repaired.recoveryBaselinePath -or
+      $null -ne $repaired.recoveryEvidencePath -or $null -ne $repaired.recoveryEvidenceHash -or $repaired.recoveryCount -ne 0 -or
+      $null -ne $repaired.pendingDecision -or $repaired.decisionFlow.status -ne 'IMPLEMENTATION_PENDING') {
+    throw 'operator repair did not cleanly reset the interrupted run'
+  }
+  if ($repairedDecision.decisionId -ne 'DEC-20260715-35ACB87E6C10' -or $repairedDecision.resolution.optionKey -ne 'B' -or $repairedDecision.resolution.source -ne 'manual') {
+    throw 'operator repair did not correct the matching resolution source'
+  }
+  if ($correction.decisionId -ne 'DEC-20260715-35ACB87E6C10' -or $correction.field -ne 'resolution.source' -or $correction.oldValue -ne 'email' -or
+      $correction.newValue -ne 'manual' -or $correction.correctedAt -ne '2026-07-15T07:00:00.0000000+00:00' -or
+      $correction.evidenceHash -ne $expectedThreadHash -or $correction.reason.Length -ne 240) {
+    throw 'operator repair audit correction is incomplete or unbounded'
+  }
+  $r = Invoke-StateTool @('RepairDecisionFlow', '-StatePath', $statePath, '-DecisionId', 'DEC-20260715-35ACB87E6C10', '-OptionKey', 'B', '-CorrectionReason', 'duplicate', '-CorrectionEvidenceThreadId', 'repair-thread', '-ManualOverride')
+  Assert-Code $r 15 'duplicate operator repair'
+
   $guard = [IO.File]::Open("$statePath.guard", [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
   try {
     $r = Invoke-StateTool @('Show', '-StatePath', $statePath)

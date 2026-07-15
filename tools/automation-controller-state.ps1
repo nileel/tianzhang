@@ -794,7 +794,66 @@ try {
       Export-State $state
     }
     'RepairDecisionFlow' {
-      Exit-WithCode 'RepairDecisionFlow requires the operator repair tool' $script:ExitInvalidState
+      if ($PSBoundParameters.ContainsKey('RunId')) {
+        Exit-WithCode 'RepairDecisionFlow is an ownerless operator action' $script:ExitInvalidArguments
+      }
+      if (-not $ManualOverride) {
+        Exit-WithCode 'RepairDecisionFlow requires -ManualOverride' $script:ExitInvalidArguments
+      }
+      Require-DecisionInput $DecisionId 'DecisionId'
+      Require-DecisionInput $OptionKey 'OptionKey'
+      Require-DecisionInput $CorrectionReason 'CorrectionReason'
+      Require-DecisionInput $CorrectionEvidenceThreadId 'CorrectionEvidenceThreadId'
+      if ($null -ne $state.pendingDecision -or $null -eq $state.decisionFlow) {
+        Exit-WithCode 'RepairDecisionFlow requires one migrated resolved decision flow' $script:ExitInvalidArguments
+      }
+      $matchingDecisions = @($state.decisionFlow.resolvedDecisions | Where-Object { [string]$_.decisionId -ceq $DecisionId })
+      if ($matchingDecisions.Count -ne 1) {
+        Exit-WithCode 'RepairDecisionFlow requires exactly one matching resolved decision' $script:ExitInvalidArguments
+      }
+      $existingCorrections = @($state.auditCorrections | Where-Object {
+        [string]$_.decisionId -ceq $DecisionId -and [string]$_.field -ceq 'resolution.source'
+      })
+      if ($existingCorrections.Count -gt 0) {
+        Exit-WithCode 'RepairDecisionFlow correction already exists' $script:ExitInvalidArguments
+      }
+      $resolvedDecision = $matchingDecisions[0]
+      if ([string]$resolvedDecision.resolution.optionKey -cne $OptionKey) {
+        Exit-WithCode 'RepairDecisionFlow option does not match the resolved decision' $script:ExitInvalidArguments
+      }
+      $oldSource = [string]$resolvedDecision.resolution.source
+      if ($oldSource -cne 'email') {
+        Exit-WithCode 'RepairDecisionFlow source is not a known legacy value' $script:ExitInvalidArguments
+      }
+      $reasonSummary = $CorrectionReason.Trim()
+      if ($reasonSummary.Length -gt 240) { $reasonSummary = $reasonSummary.Substring(0, 240) }
+      $threadHash = Get-Sha256Text $CorrectionEvidenceThreadId.Trim()
+      $correction = [ordered]@{
+        decisionId = $DecisionId
+        field = 'resolution.source'
+        oldValue = $oldSource
+        newValue = 'manual'
+        correctedAt = $nowValue.ToString('o')
+        evidenceHash = $threadHash
+        reason = $reasonSummary
+      }
+      $allCorrections = @($state.auditCorrections) + $correction
+      if ($allCorrections.Count -gt 20) {
+        $allCorrections = @($allCorrections[($allCorrections.Count - 20)..($allCorrections.Count - 1)])
+      }
+      $state.auditCorrections = @($allCorrections)
+      $resolvedDecision.resolution.source = 'manual'
+      if ($resolvedDecision.resolution -is [System.Collections.IDictionary]) {
+        [void]$resolvedDecision.resolution.Remove('messageIdHash')
+        [void]$resolvedDecision.resolution.Remove('senderHash')
+        $resolvedDecision.resolution['threadIdHash'] = $threadHash
+        $resolvedDecision.resolution['evidenceHash'] = Get-Sha256Text "manual|$threadHash|"
+      }
+      $state.decisionFlow.status = 'IMPLEMENTATION_PENDING'
+      $state.pendingDecision = $null
+      Clear-RunAndRecovery $state
+      $state.lastError = $null
+      Export-State $state
     }
     'ResetBlocked' {
       if ($state.state -ne 'AUTO-BLOCKED') { Exit-WithCode 'State is not AUTO-BLOCKED' $script:ExitInvalidArguments }
