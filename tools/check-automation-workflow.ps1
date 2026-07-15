@@ -70,7 +70,7 @@ $titleFormatPattern = ConvertFrom-Utf8Base64 'VFpH772cPOS4reaWh+eugOi/sD4='
 $titleFailurePattern = '改名失败|标题助手失败|助手失败'
 $decisionBoundaryPattern = '待决策与邮件回执|CreateDecision|禁止自行决定'
 $decisionVisibilityPattern = '自动工作流状态\.txt|TZG｜待决策|需要决策'
-$decisionFallbackPattern = 'MarkDecisionDeliveryFailed|不得让控制器作出默认选择|继续正常动态路由'
+$decisionFallbackPattern = 'RetryDecisionNotification|不得让控制器作出默认选择|继续正常动态路由'
 $taskKindMappingPattern = 'TaskKind 固定映射：普通执行=`execute`、复审=`review`、维护=`maintenance`、恢复=`recovery`'
 $finalizerScopePattern = 'Finalizer 固定边界：expectedPaths 是允许上界，只检查并提交其中的实际变化路径，不自动修复内容。'
 $emailLiteralPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
@@ -162,6 +162,12 @@ Require-Match $rules $titleFailurePattern 'workflow rules do not preserve execut
 Require-Match $rules $decisionBoundaryPattern 'workflow rules lack a decision-request boundary'
 Require-Match $rules $decisionVisibilityPattern 'workflow rules lack decision visibility instructions'
 Require-Match $rules $decisionFallbackPattern 'workflow rules lack decision delivery fallback instructions'
+Require-Match $rules 'PROVIDER_ACCEPTED[^\r\n]*不代表收件' 'workflow rules do not distinguish provider acceptance from receipt'
+Require-Match $rules '无效回复[^\r\n]*只读' 'workflow rules do not keep invalid replies read-only'
+Require-Match $rules '人工选择[^\r\n]*不得[^\r\n]*email' 'workflow rules allow manual choices to be forged as email replies'
+Require-Match $rules '同一任务[^\r\n]*(连续|下一)[^\r\n]*决策' 'workflow rules do not allow chained decisions for the same task'
+Require-Match $rules 'RECOVERABLE[^\r\n]*(必须|须)[^\r\n]*interruption evidence' 'workflow rules allow RECOVERABLE without interruption evidence'
+Require-Match $rules 'Fail[^\r\n]*不得[^\r\n]*(过期|遗留)[^\r\n]*RUNNING' 'workflow rules allow Fail to leave stale RUNNING state'
 Reject-Match $controller $emailLiteralPattern 'controller prompt contains an email address'
 
 $v2Sources = @(
@@ -216,11 +222,14 @@ foreach ($promptSource in @(
   @{ Path = $controllerPromptSource; Label = 'versioned controller prompt' },
   @{ Path = $controller; Label = 'deployed controller prompt' }
 )) {
-  foreach ($entry in @('PrepareDecision', 'NotificationReceipt', 'CreateDecision', 'ResolveDecisionReply')) {
-    Require-Match $promptSource.Path ([regex]::Escape($entry)) "$($promptSource.Label) lacks repaired decision contract: $entry"
+  foreach ($entry in @('CreateDecision', 'PrepareDecisionNotification', 'MarkDecisionSubmitted', 'RetryDecisionNotification', 'ResolveDecisionEmailReply', 'ResolveDecisionManual')) {
+    Require-Match $promptSource.Path ([regex]::Escape($entry)) "$($promptSource.Label) lacks v6 decision contract: $entry"
+  }
+  foreach ($retired in @('MarkDecisionNotified', 'ResolveDecisionReply')) {
+    Reject-Match $promptSource.Path ([regex]::Escape($retired)) "$($promptSource.Label) still uses retired decision action: $retired"
   }
 }
-Require-Match $rules '有效回复[^\r\n]*InspectCandidate[^\r\n]*不得直接[^\r\n]*Finish' 'workflow rules lack decision reply re-registration'
+Require-Match $rules '有效选择[^\r\n]*InspectCandidate[^\r\n]*不得直接[^\r\n]*Finish' 'workflow rules lack decision reply re-registration'
 if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'Start\s+-RepositoryRoot\s+''D:\\天章游戏开发''\s+-RunId\s+"\$runId"\s+-ActualModel\s+"\$actualModel"') {
   $findings.Add('controller prompt lacks the exact Start parameter contract')
 }

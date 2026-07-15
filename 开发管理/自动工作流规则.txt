@@ -1,6 +1,6 @@
 # 自动工作流规则（✅ 已审核）
 
-> 2026-07-15 Codex：v3 采用薄提示词与确定性控制器门面；队列水位、脏工作区隔离和 Codex / DeepSeek 串行执行安全语义继续继承 v2 与 2026-07-14 加固规格。
+> 2026-07-15 Codex：v6 采用薄提示词、确定性控制器门面及可连续决策生命周期；队列水位、脏工作区隔离和 Codex / DeepSeek 串行执行安全语义继续继承既有加固规格。
 
 ## 自动化拓扑
 
@@ -8,7 +8,7 @@
 - WF1、WF3、WF4 保持 PAUSED 并保留历史配置与 memory；不得与控制器同时启用，尤其不得恢复 WF3 独立写入。
 - 每日简报只读，不修改项目、不 stage、不提交。
 
-## v3 确定性入口
+## v6 确定性入口
 
 - `tools/automation-controller.ps1` 是模型唯一允许调用的控制器入口；版本化启动提示位于 `开发管理/自动工作流控制器提示词.txt`，部署 prompt 必须与该文件逐字一致。模型不得直接调用入口封装的状态、workspace guard、finalizer 或 Git 收尾命令。
 - 入口以单个 JSON 返回 `action`、`runId`、`branchKind`、`taskId`、`executor`、`expectedPaths`、`requiredSources`、`requiredChecks`、`nextCommand`、`failurePolicy` 与稳定错误码。模型只负责读取按分支返回的事实源、推导候选与允许路径、实施语义内容、判断事实冲突和选择任务直接相关的最小充分验证。
@@ -17,11 +17,11 @@
 - 复审和维护使用独立候选解析分支；当前任务队列的执行解析器不得硬套到复审或维护，也不得靠模型重新提交 `WorkType`、`Executor` 等协议枚举扩展分支。只有 `Start` 明确返回相应专用 branch 与 `nextCommand` 后，模型才能进入该分支。
 - 外部工作类型由入口固定映射到内部状态枚举；checkpoint 顺序、租约、baseline、恢复证据、expectedPaths 与实际 changedPaths 分离、DeepSeek backoff、严格决策回复、finalizer 参数和所有失败关闭均由入口执行。模型不得自行解释内部枚举、恢复计数或 helper 退出码。
 - 执行、复审、维护/待决策与 DeepSeek 说明通过 `requiredSources` 按实际分支加载，不把全部细节复制回主 prompt。任何新增确定性分支必须先扩展入口测试与本规则，再更新薄 prompt；不得继续在 prompt 中实现自然语言状态机。
-- 待决策与邮件回执：CreateDecision 前必须登记项目可见状态路径，再调用 PrepareDecision 读取其 requiredSources，并只按返回的完整参数契约创建；项目可见区由控制器确定性写入，模型不得手改。邮件发送成功必须把提供方消息标识作为 NotificationReceipt 交给 MarkDecisionNotified，缺少投递证据只能调用 MarkDecisionDeliveryFailed；不得让控制器作出默认选择、调用普通失败关闭或制造空提交。有效回复必须返回原任务的 InspectCandidate，重新登记完整业务路径与状态路径后再实施，不得直接进入 Finish。
+- 待决策与邮件回执：CreateDecision 前必须登记项目可见状态路径，再调用 PrepareDecision 读取其 requiredSources，并只按返回的完整参数契约创建；项目可见区由控制器确定性写入，模型不得手改。创建后调用 PrepareDecisionNotification，只向返回的本机私有配置目标发送，禁止 `to="me"`；Gmail 成功后读取精确 Sent 的 To，再调用 MarkDecisionSubmitted。`PROVIDER_ACCEPTED` 不代表收件，未收到时调用 RetryDecisionNotification，累计最多三次。邮件回复与聊天人工选择必须分别调用 ResolveDecisionEmailReply 和 ResolveDecisionManual，不得互相伪造。
 
 ## 每轮顺序
 
-以下顺序是 v3 门面的确定性实现契约。模型只能通过 `automation-controller.ps1` 的 Start、InspectCandidate、RegisterCandidate、BeginMutation、Finish、CompleteNoChange、Fail 及明确辅助动作驱动它，不得把下列内部步骤重新拼成命令。
+以下顺序是 v6 门面的确定性实现契约。模型只能通过 `automation-controller.ps1` 的 Start、InspectCandidate、RegisterCandidate、BeginMutation、Finish、CompleteNoChange、Fail 及明确辅助动作驱动它，不得把下列内部步骤重新拼成命令。
 
 1. 通过 Node REPL 确认实际模型身份；失败则只读退出。用 `tools/automation-controller-state.ps1 Acquire` 获取三小时本机租约，随后读取恢复指针与待决策状态。
 2. Acquire 后立即调用 `tools/automation-workspace-guard.ps1 Snapshot` 记录 HEAD、索引、已暂存、未暂存、未跟踪、重命名、删除及子模块/gitlink 基线；Snapshot 发现 dirty submodule、gitlink 异常或工具失败时失败关闭。新任务通过普通 `Check` 后，`task_selected` 检查点必须同时保存本轮 baseline 路径。
@@ -61,10 +61,11 @@
 
 - 当多个方案会改变架构、运行时行为、数据语义、对外体验、任务范围、冻结边界或主责，且事实源不能唯一推出结论时，控制器必须创建待决策项；删除真实资产、保存数据迁移、外部发送及覆盖有歧义人工改动也必须请求决定。
 - 待决策项不是失败关闭：控制器完成当前安全检查后释放租约，排除原任务及其全部传递后继，并继续选择不受该决定影响的其他合法候选。
-- 每次仅保留一个未解决决策。它必须同时写入本机状态、`自动工作流状态.txt` 的“待你决策”区、自动化任务标题/消息，并尝试发送邮件；收件地址、回信地址和搜索条件只保存在本机私有配置。
+- 同一任务仅允许一个 `pendingDecision`；已经选择的条目保留在该任务的 `decisionFlow`，恢复原任务并完成当前选择的实施后允许创建下一项决策。未解决项必须同时写入本机状态、`自动工作流状态.txt` 的“待你决策”区、自动化任务标题/消息；收件地址、回信地址和搜索条件只保存在本机私有配置。
+- CreateDecision 完成后调用 PrepareDecisionNotification，只向返回的私有配置目标发送，禁止 `to="me"`。Gmail 成功后必须读取精确 Sent 记录中的 To，再把提供方消息标识和实际收件目标交给 MarkDecisionSubmitted；`PROVIDER_ACCEPTED` 不代表收件。未收到时调用 RetryDecisionNotification，累计最多三次；不得让控制器作出默认选择、失败关闭、AUTO-BLOCKED 或制造空提交。
 - 回信查询必须先在全邮箱按允许发件人和同一 `decisionId` 搜索；自定义标签只能作为可选缩小条件，不能作为有效回复的硬条件，也不得因标签缺失排除候选。
-- 自动路径只接受允许发件人对同一决策编号的严格回复 `DEC-…：选 A` 或 `DEC-…: 选择 A`。未知发件人、编号不符、多个选项或模糊回复均不得推进任务；负责人明确手动接管时，可由人工以 `ResolveDecision -ReplySource manual -ManualOverride` 记录选择后清除决策，不得伪造为邮件回复。
-- 邮件发送或读取失败时保留待决策状态并受限重试；不得自动选择、失败关闭、AUTO-BLOCKED 或制造空提交。有效回复经 ResolveDecisionReply 后返回原任务的 InspectCandidate，必须重新登记完整业务路径和 `自动工作流状态.txt`、BeginMutation、实施并成功 Finish 后才清除该项；不得直接从 `identity_checked` 调用 Finish。
+- 自动邮件路径只接受允许发件人对同一决策编号的严格回复 `DEC-…：选 A` 或 `DEC-…: 选择 A`，并以全邮箱真实查询结果调用 ResolveDecisionEmailReply。聊天中负责人明确选择时只能调用 ResolveDecisionManual -ManualOverride；人工选择不得记为 `email`，邮件与人工证据不得互相伪造。未知发件人、编号不符、多个选项、模糊回复或其他无效回复只读，不推进任务、不写状态。
+- 有效选择返回原任务的 InspectCandidate，必须重新登记完整业务路径和 `自动工作流状态.txt`、BeginMutation、实施并成功 Finish；不得直接从 `identity_checked` 调用 Finish。当前选择保留在 `decisionFlow`，同一任务可在恢复后继续下一项决策。
 - CreateDecision 的项目状态发布失败时，控制器只可用内部 RollbackDecision 撤销尚未发布的本机决策并释放空运行，不得留下恢复残留或空提交。`CancelDecision -ManualOverride` 仅供人工修复无效或重复决策，必须校验决策编号、记录截断后的原因和取消来源；模型运行不得调用该动作。
 
 ## 可执行库存与队列维护
@@ -78,8 +79,9 @@
 - 运行状态位于 `%USERPROFILE%\.codex\automation-state\tzg-hourly-controller.json`，不得写入 Git 锁。
 - 租约三小时，在 `task_selected`、`mutation_started`、`verification_completed`、`commit_completed` 等检查点续期。
 - 首次中断不计恢复次数，随后最多恢复两次；第二次恢复仍失败转 `AUTO-BLOCKED`。
-- 只有 `CheckRecovery` 同时证明预期路径完整指纹与中断证据一致、原始 baseline 的路径外状态未变化时才能恢复；缺少证据、预期路径被继续修改或出现额外路径一律阻塞。
+- 中断入口必须把残留分类为 clean、RECOVERABLE 或 unsafe；clean 不保留恢复，RECOVERABLE 必须有 `interruption evidence`，unsafe 直接阻塞。只有 `CheckRecovery` 同时证明预期路径完整指纹与中断证据一致、原始 baseline 的路径外状态未变化时才能恢复；缺少证据、预期路径被继续修改或出现额外路径一律阻塞。
 - `verification_completed` 前必须先用 `CaptureRecoveryEvidence` 生成用户级原子证据文件；`Fail` 和 `AUTO-BLOCKED` 保留 baseline/证据引用，`Complete`、fresh `IDLE` 与人工 `ResetBlocked` 清除引用。
+- `Fail` 必须经过上述分类并原子关闭；不得遗留过期 `RUNNING`，也不得把没有 `interruption evidence` 的残留标为 RECOVERABLE。
 - 控制器自有 pending decision 或有效阻塞必须在修改前登记状态文件 `expectedPaths` 和 checkpoint，验证后作为有效结果提交；若中断或提交失败，必须保留精确恢复指针。禁止出现 `IDLE + no recovery + controller-owned dirty file`。
 - 若在选题后追加控制器自有状态路径，必须先形成扩展后的完整 `expectedPaths`，再再次调用 workspace guard `Check`。若该状态路径与 baseline 冲突，不得写、暂存或提交该状态路径，并保留原任务的恢复或失败语义；冲突状态路径不得加入 `Verify` 的 `expectedPaths` 排除集合，不能借扩展范围隐藏人工差异。
 - `ResetBlocked` 只能由人工在处理原因后明确调用。
