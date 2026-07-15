@@ -33,6 +33,35 @@ function Read-TestState {
   (Invoke-StateTool @('Show', '-StatePath', $statePath)).Output | ConvertFrom-Json
 }
 
+function New-Schema6PendingFixture {
+  param([string]$Status)
+  @{
+    schemaVersion = 6
+    controllerId = 'schema6-validation'
+    state = 'IDLE'
+    pendingDecision = @{
+      decisionId = 'DEC-SCHEMA6-INVALID'
+      createdAt = '2026-07-11T05:30:00Z'
+      taskKind = 'execute'
+      taskId = 'schema6-validation-task'
+      taskSummary = 'Validate schema v6 status'
+      question = 'Is this pending status valid?'
+      options = @(@{ key = 'A'; label = 'Yes' }, @{ key = 'B'; label = 'No' })
+      recommendedOption = 'B'
+      impactSummary = 'Strict import validation'
+      status = $Status
+      notificationAttempts = @()
+    }
+    decisionFlow = @{
+      taskKind = 'execute'
+      taskId = 'schema6-validation-task'
+      openedAt = '2026-07-11T05:30:00Z'
+      status = 'AWAITING_DECISION'
+      resolvedDecisions = @()
+    }
+  } | ConvertTo-Json -Depth 7 -Compress
+}
+
 New-Item -ItemType Directory -Path $sandbox | Out-Null
 try {
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-1', '-Now', '2026-07-11T00:00:00Z')
@@ -284,6 +313,12 @@ try {
     throw 'same-task second decision did not preserve the first resolution'
   }
 
+  $beforeRawNotificationError = [IO.File]::ReadAllBytes($statePath)
+  $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'DELIVERY_FAILED', '-NotificationError', 'owner@example.invalid provider said delivery failed', '-Now', '2026-07-11T05:12:15Z')
+  Assert-Code $r 15 'raw notification error rejection'
+  $afterRawNotificationError = [IO.File]::ReadAllBytes($statePath)
+  if ([Convert]::ToBase64String($beforeRawNotificationError) -cne [Convert]::ToBase64String($afterRawNotificationError)) { throw 'rejected raw notification error changed state file bytes' }
+
   $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'DELIVERY_FAILED', '-NotificationError', 'provider_timeout', '-Now', '2026-07-11T05:12:30Z')
   Assert-Code $r 0 'record first failed attempt'
   $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'MISADDRESSED', '-RecipientHash', ('d' * 64), '-ProviderMessageId', 'provider-message-wrong-target', '-NotificationError', 'recipient_hash_mismatch', '-Now', '2026-07-11T05:13:00Z')
@@ -360,6 +395,18 @@ try {
   $state = Read-TestState
   if ($state.state -ne 'IDLE' -or $null -ne $state.runId -or $null -ne $state.leaseExpiresAt -or $state.recoveryCount -ne 0 -or $state.lastError -ne 'task_selected rejected invalid TaskKind') {
     throw 'preflight failure did not release the empty run while preserving its diagnostic'
+  }
+
+  foreach ($invalidPendingStatus in @('RESOLVED', 'UNKNOWN_STATUS')) {
+    $schema6Invalid = New-Schema6PendingFixture $invalidPendingStatus
+    [IO.File]::WriteAllText($statePath, $schema6Invalid)
+    $beforeInvalidSchema6 = [IO.File]::ReadAllBytes($statePath)
+    $r = Invoke-StateTool @('Show', '-StatePath', $statePath)
+    Assert-Code $r 13 "schema v6 pending status $invalidPendingStatus rejection"
+    $afterInvalidSchema6 = [IO.File]::ReadAllBytes($statePath)
+    if ([Convert]::ToBase64String($beforeInvalidSchema6) -cne [Convert]::ToBase64String($afterInvalidSchema6)) {
+      throw "rejected schema v6 pending status $invalidPendingStatus changed state file bytes"
+    }
   }
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')

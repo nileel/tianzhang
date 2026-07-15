@@ -279,8 +279,9 @@ function Convert-NotificationAttemptsToV6 {
 function Convert-PendingDecisionToV6 {
   param($Decision, [int]$SourceSchema)
   if ($null -eq $Decision) { return $null }
-  $status = Convert-DecisionStatusToV6 ([string](Get-ObjectValue $Decision 'status'))
-  if ($status -notin @('PENDING','PROVIDER_ACCEPTED','DELIVERY_FAILED','MISADDRESSED','RETRY_EXHAUSTED')) {
+  $sourceStatus = [string](Get-ObjectValue $Decision 'status')
+  $status = if ($SourceSchema -eq 6) { $sourceStatus } else { Convert-DecisionStatusToV6 $sourceStatus }
+  if (@('PENDING','PROVIDER_ACCEPTED','DELIVERY_FAILED','MISADDRESSED','RETRY_EXHAUSTED') -cnotcontains $status) {
     throw "Unsupported pending decision status: $status"
   }
   [ordered]@{
@@ -586,8 +587,10 @@ try {
       }
       $errorCategory = $null
       if (-not [string]::IsNullOrWhiteSpace($NotificationError)) {
-        $errorCategory = $NotificationError.Trim()
-        if ($errorCategory.Length -gt 240) { $errorCategory = $errorCategory.Substring(0, 240) }
+        if ($NotificationError -cnotmatch '^[a-z][a-z0-9_]{0,119}$') {
+          Exit-WithCode 'NotificationError must be a symbolic error category' $script:ExitInvalidArguments
+        }
+        $errorCategory = $NotificationError
       }
       $attempt = [ordered]@{
         attemptedAt = $nowValue.ToString('o')
