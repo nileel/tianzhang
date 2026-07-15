@@ -710,6 +710,10 @@ try {
       @($schema2Evidence.expectedEntries).Count -ne 1) {
     throw 'recoverable interruption evidence did not use the expected schema 2 projection'
   }
+  $r = Invoke-Guard @('CaptureInterruptionEvidence', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $interruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'recoverable interruption evidence overwrite'
+  $overwrittenInterruption = Assert-InterruptionResult $r 'recoverable' @('task.txt') @() 'recoverable interruption evidence overwrite'
+  if ([string]$overwrittenInterruption.evidenceHash -notmatch '^[0-9a-f]{64}$') { throw "overwritten interruption evidence omitted evidence hash: $($r.Output)" }
   $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $interruptionEvidence, '-ExpectedPaths', 'task.txt')
   Assert-Code $r 0 'schema 2 interruption evidence recovers'
   [System.IO.File]::AppendAllText((Join-Path $interruptionRepo 'task.txt'), "later expected edit`n")

@@ -383,7 +383,7 @@ function Write-JsonAtomically {
     $json = $Value | ConvertTo-Json -Depth 8
     [System.IO.File]::WriteAllText($temporaryPath, $json + "`n", [System.Text.UTF8Encoding]::new($false))
     if ([System.IO.File]::Exists($fullPath)) {
-      [System.IO.File]::Replace($temporaryPath, $fullPath, $null)
+      [System.IO.File]::Move($temporaryPath, $fullPath, $true)
     } else {
       [System.IO.File]::Move($temporaryPath, $fullPath)
     }

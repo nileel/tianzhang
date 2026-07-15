@@ -118,7 +118,7 @@ foreach ($path in $paths) {
   if (Test-Path -LiteralPath $fullPath -PathType Container) { throw "Expected path must be a file: $path" }
   if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
     & git -C $script:Repository ls-files --error-unmatch -- $path *> $null
-    if ($LASTEXITCODE -ne 0) { throw "Expected path is neither an existing file nor a tracked deletion: $path" }
+    if ($LASTEXITCODE -ne 0) { continue }
   }
 }
 

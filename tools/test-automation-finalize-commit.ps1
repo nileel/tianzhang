@@ -84,6 +84,15 @@ try {
     throw 'clean allowed path was rewritten by finalization'
   }
 
+  $missingPotential = '目录/尚未创建.asset'
+  Write-Utf8 (Join-Path $repo $expected) "expected decision-only change`n"
+  $potentialResult = Invoke-Helper "$expected|$missingPotential" 'test: changed path with missing potential path'
+  if ($potentialResult.Code -ne 0) { throw "commit helper rejected an unchanged missing potential path: $($potentialResult.Output)" }
+  $potentialCommitted = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if ($potentialCommitted.Count -ne 1 -or $potentialCommitted[0] -ne $expected) {
+    throw "missing potential path affected the commit: $($potentialCommitted -join ', ')"
+  }
+
   Write-Utf8 (Join-Path $repo $expected) "expected second change`n"
   Write-Utf8 (Join-Path $repo $secondExpected) "second expected change`n"
   $multiResult = Invoke-Helper "$expected|$secondExpected" 'test: multiple expected paths'
