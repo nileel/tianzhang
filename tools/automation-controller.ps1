@@ -630,20 +630,81 @@ function Remove-RunArtifacts {
   }
 }
 
+function Close-InterruptedState {
+  param($Session, [string]$Message)
+
+  $before = Get-StateSnapshot
+  $paths = @($before.expectedPaths | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+  if ($paths.Count -eq 0) {
+    $closed = Invoke-StateTool @('AbortClean', '-RunId', $RunId, '-ErrorMessage', $Message)
+    if ($closed.Code -ne 0) { throw $(if ($closed.Error) { $closed.Error } else { 'AbortClean failed.' }) }
+    return [pscustomobject]@{
+      Classification = 'clean'
+      FailurePolicy = 'close_clean'
+      State = Convert-ChildJson $closed 'clean interruption close'
+      OriginalState = $before
+      ChangedExpectedPaths = @()
+      ConflictingPaths = @()
+    }
+  }
+
+  $capture = Invoke-GuardTool @(
+    'CaptureInterruptionEvidence', '-BaselinePath', [string]$Session.baselinePath,
+    '-EvidencePath', [string]$Session.evidencePath, '-ExpectedPaths', ($paths -join '|')
+  )
+  $captureJson = Convert-ChildJson $capture 'interruption classification'
+  $classification = [string]$captureJson.classification
+  switch ($classification) {
+    'clean' {
+      $closed = Invoke-StateTool @('AbortClean', '-RunId', $RunId, '-ErrorMessage', $Message)
+      $policy = 'close_clean'
+    }
+    'recoverable' {
+      $arguments = @(
+        'RecordRecoverableInterruption', '-RunId', $RunId, '-ErrorMessage', $Message,
+        '-RecoveryBaselinePath', [string]$Session.baselinePath,
+        '-RecoveryEvidencePath', [string]$Session.evidencePath,
+        '-RecoveryEvidenceHash', [string]$captureJson.evidenceHash
+      )
+      if ([bool]$Session.isRecovery) { $arguments += '-WasRecovery' }
+      $closed = Invoke-StateTool $arguments
+      $policy = if ($closed.Code -eq 0) { Get-RecoveryFailurePolicy (Convert-ChildJson $closed 'recoverable interruption close') } else { 'preserve_recovery' }
+    }
+    'unsafe' {
+      $reason = if ([string]::IsNullOrWhiteSpace([string]$captureJson.reason)) { $Message } else { "$Message ($([string]$captureJson.reason))" }
+      $closed = Invoke-StateTool @('BlockUnsafe', '-RunId', $RunId, '-ErrorMessage', $reason)
+      $policy = 'auto_blocked'
+    }
+    default {
+      throw "Unsupported interruption classification: $classification"
+    }
+  }
+  if ($closed.Code -ne 0) { throw $(if ($closed.Error) { $closed.Error } else { "State close failed for $classification interruption." }) }
+  $closedState = Convert-ChildJson $closed "$classification interruption close"
+  [pscustomobject]@{
+    Classification = $classification
+    FailurePolicy = $policy
+    State = $closedState
+    OriginalState = $before
+    ChangedExpectedPaths = @($captureJson.changedExpectedPaths)
+    ConflictingPaths = @($captureJson.conflictingPaths)
+  }
+}
+
 function Stop-RegisteredWork {
   param($Session, [string]$Code, [string]$Message, [int]$ExitCode)
 
-  $arguments = @('Fail', '-RunId', $RunId, '-ErrorMessage', $Message)
-  if ([bool]$Session.isRecovery) { $arguments += '-WasRecovery' }
-  $failed = Invoke-StateTool $arguments
-  $failedState = if ($failed.Code -eq 0) { Convert-ChildJson $failed 'state Fail' } else { $null }
-  $policy = if ($null -ne $failedState) { Get-RecoveryFailurePolicy $failedState } else { 'preserve_recovery' }
-  $result = New-ProtocolResult $false 'stopped' ([string]$Session.branchKind) $policy $Code $Message
-  if ($null -ne $failedState) {
-    $result.taskId = [string]$failedState.taskId
-    $result.executor = [string]$failedState.taskExecutor
-    $result.expectedPaths = @($failedState.expectedPaths)
+  try {
+    $closure = Close-InterruptedState $Session $Message
+  } catch {
+    $result = New-ProtocolResult $false 'stopped' ([string]$Session.branchKind) 'preserve_recovery' 'fail_close_error' $_.Exception.Message
+    Write-ProtocolResult $result 1
   }
+  $result = New-ProtocolResult $false 'stopped' ([string]$Session.branchKind) ([string]$closure.FailurePolicy) $Code $Message
+  $result.taskId = [string]$closure.OriginalState.taskId
+  $result.executor = [string]$closure.OriginalState.taskExecutor
+  $result.expectedPaths = @($closure.OriginalState.expectedPaths)
+  $result.conflictingPaths = @($closure.ConflictingPaths)
   Write-ProtocolResult $result $ExitCode
 }
 
@@ -670,6 +731,10 @@ try {
         $result = New-ProtocolResult $false 'stopped' 'none' 'auto_blocked' 'auto_blocked' 'Controller is AUTO-BLOCKED.'
         Write-ProtocolResult $result 11
       }
+      if ($acquire.Code -eq 13 -and "$($acquire.Error) $($acquire.Output)" -match 'stale_running_state') {
+        $result = New-ProtocolResult $false 'stopped' 'none' 'stop_read_only' 'stale_running_state' 'A stale RUNNING state requires operator classification.'
+        Write-ProtocolResult $result 13
+      }
       if ($acquire.Code -ne 0) {
         $message = if ($acquire.Error) { $acquire.Error } else { 'State Acquire failed.' }
         $result = New-ProtocolResult $false 'stopped' 'none' 'stop_read_only' 'state_error' $message
@@ -684,14 +749,7 @@ try {
         Close-StartFailure 'snapshot_failed' $message $snapshot.Code
       }
 
-      $hasRecovery = (
-        -not [string]::IsNullOrWhiteSpace([string]$acquiredState.taskKind) -or
-        -not [string]::IsNullOrWhiteSpace([string]$acquiredState.taskId) -or
-        @($acquiredState.expectedPaths).Count -gt 0 -or
-        -not [string]::IsNullOrWhiteSpace([string]$acquiredState.recoveryBaselinePath) -or
-        -not [string]::IsNullOrWhiteSpace([string]$acquiredState.recoveryEvidencePath) -or
-        -not [string]::IsNullOrWhiteSpace([string]$acquiredState.recoveryEvidenceHash)
-      )
+      $hasRecovery = [string]$acquiredState.runMode -ceq 'recovery'
       if ($hasRecovery) {
         if ([string]::IsNullOrWhiteSpace([string]$acquiredState.taskKind) -or
             [string]::IsNullOrWhiteSpace([string]$acquiredState.taskId) -or
@@ -699,16 +757,16 @@ try {
             [string]::IsNullOrWhiteSpace([string]$acquiredState.recoveryBaselinePath) -or
             [string]::IsNullOrWhiteSpace([string]$acquiredState.recoveryEvidencePath) -or
             [string]::IsNullOrWhiteSpace([string]$acquiredState.recoveryEvidenceHash)) {
-          [void](Invoke-StateTool @('Fail', '-RunId', $RunId, '-WasRecovery', '-ErrorMessage', 'recovery_state_incomplete'))
-          $result = New-ProtocolResult $false 'stopped' 'recovery' 'preserve_recovery' 'recovery_state_incomplete' 'Recovery state is incomplete.'
+          [void](Invoke-StateTool @('BlockUnsafe', '-RunId', $RunId, '-ErrorMessage', 'recovery_state_incomplete'))
+          $result = New-ProtocolResult $false 'stopped' 'recovery' 'auto_blocked' 'recovery_state_incomplete' 'Recovery state is incomplete.'
           Write-ProtocolResult $result 1
         }
         try {
           $evidence = [IO.File]::ReadAllText([string]$acquiredState.recoveryEvidencePath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json
           if ([string]$evidence.payloadHash -cne [string]$acquiredState.recoveryEvidenceHash) { throw 'Recovery evidence hash does not match state.' }
         } catch {
-          [void](Invoke-StateTool @('Fail', '-RunId', $RunId, '-WasRecovery', '-ErrorMessage', 'recovery_evidence_invalid'))
-          $result = New-ProtocolResult $false 'stopped' 'recovery' 'preserve_recovery' 'recovery_evidence_invalid' $_.Exception.Message
+          [void](Invoke-StateTool @('BlockUnsafe', '-RunId', $RunId, '-ErrorMessage', 'recovery_evidence_invalid'))
+          $result = New-ProtocolResult $false 'stopped' 'recovery' 'auto_blocked' 'recovery_evidence_invalid' $_.Exception.Message
           Write-ProtocolResult $result 1
         }
 
@@ -739,8 +797,8 @@ try {
         if ($recovery.Code -ne 0) {
           $recoveryJson = if ($recovery.Output) { Convert-ChildJson $recovery 'workspace CheckRecovery' } else { $null }
           $reason = if ($null -ne $recoveryJson -and $recoveryJson.reason) { [string]$recoveryJson.reason } else { 'recovery_check_failed' }
-          $failed = Invoke-StateTool @('Fail', '-RunId', $RunId, '-WasRecovery', '-ErrorMessage', $reason)
-          $failedState = if ($failed.Code -eq 0) { Convert-ChildJson $failed 'recovery Fail' } else { $acquiredState }
+          $failed = Invoke-StateTool @('RecordRecoverableInterruption', '-RunId', $RunId, '-WasRecovery', '-ErrorMessage', $reason)
+          $failedState = if ($failed.Code -eq 0) { Convert-ChildJson $failed 'recovery interruption' } else { $acquiredState }
           $result = New-ProtocolResult $false 'stopped' 'recovery' (Get-RecoveryFailurePolicy $failedState) $reason "Recovery check failed: $reason"
           $result.taskId = [string]$acquiredState.taskId
           $result.executor = [string]$acquiredState.taskExecutor
@@ -1212,43 +1270,24 @@ try {
         Write-ProtocolResult $result 15
       }
       $session = Read-Session
-      $state = Get-StateSnapshot
-      if ($session.phase -eq 'mutation_started' -and [string]::IsNullOrWhiteSpace([string]$state.recoveryEvidencePath)) {
-        $paths = @($state.expectedPaths)
-        if ($paths.Count -gt 0) {
-          $verify = Invoke-GuardTool @('Verify', '-BaselinePath', [string]$session.baselinePath, '-ExpectedPaths', ($paths -join '|'))
-          if ($verify.Code -eq 0) {
-            $capture = Invoke-GuardTool @(
-              'CaptureRecoveryEvidence', '-BaselinePath', [string]$session.baselinePath,
-              '-EvidencePath', [string]$session.evidencePath, '-ExpectedPaths', ($paths -join '|')
-            )
-            if ($capture.Code -eq 0) {
-              $captureJson = Convert-ChildJson $capture 'recovery evidence capture'
-              $saved = Invoke-StateTool @(
-                'Checkpoint', '-RunId', $RunId,
-                '-RecoveryBaselinePath', [string]$session.baselinePath,
-                '-RecoveryEvidencePath', [string]$session.evidencePath,
-                '-RecoveryEvidenceHash', [string]$captureJson.evidenceHash
-              )
-              if ($saved.Code -ne 0) { throw $(if ($saved.Error) { $saved.Error } else { 'Recovery evidence checkpoint failed.' }) }
-            }
-          }
-        }
+      try {
+        $closure = Close-InterruptedState $session $ErrorMessage
+      } catch {
+        $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'fail_close_error' $_.Exception.Message
+        Write-ProtocolResult $result 1
       }
-      $failArguments = @('Fail', '-RunId', $RunId, '-ErrorMessage', $ErrorMessage)
-      if ([bool]$session.isRecovery) { $failArguments += '-WasRecovery' }
-      $failed = Invoke-StateTool $failArguments
-      if ($failed.Code -ne 0) {
-        $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'fail_close_error' $(if ($failed.Error) { $failed.Error } else { 'State Fail failed.' })
-        Write-ProtocolResult $result $failed.Code
+      if ($closure.Classification -eq 'clean') {
+        Remove-RunArtifacts $session
+      } else {
+        $session.phase = 'failed'
+        Save-Session $session
       }
-      $failedState = Convert-ChildJson $failed 'state Fail'
-      $session.phase = 'failed'
-      Save-Session $session
-      $result = New-ProtocolResult $false 'failed' ([string]$session.branchKind) (Get-RecoveryFailurePolicy $failedState) 'task_failed' $ErrorMessage
-      $result.taskId = [string]$failedState.taskId
-      $result.executor = [string]$failedState.taskExecutor
-      $result.expectedPaths = @($failedState.expectedPaths)
+      $result = New-ProtocolResult $false 'failed' ([string]$session.branchKind) ([string]$closure.FailurePolicy) 'task_failed' $ErrorMessage
+      $result.taskId = [string]$closure.OriginalState.taskId
+      $result.executor = [string]$closure.OriginalState.taskExecutor
+      $result.expectedPaths = @($closure.OriginalState.expectedPaths)
+      $result.changedExpectedPaths = @($closure.ChangedExpectedPaths)
+      $result.conflictingPaths = @($closure.ConflictingPaths)
       $result.nextCommand = 'Start'
       Write-ProtocolResult $result
     }

@@ -378,6 +378,31 @@ function Clear-RunAndRecovery {
   $State.recoveryCount = 0
 }
 
+function Require-RecoveryInvariant {
+  param([System.Collections.IDictionary]$State)
+
+  $taskKindValue = [string]$State['taskKind']
+  $taskIdValue = [string]$State['taskId']
+  $hasExpectedPath = $false
+  foreach ($expectedPathValue in @($State['expectedPaths'])) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$expectedPathValue)) {
+      $hasExpectedPath = $true
+      break
+    }
+  }
+  $baselinePathValue = [string]$State['recoveryBaselinePath']
+  $evidencePathValue = [string]$State['recoveryEvidencePath']
+  $evidenceHashValue = [string]$State['recoveryEvidenceHash']
+  if ([string]::IsNullOrWhiteSpace($taskKindValue) -or
+      [string]::IsNullOrWhiteSpace($taskIdValue) -or
+      -not $hasExpectedPath -or
+      [string]::IsNullOrWhiteSpace($baselinePathValue) -or
+      [string]::IsNullOrWhiteSpace($evidencePathValue) -or
+      $evidenceHashValue -notmatch '^[0-9a-f]{64}$') {
+    Exit-WithCode 'recovery_state_incomplete' $script:ExitInvalidArguments
+  }
+}
+
 function Clear-DecisionWithAudit {
   param(
     [System.Collections.IDictionary]$State,
@@ -435,9 +460,13 @@ try {
     'Acquire' {
       Require-RunId
       if ($state.state -eq 'AUTO-BLOCKED') { Exit-WithCode 'Controller is AUTO-BLOCKED' $script:ExitBlocked }
-      if ($state.state -eq 'RUNNING' -and $state.leaseExpiresAt) {
+      if ($state.leaseExpiresAt) {
         $expires = [DateTimeOffset]::Parse($state.leaseExpiresAt)
         if ($expires -gt $nowValue) { Exit-WithCode 'An active lease already exists' $script:ExitBusy }
+      }
+      if ($state.state -eq 'RUNNING') { Exit-WithCode 'stale_running_state' $script:ExitInvalidState }
+      if ($state.state -notin @('IDLE','RECOVERABLE')) {
+        Exit-WithCode "State is not acquirable: $($state.state)" $script:ExitInvalidState
       }
       $isRecoveryAcquire = $state.state -eq 'RECOVERABLE'
       if ($state.state -eq 'IDLE') {
@@ -454,7 +483,7 @@ try {
       }
       $state.controllerId = $ControllerId
       $state.runId = $RunId
-      $state.runMode = if ($isRecoveryAcquire) { 'recovery' } else { $null }
+      $state.runMode = if ($isRecoveryAcquire) { 'recovery' } else { 'fresh' }
       $state.state = 'RUNNING'
       Set-Lease $state $nowValue
       Export-State $state
@@ -738,6 +767,10 @@ try {
     'RecordRecoverableInterruption' {
       Require-Owner $state
       if ([string]::IsNullOrWhiteSpace($ErrorMessage)) { Exit-WithCode 'ErrorMessage is required' $script:ExitInvalidArguments }
+      if ($PSBoundParameters.ContainsKey('RecoveryBaselinePath')) { $state.recoveryBaselinePath = $RecoveryBaselinePath }
+      if ($PSBoundParameters.ContainsKey('RecoveryEvidencePath')) { $state.recoveryEvidencePath = $RecoveryEvidencePath }
+      if ($PSBoundParameters.ContainsKey('RecoveryEvidenceHash')) { $state.recoveryEvidenceHash = $RecoveryEvidenceHash }
+      Require-RecoveryInvariant $state
       $state.lastError = $ErrorMessage
       if ($WasRecovery) { $state.recoveryCount = [int]$state.recoveryCount + 1 }
       if ([int]$state.recoveryCount -ge 2) {

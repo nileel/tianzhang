@@ -66,7 +66,8 @@ New-Item -ItemType Directory -Path $sandbox | Out-Null
 try {
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-1', '-Now', '2026-07-11T00:00:00Z')
   Assert-Code $r 0 'first acquire'
-  if ((Read-TestState).state -ne 'RUNNING') { throw 'first acquire did not set RUNNING' }
+  $firstAcquire = Read-TestState
+  if ($firstAcquire.state -ne 'RUNNING' -or $firstAcquire.runMode -ne 'fresh') { throw 'first acquire did not set RUNNING fresh mode' }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-2', '-Now', '2026-07-11T00:10:00Z')
   Assert-Code $r 10 'active lease rejection'
@@ -83,7 +84,7 @@ try {
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
   if ($state.schemaVersion -ne 6 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v6 recovery evidence fields' }
-  if ($null -ne $state.runMode -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v6 top-level fields were not initialized safely' }
+  if ($state.runMode -ne 'fresh' -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v6 top-level fields were not initialized safely' }
 
   $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
   Assert-Code $r 0 'checkpoint DeepSeek executor'
@@ -170,25 +171,28 @@ try {
   }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-2', '-Now', '2026-07-11T04:00:00Z')
-  Assert-Code $r 0 'expired lease takeover'
-  $state = Read-TestState
-  if ($state.runId -ne 'run-2' -or $state.taskId -ne 'sample-task' -or $state.taskExecutor -ne 'deepseek') { throw 'takeover did not preserve recovery fields' }
+  Assert-Code $r 13 'stale running state rejection'
+  if ($r.Output -notmatch 'stale_running_state') { throw "stale RUNNING rejection omitted stable error code: $($r.Output)" }
+  $staleState = Read-TestState
+  if ($staleState.runId -ne 'run-1' -or $staleState.state -ne 'RUNNING') { throw 'stale RUNNING rejection changed ownership' }
 
-  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-2', '-ErrorMessage', 'initial interruption', '-Now', '2026-07-11T04:01:00Z')
+  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-1', '-ErrorMessage', 'initial interruption', '-Now', '2026-07-11T04:01:00Z')
   Assert-Code $r 0 'initial interruption'
   $state = Read-TestState
-  if ($state.recoveryCount -ne 0) { throw 'initial interruption consumed a recovery attempt' }
+  if ($state.state -ne 'RECOVERABLE' -or $null -ne $state.runId -or $null -ne $state.leaseExpiresAt -or $state.recoveryCount -ne 0) { throw 'initial interruption did not become unowned RECOVERABLE state' }
   if ($state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'initial interruption did not preserve recovery evidence' }
 
-  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-3', '-Now', '2026-07-11T04:02:00Z')
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-2', '-Now', '2026-07-11T04:02:00Z')
   Assert-Code $r 0 'first recovery acquire'
-  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-3', '-WasRecovery', '-ErrorMessage', 'first recovery failed', '-Now', '2026-07-11T04:03:00Z')
+  $recoveryAcquire = Read-TestState
+  if ($recoveryAcquire.runMode -ne 'recovery' -or $recoveryAcquire.state -ne 'RUNNING') { throw 'RECOVERABLE acquire did not enter recovery mode' }
+  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-2', '-WasRecovery', '-ErrorMessage', 'first recovery failed', '-Now', '2026-07-11T04:03:00Z')
   Assert-Code $r 0 'first recovery failure'
   if ((Read-TestState).recoveryCount -ne 1) { throw 'first recovery count was not 1' }
 
-  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-4', '-Now', '2026-07-11T04:04:00Z')
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-3', '-Now', '2026-07-11T04:04:00Z')
   Assert-Code $r 0 'second recovery acquire'
-  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-4', '-WasRecovery', '-ErrorMessage', 'second recovery failed', '-Now', '2026-07-11T04:05:00Z')
+  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-3', '-WasRecovery', '-ErrorMessage', 'second recovery failed', '-Now', '2026-07-11T04:05:00Z')
   Assert-Code $r 0 'second recovery failure'
   $state = Read-TestState
   if ($state.state -ne 'AUTO-BLOCKED') { throw 'second recovery failure did not block' }
@@ -390,11 +394,91 @@ try {
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'preflight-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'preflight acquire'
+  $r = Invoke-StateTool @(
+    'Checkpoint', '-StatePath', $statePath, '-RunId', 'preflight-run',
+    '-TaskKind', 'execute', '-TaskId', 'preflight-task', '-TaskExecutor', 'codex',
+    '-Checkpoint', 'mutation_started', '-ExpectedPaths', 'preflight.txt',
+    '-RecoveryBaselinePath', 'C:\state\preflight-baseline.json',
+    '-RecoveryEvidencePath', 'C:\state\preflight-evidence.json',
+    '-RecoveryEvidenceHash', ('c' * 64), '-Now', '2026-07-11T06:00:15Z'
+  )
+  Assert-Code $r 0 'preflight checkpoint'
+  $r = Invoke-StateTool @(
+    'CreateDecision', '-StatePath', $statePath, '-RunId', 'preflight-run',
+    '-TaskKind', 'execute', '-TaskId', 'preflight-task', '-TaskSummary', 'Preserve decision on clean abort',
+    '-DecisionQuestion', 'Should the decision survive?', '-DecisionOptions', 'A=Yes|B=No',
+    '-RecommendedOption', 'A', '-ImpactSummary', 'Failure cleanup must not erase decisions',
+    '-Now', '2026-07-11T06:00:30Z'
+  )
+  Assert-Code $r 0 'preflight decision fixture'
+  $preflightDecisionId = (Read-TestState).pendingDecision.decisionId
   $r = Invoke-StateTool @('AbortClean', '-StatePath', $statePath, '-RunId', 'preflight-run', '-ErrorMessage', 'task_selected rejected invalid TaskKind', '-Now', '2026-07-11T06:01:00Z')
   Assert-Code $r 0 'preflight failure cleanup'
   $state = Read-TestState
-  if ($state.state -ne 'IDLE' -or $null -ne $state.runId -or $null -ne $state.leaseExpiresAt -or $state.recoveryCount -ne 0 -or $state.lastError -ne 'task_selected rejected invalid TaskKind') {
-    throw 'preflight failure did not release the empty run while preserving its diagnostic'
+  if ($state.state -ne 'IDLE' -or $null -ne $state.runId -or $null -ne $state.runMode -or $null -ne $state.leaseExpiresAt -or
+      $null -ne $state.taskKind -or $null -ne $state.taskId -or $null -ne $state.taskExecutor -or $null -ne $state.checkpoint -or
+      @($state.expectedPaths).Count -ne 0 -or $null -ne $state.recoveryBaselinePath -or $null -ne $state.recoveryEvidencePath -or
+      $null -ne $state.recoveryEvidenceHash -or $state.recoveryCount -ne 0 -or
+      $state.pendingDecision.decisionId -ne $preflightDecisionId -or $state.decisionFlow.status -ne 'AWAITING_DECISION' -or
+      $state.lastError -ne 'task_selected rejected invalid TaskKind') {
+    throw 'AbortClean did not clear run/recovery fields while preserving decision state and diagnostic'
+  }
+
+  $completeRecoveryFixture = [ordered]@{
+    schemaVersion = 6
+    controllerId = 'recovery-validation'
+    runId = 'recovery-validation-run'
+    runMode = 'fresh'
+    state = 'RUNNING'
+    leaseExpiresAt = '2026-07-11T09:30:00Z'
+    taskKind = 'execute'
+    taskId = 'recovery-validation-task'
+    taskExecutor = 'codex'
+    checkpoint = 'mutation_started'
+    expectedPaths = @('task.txt')
+    recoveryBaselinePath = 'C:\state\validation-baseline.json'
+    recoveryEvidencePath = 'C:\state\validation-evidence.json'
+    recoveryEvidenceHash = ('d' * 64)
+    recoveryCount = 0
+  }
+  foreach ($missingField in @('taskKind','taskId','expectedPaths','recoveryBaselinePath','recoveryEvidencePath','recoveryEvidenceHash')) {
+    $fixture = [ordered]@{}
+    foreach ($entry in $completeRecoveryFixture.GetEnumerator()) { $fixture[$entry.Key] = $entry.Value }
+    $fixture[$missingField] = if ($missingField -eq 'expectedPaths') { @() } else { $null }
+    [IO.File]::WriteAllText($statePath, ($fixture | ConvertTo-Json -Depth 5 -Compress))
+    $r = Invoke-StateTool @(
+      'RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'recovery-validation-run',
+      '-ErrorMessage', "missing $missingField", '-Now', '2026-07-11T06:30:00Z'
+    )
+    Assert-Code $r 15 "missing $missingField recovery invariant rejection"
+    if ((Read-TestState).state -ne 'RUNNING') { throw "missing $missingField recovery rejection mutated state" }
+  }
+  $invalidHashFixture = [ordered]@{}
+  foreach ($entry in $completeRecoveryFixture.GetEnumerator()) { $invalidHashFixture[$entry.Key] = $entry.Value }
+  $invalidHashFixture.recoveryEvidenceHash = 'not-a-sha256'
+  [IO.File]::WriteAllText($statePath, ($invalidHashFixture | ConvertTo-Json -Depth 5 -Compress))
+  $r = Invoke-StateTool @(
+    'RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'recovery-validation-run',
+    '-ErrorMessage', 'invalid evidence hash', '-Now', '2026-07-11T06:31:00Z'
+  )
+  Assert-Code $r 15 'invalid recovery evidence hash rejection'
+
+  $unsafeFixture = [ordered]@{}
+  foreach ($entry in $completeRecoveryFixture.GetEnumerator()) { $unsafeFixture[$entry.Key] = $entry.Value }
+  $unsafeFixture.recoveryBaselinePath = $null
+  $unsafeFixture.recoveryEvidencePath = $null
+  $unsafeFixture.recoveryEvidenceHash = $null
+  [IO.File]::WriteAllText($statePath, ($unsafeFixture | ConvertTo-Json -Depth 5 -Compress))
+  $r = Invoke-StateTool @(
+    'BlockUnsafe', '-StatePath', $statePath, '-RunId', 'recovery-validation-run',
+    '-ErrorMessage', 'outside expected paths changed', '-Now', '2026-07-11T06:32:00Z'
+  )
+  Assert-Code $r 0 'unsafe interruption block'
+  $unsafeState = Read-TestState
+  if ($unsafeState.state -ne 'AUTO-BLOCKED' -or $null -ne $unsafeState.runId -or $null -ne $unsafeState.leaseExpiresAt -or
+      $unsafeState.lastError -ne 'outside expected paths changed' -or $null -ne $unsafeState.recoveryEvidencePath -or
+      $null -ne $unsafeState.recoveryEvidenceHash) {
+    throw 'BlockUnsafe did not release ownership or fabricated recovery evidence'
   }
 
   foreach ($invalidPendingStatus in @('RESOLVED', 'UNKNOWN_STATUS')) {

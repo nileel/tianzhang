@@ -101,6 +101,49 @@ $tableRows
 "@
 }
 
+function New-FailureFixture {
+  param([string]$Name, [string]$RunId)
+
+  $fixtureRepo = Join-Path $sandbox "$Name-repo"
+  $fixtureStatePath = Join-Path $sandbox "$Name-state.json"
+  $fixtureRunRoot = Join-Path $sandbox "$Name-runs"
+  $taskId = "$Name-task"
+  New-Item -ItemType Directory -Path $fixtureRepo -Force | Out-Null
+  Invoke-GitAt $fixtureRepo @('init') | Out-Null
+  Invoke-GitAt $fixtureRepo @('config', 'user.name', 'Controller Failure Test') | Out-Null
+  Invoke-GitAt $fixtureRepo @('config', 'user.email', 'controller-failure@example.invalid') | Out-Null
+  Write-Utf8 (Join-Path $fixtureRepo 'task.txt') "task base`n"
+  Write-Utf8 (Join-Path $fixtureRepo 'intruder.txt') "intruder base`n"
+  Write-QueueFixture $fixtureRepo @("| $taskId | P0 | Codex / ChatGPT5.5 | 工具 | 待处理 | failure fixture |")
+  Invoke-GitAt $fixtureRepo @('add', '--', 'task.txt', 'intruder.txt', '开发管理/当前任务队列.txt') | Out-Null
+  Invoke-GitAt $fixtureRepo @('commit', '-m', 'test: failure base') | Out-Null
+
+  Assert-Code (Invoke-Controller @(
+    'Start', '-RepositoryRoot', $fixtureRepo, '-StatePath', $fixtureStatePath,
+    '-RunRoot', $fixtureRunRoot, '-RunId', $RunId, '-ActualModel', 'gpt-test'
+  )) 0 "$Name start"
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $fixtureRepo, '-StatePath', $fixtureStatePath,
+    '-RunRoot', $fixtureRunRoot, '-RunId', $RunId, '-TaskId', $taskId
+  )) 0 "$Name inspect"
+  Assert-Code (Invoke-Controller @(
+    'RegisterCandidate', '-RepositoryRoot', $fixtureRepo, '-StatePath', $fixtureStatePath,
+    '-RunRoot', $fixtureRunRoot, '-RunId', $RunId, '-ExpectedPaths', 'task.txt'
+  )) 0 "$Name register"
+  Assert-Code (Invoke-Controller @(
+    'BeginMutation', '-RepositoryRoot', $fixtureRepo, '-StatePath', $fixtureStatePath,
+    '-RunRoot', $fixtureRunRoot, '-RunId', $RunId
+  )) 0 "$Name begin mutation"
+
+  [pscustomobject]@{
+    Repository = $fixtureRepo
+    StatePath = $fixtureStatePath
+    RunRoot = $fixtureRunRoot
+    RunId = $RunId
+    TaskId = $taskId
+  }
+}
+
 New-Item -ItemType Directory -Path $repo, $runRoot -Force | Out-Null
 $resolvedRepo = (Resolve-Path -LiteralPath $repo).Path
 $tempPrefix = (Resolve-Path -LiteralPath $tempRoot).Path.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
@@ -935,6 +978,149 @@ try {
   )
   Assert-Code $noChange 0 'complete no change'
   if ((Invoke-State @('Show', '-StatePath', $noChangeStatePath)).state -ne 'IDLE') { throw 'CompleteNoChange did not release the lease' }
+
+  $cleanFailure = New-FailureFixture 'fail-clean' '10101010-1010-4010-8010-101010101010'
+  $decisionState = Invoke-State @(
+    'CreateDecision', '-StatePath', $cleanFailure.StatePath, '-RunId', $cleanFailure.RunId,
+    '-TaskKind', 'execute', '-TaskId', $cleanFailure.TaskId, '-TaskSummary', 'Keep decision through clean failure',
+    '-DecisionQuestion', 'Should failure cleanup preserve this?', '-DecisionOptions', 'A=Yes|B=No',
+    '-RecommendedOption', 'A', '-ImpactSummary', 'Decision state is independent of run ownership'
+  )
+  $cleanDecisionId = [string]$decisionState.pendingDecision.decisionId
+  $cleanFail = Invoke-Controller @(
+    'Fail', '-RepositoryRoot', $cleanFailure.Repository, '-StatePath', $cleanFailure.StatePath,
+    '-RunRoot', $cleanFailure.RunRoot, '-RunId', $cleanFailure.RunId, '-ErrorMessage', 'clean failure fixture'
+  )
+  Assert-Code $cleanFail 0 'clean failure close'
+  $cleanFailJson = $cleanFail.Output | ConvertFrom-Json
+  $cleanFailState = Invoke-State @('Show', '-StatePath', $cleanFailure.StatePath)
+  $cleanEvidencePath = Join-Path $cleanFailure.RunRoot "$($cleanFailure.RunId).recovery.json"
+  if ($cleanFailJson.failurePolicy -ne 'close_clean' -or $cleanFailState.state -ne 'IDLE' -or
+      $null -ne $cleanFailState.runId -or (Test-Path -LiteralPath $cleanEvidencePath) -or
+      $cleanFailState.pendingDecision.decisionId -ne $cleanDecisionId -or $cleanFailState.decisionFlow.status -ne 'AWAITING_DECISION') {
+    throw "clean failure was not closed without recovery evidence or lost decision state: $($cleanFail.Output)"
+  }
+
+  $recoverableFailure = New-FailureFixture 'fail-recoverable' '20202020-2020-4020-8020-202020202020'
+  Write-Utf8 (Join-Path $recoverableFailure.Repository 'task.txt') "task interrupted`n"
+  $recoverableFail = Invoke-Controller @(
+    'Fail', '-RepositoryRoot', $recoverableFailure.Repository, '-StatePath', $recoverableFailure.StatePath,
+    '-RunRoot', $recoverableFailure.RunRoot, '-RunId', $recoverableFailure.RunId, '-ErrorMessage', 'recoverable failure fixture'
+  )
+  Assert-Code $recoverableFail 0 'recoverable failure close'
+  $recoverableJson = $recoverableFail.Output | ConvertFrom-Json
+  $recoverableState = Invoke-State @('Show', '-StatePath', $recoverableFailure.StatePath)
+  if ($recoverableJson.failurePolicy -ne 'preserve_recovery' -or $recoverableState.state -ne 'RECOVERABLE' -or
+      $recoverableState.recoveryEvidenceHash -notmatch '^[0-9a-f]{64}$' -or
+      -not (Test-Path -LiteralPath $recoverableState.recoveryEvidencePath)) {
+    throw "recoverable failure did not persist evidence: $($recoverableFail.Output)"
+  }
+  $recoverableEvidence = [IO.File]::ReadAllText([string]$recoverableState.recoveryEvidencePath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json
+  if ($recoverableEvidence.schemaVersion -ne 2 -or $recoverableEvidence.payloadHash -cne $recoverableState.recoveryEvidenceHash) {
+    throw 'recoverable failure evidence schema/hash did not match state'
+  }
+  $originalRecoveryBaseline = [string]$recoverableState.recoveryBaselinePath
+  $originalRecoveryPaths = @($recoverableState.expectedPaths) -join '|'
+
+  $recoveryRunId = '21212121-2121-4121-8121-212121212121'
+  $resume = Invoke-Controller @(
+    'Start', '-RepositoryRoot', $recoverableFailure.Repository, '-StatePath', $recoverableFailure.StatePath,
+    '-RunRoot', $recoverableFailure.RunRoot, '-RunId', $recoveryRunId, '-ActualModel', 'gpt-test'
+  )
+  Assert-Code $resume 0 'recoverable fixture resume'
+  $resumeJson = $resume.Output | ConvertFrom-Json
+  $resumedState = Invoke-State @('Show', '-StatePath', $recoverableFailure.StatePath)
+  if ($resumeJson.action -ne 'resume_task' -or $resumeJson.branchKind -ne 'recovery' -or
+      $resumedState.runMode -ne 'recovery' -or $resumedState.state -ne 'RUNNING' -or
+      [string]$resumeJson.baselinePath -cne $originalRecoveryBaseline -or
+      (@($resumedState.expectedPaths) -join '|') -cne $originalRecoveryPaths) {
+    throw "only RECOVERABLE state did not resume with original evidence: $($resume.Output)"
+  }
+
+  $unsafeFailure = New-FailureFixture 'fail-unsafe' '30303030-3030-4030-8030-303030303030'
+  Write-Utf8 (Join-Path $unsafeFailure.Repository 'task.txt') "task interrupted`n"
+  Write-Utf8 (Join-Path $unsafeFailure.Repository 'intruder.txt') "intruder changed`n"
+  $unsafeFail = Invoke-Controller @(
+    'Fail', '-RepositoryRoot', $unsafeFailure.Repository, '-StatePath', $unsafeFailure.StatePath,
+    '-RunRoot', $unsafeFailure.RunRoot, '-RunId', $unsafeFailure.RunId, '-ErrorMessage', 'unsafe failure fixture'
+  )
+  Assert-Code $unsafeFail 0 'unsafe failure close'
+  $unsafeFailJson = $unsafeFail.Output | ConvertFrom-Json
+  $unsafeFailState = Invoke-State @('Show', '-StatePath', $unsafeFailure.StatePath)
+  if ($unsafeFailJson.failurePolicy -ne 'auto_blocked' -or $unsafeFailState.state -ne 'AUTO-BLOCKED' -or
+      @($unsafeFailJson.conflictingPaths) -notcontains 'intruder.txt' -or
+      $null -ne $unsafeFailState.recoveryEvidencePath -or $null -ne $unsafeFailState.recoveryEvidenceHash) {
+    throw "unsafe failure was not blocked with conflicting path evidence: $($unsafeFail.Output)"
+  }
+
+  $staleStatePath = Join-Path $sandbox 'stale-running-state.json'
+  $staleRunRoot = Join-Path $sandbox 'stale-running-runs'
+  $staleFixture = [ordered]@{
+    schemaVersion = 6
+    controllerId = 'tzg-hourly-controller'
+    runId = '40404040-4040-4040-8040-404040404040'
+    runMode = 'recovery'
+    state = 'RUNNING'
+    leaseExpiresAt = $null
+    taskKind = 'execute'
+    taskId = $recoverableFailure.TaskId
+    taskExecutor = 'codex'
+    checkpoint = 'mutation_started'
+    expectedPaths = @('task.txt')
+    recoveryBaselinePath = $originalRecoveryBaseline
+    recoveryEvidencePath = [string]$recoverableState.recoveryEvidencePath
+    recoveryEvidenceHash = [string]$recoverableState.recoveryEvidenceHash
+    recoveryCount = 0
+  }
+  Write-Utf8 $staleStatePath ($staleFixture | ConvertTo-Json -Depth 5)
+  $staleStart = Invoke-Controller @(
+    'Start', '-RepositoryRoot', $recoverableFailure.Repository, '-StatePath', $staleStatePath,
+    '-RunRoot', $staleRunRoot, '-RunId', '41414141-4141-4141-8141-414141414141', '-ActualModel', 'gpt-test'
+  )
+  Assert-Code $staleStart 13 'stale RUNNING start rejection'
+  if ($staleStart.Output -notmatch 'stale_running_state' -or (Invoke-State @('Show', '-StatePath', $staleStatePath)).state -ne 'RUNNING') {
+    throw "stale RUNNING state entered recovery check or was mutated: $($staleStart.Output)"
+  }
+
+  $incompleteStatePath = Join-Path $sandbox 'incomplete-recovery-state.json'
+  $incompleteRunRoot = Join-Path $sandbox 'incomplete-recovery-runs'
+  $incompleteFixture = [ordered]@{
+    schemaVersion = 6
+    controllerId = 'tzg-hourly-controller'
+    runId = $null
+    runMode = $null
+    state = 'RECOVERABLE'
+    leaseExpiresAt = $null
+    taskKind = 'execute'
+    taskId = $recoverableFailure.TaskId
+    taskExecutor = 'codex'
+    checkpoint = 'mutation_started'
+    expectedPaths = @('task.txt')
+    recoveryBaselinePath = $originalRecoveryBaseline
+    recoveryEvidencePath = $null
+    recoveryEvidenceHash = $null
+    recoveryCount = 0
+  }
+  Write-Utf8 $incompleteStatePath ($incompleteFixture | ConvertTo-Json -Depth 5)
+  $incompleteRunId = '50505050-5050-4050-8050-505050505050'
+  $incompleteStart = Invoke-Controller @(
+    'Start', '-RepositoryRoot', $recoverableFailure.Repository, '-StatePath', $incompleteStatePath,
+    '-RunRoot', $incompleteRunRoot, '-RunId', $incompleteRunId, '-ActualModel', 'gpt-test'
+  )
+  Assert-Code $incompleteStart 1 'incomplete RECOVERABLE stop'
+  $incompleteAfter = Invoke-State @('Show', '-StatePath', $incompleteStatePath)
+  if ($incompleteAfter.state -ne 'AUTO-BLOCKED' -or $incompleteAfter.recoveryCount -ne 0 -or
+      $incompleteStart.Output -notmatch 'recovery_state_incomplete') {
+    throw "incomplete RECOVERABLE state was not blocked exactly once: $($incompleteStart.Output)"
+  }
+  $incompleteAgain = Invoke-Controller @(
+    'Start', '-RepositoryRoot', $recoverableFailure.Repository, '-StatePath', $incompleteStatePath,
+    '-RunRoot', $incompleteRunRoot, '-RunId', '51515151-5151-4151-8151-515151515151', '-ActualModel', 'gpt-test'
+  )
+  Assert-Code $incompleteAgain 11 'incomplete recovery second start blocked'
+  if ((Invoke-State @('Show', '-StatePath', $incompleteStatePath)).recoveryCount -ne 0) {
+    throw 'incomplete recovery entered a repeated stale-running loop'
+  }
 
   'test-automation-controller: OK'
 } finally {
