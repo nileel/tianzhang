@@ -212,6 +212,15 @@ if (-not (Test-Path -LiteralPath $controllerPromptSource -PathType Leaf)) {
 foreach ($entryPoint in @('automation-controller\.ps1','Start','InspectCandidate','RegisterCandidate','BeginMutation','Finish','CompleteNoChange','Fail','requiredSources')) {
   Require-Match $controller $entryPoint "controller prompt lacks v3 entry contract: $entryPoint"
 }
+foreach ($promptSource in @(
+  @{ Path = $controllerPromptSource; Label = 'versioned controller prompt' },
+  @{ Path = $controller; Label = 'deployed controller prompt' }
+)) {
+  foreach ($entry in @('PrepareDecision', 'NotificationReceipt', 'CreateDecision', 'ResolveDecisionReply')) {
+    Require-Match $promptSource.Path ([regex]::Escape($entry)) "$($promptSource.Label) lacks repaired decision contract: $entry"
+  }
+}
+Require-Match $rules '有效回复[^\r\n]*InspectCandidate[^\r\n]*不得直接[^\r\n]*Finish' 'workflow rules lack decision reply re-registration'
 if ($null -eq $deployedPrompt -or $deployedPrompt -notmatch 'Start\s+-RepositoryRoot\s+''D:\\天章游戏开发''\s+-RunId\s+"\$runId"\s+-ActualModel\s+"\$actualModel"') {
   $findings.Add('controller prompt lacks the exact Start parameter contract')
 }

@@ -10,7 +10,7 @@
 
 5. 路径完整后把以 `|` 分隔的项目相对路径赋给 `$expectedPaths`，准确调用 RegisterCandidate -RepositoryRoot 'D:\天章游戏开发' -RunId "$runId" -ExpectedPaths "$expectedPaths"。candidate_conflict 按 nextCommand 回到 InspectCandidate；baseline_changed 或其他失败按 JSON 关闭。登记成功后才可设置标题、调用 BeginMutation 并实施。DeepSeek 分支只有 InspectCandidate 已返回其工作提示词且主责合法时才串行调用；DeepSeek 不得 stage、commit、自审、扩大路径或并行派发，只有控制器拥有 stage/commit 权限。
 
-6. 只运行任务直接相关的最小充分验证和 requiredChecks。领域硬约束仍执行；相关代码、事实源、配置、依赖和执行目标未变化时不重复同范围检查。发现事实冲突或需负责人选择时，只通过 CreateDecision、MarkDecisionNotified、MarkDecisionDeliveryFailed 或 ResolveDecisionReply 更新协议，并按规则维护项目可见状态。
+6. 只运行任务直接相关的最小充分验证和 requiredChecks。领域硬约束仍执行；相关代码、事实源、配置、依赖和执行目标未变化时不重复同范围检查。发现需负责人选择时，状态路径必须已在 expectedPaths；先调用 PrepareDecision 并读取其 requiredSources，确认既有决定不能解决后才按返回的完整参数契约调用 CreateDecision。入口会写项目可见状态；随后实际发送邮件，成功时把连接器消息标识作为 NotificationReceipt 调用 MarkDecisionNotified，失败调用 MarkDecisionDeliveryFailed，最后按 nextCommand Finish。不得无投递证据标成功。有效回复调用 ResolveDecisionReply 后必须按返回的原 taskId 重新 InspectCandidate、登记业务路径和状态路径、BeginMutation、实施并 Finish；不得从 identity_checked 直接 Finish。
 
 7. 长时间语义工作只在 JSON 允许时调用 Renew 续租。语义工作和领域验证通过后只调用 Finish，并提供提交信息；Finish 不再接受路径。没有候选或项目变化时调用 CompleteNoChange；任何失败调用 Fail 并提供失败命令、退出码和简短人工入口。不得绕过 JSON 的 nextCommand，不得把可恢复失败自行 Complete，也不得留下未收尾租约。入口返回 preserve_recovery 或 auto_blocked 时停止改选其他任务。
 
