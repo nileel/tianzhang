@@ -6,11 +6,12 @@
 
 **Architecture:** Node.js 桥接包负责飞书 SDK、互动卡片、长连接回调、HMAC 信封和本机收件箱；PowerShell 控制器只调用经过净化的发送/消费 CLI，不读取聊天历史，也不接触 App Secret。状态机升级到 schema v7，保留 Gmail 历史作为只读迁移证据，并把当前 `DEC-20260715-75D7BA2AF210` 原地迁移到飞书，不新建决定。真实凭据、Open ID 和收件箱全部保存在用户级私有目录，Git 中只提交代码、测试和不含秘密的规则文档。
 
-**Tech Stack:** PowerShell 7/Windows PowerShell 5.1 兼容脚本、Node.js `>=20`、`@larksuiteoapi/node-sdk@1.71.1`、Node 内置 `node:test`/`crypto`/`fs`、Windows 任务计划程序、现有 Codex 自动化控制器与状态机。
+**Tech Stack:** PowerShell 7（唯一受支持 PowerShell 运行时）、Node.js `>=20`、`@larksuiteoapi/node-sdk@1.71.1`、Node 内置 `node:test`/`crypto`/`fs`、Windows 任务计划程序、现有 Codex 自动化控制器与状态机。
 
 ## Global Constraints
 
-- 以 `docs/superpowers/specs/2026-07-15-feishu-decision-channel-design.md` 为批准规格；实现与规格冲突时先停下修订规格，不静默改变安全边界。
+- 以 `docs/superpowers/specs/2026-07-15-feishu-decision-channel-design.md` 和 `docs/superpowers/specs/2026-07-15-powershell7-runtime-contract-design.md` 为批准规格；实现与规格冲突时先停下修订规格，不静默改变安全边界。
+- 所有项目 PowerShell 命令使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`；不得调用 `powershell`、`powershell.exe` 或 Windows PowerShell 5.1。Task 0 门禁通过前不得开始飞书代码实现。
 - 开始真实部署前暂停 `tzg-hourly-controller`，整个迁移期间只允许一个写入型控制器；完成灰度和状态核验后再恢复。
 - 不直接编辑 Codex 自动化 TOML。提示词部署必须通过应用提供的自动化更新工具完成。
 - 不把 App ID、App Secret、收件人、Open ID、HMAC key、原始飞书事件或原始消息 ID 写入 Git、自动化 memory、控制台、提交信息或项目状态文件。
@@ -104,6 +105,8 @@ tools/install-feishu-decision-bridge.ps1
 tools/start-feishu-decision-bridge.ps1
 tools/test-setup-feishu-decision-channel.ps1
 tools/test-install-feishu-decision-bridge.ps1
+tools/check-pwsh-runtime.ps1
+tools/test-check-pwsh-runtime.ps1
 ```
 
 ### 修改文件
@@ -116,12 +119,249 @@ tools/test-automation-controller.ps1
 tools/automation-decision-status.ps1
 tools/test-automation-decision-status.ps1
 tools/check-automation-workflow.ps1
+tools/test-check-pending-whitespace.ps1
+tools/tests/check-asset-versioning-tests.ps1
+tools/tests/check-data-chain-tests.ps1
+AGENTS.md
+CLAUDE.md
+开发管理/开发-技术经验.txt
+开发管理/状态与建议维护规则.txt
+开发管理/当前任务队列.txt
+开发管理/任务列表/内容设计任务.txt
+开发管理/任务列表/场景与Unity任务.txt
+开发管理/任务列表/数值与战斗任务.txt
+开发管理/任务列表/数据链路任务.txt
 开发管理/自动工作流规则.txt
 开发管理/自动工作流控制器提示词.txt
 开发管理/自动工作流状态.txt
 ```
 
 ---
+
+## Task 0: 建立 PowerShell 7 唯一运行时门禁
+
+**Files:**
+
+- Create: `tools/check-pwsh-runtime.ps1`
+- Create: `tools/test-check-pwsh-runtime.ps1`
+- Modify: `AGENTS.md`
+- Modify: `CLAUDE.md`
+- Modify: `开发管理/开发-技术经验.txt`
+- Modify: `开发管理/状态与建议维护规则.txt`
+- Modify: `开发管理/当前任务队列.txt`
+- Modify: `开发管理/任务列表/内容设计任务.txt`
+- Modify: `开发管理/任务列表/场景与Unity任务.txt`
+- Modify: `开发管理/任务列表/数值与战斗任务.txt`
+- Modify: `开发管理/任务列表/数据链路任务.txt`
+- Modify: `tools/automation-controller.ps1`
+- Modify: `tools/automation-controller-state.ps1`
+- Modify: `tools/check-automation-workflow.ps1`
+- Modify: `tools/check-review-text.ps1`
+- Modify: `tools/check-data-chain.ps1`
+- Modify: `tools/check-pending-whitespace.ps1`
+- Modify: `tools/run-unity-editmode-tests.ps1`
+- Modify: `tools/test-check-pending-whitespace.ps1`
+- Modify: `tools/tests/check-asset-versioning-tests.ps1`
+- Modify: `tools/tests/check-data-chain-tests.ps1`
+- Modify: `docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md`
+
+- [ ] **Step 1: 先写运行时门禁失败测试**
+
+创建 `tools/test-check-pwsh-runtime.ps1`。测试在唯一临时目录写入独立 fixture，并通过以下接口调用尚不存在的 checker：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pwsh-runtime.ps1 `
+  -RepositoryRoot $fixtureRoot `
+  -DocumentPaths ($documentPaths -join '|') `
+  -ScriptPaths ($scriptPaths -join '|') `
+  -RequiredVersionPaths ($requiredVersionPaths -join '|')
+```
+
+测试必须包含以下实际 fixture 和断言：
+
+```powershell
+$windowsPowerShell = 'power' + 'shell'
+$badDocumentCases = @(
+  "$windowsPowerShell -File tools/check.ps1",
+  "$windowsPowerShell -ExecutionPolicy Bypass -File tools/check.ps1",
+  "${windowsPowerShell}.exe -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1",
+  "& $windowsPowerShell -File tools/check.ps1"
+)
+$allowedDocumentCases = @(
+  'pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1',
+  '```powershell',
+  'PowerShell 7 is required',
+  'Invoke-ChildPowerShell'
+)
+$badScript = @"
+#requires -Version 7.0
+& $windowsPowerShell -NoProfile -File tools/check.ps1
+"@
+$goodScript = @'
+#requires -Version 7.0
+& pwsh -NoProfile -File tools/check.ps1
+$name = 'power' + 'shell -File is forbidden text, not a command'
+'@
+$missingRequires = @'
+param()
+'runtime gate missing'
+'@
+```
+
+每个 bad document case 必须返回非零并含 `PW7_FORBIDDEN_DOCUMENT_COMMAND`；`$badScript` 必须返回非零并含 `PW7_FORBIDDEN_SCRIPT_COMMAND`；`$missingRequires` 必须含 `PW7_MISSING_REQUIRES`；全部 allowed cases 和 `$goodScript` 必须返回 0。测试最后输出 `test-check-pwsh-runtime: OK`，并在 `finally` 中只删除已验证位于 `$env:TEMP` 下的唯一 fixture 目录。
+
+- [ ] **Step 2: 运行测试并确认红灯原因**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-pwsh-runtime.ps1
+```
+
+预期：失败信息明确指出 `tools/check-pwsh-runtime.ps1 is missing`；不得因为 fixture 路径、编码或测试语法错误而失败。
+
+- [ ] **Step 3: 实现最小静态检查器**
+
+`tools/check-pwsh-runtime.ps1` 的公开参数固定为：
+
+```powershell
+[CmdletBinding()]
+param(
+  [string]$RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
+  [string]$DocumentPaths,
+  [string]$ScriptPaths,
+  [string]$RequiredVersionPaths
+)
+```
+
+未显式传路径时，默认 document 集合固定为：
+
+```powershell
+$defaultDocuments = @(
+  'AGENTS.md',
+  'CLAUDE.md',
+  '开发管理/开发-技术经验.txt',
+  '开发管理/状态与建议维护规则.txt',
+  '开发管理/自动工作流规则.txt',
+  '开发管理/自动工作流控制器提示词.txt',
+  '开发管理/当前任务队列.txt',
+  '开发管理/任务列表/内容设计任务.txt',
+  '开发管理/任务列表/场景与Unity任务.txt',
+  '开发管理/任务列表/数值与战斗任务.txt',
+  '开发管理/任务列表/数据链路任务.txt',
+  'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md'
+)
+```
+
+默认 script 集合为 `tools/**/*.ps1`；默认 required-version 集合固定为：
+
+```powershell
+$defaultRequiredVersions = @(
+  'tools/automation-controller.ps1',
+  'tools/automation-controller-state.ps1',
+  'tools/check-automation-workflow.ps1',
+  'tools/check-review-text.ps1',
+  'tools/check-data-chain.ps1',
+  'tools/check-pending-whitespace.ps1',
+  'tools/run-unity-editmode-tests.ps1'
+)
+```
+
+document 扫描只匹配真实命令形态；`.ps1` 扫描用 `[System.Management.Automation.Language.Parser]::ParseFile` 并遍历 `CommandAst`，当 `GetCommandName()` 为 `powershell` 或 `powershell.exe` 时拒绝。required-version 文件必须匹配 `(?im)^\s*#requires\s+-Version\s+7(?:\.0)?\s*$`。所有违规按 `CATEGORY relative/path:line` 输出到 stderr，最后退出 1；没有违规时只输出 `check-pwsh-runtime: OK`。
+
+- [ ] **Step 4: 运行 fixture 测试，确认检查器转绿**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-pwsh-runtime.ps1
+```
+
+预期：输出 `test-check-pwsh-runtime: OK`，退出码 0。
+
+- [ ] **Step 5: 运行仓库扫描并确认第二个红灯**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pwsh-runtime.ps1
+```
+
+预期：当前活动事实源和三个测试脚本中的既有 Windows PowerShell 调用被报告；七个关键入口因缺少 `#requires -Version 7.0` 被报告。历史归档不在输出中。
+
+- [ ] **Step 6: 迁移活动事实源和脚本调用**
+
+在 `AGENTS.md` 与 `CLAUDE.md` 的高频检查前加入完全相同的硬规则：
+
+```text
+- 项目 PowerShell 脚本唯一支持 PowerShell 7；所有独立进程命令必须使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。禁止调用 `powershell`、`powershell.exe` 或 Windows PowerShell 5.1。已在 PowerShell 7 会话内时可用 `& tools/<script>.ps1 ...`。
+```
+
+把 Task 0 文件列表中活动事实源和测试脚本的真实 Windows PowerShell 调用全部改为 `pwsh -NoProfile -ExecutionPolicy Bypass -File`；普通描述、Markdown 围栏和历史归档不改。`开发管理/开发-技术经验.txt` 的 PowerShell 7 条目改为“唯一受支持运行时”，删除“需要新版参数时才使用 pwsh”的条件语义。
+
+- [ ] **Step 7: 给关键入口添加版本声明**
+
+七个 required-version 文件的第一条有效声明均为：
+
+```powershell
+#requires -Version 7.0
+```
+
+不得改变脚本参数、输出或退出码。`automation-controller.ps1` 的 `Invoke-ChildPowerShell` 继续使用当前进程路径，因此父入口通过 `#requires` 后子进程天然保持 PowerShell 7。
+
+- [ ] **Step 8: 运行新门禁和直接相关测试**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-pwsh-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pwsh-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-pending-whitespace.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-asset-versioning-tests.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
+```
+
+逐项检查退出码。预期：所有命令退出 0；输出不存在 Windows PowerShell 5.1 解析错误；最后两项分别输出 `check-automation-workflow: OK` 和 `check-review-text: OK`。
+
+- [ ] **Step 9: 重新取得飞书实施基线**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
+```
+
+预期：三项均退出 0。`test-automation-controller.ps1` 现有 123 次子进程场景约需 4—5 分钟，应给单项至少 10 分钟上限，不得用包含全部检查的 120 秒共享超时。
+
+- [ ] **Step 10: 检查范围并提交 Task 0**
+
+```powershell
+$task0Paths = @(
+  'tools/check-pwsh-runtime.ps1',
+  'tools/test-check-pwsh-runtime.ps1',
+  'AGENTS.md',
+  'CLAUDE.md',
+  '开发管理/开发-技术经验.txt',
+  '开发管理/状态与建议维护规则.txt',
+  '开发管理/当前任务队列.txt',
+  '开发管理/任务列表/内容设计任务.txt',
+  '开发管理/任务列表/场景与Unity任务.txt',
+  '开发管理/任务列表/数值与战斗任务.txt',
+  '开发管理/任务列表/数据链路任务.txt',
+  'tools/automation-controller.ps1',
+  'tools/automation-controller-state.ps1',
+  'tools/check-automation-workflow.ps1',
+  'tools/check-review-text.ps1',
+  'tools/check-data-chain.ps1',
+  'tools/check-pending-whitespace.ps1',
+  'tools/run-unity-editmode-tests.ps1',
+  'tools/test-check-pending-whitespace.ps1',
+  'tools/tests/check-asset-versioning-tests.ps1',
+  'tools/tests/check-data-chain-tests.ps1',
+  'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md'
+)
+& tools/check-pending-whitespace.ps1 -ExpectedPaths ($task0Paths -join '|')
+git add -- $task0Paths
+git diff --cached --check
+git diff --cached --name-only
+git commit -m "chore: require PowerShell 7 runtime"
+```
+
+预期：提交只包含 `$task0Paths`；不包含历史归档、私有飞书配置、主工作区未跟踪文件或运行时状态。
 
 ## Task 1: 冻结写入器并保存迁移基线
 
@@ -697,7 +937,7 @@ pwsh -NoProfile -File tools/test-automation-controller.ps1
 
 ```powershell
 pwsh -NoProfile -File tools/test-automation-decision-status.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 ```
 
 预期：失败于状态标签和活动提示词仍为 Gmail 语义。
@@ -722,8 +962,8 @@ powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 
 ```powershell
 pwsh -NoProfile -File tools/test-automation-decision-status.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
 ```
 
 预期：三条命令退出码均为 0。
@@ -753,8 +993,8 @@ pwsh -NoProfile -File tools/test-install-feishu-decision-bridge.ps1
 pwsh -NoProfile -File tools/test-automation-controller-state.ps1
 pwsh -NoProfile -File tools/test-automation-controller.ps1
 pwsh -NoProfile -File tools/test-automation-decision-status.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
 ```
 
 预期：所有命令退出码 0。
@@ -895,7 +1135,7 @@ pwsh -NoProfile -File tools/automation-controller-state.ps1 Show
 pwsh -NoProfile -File tools/test-automation-controller-state.ps1
 pwsh -NoProfile -File tools/test-automation-controller.ps1
 pwsh -NoProfile -File tools/test-automation-decision-status.ps1
-powershell -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 git status --short
 git log -3 --oneline
 ```
