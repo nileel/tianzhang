@@ -53,7 +53,8 @@ try {
   Assert-Code $r 0 'checkpoint'
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
-  if ($state.schemaVersion -ne 5 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v5 recovery evidence fields' }
+  if ($state.schemaVersion -ne 6 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v6 recovery evidence fields' }
+  if ($null -ne $state.runMode -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v6 top-level fields were not initialized safely' }
 
   $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
   Assert-Code $r 0 'checkpoint DeepSeek executor'
@@ -144,7 +145,7 @@ try {
   $state = Read-TestState
   if ($state.runId -ne 'run-2' -or $state.taskId -ne 'sample-task' -or $state.taskExecutor -ne 'deepseek') { throw 'takeover did not preserve recovery fields' }
 
-  $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'run-2', '-ErrorMessage', 'initial interruption', '-Now', '2026-07-11T04:01:00Z')
+  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-2', '-ErrorMessage', 'initial interruption', '-Now', '2026-07-11T04:01:00Z')
   Assert-Code $r 0 'initial interruption'
   $state = Read-TestState
   if ($state.recoveryCount -ne 0) { throw 'initial interruption consumed a recovery attempt' }
@@ -152,13 +153,13 @@ try {
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-3', '-Now', '2026-07-11T04:02:00Z')
   Assert-Code $r 0 'first recovery acquire'
-  $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'run-3', '-WasRecovery', '-ErrorMessage', 'first recovery failed', '-Now', '2026-07-11T04:03:00Z')
+  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-3', '-WasRecovery', '-ErrorMessage', 'first recovery failed', '-Now', '2026-07-11T04:03:00Z')
   Assert-Code $r 0 'first recovery failure'
   if ((Read-TestState).recoveryCount -ne 1) { throw 'first recovery count was not 1' }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-4', '-Now', '2026-07-11T04:04:00Z')
   Assert-Code $r 0 'second recovery acquire'
-  $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'run-4', '-WasRecovery', '-ErrorMessage', 'second recovery failed', '-Now', '2026-07-11T04:05:00Z')
+  $r = Invoke-StateTool @('RecordRecoverableInterruption', '-StatePath', $statePath, '-RunId', 'run-4', '-WasRecovery', '-ErrorMessage', 'second recovery failed', '-Now', '2026-07-11T04:05:00Z')
   Assert-Code $r 0 'second recovery failure'
   $state = Read-TestState
   if ($state.state -ne 'AUTO-BLOCKED') { throw 'second recovery failure did not block' }
@@ -191,9 +192,13 @@ try {
     '-Now', '2026-07-11T05:05:00Z'
   )
   Assert-Code $r 0 'create decision'
-  $decision = (Read-TestState).pendingDecision
-  if ($decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2) {
-    throw 'create decision did not persist a pending decision'
+  $decisionState = Read-TestState
+  $decision = $decisionState.pendingDecision
+  if ($decisionState.schemaVersion -ne 6 -or $decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2 -or $decision.notificationAttempts.Count -ne 0) {
+    throw 'create decision did not persist a schema v6 pending decision'
+  }
+  if ($decisionState.decisionFlow.taskId -ne 'decision-task' -or $decisionState.decisionFlow.taskKind -ne 'execute' -or $decisionState.decisionFlow.status -ne 'AWAITING_DECISION' -or $decisionState.decisionFlow.resolvedDecisions.Count -ne 0) {
+    throw 'create decision did not open a matching decision flow'
   }
 
   $r = Invoke-StateTool @(
@@ -204,108 +209,142 @@ try {
   )
   Assert-Code $r 15 'second pending decision rejection'
 
-  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:07:00Z')
-  Assert-Code $r 15 'notification receipt required'
-  if ((Read-TestState).pendingDecision.status -ne 'PENDING') { throw 'missing notification receipt changed the decision state' }
+  $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationStatus', 'PROVIDER_ACCEPTED', '-Now', '2026-07-11T05:07:00Z')
+  Assert-Code $r 15 'accepted notification evidence required'
+  if ((Read-TestState).pendingDecision.status -ne 'PENDING') { throw 'missing accepted notification evidence changed the decision state' }
 
-  $receipt = 'gmail-message-18f00abc123'
-  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationReceipt', $receipt, '-Now', '2026-07-11T05:07:00Z')
-  Assert-Code $r 0 'mark decision notified with receipt'
+  $providerMessageId = 'gmail-message-18f00abc123'
+  $recipientHash = 'c' * 64
+  $r = Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-7',
+    '-NotificationStatus', 'PROVIDER_ACCEPTED', '-RecipientHash', $recipientHash,
+    '-ProviderMessageId', $providerMessageId, '-Now', '2026-07-11T05:07:10Z'
+  )
+  Assert-Code $r 0 'record provider accepted notification'
   $notifiedDecision = (Read-TestState).pendingDecision
-  if ($notifiedDecision.status -ne 'NOTIFIED') { throw 'notification status was not persisted' }
-  if ($notifiedDecision.notification.attempts -ne 1) { throw 'first notification attempt was not recorded' }
-  if ($notifiedDecision.notification.receiptHash -notmatch '^[0-9a-f]{64}$' -or $notifiedDecision.notification.receiptHash -eq $receipt) {
-    throw 'notification receipt was not stored as a SHA-256 hash'
+  if ($notifiedDecision.status -ne 'PROVIDER_ACCEPTED' -or $notifiedDecision.notificationAttempts.Count -ne 1) { throw 'provider accepted notification status was not appended' }
+  $acceptedAttempt = $notifiedDecision.notificationAttempts[0]
+  if ($acceptedAttempt.result -ne 'PROVIDER_ACCEPTED' -or $acceptedAttempt.recipientHash -ne $recipientHash -or $acceptedAttempt.providerMessageIdHash -notmatch '^[0-9a-f]{64}$' -or $acceptedAttempt.providerMessageIdHash -eq $providerMessageId -or $null -ne $acceptedAttempt.errorCategory) {
+    throw 'provider accepted attempt did not preserve redacted provenance'
   }
-  if ([IO.File]::ReadAllText($statePath).Contains($receipt, [StringComparison]::Ordinal)) {
-    throw 'notification receipt leaked into the state file'
-  }
+  if ([IO.File]::ReadAllText($statePath).Contains($providerMessageId, [StringComparison]::Ordinal)) { throw 'provider message ID leaked into the state file' }
 
-  $r = Invoke-StateTool @('MarkDecisionDeliveryFailed', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationError', 'smtp_unavailable', '-Now', '2026-07-11T05:07:30Z')
-  Assert-Code $r 0 'mark decision delivery failed'
-  if ((Read-TestState).pendingDecision.status -ne 'DELIVERY_FAILED' -or (Read-TestState).pendingDecision.notification.attempts -ne 2 -or $null -ne (Read-TestState).pendingDecision.notification.receiptHash) {
-    throw 'delivery failure did not retain retry count'
-  }
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'email', '-Now', '2026-07-11T05:07:30Z')
+  Assert-Code $r 15 'email resolution evidence required'
 
-  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationReceipt', 'gmail-message-18f00def456', '-Now', '2026-07-11T05:07:45Z')
-  Assert-Code $r 0 'retry decision notification'
-  if ((Read-TestState).pendingDecision.notification.attempts -ne 3) { throw 'retry notification did not advance attempt count' }
-
-  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'C', '-ReplySource', 'email', '-Now', '2026-07-11T05:08:00Z')
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'C', '-ReplySource', 'email', '-EvidenceMessageId', 'reply-message-invalid-option', '-EvidenceSender', 'owner@example.invalid', '-Now', '2026-07-11T05:08:00Z')
   Assert-Code $r 15 'unknown option rejection'
 
-  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'manual', '-ManualOverride', '-Now', '2026-07-11T05:09:00Z')
-  Assert-Code $r 0 'manual resolve decision'
-  if ((Read-TestState).pendingDecision.status -ne 'RESOLVED' -or (Read-TestState).pendingDecision.resolution.optionKey -ne 'A' -or (Read-TestState).pendingDecision.resolution.source -ne 'manual') {
-    throw 'valid decision resolution was not persisted'
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'email', '-EvidenceMessageId', 'reply-message-001', '-EvidenceSender', 'owner@example.invalid', '-EvidenceThreadId', 'forbidden-thread', '-Now', '2026-07-11T05:08:30Z')
+  Assert-Code $r 15 'email evidence field isolation'
+
+  $emailMessageId = 'reply-message-001'
+  $emailSender = 'owner@example.invalid'
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-7', '-DecisionId', $decision.decisionId, '-OptionKey', 'A', '-ReplySource', 'email', '-EvidenceMessageId', $emailMessageId, '-EvidenceSender', $emailSender, '-Now', '2026-07-11T05:09:00Z')
+  Assert-Code $r 0 'email resolve first decision'
+  $resolvedState = Read-TestState
+  if ($null -ne $resolvedState.pendingDecision -or $resolvedState.decisionFlow.status -ne 'IMPLEMENTATION_PENDING' -or $resolvedState.decisionFlow.resolvedDecisions.Count -ne 1) {
+    throw 'first resolution was not moved atomically into the decision flow'
   }
+  $emailResolved = $resolvedState.decisionFlow.resolvedDecisions[0]
+  if ($emailResolved.decisionId -ne $decision.decisionId -or $emailResolved.notificationAttempts.Count -ne 1 -or $emailResolved.resolution.optionKey -ne 'A' -or $emailResolved.resolution.source -ne 'email' -or $emailResolved.resolution.evidenceHash -notmatch '^[0-9a-f]{64}$' -or $emailResolved.resolution.messageIdHash -notmatch '^[0-9a-f]{64}$' -or $emailResolved.resolution.senderHash -notmatch '^[0-9a-f]{64}$' -or $null -ne $emailResolved.resolution.threadIdHash -or $null -ne $emailResolved.resolution.turnIdHash) {
+    throw 'email resolution provenance was not isolated and hashed'
+  }
+  $rawAfterEmail = [IO.File]::ReadAllText($statePath)
+  if ($rawAfterEmail.Contains($emailMessageId, [StringComparison]::Ordinal) -or $rawAfterEmail.Contains($emailSender, [StringComparison]::Ordinal)) { throw 'raw email resolution evidence leaked into the state file' }
 
   $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:10:00Z')
-  Assert-Code $r 0 'complete with resolved decision'
-  if ((Read-TestState).pendingDecision.status -ne 'RESOLVED') { throw 'complete cleared a resolved decision' }
+  Assert-Code $r 0 'complete while decision flow is active'
+  $stateAfterComplete = Read-TestState
+  if ($null -ne $stateAfterComplete.pendingDecision -or $stateAfterComplete.decisionFlow.status -ne 'IMPLEMENTATION_PENDING' -or $stateAfterComplete.decisionFlow.resolvedDecisions.Count -ne 1) {
+    throw 'complete cleared active decision flow history'
+  }
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:11:00Z')
-  Assert-Code $r 0 'acquire to clear resolved decision'
-  $r = Invoke-StateTool @('ClearResolvedDecision', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:12:00Z')
-  Assert-Code $r 0 'clear resolved decision'
-  if ($null -ne (Read-TestState).pendingDecision) { throw 'resolved decision was not cleared' }
+  Assert-Code $r 0 'acquire to continue decision flow'
 
   $r = Invoke-StateTool @(
     'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-8',
-    '-TaskKind', 'execute', '-TaskId', 'rollback-task', '-TaskSummary', 'Rollback fixture',
-    '-DecisionQuestion', 'Should a failed publication retain local state?',
-    '-DecisionOptions', 'A=Retain|B=Rollback', '-RecommendedOption', 'B',
-    '-ImpactSummary', 'Tests controller rollback after project publication failure',
-    '-Now', '2026-07-11T05:12:30Z'
+    '-TaskKind', 'execute', '-TaskId', 'other-task', '-TaskSummary', 'Wrong task',
+    '-DecisionQuestion', 'Should another task join this flow?', '-DecisionOptions', 'A=Yes|B=No',
+    '-RecommendedOption', 'B', '-ImpactSummary', 'Must be rejected', '-Now', '2026-07-11T05:11:30Z'
   )
-  Assert-Code $r 0 'create rollback fixture'
-  $rollbackDecision = (Read-TestState).pendingDecision
-  $r = Invoke-StateTool @(
-    'RollbackDecision', '-StatePath', $statePath, '-RunId', 'run-8',
-    '-DecisionId', $rollbackDecision.decisionId,
-    '-CancellationReason', 'decision_status_publish_failed',
-    '-Now', '2026-07-11T05:13:00Z'
-  )
-  Assert-Code $r 0 'rollback unpublished decision'
-  $rollbackState = Read-TestState
-  if ($null -ne $rollbackState.pendingDecision -or
-      $rollbackState.lastDecisionCancellation.decisionId -ne $rollbackDecision.decisionId -or
-      $rollbackState.lastDecisionCancellation.source -ne 'controller_rollback') {
-    throw 'controller rollback did not preserve a redacted audit record'
-  }
+  Assert-Code $r 15 'cross-task decision flow rejection'
 
   $r = Invoke-StateTool @(
     'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-8',
-    '-TaskKind', 'execute', '-TaskId', 'cancel-task', '-TaskSummary', 'Cancel fixture',
-    '-DecisionQuestion', 'Should an operator cancel a duplicate decision?',
-    '-DecisionOptions', 'A=Keep|B=Cancel', '-RecommendedOption', 'B',
-    '-ImpactSummary', 'Tests explicit operator repair',
-    '-Now', '2026-07-11T05:13:30Z'
+    '-TaskKind', 'execute', '-TaskId', 'decision-task', '-TaskSummary', 'Choose multiplier model',
+    '-DecisionQuestion', 'Use one multiplier or separate physical and soul multipliers?',
+    '-DecisionOptions', 'A=One multiplier|B=Separate multipliers', '-RecommendedOption', 'B',
+    '-ImpactSummary', 'Affects data schema and combat behavior', '-Now', '2026-07-11T05:12:00Z'
   )
-  Assert-Code $r 0 'create operator cancellation fixture'
-  $cancelDecision = (Read-TestState).pendingDecision
-  $r = Invoke-StateTool @(
-    'CancelDecision', '-StatePath', $statePath, '-RunId', 'run-8',
-    '-DecisionId', $cancelDecision.decisionId, '-CancellationReason', 'duplicate decision',
-    '-Now', '2026-07-11T05:14:00Z'
-  )
-  Assert-Code $r 15 'operator cancellation requires override'
-  $r = Invoke-StateTool @(
-    'CancelDecision', '-StatePath', $statePath, '-RunId', 'run-8',
-    '-DecisionId', $cancelDecision.decisionId, '-CancellationReason', 'duplicate decision',
-    '-ManualOverride', '-Now', '2026-07-11T05:14:30Z'
-  )
-  Assert-Code $r 0 'operator cancellation'
-  $cancelState = Read-TestState
-  if ($null -ne $cancelState.pendingDecision -or
-      $cancelState.lastDecisionCancellation.decisionId -ne $cancelDecision.decisionId -or
-      $cancelState.lastDecisionCancellation.source -ne 'manual' -or
-      $null -ne $cancelDecision.resolution) {
-    throw 'operator cancellation did not preserve a redacted audit record'
+  Assert-Code $r 0 'create same-task second decision'
+  $secondDecision = (Read-TestState).pendingDecision
+  if ((Read-TestState).decisionFlow.status -ne 'AWAITING_DECISION' -or (Read-TestState).decisionFlow.resolvedDecisions.Count -ne 1) {
+    throw 'same-task second decision did not preserve the first resolution'
   }
 
-  $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:15:00Z')
-  Assert-Code $r 0 'complete cancellation fixture'
+  $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'DELIVERY_FAILED', '-NotificationError', 'provider_timeout', '-Now', '2026-07-11T05:12:30Z')
+  Assert-Code $r 0 'record first failed attempt'
+  $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'MISADDRESSED', '-RecipientHash', ('d' * 64), '-ProviderMessageId', 'provider-message-wrong-target', '-NotificationError', 'recipient_hash_mismatch', '-Now', '2026-07-11T05:13:00Z')
+  Assert-Code $r 0 'record second misaddressed attempt'
+  $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'DELIVERY_FAILED', '-NotificationError', 'provider_timeout', '-Now', '2026-07-11T05:13:30Z')
+  Assert-Code $r 0 'record third failed attempt'
+  $retryState = Read-TestState
+  if ($retryState.pendingDecision.status -ne 'RETRY_EXHAUSTED' -or $retryState.pendingDecision.notificationAttempts.Count -ne 3 -or $retryState.pendingDecision.notificationAttempts[1].result -ne 'MISADDRESSED' -or $retryState.pendingDecision.notificationAttempts[2].result -ne 'DELIVERY_FAILED') {
+    throw 'three failed attempts did not exhaust retries while preserving actual results'
+  }
+  $beforeFourthAttempt = [IO.File]::ReadAllBytes($statePath)
+  $r = Invoke-StateTool @('RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'run-8', '-NotificationStatus', 'DELIVERY_FAILED', '-NotificationError', 'fourth_attempt', '-Now', '2026-07-11T05:14:00Z')
+  Assert-Code $r 15 'fourth notification attempt rejection'
+  $afterFourthAttempt = [IO.File]::ReadAllBytes($statePath)
+  if ([Convert]::ToBase64String($beforeFourthAttempt) -cne [Convert]::ToBase64String($afterFourthAttempt)) { throw 'rejected fourth attempt changed state file bytes' }
+
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-8', '-DecisionId', $secondDecision.decisionId, '-OptionKey', 'B', '-ReplySource', 'manual', '-ManualOverride', '-EvidenceThreadId', 'thread-019f63c5', '-EvidenceMessageId', 'forbidden-message', '-Now', '2026-07-11T05:14:15Z')
+  Assert-Code $r 15 'manual evidence field isolation'
+  $manualThread = 'thread-019f63c5'
+  $manualTurn = 'turn-approval-2'
+  $r = Invoke-StateTool @('ResolveDecision', '-StatePath', $statePath, '-RunId', 'run-8', '-DecisionId', $secondDecision.decisionId, '-OptionKey', 'B', '-ReplySource', 'manual', '-ManualOverride', '-EvidenceThreadId', $manualThread, '-EvidenceTurnId', $manualTurn, '-Now', '2026-07-11T05:14:30Z')
+  Assert-Code $r 0 'manual resolve second decision'
+  $manualState = Read-TestState
+  if ($null -ne $manualState.pendingDecision -or $manualState.decisionFlow.resolvedDecisions.Count -ne 2 -or $manualState.decisionFlow.status -ne 'IMPLEMENTATION_PENDING') { throw 'manual resolution did not complete the second decision atomically' }
+  $manualResolution = $manualState.decisionFlow.resolvedDecisions[1].resolution
+  if ($manualResolution.source -ne 'manual' -or $manualResolution.optionKey -ne 'B' -or $manualResolution.threadIdHash -notmatch '^[0-9a-f]{64}$' -or $manualResolution.turnIdHash -notmatch '^[0-9a-f]{64}$' -or $null -ne $manualResolution.messageIdHash -or $null -ne $manualResolution.senderHash) {
+    throw 'manual resolution provenance was not isolated and hashed'
+  }
+  $rawAfterManual = [IO.File]::ReadAllText($statePath)
+  if ($rawAfterManual.Contains($manualThread, [StringComparison]::Ordinal) -or $rawAfterManual.Contains($manualTurn, [StringComparison]::Ordinal)) { throw 'raw manual resolution evidence leaked into the state file' }
+
+  $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-8', '-TaskKind', 'execute', '-TaskId', 'decision-task', '-Now', '2026-07-11T05:14:45Z')
+  Assert-Code $r 0 'checkpoint decision task before flow completion'
+  $r = Invoke-StateTool @('CompleteDecisionFlow', '-StatePath', $statePath, '-RunId', 'run-8', '-TaskId', 'decision-task', '-Now', '2026-07-11T05:15:00Z')
+  Assert-Code $r 0 'complete decision flow'
+  $completedFlowState = Read-TestState
+  if ($null -ne $completedFlowState.decisionFlow -or $null -ne $completedFlowState.pendingDecision -or $completedFlowState.lastCompletedDecisionFlow.taskId -ne 'decision-task' -or $completedFlowState.lastCompletedDecisionFlow.decisionCount -ne 2 -or $completedFlowState.lastCompletedDecisionFlow.resolvedDecisions.Count -ne 2) {
+    throw 'completed decision flow was not summarized and cleared'
+  }
+  $historyJson = $completedFlowState.lastCompletedDecisionFlow | ConvertTo-Json -Depth 8 -Compress
+  if ($historyJson -match '(?i)(recipient|providerMessage|question|impactSummary|options|messageIdHash|senderHash|threadIdHash|turnIdHash)') { throw 'completed flow summary retained sensitive or unbounded decision details' }
+
+  $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:15:30Z')
+  Assert-Code $r 0 'complete decision flow run'
+
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'pending-complete-run', '-Now', '2026-07-11T05:16:00Z')
+  Assert-Code $r 0 'acquire pending-complete fixture'
+  $r = Invoke-StateTool @(
+    'CreateDecision', '-StatePath', $statePath, '-RunId', 'pending-complete-run',
+    '-TaskKind', 'execute', '-TaskId', 'pending-complete-task', '-TaskSummary', 'Preserve pending decision',
+    '-DecisionQuestion', 'Should Complete retain this decision?', '-DecisionOptions', 'A=Yes|B=No',
+    '-RecommendedOption', 'A', '-ImpactSummary', 'Tests run cleanup isolation', '-Now', '2026-07-11T05:16:30Z'
+  )
+  Assert-Code $r 0 'create pending-complete fixture'
+  $pendingBeforeComplete = (Read-TestState).pendingDecision.decisionId
+  $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'pending-complete-run', '-Now', '2026-07-11T05:17:00Z')
+  Assert-Code $r 0 'complete with unresolved decision'
+  $pendingAfterComplete = Read-TestState
+  if ($pendingAfterComplete.pendingDecision.decisionId -ne $pendingBeforeComplete -or $pendingAfterComplete.decisionFlow.status -ne 'AWAITING_DECISION') {
+    throw 'complete cleared an unresolved pending decision or its flow'
+  }
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":3,"state":"IDLE","controllerId":"fresh-idle","taskExecutor":"deepseek"}')
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'fresh-run', '-Now', '2026-07-11T05:13:00Z')
@@ -316,7 +355,7 @@ try {
 
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'preflight-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'preflight acquire'
-  $r = Invoke-StateTool @('Fail', '-StatePath', $statePath, '-RunId', 'preflight-run', '-ErrorMessage', 'task_selected rejected invalid TaskKind', '-Now', '2026-07-11T06:01:00Z')
+  $r = Invoke-StateTool @('AbortClean', '-StatePath', $statePath, '-RunId', 'preflight-run', '-ErrorMessage', 'task_selected rejected invalid TaskKind', '-Now', '2026-07-11T06:01:00Z')
   Assert-Code $r 0 'preflight failure cleanup'
   $state = Read-TestState
   if ($state.state -ne 'IDLE' -or $null -ne $state.runId -or $null -ne $state.leaseExpiresAt -or $state.recoveryCount -ne 0 -or $state.lastError -ne 'task_selected rejected invalid TaskKind') {
@@ -325,7 +364,7 @@ try {
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
-  if ($legacy.schemaVersion -ne 5 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.lastDecisionCancellation -or $legacy.state -ne 'IDLE') {
+  if ($legacy.schemaVersion -ne 6 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.decisionFlow -or $null -ne $legacy.lastDecisionCancellation -or $legacy.auditCorrections.Count -ne 0 -or $legacy.state -ne 'IDLE') {
     throw 'schema v1 was not migrated safely'
   }
 
@@ -369,7 +408,7 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v2-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'renew migrated schema v2 state'
   $v2 = Read-TestState
-  if ($v2.schemaVersion -ne 5 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
+  if ($v2.schemaVersion -ne 6 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
     throw 'schema v2 was not migrated safely'
   }
   if ($v2.runId -ne 'v2-run' -or $v2.state -ne 'RUNNING' -or $v2.leaseExpiresAt -ne '2026-07-11T09:00:00.0000000+00:00' -or $v2.taskKind -ne 'execute' -or $v2.taskId -ne 'v2-recovery-task' -or $v2.checkpoint -ne 'mutation_started' -or $v2.expectedPaths.Count -ne 2 -or $v2.expectedPaths[0] -ne 'a.txt' -or $v2.expectedPaths[1] -ne 'b/c.txt' -or $v2.recoveryCount -ne 1 -or $v2.lastError -ne 'recoverable interruption') {
@@ -378,14 +417,107 @@ try {
   $v2Decision = $v2.pendingDecision
   $v2CreatedAt = ([DateTimeOffset]$v2Decision.createdAt).ToUniversalTime().ToString('o')
   if ($v2Decision.decisionId -ne 'DEC-V2' -or $v2CreatedAt -ne '2026-07-10T23:30:00.0000000+00:00' -or $v2Decision.taskKind -ne 'execute' -or $v2Decision.taskId -ne 'v2-decision-task' -or $v2Decision.taskSummary -ne 'Choose v2 recovery mode' -or $v2Decision.question -ne 'Resume mutation or inspect first?' -or $v2Decision.recommendedOption -ne 'B' -or $v2Decision.impactSummary -ne 'Changes recovery latency and mutation risk' -or $v2Decision.status -ne 'DELIVERY_FAILED') {
-    throw 'schema v2 pending decision fields were not preserved after write-back'
+    throw "schema v2 pending decision fields were not preserved after write-back: $($v2Decision | ConvertTo-Json -Depth 8 -Compress)"
   }
   if ($v2Decision.options.Count -ne 2 -or $v2Decision.options[0].key -ne 'A' -or $v2Decision.options[0].label -ne 'Resume mutation' -or $v2Decision.options[1].key -ne 'B' -or $v2Decision.options[1].label -ne 'Inspect first') {
     throw 'schema v2 pending decision options were not preserved after write-back'
   }
-  $v2AttemptedAt = ([DateTimeOffset]$v2Decision.notification.attemptedAt).ToUniversalTime().ToString('o')
-  if ($v2Decision.notification.status -ne 'DELIVERY_FAILED' -or $v2AttemptedAt -ne '2026-07-10T23:31:00.0000000+00:00' -or $v2Decision.notification.attempts -ne 2 -or $v2Decision.notification.error -ne 'smtp_unavailable' -or $null -ne $v2Decision.resolution) {
-    throw 'schema v2 pending decision notification or resolution was not preserved after write-back'
+  $v2AttemptedAt = ([DateTimeOffset]$v2Decision.notificationAttempts[0].attemptedAt).ToUniversalTime().ToString('o')
+  if ($v2Decision.notificationAttempts.Count -ne 1 -or $v2Decision.notificationAttempts[0].result -ne 'DELIVERY_FAILED' -or $v2AttemptedAt -ne '2026-07-10T23:31:00.0000000+00:00' -or $v2Decision.notificationAttempts[0].errorCategory -ne 'smtp_unavailable') {
+    throw 'schema v2 pending decision notification was not converted to a legacy attempt'
+  }
+  if ($v2.decisionFlow.taskId -ne 'v2-decision-task' -or $v2.decisionFlow.status -ne 'AWAITING_DECISION' -or $v2.decisionFlow.resolvedDecisions.Count -ne 0) {
+    throw 'schema v2 pending decision did not open a migrated decision flow'
+  }
+
+  $v5UnresolvedFixture = @{
+    schemaVersion = 5
+    controllerId = 'v5-controller'
+    state = 'RUNNING'
+    runId = 'v5-run'
+    leaseExpiresAt = '2026-07-11T10:00:00Z'
+    taskKind = 'execute'
+    taskId = 'v5-unresolved-task'
+    checkpoint = 'mutation_started'
+    expectedPaths = @('legacy.txt')
+    recoveryCount = 0
+    pendingDecision = @{
+      decisionId = 'DEC-V5-UNRESOLVED'
+      createdAt = '2026-07-11T06:10:00Z'
+      taskKind = 'execute'
+      taskId = 'v5-unresolved-task'
+      taskSummary = 'Legacy unresolved decision'
+      question = 'Keep the legacy choice?'
+      options = @(@{ key = 'A'; label = 'Keep' }, @{ key = 'B'; label = 'Replace' })
+      recommendedOption = 'A'
+      impactSummary = 'Migration coverage'
+      status = 'NOTIFIED'
+      notification = @{
+        status = 'NOTIFIED'
+        attemptedAt = '2026-07-11T06:11:00Z'
+        attempts = 2
+        error = $null
+        receiptHash = ('e' * 64)
+      }
+      resolution = $null
+    }
+  } | ConvertTo-Json -Depth 7 -Compress
+  [IO.File]::WriteAllText($statePath, $v5UnresolvedFixture)
+  $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v5-run', '-Now', '2026-07-11T06:20:00Z')
+  Assert-Code $r 0 'write back migrated v5 unresolved decision'
+  $v5Unresolved = Read-TestState
+  if ($v5Unresolved.schemaVersion -ne 6 -or $v5Unresolved.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or $v5Unresolved.pendingDecision.notificationAttempts.Count -ne 1 -or $v5Unresolved.decisionFlow.status -ne 'AWAITING_DECISION') {
+    throw 'v5 unresolved decision status or flow was not migrated to schema v6'
+  }
+  $v5LegacyAttempt = $v5Unresolved.pendingDecision.notificationAttempts[0]
+  if ($v5LegacyAttempt.result -ne 'PROVIDER_ACCEPTED' -or $null -ne $v5LegacyAttempt.recipientHash -or $v5LegacyAttempt.providerMessageIdHash -ne ('e' * 64)) {
+    throw 'v5 unresolved notification did not become one redacted legacy attempt'
+  }
+
+  $v5ResolvedFixture = @{
+    schemaVersion = 5
+    controllerId = 'v5-controller'
+    state = 'IDLE'
+    pendingDecision = @{
+      decisionId = 'DEC-V5-RESOLVED'
+      createdAt = '2026-07-11T06:30:00Z'
+      taskKind = 'execute'
+      taskId = 'v5-resolved-task'
+      taskSummary = 'Legacy resolved decision'
+      question = 'Which path was selected?'
+      options = @(@{ key = 'A'; label = 'Old path' }, @{ key = 'B'; label = 'Approved path' })
+      recommendedOption = 'B'
+      impactSummary = 'Migration coverage'
+      status = 'RESOLVED'
+      notification = @{
+        status = 'NOTIFIED'
+        attemptedAt = '2026-07-11T06:31:00Z'
+        attempts = 1
+        error = $null
+        receiptHash = ('f' * 64)
+      }
+      resolution = @{
+        optionKey = 'B'
+        source = 'manual'
+        resolvedAt = '2026-07-11T06:32:00Z'
+      }
+    }
+  } | ConvertTo-Json -Depth 7 -Compress
+  [IO.File]::WriteAllText($statePath, $v5ResolvedFixture)
+  $v5ResolvedBeforeWrite = Read-TestState
+  if ($null -ne $v5ResolvedBeforeWrite.pendingDecision -or $v5ResolvedBeforeWrite.decisionFlow.status -ne 'IMPLEMENTATION_PENDING' -or $v5ResolvedBeforeWrite.decisionFlow.resolvedDecisions.Count -ne 1) {
+    throw 'v5 resolved pending decision was not moved into the migrated flow'
+  }
+  $migratedResolution = $v5ResolvedBeforeWrite.decisionFlow.resolvedDecisions[0].resolution
+  if ($migratedResolution.optionKey -ne 'B' -or $migratedResolution.source -ne 'manual' -or $migratedResolution.evidenceHash -notmatch '^[0-9a-f]{64}$') {
+    throw 'v5 resolved decision did not retain option/source with deterministic evidence'
+  }
+  $legacyEvidenceHash = $migratedResolution.evidenceHash
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'v5-resolved-run', '-Now', '2026-07-11T06:40:00Z')
+  Assert-Code $r 0 'write back migrated v5 resolved decision'
+  $v5ResolvedAfterWrite = Read-TestState
+  if ($v5ResolvedAfterWrite.schemaVersion -ne 6 -or $v5ResolvedAfterWrite.decisionFlow.resolvedDecisions[0].resolution.evidenceHash -ne $legacyEvidenceHash) {
+    throw 'v5 resolved migration evidence was not deterministic across write-back'
   }
 
   $guard = [IO.File]::Open("$statePath.guard", [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
