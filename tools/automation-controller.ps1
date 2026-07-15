@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','PrepareDecision','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply')]
+  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','PrepareDecision','CreateDecision','PrepareDecisionNotification','MarkDecisionSubmitted','RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual')]
   [string]$Action,
   [string]$RepositoryRoot = (Get-Location).Path,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
@@ -26,8 +26,17 @@ param(
   [string]$RecommendedOption,
   [string]$ImpactSummary,
   [string]$ReplyText,
+  [string]$DecisionId,
   [string]$NotificationError,
-  [string]$NotificationReceipt,
+  [string]$PrivateConfigPath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.private.json",
+  [string]$ProviderMessageId,
+  [string]$PriorProviderMessageId,
+  [string]$ObservedRecipient,
+  [string]$ReplyMessageId,
+  [string]$ReplyFrom,
+  [string]$CurrentThreadId,
+  [string]$CurrentTurnId,
+  [switch]$ManualOverride,
   [int]$LeaseMinutes = 180,
   [string]$Now
 )
@@ -137,21 +146,148 @@ function Get-DecisionStatusPath {
   Join-Path $RepositoryRoot $script:DecisionStatusRelativePath
 }
 
+function Get-DecisionStatusProjection {
+  param($State)
+
+  $pending = $null
+  if ($null -ne $State.pendingDecision) {
+    $pending = [ordered]@{
+      decisionId = [string]$State.pendingDecision.decisionId
+      createdAt = [string]$State.pendingDecision.createdAt
+      taskId = [string]$State.pendingDecision.taskId
+      taskSummary = [string]$State.pendingDecision.taskSummary
+      question = [string]$State.pendingDecision.question
+      options = @($State.pendingDecision.options | ForEach-Object {
+        [ordered]@{ key = [string]$_.key; label = [string]$_.label }
+      })
+      recommendedOption = [string]$State.pendingDecision.recommendedOption
+      status = [string]$State.pendingDecision.status
+    }
+  }
+  $flow = $null
+  if ($null -ne $State.decisionFlow) {
+    $flow = [ordered]@{
+      taskId = [string]$State.decisionFlow.taskId
+      status = [string]$State.decisionFlow.status
+      resolvedDecisions = @($State.decisionFlow.resolvedDecisions | ForEach-Object {
+        [ordered]@{
+          decisionId = [string]$_.decisionId
+          resolution = [ordered]@{
+            optionKey = [string]$_.resolution.optionKey
+            source = [string]$_.resolution.source
+          }
+        }
+      })
+    }
+  }
+  [ordered]@{ pendingDecision = $pending; decisionFlow = $flow }
+}
+
 function Invoke-DecisionStatusPublisher {
   param(
-    [ValidateSet('Publish', 'Clear')]
+    [ValidateSet('PublishPending', 'PublishImplementationPending', 'Clear')]
     [string]$PublisherAction,
-    [AllowNull()][object]$Decision
+    [AllowNull()][object]$State
   )
 
   $arguments = @($PublisherAction, '-StatusPath', (Get-DecisionStatusPath))
-  if ($PublisherAction -eq 'Publish') {
-    if ($null -eq $Decision) { throw 'Decision is required for Publish.' }
-    $json = $Decision | ConvertTo-Json -Depth 8 -Compress
+  if ($PublisherAction -ne 'Clear') {
+    if ($null -eq $State) { throw 'State is required for decision status publishing.' }
+    $json = (Get-DecisionStatusProjection $State) | ConvertTo-Json -Depth 8 -Compress
     $base64 = [Convert]::ToBase64String([Text.UTF8Encoding]::new($false).GetBytes($json))
-    $arguments += @('-DecisionJsonBase64', $base64)
+    $arguments += @('-DecisionStateJsonBase64', $base64)
   }
   Invoke-ChildPowerShell $script:DecisionStatusTool $arguments
+}
+
+function Get-Sha256TextLower {
+  param([string]$Value)
+  $bytes = [Text.UTF8Encoding]::new($false).GetBytes($Value)
+  try { [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() }
+  finally { [Array]::Clear($bytes, 0, $bytes.Length) }
+}
+
+function Test-EmailAddressShape {
+  param([string]$Value)
+  -not [string]::IsNullOrWhiteSpace($Value) -and
+    $Value -cmatch '^[A-Za-z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$'
+}
+
+function Normalize-EmailTarget {
+  param([string]$Value)
+  $Value.Trim().ToLowerInvariant()
+}
+
+function Read-PrivateDecisionConfig {
+  if (-not (Test-Path -LiteralPath $PrivateConfigPath -PathType Leaf)) { throw 'Private decision configuration is missing.' }
+  try {
+    $json = [IO.File]::ReadAllText($PrivateConfigPath, [Text.UTF8Encoding]::new($false, $true))
+    $config = $json | ConvertFrom-Json -DateKind String
+  } catch {
+    throw "Private decision configuration is invalid UTF-8 JSON: $($_.Exception.Message)"
+  }
+  if ($null -eq $config -or [int]$config.schemaVersion -ne 1) { throw 'Private decision configuration schemaVersion must be 1.' }
+  if (-not (Test-EmailAddressShape ([string]$config.recipientEmail)) -or [string]$config.recipientEmail -ceq 'me') {
+    throw 'Private recipientEmail must be one explicit email address.'
+  }
+  if (-not (Test-EmailAddressShape ([string]$config.allowedReplyFrom))) {
+    throw 'Private allowedReplyFrom must be one explicit email address.'
+  }
+  $aliases = @()
+  if ($null -ne $config.aliases) {
+    if ($config.aliases -is [string] -or $config.aliases -isnot [System.Array]) { throw 'Private aliases must be an array.' }
+    foreach ($alias in @($config.aliases)) {
+      if (-not (Test-EmailAddressShape ([string]$alias))) { throw 'Every private reply alias must be an email address.' }
+      $aliases += Normalize-EmailTarget ([string]$alias)
+    }
+  }
+  [pscustomobject]@{
+    recipientEmail = [string]$config.recipientEmail
+    recipientNormalized = Normalize-EmailTarget ([string]$config.recipientEmail)
+    allowedReplyFrom = Normalize-EmailTarget ([string]$config.allowedReplyFrom)
+    aliases = @($aliases)
+    gmailLabel = [string]$config.gmailLabel
+  }
+}
+
+function Set-SessionNotificationContext {
+  param($Session, [AllowNull()][object]$Context)
+  if ($null -eq $Session.PSObject.Properties['notificationContext']) {
+    $Session | Add-Member -NotePropertyName notificationContext -NotePropertyValue $Context
+  } else {
+    $Session.notificationContext = $Context
+  }
+  Save-Session $Session
+}
+
+function New-PreparedNotificationResult {
+  param($Session, $State, $Config)
+  if ($null -eq $State.pendingDecision) { throw 'An active pending decision is required.' }
+  $attemptNumber = @($State.pendingDecision.notificationAttempts).Count + 1
+  if ($attemptNumber -gt 3 -or [string]$State.pendingDecision.status -ceq 'RETRY_EXHAUSTED') { return $null }
+  $context = [pscustomobject]@{
+    decisionId = [string]$State.pendingDecision.decisionId
+    normalizedTargetHash = Get-Sha256TextLower ([string]$Config.recipientNormalized)
+    preparedAt = if ($Now) { ([DateTimeOffset]::Parse($Now)).ToString('o') } else { [DateTimeOffset]::UtcNow.ToString('o') }
+    attemptNumber = $attemptNumber
+  }
+  Set-SessionNotificationContext $Session $context
+  [ordered]@{
+    decisionId = [string]$State.pendingDecision.decisionId
+    subject = "Decision required: $([string]$State.pendingDecision.decisionId)"
+    body = "$([string]$State.pendingDecision.question)`nReply exactly: $([string]$State.pendingDecision.decisionId)：选择 $([string]$State.pendingDecision.recommendedOption)"
+    recipientEmail = [string]$Config.recipientEmail
+    gmailLabel = [string]$Config.gmailLabel
+    attemptNumber = $attemptNumber
+  }
+}
+
+function Get-NotificationErrorCategory {
+  param([string]$Value)
+  $category = ([regex]::Replace($Value.Trim().ToLowerInvariant(), '[^a-z0-9]+', '_')).Trim('_')
+  if ([string]::IsNullOrWhiteSpace($category) -or $category[0] -notmatch '[a-z]') { $category = "connector_$category".TrimEnd('_') }
+  if ($category.Length -gt 120) { $category = $category.Substring(0, 120).TrimEnd('_') }
+  if ([string]::IsNullOrWhiteSpace($category)) { 'connector_failure' } else { $category }
 }
 
 function Get-DecisionCommandContract {
@@ -265,7 +401,7 @@ function Close-StartFailure {
   param([string]$Code, [string]$Message, [int]$ExitCode = 1)
 
   if (-not [string]::IsNullOrWhiteSpace($RunId)) {
-    [void](Invoke-StateTool @('Fail', '-RunId', $RunId, '-ErrorMessage', $Message))
+    [void](Invoke-StateTool @('AbortClean', '-RunId', $RunId, '-ErrorMessage', $Message))
   }
   $result = New-ProtocolResult $false 'stopped' 'none' 'close_empty_run' $Code $Message
   Write-ProtocolResult $result $ExitCode
@@ -274,7 +410,7 @@ function Close-StartFailure {
 function Close-EmptyRun {
   param([string]$Code, [string]$Message, [int]$ExitCode, [string]$FailurePolicy = 'close_empty_run')
 
-  $failed = Invoke-StateTool @('Fail', '-RunId', $RunId, '-ErrorMessage', $Message)
+  $failed = Invoke-StateTool @('AbortClean', '-RunId', $RunId, '-ErrorMessage', $Message)
   if ($failed.Code -ne 0) {
     $result = New-ProtocolResult $false 'stopped' 'none' 'preserve_recovery' 'fail_close_error' $(if ($failed.Error) { $failed.Error } else { 'State Fail failed.' })
     Write-ProtocolResult $result $failed.Code
@@ -646,6 +782,7 @@ try {
         candidateResolver = $script:ExecutionCandidateResolver
         decisionContextHash = $null
         resumeTaskId = $null
+        notificationContext = $null
       }
       Write-JsonAtomically ([pscustomobject]$session) (Get-SessionPath)
 
@@ -664,7 +801,16 @@ try {
         $result.branchKind = 'pending_decision'
         $result.requiredSources = @($script:DecisionStatusRelativePath)
         $result.pendingDecision = $state.pendingDecision
-        $result.nextCommand = 'ResolveDecisionReply'
+        $result.nextCommands = @('ResolveDecisionEmailReply','ResolveDecisionManual','RetryDecisionNotification')
+        $result.nextCommand = 'ResolveDecisionEmailReply'
+      } elseif ($null -ne $state.decisionFlow -and [string]$state.decisionFlow.status -ceq 'IMPLEMENTATION_PENDING') {
+        $session.resumeTaskId = [string]$state.decisionFlow.taskId
+        Save-Session $session
+        $result.action = 'resume_decision_task'
+        $result.branchKind = 'selection'
+        $result.taskId = [string]$state.decisionFlow.taskId
+        $result.requiredSources = @($script:ExecutionQueueRelativePath, $script:DecisionStatusRelativePath)
+        $result.nextCommand = 'InspectCandidate'
       }
       Write-ProtocolResult $result
     }
@@ -675,7 +821,8 @@ try {
       $result.actions = @(
         'Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish',
         'CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure',
-        'PrepareDecision','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply'
+        'PrepareDecision','CreateDecision','PrepareDecisionNotification','MarkDecisionSubmitted',
+        'RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual'
       )
       $result.commandTemplates = [ordered]@{
         Start = "Start -RepositoryRoot 'D:\天章游戏开发' -RunId `$runId -ActualModel `$actualModel"
@@ -683,9 +830,12 @@ try {
         RegisterCandidate = 'RegisterCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -ExpectedPaths $expectedPaths'
         PrepareDecision = 'PrepareDecision -RepositoryRoot $RepositoryRoot -RunId $runId'
         CreateDecision = (Get-DecisionCommandContract).template
-        MarkDecisionNotified = 'MarkDecisionNotified -RepositoryRoot $RepositoryRoot -RunId $runId -NotificationReceipt $providerMessageId'
-        MarkDecisionDeliveryFailed = 'MarkDecisionDeliveryFailed -RepositoryRoot $RepositoryRoot -RunId $runId -NotificationError $errorSummary'
-        ResolveDecisionReply = 'ResolveDecisionReply -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'''
+        PrepareDecisionNotification = 'PrepareDecisionNotification -RepositoryRoot $RepositoryRoot -RunId $runId -PrivateConfigPath $privateConfigPath'
+        MarkDecisionSubmitted = 'MarkDecisionSubmitted -RepositoryRoot $RepositoryRoot -RunId $runId -ProviderMessageId $providerMessageId -ObservedRecipient $sentTo'
+        RetryDecisionNotification = 'RetryDecisionNotification -RepositoryRoot $RepositoryRoot -RunId $runId -DecisionId $decisionId -PrivateConfigPath $privateConfigPath'
+        MarkDecisionDeliveryFailed = 'MarkDecisionDeliveryFailed -RepositoryRoot $RepositoryRoot -RunId $runId -NotificationError $errorCategory'
+        ResolveDecisionEmailReply = 'ResolveDecisionEmailReply -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'' -ReplyMessageId $messageId -ReplyFrom $sender'
+        ResolveDecisionManual = 'ResolveDecisionManual -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'' -CurrentThreadId $threadId -ManualOverride'
       }
       $result.decisionParameters = [ordered]@{
         required = (Get-DecisionCommandContract).requiredParameters
@@ -816,12 +966,13 @@ try {
       }
       $normalizedPaths = @($checkJson.expectedPaths)
       $decisionState = Get-StateSnapshot
-      $resumesResolvedDecision = (
-        $null -ne $decisionState.pendingDecision -and
-        [string]$decisionState.pendingDecision.status -ceq 'RESOLVED' -and
-        [string]$decisionState.pendingDecision.taskId -ceq $selectedTaskId
+      $resumesDecisionFlow = (
+        $null -eq $decisionState.pendingDecision -and
+        $null -ne $decisionState.decisionFlow -and
+        [string]$decisionState.decisionFlow.status -ceq 'IMPLEMENTATION_PENDING' -and
+        [string]$decisionState.decisionFlow.taskId -ceq $selectedTaskId
       )
-      if ($resumesResolvedDecision -and $normalizedPaths -notcontains $script:DecisionStatusRelativePath) {
+      if ($resumesDecisionFlow -and $normalizedPaths -notcontains $script:DecisionStatusRelativePath) {
         Close-EmptyRun 'decision_status_path_missing' 'Resolved decision work must register the project-visible decision status path.' 15
       }
 
@@ -916,12 +1067,31 @@ try {
         $null -ne $state.pendingDecision -and
         [string]$state.pendingDecision.taskId -ceq [string]$state.taskId
       )
+      $completesDecisionFlow = (
+        $null -eq $state.pendingDecision -and
+        $null -ne $state.decisionFlow -and
+        [string]$state.decisionFlow.status -ceq 'IMPLEMENTATION_PENDING' -and
+        [string]$state.decisionFlow.taskId -ceq [string]$state.taskId
+      )
+      if ($completesDecisionFlow -and -not $ownsDecisionStatus) {
+        Stop-RegisteredWork $session 'decision_status_path_missing' 'Decision implementation must own the project-visible decision status path.' 15
+      }
       if ($ownsPendingDecision -and [string]$session.phase -cne 'commit_completed') {
-        $publisherAction = if ([string]$state.pendingDecision.status -ceq 'RESOLVED') { 'Clear' } else { 'Publish' }
-        $published = Invoke-DecisionStatusPublisher $publisherAction $state.pendingDecision
+        $published = Invoke-DecisionStatusPublisher 'PublishPending' $state
         if ($published.Code -ne 0) {
           $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
           Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
+        }
+      } elseif ($completesDecisionFlow -and [string]$session.phase -cne 'commit_completed') {
+        $published = Invoke-DecisionStatusPublisher 'PublishImplementationPending' $state
+        if ($published.Code -ne 0) {
+          $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
+          Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
+        }
+        $cleared = Invoke-DecisionStatusPublisher 'Clear' $null
+        if ($cleared.Code -ne 0) {
+          $message = if ($cleared.Error) { $cleared.Error } elseif ($cleared.Output) { $cleared.Output } else { 'Decision status clear failed.' }
+          Stop-RegisteredWork $session 'decision_status_publish_failed' $message $cleared.Code
         }
       }
 
@@ -989,13 +1159,10 @@ try {
         Stop-RegisteredWork $session $reason "Post-commit Verify failed: $reason" $postVerify.Code
       }
 
-      $stateForCompletion = Get-StateSnapshot
-      if ($ownsDecisionStatus -and $null -ne $stateForCompletion.pendingDecision -and
-          [string]$stateForCompletion.pendingDecision.status -ceq 'RESOLVED' -and
-          [string]$stateForCompletion.pendingDecision.taskId -ceq [string]$stateForCompletion.taskId) {
-        $cleared = Invoke-StateTool @('ClearResolvedDecision', '-RunId', $RunId)
-        if ($cleared.Code -ne 0) {
-          Stop-RegisteredWork $session 'decision_clear_failed' $(if ($cleared.Error) { $cleared.Error } else { 'ClearResolvedDecision failed.' }) $cleared.Code
+      if ($completesDecisionFlow) {
+        $flowCompleted = Invoke-StateTool @('CompleteDecisionFlow', '-RunId', $RunId, '-TaskId', [string]$session.taskId)
+        if ($flowCompleted.Code -ne 0) {
+          Stop-RegisteredWork $session 'decision_flow_complete_failed' $(if ($flowCompleted.Error) { $flowCompleted.Error } else { 'CompleteDecisionFlow failed.' }) $flowCompleted.Code
         }
       }
 
@@ -1215,7 +1382,7 @@ try {
         Write-ProtocolResult $result $created.Code
       }
       $createdState = Convert-ChildJson $created 'CreateDecision'
-      $published = Invoke-DecisionStatusPublisher 'Publish' $createdState.pendingDecision
+      $published = Invoke-DecisionStatusPublisher 'PublishPending' $createdState
       if ($published.Code -ne 0) {
         $rollback = Invoke-StateTool @(
           'RollbackDecision', '-RunId', $RunId,
@@ -1238,90 +1405,206 @@ try {
         $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'stop_read_only' 'decision_status_publish_failed' $message
         Write-ProtocolResult $result $published.Code
       }
-      $result = New-ProtocolResult $true 'notify_pending_decision' 'pending_decision' 'preserve_recovery' $null 'Pending decision created and published to the project status file.'
+      $session.decisionContextHash = $null
+      Set-SessionNotificationContext $session $null
+      $result = New-ProtocolResult $true 'prepare_decision_notification' 'pending_decision' 'preserve_recovery' $null 'Pending decision created and published to the project status file.'
       $result.taskId = [string]$createdState.taskId
       $result.pendingDecision = $createdState.pendingDecision
-      $result.notificationPolicy = [ordered]@{ receiptRequired = $true; receiptStorage = 'sha256_only' }
-      $result.nextCommands = @('MarkDecisionNotified', 'MarkDecisionDeliveryFailed')
-      $result.nextCommand = 'MarkDecisionNotified'
+      $result.notificationPolicy = [ordered]@{ providerEvidenceRequired = $true; sensitiveStorage = 'sha256_only' }
+      $result.nextCommand = 'PrepareDecisionNotification'
       Write-ProtocolResult $result
     }
-    'MarkDecisionNotified' {
+    'PrepareDecisionNotification' {
       $session = Read-Session
-      if ([string]::IsNullOrWhiteSpace($NotificationReceipt)) {
-        $result = New-ProtocolResult $false 'notify_pending_decision' 'pending_decision' 'preserve_recovery' 'notification_receipt_missing' 'NotificationReceipt from the provider is required.'
-        $result.nextCommand = 'MarkDecisionNotified'
+      $state = Get-StateSnapshot
+      if ($null -eq $state.pendingDecision) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'pending_decision_missing' 'PrepareDecisionNotification requires an active pending decision.'
         Write-ProtocolResult $result 15
       }
-      $marked = Invoke-StateTool @('MarkDecisionNotified', '-RunId', $RunId, '-NotificationReceipt', $NotificationReceipt)
+      try { $config = Read-PrivateDecisionConfig } catch {
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'private_config_invalid' $_.Exception.Message
+        Write-ProtocolResult $result 15
+      }
+      $notification = New-PreparedNotificationResult $session $state $config
+      if ($null -eq $notification) {
+        $result = New-ProtocolResult $false 'retry_exhausted' 'pending_decision' 'preserve_recovery' 'retry_exhausted' 'Decision notification retry limit has been reached.'
+        $result.pendingDecision = $state.pendingDecision
+        Write-ProtocolResult $result
+      }
+      $result = New-ProtocolResult $true 'submit_decision_notification' 'pending_decision' 'preserve_recovery' $null 'Transient notification payload prepared.'
+      $result.notification = $notification
+      $result.nextCommands = @('MarkDecisionSubmitted','MarkDecisionDeliveryFailed')
+      $result.nextCommand = 'MarkDecisionSubmitted'
+      Write-ProtocolResult $result
+    }
+    'MarkDecisionSubmitted' {
+      $session = Read-Session
+      $state = Get-StateSnapshot
+      if ($null -eq $state.pendingDecision -or $null -eq $session.notificationContext -or
+          [string]$session.notificationContext.decisionId -cne [string]$state.pendingDecision.decisionId) {
+        $result = New-ProtocolResult $false 'prepare_decision_notification' 'pending_decision' 'preserve_recovery' 'notification_not_prepared' 'A current prepared notification is required.'
+        Write-ProtocolResult $result 15
+      }
+      if ([string]::IsNullOrWhiteSpace($ProviderMessageId) -or -not (Test-EmailAddressShape $ObservedRecipient)) {
+        $result = New-ProtocolResult $false 'submit_decision_notification' 'pending_decision' 'preserve_recovery' 'provider_evidence_invalid' 'ProviderMessageId and one explicit ObservedRecipient are required.'
+        Write-ProtocolResult $result 15
+      }
+      $observedHash = Get-Sha256TextLower (Normalize-EmailTarget $ObservedRecipient)
+      $matchesPreparedTarget = $observedHash -ceq [string]$session.notificationContext.normalizedTargetHash
+      $status = if ($matchesPreparedTarget) { 'PROVIDER_ACCEPTED' } else { 'MISADDRESSED' }
+      $stateArguments = @(
+        'RecordDecisionNotification', '-RunId', $RunId, '-NotificationStatus', $status,
+        '-RecipientHash', $observedHash, '-ProviderMessageId', $ProviderMessageId
+      )
+      if (-not $matchesPreparedTarget) { $stateArguments += @('-NotificationError', 'recipient_mismatch') }
+      $marked = Invoke-StateTool $stateArguments
       if ($marked.Code -ne 0) {
-        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'decision_notification_failed' $(if ($marked.Error) { $marked.Error } else { 'MarkDecisionNotified failed.' })
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'decision_notification_failed' $(if ($marked.Error) { $marked.Error } else { 'RecordDecisionNotification failed.' })
         Write-ProtocolResult $result $marked.Code
       }
-      $state = Convert-ChildJson $marked 'MarkDecisionNotified'
-      $published = Invoke-DecisionStatusPublisher 'Publish' $state.pendingDecision
+      $state = Convert-ChildJson $marked 'RecordDecisionNotification'
+      Set-SessionNotificationContext $session $null
+      $published = Invoke-DecisionStatusPublisher 'PublishPending' $state
       if ($published.Code -ne 0) {
         $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
         Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
       }
-      $result = New-ProtocolResult $true 'decision_notified' 'pending_decision' 'preserve_recovery' $null 'Decision notification recorded with provider evidence.'
+      $result = New-ProtocolResult $matchesPreparedTarget $(if ($matchesPreparedTarget) { 'decision_delivery_accepted' } else { 'decision_delivery_misaddressed' }) 'pending_decision' 'preserve_recovery' $(if ($matchesPreparedTarget) { $null } else { 'recipient_mismatch' }) $(if ($matchesPreparedTarget) { 'Provider submission accepted for the prepared target.' } else { 'Provider submission target did not match the prepared target.' })
       $result.pendingDecision = $state.pendingDecision
-      $result.nextCommand = 'Finish'
+      $result.nextCommand = if ($matchesPreparedTarget) { 'Finish' } else { 'RetryDecisionNotification' }
+      Write-ProtocolResult $result
+    }
+    'RetryDecisionNotification' {
+      $session = Read-Session
+      $state = Get-StateSnapshot
+      if ($null -eq $state.pendingDecision -or [string]::IsNullOrWhiteSpace($DecisionId) -or
+          [string]$state.pendingDecision.decisionId -cne $DecisionId) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_id_mismatch' 'RetryDecisionNotification requires the current decision id.'
+        Write-ProtocolResult $result 15
+      }
+      $attempts = @($state.pendingDecision.notificationAttempts)
+      if ($attempts.Count -ge 3 -or [string]$state.pendingDecision.status -ceq 'RETRY_EXHAUSTED') {
+        $result = New-ProtocolResult $false 'retry_exhausted' 'pending_decision' 'preserve_recovery' 'retry_exhausted' 'Decision notification retry limit has been reached.'
+        $result.pendingDecision = $state.pendingDecision
+        Write-ProtocolResult $result
+      }
+      if (-not [string]::IsNullOrWhiteSpace($PriorProviderMessageId) -or -not [string]::IsNullOrWhiteSpace($ObservedRecipient)) {
+        if ([string]::IsNullOrWhiteSpace($PriorProviderMessageId) -or -not (Test-EmailAddressShape $ObservedRecipient) -or $null -eq $session.notificationContext) {
+          $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'prior_provider_evidence_invalid' 'PriorProviderMessageId and ObservedRecipient must describe the current prepared submission together.'
+          Write-ProtocolResult $result 15
+        }
+        $observedHash = Get-Sha256TextLower (Normalize-EmailTarget $ObservedRecipient)
+        if ($observedHash -ceq [string]$session.notificationContext.normalizedTargetHash) {
+          $result = New-ProtocolResult $false 'submit_decision_notification' 'pending_decision' 'preserve_recovery' 'prior_submission_matches' 'The prior submission matches the prepared target; record it with MarkDecisionSubmitted.'
+          Write-ProtocolResult $result 15
+        }
+        $marked = Invoke-StateTool @(
+          'RecordDecisionNotification', '-RunId', $RunId, '-NotificationStatus', 'MISADDRESSED',
+          '-RecipientHash', $observedHash, '-ProviderMessageId', $PriorProviderMessageId,
+          '-NotificationError', 'recipient_mismatch'
+        )
+        if ($marked.Code -ne 0) {
+          $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'decision_notification_failed' $(if ($marked.Error) { $marked.Error } else { 'RecordDecisionNotification failed.' })
+          Write-ProtocolResult $result $marked.Code
+        }
+        $state = Convert-ChildJson $marked 'RecordDecisionNotification'
+        Set-SessionNotificationContext $session $null
+        $attempts = @($state.pendingDecision.notificationAttempts)
+        if ($attempts.Count -ge 3 -or [string]$state.pendingDecision.status -ceq 'RETRY_EXHAUSTED') {
+          $published = Invoke-DecisionStatusPublisher 'PublishPending' $state
+          if ($published.Code -ne 0) { Stop-RegisteredWork $session 'decision_status_publish_failed' 'Decision status publisher failed.' $published.Code }
+          $result = New-ProtocolResult $false 'retry_exhausted' 'pending_decision' 'preserve_recovery' 'retry_exhausted' 'Decision notification retry limit has been reached.'
+          $result.pendingDecision = $state.pendingDecision
+          Write-ProtocolResult $result
+        }
+      }
+      try { $config = Read-PrivateDecisionConfig } catch {
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'private_config_invalid' $_.Exception.Message
+        Write-ProtocolResult $result 15
+      }
+      $notification = New-PreparedNotificationResult $session $state $config
+      if ($null -eq $notification) {
+        $result = New-ProtocolResult $false 'retry_exhausted' 'pending_decision' 'preserve_recovery' 'retry_exhausted' 'Decision notification retry limit has been reached.'
+        Write-ProtocolResult $result
+      }
+      $result = New-ProtocolResult $true 'submit_decision_notification' 'pending_decision' 'preserve_recovery' $null 'Transient retry notification payload prepared.'
+      $result.notification = $notification
+      $result.nextCommands = @('MarkDecisionSubmitted','MarkDecisionDeliveryFailed')
+      $result.nextCommand = 'MarkDecisionSubmitted'
       Write-ProtocolResult $result
     }
     'MarkDecisionDeliveryFailed' {
       $session = Read-Session
+      $state = Get-StateSnapshot
+      if ($null -eq $state.pendingDecision -or $null -eq $session.notificationContext -or
+          [string]$session.notificationContext.decisionId -cne [string]$state.pendingDecision.decisionId) {
+        $result = New-ProtocolResult $false 'prepare_decision_notification' 'pending_decision' 'preserve_recovery' 'notification_not_prepared' 'A current prepared notification is required.'
+        Write-ProtocolResult $result 15
+      }
       if ([string]::IsNullOrWhiteSpace($NotificationError)) {
         $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_arguments' 'NotificationError is required.'
         Write-ProtocolResult $result 15
       }
-      $marked = Invoke-StateTool @('MarkDecisionDeliveryFailed', '-RunId', $RunId, '-NotificationError', $NotificationError)
+      $errorCategory = Get-NotificationErrorCategory $NotificationError
+      $marked = Invoke-StateTool @(
+        'RecordDecisionNotification', '-RunId', $RunId, '-NotificationStatus', 'DELIVERY_FAILED',
+        '-RecipientHash', [string]$session.notificationContext.normalizedTargetHash,
+        '-NotificationError', $errorCategory
+      )
       if ($marked.Code -ne 0) {
         $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'decision_notification_failed' $(if ($marked.Error) { $marked.Error } else { 'MarkDecisionDeliveryFailed failed.' })
         Write-ProtocolResult $result $marked.Code
       }
-      $state = Convert-ChildJson $marked 'MarkDecisionDeliveryFailed'
-      $published = Invoke-DecisionStatusPublisher 'Publish' $state.pendingDecision
+      $state = Convert-ChildJson $marked 'RecordDecisionNotification'
+      Set-SessionNotificationContext $session $null
+      $published = Invoke-DecisionStatusPublisher 'PublishPending' $state
       if ($published.Code -ne 0) {
         $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
         Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
       }
       $result = New-ProtocolResult $true 'decision_delivery_failed' 'pending_decision' 'preserve_recovery' $null 'Decision delivery failure recorded and published.'
       $result.pendingDecision = $state.pendingDecision
-      $result.nextCommand = 'Finish'
+      $result.nextCommand = if ([string]$state.pendingDecision.status -ceq 'RETRY_EXHAUSTED') { $null } else { 'RetryDecisionNotification' }
       Write-ProtocolResult $result
     }
-    'ResolveDecisionReply' {
+    'ResolveDecisionEmailReply' {
       $session = Read-Session
       if ([string]$session.phase -cne 'identity_checked') {
-        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_phase' 'ResolveDecisionReply requires a fresh identity_checked run after decision publication is finished.'
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_phase' 'ResolveDecisionEmailReply requires a fresh identity_checked run after decision publication is finished.'
         $result.nextCommand = 'Finish'
         Write-ProtocolResult $result 13
       }
       $state = Get-StateSnapshot
       $pattern = '^\s*(?<id>DEC-[0-9]{8}-[A-Z0-9]+)\s*[：:]\s*(?:选择|选)\s*(?<key>[A-Za-z0-9]+)\s*$'
-      if ([string]::IsNullOrWhiteSpace($ReplyText) -or $ReplyText -notmatch $pattern) {
-        if ($null -ne $state.pendingDecision) {
-          [void](Invoke-StateTool @('MarkDecisionDeliveryFailed', '-RunId', $RunId, '-NotificationError', 'invalid_reply'))
-        }
+      if ([string]::IsNullOrWhiteSpace($ReplyText) -or $ReplyText -cnotmatch $pattern -or
+          [string]::IsNullOrWhiteSpace($ReplyMessageId) -or -not (Test-EmailAddressShape $ReplyFrom)) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_reply' 'Decision reply does not match the strict single-option format.'
-        $result.nextCommand = 'ResolveDecisionReply'
+        $result.nextCommand = 'ResolveDecisionEmailReply'
         Write-ProtocolResult $result 15
       }
       $decisionId = [string]$Matches['id']
       $optionKey = [string]$Matches['key']
       if ($null -eq $state.pendingDecision -or $decisionId -cne [string]$state.pendingDecision.decisionId -or
           @($state.pendingDecision.options | Where-Object { [string]$_.key -ceq $optionKey }).Count -ne 1) {
-        if ($null -ne $state.pendingDecision) {
-          [void](Invoke-StateTool @('MarkDecisionDeliveryFailed', '-RunId', $RunId, '-NotificationError', 'invalid_reply'))
-        }
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_reply' 'Decision id or option key is invalid.'
-        $result.nextCommand = 'ResolveDecisionReply'
+        $result.nextCommand = 'ResolveDecisionEmailReply'
         Write-ProtocolResult $result 15
       }
+      try { $config = Read-PrivateDecisionConfig } catch {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'private_config_invalid' $_.Exception.Message
+        Write-ProtocolResult $result 15
+      }
+      $sender = Normalize-EmailTarget $ReplyFrom
+      if ($sender -cne [string]$config.allowedReplyFrom -and @($config.aliases) -cnotcontains $sender) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_reply_source' 'Decision reply sender is not allowed.'
+        $result.nextCommand = 'ResolveDecisionEmailReply'
+        Write-ProtocolResult $result 15
+      }
+      $originalTaskId = [string]$state.pendingDecision.taskId
       $resolved = Invoke-StateTool @(
         'ResolveDecision', '-RunId', $RunId, '-DecisionId', $decisionId,
-        '-OptionKey', $optionKey, '-ReplySource', 'email'
+        '-OptionKey', $optionKey, '-ReplySource', 'email',
+        '-EvidenceMessageId', $ReplyMessageId, '-EvidenceSender', $sender
       )
       if ($resolved.Code -ne 0) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_resolve_failed' $(if ($resolved.Error) { $resolved.Error } else { 'ResolveDecision failed.' })
@@ -1334,14 +1617,56 @@ try {
       $session.taskId = $null
       $session.executor = $null
       if ($null -eq $session.PSObject.Properties['resumeTaskId']) {
-        $session | Add-Member -NotePropertyName resumeTaskId -NotePropertyValue ([string]$resolvedState.pendingDecision.taskId)
+        $session | Add-Member -NotePropertyName resumeTaskId -NotePropertyValue $originalTaskId
       } else {
-        $session.resumeTaskId = [string]$resolvedState.pendingDecision.taskId
+        $session.resumeTaskId = $originalTaskId
       }
       Save-Session $session
-      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Strict decision reply resolved; inspect and register the original task again.'
-      $result.taskId = [string]$resolvedState.pendingDecision.taskId
-      $result.pendingDecision = $resolvedState.pendingDecision
+      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Strict email decision reply resolved; inspect and register the original task again.'
+      $result.taskId = $originalTaskId
+      $result.decisionFlow = $resolvedState.decisionFlow
+      $result.requiredSources = @($script:ExecutionQueueRelativePath, $script:DecisionStatusRelativePath)
+      $result.nextCommand = 'InspectCandidate'
+      Write-ProtocolResult $result
+    }
+    'ResolveDecisionManual' {
+      $session = Read-Session
+      if ([string]$session.phase -cne 'identity_checked') {
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_phase' 'ResolveDecisionManual requires a fresh identity_checked run.'
+        Write-ProtocolResult $result 13
+      }
+      $state = Get-StateSnapshot
+      $pattern = '^\s*(?<id>DEC-[0-9]{8}-[A-Z0-9]+)\s*[：:]\s*(?:选择|选)\s*(?<key>[A-Za-z0-9]+)\s*$'
+      if (-not $ManualOverride -or [string]::IsNullOrWhiteSpace($ReplyText) -or $ReplyText -cnotmatch $pattern -or
+          [string]::IsNullOrWhiteSpace($CurrentThreadId)) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_manual_override' 'Manual resolution requires an exact reply, CurrentThreadId, and -ManualOverride.'
+        Write-ProtocolResult $result 15
+      }
+      $decisionId = [string]$Matches['id']
+      $optionKey = [string]$Matches['key']
+      if ($null -eq $state.pendingDecision -or $decisionId -cne [string]$state.pendingDecision.decisionId -or
+          @($state.pendingDecision.options | Where-Object { [string]$_.key -ceq $optionKey }).Count -ne 1) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_reply' 'Decision id or option key is invalid.'
+        Write-ProtocolResult $result 15
+      }
+      $originalTaskId = [string]$state.pendingDecision.taskId
+      $arguments = @(
+        'ResolveDecision', '-RunId', $RunId, '-DecisionId', $decisionId,
+        '-OptionKey', $optionKey, '-ReplySource', 'manual', '-ManualOverride',
+        '-EvidenceThreadId', $CurrentThreadId
+      )
+      if (-not [string]::IsNullOrWhiteSpace($CurrentTurnId)) { $arguments += @('-EvidenceTurnId', $CurrentTurnId) }
+      $resolved = Invoke-StateTool $arguments
+      if ($resolved.Code -ne 0) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_resolve_failed' $(if ($resolved.Error) { $resolved.Error } else { 'ResolveDecision failed.' })
+        Write-ProtocolResult $result $resolved.Code
+      }
+      $resolvedState = Convert-ChildJson $resolved 'ResolveDecision'
+      $session.resumeTaskId = $originalTaskId
+      Save-Session $session
+      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Manual decision resolution recorded; inspect and register the original task again.'
+      $result.taskId = $originalTaskId
+      $result.decisionFlow = $resolvedState.decisionFlow
       $result.requiredSources = @($script:ExecutionQueueRelativePath, $script:DecisionStatusRelativePath)
       $result.nextCommand = 'InspectCandidate'
       Write-ProtocolResult $result

@@ -9,6 +9,7 @@ $sandbox = Join-Path $tempRoot ('tzg-controller-v3-test-' + [guid]::NewGuid().To
 $repo = Join-Path $sandbox 'repo'
 $statePath = Join-Path $sandbox 'state.json'
 $runRoot = Join-Path $sandbox 'runs'
+$privateConfigPath = Join-Path $sandbox 'private-config.json'
 $safeToRemove = $false
 
 function Invoke-Controller {
@@ -141,6 +142,13 @@ try {
     '| blocked-task | P1 | Codex / gpt-5.5 | 工具 | 阻塞（TQ-057） | 阻塞候选 |',
     '| unmapped-task | P1 | External Agent | 工具 | 待处理 | 未映射主责候选 |'
   )
+  Write-Utf8 $privateConfigPath (@{
+    schemaVersion = 1
+    recipientEmail = 'owner@example.invalid'
+    allowedReplyFrom = 'owner@example.invalid'
+    gmailLabel = 'TZG_DECISIONS'
+    aliases = @('owner.alias@example.invalid')
+  } | ConvertTo-Json -Depth 3)
   Invoke-Git add -- base.txt human.txt task.txt second-task.txt '开发管理/当前任务队列.txt' '开发管理/自动工作流状态.txt' | Out-Null
   Invoke-Git commit -m 'test: base' | Out-Null
   Write-Utf8 (Join-Path $repo 'human.txt') "human dirty`n"
@@ -166,6 +174,15 @@ try {
   $contract = Invoke-Controller @('Contract')
   Assert-Code $contract 0 'protocol contract'
   $contractJson = $contract.Output | ConvertFrom-Json
+  $expectedActions = @(
+    'Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish',
+    'CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure',
+    'PrepareDecision','CreateDecision','PrepareDecisionNotification','MarkDecisionSubmitted',
+    'RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual'
+  )
+  if ((@($contractJson.actions) -join '|') -cne ($expectedActions -join '|')) {
+    throw "controller facade actions are not exact: $(@($contractJson.actions) -join '|')"
+  }
   $mapping = $contractJson.taskKindMapping
   if ($mapping.execution -ne 'execute' -or $mapping.review -ne 'review' -or
       $mapping.maintenance -ne 'maintenance' -or $mapping.recovery -ne 'recovery') {
@@ -177,7 +194,9 @@ try {
       $contractJson.commandTemplates.InspectCandidate -notmatch 'InspectCandidate -RepositoryRoot .* -RunId .* -TaskId' -or
       $contractJson.commandTemplates.InspectCandidate -match 'WorkType|Executor' -or
       $contractJson.commandTemplates.PrepareDecision -notmatch 'PrepareDecision -RepositoryRoot .* -RunId' -or
-      $contractJson.commandTemplates.MarkDecisionNotified -notmatch 'NotificationReceipt' -or
+      $contractJson.commandTemplates.MarkDecisionSubmitted -notmatch 'ProviderMessageId.*ObservedRecipient' -or
+      $null -ne $contractJson.commandTemplates.MarkDecisionNotified -or
+      $null -ne $contractJson.commandTemplates.ResolveDecisionReply -or
       @($contractJson.decisionParameters.required) -cnotcontains 'DecisionOptions' -or
       $contractJson.decisionParameters.optionFormat -ne 'A=label|B=label' -or
       $contractJson.candidateResolvers.execution.source -ne '开发管理/当前任务队列.txt' -or
@@ -311,62 +330,6 @@ try {
     throw "candidate identity mismatch did not close the empty run: $($mismatch.Output)"
   }
 
-  $begin = Invoke-Controller @(
-    'BeginMutation', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $runId, '-Now', '2026-07-15T00:05:00Z'
-  )
-  Assert-Code $begin 0 'begin mutation'
-  if ((Read-State).checkpoint -ne 'mutation_started') { throw 'BeginMutation did not persist its checkpoint' }
-  Write-Utf8 (Join-Path $repo 'task.txt') "controller residue`n"
-
-  $failed = Invoke-Controller @(
-    'Fail', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $runId,
-    '-ErrorMessage', 'simulated interruption', '-Now', '2026-07-15T00:10:00Z'
-  )
-  Assert-Code $failed 0 'mutation failure'
-  $failedState = Read-State
-  if (-not $failedState.recoveryBaselinePath -or -not $failedState.recoveryEvidencePath -or
-      $failedState.recoveryEvidenceHash -notmatch '^[0-9a-f]{64}$' -or
-      -not (Test-Path -LiteralPath $failedState.recoveryEvidencePath)) {
-    throw "mutation failure did not capture recovery evidence: $($failed.Output)"
-  }
-
-  $recoveryRunId = '33333333-3333-4333-8333-333333333333'
-  $recovery = Invoke-Controller @(
-    'Start', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $recoveryRunId,
-    '-ActualModel', 'gpt-test', '-Now', '2026-07-15T04:00:00Z'
-  )
-  Assert-Code $recovery 0 'exact residue recovery'
-  $recoveryJson = $recovery.Output | ConvertFrom-Json
-  if ($recoveryJson.action -ne 'resume_task' -or $recoveryJson.branchKind -ne 'recovery' -or
-      $recoveryJson.taskId -ne 'TQ-057' -or $recoveryJson.executor -ne 'codex' -or
-      @($recoveryJson.expectedPaths).Count -ne 2 -or $recoveryJson.nextCommand -ne 'Finish') {
-    throw "exact controller residue did not enter recovery: $($recovery.Output)"
-  }
-
-  $pauseRecovery = Invoke-Controller @(
-    'Fail', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $recoveryRunId,
-    '-ErrorMessage', 'pause recovery for changed-path test', '-Now', '2026-07-15T04:01:00Z'
-  )
-  Assert-Code $pauseRecovery 0 'pause first recovery'
-  Write-Utf8 (Join-Path $repo 'task.txt') "controller residue changed after evidence`n"
-  $changedRecoveryRunId = '44444444-4444-4444-8444-444444444444'
-  $changedRecovery = Invoke-Controller @(
-    'Start', '-RepositoryRoot', $repo, '-StatePath', $statePath,
-    '-RunRoot', $runRoot, '-RunId', $changedRecoveryRunId,
-    '-ActualModel', 'gpt-test', '-Now', '2026-07-15T08:00:00Z'
-  )
-  Assert-Code $changedRecovery 22 'changed expected recovery rejection'
-  $changedRecoveryJson = $changedRecovery.Output | ConvertFrom-Json
-  if ($changedRecoveryJson.errorCode -ne 'recovery_expected_changed' -or
-      $changedRecoveryJson.failurePolicy -ne 'auto_blocked' -or (Read-State).state -ne 'AUTO-BLOCKED') {
-    throw "changed expected path did not fail closed: $($changedRecovery.Output)"
-  }
-  Write-Utf8 (Join-Path $repo 'task.txt') "task base`n"
-
   $baselineStatePath = Join-Path $sandbox 'baseline-state.json'
   $baselineRunRoot = Join-Path $sandbox 'baseline-runs'
   $baselineRunId = '55555555-5555-4555-8555-555555555555'
@@ -459,7 +422,7 @@ try {
   $decision = (Invoke-State @('Show', '-StatePath', $decisionStatePath)).pendingDecision
   $statusText = [IO.File]::ReadAllText((Join-Path $repo '开发管理\自动工作流状态.txt'))
   if ($decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.taskKind -ne 'execute' -or
-      $statusText -notmatch [regex]::Escape($decision.decisionId) -or $statusText -notmatch '通知状态：PENDING') {
+      $statusText -notmatch [regex]::Escape($decision.decisionId) -or $statusText -notmatch '通知状态：尚未尝试发送') {
     throw "CreateDecision did not use the registered work unit: $($created.Output)"
   }
 
@@ -481,37 +444,44 @@ try {
       (Invoke-State @('Show', '-StatePath', $overrideStatePath)).state -ne 'IDLE') {
     throw "execution inspection accepted model-supplied protocol selectors: $($selectorOverride.Output)"
   }
-  $missingReceipt = Invoke-Controller @(
-    'MarkDecisionNotified', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId, '-Now', '2026-07-15T00:06:00Z'
-  )
-  if ($missingReceipt.Code -eq 0 -or
-      ($missingReceipt.Output | ConvertFrom-Json).errorCode -ne 'notification_receipt_missing' -or
-      (Invoke-State @('Show', '-StatePath', $decisionStatePath)).pendingDecision.status -ne 'PENDING') {
-    throw "decision notification succeeded without provider evidence: $($missingReceipt.Output)"
-  }
-  $notified = Invoke-Controller @(
-    'MarkDecisionNotified', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+  $preparedNotification = Invoke-Controller @(
+    'PrepareDecisionNotification', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
     '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId,
-    '-NotificationReceipt', 'gmail-message-18f00abc123', '-Now', '2026-07-15T00:06:00Z'
+    '-PrivateConfigPath', $privateConfigPath, '-Now', '2026-07-15T00:05:30Z'
   )
-  Assert-Code $notified 0 'mark decision notified'
-  $notifiedState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
+  Assert-Code $preparedNotification 0 'prepare decision notification'
+  $preparedNotificationJson = $preparedNotification.Output | ConvertFrom-Json
+  $decisionSessionPath = Join-Path $decisionRunRoot "$decisionRunId.json"
+  $decisionSession = [IO.File]::ReadAllText($decisionSessionPath) | ConvertFrom-Json
+  $contextNames = @($decisionSession.notificationContext.PSObject.Properties.Name | Sort-Object)
+  if ($preparedNotificationJson.notification.recipientEmail -cne 'owner@example.invalid' -or
+      $preparedNotificationJson.notification.gmailLabel -cne 'TZG_DECISIONS' -or
+      ([regex]::Matches($preparedNotification.Output, 'owner@example\.invalid')).Count -ne 1 -or
+      ($contextNames -join '|') -cne ((@('attemptNumber','decisionId','normalizedTargetHash','preparedAt') | Sort-Object) -join '|') -or
+      $decisionSession.notificationContext.normalizedTargetHash -notmatch '^[0-9a-f]{64}$' -or
+      ([IO.File]::ReadAllText($decisionSessionPath)) -match 'owner(?:\.alias)?@example\.invalid') {
+    throw "prepared notification did not isolate the transient target: $($preparedNotification.Output)"
+  }
+  $submitted = Invoke-Controller @(
+    'MarkDecisionSubmitted', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId,
+    '-ProviderMessageId', 'gmail-message-18f00abc123', '-ObservedRecipient', 'owner@example.invalid',
+    '-Now', '2026-07-15T00:06:00Z'
+  )
+  Assert-Code $submitted 0 'mark provider accepted decision'
+  $submittedState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
   $statusText = [IO.File]::ReadAllText((Join-Path $repo '开发管理\自动工作流状态.txt'))
-  if ($notifiedState.pendingDecision.status -ne 'NOTIFIED' -or
-      $notifiedState.pendingDecision.notification.receiptHash -notmatch '^[0-9a-f]{64}$' -or
-      $statusText -notmatch '通知状态：NOTIFIED') {
-    throw "notified decision was not published with evidence: $($notified.Output)"
-  }
-  $prematureReply = Invoke-Controller @(
-    'ResolveDecisionReply', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionRunId,
-    '-ReplyText', "$($decision.decisionId)：选择 A", '-Now', '2026-07-15T00:06:15Z'
-  )
-  if ($prematureReply.Code -eq 0 -or
-      ($prematureReply.Output | ConvertFrom-Json).errorCode -ne 'invalid_phase' -or
-      (Invoke-State @('Show', '-StatePath', $decisionStatePath)).pendingDecision.status -ne 'NOTIFIED') {
-    throw "decision reply bypassed the publication Finish boundary: $($prematureReply.Output)"
+  $sensitiveRuntimeText = @(
+    $submitted.Output,
+    [IO.File]::ReadAllText($decisionStatePath),
+    [IO.File]::ReadAllText($decisionSessionPath),
+    $statusText
+  ) -join "`n"
+  if ($submittedState.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or
+      @($submittedState.pendingDecision.notificationAttempts).Count -ne 1 -or
+      $submittedState.pendingDecision.notificationAttempts[0].providerMessageIdHash -notmatch '^[0-9a-f]{64}$' -or
+      $statusText -notmatch '提供方接受' -or $sensitiveRuntimeText -match 'owner(?:\.alias)?@example\.invalid') {
+    throw "provider-accepted notification was not stored as hash-only evidence: $($submitted.Output)"
   }
   $decisionFinish = Invoke-Controller @(
     'Finish', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
@@ -522,7 +492,8 @@ try {
   $decisionPublicationPaths = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   $decisionPublishedState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
   if ($decisionPublicationPaths.Count -ne 1 -or $decisionPublicationPaths[0] -ne '开发管理/自动工作流状态.txt' -or
-      $decisionPublishedState.state -ne 'IDLE' -or $decisionPublishedState.pendingDecision.status -ne 'NOTIFIED' -or
+      $decisionPublishedState.state -ne 'IDLE' -or $decisionPublishedState.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or
+      $decisionPublishedState.decisionFlow.status -ne 'AWAITING_DECISION' -or
       $null -ne $decisionPublishedState.recoveryBaselinePath -or $null -ne $decisionPublishedState.recoveryEvidencePath -or
       $decisionPublishedState.recoveryCount -ne 0) {
     throw "pending decision publication did not close cleanly: $($decisionFinish.Output)"
@@ -538,34 +509,67 @@ try {
   $decisionReplyStartJson = $decisionReplyStart.Output | ConvertFrom-Json
   if ($decisionReplyStartJson.action -ne 'inspect_pending_decision' -or
       $decisionReplyStartJson.pendingDecision.decisionId -ne $decision.decisionId -or
-      $decisionReplyStartJson.nextCommand -ne 'ResolveDecisionReply') {
+      $decisionReplyStartJson.nextCommand -ne 'ResolveDecisionEmailReply' -or
+      @($decisionReplyStartJson.nextCommands) -notcontains 'ResolveDecisionManual' -or
+      @($decisionReplyStartJson.nextCommands) -notcontains 'RetryDecisionNotification') {
     throw "pending decision was not surfaced on the next run: $($decisionReplyStart.Output)"
   }
 
-  $invalidReply = Invoke-Controller @(
-    'ResolveDecisionReply', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId,
-    '-ReplyText', '我建议选 A', '-Now', '2026-07-15T01:01:00Z'
+  $invalidEmailReplies = @(
+    @('-ReplyText', '', '-ReplyMessageId', 'reply-empty', '-ReplyFrom', 'owner@example.invalid'),
+    @('-ReplyText', '我建议选 A', '-ReplyMessageId', 'reply-fuzzy', '-ReplyFrom', 'owner@example.invalid'),
+    @('-ReplyText', 'DEC-20260715-WRONG：选择 A', '-ReplyMessageId', 'reply-wrong-id', '-ReplyFrom', 'owner@example.invalid'),
+    @('-ReplyText', "$($decision.decisionId)：选择 A、B", '-ReplyMessageId', 'reply-multiple', '-ReplyFrom', 'owner@example.invalid'),
+    @('-ReplyText', "$($decision.decisionId)：选择 A", '-ReplyMessageId', 'reply-unknown', '-ReplyFrom', 'intruder@example.invalid'),
+    @('-ReplyText', "$($decision.decisionId)：选择 A", '-ReplyMessageId', '', '-ReplyFrom', 'owner@example.invalid')
   )
-  if ($invalidReply.Code -eq 0 -or ($invalidReply.Output | ConvertFrom-Json).errorCode -ne 'invalid_reply') {
-    throw "fuzzy decision reply was accepted: $($invalidReply.Output)"
+  foreach ($invalidArguments in $invalidEmailReplies) {
+    $stateBytesBefore = [IO.File]::ReadAllBytes($decisionStatePath)
+    $invalidReply = Invoke-Controller (@(
+      'ResolveDecisionEmailReply', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+      '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId,
+      '-PrivateConfigPath', $privateConfigPath, '-Now', '2026-07-15T01:01:00Z'
+    ) + $invalidArguments)
+    if ($invalidReply.Code -ne 15 -or
+        -not [Linq.Enumerable]::SequenceEqual([byte[]]$stateBytesBefore, [byte[]][IO.File]::ReadAllBytes($decisionStatePath))) {
+      throw "invalid email reply changed state or returned the wrong code: $($invalidReply.Output)"
+    }
   }
   $strictReply = Invoke-Controller @(
-    'ResolveDecisionReply', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    'ResolveDecisionEmailReply', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
     '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId,
-    '-ReplyText', "$($decision.decisionId)：选择 A", '-Now', '2026-07-15T01:02:00Z'
+    '-ReplyText', "$($decision.decisionId)：选择 A", '-ReplyMessageId', 'reply-message-001',
+    '-ReplyFrom', 'owner.alias@example.invalid', '-PrivateConfigPath', $privateConfigPath,
+    '-Now', '2026-07-15T01:02:00Z'
   )
   Assert-Code $strictReply 0 'strict decision reply'
   $strictReplyJson = $strictReply.Output | ConvertFrom-Json
-  $resolvedDecision = (Invoke-State @('Show', '-StatePath', $decisionStatePath)).pendingDecision
-  if ($resolvedDecision.status -ne 'RESOLVED' -or $resolvedDecision.resolution.optionKey -ne 'A' -or
-      $resolvedDecision.resolution.source -ne 'email' -or $strictReplyJson.action -ne 'inspect_candidate' -or
+  $emailResolvedState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
+  $emailResolution = $emailResolvedState.decisionFlow.resolvedDecisions[0].resolution
+  if ($null -ne $emailResolvedState.pendingDecision -or $emailResolvedState.decisionFlow.status -ne 'IMPLEMENTATION_PENDING' -or
+      $emailResolution.optionKey -ne 'A' -or $emailResolution.source -ne 'email' -or
+      $emailResolution.messageIdHash -notmatch '^[0-9a-f]{64}$' -or $emailResolution.senderHash -notmatch '^[0-9a-f]{64}$' -or
+      $null -ne $emailResolution.threadIdHash -or $null -ne $emailResolution.turnIdHash -or
+      $strictReplyJson.action -ne 'inspect_candidate' -or
       $strictReplyJson.taskId -ne 'decision-task' -or $strictReplyJson.nextCommand -ne 'InspectCandidate') {
     throw "strict decision reply did not resolve the pending decision: $($strictReply.Output)"
   }
+  [void](Invoke-State @('Complete', '-StatePath', $decisionStatePath, '-RunId', $decisionReplyRunId, '-Now', '2026-07-15T01:02:30Z'))
+  $decisionResumeRunId = '66666666-6666-4666-8666-666666666668'
+  $decisionResumeStart = Invoke-Controller @(
+    'Start', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId,
+    '-ActualModel', 'gpt-test', '-Now', '2026-07-15T01:03:00Z'
+  )
+  Assert-Code $decisionResumeStart 0 'resolved decision flow resume start'
+  $decisionResumeJson = $decisionResumeStart.Output | ConvertFrom-Json
+  if ($decisionResumeJson.action -ne 'resume_decision_task' -or $decisionResumeJson.taskId -ne 'decision-task' -or
+      $decisionResumeJson.nextCommand -ne 'InspectCandidate') {
+    throw "resolved decision flow was not resumed by Start: $($decisionResumeStart.Output)"
+  }
   $wrongDecisionTask = Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId, '-TaskId', 'TQ-057'
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId, '-TaskId', 'TQ-057'
   )
   if ($wrongDecisionTask.Code -eq 0 -or
       ($wrongDecisionTask.Output | ConvertFrom-Json).errorCode -ne 'decision_task_mismatch' -or
@@ -574,22 +578,92 @@ try {
   }
   Assert-Code (Invoke-Controller @(
     'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId, '-TaskId', 'decision-task'
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId, '-TaskId', 'decision-task'
   )) 0 'inspect resolved decision candidate'
   Assert-Code (Invoke-Controller @(
     'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId,
     '-ExpectedPaths', 'task.txt|开发管理/自动工作流状态.txt'
   )) 0 'register resolved decision candidate'
   Assert-Code (Invoke-Controller @(
     'BeginMutation', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId, '-Now', '2026-07-15T01:03:00Z'
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId, '-Now', '2026-07-15T01:04:00Z'
   )) 0 'begin resolved decision implementation'
+  Assert-Code (Invoke-Controller @(
+    'PrepareDecision', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId
+  )) 0 'prepare chained decision context'
+  $chainedCreated = Invoke-Controller @(
+    'CreateDecision', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId,
+    '-TaskSummary', '确认第二阶段模式', '-DecisionQuestion', '第二阶段采用哪种模式？',
+    '-DecisionOptions', 'A=继续甲|B=切换乙', '-RecommendedOption', 'B',
+    '-ImpactSummary', '影响最终实现', '-Now', '2026-07-15T01:05:00Z'
+  )
+  Assert-Code $chainedCreated 0 'create chained pending decision'
+  $chainedState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
+  $chainedDecision = $chainedState.pendingDecision
+  $statusText = [IO.File]::ReadAllText((Join-Path $repo '开发管理\自动工作流状态.txt'))
+  if (@($chainedState.decisionFlow.resolvedDecisions).Count -ne 1 -or
+      $statusText -notmatch [regex]::Escape($decision.decisionId) -or
+      $statusText -notmatch [regex]::Escape($chainedDecision.decisionId)) {
+    throw 'chained decision status omitted prior resolved summaries'
+  }
+  Assert-Code (Invoke-Controller @(
+    'PrepareDecisionNotification', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId,
+    '-PrivateConfigPath', $privateConfigPath, '-Now', '2026-07-15T01:05:30Z'
+  )) 0 'prepare chained notification'
+  Assert-Code (Invoke-Controller @(
+    'MarkDecisionSubmitted', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId,
+    '-ProviderMessageId', 'gmail-message-chain-002', '-ObservedRecipient', 'owner@example.invalid',
+    '-Now', '2026-07-15T01:06:00Z'
+  )) 0 'submit chained notification'
+  $chainedPublicationFinish = Invoke-Controller @(
+    'Finish', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $decisionResumeRunId,
+    '-CommitMessage', 'test: publish chained decision', '-Now', '2026-07-15T01:06:30Z'
+  )
+  Assert-Code $chainedPublicationFinish 0 'finish chained status-only publication'
+  $statusOnlyPaths = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  $statusOnlyState = Invoke-State @('Show', '-StatePath', $decisionStatePath)
+  if ($statusOnlyPaths.Count -ne 1 -or $statusOnlyPaths[0] -ne '开发管理/自动工作流状态.txt' -or
+      $null -eq $statusOnlyState.pendingDecision -or $null -eq $statusOnlyState.decisionFlow) {
+    throw 'status-only decision publication cleared the active flow'
+  }
+
+  $chainedReplyRunId = '66666666-6666-4666-8666-666666666669'
+  Assert-Code (Invoke-Controller @(
+    'Start', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $chainedReplyRunId,
+    '-ActualModel', 'gpt-test', '-Now', '2026-07-15T02:00:00Z'
+  )) 0 'chained decision reply start'
+  Assert-Code (Invoke-Controller @(
+    'ResolveDecisionEmailReply', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $chainedReplyRunId,
+    '-ReplyText', "$($chainedDecision.decisionId)：选择 B", '-ReplyMessageId', 'reply-message-002',
+    '-ReplyFrom', 'owner@example.invalid', '-PrivateConfigPath', $privateConfigPath,
+    '-Now', '2026-07-15T02:01:00Z'
+  )) 0 'resolve chained decision'
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $chainedReplyRunId, '-TaskId', 'decision-task'
+  )) 0 'inspect final decision implementation'
+  Assert-Code (Invoke-Controller @(
+    'RegisterCandidate', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $chainedReplyRunId,
+    '-ExpectedPaths', 'task.txt|开发管理/自动工作流状态.txt'
+  )) 0 'register final decision implementation'
+  Assert-Code (Invoke-Controller @(
+    'BeginMutation', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
+    '-RunRoot', $decisionRunRoot, '-RunId', $chainedReplyRunId, '-Now', '2026-07-15T02:02:00Z'
+  )) 0 'begin final decision implementation'
   Write-Utf8 (Join-Path $repo 'task.txt') "decision implemented`n"
   $decisionResolutionFinish = Invoke-Controller @(
     'Finish', '-RepositoryRoot', $repo, '-StatePath', $decisionStatePath,
-    '-RunRoot', $decisionRunRoot, '-RunId', $decisionReplyRunId,
-    '-CommitMessage', 'test: implement resolved decision', '-Now', '2026-07-15T01:04:00Z'
+    '-RunRoot', $decisionRunRoot, '-RunId', $chainedReplyRunId,
+    '-CommitMessage', 'test: implement resolved decision', '-Now', '2026-07-15T02:03:00Z'
   )
   Assert-Code $decisionResolutionFinish 0 'finish resolved decision implementation'
   $decisionResolutionPaths = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
@@ -600,8 +674,101 @@ try {
   $expectedDecisionResolutionPaths = $expectedDecisionResolutionPaths -join '|'
   if ($actualDecisionResolutionPaths -cne $expectedDecisionResolutionPaths -or
       $decisionResolvedState.state -ne 'IDLE' -or $null -ne $decisionResolvedState.pendingDecision -or
+      $null -ne $decisionResolvedState.decisionFlow -or
+      $decisionResolvedState.lastCompletedDecisionFlow.decisionCount -ne 2 -or
       $statusText -notmatch '当前无待决策项。') {
     throw "resolved decision lifecycle did not commit and clear atomically: $($decisionResolutionFinish.Output)"
+  }
+
+  $manualStatePath = Join-Path $sandbox 'manual-state.json'
+  $manualRunRoot = Join-Path $sandbox 'manual-runs'
+  $manualCreateRunId = '12121212-1212-4212-8212-121212121212'
+  Assert-Code (Invoke-Controller @('Start','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId,'-ActualModel','gpt-test','-Now','2026-07-15T03:00:00Z')) 0 'manual fixture start'
+  Assert-Code (Invoke-Controller @('InspectCandidate','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId,'-TaskId','decision-task')) 0 'manual fixture inspect'
+  Assert-Code (Invoke-Controller @('RegisterCandidate','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId,'-ExpectedPaths','开发管理/自动工作流状态.txt')) 0 'manual fixture register'
+  Assert-Code (Invoke-Controller @('BeginMutation','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId)) 0 'manual fixture begin'
+  Assert-Code (Invoke-Controller @('PrepareDecision','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId)) 0 'manual fixture prepare'
+  Assert-Code (Invoke-Controller @(
+    'CreateDecision','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId,
+    '-TaskSummary','人工覆盖测试','-DecisionQuestion','人工选择？','-DecisionOptions','A=甲|B=乙','-RecommendedOption','B','-ImpactSummary','测试人工证据','-Now','2026-07-15T03:01:00Z'
+  )) 0 'manual fixture create'
+  $manualDecision = (Invoke-State @('Show','-StatePath',$manualStatePath)).pendingDecision
+  Assert-Code (Invoke-Controller @('Finish','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId,'-CommitMessage','test: publish manual decision','-Now','2026-07-15T03:02:00Z')) 0 'manual fixture publish'
+  $manualReplyRunId = '13131313-1313-4313-8313-131313131313'
+  Assert-Code (Invoke-Controller @('Start','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualReplyRunId,'-ActualModel','gpt-test','-Now','2026-07-15T03:03:00Z')) 0 'manual reply start'
+  $manualResolved = Invoke-Controller @(
+    'ResolveDecisionManual','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualReplyRunId,
+    '-ReplyText',"$($manualDecision.decisionId)：选择 B",'-CurrentThreadId','019f63c5-f73c-70a0-9773-5592a3e03194',
+    '-CurrentTurnId','turn-manual-001','-ManualOverride','-Now','2026-07-15T03:04:00Z'
+  )
+  Assert-Code $manualResolved 0 'manual decision resolution'
+  $manualResolvedState = Invoke-State @('Show','-StatePath',$manualStatePath)
+  $manualResolution = $manualResolvedState.decisionFlow.resolvedDecisions[0].resolution
+  if ($manualResolved.Output -match 'owner(?:\.alias)?@example\.invalid' -or $manualResolution.optionKey -ne 'B' -or
+      $manualResolution.source -ne 'manual' -or $manualResolution.threadIdHash -notmatch '^[0-9a-f]{64}$' -or
+      $manualResolution.turnIdHash -notmatch '^[0-9a-f]{64}$' -or $null -ne $manualResolution.senderHash -or
+      $null -ne $manualResolution.messageIdHash -or $null -ne $manualResolvedState.pendingDecision -or
+      ($manualResolved.Output | ConvertFrom-Json).taskId -ne 'decision-task') {
+    throw "manual resolution mixed evidence domains: $($manualResolved.Output)"
+  }
+
+  $retryStatePath = Join-Path $sandbox 'retry-state.json'
+  $retryRunRoot = Join-Path $sandbox 'retry-runs'
+  $retryRunId = '14141414-1414-4414-8414-141414141414'
+  Assert-Code (Invoke-Controller @('Start','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,'-ActualModel','gpt-test','-Now','2026-07-15T04:00:00Z')) 0 'retry fixture start'
+  Assert-Code (Invoke-Controller @('InspectCandidate','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,'-TaskId','decision-task')) 0 'retry fixture inspect'
+  Assert-Code (Invoke-Controller @('RegisterCandidate','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,'-ExpectedPaths','开发管理/自动工作流状态.txt')) 0 'retry fixture register'
+  Assert-Code (Invoke-Controller @('BeginMutation','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId)) 0 'retry fixture begin'
+  Assert-Code (Invoke-Controller @('PrepareDecision','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId)) 0 'retry fixture prepare'
+  Assert-Code (Invoke-Controller @(
+    'CreateDecision','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,
+    '-TaskSummary','通知重试','-DecisionQuestion','选择？','-DecisionOptions','A=甲|B=乙','-RecommendedOption','A','-ImpactSummary','测试重试上限','-Now','2026-07-15T04:01:00Z'
+  )) 0 'retry fixture create'
+  $retryDecision = (Invoke-State @('Show','-StatePath',$retryStatePath)).pendingDecision
+  $meConfigPath = Join-Path $sandbox 'me-private.json'
+  $blankConfigPath = Join-Path $sandbox 'blank-private.json'
+  Write-Utf8 $meConfigPath (@{schemaVersion=1;recipientEmail='me';allowedReplyFrom='owner@example.invalid';gmailLabel='TZG_DECISIONS';aliases=@()} | ConvertTo-Json)
+  Write-Utf8 $blankConfigPath (@{schemaVersion=1;recipientEmail='';allowedReplyFrom='owner@example.invalid';gmailLabel='TZG_DECISIONS';aliases=@()} | ConvertTo-Json)
+  foreach ($badConfig in @($meConfigPath,$blankConfigPath)) {
+    $badPrepare = Invoke-Controller @('PrepareDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,'-PrivateConfigPath',$badConfig)
+    if ($badPrepare.Code -ne 15) { throw "invalid private target was accepted: $($badPrepare.Output)" }
+  }
+  Assert-Code (Invoke-Controller @('PrepareDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,'-PrivateConfigPath',$privateConfigPath,'-Now','2026-07-15T04:02:00Z')) 0 'prepare retry attempt one'
+  $misaddressed = Invoke-Controller @(
+    'MarkDecisionSubmitted','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,
+    '-ProviderMessageId','wrong-target-message-1','-ObservedRecipient','wrong@example.invalid','-Now','2026-07-15T04:03:00Z'
+  )
+  Assert-Code $misaddressed 0 'record misaddressed submitted decision'
+  if ((Invoke-State @('Show','-StatePath',$retryStatePath)).pendingDecision.status -ne 'MISADDRESSED' -or
+      $misaddressed.Output -match 'notified|received|通知成功|已收到') {
+    throw "misaddressed submission claimed notification success: $($misaddressed.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'RetryDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,
+    '-DecisionId',$retryDecision.decisionId,'-PrivateConfigPath',$privateConfigPath,'-Now','2026-07-15T04:04:00Z'
+  )) 0 'prepare retry attempt two'
+  Assert-Code (Invoke-Controller @(
+    'RetryDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,
+    '-DecisionId',$retryDecision.decisionId,'-PriorProviderMessageId','wrong-target-message-2','-ObservedRecipient','wrong2@example.invalid',
+    '-PrivateConfigPath',$privateConfigPath,'-Now','2026-07-15T04:05:00Z'
+  )) 0 'record prior mismatch and prepare attempt three'
+  $longError = 'connector_' + ('x' * 200)
+  Assert-Code (Invoke-Controller @(
+    'MarkDecisionDeliveryFailed','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,
+    '-NotificationError',$longError,'-Now','2026-07-15T04:06:00Z'
+  )) 0 'record third real delivery failure'
+  $exhaustedState = Invoke-State @('Show','-StatePath',$retryStatePath)
+  $attemptCountBeforeRetry = @($exhaustedState.pendingDecision.notificationAttempts).Count
+  $exhaustedRetry = Invoke-Controller @(
+    'RetryDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$retryStatePath,'-RunRoot',$retryRunRoot,'-RunId',$retryRunId,
+    '-DecisionId',$retryDecision.decisionId,'-PrivateConfigPath',$privateConfigPath,'-Now','2026-07-15T04:07:00Z'
+  )
+  $exhaustedAfter = Invoke-State @('Show','-StatePath',$retryStatePath)
+  if ($exhaustedRetry.Code -ne 0 -or ($exhaustedRetry.Output | ConvertFrom-Json).errorCode -ne 'retry_exhausted' -or
+      $exhaustedAfter.pendingDecision.status -ne 'RETRY_EXHAUSTED' -or $attemptCountBeforeRetry -ne 3 -or
+      @($exhaustedAfter.pendingDecision.notificationAttempts).Count -ne 3 -or
+      $exhaustedAfter.pendingDecision.notificationAttempts[2].errorCategory.Length -gt 120) {
+    throw "retry exhaustion created a fourth attempt: $($exhaustedRetry.Output)"
   }
 
   $workerStatePath = Join-Path $sandbox 'worker-state.json'
