@@ -31,7 +31,7 @@
 - `dotnet build -c Release --no-restore simulations/BattleSim`
 - `dotnet run --no-build -c Release --project simulations/BattleSim`
 - 涉及 Unity 战斗运行时再加 `dotnet build src/Assembly-CSharp.csproj`
-- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts`
 - `git diff --check`
 
 ## 边界

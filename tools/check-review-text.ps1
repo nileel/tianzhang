@@ -1,3 +1,5 @@
+#requires -Version 7.0
+
 param(
   [string[]]$Paths = @("AGENTS.md", "dev-mgmt"),
   [switch]$StrictResidual

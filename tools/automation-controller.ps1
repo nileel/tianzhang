@@ -1,3 +1,5 @@
+#requires -Version 7.0
+
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]

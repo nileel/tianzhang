@@ -291,7 +291,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pwsh-runtime.ps1
 - 项目 PowerShell 脚本唯一支持 PowerShell 7；所有独立进程命令必须使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。禁止调用 `powershell`、`powershell.exe` 或 Windows PowerShell 5.1。已在 PowerShell 7 会话内时可用 `& tools/<script>.ps1 ...`。
 ```
 
-把 Task 0 文件列表中活动事实源和测试脚本的真实 Windows PowerShell 调用全部改为 `pwsh -NoProfile -ExecutionPolicy Bypass -File`；普通描述、Markdown 围栏和历史归档不改。`开发管理/开发-技术经验.txt` 的 PowerShell 7 条目改为“唯一受支持运行时”，删除“需要新版参数时才使用 pwsh”的条件语义。
+把 Task 0 文件列表中活动事实源和测试脚本的真实 Windows PowerShell 调用全部改为 `pwsh -NoProfile -ExecutionPolicy Bypass -File SCRIPT.ps1`；普通描述、Markdown 围栏和历史归档不改。`开发管理/开发-技术经验.txt` 的 PowerShell 7 条目改为“唯一受支持运行时”，删除“需要新版参数时才使用 pwsh”的条件语义。
 
 - [ ] **Step 7: 给关键入口添加版本声明**
 
@@ -379,7 +379,7 @@ git commit -m "chore: require PowerShell 7 runtime"
 - [ ] **Step 2: 读取并核对当前决定**
 
 ```powershell
-pwsh -NoProfile -File tools/automation-controller-state.ps1 Show
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.ps1 Show
 git status --short
 ```
 
@@ -733,8 +733,8 @@ Pop-Location
 - [ ] **Step 3: 运行 PowerShell 测试并确认失败**
 
 ```powershell
-pwsh -NoProfile -File tools/test-setup-feishu-decision-channel.ps1
-pwsh -NoProfile -File tools/test-install-feishu-decision-bridge.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-setup-feishu-decision-channel.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-install-feishu-decision-bridge.ps1
 ```
 
 预期：失败原因为三个生产脚本尚未实现。
@@ -761,8 +761,8 @@ pwsh -NoProfile -File tools/test-install-feishu-decision-bridge.ps1
 - [ ] **Step 6: 运行脚本测试**
 
 ```powershell
-pwsh -NoProfile -File tools/test-setup-feishu-decision-channel.ps1
-pwsh -NoProfile -File tools/test-install-feishu-decision-bridge.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-setup-feishu-decision-channel.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-install-feishu-decision-bridge.ps1
 ```
 
 预期：两组脚本测试通过，真实用户目录和 Windows 任务计划程序未被修改。
@@ -790,7 +790,7 @@ pwsh -NoProfile -File tools/test-install-feishu-decision-bridge.ps1
 - [ ] **Step 2: 运行状态测试并确认红灯**
 
 ```powershell
-pwsh -NoProfile -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
 ```
 
 预期：失败于 schema 仍为 6、provider/source 枚举和新证据参数尚未实现。
@@ -827,7 +827,7 @@ pwsh -NoProfile -File tools/test-automation-controller-state.ps1
 - [ ] **Step 4: 运行状态测试**
 
 ```powershell
-pwsh -NoProfile -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
 ```
 
 预期：全套状态迁移、通知、解决、修复和非法 schema 测试通过。
@@ -840,9 +840,9 @@ $dryRunRoot = Join-Path $env:TEMP ("tzg-feishu-v7-dry-run-{0}" -f [guid]::NewGui
 New-Item -ItemType Directory -Path $dryRunRoot | Out-Null
 $dryRunState = Join-Path $dryRunRoot 'state.json'
 Copy-Item -LiteralPath $sourceState -Destination $dryRunState
-pwsh -NoProfile -File tools/automation-controller-state.ps1 Acquire -StatePath $dryRunState -RunId 'feishu-v7-dry-run' -LeaseMinutes 5
-pwsh -NoProfile -File tools/automation-controller-state.ps1 Complete -StatePath $dryRunState -RunId 'feishu-v7-dry-run'
-pwsh -NoProfile -File tools/automation-controller-state.ps1 Show -StatePath $dryRunState
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.ps1 Acquire -StatePath $dryRunState -RunId 'feishu-v7-dry-run' -LeaseMinutes 5
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.ps1 Complete -StatePath $dryRunState -RunId 'feishu-v7-dry-run'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.ps1 Show -StatePath $dryRunState
 ```
 
 预期：副本变为 schema v7 且回到 `IDLE`；当前决定、两条 Gmail 尝试、decision flow 和 audit corrections 与源文件语义一致。核验 `$dryRunRoot` 的完整路径确实位于 `[IO.Path]::GetFullPath($env:TEMP)` 下后再删除该唯一临时目录；真实状态仍为 v6，哈希不变。
@@ -872,7 +872,7 @@ pwsh -NoProfile -File tools/automation-controller-state.ps1 Show -StatePath $dry
 - [ ] **Step 2: 运行控制器测试并确认红灯**
 
 ```powershell
-pwsh -NoProfile -File tools/test-automation-controller.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.ps1
 ```
 
 预期：失败于新动作未进入 ValidateSet/Contract，仍存在 Gmail 活动路径。
@@ -900,8 +900,8 @@ pwsh -NoProfile -File tools/test-automation-controller.ps1
 - [ ] **Step 5: 运行控制器和状态测试**
 
 ```powershell
-pwsh -NoProfile -File tools/test-automation-controller-state.ps1
-pwsh -NoProfile -File tools/test-automation-controller.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.ps1
 ```
 
 预期：两组测试通过；没有真实飞书调用或用户级真实状态修改。
@@ -936,7 +936,7 @@ pwsh -NoProfile -File tools/test-automation-controller.ps1
 - [ ] **Step 2: 运行测试并确认红灯**
 
 ```powershell
-pwsh -NoProfile -File tools/test-automation-decision-status.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 ```
 
@@ -961,7 +961,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps
 - [ ] **Step 5: 运行展示、静态守卫和审阅文本检查**
 
 ```powershell
-pwsh -NoProfile -File tools/test-automation-decision-status.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
 ```
@@ -988,11 +988,11 @@ Pop-Location
 - [ ] **Step 2: 运行 PowerShell 直接相关回归**
 
 ```powershell
-pwsh -NoProfile -File tools/test-setup-feishu-decision-channel.ps1
-pwsh -NoProfile -File tools/test-install-feishu-decision-bridge.ps1
-pwsh -NoProfile -File tools/test-automation-controller-state.ps1
-pwsh -NoProfile -File tools/test-automation-controller.ps1
-pwsh -NoProfile -File tools/test-automation-decision-status.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-setup-feishu-decision-channel.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-install-feishu-decision-bridge.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
 ```
@@ -1064,8 +1064,8 @@ git commit -m "feat(automation): add Feishu decision channel"
 - [ ] **Step 1: 创建私有配置**
 
 ```powershell
-pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action Configure
-pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action ShowSanitized
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/setup-feishu-decision-channel.ps1 -Action Configure
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/setup-feishu-decision-channel.ps1 -Action ShowSanitized
 ```
 
 预期：只显示配置 schema、app ID hash、recipient hash、是否已配对；不显示秘密或原始地址。
@@ -1073,9 +1073,9 @@ pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action ShowSaniti
 - [ ] **Step 2: 安装并检查登录桥接任务**
 
 ```powershell
-pwsh -NoProfile -File tools/install-feishu-decision-bridge.ps1 -Action Plan
-pwsh -NoProfile -File tools/install-feishu-decision-bridge.ps1 -Action Install
-pwsh -NoProfile -File tools/install-feishu-decision-bridge.ps1 -Action Status
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/install-feishu-decision-bridge.ps1 -Action Plan
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/install-feishu-decision-bridge.ps1 -Action Install
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/install-feishu-decision-bridge.ps1 -Action Status
 ```
 
 预期：唯一任务 `TianZhang-Feishu-Decision-Bridge` 处于 Running/Ready；用户级 `health.json` 在 120 秒内更新为 `CONNECTED`。
@@ -1083,7 +1083,7 @@ pwsh -NoProfile -File tools/install-feishu-decision-bridge.ps1 -Action Status
 - [ ] **Step 3: 绑定当前操作人**
 
 ```powershell
-pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action Pair -PairTimeoutSeconds 300
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/setup-feishu-decision-channel.ps1 -Action Pair -PairTimeoutSeconds 300
 ```
 
 在飞书中点击“绑定当前操作人”。预期：脚本成功保存 expected tenant 和 operator hash；同一配对卡再次点击被判为重放，其他账号点击被拒绝。
@@ -1091,7 +1091,7 @@ pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action Pair -Pair
 - [ ] **Step 4: 发送无业务影响的 canary 卡片**
 
 ```powershell
-pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action Canary -PairTimeoutSeconds 300
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/setup-feishu-decision-channel.ps1 -Action Canary -PairTimeoutSeconds 300
 ```
 
 点击 canary 的 A。预期：发送一次、回调一次、消费一次；收件箱清空到 `processed/`；控制台只显示哈希和 `CANARY_ACCEPTED`。
@@ -1131,10 +1131,10 @@ pwsh -NoProfile -File tools/setup-feishu-decision-channel.ps1 -Action Canary -Pa
 - [ ] **Step 3: 最终验证后恢复唯一写入器**
 
 ```powershell
-pwsh -NoProfile -File tools/automation-controller-state.ps1 Show
-pwsh -NoProfile -File tools/test-automation-controller-state.ps1
-pwsh -NoProfile -File tools/test-automation-controller.ps1
-pwsh -NoProfile -File tools/test-automation-decision-status.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.ps1 Show
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1
 git status --short
 git log -3 --oneline

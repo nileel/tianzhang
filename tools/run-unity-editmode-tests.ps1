@@ -1,3 +1,5 @@
+#requires -Version 7.0
+
 [CmdletBinding()]
 param(
     [string]$UnityExecutable = 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe',

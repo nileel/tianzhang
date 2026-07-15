@@ -92,8 +92,9 @@ Claude CLI 的实际身份、产物修改方和可领取任务主责必须分别
 
 ## 高频检查脚本
 
-- 审核文本/控制字符检查：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
-- docs/CSV/Unity asset 数据链路检查：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+- 项目 PowerShell 脚本唯一支持 PowerShell 7；所有独立进程命令必须使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。禁止调用 `powershell`、`powershell.exe` 或 Windows PowerShell 5.1。已在 PowerShell 7 会话内时可用 `& tools/<script>.ps1 ...`。
+- 审核文本/控制字符检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
+- docs/CSV/Unity asset 数据链路检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
 - 暂存前行尾空白检查：在同一 PowerShell 会话中对本轮预期路径运行 `& tools/check-pending-whitespace.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>'`；该检查必须在 `git add` 前执行，以覆盖 Git 尚未跟踪的新文件。暂存后仍必须运行 `git diff --cached --check` 作为第二道防线；不得用 Markdown 双空格行尾制造换行。
 
 ## 定期总结规则

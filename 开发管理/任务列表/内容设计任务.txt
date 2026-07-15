@@ -34,7 +34,7 @@
 
 ## 默认验证与边界
 
-- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
-- 涉及 CSV 或 asset 时加 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；涉及数值强度时运行 BattleSim。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
+- 涉及 CSV 或 asset 时加 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；涉及数值强度时运行 BattleSim。
 - 非规则描述类完成品每个单独一个文件；DeepSeek 批量内容只能标 `⚠️ 已修改/未审核` 并在 `AI合作沟通.txt` 交接。
 - 内容冻结期间，自动工作流不得把本文件中的任务补入 `当前任务队列.txt`；TQ-071 不是普通 `1` 任务。

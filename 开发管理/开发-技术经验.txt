@@ -9,7 +9,7 @@
 
 - **编码已统一**：项目所有源文件（.cs, .txt, .md）已统一为 UTF-8 with BOM。直接用 ReadAllText/WriteAllText 即可，无需特殊编码处理。obj/ 下构建产物为自动生成，忽略。
 - **PowerShell 批量写 txt**：多行中文内容用 `@'...'@ | Out-File -Encoding UTF8` 写入，`@'` 内可含单引号无需转义。注意结尾 `'@` 必须顶格。
-- **PowerShell 7 环境（✅ 已审核）**：已通过 winget 安装 PowerShell 7.6.2，入口为 `pwsh`（Windows PowerShell 下解析到 `C:\Users\WINDOWS\AppData\Local\Microsoft\WindowsApps\pwsh.exe`）。系统自带 Windows PowerShell 5.1 未被替换；需要 `Format-Hex -Count` 等新版参数时使用 `pwsh`。
+- **PowerShell 7 唯一受支持运行时（✅ 已审核）**：项目 PowerShell 脚本只支持 PowerShell 7；当前已通过 winget 安装 7.6.2，入口为 `pwsh`。系统自带 Windows PowerShell 5.1 未被替换，但项目不得调用它。所有独立进程命令统一使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。
 - **注意**：部分历史 .cs 文件可能仍为 GBK 编码（如曾被旧工具编辑过），读写前需检测编码或先转换为 UTF-8 with BOM。
 
 ## 编辑原则
@@ -94,10 +94,11 @@ MonoImporter:
   defaultReferences: []
   executionOrder: 0
   icon: {instanceID: 0}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:␠
+  assetBundleName:␠
+  assetBundleVariant:␠
 ```
+> 模板中的 `␠` 是可见占位符；实际写入 `.meta` 时必须将它替换为一个真实 U+0020 空格，不得把该符号本身写入文件。
 - 写入方式：`[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))`（无 BOM，LF 换行）。不要用 PowerShell 的 `Set-Content` 写 `.meta`——它对字符串列表的处理不可靠。
 
 ### .meta 尾随空格是必需的

@@ -27,10 +27,10 @@
 
 ## 默认验证
 
-- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
-- `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
 - `dotnet build src/Assembly-CSharp.csproj`
-- `powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig,src/Assets/Scripts`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig,src/Assets/Scripts`
 - `git diff --check`
 
 ## 边界

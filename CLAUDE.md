@@ -114,8 +114,9 @@ Claude CLI 的实际身份、产物修改方和可领取任务主责必须分别
 
 ## 高频检查脚本（✅ 已审核）
 
-- 审核文本/控制字符检查：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
-- docs/CSV/Unity asset 数据链路检查：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+- 项目 PowerShell 脚本唯一支持 PowerShell 7；所有独立进程命令必须使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。禁止调用 `powershell`、`powershell.exe` 或 Windows PowerShell 5.1。已在 PowerShell 7 会话内时可用 `& tools/<script>.ps1 ...`。
+- 审核文本/控制字符检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
+- docs/CSV/Unity asset 数据链路检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
 
 ## 定期总结规则（✅ 已审核；依据：b74dc0d）
 

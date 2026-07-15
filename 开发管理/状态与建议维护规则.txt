@@ -45,7 +45,7 @@ DeepSeek worker backoff 生效期间，从 runnable 候选和库存中排除 Dee
 
 ## 检查脚本入口
 
-- 文本/审核材料机械检查：`powershell -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
-- docs/CSV/Unity asset 数据链路检查：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
-- 严格缺失 asset 检查：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
+- 文本/审核材料机械检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
+- docs/CSV/Unity asset 数据链路检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+- 严格缺失 asset 检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
 - 资产版本边界检查：仅当变更涉及 `.gitattributes`、`src/Assets/Art/` 或 `docs/资源管理/美术资源登记册.md` 时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`。

@@ -33,14 +33,14 @@ try {
   $fixture = New-Fixture
   $fixtures.Add($fixture) | Out-Null
   Set-Attributes $fixture "src/Assets/Art/**/*.png filter=lfs diff=lfs merge=lfs -text`n"
-  $coveredOutput = @(& powershell -ExecutionPolicy Bypass -File $checker -ProjectRoot $fixture 2>&1)
+  $coveredOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $checker -ProjectRoot $fixture 2>&1)
   Assert-ExitCode 0 $LASTEXITCODE 'LFS-covered binary fixture'
   if ($coveredOutput -match 'fatal:') { throw 'LFS-covered binary fixture emitted unexpected Git diagnostics.' }
 
   $fixture = New-Fixture
   $fixtures.Add($fixture) | Out-Null
   Set-Attributes $fixture "src/Assets/Art/**/*.wav filter=lfs diff=lfs merge=lfs -text`n"
-  & powershell -ExecutionPolicy Bypass -File $checker -ProjectRoot $fixture 2>$null
+  & pwsh -NoProfile -ExecutionPolicy Bypass -File $checker -ProjectRoot $fixture 2>$null
   Assert-ExitCode 1 $LASTEXITCODE 'untracked binary fixture'
 
   $fixture = New-Fixture
@@ -49,7 +49,7 @@ try {
 src/Assets/Art/**/*.png filter=lfs diff=lfs merge=lfs -text
 src/Assets/Scenes/**/*.unity filter=lfs diff=lfs merge=lfs -text
 "@
-  & powershell -ExecutionPolicy Bypass -File $checker -ProjectRoot $fixture 2>$null
+  & pwsh -NoProfile -ExecutionPolicy Bypass -File $checker -ProjectRoot $fixture 2>$null
   Assert-ExitCode 1 $LASTEXITCODE 'Unity text asset fixture'
 }
 finally {

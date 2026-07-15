@@ -22,7 +22,7 @@
 - 当前状态：待处理；依赖：TQ-056 已由 Codex 完成并验证。
 - 主责：Codex / ChatGPT5.5。
 - 范围：对齐术法 docs/CSV/asset 数量，处理 `realm_lianshen` 缺失语言键与 `realm_lianxu` 删除后仍激活的数据，并吸收 TQ-040 的字段完整性复查；不得扩展内容或设定语义。
-- 验证：`powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 仅在剩余问题均有精确批准豁免或已清理时返回 0；`git diff --check`。
+- 验证：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 仅在剩余问题均有精确批准豁免或已清理时返回 0；`git diff --check`。
 - 完成条件：TQ-056 所列历史数据矛盾已清理或被精确批准豁免，并有 Codex / ChatGPT5.5 的直接验证证据。
 
 ### TQ-059 · D-TRUST-04 接通境界、元素和阵营限制
@@ -31,7 +31,7 @@
 - 当前状态：阻塞（TQ-057）；依赖：TQ-057。
 - 主责：Codex / gpt-5.5。
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
-- 验证：每个 runtime gate 具有允许与拒绝样例；运行 `powershell -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
+- 验证：每个 runtime gate 具有允许与拒绝样例；运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
 - 完成条件：三个字段都有唯一、可观察的运行时或显式元数据口径，G3 才可进入出口检查。
 
 ### TQ-069 · S-STATE-02 最小任务、背包和 NPC 状态快照

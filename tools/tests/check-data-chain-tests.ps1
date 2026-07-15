@@ -41,7 +41,7 @@ function New-ValidFixture {
 }
 
 function Invoke-Checker {
-    $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $checkerPath -ProjectRoot $fixtureRoot 2>&1 | Out-String
+    $output = & pwsh -NoProfile -ExecutionPolicy Bypass -File $checkerPath -ProjectRoot $fixtureRoot 2>&1 | Out-String
     return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = $output }
 }
 
