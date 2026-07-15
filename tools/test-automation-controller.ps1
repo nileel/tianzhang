@@ -814,6 +814,194 @@ try {
     throw "retry exhaustion created a fourth attempt: $($exhaustedRetry.Output)"
   }
 
+  $incidentRepo = Join-Path $sandbox 'decision-incident-repo'
+  $incidentStatePath = Join-Path $sandbox 'decision-incident-state.json'
+  $incidentRunRoot = Join-Path $sandbox 'decision-incident-runs'
+  New-Item -ItemType Directory -Path $incidentRepo, $incidentRunRoot -Force | Out-Null
+  Invoke-GitAt $incidentRepo @('init') | Out-Null
+  Invoke-GitAt $incidentRepo @('config', 'user.name', 'Decision Incident Test') | Out-Null
+  Invoke-GitAt $incidentRepo @('config', 'user.email', 'decision-incident@example.invalid') | Out-Null
+  Invoke-GitAt $incidentRepo @('config', 'core.quotePath', 'false') | Out-Null
+  Write-Utf8 (Join-Path $incidentRepo 'task.txt') "TQ-057 base`n"
+  Write-Utf8Bom (Join-Path $incidentRepo '开发管理\自动工作流状态.txt') @"
+# 自动工作流状态（事故时间线测试）
+
+## 当前待决策
+
+当前无待决策项。
+
+## 最近有效结果
+
+| 字段 | 值 |
+|------|----|
+| 测试 | 保持不变 |
+"@
+  Write-QueueFixture $incidentRepo @(
+    '| TQ-057 | P0 | Codex / ChatGPT5.5 | G3 数据 | 待处理 | D-TRUST-02：清理现存数据矛盾 |'
+  )
+  Invoke-GitAt $incidentRepo @('add', '--', 'task.txt', '开发管理/当前任务队列.txt', '开发管理/自动工作流状态.txt') | Out-Null
+  Invoke-GitAt $incidentRepo @('commit', '-m', 'test: incident base') | Out-Null
+
+  $incidentCreateRunId = '61616161-6161-4161-8161-616161616161'
+  Assert-Code (Invoke-Controller @(
+    'Start','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-ActualModel','gpt-test','-Now','2026-07-15T05:00:00Z'
+  )) 0 'incident first decision start'
+  Assert-Code (Invoke-Controller @(
+    'InspectCandidate','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-TaskId','TQ-057'
+  )) 0 'incident first decision inspect'
+  Assert-Code (Invoke-Controller @(
+    'RegisterCandidate','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-ExpectedPaths','开发管理/自动工作流状态.txt'
+  )) 0 'incident first decision register'
+  Assert-Code (Invoke-Controller @(
+    'BeginMutation','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-Now','2026-07-15T05:01:00Z'
+  )) 0 'incident first decision begin'
+  Assert-Code (Invoke-Controller @(
+    'PrepareDecision','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId
+  )) 0 'incident first decision prepare'
+  Assert-Code (Invoke-Controller @(
+    'CreateDecision','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-TaskSummary','TQ-057 事故选择','-DecisionQuestion','采用哪个修复方案？',
+    '-DecisionOptions','A=保留旧状态|B=修复决策链','-RecommendedOption','B','-ImpactSummary','影响 TQ-057 后续实现',
+    '-Now','2026-07-15T05:02:00Z'
+  )) 0 'incident first decision create'
+  $incidentFirstDecision = (Invoke-State @('Show','-StatePath',$incidentStatePath)).pendingDecision
+  Assert-Code (Invoke-Controller @(
+    'PrepareDecisionNotification','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-PrivateConfigPath',$privateConfigPath,'-Now','2026-07-15T05:03:00Z'
+  )) 0 'incident wrong target prepare'
+  $incidentWrongTarget = Invoke-Controller @(
+    'MarkDecisionSubmitted','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-ProviderMessageId','incident-wrong-message','-ObservedRecipient','wrong@example.invalid',
+    '-Now','2026-07-15T05:04:00Z'
+  )
+  Assert-Code $incidentWrongTarget 0 'incident wrong target submitted'
+  $incidentMisaddressedState = Invoke-State @('Show','-StatePath',$incidentStatePath)
+  $incidentFirstAttempts = @($incidentMisaddressedState.pendingDecision.notificationAttempts) | ConvertTo-Json -Depth 5 -Compress
+  if ($incidentMisaddressedState.pendingDecision.status -ne 'MISADDRESSED' -or
+      @($incidentMisaddressedState.pendingDecision.notificationAttempts).Count -ne 1 -or
+      $incidentWrongTarget.Output -match 'notified|received|通知成功|已收到') {
+    throw "incident wrong Sent target was not recorded exactly: $($incidentWrongTarget.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'Finish','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentCreateRunId,'-CommitMessage','test: publish incident decision','-Now','2026-07-15T05:05:00Z'
+  )) 0 'incident first decision publish'
+
+  $incidentResolveRunId = '62626262-6262-4262-8262-626262626262'
+  $incidentPendingStart = Invoke-Controller @(
+    'Start','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-ActualModel','gpt-test','-Now','2026-07-15T06:00:00Z'
+  )
+  Assert-Code $incidentPendingStart 0 'incident pending decision start'
+  $incidentStateBytesBeforeInvalid = [IO.File]::ReadAllBytes($incidentStatePath)
+  $incidentStatusPath = Join-Path $incidentRepo '开发管理\自动工作流状态.txt'
+  $incidentStatusBytesBeforeInvalid = [IO.File]::ReadAllBytes($incidentStatusPath)
+  $incidentNoReceipt = Invoke-Controller @(
+    'ResolveDecisionManual','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-ReplyText','用户报告没有收到邮件','-CurrentThreadId','019f63c5-f73c-70a0-9773-5592a3e03194',
+    '-CurrentTurnId','turn-incident-report','-ManualOverride','-Now','2026-07-15T06:01:00Z'
+  )
+  if ($incidentNoReceipt.Code -ne 15 -or
+      -not [Linq.Enumerable]::SequenceEqual([byte[]]$incidentStateBytesBeforeInvalid, [byte[]][IO.File]::ReadAllBytes($incidentStatePath)) -or
+      -not [Linq.Enumerable]::SequenceEqual([byte[]]$incidentStatusBytesBeforeInvalid, [byte[]][IO.File]::ReadAllBytes($incidentStatusPath))) {
+    throw "incident no-receipt report mutated state or status: $($incidentNoReceipt.Output)"
+  }
+  $incidentManual = Invoke-Controller @(
+    'ResolveDecisionManual','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-ReplyText',"$($incidentFirstDecision.decisionId)：选择 B",
+    '-CurrentThreadId','019f63c5-f73c-70a0-9773-5592a3e03194','-CurrentTurnId','turn-incident-approval',
+    '-ManualOverride','-Now','2026-07-15T06:02:00Z'
+  )
+  Assert-Code $incidentManual 0 'incident correct manual B resolution'
+  $incidentAfterManual = Invoke-State @('Show','-StatePath',$incidentStatePath)
+  $incidentFirstResolved = $incidentAfterManual.decisionFlow.resolvedDecisions[0]
+  if ($incidentFirstResolved.resolution.optionKey -ne 'B' -or $incidentFirstResolved.resolution.source -ne 'manual' -or
+      (@($incidentFirstResolved.notificationAttempts) | ConvertTo-Json -Depth 5 -Compress) -cne $incidentFirstAttempts -or
+      @($incidentFirstResolved.notificationAttempts).Count -ne 1) {
+    throw 'incident manual resolution changed the append-only notification attempt history'
+  }
+
+  $incidentReinspect = Invoke-Controller @(
+    'InspectCandidate','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-TaskId','TQ-057'
+  )
+  Assert-Code $incidentReinspect 0 'incident same TQ-057 reinspection'
+  $incidentReinspectJson = $incidentReinspect.Output | ConvertFrom-Json
+  if ($incidentReinspectJson.taskId -ne 'TQ-057' -or (Invoke-State @('Show','-StatePath',$incidentStatePath)).decisionFlow.taskId -ne 'TQ-057') {
+    throw "incident reinspection left the original TQ-057 flow: $($incidentReinspect.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'RegisterCandidate','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-ExpectedPaths','开发管理/自动工作流状态.txt'
+  )) 0 'incident second decision register'
+  Assert-Code (Invoke-Controller @(
+    'BeginMutation','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-Now','2026-07-15T06:03:00Z'
+  )) 0 'incident second decision begin'
+  Assert-Code (Invoke-Controller @(
+    'PrepareDecision','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId
+  )) 0 'incident second decision prepare'
+  Assert-Code (Invoke-Controller @(
+    'CreateDecision','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-TaskSummary','TQ-057 第二选择','-DecisionQuestion','继续采用哪个实现？',
+    '-DecisionOptions','A=路径甲|B=路径乙','-RecommendedOption','B','-ImpactSummary','影响同一任务的第二阶段',
+    '-Now','2026-07-15T06:04:00Z'
+  )) 0 'incident second decision create'
+  $incidentSecondDecision = (Invoke-State @('Show','-StatePath',$incidentStatePath)).pendingDecision
+  Assert-Code (Invoke-Controller @(
+    'Finish','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentResolveRunId,'-CommitMessage','test: publish incident second decision','-Now','2026-07-15T06:05:00Z'
+  )) 0 'incident second decision publish'
+
+  $incidentFailRunId = '63636363-6363-4363-8363-636363636363'
+  $incidentBeforeCleanFailure = Invoke-Controller @(
+    'Start','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentFailRunId,'-ActualModel','gpt-test','-Now','2026-07-15T07:00:00Z'
+  )
+  Assert-Code $incidentBeforeCleanFailure 0 'incident pre-failure start'
+  $incidentCleanFailure = Invoke-Controller @(
+    'Fail','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentFailRunId,'-ErrorMessage','incident stopped before business file changes'
+  )
+  Assert-Code $incidentCleanFailure 0 'incident clean failure close'
+  $incidentCleanFailureJson = $incidentCleanFailure.Output | ConvertFrom-Json
+  $incidentClosedState = Invoke-State @('Show','-StatePath',$incidentStatePath)
+  if ($incidentCleanFailureJson.failurePolicy -ne 'close_clean' -or $incidentClosedState.state -ne 'IDLE' -or
+      $incidentClosedState.pendingDecision.decisionId -ne $incidentSecondDecision.decisionId -or
+      $incidentCleanFailure.Output -match 'recovery_state_incomplete') {
+    throw "incident clean failure did not close IDLE with only the second decision pending: $($incidentCleanFailure.Output)"
+  }
+
+  $incidentNextRunId = '64646464-6464-4464-8464-646464646464'
+  $incidentNextStart = Invoke-Controller @(
+    'Start','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentNextRunId,'-ActualModel','gpt-test','-Now','2026-07-15T08:00:00Z'
+  )
+  Assert-Code $incidentNextStart 0 'incident next start'
+  $incidentNextStartJson = $incidentNextStart.Output | ConvertFrom-Json
+  if ($incidentNextStartJson.action -ne 'inspect_pending_decision' -or
+      $incidentNextStartJson.pendingDecision.decisionId -ne $incidentSecondDecision.decisionId -or
+      $incidentNextStart.Output -match [regex]::Escape($incidentFirstDecision.decisionId) -or
+      $incidentNextStart.Output -match 'recovery_state_incomplete') {
+    throw "incident next Start did not present only the second pending decision: $($incidentNextStart.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'CompleteNoChange','-RepositoryRoot',$incidentRepo,'-StatePath',$incidentStatePath,'-RunRoot',$incidentRunRoot,
+    '-RunId',$incidentNextRunId,'-Now','2026-07-15T08:01:00Z'
+  )) 0 'incident final clean close'
+  $incidentFinalState = Invoke-State @('Show','-StatePath',$incidentStatePath)
+  if ($incidentFinalState.state -ne 'IDLE' -or $incidentFinalState.pendingDecision.decisionId -ne $incidentSecondDecision.decisionId -or
+      $incidentFinalState.decisionFlow.resolvedDecisions[0].resolution.source -ne 'manual' -or
+      (@($incidentFinalState.decisionFlow.resolvedDecisions[0].notificationAttempts) | ConvertTo-Json -Depth 5 -Compress) -cne $incidentFirstAttempts) {
+    throw 'incident timeline did not close IDLE with the original manual evidence and append-only attempts intact'
+  }
+
   $workerStatePath = Join-Path $sandbox 'worker-state.json'
   $workerRunRoot = Join-Path $sandbox 'worker-runs'
   $workerRunId = '77777777-7777-4777-8777-777777777777'
