@@ -209,7 +209,9 @@ if (-not (Test-Path -LiteralPath $controllerPromptSource -PathType Leaf)) {
   $findings.Add('missing versioned controller prompt source')
 } elseif ($null -ne $deployedPrompt) {
   $sourcePrompt = [IO.File]::ReadAllText($controllerPromptSource).TrimEnd("`r", "`n")
-  if ($sourcePrompt -cne $deployedPrompt) { $findings.Add('deployed controller prompt does not match the versioned source') }
+  $normalizedSourcePrompt = $sourcePrompt -replace "`r`n", "`n" -replace "`r", "`n"
+  $normalizedDeployedPrompt = $deployedPrompt.TrimEnd("`r", "`n") -replace "`r`n", "`n" -replace "`r", "`n"
+  if ($normalizedSourcePrompt -cne $normalizedDeployedPrompt) { $findings.Add('deployed controller prompt does not match the versioned source') }
   if ($sourcePrompt.Length -gt 3000) { $findings.Add("controller prompt exceeds 3000 characters: $($sourcePrompt.Length)") }
   $numberedSteps = [regex]::Matches($sourcePrompt, '(?m)^\s*\d+\.\s').Count
   if ($numberedSteps -gt 10) { $findings.Add("controller prompt exceeds 10 numbered steps: $numberedSteps") }
