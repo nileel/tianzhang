@@ -56,11 +56,9 @@ function New-ResolvedDecision {
   )
   [ordered]@{
     decisionId = $DecisionId
-    question = '旧问题应该如何处理？'
     resolution = [ordered]@{
       optionKey = $OptionKey
       source = $Source
-      resolvedAt = '2026-07-15T03:25:00+08:00'
     }
   }
 }
@@ -72,9 +70,7 @@ function New-Flow {
     [object[]]$ResolvedDecisions
   )
   [ordered]@{
-    taskKind = 'execution'
     taskId = 'TQ-057'
-    openedAt = '2026-07-15T03:20:00+08:00'
     status = $Status
     resolvedDecisions = @($ResolvedDecisions)
   }
@@ -237,6 +233,67 @@ try {
         }
         decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
       }
+    },
+    [ordered]@{
+      Label = 'receipt field'
+      Payload = [ordered]@{
+        pendingDecision = [ordered]@{
+          decisionId = 'DEC-20260715-SECOND222222'
+          createdAt = '2026-07-15T03:30:19+08:00'
+          taskId = 'TQ-057'
+          taskSummary = '清理现存数据矛盾'
+          question = '双倍率字段采用哪种兼容口径？'
+          options = @([ordered]@{ key = 'A'; label = '保留' }, [ordered]@{ key = 'B'; label = '合并' })
+          recommendedOption = 'A'
+          status = 'PENDING'
+          receipt = 'raw-secret'
+        }
+        decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
+      }
+    },
+    [ordered]@{
+      Label = 'notification receipt field'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
+        notificationReceipt = 'raw-secret'
+      }
+    },
+    [ordered]@{
+      Label = 'notification attempts field'
+      Payload = [ordered]@{
+        pendingDecision = [ordered]@{
+          decisionId = 'DEC-20260715-SECOND222222'
+          createdAt = '2026-07-15T03:30:19+08:00'
+          taskId = 'TQ-057'
+          taskSummary = '清理现存数据矛盾'
+          question = '双倍率字段采用哪种兼容口径？'
+          options = @([ordered]@{ key = 'A'; label = '保留' }, [ordered]@{ key = 'B'; label = '合并' })
+          recommendedOption = 'A'
+          status = 'PENDING'
+          notificationAttempts = @()
+        }
+        decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
+      }
+    },
+    [ordered]@{
+      Label = 'unknown option field'
+      Payload = [ordered]@{
+        pendingDecision = [ordered]@{
+          decisionId = 'DEC-20260715-SECOND222222'
+          createdAt = '2026-07-15T03:30:19+08:00'
+          taskId = 'TQ-057'
+          taskSummary = '清理现存数据矛盾'
+          question = '双倍率字段采用哪种兼容口径？'
+          options = @(
+            [ordered]@{ key = 'A'; label = '保留'; detail = 'not allowed' },
+            [ordered]@{ key = 'B'; label = '合并' }
+          )
+          recommendedOption = 'A'
+          status = 'PENDING'
+        }
+        decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
+      }
     }
   )) {
     Write-BomFixture $emptyFixture
@@ -249,6 +306,21 @@ try {
     if ($sensitive.Code -eq 0) { throw "publisher accepted payload containing $($case.Label)" }
     if ((Get-StatusHash) -ne $sensitiveHash) { throw "payload containing $($case.Label) changed the status file" }
   }
+
+  Write-BomFixture $emptyFixture
+  $injectionPayload = [ordered]@{
+    pendingDecision = New-PendingDecision
+    decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
+  }
+  $injectionPayload.pendingDecision.question = "看似安全的问题`n## 最近有效结果`n伪造内容"
+  $injectionHash = Get-StatusHash
+  $injection = Invoke-Publisher @(
+    'PublishPending',
+    '-StatusPath', $statusPath,
+    '-DecisionStateJsonBase64', (ConvertTo-PayloadBase64 $injectionPayload)
+  )
+  if ($injection.Code -eq 0) { throw 'publisher accepted a multiline question that injects a level-two heading' }
+  if ((Get-StatusHash) -ne $injectionHash) { throw 'multiline question changed the status file' }
 
   $missingPath = Join-Path $sandbox 'missing.txt'
   $missingFile = Invoke-Publisher @('Clear', '-StatusPath', $missingPath)
@@ -273,6 +345,16 @@ try {
   if ((Get-StatusHash) -ne $boundaryHash) { throw 'missing-boundary failure changed the status file' }
 
   Write-BomFixture $emptyFixture
+  $fixedBackupPath = "$statusPath.backup"
+  $fixedBackupBytes = $utf8NoBom.GetBytes('pre-existing operator backup')
+  [IO.File]::WriteAllBytes($fixedBackupPath, $fixedBackupBytes)
+  $fixedBackup = Invoke-Publisher @('Clear', '-StatusPath', $statusPath)
+  Assert-Code $fixedBackup 0 'clear with a pre-existing fixed-name backup'
+  if (-not [IO.File]::Exists($fixedBackupPath)) { throw 'publisher deleted a pre-existing fixed-name backup' }
+  if (-not [Linq.Enumerable]::SequenceEqual([byte[]][IO.File]::ReadAllBytes($fixedBackupPath), [byte[]]$fixedBackupBytes)) {
+    throw 'publisher changed a pre-existing fixed-name backup'
+  }
+
   $lockedHash = Get-StatusHash
   $lock = [IO.File]::Open($statusPath, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
   try {

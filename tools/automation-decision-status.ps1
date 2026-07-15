@@ -14,7 +14,6 @@ $ErrorActionPreference = 'Stop'
 $script:ExitInvalidArguments = 15
 $script:Heading = '## 当前待决策'
 $script:EmailPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
-$script:ForbiddenPropertyPattern = '(?i)(email|evidence|provider|message)'
 $script:NotificationLabels = @{
   PENDING = '尚未尝试发送'
   PROVIDER_ACCEPTED = '发送请求已被提供方接受（不代表已收件）'
@@ -28,6 +27,7 @@ function Require-Text {
   if ($Value -isnot [string] -or [string]::IsNullOrWhiteSpace([string]$Value)) {
     throw "$Name is required"
   }
+  if ([string]$Value -match '[\r\n]') { throw "$Name must be a single line" }
 }
 
 function Test-HasProperty {
@@ -35,30 +35,13 @@ function Test-HasProperty {
   $null -ne $Value -and $null -ne $Value.PSObject.Properties[$Name]
 }
 
-function Assert-NoSensitiveProperties {
-  param([object]$Value, [string]$Path = 'payload')
-  if ($null -eq $Value -or $Value -is [string] -or $Value -is [ValueType]) { return }
-
-  if ($Value -is [Collections.IDictionary]) {
-    foreach ($key in $Value.Keys) {
-      if ([string]$key -match $script:ForbiddenPropertyPattern) { throw "$Path contains forbidden field: $key" }
-      Assert-NoSensitiveProperties $Value[$key] "$Path.$key"
-    }
-    return
-  }
-
-  if ($Value -is [Collections.IEnumerable] -and $Value -isnot [pscustomobject]) {
-    $index = 0
-    foreach ($entry in $Value) {
-      Assert-NoSensitiveProperties $entry "$Path[$index]"
-      $index++
-    }
-    return
-  }
-
+function Assert-AllowedProperties {
+  param([object]$Value, [string[]]$Allowed, [string]$Path)
+  if ($null -eq $Value) { throw "$Path is required" }
   foreach ($property in $Value.PSObject.Properties) {
-    if ($property.Name -match $script:ForbiddenPropertyPattern) { throw "$Path contains forbidden field: $($property.Name)" }
-    Assert-NoSensitiveProperties $property.Value "$Path.$($property.Name)"
+    if ($Allowed -cnotcontains [string]$property.Name) {
+      throw "$Path contains unsupported field: $($property.Name)"
+    }
   }
 }
 
@@ -74,8 +57,10 @@ function Assert-ResolvedDecisions {
   $resolved = @($DecisionFlow.resolvedDecisions)
   foreach ($entry in $resolved) {
     if ($null -eq $entry) { throw 'decisionFlow.resolvedDecisions cannot contain null' }
+    Assert-AllowedProperties $entry @('decisionId','resolution') 'resolvedDecision'
     Assert-DecisionId $entry.decisionId 'resolvedDecision.decisionId'
     if ($null -eq $entry.resolution) { throw 'resolvedDecision.resolution is required' }
+    Assert-AllowedProperties $entry.resolution @('optionKey','source') 'resolvedDecision.resolution'
     Require-Text $entry.resolution.optionKey 'resolvedDecision.resolution.optionKey'
     Require-Text $entry.resolution.source 'resolvedDecision.resolution.source'
     if ([string]$entry.resolution.source -notin @('email','manual')) { throw 'resolvedDecision.resolution.source is not supported' }
@@ -86,6 +71,7 @@ function Assert-ResolvedDecisions {
 function Assert-DecisionFlow {
   param($DecisionFlow)
   if ($null -eq $DecisionFlow) { throw 'decisionFlow is required' }
+  Assert-AllowedProperties $DecisionFlow @('taskId','status','resolvedDecisions') 'decisionFlow'
   Require-Text $DecisionFlow.taskId 'decisionFlow.taskId'
   Require-Text $DecisionFlow.status 'decisionFlow.status'
   if ([string]$DecisionFlow.status -notin @('AWAITING_DECISION','IMPLEMENTATION_PENDING')) {
@@ -97,6 +83,9 @@ function Assert-DecisionFlow {
 function Assert-PendingDecision {
   param($PendingDecision)
   if ($null -eq $PendingDecision) { throw 'pendingDecision is required for PublishPending' }
+  Assert-AllowedProperties $PendingDecision @(
+    'decisionId','createdAt','taskId','taskSummary','question','options','recommendedOption','status'
+  ) 'pendingDecision'
   foreach ($name in @('createdAt','taskId','taskSummary','question','recommendedOption','status')) {
     Require-Text $PendingDecision.$name "pendingDecision.$name"
   }
@@ -108,6 +97,7 @@ function Assert-PendingDecision {
 
   $keys = [Collections.Generic.List[string]]::new()
   foreach ($option in @($PendingDecision.options)) {
+    Assert-AllowedProperties $option @('key','label') 'pendingDecision.option'
     Require-Text $option.key 'pendingDecision.option.key'
     Require-Text $option.label 'pendingDecision.option.label'
     $keys.Add([string]$option.key)
@@ -137,7 +127,7 @@ function ConvertFrom-DecisionStateBase64 {
     throw 'payload must contain pendingDecision and decisionFlow'
   }
   if ($json -match $script:EmailPattern) { throw 'payload contains an email address' }
-  Assert-NoSensitiveProperties $payload
+  Assert-AllowedProperties $payload @('pendingDecision','decisionFlow') 'payload'
   Assert-DecisionFlow $payload.decisionFlow
   $payload
 }
@@ -223,15 +213,25 @@ function Get-ImplementationPendingBody {
 function Write-Atomically {
   param([string]$Path, [string]$Content, [bool]$WithBom)
   $directory = Split-Path -Parent $Path
-  $temporary = Join-Path $directory ('.' + [IO.Path]::GetFileName($Path) + '.' + [guid]::NewGuid().ToString('N') + '.tmp')
-  $backup = "$Path.backup"
+  $operationId = [guid]::NewGuid().ToString('N')
+  $temporary = Join-Path $directory ('.' + [IO.Path]::GetFileName($Path) + '.' + $operationId + '.tmp')
+  $backup = Join-Path $directory ('.' + [IO.Path]::GetFileName($Path) + '.' + $operationId + '.backup')
+  $replaceSucceeded = $false
   try {
     [IO.File]::WriteAllText($temporary, $Content, [Text.UTF8Encoding]::new($WithBom))
-    Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue
     [IO.File]::Replace($temporary, $Path, $backup, $true)
+    $replaceSucceeded = $true
+    Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue
+  } catch {
+    if (-not [IO.File]::Exists($Path) -and [IO.File]::Exists($backup)) {
+      try { [IO.File]::Move($backup, $Path) } catch { }
+    }
+    throw
   } finally {
     if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
-    if ([IO.File]::Exists($backup)) { [IO.File]::Delete($backup) }
+    if ($replaceSucceeded -and [IO.File]::Exists($backup)) {
+      Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue
+    }
   }
 }
 
