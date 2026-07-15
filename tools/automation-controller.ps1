@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply')]
+  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','PrepareDecision','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply')]
   [string]$Action,
   [string]$RepositoryRoot = (Get-Location).Path,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
@@ -27,6 +27,7 @@ param(
   [string]$ImpactSummary,
   [string]$ReplyText,
   [string]$NotificationError,
+  [string]$NotificationReceipt,
   [int]$LeaseMinutes = 180,
   [string]$Now
 )
@@ -36,6 +37,8 @@ $script:ProtocolVersion = 1
 $script:StateTool = Join-Path $PSScriptRoot 'automation-controller-state.ps1'
 $script:GuardTool = Join-Path $PSScriptRoot 'automation-workspace-guard.ps1'
 $script:FinalizerTool = Join-Path $PSScriptRoot 'automation-finalize-commit.ps1'
+$script:DecisionStatusTool = Join-Path $PSScriptRoot 'automation-decision-status.ps1'
+$script:DecisionStatusRelativePath = '开发管理/自动工作流状态.txt'
 $script:ExecutionQueueRelativePath = '开发管理/当前任务队列.txt'
 $script:ExecutionCandidateResolver = 'current_task_queue_execution'
 $script:TaskKindMapping = [ordered]@{
@@ -121,6 +124,42 @@ function Invoke-StateTool {
 function Invoke-GuardTool {
   param([string[]]$Arguments)
   Invoke-ChildPowerShell $script:GuardTool (@($Arguments) + @('-RepositoryRoot', $RepositoryRoot))
+}
+
+function Get-FileSha256Lower {
+  param([string]$Path)
+
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "File does not exist: $Path" }
+  (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+}
+
+function Get-DecisionStatusPath {
+  Join-Path $RepositoryRoot $script:DecisionStatusRelativePath
+}
+
+function Invoke-DecisionStatusPublisher {
+  param(
+    [ValidateSet('Publish', 'Clear')]
+    [string]$PublisherAction,
+    [AllowNull()][object]$Decision
+  )
+
+  $arguments = @($PublisherAction, '-StatusPath', (Get-DecisionStatusPath))
+  if ($PublisherAction -eq 'Publish') {
+    if ($null -eq $Decision) { throw 'Decision is required for Publish.' }
+    $json = $Decision | ConvertTo-Json -Depth 8 -Compress
+    $base64 = [Convert]::ToBase64String([Text.UTF8Encoding]::new($false).GetBytes($json))
+    $arguments += @('-DecisionJsonBase64', $base64)
+  }
+  Invoke-ChildPowerShell $script:DecisionStatusTool $arguments
+}
+
+function Get-DecisionCommandContract {
+  [ordered]@{
+    requiredParameters = @('TaskSummary', 'DecisionQuestion', 'DecisionOptions', 'RecommendedOption', 'ImpactSummary')
+    optionFormat = 'A=label|B=label'
+    template = 'CreateDecision -RepositoryRoot $RepositoryRoot -RunId $runId -TaskSummary $summary -DecisionQuestion $question -DecisionOptions ''A=label|B=label'' -RecommendedOption A -ImpactSummary $impact'
+  }
 }
 
 function Convert-ChildJson {
@@ -551,6 +590,8 @@ try {
           workType = $workType
           taskId = [string]$acquiredState.taskId
           executor = [string]$acquiredState.taskExecutor
+          decisionContextHash = $null
+          resumeTaskId = $null
         }
         Write-JsonAtomically ([pscustomobject]$session) (Get-SessionPath)
 
@@ -603,6 +644,8 @@ try {
         taskId = $null
         executor = $null
         candidateResolver = $script:ExecutionCandidateResolver
+        decisionContextHash = $null
+        resumeTaskId = $null
       }
       Write-JsonAtomically ([pscustomobject]$session) (Get-SessionPath)
 
@@ -619,7 +662,9 @@ try {
       if ($null -ne $state.pendingDecision) {
         $result.action = 'inspect_pending_decision'
         $result.branchKind = 'pending_decision'
-        $result.requiredSources = @('开发管理/自动工作流状态.txt')
+        $result.requiredSources = @($script:DecisionStatusRelativePath)
+        $result.pendingDecision = $state.pendingDecision
+        $result.nextCommand = 'ResolveDecisionReply'
       }
       Write-ProtocolResult $result
     }
@@ -630,12 +675,21 @@ try {
       $result.actions = @(
         'Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish',
         'CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure',
-        'CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply'
+        'PrepareDecision','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecisionReply'
       )
       $result.commandTemplates = [ordered]@{
         Start = "Start -RepositoryRoot 'D:\天章游戏开发' -RunId `$runId -ActualModel `$actualModel"
         InspectCandidate = 'InspectCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -TaskId $taskId'
         RegisterCandidate = 'RegisterCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -ExpectedPaths $expectedPaths'
+        PrepareDecision = 'PrepareDecision -RepositoryRoot $RepositoryRoot -RunId $runId'
+        CreateDecision = (Get-DecisionCommandContract).template
+        MarkDecisionNotified = 'MarkDecisionNotified -RepositoryRoot $RepositoryRoot -RunId $runId -NotificationReceipt $providerMessageId'
+        MarkDecisionDeliveryFailed = 'MarkDecisionDeliveryFailed -RepositoryRoot $RepositoryRoot -RunId $runId -NotificationError $errorSummary'
+        ResolveDecisionReply = 'ResolveDecisionReply -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'''
+      }
+      $result.decisionParameters = [ordered]@{
+        required = (Get-DecisionCommandContract).requiredParameters
+        optionFormat = (Get-DecisionCommandContract).optionFormat
       }
       $result.candidateResolvers = [ordered]@{
         execution = [ordered]@{
@@ -667,6 +721,14 @@ try {
       if ([string]::IsNullOrWhiteSpace($TaskId)) { Close-EmptyRun 'invalid_arguments' 'TaskId is required.' 15 }
       if ([string]$session.candidateResolver -cne $script:ExecutionCandidateResolver) {
         Close-EmptyRun 'candidate_resolver_mismatch' 'InspectCandidate is reserved for fresh current-queue execution candidates.' 15
+      }
+      if ($null -ne $session.PSObject.Properties['resumeTaskId'] -and
+          -not [string]::IsNullOrWhiteSpace([string]$session.resumeTaskId) -and
+          [string]$TaskId -cne [string]$session.resumeTaskId) {
+        $result = New-ProtocolResult $false 'inspect_candidate' 'selection' 'preserve_recovery' 'decision_task_mismatch' 'Resolved decision recovery must inspect the original task id.'
+        $result.taskId = [string]$session.resumeTaskId
+        $result.nextCommand = 'InspectCandidate'
+        Write-ProtocolResult $result 24
       }
 
       $candidate = Resolve-ExecutionQueueCandidate $TaskId
@@ -753,6 +815,15 @@ try {
         Close-EmptyRun $reason "Workspace Check failed: $reason" $check.Code $policy
       }
       $normalizedPaths = @($checkJson.expectedPaths)
+      $decisionState = Get-StateSnapshot
+      $resumesResolvedDecision = (
+        $null -ne $decisionState.pendingDecision -and
+        [string]$decisionState.pendingDecision.status -ceq 'RESOLVED' -and
+        [string]$decisionState.pendingDecision.taskId -ceq $selectedTaskId
+      )
+      if ($resumesResolvedDecision -and $normalizedPaths -notcontains $script:DecisionStatusRelativePath) {
+        Close-EmptyRun 'decision_status_path_missing' 'Resolved decision work must register the project-visible decision status path.' 15
+      }
 
       $queues = Invoke-StateTool @('Checkpoint', '-RunId', $RunId, '-Checkpoint', 'queues_loaded')
       if ($queues.Code -ne 0) {
@@ -780,7 +851,11 @@ try {
       $result.taskId = $selectedTaskId
       $result.executor = $selectedExecutor
       $result.expectedPaths = $normalizedPaths
-      $result.requiredSources = @(Get-BranchSources $selectedWorkType $selectedExecutor)
+      $requiredSources = @(Get-BranchSources $selectedWorkType $selectedExecutor)
+      if ($normalizedPaths -contains $script:DecisionStatusRelativePath) {
+        $requiredSources += $script:DecisionStatusRelativePath
+      }
+      $result.requiredSources = @($requiredSources | Select-Object -Unique)
       $result.nextCommand = 'BeginMutation'
       Write-ProtocolResult $result
     }
@@ -833,6 +908,21 @@ try {
       $paths = @($state.expectedPaths)
       if ($paths.Count -eq 0 -or [string]::IsNullOrWhiteSpace([string]$session.baselinePath)) {
         Stop-RegisteredWork $session 'recovery_state_incomplete' 'Finish is missing expected paths or the original baseline.' 1
+      }
+
+      $ownsDecisionStatus = $paths -contains $script:DecisionStatusRelativePath
+      $ownsPendingDecision = (
+        $ownsDecisionStatus -and
+        $null -ne $state.pendingDecision -and
+        [string]$state.pendingDecision.taskId -ceq [string]$state.taskId
+      )
+      if ($ownsPendingDecision -and [string]$session.phase -cne 'commit_completed') {
+        $publisherAction = if ([string]$state.pendingDecision.status -ceq 'RESOLVED') { 'Clear' } else { 'Publish' }
+        $published = Invoke-DecisionStatusPublisher $publisherAction $state.pendingDecision
+        if ($published.Code -ne 0) {
+          $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
+          Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
+        }
       }
 
       $verify = Invoke-GuardTool @('Verify', '-BaselinePath', [string]$session.baselinePath, '-ExpectedPaths', ($paths -join '|'))
@@ -897,6 +987,16 @@ try {
         $postJson = if ($postVerify.Output) { Convert-ChildJson $postVerify 'post-commit Verify' } else { $null }
         $reason = if ($null -ne $postJson -and $postJson.reason) { [string]$postJson.reason } else { 'post_commit_verify_failed' }
         Stop-RegisteredWork $session $reason "Post-commit Verify failed: $reason" $postVerify.Code
+      }
+
+      $stateForCompletion = Get-StateSnapshot
+      if ($ownsDecisionStatus -and $null -ne $stateForCompletion.pendingDecision -and
+          [string]$stateForCompletion.pendingDecision.status -ceq 'RESOLVED' -and
+          [string]$stateForCompletion.pendingDecision.taskId -ceq [string]$stateForCompletion.taskId) {
+        $cleared = Invoke-StateTool @('ClearResolvedDecision', '-RunId', $RunId)
+        if ($cleared.Code -ne 0) {
+          Stop-RegisteredWork $session 'decision_clear_failed' $(if ($cleared.Error) { $cleared.Error } else { 'ClearResolvedDecision failed.' }) $cleared.Code
+        }
       }
 
       $completed = Invoke-StateTool @('Complete', '-RunId', $RunId)
@@ -1039,12 +1139,57 @@ try {
       $result.nextCommand = 'RegisterCandidate'
       Write-ProtocolResult $result
     }
+    'PrepareDecision' {
+      $session = Read-Session
+      if ([string]$session.phase -cne 'mutation_started') {
+        $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'invalid_phase' 'PrepareDecision requires the mutation_started phase.'
+        Write-ProtocolResult $result 13
+      }
+      $state = Get-StateSnapshot
+      if (@($state.expectedPaths) -notcontains $script:DecisionStatusRelativePath) {
+        $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'decision_status_path_missing' 'The project-visible decision status path is not registered.'
+        Write-ProtocolResult $result 15
+      }
+      $contextHash = Get-FileSha256Lower (Get-DecisionStatusPath)
+      if ($null -eq $session.PSObject.Properties['decisionContextHash']) {
+        $session | Add-Member -NotePropertyName decisionContextHash -NotePropertyValue $contextHash
+      } else {
+        $session.decisionContextHash = $contextHash
+      }
+      Save-Session $session
+
+      $result = New-ProtocolResult $true 'inspect_decision_context' 'pending_decision' 'preserve_recovery' $null 'Decision context locked; use the exact command contract after reading the required source.'
+      $result.taskId = [string]$state.taskId
+      $result.requiredSources = @($script:DecisionStatusRelativePath)
+      $result.command = Get-DecisionCommandContract
+      $result.nextCommand = 'CreateDecision'
+      Write-ProtocolResult $result
+    }
     'CreateDecision' {
       $session = Read-Session
+      if ([string]$session.phase -cne 'mutation_started') {
+        $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'invalid_phase' 'CreateDecision requires the mutation_started phase.'
+        Write-ProtocolResult $result 13
+      }
       $state = Get-StateSnapshot
-      $statusPath = '开发管理/自动工作流状态.txt'
-      if (@($state.expectedPaths) -notcontains $statusPath) {
+      if (@($state.expectedPaths) -notcontains $script:DecisionStatusRelativePath) {
         $result = New-ProtocolResult $false 'stopped' ([string]$session.branchKind) 'preserve_recovery' 'decision_status_path_missing' 'The project-visible decision status path is not registered.'
+        Write-ProtocolResult $result 15
+      }
+      if ($null -eq $session.PSObject.Properties['decisionContextHash'] -or
+          [string]::IsNullOrWhiteSpace([string]$session.decisionContextHash)) {
+        $result = New-ProtocolResult $false 'inspect_decision_context' 'pending_decision' 'preserve_recovery' 'decision_context_not_prepared' 'PrepareDecision must expose and lock the project decision context first.'
+        $result.requiredSources = @($script:DecisionStatusRelativePath)
+        $result.nextCommand = 'PrepareDecision'
+        Write-ProtocolResult $result 15
+      }
+      $currentContextHash = Get-FileSha256Lower (Get-DecisionStatusPath)
+      if ($currentContextHash -cne [string]$session.decisionContextHash) {
+        $session.decisionContextHash = $null
+        Save-Session $session
+        $result = New-ProtocolResult $false 'inspect_decision_context' 'pending_decision' 'preserve_recovery' 'decision_context_changed' 'The project decision context changed after preparation.'
+        $result.requiredSources = @($script:DecisionStatusRelativePath)
+        $result.nextCommand = 'PrepareDecision'
         Write-ProtocolResult $result 15
       }
       foreach ($required in @(
@@ -1070,28 +1215,62 @@ try {
         Write-ProtocolResult $result $created.Code
       }
       $createdState = Convert-ChildJson $created 'CreateDecision'
-      $result = New-ProtocolResult $true 'publish_pending_decision' 'pending_decision' 'preserve_recovery' $null 'Pending decision created.'
+      $published = Invoke-DecisionStatusPublisher 'Publish' $createdState.pendingDecision
+      if ($published.Code -ne 0) {
+        $rollback = Invoke-StateTool @(
+          'RollbackDecision', '-RunId', $RunId,
+          '-DecisionId', [string]$createdState.pendingDecision.decisionId,
+          '-CancellationReason', 'decision_status_publish_failed'
+        )
+        if ($rollback.Code -ne 0) {
+          Stop-RegisteredWork $session 'decision_rollback_failed' $(if ($rollback.Error) { $rollback.Error } else { 'RollbackDecision failed.' }) $rollback.Code
+        }
+        $afterFailureHash = Get-FileSha256Lower (Get-DecisionStatusPath)
+        if ($afterFailureHash -cne $currentContextHash) {
+          Stop-RegisteredWork $session 'decision_status_publish_failed' 'Decision status publishing failed after changing the project file.' $published.Code
+        }
+        $completed = Invoke-StateTool @('Complete', '-RunId', $RunId)
+        if ($completed.Code -ne 0) {
+          Stop-RegisteredWork $session 'complete_failed' $(if ($completed.Error) { $completed.Error } else { 'Complete failed after decision rollback.' }) $completed.Code
+        }
+        Remove-RunArtifacts $session
+        $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'stop_read_only' 'decision_status_publish_failed' $message
+        Write-ProtocolResult $result $published.Code
+      }
+      $result = New-ProtocolResult $true 'notify_pending_decision' 'pending_decision' 'preserve_recovery' $null 'Pending decision created and published to the project status file.'
       $result.taskId = [string]$createdState.taskId
       $result.pendingDecision = $createdState.pendingDecision
-      $result.requiredSources = @('开发管理/自动工作流状态.txt')
+      $result.notificationPolicy = [ordered]@{ receiptRequired = $true; receiptStorage = 'sha256_only' }
+      $result.nextCommands = @('MarkDecisionNotified', 'MarkDecisionDeliveryFailed')
       $result.nextCommand = 'MarkDecisionNotified'
       Write-ProtocolResult $result
     }
     'MarkDecisionNotified' {
-      [void](Read-Session)
-      $marked = Invoke-StateTool @('MarkDecisionNotified', '-RunId', $RunId)
+      $session = Read-Session
+      if ([string]::IsNullOrWhiteSpace($NotificationReceipt)) {
+        $result = New-ProtocolResult $false 'notify_pending_decision' 'pending_decision' 'preserve_recovery' 'notification_receipt_missing' 'NotificationReceipt from the provider is required.'
+        $result.nextCommand = 'MarkDecisionNotified'
+        Write-ProtocolResult $result 15
+      }
+      $marked = Invoke-StateTool @('MarkDecisionNotified', '-RunId', $RunId, '-NotificationReceipt', $NotificationReceipt)
       if ($marked.Code -ne 0) {
         $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'decision_notification_failed' $(if ($marked.Error) { $marked.Error } else { 'MarkDecisionNotified failed.' })
         Write-ProtocolResult $result $marked.Code
       }
       $state = Convert-ChildJson $marked 'MarkDecisionNotified'
-      $result = New-ProtocolResult $true 'decision_notified' 'pending_decision' 'preserve_recovery' $null 'Decision notification recorded.'
+      $published = Invoke-DecisionStatusPublisher 'Publish' $state.pendingDecision
+      if ($published.Code -ne 0) {
+        $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
+        Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
+      }
+      $result = New-ProtocolResult $true 'decision_notified' 'pending_decision' 'preserve_recovery' $null 'Decision notification recorded with provider evidence.'
       $result.pendingDecision = $state.pendingDecision
       $result.nextCommand = 'Finish'
       Write-ProtocolResult $result
     }
     'MarkDecisionDeliveryFailed' {
-      [void](Read-Session)
+      $session = Read-Session
       if ([string]::IsNullOrWhiteSpace($NotificationError)) {
         $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_arguments' 'NotificationError is required.'
         Write-ProtocolResult $result 15
@@ -1102,13 +1281,23 @@ try {
         Write-ProtocolResult $result $marked.Code
       }
       $state = Convert-ChildJson $marked 'MarkDecisionDeliveryFailed'
-      $result = New-ProtocolResult $true 'decision_delivery_failed' 'pending_decision' 'preserve_recovery' $null 'Decision delivery failure recorded.'
+      $published = Invoke-DecisionStatusPublisher 'Publish' $state.pendingDecision
+      if ($published.Code -ne 0) {
+        $message = if ($published.Error) { $published.Error } elseif ($published.Output) { $published.Output } else { 'Decision status publisher failed.' }
+        Stop-RegisteredWork $session 'decision_status_publish_failed' $message $published.Code
+      }
+      $result = New-ProtocolResult $true 'decision_delivery_failed' 'pending_decision' 'preserve_recovery' $null 'Decision delivery failure recorded and published.'
       $result.pendingDecision = $state.pendingDecision
       $result.nextCommand = 'Finish'
       Write-ProtocolResult $result
     }
     'ResolveDecisionReply' {
-      [void](Read-Session)
+      $session = Read-Session
+      if ([string]$session.phase -cne 'identity_checked') {
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_phase' 'ResolveDecisionReply requires a fresh identity_checked run after decision publication is finished.'
+        $result.nextCommand = 'Finish'
+        Write-ProtocolResult $result 13
+      }
       $state = Get-StateSnapshot
       $pattern = '^\s*(?<id>DEC-[0-9]{8}-[A-Z0-9]+)\s*[：:]\s*(?:选择|选)\s*(?<key>[A-Za-z0-9]+)\s*$'
       if ([string]::IsNullOrWhiteSpace($ReplyText) -or $ReplyText -notmatch $pattern) {
@@ -1139,9 +1328,22 @@ try {
         Write-ProtocolResult $result $resolved.Code
       }
       $resolvedState = Convert-ChildJson $resolved 'ResolveDecision'
-      $result = New-ProtocolResult $true 'resume_decision_task' 'pending_decision' 'preserve_recovery' $null 'Strict decision reply resolved.'
+      $session.phase = 'identity_checked'
+      $session.branchKind = 'selection'
+      $session.workType = $null
+      $session.taskId = $null
+      $session.executor = $null
+      if ($null -eq $session.PSObject.Properties['resumeTaskId']) {
+        $session | Add-Member -NotePropertyName resumeTaskId -NotePropertyValue ([string]$resolvedState.pendingDecision.taskId)
+      } else {
+        $session.resumeTaskId = [string]$resolvedState.pendingDecision.taskId
+      }
+      Save-Session $session
+      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Strict decision reply resolved; inspect and register the original task again.'
+      $result.taskId = [string]$resolvedState.pendingDecision.taskId
       $result.pendingDecision = $resolvedState.pendingDecision
-      $result.nextCommand = 'Finish'
+      $result.requiredSources = @($script:ExecutionQueueRelativePath, $script:DecisionStatusRelativePath)
+      $result.nextCommand = 'InspectCandidate'
       Write-ProtocolResult $result
     }
     default {
