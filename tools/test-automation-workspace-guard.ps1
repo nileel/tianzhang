@@ -26,7 +26,7 @@ function Invoke-Guard {
 function Invoke-GitAt {
   param([string]$Repository, [string[]]$Arguments)
 
-  $output = & git -C $Repository @Arguments 2>&1
+  $output = & git -c core.autocrlf=false -C $Repository @Arguments 2>&1
   if ($LASTEXITCODE -ne 0) {
     throw "git $($Arguments -join ' ') failed: $($output -join "`n")"
   }
@@ -94,6 +94,30 @@ function Assert-JsonSafe {
   if (-not $Expected -and [string]::IsNullOrWhiteSpace([string]$json.reason)) {
     throw "$Label omitted a stable failure reason: $($Result.Output)"
   }
+}
+
+function Assert-InterruptionResult {
+  param(
+    $Result,
+    [string]$Classification,
+    [string[]]$ChangedExpected,
+    [string[]]$Conflicts,
+    [string]$Label
+  )
+
+  $json = $Result.Output | ConvertFrom-Json
+  foreach ($property in @('safe', 'classification', 'expectedPaths', 'changedExpectedPaths', 'conflictingPaths', 'reason', 'evidenceHash')) {
+    if ($json.PSObject.Properties.Name -notcontains $property) { throw "$Label omitted JSON property '$property': $($Result.Output)" }
+  }
+  if ([string]$json.classification -ne $Classification) { throw "$Label returned unexpected classification: $($Result.Output)" }
+  if ([bool]$json.safe -ne ($Classification -ne 'unsafe')) { throw "$Label returned unexpected safe value: $($Result.Output)" }
+  foreach ($path in $ChangedExpected) {
+    if (@($json.changedExpectedPaths) -notcontains $path) { throw "$Label omitted changed expected path '$path': $($Result.Output)" }
+  }
+  foreach ($path in $Conflicts) {
+    if (@($json.conflictingPaths) -notcontains $path) { throw "$Label omitted conflict '$path': $($Result.Output)" }
+  }
+  $json
 }
 
 function Get-FileHashText {
@@ -651,6 +675,76 @@ try {
   Assert-Code $r 21 'recovery rejects outside change'
   if (($r.Output | ConvertFrom-Json).reason -ne 'baseline_changed') { throw "unexpected outside-change recovery reason: $($r.Output)" }
   [System.IO.File]::WriteAllText((Join-Path $recoveryRepo 'human.txt'), "human base`n", [System.Text.UTF8Encoding]::new($false))
+
+  $interruptionRepo = Join-Path $sandbox 'interruption-repo'
+  New-Item -ItemType Directory -Path $interruptionRepo | Out-Null
+  Invoke-GitAt $interruptionRepo @('init') | Out-Null
+  Invoke-GitAt $interruptionRepo @('config', 'user.name', 'Interruption Guard Test') | Out-Null
+  Invoke-GitAt $interruptionRepo @('config', 'user.email', 'interruption-guard@example.invalid') | Out-Null
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'task.txt'), "task base`n", [System.Text.UTF8Encoding]::new($false))
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'human.txt'), "human base`n", [System.Text.UTF8Encoding]::new($false))
+  Invoke-GitAt $interruptionRepo @('add', '--', 'task.txt', 'human.txt') | Out-Null
+  Invoke-GitAt $interruptionRepo @('commit', '-m', 'test: interruption base') | Out-Null
+  $interruptionBaseline = Join-Path $sandbox 'interruption-baseline.json'
+  $r = Invoke-Guard @('Snapshot', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline)
+  Assert-Code $r 0 'interruption baseline snapshot'
+
+  $cleanInterruptionEvidence = Join-Path $sandbox 'interruption-clean-evidence.json'
+  $r = Invoke-Guard @('CaptureInterruptionEvidence', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $cleanInterruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'clean interruption classification'
+  $cleanInterruption = Assert-InterruptionResult $r 'clean' @() @() 'clean interruption classification'
+  if (@($cleanInterruption.changedExpectedPaths).Count -ne 0 -or @($cleanInterruption.conflictingPaths).Count -ne 0 -or $null -ne $cleanInterruption.evidenceHash) {
+    throw "clean interruption reported residue: $($r.Output)"
+  }
+  if (Test-Path -LiteralPath $cleanInterruptionEvidence) { throw 'clean interruption wrote evidence' }
+
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'task.txt'), "controller residue`n", [System.Text.UTF8Encoding]::new($false))
+  $interruptionEvidence = Join-Path $sandbox 'interruption-evidence.json'
+  $r = Invoke-Guard @('CaptureInterruptionEvidence', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $interruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'recoverable expected interruption'
+  $recoverableInterruption = Assert-InterruptionResult $r 'recoverable' @('task.txt') @() 'recoverable expected interruption'
+  if ([string]$recoverableInterruption.evidenceHash -notmatch '^[0-9a-f]{64}$') { throw "recoverable interruption omitted evidence hash: $($r.Output)" }
+  $schema2Evidence = Get-Content -Raw -LiteralPath $interruptionEvidence | ConvertFrom-Json
+  if ($schema2Evidence.schemaVersion -ne 2 -or $schema2Evidence.purpose -ne 'interruption' -or
+      @($schema2Evidence.expectedChangedPaths).Count -ne 1 -or $schema2Evidence.expectedChangedPaths[0] -ne 'task.txt' -or
+      @($schema2Evidence.expectedEntries).Count -ne 1) {
+    throw 'recoverable interruption evidence did not use the expected schema 2 projection'
+  }
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $interruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'schema 2 interruption evidence recovers'
+  [System.IO.File]::AppendAllText((Join-Path $interruptionRepo 'task.txt'), "later expected edit`n")
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $interruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 22 'schema 2 recovery rejects later expected edit'
+  if (($r.Output | ConvertFrom-Json).reason -ne 'recovery_expected_changed') { throw "unexpected schema 2 expected-change reason: $($r.Output)" }
+
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'task.txt'), "controller residue`n", [System.Text.UTF8Encoding]::new($false))
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'human.txt'), "human intrusion`n", [System.Text.UTF8Encoding]::new($false))
+  $unsafeInterruptionEvidence = Join-Path $sandbox 'interruption-unsafe-evidence.json'
+  $r = Invoke-Guard @('CaptureInterruptionEvidence', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $unsafeInterruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 21 'expected plus intruder interruption'
+  $null = Assert-InterruptionResult $r 'unsafe' @('task.txt') @('human.txt') 'expected plus intruder interruption'
+  if (Test-Path -LiteralPath $unsafeInterruptionEvidence) { throw 'unsafe interruption wrote evidence' }
+
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'human.txt'), "human base`n", [System.Text.UTF8Encoding]::new($false))
+  Remove-Item -LiteralPath (Join-Path $interruptionRepo 'task.txt')
+  $deletedInterruptionEvidence = Join-Path $sandbox 'interruption-deleted-evidence.json'
+  $r = Invoke-Guard @('CaptureInterruptionEvidence', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $deletedInterruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'deleted expected interruption'
+  $null = Assert-InterruptionResult $r 'recoverable' @('task.txt') @() 'deleted expected interruption'
+  $deletedEvidence = Get-Content -Raw -LiteralPath $deletedInterruptionEvidence | ConvertFrom-Json
+  if ($deletedEvidence.schemaVersion -ne 2 -or @($deletedEvidence.expectedChangedPaths) -notcontains 'task.txt' -or @($deletedEvidence.expectedEntries).Count -ne 0) {
+    throw 'deleted expected interruption evidence was not recoverable with empty entries'
+  }
+  $r = Invoke-Guard @('CheckRecovery', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $deletedInterruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 0 'schema 2 deleted interruption evidence recovers'
+
+  [System.IO.File]::WriteAllText((Join-Path $interruptionRepo 'task.txt'), "task base`n", [System.Text.UTF8Encoding]::new($false))
+  Invoke-GitAt $interruptionRepo @('commit', '--allow-empty', '-m', 'test: advance interruption head') | Out-Null
+  $headInterruptionEvidence = Join-Path $sandbox 'interruption-head-evidence.json'
+  $r = Invoke-Guard @('CaptureInterruptionEvidence', '-RepositoryRoot', $interruptionRepo, '-BaselinePath', $interruptionBaseline, '-EvidencePath', $headInterruptionEvidence, '-ExpectedPaths', 'task.txt')
+  Assert-Code $r 21 'head changed interruption'
+  $null = Assert-InterruptionResult $r 'unsafe' @() @('<HEAD>') 'head changed interruption'
+  if (Test-Path -LiteralPath $headInterruptionEvidence) { throw 'head-changed interruption wrote evidence' }
 
   $tamperedEvidence = Get-Content -Raw -LiteralPath $recoveryEvidence | ConvertFrom-Json
   $tamperedEvidence.head = '0000000000000000000000000000000000000000'

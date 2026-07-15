@@ -1,6 +1,6 @@
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Snapshot', 'Check', 'Verify', 'CaptureRecoveryEvidence', 'CheckRecovery')]
+  [ValidateSet('Snapshot', 'Check', 'Verify', 'CaptureRecoveryEvidence', 'CaptureInterruptionEvidence', 'CheckRecovery')]
   [string]$Action,
 
   [string]$RepositoryRoot = (Get-Location).Path,
@@ -227,6 +227,17 @@ function Sort-WorkspaceEntries {
   $list.ToArray()
 }
 
+function Sort-OrdinalPaths {
+  param([string[]]$Paths)
+
+  $unique = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  foreach ($path in $Paths) { [void]$unique.Add($path) }
+  $list = [System.Collections.Generic.List[string]]::new()
+  foreach ($path in $unique) { $list.Add($path) }
+  $list.Sort([System.StringComparer]::Ordinal)
+  $list.ToArray()
+}
+
 function Get-Sha256Text {
   param([string]$Value)
 
@@ -272,12 +283,24 @@ function Get-RecoveryEvidencePayloadHash {
       statusFingerprint = [string]$_.statusFingerprint
     }
   })
-  $payload = [pscustomobject][ordered]@{
-    repositoryRoot = [string]$Evidence.repositoryRoot
-    baselinePayloadHash = [string]$Evidence.baselinePayloadHash
-    head = [string]$Evidence.head
-    expectedPaths = @($Evidence.expectedPaths | ForEach-Object { [string]$_ })
-    expectedEntries = @(Sort-WorkspaceEntries $canonicalEntries)
+  if ([long]$Evidence.schemaVersion -eq 2) {
+    $payload = [pscustomobject][ordered]@{
+      purpose = [string]$Evidence.purpose
+      repositoryRoot = [string]$Evidence.repositoryRoot
+      baselinePayloadHash = [string]$Evidence.baselinePayloadHash
+      head = [string]$Evidence.head
+      expectedPaths = @($Evidence.expectedPaths | ForEach-Object { [string]$_ })
+      expectedChangedPaths = @(Sort-OrdinalPaths @($Evidence.expectedChangedPaths | ForEach-Object { [string]$_ }))
+      expectedEntries = @(Sort-WorkspaceEntries $canonicalEntries)
+    }
+  } else {
+    $payload = [pscustomobject][ordered]@{
+      repositoryRoot = [string]$Evidence.repositoryRoot
+      baselinePayloadHash = [string]$Evidence.baselinePayloadHash
+      head = [string]$Evidence.head
+      expectedPaths = @($Evidence.expectedPaths | ForEach-Object { [string]$_ })
+      expectedEntries = @(Sort-WorkspaceEntries $canonicalEntries)
+    }
   }
   Get-Sha256Text ($payload | ConvertTo-Json -Depth 8 -Compress)
 }
@@ -422,18 +445,41 @@ function Read-RecoveryEvidence {
   $fullPath = [System.IO.Path]::GetFullPath($Path)
   if (-not [System.IO.File]::Exists($fullPath)) { throw "Recovery evidence does not exist: $fullPath" }
   $evidence = [System.IO.File]::ReadAllText($fullPath, [System.Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json
-  if ($evidence.schemaVersion -isnot [long] -or $evidence.schemaVersion -ne 1 -or
+  if ($evidence.schemaVersion -isnot [long] -or ($evidence.schemaVersion -ne 1 -and $evidence.schemaVersion -ne 2) -or
       $evidence.repositoryRoot -isnot [string] -or [string]::IsNullOrWhiteSpace($evidence.repositoryRoot) -or
       $evidence.baselinePayloadHash -isnot [string] -or $evidence.baselinePayloadHash -notmatch '^[0-9a-f]{64}$' -or
       $evidence.head -isnot [string] -or $evidence.head -notmatch '^[0-9a-f]{40,64}$' -or
       $evidence.expectedPaths -isnot [System.Array] -or @($evidence.expectedPaths).Count -eq 0 -or
-      $evidence.expectedEntries -isnot [System.Array] -or @($evidence.expectedEntries).Count -eq 0 -or
+      $evidence.expectedEntries -isnot [System.Array] -or
       $evidence.payloadHash -isnot [string] -or $evidence.payloadHash -notmatch '^[0-9a-f]{64}$') {
+    throw 'Recovery evidence has an invalid or unsupported schema.'
+  }
+  if ($evidence.schemaVersion -eq 1 -and @($evidence.expectedEntries).Count -eq 0) {
+    throw 'Recovery evidence has an invalid or unsupported schema.'
+  }
+  if ($evidence.schemaVersion -eq 2 -and
+      ($evidence.purpose -isnot [string] -or $evidence.purpose -cne 'interruption' -or
+       $evidence.expectedChangedPaths -isnot [System.Array] -or @($evidence.expectedChangedPaths).Count -eq 0)) {
     throw 'Recovery evidence has an invalid or unsupported schema.'
   }
   foreach ($pathValue in @($evidence.expectedPaths)) {
     if ($pathValue -isnot [string] -or [string]::IsNullOrWhiteSpace($pathValue) -or $pathValue.Contains('\') -or [System.IO.Path]::IsPathRooted($pathValue)) {
       throw 'Recovery evidence contains an invalid expected path.'
+    }
+  }
+  if ($evidence.schemaVersion -eq 2) {
+    $changedPathSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($pathValue in @($evidence.expectedChangedPaths)) {
+      if ($pathValue -isnot [string] -or [string]::IsNullOrWhiteSpace($pathValue) -or $pathValue.Contains('\') -or
+          [System.IO.Path]::IsPathRooted($pathValue) -or -not (Test-OverlapsAnyExpectedPath $pathValue @($evidence.expectedPaths)) -or
+          -not $changedPathSet.Add($pathValue)) {
+        throw 'Recovery evidence contains an invalid changed expected path.'
+      }
+    }
+    $recordedChangedPaths = @($evidence.expectedChangedPaths | ForEach-Object { [string]$_ })
+    $sortedChangedPaths = @(Sort-OrdinalPaths $recordedChangedPaths)
+    if (($recordedChangedPaths | ConvertTo-Json -Compress) -cne ($sortedChangedPaths | ConvertTo-Json -Compress)) {
+      throw 'Recovery evidence changed expected paths are not sorted.'
     }
   }
   $requiredEntryProperties = @('path', 'kind', 'indexStatus', 'worktreeStatus', 'indexBlob', 'worktreeHash', 'statusFingerprint')
@@ -474,30 +520,47 @@ function Get-EntryFingerprint {
   ) -join "`u{001F}"
 }
 
-function Get-ChangedWorkspacePaths {
+function Get-WorkspaceChangePartition {
   param($Baseline, $Fresh, [string[]]$Expected)
 
   $old = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
   $new = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
   foreach ($entry in @($Baseline.entries)) {
-    if (-not (Test-OverlapsAnyExpectedPath ([string]$entry.path) $Expected)) {
-      $old[[string]$entry.path] = Get-EntryFingerprint $entry
-    }
+    $old[[string]$entry.path] = Get-EntryFingerprint $entry
   }
   foreach ($entry in @($Fresh.entries)) {
-    if (-not (Test-OverlapsAnyExpectedPath ([string]$entry.path) $Expected)) {
-      $new[[string]$entry.path] = Get-EntryFingerprint $entry
+    $new[[string]$entry.path] = Get-EntryFingerprint $entry
+  }
+
+  $allChanged = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  foreach ($path in $old.Keys) {
+    if (-not $new.ContainsKey($path) -or $old[$path] -ne $new[$path]) { [void]$allChanged.Add($path) }
+  }
+  foreach ($path in $new.Keys) {
+    if (-not $old.ContainsKey($path) -or $old[$path] -ne $new[$path]) { [void]$allChanged.Add($path) }
+  }
+
+  $expectedChanged = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  $outsideChanged = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  foreach ($path in $allChanged) {
+    if (Test-OverlapsAnyExpectedPath $path $Expected) {
+      [void]$expectedChanged.Add($path)
+    } else {
+      [void]$outsideChanged.Add($path)
     }
   }
 
-  $changed = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
-  foreach ($path in $old.Keys) {
-    if (-not $new.ContainsKey($path) -or $old[$path] -ne $new[$path]) { [void]$changed.Add($path) }
+  [pscustomobject]@{
+    expectedChangedPaths = $expectedChanged
+    outsideChangedPaths = $outsideChanged
   }
-  foreach ($path in $new.Keys) {
-    if (-not $old.ContainsKey($path) -or $old[$path] -ne $new[$path]) { [void]$changed.Add($path) }
-  }
-  return ,$changed
+}
+
+function Get-ChangedWorkspacePaths {
+  param($Baseline, $Fresh, [string[]]$Expected)
+
+  $partition = Get-WorkspaceChangePartition $Baseline $Fresh $Expected
+  return ,$partition.outsideChangedPaths
 }
 
 function Get-HeadRangePaths {
@@ -546,6 +609,27 @@ function Write-SafetyResult {
     expectedPaths = @($Expected)
     conflictingPaths = $sorted
     reason = if ([string]::IsNullOrEmpty($Reason)) { $null } else { $Reason }
+  } | ConvertTo-Json -Compress
+}
+
+function Write-InterruptionResult {
+  param(
+    [string]$Classification,
+    [string[]]$Expected,
+    [string[]]$ChangedExpectedPaths,
+    [string[]]$ConflictingPaths,
+    [AllowNull()][string]$Reason,
+    [AllowNull()][string]$EvidenceHash
+  )
+
+  [pscustomobject][ordered]@{
+    safe = $Classification -ne 'unsafe'
+    classification = $Classification
+    expectedPaths = @($Expected)
+    changedExpectedPaths = @(Sort-OrdinalPaths $ChangedExpectedPaths)
+    conflictingPaths = @(Sort-OrdinalPaths $ConflictingPaths)
+    reason = if ([string]::IsNullOrEmpty($Reason)) { $null } else { $Reason }
+    evidenceHash = if ([string]::IsNullOrEmpty($EvidenceHash)) { $null } else { $EvidenceHash }
   } | ConvertTo-Json -Compress
 }
 
@@ -609,6 +693,63 @@ try {
       } | ConvertTo-Json -Compress
       exit 0
     }
+    'CaptureInterruptionEvidence' {
+      $expected = @()
+      try {
+        $expected = ConvertTo-NormalizedExpectedPaths $ExpectedPaths
+        Assert-ExpectedPathsSafe $repository $expected
+        if ([string]::IsNullOrWhiteSpace($EvidencePath)) { throw 'EvidencePath must not be empty.' }
+      } catch {
+        $reason = if ($_.Exception.Message -eq 'expected_path_enters_submodule') { 'expected_path_enters_submodule' } else { 'invalid_arguments' }
+        Write-InterruptionResult 'unsafe' $expected @() @() $reason $null
+        exit $ExitInvalidArguments
+      }
+      try { $baseline = Read-Baseline $BaselinePath $repository } catch {
+        Write-InterruptionResult 'unsafe' $expected @() @() 'baseline_invalid' $null
+        exit 1
+      }
+      try { $fresh = Get-WorkspaceSnapshot $repository } catch {
+        if ($_.Exception.Message -ne 'dirty_submodule_unsupported') { throw }
+        Write-InterruptionResult 'unsafe' $expected @() @('<SUBMODULE>') 'dirty_submodule_unsupported' $null
+        exit $ExitBaselineChanged
+      }
+
+      $partition = Get-WorkspaceChangePartition $baseline $fresh $expected
+      $changedExpectedPaths = @(Sort-OrdinalPaths @($partition.expectedChangedPaths))
+      $conflictingPaths = [System.Collections.Generic.List[string]]::new()
+      foreach ($path in $partition.outsideChangedPaths) { $conflictingPaths.Add($path) }
+      $headChanged = -not ([string]$baseline.head).Equals([string]$fresh.head, [System.StringComparison]::Ordinal)
+      if ($headChanged) { $conflictingPaths.Add('<HEAD>') }
+
+      if ($conflictingPaths.Count -gt 0) {
+        $reason = if ($headChanged) { 'head_changed' } else { 'baseline_changed' }
+        Write-InterruptionResult 'unsafe' $expected $changedExpectedPaths $conflictingPaths.ToArray() $reason $null
+        exit $ExitBaselineChanged
+      }
+      if ($changedExpectedPaths.Count -eq 0) {
+        Write-InterruptionResult 'clean' $expected @() @() $null $null
+        exit 0
+      }
+
+      $expectedEntries = @($fresh.entries | Where-Object {
+        $null -ne $_.worktreeHash -and (Test-OverlapsAnyExpectedPath ([string]$_.path) $expected)
+      })
+      $evidence = [pscustomobject][ordered]@{
+        schemaVersion = 2
+        purpose = 'interruption'
+        repositoryRoot = $repository
+        baselinePayloadHash = [string]$baseline.payloadHash
+        head = [string]$fresh.head
+        expectedPaths = @($expected)
+        expectedChangedPaths = @($changedExpectedPaths)
+        expectedEntries = @(Sort-WorkspaceEntries $expectedEntries)
+        payloadHash = $null
+      }
+      $evidence.payloadHash = Get-RecoveryEvidencePayloadHash $evidence
+      Write-JsonAtomically $evidence $EvidencePath
+      Write-InterruptionResult 'recoverable' $expected $changedExpectedPaths @() $null ([string]$evidence.payloadHash)
+      exit 0
+    }
     'CheckRecovery' {
       $expected = @()
       try {
@@ -638,10 +779,28 @@ try {
         Write-SafetyResult $false $expected @($changed) 'baseline_changed'
         exit $ExitBaselineChanged
       }
-      $currentExpected = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected } | ForEach-Object { Get-EntryFingerprint $_ })
+      $currentExpectedEntries = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected })
+      if ($evidence.schemaVersion -eq 2) {
+        $currentExpectedEntries = @($currentExpectedEntries | Where-Object { $null -ne $_.worktreeHash })
+      }
+      $currentExpected = @($currentExpectedEntries | ForEach-Object { Get-EntryFingerprint $_ })
       $recordedExpected = @($evidence.expectedEntries | ForEach-Object { Get-EntryFingerprint $_ })
+      $expectedChanged = $false
+      $expectedConflicts = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected } | ForEach-Object { [string]$_.path })
       if (($currentExpected | ConvertTo-Json -Compress) -cne ($recordedExpected | ConvertTo-Json -Compress)) {
-        $conflicts = @($fresh.entries | Where-Object { Test-OverlapsAnyExpectedPath ([string]$_.path) $expected } | ForEach-Object { [string]$_.path })
+        $expectedChanged = $true
+      }
+      if ($evidence.schemaVersion -eq 2) {
+        $partition = Get-WorkspaceChangePartition $baseline $fresh $expected
+        $currentChangedPaths = @(Sort-OrdinalPaths @($partition.expectedChangedPaths))
+        $recordedChangedPaths = @($evidence.expectedChangedPaths | ForEach-Object { [string]$_ })
+        if (($currentChangedPaths | ConvertTo-Json -Compress) -cne ($recordedChangedPaths | ConvertTo-Json -Compress)) {
+          $expectedChanged = $true
+        }
+        $expectedConflicts = @($expectedConflicts) + @($currentChangedPaths)
+      }
+      if ($expectedChanged) {
+        $conflicts = @(Sort-OrdinalPaths $expectedConflicts)
         Write-SafetyResult $false $expected $conflicts 'recovery_expected_changed'
         exit $ExitRecoveryExpectedChanged
       }
