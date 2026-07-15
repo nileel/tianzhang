@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Acquire','Renew','Checkpoint','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecision','ClearResolvedDecision','Complete','Fail','Show','ResetBlocked')]
+  [ValidateSet('Acquire','Renew','Checkpoint','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','MarkDecisionNotified','MarkDecisionDeliveryFailed','ResolveDecision','ClearResolvedDecision','CancelDecision','RollbackDecision','Complete','Fail','Show','ResetBlocked')]
   [string]$Action,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
   [string]$ControllerId = 'tzg-hourly-controller',
@@ -29,6 +29,8 @@ param(
   [string]$ReplySource,
   [switch]$ManualOverride,
   [string]$NotificationError,
+  [string]$NotificationReceipt,
+  [string]$CancellationReason,
   [switch]$WasRecovery,
   [switch]$QueueAuditCompleted,
   [string]$QueueFingerprint,
@@ -65,7 +67,7 @@ function Get-NowValue {
 
 function New-State {
   [ordered]@{
-    schemaVersion = 4
+    schemaVersion = 5
     controllerId = $ControllerId
     runId = $null
     state = 'IDLE'
@@ -92,6 +94,7 @@ function New-State {
     }
     lastError = $null
     pendingDecision = $null
+    lastDecisionCancellation = $null
   }
 }
 
@@ -99,7 +102,7 @@ function Import-State {
   if (-not (Test-Path -LiteralPath $StatePath)) { return (New-State) }
   $raw = [IO.File]::ReadAllText($StatePath)
   $parsed = $raw | ConvertFrom-Json
-  if ($parsed.schemaVersion -notin @(1, 2, 3, 4)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
+  if ($parsed.schemaVersion -notin @(1, 2, 3, 4, 5)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
   $state = New-State
   foreach ($key in @($state.Keys)) {
     $property = $parsed.PSObject.Properties[$key]
@@ -117,7 +120,7 @@ function Import-State {
     }
   }
   $state.workerState = [ordered]@{ deepseek = $deepseek }
-  $state.schemaVersion = 4
+  $state.schemaVersion = 5
   $state
 }
 
@@ -183,6 +186,42 @@ function Get-DecisionOptions {
 function Require-DecisionInput {
   param([string]$Value, [string]$Name)
   if ([string]::IsNullOrWhiteSpace($Value)) { Exit-WithCode "$Name is required" $script:ExitInvalidArguments }
+}
+
+function Get-Sha256Text {
+  param([string]$Value)
+  $bytes = [Text.UTF8Encoding]::new($false).GetBytes($Value)
+  try {
+    ([Security.Cryptography.SHA256]::HashData($bytes) | ForEach-Object { $_.ToString('x2') }) -join ''
+  } finally {
+    [Array]::Clear($bytes, 0, $bytes.Length)
+  }
+}
+
+function Clear-DecisionWithAudit {
+  param(
+    [System.Collections.IDictionary]$State,
+    [string]$ExpectedDecisionId,
+    [string]$Reason,
+    [string]$Source,
+    [DateTimeOffset]$At
+  )
+  Require-PendingDecision $State
+  Require-DecisionInput $ExpectedDecisionId 'DecisionId'
+  Require-DecisionInput $Reason 'CancellationReason'
+  if ($State.pendingDecision.decisionId -cne $ExpectedDecisionId) {
+    Exit-WithCode 'DecisionId does not match the pending decision' $script:ExitInvalidArguments
+  }
+  $summary = $Reason.Trim()
+  if ($summary.Length -gt 240) { $summary = $summary.Substring(0, 240) }
+  $State.lastDecisionCancellation = [ordered]@{
+    decisionId = [string]$State.pendingDecision.decisionId
+    taskId = [string]$State.pendingDecision.taskId
+    cancelledAt = $At.ToString('o')
+    source = $Source
+    reason = $summary
+  }
+  $State.pendingDecision = $null
 }
 
 function Get-NotificationAttemptCount {
@@ -334,10 +373,17 @@ try {
     'MarkDecisionNotified' {
       Require-Owner $state
       Require-PendingDecision $state
+      Require-DecisionInput $NotificationReceipt 'NotificationReceipt'
       if ($state.pendingDecision.status -notin @('PENDING', 'DELIVERY_FAILED')) { Exit-WithCode 'Decision cannot be marked notified in its current status' $script:ExitInvalidArguments }
       $state.pendingDecision.status = 'NOTIFIED'
       $attempts = (Get-NotificationAttemptCount $state.pendingDecision.notification) + 1
-      $state.pendingDecision.notification = [ordered]@{ status = 'NOTIFIED'; attemptedAt = $nowValue.ToString('o'); attempts = $attempts; error = $null }
+      $state.pendingDecision.notification = [ordered]@{
+        status = 'NOTIFIED'
+        attemptedAt = $nowValue.ToString('o')
+        attempts = $attempts
+        error = $null
+        receiptHash = Get-Sha256Text $NotificationReceipt.Trim()
+      }
       Set-Lease $state $nowValue
       Export-State $state
     }
@@ -351,7 +397,13 @@ try {
       $status = if ($errorSummary -eq 'invalid_reply') { 'REPLY_INVALID' } else { 'DELIVERY_FAILED' }
       $state.pendingDecision.status = $status
       $attempts = (Get-NotificationAttemptCount $state.pendingDecision.notification) + 1
-      $state.pendingDecision.notification = [ordered]@{ status = $status; attemptedAt = $nowValue.ToString('o'); attempts = $attempts; error = $errorSummary }
+      $state.pendingDecision.notification = [ordered]@{
+        status = $status
+        attemptedAt = $nowValue.ToString('o')
+        attempts = $attempts
+        error = $errorSummary
+        receiptHash = $null
+      }
       Set-Lease $state $nowValue
       Export-State $state
     }
@@ -375,6 +427,23 @@ try {
       Require-PendingDecision $state
       if ($state.pendingDecision.status -ne 'RESOLVED') { Exit-WithCode 'Only a resolved decision can be cleared' $script:ExitInvalidArguments }
       $state.pendingDecision = $null
+      Set-Lease $state $nowValue
+      Export-State $state
+    }
+    'CancelDecision' {
+      Require-Owner $state
+      Require-PendingDecision $state
+      if (-not $ManualOverride) { Exit-WithCode 'Manual decision cancellation requires -ManualOverride' $script:ExitInvalidArguments }
+      if ($state.pendingDecision.status -eq 'RESOLVED') { Exit-WithCode 'Resolved decisions cannot be cancelled' $script:ExitInvalidArguments }
+      Clear-DecisionWithAudit $state $DecisionId $CancellationReason 'manual' $nowValue
+      Set-Lease $state $nowValue
+      Export-State $state
+    }
+    'RollbackDecision' {
+      Require-Owner $state
+      Require-PendingDecision $state
+      if ($state.pendingDecision.status -ne 'PENDING') { Exit-WithCode 'Only a pending unpublished decision can be rolled back' $script:ExitInvalidArguments }
+      Clear-DecisionWithAudit $state $DecisionId $CancellationReason 'controller_rollback' $nowValue
       Set-Lease $state $nowValue
       Export-State $state
     }

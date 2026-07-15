@@ -53,7 +53,7 @@ try {
   Assert-Code $r 0 'checkpoint'
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
-  if ($state.schemaVersion -ne 4 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v4 recovery evidence fields' }
+  if ($state.schemaVersion -ne 5 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v5 recovery evidence fields' }
 
   $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
   Assert-Code $r 0 'checkpoint DeepSeek executor'
@@ -205,17 +205,29 @@ try {
   Assert-Code $r 15 'second pending decision rejection'
 
   $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:07:00Z')
-  Assert-Code $r 0 'mark decision notified'
-  if ((Read-TestState).pendingDecision.status -ne 'NOTIFIED') { throw 'notification status was not persisted' }
-  if ((Read-TestState).pendingDecision.notification.attempts -ne 1) { throw 'first notification attempt was not recorded' }
+  Assert-Code $r 15 'notification receipt required'
+  if ((Read-TestState).pendingDecision.status -ne 'PENDING') { throw 'missing notification receipt changed the decision state' }
+
+  $receipt = 'gmail-message-18f00abc123'
+  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationReceipt', $receipt, '-Now', '2026-07-11T05:07:00Z')
+  Assert-Code $r 0 'mark decision notified with receipt'
+  $notifiedDecision = (Read-TestState).pendingDecision
+  if ($notifiedDecision.status -ne 'NOTIFIED') { throw 'notification status was not persisted' }
+  if ($notifiedDecision.notification.attempts -ne 1) { throw 'first notification attempt was not recorded' }
+  if ($notifiedDecision.notification.receiptHash -notmatch '^[0-9a-f]{64}$' -or $notifiedDecision.notification.receiptHash -eq $receipt) {
+    throw 'notification receipt was not stored as a SHA-256 hash'
+  }
+  if ([IO.File]::ReadAllText($statePath).Contains($receipt, [StringComparison]::Ordinal)) {
+    throw 'notification receipt leaked into the state file'
+  }
 
   $r = Invoke-StateTool @('MarkDecisionDeliveryFailed', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationError', 'smtp_unavailable', '-Now', '2026-07-11T05:07:30Z')
   Assert-Code $r 0 'mark decision delivery failed'
-  if ((Read-TestState).pendingDecision.status -ne 'DELIVERY_FAILED' -or (Read-TestState).pendingDecision.notification.attempts -ne 2) {
+  if ((Read-TestState).pendingDecision.status -ne 'DELIVERY_FAILED' -or (Read-TestState).pendingDecision.notification.attempts -ne 2 -or $null -ne (Read-TestState).pendingDecision.notification.receiptHash) {
     throw 'delivery failure did not retain retry count'
   }
 
-  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-Now', '2026-07-11T05:07:45Z')
+  $r = Invoke-StateTool @('MarkDecisionNotified', '-StatePath', $statePath, '-RunId', 'run-7', '-NotificationReceipt', 'gmail-message-18f00def456', '-Now', '2026-07-11T05:07:45Z')
   Assert-Code $r 0 'retry decision notification'
   if ((Read-TestState).pendingDecision.notification.attempts -ne 3) { throw 'retry notification did not advance attempt count' }
 
@@ -238,6 +250,63 @@ try {
   Assert-Code $r 0 'clear resolved decision'
   if ($null -ne (Read-TestState).pendingDecision) { throw 'resolved decision was not cleared' }
 
+  $r = Invoke-StateTool @(
+    'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-8',
+    '-TaskKind', 'execute', '-TaskId', 'rollback-task', '-TaskSummary', 'Rollback fixture',
+    '-DecisionQuestion', 'Should a failed publication retain local state?',
+    '-DecisionOptions', 'A=Retain|B=Rollback', '-RecommendedOption', 'B',
+    '-ImpactSummary', 'Tests controller rollback after project publication failure',
+    '-Now', '2026-07-11T05:12:30Z'
+  )
+  Assert-Code $r 0 'create rollback fixture'
+  $rollbackDecision = (Read-TestState).pendingDecision
+  $r = Invoke-StateTool @(
+    'RollbackDecision', '-StatePath', $statePath, '-RunId', 'run-8',
+    '-DecisionId', $rollbackDecision.decisionId,
+    '-CancellationReason', 'decision_status_publish_failed',
+    '-Now', '2026-07-11T05:13:00Z'
+  )
+  Assert-Code $r 0 'rollback unpublished decision'
+  $rollbackState = Read-TestState
+  if ($null -ne $rollbackState.pendingDecision -or
+      $rollbackState.lastDecisionCancellation.decisionId -ne $rollbackDecision.decisionId -or
+      $rollbackState.lastDecisionCancellation.source -ne 'controller_rollback') {
+    throw 'controller rollback did not preserve a redacted audit record'
+  }
+
+  $r = Invoke-StateTool @(
+    'CreateDecision', '-StatePath', $statePath, '-RunId', 'run-8',
+    '-TaskKind', 'execute', '-TaskId', 'cancel-task', '-TaskSummary', 'Cancel fixture',
+    '-DecisionQuestion', 'Should an operator cancel a duplicate decision?',
+    '-DecisionOptions', 'A=Keep|B=Cancel', '-RecommendedOption', 'B',
+    '-ImpactSummary', 'Tests explicit operator repair',
+    '-Now', '2026-07-11T05:13:30Z'
+  )
+  Assert-Code $r 0 'create operator cancellation fixture'
+  $cancelDecision = (Read-TestState).pendingDecision
+  $r = Invoke-StateTool @(
+    'CancelDecision', '-StatePath', $statePath, '-RunId', 'run-8',
+    '-DecisionId', $cancelDecision.decisionId, '-CancellationReason', 'duplicate decision',
+    '-Now', '2026-07-11T05:14:00Z'
+  )
+  Assert-Code $r 15 'operator cancellation requires override'
+  $r = Invoke-StateTool @(
+    'CancelDecision', '-StatePath', $statePath, '-RunId', 'run-8',
+    '-DecisionId', $cancelDecision.decisionId, '-CancellationReason', 'duplicate decision',
+    '-ManualOverride', '-Now', '2026-07-11T05:14:30Z'
+  )
+  Assert-Code $r 0 'operator cancellation'
+  $cancelState = Read-TestState
+  if ($null -ne $cancelState.pendingDecision -or
+      $cancelState.lastDecisionCancellation.decisionId -ne $cancelDecision.decisionId -or
+      $cancelState.lastDecisionCancellation.source -ne 'manual' -or
+      $null -ne $cancelDecision.resolution) {
+    throw 'operator cancellation did not preserve a redacted audit record'
+  }
+
+  $r = Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', 'run-8', '-Now', '2026-07-11T05:15:00Z')
+  Assert-Code $r 0 'complete cancellation fixture'
+
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":3,"state":"IDLE","controllerId":"fresh-idle","taskExecutor":"deepseek"}')
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'fresh-run', '-Now', '2026-07-11T05:13:00Z')
   Assert-Code $r 0 'fresh IDLE acquire'
@@ -256,7 +325,7 @@ try {
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
-  if ($legacy.schemaVersion -ne 4 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $legacy.state -ne 'IDLE') {
+  if ($legacy.schemaVersion -ne 5 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.lastDecisionCancellation -or $legacy.state -ne 'IDLE') {
     throw 'schema v1 was not migrated safely'
   }
 
@@ -300,7 +369,7 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v2-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'renew migrated schema v2 state'
   $v2 = Read-TestState
-  if ($v2.schemaVersion -ne 4 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError) {
+  if ($v2.schemaVersion -ne 5 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
     throw 'schema v2 was not migrated safely'
   }
   if ($v2.runId -ne 'v2-run' -or $v2.state -ne 'RUNNING' -or $v2.leaseExpiresAt -ne '2026-07-11T09:00:00.0000000+00:00' -or $v2.taskKind -ne 'execute' -or $v2.taskId -ne 'v2-recovery-task' -or $v2.checkpoint -ne 'mutation_started' -or $v2.expectedPaths.Count -ne 2 -or $v2.expectedPaths[0] -ne 'a.txt' -or $v2.expectedPaths[1] -ne 'b/c.txt' -or $v2.recoveryCount -ne 1 -or $v2.lastError -ne 'recoverable interruption') {
