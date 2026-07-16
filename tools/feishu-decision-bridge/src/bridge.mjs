@@ -7,6 +7,8 @@ import { pathToFileURL } from 'node:url';
 import { handleCardAction, normalizeCardAction } from './callback-core.mjs';
 import { parsePrivateConfig, sanitizeError, sha256 } from './config.mjs';
 import { acquireInstanceLock } from './instance-lock.mjs';
+import { handleDecisionTextMessage, normalizeMessageEvent } from './message-core.mjs';
+import { createMessageReplyTransport } from './message-runtime.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const CALLBACK_TIMEOUT_MS = 2_800;
@@ -236,6 +238,60 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRe
   };
 }
 
+function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive, reportRejection }) {
+  return async (event) => {
+    const normalized = normalizeMessageEvent(event);
+    if (normalized === null) {
+      reportRejection('invalid_shape');
+      return undefined;
+    }
+    rememberSensitive([
+      normalized.eventId,
+      normalized.tenantKey,
+      normalized.openId,
+      normalized.messageId,
+      normalized.chatId,
+    ]);
+    let config;
+    let pendingBindings;
+    try {
+      config = await loadConfig();
+      rememberSensitive([
+        config.appId,
+        config.appSecret,
+        config.recipient.value,
+        config.expectedTenantKey,
+        config.hmacKey,
+      ]);
+      pendingBindings = await readBoundedJson(
+        join(config.stateRoot, 'pending-bindings.json'),
+        fs,
+      );
+    } catch {
+      reportRejection('binding_read');
+      return undefined;
+    }
+    const messageNow = now();
+    if (!(messageNow instanceof Date) || !Number.isFinite(messageNow.getTime())) {
+      reportRejection('invalid_now');
+      return undefined;
+    }
+    const result = await handleDecisionTextMessage({
+      event,
+      config,
+      pendingBindings,
+      now: messageNow,
+      replyText,
+    }).catch(() => ({ accepted: false, rejectionCode: 'callback_error' }));
+    if (result.rejectionCode === 'message_reply_failed') {
+      reportRejection('message_reply_failed');
+    } else if (!result.accepted && result.rejectionCode !== 'format_hint') {
+      reportRejection('validation');
+    }
+    return undefined;
+  };
+}
+
 export async function startBridge(options = {}) {
   const env = options.env ?? process.env;
   const homedir = options.homedir ?? systemHomedir;
@@ -356,15 +412,23 @@ export async function startBridge(options = {}) {
     await enqueueHealth('CONNECTING');
     let EventDispatcher = options.EventDispatcher;
     let WSClient = options.WSClient;
+    let MessageClient = options.MessageClient;
     if (EventDispatcher === undefined || WSClient === undefined) {
       const sdk = await import('@larksuiteoapi/node-sdk');
       EventDispatcher ??= sdk.EventDispatcher ?? sdk.default?.EventDispatcher;
       WSClient ??= sdk.WSClient ?? sdk.default?.WSClient;
+      MessageClient ??= sdk.Client ?? sdk.default?.Client;
     }
     if (typeof EventDispatcher !== 'function' || typeof WSClient !== 'function') {
       throw new Error();
     }
     const eventDispatcher = new EventDispatcher({});
+    let messageReplyTransport = options.messageReplyTransport;
+    if (messageReplyTransport === undefined) {
+      messageReplyTransport = typeof MessageClient === 'function'
+        ? await createMessageReplyTransport(config, { Client: MessageClient })
+        : async () => { throw new Error('Feishu message reply unavailable'); };
+    }
     const registered = eventDispatcher.register({
       'card.action.trigger': makeCallback({
         loadConfig: async () => parsePrivateConfig(await readBoundedJson(configPath, fs)),
@@ -377,6 +441,16 @@ export async function startBridge(options = {}) {
           if (code === 'invalid_shape') {
             emitSanitized('warn', [summarizeCardShape(event)]);
           }
+        },
+      }),
+      'im.message.receive_v1': makeMessageCallback({
+        loadConfig: async () => parsePrivateConfig(await readBoundedJson(configPath, fs)),
+        fs,
+        now,
+        replyText: messageReplyTransport,
+        rememberSensitive,
+        reportRejection: (code) => {
+          emitSanitized('warn', [`message_rejected:${code}`]);
         },
       }),
     });

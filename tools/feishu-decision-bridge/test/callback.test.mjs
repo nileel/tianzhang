@@ -553,6 +553,7 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     (...args) => logLines.push(`${level}:${args.map(String).join(' ')}`),
   ]));
   let now = NOW;
+  const messageReplies = [];
   const runtime = await startBridge({
     env: { FEISHU_DECISION_CONFIG_PATH: configPath },
     EventDispatcher: FakeEventDispatcher,
@@ -561,10 +562,15 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     logger,
     now: () => now,
     pid: 4242,
+    messageReplyTransport: async (messageId, text) => {
+      messageReplies.push({ messageId, text });
+    },
   });
 
   assert.deepEqual(dispatcherArguments, [{}]);
-  assert.deepEqual(Object.keys(registered), ['card.action.trigger']);
+  assert.deepEqual(Object.keys(registered).sort(), [
+    'card.action.trigger', 'im.message.receive_v1',
+  ]);
   assert.deepEqual(startOptions, { eventDispatcher: runtime.eventDispatcher });
   assert.equal(clientOptions.appId, APP_ID);
   assert.equal(clientOptions.appSecret, APP_SECRET);
@@ -585,6 +591,30 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
   const callbackResult = await registered['card.action.trigger'](makeEvent());
   assert.equal(callbackResult.toast.type, 'success');
   assert.equal((await readdir(join(root, 'inbox'))).length, 1);
+
+  await registered['im.message.receive_v1']({
+    event_id: 'evt_fake_text_event',
+    event_type: 'im.message.receive_v1',
+    tenant_key: TENANT_KEY,
+    sender: {
+      sender_id: { open_id: OPERATOR_OPEN_ID },
+      sender_type: 'user',
+      tenant_key: TENANT_KEY,
+    },
+    message: {
+      message_id: 'om_fake_text_message',
+      create_time: String(NOW.getTime()),
+      chat_id: 'oc_fake_chat',
+      chat_type: 'p2p',
+      message_type: 'text',
+      content: JSON.stringify({ text: `${DECISION_ID}：自定义 采用文字方案` }),
+    },
+  });
+  assert.equal((await readdir(join(root, 'inbox'))).length, 2);
+  assert.deepEqual(messageReplies, [{
+    messageId: 'om_fake_text_message',
+    text: `已登记 ${DECISION_ID} 自定义方案：\n采用文字方案`,
+  }]);
 
   const invalidCallbackResult = await registered['card.action.trigger']({
     ...makeEvent(),

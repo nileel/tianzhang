@@ -17,9 +17,13 @@ const DECISION_PAYLOAD_KEYS = [
   'kind', 'decisionId', 'optionKey', 'cardNonceHash', 'providerMessageIdHash',
   'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'receivedAt',
 ];
-const CUSTOM_DECISION_PAYLOAD_KEYS = [
+const CUSTOM_CARD_PAYLOAD_KEYS = [
   'kind', 'decisionId', 'customText', 'cardNonceHash', 'providerMessageIdHash',
   'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'receivedAt', 'source',
+];
+const CUSTOM_TEXT_PAYLOAD_KEYS = [
+  'kind', 'decisionId', 'customText', 'providerMessageIdHash', 'providerEventIdHash',
+  'operatorOpenIdHash', 'tenantKeyHash', 'providerChatIdHash', 'receivedAt', 'source',
 ];
 const PAIRING_PAYLOAD_KEYS = [
   'kind', 'pairingNonceHash', 'providerEventIdHash', 'operatorOpenIdHash',
@@ -119,7 +123,18 @@ function snapshotDecisionPayload(value) {
 }
 
 function snapshotCustomDecisionPayload(value) {
-  const fields = exactDataObject(value, CUSTOM_DECISION_PAYLOAD_KEYS);
+  const sourceDescriptor = isPlainObject(value)
+    ? Object.getOwnPropertyDescriptor(value, 'source')
+    : null;
+  if (!sourceDescriptor || !Object.hasOwn(sourceDescriptor, 'value')) {
+    return null;
+  }
+  const fields = exactDataObject(
+    value,
+    sourceDescriptor.value === 'feishu_card_input'
+      ? CUSTOM_CARD_PAYLOAD_KEYS
+      : CUSTOM_TEXT_PAYLOAD_KEYS,
+  );
   const customText = normalizeCustomText(fields?.customText);
   if (
     fields === null
@@ -127,13 +142,14 @@ function snapshotCustomDecisionPayload(value) {
     || !isIdentifier(fields.decisionId)
     || customText === null
     || customText !== fields.customText
-    || !isHex(fields.cardNonceHash)
     || !isHex(fields.providerMessageIdHash)
     || !isHex(fields.providerEventIdHash)
     || !isHex(fields.operatorOpenIdHash)
     || !isHex(fields.tenantKeyHash)
     || parseExactIso(fields.receivedAt) === null
     || !['feishu_card_input', 'feishu_text'].includes(fields.source)
+    || (fields.source === 'feishu_card_input' && !isHex(fields.cardNonceHash))
+    || (fields.source === 'feishu_text' && !isHex(fields.providerChatIdHash))
   ) {
     return null;
   }
