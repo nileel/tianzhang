@@ -151,11 +151,26 @@ try {
   }
   if ($fake.State.Tasks.Count -ne 1) { throw 'second Install created a duplicate task' }
 
+  $healthTimestamp = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
+  [IO.File]::WriteAllText(
+    (Join-Path $stateRoot 'health.json'),
+    ([ordered]@{
+      schemaVersion = 1
+      status = 'CONNECTED'
+      pid = $PID
+      updatedAt = $healthTimestamp
+      appIdHash = ('a' * 64)
+    } | ConvertTo-Json -Compress),
+    [Text.UTF8Encoding]::new($false)
+  )
   $status = Invoke-Script -Path $installTool -Arguments @('Status', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)
   Assert-Code $status 0 'Status'
   $statusOutput = $status.Output | ConvertFrom-Json
   if (-not $statusOutput.installed -or $statusOutput.taskState -ne 'Running') {
     throw 'Status did not report the fake installed task'
+  }
+  if ($statusOutput.bridgeStatus -ne 'CONNECTED' -or $statusOutput.healthAgeSeconds -lt 0 -or $statusOutput.healthAgeSeconds -gt 10) {
+    throw "Status did not report a fresh UTC heartbeat: $($status.Output)"
   }
 
   $uninstall = Invoke-Script -Path $installTool -Arguments @('Uninstall', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)

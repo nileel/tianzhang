@@ -20,6 +20,27 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
+function isExplicitProviderRejection(error) {
+  if (error === null || typeof error !== 'object') {
+    return false;
+  }
+  const responseDescriptor = Object.getOwnPropertyDescriptor(error, 'response');
+  if (!responseDescriptor || !Object.hasOwn(responseDescriptor, 'value') || !isPlainObject(responseDescriptor.value)) {
+    return false;
+  }
+  const dataDescriptor = Object.getOwnPropertyDescriptor(responseDescriptor.value, 'data');
+  if (!dataDescriptor || !Object.hasOwn(dataDescriptor, 'value') || !isPlainObject(dataDescriptor.value)) {
+    return false;
+  }
+  const codeDescriptor = Object.getOwnPropertyDescriptor(dataDescriptor.value, 'code');
+  return Boolean(
+    codeDescriptor
+    && Object.hasOwn(codeDescriptor, 'value')
+    && Number.isInteger(codeDescriptor.value)
+    && codeDescriptor.value !== 0,
+  );
+}
+
 export class ProviderRejectedError extends Error {
   constructor() {
     super('Feishu provider rejected request');
@@ -105,8 +126,8 @@ export async function createLarkTransport(config, options = {}) {
         const messageId = providerMessageId(response);
         return { messageId };
       } catch (error) {
-        if (error instanceof ProviderRejectedError) {
-          throw error;
+        if (error instanceof ProviderRejectedError || isExplicitProviderRejection(error)) {
+          throw new ProviderRejectedError();
         }
         throw new ProviderOutcomeUnknownError();
       }

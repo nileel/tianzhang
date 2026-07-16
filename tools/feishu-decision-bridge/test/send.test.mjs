@@ -401,6 +401,7 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
   const constructions = [];
   const requests = [];
   let response = { code: 0, data: { message_id: 'om_sdk_123' } };
+  let thrownError = null;
   class FakeClient {
     constructor(options) {
       constructions.push(options);
@@ -408,6 +409,9 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
         message: {
           create: async (request) => {
             requests.push(request);
+            if (thrownError !== null) {
+              throw thrownError;
+            }
             return response;
           },
         },
@@ -437,6 +441,16 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
   const invalidRequestError = await captureRejected(transport.sendInteractive(null));
   assert.ok(invalidRequestError instanceof ProviderOutcomeUnknownError);
   assert.equal(invalidRequestError.message, 'Feishu provider outcome unknown');
+
+  thrownError = Object.assign(new Error(config.appSecret), {
+    response: { data: { code: 230001, msg: config.recipient.value } },
+  });
+  const explicitHttpRejection = await captureRejected(transport.sendInteractive(request));
+  assert.ok(explicitHttpRejection instanceof ProviderRejectedError);
+  assert.equal(explicitHttpRejection.message, 'Feishu provider rejected request');
+  assert.equal(explicitHttpRejection.message.includes(config.appSecret), false);
+  assert.equal(explicitHttpRejection.message.includes(config.recipient.value), false);
+  thrownError = null;
 
   for (const [name, badResponse] of [
     ['provider error code', { code: 999, msg: config.appSecret, data: { message_id: 'om_raw' } }],

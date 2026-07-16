@@ -163,7 +163,12 @@ function Get-HealthSummary {
     if (-not (Test-Path -LiteralPath $healthPath -PathType Leaf) -or (Get-Item $healthPath).Length -gt 16KB) {
       return [ordered]@{ bridgeStatus = 'UNAVAILABLE'; healthAgeSeconds = $null }
     }
-    $health = [IO.File]::ReadAllText($healthPath) | ConvertFrom-Json -AsHashtable
+    $healthJson = [IO.File]::ReadAllText($healthPath)
+    $health = if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) {
+      $healthJson | ConvertFrom-Json -AsHashtable -DateKind String
+    } else {
+      $healthJson | ConvertFrom-Json -AsHashtable
+    }
     $updated = [DateTimeOffset]::Parse([string]$health.updatedAt).ToUniversalTime()
     $age = [math]::Max(0, [math]::Floor(([DateTimeOffset]::UtcNow - $updated).TotalSeconds))
     return [ordered]@{ bridgeStatus = [string]$health.status; healthAgeSeconds = [int64]$age }
