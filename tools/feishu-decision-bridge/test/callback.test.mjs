@@ -81,6 +81,17 @@ function makeEvent(overrides = {}) {
   };
 }
 
+function flattenLikeSdk(rawEvent = makeEvent()) {
+  const { header, event, ...rest } = rawEvent;
+  return {
+    [Symbol('event-type')]: header.event_type,
+    event_type: header.event_type,
+    ...rest,
+    ...header,
+    ...event,
+  };
+}
+
 function makeBinding(overrides = {}) {
   return {
     decisionId: DECISION_ID,
@@ -129,7 +140,53 @@ test('normalizeCardAction accepts only a complete schema 2.0 data envelope', () 
   assert.equal(Object.hasOwn(normalized, 'raw'), false);
 });
 
-test('normalizeCardAction rejects legacy, flattened, accessor, extra-value, and unsafe inputs', async (t) => {
+test('normalizeCardAction accepts the exact schema 2.0 shape flattened by the Feishu SDK', () => {
+  const normalized = normalizeCardAction(flattenLikeSdk());
+  assert.deepEqual(normalized.action, {
+    kind: 'decision_reply',
+    decisionId: DECISION_ID,
+    optionKey: 'A',
+    cardNonce: CARD_NONCE,
+  });
+  assert.equal(normalized.appId, APP_ID);
+  assert.equal(normalized.createTimeMs, NOW.getTime());
+  assert.equal(normalized.headerTenantKey, TENANT_KEY);
+  assert.equal(normalized.operatorTenantKey, TENANT_KEY);
+  assert.equal(normalized.operatorOpenId, OPERATOR_OPEN_ID);
+  assert.equal(normalized.messageId, MESSAGE_ID);
+});
+
+test('normalizeCardAction accepts documented optional callback fields after SDK flattening', () => {
+  const event = makeEvent({
+    header: { token: 'verification_token_fixture' },
+    operator: {
+      user_id: 'user_fixture',
+      union_id: 'union_fixture',
+    },
+    action: {
+      timezone: 'Asia/Shanghai',
+      form_value: {},
+      name: 'PairButton_fixture',
+    },
+    context: { open_chat_id: 'oc_fixture_chat' },
+    event: {
+      token: 'card_update_token_fixture',
+      host: 'im_message',
+    },
+  });
+  const normalized = normalizeCardAction(flattenLikeSdk(event));
+  assert.equal(normalized.appId, APP_ID);
+  assert.equal(normalized.operatorOpenId, OPERATOR_OPEN_ID);
+  assert.equal(normalized.messageId, MESSAGE_ID);
+  assert.deepEqual(normalized.action, {
+    kind: 'decision_reply',
+    decisionId: DECISION_ID,
+    optionKey: 'A',
+    cardNonce: CARD_NONCE,
+  });
+});
+
+test('normalizeCardAction rejects legacy, incomplete flattened, accessor, extra-value, and unsafe inputs', async (t) => {
   const oldSchema = makeEvent();
   oldSchema.schema = '1.0';
   const flattened = {
@@ -369,6 +426,18 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
   const callbackResult = await registered['card.action.trigger'](makeEvent());
   assert.equal(callbackResult.toast.type, 'success');
   assert.equal((await readdir(join(root, 'inbox'))).length, 1);
+
+  const invalidCallbackResult = await registered['card.action.trigger']({
+    ...makeEvent(),
+    unexpected: `${APP_ID}-${TENANT_KEY}-${OPERATOR_OPEN_ID}-${MESSAGE_ID}`,
+  });
+  assert.deepEqual(invalidCallbackResult, rejectedResponse());
+  assert.equal(logLines.some((line) => line.includes('callback_rejected:invalid_shape')), true);
+  assert.equal(logLines.some((line) => (
+    line.includes('callback_shape:root=event,header,schema,unexpected')
+    && line.includes(';header=app_id,create_time,event_id,event_type,tenant_key')
+    && line.includes(';event=action,context,operator')
+  )), true);
 
   now = new Date(NOW.getTime() + 60_000);
   await intervalCallback();

@@ -7,10 +7,20 @@ const HEX_PATTERN = /^[0-9a-f]{64}$/;
 const OPTION_KEYS = ['A', 'B', 'C'];
 const ROOT_KEYS = ['schema', 'header', 'event'];
 const HEADER_KEYS = ['event_id', 'create_time', 'event_type', 'tenant_key', 'app_id'];
+const HEADER_OPTIONAL_KEYS = ['token'];
 const EVENT_KEYS = ['operator', 'action', 'context'];
+const EVENT_OPTIONAL_KEYS = ['token', 'host', 'delivery_type'];
+const SDK_FLATTENED_KEYS = [
+  'event_type', 'schema', 'event_id', 'create_time', 'tenant_key', 'app_id',
+  'operator', 'action', 'context',
+];
+const SDK_FLATTENED_OPTIONAL_KEYS = [...HEADER_OPTIONAL_KEYS, ...EVENT_OPTIONAL_KEYS];
 const OPERATOR_KEYS = ['tenant_key', 'open_id'];
+const OPERATOR_OPTIONAL_KEYS = ['user_id', 'union_id'];
 const ACTION_KEYS = ['tag', 'value'];
+const ACTION_OPTIONAL_KEYS = ['timezone', 'form_value', 'name'];
 const CONTEXT_KEYS = ['open_message_id'];
+const CONTEXT_OPTIONAL_KEYS = ['url', 'preview_token', 'open_chat_id'];
 const DECISION_VALUE_KEYS = ['kind', 'decisionId', 'optionKey', 'cardNonce'];
 const PAIRING_VALUE_KEYS = ['kind', 'pairingNonce'];
 
@@ -29,14 +39,17 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-function exactDataObject(value, keys) {
+function exactDataObject(value, keys, optionalKeys = []) {
   if (!isPlainObject(value)) {
     return null;
   }
   const ownKeys = Reflect.ownKeys(value);
+  const allowedKeys = [...keys, ...optionalKeys];
   if (
-    ownKeys.length !== keys.length
-    || ownKeys.some((key) => typeof key !== 'string' || !keys.includes(key))
+    ownKeys.length < keys.length
+    || ownKeys.length > allowedKeys.length
+    || keys.some((key) => !ownKeys.includes(key))
+    || ownKeys.some((key) => typeof key !== 'string' || !allowedKeys.includes(key))
   ) {
     return null;
   }
@@ -54,6 +67,44 @@ function exactDataObject(value, keys) {
     result[key] = descriptor.value;
   }
   return result;
+}
+
+function snapshotSdkFlattenedEvent(value) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const ownKeys = Reflect.ownKeys(value);
+  const symbolKeys = ownKeys.filter((key) => typeof key === 'symbol');
+  if (symbolKeys.length > 1) {
+    return null;
+  }
+  const eventTypeDescriptor = Object.getOwnPropertyDescriptor(value, 'event_type');
+  if (symbolKeys.length === 1) {
+    const symbolDescriptor = Object.getOwnPropertyDescriptor(value, symbolKeys[0]);
+    if (
+      symbolKeys[0].description !== 'event-type'
+      || !symbolDescriptor
+      || !Object.hasOwn(symbolDescriptor, 'value')
+      || !symbolDescriptor.enumerable
+      || !eventTypeDescriptor
+      || !Object.hasOwn(eventTypeDescriptor, 'value')
+      || symbolDescriptor.value !== eventTypeDescriptor.value
+    ) {
+      return null;
+    }
+  }
+  const snapshot = Object.create(null);
+  for (const key of ownKeys) {
+    if (typeof key !== 'string') {
+      continue;
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) {
+      return null;
+    }
+    snapshot[key] = descriptor.value;
+  }
+  return exactDataObject(snapshot, SDK_FLATTENED_KEYS, SDK_FLATTENED_OPTIONAL_KEYS);
 }
 
 function exactDataArray(value) {
@@ -158,16 +209,24 @@ function snapshotActionValue(value) {
 export function normalizeCardAction(rawEvent) {
   try {
     const root = exactDataObject(rawEvent, ROOT_KEYS);
-    const header = exactDataObject(root?.header, HEADER_KEYS);
-    const event = exactDataObject(root?.event, EVENT_KEYS);
-    const operator = exactDataObject(event?.operator, OPERATOR_KEYS);
-    const action = exactDataObject(event?.action, ACTION_KEYS);
-    const context = exactDataObject(event?.context, CONTEXT_KEYS);
+    const flattened = root === null
+      ? snapshotSdkFlattenedEvent(rawEvent)
+      : null;
+    const schema = root?.schema ?? flattened?.schema;
+    const header = root === null
+      ? flattened
+      : exactDataObject(root.header, HEADER_KEYS, HEADER_OPTIONAL_KEYS);
+    const event = root === null
+      ? flattened
+      : exactDataObject(root.event, EVENT_KEYS, EVENT_OPTIONAL_KEYS);
+    const operator = exactDataObject(event?.operator, OPERATOR_KEYS, OPERATOR_OPTIONAL_KEYS);
+    const action = exactDataObject(event?.action, ACTION_KEYS, ACTION_OPTIONAL_KEYS);
+    const context = exactDataObject(event?.context, CONTEXT_KEYS, CONTEXT_OPTIONAL_KEYS);
     const actionValue = snapshotActionValue(action?.value);
     const createTimeMs = parseCreateTime(header?.create_time);
     if (
-      root === null
-      || root.schema !== '2.0'
+      (root === null && flattened === null)
+      || schema !== '2.0'
       || header === null
       || event === null
       || operator === null

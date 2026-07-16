@@ -49,6 +49,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 $script:ProtocolVersion = 1
 $script:StateTool = Join-Path $PSScriptRoot 'automation-controller-state.ps1'
 $script:GuardTool = Join-Path $PSScriptRoot 'automation-workspace-guard.ps1'
@@ -413,37 +414,6 @@ function Write-JsonAtomically {
   } finally {
     if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
   }
-}
-
-function Get-PrivateAclSids {
-  @(
-    [Security.Principal.WindowsIdentity]::GetCurrent().User,
-    [Security.Principal.SecurityIdentifier]::new('S-1-5-18')
-  )
-}
-
-function Set-PrivatePathAcl {
-  param([string]$Path, [switch]$Directory)
-
-  $security = Get-Acl -LiteralPath $Path
-  $security.SetAccessRuleProtection($true, $false)
-  foreach ($existingRule in @($security.Access)) { $security.RemoveAccessRuleSpecific($existingRule) }
-  $inheritance = if ($Directory) {
-    [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
-  } else {
-    [Security.AccessControl.InheritanceFlags]::None
-  }
-  foreach ($sid in Get-PrivateAclSids) {
-    $rule = [Security.AccessControl.FileSystemAccessRule]::new(
-      $sid,
-      [Security.AccessControl.FileSystemRights]::FullControl,
-      $inheritance,
-      [Security.AccessControl.PropagationFlags]::None,
-      [Security.AccessControl.AccessControlType]::Allow
-    )
-    $security.AddAccessRule($rule) | Out-Null
-  }
-  Set-Acl -LiteralPath $Path -AclObject $security
 }
 
 function Initialize-PrivateDirectory {

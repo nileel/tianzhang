@@ -16,6 +16,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 $script:StateRootExplicit = $PSBoundParameters.ContainsKey('StateRoot')
 $script:ConfigPathExplicit = $PSBoundParameters.ContainsKey('ConfigPath')
 $script:ExpectedConfigKeys = @(
@@ -88,61 +89,6 @@ function Assert-TestInjectionSafe {
   }
 }
 
-function Get-PrivateAclSids {
-  @(
-    [Security.Principal.WindowsIdentity]::GetCurrent().User,
-    [Security.Principal.SecurityIdentifier]::new('S-1-5-18')
-  )
-}
-
-function Set-PrivatePathAcl {
-  param([string]$Path, [switch]$Directory)
-
-  $sids = Get-PrivateAclSids
-  $security = Get-Acl -LiteralPath $Path
-  $security.SetAccessRuleProtection($true, $false)
-  foreach ($existingRule in @($security.Access)) {
-    $security.RemoveAccessRuleSpecific($existingRule)
-  }
-  if ($Directory) {
-    $inheritance = [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
-  } else {
-    $inheritance = [Security.AccessControl.InheritanceFlags]::None
-  }
-  foreach ($sid in $sids) {
-    $rule = [Security.AccessControl.FileSystemAccessRule]::new(
-      $sid,
-      [Security.AccessControl.FileSystemRights]::FullControl,
-      $inheritance,
-      [Security.AccessControl.PropagationFlags]::None,
-      [Security.AccessControl.AccessControlType]::Allow
-    )
-    $security.AddAccessRule($rule) | Out-Null
-  }
-  Set-Acl -LiteralPath $Path -AclObject $security
-}
-
-function Assert-PrivateFileAcl {
-  param([string]$Path)
-
-  $acl = Get-Acl -LiteralPath $Path
-  if (-not $acl.AreAccessRulesProtected) { throw 'Private configuration ACL is unsafe' }
-  $allowed = @((Get-PrivateAclSids).Value)
-  $rules = @($acl.Access)
-  if ($rules.Count -ne 2) { throw 'Private configuration ACL is unsafe' }
-  foreach ($rule in $rules) {
-    $sid = $rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
-    if (
-      $sid -notin $allowed -or
-      $rule.IsInherited -or
-      $rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or
-      ($rule.FileSystemRights -band [Security.AccessControl.FileSystemRights]::FullControl) -ne [Security.AccessControl.FileSystemRights]::FullControl
-    ) {
-      throw 'Private configuration ACL is unsafe'
-    }
-  }
-}
-
 function Initialize-PrivateDirectory {
   param([string]$Path)
 
@@ -197,7 +143,7 @@ function Write-PrivateJsonAtomic {
       $stream.Dispose()
     }
     [IO.File]::Move($temporaryPath, $fullPath, $true)
-    Assert-PrivateFileAcl $fullPath
+    Assert-PrivatePathAcl $fullPath
   } finally {
     [Array]::Clear($bytes, 0, $bytes.Length)
     if (Test-Path -LiteralPath $temporaryPath) { Remove-Item -LiteralPath $temporaryPath -Force }
@@ -209,7 +155,7 @@ function Read-PrivateConfig {
 
   $fullPath = Resolve-AbsolutePath $Path 'ConfigPath'
   if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) { throw 'Private configuration is missing' }
-  Assert-PrivateFileAcl $fullPath
+  Assert-PrivatePathAcl $fullPath
   $file = Get-Item -LiteralPath $fullPath
   if ($file.Length -gt 64KB) { throw 'Private configuration is invalid' }
   try {
