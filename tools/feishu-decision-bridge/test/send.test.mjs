@@ -60,6 +60,10 @@ function makeDecision(overrides = {}) {
   };
 }
 
+function findDecisionActions(card) {
+  return card.elements.find((element) => element.tag === 'action').actions;
+}
+
 function makeHealth(overrides = {}) {
   return {
     status: 'CONNECTED',
@@ -136,9 +140,10 @@ test('sendDecision maps email and open_id recipients and sends the exact interac
       assert.ok(request.data.uuid.length <= 50);
 
       const content = JSON.parse(request.data.content);
-      const nonce = content.elements.at(-1).actions[0].value.cardNonce;
+      const actions = findDecisionActions(content);
+      const nonce = actions[0].value.cardNonce;
       assert.deepEqual(content, buildDecisionCard(decision, nonce));
-      for (const action of content.elements.at(-1).actions) {
+      for (const action of actions) {
         assert.deepEqual(
           Object.keys(action.value).sort(),
           ['cardNonce', 'decisionId', 'kind', 'optionKey'],
@@ -777,8 +782,10 @@ test('card nonce is a stable domain-separated HMAC and cannot be predicted by th
       now: NOW,
     });
   }
-  const nonces = requests.map((request) => JSON.parse(request.data.content)
-    .elements.at(-1).actions[0].value.cardNonce);
+  const nonces = requests.map((request) => {
+    const card = JSON.parse(request.data.content);
+    return findDecisionActions(card)[0].value.cardNonce;
+  });
   assert.equal(nonces[0], nonces[1]);
   assert.notEqual(nonces[0], nonces[2]);
   assert.notEqual(nonces[0], nonces[3]);
@@ -837,7 +844,7 @@ test('send intent store persists only sanitized atomic ACCEPTED evidence and cac
   assert.equal(record.provider, 'feishu');
   assert.equal(record.status, 'ACCEPTED');
   assert.equal(record.providerMessageIdHash, sha256('om_raw_provider_identity'));
-  const cardNonce = JSON.parse(requests[0].data.content).elements.at(-1).actions[0].value.cardNonce;
+  const cardNonce = findDecisionActions(JSON.parse(requests[0].data.content))[0].value.cardNonce;
   for (const forbidden of [
     config.recipient.value,
     config.appId,

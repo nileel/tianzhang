@@ -452,7 +452,8 @@ function Invoke-Canary {
   Initialize-PrivateDirectory $config.stateRoot
   $bindingPath = Join-Path $config.stateRoot 'pending-bindings.json'
   if (Test-Path -LiteralPath $bindingPath) { throw 'A pending decision binding already exists' }
-  $decisionId = 'CANARY-' + [guid]::NewGuid().ToString('N')
+  $decisionDate = [datetime]::UtcNow.ToString('yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture)
+  $decisionId = 'DEC-' + $decisionDate + '-CANARY' + [guid]::NewGuid().ToString('N').ToUpperInvariant()
   $nonceBytes = [byte[]]::new(24)
   [Security.Cryptography.RandomNumberGenerator]::Fill($nonceBytes)
   try { $cardNonce = [Convert]::ToHexString($nonceBytes).ToLowerInvariant() }

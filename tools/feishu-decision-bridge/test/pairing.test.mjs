@@ -123,7 +123,7 @@ test('canary CLI requires paired identity and emits only hashed delivery evidenc
     pairedOperatorOpenIdHash: operatorHash,
   }));
   const decision = {
-    decisionId: 'CANARY-fixture',
+    decisionId: 'DEC-20260716-CANARYFIXTURE',
     taskId: 'FEISHU-CANARY',
     question: '请选择 A。',
     options: [
@@ -154,7 +154,8 @@ test('canary CLI requires paired identity and emits only hashed delivery evidenc
   });
   assert.equal(code, 0);
   const card = JSON.parse(transportRequest.data.content);
-  assert.equal(card.elements.at(-1).actions[0].value.cardNonce, cardNonce);
+  const decisionActions = card.elements.find((element) => element.tag === 'action').actions;
+  assert.equal(decisionActions[0].value.cardNonce, cardNonce);
   assert.deepEqual(JSON.parse(capture.text()), {
     result: 'PROVIDER_ACCEPTED',
     targetHash: sha256(RECIPIENT),

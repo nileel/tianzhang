@@ -1,7 +1,9 @@
 import { isSafeSingleLine } from './config.mjs';
+import { formatCustomReplyCommand } from './custom-reply.mjs';
 
 const OPTION_KEYS = ['A', 'B', 'C'];
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const DECISION_ID_PATTERN = /^DEC-[0-9]{8}-[A-Z0-9]+$/;
 const INVALID_FIELD = Symbol('invalid-field');
 const MISSING_FIELD = Symbol('missing-field');
 
@@ -114,7 +116,8 @@ function isSafeDisplayText(value) {
 function validateInput(decision, cardNonce) {
   if (
     decision === null
-    || !isIdentifier(decision.decisionId)
+    || typeof decision.decisionId !== 'string'
+    || !DECISION_ID_PATTERN.test(decision.decisionId)
     || (decision.taskIdProvided && !isIdentifier(decision.taskId))
     || !isSafeDisplayText(decision.question)
     || !OPTION_KEYS.includes(decision.recommendedOption)
@@ -195,7 +198,7 @@ export function buildDecisionCard(input, cardNonce) {
           tag: 'button',
           text: {
             tag: 'plain_text',
-            content: `${key}：${label}`,
+            content: `选择 ${key}`,
           },
           type: key === decision.recommendedOption ? 'primary' : 'default',
           value: {
@@ -205,6 +208,44 @@ export function buildDecisionCard(input, cardNonce) {
             cardNonce,
           },
         })),
+      },
+      {
+        tag: 'form',
+        name: 'customDecisionForm',
+        elements: [
+          {
+            tag: 'input',
+            name: 'customDecision',
+            input_type: 'multiline_text',
+            placeholder: {
+              tag: 'plain_text',
+              content: '输入你希望采用的方案（最多 1000 字）',
+            },
+          },
+          {
+            tag: 'button',
+            action_type: 'form_submit',
+            text: {
+              tag: 'plain_text',
+              content: '提交自定义方案',
+            },
+            type: 'primary',
+            value: {
+              kind: 'decision_custom_reply',
+              decisionId: decision.decisionId,
+              cardNonce,
+            },
+          },
+        ],
+      },
+      {
+        tag: 'note',
+        elements: [
+          {
+            tag: 'plain_text',
+            content: `也可直接发消息（长按复制格式）：\n${formatCustomReplyCommand(decision.decisionId)}`,
+          },
+        ],
       },
     ],
   };
