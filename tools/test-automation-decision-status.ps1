@@ -278,6 +278,42 @@ try {
       }
     },
     [ordered]@{
+      Label = 'mixed custom resolution'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @(
+          [ordered]@{
+            decisionId = 'DEC-20260715-FIRST111111'
+            resolution = [ordered]@{ optionKey = 'A'; customText = '双通道'; source = 'feishu_text' }
+          }
+        )
+      }
+    },
+    [ordered]@{
+      Label = 'unsafe custom resolution'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @(
+          [ordered]@{
+            decisionId = 'DEC-20260715-FIRST111111'
+            resolution = [ordered]@{ customText = "双通道$([char]0x202e)"; source = 'feishu_text' }
+          }
+        )
+      }
+    },
+    [ordered]@{
+      Label = 'mismatched custom source'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @(
+          [ordered]@{
+            decisionId = 'DEC-20260715-FIRST111111'
+            resolution = [ordered]@{ customText = '双通道'; source = 'feishu_card' }
+          }
+        )
+      }
+    },
+    [ordered]@{
       Label = 'provider field'
       Payload = [ordered]@{
         pendingDecision = [ordered]@{
