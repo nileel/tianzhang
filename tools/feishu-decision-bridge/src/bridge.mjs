@@ -382,7 +382,7 @@ function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive
     if (result.rejectionCode === 'message_reply_failed') {
       reportRejection('message_reply_failed');
     } else if (!result.accepted && result.rejectionCode !== 'format_hint') {
-      reportRejection('validation');
+      reportRejection(`validation_${result.rejectionCode}`);
     }
     return undefined;
   };

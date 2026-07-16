@@ -179,16 +179,16 @@ test('valid strict text writes a signed custom envelope and confirms once', asyn
 });
 
 test('message binding rejects wrong identity, chat, tenant, decision, time, and permissions silently', async (t) => {
-  for (const [name, event, configOverride, bindingOverride] of [
-    ['wrong operator', makeEvent('ok', { sender: { sender_id: { open_id: 'ou-other' } } }), {}, {}],
-    ['wrong chat', makeEvent('ok', { message: { chat_id: 'oc-other' } }), {}, {}],
-    ['wrong tenant', makeEvent('ok', { root: { tenant_key: 'tenant-other' }, sender: { tenant_key: 'tenant-other' } }), {}, {}],
-    ['wrong app', makeEvent('ok', { root: { app_id: 'app-other' } }), {}, {}],
-    ['wrong decision', makeEvent('DEC-20260716-OTHER：自定义 ok'), {}, {}],
-    ['expired', makeEvent(), {}, { expiresAt: new Date(NOW.getTime() - 1).toISOString() }],
-    ['before issued', makeEvent('ok', { message: { create_time: String(NOW.getTime() - 120_000) } }), {}, {}],
-    ['custom disabled', makeEvent(), {}, { allowCustomReply: false }],
-    ['unpaired', makeEvent(), { pairedOperatorOpenIdHash: null }, {}],
+  for (const [name, event, configOverride, bindingOverride, expectedCode] of [
+    ['wrong operator', makeEvent('ok', { sender: { sender_id: { open_id: 'ou-other' } } }), {}, {}, 'operator_identity'],
+    ['wrong chat', makeEvent('ok', { message: { chat_id: 'oc-other' } }), {}, {}, 'chat_binding'],
+    ['wrong tenant', makeEvent('ok', { root: { tenant_key: 'tenant-other' }, sender: { tenant_key: 'tenant-other' } }), {}, {}, 'tenant_identity'],
+    ['wrong app', makeEvent('ok', { root: { app_id: 'app-other' } }), {}, {}, 'app_identity'],
+    ['wrong decision', makeEvent('DEC-20260716-OTHER：自定义 ok'), {}, {}, 'decision_mismatch'],
+    ['expired', makeEvent(), {}, { expiresAt: new Date(NOW.getTime() - 1).toISOString() }, 'binding_expired'],
+    ['before issued', makeEvent('ok', { message: { create_time: String(NOW.getTime() - 120_000) } }), {}, {}, 'binding_time'],
+    ['custom disabled', makeEvent(), {}, { allowCustomReply: false }, 'custom_disabled'],
+    ['unpaired', makeEvent(), { pairedOperatorOpenIdHash: null }, {}, 'unpaired'],
   ]) {
     await t.test(name, async (t) => {
       const root = await mkdtemp(join(tmpdir(), 'tzg-message-reject-'));
@@ -202,6 +202,7 @@ test('message binding rejects wrong identity, chat, tenant, decision, time, and 
         replyText: async (...args) => replies.push(args),
       });
       assert.equal(result.accepted, false);
+      assert.equal(result.rejectionCode, expectedCode);
       assert.equal(replies.length, 0);
       await assert.rejects(readdir(join(root, 'inbox')));
     });

@@ -295,35 +295,54 @@ export async function handleDecisionTextMessage({
     parsedConfig = parsePrivateConfig(config);
     normalized = normalizeMessageEvent(event);
     bindings = snapshotBindings(pendingBindings);
-    if (
-      normalized === null
-      || bindings === null
-      || !(now instanceof Date)
-      || !Number.isFinite(now.getTime())
-      || typeof replyText !== 'function'
-      || parsedConfig.expectedTenantKey === null
-      || parsedConfig.pairedOperatorOpenIdHash === null
-      || normalized.appId !== parsedConfig.appId
-      || normalized.createdAtMs > now.getTime()
-      || normalized.tenantKey !== parsedConfig.expectedTenantKey
-      || sha256(normalized.openId) !== parsedConfig.pairedOperatorOpenIdHash
-    ) {
-      return rejected('validation');
-    }
   } catch {
-    return rejected('validation');
+    return rejected('configuration');
+  }
+  if (normalized === null) {
+    return rejected('event_validation');
+  }
+  if (bindings === null) {
+    return rejected('binding_shape');
+  }
+  if (!(now instanceof Date) || !Number.isFinite(now.getTime()) || typeof replyText !== 'function') {
+    return rejected('runtime');
+  }
+  if (parsedConfig.expectedTenantKey === null || parsedConfig.pairedOperatorOpenIdHash === null) {
+    return rejected('unpaired');
+  }
+  if (normalized.appId !== parsedConfig.appId) {
+    return rejected('app_identity');
+  }
+  if (normalized.tenantKey !== parsedConfig.expectedTenantKey) {
+    return rejected('tenant_identity');
+  }
+  if (sha256(normalized.openId) !== parsedConfig.pairedOperatorOpenIdHash) {
+    return rejected('operator_identity');
+  }
+  if (normalized.createdAtMs > now.getTime()) {
+    return rejected('event_time');
   }
 
   const providerChatIdHash = sha256(normalized.chatId);
-  const binding = bindings.find((candidate) => (
+  const chatBindings = bindings.filter((candidate) => (
     candidate.providerChatIdHash === providerChatIdHash
-    && candidate.allowCustomReply
-    && normalized.createdAtMs >= candidate.issuedAtMs
+  ));
+  if (chatBindings.length === 0) {
+    return rejected('chat_binding');
+  }
+  const customBindings = chatBindings.filter((candidate) => candidate.allowCustomReply);
+  if (customBindings.length === 0) {
+    return rejected('custom_disabled');
+  }
+  const binding = customBindings.find((candidate) => (
+    normalized.createdAtMs >= candidate.issuedAtMs
     && normalized.createdAtMs <= candidate.expiresAtMs
     && now.getTime() <= candidate.expiresAtMs
   ));
   if (binding === undefined) {
-    return rejected('validation');
+    return rejected(customBindings.some((candidate) => normalized.createdAtMs < candidate.issuedAtMs)
+      ? 'binding_time'
+      : 'binding_expired');
   }
 
   const providerEventIdHash = sha256(normalized.eventId);
@@ -339,7 +358,7 @@ export async function handleDecisionTextMessage({
     return rejected(replyFailure ?? 'format_hint');
   }
   if (command.decisionId !== binding.decisionId) {
-    return rejected('validation');
+    return rejected('decision_mismatch');
   }
 
   const payload = {
