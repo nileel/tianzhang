@@ -1,4 +1,5 @@
 import { parsePrivateConfig, sha256 } from './config.mjs';
+import { normalizeCustomText } from './custom-reply.mjs';
 import { signEnvelope } from './envelope.mjs';
 import { writeSignedInbox } from './inbox.mjs';
 
@@ -22,6 +23,7 @@ const ACTION_OPTIONAL_KEYS = ['timezone', 'form_value', 'name'];
 const CONTEXT_KEYS = ['open_message_id'];
 const CONTEXT_OPTIONAL_KEYS = ['url', 'preview_token', 'open_chat_id'];
 const DECISION_VALUE_KEYS = ['kind', 'decisionId', 'optionKey', 'cardNonce'];
+const CUSTOM_DECISION_VALUE_KEYS = ['kind', 'decisionId', 'cardNonce'];
 const PAIRING_VALUE_KEYS = ['kind', 'pairingNonce'];
 
 const REJECTED = Object.freeze({
@@ -55,8 +57,11 @@ function exactDataObject(value, keys, optionalKeys = []) {
   }
   const descriptors = Object.getOwnPropertyDescriptors(value);
   const result = Object.create(null);
-  for (const key of keys) {
+  for (const key of allowedKeys) {
     const descriptor = descriptors[key];
+    if (descriptor === undefined) {
+      continue;
+    }
     if (
       !descriptor
       || !Object.hasOwn(descriptor, 'value')
@@ -168,7 +173,7 @@ function parseCreateTime(value) {
   }
 }
 
-function snapshotActionValue(value) {
+function snapshotActionValue(value, action) {
   if (!isPlainObject(value)) {
     return null;
   }
@@ -190,6 +195,26 @@ function snapshotActionValue(value) {
       kind: 'decision_reply',
       decisionId: fields.decisionId,
       optionKey: fields.optionKey,
+      cardNonce: fields.cardNonce,
+    };
+  }
+  if (kindDescriptor.value === 'decision_custom_reply') {
+    const fields = exactDataObject(value, CUSTOM_DECISION_VALUE_KEYS);
+    const form = exactDataObject(action?.form_value, ['customDecision']);
+    const customText = normalizeCustomText(form?.customDecision);
+    if (
+      fields === null
+      || !isIdentifier(fields.decisionId)
+      || !isIdentifier(fields.cardNonce)
+      || action?.name !== 'submitCustomDecision'
+      || customText === null
+    ) {
+      return null;
+    }
+    return {
+      kind: 'decision_custom_reply',
+      decisionId: fields.decisionId,
+      customText,
       cardNonce: fields.cardNonce,
     };
   }
@@ -222,7 +247,7 @@ export function normalizeCardAction(rawEvent) {
     const operator = exactDataObject(event?.operator, OPERATOR_KEYS, OPERATOR_OPTIONAL_KEYS);
     const action = exactDataObject(event?.action, ACTION_KEYS, ACTION_OPTIONAL_KEYS);
     const context = exactDataObject(event?.context, CONTEXT_KEYS, CONTEXT_OPTIONAL_KEYS);
-    const actionValue = snapshotActionValue(action?.value);
+    const actionValue = snapshotActionValue(action?.value, action);
     const createTimeMs = parseCreateTime(header?.create_time);
     if (
       (root === null && flattened === null)
@@ -278,13 +303,11 @@ function snapshotDecisionBinding(value) {
     return null;
   }
   const keys = Reflect.ownKeys(value);
-  const allowed = new Set([
-    'kind', 'decisionId', 'allowedOptions', 'issuedAt', 'expiresAt',
-    'cardNonceHash', 'providerMessageIdHash',
-  ]);
   const required = [
-    'decisionId', 'allowedOptions', 'expiresAt', 'cardNonceHash', 'providerMessageIdHash',
+    'kind', 'decisionId', 'allowedOptions', 'allowCustomReply', 'issuedAt', 'expiresAt',
+    'cardNonceHash', 'providerMessageIdHash', 'providerChatIdHash',
   ];
+  const allowed = new Set(required);
   if (
     keys.some((key) => typeof key !== 'string' || !allowed.has(key))
     || required.some((key) => !keys.includes(key))
@@ -305,13 +328,15 @@ function snapshotDecisionBinding(value) {
   const expiresAtMs = parseExactIso(field('expiresAt'));
   const issuedAtMs = keys.includes('issuedAt') ? parseExactIso(field('issuedAt')) : null;
   if (
-    (keys.includes('kind') && field('kind') !== 'decision_reply')
+    field('kind') !== 'decision_reply'
     || !isIdentifier(field('decisionId'))
     || options === null
     || expiresAtMs === null
-    || (keys.includes('issuedAt') && issuedAtMs === null)
+    || issuedAtMs === null
+    || typeof field('allowCustomReply') !== 'boolean'
     || !isHex(field('cardNonceHash'))
     || !isHex(field('providerMessageIdHash'))
+    || !isHex(field('providerChatIdHash'))
   ) {
     return null;
   }
@@ -319,10 +344,12 @@ function snapshotDecisionBinding(value) {
     kind: 'decision_reply',
     decisionId: field('decisionId'),
     allowedOptions: options,
+    allowCustomReply: field('allowCustomReply'),
     expiresAtMs,
     issuedAtMs,
     cardNonceHash: field('cardNonceHash'),
     providerMessageIdHash: field('providerMessageIdHash'),
+    providerChatIdHash: field('providerChatIdHash'),
   };
 }
 
@@ -388,6 +415,36 @@ function acceptedDecisionResponse(optionKey, receivedAt) {
     response: {
       toast: { type: 'success', content: `已选择 ${optionKey}` },
       card: { type: 'raw', data: readonlyDecisionCard(optionKey, receivedAt) },
+    },
+  };
+}
+
+function readonlyCustomDecisionCard(decisionId, customText, receivedAt) {
+  return {
+    config: { wide_screen_mode: true },
+    header: {
+      template: 'green',
+      title: { tag: 'plain_text', content: '已登记自定义方案' },
+    },
+    elements: [{
+      tag: 'div',
+      text: {
+        tag: 'plain_text',
+        content: `已登记自定义方案\n决定编号：${decisionId}\n${customText}\n登记时间：${receivedAt}`,
+      },
+    }],
+  };
+}
+
+function acceptedCustomDecisionResponse(decisionId, customText, receivedAt) {
+  return {
+    accepted: true,
+    response: {
+      toast: { type: 'success', content: '已登记自定义方案' },
+      card: {
+        type: 'raw',
+        data: readonlyCustomDecisionCard(decisionId, customText, receivedAt),
+      },
     },
   };
 }
@@ -465,11 +522,38 @@ export async function handleCardAction({ event, config, pendingBindings, now }) 
       || now.getTime() > binding.expiresAtMs
       || normalized.createTimeMs > binding.expiresAtMs
       || (binding.issuedAtMs !== null && normalized.createTimeMs < binding.issuedAtMs)
-      || !binding.allowedOptions.includes(normalized.action.optionKey)
       || sha256(normalized.action.cardNonce) !== binding.cardNonceHash
       || sha256(normalized.messageId) !== binding.providerMessageIdHash
+      || (normalized.action.kind === 'decision_reply'
+        && !binding.allowedOptions.includes(normalized.action.optionKey))
+      || (normalized.action.kind === 'decision_custom_reply' && !binding.allowCustomReply)
     ) {
       throw new Error();
+    }
+    if (normalized.action.kind === 'decision_custom_reply') {
+      const payload = {
+        kind: 'decision_custom_reply',
+        decisionId: normalized.action.decisionId,
+        customText: normalized.action.customText,
+        cardNonceHash: binding.cardNonceHash,
+        providerMessageIdHash: binding.providerMessageIdHash,
+        providerEventIdHash,
+        operatorOpenIdHash,
+        tenantKeyHash,
+        receivedAt,
+        source: 'feishu_card_input',
+      };
+      const envelope = signEnvelope(payload, parsedConfig.hmacKey);
+      await writeSignedInbox({
+        stateRoot: parsedConfig.stateRoot,
+        envelope,
+        eventIdHash: providerEventIdHash,
+      });
+      return acceptedCustomDecisionResponse(
+        normalized.action.decisionId,
+        normalized.action.customText,
+        receivedAt,
+      );
     }
     const payload = {
       kind: 'decision_reply',

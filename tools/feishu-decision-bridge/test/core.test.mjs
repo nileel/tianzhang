@@ -379,6 +379,7 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
   });
   assert.deepEqual(formElement.elements[1], {
     tag: 'button',
+    name: 'submitCustomDecision',
     action_type: 'form_submit',
     text: { tag: 'plain_text', content: '提交自定义方案' },
     type: 'primary',

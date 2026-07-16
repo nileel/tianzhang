@@ -5,6 +5,7 @@ import {
 import { isAbsolute, join } from 'node:path';
 
 import { parsePrivateConfig, sha256 } from './config.mjs';
+import { normalizeCustomText } from './custom-reply.mjs';
 import { canonicalize, verifyEnvelope } from './envelope.mjs';
 
 const MAX_ENVELOPE_BYTES = 64 * 1024;
@@ -15,6 +16,10 @@ const ENVELOPE_KEYS = ['schemaVersion', 'payload', 'signature'];
 const DECISION_PAYLOAD_KEYS = [
   'kind', 'decisionId', 'optionKey', 'cardNonceHash', 'providerMessageIdHash',
   'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'receivedAt',
+];
+const CUSTOM_DECISION_PAYLOAD_KEYS = [
+  'kind', 'decisionId', 'customText', 'cardNonceHash', 'providerMessageIdHash',
+  'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'receivedAt', 'source',
 ];
 const PAIRING_PAYLOAD_KEYS = [
   'kind', 'pairingNonceHash', 'providerEventIdHash', 'operatorOpenIdHash',
@@ -113,6 +118,28 @@ function snapshotDecisionPayload(value) {
   return { ...fields };
 }
 
+function snapshotCustomDecisionPayload(value) {
+  const fields = exactDataObject(value, CUSTOM_DECISION_PAYLOAD_KEYS);
+  const customText = normalizeCustomText(fields?.customText);
+  if (
+    fields === null
+    || fields.kind !== 'decision_custom_reply'
+    || !isIdentifier(fields.decisionId)
+    || customText === null
+    || customText !== fields.customText
+    || !isHex(fields.cardNonceHash)
+    || !isHex(fields.providerMessageIdHash)
+    || !isHex(fields.providerEventIdHash)
+    || !isHex(fields.operatorOpenIdHash)
+    || !isHex(fields.tenantKeyHash)
+    || parseExactIso(fields.receivedAt) === null
+    || !['feishu_card_input', 'feishu_text'].includes(fields.source)
+  ) {
+    return null;
+  }
+  return { ...fields };
+}
+
 function snapshotPairingPayload(value) {
   const fields = exactDataObject(value, PAIRING_PAYLOAD_KEYS);
   if (
@@ -146,9 +173,14 @@ function snapshotEnvelope(value) {
   if (!kindDescriptor || !Object.hasOwn(kindDescriptor, 'value')) {
     return null;
   }
-  const payload = kindDescriptor.value === 'decision_reply'
-    ? snapshotDecisionPayload(fields.payload)
-    : snapshotPairingPayload(fields.payload);
+  let payload;
+  if (kindDescriptor.value === 'decision_reply') {
+    payload = snapshotDecisionPayload(fields.payload);
+  } else if (kindDescriptor.value === 'decision_custom_reply') {
+    payload = snapshotCustomDecisionPayload(fields.payload);
+  } else {
+    payload = snapshotPairingPayload(fields.payload);
+  }
   if (payload === null) {
     return null;
   }

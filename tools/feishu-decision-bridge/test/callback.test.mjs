@@ -95,13 +95,34 @@ function flattenLikeSdk(rawEvent = makeEvent()) {
 
 function makeBinding(overrides = {}) {
   return {
+    kind: 'decision_reply',
     decisionId: DECISION_ID,
     allowedOptions: ['A', 'B', 'C'],
+    allowCustomReply: true,
+    issuedAt: new Date(NOW.getTime() - 60_000).toISOString(),
     expiresAt: new Date(NOW.getTime() + 60_000).toISOString(),
     cardNonceHash: sha256(CARD_NONCE),
     providerMessageIdHash: sha256(MESSAGE_ID),
+    providerChatIdHash: sha256('oc_fake_chat'),
     ...overrides,
   };
+}
+
+function makeCustomEvent(customText = '  采用双通道\r\n保留旧字段  ', overrides = {}) {
+  return makeEvent({
+    value: {
+      kind: 'decision_custom_reply',
+      decisionId: DECISION_ID,
+      cardNonce: CARD_NONCE,
+      ...(overrides.value ?? {}),
+    },
+    action: {
+      name: 'submitCustomDecision',
+      form_value: { customDecision: customText },
+      ...(overrides.action ?? {}),
+    },
+    ...(overrides.eventOverrides ?? {}),
+  });
 }
 
 function rejectedResponse() {
@@ -219,6 +240,37 @@ test('normalizeCardAction accepts documented optional callback fields after SDK 
     optionKey: 'A',
     cardNonce: CARD_NONCE,
   });
+});
+
+test('normalizeCardAction accepts an exact SDK-flattened custom decision form', () => {
+  const normalized = normalizeCardAction(flattenLikeSdk(makeCustomEvent()));
+  assert.deepEqual(normalized.action, {
+    kind: 'decision_custom_reply',
+    decisionId: DECISION_ID,
+    customText: '采用双通道\n保留旧字段',
+    cardNonce: CARD_NONCE,
+  });
+});
+
+test('custom decision forms reject malformed, accessor, blank, long, and unsafe content', async (t) => {
+  const accessor = makeCustomEvent();
+  Object.defineProperty(accessor.event.action.form_value, 'customDecision', {
+    enumerable: true,
+    get() { throw new Error('custom getter must not execute'); },
+  });
+  for (const [name, event] of [
+    ['missing form field', makeCustomEvent('ok', { action: { form_value: {} } })],
+    ['extra form field', makeCustomEvent('ok', { action: { form_value: { customDecision: 'ok', extra: 'no' } } })],
+    ['wrong submit name', makeCustomEvent('ok', { action: { name: 'wrongName' } })],
+    ['blank content', makeCustomEvent('   ')],
+    ['long content', makeCustomEvent('x'.repeat(1001))],
+    ['unsafe content', makeCustomEvent('ok\u0000bad')],
+    ['accessor content', accessor],
+  ]) {
+    await t.test(name, () => {
+      assert.throws(() => normalizeCardAction(event), /Invalid card action/);
+    });
+  }
 });
 
 test('normalizeCardAction rejects legacy, incomplete flattened, accessor, extra-value, and unsafe inputs', async (t) => {
@@ -345,6 +397,74 @@ test('valid decision callback writes one signed hash-only envelope and a read-on
     assert.equal(raw.includes(forbidden), false);
   }
   assert.equal((await readdir(join(root, 'inbox'))).filter((name) => name.includes('.tmp')).length, 0);
+});
+
+test('valid custom form callback writes one signed envelope and a read-only confirmation', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-callback-custom-accept-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const event = makeCustomEvent();
+  const request = {
+    event,
+    config: makeConfig(root),
+    pendingBindings: [makeBinding()],
+    now: NOW,
+  };
+  const first = await handleCardAction(request);
+  const replay = await handleCardAction(request);
+  assert.equal(first.accepted, true);
+  assert.equal(replay.accepted, true);
+  assert.equal(first.response.toast.type, 'success');
+  assert.match(first.response.toast.content, /已登记自定义方案/u);
+  assert.match(JSON.stringify(first.response.card.data), /已登记自定义方案/u);
+  assert.match(JSON.stringify(first.response.card.data), new RegExp(DECISION_ID, 'u'));
+  assert.match(JSON.stringify(first.response.card.data), /采用双通道\\n保留旧字段/u);
+  assert.equal(containsInteractiveAction(first.response.card.data), false);
+
+  const names = await readdir(join(root, 'inbox'));
+  assert.deepEqual(names, [`${sha256(EVENT_ID)}.json`]);
+  const raw = await readFile(join(root, 'inbox', names[0]), 'utf8');
+  const payload = verifyEnvelope(JSON.parse(raw), HMAC_KEY);
+  assert.deepEqual(payload, {
+    kind: 'decision_custom_reply',
+    decisionId: DECISION_ID,
+    customText: '采用双通道\n保留旧字段',
+    cardNonceHash: sha256(CARD_NONCE),
+    providerMessageIdHash: sha256(MESSAGE_ID),
+    providerEventIdHash: sha256(EVENT_ID),
+    operatorOpenIdHash: sha256(OPERATOR_OPEN_ID),
+    tenantKeyHash: sha256(TENANT_KEY),
+    receivedAt: NOW.toISOString(),
+    source: 'feishu_card_input',
+  });
+  for (const forbidden of [APP_ID, APP_SECRET, TENANT_KEY, OPERATOR_OPEN_ID, MESSAGE_ID, EVENT_ID, CARD_NONCE]) {
+    assert.equal(raw.includes(forbidden), false);
+  }
+});
+
+test('custom form callback rejects binding, nonce, identity, and expiry mismatches', async (t) => {
+  for (const [name, event, binding] of [
+    ['custom disabled', makeCustomEvent(), makeBinding({ allowCustomReply: false })],
+    ['wrong nonce', makeCustomEvent('ok', { value: { cardNonce: 'nonce_fake_other' } }), makeBinding()],
+    ['wrong identity', makeCustomEvent('ok', {
+      eventOverrides: { operator: { open_id: 'ou_fake_other' } },
+    }), makeBinding()],
+    ['expired', makeCustomEvent(), makeBinding({
+      expiresAt: new Date(NOW.getTime() - 1).toISOString(),
+    })],
+  ]) {
+    await t.test(name, async (t) => {
+      const root = await mkdtemp(join(tmpdir(), 'tzg-callback-custom-reject-'));
+      t.after(() => rm(root, { recursive: true, force: true }));
+      const result = await handleCardAction({
+        event,
+        config: makeConfig(root),
+        pendingBindings: [binding],
+        now: NOW,
+      });
+      assert.deepEqual(result, { accepted: false, response: rejectedResponse() });
+      await assert.rejects(readdir(join(root, 'inbox')));
+    });
+  }
 });
 
 test('operator pairing uses its own inbox and only the tenant key is retained raw', async (t) => {

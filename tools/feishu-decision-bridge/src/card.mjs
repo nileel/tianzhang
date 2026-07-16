@@ -222,9 +222,10 @@ export function buildDecisionCard(input, cardNonce) {
               content: '输入你希望采用的方案（最多 1000 字）',
             },
           },
-          {
-            tag: 'button',
-            action_type: 'form_submit',
+      {
+        tag: 'button',
+        name: 'submitCustomDecision',
+        action_type: 'form_submit',
             text: {
               tag: 'plain_text',
               content: '提交自定义方案',
