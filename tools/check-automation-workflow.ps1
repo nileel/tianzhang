@@ -70,9 +70,9 @@ $titleToolPattern = 'set-thread-name\.mjs'
 $taskSummaryPattern = ConvertFrom-Utf8Base64 '5Lit5paH566A6L+w'
 $titleFormatPattern = ConvertFrom-Utf8Base64 'VFpH772cPOS4reaWh+eugOi/sD4='
 $titleFailurePattern = '改名失败|标题助手失败|助手失败'
-$decisionBoundaryPattern = '待决策与邮件回执|CreateDecision|禁止自行决定'
+$decisionBoundaryPattern = '待决策与飞书卡片回执|CreateDecision|禁止自行决定'
 $decisionVisibilityPattern = '自动工作流状态\.txt|TZG｜待决策|需要决策'
-$decisionFallbackPattern = 'RetryDecisionNotification|不得让控制器作出默认选择|继续正常动态路由'
+$decisionFallbackPattern = 'CHANNEL_UNAVAILABLE|PROVIDER_OUTCOME_UNKNOWN|不得让控制器作出默认选择'
 $taskKindMappingPattern = 'TaskKind 固定映射：普通执行=`execute`、复审=`review`、维护=`maintenance`、恢复=`recovery`'
 $finalizerScopePattern = 'Finalizer 固定边界：expectedPaths 是允许上界，只检查并提交其中的实际变化路径，不自动修复内容。'
 $emailLiteralPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
@@ -164,9 +164,9 @@ Require-Match $rules $titleFailurePattern 'workflow rules do not preserve execut
 Require-Match $rules $decisionBoundaryPattern 'workflow rules lack a decision-request boundary'
 Require-Match $rules $decisionVisibilityPattern 'workflow rules lack decision visibility instructions'
 Require-Match $rules $decisionFallbackPattern 'workflow rules lack decision delivery fallback instructions'
-Require-Match $rules 'PROVIDER_ACCEPTED[^\r\n]*不代表收件' 'workflow rules do not distinguish provider acceptance from receipt'
+Require-Match $rules 'PROVIDER_ACCEPTED[^\r\n]*(只表示|不表示)[^\r\n]*(选择|负责人)' 'workflow rules do not distinguish provider acceptance from a decision reply'
 Require-Match $rules '无效回复[^\r\n]*只读' 'workflow rules do not keep invalid replies read-only'
-Require-Match $rules '人工选择[^\r\n]*不得[^\r\n]*email' 'workflow rules allow manual choices to be forged as email replies'
+Require-Match $rules '人工选择[^\r\n]*不得[^\r\n]*feishu_card' 'workflow rules allow manual choices to be forged as Feishu replies'
 Require-Match $rules '同一任务[^\r\n]*(连续|下一)[^\r\n]*决策' 'workflow rules do not allow chained decisions for the same task'
 Require-Match $rules 'RECOVERABLE[^\r\n]*(必须|须)[^\r\n]*interruption evidence' 'workflow rules allow RECOVERABLE without interruption evidence'
 Require-Match $rules 'Fail[^\r\n]*不得[^\r\n]*(过期|遗留)[^\r\n]*RUNNING' 'workflow rules allow Fail to leave stale RUNNING state'
@@ -213,7 +213,9 @@ if (-not (Test-Path -LiteralPath $controllerPromptSource -PathType Leaf)) {
   $sourcePrompt = [IO.File]::ReadAllText($controllerPromptSource).TrimEnd("`r", "`n")
   $normalizedSourcePrompt = $sourcePrompt -replace "`r`n", "`n" -replace "`r", "`n"
   $normalizedDeployedPrompt = $deployedPrompt.TrimEnd("`r", "`n") -replace "`r`n", "`n" -replace "`r", "`n"
-  if ($normalizedSourcePrompt -cne $normalizedDeployedPrompt) { $findings.Add('deployed controller prompt does not match the versioned source') }
+  if ($ExpectControllerActive -and $normalizedSourcePrompt -cne $normalizedDeployedPrompt) {
+    $findings.Add('active deployed controller prompt does not match the versioned source')
+  }
   if ($sourcePrompt.Length -gt 3000) { $findings.Add("controller prompt exceeds 3000 characters: $($sourcePrompt.Length)") }
   $numberedSteps = [regex]::Matches($sourcePrompt, '(?m)^\s*\d+\.\s').Count
   if ($numberedSteps -gt 10) { $findings.Add("controller prompt exceeds 10 numbered steps: $numberedSteps") }
@@ -222,15 +224,40 @@ if (-not (Test-Path -LiteralPath $controllerPromptSource -PathType Leaf)) {
 foreach ($entryPoint in @('automation-controller\.ps1','Start','InspectCandidate','RegisterCandidate','BeginMutation','Finish','CompleteNoChange','Fail','requiredSources')) {
   Require-Match $controller $entryPoint "controller prompt lacks v3 entry contract: $entryPoint"
 }
-foreach ($promptSource in @(
-  @{ Path = $controllerPromptSource; Label = 'versioned controller prompt' },
-  @{ Path = $controller; Label = 'deployed controller prompt' }
-)) {
-  foreach ($entry in @('CreateDecision', 'PrepareDecisionNotification', 'MarkDecisionSubmitted', 'RetryDecisionNotification', 'ResolveDecisionEmailReply', 'ResolveDecisionManual')) {
-    Require-Match $promptSource.Path ([regex]::Escape($entry)) "$($promptSource.Label) lacks v6 decision contract: $entry"
+$activePromptSources = @(@{ Path = $controllerPromptSource; Label = 'versioned controller prompt' })
+if ($ExpectControllerActive) {
+  $activePromptSources += @{ Path = $controller; Label = 'deployed controller prompt' }
+}
+foreach ($promptSource in $activePromptSources) {
+  foreach ($entry in @('CreateDecision', 'SendDecisionNotification', 'ConsumeDecisionReply', 'ResolveDecisionManual')) {
+    Require-Match $promptSource.Path ([regex]::Escape($entry)) "$($promptSource.Label) lacks v7 decision contract: $entry"
   }
-  foreach ($retired in @('MarkDecisionNotified', 'ResolveDecisionReply')) {
-    Reject-Match $promptSource.Path ([regex]::Escape($retired)) "$($promptSource.Label) still uses retired decision action: $retired"
+  foreach ($retired in @(
+    'PrepareDecisionNotification','MarkDecisionSubmitted','RetryDecisionNotification',
+    'MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','MarkDecisionNotified','ResolveDecisionReply'
+  )) {
+    Reject-Match $promptSource.Path ([regex]::Escape($retired)) "$($promptSource.Label) still uses a legacy decision action: $retired"
+  }
+  Reject-Match $promptSource.Path 'Gmail|全邮箱|邮箱搜索|搜索邮箱|邮件回复必须' "$($promptSource.Label) still requires the legacy mailbox channel"
+  Require-Match $promptSource.Path '不得[^\r\n]*读取聊天全文' "$($promptSource.Label) does not prohibit reading chat history for a decision"
+  Require-Match $promptSource.Path '不得[^\r\n]*自然语言猜[^\r\n]*A/B/C' "$($promptSource.Label) does not prohibit guessing card choices"
+  Require-Match $promptSource.Path '不得[^\r\n]*(提交|拼装)[^\r\n]*(retry|重试)参数' "$($promptSource.Label) does not prohibit model-built retry parameters"
+}
+Require-Match $rules '旧 Gmail 实现[^\r\n]*只用于历史兼容[^\r\n]*不得出现在活动 Contract' 'workflow rules do not isolate the legacy Gmail implementation'
+
+$controllerTool = Join-Path $root 'tools\automation-controller.ps1'
+Require-Match $controllerTool "'SendDecisionNotification'" 'controller tool lacks SendDecisionNotification'
+Require-Match $controllerTool "'ConsumeDecisionReply'" 'controller tool lacks ConsumeDecisionReply'
+Require-Match $controllerTool 'legacyOnly' 'controller tool does not mark legacy decision actions'
+$controllerToolText = [IO.File]::ReadAllText($controllerTool)
+$contractMatch = [regex]::Match($controllerToolText, "(?s)'Contract'\s*\{(?<body>.*?)\r?\n\s*'InspectCandidate'\s*\{")
+if (-not $contractMatch.Success) {
+  $findings.Add('controller active Contract block could not be inspected')
+} else {
+  foreach ($legacyAction in @('PrepareDecisionNotification','MarkDecisionSubmitted','RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply')) {
+    if ($contractMatch.Groups['body'].Value.Contains("'$legacyAction'", [StringComparison]::Ordinal)) {
+      $findings.Add("controller active Contract still exposes legacy action: $legacyAction")
+    }
   }
 }
 Require-Match $rules '有效选择[^\r\n]*InspectCandidate[^\r\n]*不得直接[^\r\n]*Finish' 'workflow rules lack decision reply re-registration'

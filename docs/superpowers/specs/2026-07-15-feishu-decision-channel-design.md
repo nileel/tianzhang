@@ -78,11 +78,15 @@ flowchart LR
 
 1. 从用户级私有配置读取 App ID、App Secret 和接收目标；
 2. 获取并缓存 SDK 管理的应用访问凭证；
-3. 以稳定 UUID 发送一张 `interactive` 决策卡片；
-4. 只向 stdout 返回脱敏 JSON：成功标志、提供方消息 ID、目标哈希和错误类别；
+3. 在用户级 `<stateRoot>/send-intents/` 内持久化净化发送意图，再以稳定 UUID 发送一张 `interactive` 决策卡片；
+4. 只向 stdout 返回脱敏 JSON：结果、提供方消息 ID 哈希、目标哈希、卡片 nonce 哈希和发送意图哈希；
 5. 不输出 token、Secret、原始接收目标或完整提供方响应。
 
-稳定 UUID 由 provider、`decisionId` 和通知序号确定，同一逻辑尝试的进程重试不会制造重复卡片。只有状态中登记的新通知尝试才生成新的 UUID。
+飞书官方 UUID 去重只承诺 1 小时，不能单独承担跨小时幂等。发送器以 `provider + decisionId + attemptNumber` 的领域隔离 SHA-256 作为 `intentKeyHash`，文件名只允许 64 位小写 hex。意图文件仅保存 UUID、目标/请求内容/card nonce/提供方消息 ID 的哈希、时间和有限状态；不保存原始收件人、凭证、`decisionId`、卡片 nonce、卡片内容或原始消息 ID。
+
+同一意图首次调用 provider 前必须在排他锁内原子落盘 `PREPARED → IN_FLIGHT`。`IN_FLIGHT` 或 `OUTCOME_UNKNOWN` 可在 `firstAttemptAt` 后 55 分钟安全窗内，且 UUID、内容、目标和 nonce 哈希完全相同时重试；达到 55 分钟后不得再调用 transport，结果锁定为 `PROVIDER_OUTCOME_UNKNOWN` 并要求人工核对。`ACCEPTED` 和 `REJECTED` 必须直接返回已持久化的净化结果，不再调用 provider。损坏、不匹配、锁竞争或任何终态落盘失败都失败关闭为 `PROVIDER_OUTCOME_UNKNOWN`，不覆写原证据。
+
+稳定 UUID 由 provider、`decisionId` 和通知序号确定。Card nonce 必须由私有 `hmacKey` 对领域隔离后的 provider、`decisionId` 和尝试号做 HMAC-SHA256 派生：同一意图可重建，不同密钥/尝试/领域不同，不可用无密钥摘要预测。Outbox 和发送意图只持久化 nonce 哈希。
 
 ### 5.3 飞书长连接桥
 
@@ -139,13 +143,13 @@ flowchart LR
 - `provider`：`gmail_legacy | feishu`；
 - `providerMessageIdHash`；
 - `targetHash`；
-- `result`：`PROVIDER_ACCEPTED | DELIVERY_FAILED | MISADDRESSED | CHANNEL_UNAVAILABLE`；
+- `result`：`PROVIDER_ACCEPTED | PROVIDER_OUTCOME_UNKNOWN | DELIVERY_FAILED | MISADDRESSED | CHANNEL_UNAVAILABLE`；
 - `errorCategory`；
 - `attemptedAt`。
 
 三次重试上限按 provider 分别计算。既有 Gmail 两次尝试原样迁移为 `gmail_legacy`，不会占用飞书的尝试额度，也不会被删除或重写。
 
-`CHANNEL_UNAVAILABLE` 表示发送前桥接健康检查失败，不算一次实际发送；它只写用户级诊断，不进入项目可见通知次数。`PROVIDER_ACCEPTED` 仍只表示飞书 API 接受并返回消息 ID，不表示负责人已经点击。
+`CHANNEL_UNAVAILABLE` 表示 provider 调用前的本地前置不可用，包括桥接健康失败、SDK 导入失败、client 初始化失败或配置未完成；它零 provider 调用、不算一次实际发送，且只写用户级净化诊断。`INVALID_INPUT` 仅用于配置或请求不合法。`PROVIDER_OUTCOME_UNKNOWN` 表示已可能调用 provider，但结果无法被可靠证明；它不计入失败重试，不允许创建新 attempt/UUID 自动补发，超出安全窗后必须人工核对。`PROVIDER_ACCEPTED` 仍只表示飞书 API 接受并返回消息 ID，不表示负责人已经点击。
 
 ### 7.2 选择证据
 
@@ -178,15 +182,16 @@ flowchart LR
 ## 8. 故障语义
 
 - **回复查询失败不再存在**：飞书使用推送回调，不轮询聊天记录。
-- **长连接发送前不可用**：不发送卡片，不增加发送次数，保留待决策并等待桥恢复。
-- **飞书发送 API 失败**：追加 `DELIVERY_FAILED`；只有该结果允许创建新的飞书发送尝试。
+- **provider 调用前本地不可用**：桥接不健康、SDK 导入失败或 client 初始化失败均返回 `CHANNEL_UNAVAILABLE`；不建立发送意图、不调用 provider、不增加发送次数。
+- **provider 明确拒绝**：官方 SDK 返回可判定的非零业务错误码时记录 `REJECTED`，返回 `DELIVERY_FAILED`；只有该结果允许状态机创建新的飞书发送尝试。
+- **provider 结果不明**：超时、断连、异常抛出、无效响应或缺少消息 ID 均先落盘 `OUTCOME_UNKNOWN`，再返回 `PROVIDER_OUTCOME_UNKNOWN`；不计入失败重试，不允许自动换新 attempt/UUID 补发。
 - **API 已接受但桥随后掉线**：不自动重发卡片。桥重连后负责人可再次点击原卡片；状态继续等待。
 - **重复点击**：首次有效回执获胜，后续事件幂等忽略。
 - **错误用户或旧卡片**：隔离证据，不推进任务，不触发默认选择。
 - **达到飞书三次发送上限**：保持待决策并显示人工入口，不回退 Gmail、不自动选择、不失败关闭业务任务。
 - **桥接进程崩溃**：Windows 计划任务按有限次数重启；持续失败只写用户级健康状态和 automation memory 摘要。
 
-“没有取得回复证据”“桥暂时不可用”和“发送失败”必须是三个不同状态。只有明确的发送失败可以重试通知。
+“没有取得回复证据”“发送前本地不可用”“provider 明确拒绝”和“provider 结果不明”必须是四个不同状态。只有明确拒绝才可以创建新通知尝试。
 
 ## 9. 当前现场迁移与切换
 
@@ -206,7 +211,8 @@ flowchart LR
 ## 10. 文件与组件边界
 
 - `tools/feishu-decision-bridge/package.json`、`package-lock.json`：隔离并固定官方 SDK 依赖。
-- `tools/feishu-decision-bridge/src/send-decision.mjs`：短生命周期发送适配器。
+- `tools/feishu-decision-bridge/src/send-decision.mjs`、`send-core.mjs`、`send-runtime.mjs`：短生命周期发送、幂等编排与 SDK 错误分类。
+- `tools/feishu-decision-bridge/src/send-intent-store.mjs`：用户级净化发送意图、排他锁、原子落盘和 55 分钟安全窗。
 - `tools/feishu-decision-bridge/src/bridge.mjs`：长连接、结构校验、签名信封、去重和健康心跳。
 - `tools/feishu-decision-bridge/src/config.mjs`、`card.mjs`、`envelope.mjs`：私有配置、卡片构建和证据边界。
 - `tools/setup-feishu-decision-channel.ps1`：交互式私有配置、ACL、负责人配对和金丝雀。
@@ -224,18 +230,19 @@ flowchart LR
 实现遵循 TDD，先建立失败测试并确认失败原因：
 
 1. 卡片载荷完整包含当前选项、推荐项和不含私密字段的按钮值。
-2. 发送成功只返回脱敏消息证据，稳定 UUID 防止同一逻辑尝试重复卡片。
+2. 发送成功只返回脱敏消息证据；用户级发送意图与稳定 UUID 共同防止同一逻辑尝试跨小时重复卡片。
 3. Secret、token、接收目标和 Open ID 不出现在 stdout、日志、项目状态或 fixture 快照。
 4. HMAC 错误、错误 app/tenant、未知操作者、错误消息 ID、旧 decisionId、非法 option、多选和过期回调全部拒绝。
 5. 同一 event ID、card nonce 或重复按钮点击只能解析一次。
-6. 桥健康失败不会发送或增加尝试；发送 API 失败才增加飞书失败尝试。
-7. Gmail 查询/历史状态不会触发飞书重发，两个 provider 的尝试上限独立。
-8. schema v6→v7 fixture 保留当前决策、Gmail 两次尝试、决策链与审计更正。
-9. 有效飞书回执记录 `source=feishu_card`，并按 v6 原子转换进入 `IMPLEMENTATION_PENDING`。
-10. 项目状态只显示脱敏渠道摘要。
-11. setup 脚本生成用户级配置并正确收紧 ACL；缺失或宽松 ACL 时桥拒绝启动。
-12. 计划任务安装、重复安装、停止和卸载幂等，且不创建可见终端窗口。
-13. 端到端金丝雀覆盖：发送绑定卡片 → 负责人点击 → 建立身份 → 发送测试决策 → 点击 → 重复点击拒绝。
+6. provider 调用前本地不可用不会建 intent、发送或增加尝试；明确拒绝才计入失败尝试，结果不明不自动换 attempt/UUID。
+7. 模拟 API 接受后终态落盘崩溃、超时/断连、无效响应、55 分钟超窗、损坏/不匹配 intent、锁竞争和两进程并发都失败关闭，且 provider 调用次数符合契约。
+8. Gmail 查询/历史状态不会触发飞书重发，两个 provider 的尝试上限独立。
+9. schema v6→v7 fixture 保留当前决策、Gmail 两次尝试、决策链与审计更正。
+10. 有效飞书回执记录 `source=feishu_card`，并按 v6 原子转换进入 `IMPLEMENTATION_PENDING`。
+11. 项目状态只显示脱敏渠道摘要。
+12. setup 脚本生成用户级配置并正确收紧 ACL；缺失或宽松 ACL 时桥拒绝启动。
+13. 计划任务安装、重复安装、停止和卸载幂等，且不创建可见终端窗口。
+14. 端到端金丝雀覆盖：发送绑定卡片 → 负责人点击 → 建立身份 → 发送测试决策 → 点击 → 重复点击拒绝。
 
 共享控制面改动完成后合并运行一次 controller、state、decision status、workflow checker、review text、暂存前行尾检查与 cached diff 检查。该任务不修改 Unity、CSV、BattleSim 或数值事实源，不运行其无关回归。
 

@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','PrepareDecision','CreateDecision','PrepareDecisionNotification','MarkDecisionSubmitted','RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual')]
+  [ValidateSet('Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish','CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','PrepareDecision','CreateDecision','SendDecisionNotification','ConsumeDecisionReply','PrepareDecisionNotification','MarkDecisionSubmitted','RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual')]
   [string]$Action,
   [string]$RepositoryRoot = (Get-Location).Path,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
@@ -31,6 +31,11 @@ param(
   [string]$DecisionId,
   [string]$NotificationError,
   [string]$PrivateConfigPath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.private.json",
+  [string]$FeishuConfigPath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.feishu.private.json",
+  [string]$FeishuBridgeRoot = "$env:USERPROFILE\.codex\automation-state\tzg-feishu-decision-bridge",
+  [string]$NodeExecutable = 'node',
+  [string]$FeishuSenderScript = (Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-decision.mjs'),
+  [string]$FeishuConsumerScript = (Join-Path $PSScriptRoot 'feishu-decision-bridge\src\consume-reply.mjs'),
   [string]$ProviderMessageId,
   [string]$PriorProviderMessageId,
   [string]$ObservedRecipient,
@@ -52,6 +57,13 @@ $script:DecisionStatusTool = Join-Path $PSScriptRoot 'automation-decision-status
 $script:DecisionStatusRelativePath = '开发管理/自动工作流状态.txt'
 $script:ExecutionQueueRelativePath = '开发管理/当前任务队列.txt'
 $script:ExecutionCandidateResolver = 'current_task_queue_execution'
+$script:FeishuSenderScriptExplicit = $PSBoundParameters.ContainsKey('FeishuSenderScript')
+$script:FeishuConsumerScriptExplicit = $PSBoundParameters.ContainsKey('FeishuConsumerScript')
+$script:ControllerBoundParameterNames = @($PSBoundParameters.Keys)
+$script:LegacyDecisionActions = @(
+  'PrepareDecisionNotification', 'MarkDecisionSubmitted', 'RetryDecisionNotification',
+  'MarkDecisionDeliveryFailed', 'ResolveDecisionEmailReply'
+)
 $script:TaskKindMapping = [ordered]@{
   execution = 'execute'
   review = 'review'
@@ -153,6 +165,12 @@ function Get-DecisionStatusProjection {
 
   $pending = $null
   if ($null -ne $State.pendingDecision) {
+    $notificationAttempts = @($State.pendingDecision.notificationAttempts)
+    $notificationProvider = if ($notificationAttempts.Count -gt 0) {
+      [string]$notificationAttempts[$notificationAttempts.Count - 1].provider
+    } else {
+      $null
+    }
     $pending = [ordered]@{
       decisionId = [string]$State.pendingDecision.decisionId
       createdAt = [string]$State.pendingDecision.createdAt
@@ -164,6 +182,9 @@ function Get-DecisionStatusProjection {
       })
       recommendedOption = [string]$State.pendingDecision.recommendedOption
       status = [string]$State.pendingDecision.status
+    }
+    if (-not [string]::IsNullOrWhiteSpace($notificationProvider)) {
+      $pending['notificationProvider'] = $notificationProvider
     }
   }
   $flow = $null
@@ -295,8 +316,8 @@ function Get-NotificationErrorCategory {
 function Get-DecisionCommandContract {
   [ordered]@{
     requiredParameters = @('TaskSummary', 'DecisionQuestion', 'DecisionOptions', 'RecommendedOption', 'ImpactSummary')
-    optionFormat = 'A=label|B=label'
-    template = 'CreateDecision -RepositoryRoot $RepositoryRoot -RunId $runId -TaskSummary $summary -DecisionQuestion $question -DecisionOptions ''A=label|B=label'' -RecommendedOption A -ImpactSummary $impact'
+    optionFormat = 'A=label|B=label|C=label'
+    template = 'CreateDecision -RepositoryRoot $RepositoryRoot -RunId $runId -TaskSummary $summary -DecisionQuestion $question -DecisionOptions ''A=label|B=label|C=label'' -RecommendedOption A -ImpactSummary $impact'
   }
 }
 
@@ -320,7 +341,7 @@ function New-ProtocolResult {
     [AllowNull()][string]$Message
   )
 
-  [ordered]@{
+  $result = [ordered]@{
     protocolVersion = $script:ProtocolVersion
     ok = $Ok
     action = $NextAction
@@ -337,6 +358,8 @@ function New-ProtocolResult {
     errorCode = $ErrorCode
     message = $Message
   }
+  if ($script:LegacyDecisionActions -contains $Action) { $result['legacyOnly'] = $true }
+  $result
 }
 
 function Write-ProtocolResult {
@@ -389,6 +412,293 @@ function Write-JsonAtomically {
     }
   } finally {
     if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
+  }
+}
+
+function Get-PrivateAclSids {
+  @(
+    [Security.Principal.WindowsIdentity]::GetCurrent().User,
+    [Security.Principal.SecurityIdentifier]::new('S-1-5-18')
+  )
+}
+
+function Set-PrivatePathAcl {
+  param([string]$Path, [switch]$Directory)
+
+  $security = Get-Acl -LiteralPath $Path
+  $security.SetAccessRuleProtection($true, $false)
+  foreach ($existingRule in @($security.Access)) { $security.RemoveAccessRuleSpecific($existingRule) }
+  $inheritance = if ($Directory) {
+    [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
+  } else {
+    [Security.AccessControl.InheritanceFlags]::None
+  }
+  foreach ($sid in Get-PrivateAclSids) {
+    $rule = [Security.AccessControl.FileSystemAccessRule]::new(
+      $sid,
+      [Security.AccessControl.FileSystemRights]::FullControl,
+      $inheritance,
+      [Security.AccessControl.PropagationFlags]::None,
+      [Security.AccessControl.AccessControlType]::Allow
+    )
+    $security.AddAccessRule($rule) | Out-Null
+  }
+  Set-Acl -LiteralPath $Path -AclObject $security
+}
+
+function Initialize-PrivateDirectory {
+  param([string]$Path)
+
+  if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+    New-Item -ItemType Directory -Path $Path -Force | Out-Null
+    Set-PrivatePathAcl -Path $Path -Directory
+    return
+  }
+  $security = Get-Acl -LiteralPath $Path
+  $allowed = @((Get-PrivateAclSids).Value)
+  $rules = @($security.Access)
+  if (-not $security.AreAccessRulesProtected -or $rules.Count -ne 2) {
+    throw 'Private directory ACL is unsafe.'
+  }
+  foreach ($rule in $rules) {
+    $sid = $rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
+    if ($sid -notin $allowed -or $rule.IsInherited -or
+        $rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or
+        ($rule.FileSystemRights -band [Security.AccessControl.FileSystemRights]::FullControl) -ne [Security.AccessControl.FileSystemRights]::FullControl) {
+      throw 'Private directory ACL is unsafe.'
+    }
+  }
+}
+
+function Test-Hex64 {
+  param([AllowNull()][object]$Value)
+  $Value -is [string] -and $Value -cmatch '^[0-9a-f]{64}$'
+}
+
+function Test-ExactKeys {
+  param([Collections.IDictionary]$Value, [string[]]$Expected)
+
+  if ($null -eq $Value -or $Value.Count -ne $Expected.Count) { return $false }
+  foreach ($key in $Expected) {
+    if (-not $Value.Contains($key)) { return $false }
+  }
+  $true
+}
+
+function ConvertTo-ExactUtcIso {
+  param([DateTimeOffset]$Value)
+  $Value.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ss.fffZ', [Globalization.CultureInfo]::InvariantCulture)
+}
+
+function Get-ControllerNowValue {
+  if ([string]::IsNullOrWhiteSpace($Now)) { return [DateTimeOffset]::UtcNow }
+  try { [DateTimeOffset]::Parse($Now, [Globalization.CultureInfo]::InvariantCulture) }
+  catch { throw 'Controller time is invalid.' }
+}
+
+function Assert-FeishuCliOverrideSafe {
+  param([string]$ScriptPath, [bool]$WasExplicit)
+
+  if (-not $WasExplicit) { return }
+  $prefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+  foreach ($candidate in @($RunRoot, $FeishuConfigPath, $FeishuBridgeRoot, $ScriptPath)) {
+    $full = [IO.Path]::GetFullPath($candidate)
+    if (-not $full.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+      throw 'Feishu CLI script overrides are restricted to temporary test paths.'
+    }
+  }
+}
+
+function Invoke-FeishuDecisionCli {
+  param(
+    [string]$ScriptPath,
+    [bool]$ScriptWasExplicit,
+    [object]$Request
+  )
+
+  $script:LastFeishuCliStage = 'path_validation'
+  Assert-FeishuCliOverrideSafe $ScriptPath $ScriptWasExplicit
+  $resolvedScript = [IO.Path]::GetFullPath($ScriptPath)
+  $resolvedConfig = [IO.Path]::GetFullPath($FeishuConfigPath)
+  $script:LastFeishuCliStage = 'script_validation'
+  if (-not (Test-Path -LiteralPath $resolvedScript -PathType Leaf)) { throw 'Feishu CLI invocation failed.' }
+  $script:LastFeishuCliStage = 'runtime_resolution'
+  try {
+    $node = Get-Command -Name $NodeExecutable -CommandType Application -ErrorAction Stop | Select-Object -First 1
+    $nodePath = [string]$node.Source
+  } catch {
+    throw 'Feishu CLI invocation failed.'
+  }
+
+  $requestDirectory = Join-Path ([IO.Path]::GetFullPath($RunRoot)) '.feishu-requests'
+  $script:LastFeishuCliStage = 'request_acl'
+  Initialize-PrivateDirectory $requestDirectory
+  $requestPath = Join-Path $requestDirectory ('.request-' + [guid]::NewGuid().ToString('N') + '.json')
+  try {
+    Write-JsonAtomically $Request $requestPath
+    Set-PrivatePathAcl $requestPath
+
+    $script:LastFeishuCliStage = 'process_configuration'
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $nodePath
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $startInfo.StandardOutputEncoding = [Text.UTF8Encoding]::new($false, $true)
+    $startInfo.StandardErrorEncoding = [Text.UTF8Encoding]::new($false, $true)
+    $startInfo.CreateNoWindow = $true
+    $startInfo.ArgumentList.Add($resolvedScript)
+    $startInfo.ArgumentList.Add('--request-file')
+    $startInfo.ArgumentList.Add($requestPath)
+    $startInfo.Environment['FEISHU_DECISION_CONFIG_PATH'] = $resolvedConfig
+
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+      $script:LastFeishuCliStage = 'process_start'
+      if (-not $process.Start()) { throw 'Feishu CLI invocation failed.' }
+      $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+      $stderrTask = $process.StandardError.ReadToEndAsync()
+      $script:LastFeishuCliStage = 'process_wait'
+      $process.WaitForExit()
+      $stdout = $stdoutTask.GetAwaiter().GetResult().Trim()
+      [void]$stderrTask.GetAwaiter().GetResult()
+      if ($stdout.Length -gt 16KB -or @($stdout -split '\r?\n').Count -ne 1) {
+        throw 'Feishu CLI invocation failed.'
+      }
+      $script:LastFeishuCliStage = 'output_parse'
+      try { $payload = $stdout | ConvertFrom-Json -AsHashtable -DateKind String }
+      catch { throw 'Feishu CLI invocation failed.' }
+      $script:LastFeishuCliStage = 'complete'
+      [pscustomobject]@{ Code = $process.ExitCode; Payload = $payload }
+    } finally {
+      $process.Dispose()
+    }
+  } finally {
+    Remove-Item -LiteralPath $requestPath -Force -ErrorAction SilentlyContinue
+  }
+}
+
+function Assert-NoModelDecisionEvidence {
+  param([string]$CliAction)
+
+  $forbidden = @(
+    'TaskId', 'TaskSummary', 'DecisionQuestion', 'DecisionOptions', 'RecommendedOption',
+    'ImpactSummary', 'DecisionId', 'ReplyText', 'NotificationError', 'ProviderMessageId',
+    'PriorProviderMessageId', 'ObservedRecipient', 'ReplyMessageId', 'ReplyFrom',
+    'CurrentThreadId', 'CurrentTurnId', 'ManualOverride'
+  )
+  if (@($forbidden | Where-Object { $script:ControllerBoundParameterNames -contains $_ }).Count -gt 0) {
+    throw "$CliAction reads decision and provider evidence only from locked state."
+  }
+}
+
+function Get-FeishuDecisionRoute {
+  param($PendingDecision)
+
+  $attempts = @($PendingDecision.notificationAttempts | Where-Object { [string]$_.provider -ceq 'feishu' })
+  if (@($attempts | Where-Object { [string]$_.result -ceq 'PROVIDER_OUTCOME_UNKNOWN' }).Count -gt 0) {
+    return [ordered]@{
+      nextCommand = 'CompleteNoChange'
+      nextCommands = @('CompleteNoChange', 'ResolveDecisionManual')
+      route = 'manual_reconciliation'
+    }
+  }
+  if (@($attempts | Where-Object { [string]$_.result -ceq 'PROVIDER_ACCEPTED' }).Count -gt 0) {
+    return [ordered]@{
+      nextCommand = 'ConsumeDecisionReply'
+      nextCommands = @('ConsumeDecisionReply', 'ResolveDecisionManual')
+      route = 'consume_reply'
+    }
+  }
+  $failureCount = @($attempts | Where-Object { [string]$_.result -in @('DELIVERY_FAILED', 'MISADDRESSED') }).Count
+  if ($failureCount -ge 3) {
+    return [ordered]@{
+      nextCommand = 'CompleteNoChange'
+      nextCommands = @('CompleteNoChange', 'ResolveDecisionManual')
+      route = 'retry_exhausted'
+    }
+  }
+  [ordered]@{
+    nextCommand = 'SendDecisionNotification'
+    nextCommands = @('SendDecisionNotification', 'ResolveDecisionManual')
+    route = 'send_notification'
+  }
+}
+
+function Get-DecisionBindingWindow {
+  param($PendingDecision)
+
+  $issuedAt = Get-ControllerNowValue
+  if ($null -ne $PendingDecision.PSObject.Properties['expiresAt'] -and
+      -not [string]::IsNullOrWhiteSpace([string]$PendingDecision.expiresAt)) {
+    try { $expiresAt = [DateTimeOffset]::Parse([string]$PendingDecision.expiresAt, [Globalization.CultureInfo]::InvariantCulture) }
+    catch { throw 'Pending decision expiry is invalid.' }
+  } else {
+    $expiresAt = $issuedAt.AddDays(7)
+  }
+  if ($expiresAt -le $issuedAt) { throw 'Pending decision has expired.' }
+  [ordered]@{
+    issuedAt = ConvertTo-ExactUtcIso $issuedAt
+    expiresAt = ConvertTo-ExactUtcIso $expiresAt
+  }
+}
+
+function Write-FeishuPendingBinding {
+  param($PendingDecision, [string]$CardNonceHash, [string]$ProviderMessageIdHash, $Window)
+
+  $root = [IO.Path]::GetFullPath($FeishuBridgeRoot)
+  Initialize-PrivateDirectory $root
+  $binding = [ordered]@{
+    kind = 'decision_reply'
+    decisionId = [string]$PendingDecision.decisionId
+    allowedOptions = @($PendingDecision.options | ForEach-Object { [string]$_.key })
+    issuedAt = [string]$Window.issuedAt
+    expiresAt = [string]$Window.expiresAt
+    cardNonceHash = $CardNonceHash
+    providerMessageIdHash = $ProviderMessageIdHash
+  }
+  $path = Join-Path $root 'pending-bindings.json'
+  Write-JsonAtomically @($binding) $path
+  Set-PrivatePathAcl $path
+}
+
+function Read-FeishuPendingBinding {
+  param($PendingDecision)
+
+  $path = Join-Path ([IO.Path]::GetFullPath($FeishuBridgeRoot)) 'pending-bindings.json'
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item -LiteralPath $path).Length -gt 64KB) {
+    throw 'Feishu pending binding is unavailable.'
+  }
+  try {
+    $value = [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -AsHashtable -DateKind String
+  } catch {
+    throw 'Feishu pending binding is invalid.'
+  }
+  if ($value -isnot [System.Array]) { $value = @($value) }
+  $matches = @($value | Where-Object { $_ -is [Collections.IDictionary] -and [string]$_['decisionId'] -ceq [string]$PendingDecision.decisionId })
+  if ($matches.Count -ne 1) { throw 'Feishu pending binding is invalid.' }
+  $binding = $matches[0]
+  $expected = @('kind','decisionId','allowedOptions','issuedAt','expiresAt','cardNonceHash','providerMessageIdHash')
+  if (-not (Test-ExactKeys $binding $expected) -or [string]$binding.kind -cne 'decision_reply' -or
+      (@($binding.allowedOptions) -join '|') -cne 'A|B|C' -or
+      -not (Test-Hex64 $binding.cardNonceHash) -or -not (Test-Hex64 $binding.providerMessageIdHash)) {
+    throw 'Feishu pending binding is invalid.'
+  }
+  try {
+    $issuedAt = [DateTimeOffset]::Parse([string]$binding.issuedAt, [Globalization.CultureInfo]::InvariantCulture)
+    $expiresAt = [DateTimeOffset]::Parse([string]$binding.expiresAt, [Globalization.CultureInfo]::InvariantCulture)
+    if ($expiresAt -le $issuedAt) { throw 'invalid' }
+  } catch {
+    throw 'Feishu pending binding is invalid.'
+  }
+  [pscustomobject]@{
+    decisionId = [string]$binding.decisionId
+    allowedOptions = @($binding.allowedOptions)
+    issuedAt = ConvertTo-ExactUtcIso $issuedAt
+    expiresAt = ConvertTo-ExactUtcIso $expiresAt
+    cardNonceHash = [string]$binding.cardNonceHash
+    providerMessageIdHash = [string]$binding.providerMessageIdHash
   }
 }
 
@@ -861,8 +1171,10 @@ try {
         $result.branchKind = 'pending_decision'
         $result.requiredSources = @($script:DecisionStatusRelativePath)
         $result.pendingDecision = $state.pendingDecision
-        $result.nextCommands = @('ResolveDecisionEmailReply','ResolveDecisionManual','RetryDecisionNotification')
-        $result.nextCommand = 'ResolveDecisionEmailReply'
+        $route = Get-FeishuDecisionRoute $state.pendingDecision
+        $result.nextCommands = @($route.nextCommands)
+        $result.nextCommand = [string]$route.nextCommand
+        $result.decisionRoute = [string]$route.route
       } elseif ($null -ne $state.decisionFlow -and [string]$state.decisionFlow.status -ceq 'IMPLEMENTATION_PENDING') {
         $session.resumeTaskId = [string]$state.decisionFlow.taskId
         Save-Session $session
@@ -881,8 +1193,7 @@ try {
       $result.actions = @(
         'Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish',
         'CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure',
-        'PrepareDecision','CreateDecision','PrepareDecisionNotification','MarkDecisionSubmitted',
-        'RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual'
+        'PrepareDecision','CreateDecision','SendDecisionNotification','ConsumeDecisionReply','ResolveDecisionManual'
       )
       $result.commandTemplates = [ordered]@{
         Start = "Start -RepositoryRoot 'D:\天章游戏开发' -RunId `$runId -ActualModel `$actualModel"
@@ -890,11 +1201,8 @@ try {
         RegisterCandidate = 'RegisterCandidate -RepositoryRoot $RepositoryRoot -RunId $runId -ExpectedPaths $expectedPaths'
         PrepareDecision = 'PrepareDecision -RepositoryRoot $RepositoryRoot -RunId $runId'
         CreateDecision = (Get-DecisionCommandContract).template
-        PrepareDecisionNotification = 'PrepareDecisionNotification -RepositoryRoot $RepositoryRoot -RunId $runId -PrivateConfigPath $privateConfigPath'
-        MarkDecisionSubmitted = 'MarkDecisionSubmitted -RepositoryRoot $RepositoryRoot -RunId $runId -ProviderMessageId $providerMessageId -ObservedRecipient $sentTo'
-        RetryDecisionNotification = 'RetryDecisionNotification -RepositoryRoot $RepositoryRoot -RunId $runId -DecisionId $decisionId -PrivateConfigPath $privateConfigPath'
-        MarkDecisionDeliveryFailed = 'MarkDecisionDeliveryFailed -RepositoryRoot $RepositoryRoot -RunId $runId -NotificationError $errorCategory'
-        ResolveDecisionEmailReply = 'ResolveDecisionEmailReply -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'' -ReplyMessageId $messageId -ReplyFrom $sender'
+        SendDecisionNotification = 'SendDecisionNotification -RepositoryRoot $RepositoryRoot -RunId $runId'
+        ConsumeDecisionReply = 'ConsumeDecisionReply -RepositoryRoot $RepositoryRoot -RunId $runId'
         ResolveDecisionManual = 'ResolveDecisionManual -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'' -CurrentThreadId $threadId -ManualOverride'
       }
       $result.decisionParameters = [ordered]@{
@@ -1448,11 +1756,250 @@ try {
       }
       $session.decisionContextHash = $null
       Set-SessionNotificationContext $session $null
-      $result = New-ProtocolResult $true 'prepare_decision_notification' 'pending_decision' 'preserve_recovery' $null 'Pending decision created and published to the project status file.'
+      $result = New-ProtocolResult $true 'send_decision_notification' 'pending_decision' 'preserve_recovery' $null 'Pending decision created and published to the project status file.'
       $result.taskId = [string]$createdState.taskId
       $result.pendingDecision = $createdState.pendingDecision
       $result.notificationPolicy = [ordered]@{ providerEvidenceRequired = $true; sensitiveStorage = 'sha256_only' }
-      $result.nextCommand = 'PrepareDecisionNotification'
+      $result.nextCommands = @('SendDecisionNotification')
+      $result.nextCommand = 'SendDecisionNotification'
+      Write-ProtocolResult $result
+    }
+    'SendDecisionNotification' {
+      $session = Read-Session
+      if ([string]$session.phase -notin @('identity_checked', 'mutation_started')) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_phase' 'SendDecisionNotification requires a current pending-decision run.'
+        Write-ProtocolResult $result 13
+      }
+      try { Assert-NoModelDecisionEvidence 'SendDecisionNotification' } catch {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'model_evidence_forbidden' 'SendDecisionNotification reads the unique decision and provider evidence from locked state.'
+        Write-ProtocolResult $result 15
+      }
+      $state = Get-StateSnapshot
+      if ($null -eq $state.pendingDecision) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'pending_decision_missing' 'SendDecisionNotification requires an active pending decision.'
+        Write-ProtocolResult $result 15
+      }
+      $route = Get-FeishuDecisionRoute $state.pendingDecision
+      if ([string]$route.route -cne 'send_notification') {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_send_not_allowed' 'The current Feishu delivery evidence does not allow a new send.'
+        $result.pendingDecision = $state.pendingDecision
+        $result.nextCommands = @($route.nextCommands)
+        $result.nextCommand = [string]$route.nextCommand
+        Write-ProtocolResult $result 15
+      }
+      if ((@($state.pendingDecision.options | ForEach-Object { [string]$_.key }) -join '|') -cne 'A|B|C') {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_options_invalid' 'Feishu decision cards require the exact A/B/C option set.'
+        $result.nextCommands = @('ResolveDecisionManual')
+        $result.nextCommand = 'ResolveDecisionManual'
+        Write-ProtocolResult $result 15
+      }
+      try { $window = Get-DecisionBindingWindow $state.pendingDecision } catch {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_expired' 'The pending decision is no longer valid for a new Feishu card.'
+        $result.nextCommands = @('ResolveDecisionManual')
+        $result.nextCommand = 'ResolveDecisionManual'
+        Write-ProtocolResult $result 15
+      }
+
+      $feishuAttempts = @($state.pendingDecision.notificationAttempts | Where-Object { [string]$_.provider -ceq 'feishu' })
+      $request = [ordered]@{
+        decision = [ordered]@{
+          decisionId = [string]$state.pendingDecision.decisionId
+          taskId = [string]$state.pendingDecision.taskId
+          question = [string]$state.pendingDecision.question
+          options = @($state.pendingDecision.options | ForEach-Object {
+            [ordered]@{ key = [string]$_.key; label = [string]$_.label }
+          })
+          recommendedOption = [string]$state.pendingDecision.recommendedOption
+          impactSummary = [string]$state.pendingDecision.impactSummary
+        }
+        attemptNumber = $feishuAttempts.Count + 1
+      }
+      try {
+        $cli = Invoke-FeishuDecisionCli $FeishuSenderScript $script:FeishuSenderScriptExplicit $request
+      } catch {
+        $category = if ([string]::IsNullOrWhiteSpace([string]$script:LastFeishuCliStage)) { 'unknown' } else { [string]$script:LastFeishuCliStage }
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' "feishu_cli_$category" 'Feishu sender could not be invoked safely.'
+        $result.nextCommand = if ([string]$session.phase -ceq 'mutation_started') { 'Finish' } else { 'CompleteNoChange' }
+        Write-ProtocolResult $result 1
+      }
+      $payload = $cli.Payload
+      $category = if ($payload -is [Collections.IDictionary] -and $payload.Contains('result')) { [string]$payload.result } else { '' }
+      $validResult = switch ($category) {
+        'CHANNEL_UNAVAILABLE' {
+          $cli.Code -eq 20 -and (Test-ExactKeys $payload @('result'))
+          break
+        }
+        'DELIVERY_FAILED' {
+          $cli.Code -eq 21 -and (Test-ExactKeys $payload @('result','targetHash')) -and (Test-Hex64 $payload.targetHash)
+          break
+        }
+        'PROVIDER_OUTCOME_UNKNOWN' {
+          $cli.Code -eq 23 -and
+            (Test-ExactKeys $payload @('result','targetHash','cardNonceHash','intentKeyHash')) -and
+            (Test-Hex64 $payload.targetHash) -and (Test-Hex64 $payload.cardNonceHash) -and (Test-Hex64 $payload.intentKeyHash)
+          break
+        }
+        'PROVIDER_ACCEPTED' {
+          $cli.Code -eq 0 -and
+            (Test-ExactKeys $payload @('result','targetHash','providerMessageIdHash','cardNonceHash')) -and
+            (Test-Hex64 $payload.targetHash) -and (Test-Hex64 $payload.providerMessageIdHash) -and (Test-Hex64 $payload.cardNonceHash)
+          break
+        }
+        default { $false }
+      }
+      if (-not $validResult) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_sender_invalid' 'Feishu sender returned an invalid sanitized result.'
+        $result.nextCommand = if ([string]$session.phase -ceq 'mutation_started') { 'Finish' } else { 'CompleteNoChange' }
+        Write-ProtocolResult $result 15
+      }
+
+      $stateArguments = @('RecordDecisionNotification', '-RunId', $RunId, '-NotificationProvider', 'feishu', '-NotificationStatus', $category)
+      if ($category -ne 'CHANNEL_UNAVAILABLE') { $stateArguments += @('-TargetHash', [string]$payload.targetHash) }
+      if ($category -eq 'PROVIDER_ACCEPTED') { $stateArguments += @('-ProviderMessageIdHash', [string]$payload.providerMessageIdHash) }
+      if ($category -eq 'DELIVERY_FAILED') { $stateArguments += @('-NotificationError', 'provider_rejected') }
+      $recorded = Invoke-StateTool $stateArguments
+      if ($recorded.Code -ne 0) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_notification_failed' 'Feishu notification evidence could not be recorded.'
+        Write-ProtocolResult $result $recorded.Code
+      }
+      $recordedState = Convert-ChildJson $recorded 'RecordDecisionNotification'
+      if ($category -eq 'PROVIDER_ACCEPTED') {
+        try {
+          Write-FeishuPendingBinding $recordedState.pendingDecision ([string]$payload.cardNonceHash) ([string]$payload.providerMessageIdHash) $window
+        } catch {
+          $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_binding_write_failed' 'Feishu delivery was accepted but its local reply binding could not be written.'
+          $result.pendingDecision = $recordedState.pendingDecision
+          $result.nextCommands = @('ResolveDecisionManual')
+          $result.nextCommand = 'ResolveDecisionManual'
+          Write-ProtocolResult $result 1
+        }
+      }
+
+      $safeEnd = if ([string]$session.phase -ceq 'mutation_started') { 'Finish' } else { 'CompleteNoChange' }
+      $message = switch ($category) {
+        'CHANNEL_UNAVAILABLE' { 'Feishu bridge is unavailable; no send attempt was consumed.' }
+        'PROVIDER_OUTCOME_UNKNOWN' { 'Feishu send outcome requires manual reconciliation; automatic resend is disabled.' }
+        'DELIVERY_FAILED' { 'Feishu explicitly rejected the send; the failure was recorded.' }
+        default { 'Feishu accepted the decision card and the reply binding was written.' }
+      }
+      $result = New-ProtocolResult ($category -in @('CHANNEL_UNAVAILABLE','PROVIDER_ACCEPTED')) 'decision_notification_recorded' 'pending_decision' 'preserve_recovery' $(if ($category -eq 'DELIVERY_FAILED') { 'delivery_failed' } elseif ($category -eq 'PROVIDER_OUTCOME_UNKNOWN') { 'provider_outcome_unknown' } else { $null }) $message
+      $result.deliveryResult = $category
+      $result.pendingDecision = $recordedState.pendingDecision
+      $result.nextCommands = if ($category -eq 'PROVIDER_OUTCOME_UNKNOWN') { @($safeEnd, 'ResolveDecisionManual') } else { @($safeEnd) }
+      $result.nextCommand = $safeEnd
+      Write-ProtocolResult $result
+    }
+    'ConsumeDecisionReply' {
+      $session = Read-Session
+      if ([string]$session.phase -cne 'identity_checked') {
+        $result = New-ProtocolResult $false 'stopped' 'pending_decision' 'preserve_recovery' 'invalid_phase' 'ConsumeDecisionReply requires a fresh identity_checked run.'
+        Write-ProtocolResult $result 13
+      }
+      try { Assert-NoModelDecisionEvidence 'ConsumeDecisionReply' } catch {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'model_evidence_forbidden' 'ConsumeDecisionReply reads the unique decision and reply evidence from locked state.'
+        Write-ProtocolResult $result 15
+      }
+      $state = Get-StateSnapshot
+      if ($null -eq $state.pendingDecision) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'pending_decision_missing' 'ConsumeDecisionReply requires an active pending decision.'
+        Write-ProtocolResult $result 15
+      }
+      $acceptedAttempts = @($state.pendingDecision.notificationAttempts | Where-Object {
+        [string]$_.provider -ceq 'feishu' -and [string]$_.result -ceq 'PROVIDER_ACCEPTED'
+      })
+      if ($acceptedAttempts.Count -ne 1) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_delivery_not_accepted' 'A unique accepted Feishu delivery is required before reply consumption.'
+        $result.nextCommand = 'CompleteNoChange'
+        Write-ProtocolResult $result 15
+      }
+      try { $binding = Read-FeishuPendingBinding $state.pendingDecision } catch {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_binding_invalid' 'The Feishu reply binding is unavailable or invalid.'
+        $result.nextCommands = @('CompleteNoChange', 'ResolveDecisionManual')
+        $result.nextCommand = 'CompleteNoChange'
+        Write-ProtocolResult $result 15
+      }
+      if ([string]$acceptedAttempts[0].providerMessageIdHash -cne [string]$binding.providerMessageIdHash) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_binding_mismatch' 'The Feishu reply binding does not match accepted delivery evidence.'
+        $result.nextCommand = 'CompleteNoChange'
+        Write-ProtocolResult $result 15
+      }
+      try {
+        $createdAt = ConvertTo-ExactUtcIso ([DateTimeOffset]::Parse([string]$state.pendingDecision.createdAt, [Globalization.CultureInfo]::InvariantCulture))
+      } catch {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'pending_decision_invalid' 'The pending decision timestamp is invalid.'
+        Write-ProtocolResult $result 15
+      }
+      $request = [ordered]@{
+        pendingDecision = [ordered]@{
+          decisionId = [string]$state.pendingDecision.decisionId
+          allowedOptions = @($binding.allowedOptions)
+          createdAt = $createdAt
+          expiresAt = [string]$binding.expiresAt
+          cardNonceHash = [string]$binding.cardNonceHash
+          providerMessageIdHash = [string]$binding.providerMessageIdHash
+        }
+      }
+      try {
+        $cli = Invoke-FeishuDecisionCli $FeishuConsumerScript $script:FeishuConsumerScriptExplicit $request
+      } catch {
+        $category = if ([string]::IsNullOrWhiteSpace([string]$script:LastFeishuCliStage)) { 'unknown' } else { [string]$script:LastFeishuCliStage }
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' "feishu_cli_$category" 'Feishu reply consumer could not be invoked safely.'
+        $result.nextCommand = 'CompleteNoChange'
+        Write-ProtocolResult $result 1
+      }
+      $payload = $cli.Payload
+      $category = if ($payload -is [Collections.IDictionary] -and $payload.Contains('result')) { [string]$payload.result } else { '' }
+      if ($category -eq 'NO_REPLY' -and $cli.Code -eq 0 -and (Test-ExactKeys $payload @('result'))) {
+        $result = New-ProtocolResult $true 'no_decision_reply' 'pending_decision' 'stop_read_only' $null 'No valid Feishu card reply is available.'
+        $result.nextCommands = @('CompleteNoChange', 'ResolveDecisionManual')
+        $result.nextCommand = 'CompleteNoChange'
+        Write-ProtocolResult $result
+      }
+      $acceptedKeys = @(
+        'result','optionKey','source','providerMessageIdHash','providerEventIdHash',
+        'operatorOpenIdHash','tenantKeyHash','cardNonceHash','evidenceHash'
+      )
+      $validAccepted = $category -ceq 'REPLY_ACCEPTED' -and $cli.Code -eq 0 -and
+        (Test-ExactKeys $payload $acceptedKeys) -and [string]$payload.source -ceq 'feishu_card' -and
+        @($binding.allowedOptions) -contains [string]$payload.optionKey -and
+        [string]$payload.providerMessageIdHash -ceq [string]$binding.providerMessageIdHash -and
+        [string]$payload.cardNonceHash -ceq [string]$binding.cardNonceHash -and
+        @('providerMessageIdHash','providerEventIdHash','operatorOpenIdHash','tenantKeyHash','cardNonceHash','evidenceHash' |
+          Where-Object { -not (Test-Hex64 $payload[$_]) }).Count -eq 0
+      if (-not $validAccepted) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_reply_invalid' 'Feishu reply evidence was invalid or conflicting; the pending decision was preserved.'
+        $result.nextCommands = @('CompleteNoChange', 'ResolveDecisionManual')
+        $result.nextCommand = 'CompleteNoChange'
+        Write-ProtocolResult $result 15
+      }
+
+      $originalTaskId = [string]$state.pendingDecision.taskId
+      $resolved = Invoke-StateTool @(
+        'ResolveDecision', '-RunId', $RunId, '-DecisionId', [string]$state.pendingDecision.decisionId,
+        '-OptionKey', [string]$payload.optionKey, '-ReplySource', 'feishu_card',
+        '-ProviderMessageIdHash', [string]$payload.providerMessageIdHash,
+        '-ProviderEventIdHash', [string]$payload.providerEventIdHash,
+        '-OperatorHash', [string]$payload.operatorOpenIdHash,
+        '-TenantKeyHash', [string]$payload.tenantKeyHash,
+        '-CardNonceHash', [string]$payload.cardNonceHash,
+        '-EvidenceHash', [string]$payload.evidenceHash
+      )
+      if ($resolved.Code -ne 0) {
+        $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_resolve_failed' 'The validated Feishu decision reply could not be recorded.'
+        Write-ProtocolResult $result $resolved.Code
+      }
+      $resolvedState = Convert-ChildJson $resolved 'ResolveDecision'
+      $session.branchKind = 'selection'
+      $session.workType = $null
+      $session.taskId = $null
+      $session.executor = $null
+      $session.resumeTaskId = $originalTaskId
+      Save-Session $session
+      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Validated Feishu card reply resolved; inspect and register the original task again.'
+      $result.taskId = $originalTaskId
+      $result.decisionFlow = $resolvedState.decisionFlow
+      $result.requiredSources = @($script:ExecutionQueueRelativePath, $script:DecisionStatusRelativePath)
+      $result.nextCommand = 'InspectCandidate'
       Write-ProtocolResult $result
     }
     'PrepareDecisionNotification' {

@@ -3,6 +3,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $tool = Join-Path $root 'tools\automation-decision-status.ps1'
 $sandbox = Join-Path ([IO.Path]::GetTempPath()) ('tzg-decision-status-test-' + [guid]::NewGuid().ToString('N'))
 $statusPath = Join-Path $sandbox 'status.txt'
+$healthPath = Join-Path $sandbox 'health.json'
 $engine = (Get-Process -Id $PID).Path
 $utf8NoBom = [Text.UTF8Encoding]::new($false)
 $utf8Bom = [Text.UTF8Encoding]::new($true)
@@ -51,7 +52,7 @@ function New-ResolvedDecision {
   param(
     [string]$DecisionId,
     [string]$OptionKey,
-    [ValidateSet('email','manual')]
+    [ValidateSet('email','manual','feishu_card')]
     [string]$Source
   )
   [ordered]@{
@@ -77,8 +78,12 @@ function New-Flow {
 }
 
 function New-PendingDecision {
-  param([string]$Status = 'PENDING')
-  [ordered]@{
+  param(
+    [string]$Status = 'PENDING',
+    [ValidateSet('feishu','gmail_legacy')]
+    [string]$NotificationProvider
+  )
+  $decision = [ordered]@{
     decisionId = 'DEC-20260715-SECOND222222'
     createdAt = '2026-07-15T03:30:19+08:00'
     taskId = 'TQ-057'
@@ -86,11 +91,16 @@ function New-PendingDecision {
     question = '双倍率字段采用哪种兼容口径？'
     options = @(
       [ordered]@{ key = 'A'; label = '保留双倍率字段' },
-      [ordered]@{ key = 'B'; label = '合并为统一倍率' }
+      [ordered]@{ key = 'B'; label = '合并为统一倍率' },
+      [ordered]@{ key = 'C'; label = '只读兼容旧数据' }
     )
     recommendedOption = 'A'
     status = $Status
   }
+  if (-not [string]::IsNullOrWhiteSpace($NotificationProvider)) {
+    $decision['notificationProvider'] = $NotificationProvider
+  }
+  $decision
 }
 
 $before = "# 自动工作流状态（测试）`r`n`r`n## 使用规则`r`n`r`n保持不变。`r`n`r`n## 当前待决策`r`n"
@@ -127,9 +137,9 @@ try {
     '选项 A：保留双倍率字段',
     '选项 B：合并为统一倍率',
     '推荐项：A',
-    '通知状态：尚未尝试发送',
-    '严格回复：`DEC-20260715-SECOND222222：选 A`',
-    '已登记选择：第一项=B（manual）'
+    '通知状态：等待发送飞书卡片',
+    '卡片选择：请在飞书互动卡片中选择一个选项',
+    '已登记选择：第一项=B（人工确认）'
   )) {
     if (-not $text.Contains($required, [StringComparison]::Ordinal)) { throw "published section lacks: $required" }
   }
@@ -137,16 +147,23 @@ try {
     if ($text.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) { throw "published section exposed stale or sensitive content: $forbidden" }
   }
 
-  $notificationLabels = [ordered]@{
-    PENDING = '尚未尝试发送'
-    PROVIDER_ACCEPTED = '发送请求已被提供方接受（不代表已收件）'
-    DELIVERY_FAILED = '发送失败，可重试'
-    MISADDRESSED = 'Sent 目标不一致，未完成通知'
-    RETRY_EXHAUSTED = '已达三次尝试上限，等待人工处理'
-  }
-  foreach ($entry in $notificationLabels.GetEnumerator()) {
+  $notificationLabels = @(
+    [ordered]@{ Status='PENDING'; Provider=$null; Label='等待发送飞书卡片' },
+    [ordered]@{ Status='PROVIDER_ACCEPTED'; Provider='feishu'; Label='飞书卡片已送达，等待选择' },
+    [ordered]@{ Status='PROVIDER_OUTCOME_UNKNOWN'; Provider='feishu'; Label='飞书发送结果待人工核对，已停止自动补发' },
+    [ordered]@{ Status='DELIVERY_FAILED'; Provider='feishu'; Label='飞书发送失败，可在下一轮重试' },
+    [ordered]@{ Status='MISADDRESSED'; Provider='gmail_legacy'; Label='旧 Gmail 通道目标不一致（仅历史）' },
+    [ordered]@{ Status='RETRY_EXHAUSTED'; Provider='feishu'; Label='飞书明确失败已达三次，等待人工处理' },
+    [ordered]@{ Status='PROVIDER_ACCEPTED'; Provider='gmail_legacy'; Label='旧 Gmail 通道已由提供方接受（仅历史）' }
+  )
+  foreach ($entry in $notificationLabels) {
+    $labelPending = if ([string]::IsNullOrWhiteSpace([string]$entry.Provider)) {
+      New-PendingDecision $entry.Status
+    } else {
+      New-PendingDecision $entry.Status $entry.Provider
+    }
     $labelPayload = [ordered]@{
-      pendingDecision = New-PendingDecision $entry.Key
+      pendingDecision = $labelPending
       decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
     }
     $labelResult = Invoke-Publisher @(
@@ -154,16 +171,35 @@ try {
       '-StatusPath', $statusPath,
       '-DecisionStateJsonBase64', (ConvertTo-PayloadBase64 $labelPayload)
     )
-    Assert-Code $labelResult 0 "publish notification state $($entry.Key)"
-    if (-not (Get-StatusText).Contains("通知状态：$($entry.Value)", [StringComparison]::Ordinal)) {
-      throw "notification state $($entry.Key) did not render its exact label"
+    Assert-Code $labelResult 0 "publish notification state $($entry.Status)/$($entry.Provider)"
+    if (-not (Get-StatusText).Contains("通知状态：$($entry.Label)", [StringComparison]::Ordinal)) {
+      throw "notification state $($entry.Status)/$($entry.Provider) did not render its exact label"
     }
   }
 
+  [IO.File]::WriteAllText($healthPath, (@{
+    schemaVersion=1;status='DISCONNECTED';pid=42;updatedAt=[DateTimeOffset]::UtcNow.ToString('o');appIdHash=('a' * 64)
+  } | ConvertTo-Json -Compress), $utf8NoBom)
+  $unavailablePayload = [ordered]@{
+    pendingDecision = New-PendingDecision 'PENDING'
+    decisionFlow = New-Flow 'AWAITING_DECISION' @($firstResolved)
+  }
+  $unavailable = Invoke-Publisher @(
+    'PublishPending','-StatusPath',$statusPath,'-FeishuHealthPath',$healthPath,
+    '-DecisionStateJsonBase64',(ConvertTo-PayloadBase64 $unavailablePayload)
+  )
+  Assert-Code $unavailable 0 'publish unavailable Feishu health'
+  $unavailableText = Get-StatusText
+  if (-not $unavailableText.Contains('通知状态：飞书桥接不可用，未消耗发送重试', [StringComparison]::Ordinal) -or
+      $unavailableText.Contains(('a' * 64), [StringComparison]::Ordinal)) {
+    throw 'CHANNEL_UNAVAILABLE health was not rendered as a sanitized zero-attempt state'
+  }
+
   $secondResolved = New-ResolvedDecision 'DEC-20260715-SECOND222222' 'A' 'email'
+  $thirdResolved = New-ResolvedDecision 'DEC-20260715-THIRD333333' 'C' 'feishu_card'
   $implementationPayload = [ordered]@{
     pendingDecision = $null
-    decisionFlow = New-Flow 'IMPLEMENTATION_PENDING' @($firstResolved, $secondResolved)
+    decisionFlow = New-Flow 'IMPLEMENTATION_PENDING' @($firstResolved, $secondResolved, $thirdResolved)
   }
   $implementation = Invoke-Publisher @(
     'PublishImplementationPending',
@@ -175,10 +211,12 @@ try {
   foreach ($required in @(
     'TQ-057',
     '等待原任务实施',
-    '已登记选择：第一项=B（manual）',
-    '第二项=A（email）',
+    '已登记选择：第一项=B（人工确认）',
+    '第二项=A（旧 Gmail 通道（仅历史））',
+    '第三项=C（飞书互动卡片）',
     'DEC-20260715-FIRST111111',
-    'DEC-20260715-SECOND222222'
+    'DEC-20260715-SECOND222222',
+    'DEC-20260715-THIRD333333'
   )) {
     if (-not $implementationText.Contains($required, [StringComparison]::Ordinal)) { throw "implementation section lacks: $required" }
   }

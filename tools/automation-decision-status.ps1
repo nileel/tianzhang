@@ -7,19 +7,23 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$StatusPath,
 
-  [string]$DecisionStateJsonBase64
+  [string]$DecisionStateJsonBase64,
+
+  [string]$FeishuHealthPath
 )
 
 $ErrorActionPreference = 'Stop'
 $script:ExitInvalidArguments = 15
 $script:Heading = '## 当前待决策'
 $script:EmailPattern = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
-$script:NotificationLabels = @{
-  PENDING = '尚未尝试发送'
-  PROVIDER_ACCEPTED = '发送请求已被提供方接受（不代表已收件）'
-  DELIVERY_FAILED = '发送失败，可重试'
-  MISADDRESSED = 'Sent 目标不一致，未完成通知'
-  RETRY_EXHAUSTED = '已达三次尝试上限，等待人工处理'
+$script:NotificationStatuses = @(
+  'PENDING','PROVIDER_ACCEPTED','PROVIDER_OUTCOME_UNKNOWN','DELIVERY_FAILED',
+  'MISADDRESSED','RETRY_EXHAUSTED'
+)
+$script:ResolutionSourceLabels = @{
+  email = '旧 Gmail 通道（仅历史）'
+  manual = '人工确认'
+  feishu_card = '飞书互动卡片'
 }
 
 function Require-Text {
@@ -63,7 +67,7 @@ function Assert-ResolvedDecisions {
     Assert-AllowedProperties $entry.resolution @('optionKey','source') 'resolvedDecision.resolution'
     Require-Text $entry.resolution.optionKey 'resolvedDecision.resolution.optionKey'
     Require-Text $entry.resolution.source 'resolvedDecision.resolution.source'
-    if ([string]$entry.resolution.source -notin @('email','manual')) { throw 'resolvedDecision.resolution.source is not supported' }
+    if ([string]$entry.resolution.source -notin @($script:ResolutionSourceLabels.Keys)) { throw 'resolvedDecision.resolution.source is not supported' }
   }
   $resolved
 }
@@ -84,13 +88,19 @@ function Assert-PendingDecision {
   param($PendingDecision)
   if ($null -eq $PendingDecision) { throw 'pendingDecision is required for PublishPending' }
   Assert-AllowedProperties $PendingDecision @(
-    'decisionId','createdAt','taskId','taskSummary','question','options','recommendedOption','status'
+    'decisionId','createdAt','taskId','taskSummary','question','options','recommendedOption','status','notificationProvider'
   ) 'pendingDecision'
   foreach ($name in @('createdAt','taskId','taskSummary','question','recommendedOption','status')) {
     Require-Text $PendingDecision.$name "pendingDecision.$name"
   }
   Assert-DecisionId $PendingDecision.decisionId 'pendingDecision.decisionId'
-  if ([string]$PendingDecision.status -notin @($script:NotificationLabels.Keys)) { throw 'pendingDecision.status is not supported' }
+  if ([string]$PendingDecision.status -notin $script:NotificationStatuses) { throw 'pendingDecision.status is not supported' }
+  if (Test-HasProperty $PendingDecision 'notificationProvider') {
+    Require-Text $PendingDecision.notificationProvider 'pendingDecision.notificationProvider'
+    if ([string]$PendingDecision.notificationProvider -notin @('feishu','gmail_legacy')) {
+      throw 'pendingDecision.notificationProvider is not supported'
+    }
+  }
   if ($PendingDecision.options -isnot [System.Array] -or @($PendingDecision.options).Count -lt 2) {
     throw 'pendingDecision.options requires at least two entries'
   }
@@ -148,7 +158,8 @@ function Get-ResolvedSummaryLines {
   for ($index = 0; $index -lt $ResolvedDecisions.Count; $index++) {
     $label = Get-OrdinalLabel $index
     $entry = $ResolvedDecisions[$index]
-    $choices.Add("$label=$([string]$entry.resolution.optionKey)（$([string]$entry.resolution.source)）")
+    $sourceLabel = [string]$script:ResolutionSourceLabels[[string]$entry.resolution.source]
+    $choices.Add("$label=$([string]$entry.resolution.optionKey)（$sourceLabel）")
     $identifiers.Add("$label=$([string]$entry.decisionId)")
   }
   @(
@@ -157,8 +168,65 @@ function Get-ResolvedSummaryLines {
   )
 }
 
+function Get-FeishuHealthSummary {
+  if ([string]::IsNullOrWhiteSpace($FeishuHealthPath)) { return $null }
+  $summary = [ordered]@{ available = $false; status = 'UNAVAILABLE' }
+  try {
+    $fullPath = [IO.Path]::GetFullPath($FeishuHealthPath)
+    if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf) -or (Get-Item -LiteralPath $fullPath).Length -gt 16KB) {
+      return [pscustomobject]$summary
+    }
+    $health = [IO.File]::ReadAllText($fullPath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -DateKind String
+    $status = [string]$health.status
+    $updatedAt = [DateTimeOffset]::Parse([string]$health.updatedAt, [Globalization.CultureInfo]::InvariantCulture)
+    $appIdHash = [string]$health.appIdHash
+    $age = [DateTimeOffset]::UtcNow - $updatedAt.ToUniversalTime()
+    if ($status -ceq 'CONNECTED' -and $appIdHash -cmatch '^[0-9a-f]{64}$' -and
+        $age.TotalSeconds -ge 0 -and $age.TotalSeconds -le 120) {
+      $summary.available = $true
+      $summary.status = 'CONNECTED'
+    }
+  } catch {
+    $summary.available = $false
+    $summary.status = 'UNAVAILABLE'
+  }
+  [pscustomobject]$summary
+}
+
+function Get-NotificationLabel {
+  param($PendingDecision, [AllowNull()][object]$Health)
+
+  $status = [string]$PendingDecision.status
+  $provider = if (Test-HasProperty $PendingDecision 'notificationProvider') {
+    [string]$PendingDecision.notificationProvider
+  } else {
+    $null
+  }
+  if ($status -ceq 'PENDING' -and $null -ne $Health -and -not $Health.available) {
+    return '飞书桥接不可用，未消耗发送重试'
+  }
+  if ($provider -ceq 'gmail_legacy') {
+    $label = switch ($status) {
+      'PROVIDER_ACCEPTED' { '旧 Gmail 通道已由提供方接受（仅历史）' }
+      'DELIVERY_FAILED' { '旧 Gmail 通道发送失败（仅历史）' }
+      'MISADDRESSED' { '旧 Gmail 通道目标不一致（仅历史）' }
+      'RETRY_EXHAUSTED' { '旧 Gmail 通道已达尝试上限（仅历史）' }
+      default { '旧 Gmail 通道待处理（仅历史）' }
+    }
+    return $label
+  }
+  switch ($status) {
+    'PENDING' { '等待发送飞书卡片' }
+    'PROVIDER_ACCEPTED' { '飞书卡片已送达，等待选择' }
+    'PROVIDER_OUTCOME_UNKNOWN' { '飞书发送结果待人工核对，已停止自动补发' }
+    'DELIVERY_FAILED' { '飞书发送失败，可在下一轮重试' }
+    'MISADDRESSED' { '飞书目标证据不一致，等待人工处理' }
+    'RETRY_EXHAUSTED' { '飞书明确失败已达三次，等待人工处理' }
+  }
+}
+
 function Get-PendingBody {
-  param($Payload)
+  param($Payload, [AllowNull()][object]$Health)
   if ([string]$Payload.decisionFlow.status -ne 'AWAITING_DECISION') {
     throw 'PublishPending requires decisionFlow.status AWAITING_DECISION'
   }
@@ -178,8 +246,11 @@ function Get-PendingBody {
   }
   $body.Add("- 推荐项：$([string]$decision.recommendedOption)")
   $body.Add("- 创建时间：$([string]$decision.createdAt)")
-  $body.Add("- 通知状态：$([string]$script:NotificationLabels[[string]$decision.status])")
-  $body.Add("- 严格回复：``$([string]$decision.decisionId)：选 $([string]$decision.recommendedOption)``（也可选择其他单一选项）")
+  $body.Add("- 通知状态：$(Get-NotificationLabel $decision $Health)")
+  if ($null -ne $Health) {
+    $body.Add($(if ($Health.available) { '- 飞书桥接：已连接。' } else { '- 飞书桥接：不可用。' }))
+  }
+  $body.Add('- 卡片选择：请在飞书互动卡片中选择一个选项。')
   foreach ($line in @(Get-ResolvedSummaryLines @(Assert-ResolvedDecisions $Payload.decisionFlow))) {
     $body.Add([string]$line)
   }
@@ -258,7 +329,7 @@ try {
   if ($nextHeadingIndex -lt 0) { throw 'Pending-decision section must be followed by another level-two heading' }
 
   $replacement = switch ($Action) {
-    'PublishPending' { Get-PendingBody (ConvertFrom-DecisionStateBase64); break }
+    'PublishPending' { Get-PendingBody (ConvertFrom-DecisionStateBase64) (Get-FeishuHealthSummary); break }
     'PublishImplementationPending' { Get-ImplementationPendingBody (ConvertFrom-DecisionStateBase64); break }
     'Clear' { @('', '当前无待决策项。', ''); break }
   }

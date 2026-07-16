@@ -27,14 +27,30 @@ param(
   [string]$ImpactSummary,
   [string]$DecisionId,
   [string]$OptionKey,
-  [ValidateSet('email','manual')]
+  [ValidateSet('email','manual','feishu_card')]
   [string]$ReplySource,
   [switch]$ManualOverride,
-  [ValidateSet('PROVIDER_ACCEPTED','DELIVERY_FAILED','MISADDRESSED')]
+  [ValidateSet('gmail_legacy','feishu')]
+  [string]$NotificationProvider,
+  [ValidateSet('PROVIDER_ACCEPTED','PROVIDER_OUTCOME_UNKNOWN','DELIVERY_FAILED','MISADDRESSED','CHANNEL_UNAVAILABLE')]
   [string]$NotificationStatus,
   [ValidatePattern('^[0-9a-f]{64}$')]
   [string]$RecipientHash,
   [string]$ProviderMessageId,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$TargetHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$ProviderMessageIdHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$ProviderEventIdHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$OperatorHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$TenantKeyHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$CardNonceHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$EvidenceHash,
   [string]$NotificationError,
   [string]$EvidenceMessageId,
   [string]$EvidenceSender,
@@ -79,7 +95,7 @@ function Get-NowValue {
 
 function New-State {
   [ordered]@{
-    schemaVersion = 6
+    schemaVersion = 7
     controllerId = $ControllerId
     runId = $null
     runMode = $null
@@ -118,7 +134,7 @@ function Import-State {
   if (-not (Test-Path -LiteralPath $StatePath)) { return (New-State) }
   $raw = [IO.File]::ReadAllText($StatePath)
   $parsed = $raw | ConvertFrom-Json
-  if ($parsed.schemaVersion -notin @(1, 2, 3, 4, 5, 6)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
+  if ($parsed.schemaVersion -notin @(1, 2, 3, 4, 5, 6, 7)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
   $state = New-State
   foreach ($key in @($state.Keys)) {
     $property = $parsed.PSObject.Properties[$key]
@@ -136,8 +152,8 @@ function Import-State {
     }
   }
   $state.workerState = [ordered]@{ deepseek = $deepseek }
-  Convert-DecisionStateToV6 $state $parsed ([int]$parsed.schemaVersion)
-  $state.schemaVersion = 6
+  Convert-DecisionStateToV7 $state $parsed ([int]$parsed.schemaVersion)
+  $state.schemaVersion = 7
   $state
 }
 
@@ -235,11 +251,12 @@ function Convert-StateTimestamp {
   [string]$Value
 }
 
-function Convert-DecisionStatusToV6 {
+function Convert-DecisionStatusToV7 {
   param([string]$Status)
   switch ($Status) {
     'NOTIFIED' { 'PROVIDER_ACCEPTED' }
     'PROVIDER_ACCEPTED' { 'PROVIDER_ACCEPTED' }
+    'PROVIDER_OUTCOME_UNKNOWN' { 'PROVIDER_OUTCOME_UNKNOWN' }
     'DELIVERY_FAILED' { 'DELIVERY_FAILED' }
     'REPLY_INVALID' { 'DELIVERY_FAILED' }
     'MISADDRESSED' { 'MISADDRESSED' }
@@ -249,18 +266,44 @@ function Convert-DecisionStatusToV6 {
   }
 }
 
-function Convert-NotificationAttemptsToV6 {
+function Assert-OptionalHash {
+  param($Value, [string]$Name)
+  if ($null -ne $Value -and ([string]$Value -cnotmatch '^[0-9a-f]{64}$')) {
+    throw "Invalid $Name in decision state"
+  }
+}
+
+function Convert-NotificationAttemptsToV7 {
   param($Decision, [int]$SourceSchema)
   $attempts = @()
   $existingAttempts = Get-ObjectValue $Decision 'notificationAttempts'
-  if ($SourceSchema -eq 6 -and $null -ne $existingAttempts) {
+  if ($SourceSchema -ge 6 -and $null -ne $existingAttempts) {
     foreach ($attempt in @($existingAttempts)) {
+      $provider = if ($SourceSchema -eq 6) { 'gmail_legacy' } else { [string](Get-ObjectValue $attempt 'provider') }
+      $result = Convert-DecisionStatusToV7 ([string](Get-ObjectValue $attempt 'result'))
+      $targetHash = if ($SourceSchema -eq 6) {
+        Get-ObjectValue $attempt 'recipientHash'
+      } else {
+        Get-ObjectValue $attempt 'targetHash'
+      }
+      $messageHash = Get-ObjectValue $attempt 'providerMessageIdHash'
+      $errorCategory = Get-ObjectValue $attempt 'errorCategory'
+      if ($provider -notin @('gmail_legacy', 'feishu')) { throw "Unsupported notification provider: $provider" }
+      if ($result -notin @('PROVIDER_ACCEPTED', 'PROVIDER_OUTCOME_UNKNOWN', 'DELIVERY_FAILED', 'MISADDRESSED', 'CHANNEL_UNAVAILABLE')) {
+        throw "Unsupported notification result: $result"
+      }
+      Assert-OptionalHash $targetHash 'targetHash'
+      Assert-OptionalHash $messageHash 'providerMessageIdHash'
+      if ($null -ne $errorCategory -and [string]$errorCategory -cnotmatch '^[a-z][a-z0-9_]{0,119}$') {
+        throw 'Invalid notification errorCategory in decision state'
+      }
       $attempts += [ordered]@{
+        provider = $provider
         attemptedAt = Convert-StateTimestamp (Get-ObjectValue $attempt 'attemptedAt')
-        result = Convert-DecisionStatusToV6 ([string](Get-ObjectValue $attempt 'result'))
-        recipientHash = Get-ObjectValue $attempt 'recipientHash'
-        providerMessageIdHash = Get-ObjectValue $attempt 'providerMessageIdHash'
-        errorCategory = Get-ObjectValue $attempt 'errorCategory'
+        result = $result
+        targetHash = $targetHash
+        providerMessageIdHash = $messageHash
+        errorCategory = $errorCategory
       }
     }
     return @($attempts)
@@ -268,25 +311,28 @@ function Convert-NotificationAttemptsToV6 {
   $legacyNotification = Get-ObjectValue $Decision 'notification'
   if ($null -eq $legacyNotification) { return @() }
   $legacyStatus = [string](Get-ObjectValue $legacyNotification 'status' (Get-ObjectValue $Decision 'status'))
+  $legacyMessageHash = Get-ObjectValue $legacyNotification 'receiptHash'
+  Assert-OptionalHash $legacyMessageHash 'legacy providerMessageIdHash'
   $attempts += [ordered]@{
+    provider = 'gmail_legacy'
     attemptedAt = Convert-StateTimestamp (Get-ObjectValue $legacyNotification 'attemptedAt' (Get-ObjectValue $Decision 'createdAt'))
-    result = Convert-DecisionStatusToV6 $legacyStatus
-    recipientHash = $null
-    providerMessageIdHash = Get-ObjectValue $legacyNotification 'receiptHash'
+    result = Convert-DecisionStatusToV7 $legacyStatus
+    targetHash = $null
+    providerMessageIdHash = $legacyMessageHash
     errorCategory = Get-ObjectValue $legacyNotification 'error'
   }
   @($attempts)
 }
 
-function Convert-PendingDecisionToV6 {
+function Convert-PendingDecisionToV7 {
   param($Decision, [int]$SourceSchema)
   if ($null -eq $Decision) { return $null }
   $sourceStatus = [string](Get-ObjectValue $Decision 'status')
-  $status = if ($SourceSchema -eq 6) { $sourceStatus } else { Convert-DecisionStatusToV6 $sourceStatus }
-  if (@('PENDING','PROVIDER_ACCEPTED','DELIVERY_FAILED','MISADDRESSED','RETRY_EXHAUSTED') -cnotcontains $status) {
+  $status = if ($SourceSchema -ge 6) { $sourceStatus } else { Convert-DecisionStatusToV7 $sourceStatus }
+  if (@('PENDING','PROVIDER_ACCEPTED','PROVIDER_OUTCOME_UNKNOWN','DELIVERY_FAILED','MISADDRESSED','RETRY_EXHAUSTED') -cnotcontains $status) {
     throw "Unsupported pending decision status: $status"
   }
-  [ordered]@{
+  $normalized = [ordered]@{
     decisionId = [string](Get-ObjectValue $Decision 'decisionId')
     createdAt = Convert-StateTimestamp (Get-ObjectValue $Decision 'createdAt')
     taskKind = [string](Get-ObjectValue $Decision 'taskKind')
@@ -297,8 +343,60 @@ function Convert-PendingDecisionToV6 {
     recommendedOption = [string](Get-ObjectValue $Decision 'recommendedOption')
     impactSummary = [string](Get-ObjectValue $Decision 'impactSummary')
     status = $status
-    notificationAttempts = @(Convert-NotificationAttemptsToV6 $Decision $SourceSchema)
+    notificationAttempts = @(Convert-NotificationAttemptsToV7 $Decision $SourceSchema)
   }
+  $expiresAt = Get-ObjectValue $Decision 'expiresAt'
+  if ($null -ne $expiresAt) { $normalized['expiresAt'] = Convert-StateTimestamp $expiresAt }
+  $normalized
+}
+
+function Convert-ResolutionToV7 {
+  param($Resolution, [int]$SourceSchema)
+  if ($null -eq $Resolution) { return $null }
+  $source = [string](Get-ObjectValue $Resolution 'source')
+  if ($source -notin @('email', 'manual', 'feishu_card')) { throw "Unsupported decision resolution source: $source" }
+  $normalized = [ordered]@{
+    optionKey = [string](Get-ObjectValue $Resolution 'optionKey')
+    source = $source
+    resolvedAt = Convert-StateTimestamp (Get-ObjectValue $Resolution 'resolvedAt')
+    evidenceHash = Get-ObjectValue $Resolution 'evidenceHash'
+  }
+  Assert-OptionalHash $normalized.evidenceHash 'resolution evidenceHash'
+  switch ($source) {
+    'email' {
+      $normalized['messageIdHash'] = Get-ObjectValue $Resolution 'messageIdHash'
+      $normalized['senderHash'] = Get-ObjectValue $Resolution 'senderHash'
+      Assert-OptionalHash $normalized.messageIdHash 'email messageIdHash'
+      Assert-OptionalHash $normalized.senderHash 'email senderHash'
+    }
+    'manual' {
+      $normalized['threadIdHash'] = Get-ObjectValue $Resolution 'threadIdHash'
+      $normalized['turnIdHash'] = Get-ObjectValue $Resolution 'turnIdHash'
+      Assert-OptionalHash $normalized.threadIdHash 'manual threadIdHash'
+      Assert-OptionalHash $normalized.turnIdHash 'manual turnIdHash'
+    }
+    'feishu_card' {
+      $normalized['providerMessageIdHash'] = Get-ObjectValue $Resolution 'providerMessageIdHash'
+      $normalized['providerEventIdHash'] = Get-ObjectValue $Resolution 'providerEventIdHash'
+      $normalized['operatorOpenIdHash'] = Get-ObjectValue $Resolution 'operatorOpenIdHash'
+      $normalized['tenantKeyHash'] = Get-ObjectValue $Resolution 'tenantKeyHash'
+      $normalized['cardNonceHash'] = Get-ObjectValue $Resolution 'cardNonceHash'
+      foreach ($field in @('providerMessageIdHash', 'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'cardNonceHash')) {
+        Assert-OptionalHash $normalized[$field] "Feishu $field"
+        if ($SourceSchema -eq 7 -and $null -eq $normalized[$field]) { throw "Missing Feishu $field" }
+      }
+    }
+  }
+  $normalized
+}
+
+function Convert-ResolvedDecisionToV7 {
+  param($Decision, [int]$SourceSchema)
+  $normalized = Convert-PendingDecisionToV7 $Decision $SourceSchema
+  $resolution = Convert-ResolutionToV7 (Get-ObjectValue $Decision 'resolution') $SourceSchema
+  if ($null -eq $resolution) { throw 'Resolved decision is missing resolution' }
+  $normalized['resolution'] = $resolution
+  $normalized
 }
 
 function New-DecisionFlowValue {
@@ -312,25 +410,29 @@ function New-DecisionFlowValue {
   }
 }
 
-function Convert-DecisionStateToV6 {
+function Convert-DecisionStateToV7 {
   param([System.Collections.IDictionary]$State, $Parsed, [int]$SourceSchema)
   $State.auditCorrections = @($State.auditCorrections)
-  if ($SourceSchema -eq 6) {
+  if ($SourceSchema -ge 6) {
     if ($null -ne $State.pendingDecision) {
-      $State.pendingDecision = Convert-PendingDecisionToV6 $State.pendingDecision 6
+      $State.pendingDecision = Convert-PendingDecisionToV7 $State.pendingDecision $SourceSchema
     }
     if ($null -ne $State.decisionFlow) {
       $flow = $State.decisionFlow
+      $resolved = @()
+      foreach ($decision in @((Get-ObjectValue $flow 'resolvedDecisions'))) {
+        $resolved += Convert-ResolvedDecisionToV7 $decision $SourceSchema
+      }
       $State.decisionFlow = [ordered]@{
         taskKind = [string](Get-ObjectValue $flow 'taskKind')
         taskId = [string](Get-ObjectValue $flow 'taskId')
         openedAt = Convert-StateTimestamp (Get-ObjectValue $flow 'openedAt')
         status = [string](Get-ObjectValue $flow 'status')
-        resolvedDecisions = @((Get-ObjectValue $flow 'resolvedDecisions'))
+        resolvedDecisions = @($resolved)
       }
     }
     if ($null -ne $State.pendingDecision -and $null -eq $State.decisionFlow) {
-      throw 'schema v6 pendingDecision requires decisionFlow'
+      throw "schema v$SourceSchema pendingDecision requires decisionFlow"
     }
     return
   }
@@ -342,7 +444,7 @@ function Convert-DecisionStateToV6 {
     return
   }
   $legacyStatus = [string](Get-ObjectValue $legacyDecision 'status')
-  $normalized = Convert-PendingDecisionToV6 $legacyDecision $SourceSchema
+  $normalized = Convert-PendingDecisionToV7 $legacyDecision $SourceSchema
   if ($legacyStatus -ne 'RESOLVED') {
     $State.pendingDecision = $normalized
     $State.decisionFlow = New-DecisionFlowValue $legacyDecision 'AWAITING_DECISION' @()
@@ -602,19 +704,63 @@ try {
       Require-Owner $state
       Require-PendingDecision $state
       Require-DecisionInput $NotificationStatus 'NotificationStatus'
-      $attemptCount = @($state.pendingDecision.notificationAttempts).Count
-      if ($attemptCount -ge 3 -or $state.pendingDecision.status -eq 'RETRY_EXHAUSTED') {
+      $provider = if ([string]::IsNullOrWhiteSpace($NotificationProvider)) { 'gmail_legacy' } else { $NotificationProvider }
+      $existingAttempts = @($state.pendingDecision.notificationAttempts)
+      if (@($existingAttempts | Where-Object { $_.provider -eq $provider -and $_.result -eq 'PROVIDER_OUTCOME_UNKNOWN' }).Count -gt 0) {
+        Exit-WithCode 'Provider outcome unknown requires manual reconciliation before any new attempt' $script:ExitInvalidArguments
+      }
+      $failureCount = @($existingAttempts | Where-Object {
+        $_.provider -eq $provider -and $_.result -in @('DELIVERY_FAILED', 'MISADDRESSED')
+      }).Count
+      if ($failureCount -ge 3) {
         Exit-WithCode 'Decision notification retry limit has been reached' $script:ExitInvalidArguments
       }
-      if ($state.pendingDecision.status -eq 'PROVIDER_ACCEPTED') {
+      if (@($existingAttempts | Where-Object { $_.provider -eq $provider -and $_.result -eq 'PROVIDER_ACCEPTED' }).Count -gt 0) {
         Exit-WithCode 'An accepted notification cannot be retried' $script:ExitInvalidArguments
       }
-      if ($NotificationStatus -in @('PROVIDER_ACCEPTED','MISADDRESSED')) {
-        Require-DecisionInput $RecipientHash 'RecipientHash'
-        Require-DecisionInput $ProviderMessageId 'ProviderMessageId'
+
+      if ($NotificationStatus -eq 'CHANNEL_UNAVAILABLE') {
+        if ($provider -ne 'feishu') { Exit-WithCode 'CHANNEL_UNAVAILABLE is only valid for Feishu preflight' $script:ExitInvalidArguments }
+        foreach ($field in @('RecipientHash','ProviderMessageId','TargetHash','ProviderMessageIdHash','NotificationError')) {
+          if ($PSBoundParameters.ContainsKey($field)) { Exit-WithCode 'CHANNEL_UNAVAILABLE cannot contain provider attempt evidence' $script:ExitInvalidArguments }
+        }
+        Set-Lease $state $nowValue
+        Export-State $state
+        break
+      }
+
+      $storedTargetHash = $null
+      $storedMessageHash = $null
+      if ($provider -eq 'gmail_legacy') {
+        if ($NotificationStatus -in @('PROVIDER_OUTCOME_UNKNOWN', 'CHANNEL_UNAVAILABLE')) {
+          Exit-WithCode 'Legacy Gmail cannot record the requested notification status' $script:ExitInvalidArguments
+        }
+        foreach ($field in @('TargetHash','ProviderMessageIdHash')) {
+          if ($PSBoundParameters.ContainsKey($field)) { Exit-WithCode 'Legacy Gmail notification cannot contain Feishu hash parameters' $script:ExitInvalidArguments }
+        }
+        if ($NotificationStatus -in @('PROVIDER_ACCEPTED','MISADDRESSED')) {
+          Require-DecisionInput $RecipientHash 'RecipientHash'
+          Require-DecisionInput $ProviderMessageId 'ProviderMessageId'
+        }
+        $storedTargetHash = if ([string]::IsNullOrWhiteSpace($RecipientHash)) { $null } else { $RecipientHash }
+        $storedMessageHash = if ([string]::IsNullOrWhiteSpace($ProviderMessageId)) { $null } else { Get-Sha256Text $ProviderMessageId.Trim() }
+      } else {
+        foreach ($field in @('RecipientHash','ProviderMessageId')) {
+          if ($PSBoundParameters.ContainsKey($field)) { Exit-WithCode 'Feishu notification cannot contain raw legacy provider evidence' $script:ExitInvalidArguments }
+        }
+        Require-DecisionInput $TargetHash 'TargetHash'
+        if ($NotificationStatus -in @('PROVIDER_ACCEPTED','MISADDRESSED')) {
+          Require-DecisionInput $ProviderMessageIdHash 'ProviderMessageIdHash'
+        } elseif ($PSBoundParameters.ContainsKey('ProviderMessageIdHash')) {
+          Exit-WithCode 'Feishu notification result cannot contain a provider message hash' $script:ExitInvalidArguments
+        }
+        $storedTargetHash = $TargetHash
+        $storedMessageHash = if ([string]::IsNullOrWhiteSpace($ProviderMessageIdHash)) { $null } else { $ProviderMessageIdHash }
       }
       if ($NotificationStatus -in @('DELIVERY_FAILED','MISADDRESSED')) {
         Require-DecisionInput $NotificationError 'NotificationError'
+      } elseif ($PSBoundParameters.ContainsKey('NotificationError')) {
+        Exit-WithCode 'NotificationError is only valid for an explicit provider failure' $script:ExitInvalidArguments
       }
       $errorCategory = $null
       if (-not [string]::IsNullOrWhiteSpace($NotificationError)) {
@@ -624,16 +770,19 @@ try {
         $errorCategory = $NotificationError
       }
       $attempt = [ordered]@{
+        provider = $provider
         attemptedAt = $nowValue.ToString('o')
         result = $NotificationStatus
-        recipientHash = if ([string]::IsNullOrWhiteSpace($RecipientHash)) { $null } else { $RecipientHash }
-        providerMessageIdHash = if ([string]::IsNullOrWhiteSpace($ProviderMessageId)) { $null } else { Get-Sha256Text $ProviderMessageId.Trim() }
+        targetHash = $storedTargetHash
+        providerMessageIdHash = $storedMessageHash
         errorCategory = $errorCategory
       }
-      $state.pendingDecision.notificationAttempts = @($state.pendingDecision.notificationAttempts) + $attempt
+      $state.pendingDecision.notificationAttempts = $existingAttempts + $attempt
       if ($NotificationStatus -eq 'PROVIDER_ACCEPTED') {
         $state.pendingDecision.status = 'PROVIDER_ACCEPTED'
-      } elseif (@($state.pendingDecision.notificationAttempts).Count -ge 3) {
+      } elseif ($NotificationStatus -eq 'PROVIDER_OUTCOME_UNKNOWN') {
+        $state.pendingDecision.status = 'PROVIDER_OUTCOME_UNKNOWN'
+      } elseif (($failureCount + 1) -ge 3) {
         $state.pendingDecision.status = 'RETRY_EXHAUSTED'
       } else {
         $state.pendingDecision.status = $NotificationStatus
@@ -658,28 +807,66 @@ try {
         resolvedAt = $nowValue.ToString('o')
         evidenceHash = $null
       }
+      $feishuEvidenceFields = @(
+        'ProviderMessageIdHash', 'ProviderEventIdHash', 'OperatorHash',
+        'TenantKeyHash', 'CardNonceHash', 'EvidenceHash'
+      )
       if ($ReplySource -eq 'email') {
         Require-DecisionInput $EvidenceMessageId 'EvidenceMessageId'
         Require-DecisionInput $EvidenceSender 'EvidenceSender'
-        if ($PSBoundParameters.ContainsKey('EvidenceThreadId') -or $PSBoundParameters.ContainsKey('EvidenceTurnId')) {
-          Exit-WithCode 'Email resolution cannot contain manual thread evidence' $script:ExitInvalidArguments
+        if (
+          $PSBoundParameters.ContainsKey('EvidenceThreadId') -or
+          $PSBoundParameters.ContainsKey('EvidenceTurnId') -or
+          @($feishuEvidenceFields | Where-Object { $PSBoundParameters.ContainsKey($_) }).Count -gt 0
+        ) {
+          Exit-WithCode 'Email resolution cannot contain manual or Feishu evidence' $script:ExitInvalidArguments
         }
         $messageIdHash = Get-Sha256Text $EvidenceMessageId.Trim()
         $senderHash = Get-Sha256Text $EvidenceSender.Trim()
         $resolution['messageIdHash'] = $messageIdHash
         $resolution['senderHash'] = $senderHash
         $resolution['evidenceHash'] = Get-Sha256Text "email|$messageIdHash|$senderHash"
-      } else {
+      } elseif ($ReplySource -eq 'manual') {
         if (-not $ManualOverride) { Exit-WithCode 'Manual decision resolution requires -ManualOverride' $script:ExitInvalidArguments }
         Require-DecisionInput $EvidenceThreadId 'EvidenceThreadId'
-        if ($PSBoundParameters.ContainsKey('EvidenceMessageId') -or $PSBoundParameters.ContainsKey('EvidenceSender')) {
-          Exit-WithCode 'Manual resolution cannot contain email evidence' $script:ExitInvalidArguments
+        if (
+          $PSBoundParameters.ContainsKey('EvidenceMessageId') -or
+          $PSBoundParameters.ContainsKey('EvidenceSender') -or
+          @($feishuEvidenceFields | Where-Object { $PSBoundParameters.ContainsKey($_) }).Count -gt 0
+        ) {
+          Exit-WithCode 'Manual resolution cannot contain email or Feishu evidence' $script:ExitInvalidArguments
         }
         $threadIdHash = Get-Sha256Text $EvidenceThreadId.Trim()
         $turnIdHash = if ([string]::IsNullOrWhiteSpace($EvidenceTurnId)) { $null } else { Get-Sha256Text $EvidenceTurnId.Trim() }
         $resolution['threadIdHash'] = $threadIdHash
         $resolution['turnIdHash'] = $turnIdHash
         $resolution['evidenceHash'] = Get-Sha256Text "manual|$threadIdHash|$turnIdHash"
+      } else {
+        if (
+          $ManualOverride -or
+          @(@('EvidenceMessageId','EvidenceSender','EvidenceThreadId','EvidenceTurnId') |
+            Where-Object { $PSBoundParameters.ContainsKey($_) }).Count -gt 0
+        ) {
+          Exit-WithCode 'Feishu card resolution cannot contain raw legacy evidence or manual override' $script:ExitInvalidArguments
+        }
+        foreach ($field in $feishuEvidenceFields) {
+          $value = Get-Variable -Name $field -ValueOnly
+          Require-DecisionInput $value $field
+        }
+        $matchingAcceptedAttempts = @($state.pendingDecision.notificationAttempts | Where-Object {
+          $_.provider -eq 'feishu' -and
+          $_.result -eq 'PROVIDER_ACCEPTED' -and
+          $_.providerMessageIdHash -ceq $ProviderMessageIdHash
+        })
+        if ($matchingAcceptedAttempts.Count -ne 1) {
+          Exit-WithCode 'Feishu provider message evidence does not match the accepted notification' $script:ExitInvalidArguments
+        }
+        $resolution['providerMessageIdHash'] = $ProviderMessageIdHash
+        $resolution['providerEventIdHash'] = $ProviderEventIdHash
+        $resolution['operatorOpenIdHash'] = $OperatorHash
+        $resolution['tenantKeyHash'] = $TenantKeyHash
+        $resolution['cardNonceHash'] = $CardNonceHash
+        $resolution['evidenceHash'] = $EvidenceHash
       }
       $resolvedDecision = [ordered]@{
         decisionId = [string]$state.pendingDecision.decisionId
@@ -695,6 +882,8 @@ try {
         notificationAttempts = @($state.pendingDecision.notificationAttempts)
         resolution = $resolution
       }
+      $expiresAt = Get-ObjectValue $state.pendingDecision 'expiresAt'
+      if ($null -ne $expiresAt) { $resolvedDecision['expiresAt'] = [string]$expiresAt }
       $state.decisionFlow.resolvedDecisions = @($state.decisionFlow.resolvedDecisions) + $resolvedDecision
       $state.decisionFlow.status = 'IMPLEMENTATION_PENDING'
       $state.pendingDecision = $null

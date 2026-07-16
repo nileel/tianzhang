@@ -1,3 +1,5 @@
+#requires -Version 7.0
+
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $tool = Join-Path $root 'tools\automation-controller-state.ps1'
@@ -22,6 +24,14 @@ function Assert-Code {
   if ($Result.Code -ne $Expected) {
     throw "$Label expected exit $Expected but got $($Result.Code): $($Result.Output)"
   }
+}
+
+function Get-TestSha256 {
+  param([string]$Value)
+
+  $bytes = [Text.UTF8Encoding]::new($false).GetBytes($Value)
+  try { ([Security.Cryptography.SHA256]::HashData($bytes) | ForEach-Object { $_.ToString('x2') }) -join '' }
+  finally { [Array]::Clear($bytes, 0, $bytes.Length) }
 }
 
 function Remove-AnsiCsi {
@@ -62,6 +72,76 @@ function New-Schema6PendingFixture {
   } | ConvertTo-Json -Depth 7 -Compress
 }
 
+function New-V6FeishuMigrationFixture {
+  @{
+    schemaVersion = 6
+    controllerId = 'v6-feishu-migration'
+    runId = $null
+    runMode = $null
+    state = 'IDLE'
+    leaseExpiresAt = $null
+    taskKind = $null
+    taskId = $null
+    taskExecutor = $null
+    checkpoint = $null
+    expectedPaths = @()
+    recoveryBaselinePath = $null
+    recoveryEvidencePath = $null
+    recoveryEvidenceHash = $null
+    recoveryCount = 0
+    lastError = $null
+    pendingDecision = @{
+      decisionId = 'DEC-V6-FEISHU-MIGRATION'
+      createdAt = '2026-07-15T05:00:00Z'
+      expiresAt = '2026-07-22T05:00:00Z'
+      taskKind = 'execute'
+      taskId = 'v6-feishu-task'
+      taskSummary = 'Migrate the active decision channel'
+      question = 'Which channel should carry the decision?'
+      options = @(
+        @{ key = 'A'; label = 'Feishu' },
+        @{ key = 'B'; label = 'Manual' },
+        @{ key = 'C'; label = 'Wait' }
+      )
+      recommendedOption = 'A'
+      impactSummary = 'Preserve the current decision while changing channels'
+      status = 'DELIVERY_FAILED'
+      notificationAttempts = @(
+        @{
+          attemptedAt = '2026-07-15T05:01:00Z'
+          result = 'DELIVERY_FAILED'
+          recipientHash = ('a' * 64)
+          providerMessageIdHash = $null
+          errorCategory = 'legacy_delivery_failed'
+        },
+        @{
+          attemptedAt = '2026-07-15T05:02:00Z'
+          result = 'DELIVERY_FAILED'
+          recipientHash = ('b' * 64)
+          providerMessageIdHash = ('c' * 64)
+          errorCategory = 'legacy_delivery_failed'
+        }
+      )
+    }
+    decisionFlow = @{
+      taskKind = 'execute'
+      taskId = 'v6-feishu-task'
+      openedAt = '2026-07-15T05:00:00Z'
+      status = 'AWAITING_DECISION'
+      resolvedDecisions = @()
+    }
+    auditCorrections = @(@{
+      decisionId = 'DEC-OLDER'
+      field = 'resolution.source'
+      oldValue = 'email'
+      newValue = 'manual'
+      correctedAt = '2026-07-14T05:00:00Z'
+      evidenceHash = ('d' * 64)
+      reason = 'Preserved migration fixture'
+    })
+  } | ConvertTo-Json -Depth 9 -Compress
+}
+
 New-Item -ItemType Directory -Path $sandbox | Out-Null
 try {
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'run-1', '-Now', '2026-07-11T00:00:00Z')
@@ -83,8 +163,8 @@ try {
   Assert-Code $r 0 'checkpoint'
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
-  if ($state.schemaVersion -ne 6 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v6 recovery evidence fields' }
-  if ($state.runMode -ne 'fresh' -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v6 top-level fields were not initialized safely' }
+  if ($state.schemaVersion -ne 7 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v7 recovery evidence fields' }
+  if ($state.runMode -ne 'fresh' -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v7 top-level fields were not initialized safely' }
 
   $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
   Assert-Code $r 0 'checkpoint DeepSeek executor'
@@ -227,8 +307,8 @@ try {
   Assert-Code $r 0 'create decision'
   $decisionState = Read-TestState
   $decision = $decisionState.pendingDecision
-  if ($decisionState.schemaVersion -ne 6 -or $decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2 -or $decision.notificationAttempts.Count -ne 0) {
-    throw 'create decision did not persist a schema v6 pending decision'
+  if ($decisionState.schemaVersion -ne 7 -or $decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2 -or $decision.notificationAttempts.Count -ne 0) {
+    throw 'create decision did not persist a schema v7 pending decision'
   }
   if ($decisionState.decisionFlow.taskId -ne 'decision-task' -or $decisionState.decisionFlow.taskKind -ne 'execute' -or $decisionState.decisionFlow.status -ne 'AWAITING_DECISION' -or $decisionState.decisionFlow.resolvedDecisions.Count -ne 0) {
     throw 'create decision did not open a matching decision flow'
@@ -257,7 +337,7 @@ try {
   $notifiedDecision = (Read-TestState).pendingDecision
   if ($notifiedDecision.status -ne 'PROVIDER_ACCEPTED' -or $notifiedDecision.notificationAttempts.Count -ne 1) { throw 'provider accepted notification status was not appended' }
   $acceptedAttempt = $notifiedDecision.notificationAttempts[0]
-  if ($acceptedAttempt.result -ne 'PROVIDER_ACCEPTED' -or $acceptedAttempt.recipientHash -ne $recipientHash -or $acceptedAttempt.providerMessageIdHash -notmatch '^[0-9a-f]{64}$' -or $acceptedAttempt.providerMessageIdHash -eq $providerMessageId -or $null -ne $acceptedAttempt.errorCategory) {
+  if ($acceptedAttempt.provider -ne 'gmail_legacy' -or $acceptedAttempt.result -ne 'PROVIDER_ACCEPTED' -or $acceptedAttempt.targetHash -ne $recipientHash -or $acceptedAttempt.providerMessageIdHash -notmatch '^[0-9a-f]{64}$' -or $acceptedAttempt.providerMessageIdHash -eq $providerMessageId -or $null -ne $acceptedAttempt.errorCategory) {
     throw 'provider accepted attempt did not preserve redacted provenance'
   }
   if ([IO.File]::ReadAllText($statePath).Contains($providerMessageId, [StringComparison]::Ordinal)) { throw 'provider message ID leaked into the state file' }
@@ -481,6 +561,195 @@ try {
     throw 'BlockUnsafe did not release ownership or fabricated recovery evidence'
   }
 
+  [IO.File]::WriteAllText($statePath, (New-V6FeishuMigrationFixture))
+  $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'v7-outcome-run', '-Now', '2026-07-15T06:00:00Z')
+  Assert-Code $r 0 'persist v6 to v7 Feishu migration'
+  $migratedV7 = Read-TestState
+  $migratedDecision = $migratedV7.pendingDecision
+  if (
+    $migratedV7.schemaVersion -ne 7 -or
+    $migratedDecision.decisionId -ne 'DEC-V6-FEISHU-MIGRATION' -or
+    ([DateTimeOffset]$migratedDecision.createdAt).ToUniversalTime().ToString('o') -ne '2026-07-15T05:00:00.0000000+00:00' -or
+    ([DateTimeOffset]$migratedDecision.expiresAt).ToUniversalTime().ToString('o') -ne '2026-07-22T05:00:00.0000000+00:00' -or
+    $migratedDecision.status -ne 'DELIVERY_FAILED' -or
+    $migratedDecision.notificationAttempts.Count -ne 2 -or
+    $migratedV7.decisionFlow.taskId -ne 'v6-feishu-task' -or
+    $migratedV7.auditCorrections.Count -ne 1
+  ) {
+    throw 'schema v6 active decision fields were not preserved in v7'
+  }
+  $legacyAttempts = @($migratedDecision.notificationAttempts)
+  if (
+    @($legacyAttempts | Where-Object { $_.provider -ne 'gmail_legacy' }).Count -ne 0 -or
+    $legacyAttempts[0].targetHash -ne ('a' * 64) -or
+    $legacyAttempts[1].targetHash -ne ('b' * 64) -or
+    $legacyAttempts[1].providerMessageIdHash -ne ('c' * 64) -or
+    @($legacyAttempts[0].PSObject.Properties.Name | Where-Object { $_ -eq 'recipientHash' }).Count -ne 0
+  ) {
+    throw 'v6 Gmail attempts were not migrated to hash-only gmail_legacy evidence'
+  }
+
+  $beforeUnavailableCount = $migratedDecision.notificationAttempts.Count
+  $r = Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v7-outcome-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'CHANNEL_UNAVAILABLE',
+    '-Now', '2026-07-15T06:01:00Z'
+  )
+  Assert-Code $r 0 'record Feishu channel unavailable without an attempt'
+  $afterUnavailable = (Read-TestState).pendingDecision
+  if ($afterUnavailable.notificationAttempts.Count -ne $beforeUnavailableCount -or $afterUnavailable.status -ne 'DELIVERY_FAILED') {
+    throw 'CHANNEL_UNAVAILABLE consumed a provider attempt or changed decision status'
+  }
+
+  $unknownTargetHash = Get-TestSha256 'feishu-target-outcome-unknown'
+  $r = Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v7-outcome-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'PROVIDER_OUTCOME_UNKNOWN',
+    '-TargetHash', $unknownTargetHash, '-Now', '2026-07-15T06:02:00Z'
+  )
+  Assert-Code $r 0 'record Feishu provider outcome unknown'
+  $unknownState = Read-TestState
+  $unknownAttempt = $unknownState.pendingDecision.notificationAttempts[-1]
+  if (
+    $unknownState.pendingDecision.status -ne 'PROVIDER_OUTCOME_UNKNOWN' -or
+    $unknownState.pendingDecision.notificationAttempts.Count -ne 3 -or
+    $unknownAttempt.provider -ne 'feishu' -or
+    $unknownAttempt.result -ne 'PROVIDER_OUTCOME_UNKNOWN' -or
+    $unknownAttempt.targetHash -ne $unknownTargetHash
+  ) {
+    throw 'PROVIDER_OUTCOME_UNKNOWN did not persist one sanitized non-retry attempt'
+  }
+  $beforeUnknownRetry = [IO.File]::ReadAllBytes($statePath)
+  $r = Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v7-outcome-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'DELIVERY_FAILED',
+    '-TargetHash', $unknownTargetHash, '-NotificationError', 'provider_rejected',
+    '-Now', '2026-07-15T06:03:00Z'
+  )
+  Assert-Code $r 15 'outcome unknown prohibits a new attempt'
+  if ([Convert]::ToBase64String($beforeUnknownRetry) -cne [Convert]::ToBase64String([IO.File]::ReadAllBytes($statePath))) {
+    throw 'rejected outcome-unknown retry changed state bytes'
+  }
+
+  [IO.File]::WriteAllText($statePath, (New-V6FeishuMigrationFixture))
+  Assert-Code (Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'v7-failure-run', '-Now', '2026-07-15T07:00:00Z')) 0 'acquire Feishu failure fixture'
+  $failureTargetHash = Get-TestSha256 'feishu-target-failure'
+  foreach ($minute in 1..3) {
+    $r = Invoke-StateTool @(
+      'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v7-failure-run',
+      '-NotificationProvider', 'feishu', '-NotificationStatus', 'DELIVERY_FAILED',
+      '-TargetHash', $failureTargetHash, '-NotificationError', 'provider_rejected',
+      '-Now', "2026-07-15T07:0${minute}:00Z"
+    )
+    Assert-Code $r 0 "record Feishu explicit failure $minute"
+  }
+  $failedV7 = (Read-TestState).pendingDecision
+  $feishuFailures = @($failedV7.notificationAttempts | Where-Object { $_.provider -eq 'feishu' -and $_.result -in @('DELIVERY_FAILED', 'MISADDRESSED') })
+  if ($failedV7.status -ne 'RETRY_EXHAUSTED' -or $failedV7.notificationAttempts.Count -ne 5 -or $feishuFailures.Count -ne 3) {
+    throw 'three Feishu failures did not exhaust only the Feishu retry budget'
+  }
+  $r = Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v7-failure-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'DELIVERY_FAILED',
+    '-TargetHash', $failureTargetHash, '-NotificationError', 'provider_rejected',
+    '-Now', '2026-07-15T07:04:00Z'
+  )
+  Assert-Code $r 15 'fourth Feishu failure rejection'
+
+  [IO.File]::WriteAllText($statePath, (New-V6FeishuMigrationFixture))
+  Assert-Code (Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'v7-reply-run', '-Now', '2026-07-15T08:00:00Z')) 0 'acquire Feishu reply fixture'
+  $rawTarget = 'raw-feishu-target-must-not-persist'
+  $rawProviderMessage = 'om_raw_provider_message_must_not_persist'
+  $rawProviderEvent = 'evt_raw_provider_event_must_not_persist'
+  $rawOperator = 'ou_raw_operator_must_not_persist'
+  $targetHash = Get-TestSha256 $rawTarget
+  $providerMessageHash = Get-TestSha256 $rawProviderMessage
+  $providerEventHash = Get-TestSha256 $rawProviderEvent
+  $operatorHash = Get-TestSha256 $rawOperator
+  $tenantHash = Get-TestSha256 'raw-tenant-must-not-persist'
+  $nonceHash = Get-TestSha256 'raw-card-nonce-must-not-persist'
+  $replyEvidenceHash = Get-TestSha256 'raw-envelope-evidence-must-not-persist'
+  $r = Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v7-reply-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'PROVIDER_ACCEPTED',
+    '-TargetHash', $targetHash, '-ProviderMessageIdHash', $providerMessageHash,
+    '-Now', '2026-07-15T08:01:00Z'
+  )
+  Assert-Code $r 0 'record accepted Feishu notification'
+  $r = Invoke-StateTool @(
+    'ResolveDecision', '-StatePath', $statePath, '-RunId', 'v7-reply-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-OptionKey', 'A', '-ReplySource', 'feishu_card',
+    '-Now', '2026-07-15T08:02:00Z'
+  )
+  Assert-Code $r 15 'Feishu reply evidence required'
+  $r = Invoke-StateTool @(
+    'ResolveDecision', '-StatePath', $statePath, '-RunId', 'v7-reply-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-OptionKey', 'A', '-ReplySource', 'feishu_card',
+    '-ProviderMessageIdHash', $providerMessageHash, '-ProviderEventIdHash', $providerEventHash,
+    '-OperatorHash', 'not-a-hash', '-TenantKeyHash', $tenantHash, '-CardNonceHash', $nonceHash,
+    '-EvidenceHash', $replyEvidenceHash, '-Now', '2026-07-15T08:02:10Z'
+  )
+  Assert-Code $r 1 'invalid Feishu operator hash binding rejection'
+  foreach ($badCase in @(
+    @{ label = 'wrong Feishu reply decision'; decision = 'DEC-WRONG'; option = 'A'; messageHash = $providerMessageHash },
+    @{ label = 'wrong Feishu reply option'; decision = 'DEC-V6-FEISHU-MIGRATION'; option = 'D'; messageHash = $providerMessageHash },
+    @{ label = 'wrong Feishu provider message'; decision = 'DEC-V6-FEISHU-MIGRATION'; option = 'A'; messageHash = ('f' * 64) }
+  )) {
+    $r = Invoke-StateTool @(
+      'ResolveDecision', '-StatePath', $statePath, '-RunId', 'v7-reply-run',
+      '-DecisionId', $badCase.decision, '-OptionKey', $badCase.option, '-ReplySource', 'feishu_card',
+      '-ProviderMessageIdHash', $badCase.messageHash, '-ProviderEventIdHash', $providerEventHash,
+      '-OperatorHash', $operatorHash, '-TenantKeyHash', $tenantHash, '-CardNonceHash', $nonceHash,
+      '-EvidenceHash', $replyEvidenceHash, '-Now', '2026-07-15T08:02:20Z'
+    )
+    Assert-Code $r 15 $badCase.label
+  }
+  $r = Invoke-StateTool @(
+    'ResolveDecision', '-StatePath', $statePath, '-RunId', 'v7-reply-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-OptionKey', 'A', '-ReplySource', 'feishu_card',
+    '-ProviderMessageIdHash', $providerMessageHash, '-ProviderEventIdHash', $providerEventHash,
+    '-OperatorHash', $operatorHash, '-TenantKeyHash', $tenantHash, '-CardNonceHash', $nonceHash,
+    '-EvidenceHash', $replyEvidenceHash, '-EvidenceMessageId', 'forbidden-raw-evidence',
+    '-Now', '2026-07-15T08:02:30Z'
+  )
+  Assert-Code $r 15 'Feishu reply rejects legacy raw evidence fields'
+  $r = Invoke-StateTool @(
+    'ResolveDecision', '-StatePath', $statePath, '-RunId', 'v7-reply-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-OptionKey', 'A', '-ReplySource', 'feishu_card',
+    '-ProviderMessageIdHash', $providerMessageHash, '-ProviderEventIdHash', $providerEventHash,
+    '-OperatorHash', $operatorHash, '-TenantKeyHash', $tenantHash, '-CardNonceHash', $nonceHash,
+    '-EvidenceHash', $replyEvidenceHash, '-Now', '2026-07-15T08:03:00Z'
+  )
+  Assert-Code $r 0 'resolve Feishu card reply'
+  $resolvedV7 = Read-TestState
+  $feishuResolution = $resolvedV7.decisionFlow.resolvedDecisions[-1].resolution
+  if (
+    $null -ne $resolvedV7.pendingDecision -or
+    $resolvedV7.decisionFlow.status -ne 'IMPLEMENTATION_PENDING' -or
+    $feishuResolution.source -ne 'feishu_card' -or
+    $feishuResolution.optionKey -ne 'A' -or
+    $feishuResolution.providerMessageIdHash -ne $providerMessageHash -or
+    $feishuResolution.providerEventIdHash -ne $providerEventHash -or
+    $feishuResolution.operatorOpenIdHash -ne $operatorHash -or
+    $feishuResolution.tenantKeyHash -ne $tenantHash -or
+    $feishuResolution.cardNonceHash -ne $nonceHash -or
+    $feishuResolution.evidenceHash -ne $replyEvidenceHash
+  ) {
+    throw 'Feishu card resolution did not preserve the complete hash-only evidence'
+  }
+  $resolvedRaw = [IO.File]::ReadAllText($statePath)
+  foreach ($rawLiteral in @($rawTarget, $rawProviderMessage, $rawProviderEvent, $rawOperator, 'forbidden-raw-evidence')) {
+    if ($resolvedRaw.Contains($rawLiteral, [StringComparison]::Ordinal)) { throw 'raw Feishu evidence leaked into state' }
+  }
+
+  foreach ($sourceSchema in 1..6) {
+    [IO.File]::WriteAllText($statePath, (@{ schemaVersion = $sourceSchema; state = 'IDLE'; controllerId = "schema-$sourceSchema" } | ConvertTo-Json -Compress))
+    $run = "schema-$sourceSchema-upgrade"
+    Assert-Code (Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', $run, '-Now', '2026-07-15T09:00:00Z')) 0 "schema $sourceSchema upgrade acquire"
+    if ((Read-TestState).schemaVersion -ne 7) { throw "schema $sourceSchema did not upgrade to v7" }
+    Assert-Code (Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', $run, '-Now', '2026-07-15T09:01:00Z')) 0 "schema $sourceSchema upgrade complete"
+  }
+
   foreach ($invalidPendingStatus in @('RESOLVED', 'UNKNOWN_STATUS')) {
     $schema6Invalid = New-Schema6PendingFixture $invalidPendingStatus
     [IO.File]::WriteAllText($statePath, $schema6Invalid)
@@ -495,7 +764,7 @@ try {
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
-  if ($legacy.schemaVersion -ne 6 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.decisionFlow -or $null -ne $legacy.lastDecisionCancellation -or $legacy.auditCorrections.Count -ne 0 -or $legacy.state -ne 'IDLE') {
+  if ($legacy.schemaVersion -ne 7 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.decisionFlow -or $null -ne $legacy.lastDecisionCancellation -or $legacy.auditCorrections.Count -ne 0 -or $legacy.state -ne 'IDLE') {
     throw 'schema v1 was not migrated safely'
   }
 
@@ -539,7 +808,7 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v2-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'renew migrated schema v2 state'
   $v2 = Read-TestState
-  if ($v2.schemaVersion -ne 6 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
+  if ($v2.schemaVersion -ne 7 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
     throw 'schema v2 was not migrated safely'
   }
   if ($v2.runId -ne 'v2-run' -or $v2.state -ne 'RUNNING' -or $v2.leaseExpiresAt -ne '2026-07-11T09:00:00.0000000+00:00' -or $v2.taskKind -ne 'execute' -or $v2.taskId -ne 'v2-recovery-task' -or $v2.checkpoint -ne 'mutation_started' -or $v2.expectedPaths.Count -ne 2 -or $v2.expectedPaths[0] -ne 'a.txt' -or $v2.expectedPaths[1] -ne 'b/c.txt' -or $v2.recoveryCount -ne 1 -or $v2.lastError -ne 'recoverable interruption') {
@@ -554,7 +823,7 @@ try {
     throw 'schema v2 pending decision options were not preserved after write-back'
   }
   $v2AttemptedAt = ([DateTimeOffset]$v2Decision.notificationAttempts[0].attemptedAt).ToUniversalTime().ToString('o')
-  if ($v2Decision.notificationAttempts.Count -ne 1 -or $v2Decision.notificationAttempts[0].result -ne 'DELIVERY_FAILED' -or $v2AttemptedAt -ne '2026-07-10T23:31:00.0000000+00:00' -or $v2Decision.notificationAttempts[0].errorCategory -ne 'smtp_unavailable') {
+  if ($v2Decision.notificationAttempts.Count -ne 1 -or $v2Decision.notificationAttempts[0].provider -ne 'gmail_legacy' -or $v2Decision.notificationAttempts[0].result -ne 'DELIVERY_FAILED' -or $v2AttemptedAt -ne '2026-07-10T23:31:00.0000000+00:00' -or $v2Decision.notificationAttempts[0].errorCategory -ne 'smtp_unavailable') {
     throw 'schema v2 pending decision notification was not converted to a legacy attempt'
   }
   if ($v2.decisionFlow.taskId -ne 'v2-decision-task' -or $v2.decisionFlow.status -ne 'AWAITING_DECISION' -or $v2.decisionFlow.resolvedDecisions.Count -ne 0) {
@@ -597,11 +866,11 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v5-run', '-Now', '2026-07-11T06:20:00Z')
   Assert-Code $r 0 'write back migrated v5 unresolved decision'
   $v5Unresolved = Read-TestState
-  if ($v5Unresolved.schemaVersion -ne 6 -or $v5Unresolved.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or $v5Unresolved.pendingDecision.notificationAttempts.Count -ne 1 -or $v5Unresolved.decisionFlow.status -ne 'AWAITING_DECISION') {
-    throw 'v5 unresolved decision status or flow was not migrated to schema v6'
+  if ($v5Unresolved.schemaVersion -ne 7 -or $v5Unresolved.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or $v5Unresolved.pendingDecision.notificationAttempts.Count -ne 1 -or $v5Unresolved.decisionFlow.status -ne 'AWAITING_DECISION') {
+    throw 'v5 unresolved decision status or flow was not migrated to schema v7'
   }
   $v5LegacyAttempt = $v5Unresolved.pendingDecision.notificationAttempts[0]
-  if ($v5LegacyAttempt.result -ne 'PROVIDER_ACCEPTED' -or $null -ne $v5LegacyAttempt.recipientHash -or $v5LegacyAttempt.providerMessageIdHash -ne ('e' * 64)) {
+  if ($v5LegacyAttempt.provider -ne 'gmail_legacy' -or $v5LegacyAttempt.result -ne 'PROVIDER_ACCEPTED' -or $null -ne $v5LegacyAttempt.targetHash -or $v5LegacyAttempt.providerMessageIdHash -ne ('e' * 64)) {
     throw 'v5 unresolved notification did not become one redacted legacy attempt'
   }
 
@@ -647,7 +916,7 @@ try {
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'v5-resolved-run', '-Now', '2026-07-11T06:40:00Z')
   Assert-Code $r 0 'write back migrated v5 resolved decision'
   $v5ResolvedAfterWrite = Read-TestState
-  if ($v5ResolvedAfterWrite.schemaVersion -ne 6 -or $v5ResolvedAfterWrite.decisionFlow.resolvedDecisions[0].resolution.evidenceHash -ne $legacyEvidenceHash) {
+  if ($v5ResolvedAfterWrite.schemaVersion -ne 7 -or $v5ResolvedAfterWrite.decisionFlow.resolvedDecisions[0].resolution.evidenceHash -ne $legacyEvidenceHash) {
     throw 'v5 resolved migration evidence was not deterministic across write-back'
   }
 
@@ -698,7 +967,7 @@ try {
   $correction = $repaired.auditCorrections[0]
   $threadHashBytes = [Text.UTF8Encoding]::new($false).GetBytes('repair-thread')
   $expectedThreadHash = ([Security.Cryptography.SHA256]::HashData($threadHashBytes) | ForEach-Object { $_.ToString('x2') }) -join ''
-  if ($repaired.schemaVersion -ne 6 -or $repaired.state -ne 'IDLE' -or $null -ne $repaired.runId -or $null -ne $repaired.runMode -or
+  if ($repaired.schemaVersion -ne 7 -or $repaired.state -ne 'IDLE' -or $null -ne $repaired.runId -or $null -ne $repaired.runMode -or
       $null -ne $repaired.leaseExpiresAt -or $null -ne $repaired.taskKind -or $null -ne $repaired.taskId -or $null -ne $repaired.taskExecutor -or
       $null -ne $repaired.checkpoint -or @($repaired.expectedPaths).Count -ne 0 -or $null -ne $repaired.recoveryBaselinePath -or
       $null -ne $repaired.recoveryEvidencePath -or $null -ne $repaired.recoveryEvidenceHash -or $repaired.recoveryCount -ne 0 -or

@@ -17,7 +17,7 @@
 - 不把 App ID、App Secret、收件人、Open ID、HMAC key、原始飞书事件或原始消息 ID 写入 Git、自动化 memory、控制台、提交信息或项目状态文件。
 - 私有配置固定为 `%USERPROFILE%\.codex\automation-state\tzg-hourly-controller.feishu.private.json`；桥接状态固定在 `%USERPROFILE%\.codex\automation-state\tzg-feishu-decision-bridge\`。
 - Node CLI 只输出净化 JSON；PowerShell 通过临时文件/stdin 传业务载荷，禁止把秘密或原始身份值放入命令行参数。
-- `CHANNEL_UNAVAILABLE` 表示长连接不健康或配置未完成，不计入真实发送重试次数；`DELIVERY_FAILED`、`MISADDRESSED` 才计入对应 provider 的发送尝试。
+- `CHANNEL_UNAVAILABLE` 表示 provider 调用前的长连接/SDK/client 或配置前置不可用，零 provider 调用、不建发送意图、不计入真实发送重试；`PROVIDER_OUTCOME_UNKNOWN` 表示 provider 可能已收到请求，不计失败重试且不允许换新 attempt/UUID 自动补发；只有明确 `DELIVERY_FAILED`、`MISADDRESSED` 才计入对应 provider 的失败尝试。
 - 旧 Gmail 动作和历史字段可以保留用于回滚/迁移，但不得出现在活动 `Contract.actions`、`nextCommands`、控制器提示词或模型可选择的工作流中。
 - 每个任务遵循红—绿—重构：先写会失败的直接测试，确认失败原因正确，再写最小实现，最后运行该切片的最小充分验证。
 - 任何需要真实飞书账号或 Windows 任务计划程序的步骤均放在“真实部署”任务中；此前的所有测试使用临时目录、假 transport 和假 scheduler。
@@ -92,6 +92,7 @@ tools/feishu-decision-bridge/src/envelope.mjs
 tools/feishu-decision-bridge/src/send-core.mjs
 tools/feishu-decision-bridge/src/send-runtime.mjs
 tools/feishu-decision-bridge/src/send-decision.mjs
+tools/feishu-decision-bridge/src/send-intent-store.mjs
 tools/feishu-decision-bridge/src/callback-core.mjs
 tools/feishu-decision-bridge/src/inbox.mjs
 tools/feishu-decision-bridge/src/bridge.mjs
@@ -112,6 +113,8 @@ tools/test-check-pwsh-runtime.ps1
 ### 修改文件
 
 ```text
+docs/superpowers/specs/2026-07-15-feishu-decision-channel-design.md
+docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md
 tools/automation-controller-state.ps1
 tools/test-automation-controller-state.ps1
 tools/automation-controller.ps1
@@ -528,7 +531,10 @@ Pop-Location
 - Create: `tools/feishu-decision-bridge/src/send-core.mjs`
 - Create: `tools/feishu-decision-bridge/src/send-runtime.mjs`
 - Create: `tools/feishu-decision-bridge/src/send-decision.mjs`
+- Create: `tools/feishu-decision-bridge/src/send-intent-store.mjs`
 - Create: `tools/feishu-decision-bridge/test/send.test.mjs`
+- Modify: `docs/superpowers/specs/2026-07-15-feishu-decision-channel-design.md`
+- Modify: `docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md`
 
 官方接口依据：
 
@@ -541,10 +547,12 @@ Pop-Location
 
 - `email` 映射为 `receive_id_type=email`，`open_id` 映射为 `receive_id_type=open_id`。
 - `msg_type` 固定为 `interactive`，`content` 是 `buildDecisionCard` 的 JSON 字符串。
-- provider 成功只返回 `{ result, targetHash, providerMessageIdHash, cardNonceHash }`。
-- provider 拒绝映射为 `DELIVERY_FAILED`，不得返回原始响应、目标或秘密。
-- health 文件缺失、过期超过 120 秒或 PID 不存活时返回 `CHANNEL_UNAVAILABLE`，且 transport 调用次数为 0。
-- 同一 `decisionId + provider + attemptNumber` 生成稳定 UUID；进程在 API 已接受后崩溃并重跑同一逻辑尝试时，仍发送相同 UUID，由飞书 API 去重。
+- provider 成功只返回 `{ result, targetHash, providerMessageIdHash, cardNonceHash }`；缓存成功重跑也只返回这 4 个键。
+- provider 显式非零业务码拒绝映射为 `DELIVERY_FAILED`；超时、断连、throw、非法响应或缺少 message ID 映射为 `PROVIDER_OUTCOME_UNKNOWN`，两者均不得返回原始响应、目标或秘密。
+- health 文件缺失、过期超过 120 秒、PID 不存活、SDK 导入失败或 client 初始化失败时返回 `CHANNEL_UNAVAILABLE`，且 intent/provider 调用次数均为 0。
+- 同一 `decisionId + provider + attemptNumber` 生成稳定 UUID；官方 UUID 去重只保证 1 小时，因此必须先持久化用户级 intent，55 分钟窗内同意图可用同 UUID/内容/目标/nonce 哈希重试，超窗后零 transport 并要求人工核对。
+- API 接受后终态落盘崩溃、intent 损坏/不匹配/忙锁、两进程并发、accepted/rejected 缓存、原子文件不含原始秘密/身份/消息 ID 都有定向测试。
+- Card nonce 使用私有 `hmacKey` 的领域隔 HMAC-SHA256 派生；同 intent 稳定，不同 attempt/key 不同，且不等于无密钥旧 digest。
 
 代表性断言：
 
@@ -570,8 +578,10 @@ Pop-Location
 `send-core.mjs` 导出：
 
 ```js
-export async function sendDecision({ config, decision, attemptNumber, transport, health, now }) {}
+export async function sendDecision({ config, decision, attemptNumber, transport, intentStore, health, now }) {}
 ```
+
+`send-intent-store.mjs` 导出 `createSendIntentStore(stateRoot, options?)`，只访问 `<stateRoot>/send-intents/`。`intentKeyHash = SHA-256(domain + provider + decisionId + attemptNumber)`，文件 schema 1 只允许净化哈希、UUID、尝试号、时间和 `PREPARED | IN_FLIGHT | ACCEPTED | OUTCOME_UNKNOWN | REJECTED`。使用同目录随机临时文件、`FileHandle.sync()`、close 和原子 rename；排他 `<hash>.lock` 只保存 pid/time，活进程或不足 120 秒的锁都返回忙，仅死进程且超租约可清理一次。读取对大小、UTF-8/JSON、原型、未知字段、hex、时间、状态一律严格校验；损坏/不匹配证据不覆写。Core 必须在该锁内完成检查 → `IN_FLIGHT` 落盘 → provider 调用 → 终态落盘 → release。
 
 `send-runtime.mjs` 仅在运行时创建 `new lark.Client({ appId, appSecret })`，并调用：
 
@@ -587,7 +597,9 @@ client.im.message.create({
 });
 ```
 
-`send-decision.mjs` 从 `--request-file` 指定的用户级临时 JSON 读取决定，但私有配置路径使用默认值或 `FEISHU_DECISION_CONFIG_PATH` 环境变量；输出一行净化 JSON。退出码约定：0 为 `PROVIDER_ACCEPTED`，20 为 `CHANNEL_UNAVAILABLE`，21 为 `DELIVERY_FAILED`，22 为输入/配置不合法。
+Runtime 导出安全错误类：官方明确非零 code 抛 `ProviderRejectedError`；network/throw、code 0 但缺 ID、非法响应抛 `ProviderOutcomeUnknownError`，错误文本固定且不含 raw。SDK 导入/client 初始化失败是调用前 `CHANNEL_UNAVAILABLE`。
+
+`send-decision.mjs` 从 `--request-file` 指定的用户级临时 JSON 读取决定，但私有配置路径使用默认值或 `FEISHU_DECISION_CONFIG_PATH` 环境变量；health 不健康时必须在创建 intent store/SDK 前直接返回 20。stdout 不原样透传下层对象，而是按结果类别重建严格白名单单行 JSON。退出码约定：0 为 `PROVIDER_ACCEPTED`，20 为 `CHANNEL_UNAVAILABLE`，21 为 `DELIVERY_FAILED`，22 为 `INVALID_INPUT`，23 为 `PROVIDER_OUTCOME_UNKNOWN`。
 
 - [ ] **Step 4: 运行 sender 测试和完整 Node 测试**
 
@@ -782,7 +794,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-install-feishu-decision
 - v1—v6 均能升级到 v7。
 - v6 `recipientHash` 原样迁移为 `targetHash`；历史尝试 provider 标为 `gmail_legacy`。
 - 当前决定 ID、状态、创建时间、截止时间和两条 Gmail 尝试不变。
-- `RecordDecisionNotification -NotificationProvider feishu -NotificationStatus CHANNEL_UNAVAILABLE` 不增加 provider 真实发送计数。
+- `RecordDecisionNotification -NotificationProvider feishu -NotificationStatus CHANNEL_UNAVAILABLE` 不增加 provider 真实发送计数；`PROVIDER_OUTCOME_UNKNOWN` 也不计失败重试、不允许新 attempt/UUID，并转人工核对。
 - Feishu 三次实际失败才进入 `RETRY_EXHAUSTED`；Gmail 历史次数不占用 Feishu 限额。
 - `ResolveDecision -ReplySource feishu_card` 接受卡片证据哈希；证据缺失、哈希格式错误、错误 option/decision 均失败关闭。
 - 新尝试和 resolution 中不存在原始 target、message ID、event ID 或 operator ID。
@@ -802,7 +814,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-s
 ```powershell
 [ValidateSet('gmail_legacy','feishu')]
 [string]$NotificationProvider,
-[ValidateSet('PROVIDER_ACCEPTED','DELIVERY_FAILED','MISADDRESSED','CHANNEL_UNAVAILABLE')]
+[ValidateSet('PROVIDER_ACCEPTED','PROVIDER_OUTCOME_UNKNOWN','DELIVERY_FAILED','MISADDRESSED','CHANNEL_UNAVAILABLE')]
 [string]$NotificationStatus,
 [ValidateSet('email','manual','feishu_card')]
 [string]$ReplySource,
@@ -822,7 +834,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-s
 [string]$EvidenceHash
 ```
 
-保留 `RecipientHash`、原始 `ProviderMessageId` 和 email evidence 参数只用于 v6 兼容/legacy action。飞书路径只接受已哈希的 `ProviderMessageIdHash`。`CHANNEL_UNAVAILABLE` 不追加到 `notificationAttempts`；控制器只更新用户级 `health.json`/净化诊断，因此项目可见通知次数保持不变。
+保留 `RecipientHash`、原始 `ProviderMessageId` 和 email evidence 参数只用于 v6 兼容/legacy action。飞书路径只接受已哈希的 `ProviderMessageIdHash`。`CHANNEL_UNAVAILABLE` 不追加到 `notificationAttempts`；`PROVIDER_OUTCOME_UNKNOWN` 可作为项目可见脱敏证据但不计失败重试，且状态机必须禁止为其创建新 attempt/UUID。
 
 - [ ] **Step 4: 运行状态测试**
 
@@ -854,7 +866,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.
 - Modify: `tools/automation-controller.ps1`
 - Modify: `tools/test-automation-controller.ps1`
 
-- [ ] **Step 1: 先写控制器失败测试**
+- [x] **Step 1: 先写控制器失败测试**
 
 在现有隔离临时仓库测试中新增：
 
@@ -863,13 +875,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller-state.
 - `Start` 遇到当前待决定时，若没有 Feishu 成功尝试可返回发送动作；已有成功尝试时只返回 `ConsumeDecisionReply` 或安全结束。
 - 发送动作从状态读取决定 ID，调用假 Node CLI；不接受模型提供的 `DecisionId`、target 或 provider ID。
 - bridge 不健康映射到 `CHANNEL_UNAVAILABLE`，不调用 provider transport、不消耗 Feishu retry，并返回 `CompleteNoChange`。
+- sender 返回 `PROVIDER_OUTCOME_UNKNOWN` 时不消耗 Feishu 失败 retry、不创建新 attempt/UUID，显示人工核对入口并安全结束。
 - 发送成功写入 provider `feishu` 的净化尝试，并把 `decisionId/cardNonceHash/providerMessageIdHash` 绑定镜像写到用户级 bridge 目录。
 - consumer 无回复返回 `CompleteNoChange`；签名/身份/冲突失败返回安全错误并保持待决定。
 - consumer 有效回复 A 时，状态 resolution source 为 `feishu_card`，返回原始 TaskId 和 `InspectCandidate`。
 - legacy 动作仍可被显式回滚测试调用，但不出现在 `Contract` 或任何活动 `nextCommands`。
 - 子进程调用使用 `ProcessStartInfo.ArgumentList` 或安全等价方式；秘密不出现在 command line、stdout/stderr 或项目文件。
 
-- [ ] **Step 2: 运行控制器测试并确认红灯**
+- [x] **Step 2: 运行控制器测试并确认红灯**
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.ps1
@@ -877,7 +890,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.p
 
 预期：失败于新动作未进入 ValidateSet/Contract，仍存在 Gmail 活动路径。
 
-- [ ] **Step 3: 实现安全 Node 子进程边界**
+- [x] **Step 3: 实现安全 Node 子进程边界**
 
 控制器新增默认参数：
 
@@ -889,15 +902,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.p
 
 实现内部 `Invoke-FeishuDecisionCli`：请求 JSON 写入当前 run root 下 ACL 受限的临时文件；子进程只收到脚本路径和请求文件路径；结束后在 `finally` 删除请求文件；stdout 只解析单行净化 JSON，stderr 先净化再归类。
 
-- [ ] **Step 4: 实现两个模型可见动作**
+- [x] **Step 4: 实现两个模型可见动作**
 
-`SendDecisionNotification`：读取唯一 `pendingDecision`，先检查 bridge health，再调用 sender，最后用状态工具记录 provider、结果和哈希证据。`CHANNEL_UNAVAILABLE` 只留下用户级净化健康诊断，不追加通知尝试；发送成功或失败均不要求模型拼装重试参数。
+`SendDecisionNotification`：读取唯一 `pendingDecision`，先检查 bridge health，再调用 sender，最后用状态工具记录 provider、结果和哈希证据。`CHANNEL_UNAVAILABLE` 只留下用户级净化健康诊断，不追加通知尝试；`PROVIDER_OUTCOME_UNKNOWN` 保留净化意图证据、禁止自动新尝试并指向人工核对；发送成功或失败均不要求模型拼装重试参数。
 
 `ConsumeDecisionReply`：读取唯一 `pendingDecision`，调用 consumer；`NO_REPLY` 安全结束；`REPLY_ACCEPTED` 把净化字段逐项传给 `ResolveDecision`，再返回原始 `TaskId` 的 `InspectCandidate`。
 
 保留 `PrepareDecisionNotification`、`MarkDecisionSubmitted`、`RetryDecisionNotification`、`MarkDecisionDeliveryFailed`、`ResolveDecisionEmailReply` 作为 legacy implementation，但把它们从活动契约和路由移除，并在结果中标 `legacyOnly=true`。
 
-- [ ] **Step 5: 运行控制器和状态测试**
+- [x] **Step 5: 运行控制器和状态测试**
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller-state.ps1
@@ -916,12 +929,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.p
 - Modify: `开发管理/自动工作流规则.txt`
 - Modify: `开发管理/自动工作流控制器提示词.txt`
 
-- [ ] **Step 1: 先写展示和静态守卫失败测试**
+- [x] **Step 1: 先写展示和静态守卫失败测试**
 
 展示测试新增：
 
 - `PROVIDER_ACCEPTED + feishu` 显示“飞书卡片已送达，等待选择”。
 - `CHANNEL_UNAVAILABLE` 显示“飞书桥接不可用，未消耗发送重试”。
+- `PROVIDER_OUTCOME_UNKNOWN` 显示“飞书发送结果待人工核对，已停止自动补发”。
 - resolution source `feishu_card` 显示“飞书互动卡片”。
 - Gmail 历史显示“旧 Gmail 通道（仅历史）”。
 - 输出不包含目标地址、Open ID 或原始 provider/event ID。
@@ -933,7 +947,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-controller.p
 - 控制器活动 Contract/nextCommands 不得引用五个 legacy email 动作。
 - 源码中允许存在明确标记为 legacy 的实现和迁移测试。
 
-- [ ] **Step 2: 运行测试并确认红灯**
+- [x] **Step 2: 运行测试并确认红灯**
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
@@ -942,23 +956,23 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps
 
 预期：失败于状态标签和活动提示词仍为 Gmail 语义。
 
-- [ ] **Step 3: 更新状态展示和规则事实源**
+- [x] **Step 3: 更新状态展示和规则事实源**
 
 在规则中明确：
 
 1. 飞书卡片是唯一活动外部决策通道，手动解决是保底。
 2. 模型不搜索任何邮件/聊天记录。
-3. 长连接健康失败和消息发送失败分开记账。
+3. 发送前本地不可用、provider 明确拒绝和 provider 结果不明分开记账；只有明确拒绝允许新失败尝试。
 4. 只有配对操作人的有效卡片回调可自动解决决定。
 5. Gmail 仅保留历史和限时回滚代码，不再主动发送/读取。
 
 `automation-decision-status.ps1` 增加可选 `FeishuHealthPath`，只读取 `health.json` 的 status/updatedAt/appIdHash；因此可以显示桥不可用，但不会把 `CHANNEL_UNAVAILABLE` 伪装成一条通知尝试。
 
-- [ ] **Step 4: 重写控制器提示词的待决定分支**
+- [x] **Step 4: 重写控制器提示词的待决定分支**
 
 提示词只允许按控制器 JSON 的 `nextCommands` 执行：创建后发送一次；每小时消费一次；无回复直接安全结束；有回复返回原任务检查；不得调用 Gmail connector。
 
-- [ ] **Step 5: 运行展示、静态守卫和审阅文本检查**
+- [x] **Step 5: 运行展示、静态守卫和审阅文本检查**
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-automation-decision-status.ps1
@@ -974,7 +988,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths
 
 - Verify: Tasks 2—8 的全部路径
 
-- [ ] **Step 1: 安装锁定依赖并运行 Node 测试**
+- [x] **Step 1: 安装锁定依赖并运行 Node 测试**
 
 ```powershell
 Push-Location tools/feishu-decision-bridge
@@ -985,7 +999,7 @@ Pop-Location
 
 预期：安装与全部 Node 测试通过，无网络回调或真实消息发送。
 
-- [ ] **Step 2: 运行 PowerShell 直接相关回归**
+- [x] **Step 2: 运行 PowerShell 直接相关回归**
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-setup-feishu-decision-channel.ps1
@@ -999,7 +1013,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths
 
 预期：所有命令退出码 0。
 
-- [ ] **Step 3: 检查秘密和活动 Gmail 路径**
+- [x] **Step 3: 检查秘密和活动 Gmail 路径**
 
 ```powershell
 rg -n --hidden --glob '!node_modules/**' --glob '!package-lock.json' '(appSecret|hmacKey|ou_[A-Za-z0-9]+|@(?:qq|163|126|gmail|outlook)\.)' tools/feishu-decision-bridge tools/*.ps1 开发管理
@@ -1008,11 +1022,13 @@ rg -n 'PrepareDecisionNotification|MarkDecisionSubmitted|RetryDecisionNotificati
 
 预期：第一条只命中字段名、假测试值和明确的脱敏断言，不出现真实值；第二条没有活动说明命中，或只命中清晰标记的 legacy/回滚说明。
 
-- [ ] **Step 4: 检查工作区范围并提交实现**
+- [x] **Step 4: 检查工作区范围并提交实现**
 
 ```powershell
 git status --short
 $expectedPaths = @(
+  'docs/superpowers/specs/2026-07-15-feishu-decision-channel-design.md',
+  'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md',
   'tools/feishu-decision-bridge/package.json',
   'tools/feishu-decision-bridge/package-lock.json',
   'tools/feishu-decision-bridge/src/config.mjs',
@@ -1021,6 +1037,9 @@ $expectedPaths = @(
   'tools/feishu-decision-bridge/src/send-core.mjs',
   'tools/feishu-decision-bridge/src/send-runtime.mjs',
   'tools/feishu-decision-bridge/src/send-decision.mjs',
+  'tools/feishu-decision-bridge/src/send-pairing.mjs',
+  'tools/feishu-decision-bridge/src/send-canary.mjs',
+  'tools/feishu-decision-bridge/src/send-intent-store.mjs',
   'tools/feishu-decision-bridge/src/callback-core.mjs',
   'tools/feishu-decision-bridge/src/inbox.mjs',
   'tools/feishu-decision-bridge/src/bridge.mjs',
@@ -1029,6 +1048,7 @@ $expectedPaths = @(
   'tools/feishu-decision-bridge/test/send.test.mjs',
   'tools/feishu-decision-bridge/test/callback.test.mjs',
   'tools/feishu-decision-bridge/test/consume.test.mjs',
+  'tools/feishu-decision-bridge/test/pairing.test.mjs',
   'tools/setup-feishu-decision-channel.ps1',
   'tools/install-feishu-decision-bridge.ps1',
   'tools/start-feishu-decision-bridge.ps1',
@@ -1105,9 +1125,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/setup-feishu-decision-channe
 - v7 保留两条 `gmail_legacy` 历史尝试。
 - 新增一条 provider=`feishu`、result=`PROVIDER_ACCEPTED` 尝试。
 - 飞书中只出现一张该决定卡片。
+- 用户级 `send-intents/` 只有一份与本尝试匹配的净化 `ACCEPTED` 意图，不含原始目标、凭证、decision ID、nonce、卡片内容或 provider message ID。
 - 控制器下一步为 `ConsumeDecisionReply`。
 
-如果发送前 bridge 不健康，结果必须为 `CHANNEL_UNAVAILABLE`，不发送卡片、不消耗 Feishu retry。修复 bridge 后再运行发送动作。
+如果发送前 bridge/SDK/client 不健康，结果必须为 `CHANNEL_UNAVAILABLE`，不建 intent、不发送卡片、不消耗 Feishu retry。修复前置后再运行发送动作。如果结果为 `PROVIDER_OUTCOME_UNKNOWN`，不得新建 attempt/UUID 补发；55 分钟窗内只能重跑同一逻辑尝试，超窗后必须零 transport 并人工核对。
 
 - [ ] **Step 6: 验证业务回复闭环**
 
@@ -1144,7 +1165,7 @@ git log -3 --oneline
 
 - [ ] **Step 4: 观察一个小时周期**
 
-下一个周期只能出现三种安全结果之一：无回复→`CompleteNoChange`；有效卡片回复→原 TaskId/`InspectCandidate`；bridge 不健康→`CHANNEL_UNAVAILABLE` 且不发送。若出现 Gmail connector 调用、重复卡片、错误 decision ID 或未配对身份被接受，立即暂停自动化，保留 inbox/quarantine 证据并回滚活动提示词到上一提交。
+下一个周期只能出现四种安全结果之一：无回复→`CompleteNoChange`；有效卡片回复→原 TaskId/`InspectCandidate`；发送前本地不可用→`CHANNEL_UNAVAILABLE` 且不建 intent/不发送；provider 结果不明→`PROVIDER_OUTCOME_UNKNOWN` 且不创建新 attempt/UUID，等待人工核对。若出现 Gmail connector 调用、重复卡片、错误 decision ID 或未配对身份被接受，立即暂停自动化，保留 inbox/quarantine/send-intents 证据并回滚活动提示词到上一提交。
 
 ## Acceptance Checklist
 
@@ -1152,7 +1173,8 @@ git log -3 --oneline
 - [ ] 长连接回调无需公网域名、端口映射或 SSL 证书。
 - [ ] 模型不再搜索 Gmail、飞书或任何自然语言聊天历史。
 - [ ] `DEC-20260715-75D7BA2AF210` 原地迁移，Gmail 历史完整保留且不占用 Feishu retry。
-- [ ] channel health、provider delivery、reply validity 三类失败分别记录。
+- [ ] channel health、provider 明确拒绝、provider outcome unknown、reply validity 分别记录。
+- [ ] 跨小时同一逻辑尝试由用户级发送意图失败关闭；超窗或 provider 结果不明时不自动换 attempt/UUID 补发。
 - [ ] 所有身份、消息和事件证据只以 SHA-256/HMAC 摘要进入状态或日志。
 - [ ] 私有配置 ACL 仅允许当前用户和 SYSTEM，Git 不跟踪任何运行时私密文件。
 - [ ] Node、PowerShell、状态展示、静态守卫和 review-text 检查全部通过。

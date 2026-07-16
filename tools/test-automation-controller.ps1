@@ -1,3 +1,5 @@
+#requires -Version 7.0
+
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -220,8 +222,7 @@ try {
   $expectedActions = @(
     'Contract','Start','InspectCandidate','RegisterCandidate','BeginMutation','Renew','Finish',
     'CompleteNoChange','Fail','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure',
-    'PrepareDecision','CreateDecision','PrepareDecisionNotification','MarkDecisionSubmitted',
-    'RetryDecisionNotification','MarkDecisionDeliveryFailed','ResolveDecisionEmailReply','ResolveDecisionManual'
+    'PrepareDecision','CreateDecision','SendDecisionNotification','ConsumeDecisionReply','ResolveDecisionManual'
   )
   if ((@($contractJson.actions) -join '|') -cne ($expectedActions -join '|')) {
     throw "controller facade actions are not exact: $(@($contractJson.actions) -join '|')"
@@ -237,11 +238,17 @@ try {
       $contractJson.commandTemplates.InspectCandidate -notmatch 'InspectCandidate -RepositoryRoot .* -RunId .* -TaskId' -or
       $contractJson.commandTemplates.InspectCandidate -match 'WorkType|Executor' -or
       $contractJson.commandTemplates.PrepareDecision -notmatch 'PrepareDecision -RepositoryRoot .* -RunId' -or
-      $contractJson.commandTemplates.MarkDecisionSubmitted -notmatch 'ProviderMessageId.*ObservedRecipient' -or
+      $contractJson.commandTemplates.SendDecisionNotification -notmatch 'SendDecisionNotification -RepositoryRoot .* -RunId' -or
+      $contractJson.commandTemplates.ConsumeDecisionReply -notmatch 'ConsumeDecisionReply -RepositoryRoot .* -RunId' -or
+      $null -ne $contractJson.commandTemplates.PrepareDecisionNotification -or
+      $null -ne $contractJson.commandTemplates.MarkDecisionSubmitted -or
+      $null -ne $contractJson.commandTemplates.RetryDecisionNotification -or
+      $null -ne $contractJson.commandTemplates.MarkDecisionDeliveryFailed -or
+      $null -ne $contractJson.commandTemplates.ResolveDecisionEmailReply -or
       $null -ne $contractJson.commandTemplates.MarkDecisionNotified -or
       $null -ne $contractJson.commandTemplates.ResolveDecisionReply -or
       @($contractJson.decisionParameters.required) -cnotcontains 'DecisionOptions' -or
-      $contractJson.decisionParameters.optionFormat -ne 'A=label|B=label' -or
+      $contractJson.decisionParameters.optionFormat -ne 'A=label|B=label|C=label' -or
       $contractJson.candidateResolvers.execution.source -ne '开发管理/当前任务队列.txt' -or
       @($contractJson.candidateResolvers.execution.semanticInputs) -cnotcontains 'TaskId' -or
       $contractJson.candidateResolvers.review.mode -ne 'separate_resolver_required' -or
@@ -450,7 +457,7 @@ try {
   if ($preparedDecisionJson.action -ne 'inspect_decision_context' -or
       @($preparedDecisionJson.requiredSources) -notcontains '开发管理/自动工作流状态.txt' -or
       @($preparedDecisionJson.command.requiredParameters) -cnotcontains 'DecisionOptions' -or
-      $preparedDecisionJson.command.optionFormat -ne 'A=label|B=label' -or
+      $preparedDecisionJson.command.optionFormat -ne 'A=label|B=label|C=label' -or
       $preparedDecisionJson.nextCommand -ne 'CreateDecision') {
     throw "PrepareDecision did not expose the exact decision contract: $($preparedDecision.Output)"
   }
@@ -464,8 +471,11 @@ try {
   Assert-Code $created 0 'create pending decision'
   $decision = (Invoke-State @('Show', '-StatePath', $decisionStatePath)).pendingDecision
   $statusText = [IO.File]::ReadAllText((Join-Path $repo '开发管理\自动工作流状态.txt'))
+  $createdJson = $created.Output | ConvertFrom-Json
   if ($decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.taskKind -ne 'execute' -or
-      $statusText -notmatch [regex]::Escape($decision.decisionId) -or $statusText -notmatch '通知状态：尚未尝试发送') {
+      $createdJson.nextCommand -ne 'SendDecisionNotification' -or
+      @($createdJson.nextCommands) -cnotcontains 'SendDecisionNotification' -or
+      $statusText -notmatch [regex]::Escape($decision.decisionId) -or $statusText -notmatch '通知状态：等待发送飞书卡片') {
     throw "CreateDecision did not use the registered work unit: $($created.Output)"
   }
 
@@ -497,7 +507,8 @@ try {
   $decisionSessionPath = Join-Path $decisionRunRoot "$decisionRunId.json"
   $decisionSession = [IO.File]::ReadAllText($decisionSessionPath) | ConvertFrom-Json
   $contextNames = @($decisionSession.notificationContext.PSObject.Properties.Name | Sort-Object)
-  if ($preparedNotificationJson.notification.recipientEmail -cne 'owner@example.invalid' -or
+  if ($preparedNotificationJson.legacyOnly -ne $true -or
+      $preparedNotificationJson.notification.recipientEmail -cne 'owner@example.invalid' -or
       $preparedNotificationJson.notification.gmailLabel -cne 'TZG_DECISIONS' -or
       ([regex]::Matches($preparedNotification.Output, 'owner@example\.invalid')).Count -ne 1 -or
       ($contextNames -join '|') -cne ((@('attemptNumber','decisionId','normalizedTargetHash','preparedAt') | Sort-Object) -join '|') -or
@@ -552,9 +563,11 @@ try {
   $decisionReplyStartJson = $decisionReplyStart.Output | ConvertFrom-Json
   if ($decisionReplyStartJson.action -ne 'inspect_pending_decision' -or
       $decisionReplyStartJson.pendingDecision.decisionId -ne $decision.decisionId -or
-      $decisionReplyStartJson.nextCommand -ne 'ResolveDecisionEmailReply' -or
+      $decisionReplyStartJson.nextCommand -ne 'SendDecisionNotification' -or
+      @($decisionReplyStartJson.nextCommands) -notcontains 'SendDecisionNotification' -or
       @($decisionReplyStartJson.nextCommands) -notcontains 'ResolveDecisionManual' -or
-      @($decisionReplyStartJson.nextCommands) -notcontains 'RetryDecisionNotification') {
+      @($decisionReplyStartJson.nextCommands) -contains 'ResolveDecisionEmailReply' -or
+      @($decisionReplyStartJson.nextCommands) -contains 'RetryDecisionNotification') {
     throw "pending decision was not surfaced on the next run: $($decisionReplyStart.Output)"
   }
 
@@ -1309,6 +1322,285 @@ try {
   if ((Invoke-State @('Show', '-StatePath', $incompleteStatePath)).recoveryCount -ne 0) {
     throw 'incomplete recovery entered a repeated stale-running loop'
   }
+
+  $feishuFixtureRoot = Join-Path $sandbox 'feishu-controller-fixture'
+  $feishuSeedStatePath = Join-Path $feishuFixtureRoot 'seed-state.json'
+  $feishuAcceptedStatePath = Join-Path $feishuFixtureRoot 'accepted-state.json'
+  $feishuUnknownStatePath = Join-Path $feishuFixtureRoot 'unknown-state.json'
+  $feishuAcceptedRunRoot = Join-Path $feishuFixtureRoot 'accepted-runs'
+  $feishuUnknownRunRoot = Join-Path $feishuFixtureRoot 'unknown-runs'
+  $feishuAcceptedBridgeRoot = Join-Path $feishuFixtureRoot 'accepted-bridge'
+  $feishuUnknownBridgeRoot = Join-Path $feishuFixtureRoot 'unknown-bridge'
+  $feishuConfigPath = Join-Path $feishuFixtureRoot 'feishu-private.json'
+  $fakeSenderScript = Join-Path $feishuFixtureRoot 'fake-sender.mjs'
+  $fakeConsumerScript = Join-Path $feishuFixtureRoot 'fake-consumer.mjs'
+  $fakeSenderResultPath = Join-Path $feishuFixtureRoot 'sender-result.json'
+  $fakeConsumerResultPath = Join-Path $feishuFixtureRoot 'consumer-result.json'
+  $fakeSenderTracePath = Join-Path $feishuFixtureRoot 'sender-trace.jsonl'
+  $fakeConsumerTracePath = Join-Path $feishuFixtureRoot 'consumer-trace.jsonl'
+  New-Item -ItemType Directory -Path $feishuFixtureRoot -Force | Out-Null
+  Write-Utf8 $feishuConfigPath (@{
+    schemaVersion = 1
+    appId = 'cli_fake_app'
+    appSecret = 'controller-secret-must-not-leak'
+  } | ConvertTo-Json)
+
+  $senderResultLiteral = $fakeSenderResultPath | ConvertTo-Json -Compress
+  $senderTraceLiteral = $fakeSenderTracePath | ConvertTo-Json -Compress
+  Write-Utf8 $fakeSenderScript @"
+import { appendFileSync, readFileSync } from 'node:fs';
+const resultPath = $senderResultLiteral;
+const tracePath = $senderTraceLiteral;
+const requestPath = process.argv[3];
+const request = JSON.parse(readFileSync(requestPath, 'utf8'));
+appendFileSync(tracePath, JSON.stringify({ argv: process.argv.slice(2), request }) + '\n');
+const output = JSON.parse(readFileSync(resultPath, 'utf8'));
+process.stdout.write(JSON.stringify(output) + '\n');
+process.exitCode = ({ PROVIDER_ACCEPTED: 0, CHANNEL_UNAVAILABLE: 20, DELIVERY_FAILED: 21, INVALID_INPUT: 22, PROVIDER_OUTCOME_UNKNOWN: 23 })[output.result] ?? 22;
+"@
+  $consumerResultLiteral = $fakeConsumerResultPath | ConvertTo-Json -Compress
+  $consumerTraceLiteral = $fakeConsumerTracePath | ConvertTo-Json -Compress
+  Write-Utf8 $fakeConsumerScript @"
+import { appendFileSync, readFileSync } from 'node:fs';
+const resultPath = $consumerResultLiteral;
+const tracePath = $consumerTraceLiteral;
+const requestPath = process.argv[3];
+const request = JSON.parse(readFileSync(requestPath, 'utf8'));
+appendFileSync(tracePath, JSON.stringify({ argv: process.argv.slice(2), request }) + '\n');
+const output = JSON.parse(readFileSync(resultPath, 'utf8'));
+process.stdout.write(JSON.stringify(output) + '\n');
+process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
+"@
+
+  $seedRunId = '71717171-7171-4171-8171-717171717171'
+  [void](Invoke-State @('Acquire','-StatePath',$feishuSeedStatePath,'-RunId',$seedRunId,'-Now','2026-07-16T01:00:00Z'))
+  [void](Invoke-State @(
+    'CreateDecision','-StatePath',$feishuSeedStatePath,'-RunId',$seedRunId,
+    '-TaskKind','execute','-TaskId','decision-task','-TaskSummary','飞书控制器测试',
+    '-DecisionQuestion','采用哪个飞书方案？','-DecisionOptions','A=方案甲|B=方案乙|C=方案丙',
+    '-RecommendedOption','A','-ImpactSummary','验证飞书发送与回复消费','-Now','2026-07-16T01:01:00Z'
+  ))
+  [void](Invoke-State @('Complete','-StatePath',$feishuSeedStatePath,'-RunId',$seedRunId,'-Now','2026-07-16T01:02:00Z'))
+  Copy-Item -LiteralPath $feishuSeedStatePath -Destination $feishuAcceptedStatePath
+  Copy-Item -LiteralPath $feishuSeedStatePath -Destination $feishuUnknownStatePath
+  $feishuDecisionId = [string](Invoke-State @('Show','-StatePath',$feishuSeedStatePath)).pendingDecision.decisionId
+
+  $hashA = 'a' * 64
+  $hashB = 'b' * 64
+  $hashC = 'c' * 64
+  $hashD = 'd' * 64
+  $hashE = 'e' * 64
+  $hashF = 'f' * 64
+  $hashOne = '1' * 64
+  $hashTwo = '2' * 64
+  Write-Utf8 $fakeSenderResultPath (@{
+    result = 'PROVIDER_OUTCOME_UNKNOWN'
+    targetHash = $hashA
+    cardNonceHash = $hashC
+    intentKeyHash = $hashTwo
+  } | ConvertTo-Json -Compress)
+  $unknownRunId = '72727272-7272-4272-8272-727272727272'
+  $unknownStart = Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuUnknownStatePath,'-RunRoot',$feishuUnknownRunRoot,
+    '-RunId',$unknownRunId,'-ActualModel','gpt-test','-Now','2026-07-16T02:00:00Z'
+  )
+  Assert-Code $unknownStart 0 'Feishu unknown fixture start'
+  if (($unknownStart.Output | ConvertFrom-Json).nextCommand -ne 'SendDecisionNotification') {
+    throw "unattempted Feishu decision did not route to sender: $($unknownStart.Output)"
+  }
+  $unknownSendArguments = @(
+    'SendDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$feishuUnknownStatePath,
+    '-RunRoot',$feishuUnknownRunRoot,'-RunId',$unknownRunId,'-FeishuConfigPath',$feishuConfigPath,
+    '-FeishuBridgeRoot',$feishuUnknownBridgeRoot,'-NodeExecutable','node',
+    '-FeishuSenderScript',$fakeSenderScript,'-Now','2026-07-16T02:01:00Z'
+  )
+  $unknownSend = Invoke-Controller $unknownSendArguments
+  Assert-Code $unknownSend 0 'Feishu provider outcome unknown'
+  $unknownState = Invoke-State @('Show','-StatePath',$feishuUnknownStatePath)
+  if (($unknownSend.Output | ConvertFrom-Json).deliveryResult -ne 'PROVIDER_OUTCOME_UNKNOWN' -or
+      ($unknownSend.Output | ConvertFrom-Json).nextCommand -ne 'CompleteNoChange' -or
+      @($unknownState.pendingDecision.notificationAttempts).Count -ne 1 -or
+      $unknownState.pendingDecision.notificationAttempts[0].provider -ne 'feishu' -or
+      $unknownState.pendingDecision.notificationAttempts[0].result -ne 'PROVIDER_OUTCOME_UNKNOWN') {
+    throw "unknown provider outcome was not fail-closed: $($unknownSend.Output)"
+  }
+  $senderTraceCount = @(Get-Content -LiteralPath $fakeSenderTracePath).Count
+  $forbiddenResend = Invoke-Controller $unknownSendArguments
+  if ($forbiddenResend.Code -ne 15 -or @(Get-Content -LiteralPath $fakeSenderTracePath).Count -ne $senderTraceCount) {
+    throw "unknown provider outcome allowed a new sender invocation: $($forbiddenResend.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'CompleteNoChange','-RepositoryRoot',$repo,'-StatePath',$feishuUnknownStatePath,
+    '-RunRoot',$feishuUnknownRunRoot,'-RunId',$unknownRunId,'-Now','2026-07-16T02:02:00Z'
+  )) 0 'close Feishu unknown run'
+  $unknownFollowupRunId = '73737373-7373-4373-8373-737373737373'
+  $unknownFollowup = Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuUnknownStatePath,'-RunRoot',$feishuUnknownRunRoot,
+    '-RunId',$unknownFollowupRunId,'-ActualModel','gpt-test','-Now','2026-07-16T02:03:00Z'
+  )
+  Assert-Code $unknownFollowup 0 'Feishu unknown follow-up start'
+  if (($unknownFollowup.Output | ConvertFrom-Json).nextCommand -ne 'CompleteNoChange' -or
+      @($unknownFollowup.Output | ConvertFrom-Json).nextCommands -contains 'SendDecisionNotification') {
+    throw "unknown provider outcome re-entered automatic send routing: $($unknownFollowup.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'CompleteNoChange','-RepositoryRoot',$repo,'-StatePath',$feishuUnknownStatePath,
+    '-RunRoot',$feishuUnknownRunRoot,'-RunId',$unknownFollowupRunId
+  )) 0 'close Feishu unknown follow-up'
+
+  Write-Utf8 $fakeSenderResultPath '{"result":"CHANNEL_UNAVAILABLE"}'
+  $unavailableRunId = '70707070-7070-4070-8070-707070707070'
+  Assert-Code (Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,'-RunRoot',$feishuAcceptedRunRoot,
+    '-RunId',$unavailableRunId,'-ActualModel','gpt-test','-Now','2026-07-16T02:30:00Z'
+  )) 0 'Feishu unavailable fixture start'
+  $unavailableSend = Invoke-Controller @(
+    'SendDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$unavailableRunId,'-FeishuConfigPath',$feishuConfigPath,
+    '-FeishuBridgeRoot',$feishuAcceptedBridgeRoot,'-NodeExecutable','node',
+    '-FeishuSenderScript',$fakeSenderScript,'-Now','2026-07-16T02:31:00Z'
+  )
+  Assert-Code $unavailableSend 0 'Feishu channel unavailable'
+  $unavailableState = Invoke-State @('Show','-StatePath',$feishuAcceptedStatePath)
+  if (($unavailableSend.Output | ConvertFrom-Json).deliveryResult -ne 'CHANNEL_UNAVAILABLE' -or
+      ($unavailableSend.Output | ConvertFrom-Json).nextCommand -ne 'CompleteNoChange' -or
+      @($unavailableState.pendingDecision.notificationAttempts).Count -ne 0 -or
+      (Test-Path -LiteralPath (Join-Path $feishuAcceptedBridgeRoot 'pending-bindings.json'))) {
+    throw "CHANNEL_UNAVAILABLE consumed a send attempt or created a binding: $($unavailableSend.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'CompleteNoChange','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$unavailableRunId
+  )) 0 'close Feishu unavailable run'
+
+  Write-Utf8 $fakeSenderResultPath (@{
+    result = 'PROVIDER_ACCEPTED'
+    targetHash = $hashA
+    providerMessageIdHash = $hashB
+    cardNonceHash = $hashC
+  } | ConvertTo-Json -Compress)
+  $acceptedSendRunId = '74747474-7474-4474-8474-747474747474'
+  $acceptedStart = Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,'-RunRoot',$feishuAcceptedRunRoot,
+    '-RunId',$acceptedSendRunId,'-ActualModel','gpt-test','-Now','2026-07-16T03:00:00Z'
+  )
+  Assert-Code $acceptedStart 0 'Feishu accepted fixture start'
+  $traceBeforeForbidden = @(Get-Content -LiteralPath $fakeSenderTracePath).Count
+  $forbiddenEvidence = Invoke-Controller @(
+    'SendDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$acceptedSendRunId,'-DecisionId','DEC-20260716-GUESSED',
+    '-FeishuConfigPath',$feishuConfigPath,'-FeishuBridgeRoot',$feishuAcceptedBridgeRoot,
+    '-NodeExecutable','node','-FeishuSenderScript',$fakeSenderScript,'-Now','2026-07-16T03:01:00Z'
+  )
+  if ($forbiddenEvidence.Code -ne 15 -or @(Get-Content -LiteralPath $fakeSenderTracePath).Count -ne $traceBeforeForbidden) {
+    throw "model-supplied Feishu evidence reached the sender: $($forbiddenEvidence.Output)"
+  }
+  $acceptedSend = Invoke-Controller @(
+    'SendDecisionNotification','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$acceptedSendRunId,'-FeishuConfigPath',$feishuConfigPath,
+    '-FeishuBridgeRoot',$feishuAcceptedBridgeRoot,'-NodeExecutable','node',
+    '-FeishuSenderScript',$fakeSenderScript,'-Now','2026-07-16T03:02:00Z'
+  )
+  Assert-Code $acceptedSend 0 'Feishu accepted send'
+  $acceptedState = Invoke-State @('Show','-StatePath',$feishuAcceptedStatePath)
+  $bindingPath = Join-Path $feishuAcceptedBridgeRoot 'pending-bindings.json'
+  $binding = [IO.File]::ReadAllText($bindingPath) | ConvertFrom-Json
+  $senderTrace = (Get-Content -LiteralPath $fakeSenderTracePath | Select-Object -Last 1) | ConvertFrom-Json
+  $requestFiles = @(Get-ChildItem -LiteralPath (Join-Path $feishuAcceptedRunRoot '.feishu-requests') -File -ErrorAction SilentlyContinue)
+  if (($acceptedSend.Output | ConvertFrom-Json).deliveryResult -ne 'PROVIDER_ACCEPTED' -or
+      @($acceptedState.pendingDecision.notificationAttempts).Count -ne 1 -or
+      $acceptedState.pendingDecision.notificationAttempts[0].provider -ne 'feishu' -or
+      $acceptedState.pendingDecision.notificationAttempts[0].providerMessageIdHash -ne $hashB -or
+      $binding.decisionId -ne $feishuDecisionId -or (@($binding.allowedOptions) -join '|') -ne 'A|B|C' -or
+      $binding.cardNonceHash -ne $hashC -or $binding.providerMessageIdHash -ne $hashB -or
+      $senderTrace.request.decision.decisionId -ne $feishuDecisionId -or
+      @($senderTrace.request.PSObject.Properties.Name).Count -ne 2 -or
+      ($senderTrace.argv -join '|') -match 'controller-secret-must-not-leak|feishu-private\.json' -or
+      $acceptedSend.Output -match 'controller-secret-must-not-leak' -or $requestFiles.Count -ne 0) {
+    throw "accepted Feishu send did not preserve the sanitized boundary: $($acceptedSend.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'CompleteNoChange','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$acceptedSendRunId
+  )) 0 'close Feishu accepted send run'
+
+  $consumeRunId = '75757575-7575-4575-8575-757575757575'
+  $consumeStart = Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,'-RunRoot',$feishuAcceptedRunRoot,
+    '-RunId',$consumeRunId,'-ActualModel','gpt-test','-Now','2026-07-16T04:00:00Z'
+  )
+  Assert-Code $consumeStart 0 'Feishu consume start'
+  $consumeStartJson = $consumeStart.Output | ConvertFrom-Json
+  if ($consumeStartJson.nextCommand -ne 'ConsumeDecisionReply' -or
+      @($consumeStartJson.nextCommands) -contains 'ResolveDecisionEmailReply' -or
+      @($consumeStartJson.nextCommands) -contains 'RetryDecisionNotification') {
+    throw "accepted Feishu decision exposed a legacy route: $($consumeStart.Output)"
+  }
+  Write-Utf8 $fakeConsumerResultPath '{"result":"INVALID_INPUT"}'
+  $consumeArguments = @(
+    'ConsumeDecisionReply','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$consumeRunId,'-FeishuConfigPath',$feishuConfigPath,
+    '-FeishuBridgeRoot',$feishuAcceptedBridgeRoot,'-NodeExecutable','node',
+    '-FeishuConsumerScript',$fakeConsumerScript,'-Now','2026-07-16T04:01:00Z'
+  )
+  $stateBeforeInvalidConsume = [IO.File]::ReadAllBytes($feishuAcceptedStatePath)
+  $invalidConsume = Invoke-Controller $consumeArguments
+  if ($invalidConsume.Code -ne 15 -or
+      -not [Linq.Enumerable]::SequenceEqual([byte[]]$stateBeforeInvalidConsume, [byte[]][IO.File]::ReadAllBytes($feishuAcceptedStatePath))) {
+    throw "invalid Feishu consumer result changed pending state: $($invalidConsume.Output)"
+  }
+  Write-Utf8 $fakeConsumerResultPath '{"result":"NO_REPLY"}'
+  $noReply = Invoke-Controller $consumeArguments
+  Assert-Code $noReply 0 'Feishu no reply'
+  if (($noReply.Output | ConvertFrom-Json).nextCommand -ne 'CompleteNoChange' -or
+      (Invoke-State @('Show','-StatePath',$feishuAcceptedStatePath)).pendingDecision.decisionId -ne $feishuDecisionId) {
+    throw "Feishu NO_REPLY did not preserve the pending decision: $($noReply.Output)"
+  }
+  Assert-Code (Invoke-Controller @(
+    'CompleteNoChange','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$consumeRunId
+  )) 0 'close Feishu no-reply run'
+
+  $resolveRunId = '76767676-7676-4676-8676-767676767676'
+  Assert-Code (Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,'-RunRoot',$feishuAcceptedRunRoot,
+    '-RunId',$resolveRunId,'-ActualModel','gpt-test','-Now','2026-07-16T05:00:00Z'
+  )) 0 'Feishu reply resolution start'
+  $resolveArguments = @(
+    'ConsumeDecisionReply','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
+    '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$resolveRunId,'-FeishuConfigPath',$feishuConfigPath,
+    '-FeishuBridgeRoot',$feishuAcceptedBridgeRoot,'-NodeExecutable','node',
+    '-FeishuConsumerScript',$fakeConsumerScript,'-Now','2026-07-16T05:01:00Z'
+  )
+  Write-Utf8 $fakeConsumerResultPath (@{
+    result='REPLY_ACCEPTED';optionKey='A';source='feishu_card';providerMessageIdHash=('9' * 64)
+    providerEventIdHash=$hashD;operatorOpenIdHash=$hashE;tenantKeyHash=$hashF;cardNonceHash=$hashC;evidenceHash=$hashOne
+  } | ConvertTo-Json -Compress)
+  $mismatchedReply = Invoke-Controller $resolveArguments
+  if ($mismatchedReply.Code -ne 15 -or
+      (Invoke-State @('Show','-StatePath',$feishuAcceptedStatePath)).pendingDecision.decisionId -ne $feishuDecisionId) {
+    throw "mismatched Feishu reply resolved the decision: $($mismatchedReply.Output)"
+  }
+  Write-Utf8 $fakeConsumerResultPath (@{
+    result='REPLY_ACCEPTED';optionKey='A';source='feishu_card';providerMessageIdHash=$hashB
+    providerEventIdHash=$hashD;operatorOpenIdHash=$hashE;tenantKeyHash=$hashF;cardNonceHash=$hashC;evidenceHash=$hashOne
+  } | ConvertTo-Json -Compress)
+  $resolvedReply = Invoke-Controller $resolveArguments
+  Assert-Code $resolvedReply 0 'valid Feishu reply resolution'
+  $resolvedReplyJson = $resolvedReply.Output | ConvertFrom-Json
+  $resolvedFeishuState = Invoke-State @('Show','-StatePath',$feishuAcceptedStatePath)
+  $feishuResolution = $resolvedFeishuState.decisionFlow.resolvedDecisions[0].resolution
+  $consumerTrace = (Get-Content -LiteralPath $fakeConsumerTracePath | Select-Object -Last 1) | ConvertFrom-Json
+  if ($resolvedReplyJson.nextCommand -ne 'InspectCandidate' -or $resolvedReplyJson.taskId -ne 'decision-task' -or
+      $null -ne $resolvedFeishuState.pendingDecision -or $feishuResolution.source -ne 'feishu_card' -or
+      $feishuResolution.optionKey -ne 'A' -or $feishuResolution.providerMessageIdHash -ne $hashB -or
+      $feishuResolution.operatorOpenIdHash -ne $hashE -or $feishuResolution.evidenceHash -ne $hashOne -or
+      $consumerTrace.request.pendingDecision.decisionId -ne $feishuDecisionId -or
+      ($consumerTrace.argv -join '|') -match 'controller-secret-must-not-leak|feishu-private\.json' -or
+      $resolvedReply.Output -match 'controller-secret-must-not-leak') {
+    throw "valid Feishu reply did not resolve with hash-only evidence: $($resolvedReply.Output)"
+  }
+  [void](Invoke-State @('Complete','-StatePath',$feishuAcceptedStatePath,'-RunId',$resolveRunId,'-Now','2026-07-16T05:02:00Z'))
 
   'test-automation-controller: OK'
 } finally {
