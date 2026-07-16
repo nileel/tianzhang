@@ -15,6 +15,7 @@ $script:TaskName = 'TianZhang-Feishu-Decision-Bridge'
 $script:RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $script:PackageRoot = Join-Path $PSScriptRoot 'feishu-decision-bridge'
 $script:StartScript = Join-Path $PSScriptRoot 'start-feishu-decision-bridge.ps1'
+$script:BridgeEntry = Join-Path $script:PackageRoot 'src\bridge.mjs'
 
 function Resolve-AbsolutePath {
   param([string]$Path, [string]$Label)
@@ -70,6 +71,17 @@ function New-RealSchedulerAdapter {
       param([string]$TaskName)
       Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     }
+    StopTask = {
+      param([string]$TaskName)
+      Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    }
+    GetProcesses = {
+      @(Get-CimInstance Win32_Process | Select-Object ProcessId, ParentProcessId, Name, CommandLine)
+    }
+    StopProcess = {
+      param([int]$ProcessId)
+      Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
+    }
     UpsertTask = {
       param($Plan)
       $identity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
@@ -100,7 +112,10 @@ function Assert-TestAdapterSafe {
   if (-not $fullConfig.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'SchedulerAdapter is restricted to temporary test configuration'
   }
-  $expected = @('GetNodeVersion', 'InstallPackages', 'GetTask', 'UpsertTask', 'RemoveTask', 'GetTaskStatus')
+  $expected = @(
+    'GetNodeVersion', 'InstallPackages', 'GetTask', 'StopTask',
+    'GetProcesses', 'StopProcess', 'UpsertTask', 'RemoveTask', 'GetTaskStatus'
+  )
   if ($SchedulerAdapter.Count -ne $expected.Count) { throw 'SchedulerAdapter is invalid' }
   foreach ($key in $expected) {
     if (-not $SchedulerAdapter.ContainsKey($key) -or $SchedulerAdapter[$key] -isnot [scriptblock]) {
@@ -138,6 +153,34 @@ function Assert-PackageLock {
     }
   } catch {
     throw 'Bridge package lock is invalid'
+  }
+}
+
+function Stop-VerifiedLegacyBridgeProcesses {
+  $processes = @(Invoke-Adapter 'GetProcesses')
+  $liveIds = [Collections.Generic.HashSet[int]]::new()
+  foreach ($process in $processes) {
+    $processId = 0
+    if ([int]::TryParse([string]$process.ProcessId, [ref]$processId) -and $processId -gt 0) {
+      $liveIds.Add($processId) | Out-Null
+    }
+  }
+  $entry = [IO.Path]::GetFullPath($script:BridgeEntry)
+  $entryPattern = '(?i)(?:^|\s)"?' + [regex]::Escape($entry) + '"?(?:\s|$)'
+  foreach ($process in $processes) {
+    $processId = 0
+    $parentProcessId = 0
+    if (
+      [string]$process.Name -cne 'node.exe' -or
+      -not [int]::TryParse([string]$process.ProcessId, [ref]$processId) -or
+      $processId -le 0 -or
+      -not [int]::TryParse([string]$process.ParentProcessId, [ref]$parentProcessId) -or
+      $liveIds.Contains($parentProcessId) -or
+      [string]$process.CommandLine -notmatch $entryPattern
+    ) {
+      continue
+    }
+    Invoke-Adapter 'StopProcess' @($processId)
   }
 }
 
@@ -191,6 +234,10 @@ switch ($Action) {
     Assert-PackageLock
     Assert-PrivateConfiguration
     $existing = Invoke-Adapter 'GetTask' @($script:TaskName)
+    if ($null -ne $existing) {
+      Invoke-Adapter 'StopTask' @($script:TaskName)
+    }
+    Stop-VerifiedLegacyBridgeProcesses
     Invoke-Adapter 'InstallPackages' @($script:PackageRoot)
     Invoke-Adapter 'UpsertTask' @([pscustomobject]$plan)
     Write-SanitizedJson ([ordered]@{

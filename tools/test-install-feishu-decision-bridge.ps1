@@ -50,6 +50,8 @@ function New-FakeScheduler {
     Calls = [Collections.Generic.List[string]]::new()
     Tasks = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::OrdinalIgnoreCase)
     NodeVersion = $NodeVersion
+    Processes = [Collections.Generic.List[object]]::new()
+    StoppedProcessIds = [Collections.Generic.List[int]]::new()
   }
   $adapter = @{
     GetNodeVersion = {
@@ -64,6 +66,19 @@ function New-FakeScheduler {
       param([string]$TaskName)
       $state.Calls.Add("get:$TaskName")
       if ($state.Tasks.ContainsKey($TaskName)) { $state.Tasks[$TaskName] } else { $null }
+    }
+    StopTask = {
+      param([string]$TaskName)
+      $state.Calls.Add("stop-task:$TaskName")
+    }
+    GetProcesses = {
+      $state.Calls.Add('get-processes')
+      @($state.Processes)
+    }
+    StopProcess = {
+      param([int]$ProcessId)
+      $state.Calls.Add("stop-process:$ProcessId")
+      $state.StoppedProcessIds.Add($ProcessId)
     }
     UpsertTask = {
       param($Plan)
@@ -108,6 +123,31 @@ try {
   )) 0 'install fixture Configure'
 
   $fake = New-FakeScheduler
+  $bridgeEntry = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'feishu-decision-bridge\src\bridge.mjs'))
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 100
+    ParentProcessId = 999
+    Name = 'node.exe'
+    CommandLine = "node.exe `"$bridgeEntry`""
+  })
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 101
+    ParentProcessId = 901
+    Name = 'node.exe'
+    CommandLine = "node.exe `"$bridgeEntry`""
+  })
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 901
+    ParentProcessId = 1
+    Name = 'pwsh.exe'
+    CommandLine = 'pwsh.exe -File start-feishu-decision-bridge.ps1'
+  })
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 102
+    ParentProcessId = 999
+    Name = 'node.exe'
+    CommandLine = "node.exe `"${bridgeEntry}-near`""
+  })
   $planResult = Invoke-Script -Path $installTool -Arguments @('Plan', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)
   Assert-Code $planResult 0 'Plan'
   $plan = $planResult.Output | ConvertFrom-Json
@@ -134,6 +174,9 @@ try {
   if ($firstOutput.result -ne 'INSTALLED' -or $firstOutput.updated) { throw 'first Install summary was invalid' }
   if ($fake.State.Tasks.Count -ne 1 -or -not $fake.State.Tasks.ContainsKey('TianZhang-Feishu-Decision-Bridge')) {
     throw 'first Install did not create exactly one fixed task'
+  }
+  if ($fake.State.StoppedProcessIds.Count -ne 1 -or $fake.State.StoppedProcessIds[0] -ne 100) {
+    throw "Install did not stop only the verified orphan bridge: $($fake.State.StoppedProcessIds -join ',')"
   }
   $calls = @($fake.State.Calls)
   $nodeIndex = [Array]::IndexOf($calls, 'node-version')
@@ -196,6 +239,9 @@ try {
   $startText = Get-Content -LiteralPath $startTool -Raw
   if ($startText -notmatch '(?i)Mutex' -or $startText -notmatch 'bridge\.mjs') {
     throw 'start script does not provide a process-level single-instance guard and fixed bridge entrypoint'
+  }
+  if ($startText -match '(?m)\bSet-Acl\b' -or $startText -notmatch 'private-path-acl\.ps1') {
+    throw 'start script does not use the DACL-only private path helper'
   }
 
   Write-Output 'test-install-feishu-decision-bridge: OK'

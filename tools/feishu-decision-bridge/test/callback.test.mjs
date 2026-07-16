@@ -8,6 +8,7 @@ import test from 'node:test';
 import { startBridge } from '../src/bridge.mjs';
 import { handleCardAction, normalizeCardAction } from '../src/callback-core.mjs';
 import { verifyEnvelope } from '../src/envelope.mjs';
+import { acquireInstanceLock } from '../src/instance-lock.mjs';
 
 const NOW = new Date('2026-07-16T08:00:00.000Z');
 const APP_ID = 'app_fake_demo';
@@ -123,6 +124,40 @@ function containsInteractiveAction(value) {
     || value.tag === 'action'
     || Object.values(value).some(containsInteractiveAction);
 }
+
+test('bridge instance lock rejects a live owner and reclaims a dead owner once', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-bridge-instance-lock-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+
+  await t.test('live owner rejects a second bridge', async () => {
+    const first = await acquireInstanceLock({
+      stateRoot: root,
+      pid: 101,
+      processProbe: async (pid) => pid === 101,
+    });
+    await assert.rejects(acquireInstanceLock({
+      stateRoot: root,
+      pid: 202,
+      processProbe: async (pid) => pid === 101,
+    }), /Bridge already running/);
+    await first.release();
+  });
+
+  await t.test('dead owner is reclaimed once', async () => {
+    await writeFile(join(root, 'bridge-instance.lock'), '{"schemaVersion":1,"pid":101}', 'utf8');
+    const lock = await acquireInstanceLock({
+      stateRoot: root,
+      pid: 202,
+      processProbe: async () => false,
+    });
+    assert.deepEqual(JSON.parse(await readFile(join(root, 'bridge-instance.lock'), 'utf8')), {
+      schemaVersion: 1,
+      pid: 202,
+    });
+    await lock.release();
+    await assert.rejects(readFile(join(root, 'bridge-instance.lock'), 'utf8'), { code: 'ENOENT' });
+  });
+});
 
 test('normalizeCardAction accepts only a complete schema 2.0 data envelope', () => {
   const normalized = normalizeCardAction(makeEvent());
@@ -421,6 +456,10 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     updatedAt: NOW.toISOString(),
     appIdHash: sha256(APP_ID),
   });
+  assert.deepEqual(JSON.parse(await readFile(join(root, 'bridge-instance.lock'), 'utf8')), {
+    schemaVersion: 1,
+    pid: 4242,
+  });
 
   await writeFile(configPath, JSON.stringify(makeConfig(root)));
   const callbackResult = await registered['card.action.trigger'](makeEvent());
@@ -463,6 +502,7 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
   await runtime.shutdown();
   assert.equal(clearedInterval, 73);
   assert.equal(JSON.parse(await readFile(join(root, 'health.json'), 'utf8')).status, 'DISCONNECTED');
+  await assert.rejects(readFile(join(root, 'bridge-instance.lock'), 'utf8'), { code: 'ENOENT' });
 });
 
 test('bridge does not claim CONNECTED without the official ready log and records start failure', async (t) => {
@@ -501,5 +541,6 @@ test('bridge does not claim CONNECTED without the official ready log and records
       now: () => NOW,
     }), /Bridge unavailable/);
     assert.equal(JSON.parse(await readFile(join(root, 'health.json'), 'utf8')).status, 'DISCONNECTED');
+    await assert.rejects(readFile(join(root, 'bridge-instance.lock'), 'utf8'), { code: 'ENOENT' });
   });
 });

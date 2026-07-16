@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 
 function Resolve-AbsolutePath {
   param([string]$Path, [string]$Label)
@@ -15,17 +16,10 @@ function Resolve-AbsolutePath {
   return $resolved
 }
 
-function Get-AllowedSids {
-  @(
-    [Security.Principal.WindowsIdentity]::GetCurrent().User,
-    [Security.Principal.SecurityIdentifier]::new('S-1-5-18')
-  )
-}
-
 function Test-PrivateAcl {
   param([string]$Path, [switch]$AllowInherited)
 
-  $allowed = @((Get-AllowedSids).Value)
+  $allowed = @((Get-PrivateAclSids).Value)
   $acl = Get-Acl -LiteralPath $Path
   $rules = @($acl.Access)
   if (-not $AllowInherited -and -not $acl.AreAccessRulesProtected) { return $false }
@@ -44,31 +38,12 @@ function Test-PrivateAcl {
   return $true
 }
 
-function Set-PrivateDirectoryAcl {
-  param([string]$Path)
-
-  $security = Get-Acl -LiteralPath $Path
-  $security.SetAccessRuleProtection($true, $false)
-  foreach ($existingRule in @($security.Access)) { $security.RemoveAccessRuleSpecific($existingRule) }
-  foreach ($sid in Get-AllowedSids) {
-    $rule = [Security.AccessControl.FileSystemAccessRule]::new(
-      $sid,
-      [Security.AccessControl.FileSystemRights]::FullControl,
-      [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit',
-      [Security.AccessControl.PropagationFlags]::None,
-      [Security.AccessControl.AccessControlType]::Allow
-    )
-    $security.AddAccessRule($rule) | Out-Null
-  }
-  Set-Acl -LiteralPath $Path -AclObject $security
-}
-
 function Initialize-PrivateDirectory {
   param([string]$Path)
 
   if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    Set-PrivateDirectoryAcl $Path
+    Set-PrivatePathAcl -Path $Path -Directory
     return
   }
   if (-not (Test-PrivateAcl $Path)) { throw 'Private bridge directory ACL is unsafe' }

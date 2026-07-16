@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 
 import { handleCardAction, normalizeCardAction } from './callback-core.mjs';
 import { parsePrivateConfig, sanitizeError, sha256 } from './config.mjs';
+import { acquireInstanceLock } from './instance-lock.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const CALLBACK_TIMEOUT_MS = 2_800;
@@ -279,6 +280,7 @@ export async function startBridge(options = {}) {
   let intervalId;
   let shuttingDown = false;
   let healthChain = Promise.resolve();
+  let instanceLock;
 
   const healthTimestamp = () => {
     const value = now();
@@ -336,6 +338,18 @@ export async function startBridge(options = {}) {
       }
       emitSanitized(level === 'trace' ? 'debug' : level, args);
     };
+  }
+
+  const lockFactory = options.acquireInstanceLock ?? acquireInstanceLock;
+  try {
+    instanceLock = await lockFactory({
+      stateRoot: config.stateRoot,
+      pid,
+      processProbe: options.processProbe,
+      fs,
+    });
+  } catch {
+    throw new Error('Bridge unavailable');
   }
 
   try {
@@ -413,7 +427,13 @@ export async function startBridge(options = {}) {
         } catch (error) {
           emitSanitized('warn', [error]);
         }
-        await enqueueHealth('DISCONNECTED');
+        try {
+          await enqueueHealth('DISCONNECTED');
+        } finally {
+          const ownedLock = instanceLock;
+          instanceLock = undefined;
+          await ownedLock?.release().catch((error) => emitSanitized('warn', [error]));
+        }
       },
     };
   } catch (error) {
@@ -427,6 +447,9 @@ export async function startBridge(options = {}) {
       appIdHash,
     }));
     await healthChain.catch(() => {});
+    const ownedLock = instanceLock;
+    instanceLock = undefined;
+    await ownedLock?.release().catch(() => {});
     emitSanitized('error', [error]);
     throw new Error('Bridge unavailable');
   }
