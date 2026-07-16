@@ -260,16 +260,74 @@ function summarizeSdkKeys(value) {
   return [...strings.sort(), ...symbols.sort()].join(',');
 }
 
+function diagnosticIdentifier(value) {
+  return typeof value === 'string'
+    && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/.test(value);
+}
+
+function diagnosticDigitLength(value) {
+  return typeof value === 'string' && /^\d+$/.test(value) ? value.length : -1;
+}
+
+function summarizeMessageChecks(rawEvent, sender, senderId, message) {
+  const eventType = readDataProperty(rawEvent, 'event_type');
+  const eventSymbols = isPlainObject(rawEvent)
+    ? Reflect.ownKeys(rawEvent).filter((key) => typeof key === 'symbol')
+    : [];
+  const symbolDescriptor = eventSymbols.length === 1
+    ? Object.getOwnPropertyDescriptor(rawEvent, eventSymbols[0])
+    : undefined;
+  const token = readDataProperty(rawEvent, 'token');
+  const tenantKey = readDataProperty(rawEvent, 'tenant_key');
+  let content = null;
+  try {
+    const rawContent = readDataProperty(message, 'content');
+    content = typeof rawContent === 'string' && Buffer.byteLength(rawContent, 'utf8') <= 16 * 1024
+      ? JSON.parse(rawContent)
+      : null;
+  } catch {
+    content = null;
+  }
+  return [
+    [
+      `root_checks=schema:${readDataProperty(rawEvent, 'schema') === '2.0'}`,
+      `symbol_match:${eventSymbols.length === 1 && Object.hasOwn(symbolDescriptor ?? {}, 'value') && symbolDescriptor.value === eventType}`,
+      `event_type:${eventType === 'im.message.receive_v1'}`,
+      `event_id:${diagnosticIdentifier(readDataProperty(rawEvent, 'event_id'))}`,
+      `tenant_id:${diagnosticIdentifier(tenantKey)}`,
+      `app_id:${diagnosticIdentifier(readDataProperty(rawEvent, 'app_id'))}`,
+      `token:${typeof token === 'string' && token.length >= 1 && token.length <= 512 && !/[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(token)}`,
+      `create_time_digits:${diagnosticDigitLength(readDataProperty(rawEvent, 'create_time'))}`,
+    ].join(','),
+    [
+      `sender_checks=sender_type:${readDataProperty(sender, 'sender_type') === 'user'}`,
+      `tenant_match:${readDataProperty(sender, 'tenant_key') === tenantKey}`,
+      `open_id:${diagnosticIdentifier(readDataProperty(senderId, 'open_id'))}`,
+    ].join(','),
+    [
+      `message_checks=chat_type:${readDataProperty(message, 'chat_type') === 'p2p'}`,
+      `message_type:${readDataProperty(message, 'message_type') === 'text'}`,
+      `message_id:${diagnosticIdentifier(readDataProperty(message, 'message_id'))}`,
+      `chat_id:${diagnosticIdentifier(readDataProperty(message, 'chat_id'))}`,
+      `create_time_digits:${diagnosticDigitLength(readDataProperty(message, 'create_time'))}`,
+      `content_keys:${summarizeSdkKeys(content)}`,
+      `text_type:${typeof readDataProperty(content, 'text')}`,
+    ].join(','),
+  ];
+}
+
 function summarizeMessageShape(rawEvent) {
   try {
     const sender = readDataProperty(rawEvent, 'sender');
     const senderId = readDataProperty(sender, 'sender_id');
     const message = readDataProperty(rawEvent, 'message');
+    const checks = summarizeMessageChecks(rawEvent, sender, senderId, message);
     return [
       `message_shape:root=${summarizeSdkKeys(rawEvent)}`,
       `sender=${summarizeSdkKeys(sender)}`,
       `sender_id=${summarizeSdkKeys(senderId)}`,
       `message=${summarizeSdkKeys(message)}`,
+      ...checks,
     ].join(';');
   } catch {
     return 'message_shape:unavailable';

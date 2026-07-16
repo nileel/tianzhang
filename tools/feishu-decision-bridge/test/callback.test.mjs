@@ -632,6 +632,9 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     && line.includes(';sender=sender_id,sender_type,tenant_key')
     && line.includes(';sender_id=open_id')
     && line.includes(';message=chat_id,chat_type,content,create_time,message_id,message_type')
+    && line.includes(';root_checks=schema:true,symbol_match:true,event_type:true,event_id:true,tenant_id:true,app_id:true,token:true,create_time_digits:13')
+    && line.includes(';sender_checks=sender_type:true,tenant_match:true,open_id:true')
+    && line.includes(';message_checks=chat_type:true,message_type:true,message_id:true,chat_id:true,create_time_digits:13,content_keys:text,text_type:string')
   )), true);
 
   const invalidCallbackResult = await registered['card.action.trigger']({
