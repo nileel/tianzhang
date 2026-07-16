@@ -441,7 +441,7 @@ function snapshotDecisionEvidence(value) {
     : snapshotCustomDecisionPayload(value);
 }
 
-async function readProcessedEvidence(processedDirectory, encodedKey) {
+async function readProcessedEvidence(processedDirectory, encodedKey, pending) {
   const nonces = new Set();
   const identities = new Set();
   let healthy = true;
@@ -462,9 +462,14 @@ async function readProcessedEvidence(processedDirectory, encodedKey) {
       ) {
         throw new Error();
       }
-      identities.add(payloadIdentity(payload));
       if (payload.kind === 'decision_reply' || payload.source === 'feishu_card_input') {
         nonces.add(payload.cardNonceHash);
+      }
+      if (
+        payload.decisionId === pending.decisionId
+        && payload.providerMessageIdHash === pending.providerMessageIdHash
+      ) {
+        identities.add(payloadIdentity(payload));
       }
     } catch {
       healthy = false;
@@ -551,7 +556,7 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
     const names = (await readdir(inboxDirectory))
       .filter((name) => /^[0-9a-f]{64}\.json$/.test(name))
       .sort();
-    const consumed = await readProcessedEvidence(processedDirectory, parsedConfig.hmacKey);
+    const consumed = await readProcessedEvidence(processedDirectory, parsedConfig.hmacKey, pending);
     const valid = [];
 
     for (const name of names) {

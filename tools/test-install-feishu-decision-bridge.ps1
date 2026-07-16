@@ -206,13 +206,25 @@ try {
     } | ConvertTo-Json -Compress),
     [Text.UTF8Encoding]::new($false)
   )
+  [IO.File]::WriteAllText(
+    (Join-Path $stateRoot 'text-reply-health.json'),
+    ([ordered]@{
+      schemaVersion = 1
+      status = 'TEXT_REPLY_UNAVAILABLE'
+      updatedAt = $healthTimestamp
+    } | ConvertTo-Json -Compress),
+    [Text.UTF8Encoding]::new($false)
+  )
   $status = Invoke-Script -Path $installTool -Arguments @('Status', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)
   Assert-Code $status 0 'Status'
   $statusOutput = $status.Output | ConvertFrom-Json
   if (-not $statusOutput.installed -or $statusOutput.taskState -ne 'Running') {
     throw 'Status did not report the fake installed task'
   }
-  if ($statusOutput.bridgeStatus -ne 'CONNECTED' -or $statusOutput.healthAgeSeconds -lt 0 -or $statusOutput.healthAgeSeconds -gt 10) {
+  if ($statusOutput.bridgeStatus -ne 'CONNECTED' -or $statusOutput.cardStatus -ne 'CONNECTED' -or
+      $statusOutput.textReplyStatus -ne 'TEXT_REPLY_UNAVAILABLE' -or
+      $statusOutput.textReplyAgeSeconds -lt 0 -or $statusOutput.textReplyAgeSeconds -gt 10 -or
+      $statusOutput.healthAgeSeconds -lt 0 -or $statusOutput.healthAgeSeconds -gt 10) {
     throw "Status did not report a fresh UTC heartbeat: $($status.Output)"
   }
 

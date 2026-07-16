@@ -2,7 +2,7 @@
 
 param(
   [Parameter(Mandatory = $true, Position = 0)]
-  [ValidateSet('Configure', 'Pair', 'Canary', 'ShowSanitized')]
+  [ValidateSet('Configure', 'Pair', 'Canary', 'CanaryCardCustom', 'CanaryTextCustom', 'ShowSanitized')]
   [string]$Action,
 
   [string]$ConfigPath = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller.feishu.private.json'),
@@ -426,7 +426,7 @@ function Remove-CanaryBinding {
   if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return }
   try {
     $value = Convert-JsonToHashtable ([IO.File]::ReadAllText($Path))
-    $items = if ($value -is [Collections.IList]) { @($value) } else { @($value) }
+    [object[]]$items = @($value)
     if ($items.Count -eq 1 -and [string]$items[0].decisionId -ceq $DecisionId) {
       Remove-Item -LiteralPath $Path -Force
     }
@@ -435,7 +435,19 @@ function Remove-CanaryBinding {
   }
 }
 
+function Write-TextReplyHealth {
+  param([Collections.IDictionary]$Config, [ValidateSet('TEXT_REPLY_READY', 'TEXT_REPLY_UNAVAILABLE')][string]$Status)
+
+  Write-PrivateJsonAtomic (Join-Path $Config.stateRoot 'text-reply-health.json') ([ordered]@{
+    schemaVersion = 1
+    status = $Status
+    updatedAt = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
+  })
+}
+
 function Invoke-Canary {
+  param([ValidateSet('option', 'card_custom', 'text_custom')][string]$Mode = 'option')
+
   $config = Read-PrivateConfig $ConfigPath
   if (
     -not (Test-NonEmptySafeString $config.expectedTenantKey 512) -or
@@ -460,13 +472,18 @@ function Invoke-Canary {
   finally { [Array]::Clear($nonceBytes, 0, $nonceBytes.Length) }
   $createdAt = [datetime]::UtcNow
   $expiresAt = $createdAt.AddSeconds($PairTimeoutSeconds)
+  $exactTextCommand = "$decisionId：自定义 CANARY_CUSTOM_OK"
   $sendRequestPath = Join-Path $config.stateRoot ('.canary-send-' + [guid]::NewGuid().ToString('N') + '.json')
   $consumeRequestPath = Join-Path $config.stateRoot ('.canary-consume-' + [guid]::NewGuid().ToString('N') + '.json')
   try {
     $decision = [ordered]@{
       decisionId = $decisionId
       taskId = 'FEISHU-CANARY'
-      question = '飞书决策通道金丝雀验证：请选择 A。'
+      question = switch ($Mode) {
+        'option' { '飞书决策通道金丝雀验证：请选择 A。' }
+        'card_custom' { '飞书卡片自定义回复金丝雀验证：请在输入框填写 CANARY_CUSTOM_OK 并提交。' }
+        'text_custom' { "飞书文字自定义回复金丝雀验证：请复制并发送：$exactTextCommand" }
+      }
       options = @(
         [ordered]@{ key = 'A'; label = '确认通道正常' },
         [ordered]@{ key = 'B'; label = '不确认' },
@@ -499,31 +516,77 @@ function Invoke-Canary {
     $pending = [ordered]@{
       decisionId = $decisionId
       allowedOptions = @('A', 'B', 'C')
+      allowCustomReply = $true
       createdAt = $createdIso
       expiresAt = $expiresIso
       cardNonceHash = [string]$send.Result.cardNonceHash
       providerMessageIdHash = [string]$send.Result.providerMessageIdHash
+      providerChatIdHash = [string]$send.Result.providerChatIdHash
     }
     Write-PrivateJsonAtomic $consumeRequestPath ([ordered]@{ pendingDecision = $pending })
     $consumeHelper = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\consume-reply.mjs'
     do {
       $consume = Invoke-NodeJson $consumeHelper $consumeRequestPath
       if ($consume.Code -ne 0) { throw 'Canary reply consumer failed' }
-      if ($consume.Result.result -ceq 'REPLY_ACCEPTED') {
-        if ($consume.Result.optionKey -cne 'A') { throw 'Canary received a non-A selection' }
-        Write-SanitizedJson ([ordered]@{
-          result = 'CANARY_ACCEPTED'
-          optionKey = 'A'
+      $accepted = $false
+      if ($Mode -ceq 'option' -and $consume.Result.result -ceq 'OPTION_ACCEPTED') {
+        if ($consume.Result.optionKey -cne 'A' -or $consume.Result.source -cne 'feishu_card') {
+          throw 'Canary received an invalid option selection'
+        }
+        $accepted = $true
+      } elseif ($Mode -cne 'option' -and $consume.Result.result -ceq 'CUSTOM_ACCEPTED') {
+        $expectedSource = if ($Mode -ceq 'card_custom') { 'feishu_card_input' } else { 'feishu_text' }
+        if (
+          $consume.Result.decisionId -cne $decisionId -or
+          $consume.Result.customText -cne 'CANARY_CUSTOM_OK' -or
+          $consume.Result.source -cne $expectedSource -or
+          $consume.Result.providerMessageIdHash -cne [string]$send.Result.providerMessageIdHash -or
+          ($Mode -ceq 'card_custom' -and $consume.Result.cardNonceHash -cne [string]$send.Result.cardNonceHash) -or
+          ($Mode -ceq 'text_custom' -and $consume.Result.providerChatIdHash -cne [string]$send.Result.providerChatIdHash)
+        ) {
+          throw 'Canary received invalid custom reply evidence'
+        }
+        $accepted = $true
+      }
+      if ($accepted) {
+        foreach ($key in @('providerMessageIdHash', 'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'evidenceHash')) {
+          if ([string]$consume.Result[$key] -notmatch $script:HexPattern) { throw 'Canary reply evidence is invalid' }
+        }
+        $consumedAgain = Invoke-NodeJson $consumeHelper $consumeRequestPath
+        if ($consumedAgain.Code -ne 0 -or $consumedAgain.Result.result -cne 'NO_REPLY') {
+          throw 'Canary reply was not consumed exactly once'
+        }
+        if ($Mode -ceq 'text_custom') { Write-TextReplyHealth $config 'TEXT_REPLY_READY' }
+        $sanitized = [ordered]@{
+          result = switch ($Mode) {
+            'option' { 'CANARY_ACCEPTED' }
+            'card_custom' { 'CANARY_CARD_CUSTOM_ACCEPTED' }
+            'text_custom' { 'CANARY_TEXT_CUSTOM_ACCEPTED' }
+          }
           providerMessageIdHash = [string]$consume.Result.providerMessageIdHash
           providerEventIdHash = [string]$consume.Result.providerEventIdHash
           operatorOpenIdHash = [string]$consume.Result.operatorOpenIdHash
           tenantKeyHash = [string]$consume.Result.tenantKeyHash
           evidenceHash = [string]$consume.Result.evidenceHash
-        })
+        }
+        if ($Mode -ceq 'option') {
+          $sanitized['optionKey'] = 'A'
+        } else {
+          $sanitized['customCodePointCount'] = @('CANARY_CUSTOM_OK'.EnumerateRunes()).Count
+        }
+        Write-SanitizedJson $sanitized
         return
       }
       if ([datetime]::UtcNow -lt $expiresAt) { Start-Sleep -Milliseconds 500 }
     } while ([datetime]::UtcNow -lt $expiresAt)
+    if ($Mode -ceq 'text_custom') {
+      Write-TextReplyHealth $config 'TEXT_REPLY_UNAVAILABLE'
+      Write-SanitizedJson ([ordered]@{
+        result = 'TEXT_REPLY_UNAVAILABLE'
+        cardStatus = 'CONNECTED'
+      })
+      return
+    }
     throw 'Canary confirmation timed out'
   } finally {
     Remove-CanaryBinding $bindingPath $decisionId
@@ -549,6 +612,8 @@ Assert-TestInjectionSafe
 switch ($Action) {
   'Configure' { Invoke-Configure }
   'Pair' { Invoke-Pair }
-  'Canary' { Invoke-Canary }
+  'Canary' { Invoke-Canary 'option' }
+  'CanaryCardCustom' { Invoke-Canary 'card_custom' }
+  'CanaryTextCustom' { Invoke-Canary 'text_custom' }
   'ShowSanitized' { Invoke-ShowSanitized }
 }

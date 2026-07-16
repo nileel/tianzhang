@@ -6,6 +6,9 @@ $tool = Join-Path $PSScriptRoot 'setup-feishu-decision-channel.ps1'
 $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/')
 $sandbox = Join-Path $tempRoot ('tzg-feishu-setup-test-' + [guid]::NewGuid().ToString('N'))
 $safeToRemove = $false
+$originalPath = $env:PATH
+$originalRealNode = [Environment]::GetEnvironmentVariable('TZG_TEST_REAL_NODE', 'Process')
+$originalCanaryTrace = [Environment]::GetEnvironmentVariable('TZG_TEST_CANARY_TRACE', 'Process')
 
 function Get-Sha256 {
   param([string]$Value)
@@ -131,7 +134,117 @@ function New-PairingEnvelope {
 if (-not (Test-Path -LiteralPath $tool -PathType Leaf)) {
   throw "production script is missing: $tool"
 }
+
+function Start-CanaryEnvelopeWriter {
+  param(
+    [string]$StateRoot,
+    [string]$HmacKey,
+    [string]$TenantKeyHash,
+    [string]$OperatorOpenIdHash,
+    [ValidateSet('feishu_card', 'feishu_card_input', 'feishu_text')]
+    [string]$Source,
+    [string]$EventHash
+  )
+
+  Start-Job -ScriptBlock {
+    param($Root, $Key, $TenantHash, $OperatorHash, $ReplySource, $ReplyEventHash)
+
+    $bindingPath = Join-Path $Root 'pending-bindings.json'
+    $deadline = [DateTimeOffset]::UtcNow.AddSeconds(15)
+    $binding = $null
+    do {
+      if (Test-Path -LiteralPath $bindingPath -PathType Leaf) {
+        try {
+          $value = [IO.File]::ReadAllText($bindingPath) | ConvertFrom-Json
+          $binding = if ($value -is [array]) { $value[0] } else { $value }
+        } catch {
+          $binding = $null
+        }
+      }
+      if ($null -eq $binding) { Start-Sleep -Milliseconds 50 }
+    } while ($null -eq $binding -and [DateTimeOffset]::UtcNow -lt $deadline)
+    if ($null -eq $binding) { throw 'Canary binding was not observed' }
+
+    $receivedAt = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
+    if ($ReplySource -ceq 'feishu_card') {
+      $payload = [ordered]@{
+        cardNonceHash = [string]$binding.cardNonceHash
+        decisionId = [string]$binding.decisionId
+        kind = 'decision_reply'
+        operatorOpenIdHash = $OperatorHash
+        optionKey = 'A'
+        providerEventIdHash = $ReplyEventHash
+        providerMessageIdHash = [string]$binding.providerMessageIdHash
+        receivedAt = $receivedAt
+        tenantKeyHash = $TenantHash
+      }
+    } elseif ($ReplySource -ceq 'feishu_card_input') {
+      $payload = [ordered]@{
+        cardNonceHash = [string]$binding.cardNonceHash
+        customText = 'CANARY_CUSTOM_OK'
+        decisionId = [string]$binding.decisionId
+        kind = 'decision_custom_reply'
+        operatorOpenIdHash = $OperatorHash
+        providerEventIdHash = $ReplyEventHash
+        providerMessageIdHash = [string]$binding.providerMessageIdHash
+        receivedAt = $receivedAt
+        source = 'feishu_card_input'
+        tenantKeyHash = $TenantHash
+      }
+    } else {
+      $payload = [ordered]@{
+        customText = 'CANARY_CUSTOM_OK'
+        decisionId = [string]$binding.decisionId
+        kind = 'decision_custom_reply'
+        operatorOpenIdHash = $OperatorHash
+        providerChatIdHash = [string]$binding.providerChatIdHash
+        providerEventIdHash = $ReplyEventHash
+        providerMessageIdHash = [string]$binding.providerMessageIdHash
+        receivedAt = $receivedAt
+        source = 'feishu_text'
+        tenantKeyHash = $TenantHash
+      }
+    }
+    $canonical = $payload | ConvertTo-Json -Compress
+    $keyBytes = [Convert]::FromBase64String($Key)
+    $hmac = [Security.Cryptography.HMACSHA256]::new($keyBytes)
+    try {
+      $signature = [Convert]::ToHexString($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($canonical))).ToLowerInvariant()
+    } finally {
+      $hmac.Dispose()
+      [Array]::Clear($keyBytes, 0, $keyBytes.Length)
+    }
+    $envelope = [ordered]@{ schemaVersion = 1; payload = $payload; signature = $signature }
+    $inbox = Join-Path $Root 'inbox'
+    New-Item -ItemType Directory -Path $inbox -Force | Out-Null
+    [IO.File]::WriteAllText(
+      (Join-Path $inbox "$ReplyEventHash.json"),
+      ($envelope | ConvertTo-Json -Depth 5 -Compress),
+      [Text.UTF8Encoding]::new($false)
+    )
+  } -ArgumentList $StateRoot, $HmacKey, $TenantKeyHash, $OperatorOpenIdHash, $Source, $EventHash
+}
+
+function Complete-CanaryEnvelopeWriter {
+  param($Job, [string]$Label)
+
+  $completed = Wait-Job -Job $Job -Timeout 20
+  if ($null -eq $completed) {
+    Stop-Job -Job $Job -ErrorAction SilentlyContinue
+    Remove-Job -Job $Job -Force -ErrorAction SilentlyContinue
+    throw "$Label envelope writer timed out"
+  }
+  $errors = @($Job.ChildJobs[0].Error)
+  Receive-Job -Job $Job | Out-Null
+  Remove-Job -Job $Job -Force
+  if ($errors.Count -gt 0) { throw "$Label envelope writer failed: $($errors[0])" }
+}
 $toolSource = Get-Content -Raw -LiteralPath $tool
+foreach ($requiredAction in @('CanaryCardCustom', 'CanaryTextCustom')) {
+  if (-not $toolSource.Contains("'$requiredAction'", [StringComparison]::Ordinal)) {
+    throw "Setup action contract is missing $requiredAction"
+  }
+}
 foreach ($requiredBindingField in @('allowCustomReply = $true', 'providerChatIdHash = [string]$send.Result.providerChatIdHash')) {
   if (-not $toolSource.Contains($requiredBindingField, [StringComparison]::Ordinal)) {
     throw "Canary binding is missing $requiredBindingField"
@@ -234,6 +347,129 @@ try {
   }
   Assert-PrivateFileAcl $configPath
 
+  $realNode = (Get-Command node -ErrorAction Stop).Source
+  $fakeNodeRoot = Join-Path $sandbox 'fake-node'
+  $fakeNodeScript = Join-Path $fakeNodeRoot 'fake-node.ps1'
+  $fakeNodeCommand = Join-Path $fakeNodeRoot 'node.cmd'
+  $canaryTracePath = Join-Path $fakeNodeRoot 'canary-send-trace.jsonl'
+  New-Item -ItemType Directory -Path $fakeNodeRoot -Force | Out-Null
+  Write-Utf8 $fakeNodeScript @'
+param([string]$ScriptPath, [string]$RequestPath)
+if ([IO.Path]::GetFileName($ScriptPath) -ceq 'send-canary.mjs') {
+  $request = [IO.File]::ReadAllText($RequestPath) | ConvertFrom-Json
+  if ([string]$request.decision.decisionId -cnotmatch '^DEC-[0-9]{8}-CANARY[A-F0-9]+$') { exit 22 }
+  function Get-TestHash([string]$Value) {
+    [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($Value))).ToLowerInvariant()
+  }
+  [IO.File]::AppendAllText(
+    $env:TZG_TEST_CANARY_TRACE,
+    (($request | ConvertTo-Json -Depth 8 -Compress) + "`n"),
+    [Text.UTF8Encoding]::new($false)
+  )
+  [ordered]@{
+    result = 'PROVIDER_ACCEPTED'
+    targetHash = ('a' * 64)
+    providerMessageIdHash = Get-TestHash ([string]$request.decision.decisionId)
+    providerChatIdHash = ('3' * 64)
+    cardNonceHash = Get-TestHash ([string]$request.cardNonce)
+    intentKeyHash = ('2' * 64)
+  } | ConvertTo-Json -Compress
+  exit 0
+}
+& $env:TZG_TEST_REAL_NODE $ScriptPath '--request-file' $RequestPath
+exit $LASTEXITCODE
+'@
+  Write-Utf8 $fakeNodeCommand @'
+@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-node.ps1" "%~1" "%~3"
+exit /b %ERRORLEVEL%
+'@
+  [Environment]::SetEnvironmentVariable('TZG_TEST_REAL_NODE', $realNode, 'Process')
+  [Environment]::SetEnvironmentVariable('TZG_TEST_CANARY_TRACE', $canaryTracePath, 'Process')
+  $env:PATH = $fakeNodeRoot + [IO.Path]::PathSeparator + $originalPath
+  if ((Get-Command node -ErrorAction Stop).Source -cne $fakeNodeCommand) {
+    throw 'fake node sender adapter was not selected'
+  }
+  $fakeNodeProbePath = Join-Path $fakeNodeRoot 'probe.json'
+  Write-Utf8 $fakeNodeProbePath (@{
+    decision = @{ decisionId = 'DEC-20260716-CANARYA1B2C3D4' }
+    cardNonce = 'probe'
+  } | ConvertTo-Json -Compress)
+  $fakeNodeProbe = @(& $fakeNodeCommand 'send-canary.mjs' '--request-file' $fakeNodeProbePath 2>&1)
+  if ($LASTEXITCODE -ne 0 -or (@($fakeNodeProbe | Where-Object { ([string]$_).StartsWith('{') })).Count -ne 1) {
+    throw "fake node sender adapter probe failed: $($fakeNodeProbe -join ' | ')"
+  }
+
+  $textUnavailable = Invoke-Setup -Arguments @(
+    'CanaryTextCustom','-ConfigPath',$configPath,'-StateRoot',$stateRoot,'-PairTimeoutSeconds',1
+  )
+  Assert-Code $textUnavailable 0 'CanaryTextCustom unavailable'
+  $textUnavailableJson = $textUnavailable.Output | ConvertFrom-Json
+  if ($textUnavailableJson.result -cne 'TEXT_REPLY_UNAVAILABLE' -or $textUnavailableJson.cardStatus -cne 'CONNECTED') {
+    throw "text-event unavailability disabled or misreported the card channel: $($textUnavailable.Output)"
+  }
+  $leftBindingPath = Join-Path $stateRoot 'pending-bindings.json'
+  if (Test-Path -LiteralPath $leftBindingPath) {
+    $leftBinding = [IO.File]::ReadAllText($leftBindingPath) | ConvertFrom-Json
+    throw "text unavailable canary left its binding: type=$($leftBinding.GetType().Name);count=$(@($leftBinding).Count)"
+  }
+
+  $optionWriter = Start-CanaryEnvelopeWriter -StateRoot $stateRoot -HmacKey $pairedConfig.hmacKey `
+    -TenantKeyHash (Get-Sha256 $tenantKey) -OperatorOpenIdHash $pairedConfig.pairedOperatorOpenIdHash `
+    -Source feishu_card -EventHash ('d' * 64)
+  $optionCanary = Invoke-Setup -Arguments @(
+    'Canary','-ConfigPath',$configPath,'-StateRoot',$stateRoot,'-PairTimeoutSeconds',10
+  )
+  Complete-CanaryEnvelopeWriter $optionWriter 'option canary'
+  Assert-Code $optionCanary 0 'Canary option after text unavailable'
+  if (($optionCanary.Output | ConvertFrom-Json).result -cne 'CANARY_ACCEPTED') {
+    throw "card option Canary stopped working after text unavailability: $($optionCanary.Output)"
+  }
+
+  $cardWriter = Start-CanaryEnvelopeWriter -StateRoot $stateRoot -HmacKey $pairedConfig.hmacKey `
+    -TenantKeyHash (Get-Sha256 $tenantKey) -OperatorOpenIdHash $pairedConfig.pairedOperatorOpenIdHash `
+    -Source feishu_card_input -EventHash ('e' * 64)
+  $cardCustom = Invoke-Setup -Arguments @(
+    'CanaryCardCustom','-ConfigPath',$configPath,'-StateRoot',$stateRoot,'-PairTimeoutSeconds',10
+  )
+  Complete-CanaryEnvelopeWriter $cardWriter 'card custom canary'
+  if ($cardCustom.Code -ne 0) {
+    $inboxCount = @(Get-ChildItem -LiteralPath (Join-Path $stateRoot 'inbox') -File -ErrorAction SilentlyContinue).Count
+    $processedCount = @(Get-ChildItem -LiteralPath (Join-Path $stateRoot 'processed') -File -ErrorAction SilentlyContinue).Count
+    $quarantineCount = @(Get-ChildItem -LiteralPath (Join-Path $stateRoot 'quarantine') -File -ErrorAction SilentlyContinue).Count
+    throw "card custom canary failed with sanitized counts inbox=$inboxCount processed=$processedCount quarantine=${quarantineCount}: $($cardCustom.Output)"
+  }
+  Assert-Code $cardCustom 0 'CanaryCardCustom'
+  $cardCustomJson = $cardCustom.Output | ConvertFrom-Json
+  Assert-NoLiteral $cardCustom.Output @('CANARY_CUSTOM_OK', $tenantKey, $operatorOpenId) 'CanaryCardCustom output'
+  if ($cardCustomJson.result -cne 'CANARY_CARD_CUSTOM_ACCEPTED' -or $cardCustomJson.customCodePointCount -ne 16) {
+    throw "card custom canary did not consume exact custom evidence: $($cardCustom.Output)"
+  }
+
+  $textWriter = Start-CanaryEnvelopeWriter -StateRoot $stateRoot -HmacKey $pairedConfig.hmacKey `
+    -TenantKeyHash (Get-Sha256 $tenantKey) -OperatorOpenIdHash $pairedConfig.pairedOperatorOpenIdHash `
+    -Source feishu_text -EventHash ('f' * 64)
+  $textCustom = Invoke-Setup -Arguments @(
+    'CanaryTextCustom','-ConfigPath',$configPath,'-StateRoot',$stateRoot,'-PairTimeoutSeconds',10
+  )
+  Complete-CanaryEnvelopeWriter $textWriter 'text custom canary'
+  Assert-Code $textCustom 0 'CanaryTextCustom'
+  $textCustomJson = $textCustom.Output | ConvertFrom-Json
+  Assert-NoLiteral $textCustom.Output @('CANARY_CUSTOM_OK', $tenantKey, $operatorOpenId) 'CanaryTextCustom output'
+  if ($textCustomJson.result -cne 'CANARY_TEXT_CUSTOM_ACCEPTED' -or $textCustomJson.customCodePointCount -ne 16) {
+    throw "text custom canary did not consume exact custom evidence: $($textCustom.Output)"
+  }
+  $textSendTrace = (Get-Content -LiteralPath $canaryTracePath | Select-Object -Last 1) | ConvertFrom-Json
+  $exactCanaryCommand = "$($textSendTrace.decision.decisionId)：自定义 CANARY_CUSTOM_OK"
+  if (-not ([string]$textSendTrace.decision.question).Contains($exactCanaryCommand, [StringComparison]::Ordinal)) {
+    throw 'text custom canary card did not contain the exact copyable command'
+  }
+  $textHealth = [IO.File]::ReadAllText((Join-Path $stateRoot 'text-reply-health.json')) | ConvertFrom-Json
+  if ($textHealth.status -cne 'TEXT_REPLY_READY' -or
+      (Test-Path -LiteralPath (Join-Path $stateRoot 'pending-bindings.json'))) {
+    throw 'successful text canary did not update sanitized health and remove only its binding'
+  }
+
   $unpairedConfigPath = Join-Path $sandbox 'unpaired-private.json'
   $unpairedStateRoot = Join-Path $sandbox 'unpaired-state'
   Assert-Code (Invoke-Setup -Arguments @(
@@ -251,5 +487,10 @@ try {
 
   Write-Output 'test-setup-feishu-decision-channel: OK'
 } finally {
+  $env:PATH = $originalPath
+  [Environment]::SetEnvironmentVariable('TZG_TEST_REAL_NODE', $originalRealNode, 'Process')
+  [Environment]::SetEnvironmentVariable('TZG_TEST_CANARY_TRACE', $originalCanaryTrace, 'Process')
+  Get-Job -ErrorAction SilentlyContinue | Where-Object Name -like 'Job*' | Stop-Job -ErrorAction SilentlyContinue
+  Get-Job -ErrorAction SilentlyContinue | Where-Object Name -like 'Job*' | Remove-Job -Force -ErrorAction SilentlyContinue
   if ($safeToRemove) { Remove-Item -LiteralPath $sandbox -Recurse -Force }
 }

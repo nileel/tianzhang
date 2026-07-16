@@ -204,7 +204,13 @@ function Get-HealthSummary {
     $stateRoot = Resolve-AbsolutePath ([string]$config.stateRoot) 'stateRoot'
     $healthPath = Join-Path $stateRoot 'health.json'
     if (-not (Test-Path -LiteralPath $healthPath -PathType Leaf) -or (Get-Item $healthPath).Length -gt 16KB) {
-      return [ordered]@{ bridgeStatus = 'UNAVAILABLE'; healthAgeSeconds = $null }
+      return [ordered]@{
+        bridgeStatus = 'UNAVAILABLE'
+        cardStatus = 'UNAVAILABLE'
+        healthAgeSeconds = $null
+        textReplyStatus = 'TEXT_REPLY_UNVERIFIED'
+        textReplyAgeSeconds = $null
+      }
     }
     $healthJson = [IO.File]::ReadAllText($healthPath)
     $health = if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) {
@@ -214,9 +220,45 @@ function Get-HealthSummary {
     }
     $updated = [DateTimeOffset]::Parse([string]$health.updatedAt).ToUniversalTime()
     $age = [math]::Max(0, [math]::Floor(([DateTimeOffset]::UtcNow - $updated).TotalSeconds))
-    return [ordered]@{ bridgeStatus = [string]$health.status; healthAgeSeconds = [int64]$age }
+    $textReplyStatus = 'TEXT_REPLY_UNVERIFIED'
+    $textReplyAgeSeconds = $null
+    $textHealthPath = Join-Path $stateRoot 'text-reply-health.json'
+    if (Test-Path -LiteralPath $textHealthPath -PathType Leaf) {
+      try {
+        if ((Get-Item $textHealthPath).Length -gt 4KB) { throw 'invalid' }
+        $textJson = [IO.File]::ReadAllText($textHealthPath)
+        $textHealth = if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) {
+          $textJson | ConvertFrom-Json -AsHashtable -DateKind String
+        } else {
+          $textJson | ConvertFrom-Json -AsHashtable
+        }
+        if ($textHealth.Count -ne 3 -or $textHealth.schemaVersion -ne 1 -or
+            [string]$textHealth.status -notin @('TEXT_REPLY_READY', 'TEXT_REPLY_UNAVAILABLE')) {
+          throw 'invalid'
+        }
+        $textUpdated = [DateTimeOffset]::Parse([string]$textHealth.updatedAt).ToUniversalTime()
+        $textReplyStatus = [string]$textHealth.status
+        $textReplyAgeSeconds = [int64][math]::Max(0, [math]::Floor(([DateTimeOffset]::UtcNow - $textUpdated).TotalSeconds))
+      } catch {
+        $textReplyStatus = 'TEXT_REPLY_UNVERIFIED'
+        $textReplyAgeSeconds = $null
+      }
+    }
+    return [ordered]@{
+      bridgeStatus = [string]$health.status
+      cardStatus = [string]$health.status
+      healthAgeSeconds = [int64]$age
+      textReplyStatus = $textReplyStatus
+      textReplyAgeSeconds = $textReplyAgeSeconds
+    }
   } catch {
-    return [ordered]@{ bridgeStatus = 'UNAVAILABLE'; healthAgeSeconds = $null }
+    return [ordered]@{
+      bridgeStatus = 'UNAVAILABLE'
+      cardStatus = 'UNAVAILABLE'
+      healthAgeSeconds = $null
+      textReplyStatus = 'TEXT_REPLY_UNVERIFIED'
+      textReplyAgeSeconds = $null
+    }
   }
 }
 
@@ -266,7 +308,10 @@ switch ($Action) {
       installed = $state -cne 'NotInstalled'
       taskState = $state
       bridgeStatus = $health.bridgeStatus
+      cardStatus = $health.cardStatus
       healthAgeSeconds = $health.healthAgeSeconds
+      textReplyStatus = $health.textReplyStatus
+      textReplyAgeSeconds = $health.textReplyAgeSeconds
     })
   }
 }

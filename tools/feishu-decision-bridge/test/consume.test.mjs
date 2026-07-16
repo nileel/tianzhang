@@ -301,6 +301,46 @@ test('card and text custom replies use exact source-specific evidence', async (t
   }), /Inbox write failed/);
 });
 
+test('processed evidence from an earlier decision does not compete with the current decision', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-consume-sequential-decisions-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const first = await put(root, 'evt_sequential_first');
+  const firstResult = await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending(),
+    now: NOW,
+  });
+  assert.equal(firstResult.result, 'OPTION_ACCEPTED');
+
+  const nextDecisionId = 'DEC-20260716-NEXT001';
+  const nextMessageHash = sha256('om_fake_next_message');
+  const nextNonceHash = sha256('next-card-nonce');
+  const nextEventId = 'evt_sequential_next';
+  const nextPayload = makeCustomPayload(nextEventId, '下一项方案', 'feishu_card_input', {
+    decisionId: nextDecisionId,
+    providerMessageIdHash: nextMessageHash,
+    cardNonceHash: nextNonceHash,
+  });
+  const nextEnvelope = signEnvelope(nextPayload, HMAC_KEY);
+  const nextEventIdHash = sha256(nextEventId);
+  await writeSignedInbox({ stateRoot: root, envelope: nextEnvelope, eventIdHash: nextEventIdHash });
+  const nextResult = await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending({
+      decisionId: nextDecisionId,
+      providerMessageIdHash: nextMessageHash,
+      cardNonceHash: nextNonceHash,
+    }),
+    now: NOW,
+  });
+  assert.deepEqual(nextResult, expectedCustomAccepted(nextPayload, nextEnvelope));
+  assert.deepEqual((await readdir(join(root, 'processed'))).sort(), [
+    `${first.eventIdHash}.json`, `${nextEventIdHash}.json`,
+  ].sort());
+});
+
 test('first valid reply wins across option/custom races and equal custom replays are idempotent', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-consume-mixed-race-'));
   t.after(() => rm(root, { recursive: true, force: true }));
