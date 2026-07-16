@@ -89,7 +89,7 @@ function isHealthy(health, now) {
   return Number.isFinite(ageMs) && ageMs >= 0 && ageMs <= MAX_HEALTH_AGE_MS;
 }
 
-function strictMessageId(response) {
+function strictProviderIdentity(response) {
   if (response === null || typeof response !== 'object' || Array.isArray(response)) {
     return null;
   }
@@ -98,16 +98,23 @@ function strictMessageId(response) {
     return null;
   }
   const keys = Reflect.ownKeys(response);
-  if (keys.length !== 1 || keys[0] !== 'messageId') {
+  if (keys.length !== 2 || !keys.includes('messageId') || !keys.includes('chatId')) {
     return null;
   }
-  const descriptor = Object.getOwnPropertyDescriptor(response, 'messageId');
-  if (!descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) {
-    return null;
-  }
-  return typeof descriptor.value === 'string' && PROVIDER_ID_PATTERN.test(descriptor.value)
-    ? descriptor.value
-    : null;
+  const descriptors = Object.getOwnPropertyDescriptors(response);
+  const providerId = (key) => {
+    const descriptor = descriptors[key];
+    return descriptor
+      && Object.hasOwn(descriptor, 'value')
+      && descriptor.enumerable
+      && typeof descriptor.value === 'string'
+      && PROVIDER_ID_PATTERN.test(descriptor.value)
+      ? descriptor.value
+      : null;
+  };
+  const messageId = providerId('messageId');
+  const chatId = providerId('chatId');
+  return messageId === null || chatId === null ? null : { messageId, chatId };
 }
 
 function validateTransport(transport) {
@@ -142,6 +149,7 @@ function storedOutcomeFields(outcome) {
   const fields = Object.create(null);
   for (const key of [
     'status', 'targetHash', 'cardNonceHash', 'intentKeyHash', 'providerMessageIdHash',
+    'providerChatIdHash',
   ]) {
     const descriptor = descriptors[key];
     if (descriptor !== undefined && Object.hasOwn(descriptor, 'value')) {
@@ -244,11 +252,15 @@ export async function sendDecision(request) {
     }, async () => {
       try {
         const response = await transport.sendInteractive(transportRequest);
-        const messageId = strictMessageId(response);
-        if (messageId === null) {
+        const providerIdentity = strictProviderIdentity(response);
+        if (providerIdentity === null) {
           return { status: 'OUTCOME_UNKNOWN' };
         }
-        return { status: 'ACCEPTED', providerMessageIdHash: sha256(messageId) };
+        return {
+          status: 'ACCEPTED',
+          providerMessageIdHash: sha256(providerIdentity.messageId),
+          providerChatIdHash: sha256(providerIdentity.chatId),
+        };
       } catch (error) {
         return error instanceof ProviderRejectedError
           ? { status: 'REJECTED' }
@@ -273,12 +285,16 @@ export async function sendDecision(request) {
     && outcome.status === 'ACCEPTED'
     && typeof outcome.providerMessageIdHash === 'string'
     && /^[0-9a-f]{64}$/.test(outcome.providerMessageIdHash)
+    && typeof outcome.providerChatIdHash === 'string'
+    && /^[0-9a-f]{64}$/.test(outcome.providerChatIdHash)
   ) {
     return {
       result: 'PROVIDER_ACCEPTED',
       targetHash,
       providerMessageIdHash: outcome.providerMessageIdHash,
+      providerChatIdHash: outcome.providerChatIdHash,
       cardNonceHash,
+      intentKeyHash,
     };
   }
   if (

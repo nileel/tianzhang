@@ -130,13 +130,17 @@ function sanitizeResult(result) {
     category === 'PROVIDER_ACCEPTED'
     && hex('targetHash')
     && hex('providerMessageIdHash')
+    && hex('providerChatIdHash')
     && hex('cardNonceHash')
+    && hex('intentKeyHash')
   ) {
     return {
       result: category,
       targetHash: value('targetHash'),
       providerMessageIdHash: value('providerMessageIdHash'),
+      providerChatIdHash: value('providerChatIdHash'),
       cardNonceHash: value('cardNonceHash'),
+      intentKeyHash: value('intentKeyHash'),
     };
   }
   return null;

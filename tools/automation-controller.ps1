@@ -615,7 +615,13 @@ function Get-DecisionBindingWindow {
 }
 
 function Write-FeishuPendingBinding {
-  param($PendingDecision, [string]$CardNonceHash, [string]$ProviderMessageIdHash, $Window)
+  param(
+    $PendingDecision,
+    [string]$CardNonceHash,
+    [string]$ProviderMessageIdHash,
+    [string]$ProviderChatIdHash,
+    $Window
+  )
 
   $root = [IO.Path]::GetFullPath($FeishuBridgeRoot)
   Initialize-PrivateDirectory $root
@@ -623,10 +629,12 @@ function Write-FeishuPendingBinding {
     kind = 'decision_reply'
     decisionId = [string]$PendingDecision.decisionId
     allowedOptions = @($PendingDecision.options | ForEach-Object { [string]$_.key })
+    allowCustomReply = $true
     issuedAt = [string]$Window.issuedAt
     expiresAt = [string]$Window.expiresAt
     cardNonceHash = $CardNonceHash
     providerMessageIdHash = $ProviderMessageIdHash
+    providerChatIdHash = $ProviderChatIdHash
   }
   $path = Join-Path $root 'pending-bindings.json'
   Write-JsonAtomically @($binding) $path
@@ -649,10 +657,16 @@ function Read-FeishuPendingBinding {
   $matches = @($value | Where-Object { $_ -is [Collections.IDictionary] -and [string]$_['decisionId'] -ceq [string]$PendingDecision.decisionId })
   if ($matches.Count -ne 1) { throw 'Feishu pending binding is invalid.' }
   $binding = $matches[0]
-  $expected = @('kind','decisionId','allowedOptions','issuedAt','expiresAt','cardNonceHash','providerMessageIdHash')
+  $expected = @(
+    'kind','decisionId','allowedOptions','allowCustomReply','issuedAt','expiresAt',
+    'cardNonceHash','providerMessageIdHash','providerChatIdHash'
+  )
   if (-not (Test-ExactKeys $binding $expected) -or [string]$binding.kind -cne 'decision_reply' -or
       (@($binding.allowedOptions) -join '|') -cne 'A|B|C' -or
-      -not (Test-Hex64 $binding.cardNonceHash) -or -not (Test-Hex64 $binding.providerMessageIdHash)) {
+      $binding.allowCustomReply -isnot [bool] -or $binding.allowCustomReply -ne $true -or
+      -not (Test-Hex64 $binding.cardNonceHash) -or
+      -not (Test-Hex64 $binding.providerMessageIdHash) -or
+      -not (Test-Hex64 $binding.providerChatIdHash)) {
     throw 'Feishu pending binding is invalid.'
   }
   try {
@@ -669,6 +683,8 @@ function Read-FeishuPendingBinding {
     expiresAt = ConvertTo-ExactUtcIso $expiresAt
     cardNonceHash = [string]$binding.cardNonceHash
     providerMessageIdHash = [string]$binding.providerMessageIdHash
+    providerChatIdHash = [string]$binding.providerChatIdHash
+    allowCustomReply = [bool]$binding.allowCustomReply
   }
 }
 
@@ -1811,8 +1827,14 @@ try {
         }
         'PROVIDER_ACCEPTED' {
           $cli.Code -eq 0 -and
-            (Test-ExactKeys $payload @('result','targetHash','providerMessageIdHash','cardNonceHash')) -and
-            (Test-Hex64 $payload.targetHash) -and (Test-Hex64 $payload.providerMessageIdHash) -and (Test-Hex64 $payload.cardNonceHash)
+            (Test-ExactKeys $payload @(
+              'result','targetHash','providerMessageIdHash','providerChatIdHash','cardNonceHash','intentKeyHash'
+            )) -and
+            (Test-Hex64 $payload.targetHash) -and
+            (Test-Hex64 $payload.providerMessageIdHash) -and
+            (Test-Hex64 $payload.providerChatIdHash) -and
+            (Test-Hex64 $payload.cardNonceHash) -and
+            (Test-Hex64 $payload.intentKeyHash)
           break
         }
         default { $false }
@@ -1835,7 +1857,12 @@ try {
       $recordedState = Convert-ChildJson $recorded 'RecordDecisionNotification'
       if ($category -eq 'PROVIDER_ACCEPTED') {
         try {
-          Write-FeishuPendingBinding $recordedState.pendingDecision ([string]$payload.cardNonceHash) ([string]$payload.providerMessageIdHash) $window
+          Write-FeishuPendingBinding `
+            $recordedState.pendingDecision `
+            ([string]$payload.cardNonceHash) `
+            ([string]$payload.providerMessageIdHash) `
+            ([string]$payload.providerChatIdHash) `
+            $window
         } catch {
           $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_binding_write_failed' 'Feishu delivery was accepted but its local reply binding could not be written.'
           $result.pendingDecision = $recordedState.pendingDecision

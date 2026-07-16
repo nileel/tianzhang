@@ -479,7 +479,7 @@ function Invoke-Canary {
     $sendHelper = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-canary.mjs'
     $send = Invoke-NodeJson $sendHelper $sendRequestPath
     if ($send.Result.result -cne 'PROVIDER_ACCEPTED') { throw 'Canary card was not accepted by Feishu' }
-    foreach ($key in @('providerMessageIdHash', 'cardNonceHash')) {
+    foreach ($key in @('providerMessageIdHash', 'providerChatIdHash', 'cardNonceHash')) {
       if ([string]$send.Result[$key] -notmatch $script:HexPattern) { throw 'Canary send evidence is invalid' }
     }
     $createdIso = $createdAt.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
@@ -488,10 +488,12 @@ function Invoke-Canary {
       kind = 'decision_reply'
       decisionId = $decisionId
       allowedOptions = @('A', 'B', 'C')
+      allowCustomReply = $true
       issuedAt = $createdIso
       expiresAt = $expiresIso
       cardNonceHash = [string]$send.Result.cardNonceHash
       providerMessageIdHash = [string]$send.Result.providerMessageIdHash
+      providerChatIdHash = [string]$send.Result.providerChatIdHash
     }
     Write-PrivateJsonAtomic $bindingPath @($binding)
     $pending = [ordered]@{

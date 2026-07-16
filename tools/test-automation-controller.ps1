@@ -1393,6 +1393,7 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
   $hashF = 'f' * 64
   $hashOne = '1' * 64
   $hashTwo = '2' * 64
+  $hashThree = '3' * 64
   Write-Utf8 $fakeSenderResultPath (@{
     result = 'PROVIDER_OUTCOME_UNKNOWN'
     targetHash = $hashA
@@ -1477,7 +1478,9 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
     result = 'PROVIDER_ACCEPTED'
     targetHash = $hashA
     providerMessageIdHash = $hashB
+    providerChatIdHash = $hashThree
     cardNonceHash = $hashC
+    intentKeyHash = $hashTwo
   } | ConvertTo-Json -Compress)
   $acceptedSendRunId = '74747474-7474-4474-8474-747474747474'
   $acceptedStart = Invoke-Controller @(
@@ -1512,7 +1515,11 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
       $acceptedState.pendingDecision.notificationAttempts[0].provider -ne 'feishu' -or
       $acceptedState.pendingDecision.notificationAttempts[0].providerMessageIdHash -ne $hashB -or
       $binding.decisionId -ne $feishuDecisionId -or (@($binding.allowedOptions) -join '|') -ne 'A|B|C' -or
+      $binding.allowCustomReply -ne $true -or
       $binding.cardNonceHash -ne $hashC -or $binding.providerMessageIdHash -ne $hashB -or
+      $binding.providerChatIdHash -ne $hashThree -or
+      (@($binding.PSObject.Properties.Name | Sort-Object) -join '|') -cne
+        ((@('allowedOptions','allowCustomReply','cardNonceHash','decisionId','expiresAt','issuedAt','kind','providerChatIdHash','providerMessageIdHash') | Sort-Object) -join '|') -or
       $senderTrace.request.decision.decisionId -ne $feishuDecisionId -or
       @($senderTrace.request.PSObject.Properties.Name).Count -ne 2 -or
       ($senderTrace.argv -join '|') -match 'controller-secret-must-not-leak|feishu-private\.json' -or

@@ -62,7 +62,7 @@ export class ProviderOutcomeUnknownError extends Error {
   }
 }
 
-function providerMessageId(response) {
+function providerMessageIdentity(response) {
   if (!isPlainObject(response)) {
     throw new ProviderOutcomeUnknownError();
   }
@@ -80,18 +80,22 @@ function providerMessageId(response) {
   if (!dataDescriptor || !Object.hasOwn(dataDescriptor, 'value') || !isPlainObject(dataDescriptor.value)) {
     throw new ProviderOutcomeUnknownError();
   }
-  const messageDescriptor = Object.getOwnPropertyDescriptor(dataDescriptor.value, 'message_id');
-  if (!messageDescriptor || !Object.hasOwn(messageDescriptor, 'value')) {
+  const dataDescriptors = Object.getOwnPropertyDescriptors(dataDescriptor.value);
+  const providerId = (key) => {
+    const descriptor = dataDescriptors[key];
+    return descriptor
+      && Object.hasOwn(descriptor, 'value')
+      && typeof descriptor.value === 'string'
+      && PROVIDER_ID_PATTERN.test(descriptor.value)
+      ? descriptor.value
+      : null;
+  };
+  const messageId = providerId('message_id');
+  const chatId = providerId('chat_id');
+  if (messageId === null || chatId === null) {
     throw new ProviderOutcomeUnknownError();
   }
-  const messageId = typeof messageDescriptor.value === 'string'
-    && PROVIDER_ID_PATTERN.test(messageDescriptor.value)
-    ? messageDescriptor.value
-    : null;
-  if (messageId === null) {
-    throw new ProviderOutcomeUnknownError();
-  }
-  return messageId;
+  return { messageId, chatId };
 }
 
 export async function createLarkTransport(config, options = {}) {
@@ -132,8 +136,7 @@ export async function createLarkTransport(config, options = {}) {
       try {
         const { params, data } = request;
         const response = await client.im.message.create({ params, data });
-        const messageId = providerMessageId(response);
-        return { messageId };
+        return providerMessageIdentity(response);
       } catch (error) {
         if (error instanceof ProviderRejectedError || isExplicitProviderRejection(error)) {
           throw new ProviderRejectedError();

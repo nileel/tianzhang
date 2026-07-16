@@ -131,6 +131,12 @@ function New-PairingEnvelope {
 if (-not (Test-Path -LiteralPath $tool -PathType Leaf)) {
   throw "production script is missing: $tool"
 }
+$toolSource = Get-Content -Raw -LiteralPath $tool
+foreach ($requiredBindingField in @('allowCustomReply = $true', 'providerChatIdHash = [string]$send.Result.providerChatIdHash')) {
+  if (-not $toolSource.Contains($requiredBindingField, [StringComparison]::Ordinal)) {
+    throw "Canary binding is missing $requiredBindingField"
+  }
+}
 
 New-Item -ItemType Directory -Path $sandbox | Out-Null
 $resolvedSandbox = (Resolve-Path -LiteralPath $sandbox).Path
