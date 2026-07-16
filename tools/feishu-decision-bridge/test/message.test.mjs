@@ -133,6 +133,8 @@ test('normalizeMessageEvent snapshots only the exact SDK 1.71.1 text shape', asy
     },
   });
   assert.equal(normalizeMessageEvent(optionalSdkFields)?.text, 'ok');
+  assert.equal(normalizeMessageEvent(makeEvent('ok', { root: { token: null } }))?.text, 'ok');
+  assert.equal(normalizeMessageEvent(makeEvent('ok', { root: { token: '' } }))?.text, 'ok');
 });
 
 test('valid strict text writes a signed custom envelope and confirms once', async (t) => {

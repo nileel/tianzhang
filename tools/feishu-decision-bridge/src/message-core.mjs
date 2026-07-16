@@ -213,10 +213,14 @@ export function normalizeMessageEvent(rawEvent) {
       || !identifier(root.event_id)
       || !identifier(root.tenant_key)
       || !identifier(root.app_id)
-      || typeof root.token !== 'string'
-      || root.token.length < 1
-      || root.token.length > 512
-      || /[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(root.token)
+      || (
+        root.token !== null
+        && (
+          typeof root.token !== 'string'
+          || root.token.length > 512
+          || /[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(root.token)
+        )
+      )
       || typeof root.create_time !== 'string'
       || !/^\d{13}$/.test(root.create_time)
       || !identifier(senderId.open_id)
