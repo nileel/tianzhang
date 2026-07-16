@@ -592,7 +592,7 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
   assert.equal(callbackResult.toast.type, 'success');
   assert.equal((await readdir(join(root, 'inbox'))).length, 1);
 
-  await registered['im.message.receive_v1']({
+  const textEvent = {
     [Symbol('event-type')]: 'im.message.receive_v1',
     schema: '2.0',
     event_id: 'evt_fake_text_event',
@@ -614,12 +614,25 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
       message_type: 'text',
       content: JSON.stringify({ text: `${DECISION_ID}：自定义 采用文字方案` }),
     },
-  });
+  };
+  await registered['im.message.receive_v1'](textEvent);
   assert.equal((await readdir(join(root, 'inbox'))).length, 2);
   assert.deepEqual(messageReplies, [{
     messageId: 'om_fake_text_message',
     text: `已登记 ${DECISION_ID} 自定义方案：\n采用文字方案`,
   }]);
+
+  await registered['im.message.receive_v1']({
+    ...textEvent,
+    unexpected: `${APP_ID}-${TENANT_KEY}-${OPERATOR_OPEN_ID}-${MESSAGE_ID}`,
+  });
+  assert.equal(logLines.some((line) => line.includes('message_rejected:invalid_shape')), true);
+  assert.equal(logLines.some((line) => (
+    line.includes('message_shape:root=app_id,create_time,event_id,event_type,message,schema,sender,tenant_key,token,unexpected,@symbol:event-type')
+    && line.includes(';sender=sender_id,sender_type,tenant_key')
+    && line.includes(';sender_id=open_id')
+    && line.includes(';message=chat_id,chat_type,content,create_time,message_id,message_type')
+  )), true);
 
   const invalidCallbackResult = await registered['card.action.trigger']({
     ...makeEvent(),

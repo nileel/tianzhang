@@ -238,11 +238,49 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRe
   };
 }
 
+function summarizeSdkKeys(value) {
+  if (!isPlainObject(value)) {
+    return 'not_object';
+  }
+  const strings = [];
+  const symbols = [];
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key)) {
+      strings.push(key);
+    } else if (
+      typeof key === 'symbol'
+      && typeof key.description === 'string'
+      && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key.description)
+    ) {
+      symbols.push(`@symbol:${key.description}`);
+    } else {
+      symbols.push('[unsafe]');
+    }
+  }
+  return [...strings.sort(), ...symbols.sort()].join(',');
+}
+
+function summarizeMessageShape(rawEvent) {
+  try {
+    const sender = readDataProperty(rawEvent, 'sender');
+    const senderId = readDataProperty(sender, 'sender_id');
+    const message = readDataProperty(rawEvent, 'message');
+    return [
+      `message_shape:root=${summarizeSdkKeys(rawEvent)}`,
+      `sender=${summarizeSdkKeys(sender)}`,
+      `sender_id=${summarizeSdkKeys(senderId)}`,
+      `message=${summarizeSdkKeys(message)}`,
+    ].join(';');
+  } catch {
+    return 'message_shape:unavailable';
+  }
+}
+
 function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive, reportRejection }) {
   return async (event) => {
     const normalized = normalizeMessageEvent(event);
     if (normalized === null) {
-      reportRejection('invalid_shape');
+      reportRejection('invalid_shape', event);
       return undefined;
     }
     rememberSensitive([
@@ -449,8 +487,11 @@ export async function startBridge(options = {}) {
         now,
         replyText: messageReplyTransport,
         rememberSensitive,
-        reportRejection: (code) => {
+        reportRejection: (code, event) => {
           emitSanitized('warn', [`message_rejected:${code}`]);
+          if (code === 'invalid_shape') {
+            emitSanitized('warn', [summarizeMessageShape(event)]);
+          }
         },
       }),
     });
