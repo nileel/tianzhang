@@ -24,7 +24,12 @@ $script:ResolutionSourceLabels = @{
   email = '旧 Gmail 通道（仅历史）'
   manual = '人工确认'
   feishu_card = '飞书互动卡片'
+  feishu_card_input = '飞书卡片输入'
+  feishu_text = '飞书普通文本'
+  manual_custom = '人工自定义'
 }
+$script:OptionResolutionSources = @('email','manual','feishu_card')
+$script:CustomResolutionSources = @('feishu_card_input','feishu_text','manual_custom')
 
 function Require-Text {
   param([object]$Value, [string]$Name)
@@ -55,6 +60,21 @@ function Assert-DecisionId {
   if ([string]$Value -notmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { throw "$Name has an invalid format" }
 }
 
+function Assert-CustomText {
+  param([object]$Value, [string]$Name)
+  if ($Value -isnot [string]) { throw "$Name must be a string" }
+  $text = [string]$Value
+  if ($text.Replace("`r`n", "`n").Replace("`r", "`n").Trim() -cne $text) {
+    throw "$Name must be canonically normalized"
+  }
+  $codePointCount = @($text.EnumerateRunes()).Count
+  if ($codePointCount -lt 1 -or $codePointCount -gt 1000) { throw "$Name has an invalid length" }
+  $unsafeScan = $text.Replace("`n", '').Replace("`t", '')
+  if ($unsafeScan -match '[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]') {
+    throw "$Name contains unsafe characters"
+  }
+}
+
 function Assert-ResolvedDecisions {
   param($DecisionFlow)
   if (-not (Test-HasProperty $DecisionFlow 'resolvedDecisions')) { throw 'decisionFlow.resolvedDecisions is required' }
@@ -64,10 +84,22 @@ function Assert-ResolvedDecisions {
     Assert-AllowedProperties $entry @('decisionId','resolution') 'resolvedDecision'
     Assert-DecisionId $entry.decisionId 'resolvedDecision.decisionId'
     if ($null -eq $entry.resolution) { throw 'resolvedDecision.resolution is required' }
-    Assert-AllowedProperties $entry.resolution @('optionKey','source') 'resolvedDecision.resolution'
-    Require-Text $entry.resolution.optionKey 'resolvedDecision.resolution.optionKey'
+    Assert-AllowedProperties $entry.resolution @('optionKey','customText','source') 'resolvedDecision.resolution'
     Require-Text $entry.resolution.source 'resolvedDecision.resolution.source'
-    if ([string]$entry.resolution.source -notin @($script:ResolutionSourceLabels.Keys)) { throw 'resolvedDecision.resolution.source is not supported' }
+    $hasOption = Test-HasProperty $entry.resolution 'optionKey'
+    $hasCustom = Test-HasProperty $entry.resolution 'customText'
+    if ($hasOption -eq $hasCustom) { throw 'resolvedDecision.resolution must contain exactly one reply kind' }
+    if ($hasOption) {
+      Require-Text $entry.resolution.optionKey 'resolvedDecision.resolution.optionKey'
+      if ([string]$entry.resolution.source -notin $script:OptionResolutionSources) {
+        throw 'resolvedDecision option source is not supported'
+      }
+    } else {
+      Assert-CustomText $entry.resolution.customText 'resolvedDecision.resolution.customText'
+      if ([string]$entry.resolution.source -notin $script:CustomResolutionSources) {
+        throw 'resolvedDecision custom source is not supported'
+      }
+    }
   }
   $resolved
 }
@@ -159,13 +191,18 @@ function Get-ResolvedSummaryLines {
     $label = Get-OrdinalLabel $index
     $entry = $ResolvedDecisions[$index]
     $sourceLabel = [string]$script:ResolutionSourceLabels[[string]$entry.resolution.source]
-    $choices.Add("$label=$([string]$entry.resolution.optionKey)（$sourceLabel）")
+    $choice = if (Test-HasProperty $entry.resolution 'optionKey') {
+      [string]$entry.resolution.optionKey
+    } else {
+      '自定义'
+    }
+    $choices.Add("$label=$choice（$sourceLabel）")
     $identifiers.Add("$label=$([string]$entry.decisionId)")
   }
-  @(
-    '- 已登记选择：' + ($choices -join '；'),
-    '- 决策编号摘要：' + ($identifiers -join '；')
-  )
+  $lines = [Collections.Generic.List[string]]::new()
+  $lines.Add('- 已登记选择：' + ($choices -join '；'))
+  $lines.Add('- 决策编号摘要：' + ($identifiers -join '；'))
+  $lines.ToArray()
 }
 
 function Get-FeishuHealthSummary {
