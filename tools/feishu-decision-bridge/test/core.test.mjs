@@ -337,6 +337,7 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
   const card = buildDecisionCard(decision, 'nonce-123');
   const encoded = JSON.stringify(card);
   const actionElement = card.elements.find((element) => element.tag === 'action');
+  const formElement = card.elements.find((element) => element.tag === 'form');
 
   assert.notStrictEqual(card, decision);
   assert.equal(card.header.title.content, '天章项目需要决策');
@@ -350,6 +351,13 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
   assert.match(encoded, /A 改动较大；B 风险较低；C 会延期/);
   assert.ok(actionElement);
   assert.equal(actionElement.actions.length, 3);
+  assert.deepEqual(
+    actionElement.actions.map((action) => action.text.content),
+    ['选择 A', '选择 B', '选择 C'],
+  );
+  assert.equal(JSON.stringify(actionElement.actions).includes('方案甲'), false);
+  assert.equal(JSON.stringify(actionElement.actions).includes('方案乙'), false);
+  assert.equal(JSON.stringify(actionElement.actions).includes('方案丙'), false);
   assert.deepEqual(actionElement.actions.map((action) => action.value), [
     { kind: 'decision_reply', decisionId: decision.decisionId, optionKey: 'A', cardNonce: 'nonce-123' },
     { kind: 'decision_reply', decisionId: decision.decisionId, optionKey: 'B', cardNonce: 'nonce-123' },
@@ -361,6 +369,28 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
       ['cardNonce', 'decisionId', 'kind', 'optionKey'],
     );
   }
+  assert.ok(formElement);
+  assert.equal(formElement.name, 'customDecisionForm');
+  assert.deepEqual(formElement.elements[0], {
+    tag: 'input',
+    name: 'customDecision',
+    input_type: 'multiline_text',
+    placeholder: { tag: 'plain_text', content: '输入你希望采用的方案（最多 1000 字）' },
+  });
+  assert.deepEqual(formElement.elements[1], {
+    tag: 'button',
+    name: 'submitCustomDecision',
+    action_type: 'form_submit',
+    text: { tag: 'plain_text', content: '提交自定义方案' },
+    type: 'primary',
+    value: {
+      kind: 'decision_custom_reply',
+      decisionId: decision.decisionId,
+      cardNonce: 'nonce-123',
+    },
+  });
+  assert.match(encoded, /长按复制格式/);
+  assert.match(encoded, /DEC-20260716-ABC123：自定义 <你的方案>/);
   assert.doesNotMatch(encoded, /must-not-leak|option-secret|unrelated|appSecret|hmacKey/i);
 
   decision.question = 'mutated question';
@@ -426,13 +456,15 @@ test('buildDecisionCard preserves normal international text, emoji, ZWJ, and VS1
 
 test('buildDecisionCard enforces bounded ASCII identifiers', async (t) => {
   const valid = buildDecisionCard(
-    makeDecision({ decisionId: 'DEC-1', taskId: 'TQ-1' }),
+    makeDecision({ decisionId: 'DEC-20260716-A1', taskId: 'TQ-1' }),
     'nonce-1',
   );
-  assert.equal(valid.elements.at(-1).actions[0].value.decisionId, 'DEC-1');
-  assert.equal(valid.elements.at(-1).actions[0].value.cardNonce, 'nonce-1');
+  const validAction = valid.elements.find((element) => element.tag === 'action').actions[0];
+  assert.equal(validAction.value.decisionId, 'DEC-20260716-A1');
+  assert.equal(validAction.value.cardNonce, 'nonce-1');
 
   const cases = [
+    ['noncanonical decision', makeDecision({ decisionId: 'DEC-1' }), 'nonce-1'],
     ['decision whitespace', makeDecision({ decisionId: 'DEC 1' }), 'nonce-1'],
     ['decision leading punctuation', makeDecision({ decisionId: '-DEC-1' }), 'nonce-1'],
     ['decision too long', makeDecision({ decisionId: `D${'a'.repeat(128)}` }), 'nonce-1'],

@@ -8,6 +8,7 @@ import test from 'node:test';
 import { startBridge } from '../src/bridge.mjs';
 import { handleCardAction, normalizeCardAction } from '../src/callback-core.mjs';
 import { verifyEnvelope } from '../src/envelope.mjs';
+import { acquireInstanceLock } from '../src/instance-lock.mjs';
 
 const NOW = new Date('2026-07-16T08:00:00.000Z');
 const APP_ID = 'app_fake_demo';
@@ -94,13 +95,34 @@ function flattenLikeSdk(rawEvent = makeEvent()) {
 
 function makeBinding(overrides = {}) {
   return {
+    kind: 'decision_reply',
     decisionId: DECISION_ID,
     allowedOptions: ['A', 'B', 'C'],
+    allowCustomReply: true,
+    issuedAt: new Date(NOW.getTime() - 60_000).toISOString(),
     expiresAt: new Date(NOW.getTime() + 60_000).toISOString(),
     cardNonceHash: sha256(CARD_NONCE),
     providerMessageIdHash: sha256(MESSAGE_ID),
+    providerChatIdHash: sha256('oc_fake_chat'),
     ...overrides,
   };
+}
+
+function makeCustomEvent(customText = '  采用双通道\r\n保留旧字段  ', overrides = {}) {
+  return makeEvent({
+    value: {
+      kind: 'decision_custom_reply',
+      decisionId: DECISION_ID,
+      cardNonce: CARD_NONCE,
+      ...(overrides.value ?? {}),
+    },
+    action: {
+      name: 'submitCustomDecision',
+      form_value: { customDecision: customText },
+      ...(overrides.action ?? {}),
+    },
+    ...(overrides.eventOverrides ?? {}),
+  });
 }
 
 function rejectedResponse() {
@@ -123,6 +145,40 @@ function containsInteractiveAction(value) {
     || value.tag === 'action'
     || Object.values(value).some(containsInteractiveAction);
 }
+
+test('bridge instance lock rejects a live owner and reclaims a dead owner once', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-bridge-instance-lock-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+
+  await t.test('live owner rejects a second bridge', async () => {
+    const first = await acquireInstanceLock({
+      stateRoot: root,
+      pid: 101,
+      processProbe: async (pid) => pid === 101,
+    });
+    await assert.rejects(acquireInstanceLock({
+      stateRoot: root,
+      pid: 202,
+      processProbe: async (pid) => pid === 101,
+    }), /Bridge already running/);
+    await first.release();
+  });
+
+  await t.test('dead owner is reclaimed once', async () => {
+    await writeFile(join(root, 'bridge-instance.lock'), '{"schemaVersion":1,"pid":101}', 'utf8');
+    const lock = await acquireInstanceLock({
+      stateRoot: root,
+      pid: 202,
+      processProbe: async () => false,
+    });
+    assert.deepEqual(JSON.parse(await readFile(join(root, 'bridge-instance.lock'), 'utf8')), {
+      schemaVersion: 1,
+      pid: 202,
+    });
+    await lock.release();
+    await assert.rejects(readFile(join(root, 'bridge-instance.lock'), 'utf8'), { code: 'ENOENT' });
+  });
+});
 
 test('normalizeCardAction accepts only a complete schema 2.0 data envelope', () => {
   const normalized = normalizeCardAction(makeEvent());
@@ -184,6 +240,37 @@ test('normalizeCardAction accepts documented optional callback fields after SDK 
     optionKey: 'A',
     cardNonce: CARD_NONCE,
   });
+});
+
+test('normalizeCardAction accepts an exact SDK-flattened custom decision form', () => {
+  const normalized = normalizeCardAction(flattenLikeSdk(makeCustomEvent()));
+  assert.deepEqual(normalized.action, {
+    kind: 'decision_custom_reply',
+    decisionId: DECISION_ID,
+    customText: '采用双通道\n保留旧字段',
+    cardNonce: CARD_NONCE,
+  });
+});
+
+test('custom decision forms reject malformed, accessor, blank, long, and unsafe content', async (t) => {
+  const accessor = makeCustomEvent();
+  Object.defineProperty(accessor.event.action.form_value, 'customDecision', {
+    enumerable: true,
+    get() { throw new Error('custom getter must not execute'); },
+  });
+  for (const [name, event] of [
+    ['missing form field', makeCustomEvent('ok', { action: { form_value: {} } })],
+    ['extra form field', makeCustomEvent('ok', { action: { form_value: { customDecision: 'ok', extra: 'no' } } })],
+    ['wrong submit name', makeCustomEvent('ok', { action: { name: 'wrongName' } })],
+    ['blank content', makeCustomEvent('   ')],
+    ['long content', makeCustomEvent('x'.repeat(1001))],
+    ['unsafe content', makeCustomEvent('ok\u0000bad')],
+    ['accessor content', accessor],
+  ]) {
+    await t.test(name, () => {
+      assert.throws(() => normalizeCardAction(event), /Invalid card action/);
+    });
+  }
 });
 
 test('normalizeCardAction rejects legacy, incomplete flattened, accessor, extra-value, and unsafe inputs', async (t) => {
@@ -312,6 +399,74 @@ test('valid decision callback writes one signed hash-only envelope and a read-on
   assert.equal((await readdir(join(root, 'inbox'))).filter((name) => name.includes('.tmp')).length, 0);
 });
 
+test('valid custom form callback writes one signed envelope and a read-only confirmation', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-callback-custom-accept-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const event = makeCustomEvent();
+  const request = {
+    event,
+    config: makeConfig(root),
+    pendingBindings: [makeBinding()],
+    now: NOW,
+  };
+  const first = await handleCardAction(request);
+  const replay = await handleCardAction(request);
+  assert.equal(first.accepted, true);
+  assert.equal(replay.accepted, true);
+  assert.equal(first.response.toast.type, 'success');
+  assert.match(first.response.toast.content, /已登记自定义方案/u);
+  assert.match(JSON.stringify(first.response.card.data), /已登记自定义方案/u);
+  assert.match(JSON.stringify(first.response.card.data), new RegExp(DECISION_ID, 'u'));
+  assert.match(JSON.stringify(first.response.card.data), /采用双通道\\n保留旧字段/u);
+  assert.equal(containsInteractiveAction(first.response.card.data), false);
+
+  const names = await readdir(join(root, 'inbox'));
+  assert.deepEqual(names, [`${sha256(EVENT_ID)}.json`]);
+  const raw = await readFile(join(root, 'inbox', names[0]), 'utf8');
+  const payload = verifyEnvelope(JSON.parse(raw), HMAC_KEY);
+  assert.deepEqual(payload, {
+    kind: 'decision_custom_reply',
+    decisionId: DECISION_ID,
+    customText: '采用双通道\n保留旧字段',
+    cardNonceHash: sha256(CARD_NONCE),
+    providerMessageIdHash: sha256(MESSAGE_ID),
+    providerEventIdHash: sha256(EVENT_ID),
+    operatorOpenIdHash: sha256(OPERATOR_OPEN_ID),
+    tenantKeyHash: sha256(TENANT_KEY),
+    receivedAt: NOW.toISOString(),
+    source: 'feishu_card_input',
+  });
+  for (const forbidden of [APP_ID, APP_SECRET, TENANT_KEY, OPERATOR_OPEN_ID, MESSAGE_ID, EVENT_ID, CARD_NONCE]) {
+    assert.equal(raw.includes(forbidden), false);
+  }
+});
+
+test('custom form callback rejects binding, nonce, identity, and expiry mismatches', async (t) => {
+  for (const [name, event, binding] of [
+    ['custom disabled', makeCustomEvent(), makeBinding({ allowCustomReply: false })],
+    ['wrong nonce', makeCustomEvent('ok', { value: { cardNonce: 'nonce_fake_other' } }), makeBinding()],
+    ['wrong identity', makeCustomEvent('ok', {
+      eventOverrides: { operator: { open_id: 'ou_fake_other' } },
+    }), makeBinding()],
+    ['expired', makeCustomEvent(), makeBinding({
+      expiresAt: new Date(NOW.getTime() - 1).toISOString(),
+    })],
+  ]) {
+    await t.test(name, async (t) => {
+      const root = await mkdtemp(join(tmpdir(), 'tzg-callback-custom-reject-'));
+      t.after(() => rm(root, { recursive: true, force: true }));
+      const result = await handleCardAction({
+        event,
+        config: makeConfig(root),
+        pendingBindings: [binding],
+        now: NOW,
+      });
+      assert.deepEqual(result, { accepted: false, response: rejectedResponse() });
+      await assert.rejects(readdir(join(root, 'inbox')));
+    });
+  }
+});
+
 test('operator pairing uses its own inbox and only the tenant key is retained raw', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-callback-pairing-'));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -398,6 +553,7 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     (...args) => logLines.push(`${level}:${args.map(String).join(' ')}`),
   ]));
   let now = NOW;
+  const messageReplies = [];
   const runtime = await startBridge({
     env: { FEISHU_DECISION_CONFIG_PATH: configPath },
     EventDispatcher: FakeEventDispatcher,
@@ -406,10 +562,15 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     logger,
     now: () => now,
     pid: 4242,
+    messageReplyTransport: async (messageId, text) => {
+      messageReplies.push({ messageId, text });
+    },
   });
 
   assert.deepEqual(dispatcherArguments, [{}]);
-  assert.deepEqual(Object.keys(registered), ['card.action.trigger']);
+  assert.deepEqual(Object.keys(registered).sort(), [
+    'card.action.trigger', 'im.message.receive_v1',
+  ]);
   assert.deepEqual(startOptions, { eventDispatcher: runtime.eventDispatcher });
   assert.equal(clientOptions.appId, APP_ID);
   assert.equal(clientOptions.appSecret, APP_SECRET);
@@ -421,11 +582,60 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     updatedAt: NOW.toISOString(),
     appIdHash: sha256(APP_ID),
   });
+  assert.deepEqual(JSON.parse(await readFile(join(root, 'bridge-instance.lock'), 'utf8')), {
+    schemaVersion: 1,
+    pid: 4242,
+  });
 
   await writeFile(configPath, JSON.stringify(makeConfig(root)));
   const callbackResult = await registered['card.action.trigger'](makeEvent());
   assert.equal(callbackResult.toast.type, 'success');
   assert.equal((await readdir(join(root, 'inbox'))).length, 1);
+
+  const textEvent = {
+    [Symbol('event-type')]: 'im.message.receive_v1',
+    schema: '2.0',
+    event_id: 'evt_fake_text_event',
+    event_type: 'im.message.receive_v1',
+    create_time: String(NOW.getTime()),
+    token: 'verification-token-fixture',
+    app_id: APP_ID,
+    tenant_key: TENANT_KEY,
+    sender: {
+      sender_id: { open_id: OPERATOR_OPEN_ID },
+      sender_type: 'user',
+      tenant_key: TENANT_KEY,
+    },
+    message: {
+      message_id: 'om_fake_text_message',
+      create_time: String(NOW.getTime()),
+      chat_id: 'oc_fake_chat',
+      chat_type: 'p2p',
+      message_type: 'text',
+      content: JSON.stringify({ text: `${DECISION_ID}：自定义 采用文字方案` }),
+    },
+  };
+  await registered['im.message.receive_v1'](textEvent);
+  assert.equal((await readdir(join(root, 'inbox'))).length, 2);
+  assert.deepEqual(messageReplies, [{
+    messageId: 'om_fake_text_message',
+    text: `已登记 ${DECISION_ID} 自定义方案：\n采用文字方案`,
+  }]);
+
+  await registered['im.message.receive_v1']({
+    ...textEvent,
+    unexpected: `${APP_ID}-${TENANT_KEY}-${OPERATOR_OPEN_ID}-${MESSAGE_ID}`,
+  });
+  assert.equal(logLines.some((line) => line.includes('message_rejected:invalid_shape')), true);
+  assert.equal(logLines.some((line) => (
+    line.includes('message_shape:root=app_id,create_time,event_id,event_type,message,schema,sender,tenant_key,token,unexpected,@symbol:event-type')
+    && line.includes(';sender=sender_id,sender_type,tenant_key')
+    && line.includes(';sender_id=open_id')
+    && line.includes(';message=chat_id,chat_type,content,create_time,message_id,message_type')
+    && line.includes(';root_checks=schema:true,symbol_match:true,event_type:true,event_id:true,tenant_id:true,app_id:true,token:true,create_time_digits:13')
+    && line.includes(';sender_checks=sender_type:true,tenant_match:true,open_id:true')
+    && line.includes(';message_checks=chat_type:true,message_type:true,message_id:true,chat_id:true,create_time_digits:13,content_keys:text,text_type:string')
+  )), true);
 
   const invalidCallbackResult = await registered['card.action.trigger']({
     ...makeEvent(),
@@ -463,6 +673,7 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
   await runtime.shutdown();
   assert.equal(clearedInterval, 73);
   assert.equal(JSON.parse(await readFile(join(root, 'health.json'), 'utf8')).status, 'DISCONNECTED');
+  await assert.rejects(readFile(join(root, 'bridge-instance.lock'), 'utf8'), { code: 'ENOENT' });
 });
 
 test('bridge does not claim CONNECTED without the official ready log and records start failure', async (t) => {
@@ -501,5 +712,6 @@ test('bridge does not claim CONNECTED without the official ready log and records
       now: () => NOW,
     }), /Bridge unavailable/);
     assert.equal(JSON.parse(await readFile(join(root, 'health.json'), 'utf8')).status, 'DISCONNECTED');
+    await assert.rejects(readFile(join(root, 'bridge-instance.lock'), 'utf8'), { code: 'ENOENT' });
   });
 });

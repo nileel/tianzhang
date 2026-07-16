@@ -163,8 +163,8 @@ try {
   Assert-Code $r 0 'checkpoint'
   $state = Read-TestState
   if ($state.taskId -ne 'sample-task' -or $state.expectedPaths.Count -ne 2) { throw 'checkpoint fields were not persisted' }
-  if ($state.schemaVersion -ne 7 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v7 recovery evidence fields' }
-  if ($state.runMode -ne 'fresh' -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v7 top-level fields were not initialized safely' }
+  if ($state.schemaVersion -ne 8 -or $state.taskExecutor -ne 'codex' -or $state.recoveryBaselinePath -ne 'C:\state\baseline.json' -or $state.recoveryEvidencePath -ne 'C:\state\evidence.json' -or $state.recoveryEvidenceHash -ne ('a' * 64)) { throw 'checkpoint did not persist schema v8 recovery evidence fields' }
+  if ($state.runMode -ne 'fresh' -or $null -ne $state.decisionFlow -or $null -ne $state.lastCompletedDecisionFlow -or $state.auditCorrections.Count -ne 0) { throw 'new schema v8 top-level fields were not initialized safely' }
 
   $r = Invoke-StateTool @('Checkpoint', '-StatePath', $statePath, '-RunId', 'run-1', '-TaskExecutor', 'deepseek', '-Now', '2026-07-11T00:40:30Z')
   Assert-Code $r 0 'checkpoint DeepSeek executor'
@@ -307,8 +307,8 @@ try {
   Assert-Code $r 0 'create decision'
   $decisionState = Read-TestState
   $decision = $decisionState.pendingDecision
-  if ($decisionState.schemaVersion -ne 7 -or $decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2 -or $decision.notificationAttempts.Count -ne 0) {
-    throw 'create decision did not persist a schema v7 pending decision'
+  if ($decisionState.schemaVersion -ne 8 -or $decision.status -ne 'PENDING' -or $decision.taskId -ne 'decision-task' -or $decision.options.Count -ne 2 -or $decision.notificationAttempts.Count -ne 0) {
+    throw 'create decision did not persist a schema v8 pending decision'
   }
   if ($decisionState.decisionFlow.taskId -ne 'decision-task' -or $decisionState.decisionFlow.taskKind -ne 'execute' -or $decisionState.decisionFlow.status -ne 'AWAITING_DECISION' -or $decisionState.decisionFlow.resolvedDecisions.Count -ne 0) {
     throw 'create decision did not open a matching decision flow'
@@ -567,7 +567,7 @@ try {
   $migratedV7 = Read-TestState
   $migratedDecision = $migratedV7.pendingDecision
   if (
-    $migratedV7.schemaVersion -ne 7 -or
+    $migratedV7.schemaVersion -ne 8 -or
     $migratedDecision.decisionId -ne 'DEC-V6-FEISHU-MIGRATION' -or
     ([DateTimeOffset]$migratedDecision.createdAt).ToUniversalTime().ToString('o') -ne '2026-07-15T05:00:00.0000000+00:00' -or
     ([DateTimeOffset]$migratedDecision.expiresAt).ToUniversalTime().ToString('o') -ne '2026-07-22T05:00:00.0000000+00:00' -or
@@ -742,11 +742,116 @@ try {
     if ($resolvedRaw.Contains($rawLiteral, [StringComparison]::Ordinal)) { throw 'raw Feishu evidence leaked into state' }
   }
 
-  foreach ($sourceSchema in 1..6) {
+  [IO.File]::WriteAllText($statePath, (New-V6FeishuMigrationFixture))
+  Assert-Code (Invoke-StateTool @(
+    'Acquire', '-StatePath', $statePath, '-RunId', 'v8-custom-text-run',
+    '-Now', '2026-07-15T08:10:00Z'
+  )) 0 'acquire custom text fixture'
+  Assert-Code (Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v8-custom-text-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'PROVIDER_ACCEPTED',
+    '-TargetHash', $targetHash, '-ProviderMessageIdHash', $providerMessageHash,
+    '-Now', '2026-07-15T08:11:00Z'
+  )) 0 'record custom text accepted notification'
+  foreach ($invalidCustom in @(
+    @{ label = 'blank custom text'; text = ' '; extra = @() },
+    @{ label = 'overlong custom text'; text = ('x' * 1001); extra = @() },
+    @{ label = 'unsafe custom text'; text = "bad$([char]0x202E)text"; extra = @() },
+    @{ label = 'mixed custom option'; text = 'ok'; extra = @('-OptionKey', 'A') },
+    @{ label = 'text custom with card nonce'; text = 'ok'; extra = @('-CardNonceHash', $nonceHash) }
+  )) {
+    $arguments = @(
+      'ResolveCustomDecision', '-StatePath', $statePath, '-RunId', 'v8-custom-text-run',
+      '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-CustomText', $invalidCustom.text,
+      '-ReplySource', 'feishu_text', '-ProviderMessageIdHash', $providerMessageHash,
+      '-ProviderEventIdHash', $providerEventHash, '-OperatorHash', $operatorHash,
+      '-TenantKeyHash', $tenantHash, '-ProviderChatIdHash', ('3' * 64),
+      '-EvidenceHash', $replyEvidenceHash, '-Now', '2026-07-15T08:12:00Z'
+    ) + $invalidCustom.extra
+    Assert-Code (Invoke-StateTool $arguments) 15 $invalidCustom.label
+  }
+  $customText = "采用双通道`n保留旧字段"
+  Assert-Code (Invoke-StateTool @(
+    'ResolveCustomDecision', '-StatePath', $statePath, '-RunId', 'v8-custom-text-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-CustomText', $customText,
+    '-ReplySource', 'feishu_text', '-ProviderMessageIdHash', $providerMessageHash,
+    '-ProviderEventIdHash', $providerEventHash, '-OperatorHash', $operatorHash,
+    '-TenantKeyHash', $tenantHash, '-ProviderChatIdHash', ('3' * 64),
+    '-EvidenceHash', $replyEvidenceHash, '-Now', '2026-07-15T08:13:00Z'
+  )) 0 'resolve strict text custom decision'
+  $customTextState = Read-TestState
+  $customTextResolution = $customTextState.decisionFlow.resolvedDecisions[-1].resolution
+  if (
+    $customTextState.schemaVersion -ne 8 -or
+    $customTextResolution.customText -cne $customText -or
+    $customTextResolution.source -cne 'feishu_text' -or
+    $customTextResolution.providerChatIdHash -cne ('3' * 64) -or
+    $customTextResolution.providerMessageIdHash -cne $providerMessageHash -or
+    $null -ne $customTextResolution.optionKey -or
+    $null -ne $customTextResolution.cardNonceHash
+  ) {
+    throw 'text custom resolution did not preserve the exact mutually exclusive shape'
+  }
+  $customTextState.schemaVersion = 7
+  [IO.File]::WriteAllText($statePath, ($customTextState | ConvertTo-Json -Depth 10 -Compress))
+  $migratedCustom = Read-TestState
+  if ($migratedCustom.schemaVersion -ne 8 -or
+      $migratedCustom.decisionFlow.resolvedDecisions[-1].resolution.customText -cne $customText) {
+    throw 'schema v7 custom resolution did not migrate losslessly to v8'
+  }
+
+  [IO.File]::WriteAllText($statePath, (New-V6FeishuMigrationFixture))
+  Assert-Code (Invoke-StateTool @(
+    'Acquire', '-StatePath', $statePath, '-RunId', 'v8-custom-card-run',
+    '-Now', '2026-07-15T08:20:00Z'
+  )) 0 'acquire custom card fixture'
+  Assert-Code (Invoke-StateTool @(
+    'RecordDecisionNotification', '-StatePath', $statePath, '-RunId', 'v8-custom-card-run',
+    '-NotificationProvider', 'feishu', '-NotificationStatus', 'PROVIDER_ACCEPTED',
+    '-TargetHash', $targetHash, '-ProviderMessageIdHash', $providerMessageHash,
+    '-Now', '2026-07-15T08:21:00Z'
+  )) 0 'record custom card accepted notification'
+  Assert-Code (Invoke-StateTool @(
+    'ResolveCustomDecision', '-StatePath', $statePath, '-RunId', 'v8-custom-card-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-CustomText', '卡片自定义方案',
+    '-ReplySource', 'feishu_card_input', '-ProviderMessageIdHash', $providerMessageHash,
+    '-ProviderEventIdHash', $providerEventHash, '-OperatorHash', $operatorHash,
+    '-TenantKeyHash', $tenantHash, '-CardNonceHash', $nonceHash,
+    '-EvidenceHash', $replyEvidenceHash, '-Now', '2026-07-15T08:22:00Z'
+  )) 0 'resolve card custom decision'
+  $customCardResolution = (Read-TestState).decisionFlow.resolvedDecisions[-1].resolution
+  if ($customCardResolution.source -cne 'feishu_card_input' -or
+      $customCardResolution.cardNonceHash -cne $nonceHash -or
+      $null -ne $customCardResolution.providerChatIdHash -or
+      $null -ne $customCardResolution.optionKey) {
+    throw 'card custom resolution did not preserve source-specific evidence'
+  }
+
+  [IO.File]::WriteAllText($statePath, (New-V6FeishuMigrationFixture))
+  Assert-Code (Invoke-StateTool @(
+    'Acquire', '-StatePath', $statePath, '-RunId', 'v8-custom-manual-run',
+    '-Now', '2026-07-15T08:30:00Z'
+  )) 0 'acquire manual custom fixture'
+  Assert-Code (Invoke-StateTool @(
+    'ResolveCustomDecision', '-StatePath', $statePath, '-RunId', 'v8-custom-manual-run',
+    '-DecisionId', 'DEC-V6-FEISHU-MIGRATION', '-CustomText', '人工自定义方案',
+    '-ReplySource', 'manual_custom', '-ManualOverride',
+    '-EvidenceThreadId', 'thread-custom-fixture', '-EvidenceTurnId', 'turn-custom-fixture',
+    '-Now', '2026-07-15T08:31:00Z'
+  )) 0 'resolve manual custom decision'
+  $manualCustomResolution = (Read-TestState).decisionFlow.resolvedDecisions[-1].resolution
+  if ($manualCustomResolution.source -cne 'manual_custom' -or
+      $manualCustomResolution.threadIdHash -notmatch '^[0-9a-f]{64}$' -or
+      $null -ne $manualCustomResolution.providerMessageIdHash -or
+      $null -ne $manualCustomResolution.optionKey) {
+    throw 'manual custom resolution did not preserve isolated evidence'
+  }
+
+  foreach ($sourceSchema in 1..7) {
     [IO.File]::WriteAllText($statePath, (@{ schemaVersion = $sourceSchema; state = 'IDLE'; controllerId = "schema-$sourceSchema" } | ConvertTo-Json -Compress))
     $run = "schema-$sourceSchema-upgrade"
     Assert-Code (Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', $run, '-Now', '2026-07-15T09:00:00Z')) 0 "schema $sourceSchema upgrade acquire"
-    if ((Read-TestState).schemaVersion -ne 7) { throw "schema $sourceSchema did not upgrade to v7" }
+    if ((Read-TestState).schemaVersion -ne 8) { throw "schema $sourceSchema did not upgrade to v8" }
     Assert-Code (Invoke-StateTool @('Complete', '-StatePath', $statePath, '-RunId', $run, '-Now', '2026-07-15T09:01:00Z')) 0 "schema $sourceSchema upgrade complete"
   }
 
@@ -764,7 +869,7 @@ try {
 
   [System.IO.File]::WriteAllText($statePath, '{"schemaVersion":1,"state":"IDLE","controllerId":"legacy","lastQueueAuditAt":null}')
   $legacy = Read-TestState
-  if ($legacy.schemaVersion -ne 7 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.decisionFlow -or $null -ne $legacy.lastDecisionCancellation -or $legacy.auditCorrections.Count -ne 0 -or $legacy.state -ne 'IDLE') {
+  if ($legacy.schemaVersion -ne 8 -or $null -ne $legacy.taskExecutor -or $null -ne $legacy.recoveryBaselinePath -or $null -ne $legacy.recoveryEvidencePath -or $null -ne $legacy.recoveryEvidenceHash -or $null -ne $legacy.lastQueueFingerprint -or $null -ne $legacy.lastNoCandidateFingerprint -or $null -ne $legacy.lastRunnableCount -or $legacy.workerState.deepseek.failureCount -ne 0 -or $null -ne $legacy.workerState.deepseek.backoffUntil -or $null -ne $legacy.workerState.deepseek.lastError -or $null -ne $legacy.pendingDecision -or $null -ne $legacy.decisionFlow -or $null -ne $legacy.lastDecisionCancellation -or $legacy.auditCorrections.Count -ne 0 -or $legacy.state -ne 'IDLE') {
     throw 'schema v1 was not migrated safely'
   }
 
@@ -808,7 +913,7 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v2-run', '-Now', '2026-07-11T06:00:00Z')
   Assert-Code $r 0 'renew migrated schema v2 state'
   $v2 = Read-TestState
-  if ($v2.schemaVersion -ne 7 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
+  if ($v2.schemaVersion -ne 8 -or $null -ne $v2.taskExecutor -or $null -ne $v2.recoveryBaselinePath -or $null -ne $v2.recoveryEvidencePath -or $null -ne $v2.recoveryEvidenceHash -or $null -ne $v2.lastQueueFingerprint -or $null -ne $v2.lastNoCandidateFingerprint -or $null -ne $v2.lastRunnableCount -or $v2.workerState.deepseek.failureCount -ne 0 -or $null -ne $v2.workerState.deepseek.backoffUntil -or $null -ne $v2.workerState.deepseek.lastError -or $null -ne $v2.lastDecisionCancellation) {
     throw 'schema v2 was not migrated safely'
   }
   if ($v2.runId -ne 'v2-run' -or $v2.state -ne 'RUNNING' -or $v2.leaseExpiresAt -ne '2026-07-11T09:00:00.0000000+00:00' -or $v2.taskKind -ne 'execute' -or $v2.taskId -ne 'v2-recovery-task' -or $v2.checkpoint -ne 'mutation_started' -or $v2.expectedPaths.Count -ne 2 -or $v2.expectedPaths[0] -ne 'a.txt' -or $v2.expectedPaths[1] -ne 'b/c.txt' -or $v2.recoveryCount -ne 1 -or $v2.lastError -ne 'recoverable interruption') {
@@ -866,8 +971,8 @@ try {
   $r = Invoke-StateTool @('Renew', '-StatePath', $statePath, '-RunId', 'v5-run', '-Now', '2026-07-11T06:20:00Z')
   Assert-Code $r 0 'write back migrated v5 unresolved decision'
   $v5Unresolved = Read-TestState
-  if ($v5Unresolved.schemaVersion -ne 7 -or $v5Unresolved.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or $v5Unresolved.pendingDecision.notificationAttempts.Count -ne 1 -or $v5Unresolved.decisionFlow.status -ne 'AWAITING_DECISION') {
-    throw 'v5 unresolved decision status or flow was not migrated to schema v7'
+  if ($v5Unresolved.schemaVersion -ne 8 -or $v5Unresolved.pendingDecision.status -ne 'PROVIDER_ACCEPTED' -or $v5Unresolved.pendingDecision.notificationAttempts.Count -ne 1 -or $v5Unresolved.decisionFlow.status -ne 'AWAITING_DECISION') {
+    throw 'v5 unresolved decision status or flow was not migrated to schema v8'
   }
   $v5LegacyAttempt = $v5Unresolved.pendingDecision.notificationAttempts[0]
   if ($v5LegacyAttempt.provider -ne 'gmail_legacy' -or $v5LegacyAttempt.result -ne 'PROVIDER_ACCEPTED' -or $null -ne $v5LegacyAttempt.targetHash -or $v5LegacyAttempt.providerMessageIdHash -ne ('e' * 64)) {
@@ -916,7 +1021,7 @@ try {
   $r = Invoke-StateTool @('Acquire', '-StatePath', $statePath, '-RunId', 'v5-resolved-run', '-Now', '2026-07-11T06:40:00Z')
   Assert-Code $r 0 'write back migrated v5 resolved decision'
   $v5ResolvedAfterWrite = Read-TestState
-  if ($v5ResolvedAfterWrite.schemaVersion -ne 7 -or $v5ResolvedAfterWrite.decisionFlow.resolvedDecisions[0].resolution.evidenceHash -ne $legacyEvidenceHash) {
+  if ($v5ResolvedAfterWrite.schemaVersion -ne 8 -or $v5ResolvedAfterWrite.decisionFlow.resolvedDecisions[0].resolution.evidenceHash -ne $legacyEvidenceHash) {
     throw 'v5 resolved migration evidence was not deterministic across write-back'
   }
 
@@ -967,7 +1072,7 @@ try {
   $correction = $repaired.auditCorrections[0]
   $threadHashBytes = [Text.UTF8Encoding]::new($false).GetBytes('repair-thread')
   $expectedThreadHash = ([Security.Cryptography.SHA256]::HashData($threadHashBytes) | ForEach-Object { $_.ToString('x2') }) -join ''
-  if ($repaired.schemaVersion -ne 7 -or $repaired.state -ne 'IDLE' -or $null -ne $repaired.runId -or $null -ne $repaired.runMode -or
+  if ($repaired.schemaVersion -ne 8 -or $repaired.state -ne 'IDLE' -or $null -ne $repaired.runId -or $null -ne $repaired.runMode -or
       $null -ne $repaired.leaseExpiresAt -or $null -ne $repaired.taskKind -or $null -ne $repaired.taskId -or $null -ne $repaired.taskExecutor -or
       $null -ne $repaired.checkpoint -or @($repaired.expectedPaths).Count -ne 0 -or $null -ne $repaired.recoveryBaselinePath -or
       $null -ne $repaired.recoveryEvidencePath -or $null -ne $repaired.recoveryEvidenceHash -or $repaired.recoveryCount -ne 0 -or

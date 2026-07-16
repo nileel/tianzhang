@@ -4,18 +4,29 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { parsePrivateConfig } from './config.mjs';
+import { normalizeCustomText } from './custom-reply.mjs';
 import { consumeCurrentReply } from './inbox.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const HEX_PATTERN = /^[0-9a-f]{64}$/;
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const PENDING_KEYS = [
-  'decisionId', 'allowedOptions', 'createdAt', 'expiresAt', 'cardNonceHash',
-  'providerMessageIdHash',
+  'decisionId', 'allowedOptions', 'allowCustomReply', 'createdAt', 'expiresAt',
+  'cardNonceHash', 'providerMessageIdHash', 'providerChatIdHash',
 ];
 const ACCEPTED_KEYS = [
   'result', 'optionKey', 'source', 'providerMessageIdHash', 'providerEventIdHash',
   'operatorOpenIdHash', 'tenantKeyHash', 'cardNonceHash', 'evidenceHash',
+];
+const CUSTOM_CARD_ACCEPTED_KEYS = [
+  'result', 'decisionId', 'customText', 'source', 'providerMessageIdHash',
+  'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'cardNonceHash',
+  'evidenceHash',
+];
+const CUSTOM_TEXT_ACCEPTED_KEYS = [
+  'result', 'decisionId', 'customText', 'source', 'providerMessageIdHash',
+  'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'providerChatIdHash',
+  'evidenceHash',
 ];
 const INVALID_RESULT = Object.freeze({ result: 'INVALID_INPUT' });
 const NO_REPLY_RESULT = Object.freeze({ result: 'NO_REPLY' });
@@ -93,6 +104,7 @@ function validatePending(value) {
     || options === null
     || options.length !== 3
     || options.some((option, index) => option !== ['A', 'B', 'C'][index])
+    || typeof fields.allowCustomReply !== 'boolean'
     || createdAt === null
     || expiresAt === null
     || createdAt > expiresAt
@@ -100,16 +112,20 @@ function validatePending(value) {
     || !HEX_PATTERN.test(fields.cardNonceHash)
     || typeof fields.providerMessageIdHash !== 'string'
     || !HEX_PATTERN.test(fields.providerMessageIdHash)
+    || typeof fields.providerChatIdHash !== 'string'
+    || !HEX_PATTERN.test(fields.providerChatIdHash)
   ) {
     return null;
   }
   return {
     decisionId: fields.decisionId,
     allowedOptions: [...options],
+    allowCustomReply: fields.allowCustomReply,
     createdAt: fields.createdAt,
     expiresAt: fields.expiresAt,
     cardNonceHash: fields.cardNonceHash,
     providerMessageIdHash: fields.providerMessageIdHash,
+    providerChatIdHash: fields.providerChatIdHash,
   };
 }
 
@@ -154,7 +170,7 @@ function sanitizeAccepted(value) {
   const fields = exactDataObject(value, ACCEPTED_KEYS);
   if (
     fields === null
-    || fields.result !== 'REPLY_ACCEPTED'
+    || fields.result !== 'OPTION_ACCEPTED'
     || !['A', 'B', 'C'].includes(fields.optionKey)
     || fields.source !== 'feishu_card'
     || ACCEPTED_KEYS.slice(3).some((key) => (
@@ -164,7 +180,7 @@ function sanitizeAccepted(value) {
     return null;
   }
   return {
-    result: 'REPLY_ACCEPTED',
+    result: 'OPTION_ACCEPTED',
     optionKey: fields.optionKey,
     source: 'feishu_card',
     providerMessageIdHash: fields.providerMessageIdHash,
@@ -174,6 +190,51 @@ function sanitizeAccepted(value) {
     cardNonceHash: fields.cardNonceHash,
     evidenceHash: fields.evidenceHash,
   };
+}
+
+function sanitizeCustomAccepted(value) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const sourceDescriptor = Object.getOwnPropertyDescriptor(value, 'source');
+  if (!sourceDescriptor || !Object.hasOwn(sourceDescriptor, 'value')) {
+    return null;
+  }
+  const keys = sourceDescriptor.value === 'feishu_card_input'
+    ? CUSTOM_CARD_ACCEPTED_KEYS
+    : CUSTOM_TEXT_ACCEPTED_KEYS;
+  const fields = exactDataObject(value, keys);
+  const customText = normalizeCustomText(fields?.customText);
+  if (
+    fields === null
+    || fields.result !== 'CUSTOM_ACCEPTED'
+    || !IDENTIFIER_PATTERN.test(fields.decisionId)
+    || customText === null
+    || customText !== fields.customText
+    || !['feishu_card_input', 'feishu_text'].includes(fields.source)
+    || keys.slice(4).some((key) => (
+      typeof fields[key] !== 'string' || !HEX_PATTERN.test(fields[key])
+    ))
+  ) {
+    return null;
+  }
+  const result = {
+    result: 'CUSTOM_ACCEPTED',
+    decisionId: fields.decisionId,
+    customText,
+    source: fields.source,
+    providerMessageIdHash: fields.providerMessageIdHash,
+    providerEventIdHash: fields.providerEventIdHash,
+    operatorOpenIdHash: fields.operatorOpenIdHash,
+    tenantKeyHash: fields.tenantKeyHash,
+    evidenceHash: fields.evidenceHash,
+  };
+  if (fields.source === 'feishu_card_input') {
+    result.cardNonceHash = fields.cardNonceHash;
+  } else {
+    result.providerChatIdHash = fields.providerChatIdHash;
+  }
+  return result;
 }
 
 function writeResult(stdout, value) {
@@ -211,7 +272,9 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
       writeResult(stdout, NO_REPLY_RESULT);
       return 0;
     }
-    const sanitized = sanitizeAccepted(result);
+    const sanitized = result?.result === 'OPTION_ACCEPTED'
+      ? sanitizeAccepted(result)
+      : sanitizeCustomAccepted(result);
     if (sanitized === null) {
       throw new Error();
     }

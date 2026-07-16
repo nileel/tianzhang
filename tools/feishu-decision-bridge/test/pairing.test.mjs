@@ -123,7 +123,7 @@ test('canary CLI requires paired identity and emits only hashed delivery evidenc
     pairedOperatorOpenIdHash: operatorHash,
   }));
   const decision = {
-    decisionId: 'CANARY-fixture',
+    decisionId: 'DEC-20260716-CANARYFIXTURE',
     taskId: 'FEISHU-CANARY',
     question: '请选择 A。',
     options: [
@@ -148,20 +148,24 @@ test('canary CLI requires paired identity and emits only hashed delivery evidenc
     createTransport: async () => ({
       async sendInteractive(request) {
         transportRequest = request;
-        return { messageId: 'om_canary_fixture' };
+        return { messageId: 'om_canary_fixture', chatId: 'oc_canary_fixture' };
       },
     }),
   });
   assert.equal(code, 0);
   const card = JSON.parse(transportRequest.data.content);
-  assert.equal(card.elements.at(-1).actions[0].value.cardNonce, cardNonce);
+  const decisionActions = card.elements.find((element) => element.tag === 'action').actions;
+  assert.equal(decisionActions[0].value.cardNonce, cardNonce);
   assert.deepEqual(JSON.parse(capture.text()), {
     result: 'PROVIDER_ACCEPTED',
     targetHash: sha256(RECIPIENT),
     providerMessageIdHash: sha256('om_canary_fixture'),
+    providerChatIdHash: sha256('oc_canary_fixture'),
     cardNonceHash: sha256(cardNonce),
   });
-  for (const literal of [APP_ID, APP_SECRET, RECIPIENT, cardNonce, 'om_canary_fixture']) {
+  for (const literal of [
+    APP_ID, APP_SECRET, RECIPIENT, cardNonce, 'om_canary_fixture', 'oc_canary_fixture',
+  ]) {
     assert.equal(capture.text().includes(literal), false);
   }
 

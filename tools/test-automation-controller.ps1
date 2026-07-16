@@ -750,6 +750,9 @@ try {
   )) 0 'manual fixture create'
   $manualDecision = (Invoke-State @('Show','-StatePath',$manualStatePath)).pendingDecision
   Assert-Code (Invoke-Controller @('Finish','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualCreateRunId,'-CommitMessage','test: publish manual decision','-Now','2026-07-15T03:02:00Z')) 0 'manual fixture publish'
+  $manualCustomStatePath = Join-Path $sandbox 'manual-custom-state.json'
+  $manualCustomRunRoot = Join-Path $sandbox 'manual-custom-runs'
+  Copy-Item -LiteralPath $manualStatePath -Destination $manualCustomStatePath
   $manualReplyRunId = '13131313-1313-4313-8313-131313131313'
   Assert-Code (Invoke-Controller @('Start','-RepositoryRoot',$repo,'-StatePath',$manualStatePath,'-RunRoot',$manualRunRoot,'-RunId',$manualReplyRunId,'-ActualModel','gpt-test','-Now','2026-07-15T03:03:00Z')) 0 'manual reply start'
   $manualResolved = Invoke-Controller @(
@@ -766,6 +769,31 @@ try {
       $null -ne $manualResolution.messageIdHash -or $null -ne $manualResolvedState.pendingDecision -or
       ($manualResolved.Output | ConvertFrom-Json).taskId -ne 'decision-task') {
     throw "manual resolution mixed evidence domains: $($manualResolved.Output)"
+  }
+
+  $manualCustomRunId = '13131313-1313-4313-8313-131313131314'
+  Assert-Code (Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$manualCustomStatePath,'-RunRoot',$manualCustomRunRoot,
+    '-RunId',$manualCustomRunId,'-ActualModel','gpt-test','-Now','2026-07-15T03:05:00Z'
+  )) 0 'manual custom reply start'
+  $manualCustomResolved = Invoke-Controller @(
+    'ResolveDecisionManual','-RepositoryRoot',$repo,'-StatePath',$manualCustomStatePath,
+    '-RunRoot',$manualCustomRunRoot,'-RunId',$manualCustomRunId,
+    '-ReplyText',"$($manualDecision.decisionId)：自定义 采用双通道`r`n保留旧字段",
+    '-CurrentThreadId','019f63c5-f73c-70a0-9773-5592a3e03194',
+    '-CurrentTurnId','turn-manual-custom-001','-ManualOverride','-Now','2026-07-15T03:06:00Z'
+  )
+  Assert-Code $manualCustomResolved 0 'manual custom decision resolution'
+  $manualCustomResolvedState = Invoke-State @('Show','-StatePath',$manualCustomStatePath)
+  $manualCustomResolution = $manualCustomResolvedState.decisionFlow.resolvedDecisions[0].resolution
+  if ($manualCustomResolution.customText -cne "采用双通道`n保留旧字段" -or
+      $manualCustomResolution.source -cne 'manual_custom' -or
+      $manualCustomResolution.threadIdHash -notmatch '^[0-9a-f]{64}$' -or
+      $manualCustomResolution.turnIdHash -notmatch '^[0-9a-f]{64}$' -or
+      $null -ne $manualCustomResolution.optionKey -or $null -ne $manualCustomResolution.messageIdHash -or
+      $null -ne $manualCustomResolvedState.pendingDecision -or
+      ($manualCustomResolved.Output | ConvertFrom-Json).taskId -ne 'decision-task') {
+    throw "manual custom resolution mixed evidence domains: $($manualCustomResolved.Output)"
   }
 
   $retryStatePath = Join-Path $sandbox 'retry-state.json'
@@ -1326,10 +1354,13 @@ try {
   $feishuFixtureRoot = Join-Path $sandbox 'feishu-controller-fixture'
   $feishuSeedStatePath = Join-Path $feishuFixtureRoot 'seed-state.json'
   $feishuAcceptedStatePath = Join-Path $feishuFixtureRoot 'accepted-state.json'
+  $feishuCustomStatePath = Join-Path $feishuFixtureRoot 'custom-state.json'
   $feishuUnknownStatePath = Join-Path $feishuFixtureRoot 'unknown-state.json'
   $feishuAcceptedRunRoot = Join-Path $feishuFixtureRoot 'accepted-runs'
+  $feishuCustomRunRoot = Join-Path $feishuFixtureRoot 'custom-runs'
   $feishuUnknownRunRoot = Join-Path $feishuFixtureRoot 'unknown-runs'
   $feishuAcceptedBridgeRoot = Join-Path $feishuFixtureRoot 'accepted-bridge'
+  $feishuCustomBridgeRoot = Join-Path $feishuFixtureRoot 'custom-bridge'
   $feishuUnknownBridgeRoot = Join-Path $feishuFixtureRoot 'unknown-bridge'
   $feishuConfigPath = Join-Path $feishuFixtureRoot 'feishu-private.json'
   $fakeSenderScript = Join-Path $feishuFixtureRoot 'fake-sender.mjs'
@@ -1393,6 +1424,7 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
   $hashF = 'f' * 64
   $hashOne = '1' * 64
   $hashTwo = '2' * 64
+  $hashThree = '3' * 64
   Write-Utf8 $fakeSenderResultPath (@{
     result = 'PROVIDER_OUTCOME_UNKNOWN'
     targetHash = $hashA
@@ -1477,7 +1509,9 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
     result = 'PROVIDER_ACCEPTED'
     targetHash = $hashA
     providerMessageIdHash = $hashB
+    providerChatIdHash = $hashThree
     cardNonceHash = $hashC
+    intentKeyHash = $hashTwo
   } | ConvertTo-Json -Compress)
   $acceptedSendRunId = '74747474-7474-4474-8474-747474747474'
   $acceptedStart = Invoke-Controller @(
@@ -1512,7 +1546,11 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
       $acceptedState.pendingDecision.notificationAttempts[0].provider -ne 'feishu' -or
       $acceptedState.pendingDecision.notificationAttempts[0].providerMessageIdHash -ne $hashB -or
       $binding.decisionId -ne $feishuDecisionId -or (@($binding.allowedOptions) -join '|') -ne 'A|B|C' -or
+      $binding.allowCustomReply -ne $true -or
       $binding.cardNonceHash -ne $hashC -or $binding.providerMessageIdHash -ne $hashB -or
+      $binding.providerChatIdHash -ne $hashThree -or
+      (@($binding.PSObject.Properties.Name | Sort-Object) -join '|') -cne
+        ((@('allowedOptions','allowCustomReply','cardNonceHash','decisionId','expiresAt','issuedAt','kind','providerChatIdHash','providerMessageIdHash') | Sort-Object) -join '|') -or
       $senderTrace.request.decision.decisionId -ne $feishuDecisionId -or
       @($senderTrace.request.PSObject.Properties.Name).Count -ne 2 -or
       ($senderTrace.argv -join '|') -match 'controller-secret-must-not-leak|feishu-private\.json' -or
@@ -1523,6 +1561,9 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
     'CompleteNoChange','-RepositoryRoot',$repo,'-StatePath',$feishuAcceptedStatePath,
     '-RunRoot',$feishuAcceptedRunRoot,'-RunId',$acceptedSendRunId
   )) 0 'close Feishu accepted send run'
+  Copy-Item -LiteralPath $feishuAcceptedStatePath -Destination $feishuCustomStatePath
+  New-Item -ItemType Directory -Path $feishuCustomBridgeRoot -Force | Out-Null
+  Copy-Item -LiteralPath $bindingPath -Destination (Join-Path $feishuCustomBridgeRoot 'pending-bindings.json')
 
   $consumeRunId = '75757575-7575-4575-8575-757575757575'
   $consumeStart = Invoke-Controller @(
@@ -1573,7 +1614,7 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
     '-FeishuConsumerScript',$fakeConsumerScript,'-Now','2026-07-16T05:01:00Z'
   )
   Write-Utf8 $fakeConsumerResultPath (@{
-    result='REPLY_ACCEPTED';optionKey='A';source='feishu_card';providerMessageIdHash=('9' * 64)
+    result='OPTION_ACCEPTED';optionKey='A';source='feishu_card';providerMessageIdHash=('9' * 64)
     providerEventIdHash=$hashD;operatorOpenIdHash=$hashE;tenantKeyHash=$hashF;cardNonceHash=$hashC;evidenceHash=$hashOne
   } | ConvertTo-Json -Compress)
   $mismatchedReply = Invoke-Controller $resolveArguments
@@ -1582,7 +1623,7 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
     throw "mismatched Feishu reply resolved the decision: $($mismatchedReply.Output)"
   }
   Write-Utf8 $fakeConsumerResultPath (@{
-    result='REPLY_ACCEPTED';optionKey='A';source='feishu_card';providerMessageIdHash=$hashB
+    result='OPTION_ACCEPTED';optionKey='A';source='feishu_card';providerMessageIdHash=$hashB
     providerEventIdHash=$hashD;operatorOpenIdHash=$hashE;tenantKeyHash=$hashF;cardNonceHash=$hashC;evidenceHash=$hashOne
   } | ConvertTo-Json -Compress)
   $resolvedReply = Invoke-Controller $resolveArguments
@@ -1596,11 +1637,54 @@ process.exitCode = output.result === 'INVALID_INPUT' ? 22 : 0;
       $feishuResolution.optionKey -ne 'A' -or $feishuResolution.providerMessageIdHash -ne $hashB -or
       $feishuResolution.operatorOpenIdHash -ne $hashE -or $feishuResolution.evidenceHash -ne $hashOne -or
       $consumerTrace.request.pendingDecision.decisionId -ne $feishuDecisionId -or
+      $consumerTrace.request.pendingDecision.allowCustomReply -ne $true -or
+      $consumerTrace.request.pendingDecision.providerChatIdHash -ne $hashThree -or
       ($consumerTrace.argv -join '|') -match 'controller-secret-must-not-leak|feishu-private\.json' -or
       $resolvedReply.Output -match 'controller-secret-must-not-leak') {
     throw "valid Feishu reply did not resolve with hash-only evidence: $($resolvedReply.Output)"
   }
   [void](Invoke-State @('Complete','-StatePath',$feishuAcceptedStatePath,'-RunId',$resolveRunId,'-Now','2026-07-16T05:02:00Z'))
+
+  $customRunId = '77777777-7777-4777-8777-777777777777'
+  Assert-Code (Invoke-Controller @(
+    'Start','-RepositoryRoot',$repo,'-StatePath',$feishuCustomStatePath,'-RunRoot',$feishuCustomRunRoot,
+    '-RunId',$customRunId,'-ActualModel','gpt-test','-Now','2026-07-16T06:00:00Z'
+  )) 0 'Feishu custom reply start'
+  $customArguments = @(
+    'ConsumeDecisionReply','-RepositoryRoot',$repo,'-StatePath',$feishuCustomStatePath,
+    '-RunRoot',$feishuCustomRunRoot,'-RunId',$customRunId,'-FeishuConfigPath',$feishuConfigPath,
+    '-FeishuBridgeRoot',$feishuCustomBridgeRoot,'-NodeExecutable','node',
+    '-FeishuConsumerScript',$fakeConsumerScript,'-Now','2026-07-16T06:01:00Z'
+  )
+  Write-Utf8 $fakeConsumerResultPath (@{
+    result='CUSTOM_ACCEPTED';decisionId=$feishuDecisionId;customText='采用双通道';optionKey='A';source='feishu_text'
+    providerMessageIdHash=$hashB;providerEventIdHash=$hashD;operatorOpenIdHash=$hashE
+    tenantKeyHash=$hashF;providerChatIdHash=$hashThree;evidenceHash=$hashOne
+  } | ConvertTo-Json -Compress)
+  $mixedCustom = Invoke-Controller $customArguments
+  if ($mixedCustom.Code -ne 15 -or
+      (Invoke-State @('Show','-StatePath',$feishuCustomStatePath)).pendingDecision.decisionId -ne $feishuDecisionId) {
+    throw "mixed Feishu custom reply resolved the decision: $($mixedCustom.Output)"
+  }
+  Write-Utf8 $fakeConsumerResultPath (@{
+    result='CUSTOM_ACCEPTED';decisionId=$feishuDecisionId;customText="采用双通道`n保留旧字段";source='feishu_text'
+    providerMessageIdHash=$hashB;providerEventIdHash=$hashD;operatorOpenIdHash=$hashE
+    tenantKeyHash=$hashF;providerChatIdHash=$hashThree;evidenceHash=$hashOne
+  } | ConvertTo-Json -Compress)
+  $customResolved = Invoke-Controller $customArguments
+  Assert-Code $customResolved 0 'valid Feishu custom reply resolution'
+  $customResolvedJson = $customResolved.Output | ConvertFrom-Json
+  $customResolvedState = Invoke-State @('Show','-StatePath',$feishuCustomStatePath)
+  $customResolution = $customResolvedState.decisionFlow.resolvedDecisions[0].resolution
+  if ($customResolvedJson.nextCommand -ne 'InspectCandidate' -or $customResolvedJson.taskId -ne 'decision-task' -or
+      $null -ne $customResolvedState.pendingDecision -or $customResolution.source -cne 'feishu_text' -or
+      $customResolution.customText -cne "采用双通道`n保留旧字段" -or $null -ne $customResolution.optionKey -or
+      $customResolution.providerMessageIdHash -ne $hashB -or
+      $customResolution.providerChatIdHash -ne $hashThree -or
+      $customResolution.operatorOpenIdHash -ne $hashE -or $customResolution.evidenceHash -ne $hashOne) {
+    throw "valid Feishu custom reply did not resolve with hash-only evidence: $($customResolved.Output)"
+  }
+  [void](Invoke-State @('Complete','-StatePath',$feishuCustomStatePath,'-RunId',$customRunId,'-Now','2026-07-16T06:02:00Z'))
 
   'test-automation-controller: OK'
 } finally {

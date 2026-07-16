@@ -176,13 +176,18 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
   };
   try {
     const result = await transport.sendInteractive(request);
-    if (!isPlainObject(result) || typeof result.messageId !== 'string') {
+    if (
+      !isPlainObject(result)
+      || typeof result.messageId !== 'string'
+      || typeof result.chatId !== 'string'
+    ) {
       throw new ProviderOutcomeUnknownError();
     }
     writeResult(stdout, {
       result: 'PROVIDER_ACCEPTED',
       targetHash,
       providerMessageIdHash: sha256(result.messageId),
+      providerChatIdHash: sha256(result.chatId),
       cardNonceHash: sha256(cardNonce),
     });
     return 0;

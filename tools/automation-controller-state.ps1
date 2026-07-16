@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0, Mandatory = $true)]
-  [ValidateSet('Acquire','Renew','Checkpoint','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','RecordDecisionNotification','ResolveDecision','CompleteDecisionFlow','AbortClean','RecordRecoverableInterruption','BlockUnsafe','RepairDecisionFlow','CancelDecision','RollbackDecision','Complete','Show','ResetBlocked')]
+  [ValidateSet('Acquire','Renew','Checkpoint','RecordQueueState','RecordWorkerFailure','ClearWorkerFailure','CreateDecision','RecordDecisionNotification','ResolveDecision','ResolveCustomDecision','CompleteDecisionFlow','AbortClean','RecordRecoverableInterruption','BlockUnsafe','RepairDecisionFlow','CancelDecision','RollbackDecision','Complete','Show','ResetBlocked')]
   [string]$Action,
   [string]$StatePath = "$env:USERPROFILE\.codex\automation-state\tzg-hourly-controller.json",
   [string]$ControllerId = 'tzg-hourly-controller',
@@ -27,7 +27,8 @@ param(
   [string]$ImpactSummary,
   [string]$DecisionId,
   [string]$OptionKey,
-  [ValidateSet('email','manual','feishu_card')]
+  [string]$CustomText,
+  [ValidateSet('email','manual','feishu_card','feishu_card_input','feishu_text','manual_custom')]
   [string]$ReplySource,
   [switch]$ManualOverride,
   [ValidateSet('gmail_legacy','feishu')]
@@ -49,6 +50,8 @@ param(
   [string]$TenantKeyHash,
   [ValidatePattern('^[0-9a-f]{64}$')]
   [string]$CardNonceHash,
+  [ValidatePattern('^[0-9a-f]{64}$')]
+  [string]$ProviderChatIdHash,
   [ValidatePattern('^[0-9a-f]{64}$')]
   [string]$EvidenceHash,
   [string]$NotificationError,
@@ -95,7 +98,7 @@ function Get-NowValue {
 
 function New-State {
   [ordered]@{
-    schemaVersion = 7
+    schemaVersion = 8
     controllerId = $ControllerId
     runId = $null
     runMode = $null
@@ -134,7 +137,7 @@ function Import-State {
   if (-not (Test-Path -LiteralPath $StatePath)) { return (New-State) }
   $raw = [IO.File]::ReadAllText($StatePath)
   $parsed = $raw | ConvertFrom-Json
-  if ($parsed.schemaVersion -notin @(1, 2, 3, 4, 5, 6, 7)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
+  if ($parsed.schemaVersion -notin @(1, 2, 3, 4, 5, 6, 7, 8)) { throw "Unsupported schemaVersion: $($parsed.schemaVersion)" }
   $state = New-State
   foreach ($key in @($state.Keys)) {
     $property = $parsed.PSObject.Properties[$key]
@@ -152,8 +155,8 @@ function Import-State {
     }
   }
   $state.workerState = [ordered]@{ deepseek = $deepseek }
-  Convert-DecisionStateToV7 $state $parsed ([int]$parsed.schemaVersion)
-  $state.schemaVersion = 7
+  Convert-DecisionStateToV8 $state $parsed ([int]$parsed.schemaVersion)
+  $state.schemaVersion = 8
   $state
 }
 
@@ -273,7 +276,38 @@ function Assert-OptionalHash {
   }
 }
 
-function Convert-NotificationAttemptsToV7 {
+function Normalize-CustomDecisionText {
+  param($Value)
+
+  if ($Value -isnot [string]) { return $null }
+  $normalized = $Value.Replace("`r`n", "`n").Replace("`r", "`n").Trim()
+  if ([string]::IsNullOrEmpty($normalized)) { return $null }
+  try {
+    $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
+    [void]$strictUtf8.GetBytes($normalized)
+    $runes = @($normalized.EnumerateRunes())
+  } catch {
+    return $null
+  }
+  if ($runes.Count -lt 1 -or $runes.Count -gt 1000) { return $null }
+  foreach ($rune in $runes) {
+    $category = [Text.Rune]::GetUnicodeCategory($rune)
+    if (
+      ($category -eq [Globalization.UnicodeCategory]::Control -and $rune.Value -notin @(9, 10)) -or
+      $category -in @(
+        [Globalization.UnicodeCategory]::Format,
+        [Globalization.UnicodeCategory]::Surrogate,
+        [Globalization.UnicodeCategory]::LineSeparator,
+        [Globalization.UnicodeCategory]::ParagraphSeparator
+      )
+    ) {
+      return $null
+    }
+  }
+  $normalized
+}
+
+function Convert-NotificationAttemptsToV8 {
   param($Decision, [int]$SourceSchema)
   $attempts = @()
   $existingAttempts = Get-ObjectValue $Decision 'notificationAttempts'
@@ -324,7 +358,7 @@ function Convert-NotificationAttemptsToV7 {
   @($attempts)
 }
 
-function Convert-PendingDecisionToV7 {
+function Convert-PendingDecisionToV8 {
   param($Decision, [int]$SourceSchema)
   if ($null -eq $Decision) { return $null }
   $sourceStatus = [string](Get-ObjectValue $Decision 'status')
@@ -343,24 +377,38 @@ function Convert-PendingDecisionToV7 {
     recommendedOption = [string](Get-ObjectValue $Decision 'recommendedOption')
     impactSummary = [string](Get-ObjectValue $Decision 'impactSummary')
     status = $status
-    notificationAttempts = @(Convert-NotificationAttemptsToV7 $Decision $SourceSchema)
+    notificationAttempts = @(Convert-NotificationAttemptsToV8 $Decision $SourceSchema)
   }
   $expiresAt = Get-ObjectValue $Decision 'expiresAt'
   if ($null -ne $expiresAt) { $normalized['expiresAt'] = Convert-StateTimestamp $expiresAt }
   $normalized
 }
 
-function Convert-ResolutionToV7 {
+function Convert-ResolutionToV8 {
   param($Resolution, [int]$SourceSchema)
   if ($null -eq $Resolution) { return $null }
   $source = [string](Get-ObjectValue $Resolution 'source')
-  if ($source -notin @('email', 'manual', 'feishu_card')) { throw "Unsupported decision resolution source: $source" }
-  $normalized = [ordered]@{
-    optionKey = [string](Get-ObjectValue $Resolution 'optionKey')
-    source = $source
-    resolvedAt = Convert-StateTimestamp (Get-ObjectValue $Resolution 'resolvedAt')
-    evidenceHash = Get-ObjectValue $Resolution 'evidenceHash'
+  $optionSources = @('email', 'manual', 'feishu_card')
+  $customSources = @('feishu_card_input', 'feishu_text', 'manual_custom')
+  if ($source -notin @($optionSources + $customSources)) { throw "Unsupported decision resolution source: $source" }
+  $optionKey = Get-ObjectValue $Resolution 'optionKey'
+  $customText = Get-ObjectValue $Resolution 'customText'
+  $normalized = [ordered]@{}
+  if ($source -in $optionSources) {
+    if ([string]::IsNullOrWhiteSpace([string]$optionKey) -or $null -ne $customText) {
+      throw 'Option resolution has an invalid mutually exclusive shape'
+    }
+    $normalized['optionKey'] = [string]$optionKey
+  } else {
+    $normalizedCustomText = Normalize-CustomDecisionText $customText
+    if ($null -eq $normalizedCustomText -or $normalizedCustomText -cne [string]$customText -or $null -ne $optionKey) {
+      throw 'Custom resolution has an invalid mutually exclusive shape'
+    }
+    $normalized['customText'] = $normalizedCustomText
   }
+  $normalized['source'] = $source
+  $normalized['resolvedAt'] = Convert-StateTimestamp (Get-ObjectValue $Resolution 'resolvedAt')
+  $normalized['evidenceHash'] = Get-ObjectValue $Resolution 'evidenceHash'
   Assert-OptionalHash $normalized.evidenceHash 'resolution evidenceHash'
   switch ($source) {
     'email' {
@@ -383,17 +431,44 @@ function Convert-ResolutionToV7 {
       $normalized['cardNonceHash'] = Get-ObjectValue $Resolution 'cardNonceHash'
       foreach ($field in @('providerMessageIdHash', 'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'cardNonceHash')) {
         Assert-OptionalHash $normalized[$field] "Feishu $field"
-        if ($SourceSchema -eq 7 -and $null -eq $normalized[$field]) { throw "Missing Feishu $field" }
+        if ($SourceSchema -ge 7 -and $null -eq $normalized[$field]) { throw "Missing Feishu $field" }
       }
+    }
+    'feishu_card_input' {
+      foreach ($field in @('providerMessageIdHash', 'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'cardNonceHash')) {
+        $normalized[$field] = Get-ObjectValue $Resolution $field
+        Assert-OptionalHash $normalized[$field] "Feishu custom $field"
+        if ($null -eq $normalized[$field]) { throw "Missing Feishu custom $field" }
+      }
+      if ($null -ne (Get-ObjectValue $Resolution 'providerChatIdHash')) {
+        throw 'Card custom resolution contains text chat evidence'
+      }
+    }
+    'feishu_text' {
+      foreach ($field in @('providerMessageIdHash', 'providerEventIdHash', 'operatorOpenIdHash', 'tenantKeyHash', 'providerChatIdHash')) {
+        $normalized[$field] = Get-ObjectValue $Resolution $field
+        Assert-OptionalHash $normalized[$field] "Feishu text $field"
+        if ($null -eq $normalized[$field]) { throw "Missing Feishu text $field" }
+      }
+      if ($null -ne (Get-ObjectValue $Resolution 'cardNonceHash')) {
+        throw 'Text custom resolution contains card nonce evidence'
+      }
+    }
+    'manual_custom' {
+      $normalized['threadIdHash'] = Get-ObjectValue $Resolution 'threadIdHash'
+      $normalized['turnIdHash'] = Get-ObjectValue $Resolution 'turnIdHash'
+      Assert-OptionalHash $normalized.threadIdHash 'manual custom threadIdHash'
+      Assert-OptionalHash $normalized.turnIdHash 'manual custom turnIdHash'
+      if ($null -eq $normalized.threadIdHash) { throw 'Missing manual custom threadIdHash' }
     }
   }
   $normalized
 }
 
-function Convert-ResolvedDecisionToV7 {
+function Convert-ResolvedDecisionToV8 {
   param($Decision, [int]$SourceSchema)
-  $normalized = Convert-PendingDecisionToV7 $Decision $SourceSchema
-  $resolution = Convert-ResolutionToV7 (Get-ObjectValue $Decision 'resolution') $SourceSchema
+  $normalized = Convert-PendingDecisionToV8 $Decision $SourceSchema
+  $resolution = Convert-ResolutionToV8 (Get-ObjectValue $Decision 'resolution') $SourceSchema
   if ($null -eq $resolution) { throw 'Resolved decision is missing resolution' }
   $normalized['resolution'] = $resolution
   $normalized
@@ -410,18 +485,18 @@ function New-DecisionFlowValue {
   }
 }
 
-function Convert-DecisionStateToV7 {
+function Convert-DecisionStateToV8 {
   param([System.Collections.IDictionary]$State, $Parsed, [int]$SourceSchema)
   $State.auditCorrections = @($State.auditCorrections)
   if ($SourceSchema -ge 6) {
     if ($null -ne $State.pendingDecision) {
-      $State.pendingDecision = Convert-PendingDecisionToV7 $State.pendingDecision $SourceSchema
+      $State.pendingDecision = Convert-PendingDecisionToV8 $State.pendingDecision $SourceSchema
     }
     if ($null -ne $State.decisionFlow) {
       $flow = $State.decisionFlow
       $resolved = @()
       foreach ($decision in @((Get-ObjectValue $flow 'resolvedDecisions'))) {
-        $resolved += Convert-ResolvedDecisionToV7 $decision $SourceSchema
+        $resolved += Convert-ResolvedDecisionToV8 $decision $SourceSchema
       }
       $State.decisionFlow = [ordered]@{
         taskKind = [string](Get-ObjectValue $flow 'taskKind')
@@ -444,7 +519,7 @@ function Convert-DecisionStateToV7 {
     return
   }
   $legacyStatus = [string](Get-ObjectValue $legacyDecision 'status')
-  $normalized = Convert-PendingDecisionToV7 $legacyDecision $SourceSchema
+  $normalized = Convert-PendingDecisionToV8 $legacyDecision $SourceSchema
   if ($legacyStatus -ne 'RESOLVED') {
     $State.pendingDecision = $normalized
     $State.decisionFlow = New-DecisionFlowValue $legacyDecision 'AWAITING_DECISION' @()
@@ -796,6 +871,12 @@ try {
       Require-DecisionInput $DecisionId 'DecisionId'
       Require-DecisionInput $OptionKey 'OptionKey'
       Require-DecisionInput $ReplySource 'ReplySource'
+      if ($PSBoundParameters.ContainsKey('CustomText') -or $PSBoundParameters.ContainsKey('ProviderChatIdHash')) {
+        Exit-WithCode 'Option resolution cannot contain custom decision evidence' $script:ExitInvalidArguments
+      }
+      if ($ReplySource -notin @('email', 'manual', 'feishu_card')) {
+        Exit-WithCode 'ReplySource is invalid for an option resolution' $script:ExitInvalidArguments
+      }
       if ($state.pendingDecision.decisionId -cne $DecisionId) { Exit-WithCode 'DecisionId does not match the pending decision' $script:ExitInvalidArguments }
       if (@($state.pendingDecision.options | Where-Object { $_.key -eq $OptionKey }).Count -ne 1) { Exit-WithCode 'OptionKey is not valid for the pending decision' $script:ExitInvalidArguments }
       if ($null -eq $state.decisionFlow -or [string]$state.decisionFlow.taskId -cne [string]$state.pendingDecision.taskId) {
@@ -890,6 +971,121 @@ try {
       Set-Lease $state $nowValue
       Export-State $state
     }
+    'ResolveCustomDecision' {
+      Require-Owner $state
+      Require-PendingDecision $state
+      Require-DecisionInput $DecisionId 'DecisionId'
+      Require-DecisionInput $ReplySource 'ReplySource'
+      if ($PSBoundParameters.ContainsKey('OptionKey')) {
+        Exit-WithCode 'Custom resolution cannot contain OptionKey' $script:ExitInvalidArguments
+      }
+      if ($ReplySource -notin @('feishu_card_input', 'feishu_text', 'manual_custom')) {
+        Exit-WithCode 'ReplySource is invalid for a custom resolution' $script:ExitInvalidArguments
+      }
+      $normalizedCustomText = Normalize-CustomDecisionText $CustomText
+      if ($null -eq $normalizedCustomText) {
+        Exit-WithCode 'CustomText is invalid' $script:ExitInvalidArguments
+      }
+      if ($state.pendingDecision.decisionId -cne $DecisionId) {
+        Exit-WithCode 'DecisionId does not match the pending decision' $script:ExitInvalidArguments
+      }
+      if ($null -eq $state.decisionFlow -or [string]$state.decisionFlow.taskId -cne [string]$state.pendingDecision.taskId) {
+        Exit-WithCode 'Pending decision does not belong to an active decision flow' $script:ExitInvalidState
+      }
+      $resolution = [ordered]@{
+        customText = $normalizedCustomText
+        source = $ReplySource
+        resolvedAt = $nowValue.ToString('o')
+        evidenceHash = $null
+      }
+      $allFeishuEvidenceFields = @(
+        'ProviderMessageIdHash', 'ProviderEventIdHash', 'OperatorHash',
+        'TenantKeyHash', 'CardNonceHash', 'ProviderChatIdHash', 'EvidenceHash'
+      )
+      if ($ReplySource -eq 'manual_custom') {
+        if (-not $ManualOverride) {
+          Exit-WithCode 'Manual custom resolution requires -ManualOverride' $script:ExitInvalidArguments
+        }
+        Require-DecisionInput $EvidenceThreadId 'EvidenceThreadId'
+        if (
+          $PSBoundParameters.ContainsKey('EvidenceMessageId') -or
+          $PSBoundParameters.ContainsKey('EvidenceSender') -or
+          @($allFeishuEvidenceFields | Where-Object { $PSBoundParameters.ContainsKey($_) }).Count -gt 0
+        ) {
+          Exit-WithCode 'Manual custom resolution cannot contain provider evidence' $script:ExitInvalidArguments
+        }
+        $threadIdHash = Get-Sha256Text $EvidenceThreadId.Trim()
+        $turnIdHash = if ([string]::IsNullOrWhiteSpace($EvidenceTurnId)) {
+          $null
+        } else {
+          Get-Sha256Text $EvidenceTurnId.Trim()
+        }
+        $resolution['threadIdHash'] = $threadIdHash
+        $resolution['turnIdHash'] = $turnIdHash
+        $resolution['evidenceHash'] = Get-Sha256Text "manual_custom|$threadIdHash|$turnIdHash"
+      } else {
+        if (
+          $ManualOverride -or
+          @(@('EvidenceMessageId','EvidenceSender','EvidenceThreadId','EvidenceTurnId') |
+            Where-Object { $PSBoundParameters.ContainsKey($_) }).Count -gt 0
+        ) {
+          Exit-WithCode 'Feishu custom resolution cannot contain raw or manual evidence' $script:ExitInvalidArguments
+        }
+        $requiredFields = if ($ReplySource -eq 'feishu_card_input') {
+          @('ProviderMessageIdHash','ProviderEventIdHash','OperatorHash','TenantKeyHash','CardNonceHash','EvidenceHash')
+        } else {
+          @('ProviderMessageIdHash','ProviderEventIdHash','OperatorHash','TenantKeyHash','ProviderChatIdHash','EvidenceHash')
+        }
+        foreach ($field in $requiredFields) {
+          Require-DecisionInput (Get-Variable -Name $field -ValueOnly) $field
+        }
+        if ($ReplySource -eq 'feishu_card_input' -and $PSBoundParameters.ContainsKey('ProviderChatIdHash')) {
+          Exit-WithCode 'Card custom resolution cannot contain chat evidence' $script:ExitInvalidArguments
+        }
+        if ($ReplySource -eq 'feishu_text' -and $PSBoundParameters.ContainsKey('CardNonceHash')) {
+          Exit-WithCode 'Text custom resolution cannot contain card nonce evidence' $script:ExitInvalidArguments
+        }
+        $matchingAcceptedAttempts = @($state.pendingDecision.notificationAttempts | Where-Object {
+          $_.provider -eq 'feishu' -and
+          $_.result -eq 'PROVIDER_ACCEPTED' -and
+          $_.providerMessageIdHash -ceq $ProviderMessageIdHash
+        })
+        if ($matchingAcceptedAttempts.Count -ne 1) {
+          Exit-WithCode 'Feishu provider message evidence does not match the accepted notification' $script:ExitInvalidArguments
+        }
+        $resolution['providerMessageIdHash'] = $ProviderMessageIdHash
+        $resolution['providerEventIdHash'] = $ProviderEventIdHash
+        $resolution['operatorOpenIdHash'] = $OperatorHash
+        $resolution['tenantKeyHash'] = $TenantKeyHash
+        if ($ReplySource -eq 'feishu_card_input') {
+          $resolution['cardNonceHash'] = $CardNonceHash
+        } else {
+          $resolution['providerChatIdHash'] = $ProviderChatIdHash
+        }
+        $resolution['evidenceHash'] = $EvidenceHash
+      }
+      $resolvedDecision = [ordered]@{
+        decisionId = [string]$state.pendingDecision.decisionId
+        createdAt = [string]$state.pendingDecision.createdAt
+        taskKind = [string]$state.pendingDecision.taskKind
+        taskId = [string]$state.pendingDecision.taskId
+        taskSummary = [string]$state.pendingDecision.taskSummary
+        question = [string]$state.pendingDecision.question
+        options = @($state.pendingDecision.options)
+        recommendedOption = [string]$state.pendingDecision.recommendedOption
+        impactSummary = [string]$state.pendingDecision.impactSummary
+        status = [string]$state.pendingDecision.status
+        notificationAttempts = @($state.pendingDecision.notificationAttempts)
+        resolution = $resolution
+      }
+      $expiresAt = Get-ObjectValue $state.pendingDecision 'expiresAt'
+      if ($null -ne $expiresAt) { $resolvedDecision['expiresAt'] = [string]$expiresAt }
+      $state.decisionFlow.resolvedDecisions = @($state.decisionFlow.resolvedDecisions) + $resolvedDecision
+      $state.decisionFlow.status = 'IMPLEMENTATION_PENDING'
+      $state.pendingDecision = $null
+      Set-Lease $state $nowValue
+      Export-State $state
+    }
     'CompleteDecisionFlow' {
       Require-Owner $state
       Require-DecisionInput $TaskId 'TaskId'
@@ -904,13 +1100,18 @@ try {
       $startIndex = [Math]::Max(0, $allResolved.Count - 20)
       for ($index = $startIndex; $index -lt $allResolved.Count; $index++) {
         $entry = $allResolved[$index]
-        $summaryItems += [ordered]@{
+        $summaryItem = [ordered]@{
           decisionId = [string]$entry.decisionId
-          optionKey = [string]$entry.resolution.optionKey
           source = [string]$entry.resolution.source
           resolvedAt = [string]$entry.resolution.resolvedAt
           evidenceHash = [string]$entry.resolution.evidenceHash
         }
+        if ($null -ne (Get-ObjectValue $entry.resolution 'customText')) {
+          $summaryItem['customText'] = [string]$entry.resolution.customText
+        } else {
+          $summaryItem['optionKey'] = [string]$entry.resolution.optionKey
+        }
+        $summaryItems += $summaryItem
       }
       $state.lastCompletedDecisionFlow = [ordered]@{
         taskKind = [string]$state.decisionFlow.taskKind

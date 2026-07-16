@@ -64,6 +64,22 @@ function New-ResolvedDecision {
   }
 }
 
+function New-CustomResolvedDecision {
+  param(
+    [string]$DecisionId,
+    [string]$CustomText,
+    [ValidateSet('feishu_card_input','feishu_text','manual_custom')]
+    [string]$Source
+  )
+  [ordered]@{
+    decisionId = $DecisionId
+    resolution = [ordered]@{
+      customText = $CustomText
+      source = $Source
+    }
+  }
+}
+
 function New-Flow {
   param(
     [ValidateSet('AWAITING_DECISION','IMPLEMENTATION_PENDING')]
@@ -197,9 +213,10 @@ try {
 
   $secondResolved = New-ResolvedDecision 'DEC-20260715-SECOND222222' 'A' 'email'
   $thirdResolved = New-ResolvedDecision 'DEC-20260715-THIRD333333' 'C' 'feishu_card'
+  $fourthResolved = New-CustomResolvedDecision 'DEC-20260715-FOURTH444444' "采用双通道`n保留旧字段" 'feishu_text'
   $implementationPayload = [ordered]@{
     pendingDecision = $null
-    decisionFlow = New-Flow 'IMPLEMENTATION_PENDING' @($firstResolved, $secondResolved, $thirdResolved)
+    decisionFlow = New-Flow 'IMPLEMENTATION_PENDING' @($firstResolved, $secondResolved, $thirdResolved, $fourthResolved)
   }
   $implementation = Invoke-Publisher @(
     'PublishImplementationPending',
@@ -214,13 +231,18 @@ try {
     '已登记选择：第一项=B（人工确认）',
     '第二项=A（旧 Gmail 通道（仅历史））',
     '第三项=C（飞书互动卡片）',
+    '第四项=自定义（飞书普通文本）',
     'DEC-20260715-FIRST111111',
     'DEC-20260715-SECOND222222',
-    'DEC-20260715-THIRD333333'
+    'DEC-20260715-THIRD333333',
+    'DEC-20260715-FOURTH444444'
   )) {
     if (-not $implementationText.Contains($required, [StringComparison]::Ordinal)) { throw "implementation section lacks: $required" }
   }
-  foreach ($forbidden in @('严格回复','证据','通知尝试','evidenceHash','provider','message','@')) {
+  if ($implementationText -notmatch '飞书普通文本）\r\n- 决策编号摘要：') {
+    throw 'implementation summaries were not written on separate lines'
+  }
+  foreach ($forbidden in @('采用双通道','保留旧字段','严格回复','证据','通知尝试','evidenceHash','provider','message','@')) {
     if ($implementationText.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) { throw "implementation section exposed forbidden content: $forbidden" }
   }
 
@@ -251,6 +273,42 @@ try {
           [ordered]@{
             decisionId = 'DEC-20260715-FIRST111111'
             resolution = [ordered]@{ optionKey = 'B'; source = 'manual'; evidenceHash = 'SECRET-HASH' }
+          }
+        )
+      }
+    },
+    [ordered]@{
+      Label = 'mixed custom resolution'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @(
+          [ordered]@{
+            decisionId = 'DEC-20260715-FIRST111111'
+            resolution = [ordered]@{ optionKey = 'A'; customText = '双通道'; source = 'feishu_text' }
+          }
+        )
+      }
+    },
+    [ordered]@{
+      Label = 'unsafe custom resolution'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @(
+          [ordered]@{
+            decisionId = 'DEC-20260715-FIRST111111'
+            resolution = [ordered]@{ customText = "双通道$([char]0x202e)"; source = 'feishu_text' }
+          }
+        )
+      }
+    },
+    [ordered]@{
+      Label = 'mismatched custom source'
+      Payload = [ordered]@{
+        pendingDecision = New-PendingDecision
+        decisionFlow = New-Flow 'AWAITING_DECISION' @(
+          [ordered]@{
+            decisionId = 'DEC-20260715-FIRST111111'
+            resolution = [ordered]@{ customText = '双通道'; source = 'feishu_card' }
           }
         )
       }

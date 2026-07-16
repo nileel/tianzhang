@@ -50,6 +50,9 @@ function New-FakeScheduler {
     Calls = [Collections.Generic.List[string]]::new()
     Tasks = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::OrdinalIgnoreCase)
     NodeVersion = $NodeVersion
+    Processes = [Collections.Generic.List[object]]::new()
+    StoppedProcessIds = [Collections.Generic.List[int]]::new()
+    ProcessSnapshots = 0
   }
   $adapter = @{
     GetNodeVersion = {
@@ -64,6 +67,29 @@ function New-FakeScheduler {
       param([string]$TaskName)
       $state.Calls.Add("get:$TaskName")
       if ($state.Tasks.ContainsKey($TaskName)) { $state.Tasks[$TaskName] } else { $null }
+    }
+    StopTask = {
+      param([string]$TaskName)
+      $state.Calls.Add("stop-task:$TaskName")
+    }
+    GetProcesses = {
+      $state.Calls.Add('get-processes')
+      $snapshot = @($state.Processes)
+      if ($state.ProcessSnapshots -eq 0) {
+        foreach ($process in @($state.Processes | Where-Object { $_.ProcessId -eq 901 })) {
+          $state.Processes.Remove($process) | Out-Null
+        }
+      }
+      $state.ProcessSnapshots++
+      $snapshot
+    }
+    StopProcess = {
+      param([int]$ProcessId)
+      $state.Calls.Add("stop-process:$ProcessId")
+      $state.StoppedProcessIds.Add($ProcessId)
+      foreach ($process in @($state.Processes | Where-Object { $_.ProcessId -eq $ProcessId })) {
+        $state.Processes.Remove($process) | Out-Null
+      }
     }
     UpsertTask = {
       param($Plan)
@@ -108,6 +134,31 @@ try {
   )) 0 'install fixture Configure'
 
   $fake = New-FakeScheduler
+  $bridgeEntry = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'feishu-decision-bridge\src\bridge.mjs'))
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 100
+    ParentProcessId = 999
+    Name = 'node.exe'
+    CommandLine = "node.exe `"$bridgeEntry`""
+  })
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 101
+    ParentProcessId = 901
+    Name = 'node.exe'
+    CommandLine = "node.exe `"$bridgeEntry`""
+  })
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 901
+    ParentProcessId = 1
+    Name = 'pwsh.exe'
+    CommandLine = 'pwsh.exe -File start-feishu-decision-bridge.ps1'
+  })
+  $fake.State.Processes.Add([pscustomobject]@{
+    ProcessId = 102
+    ParentProcessId = 999
+    Name = 'node.exe'
+    CommandLine = "node.exe `"${bridgeEntry}-near`""
+  })
   $planResult = Invoke-Script -Path $installTool -Arguments @('Plan', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)
   Assert-Code $planResult 0 'Plan'
   $plan = $planResult.Output | ConvertFrom-Json
@@ -135,11 +186,18 @@ try {
   if ($fake.State.Tasks.Count -ne 1 -or -not $fake.State.Tasks.ContainsKey('TianZhang-Feishu-Decision-Bridge')) {
     throw 'first Install did not create exactly one fixed task'
   }
+  if ($fake.State.StoppedProcessIds.Count -ne 2 -or
+      $fake.State.StoppedProcessIds[0] -ne 100 -or
+      $fake.State.StoppedProcessIds[1] -ne 101) {
+    throw "Install did not stop verified bridge processes across the parent-exit race: $($fake.State.StoppedProcessIds -join ',')"
+  }
   $calls = @($fake.State.Calls)
   $nodeIndex = [Array]::IndexOf($calls, 'node-version')
   $npmIndex = [Array]::FindIndex($calls, [Predicate[string]]{ param($value) $value.StartsWith('npm-ci:', [StringComparison]::Ordinal) })
   $upsertIndex = [Array]::IndexOf($calls, 'upsert:TianZhang-Feishu-Decision-Bridge')
-  if ($nodeIndex -lt 0 -or $npmIndex -le $nodeIndex -or $upsertIndex -le $npmIndex) {
+  $lastProcessIndex = [Array]::LastIndexOf($calls, 'get-processes')
+  if ($nodeIndex -lt 0 -or $npmIndex -le $nodeIndex -or
+      $lastProcessIndex -le $npmIndex -or $upsertIndex -le $lastProcessIndex) {
     throw "Install did not validate Node/install packages before scheduling: $($calls -join ',')"
   }
 
@@ -163,13 +221,25 @@ try {
     } | ConvertTo-Json -Compress),
     [Text.UTF8Encoding]::new($false)
   )
+  [IO.File]::WriteAllText(
+    (Join-Path $stateRoot 'text-reply-health.json'),
+    ([ordered]@{
+      schemaVersion = 1
+      status = 'TEXT_REPLY_UNAVAILABLE'
+      updatedAt = $healthTimestamp
+    } | ConvertTo-Json -Compress),
+    [Text.UTF8Encoding]::new($false)
+  )
   $status = Invoke-Script -Path $installTool -Arguments @('Status', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)
   Assert-Code $status 0 'Status'
   $statusOutput = $status.Output | ConvertFrom-Json
   if (-not $statusOutput.installed -or $statusOutput.taskState -ne 'Running') {
     throw 'Status did not report the fake installed task'
   }
-  if ($statusOutput.bridgeStatus -ne 'CONNECTED' -or $statusOutput.healthAgeSeconds -lt 0 -or $statusOutput.healthAgeSeconds -gt 10) {
+  if ($statusOutput.bridgeStatus -ne 'CONNECTED' -or $statusOutput.cardStatus -ne 'CONNECTED' -or
+      $statusOutput.textReplyStatus -ne 'TEXT_REPLY_UNAVAILABLE' -or
+      $statusOutput.textReplyAgeSeconds -lt 0 -or $statusOutput.textReplyAgeSeconds -gt 10 -or
+      $statusOutput.healthAgeSeconds -lt 0 -or $statusOutput.healthAgeSeconds -gt 10) {
     throw "Status did not report a fresh UTC heartbeat: $($status.Output)"
   }
 
@@ -196,6 +266,9 @@ try {
   $startText = Get-Content -LiteralPath $startTool -Raw
   if ($startText -notmatch '(?i)Mutex' -or $startText -notmatch 'bridge\.mjs') {
     throw 'start script does not provide a process-level single-instance guard and fixed bridge entrypoint'
+  }
+  if ($startText -match '(?m)\bSet-Acl\b' -or $startText -notmatch 'private-path-acl\.ps1') {
+    throw 'start script does not use the DACL-only private path helper'
   }
 
   Write-Output 'test-install-feishu-decision-bridge: OK'

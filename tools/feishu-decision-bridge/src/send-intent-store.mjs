@@ -64,7 +64,7 @@ function validIsoTime(value) {
 
 function recordKeysFor(status) {
   if (status === 'ACCEPTED') {
-    return [...BASE_KEYS, 'providerMessageIdHash', 'resultAt'];
+    return [...BASE_KEYS, 'providerMessageIdHash', 'providerChatIdHash', 'resultAt'];
   }
   if (status === 'OUTCOME_UNKNOWN' || status === 'REJECTED') {
     return [...BASE_KEYS, 'resultAt'];
@@ -115,7 +115,10 @@ function parseRecord(raw) {
   } else if (!validIsoTime(fields.firstAttemptAt)) {
     return null;
   }
-  if (fields.status === 'ACCEPTED' && !HEX_PATTERN.test(fields.providerMessageIdHash)) {
+  if (
+    fields.status === 'ACCEPTED'
+    && (!HEX_PATTERN.test(fields.providerMessageIdHash) || !HEX_PATTERN.test(fields.providerChatIdHash))
+  ) {
     return null;
   }
   if (
@@ -307,6 +310,7 @@ function publicStoredOutcome(record) {
   };
   if (record.status === 'ACCEPTED') {
     base.providerMessageIdHash = record.providerMessageIdHash;
+    base.providerChatIdHash = record.providerChatIdHash;
   }
   return base;
 }
@@ -330,6 +334,7 @@ function makeRecord(intent, status, firstAttemptAt, now, extra = {}) {
   }
   if (status === 'ACCEPTED') {
     record.providerMessageIdHash = extra.providerMessageIdHash;
+    record.providerChatIdHash = extra.providerChatIdHash;
   }
   return record;
 }
@@ -439,6 +444,7 @@ export function createSendIntentStore(stateRoot, options = {}) {
         }
         let terminalStatus = 'OUTCOME_UNKNOWN';
         let providerMessageIdHash;
+        let providerChatIdHash;
         if (isPlainObject(operationOutcome)) {
           const statusDescriptor = Object.getOwnPropertyDescriptor(operationOutcome, 'status');
           if (statusDescriptor && Object.hasOwn(statusDescriptor, 'value')) {
@@ -449,13 +455,21 @@ export function createSendIntentStore(stateRoot, options = {}) {
                 operationOutcome,
                 'providerMessageIdHash',
               );
+              const chatHashDescriptor = Object.getOwnPropertyDescriptor(
+                operationOutcome,
+                'providerChatIdHash',
+              );
               if (
                 hashDescriptor
                 && Object.hasOwn(hashDescriptor, 'value')
                 && HEX_PATTERN.test(hashDescriptor.value)
+                && chatHashDescriptor
+                && Object.hasOwn(chatHashDescriptor, 'value')
+                && HEX_PATTERN.test(chatHashDescriptor.value)
               ) {
                 terminalStatus = 'ACCEPTED';
                 providerMessageIdHash = hashDescriptor.value;
+                providerChatIdHash = chatHashDescriptor.value;
               }
             }
           }
@@ -465,7 +479,7 @@ export function createSendIntentStore(stateRoot, options = {}) {
           terminalStatus,
           firstAttemptAt,
           intent.now,
-          { providerMessageIdHash },
+          { providerMessageIdHash, providerChatIdHash },
         );
         try {
           await writeRecord(path, terminal);

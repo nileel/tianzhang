@@ -6,6 +6,8 @@
 
 **Architecture:** Node.js 桥接包负责飞书 SDK、互动卡片、长连接回调、HMAC 信封和本机收件箱；PowerShell 控制器只调用经过净化的发送/消费 CLI，不读取聊天历史，也不接触 App Secret。状态机升级到 schema v7，保留 Gmail 历史作为只读迁移证据，并把当前 `DEC-20260715-75D7BA2AF210` 原地迁移到飞书，不新建决定。真实凭据、Open ID 和收件箱全部保存在用户级私有目录，Git 中只提交代码、测试和不含秘密的规则文档。
 
+> 2026-07-16 扩展说明：本计划记录最初的 A/B/C 通道建设，当前活动实现已由 `2026-07-16-feishu-custom-decision-replies-implementation.md` 升级到 schema v8。按钮仅保留“选择 A/B/C”，完整方案在正文展示；卡片输入与严格格式文字消息均可登记自定义方案。`OPTION_ACCEPTED` / `CUSTOM_ACCEPTED` 是控制器拥有的结构化证据，模型不得搜索聊天历史或解释普通文本。Gmail 仍仅作 legacy 回滚证据。
+
 **Tech Stack:** PowerShell 7（唯一受支持 PowerShell 运行时）、Node.js `>=20`、`@larksuiteoapi/node-sdk@1.71.1`、Node 内置 `node:test`/`crypto`/`fs`、Windows 任务计划程序、现有 Codex 自动化控制器与状态机。
 
 ## Global Constraints

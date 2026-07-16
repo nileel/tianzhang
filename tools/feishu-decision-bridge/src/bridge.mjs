@@ -6,6 +6,9 @@ import { pathToFileURL } from 'node:url';
 
 import { handleCardAction, normalizeCardAction } from './callback-core.mjs';
 import { parsePrivateConfig, sanitizeError, sha256 } from './config.mjs';
+import { acquireInstanceLock } from './instance-lock.mjs';
+import { handleDecisionTextMessage, normalizeMessageEvent } from './message-core.mjs';
+import { createMessageReplyTransport } from './message-runtime.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const CALLBACK_TIMEOUT_MS = 2_800;
@@ -235,6 +238,156 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRe
   };
 }
 
+function summarizeSdkKeys(value) {
+  if (!isPlainObject(value)) {
+    return 'not_object';
+  }
+  const strings = [];
+  const symbols = [];
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key)) {
+      strings.push(key);
+    } else if (
+      typeof key === 'symbol'
+      && typeof key.description === 'string'
+      && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key.description)
+    ) {
+      symbols.push(`@symbol:${key.description}`);
+    } else {
+      symbols.push('[unsafe]');
+    }
+  }
+  return [...strings.sort(), ...symbols.sort()].join(',');
+}
+
+function diagnosticIdentifier(value) {
+  return typeof value === 'string'
+    && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/.test(value);
+}
+
+function diagnosticDigitLength(value) {
+  return typeof value === 'string' && /^\d+$/.test(value) ? value.length : -1;
+}
+
+function summarizeMessageChecks(rawEvent, sender, senderId, message) {
+  const eventType = readDataProperty(rawEvent, 'event_type');
+  const eventSymbols = isPlainObject(rawEvent)
+    ? Reflect.ownKeys(rawEvent).filter((key) => typeof key === 'symbol')
+    : [];
+  const symbolDescriptor = eventSymbols.length === 1
+    ? Object.getOwnPropertyDescriptor(rawEvent, eventSymbols[0])
+    : undefined;
+  const token = readDataProperty(rawEvent, 'token');
+  const tenantKey = readDataProperty(rawEvent, 'tenant_key');
+  let content = null;
+  try {
+    const rawContent = readDataProperty(message, 'content');
+    content = typeof rawContent === 'string' && Buffer.byteLength(rawContent, 'utf8') <= 16 * 1024
+      ? JSON.parse(rawContent)
+      : null;
+  } catch {
+    content = null;
+  }
+  return [
+    [
+      `root_checks=schema:${readDataProperty(rawEvent, 'schema') === '2.0'}`,
+      `symbol_match:${eventSymbols.length === 1 && Object.hasOwn(symbolDescriptor ?? {}, 'value') && symbolDescriptor.value === eventType}`,
+      `event_type:${eventType === 'im.message.receive_v1'}`,
+      `event_id:${diagnosticIdentifier(readDataProperty(rawEvent, 'event_id'))}`,
+      `tenant_id:${diagnosticIdentifier(tenantKey)}`,
+      `app_id:${diagnosticIdentifier(readDataProperty(rawEvent, 'app_id'))}`,
+      `token:${typeof token === 'string' && token.length >= 1 && token.length <= 512 && !/[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(token)}`,
+      `create_time_digits:${diagnosticDigitLength(readDataProperty(rawEvent, 'create_time'))}`,
+    ].join(','),
+    [
+      `sender_checks=sender_type:${readDataProperty(sender, 'sender_type') === 'user'}`,
+      `tenant_match:${readDataProperty(sender, 'tenant_key') === tenantKey}`,
+      `open_id:${diagnosticIdentifier(readDataProperty(senderId, 'open_id'))}`,
+    ].join(','),
+    [
+      `message_checks=chat_type:${readDataProperty(message, 'chat_type') === 'p2p'}`,
+      `message_type:${readDataProperty(message, 'message_type') === 'text'}`,
+      `message_id:${diagnosticIdentifier(readDataProperty(message, 'message_id'))}`,
+      `chat_id:${diagnosticIdentifier(readDataProperty(message, 'chat_id'))}`,
+      `create_time_digits:${diagnosticDigitLength(readDataProperty(message, 'create_time'))}`,
+      `content_keys:${summarizeSdkKeys(content)}`,
+      `text_type:${typeof readDataProperty(content, 'text')}`,
+    ].join(','),
+  ];
+}
+
+function summarizeMessageShape(rawEvent) {
+  try {
+    const sender = readDataProperty(rawEvent, 'sender');
+    const senderId = readDataProperty(sender, 'sender_id');
+    const message = readDataProperty(rawEvent, 'message');
+    const checks = summarizeMessageChecks(rawEvent, sender, senderId, message);
+    return [
+      `message_shape:root=${summarizeSdkKeys(rawEvent)}`,
+      `sender=${summarizeSdkKeys(sender)}`,
+      `sender_id=${summarizeSdkKeys(senderId)}`,
+      `message=${summarizeSdkKeys(message)}`,
+      ...checks,
+    ].join(';');
+  } catch {
+    return 'message_shape:unavailable';
+  }
+}
+
+function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive, reportRejection }) {
+  return async (event) => {
+    const normalized = normalizeMessageEvent(event);
+    if (normalized === null) {
+      reportRejection('invalid_shape', event);
+      return undefined;
+    }
+    rememberSensitive([
+      normalized.eventId,
+      normalized.tenantKey,
+      normalized.openId,
+      normalized.messageId,
+      normalized.chatId,
+    ]);
+    let config;
+    let pendingBindings;
+    try {
+      config = await loadConfig();
+      rememberSensitive([
+        config.appId,
+        config.appSecret,
+        config.recipient.value,
+        config.expectedTenantKey,
+        config.hmacKey,
+      ]);
+      pendingBindings = await readBoundedJson(
+        join(config.stateRoot, 'pending-bindings.json'),
+        fs,
+      );
+    } catch {
+      reportRejection('binding_read');
+      return undefined;
+    }
+    const messageNow = now();
+    if (!(messageNow instanceof Date) || !Number.isFinite(messageNow.getTime())) {
+      reportRejection('invalid_now');
+      return undefined;
+    }
+    const result = await handleDecisionTextMessage({
+      event,
+      config,
+      pendingBindings,
+      now: messageNow,
+      replyText,
+    }).catch(() => ({ accepted: false, rejectionCode: 'callback_error' }));
+    if (result.rejectionCode === 'message_reply_failed') {
+      reportRejection('message_reply_failed');
+    } else if (!result.accepted && result.rejectionCode !== 'format_hint') {
+      reportRejection(`validation_${result.rejectionCode}`);
+    }
+    return undefined;
+  };
+}
+
 export async function startBridge(options = {}) {
   const env = options.env ?? process.env;
   const homedir = options.homedir ?? systemHomedir;
@@ -279,6 +432,7 @@ export async function startBridge(options = {}) {
   let intervalId;
   let shuttingDown = false;
   let healthChain = Promise.resolve();
+  let instanceLock;
 
   const healthTimestamp = () => {
     const value = now();
@@ -338,19 +492,39 @@ export async function startBridge(options = {}) {
     };
   }
 
+  const lockFactory = options.acquireInstanceLock ?? acquireInstanceLock;
+  try {
+    instanceLock = await lockFactory({
+      stateRoot: config.stateRoot,
+      pid,
+      processProbe: options.processProbe,
+      fs,
+    });
+  } catch {
+    throw new Error('Bridge unavailable');
+  }
+
   try {
     await enqueueHealth('CONNECTING');
     let EventDispatcher = options.EventDispatcher;
     let WSClient = options.WSClient;
+    let MessageClient = options.MessageClient;
     if (EventDispatcher === undefined || WSClient === undefined) {
       const sdk = await import('@larksuiteoapi/node-sdk');
       EventDispatcher ??= sdk.EventDispatcher ?? sdk.default?.EventDispatcher;
       WSClient ??= sdk.WSClient ?? sdk.default?.WSClient;
+      MessageClient ??= sdk.Client ?? sdk.default?.Client;
     }
     if (typeof EventDispatcher !== 'function' || typeof WSClient !== 'function') {
       throw new Error();
     }
     const eventDispatcher = new EventDispatcher({});
+    let messageReplyTransport = options.messageReplyTransport;
+    if (messageReplyTransport === undefined) {
+      messageReplyTransport = typeof MessageClient === 'function'
+        ? await createMessageReplyTransport(config, { Client: MessageClient })
+        : async () => { throw new Error('Feishu message reply unavailable'); };
+    }
     const registered = eventDispatcher.register({
       'card.action.trigger': makeCallback({
         loadConfig: async () => parsePrivateConfig(await readBoundedJson(configPath, fs)),
@@ -362,6 +536,19 @@ export async function startBridge(options = {}) {
           emitSanitized('warn', [`callback_rejected:${code}`]);
           if (code === 'invalid_shape') {
             emitSanitized('warn', [summarizeCardShape(event)]);
+          }
+        },
+      }),
+      'im.message.receive_v1': makeMessageCallback({
+        loadConfig: async () => parsePrivateConfig(await readBoundedJson(configPath, fs)),
+        fs,
+        now,
+        replyText: messageReplyTransport,
+        rememberSensitive,
+        reportRejection: (code, event) => {
+          emitSanitized('warn', [`message_rejected:${code}`]);
+          if (code === 'invalid_shape') {
+            emitSanitized('warn', [summarizeMessageShape(event)]);
           }
         },
       }),
@@ -413,7 +600,13 @@ export async function startBridge(options = {}) {
         } catch (error) {
           emitSanitized('warn', [error]);
         }
-        await enqueueHealth('DISCONNECTED');
+        try {
+          await enqueueHealth('DISCONNECTED');
+        } finally {
+          const ownedLock = instanceLock;
+          instanceLock = undefined;
+          await ownedLock?.release().catch((error) => emitSanitized('warn', [error]));
+        }
       },
     };
   } catch (error) {
@@ -427,6 +620,9 @@ export async function startBridge(options = {}) {
       appIdHash,
     }));
     await healthChain.catch(() => {});
+    const ownedLock = instanceLock;
+    instanceLock = undefined;
+    await ownedLock?.release().catch(() => {});
     emitSanitized('error', [error]);
     throw new Error('Bridge unavailable');
   }

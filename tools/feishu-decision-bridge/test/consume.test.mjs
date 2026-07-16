@@ -45,12 +45,35 @@ function makePending(overrides = {}) {
   return {
     decisionId: DECISION_ID,
     allowedOptions: ['A', 'B', 'C'],
+    allowCustomReply: true,
     createdAt: new Date(NOW.getTime() - 60_000).toISOString(),
     expiresAt: new Date(NOW.getTime() + 60_000).toISOString(),
     cardNonceHash: sha256(CARD_NONCE),
     providerMessageIdHash: sha256(MESSAGE_ID),
+    providerChatIdHash: sha256('oc_fake_chat'),
     ...overrides,
   };
+}
+
+function makeCustomPayload(eventId, customText = '采用双通道', source = 'feishu_card_input', overrides = {}) {
+  const payload = {
+    kind: 'decision_custom_reply',
+    decisionId: DECISION_ID,
+    customText,
+    providerMessageIdHash: sha256(MESSAGE_ID),
+    providerEventIdHash: sha256(eventId),
+    operatorOpenIdHash: sha256(OPERATOR_OPEN_ID),
+    tenantKeyHash: sha256(TENANT_KEY),
+    receivedAt: NOW.toISOString(),
+    source,
+    ...overrides,
+  };
+  if (source === 'feishu_card_input') {
+    payload.cardNonceHash ??= sha256(CARD_NONCE);
+  } else {
+    payload.providerChatIdHash ??= sha256('oc_fake_chat');
+  }
+  return payload;
 }
 
 function makePayload(eventId, overrides = {}) {
@@ -75,9 +98,17 @@ async function put(root, eventId, overrides = {}) {
   return { envelope, eventIdHash };
 }
 
+async function putCustom(root, eventId, customText, source, overrides = {}) {
+  const payload = makeCustomPayload(eventId, customText, source, overrides);
+  const envelope = signEnvelope(payload, HMAC_KEY);
+  const eventIdHash = sha256(eventId);
+  await writeSignedInbox({ stateRoot: root, envelope, eventIdHash });
+  return { envelope, eventIdHash, payload };
+}
+
 function expectedAccepted(payload, envelope) {
   return {
-    result: 'REPLY_ACCEPTED',
+    result: 'OPTION_ACCEPTED',
     optionKey: payload.optionKey,
     source: 'feishu_card',
     providerMessageIdHash: payload.providerMessageIdHash,
@@ -126,6 +157,26 @@ test('writeSignedInbox is atomic, idempotent, strict, and fails closed on confli
   );
 });
 
+function expectedCustomAccepted(payload, envelope) {
+  const result = {
+    result: 'CUSTOM_ACCEPTED',
+    decisionId: payload.decisionId,
+    customText: payload.customText,
+    source: payload.source,
+    providerMessageIdHash: payload.providerMessageIdHash,
+    providerEventIdHash: payload.providerEventIdHash,
+    operatorOpenIdHash: payload.operatorOpenIdHash,
+    tenantKeyHash: payload.tenantKeyHash,
+    evidenceHash: sha256(canonicalize(envelope)),
+  };
+  if (payload.source === 'feishu_card_input') {
+    result.cardNonceHash = payload.cardNonceHash;
+  } else {
+    result.providerChatIdHash = payload.providerChatIdHash;
+  }
+  return result;
+}
+
 test('consumer returns the fixed accepted structure, moves evidence, and consumes once', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-consume-valid-'));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -170,7 +221,7 @@ test('a new provider event cannot reuse a card nonce that was already processed'
     now: NOW,
   };
   await put(root, 'evt_fake_nonce_first');
-  assert.equal((await consumeCurrentReply(args))?.result, 'REPLY_ACCEPTED');
+  assert.equal((await consumeCurrentReply(args))?.result, 'OPTION_ACCEPTED');
   const replay = await put(root, 'evt_fake_nonce_second');
   assert.equal(await consumeCurrentReply(args), null);
   assert.deepEqual(await readdir(join(root, 'quarantine')), [`${replay.eventIdHash}.json`]);
@@ -199,22 +250,154 @@ test('multiple valid envelopes with the same option are all processed using stab
   ].sort());
 });
 
-test('conflicting valid options are all quarantined and never resolve', async (t) => {
+test('earliest valid option wins and later conflicting options are quarantined', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-consume-conflict-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  const a = await put(root, 'evt_fake_a', { optionKey: 'A' });
-  const b = await put(root, 'evt_fake_b', { optionKey: 'B' });
+  const a = await put(root, 'evt_fake_a', {
+    optionKey: 'A', receivedAt: new Date(NOW.getTime() - 1).toISOString(),
+  });
+  const b = await put(root, 'evt_fake_b', {
+    optionKey: 'B', receivedAt: NOW.toISOString(),
+  });
   const result = await consumeCurrentReply({
     stateRoot: root,
     config: makeConfig(root),
     pendingDecision: makePending(),
     now: NOW,
   });
-  assert.equal(result, null);
-  assert.deepEqual((await readdir(join(root, 'quarantine'))).sort(), [
-    `${a.eventIdHash}.json`, `${b.eventIdHash}.json`,
-  ].sort());
+  assert.equal(result.result, 'OPTION_ACCEPTED');
+  assert.equal(result.optionKey, 'A');
+  assert.deepEqual(await readdir(join(root, 'processed')), [`${a.eventIdHash}.json`]);
+  assert.deepEqual(await readdir(join(root, 'quarantine')), [`${b.eventIdHash}.json`]);
   assert.deepEqual(await readdir(join(root, 'inbox')), []);
+});
+
+test('card and text custom replies use exact source-specific evidence', async (t) => {
+  for (const source of ['feishu_card_input', 'feishu_text']) {
+    await t.test(source, async (t) => {
+      const root = await mkdtemp(join(tmpdir(), 'tzg-consume-custom-'));
+      t.after(() => rm(root, { recursive: true, force: true }));
+      const item = await putCustom(root, `evt_custom_${source}`, '采用双通道', source);
+      const result = await consumeCurrentReply({
+        stateRoot: root,
+        config: makeConfig(root),
+        pendingDecision: makePending(),
+        now: NOW,
+      });
+      assert.deepEqual(result, expectedCustomAccepted(item.payload, item.envelope));
+      assert.equal(Object.hasOwn(result, source === 'feishu_text' ? 'cardNonceHash' : 'providerChatIdHash'), false);
+    });
+  }
+
+  const root = await mkdtemp(join(tmpdir(), 'tzg-consume-custom-invalid-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const eventId = 'evt_text_forbidden_nonce';
+  const invalid = makeCustomPayload(eventId, 'ok', 'feishu_text');
+  invalid.cardNonceHash = sha256(CARD_NONCE);
+  await assert.rejects(writeSignedInbox({
+    stateRoot: root,
+    envelope: signEnvelope(invalid, HMAC_KEY),
+    eventIdHash: sha256(eventId),
+  }), /Inbox write failed/);
+});
+
+test('processed evidence from an earlier decision does not compete with the current decision', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-consume-sequential-decisions-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const first = await put(root, 'evt_sequential_first');
+  const firstResult = await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending(),
+    now: NOW,
+  });
+  assert.equal(firstResult.result, 'OPTION_ACCEPTED');
+
+  const nextDecisionId = 'DEC-20260716-NEXT001';
+  const nextMessageHash = sha256('om_fake_next_message');
+  const nextNonceHash = sha256('next-card-nonce');
+  const nextEventId = 'evt_sequential_next';
+  const nextPayload = makeCustomPayload(nextEventId, '下一项方案', 'feishu_card_input', {
+    decisionId: nextDecisionId,
+    providerMessageIdHash: nextMessageHash,
+    cardNonceHash: nextNonceHash,
+  });
+  const nextEnvelope = signEnvelope(nextPayload, HMAC_KEY);
+  const nextEventIdHash = sha256(nextEventId);
+  await writeSignedInbox({ stateRoot: root, envelope: nextEnvelope, eventIdHash: nextEventIdHash });
+  const nextResult = await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending({
+      decisionId: nextDecisionId,
+      providerMessageIdHash: nextMessageHash,
+      cardNonceHash: nextNonceHash,
+    }),
+    now: NOW,
+  });
+  assert.deepEqual(nextResult, expectedCustomAccepted(nextPayload, nextEnvelope));
+  assert.deepEqual((await readdir(join(root, 'processed'))).sort(), [
+    `${first.eventIdHash}.json`, `${nextEventIdHash}.json`,
+  ].sort());
+});
+
+test('first valid reply wins across option/custom races and equal custom replays are idempotent', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-consume-mixed-race-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const option = await put(root, 'evt_mixed_option', {
+    receivedAt: new Date(NOW.getTime() - 2).toISOString(),
+  });
+  const sameOne = await putCustom(root, 'evt_mixed_custom_same_1', '采用双通道', 'feishu_text', {
+    receivedAt: new Date(NOW.getTime() - 1).toISOString(),
+  });
+  const sameTwo = await putCustom(root, 'evt_mixed_custom_same_2', '采用双通道', 'feishu_text', {
+    receivedAt: NOW.toISOString(),
+  });
+  const result = await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending(),
+    now: NOW,
+  });
+  assert.equal(result.result, 'OPTION_ACCEPTED');
+  assert.equal(result.providerEventIdHash, option.eventIdHash);
+  assert.deepEqual(await readdir(join(root, 'processed')), [`${option.eventIdHash}.json`]);
+  assert.deepEqual((await readdir(join(root, 'quarantine'))).sort(), [
+    `${sameOne.eventIdHash}.json`, `${sameTwo.eventIdHash}.json`,
+  ].sort());
+
+  const customRoot = await mkdtemp(join(tmpdir(), 'tzg-consume-custom-replay-'));
+  t.after(() => rm(customRoot, { recursive: true, force: true }));
+  const first = await putCustom(customRoot, 'evt_custom_first', '同一方案', 'feishu_text', {
+    receivedAt: new Date(NOW.getTime() - 1).toISOString(),
+  });
+  const duplicate = await putCustom(customRoot, 'evt_custom_duplicate', '同一方案', 'feishu_card_input');
+  const different = await putCustom(customRoot, 'evt_custom_different', '不同方案', 'feishu_text');
+  const customResult = await consumeCurrentReply({
+    stateRoot: customRoot,
+    config: makeConfig(customRoot),
+    pendingDecision: makePending(),
+    now: NOW,
+  });
+  assert.equal(customResult.result, 'CUSTOM_ACCEPTED');
+  assert.equal(customResult.providerEventIdHash, first.eventIdHash);
+  assert.deepEqual((await readdir(join(customRoot, 'processed'))).sort(), [
+    `${first.eventIdHash}.json`, `${duplicate.eventIdHash}.json`,
+  ].sort());
+  assert.deepEqual(await readdir(join(customRoot, 'quarantine')), [`${different.eventIdHash}.json`]);
+
+  const tieRoot = await mkdtemp(join(tmpdir(), 'tzg-consume-equal-time-'));
+  t.after(() => rm(tieRoot, { recursive: true, force: true }));
+  const tieA = await put(tieRoot, 'evt_equal_a', { optionKey: 'A' });
+  const tieB = await put(tieRoot, 'evt_equal_b', { optionKey: 'B' });
+  const tieWinner = tieA.eventIdHash.localeCompare(tieB.eventIdHash) < 0 ? tieA : tieB;
+  const tieResult = await consumeCurrentReply({
+    stateRoot: tieRoot,
+    config: makeConfig(tieRoot),
+    pendingDecision: makePending(),
+    now: NOW,
+  });
+  assert.equal(tieResult.providerEventIdHash, tieWinner.eventIdHash);
 });
 
 test('tampered, malformed, filename-mismatched, stale, and identity-mismatched evidence is quarantined', async (t) => {
@@ -306,7 +489,7 @@ test('consume.lock provides exclusive deterministic consumption under concurrenc
     consumeCurrentReply(args),
     consumeCurrentReply(args),
   ]);
-  assert.equal(results.filter((value) => value?.result === 'REPLY_ACCEPTED').length, 1);
+  assert.equal(results.filter((value) => value?.result === 'OPTION_ACCEPTED').length, 1);
   assert.equal(results.filter((value) => value === null).length, 1);
   await assert.rejects(readFile(join(root, 'consume.lock'), 'utf8'));
 });
@@ -383,4 +566,35 @@ test('imported consume main does not auto-run and only returns whitelisted outpu
   });
   assert.equal(code, 22);
   assert.deepEqual(oneJsonLine(stdout), { result: 'INVALID_INPUT' });
+});
+
+test('consume CLI whitelist accepts exact source-specific custom output and rejects mixed evidence', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-consume-custom-cli-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const configPath = join(root, 'private.json');
+  const requestPath = join(root, 'request.json');
+  await writeFile(configPath, JSON.stringify(makeConfig(root)));
+  await writeFile(requestPath, JSON.stringify({ pendingDecision: makePending() }));
+  const base = expectedCustomAccepted(
+    makeCustomPayload('evt_custom_cli', '采用双通道', 'feishu_text'),
+    signEnvelope(makeCustomPayload('evt_custom_cli', '采用双通道', 'feishu_text'), HMAC_KEY),
+  );
+  async function invoke(result) {
+    let stdout = '';
+    const code = await consumeMain(['--request-file', requestPath], {
+      env: { FEISHU_DECISION_CONFIG_PATH: configPath },
+      stdout: { write(chunk) { stdout += chunk; } },
+      now: () => NOW,
+      consume: async () => result,
+    });
+    return { code, value: oneJsonLine(stdout) };
+  }
+  assert.deepEqual(await invoke(base), { code: 0, value: base });
+  assert.deepEqual(await invoke({ ...base, optionKey: 'A' }), {
+    code: 22, value: { result: 'INVALID_INPUT' },
+  });
+  const wrongSourceEvidence = { ...base, source: 'feishu_card_input' };
+  assert.deepEqual(await invoke(wrongSourceEvidence), {
+    code: 22, value: { result: 'INVALID_INPUT' },
+  });
 });

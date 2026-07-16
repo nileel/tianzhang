@@ -60,6 +60,10 @@ function makeDecision(overrides = {}) {
   };
 }
 
+function findDecisionActions(card) {
+  return card.elements.find((element) => element.tag === 'action').actions;
+}
+
 function makeHealth(overrides = {}) {
   return {
     status: 'CONNECTED',
@@ -70,14 +74,14 @@ function makeHealth(overrides = {}) {
   };
 }
 
-function makeCapturingTransport(messageId = 'om_provider_123') {
+function makeCapturingTransport(messageId = 'om_provider_123', chatId = 'oc_provider_123') {
   const calls = [];
   return {
     calls,
     transport: {
       async sendInteractive(request) {
         calls.push(request);
-        return { messageId };
+        return { messageId, chatId };
       },
     },
   };
@@ -136,9 +140,10 @@ test('sendDecision maps email and open_id recipients and sends the exact interac
       assert.ok(request.data.uuid.length <= 50);
 
       const content = JSON.parse(request.data.content);
-      const nonce = content.elements.at(-1).actions[0].value.cardNonce;
+      const actions = findDecisionActions(content);
+      const nonce = actions[0].value.cardNonce;
       assert.deepEqual(content, buildDecisionCard(decision, nonce));
-      for (const action of content.elements.at(-1).actions) {
+      for (const action of actions) {
         assert.deepEqual(
           Object.keys(action.value).sort(),
           ['cardNonce', 'decisionId', 'kind', 'optionKey'],
@@ -147,6 +152,8 @@ test('sendDecision maps email and open_id recipients and sends the exact interac
 
       assert.deepEqual(Object.keys(result).sort(), [
         'cardNonceHash',
+        'intentKeyHash',
+        'providerChatIdHash',
         'providerMessageIdHash',
         'result',
         'targetHash',
@@ -154,12 +161,26 @@ test('sendDecision maps email and open_id recipients and sends the exact interac
       assert.equal(result.result, 'PROVIDER_ACCEPTED');
       assert.equal(result.targetHash, sha256(recipient.value));
       assert.equal(result.providerMessageIdHash, sha256('om_provider_123'));
+      assert.equal(result.providerChatIdHash, sha256('oc_provider_123'));
       assert.equal(result.cardNonceHash, sha256(nonce));
-      for (const hash of [result.targetHash, result.providerMessageIdHash, result.cardNonceHash]) {
+      for (const hash of [
+        result.targetHash,
+        result.providerMessageIdHash,
+        result.providerChatIdHash,
+        result.cardNonceHash,
+        result.intentKeyHash,
+      ]) {
         assert.match(hash, /^[0-9a-f]{64}$/);
       }
       const serialized = JSON.stringify(result);
-      for (const sensitive of [recipient.value, 'om_provider_123', request.data.uuid, nonce, config.appSecret]) {
+      for (const sensitive of [
+        recipient.value,
+        'om_provider_123',
+        'oc_provider_123',
+        request.data.uuid,
+        nonce,
+        config.appSecret,
+      ]) {
         assert.equal(serialized.includes(sensitive), false);
       }
     });
@@ -173,7 +194,7 @@ test('sendDecision is deterministic per logical attempt and domain-separates att
   const transport = {
     async sendInteractive(request) {
       requests.push(request);
-      return { messageId: `om_${requests.length}` };
+      return { messageId: `om_${requests.length}`, chatId: `oc_${requests.length}` };
     },
   };
 
@@ -237,7 +258,7 @@ test('sendDecision fails closed for every unhealthy snapshot without calling tra
   const boundaryTransport = {
     async sendInteractive() {
       calls += 1;
-      return { messageId: 'om_boundary' };
+      return { messageId: 'om_boundary', chatId: 'oc_boundary' };
     },
   };
   await sendDecision({
@@ -259,10 +280,14 @@ test('sendDecision distinguishes explicit provider rejection from unknown outcom
   const unknownCases = [
     ['throw', { async sendInteractive() { throw new Error(`${config.appSecret} ${config.recipient.value}`); } }],
     ['missing message id', { async sendInteractive() { return {}; } }],
-    ['extra response field', { async sendInteractive() { return { messageId: 'om_ok', raw: config.appSecret }; } }],
-    ['non-ascii id', { async sendInteractive() { return { messageId: '消息一' }; } }],
-    ['non-string id', { async sendInteractive() { return { messageId: 123 }; } }],
-    ['blank id', { async sendInteractive() { return { messageId: '  ' }; } }],
+    ['missing chat id', { async sendInteractive() { return { messageId: 'om_ok' }; } }],
+    ['extra response field', { async sendInteractive() { return { messageId: 'om_ok', chatId: 'oc_ok', raw: config.appSecret }; } }],
+    ['non-ascii message id', { async sendInteractive() { return { messageId: '消息一', chatId: 'oc_ok' }; } }],
+    ['non-string message id', { async sendInteractive() { return { messageId: 123, chatId: 'oc_ok' }; } }],
+    ['blank message id', { async sendInteractive() { return { messageId: '  ', chatId: 'oc_ok' }; } }],
+    ['non-ascii chat id', { async sendInteractive() { return { messageId: 'om_ok', chatId: '会话一' }; } }],
+    ['non-string chat id', { async sendInteractive() { return { messageId: 'om_ok', chatId: 123 }; } }],
+    ['blank chat id', { async sendInteractive() { return { messageId: 'om_ok', chatId: '  ' }; } }],
   ];
 
   for (const [name, transport] of unknownCases) {
@@ -400,7 +425,7 @@ test('sendDecision rejects invalid input before transport', async (t) => {
 test('createLarkTransport uses the official SDK request shape and canonicalizes accepted responses', async (t) => {
   const constructions = [];
   const requests = [];
-  let response = { code: 0, data: { message_id: 'om_sdk_123' } };
+  let response = { code: 0, data: { message_id: 'om_sdk_123', chat_id: 'oc_sdk_123' } };
   let thrownError = null;
   class FakeClient {
     constructor(options) {
@@ -431,7 +456,9 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
     },
   };
 
-  assert.deepEqual(await transport.sendInteractive(request), { messageId: 'om_sdk_123' });
+  assert.deepEqual(await transport.sendInteractive(request), {
+    messageId: 'om_sdk_123', chatId: 'oc_sdk_123',
+  });
   assert.equal(constructions.length, 1);
   assert.equal(constructions[0].appId, config.appId);
   assert.equal(constructions[0].appSecret, config.appSecret);
@@ -444,8 +471,10 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
   }
   assert.deepEqual(requests, [request]);
 
-  response = { data: { message_id: 'om_no_code' } };
-  assert.deepEqual(await transport.sendInteractive(request), { messageId: 'om_no_code' });
+  response = { data: { message_id: 'om_no_code', chat_id: 'oc_no_code' } };
+  assert.deepEqual(await transport.sendInteractive(request), {
+    messageId: 'om_no_code', chatId: 'oc_no_code',
+  });
 
   const invalidRequestError = await captureRejected(transport.sendInteractive(null));
   assert.ok(invalidRequestError instanceof ProviderOutcomeUnknownError);
@@ -462,10 +491,12 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
   thrownError = null;
 
   for (const [name, badResponse] of [
-    ['provider error code', { code: 999, msg: config.appSecret, data: { message_id: 'om_raw' } }],
+    ['provider error code', { code: 999, msg: config.appSecret, data: { message_id: 'om_raw', chat_id: 'oc_raw' } }],
     ['missing data', { code: 0, msg: config.appSecret }],
-    ['invalid id', { code: 0, data: { message_id: '消息' } }],
-    ['non-string id', { code: 0, data: { message_id: 123 } }],
+    ['invalid message id', { code: 0, data: { message_id: '消息', chat_id: 'oc_ok' } }],
+    ['non-string message id', { code: 0, data: { message_id: 123, chat_id: 'oc_ok' } }],
+    ['missing chat id', { code: 0, data: { message_id: 'om_ok' } }],
+    ['invalid chat id', { code: 0, data: { message_id: 'om_ok', chat_id: '会话' } }],
   ]) {
     await t.test(name, async () => {
       response = badResponse;
@@ -562,7 +593,7 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
       readHealth: async () => makeHealth(),
       createTransport: async () => {
         createCalls += 1;
-        return { async sendInteractive() { return { messageId: 'om_main' }; } };
+        return { async sendInteractive() { return { messageId: 'om_main', chatId: 'oc_main' }; } };
       },
       createIntentStore: (stateRoot) => {
         createStoreCalls += 1;
@@ -662,7 +693,9 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
       result: 'PROVIDER_ACCEPTED',
       targetHash: 'a'.repeat(64),
       providerMessageIdHash: 'b'.repeat(64),
-      cardNonceHash: 'c'.repeat(64),
+      providerChatIdHash: 'c'.repeat(64),
+      cardNonceHash: 'd'.repeat(64),
+      intentKeyHash: 'e'.repeat(64),
       raw: 'must-not-pass-through',
     }),
   });
@@ -671,7 +704,9 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
     result: 'PROVIDER_ACCEPTED',
     targetHash: 'a'.repeat(64),
     providerMessageIdHash: 'b'.repeat(64),
-    cardNonceHash: 'c'.repeat(64),
+    providerChatIdHash: 'c'.repeat(64),
+    cardNonceHash: 'd'.repeat(64),
+    intentKeyHash: 'e'.repeat(64),
   });
 
   for (const [name, request] of [
@@ -756,7 +791,7 @@ test('card nonce is a stable domain-separated HMAC and cannot be predicted by th
   const transport = {
     async sendInteractive(request) {
       requests.push(request);
-      return { messageId: `om_nonce_${requests.length}` };
+      return { messageId: `om_nonce_${requests.length}`, chatId: 'oc_nonce' };
     },
   };
   const configs = [
@@ -777,8 +812,10 @@ test('card nonce is a stable domain-separated HMAC and cannot be predicted by th
       now: NOW,
     });
   }
-  const nonces = requests.map((request) => JSON.parse(request.data.content)
-    .elements.at(-1).actions[0].value.cardNonce);
+  const nonces = requests.map((request) => {
+    const card = JSON.parse(request.data.content);
+    return findDecisionActions(card)[0].value.cardNonce;
+  });
   assert.equal(nonces[0], nonces[1]);
   assert.notEqual(nonces[0], nonces[2]);
   assert.notEqual(nonces[0], nonces[3]);
@@ -802,7 +839,7 @@ test('send intent store persists only sanitized atomic ACCEPTED evidence and cac
     async sendInteractive(request) {
       calls += 1;
       requests.push(request);
-      return { messageId: 'om_raw_provider_identity' };
+      return { messageId: 'om_raw_provider_identity', chatId: 'oc_raw_provider_identity' };
     },
   };
   const first = await sendDecision({
@@ -820,7 +857,8 @@ test('send intent store persists only sanitized atomic ACCEPTED evidence and cac
   assert.equal(calls, 1);
   assert.deepEqual(cached, first);
   assert.deepEqual(Object.keys(cached).sort(), [
-    'cardNonceHash', 'providerMessageIdHash', 'result', 'targetHash',
+    'cardNonceHash', 'intentKeyHash', 'providerChatIdHash', 'providerMessageIdHash',
+    'result', 'targetHash',
   ]);
 
   const names = await readdir(join(root, 'send-intents'));
@@ -830,14 +868,16 @@ test('send intent store persists only sanitized atomic ACCEPTED evidence and cac
   const record = JSON.parse(raw);
   assert.deepEqual(Object.keys(record).sort(), [
     'attemptNumber', 'cardNonceHash', 'firstAttemptAt', 'intentKeyHash', 'lastUpdatedAt',
-    'provider', 'providerMessageIdHash', 'requestContentHash', 'resultAt', 'schemaVersion',
+    'provider', 'providerChatIdHash', 'providerMessageIdHash', 'requestContentHash',
+    'resultAt', 'schemaVersion',
     'status', 'targetHash', 'uuid',
   ]);
   assert.equal(record.schemaVersion, 1);
   assert.equal(record.provider, 'feishu');
   assert.equal(record.status, 'ACCEPTED');
   assert.equal(record.providerMessageIdHash, sha256('om_raw_provider_identity'));
-  const cardNonce = JSON.parse(requests[0].data.content).elements.at(-1).actions[0].value.cardNonce;
+  assert.equal(record.providerChatIdHash, sha256('oc_raw_provider_identity'));
+  const cardNonce = findDecisionActions(JSON.parse(requests[0].data.content))[0].value.cardNonce;
   for (const forbidden of [
     config.recipient.value,
     config.appId,
@@ -845,6 +885,7 @@ test('send intent store persists only sanitized atomic ACCEPTED evidence and cac
     config.hmacKey,
     decision.decisionId,
     'om_raw_provider_identity',
+    'oc_raw_provider_identity',
     cardNonce,
     requests[0].data.content,
   ]) {
@@ -911,7 +952,7 @@ test('unknown outcome retries the exact same request inside 55 minutes and locks
       transport: {
         async sendInteractive(request) {
           seen.push(request);
-          return { messageId: 'om_retry_accepted' };
+          return { messageId: 'om_retry_accepted', chatId: 'oc_retry_accepted' };
         },
       },
       intentStore: store,
@@ -979,7 +1020,7 @@ test('accepted provider response followed by terminal persistence failure return
       async sendInteractive(request) {
         calls += 1;
         uuids.push(request.data.uuid);
-        return { messageId: 'om_accept_then_crash' };
+        return { messageId: 'om_accept_then_crash', chatId: 'oc_accept_then_crash' };
       },
     },
     intentStore: store,
@@ -997,7 +1038,9 @@ test('accepted provider response followed by terminal persistence failure return
       async sendInteractive(request) {
         calls += 1;
         uuids.push(request.data.uuid);
-        return { messageId: 'om_accept_then_crash_again' };
+        return {
+          messageId: 'om_accept_then_crash_again', chatId: 'oc_accept_then_crash_again',
+        };
       },
     },
     intentStore: store,
@@ -1141,7 +1184,12 @@ test('mismatched, corrupt, and busy send intents fail closed without transport o
       config: makeConfig({ stateRoot: root }),
       decision,
       attemptNumber,
-      transport: { async sendInteractive() { calls += 1; return { messageId: 'om_after_stale' }; } },
+      transport: {
+        async sendInteractive() {
+          calls += 1;
+          return { messageId: 'om_after_stale', chatId: 'oc_after_stale' };
+        },
+      },
       intentStore: createSendIntentStore(root, { pidProbe: () => false }),
       health: makeHealth(),
       now: NOW,
@@ -1167,7 +1215,7 @@ test('two concurrent calls for one intent invoke transport exactly once', async 
       calls += 1;
       started();
       await releasePromise;
-      return { messageId: 'om_concurrent' };
+      return { messageId: 'om_concurrent', chatId: 'oc_concurrent' };
     },
   };
   const request = {

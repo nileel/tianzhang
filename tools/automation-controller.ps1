@@ -49,6 +49,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 $script:ProtocolVersion = 1
 $script:StateTool = Join-Path $PSScriptRoot 'automation-controller-state.ps1'
 $script:GuardTool = Join-Path $PSScriptRoot 'automation-workspace-guard.ps1'
@@ -415,37 +416,6 @@ function Write-JsonAtomically {
   }
 }
 
-function Get-PrivateAclSids {
-  @(
-    [Security.Principal.WindowsIdentity]::GetCurrent().User,
-    [Security.Principal.SecurityIdentifier]::new('S-1-5-18')
-  )
-}
-
-function Set-PrivatePathAcl {
-  param([string]$Path, [switch]$Directory)
-
-  $security = Get-Acl -LiteralPath $Path
-  $security.SetAccessRuleProtection($true, $false)
-  foreach ($existingRule in @($security.Access)) { $security.RemoveAccessRuleSpecific($existingRule) }
-  $inheritance = if ($Directory) {
-    [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
-  } else {
-    [Security.AccessControl.InheritanceFlags]::None
-  }
-  foreach ($sid in Get-PrivateAclSids) {
-    $rule = [Security.AccessControl.FileSystemAccessRule]::new(
-      $sid,
-      [Security.AccessControl.FileSystemRights]::FullControl,
-      $inheritance,
-      [Security.AccessControl.PropagationFlags]::None,
-      [Security.AccessControl.AccessControlType]::Allow
-    )
-    $security.AddAccessRule($rule) | Out-Null
-  }
-  Set-Acl -LiteralPath $Path -AclObject $security
-}
-
 function Initialize-PrivateDirectory {
   param([string]$Path)
 
@@ -483,6 +453,37 @@ function Test-ExactKeys {
     if (-not $Value.Contains($key)) { return $false }
   }
   $true
+}
+
+function Normalize-CustomDecisionText {
+  param([AllowNull()][object]$Value)
+
+  if ($Value -isnot [string]) { return $null }
+  $normalized = $Value.Replace("`r`n", "`n").Replace("`r", "`n").Trim()
+  if ([string]::IsNullOrEmpty($normalized)) { return $null }
+  try {
+    $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
+    [void]$strictUtf8.GetBytes($normalized)
+    $runes = @($normalized.EnumerateRunes())
+  } catch {
+    return $null
+  }
+  if ($runes.Count -lt 1 -or $runes.Count -gt 1000) { return $null }
+  foreach ($rune in $runes) {
+    $category = [Text.Rune]::GetUnicodeCategory($rune)
+    if (
+      ($category -eq [Globalization.UnicodeCategory]::Control -and $rune.Value -notin @(9, 10)) -or
+      $category -in @(
+        [Globalization.UnicodeCategory]::Format,
+        [Globalization.UnicodeCategory]::Surrogate,
+        [Globalization.UnicodeCategory]::LineSeparator,
+        [Globalization.UnicodeCategory]::ParagraphSeparator
+      )
+    ) {
+      return $null
+    }
+  }
+  $normalized
 }
 
 function ConvertTo-ExactUtcIso {
@@ -645,7 +646,13 @@ function Get-DecisionBindingWindow {
 }
 
 function Write-FeishuPendingBinding {
-  param($PendingDecision, [string]$CardNonceHash, [string]$ProviderMessageIdHash, $Window)
+  param(
+    $PendingDecision,
+    [string]$CardNonceHash,
+    [string]$ProviderMessageIdHash,
+    [string]$ProviderChatIdHash,
+    $Window
+  )
 
   $root = [IO.Path]::GetFullPath($FeishuBridgeRoot)
   Initialize-PrivateDirectory $root
@@ -653,10 +660,12 @@ function Write-FeishuPendingBinding {
     kind = 'decision_reply'
     decisionId = [string]$PendingDecision.decisionId
     allowedOptions = @($PendingDecision.options | ForEach-Object { [string]$_.key })
+    allowCustomReply = $true
     issuedAt = [string]$Window.issuedAt
     expiresAt = [string]$Window.expiresAt
     cardNonceHash = $CardNonceHash
     providerMessageIdHash = $ProviderMessageIdHash
+    providerChatIdHash = $ProviderChatIdHash
   }
   $path = Join-Path $root 'pending-bindings.json'
   Write-JsonAtomically @($binding) $path
@@ -679,10 +688,16 @@ function Read-FeishuPendingBinding {
   $matches = @($value | Where-Object { $_ -is [Collections.IDictionary] -and [string]$_['decisionId'] -ceq [string]$PendingDecision.decisionId })
   if ($matches.Count -ne 1) { throw 'Feishu pending binding is invalid.' }
   $binding = $matches[0]
-  $expected = @('kind','decisionId','allowedOptions','issuedAt','expiresAt','cardNonceHash','providerMessageIdHash')
+  $expected = @(
+    'kind','decisionId','allowedOptions','allowCustomReply','issuedAt','expiresAt',
+    'cardNonceHash','providerMessageIdHash','providerChatIdHash'
+  )
   if (-not (Test-ExactKeys $binding $expected) -or [string]$binding.kind -cne 'decision_reply' -or
       (@($binding.allowedOptions) -join '|') -cne 'A|B|C' -or
-      -not (Test-Hex64 $binding.cardNonceHash) -or -not (Test-Hex64 $binding.providerMessageIdHash)) {
+      $binding.allowCustomReply -isnot [bool] -or $binding.allowCustomReply -ne $true -or
+      -not (Test-Hex64 $binding.cardNonceHash) -or
+      -not (Test-Hex64 $binding.providerMessageIdHash) -or
+      -not (Test-Hex64 $binding.providerChatIdHash)) {
     throw 'Feishu pending binding is invalid.'
   }
   try {
@@ -699,6 +714,8 @@ function Read-FeishuPendingBinding {
     expiresAt = ConvertTo-ExactUtcIso $expiresAt
     cardNonceHash = [string]$binding.cardNonceHash
     providerMessageIdHash = [string]$binding.providerMessageIdHash
+    providerChatIdHash = [string]$binding.providerChatIdHash
+    allowCustomReply = [bool]$binding.allowCustomReply
   }
 }
 
@@ -1203,7 +1220,7 @@ try {
         CreateDecision = (Get-DecisionCommandContract).template
         SendDecisionNotification = 'SendDecisionNotification -RepositoryRoot $RepositoryRoot -RunId $runId'
         ConsumeDecisionReply = 'ConsumeDecisionReply -RepositoryRoot $RepositoryRoot -RunId $runId'
-        ResolveDecisionManual = 'ResolveDecisionManual -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A'' -CurrentThreadId $threadId -ManualOverride'
+        ResolveDecisionManual = 'ResolveDecisionManual -RepositoryRoot $RepositoryRoot -RunId $runId -ReplyText ''DEC-YYYYMMDD-ID：选择 A''（或 ''DEC-YYYYMMDD-ID：自定义 <内容>''） -CurrentThreadId $threadId -ManualOverride'
       }
       $result.decisionParameters = [ordered]@{
         required = (Get-DecisionCommandContract).requiredParameters
@@ -1841,8 +1858,14 @@ try {
         }
         'PROVIDER_ACCEPTED' {
           $cli.Code -eq 0 -and
-            (Test-ExactKeys $payload @('result','targetHash','providerMessageIdHash','cardNonceHash')) -and
-            (Test-Hex64 $payload.targetHash) -and (Test-Hex64 $payload.providerMessageIdHash) -and (Test-Hex64 $payload.cardNonceHash)
+            (Test-ExactKeys $payload @(
+              'result','targetHash','providerMessageIdHash','providerChatIdHash','cardNonceHash','intentKeyHash'
+            )) -and
+            (Test-Hex64 $payload.targetHash) -and
+            (Test-Hex64 $payload.providerMessageIdHash) -and
+            (Test-Hex64 $payload.providerChatIdHash) -and
+            (Test-Hex64 $payload.cardNonceHash) -and
+            (Test-Hex64 $payload.intentKeyHash)
           break
         }
         default { $false }
@@ -1865,7 +1888,12 @@ try {
       $recordedState = Convert-ChildJson $recorded 'RecordDecisionNotification'
       if ($category -eq 'PROVIDER_ACCEPTED') {
         try {
-          Write-FeishuPendingBinding $recordedState.pendingDecision ([string]$payload.cardNonceHash) ([string]$payload.providerMessageIdHash) $window
+          Write-FeishuPendingBinding `
+            $recordedState.pendingDecision `
+            ([string]$payload.cardNonceHash) `
+            ([string]$payload.providerMessageIdHash) `
+            ([string]$payload.providerChatIdHash) `
+            $window
         } catch {
           $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_binding_write_failed' 'Feishu delivery was accepted but its local reply binding could not be written.'
           $result.pendingDecision = $recordedState.pendingDecision
@@ -1935,8 +1963,10 @@ try {
           allowedOptions = @($binding.allowedOptions)
           createdAt = $createdAt
           expiresAt = [string]$binding.expiresAt
+          allowCustomReply = [bool]$binding.allowCustomReply
           cardNonceHash = [string]$binding.cardNonceHash
           providerMessageIdHash = [string]$binding.providerMessageIdHash
+          providerChatIdHash = [string]$binding.providerChatIdHash
         }
       }
       try {
@@ -1955,18 +1985,46 @@ try {
         $result.nextCommand = 'CompleteNoChange'
         Write-ProtocolResult $result
       }
-      $acceptedKeys = @(
+      $optionAcceptedKeys = @(
         'result','optionKey','source','providerMessageIdHash','providerEventIdHash',
         'operatorOpenIdHash','tenantKeyHash','cardNonceHash','evidenceHash'
       )
-      $validAccepted = $category -ceq 'REPLY_ACCEPTED' -and $cli.Code -eq 0 -and
-        (Test-ExactKeys $payload $acceptedKeys) -and [string]$payload.source -ceq 'feishu_card' -and
+      $validOptionAccepted = $category -ceq 'OPTION_ACCEPTED' -and $cli.Code -eq 0 -and
+        (Test-ExactKeys $payload $optionAcceptedKeys) -and [string]$payload.source -ceq 'feishu_card' -and
         @($binding.allowedOptions) -contains [string]$payload.optionKey -and
         [string]$payload.providerMessageIdHash -ceq [string]$binding.providerMessageIdHash -and
         [string]$payload.cardNonceHash -ceq [string]$binding.cardNonceHash -and
         @('providerMessageIdHash','providerEventIdHash','operatorOpenIdHash','tenantKeyHash','cardNonceHash','evidenceHash' |
           Where-Object { -not (Test-Hex64 $payload[$_]) }).Count -eq 0
-      if (-not $validAccepted) {
+      $customCardAcceptedKeys = @(
+        'result','decisionId','customText','source','providerMessageIdHash','providerEventIdHash',
+        'operatorOpenIdHash','tenantKeyHash','cardNonceHash','evidenceHash'
+      )
+      $customTextAcceptedKeys = @(
+        'result','decisionId','customText','source','providerMessageIdHash','providerEventIdHash',
+        'operatorOpenIdHash','tenantKeyHash','providerChatIdHash','evidenceHash'
+      )
+      $normalizedCustomText = if ($category -ceq 'CUSTOM_ACCEPTED') {
+        Normalize-CustomDecisionText $payload.customText
+      } else {
+        $null
+      }
+      $validCustomCommon = $category -ceq 'CUSTOM_ACCEPTED' -and $cli.Code -eq 0 -and
+        [bool]$binding.allowCustomReply -and
+        [string]$payload.decisionId -ceq [string]$state.pendingDecision.decisionId -and
+        $null -ne $normalizedCustomText -and [string]$payload.customText -ceq $normalizedCustomText -and
+        [string]$payload.providerMessageIdHash -ceq [string]$binding.providerMessageIdHash -and
+        @('providerMessageIdHash','providerEventIdHash','operatorOpenIdHash','tenantKeyHash','evidenceHash' |
+          Where-Object { -not (Test-Hex64 $payload[$_]) }).Count -eq 0
+      $validCustomCard = $validCustomCommon -and [string]$payload.source -ceq 'feishu_card_input' -and
+        (Test-ExactKeys $payload $customCardAcceptedKeys) -and
+        [string]$payload.cardNonceHash -ceq [string]$binding.cardNonceHash -and
+        (Test-Hex64 $payload.cardNonceHash)
+      $validCustomText = $validCustomCommon -and [string]$payload.source -ceq 'feishu_text' -and
+        (Test-ExactKeys $payload $customTextAcceptedKeys) -and
+        [string]$payload.providerChatIdHash -ceq [string]$binding.providerChatIdHash -and
+        (Test-Hex64 $payload.providerChatIdHash)
+      if (-not $validOptionAccepted -and -not $validCustomCard -and -not $validCustomText) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'feishu_reply_invalid' 'Feishu reply evidence was invalid or conflicting; the pending decision was preserved.'
         $result.nextCommands = @('CompleteNoChange', 'ResolveDecisionManual')
         $result.nextCommand = 'CompleteNoChange'
@@ -1974,28 +2032,48 @@ try {
       }
 
       $originalTaskId = [string]$state.pendingDecision.taskId
-      $resolved = Invoke-StateTool @(
-        'ResolveDecision', '-RunId', $RunId, '-DecisionId', [string]$state.pendingDecision.decisionId,
-        '-OptionKey', [string]$payload.optionKey, '-ReplySource', 'feishu_card',
-        '-ProviderMessageIdHash', [string]$payload.providerMessageIdHash,
-        '-ProviderEventIdHash', [string]$payload.providerEventIdHash,
-        '-OperatorHash', [string]$payload.operatorOpenIdHash,
-        '-TenantKeyHash', [string]$payload.tenantKeyHash,
-        '-CardNonceHash', [string]$payload.cardNonceHash,
-        '-EvidenceHash', [string]$payload.evidenceHash
-      )
+      if ($validOptionAccepted) {
+        $stateAction = 'ResolveDecision'
+        $stateArguments = @(
+          $stateAction, '-RunId', $RunId, '-DecisionId', [string]$state.pendingDecision.decisionId,
+          '-OptionKey', [string]$payload.optionKey, '-ReplySource', 'feishu_card',
+          '-ProviderMessageIdHash', [string]$payload.providerMessageIdHash,
+          '-ProviderEventIdHash', [string]$payload.providerEventIdHash,
+          '-OperatorHash', [string]$payload.operatorOpenIdHash,
+          '-TenantKeyHash', [string]$payload.tenantKeyHash,
+          '-CardNonceHash', [string]$payload.cardNonceHash,
+          '-EvidenceHash', [string]$payload.evidenceHash
+        )
+      } else {
+        $stateAction = 'ResolveCustomDecision'
+        $stateArguments = @(
+          $stateAction, '-RunId', $RunId, '-DecisionId', [string]$state.pendingDecision.decisionId,
+          '-CustomText', $normalizedCustomText, '-ReplySource', [string]$payload.source,
+          '-ProviderMessageIdHash', [string]$payload.providerMessageIdHash,
+          '-ProviderEventIdHash', [string]$payload.providerEventIdHash,
+          '-OperatorHash', [string]$payload.operatorOpenIdHash,
+          '-TenantKeyHash', [string]$payload.tenantKeyHash,
+          '-EvidenceHash', [string]$payload.evidenceHash
+        )
+        if ($validCustomCard) {
+          $stateArguments += @('-CardNonceHash', [string]$payload.cardNonceHash)
+        } else {
+          $stateArguments += @('-ProviderChatIdHash', [string]$payload.providerChatIdHash)
+        }
+      }
+      $resolved = Invoke-StateTool $stateArguments
       if ($resolved.Code -ne 0) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_resolve_failed' 'The validated Feishu decision reply could not be recorded.'
         Write-ProtocolResult $result $resolved.Code
       }
-      $resolvedState = Convert-ChildJson $resolved 'ResolveDecision'
+      $resolvedState = Convert-ChildJson $resolved $stateAction
       $session.branchKind = 'selection'
       $session.workType = $null
       $session.taskId = $null
       $session.executor = $null
       $session.resumeTaskId = $originalTaskId
       Save-Session $session
-      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Validated Feishu card reply resolved; inspect and register the original task again.'
+      $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Validated Feishu decision reply resolved; inspect and register the original task again.'
       $result.taskId = $originalTaskId
       $result.decisionFlow = $resolvedState.decisionFlow
       $result.requiredSources = @($script:ExecutionQueueRelativePath, $script:DecisionStatusRelativePath)
@@ -2224,32 +2302,49 @@ try {
         Write-ProtocolResult $result 13
       }
       $state = Get-StateSnapshot
-      $pattern = '^\s*(?<id>DEC-[0-9]{8}-[A-Z0-9]+)\s*[：:]\s*(?:选择|选)\s*(?<key>[A-Za-z0-9]+)\s*$'
-      if (-not $ManualOverride -or [string]::IsNullOrWhiteSpace($ReplyText) -or $ReplyText -cnotmatch $pattern -or
+      $optionPattern = '^\s*(?<id>DEC-[0-9]{8}-[A-Z0-9]+)\s*[：:]\s*(?:选择|选)\s*(?<key>[A-Za-z0-9]+)\s*$'
+      $customPattern = '^\s*(?<id>DEC-[0-9]{8}-[A-Z0-9]+)\s*[：:]\s*自定义[ \t]+(?<custom>[\s\S]+?)\s*$'
+      $replyKind = $null
+      $decisionId = $null
+      $optionKey = $null
+      $normalizedCustomText = $null
+      if (-not [string]::IsNullOrWhiteSpace($ReplyText) -and $ReplyText -cmatch $optionPattern) {
+        $replyKind = 'option'
+        $decisionId = [string]$Matches['id']
+        $optionKey = [string]$Matches['key']
+      } elseif (-not [string]::IsNullOrWhiteSpace($ReplyText) -and $ReplyText -cmatch $customPattern) {
+        $replyKind = 'custom'
+        $decisionId = [string]$Matches['id']
+        $normalizedCustomText = Normalize-CustomDecisionText ([string]$Matches['custom'])
+      }
+      if (-not $ManualOverride -or $null -eq $replyKind -or
+          ($replyKind -ceq 'custom' -and $null -eq $normalizedCustomText) -or
           [string]::IsNullOrWhiteSpace($CurrentThreadId)) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_manual_override' 'Manual resolution requires an exact reply, CurrentThreadId, and -ManualOverride.'
         Write-ProtocolResult $result 15
       }
-      $decisionId = [string]$Matches['id']
-      $optionKey = [string]$Matches['key']
       if ($null -eq $state.pendingDecision -or $decisionId -cne [string]$state.pendingDecision.decisionId -or
-          @($state.pendingDecision.options | Where-Object { [string]$_.key -ceq $optionKey }).Count -ne 1) {
+          ($replyKind -ceq 'option' -and
+            @($state.pendingDecision.options | Where-Object { [string]$_.key -ceq $optionKey }).Count -ne 1)) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'invalid_reply' 'Decision id or option key is invalid.'
         Write-ProtocolResult $result 15
       }
       $originalTaskId = [string]$state.pendingDecision.taskId
-      $arguments = @(
-        'ResolveDecision', '-RunId', $RunId, '-DecisionId', $decisionId,
-        '-OptionKey', $optionKey, '-ReplySource', 'manual', '-ManualOverride',
-        '-EvidenceThreadId', $CurrentThreadId
-      )
+      $stateAction = if ($replyKind -ceq 'custom') { 'ResolveCustomDecision' } else { 'ResolveDecision' }
+      $arguments = @($stateAction, '-RunId', $RunId, '-DecisionId', $decisionId)
+      if ($replyKind -ceq 'custom') {
+        $arguments += @('-CustomText', $normalizedCustomText, '-ReplySource', 'manual_custom')
+      } else {
+        $arguments += @('-OptionKey', $optionKey, '-ReplySource', 'manual')
+      }
+      $arguments += @('-ManualOverride', '-EvidenceThreadId', $CurrentThreadId)
       if (-not [string]::IsNullOrWhiteSpace($CurrentTurnId)) { $arguments += @('-EvidenceTurnId', $CurrentTurnId) }
       $resolved = Invoke-StateTool $arguments
       if ($resolved.Code -ne 0) {
         $result = New-ProtocolResult $false 'inspect_pending_decision' 'pending_decision' 'preserve_recovery' 'decision_resolve_failed' $(if ($resolved.Error) { $resolved.Error } else { 'ResolveDecision failed.' })
         Write-ProtocolResult $result $resolved.Code
       }
-      $resolvedState = Convert-ChildJson $resolved 'ResolveDecision'
+      $resolvedState = Convert-ChildJson $resolved $stateAction
       $session.resumeTaskId = $originalTaskId
       Save-Session $session
       $result = New-ProtocolResult $true 'inspect_candidate' 'selection' 'preserve_recovery' $null 'Manual decision resolution recorded; inspect and register the original task again.'
