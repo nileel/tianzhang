@@ -593,8 +593,13 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
   assert.equal((await readdir(join(root, 'inbox'))).length, 1);
 
   await registered['im.message.receive_v1']({
+    [Symbol('event-type')]: 'im.message.receive_v1',
+    schema: '2.0',
     event_id: 'evt_fake_text_event',
     event_type: 'im.message.receive_v1',
+    create_time: String(NOW.getTime()),
+    token: 'verification-token-fixture',
+    app_id: APP_ID,
     tenant_key: TENANT_KEY,
     sender: {
       sender_id: { open_id: OPERATOR_OPEN_ID },

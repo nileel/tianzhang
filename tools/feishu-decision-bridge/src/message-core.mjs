@@ -9,6 +9,16 @@ import { writeSignedInbox } from './inbox.mjs';
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/;
 const HEX_PATTERN = /^[0-9a-f]{64}$/;
 const OPTION_KEYS = ['A', 'B', 'C'];
+const SDK_EVENT_SYMBOL_DESCRIPTION = 'event-type';
+const SDK_ROOT_KEYS = [
+  'schema', 'event_id', 'token', 'create_time', 'event_type', 'tenant_key', 'app_id',
+  'sender', 'message',
+];
+const SDK_MESSAGE_KEYS = [
+  'message_id', 'root_id', 'parent_id', 'create_time', 'update_time', 'chat_id',
+  'thread_id', 'chat_type', 'message_type', 'content', 'mentions', 'user_agent',
+  'lark_agent_context',
+];
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -54,6 +64,59 @@ function exactDataArray(value) {
     snapshot.push(descriptor.value);
   }
   return snapshot;
+}
+
+function allowedDataObject(value, requiredKeys, allowedKeys) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const ownKeys = Reflect.ownKeys(descriptors);
+  if (
+    ownKeys.some((key) => typeof key !== 'string' || !allowedKeys.includes(key))
+    || requiredKeys.some((key) => !Object.hasOwn(descriptors, key))
+  ) {
+    return null;
+  }
+  const snapshot = Object.create(null);
+  for (const key of ownKeys) {
+    const descriptor = descriptors[key];
+    if (!Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) {
+      return null;
+    }
+    snapshot[key] = descriptor.value;
+  }
+  return snapshot;
+}
+
+function snapshotSdkRoot(value) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const symbolKeys = Reflect.ownKeys(descriptors).filter((key) => typeof key === 'symbol');
+  if (symbolKeys.length !== 1 || symbolKeys[0].description !== SDK_EVENT_SYMBOL_DESCRIPTION) {
+    return null;
+  }
+  const symbolDescriptor = descriptors[symbolKeys[0]];
+  if (!Object.hasOwn(symbolDescriptor, 'value') || !symbolDescriptor.enumerable) {
+    return null;
+  }
+  const stringValue = Object.create(null);
+  for (const [key, descriptor] of Object.entries(descriptors)) {
+    if (
+      !SDK_ROOT_KEYS.includes(key)
+      || !Object.hasOwn(descriptor, 'value')
+      || !descriptor.enumerable
+    ) {
+      return null;
+    }
+    stringValue[key] = descriptor.value;
+  }
+  if (SDK_ROOT_KEYS.some((key) => !Object.hasOwn(stringValue, key))) {
+    return null;
+  }
+  return symbolDescriptor.value === stringValue.event_type ? stringValue : null;
 }
 
 function identifier(value) {
@@ -121,20 +184,27 @@ function parseMessageContent(value) {
 
 export function normalizeMessageEvent(rawEvent) {
   try {
-    const root = exactDataObject(rawEvent, [
-      'event_id', 'event_type', 'tenant_key', 'sender', 'message',
-    ]);
-    const sender = exactDataObject(root?.sender, ['sender_id', 'sender_type', 'tenant_key']);
-    const senderId = exactDataObject(sender?.sender_id, ['open_id']);
-    const message = exactDataObject(root?.message, [
+    const root = snapshotSdkRoot(rawEvent);
+    const sender = allowedDataObject(
+      root?.sender,
+      ['sender_id', 'sender_type', 'tenant_key'],
+      ['sender_id', 'sender_type', 'tenant_key'],
+    );
+    const senderId = allowedDataObject(
+      sender?.sender_id,
+      ['open_id'],
+      ['union_id', 'user_id', 'open_id'],
+    );
+    const message = allowedDataObject(root?.message, [
       'message_id', 'create_time', 'chat_id', 'chat_type', 'message_type', 'content',
-    ]);
+    ], SDK_MESSAGE_KEYS);
     const text = parseMessageContent(message?.content);
     if (
       root === null
       || sender === null
       || senderId === null
       || message === null
+      || root.schema !== '2.0'
       || root.event_type !== 'im.message.receive_v1'
       || sender.sender_type !== 'user'
       || sender.tenant_key !== root.tenant_key
@@ -142,6 +212,13 @@ export function normalizeMessageEvent(rawEvent) {
       || message.message_type !== 'text'
       || !identifier(root.event_id)
       || !identifier(root.tenant_key)
+      || !identifier(root.app_id)
+      || typeof root.token !== 'string'
+      || root.token.length < 1
+      || root.token.length > 512
+      || /[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(root.token)
+      || typeof root.create_time !== 'string'
+      || !/^\d{13}$/.test(root.create_time)
       || !identifier(senderId.open_id)
       || !identifier(message.message_id)
       || !identifier(message.chat_id)
@@ -157,6 +234,7 @@ export function normalizeMessageEvent(rawEvent) {
       eventId: root.event_id,
       eventType: root.event_type,
       tenantKey: root.tenant_key,
+      appId: root.app_id,
       openId: senderId.open_id,
       messageId: message.message_id,
       createdAtMs: Number(message.create_time),
@@ -221,6 +299,7 @@ export async function handleDecisionTextMessage({
       || typeof replyText !== 'function'
       || parsedConfig.expectedTenantKey === null
       || parsedConfig.pairedOperatorOpenIdHash === null
+      || normalized.appId !== parsedConfig.appId
       || normalized.createdAtMs > now.getTime()
       || normalized.tenantKey !== parsedConfig.expectedTenantKey
       || sha256(normalized.openId) !== parsedConfig.pairedOperatorOpenIdHash

@@ -19,6 +19,7 @@ const MESSAGE_ID = 'om-message-fixture';
 const EVENT_ID = 'evt-message-fixture';
 const DECISION_ID = 'DEC-20260716-MESSAGEFIXTURE';
 const HMAC_KEY = Buffer.alloc(32, 0x43).toString('base64');
+const SDK_EVENT_TYPE = Symbol('event-type');
 
 function sha256(value) {
   return createHash('sha256').update(value, 'utf8').digest('hex');
@@ -55,11 +56,20 @@ function makeBinding(overrides = {}) {
 
 function makeEvent(text = `${DECISION_ID}：自定义 采用双通道`, overrides = {}) {
   return {
+    [SDK_EVENT_TYPE]: 'im.message.receive_v1',
+    schema: '2.0',
     event_id: EVENT_ID,
     event_type: 'im.message.receive_v1',
+    create_time: String(NOW.getTime()),
+    token: 'verification-token-fixture',
+    app_id: APP_ID,
     tenant_key: TENANT_KEY,
     sender: {
-      sender_id: { open_id: OPEN_ID },
+      sender_id: {
+        union_id: 'on-message-fixture',
+        user_id: 'user-message-fixture',
+        open_id: OPEN_ID,
+      },
       sender_type: 'user',
       tenant_key: TENANT_KEY,
       ...(overrides.sender ?? {}),
@@ -83,6 +93,7 @@ test('normalizeMessageEvent snapshots only the exact SDK 1.71.1 text shape', asy
     eventId: EVENT_ID,
     eventType: 'im.message.receive_v1',
     tenantKey: TENANT_KEY,
+    appId: APP_ID,
     openId: OPEN_ID,
     messageId: MESSAGE_ID,
     createdAtMs: NOW.getTime(),
@@ -109,6 +120,19 @@ test('normalizeMessageEvent snapshots only the exact SDK 1.71.1 text shape', asy
   ]) {
     await t.test(name, () => assert.equal(normalizeMessageEvent(event), null));
   }
+
+  const optionalSdkFields = makeEvent('ok', {
+    message: {
+      root_id: 'om-root-fixture',
+      parent_id: 'om-parent-fixture',
+      update_time: String(NOW.getTime()),
+      thread_id: 'omt-thread-fixture',
+      mentions: [],
+      user_agent: 'desktop',
+      lark_agent_context: { active_chat_id: CHAT_ID },
+    },
+  });
+  assert.equal(normalizeMessageEvent(optionalSdkFields)?.text, 'ok');
 });
 
 test('valid strict text writes a signed custom envelope and confirms once', async (t) => {
@@ -157,6 +181,7 @@ test('message binding rejects wrong identity, chat, tenant, decision, time, and 
     ['wrong operator', makeEvent('ok', { sender: { sender_id: { open_id: 'ou-other' } } }), {}, {}],
     ['wrong chat', makeEvent('ok', { message: { chat_id: 'oc-other' } }), {}, {}],
     ['wrong tenant', makeEvent('ok', { root: { tenant_key: 'tenant-other' }, sender: { tenant_key: 'tenant-other' } }), {}, {}],
+    ['wrong app', makeEvent('ok', { root: { app_id: 'app-other' } }), {}, {}],
     ['wrong decision', makeEvent('DEC-20260716-OTHER：自定义 ok'), {}, {}],
     ['expired', makeEvent(), {}, { expiresAt: new Date(NOW.getTime() - 1).toISOString() }],
     ['before issued', makeEvent('ok', { message: { create_time: String(NOW.getTime() - 120_000) } }), {}, {}],
