@@ -155,10 +155,13 @@ function Start-CanaryEnvelopeWriter {
     do {
       if (Test-Path -LiteralPath $bindingPath -PathType Leaf) {
         try {
-          $value = [IO.File]::ReadAllText($bindingPath) | ConvertFrom-Json
-          $binding = if ($value -is [array]) { $value[0] } else { $value }
+          $value = [IO.File]::ReadAllText($bindingPath) | ConvertFrom-Json -NoEnumerate
+          if ($value -isnot [array] -or $value.Count -ne 1) {
+            throw 'Canary binding root must be a single-item array'
+          }
+          $binding = $value[0]
         } catch {
-          $binding = $null
+          throw
         }
       }
       if ($null -eq $binding) { Start-Sleep -Milliseconds 50 }

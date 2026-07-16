@@ -123,7 +123,7 @@ function Write-PrivateJsonAtomic {
     New-Item -ItemType Directory -Path $parent -Force | Out-Null
   }
   $temporaryPath = Join-Path $parent ('.' + [IO.Path]::GetFileName($fullPath) + '.' + [guid]::NewGuid().ToString('N') + '.tmp')
-  $json = $Value | ConvertTo-Json -Depth 12 -Compress
+  $json = ConvertTo-Json -InputObject $Value -Depth 12 -Compress
   $bytes = [Text.UTF8Encoding]::new($false).GetBytes($json)
   try {
     New-Item -ItemType File -Path $temporaryPath -ErrorAction Stop | Out-Null
