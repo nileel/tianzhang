@@ -5,6 +5,13 @@ import { parsePrivateConfig } from './config.mjs';
 
 const MAX_HEALTH_BYTES = 16 * 1024;
 const PROVIDER_ID_PATTERN = /^[\x21-\x7e]{1,256}$/;
+const SILENT_LOGGER = Object.freeze({
+  error() {},
+  warn() {},
+  info() {},
+  debug() {},
+  trace() {},
+});
 const UNAVAILABLE_HEALTH = Object.freeze({
   status: 'UNAVAILABLE',
   updatedAt: null,
@@ -113,6 +120,8 @@ export async function createLarkTransport(config, options = {}) {
     client = new Client({
       appId: parsedConfig.appId,
       appSecret: parsedConfig.appSecret,
+      loggerLevel: 1,
+      logger: SILENT_LOGGER,
     });
   } catch {
     throw new Error('Feishu transport unavailable');

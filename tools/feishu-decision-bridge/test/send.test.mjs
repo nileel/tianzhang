@@ -432,7 +432,16 @@ test('createLarkTransport uses the official SDK request shape and canonicalizes 
   };
 
   assert.deepEqual(await transport.sendInteractive(request), { messageId: 'om_sdk_123' });
-  assert.deepEqual(constructions, [{ appId: config.appId, appSecret: config.appSecret }]);
+  assert.equal(constructions.length, 1);
+  assert.equal(constructions[0].appId, config.appId);
+  assert.equal(constructions[0].appSecret, config.appSecret);
+  assert.equal(constructions[0].loggerLevel, 1);
+  assert.deepEqual(Object.keys(constructions[0].logger).sort(), [
+    'debug', 'error', 'info', 'trace', 'warn',
+  ]);
+  for (const level of Object.keys(constructions[0].logger)) {
+    assert.equal(constructions[0].logger[level]('must stay silent'), undefined);
+  }
   assert.deepEqual(requests, [request]);
 
   response = { data: { message_id: 'om_no_code' } };

@@ -22,6 +22,53 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
+function readDataProperty(value, key) {
+  if (!isPlainObject(value)) {
+    return undefined;
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor && Object.hasOwn(descriptor, 'value') ? descriptor.value : undefined;
+}
+
+function summarizeKeys(value) {
+  if (!isPlainObject(value)) {
+    return 'not_object';
+  }
+  return Reflect.ownKeys(value)
+    .map((key) => (
+      typeof key === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key)
+        ? key
+        : '[unsafe]'
+    ))
+    .sort()
+    .join(',');
+}
+
+function summarizeCardShape(rawEvent) {
+  try {
+    const nestedHeader = readDataProperty(rawEvent, 'header');
+    const nestedEvent = readDataProperty(rawEvent, 'event');
+    const header = nestedHeader ?? rawEvent;
+    const event = nestedEvent ?? rawEvent;
+    const operator = readDataProperty(event, 'operator');
+    const action = readDataProperty(event, 'action');
+    const context = readDataProperty(event, 'context');
+    const actionValue = readDataProperty(action, 'value');
+    const valueKeyCount = isPlainObject(actionValue) ? Reflect.ownKeys(actionValue).length : -1;
+    return [
+      `callback_shape:root=${summarizeKeys(rawEvent)}`,
+      `header=${summarizeKeys(header)}`,
+      `event=${summarizeKeys(event)}`,
+      `operator=${summarizeKeys(operator)}`,
+      `action=${summarizeKeys(action)}`,
+      `context=${summarizeKeys(context)}`,
+      `value_key_count=${valueKeyCount}`,
+    ].join(';');
+  } catch {
+    return 'callback_shape:unavailable';
+  }
+}
+
 async function readBoundedJson(path, fs) {
   let handle;
   try {
@@ -116,7 +163,7 @@ function resolveConfigPath(env, homedir) {
   return path;
 }
 
-function makeCallback({ loadConfig, fs, now, timers, rememberSensitive }) {
+function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRejection }) {
   return async (event) => {
     let actionKind;
     let config;
@@ -140,6 +187,7 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive }) {
         config.hmacKey,
       ]);
     } catch {
+      reportRejection('invalid_shape', event);
       return GENERIC_RESPONSE;
     }
     const bindingPath = join(
@@ -151,25 +199,35 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive }) {
       const value = await readBoundedJson(bindingPath, fs);
       pendingBindings = actionKind === 'operator_pairing' && !Array.isArray(value) ? [value] : value;
     } catch {
+      reportRejection('binding_read');
       return GENERIC_RESPONSE;
     }
     const callbackNow = now();
     if (!(callbackNow instanceof Date) || !Number.isFinite(callbackNow.getTime())) {
+      reportRejection('invalid_now');
       return GENERIC_RESPONSE;
     }
     let timeoutId;
     const timeout = new Promise((resolve) => {
-      timeoutId = timers.setTimeout(() => resolve({ accepted: false, response: GENERIC_RESPONSE }), CALLBACK_TIMEOUT_MS);
+      timeoutId = timers.setTimeout(() => resolve({
+        accepted: false,
+        response: GENERIC_RESPONSE,
+        rejectionCode: 'timeout',
+      }), CALLBACK_TIMEOUT_MS);
     });
     try {
       const result = await Promise.race([
         handleCardAction({ event, config, pendingBindings, now: callbackNow }),
         timeout,
       ]);
+      if (!isPlainObject(result) || result.accepted !== true) {
+        reportRejection(result?.rejectionCode === 'timeout' ? 'timeout' : 'validation');
+      }
       return isPlainObject(result) && isPlainObject(result.response)
         ? result.response
         : GENERIC_RESPONSE;
     } catch {
+      reportRejection('callback_error');
       return GENERIC_RESPONSE;
     } finally {
       timers.clearTimeout(timeoutId);
@@ -300,6 +358,12 @@ export async function startBridge(options = {}) {
         now,
         timers,
         rememberSensitive,
+        reportRejection: (code, event) => {
+          emitSanitized('warn', [`callback_rejected:${code}`]);
+          if (code === 'invalid_shape') {
+            emitSanitized('warn', [summarizeCardShape(event)]);
+          }
+        },
       }),
     });
     const activeDispatcher = registered ?? eventDispatcher;
