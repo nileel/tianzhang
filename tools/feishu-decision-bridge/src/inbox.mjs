@@ -30,8 +30,8 @@ const PAIRING_PAYLOAD_KEYS = [
   'tenantKey', 'tenantKeyHash', 'receivedAt',
 ];
 const PENDING_KEYS = [
-  'decisionId', 'allowedOptions', 'createdAt', 'expiresAt', 'cardNonceHash',
-  'providerMessageIdHash',
+  'decisionId', 'allowedOptions', 'allowCustomReply', 'createdAt', 'expiresAt',
+  'cardNonceHash', 'providerMessageIdHash', 'providerChatIdHash',
 ];
 
 function isPlainObject(value) {
@@ -214,21 +214,25 @@ function snapshotPending(value) {
     || options === null
     || options.length !== OPTION_KEYS.length
     || options.some((option, index) => option !== OPTION_KEYS[index])
+    || typeof fields.allowCustomReply !== 'boolean'
     || createdAtMs === null
     || expiresAtMs === null
     || createdAtMs > expiresAtMs
     || !isHex(fields.cardNonceHash)
     || !isHex(fields.providerMessageIdHash)
+    || !isHex(fields.providerChatIdHash)
   ) {
     return null;
   }
   return {
     decisionId: fields.decisionId,
     allowedOptions: [...options],
+    allowCustomReply: fields.allowCustomReply,
     createdAtMs,
     expiresAtMs,
     cardNonceHash: fields.cardNonceHash,
     providerMessageIdHash: fields.providerMessageIdHash,
+    providerChatIdHash: fields.providerChatIdHash,
   };
 }
 
@@ -393,10 +397,7 @@ async function movePreserving(sourcePath, destinationDirectory, name, raw) {
 
 function isCurrentPayload(payload, pending, config, nowMs) {
   const receivedAtMs = parseExactIso(payload.receivedAt);
-  return payload.kind === 'decision_reply'
-    && payload.decisionId === pending.decisionId
-    && pending.allowedOptions.includes(payload.optionKey)
-    && payload.cardNonceHash === pending.cardNonceHash
+  const common = payload.decisionId === pending.decisionId
     && payload.providerMessageIdHash === pending.providerMessageIdHash
     && payload.operatorOpenIdHash === config.pairedOperatorOpenIdHash
     && payload.tenantKeyHash === sha256(config.expectedTenantKey)
@@ -405,10 +406,44 @@ function isCurrentPayload(payload, pending, config, nowMs) {
     && receivedAtMs <= pending.expiresAtMs
     && receivedAtMs <= nowMs
     && nowMs <= pending.expiresAtMs;
+  if (!common) {
+    return false;
+  }
+  if (payload.kind === 'decision_reply') {
+    return pending.allowedOptions.includes(payload.optionKey)
+      && payload.cardNonceHash === pending.cardNonceHash;
+  }
+  if (payload.kind !== 'decision_custom_reply' || !pending.allowCustomReply) {
+    return false;
+  }
+  return payload.source === 'feishu_card_input'
+    ? payload.cardNonceHash === pending.cardNonceHash
+    : payload.source === 'feishu_text'
+      && payload.providerChatIdHash === pending.providerChatIdHash;
 }
 
-async function readConsumedNonces(processedDirectory, encodedKey) {
+function payloadIdentity(payload) {
+  return payload.kind === 'decision_reply'
+    ? `option:${payload.optionKey}`
+    : `custom:${sha256(payload.customText)}`;
+}
+
+function snapshotDecisionEvidence(value) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const kindDescriptor = Object.getOwnPropertyDescriptor(value, 'kind');
+  if (!kindDescriptor || !Object.hasOwn(kindDescriptor, 'value')) {
+    return null;
+  }
+  return kindDescriptor.value === 'decision_reply'
+    ? snapshotDecisionPayload(value)
+    : snapshotCustomDecisionPayload(value);
+}
+
+async function readProcessedEvidence(processedDirectory, encodedKey) {
   const nonces = new Set();
+  const identities = new Set();
   let healthy = true;
   const names = (await readdir(processedDirectory))
     .filter((name) => /^[0-9a-f]{64}\.json$/.test(name))
@@ -418,7 +453,7 @@ async function readConsumedNonces(processedDirectory, encodedKey) {
       const raw = await readBounded(join(processedDirectory, name));
       const envelope = JSON.parse(raw);
       const snapshot = snapshotEnvelope(envelope);
-      const payload = snapshotDecisionPayload(verifyEnvelope(envelope, encodedKey));
+      const payload = snapshotDecisionEvidence(verifyEnvelope(envelope, encodedKey));
       if (
         snapshot === null
         || snapshot.directory !== 'inbox'
@@ -427,17 +462,39 @@ async function readConsumedNonces(processedDirectory, encodedKey) {
       ) {
         throw new Error();
       }
-      nonces.add(payload.cardNonceHash);
+      identities.add(payloadIdentity(payload));
+      if (payload.kind === 'decision_reply' || payload.source === 'feishu_card_input') {
+        nonces.add(payload.cardNonceHash);
+      }
     } catch {
       healthy = false;
     }
   }
-  return { nonces, healthy };
+  return { nonces, identities, healthy: healthy && identities.size <= 1 };
 }
 
 function acceptedOutput(payload, envelope) {
+  if (payload.kind === 'decision_custom_reply') {
+    const result = {
+      result: 'CUSTOM_ACCEPTED',
+      decisionId: payload.decisionId,
+      customText: payload.customText,
+      source: payload.source,
+      providerMessageIdHash: payload.providerMessageIdHash,
+      providerEventIdHash: payload.providerEventIdHash,
+      operatorOpenIdHash: payload.operatorOpenIdHash,
+      tenantKeyHash: payload.tenantKeyHash,
+      evidenceHash: sha256(canonicalize(envelope)),
+    };
+    if (payload.source === 'feishu_card_input') {
+      result.cardNonceHash = payload.cardNonceHash;
+    } else {
+      result.providerChatIdHash = payload.providerChatIdHash;
+    }
+    return result;
+  }
   return {
-    result: 'REPLY_ACCEPTED',
+    result: 'OPTION_ACCEPTED',
     optionKey: payload.optionKey,
     source: 'feishu_card',
     providerMessageIdHash: payload.providerMessageIdHash,
@@ -494,7 +551,7 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
     const names = (await readdir(inboxDirectory))
       .filter((name) => /^[0-9a-f]{64}\.json$/.test(name))
       .sort();
-    const consumed = await readConsumedNonces(processedDirectory, parsedConfig.hmacKey);
+    const consumed = await readProcessedEvidence(processedDirectory, parsedConfig.hmacKey);
     const valid = [];
 
     for (const name of names) {
@@ -505,7 +562,7 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
         const envelope = JSON.parse(raw);
         const envelopeSnapshot = snapshotEnvelope(envelope);
         const payload = verifyEnvelope(envelope, parsedConfig.hmacKey);
-        const payloadSnapshot = snapshotDecisionPayload(payload);
+        const payloadSnapshot = snapshotDecisionEvidence(payload);
         if (
           envelopeSnapshot === null
           || envelopeSnapshot.directory !== 'inbox'
@@ -513,7 +570,9 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
           || `${payloadSnapshot.providerEventIdHash}.json` !== name
           || !isCurrentPayload(payloadSnapshot, pending, parsedConfig, now.getTime())
           || !consumed.healthy
-          || consumed.nonces.has(payloadSnapshot.cardNonceHash)
+          || ((payloadSnapshot.kind === 'decision_reply'
+            || payloadSnapshot.source === 'feishu_card_input')
+            && consumed.nonces.has(payloadSnapshot.cardNonceHash))
         ) {
           throw new Error();
         }
@@ -537,12 +596,16 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
       left.receivedAtMs - right.receivedAtMs
       || left.payload.providerEventIdHash.localeCompare(right.payload.providerEventIdHash)
     ));
-    const options = new Set(valid.map((item) => item.payload.optionKey));
-    const destination = options.size === 1 ? processedDirectory : quarantineDirectory;
+    const existingIdentity = [...consumed.identities][0];
+    const winner = existingIdentity === undefined ? valid[0] : null;
+    const winningIdentity = existingIdentity ?? payloadIdentity(winner.payload);
     for (const item of valid) {
+      const destination = payloadIdentity(item.payload) === winningIdentity
+        ? processedDirectory
+        : quarantineDirectory;
       await movePreserving(item.sourcePath, destination, item.name, item.raw);
     }
-    return options.size === 1 ? acceptedOutput(valid[0].payload, valid[0].envelope) : null;
+    return winner === null ? null : acceptedOutput(winner.payload, winner.envelope);
   } catch {
     return null;
   } finally {
