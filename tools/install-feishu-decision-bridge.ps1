@@ -281,6 +281,7 @@ switch ($Action) {
     }
     Stop-VerifiedLegacyBridgeProcesses
     Invoke-Adapter 'InstallPackages' @($script:PackageRoot)
+    Stop-VerifiedLegacyBridgeProcesses
     Invoke-Adapter 'UpsertTask' @([pscustomobject]$plan)
     Write-SanitizedJson ([ordered]@{
       result = 'INSTALLED'

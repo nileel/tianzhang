@@ -52,6 +52,7 @@ function New-FakeScheduler {
     NodeVersion = $NodeVersion
     Processes = [Collections.Generic.List[object]]::new()
     StoppedProcessIds = [Collections.Generic.List[int]]::new()
+    ProcessSnapshots = 0
   }
   $adapter = @{
     GetNodeVersion = {
@@ -73,12 +74,22 @@ function New-FakeScheduler {
     }
     GetProcesses = {
       $state.Calls.Add('get-processes')
-      @($state.Processes)
+      $snapshot = @($state.Processes)
+      if ($state.ProcessSnapshots -eq 0) {
+        foreach ($process in @($state.Processes | Where-Object { $_.ProcessId -eq 901 })) {
+          $state.Processes.Remove($process) | Out-Null
+        }
+      }
+      $state.ProcessSnapshots++
+      $snapshot
     }
     StopProcess = {
       param([int]$ProcessId)
       $state.Calls.Add("stop-process:$ProcessId")
       $state.StoppedProcessIds.Add($ProcessId)
+      foreach ($process in @($state.Processes | Where-Object { $_.ProcessId -eq $ProcessId })) {
+        $state.Processes.Remove($process) | Out-Null
+      }
     }
     UpsertTask = {
       param($Plan)
@@ -175,14 +186,18 @@ try {
   if ($fake.State.Tasks.Count -ne 1 -or -not $fake.State.Tasks.ContainsKey('TianZhang-Feishu-Decision-Bridge')) {
     throw 'first Install did not create exactly one fixed task'
   }
-  if ($fake.State.StoppedProcessIds.Count -ne 1 -or $fake.State.StoppedProcessIds[0] -ne 100) {
-    throw "Install did not stop only the verified orphan bridge: $($fake.State.StoppedProcessIds -join ',')"
+  if ($fake.State.StoppedProcessIds.Count -ne 2 -or
+      $fake.State.StoppedProcessIds[0] -ne 100 -or
+      $fake.State.StoppedProcessIds[1] -ne 101) {
+    throw "Install did not stop verified bridge processes across the parent-exit race: $($fake.State.StoppedProcessIds -join ',')"
   }
   $calls = @($fake.State.Calls)
   $nodeIndex = [Array]::IndexOf($calls, 'node-version')
   $npmIndex = [Array]::FindIndex($calls, [Predicate[string]]{ param($value) $value.StartsWith('npm-ci:', [StringComparison]::Ordinal) })
   $upsertIndex = [Array]::IndexOf($calls, 'upsert:TianZhang-Feishu-Decision-Bridge')
-  if ($nodeIndex -lt 0 -or $npmIndex -le $nodeIndex -or $upsertIndex -le $npmIndex) {
+  $lastProcessIndex = [Array]::LastIndexOf($calls, 'get-processes')
+  if ($nodeIndex -lt 0 -or $npmIndex -le $nodeIndex -or
+      $lastProcessIndex -le $npmIndex -or $upsertIndex -le $lastProcessIndex) {
     throw "Install did not validate Node/install packages before scheduling: $($calls -join ',')"
   }
 
