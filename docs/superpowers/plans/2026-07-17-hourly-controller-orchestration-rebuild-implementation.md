@@ -13,7 +13,7 @@
 - 权威设计是 `docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md`；本计划只拆解该设计，不允许重新设计。
 - 只在独立 linked worktree 和 `codex/hourly-controller-v2-rebuild` 分支实施。不得在当前主工作区修改代码，不得触碰用户已有的远程附件、两份 2026-07-15 金丹规格、`.agents/summary_state.json` 或 `设计总结.txt` 改动。
 - 建设期间 `tzg-hourly-controller` 必须保持 `PAUSED`；不得编辑任何私有 automation TOML，不得同时启用旧控制器和 v2 写入能力。
-- 保留且不重写 `tools/feishu-decision-bridge/`、飞书安装/启动/配置脚本、`tools/private-path-acl.ps1`、`tools/automation-workspace-guard.ps1`、`tools/automation-finalize-commit.ps1` 与 `tools/check-pending-whitespace.ps1`。
+- 保留且不重写 `tools/feishu-decision-bridge/` 的消息协议、飞书配置脚本、`tools/private-path-acl.ps1`、`tools/automation-workspace-guard.ps1`、`tools/automation-finalize-commit.ps1` 与 `tools/check-pending-whitespace.ps1`。只允许按批准规格窄改飞书安装/启动宿主，解决登录可见窗口并增加生命周期动作。
 - 所有私有状态、运行请求、baseline、证据和决策收件箱都位于 `%USERPROFILE%\.codex\automation-state\`，不得提交 Git；所有新建私有目录/文件复用 `private-path-acl.ps1` 收紧 ACL。
 - 每个实现切片遵循 TDD：先补直接失败测试，确认失败原因，再写最小实现，只跑该切片直接测试。完成控制器集成后合并运行一次 v2 套件；最终切换前再对保留组件运行一次相关回归，不做重复全量验证。
 - 每个提交前只对本提交路径运行 `tools/check-pending-whitespace.ps1`，再 `git add -- <paths>`，再运行一次 `git diff --cached --check`。不得暂存路径外文件。
@@ -27,10 +27,10 @@
 
 本计划的验证预算固定如下，执行者不得自行叠加重复全量检查：
 
-1. Task 1–7：每个任务只运行该模块的一个直接测试文件。
-2. Task 8：运行一次 `tools/hourly-controller-v2/tests/run-tests.ps1`，覆盖新编排层集成。
-3. Task 9：只运行一次新的静态工作流契约检查，不重复 v2 模块套件。
-4. Task 10：切换前运行一次保留组件回归、一次真实只读金丝雀；不得运行 Unity，因为此阶段没有改 Unity 业务数据。
+1. Task 1–8：每个任务只运行该模块的一个直接测试文件；Task 8 只运行安装器测试，不重复飞书 Node 套件。
+2. Task 9：运行一次 `tools/hourly-controller-v2/tests/run-tests.ps1`，覆盖新编排层集成。
+3. Task 10：只运行一次新的静态工作流契约检查，不重复 v2 模块套件。
+4. Task 11：切换前运行一次保留组件回归、一次真实只读金丝雀和一次真实无窗口宿主检查；不得运行 Unity，因为此阶段没有改 Unity 业务数据。
 5. 首次 TQ-057 写入时，才按注册表运行 `data-chain`、相关 Unity EditMode、pending whitespace 和 cached diff check；同一输入未变化时不重复。
 
 ## Stable Paths
@@ -547,7 +547,7 @@ Get-TitleToolPayload -TitleRequest <object>
 Record-TitleResult -State <object> -Succeeded <bool> -Diagnostic <sanitized-string>
 ```
 
-薄启动提示在后续 Task 9 中只读取：
+薄启动提示在后续 Task 10 中只读取：
 
 ```javascript
 const meta = nodeRepl.requestMeta;
@@ -612,7 +612,7 @@ node tools/feishu-decision-bridge/src/consume-reply.mjs --request-file <absolute
 
 - [ ] **Step 1: 写失败的适配器测试**
 
-使用假的 Node bridge，不访问网络。覆盖：OPTION_ACCEPTED、CUSTOM_ACCEPTED、NO_REPLY；首个有效回复胜出；重复幂等；冲突不覆盖；选项 scopeContract 持久化；自定义转 `IMPLEMENTATION_PENDING`；manifest approval 的正文列出任务、路径摘要、五项决定覆盖、检查与复制回复格式；禁止字段不进入项目可见输出。
+使用假的 Node bridge，不访问网络。覆盖：OPTION_ACCEPTED、CUSTOM_ACCEPTED、NO_REPLY；首个有效回复胜出；重复幂等；冲突不覆盖；选项 scopeContract 持久化；自定义转 `IMPLEMENTATION_PENDING`；manifest approval 的正文列出任务、路径摘要、五项决定覆盖、检查与复制回复格式；桥接被停止或禁用时稳定返回 `feishu_unavailable`、保留决定且不产生授权；禁止字段不进入项目可见输出。
 
 - [ ] **Step 2: 确认红灯**
 
@@ -636,7 +636,117 @@ Commit: `feat(automation-v2): adapt feishu decisions without bridge rewrite`
 
 ---
 
-## Task 8: 集成验证、路径限定提交与完整状态机
+## Task 8: 修复飞书桥登录可见窗口并增加生命周期管理
+
+**Regression source:** Codex 任务 `019f701a-32b2-70b2-a13a-26565ea9a6fb` 已证明当前登录任务以 interactive principal 直接启动长期 `pwsh.exe`；`Hidden=true` 与 `-WindowStyle Hidden` 仍不能保证登录时无控制台闪现。
+
+**Files:**
+
+- Create: `tools/start-feishu-decision-bridge-hidden.vbs`
+- Modify: `tools/install-feishu-decision-bridge.ps1`
+- Modify: `tools/test-install-feishu-decision-bridge.ps1`
+
+**Interfaces:**
+
+- `Get-TaskPlan` 输出增加 `launchMode = "WINDOWLESS_WSCRIPT"`，`execute` 为系统 `wscript.exe` 绝对路径，`arguments` 固定为 `//B //NoLogo "<hidden-launcher>" "<pwsh>" "<start-script>"`。
+- `install-feishu-decision-bridge.ps1 -Action` 固定支持 `Plan|Install|Start|Stop|Enable|Disable|Status|Uninstall`。
+- `Status` 在现有字段之外固定返回 `enabled: bool|null` 和 `launchMode: "WINDOWLESS_WSCRIPT"`；未安装时 `enabled = null`。
+- `SchedulerAdapter` 保留现有键，并增加 `IsTaskEnabled`、`EnableTask`、`DisableTask`、`StartTask` 四个 scriptblock；测试 adapter 仍只允许临时配置路径。
+
+**Lifecycle semantics:**
+
+```text
+Install  = validate config/runtime -> stop old task/processes -> upsert enabled WINDOWLESS_WSCRIPT task -> start
+Start    = require installed and enabled -> idempotent start
+Stop     = require installed -> stop scheduled task/process tree -> preserve enabled=true and all private state
+Disable  = require installed -> stop -> disable -> preserve config/pairing/state
+Enable   = require installed -> enable -> idempotent start
+Status   = read only
+Uninstall = stop/remove task -> preserve config/pairing/state
+```
+
+VBS 启动器必须恰好接收 PowerShell 7 和固定 start script 两个绝对路径参数；任一参数为空、含双引号/控制字符或脚本文件名不等于 `start-feishu-decision-bridge.ps1` 时以 64 退出。合法时使用 `WScript.Shell.Run(command, 0, True)`，命令固定包含 `-NoProfile -NonInteractive -ExecutionPolicy Bypass -File`，不读取或写入任何私有配置值。
+
+- [ ] **Step 1: 扩展失败的安装器测试**
+
+在现有 fake scheduler fixture 中增加 enabled/state 字段和四个 adapter 动作。新增断言：
+
+- `Plan.execute` 是绝对 `wscript.exe`，不是 `pwsh.exe`；
+- 参数含 `//B //NoLogo`、固定 VBS、PowerShell 7 和固定 start script，且不含配置路径或私有值；
+- `Install` 原位升级旧 direct-pwsh task 后只剩一个 enabled/running task；
+- `Stop`、`Disable`、`Enable`、`Start` 按 Lifecycle semantics 幂等执行；
+- `Disable`/`Uninstall` 后私有配置和 state root 仍存在；
+- 停止清理只命中固定 bridge 进程树，不结束无关 `pwsh.exe`/`node.exe`；
+- `Status` 的 `enabled` 与 `launchMode` 正确；
+- VBS 文本包含 `Run(command, 0, True)`，不含 secret、recipient、config path 或动态脚本名。
+
+- [ ] **Step 2: 确认红灯**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-install-feishu-decision-bridge.ps1
+```
+
+Expected: 非零，首个失败原因是 `start-feishu-decision-bridge-hidden.vbs` 缺失或 Plan 仍直接执行 `pwsh.exe`。
+
+- [ ] **Step 3: 实现固定无窗口启动器和生命周期动作**
+
+`Get-TaskPlan` 必须用 `Get-Command wscript.exe` 与 `Get-Command pwsh` 解析绝对路径；继续拒绝含双引号的路径。真实 adapter 的 `Disable` 顺序必须是 StopTask → 清理受验证遗留 bridge process → DisableTask；不得用名称批量停止 PowerShell/Node。
+
+`tools/start-feishu-decision-bridge-hidden.vbs` 的完整内容固定为：
+
+```vbscript
+Option Explicit
+
+Const EXIT_INVALID = 64
+
+Dim arguments, fileSystem, shell, pwshPath, startPath, command, exitCode
+Set arguments = WScript.Arguments
+If arguments.Count <> 2 Then WScript.Quit EXIT_INVALID
+
+pwshPath = arguments(0)
+startPath = arguments(1)
+If Not IsSafeAbsoluteFile(pwshPath, "pwsh.exe") Then WScript.Quit EXIT_INVALID
+If Not IsSafeAbsoluteFile(startPath, "start-feishu-decision-bridge.ps1") Then WScript.Quit EXIT_INVALID
+
+command = QuoteArgument(pwshPath) & " -NoProfile -NonInteractive -ExecutionPolicy Bypass -File " & QuoteArgument(startPath)
+Set shell = CreateObject("WScript.Shell")
+exitCode = shell.Run(command, 0, True)
+WScript.Quit exitCode
+
+Function IsSafeAbsoluteFile(value, expectedName)
+  Dim index, code
+  IsSafeAbsoluteFile = False
+  If Len(value) = 0 Or InStr(value, Chr(34)) > 0 Then Exit Function
+  For index = 1 To Len(value)
+    code = AscW(Mid(value, index, 1))
+    If code < 0 Then code = code + 65536
+    If code < 32 Or code = 127 Then Exit Function
+  Next
+  Set fileSystem = CreateObject("Scripting.FileSystemObject")
+  If Not fileSystem.FileExists(value) Then Exit Function
+  If StrComp(fileSystem.GetAbsolutePathName(value), value, vbTextCompare) <> 0 Then Exit Function
+  If StrComp(fileSystem.GetFileName(value), expectedName, vbTextCompare) <> 0 Then Exit Function
+  IsSafeAbsoluteFile = True
+End Function
+
+Function QuoteArgument(value)
+  QuoteArgument = Chr(34) & value & Chr(34)
+End Function
+```
+
+- [ ] **Step 4: 只运行安装器直接测试并提交**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-install-feishu-decision-bridge.ps1
+```
+
+Expected: `test-install-feishu-decision-bridge: OK`。本任务不运行 `npm test`，因为 Node 消息协议未改。
+
+Commit: `fix(feishu): launch bridge without visible console`
+
+---
+
+## Task 9: 集成验证、路径限定提交与完整状态机
 
 **Files:**
 
@@ -685,6 +795,7 @@ Abort: any non-COMMITTED active phase -> IDLE
 - 路径外人工脏文件和预存 staged 文件保持原样且不进入提交；
 - baseline/HEAD 变化返回精确 `changedPaths` 并回到 IDLE；
 - check 失败不提交、不清理人工文件、记录脱敏摘要并回到 IDLE；
+- 飞书宿主停止或禁用时，待决策分支返回 `feishu_unavailable`、保留决定并拒绝 `BeginMutation`；
 - 任意阶段中断的 recoverable/unsafe 分类转译自保留 workspace guard；
 - stdout 始终符合稳定协议且无私有标识。
 
@@ -722,7 +833,7 @@ Commit: `feat(automation-v2): integrate guarded controller state machine`
 
 ---
 
-## Task 9: 编写薄启动提示、v2 规则和契约检查
+## Task 10: 编写薄启动提示、v2 规则和契约检查
 
 **Files:**
 
@@ -740,7 +851,7 @@ Commit: `feat(automation-v2): integrate guarded controller state machine`
 
 - [ ] **Step 1: 写失败的工作流契约测试**
 
-断言提示词包含真实 `threadId` 与 metadata `thread_id`，不包含错误的 `meta.turn.thread_id` 或 `tzgTurn.turn.thread_id`；只列固定动作；规则明确单写入控制器、plan-only 批准门禁、私有状态边界、最小验证预算；注册表/状态/提示词中的 TQ-057 决策数量一致；旧控制器文件在此阶段仍存在且未被 v2 引用为实现模块。
+断言提示词包含真实 `threadId` 与 metadata `thread_id`，不包含错误的 `meta.turn.thread_id` 或 `tzgTurn.turn.thread_id`；只列固定动作；规则明确单写入控制器、plan-only 批准门禁、私有状态边界、最小验证预算；飞书宿主离线只返回 `feishu_unavailable`、不丢决定、不回退 Gmail；注册表/状态/提示词中的 TQ-057 决策数量一致；旧控制器文件在此阶段仍存在且未被 v2 引用为实现模块。
 
 - [ ] **Step 2: 确认红灯**
 
@@ -752,7 +863,7 @@ Expected: 非零，原因是 v2 提示词/规则/检查器不存在。
 
 - [ ] **Step 3: 写薄提示、规则、检查器和状态摘要**
 
-`tools/check-hourly-controller-v2.ps1` 只做静态契约检查，不重复 Task 8 已通过的 v2 模块套件，也不调用保留组件回归。
+`tools/check-hourly-controller-v2.ps1` 只做静态契约检查，不重复 Task 9 已通过的 v2 模块套件，也不调用保留组件回归。
 
 - [ ] **Step 4: 运行一次工作流契约检查并提交**
 
@@ -766,7 +877,7 @@ Commit: `docs(automation-v2): define thin startup and workflow contract`
 
 ---
 
-## Task 10: 迁移演练、真实只读金丝雀与切换门禁
+## Task 11: 迁移演练、真实只读金丝雀、无窗口宿主更新与切换门禁
 
 **Files:**
 
@@ -777,6 +888,7 @@ Commit: `docs(automation-v2): define thin startup and workflow contract`
 - Modify after approval only: `开发管理/自动工作流规则.txt`
 - Modify after approval only: `tools/check-automation-workflow.ps1`
 - Modify after approval only: `开发管理/自动工作流状态.txt`
+- System update after merge only: scheduled task `TianZhang-Feishu-Decision-Bridge`
 
 - [ ] **Step 1: 对备份做两次迁移演练**
 
@@ -806,7 +918,18 @@ Start -> RecordTitleResult -> DiscoverRead/Search/List/Check -> SubmitManifest(p
 
 验收：标题使用两个真实字段并成功或非阻断失败；清单包含五项决定；双倍率覆盖 CSV、导入器、SpellData、CombatResolver、相关测试和发现到的全部 spell assets；没有项目写入、提交、租约残留或第二个写入控制器。
 
-- [ ] **Step 4: 把 plan-only 清单发到飞书并停止**
+- [ ] **Step 4: 只读检查无窗口宿主计划**
+
+```powershell
+$bridgePlan = pwsh -NoProfile -ExecutionPolicy Bypass -File tools/install-feishu-decision-bridge.ps1 -Action Plan | ConvertFrom-Json
+if ($bridgePlan.launchMode -cne 'WINDOWLESS_WSCRIPT') { throw 'unexpected launch mode' }
+if ([IO.Path]::GetFileName([string]$bridgePlan.execute) -cne 'wscript.exe') { throw 'scheduled task still launches PowerShell directly' }
+if ([string]$bridgePlan.arguments -notmatch '^//B //NoLogo ') { throw 'windowless host arguments are invalid' }
+```
+
+Expected: 成功且不更新真实计划任务；输出不含 config path 或私有值。
+
+- [ ] **Step 5: 把 plan-only 清单发到飞书并停止**
 
 卡片正文必须包含：任务标题、所有预期路径（正文可分组，附件/严格文本可复制完整列表）、五项决定的完整口径、逐组改动意图、requiredChecks、明确的“批准后才允许首次写入”，以及回复格式：
 
@@ -815,13 +938,13 @@ DEC-<批准决定编号>：选择 A
 DEC-<批准决定编号>：自定义 <修改意见>
 ```
 
-控制器进入 `IMPLEMENTATION_PENDING`。负责人未明确批准前，不执行后续 Step 5。
+控制器进入 `IMPLEMENTATION_PENDING`。负责人未明确批准前，不执行后续 Step 6。
 
-- [ ] **Step 5: 负责人批准后，替换 canonical 提示与规则**
+- [ ] **Step 6: 负责人批准后，替换 canonical 提示与规则**
 
 把已验证的 v2 提示/规则内容写入 canonical 文件；更新 `tools/check-automation-workflow.ps1` 使其验证 v2 注册表、薄提示和旧控制器暂停，不再把旧 schema v8 当活动协议。Git 历史保留旧内容，不删除保留组件。
 
-- [ ] **Step 6: 最小切换验证并提交**
+- [ ] **Step 7: 最小切换验证并提交**
 
 只运行：
 
@@ -833,17 +956,30 @@ Expected: 新 canonical 契约通过、旧生产控制器仍为暂停状态说�
 
 Commit: `feat(automation): cut over to guarded controller v2`
 
-- [ ] **Step 7: 合并到 master 后复验一次同一检查**
+- [ ] **Step 8: 合并到 master 后复验一次同一检查**
 
-合并使用非交互 Git；合并结果只重复 Step 6 的一个检查。若失败，保持自动化暂停并修复，不启用调度。
+合并使用非交互 Git；合并结果只重复 Step 7 的一个检查。若失败，保持自动化暂停并修复，不启用调度。
 
-- [ ] **Step 8: 通过自动化管理能力更新现有任务但保持 PAUSED**
+- [ ] **Step 9: 原位更新真实飞书宿主并做一次窗口检查**
+
+保持 `tzg-hourly-controller` 为 `PAUSED`，执行：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/install-feishu-decision-bridge.ps1 -Action Install
+$bridgeStatus = pwsh -NoProfile -ExecutionPolicy Bypass -File tools/install-feishu-decision-bridge.ps1 -Action Status | ConvertFrom-Json
+if (-not $bridgeStatus.installed -or -not $bridgeStatus.enabled) { throw 'Feishu bridge task is not enabled' }
+if ($bridgeStatus.launchMode -cne 'WINDOWLESS_WSCRIPT') { throw 'Feishu bridge is not using the windowless host' }
+```
+
+随后只读核对计划任务 action 为 `wscript.exe`，相关 `wscript.exe`、`pwsh.exe` 的 `MainWindowHandle` 均为 `0`，且固定 bridge `node.exe` 只有一个实例、健康状态恢复。若任一条件失败，立即执行 `-Action Disable`，保持私有配置/状态，不回退到 direct-pwsh 登录动作。本步骤不重复 `npm test`。
+
+- [ ] **Step 10: 通过自动化管理能力更新现有任务但保持 PAUSED**
 
 更新 `tzg-hourly-controller` 使用 canonical v2 提示；不得编辑私有 TOML。手动触发一次 `plan-only`，核对它与已批准清单一致。只有负责人再次确认一致，才允许单次受控 TQ-057 写入；此步骤不自动恢复每小时调度。
 
 ---
 
-## Task 11: 首次受控写入、观察和旧编排退役
+## Task 12: 首次受控写入、观察和旧编排退役
 
 **Files:**
 
@@ -863,7 +999,7 @@ Commit: `feat(automation): cut over to guarded controller v2`
 
 - [ ] **Step 3: 恢复小时调度并观察三次真实运行**
 
-只有 Step 1–2 通过后才恢复 `tzg-hourly-controller` 每小时调度。三次运行均必须满足：单写入控制器、标题字段正确、无私有信息、无残留租约、无部分提交、无路径外变更；无可执行任务时允许 clean skip，不能伪造提交。
+只有 Step 1–2 通过后才恢复 `tzg-hourly-controller` 每小时调度。三次运行均必须满足：单写入控制器、标题字段正确、飞书任务仍为 enabled/`WINDOWLESS_WSCRIPT` 且没有可见控制台、无私有信息、无残留租约、无部分提交、无路径外变更；无可执行任务时允许 clean skip，不能伪造提交。
 
 - [ ] **Step 4: 三次通过后退役旧编排文件**
 
@@ -876,7 +1012,7 @@ tools/automation-decision-status.ps1
 与旧状态机耦合且已被 v2 覆盖的旧测试
 ```
 
-不得删除飞书桥接、安装/启动脚本、私有 ACL、workspace guard、finalizer 或 whitespace checker。旧 schema v8 私有备份至少保留到 TQ-057 完成且三次观察通过。
+不得删除飞书桥接、无窗口启动器、安装/启动脚本、私有 ACL、workspace guard、finalizer 或 whitespace checker。旧 schema v8 私有备份至少保留到 TQ-057 完成且三次观察通过。
 
 - [ ] **Step 5: 运行一次退役契约检查并提交**
 
@@ -900,6 +1036,8 @@ Commit: `chore(automation): retire legacy orchestration after observation`
 - [ ] 任一 baseline/HEAD/path 冲突返回精确 `changedPaths`，不自动重拍 baseline。
 - [ ] requiredChecks 只由控制器运行，相关输入无变化时不重复。
 - [ ] 飞书按钮、卡片自定义输入、严格文本三种回复继续有效；卡片携带可复制回复格式。
+- [ ] 飞书登录任务使用 `WINDOWLESS_WSCRIPT`，不会显示或闪现控制台，并支持幂等 `Start / Stop / Enable / Disable / Status`。
+- [ ] 停止或禁用飞书只让待决策流程返回 `feishu_unavailable`；配置、配对、状态和未完成决定不丢失，也不会授权写入或回退 Gmail。
 - [ ] 首次 TQ-057 写入存在负责人明确批准的 plan-only 清单证据。
 - [ ] 私有状态、身份、消息/事件 ID、签名和证据哈希未进入 Git 或 stdout。
 - [ ] 用户原有未跟踪/已修改文件没有被暂存、删除或改写。
@@ -914,5 +1052,5 @@ Commit: `chore(automation): retire legacy orchestration after observation`
 1. docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md
 2. docs/superpowers/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md
 
-使用 superpowers:executing-plans（或按计划允许的 subagent-driven-development）逐任务执行，从 Task 0 开始，不重新设计。只在独立 linked worktree 工作；生产 tzg-hourly-controller 全程保持 PAUSED，直到计划中的切换门禁。保留飞书桥接和 Git 安全底座，不编辑私有 automation TOML，不触碰主工作区现有未跟踪或已修改文件。严格遵守 Validation Budget：每个切片只跑直接测试，Task 8 合并跑一次 v2 套件，切换前保留组件只回归一次。每完成一个 Task 汇报提交、直接验证结果和下一门禁；遇到事实源冲突立即停止询问。
+使用 superpowers:executing-plans（或按计划允许的 subagent-driven-development）逐任务执行，从 Task 0 开始，不重新设计。只在独立 linked worktree 工作；生产 tzg-hourly-controller 全程保持 PAUSED，直到计划中的切换门禁。保留飞书消息协议和 Git 安全底座；按 Task 8 窄改飞书宿主为 WINDOWLESS_WSCRIPT 并增加显式启停，不编辑私有 automation TOML，不触碰主工作区现有未跟踪或已修改文件。严格遵守 Validation Budget：每个切片只跑直接测试，Task 9 合并跑一次 v2 套件，切换前保留组件只回归一次。每完成一个 Task 汇报提交、直接验证结果和下一门禁；遇到事实源冲突立即停止询问。
 ```
