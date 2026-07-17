@@ -1,97 +1,32 @@
-# 自动工作流规则（✅ 已审核）
+# 自动工作流 v2 规则（切换前候选）
 
-> 2026-07-16 Codex：v8 在薄提示词、确定性控制器门面和飞书互动卡片决策通道上增加卡片输入与严格格式文字自定义回复；队列水位、脏工作区隔离、可连续决策生命周期及 Codex / DeepSeek 串行执行安全语义继续继承既有加固规格。
+## 单写入控制器
 
-## 自动化拓扑
+- 生产环境任何时刻最多一个写入控制器。建设与金丝雀阶段旧生产控制器保持 `PAUSED`，v2 只允许旁路只读验证；未完成切换门禁前不得启用 v2 生产写入。
+- 模型只能调用 `tools/hourly-controller-v2/controller.ps1` 的稳定 action，不能直接调用状态、guard、finalizer 或 Git 拼装第二条写入路径，也不能并行派发写入代理。
+- 不自动 stash、reset、checkout、clean 或推送远端；路径外人工脏文件和预存 staged 项必须保持原样。
 
-- `tzg-hourly-controller` 是唯一写入型 `TZG Hourly Controller`，每小时第 15 分钟触发；旧记录 `tzg-wf2-codex-execute-1` 已在替换记录创建、决策通道规则和真实运行验证后删除。
-- WF1、WF3、WF4 保持 PAUSED 并保留历史配置与 memory；不得与控制器同时启用，尤其不得恢复 WF3 独立写入。
-- 每日简报只读，不修改项目、不 stage、不提交。
+## plan-only 批准门禁
 
-## v8 确定性入口
+- 首次真实 TQ-057 实施必须先提交 `planOnly=true` 的完整 manifest，并通过飞书把任务、路径、五项决定、逐组意图和 requiredChecks 交给负责人批准。
+- 批准前阶段只能是 `DISCOVERING`、`WAITING_DECISION` 或 `IMPLEMENTATION_PENDING`，不得进入 `AUTHORIZED`/`MUTATING`。自定义回复只要求生成新 manifest，不能直接授权写入。
+- 负责人选择批准选项后，控制器才可进入 `AUTHORIZED`；`BeginMutation` 再通过 workspace baseline CAS 后才进入 `MUTATING`。
 
-- `tools/automation-controller.ps1` 是模型唯一允许调用的控制器入口；版本化启动提示位于 `开发管理/自动工作流控制器提示词.txt`，部署 prompt 必须与该文件逐字一致。模型不得直接调用入口封装的状态、workspace guard、finalizer 或 Git 收尾命令。
-- 入口以单个 JSON 返回 `action`、`runId`、`branchKind`、`taskId`、`executor`、`expectedPaths`、`requiredSources`、`requiredChecks`、`nextCommand`、`failurePolicy` 与稳定错误码。模型只负责读取按分支返回的事实源、推导候选与允许路径、实施语义内容、判断事实冲突和选择任务直接相关的最小充分验证。
-- fresh `Start` 的 `select_candidate` 只返回当前任务队列执行入口，并固定 `workType=execution`；模型只提交语义 `TaskId`，不得从任务卡“类型”翻译工作类型，也不得复制“主责”作为执行器。`InspectCandidate` 根据 `TaskId` 读取当前任务队列表头、校验状态为“待处理”，再把主责确定性映射为配置执行器。该动作只保存用户级暂定身份并开放受任务卡约束的只读发现，不形成 `task_selected` 或恢复授权。
-- 只有候选检查完成并推导完整 `expectedPaths` 后才能调用 `RegisterCandidate`；`candidate_conflict` 返回 `InspectCandidate` 继续下一候选。
-- 复审和维护使用独立候选解析分支；当前任务队列的执行解析器不得硬套到复审或维护，也不得靠模型重新提交 `WorkType`、`Executor` 等协议枚举扩展分支。只有 `Start` 明确返回相应专用 branch 与 `nextCommand` 后，模型才能进入该分支。
-- 外部工作类型由入口固定映射到内部状态枚举；checkpoint 顺序、租约、baseline、恢复证据、expectedPaths 与实际 changedPaths 分离、DeepSeek backoff、严格决策回复、finalizer 参数和所有失败关闭均由入口执行。模型不得自行解释内部枚举、恢复计数或 helper 退出码。
-- 执行、复审、维护/待决策与 DeepSeek 说明通过 `requiredSources` 按实际分支加载，不把全部细节复制回主 prompt。任何新增确定性分支必须先扩展入口测试与本规则，再更新薄 prompt；不得继续在 prompt 中实现自然语言状态机。
-- 待决策与飞书结构化回执：CreateDecision 前必须登记项目可见状态路径，再调用 PrepareDecision 读取其 requiredSources，并只按返回的完整 A/B/C 参数契约创建；项目可见区由控制器确定性写入，模型不得手改。卡片正文展示完整方案，按钮只显示“选择 A/B/C”，并同时展示卡片输入框和可复制的 `DEC-...：自定义 <内容>` 格式。创建后只调用 SendDecisionNotification；该动作从锁定状态读取唯一 decisionId、目标和 provider 证据，模型不得提交这些值。Start 对已由飞书接受的待决策只返回 ConsumeDecisionReply 或安全结束；聊天中的人工明确回复只能按严格格式调用 ResolveDecisionManual -ManualOverride。
-- `CHANNEL_UNAVAILABLE` 表示 provider 调用前本地前置不可用，不创建发送意图、不消耗飞书失败次数并安全结束；`PROVIDER_OUTCOME_UNKNOWN` 表示 provider 可能已经收到请求，不计入失败次数、不得自动创建新 attempt/UUID 补发，必须转人工核对。只有明确 `DELIVERY_FAILED` 或 `MISADDRESSED` 才计入对应 provider 的三次失败预算。旧 Gmail 实现只用于历史兼容和显式回滚，不得出现在活动 Contract、nextCommands 或提示词路由。
+## 私有状态边界
 
-## 每轮顺序
+- 状态、request、baseline、发现日志、恢复证据、桥请求与收件箱只位于 `%USERPROFILE%\.codex\automation-state\`，必须复用 `tools/private-path-acl.ps1` 收紧 ACL，不得进入 Git、项目文档或模型输出。
+- provider、tenant、open_id、chat_id、message_id、event_id、证据哈希、secret 和原始事件不得进入项目可见文件或稳定响应。
+- 飞书宿主停止、禁用或前置不可用时固定返回 `feishu_unavailable`：保留原待决策事实，不产生授权，不丢弃决定，不推断回复，不回退 Gmail。
 
-以下顺序是 v8 门面的确定性实现契约。模型只能通过 `automation-controller.ps1` 的 Start、InspectCandidate、RegisterCandidate、BeginMutation、Finish、CompleteNoChange、Fail 及明确辅助动作驱动它，不得把下列内部步骤重新拼成命令。
+## 最小验证预算
 
-1. 通过 Node REPL 确认实际模型身份；失败则只读退出。用 `tools/automation-controller-state.ps1 Acquire` 获取三小时本机租约，随后读取恢复指针与待决策状态。
-2. Acquire 后立即调用 `tools/automation-workspace-guard.ps1 Snapshot` 记录 HEAD、索引、已暂存、未暂存、未跟踪、重命名、删除及子模块/gitlink 基线；Snapshot 发现 dirty submodule、gitlink 异常或工具失败时失败关闭。新任务通过普通 `Check` 后，`task_selected` 检查点必须同时保存本轮 baseline 路径。
-3. 先恢复能够证明属于原任务的工作，再按 `Start` 实际返回的分支选题；恢复任务必须使用状态中保存的原始 baseline、证据文件和完整 `expectedPaths` 调用 workspace guard `CheckRecovery`，不得用本轮新 Snapshot 的普通候选 `Check` 重新认领脏路径。证据缺失、损坏、预期路径指纹变化或路径外基线变化均失败关闭。fresh `select_candidate` 只从当前任务队列的配置执行器候选中按优先级串行选择，模型调用 `InspectCandidate -TaskId` 取得确定性执行器、分支事实源和只读发现策略；存在安全执行候选时，队列补位不得抢占本轮；只有入口显式开放复审/维护专用分支时才能进入对应解析流程。
-4. 每个 fresh 执行候选都必须只以语义 `TaskId` 调用 `InspectCandidate`；入口从当前任务队列读取主责并映射 `codex` / `deepseek`，模型不提交工作类型或执行器。候选检查后、任何项目修改前推导完整、项目相对的 `expectedPaths`，再调用 `RegisterCandidate` 触发 workspace guard `Check`。退出码 20 表示路径冲突：返回 `InspectCandidate` 并继续下一项；退出码 21 表示基线变化：安全退出并保留必要恢复证据；非法输入或工具失败按失败关闭。所有候选都冲突时才安静退出。
-5. TaskKind 固定映射：普通执行=`execute`、复审=`review`、维护=`maintenance`、恢复=`recovery`。fresh 当前队列入口由控制器固定外部 execution 并映射内部 execute；复审与维护必须由独立解析分支形成其固定值，不得把自然语言业务类型或主责翻译成脚本参数。调用 `Checkpoint task_selected` 时直接使用入口已解析值。若登记在任何项目修改前失败，调用 `Fail` 后必须释放空运行并回到 `IDLE`；已有任务身份、预期路径或恢复证据时仍走严格恢复流程。
-6. 选定真实工作对象后、读取实施细则前，从 Node REPL 本轮元数据取得并交叉校验 `currentThreadId`，再调用 `%USERPROFILE%\.codex\automation-tools\set-thread-name.mjs`：执行、维护或恢复任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述来自当前任务卡或复审事实源的面向人中文标题，不得只用任务编号；不得调用 `list_threads` 猜测当前任务，不得硬编码或复用历史任务 ID。无候选、锁占用、身份失败或 `currentThreadId` 校验失败时不改名。改名失败或五秒超时只记录 automation memory，不影响路由、验证、提交或失败关闭。
-7. Codex 任务由控制器直接执行。只有合法 DeepSeek / Claude 主责候选已选中后，才预检 Claude CLI 与代理身份，并读取 `开发管理/DeepSeek工作提示词.txt` 和 `开发管理/AI协作规则.txt`；DeepSeek 子进程只修改 `expectedPaths`、标记未审核并写交接，不得 stage 或 commit。只有控制器拥有 stage/commit 权限并负责最终验证与提交。
-8. DeepSeek 预检在任何 mutation 前失败时调用 `RecordWorkerFailure`，记录有限退避并继续选择安全 Codex 候选；预检成功时调用 `ClearWorkerFailure`。配置执行器映射与本轮运行可用性是两个概念，不得因临时预检失败改派主责。
-   DeepSeek worker backoff 生效期间，从 runnable 候选和库存中排除 DeepSeek 候选；排除后重新计算低水位 2、高水位 5 的库存与补位判断。只有 backoff 过期或 `ClearWorkerFailure` 成功后才恢复并重新纳入 DeepSeek 候选。
-9. 修改和验证完成后，在提交前调用 workspace guard `Verify`；退出码 21 表示基线变化，安全退出并保留恢复指针，其他非法状态或工具失败按失败关闭。`Verify` 通过后调用 workspace guard `CaptureRecoveryEvidence`，再把原始 baseline 路径、证据路径和证据 hash 与 `verification_completed` 检查点原子登记。随后只调用 `tools/automation-finalize-commit.ps1 -ExpectedPaths '<以 | 分隔的 expectedPaths>' -CommitMessage '<提交信息>'` 完成实际变化路径的行尾空白检查、路径限定暂存、`git diff --cached --check` 和 `git commit --only`；不得由控制器临时拼装等价 PowerShell 单行命令。提交后再次 `Verify`，原 staged、unstaged、untracked、rename、delete 指纹与状态必须不变。禁止 stash、reset、checkout 或 clean。
-10. 按检查点续期；验证通过才提交；结束时释放租约。Finalizer 固定边界：expectedPaths 是允许上界，只检查并提交其中的实际变化路径，不自动修复内容。`automation-finalize-commit.ps1` 必须保持调用前所有未实际变化路径及路径外索引项不变；没有实际变化、行尾空白、路径外索引变化或复检失败均按失败关闭。
+- 发现检查与最终 requiredChecks 分离。固定发现检查完成但退出码非零时，控制器保留受限诊断和已执行证据，只允许继续形成 `plan-only` 清单；不得表述为检查通过或写入授权。
+- 最终只执行注册表声明且与本轮变更直接相关的检查并必须成功；输入未变化时不重复同一检查。
+- `data-chain` 与 `unity-editmode-related` 由控制器各执行一次；`pending-whitespace` 与 `cached-diff-check` 只由保留 finalizer 对实际变化的 expectedPaths 各执行一次。
+- 提交前后只调用保留 workspace guard 验证路径外基线；提交只使用 path-limited `git commit --only`。不得把离线 fixture 结果写成生产成功。
 
-   验证遵循 `开发管理/AI协作规则.txt` 的“最小充分验证”：在选题时确定一次本轮必需检查，修改完成后尽量合并运行一次；相关代码、事实源、配置、依赖、Git 基线和执行目标没有变化时，不得因 checkpoint、提交前后或恢复阶段切换重复运行已经通过的同范围检查。普通局部任务不默认跑全项目回归或安排多轮独立复审；只有共享基础设施/控制面、安全与写入隔离、不可逆迁移、核心架构/公共数据语义、数值平衡、外部交接复审、已有失败/冲突或用户明确要求时才升级。workspace guard 提交前后验证、任务领域硬约束、行尾空白和 Git 差异检查仍保留，但不得扩展成无关检查。
+## 失败关闭与中断
 
-   若本轮 `expectedPaths` 包含 `.gitattributes`、`src/Assets/Art/` 或 `docs/资源管理/美术资源登记册.md`，在暂存前追加运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`；其他路径变更跳过该检查，且无论是否运行都保留本步骤的行尾空白、暂存差异与任务自身验证要求。
-
-   Unity EditMode 通过 `tools/run-unity-editmode-tests.ps1` 运行时，脚本会在启动前快照全部已追踪的 `Assets/**` 与 `ProjectSettings/**` 文件，并在成功、失败或结果就绪后退出的所有路径精确恢复；这包含 Unity 重写的 `.asset.meta`，不得再把该类测试副作用当作控制器路径外脏改。自动工作流相关 PowerShell 验证统一使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`，不得再以 `powershell` 隐式落到 Windows PowerShell 5.1。
-
-## 本机标题助手维护
-
-- 标题助手通过 App Server 的 `thread/name/set` 工作，私有运行时固定为 `@openai/codex@0.144.3`；不得自动追随最新 CLI，也不得用 heartbeat 或固定任务 ID 代替。
-- Codex Desktop 更新后出现协议错误或超时、官方接口契约变化，或固定版本存在相关兼容/安全修复时，才评估升级。候选版本必须先旁路安装，完成 5 项测试及真实金丝雀改名/恢复后才能替换当前运行时。
-- 完整升级、回滚步骤和版本历史位于 `%USERPROFILE%\.codex\automation-tools\MAINTENANCE.md`。自动化提示只引用稳定助手路径；仅升级 CLI 时通常不需要更新自动化记录，除非助手路径、参数、标题约束或失败策略改变。
-- 迁移或重装本机时，必须先恢复该用户级目录并通过金丝雀验证，再启用写入型控制器。
-
-## 动态选题
-
-- 禁止在自动化提示或本规则中硬编码具体 TQ、HANDOFF 或审核清单编号。
-- 复审走 `审核入口.txt`；执行按任务主责映射到同一控制器配置的 Codex 或 DeepSeek / Claude 串行执行器。
-- 内容冻结、主责边界和 G1/G2/G3 依赖均为硬约束。
-- 每轮最多处理一个复审对象、一次维护或一个最小任务切片。
-
-任务只有同时满足以下条件才是 runnable：状态为待处理；全部前置已完成，且 DeepSeek 前置产物已通过 Codex 复审；主责能映射到配置执行器；原任务及其全部传递后继都没有未解决 pending decision；内容冻结与项目闸门均满足；修改前可推导完整 `expectedPaths`；workspace guard `Check` 确认与当前基线不冲突。配置了 DeepSeek 执行器不等于本轮运行预检已经可用。
-
-## 待你决策
-
-- 当多个方案会改变架构、运行时行为、数据语义、对外体验、任务范围、冻结边界或主责，且事实源不能唯一推出结论时，控制器必须创建待决策项；删除真实资产、保存数据迁移、外部发送及覆盖有歧义人工改动也必须请求决定。
-- 待决策项不是失败关闭：控制器完成当前安全检查后释放租约，排除原任务及其全部传递后继，并继续选择不受该决定影响的其他合法候选。
-- 同一任务仅允许一个 `pendingDecision`；已经选择的条目保留在该任务的 `decisionFlow`，恢复原任务并完成当前选择的实施后允许创建下一项决策。未解决项必须同时写入本机状态、`自动工作流状态.txt` 的“待你决策”区、自动化任务标题/消息；App Secret、目标标识、配对身份、tenant、签名密钥和原始 provider/event 标识只保存在本机私有配置或用户级桥接目录。
-- CreateDecision 完成后只调用 SendDecisionNotification。模型不得提交 decisionId、目标、provider message ID、attempt number 或重试参数；控制器从当前状态构造请求并用 ACL 受限临时文件调用 Node sender。`PROVIDER_ACCEPTED` 只表示飞书 API 接受卡片，不表示负责人已经选择；发送成功后写入仅含哈希的尝试和用户级 pending binding，当前运行按入口返回的 Finish 或 CompleteNoChange 正常收尾。
-- Start 遇到已有飞书成功尝试的待决策时只调用 ConsumeDecisionReply。`NO_REPLY` 调用 CompleteNoChange；签名、配对身份、tenant、会话、nonce、provider message、决定编号、有效期、内容或回复冲突校验失败均保持待决策并安全结束。A/B/C、卡片输入和严格格式文字消息都是控制器拥有的结构化证据；模型不得搜索飞书历史、读取聊天全文或从普通聊天推断选择/自定义方案。
-- ConsumeDecisionReply 只接受桥接层验证的唯一 `OPTION_ACCEPTED` 或 `CUSTOM_ACCEPTED`。选项来源只能是 `feishu_card`；自定义来源只能是 `feishu_card_input` 或 `feishu_text`，状态机以互斥的 `optionKey` / `customText` 形状保存。聊天中负责人明确回复时只能以 `DEC-YYYYMMDD-ID：选择 A` 或 `DEC-YYYYMMDD-ID：自定义 <内容>` 调用 ResolveDecisionManual -ManualOverride；人工选择不得记为 `feishu_card`，人工自定义记为 `manual_custom`，不得伪装成飞书证据。无效回复只读，不推进任务、不写状态。
-- 自定义文本统一把 CRLF/CR 规范为 LF、去除首尾空白、保留内部换行，限 1–1000 个 Unicode code point，并拒绝危险控制/格式字符。首个有效回复按 `receivedAt` 与事件哈希稳定胜出；同一决定的重复证据幂等，冲突证据进入 quarantine，历史决定的 processed 证据不得参与当前决定竞争。
-- bridge `CONNECTED` 只表示卡片/长连接可用；文字事件另以 `TEXT_REPLY_READY`、`TEXT_REPLY_UNAVAILABLE` 或 `TEXT_REPLY_UNVERIFIED` 报告。文字事件未授权不得把卡片通道误报为离线。Gmail 只保留 schema v8 中的 legacy 历史/显式回滚证据，不得主动搜索、发送或参与活动路由。
-- 有效选择返回原任务的 InspectCandidate，必须重新登记完整业务路径和 `自动工作流状态.txt`、BeginMutation、实施并成功 Finish；不得直接从 `identity_checked` 调用 Finish。当前选择保留在 `decisionFlow`，同一任务可在恢复后继续下一项决策。
-- CreateDecision 的项目状态发布失败时，控制器只可用内部 RollbackDecision 撤销尚未发布的本机决策并释放空运行，不得留下恢复残留或空提交。`CancelDecision -ManualOverride` 仅供人工修复无效或重复决策，必须校验决策编号、记录截断后的原因和取消来源；模型运行不得调用该动作。
-
-## 可执行库存与队列维护
-
-- 低水位：2；高水位：5。可执行库存大于 2 时不因数量维护；库存为 1 或 2 时只在任务成功收尾中从 backlog 补到最多 5；库存为 0 时优先在成功收尾中补位，否则下一轮可进入独立维护。
-- 存在安全执行候选时，补位不得抢占本轮。独立维护只允许在无安全候选、队列事实错误会影响路由，或 12 小时审计发现必须提交的事实修正时发生。
-- 无合格候选时调用 `RecordQueueState` 记录队列/backlog 指纹；事实未变化时不重复同一无效维护。仅更新时间或确认无变化只写本机状态与 memory，不制造提交。
-
-## 锁与恢复
-
-- 运行状态位于 `%USERPROFILE%\.codex\automation-state\tzg-hourly-controller.json`，不得写入 Git 锁。
-- 租约三小时，在 `task_selected`、`mutation_started`、`verification_completed`、`commit_completed` 等检查点续期。
-- 首次中断不计恢复次数，随后最多恢复两次；第二次恢复仍失败转 `AUTO-BLOCKED`。
-- 中断入口必须把残留分类为 clean、RECOVERABLE 或 unsafe；clean 不保留恢复，RECOVERABLE 必须有 `interruption evidence`，unsafe 直接阻塞。只有 `CheckRecovery` 同时证明预期路径完整指纹与中断证据一致、原始 baseline 的路径外状态未变化时才能恢复；缺少证据、预期路径被继续修改或出现额外路径一律阻塞。
-- `verification_completed` 前必须先用 `CaptureRecoveryEvidence` 生成用户级原子证据文件；`Fail` 和 `AUTO-BLOCKED` 保留 baseline/证据引用，`Complete`、fresh `IDLE` 与人工 `ResetBlocked` 清除引用。
-- `Fail` 必须经过上述分类并原子关闭；不得遗留过期 `RUNNING`，也不得把没有 `interruption evidence` 的残留标为 RECOVERABLE。
-- 控制器自有 pending decision 或有效阻塞必须在修改前登记状态文件 `expectedPaths` 和 checkpoint，验证后作为有效结果提交；若中断或提交失败，必须保留精确恢复指针。禁止出现 `IDLE + no recovery + controller-owned dirty file`。
-- 若在选题后追加控制器自有状态路径，必须先形成扩展后的完整 `expectedPaths`，再再次调用 workspace guard `Check`。若该状态路径与 baseline 冲突，不得写、暂存或提交该状态路径，并保留原任务的恢复或失败语义；冲突状态路径不得加入 `Verify` 的 `expectedPaths` 排除集合，不能借扩展范围隐藏人工差异。
-- `ResetBlocked` 只能由人工在处理原因后明确调用。
-
-## 提交与失败关闭
-
-- 只 stage 本轮 `expectedPaths`，并以 `git commit --only` 路径限定提交；不覆盖、回退或提交人工改动，不自动推送远端。
-- 身份未知、状态损坏、主责/依赖不明、恢复路径不符或验证证据无效时失败关闭。
-- 无任务、有效锁或所有合法候选均与人工脏路径冲突时，只进入自动化 memory，不改项目状态、不制造提交。
-- `开发管理/自动工作流状态.txt` 只在产生有效结果、队列路由变化或 `AUTO-BLOCKED` 时更新。
+- baseline、HEAD、路径范围或检查失败时不创建部分提交，不清理人工文件，不重拍 baseline。
+- 中断残留沿用保留 guard 的 `clean`、`recoverable`、`unsafe` 分类；只有预期路径残留且路径外基线不变时才可记录 recoverable 证据。
+- 稳定响应只返回登记的错误码、精确 `changedPaths` 和脱敏摘要；模型不修改内部状态枚举。
