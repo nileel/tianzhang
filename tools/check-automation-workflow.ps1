@@ -89,6 +89,7 @@ $actionLine = '固定 Action 白名单：' + ($actions -join '|')
 Assert-Contract $prompt.Contains($actionLine, [StringComparison]::Ordinal) 'prompt fixed action whitelist differs'
 foreach ($literal in @(
     'tools.codex_app__set_thread_title',
+    '"schemaVersion": 1',
     '禁止在发现阶段调用 Shell',
     '禁止解析 Markdown 自行选任务',
     '不自行宣称检查通过',

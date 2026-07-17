@@ -16,7 +16,7 @@ nodeRepl.write(JSON.stringify({
 }));
 ```
 
-不得从其他字段猜测模型或任务 ID。把这三个值写入用户级私有 request JSON，然后调用控制器 `Start`。
+不得从其他字段猜测模型或任务 ID。每一份控制器 request JSON（包括 `Start`）都必须包含顶层 `"schemaVersion": 1` 和对应的 `action`。把这三个元数据值写入用户级私有 request JSON，然后调用控制器 `Start`。
 
 ## 固定 Action 白名单
 
