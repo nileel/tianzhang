@@ -279,6 +279,25 @@ function Assert-SourceEvidence {
   }
 }
 
+function Assert-DiscoveryCheckEvidence {
+  param(
+    [Parameter(Mandatory = $true)]$TaskContract,
+    [Parameter(Mandatory = $true)][object[]]$DiscoveryEntries
+  )
+
+  foreach ($checkId in @($TaskContract.discoveryChecks)) {
+    $evidence = @($DiscoveryEntries | Where-Object {
+        $_.ok -and
+        $_.action -ceq 'DiscoverCheck' -and
+        $_.input.checkId -ceq [string]$checkId -and
+        $_.satisfiedCheck -ceq [string]$checkId
+      })
+    if ($evidence.Count -lt 1) {
+      Throw-ManifestError -Code 'discovery_incomplete' -Message "registered discovery check evidence is missing: $checkId"
+    }
+  }
+}
+
 function Assert-DecisionCoverageShape {
   param(
     [Parameter(Mandatory = $true)]$Manifest,
@@ -490,6 +509,7 @@ function Test-WorkManifest {
   $expectedPaths = @(Assert-ExpectedPaths -Manifest $Manifest -TaskContract $TaskContract -RepositoryRoot $repositoryRoot)
   $discoveryEntries = @(Read-DiscoveryLogEntries -Path $DiscoveryLogPath)
   Assert-SourceEvidence -Manifest $Manifest -TaskContract $TaskContract -DiscoveryEntries $discoveryEntries -RepositoryRoot $repositoryRoot
+  Assert-DiscoveryCheckEvidence -TaskContract $TaskContract -DiscoveryEntries $discoveryEntries
   Assert-DecisionCoverageShape -Manifest $Manifest -TaskContract $TaskContract -DecisionLedger $DecisionLedger -ExpectedPaths $expectedPaths -RepositoryRoot $repositoryRoot
   Assert-CoverageRules -Manifest $Manifest -TaskContract $TaskContract -DiscoveryEntries $discoveryEntries -ExpectedPaths $expectedPaths -RepositoryRoot $repositoryRoot
   Assert-RegisteredLists -Manifest $Manifest -TaskContract $TaskContract

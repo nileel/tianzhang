@@ -426,9 +426,6 @@ function Invoke-DiscoverCheck {
     $outputText = ($rawOutput | ForEach-Object { [string]$_ }) -join "`n"
     $outputBytes = [Text.UTF8Encoding]::new($false).GetBytes($outputText)
     $bounded = ConvertFrom-BoundedUtf8 -Bytes $outputBytes -Limit $script:CheckOutputLimitBytes
-    if ($exitCode -ne 0) {
-      Throw-DiscoveryError -Code 'check_failed' -Message 'registered discovery check failed'
-    }
     $result = [pscustomobject][ordered]@{
       checkId = $CheckId
       exitCode = $exitCode

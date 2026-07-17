@@ -20,7 +20,8 @@
 
 ## 最小验证预算
 
-- 发现检查与最终 requiredChecks 分离。最终只执行注册表声明且与本轮变更直接相关的检查；输入未变化时不重复同一检查。
+- 发现检查与最终 requiredChecks 分离。固定发现检查完成但退出码非零时，控制器保留受限诊断和已执行证据，只允许继续形成 `plan-only` 清单；不得表述为检查通过或写入授权。
+- 最终只执行注册表声明且与本轮变更直接相关的检查并必须成功；输入未变化时不重复同一检查。
 - `data-chain` 与 `unity-editmode-related` 由控制器各执行一次；`pending-whitespace` 与 `cached-diff-check` 只由保留 finalizer 对实际变化的 expectedPaths 各执行一次。
 - 提交前后只调用保留 workspace guard 验证路径外基线；提交只使用 path-limited `git commit --only`。不得把离线 fixture 结果写成生产成功。
 

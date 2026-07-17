@@ -89,6 +89,17 @@ Write-Output 'data-chain fixture: OK'
   Assert-Equal $check.exitCode 0 'registered discovery check exit code'
   Assert-True ([bool]$check.output.Contains('data-chain fixture: OK')) 'registered discovery check output'
 
+  Write-TestUtf8 -Path (Join-Path $repositoryRoot 'tools\check-data-chain.ps1') -Value @'
+#requires -Version 7.0
+Write-Output 'data-chain fixture: ISSUES_FOUND'
+exit 7
+'@
+  $diagnosticCheck = Invoke-DiscoverCheck -Context $context -CheckId 'data-chain-readonly'
+  Assert-Equal $diagnosticCheck.checkId 'data-chain-readonly' 'diagnostic discovery check id'
+  Assert-Equal $diagnosticCheck.exitCode 7 'diagnostic discovery check exit code'
+  Assert-True ([bool]$diagnosticCheck.output.Contains('data-chain fixture: ISSUES_FOUND')) 'diagnostic discovery check output'
+  Assert-False ([bool]$diagnosticCheck.truncated) 'diagnostic discovery check truncation'
+
   Assert-Throws `
     -Script { Invoke-DiscoverCheck -Context $context -CheckId 'unknown-check' } `
     -MessageLike 'discovery_denied' `
@@ -120,6 +131,10 @@ Write-Output 'data-chain fixture: OK'
     })
   Assert-Equal $successfulRequiredSource.Count 1 'required source discovery evidence'
   Assert-True ([bool]($successfulRequiredSource[0].sourceSha256 -match '^[0-9a-f]{64}$')) 'required source log hash'
+  $completedChecks = @($entries | Where-Object {
+      $_.ok -and $_.action -ceq 'DiscoverCheck' -and $_.satisfiedCheck -ceq 'data-chain-readonly'
+    })
+  Assert-Equal $completedChecks.Count 2 'successful and diagnostic checks both satisfy discovery execution'
   $failedEntries = @($entries | Where-Object { -not $_.ok })
   Assert-True ([bool]($failedEntries.Count -ge 5)) 'failed discovery log entries'
   Assert-True ([bool](@($failedEntries | Where-Object { $_.errorCode -ceq 'discovery_denied' }).Count -ge 5)) 'failed discovery error code'

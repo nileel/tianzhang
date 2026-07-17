@@ -428,9 +428,9 @@ Invoke-DiscoverList   -Context <run> -Root <allowed-root> -Glob <fixed-glob>
 Invoke-DiscoverCheck  -Context <run> -CheckId <registered-id>
 ```
 
-固定限制：单次 read 最大 1 MiB；search 最多 500 条；list 最多 5000 条；所有结果使用项目相对 `/` 路径；拒绝 reparse point/symlink 逃逸；`DiscoverCheck` 只映射 `data-chain-readonly` 到 `tools/check-data-chain.ps1` 的只读执行，不能接受 command/arguments 字段。
+固定限制：单次 read 最大 1 MiB；search 最多 500 条；list 最多 5000 条；所有结果使用项目相对 `/` 路径；拒绝 reparse point/symlink 逃逸；`DiscoverCheck` 只映射 `data-chain-readonly` 到 `tools/check-data-chain.ps1` 的只读执行，不能接受 command/arguments 字段。固定检查进程完成但退出码非零时，返回退出码和受限诊断输出并记录已执行证据，只允许继续形成 `plan-only` 清单；不得把诊断结果记为检查通过或写入授权，最终 `data-chain` required check 仍必须成功。
 
-每次成功动作追加私有 `discovery-log.jsonl`：`sequence`、`action`、规范化输入、source SHA-256、时间；不记录 provider 信息。失败动作也记录 errorCode，但不能伪造已满足 source/check。
+每次成功动作追加私有 `discovery-log.jsonl`：`sequence`、`action`、规范化输入、source SHA-256、时间；不记录 provider 信息。固定发现检查已完成但报告业务问题时属于成功动作，原退出码保留在响应中；输入拒绝或检查未能执行等失败动作仍记录 errorCode，不能伪造已执行 source/check。
 
 - [ ] **Step 1: 写失败的发现测试**
 
@@ -497,7 +497,7 @@ Commit: `feat(automation-v2): add bounded discovery gateway`
 
 - [ ] **Step 1: 写失败的清单测试**
 
-有效 fixture 必须通过。以下每种变体必须以稳定 errorCode 拒绝：漏一个 required source；source hash 与发现时不同；漏一个决定；只写 A/B 不写完整 resolutionText；漏 `Spells.csv`、导入器、`SpellData`、`CombatResolver`、测试或任一已发现 spell asset；path 不在 allowedRoots；expectedPath 无 intendedChange；decision path 不在 expectedPaths；删除注册表 required check；使用未登记 check；baseline/HEAD 已变化。
+有效 fixture 必须通过，包括 `data-chain-readonly` 返回非零诊断但已由网关完成的情况。以下每种变体必须以稳定 errorCode 拒绝：漏一个 required source；source hash 与发现时不同；缺少任一注册表 discovery check 的网关执行证据；漏一个决定；只写 A/B 不写完整 resolutionText；漏 `Spells.csv`、导入器、`SpellData`、`CombatResolver`、测试或任一已发现 spell asset；path 不在 allowedRoots；expectedPath 无 intendedChange；decision path 不在 expectedPaths；删除注册表 required check；使用未登记 check；baseline/HEAD 已变化。
 
 baseline 失败断言必须包含具体 `changedPaths`，例如 `src/Assets/DataConfig/Spells.csv`，不能只返回 `baseline_changed`。
 
@@ -917,6 +917,8 @@ Start -> RecordTitleResult -> DiscoverRead/Search/List/Check -> SubmitManifest(p
 ```
 
 验收：标题使用两个真实字段并成功或非阻断失败；清单包含五项决定；双倍率覆盖 CSV、导入器、SpellData、CombatResolver、相关测试和发现到的全部 spell assets；没有项目写入、提交、租约残留或第二个写入控制器。
+
+`data-chain-readonly` 若因 TQ-057 正待修复的矛盾返回非零，金丝雀保留退出码和受限诊断并继续提交 `planOnly=true`；这不代表检查通过，不允许进入 `MUTATING`，首次写入后的最终 `data-chain` 仍必须成功。
 
 - [ ] **Step 4: 只读检查无窗口宿主计划**
 

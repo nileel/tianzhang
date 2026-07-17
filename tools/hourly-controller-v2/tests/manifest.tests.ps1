@@ -103,7 +103,7 @@ try {
     'docs/角色养成/术法/古修术法一.txt' = "spell doc`n"
     'docs/角色养成/功法/示例功法.txt' = "gongfa doc`n"
     'src/Assets/Data/GongFa/示例功法.asset' = "gongfa asset`n"
-    'tools/check-data-chain.ps1' = "#requires -Version 7.0`nWrite-Output 'fixture data-chain: OK'`n"
+    'tools/check-data-chain.ps1' = "#requires -Version 7.0`nWrite-Output 'fixture data-chain: ISSUES_FOUND'`nexit 7`n"
   }
   foreach ($entry in $fixtureFiles.GetEnumerator()) {
     Write-TestUtf8 -Path (Join-Path $repositoryRoot ($entry.Key.Replace('/', '\'))) -Value $entry.Value
@@ -140,7 +140,8 @@ try {
     Invoke-DiscoverRead -Context $context -Path $source | Out-Null
   }
   Invoke-DiscoverList -Context $context -Root 'src/Assets/Data/Spells' -Glob '*.asset' | Out-Null
-  Invoke-DiscoverCheck -Context $context -CheckId 'data-chain-readonly' | Out-Null
+  $diagnosticCheck = Invoke-DiscoverCheck -Context $context -CheckId 'data-chain-readonly'
+  Assert-Equal $diagnosticCheck.exitCode 7 'diagnostic discovery check exit code'
 
   $validManifestPath = Join-Path $runRoot 'valid-manifest.json'
   [IO.File]::Copy($validFixturePath, $validManifestPath, $false)
@@ -148,6 +149,13 @@ try {
   $validResult = Test-WorkManifest -Manifest $validManifest -TaskContract $taskContract -DecisionLedger $ledger -DiscoveryLogPath $discoveryLogPath -BaselinePath $baselinePath
   Assert-True ([bool]$validResult.ok) 'valid manifest result'
   Assert-Equal @($validResult.expectedPaths).Count 13 'valid manifest expected path count'
+
+  $missingDiscoveryCheckLogPath = Join-Path $runRoot 'discovery-missing-check.jsonl'
+  $withoutDiscoveryCheck = @([IO.File]::ReadAllLines($discoveryLogPath) | Where-Object {
+      [string](($_ | ConvertFrom-Json).action) -cne 'DiscoverCheck'
+    })
+  Write-TestUtf8 -Path $missingDiscoveryCheckLogPath -Value (($withoutDiscoveryCheck -join "`n") + "`n")
+  Assert-ManifestRejected -Manifest $validManifest -Code 'discovery_incomplete' -Label 'missing registered discovery check evidence' -TaskContract $taskContract -Ledger $ledger -DiscoveryLogPath $missingDiscoveryCheckLogPath -BaselinePath $baselinePath
 
   $incompleteManifest = Read-WorkManifest -Path $incompleteFixturePath
   Assert-ManifestRejected -Manifest $incompleteManifest -Code 'discovery_incomplete' -Label 'incomplete fixture' -TaskContract $taskContract -Ledger $ledger -DiscoveryLogPath $discoveryLogPath -BaselinePath $baselinePath

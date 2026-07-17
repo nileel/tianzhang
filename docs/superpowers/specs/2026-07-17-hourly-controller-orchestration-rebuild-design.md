@@ -141,9 +141,9 @@ Markdown 任务队列继续供人阅读；检查脚本必须验证 JSON 与 Mark
 - `DiscoverRead`：读取注册表允许的项目相对文件，限制大小并拒绝符号链接逃逸。
 - `DiscoverSearch`：在允许根目录内执行固定参数的 `rg` 搜索。
 - `DiscoverList`：在允许根目录内列举项目相对文件。
-- `DiscoverCheck`：只能运行注册表 `discoveryChecks` 中的检查 ID，由控制器映射到固定命令。
+- `DiscoverCheck`：只能运行注册表 `discoveryChecks` 中的检查 ID，由控制器映射到固定命令。固定检查进程完成但退出码非零时，发现动作仍返回受限诊断输出并记录已执行证据；这只允许形成 `plan-only` 清单，不构成检查通过或写入授权。
 
-自动化提示词不得在发现阶段直接调用 Shell。所有发现动作写入本机 `discoveryLog`；`SubmitManifest` 必须证明必读事实源和 `discoveryChecks` 已经经过网关。最终 `requiredChecks` 只在授权修改完成后由控制器统一执行，相关输入未变化时不重复运行同一检查。未登记动作默认拒绝。
+自动化提示词不得在发现阶段直接调用 Shell。所有发现动作写入本机 `discoveryLog`；`SubmitManifest` 必须证明必读事实源和 `discoveryChecks` 已经经过网关。发现检查的非零诊断不能被表述为通过；最终 `requiredChecks` 只在授权修改完成后由控制器统一执行并必须成功，相关输入未变化时不重复运行同一检查。未登记动作默认拒绝。
 
 若模型绕过网关直接修改项目，后续 baseline CAS 必须失败并列出具体变化路径；控制器不得自动重拍基线掩盖变化。
 
