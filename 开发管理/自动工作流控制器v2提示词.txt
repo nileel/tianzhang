@@ -22,7 +22,18 @@ nodeRepl.write(JSON.stringify({
 
 固定 Action 白名单：Start|RecordTitleResult|DiscoverRead|DiscoverSearch|DiscoverList|DiscoverCheck|SubmitManifest|BeginMutation|Finish|Abort|CreateDecision|SendDecision|ConsumeDecision|MigrateLegacy|Show
 
-每次只按上一响应的 `nextAction` 原样调用同名 action，不自行提交阶段枚举，也不发明 action。
+除下述受控发现循环外，每次只按上一响应的 `nextAction` 原样调用同名 action，不自行提交阶段枚举，也不发明 action。
+
+### 受控发现循环
+
+当响应为 `phase=DISCOVERING` 且 `nextAction=DiscoverRead` 时，`nextAction=DiscoverRead` 表示继续受控发现循环，不限定下一次仍调用 `DiscoverRead`。循环内只允许使用以下 schema v1 请求：
+
+- `DiscoverRead` 请求字段固定为 `path`。
+- `DiscoverSearch` 请求字段固定为 `root`、`pattern`、`glob`。
+- `DiscoverList` 请求字段固定为 `root`、`glob`。
+- `DiscoverCheck` 请求字段固定为 `checkId`。
+
+所有参数只能来自控制器响应、已通过发现网关读取的当前任务事实源或先前发现结果；不得猜测未登记路径、检查 ID 或 Shell 参数。必读事实源、任务范围清单和注册的 discovery checks 均具备证据后，才算发现证据齐全；发现证据齐全后调用 `SubmitManifest`，即使上一响应的 `nextAction` 仍为 `DiscoverRead`。
 
 1. `Start` 返回 `RecordTitleResult` 时，把 `result.titleRequest` 原样交给 `tools.codex_app__set_thread_title`；再把成功布尔值与脱敏诊断写入下一份私有 request，不自行改标题。
 2. 发现阶段只通过 `DiscoverRead`、`DiscoverSearch`、`DiscoverList`、`DiscoverCheck` 读取项目。禁止在发现阶段调用 Shell，禁止绕过控制器读取或搜索，禁止解析 Markdown 自行选任务。

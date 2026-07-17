@@ -90,6 +90,12 @@ Assert-Contract $prompt.Contains($actionLine, [StringComparison]::Ordinal) 'prom
 foreach ($literal in @(
     'tools.codex_app__set_thread_title',
     '"schemaVersion": 1',
+    '`nextAction=DiscoverRead` 表示继续受控发现循环',
+    '`DiscoverRead` 请求字段固定为 `path`',
+    '`DiscoverSearch` 请求字段固定为 `root`、`pattern`、`glob`',
+    '`DiscoverList` 请求字段固定为 `root`、`glob`',
+    '`DiscoverCheck` 请求字段固定为 `checkId`',
+    '发现证据齐全后调用 `SubmitManifest`',
     '禁止在发现阶段调用 Shell',
     '禁止解析 Markdown 自行选任务',
     '不自行宣称检查通过',
