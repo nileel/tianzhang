@@ -156,6 +156,120 @@ function Read-PrivateDecisionJson {
   }
 }
 
+function Test-ExactObjectProperties {
+  param(
+    [Parameter(Mandatory = $true)]$Value,
+    [Parameter(Mandatory = $true)][string[]]$Names
+  )
+
+  if ($null -eq $Value -or $Value -is [Collections.IDictionary]) {
+    return $false
+  }
+  $actual = @($Value.PSObject.Properties.Name | Sort-Object)
+  $expected = @($Names | Sort-Object)
+  ($actual -join '|') -ceq ($expected -join '|')
+}
+
+function ConvertTo-FeishuExactIso {
+  param([Parameter(Mandatory = $true)][string]$Value)
+
+  try {
+    [DateTimeOffset]::Parse($Value, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime.ToString(
+      "yyyy-MM-dd'T'HH:mm:ss.fff'Z'",
+      [Globalization.CultureInfo]::InvariantCulture
+    )
+  } catch {
+    throw 'decision_invalid: malformed decision lifetime'
+  }
+}
+
+function Get-FeishuBridgeStateRoot {
+  $configuredPath = [Environment]::GetEnvironmentVariable('FEISHU_DECISION_CONFIG_PATH')
+  $configPath = if ($null -eq $configuredPath) {
+    Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)) '.codex\automation-state\tzg-hourly-controller.feishu.private.json'
+  } else {
+    $configuredPath
+  }
+  if ([string]::IsNullOrWhiteSpace($configPath) -or -not [IO.Path]::IsPathFullyQualified($configPath)) {
+    throw 'decision_invalid: Feishu private config is invalid'
+  }
+  $fullConfigPath = [IO.Path]::GetFullPath($configPath)
+  if (-not (Test-Path -LiteralPath $fullConfigPath -PathType Leaf)) {
+    throw 'decision_invalid: Feishu private config is invalid'
+  }
+  $bytes = [IO.File]::ReadAllBytes($fullConfigPath)
+  if ($bytes.Length -gt 64KB) {
+    throw 'decision_invalid: Feishu private config is invalid'
+  }
+  try {
+    $text = [Text.UTF8Encoding]::new($false, $true).GetString($bytes).TrimStart([char]0xFEFF)
+    if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) {
+      $config = $text | ConvertFrom-Json -DateKind String
+    } else {
+      $config = $text | ConvertFrom-Json
+    }
+  } catch {
+    throw 'decision_invalid: Feishu private config is invalid'
+  }
+  $configKeys = @(
+    'schemaVersion', 'appId', 'appSecret', 'recipient', 'expectedTenantKey',
+    'pairedOperatorOpenIdHash', 'hmacKey', 'stateRoot'
+  )
+  if (-not (Test-ExactObjectProperties -Value $config -Names $configKeys) -or
+      [int]$config.schemaVersion -ne 1 -or
+      [string]::IsNullOrWhiteSpace([string]$config.stateRoot) -or
+      -not [IO.Path]::IsPathFullyQualified([string]$config.stateRoot)) {
+    throw 'decision_invalid: Feishu private config is invalid'
+  }
+  $stateRoot = [IO.Path]::GetFullPath([string]$config.stateRoot)
+  [IO.Directory]::CreateDirectory($stateRoot) | Out-Null
+  Set-PrivatePathAcl -Path $stateRoot -Directory
+  Assert-PrivatePathAcl -Path $stateRoot -Directory
+  $stateRoot
+}
+
+function New-FeishuPendingRecord {
+  param(
+    [Parameter(Mandatory = $true)]$Decision,
+    [Parameter(Mandatory = $true)]$Evidence
+  )
+
+  foreach ($hashName in @('providerMessageIdHash', 'providerChatIdHash', 'cardNonceHash')) {
+    $hashValue = [string](Get-ObjectPropertyValue -Value $Evidence -Name $hashName -Required)
+    if ($hashValue -notmatch '^[0-9a-f]{64}$') {
+      throw 'decision_invalid: bridge accepted malformed evidence'
+    }
+  }
+  [pscustomobject][ordered]@{
+    decisionId = [string]$Decision.decisionId
+    allowedOptions = @('A', 'B', 'C')
+    allowCustomReply = $true
+    createdAt = ConvertTo-FeishuExactIso -Value ([string]$Decision.createdAt)
+    expiresAt = ConvertTo-FeishuExactIso -Value ([string]$Decision.expiresAt)
+    cardNonceHash = [string]$Evidence.cardNonceHash
+    providerMessageIdHash = [string]$Evidence.providerMessageIdHash
+    providerChatIdHash = [string]$Evidence.providerChatIdHash
+  }
+}
+
+function Write-FeishuCallbackBinding {
+  param([Parameter(Mandatory = $true)]$Pending)
+
+  $binding = [pscustomobject][ordered]@{
+    kind = 'decision_reply'
+    decisionId = [string]$Pending.decisionId
+    allowedOptions = @($Pending.allowedOptions)
+    allowCustomReply = [bool]$Pending.allowCustomReply
+    issuedAt = [string]$Pending.createdAt
+    expiresAt = [string]$Pending.expiresAt
+    cardNonceHash = [string]$Pending.cardNonceHash
+    providerMessageIdHash = [string]$Pending.providerMessageIdHash
+    providerChatIdHash = [string]$Pending.providerChatIdHash
+  }
+  $bindingPath = Join-Path (Get-FeishuBridgeStateRoot) 'pending-bindings.json'
+  Write-PrivateDecisionJson -Path $bindingPath -Value (,$binding)
+}
+
 function Get-DecisionRecordPath {
   param(
     [Parameter(Mandatory = $true)][string]$RunRoot,
@@ -339,6 +453,13 @@ function Send-DecisionRequest {
     }
     $pendingPath = Get-BridgePendingPath -RunRoot $privateRoot -DecisionId $Decision.decisionId
     if (Test-Path -LiteralPath $pendingPath -PathType Leaf) {
+      try {
+        $pending = New-FeishuPendingRecord -Decision $Decision -Evidence (Read-PrivateDecisionJson -Path $pendingPath)
+        Write-PrivateDecisionJson -Path $pendingPath -Value $pending
+        Write-FeishuCallbackBinding -Pending $pending
+      } catch {
+        return New-DecisionAdapterResult -Decision $Decision -Ok $false -Phase 'WAITING_DECISION' -NextAction 'SendDecision' -ErrorCode 'feishu_unavailable'
+      }
       return New-DecisionAdapterResult -Decision $record.decision -Ok $true -Phase 'WAITING_DECISION' -NextAction 'ConsumeDecisionReply'
     }
   } else {
@@ -370,25 +491,15 @@ function Send-DecisionRequest {
   if ($bridgeResult.exitCode -ne 0 -or $null -eq $bridgeResult.payload -or $bridgeResult.payload.result -cne 'PROVIDER_ACCEPTED') {
     return New-DecisionAdapterResult -Decision $Decision -Ok $false -Phase 'WAITING_DECISION' -NextAction 'SendDecision' -ErrorCode 'feishu_unavailable'
   }
-  foreach ($hashName in @('providerMessageIdHash', 'providerChatIdHash', 'cardNonceHash')) {
-    $hashValue = [string](Get-ObjectPropertyValue -Value $bridgeResult.payload -Name $hashName -Required)
-    if ($hashValue -notmatch '^[0-9a-f]{64}$') {
-      throw 'decision_invalid: bridge accepted malformed evidence'
-    }
-  }
-  $pending = [pscustomobject][ordered]@{
-    decisionId = [string]$Decision.decisionId
-    allowedOptions = @('A', 'B', 'C')
-    allowCustomReply = $true
-    createdAt = [string]$Decision.createdAt
-    expiresAt = [string]$Decision.expiresAt
-    cardNonceHash = [string]$bridgeResult.payload.cardNonceHash
-    providerMessageIdHash = [string]$bridgeResult.payload.providerMessageIdHash
-    providerChatIdHash = [string]$bridgeResult.payload.providerChatIdHash
-  }
+  $pending = New-FeishuPendingRecord -Decision $Decision -Evidence $bridgeResult.payload
   Write-PrivateDecisionJson -Path (Get-BridgePendingPath -RunRoot $privateRoot -DecisionId $Decision.decisionId) -Value $pending
   $record.sentAt = [datetime]::UtcNow.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
   Write-PrivateDecisionJson -Path $recordPath -Value $record
+  try {
+    Write-FeishuCallbackBinding -Pending $pending
+  } catch {
+    return New-DecisionAdapterResult -Decision $Decision -Ok $false -Phase 'WAITING_DECISION' -NextAction 'SendDecision' -ErrorCode 'feishu_unavailable'
+  }
   New-DecisionAdapterResult -Decision $Decision -Ok $true -Phase 'WAITING_DECISION' -NextAction 'ConsumeDecisionReply'
 }
 

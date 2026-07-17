@@ -63,13 +63,27 @@ $sandbox = Join-Path $tempRoot ('tzg-hourly-controller-v2-decision-' + [guid]::N
 $bridgeRoot = Join-Path $sandbox 'fake-bridge'
 $captureRoot = Join-Path $sandbox 'capture'
 $runRoot = Join-Path $sandbox 'private-run'
+$bridgeStateRoot = Join-Path $sandbox 'bridge-state'
+$configPath = Join-Path $sandbox 'feishu-private.json'
 $oldMode = $env:FAKE_BRIDGE_MODE
 $oldCapture = $env:FAKE_BRIDGE_CAPTURE
+$oldConfigPath = $env:FEISHU_DECISION_CONFIG_PATH
 
 try {
   [IO.Directory]::CreateDirectory((Join-Path $bridgeRoot 'src')) | Out-Null
   [IO.Directory]::CreateDirectory($captureRoot) | Out-Null
   [IO.Directory]::CreateDirectory($runRoot) | Out-Null
+
+  Write-TestUtf8 -Path $configPath -Value ([ordered]@{
+      schemaVersion = 1
+      appId = 'cli_test_app'
+      appSecret = 'test-secret'
+      recipient = [ordered]@{ type = 'open_id'; value = 'ou_test_operator' }
+      expectedTenantKey = $null
+      pairedOperatorOpenIdHash = $null
+      hmacKey = ([Convert]::ToBase64String([byte[]](0..31)))
+      stateRoot = $bridgeStateRoot
+    } | ConvertTo-Json -Depth 10)
 
   Write-TestUtf8 -Path (Join-Path $bridgeRoot 'src\send-decision.mjs') -Value @'
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -136,6 +150,7 @@ switch (process.env.FAKE_BRIDGE_MODE) {
 
   $env:FAKE_BRIDGE_CAPTURE = $captureRoot
   $env:FAKE_BRIDGE_MODE = 'accepted'
+  $env:FEISHU_DECISION_CONFIG_PATH = $configPath
 
   $decision = New-TestDecision
   Assert-True ([bool]($decision.decisionId -match '^DEC-[0-9]{8}-[A-Z0-9]+$')) 'decision id format'
@@ -153,6 +168,30 @@ switch (process.env.FAKE_BRIDGE_MODE) {
   Assert-Equal (($capturedSend.PSObject.Properties.Name) -join '|') 'attemptNumber|decision' 'bridge send request fields'
   Assert-Equal $capturedSend.decision.options[0].label '采用方案甲，并且只修改冻结路径。' 'complete option text sent to card body'
   Assert-Equal $capturedSend.decision.options[2].label '停止本次任务，不授权任何修改。' 'third option text sent to card body'
+
+  $bindingPath = Join-Path $bridgeStateRoot 'pending-bindings.json'
+  Assert-True (Test-Path -LiteralPath $bindingPath -PathType Leaf) 'accepted send registers callback binding'
+  $bindings = @(Read-TestJson -Path $bindingPath)
+  Assert-Equal $bindings.Count 1 'one callback binding'
+  $binding = $bindings[0]
+  $expectedIssuedAt = [DateTimeOffset]::Parse($decision.createdAt).UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
+  $expectedExpiresAt = [DateTimeOffset]::Parse($decision.expiresAt).UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
+  Assert-Equal (($binding.PSObject.Properties.Name | Sort-Object) -join '|') 'allowCustomReply|allowedOptions|cardNonceHash|decisionId|expiresAt|issuedAt|kind|providerChatIdHash|providerMessageIdHash' 'callback binding fields'
+  Assert-Equal $binding.kind 'decision_reply' 'callback binding kind'
+  Assert-Equal $binding.decisionId $decision.decisionId 'callback binding decision'
+  Assert-Equal $binding.issuedAt $expectedIssuedAt 'callback binding issue time'
+  Assert-Equal $binding.expiresAt $expectedExpiresAt 'callback binding expiry'
+
+  $consumePending = Read-TestJson -Path (Join-Path $runRoot "bridge\$($decision.decisionId).pending.json")
+  Assert-Equal $consumePending.createdAt $expectedIssuedAt 'consumer pending issue time'
+  Assert-Equal $consumePending.expiresAt $expectedExpiresAt 'consumer pending expiry'
+
+  [IO.File]::Delete($bindingPath)
+  $sendCountBeforeRepair = [int][IO.File]::ReadAllText((Join-Path $captureRoot 'send-count.txt'))
+  $repaired = Send-DecisionRequest -Decision $decision -RunRoot $runRoot -BridgeRoot $bridgeRoot
+  Assert-True ([bool]$repaired.ok) 'idempotent send repairs callback binding'
+  Assert-True (Test-Path -LiteralPath $bindingPath -PathType Leaf) 'callback binding repaired'
+  Assert-Equal ([int][IO.File]::ReadAllText((Join-Path $captureRoot 'send-count.txt'))) $sendCountBeforeRepair 'repair does not resend card'
 
   $recordPath = Join-Path $runRoot "decisions\$($decision.decisionId).json"
   $record = Read-TestJson -Path $recordPath
@@ -226,7 +265,7 @@ switch (process.env.FAKE_BRIDGE_MODE) {
     Assert-True ([bool]$approval.question.Contains($check)) "approval check $check"
   }
   Assert-True ([bool]$approval.question.Contains("$($approval.decisionId)：自定义 <你的方案>")) 'approval copy reply format'
-  Assert-Equal @($approval.options[0].scopeContract.expectedPaths).Count 13 'approval frozen paths'
+  Assert-Equal @($approval.options[0].scopeContract.expectedPaths).Count @($manifest.expectedPaths).Count 'approval frozen paths'
   Assert-Equal @($approval.options[0].scopeContract.decisionIds).Count 5 'approval frozen decisions'
   Assert-Equal @($approval.options[0].scopeContract.requiredChecks).Count 4 'approval frozen checks'
 
@@ -239,6 +278,7 @@ switch (process.env.FAKE_BRIDGE_MODE) {
 } finally {
   $env:FAKE_BRIDGE_MODE = $oldMode
   $env:FAKE_BRIDGE_CAPTURE = $oldCapture
+  $env:FEISHU_DECISION_CONFIG_PATH = $oldConfigPath
   $resolvedSandbox = [IO.Path]::GetFullPath($sandbox)
   if ($resolvedSandbox.StartsWith($tempRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and
       (Test-Path -LiteralPath $resolvedSandbox)) {
