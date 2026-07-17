@@ -2,7 +2,7 @@
 
 param(
   [Parameter(Mandatory = $true, Position = 0)]
-  [ValidateSet('Plan', 'Install', 'Uninstall', 'Status')]
+  [ValidateSet('Plan', 'Install', 'Start', 'Stop', 'Enable', 'Disable', 'Status', 'Uninstall')]
   [string]$Action,
 
   [string]$ConfigPath = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller.feishu.private.json'),
@@ -15,6 +15,7 @@ $script:TaskName = 'TianZhang-Feishu-Decision-Bridge'
 $script:RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $script:PackageRoot = Join-Path $PSScriptRoot 'feishu-decision-bridge'
 $script:StartScript = Join-Path $PSScriptRoot 'start-feishu-decision-bridge.ps1'
+$script:HiddenLauncher = Join-Path $PSScriptRoot 'start-feishu-decision-bridge-hidden.vbs'
 $script:BridgeEntry = Join-Path $script:PackageRoot 'src\bridge.mjs'
 
 function Resolve-AbsolutePath {
@@ -35,16 +36,25 @@ function Write-SanitizedJson {
 function Get-TaskPlan {
   $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
   if ($null -eq $pwsh) { throw 'PowerShell 7 is unavailable' }
+  $wscript = Get-Command wscript.exe -ErrorAction SilentlyContinue
+  if ($null -eq $wscript) { throw 'Windows Script Host is unavailable' }
+  $pwshPath = Resolve-AbsolutePath $pwsh.Source 'PowerShell 7'
+  $wscriptPath = Resolve-AbsolutePath $wscript.Source 'Windows Script Host'
   $startScript = Resolve-AbsolutePath $script:StartScript 'start script'
-  if ($startScript.Contains('"', [StringComparison]::Ordinal)) { throw 'Start script path is invalid' }
+  $hiddenLauncher = Resolve-AbsolutePath $script:HiddenLauncher 'hidden launcher'
+  foreach ($path in @($pwshPath, $wscriptPath, $startScript, $hiddenLauncher)) {
+    if ($path.Contains('"', [StringComparison]::Ordinal)) { throw 'Launch path is invalid' }
+  }
+  if (-not (Test-Path -LiteralPath $hiddenLauncher -PathType Leaf)) { throw 'Hidden launcher is unavailable' }
   [ordered]@{
     schemaVersion = 1
     taskName = $script:TaskName
     trigger = 'AtLogOn'
-    execute = [IO.Path]::GetFullPath($pwsh.Source)
-    arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$startScript`""
+    execute = $wscriptPath
+    arguments = "//B //NoLogo `"$hiddenLauncher`" `"$pwshPath`" `"$startScript`""
     workingDirectory = [IO.Path]::GetFullPath($script:RepositoryRoot)
     startScript = $startScript
+    launchMode = 'WINDOWLESS_WSCRIPT'
     hidden = $true
     multipleInstances = 'IgnoreNew'
   }
@@ -90,7 +100,6 @@ function New-RealSchedulerAdapter {
       $settings = New-ScheduledTaskSettingsSet -Hidden -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero)
       $principal = New-ScheduledTaskPrincipal -UserId $identity -LogonType Interactive -RunLevel Limited
       Register-ScheduledTask -TaskName $Plan.taskName -Action $taskAction -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
-      Start-ScheduledTask -TaskName $Plan.taskName
     }
     RemoveTask = {
       param([string]$TaskName)
@@ -101,6 +110,23 @@ function New-RealSchedulerAdapter {
       param([string]$TaskName)
       $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
       if ($null -eq $task) { 'NotInstalled' } else { [string]$task.State }
+    }
+    IsTaskEnabled = {
+      param([string]$TaskName)
+      $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
+      [bool]$task.Settings.Enabled
+    }
+    EnableTask = {
+      param([string]$TaskName)
+      Enable-ScheduledTask -TaskName $TaskName | Out-Null
+    }
+    DisableTask = {
+      param([string]$TaskName)
+      Disable-ScheduledTask -TaskName $TaskName | Out-Null
+    }
+    StartTask = {
+      param([string]$TaskName)
+      Start-ScheduledTask -TaskName $TaskName
     }
   }
 }
@@ -114,7 +140,8 @@ function Assert-TestAdapterSafe {
   }
   $expected = @(
     'GetNodeVersion', 'InstallPackages', 'GetTask', 'StopTask',
-    'GetProcesses', 'StopProcess', 'UpsertTask', 'RemoveTask', 'GetTaskStatus'
+    'GetProcesses', 'StopProcess', 'UpsertTask', 'RemoveTask', 'GetTaskStatus',
+    'IsTaskEnabled', 'EnableTask', 'DisableTask', 'StartTask'
   )
   if ($SchedulerAdapter.Count -ne $expected.Count) { throw 'SchedulerAdapter is invalid' }
   foreach ($key in $expected) {
@@ -283,16 +310,76 @@ switch ($Action) {
     Invoke-Adapter 'InstallPackages' @($script:PackageRoot)
     Stop-VerifiedLegacyBridgeProcesses
     Invoke-Adapter 'UpsertTask' @([pscustomobject]$plan)
+    Invoke-Adapter 'EnableTask' @($script:TaskName)
+    Invoke-Adapter 'StartTask' @($script:TaskName)
     Write-SanitizedJson ([ordered]@{
       result = 'INSTALLED'
       taskName = $script:TaskName
       updated = $null -ne $existing
       multipleInstances = 'IgnoreNew'
+      launchMode = 'WINDOWLESS_WSCRIPT'
+    })
+  }
+  'Start' {
+    $existing = Invoke-Adapter 'GetTask' @($script:TaskName)
+    if ($null -eq $existing) { throw 'Bridge task is not installed' }
+    if (-not [bool](Invoke-Adapter 'IsTaskEnabled' @($script:TaskName))) {
+      throw 'Bridge task is disabled'
+    }
+    Invoke-Adapter 'StartTask' @($script:TaskName)
+    Write-SanitizedJson ([ordered]@{
+      result = 'STARTED'
+      taskName = $script:TaskName
+      enabled = $true
+      launchMode = 'WINDOWLESS_WSCRIPT'
+    })
+  }
+  'Stop' {
+    $existing = Invoke-Adapter 'GetTask' @($script:TaskName)
+    if ($null -eq $existing) { throw 'Bridge task is not installed' }
+    Invoke-Adapter 'StopTask' @($script:TaskName)
+    Stop-VerifiedLegacyBridgeProcesses
+    Write-SanitizedJson ([ordered]@{
+      result = 'STOPPED'
+      taskName = $script:TaskName
+      enabled = [bool](Invoke-Adapter 'IsTaskEnabled' @($script:TaskName))
+      privateStatePreserved = $true
+      launchMode = 'WINDOWLESS_WSCRIPT'
+    })
+  }
+  'Enable' {
+    $existing = Invoke-Adapter 'GetTask' @($script:TaskName)
+    if ($null -eq $existing) { throw 'Bridge task is not installed' }
+    Invoke-Adapter 'EnableTask' @($script:TaskName)
+    Invoke-Adapter 'StartTask' @($script:TaskName)
+    Write-SanitizedJson ([ordered]@{
+      result = 'ENABLED'
+      taskName = $script:TaskName
+      enabled = $true
+      launchMode = 'WINDOWLESS_WSCRIPT'
+    })
+  }
+  'Disable' {
+    $existing = Invoke-Adapter 'GetTask' @($script:TaskName)
+    if ($null -eq $existing) { throw 'Bridge task is not installed' }
+    Invoke-Adapter 'StopTask' @($script:TaskName)
+    Stop-VerifiedLegacyBridgeProcesses
+    Invoke-Adapter 'DisableTask' @($script:TaskName)
+    Write-SanitizedJson ([ordered]@{
+      result = 'DISABLED'
+      taskName = $script:TaskName
+      enabled = $false
+      privateStatePreserved = $true
+      launchMode = 'WINDOWLESS_WSCRIPT'
     })
   }
   'Uninstall' {
     $existing = Invoke-Adapter 'GetTask' @($script:TaskName)
-    if ($null -ne $existing) { Invoke-Adapter 'RemoveTask' @($script:TaskName) }
+    if ($null -ne $existing) {
+      Invoke-Adapter 'StopTask' @($script:TaskName)
+      Stop-VerifiedLegacyBridgeProcesses
+      Invoke-Adapter 'RemoveTask' @($script:TaskName)
+    }
     Write-SanitizedJson ([ordered]@{
       result = 'UNINSTALLED'
       taskName = $script:TaskName
@@ -302,12 +389,19 @@ switch ($Action) {
   }
   'Status' {
     $state = [string](Invoke-Adapter 'GetTaskStatus' @($script:TaskName))
+    $enabled = if ($state -ceq 'NotInstalled') {
+      $null
+    } else {
+      [bool](Invoke-Adapter 'IsTaskEnabled' @($script:TaskName))
+    }
     $health = Get-HealthSummary
     Write-SanitizedJson ([ordered]@{
       result = 'STATUS'
       taskName = $script:TaskName
       installed = $state -cne 'NotInstalled'
       taskState = $state
+      enabled = $enabled
+      launchMode = 'WINDOWLESS_WSCRIPT'
       bridgeStatus = $health.bridgeStatus
       cardStatus = $health.cardStatus
       healthAgeSeconds = $health.healthAgeSeconds
