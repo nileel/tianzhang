@@ -35,7 +35,7 @@ nodeRepl.write(JSON.stringify({
 
 所有参数只能来自控制器响应、已通过发现网关读取的当前任务事实源或先前发现结果；不得猜测未登记路径、检查 ID 或 Shell 参数。必读事实源、任务范围清单和注册的 discovery checks 均具备证据后，才算发现证据齐全；发现证据齐全后调用 `SubmitManifest`，即使上一响应的 `nextAction` 仍为 `DiscoverRead`。
 
-### Manifest v1 请求
+### Work manifest v1 与提交请求
 
 manifest 根字段固定为 `schemaVersion`、`runId`、`taskId`、`model`、`threadId`、`planOnly`、`sourceEvidence`、`decisionCoverage`、`expectedPaths`、`intendedChanges`、`requiredChecks`、`completionEvidence`；manifest 不得包含 `metadataThreadId`。
 
@@ -43,10 +43,12 @@ manifest 根字段固定为 `schemaVersion`、`runId`、`taskId`、`model`、`th
 - `decisionCoverage` 项字段固定为 `decisionId`、`resolutionText`、`paths`、`implementation`；`resolutionText` 必须使用控制器返回的完整已批准正文。
 - `intendedChanges` 项字段固定为 `path`、`operation`、`summary`；`operation` 只允许 `create`、`modify`、`delete`。
 - `expectedPaths` 必须逐文件列出，不得使用目录或 glob 占位；每个路径必须恰好对应一项 `intendedChanges`，每项决定的 `paths` 只能引用这些路径。
+- 集合型 `scopeContract` 必须将对应 `DiscoverList` 返回的逐文件全集原样吸收到 `expectedPaths` 与 `intendedChanges`，不得只选代表项、已知样例或最小子集；`decisionCoverage.paths` 也必须覆盖该决定约束的完整集合。
+- work manifest 与 `SubmitManifest` controller request 是两个不同文件。先把上述 work manifest 写入私有路径，再另写一份 controller request：`{"schemaVersion":1,"action":"SubmitManifest","runId":"<runId>","manifestPath":"<work manifest 的绝对私有路径>"}`；调用控制器时只把第二个文件传给 `-RequestPath`，不得把 work manifest 自身作为 `-RequestPath`。
 
 1. `Start` 返回 `RecordTitleResult` 时，把 `result.titleRequest` 原样交给 `tools.codex_app__set_thread_title`；再把成功布尔值与脱敏诊断写入下一份私有 request，不自行改标题。
 2. 发现阶段只通过 `DiscoverRead`、`DiscoverSearch`、`DiscoverList`、`DiscoverCheck` 读取项目。禁止在发现阶段调用 Shell，禁止绕过控制器读取或搜索，禁止解析 Markdown 自行选任务。
-3. 发现完成后生成 schema v1 manifest request，放在 `%USERPROFILE%\.codex\automation-state\`。manifest 必须保持 `planOnly=true`，完整列出 sourceEvidence、decisionCoverage、expectedPaths、intendedChanges、requiredChecks 与 completionEvidence。
+3. 发现完成后生成 schema v1 work manifest 和独立的 schema v1 `SubmitManifest` controller request，都放在 `%USERPROFILE%\.codex\automation-state\`。work manifest 必须保持 `planOnly=true`，完整列出 sourceEvidence、decisionCoverage、expectedPaths、intendedChanges、requiredChecks 与 completionEvidence。
 4. `SubmitManifest` 后只按 `SendDecision`、`ConsumeDecision` 和响应的后续 action 推进；负责人批准前不得请求或实施项目写入。
 5. 不自行宣称检查通过；只有 `Finish` 的控制器响应可作为 requiredChecks 与提交结果。不得修改状态枚举，不得编辑任何 automation TOML。
 6. 控制器返回终止态、错误或空 `nextAction` 时，只输出该响应的脱敏最终摘要，不自行修复状态、不推送远端。
