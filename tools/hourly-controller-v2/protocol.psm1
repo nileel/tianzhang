@@ -196,7 +196,7 @@ function ConvertTo-RedactedControllerValue {
     return $copy
   }
   if ($Value -is [Collections.IEnumerable]) {
-    return @($Value | ForEach-Object { ConvertTo-RedactedControllerValue -Value $_ })
+    return ,@($Value | ForEach-Object { ConvertTo-RedactedControllerValue -Value $_ })
   }
 
   $copy = [ordered]@{}

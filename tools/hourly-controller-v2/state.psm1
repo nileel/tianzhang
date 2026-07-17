@@ -173,13 +173,16 @@ function Write-ControllerStateAtomic {
     Throw-StateError -Code 'invalid_state' -Message 'state parent directory does not exist'
   }
   $tempPath = Join-Path $parent ('.' + [IO.Path]::GetFileName($fullPath) + '.' + [guid]::NewGuid().ToString('N') + '.tmp')
+  $backupPath = Join-Path $parent ('.' + [IO.Path]::GetFileName($fullPath) + '.' + [guid]::NewGuid().ToString('N') + '.bak')
   try {
     $json = ConvertTo-StableStateJson -State $State
     [IO.File]::WriteAllText($tempPath, $json, [Text.UTF8Encoding]::new($false))
     Set-PrivatePathAcl -Path $tempPath
     Assert-PrivatePathAcl -Path $tempPath
     if (Test-Path -LiteralPath $fullPath -PathType Leaf) {
-      [IO.File]::Replace($tempPath, $fullPath, $null, $true)
+      [IO.File]::Replace($tempPath, $fullPath, $backupPath, $true)
+      Assert-PrivatePathAcl -Path $backupPath
+      [IO.File]::Delete($backupPath)
     } else {
       [IO.File]::Move($tempPath, $fullPath)
     }
@@ -187,6 +190,9 @@ function Write-ControllerStateAtomic {
   } finally {
     if (Test-Path -LiteralPath $tempPath -PathType Leaf) {
       [IO.File]::Delete($tempPath)
+    }
+    if (Test-Path -LiteralPath $backupPath -PathType Leaf) {
+      [IO.File]::Delete($backupPath)
     }
   }
 }
