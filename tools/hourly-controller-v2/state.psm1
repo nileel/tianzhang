@@ -43,6 +43,18 @@ $script:ForbiddenFields = @(
   'evidenceHash',
   'rawEvent'
 )
+$script:ExpectedMigrationDecisionIds = @(
+  'DEC-20260715-35ACB87E6C10',
+  'DEC-20260715-75D7BA2AF210',
+  'DEC-20260714-29A5D1356CC8',
+  'DEC-20260714-320075D033A5',
+  'DEC-20260713-A07FA708DB22'
+)
+$script:ContractOnlyMigrationDecisionIds = @(
+  'DEC-20260714-29A5D1356CC8',
+  'DEC-20260714-320075D033A5',
+  'DEC-20260713-A07FA708DB22'
+)
 $script:AllowedTransitions = @{
   IDLE = @('DISCOVERING')
   DISCOVERING = @('AUTHORIZED', 'WAITING_DECISION', 'IMPLEMENTATION_PENDING', 'IDLE')
@@ -318,18 +330,39 @@ function New-MigratedLedgerEntry {
       [string]$LegacyDecision.resolution.resolvedAt -cne [string]$Contract.resolvedAt) {
     Throw-StateError -Code 'migration_invalid' -Message "legacy decision does not match contract: $decisionId"
   }
-  $selectedOptions = @($LegacyDecision.options | Where-Object { [string]$_.optionId -ceq $selectedOptionId })
-  if ($selectedOptions.Count -ne 1 -or [string]::IsNullOrWhiteSpace([string]$selectedOptions[0].text)) {
+  $selectedOptions = @($LegacyDecision.options | Where-Object {
+      $optionId = if ($_ -is [Collections.IDictionary] -and $_.Contains('optionId')) { $_.optionId } else { $_.key }
+      [string]$optionId -ceq $selectedOptionId
+    })
+  $selectedOptionText = if ($selectedOptions.Count -eq 1) {
+    if ($selectedOptions[0] -is [Collections.IDictionary] -and $selectedOptions[0].Contains('text')) {
+      [string]$selectedOptions[0].text
+    } else {
+      [string]$selectedOptions[0].label
+    }
+  } else {
+    ''
+  }
+  $expectedResolutionText = '选择 ' + $selectedOptionId + '：' + $selectedOptionText
+  if ($selectedOptions.Count -ne 1 -or
+      [string]::IsNullOrWhiteSpace($selectedOptionText) -or
+      [string]$Contract.resolutionText -cne $expectedResolutionText) {
     Throw-StateError -Code 'migration_invalid' -Message "legacy decision option text does not match contract: $decisionId"
   }
 
+  New-ContractLedgerEntry -Contract $Contract
+}
+
+function New-ContractLedgerEntry {
+  param([Parameter(Mandatory = $true)]$Contract)
+
   $scope = $Contract.scopeContract
   [pscustomobject][ordered]@{
-    decisionId = $decisionId
+    decisionId = [string]$Contract.decisionId
     taskId = [string]$Contract.taskId
     question = [string]$Contract.question
     resolutionKind = 'option'
-    selectedOptionId = $selectedOptionId
+    selectedOptionId = [string]$Contract.selectedOptionId
     resolutionText = [string]$Contract.resolutionText
     impactSummary = [string]$Contract.impactSummary
     scopeContract = [pscustomobject][ordered]@{
@@ -371,15 +404,27 @@ function Import-LegacyV8State {
   if ($contractEntries.Count -ne 5) {
     Throw-StateError -Code 'migration_invalid' -Message 'migration contract must contain five decisions'
   }
+  $contractIds = @($contractEntries | ForEach-Object { [string]$_.decisionId })
+  if (($contractIds -join '|') -cne ($script:ExpectedMigrationDecisionIds -join '|')) {
+    Throw-StateError -Code 'migration_invalid' -Message 'migration contract decision set or order is invalid'
+  }
   $legacyDecisions = Get-LegacyResolvedDecisions -Legacy $legacyResult.state
+  foreach ($legacyDecisionId in @($legacyDecisions.Keys)) {
+    if ([string]$legacyDecisionId -cnotin $script:ExpectedMigrationDecisionIds) {
+      Throw-StateError -Code 'migration_invalid' -Message "legacy decision is not in the frozen contract: $legacyDecisionId"
+    }
+  }
   $ledger = @()
   foreach ($contract in $contractEntries) {
     Assert-MigrationContractEntry -Entry $contract
     $decisionId = [string]$contract.decisionId
-    if (-not $legacyDecisions.Contains($decisionId)) {
+    if ($legacyDecisions.Contains($decisionId)) {
+      $ledger += New-MigratedLedgerEntry -Contract $contract -LegacyDecision $legacyDecisions[$decisionId]
+    } elseif ($decisionId -cin $script:ContractOnlyMigrationDecisionIds) {
+      $ledger += New-ContractLedgerEntry -Contract $contract
+    } else {
       Throw-StateError -Code 'migration_invalid' -Message "legacy decision is missing: $decisionId"
     }
-    $ledger += New-MigratedLedgerEntry -Contract $contract -LegacyDecision $legacyDecisions[$decisionId]
   }
 
   $state = [pscustomobject][ordered]@{

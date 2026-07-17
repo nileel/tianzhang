@@ -14,6 +14,7 @@ Import-Module $modulePath -Force -DisableNameChecking
 
 $fixtureRoot = Join-Path $PSScriptRoot 'fixtures'
 $legacyPath = Join-Path $fixtureRoot 'legacy-v8-tq057.json'
+$sparseLegacyPath = Join-Path $fixtureRoot 'legacy-v8-tq057-sparse.json'
 $expectedPath = Join-Path $fixtureRoot 'migrated-v1-tq057.expected.json'
 $expectedText = [IO.File]::ReadAllText($expectedPath)
 $expectedState = if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) {
@@ -28,6 +29,8 @@ $sandbox = Join-Path $tempRoot ('tzg-hourly-controller-v2-state-' + [guid]::NewG
 $statePath = Join-Path $sandbox 'state.json'
 $migrationPath = Join-Path $sandbox 'migrated.json'
 $secondMigrationPath = Join-Path $sandbox 'migrated-second.json'
+$sparseMigrationPath = Join-Path $sandbox 'migrated-sparse.json'
+$secondSparseMigrationPath = Join-Path $sandbox 'migrated-sparse-second.json'
 
 try {
   [IO.Directory]::CreateDirectory($sandbox) | Out-Null
@@ -62,6 +65,19 @@ try {
 
   Import-LegacyV8State -LegacyPath $legacyPath -DestinationPath $secondMigrationPath -FixtureContract $fixtureContract | Out-Null
   Assert-Equal ([Convert]::ToHexString([IO.File]::ReadAllBytes($secondMigrationPath))) ([Convert]::ToHexString($firstBytes)) 'second destination migration idempotency'
+
+  Import-LegacyV8State -LegacyPath $sparseLegacyPath -DestinationPath $sparseMigrationPath -FixtureContract $fixtureContract | Out-Null
+  Import-LegacyV8State -LegacyPath $sparseLegacyPath -DestinationPath $secondSparseMigrationPath -FixtureContract $fixtureContract | Out-Null
+  $sparseMigrated = Read-ControllerState -Path $sparseMigrationPath
+  Assert-Equal @($sparseMigrated.decisionLedger).Count 5 'sparse migration decision count'
+  Assert-Equal `
+    (($sparseMigrated.decisionLedger | ConvertTo-Json -Depth 100 -Compress)) `
+    (($expectedState.decisionLedger | ConvertTo-Json -Depth 100 -Compress)) `
+    'sparse migration authoritative ledger'
+  Assert-Equal `
+    ([Convert]::ToHexString([IO.File]::ReadAllBytes($secondSparseMigrationPath))) `
+    ([Convert]::ToHexString([IO.File]::ReadAllBytes($sparseMigrationPath))) `
+    'sparse second destination migration idempotency'
 
   $migrated = Read-ControllerState -Path $migrationPath
   Assert-Equal @($migrated.decisionLedger).Count 5 'migrated decision count'
