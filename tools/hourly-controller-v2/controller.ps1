@@ -366,7 +366,13 @@ function Invoke-StartAction {
   $titleRequest = New-TitleRequest -Model $model -ThreadId $threadId -MetadataThreadId $metadataThreadId -TaskTitle ([string]$task.title)
   $runId = [guid]::NewGuid().ToString()
   $privateRoot = Get-PrivateStateRoot
-  $runRoot = Join-Path $privateRoot "runs\$runId"
+  $runsRoot = Join-Path $privateRoot 'tzg-hourly-controller-v2-runs'
+  if (-not (Test-Path -LiteralPath $runsRoot -PathType Container)) {
+    [IO.Directory]::CreateDirectory($runsRoot) | Out-Null
+  }
+  Set-PrivatePathAcl -Path $runsRoot -Directory
+  Assert-PrivatePathAcl -Path $runsRoot -Directory
+  $runRoot = Join-Path $runsRoot $runId
   [IO.Directory]::CreateDirectory($runRoot) | Out-Null
   Set-PrivatePathAcl -Path $runRoot -Directory
   Assert-PrivatePathAcl -Path $runRoot -Directory

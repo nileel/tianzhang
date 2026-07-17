@@ -281,6 +281,9 @@ function Invoke-ReadOnlyPrelude {
   Assert-Equal $start.Response.nextAction 'RecordTitleResult' 'Start next action'
   Assert-Equal $start.Response.result.titleRequest.threadId $threadId 'Start title thread'
   $runId = [string]$start.Response.runId
+  $expectedRunRoot = Join-Path $Fixture.PrivateRoot ("tzg-hourly-controller-v2-runs\$runId")
+  Assert-True (Test-Path -LiteralPath $expectedRunRoot -PathType Container) 'Start uses stable isolated run root'
+  Assert-False (Test-Path -LiteralPath (Join-Path $Fixture.PrivateRoot "runs\$runId")) 'Start does not use shared runs root'
 
   $title = Invoke-Controller -Fixture $Fixture -Action 'RecordTitleResult' -Request ([ordered]@{
       schemaVersion = 1
@@ -398,6 +401,9 @@ try {
   $successPrelude = Invoke-ReadOnlyPrelude -Fixture $successFixture
   $successManifestPath = Write-TestManifest -Fixture $successFixture -Prelude $successPrelude
   $submitted = Submit-TestManifest -Fixture $successFixture -Prelude $successPrelude -ManifestPath $successManifestPath
+  if ($submitted.Code -ne 0) {
+    throw "SubmitManifest failed: $($submitted.Stdout); stderr: $($submitted.Stderr)"
+  }
   Assert-Equal $submitted.Code 0 'SubmitManifest exit'
   Assert-Equal $submitted.Response.phase 'IMPLEMENTATION_PENDING' 'plan-only manifest phase'
   Assert-Equal $submitted.Response.nextAction 'SendDecision' 'plan-only manifest next action'

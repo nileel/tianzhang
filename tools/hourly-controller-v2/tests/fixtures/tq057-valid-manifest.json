@@ -26,7 +26,7 @@
   "decisionCoverage": [
     {
       "decisionId": "DEC-20260715-35ACB87E6C10",
-      "resolutionText": "选择 B：保留 11 份古修术法文档，并补齐 CSV、语言键和 Unity asset。",
+      "resolutionText": "选择 B：按既有文档补齐 CSV、语言键和 Unity asset",
       "paths": [
         "src/Assets/DataConfig/Spells.csv",
         "src/Assets/DataConfig/Language.csv",
@@ -39,7 +39,7 @@
     },
     {
       "decisionId": "DEC-20260715-75D7BA2AF210",
-      "resolutionText": "选择 A：为所有攻击术法增加明确的 physicalDamageMultiplier 与 soulDamageMultiplier，迁移现有单通道数据；实现覆盖 Spells.csv、DataConfigImporter.cs、SpellData.cs、CombatResolver.cs、相关测试和全部既有术法资产。",
+      "resolutionText": "选择 A：为所有攻击术法增加明确的 physicalDamageMultiplier 与 soulDamageMultiplier，并迁移现有单通道数据",
       "paths": [
         "src/Assets/DataConfig/Spells.csv",
         "src/Assets/Scripts/Editor/DataConfigImporter.cs",
