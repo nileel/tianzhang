@@ -1,0 +1,31 @@
+# 自动工作流 v2 规则（切换前候选）
+
+## 单写入控制器
+
+- 生产环境任何时刻最多一个写入控制器。建设与金丝雀阶段旧生产控制器保持 `PAUSED`，v2 只允许旁路只读验证；未完成切换门禁前不得启用 v2 生产写入。
+- 模型只能调用 `tools/hourly-controller-v2/controller.ps1` 的稳定 action，不能直接调用状态、guard、finalizer 或 Git 拼装第二条写入路径，也不能并行派发写入代理。
+- 不自动 stash、reset、checkout、clean 或推送远端；路径外人工脏文件和预存 staged 项必须保持原样。
+
+## plan-only 批准门禁
+
+- 首次真实 TQ-057 实施必须先提交 `planOnly=true` 的完整 manifest，并通过飞书把任务、路径、五项决定、逐组意图和 requiredChecks 交给负责人批准。
+- 批准前阶段只能是 `DISCOVERING`、`WAITING_DECISION` 或 `IMPLEMENTATION_PENDING`，不得进入 `AUTHORIZED`/`MUTATING`。自定义回复只要求生成新 manifest，不能直接授权写入。
+- 负责人选择批准选项后，控制器才可进入 `AUTHORIZED`；`BeginMutation` 再通过 workspace baseline CAS 后才进入 `MUTATING`。
+
+## 私有状态边界
+
+- 状态、request、baseline、发现日志、恢复证据、桥请求与收件箱只位于 `%USERPROFILE%\.codex\automation-state\`，必须复用 `tools/private-path-acl.ps1` 收紧 ACL，不得进入 Git、项目文档或模型输出。
+- provider、tenant、open_id、chat_id、message_id、event_id、证据哈希、secret 和原始事件不得进入项目可见文件或稳定响应。
+- 飞书宿主停止、禁用或前置不可用时固定返回 `feishu_unavailable`：保留原待决策事实，不产生授权，不丢弃决定，不推断回复，不回退 Gmail。
+
+## 最小验证预算
+
+- 发现检查与最终 requiredChecks 分离。最终只执行注册表声明且与本轮变更直接相关的检查；输入未变化时不重复同一检查。
+- `data-chain` 与 `unity-editmode-related` 由控制器各执行一次；`pending-whitespace` 与 `cached-diff-check` 只由保留 finalizer 对实际变化的 expectedPaths 各执行一次。
+- 提交前后只调用保留 workspace guard 验证路径外基线；提交只使用 path-limited `git commit --only`。不得把离线 fixture 结果写成生产成功。
+
+## 失败关闭与中断
+
+- baseline、HEAD、路径范围或检查失败时不创建部分提交，不清理人工文件，不重拍 baseline。
+- 中断残留沿用保留 guard 的 `clean`、`recoverable`、`unsafe` 分类；只有预期路径残留且路径外基线不变时才可记录 recoverable 证据。
+- 稳定响应只返回登记的错误码、精确 `changedPaths` 和脱敏摘要；模型不修改内部状态枚举。
