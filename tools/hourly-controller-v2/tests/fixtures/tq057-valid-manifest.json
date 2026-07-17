@@ -46,6 +46,7 @@
         "src/Assets/Scripts/Combat/SpellData.cs",
         "src/Assets/Scripts/Combat/CombatResolver.cs",
         "src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs",
+        "tools/check-data-chain.ps1",
         "src/Assets/Data/Spells/spell-a.asset",
         "src/Assets/Data/Spells/spell-b.asset",
         "src/Assets/Data/Spells/spell-c.asset"
@@ -88,6 +89,7 @@
     "src/Assets/Scripts/Combat/SpellData.cs",
     "src/Assets/Scripts/Combat/CombatResolver.cs",
     "src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs",
+    "tools/check-data-chain.ps1",
     "src/Assets/Data/Spells/spell-a.asset",
     "src/Assets/Data/Spells/spell-b.asset",
     "src/Assets/Data/Spells/spell-c.asset",
@@ -126,6 +128,11 @@
       "path": "src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs",
       "operation": "modify",
       "summary": "验证双倍率导入、迁移和运行时语义。"
+    },
+    {
+      "path": "tools/check-data-chain.ps1",
+      "operation": "modify",
+      "summary": "同步 Spells.csv 双倍率字段的数据链 schema 检查。"
     },
     {
       "path": "src/Assets/Data/Spells/spell-a.asset",

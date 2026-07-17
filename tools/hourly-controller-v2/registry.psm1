@@ -36,12 +36,14 @@ $script:Tq057DecisionIds = @(
   'DEC-20260713-A07FA708DB22'
 )
 $script:Tq057RequiredChecks = @('data-chain', 'unity-editmode-related', 'pending-whitespace', 'cached-diff-check')
+$script:Tq057ExactAllowedPaths = @('tools/check-data-chain.ps1')
 $script:MultiplierDecisionId = 'DEC-20260715-75D7BA2AF210'
 $script:MultiplierCorePaths = @(
   'src/Assets/DataConfig/Spells.csv',
   'src/Assets/Scripts/Editor/DataConfigImporter.cs',
   'src/Assets/Scripts/Combat/SpellData.cs',
-  'src/Assets/Scripts/Combat/CombatResolver.cs'
+  'src/Assets/Scripts/Combat/CombatResolver.cs',
+  'tools/check-data-chain.ps1'
 )
 
 function Throw-RegistryInvalid {
@@ -141,6 +143,11 @@ function Assert-Tq057Contract {
   foreach ($check in $script:Tq057RequiredChecks) {
     if ($check -cnotin @($Task.requiredChecks)) {
       Throw-RegistryInvalid "TQ-057 required check is missing: $check"
+    }
+  }
+  foreach ($path in $script:Tq057ExactAllowedPaths) {
+    if ($path -cnotin @($Task.allowedRoots)) {
+      Throw-RegistryInvalid "TQ-057 exact allowed path is missing: $path"
     }
   }
   $rules = @($Task.coverageRules)

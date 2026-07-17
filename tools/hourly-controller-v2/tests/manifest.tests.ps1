@@ -148,7 +148,7 @@ try {
   $validManifest = Read-WorkManifest -Path $validManifestPath
   $validResult = Test-WorkManifest -Manifest $validManifest -TaskContract $taskContract -DecisionLedger $ledger -DiscoveryLogPath $discoveryLogPath -BaselinePath $baselinePath
   Assert-True ([bool]$validResult.ok) 'valid manifest result'
-  Assert-Equal @($validResult.expectedPaths).Count 13 'valid manifest expected path count'
+  Assert-Equal @($validResult.expectedPaths).Count 14 'valid manifest expected path count'
 
   $missingDiscoveryCheckLogPath = Join-Path $runRoot 'discovery-missing-check.jsonl'
   $withoutDiscoveryCheck = @([IO.File]::ReadAllLines($discoveryLogPath) | Where-Object {
@@ -182,6 +182,7 @@ try {
       'src/Assets/Scripts/Combat/SpellData.cs',
       'src/Assets/Scripts/Combat/CombatResolver.cs',
       'src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs',
+      'tools/check-data-chain.ps1',
       'src/Assets/Data/Spells/spell-c.asset'
     )) {
     $missingPath = Copy-ManifestObject $validManifest

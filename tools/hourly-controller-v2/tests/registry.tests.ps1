@@ -67,6 +67,8 @@ try {
   )
   Assert-Equal (($tq057.decisionIds) -join '|') ($expectedDecisionIds -join '|') 'TQ-057 decision ids'
   Assert-Equal (($tq057.requiredChecks) -join '|') 'data-chain|unity-editmode-related|pending-whitespace|cached-diff-check' 'TQ-057 required checks'
+  $dataChainCheckerPath = 'tools/check-data-chain.ps1'
+  Assert-True ($dataChainCheckerPath -cin @($tq057.allowedRoots)) 'TQ-057 exact data-chain checker scope'
 
   $multiplierRule = @($tq057.coverageRules | Where-Object { $_.decisionId -ceq 'DEC-20260715-75D7BA2AF210' })
   Assert-Equal $multiplierRule.Count 1 'double multiplier coverage rule count'
@@ -74,7 +76,8 @@ try {
     'src/Assets/DataConfig/Spells.csv',
     'src/Assets/Scripts/Editor/DataConfigImporter.cs',
     'src/Assets/Scripts/Combat/SpellData.cs',
-    'src/Assets/Scripts/Combat/CombatResolver.cs'
+    'src/Assets/Scripts/Combat/CombatResolver.cs',
+    $dataChainCheckerPath
   )
   foreach ($corePath in $corePaths) {
     Assert-True ($corePath -cin @($multiplierRule[0].requiredPaths)) "double multiplier path $corePath"
@@ -135,6 +138,15 @@ try {
     -Script { Read-TaskRegistry -Path $missingCorePathFile } `
     -MessageLike 'registry_invalid' `
     -Label 'missing double multiplier path'
+
+  $missingCheckerScope = Copy-TestObject $registry
+  $missingCheckerScope.tasks[0].allowedRoots = @($missingCheckerScope.tasks[0].allowedRoots | Where-Object { $_ -cne $dataChainCheckerPath })
+  $missingCheckerScopePath = Join-Path $sandbox 'missing-checker-scope.json'
+  Write-RegistryVariant -Registry $missingCheckerScope -Path $missingCheckerScopePath
+  Assert-Throws `
+    -Script { Read-TaskRegistry -Path $missingCheckerScopePath } `
+    -MessageLike 'registry_invalid' `
+    -Label 'missing exact data-chain checker scope'
 
   $missingCheck = Copy-TestObject $registry
   $missingCheck.tasks[0].requiredChecks = @($missingCheck.tasks[0].requiredChecks | Where-Object { $_ -cne 'data-chain' })

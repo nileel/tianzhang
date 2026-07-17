@@ -293,6 +293,7 @@ TQ-057 最低契约固定为：
     "src/Assets/Tests/EditMode",
     "docs/角色养成/术法",
     "docs/角色养成/功法",
+    "tools/check-data-chain.ps1",
     "开发管理"
   ],
   "discoveryChecks": ["data-chain-readonly"],
@@ -307,11 +308,11 @@ TQ-057 最低契约固定为：
 }
 ```
 
-`coverageRules` 必须明确：双倍率决定强制覆盖 `Spells.csv`、`DataConfigImporter.cs`、`SpellData.cs`、`CombatResolver.cs`、至少一个 EditMode 测试文件，以及发现阶段列出的全部现存 `src/Assets/Data/Spells/*.asset`；其余四项决定分别覆盖其语言、CSV、文档和资产影响面。
+`coverageRules` 必须明确：双倍率决定强制覆盖 `Spells.csv`、`DataConfigImporter.cs`、`SpellData.cs`、`CombatResolver.cs`、硬编码 CSV schema 的精确检查器 `tools/check-data-chain.ps1`、至少一个 EditMode 测试文件，以及发现阶段列出的全部现存 `src/Assets/Data/Spells/*.asset`；其余四项决定分别覆盖其语言、CSV、文档和资产影响面。
 
 - [ ] **Step 1: 写失败的注册表测试**
 
-测试使用临时 Markdown fixture 和真实 JSON 注册表，断言：五个任务齐全；只有 TQ-057 可执行；状态/owner/dependencies 不一致时确定性失败；TQ-056 完成证据缺失或 source/match 不成立时 TQ-057 不可选；TQ-057 缺任一决定 ID、核心双倍率路径或 required check 时失败；重复 ID 和未知字段失败。
+测试使用临时 Markdown fixture 和真实 JSON 注册表，断言：五个任务齐全；只有 TQ-057 可执行；状态/owner/dependencies 不一致时确定性失败；TQ-056 完成证据缺失或 source/match 不成立时 TQ-057 不可选；TQ-057 缺任一决定 ID、核心双倍率路径、精确检查器范围或 required check 时失败；重复 ID 和未知字段失败。
 
 - [ ] **Step 2: 确认红灯**
 
@@ -497,7 +498,7 @@ Commit: `feat(automation-v2): add bounded discovery gateway`
 
 - [ ] **Step 1: 写失败的清单测试**
 
-有效 fixture 必须通过，包括 `data-chain-readonly` 返回非零诊断但已由网关完成的情况。以下每种变体必须以稳定 errorCode 拒绝：漏一个 required source；source hash 与发现时不同；缺少任一注册表 discovery check 的网关执行证据；漏一个决定；只写 A/B 不写完整 resolutionText；漏 `Spells.csv`、导入器、`SpellData`、`CombatResolver`、测试或任一已发现 spell asset；path 不在 allowedRoots；expectedPath 无 intendedChange；decision path 不在 expectedPaths；删除注册表 required check；使用未登记 check；baseline/HEAD 已变化。
+有效 fixture 必须通过，包括 `data-chain-readonly` 返回非零诊断但已由网关完成的情况。以下每种变体必须以稳定 errorCode 拒绝：漏一个 required source；source hash 与发现时不同；缺少任一注册表 discovery check 的网关执行证据；漏一个决定；只写 A/B 不写完整 resolutionText；漏 `Spells.csv`、导入器、`SpellData`、`CombatResolver`、精确检查器、测试或任一已发现 spell asset；path 不在 allowedRoots；expectedPath 无 intendedChange；decision path 不在 expectedPaths；删除注册表 required check；使用未登记 check；baseline/HEAD 已变化。
 
 baseline 失败断言必须包含具体 `changedPaths`，例如 `src/Assets/DataConfig/Spells.csv`，不能只返回 `baseline_changed`。
 
@@ -916,7 +917,7 @@ Expected: workspace guard、finalizer 和飞书桥接均通过。不要在之后
 Start -> RecordTitleResult -> DiscoverRead/Search/List/Check -> SubmitManifest(planOnly=true)
 ```
 
-验收：标题使用两个真实字段并成功或非阻断失败；清单包含五项决定；双倍率覆盖 CSV、导入器、SpellData、CombatResolver、相关测试和发现到的全部 spell assets；没有项目写入、提交、租约残留或第二个写入控制器。
+验收：标题使用两个真实字段并成功或非阻断失败；清单包含五项决定；双倍率覆盖 CSV、导入器、SpellData、CombatResolver、精确数据链检查器、相关测试和发现到的全部 spell assets；没有项目写入、提交、租约残留或第二个写入控制器。
 
 `data-chain-readonly` 若因 TQ-057 正待修复的矛盾返回非零，金丝雀保留退出码和受限诊断并继续提交 `planOnly=true`；这不代表检查通过，不允许进入 `MUTATING`，首次写入后的最终 `data-chain` 仍必须成功。
 
@@ -1033,7 +1034,7 @@ Commit: `chore(automation): retire legacy orchestration after observation`
 - [ ] 生产环境任何时刻最多一个写入控制器；WF1、WF3、WF4 的既有暂停约束未被扩大。
 - [ ] 标题读取顶层 `threadId` 和 metadata `thread_id`，不再访问不存在的 `meta.turn.thread_id` 或 `tzgTurn.turn.thread_id`。
 - [ ] TQ-057 五项决定以完整正文和 scopeContract 迁移；没有重问、改选或只存字母。
-- [ ] 双倍率范围包含 CSV、导入器、`SpellData`、`CombatResolver`、测试和发现到的全部 spell assets。
+- [ ] 双倍率范围包含 CSV、导入器、`SpellData`、`CombatResolver`、精确数据链检查器、测试和发现到的全部 spell assets。
 - [ ] 发现只经过四个固定动作；没有任意 Shell 协议。
 - [ ] 任一 baseline/HEAD/path 冲突返回精确 `changedPaths`，不自动重拍 baseline。
 - [ ] requiredChecks 只由控制器运行，相关输入无变化时不重复。

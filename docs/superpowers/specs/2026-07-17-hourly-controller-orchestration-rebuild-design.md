@@ -86,7 +86,7 @@
 新控制器必须迁移并冻结以下已批准事实，不能重新询问、默认改选或只迁移字母：
 
 1. `DEC-20260715-35ACB87E6C10`：选择 B。保留 11 份古修术法文档，并补齐 CSV、语言键和 Unity asset。
-2. `DEC-20260715-75D7BA2AF210`：选择 A。为所有攻击术法增加明确的 `physicalDamageMultiplier` 与 `soulDamageMultiplier`，迁移现有单通道数据；实现影响至少包含 `Spells.csv`、`DataConfigImporter.cs`、`SpellData.cs`、`CombatResolver.cs`、相关测试和全部既有术法资产。
+2. `DEC-20260715-75D7BA2AF210`：选择 A。为所有攻击术法增加明确的 `physicalDamageMultiplier` 与 `soulDamageMultiplier`，迁移现有单通道数据；实现影响至少包含 `Spells.csv`、`DataConfigImporter.cs`、`SpellData.cs`、`CombatResolver.cs`、相关测试、全部既有术法资产，以及硬编码 `Spells.csv` schema 的精确检查器 `tools/check-data-chain.ps1`。
 3. `realm_lianshen` 缺失语言键：已选择补齐语言键并保留有效引用。
 4. 六部仍含有效低阶成长段的功法：只删除废止的 `realm_lianxu` 段并同步 asset，保留其他内容。
 5. 仍引用已删除或未注册境界的无效数据：已批准删除相应 CSV 行、文档和 Unity asset。
@@ -125,7 +125,7 @@
   "executor": "codex",
   "dependencies": ["TQ-056"],
   "requiredSources": ["开发管理/当前任务队列.txt"],
-  "allowedRoots": ["src/Assets/DataConfig", "src/Assets/Data", "src/Assets/Scripts", "src/Assets/Tests", "开发管理"],
+  "allowedRoots": ["src/Assets/DataConfig", "src/Assets/Data", "src/Assets/Scripts", "src/Assets/Tests", "tools/check-data-chain.ps1", "开发管理"],
   "discoveryChecks": ["data-chain"],
   "requiredChecks": ["data-chain", "unity-editmode", "pending-whitespace", "cached-diff-check"],
   "completionEvidence": ["数据链路无未批准错误", "双倍率运行时和迁移测试通过"]
@@ -318,7 +318,7 @@ IDLE
 
 1. 新旧编排层不会同时写入；WF1、WF3、WF4 继续暂停。
 2. 标题真实金丝雀成功，任务 ID来自两个当前有效元数据字段。
-3. TQ-057 五项决定完整迁移，双倍率影响范围不再漏掉运行时、导入器、测试或既有资产。
+3. TQ-057 五项决定完整迁移，双倍率影响范围不再漏掉运行时、导入器、测试、既有资产或硬编码 CSV schema 的精确检查器。
 4. 有效清单依赖的发现证据只能来自固定网关；工作清单缺失任何事实源、决定覆盖、路径意图或 required check 时确定性拒绝。
 5. baseline/HEAD/path 变化返回精确项目相对 `changedPaths` 并安全回到 `IDLE`。
 6. requiredChecks 由控制器执行并记录，全部通过后才能路径限定提交。
