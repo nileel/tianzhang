@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "runId": "11111111-1111-1111-1111-111111111111",
+  "taskId": "TQ-057",
+  "model": "fixture-model",
+  "threadId": "22222222-2222-2222-2222-222222222222",
+  "planOnly": true,
+  "sourceEvidence": [
+    {
+      "path": "开发管理/当前任务队列.txt",
+      "sha256": "873640af52262ccdea97fcfdc341c62766bb7739ce33fbeb1793d48d448b0d6f"
+    },
+    {
+      "path": "开发管理/自动工作流状态.txt",
+      "sha256": "2f2981595224f925b0d7028c0277988f1befc86b5c73cf04aef30b7e7d58c49a"
+    },
+    {
+      "path": "开发管理/开发-技术经验.txt",
+      "sha256": "9a56dc860fd6dd57d01b10c3767ced6c3355a479b1c0d113eeb05c6188d9b06e"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md",
+      "sha256": "3be6776a4acf9827f957637a57abbe51a6252c7860940407054045fbc54d4908"
+    }
+  ],
+  "decisionCoverage": [
+    {
+      "decisionId": "DEC-20260715-35ACB87E6C10",
+      "resolutionText": "选择 B：保留 11 份古修术法文档，并补齐 CSV、语言键和 Unity asset。",
+      "paths": [
+        "src/Assets/DataConfig/Spells.csv",
+        "src/Assets/DataConfig/Language.csv",
+        "docs/角色养成/术法/古修术法一.txt",
+        "src/Assets/Data/Spells/spell-a.asset",
+        "src/Assets/Data/Spells/spell-b.asset",
+        "src/Assets/Data/Spells/spell-c.asset"
+      ],
+      "implementation": "保留古修文档，并补齐 CSV、语言键和全部术法资产。"
+    },
+    {
+      "decisionId": "DEC-20260715-75D7BA2AF210",
+      "resolutionText": "选择 A：为所有攻击术法增加明确的 physicalDamageMultiplier 与 soulDamageMultiplier，迁移现有单通道数据；实现覆盖 Spells.csv、DataConfigImporter.cs、SpellData.cs、CombatResolver.cs、相关测试和全部既有术法资产。",
+      "paths": [
+        "src/Assets/DataConfig/Spells.csv",
+        "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+        "src/Assets/Scripts/Combat/SpellData.cs",
+        "src/Assets/Scripts/Combat/CombatResolver.cs",
+        "src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs",
+        "src/Assets/Data/Spells/spell-a.asset",
+        "src/Assets/Data/Spells/spell-b.asset",
+        "src/Assets/Data/Spells/spell-c.asset"
+      ],
+      "implementation": "接入双倍率字段、导入、运行时解析、迁移测试和全部已发现术法资产。"
+    },
+    {
+      "decisionId": "DEC-20260714-29A5D1356CC8",
+      "resolutionText": "选择 A：为 realm_lianshen 补齐语言键并保留有效引用。",
+      "paths": [
+        "src/Assets/DataConfig/Language.csv"
+      ],
+      "implementation": "补齐语言键并保留有效引用。"
+    },
+    {
+      "decisionId": "DEC-20260714-320075D033A5",
+      "resolutionText": "选择 A：六部仍含有效低阶成长段的功法只删除废止的 realm_lianxu 段并同步 asset，保留其他内容。",
+      "paths": [
+        "src/Assets/DataConfig/GongFa.csv",
+        "docs/角色养成/功法/示例功法.txt",
+        "src/Assets/Data/GongFa/示例功法.asset"
+      ],
+      "implementation": "仅删除废止段并同步功法文档和资产，保留低阶成长。"
+    },
+    {
+      "decisionId": "DEC-20260713-A07FA708DB22",
+      "resolutionText": "选择 A：删除仍引用已删除或未注册境界的 CSV 行、对应文档和 Unity asset。",
+      "paths": [
+        "src/Assets/DataConfig/Spells.csv",
+        "docs/角色养成/术法/古修术法一.txt",
+        "src/Assets/Data/Spells/spell-a.asset"
+      ],
+      "implementation": "删除无效 CSV 行、对应文档和资产，不触碰有效境界数据。"
+    }
+  ],
+  "expectedPaths": [
+    "src/Assets/DataConfig/Spells.csv",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Scripts/Combat/SpellData.cs",
+    "src/Assets/Scripts/Combat/CombatResolver.cs",
+    "src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs",
+    "src/Assets/Data/Spells/spell-a.asset",
+    "src/Assets/Data/Spells/spell-b.asset",
+    "src/Assets/Data/Spells/spell-c.asset",
+    "docs/角色养成/术法/古修术法一.txt",
+    "src/Assets/DataConfig/GongFa.csv",
+    "docs/角色养成/功法/示例功法.txt",
+    "src/Assets/Data/GongFa/示例功法.asset"
+  ],
+  "intendedChanges": [
+    {
+      "path": "src/Assets/DataConfig/Spells.csv",
+      "operation": "modify",
+      "summary": "补齐古修术法并迁移双倍率与无效境界行。"
+    },
+    {
+      "path": "src/Assets/DataConfig/Language.csv",
+      "operation": "modify",
+      "summary": "补齐古修术法与 realm_lianshen 语言键。"
+    },
+    {
+      "path": "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+      "operation": "modify",
+      "summary": "导入物理与神魂伤害倍率。"
+    },
+    {
+      "path": "src/Assets/Scripts/Combat/SpellData.cs",
+      "operation": "modify",
+      "summary": "保存双倍率运行时数据。"
+    },
+    {
+      "path": "src/Assets/Scripts/Combat/CombatResolver.cs",
+      "operation": "modify",
+      "summary": "分别解析物理与神魂伤害倍率。"
+    },
+    {
+      "path": "src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs",
+      "operation": "modify",
+      "summary": "验证双倍率导入、迁移和运行时语义。"
+    },
+    {
+      "path": "src/Assets/Data/Spells/spell-a.asset",
+      "operation": "modify",
+      "summary": "迁移已发现术法资产 A。"
+    },
+    {
+      "path": "src/Assets/Data/Spells/spell-b.asset",
+      "operation": "modify",
+      "summary": "迁移已发现术法资产 B。"
+    },
+    {
+      "path": "src/Assets/Data/Spells/spell-c.asset",
+      "operation": "modify",
+      "summary": "迁移已发现术法资产 C。"
+    },
+    {
+      "path": "docs/角色养成/术法/古修术法一.txt",
+      "operation": "modify",
+      "summary": "保留古修术法文档并同步有效数据语义。"
+    },
+    {
+      "path": "src/Assets/DataConfig/GongFa.csv",
+      "operation": "modify",
+      "summary": "删除六部功法的废止 realm_lianxu 段。"
+    },
+    {
+      "path": "docs/角色养成/功法/示例功法.txt",
+      "operation": "modify",
+      "summary": "同步功法文档并保留低阶成长。"
+    },
+    {
+      "path": "src/Assets/Data/GongFa/示例功法.asset",
+      "operation": "modify",
+      "summary": "同步功法资产并保留低阶成长。"
+    }
+  ],
+  "requiredChecks": [
+    "data-chain",
+    "unity-editmode-related",
+    "pending-whitespace",
+    "cached-diff-check"
+  ],
+  "completionEvidence": [
+    "数据链路无未批准错误",
+    "双倍率运行时和迁移测试通过"
+  ]
+}
