@@ -12,11 +12,41 @@ $ErrorActionPreference = 'Stop'
 function Invoke-GitRaw {
   param([string[]]$Arguments)
 
-  $output = & git -C $script:Repository @Arguments 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($Arguments -join ' ') failed: $($output -join "`n")"
+  $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = 'git'
+  $startInfo.WorkingDirectory = $script:Repository
+  $startInfo.UseShellExecute = $false
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.CreateNoWindow = $true
+  foreach ($argument in @('-C', $script:Repository) + $Arguments) {
+    $startInfo.ArgumentList.Add($argument)
   }
-  @($output)
+
+  $process = [System.Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    throw 'Unable to start git.'
+  }
+
+  $stdout = [System.IO.MemoryStream]::new()
+  try {
+    $stdoutTask = $process.StandardOutput.BaseStream.CopyToAsync($stdout)
+    $stderrTask = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+    [void]$stdoutTask.GetAwaiter().GetResult()
+    $stderr = $stderrTask.GetAwaiter().GetResult()
+    if ($process.ExitCode -ne 0) {
+      throw "git $($Arguments -join ' ') failed: $($stderr.Trim())"
+    }
+    $text = [System.Text.UTF8Encoding]::new($false, $true).GetString($stdout.ToArray()).TrimEnd("`r", "`n")
+    if ($text.Length -gt 0) {
+      $text -split "`r?`n"
+    }
+  } finally {
+    $stdout.Dispose()
+    $process.Dispose()
+  }
 }
 
 function ConvertTo-NormalizedPaths {

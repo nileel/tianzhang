@@ -5,6 +5,7 @@ $tool = Join-Path $root 'tools\automation-finalize-commit.ps1'
 $engine = (Get-Process -Id $PID).Path
 $sandbox = Join-Path ([System.IO.Path]::GetTempPath()) ('tzg-finalize-commit-test-' + [guid]::NewGuid().ToString('N'))
 $repo = Join-Path $sandbox 'repo'
+$legacyConsoleWrapper = Join-Path $sandbox 'legacy-console.ps1'
 
 function Invoke-Git {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
@@ -28,6 +29,20 @@ function Invoke-Helper {
   }
 }
 
+function Invoke-HelperWithLegacyConsole {
+  param([string]$ExpectedPaths, [string]$CommitMessage)
+
+  $previousPreference = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $output = & $engine -NoProfile -ExecutionPolicy Bypass -File $legacyConsoleWrapper `
+      -Tool $tool -RepositoryRoot $repo -ExpectedPaths $ExpectedPaths -CommitMessage $CommitMessage 2>&1
+    [pscustomobject]@{ Code = $LASTEXITCODE; Output = ($output -join "`n") }
+  } finally {
+    $ErrorActionPreference = $previousPreference
+  }
+}
+
 function Write-Utf8 {
   param([string]$Path, [string]$Value)
 
@@ -36,6 +51,17 @@ function Write-Utf8 {
   [System.IO.File]::WriteAllText($Path, $Value, [System.Text.UTF8Encoding]::new($false))
 }
 
+Write-Utf8 $legacyConsoleWrapper @'
+param(
+  [string]$Tool,
+  [string]$RepositoryRoot,
+  [string]$ExpectedPaths,
+  [string]$CommitMessage
+)
+
+[Console]::OutputEncoding = [Text.Encoding]::GetEncoding(1252)
+& $Tool -RepositoryRoot $RepositoryRoot -ExpectedPaths $ExpectedPaths -CommitMessage $CommitMessage
+'@
 New-Item -ItemType Directory -Path $repo -Force | Out-Null
 try {
   Invoke-Git init | Out-Null
@@ -102,6 +128,14 @@ try {
     throw "unexpected multi-path commit: $($multiCommitted -join ', ')"
   }
   if (((Invoke-Git rev-parse ":$unrelatedStaged") -join '') -ne $stagedBlobBefore) { throw 'multi-path commit changed unrelated staged blob' }
+
+  Write-Utf8 (Join-Path $repo $expected) "expected legacy console change`n"
+  $legacyResult = Invoke-HelperWithLegacyConsole $expected 'test: unicode path with legacy console'
+  if ($legacyResult.Code -ne 0) { throw "commit helper failed with legacy console encoding: $($legacyResult.Output)" }
+  $legacyCommitted = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if ($legacyCommitted.Count -ne 1 -or $legacyCommitted[0] -ne $expected) {
+    throw "unexpected legacy-console commit paths: $($legacyCommitted -join ', ')"
+  }
 
   $headBeforeMissing = (Invoke-Git rev-parse HEAD) -join ''
   $missing = Invoke-Helper 'missing.txt' 'test: must not commit'

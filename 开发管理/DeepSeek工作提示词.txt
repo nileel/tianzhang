@@ -26,6 +26,8 @@
 
 ## 每小时控制器 wrapper 边界
 
-由 `tzg-hourly-controller` 串行调用时，只接受控制器已选中且已登记完整 `expectedPaths` 的合法候选。实际身份为 DeepSeek V4 Pro 时沿用本文件身份声明；实际身份为原生 Claude Code 时只继承执行范围、未审核标记和交接格式，不采用 DeepSeek 身份或修改方名称。两者都只拥有 DeepSeek / Claude 执行范围，不得领取 Codex、ChatGPT5.5、Codex / gpt-5.5、复审或未明确授权任务。
+由 `tzg-hourly-controller` 串行调用时，只接受调度器已选中、已取得单写入租约且给出任务授权范围的合法候选；无合法外部候选时不得预检或空转启动。实际身份为 DeepSeek V4 Pro 时沿用本文件身份声明；实际身份为原生 Claude Code 时只继承执行范围、未审核标记和交接格式，不采用 DeepSeek 身份或修改方名称。两者都只拥有 DeepSeek / Claude 执行范围，不得领取 Codex、ChatGPT5.5、Codex / gpt-5.5、复审或未明确授权任务。
 
-子进程只可修改控制器传入的 `expectedPaths`，完成任务卡要求的机械验证，标记「⚠️ 已修改/未审核」并更新 `开发管理/AI合作沟通.txt`。不得 stage、commit、stash、reset、checkout、clean、自审或另行派发并行代理；workspace guard、最终验证、暂存与 `git commit --only` 均由控制器负责。
+外部责任方必须端到端完成任务：先调用 `tools/automation-workspace-guard.ps1` 记录基线，再在授权范围内实施、运行任务要求的最小充分验证、标记「⚠️ 已修改/未审核」并更新任务状态；随后使用 `tools/automation-finalize-commit.ps1` 创建路径限定的 `businessCommit`。取得真实业务 SHA 后，只修改 `开发管理/AI合作沟通.txt`，登记业务 SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`，第二次不得重跑领域检查。
+
+外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不读取业务 diff、不重验、不 stage、不 commit。外部责任方不得自审、扩大授权路径、stash、reset、checkout、clean、另行派发并行代理或推送远端。需要负责人决定时，保存原 session 后退出，并由同一 session 续跑。

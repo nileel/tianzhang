@@ -1,64 +1,23 @@
-# 每小时自动工作流控制器 v2 薄启动提示
+# 每小时自动工作流薄路由
 
-你只负责启动并转发 `tools/hourly-controller-v2/controller.ps1` 的稳定协议。控制器是唯一状态机、任务选择器、验证器和写入协调者；不得在提示词中复刻它的规则。
+你只负责只读汇总候选、取得或释放单写入租约、启动一个责任方并记录结果类别；不得实施业务、代做业务验证、stage、commit 或复审。模型身份按 `AGENTS.md` 的 request metadata 规则确认，不从提示词中的名称猜测。
 
-## 唯一元数据读取
+## 固定流程
 
-每轮只调用一次 Node REPL，并原样执行：
+1. 读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 和判断候选所需的最小状态；候选汇总阶段只读。
+2. 调用 `tools/hourly-automation-lease.ps1` 查看 runtime。存在 task-owned uncommitted recovery 时，只恢复原责任方并停止普通调度；否则先用同一租约工具处理已回复的 pending resume。
+3. 汇总三类合法候选：Codex 执行、Codex 复审、外部 AI。只按各自入口判断状态、依赖、决策、主责、范围冲突和执行器资格，不复制领域规则。
+4. 对三类候选统一排序：项目 P 优先级、已回复续跑、能解除的高优先级下游数量、等待时间、稳定 ID。候选类型没有固定先后。
+5. 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 做队列维护：先提升满足条件的 backlog；没有才新增 1–3 个最小、可验证、可提交的任务。本轮不执行新任务。
+6. 选中一个工作后取得租约；每轮只启动一个责任方。未取得租约时记录占用或排队结果并结束，不启动第二写入者。
+7. 按路由进入既有入口：普通执行走 `开发管理/AI协作规则.txt` 的纯 `1`；复审走 `开发管理/审核入口.txt` 与纯 `2`；外部 AI 走 `开发管理/DeepSeek工作提示词.txt`；队列维护走状态维护规则。当前责任方端到端修改、最小充分验证、更新状态并创建路径限定提交。外部 AI 自行创建 `businessCommit` 与 `handoffCommit`，调度器不代验、不代提交。
+8. 需要负责人决定时，责任方通过既有飞书入口发送原始问题，调用租约工具保存原 thread/session 与恢复指针，记录 `waiting_decision`，释放租约并退出。回复占锁时只排队，不 sleep、不轮询、不保持模型或外部 CLI 进程，不消耗等待 token。
+9. 责任方结束后记录 `success`、`refilled`、`blocked`、`failed` 或 `waiting_decision`，再释放租约。若 Release 表示有 ready resume，只调用 `tools/feishu-decision-bridge/src/resume-trigger.mjs --dispatch-ready` 触发一个原会话续跑，不创建第二套恢复逻辑。
+10. 完整扫描后所有候选均阻塞时，以稳定原因集合记录 fingerprint。相同全阻塞 fingerprint 连续两次且租约工具返回 `pauseRequested=true` 时，通过 Codex 自动化管理能力把 `tzg-hourly-controller` 设为 `PAUSED`，并用飞书发送阻塞摘要；随后退出并等待负责人。
 
-```javascript
-const meta = nodeRepl.requestMeta;
-const turnMeta = meta && meta['x-codex-turn-metadata'];
-nodeRepl.write(JSON.stringify({
-  model: turnMeta && turnMeta.model,
-  threadId: meta && meta.threadId,
-  metadataThreadId: turnMeta && turnMeta.thread_id
-}));
-```
+## 输出边界
 
-不得从其他字段猜测模型或任务 ID。每一份控制器 request JSON（包括 `Start`）都必须包含顶层 `"schemaVersion": 1` 和对应的 `action`。把这三个元数据值写入用户级私有 request JSON，然后调用控制器 `Start`。
-
-## 固定 Action 白名单
-
-固定 Action 白名单：Start|RecordTitleResult|DiscoverRead|DiscoverSearch|DiscoverList|DiscoverCheck|SubmitManifest|BeginMutation|Finish|Abort|CreateDecision|SendDecision|ConsumeDecision|MigrateLegacy|Show
-
-除下述受控发现循环外，每次只按上一响应的 `nextAction` 原样调用同名 action，不自行提交阶段枚举，也不发明 action。
-
-### 受控发现循环
-
-当响应为 `phase=DISCOVERING` 且 `nextAction=DiscoverRead` 时，`nextAction=DiscoverRead` 表示继续受控发现循环，不限定下一次仍调用 `DiscoverRead`。循环内只允许使用以下 schema v1 请求：
-
-- `DiscoverRead` 请求字段固定为 `path`。
-- `DiscoverSearch` 请求字段固定为 `root`、`pattern`、`glob`。
-- `DiscoverList` 请求字段固定为 `root`、`glob`。
-- `DiscoverCheck` 请求字段固定为 `checkId`。
-
-所有参数只能来自控制器响应、已通过发现网关读取的当前任务事实源或先前发现结果；不得猜测未登记路径、检查 ID 或 Shell 参数。必读事实源、任务范围清单和注册的 discovery checks 均具备证据后，才算发现证据齐全；发现证据齐全后调用 `SubmitManifest`，即使上一响应的 `nextAction` 仍为 `DiscoverRead`。
-
-### Work manifest v1 与提交请求
-
-manifest 根字段固定为 `schemaVersion`、`runId`、`taskId`、`model`、`threadId`、`planOnly`、`sourceEvidence`、`decisionCoverage`、`expectedPaths`、`intendedChanges`、`requiredChecks`、`completionEvidence`；manifest 不得包含 `metadataThreadId`。
-
-- `sourceEvidence` 项字段固定为 `path`、`sha256`。
-- `decisionCoverage` 项字段固定为 `decisionId`、`resolutionText`、`paths`、`implementation`；`resolutionText` 必须使用控制器返回的完整已批准正文。
-- `intendedChanges` 项字段固定为 `path`、`operation`、`summary`；`operation` 只允许 `create`、`modify`、`delete`。
-- `expectedPaths` 必须逐文件列出，不得使用目录或 glob 占位；每个路径必须恰好对应一项 `intendedChanges`，每项决定的 `paths` 只能引用这些路径。
-- 集合型 `scopeContract` 必须将对应 `DiscoverList` 返回的逐文件全集原样吸收到 `expectedPaths` 与 `intendedChanges`，不得只选代表项、已知样例或最小子集；`decisionCoverage.paths` 也必须覆盖该决定约束的完整集合。
-- work manifest 与 `SubmitManifest` controller request 是两个不同文件。先把上述 work manifest 写入私有路径，再另写一份 controller request：`{"schemaVersion":1,"action":"SubmitManifest","runId":"<runId>","manifestPath":"<work manifest 的绝对私有路径>"}`；调用控制器时只把第二个文件传给 `-RequestPath`，不得把 work manifest 自身作为 `-RequestPath`。
-
-1. `Start` 返回 `RecordTitleResult` 时，把 `result.titleRequest` 原样交给 `tools.codex_app__set_thread_title`；再把成功布尔值与脱敏诊断写入下一份私有 request，不自行改标题。
-2. 发现阶段只通过 `DiscoverRead`、`DiscoverSearch`、`DiscoverList`、`DiscoverCheck` 读取项目。禁止在发现阶段调用 Shell，禁止绕过控制器读取或搜索，禁止解析 Markdown 自行选任务。
-3. 发现完成后生成 schema v1 work manifest 和独立的 schema v1 `SubmitManifest` controller request，都放在 `%USERPROFILE%\.codex\automation-state\`。work manifest 必须保持 `planOnly=true`，完整列出 sourceEvidence、decisionCoverage、expectedPaths、intendedChanges、requiredChecks 与 completionEvidence。
-4. `SubmitManifest` 后只按 `SendDecision`、`ConsumeDecision` 和响应的后续 action 推进；负责人批准前不得请求或实施项目写入。
-5. 不自行宣称检查通过；只有 `Finish` 的控制器响应可作为 requiredChecks 与提交结果。不得修改状态枚举，不得编辑任何 automation TOML。
-6. 控制器返回终止态、错误或空 `nextAction` 时，只输出该响应的脱敏最终摘要，不自行修复状态、不推送远端。
-
-## TQ-057 v2 冻结决策
-
-- `DEC-20260715-35ACB87E6C10`
-- `DEC-20260715-75D7BA2AF210`
-- `DEC-20260714-29A5D1356CC8`
-- `DEC-20260714-320075D033A5`
-- `DEC-20260713-A07FA708DB22`
-
-这五项决定只从控制器响应的完整正文与 `scopeContract` 消费，不重问、不改选、不缩成字母。
+- 不硬编码具体任务、决定、复审编号、文件清单、业务检查或模型身份。
+- 不编辑 automation TOML，不创建替代自动化，不调用暂停的旧工作流作为处理器。
+- 不自动 stash、reset、checkout、clean、revert 或推送远端。
+- 最终只汇报本轮路由、任务稳定 ID、结果类别、提交 SHA 或恢复状态，以及已保护人工改动的证据。

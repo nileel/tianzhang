@@ -1,191 +1,208 @@
 #requires -Version 7.0
 
+[CmdletBinding()]
+param(
+  [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
+  [string]$AutomationRoot = (Join-Path $env:USERPROFILE '.codex\automations'),
+  [switch]$RequireActive,
+  [switch]$RequireLegacyRetired
+)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$root = Split-Path -Parent $PSScriptRoot
-$promptPath = Join-Path $root '开发管理\自动工作流控制器提示词.txt'
-$rulesPath = Join-Path $root '开发管理\自动工作流规则.txt'
-$v2PromptPath = Join-Path $root '开发管理\自动工作流控制器v2提示词.txt'
-$v2RulesPath = Join-Path $root '开发管理\自动工作流v2规则.txt'
-$statusPath = Join-Path $root '开发管理\自动工作流状态.txt'
-$registryPath = Join-Path $root '开发管理\自动工作流任务注册表.json'
-$controllerPath = Join-Path $root 'tools\hourly-controller-v2\controller.ps1'
-$automationRoot = Join-Path $env:USERPROFILE '.codex\automations'
-
 function Assert-Contract {
   param(
-    [Parameter(Mandatory = $true)][bool]$Condition,
-    [Parameter(Mandatory = $true)][string]$Message
+    [Parameter(Mandatory = $true)]
+    [bool]$Condition,
+    [Parameter(Mandatory = $true)]
+    [string]$Message
   )
 
-  if (-not $Condition) { throw $Message }
+  if (-not $Condition) {
+    throw $Message
+  }
 }
 
-function Read-ContractText {
+function Read-Utf8Contract {
   param([Parameter(Mandatory = $true)][string]$Path)
 
-  Assert-Contract (Test-Path -LiteralPath $Path -PathType Leaf) "missing contract file: $Path"
-  [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF)
+  Assert-Contract -Condition (Test-Path -LiteralPath $Path -PathType Leaf) -Message "missing contract file: $Path"
+  try {
+    [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF)
+  } catch {
+    throw "contract is not valid UTF-8: $Path"
+  }
 }
 
-function Get-ContractSection {
+function Assert-ContainsAll {
   param(
-    [Parameter(Mandatory = $true)][string]$Text,
-    [Parameter(Mandatory = $true)][string]$Heading
+    [Parameter(Mandatory = $true)]
+    [string]$Text,
+    [Parameter(Mandatory = $true)]
+    [string[]]$Required,
+    [Parameter(Mandatory = $true)]
+    [string]$Context
   )
 
-  $pattern = '(?ms)^##\s+' + [regex]::Escape($Heading) + '\s*\r?\n(?<body>.*?)(?=^##\s+|\z)'
-  $match = [regex]::Match($Text, $pattern)
-  Assert-Contract $match.Success "missing contract section: $Heading"
-  $match.Groups['body'].Value
+  foreach ($literal in $Required) {
+    Assert-Contract `
+      -Condition $Text.Contains($literal, [StringComparison]::OrdinalIgnoreCase) `
+      -Message "$Context is missing: $literal"
+  }
 }
 
-function Get-DecisionIds {
+function Normalize-ContractText {
   param([Parameter(Mandatory = $true)][string]$Text)
 
-  @([regex]::Matches($Text, 'DEC-[0-9]{8}-[A-Z0-9]+') | ForEach-Object { $_.Value } | Select-Object -Unique)
+  ($Text -replace "`r`n", "`n" -replace "`r", "`n").TrimEnd()
 }
 
-function Get-AutomationStatus {
-  param([Parameter(Mandatory = $true)][string]$AutomationId)
+function Read-Automation {
+  param([Parameter(Mandatory = $true)][string]$Directory)
 
-  $path = Join-Path $automationRoot "$AutomationId\automation.toml"
-  Assert-Contract (Test-Path -LiteralPath $path -PathType Leaf) "missing automation: $AutomationId"
-  $matches = @(Select-String -LiteralPath $path -Pattern '^status\s*=\s*"(?<status>ACTIVE|PAUSED)"\s*$')
-  Assert-Contract ($matches.Count -eq 1) "automation status is invalid: $AutomationId"
-  $matches[0].Matches[0].Groups['status'].Value
+  $path = Join-Path $Directory 'automation.toml'
+  $text = Read-Utf8Contract -Path $path
+  $statusMatches = @([regex]::Matches($text, '(?m)^status\s*=\s*"(?<value>ACTIVE|PAUSED)"\s*$'))
+  Assert-Contract -Condition ($statusMatches.Count -eq 1) -Message "automation status is invalid: $path"
+  $promptMatches = @([regex]::Matches($text, '(?m)^prompt\s*=\s*(?<value>"(?:[^"\\]|\\.)*")\s*$'))
+  Assert-Contract -Condition ($promptMatches.Count -eq 1) -Message "automation prompt is invalid: $path"
+  try {
+    $prompt = $promptMatches[0].Groups['value'].Value | ConvertFrom-Json
+  } catch {
+    throw "automation prompt cannot be decoded: $path"
+  }
+  [pscustomobject]@{
+    Id = Split-Path -Leaf $Directory
+    Status = $statusMatches[0].Groups['value'].Value
+    Prompt = [string]$prompt
+  }
 }
 
-$prompt = Read-ContractText -Path $promptPath
-$rules = Read-ContractText -Path $rulesPath
-$v2Prompt = Read-ContractText -Path $v2PromptPath
-$v2Rules = Read-ContractText -Path $v2RulesPath
-$status = Read-ContractText -Path $statusPath
-$controller = Read-ContractText -Path $controllerPath
+$root = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
+$automationDirectory = [IO.Path]::GetFullPath($AutomationRoot).TrimEnd('\', '/')
+Assert-Contract -Condition (Test-Path -LiteralPath $root -PathType Container) -Message "RepositoryRoot does not exist: $root"
+Assert-Contract -Condition (Test-Path -LiteralPath $automationDirectory -PathType Container) -Message "AutomationRoot does not exist: $automationDirectory"
 
-Assert-Contract (($prompt -replace "`r`n", "`n") -ceq ($v2Prompt -replace "`r`n", "`n")) 'canonical prompt does not match the verified v2 prompt'
-Assert-Contract (($rules -replace "`r`n", "`n") -ceq ($v2Rules -replace "`r`n", "`n")) 'canonical rules do not match the verified v2 rules'
+$promptPath = Join-Path $root '开发管理\自动工作流控制器提示词.txt'
+$rulesPath = Join-Path $root '开发管理\自动工作流规则.txt'
+$statusPath = Join-Path $root '开发管理\自动工作流状态.txt'
+$prompt = Read-Utf8Contract -Path $promptPath
+$rules = Read-Utf8Contract -Path $rulesPath
+[void](Read-Utf8Contract -Path $statusPath)
 
-$metadataLiterals = @(
-  'const meta = nodeRepl.requestMeta;',
-  "const turnMeta = meta && meta['x-codex-turn-metadata'];",
-  'threadId: meta && meta.threadId,',
-  'metadataThreadId: turnMeta && turnMeta.thread_id'
+Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
+  '开发管理/自动工作流规则.txt',
+  '开发管理/当前任务队列.txt',
+  '开发管理/审核入口.txt',
+  '开发管理/AI合作沟通.txt',
+  'tools/hourly-automation-lease.ps1',
+  '统一排序',
+  '三类均无合法候选时才',
+  '每轮只启动一个责任方',
+  '纯 `1`',
+  '纯 `2`',
+  '开发管理/DeepSeek工作提示词.txt',
+  '开发管理/状态与建议维护规则.txt',
+  'businessCommit',
+  'handoffCommit',
+  '不消耗等待 token',
+  '连续两次',
+  'PAUSED'
 )
-foreach ($literal in $metadataLiterals) {
-  Assert-Contract $prompt.Contains($literal, [StringComparison]::Ordinal) "prompt metadata contract is missing: $literal"
-}
-foreach ($forbiddenMetadata in @('meta.turn.thread_id', 'tzgTurn.turn.thread_id')) {
-  Assert-Contract (-not $prompt.Contains($forbiddenMetadata, [StringComparison]::Ordinal)) "prompt contains forbidden metadata path: $forbiddenMetadata"
-}
-
-$actions = @(
-  'Start', 'RecordTitleResult', 'DiscoverRead', 'DiscoverSearch', 'DiscoverList',
-  'DiscoverCheck', 'SubmitManifest', 'BeginMutation', 'Finish', 'Abort',
-  'CreateDecision', 'SendDecision', 'ConsumeDecision', 'MigrateLegacy', 'Show'
+Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
+  '单写入租约',
+  '候选资格',
+  '统一排序',
+  '四种路由责任',
+  '人工',
+  '不 stash',
+  'businessCommit',
+  'handoffCommit',
+  '决策恢复',
+  '两轮',
+  '队列补充顺序',
+  '私有状态',
+  '回滚'
 )
-$actionLine = '固定 Action 白名单：' + ($actions -join '|')
-Assert-Contract $prompt.Contains($actionLine, [StringComparison]::Ordinal) 'prompt fixed action whitelist differs'
-foreach ($literal in @(
-    'tools.codex_app__set_thread_title',
-    '"schemaVersion": 1',
-    '`nextAction=DiscoverRead` 表示继续受控发现循环',
-    '`DiscoverRead` 请求字段固定为 `path`',
-    '`DiscoverSearch` 请求字段固定为 `root`、`pattern`、`glob`',
-    '`DiscoverList` 请求字段固定为 `root`、`glob`',
-    '`DiscoverCheck` 请求字段固定为 `checkId`',
-    '发现证据齐全后调用 `SubmitManifest`',
-    '`decisionCoverage` 项字段固定为 `decisionId`、`resolutionText`、`paths`、`implementation`',
-    '`intendedChanges` 项字段固定为 `path`、`operation`、`summary`',
-    '`expectedPaths` 必须逐文件列出',
-    'work manifest 与 `SubmitManifest` controller request 是两个不同文件',
-    '不得把 work manifest 自身作为 `-RequestPath`',
-    '集合型 `scopeContract` 必须将对应 `DiscoverList` 返回的逐文件全集',
-    'manifest 不得包含 `metadataThreadId`',
-    '禁止在发现阶段调用 Shell',
-    '禁止解析 Markdown 自行选任务',
-    '不自行宣称检查通过',
-    '不得修改状态枚举',
-    '不得编辑任何 automation TOML',
-    'planOnly=true',
-    '脱敏最终摘要'
-  )) {
-  Assert-Contract $prompt.Contains($literal, [StringComparison]::OrdinalIgnoreCase) "prompt constraint is missing: $literal"
+
+$activeText = $prompt + "`n" + $rules
+Assert-Contract `
+  -Condition (-not [regex]::IsMatch($activeText, '(?i)\b(?:TQ|HANDOFF|DEC|REVIEW)-[A-Z0-9-]+')) `
+  -Message 'active prompt or rules contains a concrete task, decision, handoff, or review id'
+foreach ($forbidden in @(
+  'manifest',
+  'planOnly',
+  'SubmitManifest',
+  'DiscoverRead',
+  '任务注册表',
+  'hourly-controller-v2'
+)) {
+  Assert-Contract `
+    -Condition (-not $activeText.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) `
+    -Message "active prompt or rules contains old protocol token: $forbidden"
 }
 
-foreach ($literal in @(
-    '生产环境任何时刻最多一个写入控制器',
-    'planOnly=true',
-    '%USERPROFILE%\.codex\automation-state\',
-    '最小验证预算',
-    '输入未变化时不重复同一检查',
-    'feishu_unavailable',
-    '不丢弃决定',
-    '不回退 Gmail',
-    'pending-whitespace',
-    'cached-diff-check',
-    'git commit --only'
-  )) {
-  Assert-Contract $rules.Contains($literal, [StringComparison]::OrdinalIgnoreCase) "v2 rule is missing: $literal"
+foreach ($requiredPath in @(
+  '开发管理\AI协作规则.txt',
+  '开发管理\审核入口.txt',
+  '开发管理\DeepSeek工作提示词.txt',
+  '开发管理\状态与建议维护规则.txt',
+  'tools\hourly-automation-lease.ps1',
+  'tools\automation-workspace-guard.ps1',
+  'tools\automation-finalize-commit.ps1',
+  'tools\check-pending-whitespace.ps1',
+  'tools\feishu-decision-bridge\src\bridge.mjs'
+)) {
+  Assert-Contract `
+    -Condition (Test-Path -LiteralPath (Join-Path $root $requiredPath) -PathType Leaf) `
+    -Message "preserved workflow component is missing: $requiredPath"
 }
 
-foreach ($legacyLiteral in @('schema v8', 'v8 确定性入口', 'SendDecisionNotification', 'InspectCandidate')) {
-  Assert-Contract (-not ($prompt + "`n" + $rules).Contains($legacyLiteral, [StringComparison]::OrdinalIgnoreCase)) "canonical contract still exposes legacy v8 protocol: $legacyLiteral"
+$automations = @(
+  Get-ChildItem -LiteralPath $automationDirectory -Directory -Filter 'tzg-*' |
+    Where-Object { $_.Name -ne 'tzg-daily-automation-briefing' } |
+    ForEach-Object { Read-Automation -Directory $_.FullName }
+)
+$activeWriters = @($automations | Where-Object { $_.Status -eq 'ACTIVE' })
+$activeWriterIds = @($activeWriters | ForEach-Object { $_.Id })
+Assert-Contract -Condition ($activeWriters.Count -le 1) -Message "more than one writer automation is ACTIVE: $($activeWriterIds -join ',')"
+if ($activeWriters.Count -eq 1) {
+  Assert-Contract `
+    -Condition ($activeWriters[0].Id -eq 'tzg-hourly-controller') `
+    -Message "unexpected writer automation is ACTIVE: $($activeWriters[0].Id)"
+  Assert-Contract `
+    -Condition ((Normalize-ContractText -Text $activeWriters[0].Prompt) -ceq (Normalize-ContractText -Text $prompt)) `
+    -Message 'active controller prompt does not match the canonical thin prompt'
 }
-foreach ($oldFile in @(
+if ($RequireActive) {
+  Assert-Contract `
+    -Condition ($activeWriters.Count -eq 1 -and $activeWriters[0].Id -eq 'tzg-hourly-controller') `
+    -Message 'tzg-hourly-controller is not the unique ACTIVE writer automation'
+}
+
+if ($RequireLegacyRetired) {
+  $legacyPaths = @(
+    'tools\hourly-controller-v2',
+    'tools\check-hourly-controller-v2.ps1',
     'tools\automation-controller.ps1',
     'tools\automation-controller-state.ps1',
-    'tools\automation-decision-status.ps1'
-  )) {
-  Assert-Contract (Test-Path -LiteralPath (Join-Path $root $oldFile) -PathType Leaf) "preserved controller file is missing: $oldFile"
+    'tools\automation-controller-repair.ps1',
+    'tools\automation-decision-status.ps1',
+    'tools\test-automation-controller.ps1',
+    'tools\test-automation-controller-state.ps1',
+    'tools\test-automation-controller-repair.ps1',
+    'tools\test-automation-decision-status.ps1',
+    'tools\fixtures\automation-controller-v5-chained-decision-stuck.json',
+    '开发管理\自动工作流任务注册表.json',
+    '开发管理\自动工作流控制器v2提示词.txt',
+    '开发管理\自动工作流v2规则.txt'
+  )
+  foreach ($legacyPath in $legacyPaths) {
+    Assert-Contract `
+      -Condition (-not (Test-Path -LiteralPath (Join-Path $root $legacyPath))) `
+      -Message "legacy workflow path still exists: $legacyPath"
+  }
 }
-$activeV2Text = $prompt + "`n" + $rules + "`n" + $controller
-foreach ($oldModuleReference in @(
-    'tools/automation-controller.ps1',
-    'automation-controller-state.ps1',
-    'automation-decision-status.ps1'
-  )) {
-  Assert-Contract (-not $activeV2Text.Contains($oldModuleReference, [StringComparison]::OrdinalIgnoreCase)) "v2 references an old implementation module: $oldModuleReference"
-}
-
-$registryText = Read-ContractText -Path $registryPath
-$registry = $registryText | ConvertFrom-Json
-$tq057 = @($registry.tasks | Where-Object { $_.taskId -ceq 'TQ-057' })
-Assert-Contract ($tq057.Count -eq 1) 'registry must contain exactly one TQ-057 task'
-$registryIds = @($tq057[0].decisionIds | ForEach-Object { [string]$_ })
-$promptIds = @(Get-DecisionIds -Text (Get-ContractSection -Text $prompt -Heading 'TQ-057 v2 冻结决策'))
-$statusIds = @(Get-DecisionIds -Text (Get-ContractSection -Text $status -Heading 'TQ-057 v2 冻结决策'))
-Assert-Contract ($registryIds.Count -eq 5) 'TQ-057 registry decision count must be five'
-Assert-Contract (($promptIds -join '|') -ceq ($registryIds -join '|')) 'prompt TQ-057 decisions differ from registry'
-Assert-Contract (($statusIds -join '|') -ceq ($registryIds -join '|')) 'status TQ-057 decisions differ from registry'
-
-$statusSummary = Get-ContractSection -Text $status -Heading 'v2 建设摘要'
-foreach ($literal in @(
-    '旧生产控制器仍暂停（PAUSED）',
-    'canonical 提示与规则已切换至 v2',
-    'plan-only 清单已获负责人批准',
-    '尚未执行 BeginMutation',
-    '离线测试不代表生产成功'
-  )) {
-  Assert-Contract $statusSummary.Contains($literal, [StringComparison]::Ordinal) "v2 status summary is missing: $literal"
-}
-
-foreach ($automationId in @(
-    'tzg-hourly-controller',
-    'tzg-wf1-queue-and-review-maintenance',
-    'tzg-wf3-claude-execute-1',
-    'tzg-wf4-codex-execute-2'
-  )) {
-  Assert-Contract ((Get-AutomationStatus -AutomationId $automationId) -ceq 'PAUSED') "writer automation is not PAUSED: $automationId"
-}
-$activeWriters = @(
-  Get-ChildItem -Directory -LiteralPath $automationRoot -Filter 'tzg-*' |
-    Where-Object { $_.Name -ne 'tzg-daily-automation-briefing' } |
-    Where-Object {
-      @(Select-String -LiteralPath (Join-Path $_.FullName 'automation.toml') -Pattern '^status\s*=\s*"ACTIVE"\s*$').Count -eq 1
-    }
-)
-Assert-Contract ($activeWriters.Count -eq 0) "expected no active writer automations, found $($activeWriters.Count)"
 
 Write-Output 'check-automation-workflow: OK'

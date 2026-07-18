@@ -27,6 +27,50 @@
 - TQ-059：每个 `*Req` 字段恰好选择一种模式；`runtime_gate` 须有允许/拒绝样例，`metadata_only` 须去除限制语义、证明无 consumer 并拒绝“仍叫 `*Req` 但无 handler”。
 - D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
 
+## TQ-057 最终批准口径
+
+以下五项决定是 TQ-057 的最终实施事实。执行时不得重新询问、缩减或扩大决定边界，也不得迁移旧 ledger 的 provider 哈希或消息证据。
+
+### DEC-20260715-35ACB87E6C10 · 保留并补齐 11 份古修术法
+
+- 决定正文：选择 B：按既有文档补齐 CSV、语言键和 Unity asset
+- 影响根：`src/Assets/DataConfig`、`src/Assets/Data/Spells`、`docs/角色养成/术法`。
+- 迁移事实：补齐 `Spells.csv`、`Language.csv` 与全部 11 份古修术法 Unity asset。
+- 兼容事实：保留 11 份古修术法文档，不删除已批准内容。
+- Required checks：`data-chain`、`unity-editmode-related`、`pending-whitespace`、`cached-diff-check`。
+
+### DEC-20260715-75D7BA2AF210 · 迁移双伤害倍率
+
+- 决定正文：选择 A：为所有攻击术法增加明确的 physicalDamageMultiplier 与 soulDamageMultiplier，并迁移现有单通道数据
+- 影响根：`src/Assets/DataConfig/Spells.csv`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Scripts/Combat/SpellData.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Tests/EditMode`、全部现存 `src/Assets/Data/Spells/*.asset`，以及任何硬编码术法 schema 的 `tools/check-data-chain.ps1`。
+- 迁移事实：迁移现有单通道术法数据到 `physicalDamageMultiplier` 与 `soulDamageMultiplier`；实施清单必须覆盖发现到的全部 `src/Assets/Data/Spells/*.asset`。
+- 兼容事实：现有攻击术法迁移后保持原单通道伤害语义。
+- Required checks：`data-chain`、`unity-editmode-related`、`pending-whitespace`、`cached-diff-check`。
+
+### DEC-20260714-29A5D1356CC8 · 补齐炼神语言键
+
+- 决定正文：选择 A：为 realm_lianshen 补齐语言键并保留有效引用。
+- 影响根：`src/Assets/DataConfig/Language.csv`。
+- 迁移事实：补齐 `realm_lianshen` 语言键。
+- 兼容事实：保留现有有效 `realm_lianshen` 引用。
+- Required checks：`data-chain`、`pending-whitespace`、`cached-diff-check`。
+
+### DEC-20260714-320075D033A5 · 六部功法只删废止段
+
+- 决定正文：选择 A：六部仍含有效低阶成长段的功法只删除废止的 realm_lianxu 段并同步 asset，保留其他内容。
+- 影响根：`src/Assets/DataConfig/GongFa.csv`、`docs/角色养成/功法`、`src/Assets/Data/GongFa`。
+- 迁移事实：六部功法只删除 `realm_lianxu` 段并同步对应 asset。
+- 兼容事实：保留六部功法的其他有效低阶成长段。
+- Required checks：`data-chain`、`unity-editmode-related`、`pending-whitespace`、`cached-diff-check`。
+
+### DEC-20260713-A07FA708DB22 · 删除无效境界引用
+
+- 决定正文：选择 A：删除仍引用已删除或未注册境界的 CSV 行、对应文档和 Unity asset。
+- 影响根：`src/Assets/DataConfig`、`docs/角色养成`、`src/Assets/Data`。
+- 迁移事实：删除仍引用已删除或未注册境界的 CSV 行、文档和 Unity asset。
+- 兼容事实：不删除仍引用有效境界的数据。
+- Required checks：`data-chain`、`unity-editmode-related`、`pending-whitespace`、`cached-diff-check`。
+
 ## 默认验证
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
