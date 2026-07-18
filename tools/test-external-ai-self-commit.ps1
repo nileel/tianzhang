@@ -297,20 +297,20 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
   $handoffCommit = Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD')
   $businessCommit = Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD^')
 
-  $businessPaths = @(Invoke-CanaryGit `
+  $businessPathText = Invoke-CanaryGit `
     -RepositoryRoot $canaryRepository `
-    -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', $businessCommit) `
-    -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object)
+    -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', $businessCommit)
+  $businessPaths = @($businessPathText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object)
   $expectedBusinessPaths = @('fixtures/business.txt', '开发管理/当前任务队列.txt') | Sort-Object
   Assert-CanaryEqual `
     -Actual ($businessPaths -join '|') `
     -Expected ($expectedBusinessPaths -join '|') `
     -Message 'Business commit paths mismatch'
 
-  $handoffPaths = @(Invoke-CanaryGit `
+  $handoffPathText = Invoke-CanaryGit `
     -RepositoryRoot $canaryRepository `
-    -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', $handoffCommit) `
-    -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', $handoffCommit)
+  $handoffPaths = @($handoffPathText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   Assert-CanaryEqual `
     -Actual ($handoffPaths -join '|') `
     -Expected '开发管理/AI合作沟通.txt' `
