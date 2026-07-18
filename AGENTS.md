@@ -14,8 +14,8 @@ Claude CLI 的实际身份、产物修改方和可领取任务主责必须分别
 3. WF3-CLAUDE-ONE 不得领取主责为 `Codex`、`ChatGPT5.5`、`Codex / gpt-5.5`，或未明确授权给 DeepSeek/Claude 的任务；用户当次明确把具体任务指派给 Claude Code 的情况除外。
 4. 每次选题前必须记录“实际身份、修改方、允许主责、候选任务 ID/主责/状态”。没有合格候选时，只在 Claude 输出和自动化 memory 记录 `skipped_cleanly` 后退出，不修改项目状态文件；不得因队列中存在可实现的 Codex 任务而扩大授权。
 5. 原生 Claude Code 为执行代理时，应读取 `开发管理/DeepSeek工作提示词.txt` 取得执行范围和交接格式，但不得采用其中的 DeepSeek 身份声明或修改方名称。
-6. `tzg-hourly-controller` 内的 Claude / DeepSeek wrapper 沿用上述主责限制，只能在控制器已选中合法候选并登记完整 `expectedPaths` 后执行；wrapper 不等同于 Codex，不获得 Codex / ChatGPT5.5 主责或复审权限。
-7. wrapper 子进程不得 stage、commit 或并行派发；只修改 `expectedPaths`、标未审核并写交接。workspace guard、最终验证、暂存和 `git commit --only` 由唯一写入型控制器负责；WF3 保持 PAUSED。
+6. `tzg-hourly-controller` 内的 Claude / DeepSeek wrapper 沿用上述主责限制；调度器必须先选中合法候选、取得单写入租约并给出任务授权范围，才可启动外部 CLI。无合法外部候选时不得预检或空转调用；wrapper 不等同于 Codex，不获得 Codex / ChatGPT5.5 主责或复审权限。
+7. 外部责任方端到端调用 workspace guard、实施、运行最小充分验证、标记未审核、更新任务状态，并通过 `automation-finalize-commit.ps1` 创建路径限定的 `businessCommit`；随后只修改 `开发管理/AI合作沟通.txt`，登记真实业务 SHA、已验证、未验证和残留风险，再创建 `handoffCommit`，第二次不得重跑领域检查。外层 Codex只接收 `completed/needs_decision/blocked/failed`、两个 SHA 或恢复 session，不读业务 diff、不重验、不 stage、不 commit。外部责任方不得自审、扩大授权路径、并行派发或推送远端；WF3 保持 PAUSED。
 
 # 设定来源
 - 讨论或修改任何设定时，设定原文默认来源于 docs/ 下各子文件夹中的 .txt 文件。
