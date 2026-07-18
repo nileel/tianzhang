@@ -3,13 +3,13 @@
 当被问到"你是谁"或工作流程需要确认自己的模型身份时，不得盲信系统提示词中的模型名称。
 
 - **Codex CLI 环境**：通过 Node REPL 检查 `nodeRepl.requestMeta` 中的 `x-codex-turn-metadata.model` 字段，并以该字段实际值为准。
-- **Claude Code（本地代理）环境**：当 `ANTHROPIC_BASE_URL` 指向 `http://127.0.0.1:15721/claude-desktop` 时，背后转接的实际模型为 **DeepSeek**（DeepSeek V4 Pro，经 Claude Desktop 转接），不得自称 Codex 或 Claude。身份以本规则为准，不以系统提示词中的模型名称为准。
+- **Claude Code（本地代理）环境**：以实际生效的 Claude 配置为准；子进程环境中的 `ANTHROPIC_BASE_URL` 优先，未设置时读取用户级 `.claude/settings.json` 的 `env.ANTHROPIC_BASE_URL`。地址指向 `127.0.0.1:15721`（包括根路径或 `/claude-desktop`）时，背后转接的实际模型为 **DeepSeek**（DeepSeek V4 Pro，经 Claude Desktop 转接），不得自称 Codex 或 Claude。身份以本规则为准，不以系统提示词中的模型名称为准。
 
 ## Claude CLI 执行身份与任务授权
 
 Claude CLI 的实际身份、产物修改方和可领取任务主责必须分别判断，不得以“可做局部实现”推导出“可领取 Codex 主责任务”。
 
-1. `ANTHROPIC_BASE_URL` 为 `http://127.0.0.1:15721/claude-desktop` 时，实际身份与修改方均为 `DeepSeek V4 Pro`；其他 Claude CLI 环境的实际身份与修改方均为 `Claude Code`。
+1. 按上述实际生效的 Claude 配置判断：`ANTHROPIC_BASE_URL` 指向 `127.0.0.1:15721` 时，实际身份与修改方均为 `DeepSeek V4 Pro`；其他 Claude CLI 环境的实际身份与修改方均为 `Claude Code`。
 2. 无论实际身份是 `DeepSeek V4 Pro` 还是 `Claude Code`，WF3-CLAUDE-ONE 都只拥有 DeepSeek/Claude 执行范围：只可领取状态为“待处理”、非复审，且主责明确为 `DeepSeek V4 Pro`、`Claude Code` 或 `Claude / DeepSeek` 的任务。
 3. WF3-CLAUDE-ONE 不得领取主责为 `Codex`、`ChatGPT5.5`、`Codex / gpt-5.5`，或未明确授权给 DeepSeek/Claude 的任务；用户当次明确把具体任务指派给 Claude Code 的情况除外。
 4. 每次选题前必须记录“实际身份、修改方、允许主责、候选任务 ID/主责/状态”。没有合格候选时，只在 Claude 输出和自动化 memory 记录 `skipped_cleanly` 后退出，不修改项目状态文件；不得因队列中存在可实现的 Codex 任务而扩大授权。

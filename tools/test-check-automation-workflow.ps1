@@ -161,6 +161,7 @@ $canonicalRules = @'
 - 四种路由责任：纯 1、纯 2、外部 AI、队列维护各自端到端完成。
 - 人工脏改避让：冲突候选跳过，不 stash、reset、checkout 或 clean。
 - 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
+- 外部 CLI 权限：首次启动与恢复使用相同的非交互 dontAsk 最小权限白名单；禁止全权限绕过；执行身份按实际生效的 Claude 配置统一注入。
 - 决策恢复：保存原 thread/session；占锁排队且不等待 token。
 - 两轮阻塞暂停：相同全阻塞指纹连续两次后 PAUSED 并通知。
 - 队列补充顺序：三类无候选时先提升 backlog，否则新增最小任务，本轮不执行。
@@ -188,13 +189,17 @@ try {
     'tools/automation-workspace-guard.ps1',
     'tools/automation-finalize-commit.ps1',
     'tools/check-pending-whitespace.ps1',
-    'tools/feishu-decision-bridge/src/bridge.mjs'
+    'tools/feishu-decision-bridge/src/bridge.mjs',
+    'tools/feishu-decision-bridge/src/resume-trigger.mjs'
   )) {
     Write-Utf8File -Path (Join-Path $repositoryRoot $path) -Content "fixture`n"
   }
   Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流控制器提示词.txt') -Content $canonicalPrompt
   Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流规则.txt') -Content $canonicalRules
   Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $canonicalStatus
+  $resumeTriggerPath = Join-Path $repositoryRoot 'tools/feishu-decision-bridge/src/resume-trigger.mjs'
+  $canonicalResumeTrigger = "const args = ['--permission-mode', 'dontAsk', '--allowedTools'];`n"
+  Write-Utf8File -Path $resumeTriggerPath -Content $canonicalResumeTrigger
 
   foreach ($id in @(
     'tzg-hourly-controller',
@@ -252,6 +257,29 @@ try {
       -Context "Missing prompt phrase $requiredPhrase"
   }
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+
+  $rulesPath = Join-Path $repositoryRoot '开发管理/自动工作流规则.txt'
+  foreach ($requiredPhrase in @(
+    '首次启动与恢复',
+    'dontAsk',
+    '最小权限白名单',
+    '禁止全权限绕过',
+    '实际生效的 Claude 配置'
+  )) {
+    Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($requiredPhrase, '已移除')
+    Assert-CheckerFails `
+      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
+      -Context "Missing external permission phrase $requiredPhrase"
+  }
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  Write-Utf8File `
+    -Path $resumeTriggerPath `
+    -Content ($canonicalResumeTrigger + "const unsafe = '--dangerously-skip-permissions';`n")
+  Assert-CheckerFails `
+    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
+    -Context 'Full Claude permission bypass'
+  Write-Utf8File -Path $resumeTriggerPath -Content $canonicalResumeTrigger
 
   $legacyPath = Join-Path $repositoryRoot 'tools/automation-controller.ps1'
   Write-Utf8File -Path $legacyPath -Content "legacy`n"
