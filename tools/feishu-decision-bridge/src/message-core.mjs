@@ -390,5 +390,9 @@ export async function handleDecisionTextMessage({
     text: `已登记 ${command.decisionId} 自定义方案：\n${command.customText}`,
     replyText,
   });
-  return { accepted: true, rejectionCode: replyFailure };
+  return {
+    accepted: true,
+    rejectionCode: replyFailure,
+    decisionId: command.decisionId,
+  };
 }

@@ -9,6 +9,7 @@ import { parsePrivateConfig, sanitizeError, sha256 } from './config.mjs';
 import { acquireInstanceLock } from './instance-lock.mjs';
 import { handleDecisionTextMessage, normalizeMessageEvent } from './message-core.mjs';
 import { createMessageReplyTransport } from './message-runtime.mjs';
+import { createPostAcceptRelay } from './resume-trigger.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const CALLBACK_TIMEOUT_MS = 2_800;
@@ -166,12 +167,23 @@ function resolveConfigPath(env, homedir) {
   return path;
 }
 
-function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRejection }) {
+export function makeCallback({
+  loadConfig,
+  loadBindings,
+  fs,
+  now,
+  timers,
+  rememberSensitive,
+  reportRejection,
+  normalizeAction = normalizeCardAction,
+  handleAction = handleCardAction,
+  postAccept = () => {},
+}) {
   return async (event) => {
     let actionKind;
     let config;
     try {
-      const normalized = normalizeCardAction(event);
+      const normalized = normalizeAction(event);
       actionKind = normalized.action.kind;
       rememberSensitive([
         normalized.eventId,
@@ -199,7 +211,9 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRe
     );
     let pendingBindings;
     try {
-      const value = await readBoundedJson(bindingPath, fs);
+      const value = loadBindings === undefined
+        ? await readBoundedJson(bindingPath, fs)
+        : await loadBindings(bindingPath);
       pendingBindings = actionKind === 'operator_pairing' && !Array.isArray(value) ? [value] : value;
     } catch {
       reportRejection('binding_read');
@@ -220,11 +234,25 @@ function makeCallback({ loadConfig, fs, now, timers, rememberSensitive, reportRe
     });
     try {
       const result = await Promise.race([
-        handleCardAction({ event, config, pendingBindings, now: callbackNow }),
+        handleAction({ event, config, pendingBindings, now: callbackNow }),
         timeout,
       ]);
       if (!isPlainObject(result) || result.accepted !== true) {
         reportRejection(result?.rejectionCode === 'timeout' ? 'timeout' : 'validation');
+      } else if (actionKind !== 'operator_pairing') {
+        try {
+          const normalized = normalizeAction(event);
+          postAccept({
+            decisionId: normalized.action.decisionId,
+            replyPath: join(
+              config.stateRoot,
+              'inbox',
+              `${sha256(normalized.eventId)}.json`,
+            ),
+          });
+        } catch {
+          // Feishu acceptance must not depend on relay startup.
+        }
       }
       return isPlainObject(result) && isPlainObject(result.response)
         ? result.response
@@ -334,9 +362,20 @@ function summarizeMessageShape(rawEvent) {
   }
 }
 
-function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive, reportRejection }) {
+export function makeMessageCallback({
+  loadConfig,
+  loadBindings,
+  fs,
+  now,
+  replyText,
+  rememberSensitive,
+  reportRejection,
+  normalizeMessage = normalizeMessageEvent,
+  handleMessage = handleDecisionTextMessage,
+  postAccept = () => {},
+}) {
   return async (event) => {
-    const normalized = normalizeMessageEvent(event);
+    const normalized = normalizeMessage(event);
     if (normalized === null) {
       reportRejection('invalid_shape', event);
       return undefined;
@@ -359,10 +398,10 @@ function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive
         config.expectedTenantKey,
         config.hmacKey,
       ]);
-      pendingBindings = await readBoundedJson(
-        join(config.stateRoot, 'pending-bindings.json'),
-        fs,
-      );
+      const bindingPath = join(config.stateRoot, 'pending-bindings.json');
+      pendingBindings = loadBindings === undefined
+        ? await readBoundedJson(bindingPath, fs)
+        : await loadBindings(bindingPath);
     } catch {
       reportRejection('binding_read');
       return undefined;
@@ -372,7 +411,7 @@ function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive
       reportRejection('invalid_now');
       return undefined;
     }
-    const result = await handleDecisionTextMessage({
+    const result = await handleMessage({
       event,
       config,
       pendingBindings,
@@ -383,6 +422,20 @@ function makeMessageCallback({ loadConfig, fs, now, replyText, rememberSensitive
       reportRejection('message_reply_failed');
     } else if (!result.accepted && result.rejectionCode !== 'format_hint') {
       reportRejection(`validation_${result.rejectionCode}`);
+    }
+    if (result.accepted === true) {
+      try {
+        postAccept({
+          decisionId: result.decisionId,
+          replyPath: join(
+            config.stateRoot,
+            'inbox',
+            `${sha256(normalized.eventId)}.json`,
+          ),
+        });
+      } catch {
+        // Feishu acceptance must not depend on relay startup.
+      }
     }
     return undefined;
   };
@@ -433,6 +486,11 @@ export async function startBridge(options = {}) {
   let shuttingDown = false;
   let healthChain = Promise.resolve();
   let instanceLock;
+  const postAccept = options.postAccept ?? createPostAcceptRelay({
+    schedule: options.setImmediate,
+    spawnDetached: options.spawnDetachedRelay,
+    stateRoot: options.runtimeStateRoot,
+  });
 
   const healthTimestamp = () => {
     const value = now();
@@ -538,6 +596,7 @@ export async function startBridge(options = {}) {
             emitSanitized('warn', [summarizeCardShape(event)]);
           }
         },
+        postAccept,
       }),
       'im.message.receive_v1': makeMessageCallback({
         loadConfig: async () => parsePrivateConfig(await readBoundedJson(configPath, fs)),
@@ -551,6 +610,7 @@ export async function startBridge(options = {}) {
             emitSanitized('warn', [summarizeMessageShape(event)]);
           }
         },
+        postAccept,
       }),
     });
     const activeDispatcher = registered ?? eventDispatcher;
