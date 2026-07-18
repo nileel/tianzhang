@@ -1,5 +1,4 @@
 import { spawn as nodeSpawn } from 'node:child_process';
-import { readFile as nodeReadFile } from 'node:fs/promises';
 import { homedir as systemHomedir } from 'node:os';
 import {
   basename, dirname, isAbsolute, join, resolve,
@@ -19,17 +18,6 @@ const DEFAULT_LEASE_TOOL_PATH = resolve(
   '..',
   'hourly-automation-lease.ps1',
 );
-const CLAUDE_PERMISSION_MODE = 'dontAsk';
-const CLAUDE_ALLOWED_TOOLS = [
-  'Read',
-  'Edit',
-  'TaskCreate',
-  'TaskUpdate',
-  'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 *)',
-  'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 *)',
-  'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 *)',
-].join(',');
-const EXTERNAL_WORKER_EMAIL = 'external-worker@example.invalid';
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -51,50 +39,6 @@ function requireAbsolutePath(value, name) {
     throw new Error(`Invalid ${name}`);
   }
   return resolve(value);
-}
-
-function isDeepSeekProxy(value) {
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    return false;
-  }
-  try {
-    const url = new URL(value);
-    return url.hostname === '127.0.0.1' && url.port === '15721';
-  } catch {
-    return false;
-  }
-}
-
-export function resolveClaudeWorkerIdentity({ environment = {}, settings = {} } = {}) {
-  const environmentUrl = typeof environment?.ANTHROPIC_BASE_URL === 'string'
-    ? environment.ANTHROPIC_BASE_URL.trim()
-    : '';
-  const settingsUrl = typeof settings?.env?.ANTHROPIC_BASE_URL === 'string'
-    ? settings.env.ANTHROPIC_BASE_URL.trim()
-    : '';
-  return isDeepSeekProxy(environmentUrl || settingsUrl)
-    ? 'DeepSeek V4 Pro'
-    : 'Claude Code';
-}
-
-async function readClaudeSettings({ homedir, readFile }) {
-  try {
-    const text = await readFile(join(homedir(), '.claude', 'settings.json'), 'utf8');
-    const parsed = JSON.parse(text);
-    return isPlainObject(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function externalWorkerEnvironment(environment, identity) {
-  return {
-    ...environment,
-    GIT_AUTHOR_NAME: identity,
-    GIT_AUTHOR_EMAIL: EXTERNAL_WORKER_EMAIL,
-    GIT_COMMITTER_NAME: identity,
-    GIT_COMMITTER_EMAIL: EXTERNAL_WORKER_EMAIL,
-  };
 }
 
 function defaultRuntimeRoot(homedir = systemHomedir) {
@@ -343,15 +287,7 @@ function validateDispatch(value) {
   };
 }
 
-async function startDetachedModel({
-  dispatch,
-  reply,
-  spawnChild,
-  environment,
-  claudeSettings,
-  homedir,
-  readFile,
-}) {
+async function startDetachedModel({ dispatch, reply, spawnChild }) {
   const replyValue = reply.kind === 'option' ? reply.optionKey : reply.customText;
   if (typeof replyValue !== 'string' || replyValue.length === 0) {
     throw new Error('Invalid reply');
@@ -360,27 +296,12 @@ async function startDetachedModel({
   const command = dispatch.resumeKind === 'codex' ? 'codex' : 'claude';
   const args = dispatch.resumeKind === 'codex'
     ? ['exec', 'resume', dispatch.resumeId, '-']
-    : [
-      '--resume',
-      dispatch.resumeId,
-      '--print',
-      '--permission-mode',
-      CLAUDE_PERMISSION_MODE,
-      '--allowedTools',
-      CLAUDE_ALLOWED_TOOLS,
-    ];
-  let childEnvironment;
-  if (dispatch.resumeKind === 'claude') {
-    const effectiveSettings = claudeSettings ?? await readClaudeSettings({ homedir, readFile });
-    const identity = resolveClaudeWorkerIdentity({ environment, settings: effectiveSettings });
-    childEnvironment = externalWorkerEnvironment(environment, identity);
-  }
+    : ['--resume', dispatch.resumeId, '--print'];
   const child = spawnChild(command, args, {
     cwd: dispatch.repositoryRoot,
     detached: true,
     windowsHide: true,
     stdio: ['pipe', 'ignore', 'ignore'],
-    ...(childEnvironment === undefined ? {} : { env: childEnvironment }),
   });
   await new Promise((resolvePromise, rejectPromise) => {
     let settled = false;
@@ -452,9 +373,6 @@ export async function runResumeRelay(options) {
     }));
   const consumeReply = options.consumeReply ?? consumeSpecificReply;
   const spawnChild = options.spawnChild ?? nodeSpawn;
-  const environment = options.environment ?? process.env;
-  const homedir = options.homedir ?? systemHomedir;
-  const readFile = options.readFile ?? nodeReadFile;
   if (
     typeof invokeLease !== 'function'
     || typeof consumeReply !== 'function'
@@ -484,15 +402,7 @@ export async function runResumeRelay(options) {
     replyPath: dispatch.replyPath,
   });
   try {
-    await startDetachedModel({
-      dispatch,
-      reply,
-      spawnChild,
-      environment,
-      claudeSettings: options.claudeSettings,
-      homedir,
-      readFile,
-    });
+    await startDetachedModel({ dispatch, reply, spawnChild });
   } catch {
     await bestEffortStartFailure({ dispatch, invokeLease });
     return { status: 'START_FAILED' };

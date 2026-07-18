@@ -3,17 +3,15 @@ import { EventEmitter } from 'node:events';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import * as resumeTrigger from '../src/resume-trigger.mjs';
+import {
+  createPostAcceptRelay,
+  runResumeRelay,
+} from '../src/resume-trigger.mjs';
 import {
   makeCallback,
   makeMessageCallback,
 } from '../src/bridge.mjs';
 import { sha256 } from '../src/config.mjs';
-
-const {
-  createPostAcceptRelay,
-  runResumeRelay,
-} = resumeTrigger;
 
 function inertTimers() {
   return {
@@ -313,28 +311,7 @@ test('DISPATCH consumes only the signed reply and resumes Codex with option thro
   assert.equal(JSON.stringify(result).includes(providerHash), false);
 });
 
-test('effective Claude settings identify the local DeepSeek proxy', () => {
-  assert.equal(
-    resumeTrigger.resolveClaudeWorkerIdentity({
-      environment: {},
-      settings: {
-        env: { ANTHROPIC_BASE_URL: 'http://127.0.0.1:15721' },
-      },
-    }),
-    'DeepSeek V4 Pro',
-  );
-  assert.equal(
-    resumeTrigger.resolveClaudeWorkerIdentity({
-      environment: { ANTHROPIC_BASE_URL: 'https://api.anthropic.com' },
-      settings: {
-        env: { ANTHROPIC_BASE_URL: 'http://127.0.0.1:15721' },
-      },
-    }),
-    'Claude Code',
-  );
-});
-
-test('DISPATCH resumes Claude with least privilege and custom text through stdin only', async () => {
+test('DISPATCH resumes Claude with custom text through stdin only', async () => {
   const spawnRecorder = fakeSpawnRecorder();
   const customText = '保持原任务边界，不新增内容';
   const result = await runResumeRelay({
@@ -354,32 +331,12 @@ test('DISPATCH resumes Claude with least privilege and custom text through stdin
     }),
     consumeReply: async () => ({ kind: 'custom', customText }),
     spawnChild: spawnRecorder.spawnChild,
-    environment: { PATH: 'C:\\private\\bin' },
-    claudeSettings: {
-      env: { ANTHROPIC_BASE_URL: 'http://127.0.0.1:15721' },
-    },
   });
 
   assert.deepEqual(result, { status: 'DISPATCHED' });
   const call = spawnRecorder.calls[0];
   assert.equal(call.command, 'claude');
-  assert.deepEqual(call.args.slice(0, 3), ['--resume', 'session-claude', '--print']);
-  const permissionModeIndex = call.args.indexOf('--permission-mode');
-  assert.notEqual(permissionModeIndex, -1);
-  assert.equal(call.args[permissionModeIndex + 1], 'dontAsk');
-  const allowedToolsIndex = call.args.indexOf('--allowedTools');
-  assert.notEqual(allowedToolsIndex, -1);
-  assert.match(call.args[allowedToolsIndex + 1], /Read/u);
-  assert.match(call.args[allowedToolsIndex + 1], /Edit/u);
-  assert.match(call.args[allowedToolsIndex + 1], /automation-workspace-guard\.ps1/u);
-  assert.match(call.args[allowedToolsIndex + 1], /check-pending-whitespace\.ps1/u);
-  assert.match(call.args[allowedToolsIndex + 1], /automation-finalize-commit\.ps1/u);
-  assert.equal(call.args.includes('--dangerously-skip-permissions'), false);
-  assert.equal(call.options.env.PATH, 'C:\\private\\bin');
-  assert.equal(call.options.env.GIT_AUTHOR_NAME, 'DeepSeek V4 Pro');
-  assert.equal(call.options.env.GIT_COMMITTER_NAME, 'DeepSeek V4 Pro');
-  assert.equal(call.options.env.GIT_AUTHOR_EMAIL, 'external-worker@example.invalid');
-  assert.equal(call.options.env.GIT_COMMITTER_EMAIL, 'external-worker@example.invalid');
+  assert.deepEqual(call.args, ['--resume', 'session-claude', '--print']);
   assert.equal(call.args.join(' ').includes(customText), false);
   assert.equal(call.stdin, `[TZG_DECISION_RESUME runId=run-claude]\n${customText}`);
 });

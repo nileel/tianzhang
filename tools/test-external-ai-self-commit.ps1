@@ -11,7 +11,6 @@ function Invoke-CanaryProcess {
     [string]$WorkingDirectory,
     [AllowNull()]
     [string]$InputText,
-    [Collections.IDictionary]$Environment = @{},
     [ValidateRange(1, 900)]
     [int]$TimeoutSeconds = 120,
     [switch]$AllowNonZero
@@ -33,10 +32,6 @@ function Invoke-CanaryProcess {
   foreach ($argument in $Arguments) {
     $startInfo.ArgumentList.Add($argument)
   }
-  foreach ($name in $Environment.Keys) {
-    $startInfo.Environment[[string]$name] = [string]$Environment[$name]
-  }
-
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $startInfo
   if (-not $process.Start()) {
@@ -129,46 +124,6 @@ function Assert-CanaryEqual {
   }
 }
 
-function Get-ClaudeWorkerIdentity {
-  $baseUrl = [string]$env:ANTHROPIC_BASE_URL
-  if ([string]::IsNullOrWhiteSpace($baseUrl)) {
-    $settingsPath = Join-Path `
-      ([Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)) `
-      '.claude\settings.json'
-    if (Test-Path -LiteralPath $settingsPath) {
-      $settings = Get-Content -LiteralPath $settingsPath -Raw | ConvertFrom-Json -Depth 100
-      $baseUrl = [string]$settings.env.ANTHROPIC_BASE_URL
-    }
-  }
-  $uri = $null
-  if (
-    [Uri]::TryCreate($baseUrl, [UriKind]::Absolute, [ref]$uri) `
-    -and $uri.Host -eq '127.0.0.1' `
-    -and $uri.Port -eq 15721
-  ) {
-    return 'DeepSeek V4 Pro'
-  }
-  'Claude Code'
-}
-
-function Write-CanaryRuntimeText {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$RuntimeRoot,
-    [Parameter(Mandatory = $true)]
-    [ValidatePattern('^[A-Za-z0-9.-]+$')]
-    [string]$Name,
-    [AllowEmptyString()]
-    [string]$Content
-  )
-
-  [IO.File]::WriteAllText(
-    (Join-Path $RuntimeRoot $Name),
-    $Content,
-    [Text.UTF8Encoding]::new($false)
-  )
-}
-
 $canaryId = [Guid]::NewGuid().ToString('N')
 $temporaryBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $canaryRoot = Join-Path $temporaryBase "tzg-external-ai-canary-$canaryId"
@@ -191,18 +146,21 @@ try {
       -Destination (Join-Path $canaryRepository "tools\$toolName")
   }
 
-  $expectedAuthor = Get-ClaudeWorkerIdentity
-  $externalProcessEnvironment = @{
-    GIT_AUTHOR_NAME = $expectedAuthor
-    GIT_AUTHOR_EMAIL = 'external-worker@example.invalid'
-    GIT_COMMITTER_NAME = $expectedAuthor
-    GIT_COMMITTER_EMAIL = 'external-worker@example.invalid'
+  $baseUrl = [string]$env:ANTHROPIC_BASE_URL
+  if ([string]::IsNullOrWhiteSpace($baseUrl)) {
+    $settingsPath = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.claude\settings.json'
+    if (Test-Path -LiteralPath $settingsPath) {
+      $baseUrl = [string](Get-Content -Raw -LiteralPath $settingsPath | ConvertFrom-Json).env.ANTHROPIC_BASE_URL
+    }
+  }
+  $expectedAuthor = if ($baseUrl -match '^http://127\.0\.0\.1:15721(?:/|$)') {
+    'DeepSeek V4 Pro'
+  } else {
+    'Claude Code'
   }
   $claudeAllowedTools = @(
     'Read'
     'Edit'
-    'TaskCreate'
-    'TaskUpdate'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 *)'
@@ -246,6 +204,8 @@ try {
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'core.autocrlf', 'false') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('add', '--', '.') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('commit', '-m', 'test: initialize external AI canary') | Out-Null
+  Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'user.name', $expectedAuthor) | Out-Null
+  Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'user.email', 'external-worker@example.invalid') | Out-Null
 
   $initialHead = Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD')
   $taskCardPath = Join-Path $canaryRepository '开发管理\任务卡.txt'
@@ -264,7 +224,7 @@ Phase 1 is decision-only. Do not modify files, Git config, index, or commits. Do
 {"status":"needs_decision","decisionId":"DECISION-EXT-001","question":"是否按 A 执行授权修改？","options":["A","B"]}
 
 When this exact session is resumed with the raw reply A, perform Phase 2 without asking again:
-1. Work only in __REPOSITORY_ROOT__. Git author and committer identity are already supplied by the process environment as __EXPECTED_AUTHOR__. Do not run git config or edit .git. Do not use cd or chain shell commands; the current working directory is already the repository.
+1. Work only in __REPOSITORY_ROOT__. The temporary repository Git author is already configured as __EXPECTED_AUTHOR__. Do not run git config or edit .git. Do not use cd or chain shell commands; the current working directory is already the repository.
 2. Run these exact commands separately:
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Snapshot -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__'
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Check -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt'
@@ -287,6 +247,8 @@ unverified=none; risk=none
 7. Do not rerun the direct/domain check. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '开发管理/AI合作沟通.txt' -CommitMessage 'docs(external): record handoff'. Save its stdout SHA as handoffCommit.
 8. Do not push. Finish with one JSON object containing status completed plus both real SHAs.
 
+If any exact command returns nonzero, do not retry or diagnose it. Immediately output {"status":"failed","detailCode":"canary_command_failed"} and exit.
+
 If resumed with B, output {"status":"blocked"} without modifying the repository.
 '@
   $prompt = $promptTemplate.Replace('__REPOSITORY_ROOT__', $canaryRepository).Replace(
@@ -294,23 +256,18 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
     $baselinePath
   ).Replace('__EXPECTED_AUTHOR__', $expectedAuthor)
 
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'session-id.txt' -Content $sessionId
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'expected-author.txt' -Content $expectedAuthor
+  [IO.File]::WriteAllText(
+    (Join-Path $canaryRuntime 'session-id.txt'),
+    $sessionId,
+    [Text.UTF8Encoding]::new($false)
+  )
 
   $first = Invoke-CanaryProcess `
     -FileName $claudeExecutable `
     -Arguments (@('--session-id', $sessionId, '--print') + $claudePermissionArguments) `
     -WorkingDirectory $canaryRepository `
     -InputText ($prompt + "`n") `
-    -Environment $externalProcessEnvironment `
-    -TimeoutSeconds 300 `
-    -AllowNonZero
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'phase1.stdout.txt' -Content $first.Stdout
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'phase1.stderr.txt' -Content $first.Stderr
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'phase1.exit-code.txt' -Content ([string]$first.ExitCode)
-  if ($first.ExitCode -ne 0) {
-    throw "First external session exited with $($first.ExitCode)"
-  }
+    -TimeoutSeconds 300
   if ($first.Stdout -notmatch '"status"\s*:\s*"needs_decision"') {
     throw 'First external session did not return needs_decision'
   }
@@ -328,15 +285,7 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
     -Arguments (@('--resume', $sessionId, '--print') + $claudePermissionArguments) `
     -WorkingDirectory $canaryRepository `
     -InputText "A`n" `
-    -Environment $externalProcessEnvironment `
-    -TimeoutSeconds 600 `
-    -AllowNonZero
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'phase2.stdout.txt' -Content $second.Stdout
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'phase2.stderr.txt' -Content $second.Stderr
-  Write-CanaryRuntimeText -RuntimeRoot $canaryRuntime -Name 'phase2.exit-code.txt' -Content ([string]$second.ExitCode)
-  if ($second.ExitCode -ne 0) {
-    throw "Resumed external session exited with $($second.ExitCode)"
-  }
+    -TimeoutSeconds 600
   if ($second.Stdout -notmatch '"status"\s*:\s*"completed"') {
     throw 'Resumed external session did not return completed'
   }

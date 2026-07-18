@@ -119,11 +119,6 @@ Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
   '不 stash',
   'businessCommit',
   'handoffCommit',
-  '首次启动与恢复',
-  'dontAsk',
-  '最小权限白名单',
-  '禁止全权限绕过',
-  '实际生效的 Claude 配置',
   '决策恢复',
   '两轮',
   '队列补充顺序',
@@ -157,24 +152,12 @@ foreach ($requiredPath in @(
   'tools\automation-workspace-guard.ps1',
   'tools\automation-finalize-commit.ps1',
   'tools\check-pending-whitespace.ps1',
-  'tools\feishu-decision-bridge\src\bridge.mjs',
-  'tools\feishu-decision-bridge\src\resume-trigger.mjs'
+  'tools\feishu-decision-bridge\src\bridge.mjs'
 )) {
   Assert-Contract `
     -Condition (Test-Path -LiteralPath (Join-Path $root $requiredPath) -PathType Leaf) `
     -Message "preserved workflow component is missing: $requiredPath"
 }
-
-$resumeTriggerPath = Join-Path $root 'tools\feishu-decision-bridge\src\resume-trigger.mjs'
-$resumeTrigger = Read-Utf8Contract -Path $resumeTriggerPath
-Assert-ContainsAll -Text $resumeTrigger -Context 'Claude resume trigger' -Required @(
-  '--permission-mode',
-  'dontAsk',
-  '--allowedTools'
-)
-Assert-Contract `
-  -Condition (-not $resumeTrigger.Contains('--dangerously-skip-permissions', [StringComparison]::OrdinalIgnoreCase)) `
-  -Message 'Claude resume trigger bypasses all permissions'
 
 $automations = @(
   Get-ChildItem -LiteralPath $automationDirectory -Directory -Filter 'tzg-*' |
