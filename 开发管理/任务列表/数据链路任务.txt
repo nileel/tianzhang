@@ -16,6 +16,8 @@
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离。 |
 | D-TRUST-02 / TQ-057 | P0 | Codex | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
 | D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（G3） | 定义道路/效果/实位契约、组合、核心/载体及表现/本地化字段；导入器对未知 ID、缺字段和冲突数据失败关闭。 |
+| D-ENV-SCHEMA-01 | P2 | Codex | 阻塞（G3） | 定义有向边、地表、六类现象与五行配对表 schema；导入器对非法引用、缺字段和非确定配置失败关闭。 |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
 

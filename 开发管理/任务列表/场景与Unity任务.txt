@@ -16,6 +16,8 @@
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 |
 | U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | 玄感清除链/玄同状态 Unity 回归。 |
+| U-JD-RULE-01 | P2 | Codex | 阻塞（D-JD-SCHEMA-01、N-JD-RULE-01 有效 BattleSim fixture） | Unity 接入金丹装配、兼容/冲突可视化与可选 QTE/跳过交互；只消费规则与 fixture，不硬编码调参值。 |
+| U-ENV-RULE-01 | P2 | Codex | 阻塞（D-ENV-SCHEMA-01、N-ENV-01 有效 BattleSim fixture） | Unity 表现金丹环境规则并提供地表、现象、边与交互反馈；只消费规则与 fixture，不硬编码调参值。 |
 | U-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、D-COMBAT-01） | Unity 接入唯一攻击档案与 2v2 空间语义。 |
 | U-2_5D-01 | P2 | Codex | 待处理 | 2.5D 战棋表现小场景原型；仅在状态与结构前置完成后进入队列。 |
 
