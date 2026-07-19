@@ -296,13 +296,12 @@ async function startDetachedModel({ dispatch, reply, spawnChild }) {
   let command;
   let args;
   if (dispatch.resumeKind === 'codex' && process.platform === 'win32') {
-    command = requireAbsolutePath(process.env.ComSpec, 'ComSpec');
-    const codexCommand = join(
+    command = process.execPath;
+    const codexLauncher = join(
       requireAbsolutePath(process.env.APPDATA, 'APPDATA'),
-      'npm',
-      'codex.cmd',
+      'npm', 'node_modules', '@openai', 'codex', 'bin', 'codex.js',
     );
-    args = ['/d', '/c', 'call', codexCommand, 'exec', 'resume', dispatch.resumeId, '-'];
+    args = [codexLauncher, 'exec', 'resume', dispatch.resumeId, '-'];
   } else if (dispatch.resumeKind === 'codex') {
     command = 'codex';
     args = ['exec', 'resume', dispatch.resumeId, '-'];
