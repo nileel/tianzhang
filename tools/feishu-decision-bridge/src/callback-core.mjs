@@ -5,6 +5,7 @@ import { writeSignedInbox } from './inbox.mjs';
 
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const HEX_PATTERN = /^[0-9a-f]{64}$/;
+const MAX_CALLBACK_FUTURE_SKEW_MS = 60_000;
 const OPTION_KEYS = ['A', 'B', 'C'];
 const ROOT_KEYS = ['schema', 'header', 'event'];
 const HEADER_KEYS = ['event_id', 'create_time', 'event_type', 'tenant_key', 'app_id'];
@@ -478,7 +479,9 @@ export async function handleCardAction({ event, config, pendingBindings, now }) 
     if (normalized.headerTenantKey !== normalized.operatorTenantKey) return rejected('tenant_mismatch');
     if (parsedConfig.expectedTenantKey !== null
       && normalized.headerTenantKey !== parsedConfig.expectedTenantKey) return rejected('tenant_mismatch');
-    if (normalized.createTimeMs > now.getTime()) return rejected('event_in_future');
+    if (normalized.createTimeMs - now.getTime() > MAX_CALLBACK_FUTURE_SKEW_MS) {
+      return rejected('event_in_future');
+    }
 
     const providerEventIdHash = sha256(normalized.eventId);
     const operatorOpenIdHash = sha256(normalized.operatorOpenId);

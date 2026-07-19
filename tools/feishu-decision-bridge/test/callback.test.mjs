@@ -321,7 +321,7 @@ test('rejection paths are generic and never create inbox evidence', async (t) =>
     ['operator/header tenant mismatch', makeEvent({ operator: { tenant_key: 'tenant_fake_other' } }), makeBinding(), 'tenant_mismatch'],
     ['wrong operator', makeEvent({ operator: { open_id: 'ou_fake_other' } }), makeBinding(), 'operator_mismatch'],
     ['expired binding', makeEvent(), makeBinding({ expiresAt: new Date(NOW.getTime() - 1).toISOString() }), 'binding_expired'],
-    ['future event', makeEvent({ header: { create_time: micros(new Date(NOW.getTime() + 1)) } }), makeBinding(), 'event_in_future'],
+    ['future event beyond clock-skew tolerance', makeEvent({ header: { create_time: micros(new Date(NOW.getTime() + 60_001)) } }), makeBinding({ expiresAt: new Date(NOW.getTime() + 120_000).toISOString() }), 'event_in_future'],
     ['before issued time', makeEvent(), makeBinding({ issuedAt: new Date(NOW.getTime() + 1).toISOString() }), 'event_before_binding'],
     ['wrong nonce', makeEvent({ value: { kind: 'decision_reply', decisionId: DECISION_ID, optionKey: 'A', cardNonce: 'nonce_fake_other' } }), makeBinding(), 'nonce_mismatch'],
     ['unknown option', makeEvent({ value: { kind: 'decision_reply', decisionId: DECISION_ID, optionKey: 'D', cardNonce: CARD_NONCE } }), makeBinding(), 'invalid_event'],
@@ -349,6 +349,22 @@ test('rejection paths are generic and never create inbox evidence', async (t) =>
       assert.equal(JSON.stringify(result).includes(OPERATOR_OPEN_ID), false);
     });
   }
+});
+
+test('decision callback accepts provider time up to 60 seconds ahead', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-callback-clock-skew-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const result = await handleCardAction({
+    event: makeEvent({
+      header: { create_time: micros(new Date(NOW.getTime() + 60_000)) },
+    }),
+    config: makeConfig(root),
+    pendingBindings: [makeBinding({
+      expiresAt: new Date(NOW.getTime() + 120_000).toISOString(),
+    })],
+    now: NOW,
+  });
+  assert.equal(result.accepted, true);
 });
 
 test('valid decision callback writes one signed hash-only envelope and a read-only card', async (t) => {
