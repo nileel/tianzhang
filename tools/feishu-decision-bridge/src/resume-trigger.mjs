@@ -11,6 +11,7 @@ const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/;
 const HEX_FILE_PATTERN = /^[0-9a-f]{64}\.json$/;
 const MAX_PROCESS_OUTPUT_BYTES = 64 * 1024;
 const MAX_RELAY_DEDUPLICATION_KEYS = 4096;
+const MODEL_START_GRACE_MS = 1_000;
 const SOURCE_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_LEASE_TOOL_PATH = resolve(
   SOURCE_DIRECTORY,
@@ -305,24 +306,33 @@ async function startDetachedModel({ dispatch, reply, spawnChild }) {
   });
   await new Promise((resolvePromise, rejectPromise) => {
     let settled = false;
-    child.once('error', () => {
+    let graceTimer;
+    const rejectStart = () => {
       if (!settled) {
         settled = true;
+        clearTimeout(graceTimer);
         rejectPromise(new Error('Model start failed'));
       }
-    });
+    };
+    child.once('error', rejectStart);
+    child.once('close', rejectStart);
+    child.stdin?.once?.('error', rejectStart);
     child.once('spawn', () => {
       if (settled) {
         return;
       }
       try {
         child.stdin.end(input);
-        child.unref();
-        settled = true;
-        resolvePromise();
+        graceTimer = setTimeout(() => {
+          if (settled) {
+            return;
+          }
+          child.unref();
+          settled = true;
+          resolvePromise();
+        }, MODEL_START_GRACE_MS);
       } catch {
-        settled = true;
-        rejectPromise(new Error('Model start failed'));
+        rejectStart();
       }
     });
   });

@@ -49,7 +49,7 @@ function bridgeConfig(stateRoot) {
   };
 }
 
-function fakeSpawnRecorder({ fail = false } = {}) {
+function fakeSpawnRecorder({ fail = false, closeAfterSpawn = false } = {}) {
   const calls = [];
   const spawnChild = (command, args, options) => {
     const child = new EventEmitter();
@@ -74,6 +74,9 @@ function fakeSpawnRecorder({ fail = false } = {}) {
         child.emit('error', new Error('start failed'));
       } else {
         child.emit('spawn');
+        if (closeAfterSpawn) {
+          child.emit('close', 1);
+        }
       }
     });
     return child;
@@ -387,4 +390,41 @@ test('model start failure records failure, requeues once, and releases lease', a
     && request.replyPath === 'C:\\private\\inbox\\reply-failure.json'
   )).length, 2);
   assert.equal(leaseCalls.at(-1).runId, 'run-failure');
+});
+
+test('model exit immediately after spawn is treated as start failure', async () => {
+  const leaseCalls = [];
+  const spawnRecorder = fakeSpawnRecorder({ closeAfterSpawn: true });
+  const result = await runResumeRelay({
+    mode: 'queue',
+    stateRoot: 'C:\\private\\runtime',
+    decisionId: 'decision-early-exit',
+    replyPath: 'C:\\private\\inbox\\reply-early-exit.json',
+    invokeLease: async (request) => {
+      leaseCalls.push(request);
+      if (leaseCalls.length === 1) {
+        return {
+          status: 'DISPATCH',
+          runId: 'run-early-exit',
+          taskId: 'task-early-exit',
+          owner: 'codex',
+          repositoryRoot: 'C:\\repo',
+          resumeKind: 'codex',
+          resumeId: 'session-early-exit',
+          decisionId: 'decision-early-exit',
+          decisionRequestPath: 'C:\\private\\request-early-exit.json',
+          replyPath: 'C:\\private\\inbox\\reply-early-exit.json',
+        };
+      }
+      return { status: request.action === 'Release' ? 'RELEASED' : 'QUEUED' };
+    },
+    consumeReply: async () => ({ kind: 'option', optionKey: 'A' }),
+    spawnChild: spawnRecorder.spawnChild,
+  });
+
+  assert.deepEqual(result, { status: 'START_FAILED' });
+  assert.deepEqual(
+    leaseCalls.map((request) => request.action),
+    ['QueueResume', 'RecordResult', 'QueueResume', 'Release'],
+  );
 });
