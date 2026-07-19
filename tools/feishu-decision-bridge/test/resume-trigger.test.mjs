@@ -299,10 +299,12 @@ test('DISPATCH consumes only the signed reply and resumes Codex with option thro
   assert.equal(spawnRecorder.calls.length, 1);
   const call = spawnRecorder.calls[0];
   if (process.platform === 'win32') {
-    assert.equal(call.command, process.env.ComSpec);
+    assert.equal(call.command, process.execPath);
     assert.deepEqual(call.args, [
-      '/d', '/c', 'call',
-      join(process.env.APPDATA, 'npm', 'codex.cmd'),
+      join(
+        process.env.APPDATA,
+        'npm', 'node_modules', '@openai', 'codex', 'bin', 'codex.js',
+      ),
       'exec', 'resume', 'session-codex', '-',
     ]);
   } else {
