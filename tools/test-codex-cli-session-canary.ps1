@@ -6,6 +6,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$script:canaryStage = 'initialize'
+$script:canaryDiagnostic = [ordered]@{}
 
 function Assert-Canary {
   param(
@@ -137,21 +139,45 @@ function Invoke-SessionRunner {
     $arguments += @('-SessionId', $SessionId)
   }
 
+  $script:canaryDiagnostic = [ordered]@{
+    action = $Action
+    processExit = $null
+    stdoutLineCount = $null
+    stderrLineCount = $null
+    stderrTokensValid = $null
+    jsonParsed = $false
+    runnerStatus = $null
+    runnerAction = $null
+    childExit = $null
+    sessionIdPresent = $false
+  }
   $result = Invoke-CanaryProcess `
     -FileName 'pwsh' `
     -Arguments $arguments `
     -WorkingDirectory $CanaryRepository `
     -InputText $Prompt `
     -TimeoutSeconds $TimeoutSeconds
+  $script:canaryDiagnostic.processExit = $result.ExitCode
   $stdoutLines = @($result.Stdout -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  $script:canaryDiagnostic.stdoutLineCount = $stdoutLines.Count
   Assert-Canary -Condition ($stdoutLines.Count -eq 1) -Message 'Runner stdout contract failed.'
   try {
     $summary = $stdoutLines[0] | ConvertFrom-Json
+    $script:canaryDiagnostic.jsonParsed = $true
+    $script:canaryDiagnostic.runnerStatus = [string]$summary.status
+    $script:canaryDiagnostic.runnerAction = [string]$summary.action
+    $script:canaryDiagnostic.childExit = $summary.exitCode
+    $script:canaryDiagnostic.sessionIdPresent = -not [string]::IsNullOrWhiteSpace([string]$summary.sessionId)
   } catch {
     throw 'Runner stdout was not valid JSON.'
   }
   $stderrLines = @($result.Stderr -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  $script:canaryDiagnostic.stderrLineCount = $stderrLines.Count
+  $script:canaryDiagnostic.stderrTokensValid = $true
   foreach ($line in $stderrLines) {
+    if ($line -cnotin @('session_started', 'running')) {
+      $script:canaryDiagnostic.stderrTokensValid = $false
+    }
     Assert-Canary `
       -Condition ($line -cin @('session_started', 'running')) `
       -Message 'Runner stderr contract failed.'
@@ -177,7 +203,6 @@ $canaryRepository = Join-Path $canaryRoot 'repo'
 $marker = 'tzg-continuity-' + [Convert]::ToHexString(
   [Security.Cryptography.RandomNumberGenerator]::GetBytes(16)
 ).ToLowerInvariant()
-$stage = 'initialize'
 
 try {
   [IO.Directory]::CreateDirectory($canaryRepository) | Out-Null
@@ -207,7 +232,7 @@ try {
   $initialHead = Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD')
   $initialCommitCount = [int](Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-list', '--count', 'HEAD'))
 
-  $stage = 'start'
+  $script:canaryStage = 'start_runner'
   $startPrompt = @"
 You are running a same-session continuity canary in this isolated temporary Git repository.
 Remember this exact marker for the next turn: $marker
@@ -220,18 +245,21 @@ Do not create, modify, delete, stage, or commit any file. Do not reveal or repea
     -Prompt $startPrompt `
     -TimeoutSeconds 300
   $sessionId = [string]$started.sessionId
+  $script:canaryStage = 'start_repository_clean'
   Assert-Canary `
     -Condition ((Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) -ceq '') `
     -Message 'Repository changed during Start.'
+  $script:canaryStage = 'start_head_unchanged'
   Assert-Canary `
     -Condition ((Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD')) -ceq $initialHead) `
     -Message 'Start created a commit.'
 
-  $stage = 'resume'
+  $script:canaryStage = 'resume_prompt_isolation'
   $resumePrompt = @'
 Continue the same canary. Retrieve the exact marker from the preceding turn. Use apply_patch to create continuity.txt containing exactly that marker followed by one newline. Modify no other file. Then run `git add -- continuity.txt` and `git commit -m "test: prove Codex session continuity"`. Do not print the marker in your final response. Do not retry any failed operation.
 '@
   Assert-Canary -Condition (-not $resumePrompt.Contains($marker)) -Message 'Resume prompt contains the marker.'
+  $script:canaryStage = 'resume_runner'
   $resumed = Invoke-SessionRunner `
     -RunnerPath $runnerPath `
     -Action Resume `
@@ -239,19 +267,23 @@ Continue the same canary. Retrieve the exact marker from the preceding turn. Use
     -Prompt $resumePrompt `
     -SessionId $sessionId `
     -TimeoutSeconds 600
+  $script:canaryStage = 'resume_session_identity'
   Assert-Canary -Condition ([string]$resumed.sessionId -ceq $sessionId) -Message 'Resume returned a different session ID.'
 
-  $stage = 'verify'
+  $script:canaryStage = 'verify_continuity_file'
   $continuityPath = Join-Path $canaryRepository 'continuity.txt'
   Assert-Canary -Condition (Test-Path -LiteralPath $continuityPath -PathType Leaf) -Message 'continuity.txt is missing.'
   $continuityText = [IO.File]::ReadAllText($continuityPath, [Text.UTF8Encoding]::new($false, $true))
   Assert-Canary -Condition ($continuityText -ceq "$marker`n") -Message 'Continuity marker mismatch.'
+  $script:canaryStage = 'verify_commit_count'
   $finalCommitCount = [int](Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-list', '--count', 'HEAD'))
   Assert-Canary -Condition ($finalCommitCount -eq ($initialCommitCount + 1)) -Message 'Canary did not create exactly one commit.'
   $commitPaths = Invoke-CanaryGit `
     -RepositoryRoot $canaryRepository `
     -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD')
+  $script:canaryStage = 'verify_commit_paths'
   Assert-Canary -Condition ($commitPaths -ceq 'continuity.txt') -Message 'Canary commit changed an unauthorized path.'
+  $script:canaryStage = 'verify_repository_clean'
   Assert-Canary `
     -Condition ((Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) -ceq '') `
     -Message 'Temporary repository is not clean.'
@@ -259,7 +291,10 @@ Continue the same canary. Retrieve the exact marker from the preceding turn. Use
   Write-Output "test-codex-cli-session-canary: OK sessionId=$sessionId commits=1"
 } catch {
   $failureType = $_.Exception.GetType().Name
-  [Console]::Error.WriteLine("test-codex-cli-session-canary: FAILED stage=$stage type=$failureType")
+  $safeDiagnostic = $script:canaryDiagnostic | ConvertTo-Json -Compress
+  [Console]::Error.WriteLine(
+    "test-codex-cli-session-canary: FAILED stage=$script:canaryStage type=$failureType diagnostic=$safeDiagnostic"
+  )
   throw 'Codex same-session canary failed.'
 } finally {
   if (Test-Path -LiteralPath $canaryRoot) {
