@@ -18,6 +18,12 @@ const DEFAULT_LEASE_TOOL_PATH = resolve(
   '..',
   'hourly-automation-lease.ps1',
 );
+const DEFAULT_CODEX_SESSION_RUNNER_PATH = resolve(
+  SOURCE_DIRECTORY,
+  '..',
+  '..',
+  'codex-cli-session.ps1',
+);
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -293,9 +299,25 @@ async function startDetachedModel({ dispatch, reply, spawnChild }) {
     throw new Error('Invalid reply');
   }
   const input = `[TZG_DECISION_RESUME runId=${dispatch.runId}]\n${replyValue}`;
-  const command = dispatch.resumeKind === 'codex' ? 'codex' : 'claude';
+  const command = dispatch.resumeKind === 'codex' ? 'pwsh' : 'claude';
   const args = dispatch.resumeKind === 'codex'
-    ? ['exec', 'resume', dispatch.resumeId, '-']
+    ? [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      DEFAULT_CODEX_SESSION_RUNNER_PATH,
+      '-Action',
+      'Resume',
+      '-RepositoryRoot',
+      dispatch.repositoryRoot,
+      '-TaskId',
+      dispatch.taskId,
+      '-RunId',
+      dispatch.runId,
+      '-SessionId',
+      dispatch.resumeId,
+    ]
     : ['--resume', dispatch.resumeId, '--print'];
   const child = spawnChild(command, args, {
     cwd: dispatch.repositoryRoot,
