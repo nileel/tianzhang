@@ -33,6 +33,10 @@ const REJECTED = Object.freeze({
   }),
 });
 
+function rejected(rejectionCode) {
+  return { ...REJECTED, rejectionCode };
+}
+
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return false;
@@ -459,23 +463,22 @@ function acceptedPairingResponse() {
 }
 
 export async function handleCardAction({ event, config, pendingBindings, now }) {
+  let rejectionCode = 'invalid_config';
   try {
     const parsedConfig = parsePrivateConfig(config);
+    rejectionCode = 'invalid_now';
     if (!(now instanceof Date) || !Number.isFinite(now.getTime())) {
       throw new Error();
     }
+    rejectionCode = 'invalid_event';
     const normalized = normalizeCardAction(event);
     const bindings = snapshotBindings(pendingBindings);
-    if (
-      bindings === null
-      || normalized.appId !== parsedConfig.appId
-      || normalized.headerTenantKey !== normalized.operatorTenantKey
-      || (parsedConfig.expectedTenantKey !== null
-        && normalized.headerTenantKey !== parsedConfig.expectedTenantKey)
-      || normalized.createTimeMs > now.getTime()
-    ) {
-      throw new Error();
-    }
+    if (bindings === null) return rejected('bindings_invalid');
+    if (normalized.appId !== parsedConfig.appId) return rejected('app_mismatch');
+    if (normalized.headerTenantKey !== normalized.operatorTenantKey) return rejected('tenant_mismatch');
+    if (parsedConfig.expectedTenantKey !== null
+      && normalized.headerTenantKey !== parsedConfig.expectedTenantKey) return rejected('tenant_mismatch');
+    if (normalized.createTimeMs > now.getTime()) return rejected('event_in_future');
 
     const providerEventIdHash = sha256(normalized.eventId);
     const operatorOpenIdHash = sha256(normalized.operatorOpenId);
@@ -514,22 +517,20 @@ export async function handleCardAction({ event, config, pendingBindings, now }) 
       candidate.kind === 'decision_reply'
       && candidate.decisionId === normalized.action.decisionId
     ));
-    if (
-      binding === undefined
-      || parsedConfig.expectedTenantKey === null
-      || parsedConfig.pairedOperatorOpenIdHash === null
-      || operatorOpenIdHash !== parsedConfig.pairedOperatorOpenIdHash
-      || now.getTime() > binding.expiresAtMs
-      || normalized.createTimeMs > binding.expiresAtMs
-      || (binding.issuedAtMs !== null && normalized.createTimeMs < binding.issuedAtMs)
-      || sha256(normalized.action.cardNonce) !== binding.cardNonceHash
-      || sha256(normalized.messageId) !== binding.providerMessageIdHash
-      || (normalized.action.kind === 'decision_reply'
-        && !binding.allowedOptions.includes(normalized.action.optionKey))
-      || (normalized.action.kind === 'decision_custom_reply' && !binding.allowCustomReply)
-    ) {
-      throw new Error();
-    }
+    if (binding === undefined) return rejected('binding_missing');
+    if (parsedConfig.expectedTenantKey === null
+      || parsedConfig.pairedOperatorOpenIdHash === null) return rejected('operator_unconfigured');
+    if (operatorOpenIdHash !== parsedConfig.pairedOperatorOpenIdHash) return rejected('operator_mismatch');
+    if (now.getTime() > binding.expiresAtMs) return rejected('binding_expired');
+    if (normalized.createTimeMs > binding.expiresAtMs) return rejected('event_expired');
+    if (binding.issuedAtMs !== null
+      && normalized.createTimeMs < binding.issuedAtMs) return rejected('event_before_binding');
+    if (sha256(normalized.action.cardNonce) !== binding.cardNonceHash) return rejected('nonce_mismatch');
+    if (sha256(normalized.messageId) !== binding.providerMessageIdHash) return rejected('message_mismatch');
+    if (normalized.action.kind === 'decision_reply'
+      && !binding.allowedOptions.includes(normalized.action.optionKey)) return rejected('option_invalid');
+    if (normalized.action.kind === 'decision_custom_reply'
+      && !binding.allowCustomReply) return rejected('custom_disabled');
     if (normalized.action.kind === 'decision_custom_reply') {
       const payload = {
         kind: 'decision_custom_reply',
@@ -574,6 +575,6 @@ export async function handleCardAction({ event, config, pendingBindings, now }) 
     });
     return acceptedDecisionResponse(normalized.action.optionKey, receivedAt);
   } catch {
-    return REJECTED;
+    return rejected(rejectionCode);
   }
 }
