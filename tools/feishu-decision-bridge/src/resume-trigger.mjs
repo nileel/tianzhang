@@ -293,10 +293,23 @@ async function startDetachedModel({ dispatch, reply, spawnChild }) {
     throw new Error('Invalid reply');
   }
   const input = `[TZG_DECISION_RESUME runId=${dispatch.runId}]\n${replyValue}`;
-  const command = dispatch.resumeKind === 'codex' ? 'codex' : 'claude';
-  const args = dispatch.resumeKind === 'codex'
-    ? ['exec', 'resume', dispatch.resumeId, '-']
-    : ['--resume', dispatch.resumeId, '--print'];
+  let command;
+  let args;
+  if (dispatch.resumeKind === 'codex' && process.platform === 'win32') {
+    command = requireAbsolutePath(process.env.ComSpec, 'ComSpec');
+    const codexCommand = join(
+      requireAbsolutePath(process.env.APPDATA, 'APPDATA'),
+      'npm',
+      'codex.cmd',
+    );
+    args = ['/d', '/c', 'call', codexCommand, 'exec', 'resume', dispatch.resumeId, '-'];
+  } else if (dispatch.resumeKind === 'codex') {
+    command = 'codex';
+    args = ['exec', 'resume', dispatch.resumeId, '-'];
+  } else {
+    command = 'claude';
+    args = ['--resume', dispatch.resumeId, '--print'];
+  }
   const child = spawnChild(command, args, {
     cwd: dispatch.repositoryRoot,
     detached: true,
