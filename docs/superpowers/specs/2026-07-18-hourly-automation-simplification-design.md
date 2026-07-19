@@ -2,9 +2,9 @@
 
 > 日期：2026-07-18
 >
-> 状态：负责人已逐节确认，待书面规格复核
+> 状态：负责人已逐节确认；2026-07-19 CLI-native 最小修订已确认，待书面规格复核
 >
-> 范围：每小时任务路由、Codex/外部 AI 执行、复审、队列补充、远程决策续跑及现有复杂编排退役
+> 范围：每小时任务路由、CLI-native Codex/外部 AI 执行、复审、队列补充、远程决策续跑、自动化任务内进度及现有复杂编排退役
 >
 > 替代：`2026-07-17-hourly-controller-orchestration-rebuild-design.md` 及其未完成实施计划
 
@@ -27,6 +27,7 @@
 一份薄路由提示
 一份短规则
 一个最小租约/恢复工具
+一个无状态 Codex CLI session 边界
 现有 Git 安全脚本
 现有飞书桥
 ```
@@ -59,7 +60,7 @@
 
 生产环境只保留一个启用的 `TZG Hourly Controller`。旧 WF1、WF3、WF4 保持暂停，在新流程稳定后归档其配置；它们不能被另一个自动化按 ID 调用，也不作为运行时处理器。
 
-自动化提示不创建四份新处理器提示。当前 Codex 任务选择路由后直接进入已有规则入口：
+自动化提示不创建四份新处理器提示。当前 Codex 任务选择路由后，调度器通过一个无状态 PowerShell 边界启动 CLI-native Codex session，再由该 session 进入已有规则入口。不得把 Codex Desktop、VS Code 或 subagent rollout ID 当作 npm Codex CLI session ID。四种路由继续使用：
 
 - Codex 普通执行：`开发管理/AI协作规则.txt` 的纯 `1`。
 - Codex 复审：`开发管理/审核入口.txt` 和纯 `2`。
@@ -75,6 +76,7 @@
   -> 按统一项目优先级选择一个候选
   -> 没有合法工作候选时才选择任务补充
   -> 取得单写入租约
+  -> Codex 路由创建 CLI-native session；其他路由启动对应责任方
   -> 当前责任方按既有入口端到端执行、验证并提交
   -> 释放租约并记录简短结果
 ```
@@ -118,11 +120,13 @@
 
 ### 5.1 Codex 执行
 
-当前 Codex 任务按纯 `1` 读取任务卡和必要事实源，修改、运行最小充分验证、更新队列/归档并创建一个路径限定本地提交。自产工作完成必要验证后直接闭环，不进入额外复审队列。
+调度器选中 Codex 普通执行后，不在当前 Codex Desktop 自动化线程内实施，也不派生 Desktop subagent 作为可恢复责任方。它调用唯一的 PowerShell CLI session 边界，以 `codex exec` 创建来源为 `exec` 的持久 session，并把任务 ID、`runId`、仓库根和纯 `1` 入口作为首次输入。该 CLI session 是从读取任务卡到提交的唯一责任方。
+
+当前 CLI-native Codex 任务按纯 `1` 读取任务卡和必要事实源，修改、运行最小充分验证、更新队列/归档并创建一个路径限定本地提交。自产工作完成必要验证后直接闭环，不进入额外复审队列。PowerShell 边界不读取项目事实、不解释模型输出、不验证、不提交，只负责启动、提取 CLI session ID、转发固定进度和返回进程结果。
 
 ### 5.2 Codex 复审
 
-当前 Codex 任务按纯 `2` 读取审核入口、目标 commit/diff 和必要事实源，独立验证并给出通过、部分通过或不通过。复审者自行更新交接、未通过清单、归档或队列，并提交自己的审核结果；不在外部 AI 提交前介入。
+调度器选中 Codex 复审后，使用与普通执行相同的 PowerShell Start 边界创建独立 CLI-native session，但首次输入改为审核入口、纯 `2` 和目标稳定 ID。该 Codex 任务读取审核入口、目标 commit/diff 和必要事实源，独立验证并给出通过、部分通过或不通过。复审者自行更新交接、未通过清单、归档或队列，并提交自己的审核结果；不在外部 AI 提交前介入。
 
 ### 5.3 Claude/DeepSeek 执行
 
@@ -142,7 +146,7 @@
 
 ### 5.4 队列补充
 
-只有三类工作都没有合法候选时，本小时才进入队列维护。维护者自行检查、修改、验证和提交，不在同一小时顺带执行新任务。
+只有三类工作都没有合法候选时，本小时才进入队列维护。调度器通过同一 PowerShell Start 边界创建 CLI-native Codex 维护 session，并只传入状态维护入口和本轮 `runId`。维护者自行检查、修改、验证和提交，不在同一小时顺带执行新任务。
 
 ## 6. 写入隔离、验证与提交
 
@@ -179,7 +183,9 @@
 
 ### 7.2 Codex 与外部 AI 恢复
 
-- Codex 任务保存原 Codex `threadId`，回复到达后向原线程发送原文。
+- Codex 任务从首次运行起就是 npm Codex CLI 创建的 `exec` session。首次启动使用 `codex exec --json -`，从 CLI 事件中提取并保存原 `sessionId`；回复到达后只调用 `codex exec resume <sessionId> -` 并通过 stdin 传入负责人原文。
+- `tools/codex-cli-session.ps1` 是 Start/Resume 共用的唯一 Codex 进程边界。它由 PowerShell 7 解析本机 `codex` 命令，不硬编码 npm 安装目录，不转换或修补 rollout 文件，也不接受 Desktop/VS Code/subagent session 作为自动恢复输入。
+- 飞书 Node relay 只消费签名回复、取得租约并通过 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/codex-cli-session.ps1` 调用 Resume；Node 不直接启动 `codex`、`codex.cmd` 或 npm 内部 `codex.js`。
 - Claude/DeepSeek 调用时使用私有 `sessionId`；外部 AI 返回 `needs_decision` 后退出。回复到达时中继只调用 `claude --resume <sessionId>` 并原样传入回复。
 
 Claude CLI 已确认支持 `--session-id`、`--resume` 和 `--continue`。外部 AI 不能自行接收飞书事件，因此调度器作为通信中继是唯一必要例外；它不解释回复、不重新规划、不验证或提交外部 AI 工作。
@@ -203,6 +209,14 @@ Claude CLI 已确认支持 `--session-id`、`--resume` 和 `--continue`。外部
 - 当前任务成为唯一可恢复对象，整点调度不选择其他任务。
 - 收到回复后恢复同一责任方继续验证和提交。
 - 不把半成品交给另一 AI，也不自动清理。
+
+### 7.5 第一期进度可见性与飞书 Tasks 后置
+
+第一期只在 `TZG Hourly Controller` 当前自动化运行任务的终端显示进度。调度器输出已选择任务；PowerShell CLI 边界根据实际 CLI 事件输出 `session 已启动`、`正在执行`，并根据责任方最终结果输出 `等待决定`、`已完成` 或安全的失败原因。不得从命令名称猜测“正在验证”或“正在提交”，不得输出原始模型 JSON、prompt、回复正文、provider 标识或 secret。
+
+进度不引入项目文件、数据库、阶段状态机或新的长期 runtime 字段。结构化结果继续使用现有 `lastResult` 和 recovery；终端进度只是同一事实的可读投影。飞书回复触发的隐藏后台 Resume 不能回写已经结束的旧自动化终端，第一期只在现有私有 runtime 记录该续跑的最终结果，下一次状态读取可见。
+
+飞书任务模块属于独立第二期。只有 CLI-native Start/Resume、一次真实任务和进度输出稳定后，才另行设计 Task v2 权限、任务清单、任务 GUID 映射和更新频率。第一期不调用飞书 Tasks API，不新增任务清单配置，也不为未来集成预埋字段。
 
 ## 8. 失败、恢复与自动暂停
 
@@ -250,7 +264,7 @@ Claude CLI 已确认支持 `--session-id`、`--resume` 和 `--continue`。外部
 - 获取、释放和过期恢复单写入租约。
 - 当前 `runId`、任务 ID、责任方类型和启动时间。
 - 任务自有未提交修改的最小恢复指针。
-- 等待决定的 Codex `threadId` 或 Claude `sessionId`。
+- 等待决定的 Codex CLI `sessionId` 或 Claude `sessionId`。
 - 待续跑队列。
 - 连续全部阻塞次数与阻塞集合指纹。
 - 最近一次运行结果。
@@ -286,6 +300,8 @@ TQ-057 仍是当前 P0、Codex/ChatGPT5.5 主责、待处理任务。退役的�
 
 - 重写 `开发管理/自动工作流控制器提示词.txt` 为薄路由提示。
 - 重写 `开发管理/自动工作流规则.txt` 为短稳定规则。
+- 新增 `tools/codex-cli-session.ps1` 及其直接测试，作为 Codex Start/Resume 的唯一无状态进程边界。
+- 修改 `tools/feishu-decision-bridge/src/resume-trigger.mjs` 及其直接测试，使 Codex Resume 只调用 PowerShell CLI session 边界。
 - 修改 `AGENTS.md`、`开发管理/AI协作规则.txt`、`开发管理/DeepSeek工作提示词.txt` 的外部 AI 自提交边界。
 - 更新 `开发管理/自动工作流状态.txt`，删除失效的 v2 phase/manifest 描述，保留业务事实。
 - 更新 TQ-057 正式任务卡。
@@ -304,12 +320,13 @@ TQ-057 仍是当前 P0、Codex/ChatGPT5.5 主责、待处理任务。退役的�
 
 只验证新流程改变的边界：
 
-1. 租约工具：首次获取、第二写入者拒绝、释放、过期恢复、待续跑落盘后进程结束、两轮阻塞暂停标记。
-2. 薄路由：统一优先级、每轮一个、无候选才补任务、无具体任务硬编码、无 manifest/request 协议。
-3. 外部 AI 临时仓库金丝雀：外部 AI 自行修改、验证、创建未审核提交和交接；外层不代做。
-4. 外部会话恢复：用 session ID 验证一次请求决定、退出和 `--resume` 继续。
-5. 决策中继：锁空闲立即恢复、锁占用落盘并结束、释放后只触发一次、回复原样传递。
-6. 现有 Git 安全组件和飞书消息协议输入未变化时，不重复完整历史回归；只验证新的调用边界。
+1. Codex CLI session 边界：用 fake CLI JSONL 验证 Start 提取 `exec` session ID、Start/Resume 共用 PowerShell 入口、stdin 原样传递、固定进度输出和失败关闭；Desktop/VS Code/subagent rollout ID 不进入自动恢复。
+2. 租约工具：首次获取、第二写入者拒绝、释放、过期恢复、待续跑落盘后进程结束、两轮阻塞暂停标记。
+3. 薄路由：统一优先级、每轮一个、Codex 路由只启动 CLI-native 责任方、无候选才补任务、无具体任务硬编码、无 manifest/request 协议。
+4. 外部 AI 临时仓库金丝雀：外部 AI 自行修改、验证、创建未审核提交和交接；外层不代做。
+5. Codex CLI 临时仓库金丝雀：只运行一次首次 `codex exec`、请求决定后退出、使用同一 CLI session ID 执行 `exec resume`；不使用 Desktop rollout，不实施生产 TQ。
+6. 决策中继：锁空闲立即恢复、锁占用落盘并结束、释放后只触发一次、回复原样传递。
+7. 现有 Git 安全组件和飞书消息协议输入未变化时，不重复完整历史回归；不运行飞书 Tasks API、Unity、BattleSim 或生产 TQ 领域检查。
 
 不得把 fixture 或临时仓库结果表述为生产业务成功。
 
@@ -321,14 +338,14 @@ TQ-057 仍是当前 P0、Codex/ChatGPT5.5 主责、待处理任务。退役的�
 
 ### 14.2 生产切换
 
-1. 在隔离 worktree 完成精简实现和直接测试。
-2. 合并后只复验受切换影响的入口检查。
-3. 通过 Codex 自动化管理能力更新现有 `tzg-hourly-controller`，不手工编辑 automation TOML，并保持 `PAUSED`。
-4. 手动运行一次真实任务，不使用 plan-only 或模拟 manifest。
-5. 按全局优先级首轮预计选择 TQ-057；责任方自行完成、验证和提交。
-6. 只核对本轮是否选中一个任务、保护人工脏改、没有重复验证、产生正确路径限定提交并释放租约。
+1. 现有 TQ-057 Desktop 责任方及未提交现场继续保留，只允许原 Desktop 任务人工续跑；不自动转换 rollout，不交给新 CLI session，不把其人工完成结果当作 CLI-native 金丝雀。
+2. 生产保持 `PAUSED`，在隔离 worktree 完成 CLI-native 修订和直接测试；建设不得读取、修改或接管 TQ-057 业务现场。
+3. 合并后只复验受切换影响的入口检查，并通过 Codex 自动化管理能力更新现有 `tzg-hourly-controller`；不手工编辑 automation TOML，status 继续为 `PAUSED`。
+4. TQ-057 原责任方人工完成并清除 task-owned recovery 与对应 pending resume 后，才允许新的生产金丝雀；若原 Desktop 任务仍不可用，保持暂停并另行请求处置，不自动移交。
+5. 手动运行一次新的真实任务，不使用 plan-only、模拟 manifest 或 Desktop 可恢复责任方；按当时全局优先级选择合法候选。
+6. 只核对本轮是否创建来源为 `exec` 的 CLI session、显示固定进度、选中一个任务、保护人工脏改、没有重复验证、产生正确路径限定提交并释放租约。
 7. 首轮成功后恢复每小时调度，再观察一个真实小时轮次。
-8. 观察正常后退役第 12.3 节的旧编排文件和重复提示。
+8. 观察正常后退役第 12.3 节的旧编排文件和重复提示；飞书 Tasks 集成仍留在第二期。
 
 ### 14.3 回滚
 
@@ -341,9 +358,11 @@ TQ-057 仍是当前 P0、Codex/ChatGPT5.5 主责、待处理任务。退役的�
 - 三类候选按统一项目优先级选择，类型不形成固定优先顺序。
 - 没有合法工作候选时才补充任务，并优先使用现有 backlog。
 - 每个责任方自行修改、验证、更新状态和提交；调度器不代做。
+- Codex 自动化责任方从首次启动起就是来源为 `exec` 的 CLI session；飞书回复只恢复该原 CLI session，不尝试用 npm CLI 打开 Desktop/VS Code/subagent rollout。
 - 外部 AI 自行创建未审核提交，该 commit 可直接进入 Codex 复审。
 - 安全检查在执行阶段只运行一次，正式复审按审核规则独立取证。
 - 决策等待不保持模型/CLI 进程，不轮询且不持续消耗 token。
+- 当前自动化运行任务只显示由真实事件支持的固定进度，不显示原始模型 JSON 或敏感标识；后台续跑的最终结果写入既有私有 runtime。
 - Claude/DeepSeek 决策通过原 session 恢复，调度器只原样中继。
 - 运行前人工 staged、unstaged、untracked 和内容差异保持不变。
 - 连续两轮全部阻塞会自动暂停并通过飞书通知。
@@ -357,3 +376,5 @@ TQ-057 仍是当前 P0、Codex/ChatGPT5.5 主责、待处理任务。退役的�
 - 不创建“调度器 + 四个不可真实调用的 Codex 处理器”：Codex 自动化没有按 ID 调用暂停自动化的能力，四个处理器只会变成重复提示。
 - 不让生产自动化长期运行在独立 worktree：会引入分支同步、自动合并、队列漂移和冲突恢复；生产仍在主工作区按路径避让人工改动。
 - 不保留中央 manifest、发现和验证协议：确定性安全交给现有脚本，业务工作由当前责任方端到端完成。
+- 不修补、转换或复制 Codex Desktop rollout 供 npm CLI 恢复；现有 TQ-057 只由原 Desktop 任务人工续跑。
+- 第一期不接入飞书 Tasks、不预建任务 GUID 映射、进度数据库或新阶段状态机；稳定后另开第二期规格。
