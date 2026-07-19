@@ -1,4 +1,5 @@
-import { open } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { open, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir as systemHomedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -10,6 +11,7 @@ import { createSendIntentStore } from './send-intent-store.mjs';
 import { createLarkTransport, readHealthSnapshot } from './send-runtime.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
+const DECISION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const INVALID_RESULT = Object.freeze({ result: 'INVALID_INPUT' });
 
 function isPlainObject(value) {
@@ -150,6 +152,32 @@ function writeResult(stdout, result) {
   stdout.write(`${JSON.stringify(result)}\n`);
 }
 
+async function writePendingBinding({ stateRoot, decision, result, now }) {
+  const path = join(stateRoot, 'pending-bindings.json');
+  const temporaryPath = join(stateRoot, `.pending-bindings.${randomUUID()}.tmp`);
+  const binding = {
+    kind: 'decision_reply',
+    decisionId: decision.decisionId,
+    allowedOptions: decision.options.map((option) => option.key),
+    allowCustomReply: true,
+    issuedAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + DECISION_TTL_MS).toISOString(),
+    cardNonceHash: result.cardNonceHash,
+    providerMessageIdHash: result.providerMessageIdHash,
+    providerChatIdHash: result.providerChatIdHash,
+  };
+  try {
+    await writeFile(temporaryPath, `${JSON.stringify([binding])}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+      mode: 0o600,
+    });
+    await rename(temporaryPath, path);
+  } finally {
+    await rm(temporaryPath, { force: true }).catch(() => {});
+  }
+}
+
 export async function main(argv = process.argv.slice(2), dependencies = {}) {
   const env = dependencies.env ?? process.env;
   const getHomedir = dependencies.homedir ?? systemHomedir;
@@ -159,6 +187,7 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
   const createTransport = dependencies.createTransport ?? createLarkTransport;
   const createIntentStore = dependencies.createIntentStore ?? createSendIntentStore;
   const send = dependencies.send ?? sendDecision;
+  const writeBinding = dependencies.writeBinding ?? writePendingBinding;
 
   let request;
   let config;
@@ -228,10 +257,22 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
     return 22;
   }
 
-  const output = sanitizeResult(result);
+  let output = sanitizeResult(result);
   if (output === null) {
     writeResult(stdout, INVALID_RESULT);
     return 22;
+  }
+  if (output.result === 'PROVIDER_ACCEPTED') {
+    try {
+      await writeBinding({ stateRoot: config.stateRoot, decision: request.decision, result: output, now });
+    } catch {
+      output = {
+        result: 'PROVIDER_OUTCOME_UNKNOWN',
+        targetHash: output.targetHash,
+        cardNonceHash: output.cardNonceHash,
+        intentKeyHash: output.intentKeyHash,
+      };
+    }
   }
   const code = exitCodeFor(output);
   writeResult(stdout, output);

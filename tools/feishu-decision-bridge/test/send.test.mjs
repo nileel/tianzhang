@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -658,6 +658,32 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
   assert.equal(accepted.stderr, '');
   assert.equal(accepted.createCalls, 1);
   assert.equal(accepted.createStoreCalls, 1);
+  const binding = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
+  assert.equal(binding.length, 1);
+  assert.deepEqual(binding[0], {
+    kind: 'decision_reply',
+    decisionId: 'DEC-20260716-ABC123',
+    allowedOptions: ['A', 'B', 'C'],
+    allowCustomReply: true,
+    issuedAt: NOW.toISOString(),
+    expiresAt: new Date(NOW.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString(),
+    cardNonceHash: sha256(createHmac('sha256', Buffer.from(HMAC_KEY, 'base64'))
+      .update('card-nonce-hmac-v1\u0000feishu\u0000DEC-20260716-ABC123\u00001', 'utf8')
+      .digest('hex')),
+    providerMessageIdHash: sha256('om_main'),
+    providerChatIdHash: sha256('oc_main'),
+  });
+
+  const bindingFailed = await run(['--request-file', requestPath], {
+    writeBinding: async () => { throw new Error('binding write failed'); },
+  });
+  assert.equal(bindingFailed.code, 23);
+  assert.deepEqual(assertOneJsonLine(bindingFailed.stdout), {
+    result: 'PROVIDER_OUTCOME_UNKNOWN',
+    targetHash: sha256('operator@example.invalid'),
+    cardNonceHash: binding[0].cardNonceHash,
+    intentKeyHash: hashSendIntentKey('feishu', 'DEC-20260716-ABC123', 1),
+  });
 
   const failed = await run(['--request-file', requestPath], {
     send: async () => ({
