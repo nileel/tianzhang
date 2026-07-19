@@ -298,13 +298,22 @@ test('DISPATCH consumes only the signed reply and resumes Codex with option thro
   }]);
   assert.equal(spawnRecorder.calls.length, 1);
   const call = spawnRecorder.calls[0];
-  assert.equal(call.command, 'codex');
-  assert.deepEqual(call.args, ['exec', 'resume', 'session-codex', '-']);
+  if (process.platform === 'win32') {
+    assert.equal(call.command, process.env.ComSpec);
+    assert.deepEqual(call.args, [
+      '/d', '/c', 'call',
+      join(process.env.APPDATA, 'npm', 'codex.cmd'),
+      'exec', 'resume', 'session-codex', '-',
+    ]);
+  } else {
+    assert.equal(call.command, 'codex');
+    assert.deepEqual(call.args, ['exec', 'resume', 'session-codex', '-']);
+  }
   assert.equal(call.options.detached, true);
   assert.equal(call.options.windowsHide, true);
   assert.equal(call.unrefCalled, true);
   assert.match(call.stdin, /^\[TZG_DECISION_RESUME runId=run-codex\]\nA$/);
-  assert.equal(call.args.join(' ').includes('A'), false);
+  assert.equal(call.args.includes('A'), false);
   assert.equal(call.stdin.includes(providerHash), false);
   assert.equal(call.stdin.includes('provider-message-id'), false);
   assert.equal(call.stdin.includes(secret), false);
