@@ -238,7 +238,11 @@ export function makeCallback({
         timeout,
       ]);
       if (!isPlainObject(result) || result.accepted !== true) {
-        reportRejection(result?.rejectionCode === 'timeout' ? 'timeout' : 'validation');
+        const safeCode = typeof result?.rejectionCode === 'string'
+          && /^[a-z_]{1,64}$/.test(result.rejectionCode)
+          ? result.rejectionCode
+          : 'validation';
+        reportRejection(safeCode);
       } else if (actionKind !== 'operator_pairing') {
         try {
           const normalized = normalizeAction(event);

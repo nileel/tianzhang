@@ -316,23 +316,23 @@ test('normalizeCardAction rejects legacy, incomplete flattened, accessor, extra-
 
 test('rejection paths are generic and never create inbox evidence', async (t) => {
   const cases = [
-    ['wrong app', makeEvent({ header: { app_id: 'app_fake_other' } }), makeBinding()],
-    ['wrong header tenant', makeEvent({ header: { tenant_key: 'tenant_fake_other' } }), makeBinding()],
-    ['operator/header tenant mismatch', makeEvent({ operator: { tenant_key: 'tenant_fake_other' } }), makeBinding()],
-    ['wrong operator', makeEvent({ operator: { open_id: 'ou_fake_other' } }), makeBinding()],
-    ['expired binding', makeEvent(), makeBinding({ expiresAt: new Date(NOW.getTime() - 1).toISOString() })],
-    ['future event', makeEvent({ header: { create_time: micros(new Date(NOW.getTime() + 1)) } }), makeBinding()],
-    ['before issued time', makeEvent(), makeBinding({ issuedAt: new Date(NOW.getTime() + 1).toISOString() })],
-    ['wrong nonce', makeEvent({ value: { kind: 'decision_reply', decisionId: DECISION_ID, optionKey: 'A', cardNonce: 'nonce_fake_other' } }), makeBinding()],
-    ['unknown option', makeEvent({ value: { kind: 'decision_reply', decisionId: DECISION_ID, optionKey: 'D', cardNonce: CARD_NONCE } }), makeBinding()],
-    ['wrong decision', makeEvent({ value: { kind: 'decision_reply', decisionId: 'DEC-20260716-FAKE0002', optionKey: 'A', cardNonce: CARD_NONCE } }), makeBinding()],
-    ['wrong message', makeEvent({ context: { open_message_id: 'om_fake_other' } }), makeBinding()],
-    ['legacy schema', { ...makeEvent(), schema: '1.0' }, makeBinding()],
-    ['flattened event', { schema: '2.0', event_id: EVENT_ID }, makeBinding()],
-    ['extra action value', makeEvent({ value: { ...makeEvent().event.action.value, debug: true } }), makeBinding()],
+    ['wrong app', makeEvent({ header: { app_id: 'app_fake_other' } }), makeBinding(), 'app_mismatch'],
+    ['wrong header tenant', makeEvent({ header: { tenant_key: 'tenant_fake_other' } }), makeBinding(), 'tenant_mismatch'],
+    ['operator/header tenant mismatch', makeEvent({ operator: { tenant_key: 'tenant_fake_other' } }), makeBinding(), 'tenant_mismatch'],
+    ['wrong operator', makeEvent({ operator: { open_id: 'ou_fake_other' } }), makeBinding(), 'operator_mismatch'],
+    ['expired binding', makeEvent(), makeBinding({ expiresAt: new Date(NOW.getTime() - 1).toISOString() }), 'binding_expired'],
+    ['future event', makeEvent({ header: { create_time: micros(new Date(NOW.getTime() + 1)) } }), makeBinding(), 'event_in_future'],
+    ['before issued time', makeEvent(), makeBinding({ issuedAt: new Date(NOW.getTime() + 1).toISOString() }), 'event_before_binding'],
+    ['wrong nonce', makeEvent({ value: { kind: 'decision_reply', decisionId: DECISION_ID, optionKey: 'A', cardNonce: 'nonce_fake_other' } }), makeBinding(), 'nonce_mismatch'],
+    ['unknown option', makeEvent({ value: { kind: 'decision_reply', decisionId: DECISION_ID, optionKey: 'D', cardNonce: CARD_NONCE } }), makeBinding(), 'invalid_event'],
+    ['wrong decision', makeEvent({ value: { kind: 'decision_reply', decisionId: 'DEC-20260716-FAKE0002', optionKey: 'A', cardNonce: CARD_NONCE } }), makeBinding(), 'binding_missing'],
+    ['wrong message', makeEvent({ context: { open_message_id: 'om_fake_other' } }), makeBinding(), 'message_mismatch'],
+    ['legacy schema', { ...makeEvent(), schema: '1.0' }, makeBinding(), 'invalid_event'],
+    ['flattened event', { schema: '2.0', event_id: EVENT_ID }, makeBinding(), 'invalid_event'],
+    ['extra action value', makeEvent({ value: { ...makeEvent().event.action.value, debug: true } }), makeBinding(), 'invalid_event'],
   ];
 
-  for (const [name, event, binding] of cases) {
+  for (const [name, event, binding, rejectionCode] of cases) {
     await t.test(name, async (t) => {
       const root = await mkdtemp(join(tmpdir(), 'tzg-callback-reject-'));
       t.after(() => rm(root, { recursive: true, force: true }));
@@ -342,7 +342,7 @@ test('rejection paths are generic and never create inbox evidence', async (t) =>
         pendingBindings: [binding],
         now: NOW,
       });
-      assert.deepEqual(result, { accepted: false, response: rejectedResponse() });
+      assert.deepEqual(result, { accepted: false, response: rejectedResponse(), rejectionCode });
       await assert.rejects(readdir(join(root, 'inbox')));
       assert.equal(JSON.stringify(result).includes(APP_ID), false);
       assert.equal(JSON.stringify(result).includes(TENANT_KEY), false);
@@ -442,15 +442,15 @@ test('valid custom form callback writes one signed envelope and a read-only conf
 });
 
 test('custom form callback rejects binding, nonce, identity, and expiry mismatches', async (t) => {
-  for (const [name, event, binding] of [
-    ['custom disabled', makeCustomEvent(), makeBinding({ allowCustomReply: false })],
-    ['wrong nonce', makeCustomEvent('ok', { value: { cardNonce: 'nonce_fake_other' } }), makeBinding()],
+  for (const [name, event, binding, rejectionCode] of [
+    ['custom disabled', makeCustomEvent(), makeBinding({ allowCustomReply: false }), 'custom_disabled'],
+    ['wrong nonce', makeCustomEvent('ok', { value: { cardNonce: 'nonce_fake_other' } }), makeBinding(), 'nonce_mismatch'],
     ['wrong identity', makeCustomEvent('ok', {
       eventOverrides: { operator: { open_id: 'ou_fake_other' } },
-    }), makeBinding()],
+    }), makeBinding(), 'operator_mismatch'],
     ['expired', makeCustomEvent(), makeBinding({
       expiresAt: new Date(NOW.getTime() - 1).toISOString(),
-    })],
+    }), 'binding_expired'],
   ]) {
     await t.test(name, async (t) => {
       const root = await mkdtemp(join(tmpdir(), 'tzg-callback-custom-reject-'));
@@ -461,7 +461,7 @@ test('custom form callback rejects binding, nonce, identity, and expiry mismatch
         pendingBindings: [binding],
         now: NOW,
       });
-      assert.deepEqual(result, { accepted: false, response: rejectedResponse() });
+      assert.deepEqual(result, { accepted: false, response: rejectedResponse(), rejectionCode });
       await assert.rejects(readdir(join(root, 'inbox')));
     });
   }
@@ -648,6 +648,12 @@ test('bridge registers the exact callback, waits for ready, heartbeats, disconne
     && line.includes(';header=app_id,create_time,event_id,event_type,tenant_key')
     && line.includes(';event=action,context,operator')
   )), true);
+
+  const mismatchedMessageResult = await registered['card.action.trigger'](
+    makeEvent({ context: { open_message_id: 'om_fake_other' } }),
+  );
+  assert.deepEqual(mismatchedMessageResult, rejectedResponse());
+  assert.equal(logLines.some((line) => line.includes('callback_rejected:message_mismatch')), true);
 
   now = new Date(NOW.getTime() + 60_000);
   await intervalCallback();
