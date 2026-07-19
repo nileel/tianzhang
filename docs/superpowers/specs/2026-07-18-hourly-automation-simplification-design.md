@@ -2,7 +2,7 @@
 
 > 日期：2026-07-18
 >
-> 状态：负责人已逐节确认；2026-07-19 CLI-native 最小修订已确认，待书面规格复核
+> 状态：负责人已逐节确认；2026-07-19 CLI-native 最小修订及实施顺序已确认，待实施
 >
 > 范围：每小时任务路由、CLI-native Codex/外部 AI 执行、复审、队列补充、远程决策续跑、自动化任务内进度及现有复杂编排退役
 >
@@ -183,7 +183,7 @@
 
 ### 7.2 Codex 与外部 AI 恢复
 
-- Codex 任务从首次运行起就是 npm Codex CLI 创建的 `exec` session。首次启动使用 `codex exec --json -`，从 CLI 事件中提取并保存原 `sessionId`；回复到达后只调用 `codex exec resume <sessionId> -` 并通过 stdin 传入负责人原文。
+- Codex 任务从首次运行起就是 npm Codex CLI 创建的 `exec` session。首次启动使用 `codex exec --json -`，从 CLI 事件中提取并保存原 `sessionId`；回复到达后只调用 `codex exec resume --json <sessionId> -` 并通过 stdin 传入负责人原文。
 - `tools/codex-cli-session.ps1` 是 Start/Resume 共用的唯一 Codex 进程边界。它由 PowerShell 7 解析本机 `codex` 命令，不硬编码 npm 安装目录，不转换或修补 rollout 文件，也不接受 Desktop/VS Code/subagent session 作为自动恢复输入。
 - 飞书 Node relay 只消费签名回复、取得租约并通过 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/codex-cli-session.ps1` 调用 Resume；Node 不直接启动 `codex`、`codex.cmd` 或 npm 内部 `codex.js`。
 - Claude/DeepSeek 调用时使用私有 `sessionId`；外部 AI 返回 `needs_decision` 后退出。回复到达时中继只调用 `claude --resume <sessionId>` 并原样传入回复。
@@ -212,7 +212,7 @@ Claude CLI 已确认支持 `--session-id`、`--resume` 和 `--continue`。外部
 
 ### 7.5 第一期进度可见性与飞书 Tasks 后置
 
-第一期只在 `TZG Hourly Controller` 当前自动化运行任务的终端显示进度。调度器输出已选择任务；PowerShell CLI 边界根据实际 CLI 事件输出 `session 已启动`、`正在执行`，并根据责任方最终结果输出 `等待决定`、`已完成` 或安全的失败原因。不得从命令名称猜测“正在验证”或“正在提交”，不得输出原始模型 JSON、prompt、回复正文、provider 标识或 secret。
+第一期只在 `TZG Hourly Controller` 当前自动化运行任务的终端显示进度。调度器输出已选择任务；PowerShell CLI 边界根据实际 CLI 事件输出 `session 已启动`、`正在执行`；调度器再根据既有 runtime 和进程结果输出 `等待决定`、`已完成` 或安全的失败原因。不得从命令名称猜测“正在验证”或“正在提交”，不得输出原始模型 JSON、prompt、回复正文、provider 标识或 secret。
 
 进度不引入项目文件、数据库、阶段状态机或新的长期 runtime 字段。结构化结果继续使用现有 `lastResult` 和 recovery；终端进度只是同一事实的可读投影。飞书回复触发的隐藏后台 Resume 不能回写已经结束的旧自动化终端，第一期只在现有私有 runtime 记录该续跑的最终结果，下一次状态读取可见。
 
@@ -340,8 +340,8 @@ TQ-057 仍是当前 P0、Codex/ChatGPT5.5 主责、待处理任务。退役的�
 
 1. 现有 TQ-057 Desktop 责任方及未提交现场继续保留，只允许原 Desktop 任务人工续跑；不自动转换 rollout，不交给新 CLI session，不把其人工完成结果当作 CLI-native 金丝雀。
 2. 生产保持 `PAUSED`，在隔离 worktree 完成 CLI-native 修订和直接测试；建设不得读取、修改或接管 TQ-057 业务现场。
-3. 合并后只复验受切换影响的入口检查，并通过 Codex 自动化管理能力更新现有 `tzg-hourly-controller`；不手工编辑 automation TOML，status 继续为 `PAUSED`。
-4. TQ-057 原责任方人工完成并清除 task-owned recovery 与对应 pending resume 后，才允许新的生产金丝雀；若原 Desktop 任务仍不可用，保持暂停并另行请求处置，不自动移交。
+3. TQ-057 原责任方人工完成并清除 task-owned recovery 与对应 pending resume 后，才允许把 CLI-native 修订合入主分支；若原 Desktop 任务仍不可用，保持暂停并另行请求处置，不自动移交。
+4. 无 task-owned recovery 后再合并；只复验受切换影响的入口检查，并通过 Codex 自动化管理能力更新现有 `tzg-hourly-controller`。不手工编辑 automation TOML，status 继续为 `PAUSED`。
 5. 手动运行一次新的真实任务，不使用 plan-only、模拟 manifest 或 Desktop 可恢复责任方；按当时全局优先级选择合法候选。
 6. 只核对本轮是否创建来源为 `exec` 的 CLI session、显示固定进度、选中一个任务、保护人工脏改、没有重复验证、产生正确路径限定提交并释放租约。
 7. 首轮成功后恢复每小时调度，再观察一个真实小时轮次。
