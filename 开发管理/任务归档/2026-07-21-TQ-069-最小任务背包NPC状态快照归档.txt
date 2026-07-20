@@ -1,0 +1,23 @@
+# TQ-069 · 最小任务、背包和 NPC 状态快照（完成归档）
+
+- 完成日期：2026-07-21
+- 执行方：Codex / gpt-5.6-sol
+- 依赖：TQ-068 已归档；TQ-070 的存档版本与迁移基础现可独立领取。
+
+## 结论与交付
+
+- `GameSession` 继续作为跨场景会话生命周期所有者，分别持有 `QuestStateStore`、`InventoryStateStore` 与 `NpcStateStore`；三个 store 各自拥有并按稳定 ID 替换自己的 snapshot，不共享平行状态容器。
+- `QuestStateSnapshot`、`InventoryStateSnapshot` 与 `NpcStateSnapshot` 分别记录最小任务、物品数量和 NPC 所在世界节点；空身份、负库存或空世界节点失败关闭。
+- `StateStepSnapshot` 将 `shown`、`clicked`、`opened`、`selected`、`applied`、`completed`、`persisted` 暴露为七个独立只读状态，没有压成单一完成布尔值。
+- 场景上下文更新不会清空三个 store；`BeginNewGame` 与 `ClearSession` 会显式清空它们，避免上一会话状态泄漏到新游戏。
+
+## 回归证据
+
+- 测试先行：新增测试后，Unity 编译按预期因缺少 `StateStepSnapshot`、三个 snapshot 类型与三个 `GameSession` store 入口失败。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 错误；两个警告均来自既有 `SpellData.damageMultiplier` 过时调用，不涉及本任务文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`：130 通过、0 失败、0 跳过。
+
+## 后续边界
+
+- 本任务只建立跨场景会话 snapshot owner，不包含磁盘保存、读取、schema 版本、旧档、非法档、重置迁移或兼容分支。
+- TQ-070 必须复用本任务的三个 store/snapshot 边界建立存档版本和迁移基础，不得另建平行任务、背包或 NPC 状态服务。

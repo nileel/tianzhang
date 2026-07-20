@@ -32,6 +32,9 @@ namespace TianZhang.Game
         public string WorldSeasonId { get; private set; } = InitialWorldSeasonId;
         public int WorldDay { get; private set; } = 1;
         public string WorldTimeOfDayId { get; private set; } = InitialWorldTimeOfDayId;
+        public QuestStateStore QuestStates { get; } = new QuestStateStore();
+        public InventoryStateStore InventoryStates { get; } = new InventoryStateStore();
+        public NpcStateStore NpcStates { get; } = new NpcStateStore();
 
         /// <summary>
         /// 当前据点/副本 ID（用于返回流转时传递上下文）。
@@ -64,6 +67,7 @@ namespace TianZhang.Game
             PlayerProfile = profile;
             CurrentWorldNodeId = string.IsNullOrEmpty(startNodeId) ? "jiangzuo_hub" : startNodeId;
             ResetWorldTime();
+            ResetStateSnapshots();
             CurrentSettlementId = null;
             CurrentAdventureId = null;
             LastReturnTarget = default;
@@ -74,6 +78,7 @@ namespace TianZhang.Game
             PlayerProfile = null;
             CurrentWorldNodeId = "jiangzuo_hub";
             ResetWorldTime();
+            ResetStateSnapshots();
             CurrentSettlementId = null;
             CurrentAdventureId = null;
             LastReturnTarget = default;
@@ -124,6 +129,13 @@ namespace TianZhang.Game
             WorldSeasonId = InitialWorldSeasonId;
             WorldDay = 1;
             WorldTimeOfDayId = InitialWorldTimeOfDayId;
+        }
+
+        private void ResetStateSnapshots()
+        {
+            QuestStates.Clear();
+            InventoryStates.Clear();
+            NpcStates.Clear();
         }
 
         private void OnDestroy()
