@@ -72,6 +72,9 @@ static class BattleSimSelfTests
         if (suite == "distance-model-tq055")
             return RunChecked(suite, RunDistanceModelTq055);
 
+        if (suite == "battlefield-foundation-n-dist-01")
+            return RunChecked(suite, RunBattlefieldFoundationNDist01);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -860,18 +863,51 @@ static class BattleSimSelfTests
         AssertEqual(GameData.UnarmedBasicAttack, character.BasicAttackProfile, "unequipped character uses unarmed basic attack profile");
         character.BasicAttackProfile = new("测试主战法宝", "神魂", 1.1, "火", 2, 3);
         AssertEqual(3, character.BasicAttackProfile.MaxRange, "main combat artifact profile replaces unarmed fallback");
-        AssertEqual(6, Combat.InitialDistance, "distance-model opening separation");
-        AssertEqual(1, Combat.MoveIntoRange(6, 5, 1, 1), "melee moves before attacking");
-        AssertEqual(2, Combat.MoveIntoRange(1, 3, 2, 4), "minimum range forces retreat");
-        AssertEqual(6, Combat.MoveIntoRange(6, 0, 2, 4), "zero movement keeps distance");
-        int selected = Combat.SelectAction(4, true, 1, 1, false, true, 2, 4, GameData.UnarmedBasicAttack,
+        var battlefield = new HexBattlefield();
+        AssertEqual(6, Combat.InitialPositionA.DistanceTo(Combat.InitialPositionB), "distance-model opening separation");
+        AssertEqual(new HexCoord(5, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 5, 1, 1), "melee moves before attacking");
+        AssertEqual(new HexCoord(4, 0), battlefield.FindAttackPosition(new HexCoord(5, 0), new HexCoord(6, 0), 3, 2, 4), "minimum range forces retreat");
+        AssertEqual(new HexCoord(0, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 0, 2, 4), "zero movement keeps position");
+        int selected = Combat.SelectAction(battlefield, new HexCoord(0, 0), new HexCoord(4, 0), true, 1, 1, false, true, 2, 4, GameData.UnarmedBasicAttack,
             out int selectedMinRange, out int selectedMaxRange);
         AssertEqual(Combat.ArtAction, selected, "legal art takes priority over out-of-range divine");
         AssertEqual((2, 4), (selectedMinRange, selectedMaxRange), "selected art range is retained for movement");
-        int longRangeAction = Combat.SelectAction(6, false, 1, 1, false, true, 2, 6, GameData.UnarmedBasicAttack,
+        int longRangeAction = Combat.SelectAction(battlefield, new HexCoord(0, 0), new HexCoord(6, 0), false, 1, 1, false, true, 2, 6, GameData.UnarmedBasicAttack,
             out int longRangeMin, out int longRangeMax);
         AssertEqual(Combat.ArtAction, longRangeAction, "opening-range art is selected without a close-range fallback");
-        AssertEqual(6, Combat.MoveIntoRange(6, 5, longRangeMin, longRangeMax), "opening-range art needs no movement before casting");
+        AssertEqual(new HexCoord(0, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 5, longRangeMin, longRangeMax), "opening-range art needs no movement before casting");
+    }
+
+    static void RunBattlefieldFoundationNDist01()
+    {
+        var origin = new HexCoord(0, 0);
+        AssertEqual(3, origin.DistanceTo(new HexCoord(2, -3)), "axial coordinates use six-direction hex distance");
+
+        var terrain = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        {
+            [new HexCoord(1, 0)] = new(MovementCost: 3),
+            [new HexCoord(0, 1)] = new(BlocksMovement: true),
+        });
+        var twoPointReach = terrain.FindReachable(origin, 2);
+        AssertEqual(false, twoPointReach.ContainsKey(new HexCoord(1, 0)), "terrain entry cost consumes movement budget");
+        AssertEqual(false, twoPointReach.ContainsKey(new HexCoord(0, 1)), "movement blocker cannot be entered");
+        AssertEqual(true, terrain.FindReachable(origin, 3).ContainsKey(new HexCoord(1, 0)), "terrain becomes reachable when its explicit cost is paid");
+
+        var sight = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        {
+            [new HexCoord(1, 0)] = new(BlocksSight: true),
+        });
+        AssertEqual(false, sight.HasLineOfSight(origin, new HexCoord(2, 0)), "intermediate sight blocker cuts line of sight");
+        AssertEqual(true, sight.HasLineOfSight(origin, new HexCoord(0, 2)), "unblocked hex line remains visible");
+
+        var blockedAdvance = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        {
+            [new HexCoord(1, 0)] = new(BlocksMovement: true, BlocksSight: true),
+        });
+        var firingPosition = blockedAdvance.FindAttackPosition(origin, new HexCoord(3, 0), 2, 1, 2);
+        AssertEqual(2, firingPosition.DistanceTo(new HexCoord(3, 0)), "pathfinding sidesteps a blocked direct line to regain attack range");
+        AssertEqual(false, firingPosition == new HexCoord(1, 0), "selected attack position does not enter the blocker");
+        AssertEqual(true, blockedAdvance.HasLineOfSight(firingPosition, new HexCoord(3, 0)), "selected attack position has observable line of sight");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)

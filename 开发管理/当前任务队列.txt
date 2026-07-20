@@ -11,7 +11,7 @@
 | TQ-057 | P0 | Codex / gpt-5.5 | G3 数据 | 已完成（2026-07-19） | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
-| N-DIST-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 1v1 六角战场：格位、地形移动成本与视线的 BattleSim 基座 |
+| N-DIST-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 已完成待归档（2026-07-21） | 1v1 六角战场：格位、地形移动成本与视线的 BattleSim 基座 |
 
 ## 任务卡片
 
@@ -48,8 +48,9 @@
 ### N-DIST-01 · 1v1 六角战场：格位、地形移动成本与视线的 BattleSim 基座
 
 - 来源：`开发管理/任务列表/数值与战斗任务.txt` N-DIST-01。
-- 当前状态：待处理；依赖：G2 已通过。
+- 当前状态：已完成待归档（2026-07-21）；依赖：G2 已通过。
 - 主责：Codex / ChatGPT5.5。
 - 范围：将 BattleSim 的标量距离替换为可测试的格位、阻挡、移动成本和视线接口；不得改变既有伤害表。没有项目事实源的参数不得自行设定，须先创建待决策项。
 - 验证：`dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,simulations`，以及 `git diff --check`。
 - 完成条件：1v1 距离、阻挡、移动成本和视线具有可观察的 BattleSim 回归证据，不改变既有伤害表。
+- 完成证据：`battlefield-foundation-n-dist-01` 与既有 `distance-model-tq055` self-test 通过；Release build 为 0 警告，默认 BattleSim 完整运行返回 0；伤害表及 `Combat` 的伤害计算／防御结算段未修改。

@@ -9,7 +9,8 @@ static class Combat
     const int DeterministicRandomSeed = 20260712;
     static Random Rng = new(DeterministicRandomSeed);
     public const double BaseCritMultiplier = 1.5;
-    internal const int InitialDistance = 6;
+    internal static readonly HexCoord InitialPositionA = new(0, 0);
+    internal static readonly HexCoord InitialPositionB = new(6, 0);
     internal const int DivineAction = 0;
     internal const int KuxingAction = 1;
     internal const int ArtAction = 2;
@@ -20,8 +21,11 @@ static class Combat
     static bool IsInRange(int distance, int minRange, int maxRange) =>
         distance >= minRange && distance <= maxRange;
 
+    static bool CanAttack(HexBattlefield battlefield, HexCoord attacker, HexCoord defender, int minRange, int maxRange) =>
+        IsInRange(attacker.DistanceTo(defender), minRange, maxRange) && battlefield.HasLineOfSight(attacker, defender);
+
     internal static int SelectAction(
-        int distance,
+        HexBattlefield battlefield, HexCoord attacker, HexCoord defender,
         bool divineReady, int divineMinRange, int divineMaxRange,
         bool kuxingReady,
         bool artReady, int artMinRange, int artMaxRange,
@@ -35,19 +39,12 @@ static class Combat
             (Kind: ArtAction, Ready: artReady, MinRange: artMinRange, MaxRange: artMaxRange),
             (Kind: BasicAction, Ready: true, MinRange: basicAttack.MinRange, MaxRange: basicAttack.MaxRange),
         };
-        var selected = actions.FirstOrDefault(action => action.Ready && IsInRange(distance, action.MinRange, action.MaxRange));
+        var selected = actions.FirstOrDefault(action => action.Ready && CanAttack(battlefield, attacker, defender, action.MinRange, action.MaxRange));
         if (!selected.Ready)
             selected = actions.First(action => action.Ready);
         minRange = selected.MinRange;
         maxRange = selected.MaxRange;
         return selected.Kind;
-    }
-
-    internal static int MoveIntoRange(int distance, int movePoints, int minRange, int maxRange)
-    {
-        if (distance > maxRange) return Math.Max(maxRange, distance - Math.Max(0, movePoints));
-        if (distance < minRange) return Math.Min(minRange, distance + Math.Max(0, movePoints));
-        return distance;
     }
 
     public static double GetCritMultiplier(double critDamage, double elementCritDamageBonus = 0)
@@ -82,6 +79,7 @@ static class Combat
 
     public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
+        var battlefield = new HexBattlefield();
         int winsA = 0, winsB = 0;
         int totalTurns = 0;
         for (int r = 0; r < rounds; r++)
@@ -90,7 +88,8 @@ static class Combat
             int mpA = ca.Primary["MP"], mpB = cb.Primary["MP"];
             int artCdA = 0, artCdB = 0;
             int divineCdA = 0, divineCdB = 0;
-            int distance = InitialDistance;
+            HexCoord positionA = InitialPositionA;
+            HexCoord positionB = InitialPositionB;
             double ctA = 0, ctB = 0;
             double sA = 100.0 / ca.Primary["反应"], sB = 100.0 / cb.Primary["反应"];
             // v4.2: 水系机制 & 眩晕
@@ -156,11 +155,11 @@ static class Combat
                     bool divineReadyA = ca.DivineName != "" && divineCdA == 0;
                     bool kuxingReadyA = ca.Style == "yuqing_kuxing" && hpA > 2 && hpB > 0;
                     bool artReadyA = mpA >= artMPCostA && artCdA == 0;
-                    int actionA = SelectAction(distance, divineReadyA, ca.DivineMinRange, ca.DivineMaxRange,
+                    int actionA = SelectAction(battlefield, positionA, positionB, divineReadyA, ca.DivineMinRange, ca.DivineMaxRange,
                         kuxingReadyA, artReadyA, ca.ArtMinRange, ca.ArtMaxRange, ca.BasicAttackProfile,
                         out minRange, out maxRange);
-                    distance = MoveIntoRange(distance, ca.Primary["移力"], minRange, maxRange);
-                    if (!IsInRange(distance, minRange, maxRange)) { ctA += sA; continue; }
+                    positionA = battlefield.FindAttackPosition(positionA, positionB, ca.Primary["移力"], minRange, maxRange);
+                    if (!CanAttack(battlefield, positionA, positionB, minRange, maxRange)) { ctA += sA; continue; }
                     if (actionA == DivineAction)
                     {
                         atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen; minRange = ca.DivineMinRange; maxRange = ca.DivineMaxRange;
@@ -252,11 +251,11 @@ static class Combat
                     bool divineReadyB = cb.DivineName != "" && divineCdB == 0;
                     bool kuxingReadyB = cb.Style == "yuqing_kuxing" && hpB > 2 && hpA > 0;
                     bool artReadyB = mpB >= artMPCostB && artCdB == 0;
-                    int actionB = SelectAction(distance, divineReadyB, cb.DivineMinRange, cb.DivineMaxRange,
+                    int actionB = SelectAction(battlefield, positionB, positionA, divineReadyB, cb.DivineMinRange, cb.DivineMaxRange,
                         kuxingReadyB, artReadyB, cb.ArtMinRange, cb.ArtMaxRange, cb.BasicAttackProfile,
                         out minRange, out maxRange);
-                    distance = MoveIntoRange(distance, cb.Primary["移力"], minRange, maxRange);
-                    if (!IsInRange(distance, minRange, maxRange)) { ctB += sB; continue; }
+                    positionB = battlefield.FindAttackPosition(positionB, positionA, cb.Primary["移力"], minRange, maxRange);
+                    if (!CanAttack(battlefield, positionB, positionA, minRange, maxRange)) { ctB += sB; continue; }
                     if (actionB == DivineAction)
                     {
                         atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen; minRange = cb.DivineMinRange; maxRange = cb.DivineMaxRange;
