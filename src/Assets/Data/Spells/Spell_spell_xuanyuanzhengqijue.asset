@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_xuanyuanzhengqijue
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u7384\u5143\u6B63\u6C14\u8BC0"
   type: 2
   range: 1
   minRange: 1
   maxRange: 6
+  contentScope: player
+  element:
   mpCost: 35
   cooldownTicks: 25
-  damageMultiplier: 1.8
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 1.8
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_none
   realmScaleBase: 1

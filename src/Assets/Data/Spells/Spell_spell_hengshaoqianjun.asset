@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_hengshaoqianjun
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u6A2A\u626B\u5343\u519B"
   type: 0
   range: 0
   minRange: 0
   maxRange: 1
+  contentScope: player
+  element: "\u91D1"
   mpCost: 30
   cooldownTicks: 18
-  damageMultiplier: 1.8
+  physicalDamageMultiplier: 1.8
+  soulDamageMultiplier: 0
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_metal_root
   realmScaleBase: 1

@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_dadaoxuanyin
   m_EditorClassIdentifier:
-  contentScope: reserved
   spellName: "\u5927\u9053\u7384\u97F3"
   type: 2
   range: 1
   minRange: 1
   maxRange: 8
+  contentScope: reserved
+  element:
   mpCost: 80
   cooldownTicks: 50
-  damageMultiplier: 2.5
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 2.5
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_none
   realmScaleBase: 1

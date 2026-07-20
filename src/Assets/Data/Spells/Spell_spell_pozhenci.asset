@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_pozhenci
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u7834\u9635\u7A81\u523A"
   type: 1
   range: 1
   minRange: 0
   maxRange: 2
+  contentScope: player
+  element: "\u91D1"
   mpCost: 12
   cooldownTicks: 7
-  damageMultiplier: 1.5
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 1.5
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_metal_root
   realmScaleBase: 1

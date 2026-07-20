@@ -214,7 +214,7 @@ namespace TianZhang.Editor
         }
 
         [MenuItem("天章/导入术法配置")]
-        static void ImportSpells()
+        public static void ImportSpells()
         {
             _lang = null;
             string path = "Assets/DataConfig/Spells.csv";
@@ -224,7 +224,7 @@ namespace TianZhang.Editor
             var headers = FindHeader(lines);
             RequireColumns(headers, path,
                 "name", "type", "minRange", "maxRange", "mpCost",
-                "cooldownTicks", "damageMultiplier", "healAmount",
+                "cooldownTicks", "physicalDamageMultiplier", "soulDamageMultiplier", "healAmount",
                 "cannotBlock", "cannotDodge", "penetratingShield", "stunChance",
                 "element", "contentScope");
 
@@ -238,7 +238,14 @@ namespace TianZhang.Editor
                     continue;
                 }
 
-                var asset = ScriptableObject.CreateInstance<SpellData>();
+                string assetPath = $"Assets/Data/Spells/Spell_{SanitizeName(GetRequiredColumnValue(headers, cols, "name", path))}.asset";
+                var asset = AssetDatabase.LoadAssetAtPath<SpellData>(assetPath);
+                if (asset == null)
+                {
+                    asset = ScriptableObject.CreateInstance<SpellData>();
+                    EnsureDirectory(assetPath);
+                    AssetDatabase.CreateAsset(asset, assetPath);
+                }
                 asset.spellName = T(GetRequiredColumnValue(headers, cols, "name", path));
                 asset.type = (SpellType)int.Parse(GetRequiredColumnValue(headers, cols, "type", path));
                 asset.minRange = int.Parse(GetRequiredColumnValue(headers, cols, "minRange", path));
@@ -246,7 +253,8 @@ namespace TianZhang.Editor
                 asset.contentScope = GetRequiredContentScope(headers, cols, path);
                 asset.mpCost = int.Parse(GetRequiredColumnValue(headers, cols, "mpCost", path));
                 asset.cooldownTicks = int.Parse(GetRequiredColumnValue(headers, cols, "cooldownTicks", path));
-                asset.damageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "damageMultiplier", path));
+                asset.physicalDamageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "physicalDamageMultiplier", path));
+                asset.soulDamageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "soulDamageMultiplier", path));
                 asset.healAmount = int.Parse(GetRequiredColumnValue(headers, cols, "healAmount", path));
                 asset.cannotBlock = GetRequiredColumnValue(headers, cols, "cannotBlock", path) == "1";
                 asset.cannotDodge = GetRequiredColumnValue(headers, cols, "cannotDodge", path) == "1";
@@ -256,11 +264,11 @@ namespace TianZhang.Editor
                 asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(
                     GetRequiredColumnValue(headers, cols, "element", path));
 
-                string assetPath = $"Assets/Data/Spells/Spell_{SanitizeName(GetRequiredColumnValue(headers, cols, "name", path))}.asset";
-                EnsureDirectory(assetPath);
-                AssetDatabase.CreateAsset(asset, assetPath);
+                EditorUtility.SetDirty(asset);
                 Debug.Log($"  术法: {asset.spellName} ← {assetPath}");
             }
+
+            AssetDatabase.SaveAssets();
         }
 
         [MenuItem("天章/导入神通配置")]

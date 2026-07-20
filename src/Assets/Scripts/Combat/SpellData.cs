@@ -10,6 +10,7 @@ namespace TianZhang.Combat
         Buff,       // 增益
         Debuff,     // 减益
         Movement,   // 位移
+        Hybrid,     // 物理与神魂独立结算
     }
 
     public enum SpellRange
@@ -42,9 +43,32 @@ namespace TianZhang.Combat
         public int cooldownTicks = 30; // 冷却刻数（术法通常CD3=30刻）
 
         [Header("效能")]
-        public float damageMultiplier = 1.2f; // 伤害倍率
+        public float physicalDamageMultiplier; // 物理伤害倍率
+        public float soulDamageMultiplier;     // 神魂伤害倍率
         public int healAmount;                 // 治疗量（类型为Heal时）
         public float buffMultiplier = 1f;      // Buff倍率
+
+        // 仅供尚未迁移的调用方在编译期兼容；CSV 与 asset 均使用双倍率字段。
+        [System.Obsolete("Use physicalDamageMultiplier or soulDamageMultiplier.")]
+        public float damageMultiplier
+        {
+            get
+            {
+                return type == SpellType.Physical ? physicalDamageMultiplier : soulDamageMultiplier;
+            }
+            set
+            {
+                if (type == SpellType.Physical)
+                    physicalDamageMultiplier = value;
+                else if (type == SpellType.Hybrid)
+                {
+                    physicalDamageMultiplier = value;
+                    soulDamageMultiplier = value;
+                }
+                else
+                    soulDamageMultiplier = value;
+            }
+        }
 
         [Header("特殊效果")]
         public bool cannotBlock;        // 无法格挡

@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_shuwurushan
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u675F\u4F0D\u5982\u5C71"
   type: 1
   range: 0
   minRange: 1
   maxRange: 1
+  contentScope: player
+  element: "\u571F"
   mpCost: 35
   cooldownTicks: 20
-  damageMultiplier: 0.2
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 0.2
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_earth_root
   realmScaleBase: 1
