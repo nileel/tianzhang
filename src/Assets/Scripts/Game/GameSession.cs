@@ -123,6 +123,28 @@ namespace TianZhang.Game
             LastReturnTarget = target;
         }
 
+        public GameSessionSaveData CaptureSaveData()
+        {
+            return GameSessionSnapshot.Capture(this);
+        }
+
+        public void RestoreSaveData(GameSessionSaveData data)
+        {
+            GameSessionRestoredState restored = GameSessionSnapshot.Restore(data);
+
+            QuestStates.ReplaceAll(restored.Quests);
+            InventoryStates.ReplaceAll(restored.Inventory);
+            NpcStates.ReplaceAll(restored.Npcs);
+            CurrentWorldNodeId = restored.CurrentWorldNodeId;
+            WorldYear = restored.WorldYear;
+            WorldSeasonId = restored.WorldSeasonId;
+            WorldDay = restored.WorldDay;
+            WorldTimeOfDayId = restored.WorldTimeOfDayId;
+            CurrentSettlementId = restored.CurrentSettlementId;
+            CurrentAdventureId = restored.CurrentAdventureId;
+            LastReturnTarget = restored.LastReturnTarget;
+        }
+
         private void ResetWorldTime()
         {
             WorldYear = InitialWorldYear;

@@ -11,13 +11,12 @@
 
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
-| S-SAVE-01 / TQ-070 | P1 | Codex | 待处理 | 存档版本、新旧档、非法档和重置迁移基础；TQ-068、TQ-069 已归档。 |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 |
 | U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | 玄感清除链/玄同状态 Unity 回归。 |
 | U-FPD-RULE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01） | Unity 接入四阶段道基、容量、五座紫府、镇府神通、主动修炼和结丹永久锁。 |
 | U-FPD-AI-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、N-FPD-NPC-01） | Unity 接入 NPC 合法行动过滤与数据化修炼优先级，不硬编码行为顺序。 |
-| U-FPD-SAVE-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、S-SAVE-01） | 保存／读取道基进度、容量、紫府、镇府神通、行动与结丹锁，验证不可逆状态。 |
+| U-FPD-SAVE-01 | P2 | Codex | 阻塞（U-FPD-RULE-01） | 保存／读取道基进度、容量、紫府、镇府神通、行动与结丹锁，验证不可逆状态。 |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、D-FPD-MIGRATE-01、N-SLOT-01、N-FPD-DANXIANG-01） | 实现筑基与金丹信息界面，展示容量、府胚／建成、唯一丹相与不可逆确认。 |
 | U-JD-RULE-01 | P2 | Codex | 阻塞（D-JD-SCHEMA-01、N-JD-RULE-01、D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | Unity 接入金丹装配、全部紫府输入、唯一丹相、兼容/冲突可视化与可选 QTE/跳过；只消费规则与 fixture。 |
 | U-ENV-RULE-01 | P2 | Codex | 阻塞（D-ENV-SCHEMA-01、N-ENV-01 有效 BattleSim fixture） | Unity 表现金丹环境规则并提供地表、现象、边与交互反馈；只消费规则与 fixture，不硬编码调参值。 |
@@ -54,7 +53,7 @@
 
 ### U-FPD-SAVE-01 · 筑基与紫府持久化
 
-- 依赖：U-FPD-RULE-01、S-SAVE-01 的存档版本与迁移基础。
+- 依赖：U-FPD-RULE-01；S-SAVE-01 的存档版本与迁移基础已由 TQ-070 完成。
 - 预期路径：S-SAVE-01 确认的存档所有者、角色成长快照、相关 EditMode 测试；不得另建平行存档格式。
 - 范围：持久化道基身份／进度、天然与扩府容量、五府状态、镇府神通实例／强化节点、当前修炼行动、停止原因和结丹永久锁。
 - 验证：新档、合法旧档迁移、非法档拒绝、保存读取幂等、结丹后篡改容量或紫府失败关闭；不可重复领取扩府层或修炼结算。

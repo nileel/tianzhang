@@ -10,7 +10,6 @@
 |----|--------|------|------|------|------|
 | TQ-057 | P0 | Codex / gpt-5.5 | G3 数据 | 已完成（2026-07-19） | D-TRUST-02：清理现存数据矛盾 |
 | TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 阻塞（TQ-057） | D-TRUST-04：接通境界、元素和阵营限制 |
-| TQ-070 | P1 | Codex / gpt-5.5 | 场景与 Unity | 待处理 | S-SAVE-01：存档版本与迁移基础 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
@@ -32,18 +31,6 @@
 - 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
 - 验证：每个 runtime gate 具有允许与拒绝样例；运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与相关 Unity 回归。
 - 完成条件：三个字段都有唯一、可观察的运行时或显式元数据口径，G3 才可进入出口检查。
-
-### TQ-070 · S-SAVE-01 存档版本与迁移基础
-
-- 来源：`开发管理/任务列表/场景与Unity任务.txt`、可信度闸门规格 §7、TQ-068 与 TQ-069 完成归档。
-- 当前状态：待处理；依赖：TQ-068、TQ-069 已归档。
-- 主责：Codex / ChatGPT5.5。
-- 必读：`UNITY_STRUCTURE.md`、`开发管理/开发-技术经验.txt`、`开发管理/任务归档/2026-07-13-TQ-068-最小会话状态模型归档.txt`、`开发管理/任务归档/2026-07-21-TQ-069-最小任务背包NPC状态快照归档.txt`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs` 与 `src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`。
-- 预期修改路径：`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/当前任务队列.txt`。
-- 范围：在现有 `GameSession` 与三类 store/snapshot 边界内增加单一 schema 版本、可序列化快照、版本校验、支持旧版迁移和原子恢复／重置入口；新档、当前版往返、受支持旧档、非法档和重置必须具有确定行为。不得另建平行会话或存档服务，不扩展到存档槽位 UI、自动存档、云同步、加密或筑基／紫府持久化。
-- 验证：`dotnet build src/TianZhang.Runtime.csproj --no-restore`、`dotnet build src/TianZhang.EditModeTests.csproj --no-restore`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`，以及 `git diff --check`。
-- 完成条件：新档与重置回到同一初始状态；当前版往返保留世界、场景返回上下文及任务／背包／NPC 的稳定 ID 和七个独立步骤；受支持旧档迁移结果固定；空身份、负数量、重复 ID、未知或未来版本在修改会话前失败关闭，并有可重复回归证据。
-- 停止条件：现有所有者不能提供原子恢复且必须新建平行服务，或角色档案缺少稳定身份导致本切片必须扩展为完整角色序列化；此时先走负责人决策，不叠加兼容分支。
 
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 
