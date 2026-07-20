@@ -16,7 +16,9 @@
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离。 |
 | D-TRUST-02 / TQ-057 | P0 | Codex | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
 | D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
-| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（G3） | 定义道路/效果/实位契约、组合、核心/载体及表现/本地化字段；导入器对未知 ID、缺字段和冲突数据失败关闭。 |
+| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（G3、C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 |
+| D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（G3、D-FPD-SCHEMA-01） | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 |
 | D-ENV-SCHEMA-01 | P2 | Codex | 阻塞（G3） | 定义有向边、地表、六类现象与五行配对表 schema；导入器对非法引用、缺字段和非确定配置失败关闭。 |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
@@ -26,6 +28,29 @@
 - TQ-057 的机械清理由 DeepSeek 执行时只能标 `⚠️ 已修改/未审核` 并交接；历史扫描报告的已知误差不得直接带入结论。
 - TQ-059：每个 `*Req` 字段恰好选择一种模式；`runtime_gate` 须有允许/拒绝样例，`metadata_only` 须去除限制语义、证明无 consumer 并拒绝“仍叫 `*Req` 但无 handler”。
 - D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
+
+## 筑基、紫府与丹相后续数据任务卡
+
+### D-FPD-SCHEMA-01 · 道基、紫府、效果绑定与修炼契约
+
+- 依赖：G3 通过；C-FPD-MANSION-01 与 C-FPD-CULTIVATE-01 机制已确认。数值可以使用明确的未锁定 fixture，不得写默认平衡值。
+- 必读：2026-07-20 集成规格、三类内容规范与模板、`docs/角色养成/术法槽位设计.txt`、现有 CSV／asset／导入器／检查器。
+- 预期路径：新建数据契约规格；`src/Assets/DataConfig/`、对应 `src/Assets/Scripts` 数据模型与导入器、`tools/check-data-chain.ps1`、直接相关 EditMode 测试。进入当前队列前必须用实时扫描展开字面量路径。
+- 契约至少覆盖：唯一道基、四阶段连续进度、天然／已释放／扩府／总容量、五类紫府未建／府胚／建成状态、每府唯一镇府神通、平铺效果绑定、强化／府间节点、结丹永久锁、固定周期行动、闭关停止原因和 NPC 数据化权重。
+- 失败关闭：未知阶段、容量越界、同类双府、建成府缺少府体或镇府神通、递归效果包、结丹后新增府、非法权重字段、旧五段与新四阶段并存均拒绝导入。
+- 验证：相关 .NET／EditMode 测试、正反 fixture、`check-data-chain.ps1`、`check-review-text.ps1` 和 `git diff --check`。
+- 完成条件：BattleSim 与 Unity 可消费同一语义契约；尚未锁定数值保持显式缺失或测试 fixture，不伪装为当前默认值。
+- 停止条件：表达规则需要递归效果包、第二套角色成长服务、静默兼容字段或尚未确认的默认数值。
+
+### D-FPD-MIGRATE-01 · 内容数据与角色状态迁移
+
+- 依赖：D-FPD-SCHEMA-01；C-FPD-NAME-01、C-FPD-MANSION-01、C-FPD-CULTIVATE-01、C-FPD-EXPAND-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01 已确认；N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01 已锁定。
+- 预期路径：迁移计划 M7 的全部功法／术法／神通／道具文件、`src/Assets/DataConfig/` 对应 CSV、`src/Assets/Data/` 对应 asset、导入器、检查器和直接测试；进入当前队列前必须扫描并列出每个字面量路径。
+- 范围：迁移四阶段成长、筑基方案、容量效果、紫府状态、升格方案、镇府神通、主／辅承载和唯一丹相引用；太一道庭字段映射为同一契约。
+- 禁止：保留旧字段作为静默兼容入口、用默认值掩盖缺失内容、在导入阶段创作机制或数值、自动截断非法装备／容量数据。
+- 验证：严格数据链检查、相关 Unity EditMode、CSV/asset 数量与 ID 对齐、旧字段全局扫描、`git diff --check`；数值总回归由 N-FPD-REGRESSION-01 执行。
+- 完成条件：docs、CSV、asset、BattleSim fixture 与 Unity 数据对象对同一角色给出一致的四阶段、容量、紫府、镇府神通和丹相输入结果。
+- 停止条件：任一内容实例或数值仍未确认，或迁移需要猜测默认值、截断非法数据或保留双 schema。
 
 ## TQ-057 最终批准口径
 
