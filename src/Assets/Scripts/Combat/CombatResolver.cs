@@ -162,7 +162,7 @@ namespace TianZhang.Combat
             {
                 case SpellType.Physical:
                     damage = DamageCalculator.CalcPhysical(caster.PhysAtk,
-                        spell.damageMultiplier * ConsumeLeijieForPhysicalAction(caster),
+                        spell.physicalDamageMultiplier * ConsumeLeijieForPhysicalAction(caster),
                         caster, target, spell.cannotBlock, spell.element, spell.cannotDodge);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
@@ -173,7 +173,7 @@ namespace TianZhang.Combat
                     FudanActionBonus spellFudanBonus = ConsumeFudanForMagicAction(caster);
 
                     damage = DamageCalculator.CalcMagic(caster.MagAtk,
-                        spell.damageMultiplier * syMult * spellFudanBonus.DamageMultiplier,
+                        spell.soulDamageMultiplier * syMult * spellFudanBonus.DamageMultiplier,
                         caster,
                         target,
                         spell.element,
@@ -181,6 +181,27 @@ namespace TianZhang.Combat
                         spell.penetratingShield,
                         spellFudanBonus.MagicDefensePenetrationPercent);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
+                    msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
+                    break;
+
+                case SpellType.Hybrid:
+                    var physicalDamage = DamageCalculator.CalcPhysical(caster.PhysAtk,
+                        spell.physicalDamageMultiplier * ConsumeLeijieForPhysicalAction(caster),
+                        caster, target, spell.cannotBlock, spell.element, spell.cannotDodge);
+                    float hybridSoulMultiplier = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
+                    FudanActionBonus hybridFudanBonus = ConsumeFudanForMagicAction(caster);
+                    var soulDamage = DamageCalculator.CalcMagic(caster.MagAtk,
+                        spell.soulDamageMultiplier * hybridSoulMultiplier * hybridFudanBonus.DamageMultiplier,
+                        caster, target, spell.element, spell.cannotDodge || hybridFudanBonus.WasFull,
+                        spell.penetratingShield, hybridFudanBonus.MagicDefensePenetrationPercent);
+                    if (physicalDamage.IsHit) target.TakeDamage(physicalDamage.FinalDamage);
+                    if (soulDamage.IsHit) target.TakeDamage(soulDamage.FinalDamage);
+                    damage = new DamageCalculator.DamageResult
+                    {
+                        FinalDamage = physicalDamage.FinalDamage + soulDamage.FinalDamage,
+                        IsHit = physicalDamage.IsHit || soulDamage.IsHit,
+                        Log = $"{physicalDamage.Log}; {soulDamage.Log}"
+                    };
                     msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
 

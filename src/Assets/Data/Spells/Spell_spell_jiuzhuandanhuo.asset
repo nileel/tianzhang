@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_jiuzhuandanhuo
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u4E5D\u8F6C\u4E39\u706B"
   type: 3
   range: 1
   minRange: 1
   maxRange: 3
+  contentScope: player
+  element: "\u706B"
   mpCost: 28
   cooldownTicks: 12
-  damageMultiplier: 0.8
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 0.8
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_fire_root
   realmScaleBase: 1

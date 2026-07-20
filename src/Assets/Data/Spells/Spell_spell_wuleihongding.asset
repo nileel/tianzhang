@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_wuleihongding
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u4E94\u96F7\u8F70\u9876"
   type: 2
   range: 0
   minRange: 2
   maxRange: 5
+  contentScope: player
+  element: "\u96F7"
   mpCost: 40
   cooldownTicks: 24
-  damageMultiplier: 1.5
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 1.5
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_thunder_root
   realmScaleBase: 1

@@ -1,29 +1,29 @@
-# Skills config (2026-06-14)
+﻿# Skills config (2026-06-14)
 name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,affiliation,contentScope
 skill_jiuzhuanhuandan,1,1,4,60,50,2.0,0,0,0,1,0,0,0,desc_danhuo_penetration,element_fire_root,realm_jindan,faction_taiyidaoting,player
 skill_zhengqisuozhi,0,1,2,50,50,2.2,0,1,0,0,20,0,0,desc_zhengtao_wushi,element_metal_root,realm_jindan,faction_taiyidaoting,player
 
 # === Yuqingya (6) ===
-skill_jianxintongming,0,0,0,0,0,0,0,0,0,0,0,0,0,,element_metal_root,realm_jindan,faction_yuqingya,player
-skill_tianjieyinji,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_thunder_root,realm_zhuji,faction_yuqingya,player
-skill_leijiandianxu,0,0,0,0,0,1.5,0,0,0,0,0,0,0,,element_thunder_root,realm_jindan,faction_yuqingya,player
-skill_leijieyimai,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_thunder_root,realm_jindan,faction_yuqingya,player
-skill_kuxingshiyue,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_metal_root,realm_zhuji,faction_yuqingya,player
+skill_jianxintongming,0,0,0,0,0,0,0,0,0,0,0,0,0,详见对应神通原文,element_metal_root,realm_jindan,faction_yuqingya,player
+skill_tianjieyinji,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_thunder_root,realm_zhuji,faction_yuqingya,player
+skill_leijiandianxu,0,0,0,0,0,1.5,0,0,0,0,0,0,0,详见对应神通原文,element_thunder_root,realm_jindan,faction_yuqingya,player
+skill_leijieyimai,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_thunder_root,realm_jindan,faction_yuqingya,player
+skill_kuxingshiyue,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_metal_root,realm_zhuji,faction_yuqingya,player
 
 # === Hunyuanshan (6) ===
-skill_bumiejinshen,0,0,0,0,0,0,0,0,0,0,0,0,0,,element_metal_root,realm_jindan,faction_hunyuanshan,player
-skill_tiexuezhengqi,0,0,1,0,0,2.0,0,0,0,0,0,0,0,,element_metal_root,realm_jindan,faction_hunyuanshan,player
-skill_zhanchangzhijue,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_earth_root,realm_zhuji,faction_hunyuanshan,player
-skill_tiexuejunhun,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_earth_root,realm_jindan,faction_hunyuanshan,player
-skill_wanjuntongling,0,0,1,0,0,1.5,0,0,0,0,0,0,1,,element_earth_root,realm_jindan,faction_hunyuanshan,player
+skill_bumiejinshen,0,0,0,0,0,0,0,0,0,0,0,0,0,详见对应神通原文,element_metal_root,realm_jindan,faction_hunyuanshan,player
+skill_tiexuezhengqi,0,0,1,0,0,2.0,0,0,0,0,0,0,0,详见对应神通原文,element_metal_root,realm_jindan,faction_hunyuanshan,player
+skill_zhanchangzhijue,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_earth_root,realm_zhuji,faction_hunyuanshan,player
+skill_tiexuejunhun,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_earth_root,realm_jindan,faction_hunyuanshan,player
+skill_wanjuntongling,0,0,1,0,0,1.5,0,0,0,0,0,0,1,详见对应神通原文,element_earth_root,realm_jindan,faction_hunyuanshan,player
 
 # === Taixuguan (7) ===
-skill_yinguodaozhuan,0,0,0,0,0,0,0,0,0,0,0,0,0,,element_dark_root,realm_jindan,faction_taixuguan,player
-skill_mengjiexingzhou,0,0,0,0,0,2.0,0,0,0,0,0,0,0,,element_dark_root,realm_jindan,faction_taixuguan,player
-skill_shenhunbumie,0,0,0,0,0,3.0,0,0,0,0,0,0,0,,element_dark_root,realm_jindan,faction_taixuguan,player
-skill_shuanghuntongti,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_dark_root,realm_jindan,faction_taixuguan,player
-skill_suhuilunhui,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_dark_root,realm_zhuji,faction_taixuguan,player
-skill_yinguokehen,0,0,0,0,0,0,0,0,0,0,0,0,1,,element_dark_root,realm_jindan,faction_taixuguan,player
+skill_yinguodaozhuan,0,0,0,0,0,0,0,0,0,0,0,0,0,详见对应神通原文,element_dark_root,realm_jindan,faction_taixuguan,player
+skill_mengjiexingzhou,0,0,0,0,0,2.0,0,0,0,0,0,0,0,详见对应神通原文,element_dark_root,realm_jindan,faction_taixuguan,player
+skill_shenhunbumie,0,0,0,0,0,3.0,0,0,0,0,0,0,0,详见对应神通原文,element_dark_root,realm_jindan,faction_taixuguan,player
+skill_shuanghuntongti,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_dark_root,realm_jindan,faction_taixuguan,player
+skill_suhuilunhui,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_dark_root,realm_zhuji,faction_taixuguan,player
+skill_yinguokehen,0,0,0,0,0,0,0,0,0,0,0,0,1,详见对应神通原文,element_dark_root,realm_jindan,faction_taixuguan,player
 skill_wanfaguizong,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_wanfaguizong,element_none,realm_jindan,faction_taiyidaoting,player
 skill_lantingyimo,3,0,0,0,0,0,0,0,0,0,0,0,1,desc_skill_lantingyimo,element_water_root,realm_jindan,faction_taiyidaoting,player
 skill_tianfuzhenyue,0,0,0,0,0,0,0,0,0,0,0,0,0,desc_skill_tianfuzhenyue,element_earth_root,realm_jindan,faction_taiyidaoting,player

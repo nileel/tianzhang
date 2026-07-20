@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
+  m_Name: Spell_spell_renhua
+  m_EditorClassIdentifier: TianZhang.Combat::TianZhang.Combat.SpellData
+  spellName: "\u4EFB\u5316"
+  type: 1
+  range: 0
+  minRange: 1
+  maxRange: 5
+  contentScope: reserved
+  element: "\u98CE"
+  mpCost: 30
+  cooldownTicks: 18
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 1.4
+  healAmount: 0
+  buffMultiplier: 1
+  cannotBlock: 0
+  cannotDodge: 0
+  penetratingShield: 0
+  stunChance: 0
+  stunDuration: 1
+  realmScaleBase: 1

@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_toubianduanliu
   m_EditorClassIdentifier:
-  contentScope: reserved
   spellName: "\u6295\u97AD\u65AD\u6D41"
   type: 0
   range: 0
   minRange: 0
   maxRange: 0
+  contentScope: reserved
+  element: "\u571F"
   mpCost: 40
   cooldownTicks: 30
-  damageMultiplier: 1.2
+  physicalDamageMultiplier: 1.2
+  soulDamageMultiplier: 0
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_earth_root
   realmScaleBase: 1

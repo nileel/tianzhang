@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_wanjianchaozong
   m_EditorClassIdentifier:
-  contentScope: reserved
   spellName: "\u4E07\u5251\u671D\u5B97"
   type: 0
   range: 0
   minRange: 1
   maxRange: 5
+  contentScope: reserved
+  element: "\u91D1"
   mpCost: 65
   cooldownTicks: 35
-  damageMultiplier: 2.5
+  physicalDamageMultiplier: 2.5
+  soulDamageMultiplier: 0
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_metal_root
   realmScaleBase: 1

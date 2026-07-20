@@ -1,4 +1,4 @@
-# 多语言文本映射表
+﻿# 多语言文本映射表
 # 格式: id, zh_CN
 # 所有其他 CSV 表中的文本字段均使用此表中的 ID 引用
 #
@@ -443,3 +443,15 @@ skill_suiyue,碎岳
 skill_shennianguanchuan,神念贯穿
 skill_jiweizhu,积微成著
 skill_shishuiji,逝水千击
+realm_lianshen,炼神
+spell_beimingyin,北冥引
+spell_fuyao,扶摇
+spell_mingwei,冥微
+spell_qiongli,穷理
+spell_renhua,任化
+spell_shoufen,守分
+spell_shouzhen,守真
+spell_tongbian,通变
+spell_wudai,无待
+spell_yangua,演卦
+spell_yuye,玉液

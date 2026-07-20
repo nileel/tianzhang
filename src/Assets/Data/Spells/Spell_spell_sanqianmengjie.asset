@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_sanqianmengjie
   m_EditorClassIdentifier:
-  contentScope: reserved
   spellName: "\u4E09\u5343\u68A6\u754C"
   type: 1
   range: 0
   minRange: 3
   maxRange: 7
+  contentScope: reserved
+  element: "\u6697"
   mpCost: 70
   cooldownTicks: 45
-  damageMultiplier: 0.5
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 0.5
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_dark_root
   realmScaleBase: 1

@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_suhuijuexing
   m_EditorClassIdentifier:
-  contentScope: reserved
   spellName: "\u5BBF\u6167\u89C9\u9192"
   type: 1
   range: 0
   minRange: 0
   maxRange: 0
+  contentScope: reserved
+  element: "\u6697"
   mpCost: 50
   cooldownTicks: 40
-  damageMultiplier: 0.2
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 0.2
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_dark_root
   realmScaleBase: 1

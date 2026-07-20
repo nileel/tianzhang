@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_yongjiehuilang
   m_EditorClassIdentifier:
-  contentScope: reserved
   spellName: "\u6C38\u52AB\u56DE\u5ECA"
   type: 1
   range: 0
   minRange: 2
   maxRange: 6
+  contentScope: reserved
+  element: "\u6697"
   mpCost: 60
   cooldownTicks: 35
-  damageMultiplier: 2.5
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 2.5
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_dark_root
   realmScaleBase: 1

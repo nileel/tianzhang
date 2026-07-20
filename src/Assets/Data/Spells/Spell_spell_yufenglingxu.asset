@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2294bd6db111a4da8262a00f7142e2, type: 3}
   m_Name: Spell_spell_yufenglingxu
   m_EditorClassIdentifier:
-  contentScope: player
   spellName: "\u5FA1\u98CE\u51CC\u865A"
   type: 2
   range: 2
   minRange: 0
   maxRange: 0
+  contentScope: player
+  element: "\u98CE"
   mpCost: 25
   cooldownTicks: 15
-  damageMultiplier: 0
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 0
   healAmount: 0
   buffMultiplier: 1
   cannotBlock: 0
@@ -28,5 +30,4 @@ MonoBehaviour:
   penetratingShield: 0
   stunChance: 0
   stunDuration: 1
-  element: element_wind_root
   realmScaleBase: 1
