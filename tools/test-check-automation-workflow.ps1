@@ -147,6 +147,11 @@ $canonicalPrompt = @'
 汇总 Codex 执行、Codex 复审、外部 AI 三类合法候选并统一排序。
 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 补充队列，本轮不执行新任务。
 取得租约后每轮只启动一个责任方，路由到纯 `1`、纯 `2`、`开发管理/DeepSeek工作提示词.txt` 或队列维护。
+普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout；取得租约后只通过 `tools/codex-cli-session.ps1` 的 `Start`，把完整正式入口提示经 stdin 传入。
+调度器输出 `selected`；runner 只输出 `session_started`、`running`；调度器根据既有 runtime 和退出状态输出 `waiting_decision`、`completed` 或 `failed`。
+等待决定时保存 CLI session ID 并退出，回复后通过 runner `Resume` 同一 ID；旧终端结束后不回填后台结果。
+现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止。
+第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
 外部 AI 自验证并创建 businessCommit 与 handoffCommit，调度器不代提交。
 决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
 记录结果并释放租约；相同全阻塞指纹连续两次时把生产入口设为 PAUSED 并发送通知。
@@ -159,6 +164,10 @@ $canonicalRules = @'
 - 候选资格：状态、依赖、决策、主责、范围和执行器均合法。
 - 统一排序：项目优先级、已回复续跑、下游解锁、等待时间、稳定 ID。
 - 四种路由责任：纯 1、纯 2、外部 AI、队列维护各自端到端完成。
+- CLI-native Codex：普通执行、复审和队列维护只经 `tools/codex-cli-session.ps1` `Start`，完整入口只走 stdin；决定回复只 `Resume` 同一 ID。
+- 有限进度：只投影 selected、session_started、running、waiting_decision、completed、failed，不新增状态字段。
+- Desktop 恢复隔离：现有 task-owned Desktop recovery 只允许原任务人工完成，普通调度收到 RECOVERY_ONLY 后停止。
+- 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
 - 人工脏改避让：冲突候选跳过，不 stash、reset、checkout 或 clean。
 - 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
 - 决策恢复：保存原 thread/session；占锁排队且不等待 token。
@@ -172,7 +181,15 @@ $canonicalStatus = @'
 # 自动工作流状态
 
 - 生产入口仍为 PAUSED。
-- 精简实现位于隔离分支；旧私有备份保留；尚未取得生产成功。
+- 旧 Desktop rollout 与 npm CLI exec 不兼容，lastResult.detailCode=resume_desktop_rollout_incompatible。
+- task-owned recovery 与 pending resume 保留，lease=null。
+- CLI-native 修订位于隔离建设阶段；旧私有备份保留；尚未取得 CLI-native 生产成功。
+'@
+
+$validRelaySource = @'
+const command = dispatch.resumeKind === 'codex' ? 'pwsh' : 'claude';
+const args = ['-File', 'codex-cli-session.ps1', '-Action', 'Resume'];
+spawnChild(command, args, { windowsHide: true });
 '@
 
 try {
@@ -188,13 +205,17 @@ try {
     'tools/automation-workspace-guard.ps1',
     'tools/automation-finalize-commit.ps1',
     'tools/check-pending-whitespace.ps1',
-    'tools/feishu-decision-bridge/src/bridge.mjs'
+    'tools/codex-cli-session.ps1',
+    'tools/feishu-decision-bridge/src/bridge.mjs',
+    'tools/feishu-decision-bridge/src/resume-trigger.mjs'
   )) {
     Write-Utf8File -Path (Join-Path $repositoryRoot $path) -Content "fixture`n"
   }
   Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流控制器提示词.txt') -Content $canonicalPrompt
   Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流规则.txt') -Content $canonicalRules
   Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $canonicalStatus
+  $relayPath = Join-Path $repositoryRoot 'tools/feishu-decision-bridge/src/resume-trigger.mjs'
+  Write-Utf8File -Path $relayPath -Content $validRelaySource
 
   foreach ($id in @(
     'tzg-hourly-controller',
@@ -238,13 +259,48 @@ try {
   }
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
 
+  foreach ($forbiddenBoundary in @(
+      '普通 Codex 执行、复审和队列维护直接使用 Desktop/VS Code rollout。',
+      '第一期接入飞书 Tasks。',
+      '第一期创建 task GUID 映射。',
+      '第一期创建进度数据库。',
+      '第一期创建阶段状态机。'
+    )) {
+    Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`n$forbiddenBoundary`n")
+    Assert-CheckerFails `
+      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
+      -Context "Forbidden CLI-native boundary $forbiddenBoundary"
+  }
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+
+  foreach ($directNodeLaunch in @(
+      "const command = dispatch.resumeKind === 'codex' ? 'codex' : 'claude';",
+      "spawnChild('codex.cmd', [], {});",
+      "spawnChild('node', ['codex.js'], {});"
+    )) {
+    Write-Utf8File -Path $relayPath -Content ($validRelaySource + "`n$directNodeLaunch`n")
+    Assert-CheckerFails `
+      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
+      -Context "Direct Node Codex launch $directNodeLaunch"
+  }
+  Write-Utf8File -Path $relayPath -Content $validRelaySource
+
   foreach ($requiredPhrase in @(
     '统一排序',
     '每轮只启动一个责任方',
     '三类均无合法候选时才',
     '连续两次',
     'businessCommit',
-    '不消耗等待 token'
+    '不消耗等待 token',
+    'tools/codex-cli-session.ps1',
+    '`Start`',
+    'stdin',
+    '`selected`',
+    '`session_started`',
+    '`running`',
+    '`waiting_decision`',
+    '`completed`',
+    '`failed`'
   )) {
     Write-Utf8File -Path $promptPath -Content $canonicalPrompt.Replace($requiredPhrase, '已移除')
     Assert-CheckerFails `

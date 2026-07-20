@@ -89,7 +89,9 @@ $rulesPath = Join-Path $root '开发管理\自动工作流规则.txt'
 $statusPath = Join-Path $root '开发管理\自动工作流状态.txt'
 $prompt = Read-Utf8Contract -Path $promptPath
 $rules = Read-Utf8Contract -Path $rulesPath
-[void](Read-Utf8Contract -Path $statusPath)
+$status = Read-Utf8Contract -Path $statusPath
+$relayPath = Join-Path $root 'tools\feishu-decision-bridge\src\resume-trigger.mjs'
+$relay = Read-Utf8Contract -Path $relayPath
 
 Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   '开发管理/自动工作流规则.txt',
@@ -104,6 +106,17 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   '纯 `2`',
   '开发管理/DeepSeek工作提示词.txt',
   '开发管理/状态与建议维护规则.txt',
+  'tools/codex-cli-session.ps1',
+  '`Start`',
+  'stdin',
+  '`Resume`',
+  '`selected`',
+  '`session_started`',
+  '`running`',
+  '`waiting_decision`',
+  '`completed`',
+  '`failed`',
+  'RECOVERY_ONLY',
   'businessCommit',
   'handoffCommit',
   '不消耗等待 token',
@@ -115,6 +128,12 @@ Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
   '候选资格',
   '统一排序',
   '四种路由责任',
+  'tools/codex-cli-session.ps1',
+  '`Start`',
+  'stdin',
+  '`Resume`',
+  'CLI-native',
+  'RECOVERY_ONLY',
   '人工',
   '不 stash',
   'businessCommit',
@@ -125,8 +144,34 @@ Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
   '私有状态',
   '回滚'
 )
+Assert-ContainsAll -Text $status -Context 'workflow status' -Required @(
+  'PAUSED',
+  'resume_desktop_rollout_incompatible',
+  'recovery',
+  'pending resume',
+  'lease=null'
+)
 
 $activeText = $prompt + "`n" + $rules
+$desktopBoundary = '普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout'
+$firstPhaseBoundary = '第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机'
+Assert-ContainsAll -Text $activeText -Context 'CLI-native boundaries' -Required @(
+  $desktopBoundary,
+  $firstPhaseBoundary
+)
+$boundaryScan = $activeText.Replace($desktopBoundary, '').Replace($firstPhaseBoundary, '')
+foreach ($forbiddenBoundary in @(
+  '直接使用 Desktop',
+  '直接使用 VS Code',
+  '第一期接入飞书 Tasks',
+  '第一期创建 task GUID 映射',
+  '第一期创建进度数据库',
+  '第一期创建阶段状态机'
+)) {
+  Assert-Contract `
+    -Condition (-not $boundaryScan.Contains($forbiddenBoundary, [StringComparison]::OrdinalIgnoreCase)) `
+    -Message "active prompt or rules violates CLI-native boundary: $forbiddenBoundary"
+}
 Assert-Contract `
   -Condition (-not [regex]::IsMatch($activeText, '(?i)\b(?:TQ|HANDOFF|DEC|REVIEW)-[A-Z0-9-]+')) `
   -Message 'active prompt or rules contains a concrete task, decision, handoff, or review id'
@@ -143,16 +188,34 @@ foreach ($forbidden in @(
     -Message "active prompt or rules contains old protocol token: $forbidden"
 }
 
+Assert-ContainsAll -Text $relay -Context 'resume relay' -Required @(
+  'pwsh',
+  'codex-cli-session.ps1',
+  '-Action',
+  'Resume'
+)
+foreach ($pattern in @(
+  '(?i)\?\s*["'']codex(?:\.cmd)?["'']',
+  '(?i)(?:spawnChild|nodeSpawn)\s*\(\s*["'']codex(?:\.cmd)?["'']',
+  '(?i)codex\.js'
+)) {
+  Assert-Contract `
+    -Condition (-not [regex]::IsMatch($relay, $pattern)) `
+    -Message "resume relay directly launches Codex outside the runner: $pattern"
+}
+
 foreach ($requiredPath in @(
   '开发管理\AI协作规则.txt',
   '开发管理\审核入口.txt',
   '开发管理\DeepSeek工作提示词.txt',
   '开发管理\状态与建议维护规则.txt',
   'tools\hourly-automation-lease.ps1',
+  'tools\codex-cli-session.ps1',
   'tools\automation-workspace-guard.ps1',
   'tools\automation-finalize-commit.ps1',
   'tools\check-pending-whitespace.ps1',
-  'tools\feishu-decision-bridge\src\bridge.mjs'
+  'tools\feishu-decision-bridge\src\bridge.mjs',
+  'tools\feishu-decision-bridge\src\resume-trigger.mjs'
 )) {
   Assert-Contract `
     -Condition (Test-Path -LiteralPath (Join-Path $root $requiredPath) -PathType Leaf) `

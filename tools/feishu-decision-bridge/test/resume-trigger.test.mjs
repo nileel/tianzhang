@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   createPostAcceptRelay,
@@ -12,6 +13,14 @@ import {
   makeMessageCallback,
 } from '../src/bridge.mjs';
 import { sha256 } from '../src/config.mjs';
+
+const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
+const CODEX_SESSION_RUNNER_PATH = resolve(
+  TEST_DIRECTORY,
+  '..',
+  '..',
+  'codex-cli-session.ps1',
+);
 
 function inertTimers() {
   return {
@@ -298,13 +307,30 @@ test('DISPATCH consumes only the signed reply and resumes Codex with option thro
   }]);
   assert.equal(spawnRecorder.calls.length, 1);
   const call = spawnRecorder.calls[0];
-  assert.equal(call.command, 'codex');
-  assert.deepEqual(call.args, ['exec', 'resume', 'session-codex', '-']);
+  assert.equal(call.command, 'pwsh');
+  assert.deepEqual(call.args, [
+    '-NoProfile',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    CODEX_SESSION_RUNNER_PATH,
+    '-Action',
+    'Resume',
+    '-RepositoryRoot',
+    'C:\\repo',
+    '-TaskId',
+    'task-one',
+    '-RunId',
+    'run-codex',
+    '-SessionId',
+    'session-codex',
+  ]);
+  assert.equal(call.options.cwd, 'C:\\repo');
   assert.equal(call.options.detached, true);
   assert.equal(call.options.windowsHide, true);
   assert.equal(call.unrefCalled, true);
   assert.match(call.stdin, /^\[TZG_DECISION_RESUME runId=run-codex\]\nA$/);
-  assert.equal(call.args.join(' ').includes('A'), false);
+  assert.equal(call.args.includes('A'), false);
   assert.equal(call.stdin.includes(providerHash), false);
   assert.equal(call.stdin.includes('provider-message-id'), false);
   assert.equal(call.stdin.includes(secret), false);

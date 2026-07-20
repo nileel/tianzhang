@@ -9,7 +9,8 @@
 - 实施分支：`codex/hourly-automation-simplification`；建设 worktree：`D:\天章游戏开发-worktrees\hourly-controller-v2`。
 - TQ-057 的五项最终决定已归位到 `开发管理/任务列表/数据链路任务.txt`，当前队列只保留短入口；事实迁移提交为 `6925e35625383b3d6a1b3f18ec23571fe9312483`。
 - 旧私有源状态及时间戳备份均保留；本次备份为 `tzg-hourly-controller.pre-simplification.20260718T013707349Z.json` 与 `tzg-hourly-controller-v2.pre-simplification.20260718T013707349Z.json`。
-- 新租约、原会话续跑和外部两提交边界目前只有隔离建设证据；尚未取得精简流程的手动生产任务成功或自然整点成功，不得把离线测试表述为生产成果。
+- 2026-07-19 暂停态手动运行曾选中 TQ-057，但原责任方 rollout 来源为 Desktop/VS Code，npm CLI `exec` 无法恢复；`lastResult.detailCode=resume_desktop_rollout_incompatible`。当前 `lease=null`，task-owned recovery 与已接收决定的 pending resume 均保留。
+- CLI-native runner、relay 和静态规则修订位于建设分支；尚未执行临时仓库 same-session 金丝雀，也未取得 CLI-native 手动生产任务或自然整点成功，不得把直接测试表述为生产成果。
 
 ## 最近有效生产事实
 
@@ -18,7 +19,7 @@
 
 ## 当前阻塞
 
-当前没有需要写入本文件的长期自动化阻塞。生产切换仍受实施计划 Task 7–10 的合并、暂停态手动任务和自然整点观察门禁约束。
+TQ-057 只能由原 Desktop worker task 人工续跑并清除 recovery/pending resume；在此之前生产保持 `PAUSED`，普通自动化收到 `RECOVERY_ONLY` 后必须停止。CLI-native 修订仍受实施计划 Task 9E–9H 与 Task 10 门禁约束。
 
 ## 证据位置
 

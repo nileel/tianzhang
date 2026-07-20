@@ -2,22 +2,31 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把当前无法稳定执行的中央编排器替换为一个每小时薄路由、一个最小租约/恢复工具和现有安全组件，使 Codex、Codex 复审、Claude/DeepSeek 与队列维护各自端到端完成一个工作，并在连续两轮全部阻塞时自动暂停。
+**Goal:** 把当前无法稳定执行的中央编排器替换为一个每小时薄路由、一个最小租约/恢复工具、一个无状态 Codex CLI session 边界和现有安全组件，使 Codex、Codex 复审、Claude/DeepSeek 与队列维护各自端到端完成一个工作，并在连续两轮全部阻塞时自动暂停。
 
-**Architecture:** 自动化提示负责只读汇总候选、统一排序、取得租约并进入既有纯 `1`、纯 `2`、外部 AI 或队列维护入口；当前责任方自己修改、验证、更新状态和提交。`tools/hourly-automation-lease.ps1` 只管理租约、恢复指针、待续跑队列和阻塞计数；现有 workspace guard、finalizer、whitespace 与飞书签名消息协议保持独立。建设在 linked worktree 完成，生产自动化保持 `PAUSED`，先迁移 TQ-057 业务事实，后切换，最后在一次真实任务和一个自然整点轮次成功后退役旧编排。
+**Architecture:** 自动化提示负责只读汇总候选、统一排序和取得租约；普通 Codex、Codex 复审与队列维护都通过 `tools/codex-cli-session.ps1` 从首次启动起创建来源为 `exec` 的 CLI-native session，外部 AI 仍走既有入口。当前责任方自己修改、验证、更新状态和提交；租约工具只管理既有 runtime 字段，Node relay 只通过 PowerShell 边界恢复原 CLI session。建设在 linked worktree 完成，生产自动化保持 `PAUSED`；现有 TQ-057 只由原 Desktop 任务人工闭环，随后才合并并重跑真实生产金丝雀。
 
-**Tech Stack:** PowerShell 7、Git、Codex CLI `exec resume`、Claude CLI `--session-id/--resume`、Node.js `>=20`、现有飞书长连接桥、Codex 自动化管理能力。
+**Tech Stack:** PowerShell 7、Git、Codex CLI `exec --json` / `exec resume --json`、Claude CLI `--session-id/--resume`、Node.js `>=20`、现有飞书长连接桥、Codex 自动化管理能力。
 
 ---
 
 ## Authority and Supersession
 
 - 权威设计：`docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
+- 2026-07-19 负责人确认的 CLI-native 修订覆盖本计划原 Task 3 的 Codex Desktop 恢复假设和 Task 9 的旧金丝雀步骤；原 Claude/DeepSeek、飞书签名协议、租约 schema 与 Task 0–8 已完成证据不重做。
 - 本计划完整替代 `docs/superpowers/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md` 的未完成任务；不得继续执行旧计划的 Task 11/12，也不得恢复 manifest、发现网关、机器任务注册表或十五 Action 状态机。
 - 实际执行使用用户指定的 `superpowers:executing-plans`，从 Task 0 开始顺序执行；不并行派发、不使用 subagent-driven 路径。
 - 实施分支固定为 `codex/hourly-automation-simplification`，建设 worktree 固定为 `D:\天章游戏开发-worktrees\hourly-controller-v2`。
 - 生产工作区固定为 `D:\天章游戏开发`；建设期不得在该工作区修改、暂存、提交、stash、reset、checkout 或 clean 用户改动。
 - 当前已确认的建设基线是提交 `23f88c1854f0e416a0f18237a87730380df030ab`，五个现存自动化均为 `PAUSED`，其中生产入口为 `tzg-hourly-controller`。
+
+## 2026-07-19 Execution Checkpoint
+
+- Task 0–8 已完成并合入主分支；不得重新运行其已通过且输入未变化的验证。
+- Task 9 已真实选中 TQ-057，业务责任方产生 task-owned uncommitted recovery；飞书决定 A 已签名接收，但 npm Codex CLI `0.139.0` 不能恢复来源为 `vscode`、版本为 Codex Desktop `0.145.0-alpha.18` 的 rollout。
+- 生产入口仍为 `PAUSED`，runtime 无 lease，保留 TQ-057 recovery 和 pending resume，`lastResult.detailCode=resume_desktop_rollout_incompatible`。
+- 猜测性的 early-exit grace 已删除；Windows `cmd`/Node npm launcher 已删除，`resume-trigger.mjs` 已恢复 Task 3 原固定命令契约。相关修订提交为 `6046561d97c2155e256c6914f25072c31b6e45ef`，主分支合并为 `adb5d96ba56d45b97b9d65212ed7d0a6a1852992`。
+- CLI-native 权威设计修订提交为 `b464c1f910272c22c685723a576eb358a6038045`。本计划接下来从 Task 9A 开始，严格顺序执行；Task 9A–9H 未完成前不得进入 Task 10。
 
 ## Non-negotiable Invariants
 
@@ -25,6 +34,9 @@
 - 任一时刻最多一个项目写入者。候选汇总只读；取得租约后才能启动 Codex、复审、外部 AI 或队列维护写入。
 - 所有项目文件创建、修改和删除都使用 `apply_patch`；格式化工具只用于机械格式化，不用 PowerShell/Python 写文件替代补丁。
 - 调度器不实施、不做业务验证、不 stage、不 commit、不复审；它只选择、取得/释放租约、启动责任方并记录结果类别。
+- 普通 Codex、Codex 复审和队列维护的责任方必须从首次启动起就是 npm Codex CLI 来源为 `exec` 的 session；不得把 Desktop、VS Code 或 subagent rollout ID 交给 `codex exec resume`。
+- `tools/codex-cli-session.ps1` 是 Codex Start/Resume 的唯一进程边界。Node 不直接启动 `codex`、`codex.cmd` 或 npm 内部 `codex.js`，也不硬编码 npm 安装目录。
+- 第一期进度只投影到当前自动化运行任务的终端和既有 runtime；不接入飞书 Tasks，不新增任务 GUID 映射、进度数据库或阶段状态机。
 - 当前责任方端到端完成任务。外部 AI 的业务检查和提交不由外层 Codex重跑或代做。
 - 所有独立 PowerShell 进程只使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File`。
 - 不编辑 `%USERPROFILE%\.codex\automations\**\automation.toml`；生产自动化的 prompt、schedule、workdir 和 status 只通过 Codex 自动化管理能力更新。
@@ -54,6 +66,14 @@ Git 提交无法在自己的文件内容中记录自己的 commit SHA，因为�
 | Task 6 | 汇总运行新边界各一次；输入未变的既有 Git/飞书协议不重跑 | 不运行 Unity、BattleSim、全量项目检查 |
 | Task 7–8 | 合并后只跑静态工作流入口检查 | 不重复 Task 2–6 单元检查 |
 | Task 9 | 真实任务自己的领域验证由责任方运行一次；观察者只核对提交、租约和人工脏改 | 外层不重跑 TQ-057 领域检查 |
+| Task 9A | 暂停/隔离/恢复现场只读确认，一次主分支同步 | 不运行任何业务或协议测试 |
+| Task 9B | 一次 runner 红灯、一次 `test-codex-cli-session.ps1` 绿灯 | 不调用真实模型 |
+| Task 9C | 一次 relay 红灯、一次 `resume-trigger.test.mjs` 绿灯 | 不运行完整飞书 Node 套件 |
+| Task 9D | 一次 checker 红灯、一次 checker 测试绿灯、一次静态 checker | 不运行 CLI/飞书真实金丝雀 |
+| Task 9E | 新边界汇总各一次；只运行一次真实临时仓库 Codex CLI same-session 金丝雀 | 不重跑未变化的 lease 测试，不运行 Unity、BattleSim、TQ-057 或完整飞书回归 |
+| Task 9F | TQ-057 原责任方自行完成既有领域验证；观察者只核对 commit、lease、recovery 和人工脏改 | 不移交新 session，不由观察者重验 |
+| Task 9G | 合并后只跑静态入口检查并保持 `PAUSED` | 不重复 Task 9B–9E 检查 |
+| Task 9H | 新真实任务领域验证由 CLI-native 责任方运行一次；观察者只核对 session 来源、进度、提交和隔离 | 不重跑领域检查，不接飞书 Tasks |
 | Task 10 | 只观察一个自然整点结果及状态差异 | 不手动制造第二次等价运行 |
 | Task 11 | 退役后运行 `test-check-pwsh-runtime.ps1` 和带退役开关的工作流 checker | 不再运行已删除的旧测试 |
 
@@ -64,6 +84,9 @@ Git 提交无法在自己的文件内容中记录自己的 commit SHA，因为�
 ```text
 Thin prompt:       开发管理/自动工作流控制器提示词.txt
 Short rules:       开发管理/自动工作流规则.txt
+Codex session:     tools/codex-cli-session.ps1
+Session tests:     tools/test-codex-cli-session.ps1
+Session canary:    tools/test-codex-cli-session-canary.ps1
 Lease/recovery:    tools/hourly-automation-lease.ps1
 Lease tests:       tools/test-hourly-automation-lease.ps1
 Workflow checker:  tools/check-automation-workflow.ps1
@@ -120,13 +143,21 @@ Show Acquire SaveRecovery ClearRecovery QueueResume TakeResume RecordResult Rele
 
 `RecordResult` 的 category 只允许 `success/refilled/blocked/failed/waiting_decision`。相同 blocking fingerprint 连续两次把 `pauseRequested` 置为 `true`；`success`、`refilled` 或实质变化的 fingerprint 重置计数。租约过期但存在 `hasUncommittedChanges=true` 的恢复指针时，普通 `Acquire` 必须返回 `RECOVERY_ONLY`，不能覆盖原任务。
 
+### Codex CLI session contract
+
+- 唯一入口是 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/codex-cli-session.ps1`，Action 只允许 `Start` 或 `Resume`。
+- Start 通过当前 PowerShell 命令解析规则调用 `codex exec --json`，不使用 Node、`cmd.exe` 或 npm 内部路径；Resume 调用 `codex exec resume --json SESSION_ID -`。两者沿用 Codex CLI 当前配置的模型和 reasoning effort，不复制第二套模型配置。
+- prompt 或负责人回复只从 stdin 读取，不出现在命令行。Start 必须从唯一 `type='thread.started'` 事件的顶层 `thread_id` 提取 CLI session ID；Resume 收到同类事件时必须与传入 ID 一致。
+- stderr 只输出固定安全进度：`selected` 由调度器输出，runner 只输出 `session_started` 和 `running`；最终 `waiting_decision/completed/failed` 由调度器读取既有 runtime 后输出。stdout 只输出一行压缩 JSON `{status,action,taskId,runId,sessionId,exitCode}`，其中 `status` 只表示 child 进程 `ok/failed`，不冒充业务结果。
+- runner 不读取任务卡、不调用租约、飞书、Git 验证或 finalizer，不解释 agent message，也不输出原始 CLI JSONL、prompt、回复正文或 child stderr。
+
 ### Resume relay contract
 
 - 飞书卡片或文本回复先按现有协议写入签名 inbox；成功响应格式完全不变。
 - 新 post-accept hook 只把 `decisionId` 和签名 inbox 文件路径交给租约工具的 `QueueResume`。
 - 无租约时 `QueueResume` 原子取得原任务租约并返回 `DISPATCH`；有租约时返回 `QUEUED` 后进程结束，不 sleep、不轮询。
 - 真正 dispatch 时复用现有 `consume-reply.mjs` 验签并消费；relay 只选择 `optionKey` 或 `customText` 原文，丢弃传输哈希，不解释含义。
-- Codex 使用 `codex exec resume SESSION_ID -`；Claude/DeepSeek 使用 `claude --resume SESSION_ID --print`。回复通过 stdin 传入，避免出现在进程命令行。
+- Codex 只通过 PowerShell session 边界 Resume；Claude/DeepSeek 使用 `claude --resume SESSION_ID --print`。回复通过 stdin 传入，避免出现在进程命令行。
 - bridge 只启动隐藏的 detached relay helper，不等待模型结束；helper 或恢复线程负责最终 `RecordResult/Release`。启动失败时释放本次租约并保留待续跑项供下个整点恢复。
 
 ---
@@ -675,6 +706,453 @@ Expected: 通过；automation prompt 与 canonical 一致；所有写入型 auto
 
 任何边界失败都保持 automation `PAUSED`，保留 commit、runtime 和日志；不 reset/revert/clean。只回到对应实现 Task 修复并重跑受影响检查。未成功前不得进入 Task 10，也不得删除旧文件。
 
+**2026-07-19 actual result:** 本轮真实选择了 TQ-057，但失败关闭。原责任方 rollout 来源为 Codex Desktop `vscode`，而生产恢复命令来自 npm Codex CLI `exec`；两者的 rollout 版本/来源不兼容。TQ-057 的 task-owned uncommitted recovery、已签名决定 A 和 pending resume 均保留，automation 继续 `PAUSED`。原 Step 1–5 只作为历史执行记录；下述 Task 9A–9H 是唯一允许的修订重试路径。
+
+---
+
+## Task 9A: 重建隔离基线并确认生产恢复现场
+
+**Files:**
+
+- Read: `docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`
+- Read: `docs/superpowers/plans/2026-07-18-hourly-automation-simplification-implementation.md`
+- Read: `开发管理/自动工作流规则.txt`
+- Read: `开发管理/自动工作流状态.txt`
+- Private read: hourly runtime state
+- Git metadata only in both worktrees
+
+- [ ] **Step 1: 确认建设 worktree 身份与改动边界**
+
+```powershell
+git -C 'D:\天章游戏开发-worktrees\hourly-controller-v2' branch --show-current
+git -C 'D:\天章游戏开发-worktrees\hourly-controller-v2' status --short
+git -C 'D:\天章游戏开发' status --short
+```
+
+Expected: 建设分支为 `codex/hourly-automation-simplification`；建设 worktree 只有本修订计划/设计的已知改动；主工作区人工脏改只记录路径，不读取业务 diff、不修改。
+
+- [ ] **Step 2: 只读确认生产门禁和原恢复指针**
+
+用 Codex 自动化管理能力读取 `tzg-hourly-controller`，并用租约工具 `Show` 读取 runtime。
+
+Expected:
+
+- automation 为 `PAUSED`；
+- `lease=null`；
+- recovery 仍指向 TQ-057 的原 Desktop 责任方；
+- pending resume 恰好保留已接收决定；
+- `lastResult.detailCode=resume_desktop_rollout_incompatible`。
+
+若任一事实不同，立即停止并报告实际状态；不得清理、消费或重建 recovery。
+
+- [ ] **Step 3: 只读锁定当前 CLI 能力，不锁定安装路径**
+
+```powershell
+Get-Command codex -All
+codex --version
+codex exec --help
+codex exec resume --help
+```
+
+Expected: PowerShell 能解析 `codex`；Start 和 Resume 都支持 `--json` 及 stdin `-`，Start 支持 `--sandbox danger-full-access`。只记录实际版本和解析顺序，不把任何结果写成 launcher 路径。缺少任一能力时停止，不添加兼容层。
+
+- [ ] **Step 4: 在建设 worktree 合并一次最新主分支**
+
+先比较主分支自建设基线以来是否修改了本轮目标路径。确认没有未知写入者占用这些路径后：
+
+```powershell
+git -C 'D:\天章游戏开发-worktrees\hourly-controller-v2' merge --no-edit master
+```
+
+Expected: 无冲突合并。若任何 automation、runtime、规则或计划路径冲突，停止；不得自行选边、stash、reset 或扩大修订范围。
+
+- [ ] **Step 5: 汇报 Task 9A 证据后再继续**
+
+报告分支、worktree 状态、automation `PAUSED`、lease/recovery/pending 摘要和同步提交。按 Validation Budget 不运行测试。
+
+---
+
+## Task 9B: 用 TDD 建立无状态 Codex CLI session 边界
+
+**Files:**
+
+- Create: `tools/codex-cli-session.ps1`
+- Create: `tools/test-codex-cli-session.ps1`
+
+- [ ] **Step 1: 先写 runner 合约测试**
+
+测试在临时目录创建伪 `codex.ps1` 并把该目录放到测试进程 PATH 首位；伪命令记录 argv/stdin，并按用例输出 JSONL。至少覆盖：
+
+- Start 只通过 PowerShell 命令解析调用 `codex exec --json ... -`；
+- Resume 只调用 `codex exec resume --json SESSION_ID -`；
+- prompt/回复只经 stdin，命令行和 runner 输出都没有 secret marker；
+- Start 从唯一 `type='thread.started'` 事件的顶层 `thread_id` 返回 session ID；
+- 缺失或重复 `thread.started`、Resume ID 不匹配、child 非零退出均安全失败；
+- stdout 只有一行压缩 JSON，stderr 只有固定进度词，不泄露 child JSONL、child stderr 或 agent message。
+
+核心成功断言应等价于：
+
+```powershell
+Assert-Equal $result.status 'ok'
+Assert-Equal $result.sessionId $expectedSessionId
+Assert-Match $recordedArgs '^exec\|--json\|'
+Assert-Equal $recordedStdin $secretPrompt
+Assert-NotMatch ($capturedStdout + $capturedStderr) $secretPrompt
+```
+
+- [ ] **Step 2: 运行一次红灯**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-codex-cli-session.ps1
+```
+
+Expected: 因 `tools/codex-cli-session.ps1` 尚不存在而失败；不是测试语法错误。
+
+- [ ] **Step 3: 实现最小 runner**
+
+runner 只接受下列参数和 stdin：
+
+```powershell
+param(
+  [ValidateSet('Start','Resume')][string]$Action,
+  [string]$RepositoryRoot,
+  [string]$TaskId,
+  [string]$RunId,
+  [string]$SessionId
+)
+```
+
+实现约束：
+
+- 用 `Get-Command codex -CommandType Application,ExternalScript` 和 PowerShell `&` 调用当前安装的 Codex；不使用 Node、`cmd.exe`、`codex.cmd` 硬编码或 npm 内部路径。
+- Start 参数固定为 `exec --json -s danger-full-access -`；Resume 参数固定为 `exec resume --json SESSION_ID -`。模型和 reasoning effort 只沿用 Codex CLI 当前配置，不增加 runner 配置面。
+- 用 `Push-Location -LiteralPath $RepositoryRoot` 限定 cwd，并在 `finally` 恢复。
+- 用 PowerShell 原生管道把 stdin 交给 Codex，并逐行消费 child stdout JSONL；只识别 `type`，以及 `type='thread.started'` 时的顶层 `thread_id`。child stderr 直接重定向到 null，不回显、不落临时转录。
+- stderr 最多输出固定的 `session_started`、`running`；stdout 最后只输出 `{status,action,taskId,runId,sessionId,exitCode}`，`status` 只允许 `ok/failed`。
+- 不使用 `Start-Process`、`System.Diagnostics.Process` 或后台 reader；不读任务文件，不碰 Git/租约/飞书，不解释模型正文，不加 retry、fallback、launcher 探测层或持久状态。
+
+- [ ] **Step 4: 运行一次绿灯**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-codex-cli-session.ps1
+```
+
+Expected: 全部 runner 合约测试通过，未调用真实模型。
+
+- [ ] **Step 5: 路径限定提交**
+
+```powershell
+& tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/codex-cli-session.ps1|tools/test-codex-cli-session.ps1'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+  -ExpectedPaths 'tools/codex-cli-session.ps1|tools/test-codex-cli-session.ps1' `
+  -CommitMessage 'feat(automation): add Codex CLI session boundary'
+```
+
+Expected: 一个只含这两个文件的提交。汇报红/绿证据和 SHA 后再继续。
+
+---
+
+## Task 9C: 让飞书恢复 relay 只调用 PowerShell session 边界
+
+**Files:**
+
+- Modify: `tools/feishu-decision-bridge/src/resume-trigger.mjs`
+- Modify: `tools/feishu-decision-bridge/test/resume-trigger.test.mjs`
+
+- [ ] **Step 1: 先修改 relay 测试**
+
+Codex 用例必须断言 child command 为 `pwsh`，参数精确包含：
+
+```text
+-NoProfile
+-ExecutionPolicy
+Bypass
+-File
+<absolute tools/codex-cli-session.ps1>
+-Action
+Resume
+-RepositoryRoot
+<repository root>
+-TaskId
+<task id>
+-RunId
+<run id>
+-SessionId
+<existing resume id>
+```
+
+并断言决定正文仍只通过 stdin 传入。Claude/DeepSeek 既有 command/argv/stdin 断言保持不变。
+
+- [ ] **Step 2: 运行一次红灯**
+
+```powershell
+node tools/feishu-decision-bridge/test/resume-trigger.test.mjs
+```
+
+Expected: 当前实现仍是旧 Codex 固定命令，Codex 新断言失败；Claude/DeepSeek 用例不应失败。
+
+- [ ] **Step 3: 最小替换 Codex 分支**
+
+Codex 分支只构造上述 `pwsh -File tools/codex-cli-session.ps1 -Action Resume ...` 调用，继续使用隐藏、detached、stdin pipe 的现有启动方式。runner 路径通过当前模块目录解析为绝对路径；不得调用 `codex`、`codex.cmd`、`codex.js`，不得探测 npm 安装目录，不增加 retry/fallback。
+
+- [ ] **Step 4: 运行一次绿灯并提交**
+
+```powershell
+node tools/feishu-decision-bridge/test/resume-trigger.test.mjs
+& tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/feishu-decision-bridge/src/resume-trigger.mjs|tools/feishu-decision-bridge/test/resume-trigger.test.mjs'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+  -ExpectedPaths 'tools/feishu-decision-bridge/src/resume-trigger.mjs|tools/feishu-decision-bridge/test/resume-trigger.test.mjs' `
+  -CommitMessage 'fix(automation): resume Codex through CLI session boundary'
+```
+
+Expected: relay 测试全过；提交只含两个 relay 文件。汇报后再继续。
+
+---
+
+## Task 9D: 把 CLI-native 启动和有限进度写入唯一规则源
+
+**Files:**
+
+- Modify: `开发管理/自动工作流控制器提示词.txt`
+- Modify: `开发管理/自动工作流规则.txt`
+- Modify: `开发管理/自动工作流状态.txt`
+- Modify: `tools/check-automation-workflow.ps1`
+- Modify: `tools/test-check-automation-workflow.ps1`
+
+- [ ] **Step 1: 先添加静态 checker 失败用例**
+
+测试夹具必须证明 checker 会拒绝：
+
+- Codex 普通执行、复审或队列维护直接使用 Desktop/VS Code rollout；
+- Node 直接调用 `codex`、`codex.cmd` 或 `codex.js`；
+- 第一期新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机；
+- canonical prompt 缺少 CLI runner 的 Start、stdin 和固定进度约束。
+
+- [ ] **Step 2: 运行一次红灯**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-automation-workflow.ps1
+```
+
+Expected: 新增至少一个夹具因 checker 尚未实现对应规则而失败。
+
+- [ ] **Step 3: 最小更新 prompt、规则、状态和 checker**
+
+Canonical prompt 和规则只增加下列流程：
+
+1. 只读选题并 `Acquire` 后，普通 Codex、复审、队列维护把完整正式入口提示经 stdin 交给 runner `Start`；外部 AI 路由不变。
+2. 调度器输出 `selected`；runner 输出 `session_started`、`running`；调度器只从既有 runtime/退出状态输出 `waiting_decision`、`completed` 或 `failed`。
+3. 等待飞书决定时，当前进程退出并保存 CLI session ID；收到回复后 relay 通过 runner `Resume` 同一 ID。
+4. 回复发生在原自动化运行任务结束后时，不回填旧终端；最终结果只进入既有 runtime/下一轮摘要。
+5. TQ-057 现有 Desktop recovery 只允许原任务人工完成；普通自动化遇到它必须 `RECOVERY_ONLY` 后停止。
+
+`自动工作流状态.txt` 只记录当前真实失败、保留 recovery、建设阶段和 `PAUSED`；不得预写 CLI 金丝雀成功。checker 只检查这些固定边界，不解析模型自然语言或构造新状态机。
+
+- [ ] **Step 4: 运行一次绿灯和一次 canonical 静态检查**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 `
+  -RepositoryRoot 'D:\天章游戏开发-worktrees\hourly-controller-v2'
+```
+
+Expected: 两项都通过；automation 仍未被更新、未被运行。
+
+- [ ] **Step 5: 路径限定提交**
+
+```powershell
+& tools/check-pending-whitespace.ps1 -ExpectedPaths '开发管理/自动工作流控制器提示词.txt|开发管理/自动工作流规则.txt|开发管理/自动工作流状态.txt|tools/check-automation-workflow.ps1|tools/test-check-automation-workflow.ps1'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+  -ExpectedPaths '开发管理/自动工作流控制器提示词.txt|开发管理/自动工作流规则.txt|开发管理/自动工作流状态.txt|tools/check-automation-workflow.ps1|tools/test-check-automation-workflow.ps1' `
+  -CommitMessage 'docs(automation): route Codex work to CLI sessions'
+```
+
+Expected: 一个只含五个目标文件的提交。汇报后再继续。
+
+---
+
+## Task 9E: 汇总验证并做一次临时仓库 same-session 金丝雀
+
+**Files:**
+
+- Create: `tools/test-codex-cli-session-canary.ps1`
+
+- [ ] **Step 1: 写一次性真实 CLI 金丝雀脚本**
+
+脚本必须：
+
+1. 创建独立临时 Git 仓库和随机 secret marker，不访问生产任务卡、runtime 或 TQ-057。
+2. 第一次用 runner `Start`，让真实 Codex 只记住 marker、不写文件，返回需继续；断言退出成功、返回唯一 CLI session ID、仓库仍 clean。
+3. 第二次用 runner `Resume` 同一 ID；第二个 prompt 不包含 marker，只要求把先前记住的值通过 `apply_patch` 写入 `continuity.txt` 并提交。
+4. 断言返回 ID 与首次完全相同、文件内容等于 marker、恰好新增一个提交且仓库 clean。
+5. `finally` 删除它自己创建且已经解析确认位于临时根下的目录；失败时保留足够的安全诊断，但不输出 marker 或模型正文。
+
+不得为金丝雀增加 runner 特例、跨 session fallback 或持久映射。
+
+- [ ] **Step 2: 提交金丝雀脚本**
+
+```powershell
+& tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/test-codex-cli-session-canary.ps1'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+  -ExpectedPaths 'tools/test-codex-cli-session-canary.ps1' `
+  -CommitMessage 'test(automation): add Codex same-session canary'
+```
+
+- [ ] **Step 3: 每项汇总检查只运行一次**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-codex-cli-session.ps1
+node tools/feishu-decision-bridge/test/resume-trigger.test.mjs
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 `
+  -RepositoryRoot 'D:\天章游戏开发-worktrees\hourly-controller-v2'
+```
+
+Expected: 全部通过。任何一项失败时只返回对应 Task 修复并重跑受影响检查；不得先运行真实金丝雀。
+
+- [ ] **Step 4: 运行一次且只运行一次真实 CLI 金丝雀**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-codex-cli-session-canary.ps1 `
+  -RepositoryRoot 'D:\天章游戏开发-worktrees\hourly-controller-v2'
+```
+
+Expected: Start/Resume 同一 `exec` 来源 session、continuity 证明通过、临时仓库 clean；生产 automation 仍 `PAUSED`，TQ-057 runtime/recovery/pending 与运行前完全一致。
+
+- [ ] **Step 5: 汇报 Task 9E 证据后停止检查扩张**
+
+报告四项汇总结果、一次真实金丝雀的 session ID/提交计数，以及生产现场未变化证据。不得为了“更放心”重跑同范围测试。
+
+---
+
+## Task 9F: 只由原 Desktop 责任方人工闭环 TQ-057
+
+**Files:**
+
+- Runtime-selected TQ-057 business files, owned by the existing Desktop task only
+- Private runtime state
+
+- [ ] **Step 1: 保存主工作区只读隔离基线**
+
+用 `automation-workspace-guard.ps1 Snapshot` 记录当前 HEAD、staged/unstaged/untracked 路径与内容哈希；automation 必须继续 `PAUSED`，lease 必须为 null。观察者不读取 TQ-057 业务 diff。
+
+- [ ] **Step 2: 在原 Desktop 任务人工续跑已接受决定 A**
+
+只打开并继续原 worker task `019f7696-4e5b-74d2-a104-0ddc071ba6ab`；不创建新任务、不调用 CLI resume、不复制 diff、不把 TQ-057 移交新 session。
+
+原责任方按既有任务卡端到端完成：消费决定、实现、运行它自己的最小充分领域验证、更新任务状态、路径限定提交、`ClearRecovery`、消费对应 pending resume、`RecordResult success`、`Release`。
+
+- [ ] **Step 3: 观察者只核对边界证据**
+
+只检查：
+
+- 新业务提交 SHA 和授权路径；
+- lease 最终为 null；
+- TQ-057 recovery 与对应 pending resume 均已清除；
+- workspace guard `Verify` 证明非授权人工脏改及 staged 状态未变化。
+
+观察者不读业务 diff、不重跑领域检查、不 stage 或 commit。
+
+- [ ] **Step 4: 失败门禁**
+
+若原 Desktop 任务无法继续、领域验证失败、路径越界或 recovery 未清除，保持 `PAUSED` 并停止，报告原始证据；不得自动迁移、重演或用新 CLI session 兜底。
+
+---
+
+## Task 9G: 无恢复现场后合并 CLI-native 修订并更新暂停态 automation
+
+**Files:**
+
+- Merge: all Task 9B–9E committed paths
+- Merge: this design and implementation plan
+- External update: existing automation `tzg-hourly-controller`
+
+- [ ] **Step 1: 再次确认合并门禁和路径重叠**
+
+Expected: Task 9F 已成功，production `lease=null`、`recovery=null`、无 TQ-057 pending resume；主工作区状态已记录。比较主分支自 Task 9A 后的提交与本分支目标路径，任何未知重叠都停止。
+
+- [ ] **Step 2: 把最新主分支合入建设分支**
+
+```powershell
+git -C 'D:\天章游戏开发-worktrees\hourly-controller-v2' merge --no-edit master
+```
+
+Expected: 无 automation 目标路径冲突。若同步只带入 TQ-057 非重叠业务提交，不重跑 Task 9B–9E；只运行一次静态 checker：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 `
+  -RepositoryRoot 'D:\天章游戏开发-worktrees\hourly-controller-v2'
+```
+
+- [ ] **Step 3: 在主工作区做路径保护后合并**
+
+用 workspace guard Snapshot 保存人工基线；确认目标路径无人工占用后，从主工作区执行非快进合并：
+
+```powershell
+git -C 'D:\天章游戏开发' merge --no-ff codex/hourly-automation-simplification
+```
+
+用合并提交的路径作为 `Verify -ExpectedPaths` 允许集合。若合并失败或触及未知路径，停止；不得 reset/clean。
+
+- [ ] **Step 4: 只运行主分支静态入口检查**
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1 `
+  -RepositoryRoot 'D:\天章游戏开发'
+```
+
+Expected: 通过。不得重跑 runner、lease、relay 或真实 CLI 金丝雀。
+
+- [ ] **Step 5: 用自动化管理能力更新同一个 automation，继续暂停**
+
+把现有 `tzg-hourly-controller` prompt 更新为主分支 canonical prompt；名称、每小时时区、workdir 保持原值，status 保持 `PAUSED`。不得创建替代 automation、启用旧入口或手改 TOML。
+
+- [ ] **Step 6: 汇报合并和暂停态证据**
+
+报告 feature HEAD、merge SHA、静态 checker、workspace guard、automation prompt 一致性和 `PAUSED`。完成前不得进入 Task 9H。
+
+---
+
+## Task 9H: 手动运行一个新的 CLI-native 生产金丝雀
+
+**Files:**
+
+- Runtime-selected business files only
+- Private runtime state
+
+- [ ] **Step 1: 建立新生产金丝雀基线**
+
+确认没有 recovery/pending resume，automation 为 `PAUSED`。用 workspace guard Snapshot 记录主工作区 HEAD、staged/unstaged/untracked 路径与哈希；不要求人工工作区 clean。
+
+- [ ] **Step 2: 在 Codex 自动化界面手动运行现有入口一次**
+
+只点击现有 `TZG Hourly Controller` 的“立即运行”；不得改 schedule、创建一次性 automation 或手工启动 runner。按当时全局优先级选择合法候选，不硬编码或重选 TQ-057。
+
+- [ ] **Step 3: 观察真实、有限的当前运行进度**
+
+当前自动化运行任务终端只能出现由事实驱动的少量进度：`selected`、`session_started`、`running`，随后是 `waiting_decision`、`completed` 或 `failed` 之一。核对责任方 session 来源为 Codex CLI `exec`，且 session ID 已写入既有 recovery 字段；不得把模型正文、prompt、secret、JSONL 或 child stderr 当进度显示。
+
+若出现 `waiting_decision`，当前模型进程和自动化运行允许结束。用户经飞书回复后，relay 必须 Resume 同一 session ID；最终结果进入既有 runtime，旧自动化终端不回填属于预期行为。
+
+- [ ] **Step 4: 让 CLI-native 责任方端到端完成**
+
+责任方自己读取正式任务卡、实施、运行一次最小充分领域验证、更新状态并路径限定提交。观察者不接手、不重跑验证、不代提交。
+
+- [ ] **Step 5: 只核对生产边界**
+
+检查：
+
+- 只选择一个路由和一个任务；
+- session 从第一次启动就是 `exec` 来源，恢复仍是同一 ID；
+- lease 最终释放，recovery/pending 最终清除；
+- 业务提交路径在授权范围内；
+- workspace guard 证明人工 staged/unstaged/untracked 内容与 staged 状态未改变；
+- 没有 Desktop rollout 转换、重复领域验证、Feishu Tasks、进度数据库或额外状态机。
+
+- [ ] **Step 6: 成功/失败关闭**
+
+成功时记录 Task 9 修订金丝雀证据，才允许进入 Task 10。任一边界失败都保持 `PAUSED`，保留 commit/runtime/日志，返回最小受影响 Task；不得重跑已通过的无关验证。
+
 ---
 
 ## Task 10: 恢复每小时调度并观察一个自然轮次
@@ -801,8 +1279,11 @@ Expected: checker 通过；用户原有未提交改动仍存在且内容/暂存�
 - 主工作区目标路径与本分支重叠：停止，列出冲突路径，不覆盖。
 - 租约工具状态损坏或 ACL 不合格：失败关闭，不回退旧状态机写入。
 - 外部 AI 金丝雀无法自行完成两个提交：停止；不得恢复“外层 Codex代提交”。
+- runner Start 没有且仅有一个 `type='thread.started'` 事件及其顶层 `thread_id`，或 Resume 返回的 ID 不一致：停止；不得猜测、重试为新 session 或解析模型正文补救。
 - Codex/Claude session resume 不能证明同会话：停止；不得用新会话重新规划原任务。
+- 临时仓库 CLI 金丝雀不能证明同一 `exec` session 连续性：停止；只修 runner/直接调用边界，不迁移生产 TQ。
 - 飞书 relay 需要改变现有签名 envelope、binding 或回复协议：停止并重新请求设计批准。
+- CLI-native 第一期若必须依赖飞书 Tasks、task GUID 映射、进度数据库或新状态机才可工作：停止并重新请求设计批准。
 - 手动生产轮次失败：保持 `PAUSED`，旧文件不退役。
 - 存在 task-owned uncommitted recovery：普通调度立即停止，只允许原责任方恢复。
 - 连续两轮全阻塞：自动 `PAUSED`，飞书通知，等待负责人，不继续 Task 11。
@@ -811,31 +1292,35 @@ Expected: checker 通过；用户原有未提交改动仍存在且内容/暂存�
 
 | 设计要求 | 实施任务 |
 |----------|----------|
-| 一个自动化、薄提示、短规则 | Task 5、8、10 |
-| 统一优先级与每轮一个 | Task 5、9、10 |
-| 一责任方端到端 | Task 4、5、6、9 |
+| 一个自动化、薄提示、短规则 | Task 5、8、9H、10 |
+| 统一优先级与每轮一个 | Task 5、9H、10 |
+| 一责任方端到端 | Task 4、5、6、9F、9H |
 | 外部 AI 自验证自提交 | Task 4、6 |
-| 现有 Git 安全组件复用一次 | Task 4、6、9 |
+| 现有 Git 安全组件复用一次 | Task 4、6、9F、9G、9H |
 | 最小租约/恢复、无业务状态机 | Task 2 |
-| 飞书原样中继、原 thread/session 恢复 | Task 3、6 |
+| Codex 首次即为 CLI-native `exec` session | Task 9B、9D、9E、9H |
+| 自动化任务内有限进度、不建新状态 | Task 9B、9D、9H |
+| 飞书原样中继、原 thread/session 恢复 | Task 3、6、9C、9E |
 | 占锁排队且不耗 token | Task 2、3、10 |
 | 两轮全部阻塞自动暂停 | Task 2、5、10 |
 | 无候选才补任务 | Task 5、10 |
-| TQ-057 五决定归位且不重问 | Task 1、9 |
-| linked worktree 建设、主区可开发 | Task 0、7、11 |
-| 真实任务和自然轮次后才退役 | Task 9、10、11 |
+| TQ-057 五决定归位且不重问 | Task 1、9F |
+| linked worktree 建设、主区可开发 | Task 0、7、9A、9G、11 |
+| 真实任务和自然轮次后才退役 | Task 9H、10、11 |
 | 保留私有备份 | Task 0、11 |
 | Validation Budget | Task 1–11 各自验证段 |
 
 ## Plan Self-review Checklist
 
-- [ ] 权威设计的 16 节均在 Spec Coverage Review 中有实施落点。
-- [ ] 活动 runtime 没有具体任务 ID、manifest、registry、发现 action 或业务 phase。
-- [ ] 所有 Create/Modify/Delete 路径均为现有项目真实路径或本计划明确新建路径。
-- [ ] 所有 PowerShell 独立命令使用 `pwsh` 7。
-- [ ] 所有生产 automation 变更都通过自动化管理能力，未指示编辑 TOML。
-- [ ] 所有提交都路径限定，未要求暂存主工作区人工改动。
-- [ ] 外部 SHA 循环已用同责任方的 business/handoff 两提交消除。
-- [ ] 旧私有状态只备份和保留，没有删除步骤。
-- [ ] Task 9 前没有真实项目写入自动化，Task 11 前没有旧编排删除。
-- [ ] 文档没有未解释的临时标记、占位符或未锁定接口。
+- [x] 权威设计的 16 节均在 Spec Coverage Review 中有实施落点。
+- [x] 活动 runtime 没有具体任务 ID、manifest、registry、发现 action 或业务 phase。
+- [x] 所有 Create/Modify/Delete 路径均为现有项目真实路径或本计划明确新建路径。
+- [x] 所有 PowerShell 独立命令使用 `pwsh` 7。
+- [x] 所有生产 automation 变更都通过自动化管理能力，未指示编辑 TOML。
+- [x] 所有提交都路径限定，未要求暂存主工作区人工改动。
+- [x] 外部 SHA 循环已用同责任方的 business/handoff 两提交消除。
+- [x] 旧私有状态只备份和保留，没有删除步骤。
+- [x] Task 9H 前没有新的真实项目写入自动化，Task 11 前没有旧编排删除。
+- [x] TQ-057 只由原 Desktop 任务在 Task 9F 人工闭环，CLI-native 修订不读取或迁移其业务现场。
+- [x] 第一期没有飞书 Tasks、task GUID 映射、进度数据库、新状态机、runner retry/fallback 或第二套模型配置。
+- [x] 文档没有未解释的临时标记、占位符或未锁定接口。
