@@ -17,7 +17,6 @@ $resultStatus = 'failed'
 $resultSessionId = $null
 $script:threadStartedCount = 0
 $script:threadStartedId = $null
-$script:invalidChildJson = $false
 
 try {
   if ([string]::IsNullOrWhiteSpace($Action) -or
@@ -61,7 +60,6 @@ try {
       try {
         $event = $line | ConvertFrom-Json -ErrorAction Stop
       } catch {
-        $script:invalidChildJson = $true
         return
       }
 
@@ -91,9 +89,7 @@ try {
     $resultSessionId = $script:threadStartedId
   }
 
-  if ($childExitCode -eq 0 -and
-      -not $script:invalidChildJson -and
-      $sessionMatchesAction) {
+  if ($childExitCode -eq 0 -and $sessionMatchesAction) {
     $resultStatus = 'ok'
     $runnerExitCode = 0
   }

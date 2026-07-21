@@ -187,6 +187,10 @@ switch ($env:CODEX_SESSION_TEST_CASE) {
   'resume-success' {
     [pscustomobject]@{ type = 'thread.started'; thread_id = $threadId } | ConvertTo-Json -Compress
   }
+  'resume-non-json' {
+    Write-Output 'codex-cli informational diagnostic'
+    [pscustomobject]@{ type = 'thread.started'; thread_id = $threadId } | ConvertTo-Json -Compress
+  }
   'missing-thread' {
     [pscustomobject]@{
       type = 'item.completed'
@@ -233,6 +237,17 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
   Assert-Equal -Actual $resume.Json.sessionId -Expected $expectedSessionId -Message 'Resume session mismatch'
   Assert-Match -Actual $resume.RecordedArgs -Pattern ('^exec\|resume\|--json\|' + [regex]::Escape($expectedSessionId) + '\|-$') -Message 'Resume argv mismatch'
   Assert-Equal -Actual $resume.RecordedStdin -Expected $resumePrompt -Message 'Resume stdin mismatch'
+
+  $resumeWithDiagnosticPrompt = 'secret-resume-diagnostic-marker-49d3f1'
+  $resumeWithDiagnostic = Invoke-Runner `
+    -Action Resume `
+    -Prompt $resumeWithDiagnosticPrompt `
+    -Case 'resume-non-json' `
+    -SessionId $expectedSessionId
+  Assert-Equal -Actual $resumeWithDiagnostic.ExitCode -Expected 0 -Message 'Resume with diagnostic process failed'
+  Assert-Equal -Actual $resumeWithDiagnostic.Json.status -Expected 'ok' -Message 'Resume with diagnostic status mismatch'
+  Assert-Equal -Actual $resumeWithDiagnostic.Json.sessionId -Expected $expectedSessionId -Message 'Resume with diagnostic session mismatch'
+  Assert-Equal -Actual $resumeWithDiagnostic.StderrLines.Count -Expected 2 -Message 'Resume with diagnostic progress count mismatch'
 
   foreach ($failure in @(
       @{ Case = 'missing-thread'; Action = 'Start'; SessionId = $null; ChildExitCode = 0 },
