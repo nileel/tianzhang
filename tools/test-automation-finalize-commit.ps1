@@ -4,7 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $tool = Join-Path $root 'tools\automation-finalize-commit.ps1'
 $engine = (Get-Process -Id $PID).Path
 $sandbox = Join-Path ([System.IO.Path]::GetTempPath()) ('tzg-finalize-commit-test-' + [guid]::NewGuid().ToString('N'))
-$repo = Join-Path $sandbox 'repo'
+$repo = Join-Path $sandbox '中文仓库'
 $legacyConsoleWrapper = Join-Path $sandbox 'legacy-console.ps1'
 
 function Invoke-Git {

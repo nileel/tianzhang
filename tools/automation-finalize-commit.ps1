@@ -132,8 +132,7 @@ function Test-PathChanged {
 }
 
 $script:Repository = [System.IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
-$gitRoot = ((& git -C $script:Repository rev-parse --show-toplevel 2>&1) -join '').Trim()
-if ($LASTEXITCODE -ne 0) { throw "RepositoryRoot is not a Git repository: $RepositoryRoot" }
+$gitRoot = ((Invoke-GitRaw @('rev-parse', '--show-toplevel')) -join '').Trim()
 $resolvedGitRoot = [System.IO.Path]::GetFullPath($gitRoot).TrimEnd('\', '/')
 if (-not $resolvedGitRoot.Equals($script:Repository, [System.StringComparison]::OrdinalIgnoreCase)) {
   throw "RepositoryRoot must be the Git root: $RepositoryRoot"
