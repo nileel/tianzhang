@@ -30,6 +30,7 @@
 - 回复占锁时写入 pending resume 后立即结束，不 sleep、不轮询、不保持模型进程；释放租约或下个整点只取一个 ready resume。
 - 已有未提交任务修改时停止普通调度，只允许原责任方恢复，不把半成品交给另一责任方。
 - 现有 task-owned Desktop recovery 只允许原任务人工完成；普通自动化收到 `RECOVERY_ONLY` 后停止，不转换、复制或迁移 rollout。
+- runtime 中历史 `pauseRequested=true` 不得作为新一轮的提前退出条件；生产入口为 `ACTIVE` 时仍先完成当轮候选扫描和队列维护。只有当轮再次确认全部阻塞并由租约工具返回 `pauseRequested=true`，才进入暂停步骤。
 - 所有候选均阻塞时记录稳定 fingerprint；相同 fingerprint 连续两轮后，通过自动化管理能力保留现有字段并只提交一次完整更新，确认生产入口为 `PAUSED` 后才汇报暂停成功并发送飞书摘要。成功、成功补任务或阻塞集合实质变化会重置计数。
 
 ## 队列补充顺序、私有状态与回滚

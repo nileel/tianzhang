@@ -158,6 +158,7 @@ $canonicalPrompt = @'
 决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
 记录结果并释放租约；相同全阻塞指纹连续两次时把生产入口设为 PAUSED 并发送通知。
 pauseRequested=true 时只做一次完整配置更新；确认 status=PAUSED 后才汇报已暂停。
+历史 `pauseRequested=true` 不得作为本轮提前退出条件；只有本轮完成候选扫描和队列维护后再次返回 `pauseRequested=true`，才进入暂停步骤。
 '@
 
 $canonicalRules = @'
@@ -295,6 +296,8 @@ try {
     '队列维护正式入口必须保留两个顺序分支',
     '没有可提升的完整 backlog 任务卡不等于阻塞',
     '连续两次',
+    '历史 `pauseRequested=true` 不得作为本轮提前退出条件',
+    '只有本轮完成候选扫描和队列维护后再次返回 `pauseRequested=true`',
     '工具等待超时、yield 或尚未返回不等于 runner 失败',
     '不得释放租约或启动第二写入者',
     '只做一次完整配置更新',

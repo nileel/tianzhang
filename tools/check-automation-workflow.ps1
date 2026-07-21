@@ -125,6 +125,8 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   'handoffCommit',
   '不消耗等待 token',
   '连续两次',
+  '历史 `pauseRequested=true` 不得作为本轮提前退出条件',
+  '只有本轮完成候选扫描和队列维护后再次返回 `pauseRequested=true`',
   '只做一次完整配置更新',
   '确认 status=PAUSED',
   'PAUSED'
