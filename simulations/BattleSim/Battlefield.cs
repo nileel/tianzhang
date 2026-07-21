@@ -292,11 +292,16 @@ sealed class HexBattlefield
         return new MetricDistanceResult(false, -1, "no_legal_path_within_query_limit");
     }
 
-    public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord start, int movementBudget, HexCoord? occupied = null)
+    public IReadOnlyDictionary<HexCoord, int> FindReachable(
+        HexCoord start,
+        int movementBudget,
+        IReadOnlyCollection<HexCoord> occupied = null)
     {
         if (movementBudget < 0)
             throw new ArgumentOutOfRangeException(nameof(movementBudget), "Movement budget cannot be negative.");
 
+        var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
+        blocked?.Remove(start);
         int budgetUnits = checked(movementBudget * environmentRules.UnitsPerRange);
         var costs = new Dictionary<HexCoord, int> { [start] = 0 };
         var frontier = new PriorityQueue<HexCoord, (int Cost, int Q, int R)>();
@@ -309,7 +314,7 @@ sealed class HexBattlefield
 
             foreach (var neighbor in current.Neighbors())
             {
-                if (occupied.HasValue && neighbor == occupied.Value)
+                if (blocked?.Contains(neighbor) == true)
                     continue;
 
                 var edge = InspectEdge(current, neighbor, SpatialQueryKind.Movement);
@@ -329,14 +334,21 @@ sealed class HexBattlefield
         return costs;
     }
 
-    public HexCoord FindAttackPosition(HexCoord start, HexCoord target, int movementBudget, int minRange, int maxRange)
+    public HexCoord FindAttackPosition(
+        HexCoord start,
+        HexCoord target,
+        int movementBudget,
+        int minRange,
+        int maxRange,
+        IReadOnlyCollection<HexCoord> occupied = null)
     {
         if (minRange < 0 || maxRange < minRange)
             throw new ArgumentOutOfRangeException(nameof(minRange), "Attack range is invalid.");
 
         int minUnits = minRange * environmentRules.UnitsPerRange;
         int maxUnits = maxRange * environmentRules.UnitsPerRange;
-        var candidates = FindReachable(start, movementBudget, target);
+        var blocked = occupied ?? new[] { target };
+        var candidates = FindReachable(start, movementBudget, blocked);
         return candidates
             .Select(entry =>
             {

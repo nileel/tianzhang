@@ -11,11 +11,37 @@ static class Combat
     public const double BaseCritMultiplier = 1.5;
     internal static readonly HexCoord InitialPositionA = new(0, 0);
     internal static readonly HexCoord InitialPositionB = new(6, 0);
+    internal static readonly IReadOnlyList<HexCoord> InitialGroupPositions = Array.AsReadOnly(new[]
+    {
+        new HexCoord(0, 0),
+        new HexCoord(0, 1),
+        new HexCoord(6, 0),
+        new HexCoord(6, -1),
+    });
     internal const int DivineAction = 0;
     internal const int KuxingAction = 1;
     internal const int ArtAction = 2;
     internal const int BasicAction = 3;
     internal readonly record struct ActionPositionResult(HexCoord Position, bool CanAttack);
+    internal readonly record struct GroupTargetCandidate(int Index, int Team, int HP, bool IsAlive, bool IsLegal);
+    internal readonly record struct GroupTargetSelection(int TargetIndex, string Reason);
+    internal sealed record GroupActionObservation(
+        int Turn,
+        int ActorIndex,
+        HexCoord StartPosition,
+        HexCoord EndPosition,
+        IReadOnlyList<HexCoord> ReachablePositions,
+        int TargetIndex,
+        string TargetSelectionReason,
+        string InactionReason,
+        IReadOnlyList<HexCoord> PositionsAfterAction);
+    internal sealed record GroupRoundResult(
+        int WinnerTeam,
+        int Turns,
+        IReadOnlyList<HexCoord> InitialPositions,
+        IReadOnlyList<GroupActionObservation> Actions,
+        double HpRatioA,
+        double HpRatioB);
 
     internal static void ResetDeterministicRandom() => Rng = new Random(DeterministicRandomSeed);
 
@@ -40,11 +66,27 @@ static class Combat
         int movementBudget,
         int minRange,
         int maxRange,
-        bool preventsVoluntaryMovement)
+        bool preventsVoluntaryMovement,
+        IReadOnlyCollection<HexCoord> occupied = null)
     {
         int availableMovement = preventsVoluntaryMovement ? 0 : movementBudget;
-        var position = battlefield.FindAttackPosition(attacker, defender, availableMovement, minRange, maxRange);
+        var position = battlefield.FindAttackPosition(
+            attacker, defender, availableMovement, minRange, maxRange, occupied);
         return new ActionPositionResult(position, CanAttack(battlefield, position, defender, minRange, maxRange));
+    }
+
+    internal static GroupTargetSelection SelectGroupTarget(
+        int actorTeam,
+        IReadOnlyList<GroupTargetCandidate> candidates)
+    {
+        var selected = candidates
+            .Where(candidate => candidate.Team != actorTeam && candidate.IsAlive && candidate.IsLegal)
+            .OrderBy(candidate => candidate.HP)
+            .ThenBy(candidate => candidate.Index)
+            .FirstOrDefault();
+        return selected.IsAlive
+            ? new GroupTargetSelection(selected.Index, "selected_lowest_hp_then_input_order")
+            : new GroupTargetSelection(-1, "no_legal_target");
     }
 
     internal static int SelectAction(
@@ -356,13 +398,14 @@ static class Combat
     }
 
     // ═══════════════════════════════════════
-    // 2v2 群战模拟 (v6.0)
+    // 2v2 群战模拟 (v6.1)
     // ═══════════════════════════════════════
     struct UnitState
     {
         public Character Char;
         public int HP, MP;
         public double CT;
+        public HexCoord Position;
         public int Shouyi, Fudan, LeiJie, Qiushui, Buqian;
         public bool BuzhenFirstVoid, Stunned;
         public bool IsAlive => HP > 0;
@@ -374,90 +417,290 @@ static class Combat
         int winsA = 0, winsB = 0, totalTurns = 0;
         for (int r = 0; r < rounds; r++)
         {
-            var units = new UnitState[4];
-            var chars = new[] { ca1, ca2, cb1, cb2 };
-            int[] team = { 0, 0, 1, 1 };
-            for (int i = 0; i < 4; i++)
-            {
-                var c = chars[i];
-                units[i] = new UnitState { Char = c, HP = c.Primary["HP"], MP = c.Primary["MP"],
-                    Shouyi = c.Style == "taiyi" ? 2 : 0, Fudan = c.Style == "taiyi_fuxiu" ? 2 : 0,
-                    Qiushui = c.Style == "water_physical" ? (c.Realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 }) : 0,
-                    Buqian = c.GongFaName == "万物不迁法" ? (c.Realm switch { "元婴" => 5, "化神" => 5, "金丹" => 3, _ => 0 }) : 0,
-                    BuzhenFirstVoid = c.GongFaName == "不真自虚法" };
-            }
-            int turns = 0;
-            while (turns < 200)
-            {
-                bool aAlive = units[0].IsAlive || units[1].IsAlive;
-                bool bAlive = units[2].IsAlive || units[3].IsAlive;
-                if (!aAlive || !bAlive) break;
-                // 2v2 uses an accumulated-action-meter model: higher reaction fills CT faster.
-                for (int i = 0; i < 4; i++) if (units[i].IsAlive) { var u = units[i]; u.CT += u.Char.Primary["反应"]; units[i] = u; }
-                int actor = -1; double maxCT = -1;
-                for (int i = 0; i < 4; i++) if (units[i].IsAlive && !units[i].Stunned && units[i].CT >= 100 && units[i].CT > maxCT) { maxCT = units[i].CT; actor = i; }
-                if (actor < 0) continue;
-                turns++;
-                var au = units[actor]; au.CT -= 100;
-                // 目标: 敌方最低HP
-                int target = -1; int lowHP = int.MaxValue;
-                for (int i = 0; i < 4; i++) if (i != actor && units[i].IsAlive && team[i] != team[actor] && units[i].HP < lowHP) { lowHP = units[i].HP; target = i; }
-                if (target < 0) { units[actor] = au; continue; }
-                var du = units[target];
-                var ca = au.Char; var cb = du.Char;
-                bool useMagic = ca.Style is "magic" or "taiyi" or "taiyi_fuxiu" or "taixu" or "taixu_xuangan";
-                string atkType = useMagic ? "神魂" : "物理";
-                string skillElement = ca.ArtElement;
-                int atk = useMagic ? ca.Primary["神攻"] : ca.Primary["肉攻"];
-                int def = useMagic ? cb.Primary["神防"] : cb.Primary["肉防"];
-                double resist = useMagic ? cb.Secondary.GetValueOrDefault("魂抗率", 0) : cb.Secondary.GetValueOrDefault("物抗率", 0);
-                double mult = 1.0;
-                // 阵型光环 (绳墨正法录)
-                for (int i = 0; i < 4; i++) if (units[i].IsAlive && team[i] == team[actor] && units[i].Char.GongFaName == "绳墨正法录")
-                    mult += units[i].Char.Realm switch { "元婴" => 0.20, "金丹" => 0.15, "筑基" => 0.10, _ => 0.10 };
-                // 守一满层
-                int maxSy = ca.Realm switch { "金丹" => 5, "筑基" => 4, "练气" => 3, _ => 5 };
-                if (ca.Style == "taiyi" && au.Shouyi >= maxSy) atk = (int)(atk * 1.08);
-                // 雷劫
-                if (ca.Style == "yuqing_leijie" && au.LeiJie > 0) { mult *= 1 + au.LeiJie * (ca.Realm switch { "筑基" => 0.15, "金丹" => 0.18, "元婴" => 0.22, "化神" => 0.30, _ => 0.15 }); au.LeiJie = 0; }
-                // 万钧 (混元同尘典)
-                if (ca.GongFaName == "混元同尘典" && ca.Realm is "元婴" or "化神")
-                    for (int i = 0; i < 4; i++) if (i != actor && units[i].IsAlive && team[i] == team[actor] && (double)units[i].HP / units[i].Char.Primary["HP"] > 0.6) mult *= 1.25;
-                var elementMatch = GameData.GetElementMatch(skillElement, ca.GongFaName, cb.GongFaName);
-                int dmg = Dmg(atk, def, resist, 0, mult * elementMatch.DamageMultiplier);
-                dmg = ApplyDefenses(dmg, ca, cb, atkType, critRateBonus: elementMatch.CritRateBonus, critDamageBonus: elementMatch.CritDamageBonus);
-                // 守一减伤
-                if (cb.Style == "taiyi" && du.Shouyi > 0 && dmg > 0) { dmg = (int)(dmg * 0.80); du.Shouyi--; }
-                if (cb.GongFaName == "万物不迁法" && du.Buqian > 0 && dmg > cb.Primary["HP"] * 0.30) { dmg /= 2; du.Buqian--; }
-                if (cb.GongFaName == "不真自虚法" && dmg > 0) { double vr = cb.Realm switch { "化神" => 0.40, "元婴" => 0.25, _ => 0 }; if (du.BuzhenFirstVoid) { vr = 1.0; du.BuzhenFirstVoid = false; } if (Rng.NextDouble() < vr) dmg = 0; }
-                du.HP -= dmg;
-                if (cb.Style == "yuqing_leijie") { int maxLj2 = cb.Realm switch { "筑基" => 3, "金丹" => 5, "元婴" => 5, "化神" => 5, _ => 3 }; du.LeiJie = Math.Min(du.LeiJie + 1, maxLj2); }
-                if (ca.Style == "taiyi") au.Shouyi = Math.Min(au.Shouyi + 1, maxSy);
-                if (ca.Style == "taiyi_fuxiu") au.Fudan = Math.Min(au.Fudan + 1, ca.Realm switch { "金丹" => 5, "筑基" => 3, _ => 5 });
-                if (du.Char.Style == "water_physical" && du.Qiushui > 0 && du.HP > 0 && du.HP < cb.Primary["HP"] * 0.30) { du.HP += (int)(cb.Primary["HP"] * 0.15); du.Qiushui--; }
-                // 玄感 debuff清除
-                for (int i = 0; i < 4; i++) if (units[i].IsAlive && team[i] == team[actor] && units[i].Char.GongFaName == "南华玄感录") {
-                    double cr = units[i].Char.Realm switch { "元婴" => 0.80, "金丹" => 0.50, "筑基" => 0.30, "练气" => 0.20, _ => 0.20 };
-                    if (Rng.NextDouble() < cr) for (int j = 0; j < 4; j++) if (j != i && units[j].IsAlive && team[j] == team[actor]) { var uj = units[j]; if (uj.Stunned) { uj.Stunned = false; units[j] = uj; break; } }
-                }
-                units[actor] = au; units[target] = du;
-            }
-            bool finalAAlive = units[0].IsAlive || units[1].IsAlive;
-            bool finalBAlive = units[2].IsAlive || units[3].IsAlive;
-            if (finalAAlive && !finalBAlive) winsA++;
-            else if (!finalAAlive && finalBAlive) winsB++;
-            else
-            {
-                double hpRatioA =
-                    Math.Max(0, units[0].HP) / (double)units[0].Char.Primary["HP"] +
-                    Math.Max(0, units[1].HP) / (double)units[1].Char.Primary["HP"];
-                double hpRatioB =
-                    Math.Max(0, units[2].HP) / (double)units[2].Char.Primary["HP"] +
-                    Math.Max(0, units[3].HP) / (double)units[3].Char.Primary["HP"];
-                if (hpRatioA >= hpRatioB) winsA++; else winsB++;
-            }
-            totalTurns += turns;
+            var result = Simulate2v2Detailed(ca1, ca2, cb1, cb2);
+            if (result.WinnerTeam == 0) winsA++; else winsB++;
+            totalTurns += result.Turns;
         }
         return (winsA * 100.0 / rounds, winsB * 100.0 / rounds, (double)totalTurns / rounds);
     }
+
+    internal static GroupRoundResult Simulate2v2Detailed(
+        Character ca1, Character ca2, Character cb1, Character cb2)
+    {
+        var battlefield = new HexBattlefield();
+        var units = new UnitState[4];
+        var chars = new[] { ca1, ca2, cb1, cb2 };
+        int[] team = { 0, 0, 1, 1 };
+        if (InitialGroupPositions.Distinct().Count() != chars.Length)
+            throw new InvalidOperationException("Group deployment must assign one unique cell to each combatant.");
+
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            units[i] = new UnitState
+            {
+                Char = c,
+                HP = c.Primary["HP"],
+                MP = c.Primary["MP"],
+                Position = InitialGroupPositions[i],
+                Shouyi = c.Style == "taiyi" ? 2 : 0,
+                Fudan = c.Style == "taiyi_fuxiu" ? 2 : 0,
+                Qiushui = c.Style == "water_physical"
+                    ? (c.Realm switch { "元婴" => 3, "金丹" => 2, "筑基" => 1, _ => 0 })
+                    : 0,
+                Buqian = c.GongFaName == "万物不迁法"
+                    ? (c.Realm switch { "元婴" => 5, "化神" => 5, "金丹" => 3, _ => 0 })
+                    : 0,
+                BuzhenFirstVoid = c.GongFaName == "不真自虚法",
+            };
+        }
+
+        var observations = new List<GroupActionObservation>();
+        int turns = 0;
+        while (turns < 200)
+        {
+            bool aAlive = units[0].IsAlive || units[1].IsAlive;
+            bool bAlive = units[2].IsAlive || units[3].IsAlive;
+            if (!aAlive || !bAlive) break;
+
+            for (int i = 0; i < units.Length; i++)
+            {
+                if (!units[i].IsAlive) continue;
+                var charging = units[i];
+                charging.CT += charging.Char.Primary["反应"];
+                units[i] = charging;
+            }
+
+            int actor = -1;
+            double maxCT = -1;
+            for (int i = 0; i < units.Length; i++)
+            {
+                if (units[i].IsAlive && !units[i].Stunned && units[i].CT >= 100 && units[i].CT > maxCT)
+                {
+                    maxCT = units[i].CT;
+                    actor = i;
+                }
+            }
+            if (actor < 0) continue;
+
+            turns++;
+            var au = units[actor];
+            au.CT -= 100;
+            var startPosition = au.Position;
+            var occupied = units
+                .Where((unit, index) => index != actor && unit.IsAlive)
+                .Select(unit => unit.Position)
+                .ToArray();
+            var reachable = battlefield
+                .FindReachable(startPosition, Math.Max(0, au.Char.Primary["移力"]), occupied)
+                .OrderBy(entry => entry.Value)
+                .ThenBy(entry => entry.Key.Q)
+                .ThenBy(entry => entry.Key.R)
+                .Select(entry => entry.Key)
+                .ToArray();
+
+            var plans = new Dictionary<int, ActionPositionResult>();
+            var candidates = new GroupTargetCandidate[units.Length];
+            var attackProfile = au.Char.BasicAttackProfile;
+            for (int i = 0; i < units.Length; i++)
+            {
+                bool isEnemy = team[i] != team[actor];
+                bool isAlive = units[i].IsAlive;
+                bool isLegal = false;
+                if (isEnemy && isAlive)
+                {
+                    var plan = ResolveActionPosition(
+                        battlefield,
+                        startPosition,
+                        units[i].Position,
+                        au.Char.Primary["移力"],
+                        attackProfile.MinRange,
+                        attackProfile.MaxRange,
+                        preventsVoluntaryMovement: false,
+                        occupied);
+                    plans[i] = plan;
+                    isLegal = plan.CanAttack;
+                }
+                candidates[i] = new GroupTargetCandidate(i, team[i], units[i].HP, isAlive, isLegal);
+            }
+
+            var selection = SelectGroupTarget(team[actor], candidates);
+            int target = selection.TargetIndex;
+            if (target < 0)
+            {
+                int movementFocus = candidates
+                    .Where(candidate => candidate.Team != team[actor] && candidate.IsAlive)
+                    .OrderBy(candidate => candidate.HP)
+                    .ThenBy(candidate => candidate.Index)
+                    .Select(candidate => candidate.Index)
+                    .DefaultIfEmpty(-1)
+                    .First();
+                if (movementFocus >= 0)
+                    au.Position = plans[movementFocus].Position;
+                units[actor] = au;
+                observations.Add(new GroupActionObservation(
+                    turns,
+                    actor,
+                    startPosition,
+                    au.Position,
+                    reachable,
+                    -1,
+                    selection.Reason,
+                    movementFocus >= 0 ? "no_legal_target_after_move" : "no_alive_enemy",
+                    SnapshotOccupiedPositions(units)));
+                continue;
+            }
+
+            au.Position = plans[target].Position;
+            var du = units[target];
+            var ca = au.Char;
+            var cb = du.Char;
+            bool useMagic = ca.Style is "magic" or "taiyi" or "taiyi_fuxiu" or "taixu" or "taixu_xuangan";
+            string atkType = useMagic ? "神魂" : "物理";
+            string skillElement = ca.ArtElement;
+            int atk = useMagic ? ca.Primary["神攻"] : ca.Primary["肉攻"];
+            int def = useMagic ? cb.Primary["神防"] : cb.Primary["肉防"];
+            double resist = useMagic
+                ? cb.Secondary.GetValueOrDefault("魂抗率", 0)
+                : cb.Secondary.GetValueOrDefault("物抗率", 0);
+            double mult = 1.0;
+
+            for (int i = 0; i < units.Length; i++)
+            {
+                if (units[i].IsAlive && team[i] == team[actor] && units[i].Char.GongFaName == "绳墨正法录")
+                    mult += units[i].Char.Realm switch { "元婴" => 0.20, "金丹" => 0.15, "筑基" => 0.10, _ => 0.10 };
+            }
+
+            int maxSy = ca.Realm switch { "金丹" => 5, "筑基" => 4, "练气" => 3, _ => 5 };
+            if (ca.Style == "taiyi" && au.Shouyi >= maxSy) atk = (int)(atk * 1.08);
+            if (ca.Style == "yuqing_leijie" && au.LeiJie > 0)
+            {
+                mult *= 1 + au.LeiJie * (ca.Realm switch
+                {
+                    "筑基" => 0.15,
+                    "金丹" => 0.18,
+                    "元婴" => 0.22,
+                    "化神" => 0.30,
+                    _ => 0.15,
+                });
+                au.LeiJie = 0;
+            }
+            if (ca.GongFaName == "混元同尘典" && ca.Realm is "元婴" or "化神")
+            {
+                for (int i = 0; i < units.Length; i++)
+                {
+                    if (i != actor && units[i].IsAlive && team[i] == team[actor] &&
+                        (double)units[i].HP / units[i].Char.Primary["HP"] > 0.6)
+                        mult *= 1.25;
+                }
+            }
+
+            var elementMatch = GameData.GetElementMatch(skillElement, ca.GongFaName, cb.GongFaName);
+            int dmg = Dmg(atk, def, resist, 0, mult * elementMatch.DamageMultiplier);
+            dmg = ApplyDefenses(
+                dmg,
+                ca,
+                cb,
+                atkType,
+                critRateBonus: elementMatch.CritRateBonus,
+                critDamageBonus: elementMatch.CritDamageBonus);
+            if (cb.Style == "taiyi" && du.Shouyi > 0 && dmg > 0)
+            {
+                dmg = (int)(dmg * 0.80);
+                du.Shouyi--;
+            }
+            if (cb.GongFaName == "万物不迁法" && du.Buqian > 0 && dmg > cb.Primary["HP"] * 0.30)
+            {
+                dmg /= 2;
+                du.Buqian--;
+            }
+            if (cb.GongFaName == "不真自虚法" && dmg > 0)
+            {
+                double vr = cb.Realm switch { "化神" => 0.40, "元婴" => 0.25, _ => 0 };
+                if (du.BuzhenFirstVoid)
+                {
+                    vr = 1.0;
+                    du.BuzhenFirstVoid = false;
+                }
+                if (Rng.NextDouble() < vr) dmg = 0;
+            }
+
+            du.HP -= dmg;
+            if (cb.Style == "yuqing_leijie")
+            {
+                int maxLj2 = cb.Realm switch { "筑基" => 3, "金丹" => 5, "元婴" => 5, "化神" => 5, _ => 3 };
+                du.LeiJie = Math.Min(du.LeiJie + 1, maxLj2);
+            }
+            if (ca.Style == "taiyi") au.Shouyi = Math.Min(au.Shouyi + 1, maxSy);
+            if (ca.Style == "taiyi_fuxiu")
+                au.Fudan = Math.Min(au.Fudan + 1, ca.Realm switch { "金丹" => 5, "筑基" => 3, _ => 5 });
+            if (du.Char.Style == "water_physical" && du.Qiushui > 0 && du.HP > 0 &&
+                du.HP < cb.Primary["HP"] * 0.30)
+            {
+                du.HP += (int)(cb.Primary["HP"] * 0.15);
+                du.Qiushui--;
+            }
+
+            for (int i = 0; i < units.Length; i++)
+            {
+                if (!units[i].IsAlive || team[i] != team[actor] || units[i].Char.GongFaName != "南华玄感录")
+                    continue;
+                double cr = units[i].Char.Realm switch
+                {
+                    "元婴" => 0.80,
+                    "金丹" => 0.50,
+                    "筑基" => 0.30,
+                    "练气" => 0.20,
+                    _ => 0.20,
+                };
+                if (Rng.NextDouble() >= cr) continue;
+                for (int j = 0; j < units.Length; j++)
+                {
+                    if (j == i || !units[j].IsAlive || team[j] != team[actor]) continue;
+                    var ally = units[j];
+                    if (!ally.Stunned) continue;
+                    ally.Stunned = false;
+                    units[j] = ally;
+                    break;
+                }
+            }
+
+            units[actor] = au;
+            units[target] = du;
+            observations.Add(new GroupActionObservation(
+                turns,
+                actor,
+                startPosition,
+                au.Position,
+                reachable,
+                target,
+                selection.Reason,
+                "",
+                SnapshotOccupiedPositions(units)));
+        }
+
+        bool finalAAlive = units[0].IsAlive || units[1].IsAlive;
+        bool finalBAlive = units[2].IsAlive || units[3].IsAlive;
+        double hpRatioA =
+            Math.Max(0, units[0].HP) / (double)units[0].Char.Primary["HP"] +
+            Math.Max(0, units[1].HP) / (double)units[1].Char.Primary["HP"];
+        double hpRatioB =
+            Math.Max(0, units[2].HP) / (double)units[2].Char.Primary["HP"] +
+            Math.Max(0, units[3].HP) / (double)units[3].Char.Primary["HP"];
+        int winnerTeam = finalAAlive && !finalBAlive
+            ? 0
+            : !finalAAlive && finalBAlive
+                ? 1
+                : hpRatioA >= hpRatioB ? 0 : 1;
+        return new GroupRoundResult(
+            winnerTeam,
+            turns,
+            InitialGroupPositions.ToArray(),
+            observations,
+            hpRatioA,
+            hpRatioB);
     }
+
+    static IReadOnlyList<HexCoord> SnapshotOccupiedPositions(IEnumerable<UnitState> units) =>
+        units.Where(unit => unit.IsAlive).Select(unit => unit.Position).ToArray();
+}

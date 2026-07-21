@@ -81,6 +81,9 @@ static class BattleSimSelfTests
         if (suite == "environment-rules-n-env-01")
             return RunChecked(suite, RunEnvironmentRulesNEnv01);
 
+        if (suite == "group-positioning-n-group-01")
+            return RunChecked(suite, RunGroupPositioningNGroup01);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -959,6 +962,107 @@ static class BattleSimSelfTests
         AssertEqual(false, rootedInsideMinimum.CanAttack, "minimum range rejects a rooted point-blank attack");
     }
 
+    static void RunGroupPositioningNGroup01()
+    {
+        AssertSequence(
+            new[]
+            {
+                new HexCoord(0, 0),
+                new HexCoord(0, 1),
+                new HexCoord(6, 0),
+                new HexCoord(6, -1),
+            },
+            Combat.InitialGroupPositions,
+            "approved mirrored adjacent deployment");
+        AssertEqual(4, Combat.InitialGroupPositions.Distinct().Count(),
+            "four combatants start on unique cells");
+
+        var origin = new HexCoord(0, 0);
+        var friendlyBlocker = new HexCoord(1, 0);
+        var enemyBlocker = new HexCoord(1, -1);
+        var occupied = new HashSet<HexCoord> { friendlyBlocker, enemyBlocker };
+        var reachable = new HexBattlefield().FindReachable(origin, movementBudget: 4, occupied);
+        AssertEqual(false, reachable.ContainsKey(friendlyBlocker),
+            "friendly occupancy blocks entry and traversal");
+        AssertEqual(false, reachable.ContainsKey(enemyBlocker),
+            "enemy occupancy blocks entry and traversal");
+        AssertEqual(true, reachable.ContainsKey(new HexCoord(2, -1)),
+            "reachable query exposes a deterministic route around occupied cells");
+
+        var targetSelection = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                new Combat.GroupTargetCandidate(1, Team: 0, HP: 1, IsAlive: true, IsLegal: true),
+                new Combat.GroupTargetCandidate(2, Team: 1, HP: 10, IsAlive: true, IsLegal: true),
+                new Combat.GroupTargetCandidate(3, Team: 1, HP: 10, IsAlive: true, IsLegal: true),
+            });
+        AssertEqual(2, targetSelection.TargetIndex,
+            "equal-HP legal enemies resolve by input order");
+        AssertEqual("selected_lowest_hp_then_input_order", targetSelection.Reason,
+            "target selection reason is observable");
+
+        var reselection = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                new Combat.GroupTargetCandidate(2, Team: 1, HP: 0, IsAlive: false, IsLegal: false),
+                new Combat.GroupTargetCandidate(3, Team: 1, HP: 20, IsAlive: true, IsLegal: true),
+            });
+        AssertEqual(3, reselection.TargetIndex,
+            "a dead target is deterministically replaced by a surviving legal enemy");
+
+        var noTarget = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                new Combat.GroupTargetCandidate(2, Team: 1, HP: 20, IsAlive: true, IsLegal: false),
+                new Combat.GroupTargetCandidate(3, Team: 1, HP: 30, IsAlive: false, IsLegal: false),
+            });
+        AssertEqual(-1, noTarget.TargetIndex, "no legal enemy produces no target");
+        AssertEqual("no_legal_target", noTarget.Reason,
+            "no-target reason is observable");
+
+        var orderedRound = Combat.Simulate2v2Detailed(
+            GroupTestCharacter("a1", reaction: 20, hp: 10000, attack: 1, movement: 6),
+            GroupTestCharacter("a2", reaction: 20, hp: 10000, attack: 1, movement: 6),
+            GroupTestCharacter("b1", reaction: 20, hp: 10000, attack: 1, movement: 6),
+            GroupTestCharacter("b2", reaction: 20, hp: 10000, attack: 1, movement: 6));
+        AssertSequence(new[] { 0, 1, 2, 3 },
+            orderedRound.Actions.Take(4).Select(action => action.ActorIndex).ToArray(),
+            "equal CT resolves in fixed input order");
+        AssertEqual(true, orderedRound.Actions[0].ReachablePositions.Count > 0,
+            "each action exposes its reachable cells");
+        AssertEqual(true, orderedRound.Actions.All(action =>
+                action.PositionsAfterAction.Distinct().Count() == action.PositionsAfterAction.Count),
+            "single-cell occupancy remains unique after every action");
+        AssertEqual(true, orderedRound.Actions.All(action =>
+                !string.IsNullOrWhiteSpace(action.TargetSelectionReason)),
+            "each action exposes target selection");
+
+        var unableRound = Combat.Simulate2v2Detailed(
+            GroupTestCharacter("rooted-a1", reaction: 20, hp: 10000, attack: 1, movement: 0),
+            GroupTestCharacter("rooted-a2", reaction: 20, hp: 10000, attack: 1, movement: 0),
+            GroupTestCharacter("rooted-b1", reaction: 20, hp: 10000, attack: 1, movement: 0),
+            GroupTestCharacter("rooted-b2", reaction: 20, hp: 10000, attack: 1, movement: 0));
+        AssertEqual(-1, unableRound.Actions[0].TargetIndex,
+            "an action with no reachable legal enemy selects no target");
+        AssertEqual("no_legal_target_after_move", unableRound.Actions[0].InactionReason,
+            "an action exposes why it could not attack");
+
+        var strongA1 = GroupTestCharacter("strong-a1", reaction: 100, hp: 100, attack: 1000, movement: 6);
+        var strongA2 = GroupTestCharacter("strong-a2", reaction: 100, hp: 100, attack: 1000, movement: 6);
+        var weakB1 = GroupTestCharacter("weak-b1", reaction: 1, hp: 1, attack: 1, movement: 0);
+        var weakB2 = GroupTestCharacter("weak-b2", reaction: 1, hp: 2, attack: 1, movement: 0);
+        Combat.ResetDeterministicRandom();
+        var first = Combat.Simulate2v2(strongA1, strongA2, weakB1, weakB2, rounds: 1);
+        Combat.ResetDeterministicRandom();
+        var second = Combat.Simulate2v2(strongA1, strongA2, weakB1, weakB2, rounds: 1);
+        AssertEqual((100.0, 0.0), (first.winsA, first.winsB),
+            "group victory settlement keeps the surviving team");
+        AssertEqual(first, second, "fixed seed reproduces the same group result");
+    }
+
     static void RunEnvironmentRulesNEnv01()
     {
         var origin = new HexCoord(0, 0);
@@ -1128,6 +1232,17 @@ static class BattleSimSelfTests
         character.Primary["肉防"] = 0;
         character.Primary["神防"] = 0;
         character.Primary["反应"] = reaction;
+        character.Primary["移力"] = 6;
+        return character;
+    }
+
+    static Character GroupTestCharacter(string name, int reaction, int hp, int attack, int movement)
+    {
+        var character = CtTestCharacter(name, reaction);
+        character.Primary["HP"] = hp;
+        character.Primary["肉攻"] = attack;
+        character.Primary["肉防"] = 1000;
+        character.Primary["移力"] = movement;
         return character;
     }
 
