@@ -127,10 +127,16 @@ function Assert-CheckerFails {
     [Parameter(Mandatory = $true)]
     [object]$Result,
     [Parameter(Mandatory = $true)]
-    [string]$Context
+    [string]$Context,
+    [string]$ErrorContains
   )
 
   Assert-True -Condition ($Result.ExitCode -ne 0) -Message "$Context unexpectedly passed"
+  if (-not [string]::IsNullOrWhiteSpace($ErrorContains)) {
+    Assert-True `
+      -Condition ($Result.Stderr.Contains($ErrorContains, [StringComparison]::OrdinalIgnoreCase)) `
+      -Message "$Context did not report '$ErrorContains': $($Result.Stderr)"
+  }
 }
 
 $testId = [Guid]::NewGuid().ToString('N')
@@ -143,7 +149,8 @@ $canonicalPrompt = @'
 # 每小时自动工作流薄路由
 
 读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态。
-使用 `tools/hourly-automation-lease.ps1` 检查原任务恢复和已回复的 pending resume。
+每轮先通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不扫描候选、不取得租约、不启动责任方。
+未逻辑暂停时检查原任务恢复和已回复的 pending resume。
 汇总 Codex 执行、Codex 复审、外部 AI 三类合法候选并统一排序。
 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 补充队列，本轮不执行新任务。
 队列维护正式入口必须保留两个顺序分支；没有可提升的完整 backlog 任务卡不等于阻塞，应继续从权威来源新增完整任务卡。
@@ -156,9 +163,10 @@ $canonicalPrompt = @'
 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
 外部 AI 自验证并创建 businessCommit 与 handoffCommit，调度器不代提交。
 决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
-记录结果并释放租约；相同全阻塞指纹连续两次时把生产入口设为 PAUSED 并发送通知。
-pauseRequested=true 时只做一次完整配置更新；确认 status=PAUSED 后才汇报已暂停。
-历史 `pauseRequested=true` 不得作为本轮提前退出条件；只有本轮完成候选扫描和队列维护后再次返回 `pauseRequested=true`，才进入暂停步骤。
+记录结果并释放租约；相同全阻塞指纹连续两次使 pauseRequested=true 后，只报告“runtime 已逻辑暂停，界面尚未同步”并结束。
+逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`；只有自动化任务之外的外部普通管理上下文可确认安全后先调用 `ClearBlocking`，再把入口设为 `ACTIVE`。
+自动化任务不得调用自动化管理能力管理自身，也不得读取或更新自身配置、等待管理服务。
+界面 `PAUSED` 只由外部普通管理上下文同步；未确认时只报告“runtime 已逻辑暂停，界面尚未同步”。
 '@
 
 $canonicalRules = @'
@@ -175,7 +183,9 @@ $canonicalRules = @'
 - 人工脏改避让：冲突候选跳过，不 stash、reset、checkout 或 clean。
 - 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
 - 决策恢复：保存原 thread/session；占锁排队且不等待 token。
-- 两轮阻塞暂停：相同全阻塞指纹连续两次后 PAUSED 并通知。
+- 两轮阻塞暂停：相同全阻塞指纹连续两次后形成工具级逻辑暂停，普通 Acquire 返回 SUSPENDED。
+- 自管理边界：自动化任务不得调用自动化管理能力管理自身；只报告 runtime 已逻辑暂停，界面尚未同步。
+- 外部同步与恢复：界面 PAUSED 只由外部普通管理上下文同步；确认无 lease、recovery 和 pending resume 后先 ClearBlocking，再设为 ACTIVE。
 - 队列补充顺序：三类无候选时先提升 backlog，否则新增最小任务，本轮不执行。
 - 私有状态边界：只保存租约、恢复、待续跑、阻塞计数和最后结果，不保存 secret。
 - 回滚方式：失败时保持 PAUSED、保留提交和证据，不自动 reset、revert 或 clean。
@@ -185,9 +195,9 @@ $canonicalStatus = @'
 # 自动工作流状态
 
 - 生产入口仍为 PAUSED。
-- 旧 Desktop rollout 与 npm CLI exec 不兼容，lastResult.detailCode=resume_desktop_rollout_incompatible。
-- task-owned recovery 与 pending resume 保留，lease=null。
-- CLI-native 修订位于隔离建设阶段；旧私有备份保留；尚未取得 CLI-native 生产成功。
+- N-GROUP-01 已完成并归档。
+- runtime 的 lease、recovery 与 pending resume 均为空，pauseRequested=true。
+- 普通 Acquire 返回 SUSPENDED；未来恢复须先 ClearBlocking，再设为 ACTIVE。
 '@
 
 $validRelaySource = @'
@@ -277,6 +287,13 @@ try {
   }
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
 
+  Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`n控制器直接更新自身为 PAUSED。`n")
+  Assert-CheckerFails `
+    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
+    -Context 'Controller self-management boundary' `
+    -ErrorContains 'manages itself'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+
   foreach ($directNodeLaunch in @(
       "const command = dispatch.resumeKind === 'codex' ? 'codex' : 'claude';",
       "spawnChild('codex.cmd', [], {});",
@@ -296,12 +313,14 @@ try {
     '队列维护正式入口必须保留两个顺序分支',
     '没有可提升的完整 backlog 任务卡不等于阻塞',
     '连续两次',
-    '历史 `pauseRequested=true` 不得作为本轮提前退出条件',
-    '只有本轮完成候选扫描和队列维护后再次返回 `pauseRequested=true`',
+    'pauseRequested=true 表示工具级逻辑暂停',
+    'SUSPENDED',
+    'ClearBlocking',
+    '自动化任务不得调用自动化管理能力管理自身',
+    '外部普通管理上下文',
+    'runtime 已逻辑暂停，界面尚未同步',
     '工具等待超时、yield 或尚未返回不等于 runner 失败',
     '不得释放租约或启动第二写入者',
-    '只做一次完整配置更新',
-    '确认 status=PAUSED',
     'businessCommit',
     '不消耗等待 token',
     'tools/codex-cli-session.ps1',
@@ -314,7 +333,11 @@ try {
     '`completed`',
     '`failed`'
   )) {
-    Write-Utf8File -Path $promptPath -Content $canonicalPrompt.Replace($requiredPhrase, '已移除')
+    $promptWithoutRequiredPhrase = $canonicalPrompt -replace [regex]::Escape($requiredPhrase), '已移除'
+    Assert-True `
+      -Condition (-not $promptWithoutRequiredPhrase.Contains($requiredPhrase, [StringComparison]::OrdinalIgnoreCase)) `
+      -Message "Prompt fixture still contains required phrase $requiredPhrase"
+    Write-Utf8File -Path $promptPath -Content $promptWithoutRequiredPhrase
     Assert-CheckerFails `
       -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
       -Context "Missing prompt phrase $requiredPhrase"

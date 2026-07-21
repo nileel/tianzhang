@@ -125,10 +125,12 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   'handoffCommit',
   '不消耗等待 token',
   '连续两次',
-  '历史 `pauseRequested=true` 不得作为本轮提前退出条件',
-  '只有本轮完成候选扫描和队列维护后再次返回 `pauseRequested=true`',
-  '只做一次完整配置更新',
-  '确认 status=PAUSED',
+  'pauseRequested=true 表示工具级逻辑暂停',
+  'SUSPENDED',
+  'ClearBlocking',
+  '自动化任务不得调用自动化管理能力管理自身',
+  '外部普通管理上下文',
+  'runtime 已逻辑暂停，界面尚未同步',
   'PAUSED'
 )
 Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
@@ -154,10 +156,12 @@ Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
 )
 Assert-ContainsAll -Text $status -Context 'workflow status' -Required @(
   'PAUSED',
-  'resume_desktop_rollout_incompatible',
   'recovery',
   'pending resume',
-  'lease=null'
+  'lease',
+  'pauseRequested=true',
+  'SUSPENDED',
+  'ClearBlocking'
 )
 
 $activeText = $prompt + "`n" + $rules
@@ -194,6 +198,16 @@ foreach ($forbidden in @(
   Assert-Contract `
     -Condition (-not $activeText.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) `
     -Message "active prompt or rules contains old protocol token: $forbidden"
+}
+
+foreach ($forbiddenSelfManagement in @(
+  '控制器直接更新自身为 PAUSED',
+  '只做一次完整配置更新并等待同一调用返回',
+  '调用自身 view'
+)) {
+  Assert-Contract `
+    -Condition (-not $activeText.Contains($forbiddenSelfManagement, [StringComparison]::OrdinalIgnoreCase)) `
+    -Message "active controller manages itself: $forbiddenSelfManagement"
 }
 
 Assert-ContainsAll -Text $relay -Context 'resume relay' -Required @(

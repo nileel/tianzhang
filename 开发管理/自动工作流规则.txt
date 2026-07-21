@@ -30,13 +30,15 @@
 - 回复占锁时写入 pending resume 后立即结束，不 sleep、不轮询、不保持模型进程；释放租约或下个整点只取一个 ready resume。
 - 已有未提交任务修改时停止普通调度，只允许原责任方恢复，不把半成品交给另一责任方。
 - 现有 task-owned Desktop recovery 只允许原任务人工完成；普通自动化收到 `RECOVERY_ONLY` 后停止，不转换、复制或迁移 rollout。
-- runtime 中历史 `pauseRequested=true` 不得作为新一轮的提前退出条件；生产入口为 `ACTIVE` 时仍先完成当轮候选扫描和队列维护。只有当轮再次确认全部阻塞并由租约工具返回 `pauseRequested=true`，才进入暂停步骤。
-- 所有候选均阻塞时记录稳定 fingerprint；相同 fingerprint 连续两轮后，通过自动化管理能力保留现有字段并只提交一次完整更新，确认生产入口为 `PAUSED` 后才汇报暂停成功并发送飞书摘要。成功、成功补任务或阻塞集合实质变化会重置计数。
+- 每轮先调用租约工具 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不扫描候选、不取得租约、不启动责任方，也不读取或更新自身自动化配置。
+- 所有候选均阻塞时记录稳定 fingerprint；相同 fingerprint 连续两轮使 pauseRequested=true 后，先记录结果并释放租约，再报告“runtime 已逻辑暂停，界面尚未同步”并结束。逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`。成功、成功补任务或阻塞集合实质变化会重置计数。
+- 自动化任务不得调用自动化管理能力管理自身，也不得等待自动化管理服务。界面 `PAUSED` 只由自动化任务之外的外部普通管理上下文同步。
+- 恢复只由外部普通管理上下文执行：确认 lease、recovery、pending resume 均为空，先调用 `ClearBlocking` 成功清除逻辑暂停，再通过自动化管理能力把完整现有配置设为 `ACTIVE`。
 
 ## 队列补充顺序、私有状态与回滚
 
 - 三类均无合法候选时才补队列；队列维护正式入口必须依次保留“提升满足条件的 backlog”和“没有可提升的完整卡时，从权威 backlog、状态与建议新增 1–3 个最小、完整、可验证、可提交任务卡”两个分支。缺少现成完整卡本身不是阻塞；只有权威来源不足以形成任何完整任务卡时才记录阻塞。本轮只提交队列维护，不执行新任务。
 - 私有 runtime 只保存租约、恢复指针、pending resume、阻塞计数和最后结果；飞书状态继续保存于用户级私有目录并使用 ACL 与原子写入。不得保存 provider token、tenant key 或消息标识原文。
 - 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机；有限进度不增加长期 runtime 字段。
-- 生产 prompt、schedule、workdir 和 status 只通过 Codex 自动化管理能力变更，不编辑 TOML。
+- 生产 prompt、schedule、workdir 和 status 只由外部普通管理上下文通过 Codex 自动化管理能力变更，不编辑 TOML。
 - 失败时保持或恢复 `PAUSED`，保留提交、runtime 与日志；不自动 reset、revert、clean 或删除旧私有备份。只修复受影响切片并重跑直接检查。
