@@ -21,10 +21,12 @@
 - 2026-07-21 首个自然小时轮次完成 N-DIST-01，业务提交为 `954f5c8fc92dda8373660671f71190bed094bdb6`。
 - 后续自然轮次继续完成 N-ENV-01，业务提交为 `5108bbead888d93d836742f532d2fce011f54634`；这只作为持续运行证据，不在本文件复制逐小时流水。
 
-## 当前恢复摘要
+## 当前生产保护
 
-- 2026-07-21 12:29（Asia/Hong_Kong）N-GROUP-01 已收到决定 `DEC-20260721-4213E322C680` 的选择 A，保留原 CLI session `019f82e6-01fa-7373-8be2-096551171f4d` 等待恢复；当时 `lease=null`、`hasUncommittedChanges=false`、`changedPaths=[]`。
-- 该恢复只能继续原 session；不得创建替代责任方、复制业务 diff 或清除 recovery。
+- N-GROUP-01 已由业务提交 `c4e9db82a5a20850814136b550711fcbd6302ce0` 完成并归档；原 CLI Resume 的非 JSON 假失败不再代表恢复状态。
+- 当前 runtime 的 lease、recovery 与 pending resume 均为空；连续相同全阻塞已使 `pauseRequested=true` 成为工具级逻辑暂停，普通 Acquire 返回 `SUSPENDED`。
+- 当前阻塞原因仍为权威资料不足以形成完整新任务卡；这是合法业务阻塞，不伪造 backlog 卡。
+- 生产入口已由自动化任务之外的外部普通管理上下文确认同步为 `PAUSED`；未来恢复须先 `ClearBlocking`，再把完整现有配置设为 `ACTIVE`。
 
 ## 证据位置
 
