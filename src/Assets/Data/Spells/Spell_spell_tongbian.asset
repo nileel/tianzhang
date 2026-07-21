@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: reserved
+  realmRequirement: realm_jindan
+  elementRequirement: element_star_root
+  sourceAffiliation: faction_guxiu
   element: "\u661F"
   mpCost: 22
   cooldownTicks: 10

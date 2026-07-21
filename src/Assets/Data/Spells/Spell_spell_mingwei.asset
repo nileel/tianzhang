@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 2
   maxRange: 5
   contentScope: reserved
+  realmRequirement: realm_jindan
+  elementRequirement: element_water_root
+  sourceAffiliation: faction_guxiu
   element: "\u6C34"
   mpCost: 25
   cooldownTicks: 12

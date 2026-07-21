@@ -4,29 +4,26 @@
 
 ## 当前风险入口
 
-- TQ-057 是当前数据矛盾的唯一处理入口：术法 docs 数量与 CSV/asset 数量不一致、`realm_lianshen` 语言键缺失、已删除内容仍激活，以及原 TQ-040 的字段完整性复查。
+- TQ-057 与 TQ-059 已完成并归档；当前 G3 严格检查为功法 29/29、术法 83/83、神通 31/31。
 - 三份历史扫描证据已归档：`开发管理/任务归档/CSV高阶内容定位表.txt`、`开发管理/任务归档/realm_lianshen专项检查.txt`、`开发管理/任务归档/炼虚与高阶内容影响面清单.txt`。它们只提供调查线索，不是当前事实源。
 - `check-data-chain.ps1` 的 `Missing 0` 只表示机械覆盖，不代表 G3 或数据链可信；当前对齐快照见 `开发管理/docs-csv-asset-alignment.txt`。
-- G3 通过前禁止按数据规模继续扩写；`contentScope`、`realmReq`、`elementReq`、`affiliation` 未完成全链路验证前不得假定运行时限制存在。
+- G3 已通过，但 TQ-071 完成前仍禁止按数据规模继续扩写；`sourceAffiliation` 只表示内容来源，不是角色阵营限制。
 
 ## 任务
 
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | D-REALM-02 | P2 | Codex | 待处理 | 高阶内容最终处理方案：保留、合并、删除或资料片隔离。 |
-| D-TRUST-02 / TQ-057 | P0 | Codex | 待处理 | 处理当前风险入口的四项矛盾；差异清零或有批准的显式排除，不扩展设计语义。 |
-| D-TRUST-04 / TQ-059 | P0 | Codex | 阻塞（TQ-057） | 为 `realmReq`、`elementReq`、`affiliation` 逐字段选择并验证 `runtime_gate` 或 `metadata_only`。 |
-| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（G3、C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 |
+| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 |
-| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（G3、D-FPD-SCHEMA-01） | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 |
-| D-ENV-SCHEMA-01 | P2 | Codex | 阻塞（G3） | 定义有向边、地表、六类现象与五行配对表 schema；导入器对非法引用、缺字段和非确定配置失败关闭。 |
-| D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、G3） | 定义统一攻击档案 schema 与导入边界。 |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01） | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 |
+| D-ENV-SCHEMA-01 | P2 | Codex | 待处理 | 定义有向边、地表、六类现象与五行配对表 schema；导入器对非法引用、缺字段和非确定配置失败关闭。 |
+| D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
 
 ## G3 任务执行边界
 
-- TQ-057 的机械清理由 DeepSeek 执行时只能标 `⚠️ 已修改/未审核` 并交接；历史扫描报告的已知误差不得直接带入结论。
-- TQ-059：每个 `*Req` 字段恰好选择一种模式；`runtime_gate` 须有允许/拒绝样例，`metadata_only` 须去除限制语义、证明无 consumer 并拒绝“仍叫 `*Req` 但无 handler”。
+- TQ-059 已固定：`realmReq`、`elementReq` 为 `runtime_gate`；术法／神通原 `affiliation` 已改名为 metadata-only 的 `sourceAffiliation`。
 - D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
 
 ## 筑基、紫府与丹相后续数据任务卡

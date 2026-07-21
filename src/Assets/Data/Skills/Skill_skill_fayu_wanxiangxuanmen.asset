@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_fayu_wanxiangxuanmen
   m_EditorClassIdentifier:
-  contentScope: reserved
-  skillName: "\u6CD5\u57DF\u00B7\u4E07\u8C61\u7384\u95E8"
+  skillName: "\u6CD5\u57DF\xB7\u4E07\u8C61\u7384\u95E8"
   type: 2
   range: 2
   minRange: 0
   maxRange: 0
+  contentScope: reserved
+  realmRequirement: realm_lianshen
+  sourceAffiliation: faction_taiyidaoting
+  element: "\u6C34"
   mpCost: 0
   cooldownTicks: 50
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 1
   isBloodline: 0
-  specialEffectDesc: "desc_skill_fayu_wanxiangxuanmen"
-  element: element_water_root
+  specialEffectDesc: desc_skill_fayu_wanxiangxuanmen
   realmScaleBase: 1

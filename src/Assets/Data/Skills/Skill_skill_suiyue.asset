@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_suiyue
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u788E\u5CB3"
   type: 1
   range: 1
   minRange: 0
   maxRange: 2
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_sanxiu
+  element: "\u571F"
   mpCost: 0
   cooldownTicks: 40
   damageMultiplier: 1.5
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 0
-  specialEffectDesc: "desc_skill_suiyue"
-  element: element_earth_root
+  specialEffectDesc: desc_skill_suiyue
   realmScaleBase: 1

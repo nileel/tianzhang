@@ -35,6 +35,13 @@ namespace TianZhang.Combat
         public int maxRange = 1;
         public string contentScope = "player"; // player/reserved
 
+        [Header("使用限制")]
+        public string realmRequirement = "realm_fanren";
+        public string elementRequirement = "element_none";
+
+        [Header("来源元数据（非使用限制）")]
+        public string sourceAffiliation = "";
+
         [Header("五行属性")]
         public string element = ""; // 金/木/水/火/土/风/雷/冰/暗/星/毒/混沌，空字符串表示无属性或待数据补齐
 
@@ -79,5 +86,76 @@ namespace TianZhang.Combat
 
         [Header("境界适配（倍率因境界调整，在运行时由倍数表覆盖）")]
         public float realmScaleBase = 1f;
+
+        public bool IsAvailableTo(TianZhang.Entity.Character character) =>
+            AbilityRequirementPolicy.IsSatisfied(
+                character,
+                realmRequirement,
+                elementRequirement);
+    }
+
+    public static class AbilityRequirementPolicy
+    {
+        private static readonly System.Collections.Generic.Dictionary<string, float> RealmThresholds = new()
+        {
+            ["realm_fanren"] = 1f,
+            ["realm_lianqi"] = 1.5f,
+            ["realm_zhuji"] = 3f,
+            ["realm_jindan"] = 6f,
+            ["realm_yuanying"] = 12f,
+            ["realm_huashen"] = 24f,
+        };
+
+        public static bool IsSatisfied(
+            TianZhang.Entity.Character character,
+            string realmRequirement,
+            string elementRequirement)
+        {
+            if (character == null)
+                return false;
+
+            return MeetsRealmRequirement(character, realmRequirement)
+                && MeetsElementRequirement(character, elementRequirement);
+        }
+
+        private static bool MeetsRealmRequirement(TianZhang.Entity.Character character, string requirement)
+        {
+            if (string.IsNullOrWhiteSpace(requirement)
+                || !RealmThresholds.TryGetValue(requirement.Trim(), out float requiredRealm))
+            {
+                return false;
+            }
+
+            return character.RealmMultiplier >= requiredRealm;
+        }
+
+        private static bool MeetsElementRequirement(TianZhang.Entity.Character character, string requirement)
+        {
+            if (string.Equals(requirement?.Trim(), "element_none", System.StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.IsNullOrWhiteSpace(requirement)
+                || string.IsNullOrWhiteSpace(character.VisibleRootElement))
+            {
+                return false;
+            }
+
+            const string prefix = "element_";
+            string normalized = requirement.Trim().ToLowerInvariant();
+            if (!normalized.StartsWith(prefix, System.StringComparison.Ordinal))
+                return false;
+
+            string[] alternatives = normalized.Substring(prefix.Length)
+                .Replace("_root", "")
+                .Split(new[] { "_or_" }, System.StringSplitOptions.RemoveEmptyEntries);
+            string characterElement = DamageCalculator.ResolveElement(character.VisibleRootElement);
+            foreach (string alternative in alternatives)
+            {
+                string requiredElement = DamageCalculator.ResolveElement(prefix + alternative);
+                if (!string.IsNullOrEmpty(requiredElement) && requiredElement == characterElement)
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

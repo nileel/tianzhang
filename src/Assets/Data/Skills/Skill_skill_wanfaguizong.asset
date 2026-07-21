@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_wanfaguizong
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u4E07\u6CD5\u5F52\u5B97"
   type: 0
   range: 2
   minRange: 0
   maxRange: 0
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_taiyidaoting
+  element:
   mpCost: 0
   cooldownTicks: 0
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 0
-  specialEffectDesc: "desc_skill_wanfaguizong"
-  element: element_none
+  specialEffectDesc: desc_skill_wanfaguizong
   realmScaleBase: 1

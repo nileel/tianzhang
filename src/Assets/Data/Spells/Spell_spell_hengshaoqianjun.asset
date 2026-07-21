@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 1
   contentScope: player
+  realmRequirement: realm_jindan
+  elementRequirement: element_metal_root
+  sourceAffiliation: faction_hunyuanshan
   element: "\u91D1"
   mpCost: 30
   cooldownTicks: 18

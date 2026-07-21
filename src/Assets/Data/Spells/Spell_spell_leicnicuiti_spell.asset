@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: player
+  realmRequirement: realm_jindan
+  elementRequirement: element_thunder_root
+  sourceAffiliation: faction_yuqingya
   element: "\u96F7"
   mpCost: 30
   cooldownTicks: 20

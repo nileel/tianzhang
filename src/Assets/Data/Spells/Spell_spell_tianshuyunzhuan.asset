@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: reserved
+  realmRequirement: realm_lianshen
+  elementRequirement: element_water_root
+  sourceAffiliation: faction_taiyidaoting
   element: "\u6C34"
   mpCost: 80
   cooldownTicks: 20

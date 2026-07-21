@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 2
   maxRange: 7
   contentScope: reserved
+  realmRequirement: realm_yuanying
+  elementRequirement: element_water_root
+  sourceAffiliation: faction_taiyidaoting
   element: "\u6C34"
   mpCost: 60
   cooldownTicks: 45

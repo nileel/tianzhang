@@ -131,6 +131,36 @@ function Test-AssetCoverage {
     if ($scopeLine.Count -ne 1) { Add-Finding 'ASSET_CONTENT_SCOPE_MISSING' "${Label}:$($row.name)" 'Asset must serialize exactly one contentScope field.'; continue }
     $assetScope = $scopeLine[0].Groups[1].Value
     if ($assetScope -ne $row.contentScope) { Add-Finding 'ASSET_CONTENT_SCOPE_MISMATCH' "${Label}:$($row.name)" "Asset scope '$assetScope' differs from CSV scope '$($row.contentScope)'." }
+
+    $fieldMappings = if ($Label -eq 'Spells') {
+      @(
+        @{ Csv = 'realmReq'; Asset = 'realmRequirement' },
+        @{ Csv = 'elementReq'; Asset = 'elementRequirement' },
+        @{ Csv = 'sourceAffiliation'; Asset = 'sourceAffiliation' }
+      )
+    } elseif ($Label -eq 'Skills') {
+      @(
+        @{ Csv = 'realmReq'; Asset = 'realmRequirement' },
+        @{ Csv = 'sourceAffiliation'; Asset = 'sourceAffiliation' }
+      )
+    } else {
+      @()
+    }
+
+    foreach ($mapping in $fieldMappings) {
+      $assetField = [string]$mapping.Asset
+      $csvField = [string]$mapping.Csv
+      $matches = @(Select-String -LiteralPath $assetPath -Pattern "^\s*$([regex]::Escape($assetField)):\s*(\S+)\s*$").Matches
+      if ($matches.Count -ne 1) {
+        Add-Finding 'ASSET_REQUIREMENT_FIELD_MISSING' "${Label}:$($row.name):$assetField" "Asset must serialize exactly one $assetField field."
+        continue
+      }
+      $assetValue = $matches[0].Groups[1].Value
+      $csvValue = [string]$row.$csvField
+      if ($assetValue -cne $csvValue) {
+        Add-Finding 'ASSET_REQUIREMENT_MISMATCH' "${Label}:$($row.name):$assetField" "Asset value '$assetValue' differs from CSV $csvField '$csvValue'."
+      }
+    }
   }
 }
 
@@ -151,8 +181,8 @@ function Load-Waivers {
 $waivers = Load-Waivers
 $schemas = [ordered]@{
   GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
-  Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','affiliation','contentScope')
-  Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','affiliation','contentScope')
+  Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
+  Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
 }
 $tables = [ordered]@{
   GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa

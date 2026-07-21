@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_shuanghuntongti
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u53CC\u9B42\u540C\u4F53"
   type: 0
   range: 1
   minRange: 0
   maxRange: 0
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_taixuguan
+  element: "\u6697"
   mpCost: 0
   cooldownTicks: 0
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 1
-  specialEffectDesc:
-  element: element_dark_root
+  specialEffectDesc: "\u8BE6\u89C1\u5BF9\u5E94\u795E\u901A\u539F\u6587"
   realmScaleBase: 1

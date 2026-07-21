@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: reserved
+  realmRequirement: realm_huashen
+  elementRequirement: element_earth_root
+  sourceAffiliation: faction_hunyuanshan
   element: "\u571F"
   mpCost: 70
   cooldownTicks: 45

@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 1
   maxRange: 5
   contentScope: reserved
+  realmRequirement: realm_zhuji
+  elementRequirement: element_wind_root
+  sourceAffiliation: faction_guxiu
   element: "\u98CE"
   mpCost: 25
   cooldownTicks: 18

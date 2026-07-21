@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 2
   contentScope: player
+  realmRequirement: realm_lianqi
+  elementRequirement: element_metal_root
+  sourceAffiliation: faction_taiyidaoting
   element: "\u91D1"
   mpCost: 12
   cooldownTicks: 7

@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 2
   maxRange: 7
   contentScope: reserved
+  realmRequirement: realm_huashen
+  elementRequirement: element_dark_root
+  sourceAffiliation: faction_taixuguan
   element: "\u6697"
   mpCost: 75
   cooldownTicks: 40

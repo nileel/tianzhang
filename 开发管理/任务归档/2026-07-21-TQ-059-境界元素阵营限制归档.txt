@@ -1,0 +1,31 @@
+# TQ-059 · 境界、元素与来源元数据链归档
+
+- 完成日期：2026-07-21
+- 主责：Codex / gpt-5.6-sol
+- 业务提交：本归档随 TQ-059 路径限定提交创建，SHA 以 Git 记录为准。
+
+## 完成结果
+
+- `realmReq` 选择 `runtime_gate`：CSV → `realmRequirement` asset → `AbilityRequirementPolicy` → 玩家术法／神通装载过滤。
+- `elementReq` 选择 `runtime_gate`：复用 `CharacterData.visibleRootElement`，支持单元素与 `element_water_or_wind`；空值、未知境界和未知元素失败关闭。
+- 术法／神通原 `affiliation` 没有角色身份 consumer，因此选择 `metadata_only` 并改名为 `sourceAffiliation`；没有新增角色阵营源或猜测映射。
+- Unity 导入器同步 83 份术法 asset 与 31 份神通 asset；数据检查器逐项校验限制／来源字段与 CSV 一致。
+- 运行时策略位于 `TianZhang.Combat`，只依赖现有 Domain 角色事实；`Character` 仅增加已有显性灵根元素的运行时投影。
+
+## 验证证据
+
+- TDD RED：Unity EditMode 134 通过、3 个新增测试按预期失败；数据链 fixture 因旧 schema 不接受 `sourceAffiliation` 失败。
+- TDD GREEN：`tools/tests/check-data-chain-tests.ps1` 的 8 个正反 fixture 全部通过。
+- 严格数据链：功法 29/29、术法 83/83、神通 31/31，`check-data-chain.ps1 -FailOnMissingAssets` 返回 0。
+- 实际 asmdef 链 `TianZhang.EditModeTests.csproj` 构建 0 错误；2 个既有 `SpellData.damageMultiplier` Obsolete 警告未扩入本任务。
+- Unity EditMode 137/137 通过。
+
+## 验证入口说明
+
+- 任务卡旧命令 `dotnet build src/Assembly-CSharp.csproj --no-restore` 已执行，但 Unity asmdef 拆分后的 legacy 生成项目仍重复包含 `GameSession.cs`、遗漏 `SessionStateSnapshots.cs`，因此出现 5 个与本任务无关的既有缺失类型错误。
+- Unity 自带 solution 同步后该 legacy 项目仍未收敛；本任务没有修改或提交生成 `.csproj`，改以真实 `TianZhang.Domain → Combat → Gameplay → Editor/EditModeTests` 项目链和 Unity EditMode 证明编译。
+
+## 后续入口
+
+- G1、G2、G3 已具备通过证据；内容冻结继续保持，直到 TQ-071 独立完成解冻判定。
+- 若未来需要真实阵营限制，必须先为角色建立经确认的身份事实源并另立任务；不得把 `sourceAffiliation` 当作 gate。

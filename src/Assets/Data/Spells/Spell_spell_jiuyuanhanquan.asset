@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 2
   maxRange: 5
   contentScope: player
+  realmRequirement: realm_jindan
+  elementRequirement: element_water_root
+  sourceAffiliation: faction_taiyidaoting
   element: "\u6C34"
   mpCost: 40
   cooldownTicks: 35

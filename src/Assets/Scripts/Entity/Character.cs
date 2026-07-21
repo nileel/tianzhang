@@ -73,6 +73,7 @@ namespace TianZhang.Entity
         public string DanArtifactForm;
         public string LegacyDanJiType;
         public string VisibleRootId;
+        public string VisibleRootElement;
         public string HiddenRootState;
 
         // ---- 印记状态 ----
@@ -120,6 +121,7 @@ namespace TianZhang.Entity
             c.DanArtifactForm = data.danArtifactForm;
             c.LegacyDanJiType = data.legacyDanJiType;
             c.VisibleRootId = data.visibleRootId;
+            c.VisibleRootElement = data.visibleRootElement;
             c.HiddenRootState = data.hiddenRootState;
 
             // ---- 次线性HP公式（v3.4：根骨^0.75 × 境界倍率 × 基础值）----

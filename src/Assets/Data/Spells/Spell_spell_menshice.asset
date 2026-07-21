@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 6
   contentScope: player
+  realmRequirement: realm_zhuji
+  elementRequirement: element_earth_root
+  sourceAffiliation: faction_hunyuanshan
   element: "\u571F"
   mpCost: 20
   cooldownTicks: 5

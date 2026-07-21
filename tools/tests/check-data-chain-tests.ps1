@@ -22,9 +22,9 @@ function New-ValidFixture {
     $script:skills = -join @([char]0x795E, [char]0x901A)
     $gongFaHeader = 'name,affiliation,grade,elementMain,elementSub,starRootBone,starPhysique,starSpirit,starMind,starReaction,starTalent,starFortune,growth,chapters,contentScope'
     $gongFaRow = 'gongfa_fixture,faction_fixture,grade_mid,element_water,element_wind,1,1,1,1,1,1,1,realm_lianqi:1/1/1/1/1/1/1/1/1,chapter_fixture:realm_lianqi:0:0:0:0:0:0:0:0:desc_fixture,player'
-    $spellHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,realmReq,elementReq,element,affiliation,contentScope'
-    $spellRow = 'spell_fixture,1,1,4,1,1,1,0,0,0,0,0,realm_lianqi,element_water_root,element_water,faction_fixture,player'
-    $skillHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,affiliation,contentScope'
+    $spellHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,physicalDamageMultiplier,soulDamageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,realmReq,elementReq,element,sourceAffiliation,contentScope'
+    $spellRow = 'spell_fixture,1,1,4,1,1,0,1,0,0,0,0,0,realm_lianqi,element_water_root,element_water,faction_fixture,player'
+    $skillHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,sourceAffiliation,contentScope'
     $skillRow = 'skill_fixture,1,1,4,1,1,1,0,0,0,0,0,0,0,desc_fixture,element_water,realm_lianqi,faction_fixture,player'
 
     Write-FixtureFile (Join-Path "docs/$cultivation" "$gongFa/fixture/fixture.txt") 'fixture'
@@ -35,8 +35,8 @@ function New-ValidFixture {
     Write-FixtureFile 'src/Assets/DataConfig/Skills.csv' "# fixture`n$skillHeader`n$skillRow`n"
     Write-FixtureFile 'src/Assets/DataConfig/Language.csv' "realm_lianqi,练气`n"
     Write-FixtureFile 'src/Assets/Data/GongFa/GongFa_gongfa_fixture.asset' "contentScope: player`n"
-    Write-FixtureFile 'src/Assets/Data/Spells/Spell_spell_fixture.asset' "contentScope: player`n"
-    Write-FixtureFile 'src/Assets/Data/Skills/Skill_skill_fixture.asset' "contentScope: player`n"
+    Write-FixtureFile 'src/Assets/Data/Spells/Spell_spell_fixture.asset' "contentScope: player`nrealmRequirement: realm_lianqi`nelementRequirement: element_water_root`nsourceAffiliation: faction_fixture`n"
+    Write-FixtureFile 'src/Assets/Data/Skills/Skill_skill_fixture.asset' "contentScope: player`nrealmRequirement: realm_lianqi`nsourceAffiliation: faction_fixture`n"
     Write-FixtureFile 'tools/data-chain-warning-waivers.json' '[]'
 }
 
@@ -70,6 +70,10 @@ try {
     Remove-Item -LiteralPath (Join-Path $fixtureRoot 'src/Assets/Data/Skills/Skill_skill_fixture.asset')
     Write-FixtureFile 'src/Assets/Data/Skills/Skill_skill_fixture.asset' 'm_Name: Skill_skill_fixture'
     Assert-CheckerResult -Name 'asset scope missing' -ShouldPass $false -ExpectedRuleId 'ASSET_CONTENT_SCOPE_MISSING'
+    New-ValidFixture
+
+    (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/Data/Spells/Spell_spell_fixture.asset')).Replace('element_water_root', 'element_fire_root') | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/Data/Spells/Spell_spell_fixture.asset')
+    Assert-CheckerResult -Name 'asset requirement mismatch' -ShouldPass $false -ExpectedRuleId 'ASSET_REQUIREMENT_MISMATCH'
     New-ValidFixture
 
     (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/Spells.csv')).Replace('realm_lianqi', 'realm_lianxu') | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/Spells.csv')

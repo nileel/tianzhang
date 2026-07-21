@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_jianxintongming
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u5251\u5FC3\u901A\u660E"
   type: 0
   range: 1
   minRange: 0
   maxRange: 0
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_yuqingya
+  element: "\u91D1"
   mpCost: 0
   cooldownTicks: 0
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 0
-  specialEffectDesc:
-  element: element_metal_root
+  specialEffectDesc: "\u8BE6\u89C1\u5BF9\u5E94\u795E\u901A\u539F\u6587"
   realmScaleBase: 1

@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 1
   maxRange: 6
   contentScope: reserved
+  realmRequirement: realm_huashen
+  elementRequirement: element_thunder_root
+  sourceAffiliation: faction_taiyidaoting
   element: "\u96F7"
   mpCost: 55
   cooldownTicks: 18

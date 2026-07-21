@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_jiuzhuanhuandan
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u4E5D\u8F6C\u8FD8\u4E39"
   type: 1
   range: 1
   minRange: 1
   maxRange: 4
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_taiyidaoting
+  element: "\u706B"
   mpCost: 60
   cooldownTicks: 50
   damageMultiplier: 2
@@ -31,5 +34,4 @@ MonoBehaviour:
   isDomain: 0
   isBloodline: 0
   specialEffectDesc: "\u4E39\u706B\u7A7F\u900F\u9B42\u76FE"
-  element: element_fire_root
   realmScaleBase: 1

@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 3
   contentScope: player
+  realmRequirement: realm_lianqi
+  elementRequirement: element_water_or_wind
+  sourceAffiliation: faction_taiyidaoting
   element:
   mpCost: 8
   cooldownTicks: 6

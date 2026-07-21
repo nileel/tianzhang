@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 2
   contentScope: player
+  realmRequirement: realm_zhuji
+  elementRequirement: element_water_root
+  sourceAffiliation: faction_sanxiu
   element: "\u6C34"
   mpCost: 20
   cooldownTicks: 8

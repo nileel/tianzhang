@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_lantingyimo
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u5170\u4EAD\u9057\u58A8"
   type: 3
   range: 2
   minRange: 0
   maxRange: 0
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_taiyidaoting
+  element: "\u6C34"
   mpCost: 0
   cooldownTicks: 0
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 1
-  specialEffectDesc: "desc_skill_lantingyimo"
-  element: element_water_root
+  specialEffectDesc: desc_skill_lantingyimo
   realmScaleBase: 1

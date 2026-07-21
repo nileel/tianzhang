@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_zhengqisuozhi
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u5F81\u65D7\u6240\u6307"
   type: 0
   range: 1
   minRange: 1
   maxRange: 2
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_taiyidaoting
+  element: "\u91D1"
   mpCost: 50
   cooldownTicks: 50
   damageMultiplier: 2.2
@@ -31,5 +34,4 @@ MonoBehaviour:
   isDomain: 0
   isBloodline: 0
   specialEffectDesc: "\u5F81\u8BA8\u76EE\u6807\uFF0C\u65E0\u89C6\u683C\u6321"
-  element: element_metal_root
   realmScaleBase: 1

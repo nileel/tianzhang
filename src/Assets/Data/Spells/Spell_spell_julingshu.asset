@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 2
   contentScope: player
+  realmRequirement: realm_lianqi
+  elementRequirement: element_none
+  sourceAffiliation: faction_sanxiu
   element:
   mpCost: 0
   cooldownTicks: 5

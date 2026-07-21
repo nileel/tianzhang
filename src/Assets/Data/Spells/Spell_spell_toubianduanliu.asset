@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: reserved
+  realmRequirement: realm_yuanying
+  elementRequirement: element_earth_root
+  sourceAffiliation: faction_hunyuanshan
   element: "\u571F"
   mpCost: 40
   cooldownTicks: 30

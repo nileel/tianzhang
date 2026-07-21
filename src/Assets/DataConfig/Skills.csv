@@ -1,5 +1,5 @@
 ﻿# Skills config (2026-06-14)
-name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,affiliation,contentScope
+name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,sourceAffiliation,contentScope
 skill_jiuzhuanhuandan,1,1,4,60,50,2.0,0,0,0,1,0,0,0,desc_danhuo_penetration,element_fire_root,realm_jindan,faction_taiyidaoting,player
 skill_zhengqisuozhi,0,1,2,50,50,2.2,0,1,0,0,20,0,0,desc_zhengtao_wushi,element_metal_root,realm_jindan,faction_taiyidaoting,player
 

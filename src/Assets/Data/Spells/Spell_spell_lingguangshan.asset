@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 2
   maxRange: 4
   contentScope: player
+  realmRequirement: realm_zhuji
+  elementRequirement: element_none
+  sourceAffiliation: faction_sanxiu
   element:
   mpCost: 20
   cooldownTicks: 10

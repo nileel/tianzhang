@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: player
+  realmRequirement: realm_jindan
+  elementRequirement: element_wind_root
+  sourceAffiliation: faction_taiyidaoting
   element: "\u98CE"
   mpCost: 25
   cooldownTicks: 15

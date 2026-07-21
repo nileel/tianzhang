@@ -8,24 +8,10 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| TQ-059 | P0 | Codex / gpt-5.5 | G3 数据 | 待处理 | D-TRUST-04：接通境界、元素和阵营限制 |
 | N-DIST-02 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | 1v1 位置控制：击退、定身与最小距离回归 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
-
-### TQ-059 · D-TRUST-04 接通境界、元素和阵营限制
-
-- 来源：可信度闸门规格 §6。
-- 当前状态：待处理；依赖：TQ-057 已由提交 `057947a6e3a27b471b83da04dde7af2765452e55` 完成。
-- 主责：Codex / gpt-5.5。
-- 必读：`docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/开发-技术经验.txt`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Scripts/Combat/SpellData.cs`、`src/Assets/Scripts/Combat/DivineSkillData.cs`、`src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Game/SectSelectionManager.cs`、`src/Assets/DataConfig/Spells.csv` 与 `src/Assets/DataConfig/Skills.csv`。
-- 预期修改路径：`src/Assets/DataConfig/Spells.csv`、`src/Assets/DataConfig/Skills.csv`、`src/Assets/Data/Spells/`、`src/Assets/Data/Skills/`、`src/Assets/Scripts/Combat/SpellData.cs`、`src/Assets/Scripts/Combat/DivineSkillData.cs`、`src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Scripts/Game/SectSelectionManager.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs`、`src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta`、`tools/check-data-chain.ps1`、`tools/tests/check-data-chain-tests.ps1`、`开发管理/docs-csv-asset-alignment.txt`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数据链路任务.txt`、`开发管理/当前任务队列.txt` 与 `开发管理/任务归档/2026-07-21-TQ-059-境界元素阵营限制归档.txt`；实施前按实际选择的模式收窄，不得扩出本清单。
-- 范围：为 `realmReq`、`elementReq`、`affiliation` 分别选择并验证 runtime gate 或 metadata-only 模式，禁止字段继续伪装为有效限制。
-- 现状证据：三字段目前只出现在 CSV／机械检查器中；现有术法与神通导入器、asset 数据类及运行时没有完整消费链。每个字段必须基于实时 consumer 扫描恰好选择一种模式，不得保留“Req 命名但无 handler”的中间态。
-- 验证：每个 runtime gate 具有允许与拒绝样例；metadata-only 字段具有无 consumer 证明且移除限制性命名／说明；运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、`dotnet build src/Assembly-CSharp.csproj --no-restore`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig,src/Assets/Scripts,src/Assets/Tests` 与 `git diff --check`。
-- 完成条件：三个字段都有唯一、可观察的运行时或显式元数据口径，G3 才可进入出口检查。
-- 停止条件：任一字段必须新增角色身份源、平行装备／学习服务或未经确认的境界／五行／阵营映射；此时保存恢复指针并请求负责人决定，不得用默认允许、默认拒绝或兼容分支掩盖缺口。
 
 ### N-DIST-02 · 1v1 位置控制：击退、定身与最小距离回归
 

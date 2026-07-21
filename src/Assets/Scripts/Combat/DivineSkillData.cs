@@ -17,6 +17,12 @@ namespace TianZhang.Combat
         public int maxRange = 3;
         public string contentScope = "player"; // player/reserved
 
+        [Header("使用限制")]
+        public string realmRequirement = "realm_fanren";
+
+        [Header("来源元数据（非使用限制）")]
+        public string sourceAffiliation = "";
+
         [Header("五行属性")]
         public string element = ""; // 金/木/水/火/土/风/雷/冰/暗/星/毒/混沌，空字符串表示无属性或待数据补齐
 
@@ -43,5 +49,11 @@ namespace TianZhang.Combat
 
         [Header("境界适配")]
         public float realmScaleBase = 1f;
+
+        public bool IsAvailableTo(TianZhang.Entity.Character character) =>
+            AbilityRequirementPolicy.IsSatisfied(
+                character,
+                realmRequirement,
+                "element_none");
     }
 }

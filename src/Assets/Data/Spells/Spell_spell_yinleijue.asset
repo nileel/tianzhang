@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 1
   maxRange: 3
   contentScope: player
+  realmRequirement: realm_lianqi
+  elementRequirement: element_thunder_root
+  sourceAffiliation: faction_yuqingya
   element: "\u96F7"
   mpCost: 11
   cooldownTicks: 8

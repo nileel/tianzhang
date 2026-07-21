@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 3
   contentScope: reserved
+  realmRequirement: realm_huashen
+  elementRequirement: element_metal_root
+  sourceAffiliation: faction_yuqingya
   element: "\u91D1"
   mpCost: 70
   cooldownTicks: 40

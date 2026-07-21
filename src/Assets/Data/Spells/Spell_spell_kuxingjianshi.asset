@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 0
   maxRange: 1
   contentScope: player
+  realmRequirement: realm_lianqi
+  elementRequirement: element_metal_root
+  sourceAffiliation: faction_yuqingya
   element: "\u91D1"
   mpCost: 10
   cooldownTicks: 8

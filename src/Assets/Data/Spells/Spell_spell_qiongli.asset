@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 1
   maxRange: 5
   contentScope: reserved
+  realmRequirement: realm_jindan
+  elementRequirement: element_wood_root
+  sourceAffiliation: faction_guxiu
   element: "\u6728"
   mpCost: 35
   cooldownTicks: 30

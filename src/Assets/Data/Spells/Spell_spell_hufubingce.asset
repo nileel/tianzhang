@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 1
   maxRange: 4
   contentScope: reserved
+  realmRequirement: realm_yuanying
+  elementRequirement: element_metal_root
+  sourceAffiliation: faction_hunyuanshan
   element: "\u91D1"
   mpCost: 55
   cooldownTicks: 30

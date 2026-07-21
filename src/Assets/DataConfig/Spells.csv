@@ -1,5 +1,5 @@
 ﻿# Spells config (2026-06-14)
-name,type,minRange,maxRange,mpCost,cooldownTicks,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,realmReq,elementReq,element,affiliation,contentScope,physicalDamageMultiplier,soulDamageMultiplier
+name,type,minRange,maxRange,mpCost,cooldownTicks,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,realmReq,elementReq,element,sourceAffiliation,contentScope,physicalDamageMultiplier,soulDamageMultiplier
 spell_xuanshuizhou,1,1,4,12,8,0,0,0,0,0,realm_lianqi,element_water_root,element_water_root,faction_taiyidaoting,player,0,1.2
 spell_canglangji,1,1,4,25,20,0,0,0,0,0,realm_zhuji,element_water_root,element_water_root,faction_taiyidaoting,player,0,1.6
 spell_anshenfu,4,0,3,8,6,0,0,0,0,15,realm_lianqi,element_water_or_wind,element_none,faction_taiyidaoting,player,0,0.2

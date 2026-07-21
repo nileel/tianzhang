@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_roushengchengsheng
   m_EditorClassIdentifier:
-  contentScope: player
   skillName: "\u8089\u8EAB\u6210\u5723"
   type: 0
   range: 2
   minRange: 0
   maxRange: 0
+  contentScope: player
+  realmRequirement: realm_jindan
+  sourceAffiliation: faction_taiyidaoting
+  element: "\u571F"
   mpCost: 0
   cooldownTicks: 0
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 0
-  specialEffectDesc: "desc_skill_roushengchengsheng"
-  element: element_earth_root
+  specialEffectDesc: desc_skill_roushengchengsheng
   realmScaleBase: 1

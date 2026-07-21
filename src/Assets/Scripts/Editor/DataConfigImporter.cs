@@ -226,7 +226,7 @@ namespace TianZhang.Editor
                 "name", "type", "minRange", "maxRange", "mpCost",
                 "cooldownTicks", "physicalDamageMultiplier", "soulDamageMultiplier", "healAmount",
                 "cannotBlock", "cannotDodge", "penetratingShield", "stunChance",
-                "element", "contentScope");
+                "realmReq", "elementReq", "element", "sourceAffiliation", "contentScope");
 
             foreach (var line in lines.Skip(headerLineIndex + 1))
             {
@@ -251,6 +251,9 @@ namespace TianZhang.Editor
                 asset.minRange = int.Parse(GetRequiredColumnValue(headers, cols, "minRange", path));
                 asset.maxRange = int.Parse(GetRequiredColumnValue(headers, cols, "maxRange", path));
                 asset.contentScope = GetRequiredContentScope(headers, cols, path);
+                asset.realmRequirement = GetRequiredColumnValue(headers, cols, "realmReq", path);
+                asset.elementRequirement = GetRequiredColumnValue(headers, cols, "elementReq", path);
+                asset.sourceAffiliation = GetRequiredColumnValue(headers, cols, "sourceAffiliation", path);
                 asset.mpCost = int.Parse(GetRequiredColumnValue(headers, cols, "mpCost", path));
                 asset.cooldownTicks = int.Parse(GetRequiredColumnValue(headers, cols, "cooldownTicks", path));
                 asset.physicalDamageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "physicalDamageMultiplier", path));
@@ -272,7 +275,7 @@ namespace TianZhang.Editor
         }
 
         [MenuItem("天章/导入神通配置")]
-        static void ImportSkills()
+        public static void ImportSkills()
         {
             _lang = null;
             string path = "Assets/DataConfig/Skills.csv";
@@ -285,7 +288,7 @@ namespace TianZhang.Editor
                 "cooldownTicks", "damageMultiplier", "healAmount",
                 "cannotBlock", "cannotDodge", "penetratingShield", "stunChance",
                 "isDomain", "isBloodline", "specialEffectDesc",
-                "element", "contentScope");
+                "element", "realmReq", "sourceAffiliation", "contentScope");
 
             foreach (var line in lines.Skip(headerLineIndex + 1))
             {
@@ -297,12 +300,21 @@ namespace TianZhang.Editor
                     continue;
                 }
 
-                var asset = ScriptableObject.CreateInstance<DivineSkillData>();
+                string assetPath = $"Assets/Data/Skills/Skill_{SanitizeName(GetRequiredColumnValue(headers, cols, "name", path))}.asset";
+                var asset = AssetDatabase.LoadAssetAtPath<DivineSkillData>(assetPath);
+                if (asset == null)
+                {
+                    asset = ScriptableObject.CreateInstance<DivineSkillData>();
+                    EnsureDirectory(assetPath);
+                    AssetDatabase.CreateAsset(asset, assetPath);
+                }
                 asset.skillName = T(GetRequiredColumnValue(headers, cols, "name", path));
                 asset.type = (SpellType)int.Parse(GetRequiredColumnValue(headers, cols, "type", path));
                 asset.minRange = int.Parse(GetRequiredColumnValue(headers, cols, "minRange", path));
                 asset.maxRange = int.Parse(GetRequiredColumnValue(headers, cols, "maxRange", path));
                 asset.contentScope = GetRequiredContentScope(headers, cols, path);
+                asset.realmRequirement = GetRequiredColumnValue(headers, cols, "realmReq", path);
+                asset.sourceAffiliation = GetRequiredColumnValue(headers, cols, "sourceAffiliation", path);
                 asset.mpCost = int.Parse(GetRequiredColumnValue(headers, cols, "mpCost", path));
                 asset.cooldownTicks = int.Parse(GetRequiredColumnValue(headers, cols, "cooldownTicks", path));
                 asset.damageMultiplier = float.Parse(GetRequiredColumnValue(headers, cols, "damageMultiplier", path));
@@ -318,11 +330,11 @@ namespace TianZhang.Editor
                 asset.isBloodline = GetRequiredColumnValue(headers, cols, "isBloodline", path) == "1";
                 asset.specialEffectDesc = T(GetRequiredColumnValue(headers, cols, "specialEffectDesc", path));
 
-                string assetPath = $"Assets/Data/Skills/Skill_{SanitizeName(GetRequiredColumnValue(headers, cols, "name", path))}.asset";
-                EnsureDirectory(assetPath);
-                AssetDatabase.CreateAsset(asset, assetPath);
+                EditorUtility.SetDirty(asset);
                 Debug.Log($"  神通: {asset.skillName} ← {assetPath}");
             }
+
+            AssetDatabase.SaveAssets();
         }
 
         [MenuItem("天章/导入角色配置")]

@@ -18,6 +18,9 @@ MonoBehaviour:
   minRange: 1
   maxRange: 5
   contentScope: player
+  realmRequirement: realm_lianqi
+  elementRequirement: element_dark_root
+  sourceAffiliation: faction_taixuguan
   element: "\u6697"
   mpCost: 10
   cooldownTicks: 8

@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d548610d152a8a4cbc641db07baa4cb, type: 3}
   m_Name: Skill_skill_lingyu_wanxiangguiyuan
   m_EditorClassIdentifier:
-  contentScope: reserved
-  skillName: "\u7075\u57DF \u00B7 \u4E07\u8C61\u5F52\u5143"
+  skillName: "\u7075\u57DF \xB7 \u4E07\u8C61\u5F52\u5143"
   type: 2
   range: 2
   minRange: 0
   maxRange: 0
+  contentScope: reserved
+  realmRequirement: realm_lianshen
+  sourceAffiliation: faction_sanxiu
+  element: "\u6DF7\u6C8C"
   mpCost: 0
   cooldownTicks: 50
   damageMultiplier: 0
@@ -30,6 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 1
   isBloodline: 0
-  specialEffectDesc: "desc_skill_lingyu_wanxiangguiyuan"
-  element: element_chaos
+  specialEffectDesc: desc_skill_lingyu_wanxiangguiyuan
   realmScaleBase: 1

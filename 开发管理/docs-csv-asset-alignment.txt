@@ -1,6 +1,16 @@
-# docs → CSV → Unity Asset 对齐旧快照（非当前事实）
+# docs → CSV → Unity Asset 对齐记录
 
-> 本文件记录 2026-06-19 的机械对齐结果，**不是当前数据链闭环结论**。当前风险、待处理范围和主责见 `开发管理/任务列表/数据链路任务.txt` 的 TQ-057；执行当前检查使用 `tools/check-data-chain.ps1`。即使输出 `Missing 0`，也不代表数量、语言键、删除内容或运行时限制链已可信。
+## 2026-07-21 · TQ-059 当前结论
+
+- 严格检查结果：功法 `29/29`、术法 `83/83`、神通 `31/31`，`check-data-chain.ps1 -FailOnMissingAssets` 返回 0。
+- `realmReq` 选择 `runtime_gate`：CSV 导入 `realmRequirement`，运行时按角色现有境界事实源允许或拒绝。
+- `elementReq` 选择 `runtime_gate`：术法 CSV 导入 `elementRequirement`，运行时复用 `CharacterData.visibleRootElement` 的投影；`element_water_or_wind` 具有显式或关系，未知值失败关闭。
+- 原术法／神通 `affiliation` 选择 `metadata_only` 并改名为 `sourceAffiliation`；asset 只记录内容来源，不表示角色阵营限制。
+- `tools/check-data-chain.ps1` 会逐 asset 校验上述字段与 CSV 一致；允许／拒绝样例由 `AbilityRequirementPolicyTests` 覆盖。
+
+## 2026-06-19 旧快照（非当前事实）
+
+> 以下正文记录 2026-06-19 的机械对齐结果，**不是当前数据链闭环结论**。当前检查使用 `tools/check-data-chain.ps1`；历史 `Missing 0` 不代表当时数量、语言键、删除内容或运行时限制链已可信。
 
 > 历史快照保留原文以便追溯；后续不得以本文件中的“已闭合”“当前”措辞覆盖 TQ-057 的实时核查结果。
 

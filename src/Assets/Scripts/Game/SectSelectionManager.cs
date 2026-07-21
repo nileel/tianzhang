@@ -341,6 +341,9 @@ namespace TianZhang.Game
             player.EquippedSpellIds = charData.equippedSpells;
             player.EquippedSkillIds = charData.equippedSkills;
             player.AvailableSpells = charData.availableSpells;
+            player.RealmStage = charData.realmStage;
+            player.RealmMultiplier = charData.realmMultiplier;
+            player.VisibleRootElement = charData.visibleRootElement;
 
             // Recalculate derived stats
             float realm = charData.realmMultiplier;
@@ -378,7 +381,7 @@ namespace TianZhang.Game
             }
 
             // Update ExplorationController spell/skill assets so UI shows correct names
-            UpdateExplorationSpells(exploreCtrl, charData);
+            UpdateExplorationAbilities(exploreCtrl, charData, player);
 
             Debug.Log($"[SectSelection] Player reconfigured: {player.Name} HP={player.MaxHP} MP={player.MaxMP} PAtk={player.PhysAtk} MAtk={player.MagAtk}");
 
@@ -387,7 +390,7 @@ namespace TianZhang.Game
                 selectionPanel.SetActive(false);
         }
 
-        private void UpdateExplorationSpells(ExplorationController ctrl, CharacterData charData)
+        private void UpdateExplorationAbilities(ExplorationController ctrl, CharacterData charData, Character player)
         {
             if (ctrl == null) return;
 
@@ -400,13 +403,19 @@ namespace TianZhang.Game
                     var id = GetSpellAssetId(spellName);
                     var spath = "Assets/Data/Spells/Spell_spell_" + id + ".asset";
                     var asset = LoadAsset<Combat.SpellData>(spath);
-                    if (asset != null && Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
+                    if (asset != null
+                        && Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope)
+                        && asset.IsAvailableTo(player))
                     {
                         spellList.Add(asset);
                     }
-                    else if (asset != null)
+                    else if (asset != null && !Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
                     {
                         Debug.LogWarning($"[SectSelection] Excluded non-player spell: {spellName} ({spath}) scope={asset.contentScope}");
+                    }
+                    else if (asset != null)
+                    {
+                        Debug.LogWarning($"[SectSelection] Excluded unavailable spell: {spellName} realm={asset.realmRequirement} element={asset.elementRequirement}");
                     }
                     else
                     {
@@ -416,6 +425,36 @@ namespace TianZhang.Game
             }
             ctrl.playerSpells = spellList.ToArray();
             Debug.Log($"[SectSelection] Loaded {spellList.Count} spells for ExplorationController");
+
+            var skillList = new System.Collections.Generic.List<Combat.DivineSkillData>();
+            if (charData.equippedSkills != null)
+            {
+                foreach (var skillId in charData.equippedSkills)
+                {
+                    var path = "Assets/Data/Skills/Skill_" + skillId + ".asset";
+                    var asset = LoadAsset<Combat.DivineSkillData>(path);
+                    if (asset != null
+                        && Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope)
+                        && asset.IsAvailableTo(player))
+                    {
+                        skillList.Add(asset);
+                    }
+                    else if (asset != null && !Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
+                    {
+                        Debug.LogWarning($"[SectSelection] Excluded non-player skill: {skillId} ({path}) scope={asset.contentScope}");
+                    }
+                    else if (asset != null)
+                    {
+                        Debug.LogWarning($"[SectSelection] Excluded unavailable skill: {skillId} realm={asset.realmRequirement}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[SectSelection] Skill asset not found: {skillId} ({path})");
+                    }
+                }
+            }
+            ctrl.playerSkills = skillList.ToArray();
+            Debug.Log($"[SectSelection] Loaded {skillList.Count} skills for ExplorationController");
         }
 
         private static string GetSectRouteId(string sectName)
