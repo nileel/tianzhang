@@ -1,0 +1,27 @@
+# U-GZ-SLICE-01 · 关中单场战斗纵向切片（完成归档）
+
+- 完成日期：2026-07-22
+- 主责：Codex（实际模型：gpt-5.6-terra）
+- 授权来源：TQ-071；范围仅为“小族出身 → 关中城 → 关中野外的一场战斗”。
+
+## 完成事实
+
+- 新增 D 级 L3 副本叙事：`adventure_guanzhong_wild` 固定从 `guanzhong_city` 进入，地区为 `guanzhong`，验收身份为 `origin_minor_clan`；只描述一场石甲兽阻路战斗、胜负返回与重复进入规则。
+- `AdventureSceneController` 仍是唯一 Adventure 场景所有者：只在当前 ID 为 `guanzhong_wild` 时显示“关中野外”，并在探索初始化前把场景序列化的唯一石甲兽 `CharacterData` 绑定给现有 `ExplorationController`，`enemyCount=1`。
+- 正式 `AdventureScene` 与 `SceneBuilder.BuildAdventureScene` 都持有 `Char_Enemy_enemy_shijiahou` 的同一 GUID。非关中 Adventure ID 保留其原有模板，不消费关中绑定。
+- 正式石甲兽引用缺失或绑定数量不为一时，明确报错、禁用正式遭遇并保留返回来源出口；未触碰 `CreateFallbackEnemy`、敌人数值、掉落或 CTB 公式。
+- 复用既有 `origin_minor_clan → guanzhong_hub → guanzhong_city → guanzhong_wild → guanzhong_city` 进入与返回上下文；胜利／败北均由既有结算关闭 Adventure 上下文并返回关中城，不新增任务、世界或存档状态。
+
+## 验证
+
+- 红灯：新增 3 项 EditMode 覆盖在实现前失败，原因分别为正式石甲兽未绑定、未显示“关中野外”、缺失引用未失败关闭。
+- `dotnet build src/TianZhang.Runtime.csproj --no-restore`：通过（既有 `SpellData.damageMultiplier` 过时警告）。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：通过（同一既有过时警告）。
+- Unity 6000.3.18f1 EditMode：149/149 通过。
+- Unity batchmode `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`：通过；只读验证未引入授权外场景改动。
+- `tools/check-data-chain.ps1 -FailOnMissingAssets`、`tools/check-review-text.ps1 -Paths 开发管理,docs/剧情,src/Assets/Scripts,src/Assets/Tests`：通过。
+
+## 残留风险
+
+- `SceneBuilder` 在 Unity 写入时会把若干现有 Tile `.meta` 空值格式化为带尾随空格；这些不在本任务授权路径，已逐一恢复，未纳入提交。
+- 本切片只验证既有原型的单场 CTB 闭环；不宣称已实现关陇地区主线、奖励、经济或其他 Adventure 内容。

@@ -8,27 +8,9 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| U-GZ-SLICE-01 | P1 | Codex | Unity／内容纵向切片 | 待处理 | 小族出身至关中野外单场战斗闭环 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
-
-### U-GZ-SLICE-01 · 小族出身至关中野外单场战斗闭环
-
-- 稳定 ID：U-GZ-SLICE-01；优先级：P1；主责：Codex；当前状态：待处理。
-- 来源：`开发管理/任务归档/2026-07-22-TQ-071-三道闸门独立复核与薄内容切片授权归档.txt`。TQ-071 只批准“关中地区、小族出身、关中城据点、关中野外的一场战斗”。
-- 设计结论：采用单卡纵向切片。复用现有 `origin_minor_clan → guanzhong_hub → guanzhong_city → guanzhong_wild → guanzhong_city` 通路，不拆内容卡与 Unity 卡，不新建第二套场景流、任务服务或 Adventure 配置系统。
-- 已证明的前置：`CharacterCreationCatalog` 已把 `origin_minor_clan` 指向 `guanzhong_hub`；`WorldSceneController` 已把该节点指向 `guanzhong_city`；`SettlementSceneController` 已暴露 `guanzhong_wild` 入口；`SceneFlowManager`、`GameSession` 与现有 EditMode 测试已覆盖进入和返回上下文。上述部分只作只读锚点，不重新实现。
-- 必读：`开发管理/开发-技术经验.txt`、TQ-071 归档、`docs/剧情/剧情生产规范.txt`、`docs/剧情/设定补充/出生地与主线接入规则.txt`、`docs/地图/关陇玄域.txt`、`src/Assets/DataConfig/Enemies.csv`、`src/Assets/Scripts/Game/CharacterCreation/CharacterCreationCatalog.cs`、`src/Assets/Scripts/Game/SceneFlowManager.cs`、`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Scripts/World/WorldSceneController.cs`、`src/Assets/Scripts/Settlement/SettlementSceneController.cs`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` 与 `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`。
-- 预期修改路径：新建 `docs/剧情/副本叙事/adventure_guanzhong_wild.txt`；修改 `src/Assets/Scripts/Adventure/AdventureSceneController.cs`、`src/Assets/Scripts/Editor/SceneBuilder.cs`、`src/Assets/Scenes/AdventureScene.unity`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/Assets/Tests/EditMode/TacticalGridModelTests.cs`、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/当前任务队列.txt` 与完成归档 `开发管理/任务归档/2026-07-22-U-GZ-SLICE-01-关中单场战斗纵向切片归档.txt`。`src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset` 与其 `.meta` 只读取和绑定，不修改。
-- 内容范围：新增一个 D 级 L3 副本叙事文件，固定 `adventureId=guanzhong_wild`、来源 `guanzhong_city`、地区 `guanzhong`、本切片验收入口身份 `origin_minor_clan`、敌人 `enemy_shijiahou`。只写一次低阶野外阻路战斗、进入条件、胜负返回和重复进入规则；不新增重要 NPC、支线、对话树、奖励档案、掉落概率、经济、世界真相或地区主线，也不把验收入口身份扩成新的全局出身门禁。
-- 运行时范围：`AdventureSceneController` 继续作为正式单一 Adventure 场景所有者；只为 `guanzhong_wild` 提供“关中野外”显示名，并在探索初始化前把现有石甲兽 `CharacterData` 绑定为唯一敌人且 `enemyCount=1`。该绑定由 `AdventureScene.unity` 序列化并由 `SceneBuilder.BuildAdventureScene` 可重复生成；不得依赖运行时 `AssetDatabase`、路径字符串加载或随机 fallback。
-- 失败关闭：进入 `guanzhong_wild` 时若正式石甲兽引用缺失或数量不是一，必须给出明确错误并阻止正式遭遇启动，同时保留返回关中城的出口；不得生成 `CreateFallbackEnemy` 的“荒野妖兽 1”冒充正式内容。当前 Adventure ID 不是 `guanzhong_wild` 时不得消费关中绑定；其他现有 prototype Adventure ID 不因此获得关中内容，也不得被宣称为已批准切片。
-- 状态流：小族出身创建的新档保留 `origin_minor_clan`；进入关中城后由既有 Settlement 入口写入 `guanzhong_wild` 和 `SceneReturnTarget.Settlement("guanzhong_city")`；一次战斗无论胜利或失败都清除当前 Adventure 上下文并返回关中城，不新增任务状态、世界状态或平行存档字段。
-- 测试要求：先补失败测试，覆盖关中 ID 选择“关中野外”与石甲兽、缺失引用失败关闭、非关中 ID 不消费关中绑定，以及 `origin_minor_clan → guanzhong_hub → guanzhong_city → guanzhong_wild → guanzhong_city` 的胜利／失败闭环；再做最小实现。场景测试必须断言当前正式 `AdventureScene` 与 `SceneBuilder` 重新生成的场景都持有同一石甲兽 GUID，且批处理只读验证不改写正式场景。
-- 验证命令：`dotnet build src/TianZhang.Runtime.csproj --no-restore`；`dotnet build src/TianZhang.EditModeTests.csproj --no-restore`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`；使用 Unity 6000.3.18f1 batchmode 执行 `TianZhang.Editor.SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/剧情,src/Assets/Scripts,src/Assets/Tests`；`git diff --check`。本任务不改数值，无需运行 BattleSim。
-- 完成条件：从小族出身新档可进入关中世界节点和关中城，点击 `guanzhong_wild` 后看到“关中野外”与且仅有一个正式石甲兽敌人；完成一次真实 CTB 战斗后，胜利和失败都能返回关中城且玩家出身与世界节点仍保持；缺少正式敌人引用时不会用 fallback 伪造完成；没有解冻或实现任何切片外内容。
-- 停止条件：实现必须新增通用任务／对话／经济服务、Adventure CSV／导入器、第二套场景流或存档格式，必须修改敌人数值／掉落／战斗公式，现有 `enemy_shijiahou` 被事实源证明不能用于本切片，或 Unity 序列化引用无法由现有场景所有者承载；停止并请求负责人决定，不叠加兼容分支、默认敌人、重试层或新状态机。
 
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 

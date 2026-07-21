@@ -7,9 +7,11 @@ using UnityEngine.UI;
 using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Core;
+using TianZhang.Editor;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Tactical;
+using UnityEditor.SceneManagement;
 
 namespace TianZhang.Tests
 {
@@ -720,6 +722,119 @@ namespace TianZhang.Tests
     public class AdventureSceneControllerTests
     {
         [Test]
+        public void GuanzhongWildDisplaysItsNameAndConfiguresOnlyTheFormalShijiahou()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId("guanzhong_wild");
+                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+                var expectedEnemy = AssetDatabase.LoadAssetAtPath<CharacterData>(
+                    "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+                Assert.IsNotNull(controller);
+                Assert.IsNotNull(exploration);
+                Assert.IsNotNull(expectedEnemy);
+
+                exploration.enemyCount = 3;
+                exploration.enemyTemplates = System.Array.Empty<CharacterData>();
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+                InvokeStart(controller);
+
+                StringAssert.Contains("关中野外", GameObject.Find("AdventureIdText")?.GetComponent<Text>()?.text);
+                Assert.AreEqual(1, exploration.enemyCount);
+                CollectionAssert.AreEqual(new[] { expectedEnemy }, exploration.enemyTemplates);
+            }
+            finally
+            {
+                DestroyAdventureUi();
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void GuanzhongWildWithoutFormalEnemyBlocksEncounterButKeepsReturnExit()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId("guanzhong_wild");
+                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+                Assert.IsNotNull(controller);
+                Assert.IsNotNull(exploration);
+
+                var serializedController = new SerializedObject(controller);
+                var guanzhongEnemyTemplates = serializedController.FindProperty("guanzhongWildEnemyTemplates");
+                if (guanzhongEnemyTemplates != null)
+                {
+                    guanzhongEnemyTemplates.arraySize = 0;
+                    serializedController.ApplyModifiedPropertiesWithoutUndo();
+                }
+
+                exploration.enabled = true;
+                LogAssert.Expect(LogType.Error, new Regex("guanzhong_wild.*石甲兽"));
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+                InvokeStart(controller);
+
+                Assert.IsFalse(exploration.enabled);
+                Assert.AreEqual(AdventureSceneState.Loading, controller.CurrentState);
+                Assert.IsNotNull(GameObject.Find("ReturnToSourceButton"));
+            }
+            finally
+            {
+                DestroyAdventureUi();
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void NonGuanzhongAdventureDoesNotConsumeGuanzhongBinding()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId("taiyi_trial");
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+                var originalEnemyCount = exploration.enemyCount;
+                var originalEnemyTemplates = exploration.enemyTemplates;
+
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+
+                Assert.AreEqual(originalEnemyCount, exploration.enemyCount);
+                Assert.AreSame(originalEnemyTemplates, exploration.enemyTemplates);
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void EncounterStateMovesBetweenExplorationCombatAndReturning()
         {
             var go = new GameObject("AdventureSceneControllerTests");
@@ -853,6 +968,28 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
             if (GameSession.Instance != null)
                 Object.DestroyImmediate(GameSession.Instance.gameObject);
+        }
+
+        private static void InvokeStart(MonoBehaviour controller)
+        {
+            controller.GetType()
+                .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(controller, null);
+        }
+
+        private static void InvokePrivate(MonoBehaviour controller, string methodName)
+        {
+            var method = controller.GetType()
+                .GetMethod(methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(controller, null);
+        }
+
+        private static void DestroyAdventureUi()
+        {
+            var canvas = GameObject.Find("UICanvas");
+            if (canvas != null)
+                Object.DestroyImmediate(canvas);
         }
     }
 

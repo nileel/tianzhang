@@ -70,6 +70,18 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FormalAndRebuiltAdventureScenesBindTheSameFormalShijiahou()
+        {
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+            var formalEnemyGuid = GetFormalAdventureEnemyGuid();
+
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            Assert.AreEqual(formalEnemyGuid, GetFormalAdventureEnemyGuid());
+        }
+
+        [Test]
         public void LegacyExplorationSceneGeneratorIsNotExposed()
         {
             var legacyGenerator = typeof(SceneBuilder).GetMethod(
@@ -520,6 +532,24 @@ namespace TianZhang.Tests
 
             Assert.IsNotNull(controller, scenePath);
             Assert.IsNotNull(controller.GetComponent(expectedControllerType), expectedControllerType.Name);
+        }
+
+        private static string GetFormalAdventureEnemyGuid()
+        {
+            var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+            Assert.IsNotNull(controller);
+            var serializedController = new SerializedObject(controller);
+            var guanzhongEnemyTemplates = serializedController.FindProperty("guanzhongWildEnemyTemplates");
+            Assert.IsNotNull(guanzhongEnemyTemplates);
+            Assert.AreEqual(1, guanzhongEnemyTemplates.arraySize);
+
+            var enemy = guanzhongEnemyTemplates.GetArrayElementAtIndex(0).objectReferenceValue as TianZhang.Entity.CharacterData;
+            Assert.IsNotNull(enemy);
+            Assert.AreEqual("石甲兽", enemy.charName);
+
+            var assetPath = AssetDatabase.GetAssetPath(enemy);
+            Assert.AreEqual("Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset", assetPath);
+            return AssetDatabase.AssetPathToGUID(assetPath);
         }
 
         private static void DestroyExistingSceneFlowAndSession()

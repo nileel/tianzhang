@@ -1,7 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TianZhang.Combat;
+using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.Map;
 
 namespace TianZhang.Adventure
 {
@@ -15,6 +17,10 @@ namespace TianZhang.Adventure
 
     public class AdventureSceneController : MonoBehaviour
     {
+        private const string GuanzhongWildAdventureId = "guanzhong_wild";
+
+        [SerializeField] private CharacterData[] guanzhongWildEnemyTemplates = System.Array.Empty<CharacterData>();
+
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
         public TacticalCombatEndOutcome LastEncounterOutcome { get; private set; } = TacticalCombatEndOutcome.Ongoing;
         public string CurrentAdventureId => GameSession.Instance?.CurrentAdventureId ?? "prototype_adventure";
@@ -22,24 +28,32 @@ namespace TianZhang.Adventure
         private Text adventureIdText;
         private Text sourceText;
         private Button returnToSourceButton;
+        private ExplorationController explorationController;
+        private string encounterConfigurationError;
+
+        private void Awake()
+        {
+            ConfigureCurrentAdventureEncounter();
+        }
 
         private void Start()
         {
             BuildAdventureUi();
             RefreshAdventureUi();
-            MarkExplorationReady();
+            if (string.IsNullOrEmpty(encounterConfigurationError))
+                MarkExplorationReady();
             Debug.Log("[AdventureScene] started");
         }
 
         public void MarkExplorationReady()
         {
-            if (CurrentState != AdventureSceneState.Returning)
+            if (string.IsNullOrEmpty(encounterConfigurationError) && CurrentState != AdventureSceneState.Returning)
                 CurrentState = AdventureSceneState.Exploration;
         }
 
         public void BeginEncounter()
         {
-            if (CurrentState != AdventureSceneState.Returning)
+            if (string.IsNullOrEmpty(encounterConfigurationError) && CurrentState != AdventureSceneState.Returning)
                 CurrentState = AdventureSceneState.Combat;
         }
 
@@ -92,6 +106,46 @@ namespace TianZhang.Adventure
             return "来源: 未记录";
         }
 
+        public void SetGuanzhongWildEnemyTemplates(CharacterData[] enemyTemplates)
+        {
+            guanzhongWildEnemyTemplates = enemyTemplates ?? System.Array.Empty<CharacterData>();
+        }
+
+        private void ConfigureCurrentAdventureEncounter()
+        {
+            encounterConfigurationError = null;
+            if (CurrentAdventureId != GuanzhongWildAdventureId)
+                return;
+
+            explorationController = FindFirstObjectByType<ExplorationController>();
+            if (explorationController == null)
+            {
+                BlockGuanzhongWildEncounter("guanzhong_wild 缺少正式探索控制器，已阻止遭遇启动。");
+                return;
+            }
+
+            if (guanzhongWildEnemyTemplates == null ||
+                guanzhongWildEnemyTemplates.Length != 1 ||
+                guanzhongWildEnemyTemplates[0] == null)
+            {
+                BlockGuanzhongWildEncounter("guanzhong_wild 必须绑定且只能绑定一个正式石甲兽 CharacterData，已阻止遭遇启动。");
+                return;
+            }
+
+            explorationController.enabled = true;
+            explorationController.enemyCount = 1;
+            explorationController.enemyTemplates = guanzhongWildEnemyTemplates;
+        }
+
+        private void BlockGuanzhongWildEncounter(string error)
+        {
+            encounterConfigurationError = error;
+            CurrentState = AdventureSceneState.Loading;
+            if (explorationController != null)
+                explorationController.enabled = false;
+            Debug.LogError("[AdventureScene] " + error);
+        }
+
         private void BuildAdventureUi()
         {
             if (GameObject.Find("AdventurePanel") != null)
@@ -130,13 +184,20 @@ namespace TianZhang.Adventure
         private void RefreshAdventureUi()
         {
             if (adventureIdText != null)
-                adventureIdText.text = "当前副本: " + CurrentAdventureId;
+                adventureIdText.text = "当前副本: " + GetAdventureDisplayName();
 
             if (sourceText != null)
-                sourceText.text = BuildSourceDescription();
+                sourceText.text = string.IsNullOrEmpty(encounterConfigurationError)
+                    ? BuildSourceDescription()
+                    : encounterConfigurationError + "\n" + BuildSourceDescription();
 
             if (returnToSourceButton != null)
                 returnToSourceButton.interactable = SceneFlowManager.Instance != null;
+        }
+
+        private string GetAdventureDisplayName()
+        {
+            return CurrentAdventureId == GuanzhongWildAdventureId ? "关中野外" : CurrentAdventureId;
         }
 
         private static GameObject EnsureUICanvas()

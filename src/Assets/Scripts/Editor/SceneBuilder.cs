@@ -104,6 +104,19 @@ namespace TianZhang.Editor
                 System.IO.Directory.CreateDirectory(path);
         }
 
+        private static T SetSerializedComponentName<T>(T component, string componentName) where T : Component
+        {
+            var serializedComponent = new SerializedObject(component);
+            var nameProperty = serializedComponent.FindProperty("m_Name");
+            if (nameProperty != null && nameProperty.stringValue != componentName)
+            {
+                nameProperty.stringValue = componentName;
+                serializedComponent.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            return component;
+        }
+
         [MenuItem("Tools/天章/生成场景架构空场景")]
         public static void BuildSceneArchitectureShells()
         {
@@ -196,18 +209,19 @@ namespace TianZhang.Editor
             new GameObject(rootName);
 
             var eventSystem = new GameObject("EventSystem");
-            eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            eventSystem.AddComponent<InputSystemUIInputModule>();
+            SetSerializedComponentName(eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>(), "EventSystem");
+            SetSerializedComponentName(eventSystem.AddComponent<InputSystemUIInputModule>(), "InputSystemUIInputModule");
 
             var gameManager = new GameObject("GameManager");
-            gameManager.AddComponent<TianZhang.Game.GameManager>();
-            gameManager.AddComponent<TianZhang.Game.SceneFlowManager>();
+            SetSerializedComponentName(gameManager.AddComponent<TianZhang.Game.GameManager>(), "GameManager");
+            SetSerializedComponentName(gameManager.AddComponent<TianZhang.Game.SceneFlowManager>(), "SceneFlowManager");
 
 
             if (sceneControllerType != null)
             {
                 var controllerGo = new GameObject("SceneController");
-                controllerGo.AddComponent(sceneControllerType);
+                var sceneController = controllerGo.AddComponent(sceneControllerType);
+                SetSerializedComponentName(sceneController, sceneControllerType.Name);
             }
 
             if (rootName == "StartMenuRoot")
@@ -384,6 +398,14 @@ namespace TianZhang.Editor
                 AdventureScenePath,
                 UnityEditor.SceneManagement.OpenSceneMode.Single);
 
+            var adventureController = UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
+            var guanzhongWildEnemy = AssetDatabase.LoadAssetAtPath<CharacterData>(
+                "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            Require(adventureController != null, "Adventure scene is missing AdventureSceneController.");
+            Require(guanzhongWildEnemy != null, "Adventure scene is missing the formal stone-armored beast CharacterData.");
+            SetSerializedComponentName(adventureController, "AdventureSceneController");
+            adventureController.SetGuanzhongWildEnemyTemplates(new[] { guanzhongWildEnemy });
+
             var gridGo = new GameObject("HexGrid");
             var grid = gridGo.AddComponent<Grid>();
             grid.cellLayout = GridLayout.CellLayout.Hexagon;
@@ -408,6 +430,7 @@ namespace TianZhang.Editor
 
             var tilemapManagerGo = new GameObject("TilemapManager");
             var tilemapManager = tilemapManagerGo.AddComponent<HexTilemapManager>();
+            SetSerializedComponentName(tilemapManager, "HexTilemapManager");
             tilemapManager.groundTilemap = groundTilemap;
             tilemapManager.overlayTilemap = overlayTilemap;
             tilemapManager.unitTilemap = unitTilemap;
@@ -420,6 +443,7 @@ namespace TianZhang.Editor
 
             var explorationGo = new GameObject("AdventureEncounterController");
             var exploration = explorationGo.AddComponent<ExplorationController>();
+            SetSerializedComponentName(exploration, "ExplorationController");
             exploration.tilemapManager = tilemapManager;
             exploration.mapRadius = 6;
             exploration.obstaclePercent = 0;
@@ -427,6 +451,7 @@ namespace TianZhang.Editor
 
             var uiGo = new GameObject("BattleUIManager");
             exploration.uiManager = uiGo.AddComponent<BattleUIManager>();
+            SetSerializedComponentName(exploration.uiManager, "BattleUIManager");
 
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
                 UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
