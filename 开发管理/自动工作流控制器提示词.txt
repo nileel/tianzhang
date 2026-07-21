@@ -4,8 +4,8 @@
 
 ## 固定流程
 
-1. 读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 和判断候选所需的最小状态；候选汇总阶段只读。
-2. 每轮先通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；此时立即输出 `suspended` 并结束，不扫描候选、不取得租约、不启动责任方，也不读取或更新自身自动化配置。未逻辑暂停时，存在 task-owned uncommitted recovery 只恢复原责任方并停止普通调度；现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止；否则先用同一租约工具处理已回复的 pending resume。
+1. 每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；此时立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方，也不读取或更新自身自动化配置。
+2. 只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 和判断候选所需的最小状态；候选汇总阶段只读。存在 task-owned uncommitted recovery 时，只恢复原责任方并停止普通调度；现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止；否则先用同一租约工具处理已回复的 pending resume。
 3. 汇总三类合法候选：Codex 执行、Codex 复审、外部 AI。只按各自入口判断状态、依赖、决策、主责、范围冲突和执行器资格，不复制领域规则。
 4. 对三类候选统一排序：项目 P 优先级、已回复续跑、能解除的高优先级下游数量、等待时间、稳定 ID。候选类型没有固定先后。
 5. 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 做队列维护。队列维护正式入口必须保留两个顺序分支：先提升满足条件的 backlog；没有可提升的完整 backlog 任务卡不等于阻塞，必须继续从权威 backlog、状态与建议中新增 1–3 个最小、完整、可验证、可提交的任务卡。不得制造占位或猜测性任务；只有权威来源不足以形成任何完整任务卡时才记录 `blocked`。本轮不执行新任务。

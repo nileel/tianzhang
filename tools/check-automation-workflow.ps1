@@ -125,6 +125,8 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   'handoffCommit',
   '不消耗等待 token',
   '连续两次',
+  '每轮第一项操作必须',
+  '只有未逻辑暂停时，才读取',
   'pauseRequested=true 表示工具级逻辑暂停',
   'SUSPENDED',
   'ClearBlocking',
@@ -150,6 +152,7 @@ Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
   'handoffCommit',
   '决策恢复',
   '两轮',
+  '在读取当前任务队列或任何候选事实源前',
   '队列补充顺序',
   '私有状态',
   '回滚'
@@ -163,6 +166,12 @@ Assert-ContainsAll -Text $status -Context 'workflow status' -Required @(
   'SUSPENDED',
   'ClearBlocking'
 )
+
+$showIndex = $prompt.IndexOf('每轮第一项操作必须', [StringComparison]::Ordinal)
+$routingSourcesIndex = $prompt.IndexOf('开发管理/自动工作流规则.txt', [StringComparison]::Ordinal)
+Assert-Contract `
+  -Condition ($showIndex -ge 0 -and $routingSourcesIndex -ge 0 -and $showIndex -lt $routingSourcesIndex) `
+  -Message 'runtime Show must occur before routing sources'
 
 $activeText = $prompt + "`n" + $rules
 $desktopBoundary = '普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout'

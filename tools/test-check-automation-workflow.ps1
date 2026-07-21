@@ -148,9 +148,8 @@ $automationRoot = Join-Path $testRoot 'automations'
 $canonicalPrompt = @'
 # 每小时自动工作流薄路由
 
-读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态。
-每轮先通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不扫描候选、不取得租约、不启动责任方。
-未逻辑暂停时检查原任务恢复和已回复的 pending resume。
+每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方。
+只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态，并检查原任务恢复和已回复的 pending resume。
 汇总 Codex 执行、Codex 复审、外部 AI 三类合法候选并统一排序。
 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 补充队列，本轮不执行新任务。
 队列维护正式入口必须保留两个顺序分支；没有可提升的完整 backlog 任务卡不等于阻塞，应继续从权威来源新增完整任务卡。
@@ -183,6 +182,7 @@ $canonicalRules = @'
 - 人工脏改避让：冲突候选跳过，不 stash、reset、checkout 或 clean。
 - 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
 - 决策恢复：保存原 thread/session；占锁排队且不等待 token。
+- 启动顺序：在读取当前任务队列或任何候选事实源前先调用 Show，逻辑暂停时立即退出。
 - 两轮阻塞暂停：相同全阻塞指纹连续两次后形成工具级逻辑暂停，普通 Acquire 返回 SUSPENDED。
 - 自管理边界：自动化任务不得调用自动化管理能力管理自身；只报告 runtime 已逻辑暂停，界面尚未同步。
 - 外部同步与恢复：界面 PAUSED 只由外部普通管理上下文同步；确认无 lease、recovery 和 pending resume 后先 ClearBlocking，再设为 ACTIVE。
@@ -285,6 +285,19 @@ try {
       -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
       -Context "Forbidden CLI-native boundary $forbiddenBoundary"
   }
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+
+  $showFirstLine = '每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方。'
+  $readSourcesLine = '只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态，并检查原任务恢复和已回复的 pending resume。'
+  $lateShowPrompt = $canonicalPrompt.Replace(
+    "$showFirstLine`n$readSourcesLine",
+    "$readSourcesLine`n$showFirstLine"
+  )
+  Write-Utf8File -Path $promptPath -Content $lateShowPrompt
+  Assert-CheckerFails `
+    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
+    -Context 'Runtime Show ordering boundary' `
+    -ErrorContains 'before routing sources'
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
 
   Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`n控制器直接更新自身为 PAUSED。`n")
