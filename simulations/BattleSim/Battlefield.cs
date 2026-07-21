@@ -4,6 +4,16 @@ using System.Linq;
 
 namespace BattleSim;
 
+enum HexDirection
+{
+    East,
+    NorthEast,
+    NorthWest,
+    West,
+    SouthWest,
+    SouthEast,
+}
+
 readonly record struct HexCoord(int Q, int R)
 {
     static readonly HexCoord[] Directions =
@@ -27,6 +37,16 @@ readonly record struct HexCoord(int Q, int R)
     {
         foreach (var direction in Directions)
             yield return new HexCoord(Q + direction.Q, R + direction.R);
+    }
+
+    public HexCoord Step(HexDirection direction)
+    {
+        int index = (int)direction;
+        if (index < 0 || index >= Directions.Length)
+            throw new ArgumentOutOfRangeException(nameof(direction), "Hex direction is invalid.");
+
+        var offset = Directions[index];
+        return new HexCoord(Q + offset.Q, R + offset.R);
     }
 }
 
@@ -123,6 +143,23 @@ sealed class HexBattlefield
             .ThenBy(candidate => candidate.Position.R)
             .First()
             .Position;
+    }
+
+    public HexCoord ResolveForcedMovement(HexCoord start, HexDirection direction, int distanceBudget, HexCoord? occupied = null)
+    {
+        if (distanceBudget < 0)
+            throw new ArgumentOutOfRangeException(nameof(distanceBudget), "Forced movement distance cannot be negative.");
+
+        var current = start;
+        for (int distance = 0; distance < distanceBudget; distance++)
+        {
+            var next = current.Step(direction);
+            if (GetRules(next).BlocksMovement || (occupied.HasValue && next == occupied.Value))
+                break;
+            current = next;
+        }
+
+        return current;
     }
 
     public bool HasLineOfSight(HexCoord source, HexCoord target)

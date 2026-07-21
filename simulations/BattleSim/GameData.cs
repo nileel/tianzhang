@@ -252,10 +252,14 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     }
 
     // 术法与神通配置
+    public record ForcedMovementConfig(string Name, int ForcedMovementDistance);
+    public record MovementControlConfig(string Name, bool PreventsVoluntaryMovement);
     public record AttackProfile(string Name, string Type, double Mult, string Element, int MinRange, int MaxRange);
     public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown, string Element = "", int MinRange = 1, int MaxRange = 1);
     public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown, string Element = "", int MinRange = 1, int MaxRange = 1);
     public readonly record struct ElementMatch(double DamageMultiplier, double CritRateBonus, double CritDamageBonus);
+    public static readonly ForcedMovementConfig BreakFormationChargeKnockback = new("破阵冲锋·击退", 1);
+    public static readonly MovementControlConfig RootedControl = new("定身", true);
     public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3, "土", 1, 1);
     public static readonly AttackProfile UnarmedBasicAttack = new("徒手", "物理", 1.0, "", 1, 1);
 

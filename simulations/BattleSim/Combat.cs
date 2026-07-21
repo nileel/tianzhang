@@ -15,6 +15,7 @@ static class Combat
     internal const int KuxingAction = 1;
     internal const int ArtAction = 2;
     internal const int BasicAction = 3;
+    internal readonly record struct ActionPositionResult(HexCoord Position, bool CanAttack);
 
     internal static void ResetDeterministicRandom() => Rng = new Random(DeterministicRandomSeed);
 
@@ -23,6 +24,20 @@ static class Combat
 
     static bool CanAttack(HexBattlefield battlefield, HexCoord attacker, HexCoord defender, int minRange, int maxRange) =>
         IsInRange(attacker.DistanceTo(defender), minRange, maxRange) && battlefield.HasLineOfSight(attacker, defender);
+
+    internal static ActionPositionResult ResolveActionPosition(
+        HexBattlefield battlefield,
+        HexCoord attacker,
+        HexCoord defender,
+        int movementBudget,
+        int minRange,
+        int maxRange,
+        bool preventsVoluntaryMovement)
+    {
+        int availableMovement = preventsVoluntaryMovement ? 0 : movementBudget;
+        var position = battlefield.FindAttackPosition(attacker, defender, availableMovement, minRange, maxRange);
+        return new ActionPositionResult(position, CanAttack(battlefield, position, defender, minRange, maxRange));
+    }
 
     internal static int SelectAction(
         HexBattlefield battlefield, HexCoord attacker, HexCoord defender,
@@ -158,8 +173,9 @@ static class Combat
                     int actionA = SelectAction(battlefield, positionA, positionB, divineReadyA, ca.DivineMinRange, ca.DivineMaxRange,
                         kuxingReadyA, artReadyA, ca.ArtMinRange, ca.ArtMaxRange, ca.BasicAttackProfile,
                         out minRange, out maxRange);
-                    positionA = battlefield.FindAttackPosition(positionA, positionB, ca.Primary["移力"], minRange, maxRange);
-                    if (!CanAttack(battlefield, positionA, positionB, minRange, maxRange)) { ctA += sA; continue; }
+                    var actionPositionA = ResolveActionPosition(battlefield, positionA, positionB, ca.Primary["移力"], minRange, maxRange, false);
+                    positionA = actionPositionA.Position;
+                    if (!actionPositionA.CanAttack) { ctA += sA; continue; }
                     if (actionA == DivineAction)
                     {
                         atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen; minRange = ca.DivineMinRange; maxRange = ca.DivineMaxRange;
@@ -254,8 +270,9 @@ static class Combat
                     int actionB = SelectAction(battlefield, positionB, positionA, divineReadyB, cb.DivineMinRange, cb.DivineMaxRange,
                         kuxingReadyB, artReadyB, cb.ArtMinRange, cb.ArtMaxRange, cb.BasicAttackProfile,
                         out minRange, out maxRange);
-                    positionB = battlefield.FindAttackPosition(positionB, positionA, cb.Primary["移力"], minRange, maxRange);
-                    if (!CanAttack(battlefield, positionB, positionA, minRange, maxRange)) { ctB += sB; continue; }
+                    var actionPositionB = ResolveActionPosition(battlefield, positionB, positionA, cb.Primary["移力"], minRange, maxRange, false);
+                    positionB = actionPositionB.Position;
+                    if (!actionPositionB.CanAttack) { ctB += sB; continue; }
                     if (actionB == DivineAction)
                     {
                         atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen; minRange = cb.DivineMinRange; maxRange = cb.DivineMaxRange;

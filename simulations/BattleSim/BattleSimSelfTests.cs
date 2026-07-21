@@ -75,6 +75,9 @@ static class BattleSimSelfTests
         if (suite == "battlefield-foundation-n-dist-01")
             return RunChecked(suite, RunBattlefieldFoundationNDist01);
 
+        if (suite == "position-control-n-dist-02")
+            return RunChecked(suite, RunPositionControlNDist02);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -908,6 +911,49 @@ static class BattleSimSelfTests
         AssertEqual(2, firingPosition.DistanceTo(new HexCoord(3, 0)), "pathfinding sidesteps a blocked direct line to regain attack range");
         AssertEqual(false, firingPosition == new HexCoord(1, 0), "selected attack position does not enter the blocker");
         AssertEqual(true, blockedAdvance.HasLineOfSight(firingPosition, new HexCoord(3, 0)), "selected attack position has observable line of sight");
+    }
+
+    static void RunPositionControlNDist02()
+    {
+        var origin = new HexCoord(0, 0);
+        var battlefield = new HexBattlefield();
+        var chargeControl = GameData.BreakFormationChargeKnockback;
+        AssertEqual(1, chargeControl.ForcedMovementDistance, "破阵冲锋 uses its documented one-hex knockback");
+
+        var pushed = battlefield.ResolveForcedMovement(
+            new HexCoord(2, 0),
+            HexDirection.East,
+            chargeControl.ForcedMovementDistance);
+        AssertEqual(new HexCoord(3, 0), pushed, "knockback advances along the specified hex direction");
+        AssertEqual(3, origin.DistanceTo(pushed), "knockback changes observable combat distance");
+
+        var blockedPush = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        {
+            [new HexCoord(4, 0)] = new(BlocksMovement: true),
+        });
+        AssertEqual(
+            new HexCoord(3, 0),
+            blockedPush.ResolveForcedMovement(new HexCoord(2, 0), HexDirection.East, 3),
+            "forced movement stops at the first blocked edge or landing cell");
+
+        var rootedControl = GameData.RootedControl;
+        AssertEqual(true, rootedControl.PreventsVoluntaryMovement, "定身 prevents voluntary movement");
+        var rootedMelee = Combat.ResolveActionPosition(
+            battlefield, origin, new HexCoord(3, 0), movementBudget: 3, minRange: 1, maxRange: 1,
+            rootedControl.PreventsVoluntaryMovement);
+        AssertEqual(origin, rootedMelee.Position, "rooted combatant does not move into range");
+
+        var rootedLegalAttack = Combat.ResolveActionPosition(
+            battlefield, origin, new HexCoord(3, 0), movementBudget: 3, minRange: 2, maxRange: 4,
+            rootedControl.PreventsVoluntaryMovement);
+        AssertEqual(origin, rootedLegalAttack.Position, "rooted combatant stays in place for a legal attack");
+        AssertEqual(true, rootedLegalAttack.CanAttack, "rooted combatant may attack from a legal current position");
+
+        var rootedInsideMinimum = Combat.ResolveActionPosition(
+            battlefield, origin, new HexCoord(1, 0), movementBudget: 3, minRange: 2, maxRange: 4,
+            rootedControl.PreventsVoluntaryMovement);
+        AssertEqual(origin, rootedInsideMinimum.Position, "rooted combatant cannot retreat to satisfy minimum range");
+        AssertEqual(false, rootedInsideMinimum.CanAttack, "minimum range rejects a rooted point-blank attack");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)
