@@ -251,6 +251,70 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         return t;
     }
 
+    // N-ENV-01 环境规则 fixture：只定义固定点档位、查询边界和显式配对，不承载具体环境内容。
+    public sealed record EnvironmentRulesConfig(
+        int UnitsPerRange,
+        int CompressedEdgeUnits,
+        int StandardEdgeUnits,
+        int ExpandedEdgeUnits,
+        int MaxQueryRange,
+        int MaxPhenomenonStrengthTier);
+
+    public sealed record PhenomenonPairFixture(
+        PhenomenonChannel Channel,
+        string FirstType,
+        string SecondType,
+        string ResultType,
+        int ResultStrengthTier,
+        int ResultDurationCycles,
+        bool Cancels = false,
+        HexDirection? ResultDirection = null)
+    {
+        public bool Matches(PhenomenonState first, PhenomenonState second) =>
+            first.Channel == Channel && second.Channel == Channel &&
+            ((string.Equals(first.PhenomenonType, FirstType, StringComparison.Ordinal) &&
+              string.Equals(second.PhenomenonType, SecondType, StringComparison.Ordinal)) ||
+             (string.Equals(first.PhenomenonType, SecondType, StringComparison.Ordinal) &&
+              string.Equals(second.PhenomenonType, FirstType, StringComparison.Ordinal)));
+    }
+
+    public static readonly EnvironmentRulesConfig EnvironmentRules = new(
+        UnitsPerRange: 2,
+        CompressedEdgeUnits: 1,
+        StandardEdgeUnits: 2,
+        ExpandedEdgeUnits: 4,
+        MaxQueryRange: 16,
+        MaxPhenomenonStrengthTier: 3);
+
+    public static readonly IReadOnlyDictionary<CoverTier, int> EnvironmentCoverTierRanks =
+        new Dictionary<CoverTier, int>
+        {
+            [CoverTier.None] = 0,
+            [CoverTier.Light] = 1,
+            [CoverTier.Heavy] = 2,
+        };
+
+    public static readonly PhenomenonPairFixture[] EnvironmentPhenomenonPairFixtures =
+    {
+        new(
+            PhenomenonChannel.Visibility,
+            "fixture-visibility-a",
+            "fixture-visibility-b",
+            "fixture-visibility-result",
+            ResultStrengthTier: 2,
+            ResultDurationCycles: 2),
+    };
+
+    public static readonly EnvironmentCyclePhase[] EnvironmentCycleOrder =
+    {
+        EnvironmentCyclePhase.AirflowMovement,
+        EnvironmentCyclePhase.TemperatureChangesPrecipitation,
+        EnvironmentCyclePhase.PrecipitationWashAndSurface,
+        EnvironmentCyclePhase.VisibilityAndSuspendedHazard,
+        EnvironmentCyclePhase.CloudDischarge,
+        EnvironmentCyclePhase.DurationCleanup,
+    };
+
     // 术法与神通配置
     public record ForcedMovementConfig(string Name, int ForcedMovementDistance);
     public record MovementControlConfig(string Name, bool PreventsVoluntaryMovement);

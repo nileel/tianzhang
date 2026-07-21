@@ -78,6 +78,9 @@ static class BattleSimSelfTests
         if (suite == "position-control-n-dist-02")
             return RunChecked(suite, RunPositionControlNDist02);
 
+        if (suite == "environment-rules-n-env-01")
+            return RunChecked(suite, RunEnvironmentRulesNEnv01);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -954,6 +957,156 @@ static class BattleSimSelfTests
             rootedControl.PreventsVoluntaryMovement);
         AssertEqual(origin, rootedInsideMinimum.Position, "rooted combatant cannot retreat to satisfy minimum range");
         AssertEqual(false, rootedInsideMinimum.CanAttack, "minimum range rejects a rooted point-blank attack");
+    }
+
+    static void RunEnvironmentRulesNEnv01()
+    {
+        var origin = new HexCoord(0, 0);
+        var east = origin.Step(HexDirection.East);
+        var eastTwo = east.Step(HexDirection.East);
+        var eastThree = eastTwo.Step(HexDirection.East);
+        var metric = GameData.EnvironmentRules;
+
+        AssertEqual(2, metric.UnitsPerRange, "environment metric uses fixed-point range units");
+        AssertEqual(1, metric.CompressedEdgeUnits, "compressed edge fixture tier");
+        AssertEqual(2, metric.StandardEdgeUnits, "standard edge fixture tier");
+        AssertEqual(4, metric.ExpandedEdgeUnits, "expanded edge fixture tier");
+        AssertEqual(true, metric.MaxQueryRange > 0, "weighted queries have a configured bound");
+
+        var directed = new HexBattlefield(edgeRules: new Dictionary<DirectedHexEdge, HexEdgeRules>
+        {
+            [new(origin, east)] = new(metric.StandardEdgeUnits, AllowsMovement: true),
+            [new(east, origin)] = new(metric.StandardEdgeUnits, AllowsMovement: false),
+        });
+        AssertEqual(true, directed.InspectEdge(origin, east, SpatialQueryKind.Movement).IsLegal,
+            "directed edge allows its declared direction");
+        var reverseEdge = directed.InspectEdge(east, origin, SpatialQueryKind.Movement);
+        AssertEqual(false, reverseEdge.IsLegal, "directed edge rejects its reverse direction");
+        AssertEqual("directed_edge_blocks_movement", reverseEdge.Reason,
+            "directed edge rejection is observable");
+
+        var compressed = new HexBattlefield(edgeRules: new Dictionary<DirectedHexEdge, HexEdgeRules>
+        {
+            [new(origin, east)] = new(metric.CompressedEdgeUnits),
+            [new(east, eastTwo)] = new(metric.CompressedEdgeUnits),
+        });
+        AssertEqual(2, compressed.QueryMetricDistance(origin, eastTwo, SpatialQueryKind.Attack).DistanceUnits,
+            "compressed edges shorten the minimum weighted attack path");
+        AssertEqual(2, compressed.QueryMetricDistance(origin, eastTwo, SpatialQueryKind.Area).DistanceUnits,
+            "area queries reuse the weighted distance service");
+        AssertEqual(2, compressed.QueryMetricDistance(origin, eastTwo, SpatialQueryKind.Sight).DistanceUnits,
+            "sight queries reuse the weighted distance service");
+        AssertEqual(true, compressed.FindReachable(origin, movementBudget: 1).ContainsKey(eastTwo),
+            "movement reuses weighted edge distance");
+        var compressedAttack = Combat.ResolveActionPosition(
+            compressed, origin, eastTwo, movementBudget: 0, minRange: 1, maxRange: 1,
+            preventsVoluntaryMovement: false);
+        AssertEqual(true, compressedAttack.CanAttack,
+            "combat range checks reuse weighted edge distance");
+
+        var expanded = new HexBattlefield(edgeRules: new Dictionary<DirectedHexEdge, HexEdgeRules>
+        {
+            [new(origin, east)] = new(metric.ExpandedEdgeUnits),
+        });
+        AssertEqual(4, expanded.QueryMetricDistance(origin, east, SpatialQueryKind.Attack).DistanceUnits,
+            "expanded edge increases the minimum weighted path");
+
+        var forced = compressed.ResolveForcedMovementDetailed(
+            origin, HexDirection.East, distanceBudget: 1);
+        AssertEqual(eastTwo, forced.Position,
+            "forced movement crosses multiple compressed edges within one range unit");
+        AssertEqual(2, forced.ConsumedDistanceUnits,
+            "forced movement reports exact weighted distance consumption");
+        AssertEqual("distance_budget_exhausted", forced.StopReason,
+            "forced movement reports why the next edge was rejected");
+
+        var obstacle = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        {
+            [east] = new(IsEntityObstacle: true),
+        });
+        var obstacleEdge = obstacle.InspectEdge(origin, east, SpatialQueryKind.Movement);
+        AssertEqual(false, obstacleEdge.IsLegal, "entity obstacle rejects movement");
+        AssertEqual("entity_obstacle", obstacleEdge.Reason, "entity obstacle reason is observable");
+        var blockedSight = obstacle.QueryLineOfSight(origin, eastTwo);
+        AssertEqual(false, blockedSight.HasLineOfSight, "entity obstacle rejects ordinary sight");
+        AssertEqual("entity_obstacle", blockedSight.Reason, "sight obstruction reason is observable");
+
+        var coverTarget = eastTwo;
+        var cover = new HexBattlefield(
+            cellCover: new Dictionary<DirectionalCellCover, CoverTier>
+            {
+                [new(coverTarget, HexDirection.West)] = CoverTier.Light,
+            },
+            edgeCover: new Dictionary<DirectedHexEdge, CoverTier>
+            {
+                [new(east, coverTarget)] = CoverTier.Heavy,
+            });
+        var coveredFromWest = cover.QueryCover(origin, coverTarget);
+        AssertEqual(CoverTier.Heavy, coveredFromWest.Tier,
+            "multiple directional covers keep only the highest configured tier");
+        AssertEqual(true, coveredFromWest.Reason.Contains("edge:Heavy", StringComparison.Ordinal),
+            "cover result reports its winning source");
+        AssertEqual(CoverTier.None, cover.QueryCover(eastThree.Step(HexDirection.East), coverTarget).Tier,
+            "directional cover does not protect the opposite side");
+
+        var surfaceBoard = new HexBattlefield();
+        surfaceBoard.SetSurface(origin, new SurfaceState("fixture-wet", 2, "test", "neutral", "surface-a"));
+        surfaceBoard.SetSurface(origin, new SurfaceState("fixture-burning", 1, "test", "neutral", "surface-b"));
+        AssertEqual("fixture-burning", surfaceBoard.GetSurface(origin)?.SurfaceType,
+            "explicit final surface replaces the previous single slot");
+        AssertEqual(1, surfaceBoard.SurfaceCountAt(origin), "a cell exposes only one final surface");
+
+        var phenomena = new HexBattlefield();
+        foreach (var channel in Enum.GetValues<PhenomenonChannel>())
+        {
+            var applied = phenomena.ApplyPhenomenon(
+                origin,
+                new PhenomenonState($"fixture-{channel}", channel, StrengthTier: 1, DurationCycles: 2));
+            AssertEqual(true, applied.Applied, $"{channel} channel accepts its first result");
+        }
+        var sixChannels = phenomena.GetPhenomena(origin, heightLevel: 0);
+        AssertEqual(6, sixChannels.Count, "all six phenomenon channels expose one final result each");
+        AssertEqual(6, sixChannels.Keys.Distinct().Count(), "phenomenon channel results are unique");
+
+        var mergedAirflow = phenomena.ApplyPhenomenon(
+            origin,
+            new PhenomenonState("fixture-Airflow", PhenomenonChannel.Airflow, StrengthTier: 2, DurationCycles: 3));
+        AssertEqual(true, mergedAirflow.Applied, "same phenomenon type merges deterministically");
+        AssertEqual(3, mergedAirflow.FinalState?.StrengthTier,
+            "same phenomenon type combines strength within the configured tier cap");
+        AssertEqual(3, mergedAirflow.FinalState?.DurationCycles,
+            "same phenomenon type refreshes to the longer duration");
+
+        var beforeMissingPair = phenomena.GetPhenomena(origin, heightLevel: 0)[PhenomenonChannel.Visibility];
+        var missingPair = phenomena.ApplyPhenomenon(
+            origin,
+            new PhenomenonState("fixture-unpaired-visibility", PhenomenonChannel.Visibility, StrengthTier: 1, DurationCycles: 1));
+        AssertEqual(false, missingPair.Applied, "missing same-channel pair fails closed");
+        AssertEqual("missing_pair", missingPair.Reason, "missing pair failure is observable");
+        AssertEqual(beforeMissingPair, phenomena.GetPhenomena(origin, heightLevel: 0)[PhenomenonChannel.Visibility],
+            "missing pair preserves the prior final phenomenon");
+
+        var pairBoard = new HexBattlefield();
+        pairBoard.ApplyPhenomenon(origin, new PhenomenonState(
+            "fixture-visibility-a", PhenomenonChannel.Visibility, StrengthTier: 1, DurationCycles: 1));
+        var paired = pairBoard.ApplyPhenomenon(origin, new PhenomenonState(
+            "fixture-visibility-b", PhenomenonChannel.Visibility, StrengthTier: 1, DurationCycles: 1));
+        AssertEqual(true, paired.Applied, "registered same-channel fixture pair resolves");
+        AssertEqual("fixture-visibility-result", paired.FinalState?.PhenomenonType,
+            "registered pair exposes its unique final result");
+
+        AssertSequence(
+            new[]
+            {
+                EnvironmentCyclePhase.AirflowMovement,
+                EnvironmentCyclePhase.TemperatureChangesPrecipitation,
+                EnvironmentCyclePhase.PrecipitationWashAndSurface,
+                EnvironmentCyclePhase.VisibilityAndSuspendedHazard,
+                EnvironmentCyclePhase.CloudDischarge,
+                EnvironmentCyclePhase.DurationCleanup,
+            },
+            phenomena.AdvanceEnvironmentCycle(),
+            "environment cycle order is fixed and observable");
     }
 
     static Character StageCharacter(string name, string realm, int subIndex)

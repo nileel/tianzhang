@@ -8,23 +8,10 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
-| N-ENV-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | BattleSim 环境规则：有向边、加权距离、掩体、地表与现象通道 |
 | N-GROUP-01 | P3 | Codex / gpt-5.5 | 数值与战斗 | 待处理 | BattleSim 2v2 占格、阻挡与单目标选择基座 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
-
-### N-ENV-01 · BattleSim 环境规则基座
-
-- 来源：`开发管理/任务列表/数值与战斗任务.txt` N-ENV-01；N-DIST-01 归档明确其唯一前置已满足。
-- 当前状态：待处理；依赖：N-DIST-01 已由提交 `954f5c8fc92dda8373660671f71190bed094bdb6` 完成。
-- 主责：Codex / ChatGPT5.5。
-- 必读：`开发管理/开发-技术经验.txt`、`开发管理/任务归档/2026-07-21-N-DIST-01-六角战场基座归档.txt`、`开发管理/任务归档/2026-07-21-N-DIST-02-位置控制归档.txt`、`docs/基础设定/战场空间与环境规则.txt`、`docs/基础设定/五行显化与环境交互规则.txt`、`docs/基础设定/战斗系统.txt`、`simulations/BattleSim/Battlefield.cs`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/GameData.cs` 与 `simulations/BattleSim/BattleSimSelfTests.cs`。
-- 预期修改路径：`simulations/BattleSim/Battlefield.cs`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/GameData.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数值与战斗任务.txt`、`开发管理/当前任务队列.txt` 与 `开发管理/任务归档/2026-07-21-N-ENV-01-环境规则基座归档.txt`。
-- 范围：只在现有 `HexBattlefield` 距离与视线所有者中接入有向格边合法性、客观 `metricDistance`、实体障碍、方向性低位掩体、单一地表槽和六类区域现象通道的确定性结算接口；移动、攻击、强制位移、范围与视野共用同一加权距离服务。可调档位、查询上限与配对 fixture 进入 `GameData`，不得新增第二套距离服务、动态邻接、通用弹道、全图流体、具体环境内容档案或 Unity 表现。
-- 验证：新增 `environment-rules-n-env-01` self-test，至少覆盖单向边允许／拒绝、压缩／扩张边的最短加权路径、强制位移逐边耗费、实体障碍拒绝、多个掩体只取最高档、单格唯一地表、六通道各自唯一最终结果、缺失同通道配对失败关闭与固定环境周期顺序；运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test environment-rules-n-env-01`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test battlefield-foundation-n-dist-01`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test position-control-n-dist-02`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test distance-model-tq055`、默认 BattleSim、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations` 与 `git diff --check`。
-- 完成条件：固定输入可观察每条边的合法性与距离、掩体／障碍原因、地表结果和六通道最终现象；玩家预览与后续 AI 可复用同一查询结果，既有距离、位置控制和伤害表不变。
-- 停止条件：实现需要新增无事实源的环境倍率、命中惩罚、持续或配对结果，要求动态修改拓扑／多层占位，或必须先建设 D-ENV-SCHEMA-01、具体环境档案或 Unity 渲染；先请求负责人决定，不以默认允许、施加先后或隐藏叠层掩盖缺口。
 
 ### N-GROUP-01 · BattleSim 2v2 占格与单目标选择基座
 
