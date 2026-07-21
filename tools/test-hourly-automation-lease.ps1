@@ -298,6 +298,9 @@ try {
   } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $resumeOwner.Json.runId } | Out-Null
 
+  $clearWithRecovery = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
+  Assert-Equal -Actual $clearWithRecovery.Json.status -Expected 'RECOVERY_PRESENT' -Message 'ClearBlocking ignored recovery'
+
   $busyOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot
     TaskId = 'task-busy'
@@ -321,6 +324,9 @@ try {
   Assert-Equal -Actual @($showQueued.Json.state.pendingResumes).Count -Expected 1 -Message 'Duplicate reply was queued twice'
   $releaseBusy = Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $busyOwner.Json.runId }
   Assert-True -Condition ([bool]$releaseBusy.Json.readyResume) -Message 'Release did not report ready resume'
+
+  $clearWithPending = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
+  Assert-Equal -Actual $clearWithPending.Json.status -Expected 'PENDING_RESUMES' -Message 'ClearBlocking ignored pending resumes'
 
   $taken = Invoke-LeaseTool -Action TakeResume -Parameters @{ StateRoot = $stateRoot }
   Assert-Equal -Actual $taken.Json.status -Expected 'DISPATCH' -Message 'TakeResume did not dispatch queued reply'
@@ -383,6 +389,37 @@ try {
   Assert-Equal -Actual $blockedTwo.Json.blocking.count -Expected 2 -Message 'Second blocked result count mismatch'
   Assert-True -Condition ([bool]$blockedTwo.Json.blocking.pauseRequested) -Message 'Second blocked result did not request pause'
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $blockedTwoOwner.Json.runId } | Out-Null
+
+  $suspendedAcquire = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-must-not-start'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+  }
+  Assert-Equal -Actual $suspendedAcquire.Json.status -Expected 'SUSPENDED' -Message 'Paused runtime allowed a normal Acquire'
+  Assert-Equal -Actual $suspendedAcquire.Json.fingerprint -Expected 'fingerprint-a' -Message 'Suspended fingerprint mismatch'
+  Assert-Equal -Actual $suspendedAcquire.Json.count -Expected 2 -Message 'Suspended count mismatch'
+
+  $suspendedShow = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
+  Assert-True -Condition ($null -eq $suspendedShow.Json.state.lease) -Message 'Suspended Acquire wrote a lease'
+
+  $clearBlocking = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
+  Assert-Equal -Actual $clearBlocking.Json.status -Expected 'BLOCKING_CLEARED' -Message 'ClearBlocking did not succeed'
+  Assert-True -Condition ($null -eq $clearBlocking.Json.blocking.fingerprint) -Message 'ClearBlocking retained fingerprint'
+  Assert-Equal -Actual $clearBlocking.Json.blocking.count -Expected 0 -Message 'ClearBlocking retained count'
+  Assert-True -Condition (-not [bool]$clearBlocking.Json.blocking.pauseRequested) -Message 'ClearBlocking retained pause request'
+
+  $postClearAcquire = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-after-clear'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+  }
+  Assert-Equal -Actual $postClearAcquire.Json.status -Expected 'ACQUIRED' -Message 'Acquire did not resume after ClearBlocking'
+
+  $clearWithLease = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
+  Assert-Equal -Actual $clearWithLease.Json.status -Expected 'BUSY' -Message 'ClearBlocking ignored an active lease'
+  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $postClearAcquire.Json.runId } | Out-Null
 
   $successOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot

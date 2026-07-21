@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'ClearRecovery', 'QueueResume', 'TakeResume', 'RecordResult', 'Release')]
+  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'ClearRecovery', 'QueueResume', 'TakeResume', 'RecordResult', 'ClearBlocking', 'Release')]
   [string]$Action,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$TaskId,
@@ -471,6 +471,13 @@ try {
         Assert-StableText -Value $TaskId -ParameterName 'TaskId'
         Assert-StableText -Value $Owner -ParameterName 'Owner'
         $normalizedRepositoryRoot = Resolve-RepositoryRoot -Path $RepositoryRoot
+        if ([bool]$state.blocking.pauseRequested) {
+          $result = New-Result -Status 'SUSPENDED' -Values @{
+            fingerprint = $state.blocking.fingerprint
+            count = $state.blocking.count
+          }
+          break
+        }
         $leaseExpired = Test-LeaseExpired -Lease $state.lease -Now $now
         if ($null -ne $state.lease -and -not $leaseExpired) {
           $result = New-Result -Status 'BUSY' -Values @{
@@ -679,6 +686,28 @@ try {
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECORDED' -Values @{
           lastResult = $state.lastResult
+          blocking = $state.blocking
+        }
+      }
+
+      'ClearBlocking' {
+        if ($null -ne $state.lease) {
+          $result = New-Result -Status 'BUSY'
+          break
+        }
+        if (@($state.pendingResumes).Count -gt 0) {
+          $result = New-Result -Status 'PENDING_RESUMES'
+          break
+        }
+        if ($null -ne $state.recovery) {
+          $result = New-Result -Status 'RECOVERY_PRESENT'
+          break
+        }
+        $state.blocking.fingerprint = $null
+        $state.blocking.count = 0
+        $state.blocking.pauseRequested = $false
+        Write-RuntimeState -Path $statePath -State $state
+        $result = New-Result -Status 'BLOCKING_CLEARED' -Values @{
           blocking = $state.blocking
         }
       }
