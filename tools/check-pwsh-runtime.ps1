@@ -30,8 +30,7 @@ if (Test-Path -LiteralPath $taskListRoot -PathType Container) {
 }
 $defaultDocuments = @($defaultDocuments | Select-Object -Unique)
 $defaultRequiredVersions = @(
-  'tools/automation-controller.ps1',
-  'tools/automation-controller-state.ps1',
+  'tools/hourly-automation-lease.ps1',
   'tools/check-automation-workflow.ps1',
   'tools/check-review-text.ps1',
   'tools/check-data-chain.ps1',
