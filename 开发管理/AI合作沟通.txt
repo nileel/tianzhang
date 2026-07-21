@@ -7,7 +7,7 @@
 
 ### DS-JINDAN-NAMES-20260718-01 · Codex → DeepSeek V4 Pro
 
-- 状态：Codex 复审部分通过（48/51），三项待返修
+- 状态：待处理（Codex 复审部分通过 48/51；三项执行型返修）
 - 修改方：DeepSeek V4 Pro
 - 业务提交：`795c637c06ff340bd4c54deb32899880839b214d`（`docs/jindan: draft effect name candidates`）
 - 交付物：`docs/superpowers/specs/2026-07-18-jindan-effect-name-candidates.md`
