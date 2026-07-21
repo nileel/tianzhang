@@ -183,14 +183,16 @@ $schemas = [ordered]@{
   GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
   Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
+  EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
 }
 $tables = [ordered]@{
   GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa
   Spells = Get-CsvTable 'src/Assets/DataConfig/Spells.csv' $schemas.Spells
   Skills = Get-CsvTable 'src/Assets/DataConfig/Skills.csv' $schemas.Skills
+  EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
 }
 $docs = [ordered]@{ GongFa = Get-ContentDocs (Get-GongFaName); Spells = Get-ContentDocs (Get-SpellName); Skills = Get-ContentDocs (Get-SkillName) }
-foreach ($kind in $tables.Keys) {
+foreach ($kind in $docs.Keys) {
   if ($docs[$kind].Count -ne $tables[$kind].Rows.Count) { Add-Finding 'DOC_CSV_COUNT_MISMATCH' $kind "Docs=$($docs[$kind].Count); CSV=$($tables[$kind].Rows.Count)." }
 }
 

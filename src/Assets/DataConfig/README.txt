@@ -20,6 +20,7 @@
 | `Skills.csv` | 神通配置（ID化） | `Data/Skills/Skill_*.asset` |
 | `Characters.csv` | 角色模板（ID化） | `Data/Characters/Char_*.asset` |
 | `Enemies.csv` | 敌人模板（ID化） | `Data/Characters/Char_Enemy_*.asset` |
+| `EnvironmentProfiles.csv` | 环境档案纯数据契约 | `Data/EnvironmentProfiles/EnvironmentProfile_*.asset` |
 
 ## CSV 格式规则
 
@@ -27,6 +28,20 @@
 - `#` 开头为注释，导入时跳过
 - 字段分隔：`,` | 数组分隔：`|` | 键值分隔：`:`
 - **文本字段填 ID**（不是中文），ID 在 Language.csv 中定义
+
+## EnvironmentProfiles.csv 契约
+
+本表只定义环境档案的结构；本轮不包含任何生产环境档案、数值或显示文本。表头固定为：
+
+`profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs`
+
+- `directedEdges`：以 `|` 分隔的 `fromQ:fromR>toQ:toR` 有向六角相邻边；非拓扑邻格或重复有向边拒绝导入。
+- `surfacePrototypeRefs`：以 `|` 分隔的地表原型 ID 引用。
+- `phenomenonChannels`：以 `;` 分隔的六个通道声明，格式为 `channel=typeA+typeB`。通道必须恰为 `airflow`、`visibility`、`temperature`、`precipitation`、`suspendedHazard`、`cloudDischarge` 各一次。
+- `phenomenonPairs`：以 `|` 分隔的同通道无序配对，格式为 `channel:typeA+typeB>resultType`。三个类型引用必须已在对应通道声明；翻转的同一对视为冲突并拒绝导入。
+- `elementRelationRefs`：以 `|` 分隔，且必须恰含 `element_wood`、`element_fire`、`element_earth`、`element_metal`、`element_water` 各一次。
+
+导入器会先验证整张表；任何缺字段、未知引用、非法通道、非相邻边、重复或顺序冲突配对都会在创建或更新 `.asset` 前失败。
 
 ## 添加多语言
 

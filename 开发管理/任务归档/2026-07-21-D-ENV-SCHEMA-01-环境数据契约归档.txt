@@ -1,0 +1,23 @@
+# D-ENV-SCHEMA-01 · 环境数据契约归档
+
+- 完成日期：2026-07-21
+- 主责：Codex / gpt-5.6-terra
+- 状态：已完成待归档
+
+## 完成内容
+
+- 新增单一 `EnvironmentProfiles.csv` 的固定表头；生产表只保留结构，不含具体环境档案、数值或显示文本。
+- `EnvironmentProfileData` 仅承载档案 ID、有向六角相邻边、地表原型引用、固定六现象通道、同通道无序配对和五行关系引用。
+- `DataConfigImporter` 先解析并验证整张表，随后才创建或更新 asset；缺字段、未知现象引用、非法通道、非相邻边、重复／翻转配对及不完整五行关系引用均失败关闭。
+- 数据链检查器锁定表头，并以临时夹具覆盖未知列拒绝；EditMode 测试覆盖合法合成、未知引用、缺字段、非相邻边、非法通道、无序配对冲突和写入前失败关闭。
+
+## 验证证据
+
+- `dotnet build src/TianZhang.Runtime.csproj --no-restore`：通过（既有 1 条 obsolete 警告）。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：通过（既有 2 条 obsolete 警告）。
+- Unity EditMode、`tools/tests/check-data-chain-tests.ps1`、`tools/check-data-chain.ps1`：通过。
+
+## 后续入口与边界
+
+- C-ENV-PROFILE-01 才能填写具体环境档案和参数；U-ENV-RULE-01 才能消费这些纯数据进入运行时规则或表现。
+- 本任务未修改 BattleSim 规则、`TacticalGridModel` 运行时结算、Unity 表现或环境内容事实源。

@@ -26,6 +26,7 @@ function New-ValidFixture {
     $spellRow = 'spell_fixture,1,1,4,1,1,0,1,0,0,0,0,0,realm_lianqi,element_water_root,element_water,faction_fixture,player'
     $skillHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,sourceAffiliation,contentScope'
     $skillRow = 'skill_fixture,1,1,4,1,1,1,0,0,0,0,0,0,0,desc_fixture,element_water,realm_lianqi,faction_fixture,player'
+    $script:environmentProfileHeader = 'profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs'
 
     Write-FixtureFile (Join-Path "docs/$cultivation" "$gongFa/fixture/fixture.txt") 'fixture'
     Write-FixtureFile (Join-Path "docs/$cultivation" "$spells/fixture/fixture.txt") 'fixture'
@@ -33,6 +34,7 @@ function New-ValidFixture {
     Write-FixtureFile 'src/Assets/DataConfig/GongFa.csv' "# fixture`n$gongFaHeader`n$gongFaRow`n"
     Write-FixtureFile 'src/Assets/DataConfig/Spells.csv' "# fixture`n$spellHeader`n$spellRow`n"
     Write-FixtureFile 'src/Assets/DataConfig/Skills.csv' "# fixture`n$skillHeader`n$skillRow`n"
+    Write-FixtureFile 'src/Assets/DataConfig/EnvironmentProfiles.csv' "# fixture`n$script:environmentProfileHeader`n"
     Write-FixtureFile 'src/Assets/DataConfig/Language.csv' "realm_lianqi,练气`n"
     Write-FixtureFile 'src/Assets/Data/GongFa/GongFa_gongfa_fixture.asset' "contentScope: player`n"
     Write-FixtureFile 'src/Assets/Data/Spells/Spell_spell_fixture.asset' "contentScope: player`nrealmRequirement: realm_lianqi`nelementRequirement: element_water_root`nsourceAffiliation: faction_fixture`n"
@@ -58,6 +60,10 @@ function Assert-CheckerResult {
 try {
     New-ValidFixture
     Assert-CheckerResult -Name 'valid fixture' -ShouldPass $true -ExpectedRuleId ''
+
+    (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv')).Replace($script:environmentProfileHeader, "$script:environmentProfileHeader,unknown") | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv')
+    Assert-CheckerResult -Name 'environment schema unknown column' -ShouldPass $false -ExpectedRuleId 'CSV_SCHEMA_UNKNOWN_COLUMN'
+    New-ValidFixture
 
     Add-Content -LiteralPath (Join-Path $fixtureRoot (Join-Path "docs/$cultivation" "$spells/fixture/extra.txt")) -Value 'extra'
     Assert-CheckerResult -Name 'docs CSV count mismatch' -ShouldPass $false -ExpectedRuleId 'DOC_CSV_COUNT_MISMATCH'

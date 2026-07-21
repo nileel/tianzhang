@@ -8,6 +8,7 @@ using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.Cultivation;
 using TianZhang.Game.CharacterCreation;
+using TianZhang.Tactical;
 
 namespace TianZhang.Editor
 {
@@ -54,9 +55,381 @@ namespace TianZhang.Editor
             ImportCharacters();
             ImportEnemies();
             ImportCharacterCreationPointBuy();
+            ImportEnvironmentProfiles();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[DataConfigImporter] 全部配置导入完成");
+        }
+
+        private static readonly string[] EnvironmentProfileColumns =
+        {
+            "profileId",
+            "directedEdges",
+            "surfacePrototypeRefs",
+            "phenomenonChannels",
+            "phenomenonPairs",
+            "elementRelationRefs",
+        };
+
+        private static readonly EnvironmentPhenomenonChannel[] EnvironmentPhenomenonChannels =
+        {
+            EnvironmentPhenomenonChannel.Airflow,
+            EnvironmentPhenomenonChannel.Visibility,
+            EnvironmentPhenomenonChannel.Temperature,
+            EnvironmentPhenomenonChannel.Precipitation,
+            EnvironmentPhenomenonChannel.SuspendedHazard,
+            EnvironmentPhenomenonChannel.CloudDischarge,
+        };
+
+        private static readonly string[] ElementRelationReferences =
+        {
+            "element_wood",
+            "element_fire",
+            "element_earth",
+            "element_metal",
+            "element_water",
+        };
+
+        [MenuItem("天章/导入环境档案配置")]
+        public static void ImportEnvironmentProfiles()
+        {
+            const string path = "Assets/DataConfig/EnvironmentProfiles.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Environment profile CSV was not found: {path}", path);
+
+            var profiles = ParseEnvironmentProfiles(File.ReadAllLines(path), path);
+            try
+            {
+                foreach (var profile in profiles)
+                {
+                    string assetPath = $"Assets/Data/EnvironmentProfiles/EnvironmentProfile_{SanitizeName(profile.profileId)}.asset";
+                    var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(assetPath);
+                    bool isNew = asset == null;
+                    if (isNew)
+                    {
+                        asset = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+                        EnsureDirectory(assetPath);
+                    }
+
+                    CopyEnvironmentProfile(profile, asset);
+                    if (isNew)
+                        AssetDatabase.CreateAsset(asset, assetPath);
+                    else
+                        EditorUtility.SetDirty(asset);
+                }
+            }
+            finally
+            {
+                foreach (var profile in profiles)
+                    UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
+
+        public static EnvironmentProfileData[] ParseEnvironmentProfiles(string[] lines, string sourceName)
+        {
+            if (lines == null)
+                throw new InvalidDataException($"{sourceName} has no rows.");
+
+            int headerLineIndex = FindHeaderIndex(lines);
+            if (headerLineIndex < 0)
+                throw new InvalidDataException($"{sourceName} has no header row.");
+
+            var headers = FindHeader(lines);
+            RequireExactColumns(headers, sourceName, EnvironmentProfileColumns);
+            var profiles = new List<EnvironmentProfileData>();
+            var profileIds = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                for (int index = headerLineIndex + 1; index < lines.Length; index++)
+                {
+                    var line = lines[index];
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                        continue;
+
+                    var cols = ParseCSV(line);
+                    if (cols.Length != headers.Length)
+                    {
+                        throw new InvalidDataException(
+                            $"{sourceName} row {index + 1} has {cols.Length} columns; expected {headers.Length}.");
+                    }
+
+                    var profile = ParseEnvironmentProfileRow(headers, cols, $"{sourceName} row {index + 1}");
+                    if (!profileIds.Add(profile.profileId))
+                    {
+                        UnityEngine.Object.DestroyImmediate(profile);
+                        throw new InvalidDataException($"{sourceName} has duplicate profileId '{profile.profileId}'.");
+                    }
+
+                    profiles.Add(profile);
+                }
+
+                return profiles.ToArray();
+            }
+            catch
+            {
+                foreach (var profile in profiles)
+                    UnityEngine.Object.DestroyImmediate(profile);
+                throw;
+            }
+        }
+
+        private static EnvironmentProfileData ParseEnvironmentProfileRow(
+            string[] headers,
+            string[] cols,
+            string sourceName)
+        {
+            string profileId = GetRequiredColumnValue(headers, cols, "profileId", sourceName);
+            ValidateReference(profileId, sourceName, "profileId");
+
+            var directedEdges = ParseDirectedEdges(
+                GetRequiredColumnValue(headers, cols, "directedEdges", sourceName),
+                sourceName);
+            var surfacePrototypeRefs = ParseReferenceList(
+                GetRequiredColumnValue(headers, cols, "surfacePrototypeRefs", sourceName),
+                '|',
+                sourceName,
+                "surfacePrototypeRefs");
+            var channels = ParsePhenomenonChannels(
+                GetRequiredColumnValue(headers, cols, "phenomenonChannels", sourceName),
+                sourceName,
+                out var channelTypes);
+            var pairs = ParsePhenomenonPairs(
+                GetRequiredColumnValue(headers, cols, "phenomenonPairs", sourceName),
+                channelTypes,
+                sourceName);
+            var elementRelations = ParseElementRelationReferences(
+                GetRequiredColumnValue(headers, cols, "elementRelationRefs", sourceName),
+                sourceName);
+
+            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            profile.profileId = profileId;
+            profile.directedEdges = directedEdges;
+            profile.surfacePrototypeRefs = surfacePrototypeRefs;
+            profile.phenomenonChannels = channels;
+            profile.phenomenonPairs = pairs;
+            profile.elementRelationRefs = elementRelations;
+            return profile;
+        }
+
+        private static EnvironmentDirectedEdge[] ParseDirectedEdges(string raw, string sourceName)
+        {
+            var edges = new List<EnvironmentDirectedEdge>();
+            var seenEdges = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in SplitRequired(raw, '|', sourceName, "directedEdges"))
+            {
+                var ends = entry.Split(new[] { '>' }, StringSplitOptions.None);
+                if (ends.Length != 2)
+                    throw new InvalidDataException($"{sourceName} has invalid directed edge '{entry}'.");
+
+                ParseHexCoordinate(ends[0], sourceName, out int fromQ, out int fromR);
+                ParseHexCoordinate(ends[1], sourceName, out int toQ, out int toR);
+                if (!AreTopologicalNeighbors(fromQ, fromR, toQ, toR))
+                {
+                    throw new InvalidDataException(
+                        $"{sourceName} directed edge '{entry}' does not connect topological neighbors.");
+                }
+
+                string edgeKey = $"{fromQ}:{fromR}>{toQ}:{toR}";
+                if (!seenEdges.Add(edgeKey))
+                    throw new InvalidDataException($"{sourceName} has duplicate directed edge '{edgeKey}'.");
+
+                edges.Add(new EnvironmentDirectedEdge
+                {
+                    fromQ = fromQ,
+                    fromR = fromR,
+                    toQ = toQ,
+                    toR = toR,
+                });
+            }
+
+            return edges.ToArray();
+        }
+
+        private static void ParseHexCoordinate(string raw, string sourceName, out int q, out int r)
+        {
+            var values = raw.Split(new[] { ':' }, StringSplitOptions.None);
+            if (values.Length != 2 || !int.TryParse(values[0], out q) || !int.TryParse(values[1], out r))
+                throw new InvalidDataException($"{sourceName} has invalid hex coordinate '{raw}'.");
+        }
+
+        private static bool AreTopologicalNeighbors(int fromQ, int fromR, int toQ, int toR)
+        {
+            long deltaQ = toQ - (long)fromQ;
+            long deltaR = toR - (long)fromR;
+            return (Math.Abs(deltaQ) + Math.Abs(deltaR) + Math.Abs(deltaQ + deltaR)) / 2 == 1;
+        }
+
+        private static EnvironmentPhenomenonChannelData[] ParsePhenomenonChannels(
+            string raw,
+            string sourceName,
+            out Dictionary<EnvironmentPhenomenonChannel, HashSet<string>> channelTypes)
+        {
+            var parsedChannelTypes = new Dictionary<EnvironmentPhenomenonChannel, HashSet<string>>();
+            foreach (var entry in SplitRequired(raw, ';', sourceName, "phenomenonChannels"))
+            {
+                var values = entry.Split(new[] { '=' }, StringSplitOptions.None);
+                if (values.Length != 2)
+                    throw new InvalidDataException($"{sourceName} has invalid phenomenon channel '{entry}'.");
+
+                var channel = ParsePhenomenonChannel(values[0], sourceName);
+                if (parsedChannelTypes.ContainsKey(channel))
+                    throw new InvalidDataException($"{sourceName} repeats phenomenon channel '{values[0]}'.");
+
+                parsedChannelTypes[channel] = new HashSet<string>(
+                    ParseReferenceList(values[1], '+', sourceName, $"phenomenonChannels:{values[0]}"),
+                    StringComparer.Ordinal);
+            }
+
+            if (parsedChannelTypes.Count != EnvironmentPhenomenonChannels.Length ||
+                EnvironmentPhenomenonChannels.Any(channel => !parsedChannelTypes.ContainsKey(channel)))
+            {
+                throw new InvalidDataException(
+                    $"{sourceName} must declare each fixed phenomenon channel exactly once.");
+            }
+
+            channelTypes = parsedChannelTypes;
+            return EnvironmentPhenomenonChannels
+                .Select(channel => new EnvironmentPhenomenonChannelData
+                {
+                    channel = channel,
+                    phenomenonTypeRefs = parsedChannelTypes[channel].OrderBy(reference => reference, StringComparer.Ordinal).ToArray(),
+                })
+                .ToArray();
+        }
+
+        private static EnvironmentPhenomenonPairing[] ParsePhenomenonPairs(
+            string raw,
+            IReadOnlyDictionary<EnvironmentPhenomenonChannel, HashSet<string>> channelTypes,
+            string sourceName)
+        {
+            var pairs = new List<EnvironmentPhenomenonPairing>();
+            var seenPairs = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in SplitRequired(raw, '|', sourceName, "phenomenonPairs"))
+            {
+                var channelAndPair = entry.Split(new[] { ':' }, StringSplitOptions.None);
+                if (channelAndPair.Length != 2)
+                    throw new InvalidDataException($"{sourceName} has invalid phenomenon pair '{entry}'.");
+
+                var channel = ParsePhenomenonChannel(channelAndPair[0], sourceName);
+                var pairAndResult = channelAndPair[1].Split(new[] { '>' }, StringSplitOptions.None);
+                if (pairAndResult.Length != 2)
+                    throw new InvalidDataException($"{sourceName} has invalid phenomenon pair '{entry}'.");
+
+                var pairTypes = pairAndResult[0].Split(new[] { '+' }, StringSplitOptions.None);
+                if (pairTypes.Length != 2 || string.Equals(pairTypes[0], pairTypes[1], StringComparison.Ordinal))
+                    throw new InvalidDataException($"{sourceName} has invalid unordered phenomenon pair '{entry}'.");
+
+                ValidatePhenomenonTypeReference(channel, pairTypes[0], channelTypes, sourceName);
+                ValidatePhenomenonTypeReference(channel, pairTypes[1], channelTypes, sourceName);
+                ValidatePhenomenonTypeReference(channel, pairAndResult[1], channelTypes, sourceName);
+
+                string first = string.CompareOrdinal(pairTypes[0], pairTypes[1]) < 0 ? pairTypes[0] : pairTypes[1];
+                string second = string.CompareOrdinal(pairTypes[0], pairTypes[1]) < 0 ? pairTypes[1] : pairTypes[0];
+                string pairKey = $"{channel}:{first}+{second}";
+                if (!seenPairs.Add(pairKey))
+                {
+                    throw new InvalidDataException(
+                        $"{sourceName} repeats or reverses unordered phenomenon pair '{pairKey}'.");
+                }
+
+                pairs.Add(new EnvironmentPhenomenonPairing
+                {
+                    channel = channel,
+                    firstTypeRef = first,
+                    secondTypeRef = second,
+                    resultTypeRef = pairAndResult[1],
+                });
+            }
+
+            return pairs.ToArray();
+        }
+
+        private static void ValidatePhenomenonTypeReference(
+            EnvironmentPhenomenonChannel channel,
+            string reference,
+            IReadOnlyDictionary<EnvironmentPhenomenonChannel, HashSet<string>> channelTypes,
+            string sourceName)
+        {
+            ValidateReference(reference, sourceName, "phenomenonPairs");
+            if (!channelTypes.TryGetValue(channel, out var references) || !references.Contains(reference))
+            {
+                throw new InvalidDataException(
+                    $"{sourceName} phenomenon pair references unknown type '{reference}' in channel '{channel}'.");
+            }
+        }
+
+        private static string[] ParseElementRelationReferences(string raw, string sourceName)
+        {
+            var references = ParseReferenceList(raw, '|', sourceName, "elementRelationRefs");
+            var supplied = new HashSet<string>(references, StringComparer.Ordinal);
+            if (supplied.Count != ElementRelationReferences.Length ||
+                ElementRelationReferences.Any(reference => !supplied.Contains(reference)))
+            {
+                throw new InvalidDataException(
+                    $"{sourceName} must reference each of the five fixed element relations exactly once.");
+            }
+
+            return ElementRelationReferences.ToArray();
+        }
+
+        private static string[] ParseReferenceList(string raw, char separator, string sourceName, string fieldName)
+        {
+            var values = SplitRequired(raw, separator, sourceName, fieldName);
+            var references = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var value in values)
+            {
+                ValidateReference(value, sourceName, fieldName);
+                if (!references.Add(value))
+                    throw new InvalidDataException($"{sourceName} repeats reference '{value}' in '{fieldName}'.");
+            }
+
+            return values;
+        }
+
+        private static string[] SplitRequired(string raw, char separator, string sourceName, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                throw new InvalidDataException($"{sourceName} has empty required field '{fieldName}'.");
+
+            var values = raw.Split(new[] { separator }, StringSplitOptions.None)
+                .Select(value => value.Trim())
+                .ToArray();
+            if (values.Any(string.IsNullOrEmpty))
+                throw new InvalidDataException($"{sourceName} has an empty entry in '{fieldName}'.");
+            return values;
+        }
+
+        private static EnvironmentPhenomenonChannel ParsePhenomenonChannel(string raw, string sourceName)
+        {
+            return raw.Trim() switch
+            {
+                "airflow" => EnvironmentPhenomenonChannel.Airflow,
+                "visibility" => EnvironmentPhenomenonChannel.Visibility,
+                "temperature" => EnvironmentPhenomenonChannel.Temperature,
+                "precipitation" => EnvironmentPhenomenonChannel.Precipitation,
+                "suspendedHazard" => EnvironmentPhenomenonChannel.SuspendedHazard,
+                "cloudDischarge" => EnvironmentPhenomenonChannel.CloudDischarge,
+                _ => throw new InvalidDataException($"{sourceName} has unknown phenomenon channel '{raw}'."),
+            };
+        }
+
+        private static void ValidateReference(string value, string sourceName, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Any(character =>
+                !char.IsLetterOrDigit(character) && character != '_' && character != '-' && character != '.'))
+            {
+                throw new InvalidDataException($"{sourceName} has invalid reference '{value}' in '{fieldName}'.");
+            }
+        }
+
+        private static void CopyEnvironmentProfile(EnvironmentProfileData source, EnvironmentProfileData destination)
+        {
+            destination.profileId = source.profileId;
+            destination.directedEdges = source.directedEdges;
+            destination.surfacePrototypeRefs = source.surfacePrototypeRefs;
+            destination.phenomenonChannels = source.phenomenonChannels;
+            destination.phenomenonPairs = source.phenomenonPairs;
+            destination.elementRelationRefs = source.elementRelationRefs;
         }
 
         [MenuItem("天章/导入角色创建点购配置")]
@@ -541,6 +914,27 @@ namespace TianZhang.Editor
             {
                 if (FindColumnIndex(headers, columnName) < 0)
                     throw new InvalidDataException($"{sourceName} missing required column '{columnName}'.");
+            }
+        }
+
+        static void RequireExactColumns(string[] headers, string sourceName, params string[] columnNames)
+        {
+            RequireColumns(headers, sourceName, columnNames);
+            if (headers.Length != columnNames.Length)
+            {
+                throw new InvalidDataException(
+                    $"{sourceName} has {headers.Length} columns; expected exactly {columnNames.Length}.");
+            }
+
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var header in headers)
+            {
+                string normalized = header?.Trim();
+                if (!seen.Add(normalized) || !columnNames.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException(
+                        $"{sourceName} has duplicate or unknown column '{header}'.");
+                }
             }
         }
 
