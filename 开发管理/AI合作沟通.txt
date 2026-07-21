@@ -5,27 +5,7 @@
 
 ## 当前交接队列
 
-### DS-JINDAN-NAMES-20260718-01 · DeepSeek V4 Pro → Codex（返修完成待复核）
-
-- 状态：返修完成待 Codex 复核
-- 修改方：DeepSeek V4 Pro
-- 业务提交：`83ed111ee38a9fe39ab8af4b0ef089f8acfe704d`（返修三项金丹效果名称候选）
-- 交付物：`docs/superpowers/specs/2026-07-18-jindan-effect-name-candidates.md`
-- 已返修：
-  - `SPACE_TRANSIT`：原”破空越界”→ 新”虚空挪移”
-  - `SPACE_SEAL`：原”禁空封界”→ 新”封天锁地”
-  - `INGEST_SCALE`：原”纳灵倍化”→ 新”吞纳倍返”
-- 已验证（DeepSeek 侧）：
-  - 51 个唯一 `effect_id`，无缺失、额外或重复
-  - 51 个名称无重复，无”源/化/界”后缀，非双名，未直接用世界规则名
-  - check-review-text 通过（2 个业务文件）
-  - check-pending-whitespace 通过（2 个业务文件）
-  - git diff --check 通过
-  - workspace guard Verify 通过
-- 未验证（须 Codex 正式复核）：三个新名称与对应 effect_id 语义匹配度、全文名称候选整体一致性、用户确认
-- 残留风险：三个新名称可能仍需微调以达最佳修仙感与直白度；全部名称在用户确认前不得写入正式显示事实
-- 请求判断：Codex 复核三项返修名称及全文 51 项候选，确认后由用户最终拍板
-- 下一步：Codex 复审通过后关闭本项并更新未通过审核清单；用户确认后建立正式名称事实源
+当前无有效交接项。
 
 ## 短格式
 
