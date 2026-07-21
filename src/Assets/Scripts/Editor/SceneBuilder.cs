@@ -3,9 +3,7 @@ using UnityEditor;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using System;
-using System.IO;
 using System.Linq;
-using System.Text;
 using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Combat;
@@ -130,8 +128,6 @@ namespace TianZhang.Editor
 
         public static void ValidateSceneArchitectureShellsForBatchMode()
         {
-            BuildSceneArchitectureShells();
-
             ValidateBuildScenes(StartMenuScenePath, WorldScenePath, SettlementScenePath, AdventureScenePath);
             ValidateSceneShell(StartMenuScenePath, "StartMenuRoot", null);
             ValidateStartMenuShell(StartMenuScenePath);
@@ -139,7 +135,7 @@ namespace TianZhang.Editor
             ValidateSceneShell(SettlementScenePath, "SettlementRoot", typeof(TianZhang.Settlement.SettlementSceneController));
             ValidateSceneShell(AdventureScenePath, "AdventureRoot", typeof(TianZhang.Adventure.AdventureSceneController));
 
-            Debug.Log("[TQ-016] Scene architecture shells generated, registered, and loaded successfully.");
+            Debug.Log("[TQ-016] Scene architecture shells validated successfully.");
         }
 
         private static void ValidateBuildScenes(params string[] scenePaths)
@@ -218,7 +214,6 @@ namespace TianZhang.Editor
                 CreateStartMenuSectSelection(gameManager.GetComponent<GameManager>());
 
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
-            NormalizeGeneratedSceneYaml(scenePath);
         }
 
         private static void CreateStartMenuSectSelection(GameManager gameManager)
@@ -360,20 +355,6 @@ namespace TianZhang.Editor
             Require(selection.craftSkillText != null, $"{scenePath} missing craft skill text reference.");
         }
 
-        private static void NormalizeGeneratedSceneYaml(string scenePath)
-        {
-            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            var fullPath = Path.Combine(projectRoot, scenePath.Replace('/', Path.DirectorySeparatorChar));
-            if (!File.Exists(fullPath))
-                return;
-
-            var content = File.ReadAllText(fullPath, Encoding.UTF8);
-            var newline = content.Contains("\r\n") ? "\r\n" : "\n";
-            var lines = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-            var normalized = string.Join(newline, lines.Select(line => line.TrimEnd()));
-            File.WriteAllText(fullPath, normalized, new UTF8Encoding(false));
-        }
-
         [MenuItem("Tools/天章/生成开始菜单场景")]
         public static void BuildStartMenuScene()
         {
@@ -450,7 +431,6 @@ namespace TianZhang.Editor
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
                 UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
                 AdventureScenePath);
-            NormalizeGeneratedSceneYaml(AdventureScenePath);
             Debug.Log("<color=cyan>天章副本场景已生成</color>");
         }
 

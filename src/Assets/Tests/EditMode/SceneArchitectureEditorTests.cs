@@ -45,6 +45,17 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void BatchValidationDoesNotRewriteFormalSceneFiles()
+        {
+            var originalContents = ScenePaths.ToDictionary(path => path, File.ReadAllBytes);
+
+            SceneBuilder.ValidateSceneArchitectureShellsForBatchMode();
+
+            foreach (var scenePath in ScenePaths)
+                CollectionAssert.AreEqual(originalContents[scenePath], File.ReadAllBytes(scenePath), scenePath);
+        }
+
+        [Test]
         public void AdventureSceneShellIncludesTheFormalSingleEncounterOwners()
         {
             SceneBuilder.BuildAdventureScene();

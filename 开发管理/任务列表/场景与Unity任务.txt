@@ -4,7 +4,7 @@
 
 ## 当前事实
 
-- G1 已于 2026-07-12 通过：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者，最小正式闭环已验证。
+- G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 当前 P1 主线是最小状态模型；项目派生 asmdef 边界已由 TQ-067 完成，不得把已完成的 G1 切片重新排入队列。
 
 ## 任务

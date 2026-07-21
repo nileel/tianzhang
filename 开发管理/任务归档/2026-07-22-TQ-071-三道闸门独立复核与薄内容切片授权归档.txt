@@ -1,0 +1,30 @@
+# TQ-071 · 三道闸门独立复核与薄内容切片授权（完成归档）
+
+- 完成日期：2026-07-22
+- 主责：Codex / gpt-5.5
+- 范围：独立复核 G1 正式构建链、G2 BattleSim 数值可信度与 G3 数据链路语义可信度；只决定薄内容切片授权，不新增剧情、角色、功法、术法、神通或世界设定。
+
+## G1 修复与复核
+
+- 初次批处理复核发现 `ValidateSceneArchitectureShellsForBatchMode` 会先调用场景生成器，改写正式场景，不能作为独立验证；当前 `StartMenuScene` 也缺少创建流程要求的摘要引用。
+- 已将 batch 入口收敛为只读验证，新增 `BatchValidationDoesNotRewriteFormalSceneFiles` 回归；同步 `StartMenuScene`。
+- 场景生成器曾在 Unity 保存后直接重写 YAML，触发 Windows 1224 文件映射错误；已删除这一步二次写入，保留 Unity 保存结果并由差异检查负责行尾验证。
+- Unity EditMode：145/145 通过；只读 batch 验证退出码 0，执行前后没有新增 tracked diff。
+
+## G2 独立证据
+
+- Release build、`g2-reproducibility-tq055` 与 `g2-attribution-tq055` 自检均通过。
+- `--g2-audit --cycles 400`：21 个 Build 各 200/200 金丹样本；每个金丹矩阵格为 200 个角色配对、2,000 场战斗，覆盖结论为 `SUFFICIENT`。
+- `--g2-attribution --cycles 400`：98 个极端对局、294 条反事实；先天、功法包、风格机制的非零归因分别为 7、97、27，未归因项为 0。
+
+## G3 独立证据
+
+- `tools/tests/check-data-chain-tests.ps1` 的 9 个正反夹具通过。
+- `tools/check-data-chain.ps1 -FailOnMissingAssets` 通过：功法 29/29、术法 83/83、神通 31/31。
+- Unity EditMode 145/145 同时覆盖当前限制链；实际 asmdef 的 `TianZhang.EditModeTests.csproj` 构建为 0 错误。
+
+## 授权与边界
+
+批准且只批准一个运行时薄内容切片：**关中地区、小族出身、关中城据点、关中野外的一场战斗**。
+
+该授权不恢复世界级内容扩写，不解冻其他地区、出身、据点、战斗、剧情、角色、功法、术法、神通、经济或世界设定。任何生产工作仍须先建立包含完整范围和验证命令的当前任务卡。
