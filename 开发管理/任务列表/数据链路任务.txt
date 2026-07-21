@@ -17,7 +17,7 @@
 | D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01） | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 |
-| D-ENV-SCHEMA-01 | P2 | Codex | 待处理 | 定义有向边、地表、六类现象与五行配对表 schema；导入器对非法引用、缺字段和非确定配置失败关闭。 |
+| D-ENV-SCHEMA-01 | P2 | Codex | 已入当前队列 | 定义有向边、地表、六类现象与五行配对表 schema；导入器对非法引用、缺字段和非确定配置失败关闭。 |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
 

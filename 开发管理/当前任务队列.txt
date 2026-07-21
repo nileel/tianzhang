@@ -8,9 +8,22 @@
 
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
+| D-ENV-SCHEMA-01 | P2 | Codex / gpt-5.5 | 数据链路 | 待处理 | 环境档案 schema 与失败关闭导入边界 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
+
+### D-ENV-SCHEMA-01 · 环境档案 schema 与失败关闭导入边界
+
+- 稳定 ID：D-ENV-SCHEMA-01；优先级：P2；主责：Codex / ChatGPT5.5；当前状态：待处理。
+- 来源：`开发管理/任务列表/数据链路任务.txt` D-ENV-SCHEMA-01；同级候选中优先解锁 C-ENV-PROFILE-01 与 U-ENV-RULE-01。
+- 依赖：无；G3 已通过，N-ENV-01 已由提交 `5108bbead888d93d836742f532d2fce011f54634` 完成并提供有效 BattleSim fixture。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/任务归档/2026-07-21-N-ENV-01-环境规则基座归档.txt`、`docs/基础设定/战场空间与环境规则.txt`、`docs/基础设定/五行显化与环境交互规则.txt`、`simulations/BattleSim/Battlefield.cs`、`simulations/BattleSim/GameData.cs`、`src/Assets/DataConfig/README.txt`、`src/Assets/Scripts/Grid/TacticalGridModel.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`tools/check-data-chain.ps1` 与 `tools/tests/check-data-chain-tests.ps1`。
+- 预期修改路径：`src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/DataConfig/EnvironmentProfiles.csv.meta`、`src/Assets/DataConfig/README.txt`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs.meta`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs.meta`、`tools/check-data-chain.ps1`、`tools/tests/check-data-chain-tests.ps1`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数据链路任务.txt`、`开发管理/当前任务队列.txt` 与 `开发管理/任务归档/2026-07-21-D-ENV-SCHEMA-01-环境数据契约归档.txt`。
+- 范围：在单一 `EnvironmentProfiles.csv` 契约中定义战场档案 ID、有向相邻边、地表原型引用、固定六类现象通道、同通道无序配对与五行关系引用；由 `EnvironmentProfileData` 承载纯数据，由现有 `DataConfigImporter` 解析。生产表本轮只锁定表头与结构，不新增具体环境档案、数值或显示文本；正反样例只放测试代码。不得修改 BattleSim 规则、`TacticalGridModel` 运行时结算、Unity 表现或内容文档。
+- 验证命令：`dotnet build src/TianZhang.Runtime.csproj --no-restore`；`dotnet build src/TianZhang.EditModeTests.csproj --no-restore`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:\天章游戏开发\src`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools,src/Assets/DataConfig,src/Assets/Scripts,src/Assets/Tests`；`git diff --check`。
+- 完成条件：合法合成样例可确定导入同一份有向边、地表、六通道现象及配对／五行关系数据；未知引用、缺字段、非相邻边、非法通道、重复或顺序冲突配对在写入 asset 前失败关闭；表头、C# 字段与检查器断言一致，且没有新增具体环境内容或调参值。
+- 停止条件：完成契约必须先创作 C-ENV-PROFILE-01 的具体档案或未确认数值，必须提前实施 U-ENV-RULE-01 的运行时／表现，现有导入器与 `TianZhang.Gameplay` 数据所有者无法承载而需要第二套服务，或事实源不足以唯一决定配对／五行关系；停止并请求负责人决定，不添加默认值、静默兼容、重试或施加顺序兜底。
 
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 
