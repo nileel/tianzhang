@@ -101,6 +101,8 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   'tools/hourly-automation-lease.ps1',
   '统一排序',
   '三类均无合法候选时才',
+  '队列维护正式入口必须保留两个顺序分支',
+  '没有可提升的完整 backlog 任务卡不等于阻塞',
   '每轮只启动一个责任方',
   '纯 `1`',
   '纯 `2`',
@@ -116,11 +118,15 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   '`waiting_decision`',
   '`completed`',
   '`failed`',
+  '工具等待超时、yield 或尚未返回不等于 runner 失败',
+  '不得释放租约或启动第二写入者',
   'RECOVERY_ONLY',
   'businessCommit',
   'handoffCommit',
   '不消耗等待 token',
   '连续两次',
+  '只做一次完整配置更新',
+  '确认 status=PAUSED',
   'PAUSED'
 )
 Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(

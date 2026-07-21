@@ -146,8 +146,10 @@ $canonicalPrompt = @'
 使用 `tools/hourly-automation-lease.ps1` 检查原任务恢复和已回复的 pending resume。
 汇总 Codex 执行、Codex 复审、外部 AI 三类合法候选并统一排序。
 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 补充队列，本轮不执行新任务。
+队列维护正式入口必须保留两个顺序分支；没有可提升的完整 backlog 任务卡不等于阻塞，应继续从权威来源新增完整任务卡。
 取得租约后每轮只启动一个责任方，路由到纯 `1`、纯 `2`、`开发管理/DeepSeek工作提示词.txt` 或队列维护。
 普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout；取得租约后只通过 `tools/codex-cli-session.ps1` 的 `Start`，把完整正式入口提示经 stdin 传入。
+工具等待超时、yield 或尚未返回不等于 runner 失败；不得释放租约或启动第二写入者。
 调度器输出 `selected`；runner 只输出 `session_started`、`running`；调度器根据既有 runtime 和退出状态输出 `waiting_decision`、`completed` 或 `failed`。
 等待决定时保存 CLI session ID 并退出，回复后通过 runner `Resume` 同一 ID；旧终端结束后不回填后台结果。
 现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止。
@@ -155,6 +157,7 @@ $canonicalPrompt = @'
 外部 AI 自验证并创建 businessCommit 与 handoffCommit，调度器不代提交。
 决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
 记录结果并释放租约；相同全阻塞指纹连续两次时把生产入口设为 PAUSED 并发送通知。
+pauseRequested=true 时只做一次完整配置更新；确认 status=PAUSED 后才汇报已暂停。
 '@
 
 $canonicalRules = @'
@@ -289,7 +292,13 @@ try {
     '统一排序',
     '每轮只启动一个责任方',
     '三类均无合法候选时才',
+    '队列维护正式入口必须保留两个顺序分支',
+    '没有可提升的完整 backlog 任务卡不等于阻塞',
     '连续两次',
+    '工具等待超时、yield 或尚未返回不等于 runner 失败',
+    '不得释放租约或启动第二写入者',
+    '只做一次完整配置更新',
+    '确认 status=PAUSED',
     'businessCommit',
     '不消耗等待 token',
     'tools/codex-cli-session.ps1',
