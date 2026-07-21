@@ -1,29 +1,34 @@
 # 自动工作流状态（✅ 已审核）
 
-> 本文件只保留负责人需要看到的迁移事实、长期阻塞和最近有效生产结果；逐轮轨迹位于自动化 memory 或用户级私有 runtime。
+> 本文件只保留负责人需要看到的迁移事实、长期阻塞和最近有效生产结果；逐轮轨迹位于自动化任务、memory 或用户级私有 runtime。
 
 ## 当前切换状态
 
-- 生产入口：`tzg-hourly-controller` 仍为 `PAUSED`；旧 WF1、WF3、WF4 仍为 `PAUSED`。
+- 唯一生产写入入口为 `tzg-hourly-controller`；旧 WF1、WF3、WF4 已归档。只读的每日简报不属于写入入口。
 - 权威设计：`docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
-- 实施分支：`codex/hourly-automation-simplification`；建设 worktree：`D:\天章游戏开发-worktrees\hourly-controller-v2`。
-- TQ-057 的五项最终决定已归位到 `开发管理/任务列表/数据链路任务.txt`，当前队列只保留短入口；事实迁移提交为 `6925e35625383b3d6a1b3f18ec23571fe9312483`。
-- 旧私有源状态及时间戳备份均保留；本次备份为 `tzg-hourly-controller.pre-simplification.20260718T013707349Z.json` 与 `tzg-hourly-controller-v2.pre-simplification.20260718T013707349Z.json`。
-- 2026-07-19 暂停态手动运行曾选中 TQ-057，但原责任方 rollout 来源为 Desktop/VS Code，npm CLI `exec` 无法恢复；`lastResult.detailCode=resume_desktop_rollout_incompatible`。当前 `lease=null`，task-owned recovery 与已接收决定的 pending resume 均保留。
-- CLI-native runner、relay 和静态规则修订位于建设分支；尚未执行临时仓库 same-session 金丝雀，也未取得 CLI-native 手动生产任务或自然整点成功，不得把直接测试表述为生产成果。
+- 旧 controller v2、机器任务注册表、manifest 协议和旧修复/状态脚本已按 Task 11 从活动代码退役；CLI-native session runner、单写入租约和飞书恢复 relay 保留。
+- 旧私有源状态、时间戳备份和历史设计/计划全部保留；本次退役未迁移、转换或删除私有 runtime。
+- TQ-057 已由原 Desktop worker 完成并提交 `057947a6e3a27b471b83da04dde7af2765452e55`；旧 Desktop recovery 已由原责任方清除，没有迁移到 CLI session。
+
+## 迁移门禁证据
+
+- 2026-07-19 原 Desktop rollout 曾因 CLI 不兼容返回 `resume_desktop_rollout_incompatible`；生产保持 `PAUSED`，当时 `lease=null`，task-owned `recovery` 与已接收决定的 `pending resume` 原样保留。
+- Task 11 删除旧编排前再次把生产入口设为 `PAUSED` 并确认 `lease=null`；只有旧 Desktop 原责任方消费其恢复状态，没有转换、复制或替代 session。
 
 ## 最近有效生产事实
 
-- 2026-07-17：飞书决策桥保持单实例长连接；选项、卡片自定义输入和普通文本三条真实金丝雀已通过。该事实只证明既有消息通道，不证明本次精简调度。
-- 2026-07-11：旧单控制器曾完成一次真实小时复审并提交。该历史结果不作为新薄路由的验收证据。
+- 2026-07-21 手动生产金丝雀完成 TQ-069，业务提交为 `b2ec7930aa2476df82c48cff23e7f22667d83c20`。
+- 2026-07-21 首个自然小时轮次完成 N-DIST-01，业务提交为 `954f5c8fc92dda8373660671f71190bed094bdb6`。
+- 后续自然轮次继续完成 N-ENV-01，业务提交为 `5108bbead888d93d836742f532d2fce011f54634`；这只作为持续运行证据，不在本文件复制逐小时流水。
 
-## 当前阻塞
+## 当前恢复摘要
 
-TQ-057 只能由原 Desktop worker task 人工续跑并清除 recovery/pending resume；在此之前生产保持 `PAUSED`，普通自动化收到 `RECOVERY_ONLY` 后必须停止。CLI-native 修订仍受实施计划 Task 9E–9H 与 Task 10 门禁约束。
+- 2026-07-21 12:29（Asia/Hong_Kong）N-GROUP-01 已收到决定 `DEC-20260721-4213E322C680` 的选择 A，保留原 CLI session `019f82e6-01fa-7373-8be2-096551171f4d` 等待恢复；当时 `lease=null`、`hasUncommittedChanges=false`、`changedPaths=[]`。
+- 该恢复只能继续原 session；不得创建替代责任方、复制业务 diff 或清除 recovery。
 
 ## 证据位置
 
 - 业务成果：Git 提交、任务归档和任务卡验证结果。
-- 调度轨迹：Codex 自动化 memory。
+- 调度轨迹：Codex 自动化任务及其 memory。
 - 本机租约与恢复：用户级 `tzg-hourly-controller-runtime/runtime.json`。
 - 飞书桥状态：用户级 `tzg-feishu-decision-bridge/`。

@@ -46,7 +46,8 @@ function Convert-ProcessBytesToText {
         return [System.Text.UTF8Encoding]::new($false, $true).GetString($Bytes)
     }
     catch [System.Text.DecoderFallbackException] {
-        return [System.Console]::InputEncoding.GetString($Bytes)
+        $oemCodePage = [System.Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage
+        return [System.Text.Encoding]::GetEncoding($oemCodePage).GetString($Bytes)
     }
 }
 
@@ -177,21 +178,6 @@ try {
     $windowsPowerShell = 'power' + 'shell'
     $absoluteWindowsPowerShell = 'C:\Windows\System32\WindowsPowerShell\v1.0\' + $windowsPowerShell + '.exe'
     $absolutePwsh = 'C:\Program Files\PowerShell\7\pwsh.exe'
-    $controllerPromptCanonicalCommand = 'pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-controller.ps1'
-    $controllerPromptPath = Join-Path (Split-Path -Parent $PSScriptRoot) '开发管理/自动工作流控制器提示词.txt'
-    $controllerPromptMatches = @([System.IO.File]::ReadAllLines($controllerPromptPath) | Where-Object {
-        $_.Contains("准确调用：$controllerPromptCanonicalCommand")
-    })
-    if ($controllerPromptMatches.Count -ne 1) {
-        throw "Expected exactly one controller prompt canonical command marker; found $($controllerPromptMatches.Count)."
-    }
-    $controllerPromptCanonicalLine = $controllerPromptMatches[0]
-    $controllerPromptNonCanonicalPwsh = $controllerPromptCanonicalLine.Replace(
-        $controllerPromptCanonicalCommand,
-        'pwsh -NoProfile -File tools/automation-controller.ps1')
-    $controllerPromptForbiddenPowerShell = $controllerPromptCanonicalLine.Replace(
-        $controllerPromptCanonicalCommand,
-        'powershell -File tools/automation-controller.ps1')
 
     $badDocumentCases = @(
         "$windowsPowerShell -File tools/check.ps1",
@@ -201,8 +187,6 @@ try {
         "& '$absoluteWindowsPowerShell' -File tools/check.ps1",
         "$windowsPowerShell tools/check.ps1",
         "准确调用：$windowsPowerShell -File tools/check.ps1",
-        $controllerPromptForbiddenPowerShell,
-        $controllerPromptForbiddenPowerShell.Replace('准确调用：', '准确调用:'),
         'Run `powershell -File tools/check.ps1` now.',
         'Run ``powershell -File tools/check.ps1`` now.',
         'Run ```powershell -File tools/check.ps1``` now.',
@@ -234,8 +218,6 @@ try {
         '不要运行 `powershell -File tools/check.ps1`。',
         '普通说明：pwsh -NoProfile -File tools/check.ps1 只是错误示例，不得执行。',
         '准确调用：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1',
-        $controllerPromptCanonicalLine,
-        $controllerPromptCanonicalLine.Replace('准确调用：', '准确调用:'),
         "`$example = @'`npwsh -NoProfile -File tools/check.ps1`n'@",
         "PowerShell 7 is required`n`nInvoke-ChildPowerShell"
     )
@@ -249,8 +231,6 @@ try {
         'pwsh tools/check.ps1',
         'pwsh -NoProfile -ExecutionPolicy Bypass tools/check.ps1',
         '准确调用：pwsh -NoProfile -File tools/check.ps1',
-        $controllerPromptNonCanonicalPwsh,
-        $controllerPromptNonCanonicalPwsh.Replace('准确调用：', '准确调用:'),
         '> pwsh -NoProfile -File tools/check.ps1',
         '- pwsh -ExecutionPolicy Bypass -File tools/check.ps1',
         '1. pwsh -NoProfile -ExecutionPolicy RemoteSigned -File tools/check.ps1',
@@ -497,8 +477,7 @@ param()
         'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md'
     )
     $defaultRequiredVersionPaths = @(
-        'tools/automation-controller.ps1',
-        'tools/automation-controller-state.ps1',
+        'tools/hourly-automation-lease.ps1',
         'tools/check-automation-workflow.ps1',
         'tools/check-review-text.ps1',
         'tools/check-data-chain.ps1',
@@ -515,6 +494,11 @@ param()
 
     $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot
     Assert-Passed -Result $result -Label 'clean minimal default fixture with archived document'
+
+    Write-FixtureFile -Root $defaultRoot -RelativePath 'tools/hourly-automation-lease.ps1' -Content ''
+    $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot
+    Assert-FailedWithDiagnostic -Result $result -Diagnostic 'PW7_MISSING_REQUIRES tools/hourly-automation-lease.ps1:1' -Label 'hourly lease requires PowerShell 7'
+    Write-FixtureFile -Root $defaultRoot -RelativePath 'tools/hourly-automation-lease.ps1' -Content "#requires -Version 7.0`nparam()`n"
 
     Write-FixtureFile -Root $defaultRoot -RelativePath '开发管理/任务列表/审核与交接任务.txt' -Content "- [ ] pwsh -fi tools/check.ps1`n"
     $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot
