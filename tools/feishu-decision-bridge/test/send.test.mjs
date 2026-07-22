@@ -91,7 +91,7 @@ function makePassThroughIntentStore() {
   return {
     async run(intent, operation) {
       const outcome = await operation();
-      return { ...intent, ...outcome };
+      return { ...intent, ...outcome, resultAt: intent.now.toISOString() };
     },
   };
 }
@@ -151,6 +151,7 @@ test('sendDecision maps email and open_id recipients and sends the exact interac
       }
 
       assert.deepEqual(Object.keys(result).sort(), [
+        'acceptedAt',
         'cardNonceHash',
         'intentKeyHash',
         'providerChatIdHash',
@@ -159,6 +160,7 @@ test('sendDecision maps email and open_id recipients and sends the exact interac
         'targetHash',
       ]);
       assert.equal(result.result, 'PROVIDER_ACCEPTED');
+      assert.equal(result.acceptedAt, NOW.toISOString());
       assert.equal(result.targetHash, sha256(recipient.value));
       assert.equal(result.providerMessageIdHash, sha256('om_provider_123'));
       assert.equal(result.providerChatIdHash, sha256('oc_provider_123'));
@@ -695,6 +697,19 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
   });
 
   await writeFile(requestPath, sendRequestText);
+  const delayedNow = new Date(NOW.getTime() + (3 * 60 * 60 * 1000));
+  const cachedAccepted = await run(['--request-file', requestPath], {
+    now: () => delayedNow,
+    readHealth: async () => makeHealth({ updatedAt: delayedNow.toISOString() }),
+  });
+  assert.equal(cachedAccepted.code, 0);
+  assert.deepEqual(assertOneJsonLine(cachedAccepted.stdout), assertOneJsonLine(accepted.stdout));
+  assert.equal(
+    JSON.parse(await readFile(requestPath, 'utf8')).pendingDecision.createdAt,
+    NOW.toISOString(),
+  );
+
+  await writeFile(requestPath, sendRequestText);
   const transitionFailed = await run(['--request-file', requestPath], {
     writeRecoveryRequest: async () => { throw new Error('request transition failed'); },
   });
@@ -754,6 +769,7 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
   const acceptedWhitelist = await run(['--request-file', requestPath], {
     send: async () => ({
       result: 'PROVIDER_ACCEPTED',
+      acceptedAt: NOW.toISOString(),
       targetHash: 'a'.repeat(64),
       providerMessageIdHash: 'b'.repeat(64),
       providerChatIdHash: 'c'.repeat(64),
@@ -920,9 +936,10 @@ test('send intent store persists only sanitized atomic ACCEPTED evidence and cac
   assert.equal(calls, 1);
   assert.deepEqual(cached, first);
   assert.deepEqual(Object.keys(cached).sort(), [
-    'cardNonceHash', 'intentKeyHash', 'providerChatIdHash', 'providerMessageIdHash',
+    'acceptedAt', 'cardNonceHash', 'intentKeyHash', 'providerChatIdHash', 'providerMessageIdHash',
     'result', 'targetHash',
   ]);
+  assert.equal(cached.acceptedAt, NOW.toISOString());
 
   const names = await readdir(join(root, 'send-intents'));
   assert.equal(names.length, 1);

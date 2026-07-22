@@ -311,6 +311,7 @@ function publicStoredOutcome(record) {
   if (record.status === 'ACCEPTED') {
     base.providerMessageIdHash = record.providerMessageIdHash;
     base.providerChatIdHash = record.providerChatIdHash;
+    base.resultAt = record.resultAt;
   }
   return base;
 }

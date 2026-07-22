@@ -33,6 +33,14 @@ function validDate(value) {
   return value instanceof Date && Number.isFinite(value.getTime());
 }
 
+function validIsoTime(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  const milliseconds = Date.parse(value);
+  return Number.isFinite(milliseconds) && new Date(milliseconds).toISOString() === value;
+}
+
 function snapshotDataFields(value, keys) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return null;
@@ -149,7 +157,7 @@ function storedOutcomeFields(outcome) {
   const fields = Object.create(null);
   for (const key of [
     'status', 'targetHash', 'cardNonceHash', 'intentKeyHash', 'providerMessageIdHash',
-    'providerChatIdHash',
+    'providerChatIdHash', 'resultAt',
   ]) {
     const descriptor = descriptors[key];
     if (descriptor !== undefined && Object.hasOwn(descriptor, 'value')) {
@@ -287,9 +295,11 @@ export async function sendDecision(request) {
     && /^[0-9a-f]{64}$/.test(outcome.providerMessageIdHash)
     && typeof outcome.providerChatIdHash === 'string'
     && /^[0-9a-f]{64}$/.test(outcome.providerChatIdHash)
+    && validIsoTime(outcome.resultAt)
   ) {
     return {
       result: 'PROVIDER_ACCEPTED',
+      acceptedAt: outcome.resultAt,
       targetHash,
       providerMessageIdHash: outcome.providerMessageIdHash,
       providerChatIdHash: outcome.providerChatIdHash,

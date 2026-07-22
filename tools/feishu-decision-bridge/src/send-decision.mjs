@@ -294,9 +294,26 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
     return 22;
   }
   if (output.result === 'PROVIDER_ACCEPTED') {
+    const acceptedAt = typeof result.acceptedAt === 'string'
+      ? new Date(result.acceptedAt)
+      : new Date(Number.NaN);
+    if (!Number.isFinite(acceptedAt.getTime()) || acceptedAt.toISOString() !== result.acceptedAt) {
+      writeResult(stdout, INVALID_RESULT);
+      return 22;
+    }
     try {
-      await writeBinding({ stateRoot: config.stateRoot, decision: request.decision, result: output, now });
-      await writeRequest({ requestPath, decision: request.decision, result: output, now });
+      await writeBinding({
+        stateRoot: config.stateRoot,
+        decision: request.decision,
+        result: output,
+        now: acceptedAt,
+      });
+      await writeRequest({
+        requestPath,
+        decision: request.decision,
+        result: output,
+        now: acceptedAt,
+      });
     } catch {
       output = {
         result: 'PROVIDER_OUTCOME_UNKNOWN',
