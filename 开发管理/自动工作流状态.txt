@@ -23,11 +23,9 @@
 
 ## 当前生产保护
 
-- ⚠️ AUTO-BLOCKED（2026-07-22）：`QUEUE-MAINTENANCE` 未能从 Node REPL 的 `nodeRepl.requestMeta['x-codex-turn-metadata'].model` 取得可验证模型身份（返回 `unknown`）；已安全退出，未进入队列/backlog 选题、业务实施或复审。恢复条件：在可提供该 request metadata 的 CLI-native 会话中重新调度。
+- 2026-07-22 `QUEUE-MAINTENANCE` 已确认 Codex 执行范围并补入 U-2_5D-01A；此前的模型身份元数据阻塞已清除。
 - N-GROUP-01 已由业务提交 `c4e9db82a5a20850814136b550711fcbd6302ce0` 完成并归档；原 CLI Resume 的非 JSON 假失败不再代表恢复状态。
-- 当前 runtime 的 lease、recovery 与 pending resume 均为空；连续相同全阻塞已使 `pauseRequested=true` 成为工具级逻辑暂停，普通 Acquire 返回 `SUSPENDED`。
-- 当前阻塞原因仍为权威资料不足以形成完整新任务卡；这是合法业务阻塞，不伪造 backlog 卡。
-- 生产入口已由自动化任务之外的外部普通管理上下文确认同步为 `PAUSED`；未来恢复须先 `ClearBlocking`，再把完整现有配置设为 `ACTIVE`。
+- 生产入口仍由外部普通管理上下文保持为 `PAUSED`；本轮未修改自动化配置。
 
 ## 证据位置
 
