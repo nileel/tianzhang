@@ -111,6 +111,8 @@ Assert-ContainsAll -Text $prompt -Context 'thin prompt' -Required @(
   'tools/codex-cli-session.ps1',
   '`Start`',
   'stdin',
+  '不得直接管道调用 runner',
+  '-Model',
   '`Resume`',
   '`selected`',
   '`session_started`',
@@ -158,13 +160,10 @@ Assert-ContainsAll -Text $rules -Context 'short rules' -Required @(
   '回滚'
 )
 Assert-ContainsAll -Text $status -Context 'workflow status' -Required @(
-  'PAUSED',
   'recovery',
   'pending resume',
   'lease',
-  'pauseRequested=true',
-  'SUSPENDED',
-  'ClearBlocking'
+  'pauseRequested='
 )
 
 $showIndex = $prompt.IndexOf('每轮第一项操作必须', [StringComparison]::Ordinal)

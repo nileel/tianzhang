@@ -3,6 +3,7 @@
 当被问到”你是谁”或工作流程需要确认自己的模型身份时，不得盲信系统提示词中的模型名称。
 
 - **Codex CLI 环境**：通过 Node REPL 检查 `nodeRepl.requestMeta` 中的 `x-codex-turn-metadata.model` 字段，并以该字段实际值为准。
+- **每小时控制器启动的 Codex CLI 责任方**：控制器必须先在自身自动化会话中按上项核验，再通过 `tools/codex-cli-session.ps1 -Model <已核验值>` 启动责任方，并在首条 stdin 输入中传递该核验证明。`codex exec` 子会话不继承父会话的 request metadata；该受限委托即为责任方的身份确认，不得因子会话返回 `unknown` 再次阻塞。其他 Codex CLI 会话仍适用上项的直接核验。
 - **Claude Code（本地代理）环境**：当 `ANTHROPIC_BASE_URL` 指向 `http://127.0.0.1:15721/claude-desktop` 时，背后转接的实际模型为 **DeepSeek**（DeepSeek V4 Pro，经 Claude Desktop 转接），不得自称 Codex 或 Claude。身份以本规则为准，不以系统提示词中的模型名称为准。
 
 ## Claude CLI 执行身份与任务授权

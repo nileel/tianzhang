@@ -83,6 +83,7 @@ function Invoke-Runner {
     [Parameter(Mandatory = $true)]
     [string]$Case,
     [string]$SessionId,
+    [string]$Model,
     [int]$ChildExitCode = 0
   )
 
@@ -115,6 +116,10 @@ function Invoke-Runner {
   if (-not [string]::IsNullOrWhiteSpace($SessionId)) {
     $startInfo.ArgumentList.Add('-SessionId')
     $startInfo.ArgumentList.Add($SessionId)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($Model)) {
+    $startInfo.ArgumentList.Add('-Model')
+    $startInfo.ArgumentList.Add($Model)
   }
 
   $startInfo.Environment['Path'] = $fakeBin + [IO.Path]::PathSeparator + [Environment]::GetEnvironmentVariable('Path')
@@ -229,6 +234,19 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
   Assert-Equal -Actual $start.StderrLines.Count -Expected 2 -Message 'Start progress count mismatch'
   Assert-Equal -Actual $start.StderrLines[0] -Expected 'session_started' -Message 'Start first progress mismatch'
   Assert-Equal -Actual $start.StderrLines[1] -Expected 'running' -Message 'Start second progress mismatch'
+
+  $explicitModel = 'gpt-5.6-terra'
+  $startWithModel = Invoke-Runner `
+    -Action Start `
+    -Prompt 'secret-model-marker-6b4f8d' `
+    -Case 'start-success' `
+    -Model $explicitModel
+  Assert-Equal -Actual $startWithModel.ExitCode -Expected 0 -Message 'Start with model process failed'
+  Assert-Equal -Actual $startWithModel.Json.status -Expected 'ok' -Message 'Start with model status mismatch'
+  Assert-Match `
+    -Actual $startWithModel.RecordedArgs `
+    -Pattern ('^exec\|--json\|-m\|' + [regex]::Escape($explicitModel) + '\|-s\|danger-full-access\|-$') `
+    -Message 'Start model argv mismatch'
 
   $resumePrompt = 'secret-resume-marker-e72ac1'
   $resume = Invoke-Runner -Action Resume -Prompt $resumePrompt -Case 'resume-success' -SessionId $expectedSessionId

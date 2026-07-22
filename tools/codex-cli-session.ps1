@@ -7,7 +7,8 @@ param(
   [string]$RepositoryRoot,
   [string]$TaskId,
   [string]$RunId,
-  [string]$SessionId
+  [string]$SessionId,
+  [string]$Model
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,7 +45,12 @@ try {
   }
 
   $childArguments = if ($Action -ceq 'Start') {
-    @('exec', '--json', '-s', 'danger-full-access', '-')
+    $arguments = @('exec', '--json')
+    if (-not [string]::IsNullOrWhiteSpace($Model)) {
+      $arguments += @('-m', $Model)
+    }
+    $arguments += @('-s', 'danger-full-access', '-')
+    $arguments
   } else {
     @('exec', 'resume', '--json', $SessionId, '-')
   }

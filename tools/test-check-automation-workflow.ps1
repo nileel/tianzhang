@@ -155,6 +155,7 @@ $canonicalPrompt = @'
 队列维护正式入口必须保留两个顺序分支；没有可提升的完整 backlog 任务卡不等于阻塞，应继续从权威来源新增完整任务卡。
 取得租约后每轮只启动一个责任方，路由到纯 `1`、纯 `2`、`开发管理/DeepSeek工作提示词.txt` 或队列维护。
 普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout；取得租约后只通过 `tools/codex-cli-session.ps1` 的 `Start`，把完整正式入口提示经 stdin 传入。
+必须以新的 `pwsh -NoProfile -ExecutionPolicy Bypass -File` 进程启动 runner，并将输入写入该进程的标准输入；不得直接管道调用 runner。控制器须在自身 Node REPL 已核验模型后，把该值同时作为 runner 的 `-Model` 参数和责任方首条输入中的核验证明。
 工具等待超时、yield 或尚未返回不等于 runner 失败；不得释放租约或启动第二写入者。
 调度器输出 `selected`；runner 只输出 `session_started`、`running`；调度器根据既有 runtime 和退出状态输出 `waiting_decision`、`completed` 或 `failed`。
 等待决定时保存 CLI session ID 并退出，回复后通过 runner `Resume` 同一 ID；旧终端结束后不回填后台结果。
@@ -249,6 +250,18 @@ try {
     -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) `
     -Context 'Single active controller contract'
 
+  $activeRuntimeStatus = @'
+# 自动工作流状态
+
+- 生产入口为 ACTIVE。
+- runtime 的 lease、recovery 与 pending resume 均为空，pauseRequested=false。
+'@
+  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $activeRuntimeStatus
+  Assert-CheckerPasses `
+    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) `
+    -Context 'Active runtime status contract'
+  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $canonicalStatus
+
   Write-Automation -AutomationRoot $automationRoot -Id 'tzg-wf1-queue-and-review-maintenance' -Status 'ACTIVE' -Prompt $canonicalPrompt
   Assert-CheckerFails `
     -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) `
@@ -339,6 +352,8 @@ try {
     'tools/codex-cli-session.ps1',
     '`Start`',
     'stdin',
+    '不得直接管道调用 runner',
+    '-Model',
     '`selected`',
     '`session_started`',
     '`running`',

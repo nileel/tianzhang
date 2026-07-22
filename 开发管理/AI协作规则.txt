@@ -70,7 +70,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ### 通用步骤
 
-1. 先确认身份：Codex / ChatGPT5.5 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
+1. 先确认身份：Codex / ChatGPT5.5 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；每小时控制器经 `tools/codex-cli-session.ps1` 启动的 Codex 责任方使用控制器以 `-Model` 和首条 stdin 输入传递的核验结果，不因 `codex exec` 不继承 request metadata 而重复阻塞；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
 2. 纯 `1` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`，从执行型任务开始选择；只有命中未审核、交接或复审路由时才读取审核入口及相应清单或交接条目。纯 `2` 读取 `AGENTS.md`、审核入口、未通过审核清单、当前交接队列和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
 4. `1` 依次从当前队列中当前 AI 主责的 P0/P1、当前 AI 可修复的未通过项、交接中请求执行的非复审项、相关分线 backlog / 下一步索引、DeepSeek 批量整理任务、Codex 架构数值或复杂 Unity 任务中选择最小切片。
