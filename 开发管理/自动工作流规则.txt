@@ -29,6 +29,7 @@
 ## 决策恢复与阻塞暂停
 
 - 修改前等待决定时保存原 CLI session ID 或外部 session，释放租约并退出；回复到达后只通过 runner `Resume` 同一 CLI session ID 或既有外部恢复入口中继负责人原文。
+- 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 - 回复占锁时写入 pending resume 后立即结束，不 sleep、不轮询、不保持模型进程；释放租约或下个整点只取一个 ready resume。
 - 已有未提交任务修改时停止普通调度，只允许原责任方恢复，不把半成品交给另一责任方。
 - 现有 task-owned Desktop recovery 只允许原任务人工完成；普通自动化收到 `RECOVERY_ONLY` 后停止，不转换、复制或迁移 rollout。

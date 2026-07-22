@@ -164,6 +164,7 @@ $canonicalPrompt = @'
 外部 AI 自验证并创建 businessCommit 与 handoffCommit，调度器不代提交。
 所有控制器责任方的业务提交都通过 automation-finalize-commit.ps1 的 RequireAutomationMetadata 门禁，并以 AutomationTask、AutomationState、AutomationResult、AutomationImpact、AutomationVerify 传入单行字段；正文包含 Automation: tzg-hourly-controller，Codex 使用 State: completed，外部 businessCommit 使用 State: pending_review，handoffCommit 不使用 Automation 标记。
 决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
+只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 记录结果并释放租约；相同全阻塞指纹连续两次使 pauseRequested=true 后，只报告“runtime 已逻辑暂停，界面尚未同步”并结束。
 逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`；只有自动化任务之外的外部普通管理上下文可确认安全后先调用 `ClearBlocking`，再把入口设为 `ACTIVE`。
 自动化任务不得调用自动化管理能力管理自身，也不得读取或更新自身配置、等待管理服务。
@@ -185,6 +186,7 @@ $canonicalRules = @'
 - 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
 - 统一提交元数据：所有责任方业务提交启用 RequireAutomationMetadata，并以 AutomationTask、AutomationState、AutomationResult、AutomationImpact、AutomationVerify 传入单行字段；finalizer 写 Automation: tzg-hourly-controller，Codex 使用 State: completed，外部业务使用 State: pending_review，handoffCommit 不使用 Automation 标记。
 - 决策恢复：保存原 thread/session；占锁排队且不等待 token。
+- 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 - 启动顺序：在读取当前任务队列或任何候选事实源前先调用 Show，逻辑暂停时立即退出。
 - 两轮阻塞暂停：相同全阻塞指纹连续两次后形成工具级逻辑暂停，普通 Acquire 返回 SUSPENDED。
 - 自管理边界：自动化任务不得调用自动化管理能力管理自身；只报告 runtime 已逻辑暂停，界面尚未同步。
@@ -361,6 +363,9 @@ try {
     'State: completed',
     'State: pending_review',
     'handoffCommit 不使用 Automation 标记',
+    'PROVIDER_ACCEPTED',
+    '原发送请求路径已原子转换为消费请求',
+    'SaveRecovery',
     '不消耗等待 token',
     'tools/codex-cli-session.ps1',
     '`Start`',
