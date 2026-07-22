@@ -55,7 +55,8 @@ function Invoke-GitText {
 
 function Get-WorkspaceSnapshot {
   $snapshot = @{}
-  $lines = @(Invoke-GitText -Arguments @('-c', 'core.quotepath=false', 'status', '--porcelain=v1', '--untracked-files=all') -split '\r?\n')
+  $statusText = Invoke-GitText -Arguments @('-c', 'core.quotepath=false', 'status', '--porcelain=v1', '--untracked-files=all')
+  $lines = @($statusText -split '\r?\n')
   foreach ($line in $lines) {
     if ([string]::IsNullOrWhiteSpace($line) -or $line.Length -lt 4) {
       continue
@@ -82,8 +83,13 @@ function Get-NewChangedPaths {
   param([hashtable]$Before, [hashtable]$After)
 
   $changed = [Collections.Generic.List[string]]::new()
-  foreach ($path in @($After.Keys | Sort-Object)) {
-    if (-not $Before.ContainsKey($path) -or [string]$Before[$path] -cne [string]$After[$path]) {
+  $allPaths = @($Before.Keys) + @($After.Keys) | Sort-Object -Unique
+  foreach ($path in $allPaths) {
+    if (
+      -not $Before.ContainsKey($path) -or
+      -not $After.ContainsKey($path) -or
+      [string]$Before[$path] -cne [string]$After[$path]
+    ) {
       $changed.Add([string]$path)
     }
   }

@@ -207,6 +207,12 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     $global:LASTEXITCODE = 9
     exit 9
   }
+  'child-failed-removes-baseline-changes' {
+    [IO.File]::WriteAllText((Join-Path (Get-Location) 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false))
+    Remove-Item -LiteralPath (Join-Path (Get-Location) 'existing-untracked.txt') -Force
+    $global:LASTEXITCODE = 9
+    exit 9
+  }
   'decision-waiting' {
     & pwsh -NoProfile -ExecutionPolicy Bypass -File $env:RESPONSIBILITY_TEST_LEASE_PATH `
       -Action SaveRecovery `
@@ -275,6 +281,27 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $recoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Interrupted fixture could not reacquire recovery'
   Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryLease.runId } | Out-Null
   Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryLease.runId } | Out-Null
+
+  Reset-GitFixture
+  [IO.File]::WriteAllText((Join-Path $gitRoot 'seed.txt'), 'modified before resume', [Text.UTF8Encoding]::new($false))
+  [IO.File]::WriteAllText((Join-Path $gitRoot 'existing-untracked.txt'), 'existing before resume', [Text.UTF8Encoding]::new($false))
+  $removedBaselineRun = Acquire-TestLease -TaskId 'task-removes-baseline'
+  $removedBaseline = Invoke-Responsibility -Case 'child-failed-removes-baseline-changes' -TaskId 'task-removes-baseline' -RunId $removedBaselineRun
+  Assert-True -Condition ($removedBaseline.ExitCode -ne 0) -Message 'Baseline-removal invocation unexpectedly succeeded'
+  Assert-Equal -Actual $removedBaseline.Json.status -Expected 'interrupted' -Message 'Baseline-removal invocation did not preserve interruption recovery'
+  $removedBaselineState = Assert-LeaseReleased
+  Assert-Equal -Actual $removedBaselineState.state.recovery.trigger -Expected 'interruption' -Message 'Baseline-removal recovery trigger mismatch'
+  Assert-True -Condition ('seed.txt' -in @($removedBaselineState.state.recovery.changedPaths)) -Message 'Restored tracked file was not recorded as changed by the resume'
+  Assert-True -Condition ('existing-untracked.txt' -in @($removedBaselineState.state.recovery.changedPaths)) -Message 'Deleted untracked file was not recorded as changed by the resume'
+  $removedBaselineRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-removes-baseline'
+    Owner = 'codex'
+    RepositoryRoot = $gitRoot
+    ResumeRecovery = $true
+  }
+  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $removedBaselineRecoveryLease.runId } | Out-Null
+  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $removedBaselineRecoveryLease.runId } | Out-Null
   Reset-GitFixture
   $decisionRun = Acquire-TestLease -TaskId 'task-decision'
   $waiting = Invoke-Responsibility -Case 'decision-waiting' -TaskId 'task-decision' -RunId $decisionRun

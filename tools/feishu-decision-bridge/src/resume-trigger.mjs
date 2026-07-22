@@ -371,14 +371,18 @@ async function startDetachedModel({ dispatch, reply, spawnChild, stateRoot }) {
   });
 }
 
-async function bestEffortStartFailure({ dispatch, invokeLease }) {
+async function bestEffortStartFailure({
+  dispatch,
+  invokeLease,
+  detailCode = 'resume_child_start_failed',
+}) {
   try {
     await invokeLease({
       action: 'RecordResult',
       runId: dispatch.runId,
       category: 'failed',
       taskId: dispatch.taskId,
-      detailCode: 'resume_child_start_failed',
+      detailCode,
     });
   } catch {
     // The release attempt below remains mandatory.
@@ -439,11 +443,21 @@ export async function runResumeRelay(options) {
   }
 
   const dispatch = validateDispatch(leaseResponse);
-  const reply = await consumeReply({
-    decisionId: dispatch.decisionId,
-    decisionRequestPath: dispatch.decisionRequestPath,
-    replyPath: dispatch.replyPath,
-  });
+  let reply;
+  try {
+    reply = await consumeReply({
+      decisionId: dispatch.decisionId,
+      decisionRequestPath: dispatch.decisionRequestPath,
+      replyPath: dispatch.replyPath,
+    });
+  } catch {
+    await bestEffortStartFailure({
+      dispatch,
+      invokeLease,
+      detailCode: 'resume_reply_consume_failed',
+    });
+    return { status: 'CONSUME_FAILED' };
+  }
   try {
     await startDetachedModel({ dispatch, reply, spawnChild, stateRoot });
   } catch {

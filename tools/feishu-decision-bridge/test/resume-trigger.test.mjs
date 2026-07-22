@@ -374,6 +374,52 @@ test('DISPATCH resumes Claude with custom text through stdin only', async () => 
   assert.equal(call.stdin, `[TZG_DECISION_RESUME runId=run-claude]\n${customText}`);
 });
 
+test('reply consumption failure requeues the same dispatch and releases the lease', async () => {
+  const leaseCalls = [];
+  const spawnRecorder = fakeSpawnRecorder();
+  const result = await runResumeRelay({
+    mode: 'queue',
+    stateRoot: 'C:\\private\\runtime',
+    decisionId: 'decision-consume-failure',
+    replyPath: 'C:\\private\\inbox\\reply-consume-failure.json',
+    invokeLease: async (request) => {
+      leaseCalls.push(request);
+      if (request.action === 'QueueResume' && leaseCalls.length === 1) {
+        return {
+          status: 'DISPATCH',
+          runId: 'run-consume-failure',
+          taskId: 'task-consume-failure',
+          owner: 'codex',
+          repositoryRoot: 'C:\\repo',
+          resumeKind: 'codex',
+          resumeId: 'session-consume-failure',
+          decisionId: 'decision-consume-failure',
+          decisionRequestPath: 'C:\\private\\request-consume-failure.json',
+          replyPath: 'C:\\private\\inbox\\reply-consume-failure.json',
+        };
+      }
+      if (request.action === 'RecordResult') return { status: 'RECORDED' };
+      if (request.action === 'QueueResume') return { status: 'QUEUED' };
+      if (request.action === 'Release') return { status: 'RELEASED' };
+      throw new Error('Unexpected lease action');
+    },
+    consumeReply: async () => {
+      throw new Error('invalid signed reply');
+    },
+    spawnChild: spawnRecorder.spawnChild,
+  });
+
+  assert.deepEqual(result, { status: 'CONSUME_FAILED' });
+  assert.deepEqual(
+    leaseCalls.map((request) => request.action),
+    ['QueueResume', 'RecordResult', 'QueueResume', 'Release'],
+  );
+  assert.equal(leaseCalls[1].detailCode, 'resume_reply_consume_failed');
+  assert.equal(leaseCalls[2].replyPath, 'C:\\private\\inbox\\reply-consume-failure.json');
+  assert.equal(leaseCalls[3].runId, 'run-consume-failure');
+  assert.equal(spawnRecorder.calls.length, 0);
+});
+
 test('model start failure records failure, requeues once, and releases lease', async () => {
   const leaseCalls = [];
   const spawnRecorder = fakeSpawnRecorder({ fail: true });
