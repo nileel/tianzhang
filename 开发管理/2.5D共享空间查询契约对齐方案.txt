@@ -1,0 +1,96 @@
+# 2.5D 共享空间查询契约对齐方案
+
+> 任务：U-2_5D-01C ｜ 主责：Codex / gpt-5.6-terra ｜ 状态：已完成（方案；尚未实现）
+>
+> 依据：`U-2_5D-01B` 的定位记录，以及负责人决定 `DEC-20260722-U25D01B = A`。
+>
+> 结论：唯一规则源代码所有者应设为 `src/Assets/Scripts/Core/SpatialRules/` 中不引用 `UnityEngine` 的纯 C# 源文件。Unity 通过 `TianZhang.Foundation` 消费它；BattleSim 通过 `BattleSim.csproj` 的显式 linked compile 消费同一批源文件。它是同一份源代码，不是 Unity 对 BattleSim 的程序集引用，也不是第二个查询服务。
+
+## 一、已核实的边界与选择
+
+- `simulations/BattleSim/BattleSim.csproj` 是独立的 `net10.0` 可执行项目；当前不能被 Unity runtime 直接引用。
+- Unity 的 `TianZhang.Foundation` 已是 `Core/` 下的最底层程序集，适合承载无 Unity 依赖的查询代码；`TianZhang.Combat` 和 `TianZhang.Gameplay` 已可向下引用它。
+- `BattleSim.HexBattlefield` 已完整实现有向边、固定点加权距离、可达格、攻击位置、视线和实体障碍；迁移后它只保留 BattleSim 场景输入适配与模拟调用，不再保留另一套查询算法。
+- Unity `TianZhang.Core.HexCoord` 含 `Vector2Int`、`Vector3`、`Mathf` 转换，不能作为共享类型。共享契约使用新的纯 `SpatialHexCoord(q,r)`；Unity 和 BattleSim 都只在各自边界显式映射，不改写现有坐标类型的渲染/选格职责。
+- `TacticalGridModel.HeightLevel`、单锚点占位和 `EnvironmentProfileData.directedEdges` 是当前 Unity 可读输入；后者只有端点，尚没有边长、移动许可或作用许可。后续实现必须把这些缺失字段变为必填数据契约，不能把未声明边默认为标准边或可通行边。
+
+## 二、唯一共享契约
+
+### 源代码与程序集归属
+
+后续实现只在 `src/Assets/Scripts/Core/SpatialRules/` 创建下列纯 C# 源文件，并由 `src/Assets/Scripts/Core/TianZhang.Foundation.asmdef` 编译：
+
+| 文件 | 唯一职责 |
+|---|---|
+| `SpatialHexCoord.cs` | 轴向 `(q,r)`、六向相邻、拓扑距离、方向与有向边键；不包含世界坐标或 Unity 类型。 |
+| `SpatialQueryTypes.cs` | `SpatialQueryKind`、`SpatialCellRules`、`SpatialEdgeRules`、输入快照、结果和稳定拒绝原因。 |
+| `SpatialQueryBoard.cs` | 仅有的有向边、加权距离、范围、视线、实体障碍与可达格查询实现。 |
+
+`simulations/BattleSim/BattleSim.csproj` 只链接上述三份文件，不引用 Unity DLL、`.asmdef` 或 `Assets` 以外的第二份复制代码。`Battlefield.cs`、`Combat.cs` 与 `BattleSimSelfTests.cs` 使用该契约；Unity 的适配器只创建输入快照并调用它。
+
+### 五类查询的完整定义
+
+| 查询 | 所有者成员与输入 | 输出 | 拒绝/失败关闭 |
+|---|---|---|---|
+| 有向格边 | `SpatialQueryBoard.InspectEdge(from, to, kind)`；输入 `SpatialHexCoord`、`SpatialQueryKind`、`SpatialEdgeRules(metricDistanceUnits, allowsMovement, allowsEffects)`。 | `SpatialEdgeInspection(isLegal, metricDistanceUnits, reason)`。 | 非相邻为参数错误；缺边配置、反向未许可、移动/作用不许可分别返回稳定原因，绝不反查基础步数。 |
+| 固定点加权距离 | `QueryMetricDistance(start, target, kind, maxRange)`；读取同一边规则和 `SpatialQueryLimits(unitsPerRange, maxQueryRange)`。 | `SpatialMetricDistanceResult(isReachable, distanceUnits, reason)`；有界 Dijkstra 的最小路径。 | 超界、无合法路径、边拒绝都返回原因；不使用欧氏距离、`HexCoord.Distance` 或模型间距。 |
+| 范围 | `QueryRange(center, minRange, maxRange, kind, requireLineOfSight)`；逐格复用加权距离，并在要求时复用视线。 | 每个候选的固定点距离、是否在窗口、是否可见及拒绝原因；可达候选集合是唯一范围结果。 | `below_min_range`、`above_max_range`、距离/视线原因原样返回；无输入快照、无边规则或未配置高度资格时失败关闭。 |
+| 视线 | `QueryLineOfSight(source, target)`；读取同一边、单元规则和拓扑线。 | `SpatialLineOfSightResult(hasLineOfSight, reason)`。 | 逐边作用许可、途中 `isEntityObstacle`、`blocksSight` 均给出既有稳定原因；不读取 Camera、Renderer、Collider 或 Transform。 |
+| 实体障碍 | `SpatialCellRules.isEntityObstacle` 只能由快照输入提供；`InspectEdge`、`FindReachable`、`QueryRange` 与 `QueryLineOfSight` 统一消费它。 | 移动、可达格、范围/视线均输出 `entity_obstacle` 或被排除的格位。 | 单位占位不自动升格为实体障碍；未知障碍来源或同格矛盾拒绝建快照。 |
+
+同一所有者还提供 `FindReachable(start, movementBudget, occupied)`。它以 `SpatialQueryKind.Movement`、固定点边长和明确占位集计算落点，供移动、AI 和攻击选位使用；`Combat.CanAttack` 与 Unity 攻击/术法/神通资格必须由 `QueryRange(..., requireLineOfSight: true)` 组合，不另写距离或视线分支。
+
+`HeightLevel` 会作为 `SpatialCellRules.heightLevel` 原样携带。现有事实没有可执行的 `verticalReachRank`／高度比较配置，故本实现卡只允许等高输入进入上述五类资格查询；源/目标高度不同且未提供已批准的高度资格输入时返回 `height_rule_unconfigured`。这不是新增高度层或新玩法规则，而是拒绝把缺失规则静默降级为平面距离。
+
+## 三、Unity 与 BattleSim 的数据映射
+
+| 共享字段 | Unity 输入与适配 | BattleSim 输入与适配 | 保留的语义边界 |
+|---|---|---|---|
+| `SpatialHexCoord(q,r)` | `TianZhang.Core.HexCoord.q/r` 显式转换；`s` 由构造关系校验。 | 现有 `BattleSim.HexCoord.Q/R` 显式转换后逐步替换为共享类型。 | `ToWorld`、`FromWorld`、Tilemap 坐标和模型间距不进入契约。 |
+| `heightLevel` | `TacticalTileData.HeightLevel` 原样带入。 | BattleSim 现有格规则没有地格高度；模拟 fixture 必须显式提供 0 或已批准值。 | 不从区域现象高度区间推断格高；不同高度且无资格输入失败关闭。 |
+| 单锚点占位 | `OccupiedUnitId >= 0` 映射为 `occupied` 集合；行动者查询前从集合移除自身。 | 现有 `FindReachable(..., occupied)` 保持同一含义。 | 一个六角柱最多一名最终停留者；占位不等于实体障碍。 |
+| 普通格阻挡/视线 | `BlocksGroundMove` → `blocksMovement`；`BlocksLineOfSight` → `blocksSight`。 | `HexCellRules.BlocksMovement/BlocksSight` 同名映射。 | `BlocksFlyingMove`、`BlocksLanding` 不被伪装成地面/攻击规则；须在其明确查询类型落地后再接入。 |
+| 实体障碍 | 只能由场景交互物/环境输入明确写入 `isEntityObstacle`，不能由 `OccupiedUnitId`、Tilemap 碰撞体或视觉墙面推断。 | `HexCellRules.IsEntityObstacle` 原样映射。 | 同时阻移动和普通视线，拒绝原因保持 `entity_obstacle`。 |
+| 有向边与固定点参数 | `EnvironmentProfileData.directedEdges` 扩展为每条边显式携带 `metricDistanceUnits`、`allowsMovement`、`allowsEffects`；环境档案还显式携带查询上限与 `unitsPerRange`。 | `HexEdgeRules` 与 `GameData.EnvironmentRules` 映射为同一 `SpatialEdgeRules`/`SpatialQueryLimits`。 | 不存在“未配置边=标准边”的默认值；CSV/asset 不完整即拒绝导入或拒绝快照。 |
+
+## 四、旧 Unity 基础步数范围逻辑的停用清单
+
+下列调用不是共享查询所有者。后续实现卡必须按表完成迁移或删除，并在代码扫描中证明没有正式战斗/2.5D 范围路径继续调用它们。
+
+| 位置 | 当前旧逻辑 | 后续处置 |
+|---|---|---|
+| `src/Assets/Scripts/Core/HexGrid.cs` `GetTilesInRange` | 用 `HexCoord.Distance` 生成范围。 | 删除；没有调用方时也不保留“兼容”范围 API。 |
+| `HexGrid.FindPath`、`GetMoveRange` | BFS/基础步数预算。 | 从 `EnemyAI` 和任何 2.5D/正式战斗调用链撤出，由 `FindReachable` 与共享结果替换；旧 `ExplorationScene` 专用调用不被重新接入正式链。 |
+| `src/Assets/Scripts/Combat/CombatResolver.cs` `BasicAttack`、`CastSpell`、`UseSkill`、私有 `IsInRange` | 近战、术法、神通分别直接比较 `HexCoord.Distance`。 | 全部改为同一个 `QueryRange(..., requireLineOfSight: true)` 结果；删除私有基础距离 helper。 |
+| `src/Assets/Scripts/Combat/TacticalCombatController.cs` `ExecutePlayerSpell`、`ExecutePlayerSkill` | 在解析器之前重复基础步数预检。 | 删除重复预检，只传递共享查询结果/拒绝原因，避免两次判定。 |
+| `src/Assets/Scripts/Combat/EnemyAI.cs` `ExecuteTurn` | 基础距离决定术法、神通、追近、近战和 `HexGrid.FindPath`。 | 以共享范围、可达格和拒绝原因决定行动；不得在 AI 另算基础步数。 |
+| `src/Assets/Scripts/Map/ExplorationController.cs` 的邻接、移动预算和旧玩家 AI 距离分支 | 旧不可达 `ExplorationScene` 中仍有基础步数战斗控制。 | 不作为 2.5D 原型来源；实现卡只移除其对正式战斗查询的依赖，绝不重新接入该场景。地图边界/刷怪布点的纯拓扑距离保留，因其不是战斗范围。 |
+| `src/Assets/Scripts/Tilemap/HexTilemapManager.cs` `Vector3.Distance` | 仅把点击世界位置选为最近缓存格。 | 保留为表现/选格工具，明确不得用作规则查询。 |
+
+## 五、实现顺序、验证与失败关闭
+
+后续任务 `U-2_5D-01D` 必须测试先行，且只能按以下顺序实施：
+
+1. 为共享纯契约补失败测试：压缩/扩张边、反向边、无边/无配置、实体障碍、视线、唯一占位、不同高度未配置以及旧 `HexCoord.Distance` 不能决定攻击范围。
+2. 新建共享源文件，并让 BattleSim 用 linked compile 消费它；迁移现有 `environment-rules-n-env-01` 和距离/群体位置回归，使 BattleSim 不再拥有重复算法。
+3. 扩展环境 CSV/asset/importer 的必填边规则与查询限制；无生产环境档案时只更新表头和 parser fixture，不添加默认资产或默认值。
+4. 建立 Unity `TacticalGridModel`→共享快照适配器；快照不完整、重复占位、非法边、未知障碍来源或未配置高度资格均返回稳定拒绝原因。
+5. 将 CombatResolver、TacticalCombatController、EnemyAI 和旧不可达原型的正式战斗依赖改为该适配器；删除列出的基础范围 API/分支，不保留 fallback。
+6. 最小充分验证：
+
+   - `dotnet build -c Release --no-restore simulations/BattleSim`
+   - `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test environment-rules-n-env-01`
+   - `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test distance-model-tq055`
+   - `dotnet build src/Assembly-CSharp.csproj`
+   - `dotnet build src/TianZhang.EditModeTests.csproj`
+   - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
+   - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
+   - `git diff --check`
+
+停止并请求负责人决定的唯一情形是：必须设定未定义的高度资格/垂直触及、三维占位、格边类别或范围数值；现有程序集只能留下两份算法；或为保持旧范围而需要默认值、兼容分支、Transform/Collider/Camera/Renderer 规则输入。届时只保留扫描与失败证据，不实现适配层。
+
+## 六、本方案不表示已实现
+
+- 当前没有修改 Unity、BattleSim、程序集、CSV、asset、场景、渲染器、正式入口、CTB、伤害或技能数值。
+- `BattleSim.HexBattlefield` 目前仍是既有规则实现；本方案只指定其向唯一共享源代码迁移的路径。
+- 2.5D 原型继续未启动，且不得以 `HexGrid.GetTilesInRange`、旧 CombatResolver/TacticalCombatController 距离分支或视觉状态证明规则一致性。

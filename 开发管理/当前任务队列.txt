@@ -10,7 +10,8 @@
 |----|--------|------|------|------|------|
 | U-2_5D-01A | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 已完成 | 2.5D 战棋原型规则兼容验证清单 |
 | U-2_5D-01B | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 已完成 | 2.5D 原型规则查询所有者定位 |
-| U-2_5D-01C | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 待处理 | 共享空间查询契约与旧范围逻辑停用方案 |
+| U-2_5D-01C | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 已完成 | 共享空间查询契约与旧范围逻辑停用方案 |
+| U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 待处理 | 共享空间查询契约实现与旧范围逻辑迁移 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 
 ## 任务卡片
@@ -46,7 +47,7 @@
 ### U-2_5D-01C · 共享空间查询契约与旧范围逻辑停用方案
 
 - 来源：U-2_5D-01B 的定位记录，以及负责人对 `DEC-20260722-U25D01B` 的选择 A。
-- 当前状态：待处理；依赖：U-2_5D-01B 已完成；无待决策。
+- 当前状态：已完成；依赖：U-2_5D-01B 已完成；无待决策。
 - 主责：Codex / gpt-5.6-terra。
 - 必读：`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`UNITY_STRUCTURE.md`、`开发管理/2.5D战棋原型验证清单.txt`、`开发管理/2.5D战棋原型规则查询所有者记录.txt`、`docs/基础设定/战场空间与环境规则.txt`、`src/Assets/Scripts/Core/HexCoord.cs`、`src/Assets/Scripts/Core/HexGrid.cs`、`src/Assets/Scripts/Grid/TacticalGridModel.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`src/Assets/Scripts/Combat/TacticalCombatController.cs`、`src/Assets/Scripts/Combat/EnemyAI.cs`、当前 `.asmdef`／`.asmref`、`simulations/BattleSim/Battlefield.cs`、`simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSim.csproj` 与 `simulations/BattleSim/BattleSimSelfTests.cs`。
 - 预期修改路径：新建 `开发管理/2.5D共享空间查询契约对齐方案.txt` 与更新 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
@@ -56,6 +57,20 @@
 - 验证：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/2.5D共享空间查询契约对齐方案.txt,开发管理/当前任务队列.txt`，以及 `git diff --check`。
 - 完成条件：方案基于实际程序集边界确定一个且仅一个源代码所有者，给出五类查询完整契约、Unity／BattleSim 数据流、旧调用停用清单、失败关闭策略、精确实现路径和最小充分验证；同时新增一个可直接执行且不再需要架构猜测的实现任务卡。方案不得把设计结论写成已实现事实。
 - 停止条件：唯一所有者要求新增未定义的高度层、三维占位、格边类型或范围语义，要求改变正式冒险／战斗规则，或在现有程序集边界内只能形成两套独立实现；保留方案证据并请求负责人决定，不以适配层掩盖冲突。
+- 完成记录：已创建 `开发管理/2.5D共享空间查询契约对齐方案.txt`。方案将唯一源代码所有者定为 `src/Assets/Scripts/Core/SpatialRules/` 的纯 C# 共享源，Unity 通过 Foundation 消费、BattleSim 以 linked compile 消费；并固定五类查询、数据映射、失败关闭、旧 Unity 基础距离停用清单及精确验证。新增 U-2_5D-01D 实现卡；本卡不表示 Unity/BattleSim 已迁移或 2.5D 原型已启动。
+
+### U-2_5D-01D · 共享空间查询契约实现与旧范围逻辑迁移
+
+- 来源：`开发管理/2.5D共享空间查询契约对齐方案.txt`，以及 `DEC-20260722-U25D01B = A`。
+- 当前状态：待处理；依赖：U-2_5D-01C 已完成；无待决策。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`UNITY_STRUCTURE.md`、`开发管理/2.5D共享空间查询契约对齐方案.txt`、`docs/基础设定/战场空间与环境规则.txt`、当前 `src/Assets/Scripts/Core/HexCoord.cs`、`HexGrid.cs`、`Grid/TacticalGridModel.cs`、`Grid/EnvironmentProfileData.cs`、`Combat/CombatResolver.cs`、`Combat/TacticalCombatController.cs`、`Combat/EnemyAI.cs`、当前 `.asmdef`／`.asmref`、`simulations/BattleSim/Battlefield.cs`、`Combat.cs`、`BattleSim.csproj` 与 `BattleSimSelfTests.cs`。
+- 预期修改路径：新建 `src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs`、`SpatialQueryTypes.cs`、`SpatialQueryBoard.cs`、`src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs`、`src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs`；更新 `src/Assets/Scripts/Core/HexGrid.cs`、`src/Assets/Scripts/Grid/TacticalGridModel.cs`、`EnvironmentProfileData.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/DataConfig/README.txt`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`TacticalCombatController.cs`、`EnemyAI.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`simulations/BattleSim/BattleSim.csproj`、`Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：按方案创建唯一纯 C# 空间查询源，Unity 经 Foundation、BattleSim 经 linked compile 共同消费；以显式数据映射接入有向边、固定点距离、范围、视线、实体障碍、等高单锚点占位和稳定拒绝原因。环境档案边规则与查询限制必须变为必填；无生产档案时只更新表头、导入器与 fixture。迁移/删除方案列出的 Unity 基础步数战斗范围分支，不重新接入 `ExplorationScene`，不创建第二服务、默认值或兼容分支。
+- 禁止：不新增高度层、三维占位、格边类别、范围数值、场景、渲染器、正式入口、CTB、伤害、技能数值或生产环境档案；不从 Transform、Collider、Camera、Renderer、模型间距或欧氏距离读取规则；不保留 `HexGrid.GetTilesInRange` 或其他基础步数范围 fallback。
+- 验证：先按 TDD 让共享契约失败测试证明缺失行为，再运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test environment-rules-n-env-01`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test distance-model-tq055`、`dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与 `git diff --check`。
+- 完成条件：同一份 `SpatialRules` 源文件是 Unity/BattleSim 五类查询唯一算法来源；边、距离、范围、视线、实体障碍、占位与高度未配置均有可观察结果；所有列出的 Unity 战斗范围分支已迁移/删除且扫描无 fallback；BattleSim 和 Unity 直接测试均通过；2.5D 原型仍未启动，正式冒险入口仍唯一为 `AdventureScene`。
+- 停止条件：实现需要设定未定义的高度资格/垂直触及、三维占位、格边类别或范围数值，必须保留两份算法，或必须用默认值、兼容分支或视觉状态维持旧范围；停止并请求负责人决定，只保留失败证据。
 
 ### N-SLOT-01 · 金丹槽位与丹枢加成数值方案
 
