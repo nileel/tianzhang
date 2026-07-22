@@ -191,7 +191,7 @@ M1 至 M6 是事实源迁移。M7 是内容生产，M8 是实现任务；两者�
 执行：
 
 1. 记录 `git branch --show-current` 和 `git status --short --untracked-files=all`。
-2. 确认用户现有未跟踪文件 `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs` 仍不属于本计划目标。
+2. 确认自动责任方遗留、等待原责任恢复的未跟踪文件 `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs` 仍不属于本计划目标。
 3. 视“取消全局上古仙朝”和“太一道庭有限继承”为已确认，只核对 D2～D4 是否出现新的冲突证据。
 4. 检查本计划与 `C-JD-LORE-MIGRATE-01`、`D-REALM-DEC-01～04` 的共享文件，安排为一次语义迁移，不连续叠补丁。
 5. 未获得执行授权前，不修改 `开发管理/当前任务队列.txt`，不创建内容任务，不暂存或提交。

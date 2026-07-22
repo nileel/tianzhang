@@ -1,0 +1,7 @@
+# 每日自动化简报
+
+1. 以本次运行时间计算简报时间窗，调用 `tools/get-automation-briefing-source.ps1` 取得候选 JSON；不得把 automation memory 当作产出事实源。
+2. 只对候选业务提交读取必要 diff，确认提交内容支持元数据中的 `Result`、`Impact`、`Verify`；不代做领域复审。
+3. 按 `Task` 汇总同一任务的多个业务提交。外部 `businessCommit` 保留 `pending_review` 状态；不重复统计未带 Automation 元数据的 `handoffCommit`。
+4. 输出已确定产出、已确认影响、验证与风险；元数据缺失或与 diff 不符时单列数据质量问题，不猜测。
+5. 没有候选时明确写“本时间窗没有带有效 Automation 元数据的业务提交”，不得用旧 memory 填充。

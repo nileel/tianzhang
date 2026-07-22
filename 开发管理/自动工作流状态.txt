@@ -1,33 +1,25 @@
 # 自动工作流状态（✅ 已审核）
 
-> 本文件只保留负责人需要看到的迁移事实、长期阻塞和最近有效生产结果；逐轮轨迹位于自动化任务、memory 或用户级私有 runtime。
+> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、recovery、pending resume 与 lastResult 以本机 runtime 为准；业务结果以 Git 为准。
 
-## 当前切换状态
+## 已确认架构
 
-- 唯一生产写入入口为 `tzg-hourly-controller`；旧 WF1、WF3、WF4 已归档。只读的每日简报不属于写入入口。
-- 权威设计：`docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
-- 旧 controller v2、机器任务注册表、manifest 协议和旧修复/状态脚本已按 Task 11 从活动代码退役；CLI-native session runner、单写入租约和飞书恢复 relay 保留。
-- 旧私有源状态、时间戳备份和历史设计/计划全部保留；本次退役未迁移、转换或删除私有 runtime。
-- TQ-057 已由原 Desktop worker 完成并提交 `057947a6e3a27b471b83da04dde7af2765452e55`；旧 Desktop recovery 已由原责任方清除，没有迁移到 CLI session。
+- 唯一写入入口为 `tzg-hourly-controller`；旧 WF1、WF3、WF4 已归档。每日简报只读。
+- 权威设计为 `docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
+- 旧 controller v2、机器任务注册表、manifest 和中央状态机已退出活动代码；单写入租约、workspace guard、CLI-native session、决策恢复和 Git 元数据保留。
+- 外部 AI 继续创建 `businessCommit` 与仅含交接登记的 `handoffCommit`，后者不重复统计。
 
-## 迁移门禁证据
+## 当前人工阻塞与恢复所有权
 
-- 2026-07-19 原 Desktop rollout 曾因 CLI 不兼容返回 `resume_desktop_rollout_incompatible`；生产保持 `PAUSED`，当时 `lease=null`，task-owned `recovery` 与已接收决定的 `pending resume` 原样保留。
-- Task 11 删除旧编排前再次把生产入口设为 `PAUSED` 并确认 `lease=null`；只有旧 Desktop 原责任方消费其恢复状态，没有转换、复制或替代 session。
+- 修复期间自动化保持人工暂停；恢复时间由负责人决定，不在本文件复制界面实时值。
+- `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs` 是 Task `U-2_5D-01D` 的自动责任方 session `019f891d-a12a-7230-944a-0b9e1db14220` 留下的未提交半成品，不是人工文件。恢复前不得删除、覆盖或交给新责任方。
+- 原责任方当时未创建有效 recovery：修改后误用 guard `Check`、测试未进入目标测试程序集、任务卡漏列新脚本 `.meta`，并把旧 decision binding 误当互斥锁后记录了无 recovery 的 `waiting_decision`。
 
-## 最近有效生产事实
+## 最近已核验提交
 
-- 2026-07-21 手动生产金丝雀完成 TQ-069，业务提交为 `b2ec7930aa2476df82c48cff23e7f22667d83c20`。
-- 2026-07-21 首个自然小时轮次完成 N-DIST-01，业务提交为 `954f5c8fc92dda8373660671f71190bed094bdb6`。
-- 后续自然轮次继续完成 N-ENV-01，业务提交为 `5108bbead888d93d836742f532d2fce011f54634`；这只作为持续运行证据，不在本文件复制逐小时流水。
-
-## 当前生产保护
-
-- 2026-07-22 `QUEUE-MAINTENANCE` 已确认 Codex 执行范围并补入 U-2_5D-01A（`c6fbf1b86d93a1d223aee4ffb07a9b297619f360`）；此前的模型身份元数据阻塞已清除。
-- 2026-07-22 `QUEUE-MAINTENANCE` 已确认执行、复审与外部候选均无安全可运行项；现有待处理 backlog 摘要均不构成可直接提升的完整卡。已依 U-2_5D-01A 的完成门槛补入 U-2_5D-01B，且未执行任何业务任务。
-- 2026-07-22 `QUEUE-MAINTENANCE` 发现未跟踪的 `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs` 与 U-2_5D-01D 的预期路径冲突，已排除该业务卡；无完整 backlog 卡可直接提升后，补入 D-REALM-02A 作为不扩写内容的现行引用分类与决策输入卡，未执行任何业务任务。
-- N-GROUP-01 已由业务提交 `c4e9db82a5a20850814136b550711fcbd6302ce0` 完成并归档；原 CLI Resume 的非 JSON 假失败不再代表恢复状态。
-- 生产入口已由外部普通管理上下文恢复为 `ACTIVE`；本机 runtime 的 lease、recovery 与 pending resume 均为空，`pauseRequested=false`，最近结果为 `QUEUE-MAINTENANCE/refilled`。
+- 2026-07-21 手动生产金丝雀完成 TQ-069：`b2ec7930aa2476df82c48cff23e7f22667d83c20`。
+- 2026-07-21 自然轮次完成 N-DIST-01：`954f5c8fc92dda8373660671f71190bed094bdb6`；随后完成 N-ENV-01：`5108bbead888d93d836742f532d2fce011f54634`。
+- 2026-07-22 队列维护补入 N-GROUP-02A：`fa383fbbbc787e841717d65583bcb359d1c094f4`。控制器当时遗漏报告该 SHA，Git 元数据本身有效。
 
 ## 证据位置
 

@@ -1,25 +1,12 @@
 # 每小时自动工作流薄路由
 
-你只负责只读汇总候选、取得或释放单写入租约、启动一个责任方并记录结果类别；不得实施业务、代做业务验证、stage、commit 或复审。模型身份按 `AGENTS.md` 的 request metadata 规则确认，不从提示词中的名称猜测。
+你只负责读取调度状态、选择一个责任方并报告已核验结果；不得实施业务、代做验证、stage、commit 或复审。模型身份按 `AGENTS.md` 的 request metadata 规则确认。
 
-## 固定流程
+1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。逻辑暂停时立即输出 `suspended` 并结束，不读取候选事实源；存在 recovery 时只处理原责任方恢复。
+2. 未暂停且无 recovery 时，读取 `开发管理/自动工作流规则.txt` 及判断候选所需的最小事实源。汇总执行、复审和外部 AI 合法候选后统一排序；三类均无合法候选时才选择一次队列维护。
+3. 每轮只选一个 TaskId，并调用 `Acquire`。原中断责任方使用 `Acquire -ResumeRecovery`；未取得租约时报告占用或恢复状态后结束。
+4. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用 `开发管理/自动工作流规则.txt` 指定的既有 wrapper。等待同一次调用返回，不重新启动、不启动第二责任方。
+5. 固定调用器根据 Git 与 runtime 核验 Codex 结果并统一记录、释放租约；控制器不读取业务 diff，也不自行调用 `RecordResult` 或 `Release`。外部 AI 只接收既有 wrapper 返回的状态和两个提交 SHA。
+6. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。相同全阻塞原因达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。
 
-1. 每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；此时立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方，也不读取或更新自身自动化配置。
-2. 只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 和判断候选所需的最小状态；候选汇总阶段只读。存在 task-owned uncommitted recovery 时，只恢复原责任方并停止普通调度；现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止；否则先用同一租约工具处理已回复的 pending resume。
-3. 汇总三类合法候选：Codex 执行、Codex 复审、外部 AI。只按各自入口判断状态、依赖、决策、主责、范围冲突和执行器资格，不复制领域规则。
-4. 对三类候选统一排序：项目 P 优先级、已回复续跑、能解除的高优先级下游数量、等待时间、稳定 ID。候选类型没有固定先后。
-5. 三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 做队列维护。队列维护正式入口必须保留两个顺序分支：先提升满足条件的 backlog；没有可提升的完整 backlog 任务卡不等于阻塞，必须继续从权威 backlog、状态与建议中新增 1–3 个最小、完整、可验证、可提交的任务卡。不得制造占位或猜测性任务；只有权威来源不足以形成任何完整任务卡时才记录 `blocked`。本轮不执行新任务。
-6. 选中一个工作后取得租约；每轮只启动一个责任方。普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout；取得租约后只通过 `tools/codex-cli-session.ps1` 的 `Start`，把完整正式入口提示经 stdin 传入。必须以新的 `pwsh -NoProfile -ExecutionPolicy Bypass -File` 进程启动 runner，并将输入写入该进程的标准输入；不得直接管道调用 runner。控制器须在自身 Node REPL 已核验模型后，把该值同时作为 runner 的 `-Model` 参数和责任方首条输入中的核验证明；CLI 会话不重新以缺失的 request metadata 阻塞。外部 AI 路由保持既有入口。未取得租约时记录占用或排队结果并结束，不启动第二写入者。工具等待超时、yield 或尚未返回不等于 runner 失败；只等待同一次调用或同一执行单元，不重新启动 runner，并且在它返回唯一终态摘要前不得释放租约或启动第二写入者。
-7. 按路由进入既有入口：普通执行走 `开发管理/AI协作规则.txt` 的纯 `1`；复审走 `开发管理/审核入口.txt` 与纯 `2`；外部 AI 走 `开发管理/DeepSeek工作提示词.txt`；队列维护走状态维护规则。当前责任方端到端修改、最小充分验证、更新状态并创建路径限定提交。责任方首条 stdin 必须要求业务提交使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，稳定任务 ID、状态、结果、影响和验证分别通过 `AutomationTask`、`AutomationState`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 传入，由 finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。Codex 执行、复审和队列维护使用 `AutomationState=completed` 并生成 `State: completed`，外部 `businessCommit` 使用 `AutomationState=pending_review` 并生成 `State: pending_review`。没有已确认下游影响时，`AutomationImpact` 写“无已确认的下游影响”。外部 AI 自行创建 `businessCommit` 与 `handoffCommit`，调度器不代验、不代提交；`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
-8. 需要负责人决定时，责任方通过既有飞书入口发送原始问题。只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。随后记录 `waiting_decision`，释放租约并退出。回复后通过 runner `Resume` 同一 CLI session ID；回复占锁时只排队，不 sleep、不轮询、不保持模型或外部 CLI 进程，不消耗等待 token。
-9. 调度器输出 `selected`；runner 只输出 `session_started`、`running`；调度器根据既有 runtime 和退出状态输出 `waiting_decision`、`completed` 或 `failed`。责任方结束后记录 `success`、`refilled`、`blocked`、`failed` 或 `waiting_decision`，再释放租约。若 Release 表示有 ready resume，只调用 `tools/feishu-decision-bridge/src/resume-trigger.mjs --dispatch-ready` 触发一个原会话续跑，不创建第二套恢复逻辑。旧终端结束后不回填后台 Resume 结果，最终事实只进入既有 runtime 和下一轮摘要。
-10. 完整扫描后所有候选均阻塞时，以稳定原因集合记录 fingerprint。相同全阻塞 fingerprint 连续两次使 pauseRequested=true 后，先记录结果并释放租约，再报告“runtime 已逻辑暂停，界面尚未同步”并结束。逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`。自动化任务不得调用自动化管理能力管理自身，也不得等待自动化管理服务；界面 `PAUSED` 只由自动化任务之外的外部普通管理上下文同步。恢复也只由外部普通管理上下文执行：确认 lease、recovery、pending resume 均为空，先调用 `ClearBlocking` 成功清除逻辑暂停，再通过自动化管理能力把完整现有配置设为 `ACTIVE`。
-
-## 输出边界
-
-- 不硬编码具体任务、决定、复审编号、文件清单、业务检查或模型身份。
-- 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
-- 不编辑 automation TOML，不创建替代自动化，不调用暂停的旧工作流作为处理器。
-- 自动化任务不读取或更新自身的 prompt、schedule、workdir 或 status；界面同步和恢复只在外部普通管理上下文执行。
-- 不自动 stash、reset、checkout、clean、revert 或推送远端。
-- 最终只汇报本轮路由、任务稳定 ID、结果类别、提交 SHA 或恢复状态，以及已保护人工改动的证据。
+不硬编码具体任务、决定、复审编号、文件清单或业务检查；不创建替代自动化，不编辑 automation TOML，不自动 stash、reset、checkout、clean、revert 或推送远端。

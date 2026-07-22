@@ -3,101 +3,46 @@
 $ErrorActionPreference = 'Stop'
 
 function Assert-True {
-  param(
-    [Parameter(Mandatory = $true)]
-    [bool]$Condition,
-    [Parameter(Mandatory = $true)]
-    [string]$Message
-  )
-
-  if (-not $Condition) {
-    throw $Message
-  }
+  param([bool]$Condition, [string]$Message)
+  if (-not $Condition) { throw $Message }
 }
 
 function Write-Utf8File {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Path,
-    [Parameter(Mandatory = $true)]
-    [string]$Content
-  )
-
+  param([string]$Path, [string]$Content)
   [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null
   [IO.File]::WriteAllText($Path, $Content, [Text.UTF8Encoding]::new($false))
 }
 
-function ConvertTo-TomlString {
-  param([Parameter(Mandatory = $true)][string]$Value)
-
-  $Value | ConvertTo-Json -Compress
-}
-
 function Write-Automation {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$AutomationRoot,
-    [Parameter(Mandatory = $true)]
-    [string]$Id,
-    [Parameter(Mandatory = $true)]
-    [ValidateSet('ACTIVE', 'PAUSED')]
-    [string]$Status,
-    [Parameter(Mandatory = $true)]
-    [string]$Prompt
-  )
-
-  $path = Join-Path $AutomationRoot "$Id\automation.toml"
-  Write-Utf8File -Path $path -Content @"
+  param([string]$Root, [string]$Id, [ValidateSet('ACTIVE', 'PAUSED')][string]$Status, [string]$Prompt)
+  $encodedPrompt = $Prompt | ConvertTo-Json -Compress
+  Write-Utf8File -Path (Join-Path $Root "$Id\automation.toml") -Content @"
 version = 1
 id = "$Id"
 name = "$Id"
-prompt = $(ConvertTo-TomlString -Value $Prompt)
+prompt = $encodedPrompt
 status = "$Status"
 "@
 }
 
 function Invoke-Checker {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$RepositoryRoot,
-    [Parameter(Mandatory = $true)]
-    [string]$AutomationRoot,
-    [switch]$RequireActive,
-    [switch]$RequireLegacyRetired
-  )
-
+  param([string]$RepositoryRoot, [string]$AutomationRoot, [switch]$RequireActive, [switch]$RequireLegacyRetired)
   $arguments = @(
-    '-NoProfile',
-    '-ExecutionPolicy',
-    'Bypass',
-    '-File',
-    (Join-Path $PSScriptRoot 'check-automation-workflow.ps1'),
-    '-RepositoryRoot',
-    $RepositoryRoot,
-    '-AutomationRoot',
-    $AutomationRoot
+    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-automation-workflow.ps1'),
+    '-RepositoryRoot', $RepositoryRoot, '-AutomationRoot', $AutomationRoot
   )
-  if ($RequireActive) {
-    $arguments += '-RequireActive'
-  }
-  if ($RequireLegacyRetired) {
-    $arguments += '-RequireLegacyRetired'
-  }
-
+  if ($RequireActive) { $arguments += '-RequireActive' }
+  if ($RequireLegacyRetired) { $arguments += '-RequireLegacyRetired' }
   $startInfo = [Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = 'pwsh'
   $startInfo.UseShellExecute = $false
   $startInfo.CreateNoWindow = $true
   $startInfo.RedirectStandardOutput = $true
   $startInfo.RedirectStandardError = $true
-  foreach ($argument in $arguments) {
-    $startInfo.ArgumentList.Add($argument)
-  }
+  foreach ($argument in $arguments) { $startInfo.ArgumentList.Add($argument) }
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $startInfo
-  if (-not $process.Start()) {
-    throw 'Unable to start workflow checker'
-  }
+  Assert-True -Condition $process.Start() -Message 'Unable to start workflow checker'
   $stdoutTask = $process.StandardOutput.ReadToEndAsync()
   $stderrTask = $process.StandardError.ReadToEndAsync()
   $process.WaitForExit()
@@ -110,307 +55,141 @@ function Invoke-Checker {
   $result
 }
 
-function Assert-CheckerPasses {
-  param(
-    [Parameter(Mandatory = $true)]
-    [object]$Result,
-    [Parameter(Mandatory = $true)]
-    [string]$Context
-  )
-
+function Assert-Passes {
+  param([object]$Result, [string]$Context)
   Assert-True -Condition ($Result.ExitCode -eq 0) -Message "$Context failed: $($Result.Stderr)$($Result.Stdout)"
-  Assert-True -Condition ($Result.Stdout.TrimEnd().EndsWith('check-automation-workflow: OK', [StringComparison]::Ordinal)) -Message "$Context did not emit OK"
+  Assert-True -Condition $Result.Stdout.Contains('check-automation-workflow: OK', [StringComparison]::Ordinal) -Message "$Context did not emit OK"
 }
 
-function Assert-CheckerFails {
-  param(
-    [Parameter(Mandatory = $true)]
-    [object]$Result,
-    [Parameter(Mandatory = $true)]
-    [string]$Context,
-    [string]$ErrorContains
-  )
-
+function Assert-Fails {
+  param([object]$Result, [string]$Context, [string]$Contains)
   Assert-True -Condition ($Result.ExitCode -ne 0) -Message "$Context unexpectedly passed"
-  if (-not [string]::IsNullOrWhiteSpace($ErrorContains)) {
-    Assert-True `
-      -Condition ($Result.Stderr.Contains($ErrorContains, [StringComparison]::OrdinalIgnoreCase)) `
-      -Message "$Context did not report '$ErrorContains': $($Result.Stderr)"
+  if (-not [string]::IsNullOrWhiteSpace($Contains)) {
+    Assert-True -Condition $Result.Stderr.Contains($Contains, [StringComparison]::OrdinalIgnoreCase) -Message "$Context did not report '$Contains': $($Result.Stderr)"
   }
 }
 
 $testId = [Guid]::NewGuid().ToString('N')
-$temporaryBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
-$testRoot = Join-Path $temporaryBase "tzg-workflow-checker-test-$testId"
+$temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
+$testRoot = Join-Path $temporaryRoot "tzg-workflow-checker-test-$testId"
 $repositoryRoot = Join-Path $testRoot 'repo'
 $automationRoot = Join-Path $testRoot 'automations'
+$promptPath = Join-Path $repositoryRoot '开发管理/自动工作流控制器提示词.txt'
+$rulesPath = Join-Path $repositoryRoot '开发管理/自动工作流规则.txt'
+$statusPath = Join-Path $repositoryRoot '开发管理/自动工作流状态.txt'
+$dailyPromptPath = Join-Path $repositoryRoot '开发管理/自动化简报提示词.txt'
 
 $canonicalPrompt = @'
 # 每小时自动工作流薄路由
 
-每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方。
-只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态，并检查原任务恢复和已回复的 pending resume。
-汇总 Codex 执行、Codex 复审、外部 AI 三类合法候选并统一排序。
-三类均无合法候选时才按 `开发管理/状态与建议维护规则.txt` 补充队列，本轮不执行新任务。
-队列维护正式入口必须保留两个顺序分支；没有可提升的完整 backlog 任务卡不等于阻塞，应继续从权威来源新增完整任务卡。
-取得租约后每轮只启动一个责任方，路由到纯 `1`、纯 `2`、`开发管理/DeepSeek工作提示词.txt` 或队列维护。
-普通 Codex 执行、复审和队列维护不得使用 Desktop/VS Code rollout；取得租约后只通过 `tools/codex-cli-session.ps1` 的 `Start`，把完整正式入口提示经 stdin 传入。
-必须以新的 `pwsh -NoProfile -ExecutionPolicy Bypass -File` 进程启动 runner，并将输入写入该进程的标准输入；不得直接管道调用 runner。控制器须在自身 Node REPL 已核验模型后，把该值同时作为 runner 的 `-Model` 参数和责任方首条输入中的核验证明。
-工具等待超时、yield 或尚未返回不等于 runner 失败；不得释放租约或启动第二写入者。
-调度器输出 `selected`；runner 只输出 `session_started`、`running`；调度器根据既有 runtime 和退出状态输出 `waiting_decision`、`completed` 或 `failed`。
-等待决定时保存 CLI session ID 并退出，回复后通过 runner `Resume` 同一 ID；旧终端结束后不回填后台结果。
-现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止。
-第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
-外部 AI 自验证并创建 businessCommit 与 handoffCommit，调度器不代提交。
-所有控制器责任方的业务提交都通过 automation-finalize-commit.ps1 的 RequireAutomationMetadata 门禁，并以 AutomationTask、AutomationState、AutomationResult、AutomationImpact、AutomationVerify 传入单行字段；正文包含 Automation: tzg-hourly-controller，Codex 使用 State: completed，外部 businessCommit 使用 State: pending_review，handoffCommit 不使用 Automation 标记。
-决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
-只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
-记录结果并释放租约；相同全阻塞指纹连续两次使 pauseRequested=true 后，只报告“runtime 已逻辑暂停，界面尚未同步”并结束。
-逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`；只有自动化任务之外的外部普通管理上下文可确认安全后先调用 `ClearBlocking`，再把入口设为 `ACTIVE`。
-自动化任务不得调用自动化管理能力管理自身，也不得读取或更新自身配置、等待管理服务。
-界面 `PAUSED` 只由外部普通管理上下文同步；未确认时只报告“runtime 已逻辑暂停，界面尚未同步”。
+1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`；逻辑暂停时立即结束。
+2. 未暂停时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；恢复原责任优先，否则统一排序。
+3. 每轮只选一个执行、复审、外部 AI 或队列维护任务，并调用 `Acquire`。
+4. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。
+5. 等待同一次调用返回；不得实施、验证、stage、commit 或启动第二责任方。
+6. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
 '@
 
 $canonicalRules = @'
 # 自动工作流规则
 
-- 单写入租约：任何项目写入前必须取得租约。
-- 候选资格：状态、依赖、决策、主责、范围和执行器均合法。
-- 统一排序：项目优先级、已回复续跑、下游解锁、等待时间、稳定 ID。
-- 四种路由责任：纯 1、纯 2、外部 AI、队列维护各自端到端完成。
-- CLI-native Codex：普通执行、复审和队列维护只经 `tools/codex-cli-session.ps1` `Start`，完整入口只走 stdin；决定回复只 `Resume` 同一 ID。
-- 有限进度：只投影 selected、session_started、running、waiting_decision、completed、failed，不新增状态字段。
-- Desktop 恢复隔离：现有 task-owned Desktop recovery 只允许原任务人工完成，普通调度收到 RECOVERY_ONLY 后停止。
-- 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
-- 人工脏改避让：冲突候选跳过，不 stash、reset、checkout 或 clean。
-- 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
-- 统一提交元数据：所有责任方业务提交启用 RequireAutomationMetadata，并以 AutomationTask、AutomationState、AutomationResult、AutomationImpact、AutomationVerify 传入单行字段；finalizer 写 Automation: tzg-hourly-controller，Codex 使用 State: completed，外部业务使用 State: pending_review，handoffCommit 不使用 Automation 标记。
-- 决策恢复：保存原 thread/session；占锁排队且不等待 token。
-- 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
-- 启动顺序：在读取当前任务队列或任何候选事实源前先调用 Show，逻辑暂停时立即退出。
-- 两轮阻塞暂停：相同全阻塞指纹连续两次后形成工具级逻辑暂停，普通 Acquire 返回 SUSPENDED。
-- 自管理边界：自动化任务不得调用自动化管理能力管理自身；只报告 runtime 已逻辑暂停，界面尚未同步。
-- 外部同步与恢复：界面 PAUSED 只由外部普通管理上下文同步；确认无 lease、recovery 和 pending resume 后先 ClearBlocking，再设为 ACTIVE。
-- 队列补充顺序：三类无候选时先提升 backlog，否则新增最小任务，本轮不执行。
-- 私有状态边界：只保存租约、恢复、待续跑、阻塞计数和最后结果，不保存 secret。
-- 回滚方式：失败时保持 PAUSED、保留提交和证据，不自动 reset、revert 或 clean。
+- 单写入租约；Show 在候选读取前，恢复优先，每轮一个责任方。
+- 普通 Acquire 遇到未提交 recovery 返回 RECOVERY_ONLY；原责任方以 Acquire -ResumeRecovery 恢复。
+- Codex 只经 tools/invoke-codex-responsibility.ps1 启动；责任方不调用 RecordResult 或 Release。
+- 固定调用器只用 Git 元数据和 runtime 核验 completed、waiting_decision、interrupted、failed。
+- 外部 AI 保留 businessCommit 与 handoffCommit；handoff 不重复统计。
+- 决策只有 PROVIDER_ACCEPTED 后才能 SaveRecovery；旧 pending binding 不是互斥锁。
+- 不新增中央 manifest、阶段状态机、checkpoint、重试层或第二套队列。
 '@
 
 $canonicalStatus = @'
 # 自动工作流状态
 
-- 生产入口仍为 PAUSED。
-- N-GROUP-01 已完成并归档。
-- runtime 的 lease、recovery 与 pending resume 均为空，pauseRequested=true。
-- 普通 Acquire 返回 SUSPENDED；未来恢复须先 ClearBlocking，再设为 ACTIVE。
+- 实时 status 以 automation 配置为准；lease、recovery 和 lastResult 以本机 runtime 为准；业务结果以 Git 为准。
+- 当前修复期保持人工暂停，恢复时间由负责人决定。
 '@
 
-$validRelaySource = @'
-const command = dispatch.resumeKind === 'codex' ? 'pwsh' : 'claude';
-const args = ['-File', 'codex-cli-session.ps1', '-Action', 'Resume'];
-spawnChild(command, args, { windowsHide: true });
+$canonicalDailyPrompt = @'
+# 每日自动化简报
+
+调用 `tools/get-automation-briefing-source.ps1` 取得时间窗内候选；只检查候选 diff 是否支持 Result、Impact、Verify，再按 Task 汇总。不得读取 automation memory，不重复统计 handoff commit。
 '@
 
 try {
-  foreach ($path in @(
-    '开发管理/自动工作流控制器提示词.txt',
-    '开发管理/自动工作流规则.txt',
-    '开发管理/自动工作流状态.txt',
-    '开发管理/AI协作规则.txt',
-    '开发管理/审核入口.txt',
-    '开发管理/DeepSeek工作提示词.txt',
-    '开发管理/状态与建议维护规则.txt',
-    'tools/hourly-automation-lease.ps1',
-    'tools/automation-workspace-guard.ps1',
-    'tools/automation-finalize-commit.ps1',
-    'tools/check-pending-whitespace.ps1',
-    'tools/codex-cli-session.ps1',
-    'tools/feishu-decision-bridge/src/bridge.mjs',
-    'tools/feishu-decision-bridge/src/resume-trigger.mjs'
-  )) {
-    Write-Utf8File -Path (Join-Path $repositoryRoot $path) -Content "fixture`n"
+  foreach ($entry in @{
+      '开发管理/自动工作流控制器提示词.txt' = $canonicalPrompt
+      '开发管理/自动工作流规则.txt' = $canonicalRules
+      '开发管理/自动工作流状态.txt' = $canonicalStatus
+      '开发管理/自动化简报提示词.txt' = $canonicalDailyPrompt
+      'tools/hourly-automation-lease.ps1' = "ValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','QueueResume','TakeResume','RecordResult','ClearBlocking','Release')"
+      'tools/codex-cli-session.ps1' = 'runner fixture'
+      'tools/invoke-codex-responsibility.ps1' = 'invoker fixture'
+      'tools/automation-workspace-guard.ps1' = 'guard fixture'
+      'tools/automation-finalize-commit.ps1' = 'finalizer fixture'
+      'tools/get-automation-briefing-source.ps1' = 'briefing source fixture'
+      'tools/feishu-decision-bridge/src/resume-trigger.mjs' = 'pwsh codex-cli-session.ps1 -Action Resume'
+    }.GetEnumerator()) {
+    Write-Utf8File -Path (Join-Path $repositoryRoot $entry.Key) -Content $entry.Value
   }
-  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流控制器提示词.txt') -Content $canonicalPrompt
-  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流规则.txt') -Content $canonicalRules
-  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $canonicalStatus
-  $relayPath = Join-Path $repositoryRoot 'tools/feishu-decision-bridge/src/resume-trigger.mjs'
-  Write-Utf8File -Path $relayPath -Content $validRelaySource
+  [IO.Directory]::CreateDirectory($automationRoot) | Out-Null
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
-  foreach ($id in @(
-    'tzg-hourly-controller',
-    'tzg-wf1-queue-and-review-maintenance',
-    'tzg-wf3-claude-execute-1',
-    'tzg-wf4-codex-execute-2'
-  )) {
-    Write-Automation -AutomationRoot $automationRoot -Id $id -Status 'PAUSED' -Prompt $canonicalPrompt
-  }
+  Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
 
-  Assert-CheckerPasses `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-    -Context 'All-paused default contract'
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt ($canonicalPrompt + "`ndrift")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused controller drift' -Contains 'controller prompt'
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
-  Write-Automation -AutomationRoot $automationRoot -Id 'tzg-hourly-controller' -Status 'ACTIVE' -Prompt $canonicalPrompt
-  Assert-CheckerPasses `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) `
-    -Context 'Single active controller contract'
+  Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt ($canonicalDailyPrompt + "`ndrift")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused daily drift' -Contains 'daily briefing prompt'
+  Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
-  $activeRuntimeStatus = @'
-# 自动工作流状态
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) -Context 'Require active while paused' -Contains 'unique ACTIVE'
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'ACTIVE' -Prompt $canonicalPrompt
+  Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) -Context 'Single active controller'
+  Write-Automation -Root $automationRoot -Id 'tzg-other-writer' -Status 'ACTIVE' -Prompt $canonicalPrompt
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Multiple active writers' -Contains 'more than one writer'
+  Write-Automation -Root $automationRoot -Id 'tzg-other-writer' -Status 'PAUSED' -Prompt $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
-- 生产入口为 ACTIVE。
-- runtime 的 lease、recovery 与 pending resume 均为空，pauseRequested=false。
-'@
-  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $activeRuntimeStatus
-  Assert-CheckerPasses `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) `
-    -Context 'Active runtime status contract'
-  Write-Utf8File -Path (Join-Path $repositoryRoot '开发管理/自动工作流状态.txt') -Content $canonicalStatus
-
-  Write-Automation -AutomationRoot $automationRoot -Id 'tzg-wf1-queue-and-review-maintenance' -Status 'ACTIVE' -Prompt $canonicalPrompt
-  Assert-CheckerFails `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) `
-    -Context 'Second active writer'
-  Write-Automation -AutomationRoot $automationRoot -Id 'tzg-wf1-queue-and-review-maintenance' -Status 'PAUSED' -Prompt $canonicalPrompt
-  Write-Automation -AutomationRoot $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
-
-  $promptPath = Join-Path $repositoryRoot '开发管理/自动工作流控制器提示词.txt'
-  foreach ($forbidden in @(
-    'TQ-999',
-    'manifest',
-    'planOnly',
-    'SubmitManifest',
-    'DiscoverRead',
-    '自动工作流任务注册表',
-    'hourly-controller-v2'
-  )) {
-    Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`n$forbidden`n")
-    Assert-CheckerFails `
-      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-      -Context "Forbidden prompt token $forbidden"
-  }
+  Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`nBuffer.from('prompt')")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Ad-hoc encoding in controller' -Contains 'forbidden implementation token'
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
 
-  foreach ($forbiddenBoundary in @(
-      '普通 Codex 执行、复审和队列维护直接使用 Desktop/VS Code rollout。',
-      '第一期接入飞书 Tasks。',
-      '第一期创建 task GUID 映射。',
-      '第一期创建进度数据库。',
-      '第一期创建阶段状态机。'
-    )) {
-    Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`n$forbiddenBoundary`n")
-    Assert-CheckerFails `
-      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-      -Context "Forbidden CLI-native boundary $forbiddenBoundary"
-  }
-  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Utf8File -Path $rulesPath -Content ($canonicalRules + "`nRecordQueueState")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Retired action in rules' -Contains 'retired workflow token'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
-  $showFirstLine = '每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方。'
-  $readSourcesLine = '只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态，并检查原任务恢复和已回复的 pending resume。'
-  $fixtureLineBreak = if ($canonicalPrompt.Contains("`r`n", [StringComparison]::Ordinal)) { "`r`n" } else { "`n" }
-  $lateShowPrompt = $canonicalPrompt.Replace(
-    "$showFirstLine$fixtureLineBreak$readSourcesLine",
-    "$readSourcesLine$fixtureLineBreak$showFirstLine"
-  )
+  $showLine = '1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`；逻辑暂停时立即结束。'
+  $sourceLine = '2. 未暂停时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；恢复原责任优先，否则统一排序。'
+  $lateShowPrompt = $canonicalPrompt.Replace($showLine, '<SHOW-LINE>').Replace($sourceLine, $showLine).Replace('<SHOW-LINE>', $sourceLine)
   Write-Utf8File -Path $promptPath -Content $lateShowPrompt
-  Assert-CheckerFails `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-    -Context 'Runtime Show ordering boundary' `
-    -ErrorContains 'before routing sources'
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Late Show' -Contains 'before routing sources'
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
 
-  Write-Utf8File -Path $promptPath -Content ($canonicalPrompt + "`n控制器直接更新自身为 PAUSED。`n")
-  Assert-CheckerFails `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-    -Context 'Controller self-management boundary' `
-    -ErrorContains 'manages itself'
-  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Utf8File -Path $statusPath -Content ($canonicalStatus + "`n- 生产入口已恢复为 ACTIVE。")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Static live status claim' -Contains 'live status'
+  Write-Utf8File -Path $statusPath -Content $canonicalStatus
 
-  foreach ($directNodeLaunch in @(
-      "const command = dispatch.resumeKind === 'codex' ? 'codex' : 'claude';",
-      "spawnChild('codex.cmd', [], {});",
-      "spawnChild('node', ['codex.js'], {});"
-    )) {
-    Write-Utf8File -Path $relayPath -Content ($validRelaySource + "`n$directNodeLaunch`n")
-    Assert-CheckerFails `
-      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-      -Context "Direct Node Codex launch $directNodeLaunch"
-  }
-  Write-Utf8File -Path $relayPath -Content $validRelaySource
-
-  foreach ($requiredPhrase in @(
-    '统一排序',
-    '每轮只启动一个责任方',
-    '三类均无合法候选时才',
-    '队列维护正式入口必须保留两个顺序分支',
-    '没有可提升的完整 backlog 任务卡不等于阻塞',
-    '连续两次',
-    'pauseRequested=true 表示工具级逻辑暂停',
-    'SUSPENDED',
-    'ClearBlocking',
-    '自动化任务不得调用自动化管理能力管理自身',
-    '外部普通管理上下文',
-    'runtime 已逻辑暂停，界面尚未同步',
-    '工具等待超时、yield 或尚未返回不等于 runner 失败',
-    '不得释放租约或启动第二写入者',
-    'businessCommit',
-    'RequireAutomationMetadata',
-    'AutomationTask',
-    'AutomationState',
-    'AutomationResult',
-    'AutomationImpact',
-    'AutomationVerify',
-    'Automation: tzg-hourly-controller',
-    'State: completed',
-    'State: pending_review',
-    'handoffCommit 不使用 Automation 标记',
-    'PROVIDER_ACCEPTED',
-    '原发送请求路径已原子转换为消费请求',
-    'SaveRecovery',
-    '不消耗等待 token',
-    'tools/codex-cli-session.ps1',
-    '`Start`',
-    'stdin',
-    '不得直接管道调用 runner',
-    '-Model',
-    '`selected`',
-    '`session_started`',
-    '`running`',
-    '`waiting_decision`',
-    '`completed`',
-    '`failed`'
-  )) {
-    $promptWithoutRequiredPhrase = $canonicalPrompt -replace [regex]::Escape($requiredPhrase), '已移除'
-    Assert-True `
-      -Condition (-not $promptWithoutRequiredPhrase.Contains($requiredPhrase, [StringComparison]::OrdinalIgnoreCase)) `
-      -Message "Prompt fixture still contains required phrase $requiredPhrase"
-    Write-Utf8File -Path $promptPath -Content $promptWithoutRequiredPhrase
-    Assert-CheckerFails `
-      -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) `
-      -Context "Missing prompt phrase $requiredPhrase"
-  }
-  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Remove-Item -LiteralPath (Join-Path $repositoryRoot 'tools/invoke-codex-responsibility.ps1') -Force
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing fixed invoker' -Contains 'missing workflow component'
+  Write-Utf8File -Path (Join-Path $repositoryRoot 'tools/invoke-codex-responsibility.ps1') -Content 'invoker fixture'
 
   $legacyPath = Join-Path $repositoryRoot 'tools/automation-controller.ps1'
-  Write-Utf8File -Path $legacyPath -Content "legacy`n"
-  Assert-CheckerFails `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireLegacyRetired) `
-    -Context 'Legacy retirement guard'
+  Write-Utf8File -Path $legacyPath -Content 'legacy'
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireLegacyRetired) -Context 'Legacy path' -Contains 'legacy workflow path'
   [IO.File]::Delete($legacyPath)
-  Assert-CheckerPasses `
-    -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireLegacyRetired) `
-    -Context 'Legacy retirement success'
+  Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireLegacyRetired) -Context 'Retired legacy paths'
 
   Write-Output 'test-check-automation-workflow: OK'
 } finally {
   if (Test-Path -LiteralPath $testRoot) {
-    $resolvedRoot = [IO.Path]::GetFullPath($testRoot)
-    $temporaryPrefix = $temporaryBase.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
-    if (
-      -not $resolvedRoot.StartsWith($temporaryPrefix, [StringComparison]::OrdinalIgnoreCase) `
-      -or (Split-Path -Leaf $resolvedRoot) -ne "tzg-workflow-checker-test-$testId"
-    ) {
-      throw "Refusing unsafe checker-test cleanup: $resolvedRoot"
+    $resolved = [IO.Path]::GetFullPath($testRoot)
+    $prefix = $temporaryRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolved.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -ne "tzg-workflow-checker-test-$testId") {
+      throw "Refusing unsafe checker-test cleanup: $resolved"
     }
-    Remove-Item -LiteralPath $resolvedRoot -Recurse -Force
+    Remove-Item -LiteralPath $resolved -Recurse -Force
   }
 }
