@@ -71,7 +71,8 @@ namespace TianZhang.Tactical
                     tile.HeightLevel,
                     tile.BlocksGroundMove,
                     tile.BlocksLineOfSight,
-                    tile.IsEntityObstacle));
+                    tile.IsEntityObstacle,
+                    movementBurdenUnits: 0));
                 if (!tile.IsOccupied)
                     continue;
                 if (unitAnchors.ContainsKey(tile.OccupiedUnitId))

@@ -901,6 +901,14 @@ static class BattleSimSelfTests
         AssertEqual(false, twoPointReach.ContainsKey(new HexCoord(1, 0)), "terrain entry cost consumes movement budget");
         AssertEqual(false, twoPointReach.ContainsKey(new HexCoord(0, 1)), "movement blocker cannot be entered");
         AssertEqual(true, terrain.FindReachable(origin, 3).ContainsKey(new HexCoord(1, 0)), "terrain becomes reachable when its explicit cost is paid");
+        AssertEqual(
+            GameData.EnvironmentRules.StandardEdgeUnits,
+            terrain.QueryMetricDistance(origin, new HexCoord(1, 0), SpatialQueryKind.Attack).DistanceUnits,
+            "terrain movement burden does not change attack metric distance");
+        AssertEqual(
+            GameData.EnvironmentRules.StandardEdgeUnits,
+            terrain.QueryMetricDistance(origin, new HexCoord(1, 0), SpatialQueryKind.ForcedMovement).DistanceUnits,
+            "terrain movement burden does not change forced movement metric distance");
 
         var sight = HexBattlefield.CreateStandardFixture(new Dictionary<HexCoord, HexCellRules>
         {

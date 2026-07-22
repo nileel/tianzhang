@@ -37,17 +37,23 @@ namespace TianZhang.Core.SpatialRules
         public bool BlocksMovement { get; }
         public bool BlocksSight { get; }
         public bool IsEntityObstacle { get; }
+        public int MovementBurdenUnits { get; }
 
         public SpatialCellRules(
             int heightLevel,
             bool blocksMovement,
             bool blocksSight,
-            bool isEntityObstacle)
+            bool isEntityObstacle,
+            int movementBurdenUnits)
         {
+            if (movementBurdenUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(movementBurdenUnits));
+
             HeightLevel = heightLevel;
             BlocksMovement = blocksMovement || isEntityObstacle;
             BlocksSight = blocksSight || isEntityObstacle;
             IsEntityObstacle = isEntityObstacle;
+            MovementBurdenUnits = movementBurdenUnits;
         }
     }
 

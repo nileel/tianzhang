@@ -240,12 +240,9 @@ sealed class HexBattlefield
         {
             foreach (var to in from.Neighbors())
             {
-                if (!fixtureCells.TryGetValue(to, out var targetRules))
+                if (!fixtureCells.ContainsKey(to))
                     continue;
-                int distanceUnits = checked(
-                    rules.StandardEdgeUnits +
-                    (targetRules.MovementCost - 1) * rules.UnitsPerRange);
-                fixtureEdges[new DirectedHexEdge(from, to)] = new HexEdgeRules(distanceUnits);
+                fixtureEdges[new DirectedHexEdge(from, to)] = new HexEdgeRules(rules.StandardEdgeUnits);
             }
         }
 
@@ -559,16 +556,17 @@ sealed class HexBattlefield
                 heightLevel: 0,
                 entry.Value.BlocksMovement,
                 entry.Value.BlocksSight,
-                entry.Value.IsEntityObstacle));
+                entry.Value.IsEntityObstacle,
+                movementBurdenUnits: checked((entry.Value.MovementCost - 1) * rules.UnitsPerRange)));
         var sharedEdges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>();
         foreach (var entry in configuredEdges)
         {
             var from = ToSpatial(entry.Key.From);
             var to = ToSpatial(entry.Key.To);
             if (!sharedCells.ContainsKey(from))
-                sharedCells.Add(from, new SpatialCellRules(0, false, false, false));
+                sharedCells.Add(from, new SpatialCellRules(0, false, false, false, 0));
             if (!sharedCells.ContainsKey(to))
-                sharedCells.Add(to, new SpatialCellRules(0, false, false, false));
+                sharedCells.Add(to, new SpatialCellRules(0, false, false, false, 0));
             sharedEdges.Add(
                 new SpatialDirectedEdge(from, to),
                 new SpatialEdgeRules(

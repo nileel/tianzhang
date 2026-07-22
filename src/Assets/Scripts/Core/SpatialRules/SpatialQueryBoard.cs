@@ -66,7 +66,7 @@ namespace TianZhang.Core.SpatialRules
                 return new SpatialMetricDistanceResult(true, 0, SpatialQueryReasons.Ok);
 
             int distanceLimit = checked(rangeLimit * limits.UnitsPerRange);
-            var costs = RunDijkstra(start, kind, distanceLimit, null);
+            var costs = RunDijkstra(start, kind, distanceLimit, null, includeMovementBurden: false);
             return costs.TryGetValue(target, out int distance)
                 ? new SpatialMetricDistanceResult(true, distance, SpatialQueryReasons.Ok)
                 : new SpatialMetricDistanceResult(false, -1, SpatialQueryReasons.NoLegalPath);
@@ -90,7 +90,8 @@ namespace TianZhang.Core.SpatialRules
                 center,
                 kind,
                 checked(limits.MaxQueryRange * limits.UnitsPerRange),
-                null);
+                null,
+                includeMovementBurden: false);
             var result = new Dictionary<SpatialHexCoord, SpatialRangeEntry>();
             foreach (var candidate in cells)
             {
@@ -185,7 +186,8 @@ namespace TianZhang.Core.SpatialRules
                 start,
                 SpatialQueryKind.Movement,
                 checked(movementBudget * limits.UnitsPerRange),
-                blocked);
+                blocked,
+                includeMovementBurden: true);
         }
 
         public SpatialForcedMovementResult ResolveForcedMovement(
@@ -224,7 +226,8 @@ namespace TianZhang.Core.SpatialRules
             SpatialHexCoord start,
             SpatialQueryKind kind,
             int distanceLimit,
-            HashSet<SpatialHexCoord> occupied)
+            HashSet<SpatialHexCoord> occupied,
+            bool includeMovementBurden)
         {
             var costs = new Dictionary<SpatialHexCoord, int> { [start] = 0 };
             var settled = new HashSet<SpatialHexCoord>();
@@ -251,7 +254,10 @@ namespace TianZhang.Core.SpatialRules
                     if (!edge.IsLegal)
                         continue;
 
-                    int nextCost = checked(currentCost + edge.MetricDistanceUnits);
+                    int nextCost = checked(
+                        currentCost +
+                        edge.MetricDistanceUnits +
+                        (includeMovementBurden ? neighborRules.MovementBurdenUnits : 0));
                     if (nextCost > distanceLimit)
                         continue;
                     if (costs.TryGetValue(neighbor, out int known) && known <= nextCost)

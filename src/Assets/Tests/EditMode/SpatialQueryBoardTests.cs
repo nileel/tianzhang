@@ -36,8 +36,8 @@ namespace TianZhang.Tests
         {
             var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>
             {
-                [Origin] = new SpatialCellRules(0, false, false, false),
-                [East] = new SpatialCellRules(1, false, false, true),
+                [Origin] = new SpatialCellRules(0, false, false, false, 0),
+                [East] = new SpatialCellRules(1, false, false, true, 0),
             };
             var board = CreateBoard(
                 cells,
@@ -87,6 +87,26 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void MovementBurdenOnlyAffectsVoluntaryReachability()
+        {
+            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>
+            {
+                [Origin] = new SpatialCellRules(0, false, false, false, movementBurdenUnits: 0),
+                [East] = new SpatialCellRules(0, false, false, false, movementBurdenUnits: 4),
+            };
+            var board = CreateBoard(
+                cells,
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true),
+                });
+
+            Assert.IsFalse(board.FindReachable(Origin, 1, null).ContainsKey(East));
+            Assert.AreEqual(2, board.QueryMetricDistance(Origin, East, SpatialQueryKind.Attack).DistanceUnits);
+            Assert.AreEqual(2, board.QueryMetricDistance(Origin, East, SpatialQueryKind.ForcedMovement).DistanceUnits);
+        }
+
+        [Test]
         public void UnitySnapshotMapsExplicitRulesAndRejectsDuplicateUnitAnchors()
         {
             var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
@@ -132,9 +152,9 @@ namespace TianZhang.Tests
         {
             return CreateBoard(new Dictionary<SpatialHexCoord, SpatialCellRules>
             {
-                [Origin] = new SpatialCellRules(0, false, false, false),
-                [East] = new SpatialCellRules(0, false, false, false),
-                [EastTwo] = new SpatialCellRules(0, false, false, false),
+                [Origin] = new SpatialCellRules(0, false, false, false, 0),
+                [East] = new SpatialCellRules(0, false, false, false, 0),
+                [EastTwo] = new SpatialCellRules(0, false, false, false, 0),
             }, edges);
         }
 
