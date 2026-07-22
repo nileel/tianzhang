@@ -61,6 +61,10 @@ try {
     New-ValidFixture
     Assert-CheckerResult -Name 'valid fixture' -ShouldPass $true -ExpectedRuleId ''
 
+    Write-FixtureFile (Join-Path "docs/$cultivation" "$spells/fixture/functional.txt") "# Functional fixture`n`n- 内容类型：功能术法。`n"
+    Assert-CheckerResult -Name 'functional spell excluded from combat data count' -ShouldPass $true -ExpectedRuleId ''
+    Remove-Item -LiteralPath (Join-Path $fixtureRoot (Join-Path "docs/$cultivation" "$spells/fixture/functional.txt"))
+
     (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv')).Replace($script:environmentProfileHeader, "$script:environmentProfileHeader,unknown") | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv')
     Assert-CheckerResult -Name 'environment schema unknown column' -ShouldPass $false -ExpectedRuleId 'CSV_SCHEMA_UNKNOWN_COLUMN'
     New-ValidFixture

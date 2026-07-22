@@ -45,6 +45,13 @@ function Get-GongFaName { return (-join @([char]0x529F, [char]0x6CD5)) }
 function Get-SpellName { return (-join @([char]0x672F, [char]0x6CD5)) }
 function Get-SkillName { return (-join @([char]0x795E, [char]0x901A)) }
 
+function Test-IsDataBackedContentDoc {
+  param([System.IO.FileInfo]$File, [string]$ContentKind)
+
+  if ($ContentKind -cne (Get-SpellName)) { return $true }
+  return -not (Select-String -LiteralPath $File.FullName -Pattern '^\s*-\s*内容类型\s*[：:]\s*功能术法[。.]?\s*$' -Quiet)
+}
+
 function Get-ContentDocs {
   param([string]$ContentKind)
   $path = Join-ProjectPath @('docs', (Get-CultivationName), $ContentKind)
@@ -52,7 +59,8 @@ function Get-ContentDocs {
     Add-Error 'MISSING_DOC_DIR' $ContentKind "Missing content document directory: $path"
     return @()
   }
-  return @(Get-ChildItem -LiteralPath $path -Recurse -File -Filter *.txt | Where-Object { $_.DirectoryName -ne $path })
+  return @(Get-ChildItem -LiteralPath $path -Recurse -File -Filter *.txt |
+    Where-Object { $_.DirectoryName -ne $path -and (Test-IsDataBackedContentDoc -File $_ -ContentKind $ContentKind) })
 }
 
 function Get-CsvTable {
