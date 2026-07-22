@@ -4,10 +4,70 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ExpectedPaths,
   [Parameter(Mandatory = $true)]
-  [string]$CommitMessage
+  [string]$CommitMessage,
+  [switch]$RequireAutomationMetadata,
+  [string]$AutomationTask,
+  [string]$AutomationState,
+  [string]$AutomationResult,
+  [string]$AutomationImpact,
+  [string]$AutomationVerify
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Assert-AutomationMetadata {
+  param([Parameter(Mandatory = $true)][string]$Message)
+
+  $singleLine = '[^\r\n]*\S[^\r\n]*'
+  $pattern = "\A$singleLine\r?\n\r?\n" +
+    'Automation: tzg-hourly-controller\r?\n' +
+    "Task: $singleLine\r?\n" +
+    'State: (?:completed|pending_review)\r?\n' +
+    "Result: $singleLine\r?\n" +
+    "Impact: $singleLine\r?\n" +
+    "Verify: $singleLine\r?\n?\z"
+
+  if (-not [regex]::IsMatch($Message, $pattern, [Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
+    throw 'CommitMessage does not match the required tzg-hourly-controller metadata format.'
+  }
+}
+
+function New-AutomationCommitMessage {
+  param(
+    [Parameter(Mandatory = $true)][string]$Subject,
+    [string]$Task,
+    [string]$State,
+    [string]$Result,
+    [string]$Impact,
+    [string]$Verify
+  )
+
+  foreach ($field in @{
+      Subject = $Subject
+      Task = $Task
+      Result = $Result
+      Impact = $Impact
+      Verify = $Verify
+    }.GetEnumerator()) {
+    if ([string]::IsNullOrWhiteSpace([string]$field.Value) -or [string]$field.Value -match '[\r\n]') {
+      throw "$($field.Key) must be non-empty single-line text."
+    }
+  }
+  if ($State -notin @('completed', 'pending_review')) {
+    throw 'AutomationState must be completed or pending_review.'
+  }
+
+  @(
+    $Subject,
+    '',
+    'Automation: tzg-hourly-controller',
+    "Task: $Task",
+    "State: $State",
+    "Result: $Result",
+    "Impact: $Impact",
+    "Verify: $Verify"
+  ) -join "`n"
+}
 
 function Invoke-GitRaw {
   param([string[]]$Arguments)
@@ -138,6 +198,16 @@ if (-not $resolvedGitRoot.Equals($script:Repository, [System.StringComparison]::
   throw "RepositoryRoot must be the Git root: $RepositoryRoot"
 }
 if ([string]::IsNullOrWhiteSpace($CommitMessage)) { throw 'CommitMessage must not be empty.' }
+if ($RequireAutomationMetadata) {
+  $CommitMessage = New-AutomationCommitMessage `
+    -Subject $CommitMessage `
+    -Task $AutomationTask `
+    -State $AutomationState `
+    -Result $AutomationResult `
+    -Impact $AutomationImpact `
+    -Verify $AutomationVerify
+  Assert-AutomationMetadata -Message $CommitMessage
+}
 
 $paths = ConvertTo-NormalizedPaths $ExpectedPaths
 foreach ($path in $paths) {

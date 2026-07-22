@@ -162,6 +162,7 @@ $canonicalPrompt = @'
 现有 task-owned Desktop recovery 只允许原任务人工完成，普通自动化收到 `RECOVERY_ONLY` 后停止。
 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
 外部 AI 自验证并创建 businessCommit 与 handoffCommit，调度器不代提交。
+所有控制器责任方的业务提交都通过 automation-finalize-commit.ps1 的 RequireAutomationMetadata 门禁，并以 AutomationTask、AutomationState、AutomationResult、AutomationImpact、AutomationVerify 传入单行字段；正文包含 Automation: tzg-hourly-controller，Codex 使用 State: completed，外部 businessCommit 使用 State: pending_review，handoffCommit 不使用 Automation 标记。
 决策等待保存原 thread/session 后退出；占锁回复只排队，不 sleep、不轮询、不保持模型进程，不消耗等待 token。
 记录结果并释放租约；相同全阻塞指纹连续两次使 pauseRequested=true 后，只报告“runtime 已逻辑暂停，界面尚未同步”并结束。
 逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`；只有自动化任务之外的外部普通管理上下文可确认安全后先调用 `ClearBlocking`，再把入口设为 `ACTIVE`。
@@ -182,6 +183,7 @@ $canonicalRules = @'
 - 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机。
 - 人工脏改避让：冲突候选跳过，不 stash、reset、checkout 或 clean。
 - 外部两提交：businessCommit 后只改交接文件创建 handoffCommit，外层不代验代提交。
+- 统一提交元数据：所有责任方业务提交启用 RequireAutomationMetadata，并以 AutomationTask、AutomationState、AutomationResult、AutomationImpact、AutomationVerify 传入单行字段；finalizer 写 Automation: tzg-hourly-controller，Codex 使用 State: completed，外部业务使用 State: pending_review，handoffCommit 不使用 Automation 标记。
 - 决策恢复：保存原 thread/session；占锁排队且不等待 token。
 - 启动顺序：在读取当前任务队列或任何候选事实源前先调用 Show，逻辑暂停时立即退出。
 - 两轮阻塞暂停：相同全阻塞指纹连续两次后形成工具级逻辑暂停，普通 Acquire 返回 SUSPENDED。
@@ -302,9 +304,10 @@ try {
 
   $showFirstLine = '每轮第一项操作必须通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方。'
   $readSourcesLine = '只有未逻辑暂停时，才读取 `开发管理/自动工作流规则.txt`、`开发管理/当前任务队列.txt`、`开发管理/审核入口.txt`、`开发管理/AI合作沟通.txt` 与必要状态，并检查原任务恢复和已回复的 pending resume。'
+  $fixtureLineBreak = if ($canonicalPrompt.Contains("`r`n", [StringComparison]::Ordinal)) { "`r`n" } else { "`n" }
   $lateShowPrompt = $canonicalPrompt.Replace(
-    "$showFirstLine`n$readSourcesLine",
-    "$readSourcesLine`n$showFirstLine"
+    "$showFirstLine$fixtureLineBreak$readSourcesLine",
+    "$readSourcesLine$fixtureLineBreak$showFirstLine"
   )
   Write-Utf8File -Path $promptPath -Content $lateShowPrompt
   Assert-CheckerFails `
@@ -348,6 +351,16 @@ try {
     '工具等待超时、yield 或尚未返回不等于 runner 失败',
     '不得释放租约或启动第二写入者',
     'businessCommit',
+    'RequireAutomationMetadata',
+    'AutomationTask',
+    'AutomationState',
+    'AutomationResult',
+    'AutomationImpact',
+    'AutomationVerify',
+    'Automation: tzg-hourly-controller',
+    'State: completed',
+    'State: pending_review',
+    'handoffCommit 不使用 Automation 标记',
     '不消耗等待 token',
     'tools/codex-cli-session.ps1',
     '`Start`',

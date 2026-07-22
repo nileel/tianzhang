@@ -32,6 +32,8 @@ Verify: <本轮已通过的直接检查及结果摘要>
 
 所有由控制器启动的 Codex 执行、Codex 复审、队列维护和外部 AI 业务提交统一使用现有 `tools/automation-finalize-commit.ps1`。该工具增加可选的 `RequireAutomationMetadata` 门禁；控制器责任方必须启用，其他既有调用保持原行为。
 
+启用门禁时，调用方只以 `CommitMessage` 传递单行 Conventional Commit 标题，并分别传入 `AutomationTask`、`AutomationState`、`AutomationResult`、`AutomationImpact` 和 `AutomationVerify`。finalizer 固定写入 `Automation: tzg-hourly-controller` 并在进程内组装多行正文，避免外部 CLI 通过 shell 传递多行参数或扩大工具权限。
+
 门禁在修改 Git index 前检查：
 
 1. 六个字段完整且不重复。
@@ -82,7 +84,7 @@ Verify: <本轮已通过的直接检查及结果摘要>
 
 ## 验证
 
-1. 扩展 `tools/test-automation-finalize-commit.ps1`，证明中文多行提交正文原样保留；启用门禁时缺字段、重复字段、非法 `Automation`、非法 `State` 和多行字段均在修改 index 前失败；未启用门禁的既有用例保持通过。
+1. 扩展 `tools/test-automation-finalize-commit.ps1`，证明结构化中文参数生成的多行提交正文原样保留；启用门禁时缺字段、非法 `State` 和多行字段均在修改 index 前失败，且 `Automation` 只能由 finalizer 固定生成；未启用门禁的既有用例保持通过。
 2. 检查项目规则、Codex 入口、外部 AI 入口和控制器提示词均使用相同字段、状态语义及 `handoffCommit` 排除规则。
 3. 使用临时 Git fixture 覆盖 Codex 完成、外部待复审、交接提交、队列维护、同任务多提交和异常元数据，确认候选查询不漏项、不重复统计交接提交，且不受三项上限约束。
 4. 运行现有自动化工作流检查，确认薄路由、单写入和外部双提交边界未改变。

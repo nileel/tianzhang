@@ -236,7 +236,7 @@ and make 开发管理/当前任务队列.txt exactly:
 TASK-EXT-001|P0|Claude / DeepSeek|待复审
 Do not modify the task card or handoff file yet.
 4. Run only: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt'. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Verify -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt'.
-5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt' -CommitMessage 'test(external): create business commit'. Save its stdout SHA as businessCommit.
+5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace 通过'. Save its stdout SHA as businessCommit.
 6. Modify only 开发管理/AI合作沟通.txt to exactly these six lines, substituting the real SHA:
 # AI合作沟通
 HANDOFF-EXT-001
@@ -307,6 +307,22 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
     -Expected ($expectedBusinessPaths -join '|') `
     -Message 'Business commit paths mismatch'
 
+  $businessBody = Invoke-CanaryGit `
+    -RepositoryRoot $canaryRepository `
+    -Arguments @('show', '-s', '--format=%B', $businessCommit)
+  foreach ($requiredMetadata in @(
+      'Automation: tzg-hourly-controller',
+      'Task: TASK-EXT-001',
+      'State: pending_review',
+      'Result: 完成外部责任方授权修改',
+      'Impact: TASK-EXT-001 已进入待复审状态',
+      'Verify: check-pending-whitespace 通过'
+    )) {
+    if (-not $businessBody.Contains($requiredMetadata, [StringComparison]::Ordinal)) {
+      throw "Business commit metadata is missing: $requiredMetadata"
+    }
+  }
+
   $handoffPathText = Invoke-CanaryGit `
     -RepositoryRoot $canaryRepository `
     -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', $handoffCommit)
@@ -315,6 +331,12 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
     -Actual ($handoffPaths -join '|') `
     -Expected '开发管理/AI合作沟通.txt' `
     -Message 'Handoff commit must contain only the handoff file'
+  $handoffBody = Invoke-CanaryGit `
+    -RepositoryRoot $canaryRepository `
+    -Arguments @('show', '-s', '--format=%B', $handoffCommit)
+  if ($handoffBody.Contains('Automation: tzg-hourly-controller', [StringComparison]::Ordinal)) {
+    throw 'Handoff commit must not contain automation result metadata'
+  }
 
   $handoffText = [IO.File]::ReadAllText(
     (Join-Path $canaryRepository '开发管理\AI合作沟通.txt'),

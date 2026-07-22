@@ -16,13 +16,39 @@ function Invoke-Git {
 }
 
 function Invoke-Helper {
-  param([string]$ExpectedPaths, [string]$CommitMessage)
+  param(
+    [string]$ExpectedPaths,
+    [string]$CommitMessage,
+    [switch]$RequireAutomationMetadata,
+    [string]$AutomationTask,
+    [string]$AutomationState,
+    [string]$AutomationResult,
+    [string]$AutomationImpact,
+    [string]$AutomationVerify
+  )
 
   $previousPreference = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
   try {
-    $output = & $engine -NoProfile -ExecutionPolicy Bypass -File $tool `
-      -RepositoryRoot $repo -ExpectedPaths $ExpectedPaths -CommitMessage $CommitMessage 2>&1
+    $arguments = @(
+      '-NoProfile',
+      '-ExecutionPolicy', 'Bypass',
+      '-File', $tool,
+      '-RepositoryRoot', $repo,
+      '-ExpectedPaths', $ExpectedPaths,
+      '-CommitMessage', $CommitMessage
+    )
+    if ($RequireAutomationMetadata) {
+      $arguments += @(
+        '-RequireAutomationMetadata',
+        '-AutomationTask', $AutomationTask,
+        '-AutomationState', $AutomationState,
+        '-AutomationResult', $AutomationResult,
+        '-AutomationImpact', $AutomationImpact,
+        '-AutomationVerify', $AutomationVerify
+      )
+    }
+    $output = & $engine @arguments 2>&1
     [pscustomobject]@{ Code = $LASTEXITCODE; Output = ($output -join "`n") }
   } finally {
     $ErrorActionPreference = $previousPreference
@@ -136,6 +162,53 @@ try {
   if ($legacyCommitted.Count -ne 1 -or $legacyCommitted[0] -ne $expected) {
     throw "unexpected legacy-console commit paths: $($legacyCommitted -join ', ')"
   }
+
+  Write-Utf8 (Join-Path $repo $expected) "expected automation metadata change`n"
+  $automationFields = @{
+    AutomationTask = 'TASK-AUTO-001'
+    AutomationState = 'completed'
+    AutomationResult = '完成自动化提交元数据测试'
+    AutomationImpact = '验证日报候选可以从提交正文稳定读取'
+    AutomationVerify = 'test-automation-finalize-commit 通过'
+  }
+  $invalidAutomationFields = @(
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationTask = ''; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationState = 'failed'; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationResult = "完成自动化提交元数据测试`n额外一行"; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationImpact = ''; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationVerify = ''; $_ })
+  )
+  foreach ($invalidAutomationFieldSet in $invalidAutomationFields) {
+    $headBeforeInvalid = (Invoke-Git rev-parse HEAD) -join ''
+    $cachedBeforeInvalid = (Invoke-Git diff --cached --binary) -join "`n"
+    $invalidResult = Invoke-Helper `
+      -ExpectedPaths $expected `
+      -CommitMessage 'feat(test): 写入自动化成果摘要' `
+      -RequireAutomationMetadata `
+      @invalidAutomationFieldSet
+    if ($invalidResult.Code -eq 0) { throw 'invalid automation metadata was accepted' }
+    if (((Invoke-Git rev-parse HEAD) -join '') -ne $headBeforeInvalid) { throw 'invalid automation metadata created a commit' }
+    if (((Invoke-Git diff --cached --binary) -join "`n") -cne $cachedBeforeInvalid) { throw 'invalid automation metadata changed the index' }
+  }
+
+  $automationResult = Invoke-Helper `
+    -ExpectedPaths $expected `
+    -CommitMessage 'feat(test): 写入自动化成果摘要' `
+    -RequireAutomationMetadata `
+    @automationFields
+  if ($automationResult.Code -ne 0) { throw "valid automation metadata was rejected: $($automationResult.Output)" }
+  $automationBody = ((Invoke-Git log -1 --format=%B) -join "`n").Replace("`r`n", "`n").TrimEnd()
+  $expectedAutomationBody = @'
+feat(test): 写入自动化成果摘要
+
+Automation: tzg-hourly-controller
+Task: TASK-AUTO-001
+State: completed
+Result: 完成自动化提交元数据测试
+Impact: 验证日报候选可以从提交正文稳定读取
+Verify: test-automation-finalize-commit 通过
+'@.Replace("`r`n", "`n").TrimEnd()
+  if ($automationBody -cne $expectedAutomationBody) { throw "automation metadata changed in Git: $automationBody" }
 
   $headBeforeMissing = (Invoke-Git rev-parse HEAD) -join ''
   $missing = Invoke-Helper 'missing.txt' 'test: must not commit'

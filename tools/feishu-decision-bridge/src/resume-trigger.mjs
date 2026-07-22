@@ -40,6 +40,18 @@ function requireIdentifier(value, name) {
   return value;
 }
 
+function requireOwner(value) {
+  if (
+    typeof value !== 'string'
+    || value.trim().length === 0
+    || value.length > 256
+    || /[\u0000-\u001f\u007f]/u.test(value)
+  ) {
+    throw new Error('Invalid owner');
+  }
+  return value;
+}
+
 function requireAbsolutePath(value, name) {
   if (typeof value !== 'string' || !isAbsolute(value)) {
     throw new Error(`Invalid ${name}`);
@@ -283,7 +295,7 @@ function validateDispatch(value) {
   return {
     runId: requireIdentifier(value.runId, 'runId'),
     taskId: requireIdentifier(value.taskId, 'taskId'),
-    owner: requireIdentifier(value.owner, 'owner'),
+    owner: requireOwner(value.owner),
     repositoryRoot: requireAbsolutePath(value.repositoryRoot, 'repositoryRoot'),
     resumeKind,
     resumeId: requireIdentifier(value.resumeId, 'resumeId'),

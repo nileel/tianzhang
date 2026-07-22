@@ -18,30 +18,27 @@
 
 - [ ] **Step 1: Add failing metadata tests**
 
-Extend `Invoke-Helper` with a `RequireAutomationMetadata` switch and pass it to the child PowerShell process only when requested. Add a valid Chinese multiline commit message:
+Extend `Invoke-Helper` with a `RequireAutomationMetadata` switch and five structured metadata parameters. Add a valid Chinese field set:
 
 ```powershell
-$validAutomationMessage = @'
-feat(test): 写入自动化成果摘要
-
-Automation: tzg-hourly-controller
-Task: TASK-AUTO-001
-State: completed
-Result: 完成自动化提交元数据测试
-Impact: 验证日报候选可以从提交正文稳定读取
-Verify: test-automation-finalize-commit 通过
-'@
+$automationFields = @{
+  AutomationTask = 'TASK-AUTO-001'
+  AutomationState = 'completed'
+  AutomationResult = '完成自动化提交元数据测试'
+  AutomationImpact = '验证日报候选可以从提交正文稳定读取'
+  AutomationVerify = 'test-automation-finalize-commit 通过'
+}
 ```
 
-Before the valid case, assert that each of these messages fails with `RequireAutomationMetadata`, leaves `HEAD` unchanged, and leaves the complete cached diff unchanged:
+Before the valid case, assert that empty fields, invalid state, and multiline fields fail with `RequireAutomationMetadata`, leave `HEAD` unchanged, and leave the complete cached diff unchanged:
 
 ```powershell
-$invalidAutomationMessages = @(
-  $validAutomationMessage.Replace("`nVerify: test-automation-finalize-commit 通过", ''),
-  $validAutomationMessage.Replace('Task: TASK-AUTO-001', "Task: TASK-AUTO-001`nTask: TASK-AUTO-002"),
-  $validAutomationMessage.Replace('Automation: tzg-hourly-controller', 'Automation: another-controller'),
-  $validAutomationMessage.Replace('State: completed', 'State: failed'),
-  $validAutomationMessage.Replace('Result: 完成自动化提交元数据测试', "Result: 完成自动化提交元数据测试`n额外一行")
+$invalidAutomationFields = @(
+  ($automationFields.Clone() | ForEach-Object { $_.AutomationTask = ''; $_ }),
+  ($automationFields.Clone() | ForEach-Object { $_.AutomationState = 'failed'; $_ }),
+  ($automationFields.Clone() | ForEach-Object { $_.AutomationResult = "完成自动化提交元数据测试`n额外一行"; $_ }),
+  ($automationFields.Clone() | ForEach-Object { $_.AutomationImpact = ''; $_ }),
+  ($automationFields.Clone() | ForEach-Object { $_.AutomationVerify = ''; $_ })
 )
 ```
 
@@ -59,40 +56,33 @@ Expected: nonzero because `automation-finalize-commit.ps1` does not yet accept o
 
 - [ ] **Step 3: Implement the minimum validator**
 
-Add the switch to the parameter block:
+Add the switch and structured fields to the parameter block:
 
 ```powershell
-[switch]$RequireAutomationMetadata
+[switch]$RequireAutomationMetadata,
+[string]$AutomationTask,
+[string]$AutomationState,
+[string]$AutomationResult,
+[string]$AutomationImpact,
+[string]$AutomationVerify
 ```
 
-Add a validator that accepts exactly one Conventional Commit subject, one blank line, and the six-line metadata block:
+Validate that the subject and five supplied fields are non-empty single-line text, restrict state to `completed` or `pending_review`, then construct the commit message in the finalizer:
 
 ```powershell
-function Assert-AutomationMetadata {
-  param([Parameter(Mandatory = $true)][string]$Message)
-
-  $singleLine = '[^\r\n]*\S[^\r\n]*'
-  $pattern = "\A$singleLine\r?\n\r?\n" +
-    'Automation: tzg-hourly-controller\r?\n' +
-    "Task: $singleLine\r?\n" +
-    'State: (?:completed|pending_review)\r?\n' +
-    "Result: $singleLine\r?\n" +
-    "Impact: $singleLine\r?\n" +
-    "Verify: $singleLine\r?\n?\z"
-
-  if (-not [regex]::IsMatch($Message, $pattern, [Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
-    throw 'CommitMessage does not match the required tzg-hourly-controller metadata format.'
-  }
-}
+$CommitMessage = @(
+  $CommitMessage,
+  '',
+  'Automation: tzg-hourly-controller',
+  "Task: $AutomationTask",
+  "State: $AutomationState",
+  "Result: $AutomationResult",
+  "Impact: $AutomationImpact",
+  "Verify: $AutomationVerify"
+) -join "`n"
 ```
 
-Call it immediately after the existing non-empty `CommitMessage` check and before path conversion, `git add`, or any index mutation:
-
-```powershell
-if ($RequireAutomationMetadata) {
-  Assert-AutomationMetadata -Message $CommitMessage
-}
-```
+Perform this construction immediately after the existing non-empty `CommitMessage` check and before path conversion, `git add`, or any index mutation. The fixed `Automation` line prevents callers from supplying another automation identity and lets external CLIs keep a single-line allowed command.
 
 - [ ] **Step 4: Run the focused regression**
 
@@ -156,7 +146,7 @@ In the canonical controller prompt, require the controller to include the schema
 
 - [ ] **Step 3: Update the external self-commit canary**
 
-Change the canary business finalizer command to pass one multiline message containing all six fields and `-RequireAutomationMetadata`. Keep the handoff finalizer command unflagged. After the canary returns, read the business commit body and assert it contains:
+Change the canary business finalizer command to pass a single-line subject plus `AutomationTask`, `AutomationState`, `AutomationResult`, `AutomationImpact`, and `AutomationVerify` with `-RequireAutomationMetadata`. Keep the handoff finalizer command unflagged. After the canary returns, read the business commit body and assert it contains:
 
 ```text
 Automation: tzg-hourly-controller
