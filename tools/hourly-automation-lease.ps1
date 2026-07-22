@@ -629,8 +629,14 @@ try {
             $resultExitCode = 2
             break
           }
-          if ([string]$state.recovery.trigger -cne 'interruption') {
-            $result = New-Result -Status 'RECOVERY_NOT_INTERRUPTION'
+          $recoveryTrigger = [string]$state.recovery.trigger
+          if ($recoveryTrigger -cnotin @('decision', 'interruption')) {
+            $result = New-Result -Status 'RECOVERY_INVALID'
+            $resultExitCode = 2
+            break
+          }
+          if ($recoveryTrigger -ceq 'decision' -and [string]::IsNullOrWhiteSpace($DecisionId)) {
+            $result = New-Result -Status 'DECISION_ID_REQUIRED'
             $resultExitCode = 2
             break
           }
@@ -638,6 +644,11 @@ try {
             ([string]$state.recovery.taskId).Equals($TaskId, [StringComparison]::Ordinal) -and
             ([string]$state.recovery.owner).Equals($Owner, [StringComparison]::Ordinal) -and
             ([string]$state.recovery.repositoryRoot).Equals($normalizedRepositoryRoot, [StringComparison]::OrdinalIgnoreCase)
+          if ($recoveryTrigger -ceq 'decision') {
+            $matchesRecovery =
+              $matchesRecovery -and
+              ([string]$state.recovery.decisionId).Equals($DecisionId, [StringComparison]::Ordinal)
+          }
           if (-not $matchesRecovery) {
             $result = New-Result -Status 'RECOVERY_MISMATCH'
             $resultExitCode = 2
@@ -657,6 +668,8 @@ try {
             repositoryRoot = $state.recovery.repositoryRoot
             resumeKind = $state.recovery.resumeKind
             resumeId = $state.recovery.resumeId
+            trigger = $state.recovery.trigger
+            decisionId = $state.recovery.decisionId
             changedPaths = @($state.recovery.changedPaths)
           }
           break

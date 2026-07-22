@@ -425,6 +425,35 @@ try {
   } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $resumeOwner.Json.runId } | Out-Null
 
+  $manualDecisionWithoutId = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-resume'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+    ResumeRecovery = $true
+  } -AllowedExitCodes @(2)
+  Assert-Equal -Actual $manualDecisionWithoutId.Json.status -Expected 'DECISION_ID_REQUIRED' -Message 'Manual decision recovery did not require the exact decision id'
+  $manualDecisionWrongId = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-resume'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+    ResumeRecovery = $true
+    DecisionId = 'decision-wrong'
+  } -AllowedExitCodes @(2)
+  Assert-Equal -Actual $manualDecisionWrongId.Json.status -Expected 'RECOVERY_MISMATCH' -Message 'Manual decision recovery accepted the wrong decision id'
+  $manualDecisionLease = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-resume'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+    ResumeRecovery = $true
+    DecisionId = 'decision-resume'
+  }
+  Assert-Equal -Actual $manualDecisionLease.Json.status -Expected 'RECOVERY_ACQUIRED' -Message 'Manual decision recovery could not acquire the original task'
+  Assert-Equal -Actual $manualDecisionLease.Json.decisionId -Expected 'decision-resume' -Message 'Manual decision recovery lost the decision id'
+  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $manualDecisionLease.Json.runId } | Out-Null
+
   $clearWithRecovery = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
   Assert-Equal -Actual $clearWithRecovery.Json.status -Expected 'RECOVERY_PRESENT' -Message 'ClearBlocking ignored recovery'
 

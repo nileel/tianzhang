@@ -16,7 +16,10 @@ param(
   [string]$RunId,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$SessionId,
-  [string]$Model
+  [string]$Model,
+  [string]$DecisionId,
+  [ValidateSet('A', 'B', 'C')]
+  [string]$DecisionOption
 )
 
 $ErrorActionPreference = 'Stop'
@@ -128,7 +131,12 @@ function New-ResponsibilityPrompt {
   } else {
     '这是新的 CLI-native 责任方会话。'
   }
-  @(
+  $lines = @()
+  if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
+    $lines += "[TZG_DECISION_RESUME runId=$RunId]"
+    $lines += $DecisionOption
+  }
+  $lines += @(
     "模型核验证明：控制器已核验并以 -Model 传入 $Model；子会话不因缺少父 request metadata 再次阻塞。"
     "TaskId: $TaskId"
     "RunId: $RunId"
@@ -139,7 +147,8 @@ function New-ResponsibilityPrompt {
     '责任方端到端实施、最小充分验证并使用 automation-finalize-commit.ps1 创建路径限定提交。'
     '需要决定时必须先由 send-decision.mjs 获得 PROVIDER_ACCEPTED，再 SaveRecovery。'
     '不得自行调用 RecordResult 或 Release；固定调用器会根据 Git 与 runtime 核验结果后统一关闭本轮。'
-  ) -join "`n"
+  )
+  $lines -join "`n"
 }
 
 function Invoke-SessionRunner {
@@ -250,6 +259,32 @@ try {
     Assert-StableArgument -Value $SessionId -Name 'SessionId'
   } else {
     Assert-StableArgument -Value $Model -Name 'Model'
+  }
+  $hasDecisionId = -not [string]::IsNullOrWhiteSpace($DecisionId)
+  $hasDecisionOption = -not [string]::IsNullOrWhiteSpace($DecisionOption)
+  if ($hasDecisionId -ne $hasDecisionOption) {
+    throw 'DecisionId and DecisionOption must be provided together'
+  }
+  if ($hasDecisionId) {
+    if ($Action -cne 'Resume' -or $Route -cne 'Recovery') {
+      throw 'Decision reply is only valid for a recovery resume'
+    }
+    Assert-StableArgument -Value $DecisionId -Name 'DecisionId'
+    $resumeState = Invoke-LeaseAction -LeaseAction Show -Parameters @{ StateRoot = $StateRoot }
+    $resumeRecovery = $resumeState.state.recovery
+    $resumeLease = $resumeState.state.lease
+    $validDecisionResume =
+      $null -ne $resumeRecovery -and
+      [string]$resumeRecovery.trigger -ceq 'decision' -and
+      [string]$resumeRecovery.taskId -ceq $TaskId -and
+      [string]$resumeRecovery.decisionId -ceq $DecisionId -and
+      $null -ne $resumeLease -and
+      [string]$resumeLease.runId -ceq $RunId -and
+      [string]$resumeLease.taskId -ceq $TaskId -and
+      [string]$resumeLease.repositoryRoot -ieq $script:resolvedRepositoryRoot
+    if (-not $validDecisionResume) {
+      throw 'Decision recovery does not match the active lease'
+    }
   }
 
   $beforeHead = Invoke-GitText -Arguments @('rev-parse', 'HEAD')

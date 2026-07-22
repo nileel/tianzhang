@@ -74,7 +74,13 @@ function Invoke-Responsibility {
     [string]$TaskId,
     [string]$RunId,
     [ValidateSet('Execution', 'Review', 'QueueMaintenance', 'Recovery')]
-    [string]$Route = 'Execution'
+    [string]$Route = 'Execution',
+    [ValidateSet('Start', 'Resume')]
+    [string]$Action = 'Start',
+    [string]$ResumeSessionId,
+    [string]$DecisionId,
+    [ValidateSet('A', 'B', 'C')]
+    [string]$DecisionOption
   )
 
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
@@ -86,14 +92,27 @@ function Invoke-Responsibility {
   $startInfo.RedirectStandardError = $true
   foreach ($argument in @(
       '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $invokerPath,
-      '-Action', 'Start', '-Route', $Route,
+      '-Action', $Action, '-Route', $Route,
       '-RepositoryRoot', $gitRoot,
       '-TaskId', $TaskId,
       '-RunId', $RunId,
-      '-StateRoot', $stateRoot,
-      '-Model', 'gpt-5.6-terra'
+      '-StateRoot', $stateRoot
     )) {
     $startInfo.ArgumentList.Add($argument)
+  }
+  if ($Action -ceq 'Resume') {
+    foreach ($argument in @('-SessionId', $ResumeSessionId)) {
+      $startInfo.ArgumentList.Add($argument)
+    }
+  } else {
+    foreach ($argument in @('-Model', 'gpt-5.6-terra')) {
+      $startInfo.ArgumentList.Add($argument)
+    }
+  }
+  if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
+    foreach ($argument in @('-DecisionId', $DecisionId, '-DecisionOption', $DecisionOption)) {
+      $startInfo.ArgumentList.Add($argument)
+    }
   }
   $startInfo.Environment['Path'] = $fakeBin + [IO.Path]::PathSeparator + [Environment]::GetEnvironmentVariable('Path')
   $startInfo.Environment['RESPONSIBILITY_TEST_CASE'] = $Case
@@ -252,6 +271,31 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $waiting.Json.status -Expected 'waiting_decision' -Message 'Decision waiting status mismatch'
   $waitingState = Assert-LeaseReleased
   Assert-Equal -Actual $waitingState.state.recovery.trigger -Expected 'decision' -Message 'Decision recovery trigger mismatch'
+
+  $decisionResumeLease = Invoke-LeaseJson -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-decision'
+    Owner = 'codex'
+    RepositoryRoot = $gitRoot
+    ResumeRecovery = $true
+    DecisionId = 'decision-invoker-test'
+  }
+  Assert-Equal -Actual $decisionResumeLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Decision recovery could not be reacquired'
+  $resumed = Invoke-Responsibility `
+    -Case 'commit-success' `
+    -TaskId 'task-decision' `
+    -RunId $decisionResumeLease.runId `
+    -Route 'Recovery' `
+    -Action 'Resume' `
+    -ResumeSessionId $sessionId `
+    -DecisionId 'decision-invoker-test' `
+    -DecisionOption 'A'
+  Assert-Equal -Actual $resumed.ExitCode -Expected 0 -Message 'Decision resume invocation failed'
+  Assert-Equal -Actual $resumed.Json.status -Expected 'completed' -Message 'Decision resume status mismatch'
+  $decisionPrompt = [IO.File]::ReadAllText($tracePath)
+  Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_RESUME runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the existing resume protocol'
+  $resumedState = Assert-LeaseReleased
+  Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
 
   Write-Output 'test-invoke-codex-responsibility: OK'
 } finally {
