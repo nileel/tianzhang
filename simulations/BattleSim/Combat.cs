@@ -45,16 +45,18 @@ static class Combat
 
     internal static void ResetDeterministicRandom() => Rng = new Random(DeterministicRandomSeed);
 
+    static bool IsInRange(int distance, int minRange, int maxRange) =>
+        distance >= minRange && distance <= maxRange;
+
     static bool CanAttack(HexBattlefield battlefield, HexCoord attacker, HexCoord defender, int minRange, int maxRange)
     {
-        return battlefield.IsTargetInRange(
-            attacker,
-            defender,
-            minRange,
-            maxRange,
-            SpatialQueryKind.Attack,
-            requireLineOfSight: true,
-            out _);
+        var distance = battlefield.QueryMetricDistance(attacker, defender, SpatialQueryKind.Attack);
+        return distance.IsReachable &&
+               IsInRange(
+                   distance.DistanceUnits,
+                   minRange * battlefield.MetricUnitsPerRange,
+                   maxRange * battlefield.MetricUnitsPerRange) &&
+               battlefield.HasLineOfSight(attacker, defender);
     }
 
     internal static ActionPositionResult ResolveActionPosition(
@@ -142,7 +144,7 @@ static class Combat
 
     public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
-        var battlefield = HexBattlefield.CreateStandardFixture();
+        var battlefield = new HexBattlefield();
         int winsA = 0, winsB = 0;
         int totalTurns = 0;
         for (int r = 0; r < rounds; r++)
@@ -425,7 +427,7 @@ static class Combat
     internal static GroupRoundResult Simulate2v2Detailed(
         Character ca1, Character ca2, Character cb1, Character cb2)
     {
-        var battlefield = HexBattlefield.CreateStandardFixture();
+        var battlefield = new HexBattlefield();
         var units = new UnitState[4];
         var chars = new[] { ca1, ca2, cb1, cb2 };
         int[] team = { 0, 0, 1, 1 };

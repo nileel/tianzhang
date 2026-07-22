@@ -183,7 +183,7 @@ $schemas = [ordered]@{
   GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
   Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
-  EnvironmentProfiles = @('profileId','unitsPerRange','maxQueryRange','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
+  EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
 }
 $tables = [ordered]@{
   GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa

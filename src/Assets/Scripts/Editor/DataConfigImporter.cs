@@ -64,8 +64,6 @@ namespace TianZhang.Editor
         private static readonly string[] EnvironmentProfileColumns =
         {
             "profileId",
-            "unitsPerRange",
-            "maxQueryRange",
             "directedEdges",
             "surfacePrototypeRefs",
             "phenomenonChannels",
@@ -182,14 +180,6 @@ namespace TianZhang.Editor
         {
             string profileId = GetRequiredColumnValue(headers, cols, "profileId", sourceName);
             ValidateReference(profileId, sourceName, "profileId");
-            int unitsPerRange = ParsePositiveInt(
-                GetRequiredColumnValue(headers, cols, "unitsPerRange", sourceName),
-                sourceName,
-                "unitsPerRange");
-            int maxQueryRange = ParsePositiveInt(
-                GetRequiredColumnValue(headers, cols, "maxQueryRange", sourceName),
-                sourceName,
-                "maxQueryRange");
 
             var directedEdges = ParseDirectedEdges(
                 GetRequiredColumnValue(headers, cols, "directedEdges", sourceName),
@@ -213,8 +203,6 @@ namespace TianZhang.Editor
 
             var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
             profile.profileId = profileId;
-            profile.unitsPerRange = unitsPerRange;
-            profile.maxQueryRange = maxQueryRange;
             profile.directedEdges = directedEdges;
             profile.surfacePrototypeRefs = surfacePrototypeRefs;
             profile.phenomenonChannels = channels;
@@ -229,23 +217,9 @@ namespace TianZhang.Editor
             var seenEdges = new HashSet<string>(StringComparer.Ordinal);
             foreach (var entry in SplitRequired(raw, '|', sourceName, "directedEdges"))
             {
-                var edgeAndRules = entry.Split(new[] { '@' }, StringSplitOptions.None);
-                if (edgeAndRules.Length != 2)
-                    throw new InvalidDataException($"{sourceName} has invalid directed edge rules '{entry}'.");
-
-                var ends = edgeAndRules[0].Split(new[] { '>' }, StringSplitOptions.None);
+                var ends = entry.Split(new[] { '>' }, StringSplitOptions.None);
                 if (ends.Length != 2)
                     throw new InvalidDataException($"{sourceName} has invalid directed edge '{entry}'.");
-
-                var ruleValues = edgeAndRules[1].Split(new[] { ':' }, StringSplitOptions.None);
-                if (ruleValues.Length != 3)
-                    throw new InvalidDataException($"{sourceName} has invalid directed edge rules '{entry}'.");
-                int metricDistanceUnits = ParsePositiveInt(
-                    ruleValues[0], sourceName, $"directedEdges '{entry}' metricDistanceUnits");
-                bool allowsMovement = ParseRequiredFlag(
-                    ruleValues[1], sourceName, $"directedEdges '{entry}' allowsMovement");
-                bool allowsEffects = ParseRequiredFlag(
-                    ruleValues[2], sourceName, $"directedEdges '{entry}' allowsEffects");
 
                 ParseHexCoordinate(ends[0], sourceName, out int fromQ, out int fromR);
                 ParseHexCoordinate(ends[1], sourceName, out int toQ, out int toR);
@@ -265,29 +239,10 @@ namespace TianZhang.Editor
                     fromR = fromR,
                     toQ = toQ,
                     toR = toR,
-                    metricDistanceUnits = metricDistanceUnits,
-                    allowsMovement = allowsMovement,
-                    allowsEffects = allowsEffects,
                 });
             }
 
             return edges.ToArray();
-        }
-
-        private static int ParsePositiveInt(string raw, string sourceName, string fieldName)
-        {
-            if (!int.TryParse(raw, out int value) || value < 1)
-                throw new InvalidDataException($"{sourceName} field '{fieldName}' must be a positive integer.");
-            return value;
-        }
-
-        private static bool ParseRequiredFlag(string raw, string sourceName, string fieldName)
-        {
-            if (raw == "0")
-                return false;
-            if (raw == "1")
-                return true;
-            throw new InvalidDataException($"{sourceName} field '{fieldName}' must be 0 or 1.");
         }
 
         private static void ParseHexCoordinate(string raw, string sourceName, out int q, out int r)
@@ -470,8 +425,6 @@ namespace TianZhang.Editor
         private static void CopyEnvironmentProfile(EnvironmentProfileData source, EnvironmentProfileData destination)
         {
             destination.profileId = source.profileId;
-            destination.unitsPerRange = source.unitsPerRange;
-            destination.maxQueryRange = source.maxQueryRange;
             destination.directedEdges = source.directedEdges;
             destination.surfacePrototypeRefs = source.surfacePrototypeRefs;
             destination.phenomenonChannels = source.phenomenonChannels;

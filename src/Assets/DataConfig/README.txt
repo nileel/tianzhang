@@ -33,11 +33,9 @@
 
 本表只定义环境档案的结构；本轮不包含任何生产环境档案、数值或显示文本。表头固定为：
 
-`profileId,unitsPerRange,maxQueryRange,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs`
+`profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs`
 
-- `unitsPerRange`：每 1 格范围对应的正整数固定点单位数，必填。
-- `maxQueryRange`：单次空间查询允许的最大正整数范围，必填。
-- `directedEdges`：以 `|` 分隔的 `fromQ:fromR>toQ:toR@metricDistanceUnits:allowsMovement:allowsEffects` 有向六角相邻边；距离为正整数固定点单位，两个许可位只接受 `0` 或 `1`。非拓扑邻格、规则缺失或重复有向边拒绝导入。
+- `directedEdges`：以 `|` 分隔的 `fromQ:fromR>toQ:toR` 有向六角相邻边；非拓扑邻格或重复有向边拒绝导入。
 - `surfacePrototypeRefs`：以 `|` 分隔的地表原型 ID 引用。
 - `phenomenonChannels`：以 `;` 分隔的六个通道声明，格式为 `channel=typeA+typeB`。通道必须恰为 `airflow`、`visibility`、`temperature`、`precipitation`、`suspendedHazard`、`cloudDischarge` 各一次。
 - `phenomenonPairs`：以 `|` 分隔的同通道无序配对，格式为 `channel:typeA+typeB>resultType`。三个类型引用必须已在对应通道声明；翻转的同一对视为冲突并拒绝导入。

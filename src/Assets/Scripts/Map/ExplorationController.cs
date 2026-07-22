@@ -384,7 +384,7 @@ namespace TianZhang.Map
                 if (eu.character.Position == coord)
                 {
                     // 检查玩家是否在相邻格
-                    if (resolver.CanTarget(player.Position, coord, 1, 1, out _))
+                    if (player.Position.Distance(coord) <= 1)
                     {
                         StartBattle(eu);
                         return;
@@ -496,9 +496,7 @@ namespace TianZhang.Map
         {
             // 等待一帧让移动动画可见
             yield return null;
-            if (state == GameState.Exploration &&
-                !eu.defeated &&
-                resolver.CanTarget(player.Position, eu.character.Position, 1, 1, out _))
+            if (state == GameState.Exploration && !eu.defeated)
                 StartBattle(eu);
         }
 
@@ -623,20 +621,53 @@ namespace TianZhang.Map
             uiManager.SetActionButtonsInteractable(interactable);
         }
 
-        private void ExecutePlayerAI(EnemyUnit enemyUnit)
+private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
+            int dist = player.Position.Distance(enemyUnit.character.Position);
             player.FaceTarget(enemyUnit.character.Position);
-            resolver.Grid = tilemapManager.Grid;
-            string message = new SimpleAI().ExecuteTurn(
-                player,
-                enemyUnit.character,
-                playerSpells,
-                null,
-                resolver,
-                tilemapManager.Grid);
-            AddLog(message);
-            if (playerMarker != null)
-                playerMarker.transform.position = tilemapManager.HexToWorld(player.Position);
+
+            // 优先术法
+            if (playerSpells != null)
+            {
+                for (int i = 0; i < playerSpells.Length; i++)
+                {
+                    if (player.SpellCooldowns[i] <= 0
+                        && player.CurrentMP >= playerSpells[i].mpCost
+                        && dist >= playerSpells[i].minRange
+                        && dist <= playerSpells[i].maxRange)
+                    {
+                        var result = resolver.CastSpell(player, enemyUnit.character, i, playerSpells[i]);
+                        AddLog(result.Message);
+                        hasMovedThisTurn = true;
+                        return;
+                    }
+                }
+            }
+
+            // 移动到敌人相邻
+            if (dist > 1)
+            {
+                var path = tilemapManager.Grid.FindPath(player.Position, enemyUnit.character.Position, player.MovePoints);
+                if (path != null && path.Count > 0)
+                {
+                    int steps = Mathf.Min(path.Count, dist - 1);
+                    var movePath = path.GetRange(0, steps);
+                    tilemapManager.Grid.ClearOccupied(player.Position);
+                    player.Position = movePath[movePath.Count - 1];
+                    tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
+                    if (playerMarker != null)
+                        playerMarker.transform.position = tilemapManager.HexToWorld(player.Position);
+                    AddLog($"{player.Name} 移动 {steps} 格");
+                }
+            }
+
+            // 攻击
+            if (player.Position.Distance(enemyUnit.character.Position) <= 1)
+            {
+                bool useMagic = player.MagAtk > player.PhysAtk;
+                var result = resolver.BasicAttack(player, enemyUnit.character, useMagic);
+                AddLog(result.Message);
+            }
 
             hasMovedThisTurn = true;
         }

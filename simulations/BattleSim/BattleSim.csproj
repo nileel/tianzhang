@@ -5,9 +5,4 @@
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
     <RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="..\..\src\Assets\Scripts\Core\SpatialRules\SpatialHexCoord.cs" Link="Shared\SpatialHexCoord.cs" />
-    <Compile Include="..\..\src\Assets\Scripts\Core\SpatialRules\SpatialQueryTypes.cs" Link="Shared\SpatialQueryTypes.cs" />
-    <Compile Include="..\..\src\Assets\Scripts\Core\SpatialRules\SpatialQueryBoard.cs" Link="Shared\SpatialQueryBoard.cs" />
-  </ItemGroup>
 </Project>

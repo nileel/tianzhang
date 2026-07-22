@@ -21,6 +21,8 @@ namespace TianZhang.Combat
             SpellData[] spells, DivineSkillData[] skills,
             CombatResolver resolver, HexGrid grid)
         {
+            int dist = self.Position.Distance(target.Position);
+
             // 1. 尝试施放术法（优先选第一个可用的）
             if (spells != null)
             {
@@ -28,12 +30,8 @@ namespace TianZhang.Combat
                 {
                     if (self.SpellCooldowns[i] <= 0
                         && self.CurrentMP >= spells[i].mpCost
-                        && resolver.CanTarget(
-                            self.Position,
-                            target.Position,
-                            spells[i].minRange,
-                            spells[i].maxRange,
-                            out _))
+                        && dist >= spells[i].minRange
+                        && dist <= spells[i].maxRange)
                     {
                         var result = resolver.CastSpell(self, target, i, spells[i]);
                         return result.Message;
@@ -48,12 +46,8 @@ namespace TianZhang.Combat
                 {
                     if (self.SkillCooldowns[i] <= 0
                         && self.CurrentMP >= skills[i].mpCost
-                        && resolver.CanTarget(
-                            self.Position,
-                            target.Position,
-                            skills[i].minRange,
-                            skills[i].maxRange,
-                            out _))
+                        && dist >= skills[i].minRange
+                        && dist <= skills[i].maxRange)
                     {
                         var result = resolver.UseSkill(self, target, i, skills[i]);
                         return result.Message;
@@ -61,17 +55,21 @@ namespace TianZhang.Combat
                 }
             }
 
-            // 3. 用共享可达格选择接近或进入攻击范围的位置
-            if (!resolver.CanTarget(self.Position, target.Position, 1, 1, out _) &&
-                resolver.TryFindPositionForRange(self, target, 1, 1, out var destination) &&
-                destination != self.Position)
+            // 3. 移动接近目标
+            if (dist > 1)
             {
-                var result = resolver.Move(self, new System.Collections.Generic.List<HexCoord> { destination });
-                return result.Message;
+                var path = grid.FindPath(self.Position, target.Position, self.MovePoints);
+                if (path != null && path.Count > 0)
+                {
+                    int steps = UnityEngine.Mathf.Min(path.Count, dist - 1);
+                    var movePath = path.GetRange(0, steps);
+                    var result = resolver.Move(self, movePath);
+                    return result.Message;
+                }
             }
 
             // 4. 近战攻击
-            if (resolver.CanTarget(self.Position, target.Position, 1, 1, out _))
+            if (dist <= 1)
             {
                 bool useMagic = self.MagAtk > self.PhysAtk;
                 var result = resolver.BasicAttack(self, target, useMagic);

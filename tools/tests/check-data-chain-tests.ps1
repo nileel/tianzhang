@@ -26,7 +26,7 @@ function New-ValidFixture {
     $spellRow = 'spell_fixture,1,1,4,1,1,0,1,0,0,0,0,0,realm_lianqi,element_water_root,element_water,faction_fixture,player'
     $skillHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,sourceAffiliation,contentScope'
     $skillRow = 'skill_fixture,1,1,4,1,1,1,0,0,0,0,0,0,0,desc_fixture,element_water,realm_lianqi,faction_fixture,player'
-    $script:environmentProfileHeader = 'profileId,unitsPerRange,maxQueryRange,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs'
+    $script:environmentProfileHeader = 'profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs'
 
     Write-FixtureFile (Join-Path "docs/$cultivation" "$gongFa/fixture/fixture.txt") 'fixture'
     Write-FixtureFile (Join-Path "docs/$cultivation" "$spells/fixture/fixture.txt") 'fixture'
