@@ -61,11 +61,17 @@ namespace TianZhang.Editor
             var imp = AssetImporter.GetAtPath(p) as TextureImporter;
             if (imp != null) { imp.textureType = TextureImporterType.Sprite; imp.spritePixelsPerUnit = s; imp.SaveAndReimport(); }
 
-            var tile = ScriptableObject.CreateInstance<Tile>();
+            string tilePath = $"Assets/Resources/Tiles/{name}.asset";
+            var tile = AssetDatabase.LoadAssetAtPath<Tile>(tilePath);
+            if (tile == null)
+            {
+                tile = ScriptableObject.CreateInstance<Tile>();
+                AssetDatabase.CreateAsset(tile, tilePath);
+            }
             tile.name = name;
             tile.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(p);
             tile.color = color;
-            AssetDatabase.CreateAsset(tile, $"Assets/Resources/Tiles/{name}.asset");
+            EditorUtility.SetDirty(tile);
             return tile;
         }
 
