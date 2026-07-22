@@ -1,0 +1,104 @@
+# 2v2 范围技能、协同走位与团队 AI 参数事实源及决策输入
+
+> 任务：N-GROUP-02A
+>
+> 状态：已完成（仅事实定位与决策输入；未实施 N-GROUP-02）
+>
+> 事实截点：当前工作树的 `simulations/BattleSim/`
+> 边界：本文件不批准范围形状、距离、伤害、协同触发条件、AI 风格或权重；不构成 G2 对新规则的验证结论。
+
+## 1. 定位范围与结论
+
+本次只读定位覆盖 `Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`，并为核对实际数据承载补读 `GameData.cs` 与 `Character.cs`。当前 2v2 已有唯一的空间、占格、个人选位和单目标选择路径；范围技能形状、范围目标集、协同走位策略和可参数化的团队 AI 优先级均不存在。后续实现必须复用下列现有所有者，不能新建第二套距离、视线、占格或目标合法性规则。
+
+## 2. 已验证的现行事实
+
+### 2.1 2v2 部署、时序与可观察输出
+
+| 事实 | 现有所有者与输入 | 输出／已定义拒绝结果 | 是否可直接复用 |
+|---|---|---|---|
+| 四单位部署与队伍归属 | `Combat.InitialGroupPositions`（`Combat.cs:12-20`）固定 A1 `(0,0)`、A2 `(0,1)`、B1 `(6,0)`、B2 `(6,-1)`；`Simulate2v2Detailed`（`Combat.cs:427-456`）将索引 0、1 归入 A 队，2、3 归入 B 队。 | 初始格重复时抛出 `Group deployment must assign one unique cell to each combatant.`。 | 是；这是当前 2v2 的唯一初始部署事实，不是未来范围技能的中心或形状参数。 |
+| 行动时序 | `Simulate2v2Detailed`（`Combat.cs:458-489`）每循环累加存活单位的反应，CT 达到 100 后选取 CT 最高者；同 CT 因按索引扫描而稳定。 | `GroupActionObservation` 记录回合、行动者、起止格、可达格、目标选择和行动后占格（`Combat.cs:28-44`）。 | 是；协同规则必须保持此顺序，除非负责人另行批准时序变化。 |
+| 既有 2v2 回归夹具 | `BattleSimSelfTests.Run` 的 `group-positioning-n-group-01` 入口（`BattleSimSelfTests.cs:84-85`）及 `RunGroupPositioningNGroup01`（`BattleSimSelfTests.cs:965-1064`）。 | 覆盖初始四格、敌我占格阻挡、最低 HP／输入顺序选敌、死亡后重选、同 CT 顺序、唯一占格、无合法目标原因和固定随机种子复现。 | 是；它不覆盖范围形状、范围目标集合、协同走位或团队优先级参数。 |
+
+### 2.2 空间、距离、视线、占格与环境查询
+
+| 查询 | 现有唯一所有者与输入 | 输出／拒绝原因 | 是否可直接复用 |
+|---|---|---|---|
+| 有向边与效果路径 | `HexBattlefield.InspectEdge(from, to, kind)`（`Battlefield.cs:221-240`）；范围相关调用可传入 `SpatialQueryKind.Area`。 | 非相邻格抛出异常；效果路径被边拒绝时为 `directed_edge_blocks_effect`。移动仍分别报告 `directed_edge_blocks_movement`、`entity_obstacle` 或 `movement_blocked`。 | 是；范围效果不得绕过有向边检查。 |
+| 固定点距离 | `HexBattlefield.QueryMetricDistance(start, target, kind, maxRange)`（`Battlefield.cs:242-293`）以 `GameData.EnvironmentRules` 的固定点单位求最短合法路径；`MetricDistanceResult` 返回可达、距离单位与失败原因。 | 超出边界抛出异常；无合法路径为 `no_legal_path_within_query_limit`。`GameData.EnvironmentRules` 当前只承载技术档位与上限（`GameData.cs:254-287`），不是生产环境内容。 | 是；范围距离应继续使用该查询，不能改回基础六角步数。 |
+| 视线 | `HexBattlefield.QueryLineOfSight(source, target)` 与 `HasLineOfSight`（`Battlefield.cs:415-441`）。 | 复用距离失败原因；中间实体障碍为 `entity_obstacle`，遮挡为 `sight_blocked`。 | 是；是否把此要求应用于范围中心、范围内每一目标或两者，当前未定义。 |
+| 个人可达格与唯一占格 | `HexBattlefield.FindReachable(start, movementBudget, occupied)`（`Battlefield.cs:295-335`）接收显式占用集合；2v2 每行动前由 `Simulate2v2Detailed` 收集其余存活单位位置（`Combat.cs:490-500`）。 | 已占格不可进入或穿越；回归明确验证敌我都阻挡。 | 是；现行规则只解决逐行动者的占格冲突，不含队友预留格或联合路线。 |
+| 面向单目标的选位 | `HexBattlefield.FindAttackPosition`（`Battlefield.cs:337-381`）及 `Combat.ResolveActionPosition`（`Combat.cs:62-76`）输入移动预算、最小／最大距离、目标与占格。 | 按“可攻击、距离缺口、视线、移动成本、距离、坐标”稳定排序；返回位置与 `CanAttack`。 | 可复用为范围技能的施法者选位基础；它只针对一个目标，不能直接产出范围中心或多目标集合。 |
+| 环境查询承载 | `HexBattlefield` 构造函数接收格、边、掩体、地表、现象和环境规则（`Battlefield.cs:182-219`）；环境回归使用 `environment-rules-n-env-01`（`BattleSimSelfTests.cs:81-82`）。 | 现有查询可观察边、距离、视线、掩体、地表与六类现象通道；生产环境档案尚不存在。 | 查询 API 可复用；当前 2v2 在 `Combat.cs:430` 直接 `new HexBattlefield()`，没有接收非空战场／环境夹具。 |
+
+### 2.3 现有单目标攻击与目标选择
+
+| 事实 | 现有所有者与输入 | 输出／拒绝结果 | 是否可直接复用 |
+|---|---|---|---|
+| 攻击距离数据承载 | `GameData.AttackProfile` 含名称、类型、倍率、元素、最小距离、最大距离；`ArtConfig` 与 `DivineConfig` 也只有最小／最大距离（`GameData.cs:321-328`）。`Character.BasicAttackProfile` 是角色当前基础攻击承载（`Character.cs:41`）。 | 有效距离由 `Combat.CanAttack` 同时检查固定点攻击距离和视线（`Combat.cs:48-60`）。 | 最小／最大距离字段与检查路径可复用；没有形状、中心、友敌关系、逐目标视线或范围伤害字段。 |
+| 单体行动优先级 | `Combat.SelectAction`（`Combat.cs:92-113`）为 1v1 在神通、苦行、术法、普攻中选择第一个“已就绪且可攻击”的行动。 | 当没有可攻击行动时选择第一个已就绪行动，并输出其最小／最大距离。 | 仅其距离字段与单体选择事实可参考。`Simulate2v2Detailed` 没有调用它。 |
+| 当前 2v2 使用的攻击 | `Simulate2v2Detailed`（`Combat.cs:502-524、554-669`）仅以行动者的 `BasicAttackProfile` 生成各敌人的个人选位计划，并以单目标伤害结算。 | 每名敌人只有一个 `ActionPositionResult`；没有术法／神通选择、范围中心、范围目标列表或范围伤害循环。 | 普攻单目标链可保留为未触发范围技能时的后备行为；不能把它误称为范围技能已接入。 |
+| 当前团队目标优先级 | `Combat.SelectGroupTarget(actorTeam, candidates)`（`Combat.cs:78-90`）只过滤存活、敌方、合法候选，之后按 HP 升序、索引升序选择。 | 结果原因为 `selected_lowest_hp_then_input_order` 或 `no_legal_target`；死亡目标会被确定性重选。 | 是，作为当前默认单体焦点规则；它不是可配权重，也不读取队友意图、伤害预估、威胁、掩体或范围收益。 |
+| 无法攻击时的走位 | `Simulate2v2Detailed`（`Combat.cs:527-551`）在没有合法目标时，按存活敌方最低 HP、索引升序选一个 `movementFocus`，移动到该敌人的预先计算位置。 | 无存活敌人为 `no_alive_enemy`；否则为 `no_legal_target_after_move`。 | 是，作为当前个人追击规则；并未检查队友已选目标、队友下一行动、站位角色或预留格。 |
+
+### 2.4 已有团队效果不等于团队 AI
+
+`Simulate2v2Detailed` 已存在少数由队友存活或状态触发的战斗效果：`绳墨正法录` 为存活同队成员累计倍率（`Combat.cs:568-572`），`混元同尘典` 在另一存活队友 HP 比例大于 0.6 时加成（`Combat.cs:588-596`），`南华玄感录` 按索引寻找首个被眩晕同队成员并尝试解除（`Combat.cs:644-666`）。这些是既有结算事实，不提供队友路线、目标预留、协同触发或优先级评分；不得据此推断已有团队 AI。
+
+## 3. 分类：可复用事实、未参数化事实与缺失参数
+
+| 分类 | 项目 | 结论 |
+|---|---|---|
+| 已有事实，可直接复用 | 有向效果边、固定点距离、视线、占格、单目标选位、CT 顺序、最低 HP 后输入顺序的单体焦点 | 必须继续由 `HexBattlefield` 与 `Combat` 当前成员提供；后续只可在其上定义范围和协同语义。 |
+| 已有事实，可复用但未参数化 | `SpatialQueryKind.Area` 已可请求效果路径距离，`AttackProfile`／`ArtConfig`／`DivineConfig` 有最小／最大距离，`GroupActionObservation` 可记录当前个人行动结果 | 没有范围形状、范围中心、命中集合、友敌筛选、逐目标视线、协同意图或团队评分字段。它们不能单独构成范围技能或团队 AI。 |
+| 完全缺失，须由负责人决定 | 范围形状与中心、范围内合法目标与拒绝优先级、友军／自身关系、距离数值与范围伤害／治疗结算；协同走位的触发与冲突规则；团队目标／技能／走位优先级及其权重；2v2 是否接收具名环境战场输入 | 当前没有事实源可推出这些参数、数值或风格；不得用默认值、随机权重或兼容分支补齐。 |
+
+## 4. 负责人决策项与直接影响根
+
+### N-GROUP-DEC-01：范围技能的形状、中心与距离参数
+
+- 待决定：技能是以施法者、单一目标格或选定中心为中心；形状／方向／半径如何表达；每种范围技能的最小／最大距离和是否存在内圈空洞。现行数据只有单目标最小／最大距离，不能推出这些值。
+- 可复用根：`GameData.AttackProfile`、`ArtConfig`、`DivineConfig`（`GameData.cs:321-328`），`HexBattlefield.QueryMetricDistance(..., SpatialQueryKind.Area, ...)`（`Battlefield.cs:242-293`）。
+- 直接影响根：范围技能的数据承载、范围中心的合法性检查、范围内格／单位枚举、`Combat.Simulate2v2Detailed` 的行动选择与伤害结算，以及相应自测夹具。
+- 不作决定时的结论：只能保留现有单目标距离；不得把 `SpatialQueryKind.Area` 误写为已有范围形状。
+
+### N-GROUP-DEC-02：范围目标合法性、视线与友敌关系
+
+- 待决定：范围中心是否需要视线，范围内每个目标是否需要视线；有向边的效果拒绝如何参与；命中友军、自身、已占格和死亡单位的规则；多个拒绝原因的稳定优先级。
+- 可复用根：`InspectEdge` 的 `directed_edge_blocks_effect`、`QueryMetricDistance` 的 `no_legal_path_within_query_limit`、`QueryLineOfSight` 的 `entity_obstacle`／`sight_blocked`，以及 2v2 的存活与占格集合。
+- 直接影响根：`HexBattlefield.InspectEdge`、`QueryMetricDistance`、`QueryLineOfSight` 的组合调用点，范围命中循环，以及 `GroupActionObservation` 是否新增范围中心、命中集合和拒绝原因的可观察输出。
+- 不作决定时的结论：不能从单目标 `CanAttack` 推导“范围中心与每个单位都必须／都不必视线”。
+
+### N-GROUP-DEC-03：协同走位的触发条件与格位冲突策略
+
+- 待决定：何时允许一名单位为队友创造射线、阻挡、包夹或让位；协同只看当前行动还是允许读取下一行动者；目标格预留、协同失败和二人目标冲突如何稳定裁定。
+- 可复用根：当前 CT 顺序、`FindReachable` 的显式占格输入、`FindAttackPosition` 的稳定排序，以及 `no_legal_target_after_move`。
+- 直接影响根：`Combat.Simulate2v2Detailed` 的 `occupied`、`plans`、`movementFocus` 与位置提交段（`Combat.cs:490-551`）；不能只修改 `SelectGroupTarget` 以伪装出协同走位。
+- 不作决定时的结论：继续只有“当前行动者追逐当前最低 HP 存活敌人”的个人走位，不存在协同走位触发。
+
+### N-GROUP-DEC-04：团队 AI 的目标、技能与走位优先级
+
+- 待决定：是否保持“合法最低 HP、输入顺序”的默认焦点；范围收益、击杀把握、队友保护、站位安全、环境与技能冷却如何排序；并列时的稳定次序；所有可调阈值／权重的配置所有者。
+- 可复用根：`GroupTargetCandidate`、`SelectGroupTarget` 的稳定当前规则、`SelectAction` 的 1v1 已就绪行动顺序、`GroupActionObservation` 的当前输出。
+- 直接影响根：候选数据结构、`SelectGroupTarget` 或其明确替代者、2v2 行动选择、可观察理由字段和 `group-positioning-n-group-01` 的回归断言。
+- 不作决定时的结论：不得添加猜测性的威胁分、随机权重或“智能”默认行为；当前可复用的唯一团队目标事实仍是最低 HP 后输入顺序。
+
+### N-GROUP-DEC-05：2v2 的环境战场输入边界
+
+- 待决定：范围与团队 AI 的后续夹具是否由调用方显式传入具名 `HexBattlefield`／环境快照，及其与当前空战场默认 2v2 的关系。此项只决定输入边界，不产生生产环境档案或环境数值。
+- 可复用根：`HexBattlefield` 已可接收格、边、掩体、地表与现象；但 `Simulate2v2Detailed` 当前固定创建空战场，且 `GameData.EnvironmentRules` 明确只承载技术 fixture。
+- 直接影响根：`Combat.Simulate2v2Detailed` 的战场构造、范围／协同测试夹具和现有 `environment-rules-n-env-01`、`group-positioning-n-group-01` 的边界。
+- 不作决定时的结论：后续不得把空战场默认行为包装成已具备生产环境感知的 2v2 AI。
+
+## 5. 建议的后续实施前置与验证边界
+
+1. 先由负责人依次锁定 DEC-01、DEC-02，再锁定 DEC-03、DEC-04；DEC-05 只在范围／协同需要非空战场夹具时决定。
+2. 参数获批后的实现卡应只复用本文件列出的空间和占格所有者，并把每个新增参数写入明确数据承载；未获批的参数不得写入默认值。
+3. 后续实现应新增针对范围中心、命中集合、友敌关系、视线／效果边拒绝、协同冲突、稳定优先级和可观察理由的直接自测；范围、协同或 AI 改变后再运行受影响的 BattleSim 验证。此次仅生成事实输入，未运行全量矩阵，也未宣称任何平衡结论。
+
+## 6. 本次验证
+
+- 已按只读范围核对 `Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`，并扫描 `GameData.cs`、`Character.cs` 的直接数据承载与调用点。
+- 已通过：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt,开发管理/当前任务队列.txt`。
+- 已通过：`git diff --check`。
