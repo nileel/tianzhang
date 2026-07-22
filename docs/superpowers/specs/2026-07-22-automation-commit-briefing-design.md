@@ -4,9 +4,9 @@
 
 每日自动化简报只报告可核验的自动化产出及其项目影响，不再从控制器对话、memory、租约或当前运行快照推断历史成果。
 
-## 自动化业务提交格式
+## 所有自动化责任方的业务提交格式
 
-由 `tzg-hourly-controller` 触发的业务提交和队列维护提交保留现有 Conventional Commit 标题，并在正文追加以下字段：
+由 `tzg-hourly-controller` 派发给 Codex 或外部 AI 的每一项业务提交，以及队列维护提交，均保留现有 Conventional Commit 标题，并在正文追加以下字段：
 
 ```text
 Automation: tzg-hourly-controller
@@ -18,7 +18,8 @@ Verify: <直接验证命令及结果，或“未运行：<原因>”>
 
 - 字段顺序固定，均为单行；`Result`、`Impact` 和 `Verify` 必须基于本轮事实，不得猜测。
 - 无法真实填写任一字段时，不得创建标有 `Automation` 的完成提交，应按既有失败或待决定流程结束。
-- 外部 AI 的 `businessCommit` 使用该格式；仅记录交接的 `handoffCommit` 不使用 `Automation` 标记，避免日报重复归因。
+- 外部 AI 的每个 `businessCommit` 与 Codex 的业务提交使用完全相同的格式；这是外部 AI 实际工作成果的唯一日报统计入口。
+- 仅记录交接的 `handoffCommit` 不使用 `Automation` 标记，继续引用对应 `businessCommit` SHA；它不是第二项业务产出，日报不得重复归因。
 - 人工提交与非控制器提交不使用该标记。
 
 ## 日报生成
