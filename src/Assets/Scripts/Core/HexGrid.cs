@@ -34,23 +34,6 @@ namespace TianZhang.Core
         public int GetOccupant(HexCoord coord) =>
             occupiedBy.TryGetValue(coord, out int id) ? id : -1;
 
-        /// <summary>获取 range 范围内的所有格子</summary>
-        public List<HexCoord> GetTilesInRange(HexCoord center, int range)
-        {
-            var results = new List<HexCoord>();
-            for (int dq = -range; dq <= range; dq++)
-            {
-                for (int dr = Mathf.Max(-range, -dq - range);
-                         dr <= Mathf.Min(range, -dq + range); dr++)
-                {
-                    var coord = new HexCoord(center.q + dq, center.r + dr);
-                    if (coord.Distance(center) <= range)
-                        results.Add(coord);
-                }
-            }
-            return results;
-        }
-
         /// <summary>BFS 寻路，返回路径（不含起点）</summary>
         public List<HexCoord> FindPath(HexCoord start, HexCoord end, int maxSteps = 999)
         {

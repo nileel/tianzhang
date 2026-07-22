@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -65,6 +66,53 @@ namespace TianZhang.Tests
         }
     }
 
+    internal static class CombatSpatialTestFixture
+    {
+        public static void Configure(CombatResolver resolver, int metricDistanceUnits = 2)
+        {
+            var grid = new TacticalGridModel();
+            for (int q = 0; q <= 3; q++)
+                grid.SetTile(new TacticalTileData(new HexCoord(q, 0)));
+
+            var edges = new List<EnvironmentDirectedEdge>();
+            for (int q = 0; q < 3; q++)
+            {
+                edges.Add(CreateEdge(q, q + 1, metricDistanceUnits));
+                edges.Add(CreateEdge(q + 1, q, metricDistanceUnits));
+            }
+
+            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            try
+            {
+                profile.unitsPerRange = 2;
+                profile.maxQueryRange = 16;
+                profile.directedEdges = edges.ToArray();
+                Assert.IsTrue(
+                    SpatialQueryBoardFactory.TryCreate(grid, profile, out var snapshot, out var reason),
+                    reason);
+                resolver.ConfigureSpatialQueries(snapshot.Board);
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+            }
+        }
+
+        private static EnvironmentDirectedEdge CreateEdge(int fromQ, int toQ, int metricDistanceUnits)
+        {
+            return new EnvironmentDirectedEdge
+            {
+                fromQ = fromQ,
+                fromR = 0,
+                toQ = toQ,
+                toR = 0,
+                metricDistanceUnits = metricDistanceUnits,
+                allowsMovement = true,
+                allowsEffects = true,
+            };
+        }
+    }
+
     public class CombatMechanismTests
     {
         [Test]
@@ -80,6 +128,7 @@ namespace TianZhang.Tests
         {
             var engine = new CTBEngine();
             var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver);
             var skill = ScriptableObject.CreateInstance<DivineSkillData>();
             try
             {
@@ -117,6 +166,7 @@ namespace TianZhang.Tests
         {
             var engine = new CTBEngine();
             var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver);
 
             var baseAttacker = CreateLeijieCombatant(engine, "未蓄雷", new HexCoord(0, 0));
             var baseTarget = CreateTarget(engine, "基准目标");
@@ -148,6 +198,7 @@ namespace TianZhang.Tests
         {
             var engine = new CTBEngine();
             var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver);
             var caster = CreateMagicCaster(engine, "神魂测试者", new HexCoord(0, 0));
 
             var freshDefender = CreateLeijieCombatant(engine, "未满雷劫", new HexCoord(1, 0));
@@ -188,6 +239,7 @@ namespace TianZhang.Tests
         {
             var engine = new CTBEngine();
             var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver);
 
             var normalCaster = CreateMagicCaster(engine, "普通神魂", new HexCoord(0, 0), "含弘光大典");
             var normalTarget = CreateTarget(engine, "普通目标");
@@ -210,6 +262,7 @@ namespace TianZhang.Tests
         {
             var engine = new CTBEngine();
             var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver);
             var attacker = CreateLeijieCombatant(engine, "物理测试者", new HexCoord(0, 0));
 
             var neutralDefender = CreateTarget(engine, "普通防御", "秋水游心经");
@@ -231,6 +284,7 @@ namespace TianZhang.Tests
         {
             var engine = new CTBEngine();
             var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver);
 
             var physicalAttacker = CreateLeijieCombatant(engine, "载物物理", new HexCoord(0, 0));
             var fullPhysicalTarget = CreateTarget(engine, "满血物防", "含弘光大典");
@@ -263,6 +317,53 @@ namespace TianZhang.Tests
             Assert.IsTrue(lowMagic.Success);
             Assert.Less(lowPhysical.Damage.FinalDamage, fullPhysical.Damage.FinalDamage);
             Assert.Less(lowMagic.Damage.FinalDamage, fullMagic.Damage.FinalDamage);
+        }
+
+        [Test]
+        public void CombatResolverFailsClosedWithoutSpatialQueryConfiguration()
+        {
+            var engine = new CTBEngine();
+            var attacker = CreateLeijieCombatant(engine, "未配置攻击者", new HexCoord(0, 0));
+            var target = CreateTarget(engine, "未配置目标");
+
+            var result = new CombatResolver { Engine = engine }.BasicAttack(attacker, target);
+
+            Assert.IsFalse(result.Success);
+            Assert.AreEqual("空间查询未配置", result.Message);
+            Assert.AreEqual("spatial_query_not_configured", result.Reason);
+        }
+
+        [Test]
+        public void CombatResolverUsesConfiguredWeightedRangeInsteadOfHexDistance()
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine };
+            CombatSpatialTestFixture.Configure(resolver, metricDistanceUnits: 1);
+            var attacker = CreateLeijieCombatant(engine, "压缩边攻击者", new HexCoord(0, 0));
+            var target = CreateTarget(engine, "压缩边目标");
+            target.Position = new HexCoord(2, 0);
+            LogAssert.Expect(LogType.Log, new Regex("压缩边攻击者 物理攻击 压缩边目标"));
+
+            var result = resolver.BasicAttack(attacker, target);
+
+            Assert.IsTrue(result.Success);
+        }
+
+        [Test]
+        public void SimpleAiUsesSharedWeightedRangeForBasicAttack()
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver { Engine = engine, Grid = new HexGrid() };
+            CombatSpatialTestFixture.Configure(resolver, metricDistanceUnits: 1);
+            var attacker = CreateLeijieCombatant(engine, "压缩边敌人", new HexCoord(0, 0));
+            var target = CreateTarget(engine, "压缩边玩家");
+            target.Position = new HexCoord(2, 0);
+            LogAssert.Expect(LogType.Log, new Regex("压缩边敌人 物理攻击 压缩边玩家"));
+
+            string message = new SimpleAI().ExecuteTurn(
+                attacker, target, null, null, resolver, resolver.Grid);
+
+            StringAssert.Contains("物理攻击", message);
         }
 
         private static Character CreateFudanCaster(CTBEngine engine, string name, int fudanStacks)
@@ -473,6 +574,7 @@ namespace TianZhang.Tests
         {
             var grid = new HexGrid();
             var controller = new TacticalCombatController();
+            CombatSpatialTestFixture.Configure(controller.Resolver);
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
 
@@ -500,6 +602,7 @@ namespace TianZhang.Tests
         {
             var grid = new HexGrid();
             var controller = new TacticalCombatController();
+            CombatSpatialTestFixture.Configure(controller.Resolver);
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(3, 0), controller.Engine);
             var spell = ScriptableObject.CreateInstance<SpellData>();
@@ -520,7 +623,7 @@ namespace TianZhang.Tests
                 var outOfRange = controller.ExecutePlayerSpell(0, new[] { spell });
 
                 Assert.IsFalse(outOfRange.Success);
-                Assert.AreEqual("超出射程", outOfRange.Message);
+                Assert.AreEqual("目标不在射程范围", outOfRange.Message);
                 Assert.AreEqual(mpBefore, player.CurrentMP);
                 Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
 

@@ -20,6 +20,9 @@ namespace TianZhang.Tactical
         public int fromR;
         public int toQ;
         public int toR;
+        public int metricDistanceUnits;
+        public bool allowsMovement;
+        public bool allowsEffects;
     }
 
     [Serializable]
@@ -42,6 +45,8 @@ namespace TianZhang.Tactical
     public class EnvironmentProfileData : ScriptableObject
     {
         public string profileId;
+        public int unitsPerRange;
+        public int maxQueryRange;
         public EnvironmentDirectedEdge[] directedEdges;
         public string[] surfacePrototypeRefs;
         public EnvironmentPhenomenonChannelData[] phenomenonChannels;

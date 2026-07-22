@@ -148,6 +148,7 @@ namespace TianZhang.Combat
             Engine.ResetUnitCT(enemy.CTBUnit);
             Engine.ClearActionQueue();
             Resolver.Grid = grid;
+            Resolver.SetOccupiedAnchors(new[] { player.Position, enemy.Position });
 
             InitializeGongFaStacks(player);
             InitializeGongFaStacks(enemy);
@@ -226,12 +227,6 @@ namespace TianZhang.Combat
             var target = isSelfTarget ? player : currentSession.Enemy;
             if (target == null)
                 return NoAction();
-            if (!isSelfTarget)
-            {
-                int dist = player.Position.Distance(target.Position);
-                if (dist < spell.minRange || dist > spell.maxRange)
-                    return Failure("超出射程");
-            }
 
             var result = Resolver.CastSpell(player, target, index, spell);
             ConsumeActionIfSuccessful(player, result);
@@ -253,10 +248,6 @@ namespace TianZhang.Combat
                 return Failure("神通冷却中");
             if (player.CurrentMP < skill.mpCost)
                 return Failure("灵力不足");
-
-            int dist = player.Position.Distance(enemy.Position);
-            if (dist < skill.minRange || dist > skill.maxRange)
-                return Failure("超出射程");
 
             var result = Resolver.UseSkill(player, enemy, index, skill);
             ConsumeActionIfSuccessful(player, result);

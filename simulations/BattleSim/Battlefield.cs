@@ -1,3 +1,5 @@
+global using TianZhang.Core.SpatialRules;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,15 +14,6 @@ enum HexDirection
     West,
     SouthWest,
     SouthEast,
-}
-
-enum SpatialQueryKind
-{
-    Movement,
-    Attack,
-    ForcedMovement,
-    Area,
-    Sight,
 }
 
 enum CoverTier
@@ -190,6 +183,7 @@ sealed class HexBattlefield
     readonly Dictionary<(HexCoord Coord, PhenomenonChannel Channel), List<PhenomenonState>> phenomena = new();
     readonly GameData.EnvironmentRulesConfig environmentRules;
     readonly IReadOnlyList<GameData.PhenomenonPairFixture> phenomenonPairs;
+    readonly SpatialQueryBoard spatialBoard;
 
     public int MetricUnitsPerRange => environmentRules.UnitsPerRange;
 
@@ -216,27 +210,52 @@ sealed class HexBattlefield
             ? new Dictionary<DirectedHexEdge, CoverTier>()
             : edgeCover.ToDictionary(entry => Validate(entry.Key), entry => ValidateCover(entry.Value));
         this.phenomenonPairs = phenomenonPairs ?? GameData.EnvironmentPhenomenonPairFixtures;
+        spatialBoard = BuildSpatialBoard(this.cells, this.edgeRules, this.environmentRules);
+    }
+
+    public static HexBattlefield CreateStandardFixture(
+        IReadOnlyDictionary<HexCoord, HexCellRules> cellOverrides = null,
+        GameData.EnvironmentRulesConfig environmentRules = null)
+    {
+        var rules = environmentRules ?? GameData.EnvironmentRules;
+        ValidateEnvironmentRules(rules);
+        int radius = rules.MaxQueryRange;
+        var fixtureCells = new Dictionary<HexCoord, HexCellRules>();
+        for (int q = -radius; q <= radius; q++)
+        {
+            int minR = Math.Max(-radius, -q - radius);
+            int maxR = Math.Min(radius, -q + radius);
+            for (int r = minR; r <= maxR; r++)
+                fixtureCells[new HexCoord(q, r)] = OpenCell;
+        }
+
+        if (cellOverrides != null)
+        {
+            foreach (var entry in cellOverrides)
+                fixtureCells[entry.Key] = Validate(entry.Value);
+        }
+
+        var fixtureEdges = new Dictionary<DirectedHexEdge, HexEdgeRules>();
+        foreach (var from in fixtureCells.Keys)
+        {
+            foreach (var to in from.Neighbors())
+            {
+                if (!fixtureCells.TryGetValue(to, out var targetRules))
+                    continue;
+                int distanceUnits = checked(
+                    rules.StandardEdgeUnits +
+                    (targetRules.MovementCost - 1) * rules.UnitsPerRange);
+                fixtureEdges[new DirectedHexEdge(from, to)] = new HexEdgeRules(distanceUnits);
+            }
+        }
+
+        return new HexBattlefield(fixtureCells, fixtureEdges, environmentRules: rules);
     }
 
     public EdgeInspection InspectEdge(HexCoord from, HexCoord to, SpatialQueryKind kind)
     {
-        if (!from.TryGetDirectionTo(to, out _))
-            throw new ArgumentException("Spatial queries can inspect only adjacent hex edges.", nameof(to));
-
-        var rules = GetEdgeRules(from, to);
-        bool movement = kind is SpatialQueryKind.Movement or SpatialQueryKind.ForcedMovement;
-        if (movement && !rules.AllowsMovement)
-            return new EdgeInspection(false, rules.MetricDistanceUnits, "directed_edge_blocks_movement");
-        if (!movement && !rules.AllowsEffects)
-            return new EdgeInspection(false, rules.MetricDistanceUnits, "directed_edge_blocks_effect");
-
-        var targetRules = GetRules(to);
-        if (movement && targetRules.IsEntityObstacle)
-            return new EdgeInspection(false, rules.MetricDistanceUnits, "entity_obstacle");
-        if (movement && targetRules.BlocksMovement)
-            return new EdgeInspection(false, rules.MetricDistanceUnits, "movement_blocked");
-
-        return new EdgeInspection(true, rules.MetricDistanceUnits, "");
+        var result = spatialBoard.InspectEdge(ToSpatial(from), ToSpatial(to), kind);
+        return new EdgeInspection(result.IsLegal, result.MetricDistanceUnits, result.Reason);
     }
 
     public MetricDistanceResult QueryMetricDistance(
@@ -245,51 +264,8 @@ sealed class HexBattlefield
         SpatialQueryKind kind,
         int? maxRange = null)
     {
-        int rangeLimit = maxRange ?? environmentRules.MaxQueryRange;
-        if (rangeLimit < 0 || rangeLimit > environmentRules.MaxQueryRange)
-            throw new ArgumentOutOfRangeException(nameof(maxRange), "Metric query range exceeds the configured bound.");
-        if (start == target)
-            return new MetricDistanceResult(true, 0, "");
-
-        int distanceLimit = checked(rangeLimit * environmentRules.UnitsPerRange);
-        if (edgeRules.Count == 0 &&
-            (cells.Count == 0 || kind is SpatialQueryKind.Attack or SpatialQueryKind.Area or SpatialQueryKind.Sight))
-        {
-            int uniformDistance = checked(start.DistanceTo(target) * environmentRules.StandardEdgeUnits);
-            return uniformDistance <= distanceLimit
-                ? new MetricDistanceResult(true, uniformDistance, "")
-                : new MetricDistanceResult(false, -1, "no_legal_path_within_query_limit");
-        }
-
-        var costs = new Dictionary<HexCoord, int> { [start] = 0 };
-        var frontier = new PriorityQueue<HexCoord, (int Cost, int Q, int R)>();
-        frontier.Enqueue(start, (0, start.Q, start.R));
-
-        while (frontier.TryDequeue(out var current, out var priority))
-        {
-            if (costs[current] != priority.Cost)
-                continue;
-            if (priority.Cost > distanceLimit)
-                break;
-            if (current == target)
-                return new MetricDistanceResult(true, priority.Cost, "");
-
-            foreach (var neighbor in current.Neighbors())
-            {
-                var edge = InspectEdge(current, neighbor, kind);
-                if (!edge.IsLegal)
-                    continue;
-
-                int nextCost = priority.Cost + edge.MetricDistanceUnits;
-                if (nextCost > distanceLimit || (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost))
-                    continue;
-
-                costs[neighbor] = nextCost;
-                frontier.Enqueue(neighbor, (nextCost, neighbor.Q, neighbor.R));
-            }
-        }
-
-        return new MetricDistanceResult(false, -1, "no_legal_path_within_query_limit");
+        var result = spatialBoard.QueryMetricDistance(ToSpatial(start), ToSpatial(target), kind, maxRange);
+        return new MetricDistanceResult(result.IsReachable, result.DistanceUnits, result.Reason);
     }
 
     public IReadOnlyDictionary<HexCoord, int> FindReachable(
@@ -297,41 +273,32 @@ sealed class HexBattlefield
         int movementBudget,
         IReadOnlyCollection<HexCoord> occupied = null)
     {
-        if (movementBudget < 0)
-            throw new ArgumentOutOfRangeException(nameof(movementBudget), "Movement budget cannot be negative.");
+        IReadOnlyCollection<SpatialHexCoord> blocked = occupied == null
+            ? null
+            : occupied.Select(ToSpatial).ToArray();
+        return spatialBoard.FindReachable(ToSpatial(start), movementBudget, blocked)
+            .ToDictionary(entry => ToHex(entry.Key), entry => entry.Value);
+    }
 
-        var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
-        blocked?.Remove(start);
-        int budgetUnits = checked(movementBudget * environmentRules.UnitsPerRange);
-        var costs = new Dictionary<HexCoord, int> { [start] = 0 };
-        var frontier = new PriorityQueue<HexCoord, (int Cost, int Q, int R)>();
-        frontier.Enqueue(start, (0, start.Q, start.R));
-
-        while (frontier.TryDequeue(out var current, out var priority))
+    public bool IsTargetInRange(
+        HexCoord center,
+        HexCoord target,
+        int minRange,
+        int maxRange,
+        SpatialQueryKind kind,
+        bool requireLineOfSight,
+        out string reason)
+    {
+        var range = spatialBoard.QueryRange(
+            ToSpatial(center), minRange, maxRange, kind, requireLineOfSight);
+        if (!range.TryGet(ToSpatial(target), out var entry))
         {
-            if (costs[current] != priority.Cost)
-                continue;
-
-            foreach (var neighbor in current.Neighbors())
-            {
-                if (blocked?.Contains(neighbor) == true)
-                    continue;
-
-                var edge = InspectEdge(current, neighbor, SpatialQueryKind.Movement);
-                if (!edge.IsLegal)
-                    continue;
-
-                int terrainBurden = (GetRules(neighbor).MovementCost - 1) * environmentRules.UnitsPerRange;
-                int nextCost = priority.Cost + edge.MetricDistanceUnits + terrainBurden;
-                if (nextCost > budgetUnits || (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost))
-                    continue;
-
-                costs[neighbor] = nextCost;
-                frontier.Enqueue(neighbor, (nextCost, neighbor.Q, neighbor.R));
-            }
+            reason = SpatialQueryReasons.MissingCell;
+            return false;
         }
 
-        return costs;
+        reason = entry.Reason;
+        return entry.IsInRange;
     }
 
     public HexCoord FindAttackPosition(
@@ -345,33 +312,30 @@ sealed class HexBattlefield
         if (minRange < 0 || maxRange < minRange)
             throw new ArgumentOutOfRangeException(nameof(minRange), "Attack range is invalid.");
 
-        int minUnits = minRange * environmentRules.UnitsPerRange;
-        int maxUnits = maxRange * environmentRules.UnitsPerRange;
         var blocked = occupied ?? new[] { target };
         var candidates = FindReachable(start, movementBudget, blocked);
         return candidates
             .Select(entry =>
             {
+                bool canAttack = IsTargetInRange(
+                    entry.Key, target, minRange, maxRange,
+                    SpatialQueryKind.Attack, requireLineOfSight: true, out _);
                 var distance = QueryMetricDistance(entry.Key, target, SpatialQueryKind.Attack);
-                bool hasSight = QueryLineOfSight(entry.Key, target).HasLineOfSight;
-                bool canAttack = distance.IsReachable && distance.DistanceUnits >= minUnits && distance.DistanceUnits <= maxUnits && hasSight;
                 int distanceUnits = distance.IsReachable ? distance.DistanceUnits : int.MaxValue / 4;
-                int rangeGap = distanceUnits < minUnits
-                    ? minUnits - distanceUnits
-                    : Math.Max(0, distanceUnits - maxUnits);
+                int minUnits = minRange * environmentRules.UnitsPerRange;
+                int maxUnits = maxRange * environmentRules.UnitsPerRange;
+                int rangeGap = distanceUnits < minUnits ? minUnits - distanceUnits : Math.Max(0, distanceUnits - maxUnits);
                 return new
                 {
                     Position = entry.Key,
                     AttackPenalty = canAttack ? 0 : 1,
                     RangeGap = rangeGap,
-                    SightPenalty = hasSight ? 0 : 1,
                     MovementCost = entry.Value,
                     Distance = distanceUnits,
                 };
             })
             .OrderBy(candidate => candidate.AttackPenalty)
             .ThenBy(candidate => candidate.RangeGap)
-            .ThenBy(candidate => candidate.SightPenalty)
             .ThenBy(candidate => candidate.MovementCost)
             .ThenBy(candidate => candidate.Distance)
             .ThenBy(candidate => candidate.Position.Q)
@@ -386,27 +350,13 @@ sealed class HexBattlefield
         int distanceBudget,
         HexCoord? occupied = null)
     {
-        if (distanceBudget < 0)
-            throw new ArgumentOutOfRangeException(nameof(distanceBudget), "Forced movement distance cannot be negative.");
-
-        int budgetUnits = checked(distanceBudget * environmentRules.UnitsPerRange);
-        int consumed = 0;
-        var current = start;
-        while (true)
-        {
-            var next = current.Step(direction);
-            if (occupied.HasValue && next == occupied.Value)
-                return new ForcedMovementResult(current, consumed, "occupied_landing");
-
-            var edge = InspectEdge(current, next, SpatialQueryKind.ForcedMovement);
-            if (!edge.IsLegal)
-                return new ForcedMovementResult(current, consumed, edge.Reason);
-            if (consumed + edge.MetricDistanceUnits > budgetUnits)
-                return new ForcedMovementResult(current, consumed, "distance_budget_exhausted");
-
-            consumed += edge.MetricDistanceUnits;
-            current = next;
-        }
+        IReadOnlyCollection<SpatialHexCoord> blocked = occupied.HasValue
+            ? new[] { ToSpatial(occupied.Value) }
+            : null;
+        var result = spatialBoard.ResolveForcedMovement(
+            ToSpatial(start), (int)direction, distanceBudget, blocked);
+        return new ForcedMovementResult(
+            ToHex(result.Position), result.ConsumedDistanceUnits, result.Reason);
     }
 
     public HexCoord ResolveForcedMovement(HexCoord start, HexDirection direction, int distanceBudget, HexCoord? occupied = null) =>
@@ -414,28 +364,8 @@ sealed class HexBattlefield
 
     public LineOfSightResult QueryLineOfSight(HexCoord source, HexCoord target)
     {
-        var metricDistance = QueryMetricDistance(source, target, SpatialQueryKind.Sight);
-        if (!metricDistance.IsReachable)
-            return new LineOfSightResult(false, metricDistance.FailureReason);
-
-        var line = TraceLine(source, target);
-        for (int i = 1; i < line.Count; i++)
-        {
-            var edge = InspectEdge(line[i - 1], line[i], SpatialQueryKind.Sight);
-            if (!edge.IsLegal)
-                return new LineOfSightResult(false, edge.Reason);
-
-            if (i >= line.Count - 1)
-                continue;
-
-            var rules = GetRules(line[i]);
-            if (rules.IsEntityObstacle)
-                return new LineOfSightResult(false, "entity_obstacle");
-            if (rules.BlocksSight)
-                return new LineOfSightResult(false, "sight_blocked");
-        }
-
-        return new LineOfSightResult(true, "");
+        var result = spatialBoard.QueryLineOfSight(ToSpatial(source), ToSpatial(target));
+        return new LineOfSightResult(result.HasLineOfSight, result.Reason);
     }
 
     public bool HasLineOfSight(HexCoord source, HexCoord target) => QueryLineOfSight(source, target).HasLineOfSight;
@@ -618,12 +548,44 @@ sealed class HexBattlefield
         return phases;
     }
 
-    HexCellRules GetRules(HexCoord coord) => cells.TryGetValue(coord, out var rules) ? rules : OpenCell;
+    static SpatialQueryBoard BuildSpatialBoard(
+        IReadOnlyDictionary<HexCoord, HexCellRules> configuredCells,
+        IReadOnlyDictionary<DirectedHexEdge, HexEdgeRules> configuredEdges,
+        GameData.EnvironmentRulesConfig rules)
+    {
+        var sharedCells = configuredCells.ToDictionary(
+            entry => ToSpatial(entry.Key),
+            entry => new SpatialCellRules(
+                heightLevel: 0,
+                entry.Value.BlocksMovement,
+                entry.Value.BlocksSight,
+                entry.Value.IsEntityObstacle));
+        var sharedEdges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>();
+        foreach (var entry in configuredEdges)
+        {
+            var from = ToSpatial(entry.Key.From);
+            var to = ToSpatial(entry.Key.To);
+            if (!sharedCells.ContainsKey(from))
+                sharedCells.Add(from, new SpatialCellRules(0, false, false, false));
+            if (!sharedCells.ContainsKey(to))
+                sharedCells.Add(to, new SpatialCellRules(0, false, false, false));
+            sharedEdges.Add(
+                new SpatialDirectedEdge(from, to),
+                new SpatialEdgeRules(
+                    entry.Value.MetricDistanceUnits,
+                    entry.Value.AllowsMovement,
+                    entry.Value.AllowsEffects));
+        }
 
-    HexEdgeRules GetEdgeRules(HexCoord from, HexCoord to) =>
-        edgeRules.TryGetValue(new DirectedHexEdge(from, to), out var rules)
-            ? rules
-            : new HexEdgeRules(environmentRules.StandardEdgeUnits);
+        return new SpatialQueryBoard(
+            sharedCells,
+            sharedEdges,
+            new SpatialQueryLimits(rules.UnitsPerRange, rules.MaxQueryRange));
+    }
+
+    static SpatialHexCoord ToSpatial(HexCoord coord) => new(coord.Q, coord.R);
+
+    static HexCoord ToHex(SpatialHexCoord coord) => new(coord.Q, coord.R);
 
     static HexCellRules Validate(HexCellRules rules)
     {

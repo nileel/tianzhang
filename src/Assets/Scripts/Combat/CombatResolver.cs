@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using TianZhang.Core;
+using TianZhang.Core.SpatialRules;
 using TianZhang.Entity;
 
 namespace TianZhang.Combat
@@ -13,6 +14,10 @@ namespace TianZhang.Combat
     {
         public HexGrid Grid;
         public CTBEngine Engine;
+        private SpatialQueryBoard spatialBoard;
+        private readonly HashSet<SpatialHexCoord> occupied = new HashSet<SpatialHexCoord>();
+
+        public SpatialQueryBoard SpatialBoard => spatialBoard;
 
         // 战斗日志
         public List<string> BattleLog = new List<string>();
@@ -32,6 +37,25 @@ namespace TianZhang.Combat
             public bool Success;
             public DamageCalculator.DamageResult Damage;
             public string Message;
+            public string Reason;
+        }
+
+        public void ConfigureSpatialQueries(
+            SpatialQueryBoard board,
+            IEnumerable<HexCoord> occupiedCoords = null)
+        {
+            spatialBoard = board ?? throw new System.ArgumentNullException(nameof(board));
+            SetOccupiedAnchors(occupiedCoords);
+        }
+
+        public void SetOccupiedAnchors(IEnumerable<HexCoord> occupiedCoords)
+        {
+            occupied.Clear();
+            if (occupiedCoords == null)
+                return;
+
+            foreach (var coord in occupiedCoords)
+                occupied.Add(ToSpatial(coord));
         }
 
         private readonly struct FudanActionBonus
@@ -53,18 +77,26 @@ namespace TianZhang.Combat
         {
             if (path == null || path.Count == 0)
                 return new ActionResult { Success = false, Message = "无移动路径" };
+            if (spatialBoard == null)
+                return RangeFailure("无移动路径", SpatialQueryReasons.QueryBoardNotConfigured);
 
-            int steps = Mathf.Min(path.Count, mover.MovePoints);
-            HexCoord finalPos = path[steps - 1];
+            HexCoord finalPos = path[path.Count - 1];
+            var reachable = FindReachable(mover);
+            if (!reachable.ContainsKey(finalPos))
+                return new ActionResult
+                {
+                    Success = false,
+                    Message = "目标格不可达",
+                    Reason = SpatialQueryReasons.NoLegalPath,
+                };
 
-            if (Grid.IsOccupied(finalPos))
-                return new ActionResult { Success = false, Message = "目标格被占据" };
-
-            Grid.ClearOccupied(mover.Position);
+            Grid?.ClearOccupied(mover.Position);
+            occupied.Remove(ToSpatial(mover.Position));
             mover.Position = finalPos;
-            Grid.SetOccupied(finalPos, mover.CTBUnit.Id);
+            occupied.Add(ToSpatial(finalPos));
+            Grid?.SetOccupied(finalPos, mover.CTBUnit.Id);
 
-            string msg = $"{mover.Name} 移动到 {finalPos}（{steps}步）";
+            string msg = $"{mover.Name} 移动到 {finalPos}";
             BattleLog.Add(msg);
             return new ActionResult { Success = true, Message = msg };
         }
@@ -73,8 +105,8 @@ namespace TianZhang.Combat
         public ActionResult BasicAttack(Character attacker, Character defender,
             bool useMagic = false)
         {
-            if (!IsInRange(attacker.Position, defender.Position, 1))
-                return new ActionResult { Success = false, Message = "目标不在近战范围" };
+            if (!CanTarget(attacker.Position, defender.Position, 1, 1, out string rangeReason))
+                return RangeFailure("目标不在近战范围", rangeReason);
 
             // 朝向目标
             attacker.FaceTarget(defender.Position);
@@ -131,20 +163,19 @@ namespace TianZhang.Combat
             if (caster.SpellCooldowns[spellIndex] > 0)
                 return new ActionResult { Success = false, Message = $"{spell.spellName} 冷却中" };
 
+            if (!CanTarget(
+                caster.Position,
+                target.Position,
+                spell.minRange,
+                spell.maxRange,
+                out string rangeReason))
+                return RangeFailure("目标不在射程范围", rangeReason);
+
             // MP检查（符胆满层：零耗MP）
             bool fudanMax = caster.GongFaName == "云篆度人经" && caster.FudanStacks == caster.MaxFudan();
             int effectiveMpCost = fudanMax ? 0 : spell.mpCost;
             if (!caster.ConsumeMP(effectiveMpCost))
                 return new ActionResult { Success = false, Message = "灵力不足" };
-
-            // 射程检查（自指向术法 minRange=0 maxRange=0 跳过）
-            bool isSelfTarget = spell.minRange == 0 && spell.maxRange == 0;
-            if (!isSelfTarget)
-            {
-                int range = caster.Position.Distance(target.Position);
-                if (range < spell.minRange || range > spell.maxRange)
-                    return new ActionResult { Success = false, Message = "目标不在射程范围" };
-            }
 
             // 设置冷却
             caster.SpellCooldowns[spellIndex] = spell.cooldownTicks;
@@ -251,12 +282,16 @@ namespace TianZhang.Combat
             if (caster.SkillCooldowns[skillIndex] > 0)
                 return new ActionResult { Success = false, Message = $"{skill.skillName} 冷却中" };
 
+            if (!CanTarget(
+                caster.Position,
+                target.Position,
+                skill.minRange,
+                skill.maxRange,
+                out string rangeReason))
+                return RangeFailure("目标不在射程范围", rangeReason);
+
             if (!caster.ConsumeMP(skill.mpCost))
                 return new ActionResult { Success = false, Message = "灵力不足" };
-
-            int range = caster.Position.Distance(target.Position);
-            if (range < skill.minRange || range > skill.maxRange)
-                return new ActionResult { Success = false, Message = "目标不在射程范围" };
 
             caster.SkillCooldowns[skillIndex] = skill.cooldownTicks;
             Engine.ApplySpellCooldown(caster.CTBUnit, skill.cooldownTicks);
@@ -357,8 +392,132 @@ namespace TianZhang.Combat
                 character.SkillCooldowns[i] = Mathf.Max(0, character.SkillCooldowns[i] - ticks);
         }
 
-        private bool IsInRange(HexCoord a, HexCoord b, int maxRange) =>
-            a.Distance(b) <= maxRange;
+        public IReadOnlyDictionary<HexCoord, int> FindReachable(Character mover)
+        {
+            var result = new Dictionary<HexCoord, int>();
+            if (spatialBoard == null || mover == null)
+                return result;
+
+            var blocked = new HashSet<SpatialHexCoord>(occupied);
+            blocked.Remove(ToSpatial(mover.Position));
+            foreach (var entry in spatialBoard.FindReachable(
+                ToSpatial(mover.Position), mover.MovePoints, blocked))
+                result[ToHex(entry.Key)] = entry.Value;
+            return result;
+        }
+
+        public bool TryFindPositionForRange(
+            Character mover,
+            Character target,
+            int minRange,
+            int maxRange,
+            out HexCoord position)
+        {
+            position = mover != null ? mover.Position : default;
+            if (spatialBoard == null || mover == null || target == null)
+                return false;
+
+            bool foundInRange = false;
+            int bestMovementCost = int.MaxValue;
+            int bestDistanceUnits = int.MaxValue;
+            foreach (var entry in FindReachable(mover))
+            {
+                bool inRange = CanTarget(
+                    entry.Key, target.Position, minRange, maxRange, out _);
+                var distance = spatialBoard.QueryMetricDistance(
+                    ToSpatial(entry.Key),
+                    ToSpatial(target.Position),
+                    SpatialQueryKind.Attack);
+                int distanceUnits = distance.IsReachable ? distance.DistanceUnits : int.MaxValue;
+
+                if (foundInRange && !inRange)
+                    continue;
+                if (inRange && !foundInRange)
+                {
+                    foundInRange = true;
+                    bestMovementCost = int.MaxValue;
+                    bestDistanceUnits = int.MaxValue;
+                }
+                if (!inRange && entry.Key == mover.Position)
+                    continue;
+                bool losesTie = foundInRange
+                    ? entry.Value > bestMovementCost ||
+                      (entry.Value == bestMovementCost && distanceUnits > bestDistanceUnits)
+                    : distanceUnits > bestDistanceUnits ||
+                      (distanceUnits == bestDistanceUnits && entry.Value > bestMovementCost);
+                if (losesTie ||
+                    (entry.Value == bestMovementCost && distanceUnits == bestDistanceUnits &&
+                     Compare(entry.Key, position) >= 0))
+                    continue;
+
+                position = entry.Key;
+                bestMovementCost = entry.Value;
+                bestDistanceUnits = distanceUnits;
+            }
+
+            return bestMovementCost != int.MaxValue;
+        }
+
+        public bool CanTarget(
+            HexCoord source,
+            HexCoord target,
+            int minRange,
+            int maxRange,
+            out string reason)
+        {
+            if (spatialBoard == null)
+            {
+                reason = SpatialQueryReasons.QueryBoardNotConfigured;
+                return false;
+            }
+
+            try
+            {
+                var range = spatialBoard.QueryRange(
+                    ToSpatial(source),
+                    minRange,
+                    maxRange,
+                    SpatialQueryKind.Attack,
+                    requireLineOfSight: true);
+                if (!range.TryGet(ToSpatial(target), out var entry))
+                {
+                    reason = SpatialQueryReasons.MissingCell;
+                    return false;
+                }
+
+                reason = entry.Reason;
+                return entry.IsInRange;
+            }
+            catch (System.ArgumentException)
+            {
+                reason = SpatialQueryReasons.MissingCell;
+                return false;
+            }
+        }
+
+        private static ActionResult RangeFailure(string message, string reason)
+        {
+            return new ActionResult
+            {
+                Success = false,
+                Message = reason == SpatialQueryReasons.QueryBoardNotConfigured
+                    ? "空间查询未配置"
+                    : message,
+                Reason = reason,
+            };
+        }
+
+        private static SpatialHexCoord ToSpatial(HexCoord coord) =>
+            new SpatialHexCoord(coord.q, coord.r);
+
+        private static HexCoord ToHex(SpatialHexCoord coord) =>
+            new HexCoord(coord.Q, coord.R);
+
+        private static int Compare(HexCoord left, HexCoord right)
+        {
+            int q = left.q.CompareTo(right.q);
+            return q != 0 ? q : left.r.CompareTo(right.r);
+        }
 
         public void ClearLog() => BattleLog.Clear();
     }

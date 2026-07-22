@@ -872,7 +872,7 @@ static class BattleSimSelfTests
         AssertEqual(GameData.UnarmedBasicAttack, character.BasicAttackProfile, "unequipped character uses unarmed basic attack profile");
         character.BasicAttackProfile = new("测试主战法宝", "神魂", 1.1, "火", 2, 3);
         AssertEqual(3, character.BasicAttackProfile.MaxRange, "main combat artifact profile replaces unarmed fallback");
-        var battlefield = new HexBattlefield();
+        var battlefield = HexBattlefield.CreateStandardFixture();
         AssertEqual(6, Combat.InitialPositionA.DistanceTo(Combat.InitialPositionB), "distance-model opening separation");
         AssertEqual(new HexCoord(5, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 5, 1, 1), "melee moves before attacking");
         AssertEqual(new HexCoord(4, 0), battlefield.FindAttackPosition(new HexCoord(5, 0), new HexCoord(6, 0), 3, 2, 4), "minimum range forces retreat");
@@ -892,7 +892,7 @@ static class BattleSimSelfTests
         var origin = new HexCoord(0, 0);
         AssertEqual(3, origin.DistanceTo(new HexCoord(2, -3)), "axial coordinates use six-direction hex distance");
 
-        var terrain = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        var terrain = HexBattlefield.CreateStandardFixture(new Dictionary<HexCoord, HexCellRules>
         {
             [new HexCoord(1, 0)] = new(MovementCost: 3),
             [new HexCoord(0, 1)] = new(BlocksMovement: true),
@@ -902,14 +902,14 @@ static class BattleSimSelfTests
         AssertEqual(false, twoPointReach.ContainsKey(new HexCoord(0, 1)), "movement blocker cannot be entered");
         AssertEqual(true, terrain.FindReachable(origin, 3).ContainsKey(new HexCoord(1, 0)), "terrain becomes reachable when its explicit cost is paid");
 
-        var sight = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        var sight = HexBattlefield.CreateStandardFixture(new Dictionary<HexCoord, HexCellRules>
         {
             [new HexCoord(1, 0)] = new(BlocksSight: true),
         });
         AssertEqual(false, sight.HasLineOfSight(origin, new HexCoord(2, 0)), "intermediate sight blocker cuts line of sight");
         AssertEqual(true, sight.HasLineOfSight(origin, new HexCoord(0, 2)), "unblocked hex line remains visible");
 
-        var blockedAdvance = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        var blockedAdvance = HexBattlefield.CreateStandardFixture(new Dictionary<HexCoord, HexCellRules>
         {
             [new HexCoord(1, 0)] = new(BlocksMovement: true, BlocksSight: true),
         });
@@ -922,7 +922,7 @@ static class BattleSimSelfTests
     static void RunPositionControlNDist02()
     {
         var origin = new HexCoord(0, 0);
-        var battlefield = new HexBattlefield();
+        var battlefield = HexBattlefield.CreateStandardFixture();
         var chargeControl = GameData.BreakFormationChargeKnockback;
         AssertEqual(1, chargeControl.ForcedMovementDistance, "破阵冲锋 uses its documented one-hex knockback");
 
@@ -933,7 +933,7 @@ static class BattleSimSelfTests
         AssertEqual(new HexCoord(3, 0), pushed, "knockback advances along the specified hex direction");
         AssertEqual(3, origin.DistanceTo(pushed), "knockback changes observable combat distance");
 
-        var blockedPush = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        var blockedPush = HexBattlefield.CreateStandardFixture(new Dictionary<HexCoord, HexCellRules>
         {
             [new HexCoord(4, 0)] = new(BlocksMovement: true),
         });
@@ -981,7 +981,7 @@ static class BattleSimSelfTests
         var friendlyBlocker = new HexCoord(1, 0);
         var enemyBlocker = new HexCoord(1, -1);
         var occupied = new HashSet<HexCoord> { friendlyBlocker, enemyBlocker };
-        var reachable = new HexBattlefield().FindReachable(origin, movementBudget: 4, occupied);
+        var reachable = HexBattlefield.CreateStandardFixture().FindReachable(origin, movementBudget: 4, occupied);
         AssertEqual(false, reachable.ContainsKey(friendlyBlocker),
             "friendly occupancy blocks entry and traversal");
         AssertEqual(false, reachable.ContainsKey(enemyBlocker),
@@ -1093,6 +1093,7 @@ static class BattleSimSelfTests
         {
             [new(origin, east)] = new(metric.CompressedEdgeUnits),
             [new(east, eastTwo)] = new(metric.CompressedEdgeUnits),
+            [new(eastTwo, eastThree)] = new(metric.CompressedEdgeUnits),
         });
         AssertEqual(2, compressed.QueryMetricDistance(origin, eastTwo, SpatialQueryKind.Attack).DistanceUnits,
             "compressed edges shorten the minimum weighted attack path");
@@ -1124,7 +1125,7 @@ static class BattleSimSelfTests
         AssertEqual("distance_budget_exhausted", forced.StopReason,
             "forced movement reports why the next edge was rejected");
 
-        var obstacle = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        var obstacle = HexBattlefield.CreateStandardFixture(new Dictionary<HexCoord, HexCellRules>
         {
             [east] = new(IsEntityObstacle: true),
         });
