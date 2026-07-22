@@ -1,0 +1,62 @@
+# 2.5D 战棋原型规则查询所有者记录
+
+> 任务：U-2_5D-01B ｜ 主责：Codex / gpt-5.6-terra ｜ 状态：等待负责人决策
+>
+> 定位日期：2026-07-22 ｜ 租约：`0f0e4c63-e690-4d6d-8700-0b1b4e43429c`
+>
+> 结论：`BattleSim.HexBattlefield` 是有向格边、固定点加权距离、规则视线和实体障碍的既有完整规则所有者；但范围查询在 BattleSim 与旧 Unity 原型间存在已实现的不同语义，尚无唯一可调用所有者。此记录不表示 2.5D 原型已实现，也不授权新增桥接、默认值、兼容分支或规则改动。
+
+## 一、扫描范围与判定口径
+
+- 已读事实源：`开发管理/开发-技术经验.txt`、`开发管理/任务列表/场景与Unity任务.txt`、`开发管理/设计-当前状态.txt`、`UNITY_STRUCTURE.md`、`开发管理/2.5D战棋原型验证清单.txt`、`docs/基础设定/战场空间与环境规则.txt`、`src/Assets/Scripts/Grid/TacticalGridModel.cs`、`simulations/BattleSim/Program.cs`。
+- 已扫描实现：`src/Assets/Scripts/**/*.cs` 与 `simulations/BattleSim/**/*.cs` 中的 `HexCoord`、`HeightLevel`、有向格边、距离、范围、视线、障碍和占位调用；具体规则实现在 `simulations/BattleSim/Battlefield.cs`，其回归证据在 `simulations/BattleSim/BattleSimSelfTests.cs`。
+- 判定口径：只有能以六角规则输入返回允许、数值、集合或明确拒绝原因的实现才可作为查询所有者。`Transform`、`Collider`、`Camera`、`Renderer`、`Vector3.Distance`、模型间距和仅保存字段的数据资产均不是规则所有者。
+- 坐标边界：Unity 的 `TianZhang.Core.HexCoord(q,r,s)` 与 BattleSim 的 `BattleSim.HexCoord(Q,R)` 是不同类型；现有代码没有二者的桥接或共享规则接口。`TacticalGridModel.HeightLevel` 是 Unity 地块字段，不能据此推定 BattleSim 查询已消费同一高度数据。
+
+## 二、五类查询定位
+
+### 1. 有向格边
+
+- 既有所有者：`simulations/BattleSim/Battlefield.cs` 的 `BattleSim.HexBattlefield.InspectEdge(HexCoord from, HexCoord to, SpatialQueryKind kind)`。
+- 输入：拓扑相邻的 `from`／`to`、用途 `SpatialQueryKind`，以及构造函数注入、键为 `DirectedHexEdge(from,to)` 的 `HexEdgeRules`。`HexEdgeRules` 提供 `MetricDistanceUnits`、`AllowsMovement`、`AllowsEffects`。
+- 输出：`EdgeInspection(IsLegal, MetricDistanceUnits, Reason)`；反向边未声明允许时可返回 `directed_edge_blocks_movement` 或 `directed_edge_blocks_effect`。非相邻格直接拒绝并抛出参数异常。
+- 与格位／高度／占位的关系：以 BattleSim `HexCoord` 的 `TryGetDirectionTo` 确认六向邻接；不读取 Unity `TacticalTileData.HeightLevel`。移动用途会读取目标格 `HexCellRules.IsEntityObstacle`／`BlocksMovement`，但不读取 Unity 占位字段。
+- 非所有者排除：`src/Assets/Scripts/Grid/EnvironmentProfileData.cs` 的 `directedEdges` 只保存四个坐标整数；`TacticalGridModel` 与 `HexGrid` 均没有有向边合法性查询。
+
+### 2. 加权距离
+
+- 既有所有者：`simulations/BattleSim/Battlefield.cs` 的 `BattleSim.HexBattlefield.QueryMetricDistance(HexCoord start, HexCoord target, SpatialQueryKind kind, int? maxRange = null)`。
+- 输入：起点、目标、用途、可选最大范围；使用 `EnvironmentRulesConfig.UnitsPerRange`、`MaxQueryRange`、`StandardEdgeUnits` 和 `InspectEdge` 的有向边长度／合法性。
+- 输出：`MetricDistanceResult(IsReachable, DistanceUnits, FailureReason)`；以有界 Dijkstra 求最小固定点距离，越界或无合法路径返回 `no_legal_path_within_query_limit`。空边规则的简化分支仍返回固定点单位，不是欧氏距离。
+- 与格位／高度／占位的关系：输入和路径节点是 BattleSim `HexCoord`；此查询不接收 `HeightLevel`。`FindReachable` 会另接收 `IReadOnlyCollection<HexCoord> occupied` 以排除落点，但 `QueryMetricDistance` 本身不把 Unity 占位或渲染状态作为输入。
+- 非所有者排除：`src/Assets/Scripts/Core/HexCoord.cs` 的 `Distance` 是未加权拓扑步数；不能在压缩／标准／扩张边上代替本查询。
+
+### 3. 范围
+
+- 结论：没有既有唯一所有者，存在冲突；本项触发等待负责人决策。
+- BattleSim 候选：`simulations/BattleSim/Combat.cs` 的私有 `Combat.CanAttack(...)` 先调用 `HexBattlefield.QueryMetricDistance(..., Attack)`，将固定点距离与 `minRange`／`maxRange * MetricUnitsPerRange` 比较，并调用 `HasLineOfSight`。`HexBattlefield.FindAttackPosition(...)` 也以同一加权距离和视线选择行动格。
+- Unity 冲突实现：`src/Assets/Scripts/Core/HexGrid.cs` 的 `GetTilesInRange(HexCoord center, int range)` 仅以 `HexCoord.Distance` 生成范围；`src/Assets/Scripts/Combat/CombatResolver.cs` 的 `IsInRange`、`BasicAttack`、`CastSpell` 与 `UseSkill`，以及 `TacticalCombatController` 的施法／神通前置检查，也仅比较 Unity `HexCoord.Distance`。这些实现不读取有向边、固定点权重或规则视线。
+- 输入／输出差异：BattleSim 候选以用途、边规则和视线产生攻击是否合法或行动格；Unity 实现以基础步数产生范围列表或布尔射程结果。压缩／扩张边、实体障碍和视线阻挡时，二者可给出不同结果。
+- 与格位／高度／占位的关系：两边都以各自 `HexCoord` 工作；均未把 `TacticalGridModel.HeightLevel` 纳入该范围判定。BattleSim 的 `FindAttackPosition` 另接收占位集合，Unity 的 `GetTilesInRange`／战斗射程检查不接收占位；没有从 `OccupiedUnitId` 到 BattleSim 占位集合的现有映射。
+
+### 4. 视线
+
+- 既有所有者：`simulations/BattleSim/Battlefield.cs` 的 `BattleSim.HexBattlefield.QueryLineOfSight(HexCoord source, HexCoord target)`；`HasLineOfSight` 只是返回其 `HasLineOfSight` 字段的便捷入口。
+- 输入：来源与目标的 BattleSim `HexCoord`，以及同一 `HexBattlefield` 的边规则和格规则。
+- 输出：`LineOfSightResult(HasLineOfSight, Reason)`；先以 `QueryMetricDistance(..., Sight)` 拒绝不可达目标，再沿 `TraceLine` 逐边调用 `InspectEdge(..., Sight)`，并对中间格返回 `entity_obstacle` 或 `sight_blocked`。
+- 与格位／高度／占位的关系：使用 BattleSim `HexCoord` 路径；该视线查询不接收 Unity `HeightLevel`。`PhenomenonState`／`GetPhenomena` 的高度区间只服务区域现象，不构成此视线方法的高度比较。`occupied` 参数也不进入本方法。
+- 非所有者排除：`TacticalGridModel.BlocksLineOfSight(HexCoord)` 仅读取单格标志，未追踪来源到目标的路径；`TilemapTacticalRenderer`、`HexTilemapManager` 的 Camera／世界坐标逻辑只服务表现与选格。
+
+### 5. 实体障碍
+
+- 既有所有者：`simulations/BattleSim/Battlefield.cs` 的 `HexCellRules.IsEntityObstacle` 及其所属 `BattleSim.HexBattlefield` 查询。构造 `HexCellRules(IsEntityObstacle: true)` 时同时闭合 `BlocksMovement` 与 `BlocksSight`；`InspectEdge` 对移动返回 `entity_obstacle`，`QueryLineOfSight` 对中间格返回同一拒绝原因。格边的普通作用路径仍由同一所有者的 `HexEdgeRules.AllowsEffects`／`InspectEdge(..., Sight)` 决定。
+- 输入：构造函数接收的 `IReadOnlyDictionary<HexCoord, HexCellRules>` 与 `IReadOnlyDictionary<DirectedHexEdge, HexEdgeRules>`，再由具体移动或视线查询输入来源、目标和用途。
+- 输出：不是独立的渲染碰撞查询；拒绝结果由 `EdgeInspection.Reason` 或 `LineOfSightResult.Reason` 返回，移动可达集合由 `FindReachable` 排除。
+- 与格位／高度／占位的关系：实体障碍以 BattleSim `HexCoord` 键存储；不读取 `HeightLevel`。`FindReachable` 的外部 `occupied` 集合与 `IsEntityObstacle` 是两套输入，前者不自动成为后者。
+- 非所有者排除：Unity `TacticalTileData.OccupiedUnitId`／`HexGrid.occupiedBy` 只表达单锚点单位占位和移动进入限制；它们不会阻断规则视线，且没有映射为 `HexCellRules.IsEntityObstacle`，因此不能列为实体障碍规则所有者。
+
+## 三、负责人决策项与停止边界
+
+当前事实源已确认 `HexBattlefield` 集中承载 N-DIST-01、N-DIST-02、N-ENV-01 与 N-GROUP-01 的空间规则，但它是独立的 .NET 10 `BattleSim` 可执行项目；Unity runtime 未引用该程序集，也没有现成的共享查询契约。更关键的是，旧 Unity 原型仍实际执行基础步数范围判定，和 BattleSim 的加权距离＋视线范围判定冲突。
+
+需要负责人选择后续路径：是否新立受控任务，使 Unity 只消费经批准的同一空间查询契约并淘汰／隔离旧范围判定；或明确 2.5D 原型不进入范围、攻击、施法或视线验证。未得到决定前，不得把任一 Unity 旧实现、`TacticalGridModel` 字段、Transform、Collider、Camera、Renderer、欧氏距离或模型间距宣称为五类规则的统一所有者。
