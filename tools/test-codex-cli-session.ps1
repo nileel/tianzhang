@@ -220,7 +220,7 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
 '@
   [IO.File]::WriteAllText($fakeCodexPath, $fakeCodex, [Text.UTF8Encoding]::new($false))
 
-  $startPrompt = 'secret-start-marker-7ee5f0'
+  $startPrompt = "secret-start-marker-7ee5f0`n中文传输`nliteral `` backtick"
   $start = Invoke-Runner -Action Start -Prompt $startPrompt -Case 'start-success'
   Assert-Equal -Actual $start.ExitCode -Expected 0 -Message 'Start process failed'
   Assert-Equal -Actual $start.Json.status -Expected 'ok' -Message 'Start status mismatch'
@@ -283,6 +283,9 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
     Assert-True -Condition ($result.ExitCode -ne 0) -Message "$($failure.Case) process unexpectedly succeeded"
     Assert-Equal -Actual $result.Json.status -Expected 'failed' -Message "$($failure.Case) status mismatch"
     Assert-Equal -Actual $result.Json.exitCode -Expected $failure.ChildExitCode -Message "$($failure.Case) child exit mismatch"
+    if ($failure.Case -eq 'child-failed') {
+      Assert-Equal -Actual $result.Json.sessionId -Expected $expectedSessionId -Message 'Failed child lost its resumable session id'
+    }
   }
 
   Write-Output 'test-codex-cli-session: OK'

@@ -1,0 +1,362 @@
+#requires -Version 7.0
+
+[CmdletBinding()]
+param(
+  [Parameter(Mandatory = $true)]
+  [ValidateSet('Start', 'Resume')]
+  [string]$Action,
+  [Parameter(Mandatory = $true)]
+  [ValidateSet('Execution', 'Review', 'QueueMaintenance', 'Recovery')]
+  [string]$Route,
+  [Parameter(Mandatory = $true)]
+  [string]$RepositoryRoot,
+  [Parameter(Mandatory = $true)]
+  [string]$TaskId,
+  [Parameter(Mandatory = $true)]
+  [string]$RunId,
+  [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
+  [string]$SessionId,
+  [string]$Model
+)
+
+$ErrorActionPreference = 'Stop'
+$runnerPath = Join-Path $PSScriptRoot 'codex-cli-session.ps1'
+$leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
+$result = $null
+$resultExitCode = 1
+$capturedSessionId = $null
+$verifiedCommitSha = $null
+
+function Assert-StableArgument {
+  param([AllowNull()][string]$Value, [string]$Name, [int]$MaximumLength = 512)
+
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    throw "$Name is required"
+  }
+  if ($Value.Length -gt $MaximumLength -or $Value -match '[\x00-\x1F\x7F]') {
+    throw "$Name is invalid"
+  }
+}
+
+function Invoke-GitText {
+  param([string[]]$Arguments)
+
+  $output = & git -C $script:resolvedRepositoryRoot @Arguments 2>$null
+  if ($LASTEXITCODE -ne 0) {
+    throw "Git command failed: git $($Arguments -join ' ')"
+  }
+  (@($output) -join "`n").TrimEnd()
+}
+
+function Get-WorkspaceSnapshot {
+  $snapshot = @{}
+  $lines = @(Invoke-GitText -Arguments @('-c', 'core.quotepath=false', 'status', '--porcelain=v1', '--untracked-files=all') -split '\r?\n')
+  foreach ($line in $lines) {
+    if ([string]::IsNullOrWhiteSpace($line) -or $line.Length -lt 4) {
+      continue
+    }
+    $status = $line.Substring(0, 2)
+    $path = $line.Substring(3)
+    $arrowIndex = $path.LastIndexOf(' -> ', [StringComparison]::Ordinal)
+    if ($arrowIndex -ge 0) {
+      $path = $path.Substring($arrowIndex + 4)
+    }
+    $normalized = $path.Replace('\', '/')
+    $fullPath = Join-Path $script:resolvedRepositoryRoot $normalized
+    $contentHash = if (Test-Path -LiteralPath $fullPath -PathType Leaf) {
+      [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([IO.File]::ReadAllBytes($fullPath)))
+    } else {
+      '<missing>'
+    }
+    $snapshot[$normalized] = "$status|$contentHash"
+  }
+  $snapshot
+}
+
+function Get-NewChangedPaths {
+  param([hashtable]$Before, [hashtable]$After)
+
+  $changed = [Collections.Generic.List[string]]::new()
+  foreach ($path in @($After.Keys | Sort-Object)) {
+    if (-not $Before.ContainsKey($path) -or [string]$Before[$path] -cne [string]$After[$path]) {
+      $changed.Add([string]$path)
+    }
+  }
+  @($changed)
+}
+
+function Invoke-LeaseAction {
+  param([string]$LeaseAction, [hashtable]$Parameters = @{}, [int[]]$AllowedExitCodes = @(0))
+
+  $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $leasePath, '-Action', $LeaseAction)
+  foreach ($entry in @($Parameters.GetEnumerator() | Sort-Object Key)) {
+    if ($entry.Value -is [bool]) {
+      if ($entry.Value) { $arguments += "-$($entry.Key)" }
+      continue
+    }
+    $arguments += "-$($entry.Key)"
+    $arguments += if ($entry.Value -is [Collections.IEnumerable] -and $entry.Value -isnot [string]) {
+      @($entry.Value) -join '|'
+    } else {
+      [string]$entry.Value
+    }
+  }
+  $output = & pwsh @arguments
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -notin $AllowedExitCodes) {
+    throw "Lease action $LeaseAction failed with exit code $exitCode"
+  }
+  $lines = @($output | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+  if ($lines.Count -ne 1) {
+    throw "Lease action $LeaseAction emitted an invalid response"
+  }
+  $lines[0] | ConvertFrom-Json -Depth 100
+}
+
+function Get-RouteInstruction {
+  switch ($Route) {
+    'Execution' { '按 开发管理/AI协作规则.txt 的纯 1 入口执行，但只处理本次指定 TaskId。' }
+    'Review' { '按 开发管理/审核入口.txt 与纯 2 入口复审，但只处理本次指定 TaskId。' }
+    'QueueMaintenance' { '按 开发管理/状态与建议维护规则.txt 维护队列；本轮不执行新增业务任务。' }
+    'Recovery' { '恢复原责任方的同一 TaskId，先核对现有改动与 recovery，再继续未完成工作。' }
+  }
+}
+
+function New-ResponsibilityPrompt {
+  $actionInstruction = if ($Action -ceq 'Resume') {
+    '这是原 CLI session 的续跑，不创建新责任方。'
+  } else {
+    '这是新的 CLI-native 责任方会话。'
+  }
+  @(
+    "模型核验证明：控制器已核验并以 -Model 传入 $Model；子会话不因缺少父 request metadata 再次阻塞。"
+    "TaskId: $TaskId"
+    "RunId: $RunId"
+    "Route: $Route"
+    $actionInstruction
+    (Get-RouteInstruction)
+    '先完整读取仓库 AGENTS.md、开发管理/自动工作流规则.txt 和上述入口。'
+    '责任方端到端实施、最小充分验证并使用 automation-finalize-commit.ps1 创建路径限定提交。'
+    '需要决定时必须先由 send-decision.mjs 获得 PROVIDER_ACCEPTED，再 SaveRecovery。'
+    '不得自行调用 RecordResult 或 Release；固定调用器会根据 Git 与 runtime 核验结果后统一关闭本轮。'
+  ) -join "`n"
+}
+
+function Invoke-SessionRunner {
+  param([string]$Prompt)
+
+  $startInfo = [Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = 'pwsh'
+  $startInfo.UseShellExecute = $false
+  $startInfo.CreateNoWindow = $true
+  $startInfo.RedirectStandardInput = $true
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  foreach ($argument in @(
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $runnerPath,
+      '-Action', $Action,
+      '-RepositoryRoot', $script:resolvedRepositoryRoot,
+      '-TaskId', $TaskId,
+      '-RunId', $RunId
+    )) {
+    $startInfo.ArgumentList.Add($argument)
+  }
+  if ($Action -ceq 'Resume') {
+    $startInfo.ArgumentList.Add('-SessionId')
+    $startInfo.ArgumentList.Add($SessionId)
+  } elseif (-not [string]::IsNullOrWhiteSpace($Model)) {
+    $startInfo.ArgumentList.Add('-Model')
+    $startInfo.ArgumentList.Add($Model)
+  }
+
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    throw 'Failed to start codex CLI session runner'
+  }
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.StandardInput.Write($Prompt)
+  $process.StandardInput.Close()
+  $process.WaitForExit()
+  $stdout = $stdoutTask.GetAwaiter().GetResult()
+  $stderr = $stderrTask.GetAwaiter().GetResult()
+  $exitCode = $process.ExitCode
+  $process.Dispose()
+
+  foreach ($line in @($stderr -split '\r?\n')) {
+    if ($line -cin @('session_started', 'running')) {
+      [Console]::Error.WriteLine($line)
+    }
+  }
+  $lines = @($stdout -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if ($lines.Count -ne 1) {
+    throw 'CLI session runner emitted an invalid summary'
+  }
+  $summary = $lines[0] | ConvertFrom-Json
+  [pscustomobject]@{ ExitCode = $exitCode; Summary = $summary }
+}
+
+function Get-CommitMetadata {
+  param([string]$CommitSha)
+
+  $body = Invoke-GitText -Arguments @('show', '-s', '--format=%B', $CommitSha)
+  $fields = [ordered]@{}
+  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify')) {
+    $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
+    if ($matches.Count -ne 1) {
+      return $null
+    }
+    $fields[$name] = $matches[0].Groups['value'].Value
+  }
+  [pscustomobject]$fields
+}
+
+function Close-Run {
+  param([string]$Category, [string]$DetailCode)
+
+  $recorded = Invoke-LeaseAction -LeaseAction RecordResult -Parameters @{
+    StateRoot = $StateRoot
+    RunId = $RunId
+    Category = $Category
+    TaskId = $TaskId
+    DetailCode = $DetailCode
+  }
+  if ([string]$recorded.status -cne 'RECORDED') {
+    throw "RecordResult returned $($recorded.status)"
+  }
+  $released = Invoke-LeaseAction -LeaseAction Release -Parameters @{ StateRoot = $StateRoot; RunId = $RunId }
+  if ([string]$released.status -cne 'RELEASED') {
+    throw "Release returned $($released.status)"
+  }
+}
+
+try {
+  foreach ($path in @($runnerPath, $leasePath)) {
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+      throw "Required tool is missing: $path"
+    }
+  }
+  Assert-StableArgument -Value $TaskId -Name 'TaskId'
+  Assert-StableArgument -Value $RunId -Name 'RunId'
+  if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot)) {
+    throw 'RepositoryRoot must be absolute'
+  }
+  $script:resolvedRepositoryRoot = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd([IO.Path]::DirectorySeparatorChar)
+  if (-not (Test-Path -LiteralPath (Join-Path $script:resolvedRepositoryRoot '.git'))) {
+    throw 'RepositoryRoot must be a Git root'
+  }
+  if ($Action -ceq 'Resume') {
+    Assert-StableArgument -Value $SessionId -Name 'SessionId'
+  } else {
+    Assert-StableArgument -Value $Model -Name 'Model'
+  }
+
+  $beforeHead = Invoke-GitText -Arguments @('rev-parse', 'HEAD')
+  $beforeWorkspace = Get-WorkspaceSnapshot
+  $runner = Invoke-SessionRunner -Prompt (New-ResponsibilityPrompt)
+  $capturedSessionId = [string]$runner.Summary.sessionId
+  if ([string]::IsNullOrWhiteSpace($capturedSessionId)) {
+    $capturedSessionId = $null
+  }
+
+  $afterHead = Invoke-GitText -Arguments @('rev-parse', 'HEAD')
+  $afterWorkspace = Get-WorkspaceSnapshot
+  $newChangedPaths = @(Get-NewChangedPaths -Before $beforeWorkspace -After $afterWorkspace)
+  $newCommits = if ($beforeHead -ceq $afterHead) {
+    @()
+  } else {
+    @(Invoke-GitText -Arguments @('rev-list', '--reverse', "$beforeHead..$afterHead") -split '\r?\n' | Where-Object { $_ -match '^[0-9a-f]{40}$' })
+  }
+  $matchingCommits = [Collections.Generic.List[string]]::new()
+  foreach ($commitSha in $newCommits) {
+    $metadata = Get-CommitMetadata -CommitSha $commitSha
+    if (
+      $null -ne $metadata -and
+      [string]$metadata.Automation -ceq 'tzg-hourly-controller' -and
+      [string]$metadata.Task -ceq $TaskId -and
+      [string]$metadata.State -ceq 'completed'
+    ) {
+      $matchingCommits.Add($commitSha)
+    }
+  }
+
+  $shown = Invoke-LeaseAction -LeaseAction Show -Parameters @{ StateRoot = $StateRoot }
+  $recovery = $shown.state.recovery
+  $hasMatchingDecisionRecovery =
+    $null -ne $recovery -and
+    [string]$recovery.trigger -ceq 'decision' -and
+    [string]$recovery.taskId -ceq $TaskId -and
+    [string]$recovery.runId -ceq $RunId
+
+  if ($hasMatchingDecisionRecovery) {
+    Close-Run -Category 'waiting_decision' -DetailCode 'decision_recovery_saved'
+    $result = [ordered]@{
+      status = 'waiting_decision'; category = 'waiting_decision'; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $null
+    }
+    $resultExitCode = 0
+  } elseif ($newCommits.Count -eq 1 -and $matchingCommits.Count -eq 1) {
+    $verifiedCommitSha = $matchingCommits[0]
+    if ($null -ne $recovery -and [string]$recovery.taskId -ceq $TaskId) {
+      $cleared = Invoke-LeaseAction -LeaseAction ClearRecovery -Parameters @{ StateRoot = $StateRoot; RunId = $RunId }
+      if ([string]$cleared.status -cne 'RECOVERY_CLEARED') {
+        throw "ClearRecovery returned $($cleared.status)"
+      }
+    }
+    $category = if ($TaskId -ceq 'QUEUE-MAINTENANCE') { 'refilled' } else { 'success' }
+    Close-Run -Category $category -DetailCode "commit_$($verifiedCommitSha.Substring(0, 12))"
+    $result = [ordered]@{
+      status = 'completed'; category = $category; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $verifiedCommitSha
+    }
+    $resultExitCode = 0
+  } elseif ($newCommits.Count -gt 0) {
+    $result = [ordered]@{
+      status = 'blocked'; category = 'blocked'; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $null; detailCode = 'unverified_commit_shape'
+    }
+    $resultExitCode = 2
+  } elseif ($newChangedPaths.Count -gt 0) {
+    if ($null -eq $capturedSessionId) {
+      $result = [ordered]@{
+        status = 'blocked'; category = 'blocked'; taskId = $TaskId; runId = $RunId
+        sessionId = $null; commitSha = $null; detailCode = 'changed_without_session'
+      }
+      $resultExitCode = 2
+    } else {
+      $saved = Invoke-LeaseAction -LeaseAction SaveInterruption -Parameters @{
+        StateRoot = $StateRoot
+        RunId = $RunId
+        CodexThreadId = $capturedSessionId
+        HasUncommittedChanges = $true
+        ChangedPaths = $newChangedPaths
+      }
+      if ([string]$saved.status -cne 'RECOVERY_SAVED') {
+        throw "SaveInterruption returned $($saved.status)"
+      }
+      Close-Run -Category 'failed' -DetailCode 'interruption_recovery_saved'
+      $result = [ordered]@{
+        status = 'interrupted'; category = 'failed'; taskId = $TaskId; runId = $RunId
+        sessionId = $capturedSessionId; commitSha = $null
+      }
+      $resultExitCode = 1
+    }
+  } else {
+    Close-Run -Category 'failed' -DetailCode 'no_verified_outcome'
+    $result = [ordered]@{
+      status = 'failed'; category = 'failed'; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $null
+    }
+    $resultExitCode = 1
+  }
+} catch {
+  $result = [ordered]@{
+    status = 'failed'; category = 'failed'; taskId = $TaskId; runId = $RunId
+    sessionId = $capturedSessionId; commitSha = $verifiedCommitSha; detailCode = 'invoker_error'
+  }
+  $resultExitCode = 1
+}
+
+[Console]::Out.WriteLine(($result | ConvertTo-Json -Compress -Depth 10))
+exit $resultExitCode
