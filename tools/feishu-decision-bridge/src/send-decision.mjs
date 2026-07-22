@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { open, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir as systemHomedir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
+import {
+  basename, dirname, isAbsolute, join, resolve,
+} from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { buildDecisionCard } from './card.mjs';
@@ -178,6 +180,33 @@ async function writePendingBinding({ stateRoot, decision, result, now }) {
   }
 }
 
+async function writeRecoveryRequest({ requestPath, decision, result, now }) {
+  const temporaryPath = join(
+    dirname(requestPath),
+    `.${basename(requestPath)}.${randomUUID()}.tmp`,
+  );
+  const pendingDecision = {
+    decisionId: decision.decisionId,
+    allowedOptions: decision.options.map((option) => option.key),
+    allowCustomReply: true,
+    createdAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + DECISION_TTL_MS).toISOString(),
+    cardNonceHash: result.cardNonceHash,
+    providerMessageIdHash: result.providerMessageIdHash,
+    providerChatIdHash: result.providerChatIdHash,
+  };
+  try {
+    await writeFile(temporaryPath, `${JSON.stringify({ pendingDecision })}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+      mode: 0o600,
+    });
+    await rename(temporaryPath, requestPath);
+  } finally {
+    await rm(temporaryPath, { force: true }).catch(() => {});
+  }
+}
+
 export async function main(argv = process.argv.slice(2), dependencies = {}) {
   const env = dependencies.env ?? process.env;
   const getHomedir = dependencies.homedir ?? systemHomedir;
@@ -188,12 +217,14 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
   const createIntentStore = dependencies.createIntentStore ?? createSendIntentStore;
   const send = dependencies.send ?? sendDecision;
   const writeBinding = dependencies.writeBinding ?? writePendingBinding;
+  const writeRequest = dependencies.writeRecoveryRequest ?? writeRecoveryRequest;
 
   let request;
+  let requestPath;
   let config;
   let now;
   try {
-    const requestPath = requestPathFromArgs(argv);
+    requestPath = requestPathFromArgs(argv);
     request = validateRequest(await readBoundedJson(requestPath));
 
     const configuredPath = env.FEISHU_DECISION_CONFIG_PATH;
@@ -265,6 +296,7 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
   if (output.result === 'PROVIDER_ACCEPTED') {
     try {
       await writeBinding({ stateRoot: config.stateRoot, decision: request.decision, result: output, now });
+      await writeRequest({ requestPath, decision: request.decision, result: output, now });
     } catch {
       output = {
         result: 'PROVIDER_OUTCOME_UNKNOWN',
