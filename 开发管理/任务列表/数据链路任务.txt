@@ -17,6 +17,8 @@
 | D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01） | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 |
+| D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 |
+| D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02） | 定义统一攻击档案 schema 与导入边界。 |
 | D-COMBAT-02 | P3 | Codex | 阻塞（D-COMBAT-01、U-COMBAT-01） | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查。 |
 
@@ -47,6 +49,32 @@
 - 验证：严格数据链检查、相关 Unity EditMode、CSV/asset 数量与 ID 对齐、旧字段全局扫描、`git diff --check`；数值总回归由 N-FPD-REGRESSION-01 执行。
 - 完成条件：docs、CSV、asset、BattleSim fixture 与 Unity 数据对象对同一角色给出一致的四阶段、容量、紫府、镇府神通和丹相输入结果。
 - 停止条件：任一内容实例或数值仍未确认，或迁移需要猜测默认值、截断非法数据或保留双 schema。
+
+## 《天章》册界体系后续数据任务卡
+
+共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、三项核心遗产文件及 M7 完成品。两项任务均属于 M8，实现授权前不得进入当前任务队列。
+
+### D-TZ-CHARTER-SCHEMA-01 · 册界体系数据契约
+
+- 依赖与状态：M7 父任务完成并通过复审、用户明确授权 M8；当前冻结。C-ENV-PROFILE-01 与 D-ENV-SCHEMA-01 只提供环境档案语义，不代替本任务的地区长期状态契约。
+- 预期路径：新建 `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md`；修改 `src/Assets/DataConfig/`、对应 ScriptableObject 数据模型、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试。进入当前队列前必须实时扫描并展开全部字面量路径和新表名。
+- 数据边界：分别定义静态条目、遗物权限要求、册界节点、组织授权与传播边界档案，以及玩家已登记条目、界印状态、节点状态、当前覆盖集合、条目／节点占用和当前地区规则等动态状态；定义层与状态层不得混表。
+- 必需字段：完整承载 M4 的十八个规则字段，并为门禁目标识别、公共设施受益者／管理者、节点连通、版本化授权、现实供给、正负原子提交、金丹挑战资格和元婴受锚提供稳定 ID 引用。战场 `environmentProfile` 只能作为输出引用，不能反向成为地区状态所有者。
+- 失败关闭：未知条目／节点／授权／现象／变量／环境档案引用，覆盖集合越过传播边界，缺少正或负提交，定义与状态 ID 混用，以及旧字段静默兼容均拒绝整表导入。
+- 验证：使用正反 fixture 证明整表失败关闭；运行直接相关 .NET／EditMode、`check-data-chain.ps1`、精确文本检查、待提交空白检查和 `git diff --check`。不涉及数值时不运行 BattleSim。
+- 完成条件：Unity 数据层能无歧义读取条目、遗物、节点、授权、覆盖与当前状态，并且长期地区状态与 `EnvironmentProfileData` 保持单向引用边界；不得把 schema 完成写成规则已可游玩。
+- 停止条件：契约需要完整九域天气模拟、动态经济产出、任意规则编辑器、第二套环境档案，或必须先猜测倍率、概率和价格。
+
+### D-TZ-CHARTER-SAMPLE-01 · 册界纵向样例数据
+
+- 依赖与状态：D-TZ-CHARTER-SCHEMA-01 完成；M7 十条内容与 C-ENV-PROFILE-01 已复审；用户明确授权 M8。当前冻结。
+- 预期路径：D-TZ-CHARTER-SCHEMA-01 建立的 CSV、asset、导入器 fixture 与直接相关 EditMode 测试；进入当前队列前从现行门派、地图和遗物事实源选定一个已有门禁、一个已有公共设施和一个已有册界节点，并展开所有字面量路径。
+- 有效样例：门禁只验证《开阖九章》的目标识别与失败原因；公共设施只验证太玄界印的管理者、受益者及守卫／档案响应；节点只验证授权、连通和据点级覆盖；规则固定选用已有结构走查的 `水府地纪`，只输出一个现有 `environmentProfile` 引用。
+- 非法 fixture：至少覆盖无通行许可、只有通行而无管理权、无授权、节点断开、现实供给不足、覆盖越界、正负提交不完整、金丹挑战资格缺失和元婴受锚仍尝试覆盖。
+- 边界：只引用现行地点、设施和条目，不创作新任务、NPC、九域分布或数值；样例数据不是整域生产配置，也不建立每日经济模拟。
+- 验证：有效样例完整导入，逐个非法 fixture 以稳定错误码失败；运行 `check-data-chain.ps1`、相关 EditMode／构建、精确文本与空白检查、`git diff --check`。只有引入实际倍率、概率或资源产量时才增加数值验证。
+- 完成条件：后续运行时任务可只消费这一组数据验证通行、归属、节点、条目和环境档案输出，不需要硬编码内容或补默认值。
+- 停止条件：现行事实源没有可用门禁／设施／节点，`水府地纪` 没有合法环境档案，或样例必须扩展为完整地区内容；记录缺口并回到对应内容任务。
 
 ## TQ-057 最终批准口径
 
