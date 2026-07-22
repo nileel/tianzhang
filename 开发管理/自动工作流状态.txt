@@ -24,6 +24,7 @@
 ## 当前生产保护
 
 - 2026-07-22 `QUEUE-MAINTENANCE` 已确认 Codex 执行范围并补入 U-2_5D-01A（`c6fbf1b86d93a1d223aee4ffb07a9b297619f360`）；此前的模型身份元数据阻塞已清除。
+- 2026-07-22 `QUEUE-MAINTENANCE` 已确认执行、复审与外部候选均无安全可运行项；现有待处理 backlog 摘要均不构成可直接提升的完整卡。已依 U-2_5D-01A 的完成门槛补入 U-2_5D-01B，且未执行任何业务任务。
 - N-GROUP-01 已由业务提交 `c4e9db82a5a20850814136b550711fcbd6302ce0` 完成并归档；原 CLI Resume 的非 JSON 假失败不再代表恢复状态。
 - 生产入口已由外部普通管理上下文恢复为 `ACTIVE`；本机 runtime 的 lease、recovery 与 pending resume 均为空，`pauseRequested=false`，最近结果为 `QUEUE-MAINTENANCE/refilled`。
 
