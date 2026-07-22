@@ -126,6 +126,30 @@ function Assert-RejectedWithoutStateChange {
   Assert-Equal -Actual $after -Expected $before -Message "$Action rejection changed state bytes"
 }
 
+function Write-ConsumeRequestFixture {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+    [Parameter(Mandatory = $true)]
+    [string]$DecisionId
+  )
+
+  $fixture = [ordered]@{
+    pendingDecision = [ordered]@{
+      decisionId = $DecisionId
+      allowedOptions = @('A', 'B', 'C')
+      allowCustomReply = $true
+      createdAt = '2026-07-22T00:00:00.000Z'
+      expiresAt = '2026-07-23T00:00:00.000Z'
+      cardNonceHash = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+      providerMessageIdHash = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+      providerChatIdHash = 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc'
+    }
+  }
+  $json = $fixture | ConvertTo-Json -Depth 10 -Compress
+  [IO.File]::WriteAllText($Path, $json, [Text.UTF8Encoding]::new($false))
+}
+
 $automationStateRoot = Join-Path $env:USERPROFILE '.codex\automation-state'
 $testId = [Guid]::NewGuid().ToString('N')
 $stateRoot = Join-Path $automationStateRoot "tzg-hourly-controller-lease-tests\$testId"
@@ -235,6 +259,19 @@ try {
     RepositoryRoot = $repositoryRoot
     LeaseSeconds = 1
   }
+  [IO.File]::WriteAllText(
+    $requestPath,
+    '{"attemptNumber":1,"decision":{"decisionId":"decision-invalid-shape"}}',
+    [Text.UTF8Encoding]::new($false)
+  )
+  Assert-RejectedWithoutStateChange -Action SaveRecovery -StatePath $statePath -ExpectedStatus 'INVALID_ARGUMENT' -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $recoveryOwner.Json.runId
+    DecisionId = 'decision-invalid-shape'
+    DecisionRequestPath = $requestPath
+    CodexThreadId = 'thread-invalid-shape'
+  }
+  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-recovery-only'
   Assert-RejectedWithoutStateChange -Action SaveRecovery -StatePath $statePath -ExpectedStatus 'INVALID_ARGUMENT' -Parameters @{
     StateRoot = $stateRoot
     RunId = $recoveryOwner.Json.runId
@@ -271,6 +308,7 @@ try {
     Owner = 'external'
     RepositoryRoot = $repositoryRoot
   }
+  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-claude'
   $claudeRecovery = Invoke-LeaseTool -Action SaveRecovery -Parameters @{
     StateRoot = $stateRoot
     RunId = $claudeOwner.Json.runId
@@ -289,6 +327,7 @@ try {
     Owner = 'codex'
     RepositoryRoot = $repositoryRoot
   }
+  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-resume'
   Invoke-LeaseTool -Action SaveRecovery -Parameters @{
     StateRoot = $stateRoot
     RunId = $resumeOwner.Json.runId

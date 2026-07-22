@@ -132,6 +132,107 @@ function Resolve-ApprovedPrivateFile {
   $fullPath
 }
 
+function Assert-DecisionConsumeRequest {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+    [Parameter(Mandatory = $true)]
+    [string]$ExpectedDecisionId
+  )
+
+  $bytes = [IO.File]::ReadAllBytes($Path)
+  if ($bytes.Length -gt 65536) {
+    throw [ArgumentException]::new('DecisionRequestPath exceeds 65536 bytes')
+  }
+  try {
+    $json = [Text.UTF8Encoding]::new($false, $true).GetString($bytes)
+    $root = $json | ConvertFrom-Json -AsHashtable -Depth 20 -DateKind String
+  } catch {
+    throw [ArgumentException]::new('DecisionRequestPath must contain valid UTF-8 JSON')
+  }
+  if ($root -isnot [Collections.IDictionary]) {
+    throw [ArgumentException]::new('DecisionRequestPath root must be an object')
+  }
+  if (@($root.Keys).Count -ne 1 -or -not $root.Contains('pendingDecision')) {
+    throw [ArgumentException]::new('DecisionRequestPath must contain only pendingDecision')
+  }
+
+  $pending = $root.pendingDecision
+  if ($pending -isnot [Collections.IDictionary]) {
+    throw [ArgumentException]::new('pendingDecision must be an object')
+  }
+  $expectedKeys = @(
+    'decisionId',
+    'allowedOptions',
+    'allowCustomReply',
+    'createdAt',
+    'expiresAt',
+    'cardNonceHash',
+    'providerMessageIdHash',
+    'providerChatIdHash'
+  )
+  if (@($pending.Keys).Count -ne $expectedKeys.Count) {
+    throw [ArgumentException]::new('pendingDecision fields are invalid')
+  }
+  foreach ($key in $expectedKeys) {
+    if (-not $pending.Contains($key)) {
+      throw [ArgumentException]::new('pendingDecision fields are invalid')
+    }
+  }
+
+  if (
+    $pending.decisionId -isnot [string] -or
+    -not $pending.decisionId.Equals($ExpectedDecisionId, [StringComparison]::Ordinal)
+  ) {
+    throw [ArgumentException]::new('pendingDecision decisionId does not match')
+  }
+  $options = @($pending.allowedOptions)
+  if (
+    $options.Count -ne 3 -or
+    $options[0] -isnot [string] -or $options[0] -cne 'A' -or
+    $options[1] -isnot [string] -or $options[1] -cne 'B' -or
+    $options[2] -isnot [string] -or $options[2] -cne 'C'
+  ) {
+    throw [ArgumentException]::new('pendingDecision allowedOptions are invalid')
+  }
+  if ($pending.allowCustomReply -isnot [bool]) {
+    throw [ArgumentException]::new('pendingDecision allowCustomReply must be boolean')
+  }
+
+  $timestampFormat = "yyyy-MM-dd'T'HH:mm:ss.fff'Z'"
+  $timestampStyles = [Globalization.DateTimeStyles]::AssumeUniversal
+  $createdAt = [DateTimeOffset]::MinValue
+  $expiresAt = [DateTimeOffset]::MinValue
+  if (
+    $pending.createdAt -isnot [string] -or
+    -not [DateTimeOffset]::TryParseExact(
+      $pending.createdAt,
+      $timestampFormat,
+      [Globalization.CultureInfo]::InvariantCulture,
+      $timestampStyles,
+      [ref]$createdAt
+    ) -or
+    $pending.expiresAt -isnot [string] -or
+    -not [DateTimeOffset]::TryParseExact(
+      $pending.expiresAt,
+      $timestampFormat,
+      [Globalization.CultureInfo]::InvariantCulture,
+      $timestampStyles,
+      [ref]$expiresAt
+    ) -or
+    $createdAt -gt $expiresAt
+  ) {
+    throw [ArgumentException]::new('pendingDecision timestamps are invalid')
+  }
+
+  foreach ($hashKey in @('cardNonceHash', 'providerMessageIdHash', 'providerChatIdHash')) {
+    $hash = $pending[$hashKey]
+    if ($hash -isnot [string] -or $hash -cnotmatch '\A[0-9a-f]{64}\z') {
+      throw [ArgumentException]::new("pendingDecision $hashKey is invalid")
+    }
+  }
+}
+
 function Resolve-RepositoryRoot {
   param([Parameter(Mandatory = $true)][string]$Path)
 
@@ -530,6 +631,9 @@ try {
         $normalizedRequestPath = Resolve-ApprovedPrivateFile `
           -Path $DecisionRequestPath `
           -ParameterName 'DecisionRequestPath'
+        Assert-DecisionConsumeRequest `
+          -Path $normalizedRequestPath `
+          -ExpectedDecisionId $DecisionId
         $hasCodex = -not [string]::IsNullOrWhiteSpace($CodexThreadId)
         $hasClaude = -not [string]::IsNullOrWhiteSpace($ClaudeSessionId)
         if ($hasCodex -eq $hasClaude) {

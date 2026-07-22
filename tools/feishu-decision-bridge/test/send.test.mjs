@@ -577,7 +577,8 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
   t.after(() => rm(root, { recursive: true, force: true }));
   const requestPath = join(root, 'request.json');
   const configPath = join(root, 'private.json');
-  await writeFile(requestPath, JSON.stringify({ decision: makeDecision(), attemptNumber: 1 }));
+  const sendRequestText = JSON.stringify({ decision: makeDecision(), attemptNumber: 1 });
+  await writeFile(requestPath, sendRequestText);
   await writeFile(configPath, JSON.stringify(makeRawConfig({ stateRoot: root })));
 
   async function run(argv, overrides = {}) {
@@ -654,7 +655,14 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
 
   const accepted = await run(['--request-file', requestPath]);
   assert.equal(accepted.code, 0);
-  assert.equal(assertOneJsonLine(accepted.stdout).result, 'PROVIDER_ACCEPTED');
+  assert.deepEqual(Object.keys(assertOneJsonLine(accepted.stdout)).sort(), [
+    'cardNonceHash',
+    'intentKeyHash',
+    'providerChatIdHash',
+    'providerMessageIdHash',
+    'result',
+    'targetHash',
+  ]);
   assert.equal(accepted.stderr, '');
   assert.equal(accepted.createCalls, 1);
   assert.equal(accepted.createStoreCalls, 1);
@@ -673,7 +681,33 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
     providerMessageIdHash: sha256('om_main'),
     providerChatIdHash: sha256('oc_main'),
   });
+  assert.deepEqual(JSON.parse(await readFile(requestPath, 'utf8')), {
+    pendingDecision: {
+      decisionId: 'DEC-20260716-ABC123',
+      allowedOptions: ['A', 'B', 'C'],
+      allowCustomReply: true,
+      createdAt: NOW.toISOString(),
+      expiresAt: new Date(NOW.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString(),
+      cardNonceHash: binding[0].cardNonceHash,
+      providerMessageIdHash: sha256('om_main'),
+      providerChatIdHash: sha256('oc_main'),
+    },
+  });
 
+  await writeFile(requestPath, sendRequestText);
+  const transitionFailed = await run(['--request-file', requestPath], {
+    writeRecoveryRequest: async () => { throw new Error('request transition failed'); },
+  });
+  assert.equal(transitionFailed.code, 23);
+  assert.equal(await readFile(requestPath, 'utf8'), sendRequestText);
+  assert.deepEqual(assertOneJsonLine(transitionFailed.stdout), {
+    result: 'PROVIDER_OUTCOME_UNKNOWN',
+    targetHash: sha256('operator@example.invalid'),
+    cardNonceHash: binding[0].cardNonceHash,
+    intentKeyHash: hashSendIntentKey('feishu', 'DEC-20260716-ABC123', 1),
+  });
+
+  await writeFile(requestPath, sendRequestText);
   const bindingFailed = await run(['--request-file', requestPath], {
     writeBinding: async () => { throw new Error('binding write failed'); },
   });
@@ -685,6 +719,7 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
     intentKeyHash: hashSendIntentKey('feishu', 'DEC-20260716-ABC123', 1),
   });
 
+  await writeFile(requestPath, sendRequestText);
   const failed = await run(['--request-file', requestPath], {
     send: async () => ({
       result: 'DELIVERY_FAILED', targetHash: 'a'.repeat(64), raw: 'must-not-pass-through',
@@ -696,6 +731,7 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
     targetHash: 'a'.repeat(64),
   });
 
+  await writeFile(requestPath, sendRequestText);
   const unknown = await run(['--request-file', requestPath], {
     send: async () => ({
       result: 'PROVIDER_OUTCOME_UNKNOWN',
@@ -714,6 +750,7 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
   });
   assert.equal(unknown.stdout.includes('must-not-pass-through'), false);
 
+  await writeFile(requestPath, sendRequestText);
   const acceptedWhitelist = await run(['--request-file', requestPath], {
     send: async () => ({
       result: 'PROVIDER_ACCEPTED',
