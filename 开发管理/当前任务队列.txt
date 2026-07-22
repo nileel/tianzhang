@@ -11,7 +11,7 @@
 | U-2_5D-01A | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 已完成 | 2.5D 战棋原型规则兼容验证清单 |
 | U-2_5D-01B | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 已完成 | 2.5D 原型规则查询所有者定位 |
 | U-2_5D-01C | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 已完成 | 共享空间查询契约与旧范围逻辑停用方案 |
-| U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 待处理 | 共享空间查询契约实现与旧范围逻辑迁移 |
+| U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 阻塞（C-ENV-PROFILE-01） | 共享空间查询契约实现与旧范围逻辑迁移 |
 | N-GROUP-02A | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 待处理 | 2v2 范围技能、协同走位与团队 AI 参数事实源与决策输入 |
 | D-REALM-02A | P2 | Codex / gpt-5.6-terra | 数据链路 | 已完成 | 高阶内容现行引用分类与处理决策输入 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
@@ -63,16 +63,17 @@
 
 ### U-2_5D-01D · 共享空间查询契约实现与旧范围逻辑迁移
 
-- 来源：`开发管理/2.5D共享空间查询契约对齐方案.txt`，以及 `DEC-20260722-U25D01B = A`。
-- 当前状态：待处理；依赖：U-2_5D-01C 已完成；无待决策。
+- 来源：`开发管理/2.5D共享空间查询契约对齐方案.txt`、`DEC-20260722-U25D01B = A`，以及 2026-07-23 对首次实现的最终只读复核与负责人回滚决定。
+- 当前状态：阻塞（C-ENV-PROFILE-01）；依赖：U-2_5D-01C 已完成，C-ENV-PROFILE-01 仍冻结（待内容授权）。自动化不得选取本卡。
 - 主责：Codex / gpt-5.6-terra。
 - 必读：`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`UNITY_STRUCTURE.md`、`开发管理/2.5D共享空间查询契约对齐方案.txt`、`docs/基础设定/战场空间与环境规则.txt`、当前 `src/Assets/Scripts/Core/HexCoord.cs`、`HexGrid.cs`、`Grid/TacticalGridModel.cs`、`Grid/EnvironmentProfileData.cs`、`Combat/CombatResolver.cs`、`Combat/TacticalCombatController.cs`、`Combat/EnemyAI.cs`、当前 `.asmdef`／`.asmref`、`simulations/BattleSim/Battlefield.cs`、`Combat.cs`、`BattleSim.csproj` 与 `BattleSimSelfTests.cs`。
 - 预期修改路径：新建 `src/Assets/Scripts/Core/SpatialRules.meta`、`src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs`、`SpatialHexCoord.cs.meta`、`SpatialQueryTypes.cs`、`SpatialQueryTypes.cs.meta`、`SpatialQueryBoard.cs`、`SpatialQueryBoard.cs.meta`、`src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs`、`SpatialQueryBoardFactory.cs.meta`、`src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs`、`SpatialQueryBoardTests.cs.meta`；更新 `src/Assets/Scripts/Core/HexGrid.cs`、`src/Assets/Scripts/Grid/TacticalGridModel.cs`、`EnvironmentProfileData.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/DataConfig/README.txt`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`TacticalCombatController.cs`、`EnemyAI.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`simulations/BattleSim/BattleSim.csproj`、`Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
-- 范围：按方案创建唯一纯 C# 空间查询源，Unity 经 Foundation、BattleSim 经 linked compile 共同消费；以显式数据映射接入有向边、固定点距离、范围、视线、实体障碍、等高单锚点占位和稳定拒绝原因。环境档案边规则与查询限制必须变为必填；无生产档案时只更新表头、导入器与 fixture。迁移/删除方案列出的 Unity 基础步数战斗范围分支，不重新接入 `ExplorationScene`，不创建第二服务、默认值或兼容分支。
+- 范围：前置完成后，按方案创建唯一纯 C# 空间查询源，Unity 经 Foundation、BattleSim 经 linked compile 共同消费；以显式数据映射接入有向边、固定点距离、范围、视线、实体障碍、等高单锚点占位和稳定拒绝原因。正式 `AdventureScene` 必须显式绑定 C-ENV-PROFILE-01 产出的生产档案后，才可迁移/删除方案列出的 Unity 基础步数战斗范围分支；不重新接入 `ExplorationScene`，不创建第二服务、默认值或兼容分支。
 - 禁止：不新增高度层、三维占位、格边类别、范围数值、场景、渲染器、正式入口、CTB、伤害、技能数值或生产环境档案；不从 Transform、Collider、Camera、Renderer、模型间距或欧氏距离读取规则；不保留 `HexGrid.GetTilesInRange` 或其他基础步数范围 fallback。
 - 验证：先按 TDD 让共享契约失败测试证明缺失行为，再运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test environment-rules-n-env-01`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test distance-model-tq055`、`dotnet build src/Assembly-CSharp.csproj`、`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与 `git diff --check`。
-- 完成条件：同一份 `SpatialRules` 源文件是 Unity/BattleSim 五类查询唯一算法来源；边、距离、范围、视线、实体障碍、占位与高度未配置均有可观察结果；所有列出的 Unity 战斗范围分支已迁移/删除且扫描无 fallback；BattleSim 和 Unity 直接测试均通过；2.5D 原型仍未启动，正式冒险入口仍唯一为 `AdventureScene`。
-- 停止条件：实现需要设定未定义的高度资格/垂直触及、三维占位、格边类别或范围数值，必须保留两份算法，或必须用默认值、兼容分支或视觉状态维持旧范围；停止并请求负责人决定，只保留失败证据。
+- 完成条件：同一份 `SpatialRules` 源文件是 Unity/BattleSim 五类查询唯一算法来源；边、距离、范围、视线、实体障碍、占位与高度未配置均有可观察结果；所有列出的 Unity 战斗范围分支已迁移/删除且扫描无 fallback；除契约 fixture 外，直接测试还须从正式 `AdventureScene` 初始化已配置快照，并证明相邻敌人仍能触发战斗；BattleSim 和 Unity 直接测试均通过；2.5D 原型仍未启动，正式冒险入口仍唯一为 `AdventureScene`。
+- 停止条件：C-ENV-PROFILE-01 尚未产出正式冒险入口可显式引用的生产档案，或实现需要设定未定义的高度资格/垂直触及、三维占位、格边类别或范围数值，必须保留两份算法，或必须用默认值、兼容分支或视觉状态维持旧范围；停止并请求负责人决定，只保留失败证据。
+- 回滚记录：首次实现提交 `182e4aa` 及其移动负担修正 `3ed1cbd` 在最终只读复核中暴露出正式 `AdventureScene` 没有生产环境档案、初始化后按失败关闭规则无法触发战斗的问题；负责人选择恢复现行正式冒险基线，`bb8050e` 已完整回滚两次业务改动。自动化恢复链修复保留，本卡等待 C-ENV-PROFILE-01 后重新实施，不沿用已回滚实现。
 
 ### N-GROUP-02A · 2v2 范围技能、协同走位与团队 AI 参数事实源与决策输入
 

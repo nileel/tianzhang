@@ -22,7 +22,7 @@
 | C-FPD-SHENTONG-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、N-FPD-MANSION-01、内容冻结） | 迁移 `宿慧轮回`，删除道基品质倍率并补齐镇府神通或其他合法来源边界。 |
 | C-FPD-LORE-MIGRATE-01 | P2 | Codex | 阻塞（C-FPD-NAME-01、内容冻结） | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 |
 | C-JD-COMBO-01 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 内容冻结（D-JD-SCHEMA-01、N-JD-RULE-01 前） | 基于三实位与兼容契约设计组合档案；不得绕过确定性冲突规则。 |
-| C-ENV-PROFILE-01 | P2 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（待内容授权） | D-ENV-SCHEMA-01 与 N-ENV-01 已完成；后续为地表、五行显化与六类现象生产环境档案，参数只进入配置与有效样例。 |
+| C-ENV-PROFILE-01 | P2 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（待内容授权） | D-ENV-SCHEMA-01 与 N-ENV-01 已完成；后续为地表、五行显化与六类现象生产环境档案，参数只进入配置与有效样例；至少一个可由正式 AdventureScene 显式引用的档案是 U-2_5D-01D 的恢复前置。 |
 | C-JD-LORE-MIGRATE-01 | P1 | Codex | 内容冻结（结构规则迁移完成后） | 对旧源/化/界叙事引用逐项语义重判，迁移到道路、效果、装配、自辟元婴或环境规则；禁止机械替换。 |
 | C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 冻结（薄内容切片外） | 太一道庭法箓 CSV/BattleSim/Unity 字段方案。 |
 | C-GUXIU-03 | P2 | DeepSeek | 冻结（薄内容切片外） | 古修第一批神通；每个完成品单独文件。 |

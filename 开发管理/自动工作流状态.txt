@@ -11,15 +11,18 @@
 
 ## 当前人工阻塞与恢复所有权
 
-- 修复期间自动化保持人工暂停；恢复时间由负责人决定，不在本文件复制界面实时值。
-- `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs` 是 Task `U-2_5D-01D` 的自动责任方 session `019f891d-a12a-7230-944a-0b9e1db14220` 留下的未提交半成品，不是人工文件。恢复前不得删除、覆盖或交给新责任方。
-- 原责任方当时未创建有效 recovery：修改后误用 guard `Check`、测试未进入目标测试程序集、任务卡漏列新脚本 `.meta`，并把旧 decision binding 误当互斥锁后记录了无 recovery 的 `waiting_decision`。
+- 2026-07-23 已再次核对两个生产 automation 配置，`tzg-hourly-controller` 与 `tzg-daily-automation-briefing` 均为 `PAUSED`；恢复时间仍由负责人决定。
+- 原责任方 session `019f891d-a12a-7230-944a-0b9e1db14220` 的失联改动已完成恢复处理；当前 runtime 的 `lease`、`recovery` 与 `pendingResumes` 均为空，本地不再有孤立测试文件。
+- 恢复后的 U-2_5D-01D 业务提交 `182e4aa` 及后续修正 `3ed1cbd` 在最终只读复核中被证明会让没有生产环境档案的正式 `AdventureScene` 失败关闭；负责人已选择回滚，`bb8050e` 恢复正式冒险基线。U-2_5D-01D 现阻塞于冻结中的 C-ENV-PROFILE-01，自动化不得选取。
+- runtime 中 `lastResult=success/commit_182e4aa...` 只保留当次历史调度结果；该业务结果已被后续 Git 回滚覆盖，现状以 Git 与当前任务队列为准。
 
 ## 最近已核验提交
 
 - 2026-07-21 手动生产金丝雀完成 TQ-069：`b2ec7930aa2476df82c48cff23e7f22667d83c20`。
 - 2026-07-21 自然轮次完成 N-DIST-01：`954f5c8fc92dda8373660671f71190bed094bdb6`；随后完成 N-ENV-01：`5108bbead888d93d836742f532d2fce011f54634`。
 - 2026-07-22 队列维护补入 N-GROUP-02A：`fa383fbbbc787e841717d65583bcb359d1c094f4`。控制器当时遗漏报告该 SHA，Git 元数据本身有效。
+- 2026-07-23 决策回复与恢复边界修复：`0be26c12bf73e7e8edf3003ca540663933ff6dd0`、`2dcf2c333feca24a7cd6fa5ede540de38ee22e01`。
+- 2026-07-23 正式冒险基线回滚：`bb8050e01a1713b00086979eaf4a2c9251304835`；SceneBuilder 重复构建资源修复：`b31e1524f1e18fe87b0ca38d48edf8f937402439`。
 
 ## 证据位置
 
