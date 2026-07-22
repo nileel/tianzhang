@@ -259,7 +259,7 @@ test('QUEUED and dispatch-ready EMPTY return immediately without model start', a
   assert.equal(spawnRecorder.calls.length, 0);
 });
 
-test('DISPATCH consumes only the signed reply and resumes Codex with option through stdin', async () => {
+test('DISPATCH accepts the production Codex owner and resumes with option through stdin', async () => {
   const leaseCalls = [];
   const consumed = [];
   const spawnRecorder = fakeSpawnRecorder();
@@ -276,7 +276,7 @@ test('DISPATCH consumes only the signed reply and resumes Codex with option thro
         status: 'DISPATCH',
         runId: 'run-codex',
         taskId: 'task-one',
-        owner: 'codex',
+        owner: 'Codex/gpt-5.6-terra',
         repositoryRoot: 'C:\\repo',
         resumeKind: 'codex',
         resumeId: 'session-codex',
