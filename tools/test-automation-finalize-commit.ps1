@@ -16,13 +16,25 @@ function Invoke-Git {
 }
 
 function Invoke-Helper {
-  param([string]$ExpectedPaths, [string]$CommitMessage)
+  param(
+    [string]$ExpectedPaths,
+    [string]$CommitMessage,
+    [switch]$RequireAutomationMetadata
+  )
 
   $previousPreference = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
   try {
-    $output = & $engine -NoProfile -ExecutionPolicy Bypass -File $tool `
-      -RepositoryRoot $repo -ExpectedPaths $ExpectedPaths -CommitMessage $CommitMessage 2>&1
+    $arguments = @(
+      '-NoProfile',
+      '-ExecutionPolicy', 'Bypass',
+      '-File', $tool,
+      '-RepositoryRoot', $repo,
+      '-ExpectedPaths', $ExpectedPaths,
+      '-CommitMessage', $CommitMessage
+    )
+    if ($RequireAutomationMetadata) { $arguments += '-RequireAutomationMetadata' }
+    $output = & $engine @arguments 2>&1
     [pscustomobject]@{ Code = $LASTEXITCODE; Output = ($output -join "`n") }
   } finally {
     $ErrorActionPreference = $previousPreference
@@ -136,6 +148,39 @@ try {
   if ($legacyCommitted.Count -ne 1 -or $legacyCommitted[0] -ne $expected) {
     throw "unexpected legacy-console commit paths: $($legacyCommitted -join ', ')"
   }
+
+  Write-Utf8 (Join-Path $repo $expected) "expected automation metadata change`n"
+  $validAutomationMessage = @'
+feat(test): 写入自动化成果摘要
+
+Automation: tzg-hourly-controller
+Task: TASK-AUTO-001
+State: completed
+Result: 完成自动化提交元数据测试
+Impact: 验证日报候选可以从提交正文稳定读取
+Verify: test-automation-finalize-commit 通过
+'@
+  $invalidAutomationMessages = @(
+    $validAutomationMessage.Replace('Verify: test-automation-finalize-commit 通过', ''),
+    $validAutomationMessage.Replace('Task: TASK-AUTO-001', "Task: TASK-AUTO-001`nTask: TASK-AUTO-002"),
+    $validAutomationMessage.Replace('Automation: tzg-hourly-controller', 'Automation: another-controller'),
+    $validAutomationMessage.Replace('State: completed', 'State: failed'),
+    $validAutomationMessage.Replace('Result: 完成自动化提交元数据测试', "Result: 完成自动化提交元数据测试`n额外一行")
+  )
+  foreach ($invalidAutomationMessage in $invalidAutomationMessages) {
+    $headBeforeInvalid = (Invoke-Git rev-parse HEAD) -join ''
+    $cachedBeforeInvalid = (Invoke-Git diff --cached --binary) -join "`n"
+    $invalidResult = Invoke-Helper $expected $invalidAutomationMessage -RequireAutomationMetadata
+    if ($invalidResult.Code -eq 0) { throw 'invalid automation metadata was accepted' }
+    if (((Invoke-Git rev-parse HEAD) -join '') -ne $headBeforeInvalid) { throw 'invalid automation metadata created a commit' }
+    if (((Invoke-Git diff --cached --binary) -join "`n") -cne $cachedBeforeInvalid) { throw 'invalid automation metadata changed the index' }
+  }
+
+  $automationResult = Invoke-Helper $expected $validAutomationMessage -RequireAutomationMetadata
+  if ($automationResult.Code -ne 0) { throw "valid automation metadata was rejected: $($automationResult.Output)" }
+  $automationBody = ((Invoke-Git log -1 --format=%B) -join "`n").Replace("`r`n", "`n").TrimEnd()
+  $expectedAutomationBody = $validAutomationMessage.Replace("`r`n", "`n").TrimEnd()
+  if ($automationBody -cne $expectedAutomationBody) { throw "automation metadata changed in Git: $automationBody" }
 
   $headBeforeMissing = (Invoke-Git rev-parse HEAD) -join ''
   $missing = Invoke-Helper 'missing.txt' 'test: must not commit'

@@ -4,10 +4,28 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ExpectedPaths,
   [Parameter(Mandatory = $true)]
-  [string]$CommitMessage
+  [string]$CommitMessage,
+  [switch]$RequireAutomationMetadata
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Assert-AutomationMetadata {
+  param([Parameter(Mandatory = $true)][string]$Message)
+
+  $singleLine = '[^\r\n]*\S[^\r\n]*'
+  $pattern = "\A$singleLine\r?\n\r?\n" +
+    'Automation: tzg-hourly-controller\r?\n' +
+    "Task: $singleLine\r?\n" +
+    'State: (?:completed|pending_review)\r?\n' +
+    "Result: $singleLine\r?\n" +
+    "Impact: $singleLine\r?\n" +
+    "Verify: $singleLine\r?\n?\z"
+
+  if (-not [regex]::IsMatch($Message, $pattern, [Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
+    throw 'CommitMessage does not match the required tzg-hourly-controller metadata format.'
+  }
+}
 
 function Invoke-GitRaw {
   param([string[]]$Arguments)
@@ -138,6 +156,7 @@ if (-not $resolvedGitRoot.Equals($script:Repository, [System.StringComparison]::
   throw "RepositoryRoot must be the Git root: $RepositoryRoot"
 }
 if ([string]::IsNullOrWhiteSpace($CommitMessage)) { throw 'CommitMessage must not be empty.' }
+if ($RequireAutomationMetadata) { Assert-AutomationMetadata -Message $CommitMessage }
 
 $paths = ConvertTo-NormalizedPaths $ExpectedPaths
 foreach ($path in $paths) {
