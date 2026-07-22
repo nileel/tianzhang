@@ -263,12 +263,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-automation-briefing-sour
 **Files:**
 - Modify: `开发管理/当前任务队列.txt`
 - Preserve then modify under recovered session: `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs`
-- Expected new files: the five Unity `.cs.meta` files paired with the five new scripts listed by U-2_5D-01D
+- Expected new files: the five Unity `.cs.meta` files paired with the five new scripts listed by U-2_5D-01D, plus `src/Assets/Scripts/Core/SpatialRules.meta` for the new directory
 - Modify as required by task card: `simulations/BattleSim/BattleSim.csproj`
 
 **Step 1: 修正任务卡授权路径**
 
-在五个新 `.cs` 路径后明确加入各自 `.meta`，避免 Unity 导入产生越权写入。先运行 pending whitespace 检查，再提交任务卡修正；该提交不得夹带业务实现。
+在五个新 `.cs` 路径后明确加入各自 `.meta`，并加入新目录的 `SpatialRules.meta`，避免 Unity 导入产生越权写入。先运行 pending whitespace 检查，再提交任务卡修正；该提交不得夹带业务实现。
 
 **Step 2: 建立人工恢复指针**
 
