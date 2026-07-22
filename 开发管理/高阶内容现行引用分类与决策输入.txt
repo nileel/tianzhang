@@ -1,0 +1,277 @@
+# 高阶内容现行引用分类与决策输入
+
+> 任务：D-REALM-02A。本文只提供现行来源的分类和负责人决策输入；不改变任何 docs、CSV、asset、导入器、运行时、数值、语言键或内容数量，也不选择最终处理方向。
+
+## 已验证的当前事实
+
+- 玩家完整成长链止于金丹；高阶内容按 NPC、远期或资料片定位处理。来源：`开发管理/设计-当前状态.txt`。
+- 当前薄内容切片只批准“关中：小族出身 → 关中城 → 关中野外的一场战斗”；本次不得扩写任何高阶内容。来源：`开发管理/设计-当前状态.txt`、`开发管理/设计-下一步建议.txt`。
+- G3 已通过；`realmReq` 和 `elementReq` 是 runtime gate，`sourceAffiliation` 仅为来源 metadata。来源：`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数据链路任务.txt`。
+- `contentScope=reserved` 不是自动删除授权；高阶语言键也不能单独证明内容应保留、删除或对玩家开放。来源：`开发管理/任务列表/数据链路任务.txt`。
+- 扫描只使用现行 `docs/`、`src/Assets/DataConfig/` 与 `src/Assets/Data/`；没有使用三份历史扫描材料作事实依据。
+
+## 扫描口径与覆盖
+
+执行命令：
+
+```text
+rg -n --glob '*.txt' --glob '*.csv' --glob '*.asset' '(炼神|炼虚|化神|元婴|realm_lianshen|realm_lianxu)' docs src/Assets/DataConfig src/Assets/Data
+```
+
+命中 211 份 docs、4 份 CSV 与 8 份 asset。下列分类中的“无 consumer 证据”仅表示本卡允许读取的现行事实源没有给出运行时 consumer 证明，并不等于条目无效或应删除。
+
+## 已验证的结构化引用
+
+| 候选 | 字面量路径与稳定 ID | 当前语义 | consumer / metadata 状态 | 可选处理方向 |
+|---|---|---|---|---|
+| 炼神术法 1 | `src/Assets/DataConfig/Spells.csv:54`；`spell_wanliuguizong`；`src/Assets/Data/Spells/Spell_spell_wanliuguizong.asset` | `realmReq=realm_lianshen`，`contentScope=reserved` | `realmReq` 是已验证 runtime gate；asset 为 CSV 同步数据 | 保留、合并、删除、资料片隔离 |
+| 炼神术法 2 | `src/Assets/DataConfig/Spells.csv:61`；`spell_tianshuyunzhuan`；`src/Assets/Data/Spells/Spell_spell_tianshuyunzhuan.asset` | `realmReq=realm_lianshen`，`contentScope=reserved` | `realmReq` 是已验证 runtime gate；asset 为 CSV 同步数据 | 保留、合并、删除、资料片隔离 |
+| 炼神神通 1 | `src/Assets/DataConfig/Skills.csv:31`；`skill_fayu_wanxiangxuanmen`；`src/Assets/Data/Skills/Skill_skill_fayu_wanxiangxuanmen.asset` | `realmReq=realm_lianshen`，`contentScope=reserved` | `realmReq` 是已验证 runtime gate；asset 为 CSV 同步数据 | 保留、合并、删除、资料片隔离 |
+| 炼神神通 2 | `src/Assets/DataConfig/Skills.csv:35`；`skill_lingyu_wanxiangguiyuan`；`src/Assets/Data/Skills/Skill_skill_lingyu_wanxiangguiyuan.asset` | `realmReq=realm_lianshen`，`contentScope=reserved` | `realmReq` 是已验证 runtime gate；asset 为 CSV 同步数据 | 保留、合并、删除、资料片隔离 |
+| 炼神功法 1 | `src/Assets/DataConfig/GongFa.csv:25`；`gongfa_nanhuadamengshu`；`src/Assets/Data/GongFa/GongFa_gongfa_nanhuadamengshu.asset` | growth 与 chapters 含 `realm_lianshen`，`contentScope=reserved` | CSV/asset 对齐已验证；本卡事实源未给出该高阶 growth 的独立玩家 runtime consumer 证明 | 保留、合并、删除、资料片隔离 |
+| 炼神功法 2 | `src/Assets/DataConfig/GongFa.csv:28`；`gongfa_taiyishancangjing`；`src/Assets/Data/GongFa/GongFa_gongfa_taiyishancangjing.asset` | growth 与 chapters 含 `realm_lianshen`，`contentScope=reserved` | 同上 | 保留、合并、删除、资料片隔离 |
+| 炼神功法 3 | `src/Assets/DataConfig/GongFa.csv:30`；`gongfa_xuanpindaocang`；`src/Assets/Data/GongFa/GongFa_gongfa_xuanpindaocang.asset` | growth 与 chapters 含 `realm_lianshen`，`contentScope=reserved` | 同上 | 保留、合并、删除、资料片隔离 |
+| 炼神功法 4 | `src/Assets/DataConfig/GongFa.csv:32`；`gongfa_jiansubaopujing`；`src/Assets/Data/GongFa/GongFa_gongfa_jiansubaopujing.asset` | growth 与 chapters 含 `realm_lianshen`，`contentScope=reserved` | 同上 | 保留、合并、删除、资料片隔离 |
+| 境界语言键 | `src/Assets/DataConfig/Language.csv:32-34,446`；`realm_yuanying`、`realm_huashen`、`realm_lianxu`、`realm_lianshen` | 本地化标签，不是内容定义或玩家链批准 | 仅语言 metadata；必须随上游处理方向复核，不能单独作删改结论 | 随上游保留、合并、删除或资料片隔离 |
+
+## 文档引用分类
+
+| 分类 | 字面量路径清单 | 当前语义 | consumer / metadata 状态 | 可选处理方向 |
+|---|---|---|---|---|
+| 玩家链与高阶边界事实 | `docs/天章设定.txt`、`docs/道具/道具设计规范.txt`、`docs/基础设定/修行境界.txt`、`docs/基础设定/境界特性.txt` | 现行管理口径是玩家止于金丹；高阶内容是 NPC、远期或资料片定位。单份 docs 的旧表述不能越过该管理事实。 | docs-only；不构成 data/runtime consumer | 保留为边界说明、合并到已批准事实源、删除旧表述、资料片隔离 |
+| 基础设定、道具、地图、门派与剧情 | 本文“完整 docs 清单”中 `docs/基础设定/`、`docs/道具/`、`docs/地图/`、`docs/门派/`、`docs/剧情/` 的逐项路径 | 高阶 NPC、世界背景、地区、道具、任务与设定文本；不能据此推导玩家可达或已有运行时实现。 | docs-only；未发现与本次 8 份高阶 asset 的额外匹配 consumer | 保留、合并、删除、资料片隔离 |
+| 角色养成规范与内容原文 | 本文“完整 docs 清单”中 `docs/角色养成/` 的逐项路径 | 功法、术法、神通及其规范的高阶文本。扫描到文本不等于它已获玩家链批准。 | docs-only；仅上表 8 个结构化候选具有 CSV/asset 对齐；其余无 consumer 证据 | 保留、合并、删除、资料片隔离 |
+
+## 待确认项
+
+1. 四个炼神术法／神通仍有已验证的 `realmReq` runtime gate，但玩家完整成长链止于金丹；现有资料没有批准其最终处置。
+2. 四个炼神功法的 CSV 与 asset 对齐，但本卡允许读取的现行事实源没有给出其高阶 growth/chapters 的独立玩家 runtime consumer 证明。
+3. 211 份 docs 中同时存在 NPC／背景定位与旧高阶成长、战斗、道具或剧情表述；它们不能被本次只读分类自动降级为历史材料，更不能自动删改。
+4. `docs/天章设定.txt` 含“炼虚彻底删除”的未审核标记，而现行扫描仍存在炼虚字面量；这是一项待后续逐源语义复核的缺口，不是本卡可直接消解的冲突。
+
+## 需负责人选择的稳定问题
+
+| 问题 ID | 需要选择的影响根 | 不扩大边界的选项 |
+|---|---|---|
+| D-REALM-DEC-01 | 四个炼神术法／神通及其 4 份 asset、相应 docs 与语言依赖 | 保留、合并、删除、资料片隔离 |
+| D-REALM-DEC-02 | 四个炼神功法及其 4 份 asset、相应 docs 与语言依赖 | 保留、合并、删除、资料片隔离 |
+| D-REALM-DEC-03 | 下列 211 份 docs 的高阶文本与边界说明 | 保留为 NPC／远期背景、合并到批准事实源、删除旧内容、资料片隔离 |
+| D-REALM-DEC-04 | `realm_yuanying`、`realm_huashen`、`realm_lianxu`、`realm_lianshen` 的语言键 | 随获批上游内容保留、合并、删除或资料片隔离；不得独立决定内容方向 |
+
+选择任何方向前都须建立新的、路径明确的迁移任务卡；本卡完成不表示任何候选已经保留、合并、删除或隔离。
+
+## 完整 docs 清单
+
+以下是本次命中项的逐项字面量路径。它们的语义、consumer 状态与可选方向按上方“文档引用分类”对应目录类别判定。
+
+- `docs/道具/丹药/化神.txt`
+- `docs/道具/丹药/金丹.txt`
+- `docs/道具/丹药/炼虚.txt`
+- `docs/道具/丹药/元婴.txt`
+- `docs/道具/道具设计规范.txt`
+- `docs/道具/天材地宝/化神.txt`
+- `docs/道具/天材地宝/金丹.txt`
+- `docs/道具/天材地宝/炼虚.txt`
+- `docs/道具/天材地宝/元婴.txt`
+- `docs/地图/关陇玄域.txt`
+- `docs/地图/河西星域.txt`
+- `docs/地图/江左天域.txt`
+- `docs/地图/辽海寒域.txt`
+- `docs/地图/陇西雷域.txt`
+- `docs/地图/蜀川幽域.txt`
+- `docs/地图/中州天域.txt`
+- `docs/基础设定/角色属性_二级.txt`
+- `docs/基础设定/角色属性_先天.txt`
+- `docs/基础设定/角色属性_一级.txt`
+- `docs/基础设定/角色数值设计.txt`
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt`
+- `docs/基础设定/金丹位格批量生产模板.txt`
+- `docs/基础设定/金丹位格证位与争位规则.txt`
+- `docs/基础设定/境界特性.txt`
+- `docs/基础设定/境界体系重构草案.txt`
+- `docs/基础设定/伤害公式.txt`
+- `docs/基础设定/寿元与时间尺度设定.txt`
+- `docs/基础设定/五行显化与环境交互规则.txt`
+- `docs/基础设定/修行境界.txt`
+- `docs/基础设定/元婴锚点与金丹位格矩阵.txt`
+- `docs/基础设定/元婴锚点与金丹位格设定.txt`
+- `docs/基础设定/战斗系统.txt`
+- `docs/基础设定/自辟元婴方向设定.txt`
+- `docs/角色养成/功法/功法设计.txt`
+- `docs/角色养成/功法/古修/见素抱朴经.txt`
+- `docs/角色养成/功法/古修/南华阐衍典.txt`
+- `docs/角色养成/功法/古修/南华大梦书.txt`
+- `docs/角色养成/功法/古修/太易山藏经.txt`
+- `docs/角色养成/功法/古修/玄牝道藏.txt`
+- `docs/角色养成/功法/混元山/白屋青云录.txt`
+- `docs/角色养成/功法/混元山/含弘光大典.txt`
+- `docs/角色养成/功法/混元山/混元同尘典.txt`
+- `docs/角色养成/功法/混元山/绳墨正法录.txt`
+- `docs/角色养成/功法/兰台书院/太易玄义笺.txt`
+- `docs/角色养成/功法/散修/秋水游心经.txt`
+- `docs/角色养成/功法/太虚观/不真自虚法.txt`
+- `docs/角色养成/功法/太虚观/空无般若经.txt`
+- `docs/角色养成/功法/太虚观/南华玄感录.txt`
+- `docs/角色养成/功法/太虚观/万物不迁法.txt`
+- `docs/角色养成/功法/太一道庭/抱元守一经.txt`
+- `docs/角色养成/功法/太一道庭/大洞炼真经.txt`
+- `docs/角色养成/功法/太一道庭/九江水府箓.txt`
+- `docs/角色养成/功法/太一道庭/三洞法籍录.txt`
+- `docs/角色养成/功法/太一道庭/太一玉格典.txt`
+- `docs/角色养成/功法/太一道庭/通神三玄礼录.txt`
+- `docs/角色养成/功法/太一道庭/万法都箓经.txt`
+- `docs/角色养成/功法/太一道庭/云篆度人经.txt`
+- `docs/角色养成/功法/太一道庭/正一盟威箓.txt`
+- `docs/角色养成/功法/玉清崖/疾雷破山经.txt`
+- `docs/角色养成/功法/玉清崖/九霄雷劫录.txt`
+- `docs/角色养成/功法/玉清崖/苦行剑典.txt`
+- `docs/角色养成/功法/玉清崖/雷池淬体功.txt`
+- `docs/角色养成/功法设计规范.txt`
+- `docs/角色养成/角色技能类型.txt`
+- `docs/角色养成/神通/混元山/不灭金身.txt`
+- `docs/角色养成/神通/混元山/铁血军魂.txt`
+- `docs/角色养成/神通/混元山/铁血征旗.txt`
+- `docs/角色养成/神通/混元山/万军统领.txt`
+- `docs/角色养成/神通/混元山/战场直觉.txt`
+- `docs/角色养成/神通/散修/积微成著.txt`
+- `docs/角色养成/神通/散修/灵光贯日.txt`
+- `docs/角色养成/神通/散修/灵域 · 万象归元.txt`
+- `docs/角色养成/神通/散修/神念贯穿.txt`
+- `docs/角色养成/神通/散修/逝水千击.txt`
+- `docs/角色养成/神通/散修/碎岳.txt`
+- `docs/角色养成/神通/神通设计.txt`
+- `docs/角色养成/神通/太虚观/梦界行舟.txt`
+- `docs/角色养成/神通/太虚观/神魂不灭.txt`
+- `docs/角色养成/神通/太虚观/双魂同体.txt`
+- `docs/角色养成/神通/太虚观/宿慧轮回.txt`
+- `docs/角色养成/神通/太虚观/因果倒转.txt`
+- `docs/角色养成/神通/太虚观/因果刻痕.txt`
+- `docs/角色养成/神通/太一道庭/法域·万象玄门.txt`
+- `docs/角色养成/神通/太一道庭/九转还丹.txt`
+- `docs/角色养成/神通/太一道庭/兰亭遗墨.txt`
+- `docs/角色养成/神通/太一道庭/肉身成圣.txt`
+- `docs/角色养成/神通/太一道庭/肃礼正仪.txt`
+- `docs/角色养成/神通/太一道庭/天符镇岳.txt`
+- `docs/角色养成/神通/太一道庭/万法归宗.txt`
+- `docs/角色养成/神通/太一道庭/弈棋观势.txt`
+- `docs/角色养成/神通/太一道庭/征旗所指.txt`
+- `docs/角色养成/神通/玉清崖/剑心通明.txt`
+- `docs/角色养成/神通/玉清崖/苦行誓约.txt`
+- `docs/角色养成/神通/玉清崖/雷剑破虚.txt`
+- `docs/角色养成/神通/玉清崖/雷劫遗脉.txt`
+- `docs/角色养成/神通/玉清崖/天劫印记.txt`
+- `docs/角色养成/神通设计规范.txt`
+- `docs/角色养成/术法/古修/守分.txt`
+- `docs/角色养成/术法/混元山/横扫千军.txt`
+- `docs/角色养成/术法/混元山/虎符兵策.txt`
+- `docs/角色养成/术法/混元山/坚壁清野.txt`
+- `docs/角色养成/术法/混元山/金刀断燕.txt`
+- `docs/角色养成/术法/混元山/扪虱策.txt`
+- `docs/角色养成/术法/混元山/鸣金号令.txt`
+- `docs/角色养成/术法/混元山/破阵冲锋.txt`
+- `docs/角色养成/术法/混元山/束伍如山.txt`
+- `docs/角色养成/术法/混元山/铁骨功.txt`
+- `docs/角色养成/术法/混元山/铁索连舟.txt`
+- `docs/角色养成/术法/混元山/投鞭断流.txt`
+- `docs/角色养成/术法/混元山/万乘天威.txt`
+- `docs/角色养成/术法/混元山/玄甲铁壁.txt`
+- `docs/角色养成/术法/散修/川流劲.txt`
+- `docs/角色养成/术法/散修/定身术.txt`
+- `docs/角色养成/术法/散修/聚灵术.txt`
+- `docs/角色养成/术法/散修/裂石拳.txt`
+- `docs/角色养成/术法/散修/灵光闪.txt`
+- `docs/角色养成/术法/散修/神念刺.txt`
+- `docs/角色养成/术法/散修/缩地成寸.txt`
+- `docs/角色养成/术法/术法设计.txt`
+- `docs/角色养成/术法/太虚观/暗蚀.txt`
+- `docs/角色养成/术法/太虚观/地脉封灵.txt`
+- `docs/角色养成/术法/太虚观/黄泉照影.txt`
+- `docs/角色养成/术法/太虚观/魂归彼岸.txt`
+- `docs/角色养成/术法/太虚观/轮回残响.txt`
+- `docs/角色养成/术法/太虚观/梦魇蚀心.txt`
+- `docs/角色养成/术法/太虚观/入梦诀.txt`
+- `docs/角色养成/术法/太虚观/三千梦界.txt`
+- `docs/角色养成/术法/太虚观/宿慧觉醒.txt`
+- `docs/角色养成/术法/太虚观/业火咒.txt`
+- `docs/角色养成/术法/太虚观/因果倒悬.txt`
+- `docs/角色养成/术法/太虚观/因果丝线.txt`
+- `docs/角色养成/术法/太虚观/永劫回廊.txt`
+- `docs/角色养成/术法/太虚观/幽冥引.txt`
+- `docs/角色养成/术法/太一道庭/安神符.txt`
+- `docs/角色养成/术法/太一道庭/不坏金身.txt`
+- `docs/角色养成/术法/太一道庭/沧浪击.txt`
+- `docs/角色养成/术法/太一道庭/大道玄音.txt`
+- `docs/角色养成/术法/太一道庭/江流天地.txt`
+- `docs/角色养成/术法/太一道庭/金刚破岳.txt`
+- `docs/角色养成/术法/太一道庭/金光破岳.txt`
+- `docs/角色养成/术法/太一道庭/九渊寒泉.txt`
+- `docs/角色养成/术法/太一道庭/九转丹火.txt`
+- `docs/角色养成/术法/太一道庭/流火灵符.txt`
+- `docs/角色养成/术法/太一道庭/纳气归元.txt`
+- `docs/角色养成/术法/太一道庭/清风诀.txt`
+- `docs/角色养成/术法/太一道庭/太清玉液.txt`
+- `docs/角色养成/术法/太一道庭/天罡符阵.txt`
+- `docs/角色养成/术法/太一道庭/天书云篆.txt`
+- `docs/角色养成/术法/太一道庭/万军引弦.txt`
+- `docs/角色养成/术法/太一道庭/万流归宗.txt`
+- `docs/角色养成/术法/太一道庭/五雷符敕.txt`
+- `docs/角色养成/术法/太一道庭/玄水咒.txt`
+- `docs/角色养成/术法/太一道庭/玄元正气诀.txt`
+- `docs/角色养成/术法/太一道庭/御风凌虚.txt`
+- `docs/角色养成/术法/太一道庭/镇岳符.txt`
+- `docs/角色养成/术法/玉清崖/剑罡护体.txt`
+- `docs/角色养成/术法/玉清崖/九霄雷罚.txt`
+- `docs/角色养成/术法/玉清崖/九霄太乙斩.txt`
+- `docs/角色养成/术法/玉清崖/苦行剑式.txt`
+- `docs/角色养成/术法/玉清崖/雷池淬体.txt`
+- `docs/角色养成/术法/玉清崖/雷遁步.txt`
+- `docs/角色养成/术法/玉清崖/人剑合一.txt`
+- `docs/角色养成/术法/玉清崖/天劫引.txt`
+- `docs/角色养成/术法/玉清崖/天雷引.txt`
+- `docs/角色养成/术法/玉清崖/万剑朝宗.txt`
+- `docs/角色养成/术法/玉清崖/五雷轰顶.txt`
+- `docs/角色养成/术法/玉清崖/引雷诀.txt`
+- `docs/角色养成/术法设计规范.txt`
+- `docs/角色养成/太一道庭法箓规则.txt`
+- `docs/角色养成/太一道庭法箓体系导入映射表.txt`
+- `docs/角色养成/太一道庭法箓字段映射表.txt`
+- `docs/剧情/背景与重要NPC设计规范.txt`
+- `docs/剧情/剧情生产规范.txt`
+- `docs/剧情/普通NPC/关陇散修_矿工石根.txt`
+- `docs/剧情/普通NPC/关陇散修_消息通黑耳.txt`
+- `docs/剧情/普通NPC/混元山残部_老台守冯.txt`
+- `docs/剧情/普通NPC/九霄盟_营地管事老关.txt`
+- `docs/剧情/普通NPC/龙骧军府_军府校尉吴.txt`
+- `docs/剧情/普通NPC/太一道庭_丹堂药师白.txt`
+- `docs/剧情/普通NPC设计模板.txt`
+- `docs/剧情/任务/第一章/第一章-任务链拆分包.txt`
+- `docs/剧情/任务/第一章/quest_ch01_taiyi_outer_trial.txt`
+- `docs/剧情/设定补充/出生地与主线接入规则.txt`
+- `docs/剧情/设定补充/真形体系说明.txt`
+- `docs/剧情/世界背景故事.txt`
+- `docs/剧情/重要NPC/苻渊.txt`
+- `docs/剧情/重要NPC/韩惊蛰.txt`
+- `docs/剧情/重要NPC/吕星枢.txt`
+- `docs/剧情/重要NPC/慕容朔.txt`
+- `docs/剧情/重要NPC/司马承景.txt`
+- `docs/剧情/重要NPC/拓跋烈.txt`
+- `docs/剧情/重要NPC/王玄略.txt`
+- `docs/剧情/重要NPC/卫长庚.txt`
+- `docs/剧情/重要NPC/谢观微.txt`
+- `docs/剧情/重要NPC/谢凌沧.txt`
+- `docs/剧情/重要NPC/玄荒新路天才.txt`
+- `docs/剧情/重要NPC/姚观寂.txt`
+- `docs/剧情/重要NPC/钟离幽.txt`
+- `docs/剧情/重要NPC/祝融烈.txt`
+- `docs/剧情/主线/第一章-龙脊余震.txt`
+- `docs/剧情/主线/世界主线-后续拆分工作清单.txt`
+- `docs/剧情/主线/世界主线-总纲.txt`
+- `docs/门派/关陇玄域/混元山.txt`
+- `docs/门派/关陇玄域/太虚观.txt`
+- `docs/门派/河西星域/天机楼.txt`
+- `docs/门派/江左天域/太一道庭.txt`
+- `docs/门派/蜀川幽域/地藏寺.txt`
+- `docs/门派/太行火域/赤霄谷.txt`
+- `docs/门派/隐世势力/无生海.txt`
+- `docs/门派/中州天域/白玉京.txt`
+- `docs/天章设定.txt`
