@@ -153,6 +153,7 @@ function Write-ConsumeRequestFixture {
 $automationStateRoot = Join-Path $env:USERPROFILE '.codex\automation-state'
 $testId = [Guid]::NewGuid().ToString('N')
 $stateRoot = Join-Path $automationStateRoot "tzg-hourly-controller-lease-tests\$testId"
+$legacyStateRoot = Join-Path $stateRoot 'legacy-v1'
 $bridgeRoot = Join-Path $automationStateRoot "tzg-feishu-decision-bridge\lease-test-$testId"
 $statePath = Join-Path $stateRoot 'runtime.json'
 $requestPath = Join-Path $bridgeRoot 'decision-request.json'
@@ -168,6 +169,28 @@ try {
     Set-PrivatePathAcl -Path $fixturePath
     Assert-PrivatePathAcl -Path $fixturePath
   }
+
+  [IO.Directory]::CreateDirectory($legacyStateRoot) | Out-Null
+  Set-PrivatePathAcl -Path $legacyStateRoot -Directory
+  $legacyStatePath = Join-Path $legacyStateRoot 'runtime.json'
+  $legacyState = [ordered]@{
+    schemaVersion = 1
+    lease = $null
+    recovery = $null
+    pendingResumes = @()
+    blocking = [ordered]@{ fingerprint = $null; count = 0; pauseRequested = $false }
+    lastResult = [ordered]@{
+      category = 'success'
+      taskId = 'legacy-task'
+      detailCode = 'legacy-result'
+      recordedAt = '2026-07-22T00:00:00.0000000+00:00'
+    }
+  }
+  [IO.File]::WriteAllText($legacyStatePath, ($legacyState | ConvertTo-Json -Compress -Depth 10), [Text.UTF8Encoding]::new($false))
+  Set-PrivatePathAcl -Path $legacyStatePath
+  $migratedLegacy = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $legacyStateRoot }
+  Assert-Equal -Actual $migratedLegacy.Json.state.schemaVersion -Expected 2 -Message 'Legacy runtime was not migrated in memory'
+  Assert-True -Condition ($null -eq $migratedLegacy.Json.state.lastResult.runId) -Message 'Legacy result migration invented a run id'
 
   $relativeState = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = 'relative-state' } -AllowedExitCodes @(2)
   Assert-Equal -Actual $relativeState.Json.status -Expected 'INVALID_ARGUMENT' -Message 'Relative state root must be rejected'
@@ -192,6 +215,17 @@ try {
   Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$first.Json.runId)) -Message 'First acquire did not return runId'
   $firstRunId = [string]$first.Json.runId
   Assert-True -Condition (Test-Path -LiteralPath $statePath -PathType Leaf) -Message 'Acquire did not create runtime state'
+
+  $beforeInvalidWaiting = Get-FileSha256 -Path $statePath
+  $waitingWithoutRecovery = Invoke-LeaseTool -Action RecordResult -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $firstRunId
+    Category = 'waiting_decision'
+    TaskId = 'task-first'
+    DetailCode = 'decision-not-sent'
+  } -AllowedExitCodes @(0, 2)
+  Assert-Equal -Actual $waitingWithoutRecovery.Json.status -Expected 'RECOVERY_REQUIRED' -Message 'waiting_decision without recovery must fail closed'
+  Assert-Equal -Actual (Get-FileSha256 -Path $statePath) -Expected $beforeInvalidWaiting -Message 'Rejected waiting_decision changed state bytes'
 
   $activeStateHash = Get-FileSha256 -Path $statePath
   $secondWriter = Invoke-LeaseTool -Action Acquire -Parameters @{
@@ -290,6 +324,17 @@ try {
     ChangedPaths = @('tools/recovery-one.txt', 'tools/recovery-two.txt')
   }
   Assert-Equal -Actual $savedRecovery.Json.status -Expected 'RECOVERY_SAVED' -Message 'Codex recovery was not saved'
+  Assert-Equal -Actual $savedRecovery.Json.recovery.trigger -Expected 'decision' -Message 'Decision recovery trigger mismatch'
+  Assert-Equal -Actual $savedRecovery.Json.recovery.runId -Expected $recoveryOwner.Json.runId -Message 'Decision recovery run id mismatch'
+  $validWaiting = Invoke-LeaseTool -Action RecordResult -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $recoveryOwner.Json.runId
+    Category = 'waiting_decision'
+    TaskId = 'task-recovery-only'
+    DetailCode = 'decision-sent'
+  }
+  Assert-Equal -Actual $validWaiting.Json.status -Expected 'RECORDED' -Message 'Valid waiting_decision was rejected'
+  Assert-Equal -Actual $validWaiting.Json.lastResult.runId -Expected $recoveryOwner.Json.runId -Message 'lastResult did not retain current run id'
   Start-Sleep -Milliseconds 1200
   $recoveryOnly = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot
@@ -320,6 +365,49 @@ try {
   Assert-Equal -Actual $claudeRecovery.Json.recovery.resumeId -Expected 'session-claude' -Message 'Claude recovery id mismatch'
   Invoke-LeaseTool -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $claudeOwner.Json.runId } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $claudeOwner.Json.runId } | Out-Null
+
+  $interruptionOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-interruption'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+  }
+  $interruption = Invoke-LeaseTool -Action SaveInterruption -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $interruptionOwner.Json.runId
+    CodexThreadId = 'thread-interruption'
+    HasUncommittedChanges = $true
+    ChangedPaths = @('tools/interrupted-one.txt')
+  }
+  Assert-Equal -Actual $interruption.Json.recovery.trigger -Expected 'interruption' -Message 'Interruption recovery trigger mismatch'
+  Assert-Equal -Actual $interruption.Json.recovery.runId -Expected $interruptionOwner.Json.runId -Message 'Interruption recovery run id mismatch'
+  Assert-True -Condition ($null -eq $interruption.Json.recovery.decisionId) -Message 'Interruption recovery invented a decision id'
+  $queueInterruption = Invoke-LeaseTool -Action QueueResume -Parameters @{
+    StateRoot = $stateRoot
+    DecisionId = 'not-a-decision-recovery'
+    ReplyPath = $replyOnePath
+  } -AllowedExitCodes @(2)
+  Assert-Equal -Actual $queueInterruption.Json.status -Expected 'RECOVERY_NOT_DECISION' -Message 'QueueResume accepted interruption recovery'
+  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $interruptionOwner.Json.runId } | Out-Null
+  $otherDuringInterruption = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-other-during-interruption'
+    Owner = 'external'
+    RepositoryRoot = $repositoryRoot
+  }
+  Assert-Equal -Actual $otherDuringInterruption.Json.status -Expected 'RECOVERY_ONLY' -Message 'Ordinary acquire bypassed interruption recovery'
+  $reacquiredInterruption = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-interruption'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+    ResumeRecovery = $true
+  }
+  Assert-Equal -Actual $reacquiredInterruption.Json.status -Expected 'RECOVERY_ACQUIRED' -Message 'Original responsibility could not reacquire interruption recovery'
+  Assert-Equal -Actual $reacquiredInterruption.Json.resumeId -Expected 'thread-interruption' -Message 'Recovery acquire lost original session id'
+  Assert-True -Condition ($reacquiredInterruption.Json.runId -ne $interruptionOwner.Json.runId) -Message 'Recovery acquire reused expired run id'
+  Invoke-LeaseTool -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $reacquiredInterruption.Json.runId } | Out-Null
+  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $reacquiredInterruption.Json.runId } | Out-Null
 
   $resumeOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot
@@ -531,7 +619,7 @@ try {
   $topLevelNames = @($finalShow.Json.state.PSObject.Properties.Name | Sort-Object)
   $expectedTopLevelNames = @('blocking', 'lastResult', 'lease', 'pendingResumes', 'recovery', 'schemaVersion') | Sort-Object
   Assert-Equal -Actual ($topLevelNames -join ',') -Expected ($expectedTopLevelNames -join ',') -Message 'Runtime state schema has unexpected top-level fields'
-  Assert-Equal -Actual $finalShow.Json.state.schemaVersion -Expected 1 -Message 'Runtime schema version mismatch'
+  Assert-Equal -Actual $finalShow.Json.state.schemaVersion -Expected 2 -Message 'Runtime schema version mismatch'
   Assert-True -Condition ($null -eq $finalShow.Json.state.lease) -Message 'Final lease was not released'
   Assert-True -Condition ($null -eq $finalShow.Json.state.recovery) -Message 'Final recovery was not cleared'
   Assert-Equal -Actual @($finalShow.Json.state.pendingResumes).Count -Expected 0 -Message 'Final pending resume queue was not empty'

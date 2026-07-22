@@ -1316,3 +1316,44 @@ test('two concurrent calls for one intent invoke transport exactly once', async 
   assert.equal((await firstPromise).result, 'PROVIDER_ACCEPTED');
   assert.equal(calls, 1);
 });
+
+test('main replaces a stale completed binding after a newly accepted send', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-send-stale-binding-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const requestPath = join(root, 'request.json');
+  const configPath = join(root, 'private.json');
+  await writeFile(requestPath, JSON.stringify({ decision: makeDecision(), attemptNumber: 19 }));
+  await writeFile(configPath, JSON.stringify(makeRawConfig({ stateRoot: root })));
+  await writeFile(join(root, 'pending-bindings.json'), JSON.stringify([{
+    kind: 'decision_reply',
+    decisionId: 'DEC-COMPLETED-OLD',
+    allowedOptions: ['A', 'B', 'C'],
+    allowCustomReply: true,
+    issuedAt: new Date(NOW.getTime() - 86_400_000).toISOString(),
+    expiresAt: new Date(NOW.getTime() + 86_400_000).toISOString(),
+    cardNonceHash: 'a'.repeat(64),
+    providerMessageIdHash: 'b'.repeat(64),
+    providerChatIdHash: 'c'.repeat(64),
+  }]));
+
+  let stdout = '';
+  const code = await main(['--request-file', requestPath], {
+    env: { FEISHU_DECISION_CONFIG_PATH: configPath },
+    homedir: () => join(root, 'home'),
+    stdout: { write(value) { stdout += value; } },
+    stderr: { write() {} },
+    readHealth: async () => makeHealth(),
+    createTransport: async () => ({
+      async sendInteractive() { return { messageId: 'om_new', chatId: 'oc_new' }; },
+    }),
+    createIntentStore: (stateRoot) => createSendIntentStore(stateRoot),
+    send: sendDecision,
+    now: () => NOW,
+  });
+
+  assert.equal(code, 0);
+  assert.equal(assertOneJsonLine(stdout).result, 'PROVIDER_ACCEPTED');
+  const bindings = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
+  assert.equal(bindings.length, 1);
+  assert.equal(bindings[0].decisionId, 'DEC-20260716-ABC123');
+});

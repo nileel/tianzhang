@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'ClearRecovery', 'QueueResume', 'TakeResume', 'RecordResult', 'ClearBlocking', 'Release')]
+  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'SaveInterruption', 'ClearRecovery', 'QueueResume', 'TakeResume', 'RecordResult', 'ClearBlocking', 'Release')]
   [string]$Action,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$TaskId,
@@ -21,6 +21,7 @@ param(
   [string]$CodexThreadId,
   [string]$ClaudeSessionId,
   [switch]$HasUncommittedChanges,
+  [switch]$ResumeRecovery,
   [string]$ChangedPaths,
   [string]$ReplyPath
 )
@@ -32,7 +33,7 @@ $aclScript = Join-Path $PSScriptRoot 'private-path-acl.ps1'
 
 function New-RuntimeState {
   [pscustomobject][ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     lease = $null
     recovery = $null
     pendingResumes = @()
@@ -325,7 +326,7 @@ function Assert-RuntimeState {
     'blocking',
     'lastResult'
   ) -Context 'runtime state'
-  if ($State.schemaVersion -ne 1) {
+  if ($State.schemaVersion -ne 2) {
     throw [IO.InvalidDataException]::new('Unsupported runtime state schema')
   }
   if ($null -ne $State.lease) {
@@ -340,6 +341,8 @@ function Assert-RuntimeState {
   }
   if ($null -ne $State.recovery) {
     Assert-PropertySet -Object $State.recovery -Expected @(
+      'trigger',
+      'runId',
       'taskId',
       'owner',
       'repositoryRoot',
@@ -350,6 +353,15 @@ function Assert-RuntimeState {
       'hasUncommittedChanges',
       'changedPaths'
     ) -Context 'recovery'
+    if ([string]$State.recovery.trigger -cnotin @('decision', 'interruption')) {
+      throw [IO.InvalidDataException]::new('Recovery trigger is invalid')
+    }
+    if (
+      [string]$State.recovery.trigger -ceq 'interruption' -and
+      ($null -ne $State.recovery.decisionId -or $null -ne $State.recovery.decisionRequestPath)
+    ) {
+      throw [IO.InvalidDataException]::new('Interruption recovery cannot contain decision fields')
+    }
   }
   foreach ($pending in @($State.pendingResumes)) {
     Assert-PropertySet -Object $pending -Expected @('decisionId', 'replyPath', 'queuedAt') -Context 'pending resume'
@@ -364,12 +376,33 @@ function Assert-RuntimeState {
   ) -Context 'blocking'
   if ($null -ne $State.lastResult) {
     Assert-PropertySet -Object $State.lastResult -Expected @(
+      'runId',
       'category',
       'taskId',
       'detailCode',
       'recordedAt'
     ) -Context 'last result'
   }
+}
+
+function Convert-RuntimeStateSchema {
+  param([Parameter(Mandatory = $true)][object]$State)
+
+  if ($State.schemaVersion -eq 2) {
+    return $State
+  }
+  if ($State.schemaVersion -ne 1) {
+    throw [IO.InvalidDataException]::new('Unsupported runtime state schema')
+  }
+  if ($null -ne $State.recovery) {
+    $State.recovery | Add-Member -NotePropertyName trigger -NotePropertyValue 'decision'
+    $State.recovery | Add-Member -NotePropertyName runId -NotePropertyValue $null
+  }
+  if ($null -ne $State.lastResult) {
+    $State.lastResult | Add-Member -NotePropertyName runId -NotePropertyValue $null
+  }
+  $State.schemaVersion = 2
+  $State
 }
 
 function Initialize-StateRoot {
@@ -394,6 +427,7 @@ function Read-RuntimeState {
   } catch {
     throw [IO.InvalidDataException]::new('Runtime state is not valid UTF-8 JSON', $_.Exception)
   }
+  $state = Convert-RuntimeStateSchema -State $state
   Assert-RuntimeState -State $state
   $state.pendingResumes = @($state.pendingResumes)
   $state
@@ -589,8 +623,46 @@ try {
           }
           break
         }
+        if ($ResumeRecovery) {
+          if ($null -eq $state.recovery) {
+            $result = New-Result -Status 'RECOVERY_NOT_FOUND'
+            $resultExitCode = 2
+            break
+          }
+          if ([string]$state.recovery.trigger -cne 'interruption') {
+            $result = New-Result -Status 'RECOVERY_NOT_INTERRUPTION'
+            $resultExitCode = 2
+            break
+          }
+          $matchesRecovery =
+            ([string]$state.recovery.taskId).Equals($TaskId, [StringComparison]::Ordinal) -and
+            ([string]$state.recovery.owner).Equals($Owner, [StringComparison]::Ordinal) -and
+            ([string]$state.recovery.repositoryRoot).Equals($normalizedRepositoryRoot, [StringComparison]::OrdinalIgnoreCase)
+          if (-not $matchesRecovery) {
+            $result = New-Result -Status 'RECOVERY_MISMATCH'
+            $resultExitCode = 2
+            break
+          }
+          $state.lease = New-Lease `
+            -LeaseTaskId $TaskId `
+            -LeaseOwner $Owner `
+            -LeaseRepositoryRoot $normalizedRepositoryRoot `
+            -Now $now `
+            -DurationSeconds $LeaseSeconds
+          Write-RuntimeState -Path $statePath -State $state
+          $result = New-Result -Status 'RECOVERY_ACQUIRED' -Values @{
+            runId = $state.lease.runId
+            taskId = $state.recovery.taskId
+            owner = $state.recovery.owner
+            repositoryRoot = $state.recovery.repositoryRoot
+            resumeKind = $state.recovery.resumeKind
+            resumeId = $state.recovery.resumeId
+            changedPaths = @($state.recovery.changedPaths)
+          }
+          break
+        }
         if (
-          $leaseExpired -and
+          ($null -eq $state.lease -or $leaseExpired) -and
           $null -ne $state.recovery -and
           [bool]$state.recovery.hasUncommittedChanges
         ) {
@@ -647,6 +719,8 @@ try {
           throw [ArgumentException]::new('ChangedPaths require HasUncommittedChanges')
         }
         $state.recovery = [pscustomobject][ordered]@{
+          trigger = 'decision'
+          runId = $state.lease.runId
           taskId = $state.lease.taskId
           owner = $state.lease.owner
           repositoryRoot = $state.lease.repositoryRoot
@@ -655,6 +729,41 @@ try {
           decisionId = $DecisionId
           decisionRequestPath = $normalizedRequestPath
           hasUncommittedChanges = [bool]$HasUncommittedChanges
+          changedPaths = @($normalizedChangedPaths)
+        }
+        Write-RuntimeState -Path $statePath -State $state
+        $result = New-Result -Status 'RECOVERY_SAVED' -Values @{ recovery = $state.recovery }
+      }
+
+      'SaveInterruption' {
+        if (-not (Test-CurrentRun -Lease $state.lease -ExpectedRunId $RunId)) {
+          $result = New-Result -Status 'RUN_ID_MISMATCH'
+          $resultExitCode = 2
+          break
+        }
+        $hasCodex = -not [string]::IsNullOrWhiteSpace($CodexThreadId)
+        $hasClaude = -not [string]::IsNullOrWhiteSpace($ClaudeSessionId)
+        if ($hasCodex -eq $hasClaude) {
+          throw [ArgumentException]::new('Exactly one CodexThreadId or ClaudeSessionId is required')
+        }
+        $resumeKind = if ($hasCodex) { 'codex' } else { 'claude' }
+        $resumeId = if ($hasCodex) { $CodexThreadId } else { $ClaudeSessionId }
+        Assert-StableText -Value $resumeId -ParameterName 'resumeId' -MaximumLength 512
+        $normalizedChangedPaths = Convert-ChangedPaths -Value $ChangedPaths
+        if (-not $HasUncommittedChanges -or $normalizedChangedPaths.Count -eq 0) {
+          throw [ArgumentException]::new('Interruption recovery requires uncommitted changed paths')
+        }
+        $state.recovery = [pscustomobject][ordered]@{
+          trigger = 'interruption'
+          runId = $state.lease.runId
+          taskId = $state.lease.taskId
+          owner = $state.lease.owner
+          repositoryRoot = $state.lease.repositoryRoot
+          resumeKind = $resumeKind
+          resumeId = $resumeId
+          decisionId = $null
+          decisionRequestPath = $null
+          hasUncommittedChanges = $true
           changedPaths = @($normalizedChangedPaths)
         }
         Write-RuntimeState -Path $statePath -State $state
@@ -675,6 +784,11 @@ try {
       'QueueResume' {
         Assert-StableText -Value $DecisionId -ParameterName 'DecisionId'
         $normalizedReplyPath = Resolve-ApprovedPrivateFile -Path $ReplyPath -ParameterName 'ReplyPath'
+        if ($null -ne $state.recovery -and [string]$state.recovery.trigger -cne 'decision') {
+          $result = New-Result -Status 'RECOVERY_NOT_DECISION'
+          $resultExitCode = 2
+          break
+        }
         if ($null -eq $state.recovery -or $state.recovery.decisionId -ne $DecisionId) {
           $result = New-Result -Status 'RECOVERY_NOT_FOUND'
           $resultExitCode = 2
@@ -740,7 +854,11 @@ try {
           break
         }
         $next = $pending[0]
-        if ($null -eq $state.recovery -or $state.recovery.decisionId -ne $next.decisionId) {
+        if (
+          $null -eq $state.recovery -or
+          [string]$state.recovery.trigger -cne 'decision' -or
+          $state.recovery.decisionId -ne $next.decisionId
+        ) {
           throw [IO.InvalidDataException]::new('Pending resume does not match the recovery pointer')
         }
         Start-RecoveryLease -State $state -Now $now -DurationSeconds $LeaseSeconds
@@ -764,6 +882,19 @@ try {
         if (-not ([string]$state.lease.taskId).Equals($TaskId, [StringComparison]::Ordinal)) {
           throw [ArgumentException]::new('TaskId must match the active lease')
         }
+        if (
+          $Category -eq 'waiting_decision' -and
+          (
+            $null -eq $state.recovery -or
+            [string]$state.recovery.trigger -cne 'decision' -or
+            -not ([string]$state.recovery.taskId).Equals($TaskId, [StringComparison]::Ordinal) -or
+            -not ([string]$state.recovery.runId).Equals($RunId, [StringComparison]::Ordinal)
+          )
+        ) {
+          $result = New-Result -Status 'RECOVERY_REQUIRED'
+          $resultExitCode = 2
+          break
+        }
         if ($Category -eq 'blocked') {
           Assert-StableText -Value $BlockingFingerprint -ParameterName 'BlockingFingerprint' -MaximumLength 512
           if (
@@ -782,6 +913,7 @@ try {
           $state.blocking.pauseRequested = $false
         }
         $state.lastResult = [pscustomobject][ordered]@{
+          runId = $state.lease.runId
           category = $Category
           taskId = $TaskId
           detailCode = $DetailCode
