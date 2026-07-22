@@ -644,6 +644,48 @@ try {
   Assert-Equal -Actual $refilled.Json.blocking.count -Expected 0 -Message 'Refilled did not reset blocking count'
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $refilledOwner.Json.runId } | Out-Null
 
+  $stalePendingOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-stale-pending'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+  }
+  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-stale-one'
+  Invoke-LeaseTool -Action SaveRecovery -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $stalePendingOwner.Json.runId
+    DecisionId = 'decision-stale-one'
+    DecisionRequestPath = $requestPath
+    CodexThreadId = 'thread-stale-pending'
+  } | Out-Null
+  Invoke-LeaseTool -Action QueueResume -Parameters @{
+    StateRoot = $stateRoot
+    DecisionId = 'decision-stale-one'
+    ReplyPath = $replyOnePath
+  } | Out-Null
+  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-stale-two'
+  Invoke-LeaseTool -Action SaveRecovery -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $stalePendingOwner.Json.runId
+    DecisionId = 'decision-stale-two'
+    DecisionRequestPath = $requestPath
+    CodexThreadId = 'thread-stale-pending'
+  } | Out-Null
+  $afterDecisionReplacement = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
+  Assert-Equal -Actual @($afterDecisionReplacement.Json.state.pendingResumes).Count -Expected 0 -Message 'Replacing a decision recovery retained a stale pending reply'
+  Invoke-LeaseTool -Action QueueResume -Parameters @{
+    StateRoot = $stateRoot
+    DecisionId = 'decision-stale-two'
+    ReplyPath = $replyTwoPath
+  } | Out-Null
+  Invoke-LeaseTool -Action ClearRecovery -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $stalePendingOwner.Json.runId
+  } | Out-Null
+  $afterRecoveryClear = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
+  Assert-Equal -Actual @($afterRecoveryClear.Json.state.pendingResumes).Count -Expected 0 -Message 'Clearing recovery retained a pending reply'
+  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $stalePendingOwner.Json.runId } | Out-Null
+
   $finalShow = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
   $topLevelNames = @($finalShow.Json.state.PSObject.Properties.Name | Sort-Object)
   $expectedTopLevelNames = @('blocking', 'lastResult', 'lease', 'pendingResumes', 'recovery', 'schemaVersion') | Sort-Object

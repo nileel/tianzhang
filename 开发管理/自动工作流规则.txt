@@ -31,7 +31,7 @@
 - 修改前等待决定时保存原 CLI session ID 或外部 session，释放租约并退出；回复到达后只通过 runner `Resume` 同一 CLI session ID 或既有外部恢复入口中继负责人原文。
 - 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 - 旧 `pending-bindings.json` 不是新决策的互斥锁；责任方不得因看到旧 binding 就跳过发送或直接记录 `waiting_decision`。新 accepted send 会原子更新 binding，租约工具只接受对应的消费请求。
-- 回复占锁时写入 pending resume 后立即结束，不 sleep、不轮询、不保持模型进程；释放租约或下个整点只取一个 ready resume。
+- 回复占锁时写入 pending resume 后立即结束，不 sleep、不轮询、不保持模型进程；保存新 decision recovery 时清除旧 DecisionId 的 pending reply。释放租约或下个整点只取一个 ready resume；Codex 回复恢复必须进入固定调用器，桥接层不得直接启动底层 runner。
 - 用户在当前 Codex 对话中直接回复 A/B/C 时，只允许外部普通管理上下文用精确 `DecisionId` 调用 `Acquire -ResumeRecovery`，再把同一 `DecisionId` 和选项交给固定调用器 `Resume`；固定调用器核对 decision recovery 与当前租约后，沿用 `[TZG_DECISION_RESUME ...]` 标准输入协议。控制器和责任方不得自行走此入口，飞书回复仍走签名消费与 `QueueResume`。
 - 已有未提交任务修改时停止普通调度，只允许原责任方恢复，不把半成品交给另一责任方。
 - CLI 责任方异常退出且相对启动基线产生新改动时，固定调用器以原 session ID 和新增路径保存 `trigger=interruption` recovery；没有唯一 session ID 时保留租约和现场并转人工阻塞，不伪造恢复指针。下一轮只允许完全匹配的原任务通过 `Acquire -ResumeRecovery` 取得新租约并 Resume。

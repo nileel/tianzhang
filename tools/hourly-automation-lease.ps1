@@ -744,6 +744,11 @@ try {
           hasUncommittedChanges = [bool]$HasUncommittedChanges
           changedPaths = @($normalizedChangedPaths)
         }
+        $state.pendingResumes = @(
+          $state.pendingResumes | Where-Object {
+            ([string]$_.decisionId).Equals($DecisionId, [StringComparison]::Ordinal)
+          }
+        )
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECOVERY_SAVED' -Values @{ recovery = $state.recovery }
       }
@@ -779,6 +784,7 @@ try {
           hasUncommittedChanges = $true
           changedPaths = @($normalizedChangedPaths)
         }
+        $state.pendingResumes = [object[]]@()
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECOVERY_SAVED' -Values @{ recovery = $state.recovery }
       }
@@ -790,6 +796,7 @@ try {
           break
         }
         $state.recovery = $null
+        $state.pendingResumes = [object[]]@()
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECOVERY_CLEARED'
       }

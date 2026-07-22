@@ -80,7 +80,8 @@ function Invoke-Responsibility {
     [string]$ResumeSessionId,
     [string]$DecisionId,
     [ValidateSet('A', 'B', 'C')]
-    [string]$DecisionOption
+    [string]$DecisionOption,
+    [string]$DecisionInput
   )
 
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
@@ -90,6 +91,7 @@ function Invoke-Responsibility {
   $startInfo.CreateNoWindow = $true
   $startInfo.RedirectStandardOutput = $true
   $startInfo.RedirectStandardError = $true
+  $startInfo.RedirectStandardInput = -not [string]::IsNullOrEmpty($DecisionInput)
   foreach ($argument in @(
       '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $invokerPath,
       '-Action', $Action, '-Route', $Route,
@@ -110,7 +112,12 @@ function Invoke-Responsibility {
     }
   }
   if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
-    foreach ($argument in @('-DecisionId', $DecisionId, '-DecisionOption', $DecisionOption)) {
+    $decisionArguments = if (-not [string]::IsNullOrEmpty($DecisionInput)) {
+      @('-DecisionId', $DecisionId, '-ReadDecisionReplyFromStdin')
+    } else {
+      @('-DecisionId', $DecisionId, '-DecisionOption', $DecisionOption)
+    }
+    foreach ($argument in $decisionArguments) {
       $startInfo.ArgumentList.Add($argument)
     }
   }
@@ -129,6 +136,10 @@ function Invoke-Responsibility {
   Assert-True -Condition $process.Start() -Message 'Failed to start responsibility invoker'
   $stdoutTask = $process.StandardOutput.ReadToEndAsync()
   $stderrTask = $process.StandardError.ReadToEndAsync()
+  if ($startInfo.RedirectStandardInput) {
+    $process.StandardInput.Write($DecisionInput)
+    $process.StandardInput.Close()
+  }
   $process.WaitForExit()
   $stdout = $stdoutTask.GetAwaiter().GetResult()
   $stderr = $stderrTask.GetAwaiter().GetResult()
@@ -296,6 +307,53 @@ $global:LASTEXITCODE = 0
   Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_RESUME runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the existing resume protocol'
   $resumedState = Assert-LeaseReleased
   Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
+
+  Reset-GitFixture
+  $stdinDecisionRun = Acquire-TestLease -TaskId 'task-decision-stdin'
+  $stdinDecisionFixture = [ordered]@{
+    pendingDecision = [ordered]@{
+      decisionId = 'decision-invoker-stdin'
+      allowedOptions = @('A', 'B', 'C')
+      allowCustomReply = $true
+      createdAt = '2026-07-22T00:00:00.000Z'
+      expiresAt = '2026-07-23T00:00:00.000Z'
+      cardNonceHash = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+      providerMessageIdHash = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+      providerChatIdHash = 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc'
+    }
+  }
+  [IO.File]::WriteAllText($decisionRequestPath, ($stdinDecisionFixture | ConvertTo-Json -Depth 10 -Compress), [Text.UTF8Encoding]::new($false))
+  Set-PrivatePathAcl -Path $decisionRequestPath
+  Invoke-LeaseJson -Action SaveRecovery -Parameters @{
+    StateRoot = $stateRoot
+    RunId = $stdinDecisionRun
+    DecisionId = 'decision-invoker-stdin'
+    DecisionRequestPath = $decisionRequestPath
+    CodexThreadId = $sessionId
+  } | Out-Null
+  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $stdinDecisionRun } | Out-Null
+  $stdinResumeLease = Invoke-LeaseJson -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-decision-stdin'
+    Owner = 'codex'
+    RepositoryRoot = $gitRoot
+    ResumeRecovery = $true
+    DecisionId = 'decision-invoker-stdin'
+  }
+  $customDecision = '保持原任务边界，不新增兼容分支'
+  $stdinResumed = Invoke-Responsibility `
+    -Case 'commit-success' `
+    -TaskId 'task-decision-stdin' `
+    -RunId $stdinResumeLease.runId `
+    -Route 'Recovery' `
+    -Action 'Resume' `
+    -ResumeSessionId $sessionId `
+    -DecisionId 'decision-invoker-stdin' `
+    -DecisionInput $customDecision
+  Assert-Equal -Actual $stdinResumed.ExitCode -Expected 0 -Message 'Stdin decision resume invocation failed'
+  $stdinDecisionPrompt = [IO.File]::ReadAllText($tracePath)
+  Assert-True -Condition ($stdinDecisionPrompt.StartsWith("[TZG_DECISION_RESUME runId=$($stdinResumeLease.runId)]`n$customDecision")) -Message 'Signed bridge decision was not transported through stdin'
+  Assert-LeaseReleased | Out-Null
 
   Write-Output 'test-invoke-codex-responsibility: OK'
 } finally {

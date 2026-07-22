@@ -15,11 +15,11 @@ import {
 import { sha256 } from '../src/config.mjs';
 
 const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
-const CODEX_SESSION_RUNNER_PATH = resolve(
+const CODEX_RESPONSIBILITY_INVOKER_PATH = resolve(
   TEST_DIRECTORY,
   '..',
   '..',
-  'codex-cli-session.ps1',
+  'invoke-codex-responsibility.ps1',
 );
 
 function inertTimers() {
@@ -313,23 +313,30 @@ test('DISPATCH accepts the production Codex owner and resumes with option throug
     '-ExecutionPolicy',
     'Bypass',
     '-File',
-    CODEX_SESSION_RUNNER_PATH,
+    CODEX_RESPONSIBILITY_INVOKER_PATH,
     '-Action',
     'Resume',
+    '-Route',
+    'Recovery',
     '-RepositoryRoot',
     'C:\\repo',
     '-TaskId',
     'task-one',
     '-RunId',
     'run-codex',
+    '-StateRoot',
+    'C:\\private\\runtime',
     '-SessionId',
     'session-codex',
+    '-DecisionId',
+    'decision-one',
+    '-ReadDecisionReplyFromStdin',
   ]);
   assert.equal(call.options.cwd, 'C:\\repo');
   assert.equal(call.options.detached, true);
   assert.equal(call.options.windowsHide, true);
   assert.equal(call.unrefCalled, true);
-  assert.match(call.stdin, /^\[TZG_DECISION_RESUME runId=run-codex\]\nA$/);
+  assert.equal(call.stdin, 'A');
   assert.equal(call.args.includes('A'), false);
   assert.equal(call.stdin.includes(providerHash), false);
   assert.equal(call.stdin.includes('provider-message-id'), false);

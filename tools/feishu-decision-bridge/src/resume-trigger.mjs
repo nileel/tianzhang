@@ -18,11 +18,11 @@ const DEFAULT_LEASE_TOOL_PATH = resolve(
   '..',
   'hourly-automation-lease.ps1',
 );
-const DEFAULT_CODEX_SESSION_RUNNER_PATH = resolve(
+const DEFAULT_CODEX_RESPONSIBILITY_INVOKER_PATH = resolve(
   SOURCE_DIRECTORY,
   '..',
   '..',
-  'codex-cli-session.ps1',
+  'invoke-codex-responsibility.ps1',
 );
 
 function isPlainObject(value) {
@@ -305,12 +305,14 @@ function validateDispatch(value) {
   };
 }
 
-async function startDetachedModel({ dispatch, reply, spawnChild }) {
+async function startDetachedModel({ dispatch, reply, spawnChild, stateRoot }) {
   const replyValue = reply.kind === 'option' ? reply.optionKey : reply.customText;
   if (typeof replyValue !== 'string' || replyValue.length === 0) {
     throw new Error('Invalid reply');
   }
-  const input = `[TZG_DECISION_RESUME runId=${dispatch.runId}]\n${replyValue}`;
+  const input = dispatch.resumeKind === 'codex'
+    ? replyValue
+    : `[TZG_DECISION_RESUME runId=${dispatch.runId}]\n${replyValue}`;
   const command = dispatch.resumeKind === 'codex' ? 'pwsh' : 'claude';
   const args = dispatch.resumeKind === 'codex'
     ? [
@@ -318,17 +320,24 @@ async function startDetachedModel({ dispatch, reply, spawnChild }) {
       '-ExecutionPolicy',
       'Bypass',
       '-File',
-      DEFAULT_CODEX_SESSION_RUNNER_PATH,
+      DEFAULT_CODEX_RESPONSIBILITY_INVOKER_PATH,
       '-Action',
       'Resume',
+      '-Route',
+      'Recovery',
       '-RepositoryRoot',
       dispatch.repositoryRoot,
       '-TaskId',
       dispatch.taskId,
       '-RunId',
       dispatch.runId,
+      '-StateRoot',
+      stateRoot,
       '-SessionId',
       dispatch.resumeId,
+      '-DecisionId',
+      dispatch.decisionId,
+      '-ReadDecisionReplyFromStdin',
     ]
     : ['--resume', dispatch.resumeId, '--print'];
   const child = spawnChild(command, args, {
@@ -436,7 +445,7 @@ export async function runResumeRelay(options) {
     replyPath: dispatch.replyPath,
   });
   try {
-    await startDetachedModel({ dispatch, reply, spawnChild });
+    await startDetachedModel({ dispatch, reply, spawnChild, stateRoot });
   } catch {
     await bestEffortStartFailure({ dispatch, invokeLease });
     return { status: 'START_FAILED' };

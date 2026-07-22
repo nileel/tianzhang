@@ -19,7 +19,8 @@ param(
   [string]$Model,
   [string]$DecisionId,
   [ValidateSet('A', 'B', 'C')]
-  [string]$DecisionOption
+  [string]$DecisionOption,
+  [switch]$ReadDecisionReplyFromStdin
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,6 +30,7 @@ $result = $null
 $resultExitCode = 1
 $capturedSessionId = $null
 $verifiedCommitSha = $null
+$decisionReply = $null
 
 function Assert-StableArgument {
   param([AllowNull()][string]$Value, [string]$Name, [int]$MaximumLength = 512)
@@ -134,7 +136,7 @@ function New-ResponsibilityPrompt {
   $lines = @()
   if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
     $lines += "[TZG_DECISION_RESUME runId=$RunId]"
-    $lines += $DecisionOption
+    $lines += $script:decisionReply
   }
   $lines += @(
     "模型核验证明：控制器已核验并以 -Model 传入 $Model；子会话不因缺少父 request metadata 再次阻塞。"
@@ -262,8 +264,12 @@ try {
   }
   $hasDecisionId = -not [string]::IsNullOrWhiteSpace($DecisionId)
   $hasDecisionOption = -not [string]::IsNullOrWhiteSpace($DecisionOption)
-  if ($hasDecisionId -ne $hasDecisionOption) {
-    throw 'DecisionId and DecisionOption must be provided together'
+  if ($hasDecisionOption -and $ReadDecisionReplyFromStdin) {
+    throw 'DecisionOption and ReadDecisionReplyFromStdin are mutually exclusive'
+  }
+  $hasDecisionReply = $hasDecisionOption -or [bool]$ReadDecisionReplyFromStdin
+  if ($hasDecisionId -ne $hasDecisionReply) {
+    throw 'DecisionId and one decision reply source must be provided together'
   }
   if ($hasDecisionId) {
     if ($Action -cne 'Resume' -or $Route -cne 'Recovery') {
@@ -284,6 +290,18 @@ try {
       [string]$resumeLease.repositoryRoot -ieq $script:resolvedRepositoryRoot
     if (-not $validDecisionResume) {
       throw 'Decision recovery does not match the active lease'
+    }
+    $script:decisionReply = if ($ReadDecisionReplyFromStdin) {
+      [Console]::In.ReadToEnd()
+    } else {
+      $DecisionOption
+    }
+    if (
+      [string]::IsNullOrWhiteSpace($script:decisionReply) -or
+      $script:decisionReply.Length -gt 4000 -or
+      $script:decisionReply -match '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'
+    ) {
+      throw 'Decision reply is invalid'
     }
   }
 
