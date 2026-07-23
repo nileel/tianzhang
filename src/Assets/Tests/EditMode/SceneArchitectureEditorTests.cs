@@ -766,6 +766,100 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void LianShenReservedAbilitiesRemainExcludedAtPlayerLoad()
+        {
+            AssertCsvRowKeepsReservedLianShenScope("Spells.csv", "spell_wanliuguizong");
+            AssertCsvRowKeepsReservedLianShenScope("Spells.csv", "spell_tianshuyunzhuan");
+            AssertCsvRowKeepsReservedLianShenScope("Skills.csv", "skill_fayu_wanxiangxuanmen");
+            AssertCsvRowKeepsReservedLianShenScope("Skills.csv", "skill_lingyu_wanxiangguiyuan");
+
+            var wanLiuGuiZong = AssetDatabase.LoadAssetAtPath<SpellData>(
+                "Assets/Data/Spells/Spell_spell_wanliuguizong.asset");
+            var tianShuYunZhuan = AssetDatabase.LoadAssetAtPath<SpellData>(
+                "Assets/Data/Spells/Spell_spell_tianshuyunzhuan.asset");
+            var faYuWanXiangXuanMen = AssetDatabase.LoadAssetAtPath<DivineSkillData>(
+                "Assets/Data/Skills/Skill_skill_fayu_wanxiangxuanmen.asset");
+            var lingYuWanXiangGuiYuan = AssetDatabase.LoadAssetAtPath<DivineSkillData>(
+                "Assets/Data/Skills/Skill_skill_lingyu_wanxiangguiyuan.asset");
+
+            AssertReservedLianShenAsset(wanLiuGuiZong, "spell_wanliuguizong");
+            AssertReservedLianShenAsset(tianShuYunZhuan, "spell_tianshuyunzhuan");
+            AssertReservedLianShenAsset(faYuWanXiangXuanMen, "skill_fayu_wanxiangxuanmen");
+            AssertReservedLianShenAsset(lingYuWanXiangGuiYuan, "skill_lingyu_wanxiangguiyuan");
+
+            var managerObject = new GameObject("LianShenReservedAbilityLoader");
+            var controllerObject = new GameObject("LianShenReservedAbilityController");
+            var characterData = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
+            try
+            {
+                var manager = managerObject.AddComponent<SectSelectionManager>();
+                var controller = controllerObject.AddComponent<TianZhang.Map.ExplorationController>();
+                var player = new TianZhang.Entity.Character
+                {
+                    RealmMultiplier = 24f,
+                    VisibleRootElement = "水"
+                };
+                characterData.equippedSpells = new[] { "wanliuguizong", "tianshuyunzhuan" };
+                characterData.equippedSkills = new[]
+                {
+                    "skill_fayu_wanxiangxuanmen",
+                    "skill_lingyu_wanxiangguiyuan"
+                };
+
+                var loadAbilities = typeof(SectSelectionManager).GetMethod(
+                    "UpdateExplorationAbilities",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                Assert.IsNotNull(loadAbilities);
+
+                LogAssert.Expect(LogType.Warning, new Regex("Excluded non-player spell: wanliuguizong.*scope=reserved"));
+                LogAssert.Expect(LogType.Warning, new Regex("Excluded non-player spell: tianshuyunzhuan.*scope=reserved"));
+                LogAssert.Expect(LogType.Warning, new Regex("Excluded non-player skill: skill_fayu_wanxiangxuanmen.*scope=reserved"));
+                LogAssert.Expect(LogType.Warning, new Regex("Excluded non-player skill: skill_lingyu_wanxiangguiyuan.*scope=reserved"));
+
+                loadAbilities.Invoke(manager, new object[] { controller, characterData, player });
+
+                Assert.IsEmpty(controller.playerSpells);
+                Assert.IsEmpty(controller.playerSkills);
+            }
+            finally
+            {
+                Object.DestroyImmediate(characterData);
+                Object.DestroyImmediate(controllerObject);
+                Object.DestroyImmediate(managerObject);
+            }
+        }
+
+        private static void AssertCsvRowKeepsReservedLianShenScope(string csvFileName, string contentId)
+        {
+            string[] lines = File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig", csvFileName));
+            string header = lines.First(line => !line.StartsWith("#", System.StringComparison.Ordinal));
+            string row = lines.First(line => line.StartsWith(contentId + ",", System.StringComparison.Ordinal));
+            string[] headers = header.Split(',');
+            string[] values = row.Split(',');
+
+            int realmIndex = System.Array.IndexOf(headers, "realmReq");
+            int scopeIndex = System.Array.IndexOf(headers, "contentScope");
+            Assert.GreaterOrEqual(realmIndex, 0, csvFileName + " must contain realmReq.");
+            Assert.GreaterOrEqual(scopeIndex, 0, csvFileName + " must contain contentScope.");
+            Assert.AreEqual("realm_lianshen", values[realmIndex], contentId);
+            Assert.AreEqual("reserved", values[scopeIndex], contentId);
+        }
+
+        private static void AssertReservedLianShenAsset(SpellData asset, string contentId)
+        {
+            Assert.IsNotNull(asset, contentId);
+            Assert.AreEqual("reserved", asset.contentScope, contentId);
+            Assert.AreEqual("realm_lianshen", asset.realmRequirement, contentId);
+        }
+
+        private static void AssertReservedLianShenAsset(DivineSkillData asset, string contentId)
+        {
+            Assert.IsNotNull(asset, contentId);
+            Assert.AreEqual("reserved", asset.contentScope, contentId);
+            Assert.AreEqual("realm_lianshen", asset.realmRequirement, contentId);
+        }
+
+        [Test]
         public void ElementLookupRequiresIndependentElementColumnAndUsesHeaderOrder()
         {
             Assert.AreEqual(

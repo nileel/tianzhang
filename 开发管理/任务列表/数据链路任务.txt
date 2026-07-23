@@ -14,7 +14,7 @@
 | ID | 优先级 | 建议主责 | 状态 | 摘要 |
 |----|--------|----------|------|------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 |
-| D-REALM-02B | P2 | Codex | 待处理 | 为四个炼神术法／神通建立资料片隔离精确回归与闭环记录。 |
+| D-REALM-02B | P2 | Codex | 已完成 | 已为四个炼神术法／神通建立资料片隔离精确回归与闭环记录。 |
 | D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01） | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 |
@@ -33,7 +33,7 @@
 ### D-REALM-02B · 炼神术法／神通资料片隔离闭环验证
 
 - 来源与决定：`开发管理/高阶内容现行引用分类与决策输入.txt` 的 D-REALM-DEC-01，以及 `DEC-20260723-REALM01 = C`。
-- 依赖与状态：G3 已通过；负责人决定已锁定；无待决策。D-REALM-DEC-02～04 不属于本卡前置。
+- 依赖与状态：已完成；G3 已通过；负责人决定已锁定；无待决策。D-REALM-DEC-02～04 不属于本卡前置。
 - 必读：`开发管理/设计-当前状态.txt`、`开发管理/高阶内容现行引用分类与决策输入.txt`、四个对应 docs 原文、`src/Assets/DataConfig/Spells.csv`、`Skills.csv`、`Language.csv`、四个对应 asset、`src/Assets/Scripts/Cultivation/GongFaGrowthData.cs`、`src/Assets/Scripts/Game/SectSelectionManager.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` 与 `tools/check-data-chain.ps1`。
 - 预期路径：新建 `开发管理/炼神术法神通资料片隔离验证记录.txt`；更新 `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`开发管理/当前任务队列.txt` 与本文件。
 - 范围：只为 `spell_wanliuguizong`、`spell_tianshuyunzhuan`、`skill_fayu_wanxiangxuanmen`、`skill_lingyu_wanxiangguiyuan` 添加精确 EditMode 回归，证明 CSV 与 asset 均保持 `contentScope=reserved`、`realmReq=realm_lianshen`，且现行玩家装载入口不会把四项加入玩家术法／神通集合；记录四份 docs 与现有语言键的保留关系。
@@ -41,6 +41,7 @@
 - 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/炼神术法神通资料片隔离验证记录.txt,开发管理/当前任务队列.txt,开发管理/任务列表/数据链路任务.txt` 与 `git diff --check`。
 - 完成条件：四项的 CSV、asset、玩家可用策略与实际装载结果均有直接回归；验证记录能逐项回链到 docs、CSV、asset、语言依赖和测试；资料仍保留，但不进入现行玩家可用集合。
 - 停止条件：发现任一玩家装载旁路、CSV／asset 不一致、未知 scope、语言依赖缺失，或闭环必须修改生产代码、数据或内容；保留失败证据，将本卡标为阻塞并另立路径明确的修复卡，不在本卡内补丁化处理。
+- 完成记录：`开发管理/炼神术法神通资料片隔离验证记录.txt` 逐项回链四份 docs、CSV、asset 与语言键；`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 读取现行数据并通过 `SectSelectionManager.UpdateExplorationAbilities` 验证四项均被 `reserved` scope 拒绝，不进入玩家术法／神通集合。未改写生产内容、数据、导入器或运行时代码。
 
 ## 筑基、紫府与丹相后续数据任务卡
 

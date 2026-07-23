@@ -1,0 +1,28 @@
+# 炼神术法／神通资料片隔离验证记录
+
+- 任务：D-REALM-02B「炼神术法／神通资料片隔离闭环验证」。
+- 决定：`DEC-20260723-REALM01 = C`；仅覆盖下列四项及其直接 docs、CSV、asset 和语言键。
+- 边界：四项资料继续保留为资料片预留内容；本记录不处理炼神功法、其他 `reserved` 内容、211 份 docs 或其他高阶语言键。
+
+## 保留关系与数据事实
+
+| 稳定 ID | 保留的 docs 原文 | CSV／asset 对齐 | 保留的语言键 |
+|---|---|---|---|
+| `spell_wanliuguizong` | `docs/角色养成/术法/太一道庭/万流归宗.txt` | `Spells.csv:54` 与 `Spell_spell_wanliuguizong.asset` 均为 `contentScope=reserved`、`realmReq/realmRequirement=realm_lianshen` | `Language.csv:406` 的 `spell_wanliuguizong`；并保留 `Language.csv:446` 的 `realm_lianshen` |
+| `spell_tianshuyunzhuan` | `docs/角色养成/术法/太一道庭/天书云篆.txt` | `Spells.csv:61` 与 `Spell_spell_tianshuyunzhuan.asset` 均为 `contentScope=reserved`、`realmReq/realmRequirement=realm_lianshen` | `Language.csv:413` 的 `spell_tianshuyunzhuan`；并保留 `Language.csv:446` 的 `realm_lianshen` |
+| `skill_fayu_wanxiangxuanmen` | `docs/角色养成/神通/太一道庭/法域·万象玄门.txt` | `Skills.csv:31` 与 `Skill_skill_fayu_wanxiangxuanmen.asset` 均为 `contentScope=reserved`、`realmReq/realmRequirement=realm_lianshen` | `Language.csv:437` 的 `skill_fayu_wanxiangxuanmen`；并保留 `Language.csv:446` 的 `realm_lianshen` |
+| `skill_lingyu_wanxiangguiyuan` | `docs/角色养成/神通/散修/灵域 · 万象归元.txt` | `Skills.csv:35` 与 `Skill_skill_lingyu_wanxiangguiyuan.asset` 均为 `contentScope=reserved`、`realmReq/realmRequirement=realm_lianshen` | `Language.csv:441` 的 `skill_lingyu_wanxiangguiyuan`；并保留 `Language.csv:446` 的 `realm_lianshen` |
+
+四份 docs 和上述语言键均只读核对、未被本任务改写；它们是决定 C 的保留资料关系，不是现行玩家可用内容的批准。
+
+## 玩家装载回归
+
+`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 直接读取四行 CSV 与四份现行 asset，断言每项均保持 `reserved` 与 `realm_lianshen`。随后经 `SectSelectionManager.UpdateExplorationAbilities` 的现行玩家装载入口传入四项对应 ID，断言四次均命中 `Excluded non-player` 的 `contentScope` 拒绝分支，且 `ExplorationController.playerSpells` 与 `playerSkills` 均为空。
+
+这项回归的断言目标是 scope 隔离：`ContentScopePolicy.IsPlayerAvailable` 只接受 `player`，而四项均为 `reserved`。它不创建资料片加载器、第二套内容目录、兼容分支或玩家高阶境界。
+
+## 本次验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：成功，0 error；项目既有 2 个 `SpellData.damageMultiplier` 过时警告。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：成功（退出码 0），包含上述 EditMode 回归。
+- 后续仍须运行严格数据链、管理文本与 Git 差异门禁；其结果随本任务提交记录。
