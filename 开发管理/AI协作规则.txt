@@ -1,4 +1,4 @@
-# AI协作规则
+﻿# AI协作规则
 
 当本项目同时使用 Codex / ChatGPT5.5 与 DeepSeek V4 Pro 时，按本文件分工。用户当次明确指令优先，但不得违反 `AGENTS.md`。
 
