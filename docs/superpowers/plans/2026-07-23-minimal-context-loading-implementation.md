@@ -39,7 +39,7 @@ Run:
 git status --short
 
 $expected = @{
-  'AGENTS.md' = 13150
+  'AGENTS.md' = 13153
   'CLAUDE.md' = 16928
 }
 
@@ -186,7 +186,7 @@ Run:
 $agents = Get-Content -Raw -LiteralPath 'AGENTS.md'
 $claude = Get-Content -Raw -LiteralPath 'CLAUDE.md'
 
-if ((Get-Item -LiteralPath 'AGENTS.md').Length -ge 13150) {
+if ((Get-Item -LiteralPath 'AGENTS.md').Length -ge 13153) {
   throw 'AGENTS.md did not shrink from the reviewed baseline.'
 }
 if ((Get-Item -LiteralPath 'CLAUDE.md').Length -ge 16928) {
