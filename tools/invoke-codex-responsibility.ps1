@@ -230,15 +230,23 @@ function Get-CommitMetadata {
 }
 
 function Close-Run {
-  param([string]$Category, [string]$DetailCode)
+  param(
+    [string]$Category,
+    [string]$DetailCode,
+    [string]$BlockingFingerprint
+  )
 
-  $recorded = Invoke-LeaseAction -LeaseAction RecordResult -Parameters @{
+  $recordParameters = @{
     StateRoot = $StateRoot
     RunId = $RunId
     Category = $Category
     TaskId = $TaskId
     DetailCode = $DetailCode
   }
+  if ($Category -ceq 'blocked') {
+    $recordParameters.BlockingFingerprint = $BlockingFingerprint
+  }
+  $recorded = Invoke-LeaseAction -LeaseAction RecordResult -Parameters $recordParameters
   if ([string]$recorded.status -cne 'RECORDED') {
     throw "RecordResult returned $($recorded.status)"
   }
@@ -370,12 +378,6 @@ try {
       sessionId = $capturedSessionId; commitSha = $verifiedCommitSha
     }
     $resultExitCode = 0
-  } elseif ($newCommits.Count -gt 0) {
-    $result = [ordered]@{
-      status = 'blocked'; category = 'blocked'; taskId = $TaskId; runId = $RunId
-      sessionId = $capturedSessionId; commitSha = $null; detailCode = 'unverified_commit_shape'
-    }
-    $resultExitCode = 2
   } elseif ($newChangedPaths.Count -gt 0) {
     if ($null -eq $capturedSessionId) {
       $result = [ordered]@{
@@ -401,6 +403,16 @@ try {
       }
       $resultExitCode = 1
     }
+  } elseif ($newCommits.Count -gt 0) {
+    Close-Run `
+      -Category 'blocked' `
+      -DetailCode 'unverified_commit_shape' `
+      -BlockingFingerprint "unverified_commit_shape:$TaskId"
+    $result = [ordered]@{
+      status = 'blocked'; category = 'blocked'; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $null; detailCode = 'unverified_commit_shape'
+    }
+    $resultExitCode = 2
   } else {
     Close-Run -Category 'failed' -DetailCode 'no_verified_outcome'
     $result = [ordered]@{
