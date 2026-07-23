@@ -77,6 +77,24 @@ Assert-Contains -Text $prompt -Context 'thin controller prompt' -Values @(
   '每轮只',
   'commitSha'
 )
+Assert-Contains -Text $prompt -Context 'deferred wait contract' -Values @(
+  'Script running with cell ID',
+  '同一 cell ID',
+  'functions.wait',
+  '空输出',
+  '不是终态'
+)
+Assert-Contract `
+  -Condition (-not [regex]::IsMatch($prompt, '(?i)timeout_ms\s*=\s*180000')) `
+  -Message 'invocation timeout contract contains the forbidden 180000ms hard timeout'
+Assert-Contains -Text $prompt -Context 'invocation timeout contract' -Values @(
+  'tools.shell_command',
+  '不得使用 180000 毫秒',
+  'timeout_ms',
+  '3300000 毫秒',
+  '3600 秒租约',
+  '5 分钟边界'
+)
 Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   '单写入租约',
   'RECOVERY_ONLY',

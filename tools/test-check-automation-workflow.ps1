@@ -86,8 +86,10 @@ $canonicalPrompt = @'
 2. 未暂停时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；恢复原责任优先，否则统一排序。
 3. 每轮只选一个执行、复审、外部 AI 或队列维护任务，并调用 `Acquire`。
 4. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。
-5. 等待同一次调用返回；不得实施、验证、stage、commit 或启动第二责任方。
-6. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
+5. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
+6. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
+7. 等待同一次调用返回；不得实施、验证、stage、commit 或启动第二责任方。
+8. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
 '@
 
 $canonicalRules = @'
@@ -139,6 +141,26 @@ try {
 
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt ($canonicalPrompt + "`ndrift")
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused controller drift' -Contains 'controller prompt'
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+
+  $unsafeWaitPrompt = $canonicalPrompt.Replace(
+    '6. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。',
+    '6. 等待同一次调用返回；不得实施、验证、stage、commit 或启动第二责任方。'
+  )
+  Write-Utf8File -Path $promptPath -Content $unsafeWaitPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $unsafeWaitPrompt
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing deferred wait contract' -Contains 'deferred wait contract'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+
+  $unsafeTimeoutPrompt = $canonicalPrompt.Replace(
+    '5. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。',
+    '5. 固定调用器的 `tools.shell_command` 使用 `timeout_ms=180000` 的三分钟硬超时。'
+  )
+  Write-Utf8File -Path $promptPath -Content $unsafeTimeoutPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $unsafeTimeoutPrompt
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Three-minute invoker timeout' -Contains 'invocation timeout contract'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt ($canonicalDailyPrompt + "`ndrift")

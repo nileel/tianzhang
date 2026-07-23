@@ -5,7 +5,7 @@
 1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。逻辑暂停时立即输出 `suspended` 并结束，不读取候选事实源；存在 recovery 时只处理原责任方恢复。
 2. 未暂停且无 recovery 时，读取 `开发管理/自动工作流规则.txt` 及判断候选所需的最小事实源。汇总执行、复审和外部 AI 合法候选后统一排序；三类均无合法候选时才选择一次队列维护。
 3. 每轮只选一个 TaskId，并调用 `Acquire`。原中断责任方使用 `Acquire -ResumeRecovery`；未取得租约时报告占用或恢复状态后结束。
-4. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用 `开发管理/自动工作流规则.txt` 指定的既有 wrapper。等待同一次调用返回，不重新启动、不启动第二责任方。
+4. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用 `开发管理/自动工作流规则.txt` 指定的既有 wrapper。固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动、不启动第二责任方。
 5. 固定调用器根据 Git 与 runtime 核验 Codex 结果并统一记录、释放租约；控制器不读取业务 diff，也不自行调用 `RecordResult` 或 `Release`。外部 AI 只接收既有 wrapper 返回的状态和两个提交 SHA。
 6. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。相同全阻塞原因达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。
 
