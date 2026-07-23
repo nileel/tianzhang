@@ -154,17 +154,16 @@ $automationStateRoot = Join-Path $env:USERPROFILE '.codex\automation-state'
 $testId = [Guid]::NewGuid().ToString('N')
 $stateRoot = Join-Path $automationStateRoot "tzg-hourly-controller-lease-tests\$testId"
 $legacyStateRoot = Join-Path $stateRoot 'legacy-v1'
+$legacyV2StateRoot = Join-Path $stateRoot 'legacy-v2'
 $bridgeRoot = Join-Path $automationStateRoot "tzg-feishu-decision-bridge\lease-test-$testId"
 $statePath = Join-Path $stateRoot 'runtime.json'
 $requestPath = Join-Path $bridgeRoot 'decision-request.json'
-$replyOnePath = Join-Path $bridgeRoot 'reply-one.json'
-$replyTwoPath = Join-Path $bridgeRoot 'reply-two.json'
 
 try {
   [IO.Directory]::CreateDirectory($bridgeRoot) | Out-Null
   Set-PrivatePathAcl -Path $bridgeRoot -Directory
   Assert-PrivatePathAcl -Path $bridgeRoot -Directory
-  foreach ($fixturePath in @($requestPath, $replyOnePath, $replyTwoPath)) {
+  foreach ($fixturePath in @($requestPath)) {
     [IO.File]::WriteAllText($fixturePath, '{"fixture":true}', [Text.UTF8Encoding]::new($false))
     Set-PrivatePathAcl -Path $fixturePath
     Assert-PrivatePathAcl -Path $fixturePath
@@ -189,8 +188,45 @@ try {
   [IO.File]::WriteAllText($legacyStatePath, ($legacyState | ConvertTo-Json -Compress -Depth 10), [Text.UTF8Encoding]::new($false))
   Set-PrivatePathAcl -Path $legacyStatePath
   $migratedLegacy = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $legacyStateRoot }
-  Assert-Equal -Actual $migratedLegacy.Json.state.schemaVersion -Expected 2 -Message 'Legacy runtime was not migrated in memory'
+  Assert-Equal -Actual $migratedLegacy.Json.state.schemaVersion -Expected 3 -Message 'Legacy runtime was not migrated in memory'
+  Assert-True -Condition ($null -eq $migratedLegacy.Json.state.PSObject.Properties['pendingResumes']) -Message 'Legacy migration retained the removed pending resume queue'
   Assert-True -Condition ($null -eq $migratedLegacy.Json.state.lastResult.runId) -Message 'Legacy result migration invented a run id'
+
+  [IO.Directory]::CreateDirectory($legacyV2StateRoot) | Out-Null
+  Set-PrivatePathAcl -Path $legacyV2StateRoot -Directory
+  $legacyV2StatePath = Join-Path $legacyV2StateRoot 'runtime.json'
+  $legacyV2State = [ordered]@{
+    schemaVersion = 2
+    lease = $null
+    recovery = [ordered]@{
+      trigger = 'decision'
+      runId = 'legacy-v2-run'
+      taskId = 'legacy-v2-task'
+      owner = 'codex'
+      repositoryRoot = $repositoryRoot
+      resumeKind = 'codex'
+      resumeId = 'legacy-v2-thread'
+      decisionId = 'legacy-v2-decision'
+      decisionRequestPath = $requestPath
+      hasUncommittedChanges = $false
+      changedPaths = @()
+    }
+    pendingResumes = @([ordered]@{
+      decisionId = 'legacy-v2-decision'
+      replyPath = 'ignored.json'
+      queuedAt = '2026-07-24T00:00:00.0000000+00:00'
+    })
+    blocking = [ordered]@{ fingerprint = $null; count = 0; pauseRequested = $false }
+    lastResult = $null
+  }
+  [IO.File]::WriteAllText($legacyV2StatePath, ($legacyV2State | ConvertTo-Json -Compress -Depth 10), [Text.UTF8Encoding]::new($false))
+  Set-PrivatePathAcl -Path $legacyV2StatePath
+  $migratedLegacyV2 = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $legacyV2StateRoot }
+  Assert-Equal -Actual $migratedLegacyV2.Json.state.schemaVersion -Expected 3 -Message 'Schema v2 runtime was not migrated in memory'
+  Assert-True -Condition ($null -eq $migratedLegacyV2.Json.state.PSObject.Properties['pendingResumes']) -Message 'Schema v2 migration retained the removed pending resume queue'
+  Assert-True -Condition ($null -eq $migratedLegacyV2.Json.state.recovery.PSObject.Properties['resumeKind']) -Message 'Schema v2 decision migration retained the resume kind'
+  Assert-True -Condition ($null -eq $migratedLegacyV2.Json.state.recovery.PSObject.Properties['resumeId']) -Message 'Schema v2 decision migration retained the resume id'
+  Assert-Equal -Actual $migratedLegacyV2.Json.state.recovery.decisionId -Expected 'legacy-v2-decision' -Message 'Schema v2 migration lost the decision id'
 
   $relativeState = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = 'relative-state' } -AllowedExitCodes @(2)
   Assert-Equal -Actual $relativeState.Json.status -Expected 'INVALID_ARGUMENT' -Message 'Relative state root must be rejected'
@@ -332,7 +368,6 @@ try {
     RunId = $recoveryOwner.Json.runId
     DecisionId = 'decision-invalid-shape'
     DecisionRequestPath = $requestPath
-    CodexThreadId = 'thread-invalid-shape'
   }
   Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-recovery-only'
   Assert-RejectedWithoutStateChange -Action SaveRecovery -StatePath $statePath -ExpectedStatus 'INVALID_ARGUMENT' -Parameters @{
@@ -341,20 +376,23 @@ try {
     DecisionId = 'decision-recovery-only'
     DecisionRequestPath = $requestPath
     CodexThreadId = 'thread-recovery-only'
-    ClaudeSessionId = 'session-recovery-only'
   }
   $savedRecovery = Invoke-LeaseTool -Action SaveRecovery -Parameters @{
     StateRoot = $stateRoot
     RunId = $recoveryOwner.Json.runId
     DecisionId = 'decision-recovery-only'
     DecisionRequestPath = $requestPath
-    CodexThreadId = 'thread-recovery-only'
-    HasUncommittedChanges = $true
-    ChangedPaths = @('tools/recovery-one.txt', 'tools/recovery-two.txt')
   }
-  Assert-Equal -Actual $savedRecovery.Json.status -Expected 'RECOVERY_SAVED' -Message 'Codex recovery was not saved'
+  Assert-Equal -Actual $savedRecovery.Json.status -Expected 'RECOVERY_SAVED' -Message 'Decision recovery was not saved'
   Assert-Equal -Actual $savedRecovery.Json.recovery.trigger -Expected 'decision' -Message 'Decision recovery trigger mismatch'
   Assert-Equal -Actual $savedRecovery.Json.recovery.runId -Expected $recoveryOwner.Json.runId -Message 'Decision recovery run id mismatch'
+  $decisionRecoveryNames = @($savedRecovery.Json.recovery.PSObject.Properties.Name | Sort-Object)
+  $expectedDecisionRecoveryNames = @('changedPaths', 'decisionId', 'decisionRequestPath', 'hasUncommittedChanges', 'owner', 'repositoryRoot', 'runId', 'taskId', 'trigger') | Sort-Object
+  Assert-Equal -Actual ($decisionRecoveryNames -join ',') -Expected ($expectedDecisionRecoveryNames -join ',') -Message 'Decision recovery schema has unexpected fields'
+  Assert-True -Condition ($null -eq $savedRecovery.Json.recovery.PSObject.Properties['resumeKind']) -Message 'Decision recovery retained a resume kind'
+  Assert-True -Condition ($null -eq $savedRecovery.Json.recovery.PSObject.Properties['resumeId']) -Message 'Decision recovery retained a resume id'
+  Assert-True -Condition (-not [bool]$savedRecovery.Json.recovery.hasUncommittedChanges) -Message 'Decision recovery invented uncommitted changes'
+  Assert-Equal -Actual @($savedRecovery.Json.recovery.changedPaths).Count -Expected 0 -Message 'Decision recovery invented changed paths'
   $validWaiting = Invoke-LeaseTool -Action RecordResult -Parameters @{
     StateRoot = $stateRoot
     RunId = $recoveryOwner.Json.runId
@@ -371,7 +409,7 @@ try {
     Owner = 'external'
     RepositoryRoot = $repositoryRoot
   }
-  Assert-Equal -Actual $recoveryOnly.Json.status -Expected 'RECOVERY_ONLY' -Message 'Uncommitted recovery did not block normal acquire'
+  Assert-Equal -Actual $recoveryOnly.Json.status -Expected 'RECOVERY_ONLY' -Message 'Decision recovery did not block normal acquire'
   Assert-Equal -Actual $recoveryOnly.Json.taskId -Expected 'task-recovery-only' -Message 'Recovery-only response lost original task'
   Invoke-LeaseTool -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryOwner.Json.runId } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryOwner.Json.runId } | Out-Null
@@ -388,10 +426,9 @@ try {
     RunId = $claudeOwner.Json.runId
     DecisionId = 'decision-claude'
     DecisionRequestPath = $requestPath
-    ClaudeSessionId = 'session-claude'
   }
-  Assert-Equal -Actual $claudeRecovery.Json.recovery.resumeKind -Expected 'claude' -Message 'Claude recovery kind mismatch'
-  Assert-Equal -Actual $claudeRecovery.Json.recovery.resumeId -Expected 'session-claude' -Message 'Claude recovery id mismatch'
+  Assert-True -Condition ($null -eq $claudeRecovery.Json.recovery.PSObject.Properties['resumeKind']) -Message 'External decision recovery retained a resume kind'
+  Assert-True -Condition ($null -eq $claudeRecovery.Json.recovery.PSObject.Properties['resumeId']) -Message 'External decision recovery retained a resume id'
   Invoke-LeaseTool -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $claudeOwner.Json.runId } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $claudeOwner.Json.runId } | Out-Null
 
@@ -410,13 +447,9 @@ try {
   }
   Assert-Equal -Actual $interruption.Json.recovery.trigger -Expected 'interruption' -Message 'Interruption recovery trigger mismatch'
   Assert-Equal -Actual $interruption.Json.recovery.runId -Expected $interruptionOwner.Json.runId -Message 'Interruption recovery run id mismatch'
-  Assert-True -Condition ($null -eq $interruption.Json.recovery.decisionId) -Message 'Interruption recovery invented a decision id'
-  $queueInterruption = Invoke-LeaseTool -Action QueueResume -Parameters @{
-    StateRoot = $stateRoot
-    DecisionId = 'not-a-decision-recovery'
-    ReplyPath = $replyOnePath
-  } -AllowedExitCodes @(2)
-  Assert-Equal -Actual $queueInterruption.Json.status -Expected 'RECOVERY_NOT_DECISION' -Message 'QueueResume accepted interruption recovery'
+  $interruptionRecoveryNames = @($interruption.Json.recovery.PSObject.Properties.Name | Sort-Object)
+  $expectedInterruptionRecoveryNames = @('changedPaths', 'hasUncommittedChanges', 'owner', 'repositoryRoot', 'resumeId', 'resumeKind', 'runId', 'taskId', 'trigger') | Sort-Object
+  Assert-Equal -Actual ($interruptionRecoveryNames -join ',') -Expected ($expectedInterruptionRecoveryNames -join ',') -Message 'Interruption recovery schema has unexpected fields'
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $interruptionOwner.Json.runId } | Out-Null
   $otherDuringInterruption = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot
@@ -450,7 +483,6 @@ try {
     RunId = $resumeOwner.Json.runId
     DecisionId = 'decision-resume'
     DecisionRequestPath = $requestPath
-    CodexThreadId = 'thread-resume'
   } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $resumeOwner.Json.runId } | Out-Null
 
@@ -481,60 +513,20 @@ try {
   }
   Assert-Equal -Actual $manualDecisionLease.Json.status -Expected 'RECOVERY_ACQUIRED' -Message 'Manual decision recovery could not acquire the original task'
   Assert-Equal -Actual $manualDecisionLease.Json.decisionId -Expected 'decision-resume' -Message 'Manual decision recovery lost the decision id'
+  Assert-True -Condition ($null -eq $manualDecisionLease.Json.PSObject.Properties['resumeKind']) -Message 'Decision recovery acquire exposed a resume kind'
+  Assert-True -Condition ($null -eq $manualDecisionLease.Json.PSObject.Properties['resumeId']) -Message 'Decision recovery acquire exposed a resume id'
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $manualDecisionLease.Json.runId } | Out-Null
 
   $clearWithRecovery = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
   Assert-Equal -Actual $clearWithRecovery.Json.status -Expected 'RECOVERY_PRESENT' -Message 'ClearBlocking ignored recovery'
-
-  $busyOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-busy'
-    Owner = 'codex'
-    RepositoryRoot = $repositoryRoot
-  }
-  $queued = Invoke-LeaseTool -Action QueueResume -Parameters @{
-    StateRoot = $stateRoot
-    DecisionId = 'decision-resume'
-    ReplyPath = $replyOnePath
-  }
-  Assert-Equal -Actual $queued.Json.status -Expected 'QUEUED' -Message 'Reply was not queued while lease was busy'
-  $queuedAgain = Invoke-LeaseTool -Action QueueResume -Parameters @{
-    StateRoot = $stateRoot
-    DecisionId = 'decision-resume'
-    ReplyPath = $replyOnePath
-  }
-  Assert-Equal -Actual $queuedAgain.Json.status -Expected 'QUEUED' -Message 'Duplicate queued reply returned wrong status'
-  Assert-True -Condition ([bool]$queuedAgain.Json.duplicate) -Message 'Duplicate queued reply was not identified'
-  $showQueued = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
-  Assert-Equal -Actual @($showQueued.Json.state.pendingResumes).Count -Expected 1 -Message 'Duplicate reply was queued twice'
-  $releaseBusy = Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $busyOwner.Json.runId }
-  Assert-True -Condition ([bool]$releaseBusy.Json.readyResume) -Message 'Release did not report ready resume'
-
-  $clearWithPending = Invoke-LeaseTool -Action ClearBlocking -Parameters @{ StateRoot = $stateRoot }
-  Assert-Equal -Actual $clearWithPending.Json.status -Expected 'PENDING_RESUMES' -Message 'ClearBlocking ignored pending resumes'
-
-  $taken = Invoke-LeaseTool -Action TakeResume -Parameters @{ StateRoot = $stateRoot }
-  Assert-Equal -Actual $taken.Json.status -Expected 'DISPATCH' -Message 'TakeResume did not dispatch queued reply'
-  Assert-Equal -Actual $taken.Json.taskId -Expected 'task-resume' -Message 'TakeResume acquired wrong task'
-  Assert-Equal -Actual $taken.Json.replyPath -Expected ([IO.Path]::GetFullPath($replyOnePath)) -Message 'TakeResume returned wrong reply path'
-  $takeAgain = Invoke-LeaseTool -Action TakeResume -Parameters @{ StateRoot = $stateRoot }
-  Assert-Equal -Actual $takeAgain.Json.status -Expected 'BUSY' -Message 'TakeResume dispatched more than once'
-  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $taken.Json.runId } | Out-Null
-
-  $directDispatch = Invoke-LeaseTool -Action QueueResume -Parameters @{
-    StateRoot = $stateRoot
-    DecisionId = 'decision-resume'
-    ReplyPath = $replyTwoPath
-  }
-  Assert-Equal -Actual $directDispatch.Json.status -Expected 'DISPATCH' -Message 'QueueResume without lease did not dispatch'
-  Assert-Equal -Actual $directDispatch.Json.taskId -Expected 'task-resume' -Message 'Direct dispatch acquired wrong task'
-  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $directDispatch.Json.runId } | Out-Null
 
   $clearOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot
     TaskId = 'task-resume'
     Owner = 'codex'
     RepositoryRoot = $repositoryRoot
+    ResumeRecovery = $true
+    DecisionId = 'decision-resume'
   }
   Invoke-LeaseTool -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $clearOwner.Json.runId } | Out-Null
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $clearOwner.Json.runId } | Out-Null
@@ -673,56 +665,13 @@ try {
   Assert-Equal -Actual $refilled.Json.blocking.count -Expected 0 -Message 'Refilled did not reset blocking count'
   Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $refilledOwner.Json.runId } | Out-Null
 
-  $stalePendingOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-stale-pending'
-    Owner = 'codex'
-    RepositoryRoot = $repositoryRoot
-  }
-  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-stale-one'
-  Invoke-LeaseTool -Action SaveRecovery -Parameters @{
-    StateRoot = $stateRoot
-    RunId = $stalePendingOwner.Json.runId
-    DecisionId = 'decision-stale-one'
-    DecisionRequestPath = $requestPath
-    CodexThreadId = 'thread-stale-pending'
-  } | Out-Null
-  Invoke-LeaseTool -Action QueueResume -Parameters @{
-    StateRoot = $stateRoot
-    DecisionId = 'decision-stale-one'
-    ReplyPath = $replyOnePath
-  } | Out-Null
-  Write-ConsumeRequestFixture -Path $requestPath -DecisionId 'decision-stale-two'
-  Invoke-LeaseTool -Action SaveRecovery -Parameters @{
-    StateRoot = $stateRoot
-    RunId = $stalePendingOwner.Json.runId
-    DecisionId = 'decision-stale-two'
-    DecisionRequestPath = $requestPath
-    CodexThreadId = 'thread-stale-pending'
-  } | Out-Null
-  $afterDecisionReplacement = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
-  Assert-Equal -Actual @($afterDecisionReplacement.Json.state.pendingResumes).Count -Expected 0 -Message 'Replacing a decision recovery retained a stale pending reply'
-  Invoke-LeaseTool -Action QueueResume -Parameters @{
-    StateRoot = $stateRoot
-    DecisionId = 'decision-stale-two'
-    ReplyPath = $replyTwoPath
-  } | Out-Null
-  Invoke-LeaseTool -Action ClearRecovery -Parameters @{
-    StateRoot = $stateRoot
-    RunId = $stalePendingOwner.Json.runId
-  } | Out-Null
-  $afterRecoveryClear = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
-  Assert-Equal -Actual @($afterRecoveryClear.Json.state.pendingResumes).Count -Expected 0 -Message 'Clearing recovery retained a pending reply'
-  Invoke-LeaseTool -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $stalePendingOwner.Json.runId } | Out-Null
-
   $finalShow = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
   $topLevelNames = @($finalShow.Json.state.PSObject.Properties.Name | Sort-Object)
-  $expectedTopLevelNames = @('blocking', 'lastResult', 'lease', 'pendingResumes', 'recovery', 'schemaVersion') | Sort-Object
+  $expectedTopLevelNames = @('blocking', 'lastResult', 'lease', 'recovery', 'schemaVersion') | Sort-Object
   Assert-Equal -Actual ($topLevelNames -join ',') -Expected ($expectedTopLevelNames -join ',') -Message 'Runtime state schema has unexpected top-level fields'
-  Assert-Equal -Actual $finalShow.Json.state.schemaVersion -Expected 2 -Message 'Runtime schema version mismatch'
+  Assert-Equal -Actual $finalShow.Json.state.schemaVersion -Expected 3 -Message 'Runtime schema version mismatch'
   Assert-True -Condition ($null -eq $finalShow.Json.state.lease) -Message 'Final lease was not released'
   Assert-True -Condition ($null -eq $finalShow.Json.state.recovery) -Message 'Final recovery was not cleared'
-  Assert-Equal -Actual @($finalShow.Json.state.pendingResumes).Count -Expected 0 -Message 'Final pending resume queue was not empty'
 
   $bytes = [IO.File]::ReadAllBytes($statePath)
   $hasBom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF

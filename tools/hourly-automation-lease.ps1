@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'SaveInterruption', 'ClearRecovery', 'QueueResume', 'TakeResume', 'RecordResult', 'ClearBlocking', 'Release')]
+  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'SaveInterruption', 'ClearRecovery', 'RecordResult', 'ClearBlocking', 'Release')]
   [string]$Action,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$TaskId,
@@ -22,8 +22,7 @@ param(
   [string]$ClaudeSessionId,
   [switch]$HasUncommittedChanges,
   [switch]$ResumeRecovery,
-  [string]$ChangedPaths,
-  [string]$ReplyPath
+  [string]$ChangedPaths
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,10 +32,9 @@ $aclScript = Join-Path $PSScriptRoot 'private-path-acl.ps1'
 
 function New-RuntimeState {
   [pscustomobject][ordered]@{
-    schemaVersion = 2
+    schemaVersion = 3
     lease = $null
     recovery = $null
-    pendingResumes = @()
     blocking = [pscustomobject][ordered]@{
       fingerprint = $null
       count = 0
@@ -322,11 +320,10 @@ function Assert-RuntimeState {
     'schemaVersion',
     'lease',
     'recovery',
-    'pendingResumes',
     'blocking',
     'lastResult'
   ) -Context 'runtime state'
-  if ($State.schemaVersion -ne 2) {
+  if ($State.schemaVersion -ne 3) {
     throw [IO.InvalidDataException]::new('Unsupported runtime state schema')
   }
   if ($null -ne $State.lease) {
@@ -340,31 +337,35 @@ function Assert-RuntimeState {
     ) -Context 'lease'
   }
   if ($null -ne $State.recovery) {
-    Assert-PropertySet -Object $State.recovery -Expected @(
-      'trigger',
-      'runId',
-      'taskId',
-      'owner',
-      'repositoryRoot',
-      'resumeKind',
-      'resumeId',
-      'decisionId',
-      'decisionRequestPath',
-      'hasUncommittedChanges',
-      'changedPaths'
-    ) -Context 'recovery'
-    if ([string]$State.recovery.trigger -cnotin @('decision', 'interruption')) {
+    $recoveryTrigger = [string]$State.recovery.trigger
+    if ($recoveryTrigger -cnotin @('decision', 'interruption')) {
       throw [IO.InvalidDataException]::new('Recovery trigger is invalid')
     }
-    if (
-      [string]$State.recovery.trigger -ceq 'interruption' -and
-      ($null -ne $State.recovery.decisionId -or $null -ne $State.recovery.decisionRequestPath)
-    ) {
-      throw [IO.InvalidDataException]::new('Interruption recovery cannot contain decision fields')
+    if ($recoveryTrigger -ceq 'decision') {
+      Assert-PropertySet -Object $State.recovery -Expected @(
+        'trigger',
+        'runId',
+        'taskId',
+        'owner',
+        'repositoryRoot',
+        'decisionId',
+        'decisionRequestPath',
+        'hasUncommittedChanges',
+        'changedPaths'
+      ) -Context 'decision recovery'
+    } else {
+      Assert-PropertySet -Object $State.recovery -Expected @(
+        'trigger',
+        'runId',
+        'taskId',
+        'owner',
+        'repositoryRoot',
+        'resumeKind',
+        'resumeId',
+        'hasUncommittedChanges',
+        'changedPaths'
+      ) -Context 'interruption recovery'
     }
-  }
-  foreach ($pending in @($State.pendingResumes)) {
-    Assert-PropertySet -Object $pending -Expected @('decisionId', 'replyPath', 'queuedAt') -Context 'pending resume'
   }
   if ($null -eq $State.blocking) {
     throw [IO.InvalidDataException]::new('Runtime state is missing blocking state')
@@ -388,21 +389,56 @@ function Assert-RuntimeState {
 function Convert-RuntimeStateSchema {
   param([Parameter(Mandatory = $true)][object]$State)
 
-  if ($State.schemaVersion -eq 2) {
+  if ($State.schemaVersion -eq 3) {
     return $State
   }
-  if ($State.schemaVersion -ne 1) {
+  if ($State.schemaVersion -cnotin @(1, 2)) {
     throw [IO.InvalidDataException]::new('Unsupported runtime state schema')
   }
-  if ($null -ne $State.recovery) {
+  if ($State.schemaVersion -eq 1 -and $null -ne $State.recovery) {
     $State.recovery | Add-Member -NotePropertyName trigger -NotePropertyValue 'decision'
     $State.recovery | Add-Member -NotePropertyName runId -NotePropertyValue $null
   }
-  if ($null -ne $State.lastResult) {
+  if ($State.schemaVersion -eq 1 -and $null -ne $State.lastResult) {
     $State.lastResult | Add-Member -NotePropertyName runId -NotePropertyValue $null
   }
-  $State.schemaVersion = 2
-  $State
+  $recovery = $null
+  if ($null -ne $State.recovery) {
+    if ([string]$State.recovery.trigger -ceq 'decision') {
+      $recovery = [pscustomobject][ordered]@{
+        trigger = 'decision'
+        runId = $State.recovery.runId
+        taskId = $State.recovery.taskId
+        owner = $State.recovery.owner
+        repositoryRoot = $State.recovery.repositoryRoot
+        decisionId = $State.recovery.decisionId
+        decisionRequestPath = $State.recovery.decisionRequestPath
+        hasUncommittedChanges = [bool]$State.recovery.hasUncommittedChanges
+        changedPaths = @($State.recovery.changedPaths)
+      }
+    } elseif ([string]$State.recovery.trigger -ceq 'interruption') {
+      $recovery = [pscustomobject][ordered]@{
+        trigger = 'interruption'
+        runId = $State.recovery.runId
+        taskId = $State.recovery.taskId
+        owner = $State.recovery.owner
+        repositoryRoot = $State.recovery.repositoryRoot
+        resumeKind = $State.recovery.resumeKind
+        resumeId = $State.recovery.resumeId
+        hasUncommittedChanges = [bool]$State.recovery.hasUncommittedChanges
+        changedPaths = @($State.recovery.changedPaths)
+      }
+    } else {
+      throw [IO.InvalidDataException]::new('Recovery trigger is invalid')
+    }
+  }
+  [pscustomobject][ordered]@{
+    schemaVersion = 3
+    lease = $State.lease
+    recovery = $recovery
+    blocking = $State.blocking
+    lastResult = $State.lastResult
+  }
 }
 
 function Initialize-StateRoot {
@@ -429,7 +465,6 @@ function Read-RuntimeState {
   }
   $state = Convert-RuntimeStateSchema -State $state
   Assert-RuntimeState -State $state
-  $state.pendingResumes = @($state.pendingResumes)
   $state
 }
 
@@ -527,48 +562,6 @@ function Test-CurrentRun {
   $null -ne $Lease -and
     -not [string]::IsNullOrWhiteSpace($ExpectedRunId) -and
     ([string]$Lease.runId).Equals($ExpectedRunId, [StringComparison]::Ordinal)
-}
-
-function New-DispatchResult {
-  param(
-    [Parameter(Mandatory = $true)]
-    [object]$State,
-    [Parameter(Mandatory = $true)]
-    [string]$DispatchReplyPath
-  )
-
-  New-Result -Status 'DISPATCH' -Values @{
-    runId = $State.lease.runId
-    taskId = $State.recovery.taskId
-    owner = $State.recovery.owner
-    repositoryRoot = $State.recovery.repositoryRoot
-    resumeKind = $State.recovery.resumeKind
-    resumeId = $State.recovery.resumeId
-    decisionId = $State.recovery.decisionId
-    decisionRequestPath = $State.recovery.decisionRequestPath
-    replyPath = $DispatchReplyPath
-  }
-}
-
-function Start-RecoveryLease {
-  param(
-    [Parameter(Mandatory = $true)]
-    [object]$State,
-    [Parameter(Mandatory = $true)]
-    [DateTimeOffset]$Now,
-    [Parameter(Mandatory = $true)]
-    [int]$DurationSeconds
-  )
-
-  if ($null -eq $State.recovery) {
-    throw [IO.InvalidDataException]::new('Pending resume has no recovery pointer')
-  }
-  $State.lease = New-Lease `
-    -LeaseTaskId ([string]$State.recovery.taskId) `
-    -LeaseOwner ([string]$State.recovery.owner) `
-    -LeaseRepositoryRoot ([string]$State.recovery.repositoryRoot) `
-    -Now $Now `
-    -DurationSeconds $DurationSeconds
 }
 
 $normalizedStateRoot = $null
@@ -671,32 +664,41 @@ try {
             -Now $now `
             -DurationSeconds $LeaseSeconds
           Write-RuntimeState -Path $statePath -State $state
-          $result = New-Result -Status 'RECOVERY_ACQUIRED' -Values @{
+          $recoveryValues = @{
             runId = $state.lease.runId
             taskId = $state.recovery.taskId
             owner = $state.recovery.owner
             repositoryRoot = $state.recovery.repositoryRoot
-            resumeKind = $state.recovery.resumeKind
-            resumeId = $state.recovery.resumeId
             trigger = $state.recovery.trigger
-            decisionId = $state.recovery.decisionId
             changedPaths = @($state.recovery.changedPaths)
           }
+          if ($recoveryTrigger -ceq 'decision') {
+            $recoveryValues.decisionId = $state.recovery.decisionId
+            $recoveryValues.decisionRequestPath = $state.recovery.decisionRequestPath
+          } else {
+            $recoveryValues.resumeKind = $state.recovery.resumeKind
+            $recoveryValues.resumeId = $state.recovery.resumeId
+          }
+          $result = New-Result -Status 'RECOVERY_ACQUIRED' -Values $recoveryValues
           break
         }
         if (
           ($null -eq $state.lease -or $leaseExpired) -and
-          $null -ne $state.recovery -and
-          [bool]$state.recovery.hasUncommittedChanges
+          $null -ne $state.recovery
         ) {
-          $result = New-Result -Status 'RECOVERY_ONLY' -Values @{
+          $recoveryValues = @{
             taskId = $state.recovery.taskId
             owner = $state.recovery.owner
-            resumeKind = $state.recovery.resumeKind
-            resumeId = $state.recovery.resumeId
-            decisionId = $state.recovery.decisionId
+            trigger = $state.recovery.trigger
             changedPaths = @($state.recovery.changedPaths)
           }
+          if ([string]$state.recovery.trigger -ceq 'decision') {
+            $recoveryValues.decisionId = $state.recovery.decisionId
+          } else {
+            $recoveryValues.resumeKind = $state.recovery.resumeKind
+            $recoveryValues.resumeId = $state.recovery.resumeId
+          }
+          $result = New-Result -Status 'RECOVERY_ONLY' -Values $recoveryValues
           break
         }
         $state.lease = New-Lease `
@@ -729,17 +731,13 @@ try {
         Assert-DecisionConsumeRequest `
           -Path $normalizedRequestPath `
           -ExpectedDecisionId $DecisionId
-        $hasCodex = -not [string]::IsNullOrWhiteSpace($CodexThreadId)
-        $hasClaude = -not [string]::IsNullOrWhiteSpace($ClaudeSessionId)
-        if ($hasCodex -eq $hasClaude) {
-          throw [ArgumentException]::new('Exactly one CodexThreadId or ClaudeSessionId is required')
-        }
-        $resumeKind = if ($hasCodex) { 'codex' } else { 'claude' }
-        $resumeId = if ($hasCodex) { $CodexThreadId } else { $ClaudeSessionId }
-        Assert-StableText -Value $resumeId -ParameterName 'resumeId' -MaximumLength 512
-        $normalizedChangedPaths = Convert-ChangedPaths -Value $ChangedPaths
-        if (-not $HasUncommittedChanges -and $normalizedChangedPaths.Count -gt 0) {
-          throw [ArgumentException]::new('ChangedPaths require HasUncommittedChanges')
+        if (
+          -not [string]::IsNullOrWhiteSpace($CodexThreadId) -or
+          -not [string]::IsNullOrWhiteSpace($ClaudeSessionId) -or
+          [bool]$HasUncommittedChanges -or
+          -not [string]::IsNullOrWhiteSpace($ChangedPaths)
+        ) {
+          throw [ArgumentException]::new('Decision recovery cannot contain session or uncommitted-change fields')
         }
         $state.recovery = [pscustomobject][ordered]@{
           trigger = 'decision'
@@ -747,18 +745,11 @@ try {
           taskId = $state.lease.taskId
           owner = $state.lease.owner
           repositoryRoot = $state.lease.repositoryRoot
-          resumeKind = $resumeKind
-          resumeId = $resumeId
           decisionId = $DecisionId
           decisionRequestPath = $normalizedRequestPath
-          hasUncommittedChanges = [bool]$HasUncommittedChanges
-          changedPaths = @($normalizedChangedPaths)
+          hasUncommittedChanges = $false
+          changedPaths = @()
         }
-        $state.pendingResumes = @(
-          $state.pendingResumes | Where-Object {
-            ([string]$_.decisionId).Equals($DecisionId, [StringComparison]::Ordinal)
-          }
-        )
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECOVERY_SAVED' -Values @{ recovery = $state.recovery }
       }
@@ -789,12 +780,9 @@ try {
           repositoryRoot = $state.lease.repositoryRoot
           resumeKind = $resumeKind
           resumeId = $resumeId
-          decisionId = $null
-          decisionRequestPath = $null
           hasUncommittedChanges = $true
           changedPaths = @($normalizedChangedPaths)
         }
-        $state.pendingResumes = [object[]]@()
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECOVERY_SAVED' -Values @{ recovery = $state.recovery }
       }
@@ -806,99 +794,8 @@ try {
           break
         }
         $state.recovery = $null
-        $state.pendingResumes = [object[]]@()
         Write-RuntimeState -Path $statePath -State $state
         $result = New-Result -Status 'RECOVERY_CLEARED'
-      }
-
-      'QueueResume' {
-        Assert-StableText -Value $DecisionId -ParameterName 'DecisionId'
-        $normalizedReplyPath = Resolve-ApprovedPrivateFile -Path $ReplyPath -ParameterName 'ReplyPath'
-        if ($null -ne $state.recovery -and [string]$state.recovery.trigger -cne 'decision') {
-          $result = New-Result -Status 'RECOVERY_NOT_DECISION'
-          $resultExitCode = 2
-          break
-        }
-        if ($null -eq $state.recovery -or $state.recovery.decisionId -ne $DecisionId) {
-          $result = New-Result -Status 'RECOVERY_NOT_FOUND'
-          $resultExitCode = 2
-          break
-        }
-        $leaseExpired = Test-LeaseExpired -Lease $state.lease -Now $now
-        if ($null -ne $state.lease -and -not $leaseExpired) {
-          $duplicate = $false
-          foreach ($pending in @($state.pendingResumes)) {
-            if (
-              ([string]$pending.decisionId).Equals($DecisionId, [StringComparison]::Ordinal) -and
-              ([string]$pending.replyPath).Equals($normalizedReplyPath, [StringComparison]::OrdinalIgnoreCase)
-            ) {
-              $duplicate = $true
-              break
-            }
-          }
-          if (-not $duplicate) {
-            $pendingList = [Collections.Generic.List[object]]::new()
-            foreach ($pending in @($state.pendingResumes)) {
-              $pendingList.Add($pending)
-            }
-            $pendingList.Add([pscustomobject][ordered]@{
-              decisionId = $DecisionId
-              replyPath = $normalizedReplyPath
-              queuedAt = $now.ToString('o')
-            })
-            $state.pendingResumes = @($pendingList)
-            Write-RuntimeState -Path $statePath -State $state
-          }
-          $result = New-Result -Status 'QUEUED' -Values @{
-            duplicate = $duplicate
-            pendingCount = @($state.pendingResumes).Count
-          }
-          break
-        }
-        Start-RecoveryLease -State $state -Now $now -DurationSeconds $LeaseSeconds
-        $state.pendingResumes = @(
-          $state.pendingResumes | Where-Object {
-            -not (
-              ([string]$_.decisionId).Equals($DecisionId, [StringComparison]::Ordinal) -and
-              ([string]$_.replyPath).Equals($normalizedReplyPath, [StringComparison]::OrdinalIgnoreCase)
-            )
-          }
-        )
-        Write-RuntimeState -Path $statePath -State $state
-        $result = New-DispatchResult -State $state -DispatchReplyPath $normalizedReplyPath
-      }
-
-      'TakeResume' {
-        $leaseExpired = Test-LeaseExpired -Lease $state.lease -Now $now
-        if ($null -ne $state.lease -and -not $leaseExpired) {
-          $result = New-Result -Status 'BUSY' -Values @{
-            runId = $state.lease.runId
-            taskId = $state.lease.taskId
-            expiresAt = $state.lease.expiresAt
-          }
-          break
-        }
-        $pending = @($state.pendingResumes)
-        if ($pending.Count -eq 0) {
-          $result = New-Result -Status 'EMPTY'
-          break
-        }
-        $next = $pending[0]
-        if (
-          $null -eq $state.recovery -or
-          [string]$state.recovery.trigger -cne 'decision' -or
-          $state.recovery.decisionId -ne $next.decisionId
-        ) {
-          throw [IO.InvalidDataException]::new('Pending resume does not match the recovery pointer')
-        }
-        Start-RecoveryLease -State $state -Now $now -DurationSeconds $LeaseSeconds
-        if ($pending.Count -eq 1) {
-          $state.pendingResumes = [object[]]@()
-        } else {
-          $state.pendingResumes = @($pending[1..($pending.Count - 1)])
-        }
-        Write-RuntimeState -Path $statePath -State $state
-        $result = New-DispatchResult -State $state -DispatchReplyPath ([string]$next.replyPath)
       }
 
       'RecordResult' {
@@ -961,10 +858,6 @@ try {
           $result = New-Result -Status 'BUSY'
           break
         }
-        if (@($state.pendingResumes).Count -gt 0) {
-          $result = New-Result -Status 'PENDING_RESUMES'
-          break
-        }
         if ($null -ne $state.recovery) {
           $result = New-Result -Status 'RECOVERY_PRESENT'
           break
@@ -985,12 +878,8 @@ try {
           break
         }
         $state.lease = $null
-        $readyResume = @($state.pendingResumes).Count -gt 0
         Write-RuntimeState -Path $statePath -State $state
-        $result = New-Result -Status 'RELEASED' -Values @{
-          readyResume = $readyResume
-          pendingCount = @($state.pendingResumes).Count
-        }
+        $result = New-Result -Status 'RELEASED'
       }
     }
   } finally {
