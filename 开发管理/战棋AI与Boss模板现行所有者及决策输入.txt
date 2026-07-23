@@ -1,0 +1,87 @@
+# 战棋 AI 与 Boss 模板现行所有者及决策输入
+
+> 任务：N-AI-01A
+>
+> 状态：已完成（仅事实定位与负责人决策输入；未实施 N-AI-01）
+>
+> 事实截点：当前工作树的 `simulations/BattleSim/`。
+>
+> 边界：本文件不批准门派策略、Boss 身份、模板字段、行为权重、范围／协同规则或任何数值；不修改 BattleSim、Build、CSV、Unity、内容事实源或既有回归。
+
+## 1. 定位结论
+
+当前 BattleSim 已有两条不同的战斗决策链：1v1 使用“已就绪且可攻击的神通、苦行、术法、普攻”固定顺序；2v2 使用每名行动者的基础攻击、个人选位和“合法敌方最低 HP、输入顺序”目标规则。两条链均可追溯且具有稳定排序，但没有门派策略对象、Boss 身份、Boss 模板或可调 AI 权重。
+
+`Character.Style` 是构筑输入传入的机制／术法配置选择键：它会影响 `AssignArts` 的术法、神通档案，并在部分战斗结算分支触发既有机制。它不携带门派 ID、单位角色、Boss 标记、模板 ID、阶段或策略优先级；不得将现有 `Style` 分支误称为门派 AI 或 Boss 模板。
+
+本次静态扫描在 `Combat.cs`、`Character.cs`、`GameData.cs`、`BattleSimSelfTests.cs`、`Program.cs` 中没有命中 `Boss` 或 `boss`。当前没有 Boss 专用数据承载或回归。
+
+## 2. 现行输入承载与构筑入口
+
+| 输入／职责 | 现有所有者 | 当前事实 | 结论 |
+|---|---|---|---|
+| 矩阵构筑定义 | `Program.BuildDef`（`Program.cs:9-42`） | 每项包含名称、描述、先天、`Style`、功法名和可选成长权重；默认矩阵在 `BuildDefs` 固定列出 21 项。 | 是模拟 Build fixture，不是角色身份、门派策略或 Boss 模板注册表。 |
+| 角色的构筑选择键 | `Character.Style` 与 `Character.Create`（`Character.cs:9,70-74`） | `Program` 在生成角色时传入 `BuildDef.Style`（`Program.cs:114-124`；早期样本同理在 `529-535`）。 | 可证明现有构筑风格的来源；不能表达门派策略、Boss 身份或权重。 |
+| 角色攻击档案 | `Character.BasicAttackProfile`、术法字段、神通字段（`Character.cs:41-62`） | 基础攻击可由主战法宝档案替换；术法／神通只有名称、类型、倍率、资源／冷却、元素与最小／最大距离。 | 可复用为后续行动候选的既有战斗输入；没有策略标签、候选评分、目标偏好或范围字段。 |
+| 术法／神通配置 | `GameData.AttackProfile`、`ArtConfig`、`DivineConfig`（`GameData.cs:321-328,601-615`） | 现有档案是静态代码数据，字段只覆盖攻击结算与距离。 | 不是 AI 策略或 Boss 模板配置所有者；不能从固定倍率推导优先级。 |
+| 术法／神通赋值 | `Character.AssignArts`（`Character.cs:190-200`） | 以 `Style` switch 选择术法；符合金丹条件时再选择神通。 | `Style` 与能力档案之间已有复用关系，但无策略决策层。 |
+| 成长权重 | `BuildDef.Weights` 与 `GameData.WeightsFromGongFa`（`Program.cs:114-124`） | 用于修炼和属性成长输入。 | 不是行动、目标或移动的 AI 权重；不得复用为策略权重。 |
+
+## 3. 1v1 行动与选位链
+
+| 顺序 | 现有所有者与输入 | 稳定输出／可观察结果 | 现有回归 |
+|---|---|---|---|
+| 1 | `Combat.Simulate`（`Combat.cs:145-412`）创建 `HexBattlefield`，在双方 CT 循环中取得角色、当前位置、资源／冷却、状态和 `Style` 机制状态。 | 每次行动只面对唯一对手；战斗结果输出胜率与平均回合数。单次行动选择没有独立 observation。 | 固定随机种子可复现的断言在 `BattleSimSelfTests.cs:854-858`。 |
+| 2 | `Combat.SelectAction`（`Combat.cs:92-113`）输入神通、苦行、术法、普攻的就绪状态和各自距离。 | 先从“神通 → 苦行 → 术法 → 普攻”中选择第一个已就绪且 `CanAttack` 的候选；若没有可攻击候选，则按同一顺序选择第一个已就绪候选。该顺序是当前固定规则，不读取门派、Boss 或权重。 | `distance-model-tq055` 断言超距神通不会压过可攻击术法，且所选距离会传至移动（`BattleSimSelfTests.cs:880-889`）。 |
+| 3 | `Combat.ResolveActionPosition`（`Combat.cs:62-76`）接收行动者、唯一目标、移力、所选最小／最大距离、定身和占格。 | 调用 `HexBattlefield.FindAttackPosition`，再以 `CanAttack` 返回位置与可攻击结果；定身时移力为零。 | `position-control-n-dist-02` 覆盖定身下不移动、合法攻击和最小距离拒绝（`BattleSimSelfTests.cs:947-963`）。 |
+| 4 | `Combat.Simulate` 的双方行动分支（`Combat.cs:219-227,316-324`）。 | 将步骤 2 的行动范围交给步骤 3；不能攻击时仅推进 CT，不生成替代策略。之后才进入既有伤害与 `Style` 机制结算。 | `distance-model-tq055` 同时覆盖近战移动、远程开局不移动和行动距离。 |
+
+因此，1v1 的当前“AI”仅是固定行动优先顺序和单目标距离合法性；`Style` 可改变候选是否具备某机制或其结算效果，但没有门派策略选择、目标评分或 Boss 行为边界。
+
+## 4. 2v2 个人行动、目标与移动链
+
+| 顺序 | 现有所有者与输入 | 稳定输出／可观察结果 | 现有回归 |
+|---|---|---|---|
+| 1 | `Combat.Simulate2v2` 调用 `Simulate2v2Detailed`（`Combat.cs:414-425`）；默认矩阵在 `Program.cs:456` 调用前者。 | 外层只汇总胜率和平均回合数；详细入口产出完整的 `GroupRoundResult`。 | `ct-reaction-tq052` 和 `group-positioning-n-group-01` 调用 2v2 入口。 |
+| 2 | `Combat.Simulate2v2Detailed`（`Combat.cs:427-489`）固定部署四单位并按存活者反应累加 CT。 | 初始格为 A1 `(0,0)`、A2 `(0,1)`、B1 `(6,0)`、B2 `(6,-1)`；CT 相同时由索引扫描稳定为 0、1、2、3。 | `group-positioning-n-group-01` 覆盖初始唯一占格与同 CT 顺序（`BattleSimSelfTests.cs:965-1041`）。 |
+| 3 | 同入口的 `occupied`、`FindReachable` 与每个敌方的 `ResolveActionPosition`（`Combat.cs:490-524`）。 | 以其余存活单位的格位阻挡移动；为每个敌人建立一个个人基础攻击选位计划。这里不调用 `SelectAction`，也不选择术法或神通。 | 同一回归覆盖敌我占格、可达格和每回合唯一占格。 |
+| 4 | `Combat.SelectGroupTarget`（`Combat.cs:78-90`）接收敌我、存活、合法性、HP 和输入索引。 | 仅在合法、存活敌人中按 HP 升序、索引升序选择；理由固定为 `selected_lowest_hp_then_input_order`，否则为 `no_legal_target`。 | `group-positioning-n-group-01` 覆盖同 HP、死亡后重选、无合法目标和理由输出（`BattleSimSelfTests.cs:992-1024`）。 |
+| 5 | `Simulate2v2Detailed` 的无目标分支（`Combat.cs:527-551`）。 | 无合法攻击目标时，仍按存活敌方最低 HP、索引升序选个人 `movementFocus`，移动至预先计算的个人位置；理由为 `no_legal_target_after_move` 或 `no_alive_enemy`。 | 同一回归覆盖不可攻击时的可观察原因。 |
+| 6 | `Simulate2v2Detailed` 的结算分支（`Combat.cs:554-669`）。 | 仅使用 `BasicAttackProfile` 的个人计划；`Style` 在此决定物理／神魂攻击类别和既有机制结算。队友存活触发的功法效果属于结算，不读取队友意图、预留格、目标评分或协同计划。 | 当前回归只证明现有单目标、占格、时序和可观察输出，不证明协同 AI。 |
+
+`GroupActionObservation`（`Combat.cs:28-44`）已经承载回合、行动者、起止格、可达格、目标、目标理由、不可行动理由和行动后占格。这是后续保留可观察性的可复用输出边界；它目前没有策略 ID、候选评分、Boss 模板、范围中心、范围命中集或队友意图字段。
+
+## 5. 与 N-GROUP-02 的边界
+
+N-GROUP-02A 已确认的空间、视线、占格、个人选位、最低 HP 单体焦点和 CT 顺序可继续复用，其范围、协同走位、团队优先级及 N-GROUP-DEC-01～05 仍由 `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt` 独立约束。本卡不重列或决定它们。
+
+本卡只新增以下缺口的负责人决定输入：门派策略的身份与优先级、Boss 模板的身份与行为边界，以及策略配置所有者与 1v1／2v2 的复用边界。未决定前，现有 2v2 只能被描述为个人单目标行为，不能被包装为门派团队 AI 或 Boss AI。
+
+## 6. N-AI 后续负责人决策输入
+
+### N-AI-DEC-01：门派策略输入与优先级
+
+- 待决定：门派策略的具名身份与有效输入；它应如何影响行动候选、目标与移动；1v1 和 2v2 各自适用的优先级；并列时的稳定裁定；策略是否可覆盖现有“神通 → 苦行 → 术法 → 普攻”和“最低 HP → 输入顺序”规则。
+- 已有可复用根：`Character.Style` 到能力档案的映射、`SelectAction` 的固定候选顺序、`SelectGroupTarget` 的稳定单目标选择、`ResolveActionPosition` 的个人选位和 `GroupActionObservation` 的原因输出。
+- 直接影响根：`Character` 的未来策略输入边界、`Combat.SelectAction`、`Combat.SelectGroupTarget`、`Combat.ResolveActionPosition` 的调用编排、`Combat.Simulate2v2Detailed` 的 `plans`／`candidates`／`movementFocus` 分支，以及 `distance-model-tq055`、`group-positioning-n-group-01` 或新增策略自测。
+- 未作决定时的结论：不得把 `Style`、能力倍率、成长权重或现有结算分支解释为门派策略；继续保持当前固定顺序。
+
+### N-AI-DEC-02：Boss 模板身份与行为边界
+
+- 待决定：Boss 是否需要独立模板身份及其稳定 ID；该身份与普通角色、门派策略、`Style`、能力档案和未来阶段／行为规则的关系；Boss 可影响哪些行动、目标、移动或结算边界，以及是否与 1v1、2v2 共用同一策略接口。
+- 已有可复用根：角色已有的名称、境界、`Style`、基础攻击、术法和神通字段，以及两条现行行动／选位链。它们均只能作为普通战斗输入，不能充当 Boss 模板。
+- 直接影响根：未来 Boss 身份／模板的数据承载与角色装配入口、`Program.BuildDef` 是否仍只承担矩阵 fixture、`Character.AssignArts` 的能力输入边界、`Combat.SelectAction` 与 `Combat.Simulate2v2Detailed` 的策略消费点，以及新的 Boss 身份、稳定行为和边界回归。
+- 未作决定时的结论：当前无 Boss、精英、阶段、模板或 Boss 行为回归；不得从名称、境界或某个 `Style` 猜测 Boss 身份。
+
+### N-AI-DEC-03：配置所有者与 1v1／2v2 复用边界
+
+- 待决定：门派策略和 Boss 模板的权威配置所有者、稳定键、读取时机和可调字段边界；哪些候选选择规则必须由 1v1／2v2 共用，哪些仅属于 2v2 团队语义；现有 `GameData` 静态档案、`Character` 实例字段和 `Program.BuildDef` fixture 各自是否以及如何参与，且不得创建第二套策略决策链。
+- 已有可复用根：`GameData.AttackProfile`／`ArtConfig`／`DivineConfig` 的能力数据形状、`Character` 的当前战斗实例字段、`Program.BuildDef` 的矩阵输入和 `Combat` 的两条消费链。
+- 直接影响根：未来配置模型及其装配点、1v1 的 `SelectAction`／`ResolveActionPosition`、2v2 的 `Simulate2v2Detailed`／`SelectGroupTarget`、策略理由的可观察输出和对应自测。若涉及范围、协同或团队目标优先级，仍须回到 N-GROUP-DEC-01～05 的独立决定。
+- 未作决定时的结论：`BuildDef.Weights` 只用于成长，`GameData` 的现有攻击档案只用于战斗数值和距离，二者都不是可调 AI 权重配置；不得用默认权重、随机权重或兼容分支填补空缺。
+
+## 7. 本次验证
+
+- 已执行精确静态扫描：`rg -n "SelectAction|SelectGroupTarget|Simulate2v2Detailed|ResolveActionPosition|Boss|Style" simulations/BattleSim/Combat.cs simulations/BattleSim/Character.cs simulations/BattleSim/GameData.cs simulations/BattleSim/BattleSimSelfTests.cs simulations/BattleSim/Program.cs`。
+- 该扫描定位了两条行动链、`Style` 输入和回归调用点；未返回 Boss 命中。
+- 本卡没有修改 BattleSim、数值或测试，故未运行 BattleSim 矩阵；文本和 Git 差异检查在提交前执行。
