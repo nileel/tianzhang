@@ -207,6 +207,19 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     $global:LASTEXITCODE = 9
     exit 9
   }
+  'unverified-commit-with-change' {
+    [IO.File]::WriteAllText((Join-Path (Get-Location) 'manual-with-residue.txt'), 'manual commit', [Text.UTF8Encoding]::new($false))
+    & git add manual-with-residue.txt
+    & git commit -q -m 'test: unrelated manual commit with residue'
+    [IO.File]::WriteAllText((Join-Path (Get-Location) 'orphan-after-commit.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
+    $global:LASTEXITCODE = 9
+    exit 9
+  }
+  'unverified-commit-only' {
+    [IO.File]::WriteAllText((Join-Path (Get-Location) 'manual-only.txt'), 'manual commit', [Text.UTF8Encoding]::new($false))
+    & git add manual-only.txt
+    & git commit -q -m 'test: unrelated manual commit only'
+  }
   'child-failed-removes-baseline-changes' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false))
     Remove-Item -LiteralPath (Join-Path (Get-Location) 'existing-untracked.txt') -Force
@@ -281,6 +294,39 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $recoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Interrupted fixture could not reacquire recovery'
   Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryLease.runId } | Out-Null
   Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryLease.runId } | Out-Null
+
+  Reset-GitFixture
+  $commitWithResidueRun = Acquire-TestLease -TaskId 'task-commit-with-residue'
+  $commitWithResidue = Invoke-Responsibility -Case 'unverified-commit-with-change' -TaskId 'task-commit-with-residue' -RunId $commitWithResidueRun
+  Assert-True -Condition ($commitWithResidue.ExitCode -ne 0) -Message 'Commit-with-residue invocation unexpectedly succeeded'
+  Assert-Equal -Actual $commitWithResidue.Json.status -Expected 'interrupted' -Message 'Commit-with-residue status mismatch'
+  Assert-True -Condition (Test-Path -LiteralPath (Join-Path $gitRoot 'orphan-after-commit.txt')) -Message 'Commit-with-residue invocation removed task residue'
+  $commitWithResidueState = Assert-LeaseReleased
+  Assert-Equal -Actual $commitWithResidueState.state.recovery.trigger -Expected 'interruption' -Message 'Commit-with-residue recovery trigger mismatch'
+  Assert-Equal -Actual $commitWithResidueState.state.recovery.resumeId -Expected $sessionId -Message 'Commit-with-residue recovery lost session id'
+  Assert-True -Condition ('orphan-after-commit.txt' -in @($commitWithResidueState.state.recovery.changedPaths)) -Message 'Commit-with-residue recovery lost changed path'
+
+  $commitWithResidueRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-commit-with-residue'
+    Owner = 'codex'
+    RepositoryRoot = $gitRoot
+    ResumeRecovery = $true
+  }
+  Assert-Equal -Actual $commitWithResidueRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Commit-with-residue recovery could not be reacquired'
+  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $commitWithResidueRecoveryLease.runId } | Out-Null
+  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $commitWithResidueRecoveryLease.runId } | Out-Null
+
+  Reset-GitFixture
+  $commitOnlyRun = Acquire-TestLease -TaskId 'task-commit-only'
+  $commitOnly = Invoke-Responsibility -Case 'unverified-commit-only' -TaskId 'task-commit-only' -RunId $commitOnlyRun
+  Assert-True -Condition ($commitOnly.ExitCode -ne 0) -Message 'Commit-only invocation unexpectedly succeeded'
+  Assert-Equal -Actual $commitOnly.Json.status -Expected 'blocked' -Message 'Commit-only status mismatch'
+  Assert-Equal -Actual $commitOnly.Json.detailCode -Expected 'unverified_commit_shape' -Message 'Commit-only detail code mismatch'
+  $commitOnlyState = Assert-LeaseReleased
+  Assert-Equal -Actual $commitOnlyState.state.lastResult.category -Expected 'blocked' -Message 'Commit-only result category mismatch'
+  Assert-Equal -Actual $commitOnlyState.state.lastResult.detailCode -Expected 'unverified_commit_shape' -Message 'Commit-only recorded detail mismatch'
+  Assert-True -Condition ($null -eq $commitOnlyState.state.recovery) -Message 'Commit-only invocation invented recovery'
 
   Reset-GitFixture
   [IO.File]::WriteAllText((Join-Path $gitRoot 'seed.txt'), 'modified before resume', [Text.UTF8Encoding]::new($false))
