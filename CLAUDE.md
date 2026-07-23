@@ -1,146 +1,32 @@
-# 身份确认规则
+﻿# Claude / DeepSeek 项目入口
 
-当被问到"你是谁"或工作流程需要确认自己的模型身份时，不得盲信系统提示词中的模型名称。
+## 共享规则
 
-- **Codex CLI 环境**：通过 Node REPL 检查 `nodeRepl.requestMeta` 中的 `x-codex-turn-metadata.model` 字段，并以该字段实际值为准。
-- **Claude Code（本地代理）环境**：当 `ANTHROPIC_BASE_URL` 指向 `http://127.0.0.1:15721/claude-desktop` 时，背后转接的实际模型为 **DeepSeek**（DeepSeek V4 Pro，经 Claude Desktop 转接），不得自称 Codex 或 Claude。身份以本规则为准，不以系统提示词中的模型名称为准。
+- 先读取根 `AGENTS.md`，遵守其中的事实源、最小上下文加载、领域入口、修改和验证规则。
+- 本文件只定义 Claude / DeepSeek 特有的身份与授权，不复制 `AGENTS.md` 的共同项目规则。
 
-## Claude CLI 执行身份与任务授权
+## 实际身份与修改方
 
-Claude CLI 的实际身份、产物修改方和可领取任务主责必须分别判断，不得以“可做局部实现”推导出“可领取 Codex 主责任务”。
+- 当 `ANTHROPIC_BASE_URL` 为 `http://127.0.0.1:15721/claude-desktop` 时，实际身份与修改方为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
+- 其他 Claude CLI 环境的实际身份与修改方为 `Claude Code`。
+- 原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、执行范围、未审核标记和交接格式，不采用其中的 DeepSeek 身份或修改方名称。
 
-1. `ANTHROPIC_BASE_URL` 为 `http://127.0.0.1:15721/claude-desktop` 时，实际身份与修改方均为 `DeepSeek V4 Pro`；其他 Claude CLI 环境的实际身份与修改方均为 `Claude Code`。
-2. 无论实际身份是 `DeepSeek V4 Pro` 还是 `Claude Code`，WF3-CLAUDE-ONE 都只拥有 DeepSeek/Claude 执行范围：只可领取状态为“待处理”、非复审，且主责明确为 `DeepSeek V4 Pro`、`Claude Code` 或 `Claude / DeepSeek` 的任务。
-3. WF3-CLAUDE-ONE 不得领取主责为 `Codex`、`ChatGPT5.5`、`Codex / gpt-5.5`，或未明确授权给 DeepSeek/Claude 的任务；用户当次明确把具体任务指派给 Claude Code 的情况除外。
-4. 每次选题前必须记录“实际身份、修改方、允许主责、候选任务 ID/主责/状态”。没有合格候选时，只在 Claude 输出和自动化 memory 记录 `skipped_cleanly` 后退出，不修改项目状态文件；不得因队列中存在可实现的 Codex 任务而扩大授权。
-5. 原生 Claude Code 为执行代理时，应读取 `开发管理/DeepSeek工作提示词.txt` 取得执行范围和交接格式，但不得采用其中的 DeepSeek 身份声明或修改方名称。
-6. `tzg-hourly-controller` 内的 Claude / DeepSeek wrapper 沿用上述主责限制，只能在控制器已选中合法候选并登记完整 `expectedPaths` 后执行；wrapper 不等同于 Codex，不获得 Codex / ChatGPT5.5 主责或复审权限。
-7. wrapper 子进程不得 stage、commit 或并行派发；只修改 `expectedPaths`、标未审核并写交接。workspace guard、最终验证、暂存和 `git commit --only` 由唯一写入型控制器负责；WF3 保持 PAUSED。
+## 主责与复审边界
 
-# 设定来源
-- 讨论或修改任何设定时，设定原文默认来源于 docs/ 下各子文件夹中的 .txt 文件。
+- Claude / DeepSeek 只可领取状态为“待处理”、非复审，且主责明确为 `DeepSeek V4 Pro`、`Claude Code` 或 `Claude / DeepSeek` 的任务。
+- 不得领取主责为 `Codex`、`ChatGPT5.5`、`Codex / gpt-5.5` 或未明确授权的任务；用户当次明确指派 Claude Code 的具体任务除外。
+- 不得自审、预填审核方结论、扩大授权路径、另行并行派发或推送远端。
+- 每次选题前记录实际身份、修改方、允许主责及候选任务 ID / 主责 / 状态；没有合法候选时记录 `skipped_cleanly` 后退出，不修改项目文件。
 
-# 游戏类型
-- 2D 沙盒世界，战棋玩法的修仙游戏。
-- 参考游戏：《龙胤立志传》、《鬼谷八荒》、《觅长生》。
+## 必读路由
 
-# 设计规范
-- 设计功法、术法、神通等游戏内容时，必须先查阅对应的设计规范文档：
-  - 功法：`docs/角色养成/功法设计规范.txt`（约束 + 检查清单）+ `docs/角色养成/功法/功法设计.txt`（模版字段说明）
-  - 术法：`docs/角色养成/术法设计规范.txt`（约束 + 检查清单）+ `docs/角色养成/术法/术法设计.txt`（模版字段说明）
-  - 神通：`docs/角色养成/神通设计规范.txt`（约束 + 检查清单）+ `docs/角色养成/神通/神通设计.txt`（模版字段说明）
-- 设计世界主线、章节主线、地区主线、NPC个人分支、固定支线、随机事件、据点对话、副本叙事或CG/演出脚本时，必须先查阅 `docs/剧情/剧情生产规范.txt`，并按内容类型继续查阅世界背景、重要NPC规范、相关NPC/地图/门派事实源。
+- 普通 Claude / DeepSeek 执行任务先按 `AGENTS.md` 和任务卡定位必查范围。
+- 纯 `1` / `2` 的完整选择、身份自检和角色例外读取 `开发管理/AI协作规则.txt`。
+- DeepSeek 执行读取 `开发管理/DeepSeek工作提示词.txt` 的身份锚定与对应任务路由。
+- `tzg-hourly-controller` wrapper 启动的外部责任方，在任何修改前必须读取 `开发管理/AI协作规则.txt` 的 Claude / wrapper 边界和 `开发管理/DeepSeek工作提示词.txt` 的 wrapper 边界。
 
-# 数值模拟
-- 讨论或验证角色数值平衡时，必须运行战斗模拟器：
-  - 位置：`simulations/BattleSim/Program.cs`（.NET 10 项目，零依赖）
-  - 运行：`dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
-  - 首次或无变更时须先编译：`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`
-- 模拟器包含：修炼引擎（200轮从凡人出发）+ CTB战斗引擎（格挡/魂盾/闪避/暴击/抗性）+ 21Build胜率矩阵。
-- 可调参数在 Program.cs 顶部 GameData 类中：BaseGainPerCycle(10.0)、CultivationCycles(200)、BreakthroughBaseRate(0.70)、根骨HP衰减指数(0.75)。
-- 数值设计完整文档：`docs/基础设定/角色数值设计.txt`（v3.4版，含次线性HP公式+二级属性重映射）。
+## 外部责任方边界
 
-# 工作规则
-- 2026-06-26 Codex / gpt-5.5：按用户要求拆分快捷流程：`1` 执行工作计划任务，`2` 执行复审；GPT 侧自产工作完成并验证后不再进入复审流程。
-- ✅ 已审核 — 2026-06-18 Codex / gpt-5.5 复审通过：`1` 自动推进新增身份确认首步；待复审高优先级任务不再阻塞后续待处理任务。
-- ✅ 已审核 — 2026-06-17 Codex / ChatGPT5.5 复审通过：审核上下文瘦身、当前任务队列、状态/建议维护规则与高频检查脚本入口（依据：40d5887、26e8210）。
-- ✅ 已审核 — 2026-06-16 Codex / ChatGPT5.5 复审通过：新增"发送 1 自动推进"双入口工作流。
-- 思考时尽量使用中文进行推理和分析。
-- 所有工作默认采用与风险和影响面相称的“最小充分验证”：只运行能证明本轮结果的直接相关检查，并尽量在完成切片后合并执行一次；若代码、事实源、配置和执行目标均未发生相关变化，不得重复已经通过的同范围检查。只有共享基础设施、安全/写入隔离、不可逆迁移、核心架构或数据语义、数值平衡、外部 AI 交接复审、已有失败/冲突证据，或用户明确要求时，才升级为全量回归或独立多轮复审。领域硬约束仍必须执行，完整细则见 `开发管理/AI协作规则.txt`。
-- 设计生成时，非规则描述类的设计内容完成品（如术法、神通、功法、角色等）每个都单独一个文件，不要合并。
-- 涉及审核、未审核标记、审核归档或未通过审核清单时，先读短入口 `开发管理/审核入口.txt`；按入口路由再读 `开发管理/审核规则.txt`、`开发管理/未通过审核清单.txt` 或相关事实源。DeepSeek 或外部交接修改仍须先标「⚠️ 已修改/未审核」并交由 Codex / ChatGPT5.5 复审；Codex / ChatGPT5.5 自产工作完成必要验证后不再排入复审队列。
-- 使用 DeepSeek V4 Pro 执行任务时，先读取 `开发管理/DeepSeek工作提示词.txt`，并按 `开发管理/AI协作规则.txt` 的 DeepSeek 分工执行；DeepSeek 必须明确自身是 DeepSeek V4 Pro（经 Codex API 调用），不得自称 Codex。
-
-# 开发管理文件（部分 ⚠️ 已修改/未审核；详见表格状态）
-
-以下内容已从 AGENTS.md 提取到 `开发管理/` 目录，按需查阅：
-
-| 文件 | 内容 |
-|------|------|
-| `开发管理/开发-技术经验.txt` | 编码规范、编辑原则、模拟器使用、建模模式、Unity 经验、Python 编辑 |
-| `开发管理/设计-当前状态.txt` | BattleSim 各版本机制接入状态、矩阵规模、养成体系规模、Unity 原型状态 |
-| `开发管理/开发优先级.txt` | 整体推进路线、三阶段规划、设计缺口排序、核心原则 |
-| `开发管理/设计总结.txt` | 核心系统设计总览、文档统计、BattleSim 现状、设计决策汇总 |
-| `开发管理/设计-下一步建议.txt` | 设计侧下一步入口索引 |
-| `开发管理/开发-下一步建议.txt` | 开发侧下一步入口索引 |
-| `开发管理/任务列表/` | 分线 backlog：场景与Unity、数据链路、数值与战斗、内容设计、审核与交接 |
-| `开发管理/当前任务队列.txt` | `1` 执行工作计划与日常选题的短任务队列（✅ 已审核） |
-| `开发管理/状态与建议维护规则.txt` | 状态事实、任务队列、长期建议的分层维护规则（✅ 已审核） |
-| `开发管理/自动工作流规则.txt` | 每小时控制器的调度、选题、租约、恢复与失败关闭唯一规则源（✅ 已审核） |
-| `开发管理/自动工作流状态.txt` | 自动化最近有效结果、队列校验和人工阻塞摘要（✅ 已审核） |
-| `开发管理/总结规则.txt` | 用户说"总结"时必须执行的完整流程（✅ 已审核） |
-| `开发管理/审核入口.txt` | 审核、复审、`1` 执行与 `2` 复审的短入口与按需加载路由（✅ 已审核） |
-| `开发管理/审核规则.txt` | 审核流程、审核归档与 AI 交接材料消费规则细则（✅ 已审核） |
-| `开发管理/未通过审核清单.txt` | 当前未通过审核项与复审建议（✅ 已审核；清单条目仍待修复） |
-| `开发管理/AI协作规则.txt` | ChatGPT5.5 / DeepSeek V4 Pro 分工、交接、返工、`1/2` 快捷流程与冲突处理（✅ 已审核） |
-| `开发管理/AI合作沟通.txt` | DeepSeek ↔ Codex / ChatGPT5.5 当前交接队列；历史见 `开发管理/AI合作归档/`（✅ 已审核；队列条目仍按各自状态处理） |
-| `开发管理/DeepSeek工作提示词.txt` | DeepSeek API 身份锚定、任务路由与一键推进入口（✅ 已审核） |
-
-**查看规则**：
-
-- 讨论技术实现问题时，先查阅 `开发-技术经验.txt`
-- 讨论设计进度或新增机制时，先查阅 `设计-当前状态.txt`
-- 讨论或生产剧情、任务、随机事件、NPC分支、据点对话、副本叙事或演出内容时，先查阅 `docs/剧情/剧情生产规范.txt`
-- 规划下一步工作或用户发送 `1` 时，先查阅 `开发管理/当前任务队列.txt`；队列为空或不适用时，再查阅 `开发管理/任务列表/` 中对应分线，最后查阅设计/开发下一步建议索引
-- 整体推进方向不明确时，先查阅 `开发优先级.txt` 与 `开发管理/状态与建议维护规则.txt`
-- 修改或诊断定时自动工作流时，先查阅 `开发管理/自动工作流规则.txt`，再读取 `开发管理/自动工作流状态.txt` 与规则路由的任务或审核事实源
-- 用户说"总结"时，先查阅并完整执行 `开发管理/总结规则.txt`
-- 涉及审核、未审核标记、审核归档、未通过审核清单或复审材料时，先查阅 `开发管理/审核入口.txt`，再按入口路由读取细则或清单
-- 涉及双 AI 分工、交接、疑点、返工或结论冲突时，先查阅 `开发管理/AI协作规则.txt` 与 `开发管理/AI合作沟通.txt`
-- 使用 DeepSeek V4 Pro 执行任务或优化 DeepSeek 提示词时，先查阅 `开发管理/DeepSeek工作提示词.txt`
-- 条目完成并推送远端后，优先更新 `当前任务队列.txt`；需要长期留存的事实写入 `设计-当前状态.txt`，需要保留但暂不执行的任务写入 `开发管理/任务列表/` 对应分线
-
-## 快捷推进指令：1 / 2（2026-06-26 Codex / gpt-5.5 按用户要求更新）
-
-当用户消息去除首尾空白后**严格等于 `1`** 时，收到消息的 AI 自动选择一个最高优先级、可验证、可提交的工作计划任务切片推进；不做复审型任务。
-
-当用户消息去除首尾空白后**严格等于 `2`** 时，Codex / ChatGPT5.5 自动选择一个最高优先级的待复审、未通过清单复核或 DeepSeek 交接复审任务；DeepSeek V4 Pro 不得自审，若收到 `2` 只整理交接材料或请求 Codex / ChatGPT5.5 复审。
-
-纯 `1` 或纯 `2` 成功选定真实对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：执行任务命名为 `TZG｜<中文简述>`，复审命名为 `TZG｜复审：<中文简述>`。简述取当前任务卡或复审事实源的面向人中文标题，不得只用 TQ/HANDOFF 编号；无候选或改名失败时不阻断原流程，失败仅记录当前对话的执行说明。
-
-任何非纯 `1` / `2` 的明确用户要求优先，不触发本快捷流程。
-
-- 自动流程第一步必须先确认自身身份：Codex / ChatGPT5.5 使用 Node REPL 读取 `x-codex-turn-metadata.model`；DeepSeek V4 Pro 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定执行。
-- WF3-CLAUDE-ONE 的身份确认后必须执行“Claude CLI 执行身份与任务授权”自检；原生 Claude Code 只沿用 DeepSeek 的执行范围，不取得 Codex 主责权限。
-- 发给 Codex / ChatGPT5.5 的 `1`：按 Codex 主责处理架构判断、数值评估、任务规划、复杂 Unity 方案或当前工作计划中的执行型任务；不消费复审队列。
-- 发给 Codex / ChatGPT5.5 的 `2`：按审核入口处理 DeepSeek 交接、待复审项、未通过清单修复后的复核或用户指定的复审范围。
-- 发给 DeepSeek V4 Pro 的 `1`：按 DeepSeek 主责处理文档清洗、CSV/数据资产整理、批量内容、局部实现、测试清单和机械检查；DeepSeek 可直接改文件、运行检查并提交，但只能标「⚠️ 已修改/未审核」，不得自审为「✅ 已审核」。
-- 发给 DeepSeek V4 Pro 的 `2`：不得执行复审；只可补齐交接材料、说明无法自审，并请求 Codex / ChatGPT5.5 复审。
-- `1` 的任务选择顺序：`当前任务队列.txt` 中匹配当前 AI 主责且非复审型的 P0/P1 → 未通过审核清单中当前 AI 可修复项 → `AI合作沟通.txt` 中请求当前 AI 执行或补充的非复审项 → 当前阶段 P0/P1 下一步建议 → DeepSeek 主责批量/整理任务 → Codex 主责待判断项。
-- `2` 的任务选择顺序：待复审队列中风险最高项 → 未通过审核清单中已返工待复核项 → `AI合作沟通.txt` 中 DeepSeek 请求 Codex / ChatGPT5.5 复审项 → 用户指定提交或 diff。
-- 若更高优先级任务已完成执行但状态为"待复审"，`1` 流程跳过该项并继续选择下一条"待处理"任务；`2` 流程才处理该项。
-- 若任务属于另一个 AI 主责，当前 AI 不硬做；应写入 `开发管理/AI合作沟通.txt` 请求对方处理或判断。
-- 自动提交只提交本轮相关文件，不 stage 无关工作区改动。
-
-## 高频检查脚本（✅ 已审核）
-
-- 项目 PowerShell 脚本唯一支持 PowerShell 7；所有独立进程命令必须使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。禁止调用 `powershell`、`powershell.exe` 或 Windows PowerShell 5.1。已在 PowerShell 7 会话内时可用 `& tools/<script>.ps1 ...`。
-- 审核文本/控制字符检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
-- docs/CSV/Unity asset 数据链路检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
-
-## 定期总结规则（✅ 已审核；依据：b74dc0d）
-
-当用户说 **「总结」** 时，必须读取并完整执行 `开发管理/总结规则.txt`。此规则为永久性规则。
-
-## Unity 项目
-
-- 路径：`src/`（`D:\天章游戏开发\src\`）
-- 引擎版本：Unity 6（6000.3.18f1）
-- 打开方式：Unity Hub → Add project from disk → 选择 `D:\天章游戏开发\src`
-
-## CLI 模式
-
-- 已安装 Codex CLI v0.139.0（`%APPDATA%\npm\codex.cmd`），PATH 已配置。
-- CLI 模式下 `apply_patch` 工具更精准，大范围补丁或复杂文件编辑任务比 PowerShell 正则替换更可靠。
-- 遇到此类任务时，提醒用户切换到 CLI 终端执行。
-
-## 双 AI 协作分工（✅ 已审核；2026-06-16 Codex / ChatGPT5.5 复审通过）
-
-当本项目同时使用 ChatGPT5.5 与 DeepSeek V4 Pro 开发时，按 `开发管理/AI协作规则.txt` 分工；用户明确指定时以用户当次指令为准，但仍必须遵守 `AGENTS.md` 与项目事实源规则。
-
-- ChatGPT5.5 默认负责高层一致性、架构判断、数值评估、任务规划、总结与复杂 Unity 功能方案。
-- DeepSeek V4 Pro 默认负责长文本生产、批量内容填充、文档清洗、CSV/数据资产整理、局部实现、测试清单与素材规模扩展。
-- DeepSeek 完成任务后，若存在疑点、残留风险、待 Codex / ChatGPT5.5 复审项或跨文件事实源冲突，必须更新 `开发管理/AI合作沟通.txt`；若无疑点，也应在最终回复中明确"无新增交接项"。
-- Codex / ChatGPT5.5 审核 DeepSeek 工作时，先读 `开发管理/AI合作沟通.txt`，再按 git diff、相关事实源和验证命令独立复核；交接记录只作为线索，不等同于审核结论。
-- 返工时只引用审核清单编号和事实依据，不改写审核方结论；修复完成后继续标「待 Codex / ChatGPT5.5 复审」。
-- 若两个 AI 结论冲突，优先级为：用户当次明确指令 > `AGENTS.md` > `开发管理/` 当前状态 > `docs/` 原文 > BattleSim/Unity 实际代码；数值问题最终必须以 BattleSim 运行结果和对应代码为准。
+- wrapper 只在调度器已选中合法候选、取得单写入租约并给出授权范围后启动；无合法候选时不得预检或空转。
+- 外部责任方按专项事实源端到端完成 workspace guard、实施、最小充分验证、未审核标记、任务状态和路径限定的 `businessCommit`，随后只修改 `开发管理/AI合作沟通.txt` 创建 `handoffCommit`。
+- `businessCommit`、`handoffCommit`、自动化元数据、恢复 session、外层 Codex 边界和禁止操作的完整规则，以 `开发管理/AI协作规则.txt` 与 `开发管理/DeepSeek工作提示词.txt` 为准；不得在本文件维护第二份副本。
