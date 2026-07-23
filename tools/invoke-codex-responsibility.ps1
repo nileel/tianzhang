@@ -129,7 +129,13 @@ function Get-RouteInstruction {
     'Execution' { '按 开发管理/AI协作规则.txt 的纯 1 入口执行，但只处理本次指定 TaskId。' }
     'Review' { '按 开发管理/审核入口.txt 与纯 2 入口复审，但只处理本次指定 TaskId。' }
     'QueueMaintenance' { '按 开发管理/状态与建议维护规则.txt 维护队列；本轮不执行新增业务任务。' }
-    'Recovery' { '恢复原责任方的同一 TaskId，先核对现有改动与 recovery，再继续未完成工作。' }
+    'Recovery' {
+      if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
+        '这是决定回复触发的新责任方会话；处理同一 TaskId，先核对 durable recovery 与决定，再继续工作。'
+      } else {
+        '这是中断恢复；恢复原责任方的同一 TaskId，先核对现有改动与 recovery，再继续未完成工作。'
+      }
+    }
   }
 }
 
@@ -141,7 +147,7 @@ function New-ResponsibilityPrompt {
   }
   $lines = @()
   if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
-    $lines += "[TZG_DECISION_RESUME runId=$RunId]"
+    $lines += "[TZG_DECISION_TRIGGER runId=$RunId]"
     $lines += $script:decisionReply
   }
   $lines += @(
@@ -275,6 +281,9 @@ try {
     Assert-StableArgument -Value $SessionId -Name 'SessionId'
   } else {
     Assert-StableArgument -Value $Model -Name 'Model'
+    if (-not [string]::IsNullOrWhiteSpace($SessionId)) {
+      throw 'SessionId is not valid for a new session'
+    }
   }
   $hasDecisionId = -not [string]::IsNullOrWhiteSpace($DecisionId)
   $hasDecisionOption = -not [string]::IsNullOrWhiteSpace($DecisionOption)
@@ -286,8 +295,8 @@ try {
     throw 'DecisionId and one decision reply source must be provided together'
   }
   if ($hasDecisionId) {
-    if ($Action -cne 'Resume' -or $Route -cne 'Recovery') {
-      throw 'Decision reply is only valid for a recovery resume'
+    if ($Action -cne 'Start' -or $Route -cne 'Recovery') {
+      throw 'Decision reply is only valid for a fresh recovery session'
     }
     Assert-StableArgument -Value $DecisionId -Name 'DecisionId'
     $resumeState = Invoke-LeaseAction -LeaseAction Show -Parameters @{ StateRoot = $StateRoot }

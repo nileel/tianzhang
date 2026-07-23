@@ -232,8 +232,7 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
       -StateRoot $env:RESPONSIBILITY_TEST_STATE_ROOT `
       -RunId $env:RESPONSIBILITY_TEST_RUN_ID `
       -DecisionId 'decision-invoker-test' `
-      -DecisionRequestPath $env:RESPONSIBILITY_TEST_DECISION_PATH `
-      -CodexThreadId $sessionId | Out-Null
+      -DecisionRequestPath $env:RESPONSIBILITY_TEST_DECISION_PATH | Out-Null
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
   'no-outcome' { }
@@ -365,7 +364,7 @@ $global:LASTEXITCODE = 0
     DecisionId = 'decision-invoker-test'
   }
   Assert-Equal -Actual $decisionResumeLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Decision recovery could not be reacquired'
-  $resumed = Invoke-Responsibility `
+  $oldSessionDecision = Invoke-Responsibility `
     -Case 'commit-success' `
     -TaskId 'task-decision' `
     -RunId $decisionResumeLease.runId `
@@ -374,10 +373,21 @@ $global:LASTEXITCODE = 0
     -ResumeSessionId $sessionId `
     -DecisionId 'decision-invoker-test' `
     -DecisionOption 'A'
-  Assert-Equal -Actual $resumed.ExitCode -Expected 0 -Message 'Decision resume invocation failed'
-  Assert-Equal -Actual $resumed.Json.status -Expected 'completed' -Message 'Decision resume status mismatch'
+  Assert-Equal -Actual $oldSessionDecision.ExitCode -Expected 1 -Message 'Decision reply incorrectly accepted an original-session resume'
+  Assert-Equal -Actual $oldSessionDecision.Json.status -Expected 'failed' -Message 'Rejected original-session decision returned wrong status'
+  $resumed = Invoke-Responsibility `
+    -Case 'commit-success' `
+    -TaskId 'task-decision' `
+    -RunId $decisionResumeLease.runId `
+    -Route 'Recovery' `
+    -Action 'Start' `
+    -DecisionId 'decision-invoker-test' `
+    -DecisionOption 'A'
+  Assert-Equal -Actual $resumed.ExitCode -Expected 0 -Message 'Fresh decision invocation failed'
+  Assert-Equal -Actual $resumed.Json.status -Expected 'completed' -Message 'Fresh decision invocation status mismatch'
   $decisionPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_RESUME runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the existing resume protocol'
+  Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_TRIGGER runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the fresh-session protocol'
+  Assert-True -Condition ($decisionPrompt.Contains('这是新的 CLI-native 责任方会话。')) -Message 'Decision trigger did not start a new responsibility session'
   $resumedState = Assert-LeaseReleased
   Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
 
@@ -402,7 +412,6 @@ $global:LASTEXITCODE = 0
     RunId = $stdinDecisionRun
     DecisionId = 'decision-invoker-stdin'
     DecisionRequestPath = $decisionRequestPath
-    CodexThreadId = $sessionId
   } | Out-Null
   Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $stdinDecisionRun } | Out-Null
   $stdinResumeLease = Invoke-LeaseJson -Action Acquire -Parameters @{
@@ -419,13 +428,12 @@ $global:LASTEXITCODE = 0
     -TaskId 'task-decision-stdin' `
     -RunId $stdinResumeLease.runId `
     -Route 'Recovery' `
-    -Action 'Resume' `
-    -ResumeSessionId $sessionId `
+    -Action 'Start' `
     -DecisionId 'decision-invoker-stdin' `
     -DecisionInput $customDecision
-  Assert-Equal -Actual $stdinResumed.ExitCode -Expected 0 -Message 'Stdin decision resume invocation failed'
+  Assert-Equal -Actual $stdinResumed.ExitCode -Expected 0 -Message 'Stdin fresh decision invocation failed'
   $stdinDecisionPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True -Condition ($stdinDecisionPrompt.StartsWith("[TZG_DECISION_RESUME runId=$($stdinResumeLease.runId)]`n$customDecision")) -Message 'Signed bridge decision was not transported through stdin'
+  Assert-True -Condition ($stdinDecisionPrompt.StartsWith("[TZG_DECISION_TRIGGER runId=$($stdinResumeLease.runId)]`n$customDecision")) -Message 'Signed bridge decision was not transported through stdin'
   Assert-LeaseReleased | Out-Null
 
   Write-Output 'test-invoke-codex-responsibility: OK'

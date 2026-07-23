@@ -160,6 +160,17 @@ $statePath = Join-Path $stateRoot 'runtime.json'
 $requestPath = Join-Path $bridgeRoot 'decision-request.json'
 
 try {
+  foreach ($removedAction in @('QueueResume', 'TakeResume')) {
+    $removedActionOutput = & pwsh `
+      -NoProfile `
+      -ExecutionPolicy Bypass `
+      -File $toolPath `
+      -Action $removedAction `
+      -StateRoot $stateRoot 2>&1
+    Assert-True -Condition ($LASTEXITCODE -ne 0) -Message "Removed action $removedAction was still accepted"
+    Assert-True -Condition (@($removedActionOutput).Count -gt 0) -Message "Removed action $removedAction did not report parameter rejection"
+  }
+
   [IO.Directory]::CreateDirectory($bridgeRoot) | Out-Null
   Set-PrivatePathAcl -Path $bridgeRoot -Directory
   Assert-PrivatePathAcl -Path $bridgeRoot -Directory
