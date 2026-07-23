@@ -51,7 +51,7 @@ foreach ($entry in $expected.GetEnumerator()) {
 }
 ```
 
-Expected: neither planned file appears in `git status`; byte sizes are exactly 13,150 and 16,928. If either file changed, stop and rebase this task on the new rule text instead of overwriting it.
+Expected: neither planned file appears in `git status`; byte sizes are exactly 13,153 and 16,928. If either file changed, stop and rebase this task on the new rule text instead of overwriting it.
 
 - [ ] **Step 2: Replace `AGENTS.md` with the concise shared entry**
 
@@ -290,9 +290,10 @@ with:
 ```text
 3. `当前任务队列.txt` 的近期任务必须包含 ID、优先级、主责、类型、状态、依赖、必查范围、完整预期修改路径、验证命令和完成条件。
 4. `必查范围` 优先使用 `文档路径#章节`、`代码路径::类型.符号`、`CSV/JSON路径::实体ID` 或 `资源目录::用途/资源ID`；路径自身已经是不可再分的短事实源时可以只写路径。
-5. 既有任务卡的路径级 `必读` 默认要求先定位其中与任务相关的章节、符号或实体，不表示整份加载。只有任务卡明确写“完整文件”、无法保持语义边界、检索无结果或存在事实冲突时才读取全文；修改前仍须读取目标完整逻辑单元。
-6. Codex 任务完成后归档；外部 AI 业务提交进入待复审，由 `2` 处理。
-7. 队列不保存长解释、历史争论或完整审核过程；长期任务留在分线 backlog。
+5. 代码必查范围覆盖目标类型和方法、直接调用者与被调用者、相关测试，以及任务卡指定的当前所有者或事实源；CSV 覆盖表头和目标 ID 行；JSON 覆盖目标对象和直接引用；Unity `.asset` 覆盖目标资源及必要引用；`.meta` 只用于 GUID、导入和依赖身份，不承载业务说明。
+6. 既有任务卡的路径级 `必读` 默认要求先定位其中与任务相关的章节、符号或实体，不表示整份加载。只有任务卡明确写“完整文件”、无法保持语义边界、检索无结果或存在事实冲突时才读取全文；修改前仍须读取目标完整逻辑单元。
+7. Codex 任务完成后归档；外部 AI 业务提交进入待复审，由 `2` 处理。
+8. 队列不保存长解释、历史争论或完整审核过程；长期任务留在分线 backlog。
 ```
 
 In the same file, replace:
@@ -353,6 +354,12 @@ $requiredState = @(
   '代码路径::类型.符号',
   'CSV/JSON路径::实体ID',
   '资源目录::用途/资源ID',
+  '目标类型和方法、直接调用者与被调用者、相关测试',
+  '任务卡指定的当前所有者或事实源',
+  'CSV 覆盖表头和目标 ID 行',
+  'JSON 覆盖目标对象和直接引用',
+  'Unity `.asset` 覆盖目标资源及必要引用',
+  '`.meta` 只用于 GUID、导入和依赖身份，不承载业务说明',
   '路径级 `必读` 默认要求先定位'
 )
 foreach ($literal in $requiredState) {
