@@ -1,6 +1,6 @@
 # 自动工作流状态（✅ 已审核）
 
-> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、recovery、pending resume 与 lastResult 以本机 runtime 为准；业务结果以 Git 为准。
+> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、recovery 与 lastResult 以本机 schema 3 runtime 为准；业务结果以 Git 为准。
 
 ## 已确认架构
 
@@ -11,8 +11,9 @@
 
 ## 当前人工阻塞与恢复所有权
 
+- 2026-07-24 00:37（Asia/Hong_Kong）`DEC-20260724-ENVPROFILE` 的 A 回复已形成有效签名 processed 证据；01:19 的旧控制器仍恢复等待决定的原 session，导致该回复未进入责任方。现已取消 decision 原 session 恢复、即时桥接中继和 pending resume 队列；A 证据可由后续自然每小时轮次幂等读取，并用新的责任方 session 继续原 TaskId。
 - 2026-07-23 01:38（Asia/Hong_Kong）负责人明确恢复自动化；已先清除逻辑暂停并确认 `lease`、`recovery`、`pendingResumes` 均为空，再通过自动化管理接口将 `tzg-hourly-controller` 与 `tzg-daily-automation-briefing` 设为 `ACTIVE`。错过的 01:00 日报按同一只读 Git 数据源手动补跑，不改日常时间表。
-- 原责任方 session `019f891d-a12a-7230-944a-0b9e1db14220` 的失联改动已完成恢复处理；当前 runtime 的 `lease`、`recovery` 与 `pendingResumes` 均为空，本地不再有孤立测试文件。
+- 原责任方 session `019f891d-a12a-7230-944a-0b9e1db14220` 的失联改动已完成恢复处理；当时 runtime 的 `lease`、`recovery` 与 `pendingResumes` 均为空，本地不再有孤立测试文件。
 - 恢复后的 U-2_5D-01D 业务提交 `182e4aa` 及后续修正 `3ed1cbd` 在最终只读复核中被证明会让没有生产环境档案的正式 `AdventureScene` 失败关闭；负责人已选择回滚，`bb8050e` 恢复正式冒险基线。U-2_5D-01D 现阻塞于冻结中的 C-ENV-PROFILE-01，自动化不得选取。
 - runtime 中 `lastResult=success/commit_182e4aa...` 只保留当次历史调度结果；该业务结果已被后续 Git 回滚覆盖，现状以 Git 与当前任务队列为准。
 

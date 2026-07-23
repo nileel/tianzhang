@@ -68,6 +68,7 @@ $rules = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流�
 $maintenanceRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\状态与建议维护规则.txt')
 $status = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流状态.txt')
 $dailyPrompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动化简报提示词.txt')
+$leaseTool = Read-Utf8Contract -Path (Join-Path $root 'tools\hourly-automation-lease.ps1')
 
 Assert-Contains -Text $prompt -Context 'thin controller prompt' -Values @(
   'tools/hourly-automation-lease.ps1',
@@ -84,6 +85,12 @@ Assert-Contains -Text $prompt -Context 'deferred wait contract' -Values @(
   'functions.wait',
   '空输出',
   '不是终态'
+)
+Assert-Contains -Text $prompt -Context 'decision recovery contract' -Values @(
+  'tools/feishu-decision-bridge/src/decision-trigger.mjs',
+  'decision recovery 无回复时不得 Acquire',
+  'decision recovery 有回复时只启动新的责任方 session',
+  'interruption recovery 才允许 Resume 原 session'
 )
 Assert-Contract `
   -Condition (-not [regex]::IsMatch($prompt, '(?i)timeout_ms\s*=\s*180000')) `
@@ -106,8 +113,22 @@ Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   'businessCommit',
   'handoffCommit',
   'PROVIDER_ACCEPTED',
-  'SaveRecovery'
+  'SaveRecovery',
+  'schema 3',
+  'decision recovery',
+  'interruption recovery',
+  'Start + Recovery',
+  'Resume 原 session'
 )
+Assert-Contains -Text $leaseTool -Context 'runtime schema 3 contract' -Values @(
+  'schemaVersion = 3',
+  "'SaveRecovery'",
+  "'SaveInterruption'",
+  "'ClearRecovery'"
+)
+foreach ($retiredAction in @('QueueResume', 'TakeResume')) {
+  Assert-Contract -Condition (-not $leaseTool.Contains($retiredAction, [StringComparison]::Ordinal)) -Message "runtime schema 3 contract contains retired action: $retiredAction"
+}
 $queueDepthTokens = @(
   '至少包含 2 张合法可执行任务卡',
   '单次最多新增 3 张',
@@ -142,7 +163,11 @@ foreach ($token in @(
     'DiscoverRead',
     'planOnly',
     '自动工作流任务注册表',
-    'hourly-controller-v2'
+    'hourly-controller-v2',
+    'QueueResume',
+    'TakeResume',
+    'resume-trigger.mjs',
+    'TZG_DECISION_RESUME'
   )) {
   Assert-Contract -Condition (-not $activeText.Contains($token, [StringComparison]::OrdinalIgnoreCase)) -Message "active contract contains retired workflow token: $token"
 }
@@ -156,7 +181,7 @@ foreach ($requiredPath in @(
     'tools\automation-workspace-guard.ps1',
     'tools\automation-finalize-commit.ps1',
     'tools\get-automation-briefing-source.ps1',
-    'tools\feishu-decision-bridge\src\resume-trigger.mjs'
+    'tools\feishu-decision-bridge\src\decision-trigger.mjs'
   )) {
   Assert-Contract -Condition (Test-Path -LiteralPath (Join-Path $root $requiredPath) -PathType Leaf) -Message "missing workflow component: $requiredPath"
 }

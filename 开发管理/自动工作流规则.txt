@@ -5,7 +5,7 @@
 ## 单写入租约
 
 - 候选汇总只读；任何项目写入前必须通过 `tools/hourly-automation-lease.ps1` 取得租约。
-- 每轮只启动一个责任方。租约占用时不启动第二写入者；过期且存在 task-owned uncommitted recovery 时只允许原责任方恢复。
+- 每轮只启动一个责任方。租约占用时不启动第二写入者；过期且存在 recovery 时只允许对应的决定触发或中断恢复路径。
 - `Show` 返回的 `leaseStatus` 是租约有效性的唯一调度判断：只有 `active` 表示占用；`expired` 且无 recovery 时不得报告 occupied，继续候选判断并由 `Acquire` 替换过期租约。
 - 调度器只读取状态、选择任务、取得租约、调用固定责任方入口并报告已核验结果；不实施、不验证、不 stage、不 commit、不复审。Codex 路由的结果记录与租约释放由固定调用器统一完成，责任方不得自行 `RecordResult` 或 `Release`。
 
@@ -13,7 +13,7 @@
 
 - Codex 执行候选来自当前队列中待处理且主责属于 Codex 的任务；Codex 复审候选来自审核入口和有效交接；外部 AI 候选必须待处理、非复审且主责明确授权给外部执行范围。
 - 候选必须满足依赖、负责人决策、内容冻结、主责、范围可判断和执行器可用等条件。外部 CLI 只在真实选中外部候选并取得租约后预检。
-- 三类候选统一排序：项目 P 优先级、已回复续跑、解除高优先级下游数量、等待时间、稳定 ID。候选类型没有固定优先顺序。
+- 三类候选统一排序：项目 P 优先级、解除高优先级下游数量、等待时间、稳定 ID。候选类型没有固定优先顺序。
 - 任务范围与人工 staged、unstaged 或 untracked 改动冲突时跳过；责任方修改前仍调用 workspace guard 作最终判断。不 stash、reset、checkout 或 clean 人工改动。
 
 ## 四种路由责任
@@ -29,23 +29,24 @@
 
 ## 决策恢复与阻塞暂停
 
-- 修改前等待决定时保存原 CLI session ID 或外部 session，释放租约并退出；回复到达后只通过 runner `Resume` 同一 CLI session ID 或既有外部恢复入口中继负责人原文。
+- 修改前等待决定时保存 `trigger=decision`、TaskId、owner、repository、DecisionId 和消费请求路径，释放租约并退出。schema 3 的 decision recovery 不保存 session ID，不保存未提交修改，也不把半成品交给下一责任方。
 - 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 - 旧 `pending-bindings.json` 不是新决策的互斥锁；责任方不得因看到旧 binding 就跳过发送或直接记录 `waiting_decision`。新 accepted send 会原子更新 binding，租约工具只接受对应的消费请求。
-- 回复占锁时写入 pending resume 后立即结束，不 sleep、不轮询、不保持模型进程；保存新 decision recovery 时清除旧 DecisionId 的 pending reply。释放租约或下个整点只取一个 ready resume；Codex 回复恢复必须进入固定调用器，桥接层不得直接启动底层 runner。
-- 用户在当前 Codex 对话中直接回复 A/B/C 时，只允许外部普通管理上下文用精确 `DecisionId` 调用 `Acquire -ResumeRecovery`，再把同一 `DecisionId` 和选项交给固定调用器 `Resume`；固定调用器核对 decision recovery 与当前租约后，沿用 `[TZG_DECISION_RESUME ...]` 标准输入协议。控制器和责任方不得自行走此入口，飞书回复仍走签名消费与 `QueueResume`。
-- 已有未提交任务修改时停止普通调度，只允许原责任方恢复，不把半成品交给另一责任方。
+- 飞书桥收到 A/B/C 或自定义回复后只写入签名证据并确认，不取得租约、不启动模型、不 Resume、不轮询；已处理证据可按同一 DecisionId 幂等读取。
+- 后续每小时控制器遇到 decision recovery 时只调用 `tools/feishu-decision-bridge/src/decision-trigger.mjs`。decision recovery 无回复时不得 Acquire；有回复时以精确 DecisionId 调用 `Acquire -ResumeRecovery`，再由固定调用器使用 `Start + Recovery` 和 `[TZG_DECISION_TRIGGER ...]` 启动新的责任方 session。人工普通管理上下文如需提前处理，也必须走同一触发器，不得恢复等待决定的原 session。
+- 已有未提交任务修改时停止普通调度，只允许中断恢复路径处理，不把半成品交给另一责任方。
 - CLI 责任方异常退出且相对启动基线产生新改动时，固定调用器以原 session ID 和新增路径保存 `trigger=interruption` recovery；没有唯一 session ID 时保留租约和现场并转人工阻塞，不伪造恢复指针。下一轮只允许完全匹配的原任务通过 `Acquire -ResumeRecovery` 取得新租约并 Resume。
+- interruption recovery 保留 session ID，只有该路径允许 Resume 原 session；decision recovery 不得包含 `resumeKind` 或 `resumeId`。
 - 现有 task-owned Desktop recovery 只允许原任务人工完成；普通自动化收到 `RECOVERY_ONLY` 后停止，不转换、复制或迁移 rollout。
 - 每轮在读取当前任务队列或任何候选事实源前，先调用租约工具 `Show`。pauseRequested=true 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不扫描候选、不取得租约、不启动责任方，也不读取或更新自身自动化配置。
 - 所有候选均阻塞时记录稳定 fingerprint；相同 fingerprint 连续两轮使 pauseRequested=true 后，先记录结果并释放租约，再报告“runtime 已逻辑暂停，界面尚未同步”并结束。逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`。成功、成功补任务或阻塞集合实质变化会重置计数。
 - 自动化任务不得调用自动化管理能力管理自身，也不得等待自动化管理服务。界面 `PAUSED` 只由自动化任务之外的外部普通管理上下文同步。
-- 恢复只由外部普通管理上下文执行：确认 lease、recovery、pending resume 均为空，先调用 `ClearBlocking` 成功清除逻辑暂停，再通过自动化管理能力把完整现有配置设为 `ACTIVE`。
+- 逻辑暂停恢复只由外部普通管理上下文执行：确认 lease 与 recovery 均为空，先调用 `ClearBlocking` 成功清除逻辑暂停，再通过自动化管理能力把完整现有配置设为 `ACTIVE`。
 
 ## 队列补充顺序、私有状态与回滚
 
 - 三类均无合法候选时才补队列；队列维护正式入口必须依次保留“提升满足条件的 backlog”和“没有可提升的完整卡时，从权威 backlog、状态与建议形成合法任务卡”两个分支。队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡，单次最多新增 3 张；完成、阻塞、冻结、待决定、执行器不可用或与人工改动冲突的卡不计入深度。权威来源不足时不得制造任务，应补入全部能够安全形成的卡并在提交结果中记录不足原因；只有无法形成任何合法任务卡时才记录阻塞。本轮只提交队列维护，不执行新任务。
-- 私有 runtime 只保存租约、恢复指针、pending resume、阻塞计数和最后结果；飞书状态继续保存于用户级私有目录并使用 ACL 与原子写入。不得保存 provider token、tenant key 或消息标识原文。
+- schema 3 私有 runtime 只保存租约、条件化恢复指针、阻塞计数和最后结果；decision recovery 无 session 字段，interruption recovery 才有 session 字段。飞书状态继续保存于用户级私有目录并使用 ACL 与原子写入。不得保存 provider token、tenant key 或消息标识原文。
 - 第一期不新增飞书 Tasks、task GUID 映射、进度数据库或阶段状态机；有限进度不增加长期 runtime 字段。
 - 生产 prompt、schedule、workdir 和 status 只由外部普通管理上下文通过 Codex 自动化管理能力变更，不编辑 TOML。
 - 失败时保持或恢复 `PAUSED`，保留提交、runtime 与日志；不自动 reset、revert、clean 或删除旧私有备份。只修复受影响切片并重跑直接检查。

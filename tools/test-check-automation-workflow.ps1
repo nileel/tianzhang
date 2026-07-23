@@ -84,9 +84,10 @@ $canonicalPrompt = @'
 # 每小时自动工作流薄路由
 
 1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`；逻辑暂停时立即结束。
-2. 未暂停时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；恢复原责任优先，否则统一排序。
-3. 每轮只选一个执行、复审、外部 AI 或队列维护任务，并调用 `Acquire`。
-4. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。
+2. decision recovery 无回复时不得 Acquire；有回复时调用 `tools/feishu-decision-bridge/src/decision-trigger.mjs`。
+3. decision recovery 有回复时只启动新的责任方 session；interruption recovery 才允许 Resume 原 session。
+4. 未暂停且无 recovery 时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；每轮只选一个任务调用 `Acquire`。
+5. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。
 5. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 6. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
 7. 等待同一次调用返回；不得实施、验证、stage、commit 或启动第二责任方。
@@ -102,6 +103,8 @@ $canonicalRules = @'
 - 固定调用器只用 Git 元数据和 runtime 核验 completed、waiting_decision、interrupted、failed。
 - 外部 AI 保留 businessCommit 与 handoffCommit；handoff 不重复统计。
 - 决策只有 PROVIDER_ACCEPTED 后才能 SaveRecovery；旧 pending binding 不是互斥锁。
+- schema 3 的 decision recovery 不保存 session ID；下一轮从签名证据以 Start + Recovery 启动新的责任方 session。
+- interruption recovery 保留 session ID，只有该路径允许 Resume 原 session。
 - 队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡；单次最多新增 3 张。
 - 权威来源不足时不得制造任务，补入全部能够安全形成的卡并记录不足原因。
 - 不新增中央 manifest、阶段状态机、checkpoint、重试层或第二套队列。
@@ -134,13 +137,13 @@ try {
       '开发管理/状态与建议维护规则.txt' = $canonicalMaintenanceRules
       '开发管理/自动工作流状态.txt' = $canonicalStatus
       '开发管理/自动化简报提示词.txt' = $canonicalDailyPrompt
-      'tools/hourly-automation-lease.ps1' = "ValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','QueueResume','TakeResume','RecordResult','ClearBlocking','Release')"
+      'tools/hourly-automation-lease.ps1' = "schemaVersion = 3`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','RecordResult','ClearBlocking','Release')"
       'tools/codex-cli-session.ps1' = 'runner fixture'
-      'tools/invoke-codex-responsibility.ps1' = 'invoker fixture'
+      'tools/invoke-codex-responsibility.ps1' = '[TZG_DECISION_TRIGGER] Action Start Route Recovery'
       'tools/automation-workspace-guard.ps1' = 'guard fixture'
       'tools/automation-finalize-commit.ps1' = 'finalizer fixture'
       'tools/get-automation-briefing-source.ps1' = 'briefing source fixture'
-      'tools/feishu-decision-bridge/src/resume-trigger.mjs' = 'pwsh codex-cli-session.ps1 -Action Resume'
+      'tools/feishu-decision-bridge/src/decision-trigger.mjs' = 'Action Start Route Recovery'
     }.GetEnumerator()) {
     Write-Utf8File -Path (Join-Path $repositoryRoot $entry.Key) -Content $entry.Value
   }
@@ -161,6 +164,16 @@ try {
   Write-Utf8File -Path $promptPath -Content $unsafeWaitPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $unsafeWaitPrompt
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing deferred wait contract' -Contains 'deferred wait contract'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+
+  $missingFreshDecisionPrompt = $canonicalPrompt.Replace(
+    '3. decision recovery 有回复时只启动新的责任方 session；interruption recovery 才允许 Resume 原 session。',
+    '3. recovery 只恢复原责任方。'
+  )
+  Write-Utf8File -Path $promptPath -Content $missingFreshDecisionPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingFreshDecisionPrompt
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing fresh decision routing' -Contains 'decision recovery contract'
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
@@ -194,6 +207,11 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Retired action in rules' -Contains 'retired workflow token'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
+  $leaseFixturePath = Join-Path $repositoryRoot 'tools/hourly-automation-lease.ps1'
+  Write-Utf8File -Path $leaseFixturePath -Content "schemaVersion = 2`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','QueueResume','TakeResume','RecordResult','ClearBlocking','Release')"
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Legacy decision resume runtime' -Contains 'runtime schema 3 contract'
+  Write-Utf8File -Path $leaseFixturePath -Content "schemaVersion = 3`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','RecordResult','ClearBlocking','Release')"
+
   $queueDepthLine = '- 队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡；单次最多新增 3 张。'
   $weakQueueDepthLine = '- 没有合法 backlog 时新增 1–3 个最小任务。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($queueDepthLine, $weakQueueDepthLine)
@@ -205,7 +223,7 @@ try {
   Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules
 
   $showLine = '1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`；逻辑暂停时立即结束。'
-  $sourceLine = '2. 未暂停时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；恢复原责任优先，否则统一排序。'
+  $sourceLine = '4. 未暂停且无 recovery 时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；每轮只选一个任务调用 `Acquire`。'
   $lateShowPrompt = $canonicalPrompt.Replace($showLine, '<SHOW-LINE>').Replace($sourceLine, $showLine).Replace('<SHOW-LINE>', $sourceLine)
   Write-Utf8File -Path $promptPath -Content $lateShowPrompt
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Late Show' -Contains 'before routing sources'
