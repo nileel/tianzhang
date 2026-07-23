@@ -722,6 +722,44 @@ namespace TianZhang.Tests
     public class AdventureSceneControllerTests
     {
         [Test]
+        public void GuanzhongWildInitializationSpawnsTheFormalShijiahouMarker()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId("guanzhong_wild");
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+                Assert.IsNotNull(controller);
+                Assert.IsNotNull(exploration);
+
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+                var initMethod = typeof(TianZhang.Map.ExplorationController).GetMethod(
+                    "InitExploration",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                Assert.IsNotNull(initMethod);
+
+                var initialization = (System.Collections.IEnumerator)initMethod.Invoke(exploration, null);
+                while (initialization.MoveNext())
+                {
+                }
+
+                Assert.IsNotNull(GameObject.Find("石甲兽"), "The formal encounter must spawn its enemy marker.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void GuanzhongWildDisplaysItsNameAndConfiguresOnlyTheFormalShijiahou()
         {
             DestroyExistingSceneFlowAndSession();

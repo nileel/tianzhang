@@ -59,7 +59,13 @@ namespace TianZhang.Editor
             System.IO.File.WriteAllBytes(p, tex.EncodeToPNG());
             AssetDatabase.Refresh();
             var imp = AssetImporter.GetAtPath(p) as TextureImporter;
-            if (imp != null) { imp.textureType = TextureImporterType.Sprite; imp.spritePixelsPerUnit = s; imp.SaveAndReimport(); }
+            if (imp != null)
+            {
+                imp.textureType = TextureImporterType.Sprite;
+                imp.spriteImportMode = SpriteImportMode.Single;
+                imp.spritePixelsPerUnit = s;
+                imp.SaveAndReimport();
+            }
 
             string tilePath = $"Assets/Resources/Tiles/{name}.asset";
             var tile = AssetDatabase.LoadAssetAtPath<Tile>(tilePath);

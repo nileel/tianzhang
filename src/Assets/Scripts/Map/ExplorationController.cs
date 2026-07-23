@@ -260,6 +260,7 @@ namespace TianZhang.Map
             var rng = new System.Random(123);
             int spawned = 0;
             int maxAttempts = 500;
+            int minimumSpawnDistance = Mathf.Min(5, mapRadius - 2);
 
             for (int attempt = 0; attempt < maxAttempts && spawned < enemyCount; attempt++)
             {
@@ -270,7 +271,7 @@ namespace TianZhang.Map
                 if (s < -mapRadius + 2 || s > mapRadius - 2) continue;
 
                 // 不与玩家重叠，不在障碍上，不与其他敌人重叠
-                if (coord.Distance(player.Position) < 5) continue;
+                if (coord.Distance(player.Position) < minimumSpawnDistance) continue;
                 if (blockedTiles.Contains(coord)) continue;
                 if (tilemapManager.Grid.IsOccupied(coord)) continue;
 

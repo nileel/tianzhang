@@ -164,7 +164,10 @@ namespace TianZhang.Adventure
             panelRt.anchorMin = new Vector2(0f, 1f);
             panelRt.anchorMax = new Vector2(0f, 1f);
             panelRt.pivot = new Vector2(0f, 1f);
-            panelRt.anchoredPosition = new Vector2(24f, -24f);
+            const float panelMargin = 24f;
+            var playerPanel = canvas.transform.Find("PlayerPanel") as RectTransform;
+            float panelTop = playerPanel != null ? playerPanel.offsetMin.y - panelMargin : -panelMargin;
+            panelRt.anchoredPosition = new Vector2(panelMargin, panelTop);
             panelRt.sizeDelta = new Vector2(380f, 210f);
             panelGo.GetComponent<Image>().color = new Color(0.04f, 0.06f, 0.08f, 0.9f);
             var layout = panelGo.GetComponent<VerticalLayoutGroup>();

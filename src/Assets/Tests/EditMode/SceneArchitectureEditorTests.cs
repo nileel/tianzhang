@@ -70,6 +70,20 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FormalAdventureSceneGroundTileHasRenderableSprite()
+        {
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            var tilemapManager = Object.FindFirstObjectByType<TianZhang.HexTile.HexTilemapManager>();
+            Assert.IsNotNull(tilemapManager);
+            Assert.IsNotNull(tilemapManager.groundTile);
+
+            var groundTile = tilemapManager.groundTile as UnityEngine.Tilemaps.Tile;
+            Assert.IsNotNull(groundTile);
+            Assert.IsNotNull(groundTile.sprite, "The formal adventure ground tile must render a sprite.");
+        }
+
+        [Test]
         public void FormalAndRebuiltAdventureScenesBindTheSameFormalShijiahou()
         {
             EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
@@ -505,6 +519,50 @@ namespace TianZhang.Tests
                 DestroyAdventureUi();
                 Object.DestroyImmediate(controllerGo);
                 Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void AdventurePanelDoesNotOverlapPlayerHud()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var battleUiGo = new GameObject("BattleUIManagerTest");
+            var controllerGo = new GameObject("AdventureSceneControllerTest");
+            try
+            {
+                var battleUi = battleUiGo.AddComponent<BattleUIManager>();
+                typeof(BattleUIManager)
+                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(battleUi, null);
+
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+                InvokeStart(controller);
+                Canvas.ForceUpdateCanvases();
+
+                var canvas = GameObject.Find("UICanvas")?.transform;
+                var playerPanel = GameObject.Find("PlayerPanel")?.GetComponent<RectTransform>();
+                var adventurePanel = GameObject.Find("AdventurePanel")?.GetComponent<RectTransform>();
+                Assert.IsNotNull(canvas);
+                Assert.IsNotNull(playerPanel);
+                Assert.IsNotNull(adventurePanel);
+
+                var playerBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvas, playerPanel);
+                var adventureBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvas, adventurePanel);
+                bool overlaps = playerBounds.min.x < adventureBounds.max.x
+                    && playerBounds.max.x > adventureBounds.min.x
+                    && playerBounds.min.y < adventureBounds.max.y
+                    && playerBounds.max.y > adventureBounds.min.y;
+
+                Assert.IsFalse(
+                    overlaps,
+                    $"PlayerPanel {playerBounds.min}..{playerBounds.max} overlaps AdventurePanel {adventureBounds.min}..{adventureBounds.max}.");
+            }
+            finally
+            {
+                DestroyAdventureUi();
+                Object.DestroyImmediate(controllerGo);
+                Object.DestroyImmediate(battleUiGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
