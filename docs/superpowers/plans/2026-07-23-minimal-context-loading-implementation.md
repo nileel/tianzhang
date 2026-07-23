@@ -402,7 +402,8 @@ Run this exact PowerShell 7 block from the repository root:
 ```powershell
 & {
 function Get-TextChars([string]$Path) {
-  ([System.IO.File]::ReadAllText((Resolve-Path $Path))).Length
+  $text = [System.IO.File]::ReadAllText((Resolve-Path $Path))
+  ($text -replace "`r`n?", "`n").Length
 }
 
 function Get-SegmentChars([string]$Path, [int]$Start, [int]$End) {
