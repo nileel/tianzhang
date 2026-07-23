@@ -12,6 +12,7 @@
 | U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 阻塞（C-ENV-PROFILE-01） | 共享空间查询契约实现与旧范围逻辑迁移 |
 | D-REALM-02B | P2 | Codex / gpt-5.6-terra | 数据链路 | 已完成 | 炼神术法／神通资料片隔离闭环验证 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
+| N-AI-01A | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 待处理 | 战棋 AI 与 Boss 模板现行所有者定位 |
 | M-MGMT-01A | P3 | Codex / gpt-5.6-terra | 管理维护 | 已完成 | 管理目录重组影响面基线与迁移边界 |
 
 ## 任务卡片
@@ -54,6 +55,19 @@
 - 验证：`dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`，以及 `git diff --check`。
 - 完成条件：方案明确槽位与丹枢的输入、输出、适用边界、目标指标和数值阈值；覆盖 1～5 府与 1～3 稳定位格，不让第四、第五府失效或凭数量增槽，并保留可复现的 BattleSim 证据。
 - 停止条件：N-FPD-MANSION-01 或 N-FPD-DANXIANG-01 尚未完成，或方案必须依赖府数自动加槽、额外位格／丹相或未确认府体数值。
+
+### N-AI-01A · 战棋 AI 与 Boss 模板现行所有者定位
+
+- 来源：`开发管理/任务列表/数值与战斗任务.txt` 的 N-AI-01、`开发管理/设计-当前状态.txt` 的已通过 G2 基线，以及已完成的 `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`。本卡只补齐 N-AI-01 的事实定位与决策输入，不实施 N-AI-01。
+- 当前状态：待处理；依赖：G2 已通过、N-GROUP-02A 已完成；无待决策可阻止本卡只读定位。N-GROUP-02 的范围、协同走位和团队目标优先级仍由 N-GROUP-DEC-01～05 约束，不在本卡重列或决定。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`AGENTS.md`、`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数值与战斗任务.txt`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`、`simulations/BattleSim/Combat.cs`、`Character.cs`、`GameData.cs`、`BattleSimSelfTests.cs` 与 `Program.cs`。
+- 预期修改路径：新建 `开发管理/战棋AI与Boss模板现行所有者及决策输入.txt`；更新 `开发管理/任务列表/数值与战斗任务.txt` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：只读定位 1v1 的行动／选位链和 2v2 的个人行动、目标选择与移动链，逐项记录输入、稳定排序、可观察输出、当前数据承载和现有回归；明确现行 `Style`、攻击档案和角色状态是否能表达门派策略、Boss 身份、Boss 模板或可调权重。必须把 N-AI 后续所需且当前缺失的负责人决定拆为 N-AI-DEC-01（门派策略输入与优先级）、N-AI-DEC-02（Boss 模板身份／行为边界）和 N-AI-DEC-03（配置所有者与 1v1／2v2 复用边界），但不得代填任何选项、阈值或权重。
+- 禁止：不修改 `simulations/BattleSim/` 代码、数值、Build、CSV、Unity、内容事实源、既有回归或自动化配置；不把 `SelectAction`、`SelectGroupTarget`、既有 `Style` 分支或队友结算效果误称为门派 AI／Boss 模板；不重复 N-GROUP-02A 的范围、协同走位、团队目标优先级或环境战场决策；不新增默认策略、随机权重、兼容分支或数值结论。
+- 验证：`rg -n "SelectAction|SelectGroupTarget|Simulate2v2Detailed|ResolveActionPosition|Boss|Style" simulations/BattleSim/Combat.cs simulations/BattleSim/Character.cs simulations/BattleSim/GameData.cs simulations/BattleSim/BattleSimSelfTests.cs simulations/BattleSim/Program.cs`，`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/战棋AI与Boss模板现行所有者及决策输入.txt,开发管理/当前任务队列.txt,开发管理/任务列表/数值与战斗任务.txt`，以及 `git diff --check`。
+- 完成条件：事实输入文件能逐项回链现行 1v1／2v2 的行动、目标、选位、移动、输入承载和测试所有者；对门派策略、Boss 模板与可调优先级的现有／缺失状态有明确结论；三项 N-AI-DEC 的决定范围和直接影响根均可追溯，且没有代码、数据、数值或内容改动。
+- 停止条件：若现有调用链不能静态区分通用战斗结算与策略决策，或定位结果需要定义门派身份、Boss 属性、范围／协同规则或任何数值才能继续，记录已知调用链与缺口并停止；不得用推测性默认值完成本卡。
 
 ### M-MGMT-01A · 管理目录重组影响面基线与迁移边界
 
