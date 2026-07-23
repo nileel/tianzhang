@@ -599,7 +599,17 @@ try {
 
     switch ($Action) {
       'Show' {
-        $result = New-Result -Status 'OK' -Values @{ state = $state }
+        $leaseStatus = if ($null -eq $state.lease) {
+          'none'
+        } elseif (Test-LeaseExpired -Lease $state.lease -Now $now) {
+          'expired'
+        } else {
+          'active'
+        }
+        $result = New-Result -Status 'OK' -Values @{
+          leaseStatus = $leaseStatus
+          state = $state
+        }
       }
 
       'Acquire' {

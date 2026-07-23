@@ -195,6 +195,35 @@ try {
   $relativeState = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = 'relative-state' } -AllowedExitCodes @(2)
   Assert-Equal -Actual $relativeState.Json.status -Expected 'INVALID_ARGUMENT' -Message 'Relative state root must be rejected'
 
+  $leaseStatusStateRoot = Join-Path $stateRoot 'lease-status'
+  $leaseStatusStatePath = Join-Path $leaseStatusStateRoot 'runtime.json'
+  $emptyLeaseStatus = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $leaseStatusStateRoot }
+  Assert-Equal -Actual $emptyLeaseStatus.Json.leaseStatus -Expected 'none' -Message 'Show did not identify an empty lease'
+
+  $leaseStatusOwner = Invoke-LeaseTool -Action Acquire -Parameters @{
+    StateRoot = $leaseStatusStateRoot
+    TaskId = 'task-lease-status'
+    Owner = 'codex'
+    RepositoryRoot = $repositoryRoot
+    LeaseSeconds = 60
+  }
+  $activeLeaseStatus = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $leaseStatusStateRoot }
+  Assert-Equal -Actual $activeLeaseStatus.Json.leaseStatus -Expected 'active' -Message 'Show did not identify an active lease'
+
+  $expiredLeaseState = Get-Content -LiteralPath $leaseStatusStatePath -Raw | ConvertFrom-Json -Depth 100
+  $expiredLeaseState.lease.expiresAt = '2000-01-01T00:00:00.0000000+00:00'
+  [IO.File]::WriteAllText(
+    $leaseStatusStatePath,
+    ($expiredLeaseState | ConvertTo-Json -Compress -Depth 100),
+    [Text.UTF8Encoding]::new($false)
+  )
+  $expiredLeaseStatus = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $leaseStatusStateRoot }
+  Assert-Equal -Actual $expiredLeaseStatus.Json.leaseStatus -Expected 'expired' -Message 'Show did not identify an expired lease'
+  Invoke-LeaseTool -Action Release -Parameters @{
+    StateRoot = $leaseStatusStateRoot
+    RunId = $leaseStatusOwner.Json.runId
+  } | Out-Null
+
   $invalidRepository = Invoke-LeaseTool -Action Acquire -Parameters @{
     StateRoot = $stateRoot
     TaskId = 'task-invalid-repository'
