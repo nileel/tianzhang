@@ -177,7 +177,7 @@ function expectedCustomAccepted(payload, envelope) {
   return result;
 }
 
-test('consumer returns the fixed accepted structure, moves evidence, and consumes once', async (t) => {
+test('consumer returns the fixed accepted structure and rereads processed evidence idempotently', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-consume-valid-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const eventId = 'evt_fake_valid';
@@ -199,12 +199,12 @@ test('consumer returns the fixed accepted structure, moves evidence, and consume
     written: false,
     duplicate: true,
   });
-  assert.equal(await consumeCurrentReply({
+  assert.deepEqual(await consumeCurrentReply({
     stateRoot: root,
     config: makeConfig(root),
     pendingDecision: makePending(),
     now: NOW,
-  }), null);
+  }), result);
   assert.equal(JSON.stringify(result).includes(DECISION_ID), false);
   assert.equal(JSON.stringify(result).includes(OPERATOR_OPEN_ID), false);
   assert.equal(JSON.stringify(result).includes(TENANT_KEY), false);
@@ -221,9 +221,10 @@ test('a new provider event cannot reuse a card nonce that was already processed'
     now: NOW,
   };
   await put(root, 'evt_fake_nonce_first');
-  assert.equal((await consumeCurrentReply(args))?.result, 'OPTION_ACCEPTED');
+  const accepted = await consumeCurrentReply(args);
+  assert.equal(accepted?.result, 'OPTION_ACCEPTED');
   const replay = await put(root, 'evt_fake_nonce_second');
-  assert.equal(await consumeCurrentReply(args), null);
+  assert.deepEqual(await consumeCurrentReply(args), accepted);
   assert.deepEqual(await readdir(join(root, 'quarantine')), [`${replay.eventIdHash}.json`]);
 });
 

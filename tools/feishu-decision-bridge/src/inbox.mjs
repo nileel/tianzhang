@@ -444,6 +444,7 @@ function snapshotDecisionEvidence(value) {
 async function readProcessedEvidence(processedDirectory, encodedKey, pending) {
   const nonces = new Set();
   const identities = new Set();
+  const accepted = [];
   let healthy = true;
   const names = (await readdir(processedDirectory))
     .filter((name) => /^[0-9a-f]{64}\.json$/.test(name))
@@ -470,12 +471,29 @@ async function readProcessedEvidence(processedDirectory, encodedKey, pending) {
         && payload.providerMessageIdHash === pending.providerMessageIdHash
       ) {
         identities.add(payloadIdentity(payload));
+        accepted.push({
+          envelope,
+          payload,
+          receivedAtMs: parseExactIso(payload.receivedAt),
+        });
       }
     } catch {
       healthy = false;
     }
   }
-  return { nonces, identities, healthy: healthy && identities.size <= 1 };
+  const evidenceIsHealthy = healthy && identities.size <= 1;
+  accepted.sort((left, right) => (
+    left.receivedAtMs - right.receivedAtMs
+    || left.payload.providerEventIdHash.localeCompare(right.payload.providerEventIdHash)
+  ));
+  return {
+    accepted: evidenceIsHealthy && accepted.length > 0
+      ? acceptedOutput(accepted[0].payload, accepted[0].envelope)
+      : null,
+    nonces,
+    identities,
+    healthy: evidenceIsHealthy,
+  };
 }
 
 function acceptedOutput(payload, envelope) {
@@ -595,7 +613,7 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
     }
 
     if (valid.length === 0) {
-      return null;
+      return consumed.accepted;
     }
     valid.sort((left, right) => (
       left.receivedAtMs - right.receivedAtMs
@@ -610,7 +628,9 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
         : quarantineDirectory;
       await movePreserving(item.sourcePath, destination, item.name, item.raw);
     }
-    return winner === null ? null : acceptedOutput(winner.payload, winner.envelope);
+    return winner === null
+      ? consumed.accepted
+      : acceptedOutput(winner.payload, winner.envelope);
   } catch {
     return null;
   } finally {
