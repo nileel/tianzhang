@@ -90,7 +90,7 @@ function fakeSpawnRecorder({ fail = false } = {}) {
   return { calls, spawnChild };
 }
 
-test('card A/B/C and custom replies preserve responses and relay after inbox acceptance', async () => {
+test('card A/B/C and custom replies preserve responses without starting a relay', async () => {
   const stateRoot = 'C:\\private\\bridge-state';
   const cases = [
     { kind: 'decision_reply', optionKey: 'A' },
@@ -128,16 +128,12 @@ test('card A/B/C and custom replies preserve responses and relay after inbox acc
     const actualResponse = await callback({ fixture: true });
 
     assert.strictEqual(actualResponse, expectedResponse);
-    assert.deepEqual(order, ['signed-inbox', 'relay']);
-    assert.equal(relayed.decisionId, 'decision-one');
-    assert.equal(
-      relayed.replyPath,
-      join(stateRoot, 'inbox', `${sha256(normalized.eventId)}.json`),
-    );
+    assert.deepEqual(order, ['signed-inbox']);
+    assert.equal(relayed, undefined);
   }
 });
 
-test('text custom reply keeps Feishu confirmation text and exposes decisionId only internally', async () => {
+test('text custom reply keeps Feishu confirmation text without starting a relay', async () => {
   const stateRoot = 'C:\\private\\bridge-state';
   const confirmation = '已登记 decision-one 自定义方案：\n保持兼容';
   const order = [];
@@ -176,12 +172,8 @@ test('text custom reply keeps Feishu confirmation text and exposes decisionId on
 
   assert.equal(externalResult, undefined);
   assert.deepEqual(replies, [confirmation]);
-  assert.deepEqual(order, ['signed-inbox', 'relay']);
-  assert.equal(relayed.decisionId, 'decision-one');
-  assert.equal(
-    relayed.replyPath,
-    join(stateRoot, 'inbox', `${sha256(normalized.eventId)}.json`),
-  );
+  assert.deepEqual(order, ['signed-inbox']);
+  assert.equal(relayed, undefined);
 });
 
 test('accepted duplicate event schedules one hidden detached relay helper', () => {

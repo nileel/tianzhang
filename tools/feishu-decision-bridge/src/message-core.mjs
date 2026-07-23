@@ -393,6 +393,5 @@ export async function handleDecisionTextMessage({
   return {
     accepted: true,
     rejectionCode: replyFailure,
-    decisionId: command.decisionId,
   };
 }
