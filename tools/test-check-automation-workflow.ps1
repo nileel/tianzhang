@@ -76,6 +76,7 @@ $repositoryRoot = Join-Path $testRoot 'repo'
 $automationRoot = Join-Path $testRoot 'automations'
 $promptPath = Join-Path $repositoryRoot '开发管理/自动工作流控制器提示词.txt'
 $rulesPath = Join-Path $repositoryRoot '开发管理/自动工作流规则.txt'
+$maintenanceRulesPath = Join-Path $repositoryRoot '开发管理/状态与建议维护规则.txt'
 $statusPath = Join-Path $repositoryRoot '开发管理/自动工作流状态.txt'
 $dailyPromptPath = Join-Path $repositoryRoot '开发管理/自动化简报提示词.txt'
 
@@ -101,7 +102,16 @@ $canonicalRules = @'
 - 固定调用器只用 Git 元数据和 runtime 核验 completed、waiting_decision、interrupted、failed。
 - 外部 AI 保留 businessCommit 与 handoffCommit；handoff 不重复统计。
 - 决策只有 PROVIDER_ACCEPTED 后才能 SaveRecovery；旧 pending binding 不是互斥锁。
+- 队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡；单次最多新增 3 张。
+- 权威来源不足时不得制造任务，补入全部能够安全形成的卡并记录不足原因。
 - 不新增中央 manifest、阶段状态机、checkpoint、重试层或第二套队列。
+'@
+
+$canonicalMaintenanceRules = @'
+# 状态与建议维护规则
+
+- 队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡；单次最多新增 3 张。
+- 权威来源不足时不得制造任务，补入全部能够安全形成的卡并记录不足原因。
 '@
 
 $canonicalStatus = @'
@@ -121,6 +131,7 @@ try {
   foreach ($entry in @{
       '开发管理/自动工作流控制器提示词.txt' = $canonicalPrompt
       '开发管理/自动工作流规则.txt' = $canonicalRules
+      '开发管理/状态与建议维护规则.txt' = $canonicalMaintenanceRules
       '开发管理/自动工作流状态.txt' = $canonicalStatus
       '开发管理/自动化简报提示词.txt' = $canonicalDailyPrompt
       'tools/hourly-automation-lease.ps1' = "ValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','QueueResume','TakeResume','RecordResult','ClearBlocking','Release')"
@@ -182,6 +193,16 @@ try {
   Write-Utf8File -Path $rulesPath -Content ($canonicalRules + "`nRecordQueueState")
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Retired action in rules' -Contains 'retired workflow token'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  $queueDepthLine = '- 队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡；单次最多新增 3 张。'
+  $weakQueueDepthLine = '- 没有合法 backlog 时新增 1–3 个最小任务。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($queueDepthLine, $weakQueueDepthLine)
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing queue depth in workflow rules' -Contains 'queue depth contract'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules.Replace($queueDepthLine, $weakQueueDepthLine)
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing queue depth in maintenance rules' -Contains 'queue depth contract'
+  Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules
 
   $showLine = '1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`；逻辑暂停时立即结束。'
   $sourceLine = '2. 未暂停时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；恢复原责任优先，否则统一排序。'

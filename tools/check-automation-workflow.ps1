@@ -65,6 +65,7 @@ Assert-Contract -Condition (Test-Path -LiteralPath $automationDirectory -PathTyp
 
 $prompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流控制器提示词.txt')
 $rules = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流规则.txt')
+$maintenanceRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\状态与建议维护规则.txt')
 $status = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流状态.txt')
 $dailyPrompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动化简报提示词.txt')
 
@@ -107,6 +108,14 @@ Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   'PROVIDER_ACCEPTED',
   'SaveRecovery'
 )
+$queueDepthTokens = @(
+  '至少包含 2 张合法可执行任务卡',
+  '单次最多新增 3 张',
+  '不得制造任务',
+  '不足原因'
+)
+Assert-Contains -Text $rules -Context 'queue depth contract in workflow rules' -Values $queueDepthTokens
+Assert-Contains -Text $maintenanceRules -Context 'queue depth contract in maintenance rules' -Values $queueDepthTokens
 Assert-Contains -Text $dailyPrompt -Context 'daily briefing prompt' -Values @(
   'tools/get-automation-briefing-source.ps1',
   'Result',
