@@ -73,6 +73,12 @@ rg -n --glob '*.txt' --glob '*.csv' --glob '*.asset' '(炼神|炼虚|化神|元�
 
 选择任何方向前都须建立新的、路径明确的迁移任务卡；本卡完成不表示任何候选已经保留、合并、删除或隔离。
 
+## 已批准的负责人决定
+
+- `DEC-20260723-REALM01`：负责人对 D-REALM-DEC-01 选择 C，将四个炼神术法／神通保留为资料片预留资料，并与现行玩家可用内容隔离；不得借此扩展玩家境界链。
+- 该决定只覆盖 `spell_wanliuguizong`、`spell_tianshuyunzhuan`、`skill_fayu_wanxiangxuanmen` 与 `skill_lingyu_wanxiangguiyuan` 及其直接 asset、docs 和语言依赖。D-REALM-DEC-02～04 仍待负责人选择。
+- 现行 CSV／asset 的 `contentScope=reserved` 与玩家装载入口的过滤逻辑只是待验证证据，不自动等于决定已经闭环。后续由 D-REALM-02B 添加四项精确回归并形成隔离验证记录；若发现旁路，只记录缺口并停止，不在验证卡中扩写迁移机制。
+
 ## 完整 docs 清单
 
 以下是本次命中项的逐项字面量路径。它们的语义、consumer 状态与可选方向按上方“文档引用分类”对应目录类别判定。
