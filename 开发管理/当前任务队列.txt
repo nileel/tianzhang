@@ -12,6 +12,7 @@
 | U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 阻塞（C-ENV-PROFILE-01） | 共享空间查询契约实现与旧范围逻辑迁移 |
 | D-REALM-02B | P2 | Codex / gpt-5.6-terra | 数据链路 | 已完成 | 炼神术法／神通资料片隔离闭环验证 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
+| M-MGMT-01A | P3 | Codex / gpt-5.6-terra | 管理维护 | 待处理 | 管理目录重组影响面基线与迁移边界 |
 
 ## 任务卡片
 ### U-2_5D-01D · 共享空间查询契约实现与旧范围逻辑迁移
@@ -53,3 +54,16 @@
 - 验证：`dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`，以及 `git diff --check`。
 - 完成条件：方案明确槽位与丹枢的输入、输出、适用边界、目标指标和数值阈值；覆盖 1～5 府与 1～3 稳定位格，不让第四、第五府失效或凭数量增槽，并保留可复现的 BattleSim 证据。
 - 停止条件：N-FPD-MANSION-01 或 N-FPD-DANXIANG-01 尚未完成，或方案必须依赖府数自动加槽、额外位格／丹相或未确认府体数值。
+
+### M-MGMT-01A · 管理目录重组影响面基线与迁移边界
+
+- 来源：`开发管理/任务列表/审核与交接任务.txt` 的 M-MGMT-01，以及 `开发管理/状态与建议维护规则.txt` 的队列补充顺序。G2/G3 已通过，当前无 `2` 流程审核、有效交接或未通过复审项。
+- 当前状态：待处理；依赖：G2/G3 通过、当前队列稳定且无跨文件交接。不得把本卡视为目录重组已经获批或已经开始。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`AGENTS.md`、`开发管理/状态与建议维护规则.txt`、`开发管理/自动工作流规则.txt`、`开发管理/任务列表/审核与交接任务.txt`、`开发管理/当前任务队列.txt`，以及命中的 `AGENTS.md`、`CLAUDE.md`、`tools/` 和 `开发管理/` 路径引用。
+- 预期修改路径：新建 `开发管理/管理目录重组影响面清单.txt`；更新 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：以 `rg` 实时扫描 `开发管理/` 的字面量引用，列出当前管理入口、自动化脚本、审核／交接入口和归档链接的读取方、写入方、目标分类（规则／当前／归档）与迁移顺序；只定义未来 M-MGMT-01 的可执行范围和检查口径。
+- 禁止：不移动、重命名、删除或批量改写任何现有文件；不修改自动化配置、runtime、任务调度、审核状态或业务事实；不以动态路径猜测、兼容重定向或第二套目录掩盖未分类引用。
+- 验证：`rg -n "开发管理/" AGENTS.md CLAUDE.md tools 开发管理`，`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/管理目录重组影响面清单.txt,开发管理/任务列表/审核与交接任务.txt,开发管理/当前任务队列.txt`，以及 `git diff --check`。
+- 完成条件：清单逐项给出命中的稳定路径、读写角色、目标分类和迁移次序；所有需要改写的字面量引用均可追溯，任何动态或外部配置依赖均显式列为下一卡前置；本卡本身没有移动或改写既有路径。
+- 停止条件：发现无法静态枚举的路径解析、需改动用户级自动化配置／runtime，或扫描范围扩展到业务事实源；记录已知引用与缺口，停止并请求负责人决定，不在本卡内添加兼容层。
