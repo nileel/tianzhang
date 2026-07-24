@@ -79,6 +79,8 @@ $rulesPath = Join-Path $repositoryRoot '开发管理/自动工作流规则.txt'
 $maintenanceRulesPath = Join-Path $repositoryRoot '开发管理/状态与建议维护规则.txt'
 $statusPath = Join-Path $repositoryRoot '开发管理/自动工作流状态.txt'
 $dailyPromptPath = Join-Path $repositoryRoot '开发管理/自动化简报提示词.txt'
+$claudePath = Join-Path $repositoryRoot 'CLAUDE.md'
+$collaborationPath = Join-Path $repositoryRoot '开发管理/AI协作规则.txt'
 
 $canonicalPrompt = @'
 # 每小时自动工作流薄路由
@@ -87,11 +89,26 @@ $canonicalPrompt = @'
 2. decision recovery 无回复时不得 Acquire；后续轮次直接调用 `tools/feishu-decision-bridge/src/consume-reply.mjs` 读取签名回复。
 3. decision recovery 有回复时调用 `Acquire -ResumeRecovery`，再由固定调用器 `-Action Start -Route Recovery` 启动新的责任方 session；interruption recovery 才允许 Resume 原 session。
 4. 未暂停且无 recovery 时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；每轮只选一个任务调用 `Acquire`。
-5. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。
+5. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。
 5. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 6. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
 7. 等待同一次调用返回；不得实施、验证、stage、commit 或启动第二责任方。
 8. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
+7. 外部 AI 返回 completed 后，只核验 identity、businessCommit、handoffCommit、提交父子关系、Automation 元数据和相对基线新增未提交路径；合法且无残留时调用 `RecordResult -Category success`，成功后调用 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。
+'@
+
+$canonicalClaude = @'
+# Claude / DeepSeek
+
+- 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
+- `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
+'@
+
+$canonicalCollaboration = @'
+# AI协作规则
+
+- 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
+- `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
 '@
 
 $canonicalRules = @'
@@ -137,6 +154,8 @@ try {
       '开发管理/状态与建议维护规则.txt' = $canonicalMaintenanceRules
       '开发管理/自动工作流状态.txt' = $canonicalStatus
       '开发管理/自动化简报提示词.txt' = $canonicalDailyPrompt
+      'CLAUDE.md' = $canonicalClaude
+      '开发管理/AI协作规则.txt' = $canonicalCollaboration
       'tools/hourly-automation-lease.ps1' = "schemaVersion = 3`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','RecordResult','ClearBlocking','Release')"
       'tools/codex-cli-session.ps1' = 'runner fixture'
       'tools/invoke-codex-responsibility.ps1' = '[TZG_DECISION_REPLY] Action Start Route Recovery'
@@ -152,6 +171,18 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
+
+  $externalCloseoutLine = '7. 外部 AI 返回 completed 后，只核验 identity、businessCommit、handoffCommit、提交父子关系、Automation 元数据和相对基线新增未提交路径；合法且无残留时调用 `RecordResult -Category success`，成功后调用 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。'
+  $missingExternalCloseout = $canonicalPrompt.Replace($externalCloseoutLine, '7. 外部 AI 返回 completed 后只报告两个提交 SHA。')
+  Write-Utf8File -Path $promptPath -Content $missingExternalCloseout
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingExternalCloseout
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing external closeout contract' -Contains 'external closeout contract'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+
+  Write-Utf8File -Path $claudePath -Content $canonicalClaude.Replace('同源地址', '仅该路径')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing DeepSeek identity contract' -Contains 'DeepSeek identity contract'
+  Write-Utf8File -Path $claudePath -Content $canonicalClaude
 
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt ($canonicalPrompt + "`ndrift")
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused controller drift' -Contains 'controller prompt'
