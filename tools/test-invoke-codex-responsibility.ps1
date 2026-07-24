@@ -360,6 +360,23 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
     Commit-CompletedResult -Paths @('result.txt', '开发管理')
   }
+  'matching-commit-with-lifecycle-residue' {
+    $taskId = $env:RESPONSIBILITY_TEST_TASK_ID
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
+    Commit-CompletedResult -Paths @('result.txt')
+
+    $cardPath = Join-Path (Get-Location) "开发管理/任务卡/$taskId.txt"
+    $cardText = [IO.File]::ReadAllText($cardPath)
+    $cardText = $cardText.Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": null', '"stateReason": "test blocked"')
+    Write-FakeUtf8 -Path $cardPath -Text $cardText
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/当前任务队列.txt') -Text (@(
+      '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
+      '| --- | --- | --- | --- | --- | --- | --- | --- |'
+    ) -join "`n")
+    $backlogPath = Join-Path (Get-Location) '开发管理/任务列表/自动化任务.txt'
+    $backlogText = [IO.File]::ReadAllText($backlogPath).Replace('| 已排队 |', '| 阻塞 |')
+    Write-FakeUtf8 -Path $backlogPath -Text $backlogText
+  }
   'child-failed-with-change' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'orphan.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
     $global:LASTEXITCODE = 9
@@ -524,6 +541,47 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $commitWithResidueRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Commit-with-residue recovery could not be reacquired'
   Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $commitWithResidueRecoveryLease.runId } | Out-Null
   Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $commitWithResidueRecoveryLease.runId } | Out-Null
+
+  Reset-GitFixture
+  $lifecycleResidueTaskId = 'task-matching-lifecycle-residue'
+  Set-TaskProjectionFixture -TaskId $lifecycleResidueTaskId
+  $lifecycleResidueRun = Acquire-TestLease -TaskId $lifecycleResidueTaskId
+  $lifecycleResidue = Invoke-Responsibility `
+    -Case 'matching-commit-with-lifecycle-residue' `
+    -TaskId $lifecycleResidueTaskId `
+    -RunId $lifecycleResidueRun
+  Assert-True -Condition ($lifecycleResidue.ExitCode -ne 0) -Message 'Matching commit with lifecycle residue unexpectedly succeeded'
+  Assert-Equal -Actual $lifecycleResidue.Json.status -Expected 'interrupted' -Message 'Matching commit with lifecycle residue status mismatch'
+  Assert-True -Condition ($null -eq $lifecycleResidue.Json.commitSha) -Message 'Matching commit with lifecycle residue returned a verified commit'
+  $lifecycleResidueState = Assert-LeaseReleased
+  Assert-Equal -Actual $lifecycleResidueState.state.recovery.trigger -Expected 'interruption' -Message 'Matching commit with lifecycle residue recovery trigger mismatch'
+  Assert-Equal -Actual $lifecycleResidueState.state.recovery.resumeId -Expected $sessionId -Message 'Matching commit with lifecycle residue recovery lost session id'
+  Assert-Equal `
+    -Actual @($lifecycleResidueState.state.recovery.changedPaths).Count `
+    -Expected 3 `
+    -Message 'Matching commit with lifecycle residue recovery changed-path count mismatch'
+  foreach ($residuePath in @(
+      "开发管理/任务卡/$lifecycleResidueTaskId.txt",
+      '开发管理/当前任务队列.txt',
+      '开发管理/任务列表/自动化任务.txt'
+    )) {
+    & git -C $gitRoot diff --quiet -- $residuePath
+    $residueDiffExit = $LASTEXITCODE
+    Assert-Equal `
+      -Actual $residueDiffExit `
+      -Expected 1 `
+      -Message "Matching commit with lifecycle residue did not preserve uncommitted path: $residuePath"
+  }
+  $lifecycleResidueRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = $lifecycleResidueTaskId
+    Owner = 'codex'
+    RepositoryRoot = $gitRoot
+    ResumeRecovery = $true
+  }
+  Assert-Equal -Actual $lifecycleResidueRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Matching commit with lifecycle residue recovery could not be reacquired'
+  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $lifecycleResidueRecoveryLease.runId } | Out-Null
+  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $lifecycleResidueRecoveryLease.runId } | Out-Null
 
   Reset-GitFixture
   $commitOnlyRun = Acquire-TestLease -TaskId 'task-commit-only'

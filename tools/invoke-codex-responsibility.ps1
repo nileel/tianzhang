@@ -381,8 +381,7 @@ try {
       $null -ne $metadata -and
       [string]$metadata.Automation -ceq 'tzg-hourly-controller' -and
       [string]$metadata.Task -ceq $TaskId -and
-      [string]$metadata.State -ceq 'completed' -and
-      (Test-TaskCardCloseout)
+      [string]$metadata.State -ceq 'completed'
     ) {
       $matchingCommits.Add($commitSha)
     }
@@ -403,7 +402,12 @@ try {
       sessionId = $capturedSessionId; commitSha = $null
     }
     $resultExitCode = 0
-  } elseif ($newCommits.Count -eq 1 -and $matchingCommits.Count -eq 1) {
+  } elseif (
+    $newCommits.Count -eq 1 -and
+    $matchingCommits.Count -eq 1 -and
+    $newChangedPaths.Count -eq 0 -and
+    (Test-TaskCardCloseout)
+  ) {
     $verifiedCommitSha = $matchingCommits[0]
     if ($null -ne $recovery -and [string]$recovery.taskId -ceq $TaskId) {
       $cleared = Invoke-LeaseAction -LeaseAction ClearRecovery -Parameters @{ StateRoot = $StateRoot; RunId = $RunId }
