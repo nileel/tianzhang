@@ -182,6 +182,7 @@ $canonicalMaintenanceRules = @'
 # 状态与建议维护规则
 
 - 队列为空时维护 backlog；本轮不执行新任务。
+- QueueMaintenance 以 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 作为候选存在性证据，无需再用 `rg` 无匹配证明不存在。
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 '@
@@ -266,6 +267,16 @@ try {
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($queueOutcomeLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing queue outcome classification' -Contains 'queue outcome classification'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  $queueAbsenceLine = '- QueueMaintenance 以 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 作为候选存在性证据，无需再用 `rg` 无匹配证明不存在。'
+  Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules.Replace($queueAbsenceLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing structured queue absence evidence' -Contains 'queue absence evidence'
+  Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules
+
+  $retiredRecoveryGlobalOnly = 'QueueMaintenance / Recovery 只运行全局任务卡检查'
+  Write-Utf8File -Path $collaborationPath -Content ($canonicalCollaboration + "`n$retiredRecoveryGlobalOnly")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Retired recovery-global-only contract' -Contains 'retired recovery-global-only contract'
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
 
   $reportLine = '9. 最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。'
   $missingLifecycleReport = $canonicalPrompt.Replace($reportLine, '9. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。')

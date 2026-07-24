@@ -261,6 +261,15 @@ Assert-Contains -Text $rules -Context 'queue outcome classification' -Values @(
   'blocked/no_runnable_candidate',
   '不制造'
 )
+Assert-Contains -Text $maintenanceRules -Context 'queue absence evidence' -Values @(
+  'tools/check-task-cards.ps1 -OutputJson',
+  'readyCount',
+  '`rg` 无匹配',
+  '无需'
+)
+Assert-Contract `
+  -Condition (-not $collaborationRules.Contains('QueueMaintenance / Recovery 只运行全局任务卡检查', [StringComparison]::Ordinal)) `
+  -Message 'retired recovery-global-only contract remains in collaboration rules'
 Assert-Contains -Text $rules -Context 'fixed automation responsibility contract' -Values @(
   'RepositoryRoot',
   'current branch',

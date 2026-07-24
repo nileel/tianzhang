@@ -48,7 +48,7 @@
 - 普通 Codex 执行、复审、队列维护与恢复不得使用 Desktop/VS Code rollout；取得租约后只调用 `tools/invoke-codex-responsibility.ps1`，由该固定入口向 `tools/codex-cli-session.ps1` 写入标准输入。控制器不得临时拼装 ProcessStartInfo、编码或 here-string 启动逻辑；已在 Node REPL 核验的模型值通过固定入口传给 runner 与责任方。
 - `Execution` / `Review` 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。
 - 固定调用器只在提交元数据匹配且任务卡检查通过后记录成功：所有非 `QUEUE-MAINTENANCE` TaskId（包括 task-bearing `Recovery`）使用同一 TaskId 的 `CodexClosedOrNonReady`，只接受 exact completed archive 或 `{blocked,frozen,pending_decision,waiting_reply}` active 非 ready 卡；只有 `QUEUE-MAINTENANCE` 与其 recovery 使用全局投影。仍为 ready 或投影无效的提交沿用现有 blocked / failed closeout，不新增修复层。
-- `QueueMaintenance` 使用任务卡检查器返回的 `readyCount` 分类；只有大于 0 才记录 `refilled`，等于 0 但存在合法事实修正提交时记录 `success`，等于 0 且没有提交或工作区变化时记录既有 `blocked/no_runnable_candidate` 并使用稳定 fingerprint，不制造任务、无事实提交、recovery 或重试层。
+- `QueueMaintenance` 使用 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 分类并作为候选存在性证据，无需再用 `rg` 无匹配证明不存在；只有大于 0 才记录 `refilled`，等于 0 但存在合法事实修正提交时记录 `success`，等于 0 且没有提交或工作区变化时记录既有 `blocked/no_runnable_candidate` 并使用稳定 fingerprint，不制造任务、无事实提交、recovery 或重试层。
 - 固定调用器传入的 `RepositoryRoot` 当前工作区、current branch 与 `HEAD` 是 Codex 自动化责任方唯一 Git 实施和结果核验面；单写入租约已经提供隔离，责任方不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建或切换 linked worktree、任务分支。
 - 固定调用器或外部 wrapper 的 `tools.shell_command` 不得使用 180000 毫秒硬超时；`timeout_ms` 使用 3300000 毫秒单轮上限，与 3600 秒租约对齐并保留 5 分钟边界。
 - 调用返回 `Script running with cell ID ...` 时保留同一 cell ID 并继续调用 `functions.wait`。runner 超时、yield、空输出或尚未返回只表示外层仍未取得终态，不等于责任方失败；不得记录失败、释放租约、重新启动或启动第二责任方。

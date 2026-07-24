@@ -83,7 +83,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 7. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。
 8. 选定真实对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：`1` 为 `TZG｜<中文简述>`，`2` 为 `TZG｜复审：<中文简述>`。简述使用任务卡或复审事实源的中文标题；无候选或改名失败不阻断流程。
 9. 命中审核、未审核、交接或复审路由时，按审核入口读取细则与相应事实源；普通执行任务按任务卡必查范围先定位、后读取，发现新依赖时补读，修改前读取目标完整逻辑单元。不得处理另一个 AI 主责的高风险任务，应写入交接请求。
-10. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段，finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。固定调用器在记录成功前，Execution / Review 必须让同一 TaskId 通过 `CodexClosedOrNonReady`，QueueMaintenance / Recovery 只运行全局任务卡检查。
+10. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段，finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。`AutomationState=completed` 只表示责任方提交闭环，不表示任务卡已完成。固定调用器在 Execution / Review 启动前以 `CodexDispatchReady` 核对同一 TaskId 的 route、owner 与 ready 状态；提交后，普通任务和 task-bearing Recovery 统一使用 `CodexClosedOrNonReady`，只有 QueueMaintenance 与 maintenance recovery 使用全局 `readyCount`。`readyCount>0` 才是 `refilled`；干净的零候选维护记录既有 `blocked/no_runnable_candidate` 且不制造提交。控制器和简报读取返回的 `taskState`、`readyCount` 或同一提交中的任务投影。
 
 ### 角色例外
 
