@@ -21,20 +21,20 @@
 ### C-ENV-PROFILE-01 · 关中野外最小生产环境档案
 
 - 来源：`DEC-20260724-ENVPROFILE = A`、`开发管理/任务列表/内容设计任务.txt` 的 C-ENV-PROFILE-01、已完成的 D-ENV-SCHEMA-01 与 N-ENV-01。
-- 当前状态：待处理；依赖：D-ENV-SCHEMA-01、N-ENV-01 已完成。负责人仅授权一份关中野外最小档案；业务提交后必须由 Codex 复审，复审前不得将 U-2_5D-01D 改为待处理。
+- 当前状态：已完成（待复审）；依赖：D-ENV-SCHEMA-01、N-ENV-01 已完成。负责人仅授权一份关中野外最小档案；业务提交后必须由 Codex 复审，复审前不得将 U-2_5D-01D 改为待处理。
 - 主责：DeepSeek V4 Pro 执行；Codex 复审。Codex 已在本队列卡中完成路径与边界规划。
 - 必读：`docs/基础设定/战场空间与环境规则.txt#二、战场环境供给与生成`、`#五、地表状态`、`#六、区域现象通道`；`docs/基础设定/五行显化与环境交互规则.txt#一、五行事件与灵域`、`#二、显化配方与运行载体`；`UNITY_STRUCTURE.md#场景与正式运行时链`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::AdventureSceneController`、`src/Assets/DataConfig/README.txt#EnvironmentProfiles.csv 契约`、当前 `src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs::EnvironmentProfileData`、`src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportEnvironmentProfiles`、`ParseEnvironmentProfiles` 与 `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs::EnvironmentProfileDataTests`。
 - 预期修改路径：新建 `docs/基础设定/关中野外最小环境档案.txt`、`src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` 与 `.meta`；更新 `src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`开发管理/任务列表/内容设计任务.txt`、`开发管理/当前任务队列.txt`；业务提交后仅更新 `开发管理/AI合作沟通.txt` 登记真实业务 SHA 与复审请求。执行前须确认上述路径不与人工改动冲突。
 - 范围：只为唯一正式 `AdventureScene` 的 `guanzhong_wild` 冒险入口生产 `env_guanzhong_wild`。档案须以现有六字段契约提供有向相邻边、地表原型引用、六个固定现象通道、同通道唯一配对与五行关系引用；新建的单一说明文件逐项回链这些引用到既有环境规则，并说明其可由后续 Unity 任务显式绑定。参数只进入该 CSV 与生成 asset，不写显示文本或数值结论。
 - 禁止：不新增第二份环境档案、地表／现象通道、五行关系、角色、剧情、关中地图、显示文本、数值、BattleSim、运行时代码、导入器、场景绑定、默认档案、兼容分支或 `U-2_5D-01D` 实现；不得把 CSV 引用误写成地表原型或现象的运行时定义。
 - 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/基础设定/关中野外最小环境档案.txt,开发管理/任务列表/内容设计任务.txt,开发管理/当前任务队列.txt,开发管理/AI合作沟通.txt`，以及 `git diff --check`。
-- 完成条件：唯一 `env_guanzhong_wild` CSV 行和生成 asset 经直接 EditMode 回归验证，恰含六个固定通道和五种关系引用，且没有重复／翻转的同通道配对；说明文件能回链每项引用与关中野外入口；业务交接明确标记为 `⚠️ 已修改/未审核`。本卡不把环境档案或 U-2_5D-01D 写成已完成。
+- 完成条件：唯一 `env_guanzhong_wild` CSV 行和生成 asset 经直接 EditMode 回归验证，恰含六个固定通道和五种关系引用，且没有重复／翻转的同通道配对；说明文件能回链每项引用与关中野外入口；业务交接明确标记为 `⚠️ 已修改/未审核`。本卡只标记为已完成（待复审），不把 U-2_5D-01D 写成待处理或已完成。
 - 停止条件：若一份档案不能在不新增环境规则、数值、显示文本、第二档案、运行时代码或场景绑定的前提下通过现有契约，或需要为 `AdventureScene` 猜测默认值／兼容逻辑，保留失败证据并停止；不得以 fixture、空引用或另建入口代替生产档案。
 
 ### U-2_5D-01D · 共享空间查询契约实现与旧范围逻辑迁移
 
 - 来源：`开发管理/2.5D共享空间查询契约对齐方案.txt`、`DEC-20260722-U25D01B = A`，以及 2026-07-23 对首次实现的最终只读复核与负责人回滚决定。
-- 当前状态：阻塞（C-ENV-PROFILE-01）；依赖：U-2_5D-01C 已完成，C-ENV-PROFILE-01 仍冻结（待内容授权）。自动化不得选取本卡。
+- 当前状态：阻塞（C-ENV-PROFILE-01 待复审）；依赖：U-2_5D-01C 已完成，C-ENV-PROFILE-01 已完成（待复审）。自动化不得在复审通过前选取本卡。
 - 主责：Codex / gpt-5.6-terra。
 - 必读：`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`UNITY_STRUCTURE.md`、`开发管理/2.5D共享空间查询契约对齐方案.txt`、`docs/基础设定/战场空间与环境规则.txt`、当前 `src/Assets/Scripts/Core/HexCoord.cs`、`HexGrid.cs`、`Grid/TacticalGridModel.cs`、`Grid/EnvironmentProfileData.cs`、`Combat/CombatResolver.cs`、`Combat/TacticalCombatController.cs`、`Combat/EnemyAI.cs`、当前 `.asmdef`／`.asmref`、`simulations/BattleSim/Battlefield.cs`、`Combat.cs`、`BattleSim.csproj` 与 `BattleSimSelfTests.cs`。
 - 预期修改路径：新建 `src/Assets/Scripts/Core/SpatialRules.meta`、`src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs`、`SpatialHexCoord.cs.meta`、`SpatialQueryTypes.cs`、`SpatialQueryTypes.cs.meta`、`SpatialQueryBoard.cs`、`SpatialQueryBoard.cs.meta`、`src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs`、`SpatialQueryBoardFactory.cs.meta`、`src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs`、`SpatialQueryBoardTests.cs.meta`；更新 `src/Assets/Scripts/Core/HexGrid.cs`、`src/Assets/Scripts/Grid/TacticalGridModel.cs`、`EnvironmentProfileData.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/DataConfig/README.txt`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`src/Assets/Scripts/Combat/CombatResolver.cs`、`TacticalCombatController.cs`、`EnemyAI.cs`、`src/Assets/Scripts/Map/ExplorationController.cs`、`simulations/BattleSim/BattleSim.csproj`、`Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
