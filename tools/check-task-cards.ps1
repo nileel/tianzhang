@@ -7,8 +7,11 @@ param(
   [string]$QueuePath = '开发管理/当前任务队列.txt',
   [string]$BacklogRoot = '开发管理/任务列表',
   [string]$TaskId,
-  [ValidateSet('CodexClosedOrNonReady', 'ExternalPendingReview')]
-  [string]$Postcondition
+  [ValidateSet('CodexDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview')]
+  [string]$Postcondition,
+  [ValidateSet('codex_execute', 'codex_review')]
+  [string]$ExpectedRoute,
+  [switch]$OutputJson
 )
 
 $ErrorActionPreference = 'Stop'
@@ -143,7 +146,14 @@ try {
   Assert-RepositoryRelativePath $BacklogRoot 'BacklogRoot'
   $hasTaskId = -not [string]::IsNullOrWhiteSpace($TaskId)
   $hasPostcondition = -not [string]::IsNullOrWhiteSpace($Postcondition)
+  $hasExpectedRoute = -not [string]::IsNullOrWhiteSpace($ExpectedRoute)
+  $taskState = $null
   Assert-Contract ($hasTaskId -eq $hasPostcondition) 'TaskId and Postcondition must be provided together'
+  if ($Postcondition -ceq 'CodexDispatchReady') {
+    Assert-Contract $hasExpectedRoute 'ExpectedRoute is required for CodexDispatchReady'
+  } else {
+    Assert-Contract (-not $hasExpectedRoute) 'ExpectedRoute is only valid for CodexDispatchReady'
+  }
   if ($hasTaskId) {
     Assert-Contract (
       $TaskId -ceq $TaskId.Trim() -and
@@ -249,10 +259,28 @@ try {
     Assert-Contract ($caseInsensitiveTaskIds.Count -eq 0) "TaskId case mismatch: $TaskId"
   }
 
+  if ($Postcondition -ceq 'CodexDispatchReady') {
+    $postconditionSatisfied = $false
+    if ($cardById.ContainsKey($TaskId)) {
+      $metadata = $cardById[$TaskId].Metadata
+      $postconditionSatisfied =
+        [string]$metadata.route -ceq $ExpectedRoute -and
+        [string]$metadata.owner -ceq 'codex' -and
+        [string]$metadata.dispatchState -ceq 'ready'
+      if ($postconditionSatisfied) {
+        $taskState = [string]$metadata.dispatchState
+      }
+    }
+    Assert-Contract $postconditionSatisfied "CodexDispatchReady requires route=$ExpectedRoute owner=codex dispatchState=ready: $TaskId"
+  }
   if ($Postcondition -ceq 'CodexClosedOrNonReady') {
     $postconditionSatisfied = $false
     if ($cardById.ContainsKey($TaskId)) {
-      $postconditionSatisfied = @('blocked', 'frozen', 'pending_decision', 'waiting_reply') -ccontains [string]$cardById[$TaskId].Metadata.dispatchState
+      $activeState = [string]$cardById[$TaskId].Metadata.dispatchState
+      $postconditionSatisfied = @('blocked', 'frozen', 'pending_decision', 'waiting_reply') -ccontains $activeState
+      if ($postconditionSatisfied) {
+        $taskState = $activeState
+      }
     } else {
       $archiveRelativePath = "开发管理/任务归档/$TaskId.txt"
       $archivePath = Join-Path $repositoryPath $archiveRelativePath
@@ -271,6 +299,7 @@ try {
           Assert-Contract (@($rows | Where-Object { $_[0] -ceq $TaskId }).Count -eq 0) "archived TaskId remains in backlog: $TaskId"
         }
         $postconditionSatisfied = $true
+        $taskState = 'completed'
       }
     }
     Assert-Contract $postconditionSatisfied "CodexClosedOrNonReady requires a non-ready active card or exact completed archive: $TaskId"
@@ -283,11 +312,25 @@ try {
         [string]$metadata.route -ceq 'codex_review' -and
         [string]$metadata.owner -ceq 'codex' -and
         [string]$metadata.dispatchState -ceq 'ready'
+      if ($postconditionSatisfied) {
+        $taskState = [string]$metadata.dispatchState
+      }
     }
     Assert-Contract $postconditionSatisfied "ExternalPendingReview requires route=codex_review owner=codex dispatchState=ready: $TaskId"
   }
 
-  Write-Output "check-task-cards: OK (cards=$($cards.Count) ready=$($readyCards.Count))"
+  if ($OutputJson) {
+    [Console]::Out.WriteLine(([ordered]@{
+      status = 'ok'
+      cardCount = $cards.Count
+      readyCount = $readyCards.Count
+      taskId = if ($hasTaskId) { $TaskId } else { $null }
+      taskState = $taskState
+      postcondition = if ($hasPostcondition) { $Postcondition } else { $null }
+    } | ConvertTo-Json -Compress))
+  } else {
+    Write-Output "check-task-cards: OK (cards=$($cards.Count) ready=$($readyCards.Count))"
+  }
 } catch {
   [Console]::Error.WriteLine("check-task-cards: $($_.Exception.Message)")
   exit 1

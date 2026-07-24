@@ -150,6 +150,89 @@ try {
   [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
   $fixture = New-Fixture $tempRoot
   Assert-Success 'canonical fixture' $tempRoot
+  $globalJsonResult = Invoke-Checker $tempRoot @('-OutputJson')
+  Assert-True ($globalJsonResult.ExitCode -eq 0) "global JSON evidence should pass: $($globalJsonResult.Output)"
+  $globalJson = $globalJsonResult.Output | ConvertFrom-Json
+  Assert-True ($globalJson.status -ceq 'ok') 'global JSON status mismatch'
+  Assert-True ($globalJson.cardCount -eq 2) 'global JSON cardCount mismatch'
+  Assert-True ($globalJson.readyCount -eq 1) 'global JSON readyCount mismatch'
+  Assert-True ($null -eq $globalJson.taskId) 'global JSON invented taskId'
+  Assert-True ($null -eq $globalJson.taskState) 'global JSON invented taskState'
+  Assert-True ($null -eq $globalJson.postcondition) 'global JSON invented postcondition'
+
+  $executionDispatch = Invoke-Checker $tempRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'CodexDispatchReady',
+    '-ExpectedRoute', 'codex_execute',
+    '-OutputJson'
+  )
+  Assert-True ($executionDispatch.ExitCode -eq 0) "ready execution should pass CodexDispatchReady: $($executionDispatch.Output)"
+  $executionEvidence = $executionDispatch.Output | ConvertFrom-Json
+  Assert-True ($executionEvidence.taskId -ceq 'T-READY-01') 'execution evidence taskId mismatch'
+  Assert-True ($executionEvidence.taskState -ceq 'ready') 'execution evidence taskState mismatch'
+  Assert-True ($executionEvidence.postcondition -ceq 'CodexDispatchReady') 'execution evidence postcondition mismatch'
+
+  $reviewDispatchRoot = Join-Path $tempRoot 'review-dispatch'
+  $reviewDispatchFixture = New-Fixture $reviewDispatchRoot
+  $reviewDispatchCard = Copy-Metadata $reviewDispatchFixture.Ready
+  $reviewDispatchCard.route = 'codex_review'
+  Set-Card $reviewDispatchRoot $reviewDispatchCard
+  Set-Queue $reviewDispatchRoot @($reviewDispatchCard)
+  Set-Backlog $reviewDispatchRoot @($reviewDispatchCard, $reviewDispatchFixture.Blocked)
+  $reviewDispatch = Invoke-Checker $reviewDispatchRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'CodexDispatchReady',
+    '-ExpectedRoute', 'codex_review',
+    '-OutputJson'
+  )
+  Assert-True ($reviewDispatch.ExitCode -eq 0) "ready review should pass CodexDispatchReady: $($reviewDispatch.Output)"
+  Assert-True (($reviewDispatch.Output | ConvertFrom-Json).taskState -ceq 'ready') 'review evidence taskState mismatch'
+
+  foreach ($dispatchFailure in @(
+      @{
+        Name = 'execution card under review route'
+        Root = $tempRoot
+        TaskId = 'T-READY-01'
+        ExpectedRoute = 'codex_review'
+        Expected = 'CodexDispatchReady requires route=codex_review owner=codex dispatchState=ready'
+      },
+      @{
+        Name = 'non-ready execution card'
+        Root = $tempRoot
+        TaskId = 'T-BLOCKED-01'
+        ExpectedRoute = 'codex_execute'
+        Expected = 'CodexDispatchReady requires route=codex_execute owner=codex dispatchState=ready'
+      },
+      @{
+        Name = 'case-mismatched execution card'
+        Root = $tempRoot
+        TaskId = 't-ready-01'
+        ExpectedRoute = 'codex_execute'
+        Expected = 'TaskId case mismatch'
+      },
+      @{
+        Name = 'missing execution card'
+        Root = $tempRoot
+        TaskId = 'T-MISSING-01'
+        ExpectedRoute = 'codex_execute'
+        Expected = 'CodexDispatchReady requires route=codex_execute owner=codex dispatchState=ready'
+      }
+    )) {
+    $dispatchResult = Invoke-Checker $dispatchFailure.Root @(
+      '-TaskId', $dispatchFailure.TaskId,
+      '-Postcondition', 'CodexDispatchReady',
+      '-ExpectedRoute', $dispatchFailure.ExpectedRoute
+    )
+    Assert-True ($dispatchResult.ExitCode -ne 0) "$($dispatchFailure.Name) should fail CodexDispatchReady"
+    Assert-True ($dispatchResult.Output -match [regex]::Escape($dispatchFailure.Expected)) "$($dispatchFailure.Name) missing diagnostic: $($dispatchResult.Output)"
+  }
+
+  $missingExpectedRoute = Invoke-Checker $tempRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'CodexDispatchReady'
+  )
+  Assert-True ($missingExpectedRoute.ExitCode -ne 0) 'CodexDispatchReady without ExpectedRoute should fail'
+  Assert-True ($missingExpectedRoute.Output -match 'ExpectedRoute is required') "missing ExpectedRoute diagnostic mismatch: $($missingExpectedRoute.Output)"
   Assert-OverrideFailure 'rooted task-card override' $tempRoot 'invalid repository-relative path in TaskCardRoot' @('-TaskCardRoot', 'C:/outside')
   Assert-OverrideFailure 'traversal queue override' $tempRoot 'invalid repository-relative path in QueuePath' @('-QueuePath', '../outside.txt')
   Assert-OverrideFailure 'traversal backlog override' $tempRoot 'invalid repository-relative path in BacklogRoot' @('-BacklogRoot', '开发管理/../outside')
@@ -274,9 +357,12 @@ try {
   New-Fixture $blockedPostconditionRoot | Out-Null
   $blockedPostcondition = Invoke-Checker $blockedPostconditionRoot @(
     '-TaskId', 'T-BLOCKED-01',
-    '-Postcondition', 'CodexClosedOrNonReady'
+    '-Postcondition', 'CodexClosedOrNonReady',
+    '-OutputJson'
   )
   Assert-True ($blockedPostcondition.ExitCode -eq 0) "legal blocked task should pass CodexClosedOrNonReady: $($blockedPostcondition.Output)"
+  $blockedEvidence = $blockedPostcondition.Output | ConvertFrom-Json
+  Assert-True ($blockedEvidence.taskState -ceq 'blocked') 'blocked lifecycle evidence mismatch'
   foreach ($caseMismatch in @(
       @{ Root = $blockedPostconditionRoot; TaskId = 't-blocked-01'; Postcondition = 'CodexClosedOrNonReady' },
       @{ Root = $transitionRoot; TaskId = 't-ready-01'; Postcondition = 'ExternalPendingReview' }
@@ -313,9 +399,12 @@ try {
   Set-Backlog $archivePostconditionRoot @($archiveFixture.Blocked)
   $archivePostcondition = Invoke-Checker $archivePostconditionRoot @(
     '-TaskId', 'T-READY-01',
-    '-Postcondition', 'CodexClosedOrNonReady'
+    '-Postcondition', 'CodexClosedOrNonReady',
+    '-OutputJson'
   )
   Assert-True ($archivePostcondition.ExitCode -eq 0) "exact completed archive should pass CodexClosedOrNonReady: $($archivePostcondition.Output)"
+  $archiveEvidence = $archivePostcondition.Output | ConvertFrom-Json
+  Assert-True ($archiveEvidence.taskState -ceq 'completed') 'archive lifecycle evidence mismatch'
 
   $staleArchiveRoot = Join-Path $tempRoot 'stale-archive-postcondition'
   $staleArchiveFixture = New-Fixture $staleArchiveRoot
