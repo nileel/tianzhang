@@ -91,10 +91,10 @@ $canonicalPrompt = @'
 2. `Show` 返回 recovery 时才读取 `开发管理/自动工作流恢复规则.txt` 并映射 `Recovery`；没有 recovery 时不得读取恢复规则。
 3. 无 recovery 时读取 `开发管理/自动工作流规则.txt` 与 `开发管理/当前任务队列.txt`，按行顺序检查，选择第一项当前可安全执行的任务，每轮只为一个 TaskId 调用 `Acquire`。临时运行冲突本轮跳过且不修改任务卡或队列顺序。
 4. `codex_execute -> Execution`，`codex_review -> Review`，外部 route 调用既有 wrapper；仅队列为空时调用 `QueueMaintenance` 一次，本轮不执行新任务。Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`。
-5. 外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。
+5. 外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。
 6. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
-8. 外部 AI 返回 completed 后，只核验 `identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据和相对基线新增未提交路径；全部成立后依次调用 `RecordResult -Category success` 与 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。
+8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。
 9. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
 '@
 
@@ -103,6 +103,7 @@ $canonicalClaude = @'
 
 - 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
 - `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
+- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
 '@
 
 $canonicalAgents = @'
@@ -117,6 +118,8 @@ $canonicalCollaboration = @'
 
 - 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
 - `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
+- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
+- 控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 '@
@@ -128,12 +131,14 @@ $canonicalRules = @'
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 按 `开发管理/当前任务队列.txt` 的固定行序查找 `dispatchState=ready`，依次识别 `codex_execute`、`external_execute`、`codex_review`，选择第一项当前可安全执行。
+- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
 - `事件发生时` 才更新状态；`队列为空` 时只做一次 QueueMaintenance，`本轮不执行新任务`。
 - Codex 只经 `tools/invoke-codex-responsibility.ps1` 启动；固定 `RepositoryRoot` 的 current branch 和 HEAD，不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建 linked worktree 或任务分支。
 - runner timeout、deferred wait、workspace guard、automation-finalize-commit.ps1、Automation 元数据、RecordResult 与 Release 边界不变。
 - 外部 AI 保留 `businessCommit` 与 `handoffCommit` 的连续双提交 closeout；handoff 不重复统计。
+- 外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。
 - 失败保留现场、runtime 与日志；不自动 stash、reset、revert、checkout 或 clean。
 '@
 
@@ -220,6 +225,45 @@ try {
 
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
 
+  $ownerMappingClause = '外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`'
+  $missingPromptOwnerMapping = $canonicalPrompt.Replace($ownerMappingClause, '外部 route 调用既有 wrapper')
+  Write-Utf8File -Path $promptPath -Content $missingPromptOwnerMapping
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingPromptOwnerMapping
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing prompt external owner mapping' -Contains 'external owner mapping in controller prompt'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+
+  $ownerMappingLine = '- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($ownerMappingLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external owner mapping' -Contains 'external owner mapping in core rules'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  Write-Utf8File -Path $claudePath -Content $canonicalClaude.Replace($ownerMappingLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing CLAUDE external owner mapping' -Contains 'external owner mapping in CLAUDE.md'
+  Write-Utf8File -Path $claudePath -Content $canonicalClaude
+
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration.Replace($ownerMappingLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing collaboration external owner mapping' -Contains 'external owner mapping in collaboration rules'
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
+
+  $promptTransitionGate = '，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证'
+  $missingPromptTransitionGate = $canonicalPrompt.Replace($promptTransitionGate, '')
+  Write-Utf8File -Path $promptPath -Content $missingPromptTransitionGate
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingPromptTransitionGate
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing prompt external transition gate' -Contains 'external transition gate in controller prompt'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
+
+  $coreTransitionGateLine = '- 外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($coreTransitionGateLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external transition gate' -Contains 'external transition gate in core rules'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  $collaborationTransitionGateLine = '- 控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。'
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration.Replace($collaborationTransitionGateLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing collaboration external transition gate' -Contains 'external transition gate in collaboration rules'
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
+
   $normalResponsibilityRouteLine = '- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。'
   $oldSingleConditionRouteLine = '- 只有 `Show` 返回 existing recovery 时才读取 `开发管理/自动工作流恢复规则.txt`。'
 
@@ -253,7 +297,7 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing decision-creation section' -Contains 'recovery read contract'
   Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules
 
-  $externalCloseoutLine = '8. 外部 AI 返回 completed 后，只核验 `identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据和相对基线新增未提交路径；全部成立后依次调用 `RecordResult -Category success` 与 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。'
+  $externalCloseoutLine = '8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。'
   $missingExternalCloseout = $canonicalPrompt.Replace($externalCloseoutLine, '8. 外部 AI 返回 completed 后只报告两个提交 SHA。')
   Write-Utf8File -Path $promptPath -Content $missingExternalCloseout
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingExternalCloseout
@@ -262,8 +306,8 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   $missingCompletedSessionId = $canonicalPrompt.Replace(
-    '只核验 `identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`',
-    '只核验 `identity=DeepSeek V4 Pro`、`businessCommit`、`handoffCommit`'
+    '只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`',
+    '只核验 owner 对应 identity、`businessCommit`、`handoffCommit`'
   )
   Write-Utf8File -Path $promptPath -Content $missingCompletedSessionId
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingCompletedSessionId

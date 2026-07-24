@@ -35,13 +35,13 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 1. 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
 2. 其他 Claude CLI 环境的实际身份与修改方为 Claude Code。
-3. 仅可领取“待处理、非复审、主责明确为 DeepSeek V4 Pro、Claude Code 或 Claude / DeepSeek”的任务。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
-4. Codex、ChatGPT5.5、Codex / gpt-5.5 或未明确授权给 DeepSeek/Claude 的任务不可领取，除非用户当次明确指派 Claude Code 的具体任务。
-5. 选题前在输出与 automation memory 记录实际身份、修改方、允许主责及候选任务 ID / 主责 / 状态；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
+3. 普通选题只消费 `route=external_execute`、`dispatchState=ready` 且 owner 与执行器一致的有序队列卡；映射固定为 `owner=deepseek -> DeepSeek V4 Pro`、`owner=claude -> native Claude Code`。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
+4. `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 行为。
+5. 手动选题前在输出与 automation memory 记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
 
 ### 每小时控制器内的 Claude / DeepSeek wrapper
 
-`tzg-hourly-controller` 可以在同一租约内串行调用 Claude CLI 作为 DeepSeek / Claude 执行器，但这不会恢复 WF3，也不会赋予子进程 Codex 权限。wrapper 沿用上节主责限制：只可处理状态为待处理、非复审，且主责明确为 `DeepSeek V4 Pro`、`Claude Code` 或 `Claude / DeepSeek` 的候选；不得领取 Codex、ChatGPT5.5、Codex / gpt-5.5 或未明确授权任务。
+`tzg-hourly-controller` 可以在同一租约内串行调用 Claude CLI 作为外部执行器，但这不会恢复 WF3，也不会赋予子进程 Codex 权限。自动 wrapper 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。owner 与已核验执行器不一致时不得启动，也不得改派另一 owner。
 
 调度器必须先真实选中合法外部候选、取得单写入租约并给出任务授权范围，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份；无合法外部候选时不得预检或空转调用。外部责任方启动后自行读取任务卡与必要事实源，并端到端完成：
 
@@ -50,7 +50,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 3. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、上述同一任务卡/队列状态和直接验证结果，保持 `State: pending_review`。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段；finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
 4. 随后只修改 `开发管理/AI合作沟通.txt`，登记真实 `businessCommit` SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`；第二次不得重跑领域检查。`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
 
-外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不得读取业务 diff、重跑业务验证、stage 或 commit。外部责任方不得自审、扩大授权路径、并行派发、stash、reset、checkout、clean 或推送远端。需要负责人决定时，外部 CLI 保存原 session 后退出，并由原 session 续跑。
+外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不得读取业务 diff、重跑业务验证、stage 或 commit。控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。外部责任方不得自审、扩大授权路径、并行派发、stash、reset、checkout、clean 或推送远端。需要负责人决定时，外部 CLI 保存原 session 后退出，并由原 session 续跑。
 
 ## 验证成本控制（适用于所有工作）
 
@@ -83,7 +83,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 7. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。
 8. 选定真实对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：`1` 为 `TZG｜<中文简述>`，`2` 为 `TZG｜复审：<中文简述>`。简述使用任务卡或复审事实源的中文标题；无候选或改名失败不阻断流程。
 9. 命中审核、未审核、交接或复审路由时，按审核入口读取细则与相应事实源；普通执行任务按任务卡必查范围先定位、后读取，发现新依赖时补读，修改前读取目标完整逻辑单元。不得处理另一个 AI 主责的高风险任务，应写入交接请求。
-10. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段，finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
+10. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段，finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。固定调用器在记录成功前，Execution / Review 必须让同一 TaskId 通过 `CodexClosedOrNonReady`，QueueMaintenance / Recovery 只运行全局任务卡检查。
 
 ### 角色例外
 

@@ -48,6 +48,8 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 - `blocked/frozen/pending_decision/waiting_reply` -> active card + backlog, never queue
 - `completed` -> card moved to 任务归档 and removed from queue/backlog
 
+新卡完成时只移入精确路径 `开发管理/任务归档/<ID>.txt`；每张活跃卡的 `expectedPaths` 必须同时包含 `开发管理/任务卡/<ID>.txt` 与 `开发管理/任务归档/<ID>.txt`。历史合并归档保持原样，默认检查不递归扫描。
+
 ## 建议与闭环
 
 1. 设计/开发下一步建议只作索引，不作 `1` 的默认全文入口。
@@ -63,3 +65,4 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 - 严格缺失 asset：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`
 - 资产版本边界仅在相关路径变化时运行 `tools/check-asset-versioning.ps1`。
 - 只在创建/修改任务卡、改变任务状态、改变队列、队列补位或提交相关管理文件前运行 `tools/check-task-cards.ps1`；普通每小时轮次不运行全量检查器。
+- `tools/check-task-cards.ps1 -TaskId <ID> -Postcondition CodexClosedOrNonReady` 只接受 exact completed archive 或同 ID 的 `{blocked,frozen,pending_decision,waiting_reply}` active 非 ready 卡；`ExternalPendingReview` 只接受同 ID 的 `route=codex_review`、`owner=codex`、`dispatchState=ready` active 卡。省略 postcondition 时保持全局投影检查。

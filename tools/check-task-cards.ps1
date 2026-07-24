@@ -5,7 +5,10 @@ param(
   [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
   [string]$TaskCardRoot = '开发管理/任务卡',
   [string]$QueuePath = '开发管理/当前任务队列.txt',
-  [string]$BacklogRoot = '开发管理/任务列表'
+  [string]$BacklogRoot = '开发管理/任务列表',
+  [string]$TaskId,
+  [ValidateSet('CodexClosedOrNonReady', 'ExternalPendingReview')]
+  [string]$Postcondition
 )
 
 $ErrorActionPreference = 'Stop'
@@ -87,7 +90,7 @@ function Get-TableRows {
 }
 
 function Get-Card {
-  param([string]$Path)
+  param([string]$Path, [switch]$AllowCompleted)
   $text = Read-Utf8Text $Path
   $metaMarkers = [regex]::Matches($text, '(?m)^---TASK-META---\r?$')
   $bodyMarkers = [regex]::Matches($text, '(?m)^---TASK-BODY---\r?$')
@@ -120,7 +123,9 @@ function Get-Card {
   Assert-RepositoryFilePath ([string]$metadata.sourceBacklog) 'sourceBacklog'
   Assert-Contract ((($metadata.route -in @('codex_execute', 'codex_review')) -and $metadata.owner -ceq 'codex') -or ($metadata.route -ceq 'external_execute' -and $metadata.owner -in @('deepseek', 'claude'))) "route/owner mismatch: $Path"
   Assert-Contract (($null -eq $metadata.blockedBy) -or (($metadata.blockedBy -is [System.Collections.IEnumerable]) -and -not ($metadata.blockedBy -is [string]))) "invalid blockedBy: $Path"
-  Assert-Contract ($metadata.dispatchState -cne 'completed') "completed card in active task-card directory: $Path"
+  if (-not $AllowCompleted) {
+    Assert-Contract ($metadata.dispatchState -cne 'completed') "completed card in active task-card directory: $Path"
+  }
 
   $body = $text.Substring($bodyMarkers[0].Index + $bodyMarkers[0].Length)
   $h1 = "# $($metadata.id) · $($metadata.title)"
@@ -136,10 +141,20 @@ try {
   Assert-RepositoryRelativePath $TaskCardRoot 'TaskCardRoot'
   Assert-RepositoryRelativePath $QueuePath 'QueuePath'
   Assert-RepositoryRelativePath $BacklogRoot 'BacklogRoot'
+  $hasTaskId = -not [string]::IsNullOrWhiteSpace($TaskId)
+  $hasPostcondition = -not [string]::IsNullOrWhiteSpace($Postcondition)
+  Assert-Contract ($hasTaskId -eq $hasPostcondition) 'TaskId and Postcondition must be provided together'
+  if ($hasTaskId) {
+    Assert-Contract (
+      $TaskId -ceq $TaskId.Trim() -and
+      $TaskId -ceq [IO.Path]::GetFileName($TaskId) -and
+      $TaskId -cnotin @('.', '..')
+    ) "invalid TaskId: $TaskId"
+  }
   $taskCardPath = Join-Path $repositoryPath $TaskCardRoot
   Assert-Contract (Test-Path -LiteralPath $taskCardPath -PathType Container) "missing task-card directory: $taskCardPath"
   $cards = @()
-  $cardById = @{}
+  $cardById = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal)
   foreach ($file in Get-ChildItem -LiteralPath $taskCardPath -Filter '*.txt' -File) {
     $card = Get-Card $file.FullName
     $id = [string]$card.Metadata.id
@@ -150,15 +165,24 @@ try {
   foreach ($card in $cards) {
     $id = [string]$card.Metadata.id
     Assert-Contract ((Split-Path -Leaf $card.Path) -ceq "$id.txt") "filename/id mismatch: $($card.Path)"
+    $expectedPaths = @($card.Metadata.expectedPaths | ForEach-Object { [string]$_ })
+    Assert-Contract ($expectedPaths -ccontains "开发管理/任务卡/$id.txt") "missing exact active-card authorization: $id"
+    Assert-Contract ($expectedPaths -ccontains "开发管理/任务归档/$id.txt") "missing exact archive authorization: $id"
   }
 
   $queueFile = Join-Path $repositoryPath $QueuePath
   Assert-Contract (Test-Path -LiteralPath $queueFile -PathType Leaf) "missing queue file: $queueFile"
   $queueRows = Get-TableRows $queueFile @('ID', '路由', '主责', '优先级', '领域', '阶段', '标题', '任务卡') 'queue'
-  $queueIds = @{}
+  $queueIds = [Collections.Generic.Dictionary[string, bool]]::new([StringComparer]::Ordinal)
   foreach ($row in $queueRows) {
     $id = $row[0]
     Assert-Contract (-not $queueIds.ContainsKey($id)) "duplicate queue ID: $id"
+    $caseInsensitiveCards = @($cards | Where-Object {
+      [string]::Equals([string]$_.Metadata.id, $id, [StringComparison]::OrdinalIgnoreCase)
+    })
+    if ($caseInsensitiveCards.Count -eq 1) {
+      Assert-Contract ([string]$caseInsensitiveCards[0].Metadata.id -ceq $id) "queue ID case mismatch: $id"
+    }
     Assert-Contract ($cardById.ContainsKey($id)) "queue references missing card: $id"
     $queueIds[$id] = $true
     $card = $cardById[$id]
@@ -196,7 +220,7 @@ try {
     Assert-Contract ($row[4] -ceq $expectedBlockers) "backlog blocker mismatch: $($metadata.id)"
   }
 
-  $visitState = @{}
+  $visitState = [Collections.Generic.Dictionary[string, int]]::new([StringComparer]::Ordinal)
   function Visit-Card {
     param([string]$Id)
     $state = if ($visitState.ContainsKey($Id)) { $visitState[$Id] } else { 0 }
@@ -206,11 +230,62 @@ try {
     foreach ($dependency in $cardById[$Id].Metadata.blockedBy) {
       $dependencyId = [string]$dependency
       if ($dependencyId -ceq $Id) { throw "self-dependency: $Id" }
+      if (-not $cardById.ContainsKey($dependencyId)) {
+        $caseInsensitiveDependencies = @($cards | Where-Object {
+          [string]::Equals([string]$_.Metadata.id, $dependencyId, [StringComparison]::OrdinalIgnoreCase)
+        })
+        Assert-Contract ($caseInsensitiveDependencies.Count -eq 0) "dependency ID case mismatch: $dependencyId"
+      }
       if ($cardById.ContainsKey($dependencyId)) { Visit-Card $dependencyId }
     }
     $visitState[$Id] = 2
   }
   foreach ($card in $cards) { Visit-Card ([string]$card.Metadata.id) }
+
+  if ($hasPostcondition -and -not $cardById.ContainsKey($TaskId)) {
+    $caseInsensitiveTaskIds = @($cards | Where-Object {
+      [string]::Equals([string]$_.Metadata.id, $TaskId, [StringComparison]::OrdinalIgnoreCase)
+    })
+    Assert-Contract ($caseInsensitiveTaskIds.Count -eq 0) "TaskId case mismatch: $TaskId"
+  }
+
+  if ($Postcondition -ceq 'CodexClosedOrNonReady') {
+    $postconditionSatisfied = $false
+    if ($cardById.ContainsKey($TaskId)) {
+      $postconditionSatisfied = @('blocked', 'frozen', 'pending_decision', 'waiting_reply') -ccontains [string]$cardById[$TaskId].Metadata.dispatchState
+    } else {
+      $archiveRelativePath = "开发管理/任务归档/$TaskId.txt"
+      $archivePath = Join-Path $repositoryPath $archiveRelativePath
+      if (Test-Path -LiteralPath $archivePath -PathType Leaf) {
+        $archiveFile = Get-Item -LiteralPath $archivePath
+        Assert-Contract ($archiveFile.Name -ceq "$TaskId.txt") "TaskId case mismatch: $TaskId"
+        $archiveCard = Get-Card -Path $archiveFile.FullName -AllowCompleted
+        Assert-Contract ([string]$archiveCard.Metadata.id -ceq $TaskId) "archive ID mismatch: $TaskId"
+        Assert-Contract ([string]$archiveCard.Metadata.dispatchState -ceq 'completed') "archive is not completed: $TaskId"
+        $archiveExpectedPaths = @($archiveCard.Metadata.expectedPaths | ForEach-Object { [string]$_ })
+        Assert-Contract ($archiveExpectedPaths -ccontains "开发管理/任务卡/$TaskId.txt") "missing exact active-card authorization: $TaskId"
+        Assert-Contract ($archiveExpectedPaths -ccontains $archiveRelativePath) "missing exact archive authorization: $TaskId"
+        $backlogPath = Join-Path $repositoryPath $BacklogRoot
+        foreach ($backlogFile in Get-ChildItem -LiteralPath $backlogPath -Filter '*.txt' -File) {
+          $rows = Get-TableRows $backlogFile.FullName @('ID', '优先级', '主责', '状态投影', '阻塞于', '摘要', '任务卡') 'backlog'
+          Assert-Contract (@($rows | Where-Object { $_[0] -ceq $TaskId }).Count -eq 0) "archived TaskId remains in backlog: $TaskId"
+        }
+        $postconditionSatisfied = $true
+      }
+    }
+    Assert-Contract $postconditionSatisfied "CodexClosedOrNonReady requires a non-ready active card or exact completed archive: $TaskId"
+  }
+  if ($Postcondition -ceq 'ExternalPendingReview') {
+    $postconditionSatisfied = $false
+    if ($cardById.ContainsKey($TaskId)) {
+      $metadata = $cardById[$TaskId].Metadata
+      $postconditionSatisfied =
+        [string]$metadata.route -ceq 'codex_review' -and
+        [string]$metadata.owner -ceq 'codex' -and
+        [string]$metadata.dispatchState -ceq 'ready'
+    }
+    Assert-Contract $postconditionSatisfied "ExternalPendingReview requires route=codex_review owner=codex dispatchState=ready: $TaskId"
+  }
 
   Write-Output "check-task-cards: OK (cards=$($cards.Count) ready=$($readyCards.Count))"
 } catch {

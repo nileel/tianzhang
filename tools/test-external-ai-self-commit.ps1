@@ -103,12 +103,6 @@ function Write-CanaryFile {
   [IO.File]::WriteAllText($fullPath, $Content, [Text.UTF8Encoding]::new($false))
 }
 
-function Get-CanaryHash {
-  param([Parameter(Mandatory = $true)][string]$Path)
-
-  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([IO.File]::ReadAllBytes($Path)))
-}
-
 function Assert-CanaryEqual {
   param(
     [AllowNull()]
@@ -139,7 +133,8 @@ try {
   foreach ($toolName in @(
     'automation-workspace-guard.ps1',
     'automation-finalize-commit.ps1',
-    'check-pending-whitespace.ps1'
+    'check-pending-whitespace.ps1',
+    'check-task-cards.ps1'
   )) {
     Copy-Item `
       -LiteralPath (Join-Path $PSScriptRoot $toolName) `
@@ -158,11 +153,13 @@ try {
   } else {
     'Claude Code'
   }
+  $externalOwner = if ($expectedAuthor -ceq 'DeepSeek V4 Pro') { 'deepseek' } else { 'claude' }
   $claudeAllowedTools = @(
     'Read'
     'Edit'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 *)'
+    'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 *)'
   ) -join ','
   $claudePermissionArguments = @(
@@ -176,40 +173,104 @@ try {
 # External AI Canary Rules
 
 - This repository is an isolated system-temporary canary. Never access or modify any other repository.
-- Only a pending, non-review task explicitly owned by Claude / DeepSeek may be executed.
+- Consume only the already-selected `external_execute` card from the canonical queue. Never rescan or choose another candidate.
+- The selected card owner must match the supplied external identity.
 - Before modification, use the copied workspace guard. Use a file editing tool for changes; do not use shell file-write commands.
-- Run only the task's direct check. Create the business and handoff commits yourself with the copied finalizer.
+- Update the same card and its canonical queue/backlog projections to `route=codex_review`, `owner=codex`, `dispatchState=ready`, then run the copied task-card checker.
+- Run only the task's direct checks. Create the business and handoff commits yourself with the copied finalizer.
 - Do not self-review, widen authorized paths, dispatch another agent, push, stash, reset, checkout, or clean.
 '@
-  Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath '开发管理/任务卡.txt' -Content @'
-# TASK-EXT-001
-
-- 优先级：P0
-- 主责：Claude / DeepSeek
-- 状态：待处理；非复审
-- 决策门禁：修改前必须询问负责人选择 A 或 B，并以 needs_decision 退出。A 批准下述精确修改；B 表示阻塞退出。
-- 业务授权路径：fixtures/business.txt、开发管理/当前任务队列.txt
-- 交接授权路径：开发管理/AI合作沟通.txt
-- A 的业务结果：business.txt 写入 approved/A/verified 三行；队列状态改为待复审。
-- 直接验证：check-pending-whitespace；不得运行其他领域检查。
-- 提交：先 businessCommit，再只改交接文件创建 handoffCommit。
-'@
+  $taskId = 'TASK-EXT-001'
+  $taskCardRelativePath = "开发管理/任务卡/$taskId.txt"
+  $taskArchiveRelativePath = "开发管理/任务归档/$taskId.txt"
+  $taskBacklogRelativePath = '开发管理/任务列表/自动化任务.txt'
+  $businessExpectedPaths = @(
+    'fixtures/business.txt'
+    $taskCardRelativePath
+    '开发管理/当前任务队列.txt'
+    $taskBacklogRelativePath
+  )
+  $taskMetadata = [ordered]@{
+    schemaVersion = 1
+    id = $taskId
+    title = '外部责任方同卡待复审转换'
+    priority = 'P0'
+    route = 'external_execute'
+    owner = $externalOwner
+    domain = 'automation'
+    stage = 'verification'
+    dispatchState = 'ready'
+    blockedBy = @()
+    stateReason = $null
+    expectedPaths = @(
+      'fixtures/business.txt'
+      $taskCardRelativePath
+      $taskArchiveRelativePath
+      '开发管理/当前任务队列.txt'
+      $taskBacklogRelativePath
+      '开发管理/AI合作沟通.txt'
+    )
+    sourceBacklog = $taskBacklogRelativePath
+  }
+  $taskCardText = @(
+    '---TASK-META---'
+    ($taskMetadata | ConvertTo-Json -Depth 10)
+    '---TASK-BODY---'
+    "# $taskId · 外部责任方同卡待复审转换"
+    '## 来源与当前边界'
+    '- 本卡已由 canary 调度器选中；不得重新扫描候选。'
+    '## 必查范围'
+    '- `fixtures/business.txt` 与本卡的 canonical 投影。'
+    '## 实施范围'
+    '- A：写入业务结果，并将同一卡转换为 codex_review ready。'
+    '## 禁止项'
+    '- 不创建第二张复审卡，不自审。'
+    '## 验证'
+    '- check-pending-whitespace；check-task-cards ExternalPendingReview。'
+    '## 完成条件'
+    '- 同一 ID 的 card、queue、backlog 已进入待复审。'
+    '## 停止条件'
+    '- B：不修改并返回 blocked。'
+  ) -join "`n"
+  Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath $taskCardRelativePath -Content $taskCardText
   Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath 'fixtures/business.txt' -Content "status=pending`nchoice=`nverified=`n"
-  Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath '开发管理/当前任务队列.txt' -Content "TASK-EXT-001|P0|Claude / DeepSeek|待处理`n"
+  Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath '开发管理/当前任务队列.txt' -Content (@(
+    '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
+    '| --- | --- | --- | --- | --- | --- | --- | --- |'
+    "| $taskId | external_execute | $externalOwner | P0 | automation | verification | 外部责任方同卡待复审转换 | $taskCardRelativePath |"
+  ) -join "`n")
+  Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath $taskBacklogRelativePath -Content (@(
+    '| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |'
+    '| --- | --- | --- | --- | --- | --- | --- |'
+    "| $taskId | P0 | $externalOwner | 已排队 | — | 外部责任方同卡待复审转换 | $taskCardRelativePath |"
+  ) -join "`n")
   Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath '开发管理/AI合作沟通.txt' -Content "# AI合作沟通`n"
 
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('init') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'user.name', 'Canary Harness') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'user.email', 'canary-harness@example.invalid') | Out-Null
-  Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'core.autocrlf', 'false') | Out-Null
+  Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'core.autocrlf', 'true') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('add', '--', '.') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('commit', '-m', 'test: initialize external AI canary') | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'user.name', $expectedAuthor) | Out-Null
   Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('config', 'user.email', 'external-worker@example.invalid') | Out-Null
 
+  $baselineCardCheck = Invoke-CanaryProcess `
+    -FileName 'pwsh' `
+    -Arguments @(
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'tools/check-task-cards.ps1',
+      '-RepositoryRoot', $canaryRepository
+    ) `
+    -WorkingDirectory $canaryRepository `
+    -InputText $null
+  Assert-CanaryEqual -Actual $baselineCardCheck.ExitCode -Expected 0 -Message "Initial canonical task projection is invalid: $($baselineCardCheck.Stderr)"
+
   $initialHead = Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD')
-  $taskCardPath = Join-Path $canaryRepository '开发管理\任务卡.txt'
-  $initialTaskCardHash = Get-CanaryHash -Path $taskCardPath
+  $taskCardPath = Join-Path $canaryRepository $taskCardRelativePath
+  $initialTaskCardText = [IO.File]::ReadAllText($taskCardPath, [Text.UTF8Encoding]::new($false, $true))
+  $initialTaskBody = $initialTaskCardText.Substring(
+    $initialTaskCardText.IndexOf('---TASK-BODY---', [StringComparison]::Ordinal)
+  ).Replace("`r`n", "`n")
   $sessionId = [Guid]::NewGuid().ToString()
   $claudeCommand = Get-Command 'claude.cmd' -CommandType Application -ErrorAction Stop
   $claudeExecutable = $claudeCommand.Source
@@ -217,8 +278,9 @@ try {
   $promptTemplate = @'
 You are running an isolated external-worker canary in repository __REPOSITORY_ROOT__.
 Actual modification identity and required Git author: __EXPECTED_AUTHOR__.
+Selected task-card owner: __EXTERNAL_OWNER__.
 
-Read AGENTS.md and 开发管理/任务卡.txt. The task is explicitly owned by Claude / DeepSeek, pending, and non-review.
+Read AGENTS.md, 开发管理/当前任务队列.txt, and 开发管理/任务卡/TASK-EXT-001.txt. This exact `external_execute` card is already selected; do not rescan candidates.
 
 Phase 1 is decision-only. Do not modify files, Git config, index, or commits. Do not create a baseline yet. Ask the single task-card decision and exit. Your final output for this phase must contain one JSON object with:
 {"status":"needs_decision","decisionId":"DECISION-EXT-001","question":"是否按 A 执行授权修改？","options":["A","B"]}
@@ -227,16 +289,23 @@ When this exact session is resumed with the raw reply A, perform Phase 2 without
 1. Work only in __REPOSITORY_ROOT__. The temporary repository Git author is already configured as __EXPECTED_AUTHOR__. Do not run git config or edit .git. Do not use cd or chain shell commands; the current working directory is already the repository.
 2. Run these exact commands separately:
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Snapshot -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__'
-pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Check -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Check -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'
 3. Use your file editing tool to make fixtures/business.txt exactly:
 status=approved
 choice=A
 verified=check-pending-whitespace
-and make 开发管理/当前任务队列.txt exactly:
-TASK-EXT-001|P0|Claude / DeepSeek|待复审
-Do not modify the task card or handoff file yet.
-4. Run only: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt'. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Verify -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt'.
-5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths 'fixtures/business.txt|开发管理/当前任务队列.txt' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace 通过'. Save its stdout SHA as businessCommit.
+In 开发管理/任务卡/TASK-EXT-001.txt, change only the JSON metadata values `route` from `external_execute` to `codex_review` and `owner` from `__EXTERNAL_OWNER__` to `codex`; keep `dispatchState=ready`, the same ID/title/body, and every other field unchanged.
+Make 开发管理/当前任务队列.txt exactly these three lines:
+| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TASK-EXT-001 | codex_review | codex | P0 | automation | verification | 外部责任方同卡待复审转换 | 开发管理/任务卡/TASK-EXT-001.txt |
+Make 开发管理/任务列表/自动化任务.txt exactly these three lines:
+| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
+| --- | --- | --- | --- | --- | --- | --- |
+| TASK-EXT-001 | P0 | codex | 已排队 | — | 外部责任方同卡待复审转换 | 开发管理/任务卡/TASK-EXT-001.txt |
+Do not modify the handoff file yet.
+4. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot '__REPOSITORY_ROOT__' -TaskId 'TASK-EXT-001' -Postcondition ExternalPendingReview. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Verify -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'.
+5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace 与 ExternalPendingReview 通过'. Save its stdout SHA as businessCommit.
 6. Modify only 开发管理/AI合作沟通.txt to exactly these six lines, substituting the real SHA:
 # AI合作沟通
 HANDOFF-EXT-001
@@ -245,7 +314,7 @@ businessCommit=<REAL_SHA>
 verified=check-pending-whitespace
 unverified=none; risk=none
 7. Do not rerun the direct/domain check. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '开发管理/AI合作沟通.txt' -CommitMessage 'docs(external): record handoff'. Save its stdout SHA as handoffCommit.
-8. Do not push. Finish with one JSON object containing status completed plus both real SHAs.
+8. Do not push. Finish with one JSON object containing status completed, identity `__EXPECTED_AUTHOR__`, and both real SHAs.
 
 If any exact command returns nonzero, do not retry or diagnose it. Immediately output {"status":"failed","detailCode":"canary_command_failed"} and exit.
 
@@ -254,7 +323,10 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
   $prompt = $promptTemplate.Replace('__REPOSITORY_ROOT__', $canaryRepository).Replace(
     '__BASELINE_PATH__',
     $baselinePath
-  ).Replace('__EXPECTED_AUTHOR__', $expectedAuthor)
+  ).Replace('__EXPECTED_AUTHOR__', $expectedAuthor).Replace(
+    '__EXTERNAL_OWNER__',
+    $externalOwner
+  ).Replace('__BUSINESS_EXPECTED_PATHS__', ($businessExpectedPaths -join '|'))
 
   [IO.File]::WriteAllText(
     (Join-Path $canaryRuntime 'session-id.txt'),
@@ -289,6 +361,9 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
   if ($second.Stdout -notmatch '"status"\s*:\s*"completed"') {
     throw 'Resumed external session did not return completed'
   }
+  if (-not $second.Stdout.Contains($expectedAuthor, [StringComparison]::Ordinal)) {
+    throw 'Resumed external session did not return the owner-mapped identity'
+  }
 
   $newCommitCount = [int](Invoke-CanaryGit `
     -RepositoryRoot $canaryRepository `
@@ -301,7 +376,7 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
     -RepositoryRoot $canaryRepository `
     -Arguments @('-c', 'core.quotepath=false', 'diff-tree', '--no-commit-id', '--name-only', '-r', $businessCommit)
   $businessPaths = @($businessPathText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object)
-  $expectedBusinessPaths = @('fixtures/business.txt', '开发管理/当前任务队列.txt') | Sort-Object
+  $expectedBusinessPaths = @($businessExpectedPaths | Sort-Object)
   Assert-CanaryEqual `
     -Actual ($businessPaths -join '|') `
     -Expected ($expectedBusinessPaths -join '|') `
@@ -316,7 +391,7 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
       'State: pending_review',
       'Result: 完成外部责任方授权修改',
       'Impact: TASK-EXT-001 已进入待复审状态',
-      'Verify: check-pending-whitespace 通过'
+      'Verify: check-pending-whitespace 与 ExternalPendingReview 通过'
     )) {
     if (-not $businessBody.Contains($requiredMetadata, [StringComparison]::Ordinal)) {
       throw "Business commit metadata is missing: $requiredMetadata"
@@ -345,10 +420,45 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
   if (-not $handoffText.Contains("businessCommit=$businessCommit")) {
     throw 'Handoff does not contain the real business SHA'
   }
+  $finalTaskCardText = [IO.File]::ReadAllText($taskCardPath, [Text.UTF8Encoding]::new($false, $true))
+  $metaStart = $finalTaskCardText.IndexOf('---TASK-META---', [StringComparison]::Ordinal) + '---TASK-META---'.Length
+  $bodyStart = $finalTaskCardText.IndexOf('---TASK-BODY---', [StringComparison]::Ordinal)
+  $finalMetadata = $finalTaskCardText.Substring($metaStart, $bodyStart - $metaStart).Trim() | ConvertFrom-Json -Depth 10
   Assert-CanaryEqual `
-    -Actual (Get-CanaryHash -Path $taskCardPath) `
-    -Expected $initialTaskCardHash `
-    -Message 'Unauthorized task card changed'
+    -Actual ([string]$finalMetadata.id) `
+    -Expected $taskId `
+    -Message 'External transition changed the task-card ID'
+  Assert-CanaryEqual `
+    -Actual ([string]$finalMetadata.route) `
+    -Expected 'codex_review' `
+    -Message 'External transition did not set codex_review'
+  Assert-CanaryEqual `
+    -Actual ([string]$finalMetadata.owner) `
+    -Expected 'codex' `
+    -Message 'External transition did not set owner=codex'
+  Assert-CanaryEqual `
+    -Actual ([string]$finalMetadata.dispatchState) `
+    -Expected 'ready' `
+    -Message 'External transition did not keep dispatchState=ready'
+  Assert-CanaryEqual `
+    -Actual $finalTaskCardText.Substring($bodyStart).Replace("`r`n", "`n") `
+    -Expected $initialTaskBody `
+    -Message 'External transition changed the task-card body'
+  Assert-CanaryEqual `
+    -Actual (@(Get-ChildItem -LiteralPath (Join-Path $canaryRepository '开发管理/任务卡') -Filter '*.txt' -File).Count) `
+    -Expected 1 `
+    -Message 'External transition created a second task card'
+  $finalCardCheck = Invoke-CanaryProcess `
+    -FileName 'pwsh' `
+    -Arguments @(
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'tools/check-task-cards.ps1',
+      '-RepositoryRoot', $canaryRepository,
+      '-TaskId', $taskId,
+      '-Postcondition', 'ExternalPendingReview'
+    ) `
+    -WorkingDirectory $canaryRepository `
+    -InputText $null
+  Assert-CanaryEqual -Actual $finalCardCheck.ExitCode -Expected 0 -Message "Final pending-review projection is invalid: $($finalCardCheck.Stderr)"
   Assert-CanaryEqual `
     -Actual (Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) `
     -Expected '' `

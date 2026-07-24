@@ -32,6 +32,7 @@
 7. `队列为空` 时只调用一次 `QueueMaintenance`；本轮不执行新任务。队列维护按 `开发管理/状态与建议维护规则.txt` 处理 backlog 与状态事实，不制造缺乏权威来源的任务。
 
 - 外部 CLI 只在当前行真实选中、身份与主责匹配并取得租约后预检。责任方修改前仍调用 workspace guard 作最终判断。
+- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；owner 映射固定为 `owner=deepseek -> DeepSeek V4 Pro`、`owner=claude -> native Claude Code`。前者只使用已核验的 `http://127.0.0.1:15721` 同源端点，后者只使用原生 Claude Code。
 - 事件发生时才更新任务卡、队列或 runtime；普通轮次不为未发生的候选、阶段或进度建立中央 manifest、checkpoint、重试层、阶段状态机或第二套队列。
 
 ## 阻塞指纹与状态纠正
@@ -45,6 +46,7 @@
 
 - 普通执行按纯 `1`；复审按审核入口与纯 `2`；队列维护按状态与建议维护规则；恢复按 `开发管理/自动工作流恢复规则.txt`。四种路由责任方都自行读取事实源、完成其范围内修改、最小充分验证、更新状态并提交。
 - 普通 Codex 执行、复审、队列维护与恢复不得使用 Desktop/VS Code rollout；取得租约后只调用 `tools/invoke-codex-responsibility.ps1`，由该固定入口向 `tools/codex-cli-session.ps1` 写入标准输入。控制器不得临时拼装 ProcessStartInfo、编码或 here-string 启动逻辑；已在 Node REPL 核验的模型值通过固定入口传给 runner 与责任方。
+- 固定调用器只在提交元数据匹配且任务卡检查通过后记录成功：`Execution` / `Review` 使用同一 TaskId 的 `CodexClosedOrNonReady`，只接受 exact completed archive 或 `{blocked,frozen,pending_decision,waiting_reply}` active 非 ready 卡；`QueueMaintenance` 与 `Recovery` 只运行全局投影检查。仍为 ready 或投影无效的提交沿用现有 blocked / failed closeout，不新增修复层。
 - 固定调用器传入的 `RepositoryRoot` 当前工作区、current branch 与 `HEAD` 是 Codex 自动化责任方唯一 Git 实施和结果核验面；单写入租约已经提供隔离，责任方不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建或切换 linked worktree、任务分支。
 - 固定调用器或外部 wrapper 的 `tools.shell_command` 不得使用 180000 毫秒硬超时；`timeout_ms` 使用 3300000 毫秒单轮上限，与 3600 秒租约对齐并保留 5 分钟边界。
 - 调用返回 `Script running with cell ID ...` 时保留同一 cell ID 并继续调用 `functions.wait`。runner 超时、yield、空输出或尚未返回只表示外层仍未取得终态，不等于责任方失败；不得记录失败、释放租约、重新启动或启动第二责任方。
@@ -55,6 +57,6 @@
 - 所有由控制器启动的 Codex 执行、复审、队列维护和外部 AI `businessCommit` 都通过 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata` 创建路径限定提交。`CommitMessage` 只传单行标题，稳定任务 ID、状态、结果、影响和验证分别通过 `AutomationTask`、`AutomationState`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 传入；finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
 - Codex 与队列维护传入 `AutomationState=completed`。外部业务传入 `AutomationState=pending_review`，创建含业务修改、待复审状态和直接验证结果的 `businessCommit`；随后只修改 `开发管理/AI合作沟通.txt` 创建连续的 `handoffCommit`，登记真实业务 SHA、已验证、未验证和残留风险，第二次不重跑领域检查。
 - `handoffCommit` 不使用 Automation 标记，也不启用 `RequireAutomationMetadata`；日报不得将其重复统计为业务产出。外部 AI 不自审、不扩大授权路径、不并行派发、不推送。
-- 外部 AI 返回 completed 后，控制器只核验 `identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、业务提交的当前 Task/`State: pending_review`/Automation 元数据、handoff 无 Automation 元数据，以及相对启动基线没有新增未提交路径；不得读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。
+- 外部 AI 返回 completed 后，控制器只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、业务提交的当前 Task/`State: pending_review`/Automation 元数据、handoff 无 Automation 元数据，以及相对启动基线没有新增未提交路径。外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。
 - 外部终态无效且相对启动基线没有新增未提交路径时，控制器记录 `failed` 后释放租约；存在新增未提交路径时保留现场和租约并转人工阻塞，不伪造 recovery，不启动第二责任方。
 - 失败时保持或恢复 `PAUSED`，保留提交、runtime 与日志；不自动 stash、reset、revert、checkout、clean 或删除旧私有备份。只修复受影响切片并重跑直接检查。

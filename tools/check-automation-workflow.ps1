@@ -151,7 +151,10 @@ Assert-Contains -Text $prompt -Context 'identity source precedence' -Values @(
   '先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`'
 )
 Assert-Contains -Text $prompt -Context 'external completed gate' -Values @(
-  '`identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`'
+  'owner 对应 identity',
+  '`sessionId`',
+  '`businessCommit`',
+  '`handoffCommit`'
 )
 Assert-Contains -Text $prompt -Context 'success closeout order' -Values @(
   '全部成立后依次调用 `RecordResult -Category success` 与 `Release`'
@@ -162,6 +165,36 @@ $identityTokens = @(
   '同源地址',
   'DeepSeek V4 Pro'
 )
+$externalOwnerMappingTokens = @(
+  '已选中的 `external_execute` 同一任务卡',
+  '不得重新扫描候选',
+  'owner=deepseek -> DeepSeek V4 Pro',
+  'owner=claude -> native Claude Code'
+)
+Assert-Contains -Text $prompt -Context 'external owner mapping in controller prompt' -Values $externalOwnerMappingTokens
+Assert-Contains -Text $rules -Context 'external owner mapping in core rules' -Values $externalOwnerMappingTokens
+Assert-Contains -Text $claudeRules -Context 'external owner mapping in CLAUDE.md' -Values $externalOwnerMappingTokens
+Assert-Contains -Text $collaborationRules -Context 'external owner mapping in collaboration rules' -Values $externalOwnerMappingTokens
+$externalTransitionGateTokens = @(
+  'tools/check-task-cards.ps1',
+  '-TaskId <同一 TaskId>',
+  '-Postcondition ExternalPendingReview',
+  '生命周期/投影',
+  '不读取业务 diff',
+  '不读取业务 diff 或重跑领域验证'
+)
+Assert-Contains -Text $prompt -Context 'external transition gate in controller prompt' -Values $externalTransitionGateTokens
+Assert-Contains -Text $rules -Context 'external transition gate in core rules' -Values $externalTransitionGateTokens
+Assert-Contains -Text $collaborationRules -Context 'external transition gate in collaboration rules' -Values $externalTransitionGateTokens
+foreach ($gateContract in @(
+    @{ Text = $prompt; Context = 'controller prompt' },
+    @{ Text = $rules; Context = 'core rules' },
+    @{ Text = $collaborationRules; Context = 'collaboration rules' }
+  )) {
+  $gateIndex = $gateContract.Text.IndexOf('-Postcondition ExternalPendingReview', [StringComparison]::Ordinal)
+  $successIndex = $gateContract.Text.IndexOf('RecordResult -Category success', [StringComparison]::Ordinal)
+  Assert-Contract -Condition ($gateIndex -ge 0 -and $successIndex -gt $gateIndex) -Message "external transition gate must precede success closeout in $($gateContract.Context)"
+}
 Assert-Contains -Text $claudeRules -Context 'DeepSeek identity contract in CLAUDE.md' -Values $identityTokens
 Assert-Contains -Text $collaborationRules -Context 'DeepSeek identity contract in collaboration rules' -Values $identityTokens
 Assert-TwoConditionRecoveryRoute -Text $agentsRules -Context 'two-condition recovery route in AGENTS.md'

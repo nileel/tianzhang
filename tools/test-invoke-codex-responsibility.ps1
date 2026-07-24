@@ -54,6 +54,86 @@ function Reset-GitFixture {
   & git -C $gitRoot clean -fd | Out-Null
 }
 
+function Write-TestUtf8 {
+  param([string]$Path, [string]$Text)
+
+  [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null
+  [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false))
+}
+
+function Set-TaskProjectionFixture {
+  param(
+    [string]$TaskId,
+    [ValidateSet('codex_execute', 'codex_review')]
+    [string]$Route = 'codex_execute',
+    [ValidateSet('ready', 'blocked')]
+    [string]$DispatchState = 'ready'
+  )
+
+  $managementRoot = Join-Path $gitRoot '开发管理'
+  if (Test-Path -LiteralPath $managementRoot) {
+    Remove-Item -LiteralPath $managementRoot -Recurse -Force
+  }
+  $title = "Invoker fixture $TaskId"
+  $stateReason = if ($DispatchState -ceq 'blocked') { 'test blocked' } else { $null }
+  $metadata = [ordered]@{
+    schemaVersion = 1
+    id = $TaskId
+    title = $title
+    priority = 'P2'
+    route = $Route
+    owner = 'codex'
+    domain = 'automation'
+    stage = 'verification'
+    dispatchState = $DispatchState
+    blockedBy = @()
+    stateReason = $stateReason
+    expectedPaths = @(
+      'result.txt'
+      '开发管理/当前任务队列.txt'
+      '开发管理/任务列表/自动化任务.txt'
+      "开发管理/任务卡/$TaskId.txt"
+      "开发管理/任务归档/$TaskId.txt"
+    )
+    sourceBacklog = '开发管理/任务列表/自动化任务.txt'
+  }
+  $cardText = @(
+    '---TASK-META---'
+    ($metadata | ConvertTo-Json -Depth 10)
+    '---TASK-BODY---'
+    "# $TaskId · $title"
+    '## 来源与当前边界'
+    '## 必查范围'
+    '## 实施范围'
+    '## 禁止项'
+    '## 验证'
+    '## 完成条件'
+    '## 停止条件'
+  ) -join "`n"
+  Write-TestUtf8 -Path (Join-Path $managementRoot "任务卡/$TaskId.txt") -Text $cardText
+
+  $queueLines = @(
+    '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
+    '| --- | --- | --- | --- | --- | --- | --- | --- |'
+  )
+  if ($DispatchState -ceq 'ready') {
+    $queueLines += "| $TaskId | $Route | codex | P2 | automation | verification | $title | 开发管理/任务卡/$TaskId.txt |"
+  }
+  Write-TestUtf8 -Path (Join-Path $managementRoot '当前任务队列.txt') -Text ($queueLines -join "`n")
+
+  $projection = if ($DispatchState -ceq 'ready') { '已排队' } else { '阻塞' }
+  $backlogText = @(
+    '| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |'
+    '| --- | --- | --- | --- | --- | --- | --- |'
+    "| $TaskId | P2 | codex | $projection | — | $title | 开发管理/任务卡/$TaskId.txt |"
+  ) -join "`n"
+  Write-TestUtf8 -Path (Join-Path $managementRoot '任务列表/自动化任务.txt') -Text $backlogText
+
+  & git -C $gitRoot add -A -- '开发管理'
+  & git -C $gitRoot commit -q -m "test: prepare task projection $TaskId"
+  Assert-Equal -Actual $LASTEXITCODE -Expected 0 -Message 'Could not commit task projection fixture'
+}
+
 function Acquire-TestLease {
   param([string]$TaskId)
 
@@ -199,6 +279,7 @@ try {
   & git -C $gitRoot init -q
   & git -C $gitRoot config user.name 'Automation Test'
   & git -C $gitRoot config user.email 'automation-test@example.invalid'
+  & git -C $gitRoot config core.autocrlf false
   [IO.File]::WriteAllText((Join-Path $gitRoot 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false))
   & git -C $gitRoot add seed.txt
   & git -C $gitRoot commit -q -m 'test: seed'
@@ -227,12 +308,57 @@ $stdinText = @($input) -join "`n"
 $sessionId = $env:RESPONSIBILITY_TEST_SESSION_ID
 [pscustomobject]@{ type = 'thread.started'; thread_id = $sessionId } | ConvertTo-Json -Compress
 
+function Write-FakeUtf8 {
+  param([string]$Path, [string]$Text)
+  [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null
+  [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false))
+}
+
+function Commit-CompletedResult {
+  param([string[]]$Paths)
+  & git add -A -- @Paths
+  $message = "test: automation result`n`nAutomation: tzg-hourly-controller`nTask: $($env:RESPONSIBILITY_TEST_TASK_ID)`nState: completed`nResult: fixture completed`nImpact: no downstream impact`nVerify: fixture"
+  & git commit -q -m $message
+}
+
 switch ($env:RESPONSIBILITY_TEST_CASE) {
   'commit-success' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'result.txt'), $env:RESPONSIBILITY_TEST_TASK_ID, [Text.UTF8Encoding]::new($false))
-    & git add result.txt
-    $message = "test: automation result`n`nAutomation: tzg-hourly-controller`nTask: $($env:RESPONSIBILITY_TEST_TASK_ID)`nState: completed`nResult: fixture completed`nImpact: no downstream impact`nVerify: fixture"
-    & git commit -q -m $message
+    Commit-CompletedResult -Paths @('result.txt')
+  }
+  'commit-blocked' {
+    $taskId = $env:RESPONSIBILITY_TEST_TASK_ID
+    $cardPath = Join-Path (Get-Location) "开发管理/任务卡/$taskId.txt"
+    $cardText = [IO.File]::ReadAllText($cardPath)
+    $cardText = $cardText.Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": null', '"stateReason": "test blocked"')
+    Write-FakeUtf8 -Path $cardPath -Text $cardText
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/当前任务队列.txt') -Text (@(
+      '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
+      '| --- | --- | --- | --- | --- | --- | --- | --- |'
+    ) -join "`n")
+    $backlogPath = Join-Path (Get-Location) '开发管理/任务列表/自动化任务.txt'
+    $backlogText = [IO.File]::ReadAllText($backlogPath).Replace('| 已排队 |', '| 阻塞 |')
+    Write-FakeUtf8 -Path $backlogPath -Text $backlogText
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
+    Commit-CompletedResult -Paths @('result.txt', '开发管理/任务卡', '开发管理/当前任务队列.txt', '开发管理/任务列表/自动化任务.txt')
+  }
+  'commit-archived' {
+    $taskId = $env:RESPONSIBILITY_TEST_TASK_ID
+    $cardPath = Join-Path (Get-Location) "开发管理/任务卡/$taskId.txt"
+    $archivePath = Join-Path (Get-Location) "开发管理/任务归档/$taskId.txt"
+    $cardText = [IO.File]::ReadAllText($cardPath).Replace('"dispatchState": "ready"', '"dispatchState": "completed"')
+    Write-FakeUtf8 -Path $archivePath -Text $cardText
+    Remove-Item -LiteralPath $cardPath -Force
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/当前任务队列.txt') -Text (@(
+      '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
+      '| --- | --- | --- | --- | --- | --- | --- | --- |'
+    ) -join "`n")
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/任务列表/自动化任务.txt') -Text (@(
+      '| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |'
+      '| --- | --- | --- | --- | --- | --- | --- |'
+    ) -join "`n")
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
+    Commit-CompletedResult -Paths @('result.txt', '开发管理')
   }
   'child-failed-with-change' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'orphan.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
@@ -275,13 +401,14 @@ $global:LASTEXITCODE = 0
   [IO.File]::WriteAllText($fakeCodexPath, $fakeCodex, [Text.UTF8Encoding]::new($false))
 
   $taskId = 'task-invoker-unicode-prompt'
+  Set-TaskProjectionFixture -TaskId $taskId
   $runId = Acquire-TestLease -TaskId $taskId
-  $completed = Invoke-Responsibility -Case 'commit-success' -TaskId $taskId -RunId $runId
-  Assert-Equal -Actual $completed.ExitCode -Expected 0 -Message ("Completed invocation failed: json=$($completed.Json | ConvertTo-Json -Compress -Depth 10) stderr=$($completed.Stderr)")
-  Assert-Equal -Actual $completed.Json.status -Expected 'completed' -Message 'Completed status mismatch'
-  Assert-Equal -Actual $completed.Json.category -Expected 'success' -Message 'Completed category mismatch'
-  Assert-Equal -Actual $completed.Json.sessionId -Expected $sessionId -Message 'Completed session mismatch'
-  Assert-True -Condition ([string]$completed.Json.commitSha -match '^[0-9a-f]{40}$') -Message 'Completed invocation did not return a commit SHA'
+  $unchangedReady = Invoke-Responsibility -Case 'commit-success' -TaskId $taskId -RunId $runId
+  Assert-True -Condition ($unchangedReady.ExitCode -ne 0) -Message 'Result-only completed commit unexpectedly succeeded'
+  Assert-Equal -Actual $unchangedReady.Json.status -Expected 'blocked' -Message 'Result-only completed status mismatch'
+  Assert-Equal -Actual $unchangedReady.Json.category -Expected 'blocked' -Message 'Result-only completed category mismatch'
+  Assert-Equal -Actual $unchangedReady.Json.detailCode -Expected 'unverified_commit_shape' -Message 'Result-only completed detail mismatch'
+  Assert-True -Condition ($null -eq $unchangedReady.Json.commitSha) -Message 'Result-only completed invocation returned a commit SHA'
   $transportedPrompt = [IO.File]::ReadAllText($tracePath)
   Assert-True -Condition ($transportedPrompt.Contains($taskId)) -Message 'Task id was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains('模型核验证明')) -Message 'Unicode prompt text was not transported through stdin'
@@ -292,8 +419,31 @@ $global:LASTEXITCODE = 0
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
+  $blockedTaskId = 'task-blocked-closeout'
+  Set-TaskProjectionFixture -TaskId $blockedTaskId
+  $blockedRun = Acquire-TestLease -TaskId $blockedTaskId
+  $blockedCompleted = Invoke-Responsibility -Case 'commit-blocked' -TaskId $blockedTaskId -RunId $blockedRun
+  Assert-Equal -Actual $blockedCompleted.ExitCode -Expected 0 -Message ("Blocked transition invocation failed: json=$($blockedCompleted.Json | ConvertTo-Json -Compress -Depth 10) stderr=$($blockedCompleted.Stderr)")
+  Assert-Equal -Actual $blockedCompleted.Json.status -Expected 'completed' -Message 'Blocked transition status mismatch'
+  Assert-Equal -Actual $blockedCompleted.Json.category -Expected 'success' -Message 'Blocked transition category mismatch'
+  Assert-True -Condition ([string]$blockedCompleted.Json.commitSha -match '^[0-9a-f]{40}$') -Message 'Blocked transition did not return a commit SHA'
+  Assert-LeaseReleased | Out-Null
+
+  Reset-GitFixture
+  $archivedTaskId = 'task-archived-closeout'
+  Set-TaskProjectionFixture -TaskId $archivedTaskId
+  $archivedRun = Acquire-TestLease -TaskId $archivedTaskId
+  $archivedCompleted = Invoke-Responsibility -Case 'commit-archived' -TaskId $archivedTaskId -RunId $archivedRun
+  Assert-Equal -Actual $archivedCompleted.ExitCode -Expected 0 -Message ("Archived transition invocation failed: json=$($archivedCompleted.Json | ConvertTo-Json -Compress -Depth 10) stderr=$($archivedCompleted.Stderr)")
+  Assert-Equal -Actual $archivedCompleted.Json.status -Expected 'completed' -Message 'Archived transition status mismatch'
+  Assert-Equal -Actual $archivedCompleted.Json.category -Expected 'success' -Message 'Archived transition category mismatch'
+  Assert-True -Condition ([string]$archivedCompleted.Json.commitSha -match '^[0-9a-f]{40}$') -Message 'Archived transition did not return a commit SHA'
+  Assert-LeaseReleased | Out-Null
+
+  Reset-GitFixture
+  Set-TaskProjectionFixture -TaskId 'task-review' -Route 'codex_review'
   $reviewRun = Acquire-TestLease -TaskId 'task-review'
-  $reviewCompleted = Invoke-Responsibility -Case 'commit-success' -TaskId 'task-review' -RunId $reviewRun -Route 'Review'
+  $reviewCompleted = Invoke-Responsibility -Case 'commit-archived' -TaskId 'task-review' -RunId $reviewRun -Route 'Review'
   Assert-Equal -Actual $reviewCompleted.ExitCode -Expected 0 -Message 'Review invocation failed'
   Assert-Equal -Actual $reviewCompleted.Json.status -Expected 'completed' -Message 'Review status mismatch'
   $reviewPrompt = [IO.File]::ReadAllText($tracePath)
@@ -301,6 +451,7 @@ $global:LASTEXITCODE = 0
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
+  Set-TaskProjectionFixture -TaskId 'task-global-projection' -DispatchState 'blocked'
   $queueRun = Acquire-TestLease -TaskId 'QUEUE-MAINTENANCE'
   $queueCompleted = Invoke-Responsibility -Case 'commit-success' -TaskId 'QUEUE-MAINTENANCE' -RunId $queueRun -Route 'QueueMaintenance'
   Assert-Equal -Actual $queueCompleted.ExitCode -Expected 0 -Message 'Queue maintenance invocation failed'

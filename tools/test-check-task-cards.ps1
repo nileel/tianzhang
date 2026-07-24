@@ -43,7 +43,11 @@ function Get-Metadata {
     dispatchState = $DispatchState
     blockedBy = $BlockedBy
     stateReason = $StateReason
-    expectedPaths = @('simulations/BattleSim/Combat.cs', "开发管理/任务卡/$Id.txt")
+    expectedPaths = @(
+      'simulations/BattleSim/Combat.cs'
+      "开发管理/任务卡/$Id.txt"
+      "开发管理/任务归档/$Id.txt"
+    )
     sourceBacklog = '开发管理/任务列表/数值与战斗任务.txt'
   }
 }
@@ -59,7 +63,11 @@ function Copy-Metadata {
   param([hashtable]$Metadata)
   $copy = [ordered]@{}
   foreach ($key in $Metadata.Keys) {
-    $copy[$key] = if ($Metadata[$key] -is [array]) { @($Metadata[$key]) } else { $Metadata[$key] }
+    if ($Metadata[$key] -is [array]) {
+      $copy[$key] = @($Metadata[$key])
+    } else {
+      $copy[$key] = $Metadata[$key]
+    }
   }
   $copy
 }
@@ -69,6 +77,11 @@ function Set-Card {
   $args = @{ Metadata = $Metadata }
   if ($PSBoundParameters.ContainsKey('Headings')) { $args.Headings = $Headings }
   Write-Utf8 (Join-Path $Root "开发管理/任务卡/$FileName") (Get-CardText @args)
+}
+
+function Set-Archive {
+  param([string]$Root, [hashtable]$Metadata)
+  Write-Utf8 (Join-Path $Root "开发管理/任务归档/$($Metadata.id).txt") (Get-CardText -Metadata $Metadata)
 }
 
 function Set-Queue {
@@ -168,10 +181,13 @@ try {
     @{ Name = 'dot expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('folder/./bad.txt'); Set-Card $root $m } },
     @{ Name = 'parent expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('../bad.txt'); Set-Card $root $m } },
     @{ Name = 'directory expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('folder'); Set-Card $root $m } },
+    @{ Name = 'missing exact active-card authorization'; Expected = 'missing exact active-card authorization'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('simulations/BattleSim/Combat.cs', '开发管理/任务归档/T-READY-01.txt'); Set-Card $root $m } },
+    @{ Name = 'missing exact archive authorization'; Expected = 'missing exact archive authorization'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('simulations/BattleSim/Combat.cs', '开发管理/任务卡/T-READY-01.txt'); Set-Card $root $m } },
     @{ Name = 'route owner mismatch'; Expected = 'route/owner mismatch'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.owner = 'claude'; Set-Card $root $m } },
     @{ Name = 'missing body heading'; Expected = 'missing body heading'; Change = { param($root, $f) Set-Card $root $f.Ready -Headings @('来源与当前边界') } },
     @{ Name = 'H1 mismatch'; Expected = 'H1 mismatch'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务卡/T-READY-01.txt'; (Get-Content -Raw $path).Replace('# T-READY-01 · 合法 ready 卡', '# bad') | Set-Content -LiteralPath $path -Encoding utf8 } },
     @{ Name = 'queue projection mismatch'; Expected = 'queue projection mismatch'; Change = { param($root, $f) $path = Join-Path $root '开发管理/当前任务队列.txt'; (Get-Content -Raw $path).Replace('codex_execute', 'codex_review') | Set-Content -LiteralPath $path -Encoding utf8 } },
+    @{ Name = 'queue ID case mismatch'; Expected = 'queue ID case mismatch'; Change = { param($root, $f) $path = Join-Path $root '开发管理/当前任务队列.txt'; (Get-Content -Raw $path).Replace('| T-READY-01 |', '| t-ready-01 |').Replace('开发管理/任务卡/T-READY-01.txt', '开发管理/任务卡/t-ready-01.txt') | Set-Content -LiteralPath $path -Encoding utf8 } },
     @{ Name = 'non-ready in queue'; Expected = 'non-ready card in queue'; Change = { param($root, $f) Set-Queue $root @($f.Ready, $f.Blocked) } },
     @{ Name = 'ready missing from queue'; Expected = 'ready card missing from queue'; Change = { param($root, $f) Set-Queue $root @() } },
     @{ Name = 'ready duplicated in queue'; Expected = 'duplicate queue ID'; Change = { param($root, $f) Set-Queue $root @($f.Ready, $f.Ready) } },
@@ -184,6 +200,7 @@ try {
     @{ Name = 'backlog card path mismatch'; Expected = 'missing backlog row'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务列表/数值与战斗任务.txt'; (Get-Content -Raw $path).Replace('开发管理/任务卡/T-READY-01.txt', '开发管理/任务卡/T-OTHER-01.txt') | Set-Content -LiteralPath $path -Encoding utf8 } },
     @{ Name = 'completed active card'; Expected = 'completed card'; Change = { param($root, $f) $m = Copy-Metadata $f.Blocked; $m.dispatchState = 'completed'; Set-Card $root $m } },
     @{ Name = 'self dependency'; Expected = 'self-dependency'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.dispatchState = 'blocked'; $m.blockedBy = @('T-READY-01'); Set-Card $root $m; Set-Queue $root @(); Set-Backlog $root @($m, $f.Blocked) } },
+    @{ Name = 'dependency ID case mismatch'; Expected = 'dependency ID case mismatch'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.dispatchState = 'blocked'; $m.blockedBy = @('t-blocked-01'); Set-Card $root $m; Set-Queue $root @(); Set-Backlog $root @($m, $f.Blocked) } },
     @{ Name = 'two-card dependency cycle'; Expected = 'dependency cycle'; Change = { param($root, $f) $a = Copy-Metadata $f.Ready; $b = Copy-Metadata $f.Blocked; $a.dispatchState = 'blocked'; $a.blockedBy = @('T-BLOCKED-01'); $b.blockedBy = @('T-READY-01'); Set-Card $root $a; Set-Card $root $b; Set-Queue $root @(); Set-Backlog $root @($a, $b) } }
   )
 
@@ -207,6 +224,113 @@ try {
   Set-Backlog $transitionRoot @($review, $transition.Blocked)
   Assert-Success 'codex review transition end' $transitionRoot
   Assert-True ((Get-ChildItem -LiteralPath (Join-Path $transitionRoot '开发管理/任务卡') -Filter '*.txt').Count -eq 2) 'transition created a second task-card ID'
+  $externalPendingReview = Invoke-Checker $transitionRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'ExternalPendingReview'
+  )
+  Assert-True ($externalPendingReview.ExitCode -eq 0) "same-card pending review should pass ExternalPendingReview: $($externalPendingReview.Output)"
+  $externalWrongCases = @(
+    @{
+      Name = 'wrong external pending-review route'
+      Metadata = Get-Metadata -Route 'codex_execute' -Owner 'codex'
+      Expected = 'ExternalPendingReview requires route=codex_review owner=codex dispatchState=ready'
+    },
+    @{
+      Name = 'wrong external pending-review owner'
+      Metadata = Get-Metadata -Route 'codex_review' -Owner 'deepseek'
+      Expected = 'route/owner mismatch'
+    },
+    @{
+      Name = 'wrong external pending-review state'
+      Metadata = Get-Metadata -Route 'codex_review' -Owner 'codex' -DispatchState 'blocked' -StateReason 'not ready'
+      Expected = 'ExternalPendingReview requires route=codex_review owner=codex dispatchState=ready'
+    }
+  )
+  foreach ($externalWrongCase in $externalWrongCases) {
+    $externalWrongRoot = Join-Path $tempRoot ([guid]::NewGuid().ToString('N'))
+    $externalWrongFixture = New-Fixture $externalWrongRoot
+    Set-Card $externalWrongRoot $externalWrongCase.Metadata
+    $externalWrongQueue = if ($externalWrongCase.Metadata.dispatchState -ceq 'ready') { @($externalWrongCase.Metadata) } else { @() }
+    Set-Queue $externalWrongRoot $externalWrongQueue
+    Set-Backlog $externalWrongRoot @($externalWrongCase.Metadata, $externalWrongFixture.Blocked)
+    $externalWrongResult = Invoke-Checker $externalWrongRoot @(
+      '-TaskId', 'T-READY-01',
+      '-Postcondition', 'ExternalPendingReview'
+    )
+    Assert-True ($externalWrongResult.ExitCode -ne 0) "$($externalWrongCase.Name) should fail"
+    Assert-True ($externalWrongResult.Output -match [regex]::Escape($externalWrongCase.Expected)) "$($externalWrongCase.Name) missing diagnostic: $($externalWrongResult.Output)"
+  }
+
+  $readyPostconditionRoot = Join-Path $tempRoot 'ready-postcondition'
+  New-Fixture $readyPostconditionRoot | Out-Null
+  $readyPostcondition = Invoke-Checker $readyPostconditionRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'CodexClosedOrNonReady'
+  )
+  Assert-True ($readyPostcondition.ExitCode -ne 0) 'unchanged ready task should fail CodexClosedOrNonReady'
+  Assert-True ($readyPostcondition.Output -match 'CodexClosedOrNonReady requires') "unchanged ready task missing postcondition diagnostic: $($readyPostcondition.Output)"
+
+  $blockedPostconditionRoot = Join-Path $tempRoot 'blocked-postcondition'
+  New-Fixture $blockedPostconditionRoot | Out-Null
+  $blockedPostcondition = Invoke-Checker $blockedPostconditionRoot @(
+    '-TaskId', 'T-BLOCKED-01',
+    '-Postcondition', 'CodexClosedOrNonReady'
+  )
+  Assert-True ($blockedPostcondition.ExitCode -eq 0) "legal blocked task should pass CodexClosedOrNonReady: $($blockedPostcondition.Output)"
+  foreach ($caseMismatch in @(
+      @{ Root = $blockedPostconditionRoot; TaskId = 't-blocked-01'; Postcondition = 'CodexClosedOrNonReady' },
+      @{ Root = $transitionRoot; TaskId = 't-ready-01'; Postcondition = 'ExternalPendingReview' }
+    )) {
+    $caseMismatchResult = Invoke-Checker $caseMismatch.Root @(
+      '-TaskId', $caseMismatch.TaskId,
+      '-Postcondition', $caseMismatch.Postcondition
+    )
+    Assert-True ($caseMismatchResult.ExitCode -ne 0) "$($caseMismatch.Postcondition) accepted a case-mismatched TaskId"
+    Assert-True ($caseMismatchResult.Output -match 'TaskId case mismatch') "$($caseMismatch.Postcondition) missing TaskId case diagnostic: $($caseMismatchResult.Output)"
+  }
+
+  foreach ($nonReadyState in @('pending_decision', 'frozen', 'waiting_reply')) {
+    $nonReadyRoot = Join-Path $tempRoot "non-ready-$nonReadyState"
+    $nonReadyFixture = New-Fixture $nonReadyRoot
+    $nonReadyCard = Copy-Metadata $nonReadyFixture.Blocked
+    $nonReadyCard.dispatchState = $nonReadyState
+    Set-Card $nonReadyRoot $nonReadyCard
+    Set-Backlog $nonReadyRoot @($nonReadyFixture.Ready, $nonReadyCard)
+    $nonReadyPostcondition = Invoke-Checker $nonReadyRoot @(
+      '-TaskId', 'T-BLOCKED-01',
+      '-Postcondition', 'CodexClosedOrNonReady'
+    )
+    Assert-True ($nonReadyPostcondition.ExitCode -eq 0) "legal $nonReadyState task should pass CodexClosedOrNonReady: $($nonReadyPostcondition.Output)"
+  }
+
+  $archivePostconditionRoot = Join-Path $tempRoot 'archive-postcondition'
+  $archiveFixture = New-Fixture $archivePostconditionRoot
+  $completedArchive = Copy-Metadata $archiveFixture.Ready
+  $completedArchive.dispatchState = 'completed'
+  Set-Archive $archivePostconditionRoot $completedArchive
+  Remove-Item -LiteralPath (Join-Path $archivePostconditionRoot '开发管理/任务卡/T-READY-01.txt') -Force
+  Set-Queue $archivePostconditionRoot @()
+  Set-Backlog $archivePostconditionRoot @($archiveFixture.Blocked)
+  $archivePostcondition = Invoke-Checker $archivePostconditionRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'CodexClosedOrNonReady'
+  )
+  Assert-True ($archivePostcondition.ExitCode -eq 0) "exact completed archive should pass CodexClosedOrNonReady: $($archivePostcondition.Output)"
+
+  $staleArchiveRoot = Join-Path $tempRoot 'stale-archive-postcondition'
+  $staleArchiveFixture = New-Fixture $staleArchiveRoot
+  $staleCompletedArchive = Copy-Metadata $staleArchiveFixture.Ready
+  $staleCompletedArchive.dispatchState = 'completed'
+  Set-Archive $staleArchiveRoot $staleCompletedArchive
+  Remove-Item -LiteralPath (Join-Path $staleArchiveRoot '开发管理/任务卡/T-READY-01.txt') -Force
+  Set-Queue $staleArchiveRoot @()
+  Set-Backlog $staleArchiveRoot @($staleArchiveFixture.Ready, $staleArchiveFixture.Blocked)
+  $staleArchivePostcondition = Invoke-Checker $staleArchiveRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'CodexClosedOrNonReady'
+  )
+  Assert-True ($staleArchivePostcondition.ExitCode -ne 0) 'stale backlog row after archive should fail CodexClosedOrNonReady'
+  Assert-True ($staleArchivePostcondition.Output -match 'archived TaskId remains in backlog') "stale archive missing backlog diagnostic: $($staleArchivePostcondition.Output)"
 
   Write-Output 'test-check-task-cards: PASS'
 } finally {

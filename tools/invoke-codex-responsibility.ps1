@@ -26,6 +26,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $runnerPath = Join-Path $PSScriptRoot 'codex-cli-session.ps1'
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
+$taskCardCheckerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
 $result = $null
 $resultExitCode = 1
 $capturedSessionId = $null
@@ -243,6 +244,18 @@ function Get-CommitMetadata {
   [pscustomobject]$fields
 }
 
+function Test-TaskCardCloseout {
+  $arguments = @(
+    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $taskCardCheckerPath,
+    '-RepositoryRoot', $script:resolvedRepositoryRoot
+  )
+  if ($Route -cin @('Execution', 'Review')) {
+    $arguments += @('-TaskId', $TaskId, '-Postcondition', 'CodexClosedOrNonReady')
+  }
+  $null = & pwsh @arguments 2>&1
+  $LASTEXITCODE -eq 0
+}
+
 function Close-Run {
   param(
     [string]$Category,
@@ -271,7 +284,7 @@ function Close-Run {
 }
 
 try {
-  foreach ($path in @($runnerPath, $leasePath)) {
+  foreach ($path in @($runnerPath, $leasePath, $taskCardCheckerPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
       throw "Required tool is missing: $path"
     }
@@ -368,7 +381,8 @@ try {
       $null -ne $metadata -and
       [string]$metadata.Automation -ceq 'tzg-hourly-controller' -and
       [string]$metadata.Task -ceq $TaskId -and
-      [string]$metadata.State -ceq 'completed'
+      [string]$metadata.State -ceq 'completed' -and
+      (Test-TaskCardCloseout)
     ) {
       $matchingCommits.Add($commitSha)
     }

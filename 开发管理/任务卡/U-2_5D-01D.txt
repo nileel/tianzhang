@@ -40,7 +40,8 @@
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
-    "开发管理/任务卡/U-2_5D-01D.txt"
+    "开发管理/任务卡/U-2_5D-01D.txt",
+    "开发管理/任务归档/U-2_5D-01D.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
