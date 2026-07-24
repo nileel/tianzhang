@@ -38,6 +38,21 @@ function Assert-Contains {
   }
 }
 
+function Assert-TwoConditionRecoveryRoute {
+  param([string]$Text, [string]$Context)
+  Assert-Contains -Text $Text -Context $Context -Values @(
+    '控制器调度',
+    'Show',
+    'existing recovery',
+    '开发管理/自动工作流恢复规则.txt',
+    '普通责任方',
+    '实际到达新的用户决定事件',
+    '只读取',
+    '创建决定恢复',
+    '未到达决定事件时不得读取恢复规则'
+  )
+}
+
 function Read-Automation {
   param([string]$Directory)
   $path = Join-Path $Directory 'automation.toml'
@@ -73,6 +88,7 @@ $leaseTool = Read-Utf8Contract -Path (Join-Path $root 'tools\hourly-automation-l
 $invokerPath = Join-Path $root 'tools\invoke-codex-responsibility.ps1'
 Assert-Contract -Condition (Test-Path -LiteralPath $invokerPath -PathType Leaf) -Message 'missing workflow component: tools\invoke-codex-responsibility.ps1'
 $invoker = Read-Utf8Contract -Path $invokerPath
+$agentsRules = Read-Utf8Contract -Path (Join-Path $root 'AGENTS.md')
 $claudeRules = Read-Utf8Contract -Path (Join-Path $root 'CLAUDE.md')
 $collaborationRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\AI协作规则.txt')
 
@@ -148,6 +164,10 @@ $identityTokens = @(
 )
 Assert-Contains -Text $claudeRules -Context 'DeepSeek identity contract in CLAUDE.md' -Values $identityTokens
 Assert-Contains -Text $collaborationRules -Context 'DeepSeek identity contract in collaboration rules' -Values $identityTokens
+Assert-TwoConditionRecoveryRoute -Text $agentsRules -Context 'two-condition recovery route in AGENTS.md'
+Assert-TwoConditionRecoveryRoute -Text $collaborationRules -Context 'two-condition recovery route in collaboration rules'
+Assert-TwoConditionRecoveryRoute -Text $maintenanceRules -Context 'two-condition recovery route in maintenance rules'
+Assert-TwoConditionRecoveryRoute -Text $rules -Context 'two-condition recovery route in core rules'
 Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   '单写入租约',
   'Show',
@@ -243,7 +263,7 @@ Assert-Contains -Text $invoker -Context 'UTF-8 stdin contract' -Values @(
   'Console]::OpenStandardInput',
   'Text.UTF8Encoding'
 )
-$normalContract = $prompt + "`n" + $rules
+$normalContract = $prompt + "`n" + $rules + "`n" + $agentsRules + "`n" + $collaborationRules + "`n" + $maintenanceRules
 foreach ($detailToken in @(
     'consume-reply.mjs',
     'PROVIDER_ACCEPTED',

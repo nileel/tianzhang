@@ -80,6 +80,7 @@ $recoveryRulesPath = Join-Path $repositoryRoot '开发管理/自动工作流恢�
 $maintenanceRulesPath = Join-Path $repositoryRoot '开发管理/状态与建议维护规则.txt'
 $statusPath = Join-Path $repositoryRoot '开发管理/自动工作流状态.txt'
 $dailyPromptPath = Join-Path $repositoryRoot '开发管理/自动化简报提示词.txt'
+$agentsPath = Join-Path $repositoryRoot 'AGENTS.md'
 $claudePath = Join-Path $repositoryRoot 'CLAUDE.md'
 $collaborationPath = Join-Path $repositoryRoot '开发管理/AI协作规则.txt'
 
@@ -104,17 +105,28 @@ $canonicalClaude = @'
 - `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
 '@
 
+$canonicalAgents = @'
+# AGENTS
+
+- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
+- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
+'@
+
 $canonicalCollaboration = @'
 # AI协作规则
 
 - 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
 - `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
+- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
+- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 '@
 
 $canonicalRules = @'
 # 自动工作流规则
 
-- 单写入租约；`Show` 在队列读取前，pauseRequested=true 时结束，recovery 优先并只路由 `开发管理/自动工作流恢复规则.txt`；每轮一个责任方。
+- 单写入租约；`Show` 在队列读取前，pauseRequested=true 时结束；每轮一个责任方。
+- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
+- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 按 `开发管理/当前任务队列.txt` 的固定行序查找 `dispatchState=ready`，依次识别 `codex_execute`、`external_execute`、`codex_review`，选择第一项当前可安全执行。
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
@@ -161,6 +173,8 @@ $canonicalMaintenanceRules = @'
 # 状态与建议维护规则
 
 - 队列为空时维护 backlog；本轮不执行新任务。
+- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
+- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 '@
 
 $canonicalStatus = @'
@@ -186,6 +200,7 @@ try {
       '开发管理/状态与建议维护规则.txt' = $canonicalMaintenanceRules
       '开发管理/自动工作流状态.txt' = $canonicalStatus
       '开发管理/自动化简报提示词.txt' = $canonicalDailyPrompt
+      'AGENTS.md' = $canonicalAgents
       'CLAUDE.md' = $canonicalClaude
       '开发管理/AI协作规则.txt' = $canonicalCollaboration
       'tools/hourly-automation-lease.ps1' = "schemaVersion = 3`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','RecordResult','ClearBlocking','Release')"
@@ -204,6 +219,25 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
+
+  $normalResponsibilityRouteLine = '- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。'
+  $oldSingleConditionRouteLine = '- 只有 `Show` 返回 existing recovery 时才读取 `开发管理/自动工作流恢复规则.txt`。'
+
+  Write-Utf8File -Path $agentsPath -Content $canonicalAgents.Replace($normalResponsibilityRouteLine, $oldSingleConditionRouteLine)
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'AGENTS reverted to single-condition recovery route' -Contains 'two-condition recovery route in AGENTS.md'
+  Write-Utf8File -Path $agentsPath -Content $canonicalAgents
+
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration.Replace($normalResponsibilityRouteLine, $oldSingleConditionRouteLine)
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Collaboration rules reverted to single-condition recovery route' -Contains 'two-condition recovery route in collaboration rules'
+  Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
+
+  Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules.Replace($normalResponsibilityRouteLine, $oldSingleConditionRouteLine)
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Maintenance rules reverted to single-condition recovery route' -Contains 'two-condition recovery route in maintenance rules'
+  Write-Utf8File -Path $maintenanceRulesPath -Content $canonicalMaintenanceRules
+
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($normalResponsibilityRouteLine, $oldSingleConditionRouteLine)
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Core rules reverted to single-condition recovery route' -Contains 'two-condition recovery route in core rules'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
   $existingRecoveryReadLine = '- `Show.recovery != null` 时，恢复 route 读取对应恢复规则；普通 Acquire 收到 RECOVERY_ONLY 后停止。'
   Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules.Replace($existingRecoveryReadLine, '- recovery route 按既有规则处理；普通 Acquire 收到 RECOVERY_ONLY 后停止。')

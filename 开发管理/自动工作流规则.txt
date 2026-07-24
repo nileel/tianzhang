@@ -13,7 +13,8 @@
 - 每轮在读取当前任务队列或任何项目路由源前，先通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。
 - `pauseRequested=true` 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不取得租约、不启动责任方，也不读取或更新自身 automation 配置。
 - `Show` 返回的 `leaseStatus` 是租约有效性的唯一调度判断：只有 `active` 表示占用；`expired` 且无 recovery 时不得报告 occupied，继续队列判断并由 `Acquire` 替换过期租约。
-- recovery 优先于普通队列。`Show.recovery != null` 时只读取 `开发管理/自动工作流恢复规则.txt` 并处理该恢复；没有 recovery 时不得读取恢复细节。
+- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
+- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 任何项目写入前必须取得租约。每轮一个责任方；租约占用时不启动第二写入者。
 - 调度器只读取状态、选择任务、取得租约、调用责任方入口并报告已核验结果；不实施、不做领域验证、不 stage、不 commit、不复审。
 - Codex 路由的结果记录与租约释放由固定调用器统一完成；外部路线只由持有当前 Run ID 的控制器在核验终态后关闭。责任方不得自行调用 `RecordResult` 或 `Release`。
