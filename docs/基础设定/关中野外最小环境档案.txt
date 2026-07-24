@@ -1,0 +1,88 @@
+# 关中野外最小环境档案
+
+> ⚠️ 已修改/未审核；修改方：Claude Code；变更范围：新建唯一生产环境档案 `env_guanzhong_wild`。
+> 本档案为正式 `AdventureScene` 唯一冒险入口 `guanzhong_wild`（关中野外）的最小生产环境配置，由 `DEC-20260724-ENVPROFILE = A` 授权。
+
+## 概览
+
+| 条目 | 值 |
+|------|-----|
+| 档案 ID | `env_guanzhong_wild` |
+| 绑定冒险 | `guanzhong_wild`（`AdventureSceneController` 单入口） |
+| 数据源 | `src/Assets/DataConfig/EnvironmentProfiles.csv` — 唯一行 |
+| 运行时 asset | `src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` |
+| 契约 | 六字段：`profileId`、`directedEdges`、`surfacePrototypeRefs`、`phenomenonChannels`、`phenomenonPairs`、`elementRelationRefs` |
+| 后续绑定 | 由 `U-2_5D-01D` 的 `SpatialQueryBoardFactory` 从正式 `AdventureScene` 显式读取本档案后，迁移旧战斗范围分支 |
+
+## 契约字段与规则回链
+
+### 1. `directedEdges` — 有向相邻边（六条）
+
+| 边（fromQ:fromR → toQ:toR） | 规则依据 |
+|----|----|
+| `-1:0>0:0` | `docs/基础设定/战场空间与环境规则.txt#一、六角拓扑与加权距离` — 拓扑相邻、加权距离 1 的有向连接 |
+| `0:0>1:0` | 同上 |
+| `1:0>1:-1` | 同上 |
+| `0:0>0:1` | 同上 |
+| `0:1>-1:1` | 同上 |
+| `-1:0>-1:1` | 同上 |
+
+每条边均通过 `AreTopologicalNeighbors` 验证（`(abs(dq)+abs(dr)+abs(dq+dr))/2 = 1`），无重复有向边。
+
+### 2. `surfacePrototypeRefs` — 地表原型引用（两项）
+
+| 引用 | 规则依据 |
+|------|---------|
+| `surface_grassland` | `docs/基础设定/战场空间与环境规则.txt#五、地表状态` — 草地属于基础地表原型，可被覆盖或转化 |
+| `surface_loess` | 同上 — 黄土/沙土地表原型 |
+
+关中野外以草地与黄土为干地表基线；发生战斗时由五行显化或潮汐进一步转化为潮湿、泥泞、燃烧或冰面等规则地表。
+
+### 3. `phenomenonChannels` — 六个固定现象通道
+
+| 通道 | 声明类型 | 规则依据 |
+|------|---------|---------|
+| `airflow` | `wind`、`gust` | `docs/基础设定/战场空间与环境规则.txt#六、区域现象通道` — 气流通道；`docs/基础设定/五行显化与环境交互规则.txt#一、五行事件与灵域` |
+| `visibility` | `mist`、`haze` | 同上 — 能见度通道 |
+| `temperature` | `heat`、`cold` | 同上 — 温度通道 |
+| `precipitation` | `rain`、`drizzle` | 同上 — 降水通道 |
+| `suspendedHazard` | `ash`、`dust` | 同上 — 悬浮危害通道 |
+| `cloudDischarge` | `storm`、`lightning` | 同上 — 云气/放电通道 |
+
+每个通道恰好声明两种现象类型，不重叠、不缺漏。导入器通过 `ParsePhenomenonChannels` 验证六个通道各出现一次，缺失或重复均拒绝导入。
+
+### 4. `phenomenonPairs` — 同通道唯一配对（六组）
+
+| 配对（无序） | 结果 | 规则依据 |
+|----|------|---------|
+| `airflow:gust+wind` | `gust` | `docs/基础设定/战场空间与环境规则.txt#六` — 同通道唯一配对。配对结果必须是通道已声明类型之一，导入器通过 `ValidatePhenomenonTypeReference` 验证 result 属于该通道已声明类型集 |
+| `visibility:haze+mist` | `haze` | 同上 |
+| `temperature:cold+heat` | `cold` | 同上 |
+| `precipitation:drizzle+rain` | `drizzle` | 同上 |
+| `suspendedHazard:ash+dust` | `ash` | 同上 |
+| `cloudDischarge:lightning+storm` | `lightning` | 同上 |
+
+每组配对中 `firstTypeRef`、`secondTypeRef`、`resultTypeRef` 均在对应通道的类型集中，无重复且无翻转冲突。导入器 `ParsePhenomenonPairs` 将配对按字符串序归一化并拒绝翻转重复。
+
+### 5. `elementRelationRefs` — 五种五行关系引用
+
+| 引用 | 规则依据 |
+|------|---------|
+| `element_wood` | `docs/基础设定/五行显化与环境交互规则.txt#一、五行事件与灵域` — 木行（含风、毒） |
+| `element_fire` | 同上 — 火行（含星） |
+| `element_earth` | 同上 — 土行（含暗） |
+| `element_metal` | 同上 — 金行（含雷） |
+| `element_water` | 同上 — 水行（含冰） |
+
+导入器 `ParseElementRelationReferences` 要求五行引用恰好各一次，并为每种关系回调 `docs/基础设定/五行显化与环境交互规则.txt#一` 的灵域相生/相克链与 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 的五行数值关系。
+
+## 与正式冒险入口的绑定关系
+
+- 正式 `AdventureScene` 的唯一入口 ID 为 `guanzhong_wild`（`AdventureSceneController.GuanzhongWildAdventureId`）。
+- 本档案 `profileId = env_guanzhong_wild` 即该入口的环境配置。
+- `U-2_5D-01D` 实施时，`SpatialQueryBoardFactory` 按 `AdventureSceneController.CurrentAdventureId` 加载本档案，无需默认档案或兼容分支。
+- 在 `U-2_5D-01D` 显式绑定前，本档案仅作为 CSV 行与 asset 存在，不修改任何运行时代码或场景绑定。
+
+## 不包含的内容
+
+本档案不包含运行时定义、数值结论、显示文本、场景绑定、默认值、第二份档案、兼容分支、BattleSim 输入、角色模板、剧情内容或五行关系的具体效果版本（效果版本仍以 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 为准）。

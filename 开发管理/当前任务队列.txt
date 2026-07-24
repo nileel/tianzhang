@@ -10,7 +10,7 @@
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
 | U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 阻塞（C-ENV-PROFILE-01） | 共享空间查询契约实现与旧范围逻辑迁移 |
-| C-ENV-PROFILE-01 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 内容与数据 | 待处理 | 关中野外最小生产环境档案 |
+| C-ENV-PROFILE-01 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 内容与数据 | 已完成（待复审） | 关中野外最小生产环境档案 |
 | D-REALM-02B | P2 | Codex / gpt-5.6-terra | 数据链路 | 已完成 | 炼神术法／神通资料片隔离闭环验证 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 | N-AI-01A | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 已完成 | 战棋 AI 与 Boss 模板现行所有者定位 |

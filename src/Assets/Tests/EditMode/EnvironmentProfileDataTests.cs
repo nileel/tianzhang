@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using TianZhang.Editor;
@@ -58,6 +59,48 @@ namespace TianZhang.Tests
             Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseEnvironmentProfiles(
                 new[] { Header, missingElementRelations },
                 "EnvironmentProfiles.csv"));
+        }
+
+        private const string GuanzhongWildRow =
+            "env_guanzhong_wild,-1:0>0:0|0:0>1:0|1:0>1:-1|0:0>0:1|0:1>-1:1|-1:0>-1:1,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
+
+        [Test]
+        public void ParseEnvironmentProfilesAcceptsGuanzhongWildProductionProfile()
+        {
+            var profiles = DataConfigImporter.ParseEnvironmentProfiles(
+                new[] { Header, GuanzhongWildRow },
+                "EnvironmentProfiles.csv");
+
+            Assert.AreEqual(1, profiles.Length);
+            var profile = profiles[0];
+            Assert.AreEqual("env_guanzhong_wild", profile.profileId);
+
+            Assert.AreEqual(6, profile.directedEdges.Length);
+
+            Assert.AreEqual(2, profile.surfacePrototypeRefs.Length);
+            CollectionAssert.Contains(profile.surfacePrototypeRefs, "surface_grassland");
+            CollectionAssert.Contains(profile.surfacePrototypeRefs, "surface_loess");
+
+            Assert.AreEqual(6, profile.phenomenonChannels.Length);
+            var channels = new Dictionary<EnvironmentPhenomenonChannel, string[]>();
+            foreach (var channelData in profile.phenomenonChannels)
+                channels[channelData.channel] = channelData.phenomenonTypeRefs;
+            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Airflow));
+            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Visibility));
+            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Temperature));
+            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Precipitation));
+            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.SuspendedHazard));
+            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.CloudDischarge));
+
+            Assert.AreEqual(6, profile.phenomenonPairs.Length);
+            Assert.AreEqual(EnvironmentPhenomenonChannel.Airflow, profile.phenomenonPairs[0].channel);
+            Assert.AreEqual("gust", profile.phenomenonPairs[0].firstTypeRef);
+            Assert.AreEqual("wind", profile.phenomenonPairs[0].secondTypeRef);
+            Assert.AreEqual("gust", profile.phenomenonPairs[0].resultTypeRef);
+
+            CollectionAssert.AreEqual(
+                new[] { "element_wood", "element_fire", "element_earth", "element_metal", "element_water" },
+                profile.elementRelationRefs);
         }
 
         [Test]
