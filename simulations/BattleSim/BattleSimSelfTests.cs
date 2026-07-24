@@ -84,6 +84,9 @@ static class BattleSimSelfTests
         if (suite == "group-positioning-n-group-01")
             return RunChecked(suite, RunGroupPositioningNGroup01);
 
+        if (suite == "group-area-targeting-n-group-02")
+            return RunChecked(suite, RunGroupAreaTargetingNGroup02);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -662,6 +665,7 @@ static class BattleSimSelfTests
     static void RunCtReactionTq052()
     {
         var (fastWins, slowWins, _) = Combat.Simulate2v2(
+            HexBattlefield.CreateTechnicalFixture(),
             CtTestCharacter("fast-1", 20),
             CtTestCharacter("fast-2", 20),
             CtTestCharacter("slow-1", 10),
@@ -672,6 +676,7 @@ static class BattleSimSelfTests
         AssertEqual(0.0, slowWins, "lower reaction team cannot take the first action");
 
         var (firstWins, secondWins, _) = Combat.Simulate2v2(
+            HexBattlefield.CreateTechnicalFixture(),
             CtTestCharacter("first-1", 10),
             CtTestCharacter("first-2", 10),
             CtTestCharacter("second-1", 10),
@@ -962,6 +967,168 @@ static class BattleSimSelfTests
         AssertEqual(false, rootedInsideMinimum.CanAttack, "minimum range rejects a rooted point-blank attack");
     }
 
+    static void RunGroupAreaTargetingNGroup02()
+    {
+        var caster = new HexCoord(0, 0);
+        var targetCell = new HexCoord(2, 0);
+        var areaConfig = new GameData.AreaTargetingConfig(
+            "fixture-circle",
+            GameData.AreaCenterKind.TargetCell,
+            MinCastRange: 1,
+            MaxCastRange: 2,
+            new GameData.AreaShapeConfig(
+                GameData.AreaShapeKind.Circle,
+                Radius: 2,
+                Length: 0,
+                FanHalfAngleSteps: 0,
+                Facing: HexDirection.East,
+                InnerRadius: 1),
+            GameData.AreaEffectBlocker.DirectedEdge,
+            GameData.AreaTargetFaction.Enemy,
+            GameData.AreaTargetState.Alive);
+        var candidates = new[]
+        {
+            new GameData.AreaTargetCandidate(Index: 0, Team: 0, Position: caster, IsAlive: true),
+            new GameData.AreaTargetCandidate(Index: 1, Team: 0, Position: new HexCoord(3, -1), IsAlive: true),
+            new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(4, 0), IsAlive: true),
+            new GameData.AreaTargetCandidate(Index: 3, Team: 1, Position: targetCell, IsAlive: true),
+        };
+
+        var sightBlockedOnly = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
+        {
+            [new HexCoord(3, 0)] = new(IsEntityObstacle: true),
+        });
+        AssertEqual(false, sightBlockedOnly.QueryLineOfSight(targetCell, new HexCoord(4, 0)).HasLineOfSight,
+            "ordinary sight records an entity obstacle between area center and target");
+        var circle = sightBlockedOnly.ResolveAreaTargeting(
+            areaConfig, caster, casterTeam: 0, casterIndex: 0, targetCell, effectiveRangeModifier: 0, candidates);
+        AssertEqual(targetCell, circle.Center, "target-cell skill exposes its resolved area center");
+        AssertSequence(new[] { 2 }, circle.HitTargetIndexes,
+            "circle uses its explicit inner hole and does not require ordinary unit sight");
+        AssertEqual("", circle.RejectionReason, "legal area hit has no rejection reason");
+
+        var boundedCells = new HashSet<HexCoord>
+        {
+            caster,
+            new HexCoord(1, 0),
+            targetCell,
+            new HexCoord(3, 0),
+            new HexCoord(4, 0),
+        };
+        var declaredEffectBlocker = new HexBattlefield(
+            edgeRules: new Dictionary<DirectedHexEdge, HexEdgeRules>
+            {
+                [new(caster, new HexCoord(1, 0))] = new(GameData.EnvironmentRules.StandardEdgeUnits),
+                [new(new HexCoord(1, 0), targetCell)] = new(GameData.EnvironmentRules.StandardEdgeUnits),
+                [new(targetCell, new HexCoord(3, 0))] = new(
+                    GameData.EnvironmentRules.StandardEdgeUnits,
+                    EffectBlockers: GameData.AreaEffectBlocker.DirectedEdge),
+                [new(new HexCoord(3, 0), new HexCoord(4, 0))] = new(GameData.EnvironmentRules.StandardEdgeUnits),
+            },
+            validCells: boundedCells);
+        var blocked = declaredEffectBlocker.ResolveAreaTargeting(
+            areaConfig, caster, casterTeam: 0, casterIndex: 0, targetCell, effectiveRangeModifier: 0, candidates);
+        AssertEqual("declared_effect_blocker", blocked.RejectionReason,
+            "declared effect blockers reject the area before target eligibility");
+
+        var invalidCenter = new HexBattlefield(validCells: new HashSet<HexCoord> { caster }).ResolveAreaTargeting(
+            areaConfig, caster, casterTeam: 0, casterIndex: 0, targetCell, effectiveRangeModifier: 0, candidates);
+        AssertEqual("target_cell_invalid_or_out_of_bounds", invalidCenter.RejectionReason,
+            "invalid target cells are the highest-priority area rejection");
+
+        var restrictedTargets = new[]
+        {
+            new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: targetCell, IsAlive: false),
+            new GameData.AreaTargetCandidate(Index: 1, Team: 0, Position: new HexCoord(3, 0), IsAlive: true),
+        };
+        var stateBeforeFaction = new HexBattlefield().ResolveAreaTargeting(
+            areaConfig with { Shape = areaConfig.Shape with { InnerRadius = 0 } },
+            caster,
+            casterTeam: 0,
+            casterIndex: 0,
+            targetCell,
+            effectiveRangeModifier: 0,
+            restrictedTargets);
+        AssertEqual("target_state_or_corpse_ineligible", stateBeforeFaction.RejectionReason,
+            "state and corpse eligibility outrank faction rejection when no area target survives");
+
+        var lineConfig = new GameData.AreaTargetingConfig(
+            "fixture-line",
+            GameData.AreaCenterKind.Caster,
+            MinCastRange: 0,
+            MaxCastRange: 0,
+            new GameData.AreaShapeConfig(
+                GameData.AreaShapeKind.Line,
+                Radius: 0,
+                Length: 2,
+                FanHalfAngleSteps: 0,
+                Facing: HexDirection.East,
+                InnerRadius: 0),
+            GameData.AreaEffectBlocker.None,
+            GameData.AreaTargetFaction.Enemy,
+            GameData.AreaTargetState.Alive);
+        var line = new HexBattlefield().ResolveAreaTargeting(
+            lineConfig,
+            caster,
+            casterTeam: 0,
+            casterIndex: 0,
+            targetCell: caster,
+            effectiveRangeModifier: 0,
+            new[]
+            {
+                new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(1, 0), IsAlive: true),
+                new GameData.AreaTargetCandidate(Index: 3, Team: 1, Position: new HexCoord(2, 0), IsAlive: true),
+                new GameData.AreaTargetCandidate(Index: 4, Team: 1, Position: new HexCoord(1, -1), IsAlive: true),
+            });
+        AssertSequence(new[] { 2, 3 }, line.HitTargetIndexes,
+            "line shape keeps only cells along its configured facing and length");
+
+        var fan = new HexBattlefield().ResolveAreaTargeting(
+            lineConfig with
+            {
+                Name = "fixture-fan",
+                Shape = new GameData.AreaShapeConfig(
+                    GameData.AreaShapeKind.Fan,
+                    Radius: 0,
+                    Length: 2,
+                    FanHalfAngleSteps: 1,
+                    Facing: HexDirection.East,
+                    InnerRadius: 0),
+            },
+            caster,
+            casterTeam: 0,
+            casterIndex: 0,
+            targetCell: caster,
+            effectiveRangeModifier: 0,
+            new[]
+            {
+                new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(2, -1), IsAlive: true),
+                new GameData.AreaTargetCandidate(Index: 3, Team: 1, Position: new HexCoord(-1, 0), IsAlive: true),
+            });
+        AssertSequence(new[] { 2 }, fan.HitTargetIndexes,
+            "fan shape honors its local facing and angle parameter");
+
+        var shortCast = new HexBattlefield().ResolveAreaTargeting(
+            areaConfig with { MaxCastRange = 1 },
+            caster,
+            casterTeam: 0,
+            casterIndex: 0,
+            targetCell,
+            effectiveRangeModifier: 0,
+            candidates);
+        AssertEqual("cast_distance_out_of_range", shortCast.RejectionReason,
+            "cast distance is checked before target propagation and eligibility");
+
+        AssertEqual(true, typeof(Combat).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Any(method => method.Name == "Simulate2v2" &&
+                               method.GetParameters().Length == 6 &&
+                               method.GetParameters()[0].ParameterType == typeof(HexBattlefield)),
+            "formal 2v2 entry requires an explicit battlefield input");
+        AssertEqual(true, new[] { "AreaCenter", "AreaHitTargetIndexes", "AreaRejectionReason" }
+                .All(name => typeof(Combat.GroupActionObservation).GetProperty(name) != null),
+            "group action observations expose area center, hit set, and rejection reason");
+    }
+
     static void RunGroupPositioningNGroup01()
     {
         AssertSequence(
@@ -1024,6 +1191,7 @@ static class BattleSimSelfTests
             "no-target reason is observable");
 
         var orderedRound = Combat.Simulate2v2Detailed(
+            HexBattlefield.CreateTechnicalFixture(),
             GroupTestCharacter("a1", reaction: 20, hp: 10000, attack: 1, movement: 6),
             GroupTestCharacter("a2", reaction: 20, hp: 10000, attack: 1, movement: 6),
             GroupTestCharacter("b1", reaction: 20, hp: 10000, attack: 1, movement: 6),
@@ -1041,6 +1209,7 @@ static class BattleSimSelfTests
             "each action exposes target selection");
 
         var unableRound = Combat.Simulate2v2Detailed(
+            HexBattlefield.CreateTechnicalFixture(),
             GroupTestCharacter("rooted-a1", reaction: 20, hp: 10000, attack: 1, movement: 0),
             GroupTestCharacter("rooted-a2", reaction: 20, hp: 10000, attack: 1, movement: 0),
             GroupTestCharacter("rooted-b1", reaction: 20, hp: 10000, attack: 1, movement: 0),
@@ -1055,9 +1224,11 @@ static class BattleSimSelfTests
         var weakB1 = GroupTestCharacter("weak-b1", reaction: 1, hp: 1, attack: 1, movement: 0);
         var weakB2 = GroupTestCharacter("weak-b2", reaction: 1, hp: 2, attack: 1, movement: 0);
         Combat.ResetDeterministicRandom();
-        var first = Combat.Simulate2v2(strongA1, strongA2, weakB1, weakB2, rounds: 1);
+        var first = Combat.Simulate2v2(
+            HexBattlefield.CreateTechnicalFixture(), strongA1, strongA2, weakB1, weakB2, rounds: 1);
         Combat.ResetDeterministicRandom();
-        var second = Combat.Simulate2v2(strongA1, strongA2, weakB1, weakB2, rounds: 1);
+        var second = Combat.Simulate2v2(
+            HexBattlefield.CreateTechnicalFixture(), strongA1, strongA2, weakB1, weakB2, rounds: 1);
         AssertEqual((100.0, 0.0), (first.winsA, first.winsB),
             "group victory settlement keeps the surviving team");
         AssertEqual(first, second, "fixed seed reproduces the same group result");

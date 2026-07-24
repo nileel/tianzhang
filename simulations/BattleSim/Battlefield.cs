@@ -143,16 +143,21 @@ readonly record struct HexEdgeRules
 {
     public int MetricDistanceUnits { get; }
     public bool AllowsMovement { get; }
-    public bool AllowsEffects { get; }
+    public GameData.AreaEffectBlocker EffectBlockers { get; }
 
-    public HexEdgeRules(int MetricDistanceUnits, bool AllowsMovement = true, bool AllowsEffects = true)
+    public HexEdgeRules(
+        int MetricDistanceUnits,
+        bool AllowsMovement = true,
+        GameData.AreaEffectBlocker EffectBlockers = GameData.AreaEffectBlocker.None)
     {
         if (MetricDistanceUnits < 1)
             throw new ArgumentOutOfRangeException(nameof(MetricDistanceUnits), "Metric distance must be at least one fixed-point unit.");
+        if ((EffectBlockers & ~GameData.AreaEffectBlocker.All) != 0)
+            throw new ArgumentOutOfRangeException(nameof(EffectBlockers), "Effect blockers are invalid.");
 
         this.MetricDistanceUnits = MetricDistanceUnits;
         this.AllowsMovement = AllowsMovement;
-        this.AllowsEffects = AllowsEffects;
+        this.EffectBlockers = EffectBlockers;
     }
 }
 
@@ -186,6 +191,7 @@ sealed class HexBattlefield
     readonly Dictionary<DirectedHexEdge, HexEdgeRules> edgeRules;
     readonly Dictionary<DirectionalCellCover, CoverTier> cellCover;
     readonly Dictionary<DirectedHexEdge, CoverTier> edgeCover;
+    readonly HashSet<HexCoord> validCells;
     readonly Dictionary<HexCoord, SurfaceState> surfaces = new();
     readonly Dictionary<(HexCoord Coord, PhenomenonChannel Channel), List<PhenomenonState>> phenomena = new();
     readonly GameData.EnvironmentRulesConfig environmentRules;
@@ -199,7 +205,8 @@ sealed class HexBattlefield
         IReadOnlyDictionary<DirectionalCellCover, CoverTier> cellCover = null,
         IReadOnlyDictionary<DirectedHexEdge, CoverTier> edgeCover = null,
         GameData.EnvironmentRulesConfig environmentRules = null,
-        IReadOnlyList<GameData.PhenomenonPairFixture> phenomenonPairs = null)
+        IReadOnlyList<GameData.PhenomenonPairFixture> phenomenonPairs = null,
+        IReadOnlySet<HexCoord> validCells = null)
     {
         this.environmentRules = environmentRules ?? GameData.EnvironmentRules;
         ValidateEnvironmentRules(this.environmentRules);
@@ -216,18 +223,32 @@ sealed class HexBattlefield
             ? new Dictionary<DirectedHexEdge, CoverTier>()
             : edgeCover.ToDictionary(entry => Validate(entry.Key), entry => ValidateCover(entry.Value));
         this.phenomenonPairs = phenomenonPairs ?? GameData.EnvironmentPhenomenonPairFixtures;
+        this.validCells = validCells == null ? null : new HashSet<HexCoord>(validCells);
     }
 
-    public EdgeInspection InspectEdge(HexCoord from, HexCoord to, SpatialQueryKind kind)
+    public bool IsValidCell(HexCoord coord) => validCells == null || validCells.Contains(coord);
+
+    internal static HexBattlefield CreateTechnicalFixture() => new();
+
+    public EdgeInspection InspectEdge(HexCoord from, HexCoord to, SpatialQueryKind kind) =>
+        InspectEdge(from, to, kind, GameData.AreaEffectBlocker.All);
+
+    EdgeInspection InspectEdge(
+        HexCoord from,
+        HexCoord to,
+        SpatialQueryKind kind,
+        GameData.AreaEffectBlocker activeEffectBlockers)
     {
         if (!from.TryGetDirectionTo(to, out _))
             throw new ArgumentException("Spatial queries can inspect only adjacent hex edges.", nameof(to));
+        if (!IsValidCell(from) || !IsValidCell(to))
+            return new EdgeInspection(false, 0, "target_cell_invalid_or_out_of_bounds");
 
         var rules = GetEdgeRules(from, to);
         bool movement = kind is SpatialQueryKind.Movement or SpatialQueryKind.ForcedMovement;
         if (movement && !rules.AllowsMovement)
             return new EdgeInspection(false, rules.MetricDistanceUnits, "directed_edge_blocks_movement");
-        if (!movement && !rules.AllowsEffects)
+        if (!movement && (rules.EffectBlockers & activeEffectBlockers) != 0)
             return new EdgeInspection(false, rules.MetricDistanceUnits, "directed_edge_blocks_effect");
 
         var targetRules = GetRules(to);
@@ -244,15 +265,36 @@ sealed class HexBattlefield
         HexCoord target,
         SpatialQueryKind kind,
         int? maxRange = null)
+        => QueryMetricDistanceCore(start, target, kind, maxRange, GameData.AreaEffectBlocker.All);
+
+    public MetricDistanceResult QueryAreaEffectDistance(
+        HexCoord start,
+        HexCoord target,
+        GameData.AreaEffectBlocker declaredBlockers,
+        int? maxRange = null)
+    {
+        if ((declaredBlockers & ~GameData.AreaEffectBlocker.All) != 0)
+            throw new ArgumentOutOfRangeException(nameof(declaredBlockers), "Area effect blockers are invalid.");
+        return QueryMetricDistanceCore(start, target, SpatialQueryKind.Area, maxRange, declaredBlockers);
+    }
+
+    MetricDistanceResult QueryMetricDistanceCore(
+        HexCoord start,
+        HexCoord target,
+        SpatialQueryKind kind,
+        int? maxRange,
+        GameData.AreaEffectBlocker activeEffectBlockers)
     {
         int rangeLimit = maxRange ?? environmentRules.MaxQueryRange;
         if (rangeLimit < 0 || rangeLimit > environmentRules.MaxQueryRange)
             throw new ArgumentOutOfRangeException(nameof(maxRange), "Metric query range exceeds the configured bound.");
+        if (!IsValidCell(start) || !IsValidCell(target))
+            return new MetricDistanceResult(false, -1, "target_cell_invalid_or_out_of_bounds");
         if (start == target)
             return new MetricDistanceResult(true, 0, "");
 
         int distanceLimit = checked(rangeLimit * environmentRules.UnitsPerRange);
-        if (edgeRules.Count == 0 &&
+        if (validCells == null && edgeRules.Count == 0 &&
             (cells.Count == 0 || kind is SpatialQueryKind.Attack or SpatialQueryKind.Area or SpatialQueryKind.Sight))
         {
             int uniformDistance = checked(start.DistanceTo(target) * environmentRules.StandardEdgeUnits);
@@ -276,7 +318,7 @@ sealed class HexBattlefield
 
             foreach (var neighbor in current.Neighbors())
             {
-                var edge = InspectEdge(current, neighbor, kind);
+                var edge = InspectEdge(current, neighbor, kind, activeEffectBlockers);
                 if (!edge.IsLegal)
                     continue;
 
@@ -378,6 +420,179 @@ sealed class HexBattlefield
             .ThenBy(candidate => candidate.Position.R)
             .First()
             .Position;
+    }
+
+    public GameData.AreaTargetingResult ResolveAreaTargeting(
+        GameData.AreaTargetingConfig config,
+        HexCoord caster,
+        int casterTeam,
+        int casterIndex,
+        HexCoord targetCell,
+        int effectiveRangeModifier,
+        IReadOnlyList<GameData.AreaTargetCandidate> candidates)
+    {
+        ValidateAreaTargetingConfig(config);
+        if (candidates == null)
+            throw new ArgumentNullException(nameof(candidates));
+
+        int effectiveMinRange = checked(config.MinCastRange + effectiveRangeModifier);
+        int effectiveMaxRange = checked(config.MaxCastRange + effectiveRangeModifier);
+        if (effectiveMinRange < 0 || effectiveMaxRange < effectiveMinRange)
+            throw new ArgumentOutOfRangeException(
+                nameof(effectiveRangeModifier),
+                "Effective cast range must retain a non-negative legal interval.");
+
+        HexCoord center = config.CenterKind == GameData.AreaCenterKind.Caster ? caster : targetCell;
+        if (!IsValidCell(center))
+            return new GameData.AreaTargetingResult(null, Array.Empty<int>(), "target_cell_invalid_or_out_of_bounds");
+
+        var unblockedCastDistance = QueryAreaEffectDistance(
+            caster,
+            center,
+            GameData.AreaEffectBlocker.None,
+            effectiveMaxRange);
+        int minDistanceUnits = checked(effectiveMinRange * environmentRules.UnitsPerRange);
+        int maxDistanceUnits = checked(effectiveMaxRange * environmentRules.UnitsPerRange);
+        if (!unblockedCastDistance.IsReachable ||
+            unblockedCastDistance.DistanceUnits < minDistanceUnits ||
+            unblockedCastDistance.DistanceUnits > maxDistanceUnits)
+        {
+            return new GameData.AreaTargetingResult(center, Array.Empty<int>(), "cast_distance_out_of_range");
+        }
+
+        var castPropagation = QueryAreaEffectDistance(caster, center, config.EffectBlockers, effectiveMaxRange);
+        if (!castPropagation.IsReachable)
+            return new GameData.AreaTargetingResult(center, Array.Empty<int>(), "declared_effect_blocker");
+
+        var hits = new List<int>();
+        bool propagationBlocked = false;
+        bool stateRejected = false;
+        bool factionRejected = false;
+        foreach (var candidate in candidates.OrderBy(candidate => candidate.Index))
+        {
+            if (!IsWithinAreaShape(center, candidate.Position, config.Shape))
+                continue;
+
+            var propagation = QueryAreaEffectDistance(center, candidate.Position, config.EffectBlockers);
+            if (!propagation.IsReachable)
+            {
+                propagationBlocked = true;
+                continue;
+            }
+
+            if (!IsTargetStateAllowed(config.AllowedStates, candidate.IsAlive))
+            {
+                stateRejected = true;
+                continue;
+            }
+
+            var faction = GetTargetFaction(casterTeam, casterIndex, candidate);
+            if ((config.AllowedFactions & faction) == 0)
+            {
+                factionRejected = true;
+                continue;
+            }
+
+            hits.Add(candidate.Index);
+        }
+
+        if (hits.Count > 0)
+            return new GameData.AreaTargetingResult(center, hits, "");
+        if (propagationBlocked)
+            return new GameData.AreaTargetingResult(center, Array.Empty<int>(), "declared_effect_blocker");
+        if (stateRejected)
+            return new GameData.AreaTargetingResult(center, Array.Empty<int>(), "target_state_or_corpse_ineligible");
+        if (factionRejected)
+            return new GameData.AreaTargetingResult(center, Array.Empty<int>(), "target_faction_ineligible");
+        return new GameData.AreaTargetingResult(center, Array.Empty<int>(), "no_legal_target");
+    }
+
+    static void ValidateAreaTargetingConfig(GameData.AreaTargetingConfig config)
+    {
+        if (config == null || string.IsNullOrWhiteSpace(config.Name) || config.Shape == null ||
+            config.MinCastRange < 0 || config.MaxCastRange < config.MinCastRange ||
+            (config.EffectBlockers & ~GameData.AreaEffectBlocker.All) != 0)
+        {
+            throw new ArgumentException("Area targeting configuration is invalid.", nameof(config));
+        }
+
+        var shape = config.Shape;
+        if (shape.InnerRadius < 0)
+            throw new ArgumentException("Area shape inner radius is invalid.", nameof(config));
+        switch (shape.Kind)
+        {
+            case GameData.AreaShapeKind.Circle when shape.Radius >= 0 && shape.Length == 0 &&
+                                                    shape.FanHalfAngleSteps == 0 && shape.InnerRadius <= shape.Radius:
+                return;
+            case GameData.AreaShapeKind.Line when shape.Radius == 0 && shape.Length > 0 &&
+                                                  shape.FanHalfAngleSteps == 0 && shape.InnerRadius < shape.Length:
+                return;
+            case GameData.AreaShapeKind.Fan when shape.Radius == 0 && shape.Length > 0 &&
+                                                 shape.FanHalfAngleSteps is >= 0 and <= 1 && shape.InnerRadius < shape.Length:
+                return;
+            default:
+                throw new ArgumentException("Area shape configuration is invalid.", nameof(config));
+        }
+    }
+
+    static bool IsTargetStateAllowed(GameData.AreaTargetState allowedStates, bool isAlive) =>
+        isAlive
+            ? (allowedStates & GameData.AreaTargetState.Alive) != 0
+            : (allowedStates & GameData.AreaTargetState.Corpse) != 0;
+
+    static GameData.AreaTargetFaction GetTargetFaction(
+        int casterTeam,
+        int casterIndex,
+        GameData.AreaTargetCandidate candidate)
+    {
+        if (candidate.Index == casterIndex)
+            return GameData.AreaTargetFaction.Self;
+        return candidate.Team == casterTeam
+            ? GameData.AreaTargetFaction.Ally
+            : GameData.AreaTargetFaction.Enemy;
+    }
+
+    static bool IsWithinAreaShape(HexCoord center, HexCoord target, GameData.AreaShapeConfig shape)
+    {
+        int distance = center.DistanceTo(target);
+        if (shape.InnerRadius > 0 && distance <= shape.InnerRadius)
+            return false;
+
+        return shape.Kind switch
+        {
+            GameData.AreaShapeKind.Circle => distance <= shape.Radius,
+            GameData.AreaShapeKind.Line => IsOnLine(center, target, shape.Facing, shape.Length),
+            GameData.AreaShapeKind.Fan => IsInFan(center, target, shape.Facing, shape.Length, shape.FanHalfAngleSteps),
+            _ => false,
+        };
+    }
+
+    static bool IsOnLine(HexCoord center, HexCoord target, HexDirection facing, int length)
+    {
+        var current = center;
+        for (int step = 1; step <= length; step++)
+        {
+            current = current.Step(facing);
+            if (current == target)
+                return true;
+        }
+        return false;
+    }
+
+    static bool IsInFan(HexCoord center, HexCoord target, HexDirection facing, int length, int halfAngleSteps)
+    {
+        if (center.DistanceTo(target) > length)
+            return false;
+        if (target == center)
+            return true;
+
+        var offset = new HexCoord(target.Q - center.Q, target.R - center.R);
+        for (int step = 0; step < (int)facing; step++)
+            offset = new HexCoord(-offset.R, offset.Q + offset.R);
+
+        return halfAngleSteps == 0
+            ? offset.R == 0 && offset.Q > 0
+            : offset.Q > 0 && Math.Abs(offset.R) <= offset.Q;
     }
 
     public ForcedMovementResult ResolveForcedMovementDetailed(

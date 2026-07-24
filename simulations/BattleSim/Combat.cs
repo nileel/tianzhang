@@ -34,6 +34,9 @@ static class Combat
         int TargetIndex,
         string TargetSelectionReason,
         string InactionReason,
+        HexCoord? AreaCenter,
+        IReadOnlyList<int> AreaHitTargetIndexes,
+        string AreaRejectionReason,
         IReadOnlyList<HexCoord> PositionsAfterAction);
     internal sealed record GroupRoundResult(
         int WinnerTeam,
@@ -412,12 +415,15 @@ static class Combat
     }
 
     public static (double winsA, double winsB, double avgTurns) Simulate2v2(
+        HexBattlefield battlefield,
         Character ca1, Character ca2, Character cb1, Character cb2, int rounds)
     {
+        if (battlefield == null)
+            throw new ArgumentNullException(nameof(battlefield));
         int winsA = 0, winsB = 0, totalTurns = 0;
         for (int r = 0; r < rounds; r++)
         {
-            var result = Simulate2v2Detailed(ca1, ca2, cb1, cb2);
+            var result = Simulate2v2Detailed(battlefield, ca1, ca2, cb1, cb2);
             if (result.WinnerTeam == 0) winsA++; else winsB++;
             totalTurns += result.Turns;
         }
@@ -425,9 +431,11 @@ static class Combat
     }
 
     internal static GroupRoundResult Simulate2v2Detailed(
+        HexBattlefield battlefield,
         Character ca1, Character ca2, Character cb1, Character cb2)
     {
-        var battlefield = new HexBattlefield();
+        if (battlefield == null)
+            throw new ArgumentNullException(nameof(battlefield));
         var units = new UnitState[4];
         var chars = new[] { ca1, ca2, cb1, cb2 };
         int[] team = { 0, 0, 1, 1 };
@@ -547,6 +555,9 @@ static class Combat
                     -1,
                     selection.Reason,
                     movementFocus >= 0 ? "no_legal_target_after_move" : "no_alive_enemy",
+                    null,
+                    Array.Empty<int>(),
+                    "",
                     SnapshotOccupiedPositions(units)));
                 continue;
             }
@@ -675,6 +686,9 @@ static class Combat
                 reachable,
                 target,
                 selection.Reason,
+                "",
+                null,
+                Array.Empty<int>(),
                 "",
                 SnapshotOccupiedPositions(units)));
         }

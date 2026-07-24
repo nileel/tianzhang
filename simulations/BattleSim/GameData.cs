@@ -316,11 +316,98 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     };
 
     // 术法与神通配置
+    public enum AreaShapeKind
+    {
+        Circle,
+        Line,
+        Fan,
+    }
+
+    public enum AreaCenterKind
+    {
+        Caster,
+        TargetCell,
+    }
+
+    [Flags]
+    public enum AreaTargetFaction
+    {
+        None = 0,
+        Enemy = 1,
+        Ally = 2,
+        Self = 4,
+    }
+
+    [Flags]
+    public enum AreaTargetState
+    {
+        None = 0,
+        Alive = 1,
+        Corpse = 2,
+    }
+
+    [Flags]
+    public enum AreaEffectBlocker
+    {
+        None = 0,
+        DirectedEdge = 1,
+        All = DirectedEdge,
+    }
+
+    public sealed record AreaShapeConfig(
+        AreaShapeKind Kind,
+        int Radius,
+        int Length,
+        int FanHalfAngleSteps,
+        HexDirection Facing,
+        int InnerRadius);
+
+    public sealed record AreaTargetingConfig(
+        string Name,
+        AreaCenterKind CenterKind,
+        int MinCastRange,
+        int MaxCastRange,
+        AreaShapeConfig Shape,
+        AreaEffectBlocker EffectBlockers,
+        AreaTargetFaction AllowedFactions,
+        AreaTargetState AllowedStates);
+
+    public readonly record struct AreaTargetCandidate(int Index, int Team, HexCoord Position, bool IsAlive);
+    public sealed record AreaTargetingResult(
+        HexCoord? Center,
+        IReadOnlyList<int> HitTargetIndexes,
+        string RejectionReason);
+
     public record ForcedMovementConfig(string Name, int ForcedMovementDistance);
     public record MovementControlConfig(string Name, bool PreventsVoluntaryMovement);
-    public record AttackProfile(string Name, string Type, double Mult, string Element, int MinRange, int MaxRange);
-    public record ArtConfig(string Name, string Type, double Mult, int MPCost, int Cooldown, string Element = "", int MinRange = 1, int MaxRange = 1);
-    public record DivineConfig(string Name, string Type, double Mult, double DefPen, int Cooldown, string Element = "", int MinRange = 1, int MaxRange = 1);
+    public record AttackProfile(
+        string Name,
+        string Type,
+        double Mult,
+        string Element,
+        int MinRange,
+        int MaxRange,
+        AreaTargetingConfig AreaTargeting = null);
+    public record ArtConfig(
+        string Name,
+        string Type,
+        double Mult,
+        int MPCost,
+        int Cooldown,
+        string Element = "",
+        int MinRange = 1,
+        int MaxRange = 1,
+        AreaTargetingConfig AreaTargeting = null);
+    public record DivineConfig(
+        string Name,
+        string Type,
+        double Mult,
+        double DefPen,
+        int Cooldown,
+        string Element = "",
+        int MinRange = 1,
+        int MaxRange = 1,
+        AreaTargetingConfig AreaTargeting = null);
     public readonly record struct ElementMatch(double DamageMultiplier, double CritRateBonus, double CritDamageBonus);
     public static readonly ForcedMovementConfig BreakFormationChargeKnockback = new("破阵冲锋·击退", 1);
     public static readonly MovementControlConfig RootedControl = new("定身", true);

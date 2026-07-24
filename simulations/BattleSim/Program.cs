@@ -435,6 +435,7 @@ class Program
 
         double[,] mat2v2 = new double[N, N];
         int sim2v2 = SIM / 4;
+        var matrixBattlefield = HexBattlefield.CreateTechnicalFixture();
         for (int i = 0; i < N; i++)
             for (int j = i + 1; j < N; j++)
             {
@@ -453,7 +454,8 @@ class Program
                 {
                     int a2 = (s + left.Count / 2) % left.Count;
                     int b2 = (s + right.Count / 2) % right.Count;
-                    var (wi, wj, t) = Combat.Simulate2v2(left[s], left[a2], right[s], right[b2], roundsPerPair);
+                    var (wi, wj, t) = Combat.Simulate2v2(
+                        matrixBattlefield, left[s], left[a2], right[s], right[b2], roundsPerPair);
                     wI += (int)Math.Round(wi * roundsPerPair / 100.0);
                     tot += roundsPerPair;
                 }
