@@ -467,6 +467,7 @@ param()
         '开发管理/开发-技术经验.txt',
         '开发管理/状态与建议维护规则.txt',
         '开发管理/自动工作流规则.txt',
+        '开发管理/自动工作流恢复规则.txt',
         '开发管理/自动工作流控制器提示词.txt',
         '开发管理/当前任务队列.txt',
         '开发管理/任务列表/内容设计任务.txt',
@@ -474,6 +475,7 @@ param()
         '开发管理/任务列表/数值与战斗任务.txt',
         '开发管理/任务列表/数据链路任务.txt',
         '开发管理/任务列表/审核与交接任务.txt',
+        '开发管理/任务卡/T-READY-01.txt',
         'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md'
     )
     $defaultRequiredVersionPaths = @(
@@ -482,6 +484,7 @@ param()
         'tools/check-review-text.ps1',
         'tools/check-data-chain.ps1',
         'tools/check-pending-whitespace.ps1',
+        'tools/check-task-cards.ps1',
         'tools/run-unity-editmode-tests.ps1'
     )
     foreach ($path in $defaultDocumentPaths) {
@@ -491,9 +494,18 @@ param()
         Write-FixtureFile -Root $defaultRoot -RelativePath $path -Content "#requires -Version 7.0`nparam()`n"
     }
     Write-FixtureFile -Root $defaultRoot -RelativePath '开发管理/任务列表/历史归档/old.txt' -Content "$windowsPowerShell -File tools/old.ps1`n"
+    Write-FixtureFile -Root $defaultRoot -RelativePath '开发管理/任务归档/old.txt' -Content 'pwsh -fi tools/old.ps1'
 
     $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot
     Assert-Passed -Result $result -Label 'clean minimal default fixture with archived document'
+
+    Write-FixtureFile -Root $defaultRoot -RelativePath '开发管理/任务卡/T-READY-01.txt' -Content 'pwsh -fi tools/check.ps1'
+    $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot
+    Assert-FailedWithDiagnostic -Result $result -Diagnostic 'PW7_NONCANONICAL_PWSH_COMMAND 开发管理/任务卡/T-READY-01.txt:1' -Label 'active task card discovery'
+    Write-FixtureFile -Root $defaultRoot -RelativePath '开发管理/任务卡/T-READY-01.txt' -Content "runtime policy`n"
+
+    $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot
+    Assert-Passed -Result $result -Label 'task archive remains excluded from default discovery'
 
     Write-FixtureFile -Root $defaultRoot -RelativePath 'tools/hourly-automation-lease.ps1' -Content ''
     $result = Invoke-DefaultRuntimeChecker -Root $defaultRoot

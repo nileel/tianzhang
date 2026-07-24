@@ -16,6 +16,7 @@ $defaultDocuments = @(
   '开发管理/开发-技术经验.txt',
   '开发管理/状态与建议维护规则.txt',
   '开发管理/自动工作流规则.txt',
+  '开发管理/自动工作流恢复规则.txt',
   '开发管理/自动工作流控制器提示词.txt',
   '开发管理/当前任务队列.txt',
   'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md'
@@ -28,6 +29,16 @@ if (Test-Path -LiteralPath $taskListRoot -PathType Container) {
       ForEach-Object { [System.IO.Path]::GetRelativePath($root, $_.FullName).Replace('\', '/') }
   )
 }
+$taskCardRoot = Join-Path $root '开发管理/任务卡'
+if (Test-Path -LiteralPath $taskCardRoot -PathType Container) {
+  $defaultDocuments += @(
+    Get-ChildItem -LiteralPath $taskCardRoot -Filter '*.txt' -File |
+      Sort-Object -Property FullName |
+      ForEach-Object {
+        [IO.Path]::GetRelativePath($root, $_.FullName).Replace('\', '/')
+      }
+  )
+}
 $defaultDocuments = @($defaultDocuments | Select-Object -Unique)
 $defaultRequiredVersions = @(
   'tools/hourly-automation-lease.ps1',
@@ -35,6 +46,7 @@ $defaultRequiredVersions = @(
   'tools/check-review-text.ps1',
   'tools/check-data-chain.ps1',
   'tools/check-pending-whitespace.ps1',
+  'tools/check-task-cards.ps1',
   'tools/run-unity-editmode-tests.ps1'
 )
 
