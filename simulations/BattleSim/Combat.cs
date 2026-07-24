@@ -23,6 +23,9 @@ static class Combat
     internal const int ArtAction = 2;
     internal const int BasicAction = 3;
     internal readonly record struct ActionPositionResult(HexCoord Position, bool CanAttack);
+    internal readonly record struct GroupActionPlan(
+        ActionPositionResult Position,
+        GameData.AreaTargetingResult AreaTargeting);
     internal readonly record struct GroupTargetCandidate(int Index, int Team, int HP, bool IsAlive, bool IsLegal);
     internal readonly record struct GroupTargetSelection(int TargetIndex, string Reason);
     internal sealed record GroupActionObservation(
@@ -414,6 +417,79 @@ static class Combat
         public bool IsAlive => HP > 0;
     }
 
+    static GroupActionPlan ResolveGroupActionPlan(
+        HexBattlefield battlefield,
+        UnitState[] units,
+        int[] team,
+        int actor,
+        int target,
+        IReadOnlyCollection<HexCoord> occupied)
+    {
+        var actorState = units[actor];
+        var profile = actorState.Char.BasicAttackProfile;
+        if (profile.AreaTargeting == null)
+        {
+            return new GroupActionPlan(
+                ResolveActionPosition(
+                    battlefield,
+                    actorState.Position,
+                    units[target].Position,
+                    actorState.Char.Primary["移力"],
+                    profile.MinRange,
+                    profile.MaxRange,
+                    preventsVoluntaryMovement: false,
+                    occupied),
+                AreaTargeting: null);
+        }
+
+        return battlefield
+            .FindReachable(
+                actorState.Position,
+                Math.Max(0, actorState.Char.Primary["移力"]),
+                occupied)
+            .Select(entry =>
+            {
+                var areaCandidates = units
+                    .Select((unit, index) => new GameData.AreaTargetCandidate(
+                        index,
+                        team[index],
+                        index == actor ? entry.Key : unit.Position,
+                        unit.IsAlive))
+                    .ToArray();
+                var area = battlefield.ResolveAreaTargeting(
+                    profile.AreaTargeting,
+                    entry.Key,
+                    team[actor],
+                    actor,
+                    units[target].Position,
+                    effectiveRangeModifier: 0,
+                    areaCandidates);
+                var targetDistance = battlefield.QueryAreaEffectDistance(
+                    entry.Key,
+                    units[target].Position,
+                    GameData.AreaEffectBlocker.None);
+                return new
+                {
+                    Position = entry.Key,
+                    MovementCost = entry.Value,
+                    CanAttack = area.HitTargetIndexes.Contains(target),
+                    Area = area,
+                    TargetDistance = targetDistance.IsReachable
+                        ? targetDistance.DistanceUnits
+                        : int.MaxValue / 4,
+                };
+            })
+            .OrderBy(candidate => candidate.CanAttack ? 0 : 1)
+            .ThenBy(candidate => candidate.CanAttack ? candidate.MovementCost : candidate.TargetDistance)
+            .ThenBy(candidate => candidate.CanAttack ? candidate.TargetDistance : candidate.MovementCost)
+            .ThenBy(candidate => candidate.Position.Q)
+            .ThenBy(candidate => candidate.Position.R)
+            .Select(candidate => new GroupActionPlan(
+                new ActionPositionResult(candidate.Position, candidate.CanAttack),
+                candidate.Area))
+            .First();
+    }
+
     public static (double winsA, double winsB, double avgTurns) Simulate2v2(
         HexBattlefield battlefield,
         Character ca1, Character ca2, Character cb1, Character cb2, int rounds)
@@ -507,9 +583,8 @@ static class Combat
                 .Select(entry => entry.Key)
                 .ToArray();
 
-            var plans = new Dictionary<int, ActionPositionResult>();
+            var plans = new Dictionary<int, GroupActionPlan>();
             var candidates = new GroupTargetCandidate[units.Length];
-            var attackProfile = au.Char.BasicAttackProfile;
             for (int i = 0; i < units.Length; i++)
             {
                 bool isEnemy = team[i] != team[actor];
@@ -517,17 +592,15 @@ static class Combat
                 bool isLegal = false;
                 if (isEnemy && isAlive)
                 {
-                    var plan = ResolveActionPosition(
+                    var plan = ResolveGroupActionPlan(
                         battlefield,
-                        startPosition,
-                        units[i].Position,
-                        au.Char.Primary["移力"],
-                        attackProfile.MinRange,
-                        attackProfile.MaxRange,
-                        preventsVoluntaryMovement: false,
+                        units,
+                        team,
+                        actor,
+                        i,
                         occupied);
                     plans[i] = plan;
-                    isLegal = plan.CanAttack;
+                    isLegal = plan.Position.CanAttack;
                 }
                 candidates[i] = new GroupTargetCandidate(i, team[i], units[i].HP, isAlive, isLegal);
             }
@@ -544,7 +617,10 @@ static class Combat
                     .DefaultIfEmpty(-1)
                     .First();
                 if (movementFocus >= 0)
-                    au.Position = plans[movementFocus].Position;
+                    au.Position = plans[movementFocus].Position.Position;
+                var areaObservation = movementFocus >= 0
+                    ? plans[movementFocus].AreaTargeting
+                    : null;
                 units[actor] = au;
                 observations.Add(new GroupActionObservation(
                     turns,
@@ -555,14 +631,15 @@ static class Combat
                     -1,
                     selection.Reason,
                     movementFocus >= 0 ? "no_legal_target_after_move" : "no_alive_enemy",
-                    null,
-                    Array.Empty<int>(),
-                    "",
+                    areaObservation?.Center,
+                    areaObservation?.HitTargetIndexes ?? Array.Empty<int>(),
+                    areaObservation?.RejectionReason ?? "",
                     SnapshotOccupiedPositions(units)));
                 continue;
             }
 
-            au.Position = plans[target].Position;
+            var selectedPlan = plans[target];
+            au.Position = selectedPlan.Position.Position;
             var du = units[target];
             var ca = au.Char;
             var cb = du.Char;
@@ -687,9 +764,9 @@ static class Combat
                 target,
                 selection.Reason,
                 "",
-                null,
-                Array.Empty<int>(),
-                "",
+                selectedPlan.AreaTargeting?.Center,
+                selectedPlan.AreaTargeting?.HitTargetIndexes ?? Array.Empty<int>(),
+                selectedPlan.AreaTargeting?.RejectionReason ?? "",
                 SnapshotOccupiedPositions(units)));
         }
 

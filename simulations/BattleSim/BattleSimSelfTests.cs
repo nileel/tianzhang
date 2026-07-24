@@ -1083,6 +1083,35 @@ static class BattleSimSelfTests
         AssertSequence(new[] { 2, 3 }, line.HitTargetIndexes,
             "line shape keeps only cells along its configured facing and length");
 
+        var lineBlockedAtFront = new HexBattlefield(
+            edgeRules: new Dictionary<DirectedHexEdge, HexEdgeRules>
+            {
+                [new(caster, new HexCoord(1, 0))] = new(
+                    GameData.EnvironmentRules.StandardEdgeUnits,
+                    EffectBlockers: GameData.AreaEffectBlocker.DirectedEdge),
+            }).ResolveAreaTargeting(
+                lineConfig with
+                {
+                    Name = "fixture-blocked-line",
+                    Shape = lineConfig.Shape with { Length = 1 },
+                    EffectBlockers = GameData.AreaEffectBlocker.DirectedEdge,
+                },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell: caster,
+                effectiveRangeModifier: 0,
+                new[]
+                {
+                    new GameData.AreaTargetCandidate(
+                        Index: 2,
+                        Team: 1,
+                        Position: new HexCoord(1, 0),
+                        IsAlive: true),
+                });
+        AssertEqual("declared_effect_blocker", lineBlockedAtFront.RejectionReason,
+            "line propagation cannot leave its shape to route around a blocked front edge");
+
         var fan = new HexBattlefield().ResolveAreaTargeting(
             lineConfig with
             {
@@ -1104,9 +1133,10 @@ static class BattleSimSelfTests
             {
                 new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(2, -1), IsAlive: true),
                 new GameData.AreaTargetCandidate(Index: 3, Team: 1, Position: new HexCoord(-1, 0), IsAlive: true),
+                new GameData.AreaTargetCandidate(Index: 4, Team: 1, Position: new HexCoord(0, 1), IsAlive: true),
             });
-        AssertSequence(new[] { 2 }, fan.HitTargetIndexes,
-            "fan shape honors its local facing and angle parameter");
+        AssertSequence(new[] { 2, 4 }, fan.HitTargetIndexes,
+            "fan shape honors both boundaries of its local facing and angle parameter");
 
         var shortCast = new HexBattlefield().ResolveAreaTargeting(
             areaConfig with { MaxCastRange = 1 },
@@ -1118,6 +1148,96 @@ static class BattleSimSelfTests
             candidates);
         AssertEqual("cast_distance_out_of_range", shortCast.RejectionReason,
             "cast distance is checked before target propagation and eligibility");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                areaConfig with { CenterKind = (GameData.AreaCenterKind)999 },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell,
+                effectiveRangeModifier: 0,
+                candidates),
+            "area targeting rejects an unknown center kind");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                areaConfig with { AllowedFactions = (GameData.AreaTargetFaction)8 },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell,
+                effectiveRangeModifier: 0,
+                candidates),
+            "area targeting rejects an unknown faction flag");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                areaConfig with { AllowedStates = (GameData.AreaTargetState)4 },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell,
+                effectiveRangeModifier: 0,
+                candidates),
+            "area targeting rejects an unknown state flag");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                areaConfig with { Shape = areaConfig.Shape with { Facing = (HexDirection)999 } },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell,
+                effectiveRangeModifier: 0,
+                candidates),
+            "area targeting rejects an unknown shape facing");
+
+        var areaActor = GroupTestCharacter(
+            "area-observation-a1",
+            reaction: 100,
+            hp: 10000,
+            attack: 1,
+            movement: 0);
+        areaActor.BasicAttackProfile = new GameData.AttackProfile(
+            "fixture-area-basic",
+            "物理",
+            1.0,
+            "",
+            MinRange: 1,
+            MaxRange: 6,
+            areaConfig with
+            {
+                Name = "fixture-observed-circle",
+                MinCastRange = 1,
+                MaxCastRange = 6,
+                Shape = areaConfig.Shape with { Radius = 1, InnerRadius = 0 },
+                EffectBlockers = GameData.AreaEffectBlocker.None,
+            });
+        var sightBlockedGroupBattlefield = new HexBattlefield(
+            cells: new Dictionary<HexCoord, HexCellRules>
+            {
+                [new HexCoord(3, 0)] = new(IsEntityObstacle: true),
+            });
+        AssertEqual(
+            false,
+            sightBlockedGroupBattlefield.QueryLineOfSight(
+                Combat.InitialGroupPositions[0],
+                Combat.InitialGroupPositions[2]).HasLineOfSight,
+            "group fixture blocks ordinary sight between the area actor and primary target");
+        var areaRound = Combat.Simulate2v2Detailed(
+            sightBlockedGroupBattlefield,
+            areaActor,
+            GroupTestCharacter("area-observation-a2", reaction: 1, hp: 10000, attack: 1, movement: 0),
+            GroupTestCharacter("area-observation-b1", reaction: 1, hp: 10000, attack: 1, movement: 0),
+            GroupTestCharacter("area-observation-b2", reaction: 1, hp: 10000, attack: 1, movement: 0));
+        var observedAreaAction = areaRound.Actions.First(action => action.ActorIndex == 0);
+        AssertEqual(
+            Combat.InitialGroupPositions[2],
+            observedAreaAction.AreaCenter,
+            "formal 2v2 records the resolved target-cell area center without ordinary sight");
+        AssertSequence(
+            new[] { 2, 3 },
+            observedAreaAction.AreaHitTargetIndexes,
+            "formal 2v2 records every legal enemy hit by the configured area");
+        AssertEqual("", observedAreaAction.AreaRejectionReason,
+            "formal 2v2 records no rejection for a legal area action");
 
         AssertEqual(true, typeof(Combat).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Any(method => method.Name == "Simulate2v2" &&
