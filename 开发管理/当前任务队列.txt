@@ -14,6 +14,7 @@
 | D-REALM-02B | P2 | Codex / gpt-5.6-terra | 数据链路 | 已完成 | 炼神术法／神通资料片隔离闭环验证 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 | N-GROUP-02B | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 已完成 | 2v2 范围技能空间合法性与显式战场输入 |
+| N-GROUP-02C | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 待处理 | 临时团队 AI 的确定性候选优先级 |
 | N-AI-01A | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 已完成 | 战棋 AI 与 Boss 模板现行所有者定位 |
 | M-MGMT-01A | P3 | Codex / gpt-5.6-terra | 管理维护 | 已完成 | 管理目录重组影响面基线与迁移边界 |
 | M-MGMT-01B | P3 | Codex / gpt-5.6-terra | 管理维护 | 已完成 | 管理目录唯一旧新路径映射与批准输入 |
@@ -85,6 +86,19 @@
 - 完成条件：范围模板／中心／局部参数、施法距离区间、内洞、阻断、阵营与状态资格都有明确数据承载；范围目标无普通视线前置，范围中心、命中集合与稳定拒绝原因可观察；正式 2v2 不在内部构造生产默认空战场；没有任何具体技能内容参数、协同走位或完整团队 AI 行为。
 - 停止条件：任一正式 2v2 调用方没有真实战场／等价快照而唯一替代是自动空战场，或实现需要补填具体技能参数、环境内容、伤害／治疗结算、协同走位或未获批准的阻断／距离规则时，保留失败证据并请求负责人决定；不得用默认值、兼容分支或测试 fixture 冒充生产环境。
 - 完成记录：范围模板／中心／局部参数、有效施法距离、内洞、效果边阻断、阵营与状态资格现已由 `GameData` 明确承载；`HexBattlefield.ResolveAreaTargeting` 输出范围中心、命中集合或按锁定顺序的拒绝原因，且不使用普通视线。正式 2v2 入口要求调用方传入战场；旧回归与数值矩阵仅以命名技术夹具显式调用。未填任何技能内容参数、生产环境、伤害／治疗逻辑、协同走位或团队候选优先级。直接验证见任务事实源 §6。
+
+### N-GROUP-02C · 临时团队 AI 确定性候选优先级
+
+- 来源：`开发管理/任务列表/数值与战斗任务.txt` 的 N-GROUP-02C、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`，以及已完成的 N-GROUP-02B。
+- 当前状态：待处理；依赖 N-GROUP-02B 已完成。`DEC-20260724-NGROUP0201` 已锁定 N-GROUP-DEC-04，无待决策。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`、`#五、后续实施边界与验证口径`、`#六、N-GROUP-02B 实施与验证`；`simulations/BattleSim/Combat.cs::GroupTargetCandidate,GroupActionObservation,SelectGroupTarget,Simulate2v2Detailed`；`simulations/BattleSim/BattleSimSelfTests.cs` 中 N-GROUP-02B 对应自测及 `simulations/BattleSim/Program.cs` 的 2v2 调用点。
+- 预期修改路径：更新 `simulations/BattleSim/Combat.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`simulations/BattleSim/Program.cs`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`、`开发管理/任务列表/数值与战斗任务.txt` 与本文件；执行前须确认这些路径不与人工改动冲突。
+- 范围：只对同一行动的合法候选按“可击杀敌人数降序、命中合法敌人数降序、主要目标当前 HP 升序、既有输入顺序”做确定性选择；每一层理由及最终选择均可观察。它不读取队友意图或下一行动，也不改变现有个人走位／占格提交。
+- 禁止：不加入队友保护、站位安全、环境或冷却权重、随机评分、浮点权重、协同走位、射线创造、让路、包夹、格位预留、双人冲突策略、Boss／门派策略或完整团队 AI；不修改 N-GROUP-02B 的已锁定空间合法性和数据语义。
+- 验证：先新增并观察 `group-action-priority-n-group-02` 自测在缺失行为时失败；再运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-area-targeting-n-group-02`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-action-priority-n-group-02`、`dotnet run --no-build -c Release --project simulations/BattleSim`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt,开发管理/任务列表/数值与战斗任务.txt,开发管理/当前任务队列.txt` 与 `git diff --check`。
+- 完成条件：四层字典序在直接回归中可观察且稳定，不存在浮点／随机权重；现有个人移动与唯一占格保持不变，协同走位和完整团队 AI 仍位于独立后续系统。
+- 停止条件：N-GROUP-02B 未能提供不依赖猜测伤害、冷却或环境权重的合法行动候选和命中集合，或实现必须重新定义协同走位／完整团队 AI 时停止；不得在本卡内补丁化扩张。
 
 ### N-AI-01A · 战棋 AI 与 Boss 模板现行所有者定位
 
