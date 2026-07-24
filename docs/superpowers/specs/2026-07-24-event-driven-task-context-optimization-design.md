@@ -16,9 +16,9 @@
 
 2026-07-24 检查得到：
 
-- `开发管理/当前任务队列.txt` 为 17,539 字符，粗略约 8,350 个中文上下文 token。
-- 当前队列包含 8 张完整任务卡，只有 1 张状态为待处理。
-- 非待处理卡占任务卡正文约 86.1%。
+- `开发管理/当前任务队列.txt` 为 19,661 字符。
+- 当前队列包含 9 张完整任务卡，只有 `N-GROUP-02C` 状态为待处理。
+- 非待处理卡占任务卡正文约 90.2%。
 - 当前队列与分线 backlog 会重复保存同一任务的必读、范围、禁止项、验证、完成条件和停止条件。
 - 现行每小时控制器还会在无 recovery 时汇总 Codex 执行、Codex 复审和外部 AI 三类候选，每轮重新按项目优先级、下游解锁量、等待时间和稳定 ID 排序。
 
@@ -31,6 +31,7 @@
 - 不新增任务数据库、缓存、长期阶段状态机或兼容格式。
 - 不改变现有 decision recovery 与 interruption recovery 的安全优先级。
 - 不改变单写入租约、workspace guard、外部 AI 双提交或禁止自审边界。
+- 不允许控制器启动的 Codex 自动化责任方创建 linked worktree、任务分支或在固定调用器传入的 `RepositoryRoot` 之外实施。
 - 不同时执行整个 `开发管理/规则/`、`开发管理/当前/`、`开发管理/归档/` 目录迁移。
 - 不修改 Unity、BattleSim、CSV、asset 或游戏设计事实。
 - 不一次性把现有 71 项 backlog 全部拆成独立文件。
@@ -48,6 +49,14 @@
 - `codex_execute`
 - `external_execute`
 - `codex_review`
+
+任务卡中的路由是调度标签，不替代固定调用器的现有参数契约：
+
+- `codex_execute` 映射到 `tools/invoke-codex-responsibility.ps1 -Route Execution`
+- `codex_review` 映射到 `tools/invoke-codex-responsibility.ps1 -Route Review`
+- 空队列维护映射到 `-Route QueueMaintenance`
+- decision / interruption recovery 继续映射到 `-Route Recovery`
+- `external_execute` 继续调用现有外部 wrapper，不通过 Codex 固定调用器
 
 队列契约：
 
@@ -169,6 +178,8 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 5. 按行顺序检查，选择第一项当前可安全执行的工作。
 6. 调用 `Acquire`，再按任务卡 `route` 启动唯一责任方。
 
+控制器启动的 Codex 自动化责任方必须直接在固定调用器传入的 `RepositoryRoot` 当前分支工作。任务卡、队列状态、业务修改、验证结果和 `automation-finalize-commit.ps1` 生成的提交必须全部落在固定调用器观察的同一个 `RepositoryRoot/HEAD`。自动责任方不得调用 `using-git-worktrees`、`git worktree add`，不得创建或切换 linked worktree / 任务分支；其他分支存在提交不能作为任务完成结果。
+
 ### 执行前仍保留的必要判断
 
 - 队列行与任务卡是否一致；
@@ -257,6 +268,8 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 
 不为每个细小领域新建一套调度器；领域与阶段只用于任务路由和检索。
 
+恢复规则拆分不得改变固定调用器已经建立的 UTF-8 stdin 契约。自定义决定回复继续由显式 UTF-8 `StreamReader` 读取，测试驱动器也以 UTF-8 写入 stdin；不得退回系统代码页或普通 `[Console]::In.ReadToEnd()`。
+
 ## 八、只读任务卡检查器
 
 新增 `tools/check-task-cards.ps1`，仅在创建或修改任务卡、改变任务状态、变更当前队列、队列补位和提交管理文件前运行。普通自动化每轮不运行全量检查器。
@@ -291,6 +304,8 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 - 外部 AI 双提交、禁止自审和 Codex 正式复审；
 - workspace guard、路径限定提交和最小充分验证；
 - runner 等待与同一 session 恢复。
+- 固定调用器传入的 `RepositoryRoot` 当前分支是自动 Codex 责任方唯一实施和结果核验面；
+- 自定义决定回复的 UTF-8 stdin 传输。
 
 ### 被移除的重复工作
 
@@ -318,7 +333,7 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 5. 已完成或审核完成项直接归档。
 6. 若存在有效外部待复审任务，将同一任务投影为 `codex_review`。
 7. 更新 `AGENTS.md`、自动工作流核心规则、控制器提示词、状态维护规则、AI 协作规则、审核入口和外部执行提示。
-8. 更新自动化与 PowerShell 直接测试。
+8. 更新自动化与 PowerShell 直接测试，并保留固定 `RepositoryRoot`、禁止自动 worktree 及 UTF-8 决定回复断言。
 9. 将新增 `任务卡/` 和恢复规则路径补入未来管理目录迁移映射，但本轮不搬迁现有目录。
 
 ## 十一、验证
@@ -335,6 +350,9 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 - 队首存在临时路径冲突时按固定顺序选择下一项；
 - 全部项具有相同阻塞 fingerprint 时保留现有暂停行为；
 - recovery 优先于普通队列；
+- Codex 自动责任方提示词携带固定 `RepositoryRoot`，并明确禁止 linked worktree 与任务分支；
+- 任务提交、任务卡和队列状态只能由同一 `RepositoryRoot/HEAD` 的固定调用器核验为成功；
+- 自定义决定回复通过 UTF-8 stdin 无损进入 recovery 责任方；
 - 空队列只运行维护、不在同轮执行新任务；
 - 外部执行完成后同一任务转换为 `codex_review`；
 - 纯 `1` 与纯 `2` 保持各自语义；
@@ -345,13 +363,15 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 
 ## 十二、验收标准
 
-- 当前队列从 17,539 字符缩减为短索引，目标不超过 2,500 字符。
+- 当前队列从 19,661 字符缩减为短索引，目标不超过 2,500 字符。
 - 普通无 recovery 且队首无冲突的自动化只需读取短队列和一张任务卡即可选定责任方。
 - 前项存在临时冲突时只按固定顺序补读到第一张可执行卡，不读取 backlog 或重新全局排序。
 - 队列非空时不进入 backlog 补位流程。
 - 队列顺序只在明确事件中变化。
 - blocked、frozen、pending_decision 与 waiting_reply 均能从领域 backlog 定位。
 - 外部执行与 Codex 复审使用同一任务卡，不复制业务范围正文。
+- 自动 Codex 责任方的全部结果都在传入的 `RepositoryRoot` 当前分支形成并由同一 HEAD 核验；不得以其他 worktree 或分支上的提交关闭任务。
+- recovery 规则拆分后，UTF-8 自定义决定回复回归继续通过。
 - 不新增自动生成器、依赖求解器、数据库、兼容分支或长期 runtime 状态。
 - 现有恢复、租约、隔离、复审、提交和全阻塞暂停行为均有回归证据。
 
@@ -361,6 +381,7 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 
 - 统一短队列无法在不复制完整交接或审核正文的前提下表示复审工作；
 - 必须新增长期 runtime 状态、第二套队列或兼容解析才能维持现有恢复；
+- 必须允许自动责任方创建 worktree、任务分支或从固定 `RepositoryRoot/HEAD` 之外返回结果；
 - 当前任务状态无法在任务卡、短队列和 backlog 投影之间建立唯一权威关系；
 - 实施需要修改 Unity、BattleSim、CSV、asset 或游戏设计事实；
 - 迁移开始要求一次性拆分全部 backlog 或同时执行管理目录重组；
