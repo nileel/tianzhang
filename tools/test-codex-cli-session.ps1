@@ -96,6 +96,7 @@ function Invoke-Runner {
   $startInfo.RedirectStandardInput = $true
   $startInfo.RedirectStandardOutput = $true
   $startInfo.RedirectStandardError = $true
+  $startInfo.StandardInputEncoding = [Text.UTF8Encoding]::new($false)
   foreach ($argument in @(
       '-NoProfile',
       '-ExecutionPolicy',
@@ -220,7 +221,7 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
 '@
   [IO.File]::WriteAllText($fakeCodexPath, $fakeCodex, [Text.UTF8Encoding]::new($false))
 
-  $startPrompt = "secret-start-marker-7ee5f0`n中文传输`nliteral `` backtick"
+  $startPrompt = "secret-start-marker-7ee5f0`n模型核验证明`nD:\天章游戏开发`nliteral `` backtick"
   $start = Invoke-Runner -Action Start -Prompt $startPrompt -Case 'start-success'
   Assert-Equal -Actual $start.ExitCode -Expected 0 -Message 'Start process failed'
   Assert-Equal -Actual $start.Json.status -Expected 'ok' -Message 'Start status mismatch'

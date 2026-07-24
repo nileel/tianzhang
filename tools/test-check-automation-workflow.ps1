@@ -136,7 +136,7 @@ $canonicalRules = @'
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
 - `事件发生时` 才更新状态；`队列为空` 时只做一次 QueueMaintenance，`本轮不执行新任务`。
 - Execution / Review 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。
-- task-bearing Recovery 与普通 Codex 任务都使用同一 TaskId 的 `CodexClosedOrNonReady`；只有 `QUEUE-MAINTENANCE` recovery 使用全局投影。
+- task-bearing `Recovery` 与普通 Codex 任务都使用同一 TaskId 的 `CodexClosedOrNonReady`；只有 `QUEUE-MAINTENANCE` recovery 使用全局投影。
 - QueueMaintenance 使用 `readyCount` 分类；只有大于 0 才是 `refilled`，0 且无事实变化时记录既有 `blocked/no_runnable_candidate`，不制造提交。
 - `AutomationState=completed` 只表示责任方提交闭环；任务真实 lifecycle 通过 `taskState` 或同一提交中的任务卡/归档读取。
 - Codex 只经 `tools/invoke-codex-responsibility.ps1` 启动；固定 `RepositoryRoot` 的 current branch 和 HEAD，不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建 linked worktree 或任务分支。
@@ -256,7 +256,7 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing Codex dispatch preflight' -Contains 'Codex responsibility preflight'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
-  $recoveryCloseoutLine = '- task-bearing Recovery 与普通 Codex 任务都使用同一 TaskId 的 `CodexClosedOrNonReady`；只有 `QUEUE-MAINTENANCE` recovery 使用全局投影。'
+  $recoveryCloseoutLine = '- task-bearing `Recovery` 与普通 Codex 任务都使用同一 TaskId 的 `CodexClosedOrNonReady`；只有 `QUEUE-MAINTENANCE` recovery 使用全局投影。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($recoveryCloseoutLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing task-bearing recovery closeout' -Contains 'task-bearing recovery closeout'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules

@@ -88,6 +88,9 @@ $leaseTool = Read-Utf8Contract -Path (Join-Path $root 'tools\hourly-automation-l
 $invokerPath = Join-Path $root 'tools\invoke-codex-responsibility.ps1'
 Assert-Contract -Condition (Test-Path -LiteralPath $invokerPath -PathType Leaf) -Message 'missing workflow component: tools\invoke-codex-responsibility.ps1'
 $invoker = Read-Utf8Contract -Path $invokerPath
+$runnerPath = Join-Path $root 'tools\codex-cli-session.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $runnerPath -PathType Leaf) -Message 'missing workflow component: tools\codex-cli-session.ps1'
+$runner = Read-Utf8Contract -Path $runnerPath
 $agentsRules = Read-Utf8Contract -Path (Join-Path $root 'AGENTS.md')
 $claudeRules = Read-Utf8Contract -Path (Join-Path $root 'CLAUDE.md')
 $collaborationRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\AI协作规则.txt')
@@ -158,6 +161,10 @@ Assert-Contains -Text $prompt -Context 'external completed gate' -Values @(
 )
 Assert-Contains -Text $prompt -Context 'success closeout order' -Values @(
   '全部成立后依次调用 `RecordResult -Category success` 与 `Release`'
+)
+Assert-Contains -Text $prompt -Context 'lifecycle result report' -Values @(
+  'taskState',
+  'readyCount'
 )
 $identityTokens = @(
   '~/.claude/settings.json',
@@ -237,6 +244,23 @@ Assert-Contains -Text $rules -Context 'empty queue maintenance-only' -Values @(
   'QueueMaintenance',
   '本轮不执行新任务'
 )
+Assert-Contains -Text $rules -Context 'Codex responsibility preflight' -Values @(
+  'CodexDispatchReady',
+  'ExpectedRoute',
+  'route',
+  'owner'
+)
+Assert-Contains -Text $rules -Context 'task-bearing recovery closeout' -Values @(
+  'task-bearing `Recovery`',
+  'CodexClosedOrNonReady',
+  'QUEUE-MAINTENANCE'
+)
+Assert-Contains -Text $rules -Context 'queue outcome classification' -Values @(
+  'readyCount',
+  'refilled',
+  'blocked/no_runnable_candidate',
+  '不制造'
+)
 Assert-Contains -Text $rules -Context 'fixed automation responsibility contract' -Values @(
   'RepositoryRoot',
   'current branch',
@@ -291,9 +315,13 @@ Assert-Contains -Text $invoker -Context 'fixed root/worktree contract' -Values @
   'using-git-worktrees',
   'git worktree add'
 )
-Assert-Contains -Text $invoker -Context 'UTF-8 stdin contract' -Values @(
+Assert-Contains -Text $runner -Context 'UTF-8 stdin contract' -Values @(
   'IO.StreamReader',
   'Console]::OpenStandardInput',
+  'Text.UTF8Encoding'
+)
+Assert-Contains -Text $invoker -Context 'UTF-8 stdin contract' -Values @(
+  'StandardInputEncoding',
   'Text.UTF8Encoding'
 )
 $normalContract = $prompt + "`n" + $rules + "`n" + $agentsRules + "`n" + $collaborationRules + "`n" + $maintenanceRules

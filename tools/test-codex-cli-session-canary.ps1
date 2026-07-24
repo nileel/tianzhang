@@ -203,6 +203,7 @@ $canaryRepository = Join-Path $canaryRoot 'repo'
 $marker = 'tzg-continuity-' + [Convert]::ToHexString(
   [Security.Cryptography.RandomNumberGenerator]::GetBytes(16)
 ).ToLowerInvariant()
+$transportMarker = "$marker|模型核验证明|D:\天章游戏开发"
 
 try {
   [IO.Directory]::CreateDirectory($canaryRepository) | Out-Null
@@ -235,7 +236,7 @@ try {
   $script:canaryStage = 'start_runner'
   $startPrompt = @"
 You are running a same-session continuity canary in this isolated temporary Git repository.
-Remember this exact marker for the next turn: $marker
+Remember this exact marker for the next turn: $transportMarker
 Do not create, modify, delete, stage, or commit any file. Do not reveal or repeat the marker in your final response. End with a brief acknowledgement that you are waiting for continuation.
 "@
   $started = Invoke-SessionRunner `
@@ -258,7 +259,7 @@ Do not create, modify, delete, stage, or commit any file. Do not reveal or repea
   $resumePrompt = @'
 Continue the same canary. Retrieve the exact marker from the preceding turn. Use apply_patch to create continuity.txt containing exactly that marker followed by one newline. Modify no other file. Then run `git add -- continuity.txt` and `git commit -m "test: prove Codex session continuity"`. Do not print the marker in your final response. Do not retry any failed operation.
 '@
-  Assert-Canary -Condition (-not $resumePrompt.Contains($marker)) -Message 'Resume prompt contains the marker.'
+  Assert-Canary -Condition (-not $resumePrompt.Contains($transportMarker)) -Message 'Resume prompt contains the marker.'
   $script:canaryStage = 'resume_runner'
   $resumed = Invoke-SessionRunner `
     -RunnerPath $runnerPath `
@@ -274,7 +275,7 @@ Continue the same canary. Retrieve the exact marker from the preceding turn. Use
   $continuityPath = Join-Path $canaryRepository 'continuity.txt'
   Assert-Canary -Condition (Test-Path -LiteralPath $continuityPath -PathType Leaf) -Message 'continuity.txt is missing.'
   $continuityText = [IO.File]::ReadAllText($continuityPath, [Text.UTF8Encoding]::new($false, $true))
-  Assert-Canary -Condition ($continuityText -ceq "$marker`n") -Message 'Continuity marker mismatch.'
+  Assert-Canary -Condition ($continuityText -ceq "$transportMarker`n") -Message 'Continuity marker mismatch.'
   $script:canaryStage = 'verify_commit_count'
   $finalCommitCount = [int](Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-list', '--count', 'HEAD'))
   Assert-Canary -Condition ($finalCommitCount -eq ($initialCommitCount + 1)) -Message 'Canary did not create exactly one commit.'

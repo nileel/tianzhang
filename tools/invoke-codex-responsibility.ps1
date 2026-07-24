@@ -184,6 +184,7 @@ function Invoke-SessionRunner {
   $startInfo.RedirectStandardInput = $true
   $startInfo.RedirectStandardOutput = $true
   $startInfo.RedirectStandardError = $true
+  $startInfo.StandardInputEncoding = [Text.UTF8Encoding]::new($false)
   foreach ($argument in @(
       '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $runnerPath,
       '-Action', $Action,

@@ -38,7 +38,16 @@ try {
     throw 'SessionId is required for Resume.'
   }
 
-  $inputText = [Console]::In.ReadToEnd()
+  $stdinReader = [IO.StreamReader]::new(
+    [Console]::OpenStandardInput(),
+    [Text.UTF8Encoding]::new($false, $true),
+    $false
+  )
+  try {
+    $inputText = $stdinReader.ReadToEnd()
+  } finally {
+    $stdinReader.Dispose()
+  }
   $codexCommand = Get-Command codex -CommandType Application, ExternalScript -ErrorAction Stop | Select-Object -First 1
   if ($null -eq $codexCommand) {
     throw 'Codex command was not found.'
