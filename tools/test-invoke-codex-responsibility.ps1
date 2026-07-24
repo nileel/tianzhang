@@ -161,6 +161,35 @@ function Assert-LeaseReleased {
   $shown
 }
 
+function Assert-NormalRoutePrompt {
+  param([string]$Prompt, [string]$Context)
+
+  Assert-True `
+    -Condition $Prompt.Contains('开发管理/自动工作流恢复规则.txt') `
+    -Message "$Context did not carry the conditional recovery-rule route"
+  Assert-True `
+    -Condition $Prompt.Contains('创建决定恢复') `
+    -Message "$Context did not name the just-in-time decision section"
+  Assert-True `
+    -Condition $Prompt.Contains('实际到达新的用户决定事件') `
+    -Message "$Context did not require an actual decision event"
+  Assert-True `
+    -Condition $Prompt.Contains('未到达决定事件时不得读取该文件') `
+    -Message "$Context did not prohibit eager recovery-rule reads"
+  foreach ($detailToken in @(
+      'send-decision.mjs',
+      'PROVIDER_ACCEPTED',
+      'SaveRecovery',
+      'consume-reply.mjs',
+      '-Action Start -Route Recovery',
+      'Resume 原 session'
+    )) {
+    Assert-True `
+      -Condition (-not $Prompt.Contains($detailToken)) `
+      -Message "$Context leaked detailed recovery protocol: $detailToken"
+  }
+}
+
 try {
   Assert-True -Condition (Test-Path -LiteralPath $invokerPath -PathType Leaf) -Message "Expected implementation is missing: $invokerPath"
 
@@ -259,9 +288,16 @@ $global:LASTEXITCODE = 0
   Assert-True -Condition ($transportedPrompt.Contains("`n")) -Message 'Multiline prompt was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains("RepositoryRoot: $gitRoot")) -Message 'Repository root was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains('不得创建或切换 linked worktree、任务分支')) -Message 'Automated responsibility worktree prohibition was not transported through stdin'
-  Assert-True `
-    -Condition (-not $transportedPrompt.Contains('开发管理/自动工作流恢复规则.txt')) `
-    -Message 'Normal execution eagerly loaded recovery rules'
+  Assert-NormalRoutePrompt -Prompt $transportedPrompt -Context 'Normal execution'
+  Assert-LeaseReleased | Out-Null
+
+  Reset-GitFixture
+  $reviewRun = Acquire-TestLease -TaskId 'task-review'
+  $reviewCompleted = Invoke-Responsibility -Case 'commit-success' -TaskId 'task-review' -RunId $reviewRun -Route 'Review'
+  Assert-Equal -Actual $reviewCompleted.ExitCode -Expected 0 -Message 'Review invocation failed'
+  Assert-Equal -Actual $reviewCompleted.Json.status -Expected 'completed' -Message 'Review status mismatch'
+  $reviewPrompt = [IO.File]::ReadAllText($tracePath)
+  Assert-NormalRoutePrompt -Prompt $reviewPrompt -Context 'Normal review'
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
@@ -271,9 +307,7 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $queueCompleted.Json.status -Expected 'completed' -Message 'Queue maintenance status mismatch'
   Assert-Equal -Actual $queueCompleted.Json.category -Expected 'refilled' -Message 'Queue maintenance category mismatch'
   $queuePrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True `
-    -Condition (-not $queuePrompt.Contains('开发管理/自动工作流恢复规则.txt')) `
-    -Message 'Queue maintenance eagerly loaded recovery rules'
+  Assert-NormalRoutePrompt -Prompt $queuePrompt -Context 'Queue maintenance'
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
@@ -303,8 +337,20 @@ $global:LASTEXITCODE = 0
     ResumeRecovery = $true
   }
   Assert-Equal -Actual $recoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Interrupted fixture could not reacquire recovery'
-  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryLease.runId } | Out-Null
-  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $recoveryLease.runId } | Out-Null
+  $interruptionResumed = Invoke-Responsibility `
+    -Case 'commit-success' `
+    -TaskId 'task-interrupted' `
+    -RunId $recoveryLease.runId `
+    -Route 'Recovery' `
+    -Action 'Resume' `
+    -ResumeSessionId $sessionId
+  Assert-Equal -Actual $interruptionResumed.ExitCode -Expected 0 -Message 'Interruption recovery invocation failed'
+  Assert-Equal -Actual $interruptionResumed.Json.status -Expected 'completed' -Message 'Interruption recovery status mismatch'
+  $interruptionPrompt = [IO.File]::ReadAllText($tracePath)
+  Assert-True -Condition ($interruptionPrompt.Contains('开发管理/自动工作流恢复规则.txt')) -Message 'Interruption recovery did not load recovery rules'
+  Assert-True -Condition ($interruptionPrompt.Contains('这是原 CLI session 的续跑，不创建新责任方。')) -Message 'Interruption recovery did not Resume the original session'
+  Assert-True -Condition ($interruptionPrompt.Contains('这是中断恢复，恢复原责任方的同一 TaskId')) -Message 'Interruption recovery lost its route wording'
+  Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
   $commitWithResidueRun = Acquire-TestLease -TaskId 'task-commit-with-residue'
@@ -403,6 +449,7 @@ $global:LASTEXITCODE = 0
   Assert-True `
     -Condition $decisionPrompt.Contains('开发管理/自动工作流恢复规则.txt') `
     -Message 'Recovery route did not load recovery rules'
+  Assert-True -Condition ($decisionPrompt.Contains('这是带决定回复的新责任方会话')) -Message 'Decision recovery lost its fresh-session route wording'
   $resumedState = Assert-LeaseReleased
   Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
 

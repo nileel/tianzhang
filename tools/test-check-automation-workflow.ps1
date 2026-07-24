@@ -130,11 +130,18 @@ $canonicalRecoveryRules = @'
 
 ## 读取条件与共同边界
 
-- 只在 recovery 存在时读取；普通 Acquire 收到 RECOVERY_ONLY 后停止。
+- 本文件只有两个读取条件。
+- `Show.recovery != null` 时，恢复 route 读取对应恢复规则；普通 Acquire 收到 RECOVERY_ONLY 后停止。
+- 普通责任方实际到达新的用户决定事件时，只读取 `创建决定恢复`；未到达决定事件时不得读取本文件。
+
+## 创建决定恢复
+
+- 仅实际到达新的用户决定事件后进入本节。
+- 仅 PROVIDER_ACCEPTED 后调用 SaveRecovery。
 
 ## 决定恢复
 
-- 仅 PROVIDER_ACCEPTED 后调用 SaveRecovery；decision recovery 后续由 consume-reply.mjs 读取回复，再 Acquire -ResumeRecovery。
+- decision recovery 后续由 consume-reply.mjs 读取回复，再 Acquire -ResumeRecovery。
 - 新责任方必须使用 -Action Start -Route Recovery，不得 `Resume` 原 session。
 
 ## 中断恢复
@@ -197,6 +204,20 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
+
+  $existingRecoveryReadLine = '- `Show.recovery != null` 时，恢复 route 读取对应恢复规则；普通 Acquire 收到 RECOVERY_ONLY 后停止。'
+  Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules.Replace($existingRecoveryReadLine, '- recovery route 按既有规则处理；普通 Acquire 收到 RECOVERY_ONLY 后停止。')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing existing-recovery read condition' -Contains 'recovery read contract'
+  Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules
+
+  $newDecisionReadLine = '- 普通责任方实际到达新的用户决定事件时，只读取 `创建决定恢复`；未到达决定事件时不得读取本文件。'
+  Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules.Replace($newDecisionReadLine, '- 普通责任方启动时读取恢复规则。')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing just-in-time decision read condition' -Contains 'recovery read contract'
+  Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules
+
+  Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules.Replace('## 创建决定恢复', '## 恢复建立')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing decision-creation section' -Contains 'recovery read contract'
+  Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules
 
   $externalCloseoutLine = '8. 外部 AI 返回 completed 后，只核验 `identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据和相对基线新增未提交路径；全部成立后依次调用 `RecordResult -Category success` 与 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。'
   $missingExternalCloseout = $canonicalPrompt.Replace($externalCloseoutLine, '8. 外部 AI 返回 completed 后只报告两个提交 SHA。')

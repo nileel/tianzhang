@@ -4,7 +4,7 @@
 
 **Goal:** 将当前每轮汇总候选的自动工作流迁移为事件驱动的有序 `ready` 队列，使普通执行只读取短队列和一张权威任务卡，同时保留现有恢复、租约、路径冲突、复审、提交和暂停边界。
 
-**Architecture:** `开发管理/当前任务队列.txt` 只保存按执行顺序排列的 `ready` 投影；`开发管理/任务卡/<ID>.txt` 保存活跃任务唯一结构化元数据和正文；分线 backlog 保存未完成任务的短投影。队列只在任务进入、状态变化、完成、复审转换或空队列事件中更新。现有固定调用器继续承载 Codex 责任方，恢复细节拆到按需读取的独立规则，不新增调度器、数据库、缓存、依赖求解器或长期 runtime 状态。
+**Architecture:** `开发管理/当前任务队列.txt` 只保存按执行顺序排列的 `ready` 投影；`开发管理/任务卡/<ID>.txt` 保存活跃任务唯一结构化元数据和正文；分线 backlog 保存未完成任务的短投影。队列只在任务进入、状态变化、完成、复审转换或空队列事件中更新。现有固定调用器继续承载 Codex 责任方，恢复细节拆到独立规则，并且只在 `Show` 返回 existing recovery 或普通责任方实际到达新的用户决定事件时按需读取；不新增调度器、数据库、缓存、依赖求解器或长期 runtime 状态。
 
 **Tech Stack:** PowerShell 7、UTF-8 JSON 元数据、Markdown 表格、现有 Codex Desktop automation、Git、现有 automation lease / invoker / finalizer。
 
@@ -679,7 +679,7 @@ Update its file-layer table:
 当前任务队列.txt -> 有序 ready 调度索引；普通 1 / 2 和自动选题时读取
 任务卡/ -> 已进入近期调度或转为非 ready 的活跃任务唯一事实；选中 ID 或发生状态事件时读取
 任务列表/ -> 未完成 backlog 与任务卡短投影；空队列、拆任务、解阻塞判断时读取
-自动工作流恢复规则.txt -> decision / interruption 恢复细则；Show 返回 recovery 时才读取
+自动工作流恢复规则.txt -> decision / interruption 恢复细则；Show 返回 existing recovery 时由 Recovery route 读取，或普通责任方实际到达新的用户决定事件时只即时读取“创建决定恢复”
 ```
 
 Replace the obsolete runtime wording `pending resume` with the existing schema-3 fact: runtime stores only the lease, conditional recovery pointer, blocking fingerprint/count/pause flag and last result.
@@ -721,7 +721,7 @@ In `AGENTS.md`:
 - change pure `1` to select the first current-AI `codex_execute` / `external_execute` row in queue order and skip `codex_review`;
 - change pure `2` to select the first `codex_review` row in queue order, then read `审核入口.txt`;
 - state that an empty queue alone routes to backlog maintenance;
-- state that normal automation reads `自动工作流规则.txt`, while only a non-null recovery returned by `Show` additionally routes to `自动工作流恢复规则.txt`;
+- state that normal dispatch reads `自动工作流规则.txt`; a non-null recovery returned by `Show` routes Recovery to `自动工作流恢复规则.txt`, while a normal responsibility reads only its `创建决定恢复` section if and when it actually reaches a new user-decision event;
 - preserve the manual-vs-automated worktree distinction already added after commit `f02a808`.
 
 In `AI协作规则.txt`, replace the old independent priority scans with:
@@ -734,7 +734,7 @@ In `AI协作规则.txt`, replace the old independent priority scans with:
 ```
 
 Keep title setting, identity checking, minimal reads, validation cost control, finalizer, lease and role restrictions unchanged.
-Replace its claim that one file contains all recovery details with the same two-level route: normal dispatch reads `自动工作流规则.txt`; only `Show` returning recovery adds `自动工作流恢复规则.txt`.
+Replace its claim that one file contains all recovery details with the same two-condition route: normal dispatch reads `自动工作流规则.txt`; `Show` returning existing recovery routes Recovery to `自动工作流恢复规则.txt`; a normal responsibility additionally reads only `创建决定恢复` if and when it actually reaches a new user-decision event.
 
 - [ ] **Step 4: Make review and external handoff use the same card**
 
@@ -856,38 +856,63 @@ Expected: staged set contains exactly the six files and the commit succeeds.
 - Modify: `tools/check-automation-workflow.ps1`
 - Modify: `tools/test-check-automation-workflow.ps1`
 
+**User-approved implementation decision A (2026-07-24):**
+
+- The recovery-rule file has exactly two read conditions: `Show` returned existing recovery, or a normal responsibility actually reached a new user-decision event.
+- Execution, Review and QueueMaintenance do not eagerly read the file and do not carry detailed decision/interruption protocol. Their prompt carries only a generic conditional instruction: on a real new decision event, read only `创建决定恢复`; without that event, do not read the file.
+- Recovery routes continue to read the applicable existing-recovery rules normally.
+- This correction additionally authorizes amendments to this plan and `docs/superpowers/specs/2026-07-24-event-driven-task-context-optimization-design.md`; it does not change other design scope.
+
 **Interfaces:**
-- `Show.recovery != null` -> read `自动工作流恢复规则.txt`.
-- No recovery -> do not read recovery details.
+- `Show.recovery != null` -> Recovery reads the applicable rules in `自动工作流恢复规则.txt`.
+- A normal responsibility actually reaches a new user-decision event -> just-in-time read of `创建决定恢复` only.
+- No existing recovery and no new decision event -> do not read recovery details.
 - `Execution`, `Review`, `QueueMaintenance`, `Recovery` remain the only invoker routes.
 - Decision recovery remains `Start`; interruption recovery alone may `Resume`.
 - Custom decision text remains explicit UTF-8 stdin.
 
 - [ ] **Step 1: Change the invoker tests first**
 
-In `tools/test-invoke-codex-responsibility.ps1`, add assertions:
+In `tools/test-invoke-codex-responsibility.ps1`, cover Execution, Review and QueueMaintenance with a shared normal-route assertion:
 
 ```powershell
 Assert-True `
-  -Condition (-not $transportedPrompt.Contains('开发管理/自动工作流恢复规则.txt')) `
-  -Message 'Normal execution eagerly loaded recovery rules'
+  -Condition $transportedPrompt.Contains('开发管理/自动工作流恢复规则.txt') `
+  -Message 'Normal route did not carry the conditional recovery-rule route'
+Assert-True `
+  -Condition $transportedPrompt.Contains('创建决定恢复') `
+  -Message 'Normal route did not name the just-in-time decision section'
+Assert-True `
+  -Condition $transportedPrompt.Contains('实际到达新的用户决定事件') `
+  -Message 'Normal route did not require an actual decision event'
+Assert-True `
+  -Condition $transportedPrompt.Contains('未到达决定事件时不得读取该文件') `
+  -Message 'Normal route did not prohibit eager recovery-rule reads'
 ```
 
-After queue maintenance:
+For each normal-route prompt, reject detailed protocol tokens:
 
 ```powershell
-$queuePrompt = [IO.File]::ReadAllText($tracePath)
-Assert-True `
-  -Condition (-not $queuePrompt.Contains('开发管理/自动工作流恢复规则.txt')) `
-  -Message 'Queue maintenance eagerly loaded recovery rules'
+send-decision.mjs
+PROVIDER_ACCEPTED
+SaveRecovery
+consume-reply.mjs
+-Action Start -Route Recovery
+Resume 原 session
 ```
 
-After fresh decision recovery:
+After fresh decision recovery and interruption recovery, respectively:
 
 ```powershell
 Assert-True `
   -Condition $decisionPrompt.Contains('开发管理/自动工作流恢复规则.txt') `
   -Message 'Recovery route did not load recovery rules'
+Assert-True `
+  -Condition $decisionPrompt.Contains('这是新的 CLI-native 责任方会话。') `
+  -Message 'Decision recovery did not Start a fresh session'
+Assert-True `
+  -Condition $interruptionPrompt.Contains('这是原 CLI session 的续跑，不创建新责任方。') `
+  -Message 'Interruption recovery did not Resume the original session'
 ```
 
 Keep the existing exact Chinese stdin assertion:
@@ -904,7 +929,7 @@ Run:
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-invoke-codex-responsibility.ps1
 ```
 
-Expected: nonzero because the current `Recovery` route does not name the new recovery rule.
+Expected: nonzero because the current common responsibility prompt still embeds detailed `send-decision.mjs` / `PROVIDER_ACCEPTED` / `SaveRecovery` protocol and does not carry the approved conditional `创建决定恢复` instruction.
 
 - [ ] **Step 2: Change workflow checker fixtures and negative tests before production rules**
 
@@ -920,7 +945,7 @@ The canonical prompt fixture must contain:
 
 ```text
 Show before any queue source
-自动工作流恢复规则.txt only when recovery exists
+controller prompt routes 自动工作流恢复规则.txt only when Show returned existing recovery; normal responsibility JIT decision creation is outside the controller prompt
 当前任务队列.txt when no recovery
 按行顺序
 第一项当前可安全执行
@@ -950,6 +975,10 @@ codex_review
 The canonical recovery fixture must contain:
 
 ```text
+只有两个读取条件
+Show.recovery != null
+普通责任方实际到达新的用户决定事件
+创建决定恢复
 PROVIDER_ACCEPTED
 SaveRecovery
 decision recovery
@@ -974,7 +1003,10 @@ Add negative tests proving:
 8. recovery detail leaks back into normal prompt/core;
 9. recovery file loses fresh decision `Start` or interruption-only `Resume`;
 10. fixed root/worktree prohibition disappears;
-11. invoker fixture loses explicit UTF-8 stdin tokens.
+11. invoker fixture loses explicit UTF-8 stdin tokens;
+12. recovery file loses the existing-recovery read condition;
+13. recovery file loses the just-in-time new-decision condition;
+14. recovery file loses the `创建决定恢复` section.
 
 Run:
 
@@ -994,11 +1026,14 @@ Required sections:
 # 自动工作流恢复规则
 
 ## 读取条件与共同边界
+## 创建决定恢复
 ## 决定恢复
 ## 中断恢复
 ## UTF-8 决定回复
 ## 失败关闭
 ```
+
+The read contract must explicitly state that `Show.recovery != null` routes Recovery to the applicable rules, while a normal responsibility reads only `创建决定恢复` after it actually reaches a new user-decision event. Without either condition, the file is not read. Initial `send-decision.mjs` / `PROVIDER_ACCEPTED` / `SaveRecovery` creation protocol belongs inside `创建决定恢复`; reply consumption and fresh recovery Start remain in `决定恢复`.
 
 The UTF-8 section must explicitly preserve:
 
@@ -1057,7 +1092,7 @@ The prompt must:
 
 1. call `Show` before reading any project routing source;
 2. stop on logical pause;
-3. read `自动工作流恢复规则.txt` only when recovery exists;
+3. at the controller layer, read `自动工作流恢复规则.txt` only when `Show` returned existing recovery; normal responsibilities use the separate just-in-time `创建决定恢复` condition described below;
 4. otherwise read `自动工作流规则.txt` and `当前任务队列.txt`;
 5. walk fixed row order and choose the first safe row;
 6. map `codex_execute -> Execution`, `codex_review -> Review`, empty queue -> `QueueMaintenance`, recovery -> `Recovery`, external route -> existing wrapper;
@@ -1067,7 +1102,7 @@ The prompt must:
 
 Do not copy detailed decision/interruption steps back into the prompt.
 
-- [ ] **Step 6: Route only `Recovery` invocations to the new file**
+- [ ] **Step 6: Keep Recovery routing and add normal just-in-time decision creation**
 
 Change `Get-RouteInstruction` in `tools/invoke-codex-responsibility.ps1`:
 
@@ -1090,6 +1125,14 @@ Change `Get-RouteInstruction` in `tools/invoke-codex-responsibility.ps1`:
 }
 ```
 
+Replace the common unconditional detailed decision instruction with:
+
+```text
+Execution、Review、QueueMaintenance 责任方仅在实际到达新的用户决定事件时，才读取 开发管理/自动工作流恢复规则.txt 的“创建决定恢复”一节；未到达决定事件时不得读取该文件。
+```
+
+The common prompt must not embed `send-decision.mjs`, `PROVIDER_ACCEPTED`, `SaveRecovery`, `consume-reply.mjs` or Start-vs-Resume protocol. Recovery route wording above continues to load the applicable recovery rules normally.
+
 Do not change the route ValidateSet, fixed root instruction, finalizer instruction, recovery acquisition checks or stdin reader.
 
 - [ ] **Step 7: Update the workflow checker implementation**
@@ -1097,6 +1140,7 @@ Do not change the route ValidateSet, fixed root instruction, finalizer instructi
 In `tools/check-automation-workflow.ps1`:
 
 - read `开发管理/自动工作流恢复规则.txt` separately;
+- assert its two read conditions and `创建决定恢复` section, and assert that `PROVIDER_ACCEPTED` / `SaveRecovery` remain inside that section;
 - assert normal prompt/core event-driven tokens;
 - assert recovery tokens only in recovery rules;
 - reject `consume-reply.mjs`, `PROVIDER_ACCEPTED`, `SaveRecovery` and detailed session-resume prose in normal prompt/core;
@@ -1344,7 +1388,7 @@ Confirm:
 - 明确阻塞从队列移除但仍能从 backlog + card 读取；
 - 空队列只维护，不在同轮执行；
 - external_execute 完成后同卡转 codex_review；
-- recovery 细节只在 recovery route 读取；
+- recovery 细节只在两个批准条件下读取：existing recovery 由 Recovery route 读取对应规则，普通责任方实际到达新决定事件时只即时读取 `创建决定恢复`；
 - 自动 Codex 仍固定在 invoker RepositoryRoot/current HEAD；
 - UTF-8 自定义决定回复回归通过；
 - 没有第二队列、数据库、缓存、求解器、自动生成器或兼容解析；

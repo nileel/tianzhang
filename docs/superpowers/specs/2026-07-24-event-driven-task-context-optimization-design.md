@@ -260,11 +260,13 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 为降低稳定规则的固定上下文：
 
 1. `开发管理/自动工作流规则.txt` 只保留租约、暂停、recovery 优先、固定队列顺序、临时跳过、全阻塞 fingerprint、唯一责任方和结果报告等薄路由规则。
-2. decision / interruption 恢复细节迁入单独的恢复规则，只在 `Show` 返回 recovery 时读取。
+2. decision / interruption 恢复细节迁入单独的恢复规则；读取条件只有两个：`Show` 返回 existing recovery 时由 Recovery route 读取对应规则，或普通责任方实际到达新的用户决定事件时即时只读取 `创建决定恢复` 一节。普通责任方没有到达决定事件时不得读取该文件。
 3. `codex_execute` 再读取纯 `1`、目标任务卡和该任务必查范围。
 4. `codex_review` 再读取审核入口、交接证据、目标任务卡和目标 diff。
 5. `external_execute` 再读取外部执行规则、目标任务卡和必要事实源。
 6. 当前队列为空时才读取状态与建议维护规则和分线 backlog。
+
+2026-07-24 用户批准实施决定 A：Execution、Review、QueueMaintenance 的初始 prompt 只携带上述条件式即时读取指令，不预载恢复规则，也不携带 `PROVIDER_ACCEPTED`、`SaveRecovery`、`consume-reply.mjs` 或 Start-vs-Resume 细节；真正发生新的用户决定事件后，责任方才读取 `创建决定恢复` 并建立 durable decision recovery。Recovery route 继续按 existing recovery 类型读取对应恢复规则。
 
 不为每个细小领域新建一套调度器；领域与阶段只用于任务路由和检索。
 
@@ -371,7 +373,7 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 - blocked、frozen、pending_decision 与 waiting_reply 均能从领域 backlog 定位。
 - 外部执行与 Codex 复审使用同一任务卡，不复制业务范围正文。
 - 自动 Codex 责任方的全部结果都在传入的 `RepositoryRoot` 当前分支形成并由同一 HEAD 核验；不得以其他 worktree 或分支上的提交关闭任务。
-- recovery 规则拆分后，UTF-8 自定义决定回复回归继续通过。
+- recovery 规则拆分后，普通责任方无决定事件时不读取恢复文件，实际到达新决定事件时只即时读取 `创建决定恢复`，Recovery route 仍按 existing recovery 读取对应规则，且 UTF-8 自定义决定回复回归继续通过。
 - 不新增自动生成器、依赖求解器、数据库、兼容分支或长期 runtime 状态。
 - 现有恢复、租约、隔离、复审、提交和全阻塞暂停行为均有回归证据。
 

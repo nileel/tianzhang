@@ -167,7 +167,7 @@ function New-ResponsibilityPrompt {
     '先完整读取仓库 AGENTS.md、开发管理/自动工作流规则.txt 和上述入口。'
     '本自动化责任方由单写入租约隔离，必须直接在上述 RepositoryRoot 的当前分支工作；不得创建或切换 linked worktree、任务分支，不得调用 using-git-worktrees 或 git worktree add。'
     '责任方端到端实施、最小充分验证并使用 automation-finalize-commit.ps1 创建路径限定提交。'
-    '需要决定时必须先由 send-decision.mjs 获得 PROVIDER_ACCEPTED，再 SaveRecovery。'
+    'Execution、Review、QueueMaintenance 责任方仅在实际到达新的用户决定事件时，才读取 开发管理/自动工作流恢复规则.txt 的“创建决定恢复”一节；未到达决定事件时不得读取该文件。'
     '不得自行调用 RecordResult 或 Release；固定调用器会根据 Git 与 runtime 核验结果后统一关闭本轮。'
   )
   $lines -join "`n"

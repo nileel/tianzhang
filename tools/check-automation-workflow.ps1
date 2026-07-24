@@ -193,6 +193,28 @@ Assert-Contains -Text $rules -Context 'fixed automation responsibility contract'
   'workspace guard',
   'automation-finalize-commit.ps1'
 )
+Assert-Contains -Text $recoveryRules -Context 'recovery read contract' -Values @(
+  '只有两个读取条件',
+  'Show.recovery != null',
+  '普通责任方实际到达新的用户决定事件',
+  '只读取 `创建决定恢复`',
+  '未到达决定事件时不得读取本文件',
+  '## 创建决定恢复'
+)
+$creationSectionIndex = $recoveryRules.IndexOf('## 创建决定恢复', [StringComparison]::Ordinal)
+$decisionSectionIndex = $recoveryRules.IndexOf('## 决定恢复', [StringComparison]::Ordinal)
+$providerAcceptedIndex = $recoveryRules.IndexOf('PROVIDER_ACCEPTED', [StringComparison]::Ordinal)
+$saveRecoveryIndex = $recoveryRules.IndexOf('SaveRecovery', [StringComparison]::Ordinal)
+Assert-Contract `
+  -Condition (
+    $creationSectionIndex -ge 0 -and
+    $decisionSectionIndex -gt $creationSectionIndex -and
+    $providerAcceptedIndex -gt $creationSectionIndex -and
+    $providerAcceptedIndex -lt $decisionSectionIndex -and
+    $saveRecoveryIndex -gt $creationSectionIndex -and
+    $saveRecoveryIndex -lt $decisionSectionIndex
+  ) `
+  -Message 'decision creation protocol must remain inside 创建决定恢复'
 Assert-Contains -Text $recoveryRules -Context 'recovery rules' -Values @(
   'PROVIDER_ACCEPTED',
   'SaveRecovery',
