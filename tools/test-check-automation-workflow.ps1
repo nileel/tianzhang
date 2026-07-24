@@ -197,6 +197,7 @@ $canonicalDailyPrompt = @'
 # 每日自动化简报
 
 调用 `tools/get-automation-briefing-source.ps1` 取得时间窗内候选；只检查候选 diff 是否支持 Result、Impact、Verify，再按 Task 汇总。不得读取 automation memory，不重复统计 handoff commit。
+业务提交按同一提交中的任务事实分类：归档任务是 `completed`，活跃任务保留 `blocked`、`frozen`、`pending_decision` 或 `waiting_reply`；外部交接保留 `pending_review`，队列维护是 `queue_maintenance`，缺少可核验 lifecycle 时报告 `outcome_unverifiable`。
 '@
 
 $canonicalInvoker = 'RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate'
@@ -403,6 +404,14 @@ try {
 
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt ($canonicalDailyPrompt + "`ndrift")
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused daily drift' -Contains 'daily briefing prompt'
+  Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
+
+  $lifecycleBriefingLine = '业务提交按同一提交中的任务事实分类：归档任务是 `completed`，活跃任务保留 `blocked`、`frozen`、`pending_decision` 或 `waiting_reply`；外部交接保留 `pending_review`，队列维护是 `queue_maintenance`，缺少可核验 lifecycle 时报告 `outcome_unverifiable`。'
+  $missingLifecycleBriefing = $canonicalDailyPrompt.Replace($lifecycleBriefingLine, '')
+  Write-Utf8File -Path $dailyPromptPath -Content $missingLifecycleBriefing
+  Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $missingLifecycleBriefing
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing briefing lifecycle categories' -Contains 'daily briefing lifecycle categories'
+  Write-Utf8File -Path $dailyPromptPath -Content $canonicalDailyPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) -Context 'Require active while paused' -Contains 'unique ACTIVE'

@@ -356,6 +356,16 @@ Assert-Contains -Text $dailyPrompt -Context 'daily briefing prompt' -Values @(
   'memory',
   'handoff'
 )
+Assert-Contains -Text $dailyPrompt -Context 'daily briefing lifecycle categories' -Values @(
+  'completed',
+  'blocked',
+  'frozen',
+  'pending_decision',
+  'waiting_reply',
+  'pending_review',
+  'queue_maintenance',
+  'outcome_unverifiable'
+)
 
 $showIndex = $prompt.IndexOf('Show', [StringComparison]::Ordinal)
 $queueIndex = $prompt.IndexOf('开发管理/当前任务队列.txt', [StringComparison]::Ordinal)

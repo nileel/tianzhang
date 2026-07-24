@@ -11,6 +11,6 @@
 7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动。
 8. Codex 路线由固定调用器根据 Git 与 runtime 统一收尾。外部 AI 返回 completed 后，控制器只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、业务提交的当前 Task/`State: pending_review`/Automation 元数据、handoff 无 Automation 元数据，以及相对启动基线没有新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。
 9. 外部终态无效且没有相对基线新增未提交路径时，控制器调用 `RecordResult -Category failed` 后 `Release`；存在新增未提交路径时保留现场和租约，报告人工阻塞并结束，不伪造 recovery，不启动第二责任方。
-10. 相同稳定 fingerprint 连续两轮达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
+10. 相同稳定 fingerprint 连续两轮达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。
 
 不硬编码具体任务、决定、复审编号、业务路径、实现步骤或业务检查；不创建替代自动化，不编辑 automation TOML，不自动 stash、reset、checkout、clean、revert 或推送远端。

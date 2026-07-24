@@ -51,6 +51,67 @@ function Get-SingleMetadataValue {
   $matches[0].Groups['value'].Value
 }
 
+function Read-CommitFile {
+  param([string]$CommitSha, [string]$Path)
+
+  try {
+    Invoke-GitRaw -Arguments @('show', "$CommitSha`:$Path")
+  } catch {
+    $null
+  }
+}
+
+function Get-TaskStateFromCard {
+  param([string]$Text, [string]$Task)
+
+  if ($null -eq $Text) { return $null }
+  $metaMarkers = [regex]::Matches($Text, '(?m)^---TASK-META---\r?$')
+  $bodyMarkers = [regex]::Matches($Text, '(?m)^---TASK-BODY---\r?$')
+  if (
+    $metaMarkers.Count -ne 1 -or
+    $bodyMarkers.Count -ne 1 -or
+    $metaMarkers[0].Index -ge $bodyMarkers[0].Index
+  ) {
+    return $null
+  }
+  $jsonText = $Text.Substring(
+    $metaMarkers[0].Index + $metaMarkers[0].Length,
+    $bodyMarkers[0].Index - ($metaMarkers[0].Index + $metaMarkers[0].Length)
+  ).Trim()
+  try {
+    $metadata = $jsonText | ConvertFrom-Json -Depth 20
+  } catch {
+    return $null
+  }
+  if (
+    $null -eq $metadata -or
+    [string]$metadata.id -cne $Task
+  ) {
+    return $null
+  }
+  [string]$metadata.dispatchState
+}
+
+function Get-CommittedTaskState {
+  param([string]$CommitSha, [string]$Task)
+
+  $activeText = Read-CommitFile -CommitSha $CommitSha -Path "开发管理/任务卡/$Task.txt"
+  $archiveText = Read-CommitFile -CommitSha $CommitSha -Path "开发管理/任务归档/$Task.txt"
+  if (($null -ne $activeText) -eq ($null -ne $archiveText)) {
+    return $null
+  }
+  if ($null -ne $archiveText) {
+    $archiveState = Get-TaskStateFromCard -Text $archiveText -Task $Task
+    if ($archiveState -ceq 'completed') { return $archiveState }
+    return $null
+  }
+  $activeState = Get-TaskStateFromCard -Text $activeText -Task $Task
+  if ($activeState -cin @('blocked', 'frozen', 'pending_decision', 'waiting_reply')) {
+    return $activeState
+  }
+  $null
+}
+
 function Get-CommitRecord {
   param([string]$CommitSha)
 
@@ -82,7 +143,17 @@ function Get-CommitRecord {
   } elseif ([string]$values.State -ceq 'pending_review') {
     'pending_review'
   } else {
-    'completed'
+    Get-CommittedTaskState -CommitSha $CommitSha -Task ([string]$values.Task)
+  }
+  if ([string]::IsNullOrWhiteSpace([string]$category)) {
+    return [pscustomobject]@{
+      Kind = 'error'
+      Value = [ordered]@{
+        sha = $CommitSha
+        shortSha = $CommitSha.Substring(0, 8)
+        reason = 'outcome_unverifiable'
+      }
+    }
   }
   [pscustomobject]@{
     Kind = 'candidate'
@@ -149,13 +220,7 @@ try {
     }
     $group = $groupMap[$task]
     $group.commits.Add([pscustomobject]$candidate)
-    if ($group.category -cne 'queue_maintenance') {
-      if ([string]$candidate.category -ceq 'completed') {
-        $group.category = 'completed'
-      } elseif ($group.category -cne 'completed') {
-        $group.category = 'pending_review'
-      }
-    }
+    $group.category = [string]$candidate.category
   }
 
   $groups = [Collections.Generic.List[object]]::new()
