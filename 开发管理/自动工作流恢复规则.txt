@@ -1,0 +1,40 @@
+# 自动工作流恢复规则
+
+本文件只定义 durable recovery 的处理细节。每轮必须先调用 `tools/hourly-automation-lease.ps1 Show`；仅当 `Show.recovery != null` 时读取本文件。没有 recovery 时不得读取或预执行这里的协议。
+
+## 读取条件与共同边界
+
+- recovery 优先于普通队列调度。普通 `Acquire` 返回 `RECOVERY_ONLY` 时立即停止，不转换、复制或绕过现有 recovery。
+- 先按 `trigger` 区分 `decision recovery` 与 `interruption recovery`，再核对原 TaskId、owner、repository；不得把一种恢复当成另一种恢复。
+- 恢复仍由固定调用器进入同一 TaskId 的责任方；每轮只恢复一个责任方，不实施第二项业务任务。
+
+## 决定恢复
+
+- 修改前等待决定时保存 `trigger=decision`、TaskId、owner、repository、DecisionId 和消费请求路径，释放租约并退出。schema 3 的 decision recovery 不保存 session ID，不保存未提交修改，也不把半成品交给下一责任方。
+- 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
+- 旧 `pending-bindings.json` 不是新决定的互斥锁；责任方不得因看到旧 binding 就跳过发送或直接记录 `waiting_decision`。新 accepted send 会原子更新 binding，租约工具只接受对应的消费请求。
+- 飞书桥收到 A/B/C 或自定义回复后只写入签名证据并确认，不取得租约、不启动模型、不 Resume、不轮询；已处理证据可按同一 DecisionId 幂等读取。
+- 后续每小时控制器遇到 decision recovery 时直接调用 `consume-reply.mjs` 读取对应消费请求。无回复时不得 Acquire；有回复时以精确 DecisionId 调用 `Acquire -ResumeRecovery`，再由固定调用器使用 `-Action Start -Route Recovery` 启动新的责任方 session。不存在独立决定触发器，不得恢复等待决定的原 session。
+- decision recovery 不得包含 `resumeKind` 或 `resumeId`；决定恢复始终是 fresh `Start`，不得 `Resume` 原 session。
+
+## 中断恢复
+
+- 已有未提交任务修改时停止普通调度，只允许中断恢复路径处理，不把半成品交给另一责任方。
+- CLI 责任方异常退出且相对启动基线产生新改动时，固定调用器以原 session ID 和新增路径保存 `trigger=interruption` recovery；没有唯一 session ID 时保留租约和现场并转人工阻塞，不伪造恢复指针。
+- 下一轮只允许完全匹配的原 TaskId、owner、repository 通过 `Acquire -ResumeRecovery` 取得新租约并 `Resume` 原 session。interruption recovery 保留 session ID，只有该路径允许 Resume 原 session。
+- 现有 task-owned Desktop recovery 只允许原任务人工完成；普通自动化收到 `RECOVERY_ONLY` 后停止，不转换、复制或迁移 rollout。
+
+## UTF-8 决定回复
+
+- A/B/C 选项通过固定调用器的 `DecisionOption` 传入；自定义回复只通过标准输入传入，不拼接到命令行。
+- 自定义回复由 tools/invoke-codex-responsibility.ps1 使用
+  `[IO.StreamReader]` + `[Console]::OpenStandardInput()` +
+  `[Text.UTF8Encoding]::new($false)` 读取。
+  测试驱动器以 StandardInputEncoding=UTF-8 写入。
+  不得改为系统代码页或普通 `[Console]::In.ReadToEnd()`。
+
+## 失败关闭
+
+- 决定回复缺失、DecisionId 不匹配或恢复租约未取得时，只报告对应 recovery 状态并结束，不启动责任方。
+- 中断恢复没有唯一 session ID、路径不匹配或现场无法安全接管时保留 recovery、租约与现场并转人工阻塞，不伪造成功、失败或恢复指针。
+- runner 的空输出、yield 或尚未返回不是恢复终态；继续等待同一次调用，直到取得唯一终态摘要。

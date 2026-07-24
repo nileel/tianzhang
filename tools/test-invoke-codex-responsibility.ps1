@@ -259,6 +259,9 @@ $global:LASTEXITCODE = 0
   Assert-True -Condition ($transportedPrompt.Contains("`n")) -Message 'Multiline prompt was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains("RepositoryRoot: $gitRoot")) -Message 'Repository root was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains('不得创建或切换 linked worktree、任务分支')) -Message 'Automated responsibility worktree prohibition was not transported through stdin'
+  Assert-True `
+    -Condition (-not $transportedPrompt.Contains('开发管理/自动工作流恢复规则.txt')) `
+    -Message 'Normal execution eagerly loaded recovery rules'
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
@@ -267,6 +270,10 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $queueCompleted.ExitCode -Expected 0 -Message 'Queue maintenance invocation failed'
   Assert-Equal -Actual $queueCompleted.Json.status -Expected 'completed' -Message 'Queue maintenance status mismatch'
   Assert-Equal -Actual $queueCompleted.Json.category -Expected 'refilled' -Message 'Queue maintenance category mismatch'
+  $queuePrompt = [IO.File]::ReadAllText($tracePath)
+  Assert-True `
+    -Condition (-not $queuePrompt.Contains('开发管理/自动工作流恢复规则.txt')) `
+    -Message 'Queue maintenance eagerly loaded recovery rules'
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
@@ -393,6 +400,9 @@ $global:LASTEXITCODE = 0
   $decisionPrompt = [IO.File]::ReadAllText($tracePath)
   Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_REPLY runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the fresh-session protocol'
   Assert-True -Condition ($decisionPrompt.Contains('这是新的 CLI-native 责任方会话。')) -Message 'Decision reply did not start a new responsibility session'
+  Assert-True `
+    -Condition $decisionPrompt.Contains('开发管理/自动工作流恢复规则.txt') `
+    -Message 'Recovery route did not load recovery rules'
   $resumedState = Assert-LeaseReleased
   Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
 

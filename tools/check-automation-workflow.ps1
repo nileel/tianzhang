@@ -65,10 +65,14 @@ Assert-Contract -Condition (Test-Path -LiteralPath $automationDirectory -PathTyp
 
 $prompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流控制器提示词.txt')
 $rules = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流规则.txt')
+$recoveryRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流恢复规则.txt')
 $maintenanceRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\状态与建议维护规则.txt')
 $status = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流状态.txt')
 $dailyPrompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动化简报提示词.txt')
 $leaseTool = Read-Utf8Contract -Path (Join-Path $root 'tools\hourly-automation-lease.ps1')
+$invokerPath = Join-Path $root 'tools\invoke-codex-responsibility.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $invokerPath -PathType Leaf) -Message 'missing workflow component: tools\invoke-codex-responsibility.ps1'
+$invoker = Read-Utf8Contract -Path $invokerPath
 $claudeRules = Read-Utf8Contract -Path (Join-Path $root 'CLAUDE.md')
 $collaborationRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\AI协作规则.txt')
 
@@ -76,10 +80,28 @@ Assert-Contains -Text $prompt -Context 'thin controller prompt' -Values @(
   'tools/hourly-automation-lease.ps1',
   'Show',
   '开发管理/自动工作流规则.txt',
+  '开发管理/当前任务队列.txt',
   'Acquire',
   'tools/invoke-codex-responsibility.ps1',
   '每轮只',
   'commitSha'
+)
+Assert-Contains -Text $prompt -Context 'recovery rule route' -Values @(
+  'Show` 返回 recovery',
+  '开发管理/自动工作流恢复规则.txt',
+  '没有 recovery 时不得读取恢复规则',
+  'Recovery'
+)
+Assert-Contains -Text $prompt -Context 'ordered queue route' -Values @(
+  '按行顺序',
+  '第一项当前可安全执行',
+  '临时运行冲突',
+  '不修改任务卡或队列顺序',
+  'codex_execute -> Execution',
+  'codex_review -> Review',
+  '队列为空',
+  'QueueMaintenance',
+  '本轮不执行新任务'
 )
 Assert-Contains -Text $prompt -Context 'deferred wait contract' -Values @(
   'Script running with cell ID',
@@ -87,13 +109,6 @@ Assert-Contains -Text $prompt -Context 'deferred wait contract' -Values @(
   'functions.wait',
   '空输出',
   '不是终态'
-)
-Assert-Contains -Text $prompt -Context 'decision recovery contract' -Values @(
-  'tools/feishu-decision-bridge/src/consume-reply.mjs',
-  'decision recovery 无回复时不得 Acquire',
-  'Acquire -ResumeRecovery',
-  '-Action Start -Route Recovery',
-  'interruption recovery 才允许 Resume 原 session'
 )
 Assert-Contract `
   -Condition (-not [regex]::IsMatch($prompt, '(?i)timeout_ms\s*=\s*180000')) `
@@ -135,22 +150,91 @@ Assert-Contains -Text $claudeRules -Context 'DeepSeek identity contract in CLAUD
 Assert-Contains -Text $collaborationRules -Context 'DeepSeek identity contract in collaboration rules' -Values $identityTokens
 Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   '单写入租约',
-  'RECOVERY_ONLY',
-  'Acquire -ResumeRecovery',
+  'Show',
+  'pauseRequested=true',
+  '开发管理/自动工作流恢复规则.txt',
+  '每轮一个责任方',
   'tools/invoke-codex-responsibility.ps1',
   'RecordResult',
   'Release',
   'businessCommit',
-  'handoffCommit',
+  'handoffCommit'
+)
+Assert-Contains -Text $rules -Context 'fixed queue order' -Values @(
+  '开发管理/当前任务队列.txt',
+  'dispatchState=ready',
+  'codex_execute',
+  'external_execute',
+  'codex_review',
+  '第一项当前可安全执行'
+)
+Assert-Contains -Text $rules -Context 'temporary skip contract' -Values @(
+  '临时运行条件',
+  '跳过本轮',
+  '不修改任务卡或队列顺序'
+)
+Assert-Contains -Text $rules -Context 'two-round pause' -Values @(
+  '同一稳定 fingerprint 连续两轮',
+  '明确任务阻塞',
+  '状态纠正事件'
+)
+Assert-Contains -Text $rules -Context 'empty queue maintenance-only' -Values @(
+  '事件发生时',
+  '队列为空',
+  'QueueMaintenance',
+  '本轮不执行新任务'
+)
+Assert-Contains -Text $rules -Context 'fixed automation responsibility contract' -Values @(
+  'RepositoryRoot',
+  'current branch',
+  'using-git-worktrees',
+  'git worktree add',
+  'linked worktree',
+  'workspace guard',
+  'automation-finalize-commit.ps1'
+)
+Assert-Contains -Text $recoveryRules -Context 'recovery rules' -Values @(
   'PROVIDER_ACCEPTED',
   'SaveRecovery',
-  'schema 3',
   'decision recovery',
-  'interruption recovery',
   'consume-reply.mjs',
+  'Acquire -ResumeRecovery',
+  'RECOVERY_ONLY',
+  'UTF-8'
+)
+Assert-Contains -Text $recoveryRules -Context 'decision recovery Start' -Values @(
+  'decision recovery',
   '-Action Start -Route Recovery',
+  '不得 `Resume` 原 session'
+)
+Assert-Contains -Text $recoveryRules -Context 'interruption recovery Resume' -Values @(
+  'interruption recovery',
   'Resume 原 session'
 )
+Assert-Contains -Text $invoker -Context 'fixed root/worktree contract' -Values @(
+  'RepositoryRoot',
+  'using-git-worktrees',
+  'git worktree add'
+)
+Assert-Contains -Text $invoker -Context 'UTF-8 stdin contract' -Values @(
+  'IO.StreamReader',
+  'Console]::OpenStandardInput',
+  'Text.UTF8Encoding'
+)
+$normalContract = $prompt + "`n" + $rules
+foreach ($detailToken in @(
+    'consume-reply.mjs',
+    'PROVIDER_ACCEPTED',
+    'SaveRecovery',
+    'Resume 原 session'
+  )) {
+  Assert-Contract `
+    -Condition (-not $normalContract.Contains($detailToken, [StringComparison]::OrdinalIgnoreCase)) `
+    -Message "recovery detail leak in normal contract: $detailToken"
+}
+Assert-Contract `
+  -Condition (-not $rules.Contains('三类候选每轮汇总后统一排序', [StringComparison]::OrdinalIgnoreCase)) `
+  -Message 'workflow rules reintroduced per-round unified sorting'
 Assert-Contains -Text $leaseTool -Context 'runtime schema 3 contract' -Values @(
   'schemaVersion = 3',
   "'SaveRecovery'",
@@ -160,14 +244,6 @@ Assert-Contains -Text $leaseTool -Context 'runtime schema 3 contract' -Values @(
 foreach ($retiredAction in @('QueueResume', 'TakeResume')) {
   Assert-Contract -Condition (-not $leaseTool.Contains($retiredAction, [StringComparison]::Ordinal)) -Message "runtime schema 3 contract contains retired action: $retiredAction"
 }
-$queueDepthTokens = @(
-  '至少包含 2 张合法可执行任务卡',
-  '单次最多新增 3 张',
-  '不得制造任务',
-  '不足原因'
-)
-Assert-Contains -Text $rules -Context 'queue depth contract in workflow rules' -Values $queueDepthTokens
-Assert-Contains -Text $maintenanceRules -Context 'queue depth contract in maintenance rules' -Values $queueDepthTokens
 Assert-Contains -Text $dailyPrompt -Context 'daily briefing prompt' -Values @(
   'tools/get-automation-briefing-source.ps1',
   'Result',
@@ -179,14 +255,14 @@ Assert-Contains -Text $dailyPrompt -Context 'daily briefing prompt' -Values @(
 )
 
 $showIndex = $prompt.IndexOf('Show', [StringComparison]::Ordinal)
-$routingIndex = $prompt.IndexOf('开发管理/自动工作流规则.txt', [StringComparison]::Ordinal)
-Assert-Contract -Condition ($showIndex -ge 0 -and $routingIndex -ge 0 -and $showIndex -lt $routingIndex) -Message 'runtime Show must occur before routing sources'
+$queueIndex = $prompt.IndexOf('开发管理/当前任务队列.txt', [StringComparison]::Ordinal)
+Assert-Contract -Condition ($showIndex -ge 0 -and $queueIndex -ge 0 -and $showIndex -lt $queueIndex) -Message 'runtime Show must occur before queue source'
 
 foreach ($token in @('Buffer', 'TextEncoder', 'ProcessStartInfo', "@'", '@"')) {
   Assert-Contract -Condition (-not $prompt.Contains($token, [StringComparison]::OrdinalIgnoreCase)) -Message "controller contains forbidden implementation token: $token"
 }
 
-$activeText = $prompt + "`n" + $rules
+$activeText = $prompt + "`n" + $rules + "`n" + $recoveryRules
 foreach ($token in @(
     'RecordQueueState',
     'ClearWorkerFailure',
@@ -208,7 +284,9 @@ Assert-Contract -Condition (-not [regex]::IsMatch($activeText, '(?i)\b(?:TQ|HAND
 Assert-Contract -Condition (-not [regex]::IsMatch($status, '(?im)^.*生产入口.*\b(?:ACTIVE|PAUSED)\b.*$')) -Message 'workflow status contains a static live status claim'
 
 foreach ($requiredPath in @(
+    '开发管理\自动工作流恢复规则.txt',
     'tools\hourly-automation-lease.ps1',
+    'tools\check-task-cards.ps1',
     'tools\codex-cli-session.ps1',
     'tools\invoke-codex-responsibility.ps1',
     'tools\automation-workspace-guard.ps1',
