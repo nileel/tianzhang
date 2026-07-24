@@ -111,13 +111,19 @@ Assert-Contains -Text $prompt -Context 'external closeout contract' -Values @(
   '~/.claude/settings.json',
   'http://127.0.0.1:15721',
   'DeepSeek V4 Pro',
-  'identity',
-  'businessCommit',
-  'handoffCommit',
   'RecordResult -Category success',
   'Release',
   '相对基线新增未提交路径',
   '保留现场和租约'
+)
+Assert-Contains -Text $prompt -Context 'identity source precedence' -Values @(
+  '先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`'
+)
+Assert-Contains -Text $prompt -Context 'external completed gate' -Values @(
+  '`identity=DeepSeek V4 Pro`、`sessionId`、`businessCommit`、`handoffCommit`'
+)
+Assert-Contains -Text $prompt -Context 'success closeout order' -Values @(
+  '全部成立后依次调用 `RecordResult -Category success` 与 `Release`'
 )
 $identityTokens = @(
   '~/.claude/settings.json',
