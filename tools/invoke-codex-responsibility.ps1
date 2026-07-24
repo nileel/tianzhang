@@ -245,16 +245,42 @@ function Get-CommitMetadata {
   [pscustomobject]$fields
 }
 
-function Test-TaskCardCloseout {
+function Invoke-TaskCardEvidence {
+  param(
+    [string]$Postcondition,
+    [string]$ExpectedRoute
+  )
+
   $arguments = @(
     '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $taskCardCheckerPath,
-    '-RepositoryRoot', $script:resolvedRepositoryRoot
+    '-RepositoryRoot', $script:resolvedRepositoryRoot,
+    '-OutputJson'
   )
-  if ($Route -cin @('Execution', 'Review')) {
-    $arguments += @('-TaskId', $TaskId, '-Postcondition', 'CodexClosedOrNonReady')
+  if (-not [string]::IsNullOrWhiteSpace($Postcondition)) {
+    $arguments += @('-TaskId', $TaskId, '-Postcondition', $Postcondition)
   }
-  $null = & pwsh @arguments 2>&1
-  $LASTEXITCODE -eq 0
+  if (-not [string]::IsNullOrWhiteSpace($ExpectedRoute)) {
+    $arguments += @('-ExpectedRoute', $ExpectedRoute)
+  }
+
+  $output = @(& pwsh @arguments 2>&1)
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -ne 0) {
+    return [pscustomobject]@{ Succeeded = $false; Evidence = $null }
+  }
+  $lines = @($output | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+  if ($lines.Count -ne 1) {
+    return [pscustomobject]@{ Succeeded = $false; Evidence = $null }
+  }
+  try {
+    $evidence = $lines[0] | ConvertFrom-Json -Depth 20
+  } catch {
+    return [pscustomobject]@{ Succeeded = $false; Evidence = $null }
+  }
+  [pscustomobject]@{
+    Succeeded = [string]$evidence.status -ceq 'ok'
+    Evidence = $evidence
+  }
 }
 
 function Close-Run {
@@ -359,6 +385,36 @@ try {
     }
   }
 
+  $expectedRoute = switch ($Route) {
+    'Execution' { 'codex_execute' }
+    'Review' { 'codex_review' }
+    default { $null }
+  }
+  $routeTaskBindingValid = if ($Route -ceq 'QueueMaintenance') {
+    $TaskId -ceq 'QUEUE-MAINTENANCE'
+  } elseif ($Route -ceq 'Recovery') {
+    $true
+  } else {
+    $TaskId -cne 'QUEUE-MAINTENANCE'
+  }
+  $dispatchEvidence = if ($null -ne $expectedRoute -and $routeTaskBindingValid) {
+    Invoke-TaskCardEvidence -Postcondition 'CodexDispatchReady' -ExpectedRoute $expectedRoute
+  } else {
+    $null
+  }
+  $preflightValid =
+    $routeTaskBindingValid -and
+    ($null -eq $expectedRoute -or ($null -ne $dispatchEvidence -and $dispatchEvidence.Succeeded))
+  if (-not $preflightValid) {
+    Close-Run -Category 'failed' -DetailCode 'route_precondition_failed'
+    $result = [ordered]@{
+      status = 'failed'; category = 'failed'; taskId = $TaskId; runId = $RunId
+      sessionId = $null; commitSha = $null; detailCode = 'route_precondition_failed'
+    }
+    $resultExitCode = 1
+    throw 'Responsibility route precondition failed'
+  }
+
   $beforeHead = Invoke-GitText -Arguments @('rev-parse', 'HEAD')
   $beforeWorkspace = Get-WorkspaceSnapshot
   $runner = Invoke-SessionRunner -Prompt (New-ResponsibilityPrompt)
@@ -395,6 +451,12 @@ try {
     [string]$recovery.trigger -ceq 'decision' -and
     [string]$recovery.taskId -ceq $TaskId -and
     [string]$recovery.runId -ceq $RunId
+  $isQueueMaintenance = $TaskId -ceq 'QUEUE-MAINTENANCE'
+  $closeoutCheck = if ($isQueueMaintenance) {
+    Invoke-TaskCardEvidence
+  } else {
+    Invoke-TaskCardEvidence -Postcondition 'CodexClosedOrNonReady'
+  }
 
   if ($hasMatchingDecisionRecovery) {
     Close-Run -Category 'waiting_decision' -DetailCode 'decision_recovery_saved'
@@ -407,7 +469,7 @@ try {
     $newCommits.Count -eq 1 -and
     $matchingCommits.Count -eq 1 -and
     $newChangedPaths.Count -eq 0 -and
-    (Test-TaskCardCloseout)
+    $closeoutCheck.Succeeded
   ) {
     $verifiedCommitSha = $matchingCommits[0]
     if ($null -ne $recovery -and [string]$recovery.taskId -ceq $TaskId) {
@@ -416,13 +478,42 @@ try {
         throw "ClearRecovery returned $($cleared.status)"
       }
     }
-    $category = if ($TaskId -ceq 'QUEUE-MAINTENANCE') { 'refilled' } else { 'success' }
+    $category = if (
+      $isQueueMaintenance -and
+      [int]$closeoutCheck.Evidence.readyCount -gt 0
+    ) {
+      'refilled'
+    } else {
+      'success'
+    }
     Close-Run -Category $category -DetailCode "commit_$($verifiedCommitSha.Substring(0, 12))"
     $result = [ordered]@{
       status = 'completed'; category = $category; taskId = $TaskId; runId = $RunId
       sessionId = $capturedSessionId; commitSha = $verifiedCommitSha
     }
+    if ($isQueueMaintenance) {
+      $result.readyCount = [int]$closeoutCheck.Evidence.readyCount
+    } else {
+      $result.taskState = [string]$closeoutCheck.Evidence.taskState
+    }
     $resultExitCode = 0
+  } elseif (
+    $isQueueMaintenance -and
+    $newCommits.Count -eq 0 -and
+    $newChangedPaths.Count -eq 0 -and
+    $closeoutCheck.Succeeded -and
+    [int]$closeoutCheck.Evidence.readyCount -eq 0
+  ) {
+    Close-Run `
+      -Category 'blocked' `
+      -DetailCode 'no_runnable_candidate' `
+      -BlockingFingerprint 'queue:no_runnable_candidate'
+    $result = [ordered]@{
+      status = 'blocked'; category = 'blocked'; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $null
+      detailCode = 'no_runnable_candidate'; readyCount = 0
+    }
+    $resultExitCode = 2
   } elseif ($newChangedPaths.Count -gt 0) {
     if ($null -eq $capturedSessionId) {
       $result = [ordered]@{
@@ -467,11 +558,13 @@ try {
     $resultExitCode = 1
   }
 } catch {
-  $result = [ordered]@{
-    status = 'failed'; category = 'failed'; taskId = $TaskId; runId = $RunId
-    sessionId = $capturedSessionId; commitSha = $verifiedCommitSha; detailCode = 'invoker_error'
+  if ($null -eq $result) {
+    $result = [ordered]@{
+      status = 'failed'; category = 'failed'; taskId = $TaskId; runId = $RunId
+      sessionId = $capturedSessionId; commitSha = $verifiedCommitSha; detailCode = 'invoker_error'
+    }
+    $resultExitCode = 1
   }
-  $resultExitCode = 1
 }
 
 [Console]::Out.WriteLine(($result | ConvertTo-Json -Compress -Depth 10))
