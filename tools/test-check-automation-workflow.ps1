@@ -95,7 +95,7 @@ $canonicalPrompt = @'
 6. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
 8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。
-9. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。
+9. 最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。
 '@
 
 $canonicalClaude = @'
@@ -135,6 +135,10 @@ $canonicalRules = @'
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
 - `事件发生时` 才更新状态；`队列为空` 时只做一次 QueueMaintenance，`本轮不执行新任务`。
+- Execution / Review 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。
+- task-bearing Recovery 与普通 Codex 任务都使用同一 TaskId 的 `CodexClosedOrNonReady`；只有 `QUEUE-MAINTENANCE` recovery 使用全局投影。
+- QueueMaintenance 使用 `readyCount` 分类；只有大于 0 才是 `refilled`，0 且无事实变化时记录既有 `blocked/no_runnable_candidate`，不制造提交。
+- `AutomationState=completed` 只表示责任方提交闭环；任务真实 lifecycle 通过 `taskState` 或同一提交中的任务卡/归档读取。
 - Codex 只经 `tools/invoke-codex-responsibility.ps1` 启动；固定 `RepositoryRoot` 的 current branch 和 HEAD，不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建 linked worktree 或任务分支。
 - runner timeout、deferred wait、workspace guard、automation-finalize-commit.ps1、Automation 元数据、RecordResult 与 Release 边界不变。
 - 外部 AI 保留 `businessCommit` 与 `handoffCommit` 的连续双提交 closeout；handoff 不重复统计。
@@ -195,7 +199,8 @@ $canonicalDailyPrompt = @'
 调用 `tools/get-automation-briefing-source.ps1` 取得时间窗内候选；只检查候选 diff 是否支持 Result、Impact、Verify，再按 Task 汇总。不得读取 automation memory，不重复统计 handoff commit。
 '@
 
-$canonicalInvoker = 'RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding'
+$canonicalInvoker = 'RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate'
+$canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding'
 
 try {
   foreach ($entry in @{
@@ -210,7 +215,7 @@ try {
       '开发管理/AI协作规则.txt' = $canonicalCollaboration
       'tools/hourly-automation-lease.ps1' = "schemaVersion = 3`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','RecordResult','ClearBlocking','Release')"
       'tools/check-task-cards.ps1' = 'task card checker fixture'
-      'tools/codex-cli-session.ps1' = 'runner fixture'
+      'tools/codex-cli-session.ps1' = $canonicalRunner
       'tools/invoke-codex-responsibility.ps1' = $canonicalInvoker
       'tools/automation-workspace-guard.ps1' = 'guard fixture'
       'tools/automation-finalize-commit.ps1' = 'finalizer fixture'
@@ -245,6 +250,29 @@ try {
   Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration.Replace($ownerMappingLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing collaboration external owner mapping' -Contains 'external owner mapping in collaboration rules'
   Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
+
+  $dispatchReadyLine = '- Execution / Review 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($dispatchReadyLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing Codex dispatch preflight' -Contains 'Codex responsibility preflight'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  $recoveryCloseoutLine = '- task-bearing Recovery 与普通 Codex 任务都使用同一 TaskId 的 `CodexClosedOrNonReady`；只有 `QUEUE-MAINTENANCE` recovery 使用全局投影。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($recoveryCloseoutLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing task-bearing recovery closeout' -Contains 'task-bearing recovery closeout'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  $queueOutcomeLine = '- QueueMaintenance 使用 `readyCount` 分类；只有大于 0 才是 `refilled`，0 且无事实变化时记录既有 `blocked/no_runnable_candidate`，不制造提交。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($queueOutcomeLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing queue outcome classification' -Contains 'queue outcome classification'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  $reportLine = '9. 最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。'
+  $missingLifecycleReport = $canonicalPrompt.Replace($reportLine, '9. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。')
+  Write-Utf8File -Path $promptPath -Content $missingLifecycleReport
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingLifecycleReport
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing lifecycle result report' -Contains 'lifecycle result report'
+  Write-Utf8File -Path $promptPath -Content $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   $promptTransitionGate = '，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证'
   $missingPromptTransitionGate = $canonicalPrompt.Replace($promptTransitionGate, '')
@@ -455,8 +483,13 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing fixed root and worktree prohibition' -Contains 'fixed root/worktree contract'
   Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker
 
-  Write-Utf8File -Path $invokerFixturePath -Content 'RepositoryRoot using-git-worktrees git worktree add'
-  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing explicit UTF-8 stdin tokens' -Contains 'UTF-8 stdin contract'
+  $runnerFixturePath = Join-Path $repositoryRoot 'tools/codex-cli-session.ps1'
+  Write-Utf8File -Path $runnerFixturePath -Content 'runner fixture without an explicit stdin decoder'
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing explicit UTF-8 stdin decoder' -Contains 'UTF-8 stdin contract'
+  Write-Utf8File -Path $runnerFixturePath -Content $canonicalRunner
+
+  Write-Utf8File -Path $invokerFixturePath -Content 'RepositoryRoot using-git-worktrees git worktree add CodexDispatchReady taskState readyCount no_runnable_candidate'
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing explicit UTF-8 stdin writer' -Contains 'UTF-8 stdin contract'
   Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker
 
   Write-Utf8File -Path $statusPath -Content ($canonicalStatus + "`n- 生产入口已恢复为 ACTIVE。")

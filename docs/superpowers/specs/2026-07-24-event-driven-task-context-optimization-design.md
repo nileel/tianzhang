@@ -374,6 +374,19 @@ backlog 状态是用于发现的短投影，独立任务卡是权威源。检查
 - 外部执行与 Codex 复审使用同一任务卡，不复制业务范围正文。
 - 自动 Codex 责任方的全部结果都在传入的 `RepositoryRoot` 当前分支形成并由同一 HEAD 核验；不得以其他 worktree 或分支上的提交关闭任务。
 - recovery 规则拆分后，普通责任方无决定事件时不读取恢复文件，实际到达新决定事件时只即时读取 `创建决定恢复`，Recovery route 仍按 existing recovery 读取对应规则，且 UTF-8 自定义决定回复回归继续通过。
+
+## 2026-07-25 收尾简化修订
+
+本修订保留短队列、独立任务卡和按需 recovery，不新增 runtime category、任务状态、recovery 字段、检查脚本或重试层。已确认问题统一收敛到同一条事实链：
+
+1. `tools/check-task-cards.ps1` 是唯一任务投影检查器，同时提供启动前约束和提交后 lifecycle 证据；固定调用器不得另建任务卡解析器。
+2. `Execution` / `Review` 在启动 runner 前，必须证明同一 TaskId 的 active card 为 `ready`，且 route、owner 与调用路线精确匹配。
+3. 所有非 `QUEUE-MAINTENANCE` TaskId 的 `Recovery` 与普通 Codex 任务使用同一 `CodexClosedOrNonReady` 收尾；只有 maintenance recovery 使用全局投影。
+4. `QueueMaintenance` 以检查器返回的 `readyCount` 分类：大于 0 才是 `refilled`；0 但存在合法事实修正是 `success`；0、无提交且无工作区变化是既有 `blocked/no_runnable_candidate`，不得制造任务或无事实提交。
+5. Automation 提交元数据的 `State: completed` 只表示当前责任方提交闭环，不等于任务 `dispatchState=completed`。控制器与日报从同一提交中的 active card 或 exact completed archive 读取任务真实 lifecycle。
+6. responsibility prompt 和自定义决定回复都使用显式 UTF-8 stdin 协议。写端明确使用 UTF-8；runner 从 `Console.OpenStandardInput()` 通过严格 UTF-8 `StreamReader` 解码，不使用系统代码页、`chcp`、编码猜测或 fallback。
+
+固定调用器最终只返回现有 category，并附带瞬时 `taskState` 或 `readyCount` 证据；这两个值不写入 schema-3 runtime。相同的合法空队列连续两轮仍复用既有 blocking fingerprint/count 触发逻辑暂停，不增加新的停止机制。
 - 不新增自动生成器、依赖求解器、数据库、兼容分支或长期 runtime 状态。
 - 现有恢复、租约、隔离、复审、提交和全阻塞暂停行为均有回归证据。
 
