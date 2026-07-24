@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": null,
+  "stateReason": "N-GROUP-02B 只提供合法行动与命中集合；现有 2v2 没有无需推测伤害即可比较的每行动结算候选，无法确定可击杀敌人数。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -29,6 +29,11 @@
 
 - `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`，以及已完成的 N-GROUP-02B。
 - `DEC-20260724-NGROUP0201` 已锁定 N-GROUP-DEC-04，无待决策。只消费 N-GROUP-02B 已形成的合法行动、命中集合与可观察结算候选。
+
+## 当前阻塞
+
+- 已核对 N-GROUP-02B 的 `GroupActionPlan`：它只承载行动位置与 `AreaTargetingResult`；后者只输出范围中心、命中索引和拒绝原因。当前 2v2 仍在选定主要目标后才执行单目标伤害结算，因而没有不依赖推测伤害、冷却或环境权重的每行动可击杀候选。
+- 本卡不能把命中集合伪作击杀集合，也不能在没有已锁定数据语义时补造伤害／结算接口。需要负责人明确该结算候选的所有者和数据语义后，才可恢复本卡；在此之前不修改 BattleSim 行为。
 
 ## 必查范围
 

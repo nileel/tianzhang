@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| N-GROUP-02C | codex_execute | codex | P3 | battlesim | implementation | 临时团队 AI 的确定性候选优先级 | 开发管理/任务卡/N-GROUP-02C.txt |

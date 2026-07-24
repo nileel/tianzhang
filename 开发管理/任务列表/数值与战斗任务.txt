@@ -22,8 +22,8 @@
 | N-SUPPRESS-01 | P2 | Codex | 阻塞（N-GC-BASE-01） | — | 削位/封丹采用确定性的资格、目标与冲突结算；不得以随机触发概率替代规则。 | — |
 | N-JD-RULE-01 | P1 | Codex | 阻塞（D-JD-SCHEMA-01、有效样例） | — | BattleSim 接入金丹三实位、装配、载体独立账本、确定性冲突、可选 QTE/跳过、跨阶挑战档案与实位死亡；所有可调参数进入配置。 | — |
 | N-STATE-01 | P2 | Codex | 阻塞（D-JD-SCHEMA-01） | — | 接入状态极性与载体、局部回溯、因果响应容量及债务不变量，保持确定性结算。 | — |
-| N-GROUP-02 | P3 | Codex | 进行中（子任务 N-GROUP-02C 已排队） | — | 2v2 范围技能、临时团队候选优先级与显式战场输入；协同走位不在本任务实施。 | — |
-| N-GROUP-02C | P3 | codex | 已排队 | — | 临时团队 AI 的确定性候选优先级 | 开发管理/任务卡/N-GROUP-02C.txt |
+| N-GROUP-02 | P3 | Codex | 待决定（子任务 N-GROUP-02C） | 每行动结算候选契约 | 2v2 范围技能、临时团队候选优先级与显式战场输入；协同走位不在本任务实施。 | — |
+| N-GROUP-02C | P3 | codex | 待决定 | — | 临时团队 AI 的确定性候选优先级 | 开发管理/任务卡/N-GROUP-02C.txt |
 | N-AI-01 | P3 | Codex | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |
 
 ## G2 任务执行边界
@@ -94,7 +94,7 @@
 
 ### N-GROUP-02C · 临时团队 AI 确定性候选优先级
 
-- 依赖与状态：待处理；N-GROUP-02B 已完成。只消费 N-GROUP-02B 已形成的合法行动、命中集合与可观察结算候选。N-GROUP-DEC-04 已锁定，不等待新的优先级或权重决定。
+- 依赖与状态：待决定；N-GROUP-02B 已完成。它已形成合法行动与命中集合，但未形成无需推测伤害的可观察每行动结算候选。N-GROUP-DEC-04 的排序已经锁定；仍需负责人明确结算候选的所有者与数据语义，不能用默认值或权重代填。
 - 必读：`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`、`simulations/BattleSim/Combat.cs::GroupTargetCandidate,GroupActionObservation,SelectGroupTarget,Simulate2v2Detailed`、N-GROUP-02B 完成后的范围候选／结算接口及 `BattleSimSelfTests.cs` 对应自测。
 - 预期路径：更新 `simulations/BattleSim/Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`、本文件与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
 - 范围：只对同一行动的合法候选按“可击杀敌人数降序、命中合法敌人数降序、主要目标当前 HP 升序、既有输入顺序”做确定性选择；每一层理由及最终选择均可观察。它不读取队友意图或下一行动，也不改变现有个人走位／占格提交。
