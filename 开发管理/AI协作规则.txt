@@ -5,11 +5,11 @@
 ## 总原则
 
 - 设定与设计内容以 `docs/` 原文为准；进度与阶段判断以 `开发管理/` 为准；数值结论以 `simulations/BattleSim` 实际运行结果为准；Unity 实现以 `src/` 当前代码为准。
-- 涉及审核、交接或纯 `2` 时，先读 `开发管理/审核入口.txt`；纯 `1` 先读 `开发管理/当前任务队列.txt`，仅命中未审核、交接或复审路由时再读审核入口。
-- `当前任务队列.txt` 只放近期可执行切片；`设计-当前状态.txt` 只放已验证事实和当前风险；分线 backlog 与建议索引的维护细则见 `开发管理/状态与建议维护规则.txt`。
+- 纯 `1` / `2` 都先读 `开发管理/当前任务队列.txt`；选中 ID 后以 `开发管理/任务卡/<ID>.txt` 为活跃任务唯一事实，纯 `2` 再读 `开发管理/审核入口.txt` 和对应证据。
+- `当前任务队列.txt` 只保存有序 ready 投影；`设计-当前状态.txt` 只放已验证事实和当前风险；分线 backlog 与建议索引的维护细则见 `开发管理/状态与建议维护规则.txt`。
 - 任务卡的 `必读` / `必查范围` 统一按 `开发管理/状态与建议维护规则.txt` 解释：先定位相关章节、符号、实体或用途，再读取当前步骤需要的原文；路径级条目不默认等于整份加载，修改前仍读取目标完整逻辑单元。
 - 交接材料只记录当前线索、疑点和待判断项，不能替代 docs、管理文件、BattleSim、Unity 代码或 git diff。
-- 定时自动推进先读 `开发管理/自动工作流规则.txt`，该文件是调度、选题、租约、恢复与失败关闭的唯一规则源。
+- 普通定时调度先读 `开发管理/自动工作流规则.txt`；只有自动化 `Show` 返回非空 recovery 时才追加读取 `开发管理/自动工作流恢复规则.txt` 的 decision / interruption 恢复细则。
 
 ## 主责
 
@@ -44,8 +44,8 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 调度器必须先真实选中合法外部候选、取得单写入租约并给出任务授权范围，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份；无合法外部候选时不得预检或空转调用。外部责任方启动后自行读取任务卡与必要事实源，并端到端完成：
 
 1. 调用 `tools/automation-workspace-guard.ps1` 记录基线，确认授权范围与人工改动不冲突。
-2. 实施修改、运行任务直接要求的最小充分验证、标记「⚠️ 已修改/未审核」并更新任务状态。
-3. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、任务状态和直接验证结果。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段；finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
+2. 实施修改、运行任务直接要求的最小充分验证并标记「⚠️ 已修改/未审核」；成功后把同一任务卡更新为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，在原队列行就地同步且保持同一 ID、标题和正文，不创建第二张复审卡。
+3. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、上述同一任务卡/队列状态和直接验证结果，保持 `State: pending_review`。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段；finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
 4. 随后只修改 `开发管理/AI合作沟通.txt`，登记真实 `businessCommit` SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`；第二次不得重跑领域检查。`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
 
 外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不得读取业务 diff、重跑业务验证、stage 或 commit。外部责任方不得自审、扩大授权路径、并行派发、stash、reset、checkout、clean 或推送远端。需要负责人决定时，外部 CLI 保存原 session 后退出，并由原 session 续跑。
@@ -60,7 +60,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ## 交接
 
-1. 派工时明确主责、任务类型、允许修改范围、必读事实源和验证命令。
+1. 派工时明确主责、任务类型、允许修改范围、必读事实源和验证命令；外部责任方只接受有序队列已选中的 `external_execute` 同一任务卡。
 2. DeepSeek 的修改只能标「⚠️ 已修改/未审核」，不得预填审核方结论；外部执行任务按本文件的 `businessCommit` + `handoffCommit` 边界自行创建本地提交。
 3. 需要审核或判断时，DeepSeek 在 `AI合作沟通.txt` 写入短 ID、方向、任务/提交范围、修改文件、已验证、未验证、残留风险、请求判断和建议下一步。
 4. Codex 消费交接时先读审核入口和匹配条目，再以 diff、事实源和可重复命令独立验证。
@@ -68,24 +68,25 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ## 快捷工作流：`1` / `2`
 
-当用户消息去除首尾空白后严格等于 `1` 时，自动推进一个最高优先级、可验证、可提交的执行型任务，不做复审。当消息严格等于 `2` 时，Codex / ChatGPT5.5 自动推进一个最高优先级复审任务；DeepSeek 只可补齐交接材料，不得自审。其他消息按用户明确要求执行。
+当用户消息去除首尾空白后严格等于 `1` 时，按有序队列推进一个当前 AI 可执行的执行型任务，不做复审。当消息严格等于 `2` 时，Codex / ChatGPT5.5 按有序队列推进一个复审任务；DeepSeek 只可补齐交接材料，不得自审。其他消息按用户明确要求执行。
 
 ### 通用步骤
 
 1. 先确认身份：Codex / ChatGPT5.5 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；每小时控制器经 `tools/codex-cli-session.ps1` 启动的 Codex 责任方使用控制器以 `-Model` 和首条 stdin 输入传递的核验结果，不因 `codex exec` 不继承 request metadata 而重复阻塞；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
-2. 纯 `1` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`，从执行型任务开始选择；只有命中未审核、交接或复审路由时才读取审核入口及相应清单或交接条目。纯 `2` 读取 `AGENTS.md`、审核入口、未通过审核清单、当前交接队列和目标 diff；DeepSeek 还读其工作提示词。
+2. 纯 `1` / `2` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`；选中行后读取同一 ID 的 `开发管理/任务卡/<ID>.txt`。纯 `2` 再按审核入口加载该项需要的未通过条目、交接证据和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
-4. `1` 依次从当前队列中当前 AI 主责的 P0/P1、当前 AI 可修复的未通过项、交接中请求执行的非复审项、相关分线 backlog / 下一步索引、DeepSeek 批量整理任务、Codex 架构数值或复杂 Unity 任务中选择最小切片。
-5. `2` 依次从风险最高的待复审项、已返工可复核的未通过项、DeepSeek 请求复审/判断项和用户指定提交或 diff 中选择。
-6. `1` 一律跳过待复审项，继续选择待处理项；`2` 才处理待复审项。当前队列为空、过期或无匹配主责时，按状态维护规则读取相关分线 backlog 与建议索引。
-7. 选定真实对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：`1` 为 `TZG｜<中文简述>`，`2` 为 `TZG｜复审：<中文简述>`。简述使用任务卡或复审事实源的中文标题；无候选或改名失败不阻断流程。
-8. 命中审核、未审核、交接或复审路由时，按审核入口读取细则与相应事实源；普通执行任务按任务卡必查范围先定位、后读取，发现新依赖时补读，修改前读取目标完整逻辑单元。不得处理另一个 AI 主责的高风险任务，应写入交接请求。
-9. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段，finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
+4. 纯 `1` 从队首向后选择当前 AI 可执行的第一项 `codex_execute` 或 `external_execute`；不消费 `codex_review`。
+5. 纯 `2` 从队首向后选择第一项 `codex_review`；DeepSeek / Claude 不得自审。
+6. 路径冲突或执行器暂不可用时可在本轮继续检查下一行，但不修改顺序；明确逻辑阻塞必须先转状态并移出队列。
+7. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。
+8. 选定真实对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：`1` 为 `TZG｜<中文简述>`，`2` 为 `TZG｜复审：<中文简述>`。简述使用任务卡或复审事实源的中文标题；无候选或改名失败不阻断流程。
+9. 命中审核、未审核、交接或复审路由时，按审核入口读取细则与相应事实源；普通执行任务按任务卡必查范围先定位、后读取，发现新依赖时补读，修改前读取目标完整逻辑单元。不得处理另一个 AI 主责的高风险任务，应写入交接请求。
+10. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify` 分别传入事实字段，finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
 
 ### 角色例外
 
-- Codex / ChatGPT5.5 的 `1` 优先处理其主责执行型任务，不消费待复审队列；其自产工作完成必要验证后可闭环。
-- Codex / ChatGPT5.5 的 `2` 优先处理 DeepSeek 交接、待复审项、返工项或用户指定提交；通过后按审核规则关闭，未通过则更新未通过清单。
+- Codex / ChatGPT5.5 的 `1` 按队列顺序处理其主责执行型任务，不消费 `codex_review`；其自产工作完成必要验证后可闭环。
+- Codex / ChatGPT5.5 的 `2` 按队列顺序处理第一项 `codex_review`；通过后按审核规则关闭，未通过则更新未通过清单。
 - DeepSeek 的 `1` 只做其主责执行型任务；所有修改标为未审核，按外部两提交边界完成业务提交与交接提交。
 - DeepSeek 的 `2` 不得复审自己；仅补齐交接材料、验证输出和请求复审范围。
 
