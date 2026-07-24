@@ -1,0 +1,31 @@
+# C-ENV-PROFILE-01 · 关中野外最小环境档案复审归档
+
+- 完成日期：2026-07-24
+- 修改方：DeepSeek V4 Pro
+- 复审方：Codex / gpt-5.6-terra
+- 结论：通过
+
+## 提交链
+
+- 业务提交：`922a0751f52d81d4432d0e3e8abb3570012a7427`。
+- 交接提交：`b955f52`。
+- 交接身份与 Unity 目录 `.meta` 修正：`61c513f`。
+
+## 复审结果
+
+- 唯一 `env_guanzhong_wild` CSV 行、生成 asset 与 `EnvironmentProfileData` 的六字段序列化逐项相符：六条有向相邻边、两项地表原型引用、六个固定通道、六组同通道无序配对和五项五行关系引用均完整。
+- 现象通道、配对和五行引用符合既有导入器的失败关闭约束；资产脚本 GUID 指向 `EnvironmentProfileData`，且资源目录已有受跟踪的 folder `.meta`。
+- 复审补强 `EnvironmentProfileDataTests`：直接解析仓库 CSV，并将完整解析结果与生成 asset 对照，防止 CSV、样例常量或 asset 单独漂移。
+- 环境档案说明已移除临时「⚠️ 已修改/未审核」标记；当前交接队列已清空。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 errors；2 条既有 obsolete 警告。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths ...`：通过（5 files checked）。
+
+## 保留边界
+
+- 本次只关闭 C-ENV-PROFILE-01 复审；未实施 `U-2_5D-01D`。
+- `DEC-20260724-ENVPROFILE = A` 只授权该环境档案，故 U-2_5D-01D 仍为冻结状态，须获得独立实施授权后才能进入队列。

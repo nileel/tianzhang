@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using TianZhang.Editor;
@@ -65,42 +64,71 @@ namespace TianZhang.Tests
             "env_guanzhong_wild,-1:0>0:0|0:0>1:0|1:0>1:-1|0:0>0:1|0:1>-1:1|-1:0>-1:1,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
 
         [Test]
-        public void ParseEnvironmentProfilesAcceptsGuanzhongWildProductionProfile()
+        public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
         {
-            var profiles = DataConfigImporter.ParseEnvironmentProfiles(
+            string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/EnvironmentProfiles.csv");
+            var expectedProfiles = DataConfigImporter.ParseEnvironmentProfiles(
                 new[] { Header, GuanzhongWildRow },
                 "EnvironmentProfiles.csv");
+            var actualProfiles = DataConfigImporter.ParseEnvironmentProfiles(
+                File.ReadAllLines(sourceFilePath),
+                sourceFilePath);
 
-            Assert.AreEqual(1, profiles.Length);
-            var profile = profiles[0];
-            Assert.AreEqual("env_guanzhong_wild", profile.profileId);
+            try
+            {
+                Assert.AreEqual(1, expectedProfiles.Length);
+                Assert.AreEqual(1, actualProfiles.Length);
+                AssertEnvironmentProfileEquals(expectedProfiles[0], actualProfiles[0]);
 
-            Assert.AreEqual(6, profile.directedEdges.Length);
+                const string assetPath =
+                    "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset";
+                var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(assetPath);
+                Assert.IsNotNull(asset, $"Missing generated environment asset at {assetPath}.");
+                AssertEnvironmentProfileEquals(expectedProfiles[0], asset);
+            }
+            finally
+            {
+                foreach (var profile in expectedProfiles)
+                    UnityEngine.Object.DestroyImmediate(profile);
+                foreach (var profile in actualProfiles)
+                    UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
 
-            Assert.AreEqual(2, profile.surfacePrototypeRefs.Length);
-            CollectionAssert.Contains(profile.surfacePrototypeRefs, "surface_grassland");
-            CollectionAssert.Contains(profile.surfacePrototypeRefs, "surface_loess");
+        private static void AssertEnvironmentProfileEquals(EnvironmentProfileData expected, EnvironmentProfileData actual)
+        {
+            Assert.AreEqual(expected.profileId, actual.profileId);
 
-            Assert.AreEqual(6, profile.phenomenonChannels.Length);
-            var channels = new Dictionary<EnvironmentPhenomenonChannel, string[]>();
-            foreach (var channelData in profile.phenomenonChannels)
-                channels[channelData.channel] = channelData.phenomenonTypeRefs;
-            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Airflow));
-            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Visibility));
-            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Temperature));
-            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.Precipitation));
-            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.SuspendedHazard));
-            Assert.IsTrue(channels.ContainsKey(EnvironmentPhenomenonChannel.CloudDischarge));
+            Assert.AreEqual(expected.directedEdges.Length, actual.directedEdges.Length);
+            for (int index = 0; index < expected.directedEdges.Length; index++)
+            {
+                Assert.AreEqual(expected.directedEdges[index].fromQ, actual.directedEdges[index].fromQ);
+                Assert.AreEqual(expected.directedEdges[index].fromR, actual.directedEdges[index].fromR);
+                Assert.AreEqual(expected.directedEdges[index].toQ, actual.directedEdges[index].toQ);
+                Assert.AreEqual(expected.directedEdges[index].toR, actual.directedEdges[index].toR);
+            }
 
-            Assert.AreEqual(6, profile.phenomenonPairs.Length);
-            Assert.AreEqual(EnvironmentPhenomenonChannel.Airflow, profile.phenomenonPairs[0].channel);
-            Assert.AreEqual("gust", profile.phenomenonPairs[0].firstTypeRef);
-            Assert.AreEqual("wind", profile.phenomenonPairs[0].secondTypeRef);
-            Assert.AreEqual("gust", profile.phenomenonPairs[0].resultTypeRef);
+            CollectionAssert.AreEqual(expected.surfacePrototypeRefs, actual.surfacePrototypeRefs);
 
-            CollectionAssert.AreEqual(
-                new[] { "element_wood", "element_fire", "element_earth", "element_metal", "element_water" },
-                profile.elementRelationRefs);
+            Assert.AreEqual(expected.phenomenonChannels.Length, actual.phenomenonChannels.Length);
+            for (int index = 0; index < expected.phenomenonChannels.Length; index++)
+            {
+                Assert.AreEqual(expected.phenomenonChannels[index].channel, actual.phenomenonChannels[index].channel);
+                CollectionAssert.AreEqual(
+                    expected.phenomenonChannels[index].phenomenonTypeRefs,
+                    actual.phenomenonChannels[index].phenomenonTypeRefs);
+            }
+
+            Assert.AreEqual(expected.phenomenonPairs.Length, actual.phenomenonPairs.Length);
+            for (int index = 0; index < expected.phenomenonPairs.Length; index++)
+            {
+                Assert.AreEqual(expected.phenomenonPairs[index].channel, actual.phenomenonPairs[index].channel);
+                Assert.AreEqual(expected.phenomenonPairs[index].firstTypeRef, actual.phenomenonPairs[index].firstTypeRef);
+                Assert.AreEqual(expected.phenomenonPairs[index].secondTypeRef, actual.phenomenonPairs[index].secondTypeRef);
+                Assert.AreEqual(expected.phenomenonPairs[index].resultTypeRef, actual.phenomenonPairs[index].resultTypeRef);
+            }
+
+            CollectionAssert.AreEqual(expected.elementRelationRefs, actual.elementRelationRefs);
         }
 
         [Test]

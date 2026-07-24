@@ -1,6 +1,5 @@
 # 关中野外最小环境档案
 
-> ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：新建唯一生产环境档案 `env_guanzhong_wild`。
 > 本档案为正式 `AdventureScene` 唯一冒险入口 `guanzhong_wild`（关中野外）的最小生产环境配置，由 `DEC-20260724-ENVPROFILE = A` 授权。
 
 ## 概览
