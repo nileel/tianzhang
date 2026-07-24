@@ -1,6 +1,6 @@
 # 当前任务队列（✅ 已审核）
 
-> 内容边界：TQ-071 只批准“关中：小族出身 → 关中城 → 关中野外的一场战斗”薄内容切片。其他剧情、角色、功法、术法、神通或世界设定扩写不得补入本队列；批准切片也须先建立完整任务卡。
+> 内容边界：TQ-071 只批准“关中：小族出身 → 关中城 → 关中野外的一场战斗”薄内容切片。`DEC-20260724-ENVPROFILE = A` 额外且仅授权该正式冒险入口的一份关中野外最小生产环境档案；其他剧情、角色、功法、术法、神通或世界设定扩写不得补入本队列；批准切片也须先建立完整任务卡。
 > 本文件只放近期可执行、可验证、可提交的任务切片；复审和交接任务走 `开发管理/审核入口.txt`。
 > 过程记录已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
 > 已推送的完成卡已归档至 `开发管理/任务归档/2026-07-23-当前任务队列已完成卡归档.txt`；尚未推送的完成卡继续保留在本队列。
@@ -10,6 +10,7 @@
 | ID | 优先级 | 主责 | 类型 | 状态 | 任务 |
 |----|--------|------|------|------|------|
 | U-2_5D-01D | P2 | Codex / gpt-5.6-terra | 场景与 Unity | 阻塞（C-ENV-PROFILE-01） | 共享空间查询契约实现与旧范围逻辑迁移 |
+| C-ENV-PROFILE-01 | P2 | DeepSeek V4 Pro 执行；Codex 复审 | 内容与数据 | 待处理 | 关中野外最小生产环境档案 |
 | D-REALM-02B | P2 | Codex / gpt-5.6-terra | 数据链路 | 已完成 | 炼神术法／神通资料片隔离闭环验证 |
 | N-SLOT-01 | P2 | Codex / gpt-5.5 | 数值与战斗 | 阻塞（N-FPD-DANXIANG-01、N-FPD-MANSION-01） | 金丹槽位与丹枢加成数值方案 |
 | N-AI-01A | P3 | Codex / gpt-5.6-terra | 数值与战斗 | 已完成 | 战棋 AI 与 Boss 模板现行所有者定位 |
@@ -17,6 +18,19 @@
 | M-MGMT-01B | P3 | Codex / gpt-5.6-terra | 管理维护 | 已完成 | 管理目录唯一旧新路径映射与批准输入 |
 
 ## 任务卡片
+### C-ENV-PROFILE-01 · 关中野外最小生产环境档案
+
+- 来源：`DEC-20260724-ENVPROFILE = A`、`开发管理/任务列表/内容设计任务.txt` 的 C-ENV-PROFILE-01、已完成的 D-ENV-SCHEMA-01 与 N-ENV-01。
+- 当前状态：待处理；依赖：D-ENV-SCHEMA-01、N-ENV-01 已完成。负责人仅授权一份关中野外最小档案；业务提交后必须由 Codex 复审，复审前不得将 U-2_5D-01D 改为待处理。
+- 主责：DeepSeek V4 Pro 执行；Codex 复审。Codex 已在本队列卡中完成路径与边界规划。
+- 必读：`docs/基础设定/战场空间与环境规则.txt#二、战场环境供给与生成`、`#五、地表状态`、`#六、区域现象通道`；`docs/基础设定/五行显化与环境交互规则.txt#一、五行事件与灵域`、`#二、显化配方与运行载体`；`UNITY_STRUCTURE.md#场景与正式运行时链`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::AdventureSceneController`、`src/Assets/DataConfig/README.txt#EnvironmentProfiles.csv 契约`、当前 `src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs::EnvironmentProfileData`、`src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportEnvironmentProfiles`、`ParseEnvironmentProfiles` 与 `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs::EnvironmentProfileDataTests`。
+- 预期修改路径：新建 `docs/基础设定/关中野外最小环境档案.txt`、`src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` 与 `.meta`；更新 `src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`开发管理/任务列表/内容设计任务.txt`、`开发管理/当前任务队列.txt`；业务提交后仅更新 `开发管理/AI合作沟通.txt` 登记真实业务 SHA 与复审请求。执行前须确认上述路径不与人工改动冲突。
+- 范围：只为唯一正式 `AdventureScene` 的 `guanzhong_wild` 冒险入口生产 `env_guanzhong_wild`。档案须以现有六字段契约提供有向相邻边、地表原型引用、六个固定现象通道、同通道唯一配对与五行关系引用；新建的单一说明文件逐项回链这些引用到既有环境规则，并说明其可由后续 Unity 任务显式绑定。参数只进入该 CSV 与生成 asset，不写显示文本或数值结论。
+- 禁止：不新增第二份环境档案、地表／现象通道、五行关系、角色、剧情、关中地图、显示文本、数值、BattleSim、运行时代码、导入器、场景绑定、默认档案、兼容分支或 `U-2_5D-01D` 实现；不得把 CSV 引用误写成地表原型或现象的运行时定义。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/基础设定/关中野外最小环境档案.txt,开发管理/任务列表/内容设计任务.txt,开发管理/当前任务队列.txt,开发管理/AI合作沟通.txt`，以及 `git diff --check`。
+- 完成条件：唯一 `env_guanzhong_wild` CSV 行和生成 asset 经直接 EditMode 回归验证，恰含六个固定通道和五种关系引用，且没有重复／翻转的同通道配对；说明文件能回链每项引用与关中野外入口；业务交接明确标记为 `⚠️ 已修改/未审核`。本卡不把环境档案或 U-2_5D-01D 写成已完成。
+- 停止条件：若一份档案不能在不新增环境规则、数值、显示文本、第二档案、运行时代码或场景绑定的前提下通过现有契约，或需要为 `AdventureScene` 猜测默认值／兼容逻辑，保留失败证据并停止；不得以 fixture、空引用或另建入口代替生产档案。
+
 ### U-2_5D-01D · 共享空间查询契约实现与旧范围逻辑迁移
 
 - 来源：`开发管理/2.5D共享空间查询契约对齐方案.txt`、`DEC-20260722-U25D01B = A`，以及 2026-07-23 对首次实现的最终只读复核与负责人回滚决定。
