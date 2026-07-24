@@ -92,6 +92,9 @@ function Invoke-Responsibility {
   $startInfo.RedirectStandardOutput = $true
   $startInfo.RedirectStandardError = $true
   $startInfo.RedirectStandardInput = -not [string]::IsNullOrEmpty($DecisionInput)
+  if ($startInfo.RedirectStandardInput) {
+    $startInfo.StandardInputEncoding = [Text.UTF8Encoding]::new($false)
+  }
   foreach ($argument in @(
       '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $invokerPath,
       '-Action', $Action, '-Route', $Route,
@@ -254,6 +257,8 @@ $global:LASTEXITCODE = 0
   Assert-True -Condition ($transportedPrompt.Contains($taskId)) -Message 'Task id was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains('模型核验证明')) -Message 'Unicode prompt text was not transported through stdin'
   Assert-True -Condition ($transportedPrompt.Contains("`n")) -Message 'Multiline prompt was not transported through stdin'
+  Assert-True -Condition ($transportedPrompt.Contains("RepositoryRoot: $gitRoot")) -Message 'Repository root was not transported through stdin'
+  Assert-True -Condition ($transportedPrompt.Contains('不得创建或切换 linked worktree、任务分支')) -Message 'Automated responsibility worktree prohibition was not transported through stdin'
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
