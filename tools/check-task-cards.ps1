@@ -32,16 +32,22 @@ function Normalize-Cell {
   $Value.Trim().Trim([char]96)
 }
 
-function Assert-RepositoryFilePath {
+function Assert-RepositoryRelativePath {
   param([string]$Value, [string]$Label)
   $invalid = [string]::IsNullOrWhiteSpace($Value) -or
+    $Value -cne $Value.Trim() -or
     [IO.Path]::IsPathRooted($Value) -or
     $Value.Contains('\') -or
     $Value -match '[*?\[\]]' -or
     $Value.EndsWith('/') -or
-    (@(($Value -split '/') | Where-Object { $_ -eq '.' -or $_ -eq '..' }).Count -gt 0) -or
-    [string]::IsNullOrEmpty([IO.Path]::GetExtension($Value))
+    (@(($Value -split '/') | Where-Object { $_ -eq '.' -or $_ -eq '..' }).Count -gt 0)
   Assert-Contract (-not $invalid) "invalid repository-relative path in ${Label}: $Value"
+}
+
+function Assert-RepositoryFilePath {
+  param([string]$Value, [string]$Label)
+  Assert-RepositoryRelativePath $Value $Label
+  Assert-Contract (-not [string]::IsNullOrEmpty([IO.Path]::GetExtension($Value))) "invalid repository-relative path in ${Label}: $Value"
 }
 
 function Get-TableRows {
@@ -61,8 +67,15 @@ function Get-TableRows {
   }
   Assert-Contract ($headerIndex -ge 0) "missing $Kind table header: $Path"
 
+  $separatorIndex = $headerIndex + 1
+  Assert-Contract ($separatorIndex -lt $lines.Count) "missing $Kind table separator: $Path"
+  $separatorLine = $lines[$separatorIndex].Trim()
+  Assert-Contract ($separatorLine.StartsWith('|') -and $separatorLine.EndsWith('|')) "invalid $Kind table separator: $Path"
+  $separatorCells = @($separatorLine.Trim([char]'|').Split([char]'|') | ForEach-Object { Normalize-Cell $_ })
+  Assert-Contract ($separatorCells.Count -eq $Header.Count -and (@($separatorCells | Where-Object { $_ -notmatch '^:?-{3,}:?$' }).Count -eq 0)) "invalid $Kind table separator: $Path"
+
   $rows = @()
-  for ($index = $headerIndex + 1; $index -lt $lines.Count; $index++) {
+  for ($index = $separatorIndex + 1; $index -lt $lines.Count; $index++) {
     $line = $lines[$index].Trim()
     if ([string]::IsNullOrWhiteSpace($line) -or -not $line.StartsWith('|')) { break }
     Assert-Contract ($line.EndsWith('|')) "$Kind row has wrong cell count: $Path"
@@ -120,6 +133,9 @@ function Get-Card {
 
 try {
   $repositoryPath = (Resolve-Path -LiteralPath $RepositoryRoot).Path
+  Assert-RepositoryRelativePath $TaskCardRoot 'TaskCardRoot'
+  Assert-RepositoryRelativePath $QueuePath 'QueuePath'
+  Assert-RepositoryRelativePath $BacklogRoot 'BacklogRoot'
   $taskCardPath = Join-Path $repositoryPath $TaskCardRoot
   Assert-Contract (Test-Path -LiteralPath $taskCardPath -PathType Container) "missing task-card directory: $taskCardPath"
   $cards = @()

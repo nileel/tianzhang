@@ -74,6 +74,7 @@ function Set-Card {
 function Set-Queue {
   param([string]$Root, [object[]]$Cards)
   $lines = @('| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |')
+  $lines += '| --- | --- | --- | --- | --- | --- | --- | --- |'
   foreach ($card in $Cards) {
     $lines += "| $($card.id) | $($card.route) | $($card.owner) | $($card.priority) | $($card.domain) | $($card.stage) | $($card.title) | 开发管理/任务卡/$($card.id).txt |"
   }
@@ -84,6 +85,7 @@ function Set-Backlog {
   param([string]$Root, [object[]]$Cards)
   $projection = @{ ready = '已排队'; blocked = '阻塞'; frozen = '冻结'; pending_decision = '待决定'; waiting_reply = '等待回复' }
   $lines = @('| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |')
+  $lines += '| --- | --- | --- | --- | --- | --- | --- |'
   foreach ($card in $Cards) {
     $blocked = if ($card.blockedBy.Count) { $card.blockedBy -join '、' } else { '—' }
     $lines += "| $($card.id) | $($card.priority) | $($card.owner) | $($projection[$card.dispatchState]) | $blocked | $($card.title) | 开发管理/任务卡/$($card.id).txt |"
@@ -103,9 +105,9 @@ function New-Fixture {
 }
 
 function Invoke-Checker {
-  param([string]$Root)
+  param([string]$Root, [string[]]$Overrides = @())
   $checker = Join-Path $PSScriptRoot 'check-task-cards.ps1'
-  $output = (& pwsh -NoProfile -ExecutionPolicy Bypass -File $checker -RepositoryRoot $Root 2>&1 | Out-String)
+  $output = (& pwsh -NoProfile -ExecutionPolicy Bypass -File $checker -RepositoryRoot $Root @Overrides 2>&1 | Out-String)
   [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = $output }
 }
 
@@ -123,18 +125,33 @@ function Assert-Failure {
   Assert-True ($result.Output -match [regex]::Escape($Expected)) "$Name missing '$Expected': $($result.Output)"
 }
 
+function Assert-OverrideFailure {
+  param([string]$Name, [string]$Root, [string]$Expected, [string[]]$Overrides)
+  $result = Invoke-Checker $Root $Overrides
+  Assert-True ($result.ExitCode -ne 0) "$Name should fail"
+  Assert-True ($result.Output -match [regex]::Escape($Expected)) "$Name missing '$Expected': $($result.Output)"
+}
+
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("check-task-cards-test-" + [guid]::NewGuid().ToString('N'))
 try {
   [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
   $fixture = New-Fixture $tempRoot
   Assert-Success 'canonical fixture' $tempRoot
+  Assert-OverrideFailure 'rooted task-card override' $tempRoot 'invalid repository-relative path in TaskCardRoot' @('-TaskCardRoot', 'C:/outside')
+  Assert-OverrideFailure 'traversal queue override' $tempRoot 'invalid repository-relative path in QueuePath' @('-QueuePath', '../outside.txt')
+  Assert-OverrideFailure 'traversal backlog override' $tempRoot 'invalid repository-relative path in BacklogRoot' @('-BacklogRoot', '开发管理/../outside')
+  $separatorRoot = Join-Path $tempRoot 'markdown-separators'
+  $separatorFixture = New-Fixture $separatorRoot
+  Assert-Success 'markdown table separator rows' $separatorRoot
 
   $cases = @(
     @{ Name = 'missing task-card directory'; Expected = 'task-card directory'; Change = { param($root, $f) Remove-Item -LiteralPath (Join-Path $root '开发管理/任务卡') -Recurse -Force } },
     @{ Name = 'invalid UTF-8'; Expected = 'invalid UTF-8'; Change = { param($root, $f) [IO.File]::WriteAllBytes((Join-Path $root '开发管理/任务卡/T-READY-01.txt'), [byte[]](0xFF, 0xFE)) } },
     @{ Name = 'invalid JSON'; Expected = 'invalid JSON'; Change = { param($root, $f) Write-Utf8 (Join-Path $root '开发管理/任务卡/T-READY-01.txt') "---TASK-META---`n{ bad }`n---TASK-BODY---" } },
     @{ Name = 'duplicate metadata delimiter'; Expected = 'metadata delimiter'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务卡/T-READY-01.txt'; Write-Utf8 $path ((Get-Content -Raw $path) + "`n---TASK-META---") } },
+    @{ Name = 'missing metadata delimiter'; Expected = 'metadata delimiter'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务卡/T-READY-01.txt'; Write-Utf8 $path ((Get-Content -Raw $path).Replace('---TASK-META---', '---META---')) } },
     @{ Name = 'missing body delimiter'; Expected = 'body delimiter'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务卡/T-READY-01.txt'; Write-Utf8 $path ((Get-Content -Raw $path).Replace('---TASK-BODY---', '---BODY---')) } },
+    @{ Name = 'duplicate body delimiter'; Expected = 'body delimiter'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务卡/T-READY-01.txt'; Write-Utf8 $path ((Get-Content -Raw $path) + "`n---TASK-BODY---") } },
     @{ Name = 'missing required metadata field'; Expected = 'missing metadata field'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.Remove('domain'); Set-Card $root $m } },
     @{ Name = 'filename ID mismatch'; Expected = 'filename/id mismatch'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.id = 'T-OTHER-01'; Set-Card $root $m -FileName 'T-READY-01.txt' } },
     @{ Name = 'duplicate ID'; Expected = 'duplicate card ID'; Change = { param($root, $f) $m = Copy-Metadata $f.Blocked; $m.id = 'T-READY-01'; Set-Card $root $m -FileName 'T-BLOCKED-01.txt' } },
