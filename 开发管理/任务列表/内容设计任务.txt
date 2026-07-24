@@ -11,34 +11,34 @@
 
 ## 任务
 
-| ID | 优先级 | 建议主责 | 状态 | 摘要 |
-|----|--------|----------|------|------|
-| C-JD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 待用户确认 | 51 项名称候选已由 Codex 复审通过；用户确认前不得写入正式显示事实，且 D-JD-SCHEMA-01 前不得进入数据契约。 |
-| C-FPD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 |
-| C-FPD-MANSION-01 | P1 | Codex | 冻结（薄内容切片外） | 设计命、魂、识、悟、运五类府体的具体机制与非数值边界；每府仍只有一项府体效果。 |
-| C-FPD-CULTIVATE-01 | P1 | Codex | 冻结（薄内容切片外） | 锁定紫府蕴养、开府考验、失败损耗和闭关停止条件的机制边界，不提前填数值。 |
-| C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-MANSION-01、C-ECON-01、内容冻结） | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 |
-| C-FPD-GONGFA-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、N-FPD-GROWTH-01、内容冻结） | 分六批迁移 29 部功法的筑基方案、四阶段成长、道基核心效果绑定和五府软亲和。 |
-| C-FPD-SPELL-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-MANSION-01、N-FPD-MANSION-01、内容冻结） | 逐项迁移 11 项古修术法的固定镇府神通、兼容府属、升格条件、源术法处置及主／辅边界。 |
-| C-FPD-SHENTONG-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、N-FPD-MANSION-01、内容冻结） | 迁移 `宿慧轮回`，删除道基品质倍率并补齐镇府神通或其他合法来源边界。 |
-| C-FPD-LORE-MIGRATE-01 | P2 | Codex | 阻塞（C-FPD-NAME-01、内容冻结） | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 |
-| C-JD-COMBO-01 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 内容冻结（D-JD-SCHEMA-01、N-JD-RULE-01 前） | 基于三实位与兼容契约设计组合档案；不得绕过确定性冲突规则。 |
-| C-JD-LORE-MIGRATE-01 | P1 | Codex | 内容冻结（结构规则迁移完成后） | 对旧源/化/界叙事引用逐项语义重判，迁移到道路、效果、装配、自辟元婴或环境规则；禁止机械替换。 |
-| C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 冻结（薄内容切片外） | 太一道庭法箓 CSV/BattleSim/Unity 字段方案。 |
-| C-GUXIU-03 | P2 | DeepSeek | 冻结（薄内容切片外） | 古修第一批神通；每个完成品单独文件。 |
-| C-SANXIU-01 | P2 | DeepSeek | 冻结（薄内容切片外） | 散修通用内容可玩性补强清单。 |
-| C-NPC-01 | P2 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | 重要 NPC 源/化/界字段后的叙事扩写。 |
-| C-STORY-WM-P0 | P0 | Codex | 冻结（薄内容切片外） | 世界主线 P0 后续扩写；已完成前置不再重复排期。 |
-| C-STORY-WM-L1 | P1 | Codex | 冻结（薄内容切片外） | 第二至第七章 L1 骨架；来源：`docs/剧情/主线/世界主线-后续拆分工作清单.txt`。 |
-| C-STORY-WM-L2 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | L2/L3/L4 地区主线、势力线、NPC 分支和终局演出。 |
-| C-TZ-CHARTER-ENTRIES-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（M7 未授权；01A、01B 未完成） | M7 父任务；只负责两个内容批次的依赖、跨条目地区分布和最终一致性收口，不直接替代子任务生产。 |
-| C-TZ-CHARTER-ENTRIES-01A | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（C-ENV-PROFILE-01、内容授权） | 生产 `灵机聚散`、`劫威缓厉` 两项非地纪册界条目；每项单独文件。 |
-| C-TZ-CHARTER-ENTRIES-01B | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（C-ENV-PROFILE-01、内容授权） | 生产雷、火、冰、瘴、风、水、星、阴八项五行地纪；每项单独文件并提交不可拆分生态包。 |
-| C-STORY-04 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | 低阶势力生态与一条样板地方节点成长线；中后期可成为地方授权者、见证者或受益共同体。 |
-| C-QUEST-01 | P2 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | 宗门入门支线任务首批；一任务一文件。 |
-| C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | 据点通用称谓、寒暄和任务入口文案表。 |
-| C-ECON-01 | P3 | Codex 规划 | 冻结（薄内容切片外） | 灵石、丹药、天材地宝、掉落表经济基线。 |
-| C-HIGH-01 | P3 | Codex | 冻结（薄内容切片外） | 高阶内容按 NPC/资料片/历史说明分类收口。 |
+| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
+|----|--------|------|----------|--------|------|--------|
+| C-JD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 待用户确认 | — | 51 项名称候选已由 Codex 复审通过；用户确认前不得写入正式显示事实，且 D-JD-SCHEMA-01 前不得进入数据契约。 | — |
+| C-FPD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | — | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 | — |
+| C-FPD-MANSION-01 | P1 | Codex | 冻结（薄内容切片外） | — | 设计命、魂、识、悟、运五类府体的具体机制与非数值边界；每府仍只有一项府体效果。 | — |
+| C-FPD-CULTIVATE-01 | P1 | Codex | 冻结（薄内容切片外） | — | 锁定紫府蕴养、开府考验、失败损耗和闭关停止条件的机制边界，不提前填数值。 | — |
+| C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-MANSION-01、C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
+| C-FPD-GONGFA-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、N-FPD-GROWTH-01、内容冻结） | — | 分六批迁移 29 部功法的筑基方案、四阶段成长、道基核心效果绑定和五府软亲和。 | — |
+| C-FPD-SPELL-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-MANSION-01、N-FPD-MANSION-01、内容冻结） | — | 逐项迁移 11 项古修术法的固定镇府神通、兼容府属、升格条件、源术法处置及主／辅边界。 | — |
+| C-FPD-SHENTONG-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、N-FPD-MANSION-01、内容冻结） | — | 迁移 `宿慧轮回`，删除道基品质倍率并补齐镇府神通或其他合法来源边界。 | — |
+| C-FPD-LORE-MIGRATE-01 | P2 | Codex | 阻塞（C-FPD-NAME-01、内容冻结） | — | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 | — |
+| C-JD-COMBO-01 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 内容冻结（D-JD-SCHEMA-01、N-JD-RULE-01 前） | — | 基于三实位与兼容契约设计组合档案；不得绕过确定性冲突规则。 | — |
+| C-JD-LORE-MIGRATE-01 | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 对旧源/化/界叙事引用逐项语义重判，迁移到道路、效果、装配、自辟元婴或环境规则；禁止机械替换。 | — |
+| C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 冻结（薄内容切片外） | — | 太一道庭法箓 CSV/BattleSim/Unity 字段方案。 | — |
+| C-GUXIU-03 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 古修第一批神通；每个完成品单独文件。 | — |
+| C-SANXIU-01 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 散修通用内容可玩性补强清单。 | — |
+| C-NPC-01 | P2 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 重要 NPC 源/化/界字段后的叙事扩写。 | — |
+| C-STORY-WM-P0 | P0 | Codex | 冻结（薄内容切片外） | — | 世界主线 P0 后续扩写；已完成前置不再重复排期。 | — |
+| C-STORY-WM-L1 | P1 | Codex | 冻结（薄内容切片外） | — | 第二至第七章 L1 骨架；来源：`docs/剧情/主线/世界主线-后续拆分工作清单.txt`。 | — |
+| C-STORY-WM-L2 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | L2/L3/L4 地区主线、势力线、NPC 分支和终局演出。 | — |
+| C-TZ-CHARTER-ENTRIES-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（M7 未授权；01A、01B 未完成） | — | M7 父任务；只负责两个内容批次的依赖、跨条目地区分布和最终一致性收口，不直接替代子任务生产。 | — |
+| C-TZ-CHARTER-ENTRIES-01A | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（C-ENV-PROFILE-01、内容授权） | — | 生产 `灵机聚散`、`劫威缓厉` 两项非地纪册界条目；每项单独文件。 | — |
+| C-TZ-CHARTER-ENTRIES-01B | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（C-ENV-PROFILE-01、内容授权） | — | 生产雷、火、冰、瘴、风、水、星、阴八项五行地纪；每项单独文件并提交不可拆分生态包。 | — |
+| C-STORY-04 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 低阶势力生态与一条样板地方节点成长线；中后期可成为地方授权者、见证者或受益共同体。 | — |
+| C-QUEST-01 | P2 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 宗门入门支线任务首批；一任务一文件。 | — |
+| C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 据点通用称谓、寒暄和任务入口文案表。 | — |
+| C-ECON-01 | P3 | Codex 规划 | 冻结（薄内容切片外） | — | 灵石、丹药、天材地宝、掉落表经济基线。 | — |
+| C-HIGH-01 | P3 | Codex | 冻结（薄内容切片外） | — | 高阶内容按 NPC/资料片/历史说明分类收口。 | — |
 
 ## C-JD-LORE-MIGRATE-01 精确影响范围
 

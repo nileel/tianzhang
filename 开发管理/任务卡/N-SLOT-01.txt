@@ -1,0 +1,66 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-SLOT-01",
+  "title": "金丹槽位与丹枢加成数值方案",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-FPD-DANXIANG-01",
+    "N-FPD-MANSION-01"
+  ],
+  "stateReason": "等待丹相主辅预算与五府府体预算完成",
+  "expectedPaths": [
+    "simulations/BattleSim/Program.cs",
+    "docs/角色养成/术法槽位设计.txt",
+    "docs/基础设定/角色数值设计.txt",
+    "开发管理/金丹槽位与丹枢加成数值验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-SLOT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-SLOT-01 · 金丹槽位与丹枢加成数值方案
+
+## 来源与当前边界
+
+- 2026-07-20 筑基／紫府／丹相集成规格。
+- N-GC-BASE-01 已完成。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`。
+- `docs/基础设定/角色数值设计.txt`、`docs/基础设定/境界特性.txt`、`docs/基础设定/元婴锚点与金丹位格设定.txt`。
+- `docs/角色养成/术法槽位设计.txt` 与 `simulations/BattleSim/Program.cs`。
+
+## 实施范围
+
+- 基于已通过的 G2 覆盖和新主／辅预算，提出并验证术法槽、普通神通槽与合法丹枢接口方案。
+- 方案明确槽位与丹枢的输入、输出、适用边界、目标指标和数值阈值，并覆盖 1～5 府与 1～3 稳定位格。
+
+## 禁止项
+
+- 紫府数量、府属、第四／第五府和稳定位格数量都不得自动生成普通槽位；任何槽位修正必须来自明示效果绑定。
+- 不得提前实施 N-SEAT-01 的占据结算、N-SUPPRESS-01 的冲突规则或伤害表调整。
+
+## 验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- `git diff --check`。
+
+## 完成条件
+
+- 方案明确槽位与丹枢的输入、输出、适用边界、目标指标和数值阈值。
+- 覆盖 1～5 府与 1～3 稳定位格，不让第四、第五府失效或凭数量增槽，并保留可复现的 BattleSim 证据。
+
+## 停止条件
+
+- N-FPD-MANSION-01 或 N-FPD-DANXIANG-01 尚未完成，或方案必须依赖府数自动加槽、额外位格／丹相或未确认府体数值。

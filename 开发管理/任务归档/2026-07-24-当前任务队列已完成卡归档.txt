@@ -1,0 +1,86 @@
+# 2026-07-24 当前任务队列已完成卡归档
+
+> 以下条目是在事件驱动迁移前已经完成或复审通过的旧式完整任务卡，仅保留历史记录，不是 `开发管理/任务卡/` 下的活跃任务卡文件。
+
+### C-ENV-PROFILE-01 · 关中野外最小生产环境档案
+
+- 来源：`DEC-20260724-ENVPROFILE = A`、`开发管理/任务列表/内容设计任务.txt` 的 C-ENV-PROFILE-01、已完成的 D-ENV-SCHEMA-01 与 N-ENV-01。
+- 当前状态：审核完成；依赖：D-ENV-SCHEMA-01、N-ENV-01 已完成。复审证据见 `开发管理/AI合作归档/2026-07-24-C-ENV-PROFILE-01-环境档案复审归档.txt`；待本提交推送后从近期队列归档。
+- 主责：DeepSeek V4 Pro 执行；Codex 复审。Codex 已在本队列卡中完成路径与边界规划。
+- 必读：`docs/基础设定/战场空间与环境规则.txt#二、战场环境供给与生成`、`#五、地表状态`、`#六、区域现象通道`；`docs/基础设定/五行显化与环境交互规则.txt#一、五行事件与灵域`、`#二、显化配方与运行载体`；`UNITY_STRUCTURE.md#场景与正式运行时链`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::AdventureSceneController`、`src/Assets/DataConfig/README.txt#EnvironmentProfiles.csv 契约`、当前 `src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs::EnvironmentProfileData`、`src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportEnvironmentProfiles`、`ParseEnvironmentProfiles` 与 `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs::EnvironmentProfileDataTests`。
+- 预期修改路径：新建 `docs/基础设定/关中野外最小环境档案.txt`、`src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` 与 `.meta`；更新 `src/Assets/DataConfig/EnvironmentProfiles.csv`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`、`开发管理/任务列表/内容设计任务.txt`、`开发管理/当前任务队列.txt`；业务提交后仅更新 `开发管理/AI合作沟通.txt` 登记真实业务 SHA 与复审请求。执行前须确认上述路径不与人工改动冲突。
+- 范围：只为唯一正式 `AdventureScene` 的 `guanzhong_wild` 冒险入口生产 `env_guanzhong_wild`。档案须以现有六字段契约提供有向相邻边、地表原型引用、六个固定现象通道、同通道唯一配对与五行关系引用；新建的单一说明文件逐项回链这些引用到既有环境规则，并说明其可由后续 Unity 任务显式绑定。参数只进入该 CSV 与生成 asset，不写显示文本或数值结论。
+- 禁止：不新增第二份环境档案、地表／现象通道、五行关系、角色、剧情、关中地图、显示文本、数值、BattleSim、运行时代码、导入器、场景绑定、默认档案、兼容分支或 `U-2_5D-01D` 实现；不得把 CSV 引用误写成地表原型或现象的运行时定义。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/基础设定/关中野外最小环境档案.txt,开发管理/任务列表/内容设计任务.txt,开发管理/当前任务队列.txt,开发管理/AI合作沟通.txt`，以及 `git diff --check`。
+- 完成记录：唯一 `env_guanzhong_wild` CSV 行和生成 asset 经直接 EditMode 回归验证；六个固定通道、五种关系引用及无重复／翻转配对均已独立复核。交接已消费，详见复审归档；本轮未把 U-2_5D-01D 改为待处理或已完成。
+- 停止条件：若一份档案不能在不新增环境规则、数值、显示文本、第二档案、运行时代码或场景绑定的前提下通过现有契约，或需要为 `AdventureScene` 猜测默认值／兼容逻辑，保留失败证据并停止；不得以 fixture、空引用或另建入口代替生产档案。
+
+### D-REALM-02B · 炼神术法／神通资料片隔离闭环验证
+
+- 来源：`开发管理/高阶内容现行引用分类与决策输入.txt` 的 D-REALM-DEC-01，以及 `DEC-20260723-REALM01 = C`。
+- 当前状态：已完成；依赖：G3 已通过，负责人决定已锁定；无待决策。D-REALM-DEC-02～04 不属于本卡前置。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数据链路任务.txt`、`开发管理/高阶内容现行引用分类与决策输入.txt`、`docs/角色养成/术法/太一道庭/万流归宗.txt`、`docs/角色养成/术法/太一道庭/天书云篆.txt`、`docs/角色养成/神通/太一道庭/法域·万象玄门.txt`、`docs/角色养成/神通/散修/灵域 · 万象归元.txt`、`src/Assets/DataConfig/Spells.csv`、`Skills.csv`、`Language.csv`、`src/Assets/Data/Spells/Spell_spell_wanliuguizong.asset`、`Spell_spell_tianshuyunzhuan.asset`、`src/Assets/Data/Skills/Skill_skill_fayu_wanxiangxuanmen.asset`、`Skill_skill_lingyu_wanxiangguiyuan.asset`、`src/Assets/Scripts/Cultivation/GongFaGrowthData.cs`、`src/Assets/Scripts/Game/SectSelectionManager.cs`、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` 与 `tools/check-data-chain.ps1`。
+- 预期修改路径：新建 `开发管理/炼神术法神通资料片隔离验证记录.txt`；更新 `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`开发管理/任务列表/数据链路任务.txt` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：只为 `spell_wanliuguizong`、`spell_tianshuyunzhuan`、`skill_fayu_wanxiangxuanmen`、`skill_lingyu_wanxiangguiyuan` 添加精确 EditMode 回归，证明 CSV 与 asset 均保持 `contentScope=reserved`、`realmReq=realm_lianshen`，且现行玩家装载入口不会把四项加入玩家术法／神通集合；记录四份 docs 与现有语言键的保留关系。
+- 禁止：不修改四份 docs、CSV、asset、语言键、导入器或运行时代码；不新增 `expansion` scope、第二套内容目录、兼容分支、玩家高阶境界或资料片加载器；不把本决定外推到炼神功法、211 份 docs 或其他 `reserved` 内容。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/炼神术法神通资料片隔离验证记录.txt,开发管理/当前任务队列.txt,开发管理/任务列表/数据链路任务.txt` 与 `git diff --check`。
+- 完成条件：四项的 CSV、asset、玩家可用策略与实际装载结果均有直接回归；验证记录能逐项回链到 docs、CSV、asset、语言依赖和测试；资料仍保留，但不进入现行玩家可用集合。
+- 停止条件：发现任一玩家装载旁路、CSV／asset 不一致、未知 scope、语言依赖缺失，或闭环必须修改生产代码、数据或内容；保留失败证据，将本卡标为阻塞并另立路径明确的修复卡，不在本卡内补丁化处理。
+- 完成记录：新增 `开发管理/炼神术法神通资料片隔离验证记录.txt` 和精确 EditMode 回归。四项 CSV／asset 均保持 `contentScope=reserved`、`realmReq=realm_lianshen`；现行 `SectSelectionManager.UpdateExplorationAbilities` 的实际装载入口将四项命中 `Excluded non-player` 分支，未加入玩家术法／神通集合。未修改 docs、CSV、asset、语言键、导入器或运行时代码。
+
+### N-GROUP-02B · 2v2 范围技能空间合法性与显式战场输入
+
+- 来源：`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt` 的 N-GROUP-DEC-01～05，以及 `DEC-20260724-NGROUP0201`。
+- 当前状态：已完成；依赖：N-GROUP-02A 已完成，五项 N-GROUP 决定已整体锁定。N-GROUP-02C 可在本卡完成后处理临时团队候选优先级；协同走位和完整团队 AI 不属于本卡。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`AGENTS.md`、`开发管理/开发-技术经验.txt#模拟器`、`#BattleSim 建模模式`、`开发管理/设计-当前状态.txt#BattleSim`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#2～5`、`simulations/BattleSim/GameData.cs::EnvironmentRulesConfig,AttackProfile,ArtConfig,DivineConfig`、`Battlefield.cs::SpatialQueryKind,HexCoord,HexBattlefield.InspectEdge,QueryMetricDistance,QueryLineOfSight`、`Combat.cs::GroupTargetCandidate,GroupActionObservation,SelectGroupTarget,Simulate2v2,Simulate2v2Detailed`、`BattleSimSelfTests.cs::Run,RunGroupPositioningNGroup01` 与 `Program.cs::Main`／2v2 矩阵调用点。
+- 预期修改路径：更新 `simulations/BattleSim/GameData.cs`、`Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`、`开发管理/任务列表/数值与战斗任务.txt` 与本文件；执行前须确认这些路径不与人工改动冲突。
+- 范围：以可扩展模板承载圆形、直线、扇形及其局部参数，逐技能选择施法者／目标格中心、施法距离区间、显式内洞、效果边阻断、阵营与状态／尸体资格。角色距离修正只作用于有效距离，不能改写技能基础数据。范围命中只判断从释放／生效位置到目标的技能传播，不检查施法者／目标单位普通视线，并按已锁定优先级输出首个拒绝原因。正式 2v2 调用方显式提供真实 `HexBattlefield` 或等价环境快照；自动空战场只保留给旧回归和明确技术 fixture。
+- 禁止：不补任何具体技能数值、形状尺寸、阻断列表或角色距离修正值；不新增生产环境档案、环境数值、Unity、CSV、伤害／治疗平衡结论、协同走位、让路、射线创造、包夹、目标格预留、双人冲突策略或完整团队 AI；不把 `QueryLineOfSight`、`entity_obstacle`、`sight_blocked` 作为范围命中通用前置；不保留生产默认空战场、兼容 fallback 或第二套空间查询。
+- 验证：先新增并观察 `group-area-targeting-n-group-02` 自测在缺失行为时失败；再运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-area-targeting-n-group-02`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-positioning-n-group-01`、`dotnet run --no-build -c Release --project simulations/BattleSim`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt,开发管理/任务列表/数值与战斗任务.txt,开发管理/当前任务队列.txt` 与 `git diff --check`。
+- 完成条件：范围模板／中心／局部参数、施法距离区间、内洞、阻断、阵营与状态资格都有明确数据承载；范围目标无普通视线前置，范围中心、命中集合与稳定拒绝原因可观察；正式 2v2 不在内部构造生产默认空战场；没有任何具体技能内容参数、协同走位或完整团队 AI 行为。
+- 停止条件：任一正式 2v2 调用方没有真实战场／等价快照而唯一替代是自动空战场，或实现需要补填具体技能参数、环境内容、伤害／治疗结算、协同走位或未获批准的阻断／距离规则时，保留失败证据并请求负责人决定；不得用默认值、兼容分支或测试 fixture 冒充生产环境。
+- 完成记录：范围模板／中心／局部参数、有效施法距离、内洞、效果边阻断、阵营与状态资格现已由 `GameData` 明确承载；`HexBattlefield.ResolveAreaTargeting` 输出范围中心、命中集合或按锁定顺序的拒绝原因，且不使用普通视线。正式 2v2 入口要求调用方传入战场；旧回归与数值矩阵仅以命名技术夹具显式调用。未填任何技能内容参数、生产环境、伤害／治疗逻辑、协同走位或团队候选优先级。直接验证见任务事实源 §6。
+
+### N-AI-01A · 战棋 AI 与 Boss 模板现行所有者定位
+
+- 来源：`开发管理/任务列表/数值与战斗任务.txt` 的 N-AI-01、`开发管理/设计-当前状态.txt` 的已通过 G2 基线，以及已完成的 `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`。本卡只补齐 N-AI-01 的事实定位与决策输入，不实施 N-AI-01。
+- 当前状态：已完成（仅事实定位与决策输入）；依赖：G2 已通过、N-GROUP-02A 已完成。N-GROUP-02 的范围、协同走位和团队目标优先级仍由 N-GROUP-DEC-01～05 约束，不在本卡重列或决定；N-AI-01 后续等待 N-AI-DEC-01～03。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`AGENTS.md`、`开发管理/开发-技术经验.txt`、`开发管理/设计-当前状态.txt`、`开发管理/任务列表/数值与战斗任务.txt`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`、`simulations/BattleSim/Combat.cs`、`Character.cs`、`GameData.cs`、`BattleSimSelfTests.cs` 与 `Program.cs`。
+- 预期修改路径：新建 `开发管理/战棋AI与Boss模板现行所有者及决策输入.txt`；更新 `开发管理/任务列表/数值与战斗任务.txt` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：只读定位 1v1 的行动／选位链和 2v2 的个人行动、目标选择与移动链，逐项记录输入、稳定排序、可观察输出、当前数据承载和现有回归；明确现行 `Style`、攻击档案和角色状态是否能表达门派策略、Boss 身份、Boss 模板或可调权重。必须把 N-AI 后续所需且当前缺失的负责人决定拆为 N-AI-DEC-01（门派策略输入与优先级）、N-AI-DEC-02（Boss 模板身份／行为边界）和 N-AI-DEC-03（配置所有者与 1v1／2v2 复用边界），但不得代填任何选项、阈值或权重。
+- 禁止：不修改 `simulations/BattleSim/` 代码、数值、Build、CSV、Unity、内容事实源、既有回归或自动化配置；不把 `SelectAction`、`SelectGroupTarget`、既有 `Style` 分支或队友结算效果误称为门派 AI／Boss 模板；不重复 N-GROUP-02A 的范围、协同走位、团队目标优先级或环境战场决策；不新增默认策略、随机权重、兼容分支或数值结论。
+- 验证：`rg -n "SelectAction|SelectGroupTarget|Simulate2v2Detailed|ResolveActionPosition|Boss|Style" simulations/BattleSim/Combat.cs simulations/BattleSim/Character.cs simulations/BattleSim/GameData.cs simulations/BattleSim/BattleSimSelfTests.cs simulations/BattleSim/Program.cs`，`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/战棋AI与Boss模板现行所有者及决策输入.txt,开发管理/当前任务队列.txt,开发管理/任务列表/数值与战斗任务.txt`，以及 `git diff --check`。
+- 完成条件：事实输入文件能逐项回链现行 1v1／2v2 的行动、目标、选位、移动、输入承载和测试所有者；对门派策略、Boss 模板与可调优先级的现有／缺失状态有明确结论；三项 N-AI-DEC 的决定范围和直接影响根均可追溯，且没有代码、数据、数值或内容改动。
+- 停止条件：若现有调用链不能静态区分通用战斗结算与策略决策，或定位结果需要定义门派身份、Boss 属性、范围／协同规则或任何数值才能继续，记录已知调用链与缺口并停止；不得用推测性默认值完成本卡。
+- 完成记录：新增 `开发管理/战棋AI与Boss模板现行所有者及决策输入.txt`。已逐项定位 1v1 行动／选位与 2v2 个人行动、目标和移动链，并记录现有承载与回归。结论为：`Style` 仅是构筑机制／能力档案选择键；现行不存在门派策略、Boss 身份／模板或可调 AI 权重。已形成 N-AI-DEC-01（门派策略输入与优先级）、N-AI-DEC-02（Boss 模板身份／行为边界）、N-AI-DEC-03（配置所有者与 1v1／2v2 复用边界）的直接影响根；未代填选项、阈值或权重。
+
+### M-MGMT-01A · 管理目录重组影响面基线与迁移边界
+
+- 来源：`开发管理/任务列表/审核与交接任务.txt` 的 M-MGMT-01，以及 `开发管理/状态与建议维护规则.txt` 的队列补充顺序。G2/G3 已通过，当前无 `2` 流程审核、有效交接或未通过复审项。
+- 当前状态：已完成；G2/G3 通过、当前队列稳定且无跨文件交接的前提已核验。目录重组仍未获批或开始。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`AGENTS.md`、`开发管理/状态与建议维护规则.txt`、`开发管理/自动工作流规则.txt`、`开发管理/任务列表/审核与交接任务.txt`、`开发管理/当前任务队列.txt`，以及命中的 `AGENTS.md`、`CLAUDE.md`、`tools/` 和 `开发管理/` 路径引用。
+- 预期修改路径：新建 `开发管理/管理目录重组影响面清单.txt`；更新 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：以 `rg` 实时扫描 `开发管理/` 的字面量引用，列出当前管理入口、自动化脚本、审核／交接入口和归档链接的读取方、写入方、目标分类（规则／当前／归档）与迁移顺序；只定义未来 M-MGMT-01 的可执行范围和检查口径。
+- 禁止：不移动、重命名、删除或批量改写任何现有文件；不修改自动化配置、runtime、任务调度、审核状态或业务事实；不以动态路径猜测、兼容重定向或第二套目录掩盖未分类引用。
+- 验证：`rg -n "开发管理/" AGENTS.md CLAUDE.md tools 开发管理`，`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/管理目录重组影响面清单.txt,开发管理/任务列表/审核与交接任务.txt,开发管理/当前任务队列.txt`，以及 `git diff --check`。
+- 完成条件：清单逐项给出命中的稳定路径、读写角色、目标分类和迁移次序；所有需要改写的字面量引用均可追溯，任何动态或外部配置依赖均显式列为下一卡前置；本卡本身没有移动或改写既有路径。
+- 停止条件：发现无法静态枚举的路径解析、需改动用户级自动化配置／runtime，或扫描范围扩展到业务事实源；记录已知引用与缺口，停止并请求负责人决定，不在本卡内添加兼容层。
+- 完成记录：已新增 `开发管理/管理目录重组影响面清单.txt`。新文件建立了新建前的 `rg` 基线（541 条命中、98 个源文件），列出根入口、6 个工具脚本、当前管理入口、审核／交接入口与归档链接的读写角色、分类、迁移次序、动态依赖和 M-MGMT-01 检查口径。未移动、重命名、删除或批量改写既有路径；M-MGMT-01 现等待负责人批准唯一旧新路径映射。
+
+### M-MGMT-01B · 管理目录唯一旧新路径映射与批准输入
+
+- 来源：已完成的 M-MGMT-01A、`开发管理/管理目录重组影响面清单.txt`，以及 `开发管理/任务列表/审核与交接任务.txt` 中 M-MGMT-01 的批准前置。
+- 当前状态：已完成；依赖：M-MGMT-01A 已完成，G2／G3 已通过；已补齐负责人批准所需的唯一映射，不实施目录重组。M-MGMT-01 仍等待负责人批准。
+- 主责：Codex / gpt-5.6-terra。
+- 必读：`AGENTS.md`、`CLAUDE.md`、`开发管理/状态与建议维护规则.txt`、`开发管理/自动工作流规则.txt`、`开发管理/管理目录重组影响面清单.txt`、`开发管理/任务列表/审核与交接任务.txt` 与当前 `开发管理/` 一级文件、`任务列表/`、`任务归档/`、`AI合作归档/` 清单；以 `rg -n "开发管理/" AGENTS.md CLAUDE.md tools 开发管理` 定位直接引用。
+- 预期修改路径：新建 `开发管理/管理目录唯一旧新路径映射与批准输入.txt`；更新 `开发管理/任务列表/审核与交接任务.txt` 与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
+- 范围：为 M-MGMT-01A 已分类的每个稳定入口、当前事实、活跃证据、任务目录和归档目录给出唯一的“现路径 → `开发管理/规则/`、`开发管理/当前/` 或 `开发管理/归档/` 下具体目标路径”映射；扫描并列出每个旧路径的仓库内直接读取方／写入方、同名冲突、动态目录根和迁移批次；形成一个可由负责人整体批准或逐项退回的决定输入。根 `AGENTS.md`、`CLAUDE.md` 与 `tools/` 只作为引用改写方，不迁入 `开发管理/`。
+- 禁止：不移动、重命名、删除或批量改写任何文件；不修改脚本、自动化配置、runtime、租约、任务调度、业务 docs／CSV／Unity／BattleSim；不添加重定向、兼容路径、默认目录或第二套任务入口；不把无法归类的路径猜测为已批准映射。
+- 验证：`rg -n "开发管理/" AGENTS.md CLAUDE.md tools 开发管理`；逐项检查映射源存在、目标唯一且无重复目标；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/管理目录唯一旧新路径映射与批准输入.txt,开发管理/当前任务队列.txt,开发管理/任务列表/审核与交接任务.txt`；`git diff --check`。
+- 完成条件：M-MGMT-01A 清单中的每个稳定入口和目录都有且只有一个具体目标；所有仓库内直接引用、动态 `任务列表/` 根、六个工具脚本、测试夹具与归档链接均回链到对应映射；同名冲突和无法静态枚举项单独列出；批准输入能明确说明负责人批准后 M-MGMT-01 的精确实施范围，但本卡没有实际迁移。
+- 停止条件：发现目标分类必须改变现有规则／当前／归档语义，存在无法消除的目标冲突，必须修改用户级自动化或业务事实源，或无法在不引入兼容层的情况下保持活跃入口和历史链接可达；保留扫描与冲突证据，标记阻塞并请求负责人决定。
+- 完成记录：新增 `开发管理/管理目录唯一旧新路径映射与批准输入.txt`。该输入为 14 个稳定规则、9 个当前事实、18 个活跃治理／业务证据、5 个当前任务文件以及 2 个归档根给出唯一目标；记录本次 515 条／100 源文件扫描、六个工具脚本、动态 `任务列表/` 根、测试夹具、归档链接、同名检查和批准选项。未移动、重命名、删除或批量改写任何既有路径；M-MGMT-01 继续等待负责人批准。
