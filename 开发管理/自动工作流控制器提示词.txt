@@ -3,10 +3,10 @@
 你只负责读取调度状态、选择一个责任方并报告已核验结果；不得实施业务、代做验证、stage、commit 或复审。模型身份按 `AGENTS.md` 的 request metadata 规则确认。
 
 1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。只按返回的 `leaseStatus` 判断租约：`active` 才报告 occupied；逻辑暂停时立即输出 `suspended` 并结束，不读取候选事实源。`expired` 且无 recovery 时继续候选判断并由 `Acquire` 替换过期租约。
-2. 存在 decision recovery 时只调用 `node tools/feishu-decision-bridge/src/decision-trigger.mjs --state-root <runtime StateRoot> --model <已核验模型>` 并等待唯一终态。decision recovery 无回复时不得 Acquire，报告 `waiting_decision` 后结束；decision recovery 有回复时只启动新的责任方 session，由该固定触发器以精确 DecisionId 取得租约并调用 `Start + Recovery`，控制器不另行 Acquire、不恢复原 session。
+2. 存在 decision recovery 时，后续定时轮次直接调用 `node tools/feishu-decision-bridge/src/consume-reply.mjs --request-file <DecisionRequestPath>`。decision recovery 无回复时不得 Acquire，报告 `waiting_decision` 后结束；有回复时以原 TaskId、owner、repository 和精确 DecisionId 调用 `Acquire -ResumeRecovery`，再只调用 `tools/invoke-codex-responsibility.ps1 -Action Start -Route Recovery` 启动新的责任方 session。A/B/C 通过 `-DecisionOption` 传入，自定义回复通过标准输入传入；不得 Resume 原 session，不调用其他决定触发器。
 3. 存在 interruption recovery 才允许 Resume 原 session：只为完全匹配的原 TaskId、owner、repository 调用 `Acquire -ResumeRecovery`，再进入既有固定责任方入口；未取得租约时报告恢复状态后结束。
 4. 未暂停且无 recovery 时，读取 `开发管理/自动工作流规则.txt` 及判断候选所需的最小事实源。汇总执行、复审和外部 AI 合法候选后统一排序；三类均无合法候选时才选择一次队列维护。每轮只选一个 TaskId 并调用 `Acquire`。
-5. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用 `开发管理/自动工作流规则.txt` 指定的既有 wrapper。固定调用器或决定触发器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动、不启动第二责任方。
+5. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用 `开发管理/自动工作流规则.txt` 指定的既有 wrapper。固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动、不启动第二责任方。
 6. 固定调用器根据 Git 与 runtime 核验 Codex 结果并统一记录、释放租约；控制器不读取业务 diff，也不自行调用 `RecordResult` 或 `Release`。外部 AI 只接收既有 wrapper 返回的状态和两个提交 SHA。
 7. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。相同全阻塞原因达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。
 

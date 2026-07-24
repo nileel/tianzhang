@@ -84,8 +84,8 @@ $canonicalPrompt = @'
 # 每小时自动工作流薄路由
 
 1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`；逻辑暂停时立即结束。
-2. decision recovery 无回复时不得 Acquire；有回复时调用 `tools/feishu-decision-bridge/src/decision-trigger.mjs`。
-3. decision recovery 有回复时只启动新的责任方 session；interruption recovery 才允许 Resume 原 session。
+2. decision recovery 无回复时不得 Acquire；后续轮次直接调用 `tools/feishu-decision-bridge/src/consume-reply.mjs` 读取签名回复。
+3. decision recovery 有回复时调用 `Acquire -ResumeRecovery`，再由固定调用器 `-Action Start -Route Recovery` 启动新的责任方 session；interruption recovery 才允许 Resume 原 session。
 4. 未暂停且无 recovery 时读取 `开发管理/自动工作流规则.txt` 和最小候选事实源；每轮只选一个任务调用 `Acquire`。
 5. Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用既有 wrapper。
 5. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
@@ -103,7 +103,7 @@ $canonicalRules = @'
 - 固定调用器只用 Git 元数据和 runtime 核验 completed、waiting_decision、interrupted、failed。
 - 外部 AI 保留 businessCommit 与 handoffCommit；handoff 不重复统计。
 - 决策只有 PROVIDER_ACCEPTED 后才能 SaveRecovery；旧 pending binding 不是互斥锁。
-- schema 3 的 decision recovery 不保存 session ID；下一轮从签名证据以 Start + Recovery 启动新的责任方 session。
+- schema 3 的 decision recovery 不保存 session ID；下一轮直接调用 consume-reply.mjs 读取签名证据，再由固定调用器 `-Action Start -Route Recovery` 启动新的责任方 session。
 - interruption recovery 保留 session ID，只有该路径允许 Resume 原 session。
 - 队列维护结束时，权威来源足够时至少包含 2 张合法可执行任务卡；单次最多新增 3 张。
 - 权威来源不足时不得制造任务，补入全部能够安全形成的卡并记录不足原因。
@@ -139,11 +139,11 @@ try {
       '开发管理/自动化简报提示词.txt' = $canonicalDailyPrompt
       'tools/hourly-automation-lease.ps1' = "schemaVersion = 3`nValidateSet('Show','Acquire','SaveRecovery','SaveInterruption','ClearRecovery','RecordResult','ClearBlocking','Release')"
       'tools/codex-cli-session.ps1' = 'runner fixture'
-      'tools/invoke-codex-responsibility.ps1' = '[TZG_DECISION_TRIGGER] Action Start Route Recovery'
+      'tools/invoke-codex-responsibility.ps1' = '[TZG_DECISION_REPLY] Action Start Route Recovery'
       'tools/automation-workspace-guard.ps1' = 'guard fixture'
       'tools/automation-finalize-commit.ps1' = 'finalizer fixture'
       'tools/get-automation-briefing-source.ps1' = 'briefing source fixture'
-      'tools/feishu-decision-bridge/src/decision-trigger.mjs' = 'Action Start Route Recovery'
+      'tools/feishu-decision-bridge/src/consume-reply.mjs' = 'OPTION_ACCEPTED CUSTOM_ACCEPTED NO_REPLY'
     }.GetEnumerator()) {
     Write-Utf8File -Path (Join-Path $repositoryRoot $entry.Key) -Content $entry.Value
   }
@@ -168,7 +168,7 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   $missingFreshDecisionPrompt = $canonicalPrompt.Replace(
-    '3. decision recovery 有回复时只启动新的责任方 session；interruption recovery 才允许 Resume 原 session。',
+    '3. decision recovery 有回复时调用 `Acquire -ResumeRecovery`，再由固定调用器 `-Action Start -Route Recovery` 启动新的责任方 session；interruption recovery 才允许 Resume 原 session。',
     '3. recovery 只恢复原责任方。'
   )
   Write-Utf8File -Path $promptPath -Content $missingFreshDecisionPrompt
@@ -236,6 +236,11 @@ try {
   Remove-Item -LiteralPath (Join-Path $repositoryRoot 'tools/invoke-codex-responsibility.ps1') -Force
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing fixed invoker' -Contains 'missing workflow component'
   Write-Utf8File -Path (Join-Path $repositoryRoot 'tools/invoke-codex-responsibility.ps1') -Content 'invoker fixture'
+
+  $retiredDecisionTriggerPath = Join-Path $repositoryRoot 'tools/feishu-decision-bridge/src/decision-trigger.mjs'
+  Write-Utf8File -Path $retiredDecisionTriggerPath -Content 'retired'
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Retired decision trigger' -Contains 'retired decision trigger'
+  [IO.File]::Delete($retiredDecisionTriggerPath)
 
   $legacyPath = Join-Path $repositoryRoot 'tools/automation-controller.ps1'
   Write-Utf8File -Path $legacyPath -Content 'legacy'

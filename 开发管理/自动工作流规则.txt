@@ -33,7 +33,7 @@
 - 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 - 旧 `pending-bindings.json` 不是新决策的互斥锁；责任方不得因看到旧 binding 就跳过发送或直接记录 `waiting_decision`。新 accepted send 会原子更新 binding，租约工具只接受对应的消费请求。
 - 飞书桥收到 A/B/C 或自定义回复后只写入签名证据并确认，不取得租约、不启动模型、不 Resume、不轮询；已处理证据可按同一 DecisionId 幂等读取。
-- 后续每小时控制器遇到 decision recovery 时只调用 `tools/feishu-decision-bridge/src/decision-trigger.mjs`。decision recovery 无回复时不得 Acquire；有回复时以精确 DecisionId 调用 `Acquire -ResumeRecovery`，再由固定调用器使用 `Start + Recovery` 和 `[TZG_DECISION_TRIGGER ...]` 启动新的责任方 session。人工普通管理上下文如需提前处理，也必须走同一触发器，不得恢复等待决定的原 session。
+- 后续每小时控制器遇到 decision recovery 时直接调用 `consume-reply.mjs` 读取对应消费请求。无回复时不得 Acquire；有回复时以精确 DecisionId 调用 `Acquire -ResumeRecovery`，再由固定调用器使用 `-Action Start -Route Recovery` 启动新的责任方 session。不存在独立决定触发器，不得恢复等待决定的原 session。
 - 已有未提交任务修改时停止普通调度，只允许中断恢复路径处理，不把半成品交给另一责任方。
 - CLI 责任方异常退出且相对启动基线产生新改动时，固定调用器以原 session ID 和新增路径保存 `trigger=interruption` recovery；没有唯一 session ID 时保留租约和现场并转人工阻塞，不伪造恢复指针。下一轮只允许完全匹配的原任务通过 `Acquire -ResumeRecovery` 取得新租约并 Resume。
 - interruption recovery 保留 session ID，只有该路径允许 Resume 原 session；decision recovery 不得包含 `resumeKind` 或 `resumeId`。

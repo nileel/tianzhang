@@ -386,8 +386,8 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $resumed.ExitCode -Expected 0 -Message 'Fresh decision invocation failed'
   Assert-Equal -Actual $resumed.Json.status -Expected 'completed' -Message 'Fresh decision invocation status mismatch'
   $decisionPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_TRIGGER runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the fresh-session protocol'
-  Assert-True -Condition ($decisionPrompt.Contains('这是新的 CLI-native 责任方会话。')) -Message 'Decision trigger did not start a new responsibility session'
+  Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_REPLY runId=$($decisionResumeLease.runId)]`nA")) -Message 'Decision option was not transported with the fresh-session protocol'
+  Assert-True -Condition ($decisionPrompt.Contains('这是新的 CLI-native 责任方会话。')) -Message 'Decision reply did not start a new responsibility session'
   $resumedState = Assert-LeaseReleased
   Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
 
@@ -433,7 +433,7 @@ $global:LASTEXITCODE = 0
     -DecisionInput $customDecision
   Assert-Equal -Actual $stdinResumed.ExitCode -Expected 0 -Message 'Stdin fresh decision invocation failed'
   $stdinDecisionPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True -Condition ($stdinDecisionPrompt.StartsWith("[TZG_DECISION_TRIGGER runId=$($stdinResumeLease.runId)]`n$customDecision")) -Message 'Signed bridge decision was not transported through stdin'
+  Assert-True -Condition ($stdinDecisionPrompt.StartsWith("[TZG_DECISION_REPLY runId=$($stdinResumeLease.runId)]`n$customDecision")) -Message 'Signed bridge decision was not transported through stdin'
   Assert-LeaseReleased | Out-Null
 
   Write-Output 'test-invoke-codex-responsibility: OK'

@@ -131,7 +131,7 @@ function Get-RouteInstruction {
     'QueueMaintenance' { '按 开发管理/状态与建议维护规则.txt 维护队列；本轮不执行新增业务任务。' }
     'Recovery' {
       if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
-        '这是决定回复触发的新责任方会话；处理同一 TaskId，先核对 durable recovery 与决定，再继续工作。'
+        '这是带决定回复的新责任方会话；处理同一 TaskId，先核对 durable recovery 与决定，再继续工作。'
       } else {
         '这是中断恢复；恢复原责任方的同一 TaskId，先核对现有改动与 recovery，再继续未完成工作。'
       }
@@ -147,7 +147,7 @@ function New-ResponsibilityPrompt {
   }
   $lines = @()
   if (-not [string]::IsNullOrWhiteSpace($DecisionId)) {
-    $lines += "[TZG_DECISION_TRIGGER runId=$RunId]"
+    $lines += "[TZG_DECISION_REPLY runId=$RunId]"
     $lines += $script:decisionReply
   }
   $lines += @(

@@ -87,9 +87,10 @@ Assert-Contains -Text $prompt -Context 'deferred wait contract' -Values @(
   '不是终态'
 )
 Assert-Contains -Text $prompt -Context 'decision recovery contract' -Values @(
-  'tools/feishu-decision-bridge/src/decision-trigger.mjs',
+  'tools/feishu-decision-bridge/src/consume-reply.mjs',
   'decision recovery 无回复时不得 Acquire',
-  'decision recovery 有回复时只启动新的责任方 session',
+  'Acquire -ResumeRecovery',
+  '-Action Start -Route Recovery',
   'interruption recovery 才允许 Resume 原 session'
 )
 Assert-Contract `
@@ -117,7 +118,8 @@ Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   'schema 3',
   'decision recovery',
   'interruption recovery',
-  'Start + Recovery',
+  'consume-reply.mjs',
+  '-Action Start -Route Recovery',
   'Resume 原 session'
 )
 Assert-Contains -Text $leaseTool -Context 'runtime schema 3 contract' -Values @(
@@ -167,6 +169,8 @@ foreach ($token in @(
     'QueueResume',
     'TakeResume',
     'resume-trigger.mjs',
+    'decision-trigger.mjs',
+    'TZG_DECISION_TRIGGER',
     'TZG_DECISION_RESUME'
   )) {
   Assert-Contract -Condition (-not $activeText.Contains($token, [StringComparison]::OrdinalIgnoreCase)) -Message "active contract contains retired workflow token: $token"
@@ -181,10 +185,13 @@ foreach ($requiredPath in @(
     'tools\automation-workspace-guard.ps1',
     'tools\automation-finalize-commit.ps1',
     'tools\get-automation-briefing-source.ps1',
-    'tools\feishu-decision-bridge\src\decision-trigger.mjs'
+    'tools\feishu-decision-bridge\src\consume-reply.mjs'
   )) {
   Assert-Contract -Condition (Test-Path -LiteralPath (Join-Path $root $requiredPath) -PathType Leaf) -Message "missing workflow component: $requiredPath"
 }
+Assert-Contract `
+  -Condition (-not (Test-Path -LiteralPath (Join-Path $root 'tools\feishu-decision-bridge\src\decision-trigger.mjs'))) `
+  -Message 'retired decision trigger component still exists'
 
 $automationDirectories = @(Get-ChildItem -LiteralPath $automationDirectory -Directory -Filter 'tzg-*')
 $automations = @($automationDirectories | ForEach-Object { Read-Automation -Directory $_.FullName })
