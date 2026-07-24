@@ -26,6 +26,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 
 $aclScript = Join-Path $PSScriptRoot 'private-path-acl.ps1'
 . $aclScript

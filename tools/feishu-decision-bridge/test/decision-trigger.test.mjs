@@ -1,11 +1,43 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import { rm } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import {
+  dirname, join, resolve, sep,
+} from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { runDecisionTrigger } from '../src/decision-trigger.mjs';
 import {
   makeCallback,
   makeMessageCallback,
 } from '../src/bridge.mjs';
+
+const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(TEST_DIRECTORY, '..', '..', '..');
+const LEASE_TOOL_PATH = resolve(TEST_DIRECTORY, '..', '..', 'hourly-automation-lease.ps1');
+
+async function runProcessBytes(command, args) {
+  const child = spawn(command, args, {
+    windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const stdout = [];
+  const stderr = [];
+  child.stdout.on('data', (chunk) => stdout.push(Buffer.from(chunk)));
+  child.stderr.on('data', (chunk) => stderr.push(Buffer.from(chunk)));
+  const code = await new Promise((resolvePromise, rejectPromise) => {
+    child.once('error', rejectPromise);
+    child.once('close', resolvePromise);
+  });
+  return {
+    code,
+    stdout: Buffer.concat(stdout),
+    stderr: Buffer.concat(stderr).toString('utf8'),
+  };
+}
 
 function decisionState() {
   return {
@@ -116,6 +148,46 @@ test('accepted decision starts a fresh recovery session with no old session id',
     reply: 'A',
   });
   assert.equal(invokeCalls[0].sessionId, undefined);
+});
+
+test('lease JSON stays UTF-8 when PowerShell runs from a Unicode absolute path', {
+  skip: process.platform !== 'win32',
+}, async () => {
+  const automationStateRoot = resolve(homedir(), '.codex', 'automation-state');
+  const stateRoot = join(
+    automationStateRoot,
+    `tzg-hourly-controller-encoding-test-${randomUUID()}`,
+  );
+  try {
+    const completed = await runProcessBytes('pwsh', [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      LEASE_TOOL_PATH,
+      '-Action',
+      'Acquire',
+      '-StateRoot',
+      stateRoot,
+      '-TaskId',
+      'encoding-test',
+      '-Owner',
+      'codex',
+      '-RepositoryRoot',
+      PROJECT_ROOT,
+    ]);
+
+    assert.equal(completed.code, 0, completed.stderr);
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(completed.stdout);
+    const result = JSON.parse(text);
+    assert.equal(result.repositoryRoot, PROJECT_ROOT);
+  } finally {
+    const prefix = automationStateRoot.endsWith(sep)
+      ? automationStateRoot
+      : automationStateRoot + sep;
+    assert.ok(stateRoot.startsWith(prefix));
+    await rm(stateRoot, { recursive: true, force: true });
+  }
 });
 
 test('non-decision recovery is left for the interruption path', async () => {
