@@ -31,10 +31,11 @@
 
 WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI 仅有 DeepSeek / Claude 执行范围，不是 Codex 主责角色：
 
-1. `ANTHROPIC_BASE_URL` 为 `http://127.0.0.1:15721/claude-desktop` 时，实际身份与修改方为 DeepSeek V4 Pro；否则为 Claude Code。
-2. 仅可领取“待处理、非复审、主责明确为 DeepSeek V4 Pro、Claude Code 或 Claude / DeepSeek”的任务。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
-3. Codex、ChatGPT5.5、Codex / gpt-5.5 或未明确授权给 DeepSeek/Claude 的任务不可领取，除非用户当次明确指派 Claude Code 的具体任务。
-4. 选题前在输出与 automation memory 记录实际身份、修改方、允许主责及候选任务 ID / 主责 / 状态；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
+1. 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
+2. 其他 Claude CLI 环境的实际身份与修改方为 Claude Code。
+3. 仅可领取“待处理、非复审、主责明确为 DeepSeek V4 Pro、Claude Code 或 Claude / DeepSeek”的任务。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
+4. Codex、ChatGPT5.5、Codex / gpt-5.5 或未明确授权给 DeepSeek/Claude 的任务不可领取，除非用户当次明确指派 Claude Code 的具体任务。
+5. 选题前在输出与 automation memory 记录实际身份、修改方、允许主责及候选任务 ID / 主责 / 状态；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
 
 ### 每小时控制器内的 Claude / DeepSeek wrapper
 

@@ -6,8 +6,10 @@
 2. 存在 decision recovery 时，后续定时轮次直接调用 `node tools/feishu-decision-bridge/src/consume-reply.mjs --request-file <DecisionRequestPath>`。decision recovery 无回复时不得 Acquire，报告 `waiting_decision` 后结束；有回复时以原 TaskId、owner、repository 和精确 DecisionId 调用 `Acquire -ResumeRecovery`，再只调用 `tools/invoke-codex-responsibility.ps1 -Action Start -Route Recovery` 启动新的责任方 session。A/B/C 通过 `-DecisionOption` 传入，自定义回复通过标准输入传入；不得 Resume 原 session，不调用其他决定触发器。
 3. 存在 interruption recovery 才允许 Resume 原 session：只为完全匹配的原 TaskId、owner、repository 调用 `Acquire -ResumeRecovery`，再进入既有固定责任方入口；未取得租约时报告恢复状态后结束。
 4. 未暂停且无 recovery 时，读取 `开发管理/自动工作流规则.txt` 及判断候选所需的最小事实源。汇总执行、复审和外部 AI 合法候选后统一排序；三类均无合法候选时才选择一次队列维护。每轮只选一个 TaskId 并调用 `Acquire`。
-5. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`；外部 AI 只调用 `开发管理/自动工作流规则.txt` 指定的既有 wrapper。固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动、不启动第二责任方。
-6. 固定调用器根据 Git 与 runtime 核验 Codex 结果并统一记录、释放租约；控制器不读取业务 diff，也不自行调用 `RecordResult` 或 `Release`。外部 AI 只接收既有 wrapper 返回的状态和两个提交 SHA。
-7. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。相同全阻塞原因达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。
+5. Codex 执行、复审、队列维护只调用 `tools/invoke-codex-responsibility.ps1`。外部 AI 只调用既有 wrapper；预检身份时先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`，`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。身份与候选主责不匹配时不启动外部 CLI，记录 failed 并释放当前租约。
+6. 固定调用器或外部 wrapper 的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动、不启动第二责任方。
+7. Codex 路线仍由固定调用器根据 Git 与 runtime 统一收尾。外部 AI 返回 completed 后，控制器只核验 `identity=DeepSeek V4 Pro`、`businessCommit`、`handoffCommit`、提交父子关系、业务提交的当前 Task/`State: pending_review`/Automation 元数据、handoff 无 Automation 元数据，以及相对启动基线没有新增未提交路径；不得读取业务 diff或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。
+8. 外部终态无效且没有相对基线新增未提交路径时，控制器调用 `RecordResult -Category failed` 后 `Release`；存在新增未提交路径时保留现场和租约，报告人工阻塞并结束，不伪造 recovery，不启动第二责任方。
+9. 最终只报告 route、TaskId、category、sessionId、commitSha 或 recovery 状态。相同全阻塞原因达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。
 
 不硬编码具体任务、决定、复审编号、文件清单或业务检查；不创建替代自动化，不编辑 automation TOML，不自动 stash、reset、checkout、clean、revert 或推送远端。

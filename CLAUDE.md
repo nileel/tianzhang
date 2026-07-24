@@ -7,7 +7,7 @@
 
 ## 实际身份与修改方
 
-- 当 `ANTHROPIC_BASE_URL` 为 `http://127.0.0.1:15721/claude-desktop` 时，实际身份与修改方为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
+- 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
 - 其他 Claude CLI 环境的实际身份与修改方为 `Claude Code`。
 - 原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、执行范围、未审核标记和交接格式，不采用其中的 DeepSeek 身份或修改方名称。
 

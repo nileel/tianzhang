@@ -69,6 +69,8 @@ $maintenanceRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\状�
 $status = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流状态.txt')
 $dailyPrompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动化简报提示词.txt')
 $leaseTool = Read-Utf8Contract -Path (Join-Path $root 'tools\hourly-automation-lease.ps1')
+$claudeRules = Read-Utf8Contract -Path (Join-Path $root 'CLAUDE.md')
+$collaborationRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\AI协作规则.txt')
 
 Assert-Contains -Text $prompt -Context 'thin controller prompt' -Values @(
   'tools/hourly-automation-lease.ps1',
@@ -104,6 +106,27 @@ Assert-Contains -Text $prompt -Context 'invocation timeout contract' -Values @(
   '3600 秒租约',
   '5 分钟边界'
 )
+Assert-Contains -Text $prompt -Context 'external closeout contract' -Values @(
+  'ANTHROPIC_BASE_URL',
+  '~/.claude/settings.json',
+  'http://127.0.0.1:15721',
+  'DeepSeek V4 Pro',
+  'identity',
+  'businessCommit',
+  'handoffCommit',
+  'RecordResult -Category success',
+  'Release',
+  '相对基线新增未提交路径',
+  '保留现场和租约'
+)
+$identityTokens = @(
+  '~/.claude/settings.json',
+  'http://127.0.0.1:15721',
+  '同源地址',
+  'DeepSeek V4 Pro'
+)
+Assert-Contains -Text $claudeRules -Context 'DeepSeek identity contract in CLAUDE.md' -Values $identityTokens
+Assert-Contains -Text $collaborationRules -Context 'DeepSeek identity contract in collaboration rules' -Values $identityTokens
 Assert-Contains -Text $rules -Context 'workflow rules' -Values @(
   '单写入租约',
   'RECOVERY_ONLY',
