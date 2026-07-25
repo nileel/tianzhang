@@ -87,7 +87,7 @@ docs/基础设定/境界特性.txt
 开发管理/任务列表/内容设计任务.txt
 开发管理/当前任务队列.txt
 开发管理/任务卡/C-FPD-MANSION-01.txt
-开发管理/任务卡/归档/C-FPD-MANSION-01.txt
+开发管理/任务归档/C-FPD-MANSION-01.txt
 ```
 
 任务卡正文使用现有标准七节：
@@ -136,7 +136,7 @@ docs/基础设定/寿元与时间尺度设定.txt
 开发管理/任务列表/内容设计任务.txt
 开发管理/当前任务队列.txt
 开发管理/任务卡/C-FPD-CULTIVATE-01.txt
-开发管理/任务卡/归档/C-FPD-CULTIVATE-01.txt
+开发管理/任务归档/C-FPD-CULTIVATE-01.txt
 ```
 
 正文必须明确：
@@ -174,7 +174,7 @@ simulations/BattleSim/GameData.cs
 开发管理/任务列表/数值与战斗任务.txt
 开发管理/当前任务队列.txt
 开发管理/任务卡/N-GROUP-02C0.txt
-开发管理/任务卡/归档/N-GROUP-02C0.txt
+开发管理/任务归档/N-GROUP-02C0.txt
 ```
 
 正文必须锁定以下契约，不得预先实现：
