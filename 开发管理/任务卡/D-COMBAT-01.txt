@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-COMBAT-01",
+  "title": "统一攻击档案 schema 与导入边界",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "N-GROUP-02 已完成，范围、距离与目标语义已有可复用事实；本卡只定义后续数据契约，不实现导入器或运行时消费。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-01.txt",
+    "开发管理/任务归档/D-COMBAT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-COMBAT-01 · 统一攻击档案 schema 与导入边界
+
+## 来源与当前边界
+
+- `N-GROUP-02` 已完成：2v2 的显式战场、范围中心／命中／拒绝语义以及临时候选优先级已经有直接回归证据。
+- 现有 BattleSim 由 `GameData.AttackProfile`、`ArtConfig`、`DivineConfig` 和无装备 `BasicAttackProfile` 承载攻击；Unity 由 `SpellData`、`DivineSkillData`、`Skills.csv` 与 `DataConfigImporter` 分别承载术法／神通。两端尚无统一的 CSV/asset 攻击档案契约。
+- 本卡只产出可实施的数据契约；具体 CSV/asset、导入器、BattleSim/Unity 消费与跨端 fixture 由后续卡处理。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-12-battlesim-distance-model-design.md` 的“普攻与主战法宝”“后续演进路线”“验证”。
+- `开发管理/任务列表/数据链路任务.txt` 的 `D-COMBAT-01`、`D-COMBAT-02` 与 G3 执行边界；`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt` 的“现有单目标攻击与目标选择”“已锁定的负责人决定与直接影响根”。
+- `simulations/BattleSim/GameData.cs::AttackProfile`、`ArtConfig`、`DivineConfig` 及 `simulations/BattleSim/Character.cs` 的基础攻击装配。
+- `src/Assets/Scripts/Combat/SpellData.cs::SpellData`、`DivineSkillData.cs::DivineSkillData`、`src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportSpells`、`ImportSkills` 与 `src/Assets/DataConfig/Skills.csv` 表头。
+
+## 实施范围
+
+- 新建一份攻击档案数据契约，明确稳定 ID、CSV 行、Unity asset、BattleSim 读取投影及其唯一权威关系；定义主战法宝基础攻击与术法／神通在类型、元素、倍率、施法距离、资源／冷却和已存在范围目标语义上的共用字段与各自特有字段。
+- 定义导入边界：表头、必填与可选字段、跨字段合法性、未知引用、范围／目标配置和坏数据的失败关闭结果；列出后续正反 fixture 与跨端差异检查的最低输入，不填入任何生产数值或内容实例。
+- 明确迁移顺序和消费者边界，保证后续实现不会把 Unity 或 BattleSim 的默认／硬编码值重新作为权威来源。
+
+## 禁止项
+
+- 不修改 CSV、asset、导入器、BattleSim、Unity 运行时、现有攻击数值或任何内容实例；不提前执行 `D-COMBAT-02` 或 `U-COMBAT-01`。
+- 不臆造武器、技能形状、伤害、距离、目标阵营、阻断或范围参数；缺少事实的字段只定义为显式缺失或由后续 fixture 提供。
+- 不新建平行数据源、默认回退或兼容读取分支。
+
+## 验证
+
+- 对照必查范围逐字段确认唯一生产者、投影与失败关闭边界。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- 数据契约使 `D-COMBAT-02` 能实现 CSV/asset fixture 与 BattleSim/Unity 差异检查，而不需要猜测字段、默认值或数据所有者。
+- 基础攻击、术法、神通、距离和范围目标语义的共用／特有边界可追溯到现有事实，且没有声称任何未实施的运行时行为。
+
+## 停止条件
+
+- 若契约必须指定尚无事实源的生产攻击参数、武器内容、范围目标资格或跨端消费者所有者，停止并将本卡转为 `pending_decision`；不得以默认值、临时数据或并行 schema 补齐。
