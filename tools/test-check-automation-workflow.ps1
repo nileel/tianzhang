@@ -80,6 +80,7 @@ $recoveryRulesPath = Join-Path $repositoryRoot '开发管理/自动工作流恢�
 $maintenanceRulesPath = Join-Path $repositoryRoot '开发管理/状态与建议维护规则.txt'
 $statusPath = Join-Path $repositoryRoot '开发管理/自动工作流状态.txt'
 $dailyPromptPath = Join-Path $repositoryRoot '开发管理/自动化简报提示词.txt'
+$weeklyPromptPath = Join-Path $repositoryRoot '开发管理/每周项目总结提示词.txt'
 $agentsPath = Join-Path $repositoryRoot 'AGENTS.md'
 $claudePath = Join-Path $repositoryRoot 'CLAUDE.md'
 $collaborationPath = Join-Path $repositoryRoot '开发管理/AI协作规则.txt'
@@ -201,6 +202,13 @@ $canonicalDailyPrompt = @'
 业务提交按同一提交中的任务事实分类：归档任务是 `completed`，活跃任务保留 `blocked`、`frozen`、`pending_decision` 或 `waiting_reply`；外部交接保留 `pending_review`，队列维护是 `queue_maintenance`，缺少可核验 lifecycle 时报告 `outcome_unverifiable`。
 '@
 
+$canonicalWeeklyPrompt = @'
+# 每周项目总结
+
+不得修改项目文件。以 lastSuccessfulUntil 为游标读取全部 Git 提交，并读取 开发管理/当前任务队列.txt。
+严格按当前队列输出下周重点，最多三项。
+'@
+
 $canonicalInvoker = 'RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate'
 $canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding'
 
@@ -229,6 +237,8 @@ try {
   [IO.Directory]::CreateDirectory($automationRoot) | Out-Null
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
+  Write-Utf8File -Path $weeklyPromptPath -Content $canonicalWeeklyPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-weekly-project-summary' -Status 'PAUSED' -Prompt $canonicalWeeklyPrompt
 
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
 
@@ -417,6 +427,10 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused daily drift' -Contains 'daily briefing prompt'
   Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'PAUSED' -Prompt $canonicalDailyPrompt
 
+  Write-Automation -Root $automationRoot -Id 'tzg-weekly-project-summary' -Status 'PAUSED' -Prompt ($canonicalWeeklyPrompt + "`ndrift")
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused weekly drift' -Contains 'weekly project summary prompt'
+  Write-Automation -Root $automationRoot -Id 'tzg-weekly-project-summary' -Status 'PAUSED' -Prompt $canonicalWeeklyPrompt
+
   $lifecycleBriefingLine = '业务提交按同一提交中的任务事实分类：归档任务是 `completed`，活跃任务保留 `blocked`、`frozen`、`pending_decision` 或 `waiting_reply`；外部交接保留 `pending_review`，队列维护是 `queue_maintenance`，缺少可核验 lifecycle 时报告 `outcome_unverifiable`。'
   $missingLifecycleBriefing = $canonicalDailyPrompt.Replace($lifecycleBriefingLine, '')
   Write-Utf8File -Path $dailyPromptPath -Content $missingLifecycleBriefing
@@ -427,6 +441,8 @@ try {
 
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) -Context 'Require active while paused' -Contains 'unique ACTIVE'
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'ACTIVE' -Prompt $canonicalPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-daily-automation-briefing' -Status 'ACTIVE' -Prompt $canonicalDailyPrompt
+  Write-Automation -Root $automationRoot -Id 'tzg-weekly-project-summary' -Status 'ACTIVE' -Prompt $canonicalWeeklyPrompt
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot -RequireActive) -Context 'Single active controller'
   Write-Automation -Root $automationRoot -Id 'tzg-other-writer' -Status 'ACTIVE' -Prompt $canonicalPrompt
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Multiple active writers' -Contains 'more than one writer'

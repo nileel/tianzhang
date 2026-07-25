@@ -84,6 +84,7 @@ $recoveryRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动�
 $maintenanceRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\状态与建议维护规则.txt')
 $status = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动工作流状态.txt')
 $dailyPrompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\自动化简报提示词.txt')
+$weeklyPrompt = Read-Utf8Contract -Path (Join-Path $root '开发管理\每周项目总结提示词.txt')
 $leaseTool = Read-Utf8Contract -Path (Join-Path $root 'tools\hourly-automation-lease.ps1')
 $invokerPath = Join-Path $root 'tools\invoke-codex-responsibility.ps1'
 Assert-Contract -Condition (Test-Path -LiteralPath $invokerPath -PathType Leaf) -Message 'missing workflow component: tools\invoke-codex-responsibility.ps1'
@@ -375,6 +376,14 @@ Assert-Contains -Text $dailyPrompt -Context 'daily briefing lifecycle categories
   'queue_maintenance',
   'outcome_unverifiable'
 )
+Assert-Contains -Text $weeklyPrompt -Context 'weekly project summary prompt' -Values @(
+  '不得修改项目文件',
+  'lastSuccessfulUntil',
+  '全部 Git 提交',
+  '开发管理/当前任务队列.txt',
+  '下周重点',
+  '最多三项'
+)
 
 $showIndex = $prompt.IndexOf('Show', [StringComparison]::Ordinal)
 $queueIndex = $prompt.IndexOf('开发管理/当前任务队列.txt', [StringComparison]::Ordinal)
@@ -426,16 +435,22 @@ $automationDirectories = @(Get-ChildItem -LiteralPath $automationDirectory -Dire
 $automations = @($automationDirectories | ForEach-Object { Read-Automation -Directory $_.FullName })
 $controllers = @($automations | Where-Object { $_.Id -eq 'tzg-hourly-controller' })
 $dailyBriefings = @($automations | Where-Object { $_.Id -eq 'tzg-daily-automation-briefing' })
+$weeklySummaries = @($automations | Where-Object { $_.Id -eq 'tzg-weekly-project-summary' })
 Assert-Contract -Condition ($controllers.Count -eq 1) -Message 'tzg-hourly-controller configuration is missing or duplicated'
 Assert-Contract -Condition ($dailyBriefings.Count -eq 1) -Message 'tzg-daily-automation-briefing configuration is missing or duplicated'
+Assert-Contract -Condition ($weeklySummaries.Count -eq 1) -Message 'tzg-weekly-project-summary configuration is missing or duplicated'
 Assert-Contract `
   -Condition ((Normalize-ContractText -Text $controllers[0].Prompt) -ceq (Normalize-ContractText -Text $prompt)) `
   -Message 'controller prompt does not match the canonical prompt'
 Assert-Contract `
   -Condition ((Normalize-ContractText -Text $dailyBriefings[0].Prompt) -ceq (Normalize-ContractText -Text $dailyPrompt)) `
   -Message 'daily briefing prompt does not match the canonical prompt'
+Assert-Contract `
+  -Condition ((Normalize-ContractText -Text $weeklySummaries[0].Prompt) -ceq (Normalize-ContractText -Text $weeklyPrompt)) `
+  -Message 'weekly project summary prompt does not match the canonical prompt'
 
-$writers = @($automations | Where-Object { $_.Id -ne 'tzg-daily-automation-briefing' })
+$readOnlyAutomationIds = @($dailyBriefings[0].Id, $weeklySummaries[0].Id)
+$writers = @($automations | Where-Object { $_.Id -cnotin $readOnlyAutomationIds })
 $activeWriters = @($writers | Where-Object { $_.Status -eq 'ACTIVE' })
 Assert-Contract -Condition ($activeWriters.Count -le 1) -Message 'more than one writer automation is ACTIVE'
 if ($activeWriters.Count -eq 1) {
