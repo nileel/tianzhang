@@ -4,6 +4,14 @@
 >
 > 目的：在不改动正式场景、战斗或规则层的前提下，为后续小型 2.5D 表现原型固定可重复的兼容验证。2.5D 只改变渲染表现；所有规则结论必须来自同一份六角规则数据，不能来自 Unity `Transform`、碰撞体或模型外观。
 
+## 已执行证据 · U-2_5D-01（2026-07-25）
+
+- 固定 fixture：`TacticalGridModel` 的 `(0,0)` 占位单位 7、`(1,0)` 空格与 `(2,0)` 的 `HeightLevel=3`；同一 `SpatialQueryBoardFactory` 输入只配置 `(0,0) -> (1,0)` 的有向边，`metricDistanceUnits=2`。
+- `Tilemap2D -> Hybrid2_5D -> Tilemap2D` 三次查询均得到：距离可达 `2`、基础攻击范围可达、视线可达、可移动集合为起点与 `(1,0)`；`HybridTacticalRendererTests.RendererSwitchKeepsSharedSpatialOutputAndSingleColumnOccupancy` 断言三个输出完全相同，且 `(0,0)` 仅保留单位 7 的单柱占位与一个 billboard 标记。
+- 可见表现证据：`HybridTacticalRendererTests` 已验证 3D 六角地块按绑定 `HexCoord` 和 `HeightLevel` 建立、较高地块具有更高纯表现坐标、地面 collider 射线只回传其绑定坐标；控制器仅将该坐标交给共享查询并显示其移动／攻击范围反馈。
+- 隔离证据：`HybridTacticalPrototype.unity` 仅包含斜俯视正交相机及原型控制器／渲染器；测试确认没有 `AdventureSceneController`，且 `EditorBuildSettings` 不含该场景。正式 Build Settings 与 `AdventureScene` 未修改。
+- 验证：Unity EditMode `171/171` 通过；`dotnet build -c Release --no-restore src/TianZhang.EditModeTests.csproj` 通过。`TianZhang.Runtime.csproj` 的同命令仍因其既有单程序集清单未收录已存在的 SpatialRules／环境类型而失败，本卡未修改生成工程映射；Unity 与当前 Gameplay/EditMode 生成程序集均已实际编译原型脚本。
+
 ## 一、适用边界与前置门槛
 
 - 原型只可消费同一 `TacticalGridModel`、`HexCoord` 与已批准的规则查询所有者；每条证据均用完全相同的输入 fixture 分别驱动 2D 与 2.5D 表现。

@@ -25,6 +25,7 @@ namespace TianZhang.Editor
         private const string WorldScenePath = "Assets/Scenes/WorldScene.unity";
         private const string SettlementScenePath = "Assets/Scenes/SettlementScene.unity";
         private const string AdventureScenePath = "Assets/Scenes/AdventureScene.unity";
+        private const string HybridTacticalPrototypeScenePath = "Assets/Scenes/HybridTacticalPrototype.unity";
 
         /// <summary>
         /// 创建正交主相机（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
@@ -474,6 +475,39 @@ namespace TianZhang.Editor
                 UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
                 AdventureScenePath);
             Debug.Log("<color=cyan>天章副本场景已生成</color>");
+        }
+
+        [MenuItem("Tools/天章/生成2.5D战棋隔离原型场景")]
+        public static void BuildHybridTacticalPrototypeScene()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+                UnityEditor.SceneManagement.NewSceneMode.Single);
+
+            var camera = CreateMainCamera(9f, new Color(0.05f, 0.07f, 0.09f));
+            camera.transform.position = new Vector3(0f, 10f, -10f);
+            camera.transform.rotation = Quaternion.LookRotation(new Vector3(0f, -1f, 1f), Vector3.up);
+
+            var environmentProfile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            Require(environmentProfile != null, "Hybrid tactical prototype requires env_guanzhong_wild EnvironmentProfileData.");
+
+            var root = new GameObject("HybridTacticalPrototypeRoot");
+            var renderer = root.AddComponent<HybridTacticalRenderer>();
+            SetSerializedComponentName(renderer, "HybridTacticalRenderer");
+            renderer.SetPresentationCamera(camera);
+
+            var controller = root.AddComponent<HybridTacticalPrototypeController>();
+            SetSerializedComponentName(controller, "HybridTacticalPrototypeController");
+            controller.SetEnvironmentProfile(environmentProfile);
+            controller.SetPresentationCamera(camera);
+            controller.SetPrototypeRadius(5);
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
+                HybridTacticalPrototypeScenePath);
+            AssetDatabase.Refresh();
+            Debug.Log("<color=cyan>2.5D战棋隔离原型场景已生成</color>");
         }
 
     }
