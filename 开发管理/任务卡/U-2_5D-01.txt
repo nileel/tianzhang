@@ -1,0 +1,80 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-2_5D-01",
+  "title": "2.5D 战棋表现隔离小场景原型",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "U-2_5D-01A～D、正式冒险链与共享空间查询契约均已完成；本卡只建立不进入正式 Build Settings 的隔离原型，满足进入队列条件。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs.meta",
+    "src/Assets/Scripts/Grid/HybridTacticalPrototypeController.cs",
+    "src/Assets/Scripts/Grid/HybridTacticalPrototypeController.cs.meta",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scenes/HybridTacticalPrototype.unity",
+    "src/Assets/Scenes/HybridTacticalPrototype.unity.meta",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs.meta",
+    "开发管理/2.5D战棋原型验证清单.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-2_5D-01.txt",
+    "开发管理/任务归档/U-2_5D-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-2_5D-01 · 2.5D 战棋表现隔离小场景原型
+
+## 来源与当前边界
+
+- `docs/superpowers/specs/2026-06-19-scene-architecture-design.md` 的“第七步：2.5D 战斗表现原型”，以及 `开发管理/任务列表/场景与Unity任务.txt` 的 U-2_5D-01 条目。
+- U-2_5D-01A～C 已分别完成兼容清单、查询所有者定位和共享契约方案；U-2_5D-01D 已完成共享空间查询契约实现与旧范围逻辑迁移。
+- 本卡只验证隔离小场景的表现与输入映射，不把原型注册为正式入口，不把 `AdventureScene` 或旧 `ExplorationScene` 改成 2.5D。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-06-19-scene-architecture-design.md#第七步：2.5D 战斗表现原型`、`开发管理/2.5D战棋原型验证清单.txt` 与 `开发管理/任务归档/U-2_5D-01D.txt`。
+- `src/Assets/Scripts/Grid/TacticalGridModel.cs::TacticalGridModel`、`src/Assets/Scripts/Grid/ITacticalRenderer.cs::ITacticalRenderer`、`src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs::TilemapTacticalRenderer` 及其直接调用者 `src/Assets/Scripts/Tilemap/HexTilemapManager.cs`。
+- `src/Assets/Scripts/Core/SpatialRules/SpatialQueryBoard.cs::SpatialQueryBoard`、`src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs::SpatialQueryBoardFactory` 与 `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs`。
+- `src/Assets/Scripts/Editor/SceneBuilder.cs`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`src/ProjectSettings/EditorBuildSettings.asset` 与当前正式 `AdventureScene` 所有者；验证原型不进入正式链。
+
+## 实施范围
+
+- 建立半径 5～7 的隔离原型场景，以同一 `TacticalGridModel` 和 `SpatialQueryBoard` 输入生成 2.5D 六角地块、斜俯视正交相机、2D billboard 单位标记、地面阴影和已有 `HeightLevel` 的纯表现映射。
+- 鼠标射线只负责命中表现地块并还原其绑定的 `HexCoord`；移动、距离、范围、视线、障碍、占位和拒绝原因继续读取共享规则查询结果。
+- 固定同一 fixture 对照 `Tilemap2D` 与 `Hybrid2_5D` 的规则输出；切换表现不得写回、重建或改变规则状态。
+- 更新兼容验证清单，记录同一 case 的 2D／2.5D 输出、可见表现证据及正式 Build Settings 未变化的检查结果。
+
+## 禁止项
+
+- 不修改 CTB、伤害、冷却、寻路、技能范围、空间查询算法、环境档案或玩法数值。
+- 不新增三维占位、同柱多单位、飞行高度规则、格边类别、默认档案、兼容分支或第二份规则服务。
+- 不修改 `AdventureScene`、`ExplorationScene`、`SceneFlowManager` 或正式 Build Settings；原型不得成为第二个正式冒险入口。
+- 不用 Transform、Collider、Camera、Renderer、模型间距或欧氏距离推导任何战斗规则；Collider 只可返回已绑定的 `HexCoord` 作为输入选择。
+
+## 验证
+
+- 测试先行，覆盖同一模型的坐标映射、表现切换不改规则输出、射线命中只返回绑定坐标、单柱唯一占位与正式 Build Settings 不含原型场景。
+- `dotnet build -c Release --no-restore src/TianZhang.Runtime.csproj`。
+- `dotnet build -c Release --no-restore src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- 隔离场景以相同规则输入呈现半径 5～7 的 2.5D 六角地块、billboard 单位、高度表现、点击选格和移动／攻击范围反馈。
+- 清单中的同 case 规则输出在 2D 与 2.5D 间一致；改变模型 Transform、镜头或纯视觉对象不改变距离、范围、视线、障碍、占位或行动合法性。
+- Unity 编译、EditMode、数据链与文本检查通过，正式冒险入口仍唯一为 `AdventureScene`，原型未进入 Build Settings。
+
+## 停止条件
+
+- 实施必须改变正式冒险入口、共享空间规则、战斗语义或环境数据，必须引入三维占位／未定义高度资格，或无法在隔离场景内用现有接口完成同输入对照时停止并请求负责人决定。
