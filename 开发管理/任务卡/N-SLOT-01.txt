@@ -10,10 +10,9 @@
   "stage": "design",
   "dispatchState": "blocked",
   "blockedBy": [
-    "N-FPD-DANXIANG-01",
-    "N-FPD-MANSION-01"
+    "N-FPD-DANXIANG-01"
   ],
-  "stateReason": "等待丹相主辅预算与五府府体预算完成",
+  "stateReason": "五府府体预算已于 2026-07-25 完成；等待 N-FPD-DANXIANG-01 锁定丹相主辅预算。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/角色养成/术法槽位设计.txt",

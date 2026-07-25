@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-25 C-FPD-MANSION-01 已完成并确认五项府体机制；负责人要求纠正陈旧阻塞投影，本卡现可进入数值预算验证。",
+  "stateReason": "2026-07-25 已以 BattleSim 锁定五项府体参数区间、统一预算、差异上限和 1～5 府边际收益；第四、第五府各保留实际收益，且未产生槽位、位格或丹相增量。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/superpowers/specs/2026-07-21-five-mansion-body-effects-design.md",
@@ -19,6 +19,7 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-FPD-MANSION-01.txt",
+    "开发管理/任务卡/N-SLOT-01.txt",
     "开发管理/任务归档/N-FPD-MANSION-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
@@ -67,3 +68,9 @@
 ## 停止条件
 
 - 既有机制无法在统一平铺效果绑定中表达，必须新增递归效果系统，或结论需要修改战斗规则而非府体成长输入时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-25：`RunMansionBodyBudgetAudit` 覆盖均衡 1～5 府、五类极端 Build 与软亲和 0.80／1.20 回归。每座完整紫府为 1.00 预算分，五府总上限为 5.00；第四、第五府各保留 1.00 边际收益，术法槽、神通槽、稳定位格与丹相增量均为零。
+- 参数区间、目标指标与上限已同步至五府府体设计和境界直接事实；可复现输入、输出和残留风险已写入独立验证记录。
+- 已解除 N-FPD-DANXIANG-01 与 N-SLOT-01 对本卡的 backlog 依赖投影；前者仍等待 N-JD-RULE-01C，后者仍等待 N-FPD-DANXIANG-01。

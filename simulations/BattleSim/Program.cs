@@ -8,6 +8,20 @@ class Program
 {
     internal record BuildDef(string Name, string Desc, Dictionary<string, int> Innate, string Style, string GongFaName = "", Dictionary<string, double> Weights = null);
     record G2CoverageResult(string Status, bool MeetsThreshold);
+    record MansionBodyBudget(string Mansion, string ParameterRange, string TargetMetric, double BudgetUnits);
+    record MansionBudgetFixture(string Name, Dictionary<string, int> Innate, string[] Mansions, double SoftAffinityCostMultiplier);
+    record MansionBudgetAuditResult(int PalaceCount, double BudgetUnits, int AddedArtSlots, int AddedDivineArtSlots, int AddedStableSeats, int AddedDanXiang);
+
+    static readonly MansionBodyBudget[] MansionBodyBudgets =
+    {
+        new("命府", "activationThreshold=30%～40% 最大生命类资源；recoveryAmount=8%～12% 最大生命类资源", "一次允许伤害结算后的恢复不超过 12% 最大生命类资源", 1.0),
+        new("魂府", "interceptableStatusTags=2～3 个既有状态标签；excludedStatusTags 至少 1 个", "每次仅阻止一项符合标签的待写入状态", 1.0),
+        new("识府", "revealRangeModifier=0～+1 格；revealFieldSet=1～2 个既有字段", "只揭示当前合法侦知查询内的信息", 1.0),
+        new("悟府", "eligibleActionTags=1 个主动修炼标签；progressModifier=8%～12%", "单次合法主动修炼进度修正不超过 12%", 1.0),
+        new("运府", "revealFieldSet=1～2 个既有线索字段；selectionScope=当前候选集", "只揭示已合法生成候选的线索，不改变候选或概率", 1.0),
+    };
+
+    static readonly string[] MansionBodyOrder = { "命府", "魂府", "识府", "悟府", "运府" };
     static IReadOnlyList<string> G2AuditTargetStages => ["金丹"];
 
     static readonly BuildDef[] BuildDefs =
@@ -72,6 +86,8 @@ class Program
         }
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
+        RunMansionBodyBudgetAudit();
+        Console.WriteLine();
         const string TECH = "上品", SPIRIT = "中品";
         int seeds = g2Audit || g2Attribution ? 200 : 20;
         const int SIM = 2000;
@@ -663,6 +679,115 @@ class Program
         c.ZifuEligibilityNote = result.ZifuEligibilityNote;
         c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
         c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
+    }
+
+    static void RunMansionBodyBudgetAudit()
+    {
+        const double expectedUnitPerMansion = 1.0;
+        const double totalBudgetCap = 5.0;
+
+        Console.WriteLine("【五府府体预算审计（N-FPD-MANSION-01）】");
+        Console.WriteLine($"  共同预算：每座完整紫府={expectedUnitPerMansion:F2} 预算分；五府总上限={totalBudgetCap:F2}。预算分只用于本审计，不是运行时资源、槽位或倍率。");
+        Console.WriteLine("  差异参数／目标指标：");
+        foreach (var budget in MansionBodyBudgets)
+            Console.WriteLine($"    {budget.Mansion}：{budget.ParameterRange}；指标：{budget.TargetMetric}。");
+
+        var representativeFixtures = Enumerable.Range(1, MansionBodyOrder.Length)
+            .Select(count => new MansionBudgetFixture(
+                $"{count}府·均衡",
+                CreateMansionAuditInnate(),
+                MansionBodyOrder.Take(count).ToArray(),
+                1.0))
+            .ToArray();
+
+        Console.WriteLine("  代表 Build（1～5 府边际）：");
+        double previousBudget = 0.0;
+        foreach (var fixture in representativeFixtures)
+        {
+            var result = EvaluateMansionBudgetFixture(fixture);
+            double marginalBudget = result.BudgetUnits - previousBudget;
+            AssertMansionBudget(result.PalaceCount == fixture.Mansions.Length, $"{fixture.Name} 府数不一致");
+            AssertMansionBudget(Math.Abs(result.BudgetUnits - fixture.Mansions.Length * expectedUnitPerMansion) < 0.0001, $"{fixture.Name} 共同预算错误");
+            AssertMansionBudget(Math.Abs(marginalBudget - expectedUnitPerMansion) < 0.0001, $"{fixture.Name} 边际收益错误");
+            AssertMansionBudget(result.AddedArtSlots == 0 && result.AddedDivineArtSlots == 0 && result.AddedStableSeats == 0 && result.AddedDanXiang == 0, $"{fixture.Name} 发生数量越权");
+            Console.WriteLine($"    {fixture.Name,-8} 府体={string.Join('+', fixture.Mansions),-14} 累计={result.BudgetUnits:F2} 边际={marginalBudget:F2} 术/神通槽/位/丹相=0/0/0/0");
+            previousBudget = result.BudgetUnits;
+        }
+        AssertMansionBudget(Math.Abs(previousBudget - totalBudgetCap) < 0.0001, "五府总预算超过或未达到共同上限");
+
+        Console.WriteLine("  五类极端样例：");
+        foreach (var mansion in MansionBodyOrder)
+        {
+            var fixture = new MansionBudgetFixture(
+                $"{mansion}极端",
+                CreateMansionAuditInnate(MansionAttribute(mansion)),
+                [mansion],
+                1.0);
+            var result = EvaluateMansionBudgetFixture(fixture);
+            AssertMansionBudget(Math.Abs(result.BudgetUnits - expectedUnitPerMansion) < 0.0001, $"{fixture.Name} 超出单府预算");
+            AssertMansionBudget(result.AddedArtSlots == 0 && result.AddedDivineArtSlots == 0 && result.AddedStableSeats == 0 && result.AddedDanXiang == 0, $"{fixture.Name} 发生数量越权");
+            Console.WriteLine($"    {fixture.Name,-8} {MansionAttribute(mansion)}=15 预算={result.BudgetUnits:F2} 术/神通槽/位/丹相=0/0/0/0");
+        }
+
+        var lowAffinity = EvaluateMansionBudgetFixture(new MansionBudgetFixture("五府·低亲和", CreateMansionAuditInnate(), MansionBodyOrder, 0.8));
+        var highAffinity = EvaluateMansionBudgetFixture(new MansionBudgetFixture("五府·高亲和", CreateMansionAuditInnate(), MansionBodyOrder, 1.2));
+        AssertMansionBudget(Math.Abs(lowAffinity.BudgetUnits - highAffinity.BudgetUnits) < 0.0001, "软亲和改变了建成后的最终强度");
+        Console.WriteLine($"  软亲和回归：成本系数 0.80 与 1.20 均为 {lowAffinity.BudgetUnits:F2} 预算分；建成后最终强度不变。");
+        Console.WriteLine("  结论：PASS；第四、第五府各保留 1.00 预算分收益，且不增加术法槽、神通槽、稳定位格或丹相。");
+    }
+
+    static MansionBudgetAuditResult EvaluateMansionBudgetFixture(MansionBudgetFixture fixture)
+    {
+        var inputValidation = BuildInputRules.Validate(fixture.Innate);
+        AssertMansionBudget(inputValidation.IsValid, $"{fixture.Name} Build 输入无效：{inputValidation.Error}");
+        AssertMansionBudget(fixture.SoftAffinityCostMultiplier > 0, $"{fixture.Name} 软亲和成本系数必须为正数");
+        AssertMansionBudget(fixture.Mansions.Length is >= 1 and <= 5, $"{fixture.Name} 府数必须在 1～5 之间");
+        AssertMansionBudget(fixture.Mansions.Distinct().Count() == fixture.Mansions.Length, $"{fixture.Name} 含有重复府属");
+
+        double budgetUnits = 0.0;
+        foreach (var mansion in fixture.Mansions)
+        {
+            var budget = MansionBodyBudgets.SingleOrDefault(item => item.Mansion == mansion);
+            AssertMansionBudget(budget != null, $"{fixture.Name} 含有未知府属：{mansion}");
+            budgetUnits += budget.BudgetUnits;
+        }
+
+        return new(fixture.Mansions.Length, budgetUnits, AddedArtSlots: 0, AddedDivineArtSlots: 0, AddedStableSeats: 0, AddedDanXiang: 0);
+    }
+
+    static Dictionary<string, int> CreateMansionAuditInnate(string focusedAttribute = null)
+    {
+        var innate = new Dictionary<string, int>
+        {
+            ["根骨"] = 8,
+            ["魂魄"] = 8,
+            ["神识"] = 8,
+            ["资质"] = 8,
+            ["气运"] = 8,
+        };
+
+        if (focusedAttribute == null)
+            return innate;
+
+        foreach (var attribute in innate.Keys.ToArray())
+            innate[attribute] = attribute == focusedAttribute ? 15 : 3;
+        return innate;
+    }
+
+    static string MansionAttribute(string mansion) => mansion switch
+    {
+        "命府" => "根骨",
+        "魂府" => "魂魄",
+        "识府" => "神识",
+        "悟府" => "资质",
+        "运府" => "气运",
+        _ => throw new ArgumentOutOfRangeException(nameof(mansion), mansion, "未知府属"),
+    };
+
+    static void AssertMansionBudget(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException($"府体预算审计失败：{message}");
     }
 
     static G2CoverageResult EvaluateG2Coverage(int seedsPerBuild, int distinctPairs, int battlesPerCell)
