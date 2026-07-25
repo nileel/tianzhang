@@ -5,3 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| N-FPD-MANSION-01 | codex_execute | codex | P1 | battlesim | design | 五府府体预算 | 开发管理/任务卡/N-FPD-MANSION-01.txt |
+| U-2_5D-01D | codex_execute | codex | P2 | unity | implementation | 共享空间查询契约实现与旧范围逻辑迁移 | 开发管理/任务卡/U-2_5D-01D.txt |
