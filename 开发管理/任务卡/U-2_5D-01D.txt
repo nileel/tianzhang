@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-07-25 负责人选择完整依赖方案并明确授予本卡独立重新实施授权。",
+  "stateReason": "2026-07-25 已核验：env_guanzhong_wild 生产 asset 存在，但正式 AdventureScene 没有 EnvironmentProfileData 序列化引用或运行时消费点；本卡 expectedPaths 未授权场景、AdventureSceneController 或生产 asset，无法在无默认值/兼容分支的边界内显式绑定后迁移旧范围逻辑。",
   "expectedPaths": [
     "src/Assets/Scripts/Core/SpatialRules.meta",
     "src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs",
@@ -54,6 +54,12 @@
 - U-2_5D-01C 与 C-ENV-PROFILE-01 均已完成并通过复审。
 - `DEC-20260724-ENVPROFILE = A` 只曾授权 C-ENV-PROFILE-01；2026-07-25 负责人另行选择完整依赖方案，并明确授予本卡独立重新实施授权。
 - 回滚记录：首次实现提交 `182e4aa` 及其移动负担修正 `3ed1cbd` 在最终只读复核中暴露出正式 `AdventureScene` 没有生产环境档案、初始化后按失败关闭规则无法触发战斗的问题；负责人选择恢复现行正式冒险基线，`bb8050e` 已完整回滚两次业务改动。自动化恢复链修复保留，后续重新实施不得沿用已回滚实现。
+
+## 当前阻塞（2026-07-25）
+
+- 已核验 `src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` 存在，但其 GUID 未出现在 `src/Assets/Scenes/AdventureScene.unity`；`AdventureSceneController` 与场景中的 `ExplorationController` 均没有 `EnvironmentProfileData` 字段或消费点。
+- 现有 `expectedPaths` 不包含正式场景、`AdventureSceneController.cs` 或生产环境 asset，故不能在本卡授权内建立正式入口的显式绑定，也不能以默认、自动查找或兼容分支替代。
+- 需负责人明确扩展本卡允许路径并指定绑定所有者（`AdventureSceneController` 或正式场景的 `ExplorationController`），之后再重新置为 `ready`。
 
 ## 必查范围
 
