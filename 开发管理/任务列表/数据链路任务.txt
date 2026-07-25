@@ -14,9 +14,8 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
-| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01A、D-FPD-SCHEMA-01B | 道基、紫府与修炼数据父任务；两个子任务均完成后才关闭。 | — |
-| D-FPD-SCHEMA-01A | P1 | codex | 已排队 | — | 道基、紫府与修炼静态数据契约 | 开发管理/任务卡/D-FPD-SCHEMA-01A.txt |
-| D-FPD-SCHEMA-01B | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01A | 数据对象、导入器、检查器、非法输入失败关闭与直接测试。 | — |
+| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 道基、紫府与修炼数据父任务；静态契约已归档，两个子任务均完成后才关闭。 | — |
+| D-FPD-SCHEMA-01B | P1 | Codex | 待建卡 | — | 数据对象、导入器、检查器、非法输入失败关闭与直接测试；以已归档静态契约为唯一语义来源。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A、D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约、导入失败关闭与样例均完成后才关闭。 | — |
 | D-JD-SCHEMA-01A | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 金丹道路、效果、三实位、丹枢／丹相、主辅承载与账本静态契约。 | — |
@@ -39,20 +38,9 @@
 - 状态：父任务不直接进入队列；两个子任务均完成并归档后才关闭父任务并解锁 `D-JD-SCHEMA-01A`。
 - 禁止：不得用父任务替代子任务交付，不得在 `01A` 尚未锁定语义时由 `01B` 反向创作机制或默认值。
 
-### D-FPD-SCHEMA-01A · 道基、紫府、效果与修炼静态数据契约
-
-- 依赖：`C-FPD-MANSION-01`、`C-FPD-CULTIVATE-01` 均完成并获负责人确认；G3 已通过。
-- 必读：2026-07-20 集成规格、两个机制设计完成品、三类内容规范与模板、`docs/角色养成/术法槽位设计.txt`，以及现有 CSV／asset 字段。
-- 预期路径：新建 `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 与正反 fixture 规格；进入当前队列前用实时扫描展开实际相关文件。
-- 交付：定义唯一道基、四阶段连续进度、天然／已释放／扩府／总容量、五府未建／府胚／建成状态、每府唯一镇府神通、平铺效果绑定、强化／府间节点、结丹永久锁、固定周期行动和闭关停止原因。
-- 禁止：未锁定数值只能显式缺失或只存在于测试 fixture；不实现导入器、Unity 运行时、BattleSim 数值或 NPC 权重。
-- 验证：逐字段映射已确认机制；正反 fixture 覆盖合法最小状态、容量边界、同类双府、缺少必需绑定、递归效果包和结丹后新增府。
-- 完成条件：静态契约与 fixture 足以让 `D-FPD-SCHEMA-01B` 实现失败关闭，不需要猜测默认值或反向修改机制。
-- 停止条件：已确认机制不能由平铺效果绑定表达，或必须引入递归效果包、第二套角色成长服务、静默兼容字段或默认平衡值。
-
 ### D-FPD-SCHEMA-01B · 道基、紫府与修炼导入及失败关闭
 
-- 依赖：`D-FPD-SCHEMA-01A` 完成并归档。
+- 前置已满足：`D-FPD-SCHEMA-01A` 已归档；`docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 是唯一静态语义来源。
 - 必读：`D-FPD-SCHEMA-01A` 数据契约与 fixture；现有 `src/Assets/DataConfig/`、对应数据模型、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试。
 - 预期路径：相关 CSV、ScriptableObject／纯数据对象、导入器、检查器及 EditMode 测试；建卡时必须用实时扫描展开字面量路径。
 - 交付：实现 `01A` 契约的数据对象、导入、校验和稳定错误原因；未知阶段、容量越界、同类双府、建成府缺少必需绑定、递归效果包、结丹后新增府及旧新 schema 并存均整表失败关闭。

@@ -5,6 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-FPD-SCHEMA-01A | codex_execute | codex | P1 | data | design | 道基、紫府与修炼静态数据契约 | 开发管理/任务卡/D-FPD-SCHEMA-01A.txt |
 | N-FPD-GROWTH-01 | codex_execute | codex | P1 | battlesim | design | 四阶段成长与道基核心曲线 | 开发管理/任务卡/N-FPD-GROWTH-01.txt |
 | N-FPD-CULTIVATE-01 | codex_execute | codex | P2 | battlesim | design | 养基与筑府周期参数 | 开发管理/任务卡/N-FPD-CULTIVATE-01.txt |

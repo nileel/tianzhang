@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "C-FPD-MANSION-01 与 C-FPD-CULTIVATE-01 均已归档完成；G3 已通过，本卡可锁定静态契约与正反 fixture 规格。",
+  "stateReason": "2026-07-26 已完成唯一道基、四阶段连续进度、容量、五府状态、镇府神通、平铺效果、节点、行动、结丹锁与正反 fixture 契约；未实现导入器、Unity、BattleSim 或 NPC 权重。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -62,3 +62,7 @@
 ## 停止条件
 
 - 已确认机制不能由平铺效果绑定表达，或必须引入递归效果包、第二套角色成长服务、静默兼容字段或默认平衡值。
+
+## 完成记录
+
+- 2026-07-26：已锁定 `foundationPurpleMansionState` 的唯一道基、连续四阶段、派生容量、五府三态、每府府体／镇府神通、平铺效果与节点、固定周期行动、闭关停止原因、结丹快照锁和正反 fixture。旧 `developedMansions`／`mansionBindings`／五段进度／按府数增槽字段被明确列为不可混用的旧 schema；`D-FPD-SCHEMA-01B` 已解除前置，可据此建卡实施整表失败关闭。
