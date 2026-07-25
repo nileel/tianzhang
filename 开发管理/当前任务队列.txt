@@ -5,6 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-FPD-CULTIVATE-01 | codex_execute | codex | P1 | content | design | 养基、筑府与闭关机制 | 开发管理/任务卡/C-FPD-CULTIVATE-01.txt |
 | U-2_5D-01D | codex_execute | codex | P2 | unity | implementation | 共享空间查询契约实现与旧范围逻辑迁移 | 开发管理/任务卡/U-2_5D-01D.txt |
 | N-GROUP-02C0 | codex_execute | codex | P3 | battlesim | design | 每行动结算候选契约 | 开发管理/任务卡/N-GROUP-02C0.txt |

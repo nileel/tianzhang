@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-FPD-CULTIVATE-01",
+  "title": "养基、筑府与闭关机制",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-25 已完成养基、筑府、闭关、停止原因与存读档原子边界的负责人确认设计；数值参数留待 N-FPD-CULTIVATE-01。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md",
+    "docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md",
+    "docs/基础设定/修行境界.txt",
+    "docs/基础设定/寿元与时间尺度设定.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/C-FPD-CULTIVATE-01.txt",
+    "开发管理/任务归档/C-FPD-CULTIVATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-FPD-CULTIVATE-01 · 养基、筑府与闭关机制
+
+## 来源与当前边界
+
+- `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`、`docs/基础设定/修行境界.txt` 与 `docs/基础设定/寿元与时间尺度设定.txt`。
+- 2026-07-25 负责人选择完整依赖方案，并只解冻养基、筑府与闭关机制设计切片；其他内容任务、M7、M8 与批量内容生产仍冻结。
+- G3 已通过；本卡只锁定行动生命周期和非数值边界，不决定周期参数。
+
+## 必查范围
+
+- 完整读取 `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md` 中四阶段连续进度、紫府建造、结丹锁与 NPC 行动边界。
+- `docs/基础设定/修行境界.txt` 中凡人、练气、筑基与结丹的直接规则。
+- `docs/基础设定/寿元与时间尺度设定.txt` 中固定周期行动和时间尺度边界。
+- `开发管理/任务列表/内容设计任务.txt#C-FPD-CULTIVATE-01 · 养基、筑府与闭关机制`。
+
+## 实施范围
+
+- 形成 `docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md`。
+- 定义连续养基、府胚蕴养、开府考验、失败回退、资源耗尽、事件暂停、目标完成与玩家自设停止条件。
+- 明确行动的开始、单周期推进、暂停、恢复、完成、失败和保存／读取边界。
+- 玩家与 NPC 使用同一合法行动集合；闭关只负责按既定停止条件重复合法行动。
+
+## 禁止项
+
+- 不填写周期长度、资源量、损耗比例、成功阈值或平衡默认值。
+- 不恢复最终抽签式筑基，不生成残缺道基或残缺紫府。
+- 不设计五府具体效果，不定义数据 schema，不实现 BattleSim 或 Unity。
+- 不解冻其他内容任务，不把闭关扩展为独立修炼系统。
+
+## 验证
+
+- 对照境界与时间尺度事实逐项检查行动生命周期、暂停／恢复、失败和存档边界。
+- 验证除功法每日被动灵力外，所有进度均由固定周期主动行动推进；闭关只重复这些行动。
+- 验证玩家与 NPC 的合法行动集合一致，且失败不会生成残缺道基或残缺紫府。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理` 与 `git diff --check`。
+
+## 完成条件
+
+- 行动生命周期、暂停／恢复、失败、停止原因和存档边界均获负责人确认，可由后续数值和 schema 任务直接引用。
+- 任务完成后归档本卡；若 `C-FPD-MANSION-01` 也已完成，解锁 `D-FPD-SCHEMA-01A`。
+
+## 停止条件
+
+- 机制需要周期长度、资源量、损耗比例、成功阈值，或现有境界／寿元事实无法支持行动闭环时停止并转为 `pending_decision`；不得以实现便利改写设定。
+
+## 完成记录
+
+- 2026-07-25：已锁定统一行动生命周期、固定周期原子结算、暂停／恢复、主动终止、失败回退、闭关停止与存读档边界；未填写数值或 schema。`C-FPD-MANSION-01` 已完成，`D-FPD-SCHEMA-01A` 的两个内容设计前置现均已满足。
