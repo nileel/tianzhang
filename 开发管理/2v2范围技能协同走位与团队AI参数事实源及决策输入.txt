@@ -2,14 +2,14 @@
 
 > 任务：N-GROUP-02A
 >
-> 状态：已完成（事实定位与负责人决定均已锁定；未实施 N-GROUP-02）
+> 状态：已完成（事实定位、负责人决定与 N-GROUP-02B／N-GROUP-02C 实施均已关闭；协同走位仍未实施）
 >
 > 事实截点：当前工作树的 `simulations/BattleSim/`
 > 边界：本文件锁定 N-GROUP-DEC-01～05 的规则边界，但不为任何具体技能补填数值、形状尺寸、阻断列表或角色距离修正值；不构成 G2 对新规则的验证结论。
 
 ## 1. 定位范围与结论
 
-本次只读定位覆盖 `Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`，并为核对实际数据承载补读 `GameData.cs` 与 `Character.cs`。当前 2v2 已有唯一的空间、占格、个人选位和单目标选择路径；范围技能形状、范围目标集、协同走位策略和可参数化的团队 AI 优先级均不存在。后续实现必须复用下列现有所有者，不能新建第二套距离、视线、占格或目标合法性规则。
+本次只读定位覆盖 `Battlefield.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`，并为核对实际数据承载补读 `GameData.cs` 与 `Character.cs`。当前 2v2 已有唯一的空间、占格、个人选位、范围目标集和临时确定性候选优先级路径；协同走位策略与完整团队 AI 均不存在。实施继续复用下列所有者，不能新建第二套距离、视线、占格或目标合法性规则。
 
 ## 2. 已验证的现行事实
 
@@ -39,7 +39,7 @@
 | 攻击距离数据承载 | `GameData.AttackProfile` 含名称、类型、倍率、元素、最小距离、最大距离；`ArtConfig` 与 `DivineConfig` 也只有最小／最大距离（`GameData.cs:321-328`）。`Character.BasicAttackProfile` 是角色当前基础攻击承载（`Character.cs:41`）。 | 有效距离由 `Combat.CanAttack` 同时检查固定点攻击距离和视线（`Combat.cs:48-60`）。 | 最小／最大距离字段与检查路径可复用；没有形状、中心、友敌关系、逐目标视线或范围伤害字段。 |
 | 单体行动优先级 | `Combat.SelectAction`（`Combat.cs:92-113`）为 1v1 在神通、苦行、术法、普攻中选择第一个“已就绪且可攻击”的行动。 | 当没有可攻击行动时选择第一个已就绪行动，并输出其最小／最大距离。 | 仅其距离字段与单体选择事实可参考。`Simulate2v2Detailed` 没有调用它。 |
 | 当前 2v2 使用的攻击 | `Simulate2v2Detailed`（`Combat.cs:502-524、554-669`）仅以行动者的 `BasicAttackProfile` 生成各敌人的个人选位计划，并以单目标伤害结算。 | 每名敌人只有一个 `ActionPositionResult`；没有术法／神通选择、范围中心、范围目标列表或范围伤害循环。 | 普攻单目标链可保留为未触发范围技能时的后备行为；不能把它误称为范围技能已接入。 |
-| 当前团队目标优先级 | `Combat.SelectGroupTarget(actorTeam, candidates)`（`Combat.cs:78-90`）只过滤存活、敌方、合法候选，之后按 HP 升序、索引升序选择。 | 结果原因为 `selected_lowest_hp_then_input_order` 或 `no_legal_target`；死亡目标会被确定性重选。 | 是，作为当前默认单体焦点规则；它不是可配权重，也不读取队友意图、伤害预估、威胁、掩体或范围收益。 |
+| 当前团队目标优先级 | `Combat.Simulate2v2Detailed` 为同一行动的合法候选装配 `GroupActionSettlementCandidate`；`Combat.SelectGroupTarget(actorTeam, candidates)` 只消费其已解析的结算证据、合法命中、主要目标当前 HP 和输入顺序。 | 按“已证实击杀数降序、合法命中数降序、HP 升序、输入顺序”选择；结果原因为 `selected_kill_count_then_legal_hit_count_then_lowest_hp_then_input_order`，`GroupTargetPriority` 与 `GroupActionObservation.TargetSelectionPriority` 公开各层数值及 unavailable 原因。 | 是；当前选择期均为 `settlement_evidence_unavailable`，击杀层只计 0 而不推测伤害或消耗 RNG；它不是可配权重，也不读取队友意图、威胁、掩体或范围收益。 |
 | 无法攻击时的走位 | `Simulate2v2Detailed`（`Combat.cs:527-551`）在没有合法目标时，按存活敌方最低 HP、索引升序选一个 `movementFocus`，移动到该敌人的预先计算位置。 | 无存活敌人为 `no_alive_enemy`；否则为 `no_legal_target_after_move`。 | 是，作为当前个人追击规则；并未检查队友已选目标、队友下一行动、站位角色或预留格。 |
 
 ### 2.4 已有团队效果不等于团队 AI
@@ -50,9 +50,9 @@
 
 | 分类 | 项目 | 结论 |
 |---|---|---|
-| 已有事实，可直接复用 | 有向效果边、固定点距离、视线、占格、单目标选位、CT 顺序、最低 HP 后输入顺序的单体焦点 | 必须继续由 `HexBattlefield` 与 `Combat` 当前成员提供；后续只可在其上定义范围和协同语义。 |
-| 已有事实，可复用但未参数化 | `SpatialQueryKind.Area` 已可请求效果路径距离，`AttackProfile`／`ArtConfig`／`DivineConfig` 有最小／最大距离，`GroupActionObservation` 可记录当前个人行动结果 | 没有范围形状、范围中心、命中集合、友敌筛选、显式阻断、协同意图或团队评分字段。它们不能单独构成范围技能或团队 AI。 |
-| 已锁定边界，待实现 | 范围模板与中心、逐技能施法距离区间、范围目标资格与稳定拒绝优先级、临时团队候选排序、2v2 显式战场输入 | 负责人已锁定通用规则边界；实现只能使用明确数据承载与技术 fixture，仍不得补入具体技能数值、尺寸、阻断列表或角色距离修正值。 |
+| 已有事实，可直接复用 | 有向效果边、固定点距离、视线、占格、单目标选位、CT 顺序、范围目标，以及按结算证据／合法命中／HP／输入顺序的临时候选优先级 | 必须继续由 `HexBattlefield` 与 `Combat` 当前成员提供；协同语义不得另建第二套空间或候选所有者。 |
+| 已有事实，可复用但未参数化 | `SpatialQueryKind.Area` 已可请求效果路径距离，`AttackProfile`／`ArtConfig`／`DivineConfig` 有最小／最大距离，`GroupActionObservation` 可记录范围与选择优先级 | 没有具体技能伤害参数、协同意图或团队评分字段。它们不能单独构成协同走位或完整团队 AI。 |
+| 已锁定并已实施 | 范围模板与中心、逐技能施法距离区间、范围目标资格与稳定拒绝优先级、临时团队候选排序、2v2 显式战场输入 | 实现只使用已声明的数据承载与技术 fixture；仍未补入具体技能数值、尺寸、阻断列表或角色距离修正值。 |
 | 保持独立后续系统 | 协同走位、让路、射线创造、包夹、格位预留、双人冲突策略与完整团队 AI | 本阶段不实施；不得在 N-GROUP-02 中以局部补丁伪装实现。 |
 
 ## 4. 已锁定的负责人决定与直接影响根
@@ -116,3 +116,10 @@
 - `GroupActionPlan` 仅承载行动位置和上述范围结果；它没有每行动伤害、击杀集合或等价的结算候选。命中集合不能推导可击杀敌人数，因为当前单目标伤害在主要目标选定后才结算，且本阶段没有已锁定的范围伤害语义。因此 N-GROUP-02C 在获得独立、可观察的结算候选契约前保持待决定，不能以默认值、猜测伤害或权重补齐。
 - `group-area-targeting-n-group-02` 覆盖目标格越界、施法距离、已声明效果边阻断、形状外绕路拒绝、实体障碍不构成普通范围视线前置、内洞、圆形／直线／双侧扇形、阵营／状态与非法配置拒绝、显式 2v2 战场输入及真实行动观测。
 - 直接验证：Release 无还原构建、`group-area-targeting-n-group-02`、既有 `group-positioning-n-group-01` 与完整 BattleSim 矩阵；本轮不引入伤害、治疗或平衡结论。
+
+## 7. N-GROUP-02C 实施与验证
+
+- `Simulate2v2Detailed` 仅为同一行动的合法敌方候选装配不可变 `GroupActionSettlementCandidate`：行动回合与行动者、主要目标稳定索引、去重并按输入索引升序的合法命中集合、候选输入顺序及 `GroupActionSettlementEvidence.Unavailable()`。它在真实伤害、防御与 RNG 调用之前形成，未预测伤害、未写回单位状态，也未将命中集合改写为击杀集合。
+- `SelectGroupTarget` 只比较同一行动实例的合法候选，并以已证实击杀数降序、合法命中数降序、主要目标当前 HP 升序、候选输入顺序升序组成字典序；无合法候选仍为 `no_legal_target`。resolved 空集合与 unavailable 严格分开：后者保持 `settlement_evidence_unavailable`，击杀层只贡献 0。
+- `GroupTargetPriority` 和 `GroupActionObservation.TargetSelectionPriority` 记录四层比较值、证据状态及 unavailable 原因；最终选择仍由 `TargetIndex` 和稳定选择理由表示。`GroupActionSettlementEvidence.Resolved` 只提供给已结算观察／直接回归的已解析击杀集合，未回流改变当前行动选择。
+- `group-action-priority-n-group-02` 覆盖已确认一名击杀、resolved 零击杀、unavailable、合法命中与击杀的语义分离、HP 与输入顺序裁定、相同主要目标的不同命中方案，以及 2v2 选择期的 unavailable 观察。它不引入浮点或随机权重，且未修改个人移动、唯一占格、范围空间合法性、真实伤害结算或 RNG 顺序。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "N-GROUP-02C0 已归档；本卡只消费已锁定的每行动结算候选契约。",
+  "stateReason": "2026-07-25 已按 N-GROUP-02C0 契约完成四层确定性候选优先级；选择期保持 unavailable 结算证据，未改变 RNG、走位或占格。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -30,11 +30,6 @@
 
 - `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～06`、`docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md`，以及已完成的 N-GROUP-02B。
 - `DEC-20260724-NGROUP0201` 已锁定 N-GROUP-DEC-04，无待决策。只消费 N-GROUP-02B 已形成的合法行动、命中集合与 N-GROUP-02C0 已锁定的可观察结算候选。
-
-## 前置已关闭
-
-- N-GROUP-02C0 已锁定每行动结算候选所有者、必需字段、resolved | unavailable 证据状态、缺失语义及与 RNG 消耗的边界。
-- 本卡仍不能把命中集合伪作击杀集合，也不能预测伤害、提前消耗 RNG 或补造默认结算证据；只实现该契约的确定性消费方。
 
 ## 必查范围
 
@@ -65,6 +60,7 @@
 
 - 四层字典序在直接回归中可观察且稳定，不存在浮点／随机权重。
 - 现有个人移动与唯一占格保持不变，协同走位和完整团队 AI 仍位于独立后续系统。
+- 本卡已归档，队列与 backlog 已移除 N-GROUP-02C；N-GROUP-02 已关闭。
 
 ## 停止条件
 

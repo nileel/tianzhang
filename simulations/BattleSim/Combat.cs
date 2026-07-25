@@ -7,6 +7,7 @@ namespace BattleSim;
 static class Combat
 {
     const int DeterministicRandomSeed = 20260712;
+    const string SettlementEvidenceUnavailableReason = "settlement_evidence_unavailable";
     static Random Rng = new(DeterministicRandomSeed);
     public const double BaseCritMultiplier = 1.5;
     internal static readonly HexCoord InitialPositionA = new(0, 0);
@@ -26,8 +27,56 @@ static class Combat
     internal readonly record struct GroupActionPlan(
         ActionPositionResult Position,
         GameData.AreaTargetingResult AreaTargeting);
-    internal readonly record struct GroupTargetCandidate(int Index, int Team, int HP, bool IsAlive, bool IsLegal);
-    internal readonly record struct GroupTargetSelection(int TargetIndex, string Reason);
+    internal enum GroupActionSettlementEvidenceStatus
+    {
+        Resolved,
+        Unavailable,
+    }
+    internal readonly record struct GroupActionSettlementEvidence(
+        GroupActionSettlementEvidenceStatus Status,
+        IReadOnlyList<int> ResolvedKillTargetIndexes,
+        string UnavailableReason)
+    {
+        internal static GroupActionSettlementEvidence Resolved(IEnumerable<int> resolvedKillTargetIndexes)
+        {
+            if (resolvedKillTargetIndexes == null)
+                throw new ArgumentNullException(nameof(resolvedKillTargetIndexes));
+            return new GroupActionSettlementEvidence(
+                GroupActionSettlementEvidenceStatus.Resolved,
+                NormalizeTargetIndexes(resolvedKillTargetIndexes),
+                "");
+        }
+
+        internal static GroupActionSettlementEvidence Unavailable() => new(
+            GroupActionSettlementEvidenceStatus.Unavailable,
+            Array.Empty<int>(),
+            SettlementEvidenceUnavailableReason);
+    }
+    internal readonly record struct GroupActionSettlementCandidate(
+        int Turn,
+        int ActorIndex,
+        int PrimaryTargetIndex,
+        IReadOnlyList<int> LegalHitTargetIndexes,
+        int InputOrder,
+        GroupActionSettlementEvidence SettlementEvidence);
+    internal readonly record struct GroupTargetCandidate(
+        int Index,
+        int Team,
+        int HP,
+        bool IsAlive,
+        bool IsLegal,
+        GroupActionSettlementCandidate? SettlementCandidate = null);
+    internal readonly record struct GroupTargetPriority(
+        int ConfirmedKillTargetCount,
+        int LegalHitTargetCount,
+        int PrimaryTargetHP,
+        int CandidateInputOrder,
+        GroupActionSettlementEvidenceStatus SettlementEvidenceStatus,
+        string SettlementEvidenceReason);
+    internal readonly record struct GroupTargetSelection(
+        int TargetIndex,
+        string Reason,
+        GroupTargetPriority? Priority = null);
     internal sealed record GroupActionObservation(
         int Turn,
         int ActorIndex,
@@ -36,6 +85,7 @@ static class Combat
         IReadOnlyList<HexCoord> ReachablePositions,
         int TargetIndex,
         string TargetSelectionReason,
+        GroupTargetPriority? TargetSelectionPriority,
         string InactionReason,
         HexCoord? AreaCenter,
         IReadOnlyList<int> AreaHitTargetIndexes,
@@ -85,15 +135,72 @@ static class Combat
         int actorTeam,
         IReadOnlyList<GroupTargetCandidate> candidates)
     {
-        var selected = candidates
+        var legalCandidates = candidates
             .Where(candidate => candidate.Team != actorTeam && candidate.IsAlive && candidate.IsLegal)
-            .OrderBy(candidate => candidate.HP)
-            .ThenBy(candidate => candidate.Index)
+            .ToArray();
+        if (legalCandidates.Length == 0)
+            return new GroupTargetSelection(-1, "no_legal_target");
+
+        if (legalCandidates[0].SettlementCandidate is not GroupActionSettlementCandidate actionInstance)
+            throw new InvalidOperationException("A legal group target candidate requires a settlement candidate.");
+        if (legalCandidates.Any(candidate => candidate.SettlementCandidate is not GroupActionSettlementCandidate settlementCandidate ||
+                                            settlementCandidate.Turn != actionInstance.Turn ||
+                                            settlementCandidate.ActorIndex != actionInstance.ActorIndex))
+            throw new InvalidOperationException("Group target selection only compares candidates from one action instance.");
+
+        var selected = legalCandidates
+            .Select(candidate => new
+            {
+                Candidate = candidate,
+                Priority = CreateGroupTargetPriority(candidate),
+            })
+            .OrderByDescending(candidate => candidate.Priority.ConfirmedKillTargetCount)
+            .ThenByDescending(candidate => candidate.Priority.LegalHitTargetCount)
+            .ThenBy(candidate => candidate.Priority.PrimaryTargetHP)
+            .ThenBy(candidate => candidate.Priority.CandidateInputOrder)
             .FirstOrDefault();
-        return selected.IsAlive
-            ? new GroupTargetSelection(selected.Index, "selected_lowest_hp_then_input_order")
-            : new GroupTargetSelection(-1, "no_legal_target");
+        return selected != null
+            ? new GroupTargetSelection(
+                selected.Candidate.Index,
+                "selected_kill_count_then_legal_hit_count_then_lowest_hp_then_input_order",
+                selected.Priority)
+            : throw new InvalidOperationException("A non-empty legal candidate set must select one candidate.");
     }
+
+    static GroupTargetPriority CreateGroupTargetPriority(GroupTargetCandidate candidate)
+    {
+        if (candidate.SettlementCandidate is not GroupActionSettlementCandidate settlementCandidate)
+            throw new InvalidOperationException("A legal group target candidate requires a settlement candidate.");
+        if (settlementCandidate.PrimaryTargetIndex != candidate.Index)
+            throw new InvalidOperationException("The settlement candidate primary target must match its group target candidate.");
+        if (settlementCandidate.InputOrder < 0)
+            throw new InvalidOperationException("The settlement candidate input order must be non-negative.");
+
+        var evidence = settlementCandidate.SettlementEvidence;
+        int confirmedKillTargetCount = evidence.Status switch
+        {
+            GroupActionSettlementEvidenceStatus.Resolved when string.IsNullOrEmpty(evidence.UnavailableReason)
+                => evidence.ResolvedKillTargetIndexes.Count,
+            GroupActionSettlementEvidenceStatus.Unavailable when
+                evidence.ResolvedKillTargetIndexes.Count == 0 &&
+                evidence.UnavailableReason == SettlementEvidenceUnavailableReason
+                => 0,
+            _ => throw new ArgumentOutOfRangeException(nameof(evidence.Status)),
+        };
+        string evidenceReason = evidence.Status == GroupActionSettlementEvidenceStatus.Unavailable
+            ? evidence.UnavailableReason
+            : "";
+        return new GroupTargetPriority(
+            confirmedKillTargetCount,
+            settlementCandidate.LegalHitTargetIndexes.Count,
+            candidate.HP,
+            settlementCandidate.InputOrder,
+            evidence.Status,
+            evidenceReason);
+    }
+
+    static IReadOnlyList<int> NormalizeTargetIndexes(IEnumerable<int> targetIndexes) =>
+        targetIndexes.Distinct().OrderBy(index => index).ToArray();
 
     internal static int SelectAction(
         HexBattlefield battlefield, HexCoord attacker, HexCoord defender,
@@ -590,6 +697,7 @@ static class Combat
                 bool isEnemy = team[i] != team[actor];
                 bool isAlive = units[i].IsAlive;
                 bool isLegal = false;
+                GroupActionSettlementCandidate? settlementCandidate = null;
                 if (isEnemy && isAlive)
                 {
                     var plan = ResolveGroupActionPlan(
@@ -601,8 +709,27 @@ static class Combat
                         occupied);
                     plans[i] = plan;
                     isLegal = plan.Position.CanAttack;
+                    if (isLegal)
+                    {
+                        var legalHitTargetIndexes = plan.AreaTargeting == null
+                            ? new[] { i }
+                            : NormalizeTargetIndexes(plan.AreaTargeting.HitTargetIndexes);
+                        settlementCandidate = new GroupActionSettlementCandidate(
+                            turns,
+                            actor,
+                            i,
+                            legalHitTargetIndexes,
+                            i,
+                            GroupActionSettlementEvidence.Unavailable());
+                    }
                 }
-                candidates[i] = new GroupTargetCandidate(i, team[i], units[i].HP, isAlive, isLegal);
+                candidates[i] = new GroupTargetCandidate(
+                    i,
+                    team[i],
+                    units[i].HP,
+                    isAlive,
+                    isLegal,
+                    settlementCandidate);
             }
 
             var selection = SelectGroupTarget(team[actor], candidates);
@@ -630,6 +757,7 @@ static class Combat
                     reachable,
                     -1,
                     selection.Reason,
+                    selection.Priority,
                     movementFocus >= 0 ? "no_legal_target_after_move" : "no_alive_enemy",
                     areaObservation?.Center,
                     areaObservation?.HitTargetIndexes ?? Array.Empty<int>(),
@@ -763,6 +891,7 @@ static class Combat
                 reachable,
                 target,
                 selection.Reason,
+                selection.Priority,
                 "",
                 selectedPlan.AreaTargeting?.Center,
                 selectedPlan.AreaTargeting?.HitTargetIndexes ?? Array.Empty<int>(),

@@ -87,6 +87,9 @@ static class BattleSimSelfTests
         if (suite == "group-area-targeting-n-group-02")
             return RunChecked(suite, RunGroupAreaTargetingNGroup02);
 
+        if (suite == "group-action-priority-n-group-02")
+            return RunChecked(suite, RunGroupActionPriorityNGroup02);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -1249,6 +1252,127 @@ static class BattleSimSelfTests
             "group action observations expose area center, hit set, and rejection reason");
     }
 
+    static void RunGroupActionPriorityNGroup02()
+    {
+        var confirmedKill = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                GroupPriorityCandidate(
+                    primaryTargetIndex: 2,
+                    hp: 10,
+                    inputOrder: 0,
+                    legalHitTargetIndexes: new[] { 2, 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Resolved(new[] { 2 })),
+                GroupPriorityCandidate(
+                    primaryTargetIndex: 3,
+                    hp: 1,
+                    inputOrder: 1,
+                    legalHitTargetIndexes: new[] { 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Resolved(Array.Empty<int>())),
+                GroupPriorityCandidate(
+                    primaryTargetIndex: 4,
+                    hp: 1,
+                    inputOrder: 2,
+                    legalHitTargetIndexes: new[] { 3, 4 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+            });
+        AssertEqual(
+            "selected_kill_count_then_legal_hit_count_then_lowest_hp_then_input_order",
+            confirmedKill.Reason,
+            "group selection exposes the approved deterministic priority reason");
+        AssertEqual(2, confirmedKill.TargetIndex,
+            "a confirmed kill count outranks legal-hit count and current HP");
+        var confirmedPriority = confirmedKill.Priority
+            ?? throw new InvalidOperationException("selected candidate priority is observable");
+        AssertEqual(1, confirmedPriority.ConfirmedKillTargetCount,
+            "selected priority exposes confirmed kill count");
+        AssertEqual(2, confirmedPriority.LegalHitTargetCount,
+            "selected priority exposes legal hit count");
+        AssertEqual(10, confirmedPriority.PrimaryTargetHP,
+            "selected priority exposes current primary target HP");
+        AssertEqual(0, confirmedPriority.CandidateInputOrder,
+            "selected priority exposes input order");
+        AssertEqual(Combat.GroupActionSettlementEvidenceStatus.Resolved,
+            confirmedPriority.SettlementEvidenceStatus,
+            "resolved evidence remains distinguishable from unavailable evidence");
+
+        var legalHits = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                GroupPriorityCandidate(2, hp: 1, inputOrder: 0, legalHitTargetIndexes: new[] { 2 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+                GroupPriorityCandidate(3, hp: 100, inputOrder: 1, legalHitTargetIndexes: new[] { 2, 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+            });
+        AssertEqual(3, legalHits.TargetIndex,
+            "legal hit count is compared before primary target HP");
+        var unavailablePriority = legalHits.Priority
+            ?? throw new InvalidOperationException("unavailable candidate priority is observable");
+        AssertEqual(0, unavailablePriority.ConfirmedKillTargetCount,
+            "unavailable evidence contributes zero without becoming resolved evidence");
+        AssertEqual(2, unavailablePriority.LegalHitTargetCount,
+            "legal hit targets are not interpreted as kill targets");
+        AssertEqual(Combat.GroupActionSettlementEvidenceStatus.Unavailable,
+            unavailablePriority.SettlementEvidenceStatus,
+            "unavailable evidence status stays observable");
+        AssertEqual("settlement_evidence_unavailable", unavailablePriority.SettlementEvidenceReason,
+            "unavailable evidence keeps its stable reason");
+
+        var lowestHp = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                GroupPriorityCandidate(2, hp: 50, inputOrder: 3, legalHitTargetIndexes: new[] { 2, 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+                GroupPriorityCandidate(3, hp: 10, inputOrder: 4, legalHitTargetIndexes: new[] { 2, 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+            });
+        AssertEqual(3, lowestHp.TargetIndex,
+            "primary target HP is compared after kill and legal-hit counts");
+
+        var inputOrder = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                GroupPriorityCandidate(2, hp: 10, inputOrder: 9, legalHitTargetIndexes: new[] { 2 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+                GroupPriorityCandidate(3, hp: 10, inputOrder: 8, legalHitTargetIndexes: new[] { 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+            });
+        AssertEqual(3, inputOrder.TargetIndex,
+            "the existing candidate input order breaks complete priority ties");
+
+        var samePrimaryDifferentHits = Combat.SelectGroupTarget(
+            actorTeam: 0,
+            new[]
+            {
+                GroupPriorityCandidate(2, hp: 10, inputOrder: 3, legalHitTargetIndexes: new[] { 2 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+                GroupPriorityCandidate(2, hp: 10, inputOrder: 4, legalHitTargetIndexes: new[] { 2, 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+            });
+        AssertEqual(2, samePrimaryDifferentHits.TargetIndex,
+            "multiple action candidates may retain the same primary target");
+        AssertEqual(4, samePrimaryDifferentHits.Priority?.CandidateInputOrder,
+            "same-primary candidates remain separate so their legal hit sets can decide selection");
+
+        var observedRound = Combat.Simulate2v2Detailed(
+            HexBattlefield.CreateTechnicalFixture(),
+            GroupTestCharacter("priority-a1", reaction: 100, hp: 10000, attack: 1, movement: 6),
+            GroupTestCharacter("priority-a2", reaction: 1, hp: 10000, attack: 1, movement: 6),
+            GroupTestCharacter("priority-b1", reaction: 1, hp: 10000, attack: 1, movement: 6),
+            GroupTestCharacter("priority-b2", reaction: 1, hp: 10000, attack: 1, movement: 6));
+        var observedPriority = observedRound.Actions[0].TargetSelectionPriority
+            ?? throw new InvalidOperationException("2v2 selection priority is observable");
+        AssertEqual(Combat.GroupActionSettlementEvidenceStatus.Unavailable,
+            observedPriority.SettlementEvidenceStatus,
+            "selection-period 2v2 candidates do not claim resolved settlement evidence");
+        AssertEqual("settlement_evidence_unavailable", observedPriority.SettlementEvidenceReason,
+            "selection-period 2v2 candidates keep the unavailable evidence reason");
+    }
+
     static void RunGroupPositioningNGroup01()
     {
         AssertSequence(
@@ -1281,12 +1405,14 @@ static class BattleSimSelfTests
             new[]
             {
                 new Combat.GroupTargetCandidate(1, Team: 0, HP: 1, IsAlive: true, IsLegal: true),
-                new Combat.GroupTargetCandidate(2, Team: 1, HP: 10, IsAlive: true, IsLegal: true),
-                new Combat.GroupTargetCandidate(3, Team: 1, HP: 10, IsAlive: true, IsLegal: true),
+                GroupPriorityCandidate(2, hp: 10, inputOrder: 2, legalHitTargetIndexes: new[] { 2 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
+                GroupPriorityCandidate(3, hp: 10, inputOrder: 3, legalHitTargetIndexes: new[] { 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
             });
         AssertEqual(2, targetSelection.TargetIndex,
             "equal-HP legal enemies resolve by input order");
-        AssertEqual("selected_lowest_hp_then_input_order", targetSelection.Reason,
+        AssertEqual("selected_kill_count_then_legal_hit_count_then_lowest_hp_then_input_order", targetSelection.Reason,
             "target selection reason is observable");
 
         var reselection = Combat.SelectGroupTarget(
@@ -1294,7 +1420,8 @@ static class BattleSimSelfTests
             new[]
             {
                 new Combat.GroupTargetCandidate(2, Team: 1, HP: 0, IsAlive: false, IsLegal: false),
-                new Combat.GroupTargetCandidate(3, Team: 1, HP: 20, IsAlive: true, IsLegal: true),
+                GroupPriorityCandidate(3, hp: 20, inputOrder: 3, legalHitTargetIndexes: new[] { 3 },
+                    settlementEvidence: Combat.GroupActionSettlementEvidence.Unavailable()),
             });
         AssertEqual(3, reselection.TargetIndex,
             "a dead target is deterministically replaced by a surviving legal enemy");
@@ -1526,6 +1653,25 @@ static class BattleSimSelfTests
         character.Primary["移力"] = 6;
         return character;
     }
+
+    static Combat.GroupTargetCandidate GroupPriorityCandidate(
+        int primaryTargetIndex,
+        int hp,
+        int inputOrder,
+        IReadOnlyList<int> legalHitTargetIndexes,
+        Combat.GroupActionSettlementEvidence settlementEvidence) => new(
+            primaryTargetIndex,
+            Team: 1,
+            hp,
+            IsAlive: true,
+            IsLegal: true,
+            new Combat.GroupActionSettlementCandidate(
+                Turn: 1,
+                ActorIndex: 0,
+                PrimaryTargetIndex: primaryTargetIndex,
+                LegalHitTargetIndexes: legalHitTargetIndexes,
+                InputOrder: inputOrder,
+                SettlementEvidence: settlementEvidence));
 
     static Character GroupTestCharacter(string name, int reaction, int hp, int attack, int movement)
     {
