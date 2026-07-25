@@ -93,11 +93,19 @@
 - 可复用根：`HexBattlefield` 已可接收格、边、掩体、地表与现象；`Simulate2v2Detailed` 现要求其调用方传入战场，`GameData.EnvironmentRules` 仍只承载技术 fixture。
 - 直接影响根：`Combat.Simulate2v2Detailed`／`Simulate2v2` 的战场输入、调用方、范围测试 fixture 和 `environment-rules-n-env-01`、`group-positioning-n-group-01` 的边界。
 
+### N-GROUP-DEC-06：每行动结算候选的证据边界
+
+- 锁定规则：行动生产者拥有主要目标、合法命中、稳定输入顺序与结算证据；选择器只消费已经解析的事实。击杀集合仅可在真实行动执行完成后由执行生产者写入。
+- 锁定缺失语义：选择期尚无真实结算时使用 unavailable 和稳定原因 settlement_evidence_unavailable；它在击杀证据层计 0，但不表示实际行动无法击杀。resolved 的空集合只表示已确认零击杀，两种状态不得混写。
+- RNG 边界：格挡、闪避、暴击和随机功法效果仍只在真实执行路径消耗全局 RNG。不得复制伤害、预测结算或以命中集合替代击杀集合。
+- 可复用根：Combat.ResolveGroupActionPlan 的合法命中结果、Simulate2v2Detailed 的行动候选与真实执行段、以及 docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md。
+- 直接影响根：N-GROUP-02C 的候选输入、观察理由和自测；本决定不实现其四层排序、范围伤害或协同走位。
+
 ## 5. 后续实施边界与验证口径
 
 1. 首张可执行卡为 N-GROUP-02B：只实现范围模板／中心／距离区间、范围目标合法性与拒绝优先级、以及显式战场输入；它不得代填任何具体技能内容参数，也不得实现协同走位或完整团队 AI。
-2. N-GROUP-02C 在 N-GROUP-02B 完成后才实现 DEC-04 的临时确定性候选排序及可观察理由；它不扩大到 DEC-03 的协同走位或 N-AI-01 的完整团队 AI。
-3. 后续实现必须只复用本文件列出的空间、占格与行动所有者。N-GROUP-02B 已为范围中心、命中集合、阵营／状态、已声明阻断、稳定拒绝原因与显式战场输入建立直接自测；N-GROUP-02C 仍须为临时团队优先级补充独立自测。范围或临时团队优先级改变后运行受影响 BattleSim 验证；本文件本身不宣称平衡结论。
+2. N-GROUP-02C 在 N-GROUP-02C0 锁定的结算候选契约后实现 DEC-04 的临时确定性候选排序及可观察理由；它不扩大到 DEC-03 的协同走位或 N-AI-01 的完整团队 AI。
+3. 后续实现必须只复用本文件列出的空间、占格与行动所有者。N-GROUP-02B 已为范围中心、命中集合、阵营／状态、已声明阻断、稳定拒绝原因与显式战场输入建立直接自测；N-GROUP-02C 还须按每行动结算候选契约为临时团队优先级补充独立自测。范围或临时团队优先级改变后运行受影响 BattleSim 验证；本文件本身不宣称平衡结论。
 
 ## 6. N-GROUP-02B 实施与验证
 

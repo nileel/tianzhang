@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-GROUP-02C0",
+  "title": "每行动结算候选契约",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-25 已锁定行动生产者、resolved | unavailable 证据状态、缺失语义与 RNG 边界；N-GROUP-02C 已转为 ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md",
+    "开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/GameData.cs",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-GROUP-02C0.txt",
+    "开发管理/任务卡/N-GROUP-02C.txt",
+    "开发管理/任务归档/N-GROUP-02C0.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-GROUP-02C0 · 每行动结算候选契约
+
+## 来源与当前边界
+
+- N-GROUP-DEC-04～05 以及 N-GROUP-02B 已形成的合法行动和命中集合是本契约的直接事实来源。
+- 本卡只锁定结算候选所有者和数据语义；不实现 N-GROUP-02C 的四层排序。
+- 格挡、闪避、暴击和部分功法效果在真实行动结算中使用全局 RNG，选择阶段不能复制或预测结果。
+
+## 必查范围
+
+- 2v2 范围技能协同走位与团队 AI 参数事实源中的 N-GROUP-DEC-04～05、后续实施边界和 N-GROUP-02B 实施验证。
+- Combat 中的 GroupTargetCandidate、GroupActionPlan、GroupActionObservation、SelectGroupTarget、Simulate2v2Detailed，以及伤害、防御和随机效果的直接调用链。
+- GameData 中行动、技能和结算输入的数据所有者。
+
+## 实施范围
+
+- 形成 2026-07-25-group-action-settlement-candidate-contract.md。
+- 锁定行动生产者拥有候选；选择器只消费已解析、可观察的结算事实。
+- 锁定主要目标稳定 ID、合法命中集合、已解析击杀集合、稳定输入顺序与 resolved | unavailable 证据状态。
+- 锁定 resolved 的空击杀集合表示已确认零击杀；unavailable 是未形成选择期结算事实，二者不可混写。
+- 锁定 unavailable 在击杀证据层贡献 0 并输出 settlement_evidence_unavailable，但不声称行动一定不能击杀。
+- 锁定候选形成、观察、消费、真实行动执行和 RNG 消耗之间的边界。
+
+## 禁止项
+
+- 不预测随机伤害，不提前或重复消耗 RNG，不复制虚拟伤害结算。
+- 不把命中集合当作击杀集合，不伪造 resolved 空集合。
+- 不实现四层排序、队友保护、站位安全、环境/冷却权重、协同走位或完整团队 AI。
+- 不修改 N-GROUP-02B 的空间合法性，不以默认值或新权重掩盖证据缺失。
+
+## 验证
+
+- 已由现有伤害调用链确认每个字段的唯一生产者、形成时点和可观察消费方。
+- 契约样例覆盖已确认一个击杀、resolved 零击杀、unavailable、稳定输入顺序和相同主要目标的不同命中集合。
+- unavailable 路径不消耗 RNG、不声称零击杀，也不改变实际行动执行。
+- 文本检查与 Git 差异检查作为直接验证。
+
+## 完成条件
+
+- 已锁定结算候选所有者、必需字段、证据状态、缺失语义、稳定原因和与行动执行的边界。
+- N-GROUP-02C 能在不猜测伤害、不提前消耗 RNG 的前提下只消费本契约实现确定性排序。
+- 本卡已归档，N-GROUP-02C 已从 blocked 转为 ready。
+
+## 停止条件
+
+- 若实现必须预测随机结算、复制伤害流程、改变 N-GROUP-02B 空间语义或扩大为完整团队 AI，则应转为 pending_decision，不得叠加猜测性接口。

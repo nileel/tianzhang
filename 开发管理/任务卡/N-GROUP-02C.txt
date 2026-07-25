@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-GROUP-02C0"
-  ],
-  "stateReason": "等待 N-GROUP-02C0 锁定每行动结算候选所有者、证据状态与缺失语义。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "N-GROUP-02C0 已归档；本卡只消费已锁定的每行动结算候选契约。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -30,17 +28,17 @@
 
 ## 来源与当前边界
 
-- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`，以及已完成的 N-GROUP-02B。
-- `DEC-20260724-NGROUP0201` 已锁定 N-GROUP-DEC-04，无待决策。只消费 N-GROUP-02B 已形成的合法行动、命中集合与可观察结算候选。
+- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～06`、`docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md`，以及已完成的 N-GROUP-02B。
+- `DEC-20260724-NGROUP0201` 已锁定 N-GROUP-DEC-04，无待决策。只消费 N-GROUP-02B 已形成的合法行动、命中集合与 N-GROUP-02C0 已锁定的可观察结算候选。
 
-## 当前阻塞
+## 前置已关闭
 
-- 等待 `N-GROUP-02C0` 锁定每行动结算候选所有者、必需字段、`resolved | unavailable` 证据状态、缺失语义及与 RNG 消耗的边界。
-- 在 `N-GROUP-02C0` 完成前，本卡不能把命中集合伪作击杀集合，也不能预测伤害、提前消耗 RNG 或补造默认结算证据；不修改 BattleSim 行为。
+- N-GROUP-02C0 已锁定每行动结算候选所有者、必需字段、resolved | unavailable 证据状态、缺失语义及与 RNG 消耗的边界。
+- 本卡仍不能把命中集合伪作击杀集合，也不能预测伤害、提前消耗 RNG 或补造默认结算证据；只实现该契约的确定性消费方。
 
 ## 必查范围
 
-- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`、`#五、后续实施边界与验证口径`、`#六、N-GROUP-02B 实施与验证`。
+- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～06`、`#五、后续实施边界与验证口径`、`#六、N-GROUP-02B 实施与验证`，以及 `docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md`。
 - `simulations/BattleSim/Combat.cs::GroupTargetCandidate,GroupActionObservation,SelectGroupTarget,Simulate2v2Detailed`。
 - `simulations/BattleSim/BattleSimSelfTests.cs` 中 N-GROUP-02B 对应自测及 `simulations/BattleSim/Program.cs` 的 2v2 调用点。
 
