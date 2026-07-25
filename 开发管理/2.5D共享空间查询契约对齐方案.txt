@@ -83,7 +83,6 @@
    - `dotnet build -c Release --no-restore simulations/BattleSim`
    - `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test environment-rules-n-env-01`
    - `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test distance-model-tq055`
-   - `dotnet build src/Assembly-CSharp.csproj`
    - `dotnet build src/TianZhang.EditModeTests.csproj`
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`

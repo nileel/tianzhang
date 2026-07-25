@@ -1,12 +1,12 @@
 # Unity 结构事实图
 
-> TQ-064 于 2026-07-12 基于当前工作树扫描生成。此文件记录当前路径与边界，不替代运行时行为测试或数据语义结论。
+> TQ-064 于 2026-07-12 基于当前工作树扫描生成；程序集图与验证入口于 2026-07-26 按实时 asmdef、Unity solution 和 Bee 产物刷新。此文件记录当前路径与边界，不替代运行时行为测试或数据语义结论。
 
 ## 扫描范围与入口
 
 - 已扫描：`src/Assets/`、`src/ProjectSettings/`、全部 `.unity`、`.asmdef`、`Assets/Scripts/**/*.cs` 与 `Assets/Tests/EditMode/**/*.cs`。
 - 正式 Build Settings：`src/ProjectSettings/EditorBuildSettings.asset` 当前启用 `StartMenuScene`、`WorldScene`、`SettlementScene` 与 `AdventureScene`。
-- 验证入口：`tools/run-unity-editmode-tests.ps1` 运行 EditMode；`src/Assets/Scripts/Editor/SceneBuilder.cs` 提供 `ValidateSceneArchitectureShellsForBatchMode`；`.NET` 编译入口为 `src/Assembly-CSharp.csproj` 与 `src/TianZhang.EditModeTests.csproj`。
+- 验证入口：`tools/run-unity-editmode-tests.ps1` 运行 EditMode；`src/Assets/Scripts/Editor/SceneBuilder.cs` 提供 `ValidateSceneArchitectureShellsForBatchMode`；快速 `.NET` 编译入口为 Unity 生成的 `src/TianZhang.EditModeTests.csproj`，它经 ProjectReference 覆盖全部现行命名程序集。
 
 ## 场景与正式运行时链
 
@@ -43,25 +43,33 @@
 ## Assembly 图
 
 ```text
-TianZhang.Runtime
-  └─ Assets/Scripts（当前所有 runtime 特性仍共享此 assembly）
+TianZhang.Foundation
+  └─ Core
+
+TianZhang.Domain
+  └─ references Foundation；Entity 与 Cultivation
+
+TianZhang.Combat
+  └─ references Foundation + Domain
+
+TianZhang.Gameplay
+  └─ references Foundation + Domain + Combat；Game、Adventure、World、Settlement、Grid、Map、Tilemap
 
 TianZhang.Editor (Editor only)
-  └─ references TianZhang.Runtime
+  └─ references Foundation + Domain + Combat + Gameplay
 
 TianZhang.EditModeTests (Editor only, UNITY_INCLUDE_TESTS)
-  └─ references TianZhang.Runtime + TianZhang.Editor + NUnit
+  └─ references Foundation + Domain + Combat + Gameplay + Editor + NUnit
 ```
 
-- 定义文件：`src/Assets/Scripts/TianZhang.Runtime.asmdef`、`src/Assets/Scripts/Editor/TianZhang.Editor.asmdef`、`src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`。
-- 当前没有项目派生的 feature-level asmdef；TQ-067 负责在保持序列化兼容的前提下建立边界。
+- 定义文件：`src/Assets/Scripts/Core/TianZhang.Foundation.asmdef`、`Entity/TianZhang.Domain.asmdef`、`Combat/TianZhang.Combat.asmdef`、`Game/TianZhang.Gameplay.asmdef`、`Editor/TianZhang.Editor.asmdef` 与 `src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`；Gameplay 和 Domain 的跨目录归属由相邻 `.asmref` 显式声明。
+- `src/Assets/Scripts/TianZhang.Runtime.asmdef` 当前目录下没有直接 `.cs`，不在 Unity 生成的活动 solution 或 Bee DLL 产物中；不得再用旧 `Assembly-CSharp.csproj` 代表运行时程序集。
 
 ## 验证入口
 
 | 入口 | 覆盖面 |
 |---|---|
-| `dotnet build src/Assembly-CSharp.csproj` | Runtime 脚本编译。 |
-| `dotnet build src/TianZhang.EditModeTests.csproj` | EditMode 测试程序集编译。 |
+| `dotnet build src/TianZhang.EditModeTests.csproj` | 快速编译 Foundation、Domain、Combat、Gameplay、Editor 与 EditModeTests 的现行 ProjectReference 链；`.csproj` 由 Unity 生成，不纳入 Git。 |
 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` | Unity EditMode 全套；运行器会恢复追踪的 `Assets/**` 与 `ProjectSettings/**`。 |
 | `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` | 正式场景壳与架构批处理校验。 |
 | `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` | 场景流转、正式冒险入口和构建壳回归。 |
@@ -70,9 +78,8 @@ TianZhang.EditModeTests (Editor only, UNITY_INCLUDE_TESTS)
 
 1. `ExplorationController` / `SceneBuilder` 的旧原型职责尚未从正式链清晰分离：TQ-065。
 2. `BattleUIManager` 与 `Character` 的 UI / 领域职责仍需拆分：TQ-066。
-3. Runtime 仍是单一项目 asmdef；需在不破坏序列化的前提下建立 feature 边界：TQ-067。
-4. `GameSession` 的世界时间与起点状态尚未成为已验证的最小一致模型：TQ-068。
-5. `ExplorationScene` 仍保留为不可达旧原型；在正式 Adventure 接入其最小玩法前不得删除或重新启用。
+3. `GameSession` 的世界时间与起点状态尚未成为已验证的最小一致模型：TQ-068。
+4. `ExplorationScene` 仍保留为不可达旧原型；在正式 Adventure 接入其最小玩法前不得删除或重新启用。
 
 ## 可复扫命令
 

@@ -105,9 +105,10 @@ MonoImporter:
 - `userData: `、`assetBundleName: `、`assetBundleVariant: ` 行末的空格是 YAML 空值语法，删掉会导致 Unity 解析异常。
 - `git diff --check` 对此的 trailing whitespace 报错是误报（对比对象是单行版 `.meta` 时尤其如此）。不要为了通过 `git diff --check` 而删除这些空格。
 
-### 新增脚本后 csproj 排查
-- `Assembly-CSharp.csproj` 被 `.gitignore` 忽略，不随 git 同步。新增目录/脚本后 Unity 需重新生成 csproj（关闭 Unity → 删除 csproj → 重新打开项目）。
-- 编译报 `namespace does not exist` 时，先 `rg "新脚本路径" Assembly-CSharp.csproj` 确认文件是否在编译列表中。不在列表中 → csproj 需重建。
+### asmdef 分层后的 csproj 排查
+- Unity 生成的 `*.csproj` / `*.sln` 均由 `.gitignore` 排除，不得手工维护或纳入 Git。当前源码按 `TianZhang.Foundation`、`Domain`、`Combat`、`Gameplay`、`Editor` 与 `EditModeTests` 的 asmdef / asmref 分层，不存在活动的 `Assembly-CSharp` 程序集。
+- 快速编译使用 `dotnet build src/TianZhang.EditModeTests.csproj`，由其 ProjectReference 覆盖现行命名程序集；权威 Unity 编译与测试使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- 编译报 `namespace does not exist` 时，先确认脚本所属 `.asmdef` / `.asmref` 及依赖方向，再在对应 `TianZhang.*.csproj` 中核对 Compile / ProjectReference。生成投影缺失时由 Unity 刷新工程，不得给旧 `.csproj` 追加源码或兼容引用。
 
 ### PowerShell 写文件陷阱
 - `Set-Content -Value [List[string]]` 会将列表序列化为单行 `ToString()` 而非逐行写入。逐行写入用 `[System.IO.File]::WriteAllLines` 或 `$array | Set-Content`。

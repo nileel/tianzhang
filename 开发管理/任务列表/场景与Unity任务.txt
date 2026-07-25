@@ -107,7 +107,6 @@
 
 ## 默认验证
 
-- `dotnet build src/Assembly-CSharp.csproj`
 - `dotnet build src/TianZhang.EditModeTests.csproj`
 - 可用时运行 Unity EditMode 目标测试或 `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`
