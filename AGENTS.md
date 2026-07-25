@@ -70,7 +70,7 @@
 - 如果修复开始连续叠加补丁、跨越多个原定边界或突破停止条件，立即停止并重新判断根因。
 - 默认使用与风险和影响面相称的最小充分验证；相关输入未变化时不重复同范围检查。共享基础设施、安全/写入隔离、不可逆迁移、核心架构或数据语义、数值平衡、外部交接复审、已有失败/冲突证据或用户明确要求时才升级验证。
 - 项目 PowerShell 脚本只支持 PowerShell 7；独立进程使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。
-- 手动 Codex 对话准备写入项目文件且自动化 `Show` 返回非空 lease 时，使用 `.worktrees/` 隔离工作；只在 `lease=null` 且待合并路径不冲突时合并回主工作区。只读对话不需要 worktree。
+- 手动 AI 对话（Codex / DeepSeek / Claude）执行纯 `1` 的 ready 队列任务时，选中任务后、任何项目写入前必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用自动化 `Show` 并重读同一任务卡与队列；只有 `lease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成，任一条件不满足就停止合并并报告。其他手动写入任务在 `Show` 返回非空 lease 时使用 `.worktrees/` 隔离，也只在 `lease=null` 且待合并路径不冲突时合并回主工作区。只读对话不需要 worktree。
 - 控制器启动的 Codex CLI 自动化责任方不属于手动对话；单写入租约已经提供隔离，必须直接在固定调用器传入的 `RepositoryRoot` 当前分支工作，不得使用 `using-git-worktrees`、`git worktree add`，也不得创建或切换 linked worktree / 任务分支。
 - 暂存前对本轮预期路径运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。不得 stage 或提交无关改动。
 - 审核文本检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`

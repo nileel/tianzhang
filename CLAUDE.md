@@ -18,6 +18,7 @@
 - `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 的 owner 映射和已选卡边界。
 - 不得自审、预填审核方结论、扩大授权路径、另行并行派发或推送远端。
 - 手动选题时记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；没有合法候选时记录 `skipped_cleanly` 后退出，不修改项目文件。
+- 手动纯 `1` 选中合法 `external_execute` ready 卡后，写入与合并隔离执行 `开发管理/AI协作规则.txt` 的通用步骤 5；自动 wrapper 仍按已取得的单写入租约直接使用传入的主工作区。
 
 ## 必读路由
 
