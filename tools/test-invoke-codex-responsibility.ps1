@@ -420,6 +420,14 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     & git add manual-only.txt
     & git commit -q -m 'test: unrelated manual commit only'
   }
+  'unverified-two-commits-only' {
+    foreach ($index in 1..2) {
+      $path = "manual-only-$index.txt"
+      [IO.File]::WriteAllText((Join-Path (Get-Location) $path), "manual commit $index", [Text.UTF8Encoding]::new($false))
+      & git add -- $path
+      & git commit -q -m "test: unrelated manual commit $index"
+    }
+  }
   'child-failed-removes-baseline-changes' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false))
     Remove-Item -LiteralPath (Join-Path (Get-Location) 'existing-untracked.txt') -Force
@@ -729,6 +737,18 @@ $global:LASTEXITCODE = 0
   Assert-Equal -Actual $commitOnlyState.state.lastResult.category -Expected 'blocked' -Message 'Commit-only result category mismatch'
   Assert-Equal -Actual $commitOnlyState.state.lastResult.detailCode -Expected 'unverified_commit_shape' -Message 'Commit-only recorded detail mismatch'
   Assert-True -Condition ($null -eq $commitOnlyState.state.recovery) -Message 'Commit-only invocation invented recovery'
+
+  Reset-GitFixture
+  Set-TaskProjectionFixture -TaskId 'task-two-commits-only'
+  $twoCommitsOnlyRun = Acquire-TestLease -TaskId 'task-two-commits-only'
+  $twoCommitsOnly = Invoke-Responsibility -Case 'unverified-two-commits-only' -TaskId 'task-two-commits-only' -RunId $twoCommitsOnlyRun
+  Assert-True -Condition ($twoCommitsOnly.ExitCode -ne 0) -Message 'Two-commit-only invocation unexpectedly succeeded'
+  Assert-Equal -Actual $twoCommitsOnly.Json.status -Expected 'blocked' -Message 'Two-commit-only status mismatch'
+  Assert-Equal -Actual $twoCommitsOnly.Json.detailCode -Expected 'unverified_commit_shape' -Message 'Two-commit-only detail code mismatch'
+  $twoCommitsOnlyState = Assert-LeaseReleased
+  Assert-Equal -Actual $twoCommitsOnlyState.state.lastResult.category -Expected 'blocked' -Message 'Two-commit-only result category mismatch'
+  Assert-Equal -Actual $twoCommitsOnlyState.state.lastResult.detailCode -Expected 'unverified_commit_shape' -Message 'Two-commit-only recorded detail mismatch'
+  Assert-True -Condition ($null -eq $twoCommitsOnlyState.state.recovery) -Message 'Two-commit-only invocation invented recovery'
 
   Reset-GitFixture
   Set-TaskProjectionFixture -TaskId 'task-removes-baseline'

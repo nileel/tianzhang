@@ -155,6 +155,29 @@ try {
   }
   if (((Invoke-Git rev-parse ":$unrelatedStaged") -join '') -ne $stagedBlobBefore) { throw 'multi-path commit changed unrelated staged blob' }
 
+  $activeCard = '开发管理/任务卡/归档测试.txt'
+  $archiveCard = '开发管理/任务归档/归档测试.txt'
+  Write-Utf8 (Join-Path $repo $activeCard) "archive fixture base`n"
+  Invoke-Git add -- $activeCard | Out-Null
+  Invoke-Git commit --only -m 'test: add active archive fixture' -- $activeCard | Out-Null
+  Write-Utf8 (Join-Path $repo $archiveCard) "archive fixture base`ncompleted`n"
+  Remove-Item -LiteralPath (Join-Path $repo $activeCard) -Force
+  Invoke-Git add -- $activeCard $archiveCard | Out-Null
+
+  $archiveResult = Invoke-Helper "$activeCard|$archiveCard" 'test: archive active card atomically'
+  if ($archiveResult.Code -ne 0) { throw "commit helper failed for staged archive: $($archiveResult.Output)" }
+  $archiveCommitted = @(Invoke-Git show --format= --name-status --no-renames HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if (
+    $archiveCommitted.Count -ne 2 -or
+    $archiveCommitted -notcontains "D`t$activeCard" -or
+    $archiveCommitted -notcontains "A`t$archiveCard"
+  ) {
+    throw "archive commit did not include both source deletion and destination addition: $($archiveCommitted -join ', ')"
+  }
+  & git -C $repo diff --cached --quiet -- $activeCard $archiveCard
+  if ($LASTEXITCODE -ne 0) { throw 'archive commit left expected paths staged' }
+  if (((Invoke-Git rev-parse ":$unrelatedStaged") -join '') -ne $stagedBlobBefore) { throw 'archive commit changed unrelated staged blob' }
+
   Write-Utf8 (Join-Path $repo $expected) "expected legacy console change`n"
   $legacyResult = Invoke-HelperWithLegacyConsole $expected 'test: unicode path with legacy console'
   if ($legacyResult.Code -ne 0) { throw "commit helper failed with legacy console encoding: $($legacyResult.Output)" }

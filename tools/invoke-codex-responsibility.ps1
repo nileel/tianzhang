@@ -429,7 +429,8 @@ try {
   $newCommits = if ($beforeHead -ceq $afterHead) {
     @()
   } else {
-    @(Invoke-GitText -Arguments @('rev-list', '--reverse', "$beforeHead..$afterHead") -split '\r?\n' | Where-Object { $_ -match '^[0-9a-f]{40}$' })
+    $commitText = Invoke-GitText -Arguments @('rev-list', '--reverse', "$beforeHead..$afterHead")
+    @($commitText -split '\r?\n' | Where-Object { $_ -match '^[0-9a-f]{40}$' })
   }
   $matchingCommits = [Collections.Generic.List[string]]::new()
   foreach ($commitSha in $newCommits) {

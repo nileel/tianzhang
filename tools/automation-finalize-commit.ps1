@@ -181,14 +181,23 @@ function Test-DiffChanged {
 function Test-PathChanged {
   param([string]$Path)
 
+  if (Test-DiffChanged @('diff', '--quiet', '--cached', '--', $Path)) { return $true }
+  if (Test-DiffChanged @('diff', '--quiet', '--', $Path)) { return $true }
   & git -C $script:Repository ls-files --error-unmatch -- $Path *> $null
   $isTracked = $LASTEXITCODE -eq 0
   if (-not $isTracked) {
     return Test-Path -LiteralPath (Join-Path $script:Repository $Path) -PathType Leaf
   }
-  if (Test-DiffChanged @('diff', '--quiet', '--cached', '--', $Path)) { return $true }
-  if (Test-DiffChanged @('diff', '--quiet', '--', $Path)) { return $true }
   $false
+}
+
+function Test-PathNeedsStaging {
+  param([string]$Path)
+
+  if (Test-DiffChanged @('diff', '--quiet', '--', $Path)) { return $true }
+  & git -C $script:Repository ls-files --error-unmatch -- $Path *> $null
+  if ($LASTEXITCODE -eq 0) { return $false }
+  Test-Path -LiteralPath (Join-Path $script:Repository $Path) -PathType Leaf
 }
 
 $script:Repository = [System.IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
@@ -236,11 +245,14 @@ try {
   Pop-Location
 }
 
-[void](Invoke-GitRaw (@('add', '--') + $changedPaths))
+$pathsToStage = @($changedPaths | Where-Object { Test-PathNeedsStaging $_ })
+if ($pathsToStage.Count -gt 0) {
+  [void](Invoke-GitRaw (@('add', '--') + $pathsToStage))
+}
 $afterAddIndex = Get-IndexEntries
 Assert-ExternalIndexUnchanged $beforeIndex $afterAddIndex $changedPaths
 
-$stagedPaths = @(Invoke-GitRaw (@('-c', 'core.quotepath=false', 'diff', '--cached', '--name-only', '--') + $changedPaths) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Replace('\', '/') })
+$stagedPaths = @(Invoke-GitRaw (@('-c', 'core.quotepath=false', 'diff', '--cached', '--no-renames', '--name-only', '--') + $changedPaths) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Replace('\', '/') })
 foreach ($path in $changedPaths) {
   if (-not @($stagedPaths | Where-Object { Test-OverlapsExpected $_ @($path) }).Count) { throw "Expected path has no staged change: $path" }
 }
