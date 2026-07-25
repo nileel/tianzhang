@@ -14,16 +14,20 @@
 | N-FPD-GROWTH-01 | P1 | Codex | 阻塞（C-FPD-CULTIVATE-01） | — | 重分配四阶段一级属性总预算，并验证道基核心效果的连续成长曲线。 | — |
 | N-FPD-MANSION-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01） | — | 锁定五府府体效果的共同预算、差异预算与 1～5 府边际边界。 | — |
 | N-FPD-CULTIVATE-01 | P2 | Codex | 阻塞（C-FPD-CULTIVATE-01） | — | 验证养基、蕴养府胚、开府考验、失败损耗和闭关周期参数。 | — |
-| N-FPD-DANXIANG-01 | P1 | Codex | 阻塞（N-FPD-MANSION-01、N-JD-RULE-01） | — | 验证 1～5 府进入唯一丹相时的主承载与辅助输入预算，保证第四、第五府有效但不增位格。 | — |
+| N-FPD-DANXIANG-01 | P1 | Codex | 阻塞（N-FPD-MANSION-01、N-JD-RULE-01C） | — | 验证 1～5 府进入唯一丹相时的主承载与辅助输入预算，保证第四、第五府有效但不增位格。 | — |
 | N-FPD-NPC-01 | P2 | Codex | 阻塞（D-FPD-SCHEMA-01、N-FPD-CULTIVATE-01） | — | 校准 NPC 修炼行动的基础权重及性格、门派、境界目标、寿元、资源和环境修正。 | — |
 | N-FPD-REGRESSION-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SLOT-01 | P2 | codex | 阻塞 | N-FPD-DANXIANG-01、N-FPD-MANSION-01 | 金丹槽位与丹枢加成数值方案 | 开发管理/任务卡/N-SLOT-01.txt |
 | N-SEAT-01 | P2 | Codex | 阻塞（N-GC-BASE-01） | — | 席位竞争与丹枢占据采用确定性的资格、兼容与冲突结算；不得以随机胜者替代规则。 | — |
 | N-SUPPRESS-01 | P2 | Codex | 阻塞（N-GC-BASE-01） | — | 削位/封丹采用确定性的资格、目标与冲突结算；不得以随机触发概率替代规则。 | — |
-| N-JD-RULE-01 | P1 | Codex | 阻塞（D-JD-SCHEMA-01、有效样例） | — | BattleSim 接入金丹三实位、装配、载体独立账本、确定性冲突、可选 QTE/跳过、跨阶挑战档案与实位死亡；所有可调参数进入配置。 | — |
+| N-JD-RULE-01 | P1 | Codex | 阻塞 | N-JD-RULE-01A、N-JD-RULE-01B、N-JD-RULE-01C | 金丹 BattleSim 规则父任务；三个子任务均完成后才关闭。 | — |
+| N-JD-RULE-01A | P1 | Codex | 阻塞 | D-JD-SAMPLE-01 | 三实位、装配、唯一丹枢／丹相及能力与资源／冷却独立账本。 | — |
+| N-JD-RULE-01B | P1 | Codex | 阻塞 | N-JD-RULE-01A | 合法性过滤、确定性冲突及 QTE／跳过同结果结算。 | — |
+| N-JD-RULE-01C | P1 | Codex | 阻塞 | N-JD-RULE-01B | 版本化跨阶挑战、实位载体死亡与账本释放／保留。 | — |
 | N-STATE-01 | P2 | Codex | 阻塞（D-JD-SCHEMA-01） | — | 接入状态极性与载体、局部回溯、因果响应容量及债务不变量，保持确定性结算。 | — |
-| N-GROUP-02 | P3 | Codex | 待决定（子任务 N-GROUP-02C） | 每行动结算候选契约 | 2v2 范围技能、临时团队候选优先级与显式战场输入；协同走位不在本任务实施。 | — |
-| N-GROUP-02C | P3 | codex | 待决定 | — | 临时团队 AI 的确定性候选优先级 | 开发管理/任务卡/N-GROUP-02C.txt |
+| N-GROUP-02 | P3 | Codex | 阻塞 | N-GROUP-02C0、N-GROUP-02C | 2v2 范围技能、临时团队候选优先级与显式战场输入；协同走位不在本任务实施。 | — |
+| N-GROUP-02C0 | P3 | codex | 已排队 | — | 每行动结算候选契约 | 开发管理/任务卡/N-GROUP-02C0.txt |
+| N-GROUP-02C | P3 | codex | 阻塞 | N-GROUP-02C0 | 临时团队 AI 的确定性候选优先级 | 开发管理/任务卡/N-GROUP-02C.txt |
 | N-AI-01 | P3 | Codex | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |
 
 ## G2 任务执行边界
@@ -65,7 +69,7 @@
 
 ### N-FPD-DANXIANG-01 · 全部紫府输入与主辅预算
 
-- 依赖：N-FPD-MANSION-01、N-JD-RULE-01；只消费已确认的唯一丹枢、唯一丹相和不同主承载规则。
+- 依赖：N-FPD-MANSION-01、N-JD-RULE-01C；只消费已确认的唯一丹枢、唯一丹相和不同主承载规则。`N-JD-RULE-01C` 完成时同时关闭父任务 `N-JD-RULE-01`。
 - 预期路径：`simulations/BattleSim/Program.cs`、`docs/基础设定/元婴锚点与金丹位格设定.txt`、`docs/基础设定/金丹基础效果装配与冲突规则.txt`、`docs/角色养成/术法槽位设计.txt` 与验证记录。
 - 范围：建立 1～5 府 × 1～3 稳定位格 fixture，校准主承载、辅助输入、唯一实例账本与第四／第五府边际收益；不修改位格权限或五十一个基础效果。
 - 验证：BattleSim 覆盖一府一位、三府三位、五府三位、主一辅多、同一实例多处引用和安全重铸；同一 `abilityInstanceId` 只结算一次。
@@ -90,18 +94,69 @@
 - 完成条件：新四阶段、容量、府体、镇府神通和丹相输入都有可复现证据；没有靠临时调参掩盖单项内容错误。
 - 停止条件：任一失败不能归因到单一数值、内容或 schema 层；停止并拆回对应任务，不叠加兼容补丁。
 
+## 金丹 BattleSim 后续任务卡
+
+### N-JD-RULE-01 · 金丹 BattleSim 规则父任务
+
+- 子任务：`N-JD-RULE-01A` 负责三实位、装配与唯一账本；`N-JD-RULE-01B` 负责确定性冲突与 QTE／跳过；`N-JD-RULE-01C` 负责跨阶挑战与实位死亡。
+- 状态：父任务不直接进入队列；三个子任务均完成并归档后才关闭，`N-FPD-DANXIANG-01` 只等待最后一个子任务和 `N-FPD-MANSION-01`。
+- 禁止：不得用父任务一次性实现三个边界，不得在数据 fixture 尚未可消费时硬编码缺失输入。
+
+### N-JD-RULE-01A · 三实位、装配与唯一账本
+
+- 依赖：`D-JD-SAMPLE-01` 完成并关闭父任务 `D-JD-SCHEMA-01`。
+- 必读：`docs/基础设定/金丹基础效果装配与冲突规则.txt`、`docs/基础设定/元婴锚点与金丹位格设定.txt`、`D-JD-SAMPLE-01` 有效与非法 fixture，以及 BattleSim 现有角色、能力、资源和冷却账本所有者。
+- 预期路径：`simulations/BattleSim/GameData.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs` 与独立验证记录；建卡时按实时符号扫描校准。
+- 交付：接入三实位资格与装配、唯一丹枢、唯一丹相、`abilityInstanceId` 及能力、资源、冷却独立账本。
+- 禁止：不实现冲突 QTE、跨阶挑战或实位死亡；不按府数增加实位，不允许同一能力实例重复结算。
+- 验证：先建立缺失行为失败自测，再运行 Release 构建、目标自测和完整 BattleSim；覆盖一府一位、三府三位、五府三位、同实例多处引用与非法第四实位。
+- 完成条件：三个实位与唯一实例账本可观察、确定且只消费 `D-JD-SAMPLE-01` 数据，随后解锁 `N-JD-RULE-01B`。
+- 停止条件：数据 fixture 缺少唯一所有者，或实现必须修改数据契约、生成第四实位、第二丹枢／丹相或共享可变账本。
+
+### N-JD-RULE-01B · 确定性冲突与 QTE／跳过
+
+- 依赖：`N-JD-RULE-01A` 完成并归档。
+- 必读：金丹装配与冲突规则、`N-JD-RULE-01A` 的资格／账本接口、BattleSim 现有输入与确定性排序入口。
+- 预期路径：`simulations/BattleSim/Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs` 与独立验证记录；建卡时按实时符号扫描校准。
+- 交付：先过滤非法候选，再以已锁定规则做确定性冲突排序；QTE 和跳过只改变输入方式，必须得到相同合法性、预算与结算结果。
+- 禁止：不使用随机胜者、浮点权重或隐藏输入，不修改实位资格和账本，不提前实现跨阶挑战与实位死亡。
+- 验证：固定输入重复运行得到同一胜者、原因和账本变化；QTE 与跳过对同一选择输出一致；非法候选永不进入冲突排序。
+- 完成条件：冲突及 QTE／跳过结算确定、可观察且不改变 `N-JD-RULE-01A` 账本语义，随后解锁 `N-JD-RULE-01C`。
+- 停止条件：实现需要随机胜者、未定义权重、QTE 独占奖励或改写三实位／账本契约。
+
+### N-JD-RULE-01C · 跨阶挑战与实位死亡
+
+- 依赖：`N-JD-RULE-01B` 完成并归档。
+- 必读：`docs/基础设定/金丹位格证位与争位规则.txt`、`docs/基础设定/元婴锚点与金丹位格设定.txt`、版本化挑战资格与载体账本直接事实，以及 `N-JD-RULE-01A/01B` 接口。
+- 预期路径：`simulations/BattleSim/GameData.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs` 与独立验证记录；建卡时实时扫描精确符号。
+- 交付：实现版本化跨阶挑战档案、稳定资格拒绝原因、实位载体死亡，以及对应能力／资源／冷却账本的释放或保留。
+- 禁止：不让旧挑战许可跨版本复用，不把元婴锚点降格为普通金丹冲突，不静默丢弃或复制账本。
+- 验证：覆盖有效／过期／未知挑战档案、无资格拒绝、各实位载体死亡、账本释放／保留和重复处理幂等；运行 Release 构建、目标自测和完整 BattleSim。
+- 完成条件：跨阶挑战与实位死亡均有确定结果和稳定原因，账本无泄漏／重复；随后关闭父任务 `N-JD-RULE-01` 并允许其作为 `N-FPD-DANXIANG-01` 的完成前置。
+- 停止条件：挑战规则或死亡后账本归属仍不明确，或实现需要新位格权限、随机胜者或跨层兼容补丁。
+
 ## 战棋 AI 后续任务卡
+
+### N-GROUP-02C0 · 每行动结算候选契约
+
+- 依赖与状态：N-GROUP-02B 已完成；2026-07-25 负责人已批准将本契约拆为独立任务并排入当前队列，精确范围读取 `开发管理/任务卡/N-GROUP-02C0.txt`。
+- 必读：`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`、`simulations/BattleSim/Combat.cs` 中合法行动、命中、伤害与 RNG 结算链，以及 `GameData.cs` 的行动数据所有者。
+- 交付：锁定行动生产者拥有的结算候选，至少包含主要目标稳定 ID、合法命中集合、已解析击杀集合、稳定输入顺序和 `resolved | unavailable` 证据状态。
+- 语义：`resolved` 空击杀集合表示已确认零击杀；`unavailable` 只表示没有可用于选择的已解析证据，在击杀证据层计 0 并输出 `settlement_evidence_unavailable`，不得宣称行动一定无法击杀。
+- 禁止：不预测伤害、不提前消耗 RNG、不把命中集合当击杀集合、不伪造 `resolved` 空集合，不实现 N-GROUP-02C 排序或完整团队 AI。
+- 验证与完成：字段所有者、形成时点、消费方和缺失语义均可观察；完成并归档后将 `N-GROUP-02C` 转为 `ready`。
+- 停止条件：必须复制随机结算、改变 N-GROUP-02B 空间语义或扩大为完整团队 AI。
 
 ### N-GROUP-02C · 临时团队 AI 确定性候选优先级
 
-- 依赖与状态：待决定；N-GROUP-02B 已完成。它已形成合法行动与命中集合，但未形成无需推测伤害的可观察每行动结算候选。N-GROUP-DEC-04 的排序已经锁定；仍需负责人明确结算候选的所有者与数据语义，不能用默认值或权重代填。
+- 依赖与状态：阻塞于 `N-GROUP-02C0`；N-GROUP-DEC-04 的排序已经锁定。本卡只消费前置契约提供的可观察结算候选，不能用默认值、预测伤害或权重代填。
 - 必读：`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`、`simulations/BattleSim/Combat.cs::GroupTargetCandidate,GroupActionObservation,SelectGroupTarget,Simulate2v2Detailed`、N-GROUP-02B 完成后的范围候选／结算接口及 `BattleSimSelfTests.cs` 对应自测。
 - 预期路径：更新 `simulations/BattleSim/Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`、`开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt`、本文件与 `开发管理/当前任务队列.txt`；执行前须确认这些路径不与人工改动冲突。
 - 范围：只对同一行动的合法候选按“可击杀敌人数降序、命中合法敌人数降序、主要目标当前 HP 升序、既有输入顺序”做确定性选择；每一层理由及最终选择均可观察。它不读取队友意图或下一行动，也不改变现有个人走位／占格提交。
 - 禁止：不加入队友保护、站位安全、环境或冷却权重、随机评分、浮点权重、协同走位、射线创造、让路、包夹、格位预留、双人冲突策略、Boss／门派策略或完整团队 AI；不修改 N-GROUP-02B 的已锁定空间合法性和数据语义。
 - 验证：先新增并观察 `group-action-priority-n-group-02` 自测在缺失行为时失败；再运行 `dotnet build -c Release --no-restore simulations/BattleSim`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-area-targeting-n-group-02`、`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-action-priority-n-group-02`、`dotnet run --no-build -c Release --project simulations/BattleSim`、受影响文本检查与 `git diff --check`。
 - 完成条件：四层字典序在直接回归中可观察且稳定，不存在浮点／随机权重；现有个人移动与唯一占格保持不变，协同走位和完整团队 AI 仍位于独立后续系统。
-- 停止条件：N-GROUP-02B 未能提供不依赖猜测伤害、冷却或环境权重的合法行动候选和命中集合，或实现必须重新定义协同走位／完整团队 AI 时停止；不得在本卡内补丁化扩张。
+- 停止条件：N-GROUP-02C0 未能提供不依赖猜测伤害、冷却或环境权重的可观察结算候选，或实现必须重新定义协同走位／完整团队 AI 时停止；不得在本卡内补丁化扩张。
 
 ## 默认验证
 

@@ -14,9 +14,14 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
-| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞（C-FPD-MANSION-01、C-FPD-CULTIVATE-01） | — | 定义四阶段道基、容量、五座紫府、镇府神通、平铺效果绑定、修炼行动与 NPC 权重契约。 | — |
+| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01A、D-FPD-SCHEMA-01B | 道基、紫府与修炼数据父任务；两个子任务均完成后才关闭。 | — |
+| D-FPD-SCHEMA-01A | P1 | Codex | 阻塞 | C-FPD-MANSION-01、C-FPD-CULTIVATE-01 | 道基、紫府、效果与修炼静态数据契约及正反 fixture。 | — |
+| D-FPD-SCHEMA-01B | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01A | 数据对象、导入器、检查器、非法输入失败关闭与直接测试。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
-| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01） | — | 定义道路/效果/实位、唯一丹枢／丹相、全部紫府输入、主辅承载及表现/本地化字段；坏数据失败关闭。 | — |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A、D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约、导入失败关闭与样例均完成后才关闭。 | — |
+| D-JD-SCHEMA-01A | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 金丹道路、效果、三实位、丹枢／丹相、主辅承载与账本静态契约。 | — |
+| D-JD-SCHEMA-01B | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A | 金丹数据对象、导入器、检查器、正反 fixture 与失败关闭。 | — |
+| D-JD-SAMPLE-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02） | — | 定义统一攻击档案 schema 与导入边界。 | — |
@@ -29,16 +34,73 @@
 
 ## 筑基、紫府与丹相后续数据任务卡
 
-### D-FPD-SCHEMA-01 · 道基、紫府、效果绑定与修炼契约
+### D-FPD-SCHEMA-01 · 道基、紫府与修炼数据父任务
 
-- 依赖：G3 通过；C-FPD-MANSION-01 与 C-FPD-CULTIVATE-01 机制已确认。数值可以使用明确的未锁定 fixture，不得写默认平衡值。
-- 必读：2026-07-20 集成规格、三类内容规范与模板、`docs/角色养成/术法槽位设计.txt`、现有 CSV／asset／导入器／检查器。
-- 预期路径：新建数据契约规格；`src/Assets/DataConfig/`、对应 `src/Assets/Scripts` 数据模型与导入器、`tools/check-data-chain.ps1`、直接相关 EditMode 测试。进入当前队列前必须用实时扫描展开字面量路径。
-- 契约至少覆盖：唯一道基、四阶段连续进度、天然／已释放／扩府／总容量、五类紫府未建／府胚／建成状态、每府唯一镇府神通、平铺效果绑定、强化／府间节点、结丹永久锁、固定周期行动、闭关停止原因和 NPC 数据化权重。
-- 失败关闭：未知阶段、容量越界、同类双府、建成府缺少府体或镇府神通、递归效果包、结丹后新增府、非法权重字段、旧五段与新四阶段并存均拒绝导入。
-- 验证：相关 .NET／EditMode 测试、正反 fixture、`check-data-chain.ps1`、`check-review-text.ps1` 和 `git diff --check`。
-- 完成条件：BattleSim 与 Unity 可消费同一语义契约；尚未锁定数值保持显式缺失或测试 fixture，不伪装为当前默认值。
-- 停止条件：表达规则需要递归效果包、第二套角色成长服务、静默兼容字段或尚未确认的默认数值。
+- 子任务：`D-FPD-SCHEMA-01A` 负责静态契约与 fixture；`D-FPD-SCHEMA-01B` 负责数据对象、导入、校验和失败关闭。
+- 状态：父任务不直接进入队列；两个子任务均完成并归档后才关闭父任务并解锁 `D-JD-SCHEMA-01A`。
+- 禁止：不得用父任务替代子任务交付，不得在 `01A` 尚未锁定语义时由 `01B` 反向创作机制或默认值。
+
+### D-FPD-SCHEMA-01A · 道基、紫府、效果与修炼静态数据契约
+
+- 依赖：`C-FPD-MANSION-01`、`C-FPD-CULTIVATE-01` 均完成并获负责人确认；G3 已通过。
+- 必读：2026-07-20 集成规格、两个机制设计完成品、三类内容规范与模板、`docs/角色养成/术法槽位设计.txt`，以及现有 CSV／asset 字段。
+- 预期路径：新建 `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 与正反 fixture 规格；进入当前队列前用实时扫描展开实际相关文件。
+- 交付：定义唯一道基、四阶段连续进度、天然／已释放／扩府／总容量、五府未建／府胚／建成状态、每府唯一镇府神通、平铺效果绑定、强化／府间节点、结丹永久锁、固定周期行动和闭关停止原因。
+- 禁止：未锁定数值只能显式缺失或只存在于测试 fixture；不实现导入器、Unity 运行时、BattleSim 数值或 NPC 权重。
+- 验证：逐字段映射已确认机制；正反 fixture 覆盖合法最小状态、容量边界、同类双府、缺少必需绑定、递归效果包和结丹后新增府。
+- 完成条件：静态契约与 fixture 足以让 `D-FPD-SCHEMA-01B` 实现失败关闭，不需要猜测默认值或反向修改机制。
+- 停止条件：已确认机制不能由平铺效果绑定表达，或必须引入递归效果包、第二套角色成长服务、静默兼容字段或默认平衡值。
+
+### D-FPD-SCHEMA-01B · 道基、紫府与修炼导入及失败关闭
+
+- 依赖：`D-FPD-SCHEMA-01A` 完成并归档。
+- 必读：`D-FPD-SCHEMA-01A` 数据契约与 fixture；现有 `src/Assets/DataConfig/`、对应数据模型、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试。
+- 预期路径：相关 CSV、ScriptableObject／纯数据对象、导入器、检查器及 EditMode 测试；建卡时必须用实时扫描展开字面量路径。
+- 交付：实现 `01A` 契约的数据对象、导入、校验和稳定错误原因；未知阶段、容量越界、同类双府、建成府缺少必需绑定、递归效果包、结丹后新增府及旧新 schema 并存均整表失败关闭。
+- 禁止：不创作机制或数值，不保留旧字段 fallback，不自动截断非法状态，不建立第二套角色成长数据模型。
+- 验证：正反 fixture、相关 .NET／EditMode、`check-data-chain.ps1`、文本检查与差异检查。
+- 完成条件：BattleSim 与 Unity 能消费同一语义数据，所有非法 fixture 以稳定错误原因失败；随后关闭父任务 `D-FPD-SCHEMA-01`。
+- 停止条件：实现需要改写 `01A` 语义、猜测默认值、静默兼容旧字段或新增平行数据所有者。
+
+### D-JD-SCHEMA-01 · 金丹数据父任务
+
+- 子任务：`D-JD-SCHEMA-01A` 锁定静态契约；`D-JD-SCHEMA-01B` 实现导入与失败关闭；`D-JD-SAMPLE-01` 建立可消费样例。
+- 状态：父任务不直接进入队列；三个子任务均完成并归档后才关闭。
+- 禁止：不得把 51 项正式内容档案、生产平衡或 Unity 玩法实现并入本父任务。
+
+### D-JD-SCHEMA-01A · 金丹静态数据契约
+
+- 依赖：`D-FPD-SCHEMA-01B` 完成并关闭父任务 `D-FPD-SCHEMA-01`。
+- 必读：`docs/superpowers/specs/2026-07-19-jindan-position-proof-and-contestation-design.md`、`docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`、`docs/基础设定/金丹基础效果装配与冲突规则.txt` 与现有金丹数据字段。
+- 预期路径：新建 `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md`；建卡时展开直接相关数据模型和 fixture 路径。
+- 交付：定义道路、基础效果、三实位、唯一丹枢、唯一丹相、全部紫府输入、主辅承载、`abilityInstanceId`、资源／冷却账本、冲突引用及表现／本地化稳定键。
+- 禁止：不等待正式显示名写入数据；未确认名称只通过稳定键引用。不开发表、导入器、BattleSim 行为或生产数值。
+- 验证：逐项对齐位格、装配、唯一实例和主辅规则；契约能表达一府一位、三府三位和五府三位而不生成第四实位或第二丹相。
+- 完成条件：`D-JD-SCHEMA-01B` 可仅按本契约实现数据导入与失败关闭，不需要创作规则。
+- 停止条件：规则事实冲突，或契约必须引入第二丹枢／丹相、超过三实位、共享可变账本或旧九品兼容语义。
+
+### D-JD-SCHEMA-01B · 金丹导入与失败关闭
+
+- 依赖：`D-JD-SCHEMA-01A` 完成并归档。
+- 必读：`D-JD-SCHEMA-01A` 静态契约；现有数据模型、导入器、检查器和直接测试。
+- 预期路径：相关 CSV／asset、数据对象、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试；建卡时实时展开字面量路径。
+- 交付：实现数据对象、导入器、检查器、正反 fixture 和稳定错误原因。
+- 失败关闭：未知道路／效果／位格、同一实例重复结算、第二丹枢或第二丹相、超过三实位、缺少账本所有者、非法主辅引用与旧九品静默兼容。
+- 禁止：不生产 51 项正式内容档案，不填平衡值，不自动修复或截断非法输入。
+- 验证：相关 .NET／EditMode、`check-data-chain.ps1`、正反 fixture、文本检查和差异检查。
+- 完成条件：合法数据完整导入，所有非法 fixture 以稳定原因整表失败，随后解锁 `D-JD-SAMPLE-01`。
+- 停止条件：实现需要改变静态契约、补默认值、保留旧 schema fallback 或建立第二导入链。
+
+### D-JD-SAMPLE-01 · 金丹最小有效与非法样例
+
+- 依赖：`D-JD-SCHEMA-01B` 完成并归档。
+- 必读：`D-JD-SCHEMA-01A` 契约、`D-JD-SCHEMA-01B` 导入边界，以及金丹装配和全部紫府输入事实。
+- 预期路径：`D-JD-SCHEMA-01B` 建立的 fixture 目录、直接数据测试与本任务验证记录；建卡时展开实际路径。
+- 交付：至少一组覆盖一府一位、三府三位、五府三位的有效 fixture，以及重复实例、越权位格、第二丹相、非法主辅关系和缺失账本所有者的失败 fixture。
+- 禁止：样例不代表 51 项正式玩法档案、完整内容迁移、生产平衡或 UI；不得用虚构默认值使非法输入通过。
+- 验证：三个有效组合完整导入并保持唯一实例账本；每个非法样例以 `D-JD-SCHEMA-01B` 定义的稳定原因失败。
+- 完成条件：后续 `N-JD-RULE-01A` 可只消费该样例接入 BattleSim，不硬编码缺失内容；同时关闭父任务 `D-JD-SCHEMA-01`。
+- 停止条件：现有契约无法表达三个有效组合，或必须先生产完整内容／数值才能形成最小 fixture。
 
 ### D-FPD-MIGRATE-01 · 内容数据与角色状态迁移
 

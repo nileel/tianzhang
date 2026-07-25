@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "N-GROUP-02B 只提供合法行动与命中集合；现有 2v2 没有无需推测伤害即可比较的每行动结算候选，无法确定可击杀敌人数。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-GROUP-02C0"
+  ],
+  "stateReason": "等待 N-GROUP-02C0 锁定每行动结算候选所有者、证据状态与缺失语义。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -33,8 +35,8 @@
 
 ## 当前阻塞
 
-- 已核对 N-GROUP-02B 的 `GroupActionPlan`：它只承载行动位置与 `AreaTargetingResult`；后者只输出范围中心、命中索引和拒绝原因。当前 2v2 仍在选定主要目标后才执行单目标伤害结算，因而没有不依赖推测伤害、冷却或环境权重的每行动可击杀候选。
-- 本卡不能把命中集合伪作击杀集合，也不能在没有已锁定数据语义时补造伤害／结算接口。需要负责人明确该结算候选的所有者和数据语义后，才可恢复本卡；在此之前不修改 BattleSim 行为。
+- 等待 `N-GROUP-02C0` 锁定每行动结算候选所有者、必需字段、`resolved | unavailable` 证据状态、缺失语义及与 RNG 消耗的边界。
+- 在 `N-GROUP-02C0` 完成前，本卡不能把命中集合伪作击杀集合，也不能预测伤害、提前消耗 RNG 或补造默认结算证据；不修改 BattleSim 行为。
 
 ## 必查范围
 

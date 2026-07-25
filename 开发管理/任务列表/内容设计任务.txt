@@ -6,6 +6,7 @@
 
 - 2026-07-22 TQ-071 已完成独立复核：仅批准“关中：小族出身 → 关中城 → 关中野外的一场战斗”运行时薄内容切片。除此之外，仍不得新增剧情、角色、功法、术法、神通或世界设定；既有错误修复和复审继续按原流程处理。
 - 2026-07-24 `DEC-20260724-ENVPROFILE = A` 仅解冻 `C-ENV-PROFILE-01` 的一个关中野外最小生产环境档案；不解冻其他内容任务，也不实施 `U-2_5D-01D`。
+- 2026-07-25 负责人选择完整依赖方案，另行解冻 `C-FPD-MANSION-01` 与 `C-FPD-CULTIVATE-01` 的机制设计切片；不解冻其他内容任务、M7、M8 或批量内容生产。
 - 高阶内容不批量删除；先按 NPC、资料片、宗门秘术或历史说明分类。
 - 2026-07-22 用户专项授权的《天章》宇宙观 M0—M6 与 M9 已完成事实源迁移：世界背景、世界主线、三项遗产格式和册界规则结构已落地；M7 册界条目、M8 CSV／Unity／运行时／保存／UI 均未执行，且未进入当前任务队列。
 
@@ -15,8 +16,8 @@
 |----|--------|------|----------|--------|------|--------|
 | C-JD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 待用户确认 | — | 51 项名称候选已由 Codex 复审通过；用户确认前不得写入正式显示事实，且 D-JD-SCHEMA-01 前不得进入数据契约。 | — |
 | C-FPD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | — | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 | — |
-| C-FPD-MANSION-01 | P1 | Codex | 冻结（薄内容切片外） | — | 设计命、魂、识、悟、运五类府体的具体机制与非数值边界；每府仍只有一项府体效果。 | — |
-| C-FPD-CULTIVATE-01 | P1 | Codex | 冻结（薄内容切片外） | — | 锁定紫府蕴养、开府考验、失败损耗和闭关停止条件的机制边界，不提前填数值。 | — |
+| C-FPD-MANSION-01 | P1 | codex | 已排队 | — | 五府府体机制 | 开发管理/任务卡/C-FPD-MANSION-01.txt |
+| C-FPD-CULTIVATE-01 | P1 | codex | 已排队 | — | 养基、筑府与闭关机制 | 开发管理/任务卡/C-FPD-CULTIVATE-01.txt |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-MANSION-01、C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
 | C-FPD-GONGFA-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、N-FPD-GROWTH-01、内容冻结） | — | 分六批迁移 29 部功法的筑基方案、四阶段成长、道基核心效果绑定和五府软亲和。 | — |
 | C-FPD-SPELL-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-FPD-MANSION-01、N-FPD-MANSION-01、内容冻结） | — | 逐项迁移 11 项古修术法的固定镇府神通、兼容府属、升格条件、源术法处置及主／辅边界。 | — |
@@ -104,8 +105,8 @@
 
 ### C-FPD-MANSION-01 · 五府府体机制
 
-- 依赖与状态：G3 已通过；当前冻结在批准薄内容切片外。用户确认 C-FPD-NAME-01 不是机制设计前置。
-- 预期路径：新建 `docs/superpowers/specs/2026-07-21-five-mansion-body-effects-design.md`；确认后再同步 `docs/基础设定/境界特性.txt` 与相关规范。
+- 依赖与状态：G3 已通过；2026-07-25 负责人已解冻本机制设计切片并排入当前队列。用户确认 C-FPD-NAME-01 不是机制设计前置。
+- 预期路径：新建 `docs/superpowers/specs/2026-07-21-five-mansion-body-effects-design.md`；确认后再同步 `docs/基础设定/境界特性.txt` 与相关规范，精确范围读取 `开发管理/任务卡/C-FPD-MANSION-01.txt`。
 - 交付：命、魂、识、悟、运各一项府体机制，明确触发、条件、目标、效果类型、与镇府神通／府间节点边界；只写可调参数名，不填强度数值。
 - 验证：五类各自独立、各最多一座、每府一项府体效果；不得禁用府属、制造残缺府或按府数自动增加槽位。
 - 完成条件：五项机制均由用户确认并能用统一效果绑定表达，随后才解锁 N-FPD-MANSION-01。
@@ -113,8 +114,8 @@
 
 ### C-FPD-CULTIVATE-01 · 养基、筑府与闭关机制
 
-- 依赖与状态：G3 已通过；当前冻结在批准薄内容切片外。
-- 预期路径：新建 `docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md`；确认后同步修炼事实源。
+- 依赖与状态：G3 已通过；2026-07-25 负责人已解冻本机制设计切片并排入当前队列。
+- 预期路径：新建 `docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md`；确认后同步修炼事实源，精确范围读取 `开发管理/任务卡/C-FPD-CULTIVATE-01.txt`。
 - 交付：定义连续养基、府胚蕴养、开府考验、失败回退、资源耗尽、事件暂停、目标完成和玩家自设停止条件；NPC 使用同一合法行动集合。
 - 验证：除功法每日被动灵力外均由固定周期主动行动推进；闭关只重复行动；失败不生成残缺道基或残缺紫府。
 - 完成条件：行动生命周期、暂停／恢复、失败与存档边界均获确认，可由后续数值和 schema 任务直接引用。
@@ -177,4 +178,4 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
 - 涉及 CSV 或 asset 时加 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；涉及数值强度时运行 BattleSim。
 - 非规则描述类完成品每个单独一个文件；DeepSeek 批量内容只能标 `⚠️ 已修改/未审核` 并在 `AI合作沟通.txt` 交接。
-- 除经批准的关中薄内容切片外，自动工作流不得把本文件中的任务补入 `当前任务队列.txt`；新增切片仍须先建立完整任务卡。
+- 除经批准的关中薄内容切片，以及 2026-07-25 负责人专项解冻的 `C-FPD-MANSION-01`、`C-FPD-CULTIVATE-01` 外，自动工作流不得把本文件中的任务补入 `当前任务队列.txt`；新增切片仍须先建立完整任务卡。

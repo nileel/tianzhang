@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-GROUP-02C0",
+  "title": "每行动结算候选契约",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-25 负责人选择完整依赖方案；本卡作为 N-GROUP-02C 的独立前置契约。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md",
+    "开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/GameData.cs",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-GROUP-02C0.txt",
+    "开发管理/任务归档/N-GROUP-02C0.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-GROUP-02C0 · 每行动结算候选契约
+
+## 来源与当前边界
+
+- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`，以及 N-GROUP-02B 已形成的合法行动与命中集合。
+- 2026-07-25 负责人选择将结算候选所有者与数据语义拆为独立前置；本卡只锁定契约，不实现 N-GROUP-02C 的四层排序。
+- 当前格挡、闪避、暴击和部分功法效果会在行动结算时使用全局 RNG，选择阶段不能复制或预测这些结果。
+
+## 必查范围
+
+- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt#N-GROUP-DEC-04～05`、`#五、后续实施边界与验证口径`、`#六、N-GROUP-02B 实施与验证`。
+- `simulations/BattleSim/Combat.cs::GroupTargetCandidate,GroupActionPlan,GroupActionObservation,SelectGroupTarget,Simulate2v2Detailed`。
+- `simulations/BattleSim/Combat.cs` 中伤害防御、格挡、闪避、暴击和随机功法效果的结算逻辑，以及直接调用链。
+- `simulations/BattleSim/GameData.cs` 中行动、技能和结算输入的数据所有者。
+
+## 实施范围
+
+- 形成 `docs/superpowers/specs/2026-07-25-group-action-settlement-candidate-contract.md`。
+- 明确行动生产者拥有结算候选，选择器只消费已解析、可观察的结算事实。
+- 候选至少包含主要目标稳定 ID、合法命中目标集合、已解析击杀目标集合、稳定输入顺序和 `resolved | unavailable` 证据状态。
+- `resolved` 且击杀集合为空表示已确认零击杀；`unavailable` 表示生产者尚未形成可用于选择的结算事实，两者不可混写。
+- 排序中的可击杀数只计已经解析且可证明的击杀目标；`unavailable` 在该层贡献证据数 0，并输出稳定原因 `settlement_evidence_unavailable`，但不宣称实际行动一定无法击杀。
+- 明确契约形成、观察和消费时点，以及它与真实行动执行、RNG 消耗和 N-GROUP-02C 排序的边界。
+
+## 禁止项
+
+- 不预测随机伤害，不提前或重复消耗 RNG，不复制一次虚拟伤害结算。
+- 不把命中集合当作击杀集合，不伪造 `resolved` 空集合。
+- 不在本卡实现四层排序、队友保护、站位安全、环境／冷却权重、协同走位或完整团队 AI。
+- 不修改 N-GROUP-02B 的空间合法性，不以默认值或新权重掩盖证据缺失。
+
+## 验证
+
+- 用现有伤害调用链证明每个字段有唯一生产者、明确形成时点和可观察消费方。
+- 至少用契约样例覆盖：已确认一个击杀、`resolved` 零击杀、`unavailable`、稳定输入顺序和相同主要目标的不同命中集合。
+- 检查任何 `unavailable` 路径均不消耗 RNG、不声称零击杀，也不改变实际行动执行。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理,simulations` 与 `git diff --check`。
+
+## 完成条件
+
+- 结算候选所有者、必需字段、证据状态、缺失语义、稳定原因和与行动执行的边界均已锁定。
+- `N-GROUP-02C` 能在不猜测伤害、不提前消耗 RNG 的前提下只消费本契约实现确定性排序。
+- 任务完成后归档本卡，并将 `N-GROUP-02C` 从 `blocked` 转为 `ready`。
+
+## 停止条件
+
+- 现有行动生产者无法提供已解析事实且解决方案必须预测随机结算、复制伤害流程、改变 N-GROUP-02B 空间语义或扩大到完整团队 AI 时停止并转为 `pending_decision`；不得叠加猜测性接口。
