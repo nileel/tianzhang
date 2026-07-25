@@ -12,8 +12,8 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| N-FPD-GROWTH-01 | P1 | Codex | 阻塞（C-FPD-CULTIVATE-01） | — | 重分配四阶段一级属性总预算，并验证道基核心效果的连续成长曲线。 | — |
-| N-FPD-CULTIVATE-01 | P2 | Codex | 阻塞（C-FPD-CULTIVATE-01） | — | 验证养基、蕴养府胚、开府考验、失败损耗和闭关周期参数。 | — |
+| N-FPD-GROWTH-01 | P1 | codex | 已排队 | — | 四阶段成长与道基核心曲线 | 开发管理/任务卡/N-FPD-GROWTH-01.txt |
+| N-FPD-CULTIVATE-01 | P2 | codex | 已排队 | — | 养基与筑府周期参数 | 开发管理/任务卡/N-FPD-CULTIVATE-01.txt |
 | N-FPD-DANXIANG-01 | P1 | Codex | 阻塞（N-JD-RULE-01C） | — | 验证 1～5 府进入唯一丹相时的主承载与辅助输入预算，保证第四、第五府有效但不增位格。 | — |
 | N-FPD-NPC-01 | P2 | Codex | 阻塞（D-FPD-SCHEMA-01、N-FPD-CULTIVATE-01） | — | 校准 NPC 修炼行动的基础权重及性格、门派、境界目标、寿元、资源和环境修正。 | — |
 | N-FPD-REGRESSION-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |

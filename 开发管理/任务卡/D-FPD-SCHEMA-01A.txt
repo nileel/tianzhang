@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-FPD-SCHEMA-01A",
+  "title": "道基、紫府与修炼静态数据契约",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "C-FPD-MANSION-01 与 C-FPD-CULTIVATE-01 均已归档完成；G3 已通过，本卡可锁定静态契约与正反 fixture 规格。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-FPD-SCHEMA-01A.txt",
+    "开发管理/任务归档/D-FPD-SCHEMA-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-FPD-SCHEMA-01A · 道基、紫府与修炼静态数据契约
+
+## 来源与当前边界
+
+- `C-FPD-MANSION-01` 与 `C-FPD-CULTIVATE-01` 已完成并归档，G3 已通过。
+- 本卡只形成可供后续导入器失败关闭消费的静态契约与正反 fixture 规格，不实施导入器、Unity 运行时、BattleSim 数值或 NPC 权重。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`。
+- `docs/superpowers/specs/2026-07-21-five-mansion-body-effects-design.md` 与 `docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md`。
+- `docs/角色养成/功法设计规范.txt`、`docs/角色养成/术法设计规范.txt`、`docs/角色养成/神通设计规范.txt` 的对应模板与约束，以及 `docs/角色养成/术法槽位设计.txt`。
+- 现有 `src/Assets/DataConfig/` 字段和直接相关数据模型；先定位目标字段与所有者，再读取完整逻辑单元。
+- `开发管理/任务列表/数据链路任务.txt#D-FPD-SCHEMA-01A · 道基、紫府、效果与修炼静态数据契约`。
+
+## 实施范围
+
+- 新建 `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md`，在其中给出正反 fixture 规格。
+- 定义唯一道基、四阶段连续进度、天然／已释放／扩府／总容量、五府未建／府胚／建成、每府唯一镇府神通、平铺效果绑定、强化／府间节点、结丹永久锁、固定周期行动和闭关停止原因。
+- 令契约与 fixture 足以支持后续整表失败关闭，不需要猜测默认值或反向修改机制。
+
+## 禁止项
+
+- 未锁定数值只能显式缺失或只存在于测试 fixture。
+- 不实施导入器、Unity 运行时、BattleSim 数值或 NPC 权重。
+- 不引入递归效果包、第二套角色成长服务、静默兼容字段或默认平衡值。
+
+## 验证
+
+- 逐字段映射已确认机制。
+- 正反 fixture 覆盖合法最小状态、容量边界、同类双府、缺少必需绑定、递归效果包和结丹后新增府。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs` 与 `git diff --check`。
+
+## 完成条件
+
+- 静态契约与 fixture 足以让 `D-FPD-SCHEMA-01B` 实现失败关闭，不需要猜测默认值或反向修改机制。
+- 完成后归档本卡并解除 `D-FPD-SCHEMA-01B` 的前置。
+
+## 停止条件
+
+- 已确认机制不能由平铺效果绑定表达，或必须引入递归效果包、第二套角色成长服务、静默兼容字段或默认平衡值。

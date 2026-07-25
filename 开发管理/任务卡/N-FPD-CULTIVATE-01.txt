@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-FPD-CULTIVATE-01",
+  "title": "养基与筑府周期参数",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "C-FPD-CULTIVATE-01 已归档完成；本卡可校准养基、筑府与闭关的周期参数。",
+  "expectedPaths": [
+    "simulations/BattleSim/Program.cs",
+    "docs/基础设定/修行境界.txt",
+    "docs/基础设定/寿元与时间尺度设定.txt",
+    "开发管理/养基与筑府周期参数数值验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-FPD-CULTIVATE-01.txt",
+    "开发管理/任务归档/N-FPD-CULTIVATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-FPD-CULTIVATE-01 · 养基与筑府周期参数
+
+## 来源与当前边界
+
+- `C-FPD-CULTIVATE-01` 已完成并归档，养基、筑府、闭关、停止原因与存读档原子边界均已确认。
+- 本卡只校准周期、资源和失败回退参数，不恢复最终抽签式筑基或设计具体扩府物品。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`。
+- `docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md`。
+- `docs/基础设定/修行境界.txt` 与 `docs/基础设定/寿元与时间尺度设定.txt`。
+- `simulations/BattleSim/Program.cs` 中修炼引擎、角色构建与结果输出逻辑。
+- `开发管理/任务列表/数值与战斗任务.txt#N-FPD-CULTIVATE-01 · 养基与筑府周期参数`。
+
+## 实施范围
+
+- 校准养基周期、府胚蕴养周期、开府考验、失败回退、资源损耗和闭关停止阈值。
+- 从凡人出发的修炼引擎覆盖下／中／上／极品灵根、0～5 容量、主动单周期与闭关重复。
+- 在 `开发管理/养基与筑府周期参数数值验证记录.txt` 保存可复现输入、输出、结论与残留风险。
+
+## 禁止项
+
+- 不恢复最终抽签式筑基，不生成残缺道基或残缺紫府。
+- 不指定具体扩府物品掉率，不改写章节寿元尺度。
+- 不将候选参数写成未验证的现行事实。
+
+## 验证
+
+- 运行 `dotnet build -c Release --no-restore simulations/BattleSim`。
+- 运行 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- 检查时间、资源和失败后恢复路径；下品无扩府时能完成第四阶段但不能满足至少一府结丹门槛。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations` 与 `git diff --check`。
+
+## 完成条件
+
+- 所有参数可配置且有目标时间尺度；下品无扩府时能完成第四阶段但不能满足至少一府结丹门槛。
+- 完成后归档本卡并更新对应 backlog 投影。
+
+## 停止条件
+
+- 需要先指定具体扩府物品掉率或改写章节寿元尺度。
