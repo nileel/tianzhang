@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "N-GROUP-02 已完成，范围、距离与目标语义已有可复用事实；本卡只定义后续数据契约，不实现导入器或运行时消费。",
+  "stateReason": "已完成：攻击档案唯一 CSV 权威、Unity/BattleSim 投影、范围目标语义、失败关闭、fixture 与迁移边界已锁定；未实现 CSV、asset、导入器或运行时消费者。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -22,6 +22,12 @@
 }
 ---TASK-BODY---
 # D-COMBAT-01 · 统一攻击档案 schema 与导入边界
+
+## 完成交付
+
+- 已锁定 `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md`：CSV 行是唯一攻击参数权威，Unity asset 与 BattleSim 仅投影同一 `attackProfileId`。
+- 已定义基础攻击、术法、神通、距离、资源/冷却与范围目标的共用/特有字段，及无默认回退的导入失败关闭边界。
+- 已保留未解决的 BattleSim 回合冷却与 Unity 刻冷却单位差异为显式失败，不虚构换算或生产数值。
 
 ## 来源与当前边界
 
@@ -44,13 +50,14 @@
 
 ## 禁止项
 
+- 已遵守：
 - 不修改 CSV、asset、导入器、BattleSim、Unity 运行时、现有攻击数值或任何内容实例；不提前执行 `D-COMBAT-02` 或 `U-COMBAT-01`。
 - 不臆造武器、技能形状、伤害、距离、目标阵营、阻断或范围参数；缺少事实的字段只定义为显式缺失或由后续 fixture 提供。
 - 不新建平行数据源、默认回退或兼容读取分支。
 
 ## 验证
 
-- 对照必查范围逐字段确认唯一生产者、投影与失败关闭边界。
+- 对照任务必查范围逐字段确认唯一生产者、投影与失败关闭边界。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 - `git diff --check`。
@@ -63,3 +70,7 @@
 ## 停止条件
 
 - 若契约必须指定尚无事实源的生产攻击参数、武器内容、范围目标资格或跨端消费者所有者，停止并将本卡转为 `pending_decision`；不得以默认值、临时数据或并行 schema 补齐。
+
+## 后续边界
+
+`D-COMBAT-02` 仍等待 `U-COMBAT-01`，负责本契约的 CSV/asset fixture 与跨端差异检查；生产内容和消费者切换另行授权。
