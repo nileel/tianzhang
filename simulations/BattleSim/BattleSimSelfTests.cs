@@ -1539,8 +1539,8 @@ static class BattleSimSelfTests
             "forced movement crosses multiple compressed edges within one range unit");
         AssertEqual(2, forced.ConsumedDistanceUnits,
             "forced movement reports exact weighted distance consumption");
-        AssertEqual("distance_budget_exhausted", forced.StopReason,
-            "forced movement reports why the next edge was rejected");
+        AssertEqual("directed_edge_not_configured", forced.StopReason,
+            "forced movement fails closed when the next directed edge is not configured");
 
         var obstacle = new HexBattlefield(new Dictionary<HexCoord, HexCellRules>
         {

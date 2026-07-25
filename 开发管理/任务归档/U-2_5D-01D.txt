@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-25 负责人指定 AdventureSceneController 为正式环境档案绑定所有者，并授权正式 AdventureScene、SceneBuilder、生产环境 asset 与直接场景/控制器测试路径；现有显式绑定阻塞已解除。",
+  "stateReason": "2026-07-25 已完成共享纯 C# 空间查询契约、Unity/BattleSim 唯一消费、正式 AdventureScene 环境档案绑定及旧战斗范围迁移；BattleSim 两项自测和 Unity EditMode 166/166 通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Core/SpatialRules.meta",
     "src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs",
@@ -54,6 +54,14 @@
 }
 ---TASK-BODY---
 # U-2_5D-01D · 共享空间查询契约实现与旧范围逻辑迁移
+
+## 完成交付
+
+- `SpatialRules` 是 Unity Foundation 与 BattleSim linked compile 共同消费的唯一空间算法源；有向边、固定点距离、范围、视线、实体障碍、占位、强制移动和高度未配置均返回显式结果或稳定拒绝原因。
+- `AdventureSceneController` 是正式 `env_guanzhong_wild` 绑定所有者，`SceneBuilder` 重建与正式 `AdventureScene` 均保存生产 asset GUID；`ExplorationController` 只消费入口传入的档案并构建已配置快照。
+- Unity 战斗解析、敌方 AI 和战斗控制器已迁移到共享查询；`HexGrid.GetTilesInRange`、`GetMoveRange` 与战斗基础步数 fallback 已删除，探索态地图寻路保持原边界。
+- BattleSim Release 编译、`environment-rules-n-env-01`、`distance-model-tq055`、`TianZhang.EditModeTests.csproj`、Unity EditMode 166/166、数据链和差异检查通过。
+- `dotnet build src/Assembly-CSharp.csproj` 已执行；该受版本控制文件仍是 2026-07-13 的旧单程序集源码清单，未反映现行 asmdef 分层，并同时报出现存 `GameSession` 缺型。现行 Foundation/Domain/Combat/Gameplay/Editor/EditModeTests 编译链与 Unity 脚本编译均通过，本卡未越界改写生成工程映射。
 
 ## 来源与当前边界
 

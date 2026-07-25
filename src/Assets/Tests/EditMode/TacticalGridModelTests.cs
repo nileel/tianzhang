@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -7,6 +8,7 @@ using UnityEngine.UI;
 using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Core;
+using TianZhang.Core.SpatialRules;
 using TianZhang.Editor;
 using TianZhang.Entity;
 using TianZhang.Game;
@@ -15,6 +17,54 @@ using UnityEditor.SceneManagement;
 
 namespace TianZhang.Tests
 {
+    internal static class SpatialQueryTestFixture
+    {
+        public static SpatialQueryBoard CreateOpenBoard(int radius = 6)
+        {
+            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>();
+            for (int q = -radius; q <= radius; q++)
+            {
+                int minimumR = System.Math.Max(-radius, -q - radius);
+                int maximumR = System.Math.Min(radius, -q + radius);
+                for (int r = minimumR; r <= maximumR; r++)
+                {
+                    var coord = new SpatialHexCoord(q, r);
+                    cells.Add(coord, new SpatialCellRules(0, false, false, false, 0));
+                }
+            }
+
+            var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>();
+            foreach (var from in cells.Keys)
+            {
+                foreach (var to in from.Neighbors())
+                {
+                    if (cells.ContainsKey(to))
+                        edges.Add(new SpatialDirectedEdge(from, to), new SpatialEdgeRules(2, true, true));
+                }
+            }
+            return new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(2, 16));
+        }
+
+        public static SpatialQueryBoard CreateCompressedLineBoard()
+        {
+            var origin = new SpatialHexCoord(0, 0);
+            var east = new SpatialHexCoord(1, 0);
+            var eastTwo = new SpatialHexCoord(2, 0);
+            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>
+            {
+                [origin] = new SpatialCellRules(0, false, false, false, 0),
+                [east] = new SpatialCellRules(0, false, false, false, 0),
+                [eastTwo] = new SpatialCellRules(0, false, false, false, 0),
+            };
+            var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+            {
+                [new SpatialDirectedEdge(origin, east)] = new SpatialEdgeRules(1, true, true),
+                [new SpatialDirectedEdge(east, eastTwo)] = new SpatialEdgeRules(1, true, true),
+            };
+            return new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(2, 16));
+        }
+    }
+
     public class TacticalGridModelTests
     {
         [Test]
@@ -79,7 +129,11 @@ namespace TianZhang.Tests
         public void FullFudanBoostsAndConsumesMagicDivineSkill()
         {
             var engine = new CTBEngine();
-            var resolver = new CombatResolver { Engine = engine };
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
+            };
             var skill = ScriptableObject.CreateInstance<DivineSkillData>();
             try
             {
@@ -116,7 +170,11 @@ namespace TianZhang.Tests
         public void LeijieDamageTakenBoostsNextPhysicalAttackAndThenConsumes()
         {
             var engine = new CTBEngine();
-            var resolver = new CombatResolver { Engine = engine };
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
+            };
 
             var baseAttacker = CreateLeijieCombatant(engine, "未蓄雷", new HexCoord(0, 0));
             var baseTarget = CreateTarget(engine, "基准目标");
@@ -147,7 +205,11 @@ namespace TianZhang.Tests
         public void FullLeijieStackReducesMagicDefenseAgainstMagicAttack()
         {
             var engine = new CTBEngine();
-            var resolver = new CombatResolver { Engine = engine };
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
+            };
             var caster = CreateMagicCaster(engine, "神魂测试者", new HexCoord(0, 0));
 
             var freshDefender = CreateLeijieCombatant(engine, "未满雷劫", new HexCoord(1, 0));
@@ -187,7 +249,11 @@ namespace TianZhang.Tests
         internal static void AssertXuanganAddsRealmMindStrengthToMagicDamage(bool expectLogs)
         {
             var engine = new CTBEngine();
-            var resolver = new CombatResolver { Engine = engine };
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
+            };
 
             var normalCaster = CreateMagicCaster(engine, "普通神魂", new HexCoord(0, 0), "含弘光大典");
             var normalTarget = CreateTarget(engine, "普通目标");
@@ -209,7 +275,11 @@ namespace TianZhang.Tests
         internal static void AssertHanhongPhysicalDefenseBonusReducesPhysicalDamageAtFullHp(bool expectLogs)
         {
             var engine = new CTBEngine();
-            var resolver = new CombatResolver { Engine = engine };
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
+            };
             var attacker = CreateLeijieCombatant(engine, "物理测试者", new HexCoord(0, 0));
 
             var neutralDefender = CreateTarget(engine, "普通防御", "秋水游心经");
@@ -230,7 +300,11 @@ namespace TianZhang.Tests
         internal static void AssertZaiwuMissingHpIncreasesPhysicalAndMagicDefense(bool expectLogs)
         {
             var engine = new CTBEngine();
-            var resolver = new CombatResolver { Engine = engine };
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
+            };
 
             var physicalAttacker = CreateLeijieCombatant(engine, "载物物理", new HexCoord(0, 0));
             var fullPhysicalTarget = CreateTarget(engine, "满血物防", "含弘光大典");
@@ -263,6 +337,38 @@ namespace TianZhang.Tests
             Assert.IsTrue(lowMagic.Success);
             Assert.Less(lowPhysical.Damage.FinalDamage, fullPhysical.Damage.FinalDamage);
             Assert.Less(lowMagic.Damage.FinalDamage, fullMagic.Damage.FinalDamage);
+        }
+
+        [Test]
+        public void CombatResolverFailsClosedWithoutSpatialQueryConfiguration()
+        {
+            var engine = new CTBEngine();
+            var attacker = CreateLeijieCombatant(engine, "未配置攻击者", new HexCoord(0, 0));
+            var target = CreateTarget(engine, "未配置目标");
+
+            var result = new CombatResolver { Engine = engine }.BasicAttack(attacker, target);
+
+            Assert.IsFalse(result.Success);
+            Assert.AreEqual("目标不在近战范围", result.Message);
+        }
+
+        [Test]
+        public void CombatResolverUsesWeightedRangeInsteadOfHexDistance()
+        {
+            var engine = new CTBEngine();
+            var resolver = new CombatResolver
+            {
+                Engine = engine,
+                SpatialBoard = SpatialQueryTestFixture.CreateCompressedLineBoard(),
+            };
+            var attacker = CreateLeijieCombatant(engine, "压缩边攻击者", new HexCoord(0, 0));
+            var target = CreateTarget(engine, "压缩边目标");
+            target.Position = new HexCoord(2, 0);
+            LogAssert.Expect(LogType.Log, new Regex("压缩边攻击者 物理攻击 压缩边目标"));
+
+            var result = resolver.BasicAttack(attacker, target);
+
+            Assert.IsTrue(result.Success);
         }
 
         private static Character CreateFudanCaster(CTBEngine engine, string name, int fudanStacks)
@@ -427,7 +533,8 @@ namespace TianZhang.Tests
             player.CTBUnit.NextActionThreshold = 130f;
             enemy.CTBUnit.CT = 150f;
 
-            var session = controller.BeginCombat(player, enemy, grid);
+            var session = controller.BeginCombat(
+                player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
 
             Assert.AreSame(player, session.Player);
             Assert.AreSame(enemy, session.Enemy);
@@ -458,7 +565,7 @@ namespace TianZhang.Tests
             fast.SpellCooldowns[0] = 5;
             slow.SpellCooldowns[0] = 5;
 
-            controller.BeginCombat(fast, slow, grid);
+            controller.BeginCombat(fast, slow, grid, SpatialQueryTestFixture.CreateOpenBoard());
             var next = controller.AdvanceUntilAction();
             controller.AdvanceCooldowns(next.TicksElapsed);
 
@@ -476,7 +583,7 @@ namespace TianZhang.Tests
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
 
-            controller.BeginCombat(player, enemy, grid);
+            controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
             var hit = controller.ExecutePlayerBasicAttack();
@@ -513,7 +620,7 @@ namespace TianZhang.Tests
                 spell.cooldownTicks = 20;
                 spell.damageMultiplier = 1f;
 
-                controller.BeginCombat(player, enemy, grid);
+                controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
                 player.CTBUnit.CT = CTBEngine.ActionThreshold;
                 int mpBefore = player.CurrentMP;
 
@@ -547,7 +654,7 @@ namespace TianZhang.Tests
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
 
-            controller.BeginCombat(player, enemy, grid);
+            controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
             var guard = controller.ExecutePlayerGuard();
@@ -575,7 +682,7 @@ namespace TianZhang.Tests
             player.EquippedSpellIds = new[] { "old-spell" };
             player.AvailableSpells = new[] { "old-spell", "new-spell", "backup-spell" };
 
-            controller.BeginCombat(player, enemy, grid);
+            controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
             var swapped = controller.ExecutePlayerSwapSpell(0, "new-spell");
@@ -634,7 +741,7 @@ namespace TianZhang.Tests
             {
                 enemyData.realmMultiplier = 2.0f;
                 grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-                controller.BeginCombat(player, enemy, grid);
+                controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
                 enemy.TakeDamage(enemy.CurrentHP);
 
                 var result = controller.ResolveBattleEnd(enemyData, grid);
@@ -751,6 +858,67 @@ namespace TianZhang.Tests
                 }
 
                 Assert.IsNotNull(GameObject.Find("石甲兽"), "The formal encounter must spawn its enemy marker.");
+                var snapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
+                Assert.IsNotNull(snapshot);
+                Assert.AreEqual(2, snapshot.Board.UnitsPerRange);
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void GuanzhongWildConfiguredAdjacentEnemyBeginsCombat()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("GameSessionTest");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId("guanzhong_wild");
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+                var initialization = (System.Collections.IEnumerator)typeof(TianZhang.Map.ExplorationController)
+                    .GetMethod("InitExploration", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(exploration, null);
+                while (initialization.MoveNext())
+                {
+                }
+
+                var player = GetPrivateField<Character>(exploration, "player");
+                var enemies = (System.Collections.IList)exploration.GetType()
+                    .GetField("enemies", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .GetValue(exploration);
+                var firstEnemy = enemies[0];
+                var enemy = (Character)firstEnemy.GetType()
+                    .GetField("character", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                    .GetValue(firstEnemy);
+                var resolver = GetPrivateField<CombatResolver>(exploration, "resolver");
+                var tacticalController = GetPrivateField<TacticalCombatController>(
+                    exploration,
+                    "tacticalCombatController");
+                var snapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
+
+                player.Position = new HexCoord(0, 0);
+                enemy.Position = new HexCoord(1, 0);
+                Assert.IsTrue(resolver.CanTarget(player.Position, enemy.Position, 1, 1, out var reason), reason);
+
+                tacticalController.BeginCombat(
+                    player,
+                    enemy,
+                    exploration.tilemapManager.Grid,
+                    snapshot.Board);
+                controller.BeginEncounter();
+
+                Assert.AreEqual(AdventureSceneState.Combat, controller.CurrentState);
+                Assert.AreSame(enemy, tacticalController.CurrentSession.Enemy);
             }
             finally
             {
@@ -1021,6 +1189,13 @@ namespace TianZhang.Tests
                 .GetMethod(methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             Assert.IsNotNull(method, methodName);
             method.Invoke(controller, null);
+        }
+
+        private static T GetPrivateField<T>(object target, string fieldName)
+        {
+            return (T)target.GetType()
+                .GetField(fieldName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .GetValue(target);
         }
 
         private static void DestroyAdventureUi()

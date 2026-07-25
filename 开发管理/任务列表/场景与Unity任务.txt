@@ -25,7 +25,6 @@
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01、M8 实现授权） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 | U-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、D-COMBAT-01） | — | Unity 接入唯一攻击档案与 2v2 空间语义。 | — |
 | U-2_5D-01 | P2 | Codex | 待处理 | — | 2.5D 战棋表现小场景原型；仅在状态与结构前置完成后进入队列。 | — |
-| U-2_5D-01D | P2 | codex | 已排队 | — | 共享空间查询契约实现与旧范围逻辑迁移 | 开发管理/任务卡/U-2_5D-01D.txt |
 
 ## 执行边界
 

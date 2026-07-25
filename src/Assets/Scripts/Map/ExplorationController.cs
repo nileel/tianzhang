@@ -7,6 +7,7 @@ using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.HexTile;
+using TianZhang.Tactical;
 
 namespace TianZhang.Map
 {
@@ -42,6 +43,8 @@ namespace TianZhang.Map
         private TacticalCombatController tacticalCombatController;
         private CombatLogAdapter combatLogAdapter;
         private AdventureSceneController adventureSceneController;
+        private EnvironmentProfileData environmentProfile;
+        private SpatialQuerySnapshot spatialQuerySnapshot;
         private Character player;
         private List<EnemyUnit> enemies = new List<EnemyUnit>();
 
@@ -87,6 +90,11 @@ namespace TianZhang.Map
             StartCoroutine(InitExploration());
         }
 
+        public void ConfigureEnvironmentProfile(EnvironmentProfileData profile)
+        {
+            environmentProfile = profile;
+        }
+
         private void Update()
         {
             if (state == GameState.Exploration && waitingForMoveInput)
@@ -106,11 +114,19 @@ namespace TianZhang.Map
         private IEnumerator InitExploration()
         {
             state = GameState.Loading;
+            adventureSceneController = FindFirstObjectByType<AdventureSceneController>();
+            if (environmentProfile == null)
+            {
+                adventureSceneController?.ReportEncounterConfigurationFailure(
+                    "正式探索控制器未收到环境档案，已阻止遭遇启动。");
+                enabled = false;
+                yield break;
+            }
+
             ctbEngine = new CTBEngine();
             resolver = new CombatResolver { Engine = ctbEngine };
             tacticalCombatController = new TacticalCombatController(ctbEngine, resolver);
             combatLogAdapter = new CombatLogAdapter(AddLog, SetStatus);
-            adventureSceneController = FindFirstObjectByType<AdventureSceneController>();
 
             // 创建障碍格素材（深灰色）
             blockedTile = CreateColoredTile("BlockedTile", new Color(0.25f, 0.22f, 0.2f, 1f));
@@ -130,6 +146,22 @@ namespace TianZhang.Map
 
             // 生成敌人
             SpawnEnemies();
+
+            var tacticalGrid = TacticalGridModel.FromHexGrid(
+                tilemapManager.allHexCoords,
+                tilemapManager.Grid);
+            if (!SpatialQueryBoardFactory.TryCreate(
+                tacticalGrid,
+                environmentProfile,
+                out spatialQuerySnapshot,
+                out string spatialReason))
+            {
+                adventureSceneController?.ReportEncounterConfigurationFailure(
+                    "正式空间查询快照创建失败: " + spatialReason);
+                enabled = false;
+                yield break;
+            }
+            resolver.SpatialBoard = spatialQuerySnapshot.Board;
 
             // 刷新UI
             if (uiManager != null)
@@ -385,7 +417,7 @@ namespace TianZhang.Map
                 if (eu.character.Position == coord)
                 {
                     // 检查玩家是否在相邻格
-                    if (player.Position.Distance(coord) <= 1)
+                    if (resolver.CanTarget(player.Position, coord, 1, 1, out _))
                     {
                         StartBattle(eu);
                         return;
@@ -511,7 +543,11 @@ namespace TianZhang.Map
             waitingForMoveInput = false;
             currentCombatTarget = enemy.character;
             adventureSceneController?.BeginEncounter();
-            tacticalCombatController.BeginCombat(player, enemy.character, tilemapManager.Grid);
+            tacticalCombatController.BeginCombat(
+                player,
+                enemy.character,
+                tilemapManager.Grid,
+                spatialQuerySnapshot.Board);
 
             GetCombatLogAdapter().AnnounceBattleStart(player.Name, enemy.character.Name);
 
@@ -624,7 +660,6 @@ namespace TianZhang.Map
 
 private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
-            int dist = player.Position.Distance(enemyUnit.character.Position);
             player.FaceTarget(enemyUnit.character.Position);
 
             // 优先术法
@@ -634,8 +669,12 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
                 {
                     if (player.SpellCooldowns[i] <= 0
                         && player.CurrentMP >= playerSpells[i].mpCost
-                        && dist >= playerSpells[i].minRange
-                        && dist <= playerSpells[i].maxRange)
+                        && resolver.CanTarget(
+                            player.Position,
+                            enemyUnit.character.Position,
+                            playerSpells[i].minRange,
+                            playerSpells[i].maxRange,
+                            out _))
                     {
                         var result = resolver.CastSpell(player, enemyUnit.character, i, playerSpells[i]);
                         AddLog(result.Message);
@@ -646,24 +685,22 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
             }
 
             // 移动到敌人相邻
-            if (dist > 1)
+            if (!resolver.CanTarget(player.Position, enemyUnit.character.Position, 1, 1, out _))
             {
-                var path = tilemapManager.Grid.FindPath(player.Position, enemyUnit.character.Position, player.MovePoints);
+                var path = resolver.FindPathTowardTarget(player, enemyUnit.character);
                 if (path != null && path.Count > 0)
                 {
-                    int steps = Mathf.Min(path.Count, dist - 1);
-                    var movePath = path.GetRange(0, steps);
                     tilemapManager.Grid.ClearOccupied(player.Position);
-                    player.Position = movePath[movePath.Count - 1];
+                    player.Position = path[path.Count - 1];
                     tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
                     if (playerMarker != null)
                         playerMarker.transform.position = tilemapManager.HexToWorld(player.Position);
-                    AddLog($"{player.Name} 移动 {steps} 格");
+                    AddLog($"{player.Name} 移动 {path.Count} 格");
                 }
             }
 
             // 攻击
-            if (player.Position.Distance(enemyUnit.character.Position) <= 1)
+            if (resolver.CanTarget(player.Position, enemyUnit.character.Position, 1, 1, out _))
             {
                 bool useMagic = player.MagAtk > player.PhysAtk;
                 var result = resolver.BasicAttack(player, enemyUnit.character, useMagic);

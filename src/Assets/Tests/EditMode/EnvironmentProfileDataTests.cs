@@ -14,7 +14,7 @@ namespace TianZhang.Tests
             "profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs";
 
         private const string ValidRow =
-            "fixture_profile,0:0>1:0|1:0>1:-1,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water";
+            "fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@1@1@1|1:0>1:-1@4@0@1,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water";
 
         [Test]
         public void ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow()
@@ -26,7 +26,14 @@ namespace TianZhang.Tests
             Assert.AreEqual(1, profiles.Length);
             var profile = profiles[0];
             Assert.AreEqual("fixture_profile", profile.profileId);
+            Assert.AreEqual(2, profile.unitsPerRange);
+            Assert.AreEqual(16, profile.maxQueryRange);
             Assert.AreEqual(2, profile.directedEdges.Length);
+            Assert.AreEqual(1, profile.directedEdges[0].metricDistanceUnits);
+            Assert.IsTrue(profile.directedEdges[0].allowsMovement);
+            Assert.IsTrue(profile.directedEdges[0].allowsEffects);
+            Assert.AreEqual(4, profile.directedEdges[1].metricDistanceUnits);
+            Assert.IsFalse(profile.directedEdges[1].allowsMovement);
             Assert.AreEqual(6, profile.phenomenonChannels.Length);
             Assert.AreEqual(1, profile.phenomenonPairs.Length);
             Assert.AreEqual(EnvironmentPhenomenonChannel.Visibility, profile.phenomenonPairs[0].channel);
@@ -38,10 +45,12 @@ namespace TianZhang.Tests
                 profile.elementRelationRefs);
         }
 
-        [TestCase("fixture_profile,0:0>2:0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,0:0>1:0,surface_wet,airflow=wind;invalid=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,0:0>1:0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+unknown>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,0:0>1:0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@0@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@yes@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;invalid=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+unknown>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
         public void ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(string row)
         {
             Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseEnvironmentProfiles(
@@ -53,7 +62,7 @@ namespace TianZhang.Tests
         public void ParseEnvironmentProfilesRejectsRowsWithMissingRequiredFields()
         {
             const string missingElementRelations =
-                "fixture_profile,0:0>1:0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze";
+                "fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze";
 
             Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseEnvironmentProfiles(
                 new[] { Header, missingElementRelations },
@@ -61,7 +70,7 @@ namespace TianZhang.Tests
         }
 
         private const string GuanzhongWildRow =
-            "env_guanzhong_wild,-1:0>0:0|0:0>1:0|1:0>1:-1|0:0>0:1|0:1>-1:1|-1:0>-1:1,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
+            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=16;edges=-1:0>0:0@2@1@1|0:0>1:0@2@1@1|1:0>1:-1@2@1@1|0:0>0:1@2@1@1|0:1>-1:1@2@1@1|-1:0>-1:1@2@1@1,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
 
         [Test]
         public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
@@ -98,6 +107,8 @@ namespace TianZhang.Tests
         private static void AssertEnvironmentProfileEquals(EnvironmentProfileData expected, EnvironmentProfileData actual)
         {
             Assert.AreEqual(expected.profileId, actual.profileId);
+            Assert.AreEqual(expected.unitsPerRange, actual.unitsPerRange);
+            Assert.AreEqual(expected.maxQueryRange, actual.maxQueryRange);
 
             Assert.AreEqual(expected.directedEdges.Length, actual.directedEdges.Length);
             for (int index = 0; index < expected.directedEdges.Length; index++)
@@ -106,6 +117,9 @@ namespace TianZhang.Tests
                 Assert.AreEqual(expected.directedEdges[index].fromR, actual.directedEdges[index].fromR);
                 Assert.AreEqual(expected.directedEdges[index].toQ, actual.directedEdges[index].toQ);
                 Assert.AreEqual(expected.directedEdges[index].toR, actual.directedEdges[index].toR);
+                Assert.AreEqual(expected.directedEdges[index].metricDistanceUnits, actual.directedEdges[index].metricDistanceUnits);
+                Assert.AreEqual(expected.directedEdges[index].allowsMovement, actual.directedEdges[index].allowsMovement);
+                Assert.AreEqual(expected.directedEdges[index].allowsEffects, actual.directedEdges[index].allowsEffects);
             }
 
             CollectionAssert.AreEqual(expected.surfacePrototypeRefs, actual.surfacePrototypeRefs);
@@ -145,7 +159,7 @@ namespace TianZhang.Tests
                 File.WriteAllText(
                     sourceFilePath,
                     Header + "\n" +
-                    "fixture_invalid,0:0>2:0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water\n");
+                    "fixture_invalid,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
                 Assert.Throws<InvalidDataException>(() => DataConfigImporter.ImportEnvironmentProfiles());

@@ -1,0 +1,170 @@
+using System.Collections.Generic;
+using NUnit.Framework;
+using TianZhang.Core;
+using TianZhang.Core.SpatialRules;
+using TianZhang.Tactical;
+using UnityEngine;
+
+namespace TianZhang.Tests.EditMode
+{
+    public class SpatialQueryBoardTests
+    {
+        private static readonly SpatialHexCoord Origin = new SpatialHexCoord(0, 0);
+        private static readonly SpatialHexCoord East = new SpatialHexCoord(1, 0);
+        private static readonly SpatialHexCoord EastTwo = new SpatialHexCoord(2, 0);
+
+        [Test]
+        public void DirectedWeightedEdgesAreTheOnlyDistanceSource()
+        {
+            var board = CreateBoard(
+                new[] { Origin, East, EastTwo },
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(1, true, true),
+                    [new SpatialDirectedEdge(East, EastTwo)] = new SpatialEdgeRules(1, true, true),
+                });
+
+            Assert.AreEqual(SpatialQueryReasons.ReverseDirectedEdgeNotPermitted,
+                board.InspectEdge(East, Origin, SpatialQueryKind.Movement).Reason);
+            Assert.AreEqual(2,
+                board.QueryMetricDistance(Origin, EastTwo, SpatialQueryKind.Attack).DistanceUnits);
+        }
+
+        [Test]
+        public void ExpandedNeighborIsOutsideBasicAttackRange()
+        {
+            var board = CreateBoard(
+                new[] { Origin, East },
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(4, true, true),
+                });
+
+            var range = board.QueryRange(Origin, 1, 1, SpatialQueryKind.Attack, true);
+
+            Assert.IsTrue(range.TryGet(East, out var entry));
+            Assert.IsFalse(entry.IsInRange);
+            Assert.AreEqual(SpatialQueryReasons.AboveMaximumRange, entry.Reason);
+        }
+
+        [Test]
+        public void EntityObstacleBlocksMovementAndLineOfSight()
+        {
+            var cells = CreateCells(Origin, East, EastTwo);
+            cells[East] = new SpatialCellRules(0, false, false, true, 0);
+            var board = new SpatialQueryBoard(
+                cells,
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true),
+                    [new SpatialDirectedEdge(East, EastTwo)] = new SpatialEdgeRules(2, true, true),
+                },
+                new SpatialQueryLimits(2, 16));
+
+            Assert.AreEqual(SpatialQueryReasons.EntityObstacle,
+                board.InspectEdge(Origin, East, SpatialQueryKind.Movement).Reason);
+            Assert.AreEqual(SpatialQueryReasons.EntityObstacle,
+                board.QueryLineOfSight(Origin, EastTwo).Reason);
+        }
+
+        [Test]
+        public void DifferentHeightFailsClosed()
+        {
+            var cells = CreateCells(Origin, East);
+            cells[East] = new SpatialCellRules(1, false, false, false, 0);
+            var board = new SpatialQueryBoard(
+                cells,
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true),
+                },
+                new SpatialQueryLimits(2, 16));
+
+            Assert.AreEqual(SpatialQueryReasons.HeightRuleUnconfigured,
+                board.QueryMetricDistance(Origin, East, SpatialQueryKind.Attack).Reason);
+        }
+
+        [Test]
+        public void OccupiedLandingIsExcludedWithoutBecomingEntityObstacle()
+        {
+            var board = CreateBoard(
+                new[] { Origin, East },
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true),
+                });
+
+            var reachable = board.FindReachable(Origin, 1, new[] { East });
+
+            Assert.IsFalse(reachable.ContainsKey(East));
+            Assert.IsTrue(board.InspectEdge(Origin, East, SpatialQueryKind.Movement).IsLegal);
+        }
+
+        [Test]
+        public void UnityFactoryMapsExplicitProfileAndRejectsDuplicateUnitAnchors()
+        {
+            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            try
+            {
+                profile.unitsPerRange = 2;
+                profile.maxQueryRange = 16;
+                profile.directedEdges = new[]
+                {
+                    new EnvironmentDirectedEdge
+                    {
+                        fromQ = 0,
+                        fromR = 0,
+                        toQ = 1,
+                        toR = 0,
+                        metricDistanceUnits = 2,
+                        allowsMovement = true,
+                        allowsEffects = true,
+                    },
+                };
+
+                var validGrid = new TacticalGridModel();
+                validGrid.SetTile(new TacticalTileData(new HexCoord(0, 0)) { OccupiedUnitId = 7 });
+                validGrid.SetTile(new TacticalTileData(new HexCoord(1, 0)));
+
+                Assert.IsTrue(
+                    SpatialQueryBoardFactory.TryCreate(validGrid, profile, out var snapshot, out var reason),
+                    reason);
+                Assert.IsTrue(snapshot.Board.InspectEdge(Origin, East, SpatialQueryKind.Attack).IsLegal);
+                CollectionAssert.AreEqual(new[] { Origin }, snapshot.Occupied);
+
+                var duplicateGrid = new TacticalGridModel();
+                duplicateGrid.SetTile(new TacticalTileData(new HexCoord(0, 0)) { OccupiedUnitId = 7 });
+                duplicateGrid.SetTile(new TacticalTileData(new HexCoord(1, 0)) { OccupiedUnitId = 7 });
+                Assert.IsFalse(
+                    SpatialQueryBoardFactory.TryCreate(duplicateGrid, profile, out _, out var duplicateReason));
+                Assert.AreEqual(SpatialQuerySnapshotReasons.DuplicateUnitAnchor, duplicateReason);
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+            }
+        }
+
+        private static SpatialQueryBoard CreateBoard(
+            IEnumerable<SpatialHexCoord> coords,
+            IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges)
+        {
+            return new SpatialQueryBoard(CreateCells(coords), edges, new SpatialQueryLimits(2, 16));
+        }
+
+        private static Dictionary<SpatialHexCoord, SpatialCellRules> CreateCells(
+            params SpatialHexCoord[] coords)
+        {
+            return CreateCells((IEnumerable<SpatialHexCoord>)coords);
+        }
+
+        private static Dictionary<SpatialHexCoord, SpatialCellRules> CreateCells(
+            IEnumerable<SpatialHexCoord> coords)
+        {
+            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>();
+            foreach (var coord in coords)
+                cells.Add(coord, new SpatialCellRules(0, false, false, false, 0));
+            return cells;
+        }
+    }
+}

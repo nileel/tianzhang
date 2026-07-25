@@ -96,6 +96,19 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FormalAndRebuiltAdventureScenesBindTheProductionEnvironmentProfile()
+        {
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+            var formalEnvironmentGuid = GetFormalAdventureEnvironmentGuid();
+
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            Assert.AreEqual("a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6", formalEnvironmentGuid);
+            Assert.AreEqual(formalEnvironmentGuid, GetFormalAdventureEnvironmentGuid());
+        }
+
+        [Test]
         public void LegacyExplorationSceneGeneratorIsNotExposed()
         {
             var legacyGenerator = typeof(SceneBuilder).GetMethod(
@@ -607,6 +620,25 @@ namespace TianZhang.Tests
 
             var assetPath = AssetDatabase.GetAssetPath(enemy);
             Assert.AreEqual("Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset", assetPath);
+            return AssetDatabase.AssetPathToGUID(assetPath);
+        }
+
+        private static string GetFormalAdventureEnvironmentGuid()
+        {
+            var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+            Assert.IsNotNull(controller);
+            var serializedController = new SerializedObject(controller);
+            var environmentProperty = serializedController.FindProperty("guanzhongWildEnvironmentProfile");
+            Assert.IsNotNull(environmentProperty);
+
+            var environment = environmentProperty.objectReferenceValue as TianZhang.Tactical.EnvironmentProfileData;
+            Assert.IsNotNull(environment);
+            Assert.AreEqual("env_guanzhong_wild", environment.profileId);
+
+            var assetPath = AssetDatabase.GetAssetPath(environment);
+            Assert.AreEqual(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
+                assetPath);
             return AssetDatabase.AssetPathToGUID(assetPath);
         }
 

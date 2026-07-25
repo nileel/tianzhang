@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TianZhang.Core;
+using TianZhang.Core.SpatialRules;
 using TianZhang.Entity;
 
 namespace TianZhang.Combat
@@ -132,11 +133,16 @@ namespace TianZhang.Combat
 
         public TacticalCombatSession CurrentSession => currentSession;
 
-        public TacticalCombatSession BeginCombat(Character player, Character enemy, HexGrid grid)
+        public TacticalCombatSession BeginCombat(
+            Character player,
+            Character enemy,
+            HexGrid grid,
+            SpatialQueryBoard spatialBoard)
         {
             if (player == null) throw new ArgumentNullException(nameof(player));
             if (enemy == null) throw new ArgumentNullException(nameof(enemy));
             if (grid == null) throw new ArgumentNullException(nameof(grid));
+            if (spatialBoard == null) throw new ArgumentNullException(nameof(spatialBoard));
 
             EnsureRegistered(player);
             EnsureRegistered(enemy);
@@ -148,6 +154,7 @@ namespace TianZhang.Combat
             Engine.ResetUnitCT(enemy.CTBUnit);
             Engine.ClearActionQueue();
             Resolver.Grid = grid;
+            Resolver.SpatialBoard = spatialBoard;
 
             InitializeGongFaStacks(player);
             InitializeGongFaStacks(enemy);
@@ -228,8 +235,12 @@ namespace TianZhang.Combat
                 return NoAction();
             if (!isSelfTarget)
             {
-                int dist = player.Position.Distance(target.Position);
-                if (dist < spell.minRange || dist > spell.maxRange)
+                if (!Resolver.CanTarget(
+                    player.Position,
+                    target.Position,
+                    spell.minRange,
+                    spell.maxRange,
+                    out _))
                     return Failure("超出射程");
             }
 
@@ -254,8 +265,12 @@ namespace TianZhang.Combat
             if (player.CurrentMP < skill.mpCost)
                 return Failure("灵力不足");
 
-            int dist = player.Position.Distance(enemy.Position);
-            if (dist < skill.minRange || dist > skill.maxRange)
+            if (!Resolver.CanTarget(
+                player.Position,
+                enemy.Position,
+                skill.minRange,
+                skill.maxRange,
+                out _))
                 return Failure("超出射程");
 
             var result = Resolver.UseSkill(player, enemy, index, skill);
@@ -331,7 +346,7 @@ namespace TianZhang.Combat
             if (grid == null) throw new ArgumentNullException(nameof(grid));
 
             Resolver.Grid = grid;
-            return AIController.ExecuteTurn(enemy, target, spells, skills, Resolver, grid);
+            return AIController.ExecuteTurn(enemy, target, spells, skills, Resolver);
         }
 
         public void ConsumeAction(Character character)

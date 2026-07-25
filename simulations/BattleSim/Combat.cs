@@ -101,18 +101,17 @@ static class Combat
 
     internal static void ResetDeterministicRandom() => Rng = new Random(DeterministicRandomSeed);
 
-    static bool IsInRange(int distance, int minRange, int maxRange) =>
-        distance >= minRange && distance <= maxRange;
-
     static bool CanAttack(HexBattlefield battlefield, HexCoord attacker, HexCoord defender, int minRange, int maxRange)
     {
-        var distance = battlefield.QueryMetricDistance(attacker, defender, SpatialQueryKind.Attack);
-        return distance.IsReachable &&
-               IsInRange(
-                   distance.DistanceUnits,
-                   minRange * battlefield.MetricUnitsPerRange,
-                   maxRange * battlefield.MetricUnitsPerRange) &&
-               battlefield.HasLineOfSight(attacker, defender);
+        return battlefield
+            .QueryRange(
+                attacker,
+                defender,
+                minRange,
+                maxRange,
+                SpatialQueryKind.Attack,
+                requireLineOfSight: true)
+            .IsInRange;
     }
 
     internal static ActionPositionResult ResolveActionPosition(

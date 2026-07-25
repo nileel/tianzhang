@@ -4,6 +4,7 @@ using TianZhang.Combat;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Map;
+using TianZhang.Tactical;
 
 namespace TianZhang.Adventure
 {
@@ -20,6 +21,7 @@ namespace TianZhang.Adventure
         private const string GuanzhongWildAdventureId = "guanzhong_wild";
 
         [SerializeField] private CharacterData[] guanzhongWildEnemyTemplates = System.Array.Empty<CharacterData>();
+        [SerializeField] private EnvironmentProfileData guanzhongWildEnvironmentProfile;
 
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
         public TacticalCombatEndOutcome LastEncounterOutcome { get; private set; } = TacticalCombatEndOutcome.Ongoing;
@@ -111,6 +113,11 @@ namespace TianZhang.Adventure
             guanzhongWildEnemyTemplates = enemyTemplates ?? System.Array.Empty<CharacterData>();
         }
 
+        public void SetGuanzhongWildEnvironmentProfile(EnvironmentProfileData environmentProfile)
+        {
+            guanzhongWildEnvironmentProfile = environmentProfile;
+        }
+
         private void ConfigureCurrentAdventureEncounter()
         {
             encounterConfigurationError = null;
@@ -132,6 +139,14 @@ namespace TianZhang.Adventure
                 return;
             }
 
+            if (guanzhongWildEnvironmentProfile == null ||
+                guanzhongWildEnvironmentProfile.profileId != "env_guanzhong_wild")
+            {
+                BlockGuanzhongWildEncounter("guanzhong_wild 必须显式绑定 env_guanzhong_wild 环境档案，已阻止遭遇启动。");
+                return;
+            }
+
+            explorationController.ConfigureEnvironmentProfile(guanzhongWildEnvironmentProfile);
             explorationController.enabled = true;
             explorationController.enemyCount = 1;
             explorationController.enemyTemplates = guanzhongWildEnemyTemplates;
@@ -144,6 +159,11 @@ namespace TianZhang.Adventure
             if (explorationController != null)
                 explorationController.enabled = false;
             Debug.LogError("[AdventureScene] " + error);
+        }
+
+        public void ReportEncounterConfigurationFailure(string error)
+        {
+            BlockGuanzhongWildEncounter(error);
         }
 
         private void BuildAdventureUi()

@@ -13,31 +13,51 @@ MonoBehaviour:
   m_Name: EnvironmentProfile_env_guanzhong_wild
   m_EditorClassIdentifier:
   profileId: env_guanzhong_wild
+  unitsPerRange: 2
+  maxQueryRange: 16
   directedEdges:
   - fromQ: -1
     fromR: 0
     toQ: 0
     toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 0
     fromR: 0
     toQ: 1
     toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 1
     fromR: 0
     toQ: 1
     toR: -1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 0
     fromR: 0
     toQ: 0
     toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 0
     fromR: 1
     toQ: -1
     toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: -1
     fromR: 0
     toQ: -1
     toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   surfacePrototypeRefs:
   - surface_grassland
   - surface_loess

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using TianZhang.Core;
+using TianZhang.Core.SpatialRules;
 using TianZhang.Entity;
 
 namespace TianZhang.Combat
@@ -13,6 +15,7 @@ namespace TianZhang.Combat
     {
         public HexGrid Grid;
         public CTBEngine Engine;
+        public SpatialQueryBoard SpatialBoard { get; set; }
 
         // 战斗日志
         public List<string> BattleLog = new List<string>();
@@ -53,9 +56,22 @@ namespace TianZhang.Combat
         {
             if (path == null || path.Count == 0)
                 return new ActionResult { Success = false, Message = "无移动路径" };
+            if (SpatialBoard == null)
+                return new ActionResult { Success = false, Message = "空间查询未配置" };
 
-            int steps = Mathf.Min(path.Count, mover.MovePoints);
-            HexCoord finalPos = path[steps - 1];
+            var occupied = Grid.GetOccupiedCoords()
+                .Where(coord => coord != mover.Position)
+                .Select(ToSpatial)
+                .ToArray();
+            var legalPath = SpatialBoard.FindPath(
+                ToSpatial(mover.Position),
+                ToSpatial(path[path.Count - 1]),
+                mover.MovePoints,
+                occupied);
+            if (legalPath.Count == 0)
+                return new ActionResult { Success = false, Message = "无移动路径" };
+
+            HexCoord finalPos = FromSpatial(legalPath[legalPath.Count - 1]);
 
             if (Grid.IsOccupied(finalPos))
                 return new ActionResult { Success = false, Message = "目标格被占据" };
@@ -64,7 +80,7 @@ namespace TianZhang.Combat
             mover.Position = finalPos;
             Grid.SetOccupied(finalPos, mover.CTBUnit.Id);
 
-            string msg = $"{mover.Name} 移动到 {finalPos}（{steps}步）";
+            string msg = $"{mover.Name} 移动到 {finalPos}（{legalPath.Count}格）";
             BattleLog.Add(msg);
             return new ActionResult { Success = true, Message = msg };
         }
@@ -73,7 +89,7 @@ namespace TianZhang.Combat
         public ActionResult BasicAttack(Character attacker, Character defender,
             bool useMagic = false)
         {
-            if (!IsInRange(attacker.Position, defender.Position, 1))
+            if (!CanTarget(attacker.Position, defender.Position, 1, 1, out _))
                 return new ActionResult { Success = false, Message = "目标不在近战范围" };
 
             // 朝向目标
@@ -141,8 +157,7 @@ namespace TianZhang.Combat
             bool isSelfTarget = spell.minRange == 0 && spell.maxRange == 0;
             if (!isSelfTarget)
             {
-                int range = caster.Position.Distance(target.Position);
-                if (range < spell.minRange || range > spell.maxRange)
+                if (!CanTarget(caster.Position, target.Position, spell.minRange, spell.maxRange, out _))
                     return new ActionResult { Success = false, Message = "目标不在射程范围" };
             }
 
@@ -254,8 +269,7 @@ namespace TianZhang.Combat
             if (!caster.ConsumeMP(skill.mpCost))
                 return new ActionResult { Success = false, Message = "灵力不足" };
 
-            int range = caster.Position.Distance(target.Position);
-            if (range < skill.minRange || range > skill.maxRange)
+            if (!CanTarget(caster.Position, target.Position, skill.minRange, skill.maxRange, out _))
                 return new ActionResult { Success = false, Message = "目标不在射程范围" };
 
             caster.SkillCooldowns[skillIndex] = skill.cooldownTicks;
@@ -357,8 +371,80 @@ namespace TianZhang.Combat
                 character.SkillCooldowns[i] = Mathf.Max(0, character.SkillCooldowns[i] - ticks);
         }
 
-        private bool IsInRange(HexCoord a, HexCoord b, int maxRange) =>
-            a.Distance(b) <= maxRange;
+        public bool CanTarget(
+            HexCoord source,
+            HexCoord target,
+            int minRange,
+            int maxRange,
+            out string reason)
+        {
+            if (SpatialBoard == null)
+            {
+                reason = SpatialQueryReasons.QueryBoardNotConfigured;
+                return false;
+            }
+
+            var result = SpatialBoard.QueryRangeEntry(
+                ToSpatial(source),
+                ToSpatial(target),
+                minRange,
+                maxRange,
+                SpatialQueryKind.Attack,
+                requireLineOfSight: true);
+            reason = result.Reason;
+            return result.IsInRange;
+        }
+
+        public List<HexCoord> FindPathTowardTarget(Character mover, Character target)
+        {
+            if (mover == null) throw new System.ArgumentNullException(nameof(mover));
+            if (target == null) throw new System.ArgumentNullException(nameof(target));
+            if (SpatialBoard == null)
+                return new List<HexCoord>();
+
+            var start = ToSpatial(mover.Position);
+            var targetCoord = ToSpatial(target.Position);
+            var occupied = Grid.GetOccupiedCoords()
+                .Where(coord => coord != mover.Position)
+                .Select(ToSpatial)
+                .ToArray();
+            var destination = SpatialBoard
+                .FindReachable(start, mover.MovePoints, occupied)
+                .Select(entry => new
+                {
+                    Coord = entry.Key,
+                    MovementCost = entry.Value,
+                    Range = SpatialBoard.QueryRangeEntry(
+                        entry.Key,
+                        targetCoord,
+                        1,
+                        1,
+                        SpatialQueryKind.Attack,
+                        requireLineOfSight: true),
+                    Distance = SpatialBoard.QueryMetricDistance(
+                        entry.Key,
+                        targetCoord,
+                        SpatialQueryKind.Attack),
+                })
+                .OrderBy(candidate => candidate.Range.IsInRange ? 0 : 1)
+                .ThenBy(candidate => candidate.Distance.IsReachable
+                    ? candidate.Distance.DistanceUnits
+                    : int.MaxValue)
+                .ThenBy(candidate => candidate.MovementCost)
+                .ThenBy(candidate => candidate.Coord.Q)
+                .ThenBy(candidate => candidate.Coord.R)
+                .FirstOrDefault();
+            if (destination == null || destination.Coord == start)
+                return new List<HexCoord>();
+
+            return SpatialBoard
+                .FindPath(start, destination.Coord, mover.MovePoints, occupied)
+                .Select(FromSpatial)
+                .ToList();
+        }
+
+        private static SpatialHexCoord ToSpatial(HexCoord coord) => new SpatialHexCoord(coord.q, coord.r);
+        private static HexCoord FromSpatial(SpatialHexCoord coord) => new HexCoord(coord.Q, coord.R);
 
         public void ClearLog() => BattleLog.Clear();
     }

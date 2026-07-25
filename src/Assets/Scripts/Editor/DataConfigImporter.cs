@@ -183,7 +183,9 @@ namespace TianZhang.Editor
 
             var directedEdges = ParseDirectedEdges(
                 GetRequiredColumnValue(headers, cols, "directedEdges", sourceName),
-                sourceName);
+                sourceName,
+                out int unitsPerRange,
+                out int maxQueryRange);
             var surfacePrototypeRefs = ParseReferenceList(
                 GetRequiredColumnValue(headers, cols, "surfacePrototypeRefs", sourceName),
                 '|',
@@ -203,6 +205,8 @@ namespace TianZhang.Editor
 
             var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
             profile.profileId = profileId;
+            profile.unitsPerRange = unitsPerRange;
+            profile.maxQueryRange = maxQueryRange;
             profile.directedEdges = directedEdges;
             profile.surfacePrototypeRefs = surfacePrototypeRefs;
             profile.phenomenonChannels = channels;
@@ -211,13 +215,42 @@ namespace TianZhang.Editor
             return profile;
         }
 
-        private static EnvironmentDirectedEdge[] ParseDirectedEdges(string raw, string sourceName)
+        private static EnvironmentDirectedEdge[] ParseDirectedEdges(
+            string raw,
+            string sourceName,
+            out int unitsPerRange,
+            out int maxQueryRange)
         {
+            var sections = raw.Split(new[] { ';' }, StringSplitOptions.None);
+            if (sections.Length != 3 ||
+                !sections[0].StartsWith("unitsPerRange=", StringComparison.Ordinal) ||
+                !sections[1].StartsWith("maxQueryRange=", StringComparison.Ordinal) ||
+                !sections[2].StartsWith("edges=", StringComparison.Ordinal))
+            {
+                throw new InvalidDataException($"{sourceName} has invalid directedEdges query envelope '{raw}'.");
+            }
+            unitsPerRange = ParsePositiveInteger(
+                sections[0].Substring("unitsPerRange=".Length),
+                sourceName,
+                "unitsPerRange");
+            maxQueryRange = ParsePositiveInteger(
+                sections[1].Substring("maxQueryRange=".Length),
+                sourceName,
+                "maxQueryRange");
+
             var edges = new List<EnvironmentDirectedEdge>();
             var seenEdges = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var entry in SplitRequired(raw, '|', sourceName, "directedEdges"))
+            foreach (var entry in SplitRequired(
+                sections[2].Substring("edges=".Length),
+                '|',
+                sourceName,
+                "directedEdges"))
             {
-                var ends = entry.Split(new[] { '>' }, StringSplitOptions.None);
+                var ruleParts = entry.Split(new[] { '@' }, StringSplitOptions.None);
+                if (ruleParts.Length != 4)
+                    throw new InvalidDataException($"{sourceName} has invalid directed edge rule '{entry}'.");
+
+                var ends = ruleParts[0].Split(new[] { '>' }, StringSplitOptions.None);
                 if (ends.Length != 2)
                     throw new InvalidDataException($"{sourceName} has invalid directed edge '{entry}'.");
 
@@ -233,16 +266,40 @@ namespace TianZhang.Editor
                 if (!seenEdges.Add(edgeKey))
                     throw new InvalidDataException($"{sourceName} has duplicate directed edge '{edgeKey}'.");
 
+                int metricDistanceUnits = ParsePositiveInteger(
+                    ruleParts[1], sourceName, $"directedEdges '{edgeKey}' metricDistanceUnits");
+                bool allowsMovement = ParseBinaryFlag(
+                    ruleParts[2], sourceName, $"directedEdges '{edgeKey}' allowsMovement");
+                bool allowsEffects = ParseBinaryFlag(
+                    ruleParts[3], sourceName, $"directedEdges '{edgeKey}' allowsEffects");
+
                 edges.Add(new EnvironmentDirectedEdge
                 {
                     fromQ = fromQ,
                     fromR = fromR,
                     toQ = toQ,
                     toR = toR,
+                    metricDistanceUnits = metricDistanceUnits,
+                    allowsMovement = allowsMovement,
+                    allowsEffects = allowsEffects,
                 });
             }
 
             return edges.ToArray();
+        }
+
+        private static int ParsePositiveInteger(string raw, string sourceName, string fieldName)
+        {
+            if (!int.TryParse(raw, out int value) || value < 1)
+                throw new InvalidDataException($"{sourceName} has invalid positive integer '{raw}' in '{fieldName}'.");
+            return value;
+        }
+
+        private static bool ParseBinaryFlag(string raw, string sourceName, string fieldName)
+        {
+            if (raw == "1") return true;
+            if (raw == "0") return false;
+            throw new InvalidDataException($"{sourceName} has invalid binary flag '{raw}' in '{fieldName}'.");
         }
 
         private static void ParseHexCoordinate(string raw, string sourceName, out int q, out int r)
@@ -425,6 +482,8 @@ namespace TianZhang.Editor
         private static void CopyEnvironmentProfile(EnvironmentProfileData source, EnvironmentProfileData destination)
         {
             destination.profileId = source.profileId;
+            destination.unitsPerRange = source.unitsPerRange;
+            destination.maxQueryRange = source.maxQueryRange;
             destination.directedEdges = source.directedEdges;
             destination.surfacePrototypeRefs = source.surfacePrototypeRefs;
             destination.phenomenonChannels = source.phenomenonChannels;

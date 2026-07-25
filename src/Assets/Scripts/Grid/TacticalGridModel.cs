@@ -25,6 +25,8 @@ namespace TianZhang.Tactical
         public bool BlocksFlyingMove;
         public bool BlocksLineOfSight;
         public bool BlocksLanding;
+        public bool IsEntityObstacle;
+        public string EntityObstacleSourceId;
         public int OccupiedUnitId;
 
         public bool IsOccupied => OccupiedUnitId >= 0;
@@ -38,6 +40,8 @@ namespace TianZhang.Tactical
             BlocksFlyingMove = false;
             BlocksLineOfSight = false;
             BlocksLanding = false;
+            IsEntityObstacle = false;
+            EntityObstacleSourceId = null;
             OccupiedUnitId = NoUnit;
         }
     }

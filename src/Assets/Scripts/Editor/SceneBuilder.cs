@@ -13,6 +13,7 @@ using TianZhang.Map;
 using TianZhang.World;
 using TianZhang.Settlement;
 using TianZhang.Adventure;
+using TianZhang.Tactical;
 using UnityEngine.InputSystem.UI;
 
 namespace TianZhang.Editor
@@ -413,10 +414,14 @@ namespace TianZhang.Editor
             var adventureController = UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
             var guanzhongWildEnemy = AssetDatabase.LoadAssetAtPath<CharacterData>(
                 "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            var guanzhongWildEnvironment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             Require(adventureController != null, "Adventure scene is missing AdventureSceneController.");
             Require(guanzhongWildEnemy != null, "Adventure scene is missing the formal stone-armored beast CharacterData.");
+            Require(guanzhongWildEnvironment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileData.");
             SetSerializedComponentName(adventureController, "AdventureSceneController");
             adventureController.SetGuanzhongWildEnemyTemplates(new[] { guanzhongWildEnemy });
+            adventureController.SetGuanzhongWildEnvironmentProfile(guanzhongWildEnvironment);
 
             var gridGo = new GameObject("HexGrid");
             var grid = gridGo.AddComponent<Grid>();
