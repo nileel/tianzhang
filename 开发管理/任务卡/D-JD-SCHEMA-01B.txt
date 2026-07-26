@@ -1,0 +1,78 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-JD-SCHEMA-01B",
+  "title": "金丹数据导入与失败关闭",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：D-JD-SCHEMA-01A 已归档并锁定静态契约；本卡可只实现金丹静态数据对象、整表导入、数据链检查和直接 fixture，不生产正式内容或数值。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/JindanStaticStates.csv",
+    "src/Assets/DataConfig/JindanStaticStates.csv.meta",
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/Scripts/Entity/JindanStaticStateData.cs",
+    "src/Assets/Scripts/Entity/JindanStaticStateData.cs.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs",
+    "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-SCHEMA-01B.txt",
+    "开发管理/任务归档/D-JD-SCHEMA-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-JD-SCHEMA-01B · 金丹数据导入与失败关闭
+
+## 来源与当前边界
+
+- `D-JD-SCHEMA-01A` 已归档；`docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md` 是本卡唯一静态语义来源。
+- 本卡采用独立 `JindanStaticStates.csv` 与 `JindanStaticStateData` 数据对象；先完成整表预校验，才允许创建或更新任何 Unity asset。
+- 只实现数据对象、导入、数据链检查和直接 EditMode fixture。不得生产十七道路或五十一项正式内容档案、角色、数值、BattleSim、Unity 玩法或 UI。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md`：根对象、五府完整输入、唯一丹枢／丹相、三实位、主辅承载、唯一账本、稳定键、fixture 与拒绝原因。
+- `开发管理/任务归档/D-JD-SCHEMA-01A.txt`：已锁定边界与解除前置记录。
+- `src/Assets/DataConfig/FoundationPurpleMansionStates.csv`、`src/Assets/DataConfig/README.txt`：现有 CSV 与数据源约定。
+- `src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs`：同角色五府冻结输入和结丹锁的直接数据所有者。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportFoundationPurpleMansionStates`、`ParseFoundationPurpleMansionStates`、`ImportEnvironmentProfiles`、CSV 解析辅助方法与 asset 写入模式。
+- `src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs`、`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`：正反 fixture 与导入前整表失败关闭测试模式。
+- `tools/check-data-chain.ps1`：CSV 表头、未知列和数据链检查入口。
+
+## 实施范围
+
+- 新建 `JindanStaticStates.csv`、对应 `JindanStaticStateData` 对象、公开可测的导入入口和直接 EditMode fixture；生产 CSV 只保留表头，fixture 专用字面量不得进入生产 CSV 或 asset。
+- 在 `DataConfigImporter` 中完成根、引用、五府完整输入、唯一核心／丹相、三实位、主辅承载、实例账本、冲突引用和稳定键的整表预校验；任何一行失败时不得创建或更新 asset。
+- 扩展数据管线说明与检查器，使新表头、未知列和 fixture 隔离受到同一检查；检查器不成为运行时语义所有者。
+- 对契约列明的三组有效 fixture 与每项非法 fixture 验证稳定拒绝原因，至少覆盖 `JD_FPM_INPUT_NOT_FORMED`、`JD_MANSION_INPUT_INCOMPLETE`、`JD_UNKNOWN_STATIC_REFERENCE`、`JD_STABLE_POSITION_LIMIT`、`JD_CORE_NOT_UNIQUE`、`JD_DANXIANG_NOT_UNIQUE`、`JD_PRIMARY_CARRIER_DUPLICATE`、`JD_ABILITY_LEDGER_OWNERSHIP_INVALID`、`JD_CONFLICT_REFERENCE_INVALID` 与 `JD_LEGACY_OR_DISPLAY_FIELD`。
+
+## 禁止项
+
+- 不修改静态契约，不创作道路、效果、名称、表现、数值、默认承载或生产角色。
+- 不保留旧九品／旧槽位／旧紫府字段 fallback，不自动截断非法输入，不建立第二导入链或平行金丹核心／丹相／账本。
+- 不修改 `simulations/BattleSim/`、现有 Unity 金丹证位运行时、存档、战斗、NPC 行为、内容 CSV 或生产角色 asset；最小样例由 `D-JD-SAMPLE-01` 负责。
+
+## 验证
+
+- 直接 EditMode fixture 覆盖一府一位、三府三位、五府三位和契约规定的每类非法输入；非法输入必须在 asset 写入前以稳定原因失败。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- 相关 Unity EditMode 测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src,tools`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- 数据对象、导入器、检查器与 fixture 均以同一静态契约消费金丹根；任一非法状态在写入前关闭，不产生半个核心、丹相、实位、承载或账本。
+- 无旧字段回退、静默默认、第二导入链或共享可变账本；所有直接检查通过后归档本卡、解除 `D-JD-SAMPLE-01` 前置，并同步关闭父任务 `D-JD-SCHEMA-01` 的已完成子项投影。
+
+## 停止条件
+
+- 实现需要改写 `D-JD-SCHEMA-01A` 静态语义、猜测默认值、保留旧字段兼容、引入第二丹枢／丹相、第四实位、共享可变账本或生产内容／数值；停止并转为 `pending_decision`。

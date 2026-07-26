@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-NPC-WEIGHT-01A"
-  ],
-  "stateReason": "2026-07-26：DEC-20260726-NPCWEIGHT 选择 A，批准先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重；等待 D-NPC-WEIGHT-01A 形成唯一数据契约。",
+  "dispatchState": "pending_decision",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：D-NPC-WEIGHT-01A 已完成独立数据契约；契约明确生产权重、阈值、封顶／递减与校准目标须另行批准。等待 DEC-20260727-NPCWEIGHT-PROD，批准前不得建立 CSV、asset、导入器、BattleSim 或 Unity 实现。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/基础设定/修行境界.txt",

@@ -13,7 +13,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | N-FPD-DANXIANG-01 | P1 | Codex | 阻塞（N-JD-RULE-01C） | — | 验证 1～5 府进入唯一丹相时的主承载与辅助输入预算，保证第四、第五府有效但不增位格。 | — |
-| N-FPD-NPC-01 | P2 | codex | 阻塞 | D-NPC-WEIGHT-01A | NPC 修炼行动权重 | 开发管理/任务卡/N-FPD-NPC-01.txt |
+| N-FPD-NPC-01 | P2 | codex | 待决定 | — | NPC 修炼行动权重 | 开发管理/任务卡/N-FPD-NPC-01.txt |
 | N-FPD-REGRESSION-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SLOT-01 | P2 | codex | 阻塞 | N-FPD-DANXIANG-01 | 金丹槽位与丹枢加成数值方案 | 开发管理/任务卡/N-SLOT-01.txt |
 | N-SEAT-01 | P2 | Codex | 阻塞（N-GC-BASE-01） | — | 席位竞争与丹枢占据采用确定性的资格、兼容与冲突结算；不得以随机胜者替代规则。 | — |

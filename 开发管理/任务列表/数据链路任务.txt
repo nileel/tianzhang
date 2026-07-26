@@ -15,8 +15,8 @@
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
-| D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A、D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约、导入失败关闭与样例均完成后才关闭。 | — |
-| D-JD-SCHEMA-01B | P1 | Codex | 待建卡 | — | 金丹数据对象、导入器、检查器、正反 fixture 与失败关闭；静态契约已归档，可按独立卡进入近期调度。 | — |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约已归档，等待导入失败关闭与样例完成。 | — |
+| D-JD-SCHEMA-01B | P1 | codex | 已排队 | — | 金丹数据导入与失败关闭 | 开发管理/任务卡/D-JD-SCHEMA-01B.txt |
 | D-JD-SAMPLE-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
