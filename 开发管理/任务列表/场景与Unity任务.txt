@@ -14,7 +14,6 @@
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
 | U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
-| U-FPD-RULE-01 | P1 | codex | 已排队 | — | 道基与紫府运行时 | 开发管理/任务卡/U-FPD-RULE-01.txt |
 | U-FPD-AI-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、N-FPD-NPC-01） | — | Unity 接入 NPC 合法行动过滤与数据化修炼优先级，不硬编码行为顺序。 | — |
 | U-FPD-SAVE-01 | P2 | Codex | 阻塞（U-FPD-RULE-01） | — | 保存／读取道基进度、容量、紫府、镇府神通、行动与结丹锁，验证不可逆状态。 | — |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、D-FPD-MIGRATE-01、N-SLOT-01、N-FPD-DANXIANG-01） | — | 实现筑基与金丹信息界面，展示容量、府胚／建成、唯一丹相与不可逆确认。 | — |

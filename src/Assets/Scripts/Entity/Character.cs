@@ -64,6 +64,8 @@ namespace TianZhang.Entity
         public int CombatSwapsUsed;     // 本场战斗已换法次数
         public const int MaxCombatSwaps = 2; // 每场最多临阵换法次数
         public string[] DevelopedMansions; // 已主修紫府府位
+        public FoundationPurpleMansionRuntimeState FoundationPurpleMansionState { get; private set; }
+        public bool HasFoundationPurpleMansionState => FoundationPurpleMansionState != null;
         public string RealmStage;
         public string TargetPosition;
         public string PositionOccupationState;
@@ -112,12 +114,32 @@ namespace TianZhang.Entity
             c.m_Realm = !string.IsNullOrWhiteSpace(data.realmStage)
                 ? NormalizeRealmFromStage(data.realmStage)
                 : RealmNameFromMultiplier(realm);
-            c.DevelopedMansions = data.developedMansions != null ? (string[])data.developedMansions.Clone() : new string[0];
+            if (data.foundationPurpleMansionState != null)
+            {
+                if (!FoundationPurpleMansionRuntimeState.TryCreate(
+                        data.foundationPurpleMansionState,
+                        out FoundationPurpleMansionRuntimeState foundationPurpleMansionState,
+                        out string failureReason))
+                {
+                    throw new System.InvalidOperationException(failureReason);
+                }
+
+                c.FoundationPurpleMansionState = foundationPurpleMansionState;
+                c.DevelopedMansions = new string[0];
+            }
+            else
+            {
+                c.DevelopedMansions = data.developedMansions != null
+                    ? (string[])data.developedMansions.Clone()
+                    : new string[0];
+            }
             c.TargetPosition = data.targetPosition;
             c.PositionOccupationState = data.positionOccupationState;
             c.DanXiangId = data.danXiangId;
             c.DanPivotRole = data.danPivotRole;
-            c.MansionBindings = data.mansionBindings != null ? (string[])data.mansionBindings.Clone() : new string[0];
+            c.MansionBindings = data.foundationPurpleMansionState == null && data.mansionBindings != null
+                ? (string[])data.mansionBindings.Clone()
+                : new string[0];
             c.DanArtifactForm = data.danArtifactForm;
             c.LegacyDanJiType = data.legacyDanJiType;
             c.VisibleRootId = data.visibleRootId;
@@ -295,6 +317,51 @@ namespace TianZhang.Entity
             MaxSpellSlots = spellSlots;
             MaxSkillSlots = skillSlots;
             EnsureCooldownArraySize();
+        }
+
+        public FoundationPurpleMansionOperationResult TryNurtureFoundationCycle(string cycleId)
+        {
+            return RequireFoundationPurpleMansionState().TryNurtureFoundationCycle(cycleId);
+        }
+
+        public FoundationPurpleMansionOperationResult CanExpandMansionCapacity()
+        {
+            return RequireFoundationPurpleMansionState().CanExpandMansionCapacity();
+        }
+
+        public FoundationPurpleMansionOperationResult TryOpenMansionCycle(
+            PurpleMansionKind mansionKind,
+            string cycleId)
+        {
+            return RequireFoundationPurpleMansionState().TryOpenMansionCycle(mansionKind, cycleId);
+        }
+
+        public FoundationPurpleMansionOperationResult TryFailMansionOpeningTrial(
+            PurpleMansionKind mansionKind)
+        {
+            return RequireFoundationPurpleMansionState().TryFailMansionOpeningTrial(mansionKind);
+        }
+
+        public FoundationPurpleMansionOperationResult TryRepeatClosedRetreatCycle(
+            string cycleId,
+            bool hasNextCycleResources)
+        {
+            return RequireFoundationPurpleMansionState().TryRepeatClosedRetreatCycle(
+                cycleId,
+                hasNextCycleResources);
+        }
+
+        internal FoundationPurpleMansionOperationResult TryFormJindanLock()
+        {
+            return RequireFoundationPurpleMansionState().TryFormJindanLock();
+        }
+
+        private FoundationPurpleMansionRuntimeState RequireFoundationPurpleMansionState()
+        {
+            if (FoundationPurpleMansionState == null)
+                throw new System.InvalidOperationException(
+                    FoundationPurpleMansionRuntimeState.InvalidRuntimeState);
+            return FoundationPurpleMansionState;
         }
 
         public void EnsureCooldownArraySize()

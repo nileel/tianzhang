@@ -39,6 +39,13 @@ namespace TianZhang.Tests
                 var state = states[0];
                 Assert.AreEqual("foundationPurpleMansionState", state.schemaId);
                 Assert.AreEqual(5, state.mansionStates.Length);
+                Assert.IsTrue(
+                    FoundationPurpleMansionRuntimeState.TryCreate(
+                        state,
+                        out FoundationPurpleMansionRuntimeState runtimeState,
+                        out string failureReason),
+                    failureReason);
+                Assert.AreEqual(state.foundationState.totalMansionCapacity, runtimeState.TotalMansionCapacity);
 
                 if (fixture == "phase1")
                 {
@@ -73,6 +80,7 @@ namespace TianZhang.Tests
         [TestCase("capacity", "FPM_CAPACITY_OVERFLOW")]
         [TestCase("duplicate", "FPM_DUPLICATE_MANSION_KIND")]
         [TestCase("missingBinding", "FPM_COMPLETE_MISSING_BINDING")]
+        [TestCase("multipleGuardian", "FPM_COMPLETE_MISSING_BINDING")]
         [TestCase("recursiveEffect", "FPM_RECURSIVE_EFFECT_BINDING")]
         [TestCase("jindanMutation", "FPM_JINDAN_LOCK_MUTATION")]
         [TestCase("legacyMixed", "FPM_LEGACY_SCHEMA_MIXED")]
@@ -207,6 +215,13 @@ namespace TianZhang.Tests
                 case "missingBinding":
                     ApplyOneCompleteMansion(values);
                     values["guardianAbilities"] = "none";
+                    values["fixtureId"] = "fpm.invalid.complete-missing-binding";
+                    values["expect"] = "REJECT";
+                    return values;
+                case "multipleGuardian":
+                    ApplyOneCompleteMansion(values);
+                    values["guardianAbilities"] +=
+                        "|guardian_ming_second~fixture_ability_ming_second~mansion_ming~fixture_spell_ming~fixture_upgrade_ming~RETAIN~PASSIVE~none";
                     values["fixtureId"] = "fpm.invalid.complete-missing-binding";
                     values["expect"] = "REJECT";
                     return values;

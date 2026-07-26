@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-26：D-FPD-SCHEMA-01A/01B 与 N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01 均已归档；合法与非法数据 fixture 已可消费。",
+  "stateReason": "2026-07-27：Character 已在单一实体所有者中消费经导入校验的道基／紫府根状态；EditMode 回归与项目编译通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Entity/Character.cs",
     "src/Assets/Scripts/Entity/CharacterData.cs",
@@ -66,3 +66,9 @@
 ## 停止条件
 
 - 现有所有者无法容纳状态而必须新建平行成长服务，或数据契约／已锁定数值无法表达所需运行时输入。
+
+## 完成记录
+
+- `Character` 持有道基／紫府运行时投影；四阶段连续进度、天然／释放／扩府容量、五府建造状态、唯一镇府神通与平铺效果绑定均可观察，且不从旧 `developedMansions`／`mansionBindings` 回退。
+- 固定周期行动、闭关下一周期和开府失败只写入当前运行时事实；`JindanProofCoordinator` 形成不可逆快照后，养基、扩府与开府均返回稳定拒绝原因。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj --no-restore`（0 error；2 个既有 obsolete 警告）；`tools/run-unity-editmode-tests.ps1`（通过）。

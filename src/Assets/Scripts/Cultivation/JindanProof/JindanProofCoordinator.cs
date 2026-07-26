@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TianZhang.Entity;
 
 namespace TianZhang.Cultivation.JindanProof
 {
@@ -173,6 +174,18 @@ namespace TianZhang.Cultivation.JindanProof
                     attempt.Invalidate();
                 }
             }
+        }
+
+        /// <summary>
+        /// 结丹协调边界是道基／紫府不可逆快照的唯一运行时写入入口。
+        /// </summary>
+        public FoundationPurpleMansionOperationResult TryFormFoundationPurpleMansionLock(
+            Character character)
+        {
+            if (character == null)
+                throw new ArgumentNullException(nameof(character));
+
+            return character.TryFormJindanLock();
         }
 
         internal void CaptureState(
