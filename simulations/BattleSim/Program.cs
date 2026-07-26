@@ -11,6 +11,8 @@ class Program
     record MansionBodyBudget(string Mansion, string ParameterRange, string TargetMetric, double BudgetUnits);
     record MansionBudgetFixture(string Name, Dictionary<string, int> Innate, string[] Mansions, double SoftAffinityCostMultiplier);
     record MansionBudgetAuditResult(int PalaceCount, double BudgetUnits, int AddedArtSlots, int AddedDivineArtSlots, int AddedStableSeats, int AddedDanXiang);
+    record FoundationGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 神识);
+    record DaoFoundationCoreCurve(string ParameterId, double StartingNormalizedMagnitude, double MaximumNormalizedMagnitude, double Exponent);
 
     static readonly MansionBodyBudget[] MansionBodyBudgets =
     {
@@ -23,6 +25,9 @@ class Program
 
     static readonly string[] MansionBodyOrder = { "命府", "魂府", "识府", "悟府", "运府" };
     static IReadOnlyList<string> G2AuditTargetStages => ["金丹"];
+    static readonly double[] FoundationStageShares = { 0.18, 0.22, 0.27, 0.33 };
+    static readonly DaoFoundationCoreCurve RepresentativeFoundationCoreCurve = new("normalizedMagnitude", 0.35, 1.00, 1.25);
+    static readonly string[] FoundationGrowthAuditBuilds = { "物·纯战", "法·纯战", "太一·符修" };
 
     static readonly BuildDef[] BuildDefs =
     {
@@ -86,6 +91,8 @@ class Program
         }
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
+        RunFoundationGrowthAudit();
+        Console.WriteLine();
         RunMansionBodyBudgetAudit();
         Console.WriteLine();
         const string TECH = "上品", SPIRIT = "中品";
@@ -690,6 +697,161 @@ class Program
         c.ZifuEligibilityNote = result.ZifuEligibilityNote;
         c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
         c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
+    }
+
+    static void RunFoundationGrowthAudit()
+    {
+        const double tolerance = 0.000000001;
+        const int legacyFoundationStages = 5;
+        AssertFoundationGrowth(FoundationStageShares.Length == 4, "道基成长必须正好包含四个阶段");
+        AssertFoundationGrowth(Math.Abs(FoundationStageShares.Sum() - 1.0) <= tolerance, "四阶段预算份额之和必须为 1");
+        AssertFoundationGrowth(FoundationStageShares.Zip(FoundationStageShares.Skip(1), (left, right) => left < right).All(value => value), "四阶段预算份额必须逐阶段递增，不能平均拆分");
+
+        Console.WriteLine("【四阶段成长与道基核心曲线审计（N-FPD-GROWTH-01）】");
+        Console.WriteLine("  旧输入：每部功法现行筑基五段成长；四阶段份额=18%/22%/27%/33%，整数总额采用保底一格后的最大余数分配。");
+        Console.WriteLine($"  守恒容差：{tolerance:E0}；移力按现行固定境界值处理，不迁移旧五段的非运行时增量。");
+
+        int auditedBuilds = 0;
+        foreach (var build in BuildDefs)
+        {
+            var legacyTotal = Multiply(ResolveLegacyFoundationGrowth(build), legacyFoundationStages);
+            var fourStageGrowth = RedistributeFoundationGrowth(legacyTotal);
+            var migratedTotal = SumFoundationGrowth(fourStageGrowth);
+            double difference = MaximumGrowthDifference(legacyTotal, migratedTotal);
+            AssertFoundationGrowth(difference <= tolerance, $"{build.Name} 的四阶段总预算偏差为 {difference:E3}");
+            auditedBuilds++;
+
+            if (FoundationGrowthAuditBuilds.Contains(build.Name))
+            {
+                Console.WriteLine($"  {build.Name,-8} 旧总={FormatFoundationGrowth(legacyTotal)}");
+                for (int stage = 0; stage < fourStageGrowth.Length; stage++)
+                    Console.WriteLine($"    第{stage + 1}阶段={FormatFoundationGrowth(fourStageGrowth[stage])}");
+            }
+        }
+
+        Console.WriteLine($"  练气出口：道基成长贡献=0，迁移前后差值=0（{auditedBuilds} Build）。");
+        Console.WriteLine($"  金丹入口：每个 Build 的筑基累计成长总额守恒，最大原始差值≤{tolerance:E0}。");
+
+        var progressAnchors = new[] { 0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0 };
+        double previousMagnitude = double.NegativeInfinity;
+        Console.WriteLine($"  核心曲线：{RepresentativeFoundationCoreCurve.ParameterId}=start + (max-start) × progress^{RepresentativeFoundationCoreCurve.Exponent:F2}");
+        for (int stage = 0; stage < progressAnchors.Length; stage++)
+        {
+            double magnitude = EvaluateFoundationCoreCurve(progressAnchors[stage], RepresentativeFoundationCoreCurve);
+            AssertFoundationGrowth(magnitude >= previousMagnitude, "道基核心数值曲线不得倒退");
+            previousMagnitude = magnitude;
+            Console.WriteLine($"    第{stage + 1}阶段：progress={progressAnchors[stage]:F3}，normalizedMagnitude={magnitude:F3}");
+        }
+        AssertFoundationGrowth(Math.Abs(EvaluateFoundationCoreCurve(0, RepresentativeFoundationCoreCurve) - RepresentativeFoundationCoreCurve.StartingNormalizedMagnitude) <= tolerance, "道基核心曲线起点错误");
+        AssertFoundationGrowth(Math.Abs(EvaluateFoundationCoreCurve(1, RepresentativeFoundationCoreCurve) - RepresentativeFoundationCoreCurve.MaximumNormalizedMagnitude) <= tolerance, "道基核心曲线终点错误");
+        Console.WriteLine("  结论：PASS；曲线只提供连续数值参数，非数值效果仍须显式阶段条件，不产生功法专属机制、槽位、位格或丹相。 ");
+    }
+
+    static FoundationGrowth ResolveLegacyFoundationGrowth(BuildDef build)
+    {
+        if (GameData.GongFaTables.TryGetValue(build.GongFaName, out var table)
+            && table.TryGetValue("筑基", out var growth))
+        {
+            return new(growth.HP, growth.MP, growth.肉攻, growth.神攻, growth.肉防, growth.神防, growth.反应, growth.神识);
+        }
+
+        AssertFoundationGrowth(GameData.HasApprovedGrowthFallback(build.GongFaName), $"{build.GongFaName} 缺少已登记的成长回退");
+        var weights = build.Weights ?? GameData.WeightsFromGongFa(build.GongFaName);
+        var baseGrowth = GameData.SubGrowthBase["筑基"];
+        double Scale(string innateAttribute) => weights[innateAttribute] / 0.6;
+
+        // 与 Character.SubGrowthSum 的回退映射保持一致，审计的是现行运行时输入而不是模板旧值。
+        return new(
+            baseGrowth.HP * Scale("根骨"),
+            baseGrowth.MP * Scale("魂魄"),
+            baseGrowth.肉攻 * Scale("根骨"),
+            baseGrowth.神攻 * Scale("魂魄"),
+            baseGrowth.肉防 * Scale("根骨"),
+            baseGrowth.神防 * Scale("魂魄"),
+            baseGrowth.反应 * Scale("根骨"),
+            baseGrowth.神识 * Scale("神识"));
+    }
+
+    static FoundationGrowth[] RedistributeFoundationGrowth(FoundationGrowth total)
+    {
+        var hp = AllocateFoundationBudget(total.HP);
+        var mp = AllocateFoundationBudget(total.MP);
+        var physicalAttack = AllocateFoundationBudget(total.肉攻);
+        var spiritualAttack = AllocateFoundationBudget(total.神攻);
+        var physicalDefense = AllocateFoundationBudget(total.肉防);
+        var spiritualDefense = AllocateFoundationBudget(total.神防);
+        var reaction = AllocateFoundationBudget(total.反应);
+        var perception = AllocateFoundationBudget(total.神识);
+
+        return Enumerable.Range(0, FoundationStageShares.Length)
+            .Select(index => new FoundationGrowth(
+                hp[index], mp[index], physicalAttack[index], spiritualAttack[index],
+                physicalDefense[index], spiritualDefense[index], reaction[index], perception[index]))
+            .ToArray();
+    }
+
+    static double[] AllocateFoundationBudget(double total)
+    {
+        AssertFoundationGrowth(total >= 0 && !double.IsNaN(total) && !double.IsInfinity(total), "成长预算必须为有限非负数");
+        bool isWholeNumber = Math.Abs(total - Math.Round(total)) < 0.000000001;
+        if (!isWholeNumber || total < FoundationStageShares.Length)
+        {
+            var fractional = FoundationStageShares.Select(share => total * share).ToArray();
+            fractional[^1] = total - fractional.Take(fractional.Length - 1).Sum();
+            return fractional;
+        }
+
+        int wholeTotal = (int)Math.Round(total);
+        var allocation = Enumerable.Repeat(1.0, FoundationStageShares.Length).ToArray();
+        int remaining = wholeTotal - allocation.Length;
+        var fractionalParts = FoundationStageShares
+            .Select((share, index) => new { Index = index, Target = remaining * share })
+            .ToArray();
+        foreach (var part in fractionalParts)
+            allocation[part.Index] += Math.Floor(part.Target);
+
+        int undistributed = remaining - fractionalParts.Sum(part => (int)Math.Floor(part.Target));
+        foreach (var part in fractionalParts
+                     .OrderByDescending(item => item.Target - Math.Floor(item.Target))
+                     .ThenBy(item => item.Index)
+                     .Take(undistributed))
+            allocation[part.Index] += 1;
+        return allocation;
+    }
+
+    static FoundationGrowth Multiply(FoundationGrowth value, double multiplier) => new(
+        value.HP * multiplier, value.MP * multiplier, value.肉攻 * multiplier, value.神攻 * multiplier,
+        value.肉防 * multiplier, value.神防 * multiplier, value.反应 * multiplier, value.神识 * multiplier);
+
+    static FoundationGrowth SumFoundationGrowth(IEnumerable<FoundationGrowth> values) => values.Aggregate(
+        new FoundationGrowth(0, 0, 0, 0, 0, 0, 0, 0),
+        (total, value) => new FoundationGrowth(
+            total.HP + value.HP, total.MP + value.MP, total.肉攻 + value.肉攻, total.神攻 + value.神攻,
+            total.肉防 + value.肉防, total.神防 + value.神防, total.反应 + value.反应, total.神识 + value.神识));
+
+    static double MaximumGrowthDifference(FoundationGrowth left, FoundationGrowth right) => new[]
+    {
+        Math.Abs(left.HP - right.HP), Math.Abs(left.MP - right.MP), Math.Abs(left.肉攻 - right.肉攻), Math.Abs(left.神攻 - right.神攻),
+        Math.Abs(left.肉防 - right.肉防), Math.Abs(left.神防 - right.神防), Math.Abs(left.反应 - right.反应), Math.Abs(left.神识 - right.神识)
+    }.Max();
+
+    static string FormatFoundationGrowth(FoundationGrowth growth) =>
+        $"HP={growth.HP:F2} MP={growth.MP:F2} 肉攻={growth.肉攻:F2} 神攻={growth.神攻:F2} 肉防={growth.肉防:F2} 神防={growth.神防:F2} 反应={growth.反应:F2} 神识={growth.神识:F2}";
+
+    static double EvaluateFoundationCoreCurve(double progress, DaoFoundationCoreCurve curve)
+    {
+        AssertFoundationGrowth(progress is >= 0 and <= 1, "道基连续进度必须位于 [0, 1]");
+        AssertFoundationGrowth(curve.StartingNormalizedMagnitude is >= 0 and <= 1, "道基核心曲线起点必须归一化");
+        AssertFoundationGrowth(curve.MaximumNormalizedMagnitude >= curve.StartingNormalizedMagnitude && curve.MaximumNormalizedMagnitude <= 1, "道基核心曲线终点必须位于起点与 1 之间");
+        AssertFoundationGrowth(curve.Exponent >= 1, "道基核心曲线指数不得早期超额放大");
+        return curve.StartingNormalizedMagnitude
+             + (curve.MaximumNormalizedMagnitude - curve.StartingNormalizedMagnitude) * Math.Pow(progress, curve.Exponent);
+    }
+
+    static void AssertFoundationGrowth(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException($"四阶段成长审计失败：{message}");
     }
 
     static void RunMansionBodyBudgetAudit()
