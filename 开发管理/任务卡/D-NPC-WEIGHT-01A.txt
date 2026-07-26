@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-NPC-WEIGHT-01A",
+  "title": "NPC 修炼行动权重静态契约",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-26：DEC-20260726-NPCWEIGHT 选择 A，批准先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-NPC-WEIGHT-01A.txt",
+    "开发管理/任务归档/D-NPC-WEIGHT-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-NPC-WEIGHT-01A · NPC 修炼行动权重静态契约
+
+## 来源与当前边界
+
+- `DEC-20260726-NPCWEIGHT = A` 已批准先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重。
+- `D-FPD-SCHEMA-01A/01B` 已完成道基／紫府状态与导入边界，并明确不代表 NPC 权重；`N-FPD-CULTIVATE-01` 已锁定行动成本。
+- 本卡只形成可供后续导入、BattleSim 校准与 Unity 消费共同使用的静态契约与正反 fixture 规格，不实现 CSV、asset、导入器、运行时或生产数值。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md` 的 NPC 合法行动、共享结果规则与决策权重边界。
+- `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 的行动、结丹锁与“明确排除 NPC 权重”边界。
+- `docs/基础设定/修行境界.txt` 与 `docs/基础设定/金丹位格证位与争位规则.txt` 的行动硬门槛和权重不得覆盖的规则。
+- 现有 `src/Assets/DataConfig/`、直接相关数据模型和 `DataConfigImporter` 的单一数据源／失败关闭模式；先定位目标字段与所有者，再读取完整逻辑单元。
+- `开发管理/任务列表/数据链路任务.txt#D-NPC-WEIGHT-01A · NPC 修炼行动权重静态契约`。
+
+## 实施范围
+
+- 新建 `docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md`，定义一个可版本化、可热调的独立 CSV/asset 数据链，以及唯一权威来源到 BattleSim 与 Unity 只读消费投影的单向边界。
+- 定义合法行动过滤后的行动稳定 ID、基础权重、性格／门派／境界目标／寿元／资源／环境修正、重算事件、封顶／递减、并列裁定及稳定失败原因所需字段；生产权重、阈值和具体门派／性格档案保持缺失，不在本卡猜测。
+- 写出正反 fixture 规格，证明非法行动不能由权重覆盖、未知引用与双权威来源整表失败、同一固定输入可确定性排序；契约须可由后续单一导入链输出 CSV/asset，并由 BattleSim 与 Unity 共同消费。
+
+## 禁止项
+
+- 不把权重塞入道基／紫府状态、BattleSim `Program` 常量、Unity 行为顺序或任意第二配置源。
+- 不实现 CSV、asset、导入器、BattleSim、Unity、生产数值、默认权重或兼容／回退分支。
+- 不新增 NPC 全知信息、每日全世界扫描，且不得让寿元、资源或任何权重绕过凡品、容量、结丹或证位硬门槛。
+
+## 验证
+
+- 逐项核对行动成本、硬门槛、NPC 与玩家共享结果规则及既有单一数据源导入模式；静态契约能表达所有已批准修正来源而不填入生产值。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `git diff --check`。
+
+## 完成条件
+
+- 后续导入／fixture 与 `N-FPD-NPC-01` 可仅依据本契约建立同一数据源和确定性校准，不需要补字段、默认值、第二权威来源或重写行动硬门槛。
+
+## 停止条件
+
+- 无法以单一数据链表达既有行动与修正，或契约必须把 NPC 权重塞回道基／紫府状态、增加未知事实、每日全世界扫描、默认权重或双权威来源。

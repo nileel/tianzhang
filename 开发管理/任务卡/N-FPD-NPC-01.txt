@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-07-26：D-FPD-SCHEMA-01A/01B 已完成的契约明确不包含 NPC 权重，无法满足本卡的权重字段前置；等待 DEC-20260726-NPCWEIGHT 确认唯一数据契约来源与范围。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-NPC-WEIGHT-01A"
+  ],
+  "stateReason": "2026-07-26：DEC-20260726-NPCWEIGHT 选择 A，批准先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重；等待 D-NPC-WEIGHT-01A 形成唯一数据契约。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/基础设定/修行境界.txt",
@@ -31,25 +33,27 @@
 - `N-FPD-CULTIVATE-01` 已锁定行动成本；已完成的 `D-FPD-SCHEMA-01A/01B` 仅定义角色道基／紫府状态，并明确不代表 NPC 权重。
 - 当前缺少已批准的 NPC 行动权重字段、唯一数据来源和 runtime／BattleSim 消费边界，不能凭空校准或把权重硬编码进模拟器。
 
-## 待决定事项
+## 已确认的决定
 
-- `DEC-20260726-NPCWEIGHT`：确认 NPC 行动权重的唯一数据契约来源与实施范围后，才能将本卡重新置为 ready。
+- `DEC-20260726-NPCWEIGHT = A`：先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重。
+- `D-NPC-WEIGHT-01A` 是唯一数据契约前置；完成前本卡不得进入 ready 队列，也不得写入 BattleSim、CSV、asset 或 Unity 运行时。
 
 ## 必查范围
 
 - `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md`：其明确排除 NPC 权重的边界。
+- `docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md`：完成后作为唯一权重数据契约。
 - `simulations/BattleSim/Program.cs`、`simulations/BattleSim/Cultivation.cs` 与 `simulations/BattleSim/GameData.cs` 的现有修炼输入与可配置参数。
 - `docs/基础设定/修行境界.txt`、`docs/基础设定/金丹位格证位与争位规则.txt`。
 
 ## 实施范围
 
-- 待 `DEC-20260726-NPCWEIGHT` 确认后，校准基础权重及性格、门派、境界目标、寿元、资源和环境修正；先过滤非法行动，权重不得绕过凡品、容量、结丹或证位硬门槛。
+- 待 `D-NPC-WEIGHT-01A` 完成后，校准基础权重及性格、门派、境界目标、寿元、资源和环境修正；先过滤非法行动，权重不得绕过凡品、容量、结丹或证位硬门槛。
 - 建立资源充足／不足、寿元将尽、门派职责、可扩府、可结丹和生存危机的确定性场景；固定输入得到稳定排序。
 
 ## 禁止项
 
 - 不新增 NPC 全知信息、每日全世界扫描或硬编码行为顺序。
-- 决定前不写入 BattleSim、CSV、asset 或数值验证记录。
+- 数据契约完成前不写入 BattleSim、CSV、asset、Unity 运行时或数值验证记录。
 
 ## 验证
 

@@ -19,6 +19,7 @@
 | D-JD-SCHEMA-01A | P1 | codex | 已排队 | — | 金丹静态数据契约 | 开发管理/任务卡/D-JD-SCHEMA-01A.txt |
 | D-JD-SCHEMA-01B | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A | 金丹数据对象、导入器、检查器、正反 fixture 与失败关闭。 | — |
 | D-JD-SAMPLE-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
+| D-NPC-WEIGHT-01A | P2 | codex | 已排队 | — | NPC 修炼行动权重静态契约 | 开发管理/任务卡/D-NPC-WEIGHT-01A.txt |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
@@ -79,6 +80,16 @@
 - 验证：严格数据链检查、相关 Unity EditMode、CSV/asset 数量与 ID 对齐、旧字段全局扫描、`git diff --check`；数值总回归由 N-FPD-REGRESSION-01 执行。
 - 完成条件：docs、CSV、asset、BattleSim fixture 与 Unity 数据对象对同一角色给出一致的四阶段、容量、紫府、镇府神通和丹相输入结果。
 - 停止条件：任一内容实例或数值仍未确认，或迁移需要猜测默认值、截断非法数据或保留双 schema。
+
+### D-NPC-WEIGHT-01A · NPC 修炼行动权重静态契约
+
+- 决定：`DEC-20260726-NPCWEIGHT = A` 已批准先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重。
+- 依赖：`N-FPD-CULTIVATE-01` 已锁定行动成本；`D-FPD-SCHEMA-01A/01B` 已归档且明确排除 NPC 权重。
+- 预期路径：新建 `docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md`；任务卡与当前队列。仅在实施导入器任务时再实时展开 CSV、asset、数据模型、导入器和直接测试的字面量路径。
+- 范围：定义一个可版本化的独立权重数据链、唯一权威来源与 BattleSim／Unity 的只读消费投影；定义行动、修正来源、稳定 ID、合法行动过滤边界、重算事件、封顶／递减和并列裁定所需的字段与正反 fixture 规格，但不填写生产权重或阈值。
+- 禁止：不复用或扩展道基／紫府状态契约，不写 BattleSim／Unity 运行时，不实现 CSV／asset、导入器或生产数值；不得建立双权威来源、默认权重、未知全局信息或每日全世界扫描。
+- 完成条件：后续导入／fixture 与 `N-FPD-NPC-01` 的校准可仅依此契约接入同一数据源，不需要补充字段、默认值或另一套权重链。
+- 停止条件：无法在单一数据源中表达既有行动硬门槛与所需修正，或实现需要把 NPC 权重塞回道基／紫府状态、增加全知信息或双数据链。
 
 ## 《天章》册界体系后续数据任务卡
 
