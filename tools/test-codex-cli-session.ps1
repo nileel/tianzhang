@@ -156,7 +156,9 @@ function Invoke-Runner {
 
   $stderrLines = @($stderr -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   foreach ($line in $stderrLines) {
-    Assert-True -Condition ($line -cin @('session_started', 'running')) -Message "$Case emitted unsafe stderr: $line"
+    Assert-True `
+      -Condition ($line -cin @('session_started', 'running') -or $line -cmatch '^codex_session_id=.+$') `
+      -Message "$Case emitted unsafe stderr: $line"
   }
   Assert-NotMatch -Actual ($stdout + $stderr) -Pattern ([regex]::Escape($Prompt)) -Message "$Case leaked prompt or reply"
 
@@ -232,9 +234,10 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
   Assert-Equal -Actual $start.Json.exitCode -Expected 0 -Message 'Start child exit mismatch'
   Assert-Match -Actual $start.RecordedArgs -Pattern '^exec\|--json\|-s\|danger-full-access\|-$' -Message 'Start argv mismatch'
   Assert-Equal -Actual $start.RecordedStdin -Expected $startPrompt -Message 'Start stdin mismatch'
-  Assert-Equal -Actual $start.StderrLines.Count -Expected 2 -Message 'Start progress count mismatch'
-  Assert-Equal -Actual $start.StderrLines[0] -Expected 'session_started' -Message 'Start first progress mismatch'
-  Assert-Equal -Actual $start.StderrLines[1] -Expected 'running' -Message 'Start second progress mismatch'
+  Assert-Equal -Actual $start.StderrLines.Count -Expected 3 -Message 'Start progress count mismatch'
+  Assert-Equal -Actual $start.StderrLines[0] -Expected "codex_session_id=$expectedSessionId" -Message 'Start live session mismatch'
+  Assert-Equal -Actual $start.StderrLines[1] -Expected 'session_started' -Message 'Start first progress mismatch'
+  Assert-Equal -Actual $start.StderrLines[2] -Expected 'running' -Message 'Start second progress mismatch'
 
   $explicitModel = 'gpt-5.6-terra'
   $startWithModel = Invoke-Runner `
@@ -266,7 +269,7 @@ $global:LASTEXITCODE = [int]$env:CODEX_SESSION_TEST_EXIT_CODE
   Assert-Equal -Actual $resumeWithDiagnostic.ExitCode -Expected 0 -Message 'Resume with diagnostic process failed'
   Assert-Equal -Actual $resumeWithDiagnostic.Json.status -Expected 'ok' -Message 'Resume with diagnostic status mismatch'
   Assert-Equal -Actual $resumeWithDiagnostic.Json.sessionId -Expected $expectedSessionId -Message 'Resume with diagnostic session mismatch'
-  Assert-Equal -Actual $resumeWithDiagnostic.StderrLines.Count -Expected 2 -Message 'Resume with diagnostic progress count mismatch'
+  Assert-Equal -Actual $resumeWithDiagnostic.StderrLines.Count -Expected 3 -Message 'Resume with diagnostic progress count mismatch'
 
   foreach ($failure in @(
       @{ Case = 'missing-thread'; Action = 'Start'; SessionId = $null; ChildExitCode = 0 },

@@ -20,7 +20,9 @@ param(
   [string]$DecisionId,
   [ValidateSet('A', 'B', 'C')]
   [string]$DecisionOption,
-  [switch]$ReadDecisionReplyFromStdin
+  [switch]$ReadDecisionReplyFromStdin,
+  [ValidateRange(1, 86400)]
+  [int]$ResponsibilityTimeoutSeconds = 3000
 )
 
 $ErrorActionPreference = 'Stop'
@@ -211,23 +213,64 @@ function Invoke-SessionRunner {
   $stderrTask = $process.StandardError.ReadToEndAsync()
   $process.StandardInput.Write($Prompt)
   $process.StandardInput.Close()
-  $process.WaitForExit()
+  $timeoutMilliseconds = [int]($ResponsibilityTimeoutSeconds * 1000)
+  $timedOut = -not $process.WaitForExit($timeoutMilliseconds)
+  if ($timedOut) {
+    try {
+      $process.Kill($true)
+    } catch [InvalidOperationException] {
+      if (-not $process.HasExited) {
+        throw
+      }
+    }
+    $process.WaitForExit()
+  }
   $stdout = $stdoutTask.GetAwaiter().GetResult()
   $stderr = $stderrTask.GetAwaiter().GetResult()
-  $exitCode = $process.ExitCode
+  $exitCode = if ($timedOut) { 124 } else { $process.ExitCode }
   $process.Dispose()
 
+  $liveSessionIds = @(
+    $stderr -split '\r?\n' |
+      Where-Object { $_.StartsWith('codex_session_id=', [StringComparison]::Ordinal) } |
+      ForEach-Object { $_.Substring('codex_session_id='.Length) } |
+      Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+  )
   foreach ($line in @($stderr -split '\r?\n')) {
     if ($line -cin @('session_started', 'running')) {
       [Console]::Error.WriteLine($line)
     }
   }
+  $liveSessionId = if ($liveSessionIds.Count -eq 1) {
+    [string]$liveSessionIds[0]
+  } else {
+    $null
+  }
+  if ($timedOut) {
+    $summary = [pscustomobject]@{
+      status = 'failed'
+      action = $Action
+      taskId = $TaskId
+      runId = $RunId
+      sessionId = $liveSessionId
+      exitCode = 124
+    }
+    return [pscustomobject]@{ ExitCode = $exitCode; Summary = $summary; TimedOut = $true }
+  }
+
   $lines = @($stdout -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   if ($lines.Count -ne 1) {
     throw 'CLI session runner emitted an invalid summary'
   }
   $summary = $lines[0] | ConvertFrom-Json
-  [pscustomobject]@{ ExitCode = $exitCode; Summary = $summary }
+  $summarySessionId = [string]$summary.sessionId
+  if ([string]::IsNullOrWhiteSpace($summarySessionId)) {
+    $summarySessionId = $null
+  }
+  if ($liveSessionId -cne $summarySessionId) {
+    throw 'CLI session runner live session does not match its summary'
+  }
+  [pscustomobject]@{ ExitCode = $exitCode; Summary = $summary; TimedOut = $false }
 }
 
 function Get-CommitMetadata {

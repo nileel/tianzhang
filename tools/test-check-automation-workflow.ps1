@@ -141,6 +141,7 @@ $canonicalRules = @'
 - QueueMaintenance 使用 `readyCount` 分类；只有大于 0 才是 `refilled`，0 且无事实变化时记录既有 `blocked/no_runnable_candidate`，不制造提交。
 - `AutomationState=completed` 只表示责任方提交闭环；任务真实 lifecycle 通过 `taskState` 或同一提交中的任务卡/归档读取。
 - Codex 只经 `tools/invoke-codex-responsibility.ps1` 启动；固定 `RepositoryRoot` 的 current branch 和 HEAD，不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建 linked worktree 或任务分支。
+- Codex 固定调用器在责任方子进程内部使用 3000 秒上限，预留外层 300 秒完成进程树终止、live session 捕获、SaveInterruption、RecordResult 与 Release；超时且存在有效 session 与新增未提交路径时必须保存 interruption recovery。
 - runner timeout、deferred wait、workspace guard、automation-finalize-commit.ps1、Automation 元数据、RecordResult 与 Release 边界不变。
 - 外部 AI 保留 `businessCommit` 与 `handoffCommit` 的连续双提交 closeout；handoff 不重复统计。
 - 外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。
@@ -209,8 +210,8 @@ $canonicalWeeklyPrompt = @'
 严格按当前队列输出下周重点，最多三项。
 '@
 
-$canonicalInvoker = 'RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate'
-$canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding'
+$canonicalInvoker = 'RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate ResponsibilityTimeoutSeconds [int]$ResponsibilityTimeoutSeconds = 3000 $process.WaitForExit($timeoutMilliseconds) $process.Kill($true) exitCode = 124'
+$canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding codex_session_id='
 
 try {
   foreach ($entry in @{
@@ -527,6 +528,19 @@ try {
   Write-Utf8File -Path $invokerFixturePath -Content 'RepositoryRoot using-git-worktrees git worktree add CodexDispatchReady taskState readyCount no_runnable_candidate'
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing explicit UTF-8 stdin writer' -Contains 'UTF-8 stdin contract'
   Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker
+
+  Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker.Replace('$process.Kill($true)', '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing responsibility child deadline' -Contains 'responsibility child deadline contract'
+  Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker
+
+  Write-Utf8File -Path $runnerFixturePath -Content $canonicalRunner.Replace('codex_session_id=', '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing live session sentinel' -Contains 'live session contract'
+  Write-Utf8File -Path $runnerFixturePath -Content $canonicalRunner
+
+  $responsibilityCloseoutLine = '- Codex 固定调用器在责任方子进程内部使用 3000 秒上限，预留外层 300 秒完成进程树终止、live session 捕获、SaveInterruption、RecordResult 与 Release；超时且存在有效 session 与新增未提交路径时必须保存 interruption recovery。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($responsibilityCloseoutLine, '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing responsibility closeout reserve' -Contains 'responsibility closeout reserve'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
   Write-Utf8File -Path $statusPath -Content ($canonicalStatus + "`n- 生产入口已恢复为 ACTIVE。")
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Static live status claim' -Contains 'live status'

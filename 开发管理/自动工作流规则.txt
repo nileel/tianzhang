@@ -51,7 +51,8 @@
 - `QueueMaintenance` 使用 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 分类并作为候选存在性证据，无需再用 `rg` 无匹配证明不存在；只有大于 0 才记录 `refilled`，等于 0 但存在合法事实修正提交时记录 `success`，等于 0 且没有提交或工作区变化时记录既有 `blocked/no_runnable_candidate` 并使用稳定 fingerprint，不制造任务、无事实提交、recovery 或重试层。
 - 固定调用器传入的 `RepositoryRoot` 当前工作区、current branch 与 `HEAD` 是 Codex 自动化责任方唯一 Git 实施和结果核验面；单写入租约已经提供隔离，责任方不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建或切换 linked worktree、任务分支。
 - 固定调用器或外部 wrapper 的 `tools.shell_command` 不得使用 180000 毫秒硬超时；`timeout_ms` 使用 3300000 毫秒单轮上限，与 3600 秒租约对齐并保留 5 分钟边界。
-- 调用返回 `Script running with cell ID ...` 时保留同一 cell ID 并继续调用 `functions.wait`。runner 超时、yield、空输出或尚未返回只表示外层仍未取得终态，不等于责任方失败；不得记录失败、释放租约、重新启动或启动第二责任方。
+- Codex 固定调用器在责任方子进程内部使用 3000 秒上限，预留外层 300 秒完成进程树终止、live session 捕获、`SaveInterruption`、`RecordResult` 与 `Release`；超时且存在有效 session 与新增未提交路径时必须保存 interruption recovery，不从模型正文猜测终态。
+- 调用返回 `Script running with cell ID ...` 时保留同一 cell ID 并继续调用 `functions.wait`。外层 shell timeout、yield、空输出或尚未返回只表示外层仍未取得终态，不等于责任方失败；不得据此记录失败、释放租约、重新启动或启动第二责任方。固定调用器内部截止完成关闭后返回的 JSON 才是终态。
 - 进度只投影 `selected`、`session_started`、`running`、`waiting_decision`、`completed`、`failed`；调度器和 runner 不从模型正文猜测阶段，不输出 prompt、原始 JSONL、回复或 child stderr。
 
 ## 提交、外部 closeout 与失败保全

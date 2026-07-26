@@ -21,6 +21,7 @@ $testRoot = Join-Path ([IO.Path]::GetTempPath()) "tzg-invoke-responsibility-test
 $fakeBin = Join-Path $testRoot 'bin'
 $gitRoot = Join-Path $testRoot 'repo'
 $tracePath = Join-Path $testRoot 'stdin.txt'
+$childPidPath = Join-Path $testRoot 'timeout-child-pid.txt'
 $stateRoot = Join-Path $automationStateRoot "tzg-invoke-responsibility-tests\$testId"
 $bridgeRoot = Join-Path $automationStateRoot "tzg-feishu-decision-bridge\invoke-test-$testId"
 $decisionRequestPath = Join-Path $bridgeRoot 'decision-request.json'
@@ -161,7 +162,8 @@ function Invoke-Responsibility {
     [string]$DecisionId,
     [ValidateSet('A', 'B', 'C')]
     [string]$DecisionOption,
-    [string]$DecisionInput
+    [string]$DecisionInput,
+    [int]$ResponsibilityTimeoutSeconds
   )
 
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
@@ -204,6 +206,10 @@ function Invoke-Responsibility {
       $startInfo.ArgumentList.Add($argument)
     }
   }
+  if ($ResponsibilityTimeoutSeconds -gt 0) {
+    $startInfo.ArgumentList.Add('-ResponsibilityTimeoutSeconds')
+    $startInfo.ArgumentList.Add([string]$ResponsibilityTimeoutSeconds)
+  }
   $startInfo.Environment['Path'] = $fakeBin + [IO.Path]::PathSeparator + [Environment]::GetEnvironmentVariable('Path')
   $startInfo.Environment['RESPONSIBILITY_TEST_CASE'] = $Case
   $startInfo.Environment['RESPONSIBILITY_TEST_SESSION_ID'] = $sessionId
@@ -213,6 +219,7 @@ function Invoke-Responsibility {
   $startInfo.Environment['RESPONSIBILITY_TEST_STATE_ROOT'] = $stateRoot
   $startInfo.Environment['RESPONSIBILITY_TEST_LEASE_PATH'] = $leasePath
   $startInfo.Environment['RESPONSIBILITY_TEST_DECISION_PATH'] = $decisionRequestPath
+  $startInfo.Environment['RESPONSIBILITY_TEST_CHILD_PID_PATH'] = $childPidPath
 
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $startInfo
@@ -406,6 +413,11 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'orphan.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
     $global:LASTEXITCODE = 9
     exit 9
+  }
+  'timeout-with-change' {
+    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'orphan-timeout.txt') -Text 'preserve timed-out work'
+    Write-FakeUtf8 -Path $env:RESPONSIBILITY_TEST_CHILD_PID_PATH -Text ([string]$PID)
+    Start-Sleep -Seconds 10
   }
   'unverified-commit-with-change' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'manual-with-residue.txt'), 'manual commit', [Text.UTF8Encoding]::new($false))
@@ -661,6 +673,40 @@ $global:LASTEXITCODE = 0
   Assert-True -Condition ($interruptionPrompt.Contains('这是原 CLI session 的续跑，不创建新责任方。')) -Message 'Interruption recovery did not Resume the original session'
   Assert-True -Condition ($interruptionPrompt.Contains('这是中断恢复，恢复原责任方的同一 TaskId')) -Message 'Interruption recovery lost its route wording'
   Assert-LeaseReleased | Out-Null
+
+  Reset-GitFixture
+  Remove-Item -LiteralPath $childPidPath -Force -ErrorAction SilentlyContinue
+  Set-TaskProjectionFixture -TaskId 'task-timeout'
+  $timeoutRun = Acquire-TestLease -TaskId 'task-timeout'
+  $timeoutWatch = [Diagnostics.Stopwatch]::StartNew()
+  $timedOut = Invoke-Responsibility `
+    -Case 'timeout-with-change' `
+    -TaskId 'task-timeout' `
+    -RunId $timeoutRun `
+    -ResponsibilityTimeoutSeconds 1
+  $timeoutWatch.Stop()
+  Assert-True -Condition ($timedOut.ExitCode -ne 0) -Message 'Timed-out invocation unexpectedly succeeded'
+  Assert-Equal -Actual $timedOut.Json.status -Expected 'interrupted' -Message 'Timed-out invocation status mismatch'
+  Assert-Equal -Actual $timedOut.Json.sessionId -Expected $sessionId -Message 'Timed-out invocation lost live session id'
+  Assert-True -Condition ($timeoutWatch.Elapsed.TotalSeconds -lt 8) -Message 'Timed-out invocation did not honor its internal deadline'
+  Assert-True -Condition (Test-Path -LiteralPath (Join-Path $gitRoot 'orphan-timeout.txt')) -Message 'Timed-out invocation removed unfinished work'
+  Assert-True -Condition (Test-Path -LiteralPath $childPidPath) -Message 'Timed-out fixture did not record its child pid'
+  $timedOutChildPid = [int][IO.File]::ReadAllText($childPidPath)
+  Assert-True -Condition ($null -eq (Get-Process -Id $timedOutChildPid -ErrorAction SilentlyContinue)) -Message 'Timed-out responsibility child process leaked'
+  $timedOutState = Assert-LeaseReleased
+  Assert-Equal -Actual $timedOutState.state.recovery.trigger -Expected 'interruption' -Message 'Timed-out invocation did not save interruption recovery'
+  Assert-Equal -Actual $timedOutState.state.recovery.resumeId -Expected $sessionId -Message 'Timed-out recovery lost session id'
+  Assert-True -Condition ('orphan-timeout.txt' -in @($timedOutState.state.recovery.changedPaths)) -Message 'Timed-out recovery lost changed path'
+  $timedOutRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
+    StateRoot = $stateRoot
+    TaskId = 'task-timeout'
+    Owner = 'codex'
+    RepositoryRoot = $gitRoot
+    ResumeRecovery = $true
+  }
+  Assert-Equal -Actual $timedOutRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Timed-out recovery could not be reacquired'
+  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $timedOutRecoveryLease.runId } | Out-Null
+  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $timedOutRecoveryLease.runId } | Out-Null
 
   Reset-GitFixture
   Set-TaskProjectionFixture -TaskId 'task-commit-with-residue'

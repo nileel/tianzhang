@@ -334,6 +334,22 @@ Assert-Contains -Text $invoker -Context 'UTF-8 stdin contract' -Values @(
   'StandardInputEncoding',
   'Text.UTF8Encoding'
 )
+Assert-Contains -Text $invoker -Context 'responsibility child deadline contract' -Values @(
+  'ResponsibilityTimeoutSeconds',
+  '[int]$ResponsibilityTimeoutSeconds = 3000',
+  '$process.WaitForExit($timeoutMilliseconds)',
+  '$process.Kill($true)',
+  'exitCode = 124'
+)
+Assert-Contains -Text $runner -Context 'live session contract' -Values @(
+  'codex_session_id='
+)
+Assert-Contains -Text $rules -Context 'responsibility closeout reserve' -Values @(
+  '3000 秒',
+  '300 秒',
+  'SaveInterruption',
+  'interruption recovery'
+)
 $normalContract = $prompt + "`n" + $rules + "`n" + $agentsRules + "`n" + $collaborationRules + "`n" + $maintenanceRules
 foreach ($detailToken in @(
     'consume-reply.mjs',

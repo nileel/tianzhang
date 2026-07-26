@@ -85,6 +85,9 @@ try {
       $script:threadStartedCount++
       $threadIdProperty = $event.PSObject.Properties['thread_id']
       $threadId = if ($null -ne $threadIdProperty) { [string]$threadIdProperty.Value } else { $null }
+      if (-not [string]::IsNullOrWhiteSpace($threadId)) {
+        [Console]::Error.WriteLine("codex_session_id=$threadId")
+      }
       if ($script:threadStartedCount -eq 1) {
         $script:threadStartedId = $threadId
         [Console]::Error.WriteLine('session_started')
