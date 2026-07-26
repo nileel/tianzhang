@@ -96,6 +96,7 @@ namespace TianZhang.Entity
         public int maxSkillSlots;          // 神通槽位上限
 
         [Header("紫府/金丹兼容字段")]
+        public FoundationPurpleMansionStateData foundationPurpleMansionState;
         public string[] developedMansions;     // 已主修府位：命府/魂府/识府/气府/运府
         public string targetPosition = "";     // 目标源/化/界席位 ID
         public string positionOccupationState = ""; // 夺取/继承/敕封/暂寄/自辟

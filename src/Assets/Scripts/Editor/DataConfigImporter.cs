@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -49,6 +50,7 @@ namespace TianZhang.Editor
         static void ImportAll()
         {
             _lang = null; LoadLanguage();
+            ImportFoundationPurpleMansionStates();
             ImportGongFa();
             ImportSpells();
             ImportSkills();
@@ -70,6 +72,47 @@ namespace TianZhang.Editor
             "phenomenonPairs",
             "elementRelationRefs",
         };
+
+        private static readonly string[] FoundationPurpleMansionColumns =
+        {
+            "schemaId",
+            "schemaVersion",
+            "characterId",
+            "foundationInstanceId",
+            "foundationDefinitionId",
+            "sourceGongFaId",
+            "phase",
+            "continuousProgress",
+            "phaseBoundarySetId",
+            "naturalMansionCapacity",
+            "releasedNaturalCapacity",
+            "expansionGrants",
+            "expandedMansionCapacity",
+            "totalMansionCapacity",
+            "mansionStates",
+            "effectBindings",
+            "guardianAbilities",
+            "enhancementNodes",
+            "cultivationActionState",
+            "closedRetreatPlan",
+            "jindanLock",
+            "fixtureId",
+            "expect",
+            "fixtureOnlyNumericProfile",
+        };
+
+        private static readonly string[] LegacyFoundationPurpleMansionColumns =
+        {
+            "developedMansions",
+            "mansionBindings",
+            "realmStage",
+            "legacyDanJiType",
+            "foundationGrade",
+            "foundationStages",
+        };
+
+        private const string FoundationPurpleMansionSchemaId = "foundationPurpleMansionState";
+        private const int FoundationPurpleMansionSchemaVersion = 1;
 
         private static readonly EnvironmentPhenomenonChannel[] EnvironmentPhenomenonChannels =
         {
@@ -489,6 +532,1181 @@ namespace TianZhang.Editor
             destination.phenomenonChannels = source.phenomenonChannels;
             destination.phenomenonPairs = source.phenomenonPairs;
             destination.elementRelationRefs = source.elementRelationRefs;
+        }
+
+        [MenuItem("天章/导入道基紫府状态配置")]
+        public static void ImportFoundationPurpleMansionStates()
+        {
+            const string path = "Assets/DataConfig/FoundationPurpleMansionStates.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Foundation/Purple Mansion CSV was not found: {path}", path);
+
+            var states = ParseFoundationPurpleMansionStates(File.ReadAllLines(path), path, allowFixtures: false);
+            try
+            {
+                foreach (var state in states)
+                {
+                    string assetPath =
+                        $"Assets/Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_{SanitizeName(state.characterId)}.asset";
+                    var asset = AssetDatabase.LoadAssetAtPath<FoundationPurpleMansionStateData>(assetPath);
+                    bool isNew = asset == null;
+                    if (isNew)
+                    {
+                        asset = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
+                        EnsureDirectory(assetPath);
+                    }
+
+                    CopyFoundationPurpleMansionState(state, asset);
+                    if (isNew)
+                        AssetDatabase.CreateAsset(asset, assetPath);
+                    else
+                        EditorUtility.SetDirty(asset);
+                }
+            }
+            finally
+            {
+                foreach (var state in states)
+                    UnityEngine.Object.DestroyImmediate(state);
+            }
+        }
+
+        /// <summary>
+        /// Parses the complete table before the importer creates or updates any persistent asset.
+        /// Fixtures may opt into literal numeric profiles; production imports cannot.
+        /// </summary>
+        public static FoundationPurpleMansionStateData[] ParseFoundationPurpleMansionStates(
+            string[] lines,
+            string sourceName,
+            bool allowFixtures = true)
+        {
+            if (lines == null)
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, "has no rows.");
+
+            int headerLineIndex = FindHeaderIndex(lines);
+            if (headerLineIndex < 0)
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, "has no header row.");
+
+            var headers = FindHeader(lines);
+            RequireFoundationPurpleMansionColumns(headers, sourceName);
+            var states = new List<FoundationPurpleMansionStateData>();
+            var characterIds = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                for (int index = headerLineIndex + 1; index < lines.Length; index++)
+                {
+                    var line = lines[index];
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                        continue;
+
+                    var columns = ParseCSV(line);
+                    if (columns.Length != headers.Length)
+                    {
+                        throw FoundationError(
+                            "FPM_TABLE_INVALID",
+                            $"{sourceName} row {index + 1}",
+                            $"has {columns.Length} columns; expected {headers.Length}.");
+                    }
+
+                    var state = ParseFoundationPurpleMansionRow(
+                        headers,
+                        columns,
+                        $"{sourceName} row {index + 1}",
+                        allowFixtures);
+                    if (!characterIds.Add(state.characterId))
+                    {
+                        UnityEngine.Object.DestroyImmediate(state);
+                        throw FoundationError("FPM_DUPLICATE_CHARACTER_ID", sourceName, $"repeats characterId '{state.characterId}'.");
+                    }
+
+                    states.Add(state);
+                }
+
+                return states.ToArray();
+            }
+            catch
+            {
+                foreach (var state in states)
+                    UnityEngine.Object.DestroyImmediate(state);
+                throw;
+            }
+        }
+
+        private static FoundationPurpleMansionStateData ParseFoundationPurpleMansionRow(
+            string[] headers,
+            string[] columns,
+            string sourceName,
+            bool allowFixtures)
+        {
+            string fixtureId = GetFoundationColumnValue(headers, columns, "fixtureId");
+            string expectation = GetFoundationColumnValue(headers, columns, "expect");
+            string fixtureNumericProfile = GetFoundationColumnValue(headers, columns, "fixtureOnlyNumericProfile");
+            bool hasFixtureData = !IsNone(fixtureId) || !IsNone(expectation) || !IsNone(fixtureNumericProfile);
+            if (!allowFixtures && hasFixtureData)
+            {
+                throw FoundationError(
+                    "FPM_FIXTURE_IN_PRODUCTION",
+                    sourceName,
+                    "contains fixture-only fields.");
+            }
+
+            if (hasFixtureData)
+            {
+                RequireFoundationReference(fixtureId, sourceName, "fixtureId");
+                if (expectation != "ACCEPT" && expectation != "REJECT")
+                    throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "expect must be ACCEPT or REJECT.");
+                if (IsNone(fixtureNumericProfile))
+                    throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "fixtureOnlyNumericProfile is required for a fixture.");
+            }
+
+            string schemaId = GetRequiredFoundationColumnValue(headers, columns, "schemaId", sourceName);
+            int schemaVersion = ParseFoundationInteger(
+                GetRequiredFoundationColumnValue(headers, columns, "schemaVersion", sourceName),
+                sourceName,
+                "schemaVersion");
+            if (schemaId != FoundationPurpleMansionSchemaId || schemaVersion != FoundationPurpleMansionSchemaVersion)
+            {
+                throw FoundationError(
+                    "FPM_UNKNOWN_SCHEMA",
+                    sourceName,
+                    $"requires {FoundationPurpleMansionSchemaId} v{FoundationPurpleMansionSchemaVersion}.");
+            }
+
+            var foundation = new FoundationStateRecord
+            {
+                foundationInstanceId = GetRequiredFoundationColumnValue(headers, columns, "foundationInstanceId", sourceName),
+                foundationDefinitionId = GetRequiredFoundationColumnValue(headers, columns, "foundationDefinitionId", sourceName),
+                sourceGongFaId = GetRequiredFoundationColumnValue(headers, columns, "sourceGongFaId", sourceName),
+                phase = ParseFoundationPhase(
+                    GetRequiredFoundationColumnValue(headers, columns, "phase", sourceName),
+                    sourceName),
+                continuousProgress = ParseFoundationFloat(
+                    GetRequiredFoundationColumnValue(headers, columns, "continuousProgress", sourceName),
+                    sourceName,
+                    "continuousProgress"),
+                phaseBoundarySetId = GetRequiredFoundationColumnValue(headers, columns, "phaseBoundarySetId", sourceName),
+                naturalMansionCapacity = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "naturalMansionCapacity", sourceName),
+                    sourceName,
+                    "naturalMansionCapacity"),
+                releasedNaturalCapacity = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "releasedNaturalCapacity", sourceName),
+                    sourceName,
+                    "releasedNaturalCapacity"),
+                expansionGrants = ParseFoundationExpansionGrants(
+                    GetFoundationColumnValue(headers, columns, "expansionGrants"),
+                    sourceName),
+                expandedMansionCapacity = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "expandedMansionCapacity", sourceName),
+                    sourceName,
+                    "expandedMansionCapacity"),
+                totalMansionCapacity = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "totalMansionCapacity", sourceName),
+                    sourceName,
+                    "totalMansionCapacity"),
+            };
+
+            RequireFoundationReference(foundation.foundationInstanceId, sourceName, "foundationInstanceId");
+            RequireFoundationReference(foundation.foundationDefinitionId, sourceName, "foundationDefinitionId");
+            RequireFoundationReference(foundation.sourceGongFaId, sourceName, "sourceGongFaId");
+            RequireFoundationReference(foundation.phaseBoundarySetId, sourceName, "phaseBoundarySetId");
+            if (foundation.naturalMansionCapacity < 0 || foundation.naturalMansionCapacity > 3)
+                throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "naturalMansionCapacity must be in 0..3.");
+
+            var state = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
+            try
+            {
+                state.schemaId = schemaId;
+                state.schemaVersion = schemaVersion;
+                state.characterId = GetRequiredFoundationColumnValue(headers, columns, "characterId", sourceName);
+                RequireFoundationReference(state.characterId, sourceName, "characterId");
+                state.foundationState = foundation;
+                state.mansionStates = ParsePurpleMansionStates(
+                    GetRequiredFoundationColumnValue(headers, columns, "mansionStates", sourceName),
+                    sourceName);
+                state.effectBindings = ParseFoundationEffectBindings(
+                    GetFoundationColumnValue(headers, columns, "effectBindings"),
+                    sourceName);
+                state.guardianAbilities = ParseGuardianAbilities(
+                    GetFoundationColumnValue(headers, columns, "guardianAbilities"),
+                    sourceName);
+                state.enhancementNodes = ParseEnhancementNodes(
+                    GetFoundationColumnValue(headers, columns, "enhancementNodes"),
+                    sourceName);
+                state.cultivationActionState = ParseCultivationActionState(
+                    GetFoundationColumnValue(headers, columns, "cultivationActionState"),
+                    sourceName);
+                state.closedRetreatPlan = ParseClosedRetreatPlan(
+                    GetFoundationColumnValue(headers, columns, "closedRetreatPlan"),
+                    sourceName);
+                state.jindanLock = ParseJindanLock(
+                    GetRequiredFoundationColumnValue(headers, columns, "jindanLock", sourceName),
+                    sourceName);
+
+                ValidateFoundationPurpleMansionState(state, sourceName);
+                ValidateFixturePhaseBoundary(state, fixtureId, fixtureNumericProfile, sourceName);
+                return state;
+            }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(state);
+                throw;
+            }
+        }
+
+        private static void ValidateFoundationPurpleMansionState(
+            FoundationPurpleMansionStateData state,
+            string sourceName)
+        {
+            int releasedCapacity = Math.Min(
+                state.foundationState.naturalMansionCapacity,
+                FoundationPhaseIndex(state.foundationState.phase) - 1);
+            int expandedCapacity = state.foundationState.expansionGrants.Length;
+            int totalCapacity = releasedCapacity + expandedCapacity;
+            if (state.foundationState.releasedNaturalCapacity != releasedCapacity ||
+                state.foundationState.expandedMansionCapacity != expandedCapacity ||
+                state.foundationState.totalMansionCapacity != totalCapacity)
+            {
+                throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "derived mansion capacity does not match the supplied values.");
+            }
+
+            int committedCapacity = state.mansionStates.Count(mansion =>
+                mansion.state == PurpleMansionBuildState.Embryo || mansion.state == PurpleMansionBuildState.Complete);
+            if (committedCapacity > totalCapacity)
+                throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "mansion commitments exceed totalMansionCapacity.");
+
+            var effectsById = state.effectBindings.ToDictionary(effect => effect.effectBindingId, StringComparer.Ordinal);
+            var grantsById = state.foundationState.expansionGrants.ToDictionary(grant => grant.grantId, StringComparer.Ordinal);
+            var mansionsByInstanceId = state.mansionStates
+                .Where(mansion => mansion.state == PurpleMansionBuildState.Complete)
+                .ToDictionary(mansion => mansion.mansionInstanceId, StringComparer.Ordinal);
+            var guardiansById = state.guardianAbilities.ToDictionary(guardian => guardian.abilityInstanceId, StringComparer.Ordinal);
+            var nodesById = state.enhancementNodes.ToDictionary(node => node.nodeId, StringComparer.Ordinal);
+
+            ValidateEffectCarriers(state, effectsById, grantsById, mansionsByInstanceId, guardiansById, nodesById, sourceName);
+            ValidateExpansionGrants(state, effectsById, sourceName);
+            ValidateMansionCompletion(state, effectsById, guardiansById, sourceName);
+            ValidateGuardianAbilities(state, effectsById, mansionsByInstanceId, sourceName);
+            ValidateEnhancementNodes(state, effectsById, guardiansById, mansionsByInstanceId, sourceName);
+            ValidateCultivationActionAndRetreat(state, sourceName);
+            ValidateJindanLock(state, sourceName);
+        }
+
+        private static void ValidateEffectCarriers(
+            FoundationPurpleMansionStateData state,
+            IReadOnlyDictionary<string, FoundationEffectBinding> effectsById,
+            IReadOnlyDictionary<string, FoundationExpansionGrant> grantsById,
+            IReadOnlyDictionary<string, PurpleMansionStateRecord> mansionsByInstanceId,
+            IReadOnlyDictionary<string, GuardianAbilityRecord> guardiansById,
+            IReadOnlyDictionary<string, EnhancementNodeRecord> nodesById,
+            string sourceName)
+        {
+            var ordersByCarrier = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var effect in state.effectBindings)
+            {
+                string carrierKey = $"{effect.carrierKind}:{effect.carrierId}";
+                if (ordersByCarrier.TryGetValue(carrierKey, out int previousOrder) && effect.order <= previousOrder)
+                {
+                    throw FoundationError("FPM_INVALID_EFFECT_BINDING", sourceName, $"effect order is not increasing for '{carrierKey}'.");
+                }
+                ordersByCarrier[carrierKey] = effect.order;
+
+                bool carrierExists = effect.carrierKind switch
+                {
+                    FoundationEffectCarrierKind.Foundation => effect.carrierId == state.foundationState.foundationInstanceId,
+                    FoundationEffectCarrierKind.MansionBody => mansionsByInstanceId.ContainsKey(effect.carrierId),
+                    FoundationEffectCarrierKind.GuardianAbility => guardiansById.ContainsKey(effect.carrierId),
+                    FoundationEffectCarrierKind.EnhancementNode => nodesById.ContainsKey(effect.carrierId),
+                    FoundationEffectCarrierKind.ExpansionGrant => grantsById.ContainsKey(effect.carrierId),
+                    FoundationEffectCarrierKind.CultivationAction => state.cultivationActionState != null &&
+                                                                  effect.carrierId == state.cultivationActionState.actionStateId,
+                    _ => false,
+                };
+                if (!carrierExists)
+                {
+                    throw FoundationError(
+                        "FPM_UNKNOWN_REFERENCE",
+                        sourceName,
+                        $"effect binding '{effect.effectBindingId}' has an unknown carrier '{carrierKey}'.");
+                }
+
+                foreach (var condition in effect.conditions)
+                {
+                    if (!condition.StartsWith("completeMansion:", StringComparison.Ordinal))
+                        continue;
+
+                    var requiredKind = ParsePurpleMansionKind(
+                        condition.Substring("completeMansion:".Length),
+                        sourceName);
+                    if (!state.mansionStates.Any(mansion =>
+                        mansion.mansionKind == requiredKind && mansion.state == PurpleMansionBuildState.Complete))
+                    {
+                        throw FoundationError(
+                            "FPM_UNKNOWN_REFERENCE",
+                            sourceName,
+                            $"effect binding '{effect.effectBindingId}' requires a missing complete mansion.");
+                    }
+                }
+            }
+        }
+
+        private static void ValidateExpansionGrants(
+            FoundationPurpleMansionStateData state,
+            IReadOnlyDictionary<string, FoundationEffectBinding> effectsById,
+            string sourceName)
+        {
+            foreach (var grant in state.foundationState.expansionGrants)
+            {
+                if (!effectsById.TryGetValue(grant.capacityEffectBindingId, out var effect) ||
+                    effect.carrierKind != FoundationEffectCarrierKind.ExpansionGrant ||
+                    effect.carrierId != grant.grantId ||
+                    effect.atomicEffectType != "MANSION_CAPACITY_PLUS_ONE")
+                {
+                    throw FoundationError(
+                        "FPM_INVALID_EXPANSION_GRANT",
+                        sourceName,
+                        $"expansion grant '{grant.grantId}' lacks its permanent capacity +1 binding.");
+                }
+            }
+        }
+
+        private static void ValidateMansionCompletion(
+            FoundationPurpleMansionStateData state,
+            IReadOnlyDictionary<string, FoundationEffectBinding> effectsById,
+            IReadOnlyDictionary<string, GuardianAbilityRecord> guardiansById,
+            string sourceName)
+        {
+            var completeGuardianIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var mansion in state.mansionStates)
+            {
+                if (mansion.state == PurpleMansionBuildState.NotBuilt)
+                    continue;
+
+                if (mansion.state == PurpleMansionBuildState.Embryo)
+                {
+                    if (!IsNone(mansion.mansionInstanceId) ||
+                        !IsNone(mansion.mansionBodyEffectBindingId) ||
+                        !IsNone(mansion.guardianAbilityInstanceId))
+                    {
+                        throw FoundationError("FPM_INVALID_EMBRYO", sourceName, "an embryo may not carry a mansion body or guardian ability.");
+                    }
+                    continue;
+                }
+
+                string requiredBindingId = RequiredMansionBodyBindingId(mansion.mansionKind);
+                if (mansion.mansionBodyEffectBindingId != requiredBindingId ||
+                    !effectsById.TryGetValue(mansion.mansionBodyEffectBindingId, out var bodyEffect) ||
+                    bodyEffect.carrierKind != FoundationEffectCarrierKind.MansionBody ||
+                    bodyEffect.carrierId != mansion.mansionInstanceId ||
+                    !guardiansById.TryGetValue(mansion.guardianAbilityInstanceId, out var guardian) ||
+                    !completeGuardianIds.Add(mansion.guardianAbilityInstanceId))
+                {
+                    throw FoundationError(
+                        "FPM_COMPLETE_MISSING_BINDING",
+                        sourceName,
+                        $"complete {mansion.mansionKind} mansion lacks its one-to-one body binding or guardian ability.");
+                }
+
+                if (guardian.mansionInstanceId != mansion.mansionInstanceId ||
+                    guardian.sourceSpellId != mansion.sourceSpellId ||
+                    guardian.upgradePlanId != mansion.upgradePlanId ||
+                    guardian.sourceSpellDisposition != mansion.sourceSpellDisposition)
+                {
+                    throw FoundationError(
+                        "FPM_COMPLETE_MISSING_BINDING",
+                        sourceName,
+                        $"guardian ability '{guardian.abilityInstanceId}' does not match its complete mansion.");
+                }
+            }
+
+            if (completeGuardianIds.Count != state.guardianAbilities.Length)
+            {
+                throw FoundationError("FPM_COMPLETE_MISSING_BINDING", sourceName, "an unbound guardian ability was supplied.");
+            }
+        }
+
+        private static void ValidateGuardianAbilities(
+            FoundationPurpleMansionStateData state,
+            IReadOnlyDictionary<string, FoundationEffectBinding> effectsById,
+            IReadOnlyDictionary<string, PurpleMansionStateRecord> mansionsByInstanceId,
+            string sourceName)
+        {
+            foreach (var guardian in state.guardianAbilities)
+            {
+                if (!mansionsByInstanceId.ContainsKey(guardian.mansionInstanceId))
+                {
+                    throw FoundationError(
+                        "FPM_COMPLETE_MISSING_BINDING",
+                        sourceName,
+                        $"guardian ability '{guardian.abilityInstanceId}' references an unknown mansion.");
+                }
+
+                foreach (var effectId in guardian.effectBindingIds)
+                {
+                    if (!effectsById.TryGetValue(effectId, out var effect) ||
+                        effect.carrierKind != FoundationEffectCarrierKind.GuardianAbility ||
+                        effect.carrierId != guardian.abilityInstanceId)
+                    {
+                        throw FoundationError(
+                            "FPM_UNKNOWN_REFERENCE",
+                            sourceName,
+                            $"guardian ability '{guardian.abilityInstanceId}' has an invalid effect binding reference.");
+                    }
+                }
+            }
+        }
+
+        private static void ValidateEnhancementNodes(
+            FoundationPurpleMansionStateData state,
+            IReadOnlyDictionary<string, FoundationEffectBinding> effectsById,
+            IReadOnlyDictionary<string, GuardianAbilityRecord> guardiansById,
+            IReadOnlyDictionary<string, PurpleMansionStateRecord> mansionsByInstanceId,
+            string sourceName)
+        {
+            foreach (var node in state.enhancementNodes)
+            {
+                if (!guardiansById.TryGetValue(node.abilityInstanceId, out var guardian) ||
+                    !mansionsByInstanceId.TryGetValue(guardian.mansionInstanceId, out var sourceMansion))
+                {
+                    throw FoundationError("FPM_UNKNOWN_REFERENCE", sourceName, $"enhancement node '{node.nodeId}' has an unknown guardian ability.");
+                }
+
+                foreach (var effectId in node.effectBindingIds)
+                {
+                    if (!effectsById.TryGetValue(effectId, out var effect) ||
+                        effect.carrierKind != FoundationEffectCarrierKind.EnhancementNode ||
+                        effect.carrierId != node.nodeId)
+                    {
+                        throw FoundationError("FPM_UNKNOWN_REFERENCE", sourceName, $"enhancement node '{node.nodeId}' has an invalid effect binding reference.");
+                    }
+                }
+
+                if (node.nodeKind != EnhancementNodeKind.InterMansion)
+                    continue;
+
+                var requiredKinds = node.requirements
+                    .Where(requirement => requirement.StartsWith("completeMansion:", StringComparison.Ordinal))
+                    .Select(requirement => ParsePurpleMansionKind(requirement.Substring("completeMansion:".Length), sourceName))
+                    .ToArray();
+                if (requiredKinds.Length != 1 || requiredKinds[0] == sourceMansion.mansionKind)
+                {
+                    throw FoundationError("FPM_INVALID_ENHANCEMENT_NODE", sourceName, $"inter-mansion node '{node.nodeId}' lacks a different complete mansion requirement.");
+                }
+            }
+        }
+
+        private static void ValidateCultivationActionAndRetreat(FoundationPurpleMansionStateData state, string sourceName)
+        {
+            var action = state.cultivationActionState;
+            var embryos = state.mansionStates.Where(mansion => mansion.state == PurpleMansionBuildState.Embryo).ToArray();
+            if (embryos.Length > 0 && action == null)
+                throw FoundationError("FPM_INVALID_ACTION", sourceName, "an embryo requires its related action state.");
+
+            if (action != null)
+            {
+                bool targetMatches = action.actionKind switch
+                {
+                    CultivationActionKind.FoundationTrial => action.targetRef == state.foundationState.foundationDefinitionId,
+                    CultivationActionKind.FoundationNurture => action.targetRef == state.foundationState.foundationInstanceId,
+                    CultivationActionKind.MansionEmbryoNurture => embryos.Any(embryo =>
+                        embryo.embryoId == action.targetRef && embryo.relatedActionStateId == action.actionStateId),
+                    CultivationActionKind.MansionOpeningTrial => embryos.Any(embryo =>
+                        embryo.embryoId == action.targetRef && embryo.relatedActionStateId == action.actionStateId),
+                    _ => false,
+                };
+                if (!targetMatches)
+                    throw FoundationError("FPM_INVALID_ACTION", sourceName, $"action '{action.actionStateId}' has an invalid targetRef.");
+
+                foreach (var embryo in embryos)
+                {
+                    if (embryo.relatedActionStateId != action.actionStateId)
+                        throw FoundationError("FPM_INVALID_ACTION", sourceName, $"embryo '{embryo.embryoId}' is not bound to the current action.");
+                }
+            }
+
+            if (state.closedRetreatPlan == null)
+                return;
+
+            if (action == null ||
+                state.closedRetreatPlan.actionStateId != action.actionStateId ||
+                state.closedRetreatPlan.targetRef != action.targetRef ||
+                action.status == CultivationActionStatus.Completed ||
+                action.status == CultivationActionStatus.Failed ||
+                action.status == CultivationActionStatus.Terminated)
+            {
+                throw FoundationError("FPM_INVALID_CLOSED_RETREAT", sourceName, "closed retreat must reference the current recoverable action and target.");
+            }
+        }
+
+        private static void ValidateJindanLock(FoundationPurpleMansionStateData state, string sourceName)
+        {
+            if (state.jindanLock.status == JindanLockStatus.PreJindan)
+            {
+                if (state.jindanLock.formationSnapshot != null)
+                    throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "PRE_JINDAN may not carry a formation snapshot.");
+                return;
+            }
+
+            var snapshot = state.jindanLock.formationSnapshot;
+            bool validFormedState = state.foundationState.phase == FoundationPhase.Phase4 &&
+                                    state.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete) &&
+                                    state.mansionStates.All(mansion => mansion.state != PurpleMansionBuildState.Embryo);
+            if (!validFormedState || snapshot == null ||
+                snapshot.foundationInstanceId != state.foundationState.foundationInstanceId ||
+                snapshot.phase != state.foundationState.phase ||
+                snapshot.naturalMansionCapacity != state.foundationState.naturalMansionCapacity)
+            {
+                throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "FORMED state does not match its irreversible snapshot.");
+            }
+
+            var currentGrantIds = state.foundationState.expansionGrants.Select(grant => grant.grantId).OrderBy(id => id, StringComparer.Ordinal).ToArray();
+            var snapshotGrantIds = snapshot.expansionGrantIds.OrderBy(id => id, StringComparer.Ordinal).ToArray();
+            if (!currentGrantIds.SequenceEqual(snapshotGrantIds, StringComparer.Ordinal) || snapshot.mansionStates.Length != 5)
+                throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "FORMED state changed grants or mansion count after formation.");
+
+            foreach (var mansion in state.mansionStates)
+            {
+                var recorded = snapshot.mansionStates.SingleOrDefault(value => value.mansionKind == mansion.mansionKind);
+                if (recorded == null ||
+                    recorded.state != mansion.state ||
+                    recorded.mansionBodyEffectBindingId != mansion.mansionBodyEffectBindingId ||
+                    recorded.guardianAbilityInstanceId != mansion.guardianAbilityInstanceId)
+                {
+                    throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "FORMED state changed a mansion, body binding, or guardian ability after formation.");
+                }
+            }
+        }
+
+        private static void ValidateFixturePhaseBoundary(
+            FoundationPurpleMansionStateData state,
+            string fixtureId,
+            string fixtureNumericProfile,
+            string sourceName)
+        {
+            if (IsNone(fixtureId))
+            {
+                if (!IsNone(fixtureNumericProfile))
+                    throw FoundationError("FPM_FIXTURE_IN_PRODUCTION", sourceName, "fixtureOnlyNumericProfile requires fixtureId.");
+                throw FoundationError("FPM_EXTERNAL_REFERENCE_UNRESOLVED", sourceName, "phaseBoundarySetId requires an external numeric profile.");
+            }
+
+            var parts = fixtureNumericProfile.Split(new[] { '~' }, StringSplitOptions.None);
+            if (parts.Length != 4 || parts[0] != state.foundationState.phaseBoundarySetId)
+                throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "fixture numeric profile does not match phaseBoundarySetId.");
+
+            float phase1Maximum = ParseFoundationFloat(parts[1], sourceName, "fixture phase 1 maximum");
+            float phase2Maximum = ParseFoundationFloat(parts[2], sourceName, "fixture phase 2 maximum");
+            float phase3Maximum = ParseFoundationFloat(parts[3], sourceName, "fixture phase 3 maximum");
+            if (phase1Maximum >= phase2Maximum || phase2Maximum >= phase3Maximum)
+                throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "fixture phase boundaries must be strictly increasing.");
+
+            FoundationPhase resolvedPhase = state.foundationState.continuousProgress <= phase1Maximum
+                ? FoundationPhase.Phase1
+                : state.foundationState.continuousProgress <= phase2Maximum
+                    ? FoundationPhase.Phase2
+                    : state.foundationState.continuousProgress <= phase3Maximum
+                        ? FoundationPhase.Phase3
+                        : FoundationPhase.Phase4;
+            if (state.foundationState.phase != resolvedPhase)
+                throw FoundationError("FPM_UNKNOWN_PHASE", sourceName, "phase disagrees with fixture phase boundaries.");
+        }
+
+        private static FoundationExpansionGrant[] ParseFoundationExpansionGrants(string raw, string sourceName)
+        {
+            var grants = new List<FoundationExpansionGrant>();
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in SplitFoundationList(raw, '|', sourceName, "expansionGrants"))
+            {
+                var parts = entry.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 3)
+                    throw FoundationError("FPM_INVALID_EXPANSION_GRANT", sourceName, $"has invalid expansion grant '{entry}'.");
+                foreach (var part in parts)
+                    RequireFoundationReference(part, sourceName, "expansionGrants");
+                if (!ids.Add(parts[0]))
+                    throw FoundationError("FPM_INVALID_EXPANSION_GRANT", sourceName, $"repeats expansion grant '{parts[0]}'.");
+                grants.Add(new FoundationExpansionGrant
+                {
+                    grantId = parts[0],
+                    sourceItemId = parts[1],
+                    capacityEffectBindingId = parts[2],
+                });
+            }
+
+            if (grants.Count > 2)
+                throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "allows at most two expansion grants.");
+            return grants.ToArray();
+        }
+
+        private static PurpleMansionStateRecord[] ParsePurpleMansionStates(string raw, string sourceName)
+        {
+            var states = new List<PurpleMansionStateRecord>();
+            var kinds = new HashSet<PurpleMansionKind>();
+            foreach (var entry in SplitFoundationList(raw, '|', sourceName, "mansionStates", allowNone: false))
+            {
+                var parts = entry.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length < 2)
+                    throw FoundationError("FPM_INVALID_MANSION_STATE", sourceName, $"has invalid mansion state '{entry}'.");
+
+                var kind = ParsePurpleMansionKind(parts[0], sourceName);
+                if (!kinds.Add(kind))
+                    throw FoundationError("FPM_DUPLICATE_MANSION_KIND", sourceName, $"repeats mansion kind '{parts[0]}'.");
+                var buildState = ParsePurpleMansionBuildState(parts[1], sourceName);
+                var mansion = new PurpleMansionStateRecord
+                {
+                    mansionKind = kind,
+                    state = buildState,
+                };
+
+                switch (buildState)
+                {
+                    case PurpleMansionBuildState.NotBuilt:
+                        if (parts.Length != 2)
+                            throw FoundationError("FPM_INVALID_MANSION_STATE", sourceName, $"NOT_BUILT mansion '{parts[0]}' has a payload.");
+                        break;
+                    case PurpleMansionBuildState.Embryo:
+                        if (parts.Length != 8)
+                            throw FoundationError("FPM_INVALID_EMBRYO", sourceName, $"EMBRYO mansion '{parts[0]}' has an invalid payload.");
+                        mansion.embryoId = parts[2];
+                        mansion.sourceSpellId = parts[3];
+                        mansion.upgradePlanId = parts[4];
+                        mansion.continuousProgress = ParseFoundationFloat(parts[5], sourceName, "embryo continuousProgress");
+                        mansion.progressChannelId = parts[6];
+                        mansion.relatedActionStateId = parts[7];
+                        RequireFoundationReference(mansion.embryoId, sourceName, "embryoId");
+                        RequireFoundationReference(mansion.sourceSpellId, sourceName, "sourceSpellId");
+                        RequireFoundationReference(mansion.upgradePlanId, sourceName, "upgradePlanId");
+                        RequireFoundationReference(mansion.progressChannelId, sourceName, "progressChannelId");
+                        RequireFoundationReference(mansion.relatedActionStateId, sourceName, "relatedActionStateId");
+                        break;
+                    case PurpleMansionBuildState.Complete:
+                        if (parts.Length != 8)
+                            throw FoundationError("FPM_COMPLETE_MISSING_BINDING", sourceName, $"COMPLETE mansion '{parts[0]}' has an invalid payload.");
+                        mansion.mansionInstanceId = parts[2];
+                        mansion.mansionBodyEffectBindingId = parts[3];
+                        mansion.guardianAbilityInstanceId = parts[4];
+                        mansion.sourceSpellId = parts[5];
+                        mansion.upgradePlanId = parts[6];
+                        mansion.sourceSpellDisposition = ParseSourceSpellDisposition(parts[7], sourceName);
+                        RequireFoundationReference(mansion.mansionInstanceId, sourceName, "mansionInstanceId");
+                        RequireFoundationReference(mansion.mansionBodyEffectBindingId, sourceName, "mansionBodyEffectBindingId");
+                        RequireFoundationReference(mansion.guardianAbilityInstanceId, sourceName, "guardianAbilityInstanceId");
+                        RequireFoundationReference(mansion.sourceSpellId, sourceName, "sourceSpellId");
+                        RequireFoundationReference(mansion.upgradePlanId, sourceName, "upgradePlanId");
+                        break;
+                }
+                states.Add(mansion);
+            }
+
+            if (states.Count != 5 || kinds.Count != 5)
+                throw FoundationError("FPM_DUPLICATE_MANSION_KIND", sourceName, "must declare each of the five mansion kinds exactly once.");
+            return states.ToArray();
+        }
+
+        private static FoundationEffectBinding[] ParseFoundationEffectBindings(string raw, string sourceName)
+        {
+            if (ContainsRecursiveEffectSyntax(raw))
+                throw FoundationError("FPM_RECURSIVE_EFFECT_BINDING", sourceName, "contains a recursive or packaged effect field.");
+
+            var bindings = new List<FoundationEffectBinding>();
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in SplitFoundationList(raw, '|', sourceName, "effectBindings"))
+            {
+                var parts = entry.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 9)
+                    throw FoundationError("FPM_INVALID_EFFECT_BINDING", sourceName, $"has invalid effect binding '{entry}'.");
+                foreach (var index in new[] { 0, 2, 4, 6, 7 })
+                    RequireFoundationReference(parts[index], sourceName, "effectBindings");
+                if (!ids.Add(parts[0]) || parts[0] == parts[2])
+                    throw FoundationError("FPM_RECURSIVE_EFFECT_BINDING", sourceName, $"has a duplicate or self-referencing binding '{parts[0]}'.");
+
+                bindings.Add(new FoundationEffectBinding
+                {
+                    effectBindingId = parts[0],
+                    carrierKind = ParseFoundationEffectCarrierKind(parts[1], sourceName),
+                    carrierId = parts[2],
+                    order = ParsePositiveFoundationInteger(parts[3], sourceName, "effect order"),
+                    trigger = parts[4],
+                    conditions = ParseFoundationConditions(parts[5], sourceName),
+                    target = parts[6],
+                    atomicEffectType = parts[7],
+                    parameters = ParseFoundationParameters(parts[8], sourceName),
+                });
+            }
+            return bindings.ToArray();
+        }
+
+        private static GuardianAbilityRecord[] ParseGuardianAbilities(string raw, string sourceName)
+        {
+            var abilities = new List<GuardianAbilityRecord>();
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in SplitFoundationList(raw, '|', sourceName, "guardianAbilities"))
+            {
+                var parts = entry.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 8)
+                    throw FoundationError("FPM_COMPLETE_MISSING_BINDING", sourceName, $"has invalid guardian ability '{entry}'.");
+                foreach (var index in new[] { 0, 1, 2, 3, 4 })
+                    RequireFoundationReference(parts[index], sourceName, "guardianAbilities");
+                if (!ids.Add(parts[0]))
+                    throw FoundationError("FPM_COMPLETE_MISSING_BINDING", sourceName, $"repeats guardian ability '{parts[0]}'.");
+                abilities.Add(new GuardianAbilityRecord
+                {
+                    abilityInstanceId = parts[0],
+                    abilityDefinitionId = parts[1],
+                    mansionInstanceId = parts[2],
+                    sourceSpellId = parts[3],
+                    upgradePlanId = parts[4],
+                    sourceSpellDisposition = ParseSourceSpellDisposition(parts[5], sourceName),
+                    form = ParseGuardianAbilityForm(parts[6], sourceName),
+                    effectBindingIds = ParseFoundationReferenceList(parts[7], '+', sourceName, "guardian ability effectBindingIds"),
+                });
+            }
+            return abilities.ToArray();
+        }
+
+        private static EnhancementNodeRecord[] ParseEnhancementNodes(string raw, string sourceName)
+        {
+            var nodes = new List<EnhancementNodeRecord>();
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in SplitFoundationList(raw, '|', sourceName, "enhancementNodes"))
+            {
+                var parts = entry.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 5)
+                    throw FoundationError("FPM_INVALID_ENHANCEMENT_NODE", sourceName, $"has invalid enhancement node '{entry}'.");
+                RequireFoundationReference(parts[0], sourceName, "nodeId");
+                RequireFoundationReference(parts[1], sourceName, "abilityInstanceId");
+                if (!ids.Add(parts[0]))
+                    throw FoundationError("FPM_INVALID_ENHANCEMENT_NODE", sourceName, $"repeats node '{parts[0]}'.");
+                var requirements = ParseFoundationConditions(parts[3], sourceName);
+                if (requirements.Length == 0)
+                    throw FoundationError("FPM_INVALID_ENHANCEMENT_NODE", sourceName, $"node '{parts[0]}' needs explicit requirements.");
+                nodes.Add(new EnhancementNodeRecord
+                {
+                    nodeId = parts[0],
+                    abilityInstanceId = parts[1],
+                    nodeKind = ParseEnhancementNodeKind(parts[2], sourceName),
+                    requirements = requirements,
+                    effectBindingIds = ParseFoundationReferenceList(parts[4], '+', sourceName, "enhancement node effectBindingIds"),
+                });
+            }
+            return nodes.ToArray();
+        }
+
+        private static CultivationActionStateRecord ParseCultivationActionState(string raw, string sourceName)
+        {
+            if (IsNone(raw))
+                return null;
+            var parts = raw.Split(new[] { '~' }, StringSplitOptions.None);
+            if (parts.Length != 9)
+                throw FoundationError("FPM_INVALID_ACTION", sourceName, "has an invalid cultivationActionState payload.");
+            foreach (var index in new[] { 0, 3, 4, 5, 7 })
+                RequireFoundationReference(parts[index], sourceName, "cultivationActionState");
+            var numericProfileRefs = ParseFoundationReferenceList(parts[8], '+', sourceName, "numericProfileRefs");
+            if (numericProfileRefs.Length == 0)
+                throw FoundationError("FPM_INVALID_ACTION", sourceName, "cultivationActionState needs numericProfileRefs.");
+            return new CultivationActionStateRecord
+            {
+                actionStateId = parts[0],
+                actionKind = ParseCultivationActionKind(parts[1], sourceName),
+                status = ParseCultivationActionStatus(parts[2], sourceName),
+                targetRef = parts[3],
+                fixedCycleDefinitionId = parts[4],
+                lastStableBoundaryId = parts[5],
+                committedCycleIds = ParseFoundationReferenceList(parts[6], '+', sourceName, "committedCycleIds"),
+                progressChannelId = parts[7],
+                numericProfileRefs = numericProfileRefs,
+            };
+        }
+
+        private static ClosedRetreatPlanRecord ParseClosedRetreatPlan(string raw, string sourceName)
+        {
+            if (IsNone(raw))
+                return null;
+            var parts = raw.Split(new[] { '~' }, StringSplitOptions.None);
+            if (parts.Length != 3)
+                throw FoundationError("FPM_INVALID_CLOSED_RETREAT", sourceName, "has an invalid closedRetreatPlan payload.");
+            RequireFoundationReference(parts[0], sourceName, "closedRetreatPlan.actionStateId");
+            RequireFoundationReference(parts[1], sourceName, "closedRetreatPlan.targetRef");
+            var stopConditions = ParseFoundationStopConditions(parts[2], sourceName);
+            if (stopConditions.Length == 0)
+                throw FoundationError("FPM_INVALID_CLOSED_RETREAT", sourceName, "needs explicit stop conditions.");
+            return new ClosedRetreatPlanRecord
+            {
+                actionStateId = parts[0],
+                targetRef = parts[1],
+                stopConditions = stopConditions,
+            };
+        }
+
+        private static JindanLockRecord ParseJindanLock(string raw, string sourceName)
+        {
+            if (raw == "PRE_JINDAN")
+            {
+                return new JindanLockRecord
+                {
+                    status = JindanLockStatus.PreJindan,
+                    formationSnapshot = null,
+                };
+            }
+
+            var parts = raw.Split(new[] { '~' }, StringSplitOptions.None);
+            if (parts.Length != 6 || parts[0] != "FORMED")
+                throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "has an invalid jindanLock payload.");
+            RequireFoundationReference(parts[1], sourceName, "formationSnapshot.foundationInstanceId");
+            var snapshots = new List<PurpleMansionSnapshot>();
+            var kinds = new HashSet<PurpleMansionKind>();
+            foreach (var entry in SplitFoundationList(parts[5], '+', sourceName, "formationSnapshot.mansionStates", allowNone: false))
+            {
+                var mansionParts = entry.Split(new[] { ':' }, StringSplitOptions.None);
+                if (mansionParts.Length < 2 || mansionParts.Length > 4)
+                    throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "has an invalid formation mansion snapshot.");
+                var mansionKind = ParsePurpleMansionKind(mansionParts[0], sourceName);
+                if (!kinds.Add(mansionKind))
+                    throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "repeats a formation mansion snapshot.");
+                var mansionState = ParsePurpleMansionBuildState(mansionParts[1], sourceName);
+                if (mansionState == PurpleMansionBuildState.Complete && mansionParts.Length != 4 ||
+                    mansionState != PurpleMansionBuildState.Complete && mansionParts.Length != 2)
+                {
+                    throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "has an incomplete formation mansion snapshot.");
+                }
+                if (mansionState == PurpleMansionBuildState.Complete)
+                {
+                    RequireFoundationReference(mansionParts[2], sourceName, "formationSnapshot.mansionBodyEffectBindingId");
+                    RequireFoundationReference(mansionParts[3], sourceName, "formationSnapshot.guardianAbilityInstanceId");
+                }
+                snapshots.Add(new PurpleMansionSnapshot
+                {
+                    mansionKind = mansionKind,
+                    state = mansionState,
+                    mansionBodyEffectBindingId = mansionState == PurpleMansionBuildState.Complete ? mansionParts[2] : "",
+                    guardianAbilityInstanceId = mansionState == PurpleMansionBuildState.Complete ? mansionParts[3] : "",
+                });
+            }
+
+            return new JindanLockRecord
+            {
+                status = JindanLockStatus.Formed,
+                formationSnapshot = new JindanFormationSnapshot
+                {
+                    foundationInstanceId = parts[1],
+                    phase = ParseFoundationPhase(parts[2], sourceName),
+                    naturalMansionCapacity = ParseFoundationInteger(parts[3], sourceName, "formationSnapshot.naturalMansionCapacity"),
+                    expansionGrantIds = ParseFoundationReferenceList(parts[4], '+', sourceName, "formationSnapshot.expansionGrantIds"),
+                    mansionStates = snapshots.ToArray(),
+                },
+            };
+        }
+
+        private static string[] ParseFoundationConditions(string raw, string sourceName)
+        {
+            var conditions = SplitFoundationList(raw, '+', sourceName, "conditions");
+            foreach (var condition in conditions)
+            {
+                if (!condition.StartsWith("completeMansion:", StringComparison.Ordinal))
+                {
+                    RequireFoundationReference(condition, sourceName, "conditions");
+                    continue;
+                }
+                ParsePurpleMansionKind(condition.Substring("completeMansion:".Length), sourceName);
+            }
+            return conditions;
+        }
+
+        private static string[] ParseFoundationParameters(string raw, string sourceName)
+        {
+            var parameters = SplitFoundationList(raw, '+', sourceName, "parameters");
+            foreach (var parameter in parameters)
+            {
+                var parts = parameter.Split(new[] { ':' }, StringSplitOptions.None);
+                if (parts.Length != 2)
+                    throw FoundationError("FPM_INVALID_EFFECT_BINDING", sourceName, $"has invalid parameter '{parameter}'.");
+                RequireFoundationReference(parts[0], sourceName, "parameter key");
+                RequireFoundationReference(parts[1], sourceName, "parameter value");
+            }
+            return parameters;
+        }
+
+        private static string[] ParseFoundationReferenceList(string raw, char separator, string sourceName, string fieldName)
+        {
+            var references = SplitFoundationList(raw, separator, sourceName, fieldName);
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var reference in references)
+            {
+                RequireFoundationReference(reference, sourceName, fieldName);
+                if (!ids.Add(reference))
+                    throw FoundationError("FPM_UNKNOWN_REFERENCE", sourceName, $"repeats reference '{reference}' in '{fieldName}'.");
+            }
+            return references;
+        }
+
+        private static string[] ParseFoundationStopConditions(string raw, string sourceName)
+        {
+            var conditions = SplitFoundationList(raw, '+', sourceName, "stopConditions");
+            var allowed = new HashSet<string>(StringComparer.Ordinal)
+            {
+                "WAITING_RESPONSE",
+                "INSUFFICIENT_NEXT_CYCLE_RESOURCES",
+                "TARGET_COMPLETED",
+                "ACTION_FAILED",
+                "INJURY_UNRESOLVED",
+                "ACTION_INVALIDATED",
+                "PLAYER_GUARD",
+                "CHAPTER_OR_UNLOCK_BOUNDARY",
+                "MANUAL_PAUSE",
+            };
+            foreach (var condition in conditions)
+            {
+                if (!allowed.Contains(condition))
+                    throw FoundationError("FPM_INVALID_CLOSED_RETREAT", sourceName, $"has unknown stop condition '{condition}'.");
+            }
+            return conditions;
+        }
+
+        private static string[] SplitFoundationList(
+            string raw,
+            char separator,
+            string sourceName,
+            string fieldName,
+            bool allowNone = true)
+        {
+            if (IsNone(raw))
+            {
+                if (allowNone)
+                    return Array.Empty<string>();
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, $"'{fieldName}' cannot be none.");
+            }
+
+            var values = raw.Split(new[] { separator }, StringSplitOptions.None)
+                .Select(value => value.Trim())
+                .ToArray();
+            if (values.Any(string.IsNullOrEmpty))
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, $"'{fieldName}' contains an empty entry.");
+            return values;
+        }
+
+        private static void RequireFoundationPurpleMansionColumns(string[] headers, string sourceName)
+        {
+            if (headers.Any(header => LegacyFoundationPurpleMansionColumns.Contains(header?.Trim(), StringComparer.OrdinalIgnoreCase)))
+            {
+                throw FoundationError("FPM_LEGACY_SCHEMA_MIXED", sourceName, "contains an old foundation or mansion schema column.");
+            }
+            RequireExactColumns(headers, sourceName, FoundationPurpleMansionColumns);
+        }
+
+        private static string GetRequiredFoundationColumnValue(string[] headers, string[] columns, string name, string sourceName)
+        {
+            string value = GetFoundationColumnValue(headers, columns, name);
+            if (IsNone(value))
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, $"has an empty required column '{name}'.");
+            return value;
+        }
+
+        private static string GetFoundationColumnValue(string[] headers, string[] columns, string name)
+        {
+            int index = FindColumnIndex(headers, name);
+            return index >= 0 && index < columns.Length ? columns[index].Trim() : "";
+        }
+
+        private static FoundationPhase ParseFoundationPhase(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "PHASE_1" => FoundationPhase.Phase1,
+                "PHASE_2" => FoundationPhase.Phase2,
+                "PHASE_3" => FoundationPhase.Phase3,
+                "PHASE_4" => FoundationPhase.Phase4,
+                _ => throw FoundationError("FPM_UNKNOWN_PHASE", sourceName, $"has unknown phase '{raw}'."),
+            };
+        }
+
+        private static int FoundationPhaseIndex(FoundationPhase phase)
+        {
+            return phase switch
+            {
+                FoundationPhase.Phase1 => 1,
+                FoundationPhase.Phase2 => 2,
+                FoundationPhase.Phase3 => 3,
+                FoundationPhase.Phase4 => 4,
+                _ => throw new ArgumentOutOfRangeException(nameof(phase)),
+            };
+        }
+
+        private static PurpleMansionKind ParsePurpleMansionKind(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "MING" => PurpleMansionKind.Ming,
+                "HUN" => PurpleMansionKind.Hun,
+                "SHI" => PurpleMansionKind.Shi,
+                "WU" => PurpleMansionKind.Wu,
+                "YUN" => PurpleMansionKind.Yun,
+                _ => throw FoundationError("FPM_DUPLICATE_MANSION_KIND", sourceName, $"has unknown mansion kind '{raw}'."),
+            };
+        }
+
+        private static PurpleMansionBuildState ParsePurpleMansionBuildState(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "NOT_BUILT" => PurpleMansionBuildState.NotBuilt,
+                "EMBRYO" => PurpleMansionBuildState.Embryo,
+                "COMPLETE" => PurpleMansionBuildState.Complete,
+                _ => throw FoundationError("FPM_INVALID_MANSION_STATE", sourceName, $"has unknown mansion state '{raw}'."),
+            };
+        }
+
+        private static FoundationEffectCarrierKind ParseFoundationEffectCarrierKind(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "FOUNDATION" => FoundationEffectCarrierKind.Foundation,
+                "MANSION_BODY" => FoundationEffectCarrierKind.MansionBody,
+                "GUARDIAN_ABILITY" => FoundationEffectCarrierKind.GuardianAbility,
+                "ENHANCEMENT_NODE" => FoundationEffectCarrierKind.EnhancementNode,
+                "EXPANSION_GRANT" => FoundationEffectCarrierKind.ExpansionGrant,
+                "CULTIVATION_ACTION" => FoundationEffectCarrierKind.CultivationAction,
+                _ => throw FoundationError("FPM_INVALID_EFFECT_BINDING", sourceName, $"has unknown carrier kind '{raw}'."),
+            };
+        }
+
+        private static GuardianAbilityForm ParseGuardianAbilityForm(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "ACTIVE" => GuardianAbilityForm.Active,
+                "PASSIVE" => GuardianAbilityForm.Passive,
+                "TRIGGERED" => GuardianAbilityForm.Triggered,
+                _ => throw FoundationError("FPM_COMPLETE_MISSING_BINDING", sourceName, $"has unknown guardian form '{raw}'."),
+            };
+        }
+
+        private static EnhancementNodeKind ParseEnhancementNodeKind(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "BEHAVIOR" => EnhancementNodeKind.Behavior,
+                "CULTIVATION" => EnhancementNodeKind.Cultivation,
+                "RESOURCE" => EnhancementNodeKind.Resource,
+                "INTER_MANSION" => EnhancementNodeKind.InterMansion,
+                "SPECIAL" => EnhancementNodeKind.Special,
+                _ => throw FoundationError("FPM_INVALID_ENHANCEMENT_NODE", sourceName, $"has unknown enhancement node kind '{raw}'."),
+            };
+        }
+
+        private static CultivationActionKind ParseCultivationActionKind(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "FOUNDATION_TRIAL" => CultivationActionKind.FoundationTrial,
+                "FOUNDATION_NURTURE" => CultivationActionKind.FoundationNurture,
+                "MANSION_EMBRYO_NURTURE" => CultivationActionKind.MansionEmbryoNurture,
+                "MANSION_OPENING_TRIAL" => CultivationActionKind.MansionOpeningTrial,
+                _ => throw FoundationError("FPM_INVALID_ACTION", sourceName, $"has unknown action kind '{raw}'."),
+            };
+        }
+
+        private static CultivationActionStatus ParseCultivationActionStatus(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "READY" => CultivationActionStatus.Ready,
+                "ACTIVE" => CultivationActionStatus.Active,
+                "PAUSED" => CultivationActionStatus.Paused,
+                "COMPLETED" => CultivationActionStatus.Completed,
+                "FAILED" => CultivationActionStatus.Failed,
+                "TERMINATED" => CultivationActionStatus.Terminated,
+                _ => throw FoundationError("FPM_INVALID_ACTION", sourceName, $"has unknown action status '{raw}'."),
+            };
+        }
+
+        private static string ParseSourceSpellDisposition(string raw, string sourceName)
+        {
+            if (raw == "RETAIN" || raw == "REPLACE" || raw == "INTERNALIZE")
+                return raw;
+            throw FoundationError("FPM_COMPLETE_MISSING_BINDING", sourceName, $"has unknown source spell disposition '{raw}'.");
+        }
+
+        private static string RequiredMansionBodyBindingId(PurpleMansionKind kind)
+        {
+            return kind switch
+            {
+                PurpleMansionKind.Ming => "MANSION_BODY_MING_YUAN_HUIHU",
+                PurpleMansionKind.Hun => "MANSION_BODY_HUN_LINGTAI_DINGPO",
+                PurpleMansionKind.Shi => "MANSION_BODY_SHI_SHENGUAN_RUWEI",
+                PurpleMansionKind.Wu => "MANSION_BODY_WU_WUJI_SHANCHENG",
+                PurpleMansionKind.Yun => "MANSION_BODY_YUN_JIYUAN_SHIZHAO",
+                _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+            };
+        }
+
+        private static int ParseFoundationInteger(string raw, string sourceName, string fieldName)
+        {
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, $"has invalid integer '{raw}' in '{fieldName}'.");
+            return value;
+        }
+
+        private static int ParsePositiveFoundationInteger(string raw, string sourceName, string fieldName)
+        {
+            int value = ParseFoundationInteger(raw, sourceName, fieldName);
+            if (value < 1)
+                throw FoundationError("FPM_INVALID_EFFECT_BINDING", sourceName, $"'{fieldName}' must be positive.");
+            return value;
+        }
+
+        private static float ParseFoundationFloat(string raw, string sourceName, string fieldName)
+        {
+            if (!float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out float value) ||
+                float.IsNaN(value) ||
+                float.IsInfinity(value))
+            {
+                throw FoundationError("FPM_TABLE_INVALID", sourceName, $"has invalid continuous value '{raw}' in '{fieldName}'.");
+            }
+            return value;
+        }
+
+        private static void RequireFoundationReference(string value, string sourceName, string fieldName)
+        {
+            if (IsNone(value) || value.Any(character =>
+                !char.IsLetterOrDigit(character) && character != '_' && character != '-' && character != '.'))
+            {
+                throw FoundationError("FPM_UNKNOWN_REFERENCE", sourceName, $"has invalid reference '{value}' in '{fieldName}'.");
+            }
+        }
+
+        private static bool ContainsRecursiveEffectSyntax(string raw)
+        {
+            if (string.IsNullOrEmpty(raw))
+                return false;
+            return raw.IndexOf("effectPackageId", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   raw.IndexOf("nestedEffectBindingIds", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   raw.IndexOf("children=", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   raw.IndexOf("subEffects=", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsNone(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) || string.Equals(value.Trim(), "none", StringComparison.Ordinal);
+        }
+
+        private static InvalidDataException FoundationError(string code, string sourceName, string message)
+        {
+            return new InvalidDataException($"{code}: {sourceName} {message}");
+        }
+
+        private static void CopyFoundationPurpleMansionState(
+            FoundationPurpleMansionStateData source,
+            FoundationPurpleMansionStateData destination)
+        {
+            destination.schemaId = source.schemaId;
+            destination.schemaVersion = source.schemaVersion;
+            destination.characterId = source.characterId;
+            destination.foundationState = source.foundationState;
+            destination.mansionStates = source.mansionStates;
+            destination.effectBindings = source.effectBindings;
+            destination.guardianAbilities = source.guardianAbilities;
+            destination.enhancementNodes = source.enhancementNodes;
+            destination.cultivationActionState = source.cultivationActionState;
+            destination.closedRetreatPlan = source.closedRetreatPlan;
+            destination.jindanLock = source.jindanLock;
         }
 
         [MenuItem("天章/导入角色创建点购配置")]

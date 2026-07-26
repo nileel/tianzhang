@@ -64,7 +64,7 @@ function Get-ContentDocs {
 }
 
 function Get-CsvTable {
-  param([string]$RelativePath, [string[]]$ExpectedHeaders)
+  param([string]$RelativePath, [string[]]$ExpectedHeaders, [string[]]$OptionalHeaders = @())
   $path = Join-Path $root $RelativePath
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
     Add-Error 'MISSING_CSV' $RelativePath "Missing CSV: $RelativePath"
@@ -99,6 +99,7 @@ function Get-CsvTable {
     $row = [ordered]@{}
     for ($column = 0; $column -lt $headers.Count; $column++) { $row[$headers[$column]] = $values[$column] }
     foreach ($header in $ExpectedHeaders) {
+      if ($header -in $OptionalHeaders) { continue }
       if (-not $row.Contains($header) -or [string]::IsNullOrWhiteSpace($row[$header])) {
         Add-Finding 'REQUIRED_FIELD_EMPTY' "${RelativePath}:${rowKey}:$header" 'Required field is empty.'
       }
@@ -192,12 +193,14 @@ $schemas = [ordered]@{
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
   Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
   EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
+  FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','phase','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','releasedNaturalCapacity','expansionGrants','expandedMansionCapacity','totalMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
 }
 $tables = [ordered]@{
   GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa
   Spells = Get-CsvTable 'src/Assets/DataConfig/Spells.csv' $schemas.Spells
   Skills = Get-CsvTable 'src/Assets/DataConfig/Skills.csv' $schemas.Skills
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
+  FoundationPurpleMansionStates = Get-CsvTable 'src/Assets/DataConfig/FoundationPurpleMansionStates.csv' $schemas.FoundationPurpleMansionStates @('expansionGrants','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','fixtureId','expect','fixtureOnlyNumericProfile')
 }
 $docs = [ordered]@{ GongFa = Get-ContentDocs (Get-GongFaName); Spells = Get-ContentDocs (Get-SpellName); Skills = Get-ContentDocs (Get-SkillName) }
 foreach ($kind in $docs.Keys) {
@@ -208,6 +211,14 @@ $languageIds = Get-LanguageIds
 Test-AssetCoverage 'GongFa' $tables.GongFa.Rows 'src/Assets/Data/GongFa' 'GongFa'
 Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
 Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
+
+foreach ($row in $tables.FoundationPurpleMansionStates.Rows) {
+  foreach ($field in @('fixtureId', 'expect', 'fixtureOnlyNumericProfile')) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$row.$field)) {
+      Add-Finding 'FPM_FIXTURE_IN_PRODUCTION' "FoundationPurpleMansionStates:$($row.characterId):$field" 'Fixture-only values are not an auditable production source.'
+    }
+  }
+}
 
 foreach ($table in $tables.Values) {
   foreach ($row in $table.Rows) {

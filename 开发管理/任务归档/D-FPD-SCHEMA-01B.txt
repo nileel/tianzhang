@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "D-FPD-SCHEMA-01A 已于 2026-07-26 归档并锁定唯一静态语义；本卡只实现数据对象、导入、整表失败关闭与直接测试。",
+  "stateReason": "2026-07-26 已完成数据对象、全表预校验导入、数据链表头审计与 13 个直接 EditMode fixture；生产角色迁移仍由 D-FPD-MIGRATE-01 负责。",
   "expectedPaths": [
     "src/Assets/DataConfig/FoundationPurpleMansionStates.csv",
     "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta",
@@ -77,3 +77,9 @@
 ## 停止条件
 
 - 实现需要改写 `D-FPD-SCHEMA-01A` 静态语义、猜测默认值、保留旧字段兼容、引入递归效果包或新增平行成长服务；停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-26：新增 `FoundationPurpleMansionStates.csv`、`FoundationPurpleMansionStateData` 与严格导入入口；导入器在创建或更新 asset 前完成整表解析，稳定拒绝容量越界、府属重复、建成府缺绑定、递归效果、结丹锁变更、旧新 schema 混用和未知阶段。
+- 验证：Unity EditMode `184/184` 通过（本卡 fixture `13/13`）；`tools/check-data-chain.ps1` 与 `tools/check-review-text.ps1 -Paths 开发管理,docs,src,tools` 通过。
+- 边界：生产 CSV 仅有表头，没有创建或迁移角色状态 asset；`D-FPD-MIGRATE-01` 继续负责内容与旧字段迁移。

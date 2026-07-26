@@ -21,6 +21,7 @@
 | `Characters.csv` | 角色模板（ID化） | `Data/Characters/Char_*.asset` |
 | `Enemies.csv` | 敌人模板（ID化） | `Data/Characters/Char_Enemy_*.asset` |
 | `EnvironmentProfiles.csv` | 环境档案纯数据契约 | `Data/EnvironmentProfiles/EnvironmentProfile_*.asset` |
+| `FoundationPurpleMansionStates.csv` | 道基、紫府与修炼根状态（当前仅 schema） | `Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_*.asset` |
 
 ## CSV 格式规则
 
@@ -42,6 +43,21 @@
 - `elementRelationRefs`：以 `|` 分隔，且必须恰含 `element_wood`、`element_fire`、`element_earth`、`element_metal`、`element_water` 各一次。
 
 导入器会先验证整张表；任何缺字段、未知引用、非法通道、非相邻边、重复或顺序冲突配对都会在创建或更新 `.asset` 前失败。
+
+## FoundationPurpleMansionStates.csv 契约
+
+本表只消费 `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 的
+`foundationPurpleMansionState` 根对象；当前没有生产角色行，内容迁移由
+`D-FPD-MIGRATE-01` 单独授权。表头固定，未知列（包括旧
+`developedMansions`、`mansionBindings`、`realmStage` 与 `legacyDanJiType`）会失败关闭。
+
+- `schemaId` 固定为 `foundationPurpleMansionState`，`schemaVersion` 固定为 `1`。
+- 复合列不用 CSV 内嵌逗号：集合使用 `|`，记录字段使用 `~`，记录内列表使用 `+`；
+  空集合写 `none`。`mansionStates` 始终显式给出五府，不得省略未建府。
+- `fixtureId`、`expect` 和 `fixtureOnlyNumericProfile` 仅供 EditMode fixture 使用；生产
+  导入拒绝它们，故测试字面量不能生成生产 asset。
+- `phaseBoundarySetId`、功法／术法／神通／行动和数值档案仍是外部权威 ID；本表只保存
+  稳定引用，不从旧角色字段或运行时槽位推断任何状态。
 
 ## 添加多语言
 

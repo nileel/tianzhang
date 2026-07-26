@@ -1,0 +1,2 @@
+# 仅导入已确认的角色道基、紫府与修炼根状态；当前内容迁移由 D-FPD-MIGRATE-01 另行授权。
+schemaId,schemaVersion,characterId,foundationInstanceId,foundationDefinitionId,sourceGongFaId,phase,continuousProgress,phaseBoundarySetId,naturalMansionCapacity,releasedNaturalCapacity,expansionGrants,expandedMansionCapacity,totalMansionCapacity,mansionStates,effectBindings,guardianAbilities,enhancementNodes,cultivationActionState,closedRetreatPlan,jindanLock,fixtureId,expect,fixtureOnlyNumericProfile

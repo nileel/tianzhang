@@ -14,11 +14,9 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
-| D-FPD-SCHEMA-01 | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 道基、紫府与修炼数据父任务；静态契约已归档，两个子任务均完成后才关闭。 | — |
-| D-FPD-SCHEMA-01B | P1 | codex | 已排队 | — | 道基、紫府与修炼导入及失败关闭 | 开发管理/任务卡/D-FPD-SCHEMA-01B.txt |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A、D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约、导入失败关闭与样例均完成后才关闭。 | — |
-| D-JD-SCHEMA-01A | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 金丹道路、效果、三实位、丹枢／丹相、主辅承载与账本静态契约。 | — |
+| D-JD-SCHEMA-01A | P1 | Codex | 待建卡 | — | 金丹道路、效果、三实位、丹枢／丹相、主辅承载与账本静态契约。 | — |
 | D-JD-SCHEMA-01B | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A | 金丹数据对象、导入器、检查器、正反 fixture 与失败关闭。 | — |
 | D-JD-SAMPLE-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
@@ -32,23 +30,6 @@
 
 ## 筑基、紫府与丹相后续数据任务卡
 
-### D-FPD-SCHEMA-01 · 道基、紫府与修炼数据父任务
-
-- 子任务：`D-FPD-SCHEMA-01A` 负责静态契约与 fixture；`D-FPD-SCHEMA-01B` 负责数据对象、导入、校验和失败关闭。
-- 状态：父任务不直接进入队列；两个子任务均完成并归档后才关闭父任务并解锁 `D-JD-SCHEMA-01A`。
-- 禁止：不得用父任务替代子任务交付，不得在 `01A` 尚未锁定语义时由 `01B` 反向创作机制或默认值。
-
-### D-FPD-SCHEMA-01B · 道基、紫府与修炼导入及失败关闭
-
-- 前置已满足：`D-FPD-SCHEMA-01A` 已归档；`docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 是唯一静态语义来源。
-- 必读：`D-FPD-SCHEMA-01A` 数据契约与 fixture；现有 `src/Assets/DataConfig/`、对应数据模型、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试。
-- 预期路径：相关 CSV、ScriptableObject／纯数据对象、导入器、检查器及 EditMode 测试；建卡时必须用实时扫描展开字面量路径。
-- 交付：实现 `01A` 契约的数据对象、导入、校验和稳定错误原因；未知阶段、容量越界、同类双府、建成府缺少必需绑定、递归效果包、结丹后新增府及旧新 schema 并存均整表失败关闭。
-- 禁止：不创作机制或数值，不保留旧字段 fallback，不自动截断非法状态，不建立第二套角色成长数据模型。
-- 验证：正反 fixture、相关 .NET／EditMode、`check-data-chain.ps1`、文本检查与差异检查。
-- 完成条件：BattleSim 与 Unity 能消费同一语义数据，所有非法 fixture 以稳定错误原因失败；随后关闭父任务 `D-FPD-SCHEMA-01`。
-- 停止条件：实现需要改写 `01A` 语义、猜测默认值、静默兼容旧字段或新增平行数据所有者。
-
 ### D-JD-SCHEMA-01 · 金丹数据父任务
 
 - 子任务：`D-JD-SCHEMA-01A` 锁定静态契约；`D-JD-SCHEMA-01B` 实现导入与失败关闭；`D-JD-SAMPLE-01` 建立可消费样例。
@@ -57,7 +38,7 @@
 
 ### D-JD-SCHEMA-01A · 金丹静态数据契约
 
-- 依赖：`D-FPD-SCHEMA-01B` 完成并关闭父任务 `D-FPD-SCHEMA-01`。
+- 依赖：`D-FPD-SCHEMA-01` 已完成；进入队列前仍须建立并核验 `D-JD-SCHEMA-01A` 的独立任务卡。
 - 必读：`docs/superpowers/specs/2026-07-19-jindan-position-proof-and-contestation-design.md`、`docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`、`docs/基础设定/金丹基础效果装配与冲突规则.txt` 与现有金丹数据字段。
 - 预期路径：新建 `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md`；建卡时展开直接相关数据模型和 fixture 路径。
 - 交付：定义道路、基础效果、三实位、唯一丹枢、唯一丹相、全部紫府输入、主辅承载、`abilityInstanceId`、资源／冷却账本、冲突引用及表现／本地化稳定键。
