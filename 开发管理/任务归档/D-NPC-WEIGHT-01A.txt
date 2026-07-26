@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-26：DEC-20260726-NPCWEIGHT 选择 A，批准先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重。",
+  "stateReason": "2026-07-27 已完成独立 NPC 修炼行动权重 CSV／asset 单一权威契约、合法性前置过滤、七类修正、重算／封顶／递减／并列策略、稳定失败原因与正反 fixture；未实现 CSV、asset、导入器、BattleSim、Unity 或生产数值。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -62,3 +62,7 @@
 ## 停止条件
 
 - 无法以单一数据链表达既有行动与修正，或契约必须把 NPC 权重塞回道基／紫府状态、增加未知事实、每日全世界扫描、默认权重或双权威来源。
+
+## 完成记录
+
+- 2026-07-27：已锁定独立 `npcCultivationActionWeightProfile` 源集与 Unity／BattleSim 同版本只读投影边界；定义五项现有行动稳定 ID、合法性先过滤、基础权重、六类修正、寿元风险阈值边界、事件驱动重算、封顶／递减、确定性并列裁定、失败原因和正反 fixture。未实现 CSV、asset、导入器、BattleSim、Unity 或生产数值。
