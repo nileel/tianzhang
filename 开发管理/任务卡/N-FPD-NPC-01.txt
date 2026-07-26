@@ -10,7 +10,7 @@
   "stage": "design",
   "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-07-27：D-NPC-WEIGHT-01A 已完成独立数据契约；契约明确生产权重、阈值、封顶／递减与校准目标须另行批准。等待 DEC-20260727-NPCWEIGHT-PROD，批准前不得建立 CSV、asset、导入器、BattleSim 或 Unity 实现。",
+  "stateReason": "2026-07-27：D-NPC-WEIGHT-01A 已完成独立数据契约；契约明确生产权重、阈值、封顶／递减与校准目标须另行批准。等待 DEC-20260727-NPCWEIGHT，批准前不得建立 CSV、asset、导入器、BattleSim 或 Unity 实现。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/基础设定/修行境界.txt",
