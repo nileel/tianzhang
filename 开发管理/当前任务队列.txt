@@ -5,3 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| D-JD-SCHEMA-01A | codex_execute | codex | P1 | data | design | 金丹静态数据契约 | 开发管理/任务卡/D-JD-SCHEMA-01A.txt |
+| U-FPD-RULE-01 | codex_execute | codex | P1 | unity | implementation | 道基与紫府运行时 | 开发管理/任务卡/U-FPD-RULE-01.txt |

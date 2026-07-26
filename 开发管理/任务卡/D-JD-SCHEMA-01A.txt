@@ -1,0 +1,62 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-JD-SCHEMA-01A",
+  "title": "金丹静态数据契约",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-26：D-FPD-SCHEMA-01A/01B 已归档完成，已具备金丹静态契约的道基／紫府输入与失败关闭基线。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-SCHEMA-01A.txt",
+    "开发管理/任务归档/D-JD-SCHEMA-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-JD-SCHEMA-01A · 金丹静态数据契约
+
+## 来源与当前边界
+
+- `D-FPD-SCHEMA-01A/01B` 已归档：道基／紫府状态已有唯一根对象、整表失败关闭与正反 fixture；本卡只锁定金丹静态契约，不迁移生产角色或内容实例。
+- 仅定义道路、基础效果、三实位、唯一丹枢／丹相、全部紫府输入、主辅承载、唯一实例账本、冲突引用及表现／本地化稳定键；正式显示名继续只通过稳定键引用。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-19-jindan-position-proof-and-contestation-design.md`。
+- `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt`、`docs/基础设定/金丹基础效果装配与冲突规则.txt`。
+- `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 的紫府输入、丹枢锁与 fixture 边界。
+- `src/Assets/Scripts/Cultivation/JindanProof/JindanProofDefinitions.cs`、`src/Assets/Scripts/Cultivation/JindanProof/JindanPositionRegistry.cs`、`src/Assets/Tests/EditMode/JindanProofTestFixtures.cs` 与 `src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs` 的直接字段／fixture 所有者。
+
+## 实施范围
+
+- 新建 `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md`，将道路、基础效果、三实位、唯一丹枢、唯一丹相、主辅承载、`abilityInstanceId`、资源／冷却账本、冲突引用和稳定键写成可被后续导入器直接消费的契约。
+- 契约必须表达一府一位、三府三位、五府三位；第四、第五府可作为输入，但不得生成第四实位、第二丹枢或第二丹相。
+- 为后续 `D-JD-SCHEMA-01B` 写明正反 fixture 与稳定拒绝原因，不在本卡实现 CSV、asset、导入器、BattleSim 行为或生产数值。
+
+## 禁止项
+
+- 不等待正式显示名，也不把候选名称写入数据字段。
+- 不引入第二丹枢／丹相、超过三实位、共享可变账本、旧九品兼容语义或默认平衡值。
+
+## 验证
+
+- 逐项核对位格、装配、唯一实例和主辅承载的事实源；验证契约能表达三组最小有效组合及其非法反例。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `git diff --check`。
+
+## 完成条件
+
+- `D-JD-SCHEMA-01B` 能仅依据本契约实现数据导入与失败关闭，不需要创作规则或补默认值。
+
+## 停止条件
+
+- 规则事实冲突，或契约必须引入第二丹枢／丹相、超过三实位、共享可变账本或旧九品兼容语义。

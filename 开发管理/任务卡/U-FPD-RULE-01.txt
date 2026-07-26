@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-FPD-RULE-01",
+  "title": "道基与紫府运行时",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-26：D-FPD-SCHEMA-01A/01B 与 N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01 均已归档；合法与非法数据 fixture 已可消费。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/CharacterData.cs",
+    "src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-FPD-RULE-01.txt",
+    "开发管理/任务归档/U-FPD-RULE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-FPD-RULE-01 · 道基与紫府运行时
+
+## 来源与当前边界
+
+- `D-FPD-SCHEMA-01A/01B` 已提供唯一道基／紫府数据根对象、稳定失败关闭及合法与非法 fixture；`N-FPD-GROWTH-01`、`N-FPD-MANSION-01`、`N-FPD-CULTIVATE-01` 已锁定四阶段、五府府体与周期行动参数。
+- 本卡只把已锁定规则接入既有运行时角色与金丹协调所有者；不迁移生产内容、不实现保存、UI、NPC 自主决策、槽位预算或丹相主辅结算。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md`：根对象、状态、行动、结丹锁及 fixture 边界。
+- `开发管理/四阶段成长与道基核心曲线数值验证记录.txt`、`开发管理/五府府体预算数值验证记录.txt` 与 `开发管理/养基与筑府周期参数数值验证记录.txt`。
+- `src/Assets/Scripts/Entity/Character.cs::FromData`、`RecalculateSlots`、`CalculateSlotLimits`，以及 `CharacterData.cs`、`FoundationPurpleMansionStateData.cs` 的直接状态所有者。
+- `src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs` 与 `src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs` 的结丹协调与 fixture 模式。
+
+## 实施范围
+
+- 在既有 `Character` 运行时所有者中消费经过导入校验的道基／紫府状态，提供四阶段连续进度、容量释放、最多两层扩府、五类紫府府胚／建成、每府唯一镇府神通、平铺效果绑定、固定周期行动、闭关重复及结丹永久锁的可观察结果。
+- 通过现有金丹协调边界拒绝结丹后养基、扩府和开府；非法状态必须返回稳定拒绝原因，不得截断、默认补全或继续旧字段语义。
+- 不因紫府数量生成术法／神通槽位，不创建平行成长服务，不改写未锁定的丹相主辅、内容实例或数值。
+
+## 禁止项
+
+- 不用 UI、静态假数据、旧 `developedMansions`／`mansionBindings` 回退、递归效果包或默认值替代规则。
+- 不修改保存、UI、NPC、BattleSim、内容 CSV／asset 或金丹冲突／实位规则。
+
+## 验证
+
+- 相关 EditMode fixture 覆盖凡品筑基、下品零府、两层扩府、重复府属、失败回退、结丹后禁止养基／扩府／开府、递归效果和同府多神通。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- `git diff --check`。
+
+## 完成条件
+
+- 所有硬门槛均有现有运行时角色／金丹协调边界中的单一所有者和可观察状态；不以兼容分支、UI 或默认值掩盖规则。
+
+## 停止条件
+
+- 现有所有者无法容纳状态而必须新建平行成长服务，或数据契约／已锁定数值无法表达所需运行时输入。
