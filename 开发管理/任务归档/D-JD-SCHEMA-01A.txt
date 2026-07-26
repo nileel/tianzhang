@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-26：D-FPD-SCHEMA-01A/01B 已归档完成，已具备金丹静态契约的道基／紫府输入与失败关闭基线。",
+  "stateReason": "2026-07-27 已完成金丹根对象、五府完整输入、唯一丹枢／丹相、三实位、主辅承载、abilityInstanceId 唯一账本、冲突引用、稳定键与正反 fixture 契约；未实现导入器、CSV、asset、生产角色、BattleSim 或数值。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -60,3 +60,7 @@
 ## 停止条件
 
 - 规则事实冲突，或契约必须引入第二丹枢／丹相、超过三实位、共享可变账本或旧九品兼容语义。
+
+## 完成记录
+
+- 2026-07-27：已锁定 `jindanStaticState` 的同角色五府冻结输入、唯一 `jindanCoreBinding`／丹相、源／化／界最多三项稳定实位、每位独立主承载与显式辅助连接、按 `abilityInstanceId` 归属的资源／冷却／充能／代价／冲突账本、表现与本地化稳定键，以及一府一位、三府三位、五府三位和非法反例 fixture。第四、第五府被明确保留为同一丹相输入，且不产生第四实位、第二丹枢或第二丹相；`D-JD-SCHEMA-01B` 已解除此前置，可据此建卡实施整表失败关闭。

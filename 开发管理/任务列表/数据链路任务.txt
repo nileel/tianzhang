@@ -16,8 +16,7 @@
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A、D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约、导入失败关闭与样例均完成后才关闭。 | — |
-| D-JD-SCHEMA-01A | P1 | codex | 已排队 | — | 金丹静态数据契约 | 开发管理/任务卡/D-JD-SCHEMA-01A.txt |
-| D-JD-SCHEMA-01B | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A | 金丹数据对象、导入器、检查器、正反 fixture 与失败关闭。 | — |
+| D-JD-SCHEMA-01B | P1 | Codex | 待建卡 | — | 金丹数据对象、导入器、检查器、正反 fixture 与失败关闭；静态契约已归档，可按独立卡进入近期调度。 | — |
 | D-JD-SAMPLE-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
 | D-NPC-WEIGHT-01A | P2 | codex | 已排队 | — | NPC 修炼行动权重静态契约 | 开发管理/任务卡/D-NPC-WEIGHT-01A.txt |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
@@ -37,20 +36,9 @@
 - 状态：父任务不直接进入队列；三个子任务均完成并归档后才关闭。
 - 禁止：不得把 51 项正式内容档案、生产平衡或 Unity 玩法实现并入本父任务。
 
-### D-JD-SCHEMA-01A · 金丹静态数据契约
-
-- 依赖：`D-FPD-SCHEMA-01` 已完成；进入队列前仍须建立并核验 `D-JD-SCHEMA-01A` 的独立任务卡。
-- 必读：`docs/superpowers/specs/2026-07-19-jindan-position-proof-and-contestation-design.md`、`docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`、`docs/基础设定/金丹基础效果装配与冲突规则.txt` 与现有金丹数据字段。
-- 预期路径：新建 `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md`；建卡时展开直接相关数据模型和 fixture 路径。
-- 交付：定义道路、基础效果、三实位、唯一丹枢、唯一丹相、全部紫府输入、主辅承载、`abilityInstanceId`、资源／冷却账本、冲突引用及表现／本地化稳定键。
-- 禁止：不等待正式显示名写入数据；未确认名称只通过稳定键引用。不开发表、导入器、BattleSim 行为或生产数值。
-- 验证：逐项对齐位格、装配、唯一实例和主辅规则；契约能表达一府一位、三府三位和五府三位而不生成第四实位或第二丹相。
-- 完成条件：`D-JD-SCHEMA-01B` 可仅按本契约实现数据导入与失败关闭，不需要创作规则。
-- 停止条件：规则事实冲突，或契约必须引入第二丹枢／丹相、超过三实位、共享可变账本或旧九品兼容语义。
-
 ### D-JD-SCHEMA-01B · 金丹导入与失败关闭
 
-- 依赖：`D-JD-SCHEMA-01A` 完成并归档。
+- 依赖：`D-JD-SCHEMA-01A` 已于 2026-07-27 完成并归档；进入队列前建立独立任务卡并实时展开实现路径。
 - 必读：`D-JD-SCHEMA-01A` 静态契约；现有数据模型、导入器、检查器和直接测试。
 - 预期路径：相关 CSV／asset、数据对象、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试；建卡时实时展开字面量路径。
 - 交付：实现数据对象、导入器、检查器、正反 fixture 和稳定错误原因。
