@@ -13,6 +13,41 @@ class Program
     record MansionBudgetAuditResult(int PalaceCount, double BudgetUnits, int AddedArtSlots, int AddedDivineArtSlots, int AddedStableSeats, int AddedDanXiang);
     record FoundationGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 神识);
     record DaoFoundationCoreCurve(string ParameterId, double StartingNormalizedMagnitude, double MaximumNormalizedMagnitude, double Exponent);
+    enum CultivationAuditAction { MortalToQi, FoundationTrial, FoundationGrowth, MansionEmbryo, MansionOpening, Recovery }
+    record CultivationCycleConfig(
+        int DaysPerCycle,
+        int MortalToQiCycles,
+        int FoundationTrialCycles,
+        int FoundationStageCycles,
+        int MansionEmbryoCycles,
+        int MansionOpeningCycles,
+        int MortalToQiSupplyCost,
+        int FoundationTrialSupplyCost,
+        int FoundationGrowthSupplyCost,
+        int MansionEmbryoSupplyCost,
+        int MansionOpeningSupplyCost,
+        int RetreatReserveCycles,
+        double OpeningFailureProgressRetention,
+        int OpeningFailureInjury,
+        int RecoveryCycles);
+    record CultivationCycleState(
+        string SpiritGrade,
+        int NaturalCapacity,
+        int ExpansionLayers,
+        int Resources,
+        int ElapsedDays,
+        int MortalProgress,
+        int FoundationTrialProgress,
+        bool QiComplete,
+        bool FoundationTrialComplete,
+        int FoundationStage,
+        int FoundationProgress,
+        int EmbryoProgress,
+        int OpeningProgress,
+        int CompletedMansions,
+        int Injury);
+    record CultivationCycleResult(CultivationCycleState State, string StopReason);
+    record CultivationCapacityFixture(string Name, string SpiritGrade, int ExpansionLayers, int TotalCapacity);
 
     static readonly MansionBodyBudget[] MansionBodyBudgets =
     {
@@ -28,6 +63,31 @@ class Program
     static readonly double[] FoundationStageShares = { 0.18, 0.22, 0.27, 0.33 };
     static readonly DaoFoundationCoreCurve RepresentativeFoundationCoreCurve = new("normalizedMagnitude", 0.35, 1.00, 1.25);
     static readonly string[] FoundationGrowthAuditBuilds = { "物·纯战", "法·纯战", "太一·符修" };
+    static readonly CultivationCycleConfig CalibratedCultivationCycles = new(
+        DaysPerCycle: 30,
+        MortalToQiCycles: 120,
+        FoundationTrialCycles: 6,
+        FoundationStageCycles: 24,
+        MansionEmbryoCycles: 18,
+        MansionOpeningCycles: 3,
+        MortalToQiSupplyCost: 1,
+        FoundationTrialSupplyCost: 2,
+        FoundationGrowthSupplyCost: 1,
+        MansionEmbryoSupplyCost: 2,
+        MansionOpeningSupplyCost: 4,
+        RetreatReserveCycles: 1,
+        OpeningFailureProgressRetention: 0.50,
+        OpeningFailureInjury: 20,
+        RecoveryCycles: 4);
+    static readonly CultivationCapacityFixture[] CultivationCapacityFixtures =
+    {
+        new("下品·无扩府", "下品", 0, 0),
+        new("中品·天然一府", "中品", 0, 1),
+        new("上品·天然二府", "上品", 0, 2),
+        new("极品·天然三府", "极品", 0, 3),
+        new("极品·一层扩府", "极品", 1, 4),
+        new("极品·两层扩府", "极品", 2, 5),
+    };
 
     static readonly BuildDef[] BuildDefs =
     {
@@ -94,6 +154,8 @@ class Program
         RunFoundationGrowthAudit();
         Console.WriteLine();
         RunMansionBodyBudgetAudit();
+        Console.WriteLine();
+        RunCultivationCycleAudit();
         Console.WriteLine();
         const string TECH = "上品", SPIRIT = "中品";
         int seeds = g2Audit || g2Attribution ? 200 : 20;
@@ -852,6 +914,248 @@ class Program
     {
         if (!condition)
             throw new InvalidOperationException($"四阶段成长审计失败：{message}");
+    }
+
+    static void RunCultivationCycleAudit()
+    {
+        var config = CalibratedCultivationCycles;
+        AssertCultivationCycle(config.DaysPerCycle == 30, "修炼周期必须锁定为三十日");
+        AssertCultivationCycle(config.FoundationStageCycles > 0 && config.MansionEmbryoCycles > 0 && config.MansionOpeningCycles > 0, "各行动周期必须为正数");
+        AssertCultivationCycle(config.OpeningFailureProgressRetention is > 0 and < 1, "开府失败回退必须保留部分而非全部府胚进度");
+        AssertCultivationCycle(config.RetreatReserveCycles >= 1, "闭关必须保留至少一个周期的资源阈值");
+
+        Console.WriteLine("【养基、筑府与闭关周期审计（N-FPD-CULTIVATE-01）】");
+        Console.WriteLine($"  固定周期：{config.DaysPerCycle} 日（每年 12 周期）；凡人至练气九品={config.MortalToQiCycles} 周期，筑基考验={config.FoundationTrialCycles} 周期，养基每阶段={config.FoundationStageCycles} 周期。");
+        Console.WriteLine($"  府胚={config.MansionEmbryoCycles} 周期，开府考验={config.MansionOpeningCycles} 周期；资源成本=练气准备 {config.MortalToQiSupplyCost}/周期、筑基考验 {config.FoundationTrialSupplyCost}/周期、养基 {config.FoundationGrowthSupplyCost}/周期、府胚 {config.MansionEmbryoSupplyCost}/周期、开府 {config.MansionOpeningSupplyCost}/周期。");
+
+        var activeCycle = NewCultivationCycleState("中品", expansionLayers: 0, resources: 20) with
+        {
+            QiComplete = true,
+            FoundationTrialComplete = true,
+            FoundationStage = 1,
+        };
+        var singleCycle = AdvanceCultivationCycle(activeCycle, config, CultivationAuditAction.FoundationGrowth);
+        AssertCultivationCycle(singleCycle.StopReason == "继续", "单周期养基在未跨阶段时必须继续");
+        AssertCultivationCycle(singleCycle.State.ElapsedDays == config.DaysPerCycle && singleCycle.State.Resources == activeCycle.Resources - config.FoundationGrowthSupplyCost && singleCycle.State.FoundationProgress == 1, "主动单周期必须只完整提交一次时间、资源与进度");
+
+        var reserveStopState = activeCycle with { Resources = config.FoundationGrowthSupplyCost * (config.RetreatReserveCycles + 1) };
+        var reserveStopped = RepeatCultivationAction(reserveStopState, config, CultivationAuditAction.FoundationGrowth);
+        AssertCultivationCycle(reserveStopped.StopReason == "闭关保留阈值" && reserveStopped.State.FoundationProgress == 1 && reserveStopped.State.Resources == config.FoundationGrowthSupplyCost * config.RetreatReserveCycles, "闭关必须在稳定边界保留一个完整周期资源");
+        Console.WriteLine($"  主动／闭关边界：单周期={config.DaysPerCycle} 日、养基进度+1；闭关在剩余 {config.RetreatReserveCycles} 个周期资源时停止。");
+
+        foreach (var fixture in CultivationCapacityFixtures)
+        {
+            AssertCultivationCycle(NaturalMansionCapacity(fixture.SpiritGrade) + fixture.ExpansionLayers == fixture.TotalCapacity, $"{fixture.Name} 的容量输入不一致");
+            var state = NewCultivationCycleState(fixture.SpiritGrade, fixture.ExpansionLayers, resources: 400);
+            state = RequireCultivationStop(RepeatCultivationAction(state, config, CultivationAuditAction.MortalToQi), "练气九品圆满", fixture.Name);
+            state = RequireCultivationStop(RepeatCultivationAction(state, config, CultivationAuditAction.FoundationTrial), "筑基成功", fixture.Name);
+            state = RequireCultivationStop(RepeatCultivationAction(state, config, CultivationAuditAction.FoundationGrowth), "第四阶段完成", fixture.Name);
+
+            AssertCultivationCycle(state.FoundationStage == 4 && AvailableMansionCapacity(state) == fixture.TotalCapacity, $"{fixture.Name} 必须完成第四阶段并释放全部容量");
+            if (fixture.TotalCapacity == 0)
+            {
+                var noMansion = AdvanceCultivationCycle(state, config, CultivationAuditAction.MansionEmbryo);
+                AssertCultivationCycle(noMansion.StopReason == "无可用紫府容量" && !CanCondense(state), "下品无扩府必须能完成第四阶段但不能满足结丹的至少一府门槛");
+            }
+            else
+            {
+                state = RequireCultivationStop(RepeatCultivationAction(state, config, CultivationAuditAction.MansionEmbryo), "府胚完成", fixture.Name);
+                state = RequireCultivationStop(RepeatCultivationAction(state, config, CultivationAuditAction.MansionOpening), "开府成功", fixture.Name);
+                AssertCultivationCycle(state.CompletedMansions == 1 && CanCondense(state), $"{fixture.Name} 的完整紫府必须满足至少一府结丹门槛");
+            }
+
+            Console.WriteLine($"    {fixture.Name,-10} 容量={fixture.TotalCapacity}，第四阶段={state.FoundationStage}，完整紫府={state.CompletedMansions}，可结丹={CanCondense(state)}，累计={state.ElapsedDays / 360.0:F2} 年。");
+        }
+
+        int normalMansionCycles = config.MortalToQiCycles + config.FoundationTrialCycles + config.FoundationStageCycles * 3 + config.MansionEmbryoCycles + config.MansionOpeningCycles;
+        int normalMansionResources = config.MortalToQiCycles * config.MortalToQiSupplyCost
+            + config.FoundationTrialCycles * config.FoundationTrialSupplyCost
+            + config.FoundationStageCycles * 3 * config.FoundationGrowthSupplyCost
+            + config.MansionEmbryoCycles * config.MansionEmbryoSupplyCost
+            + config.MansionOpeningCycles * config.MansionOpeningSupplyCost;
+        AssertCultivationCycle(normalMansionCycles == 219 && normalMansionResources == 252, "目标时间或资源总账意外变化");
+        Console.WriteLine($"  时间／资源目标：凡人起点至第一座完整紫府={normalMansionCycles} 周期={normalMansionCycles * config.DaysPerCycle / 360.0:F2} 年，累计资源={normalMansionResources}。");
+
+        var failureStart = NewCultivationCycleState("中品", expansionLayers: 0, resources: 80) with
+        {
+            QiComplete = true,
+            FoundationTrialComplete = true,
+            FoundationStage = 4,
+            EmbryoProgress = config.MansionEmbryoCycles,
+        };
+        var failedOpening = RepeatCultivationAction(failureStart, config, CultivationAuditAction.MansionOpening, forceOpeningFailure: true);
+        AssertCultivationCycle(failedOpening.StopReason == "开府失败" && failedOpening.State.EmbryoProgress == 9 && failedOpening.State.CompletedMansions == 0 && failedOpening.State.Injury == config.OpeningFailureInjury, "开府失败必须保留半数府胚、释放容量并留下可恢复伤势");
+        var recovered = RequireCultivationStop(RepeatCultivationAction(failedOpening.State, config, CultivationAuditAction.Recovery), "伤势恢复", "开府失败恢复");
+        var reformedEmbryo = RequireCultivationStop(RepeatCultivationAction(recovered, config, CultivationAuditAction.MansionEmbryo), "府胚完成", "开府失败恢复");
+        var retrySucceeded = RequireCultivationStop(RepeatCultivationAction(reformedEmbryo, config, CultivationAuditAction.MansionOpening), "开府成功", "开府失败恢复");
+        AssertCultivationCycle(retrySucceeded.CompletedMansions == 1 && CanCondense(retrySucceeded), "伤势恢复、府胚补回与再次开府后必须形成完整紫府");
+        Console.WriteLine($"  开府失败回退：保留府胚 {failedOpening.State.EmbryoProgress}/{config.MansionEmbryoCycles}，伤势={failedOpening.State.Injury}；恢复 {config.RecoveryCycles} 周期后补回 {config.MansionEmbryoCycles - failedOpening.State.EmbryoProgress} 周期，重试成功且不生成残缺紫府。");
+        Console.WriteLine("  结论：PASS；下／中／上／极品灵根和 0～5 容量均覆盖，闭关不预支资源或重复结算，失败后走确定性恢复路径。");
+    }
+
+    static CultivationCycleState NewCultivationCycleState(string spiritGrade, int expansionLayers, int resources)
+    {
+        int naturalCapacity = NaturalMansionCapacity(spiritGrade);
+        AssertCultivationCycle(expansionLayers is >= 0 and <= 2, "扩府层数必须在 0～2 之间");
+        AssertCultivationCycle(resources >= 0, "初始资源不得为负数");
+        return new(spiritGrade, naturalCapacity, expansionLayers, resources, 0, 0, 0, false, false, 0, 0, 0, 0, 0, 0);
+    }
+
+    static CultivationCycleState RequireCultivationStop(CultivationCycleResult result, string expectedReason, string fixtureName)
+    {
+        AssertCultivationCycle(result.StopReason == expectedReason, $"{fixtureName} 的停止原因应为「{expectedReason}」，实际为「{result.StopReason}」");
+        return result.State;
+    }
+
+    static CultivationCycleResult RepeatCultivationAction(CultivationCycleState state, CultivationCycleConfig config, CultivationAuditAction action, bool forceOpeningFailure = false)
+    {
+        while (true)
+        {
+            int cost = CultivationCycleCost(config, action);
+            int reserve = cost * config.RetreatReserveCycles;
+            if (cost > 0 && state.Resources - cost < reserve)
+                return new(state, "闭关保留阈值");
+
+            var result = AdvanceCultivationCycle(state, config, action, forceOpeningFailure);
+            state = result.State;
+            if (result.StopReason != "继续")
+                return result;
+        }
+    }
+
+    static CultivationCycleResult AdvanceCultivationCycle(CultivationCycleState state, CultivationCycleConfig config, CultivationAuditAction action, bool forceOpeningFailure = false)
+    {
+        string blockedReason = CultivationActionBlockedReason(state, config, action);
+        if (blockedReason != null)
+            return new(state, blockedReason);
+
+        int cost = CultivationCycleCost(config, action);
+        if (state.Resources < cost)
+            return new(state, "资源不足");
+
+        var next = state with { Resources = state.Resources - cost, ElapsedDays = state.ElapsedDays + config.DaysPerCycle };
+        return action switch
+        {
+            CultivationAuditAction.MortalToQi => AdvanceMortalToQi(next, config),
+            CultivationAuditAction.FoundationTrial => AdvanceFoundationTrial(next, config),
+            CultivationAuditAction.FoundationGrowth => AdvanceFoundationGrowth(next, config),
+            CultivationAuditAction.MansionEmbryo => AdvanceMansionEmbryo(next, config),
+            CultivationAuditAction.MansionOpening => AdvanceMansionOpening(next, config, forceOpeningFailure),
+            CultivationAuditAction.Recovery => AdvanceRecovery(next, config),
+            _ => throw new ArgumentOutOfRangeException(nameof(action), action, "未知修炼审计行动"),
+        };
+    }
+
+    static string CultivationActionBlockedReason(CultivationCycleState state, CultivationCycleConfig config, CultivationAuditAction action)
+    {
+        if (action != CultivationAuditAction.Recovery && state.Injury > 0)
+            return "伤势未恢复";
+
+        return action switch
+        {
+            CultivationAuditAction.MortalToQi when state.QiComplete => "目标已完成",
+            CultivationAuditAction.FoundationTrial when !state.QiComplete => "未达练气九品圆满",
+            CultivationAuditAction.FoundationTrial when state.FoundationTrialComplete => "目标已完成",
+            CultivationAuditAction.FoundationGrowth when !state.FoundationTrialComplete => "未成功筑基",
+            CultivationAuditAction.FoundationGrowth when state.FoundationStage >= 4 => "目标已完成",
+            CultivationAuditAction.MansionEmbryo when state.FoundationStage < 2 => "尚未释放紫府容量",
+            CultivationAuditAction.MansionEmbryo when AvailableMansionCapacity(state) <= state.CompletedMansions => "无可用紫府容量",
+            CultivationAuditAction.MansionOpening when state.EmbryoProgress < config.MansionEmbryoCycles => "府胚未完成",
+            CultivationAuditAction.Recovery when state.Injury <= 0 => "目标已完成",
+            _ => null,
+        };
+    }
+
+    static CultivationCycleResult AdvanceMortalToQi(CultivationCycleState state, CultivationCycleConfig config)
+    {
+        int progress = state.MortalProgress + 1;
+        var next = state with { MortalProgress = progress, QiComplete = progress == config.MortalToQiCycles };
+        return new(next, next.QiComplete ? "练气九品圆满" : "继续");
+    }
+
+    static CultivationCycleResult AdvanceFoundationTrial(CultivationCycleState state, CultivationCycleConfig config)
+    {
+        int progress = state.FoundationTrialProgress + 1;
+        bool complete = progress == config.FoundationTrialCycles;
+        var next = state with
+        {
+            FoundationTrialProgress = progress,
+            FoundationTrialComplete = complete,
+            FoundationStage = complete ? 1 : state.FoundationStage,
+        };
+        return new(next, complete ? "筑基成功" : "继续");
+    }
+
+    static CultivationCycleResult AdvanceFoundationGrowth(CultivationCycleState state, CultivationCycleConfig config)
+    {
+        int progress = state.FoundationProgress + 1;
+        if (progress < config.FoundationStageCycles)
+            return new(state with { FoundationProgress = progress }, "继续");
+
+        int stage = state.FoundationStage + 1;
+        var next = state with { FoundationStage = stage, FoundationProgress = 0 };
+        return new(next, stage == 4 ? "第四阶段完成" : "继续");
+    }
+
+    static CultivationCycleResult AdvanceMansionEmbryo(CultivationCycleState state, CultivationCycleConfig config)
+    {
+        int progress = state.EmbryoProgress + 1;
+        var next = state with { EmbryoProgress = progress };
+        return new(next, progress == config.MansionEmbryoCycles ? "府胚完成" : "继续");
+    }
+
+    static CultivationCycleResult AdvanceMansionOpening(CultivationCycleState state, CultivationCycleConfig config, bool forceFailure)
+    {
+        int progress = state.OpeningProgress + 1;
+        if (progress < config.MansionOpeningCycles)
+            return new(state with { OpeningProgress = progress }, "继续");
+
+        if (forceFailure)
+        {
+            int retainedProgress = (int)Math.Round(config.MansionEmbryoCycles * config.OpeningFailureProgressRetention, MidpointRounding.AwayFromZero);
+            return new(state with { EmbryoProgress = retainedProgress, OpeningProgress = 0, Injury = config.OpeningFailureInjury }, "开府失败");
+        }
+
+        return new(state with { EmbryoProgress = 0, OpeningProgress = 0, CompletedMansions = state.CompletedMansions + 1 }, "开府成功");
+    }
+
+    static CultivationCycleResult AdvanceRecovery(CultivationCycleState state, CultivationCycleConfig config)
+    {
+        int recoveryPerCycle = Math.Max(1, (int)Math.Ceiling(config.OpeningFailureInjury / (double)config.RecoveryCycles));
+        int injury = Math.Max(0, state.Injury - recoveryPerCycle);
+        var next = state with { Injury = injury };
+        return new(next, injury == 0 ? "伤势恢复" : "继续");
+    }
+
+    static int CultivationCycleCost(CultivationCycleConfig config, CultivationAuditAction action) => action switch
+    {
+        CultivationAuditAction.MortalToQi => config.MortalToQiSupplyCost,
+        CultivationAuditAction.FoundationTrial => config.FoundationTrialSupplyCost,
+        CultivationAuditAction.FoundationGrowth => config.FoundationGrowthSupplyCost,
+        CultivationAuditAction.MansionEmbryo => config.MansionEmbryoSupplyCost,
+        CultivationAuditAction.MansionOpening => config.MansionOpeningSupplyCost,
+        CultivationAuditAction.Recovery => 0,
+        _ => throw new ArgumentOutOfRangeException(nameof(action), action, "未知修炼审计行动"),
+    };
+
+    static int NaturalMansionCapacity(string spiritGrade) => spiritGrade switch
+    {
+        "下品" => 0,
+        "中品" => 1,
+        "上品" => 2,
+        "极品" => 3,
+        _ => throw new ArgumentOutOfRangeException(nameof(spiritGrade), spiritGrade, "无效的筑基灵根品级"),
+    };
+
+    static int AvailableMansionCapacity(CultivationCycleState state) =>
+        Math.Min(state.NaturalCapacity, Math.Max(0, state.FoundationStage - 1)) + state.ExpansionLayers;
+
+    static bool CanCondense(CultivationCycleState state) => state.FoundationStage == 4 && state.CompletedMansions >= 1;
+
+    static void AssertCultivationCycle(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException($"养基与筑府周期审计失败：{message}");
     }
 
     static void RunMansionBodyBudgetAudit()

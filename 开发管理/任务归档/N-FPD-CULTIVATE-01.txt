@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "C-FPD-CULTIVATE-01 已归档完成；本卡可校准养基、筑府与闭关的周期参数。",
+  "stateReason": "2026-07-26 已以 BattleSim 锁定养基、府胚、开府、失败回退与闭关停止阈值；下品无扩府可完成第四阶段但不满足至少一府结丹门槛。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/基础设定/修行境界.txt",
@@ -66,3 +66,10 @@
 ## 停止条件
 
 - 需要先指定具体扩府物品掉率或改写章节寿元尺度。
+
+## 完成记录
+
+- 2026-07-26：`Program.CalibratedCultivationCycles` 锁定 30 日修炼周期、凡人至练气九品 120 周期、筑基考验 6 周期、每个养基阶段 24 周期、府胚 18 周期、开府考验 3 周期，以及对应资源成本和闭关保留一个完整周期资源的停止阈值。
+- `RunCultivationCycleAudit` 覆盖下／中／上／极品灵根和 0～5 容量、主动单周期、闭关重复、资源阈值、开府失败、伤势恢复与重试。下品无扩府可完成第四阶段但不能结丹；其他容量 fixture 在建成一座完整紫府后满足至少一府门槛。
+- 标准凡人起点至首府路径为 219 周期／18.25 年、252 资源；失败后保留 9／18 府胚、20 点可恢复伤势，恢复并重试额外增加 16 周期／30 资源，未产生残缺成果或自动重试。
+- Release 构建以 0 警告、0 错误通过；默认 BattleSim 在 662.4 秒后以退出码 0 结束。完整输入、输出、结论和残留风险见 `开发管理/养基与筑府周期参数数值验证记录.txt`。
