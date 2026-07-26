@@ -8,6 +8,7 @@ static class Combat
 {
     const int DeterministicRandomSeed = 20260712;
     const string SettlementEvidenceUnavailableReason = "settlement_evidence_unavailable";
+    internal const int DuelTurnLimit = 100;
     static Random Rng = new(DeterministicRandomSeed);
     public const double BaseCritMultiplier = 1.5;
     internal static readonly HexCoord InitialPositionA = new(0, 0);
@@ -257,7 +258,7 @@ static class Combat
     public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
         var battlefield = new HexBattlefield();
-        int winsA = 0, winsB = 0;
+        double winsA = 0, winsB = 0;
         int totalTurns = 0;
         for (int r = 0; r < rounds; r++)
         {
@@ -308,7 +309,7 @@ static class Combat
             double kuxingHpCostRate(string realm) => realm switch { "化神" => 0.25, "元婴" => 0.20, "金丹" => 0.20, "筑基" => 0.15, _ => 0.10 };
             bool kuxingHasRecover(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, _ => false };
             bool kuxingHasDuanLong(string realm) => realm switch { "化神" => true, "元婴" => true, "金丹" => true, "筑基" => true, _ => false };            int turns = 0;
-            while (hpA > 0 && hpB > 0)
+            while (hpA > 0 && hpB > 0 && turns < DuelTurnLimit)
             {
                 turns++;
                 // 秋水回血: water_physical每回合恢复1.5%最大HP
@@ -504,7 +505,28 @@ static class Combat
                 }
             }
             totalTurns += turns;
-            if (hpA > 0) winsA++; else winsB++;
+            if (hpA > 0 && hpB <= 0)
+            {
+                winsA++;
+            }
+            else if (hpB > 0 && hpA <= 0)
+            {
+                winsB++;
+            }
+            else
+            {
+                double hpRatioA = Math.Max(0, hpA) / (double)ca.Primary["HP"];
+                double hpRatioB = Math.Max(0, hpB) / (double)cb.Primary["HP"];
+                if (hpRatioA > hpRatioB)
+                    winsA++;
+                else if (hpRatioB > hpRatioA)
+                    winsB++;
+                else
+                {
+                    winsA += 0.5;
+                    winsB += 0.5;
+                }
+            }
         }
         return (winsA * 100.0 / rounds, winsB * 100.0 / rounds, (double)totalTurns / rounds);
     }

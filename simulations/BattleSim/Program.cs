@@ -90,7 +90,7 @@ class Program
         Console.WriteLine();
         const string TECH = "上品", SPIRIT = "中品";
         int seeds = g2Audit || g2Attribution ? 200 : 20;
-        const int SIM = 2000;
+        int SIM = g2Audit || g2Attribution ? 2000 : 100;
 
         var buildDefs = BuildDefs;
         foreach (var build in buildDefs)
@@ -273,7 +273,8 @@ class Program
         {
             for (int j = i + 1; j < N; j++)
             {
-                int wI = 0, tot = 0;
+                double wI = 0;
+                int tot = 0;
                 var left = goldPools[i];
                 var right = goldPools[j];
                 int pairs = Math.Min(left.Count, right.Count);
@@ -283,14 +284,24 @@ class Program
                     mat[j, i] = double.NaN;
                     continue;
                 }
-                int h = Math.Max(1, SIM / pairs / 2);
+                var directionalRounds = AllocateDirectionalBattleRounds(SIM, pairs);
                 for (int s = 0; s < pairs; s++)
                 {
                     var ci = left[s]; var cj = right[s];
-                    var (wi, wj, _) = Combat.Simulate(ci, cj, h);
-                    var (wi2, wj2, _) = Combat.Simulate(cj, ci, h);
-                    wI += (int)Math.Round((wi + wj2) / 2.0 * h * 2 / 100.0);
-                    tot += h * 2;
+                    int forwardRounds = directionalRounds[s * 2];
+                    if (forwardRounds > 0)
+                    {
+                        var (wi, _, _) = Combat.Simulate(ci, cj, forwardRounds);
+                        wI += wi * forwardRounds / 100.0;
+                        tot += forwardRounds;
+                    }
+                    int reverseRounds = directionalRounds[s * 2 + 1];
+                    if (reverseRounds > 0)
+                    {
+                        var (_, wj2, _) = Combat.Simulate(cj, ci, reverseRounds);
+                        wI += wj2 * reverseRounds / 100.0;
+                        tot += reverseRounds;
+                    }
                 }
                 mat[i, j] = wI * 100.0 / tot;
                 mat[j, i] = 100.0 - mat[i, j];
@@ -885,7 +896,8 @@ class Program
         {
             for (int j = i + 1; j < n; j++)
             {
-                int wI = 0, tot = 0;
+                double wI = 0;
+                int tot = 0;
                 var left = pools[i];
                 var right = pools[j];
                 int pairs = Math.Min(left.Count, right.Count);
@@ -896,15 +908,25 @@ class Program
                     continue;
                 }
 
-                int h = Math.Max(1, sim / pairs / 2);
+                var directionalRounds = AllocateDirectionalBattleRounds(sim, pairs);
                 for (int s = 0; s < pairs; s++)
                 {
                     var ci = left[s];
                     var cj = right[s];
-                    var (wi, _, _) = Combat.Simulate(ci, cj, h);
-                    var (_, wj2, _) = Combat.Simulate(cj, ci, h);
-                    wI += (int)Math.Round((wi + wj2) / 2.0 * h * 2 / 100.0);
-                    tot += h * 2;
+                    int forwardRounds = directionalRounds[s * 2];
+                    if (forwardRounds > 0)
+                    {
+                        var (wi, _, _) = Combat.Simulate(ci, cj, forwardRounds);
+                        wI += wi * forwardRounds / 100.0;
+                        tot += forwardRounds;
+                    }
+                    int reverseRounds = directionalRounds[s * 2 + 1];
+                    if (reverseRounds > 0)
+                    {
+                        var (_, wj2, _) = Combat.Simulate(cj, ci, reverseRounds);
+                        wI += wj2 * reverseRounds / 100.0;
+                        tot += reverseRounds;
+                    }
                 }
 
                 mat[i, j] = wI * 100.0 / tot;
@@ -913,6 +935,21 @@ class Program
         }
 
         return mat;
+    }
+
+    internal static int[] AllocateDirectionalBattleRounds(int totalBattles, int pairs)
+    {
+        if (totalBattles < 0)
+            throw new ArgumentOutOfRangeException(nameof(totalBattles));
+        if (pairs <= 0)
+            throw new ArgumentOutOfRangeException(nameof(pairs));
+
+        var rounds = new int[checked(pairs * 2)];
+        int roundsPerSlot = totalBattles / rounds.Length;
+        int remainder = totalBattles % rounds.Length;
+        for (int slot = 0; slot < rounds.Length; slot++)
+            rounds[slot] = roundsPerSlot + (slot < remainder ? 1 : 0);
+        return rounds;
     }
 
     static void PrintWinRateMatrix(string title, string[] tags, double[,] mat)

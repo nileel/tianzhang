@@ -90,6 +90,9 @@ static class BattleSimSelfTests
         if (suite == "group-action-priority-n-group-02")
             return RunChecked(suite, RunGroupActionPriorityNGroup02);
 
+        if (suite == "duel-bounds")
+            return RunChecked(suite, RunDuelBounds);
+
         if (suite != "element-v510")
         {
             Console.Error.WriteLine($"Unknown self-test suite: {suite}");
@@ -688,6 +691,46 @@ static class BattleSimSelfTests
 
         AssertEqual(100.0, firstWins, "equal reaction resolves in input order");
         AssertEqual(0.0, secondWins, "equal reaction order is stable");
+    }
+
+    static void RunDuelBounds()
+    {
+        var tieA = DuelTimeoutCharacter("tie-a", ranged: false);
+        var tieB = DuelTimeoutCharacter("tie-b", ranged: false);
+        var (tieWinsA, tieWinsB, tieTurns) = Combat.Simulate(tieA, tieB, rounds: 1);
+        AssertEqual(50.0, tieWinsA, "equal timeout awards half a win to A");
+        AssertEqual(50.0, tieWinsB, "equal timeout awards half a win to B");
+        AssertEqual((double)Combat.DuelTurnLimit, tieTurns, "equal timeout stops at the duel turn limit");
+
+        var ranged = DuelTimeoutCharacter("ranged", ranged: true);
+        var stalled = DuelTimeoutCharacter("stalled", ranged: false);
+        var (rangedWinsFirst, stalledWinsSecond, firstTurns) = Combat.Simulate(ranged, stalled, rounds: 1);
+        AssertEqual(100.0, rangedWinsFirst, "higher remaining HP ratio wins from A");
+        AssertEqual(0.0, stalledWinsSecond, "lower remaining HP ratio loses from B");
+        AssertEqual((double)Combat.DuelTurnLimit, firstTurns, "asymmetric timeout stops at the duel turn limit");
+
+        var (stalledWinsFirst, rangedWinsSecond, secondTurns) = Combat.Simulate(stalled, ranged, rounds: 1);
+        AssertEqual(0.0, stalledWinsFirst, "lower remaining HP ratio loses from A");
+        AssertEqual(100.0, rangedWinsSecond, "higher remaining HP ratio wins from B");
+        AssertEqual((double)Combat.DuelTurnLimit, secondTurns, "swapped timeout stops at the duel turn limit");
+
+        var quickA = CtTestCharacter("quick-a", 10);
+        var quickB = CtTestCharacter("quick-b", 10);
+        var (quickWinsA, quickWinsB, quickTurns) = Combat.Simulate(quickA, quickB, rounds: 1);
+        AssertEqual(100.0, quickWinsA, "kill before the limit keeps the original winner");
+        AssertEqual(0.0, quickWinsB, "kill before the limit keeps the original loser");
+        if (quickTurns >= Combat.DuelTurnLimit)
+            throw new InvalidOperationException($"kill before the limit took {quickTurns} turns.");
+
+        var directionalRounds = Program.AllocateDirectionalBattleRounds(totalBattles: 100, pairs: 20);
+        AssertEqual(40, directionalRounds.Length, "directional battle allocation slot count");
+        AssertEqual(100, directionalRounds.Sum(), "directional battle allocation exact total");
+        AssertEqual(2, directionalRounds.Min(), "directional battle allocation minimum");
+        AssertEqual(3, directionalRounds.Max(), "directional battle allocation maximum");
+        AssertSequence(
+            directionalRounds,
+            Program.AllocateDirectionalBattleRounds(totalBattles: 100, pairs: 20),
+            "directional battle allocation is deterministic");
     }
 
     static void RunCritMultiplierTq053()
@@ -1651,6 +1694,24 @@ static class BattleSimSelfTests
         character.Primary["神防"] = 0;
         character.Primary["反应"] = reaction;
         character.Primary["移力"] = 6;
+        return character;
+    }
+
+    static Character DuelTimeoutCharacter(string name, bool ranged)
+    {
+        var character = Character.Create(name, new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+        character.Realm = "筑基";
+        character.Primary["HP"] = 10000;
+        character.Primary["MP"] = 0;
+        character.Primary["肉攻"] = 1;
+        character.Primary["神攻"] = 0;
+        character.Primary["肉防"] = 0;
+        character.Primary["神防"] = 0;
+        character.Primary["反应"] = 10;
+        character.Primary["移力"] = 0;
+        character.BasicAttackProfile = ranged
+            ? new GameData.AttackProfile("timeout-ranged", "物理", 1.0, "", 1, 6)
+            : GameData.UnarmedBasicAttack;
         return character;
     }
 

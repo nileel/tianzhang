@@ -199,6 +199,8 @@ sealed class HexBattlefield
     readonly GameData.EnvironmentRulesConfig environmentRules;
     readonly IReadOnlyList<GameData.PhenomenonPairFixture> phenomenonPairs;
     readonly SharedSpatial.SpatialQueryBoard spatialBoard;
+    readonly Dictionary<(HexCoord Source, HexCoord Target, int MinRange, int MaxRange, SpatialQueryKind Kind, bool RequireLineOfSight), RangeQueryResult> rangeQueryCache = new();
+    readonly Dictionary<(HexCoord Start, HexCoord Target, int MovementBudget, int MinRange, int MaxRange), HexCoord> attackPositionCache = new();
 
     public int MetricUnitsPerRange => environmentRules.UnitsPerRange;
 
@@ -331,6 +333,10 @@ sealed class HexBattlefield
         SpatialQueryKind kind,
         bool requireLineOfSight)
     {
+        var cacheKey = (source, target, minRange, maxRange, kind, requireLineOfSight);
+        if (rangeQueryCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
         var result = spatialBoard.QueryRangeEntry(
             ToSpatial(source),
             ToSpatial(target),
@@ -338,11 +344,13 @@ sealed class HexBattlefield
             maxRange,
             ToSpatial(kind),
             requireLineOfSight);
-        return new RangeQueryResult(
+        var queryResult = new RangeQueryResult(
             result.IsInRange,
             result.DistanceUnits,
             result.HasLineOfSight,
             NormalizeSpatialReason(result.Reason));
+        rangeQueryCache.Add(cacheKey, queryResult);
+        return queryResult;
     }
 
     public HexCoord FindAttackPosition(
@@ -356,11 +364,15 @@ sealed class HexBattlefield
         if (minRange < 0 || maxRange < minRange)
             throw new ArgumentOutOfRangeException(nameof(minRange), "Attack range is invalid.");
 
+        var cacheKey = (start, target, movementBudget, minRange, maxRange);
+        if (occupied == null && attackPositionCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
         int minUnits = minRange * environmentRules.UnitsPerRange;
         int maxUnits = maxRange * environmentRules.UnitsPerRange;
         var blocked = occupied ?? new[] { target };
         var candidates = FindReachable(start, movementBudget, blocked);
-        return candidates
+        var position = candidates
             .Select(entry =>
             {
                 var distance = QueryMetricDistance(entry.Key, target, SpatialQueryKind.Attack);
@@ -389,6 +401,9 @@ sealed class HexBattlefield
             .ThenBy(candidate => candidate.Position.R)
             .First()
             .Position;
+        if (occupied == null)
+            attackPositionCache.Add(cacheKey, position);
+        return position;
     }
 
     public GameData.AreaTargetingResult ResolveAreaTargeting(
