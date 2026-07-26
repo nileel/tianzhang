@@ -15,7 +15,7 @@
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-SCHEMA-01 | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 道基、紫府与修炼数据父任务；静态契约已归档，两个子任务均完成后才关闭。 | — |
-| D-FPD-SCHEMA-01B | P1 | Codex | 待建卡 | — | 数据对象、导入器、检查器、非法输入失败关闭与直接测试；以已归档静态契约为唯一语义来源。 | — |
+| D-FPD-SCHEMA-01B | P1 | codex | 已排队 | — | 道基、紫府与修炼导入及失败关闭 | 开发管理/任务卡/D-FPD-SCHEMA-01B.txt |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01A、D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约、导入失败关闭与样例均完成后才关闭。 | — |
 | D-JD-SCHEMA-01A | P1 | Codex | 阻塞 | D-FPD-SCHEMA-01B | 金丹道路、效果、三实位、丹枢／丹相、主辅承载与账本静态契约。 | — |

@@ -1,0 +1,79 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-FPD-SCHEMA-01B",
+  "title": "道基、紫府与修炼导入及失败关闭",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "D-FPD-SCHEMA-01A 已于 2026-07-26 归档并锁定唯一静态语义；本卡只实现数据对象、导入、整表失败关闭与直接测试。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/FoundationPurpleMansionStates.csv",
+    "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta",
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/Scripts/Entity/CharacterData.cs",
+    "src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs",
+    "src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-FPD-SCHEMA-01B.txt",
+    "开发管理/任务归档/D-FPD-SCHEMA-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-FPD-SCHEMA-01B · 道基、紫府与修炼导入及失败关闭
+
+## 来源与当前边界
+
+- `D-FPD-SCHEMA-01A` 已归档；`docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md` 是本卡唯一静态语义来源。
+- 本卡采用独立 `FoundationPurpleMansionStates.csv` 与 `FoundationPurpleMansionStateData` 数据对象；先对全表解析和校验，再创建或更新任何 Unity asset。
+- 只实现数据对象、导入、数据链检查和直接 EditMode fixture。不得迁移现有角色内容、实现 Unity 运行时、BattleSim 数值或 NPC 权重。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md`：完整契约、fixture 与稳定失败原因。
+- `开发管理/任务归档/D-FPD-SCHEMA-01A.txt`：已锁定边界与解除前置记录。
+- `src/Assets/DataConfig/Characters.csv`、`src/Assets/DataConfig/README.txt`：现有 CSV 与数据源约定。
+- `src/Assets/Scripts/Entity/CharacterData.cs`：旧字段和新状态引用的直接数据所有者。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportCharacters`、CSV 解析辅助方法与 `ImportEnvironmentProfiles`：整表预校验和 asset 写入模式。
+- `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs`：正反 fixture 与导入前失败关闭测试模式。
+- `tools/check-data-chain.ps1`：CSV 表头、未知列与数据链检查入口。
+
+## 实施范围
+
+- 新建 `FoundationPurpleMansionStates.csv`、对应 `FoundationPurpleMansionStateData` 对象及 `CharacterData` 的显式新状态引用；只使用稳定 `characterId`，不从旧字段推断或补全。
+- 在 `DataConfigImporter` 增加公开可测的整表解析／校验入口：完成全部行的字段、引用、派生容量、五府状态、平铺效果、行动与结丹锁校验后，才允许创建或更新状态 asset。
+- 为契约规定的正反 fixture 建立直接 EditMode 测试，稳定验证 `FPM_CAPACITY_OVERFLOW`、`FPM_DUPLICATE_MANSION_KIND`、`FPM_COMPLETE_MISSING_BINDING`、`FPM_RECURSIVE_EFFECT_BINDING`、`FPM_JINDAN_LOCK_MUTATION`、`FPM_LEGACY_SCHEMA_MIXED` 与 `FPM_UNKNOWN_PHASE`；fixture 专用字面量不得进入生产 CSV 或 asset。
+- 扩展数据管线说明和检查器，使新表头、未知列与可审计数据源受同一检查；不把检查器变成运行时语义所有者。
+
+## 禁止项
+
+- 不修改静态契约，不创作机制、名称、数值、默认阈值或数值档案。
+- 不保留旧字段 fallback、不自动截断非法状态、不建立第二套角色成长服务，也不允许新旧 schema 并存。
+- 不修改 `simulations/BattleSim/`、Unity 培养／战斗运行时、NPC 行为、内容 CSV 或生成的生产角色 asset；内容迁移只由 `D-FPD-MIGRATE-01` 处理。
+
+## 验证
+
+- 直接 EditMode fixture 覆盖合法最小状态、容量上界、暂停府胚以及契约列明的每类非法输入；非法输入须在 asset 写入前以稳定原因失败。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- 相关 Unity EditMode 测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src,tools`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- Unity 数据对象、导入器、检查器与 fixture 均以同一契约语义消费根对象；整表在写入前关闭全部契约列明的非法状态。
+- 无旧字段回退、静默默认、递归效果包或新旧 schema 并存；所有直接检查通过后归档本卡，并关闭父任务 `D-FPD-SCHEMA-01`。
+
+## 停止条件
+
+- 实现需要改写 `D-FPD-SCHEMA-01A` 静态语义、猜测默认值、保留旧字段兼容、引入递归效果包或新增平行成长服务；停止并转为 `pending_decision`。
