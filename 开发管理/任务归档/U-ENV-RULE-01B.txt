@@ -8,14 +8,15 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：U-ENV-RULE-01A 已把 env_guanzhong_wild 投影为唯一、失败关闭且可观察的运行时环境查询结果；本卡可只读接入既有渲染与最小反馈。",
+  "stateReason": "2026-07-28：正式 AdventureScene 已只读显示同一 TacticalGridModel 的地表原型、六个现象通道、有向格边及共享空间查询的移动／交互拒绝原因；EditMode 编译通过，Unity EditMode 217/217 通过，U-ENV-RULE-01 已关闭。",
   "expectedPaths": [
     "src/Assets/Scripts/Grid/ITacticalRenderer.cs",
     "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs",
     "src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs",
     "src/Assets/Scripts/Tilemap/HexTilemapManager.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
     "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
     "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
@@ -68,3 +69,9 @@
 ## 停止条件
 
 - 表现必须猜测规则状态、创建第二 Canvas／环境服务、修改生产参数或依赖未确认美术资源时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-28：`EnvironmentPresentationSnapshot` 只读消费已配置 `TacticalGridModel` 与共享空间查询，两个既有渲染器据真实 `TacticalTileData` 着色；正式 `AdventurePanel` 在既有 `UICanvas` 显示地表原型、六个通道、有向格边及移动／交互的允许或稳定拒绝原因。未创建第二环境服务、Canvas 或场景链。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 0 error（2 条既有 obsolete 警告）；Unity EditMode 217/217 通过。详情见 `开发管理/Unity环境表现与反馈验证记录.txt`。
+- `U-ENV-RULE-01` 父项及本卡已从 backlog／ready 队列关闭。

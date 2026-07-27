@@ -28,6 +28,7 @@ namespace TianZhang.Tactical
         private Sprite unitSprite;
 
         public TacticalGridModel Model { get; private set; }
+        public EnvironmentPresentationSnapshot EnvironmentPresentation { get; private set; }
         public Camera PresentationCamera => presentationCamera;
         public int VisualTileCount => tileViews.Count;
 
@@ -48,6 +49,18 @@ namespace TianZhang.Tactical
 
             foreach (var tile in model.Tiles.Where(value => value.IsOccupied))
                 PlaceUnitMarker(tile.Coord, new Color(0.92f, 0.82f, 0.35f), "Unit_" + tile.OccupiedUnitId);
+
+            PresentEnvironment(model);
+        }
+
+        public EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model)
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            Model = model;
+            EnvironmentPresentation = EnvironmentPresentationSnapshot.Create(model);
+            return EnvironmentPresentation;
         }
 
         public HexCoord ScreenToHex(Vector3 screenPosition)
@@ -261,6 +274,10 @@ namespace TianZhang.Tactical
         {
             if (tile.BlocksGroundMove)
                 return new Color(0.38f, 0.25f, 0.18f);
+            if (tile.TerrainType == TacticalTerrainType.Water)
+                return new Color(0.24f, 0.48f, 0.7f);
+            if (tile.TerrainType == TacticalTerrainType.HighGround)
+                return new Color(0.58f, 0.72f, 0.4f);
             if (tile.HeightLevel > 0)
                 return new Color(0.48f, 0.64f, 0.38f);
             return new Color(0.31f, 0.5f, 0.27f);

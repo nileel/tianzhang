@@ -8,6 +8,7 @@ using TianZhang.Cultivation;
 using TianZhang.Editor;
 using TianZhang.Game;
 using TianZhang.Settlement;
+using TianZhang.Tactical;
 using TianZhang.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -532,6 +533,44 @@ namespace TianZhang.Tests
                 DestroyAdventureUi();
                 Object.DestroyImmediate(controllerGo);
                 Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void AdventureSceneControllerDisplaysOnlyRenderedEnvironmentFeedback()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var controllerGo = new GameObject("AdventureEnvironmentFeedbackTest");
+            try
+            {
+                var profile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                    "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+                Assert.IsNotNull(profile);
+
+                var model = new TacticalGridModel();
+                foreach (var edge in profile.directedEdges)
+                {
+                    model.SetTile(new TacticalTileData(new TianZhang.Core.HexCoord(edge.fromQ, edge.fromR)));
+                    model.SetTile(new TacticalTileData(new TianZhang.Core.HexCoord(edge.toQ, edge.toR)));
+                }
+                Assert.IsTrue(model.TryConfigureEnvironmentProfile(profile, out var reason), reason);
+
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+                controller.SetEnvironmentPresentation(EnvironmentPresentationSnapshot.Create(model));
+                InvokeStart(controller);
+
+                string feedback = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>()?.text;
+                StringAssert.Contains("surface_grassland", feedback);
+                StringAssert.Contains("气流", feedback);
+                StringAssert.Contains("格边", feedback);
+                StringAssert.Contains("移动允许", feedback);
+                StringAssert.DoesNotContain("surface_default", feedback);
+            }
+            finally
+            {
+                DestroyAdventureUi();
+                Object.DestroyImmediate(controllerGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }

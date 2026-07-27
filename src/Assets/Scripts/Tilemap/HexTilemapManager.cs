@@ -87,6 +87,16 @@ namespace TianZhang.HexTile
             return TacticalGrid;
         }
 
+        public EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model)
+        {
+            if (model == null)
+                throw new System.ArgumentNullException(nameof(model));
+
+            EnsureTacticalRenderer();
+            TacticalGrid = model;
+            return TacticalRenderer.PresentEnvironment(model);
+        }
+
         /// <summary>屏幕坐标 → 最近的六角格（精确匹配）</summary>
         public HexCoord ScreenToHex(Vector3 screenPos)
         {

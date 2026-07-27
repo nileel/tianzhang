@@ -163,6 +163,16 @@ namespace TianZhang.Map
             }
             resolver.SpatialBoard = spatialQuerySnapshot.Board;
 
+            var environmentPresentation = tilemapManager.PresentEnvironment(tacticalGrid);
+            if (!environmentPresentation.IsConfigured)
+            {
+                adventureSceneController?.ReportEncounterConfigurationFailure(
+                    "正式环境表现创建失败: " + environmentPresentation.FailureReason);
+                enabled = false;
+                yield break;
+            }
+            adventureSceneController?.SetEnvironmentPresentation(environmentPresentation);
+
             // 刷新UI
             if (uiManager != null)
             {

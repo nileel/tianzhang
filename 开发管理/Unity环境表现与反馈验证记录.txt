@@ -1,0 +1,13 @@
+# Unity 环境表现与反馈验证记录
+
+## U-ENV-RULE-01B（2026-07-28）
+
+- 正式链：`AdventureSceneController` 在既有 `UICanvas/AdventurePanel` 创建 `EnvironmentFeedbackText`；`ExplorationController::InitExploration` 只在 `SpatialQueryBoardFactory` 成功产出既有 `TacticalGridModel` 查询结果后，经 `HexTilemapManager` 和 `TilemapTacticalRenderer` 传入同一模型的只读展示快照。
+- 表现范围：Tilemap 与 Hybrid 渲染器按真实 `TacticalTileData` 地表字段着色；面板只显示已配置的地表原型、六个环境通道、真实有向格边，以及共享空间查询返回的移动／交互允许状态或稳定拒绝原因。缺少环境输入只显示失败原因，不展示未配置字段。
+- 边界：未修改 `EnvironmentProfileData`、生产档案、空间查询／战斗规则、CTB、伤害、冷却、寻路、技能范围、掉落、场景链或 Canvas 数量。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：通过，0 error；仅有 2 条既有 `SpellData.damageMultiplier` obsolete 警告。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：217/217 通过。
+- 新增 EditMode 覆盖：两种渲染器均只暴露配置过的地表／六通道，并把拒绝格边映射为 `directed_edge_blocks_movement` 与 `directed_edge_blocks_effects`；正式 AdventurePanel 显示生产档案真实字段，不泄露 `surface_default`。

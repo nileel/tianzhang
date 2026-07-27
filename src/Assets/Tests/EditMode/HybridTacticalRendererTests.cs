@@ -107,6 +107,37 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void RenderersExposeConfiguredEnvironmentFieldsAndStableEdgeRejections()
+        {
+            var hybridRoot = new GameObject("HybridEnvironmentPresentationTest");
+            var tilemapRoot = new GameObject("TilemapEnvironmentPresentationTest");
+            var profile = CreateProfile();
+            var tile = ScriptableObject.CreateInstance<Tile>();
+            try
+            {
+                profile.directedEdges[0].allowsMovement = false;
+                profile.directedEdges[0].allowsEffects = false;
+                var model = CreateModel();
+                Assert.IsTrue(model.TryConfigureEnvironmentProfile(profile, out var reason), reason);
+
+                var hybridRenderer = hybridRoot.AddComponent<HybridTacticalRenderer>();
+                var tilemapRenderer = CreateTilemapRenderer(tilemapRoot, tile);
+                hybridRenderer.RenderGrid(model);
+                tilemapRenderer.RenderGrid(model);
+
+                AssertEnvironmentPresentation(hybridRenderer.EnvironmentPresentation);
+                AssertEnvironmentPresentation(tilemapRenderer.EnvironmentPresentation);
+            }
+            finally
+            {
+                Object.DestroyImmediate(tile);
+                Object.DestroyImmediate(tilemapRoot);
+                Object.DestroyImmediate(hybridRoot);
+                Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
         public void PrototypeControllerUsesBoundRayInputAndSharedQuerySnapshot()
         {
             var root = new GameObject("HybridPrototypeControllerTest");
@@ -261,6 +292,25 @@ namespace TianZhang.Tests.EditMode
             renderer.Initialize(manager);
             root.SetActive(true);
             return renderer;
+        }
+
+        private static void AssertEnvironmentPresentation(EnvironmentPresentationSnapshot presentation)
+        {
+            Assert.IsNotNull(presentation);
+            Assert.IsTrue(presentation.IsConfigured, presentation.FailureReason);
+            CollectionAssert.AreEqual(new[] { "surface_grassland" }, presentation.SurfacePrototypeRefs);
+            CollectionAssert.AreEquivalent(
+                System.Enum.GetValues(typeof(EnvironmentPhenomenonChannel)),
+                presentation.PhenomenonChannels);
+            Assert.AreEqual(1, presentation.DirectedEdges.Count);
+
+            var edge = presentation.DirectedEdges[0];
+            Assert.AreEqual(Origin, edge.From);
+            Assert.AreEqual(East, edge.To);
+            Assert.IsFalse(edge.MovementAllowed);
+            Assert.AreEqual(SpatialQueryReasons.DirectedEdgeBlocksMovement, edge.MovementReason);
+            Assert.IsFalse(edge.InteractionAllowed);
+            Assert.AreEqual(SpatialQueryReasons.DirectedEdgeBlocksEffects, edge.InteractionReason);
         }
 
         private static string CaptureRuleOutput(SpatialQuerySnapshot snapshot)

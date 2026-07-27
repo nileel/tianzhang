@@ -12,6 +12,7 @@ namespace TianZhang.Tactical
         private HexTilemapManager tilemapManager;
 
         public TacticalGridModel Model { get; private set; }
+        public EnvironmentPresentationSnapshot EnvironmentPresentation { get; private set; }
 
         public void Initialize(HexTilemapManager manager)
         {
@@ -30,13 +31,37 @@ namespace TianZhang.Tactical
             Model = model;
             manager.groundTilemap.ClearAllTiles();
             manager.overlayTilemap?.ClearAllTiles();
-            manager.groundTilemap.color = new Color(0.45f, 0.5f, 0.55f, 1f);
+            manager.groundTilemap.color = Color.white;
 
             foreach (var tile in model.Tiles)
             {
                 var cell = new Vector3Int(tile.Coord.q, tile.Coord.r, 0);
                 manager.groundTilemap.SetTile(cell, manager.groundTile);
             }
+
+            PresentEnvironment(model);
+        }
+
+        public EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model)
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            var manager = RequireManager();
+            Model = model;
+            EnvironmentPresentation = EnvironmentPresentationSnapshot.Create(model);
+
+            if (manager.groundTilemap == null)
+                return EnvironmentPresentation;
+
+            foreach (var tile in model.Tiles)
+            {
+                var cell = new Vector3Int(tile.Coord.q, tile.Coord.r, 0);
+                manager.groundTilemap.SetTileFlags(cell, UnityEngine.Tilemaps.TileFlags.None);
+                manager.groundTilemap.SetColor(cell, GetTerrainColor(tile));
+            }
+
+            return EnvironmentPresentation;
         }
 
         public HexCoord ScreenToHex(Vector3 screenPosition)
@@ -83,6 +108,17 @@ namespace TianZhang.Tactical
         private static List<HexCoord> ToList(IEnumerable<HexCoord> tiles)
         {
             return tiles == null ? new List<HexCoord>() : new List<HexCoord>(tiles);
+        }
+
+        private static Color GetTerrainColor(TacticalTileData tile)
+        {
+            if (tile.BlocksGroundMove || tile.TerrainType == TacticalTerrainType.Obstacle)
+                return new Color(0.38f, 0.25f, 0.18f);
+            if (tile.TerrainType == TacticalTerrainType.Water)
+                return new Color(0.24f, 0.48f, 0.7f);
+            if (tile.TerrainType == TacticalTerrainType.HighGround || tile.HeightLevel > 0)
+                return new Color(0.58f, 0.72f, 0.4f);
+            return new Color(0.62f, 0.78f, 0.5f);
         }
     }
 }

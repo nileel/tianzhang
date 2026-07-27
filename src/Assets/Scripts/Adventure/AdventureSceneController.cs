@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TianZhang.Combat;
@@ -29,9 +30,11 @@ namespace TianZhang.Adventure
 
         private Text adventureIdText;
         private Text sourceText;
+        private Text environmentFeedbackText;
         private Button returnToSourceButton;
         private ExplorationController explorationController;
         private string encounterConfigurationError;
+        private EnvironmentPresentationSnapshot environmentPresentation;
 
         private void Awake()
         {
@@ -166,12 +169,19 @@ namespace TianZhang.Adventure
             BlockGuanzhongWildEncounter(error);
         }
 
+        public void SetEnvironmentPresentation(EnvironmentPresentationSnapshot presentation)
+        {
+            environmentPresentation = presentation;
+            RefreshAdventureUi();
+        }
+
         private void BuildAdventureUi()
         {
             if (GameObject.Find("AdventurePanel") != null)
             {
                 adventureIdText = GameObject.Find("AdventureIdText")?.GetComponent<Text>();
                 sourceText = GameObject.Find("AdventureSourceText")?.GetComponent<Text>();
+                environmentFeedbackText = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>();
                 returnToSourceButton = GameObject.Find("ReturnToSourceButton")?.GetComponent<Button>();
                 return;
             }
@@ -188,7 +198,7 @@ namespace TianZhang.Adventure
             var playerPanel = canvas.transform.Find("PlayerPanel") as RectTransform;
             float panelTop = playerPanel != null ? playerPanel.offsetMin.y - panelMargin : -panelMargin;
             panelRt.anchoredPosition = new Vector2(panelMargin, panelTop);
-            panelRt.sizeDelta = new Vector2(380f, 210f);
+            panelRt.sizeDelta = new Vector2(380f, 390f);
             panelGo.GetComponent<Image>().color = new Color(0.04f, 0.06f, 0.08f, 0.9f);
             var layout = panelGo.GetComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(20, 20, 18, 18);
@@ -199,6 +209,7 @@ namespace TianZhang.Adventure
             CreateText("AdventureTitle", panelGo.transform, "副本", 26, Color.white, TextAnchor.MiddleCenter, 38f);
             adventureIdText = CreateText("AdventureIdText", panelGo.transform, "", 18, Color.yellow, TextAnchor.MiddleCenter, 32f).GetComponent<Text>();
             sourceText = CreateText("AdventureSourceText", panelGo.transform, "", 15, new Color(0.85f, 0.85f, 0.78f), TextAnchor.MiddleCenter, 42f).GetComponent<Text>();
+            environmentFeedbackText = CreateText("EnvironmentFeedbackText", panelGo.transform, "", 14, new Color(0.76f, 0.9f, 0.82f), TextAnchor.UpperLeft, 170f).GetComponent<Text>();
 
             returnToSourceButton = CreateButton("ReturnToSourceButton", panelGo.transform, "返回来源", new Color(0.28f, 0.34f, 0.42f, 1f)).GetComponent<Button>();
             returnToSourceButton.onClick.AddListener(ReturnToSource);
@@ -214,6 +225,9 @@ namespace TianZhang.Adventure
                     ? BuildSourceDescription()
                     : encounterConfigurationError + "\n" + BuildSourceDescription();
 
+            if (environmentFeedbackText != null)
+                environmentFeedbackText.text = BuildEnvironmentFeedbackDescription();
+
             if (returnToSourceButton != null)
                 returnToSourceButton.interactable = SceneFlowManager.Instance != null;
         }
@@ -221,6 +235,57 @@ namespace TianZhang.Adventure
         private string GetAdventureDisplayName()
         {
             return CurrentAdventureId == GuanzhongWildAdventureId ? "关中野外" : CurrentAdventureId;
+        }
+
+        private string BuildEnvironmentFeedbackDescription()
+        {
+            if (environmentPresentation == null)
+                return string.Empty;
+            if (!environmentPresentation.IsConfigured)
+                return "环境反馈拒绝: " + environmentPresentation.FailureReason;
+
+            var channels = new List<string>();
+            foreach (var channel in environmentPresentation.PhenomenonChannels)
+                channels.Add(GetPhenomenonChannelDisplayName(channel));
+
+            var edges = new List<string>();
+            foreach (var edge in environmentPresentation.DirectedEdges)
+            {
+                edges.Add(
+                    "(" + edge.From.q + "," + edge.From.r + ")→(" + edge.To.q + "," + edge.To.r + ") " +
+                    "移动" + FormatInteractionState(edge.MovementAllowed, edge.MovementReason) + "，交互" +
+                    FormatInteractionState(edge.InteractionAllowed, edge.InteractionReason));
+            }
+
+            return "地表原型: " + string.Join("、", environmentPresentation.SurfacePrototypeRefs) + "\n" +
+                "现象通道: " + string.Join("、", channels) + "\n" +
+                "格边: " + string.Join("；", edges);
+        }
+
+        private static string FormatInteractionState(bool allowed, string reason)
+        {
+            return allowed ? "允许" : "拒绝(" + reason + ")";
+        }
+
+        private static string GetPhenomenonChannelDisplayName(EnvironmentPhenomenonChannel channel)
+        {
+            switch (channel)
+            {
+                case EnvironmentPhenomenonChannel.Airflow:
+                    return "气流";
+                case EnvironmentPhenomenonChannel.Visibility:
+                    return "能见度";
+                case EnvironmentPhenomenonChannel.Temperature:
+                    return "温度";
+                case EnvironmentPhenomenonChannel.Precipitation:
+                    return "降水";
+                case EnvironmentPhenomenonChannel.SuspendedHazard:
+                    return "悬浮危害";
+                case EnvironmentPhenomenonChannel.CloudDischarge:
+                    return "云气／放电";
+                default:
+                    return channel.ToString();
+            }
         }
 
         private static GameObject EnsureUICanvas()
