@@ -1,0 +1,25 @@
+# 金丹跨阶挑战与实位死亡验证记录
+
+## 范围
+
+- 任务：`N-JD-RULE-01C`。
+- 输入：`jd.valid.three-mansion-three-seats` 的已冻结三实位与 `N-JD-RULE-01A` 的按 `abilityInstanceId` 运行账本；跨阶资格只使用内存中的版本化档案，不修改 fixture、Unity 数据契约或生产数据。
+- 边界：只实现挑战资格重验与真实主承载死亡关闭；不裁定挑战胜者，不新增位格权限，不实现元婴锚点换绑、复活、压阶、席位占据或伤害表调整。
+
+## 可复现结果
+
+1. 有效档案：定义版本 7、目标变量、挑战者、元婴法统来源和 tick 12 均匹配时返回 `JD_CHALLENGE_AUTHORIZED`；重复同一 `challengeEventId` 返回等价结果且不写入资源、冷却、冲突储备或胜负。
+2. 拒绝原因：未知 grant 返回 `JD_CHALLENGE_GRANT_UNKNOWN`；旧定义版本返回 `JD_CHALLENGE_VERSION_MISMATCH`；有效期外返回 `JD_CHALLENGE_EXPIRED`；撤销档案返回 `JD_CHALLENGE_REVOKED`；目标变量不符返回 `JD_CHALLENGE_TARGET_MISMATCH`。
+3. 实位死亡：源、化、界三种主承载分别死亡时均返回 `JD_CARRIER_DEATH_SETTLED`，角色成为不可参战的丹毁死亡状态；原实位装配被移除且受保护死亡记录阻止替换装配。
+4. 账本归属：死亡主承载的唯一账本被标记 release，资源、冷却和冲突储备的结算快照完整保留；同一装配内另外两个 `abilityInstanceId` 的账本保持 retain，既不复制也不静默丢弃。重复同一死亡 event ID 返回同一结算对象。
+
+## 已执行命令
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-challenge-death-n-jd-rule-01c`：通过。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：通过，退出码 0，耗时约 467.4 秒。
+
+## 结论
+
+- 跨阶例外严格绑定 grant 版本、变量、挑战者、来源、有效期和撤销状态，不可跨版本复用，也不把元婴锚点降为金丹同阶冲突。
+- 实位载体死亡采用先校验、后单次提交的关闭顺序；失败路径不改变角色或账本，成功路径不留下活着但缺位、重复释放或复制账本的中间状态。

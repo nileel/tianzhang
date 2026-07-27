@@ -5,7 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| N-JD-RULE-01C | codex_execute | codex | P1 | battlesim | implementation | 版本化跨阶挑战与实位死亡 | 开发管理/任务卡/N-JD-RULE-01C.txt |
+| N-FPD-DANXIANG-01 | codex_execute | codex | P1 | battlesim | design | 全部紫府输入与主辅预算 | 开发管理/任务卡/N-FPD-DANXIANG-01.txt |
 | N-STATE-01 | codex_execute | codex | P2 | battlesim | implementation | 战斗状态、回溯与因果债务 | 开发管理/任务卡/N-STATE-01.txt |
 | U-ENV-RULE-01A | codex_execute | codex | P2 | unity | implementation | 环境规则运行时消费 | 开发管理/任务卡/U-ENV-RULE-01A.txt |
 | U-FPD-AI-01 | codex_execute | codex | P2 | unity | implementation | NPC 自主修炼 | 开发管理/任务卡/U-FPD-AI-01.txt |

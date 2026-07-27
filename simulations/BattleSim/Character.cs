@@ -60,6 +60,8 @@ class Character
     public GoldenCoreAssembly GoldenCoreAssembly { get; private set; }
     public string ArtAbilityInstanceId { get; private set; } = "";
     public string DivineAbilityInstanceId { get; private set; } = "";
+    public bool IsDead { get; private set; }
+    public GoldenCoreCarrierDeathResolution ProtectedGoldenCoreDeath { get; private set; }
 
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
@@ -208,6 +210,8 @@ class Character
         string artAbilityInstanceId = "",
         string divineAbilityInstanceId = "")
     {
+        if (IsDead)
+            throw new InvalidOperationException("A protected golden-core death cannot receive a replacement assembly.");
         if (assembly == null)
             throw new ArgumentNullException(nameof(assembly));
         ValidateAssemblyAbility(assembly, artAbilityInstanceId, nameof(artAbilityInstanceId));
@@ -227,6 +231,51 @@ class Character
         if (GoldenCoreAssembly == null)
             return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_ASSEMBLY_UNAVAILABLE");
         return GoldenCoreConflictCandidates.Prepare(GoldenCoreAssembly, runtimeLedger, input);
+    }
+
+    internal GoldenCoreCarrierDeathResolution ResolveGoldenCoreCarrierDeath(
+        GoldenCoreRuntimeLedger runtimeLedger,
+        GoldenCoreCarrierDeathInput input)
+    {
+        if (input == null || string.IsNullOrWhiteSpace(input.DeathEventId) || string.IsNullOrWhiteSpace(input.CarrierAbilityInstanceId))
+            return GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_INPUT_INVALID");
+
+        if (ProtectedGoldenCoreDeath != null)
+        {
+            return string.Equals(ProtectedGoldenCoreDeath.DeathEventId, input.DeathEventId, StringComparison.Ordinal)
+                ? ProtectedGoldenCoreDeath
+                : GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_ALREADY_SETTLED");
+        }
+
+        var assembly = GoldenCoreAssembly;
+        if (assembly == null)
+            return GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_ASSEMBLY_UNAVAILABLE");
+        if (runtimeLedger == null || !ReferenceEquals(runtimeLedger.Assembly, assembly))
+            return GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_RUNTIME_LEDGER_INVALID");
+        if (!assembly.StableSeats.TryGetValue(input.PositionType, out var seat))
+            return GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_REAL_POSITION_INVALID");
+        if (!string.Equals(seat.PrimaryCarrierAbilityInstanceId, input.CarrierAbilityInstanceId, StringComparison.Ordinal))
+            return GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_CARRIER_MISMATCH");
+
+        var dispositions = runtimeLedger.CloseForCarrierDeath(input.CarrierAbilityInstanceId);
+        var settlement = new GoldenCoreCarrierDeathResolution(
+            true,
+            "JD_CARRIER_DEATH_SETTLED",
+            input.DeathEventId,
+            input.PositionType,
+            input.CarrierAbilityInstanceId,
+            dispositions);
+
+        ProtectedGoldenCoreDeath = settlement;
+        IsDead = true;
+        GoldenCoreAssembly = null;
+        ArtAbilityInstanceId = "";
+        DivineAbilityInstanceId = "";
+        FormedState = "丹毁死亡";
+        OccupancyState = "丹毁死亡";
+        FinalOccupancyState = "丹毁死亡";
+        SeatCompetitionState = "已关闭";
+        return settlement;
     }
 
     static void ValidateAssemblyAbility(GoldenCoreAssembly assembly, string abilityInstanceId, string parameterName)

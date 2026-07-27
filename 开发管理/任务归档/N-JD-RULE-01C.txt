@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：N-JD-RULE-01B 已归档；确定性冲突候选过滤、固定排序及 QTE／跳过同结果结算已可消费，现进入队列实现版本化跨阶挑战、实位载体死亡与账本释放／保留。",
+  "stateReason": "2026-07-28：已实现版本化跨阶挑战资格重验与源、化、界三实位主承载死亡的原子关闭；目标自测、Release 构建和完整 BattleSim 均通过。N-JD-RULE-01 已关闭，N-FPD-DANXIANG-01 已解除最后依赖并重新进入 ready 队列。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -20,6 +20,7 @@
     "开发管理/金丹跨阶挑战与实位死亡验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-FPD-DANXIANG-01.txt",
     "开发管理/任务卡/N-JD-RULE-01C.txt",
     "开发管理/任务归档/N-JD-RULE-01C.txt"
   ],
@@ -68,3 +69,9 @@
 ## 停止条件
 
 - 挑战资格或死亡后账本归属仍不能由现行事实源唯一确定，或实现需要随机胜者、新位格权限、复活／换绑机制或跨层兼容补丁时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-28：`CrossTierChallengeArchive` 以 grant ID、定义版本、目标变量、挑战者、许可来源、有效期和撤销状态重验资格；未知、版本不符、过期、撤销与目标不符均返回稳定拒绝码，重复同一挑战事件不写入资源或胜负。
+- `Character.ResolveGoldenCoreCarrierDeath` 对源、化、界任一静态主承载执行一次原子失位：释放该主承载的唯一运行账本，保留其余实例账本快照，写入受保护死亡记录并禁止后续换绑；同一死亡事件返回同一结算结果。
+- `golden-core-challenge-death-n-jd-rule-01c`、Release 构建及完整 BattleSim 均通过；详情见 `开发管理/金丹跨阶挑战与实位死亡验证记录.txt`。

@@ -926,7 +926,33 @@ public sealed class GoldenCoreRuntimeLedger
         foreach (var state in states.Values)
             state.TickCooldown();
     }
+
+    internal IReadOnlyList<GoldenCoreLedgerDisposition> CloseForCarrierDeath(string carrierAbilityInstanceId)
+    {
+        if (string.IsNullOrWhiteSpace(carrierAbilityInstanceId) || !states.ContainsKey(carrierAbilityInstanceId))
+            throw new InvalidOperationException("A carrier death requires an owned ability runtime ledger.");
+
+        var dispositions = states.Values
+            .OrderBy(state => state.AbilityInstanceId, StringComparer.Ordinal)
+            .Select(state => new GoldenCoreLedgerDisposition(
+                state.AbilityInstanceId,
+                state.AbilityInstanceId == carrierAbilityInstanceId,
+                state.Resource,
+                state.Cooldown,
+                state.ConflictReserve))
+            .ToArray();
+
+        states[carrierAbilityInstanceId].Release();
+        return dispositions;
+    }
 }
+
+public sealed record GoldenCoreLedgerDisposition(
+    string AbilityInstanceId,
+    bool IsReleased,
+    int Resource,
+    int Cooldown,
+    int ConflictReserve);
 
 public sealed class GoldenCoreAbilityRuntimeState
 {
@@ -940,11 +966,14 @@ public sealed class GoldenCoreAbilityRuntimeState
     public int Resource { get; private set; }
     public int Cooldown { get; private set; }
     public int ConflictReserve { get; private set; }
+    public bool IsReleased { get; private set; }
 
     public bool TrySpendResource(int amount)
     {
         if (amount < 0)
             throw new ArgumentOutOfRangeException(nameof(amount));
+        if (IsReleased)
+            return false;
         if (Resource < amount)
             return false;
         Resource -= amount;
@@ -955,12 +984,13 @@ public sealed class GoldenCoreAbilityRuntimeState
     {
         if (turns < 0)
             throw new ArgumentOutOfRangeException(nameof(turns));
+        EnsureActive();
         Cooldown = Math.Max(Cooldown, turns);
     }
 
     public void TickCooldown()
     {
-        if (Cooldown > 0)
+        if (!IsReleased && Cooldown > 0)
             Cooldown--;
     }
 
@@ -968,6 +998,7 @@ public sealed class GoldenCoreAbilityRuntimeState
     {
         if (amount < 0)
             throw new ArgumentOutOfRangeException(nameof(amount));
+        EnsureActive();
         ConflictReserve += amount;
     }
 
@@ -975,11 +1006,157 @@ public sealed class GoldenCoreAbilityRuntimeState
     {
         if (amount < 0)
             throw new ArgumentOutOfRangeException(nameof(amount));
+        if (IsReleased)
+            return false;
         if (ConflictReserve < amount)
             return false;
         ConflictReserve -= amount;
         return true;
     }
+
+    internal void Release()
+    {
+        IsReleased = true;
+    }
+
+    void EnsureActive()
+    {
+        if (IsReleased)
+            throw new InvalidOperationException($"Golden-core ability runtime '{AbilityInstanceId}' has been released.");
+    }
+}
+
+public enum CrossTierChallengeSourceKind
+{
+    JindanProtection,
+    YuanyingOrthodoxy,
+    DedicatedGreatFormation,
+    NarrativeRelic,
+}
+
+/// <summary>
+/// 已冻结的跨阶例外资格。它只允许档案明确的挑战进入直接冲突，不改变角色境界、位格或胜负结果。
+/// </summary>
+public sealed record CrossTierChallengeGrant(
+    string GrantId,
+    int DefinitionVersion,
+    string TargetVariableId,
+    string ChallengerId,
+    CrossTierChallengeSourceKind QualificationSource,
+    string AllowedOperationId,
+    string TargetId,
+    string ScopeId,
+    string BeneficiaryId,
+    string RealityAnchorId,
+    string ResourceLedgerRef,
+    string CapacityLedgerRef,
+    int ChallengeRuleTier,
+    int EffectiveAtTick,
+    int ExpiresAtTick,
+    bool IsRevoked,
+    string RevocationReason,
+    string DisplaySource);
+
+public sealed record CrossTierChallengeRequest(
+    string ChallengeEventId,
+    string GrantId,
+    int ExpectedDefinitionVersion,
+    string TargetVariableId,
+    string ChallengerId,
+    int WorldTick);
+
+public sealed record CrossTierChallengeResolution(
+    bool IsEligible,
+    string Reason,
+    CrossTierChallengeGrant Grant)
+{
+    internal static CrossTierChallengeResolution Rejected(string reason) => new(false, reason, null);
+}
+
+/// <summary>
+/// 版本化档案只做资格重验；相同输入不扣除资源、不写入胜负，重复事件因此保持幂等。
+/// </summary>
+public sealed class CrossTierChallengeArchive
+{
+    readonly IReadOnlyDictionary<string, CrossTierChallengeGrant> grants;
+
+    public CrossTierChallengeArchive(IEnumerable<CrossTierChallengeGrant> grants)
+    {
+        if (grants == null)
+            throw new ArgumentNullException(nameof(grants));
+
+        var indexed = new Dictionary<string, CrossTierChallengeGrant>(StringComparer.Ordinal);
+        foreach (var grant in grants)
+        {
+            if (grant == null || string.IsNullOrWhiteSpace(grant.GrantId) || !indexed.TryAdd(grant.GrantId, grant))
+                throw new ArgumentException("Cross-tier challenge grant ids must be unique and non-empty.", nameof(grants));
+        }
+        this.grants = indexed;
+    }
+
+    public CrossTierChallengeResolution Resolve(CrossTierChallengeRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.ChallengeEventId) || string.IsNullOrWhiteSpace(request.GrantId) ||
+            string.IsNullOrWhiteSpace(request.TargetVariableId) || string.IsNullOrWhiteSpace(request.ChallengerId) ||
+            request.ExpectedDefinitionVersion <= 0 || request.WorldTick < 0)
+        {
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_REQUEST_INVALID");
+        }
+        if (!grants.TryGetValue(request.GrantId, out var grant))
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_GRANT_UNKNOWN");
+        if (!IsWellFormed(grant))
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_GRANT_INVALID");
+        if (grant.DefinitionVersion != request.ExpectedDefinitionVersion)
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_VERSION_MISMATCH");
+        if (grant.IsRevoked)
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_REVOKED");
+        if (request.WorldTick < grant.EffectiveAtTick)
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_NOT_YET_EFFECTIVE");
+        if (request.WorldTick > grant.ExpiresAtTick)
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_EXPIRED");
+        if (!string.Equals(grant.TargetVariableId, request.TargetVariableId, StringComparison.Ordinal))
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_TARGET_MISMATCH");
+        if (!string.Equals(grant.ChallengerId, request.ChallengerId, StringComparison.Ordinal))
+            return CrossTierChallengeResolution.Rejected("JD_CHALLENGE_CHALLENGER_MISMATCH");
+        return new CrossTierChallengeResolution(true, "JD_CHALLENGE_AUTHORIZED", grant);
+    }
+
+    static bool IsWellFormed(CrossTierChallengeGrant grant)
+    {
+        return grant.DefinitionVersion > 0 && grant.ChallengeRuleTier > 0 && grant.EffectiveAtTick >= 0 &&
+               grant.ExpiresAtTick >= grant.EffectiveAtTick &&
+               grant.QualificationSource is CrossTierChallengeSourceKind.JindanProtection or
+                   CrossTierChallengeSourceKind.YuanyingOrthodoxy or
+                   CrossTierChallengeSourceKind.DedicatedGreatFormation or
+                   CrossTierChallengeSourceKind.NarrativeRelic &&
+               !string.IsNullOrWhiteSpace(grant.TargetVariableId) &&
+               !string.IsNullOrWhiteSpace(grant.ChallengerId) &&
+               !string.IsNullOrWhiteSpace(grant.AllowedOperationId) &&
+               !string.IsNullOrWhiteSpace(grant.TargetId) &&
+               !string.IsNullOrWhiteSpace(grant.ScopeId) &&
+               !string.IsNullOrWhiteSpace(grant.BeneficiaryId) &&
+               !string.IsNullOrWhiteSpace(grant.RealityAnchorId) &&
+               !string.IsNullOrWhiteSpace(grant.ResourceLedgerRef) &&
+               !string.IsNullOrWhiteSpace(grant.CapacityLedgerRef) &&
+               !string.IsNullOrWhiteSpace(grant.DisplaySource);
+    }
+}
+
+public sealed record GoldenCoreCarrierDeathInput(
+    string DeathEventId,
+    GoldenCoreSeatType PositionType,
+    string CarrierAbilityInstanceId);
+
+public sealed record GoldenCoreCarrierDeathResolution(
+    bool IsSettled,
+    string Reason,
+    string DeathEventId,
+    GoldenCoreSeatType PositionType,
+    string CarrierAbilityInstanceId,
+    IReadOnlyList<GoldenCoreLedgerDisposition> LedgerDispositions)
+{
+    internal static GoldenCoreCarrierDeathResolution Rejected(string reason) =>
+        new(false, reason, "", default, "", Array.Empty<GoldenCoreLedgerDisposition>());
 }
 
 public enum GoldenCoreConflictInputMode

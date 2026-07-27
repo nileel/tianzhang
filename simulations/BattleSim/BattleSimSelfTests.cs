@@ -37,6 +37,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-conflict-n-jd-rule-01b")
             return RunChecked(suite, RunGoldenCoreConflictNjdrule01B);
 
+        if (suite == "golden-core-challenge-death-n-jd-rule-01c")
+            return RunChecked(suite, RunGoldenCoreChallengeDeathNjdrule01C);
+
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
 
@@ -816,6 +819,126 @@ static class BattleSimSelfTests
         {
             throw new InvalidOperationException("fixed seat ranking must decide before pulse spending and retain independent ledgers.");
         }
+    }
+
+    static void RunGoldenCoreChallengeDeathNjdrule01C()
+    {
+        var grant = new CrossTierChallengeGrant(
+            "grant-n-jd-rule-01c",
+            DefinitionVersion: 7,
+            TargetVariableId: "fixture-higher-rule-variable",
+            ChallengerId: "challenger-n-jd-rule-01c",
+            QualificationSource: CrossTierChallengeSourceKind.YuanyingOrthodoxy,
+            AllowedOperationId: "fixture-direct-conflict",
+            TargetId: "fixture-higher-rule-target",
+            ScopeId: "fixture-scope",
+            BeneficiaryId: "challenger-n-jd-rule-01c",
+            RealityAnchorId: "fixture-anchor",
+            ResourceLedgerRef: "fixture-resource-ledger",
+            CapacityLedgerRef: "fixture-capacity-ledger",
+            ChallengeRuleTier: 2,
+            EffectiveAtTick: 10,
+            ExpiresAtTick: 20,
+            IsRevoked: false,
+            RevocationReason: "",
+            DisplaySource: "fixture-yuanying-orthodoxy");
+        var archive = new CrossTierChallengeArchive(new[] { grant });
+        var validRequest = new CrossTierChallengeRequest(
+            "challenge-event-n-jd-rule-01c",
+            grant.GrantId,
+            grant.DefinitionVersion,
+            grant.TargetVariableId,
+            grant.ChallengerId,
+            WorldTick: 12);
+        var authorized = Combat.ResolveCrossTierChallenge(archive, validRequest);
+        var repeatedAuthorization = Combat.ResolveCrossTierChallenge(archive, validRequest);
+        if (!authorized.IsEligible || authorized.Reason != "JD_CHALLENGE_AUTHORIZED" || !Equals(authorized, repeatedAuthorization))
+            throw new InvalidOperationException("a valid versioned challenge must authorize deterministically without mutating repeated events.");
+
+        AssertChallengeRejection(
+            Combat.ResolveCrossTierChallenge(archive, validRequest with { GrantId = "unknown-grant" }),
+            "JD_CHALLENGE_GRANT_UNKNOWN",
+            "unknown challenge grant");
+        AssertChallengeRejection(
+            Combat.ResolveCrossTierChallenge(archive, validRequest with { ExpectedDefinitionVersion = grant.DefinitionVersion - 1 }),
+            "JD_CHALLENGE_VERSION_MISMATCH",
+            "version mismatch challenge grant");
+        AssertChallengeRejection(
+            Combat.ResolveCrossTierChallenge(
+                new CrossTierChallengeArchive(new[] { grant with { ExpiresAtTick = 11 } }),
+                validRequest),
+            "JD_CHALLENGE_EXPIRED",
+            "expired challenge grant");
+        AssertChallengeRejection(
+            Combat.ResolveCrossTierChallenge(
+                new CrossTierChallengeArchive(new[] { grant with { IsRevoked = true, RevocationReason = "fixture-revoked" } }),
+                validRequest),
+            "JD_CHALLENGE_REVOKED",
+            "revoked challenge grant");
+        AssertChallengeRejection(
+            Combat.ResolveCrossTierChallenge(archive, validRequest with { TargetVariableId = "wrong-variable" }),
+            "JD_CHALLENGE_TARGET_MISMATCH",
+            "target mismatch challenge grant");
+
+        foreach (var positionType in new[]
+        {
+            GoldenCoreSeatType.Source,
+            GoldenCoreSeatType.Transformation,
+            GoldenCoreSeatType.Domain,
+        })
+        {
+            var participant = CreateThreeSeatConflictParticipant($"death-{positionType}", sourceReserve: 4, transformationReserve: 5);
+            var seat = participant.Character.GoldenCoreAssembly.StableSeats[positionType];
+            var carrierLedger = participant.RuntimeLedger.Get(seat.PrimaryCarrierAbilityInstanceId);
+            if (!carrierLedger.TrySpendResource(25))
+                throw new InvalidOperationException("death fixture must establish a resource debit before settlement.");
+            carrierLedger.StartCooldown(4);
+            carrierLedger.AddConflictReserve(9);
+
+            string deathEventId = $"death-event-{positionType}";
+            var death = Combat.ResolveGoldenCoreCarrierDeath(
+                participant.Character,
+                participant.RuntimeLedger,
+                new GoldenCoreCarrierDeathInput(deathEventId, positionType, seat.PrimaryCarrierAbilityInstanceId));
+            if (!death.IsSettled || death.Reason != "JD_CARRIER_DEATH_SETTLED" ||
+                !participant.Character.IsDead || participant.Character.GoldenCoreAssembly != null ||
+                participant.Character.ProtectedGoldenCoreDeath != death)
+            {
+                throw new InvalidOperationException($"{positionType} carrier death must atomically remove the real position and close the character.");
+            }
+
+            var released = death.LedgerDispositions.Single(disposition => disposition.AbilityInstanceId == seat.PrimaryCarrierAbilityInstanceId);
+            if (!released.IsReleased || released.Resource != 75 || released.Cooldown != 4 || released.ConflictReserve < 9 ||
+                !carrierLedger.IsReleased)
+            {
+                throw new InvalidOperationException($"{positionType} carrier ledger must release its exact resource, cooldown, and conflict-reserve state once.");
+            }
+            if (death.LedgerDispositions.Count != 3 || death.LedgerDispositions.Count(disposition => disposition.IsReleased) != 1 ||
+                death.LedgerDispositions.Where(disposition => !disposition.IsReleased).Any(disposition => participant.RuntimeLedger.Get(disposition.AbilityInstanceId).IsReleased))
+            {
+                throw new InvalidOperationException($"{positionType} carrier death must retain unrelated owned ledgers without copying or releasing them.");
+            }
+
+            var repeatedDeath = Combat.ResolveGoldenCoreCarrierDeath(
+                participant.Character,
+                participant.RuntimeLedger,
+                new GoldenCoreCarrierDeathInput(deathEventId, positionType, seat.PrimaryCarrierAbilityInstanceId));
+            if (!ReferenceEquals(death, repeatedDeath))
+                throw new InvalidOperationException($"{positionType} carrier death must be idempotent for the same event id.");
+
+            var (deadWins, survivorWins, turns) = Combat.Simulate(participant.Character, Character.Create("survivor", participant.Character.Innate, "physical"), rounds: 1);
+            if (deadWins != 0 || survivorWins != 100 || turns != 0)
+                throw new InvalidOperationException("a character closed by real-position death cannot re-enter combat.");
+            AssertThrows<InvalidOperationException>(
+                () => participant.Character.AssignGoldenCoreAssembly(GoldenCoreAssembly.Create(LoadGoldenCoreFixture("jd.valid.one-mansion-one-seat"))),
+                "a protected golden-core death cannot rebind a replacement assembly");
+        }
+    }
+
+    static void AssertChallengeRejection(CrossTierChallengeResolution resolution, string expectedReason, string label)
+    {
+        if (resolution.IsEligible || resolution.Reason != expectedReason || resolution.Grant != null)
+            throw new InvalidOperationException($"{label} must reject with {expectedReason}.");
     }
 
     static (Character Character, GoldenCoreRuntimeLedger RuntimeLedger) CreateConflictParticipant(string prefix, int reserve)

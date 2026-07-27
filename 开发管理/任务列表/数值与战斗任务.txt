@@ -12,7 +12,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| N-FPD-DANXIANG-01 | P1 | codex | 阻塞 | N-JD-RULE-01C | 全部紫府输入与主辅预算 | 开发管理/任务卡/N-FPD-DANXIANG-01.txt |
+| N-FPD-DANXIANG-01 | P1 | codex | 已排队 | — | 全部紫府输入与主辅预算 | 开发管理/任务卡/N-FPD-DANXIANG-01.txt |
 | N-FPD-REGRESSION-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SLOT-01 | P2 | codex | 阻塞 | N-FPD-DANXIANG-01 | 金丹槽位与丹枢加成数值方案 | 开发管理/任务卡/N-SLOT-01.txt |
 | N-SEAT-01 | P2 | Codex | 阻塞（N-SEAT-01A、N-SEAT-01B） | — | 确定性争位与原子占据父任务；不直接执行。 | — |
@@ -21,8 +21,6 @@
 | N-SUPPRESS-01 | P2 | Codex | 阻塞（N-SUPPRESS-01A、N-SUPPRESS-01B） | — | 确定性削位与封丹父任务；不直接执行。 | — |
 | N-SUPPRESS-01A | P2 | codex | 已排队 | — | 削位／封丹现状与确定性实现输入 | 开发管理/任务卡/N-SUPPRESS-01A.txt |
 | N-SUPPRESS-01B | P2 | codex | 阻塞 | N-SUPPRESS-01A | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |
-| N-JD-RULE-01 | P1 | Codex | 阻塞 | N-JD-RULE-01C | 金丹 BattleSim 规则父任务；等待最后一个子任务完成后关闭。 | — |
-| N-JD-RULE-01C | P1 | codex | 已排队 | — | 版本化跨阶挑战与实位死亡 | 开发管理/任务卡/N-JD-RULE-01C.txt |
 | N-STATE-01 | P2 | codex | 已排队 | — | 战斗状态、回溯与因果债务 | 开发管理/任务卡/N-STATE-01.txt |
 | N-AI-01 | P3 | Codex | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |
 
@@ -47,7 +45,7 @@
 
 ### N-FPD-DANXIANG-01 · 全部紫府输入与主辅预算
 
-- 依赖：N-FPD-MANSION-01、N-JD-RULE-01C；只消费已确认的唯一丹枢、唯一丹相和不同主承载规则。`N-JD-RULE-01C` 完成时同时关闭父任务 `N-JD-RULE-01`。
+- 依赖：N-FPD-MANSION-01、N-JD-RULE-01C 已完成并归档；只消费已确认的唯一丹枢、唯一丹相、不同主承载与实位死亡账本边界。
 - 预期路径：`simulations/BattleSim/Program.cs`、`docs/基础设定/元婴锚点与金丹位格设定.txt`、`docs/基础设定/金丹基础效果装配与冲突规则.txt`、`docs/角色养成/术法槽位设计.txt` 与验证记录。
 - 范围：建立 1～5 府 × 1～3 稳定位格 fixture，校准主承载、辅助输入、唯一实例账本与第四／第五府边际收益；不修改位格权限或五十一个基础效果。
 - 验证：BattleSim 覆盖一府一位、三府三位、五府三位、主一辅多、同一实例多处引用和安全重铸；同一 `abilityInstanceId` 只结算一次。
@@ -62,25 +60,6 @@
 - 验证：执行 Release 编译与完整 BattleSim，保存命令、参数、种子、矩阵摘要和失败样例；再运行相关评审文本检查与 `git diff --check`。
 - 完成条件：新四阶段、容量、府体、镇府神通和丹相输入都有可复现证据；没有靠临时调参掩盖单项内容错误。
 - 停止条件：任一失败不能归因到单一数值、内容或 schema 层；停止并拆回对应任务，不叠加兼容补丁。
-
-## 金丹 BattleSim 后续任务卡
-
-### N-JD-RULE-01 · 金丹 BattleSim 规则父任务
-
-- 子任务：`N-JD-RULE-01A` 负责三实位、装配与唯一账本；`N-JD-RULE-01B` 负责确定性冲突与 QTE／跳过；`N-JD-RULE-01C` 负责跨阶挑战与实位死亡。
-- 状态：父任务不直接进入队列；三个子任务均完成并归档后才关闭，`N-FPD-DANXIANG-01` 只等待最后一个子任务和 `N-FPD-MANSION-01`。
-- 禁止：不得用父任务一次性实现三个边界，不得在数据 fixture 尚未可消费时硬编码缺失输入。
-
-### N-JD-RULE-01C · 跨阶挑战与实位死亡
-
-- 依赖：`N-JD-RULE-01B` 完成并归档。
-- 必读：`docs/基础设定/金丹位格证位与争位规则.txt`、`docs/基础设定/元婴锚点与金丹位格设定.txt`、版本化挑战资格与载体账本直接事实，以及 `N-JD-RULE-01A/01B` 接口。
-- 预期路径：`simulations/BattleSim/GameData.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs` 与独立验证记录；建卡时实时扫描精确符号。
-- 交付：实现版本化跨阶挑战档案、稳定资格拒绝原因、实位载体死亡，以及对应能力／资源／冷却账本的释放或保留。
-- 禁止：不让旧挑战许可跨版本复用，不把元婴锚点降格为普通金丹冲突，不静默丢弃或复制账本。
-- 验证：覆盖有效／过期／未知挑战档案、无资格拒绝、各实位载体死亡、账本释放／保留和重复处理幂等；运行 Release 构建、目标自测和完整 BattleSim。
-- 完成条件：跨阶挑战与实位死亡均有确定结果和稳定原因，账本无泄漏／重复；随后关闭父任务 `N-JD-RULE-01` 并允许其作为 `N-FPD-DANXIANG-01` 的完成前置。
-- 停止条件：挑战规则或死亡后账本归属仍不明确，或实现需要新位格权限、随机胜者或跨层兼容补丁。
 
 ## 席位竞争与削位／封丹拆分
 

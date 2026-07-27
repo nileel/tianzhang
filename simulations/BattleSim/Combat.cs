@@ -268,8 +268,29 @@ static class Combat
             right.PrepareGoldenCoreConflictCandidate(rightRuntimeLedger, rightInput),
             inputMode);
 
+    public static CrossTierChallengeResolution ResolveCrossTierChallenge(
+        CrossTierChallengeArchive archive,
+        CrossTierChallengeRequest request) =>
+        archive == null
+            ? CrossTierChallengeResolution.Rejected("JD_CHALLENGE_ARCHIVE_UNAVAILABLE")
+            : archive.Resolve(request);
+
+    public static GoldenCoreCarrierDeathResolution ResolveGoldenCoreCarrierDeath(
+        Character character,
+        GoldenCoreRuntimeLedger runtimeLedger,
+        GoldenCoreCarrierDeathInput input) =>
+        character == null
+            ? GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_CHARACTER_UNAVAILABLE")
+            : character.ResolveGoldenCoreCarrierDeath(runtimeLedger, input);
+
     public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
+        if (ca.IsDead || cb.IsDead)
+        {
+            if (ca.IsDead && cb.IsDead)
+                return (50, 50, 0);
+            return ca.IsDead ? (0, 100, 0) : (100, 0, 0);
+        }
         var battlefield = new HexBattlefield();
         double winsA = 0, winsB = 0;
         int totalTurns = 0;

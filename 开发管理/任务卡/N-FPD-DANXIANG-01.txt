@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-JD-RULE-01C"
-  ],
-  "stateReason": "2026-07-28：N-FPD-MANSION-01 已归档；本卡已从丹相后续任务拆出，只等待 N-JD-RULE-01C 完成金丹生命周期与账本边界。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-FPD-MANSION-01 与 N-JD-RULE-01C 均已归档；全部紫府输入、主辅预算和唯一账本边界现已具备，进入 ready 队列。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
