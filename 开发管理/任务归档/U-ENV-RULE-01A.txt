@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：D-ENV-SCHEMA-01、N-ENV-01、C-ENV-PROFILE-01 与共享空间查询契约均已完成；本卡先接入纯运行时消费，不包含渲染表现。",
+  "stateReason": "2026-07-28：env_guanzhong_wild 已不可变投影到 TacticalGridModel；共享空间查询仅消费该投影的有向边、查询上限与环境元数据，未登记环境输入稳定失败关闭。EditMode 编译通过，Unity EditMode 215/215 通过，U-ENV-RULE-01B 已解除依赖。",
   "expectedPaths": [
     "src/Assets/Scripts/Grid/EnvironmentProfileData.cs",
     "src/Assets/Scripts/Grid/TacticalGridModel.cs",
@@ -19,10 +19,12 @@
     "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
     "开发管理/Unity环境规则运行时消费验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ENV-RULE-01A.txt",
+    "开发管理/任务卡/U-ENV-RULE-01B.txt",
     "开发管理/任务归档/U-ENV-RULE-01A.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
@@ -69,3 +71,9 @@
 ## 停止条件
 
 - 现有字段不能唯一表达运行时输入，或实现需要第二套空间查询、默认档案、未定义数值或反向修改数据契约时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-28：`EnvironmentProfileRuntime` 完整复制并验证生产档案的地表、六通道、配对、五行引用、边和查询上限；`TacticalGridModel` 只保留成功投影，非法重配清空旧状态；`SpatialQueryBoardFactory` 仅消费该投影建立共享空间查询。缺失或未登记输入返回稳定原因，没有默认地表、现象或基础步数 fallback。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj` 0 error（2 条既有 obsolete 警告）；Unity EditMode 215/215 通过。详情见 `开发管理/Unity环境规则运行时消费验证记录.txt`。
+- 未修改生产环境参数、BattleSim、伤害、场景美术或 UI；`U-ENV-RULE-01B` 已转为 ready。

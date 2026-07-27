@@ -106,8 +106,61 @@ namespace TianZhang.Tests.EditMode
             var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
             try
             {
+                profile.profileId = "factory_fixture";
                 profile.unitsPerRange = 2;
                 profile.maxQueryRange = 16;
+                profile.surfacePrototypeRefs = new[] { "surface_grassland" };
+                profile.phenomenonChannels = new[]
+                {
+                    new EnvironmentPhenomenonChannelData
+                    {
+                        channel = EnvironmentPhenomenonChannel.Airflow,
+                        phenomenonTypeRefs = new[] { "wind", "gust", "breeze" },
+                    },
+                    new EnvironmentPhenomenonChannelData
+                    {
+                        channel = EnvironmentPhenomenonChannel.Visibility,
+                        phenomenonTypeRefs = new[] { "mist" },
+                    },
+                    new EnvironmentPhenomenonChannelData
+                    {
+                        channel = EnvironmentPhenomenonChannel.Temperature,
+                        phenomenonTypeRefs = new[] { "heat" },
+                    },
+                    new EnvironmentPhenomenonChannelData
+                    {
+                        channel = EnvironmentPhenomenonChannel.Precipitation,
+                        phenomenonTypeRefs = new[] { "rain" },
+                    },
+                    new EnvironmentPhenomenonChannelData
+                    {
+                        channel = EnvironmentPhenomenonChannel.SuspendedHazard,
+                        phenomenonTypeRefs = new[] { "ash" },
+                    },
+                    new EnvironmentPhenomenonChannelData
+                    {
+                        channel = EnvironmentPhenomenonChannel.CloudDischarge,
+                        phenomenonTypeRefs = new[] { "storm" },
+                    },
+                };
+                profile.phenomenonPairs = new[]
+                {
+                    new EnvironmentPhenomenonPairing
+                    {
+                        channel = EnvironmentPhenomenonChannel.Airflow,
+                        firstTypeRef = "wind",
+                        secondTypeRef = "gust",
+                        resultTypeRef = "gust",
+                    },
+                };
+                profile.elementRelationRefs = new[]
+                {
+                    "element_wood",
+                    "element_fire",
+                    "element_earth",
+                    "element_metal",
+                    "element_water",
+                };
                 profile.directedEdges = new[]
                 {
                     new EnvironmentDirectedEdge
@@ -131,6 +184,23 @@ namespace TianZhang.Tests.EditMode
                     reason);
                 Assert.IsTrue(snapshot.Board.InspectEdge(Origin, East, SpatialQueryKind.Attack).IsLegal);
                 CollectionAssert.AreEqual(new[] { Origin }, snapshot.Occupied);
+                Assert.IsTrue(snapshot.Environment.IsSurfacePrototypeConfigured("surface_grassland", out var surfaceReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.Ok, surfaceReason);
+                Assert.IsTrue(snapshot.Environment.TryResolvePhenomenonPair(
+                    EnvironmentPhenomenonChannel.Airflow,
+                    "gust",
+                    "wind",
+                    out var resultType,
+                    out var pairingReason));
+                Assert.AreEqual("gust", resultType);
+                Assert.AreEqual(EnvironmentRuntimeReasons.Ok, pairingReason);
+                Assert.IsFalse(snapshot.Environment.TryResolvePhenomenonPair(
+                    EnvironmentPhenomenonChannel.Airflow,
+                    "gust",
+                    "breeze",
+                    out _,
+                    out var missingPairReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.PhenomenonPairNotConfigured, missingPairReason);
 
                 var duplicateGrid = new TacticalGridModel();
                 duplicateGrid.SetTile(new TacticalTileData(new HexCoord(0, 0)) { OccupiedUnitId = 7 });

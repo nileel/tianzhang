@@ -113,6 +113,139 @@ namespace TianZhang.Tests
             Assert.AreEqual(7, grid.GetOccupant(occupied));
             Assert.IsTrue(grid.IsOccupied(occupied));
         }
+
+        [Test]
+        public void EnvironmentProfileProjectionProvidesOnlyConfiguredRuntimeInputs()
+        {
+            var model = new TacticalGridModel();
+            var profile = CreateEnvironmentProfile();
+            try
+            {
+                Assert.IsTrue(model.TryConfigureEnvironmentProfile(profile, out var reason), reason);
+                Assert.AreEqual("runtime_fixture", model.EnvironmentRules.ProfileId);
+                Assert.IsTrue(model.EnvironmentRules.IsSurfacePrototypeConfigured("surface_grassland", out var surfaceReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.Ok, surfaceReason);
+                Assert.IsFalse(model.EnvironmentRules.IsSurfacePrototypeConfigured("surface_default", out surfaceReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.SurfacePrototypeNotConfigured, surfaceReason);
+                Assert.IsTrue(model.EnvironmentRules.TryResolvePhenomenonPair(
+                    EnvironmentPhenomenonChannel.Airflow,
+                    "gust",
+                    "wind",
+                    out var pairingResult,
+                    out var pairingReason));
+                Assert.AreEqual("gust", pairingResult);
+                Assert.AreEqual(EnvironmentRuntimeReasons.Ok, pairingReason);
+                Assert.IsFalse(model.EnvironmentRules.TryResolvePhenomenonPair(
+                    EnvironmentPhenomenonChannel.Airflow,
+                    "gust",
+                    "breeze",
+                    out _,
+                    out pairingReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.PhenomenonPairNotConfigured, pairingReason);
+                Assert.IsTrue(model.EnvironmentRules.IsElementRelationConfigured("element_wood", out var elementReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.Ok, elementReason);
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
+        public void InvalidEnvironmentProfileClearsPreviouslyBoundRuntimeRules()
+        {
+            var model = new TacticalGridModel();
+            var valid = CreateEnvironmentProfile();
+            var invalid = CreateEnvironmentProfile();
+            try
+            {
+                Assert.IsTrue(model.TryConfigureEnvironmentProfile(valid, out var validReason), validReason);
+                invalid.surfacePrototypeRefs = new[] { "surface_grassland", "surface_grassland" };
+
+                Assert.IsFalse(model.TryConfigureEnvironmentProfile(invalid, out var invalidReason));
+                Assert.AreEqual(EnvironmentRuntimeReasons.SurfacePrototypesNotConfigured, invalidReason);
+                Assert.IsNull(model.EnvironmentRules);
+            }
+            finally
+            {
+                Object.DestroyImmediate(invalid);
+                Object.DestroyImmediate(valid);
+            }
+        }
+
+        private static EnvironmentProfileData CreateEnvironmentProfile()
+        {
+            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            profile.profileId = "runtime_fixture";
+            profile.unitsPerRange = 2;
+            profile.maxQueryRange = 16;
+            profile.directedEdges = new[]
+            {
+                new EnvironmentDirectedEdge
+                {
+                    fromQ = 0,
+                    fromR = 0,
+                    toQ = 1,
+                    toR = 0,
+                    metricDistanceUnits = 2,
+                    allowsMovement = true,
+                    allowsEffects = true,
+                },
+            };
+            profile.surfacePrototypeRefs = new[] { "surface_grassland", "surface_loess" };
+            profile.phenomenonChannels = new[]
+            {
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Airflow,
+                    phenomenonTypeRefs = new[] { "wind", "gust", "breeze" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Visibility,
+                    phenomenonTypeRefs = new[] { "mist" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Temperature,
+                    phenomenonTypeRefs = new[] { "heat" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Precipitation,
+                    phenomenonTypeRefs = new[] { "rain" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.SuspendedHazard,
+                    phenomenonTypeRefs = new[] { "ash" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.CloudDischarge,
+                    phenomenonTypeRefs = new[] { "storm" },
+                },
+            };
+            profile.phenomenonPairs = new[]
+            {
+                new EnvironmentPhenomenonPairing
+                {
+                    channel = EnvironmentPhenomenonChannel.Airflow,
+                    firstTypeRef = "wind",
+                    secondTypeRef = "gust",
+                    resultTypeRef = "gust",
+                },
+            };
+            profile.elementRelationRefs = new[]
+            {
+                "element_wood",
+                "element_fire",
+                "element_earth",
+                "element_metal",
+                "element_water",
+            };
+            return profile;
+        }
     }
 
     public class CombatMechanismTests

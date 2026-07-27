@@ -1,0 +1,25 @@
+# Unity 环境规则运行时消费验证记录
+
+## 任务与范围
+
+- 任务：`U-ENV-RULE-01A`。
+- 生产输入：唯一 `env_guanzhong_wild` 环境档案与现有 `TacticalGridModel`／`SpatialQueryBoard` 链。
+- 不涉及：环境参数、BattleSim、伤害、场景美术、UI 或 `U-ENV-RULE-01B` 的渲染反馈。
+
+## 已验证结果
+
+- `EnvironmentProfileRuntime` 将档案 ID、查询上限、有向边、可用地表、六类现象通道、无序现象配对和五行引用复制为只读运行时投影；空档案、缺失字段、重复通道／配对或未登记引用均返回稳定原因。
+- `TacticalGridModel` 只在成功投影后持有环境规则；一次非法重配会清除旧投影，不保留旧档案或默认地表。
+- `SpatialQueryBoardFactory` 仅从已绑定的 `TacticalGridModel.EnvironmentRules` 建立空间棋盘，因此移动／视线阻挡继续由同一共享空间查询消费，有向边、查询上限和环境元数据不会分裂为第二所有者。
+- `SpatialQueryBoardTests` 覆盖地表、显式现象配对、缺失配对的稳定拒绝，以及工厂对投影的消费；`TacticalGridModelTests` 覆盖生产式完整投影和非法重配清空；现有正式 `AdventureScene` 初始化测试在最终 Unity EditMode 回归中通过。
+
+## 命令与结果
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 error；仅现存 2 条 `SpellData.damageMultiplier` obsolete 警告。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：通过，215/215。
+- 首次 Unity EditMode 发现两个既有原型夹具未声明完整环境档案；仅补齐该测试夹具的显式数据后重跑通过，未增加运行时兼容分支。
+
+## 结论与后续
+
+- 运行时层不从名称、颜色或默认地表推断环境状态；逐格地表与现象覆盖仍保持未配置并在后续消费中失败关闭。
+- `U-ENV-RULE-01B` 已解除依赖，可只读显示本任务提供的真实字段与稳定原因。

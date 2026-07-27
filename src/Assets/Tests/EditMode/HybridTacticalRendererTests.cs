@@ -170,6 +170,58 @@ namespace TianZhang.Tests.EditMode
             profile.profileId = "hybrid_renderer_test";
             profile.unitsPerRange = 2;
             profile.maxQueryRange = 16;
+            profile.surfacePrototypeRefs = new[] { "surface_grassland" };
+            profile.phenomenonChannels = new[]
+            {
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Airflow,
+                    phenomenonTypeRefs = new[] { "wind", "gust" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Visibility,
+                    phenomenonTypeRefs = new[] { "mist" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Temperature,
+                    phenomenonTypeRefs = new[] { "heat" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.Precipitation,
+                    phenomenonTypeRefs = new[] { "rain" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.SuspendedHazard,
+                    phenomenonTypeRefs = new[] { "ash" },
+                },
+                new EnvironmentPhenomenonChannelData
+                {
+                    channel = EnvironmentPhenomenonChannel.CloudDischarge,
+                    phenomenonTypeRefs = new[] { "storm" },
+                },
+            };
+            profile.phenomenonPairs = new[]
+            {
+                new EnvironmentPhenomenonPairing
+                {
+                    channel = EnvironmentPhenomenonChannel.Airflow,
+                    firstTypeRef = "wind",
+                    secondTypeRef = "gust",
+                    resultTypeRef = "gust",
+                },
+            };
+            profile.elementRelationRefs = new[]
+            {
+                "element_wood",
+                "element_fire",
+                "element_earth",
+                "element_metal",
+                "element_water",
+            };
             profile.directedEdges = new[]
             {
                 new EnvironmentDirectedEdge

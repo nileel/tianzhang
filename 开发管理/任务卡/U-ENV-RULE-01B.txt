@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-ENV-RULE-01A"
-  ],
-  "stateReason": "2026-07-28：表现切片已从 U-ENV-RULE-01 拆出；等待 01A 提供唯一、稳定且可观察的运行时环境查询结果。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：U-ENV-RULE-01A 已把 env_guanzhong_wild 投影为唯一、失败关闭且可观察的运行时环境查询结果；本卡可只读接入既有渲染与最小反馈。",
   "expectedPaths": [
     "src/Assets/Scripts/Grid/ITacticalRenderer.cs",
     "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs",

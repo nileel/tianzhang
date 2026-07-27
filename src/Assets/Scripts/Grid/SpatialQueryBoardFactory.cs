@@ -22,13 +22,16 @@ namespace TianZhang.Tactical
     {
         internal SpatialQuerySnapshot(
             SpatialQueryBoard board,
+            EnvironmentProfileRuntime environment,
             IReadOnlyDictionary<int, SpatialHexCoord> unitAnchors)
         {
             Board = board ?? throw new ArgumentNullException(nameof(board));
+            Environment = environment ?? throw new ArgumentNullException(nameof(environment));
             UnitAnchors = unitAnchors ?? throw new ArgumentNullException(nameof(unitAnchors));
         }
 
         public SpatialQueryBoard Board { get; }
+        public EnvironmentProfileRuntime Environment { get; }
         public IReadOnlyDictionary<int, SpatialHexCoord> UnitAnchors { get; }
 
         public IReadOnlyCollection<SpatialHexCoord> Occupied
@@ -54,14 +57,27 @@ namespace TianZhang.Tactical
             snapshot = null;
             if (grid == null)
                 return Fail(SpatialQuerySnapshotReasons.GridNotConfigured, out reason);
-            if (profile == null)
+
+            if (!grid.TryConfigureEnvironmentProfile(profile, out reason))
+                return false;
+
+            return TryCreate(grid, out snapshot, out reason);
+        }
+
+        public static bool TryCreate(
+            TacticalGridModel grid,
+            out SpatialQuerySnapshot snapshot,
+            out string reason)
+        {
+            snapshot = null;
+            if (grid == null)
+                return Fail(SpatialQuerySnapshotReasons.GridNotConfigured, out reason);
+            if (grid.EnvironmentRules == null)
                 return Fail(SpatialQuerySnapshotReasons.EnvironmentProfileNotConfigured, out reason);
-            if (profile.unitsPerRange < 1 || profile.maxQueryRange < 1)
-                return Fail(SpatialQuerySnapshotReasons.QueryLimitsNotConfigured, out reason);
             if (grid.Count == 0)
                 return Fail(SpatialQuerySnapshotReasons.CellsNotConfigured, out reason);
-            if (profile.directedEdges == null || profile.directedEdges.Length == 0)
-                return Fail(SpatialQuerySnapshotReasons.DirectedEdgesNotConfigured, out reason);
+
+            var environment = grid.EnvironmentRules;
 
             var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>();
             var unitAnchors = new Dictionary<int, SpatialHexCoord>();
@@ -85,7 +101,7 @@ namespace TianZhang.Tactical
             }
 
             var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>();
-            foreach (var configured in profile.directedEdges)
+            foreach (var configured in environment.DirectedEdges)
             {
                 var from = new SpatialHexCoord(configured.fromQ, configured.fromR);
                 var to = new SpatialHexCoord(configured.toQ, configured.toR);
@@ -116,7 +132,8 @@ namespace TianZhang.Tactical
                 new SpatialQueryBoard(
                     cells,
                     edges,
-                    new SpatialQueryLimits(profile.unitsPerRange, profile.maxQueryRange)),
+                    new SpatialQueryLimits(environment.UnitsPerRange, environment.MaxQueryRange)),
+                environment,
                 unitAnchors);
             reason = SpatialQueryReasons.Ok;
             return true;

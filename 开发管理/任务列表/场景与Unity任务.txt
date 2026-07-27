@@ -23,9 +23,8 @@
 | U-JD-RULE-01A | P2 | Codex | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-ENV-RULE-01 | P2 | Codex | 阻塞（U-ENV-RULE-01A、U-ENV-RULE-01B） | — | 环境运行时与表现父任务；不直接执行。 | — |
-| U-ENV-RULE-01A | P2 | codex | 已排队 | — | 环境规则运行时消费 | 开发管理/任务卡/U-ENV-RULE-01A.txt |
-| U-ENV-RULE-01B | P2 | codex | 阻塞 | U-ENV-RULE-01A | 环境地表、现象与交互反馈 | 开发管理/任务卡/U-ENV-RULE-01B.txt |
+| U-ENV-RULE-01 | P2 | Codex | 阻塞（U-ENV-RULE-01B） | — | 环境运行时与表现父任务；不直接执行。 | — |
+| U-ENV-RULE-01B | P2 | codex | 已排队 | — | 环境地表、现象与交互反馈 | 开发管理/任务卡/U-ENV-RULE-01B.txt |
 | U-TZ-CHARTER-MODEL-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、D-TZ-CHARTER-SAMPLE-01、M8 实现授权） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、M8 实现授权） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01、M8 实现授权） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
