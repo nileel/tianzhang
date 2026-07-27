@@ -868,7 +868,7 @@ public sealed class GoldenCoreAssembly
     {
         if (initialResource < 0)
             throw new ArgumentOutOfRangeException(nameof(initialResource));
-        return new GoldenCoreRuntimeLedger(AbilityLedgers.Values, initialResource);
+        return new GoldenCoreRuntimeLedger(this, AbilityLedgers.Values, initialResource);
     }
 
     static IEnumerable<string> MutableLedgerReferences(GoldenCoreAbilityLedgerBinding binding) =>
@@ -905,13 +905,16 @@ public sealed class GoldenCoreRuntimeLedger
 {
     readonly Dictionary<string, GoldenCoreAbilityRuntimeState> states;
 
-    internal GoldenCoreRuntimeLedger(IEnumerable<GoldenCoreAbilityLedgerBinding> bindings, int initialResource)
+    internal GoldenCoreRuntimeLedger(GoldenCoreAssembly assembly, IEnumerable<GoldenCoreAbilityLedgerBinding> bindings, int initialResource)
     {
+        Assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
         states = bindings.ToDictionary(
             binding => binding.AbilityInstanceId,
             binding => new GoldenCoreAbilityRuntimeState(binding.AbilityInstanceId, initialResource),
             StringComparer.Ordinal);
     }
+
+    internal GoldenCoreAssembly Assembly { get; }
 
     public GoldenCoreAbilityRuntimeState Get(string abilityInstanceId) =>
         states.TryGetValue(abilityInstanceId, out var state)
@@ -977,4 +980,240 @@ public sealed class GoldenCoreAbilityRuntimeState
         ConflictReserve -= amount;
         return true;
     }
+}
+
+public enum GoldenCoreConflictInputMode
+{
+    Qte,
+    Skip,
+}
+
+public enum GoldenCoreConflictOutcome
+{
+    LeftWins,
+    RightWins,
+    Neutral,
+    Rejected,
+}
+
+/// <summary>冲突候选只记录已冻结的静态装配和公开的结算输入，不从阶段、随机数或部署顺序取裁定。</summary>
+public sealed record GoldenCoreConflictCandidateInput(
+    string CandidateId,
+    string AbilityInstanceId,
+    GoldenCoreSeatType PositionType,
+    string CompatibilityProfileId,
+    string ConflictCostProfileId,
+    string VariableId,
+    string TargetId,
+    bool HasVariableAuthority,
+    bool HasLegalTarget,
+    int RealityAnchorRank,
+    int AlreadyPaidCost,
+    bool HasActiveContinuousCarrier,
+    int PulseCost,
+    int SettlementCooldown);
+
+public sealed class GoldenCoreConflictCandidate
+{
+    internal GoldenCoreConflictCandidate(GoldenCoreConflictCandidateInput input, GoldenCoreAbilityRuntimeState runtimeState)
+    {
+        Input = input;
+        RuntimeState = runtimeState;
+    }
+
+    public GoldenCoreConflictCandidateInput Input { get; }
+    internal GoldenCoreAbilityRuntimeState RuntimeState { get; }
+}
+
+public sealed record GoldenCoreConflictCandidatePreparation(GoldenCoreConflictCandidate Candidate, string RejectionCode)
+{
+    public bool IsEligible => Candidate != null && string.IsNullOrEmpty(RejectionCode);
+
+    public static GoldenCoreConflictCandidatePreparation Rejected(string rejectionCode) =>
+        new(null, rejectionCode);
+}
+
+public sealed record GoldenCoreConflictResolution(
+    GoldenCoreConflictOutcome Outcome,
+    string Reason,
+    string WinnerCandidateId,
+    int LeftPulses,
+    int RightPulses,
+    int LeftReserveSpent,
+    int RightReserveSpent,
+    int RejectedCandidateCount);
+
+public static class GoldenCoreConflictCandidates
+{
+    public static GoldenCoreConflictCandidatePreparation Prepare(
+        GoldenCoreAssembly assembly,
+        GoldenCoreRuntimeLedger runtimeLedger,
+        GoldenCoreConflictCandidateInput input)
+    {
+        if (assembly == null || runtimeLedger == null || input == null)
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_INPUT_INVALID");
+        if (!ReferenceEquals(runtimeLedger.Assembly, assembly))
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_RUNTIME_LEDGER_INVALID");
+        if (string.IsNullOrWhiteSpace(input.CandidateId) ||
+            string.IsNullOrWhiteSpace(input.AbilityInstanceId) ||
+            string.IsNullOrWhiteSpace(input.CompatibilityProfileId) ||
+            string.IsNullOrWhiteSpace(input.ConflictCostProfileId) ||
+            string.IsNullOrWhiteSpace(input.VariableId) ||
+            string.IsNullOrWhiteSpace(input.TargetId) ||
+            input.RealityAnchorRank < 0 ||
+            input.AlreadyPaidCost < 0 ||
+            input.PulseCost <= 0 ||
+            input.SettlementCooldown < 0)
+        {
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_INPUT_INVALID");
+        }
+        if (!input.HasVariableAuthority || !input.HasLegalTarget)
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_AUTHORITY_INVALID");
+        if (!assembly.StableSeats.TryGetValue(input.PositionType, out var seat) ||
+            !string.Equals(seat.PrimaryCarrierAbilityInstanceId, input.AbilityInstanceId, StringComparison.Ordinal))
+        {
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_STABLE_POSITION_INVALID");
+        }
+        if (!string.Equals(seat.CompatibilityProfileId, input.CompatibilityProfileId, StringComparison.Ordinal))
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_STATIC_COMPATIBILITY_INVALID");
+        if (!assembly.AbilityLedgers.TryGetValue(input.AbilityInstanceId, out var binding))
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_ABILITY_LEDGER_INVALID");
+        if (string.IsNullOrWhiteSpace(binding.ConflictReserveLedgerRef) ||
+            string.IsNullOrWhiteSpace(binding.ConflictCostProfileId))
+        {
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_RESERVE_UNAVAILABLE");
+        }
+        if (!string.Equals(binding.ConflictCostProfileId, input.ConflictCostProfileId, StringComparison.Ordinal))
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_COST_PROFILE_INVALID");
+
+        return new GoldenCoreConflictCandidatePreparation(
+            new GoldenCoreConflictCandidate(input, runtimeLedger.Get(input.AbilityInstanceId)),
+            "");
+    }
+}
+
+public static class GoldenCoreConflictResolver
+{
+    public static GoldenCoreConflictResolution Resolve(
+        GoldenCoreConflictCandidatePreparation left,
+        GoldenCoreConflictCandidatePreparation right,
+        GoldenCoreConflictInputMode inputMode)
+    {
+        if (inputMode != GoldenCoreConflictInputMode.Qte && inputMode != GoldenCoreConflictInputMode.Skip)
+            return Rejected("JD_CONFLICT_INPUT_MODE_INVALID", 0);
+
+        int rejectedCandidateCount = (left?.IsEligible == true ? 0 : 1) + (right?.IsEligible == true ? 0 : 1);
+        if (rejectedCandidateCount > 0)
+        {
+            string rejectionReason = left?.IsEligible == false
+                ? left.RejectionCode
+                : right?.RejectionCode ?? "JD_CONFLICT_INPUT_INVALID";
+            return Rejected(rejectionReason, rejectedCandidateCount);
+        }
+
+        var leftCandidate = left.Candidate;
+        var rightCandidate = right.Candidate;
+        var comparison = ComparePriority(leftCandidate, rightCandidate, out var reason);
+        if (comparison > 0)
+            return new GoldenCoreConflictResolution(GoldenCoreConflictOutcome.LeftWins, reason, leftCandidate.Input.CandidateId, 0, 0, 0, 0, 0);
+        if (comparison < 0)
+            return new GoldenCoreConflictResolution(GoldenCoreConflictOutcome.RightWins, reason, rightCandidate.Input.CandidateId, 0, 0, 0, 0, 0);
+
+        int leftPulses = leftCandidate.RuntimeState.ConflictReserve / leftCandidate.Input.PulseCost;
+        int rightPulses = rightCandidate.RuntimeState.ConflictReserve / rightCandidate.Input.PulseCost;
+        int leftReserveSpent = leftPulses * leftCandidate.Input.PulseCost;
+        int rightReserveSpent = rightPulses * rightCandidate.Input.PulseCost;
+        if (leftReserveSpent > 0 && !leftCandidate.RuntimeState.TrySpendConflictReserve(leftReserveSpent))
+            throw new InvalidOperationException("conflict reserve changed during deterministic settlement.");
+        if (rightReserveSpent > 0 && !rightCandidate.RuntimeState.TrySpendConflictReserve(rightReserveSpent))
+            throw new InvalidOperationException("conflict reserve changed during deterministic settlement.");
+        leftCandidate.RuntimeState.StartCooldown(leftCandidate.Input.SettlementCooldown);
+        rightCandidate.RuntimeState.StartCooldown(rightCandidate.Input.SettlementCooldown);
+
+        if (leftPulses > rightPulses)
+        {
+            return new GoldenCoreConflictResolution(
+                GoldenCoreConflictOutcome.LeftWins,
+                "PULSE_ADVANTAGE",
+                leftCandidate.Input.CandidateId,
+                leftPulses,
+                rightPulses,
+                leftReserveSpent,
+                rightReserveSpent,
+                0);
+        }
+        if (rightPulses > leftPulses)
+        {
+            return new GoldenCoreConflictResolution(
+                GoldenCoreConflictOutcome.RightWins,
+                "PULSE_ADVANTAGE",
+                rightCandidate.Input.CandidateId,
+                leftPulses,
+                rightPulses,
+                leftReserveSpent,
+                rightReserveSpent,
+                0);
+        }
+        return new GoldenCoreConflictResolution(
+            GoldenCoreConflictOutcome.Neutral,
+            "PULSE_NEUTRAL",
+            "",
+            leftPulses,
+            rightPulses,
+            leftReserveSpent,
+            rightReserveSpent,
+            0);
+    }
+
+    static GoldenCoreConflictResolution Rejected(string reason, int rejectedCandidateCount) =>
+        new(GoldenCoreConflictOutcome.Rejected, reason, "", 0, 0, 0, 0, rejectedCandidateCount);
+
+    static int ComparePriority(
+        GoldenCoreConflictCandidate left,
+        GoldenCoreConflictCandidate right,
+        out string reason)
+    {
+        int comparison = CompareAuthorityAndTarget(left.Input, right.Input);
+        if (comparison != 0)
+        {
+            reason = "VARIABLE_AUTHORITY_AND_TARGET";
+            return comparison;
+        }
+        comparison = PositionRank(left.Input.PositionType).CompareTo(PositionRank(right.Input.PositionType));
+        if (comparison != 0)
+        {
+            reason = "POSITION_TIER";
+            return comparison;
+        }
+        comparison = left.Input.RealityAnchorRank.CompareTo(right.Input.RealityAnchorRank);
+        if (comparison != 0)
+        {
+            reason = "REALITY_ANCHOR";
+            return comparison;
+        }
+        comparison = left.Input.AlreadyPaidCost.CompareTo(right.Input.AlreadyPaidCost);
+        if (comparison != 0)
+        {
+            reason = "ALREADY_PAID_COST";
+            return comparison;
+        }
+        comparison = left.Input.HasActiveContinuousCarrier.CompareTo(right.Input.HasActiveContinuousCarrier);
+        reason = comparison == 0 ? "PULSE" : "ACTIVE_CONTINUOUS_CARRIER";
+        return comparison;
+    }
+
+    static int CompareAuthorityAndTarget(GoldenCoreConflictCandidateInput left, GoldenCoreConflictCandidateInput right)
+    {
+        int leftRank = (left.HasVariableAuthority ? 2 : 0) + (left.HasLegalTarget ? 1 : 0);
+        int rightRank = (right.HasVariableAuthority ? 2 : 0) + (right.HasLegalTarget ? 1 : 0);
+        return leftRank.CompareTo(rightRank);
+    }
+
+    static int PositionRank(GoldenCoreSeatType positionType) => positionType switch
+    {
+        GoldenCoreSeatType.Source => 3,
+        GoldenCoreSeatType.Transformation => 2,
+        GoldenCoreSeatType.Domain => 1,
+        _ => 0,
+    };
 }

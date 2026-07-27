@@ -34,6 +34,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-assembly-n-jd-rule-01a")
             return RunChecked(suite, RunGoldenCoreAssemblyNjdrule01A);
 
+        if (suite == "golden-core-conflict-n-jd-rule-01b")
+            return RunChecked(suite, RunGoldenCoreConflictNjdrule01B);
+
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
 
@@ -743,6 +746,154 @@ static class BattleSimSelfTests
         character.AssignGoldenCoreAssembly(sharedReferenceAssembly, "guardian_ming", "guardian_hun");
         AssertEqual("guardian_ming", character.ArtAbilityInstanceId, "character art ability ledger binding");
         AssertEqual("guardian_hun", character.DivineAbilityInstanceId, "character divine ability ledger binding");
+    }
+
+    static void RunGoldenCoreConflictNjdrule01B()
+    {
+        var missingConflictAssembly = GoldenCoreAssembly.Create(LoadGoldenCoreFixture("jd.valid.one-mansion-one-seat"));
+        var missingConflictRuntime = missingConflictAssembly.CreateRuntimeLedger(initialResource: 100);
+        var illegal = GoldenCoreConflictCandidates.Prepare(
+            missingConflictAssembly,
+            missingConflictRuntime,
+            CreateConflictCandidateInput("illegal", "conflict-cost-illegal"));
+        if (illegal.IsEligible || illegal.Candidate != null || illegal.RejectionCode != "JD_CONFLICT_RESERVE_UNAVAILABLE")
+            throw new InvalidOperationException("candidates without paired conflict reserve data must be filtered before sorting.");
+
+        var first = CreateConflictParticipant("first", reserve: 6);
+        var second = CreateConflictParticipant("second", reserve: 4);
+        var qte = Combat.ResolveGoldenCoreConflict(
+            first.Character,
+            first.RuntimeLedger,
+            CreateConflictCandidateInput("left", "conflict-cost-first"),
+            second.Character,
+            second.RuntimeLedger,
+            CreateConflictCandidateInput("right", "conflict-cost-second"),
+            GoldenCoreConflictInputMode.Qte);
+
+        var skippedFirst = CreateConflictParticipant("skip-first", reserve: 6);
+        var skippedSecond = CreateConflictParticipant("skip-second", reserve: 4);
+        var skipped = Combat.ResolveGoldenCoreConflict(
+            skippedFirst.Character,
+            skippedFirst.RuntimeLedger,
+            CreateConflictCandidateInput("left", "conflict-cost-skip-first"),
+            skippedSecond.Character,
+            skippedSecond.RuntimeLedger,
+            CreateConflictCandidateInput("right", "conflict-cost-skip-second"),
+            GoldenCoreConflictInputMode.Skip);
+
+        var expected = new GoldenCoreConflictResolution(
+            GoldenCoreConflictOutcome.LeftWins,
+            "PULSE_ADVANTAGE",
+            "left",
+            3,
+            2,
+            6,
+            4,
+            0);
+        if (!Equals(expected, qte) || !Equals(expected, skipped))
+            throw new InvalidOperationException("QTE and skip must resolve the same selected candidates through one deterministic pulse result.");
+        AssertConflictRuntime(first.RuntimeLedger, 0, 3, "QTE left");
+        AssertConflictRuntime(second.RuntimeLedger, 0, 3, "QTE right");
+        AssertConflictRuntime(skippedFirst.RuntimeLedger, 0, 3, "skip left");
+        AssertConflictRuntime(skippedSecond.RuntimeLedger, 0, 3, "skip right");
+
+        var sorting = CreateThreeSeatConflictParticipant("sorting", sourceReserve: 7, transformationReserve: 5);
+        var sortingResult = Combat.ResolveGoldenCoreConflict(
+            sorting.Character,
+            sorting.RuntimeLedger,
+            CreateConflictCandidateInput("source", "conflict-cost-sorting-guardian_ming"),
+            sorting.Character,
+            sorting.RuntimeLedger,
+            CreateConflictCandidateInput(
+                "transformation",
+                "conflict-cost-sorting-guardian_hun",
+                abilityInstanceId: "guardian_hun",
+                positionType: GoldenCoreSeatType.Transformation,
+                compatibilityProfileId: "compat_transformation"),
+            GoldenCoreConflictInputMode.Skip);
+        if (sortingResult.Outcome != GoldenCoreConflictOutcome.LeftWins || sortingResult.Reason != "POSITION_TIER" ||
+            sorting.RuntimeLedger.Get("guardian_ming").ConflictReserve != 7 || sorting.RuntimeLedger.Get("guardian_hun").ConflictReserve != 5)
+        {
+            throw new InvalidOperationException("fixed seat ranking must decide before pulse spending and retain independent ledgers.");
+        }
+    }
+
+    static (Character Character, GoldenCoreRuntimeLedger RuntimeLedger) CreateConflictParticipant(string prefix, int reserve)
+    {
+        var input = LoadGoldenCoreFixture("jd.valid.one-mansion-one-seat") with
+        {
+            AbilityLedgers = LoadGoldenCoreFixture("jd.valid.one-mansion-one-seat").AbilityLedgers
+                .Select(binding => binding with
+                {
+                    ConflictReserveLedgerRef = $"conflict-reserve-{prefix}",
+                    ConflictCostProfileId = $"conflict-cost-{prefix}",
+                })
+                .ToArray(),
+        };
+        var character = Character.Create(
+            $"N-JD-RULE-01B-{prefix}",
+            new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 },
+            "physical");
+        character.AssignGoldenCoreAssembly(GoldenCoreAssembly.Create(input));
+        var runtimeLedger = character.CreateGoldenCoreRuntimeLedger(initialResource: 100);
+        runtimeLedger.Get("guardian_ming").AddConflictReserve(reserve);
+        return (character, runtimeLedger);
+    }
+
+    static (Character Character, GoldenCoreRuntimeLedger RuntimeLedger) CreateThreeSeatConflictParticipant(
+        string prefix,
+        int sourceReserve,
+        int transformationReserve)
+    {
+        var fixture = LoadGoldenCoreFixture("jd.valid.three-mansion-three-seats");
+        var input = fixture with
+        {
+            AbilityLedgers = fixture.AbilityLedgers
+                .Select(binding => binding with
+                {
+                    ConflictReserveLedgerRef = $"conflict-reserve-{prefix}-{binding.AbilityInstanceId}",
+                    ConflictCostProfileId = $"conflict-cost-{prefix}-{binding.AbilityInstanceId}",
+                })
+                .ToArray(),
+        };
+        var character = Character.Create(
+            $"N-JD-RULE-01B-{prefix}",
+            new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 },
+            "physical");
+        character.AssignGoldenCoreAssembly(GoldenCoreAssembly.Create(input));
+        var runtimeLedger = character.CreateGoldenCoreRuntimeLedger(initialResource: 100);
+        runtimeLedger.Get("guardian_ming").AddConflictReserve(sourceReserve);
+        runtimeLedger.Get("guardian_hun").AddConflictReserve(transformationReserve);
+        return (character, runtimeLedger);
+    }
+
+    static GoldenCoreConflictCandidateInput CreateConflictCandidateInput(
+        string candidateId,
+        string conflictCostProfileId,
+        string abilityInstanceId = "guardian_ming",
+        GoldenCoreSeatType positionType = GoldenCoreSeatType.Source,
+        string compatibilityProfileId = "compat_source") =>
+        new(
+            candidateId,
+            abilityInstanceId,
+            positionType,
+            compatibilityProfileId,
+            conflictCostProfileId,
+            "fixture-variable",
+            "fixture-target",
+            HasVariableAuthority: true,
+            HasLegalTarget: true,
+            RealityAnchorRank: 1,
+            AlreadyPaidCost: 2,
+            HasActiveContinuousCarrier: true,
+            PulseCost: 2,
+            SettlementCooldown: 3);
+
+    static void AssertConflictRuntime(GoldenCoreRuntimeLedger runtimeLedger, int expectedReserve, int expectedCooldown, string label)
+    {
+        var state = runtimeLedger.Get("guardian_ming");
+        if (state.ConflictReserve != expectedReserve || state.Cooldown != expectedCooldown)
+            throw new InvalidOperationException($"{label} must share the selected candidate's reserve and cooldown settlement.");
     }
 
     static void AssertAssembly(GoldenCoreAssemblyInput input, int expectedMansionAbilities, int expectedSeats, string label)

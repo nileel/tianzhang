@@ -220,6 +220,15 @@ class Character
     internal GoldenCoreRuntimeLedger CreateGoldenCoreRuntimeLedger(int initialResource) =>
         GoldenCoreAssembly?.CreateRuntimeLedger(initialResource);
 
+    internal GoldenCoreConflictCandidatePreparation PrepareGoldenCoreConflictCandidate(
+        GoldenCoreRuntimeLedger runtimeLedger,
+        GoldenCoreConflictCandidateInput input)
+    {
+        if (GoldenCoreAssembly == null)
+            return GoldenCoreConflictCandidatePreparation.Rejected("JD_CONFLICT_ASSEMBLY_UNAVAILABLE");
+        return GoldenCoreConflictCandidates.Prepare(GoldenCoreAssembly, runtimeLedger, input);
+    }
+
     static void ValidateAssemblyAbility(GoldenCoreAssembly assembly, string abilityInstanceId, string parameterName)
     {
         if (!string.IsNullOrWhiteSpace(abilityInstanceId) && !assembly.AbilityLedgers.ContainsKey(abilityInstanceId))

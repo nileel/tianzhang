@@ -21,9 +21,8 @@
 | N-SUPPRESS-01 | P2 | Codex | 阻塞（N-SUPPRESS-01A、N-SUPPRESS-01B） | — | 确定性削位与封丹父任务；不直接执行。 | — |
 | N-SUPPRESS-01A | P2 | codex | 已排队 | — | 削位／封丹现状与确定性实现输入 | 开发管理/任务卡/N-SUPPRESS-01A.txt |
 | N-SUPPRESS-01B | P2 | codex | 阻塞 | N-SUPPRESS-01A | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |
-| N-JD-RULE-01 | P1 | Codex | 阻塞 | N-JD-RULE-01B、N-JD-RULE-01C | 金丹 BattleSim 规则父任务；剩余两个子任务完成后关闭。 | — |
-| N-JD-RULE-01B | P1 | codex | 已排队 | — | 确定性冲突与 QTE／跳过 | 开发管理/任务卡/N-JD-RULE-01B.txt |
-| N-JD-RULE-01C | P1 | codex | 阻塞 | N-JD-RULE-01B | 版本化跨阶挑战与实位死亡 | 开发管理/任务卡/N-JD-RULE-01C.txt |
+| N-JD-RULE-01 | P1 | Codex | 阻塞 | N-JD-RULE-01C | 金丹 BattleSim 规则父任务；等待最后一个子任务完成后关闭。 | — |
+| N-JD-RULE-01C | P1 | codex | 已排队 | — | 版本化跨阶挑战与实位死亡 | 开发管理/任务卡/N-JD-RULE-01C.txt |
 | N-STATE-01 | P2 | codex | 已排队 | — | 战斗状态、回溯与因果债务 | 开发管理/任务卡/N-STATE-01.txt |
 | N-AI-01 | P3 | Codex | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |
 
@@ -71,17 +70,6 @@
 - 子任务：`N-JD-RULE-01A` 负责三实位、装配与唯一账本；`N-JD-RULE-01B` 负责确定性冲突与 QTE／跳过；`N-JD-RULE-01C` 负责跨阶挑战与实位死亡。
 - 状态：父任务不直接进入队列；三个子任务均完成并归档后才关闭，`N-FPD-DANXIANG-01` 只等待最后一个子任务和 `N-FPD-MANSION-01`。
 - 禁止：不得用父任务一次性实现三个边界，不得在数据 fixture 尚未可消费时硬编码缺失输入。
-
-### N-JD-RULE-01B · 确定性冲突与 QTE／跳过
-
-- 依赖：`N-JD-RULE-01A` 完成并归档。
-- 必读：金丹装配与冲突规则、`N-JD-RULE-01A` 的资格／账本接口、BattleSim 现有输入与确定性排序入口。
-- 预期路径：`simulations/BattleSim/Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs` 与独立验证记录；建卡时按实时符号扫描校准。
-- 交付：先过滤非法候选，再以已锁定规则做确定性冲突排序；QTE 和跳过只改变输入方式，必须得到相同合法性、预算与结算结果。
-- 禁止：不使用随机胜者、浮点权重或隐藏输入，不修改实位资格和账本，不提前实现跨阶挑战与实位死亡。
-- 验证：固定输入重复运行得到同一胜者、原因和账本变化；QTE 与跳过对同一选择输出一致；非法候选永不进入冲突排序。
-- 完成条件：冲突及 QTE／跳过结算确定、可观察且不改变 `N-JD-RULE-01A` 账本语义，随后解锁 `N-JD-RULE-01C`。
-- 停止条件：实现需要随机胜者、未定义权重、QTE 独占奖励或改写三实位／账本契约。
 
 ### N-JD-RULE-01C · 跨阶挑战与实位死亡
 

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-JD-RULE-01B"
-  ],
-  "stateReason": "2026-07-28：任务已从金丹规则父任务拆出；等待 N-JD-RULE-01B 提供确定性冲突结算，再实现版本化跨阶挑战、实位载体死亡与账本释放／保留。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-JD-RULE-01B 已归档；确定性冲突候选过滤、固定排序及 QTE／跳过同结果结算已可消费，现进入队列实现版本化跨阶挑战、实位载体死亡与账本释放／保留。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",

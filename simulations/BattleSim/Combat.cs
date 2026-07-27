@@ -255,6 +255,19 @@ static class Combat
         return rawDmg;
     }
 
+    public static GoldenCoreConflictResolution ResolveGoldenCoreConflict(
+        Character left,
+        GoldenCoreRuntimeLedger leftRuntimeLedger,
+        GoldenCoreConflictCandidateInput leftInput,
+        Character right,
+        GoldenCoreRuntimeLedger rightRuntimeLedger,
+        GoldenCoreConflictCandidateInput rightInput,
+        GoldenCoreConflictInputMode inputMode) =>
+        GoldenCoreConflictResolver.Resolve(
+            left.PrepareGoldenCoreConflictCandidate(leftRuntimeLedger, leftInput),
+            right.PrepareGoldenCoreConflictCandidate(rightRuntimeLedger, rightInput),
+            inputMode);
+
     public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
         var battlefield = new HexBattlefield();

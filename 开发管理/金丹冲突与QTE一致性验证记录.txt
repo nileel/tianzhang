@@ -1,0 +1,25 @@
+# 金丹确定性冲突与 QTE／跳过一致性验证记录
+
+## 范围
+
+- 任务：`N-JD-RULE-01B`。
+- 输入：`JindanStaticStates.fixture.csv` 的 `jd.valid.one-mansion-one-seat`、`jd.valid.three-mansion-three-seats` 已锁定静态装配；自测仅在内存中为既有能力账本补入成对的 `conflictReserveLedgerRef` 与 `conflictCostProfileId`，不修改 fixture、Unity 数据契约或生产数据。
+- 边界：只实现同阶冲突候选过滤、五项固定比较与同一脉冲结算入口；不实现跨阶挑战、实位死亡、席位占据、压阶或伤害表调整。
+
+## 可复现结果
+
+1. 红灯：在解析器仍返回 `JD_CONFLICT_BEHAVIOR_UNIMPLEMENTED` 时，`golden-core-conflict-n-jd-rule-01b` 以“缺少成对冲突储备的候选必须在排序前过滤”失败。
+2. 非法候选：缺少 `conflictReserveLedgerRef`／`conflictCostProfileId` 的候选返回 `JD_CONFLICT_RESERVE_UNAVAILABLE`，没有 `GoldenCoreConflictCandidate`，不会进入比较。
+3. 同输入结算：两个同源位候选的前五项比较相同，左／右储备分别为 6／4、脉冲成本均为 2、冷却均为 3；QTE 与跳过都得到 `LeftWins`、`PULSE_ADVANTAGE`、脉冲 3／2、储备扣除 6／4，双方冷却均为 3。
+4. 固定排序与账本独立：源位对化位先以 `POSITION_TIER` 判源位胜出，不扣冲突储备；`guardian_ming` 的 7 点与 `guardian_hun` 的 5 点储备保持分别归属各自 `abilityInstanceId`。
+
+## 已执行命令
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`：红灯前后均构建通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b`：先失败，完成实现后通过。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：通过，退出码 0，耗时约 476.5 秒。
+
+## 结论
+
+- 冲突裁定只使用显式候选输入、稳定实位、冻结兼容档案、唯一运行账本与整数脉冲；不读取阶段、稳定 ID、浮点权重、随机数或 QTE 独占奖励。
+- `N-JD-RULE-01C` 的前置 `N-JD-RULE-01B` 已满足，可进入 ready 队列；父任务 `N-JD-RULE-01` 仍等待 01C。
