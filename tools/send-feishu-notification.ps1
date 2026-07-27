@@ -1,0 +1,286 @@
+#requires -Version 7.0
+
+[CmdletBinding()]
+param(
+  [Parameter(Mandatory = $true)]
+  [ValidateSet('TaskOutcome', 'DailyReport', 'WeeklyReport')]
+  [string]$Kind,
+
+  [string]$RepositoryRoot,
+  [string]$TaskId,
+  [ValidateSet('completed', 'pending_review', 'blocked', 'waiting_decision', 'waiting_reply', 'failed')]
+  [string]$Status,
+  [string]$RunId,
+  [string]$CommitSha,
+  [string]$DetailCode,
+
+  [string]$WindowUntil,
+  [string]$Title,
+  [string]$Body,
+
+  [string]$NodePath
+)
+
+$ErrorActionPreference = 'Stop'
+$script:SenderEntry = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-notification.mjs'
+
+function Write-InvalidResult {
+  [Console]::Out.WriteLine('{"result":"INVALID_INPUT"}')
+}
+
+function Assert-StableText {
+  param(
+    [AllowNull()][string]$Value,
+    [string]$Name,
+    [int]$MaximumLength = 1000,
+    [switch]$AllowNewline
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Value) -or $Value.Length -gt $MaximumLength) {
+    throw "$Name is invalid"
+  }
+  $controlPattern = if ($AllowNewline) {
+    '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'
+  } else {
+    '[\x00-\x1F\x7F]'
+  }
+  if ($Value -match $controlPattern) {
+    throw "$Name is invalid"
+  }
+}
+
+function Get-TaskMeta {
+  param([string]$Root, [string]$Id)
+
+  $activePath = Join-Path $Root "开发管理\任务卡\$Id.txt"
+  $archivePath = Join-Path $Root "开发管理\任务归档\$Id.txt"
+  $path = if (Test-Path -LiteralPath $activePath -PathType Leaf) {
+    $activePath
+  } elseif (Test-Path -LiteralPath $archivePath -PathType Leaf) {
+    $archivePath
+  } else {
+    throw 'Task card is unavailable'
+  }
+  $raw = Get-Content -LiteralPath $path -Raw -Encoding UTF8
+  $match = [regex]::Match(
+    $raw,
+    '(?s)\A---TASK-META---\s*(?<json>\{.*?\})\s*---TASK-BODY---'
+  )
+  if (-not $match.Success) {
+    throw 'Task metadata is invalid'
+  }
+  $meta = $match.Groups['json'].Value | ConvertFrom-Json -Depth 30
+  if (
+    [string]$meta.id -cne $Id -or
+    [string]::IsNullOrWhiteSpace([string]$meta.title)
+  ) {
+    throw 'Task metadata is invalid'
+  }
+  $meta
+}
+
+function Invoke-GitUtf8Text {
+  param([string]$Root, [string[]]$Arguments)
+
+  $startInfo = [Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = 'git'
+  $startInfo.UseShellExecute = $false
+  $startInfo.CreateNoWindow = $true
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
+  $startInfo.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
+  $startInfo.ArgumentList.Add('-C')
+  $startInfo.ArgumentList.Add($Root)
+  foreach ($argument in $Arguments) {
+    $startInfo.ArgumentList.Add($argument)
+  }
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    throw 'Commit is unavailable'
+  }
+  $stdout = $process.StandardOutput.ReadToEndAsync()
+  $stderr = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $exitCode = $process.ExitCode
+  $text = $stdout.GetAwaiter().GetResult()
+  $null = $stderr.GetAwaiter().GetResult()
+  $process.Dispose()
+  if ($exitCode -ne 0) {
+    throw 'Commit is unavailable'
+  }
+  $text.TrimEnd()
+}
+
+function Get-CommitFields {
+  param([string]$Root, [string]$Sha, [string]$Id, [string]$ExpectedState)
+
+  if ($Sha -notmatch '^[0-9a-f]{40}$') {
+    throw 'CommitSha is invalid'
+  }
+  $body = Invoke-GitUtf8Text -Root $Root -Arguments @('show', '-s', '--format=%B', $Sha)
+  $fields = [ordered]@{}
+  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify')) {
+    $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
+    if ($matches.Count -ne 1) {
+      throw 'Commit metadata is invalid'
+    }
+    $fields[$name] = $matches[0].Groups['value'].Value
+  }
+  if (
+    [string]$fields.Automation -cne 'tzg-hourly-controller' -or
+    [string]$fields.Task -cne $Id -or
+    [string]$fields.State -cne $ExpectedState
+  ) {
+    throw 'Commit metadata is invalid'
+  }
+  $result = [regex]::Match([string]$fields.Result, '^问题=(?<goal>.+?)；完成=(?<completed>.+)$')
+  $impact = [regex]::Match([string]$fields.Impact, '^影响=(?<impact>.+?)；边界=(?<boundary>.+)$')
+  $verify = [regex]::Match([string]$fields.Verify, '^验证=(?<verification>.+?)；后续=(?<next>.+)$')
+  if (-not $result.Success -or -not $impact.Success -or -not $verify.Success) {
+    throw 'Commit notification metadata is invalid'
+  }
+  [ordered]@{
+    goal = $result.Groups['goal'].Value
+    completed = $result.Groups['completed'].Value
+    impact = $impact.Groups['impact'].Value
+    boundary = $impact.Groups['boundary'].Value
+    verification = $verify.Groups['verification'].Value
+    next = $verify.Groups['next'].Value
+  }
+}
+
+function New-TaskRequest {
+  $root = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
+  if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) {
+    throw 'RepositoryRoot is invalid'
+  }
+  Assert-StableText -Value $TaskId -Name 'TaskId' -MaximumLength 128
+  Assert-StableText -Value $RunId -Name 'RunId' -MaximumLength 256
+  $meta = Get-TaskMeta -Root $root -Id $TaskId
+  $fields = if (-not [string]::IsNullOrWhiteSpace($CommitSha)) {
+    if ($Status -notin @('completed', 'pending_review')) {
+      throw 'CommitSha is invalid for this status'
+    }
+    Get-CommitFields -Root $root -Sha $CommitSha -Id $TaskId -ExpectedState $Status
+  } else {
+    if ($Status -in @('completed', 'pending_review')) {
+      throw 'CommitSha is required for this status'
+    }
+    Assert-StableText -Value $DetailCode -Name 'DetailCode' -MaximumLength 256
+    $statusLabel = switch ($Status) {
+      'blocked' { '阻塞' }
+      'waiting_decision' { '待决定' }
+      'waiting_reply' { '待回复' }
+      default { '失败' }
+    }
+    $reason = if ([string]::IsNullOrWhiteSpace([string]$meta.stateReason)) {
+      "自动化终态：$statusLabel（$DetailCode）"
+    } else {
+      [string]$meta.stateReason
+    }
+    $next = switch ($Status) {
+      'waiting_decision' { "等待负责人决定后恢复；当前原因：$reason" }
+      'waiting_reply' { "等待负责人回复后恢复；当前原因：$reason" }
+      'blocked' { "解除阻塞条件后再推进；当前原因：$reason" }
+      default { "检查自动化终态 $DetailCode 后再决定是否重启；当前原因：$reason" }
+    }
+    [ordered]@{
+      goal = "推进任务《$($meta.title)》"
+      completed = "本轮未形成已核验业务提交；终态为 $statusLabel（$DetailCode）"
+      impact = '未确认任何业务行为变化'
+      boundary = '未把未提交或未核验内容计为完成'
+      verification = '仅核验自动化终态与任务卡当前状态；没有业务提交可供领域验证'
+      next = $next
+    }
+  }
+  foreach ($name in @('goal', 'completed', 'impact', 'boundary', 'verification', 'next')) {
+    Assert-StableText -Value ([string]$fields[$name]) -Name $name
+  }
+  $eventTail = if ([string]::IsNullOrWhiteSpace($CommitSha)) {
+    "$RunId`:$DetailCode"
+  } else {
+    $CommitSha
+  }
+  [ordered]@{
+    notification = [ordered]@{
+      kind = 'task_outcome'
+      taskId = $TaskId
+      title = [string]$meta.title
+      status = $Status
+      goal = [string]$fields.goal
+      completed = [string]$fields.completed
+      impact = [string]$fields.impact
+      boundary = [string]$fields.boundary
+      verification = [string]$fields.verification
+      next = [string]$fields.next
+      commitSha = if ([string]::IsNullOrWhiteSpace($CommitSha)) { $null } else { $CommitSha }
+    }
+    idempotencyKey = "task_outcome:$TaskId`:$Status`:$eventTail"
+  }
+}
+
+function New-ReportRequest {
+  Assert-StableText -Value $WindowUntil -Name 'WindowUntil' -MaximumLength 64
+  $parsedUntil = [datetimeoffset]::MinValue
+  if (
+    $WindowUntil -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})$' -or
+    -not [datetimeoffset]::TryParse(
+      $WindowUntil,
+      [Globalization.CultureInfo]::InvariantCulture,
+      [Globalization.DateTimeStyles]::RoundtripKind,
+      [ref]$parsedUntil
+    )
+  ) {
+    throw 'WindowUntil is invalid'
+  }
+  Assert-StableText -Value $Title -Name 'Title' -MaximumLength 120
+  Assert-StableText -Value $Body -Name 'Body' -MaximumLength 6000 -AllowNewline
+  $wireKind = if ($Kind -ceq 'DailyReport') { 'daily_report' } else { 'weekly_report' }
+  $automationId = if ($Kind -ceq 'DailyReport') {
+    'tzg-daily-automation-briefing'
+  } else {
+    'tzg-weekly-project-summary'
+  }
+  [ordered]@{
+    notification = [ordered]@{
+      kind = $wireKind
+      title = $Title
+      body = $Body
+    }
+    idempotencyKey = "$wireKind`:$automationId`:$WindowUntil"
+  }
+}
+
+try {
+  if (-not (Test-Path -LiteralPath $script:SenderEntry -PathType Leaf)) {
+    throw 'Notification sender is unavailable'
+  }
+  $resolvedNode = if ([string]::IsNullOrWhiteSpace($NodePath)) {
+    $command = Get-Command node -ErrorAction Stop
+    [IO.Path]::GetFullPath($command.Source)
+  } else {
+    [IO.Path]::GetFullPath($NodePath)
+  }
+  if (-not (Test-Path -LiteralPath $resolvedNode -PathType Leaf)) {
+    throw 'Node runtime is unavailable'
+  }
+  $request = if ($Kind -ceq 'TaskOutcome') {
+    New-TaskRequest
+  } else {
+    New-ReportRequest
+  }
+  $json = $request | ConvertTo-Json -Depth 20 -Compress
+  $output = @($json | & $resolvedNode $script:SenderEntry 2>$null)
+  $exitCode = $LASTEXITCODE
+  $lines = @($output | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+  if ($lines.Count -ne 1) {
+    throw 'Notification sender returned an invalid response'
+  }
+  [Console]::Out.WriteLine([string]$lines[0])
+  exit $exitCode
+} catch {
+  Write-InvalidResult
+  exit 22
+}

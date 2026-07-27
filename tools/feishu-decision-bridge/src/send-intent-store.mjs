@@ -365,6 +365,7 @@ export function createSendIntentStore(stateRoot, options = {}) {
   const atomicWrite = typeof options?.atomicWrite === 'function'
     ? options.atomicWrite
     : async (path, record) => defaultAtomicWrite(path, record);
+  const retryUnknown = options?.retryUnknown !== false;
 
   async function writeRecord(path, record) {
     await atomicWrite(path, record, defaultAtomicWrite);
@@ -404,6 +405,18 @@ export function createSendIntentStore(stateRoot, options = {}) {
         }
 
         if (record?.status === 'IN_FLIGHT' || record?.status === 'OUTCOME_UNKNOWN') {
+          if (!retryUnknown) {
+            if (record.status === 'IN_FLIGHT') {
+              const lockedUnknown = makeRecord(
+                intent,
+                'OUTCOME_UNKNOWN',
+                record.firstAttemptAt,
+                intent.now,
+              );
+              await writeRecord(path, lockedUnknown).catch(() => {});
+            }
+            return unknownOutcome(intent);
+          }
           const age = intent.now.getTime() - Date.parse(record.firstAttemptAt);
           if (!Number.isFinite(age) || age < 0 || age >= SAFE_RETRY_MS) {
             if (record.status === 'IN_FLIGHT') {

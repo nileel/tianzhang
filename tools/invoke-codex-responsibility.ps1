@@ -22,18 +22,21 @@ param(
   [string]$DecisionOption,
   [switch]$ReadDecisionReplyFromStdin,
   [ValidateRange(1, 86400)]
-  [int]$ResponsibilityTimeoutSeconds = 3000
+  [int]$ResponsibilityTimeoutSeconds = 3000,
+  [string]$NotificationPath = (Join-Path $PSScriptRoot 'send-feishu-notification.ps1')
 )
 
 $ErrorActionPreference = 'Stop'
 $runnerPath = Join-Path $PSScriptRoot 'codex-cli-session.ps1'
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $taskCardCheckerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
+$notificationPath = $NotificationPath
 $result = $null
 $resultExitCode = 1
 $capturedSessionId = $null
 $verifiedCommitSha = $null
 $decisionReply = $null
+$runClosed = $false
 
 function Assert-StableArgument {
   param([AllowNull()][string]$Value, [string]$Name, [int]$MaximumLength = 512)
@@ -54,6 +57,40 @@ function Invoke-GitText {
     throw "Git command failed: git $($Arguments -join ' ')"
   }
   (@($output) -join "`n").TrimEnd()
+}
+
+function Invoke-GitUtf8Text {
+  param([string[]]$Arguments)
+
+  $startInfo = [Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = 'git'
+  $startInfo.UseShellExecute = $false
+  $startInfo.CreateNoWindow = $true
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
+  $startInfo.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
+  $startInfo.ArgumentList.Add('-C')
+  $startInfo.ArgumentList.Add($script:resolvedRepositoryRoot)
+  foreach ($argument in $Arguments) {
+    $startInfo.ArgumentList.Add($argument)
+  }
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    throw 'Git command failed to start'
+  }
+  $stdout = $process.StandardOutput.ReadToEndAsync()
+  $stderr = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $exitCode = $process.ExitCode
+  $text = $stdout.GetAwaiter().GetResult()
+  $null = $stderr.GetAwaiter().GetResult()
+  $process.Dispose()
+  if ($exitCode -ne 0) {
+    throw "Git command failed: git $($Arguments -join ' ')"
+  }
+  $text.TrimEnd()
 }
 
 function Get-WorkspaceSnapshot {
@@ -170,6 +207,7 @@ function New-ResponsibilityPrompt {
     '先完整读取仓库 AGENTS.md、开发管理/自动工作流规则.txt 和上述入口。'
     '本自动化责任方由单写入租约隔离，必须直接在上述 RepositoryRoot 的当前分支工作；不得创建或切换 linked worktree、任务分支，不得调用 using-git-worktrees 或 git worktree add。'
     '责任方端到端实施、最小充分验证并使用 automation-finalize-commit.ps1 创建路径限定提交。'
+    '自动化业务提交的三行摘要必须使用以下单行结构且六个子字段都非空：Result: 问题=<原问题>；完成=<具体交付>，Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>，Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>。'
     'Execution、Review、QueueMaintenance 责任方仅在实际到达新的用户决定事件时，才读取 开发管理/自动工作流恢复规则.txt 的“创建决定恢复”一节；未到达决定事件时不得读取该文件。'
     '不得自行调用 RecordResult 或 Release；固定调用器会根据 Git 与 runtime 核验结果后统一关闭本轮。'
   )
@@ -276,7 +314,7 @@ function Invoke-SessionRunner {
 function Get-CommitMetadata {
   param([string]$CommitSha)
 
-  $body = Invoke-GitText -Arguments @('show', '-s', '--format=%B', $CommitSha)
+  $body = Invoke-GitUtf8Text -Arguments @('show', '-s', '--format=%B', $CommitSha)
   $fields = [ordered]@{}
   foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify')) {
     $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
@@ -286,6 +324,40 @@ function Get-CommitMetadata {
     $fields[$name] = $matches[0].Groups['value'].Value
   }
   [pscustomobject]$fields
+}
+
+function Test-NotificationMetadata {
+  param($Metadata)
+
+  if ($null -eq $Metadata) {
+    return $false
+  }
+  $patterns = [ordered]@{
+    Result = '^问题=(?<first>.+?)；完成=(?<second>.+)$'
+    Impact = '^影响=(?<first>.+?)；边界=(?<second>.+)$'
+    Verify = '^验证=(?<first>.+?)；后续=(?<second>.+)$'
+  }
+  foreach ($entry in $patterns.GetEnumerator()) {
+    $value = [string]$Metadata.($entry.Key)
+    if (
+      [string]::IsNullOrWhiteSpace($value) -or
+      $value.Length -gt 2000 -or
+      $value -match '[\x00-\x1F\x7F]'
+    ) {
+      return $false
+    }
+    $match = [regex]::Match($value, $entry.Value)
+    if (
+      -not $match.Success -or
+      [string]::IsNullOrWhiteSpace($match.Groups['first'].Value) -or
+      [string]::IsNullOrWhiteSpace($match.Groups['second'].Value) -or
+      $match.Groups['first'].Value.Length -gt 1000 -or
+      $match.Groups['second'].Value.Length -gt 1000
+    ) {
+      return $false
+    }
+  }
+  $true
 }
 
 function Invoke-TaskCardEvidence {
@@ -351,6 +423,7 @@ function Close-Run {
   if ([string]$released.status -cne 'RELEASED') {
     throw "Release returned $($released.status)"
   }
+  $script:runClosed = $true
 }
 
 try {
@@ -482,7 +555,8 @@ try {
       $null -ne $metadata -and
       [string]$metadata.Automation -ceq 'tzg-hourly-controller' -and
       [string]$metadata.Task -ceq $TaskId -and
-      [string]$metadata.State -ceq 'completed'
+      [string]$metadata.State -ceq 'completed' -and
+      (Test-NotificationMetadata -Metadata $metadata)
     ) {
       $matchingCommits.Add($commitSha)
     }
@@ -608,6 +682,43 @@ try {
       sessionId = $capturedSessionId; commitSha = $verifiedCommitSha; detailCode = 'invoker_error'
     }
     $resultExitCode = 1
+  }
+}
+
+if (
+  $runClosed -and
+  $TaskId -cne 'QUEUE-MAINTENANCE' -and
+  $null -ne $result -and
+  (Test-Path -LiteralPath $notificationPath -PathType Leaf)
+) {
+  try {
+    $notificationStatus = switch ([string]$result.category) {
+      'waiting_decision' { 'waiting_decision' }
+      'blocked' { 'blocked' }
+      'failed' { 'failed' }
+      default { 'completed' }
+    }
+    $notificationArguments = @(
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $notificationPath,
+      '-Kind', 'TaskOutcome',
+      '-RepositoryRoot', $script:resolvedRepositoryRoot,
+      '-TaskId', $TaskId,
+      '-Status', $notificationStatus,
+      '-RunId', $RunId
+    )
+    if (-not [string]::IsNullOrWhiteSpace([string]$result.commitSha)) {
+      $notificationArguments += @('-CommitSha', [string]$result.commitSha)
+    } else {
+      $detailCode = if ([string]::IsNullOrWhiteSpace([string]$result.detailCode)) {
+        [string]$result.category
+      } else {
+        [string]$result.detailCode
+      }
+      $notificationArguments += @('-DetailCode', $detailCode)
+    }
+    $null = @(& pwsh @notificationArguments 2>$null)
+  } catch {
+    # Notification delivery is isolated from the already closed business run.
   }
 }
 

@@ -4,13 +4,16 @@
 
 1. 以上次运行时间为 `Since`、本次运行时间为 `Until`；调用 `tools/get-automation-briefing-source.ps1` 取得时间窗内候选 JSON。没有上次运行时间时只回看此前 24 小时。
 2. 只对候选业务提交读取支持元数据 `Result`、`Impact`、`Verify` 所需的最小 diff；确认提交内容与声明一致，但不重跑验证、不代做领域复审。
-3. 按 `Task` 合并同一任务的多个业务提交，以窗口内最新候选提交中的任务事实分类：归档任务为 `completed`；活跃任务保留 `blocked`、`frozen`、`pending_decision` 或 `waiting_reply`；外部 `businessCommit` 保留 `pending_review`；缺少可核验生命周期时记录 `outcome_unverifiable`。卡片清理、中间提交和未带 Automation 元数据的 `handoffCommit` 不重复统计为独立成果。
+3. 按 `Task` 合并同一任务的多个业务提交，以窗口内最新候选提交中的任务事实分类：归档任务为 `completed`；活跃任务保留 `blocked`、`frozen`、`pending_decision` 或 `waiting_reply`；外部 `businessCommit` 保留 `pending_review`；缺少可核验生命周期时记录 `outcome_unverifiable`。优先读取结构化 `Result: 问题=…；完成=…`、`Impact: 影响=…；边界=…`、`Verify: 验证=…；后续=…`；旧提交仍按现有三行与必要 diff 核验，不因缺少新子字段否定历史成果。卡片清理、中间提交和未带 Automation 元数据的 `handoffCommit` 不重复统计为独立成果。
 4. `queue_maintenance` 只有在 diff 证明它实际改变 ready 候选、固定顺序、依赖或阻塞时才进入正文；不得把维护提交数量当作业务成果。
 5. 在候选核验后只读 `开发管理/当前任务队列.txt`，按现有行顺序读取队首最多三张任务卡。将它们作为运行结束时的当前快照，不与时间窗内成果混为同一时点，也不自行重排。
 6. 输出固定为以下四段，空段省略：
    - `## 净成果`：按任务说明解决的问题、实际产出、已确认影响和元数据声明的验证。
    - `## 未闭环`：只列 `blocked`、`frozen`、`pending_decision`、`waiting_reply` 与 `pending_review`，并说明继续推进所缺条件。
    - `## 接下来`：列当前固定队首最多三项及已知直接依赖，注明快照时间。
-   - `## 异常`：只在元数据无效、生命周期无法核验、提交与 diff 不符、工作区存在未提交路径或 runtime 存在需人工介入的异常时输出。
+   - `## 异常`：只在元数据无效、生命周期无法核验、提交与 diff 不符、工作区存在未提交路径、runtime 存在需人工介入的异常，或本时间窗存在未投递飞书通知时输出。
 7. 调用 `tools/hourly-automation-lease.ps1 -Action Show` 只读检查控制面，并用 `git status --short` 判断工作区是否存在未提交路径；不得读取或归因无关 diff。有效租约属于正常运行，不作为异常；逻辑暂停、遗留 recovery 或其他需人工介入的控制面状态才进入异常。
-8. 没有候选时明确写“本时间窗没有带有效 Automation 元数据的业务提交”，但仍输出当前队首；候选源失败时明确报告 `source_error`，不得用旧 memory 填充。
+8. 调用 `tools/get-feishu-notification-summary.ps1 -Since <Since 的 ISO 时间> -Until <Until 的 ISO 时间>` 只读取得本时间窗投递摘要。`undelivered>0` 时在“异常”中只写未投递总数与 `task_outcome`、`daily_report`、`weekly_report` 分类数；`SOURCE_UNAVAILABLE` 时写明投递审计不可用，不读取私有目录或 provider 信息。
+9. 没有候选时明确写“本时间窗没有带有效 Automation 元数据的业务提交”，但仍输出当前队首；候选源失败时明确报告 `source_error`，不得用旧 memory 填充。
+10. 先形成不超过 6000 个 Unicode code point 的最终 Markdown 正文，正文不得包含独立成行的 PowerShell here-string 终止符。标题固定为 `天章日报 · YYYY-MM-DD`。正文确定后只调用一次 `tools/send-feishu-notification.ps1 -Kind DailyReport -WindowUntil <Until 的 ISO 时间> -Title <标题> -Body <完整正文>`，不得截断、缩写或另写飞书版。
+11. Codex 最终输出同一份完整正文。飞书返回 `PROVIDER_ACCEPTED` 时不增加成功噪音；返回 `CHANNEL_UNAVAILABLE`、`DELIVERY_FAILED`、`PROVIDER_OUTCOME_UNKNOWN` 或 `INVALID_INPUT` 时，在 Codex 正文末尾追加一行脱敏的 `飞书投递状态：<类别>`。飞书失败不改变报告事实、时间窗或游标，不重试、不改自动化配置。

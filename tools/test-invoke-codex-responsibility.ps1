@@ -21,11 +21,14 @@ $testRoot = Join-Path ([IO.Path]::GetTempPath()) "tzg-invoke-responsibility-test
 $fakeBin = Join-Path $testRoot 'bin'
 $gitRoot = Join-Path $testRoot 'repo'
 $tracePath = Join-Path $testRoot 'stdin.txt'
+$notificationTracePath = Join-Path $testRoot 'notification-args.json'
 $childPidPath = Join-Path $testRoot 'timeout-child-pid.txt'
 $stateRoot = Join-Path $automationStateRoot "tzg-invoke-responsibility-tests\$testId"
 $bridgeRoot = Join-Path $automationStateRoot "tzg-feishu-decision-bridge\invoke-test-$testId"
 $decisionRequestPath = Join-Path $bridgeRoot 'decision-request.json'
 $fakeCodexPath = Join-Path $fakeBin 'codex.ps1'
+$fakeNotificationPath = Join-Path $testRoot 'fake-notification.ps1'
+$missingNotificationPath = Join-Path $testRoot 'missing-notification.ps1'
 $sessionId = '22222222-3333-4444-8555-666666666666'
 
 function Invoke-LeaseJson {
@@ -163,10 +166,15 @@ function Invoke-Responsibility {
     [ValidateSet('A', 'B', 'C')]
     [string]$DecisionOption,
     [string]$DecisionInput,
-    [int]$ResponsibilityTimeoutSeconds
+    [int]$ResponsibilityTimeoutSeconds,
+    [switch]$UseFakeNotification,
+    [int]$NotificationExitCode = 0
   )
 
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
+  if ($UseFakeNotification) {
+    Remove-Item -LiteralPath $notificationTracePath -Force -ErrorAction SilentlyContinue
+  }
   $startInfo = [Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = 'pwsh'
   $startInfo.UseShellExecute = $false
@@ -183,7 +191,8 @@ function Invoke-Responsibility {
       '-RepositoryRoot', $gitRoot,
       '-TaskId', $TaskId,
       '-RunId', $RunId,
-      '-StateRoot', $stateRoot
+      '-StateRoot', $stateRoot,
+      '-NotificationPath', $(if ($UseFakeNotification) { $fakeNotificationPath } else { $missingNotificationPath })
     )) {
     $startInfo.ArgumentList.Add($argument)
   }
@@ -220,6 +229,8 @@ function Invoke-Responsibility {
   $startInfo.Environment['RESPONSIBILITY_TEST_LEASE_PATH'] = $leasePath
   $startInfo.Environment['RESPONSIBILITY_TEST_DECISION_PATH'] = $decisionRequestPath
   $startInfo.Environment['RESPONSIBILITY_TEST_CHILD_PID_PATH'] = $childPidPath
+  $startInfo.Environment['RESPONSIBILITY_TEST_NOTIFICATION_TRACE'] = $notificationTracePath
+  $startInfo.Environment['RESPONSIBILITY_TEST_NOTIFICATION_EXIT'] = [string]$NotificationExitCode
 
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $startInfo
@@ -324,7 +335,7 @@ function Write-FakeUtf8 {
 function Commit-CompletedResult {
   param([string[]]$Paths)
   & git add -A -- @Paths
-  $message = "test: automation result`n`nAutomation: tzg-hourly-controller`nTask: $($env:RESPONSIBILITY_TEST_TASK_ID)`nState: completed`nResult: fixture completed`nImpact: no downstream impact`nVerify: fixture"
+  $message = "test: automation result`n`nAutomation: tzg-hourly-controller`nTask: $($env:RESPONSIBILITY_TEST_TASK_ID)`nState: completed`nResult: 问题=fixture problem；完成=fixture completed`nImpact: 影响=no downstream impact；边界=fixture boundary`nVerify: 验证=fixture verification；后续=fixture next"
   & git commit -q -m $message
 }
 
@@ -461,6 +472,16 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
 $global:LASTEXITCODE = 0
 '@
   [IO.File]::WriteAllText($fakeCodexPath, $fakeCodex, [Text.UTF8Encoding]::new($false))
+  $fakeNotification = @'
+[IO.File]::WriteAllText(
+  $env:RESPONSIBILITY_TEST_NOTIFICATION_TRACE,
+  ($args | ConvertTo-Json -Compress),
+  [Text.UTF8Encoding]::new($false)
+)
+[Console]::Out.WriteLine('{"result":"DELIVERY_FAILED"}')
+exit [int]$env:RESPONSIBILITY_TEST_NOTIFICATION_EXIT
+'@
+  [IO.File]::WriteAllText($fakeNotificationPath, $fakeNotification, [Text.UTF8Encoding]::new($false))
 
   foreach ($preflightCase in @(
       @{
@@ -559,6 +580,25 @@ $global:LASTEXITCODE = 0
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
+  $notificationTaskId = 'task-notification-failure'
+  Set-TaskProjectionFixture -TaskId $notificationTaskId
+  $notificationRun = Acquire-TestLease -TaskId $notificationTaskId
+  $notificationCompleted = Invoke-Responsibility `
+    -Case 'commit-archived' `
+    -TaskId $notificationTaskId `
+    -RunId $notificationRun `
+    -UseFakeNotification `
+    -NotificationExitCode 21
+  Assert-Equal -Actual $notificationCompleted.ExitCode -Expected 0 -Message 'Notification failure changed successful task exit code'
+  Assert-Equal -Actual $notificationCompleted.Json.status -Expected 'completed' -Message 'Notification failure changed successful task status'
+  Assert-LeaseReleased | Out-Null
+  Assert-True -Condition (Test-Path -LiteralPath $notificationTracePath) -Message 'Closed task did not invoke notification adapter'
+  $notificationArguments = @([IO.File]::ReadAllText($notificationTracePath) | ConvertFrom-Json)
+  foreach ($requiredArgument in @('TaskOutcome', $notificationTaskId, 'completed', [string]$notificationCompleted.Json.commitSha)) {
+    Assert-True -Condition ($requiredArgument -in $notificationArguments) -Message "Notification adapter missed argument: $requiredArgument"
+  }
+
+  Reset-GitFixture
   Set-TaskProjectionFixture -TaskId 'task-review' -Route 'codex_review'
   $reviewRun = Acquire-TestLease -TaskId 'task-review'
   $reviewCompleted = Invoke-Responsibility -Case 'commit-archived' -TaskId 'task-review' -RunId $reviewRun -Route 'Review'
@@ -571,7 +611,7 @@ $global:LASTEXITCODE = 0
   Reset-GitFixture
   Set-TaskProjectionFixture -TaskId 'task-global-projection' -DispatchState 'blocked'
   $queueEmptyRun = Acquire-TestLease -TaskId 'QUEUE-MAINTENANCE'
-  $queueEmpty = Invoke-Responsibility -Case 'no-outcome' -TaskId 'QUEUE-MAINTENANCE' -RunId $queueEmptyRun -Route 'QueueMaintenance'
+  $queueEmpty = Invoke-Responsibility -Case 'no-outcome' -TaskId 'QUEUE-MAINTENANCE' -RunId $queueEmptyRun -Route 'QueueMaintenance' -UseFakeNotification
   Assert-Equal -Actual $queueEmpty.ExitCode -Expected 2 -Message 'Clean empty queue returned wrong exit code'
   Assert-Equal -Actual $queueEmpty.Json.status -Expected 'blocked' -Message 'Clean empty queue status mismatch'
   Assert-Equal -Actual $queueEmpty.Json.category -Expected 'blocked' -Message 'Clean empty queue category mismatch'
@@ -580,6 +620,7 @@ $global:LASTEXITCODE = 0
   $queueEmptyState = Assert-LeaseReleased
   Assert-Equal -Actual $queueEmptyState.state.blocking.fingerprint -Expected 'queue:no_runnable_candidate' -Message 'Clean empty queue fingerprint mismatch'
   Assert-Equal -Actual $queueEmptyState.state.blocking.count -Expected 1 -Message 'Clean empty queue blocker count mismatch'
+  Assert-True -Condition (-not (Test-Path -LiteralPath $notificationTracePath)) -Message 'No-op queue maintenance emitted a notification'
 
   $queueRepeatRun = Acquire-TestLease -TaskId 'QUEUE-MAINTENANCE'
   $queueRepeat = Invoke-Responsibility -Case 'no-outcome' -TaskId 'QUEUE-MAINTENANCE' -RunId $queueRepeatRun -Route 'QueueMaintenance'

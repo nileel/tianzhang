@@ -163,6 +163,13 @@ Assert-Contains -Text $prompt -Context 'external completed gate' -Values @(
 Assert-Contains -Text $prompt -Context 'success closeout order' -Values @(
   '全部成立后依次调用 `RecordResult -Category success` 与 `Release`'
 )
+Assert-Contains -Text $prompt -Context 'external outcome notification' -Values @(
+  '六个结构化通知子字段',
+  'tools/send-feishu-notification.ps1',
+  '-Kind TaskOutcome',
+  '-Status pending_review',
+  '飞书返回任何失败都不得改变'
+)
 Assert-Contains -Text $prompt -Context 'lifecycle result report' -Values @(
   'taskState',
   'readyCount'
@@ -262,6 +269,15 @@ Assert-Contains -Text $rules -Context 'queue outcome classification' -Values @(
   'blocked/no_runnable_candidate',
   '不制造'
 )
+Assert-Contains -Text $rules -Context 'automation notification metadata' -Values @(
+  'Result: 问题=<原问题>；完成=<具体交付>',
+  'Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>',
+  'Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>',
+  '六个子字段',
+  'tools/send-feishu-notification.ps1 -Kind TaskOutcome',
+  '普通队列维护和无业务变化轮询不发送',
+  '通知失败只记录脱敏投递状态'
+)
 Assert-Contains -Text $maintenanceRules -Context 'queue absence evidence' -Values @(
   'tools/check-task-cards.ps1 -OutputJson',
   'readyCount',
@@ -341,6 +357,15 @@ Assert-Contains -Text $invoker -Context 'responsibility child deadline contract'
   '$process.Kill($true)',
   'exitCode = 124'
 )
+Assert-Contains -Text $invoker -Context 'responsibility outcome notification contract' -Values @(
+  'Test-NotificationMetadata',
+  'Result = ''^问题=',
+  'Impact = ''^影响=',
+  'Verify = ''^验证=',
+  'send-feishu-notification.ps1',
+  '$runClosed',
+  '$TaskId -cne ''QUEUE-MAINTENANCE'''
+)
 Assert-Contains -Text $runner -Context 'live session contract' -Values @(
   'codex_session_id='
 )
@@ -392,6 +417,14 @@ Assert-Contains -Text $dailyPrompt -Context 'daily briefing lifecycle categories
   'queue_maintenance',
   'outcome_unverifiable'
 )
+Assert-Contains -Text $dailyPrompt -Context 'daily Feishu delivery contract' -Values @(
+  'tools/get-feishu-notification-summary.ps1',
+  'undelivered>0',
+  'tools/send-feishu-notification.ps1 -Kind DailyReport',
+  '完整正文',
+  '6000 个 Unicode code point',
+  '飞书投递状态'
+)
 Assert-Contains -Text $weeklyPrompt -Context 'weekly project summary prompt' -Values @(
   '不得修改项目文件',
   'lastSuccessfulUntil',
@@ -399,6 +432,22 @@ Assert-Contains -Text $weeklyPrompt -Context 'weekly project summary prompt' -Va
   '开发管理/当前任务队列.txt',
   '下周重点',
   '最多三项'
+)
+Assert-Contains -Text $weeklyPrompt -Context 'weekly risk classification and delivery contract' -Values @(
+  '`ready`',
+  '`blocked`',
+  '`frozen`',
+  '`pending_decision` / `waiting_reply`',
+  '`pending_review`',
+  '`completed`',
+  '`no_task`',
+  '`boundary_only`',
+  '`evidence_conflict`',
+  'completed` 不得列为当前风险',
+  'Unity `src/` 当前行为',
+  'tools/send-feishu-notification.ps1 -Kind WeeklyReport',
+  '完整正文',
+  '6000 个 Unicode code point'
 )
 
 $showIndex = $prompt.IndexOf('Show', [StringComparison]::Ordinal)
@@ -439,6 +488,10 @@ foreach ($requiredPath in @(
     'tools\automation-workspace-guard.ps1',
     'tools\automation-finalize-commit.ps1',
     'tools\get-automation-briefing-source.ps1',
+    'tools\send-feishu-notification.ps1',
+    'tools\get-feishu-notification-summary.ps1',
+    'tools\feishu-decision-bridge\src\send-notification.mjs',
+    'tools\feishu-decision-bridge\src\notification-summary.mjs',
     'tools\feishu-decision-bridge\src\consume-reply.mjs'
   )) {
   Assert-Contract -Condition (Test-Path -LiteralPath (Join-Path $root $requiredPath) -PathType Leaf) -Message "missing workflow component: $requiredPath"
