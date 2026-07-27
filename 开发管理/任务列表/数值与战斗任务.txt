@@ -20,7 +20,6 @@
 | N-SUPPRESS-01 | P2 | Codex | 阻塞（N-SUPPRESS-01A、N-SUPPRESS-01B） | — | 确定性削位与封丹父任务；不直接执行。 | — |
 | N-SUPPRESS-01A | P2 | codex | 已排队 | — | 削位／封丹现状与确定性实现输入 | 开发管理/任务卡/N-SUPPRESS-01A.txt |
 | N-SUPPRESS-01B | P2 | codex | 阻塞 | N-SUPPRESS-01A | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |
-| N-STATE-01 | P2 | codex | 已排队 | — | 战斗状态、回溯与因果债务 | 开发管理/任务卡/N-STATE-01.txt |
 | N-AI-01 | P3 | Codex | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |
 
 ## G2 任务执行边界

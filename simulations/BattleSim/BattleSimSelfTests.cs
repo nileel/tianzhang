@@ -58,6 +58,9 @@ static class BattleSimSelfTests
         if (suite == "ct-reaction-tq052")
             return RunChecked(suite, RunCtReactionTq052);
 
+        if (suite == "state-rewind-causal-n-state-01")
+            return RunChecked(suite, RunCombatStateRewindCausalNState01);
+
         if (suite == "crit-multiplier-tq053")
             return RunChecked(suite, RunCritMultiplierTq053);
 
@@ -1999,6 +2002,167 @@ static class BattleSimSelfTests
         AssertEqual((100.0, 0.0), (first.winsA, first.winsB),
             "group victory settlement keeps the surviving team");
         AssertEqual(first, second, "fixed seed reproduces the same group result");
+    }
+
+    static void RunCombatStateRewindCausalNState01()
+    {
+        CombatLocalStateSnapshot Snapshot(string position, int hitPoints, int mana) => new(
+            position,
+            "walk",
+            "ground",
+            "alive",
+            hitPoints,
+            mana,
+            "stance:none",
+            "process:none",
+            new Dictionary<string, int> { ["art"] = 2, ["divine"] = 4 },
+            new Dictionary<string, int> { ["art"] = 1 },
+            new Dictionary<string, int> { ["potion"] = 1 });
+
+        var actor = Character.Create(
+            "state-actor",
+            new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 },
+            "physical");
+        var state = actor.StartCombatState(Snapshot("0,0", 100, 50));
+        AssertEqual(1, state.AutomaticResponseCapacity, "configured response capacity is explicit");
+
+        var buffProfile = new CombatTemporaryStatusProfile(
+            "fixture-guard",
+            CombatStatusCarrierKind.TemporaryStatus,
+            CombatStatusPolarity.Buff,
+            new[] { CombatStatusTag.Defense },
+            CombatStatusSourceKind.SelfAbility,
+            CombatStatusRemovalPolicy.Normal,
+            DefinitionVersion: 1);
+        var wrongCarrier = state.TryApplyTemporaryStatus(new CombatStatusApplication(
+            "fixture-wrong-carrier",
+            buffProfile with { CarrierKind = CombatStatusCarrierKind.StanceState },
+            "state-actor",
+            "state-actor",
+            2));
+        AssertEqual(false, wrongCarrier.IsApplied, "stance state cannot enter temporary-status carrier");
+        AssertEqual("STATE_CARRIER_NOT_TEMPORARY_STATUS", wrongCarrier.Reason, "carrier rejection is stable");
+
+        var guard = state.TryApplyTemporaryStatus(new CombatStatusApplication(
+            "fixture-guard-instance",
+            buffProfile,
+            "state-actor",
+            "state-actor",
+            2));
+        AssertEqual(true, guard.IsApplied, "complete buff status is accepted by its owner");
+        var mixed = state.TryApplyTemporaryStatus(new CombatStatusApplication(
+            "fixture-mixed-instance",
+            new CombatTemporaryStatusProfile(
+                "fixture-mixed",
+                CombatStatusCarrierKind.TemporaryStatus,
+                CombatStatusPolarity.Mixed,
+                new[] { CombatStatusTag.Offense, CombatStatusTag.Resource },
+                CombatStatusSourceKind.OtherAbility,
+                CombatStatusRemovalPolicy.Normal,
+                DefinitionVersion: 1),
+            "other-actor",
+            "state-actor",
+            1));
+        AssertEqual(true, mixed.IsApplied, "mixed polarity is explicit rather than neutral");
+        var polarityConflict = state.TryApplyTemporaryStatus(new CombatStatusApplication(
+            "fixture-guard-debuff-instance",
+            buffProfile with { Polarity = CombatStatusPolarity.Debuff },
+            "other-actor",
+            "state-actor",
+            1));
+        AssertEqual(false, polarityConflict.IsApplied, "one status id cannot change polarity by source or target");
+        AssertEqual("STATE_POLARITY_CONFLICT", polarityConflict.Reason, "polarity rejection is stable");
+
+        state.RecordOwnActionCheckpoint("fixture-checkpoint", ownActionSequence: 1);
+        var checkpointGuard = state.TemporaryStatuses.Single(status => status.InstanceId == "fixture-guard-instance");
+        state.SynchronizeLocalState(Snapshot("3,1", 40, 10));
+        var localDebuff = state.TryApplyTemporaryStatus(new CombatStatusApplication(
+            "fixture-local-debuff",
+            new CombatTemporaryStatusProfile(
+                "fixture-local-debuff",
+                CombatStatusCarrierKind.TemporaryStatus,
+                CombatStatusPolarity.Debuff,
+                new[] { CombatStatusTag.Control },
+                CombatStatusSourceKind.OtherAbility,
+                CombatStatusRemovalPolicy.Normal,
+                DefinitionVersion: 1),
+            "other-actor",
+            "state-actor",
+            1));
+        AssertEqual(true, localDebuff.IsApplied, "post-checkpoint local state can change");
+        AssertEqual(true, state.RecordLedgerEntry(new CombatStateLedgerEntry(
+            "fixture-external-cost", 2, CombatStateLedgerScope.ExternalCommitted, HitPointCost: 8, ManaCost: 5)).IsApplied,
+            "external committed cost is classified");
+        AssertEqual(true, state.RecordLedgerEntry(new CombatStateLedgerEntry(
+            "fixture-protected-cost", 3, CombatStateLedgerScope.ProtectedHistory, HitPointCost: 2, ManaCost: 3)).IsApplied,
+            "protected history cost is classified");
+
+        var createdDebt = state.CreateCausalDebt(new CausalDebtSpec(
+            "fixture-debt",
+            "fixture-action",
+            "fixture-result",
+            "state-actor",
+            ResourceCost: 12,
+            ResultBudget: 7,
+            DueOwnActionSequence: 2));
+        AssertEqual(true, createdDebt.IsApplied, "causal debt is created before rewind");
+
+        var rewind = state.Rewind("fixture-rewind", "fixture-checkpoint");
+        AssertEqual(true, rewind.IsApplied, "local checkpoint rewind succeeds");
+        AssertEqual(1, rewind.ReappliedExternalEntryCount, "external costs are replayed after local restore");
+        AssertEqual(1, rewind.ReappliedProtectedEntryCount, "protected costs are replayed after local restore");
+        AssertEqual("0,0", state.CurrentLocalState.PositionId, "rewind restores local position only");
+        AssertEqual(90, state.CurrentLocalState.HitPoints, "rewind replays external and protected health costs");
+        AssertEqual(42, state.CurrentLocalState.Mana, "rewind replays external and protected mana costs");
+        AssertEqual(false, state.TemporaryStatuses.Any(status => status.InstanceId == "fixture-local-debuff"),
+            "post-checkpoint target-local status is removed");
+        AssertEqual(true, ReferenceEquals(checkpointGuard, state.TemporaryStatuses.Single(status => status.InstanceId == "fixture-guard-instance")),
+            "rewind restores the same unique status instance without copying it");
+        AssertEqual(1, state.CausalDebts.Count, "causal debt remains protected history across rewind");
+
+        var repeatedRewind = state.Rewind("fixture-rewind", "fixture-checkpoint");
+        AssertEqual(rewind, repeatedRewind, "same rewind event is idempotent");
+        AssertEqual(42, state.CurrentLocalState.Mana, "idempotent rewind does not replay costs twice");
+
+        var acceptedResponse = state.TryConsumeAutomaticResponse(new AutomaticResponseAttempt(
+            "fixture-root-1", "fixture-rule-1", true, true, true, true, true));
+        AssertEqual(true, acceptedResponse.IsAccepted, "fully legal response consumes capacity only on settlement");
+        AssertEqual(0, acceptedResponse.RemainingCapacity, "accepted response consumes exactly one capacity");
+        var exhaustedResponse = state.TryConsumeAutomaticResponse(new AutomaticResponseAttempt(
+            "fixture-root-2", "fixture-rule-1", true, true, true, true, true));
+        AssertEqual(false, exhaustedResponse.IsAccepted, "capacity exhaustion rejects later response");
+        AssertEqual("CAUSAL_RESPONSE_CAPACITY_EXHAUSTED", exhaustedResponse.Reason, "capacity rejection is stable");
+        state.CompleteOwnActiveAction();
+        var restoredResponse = state.TryConsumeAutomaticResponse(new AutomaticResponseAttempt(
+            "fixture-root-3", "fixture-rule-1", true, true, true, true, true));
+        AssertEqual(true, restoredResponse.IsAccepted, "completed own action restores configured response capacity");
+        var invalidResponse = state.TryConsumeAutomaticResponse(new AutomaticResponseAttempt(
+            "fixture-root-4", "fixture-rule-1", false, true, true, true, true));
+        AssertEqual(false, invalidResponse.IsAccepted, "invalid response never spends capacity");
+        AssertEqual("CAUSAL_RESPONSE_TARGET_INVALID", invalidResponse.Reason, "pre-settlement rejection is stable");
+
+        var recipientCharacter = Character.Create(
+            "state-recipient",
+            new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 },
+            "physical");
+        var recipient = recipientCharacter.StartCombatState(Snapshot("1,0", 80, 100));
+        var transfer = state.TransferCausalDebt("fixture-transfer", "fixture-debt", recipient, true, true);
+        AssertEqual(true, transfer.IsApplied, "eligible participant receives the existing debt instance");
+        AssertEqual(0, state.CausalDebts.Count, "transfer removes debt from prior holder instead of copying it");
+        AssertEqual(1, recipient.CausalDebts.Count, "transfer leaves exactly one debt owner");
+        AssertEqual("state-recipient", recipient.CausalDebts[0].CurrentHolderCombatantId, "debt holder changes deterministically");
+        AssertEqual(12, recipient.CausalDebts[0].OutstandingResourceCost, "transfer preserves outstanding debt conservation");
+        AssertEqual(transfer, state.TransferCausalDebt("fixture-transfer", "fixture-debt", recipient, true, true),
+            "same transfer operation is idempotent");
+
+        var repaid = recipient.RepayCausalDebt("fixture-repayment", "fixture-debt");
+        AssertEqual(true, repaid.IsApplied, "current holder pays the full debt exactly once");
+        AssertEqual(CausalDebtSettlementState.Repaid, recipient.CausalDebts[0].State, "debt closes as repaid");
+        AssertEqual(0, recipient.CausalDebts[0].OutstandingResourceCost, "repayment clears outstanding resource cost");
+        AssertEqual(88, recipient.CurrentLocalState.Mana, "repayment debits the current holder once");
+        AssertEqual(repaid, recipient.RepayCausalDebt("fixture-repayment", "fixture-debt"),
+            "same repayment operation is idempotent");
+        AssertEqual(88, recipient.CurrentLocalState.Mana, "repeated repayment does not double-pay");
     }
 
     static void RunEnvironmentRulesNEnv01()

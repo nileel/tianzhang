@@ -283,6 +283,24 @@ static class Combat
             ? GoldenCoreCarrierDeathResolution.Rejected("JD_CARRIER_DEATH_CHARACTER_UNAVAILABLE")
             : character.ResolveGoldenCoreCarrierDeath(runtimeLedger, input);
 
+    static CombatLocalStateSnapshot CaptureCombatLocalState(
+        HexCoord position,
+        int hitPoints,
+        int mana,
+        int artCooldown,
+        int divineCooldown) => new(
+            $"{position.Q},{position.R}",
+            "ground",
+            "ground",
+            hitPoints > 0 ? "alive" : "dead",
+            Math.Max(0, hitPoints),
+            Math.Max(0, mana),
+            "none",
+            "none",
+            new Dictionary<string, int> { ["art"] = Math.Max(0, artCooldown), ["divine"] = Math.Max(0, divineCooldown) },
+            new Dictionary<string, int>(),
+            new Dictionary<string, int>());
+
     public static (double winsA, double winsB, double avgTurns) Simulate(Character ca, Character cb, int rounds)
     {
         if (ca.IsDead || cb.IsDead)
@@ -316,6 +334,8 @@ static class Combat
                 : null;
             HexCoord positionA = InitialPositionA;
             HexCoord positionB = InitialPositionB;
+            var combatStateA = ca.StartCombatState(CaptureCombatLocalState(positionA, hpA, mpA, artCdA, divineCdA));
+            var combatStateB = cb.StartCombatState(CaptureCombatLocalState(positionB, hpB, mpB, artCdB, divineCdB));
             double ctA = 0, ctB = 0;
             double sA = 100.0 / ca.Primary["反应"], sB = 100.0 / cb.Primary["反应"];
             // v4.2: 水系机制 & 眩晕
@@ -376,6 +396,8 @@ static class Combat
 
                     // 玄感: 回合开始 debuff清除
                     if (ca.Style == "taixu_xuangan" && stunnedA && Rng.NextDouble() < xuanganClearRate(ca.Realm)) { stunnedA = false; if (xuanganCanHeal(ca.Realm)) hpA = Math.Min(ca.Primary["HP"], hpA + (int)(ca.Primary["HP"] * 0.05)); xuantongA = xuanganXuantongDur(ca.Realm); }                    if (stunnedA) { stunnedA = false; ctA += sA; continue; }
+                    combatStateA.SynchronizeLocalState(CaptureCombatLocalState(positionA, hpA, mpA, artCdA, divineCdA));
+                    combatStateA.RecordOwnActionCheckpoint($"duel-{r}-turn-{turns}-a", turns);
                     // AI决策: 神通 > 术法 > 平A
                     string atkType, skillElement = ""; double mult, defPen; int atk, def, minRange, maxRange; double resist;
                     bool waterSkillA = false;                    bool kuxingUsedA = false; int kuxingHpRecoverA = 0; bool kuxingIgnoreBlockA = false;
@@ -388,7 +410,13 @@ static class Combat
                         out minRange, out maxRange);
                     var actionPositionA = ResolveActionPosition(battlefield, positionA, positionB, ca.Primary["移力"], minRange, maxRange, false);
                     positionA = actionPositionA.Position;
-                    if (!actionPositionA.CanAttack) { ctA += sA; continue; }
+                    if (!actionPositionA.CanAttack)
+                    {
+                        combatStateA.SynchronizeLocalState(CaptureCombatLocalState(positionA, hpA, mpA, artCdA, divineCdA));
+                        combatStateA.CompleteOwnActiveAction();
+                        ctA += sA;
+                        continue;
+                    }
                     if (actionA == DivineAction)
                     {
                         atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen; minRange = ca.DivineMinRange; maxRange = ca.DivineMaxRange;
@@ -477,13 +505,18 @@ static class Combat
                     // 守一&符胆: 回合结束印记+1
                     if (ca.Style == "taiyi") shouyiA = Math.Min(shouyiA + 1, maxShouyi(ca.Realm));
                     if (ca.Style == "taiyi_fuxiu") fudanA = Math.Min(fudanA + 1, maxFudan(ca.Realm));
-                    if (xuantongA > 0) xuantongA--;                    ctA += sA;
+                    if (xuantongA > 0) xuantongA--;
+                    combatStateA.SynchronizeLocalState(CaptureCombatLocalState(positionA, hpA, mpA, artCdA, divineCdA));
+                    combatStateA.CompleteOwnActiveAction();
+                    ctA += sA;
                 }
                 else
                 {
 
                     // 玄感: 回合开始 debuff清除
                     if (cb.Style == "taixu_xuangan" && stunnedB && Rng.NextDouble() < xuanganClearRate(cb.Realm)) { stunnedB = false; if (xuanganCanHeal(cb.Realm)) hpB = Math.Min(cb.Primary["HP"], hpB + (int)(cb.Primary["HP"] * 0.05)); xuantongB = xuanganXuantongDur(cb.Realm); }                    if (stunnedB) { stunnedB = false; ctB += sB; continue; }
+                    combatStateB.SynchronizeLocalState(CaptureCombatLocalState(positionB, hpB, mpB, artCdB, divineCdB));
+                    combatStateB.RecordOwnActionCheckpoint($"duel-{r}-turn-{turns}-b", turns);
                     string atkType, skillElement = ""; double mult, defPen; int atk, def, minRange, maxRange; double resist;
                     bool waterSkillB = false;                    bool kuxingUsedB = false; int kuxingHpRecoverB = 0; bool kuxingIgnoreBlockB = false;
                     int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : (xuantongB > 0 ? (int)(cb.ArtMPCost * 0.70) : cb.ArtMPCost);
@@ -495,7 +528,13 @@ static class Combat
                         out minRange, out maxRange);
                     var actionPositionB = ResolveActionPosition(battlefield, positionB, positionA, cb.Primary["移力"], minRange, maxRange, false);
                     positionB = actionPositionB.Position;
-                    if (!actionPositionB.CanAttack) { ctB += sB; continue; }
+                    if (!actionPositionB.CanAttack)
+                    {
+                        combatStateB.SynchronizeLocalState(CaptureCombatLocalState(positionB, hpB, mpB, artCdB, divineCdB));
+                        combatStateB.CompleteOwnActiveAction();
+                        ctB += sB;
+                        continue;
+                    }
                     if (actionB == DivineAction)
                     {
                         atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen; minRange = cb.DivineMinRange; maxRange = cb.DivineMaxRange;
@@ -571,7 +610,10 @@ static class Combat
 
                     if (cb.Style == "taiyi") shouyiB = Math.Min(shouyiB + 1, maxShouyi(cb.Realm));
                     if (cb.Style == "taiyi_fuxiu") fudanB = Math.Min(fudanB + 1, maxFudan(cb.Realm));
-                    if (xuantongB > 0) xuantongB--;                    ctB += sB;
+                    if (xuantongB > 0) xuantongB--;
+                    combatStateB.SynchronizeLocalState(CaptureCombatLocalState(positionB, hpB, mpB, artCdB, divineCdB));
+                    combatStateB.CompleteOwnActiveAction();
+                    ctB += sB;
                 }
             }
             totalTurns += turns;

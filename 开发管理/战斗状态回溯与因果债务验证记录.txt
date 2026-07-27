@@ -1,0 +1,35 @@
+# 战斗状态、回溯与因果债务验证记录
+
+任务：`N-STATE-01`（2026-07-28）
+
+## 已实现边界
+
+- `Character` 在每场 1v1 对局中只持有一个 `CombatStateRuntime`；它是临时状态、局部检查点、自动响应容量和因果债务的唯一运行时所有者。
+- `CombatTemporaryStatusProfile` 显式固定临时状态的载体、`BUFF`／`DEBUFF`／`MIXED` 极性、标签、来源、解除策略和版本；不接受中性极性、错误载体、缺字段或同一状态 ID 的极性翻转。
+- 回溯只恢复角色局部快照（位置、移动／高度／生命状态、HP、灵力、姿态／过程、冷却、充能、消耗品和临时状态）。检查点后的 `EXTERNAL_COMMITTED` 与 `PROTECTED_HISTORY` 成本按稳定顺序重放；债务不在快照内，不能被回溯删除。
+- 自动响应仅在目标、资源、冷却、条件均通过且实际进入结算时消耗显式容量；自身主动行动完成后按规则档案恢复为 `1`，不累积。
+- 因果债务只存在一个当前持有者；转移不复制未付额，完整偿还一次关闭债务，重复转移／偿还操作返回原结果而不再扣费。
+
+## 独立目标自测
+
+`state-rewind-causal-n-state-01` 使用固定输入验证：
+
+- 正／负／混合状态、唯一载体与稳定拒绝原因；
+- 局部回溯恢复检查点并重放外部 `8 HP + 5 MP` 与受保护 `2 HP + 3 MP` 成本，重复回溯不重复扣费；
+- 自动响应容量耗尽、行动完成恢复和未进入结算时不消耗；
+- 债务创建后不被回溯删除，转移后仅有一个持有者，偿还和重复偿还保持 `12 -> 0` 的守恒与幂等。
+
+## 命令与实际结果
+
+```powershell
+dotnet build -c Release --no-restore simulations/BattleSim
+# 通过，0 警告，0 错误。
+
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test state-rewind-causal-n-state-01
+# SELFTEST state-rewind-causal-n-state-01 PASS
+
+dotnet run --no-build -c Release --project simulations/BattleSim
+# 退出码 0；四阶段成长、五府预算、丹相输入、养基筑府、NPC 修炼与既有矩阵审计均完成。
+```
+
+本卡未修改伤害表、金丹位格权限、Unity 运行时或生产数据；尚未把具体术法／神通效果批量迁移为临时状态档案。

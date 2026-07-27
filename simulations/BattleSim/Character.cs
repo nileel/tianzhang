@@ -62,6 +62,8 @@ class Character
     public string DivineAbilityInstanceId { get; private set; } = "";
     public bool IsDead { get; private set; }
     public GoldenCoreCarrierDeathResolution ProtectedGoldenCoreDeath { get; private set; }
+    // N-STATE-01: a combatant has exactly one active state owner for temporary statuses, checkpoints and causal debts.
+    public CombatStateRuntime CombatState { get; private set; }
 
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
@@ -76,6 +78,14 @@ class Character
         var c = new Character { Name = name, Realm = "凡人", SubIndex = 0, Style = style };
         foreach (var k in InnateKeys) c.Innate[k] = innate[k];
         return c;
+    }
+
+    internal CombatStateRuntime StartCombatState(CombatLocalStateSnapshot initialState)
+    {
+        var runtime = new CombatStateRuntime(Name, GameData.CombatStateRules);
+        runtime.Initialize(initialState);
+        CombatState = runtime;
+        return runtime;
     }
 
     public void ApplyGrowth(string realm, string techGrade, Dictionary<string, double> weights)

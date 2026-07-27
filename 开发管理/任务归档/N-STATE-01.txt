@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：唯一列明前置 D-JD-SCHEMA-01 已完成；现行状态、局部回溯、因果响应容量与债务规则可在 BattleSim 独立实现和验证。",
+  "stateReason": "2026-07-28：BattleSim 已建立角色唯一战斗状态实例、局部回溯账本、显式自动响应容量和可转移且幂等的因果债务；Release 构建、独立自测、完整 BattleSim 审计及文本门禁通过。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -41,7 +41,7 @@
 
 ## 实施范围
 
-- 建立单一状态实例与载体所有权，明确正／负／中性极性、来源、目标、持续、版本和稳定拒绝原因。
+- 建立单一状态实例与载体所有权，明确正／负／混合极性、来源、目标、持续、版本和稳定拒绝原因。
 - 局部回溯只恢复规则允许的局部快照，不回滚世界外部事实、唯一 ID、已关闭事务或债务。
 - 因果响应按显式容量接纳或拒绝，债务生成、转移、偿还和重复处理满足守恒与幂等。
 
@@ -66,3 +66,10 @@
 ## 停止条件
 
 - 状态载体、可回溯事实、容量单位或债务归属不能由现行规则唯一确定，或实现需要全局回滚、随机触发、隐藏输入或第二套状态服务时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-28：`CombatStateRuntime` 成为角色单一临时状态、检查点、自动响应容量和因果债务所有者；`Combat.Simulate` 在每场对局初始化该状态，并在正常主动行动边界记录局部快照、同步局部字段和恢复响应容量。
+- 状态档案仅接受 `BUFF`、`DEBUFF`、`MIXED`，按唯一实例 ID 持有，并稳定拒绝错误载体、缺失字段、目标所有者不一致、重复实例和状态 ID 极性翻转。
+- 回溯仅恢复角色局部字段与原状态实例，按事件顺序重放外部提交和受保护成本；因果债务不进入检查点。债务转移后没有第二份实例，重复转移／偿还不重复付款。
+- Release 构建、`state-rewind-causal-n-state-01` 独立自测和完整 BattleSim 审计均通过；详细输入与结果见 `开发管理/战斗状态回溯与因果债务验证记录.txt`。

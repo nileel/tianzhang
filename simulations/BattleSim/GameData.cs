@@ -700,6 +700,12 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public static readonly DivineConfig YuqingDivine = new("万剑朝宗", "物理", 1.8, 15, 5, "金", 1, 3);
     public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3, "雷", 1, 3);
     public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5, "雷", 1, 3);
+
+    // N-STATE-01: capacities are explicit rule data; combat state never invents a fallback value.
+    public static readonly CombatStateRulesConfig CombatStateRules = new(
+        CheckpointCapacity: 3,
+        AutomaticResponseCapacity: 1,
+        MaxCausalGraftRules: 2);
 }
 
 public enum GoldenCoreSeatType
@@ -1532,4 +1538,611 @@ public static class GoldenCoreConflictResolver
         GoldenCoreSeatType.Domain => 1,
         _ => 0,
     };
+}
+
+// N-STATE-01: temporary combat effects are represented only by this carrier.
+public enum CombatStatusCarrierKind
+{
+    TemporaryStatus,
+    StanceState,
+    ProcessState,
+    TaskMarker,
+    LifeState,
+}
+
+public enum CombatStatusPolarity
+{
+    Buff,
+    Debuff,
+    Mixed,
+}
+
+public enum CombatStatusTag
+{
+    Attribute,
+    Offense,
+    Defense,
+    Mobility,
+    Action,
+    Control,
+    Perception,
+    Resource,
+    Recovery,
+    Periodic,
+}
+
+public enum CombatStatusSourceKind
+{
+    SelfAbility,
+    OtherAbility,
+    EquipmentProc,
+    Environment,
+    SystemCost,
+}
+
+public enum CombatStatusRemovalPolicy
+{
+    Normal,
+    Anchored,
+    SourceOnly,
+}
+
+public enum CombatStateLedgerScope
+{
+    TargetLocal,
+    ExternalCommitted,
+    ProtectedHistory,
+}
+
+public enum CausalDebtSettlementState
+{
+    Pending,
+    Repaid,
+    Defaulted,
+}
+
+/// <summary>Immutable rule data for a temporary status. Missing content is rejected instead of inferred at runtime.</summary>
+public sealed record CombatTemporaryStatusProfile(
+    string StatusId,
+    CombatStatusCarrierKind CarrierKind,
+    CombatStatusPolarity Polarity,
+    IReadOnlyList<CombatStatusTag> Tags,
+    CombatStatusSourceKind SourceKind,
+    CombatStatusRemovalPolicy RemovalPolicy,
+    int DefinitionVersion)
+{
+    public bool IsWellFormed =>
+        !string.IsNullOrWhiteSpace(StatusId) &&
+        CarrierKind == CombatStatusCarrierKind.TemporaryStatus &&
+        Enum.IsDefined(typeof(CombatStatusPolarity), Polarity) &&
+        Tags != null && Tags.Count > 0 && Tags.Distinct().Count() == Tags.Count &&
+        Tags.All(tag => Enum.IsDefined(typeof(CombatStatusTag), tag)) &&
+        Enum.IsDefined(typeof(CombatStatusSourceKind), SourceKind) &&
+        Enum.IsDefined(typeof(CombatStatusRemovalPolicy), RemovalPolicy) &&
+        DefinitionVersion > 0 &&
+        (RemovalPolicy != CombatStatusRemovalPolicy.SourceOnly || SourceKind == CombatStatusSourceKind.SystemCost);
+
+    public string InvalidReason => CarrierKind != CombatStatusCarrierKind.TemporaryStatus
+        ? "STATE_CARRIER_NOT_TEMPORARY_STATUS"
+        : !IsWellFormed
+            ? "STATE_STATUS_PROFILE_INVALID"
+            : "";
+}
+
+/// <summary>All capacities are declared by profile data; the runtime has no fallback values.</summary>
+public sealed record CombatStateRulesConfig(
+    int CheckpointCapacity,
+    int AutomaticResponseCapacity,
+    int MaxCausalGraftRules)
+{
+    public bool IsWellFormed => CheckpointCapacity > 0 && AutomaticResponseCapacity >= 0 && MaxCausalGraftRules is > 0 and <= 2;
+}
+
+public sealed record CombatTemporaryStatus(
+    string InstanceId,
+    CombatTemporaryStatusProfile Profile,
+    string SourceCombatantId,
+    string TargetCombatantId,
+    int RemainingActions);
+
+public sealed record CombatStatusApplication(
+    string InstanceId,
+    CombatTemporaryStatusProfile Profile,
+    string SourceCombatantId,
+    string TargetCombatantId,
+    int RemainingActions);
+
+public sealed record CombatStatusMutation(
+    bool IsApplied,
+    string Reason,
+    CombatTemporaryStatus Status)
+{
+    internal static CombatStatusMutation Rejected(string reason) => new(false, reason, null);
+}
+
+/// <summary>Only character-local facts are eligible for a rewind checkpoint.</summary>
+public sealed record CombatLocalStateSnapshot(
+    string PositionId,
+    string MovementMode,
+    string AltitudeBand,
+    string LifeState,
+    int HitPoints,
+    int Mana,
+    string StanceStateId,
+    string ProcessStateId,
+    IReadOnlyDictionary<string, int> Cooldowns,
+    IReadOnlyDictionary<string, int> Charges,
+    IReadOnlyDictionary<string, int> Consumables);
+
+public sealed record CombatStateCheckpoint(
+    string CheckpointId,
+    int OwnActionSequence,
+    CombatLocalStateSnapshot LocalState,
+    IReadOnlyList<CombatTemporaryStatus> TemporaryStatuses);
+
+/// <summary>Costs from non-local results are replayed after a rewind; no world result is stored here.</summary>
+public sealed record CombatStateLedgerEntry(
+    string EntryId,
+    int OwnActionSequence,
+    CombatStateLedgerScope Scope,
+    int HitPointCost,
+    int ManaCost);
+
+public sealed record CombatStateMutationResult(bool IsApplied, string Reason)
+{
+    internal static CombatStateMutationResult Rejected(string reason) => new(false, reason);
+}
+
+public sealed record CombatStateRewindResolution(
+    bool IsApplied,
+    string Reason,
+    string CheckpointId,
+    int ReappliedExternalEntryCount,
+    int ReappliedProtectedEntryCount)
+{
+    internal static CombatStateRewindResolution Rejected(string reason, string checkpointId) =>
+        new(false, reason, checkpointId, 0, 0);
+}
+
+public sealed record AutomaticResponseAttempt(
+    string RootEventId,
+    string RuleId,
+    bool HasLegalTarget,
+    bool HasResources,
+    bool IsCooldownReady,
+    bool MeetsAllConditions,
+    bool EntersSettlement);
+
+public sealed record AutomaticResponseResolution(bool IsAccepted, string Reason, int RemainingCapacity)
+{
+    internal static AutomaticResponseResolution Rejected(string reason, int remainingCapacity) =>
+        new(false, reason, remainingCapacity);
+}
+
+public sealed record CausalDebtSpec(
+    string DebtId,
+    string OriginalActionInstanceId,
+    string ResultInstanceId,
+    string HolderCombatantId,
+    int ResourceCost,
+    int ResultBudget,
+    int DueOwnActionSequence);
+
+public sealed record CausalDebtSnapshot(
+    string DebtId,
+    string OriginalActionInstanceId,
+    string ResultInstanceId,
+    string OriginalHolderCombatantId,
+    string CurrentHolderCombatantId,
+    int OriginalResourceCost,
+    int OutstandingResourceCost,
+    int ResultBudget,
+    int DueOwnActionSequence,
+    CausalDebtSettlementState State);
+
+public sealed record CausalDebtResolution(
+    bool IsApplied,
+    string Reason,
+    CausalDebtSnapshot Debt)
+{
+    internal static CausalDebtResolution Rejected(string reason) => new(false, reason, null);
+}
+
+/// <summary>
+/// One character owns one runtime instance. It owns temporary statuses, local checkpoints, response capacity and debts;
+/// it deliberately has no world-state store, so a local rewind cannot roll external facts back.
+/// </summary>
+public sealed class CombatStateRuntime
+{
+    sealed class MutableCausalDebt
+    {
+        public MutableCausalDebt(CausalDebtSpec spec)
+        {
+            DebtId = spec.DebtId;
+            OriginalActionInstanceId = spec.OriginalActionInstanceId;
+            ResultInstanceId = spec.ResultInstanceId;
+            OriginalHolderCombatantId = spec.HolderCombatantId;
+            CurrentHolderCombatantId = spec.HolderCombatantId;
+            OriginalResourceCost = spec.ResourceCost;
+            OutstandingResourceCost = spec.ResourceCost;
+            ResultBudget = spec.ResultBudget;
+            DueOwnActionSequence = spec.DueOwnActionSequence;
+        }
+
+        public string DebtId { get; }
+        public string OriginalActionInstanceId { get; }
+        public string ResultInstanceId { get; }
+        public string OriginalHolderCombatantId { get; }
+        public string CurrentHolderCombatantId { get; set; }
+        public int OriginalResourceCost { get; }
+        public int OutstandingResourceCost { get; set; }
+        public int ResultBudget { get; }
+        public int DueOwnActionSequence { get; }
+        public CausalDebtSettlementState State { get; set; } = CausalDebtSettlementState.Pending;
+
+        public CausalDebtSnapshot Snapshot() => new(
+            DebtId,
+            OriginalActionInstanceId,
+            ResultInstanceId,
+            OriginalHolderCombatantId,
+            CurrentHolderCombatantId,
+            OriginalResourceCost,
+            OutstandingResourceCost,
+            ResultBudget,
+            DueOwnActionSequence,
+            State);
+    }
+
+    readonly CombatStateRulesConfig rules;
+    readonly Dictionary<string, CombatTemporaryStatus> statuses = new(StringComparer.Ordinal);
+    readonly Dictionary<string, CombatStatusPolarity> polarityByStatusId = new(StringComparer.Ordinal);
+    readonly Queue<CombatStateCheckpoint> checkpoints = new();
+    readonly Dictionary<string, CombatStateLedgerEntry> ledgerEntries = new(StringComparer.Ordinal);
+    readonly Dictionary<string, CombatStateRewindResolution> processedRewinds = new(StringComparer.Ordinal);
+    readonly Dictionary<string, AutomaticResponseResolution> acceptedResponses = new(StringComparer.Ordinal);
+    readonly Dictionary<string, MutableCausalDebt> debts = new(StringComparer.Ordinal);
+    readonly Dictionary<string, CausalDebtResolution> processedDebtOperations = new(StringComparer.Ordinal);
+    CombatLocalStateSnapshot currentState;
+
+    public CombatStateRuntime(string ownerCombatantId, CombatStateRulesConfig rules)
+    {
+        if (string.IsNullOrWhiteSpace(ownerCombatantId))
+            throw new ArgumentException("A combat-state owner id is required.", nameof(ownerCombatantId));
+        if (rules == null || !rules.IsWellFormed)
+            throw new ArgumentException("Combat-state rules must declare valid checkpoint and response capacities.", nameof(rules));
+
+        OwnerCombatantId = ownerCombatantId;
+        this.rules = rules;
+        AutomaticResponseCapacity = rules.AutomaticResponseCapacity;
+    }
+
+    public string OwnerCombatantId { get; }
+    public int AutomaticResponseCapacity { get; private set; }
+    public CombatLocalStateSnapshot CurrentLocalState => CloneLocalState(RequireCurrentState());
+    public IReadOnlyList<CombatTemporaryStatus> TemporaryStatuses =>
+        statuses.Values.OrderBy(status => status.InstanceId, StringComparer.Ordinal).ToArray();
+    public IReadOnlyList<CombatStateCheckpoint> Checkpoints => checkpoints.ToArray();
+    public IReadOnlyList<CausalDebtSnapshot> CausalDebts =>
+        debts.Values.OrderBy(debt => debt.DebtId, StringComparer.Ordinal).Select(debt => debt.Snapshot()).ToArray();
+
+    public void Initialize(CombatLocalStateSnapshot initialState)
+    {
+        currentState = CloneAndValidateLocalState(initialState);
+        statuses.Clear();
+        polarityByStatusId.Clear();
+        checkpoints.Clear();
+        ledgerEntries.Clear();
+        processedRewinds.Clear();
+        acceptedResponses.Clear();
+        debts.Clear();
+        processedDebtOperations.Clear();
+        AutomaticResponseCapacity = rules.AutomaticResponseCapacity;
+    }
+
+    /// <summary>Syncs simulation-owned scalar data without replacing the sole temporary-status carrier.</summary>
+    public void SynchronizeLocalState(CombatLocalStateSnapshot localState)
+    {
+        currentState = CloneAndValidateLocalState(localState);
+    }
+
+    public void RecordOwnActionCheckpoint(string checkpointId, int ownActionSequence)
+    {
+        RequireCurrentState();
+        if (string.IsNullOrWhiteSpace(checkpointId) || ownActionSequence < 0)
+            throw new ArgumentException("A checkpoint requires a stable id and non-negative own-action sequence.");
+        if (checkpoints.Any(checkpoint => string.Equals(checkpoint.CheckpointId, checkpointId, StringComparison.Ordinal)))
+            throw new InvalidOperationException("A self-action checkpoint id may only be recorded once.");
+
+        checkpoints.Enqueue(new CombatStateCheckpoint(
+            checkpointId,
+            ownActionSequence,
+            CloneLocalState(currentState),
+            statuses.Values.OrderBy(status => status.InstanceId, StringComparer.Ordinal).ToArray()));
+        while (checkpoints.Count > rules.CheckpointCapacity)
+            checkpoints.Dequeue();
+    }
+
+    public void CompleteOwnActiveAction()
+    {
+        RequireCurrentState();
+        AutomaticResponseCapacity = rules.AutomaticResponseCapacity;
+    }
+
+    public CombatStatusMutation TryApplyTemporaryStatus(CombatStatusApplication application)
+    {
+        RequireCurrentState();
+        if (application == null || application.Profile == null || string.IsNullOrWhiteSpace(application.InstanceId) ||
+            string.IsNullOrWhiteSpace(application.SourceCombatantId) || string.IsNullOrWhiteSpace(application.TargetCombatantId) ||
+            application.RemainingActions <= 0)
+        {
+            return CombatStatusMutation.Rejected("STATE_STATUS_APPLICATION_INVALID");
+        }
+        if (!application.Profile.IsWellFormed)
+            return CombatStatusMutation.Rejected(application.Profile.InvalidReason);
+        if (!string.Equals(application.TargetCombatantId, OwnerCombatantId, StringComparison.Ordinal))
+            return CombatStatusMutation.Rejected("STATE_TARGET_OWNER_MISMATCH");
+        if (statuses.ContainsKey(application.InstanceId))
+            return CombatStatusMutation.Rejected("STATE_INSTANCE_ALREADY_EXISTS");
+        if (polarityByStatusId.TryGetValue(application.Profile.StatusId, out var knownPolarity) &&
+            knownPolarity != application.Profile.Polarity)
+        {
+            return CombatStatusMutation.Rejected("STATE_POLARITY_CONFLICT");
+        }
+
+        var status = new CombatTemporaryStatus(
+            application.InstanceId,
+            application.Profile,
+            application.SourceCombatantId,
+            application.TargetCombatantId,
+            application.RemainingActions);
+        statuses.Add(status.InstanceId, status);
+        polarityByStatusId[status.Profile.StatusId] = status.Profile.Polarity;
+        return new CombatStatusMutation(true, "STATE_STATUS_APPLIED", status);
+    }
+
+    public CombatStateMutationResult TryRemoveTemporaryStatus(string instanceId, bool conflictAuthorized)
+    {
+        if (string.IsNullOrWhiteSpace(instanceId) || !statuses.TryGetValue(instanceId, out var status))
+            return CombatStateMutationResult.Rejected("STATE_STATUS_INSTANCE_UNKNOWN");
+        if (status.Profile.RemovalPolicy == CombatStatusRemovalPolicy.SourceOnly)
+            return CombatStateMutationResult.Rejected("STATE_SOURCE_ONLY_PROTECTED");
+        if (status.Profile.RemovalPolicy == CombatStatusRemovalPolicy.Anchored && !conflictAuthorized)
+            return CombatStateMutationResult.Rejected("STATE_ANCHORED_CONFLICT_REQUIRED");
+
+        statuses.Remove(instanceId);
+        return new CombatStateMutationResult(true, "STATE_STATUS_REMOVED");
+    }
+
+    public CombatStateMutationResult RecordLedgerEntry(CombatStateLedgerEntry entry)
+    {
+        if (entry == null || string.IsNullOrWhiteSpace(entry.EntryId) || entry.OwnActionSequence < 0 ||
+            entry.HitPointCost < 0 || entry.ManaCost < 0 ||
+            !Enum.IsDefined(typeof(CombatStateLedgerScope), entry.Scope))
+        {
+            return CombatStateMutationResult.Rejected("STATE_LEDGER_ENTRY_INVALID");
+        }
+        if (!ledgerEntries.TryAdd(entry.EntryId, entry))
+            return CombatStateMutationResult.Rejected("STATE_LEDGER_ENTRY_DUPLICATE");
+        return new CombatStateMutationResult(true, "STATE_LEDGER_ENTRY_RECORDED");
+    }
+
+    public CombatStateRewindResolution Rewind(string rewindEventId, string checkpointId)
+    {
+        RequireCurrentState();
+        if (string.IsNullOrWhiteSpace(rewindEventId) || string.IsNullOrWhiteSpace(checkpointId))
+            return CombatStateRewindResolution.Rejected("STATE_REWIND_REQUEST_INVALID", checkpointId ?? "");
+        if (processedRewinds.TryGetValue(rewindEventId, out var processed))
+            return processed;
+
+        var checkpoint = checkpoints.SingleOrDefault(candidate =>
+            string.Equals(candidate.CheckpointId, checkpointId, StringComparison.Ordinal));
+        if (checkpoint == null)
+            return CombatStateRewindResolution.Rejected("STATE_REWIND_CHECKPOINT_UNKNOWN", checkpointId);
+
+        RestoreCheckpoint(checkpoint);
+        int externalCount = 0;
+        int protectedCount = 0;
+        foreach (var entry in ledgerEntries.Values
+                     .Where(entry => entry.OwnActionSequence > checkpoint.OwnActionSequence &&
+                                     entry.Scope != CombatStateLedgerScope.TargetLocal)
+                     .OrderBy(entry => entry.OwnActionSequence)
+                     .ThenBy(entry => entry.EntryId, StringComparer.Ordinal))
+        {
+            currentState = currentState with
+            {
+                HitPoints = Math.Max(0, currentState.HitPoints - entry.HitPointCost),
+                Mana = Math.Max(0, currentState.Mana - entry.ManaCost),
+            };
+            if (entry.Scope == CombatStateLedgerScope.ExternalCommitted)
+                externalCount++;
+            else
+                protectedCount++;
+        }
+
+        var resolution = new CombatStateRewindResolution(
+            true,
+            "STATE_REWIND_APPLIED",
+            checkpointId,
+            externalCount,
+            protectedCount);
+        processedRewinds.Add(rewindEventId, resolution);
+        return resolution;
+    }
+
+    public AutomaticResponseResolution TryConsumeAutomaticResponse(AutomaticResponseAttempt attempt)
+    {
+        if (attempt == null || string.IsNullOrWhiteSpace(attempt.RootEventId) || string.IsNullOrWhiteSpace(attempt.RuleId))
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_REQUEST_INVALID", AutomaticResponseCapacity);
+
+        string responseKey = $"{attempt.RootEventId}\u001f{attempt.RuleId}";
+        if (acceptedResponses.TryGetValue(responseKey, out var accepted))
+            return accepted;
+        if (!attempt.HasLegalTarget)
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_TARGET_INVALID", AutomaticResponseCapacity);
+        if (!attempt.HasResources)
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_RESOURCE_UNAVAILABLE", AutomaticResponseCapacity);
+        if (!attempt.IsCooldownReady)
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_COOLDOWN_UNAVAILABLE", AutomaticResponseCapacity);
+        if (!attempt.MeetsAllConditions)
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_CONDITION_FAILED", AutomaticResponseCapacity);
+        if (!attempt.EntersSettlement)
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_NOT_SETTLED", AutomaticResponseCapacity);
+        if (AutomaticResponseCapacity <= 0)
+            return AutomaticResponseResolution.Rejected("CAUSAL_RESPONSE_CAPACITY_EXHAUSTED", AutomaticResponseCapacity);
+
+        AutomaticResponseCapacity--;
+        var resolution = new AutomaticResponseResolution(true, "CAUSAL_RESPONSE_ACCEPTED", AutomaticResponseCapacity);
+        acceptedResponses.Add(responseKey, resolution);
+        return resolution;
+    }
+
+    public CausalDebtResolution CreateCausalDebt(CausalDebtSpec spec)
+    {
+        RequireCurrentState();
+        if (!IsValidDebtSpec(spec))
+            return CausalDebtResolution.Rejected("CAUSAL_DEBT_SPEC_INVALID");
+        if (!string.Equals(spec.HolderCombatantId, OwnerCombatantId, StringComparison.Ordinal))
+            return CausalDebtResolution.Rejected("CAUSAL_DEBT_HOLDER_MISMATCH");
+        if (debts.TryGetValue(spec.DebtId, out var existing))
+        {
+            return SameDebtSpec(existing, spec)
+                ? new CausalDebtResolution(true, "CAUSAL_DEBT_ALREADY_REGISTERED", existing.Snapshot())
+                : CausalDebtResolution.Rejected("CAUSAL_DEBT_ID_CONFLICT");
+        }
+
+        var debt = new MutableCausalDebt(spec);
+        debts.Add(debt.DebtId, debt);
+        return new CausalDebtResolution(true, "CAUSAL_DEBT_CREATED", debt.Snapshot());
+    }
+
+    public CausalDebtResolution TransferCausalDebt(
+        string transferOperationId,
+        string debtId,
+        CombatStateRuntime recipient,
+        bool recipientIsRealParticipant,
+        bool recipientIsCompatible)
+    {
+        if (string.IsNullOrWhiteSpace(transferOperationId) || string.IsNullOrWhiteSpace(debtId))
+            return CausalDebtResolution.Rejected("CAUSAL_DEBT_TRANSFER_INVALID");
+        if (processedDebtOperations.TryGetValue(transferOperationId, out var processed))
+            return processed;
+        if (!recipientIsRealParticipant || !recipientIsCompatible || recipient == null || ReferenceEquals(recipient, this))
+            return RememberDebtOperation(transferOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_TRANSFER_INELIGIBLE"));
+        if (!debts.TryGetValue(debtId, out var debt))
+            return RememberDebtOperation(transferOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_UNKNOWN"));
+        if (debt.State != CausalDebtSettlementState.Pending)
+            return RememberDebtOperation(transferOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_ALREADY_CLOSED"));
+        if (recipient.debts.ContainsKey(debtId))
+            return RememberDebtOperation(transferOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_RECIPIENT_CONFLICT"));
+
+        debts.Remove(debtId);
+        debt.CurrentHolderCombatantId = recipient.OwnerCombatantId;
+        recipient.debts.Add(debtId, debt);
+        return RememberDebtOperation(transferOperationId,
+            new CausalDebtResolution(true, "CAUSAL_DEBT_TRANSFERRED", debt.Snapshot()));
+    }
+
+    public CausalDebtResolution RepayCausalDebt(string repaymentOperationId, string debtId)
+    {
+        RequireCurrentState();
+        if (string.IsNullOrWhiteSpace(repaymentOperationId) || string.IsNullOrWhiteSpace(debtId))
+            return CausalDebtResolution.Rejected("CAUSAL_DEBT_REPAYMENT_INVALID");
+        if (processedDebtOperations.TryGetValue(repaymentOperationId, out var processed))
+            return processed;
+        if (!debts.TryGetValue(debtId, out var debt))
+            return RememberDebtOperation(repaymentOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_UNKNOWN"));
+        if (debt.State != CausalDebtSettlementState.Pending)
+            return RememberDebtOperation(repaymentOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_ALREADY_CLOSED"));
+        if (currentState.Mana < debt.OutstandingResourceCost)
+            return RememberDebtOperation(repaymentOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_PAYMENT_UNAVAILABLE"));
+
+        currentState = currentState with { Mana = currentState.Mana - debt.OutstandingResourceCost };
+        debt.OutstandingResourceCost = 0;
+        debt.State = CausalDebtSettlementState.Repaid;
+        return RememberDebtOperation(repaymentOperationId,
+            new CausalDebtResolution(true, "CAUSAL_DEBT_REPAID", debt.Snapshot()));
+    }
+
+    public CausalDebtResolution DefaultCausalDebt(string defaultOperationId, string debtId)
+    {
+        if (string.IsNullOrWhiteSpace(defaultOperationId) || string.IsNullOrWhiteSpace(debtId))
+            return CausalDebtResolution.Rejected("CAUSAL_DEBT_DEFAULT_INVALID");
+        if (processedDebtOperations.TryGetValue(defaultOperationId, out var processed))
+            return processed;
+        if (!debts.TryGetValue(debtId, out var debt))
+            return RememberDebtOperation(defaultOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_UNKNOWN"));
+        if (debt.State != CausalDebtSettlementState.Pending)
+            return RememberDebtOperation(defaultOperationId, CausalDebtResolution.Rejected("CAUSAL_DEBT_ALREADY_CLOSED"));
+
+        debt.State = CausalDebtSettlementState.Defaulted;
+        return RememberDebtOperation(defaultOperationId,
+            new CausalDebtResolution(true, "CAUSAL_DEBT_DEFAULTED", debt.Snapshot()));
+    }
+
+    public CausalDebtSnapshot GetCausalDebt(string debtId) =>
+        debts.TryGetValue(debtId, out var debt) ? debt.Snapshot() : null;
+
+    void RestoreCheckpoint(CombatStateCheckpoint checkpoint)
+    {
+        currentState = CloneLocalState(checkpoint.LocalState);
+        statuses.Clear();
+        foreach (var status in checkpoint.TemporaryStatuses)
+            statuses.Add(status.InstanceId, status);
+    }
+
+    CausalDebtResolution RememberDebtOperation(string operationId, CausalDebtResolution resolution)
+    {
+        processedDebtOperations.Add(operationId, resolution);
+        return resolution;
+    }
+
+    CombatLocalStateSnapshot RequireCurrentState() => currentState ??
+        throw new InvalidOperationException("Combat state must be initialized before it is used.");
+
+    static bool IsValidDebtSpec(CausalDebtSpec spec) =>
+        spec != null && !string.IsNullOrWhiteSpace(spec.DebtId) &&
+        !string.IsNullOrWhiteSpace(spec.OriginalActionInstanceId) &&
+        !string.IsNullOrWhiteSpace(spec.ResultInstanceId) &&
+        !string.IsNullOrWhiteSpace(spec.HolderCombatantId) &&
+        spec.ResourceCost >= 0 && spec.ResultBudget >= 0 && spec.DueOwnActionSequence > 0;
+
+    static bool SameDebtSpec(MutableCausalDebt debt, CausalDebtSpec spec) =>
+        debt.OriginalActionInstanceId == spec.OriginalActionInstanceId &&
+        debt.ResultInstanceId == spec.ResultInstanceId &&
+        debt.OriginalHolderCombatantId == spec.HolderCombatantId &&
+        debt.OriginalResourceCost == spec.ResourceCost &&
+        debt.ResultBudget == spec.ResultBudget &&
+        debt.DueOwnActionSequence == spec.DueOwnActionSequence;
+
+    static CombatLocalStateSnapshot CloneAndValidateLocalState(CombatLocalStateSnapshot state)
+    {
+        if (state == null || string.IsNullOrWhiteSpace(state.PositionId) || string.IsNullOrWhiteSpace(state.MovementMode) ||
+            string.IsNullOrWhiteSpace(state.AltitudeBand) || string.IsNullOrWhiteSpace(state.LifeState) ||
+            state.HitPoints < 0 || state.Mana < 0 || string.IsNullOrWhiteSpace(state.StanceStateId) ||
+            string.IsNullOrWhiteSpace(state.ProcessStateId))
+        {
+            throw new ArgumentException("Combat local state must declare every rewindable field.", nameof(state));
+        }
+        return CloneLocalState(state);
+    }
+
+    static CombatLocalStateSnapshot CloneLocalState(CombatLocalStateSnapshot state) => new(
+        state.PositionId,
+        state.MovementMode,
+        state.AltitudeBand,
+        state.LifeState,
+        state.HitPoints,
+        state.Mana,
+        state.StanceStateId,
+        state.ProcessStateId,
+        CloneLedger(state.Cooldowns, "cooldown"),
+        CloneLedger(state.Charges, "charge"),
+        CloneLedger(state.Consumables, "consumable"));
+
+    static IReadOnlyDictionary<string, int> CloneLedger(IReadOnlyDictionary<string, int> source, string label)
+    {
+        if (source == null || source.Any(entry => string.IsNullOrWhiteSpace(entry.Key) || entry.Value < 0))
+            throw new ArgumentException($"Combat {label} slots must be complete and non-negative.");
+        return new Dictionary<string, int>(source, StringComparer.Ordinal);
+    }
 }
