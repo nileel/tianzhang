@@ -15,8 +15,9 @@
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
-| D-JD-SCHEMA-01 | P1 | Codex | 待决定（D-JD-SAMPLE-01） | DEC-20260727-JDFPM02 | 金丹数据父任务；静态契约、导入失败关闭及效果装配拒绝码分类已归档，等待样例的紫府 FORM 锁快照决定。 | — |
-| D-JD-SAMPLE-01 | P1 | codex | 待决定 | — | 金丹最小有效与非法样例 | `开发管理/任务卡/D-JD-SAMPLE-01.txt` |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞（D-JD-SAMPLE-01） | D-JD-FPM-LOCK-01 | 金丹数据父任务；静态契约、导入失败关闭及效果装配拒绝码分类已归档，等待锁快照前置解除样例阻塞。 | — |
+| D-JD-SAMPLE-01 | P1 | codex | 阻塞 | D-JD-FPM-LOCK-01 | 金丹最小有效与非法样例 | `开发管理/任务卡/D-JD-SAMPLE-01.txt` |
+| D-JD-FPM-LOCK-01 | P1 | codex | 已排队 | — | FORM 锁快照空值一致性 | `开发管理/任务卡/D-JD-FPM-LOCK-01.txt` |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
@@ -30,13 +31,13 @@
 
 ### D-JD-SCHEMA-01 · 金丹数据父任务
 
-- 子任务：`D-JD-SCHEMA-01A` 已锁定静态契约；`D-JD-SCHEMA-01B` 已归档导入与失败关闭；`D-JD-EFFECT-LOADOUT-01` 已归档效果装配拒绝码分类；`D-JD-SAMPLE-01` 等待 `DEC-20260727-JDFPM02` 解决 FORM 锁快照的 null／空字符串不一致；生产 `JindanStaticStates.csv` 仍只保留表头。
+- 子任务：`D-JD-SCHEMA-01A` 已锁定静态契约；`D-JD-SCHEMA-01B` 已归档导入与失败关闭；`D-JD-EFFECT-LOADOUT-01` 已归档效果装配拒绝码分类；`D-JD-FPM-LOCK-01` 已获 `DEC-20260727-JDFPM02` 的 A 授权，负责解除 FORM 锁快照的 null／空字符串不一致；`D-JD-SAMPLE-01` 随后恢复；生产 `JindanStaticStates.csv` 仍只保留表头。
 - 状态：父任务不直接进入队列；样例恢复并完成后，三个子任务均归档才关闭。
 - 禁止：不得把 51 项正式内容档案、生产平衡或 Unity 玩法实现并入本父任务。
 
 ### D-JD-SAMPLE-01 · 金丹最小有效与非法样例
 
-- 状态：`D-JD-EFFECT-LOADOUT-01` 前置已完成；已消费 `DEC-20260727-JDEFFECT01` 的 A 回复。2026-07-27 以直接紫府 fixture 解析确认，一府／三府 FORMED 快照的未建府字段出现 null／空字符串不一致，稳定报 `FPM_JINDAN_LOCK_MUTATION`；`DEC-20260727-JDFPM02` 待决定，本卡仍禁止修改导入器。
+- 状态：`D-JD-EFFECT-LOADOUT-01` 前置已完成；已消费 `DEC-20260727-JDEFFECT01` 与 `DEC-20260727-JDFPM02` 的 A 回复。`D-JD-FPM-LOCK-01` 已获授权，仅解决一府／三府 FORMED 快照的未建府字段 null／空字符串不一致；该卡归档后本卡恢复 ready，且本卡仍禁止修改导入器。
 - 必读：`D-JD-SCHEMA-01A` 契约、`D-JD-SCHEMA-01B` 导入边界，以及金丹装配和全部紫府输入事实。
 - 预期路径：新建 `src/Assets/Tests/EditMode/Fixtures/` 下的紫府与金丹非生产 fixture CSV（及 `.meta`）、`src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs` 与本任务验证记录；不得修改生产 CSV 或 asset。
 - 交付：至少一组覆盖一府一位、三府三位、五府三位的有效 fixture，以及重复实例、越权位格、第二丹相、非法主辅关系和缺失账本所有者的失败 fixture。
@@ -44,6 +45,13 @@
 - 验证：三个有效组合完整导入并保持唯一实例账本；每个非法样例以 `D-JD-SCHEMA-01B` 定义的稳定原因失败。
 - 完成条件：后续 `N-JD-RULE-01A` 可只消费该样例接入 BattleSim，不硬编码缺失内容；同时关闭父任务 `D-JD-SCHEMA-01`。
 - 停止条件：现有契约无法表达三个有效组合，或必须先生产完整内容／数值才能形成最小 fixture。
+
+### D-JD-FPM-LOCK-01 · FORM 锁快照空值一致性
+
+- 来源与边界：已消费 `DEC-20260727-JDFPM02` 的 A 回复。当前 `ParseJindanLock` 把 `NOT_BUILT` 快照的两个可比较字段写为 `""`，而 `ParsePurpleMansionStates` 保持 `null`；`ValidateJindanLock` 逐字段比较后误将合法一府／三府 FORMED 输入拒绝为 `FPM_JINDAN_LOCK_MUTATION`。
+- 实施：仅使未承载字段在同一内存表示下参与既有锁比对，并在 `FoundationPurpleMansionStateDataTests` 直接证明一府、三府的合法 FORMED 快照通过；保留一项真实快照不匹配仍以 `FPM_JINDAN_LOCK_MUTATION` 拒绝的证据。
+- 禁止：不得修改金丹静态契约、`JindanStaticStateData`、生产 CSV／asset、fixture CSV、解析语法、锁的不可变语义、道路／效果／位格、账本、BattleSim、运行时、战斗或 UI；不得用默认值、兼容分支或放宽比较掩盖真实锁变更。
+- 完成：归档本卡，解除 `D-JD-SAMPLE-01` 的唯一前置并将其恢复 ready、插入当前队列；样例本身和父任务仍由 `D-JD-SAMPLE-01` 完成。
 
 ### D-FPD-MIGRATE-01 · 内容数据与角色状态迁移
 

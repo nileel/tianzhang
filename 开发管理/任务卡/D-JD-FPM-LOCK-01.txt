@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-JD-FPM-LOCK-01",
+  "title": "FORM 锁快照空值一致性",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：已消费 DEC-20260727-JDFPM02 的 A 回复。仅修复 FORMED 锁快照将 NOT_BUILT 府字段解析为 \"\"、而当前府状态为 null 所致的误报 FPM_JINDAN_LOCK_MUTATION；完成后解除 D-JD-SAMPLE-01。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-FPM-LOCK-01.txt",
+    "开发管理/任务归档/D-JD-FPM-LOCK-01.txt",
+    "开发管理/任务卡/D-JD-SAMPLE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-JD-FPM-LOCK-01 · FORM 锁快照空值一致性
+
+## 来源与当前边界
+
+- 已消费决定 `DEC-20260727-JDFPM02` 的 A 回复。直接解析已确认：`ParseJindanLock` 对 `NOT_BUILT` 府的 `mansionBodyEffectBindingId` 和 `guardianAbilityInstanceId` 赋予空字符串，但 `ParsePurpleMansionStates` 对同一无承载字段保留 `null`。`ValidateJindanLock` 的严格字段比较于是把合法 FORM 快照误报为 `FPM_JINDAN_LOCK_MUTATION`。
+- 本卡只统一同一语义的内存空值表示，恢复 `D-JD-SAMPLE-01` 所需的一府／三府 FORM 输入表达能力。锁仍必须拒绝任何真实府状态、身体效果绑定或镇府神通实例变更。
+
+## 必查范围
+
+- `开发管理/任务卡/D-JD-SAMPLE-01.txt` 的本轮停止记录、决定处理记录与禁止项；`开发管理/任务归档/D-JD-SCHEMA-01A.txt`、`开发管理/任务归档/D-JD-SCHEMA-01B.txt` 的静态语义与导入边界。
+- `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md` 的“根对象与唯一归属”“主承载、辅助连接与五府平等”“fixture 规格与稳定拒绝原因”。
+- `src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs::PurpleMansionStateRecord`、`JindanFormationSnapshot`、`PurpleMansionSnapshot`。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ParseFoundationPurpleMansionStates`、`ParsePurpleMansionStates`、`ParseJindanLock`、`ValidateJindanLock` 及其直接调用关系。
+- `src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs` 与 `开发管理/开发-技术经验.txt#asmdef 分层后的 csproj 排查`。
+
+## 实施范围
+
+- 在已有 `ParseJindanLock`／`ValidateJindanLock` 的单一路径中，使 `NOT_BUILT` 府快照中不存在的身体效果绑定和镇府神通实例与 `ParsePurpleMansionStates` 的同一无值语义一致；不改变 CSV 的 `NOT_BUILT` 两字段语法。
+- 在现有直接 EditMode 测试中构造完整五府输入的合法 FORM 一府与三府快照，断言均可解析；保留或补齐一个只有真实快照差异的 `FPM_JINDAN_LOCK_MUTATION` 反例。
+- 完成时归档本卡，解除 `D-JD-SAMPLE-01` 前置、将其恢复 `ready` 并插入队列；不创建或修改样例 fixture CSV。
+
+## 禁止项
+
+- 不修改金丹静态契约、`JindanStaticStateData`、生产 CSV／asset、fixture CSV、数据链检查器、BattleSim、运行时证位、战斗、UI、道路、效果、位格、丹枢、丹相或账本。
+- 不放宽锁比较、不增加 fallback／默认值／兼容分支，不接受 `EMBRYO`、缺府、真实绑定或镇府神通变更。
+- 不完成或改写 `D-JD-SAMPLE-01` 的 fixture 交付或父任务关闭。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-JD-FPM-LOCK-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- 完整五府输入的一府与三府合法 FORM 快照不再因无承载字段的 null／空字符串表示差异失败；真实不可变字段改变仍在 asset 写入前稳定返回 `FPM_JINDAN_LOCK_MUTATION`。
+- `D-JD-SAMPLE-01` 仅在本卡归档后恢复 `ready`；生产数据和金丹样例 CSV 未被本卡修改。
+
+## 停止条件
+
+- 修复需要改变锁的不可变语义、接受真实快照差异、修改 CSV 语法／生产内容／金丹契约，或引入默认值、第二导入路径、第二丹枢／丹相、第四实位或共享账本；停止并转为 `pending_decision`。

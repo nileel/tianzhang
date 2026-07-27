@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "data",
   "stage": "verification",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-07-27：在非生产紫府 CSV 直接解析中确认，FORMED 锁快照将未建府字段保留为空字符串，而对应紫府状态字段为 null；ValidateJindanLock 将一府一位与三府三位判为 FPM_JINDAN_LOCK_MUTATION。五府三位可解析，但契约要求的三组样例无法同时表达；已发送 DEC-20260727-JDFPM02，等待负责人决定是否授权最小导入器修复。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-JD-FPM-LOCK-01"
+  ],
+  "stateReason": "2026-07-27：已消费 DEC-20260727-JDFPM02 的 A 回复；已建立 D-JD-FPM-LOCK-01，仅修复 FORMED 锁快照中未建府字段的 null／空字符串不一致。该前置归档后本卡恢复 ready。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv.meta",
@@ -84,3 +86,7 @@
 
 - 2026-07-27：以成对的非生产 CSV 试验同一 `fixtureId` 的紫府输入与金丹行。`jd.valid.one-mansion-one-seat` 与 `jd.valid.three-mansion-three-seats` 在 `ParseFoundationPurpleMansionStates` 阶段稳定失败为 `FPM_JINDAN_LOCK_MUTATION`：`ParseJindanLock` 对 `NOT_BUILT` 府的快照字段赋值 `""`，`ParsePurpleMansionStates` 的对应状态字段为 `null`，`ValidateJindanLock` 逐字段比较后判定锁后突变；`jd.valid.five-mansion-three-seats` 可通过。该原因使契约要求的三组有效样例无法在本卡禁止修改 `DataConfigImporter.cs` 的范围内同时表达。
 - 已创建并发送 `DEC-20260727-JDFPM02`：A（推荐）新建并授权仅修复该 null／空字符串锁快照不一致的导入器任务，完成后恢复本卡；B 修订契约和任务、只保留五府三位；C 保持边界并暂停本卡。发送已获通道接受，等待负责人回复；本轮没有保留 fixture、测试、生产 CSV 或 asset 修改。
+
+## 决定处理记录
+
+- 2026-07-27：已消费 `DEC-20260727-JDFPM02` 的 A 回复。新建 `D-JD-FPM-LOCK-01`，仅统一 FORMED 锁快照与 `NOT_BUILT` 府的空值表示并增加直接解析证据；本卡在该前置归档后恢复 ready，仍由本卡独占 fixture CSV、金丹 fixture 测试及父任务关闭。
