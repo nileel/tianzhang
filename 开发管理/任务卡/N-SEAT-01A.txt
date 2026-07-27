@@ -1,0 +1,62 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-SEAT-01A",
+  "title": "争位现状与确定性实现输入",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "discovery",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-GC-BASE-01 已归档，但 BattleSim 仍保留旧 SeatCompetitionScore 投影；先核对现有所有者与新原子争位规则，再进入实现。",
+  "expectedPaths": [
+    "开发管理/金丹争位现状与确定性实现输入.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-SEAT-01A.txt",
+    "开发管理/任务归档/N-SEAT-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-SEAT-01A · 争位现状与确定性实现输入
+
+## 来源与当前边界
+
+- `N-GC-BASE-01` 已提供旧席位样本和诊断基座；现行规则已改为版本化空位、临界争位和原子绑定。
+- BattleSim 仍存在 `SeatCompetitionScore`、`待争席` 和样本汇总，不能直接证明符合现行规则。
+- 本卡只做根因与所有者定位，不修改模拟器。
+
+## 必查范围
+
+- `docs/基础设定/金丹位格证位与争位规则.txt` 全文中的资格、并行争位、临界轮次、原子提交和保存边界。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt#六、丹毁、位格丧失与死亡`。
+- `simulations/BattleSim/GameData.cs::ResolveGoldenCoreProfile`、`Cultivation.cs`、`Character.cs::Character`、`SeatCompetitionSampleStats.cs`、`BattleSimSelfTests.cs` 旧争席回归、`Program.cs` 汇总。
+
+## 实施范围
+
+- 区分仍可复用的样本输入、只用于历史诊断的分数字段和必须替换的胜者／占据语义。
+- 锁定 `N-SEAT-01B` 的唯一状态所有者、输入、稳定排序、原子提交、幂等、精确修改路径与自测矩阵。
+- 记录所有缺失事实或冲突，不以旧分数、NPC ID 或注册顺序补齐。
+
+## 禁止项
+
+- 不修改 BattleSim、数值、docs 规则或生产数据。
+- 不把 `SeatCompetitionScore` 直接解释为现行胜者规则，不代填阈值或隐藏优先级。
+- 不提前执行席位绑定、死亡或存档实现。
+
+## 验证
+
+- 用符号级扫描和完整逻辑单元读取证明现有生产者、消费者、回归和缺口。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- `git diff --check`。
+
+## 完成条件
+
+- `N-SEAT-01B` 获得无需猜测的唯一所有者、输入输出、拒绝原因、原子边界和自测清单。
+
+## 停止条件
+
+- 现行规则仍不能裁定同刻完成后的稳定轮输入、绑定所有者或死亡提交边界时，停止并转为 `pending_decision`。

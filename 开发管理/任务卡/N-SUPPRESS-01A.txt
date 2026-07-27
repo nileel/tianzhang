@@ -1,0 +1,61 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-SUPPRESS-01A",
+  "title": "削位／封丹现状与确定性实现输入",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "discovery",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-GC-BASE-01 已归档，但现有 GoldenCoreSuppressionExitStats 仍是旧削位百分比和封丹开关诊断；先定位差距，避免把旧参数误作现行规则。",
+  "expectedPaths": [
+    "开发管理/削位封丹现状与确定性实现输入.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-SUPPRESS-01A.txt",
+    "开发管理/任务归档/N-SUPPRESS-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-SUPPRESS-01A · 削位／封丹现状与确定性实现输入
+
+## 来源与当前边界
+
+- 现有 `GoldenCoreSuppressionExitStats` 只为旧出口审计提供削位 15/30/45 和封丹开关，不是现行确定性资格、目标与冲突规则。
+- 本卡先确认旧诊断中哪些输入仍可保留、哪些必须隔离或替换，不修改模拟器。
+
+## 必查范围
+
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt#五、压阶、降级与跨阶挑战资格`。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt` 的真实失位、暂时不稳定和占据边界。
+- `simulations/BattleSim/GoldenCoreSuppressionExitStats.cs` 全部类型与方法、`BattleSimSelfTests.cs` 的 TQ-015C-8～10、`Program.cs` 出口审计及直接 Character／Combat 输入。
+
+## 实施范围
+
+- 区分历史审计开关、现行合法资格、合法目标、冲突输入、结算输出和稳定拒绝原因。
+- 锁定 `N-SUPPRESS-01B` 的唯一所有者、精确路径、旧诊断迁移／隔离策略和自测矩阵。
+- 记录需要负责人决定的成本、资格或失败原因，不以百分比、随机概率或默认开关补齐。
+
+## 禁止项
+
+- 不修改 BattleSim、旧审计结果、数值、docs 或生产数据。
+- 不把削位百分比、符修标签或玄感标签直接提升为现行规则。
+- 不提前实现削位、封丹、跨阶挑战或真实失位。
+
+## 验证
+
+- 用符号级扫描证明每个旧开关、生产者、消费者、测试和现行规则缺口。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- `git diff --check`。
+
+## 完成条件
+
+- `N-SUPPRESS-01B` 获得无需猜测的资格、目标、冲突、结算、拒绝原因、旧诊断处置和测试输入。
+
+## 停止条件
+
+- 现行事实源不能唯一确定资格、成本、目标或失败原因时，停止并转为 `pending_decision`，不得代填概率或百分比。

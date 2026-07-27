@@ -14,8 +14,12 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
-| D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
-| D-JD-SCHEMA-01 | P1 | Codex | 已完成 | — | 金丹数据父任务；静态契约、导入失败关闭、效果装配拒绝码分类与成对最小样例均已归档；生产 CSV 仍只保留表头。 | — |
+| D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
+| D-FPD-MIGRATE-01A | P1 | Codex | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01B | P1 | Codex | 阻塞（C-FPD-SPELL-01） | — | 四批古修术法 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01C | P1 | Codex | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01D | P1 | Codex | 阻塞（C-FPD-NAME-01、N-FPD-DANXIANG-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
+| D-FPD-MIGRATE-01E | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
@@ -27,21 +31,16 @@
 
 ## 筑基、紫府与丹相后续数据任务卡
 
-### D-JD-SCHEMA-01 · 金丹数据父任务
-
-- 完成：`D-JD-SCHEMA-01A` 静态契约、`D-JD-SCHEMA-01B` 导入失败关闭、`D-JD-EFFECT-LOADOUT-01` 效果装配拒绝码分类、`D-JD-FPM-LOCK-01` FORMED 锁快照统一及 `D-JD-SAMPLE-01` 成对最小样例均已归档。
-- 验证：三组有效样例通过 Unity EditMode；十二类非法样例以指定稳定原因失败；数据链与文本检查均通过。生产 `JindanStaticStates.csv` 仍只保留表头。
-- 边界：未迁入 51 项正式内容档案，未修改生产平衡、Unity 玩法或 UI。
-
 ### D-FPD-MIGRATE-01 · 内容数据与角色状态迁移
 
-- 依赖：D-FPD-SCHEMA-01；C-FPD-NAME-01、C-FPD-MANSION-01、C-FPD-CULTIVATE-01、C-FPD-EXPAND-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01 已确认；N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01 已锁定。
-- 预期路径：迁移计划 M7 的全部功法／术法／神通／道具文件、`src/Assets/DataConfig/` 对应 CSV、`src/Assets/Data/` 对应 asset、导入器、检查器和直接测试；进入当前队列前必须扫描并列出每个字面量路径。
-- 范围：迁移四阶段成长、筑基方案、容量效果、紫府状态、升格方案、镇府神通、主／辅承载和唯一丹相引用；太一道庭字段映射为同一契约。
-- 禁止：保留旧字段作为静默兼容入口、用默认值掩盖缺失内容、在导入阶段创作机制或数值、自动截断非法装备／容量数据。
-- 验证：严格数据链检查、相关 Unity EditMode、CSV/asset 数量与 ID 对齐、旧字段全局扫描、`git diff --check`；数值总回归由 N-FPD-REGRESSION-01 执行。
-- 完成条件：docs、CSV、asset、BattleSim fixture 与 Unity 数据对象对同一角色给出一致的四阶段、容量、紫府、镇府神通和丹相输入结果。
-- 停止条件：任一内容实例或数值仍未确认，或迁移需要猜测默认值、截断非法数据或保留双 schema。
+- `D-FPD-MIGRATE-01A` 逐批迁移 29 部功法的四阶段、筑基方案、道基核心和五府软亲和。
+- `D-FPD-MIGRATE-01B` 逐批迁移 11 项古修术法的升格、镇府神通、兼容府属和主／辅边界。
+- `D-FPD-MIGRATE-01C` 迁移 `宿慧轮回` 与批准扩府道具，保持唯一实例和统一容量 `+1` 引用。
+- `D-FPD-MIGRATE-01D` 迁移角色道基／紫府状态、正式阶段名、结丹快照锁和旧五段／品质字段；不重复迁移前三项内容资产。
+- `D-FPD-MIGRATE-01E` 只做旧字段全局清除、docs／CSV／asset／BattleSim fixture／Unity 对齐与完整数据链审计；失败时回到对应根因子任务，不叠加兼容补丁。
+- 父任务不直接进入队列；01A～01E 均完成后关闭。每张子任务进入队列前必须展开准确内容文件、CSV 行、asset、导入器符号、检查器和直接测试。
+- 全组禁止保留旧字段作为静默兼容入口、用默认值掩盖缺失内容、在导入阶段创作机制或数值、自动截断非法装备／容量数据。
+- 数值总回归仍由 `N-FPD-REGRESSION-01` 执行，01E 不用临时调参代替根因修复。
 
 ## 《天章》册界体系后续数据任务卡
 

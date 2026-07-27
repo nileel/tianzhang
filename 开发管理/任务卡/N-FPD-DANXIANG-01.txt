@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-FPD-DANXIANG-01",
+  "title": "全部紫府输入与主辅预算",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-JD-RULE-01C"
+  ],
+  "stateReason": "2026-07-28：N-FPD-MANSION-01 已归档；本卡已从丹相后续任务拆出，只等待 N-JD-RULE-01C 完成金丹生命周期与账本边界。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Program.cs",
+    "docs/基础设定/元婴锚点与金丹位格设定.txt",
+    "docs/基础设定/金丹基础效果装配与冲突规则.txt",
+    "docs/角色养成/术法槽位设计.txt",
+    "开发管理/丹相主辅预算数值验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-FPD-DANXIANG-01.txt",
+    "开发管理/任务归档/N-FPD-DANXIANG-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-FPD-DANXIANG-01 · 全部紫府输入与主辅预算
+
+## 来源与当前边界
+
+- `N-FPD-MANSION-01` 已用 BattleSim 锁定五府府体共同预算与边际边界。
+- `N-JD-RULE-01A` 已提供一至三实位、唯一丹枢／丹相与实例账本；本卡等待 01C 完成生命周期后，只校准全部紫府进入唯一丹相时的主承载和辅助输入预算。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md` 的唯一丹相与全部紫府输入约束。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt`、`docs/基础设定/金丹基础效果装配与冲突规则.txt`、`docs/角色养成/术法槽位设计.txt` 的主承载、辅助输入、唯一实例和槽位边界。
+- `开发管理/任务归档/N-FPD-MANSION-01.txt`、完成后的 `N-JD-RULE-01C`，以及 `simulations/BattleSim/GameData.cs::GoldenCoreAssembly`、`Character.cs::Character`、`Program.cs::Main`。
+
+## 实施范围
+
+- 建立 1～5 府 × 1～3 稳定位格 fixture，校准每个实位的主承载、全部其余紫府的辅助输入、唯一实例账本和组合上限。
+- 明确第四、第五府的边际收益，使其保持有效输入但不生成第四实位、第二丹相或额外普通效果槽。
+- 覆盖同一 `abilityInstanceId` 多处引用和安全重铸，保证资源／冷却只结算一次。
+
+## 禁止项
+
+- 不修改金丹矩阵权限、装配上限、五十一个基础效果、紫府容量或位格数量。
+- 不用府数自动增加术法槽、普通神通槽、稳定位格或丹相。
+- 不提前实施内容实例迁移、Unity UI、席位竞争或削位／封丹。
+
+## 验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- 保存 1～5 府 × 1～3 位矩阵、唯一实例、多处引用和安全重铸的可复现结果。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+
+## 完成条件
+
+- 主辅预算、资源／冷却账本和组合上限可复现；五府不会生成第四位格、第二丹相或额外效果槽。
+- 完成后解除 `N-SLOT-01` 的唯一依赖。
+
+## 停止条件
+
+- 方案需要改变金丹矩阵权限、装配上限、元婴锚点、紫府容量或依赖未确认的内容实例强度时停止并转为 `pending_decision`。

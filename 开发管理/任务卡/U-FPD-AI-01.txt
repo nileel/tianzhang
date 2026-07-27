@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-FPD-AI-01",
+  "title": "NPC 自主修炼",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：U-FPD-RULE-01 与 N-FPD-NPC-01 均已归档；现有 GameSession 世界日推进、NPC 状态存储和数据化权重运行时可作为唯一接入点。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs",
+    "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs.meta",
+    "src/Assets/Scripts/Entity/NpcCultivationActionWeightProfileData.cs",
+    "src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs",
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationActionCoordinatorTests.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationActionCoordinatorTests.cs.meta",
+    "src/Assets/Tests/EditMode/NpcCultivationActionWeightProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "开发管理/NPC自主修炼Unity验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-FPD-AI-01.txt",
+    "开发管理/任务归档/U-FPD-AI-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-FPD-AI-01 · NPC 自主修炼
+
+## 来源与当前边界
+
+- `U-FPD-RULE-01` 已建立唯一道基／紫府运行时状态；`N-FPD-NPC-01` 已建立同一生产 CSV、Unity runtime 与 BattleSim 只读投影的权重结果。
+- `GameSession.AdvanceWorldDay` 是现有世界日推进入口，`NpcStateStore` 是现有 NPC 会话状态所有者；本卡只在规定事件接入自主行动，不建立第二套世界 tick 或成长状态。
+
+## 必查范围
+
+- `开发管理/任务归档/U-FPD-RULE-01.txt`、`开发管理/任务归档/N-FPD-NPC-01.txt`。
+- `src/Assets/Scripts/Entity/NpcCultivationActionWeightProfileData.cs::NpcCultivationActionWeightProfileRuntime.Evaluate`。
+- `src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs::FoundationPurpleMansionRuntimeState`。
+- `src/Assets/Scripts/Game/GameSession.cs::AdvanceWorldDay`、`SessionStateSnapshots.cs::NpcStateStore`。
+- `src/Assets/Scripts/Cultivation/JindanProof/NpcJindanProofPolicy.cs::NpcJindanProofPolicy.Evaluate` 及直接 EditMode 测试。
+
+## 实施范围
+
+- 先用现有道基／紫府硬门槛过滤非法行动，再以数据化权重对合法行动稳定排序。
+- 只在档案声明的世界日、资源、境界目标、寿元或环境事件重算，不每日扫描全世界。
+- 将选中行动提交到既有 NPC 状态和道基／紫府行动生命周期；玩家不能逐个替 NPC 排程。
+
+## 禁止项
+
+- 不新增第二套角色成长、NPC 状态或世界时间服务，不硬编码行动顺序。
+- 不读取 NPC 不可知的玩家／世界隐藏事实，不让寿元权重绕过第四阶段、至少一府或证位硬条件。
+- 不修改生产权重、数值预算、存档 schema 或 UI。
+
+## 验证
+
+- EditMode 覆盖非法先过滤、固定输入稳定排序、事件触发重算、资源不足、寿元边界和重复世界日不重复提交。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- 可用时运行直接相关 Unity EditMode 测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+
+## 完成条件
+
+- NPC 与玩家共享行动成本和硬条件，权重只来自已验证数据，固定世界状态产生稳定选择。
+- 世界日推进和存读档不会重复结算、丢失当前行动或创建平行状态。
+
+## 停止条件
+
+- 现有所有者无法容纳调度而必须建立第二套成长／世界时间服务，或实现需要 NPC 全知、每日全世界扫描、硬编码行为顺序或未确认参数时停止并转为 `pending_decision`。

@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-STATE-01",
+  "title": "战斗状态、回溯与因果债务",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：唯一列明前置 D-JD-SCHEMA-01 已完成；现行状态、局部回溯、因果响应容量与债务规则可在 BattleSim 独立实现和验证。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/Program.cs",
+    "开发管理/战斗状态回溯与因果债务验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-STATE-01.txt",
+    "开发管理/任务归档/N-STATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-STATE-01 · 战斗状态、回溯与因果债务
+
+## 来源与当前边界
+
+- `D-JD-SCHEMA-01` 已完成金丹静态契约和样例；本卡只接入战斗状态极性／载体、局部回溯、因果响应容量和债务不变量。
+- 现有 BattleSim 仍以角色字段和战斗局部变量结算状态；不得用兼容分支维持两套状态所有者。
+
+## 必查范围
+
+- `docs/基础设定/战斗状态与时空因果结算规则.txt` 的状态载体、极性、回溯边界、响应容量与债务不变量。
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt` 的跨效果和压阶边界。
+- `simulations/BattleSim/GameData.cs` 的状态／能力档案，`Character.cs::Character`，`Combat.cs::Combat.Simulate`，`BattleSimSelfTests.cs::Run` 与现有状态回归，`Program.cs::Main`。
+
+## 实施范围
+
+- 建立单一状态实例与载体所有权，明确正／负／中性极性、来源、目标、持续、版本和稳定拒绝原因。
+- 局部回溯只恢复规则允许的局部快照，不回滚世界外部事实、唯一 ID、已关闭事务或债务。
+- 因果响应按显式容量接纳或拒绝，债务生成、转移、偿还和重复处理满足守恒与幂等。
+
+## 禁止项
+
+- 不引入全局时间倒流、随机触发、浮点优先级、隐藏状态或第二套状态服务。
+- 不修改伤害表、金丹位格权限、Unity 运行时或生产数据。
+- 不以默认容量、静默截断或兼容读取掩盖缺失输入。
+
+## 验证
+
+- 新增独立目标自测，覆盖状态极性／载体、局部回溯边界、容量不足、债务守恒和重复处理。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+
+## 完成条件
+
+- 同一固定输入产生确定状态、回溯、容量和债务结果；唯一实例不复制，非法跨边界操作稳定失败。
+- 验证记录保存命令、输入、结果和受影响回归。
+
+## 停止条件
+
+- 状态载体、可回溯事实、容量单位或债务归属不能由现行规则唯一确定，或实现需要全局回滚、随机触发、隐藏输入或第二套状态服务时停止并转为 `pending_decision`。

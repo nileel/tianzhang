@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ENV-RULE-01B",
+  "title": "环境地表、现象与交互反馈",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-ENV-RULE-01A"
+  ],
+  "stateReason": "2026-07-28：表现切片已从 U-ENV-RULE-01 拆出；等待 01A 提供唯一、稳定且可观察的运行时环境查询结果。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Grid/ITacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs",
+    "src/Assets/Scripts/Tilemap/HexTilemapManager.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "开发管理/Unity环境表现与反馈验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ENV-RULE-01B.txt",
+    "开发管理/任务归档/U-ENV-RULE-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ENV-RULE-01B · 环境地表、现象与交互反馈
+
+## 来源与当前边界
+
+- `U-ENV-RULE-01A` 完成后提供唯一环境查询结果；本卡只把真实地表、现象、格边和交互原因投影到现有渲染与最小状态反馈。
+- 正式冒险入口仍是 `AdventureScene`，统一 UI 仍归现有 `UICanvas`；不得创建第二场景链或第二 Canvas。
+
+## 必查范围
+
+- 完成后的 `U-ENV-RULE-01A` 运行时输出。
+- `src/Assets/Scripts/Grid/ITacticalRenderer.cs`、`HybridTacticalRenderer.cs`、`TilemapTacticalRenderer.cs`、`src/Assets/Scripts/Tilemap/HexTilemapManager.cs`。
+- `src/Assets/Scripts/Adventure/AdventureSceneController.cs` 和直接相关渲染／场景测试。
+
+## 实施范围
+
+- 在现有渲染器中显示地表、六类现象、特殊格边和交互允许／拒绝状态。
+- 反馈只读取 01A 的真实字段与稳定原因；表现不得反向修改环境或长期世界状态。
+- 保持正式冒险入口、统一 UI、场景引用和序列化兼容。
+
+## 禁止项
+
+- 不硬编码环境调参值，不从颜色、名称或静态图推断规则状态。
+- 不新增第二 Canvas、第二环境服务、完整环境编辑器或新内容档案。
+- 不修改 CTB、伤害、冷却、寻路、技能范围或掉落。
+
+## 验证
+
+- EditMode 覆盖地表、六类现象、格边、允许／拒绝反馈和未知信息不泄露。
+- 可用时运行直接相关 PlayMode／场景验证。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+
+## 完成条件
+
+- 玩家能在正式场景观察真实环境字段和稳定失败原因，表现不成为规则所有者。
+- 完成后关闭父任务 `U-ENV-RULE-01`。
+
+## 停止条件
+
+- 表现必须猜测规则状态、创建第二 Canvas／环境服务、修改生产参数或依赖未确认美术资源时停止并转为 `pending_decision`。

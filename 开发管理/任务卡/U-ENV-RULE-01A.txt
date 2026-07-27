@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ENV-RULE-01A",
+  "title": "环境规则运行时消费",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：D-ENV-SCHEMA-01、N-ENV-01、C-ENV-PROFILE-01 与共享空间查询契约均已完成；本卡先接入纯运行时消费，不包含渲染表现。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Grid/EnvironmentProfileData.cs",
+    "src/Assets/Scripts/Grid/TacticalGridModel.cs",
+    "src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "开发管理/Unity环境规则运行时消费验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ENV-RULE-01A.txt",
+    "开发管理/任务归档/U-ENV-RULE-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ENV-RULE-01A · 环境规则运行时消费
+
+## 来源与当前边界
+
+- `D-ENV-SCHEMA-01` 已提供失败关闭的 `EnvironmentProfileData`；`C-ENV-PROFILE-01` 已提供唯一关中野外生产档案。
+- `N-ENV-01` 与 U-2_5D 共享空间查询链已提供有向边、地表、现象通道、阻挡、视线和固定点距离语义。
+- 本卡只让 Unity 运行时消费这些既有字段，不实现视觉表现。
+
+## 必查范围
+
+- `docs/基础设定/战场空间与环境规则.txt`、`docs/基础设定/五行显化与环境交互规则.txt` 的运行时查询边界。
+- `开发管理/任务归档/2026-07-21-D-ENV-SCHEMA-01-环境数据契约归档.txt`、`2026-07-21-N-ENV-01-环境规则基座归档.txt`、`U-2_5D-01D.txt`。
+- `src/Assets/Scripts/Grid/EnvironmentProfileData.cs`、`TacticalGridModel.cs`、`SpatialQueryBoardFactory.cs` 与 `AdventureSceneController.cs` 的生产档案绑定。
+
+## 实施范围
+
+- 把生产环境档案投影为唯一 `TacticalGridModel` 查询输入，覆盖地表、六类现象、有向边、移动／视线阻挡和交互结果。
+- 缺失或非法引用失败关闭，不回退到硬编码默认地表、现象或基础步数算法。
+- 运行时结果提供稳定原因，供后续表现切片只读消费。
+
+## 禁止项
+
+- 不修改生产环境参数、BattleSim 数值、伤害表、场景美术或 UI。
+- 不建立第二套空间查询、环境状态或默认档案。
+- 不提前实现 `U-ENV-RULE-01B` 的渲染与反馈。
+
+## 验证
+
+- EditMode 覆盖生产档案、地表、现象通道、有向边、阻挡、视线、非法引用和稳定拒绝原因。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- 可用时运行直接相关 Unity EditMode 测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+
+## 完成条件
+
+- Unity 规则层只依据唯一环境档案和共享空间查询返回确定结果；没有硬编码调参值或旧算法 fallback。
+- 完成后解除 `U-ENV-RULE-01B` 的依赖。
+
+## 停止条件
+
+- 现有字段不能唯一表达运行时输入，或实现需要第二套空间查询、默认档案、未定义数值或反向修改数据契约时停止并转为 `pending_decision`。

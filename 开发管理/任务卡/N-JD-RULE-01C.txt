@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-JD-RULE-01C",
+  "title": "版本化跨阶挑战与实位死亡",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-JD-RULE-01B"
+  ],
+  "stateReason": "2026-07-28：任务已从金丹规则父任务拆出；等待 N-JD-RULE-01B 提供确定性冲突结算，再实现版本化跨阶挑战、实位载体死亡与账本释放／保留。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/Program.cs",
+    "开发管理/金丹跨阶挑战与实位死亡验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-JD-RULE-01C.txt",
+    "开发管理/任务归档/N-JD-RULE-01C.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-JD-RULE-01C · 版本化跨阶挑战与实位死亡
+
+## 来源与当前边界
+
+- `N-JD-RULE-01A` 已归档，源、化、界三实位、唯一丹枢／丹相和按 `abilityInstanceId` 的账本已可消费。
+- `N-JD-RULE-01B` 当前负责确定性冲突与 QTE／跳过同结果结算；本卡只在其完成后接入跨阶资格和真实失位生命周期。
+
+## 必查范围
+
+- `docs/基础设定/金丹位格证位与争位规则.txt#五、并行争位与外部干扰`、`#七、原子提交、保存与失败关闭`。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt#六、丹毁、位格丧失与死亡`、`#七、元婴道路锚点`。
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt#五、压阶、降级与跨阶挑战资格`。
+- `开发管理/任务归档/N-JD-RULE-01A.txt`、完成后的 `N-JD-RULE-01B` 接口，以及 `simulations/BattleSim/GameData.cs::GoldenCoreAssembly`、`GoldenCoreRuntimeLedger`、`Character.cs::Character`、`Combat.cs::Combat.Simulate`、`BattleSimSelfTests.cs::Run`、`Program.cs::Main`。
+
+## 实施范围
+
+- 建立带定义版本、目标变量、挑战者、资格来源、有效期和撤销状态的跨阶挑战档案；未知、过期、撤销或目标不匹配时给出稳定拒绝原因。
+- 对源、化、界任一真实位格载体死亡执行原子失位与角色死亡，并按已锁定所有权释放或保留能力、资源、冷却和冲突储备账本。
+- 重复处理同一死亡或挑战事件必须幂等；失败不得留下半死亡、半释放或复制账本。
+
+## 禁止项
+
+- 不让旧挑战许可跨版本复用，不把元婴锚点降格为普通金丹冲突。
+- 不新增位格权限、随机胜者、兼容读取层或未定义复活／换绑机制。
+- 不修改生产 CSV／asset、伤害表或 `N-JD-RULE-01A/01B` 已锁定的账本所有权。
+
+## 验证
+
+- 新增独立 `golden-core-challenge-death-n-jd-rule-01c` 自测，覆盖有效／过期／未知挑战、各实位死亡、账本释放／保留和重复处理。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- 提交前运行待提交空白检查和 `git diff --cached --check`。
+
+## 完成条件
+
+- 跨阶挑战和真实失位均返回确定结果与稳定原因，账本无泄漏、重复或静默丢失。
+- 完成后关闭父任务 `N-JD-RULE-01`，并解除 `N-FPD-DANXIANG-01` 的最后依赖。
+
+## 停止条件
+
+- 挑战资格或死亡后账本归属仍不能由现行事实源唯一确定，或实现需要随机胜者、新位格权限、复活／换绑机制或跨层兼容补丁时停止并转为 `pending_decision`。

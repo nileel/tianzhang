@@ -1,0 +1,63 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-COMBAT-01A",
+  "title": "Unity 攻击档案消费者定位",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "discovery",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-GROUP-02 与 D-COMBAT-01 已完成；先定位 Unity 基础攻击、术法、神通、目标和空间消费者，形成不猜测新所有者的实施输入。",
+  "expectedPaths": [
+    "开发管理/Unity统一攻击档案消费者现状与实施输入.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-01A.txt",
+    "开发管理/任务归档/U-COMBAT-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-COMBAT-01A · Unity 攻击档案消费者定位
+
+## 来源与当前边界
+
+- `D-COMBAT-01` 已锁定唯一 CSV 权威、Unity/BattleSim 投影和失败关闭契约，但未建立 Unity 数据对象或消费者。
+- `N-GROUP-02` 已锁定 2v2 空间、范围中心／命中／拒绝和确定性目标语义。
+- 本卡只读定位 Unity 现有消费者并产出实施输入，不修改运行时。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md` 全部实施边界。
+- `src/Assets/Scripts/Combat/SpellData.cs`、`DivineSkillData.cs`、`CombatResolver.cs`、`EnemyAI.cs`。
+- `src/Assets/Scripts/Grid/TacticalGridModel.cs`、现有战斗／空间直接测试。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs` 的术法与神通导入入口，仅用于确认投影边界。
+
+## 实施范围
+
+- 逐项记录基础攻击、术法、神通、资源／冷却、距离、目标和范围语义的现有生产者与消费者。
+- 确认可复用的数据对象、运行时适配和 2v2 空间入口，列出 `U-COMBAT-01B` 的精确修改路径、直接测试和停止条件。
+- 显式记录 BattleSim 回合冷却与 Unity 刻冷却尚无换算事实，不代填默认值。
+
+## 禁止项
+
+- 不修改代码、CSV、asset、导入器、战斗参数或生产内容。
+- 不先命名新服务、猜测冷却换算或建立 Unity 专属 schema。
+- 不提前执行 `U-COMBAT-01B` 或 `D-COMBAT-02`。
+
+## 验证
+
+- 用 `rg` 和完整逻辑单元读取证明每个现有消费者和直接测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `git diff --check`。
+
+## 完成条件
+
+- `U-COMBAT-01B` 获得精确路径、唯一所有者、数据流、测试入口和未决差异，不需要猜测默认值或新服务。
+
+## 停止条件
+
+- Unity 消费者或冷却／范围语义存在多个冲突事实源且无法由现行契约裁定时，停止并转为 `pending_decision`。

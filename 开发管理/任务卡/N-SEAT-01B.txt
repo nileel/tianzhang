@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-SEAT-01B",
+  "title": "确定性争位与原子占据",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-SEAT-01A"
+  ],
+  "stateReason": "2026-07-28：实现切片已从 N-SEAT-01 拆出；等待 01A 清理旧 SeatCompetitionScore 语义并锁定唯一状态所有者与原子提交边界。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Cultivation.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/SeatCompetitionSampleStats.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/Program.cs",
+    "开发管理/金丹确定性争位与原子占据验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-SEAT-01B.txt",
+    "开发管理/任务归档/N-SEAT-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-SEAT-01B · 确定性争位与原子占据
+
+## 来源与当前边界
+
+- `N-SEAT-01A` 完成后提供唯一所有者和旧模型处置；本卡只实现现行证位、临界争位与原子占据。
+- 实位载体死亡与跨阶挑战仍由 `N-JD-RULE-01C` 所有，本卡只消费其已完成边界。
+
+## 必查范围
+
+- 完成后的 `开发管理/金丹争位现状与确定性实现输入.txt`。
+- `docs/基础设定/金丹位格证位与争位规则.txt`、`元婴锚点与金丹位格设定.txt` 的原子占据与真实失位规则。
+- 01A 锁定的 BattleSim 目标类型、方法、调用者、测试和汇总入口。
+
+## 实施范围
+
+- 先校验空缺、版本、地点、现实支点、主承载、最低条件、关键事件和唯一占据，再提交候选进度。
+- 同刻完成进入显式临界稳定轮，不读取随机数、ID、注册／加载顺序或隐藏优先级。
+- 唯一完成者原子绑定；失败保留原占据，不留下半状态，重复关闭同一世界 tick 幂等。
+
+## 禁止项
+
+- 不使用随机胜者、旧分数直接决胜、隐藏排序或自动截断候选。
+- 不修改金丹装配、冲突 QTE、跨阶挑战、伤害表或生产数据。
+- 不在原子绑定成功前写入稳定占据。
+
+## 验证
+
+- 独立自测覆盖唯一完成、同刻临界、多轮继续、版本变化、空位失效、重复 tick 和原子失败。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+
+## 完成条件
+
+- 固定输入得到确定的继续／唯一胜者／拒绝结果，原子占据无双重绑定或半状态。
+- 完成后关闭父任务 `N-SEAT-01`。
+
+## 停止条件
+
+- 01A 仍有未裁定状态所有者、稳定轮输入或死亡提交边界，或实现需要随机／隐藏优先级、兼容补丁或新位格权限时停止并转为 `pending_decision`。

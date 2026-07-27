@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-FPD-SAVE-01",
+  "title": "筑基与紫府持久化",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：U-FPD-RULE-01 已归档，TQ-070 已提供单一存档版本、迁移和失败关闭基础；本卡可在现有 GameSession 快照链持久化道基与紫府不可逆事实。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "开发管理/筑基紫府持久化验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-FPD-SAVE-01.txt",
+    "开发管理/任务归档/U-FPD-SAVE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-FPD-SAVE-01 · 筑基与紫府持久化
+
+## 来源与当前边界
+
+- `U-FPD-RULE-01` 已建立唯一道基、四阶段、容量、五府、镇府神通、行动和结丹锁运行时。
+- TQ-070 已在 `GameSession` 与 `SessionStateSnapshots` 建立 schema 版本、迁移、原子恢复和失败关闭；本卡不得另建平行存档格式。
+
+## 必查范围
+
+- `开发管理/任务归档/U-FPD-RULE-01.txt`。
+- `src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs` 的完整运行时状态与不可逆校验。
+- `src/Assets/Scripts/Entity/Character.cs::FoundationPurpleMansionState`。
+- `src/Assets/Scripts/Game/GameSession.cs` 的 capture／restore 边界和 `SessionStateSnapshots.cs` 的 schema、保存数据、迁移与原子替换。
+- `src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs` 与道基／紫府直接测试。
+
+## 实施范围
+
+- 持久化道基身份／进度、天然与扩府容量、五府状态、镇府神通实例／强化节点、当前修炼行动、停止原因和结丹永久锁。
+- 新档、合法旧档迁移和当前版往返都复用现有 schema 所有者；恢复前完整校验，成功后原子替换。
+- 保持唯一实例 ID、已提交周期和不可重复领取扩府层，读档不重复修炼结算。
+
+## 禁止项
+
+- 不建立第二套存档、静默兼容层、默认 ID 或半迁移状态。
+- 不修改筑基／紫府规则、数值、内容数据、NPC 调度或 UI。
+- 不自动修复非法档、截断容量或重建缺失镇府神通。
+
+## 验证
+
+- EditMode 覆盖新档、合法旧档迁移、非法档拒绝、保存读取幂等、结丹后篡改失败关闭和重复结算防护。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- 可用时运行直接相关 Unity EditMode 测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+
+## 完成条件
+
+- 读档后全部不可逆事实、唯一实例 ID、当前行动和已提交周期与保存前一致。
+- 非法档在替换会话前失败，不留下半恢复或重复结算。
+
+## 停止条件
+
+- 现有存档所有者不能承载状态、需要新建平行格式／兼容读取层，或无法区分定义版本、实例状态和已提交事务时停止并转为 `pending_decision`。

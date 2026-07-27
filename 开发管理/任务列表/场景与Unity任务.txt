@@ -14,15 +14,24 @@
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
 | U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
-| U-FPD-AI-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、N-FPD-NPC-01） | — | Unity 接入 NPC 合法行动过滤与数据化修炼优先级，不硬编码行为顺序。 | — |
-| U-FPD-SAVE-01 | P2 | Codex | 阻塞（U-FPD-RULE-01） | — | 保存／读取道基进度、容量、紫府、镇府神通、行动与结丹锁，验证不可逆状态。 | — |
-| U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-RULE-01、D-FPD-MIGRATE-01、N-SLOT-01、N-FPD-DANXIANG-01） | — | 实现筑基与金丹信息界面，展示容量、府胚／建成、唯一丹相与不可逆确认。 | — |
-| U-JD-RULE-01 | P2 | Codex | 阻塞（D-JD-SCHEMA-01、N-JD-RULE-01、D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | Unity 接入金丹装配、全部紫府输入、唯一丹相、兼容/冲突可视化与可选 QTE/跳过；只消费规则与 fixture。 | — |
-| U-ENV-RULE-01 | P2 | Codex | 阻塞（D-ENV-SCHEMA-01、N-ENV-01 有效 BattleSim fixture） | — | Unity 表现金丹环境规则并提供地表、现象、边与交互反馈；只消费规则与 fixture，不硬编码调参值。 | — |
+| U-FPD-AI-01 | P2 | codex | 已排队 | — | NPC 自主修炼 | 开发管理/任务卡/U-FPD-AI-01.txt |
+| U-FPD-SAVE-01 | P2 | codex | 已排队 | — | 筑基与紫府持久化 | 开发管理/任务卡/U-FPD-SAVE-01.txt |
+| U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-UI-01A、U-FPD-UI-01B） | — | 筑基、紫府与唯一丹相界面父任务；不直接执行。 | — |
+| U-FPD-UI-01A | P2 | Codex | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
+| U-FPD-UI-01B | P2 | Codex | 阻塞（U-FPD-UI-01A、N-SLOT-01、N-FPD-DANXIANG-01） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
+| U-JD-RULE-01 | P2 | Codex | 阻塞（U-JD-RULE-01A、U-JD-RULE-01B、U-JD-RULE-01C） | — | 金丹 Unity 规则父任务；不直接执行。 | — |
+| U-JD-RULE-01A | P2 | Codex | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
+| U-JD-RULE-01B | P2 | Codex | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
+| U-JD-RULE-01C | P2 | Codex | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
+| U-ENV-RULE-01 | P2 | Codex | 阻塞（U-ENV-RULE-01A、U-ENV-RULE-01B） | — | 环境运行时与表现父任务；不直接执行。 | — |
+| U-ENV-RULE-01A | P2 | codex | 已排队 | — | 环境规则运行时消费 | 开发管理/任务卡/U-ENV-RULE-01A.txt |
+| U-ENV-RULE-01B | P2 | codex | 阻塞 | U-ENV-RULE-01A | 环境地表、现象与交互反馈 | 开发管理/任务卡/U-ENV-RULE-01B.txt |
 | U-TZ-CHARTER-MODEL-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、D-TZ-CHARTER-SAMPLE-01、M8 实现授权） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、M8 实现授权） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01、M8 实现授权） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
-| U-COMBAT-01 | P3 | Codex | 阻塞（N-GROUP-02、D-COMBAT-01） | — | Unity 接入唯一攻击档案与 2v2 空间语义。 | — |
+| U-COMBAT-01 | P3 | Codex | 阻塞（U-COMBAT-01A、U-COMBAT-01B） | — | Unity 统一攻击档案与 2v2 消费父任务；不直接执行。 | — |
+| U-COMBAT-01A | P3 | codex | 已排队 | — | Unity 攻击档案消费者定位 | 开发管理/任务卡/U-COMBAT-01A.txt |
+| U-COMBAT-01B | P3 | codex | 阻塞 | U-COMBAT-01A | Unity 攻击档案与 2v2 消费接入 | 开发管理/任务卡/U-COMBAT-01B.txt |
 
 ## 执行边界
 
@@ -33,15 +42,6 @@
 - TQ-074 不得用假资源或虚构登记替代真实资源闭环。
 
 ## 筑基、紫府与丹相后续 Unity 任务卡
-
-### U-FPD-RULE-01 · 道基与紫府运行时
-
-- 依赖：D-FPD-SCHEMA-01；N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01；至少一组合法与非法 fixture。
-- 预期路径：`src/Assets/Scripts` 中现有角色成长／会话所有者、相关数据模型，`src/Assets/Tests/EditMode`；不得新建第二套角色成长服务。进入当前队列前由实时扫描展开字面量路径。
-- 范围：接入唯一道基、四阶段连续进度、容量释放、最多两层扩府、五类紫府两段建造、每府唯一镇府神通、平铺效果绑定、固定周期行动、闭关重复和结丹永久锁。
-- 验证：允许／拒绝 fixture 覆盖凡品筑基、下品零府、两层扩府、重复府属、失败回退、结丹后养基／扩府／开府、递归效果包和同府多神通；运行相关编译与 EditMode。
-- 完成条件：所有硬门槛有单一持久化所有者和可观察状态，不以 UI、默认值或兼容分支代替规则。
-- 停止条件：现有所有者无法容纳新状态且需要新建平行成长服务，或数据契约／数值尚未锁定。
 
 ### U-FPD-AI-01 · NPC 自主修炼
 
@@ -63,12 +63,32 @@
 
 ### U-FPD-UI-01 · 筑基与唯一丹相界面
 
-- 依赖：U-FPD-RULE-01、D-FPD-MIGRATE-01、N-SLOT-01、N-FPD-DANXIANG-01；使用 2026-07-17 UI 规格，不复用未采纳样图布局。
-- 预期路径：现有境界／角色 UI 所有者、相关 UI 数据适配与 EditMode／PlayMode 测试；进入队列前展开字面量路径。
-- 范围：显示第一至第四阶段、天然／已释放／扩府／总容量、0～5 座紫府未建／府胚／建成、每府府体与镇府神通、结丹不可逆确认，以及一个丹枢核心／一个丹相中的 1～3 主承载与辅助输入。
-- 验证：0、1、3、5 府角色及一至三稳定位格快照；未知信息不泄露；第四、第五府可见但不生成额外位格、丹相或槽位。
-- 完成条件：界面只消费真实字段，不从颜色、名称或静态图推断规则状态。
-- 停止条件：真实字段、槽位预算或丹相主辅数据尚不可用；不得用静态假数据先锁死布局。
+- 父任务不直接进入队列；`U-FPD-UI-01A` 与 `U-FPD-UI-01B` 均完成后关闭。
+- `U-FPD-UI-01A` 只显示第一至第四阶段、天然／已释放／扩府／总容量、0～5 座紫府未建／府胚／建成、每府府体与镇府神通；只依赖已迁移的真实道基／紫府字段。
+- `U-FPD-UI-01B` 只显示结丹不可逆确认，以及一个丹枢核心／一个丹相中的 1～3 主承载与辅助输入；等待 01A、`N-SLOT-01` 和 `N-FPD-DANXIANG-01`。
+- 两个子任务都使用 2026-07-17 UI 规格，不复用未采纳样图布局；未知信息不泄露，第四、第五府可见但不生成额外位格、丹相或槽位。
+- 进入队列前分别扫描现有境界／角色 UI 所有者与直接 EditMode／PlayMode 测试，不从颜色、名称、静态图或假数据推断规则状态。
+
+## 金丹、环境与统一攻击运行时拆分
+
+### U-JD-RULE-01 · 金丹 Unity 规则父任务
+
+- `U-JD-RULE-01A` 接入金丹装配、全部紫府输入、唯一丹相、主辅承载和静态兼容；只消费已完成数据与 BattleSim 规则。
+- `U-JD-RULE-01B` 在 01A 上提供冲突可视化和 QTE／跳过输入；两种输入必须复用同一合法性、预算与结算。
+- `U-JD-RULE-01C` 在 01B 上提供版本化跨阶挑战、真实失位、角色死亡和账本释放／保留反馈。
+- 父任务不直接进入队列；三个子任务均完成后关闭。不得硬编码调参值、建立第二套金丹状态或在 Unity 重写 BattleSim 规则。
+
+### U-ENV-RULE-01 · 环境运行时与表现父任务
+
+- `U-ENV-RULE-01A` 只负责生产环境档案到共享空间查询的运行时消费。
+- `U-ENV-RULE-01B` 只负责地表、现象、格边、交互允许／拒绝和稳定原因的现有渲染／UI 反馈。
+- 父任务不直接进入队列；两项均完成后关闭。表现不得反向成为规则或长期世界状态所有者。
+
+### U-COMBAT-01 · Unity 统一攻击档案与 2v2 消费父任务
+
+- `U-COMBAT-01A` 只读定位基础攻击、术法、神通、距离、目标、范围、资源和冷却消费者，并产出精确实施输入。
+- `U-COMBAT-01B` 依据 01A 接入统一攻击档案和 2v2 共享空间语义；不生产 CSV／asset fixture。
+- 父任务不直接进入队列；两项均完成后关闭并解除 `D-COMBAT-02` 的依赖。
 
 ## 《天章》册界体系后续 Unity 任务卡
 

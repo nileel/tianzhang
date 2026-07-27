@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-COMBAT-01B",
+  "title": "Unity 攻击档案与 2v2 消费接入",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-01A"
+  ],
+  "stateReason": "2026-07-28：实现切片已从 U-COMBAT-01 拆出；等待 01A 锁定 Unity 现有消费者、精确路径和冷却／范围差异。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Combat/AttackProfileData.cs",
+    "src/Assets/Scripts/Combat/AttackProfileData.cs.meta",
+    "src/Assets/Scripts/Combat/CombatResolver.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Grid/TacticalGridModel.cs",
+    "src/Assets/Tests/EditMode/AttackProfileRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileRuntimeTests.cs.meta",
+    "开发管理/Unity攻击档案与2v2消费验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-01B.txt",
+    "开发管理/任务归档/U-COMBAT-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-COMBAT-01B · Unity 攻击档案与 2v2 消费接入
+
+## 来源与当前边界
+
+- `U-COMBAT-01A` 完成后提供精确 Unity 消费者和实施路径；`D-COMBAT-01` 是唯一数据契约。
+- 本卡只建立 Unity 数据承载与运行时消费，不生产 CSV／asset fixture；后者仍由 `D-COMBAT-02` 负责。
+
+## 必查范围
+
+- 完成后的 `开发管理/Unity统一攻击档案消费者现状与实施输入.txt`。
+- `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md`。
+- 01A 锁定的基础攻击、术法、神通、战斗结算、目标选择与空间查询完整逻辑单元。
+
+## 实施范围
+
+- 建立与契约一致的 Unity 攻击档案承载和消费者适配，基础攻击、术法、神通只读同一 `attackProfileId` 投影。
+- 将现有 2v2 目标、距离和范围语义接到共享空间查询，不复制候选排序或范围算法。
+- 未解决的冷却单位差异显式失败，不做默认换算。
+
+## 禁止项
+
+- 不创建 Unity 专属 schema、默认攻击档案、兼容 fallback 或第二套空间查询。
+- 不修改生产攻击数值、内容 CSV／asset、BattleSim 或 D-COMBAT-02 fixture。
+- 不扩展协同走位、完整团队 AI、治疗或新范围形状。
+
+## 验证
+
+- EditMode 覆盖基础攻击／术法／神通投影、2v2 单目标和范围、未知 ID、缺字段与冷却差异失败关闭。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- 可用时运行直接相关 Unity EditMode 测试。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+
+## 完成条件
+
+- Unity 只消费统一攻击档案和共享空间语义，坏数据稳定失败，无默认／硬编码权威。
+- 完成后关闭父任务 `U-COMBAT-01` 并解除 `D-COMBAT-02` 的依赖。
+
+## 停止条件
+
+- 01A 仍有未裁定消费者、冷却换算或范围语义，或实现需要平行 schema、默认值、生产数值或第二套空间查询时停止并转为 `pending_decision`。

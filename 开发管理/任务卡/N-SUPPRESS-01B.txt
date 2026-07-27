@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-SUPPRESS-01B",
+  "title": "确定性削位与封丹结算",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-SUPPRESS-01A"
+  ],
+  "stateReason": "2026-07-28：实现切片已从 N-SUPPRESS-01 拆出；等待 01A 明确旧审计开关的隔离／迁移和现行确定性资格、目标、成本及失败原因。",
+  "expectedPaths": [
+    "simulations/BattleSim/GoldenCoreSuppressionExitStats.cs",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/Program.cs",
+    "开发管理/确定性削位与封丹验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-SUPPRESS-01B.txt",
+    "开发管理/任务归档/N-SUPPRESS-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-SUPPRESS-01B · 确定性削位与封丹结算
+
+## 来源与当前边界
+
+- `N-SUPPRESS-01A` 完成后提供现行资格、目标、冲突与旧诊断处置；本卡只实施确定性结算。
+- 跨阶挑战和真实失位由 `N-JD-RULE-01C` 所有；本卡不得以削位／封丹绕过其资格和死亡边界。
+
+## 必查范围
+
+- 完成后的 `开发管理/削位封丹现状与确定性实现输入.txt`。
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt`、`元婴锚点与金丹位格设定.txt` 的压阶、挑战、暂时不稳定与真实失位边界。
+- 01A 锁定的 BattleSim 类型、方法、调用者、测试和默认审计入口。
+
+## 实施范围
+
+- 先验证施加者资格、目标状态、挑战资格、成本和冲突输入，再以确定性路径结算削位或封丹。
+- 区分暂时不稳定、效果禁用与真实失位；不把资源耗尽或封丹自动升级为角色死亡。
+- 重复处理同一事件幂等，失败不扣费、不写入半状态，输出稳定拒绝原因。
+
+## 禁止项
+
+- 不使用随机触发、固定概率、隐藏权重或旧削位百分比直接代表现行规则。
+- 不修改伤害表、位格权限、金丹装配、生产数据或 Unity 运行时。
+- 不复制或绕过 `N-JD-RULE-01C` 的跨阶资格和真实失位。
+
+## 验证
+
+- 独立自测覆盖合法／非法资格、目标不匹配、成本不足、冲突胜负、暂时不稳定、封丹、真实失位隔离和重复处理。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+
+## 完成条件
+
+- 固定输入得到确定结算和稳定原因，失败无扣费／半状态，暂时压制不被误写成真实失位。
+- 完成后关闭父任务 `N-SUPPRESS-01`。
+
+## 停止条件
+
+- 01A 仍有未裁定资格、成本、目标或旧诊断处置，或实现需要概率、隐藏权重、默认值或跨层兼容补丁时停止并转为 `pending_decision`。
