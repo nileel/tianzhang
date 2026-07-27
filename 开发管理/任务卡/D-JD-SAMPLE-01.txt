@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "verification",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "D-JD-SCHEMA-01B 已于 2026-07-27 完成整表导入与失败关闭；本卡将既有内存型直接测试 fixture 提升为可复用的非生产 CSV 样例，前置已解除。",
+  "dispatchState": "pending_decision",
+  "blockedBy": ["DEC-20260727-JDEFFECT01"],
+  "stateReason": "2026-07-27：契约与本卡要求效果越界反例稳定返回 JD_EFFECT_LOADOUT_INVALID，但现有 DataConfigImporter 未定义该拒绝码并返回 JD_UNKNOWN_STATIC_REFERENCE；本卡禁止修改导入器，已请求决定。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv.meta",
@@ -70,3 +70,8 @@
 ## 停止条件
 
 - 现有契约或解析器无法表达三组有效组合及指定非法反例，或样例必须先生产正式内容／数值、修改静态语义、创建第二丹枢／丹相、第四实位、共享账本或生产权威表；停止并转为 `pending_decision`。
+
+## 待决定记录
+
+- 2026-07-27：`ValidateJindanStablePositions` 对“效果不属于道路候选”与其他未解析静态引用统一抛出 `JD_UNKNOWN_STATIC_REFERENCE`；仓库中不存在 `JD_EFFECT_LOADOUT_INVALID`。这无法满足已锁定契约和本卡指定的稳定拒绝原因，而本卡同时禁止修改 `DataConfigImporter.cs`。
+- 已创建决定 `DEC-20260727-JDEFFECT01`：A 为另建并授权仅修正该错误分类的导入器任务（推荐）；B 为修订契约及任务以沿用 `JD_UNKNOWN_STATIC_REFERENCE`；C 为保持边界并暂停样例任务。决定前未创建 fixture、测试、生产 CSV 或 asset。
