@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-JD-EFFECT-LOADOUT-01",
+  "title": "金丹效果装配拒绝码分类",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：已消费 DEC-20260727-JDEFFECT01 的 A 回复；仅授权将已知效果越出其道路候选的拒绝分类为 JD_EFFECT_LOADOUT_INVALID，完成后解除 D-JD-SAMPLE-01。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-EFFECT-LOADOUT-01.txt",
+    "开发管理/任务归档/D-JD-EFFECT-LOADOUT-01.txt",
+    "开发管理/任务卡/D-JD-SAMPLE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-JD-EFFECT-LOADOUT-01 · 金丹效果装配拒绝码分类
+
+## 来源与当前边界
+
+- 已消费决定 `DEC-20260727-JDEFFECT01` 的 A 回复。`D-JD-SAMPLE-01` 需要契约规定的 `JD_EFFECT_LOADOUT_INVALID`，但现有 `ValidateJindanStablePositions` 将效果不属于已解析道路候选和未知静态引用统一归为 `JD_UNKNOWN_STATIC_REFERENCE`。
+- 本卡只修正这一稳定分类并增加直接 EditMode 证据。道路、效果、位格、兼容档案和 fixture 的静态语义仍以已锁定契约为准；不得创建样例 CSV 或生产内容。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md` 的“道路、基础效果与三项稳定真实位格”“fixture 规格与稳定拒绝原因”。
+- `开发管理/任务卡/D-JD-SAMPLE-01.txt` 的待决定记录与禁止项；`开发管理/任务归档/D-JD-SCHEMA-01A.txt`、`开发管理/任务归档/D-JD-SCHEMA-01B.txt` 的已锁定边界。
+- `src/Assets/Scripts/Entity/JindanStaticStateData.cs::JindanStaticReferenceCatalog`、`JindanRoadReference`。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ValidateJindanStablePositions`。
+- `src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs::ParseJindanStaticStatesFailsWithItsStableReason`、`BuildCatalog` 与 `开发管理/开发-技术经验.txt#asmdef 分层后的 csproj 排查`。
+
+## 实施范围
+
+- 在 `ValidateJindanStablePositions` 中保留道路、位格、道证档案和未知效果的 `JD_UNKNOWN_STATIC_REFERENCE`；当效果已由同一显式 reference catalog 识别、但不属于绑定 `roadId` 的候选时，稳定返回 `JD_EFFECT_LOADOUT_INVALID`，且在兼容档案检查之前失败。
+- 以现有 in-memory catalog 增加一个只违反“已知效果越出本道路候选”的直接 EditMode 反例，并保留未知静态引用的现有断言。
+- 任务完成时归档本卡，解除 `D-JD-SAMPLE-01` 的该前置并将其恢复为 `ready`，同步数据链 backlog 与当前队列；父任务继续由样例卡完成后关闭。
+
+## 禁止项
+
+- 不修改静态契约、`JindanStaticStateData` 字段、生产 CSV／asset、fixture CSV、数据链检查器、BattleSim、运行时证位、战斗、UI、正式道路、效果、数值或角色。
+- 不把未知效果误分类为 `JD_EFFECT_LOADOUT_INVALID`，不新增 fallback、默认候选、第二 reference catalog 或兼容分支。
+- 不完成或改写 `D-JD-SAMPLE-01` 的 fixture 交付；本卡只解除它的导入器前置。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- 已知但不属于绑定道路候选的效果稳定返回 `JD_EFFECT_LOADOUT_INVALID`；未知道路、位格、道证档案或效果仍返回 `JD_UNKNOWN_STATIC_REFERENCE`。
+- 直接 EditMode、数据链、文本与 Git 差异检查通过；`D-JD-SAMPLE-01` 仅在此前置归档后重新 ready。
+
+## 停止条件
+
+- 现有 catalog 无法不扩展静态语义地区分未知效果与已知但越权的效果，或修正需要修改契约、生产数据、样例 fixture、数值、运行时或 UI；停止并转为 `pending_decision`。
