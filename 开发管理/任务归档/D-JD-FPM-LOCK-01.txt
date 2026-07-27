@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-27：已消费 DEC-20260727-JDFPM02 的 A 回复。仅修复 FORMED 锁快照将 NOT_BUILT 府字段解析为 \"\"、而当前府状态为 null 所致的误报 FPM_JINDAN_LOCK_MUTATION；完成后解除 D-JD-SAMPLE-01。",
+  "stateReason": "2026-07-27：已将 FORMED 锁快照中 NOT_BUILT 府的无承载字段统一为 null；一府／三府完整五府快照通过，真实锁变更仍拒绝，D-JD-SAMPLE-01 已恢复 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/DataConfigImporter.cs",
     "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
@@ -66,3 +66,7 @@
 ## 停止条件
 
 - 修复需要改变锁的不可变语义、接受真实快照差异、修改 CSV 语法／生产内容／金丹契约，或引入默认值、第二导入路径、第二丹枢／丹相、第四实位或共享账本；停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-27：`ParseJindanLock` 对 `NOT_BUILT` 府快照的两个无承载字段改为保留 `null`，与 `ParsePurpleMansionStates` 一致；直接 EditMode 测试覆盖完整五府的一府／三府 FORMED 快照解析，并保留真实快照变化稳定拒绝为 `FPM_JINDAN_LOCK_MUTATION`。`D-JD-SAMPLE-01` 已恢复 ready，未修改生产或 fixture CSV。

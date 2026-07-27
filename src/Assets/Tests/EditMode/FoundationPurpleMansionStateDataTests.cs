@@ -77,6 +77,32 @@ namespace TianZhang.Tests
             }
         }
 
+        [TestCase("formedOneMansion", 1)]
+        [TestCase("formedThreeMansions", 3)]
+        public void ParseFoundationPurpleMansionStatesAcceptsFormedSnapshotsWithNotBuiltMansions(
+            string fixture,
+            int expectedCompleteMansions)
+        {
+            var states = DataConfigImporter.ParseFoundationPurpleMansionStates(
+                new[] { Header, BuildFixture(fixture) },
+                "FoundationPurpleMansionStates.fixture.csv");
+
+            try
+            {
+                var state = states.Single();
+                Assert.AreEqual(expectedCompleteMansions, state.mansionStates.Count(mansion => mansion.state == PurpleMansionBuildState.Complete));
+                Assert.IsTrue(state.mansionStates.Where(mansion => mansion.state == PurpleMansionBuildState.NotBuilt).All(mansion =>
+                    mansion.mansionBodyEffectBindingId == null && mansion.guardianAbilityInstanceId == null));
+                Assert.IsTrue(state.jindanLock.formationSnapshot.mansionStates
+                    .Where(mansion => mansion.state == PurpleMansionBuildState.NotBuilt)
+                    .All(mansion => mansion.mansionBodyEffectBindingId == null && mansion.guardianAbilityInstanceId == null));
+            }
+            finally
+            {
+                DestroyAll(states);
+            }
+        }
+
         [TestCase("capacity", "FPM_CAPACITY_OVERFLOW")]
         [TestCase("duplicate", "FPM_DUPLICATE_MANSION_KIND")]
         [TestCase("missingBinding", "FPM_COMPLETE_MISSING_BINDING")]
@@ -192,6 +218,28 @@ namespace TianZhang.Tests
                     ApplyOneCompleteMansion(values);
                     values["fixtureId"] = "fpm.valid.one-complete-mansion";
                     return values;
+                case "formedOneMansion":
+                    ApplyOneCompleteMansion(values);
+                    values["jindanLock"] = FormedLock(
+                        1,
+                        "MING:COMPLETE:MANSION_BODY_MING_YUAN_HUIHU:guardian_ming",
+                        "HUN:NOT_BUILT",
+                        "SHI:NOT_BUILT",
+                        "WU:NOT_BUILT",
+                        "YUN:NOT_BUILT");
+                    values["fixtureId"] = "fpm.valid.formed-one-mansion";
+                    return values;
+                case "formedThreeMansions":
+                    ApplyThreeCompleteMansions(values);
+                    values["jindanLock"] = FormedLock(
+                        3,
+                        "MING:COMPLETE:MANSION_BODY_MING_YUAN_HUIHU:guardian_ming",
+                        "HUN:COMPLETE:MANSION_BODY_HUN_LINGTAI_DINGPO:guardian_hun",
+                        "SHI:COMPLETE:MANSION_BODY_SHI_SHENGUAN_RUWEI:guardian_shi",
+                        "WU:NOT_BUILT",
+                        "YUN:NOT_BUILT");
+                    values["fixtureId"] = "fpm.valid.formed-three-mansion";
+                    return values;
                 case "capacityUpperBound":
                     ApplyCapacityUpperBound(values);
                     values["fixtureId"] = "fpm.valid.capacity-upper-bound";
@@ -295,6 +343,32 @@ namespace TianZhang.Tests
             });
         }
 
+        private static void ApplyThreeCompleteMansions(Dictionary<string, string> values)
+        {
+            values["phase"] = "PHASE_4";
+            values["continuousProgress"] = "400";
+            values["naturalMansionCapacity"] = "3";
+            values["releasedNaturalCapacity"] = "3";
+            values["totalMansionCapacity"] = "3";
+            values["mansionStates"] =
+                "MING~COMPLETE~mansion_ming~MANSION_BODY_MING_YUAN_HUIHU~guardian_ming~fixture_spell_ming~fixture_upgrade_ming~RETAIN|" +
+                "HUN~COMPLETE~mansion_hun~MANSION_BODY_HUN_LINGTAI_DINGPO~guardian_hun~fixture_spell_hun~fixture_upgrade_hun~RETAIN|" +
+                "SHI~COMPLETE~mansion_shi~MANSION_BODY_SHI_SHENGUAN_RUWEI~guardian_shi~fixture_spell_shi~fixture_upgrade_shi~RETAIN|" +
+                "WU~NOT_BUILT|YUN~NOT_BUILT";
+            values["effectBindings"] = string.Join("|", new[]
+            {
+                BodyEffect("MING", "mansion_ming"),
+                BodyEffect("HUN", "mansion_hun"),
+                BodyEffect("SHI", "mansion_shi"),
+            });
+            values["guardianAbilities"] = string.Join("|", new[]
+            {
+                Guardian("ming", "MING"),
+                Guardian("hun", "HUN"),
+                Guardian("shi", "SHI"),
+            });
+        }
+
         private static void ApplyPausedEmbryo(Dictionary<string, string> values)
         {
             ApplyOneCompleteMansion(values);
@@ -313,6 +387,11 @@ namespace TianZhang.Tests
         private static string NotBuiltMansions()
         {
             return "MING~NOT_BUILT|HUN~NOT_BUILT|SHI~NOT_BUILT|WU~NOT_BUILT|YUN~NOT_BUILT";
+        }
+
+        private static string FormedLock(int naturalMansionCapacity, params string[] mansionSnapshots)
+        {
+            return $"FORMED~foundation_fixture~PHASE_4~{naturalMansionCapacity}~none~{string.Join("+", mansionSnapshots)}";
         }
 
         private static string CompleteMansions()

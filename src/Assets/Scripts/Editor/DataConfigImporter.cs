@@ -2338,8 +2338,8 @@ namespace TianZhang.Editor
                 {
                     mansionKind = mansionKind,
                     state = mansionState,
-                    mansionBodyEffectBindingId = mansionState == PurpleMansionBuildState.Complete ? mansionParts[2] : "",
-                    guardianAbilityInstanceId = mansionState == PurpleMansionBuildState.Complete ? mansionParts[3] : "",
+                    mansionBodyEffectBindingId = mansionState == PurpleMansionBuildState.Complete ? mansionParts[2] : null,
+                    guardianAbilityInstanceId = mansionState == PurpleMansionBuildState.Complete ? mansionParts[3] : null,
                 });
             }
 

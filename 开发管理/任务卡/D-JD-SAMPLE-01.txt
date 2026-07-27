@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-JD-FPM-LOCK-01"
-  ],
-  "stateReason": "2026-07-27：已消费 DEC-20260727-JDFPM02 的 A 回复；已建立 D-JD-FPM-LOCK-01，仅修复 FORMED 锁快照中未建府字段的 null／空字符串不一致。该前置归档后本卡恢复 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：D-JD-FPM-LOCK-01 已归档，FORMED 锁快照与当前 NOT_BUILT 府的无值字段已统一为 null；恢复本卡 ready 以交付金丹最小样例。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv.meta",
@@ -90,3 +88,4 @@
 ## 决定处理记录
 
 - 2026-07-27：已消费 `DEC-20260727-JDFPM02` 的 A 回复。新建 `D-JD-FPM-LOCK-01`，仅统一 FORMED 锁快照与 `NOT_BUILT` 府的空值表示并增加直接解析证据；本卡在该前置归档后恢复 ready，仍由本卡独占 fixture CSV、金丹 fixture 测试及父任务关闭。
+- 2026-07-27：`D-JD-FPM-LOCK-01` 已归档；完整五府的一府／三府 FORMED 锁快照可通过现有严格比较，本卡恢复 ready。
