@@ -13,6 +13,19 @@ class Program
     record MansionBudgetFixture(string Name, Dictionary<string, int> Innate, string[] Mansions, double SoftAffinityCostMultiplier);
     record MansionBudgetAuditResult(int PalaceCount, double BudgetUnits, int AddedArtSlots, int AddedDivineArtSlots, int AddedStableSeats, int AddedDanXiang);
     record DanxiangBudgetFixture(int MansionCount, int StableSeatCount);
+    enum DanshuSlotKind { Art, OrdinaryDivine }
+    record DanshuSlotEffectBinding(
+        string BindingId,
+        string DanshuInterfaceId,
+        string SlotCapacityEffectId,
+        string DanshuCoreId,
+        string StableSeatPositionId,
+        GoldenCoreSeatType PositionType,
+        string PrimaryCarrierAbilityInstanceId,
+        string CompatibilityProfileId,
+        DanshuSlotKind SlotKind,
+        int Delta);
+    record JindanSlotBudgetAuditResult(int ArtSlots, int OrdinaryDivineSlots, int GrantedArtSlots, int GrantedOrdinaryDivineSlots);
     record FoundationGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 神识);
     record DaoFoundationCoreCurve(string ParameterId, double StartingNormalizedMagnitude, double MaximumNormalizedMagnitude, double Exponent);
     enum CultivationAuditAction { MortalToQi, FoundationTrial, FoundationGrowth, MansionEmbryo, MansionOpening, Recovery }
@@ -61,6 +74,13 @@ class Program
     };
 
     static readonly string[] MansionBodyOrder = { "命府", "魂府", "识府", "悟府", "运府" };
+    const int FoundationArtSlotBaseline = 5;
+    const int FoundationOrdinaryDivineSlotBaseline = 2;
+    const int MaximumAdditionalArtSlots = 3;
+    const int MaximumAdditionalOrdinaryDivineSlots = 2;
+    const string DanshuSlotCapacityInterfaceId = "DANSHU_SLOT_CAPACITY_V1";
+    const string ArtSlotCapacityEffectId = "DANSHU_SLOT_ART_CAPACITY";
+    const string OrdinaryDivineSlotCapacityEffectId = "DANSHU_SLOT_ORDINARY_DIVINE_CAPACITY";
     static IReadOnlyList<string> G2AuditTargetStages => ["金丹"];
     static readonly double[] FoundationStageShares = { 0.18, 0.22, 0.27, 0.33 };
     static readonly DaoFoundationCoreCurve RepresentativeFoundationCoreCurve = new("normalizedMagnitude", 0.35, 1.00, 1.25);
@@ -158,6 +178,8 @@ class Program
         RunMansionBodyBudgetAudit();
         Console.WriteLine();
         RunDanxiangInputBudgetAudit();
+        Console.WriteLine();
+        RunJindanSlotBudgetAudit();
         Console.WriteLine();
         RunCultivationCycleAudit();
         Console.WriteLine();
@@ -1492,6 +1514,185 @@ class Program
     {
         if (!condition)
             throw new InvalidOperationException($"丹相主辅预算审计失败：{message}");
+    }
+
+    static void RunJindanSlotBudgetAudit()
+    {
+        Console.WriteLine("【金丹槽位与丹枢显式加成审计（N-SLOT-01）】");
+        Console.WriteLine($"  筑基基准：术法={FoundationArtSlotBaseline}，普通神通={FoundationOrdinaryDivineSlotBaseline}；每个稳定实位最多一条显式丹枢槽位绑定，单条固定 +1。术法额外上限={MaximumAdditionalArtSlots}，普通神通额外上限={MaximumAdditionalOrdinaryDivineSlots}。");
+        Console.WriteLine("  1～5 府 × 1～3 稳定位格：未配置显式绑定时维持基准；府数、辅助引用和临时状态不自动产生槽位。");
+
+        for (int mansionCount = 1; mansionCount <= 5; mansionCount++)
+        {
+            for (int stableSeatCount = 1; stableSeatCount <= 3; stableSeatCount++)
+            {
+                var fixture = new DanxiangBudgetFixture(mansionCount, stableSeatCount);
+                if (stableSeatCount > mansionCount)
+                {
+                    AssertDanxiangAssemblyRejected(fixture, "JD_PRIMARY_CARRIER_DUPLICATE");
+                    Console.WriteLine($"    {mansionCount}府×{stableSeatCount}位：不成立（缺少第 {stableSeatCount} 项独立主承载）；槽位输出=0。");
+                    continue;
+                }
+
+                var assembly = GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(fixture));
+                var baseline = EvaluateJindanSlotBudget(assembly, Array.Empty<DanshuSlotEffectBinding>());
+                AssertJindanSlotBudget(
+                    baseline.ArtSlots == FoundationArtSlotBaseline &&
+                    baseline.OrdinaryDivineSlots == FoundationOrdinaryDivineSlotBaseline &&
+                    baseline.GrantedArtSlots == 0 &&
+                    baseline.GrantedOrdinaryDivineSlots == 0,
+                    $"{mansionCount}府×{stableSeatCount}位在无显式绑定时不应获得槽位");
+
+                for (int addedArtSlots = 0; addedArtSlots <= MaximumAdditionalArtSlots; addedArtSlots++)
+                {
+                    for (int addedOrdinaryDivineSlots = 0; addedOrdinaryDivineSlots <= MaximumAdditionalOrdinaryDivineSlots; addedOrdinaryDivineSlots++)
+                    {
+                        if (addedArtSlots + addedOrdinaryDivineSlots > stableSeatCount)
+                            continue;
+
+                        var result = EvaluateJindanSlotBudget(
+                            assembly,
+                            CreateDanshuSlotBindings(assembly, addedArtSlots, addedOrdinaryDivineSlots));
+                        AssertJindanSlotBudget(
+                            result.ArtSlots == FoundationArtSlotBaseline + addedArtSlots &&
+                            result.OrdinaryDivineSlots == FoundationOrdinaryDivineSlotBaseline + addedOrdinaryDivineSlots &&
+                            result.GrantedArtSlots == addedArtSlots &&
+                            result.GrantedOrdinaryDivineSlots == addedOrdinaryDivineSlots,
+                            $"{mansionCount}府×{stableSeatCount}位的显式槽位分配错误");
+                    }
+                }
+
+                Console.WriteLine($"    {mansionCount}府×{stableSeatCount}位：无绑定={FoundationArtSlotBaseline}/{FoundationOrdinaryDivineSlotBaseline}，显式预算≤{stableSeatCount}，术法≤{FoundationArtSlotBaseline + Math.Min(stableSeatCount, MaximumAdditionalArtSlots)}，普通神通≤{FoundationOrdinaryDivineSlotBaseline + Math.Min(stableSeatCount, MaximumAdditionalOrdinaryDivineSlots)}。");
+            }
+        }
+
+        var oneMansionOneSeat = GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(new DanxiangBudgetFixture(1, 1)));
+        var fiveMansionOneSeat = GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(new DanxiangBudgetFixture(5, 1)));
+        var oneMansionBaseline = EvaluateJindanSlotBudget(oneMansionOneSeat, Array.Empty<DanshuSlotEffectBinding>());
+        var fiveMansionBaseline = EvaluateJindanSlotBudget(fiveMansionOneSeat, Array.Empty<DanshuSlotEffectBinding>());
+        AssertJindanSlotBudget(oneMansionBaseline == fiveMansionBaseline, "紫府数量在无显式绑定时改变了槽位");
+
+        var threeSeatAssembly = GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(new DanxiangBudgetFixture(5, 3)));
+        var sourceSeat = threeSeatAssembly.StableSeats[GoldenCoreSeatType.Source];
+        var sourceArtBinding = CreateDanshuSlotBinding(threeSeatAssembly, sourceSeat, DanshuSlotKind.Art);
+        AssertDanshuSlotBudgetRejected(
+            () => EvaluateJindanSlotBudget(threeSeatAssembly, new[] { sourceArtBinding with { Delta = 2 } }),
+            "JD_SLOT_DELTA_INVALID");
+        AssertDanshuSlotBudgetRejected(
+            () => EvaluateJindanSlotBudget(threeSeatAssembly, new[] { sourceArtBinding with { DanshuInterfaceId = "DANSHU_SLOT_CAPACITY_UNDECLARED" } }),
+            "JD_SLOT_INTERFACE_INVALID");
+        AssertDanshuSlotBudgetRejected(
+            () => EvaluateJindanSlotBudget(threeSeatAssembly, new[] { sourceArtBinding with { SlotCapacityEffectId = OrdinaryDivineSlotCapacityEffectId } }),
+            "JD_SLOT_EFFECT_INVALID");
+        AssertDanshuSlotBudgetRejected(
+            () => EvaluateJindanSlotBudget(threeSeatAssembly, new[] { sourceArtBinding with { PrimaryCarrierAbilityInstanceId = "guardian_2" } }),
+            "JD_SLOT_PRIMARY_CARRIER_INVALID");
+        AssertDanshuSlotBudgetRejected(
+            () => EvaluateJindanSlotBudget(threeSeatAssembly, new[] { sourceArtBinding, CreateDanshuSlotBinding(threeSeatAssembly, sourceSeat, DanshuSlotKind.OrdinaryDivine) }),
+            "JD_SLOT_STABLE_SEAT_DUPLICATE");
+        AssertDanshuSlotBudgetRejected(
+            () => EvaluateJindanSlotBudget(threeSeatAssembly, CreateDanshuSlotBindings(threeSeatAssembly, 0, 3)),
+            "JD_SLOT_ORDINARY_DIVINE_CAP_EXCEEDED");
+
+        Console.WriteLine("  拒绝回归：+2、未声明接口、效果类别不符、辅助实例冒充主承载、同一实位双绑、普通神通 +3 均被拒绝。");
+        Console.WriteLine("  结论：PASS；只有稳定实位的显式丹枢接口可按 +1 分配术法／普通神通容量，最终上限为 8／4；第四、第五府和辅助连接不自动增槽。\n  本审计只锁定设计输入与数值阈值，不创建运行时数据字段、位格、丹相、账本或伤害结算。");
+    }
+
+    static IReadOnlyList<DanshuSlotEffectBinding> CreateDanshuSlotBindings(
+        GoldenCoreAssembly assembly,
+        int addedArtSlots,
+        int addedOrdinaryDivineSlots)
+    {
+        var seats = assembly.StableSeats.Values.OrderBy(seat => seat.PositionType).ToArray();
+        var bindings = new List<DanshuSlotEffectBinding>();
+        int nextSeatIndex = 0;
+        for (int index = 0; index < addedArtSlots; index++)
+            bindings.Add(CreateDanshuSlotBinding(assembly, seats[nextSeatIndex++], DanshuSlotKind.Art));
+        for (int index = 0; index < addedOrdinaryDivineSlots; index++)
+            bindings.Add(CreateDanshuSlotBinding(assembly, seats[nextSeatIndex++], DanshuSlotKind.OrdinaryDivine));
+        return bindings;
+    }
+
+    static DanshuSlotEffectBinding CreateDanshuSlotBinding(
+        GoldenCoreAssembly assembly,
+        GoldenCoreSeatBinding seat,
+        DanshuSlotKind slotKind) =>
+        new(
+            $"slot_binding_{seat.PositionType}_{slotKind}",
+            DanshuSlotCapacityInterfaceId,
+            slotKind == DanshuSlotKind.Art ? ArtSlotCapacityEffectId : OrdinaryDivineSlotCapacityEffectId,
+            assembly.CoreBinding.DanshuCoreId,
+            seat.PositionId,
+            seat.PositionType,
+            seat.PrimaryCarrierAbilityInstanceId,
+            seat.CompatibilityProfileId,
+            slotKind,
+            Delta: 1);
+
+    static JindanSlotBudgetAuditResult EvaluateJindanSlotBudget(
+        GoldenCoreAssembly assembly,
+        IReadOnlyList<DanshuSlotEffectBinding> bindings)
+    {
+        AssertJindanSlotBudget(assembly != null, "JD_SLOT_ASSEMBLY_UNAVAILABLE");
+        AssertJindanSlotBudget(bindings != null, "JD_SLOT_BINDING_INPUT_INVALID");
+
+        int addedArtSlots = 0;
+        int addedOrdinaryDivineSlots = 0;
+        var bindingIds = new HashSet<string>(StringComparer.Ordinal);
+        var boundPositionTypes = new HashSet<GoldenCoreSeatType>();
+        foreach (var binding in bindings)
+        {
+            AssertJindanSlotBudget(binding != null, "JD_SLOT_BINDING_INPUT_INVALID");
+            AssertJindanSlotBudget(!string.IsNullOrWhiteSpace(binding.BindingId) && bindingIds.Add(binding.BindingId), "JD_SLOT_BINDING_DUPLICATE");
+            AssertJindanSlotBudget(binding.Delta == 1, "JD_SLOT_DELTA_INVALID");
+            AssertJindanSlotBudget(binding.DanshuInterfaceId == DanshuSlotCapacityInterfaceId, "JD_SLOT_INTERFACE_INVALID");
+            AssertJindanSlotBudget(binding.DanshuCoreId == assembly.CoreBinding.DanshuCoreId, "JD_SLOT_CORE_MISMATCH");
+            AssertJindanSlotBudget(assembly.StableSeats.TryGetValue(binding.PositionType, out var seat), "JD_SLOT_STABLE_SEAT_INVALID");
+            AssertJindanSlotBudget(seat.PositionId == binding.StableSeatPositionId, "JD_SLOT_STABLE_SEAT_INVALID");
+            AssertJindanSlotBudget(boundPositionTypes.Add(binding.PositionType), "JD_SLOT_STABLE_SEAT_DUPLICATE");
+            AssertJindanSlotBudget(seat.PrimaryCarrierAbilityInstanceId == binding.PrimaryCarrierAbilityInstanceId, "JD_SLOT_PRIMARY_CARRIER_INVALID");
+            AssertJindanSlotBudget(seat.CompatibilityProfileId == binding.CompatibilityProfileId, "JD_SLOT_COMPATIBILITY_INVALID");
+
+            if (binding.SlotKind == DanshuSlotKind.Art)
+            {
+                AssertJindanSlotBudget(binding.SlotCapacityEffectId == ArtSlotCapacityEffectId, "JD_SLOT_EFFECT_INVALID");
+                addedArtSlots += binding.Delta;
+            }
+            else
+            {
+                AssertJindanSlotBudget(binding.SlotCapacityEffectId == OrdinaryDivineSlotCapacityEffectId, "JD_SLOT_EFFECT_INVALID");
+                addedOrdinaryDivineSlots += binding.Delta;
+            }
+        }
+
+        AssertJindanSlotBudget(addedArtSlots <= MaximumAdditionalArtSlots, "JD_SLOT_ART_CAP_EXCEEDED");
+        AssertJindanSlotBudget(addedOrdinaryDivineSlots <= MaximumAdditionalOrdinaryDivineSlots, "JD_SLOT_ORDINARY_DIVINE_CAP_EXCEEDED");
+        AssertJindanSlotBudget(addedArtSlots + addedOrdinaryDivineSlots <= assembly.StableSeats.Count, "JD_SLOT_STABLE_BUDGET_EXCEEDED");
+        return new(
+            FoundationArtSlotBaseline + addedArtSlots,
+            FoundationOrdinaryDivineSlotBaseline + addedOrdinaryDivineSlots,
+            addedArtSlots,
+            addedOrdinaryDivineSlots);
+    }
+
+    static void AssertDanshuSlotBudgetRejected(Action action, string expectedCode)
+    {
+        try
+        {
+            action();
+        }
+        catch (InvalidOperationException ex) when (ex.Message == expectedCode)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException($"金丹槽位审计必须拒绝 {expectedCode}。");
+    }
+
+    static void AssertJindanSlotBudget(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException(message);
     }
 
     static G2CoverageResult EvaluateG2Coverage(int seedsPerBuild, int distinctPairs, int battlesPerCell)

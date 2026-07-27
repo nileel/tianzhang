@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| N-SLOT-01 | codex_execute | codex | P2 | battlesim | design | 金丹槽位与丹枢加成数值方案 | 开发管理/任务卡/N-SLOT-01.txt |
 | U-ENV-RULE-01A | codex_execute | codex | P2 | unity | implementation | 环境规则运行时消费 | 开发管理/任务卡/U-ENV-RULE-01A.txt |
 | U-FPD-AI-01 | codex_execute | codex | P2 | unity | implementation | NPC 自主修炼 | 开发管理/任务卡/U-FPD-AI-01.txt |
 | U-FPD-SAVE-01 | codex_execute | codex | P2 | unity | implementation | 筑基与紫府持久化 | 开发管理/任务卡/U-FPD-SAVE-01.txt |

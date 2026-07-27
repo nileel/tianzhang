@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：N-FPD-DANXIANG-01 已归档，1～5 府 × 1～3 位主辅预算、唯一实例账本与无额外槽位边界均已锁定；进入 ready 队列。",
+  "stateReason": "2026-07-28：BattleSim 已锁定稳定实位显式丹枢槽位绑定的 5/2 基准、1～3 单位预算与 8/4 硬上限；1～5 府 × 1～3 位审计、完整模拟和文本门禁通过，紫府数量与辅助输入不自动增槽。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/角色养成/术法槽位设计.txt",
@@ -62,3 +62,10 @@
 ## 停止条件
 
 - N-FPD-MANSION-01 或 N-FPD-DANXIANG-01 尚未完成，或方案必须依赖府数自动加槽、额外位格／丹相或未确认府体数值。
+
+## 完成记录
+
+- 2026-07-28：锁定术法／普通神通槽的 `5/2` 筑基基准和显式丹枢容量公式：`术法=5+a`、`普通神通=2+d`，其中 `a≤3`、`d≤2`、`a+d≤当前稳定实位数`。初结／温养／圆满只分别开放 1／2／3 个可分配单位，最终硬上限为 `8/4`。
+- 合法 `DanshuSlotEffectBinding` 必须匹配矩阵接口、唯一丹枢、稳定目标位格、独立主承载、兼容档案、类别和 `delta=+1`；无绑定、`TEMPORARY`、失稳、府数和辅助连接的输出均为零。
+- `RunJindanSlotBudgetAudit` 穷举 1～5 府 × 1～3 位的所有合法分配；独立主承载不足的组合被既有 `JD_PRIMARY_CARRIER_DUPLICATE` 拒绝，`+2`、未声明接口、类别错配、非目标主承载、同实位双绑和普通神通 `+3` 也稳定拒绝。Release 构建与完整 BattleSim 通过；详情见 `开发管理/金丹槽位与丹枢加成数值验证记录.txt`。
+- 未实现矩阵／CSV／Unity 数据字段、角色运行时重算、UI 或任何占据、削位、封丹与伤害结算；后续实现必须逐项填入显式接口记录。
