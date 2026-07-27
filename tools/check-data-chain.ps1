@@ -173,6 +173,84 @@ function Test-AssetCoverage {
   }
 }
 
+function Test-NpcCultivationActionWeightProfile {
+  param([object]$Table)
+
+  $label = 'NpcCultivationActionWeightProfiles'
+  $rows = @($Table.Rows)
+  $manifests = @($rows | Where-Object { $_.recordKind -ceq 'MANIFEST' })
+  if ($manifests.Count -ne 1) {
+    Add-Finding 'NPC_WEIGHT_MANIFEST_COUNT' $label 'Production CSV must contain exactly one MANIFEST row.'
+    return
+  }
+
+  $manifest = $manifests[0]
+  foreach ($field in @('schemaId', 'schemaVersion', 'profileId', 'sourceContentHash', 'authorityKind', 'tieBreakPolicy')) {
+    if ([string]::IsNullOrWhiteSpace([string]$manifest.$field)) {
+      Add-Finding 'NPC_WEIGHT_MANIFEST_FIELD_MISSING' "${label}:$field" 'Manifest requires this explicit field.'
+    }
+  }
+  if ($manifest.schemaId -cne 'npcCultivationActionWeightProfile' -or $manifest.schemaVersion -cne '1') {
+    Add-Finding 'NPC_WEIGHT_SCHEMA_INVALID' $label 'Manifest schemaId/schemaVersion is not the production schema.'
+  }
+  if ($manifest.authorityKind -cne 'CSV_SOURCE_SET' -or $manifest.tieBreakPolicy -cne 'LEXICOGRAPHIC_ASC') {
+    Add-Finding 'NPC_WEIGHT_AUTHORITY_INVALID' $label 'Manifest must declare CSV_SOURCE_SET and LEXICOGRAPHIC_ASC.'
+  }
+
+  $profileIds = @($rows | ForEach-Object { [string]$_.profileId } | Sort-Object -Unique)
+  if ($profileIds.Count -ne 1 -or $profileIds[0] -cne $manifest.profileId) {
+    Add-Finding 'NPC_WEIGHT_PROFILE_MIXED' $label 'All rows must belong to the single manifest profileId.'
+  }
+
+  $canonicalRows = @($rows | ForEach-Object {
+    $values = foreach ($header in $Table.Headers) {
+      if ($header -ceq 'sourceContentHash') { '' } else { [string]$_.PSObject.Properties[$header].Value }
+    }
+    $values -join ','
+  })
+  $canonical = (@($Table.Headers -join ',') + $canonicalRows) -join "`n"
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $actualHash = -join ($sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($canonical)) | ForEach-Object { $_.ToString('x2') })
+  }
+  finally {
+    $sha256.Dispose()
+  }
+  if ($manifest.sourceContentHash -cne $actualHash) {
+    Add-Finding 'NPC_WEIGHT_SOURCE_HASH_MISMATCH' $label 'Manifest sourceContentHash does not match the normalized complete CSV source set.'
+  }
+
+  $actions = @($rows | Where-Object { $_.recordKind -ceq 'ACTION' })
+  $expectedActions = @('FOUNDATION_TRIAL', 'FOUNDATION_NURTURE', 'MANSION_EMBRYO_NURTURE', 'MANSION_OPENING_TRIAL', 'JINDAN_PROOF')
+  $actualActions = @($actions | ForEach-Object { $_.actionStableId } | Sort-Object -Unique)
+  if ($actualActions.Count -ne $expectedActions.Count -or @($expectedActions | Where-Object { $_ -notin $actualActions }).Count -ne 0) {
+    Add-Finding 'NPC_WEIGHT_ACTION_SET_INVALID' $label 'Production profile must define the five contract action stable IDs exactly once.'
+  }
+  foreach ($kind in @('MODIFIER', 'CAP_POLICY', 'DIMINISHING_POLICY', 'RISK_GATE', 'TRIGGER')) {
+    if (@($rows | Where-Object { $_.recordKind -ceq $kind }).Count -eq 0) {
+      Add-Finding 'NPC_WEIGHT_RECORD_KIND_MISSING' "${label}:$kind" 'Production profile is missing this required record kind.'
+    }
+  }
+
+  $assetDir = 'src/Assets/Data/NpcCultivationActionWeightProfiles'
+  $assetName = "NpcCultivationActionWeightProfile_$($manifest.profileId).asset"
+  $assetPath = Join-Path $root (Join-Path $assetDir $assetName)
+  if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+    Add-Finding 'NPC_WEIGHT_ASSET_MISSING' $label "CSV profile has no matching asset: $assetDir/$assetName"
+    return
+  }
+  $assetNames = @(Get-ChildItem -LiteralPath (Join-Path $root $assetDir) -File -Filter *.asset | Select-Object -ExpandProperty Name)
+  if ($assetNames.Count -ne 1 -or $assetNames[0] -cne $assetName) {
+    Add-Finding 'NPC_WEIGHT_ASSET_COVERAGE_INVALID' $label 'Production profile directory must contain exactly its one matching asset.'
+  }
+  foreach ($field in @('schemaId', 'schemaVersion', 'profileId', 'sourceContentHash', 'authorityKind', 'tieBreakPolicy')) {
+    $matches = @(Select-String -LiteralPath $assetPath -Pattern "^\s*$([regex]::Escape($field)):\s*(\S+)\s*$").Matches
+    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne [string]$manifest.$field) {
+      Add-Finding 'NPC_WEIGHT_ASSET_MANIFEST_MISMATCH' "${label}:$field" 'Asset manifest field must exactly match the CSV manifest.'
+    }
+  }
+}
+
 function Load-Waivers {
   $path = Join-Path $root 'tools/data-chain-warning-waivers.json'
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Error 'WAIVER_FILE_MISSING' 'tools/data-chain-warning-waivers.json' 'The precise-warning waiver file is required.'; return @() }
@@ -195,6 +273,7 @@ $schemas = [ordered]@{
   EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','phase','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','releasedNaturalCapacity','expansionGrants','expandedMansionCapacity','totalMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
   JindanStaticStates = @('schemaId','schemaVersion','characterId','foundationPurpleMansionStateRef','mansionInputs','jindanCoreBinding','danxiang','stablePositionBindings','abilityLedgerBindings','fixtureId','expect','fixtureOnlyNumericProfile')
+  NpcCultivationActionWeightProfiles = @('schemaId','schemaVersion','profileId','sourceContentHash','authorityKind','recordKind','recordId','actionStableId','legalityRuleSetRef','baseWeight','subjectiveRiskGateRef','enabled','sourceKind','selectorRef','priorityDelta','applicationOrder','capPolicyRef','diminishingPolicyRef','actionTotalCapPolicyRef','scope','minimum','maximum','appliesAfterSourceKind','inputBasis','activationThreshold','segments','outputBound','tieBreakPolicy','triggerStableId','riskThresholdDelta','knownEvidenceRefs','riskAssessmentRef','baseRiskThreshold','lifespanCapPolicyRef')
 }
 $tables = [ordered]@{
   GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa
@@ -203,6 +282,7 @@ $tables = [ordered]@{
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   FoundationPurpleMansionStates = Get-CsvTable 'src/Assets/DataConfig/FoundationPurpleMansionStates.csv' $schemas.FoundationPurpleMansionStates @('expansionGrants','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','fixtureId','expect','fixtureOnlyNumericProfile')
   JindanStaticStates = Get-CsvTable 'src/Assets/DataConfig/JindanStaticStates.csv' $schemas.JindanStaticStates @('fixtureId','expect','fixtureOnlyNumericProfile')
+  NpcCultivationActionWeightProfiles = Get-CsvTable 'src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv' $schemas.NpcCultivationActionWeightProfiles $schemas.NpcCultivationActionWeightProfiles
 }
 $docs = [ordered]@{ GongFa = Get-ContentDocs (Get-GongFaName); Spells = Get-ContentDocs (Get-SpellName); Skills = Get-ContentDocs (Get-SkillName) }
 foreach ($kind in $docs.Keys) {
@@ -213,6 +293,7 @@ $languageIds = Get-LanguageIds
 Test-AssetCoverage 'GongFa' $tables.GongFa.Rows 'src/Assets/Data/GongFa' 'GongFa'
 Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
 Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
+Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfiles
 
 foreach ($row in $tables.FoundationPurpleMansionStates.Rows) {
   foreach ($field in @('fixtureId', 'expect', 'fixtureOnlyNumericProfile')) {

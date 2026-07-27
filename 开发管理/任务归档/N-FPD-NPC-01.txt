@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-FPD-NPC-01",
+  "title": "NPC 修炼行动权重",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "verification",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：DEC-20260727-NPCWEIGHT = A 已落实。生产 CSV、Unity asset/runtime 与 BattleSim 只读投影共用内容哈希 8f9e1e7c6154d6b1bcbae301cf8e0fd219fd258565d43a1a55ec84cd8d9ec1b9；BattleSim 完整运行通过，EditMode 结果 XML 为 209/209 通过。",
+  "expectedPaths": [
+    "simulations/BattleSim/Program.cs",
+    "simulations/BattleSim/NpcCultivationActionWeightProfiles.cs",
+    "src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv",
+    "src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv.meta",
+    "src/Assets/Data/NpcCultivationActionWeightProfiles.meta",
+    "src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset",
+    "src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset.meta",
+    "src/Assets/Scripts/Entity/NpcCultivationActionWeightProfileData.cs",
+    "src/Assets/Scripts/Entity/NpcCultivationActionWeightProfileData.cs.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationActionWeightProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationActionWeightProfileDataTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "docs/基础设定/修行境界.txt",
+    "docs/基础设定/金丹位格证位与争位规则.txt",
+    "开发管理/NPC修炼行动权重数值验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-FPD-NPC-01.txt",
+    "开发管理/任务归档/N-FPD-NPC-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-FPD-NPC-01 · NPC 修炼行动权重
+
+## 来源与当前边界
+
+- `D-NPC-WEIGHT-01A` 提供独立数据契约，`N-FPD-CULTIVATE-01` 已锁定行动成本；该任务不接入每日世界扫描或 NPC 实际调度器。
+- `DEC-20260727-NPCWEIGHT = A` 授权同一任务完成完整 CSV、asset/importer、Unity runtime 与 BattleSim 只读投影。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md`：生产字段、权威来源与硬约束。
+- `src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv::npc-cultivation-production-v1`：唯一生产参数。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ParseNpcCultivationActionWeightProfiles` 与 `simulations/BattleSim/NpcCultivationActionWeightProfiles.cs`：同哈希投影。
+
+## 实施范围
+
+- 完成五种行动的基础权重，以及性格、门派、境界目标、寿元、资源和环境六类修正。
+- 在计分前拒绝非法行动；风险门槛、封顶、边际递减、重算触发器和同分词典序均显式数据化。
+
+## 禁止项
+
+- 不新增 NPC 全知信息、每日全世界扫描或硬编码行为顺序。
+- 不让寿元修正绕过凡品、容量、结丹或证位硬门槛。
+
+## 验证
+
+- BattleSim Release 构建和完整运行通过；审计覆盖非法过滤、资源不足、寿元风险门槛、总封顶和同分词典序。
+- Unity EditMode 结果 XML：209/209 通过；覆盖 CSV 解析、导入 asset、哈希不匹配拒绝、非法过滤和风险门槛。
+- `tools/check-data-chain.ps1` 通过并复算 CSV 内容哈希、核对唯一 asset；文本、任务卡与 diff 检查在提交前通过。
+
+## 完成条件
+
+- 已达成：所有权重具有唯一可热调来源；默认值、封顶／递减、重算事件和并列裁定可复现验证。
+
+## 停止条件
+
+- 未触发：未新增 NPC 全知信息、每日扫描或硬编码行为顺序。

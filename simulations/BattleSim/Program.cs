@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace BattleSim;
@@ -156,6 +157,8 @@ class Program
         RunMansionBodyBudgetAudit();
         Console.WriteLine();
         RunCultivationCycleAudit();
+        Console.WriteLine();
+        RunNpcCultivationActionWeightAudit();
         Console.WriteLine();
         const string TECH = "上品", SPIRIT = "中品";
         int seeds = g2Audit || g2Attribution ? 200 : 20;
@@ -1156,6 +1159,62 @@ class Program
     {
         if (!condition)
             throw new InvalidOperationException($"养基与筑府周期审计失败：{message}");
+    }
+
+    static void RunNpcCultivationActionWeightAudit()
+    {
+        var profile = NpcCultivationActionWeightProfile.LoadProduction(Directory.GetCurrentDirectory());
+        Console.WriteLine("【NPC 修炼行动权重审计（N-FPD-NPC-01）】");
+        Console.WriteLine($"  唯一投影：profile={profile.ProfileId}；sourceContentHash={profile.SourceContentHash}；并列裁定=actionStableId 词典序升序。");
+
+        var abundant = profile.Evaluate(
+            new[] { "FOUNDATION_TRIAL", "FOUNDATION_NURTURE", "MANSION_EMBRYO_NURTURE", "MANSION_OPENING_TRIAL", "JINDAN_PROOF" },
+            new[]
+            {
+                "PERS_AMBITIOUS", "PERS_DISCIPLINED", "PERS_PRUDENT", "SECT_CULTIVATION", "SECT_MANSION_CRAFT",
+                "GOAL_FOUNDATION_COMPLETE", "GOAL_OPEN_MANSION", "GOAL_JINDAN", "LIFE_URGENT", "RESERVE_RICH",
+                "ENV_SPIRIT_RICH", "ENV_JINDAN_AUSPICIOUS", "KNOWN_JINDAN_OPPORTUNITY",
+            },
+            new Dictionary<string, double> { ["subjective_success"] = 70 });
+        AssertNpcWeight(abundant.SelectedActionId == "JINDAN_PROOF", "资源充足且已知机会的完整输入必须选择证位行动");
+        AssertNpcWeight(Math.Abs(abundant.Candidates.Single(candidate => candidate.ActionId == "JINDAN_PROOF").Score - 130) < 0.000001,
+            "行动总封顶必须把证位输入稳定限制在 130");
+
+        var resourceTight = profile.Evaluate(
+            new[] { "FOUNDATION_NURTURE" },
+            new[] { "SECT_CULTIVATION", "GOAL_FOUNDATION_COMPLETE", "RESERVE_TIGHT" },
+            new Dictionary<string, double>());
+        AssertNpcWeight(resourceTight.SelectedActionId == "FOUNDATION_NURTURE", "资源不足时只能在已过滤的合法行动中选择");
+        AssertNpcWeight(resourceTight.Candidates.Single(candidate => candidate.ActionId == "MANSION_OPENING_TRIAL").RejectionReason == NpcCultivationActionWeightProfile.IllegalAction,
+            "资源不足的开府行动必须在权重前被拒绝");
+
+        var lifespanUrgent = profile.Evaluate(
+            new[] { "JINDAN_PROOF" },
+            new[] { "LIFE_URGENT", "KNOWN_JINDAN_OPPORTUNITY" },
+            new Dictionary<string, double> { ["subjective_success"] = 45 });
+        AssertNpcWeight(lifespanUrgent.SelectedActionId == "JINDAN_PROOF", "寿元紧迫只能降低已合法证位的主观风险阈值");
+
+        var riskRejected = profile.Evaluate(
+            new[] { "JINDAN_PROOF" },
+            new[] { "KNOWN_JINDAN_OPPORTUNITY" },
+            new Dictionary<string, double> { ["subjective_success"] = 55 });
+        AssertNpcWeight(riskRejected.SelectedActionId == null &&
+                        riskRejected.Candidates.Single(candidate => candidate.ActionId == "JINDAN_PROOF").RejectionReason == NpcCultivationActionWeightProfile.RiskGateRejected,
+            "低于已知主观风险阈值的证位必须被拒绝，而非改写硬门槛");
+
+        var tie = NpcCultivationActionWeightProfile.OrderAccepted(new[]
+        {
+            new NpcDecisionCandidate("MANSION_OPENING_TRIAL", true, null, 100, Array.Empty<string>()),
+            new NpcDecisionCandidate("FOUNDATION_NURTURE", true, null, 100, Array.Empty<string>()),
+        });
+        AssertNpcWeight(tie[0].ActionId == "FOUNDATION_NURTURE", "同分行动必须只按 actionStableId 词典序裁定");
+        Console.WriteLine("  场景：资源充足=证位(130)；资源不足=养基；寿元紧迫=降低风险阈值；低主观胜算=拒绝；同分=词典序稳定。结论：PASS。");
+    }
+
+    static void AssertNpcWeight(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException($"NPC 修炼行动权重审计失败：{message}");
     }
 
     static void RunMansionBodyBudgetAudit()

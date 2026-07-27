@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 using UnityEditor;
 using TianZhang.Entity;
@@ -50,6 +52,7 @@ namespace TianZhang.Editor
         static void ImportAll()
         {
             _lang = null; LoadLanguage();
+            ImportNpcCultivationActionWeightProfiles();
             ImportFoundationPurpleMansionStates();
             ImportJindanStaticStates();
             ImportGongFa();
@@ -146,6 +149,16 @@ namespace TianZhang.Editor
         private const string JindanStaticSchemaId = "jindanStaticState";
         private const int JindanStaticSchemaVersion = 1;
 
+        private static readonly string[] NpcCultivationActionWeightColumns =
+        {
+            "schemaId", "schemaVersion", "profileId", "sourceContentHash", "authorityKind", "recordKind", "recordId",
+            "actionStableId", "legalityRuleSetRef", "baseWeight", "subjectiveRiskGateRef", "enabled", "sourceKind",
+            "selectorRef", "priorityDelta", "applicationOrder", "capPolicyRef", "diminishingPolicyRef", "actionTotalCapPolicyRef",
+            "scope", "minimum", "maximum", "appliesAfterSourceKind", "inputBasis", "activationThreshold", "segments",
+            "outputBound", "tieBreakPolicy", "triggerStableId", "riskThresholdDelta", "knownEvidenceRefs", "riskAssessmentRef",
+            "baseRiskThreshold", "lifespanCapPolicyRef",
+        };
+
         private static readonly EnvironmentPhenomenonChannel[] EnvironmentPhenomenonChannels =
         {
             EnvironmentPhenomenonChannel.Airflow,
@@ -164,6 +177,274 @@ namespace TianZhang.Editor
             "element_metal",
             "element_water",
         };
+
+        [MenuItem("天章/导入 NPC 修炼行动权重")]
+        public static void ImportNpcCultivationActionWeightProfiles()
+        {
+            const string path = "Assets/DataConfig/NpcCultivationActionWeightProfiles.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"NPC cultivation action weight CSV was not found: {path}", path);
+
+            var profiles = ParseNpcCultivationActionWeightProfiles(File.ReadAllLines(path), path);
+            try
+            {
+                foreach (var profile in profiles)
+                {
+                    string assetPath = $"Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_{SanitizeName(profile.profileId)}.asset";
+                    var asset = AssetDatabase.LoadAssetAtPath<NpcCultivationActionWeightProfileData>(assetPath);
+                    bool isNew = asset == null;
+                    if (isNew)
+                    {
+                        asset = ScriptableObject.CreateInstance<NpcCultivationActionWeightProfileData>();
+                        EnsureDirectory(assetPath);
+                    }
+
+                    CopyNpcCultivationActionWeightProfile(profile, asset);
+                    if (isNew)
+                        AssetDatabase.CreateAsset(asset, assetPath);
+                    else
+                        EditorUtility.SetDirty(asset);
+                }
+            }
+            finally
+            {
+                foreach (var profile in profiles)
+                    UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
+
+        /// <summary>
+        /// Parses the complete, single-authority source set before any asset can be created or updated.
+        /// All record kinds remain in one profile so Unity and BattleSim can verify the same content hash.
+        /// </summary>
+        public static NpcCultivationActionWeightProfileData[] ParseNpcCultivationActionWeightProfiles(
+            string[] lines,
+            string sourceName)
+        {
+            if (lines == null)
+                throw new InvalidDataException($"{sourceName} has no rows.");
+
+            int headerLineIndex = FindHeaderIndex(lines);
+            if (headerLineIndex < 0)
+                throw new InvalidDataException($"{sourceName} has no header row.");
+
+            string[] headers = FindHeader(lines);
+            RequireExactColumns(headers, sourceName, NpcCultivationActionWeightColumns);
+            int hashIndex = Array.IndexOf(headers, "sourceContentHash");
+            var rows = new List<string[]>();
+            for (int index = headerLineIndex + 1; index < lines.Length; index++)
+            {
+                string line = lines[index];
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                    continue;
+                string[] columns = ParseCSV(line);
+                if (columns.Length != headers.Length)
+                    throw new InvalidDataException($"{sourceName} row {index + 1} has {columns.Length} columns; expected {headers.Length}.");
+                rows.Add(columns);
+            }
+            if (rows.Count == 0)
+                throw new InvalidDataException($"{sourceName} has no data rows.");
+
+            string contentHash = ComputeNpcCultivationSourceHash(headers, rows, hashIndex);
+            var result = new List<NpcCultivationActionWeightProfileData>();
+            foreach (var group in rows.GroupBy(row => GetRequiredColumnValue(headers, row, "profileId", sourceName), StringComparer.Ordinal))
+            {
+                var profileRows = group.ToArray();
+                string profileId = group.Key;
+                var manifests = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "MANIFEST").ToArray();
+                if (manifests.Length != 1)
+                    throw new InvalidDataException($"NPC_WEIGHT_DOUBLE_AUTHORITY: {profileId} must contain exactly one manifest.");
+
+                string[] manifest = manifests[0];
+                if (NpcRequired(headers, manifest, "schemaId", sourceName) != NpcCultivationActionWeightProfileRuntime.SchemaId ||
+                    ParseNpcInteger(NpcRequired(headers, manifest, "schemaVersion", sourceName), sourceName, "schemaVersion") != NpcCultivationActionWeightProfileRuntime.SchemaVersion)
+                {
+                    throw new InvalidDataException($"NPC_WEIGHT_UNKNOWN_SCHEMA: {profileId} has an unsupported schema.");
+                }
+                if (NpcRequired(headers, manifest, "authorityKind", sourceName) != "CSV_SOURCE_SET" ||
+                    NpcRequired(headers, manifest, "sourceContentHash", sourceName) != contentHash ||
+                    NpcRequired(headers, manifest, "tieBreakPolicy", sourceName) != "LEXICOGRAPHIC_ASC")
+                {
+                    throw new InvalidDataException($"NPC_WEIGHT_DOUBLE_AUTHORITY: {profileId} has an invalid manifest authority or content hash.");
+                }
+
+                var profile = ScriptableObject.CreateInstance<NpcCultivationActionWeightProfileData>();
+                try
+                {
+                    profile.schemaId = NpcCultivationActionWeightProfileRuntime.SchemaId;
+                    profile.schemaVersion = NpcCultivationActionWeightProfileRuntime.SchemaVersion;
+                    profile.profileId = profileId;
+                    profile.sourceContentHash = contentHash;
+                    profile.authorityKind = "CSV_SOURCE_SET";
+                    profile.tieBreakPolicy = "LEXICOGRAPHIC_ASC";
+                    profile.actionWeightRows = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "ACTION")
+                        .Select(row => new NpcCultivationActionWeightRecord
+                        {
+                            recordId = NpcRequired(headers, row, "recordId", sourceName),
+                            actionStableId = NpcRequired(headers, row, "actionStableId", sourceName),
+                            legalityRuleSetRef = NpcRequired(headers, row, "legalityRuleSetRef", sourceName),
+                            baseWeight = ParseNpcFloat(NpcRequired(headers, row, "baseWeight", sourceName), sourceName, "baseWeight"),
+                            subjectiveRiskGateRef = NpcValue(headers, row, "subjectiveRiskGateRef"),
+                            enabled = ParseNpcBool(NpcRequired(headers, row, "enabled", sourceName), sourceName),
+                            actionTotalCapPolicyRef = NpcRequired(headers, row, "actionTotalCapPolicyRef", sourceName),
+                        }).ToArray();
+                    profile.modifierRows = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "MODIFIER")
+                        .Select(row => new NpcCultivationWeightModifierRecord
+                        {
+                            modifierId = NpcRequired(headers, row, "recordId", sourceName),
+                            sourceKind = NpcRequired(headers, row, "sourceKind", sourceName),
+                            actionStableId = NpcRequired(headers, row, "actionStableId", sourceName),
+                            selectorRef = NpcRequired(headers, row, "selectorRef", sourceName),
+                            priorityDelta = ParseNpcFloat(NpcRequired(headers, row, "priorityDelta", sourceName), sourceName, "priorityDelta"),
+                            applicationOrder = ParseNpcInteger(NpcRequired(headers, row, "applicationOrder", sourceName), sourceName, "applicationOrder"),
+                            capPolicyRef = NpcRequired(headers, row, "capPolicyRef", sourceName),
+                            diminishingPolicyRef = NpcRequired(headers, row, "diminishingPolicyRef", sourceName),
+                            riskThresholdDelta = ParseNpcFloat(NpcValue(headers, row, "riskThresholdDelta", "0"), sourceName, "riskThresholdDelta"),
+                        }).ToArray();
+                    profile.capPolicies = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "CAP_POLICY")
+                        .Select(row => new NpcCultivationWeightCapPolicy
+                        {
+                            capPolicyId = NpcRequired(headers, row, "recordId", sourceName),
+                            scope = NpcRequired(headers, row, "scope", sourceName),
+                            minimum = ParseNpcFloat(NpcRequired(headers, row, "minimum", sourceName), sourceName, "minimum"),
+                            maximum = ParseNpcFloat(NpcRequired(headers, row, "maximum", sourceName), sourceName, "maximum"),
+                            appliesAfterSourceKind = NpcValue(headers, row, "appliesAfterSourceKind"),
+                        }).ToArray();
+                    profile.diminishingPolicies = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "DIMINISHING_POLICY")
+                        .Select(row => new NpcCultivationWeightDiminishingPolicy
+                        {
+                            diminishingPolicyId = NpcRequired(headers, row, "recordId", sourceName),
+                            scope = NpcRequired(headers, row, "scope", sourceName),
+                            inputBasis = NpcRequired(headers, row, "inputBasis", sourceName),
+                            activationThreshold = ParseNpcFloat(NpcRequired(headers, row, "activationThreshold", sourceName), sourceName, "activationThreshold"),
+                            segments = NpcRequired(headers, row, "segments", sourceName),
+                            outputBound = ParseNpcFloat(NpcRequired(headers, row, "outputBound", sourceName), sourceName, "outputBound"),
+                        }).ToArray();
+                    profile.riskGates = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "RISK_GATE")
+                        .Select(row => new NpcCultivationRiskGate
+                        {
+                            riskGateRef = NpcRequired(headers, row, "recordId", sourceName),
+                            knownEvidenceRefs = NpcRequired(headers, row, "knownEvidenceRefs", sourceName).Split('|'),
+                            riskAssessmentRef = NpcRequired(headers, row, "riskAssessmentRef", sourceName),
+                            baseRiskThreshold = ParseNpcFloat(NpcRequired(headers, row, "baseRiskThreshold", sourceName), sourceName, "baseRiskThreshold"),
+                            lifespanCapPolicyRef = NpcRequired(headers, row, "lifespanCapPolicyRef", sourceName),
+                        }).ToArray();
+                    profile.recalculationTriggers = profileRows.Where(row => NpcValue(headers, row, "recordKind") == "TRIGGER")
+                        .Select(row => new NpcCultivationRecalculationTrigger
+                        {
+                            triggerStableId = NpcRequired(headers, row, "triggerStableId", sourceName),
+                        }).ToArray();
+
+                    EnsureNpcUniqueRecords(profile, sourceName);
+                    if (!NpcCultivationActionWeightProfileRuntime.TryCreate(profile, out _, out string failureReason))
+                        throw new InvalidDataException($"{failureReason}: {profileId} did not form a valid runtime projection.");
+                    foreach (var policy in profile.diminishingPolicies)
+                        ValidateNpcDiminishingSegments(policy, sourceName);
+                    result.Add(profile);
+                }
+                catch
+                {
+                    UnityEngine.Object.DestroyImmediate(profile);
+                    throw;
+                }
+            }
+            return result.ToArray();
+        }
+
+        private static void CopyNpcCultivationActionWeightProfile(
+            NpcCultivationActionWeightProfileData source,
+            NpcCultivationActionWeightProfileData destination)
+        {
+            destination.schemaId = source.schemaId;
+            destination.schemaVersion = source.schemaVersion;
+            destination.profileId = source.profileId;
+            destination.sourceContentHash = source.sourceContentHash;
+            destination.authorityKind = source.authorityKind;
+            destination.tieBreakPolicy = source.tieBreakPolicy;
+            destination.actionWeightRows = source.actionWeightRows;
+            destination.modifierRows = source.modifierRows;
+            destination.capPolicies = source.capPolicies;
+            destination.diminishingPolicies = source.diminishingPolicies;
+            destination.riskGates = source.riskGates;
+            destination.recalculationTriggers = source.recalculationTriggers;
+        }
+
+        private static void EnsureNpcUniqueRecords(NpcCultivationActionWeightProfileData profile, string sourceName)
+        {
+            var recordIds = profile.actionWeightRows.Select(row => row.recordId)
+                .Concat(profile.modifierRows.Select(row => row.modifierId))
+                .Concat(profile.capPolicies.Select(row => row.capPolicyId))
+                .Concat(profile.diminishingPolicies.Select(row => row.diminishingPolicyId))
+                .Concat(profile.riskGates.Select(row => row.riskGateRef))
+                .Concat(profile.recalculationTriggers.Select(row => row.triggerStableId))
+                .ToArray();
+            if (recordIds.Distinct(StringComparer.Ordinal).Count() != recordIds.Length)
+                throw new InvalidDataException($"NPC_WEIGHT_DUPLICATE_RECORD: {sourceName} contains a duplicate stable record ID.");
+        }
+
+        private static void ValidateNpcDiminishingSegments(NpcCultivationWeightDiminishingPolicy policy, string sourceName)
+        {
+            float expectedLower = 0;
+            foreach (string segment in policy.segments.Split('|'))
+            {
+                string[] parts = segment.Split('@');
+                string[] bounds = parts[0].Split('-');
+                if (parts.Length != 2 || bounds.Length != 2 ||
+                    !float.TryParse(bounds[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float lower) ||
+                    !float.TryParse(bounds[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float upper) ||
+                    !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float multiplier) ||
+                    lower != expectedLower || upper <= lower || multiplier < 0)
+                {
+                    throw new InvalidDataException($"NPC_WEIGHT_INVALID_POLICY: {sourceName} has invalid diminishing segments for '{policy.diminishingPolicyId}'.");
+                }
+                expectedLower = upper;
+            }
+        }
+
+        private static string ComputeNpcCultivationSourceHash(string[] headers, IEnumerable<string[]> rows, int hashIndex)
+        {
+            var canonicalRows = rows.Select(row =>
+            {
+                var copy = row.ToArray();
+                copy[hashIndex] = string.Empty;
+                return string.Join(",", copy);
+            });
+            string canonical = string.Join("\n", new[] { string.Join(",", headers) }.Concat(canonicalRows));
+            byte[] bytes;
+            using (var sha256 = SHA256.Create())
+            {
+                bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(canonical));
+            }
+
+            return BitConverter.ToString(bytes).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        private static string NpcValue(string[] headers, string[] columns, string name, string defaultValue = "") =>
+            GetColumnValueOrDefault(headers, columns, name, defaultValue);
+
+        private static string NpcRequired(string[] headers, string[] columns, string name, string sourceName) =>
+            GetRequiredColumnValue(headers, columns, name, sourceName);
+
+        private static int ParseNpcInteger(string value, string sourceName, string fieldName)
+        {
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
+                throw new InvalidDataException($"NPC_WEIGHT_MISSING_EXPLICIT_VALUE: {sourceName} has invalid {fieldName}.");
+            return result;
+        }
+
+        private static float ParseNpcFloat(string value, string sourceName, string fieldName)
+        {
+            if (!float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float result) || float.IsNaN(result) || float.IsInfinity(result))
+                throw new InvalidDataException($"NPC_WEIGHT_MISSING_EXPLICIT_VALUE: {sourceName} has invalid {fieldName}.");
+            return result;
+        }
+
+        private static bool ParseNpcBool(string value, string sourceName)
+        {
+            if (value == "true") return true;
+            if (value == "false") return false;
+            throw new InvalidDataException($"NPC_WEIGHT_MISSING_EXPLICIT_VALUE: {sourceName} has invalid enabled flag.");
+        }
 
         [MenuItem("天章/导入环境档案配置")]
         public static void ImportEnvironmentProfiles()

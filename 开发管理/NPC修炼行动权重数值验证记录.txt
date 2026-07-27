@@ -1,0 +1,25 @@
+# NPC 修炼行动权重数值验证记录
+
+## 生产来源
+
+- Profile：`npc-cultivation-production-v1`
+- 唯一参数来源：`src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv`
+- 导入投影：`src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset`
+- 内容哈希：`8f9e1e7c6154d6b1bcbae301cf8e0fd219fd258565d43a1a55ec84cd8d9ec1b9`
+
+## 已验证的固定输入
+
+| 场景 | 固定输入与预期 | 验证结果 |
+|------|----------------|----------|
+| 资源充足的证位准备 | 已知机会、五类修正同时命中；总权重受行动总封顶约束 | `JINDAN_PROOF` 得 130 并被选中 |
+| 资源不足 | 只有养基行动合法 | 其他行动在计分前以 `ILLEGAL_ACTION` 拒绝 |
+| 寿元将尽 | 已知机会、主观成功估计 45 | `JINDAN_PROOF` 以有界寿元风险阈值通过 |
+| 风险不足 | 已知机会、主观成功估计 55、无寿元豁免 | `JINDAN_PROOF` 以 `RISK_GATE_REJECTED` 拒绝 |
+| 同分 | 两个已合法候选的最终权重相同 | 以 action stable ID 的词典序稳定选择 |
+
+## 运行记录
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`：通过。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`：通过；含上述 NPC 只读投影审计。
+- Unity EditMode：209/209 通过；其中包含 CSV 解析、asset 导入、哈希不匹配拒绝、非法过滤与风险门槛回归。
+- `tools/check-data-chain.ps1`：通过；复算 CSV 哈希并核对唯一导入 asset。

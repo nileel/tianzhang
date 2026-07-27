@@ -1,0 +1,265 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f0d8aa5801a4daa80f76cc44d64d625, type: 3}
+  m_Name: NpcCultivationActionWeightProfile_npc-cultivation-production-v1
+  m_EditorClassIdentifier: TianZhang.Domain::TianZhang.Entity.NpcCultivationActionWeightProfileData
+  schemaId: npcCultivationActionWeightProfile
+  schemaVersion: 1
+  profileId: npc-cultivation-production-v1
+  sourceContentHash: 8f9e1e7c6154d6b1bcbae301cf8e0fd219fd258565d43a1a55ec84cd8d9ec1b9
+  authorityKind: CSV_SOURCE_SET
+  tieBreakPolicy: LEXICOGRAPHIC_ASC
+  actionWeightRows:
+  - recordId: action-foundation-trial
+    actionStableId: FOUNDATION_TRIAL
+    legalityRuleSetRef: FOUNDATION_TRIAL_RULESET
+    baseWeight: 90
+    subjectiveRiskGateRef: ""
+    enabled: 1
+    actionTotalCapPolicyRef: cap-action-total
+  - recordId: action-foundation-nurture
+    actionStableId: FOUNDATION_NURTURE
+    legalityRuleSetRef: FOUNDATION_NURTURE_RULESET
+    baseWeight: 74
+    subjectiveRiskGateRef: ""
+    enabled: 1
+    actionTotalCapPolicyRef: cap-action-total
+  - recordId: action-mansion-embryo-nurture
+    actionStableId: MANSION_EMBRYO_NURTURE
+    legalityRuleSetRef: MANSION_EMBRYO_NURTURE_RULESET
+    baseWeight: 70
+    subjectiveRiskGateRef: ""
+    enabled: 1
+    actionTotalCapPolicyRef: cap-action-total
+  - recordId: action-mansion-opening-trial
+    actionStableId: MANSION_OPENING_TRIAL
+    legalityRuleSetRef: MANSION_OPENING_TRIAL_RULESET
+    baseWeight: 82
+    subjectiveRiskGateRef: ""
+    enabled: 1
+    actionTotalCapPolicyRef: cap-action-total
+  - recordId: action-jindan-proof
+    actionStableId: JINDAN_PROOF
+    legalityRuleSetRef: JINDAN_PROOF_RULESET
+    baseWeight: 86
+    subjectiveRiskGateRef: risk-jindan-known
+    enabled: 1
+    actionTotalCapPolicyRef: cap-action-total
+  modifierRows:
+  - modifierId: mod-personality-disciplined-nurture
+    sourceKind: PERSONALITY
+    actionStableId: FOUNDATION_NURTURE
+    selectorRef: PERS_DISCIPLINED
+    priorityDelta: 9
+    applicationOrder: 1
+    capPolicyRef: cap-source-personality
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-personality-ambitious-jindan
+    sourceKind: PERSONALITY
+    actionStableId: JINDAN_PROOF
+    selectorRef: PERS_AMBITIOUS
+    priorityDelta: 12
+    applicationOrder: 1
+    capPolicyRef: cap-source-personality
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-personality-prudent-trial
+    sourceKind: PERSONALITY
+    actionStableId: FOUNDATION_TRIAL
+    selectorRef: PERS_PRUDENT
+    priorityDelta: 5
+    applicationOrder: 1
+    capPolicyRef: cap-source-personality
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-sect-cultivation-nurture
+    sourceKind: SECT
+    actionStableId: FOUNDATION_NURTURE
+    selectorRef: SECT_CULTIVATION
+    priorityDelta: 8
+    applicationOrder: 1
+    capPolicyRef: cap-source-sect
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-sect-mansion-embryo
+    sourceKind: SECT
+    actionStableId: MANSION_EMBRYO_NURTURE
+    selectorRef: SECT_MANSION_CRAFT
+    priorityDelta: 12
+    applicationOrder: 1
+    capPolicyRef: cap-source-sect
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-sect-mansion-opening
+    sourceKind: SECT
+    actionStableId: MANSION_OPENING_TRIAL
+    selectorRef: SECT_MANSION_CRAFT
+    priorityDelta: 7
+    applicationOrder: 2
+    capPolicyRef: cap-source-sect
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-goal-foundation-nurture
+    sourceKind: REALM_GOAL
+    actionStableId: FOUNDATION_NURTURE
+    selectorRef: GOAL_FOUNDATION_COMPLETE
+    priorityDelta: 14
+    applicationOrder: 1
+    capPolicyRef: cap-source-realm-goal
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-goal-mansion-embryo
+    sourceKind: REALM_GOAL
+    actionStableId: MANSION_EMBRYO_NURTURE
+    selectorRef: GOAL_OPEN_MANSION
+    priorityDelta: 18
+    applicationOrder: 1
+    capPolicyRef: cap-source-realm-goal
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-goal-jindan
+    sourceKind: REALM_GOAL
+    actionStableId: JINDAN_PROOF
+    selectorRef: GOAL_JINDAN
+    priorityDelta: 20
+    applicationOrder: 1
+    capPolicyRef: cap-source-realm-goal
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-lifespan-urgent-jindan
+    sourceKind: LIFESPAN
+    actionStableId: JINDAN_PROOF
+    selectorRef: LIFE_URGENT
+    priorityDelta: 16
+    applicationOrder: 1
+    capPolicyRef: cap-source-lifespan
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: -20
+  - modifierId: mod-lifespan-stable-nurture
+    sourceKind: LIFESPAN
+    actionStableId: FOUNDATION_NURTURE
+    selectorRef: LIFE_STABLE
+    priorityDelta: 4
+    applicationOrder: 1
+    capPolicyRef: cap-source-lifespan
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-resource-rich-opening
+    sourceKind: RESOURCE
+    actionStableId: MANSION_OPENING_TRIAL
+    selectorRef: RESERVE_RICH
+    priorityDelta: 10
+    applicationOrder: 1
+    capPolicyRef: cap-source-resource
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-resource-rich-jindan
+    sourceKind: RESOURCE
+    actionStableId: JINDAN_PROOF
+    selectorRef: RESERVE_RICH
+    priorityDelta: 12
+    applicationOrder: 2
+    capPolicyRef: cap-source-resource
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-resource-tight-nurture
+    sourceKind: RESOURCE
+    actionStableId: FOUNDATION_NURTURE
+    selectorRef: RESERVE_TIGHT
+    priorityDelta: 6
+    applicationOrder: 1
+    capPolicyRef: cap-source-resource
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-environment-rich-embryo
+    sourceKind: ENVIRONMENT
+    actionStableId: MANSION_EMBRYO_NURTURE
+    selectorRef: ENV_SPIRIT_RICH
+    priorityDelta: 10
+    applicationOrder: 1
+    capPolicyRef: cap-source-environment
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  - modifierId: mod-environment-auspicious-jindan
+    sourceKind: ENVIRONMENT
+    actionStableId: JINDAN_PROOF
+    selectorRef: ENV_JINDAN_AUSPICIOUS
+    priorityDelta: 14
+    applicationOrder: 1
+    capPolicyRef: cap-source-environment
+    diminishingPolicyRef: diminish-source
+    riskThresholdDelta: 0
+  capPolicies:
+  - capPolicyId: cap-source-personality
+    scope: SOURCE_GROUP
+    minimum: -20
+    maximum: 20
+    appliesAfterSourceKind: PERSONALITY
+  - capPolicyId: cap-source-sect
+    scope: SOURCE_GROUP
+    minimum: -20
+    maximum: 20
+    appliesAfterSourceKind: SECT
+  - capPolicyId: cap-source-realm-goal
+    scope: SOURCE_GROUP
+    minimum: -20
+    maximum: 20
+    appliesAfterSourceKind: REALM_GOAL
+  - capPolicyId: cap-source-lifespan
+    scope: SOURCE_GROUP
+    minimum: -20
+    maximum: 20
+    appliesAfterSourceKind: LIFESPAN
+  - capPolicyId: cap-source-resource
+    scope: SOURCE_GROUP
+    minimum: -20
+    maximum: 20
+    appliesAfterSourceKind: RESOURCE
+  - capPolicyId: cap-source-environment
+    scope: SOURCE_GROUP
+    minimum: -20
+    maximum: 20
+    appliesAfterSourceKind: ENVIRONMENT
+  - capPolicyId: cap-action-total
+    scope: ACTION_TOTAL
+    minimum: 0
+    maximum: 130
+    appliesAfterSourceKind: ENVIRONMENT
+  - capPolicyId: cap-risk-threshold
+    scope: RISK_THRESHOLD
+    minimum: 20
+    maximum: 80
+    appliesAfterSourceKind: LIFESPAN
+  diminishingPolicies:
+  - diminishingPolicyId: diminish-source
+    scope: SOURCE_GROUP
+    inputBasis: ABSOLUTE_DELTA
+    activationThreshold: 10
+    segments: 0-10@1|10-20@0.5|20-100@0.25
+    outputBound: 20
+  riskGates:
+  - riskGateRef: risk-jindan-known
+    knownEvidenceRefs:
+    - KNOWN_JINDAN_OPPORTUNITY
+    riskAssessmentRef: subjective_success
+    baseRiskThreshold: 60
+    lifespanCapPolicyRef: cap-risk-threshold
+  recalculationTriggers:
+  - triggerStableId: ACTION_LEGALITY_CHANGED
+  - triggerStableId: PERSONALITY_OR_SECT_CHANGED
+  - triggerStableId: REALM_GOAL_CHANGED
+  - triggerStableId: LIFESPAN_PRESSURE_BAND_CHANGED
+  - triggerStableId: RESOURCE_AVAILABILITY_CHANGED
+  - triggerStableId: ENVIRONMENT_CONTEXT_CHANGED
+  - triggerStableId: JINDAN_KNOWN_OPPORTUNITY_CHANGED
+  - triggerStableId: CURRENT_ACTION_STABLE_BOUNDARY
