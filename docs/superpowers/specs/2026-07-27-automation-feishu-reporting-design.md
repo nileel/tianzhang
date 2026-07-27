@@ -59,12 +59,20 @@
 
 仓库中的以下文件继续作为 prompt 事实源：
 
+- `开发管理/自动工作流控制器提示词.txt`
 - `开发管理/自动化简报提示词.txt`
 - `开发管理/每周项目总结提示词.txt`
 
-实现完成后，只通过 Codex 自动化管理能力同步两个现有自动化的完整配置；不得直接编辑用户级 `automation.toml`。同步时保留现有 ID、名称、schedule、workdir、model、status 和无关配置。
+实现完成后，只通过 Codex 自动化管理能力同步三个现有自动化的完整配置；不得直接编辑用户级 `automation.toml`。同步时保留现有 ID、名称、schedule、workdir、model、status 和无关配置。
 
-### 4.3 自动化任务通知摘要契约
+### 4.3 通知触发责任边界
+
+- Codex 业务任务继续由 `tools/invoke-codex-responsibility.ps1` 在已核验终态关闭后发送；实时控制器 prompt 不重复发送。
+- 外部 AI 终态新增固定入口 `tools/close-external-responsibility.ps1`。该脚本接收控制器已选中的 TaskId、RunId、owner、外部进程结果、启动基线和提交标识，自行完成现有 identity、session、双提交、元数据、任务卡与工作区门禁，再执行 `RecordResult`、`Release` 和一次通知。控制器不得分别拼装这三个收尾动作。
+- 日报与周报仍由各自实时 prompt 在最终正文确定后调用普通通知脚本。当前 automation schema 没有可用的 post-run hook，脚本不能在不接管整次报告模型调用的情况下取得最终正文。
+- 不新增报告 runner、Windows 计划任务、第二调度器或 lease 层通知钩子；`tools/hourly-automation-lease.ps1` 保持只管理控制面状态。
+
+### 4.4 自动化任务通知摘要契约
 
 不新增第二份提交元数据协议。继续使用现有 `Result`、`Impact`、`Verify` 三行，但对未来自动化业务提交收紧为以下单行结构：
 
@@ -104,9 +112,11 @@ Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下�
 ### 5.2 外部业务任务
 
 1. 外部责任方继续创建 `businessCommit` 和 `handoffCommit`。
-2. 控制器先核验 identity、session、提交父子关系、Automation 元数据、handoff 边界、工作区与 `ExternalPendingReview`。
-3. 控制器完成既有 `RecordResult` 与 `Release` 后，使用已核验 `businessCommit` 的结构化字段发送 `pending_review` 通知。
-4. 通知明确说明“等待 Codex 复审”，不得把外部完成写成审核通过。
+2. 控制器把外部进程结果、启动基线和稳定任务参数一次性交给 `tools/close-external-responsibility.ps1`，不自行关闭终态。
+3. 固定脚本核验 identity、session、提交父子关系、Automation 元数据、handoff 边界、工作区与 `ExternalPendingReview`。
+4. 全部门禁通过后，固定脚本依次执行既有 `RecordResult` 与 `Release`，再使用已核验 `businessCommit` 的结构化字段发送一次 `pending_review` 通知。
+5. 外部终态无效且没有新增残留时，由同一脚本记录 `failed`、释放租约并发送一次无提交失败通知；存在新增未提交路径时保留现场和租约，不发送已关闭终态通知。
+6. 通知明确说明“等待 Codex 复审”，不得把外部完成写成审核通过。
 
 ### 5.3 无提交终态
 
@@ -207,7 +217,7 @@ Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下�
 - `开发管理/自动工作流控制器提示词.txt`
 - `开发管理/AI协作规则.txt` 中自动化 closeout 元数据约束
 - `tools/invoke-codex-responsibility.ps1`
-- 外部 closeout 的现有控制器约束与直接测试
+- `tools/close-external-responsibility.ps1` 及其直接测试
 - `tools/check-automation-workflow.ps1`
 - `tools/feishu-decision-bridge/` 中新增的普通通知卡、发送入口和直接测试
 - 与上述逻辑单元直接对应的 PowerShell / Node 测试
@@ -217,6 +227,7 @@ Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下�
 - 飞书私有配置内容
 - 现有决策卡、回调、回复绑定和 inbox 协议
 - `tools/hourly-automation-lease.ps1` schema
+- automation schema 或新的报告 runner / post-run hook
 - Git workspace guard、提交隔离和恢复语义
 - 日报、周报的 schedule、workdir、model 或 ACTIVE 状态
 
@@ -235,7 +246,9 @@ Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下�
 ### 11.2 PowerShell 与工作流测试
 
 - Codex 成功提交只有在通知摘要字段合法时才通过 closeout。
-- 外部 `pending_review` 只在现有双提交与任务卡门禁通过后发送。
+- 外部 `pending_review` 只在固定 closeout 脚本的现有双提交与任务卡门禁通过后发送。
+- 外部控制器只调用一次固定 closeout 脚本，不再分别调用 `RecordResult`、`Release` 和通知入口。
+- 外部无残留失败由固定脚本关闭并通知；有残留失败保留现场、租约且不伪造关闭通知。
 - 无提交终态不会伪造完成摘要。
 - 通知失败不改变 `RecordResult`、`Release`、任务状态或退出类别。
 - 日报、周报实时 prompt 与仓库规范一致。
@@ -259,12 +272,12 @@ Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下�
 ## 12. 上线顺序
 
 1. 在隔离 worktree 实现普通通知入口与假传输测试。
-2. 收紧未来业务提交的三行结构化元数据，并补固定调用器/外部 closeout 测试。
+2. 收紧未来业务提交的三行结构化元数据，并补 Codex 固定调用器与 external closeout 脚本测试。
 3. 更新日报、周报和周报风险交叉核验规则。
 4. 运行全部直接测试与现有飞书协议回归。
 5. 合并前重新调用 `Show`，确认 `lease=null`，并核对主工作区目标路径无 staged、unstaged、untracked 冲突。
 6. 集成已验证提交。
-7. 通过 Codex 自动化管理能力同步两个现有自动化的完整 prompt，保留所有无关配置。
+7. 通过 Codex 自动化管理能力同步每小时控制器、日报和周报三个现有自动化的完整 prompt，保留所有无关配置。
 8. 运行自动化一致性检查并只读确认飞书健康。
 9. 负责人在发送动作前确认后执行生产金丝雀。
 
