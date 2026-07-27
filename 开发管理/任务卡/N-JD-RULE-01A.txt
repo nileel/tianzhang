@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-JD-RULE-01A",
+  "title": "三实位、装配与唯一账本",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：D-JD-SAMPLE-01 已归档并关闭 D-JD-SCHEMA-01；三组可消费的非生产有效／非法 fixture 已具备，本子任务成为 N-JD-RULE-01 的首个可执行切片。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/Program.cs",
+    "开发管理/金丹三实位装配与账本验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-JD-RULE-01A.txt",
+    "开发管理/任务归档/N-JD-RULE-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-JD-RULE-01A · 三实位、装配与唯一账本
+
+## 来源与当前边界
+
+- `D-JD-SAMPLE-01` 已归档，并关闭 `D-JD-SCHEMA-01`；其非生产 fixture 已提供一府一位、三府三位、五府三位，以及唯一核心／丹相、第四实位与共享实例账本等有效和非法输入。
+- 当前 BattleSim 只有角色级术法／神通字段及 `Combat.Simulate` 的局部资源、冷却变量，尚无从 `abilityInstanceId` 分离资源、冷却和冲突储备的金丹实位装配模型。
+- 本卡只实现 `N-JD-RULE-01` 的首个子边界；`N-JD-RULE-01B` 的冲突、QTE／跳过与 `N-JD-RULE-01C` 的跨阶挑战、实位死亡均不在本卡范围。
+
+## 必查范围
+
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt#一、每位格一项效果与切换事务`、`#三、跨道路静态兼容契约`、`#四、同阶冲突与可选领域对抗`。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt#三、源位、化位、界位`、`#四、金丹三阶段与真实位格`、`#五、镇府神通主承载、丹枢核心与唯一丹相`。
+- `开发管理/任务归档/D-JD-SAMPLE-01.txt` 的完成记录；`src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv` 与 `src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv` 的表头、三组 `jd.valid.*` 行及对应唯一性反例。
+- `simulations/BattleSim/GameData.cs::GoldenCoreProfile`、`GoldenCoreSeatProfile`、`ResolveGoldenCoreProfile`；`simulations/BattleSim/Character.cs::Character.AssignArts`；`simulations/BattleSim/Combat.cs::Combat.Simulate`；`simulations/BattleSim/BattleSimSelfTests.cs::Run` 与现有金丹自测；`simulations/BattleSim/Program.cs::Main`。
+
+## 实施范围
+
+- 在 BattleSim 建立源、化、界三种且仅三种真实位格的资格与装配模型；每个稳定实位同一时刻只承载一个效果实例，装配数不超过稳定实位数。
+- 只消费现有非生产 fixture 定义一府一位、三府三位、五府三位输入；锁定唯一 `JindanCoreBinding`、唯一丹相和每个实位的合法主承载。五府中的第四、第五府必须保持有效输入，且不得形成第四实位。
+- 以 `abilityInstanceId` 建立能力、资源、冷却与 `conflictReserve` 的独立账本：同一实例跨位辅助或被丹相引用时只保留一份可变账本，不复制或并行透支；不同实例不得共享账本。
+- 增加可独立运行的目标自测和可复现验证记录，覆盖一府一位、三府三位、五府三位、同实例多处引用及非法第四实位。
+
+## 禁止项
+
+- 不修改 `D-JD-SAMPLE-01` fixture、Unity 数据契约或生产 CSV／asset，不以 BattleSim 默认值补造缺失 fixture 输入。
+- 不实现同阶冲突排序、QTE／跳过、跨阶挑战、实位载体死亡、占据结算、压阶或伤害表调整。
+- 不按紫府数量、丹枢、丹相、法宝、召唤物或临时复制增加实位／装配槽；不生成第二丹枢、第二丹相或共享可变账本。
+
+## 验证
+
+- 先以缺失行为失败的 `golden-core-assembly-n-jd-rule-01a` 自测，再运行同一目标自测通过。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- 一、三、五府样例分别只产生一、三、三项稳定实位；第四、第五府继续作为有效输入而不产生额外实位、丹枢、丹相或装配槽。
+- 唯一核心、唯一丹相、合法主承载与按 `abilityInstanceId` 分隔的能力／资源／冷却／冲突储备均可观察且确定；同实例多处引用不复制账本。
+- 验证记录包含可复现输入、结果与命令；完成后归档本卡、解除 `N-JD-RULE-01B` 的依赖投影，父任务 `N-JD-RULE-01` 保持等待后续子任务。
+
+## 停止条件
+
+- fixture 不能给出唯一所有者，或实现必须修改数据契约、生产数据、紫府数量到实位的自动映射、第二丹枢／丹相、第四实位或共享可变账本时停止并转为 `pending_decision`。

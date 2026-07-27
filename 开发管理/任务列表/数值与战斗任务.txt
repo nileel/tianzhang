@@ -18,7 +18,7 @@
 | N-SEAT-01 | P2 | Codex | 阻塞（N-GC-BASE-01） | — | 席位竞争与丹枢占据采用确定性的资格、兼容与冲突结算；不得以随机胜者替代规则。 | — |
 | N-SUPPRESS-01 | P2 | Codex | 阻塞（N-GC-BASE-01） | — | 削位/封丹采用确定性的资格、目标与冲突结算；不得以随机触发概率替代规则。 | — |
 | N-JD-RULE-01 | P1 | Codex | 阻塞 | N-JD-RULE-01A、N-JD-RULE-01B、N-JD-RULE-01C | 金丹 BattleSim 规则父任务；三个子任务均完成后才关闭。 | — |
-| N-JD-RULE-01A | P1 | Codex | 阻塞 | D-JD-SAMPLE-01 | 三实位、装配、唯一丹枢／丹相及能力与资源／冷却独立账本。 | — |
+| N-JD-RULE-01A | P1 | codex | 已排队 | — | 三实位、装配与唯一账本 | 开发管理/任务卡/N-JD-RULE-01A.txt |
 | N-JD-RULE-01B | P1 | Codex | 阻塞 | N-JD-RULE-01A | 合法性过滤、确定性冲突及 QTE／跳过同结果结算。 | — |
 | N-JD-RULE-01C | P1 | Codex | 阻塞 | N-JD-RULE-01B | 版本化跨阶挑战、实位载体死亡与账本释放／保留。 | — |
 | N-STATE-01 | P2 | Codex | 阻塞（D-JD-SCHEMA-01） | — | 接入状态极性与载体、局部回溯、因果响应容量及债务不变量，保持确定性结算。 | — |
