@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-07-27：D-NPC-WEIGHT-01A 已完成独立数据契约；契约明确生产权重、阈值、封顶／递减与校准目标须另行批准。等待 DEC-20260727-NPCWEIGHT，批准前不得建立 CSV、asset、导入器、BattleSim 或 Unity 实现。",
+  "stateReason": "2026-07-27：DEC-20260727-NPCWEIGHT = A，已授权基于 D-NPC-WEIGHT-01A 的独立数据契约与 BattleSim 形成首版生产权重、阈值、封顶／递减与校准目标；本卡解除为 ready，仍受既有硬门槛与停止条件约束。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/基础设定/修行境界.txt",
@@ -34,6 +34,7 @@
 ## 已确认的决定
 
 - `DEC-20260726-NPCWEIGHT = A`：先建立独立 CSV/asset 契约，再校准 BattleSim 与 Unity 共用权重。
+- `DEC-20260727-NPCWEIGHT = A`：授权基于已完成的独立数据契约与 BattleSim 形成首版生产权重、阈值、封顶／递减与校准目标。
 - `D-NPC-WEIGHT-01A` 是唯一数据契约前置；完成前本卡不得进入 ready 队列，也不得写入 BattleSim、CSV、asset 或 Unity 运行时。
 
 ## 必查范围

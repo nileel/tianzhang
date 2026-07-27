@@ -6,3 +6,4 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | D-JD-SCHEMA-01B | codex_execute | codex | P1 | data | implementation | 金丹数据导入与失败关闭 | 开发管理/任务卡/D-JD-SCHEMA-01B.txt |
+| N-FPD-NPC-01 | codex_execute | codex | P2 | battlesim | design | NPC 修炼行动权重 | 开发管理/任务卡/N-FPD-NPC-01.txt |
