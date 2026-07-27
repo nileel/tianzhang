@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -29,6 +30,9 @@ static class BattleSimSelfTests
 
         if (suite == "golden-core-validation-base-n-gc-base-01")
             return RunChecked(suite, RunGoldenCoreValidationBaseNgcBase01);
+
+        if (suite == "golden-core-assembly-n-jd-rule-01a")
+            return RunChecked(suite, RunGoldenCoreAssemblyNjdrule01A);
 
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
@@ -692,6 +696,205 @@ static class BattleSimSelfTests
         AssertEqual(100.0, firstWins, "equal reaction resolves in input order");
         AssertEqual(0.0, secondWins, "equal reaction order is stable");
     }
+
+    static void RunGoldenCoreAssemblyNjdrule01A()
+    {
+        var oneSeat = LoadGoldenCoreFixture("jd.valid.one-mansion-one-seat");
+        var threeSeats = LoadGoldenCoreFixture("jd.valid.three-mansion-three-seats");
+        var fiveMansions = LoadGoldenCoreFixture("jd.valid.five-mansion-three-seats");
+
+        AssertAssembly(oneSeat, expectedMansionAbilities: 1, expectedSeats: 1, "one mansion fixture");
+        AssertAssembly(threeSeats, expectedMansionAbilities: 3, expectedSeats: 3, "three mansion fixture");
+        AssertAssembly(fiveMansions, expectedMansionAbilities: 5, expectedSeats: 3, "five mansion fixture");
+
+        AssertFixtureRejected("jd.invalid.fourth-stable-position", "JD_STABLE_POSITION_LIMIT");
+        AssertFixtureRejected("jd.invalid.second-core", "JD_CORE_NOT_UNIQUE");
+        AssertFixtureRejected("jd.invalid.second-danxiang", "JD_DANXIANG_NOT_UNIQUE");
+        AssertFixtureRejected("jd.invalid.shared-instance-ledger", "JD_ABILITY_LEDGER_OWNERSHIP_INVALID");
+
+        var sharedReferenceInput = threeSeats with
+        {
+            StableSeats = threeSeats.StableSeats
+                .Select(seat => seat.PositionType == GoldenCoreSeatType.Transformation
+                    ? seat with { AuxiliaryCarrierAbilityInstanceIds = new[] { "guardian_ming" } }
+                    : seat)
+                .ToArray(),
+            DanxiangAbilityInstanceIds = new[] { "guardian_ming" },
+        };
+        var sharedReferenceAssembly = GoldenCoreAssembly.Create(sharedReferenceInput);
+        var runtimeLedger = sharedReferenceAssembly.CreateRuntimeLedger(initialResource: 100);
+        var mingLedger = runtimeLedger.Get("guardian_ming");
+        if (!ReferenceEquals(mingLedger, runtimeLedger.Get("guardian_ming")))
+            throw new InvalidOperationException("same ability instance must resolve to one runtime ledger.");
+        if (!mingLedger.TrySpendResource(30) || mingLedger.Resource != 70 || runtimeLedger.Get("guardian_hun").Resource != 100)
+            throw new InvalidOperationException("ability resource ledgers must be independent by ability instance id.");
+        mingLedger.StartCooldown(3);
+        runtimeLedger.TickCooldowns();
+        if (mingLedger.Cooldown != 2 || runtimeLedger.Get("guardian_hun").Cooldown != 0)
+            throw new InvalidOperationException("ability cooldown ledgers must be independent by ability instance id.");
+        mingLedger.AddConflictReserve(9);
+        if (!mingLedger.TrySpendConflictReserve(4) || mingLedger.ConflictReserve != 5 || runtimeLedger.Get("guardian_hun").ConflictReserve != 0)
+            throw new InvalidOperationException("conflict reserves must remain on the unique ability instance ledger.");
+
+        var character = Character.Create(
+            "N-JD-RULE-01A",
+            new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 },
+            "physical");
+        character.AssignGoldenCoreAssembly(sharedReferenceAssembly, "guardian_ming", "guardian_hun");
+        AssertEqual("guardian_ming", character.ArtAbilityInstanceId, "character art ability ledger binding");
+        AssertEqual("guardian_hun", character.DivineAbilityInstanceId, "character divine ability ledger binding");
+    }
+
+    static void AssertAssembly(GoldenCoreAssemblyInput input, int expectedMansionAbilities, int expectedSeats, string label)
+    {
+        var assembly = GoldenCoreAssembly.Create(input);
+        AssertEqual(expectedMansionAbilities, assembly.AbilityLedgers.Count, $"{label} ability ledger count");
+        AssertEqual(expectedSeats, assembly.StableSeats.Count, $"{label} stable seat count");
+        AssertEqual(input.CoreBinding.JindanInstanceId, assembly.Danxiang.JindanInstanceId, $"{label} unique core and danxiang");
+        if (assembly.StableSeats.Values.Any(seat => !assembly.AbilityLedgers.ContainsKey(seat.PrimaryCarrierAbilityInstanceId)))
+            throw new InvalidOperationException($"{label}: a stable seat has no owned primary carrier ledger.");
+    }
+
+    static void AssertFixtureRejected(string fixtureId, string expectedCode)
+    {
+        try
+        {
+            GoldenCoreAssembly.Create(LoadGoldenCoreFixture(fixtureId));
+        }
+        catch (GoldenCoreAssemblyException ex) when (ex.Code == expectedCode)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException($"{fixtureId} must fail with {expectedCode}.");
+    }
+
+    static GoldenCoreAssemblyInput LoadGoldenCoreFixture(string fixtureId)
+    {
+        var jindanRow = ReadFixtureRows("JindanStaticStates.fixture.csv")
+            .Single(row => row["fixtureId"] == fixtureId);
+        var foundationRow = ReadFixtureRows("FoundationPurpleMansionStates.fixture.csv")
+            .Single(row => row["fixtureId"] == fixtureId);
+        if (jindanRow["characterId"] != foundationRow["characterId"] ||
+            jindanRow["foundationPurpleMansionStateRef"] != foundationRow["foundationInstanceId"])
+        {
+            throw new InvalidOperationException($"{fixtureId} does not pair one Jindan row with its frozen foundation input.");
+        }
+
+        var mansionAbilityIds = ParseCompleteMansionAbilityIds(jindanRow["mansionInputs"], fixtureId);
+        int foundationCompleteMansionCount = foundationRow["mansionStates"]
+            .Split('|')
+            .Count(item => item.Split('~').Length > 1 && item.Split('~')[1] == "COMPLETE");
+        if (mansionAbilityIds.Count != foundationCompleteMansionCount)
+            throw new InvalidOperationException($"{fixtureId} has inconsistent Jindan and foundation mansion inputs.");
+
+        var core = ParseParts(jindanRow["jindanCoreBinding"], 5, "JD_CORE_NOT_UNIQUE", fixtureId, "jindanCoreBinding");
+        var danxiang = ParseParts(jindanRow["danxiang"], 5, "JD_DANXIANG_NOT_UNIQUE", fixtureId, "danxiang");
+        var seats = jindanRow["stablePositionBindings"]
+            .Split('|')
+            .Select(item => ParseSeat(item, fixtureId))
+            .ToArray();
+        var ledgers = jindanRow["abilityLedgerBindings"]
+            .Split('|')
+            .Select(item => ParseLedger(item, fixtureId))
+            .ToArray();
+
+        return new GoldenCoreAssemblyInput(
+            new JindanCoreBinding(core[0], core[1], core[2], core[3], int.Parse(core[4])),
+            new JindanDanxiangBinding(danxiang[0], danxiang[1], danxiang[2], NoneToEmpty(danxiang[3]), danxiang[4]),
+            seats,
+            ledgers,
+            mansionAbilityIds,
+            Array.Empty<string>());
+    }
+
+    static IReadOnlyList<Dictionary<string, string>> ReadFixtureRows(string fileName)
+    {
+        var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fileName))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
+            .ToArray();
+        var headers = lines[0].Split(',');
+        return lines.Skip(1).Select(line =>
+        {
+            var values = line.Split(',');
+            if (values.Length != headers.Length)
+                throw new InvalidOperationException($"{fileName} has a malformed CSV row.");
+            return headers.Select((header, index) => (header, value: values[index]))
+                .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
+        }).ToArray();
+    }
+
+    static string FindRepositoryRoot()
+    {
+        for (var directory = new DirectoryInfo(Directory.GetCurrentDirectory()); directory != null; directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "src", "Assets", "Tests", "EditMode", "Fixtures", "JindanStaticStates.fixture.csv")))
+                return directory.FullName;
+        }
+        throw new InvalidOperationException("BattleSim could not locate the non-production Jindan fixture directory.");
+    }
+
+    static IReadOnlyList<string> ParseCompleteMansionAbilityIds(string raw, string fixtureId)
+    {
+        var completeAbilities = new List<string>();
+        foreach (var item in raw.Split('|'))
+        {
+            var parts = item.Split('~');
+            if (parts.Length < 2)
+                throw new GoldenCoreAssemblyException("JD_UNKNOWN_STATIC_REFERENCE", $"{fixtureId} has an invalid mansion input.");
+            if (parts[1] != "COMPLETE")
+                continue;
+            if (parts.Length < 5 || string.IsNullOrWhiteSpace(parts[4]))
+                throw new GoldenCoreAssemblyException("JD_CARRIER_REFERENCE_INVALID", $"{fixtureId} has a complete mansion without guardian ability.");
+            completeAbilities.Add(parts[4]);
+        }
+        return completeAbilities;
+    }
+
+    static GoldenCoreSeatBinding ParseSeat(string raw, string fixtureId)
+    {
+        var parts = ParseParts(raw, 9, "JD_STABLE_POSITION_LIMIT", fixtureId, "stablePositionBindings");
+        var positionType = parts[3] switch
+        {
+            "SOURCE" => GoldenCoreSeatType.Source,
+            "TRANSFORMATION" => GoldenCoreSeatType.Transformation,
+            "DOMAIN" => GoldenCoreSeatType.Domain,
+            _ => throw new GoldenCoreAssemblyException("JD_STABLE_POSITION_LIMIT", $"{fixtureId} has an unknown stable position type."),
+        };
+        return new GoldenCoreSeatBinding(
+            parts[0],
+            parts[2],
+            positionType,
+            parts[5],
+            parts[6],
+            parts[7],
+            parts[8] == "none" ? Array.Empty<string>() : parts[8].Split('+'));
+    }
+
+    static GoldenCoreAbilityLedgerBinding ParseLedger(string raw, string fixtureId)
+    {
+        var parts = ParseParts(raw, 7, "JD_ABILITY_LEDGER_OWNERSHIP_INVALID", fixtureId, "abilityLedgerBindings");
+        return new GoldenCoreAbilityLedgerBinding(
+            parts[0],
+            NoneToEmpty(parts[1]),
+            NoneToEmpty(parts[2]),
+            NoneToEmpty(parts[3]),
+            NoneToEmpty(parts[4]),
+            NoneToEmpty(parts[5]),
+            NoneToEmpty(parts[6]));
+    }
+
+    static string[] ParseParts(string raw, int expectedCount, string errorCode, string fixtureId, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(raw) || raw.Contains('|'))
+            throw new GoldenCoreAssemblyException(errorCode, $"{fixtureId} has multiple or empty {fieldName} records.");
+        var parts = raw.Split('~');
+        if (parts.Length != expectedCount)
+            throw new GoldenCoreAssemblyException(errorCode, $"{fixtureId} has an invalid {fieldName} record.");
+        return parts;
+    }
+
+    static string NoneToEmpty(string value) => value == "none" ? "" : value;
 
     static void RunDuelBounds()
     {

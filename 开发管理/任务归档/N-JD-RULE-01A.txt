@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-27：D-JD-SAMPLE-01 已归档并关闭 D-JD-SCHEMA-01；三组可消费的非生产有效／非法 fixture 已具备，本子任务成为 N-JD-RULE-01 的首个可执行切片。",
+  "stateReason": "2026-07-27：BattleSim 已从 D-JD-SAMPLE-01 的非生产有效／非法 fixture 装配源、化、界三种真实位格，锁定唯一丹枢／丹相与按 abilityInstanceId 的可变账本；目标自测、Release 构建及完整 BattleSim 均通过，N-JD-RULE-01B 的依赖已解除，等待后续建卡调度。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -71,3 +71,9 @@
 ## 停止条件
 
 - fixture 不能给出唯一所有者，或实现必须修改数据契约、生产数据、紫府数量到实位的自动映射、第二丹枢／丹相、第四实位或共享可变账本时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-27：新增 `GoldenCoreAssembly`，仅接受源、化、界三种实位，并校验唯一 `JindanCoreBinding`、唯一丹相、不同主承载、完整紫府神通的逐实例账本与可变账本引用唯一性。五府有效样例保留五项能力账本，但只产生三项稳定实位。
+- `Character` 可把装配内的既有实例显式绑定到角色既有术法／神通槽；`Combat.Simulate` 在绑定存在时按该实例读取与更新资源、冷却。`GoldenCoreRuntimeLedger` 按 `abilityInstanceId` 唯一返回资源、冷却和 `conflictReserve` 状态；辅助与丹相重复引用同一实例不复制状态。
+- `golden-core-assembly-n-jd-rule-01a` 覆盖三组有效 fixture、第四实位、第二核心、第二丹相、共享账本反例与同一实例多处引用；先稳定失败为缺少模型，后通过。Release 构建和完整 BattleSim 通过；详情见 `开发管理/金丹三实位装配与账本验证记录.txt`。

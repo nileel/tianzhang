@@ -701,3 +701,280 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public static readonly ArtConfig YuqingLeijieArt = new("九霄雷罚", "物理", 1.4, 25, 3, "雷", 1, 3);
     public static readonly DivineConfig YuqingLeijieDivine = new("雷剑破虚", "物理", 1.6, 15, 5, "雷", 1, 3);
 }
+
+public enum GoldenCoreSeatType
+{
+    Source,
+    Transformation,
+    Domain,
+}
+
+public sealed record JindanCoreBinding(
+    string BindingId,
+    string JindanInstanceId,
+    string DanshuCoreId,
+    string FormationTransactionId,
+    int FormationVersion);
+
+public sealed record JindanDanxiangBinding(
+    string DanxiangInstanceId,
+    string JindanInstanceId,
+    string DanxiangNameKey,
+    string DanxingDefinitionId,
+    string PresentationProfileId);
+
+public sealed record GoldenCoreSeatBinding(
+    string PositionId,
+    string RoadId,
+    GoldenCoreSeatType PositionType,
+    string EquippedEffectId,
+    string CompatibilityProfileId,
+    string PrimaryCarrierAbilityInstanceId,
+    IReadOnlyList<string> AuxiliaryCarrierAbilityInstanceIds);
+
+public sealed record GoldenCoreAbilityLedgerBinding(
+    string AbilityInstanceId,
+    string ResourceDebitLedgerRef,
+    string CooldownLedgerRef,
+    string ChargeLedgerRef,
+    string CostLedgerRef,
+    string ConflictReserveLedgerRef,
+    string ConflictCostProfileId);
+
+public sealed record GoldenCoreAssemblyInput(
+    JindanCoreBinding CoreBinding,
+    JindanDanxiangBinding Danxiang,
+    IReadOnlyList<GoldenCoreSeatBinding> StableSeats,
+    IReadOnlyList<GoldenCoreAbilityLedgerBinding> AbilityLedgers,
+    IReadOnlyList<string> CompleteMansionAbilityInstanceIds,
+    IReadOnlyList<string> DanxiangAbilityInstanceIds);
+
+public sealed class GoldenCoreAssemblyException : InvalidOperationException
+{
+    public GoldenCoreAssemblyException(string code, string message)
+        : base($"{code}: {message}")
+    {
+        Code = code;
+    }
+
+    public string Code { get; }
+}
+
+/// <summary>
+/// 金丹稳定实位的运行前装配：只承接已验证的静态绑定，不生成第四位、第二丹枢或第二丹相。
+/// </summary>
+public sealed class GoldenCoreAssembly
+{
+    GoldenCoreAssembly(
+        JindanCoreBinding coreBinding,
+        JindanDanxiangBinding danxiang,
+        IReadOnlyDictionary<GoldenCoreSeatType, GoldenCoreSeatBinding> stableSeats,
+        IReadOnlyDictionary<string, GoldenCoreAbilityLedgerBinding> abilityLedgers,
+        IReadOnlyList<string> danxiangAbilityInstanceIds)
+    {
+        CoreBinding = coreBinding;
+        Danxiang = danxiang;
+        StableSeats = stableSeats;
+        AbilityLedgers = abilityLedgers;
+        DanxiangAbilityInstanceIds = danxiangAbilityInstanceIds;
+    }
+
+    public JindanCoreBinding CoreBinding { get; }
+    public JindanDanxiangBinding Danxiang { get; }
+    public IReadOnlyDictionary<GoldenCoreSeatType, GoldenCoreSeatBinding> StableSeats { get; }
+    public IReadOnlyDictionary<string, GoldenCoreAbilityLedgerBinding> AbilityLedgers { get; }
+    public IReadOnlyList<string> DanxiangAbilityInstanceIds { get; }
+
+    public static GoldenCoreAssembly Create(GoldenCoreAssemblyInput input)
+    {
+        if (input == null || input.CoreBinding == null || input.Danxiang == null ||
+            input.StableSeats == null || input.AbilityLedgers == null ||
+            input.CompleteMansionAbilityInstanceIds == null || input.DanxiangAbilityInstanceIds == null)
+        {
+            throw new GoldenCoreAssemblyException("JD_UNKNOWN_STATIC_REFERENCE", "assembly input is incomplete.");
+        }
+
+        RequireReference(input.CoreBinding.BindingId, "JD_CORE_NOT_UNIQUE", "core binding id is required.");
+        RequireReference(input.CoreBinding.JindanInstanceId, "JD_CORE_NOT_UNIQUE", "jindan instance id is required.");
+        RequireReference(input.CoreBinding.DanshuCoreId, "JD_CORE_NOT_UNIQUE", "danshu core id is required.");
+        RequireReference(input.Danxiang.DanxiangInstanceId, "JD_DANXIANG_NOT_UNIQUE", "danxiang instance id is required.");
+        RequireReference(input.Danxiang.JindanInstanceId, "JD_DANXIANG_NOT_UNIQUE", "danxiang jindan instance id is required.");
+        if (!string.Equals(input.CoreBinding.JindanInstanceId, input.Danxiang.JindanInstanceId, StringComparison.Ordinal))
+            throw new GoldenCoreAssemblyException("JD_DANXIANG_NOT_UNIQUE", "danxiang must bind the unique jindan instance.");
+
+        if (input.StableSeats.Count is < 1 or > 3)
+            throw new GoldenCoreAssemblyException("JD_STABLE_POSITION_LIMIT", "stable seats must contain one to three entries.");
+
+        var mansionAbilities = RequireDistinctReferences(
+            input.CompleteMansionAbilityInstanceIds,
+            "JD_ABILITY_LEDGER_OWNERSHIP_INVALID",
+            "complete mansion ability");
+        var ledgers = new Dictionary<string, GoldenCoreAbilityLedgerBinding>(StringComparer.Ordinal);
+        var mutableLedgerOwners = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var binding in input.AbilityLedgers)
+        {
+            if (binding == null || string.IsNullOrWhiteSpace(binding.AbilityInstanceId) || !ledgers.TryAdd(binding.AbilityInstanceId, binding))
+                throw new GoldenCoreAssemblyException("JD_ABILITY_LEDGER_OWNERSHIP_INVALID", "ability ledger ids must be unique and non-empty.");
+
+            foreach (var ledgerRef in MutableLedgerReferences(binding))
+            {
+                if (mutableLedgerOwners.TryGetValue(ledgerRef, out var owner))
+                    throw new GoldenCoreAssemblyException("JD_ABILITY_LEDGER_OWNERSHIP_INVALID", $"mutable ledger '{ledgerRef}' is already owned by '{owner}'.");
+                mutableLedgerOwners.Add(ledgerRef, binding.AbilityInstanceId);
+            }
+
+            bool hasConflictReserve = !string.IsNullOrWhiteSpace(binding.ConflictReserveLedgerRef);
+            bool hasConflictCost = !string.IsNullOrWhiteSpace(binding.ConflictCostProfileId);
+            if (hasConflictReserve != hasConflictCost)
+                throw new GoldenCoreAssemblyException("JD_CONFLICT_REFERENCE_INVALID", "conflict reserve and cost profile must be declared together.");
+        }
+
+        if (!ledgers.Keys.OrderBy(id => id, StringComparer.Ordinal).SequenceEqual(mansionAbilities.OrderBy(id => id, StringComparer.Ordinal), StringComparer.Ordinal))
+            throw new GoldenCoreAssemblyException("JD_ABILITY_LEDGER_OWNERSHIP_INVALID", "every complete mansion ability requires exactly one owned ledger.");
+
+        var seats = new Dictionary<GoldenCoreSeatType, GoldenCoreSeatBinding>();
+        var primaryCarriers = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var seat in input.StableSeats)
+        {
+            if (seat == null || !seats.TryAdd(seat.PositionType, seat))
+                throw new GoldenCoreAssemblyException("JD_STABLE_POSITION_LIMIT", "each source, transformation, or domain seat may occur once.");
+            RequireReference(seat.PositionId, "JD_UNKNOWN_STATIC_REFERENCE", "position id is required.");
+            RequireReference(seat.RoadId, "JD_UNKNOWN_STATIC_REFERENCE", "road id is required.");
+            RequireReference(seat.EquippedEffectId, "JD_EFFECT_LOADOUT_INVALID", "equipped effect id is required.");
+            RequireReference(seat.CompatibilityProfileId, "JD_UNKNOWN_STATIC_REFERENCE", "compatibility profile id is required.");
+            RequireReference(seat.PrimaryCarrierAbilityInstanceId, "JD_CARRIER_REFERENCE_INVALID", "primary carrier is required.");
+            if (!ledgers.ContainsKey(seat.PrimaryCarrierAbilityInstanceId) || !primaryCarriers.Add(seat.PrimaryCarrierAbilityInstanceId))
+                throw new GoldenCoreAssemblyException("JD_PRIMARY_CARRIER_DUPLICATE", "stable seats require different owned primary carrier instances.");
+
+            var auxiliaries = RequireDistinctReferences(
+                seat.AuxiliaryCarrierAbilityInstanceIds ?? Array.Empty<string>(),
+                "JD_CARRIER_REFERENCE_INVALID",
+                "auxiliary carrier");
+            if (auxiliaries.Contains(seat.PrimaryCarrierAbilityInstanceId, StringComparer.Ordinal) || auxiliaries.Any(id => !ledgers.ContainsKey(id)))
+                throw new GoldenCoreAssemblyException("JD_CARRIER_REFERENCE_INVALID", "auxiliary carriers must reference other owned ability instances.");
+        }
+
+        var danxiangReferences = RequireDistinctReferences(
+            input.DanxiangAbilityInstanceIds,
+            "JD_CARRIER_REFERENCE_INVALID",
+            "danxiang ability");
+        if (danxiangReferences.Any(id => !ledgers.ContainsKey(id)))
+            throw new GoldenCoreAssemblyException("JD_CARRIER_REFERENCE_INVALID", "danxiang may only reference owned ability instances.");
+
+        return new GoldenCoreAssembly(input.CoreBinding, input.Danxiang, seats, ledgers, danxiangReferences.ToArray());
+    }
+
+    public GoldenCoreRuntimeLedger CreateRuntimeLedger(int initialResource)
+    {
+        if (initialResource < 0)
+            throw new ArgumentOutOfRangeException(nameof(initialResource));
+        return new GoldenCoreRuntimeLedger(AbilityLedgers.Values, initialResource);
+    }
+
+    static IEnumerable<string> MutableLedgerReferences(GoldenCoreAbilityLedgerBinding binding) =>
+        new[]
+        {
+            binding.ResourceDebitLedgerRef,
+            binding.CooldownLedgerRef,
+            binding.ChargeLedgerRef,
+            binding.CostLedgerRef,
+            binding.ConflictReserveLedgerRef,
+        }.Where(reference => !string.IsNullOrWhiteSpace(reference));
+
+    static HashSet<string> RequireDistinctReferences(IEnumerable<string> values, string code, string label)
+    {
+        var result = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var value in values)
+        {
+            RequireReference(value, code, $"{label} id is required.");
+            if (!result.Add(value))
+                throw new GoldenCoreAssemblyException(code, $"{label} ids must be unique.");
+        }
+        return result;
+    }
+
+    static void RequireReference(string value, string code, string message)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new GoldenCoreAssemblyException(code, message);
+    }
+}
+
+/// <summary>每个 abilityInstanceId 的可变战斗账本；同一实例始终返回同一个状态对象。</summary>
+public sealed class GoldenCoreRuntimeLedger
+{
+    readonly Dictionary<string, GoldenCoreAbilityRuntimeState> states;
+
+    internal GoldenCoreRuntimeLedger(IEnumerable<GoldenCoreAbilityLedgerBinding> bindings, int initialResource)
+    {
+        states = bindings.ToDictionary(
+            binding => binding.AbilityInstanceId,
+            binding => new GoldenCoreAbilityRuntimeState(binding.AbilityInstanceId, initialResource),
+            StringComparer.Ordinal);
+    }
+
+    public GoldenCoreAbilityRuntimeState Get(string abilityInstanceId) =>
+        states.TryGetValue(abilityInstanceId, out var state)
+            ? state
+            : throw new KeyNotFoundException($"Unknown golden-core ability instance: {abilityInstanceId}");
+
+    public void TickCooldowns()
+    {
+        foreach (var state in states.Values)
+            state.TickCooldown();
+    }
+}
+
+public sealed class GoldenCoreAbilityRuntimeState
+{
+    internal GoldenCoreAbilityRuntimeState(string abilityInstanceId, int initialResource)
+    {
+        AbilityInstanceId = abilityInstanceId;
+        Resource = initialResource;
+    }
+
+    public string AbilityInstanceId { get; }
+    public int Resource { get; private set; }
+    public int Cooldown { get; private set; }
+    public int ConflictReserve { get; private set; }
+
+    public bool TrySpendResource(int amount)
+    {
+        if (amount < 0)
+            throw new ArgumentOutOfRangeException(nameof(amount));
+        if (Resource < amount)
+            return false;
+        Resource -= amount;
+        return true;
+    }
+
+    public void StartCooldown(int turns)
+    {
+        if (turns < 0)
+            throw new ArgumentOutOfRangeException(nameof(turns));
+        Cooldown = Math.Max(Cooldown, turns);
+    }
+
+    public void TickCooldown()
+    {
+        if (Cooldown > 0)
+            Cooldown--;
+    }
+
+    public void AddConflictReserve(int amount)
+    {
+        if (amount < 0)
+            throw new ArgumentOutOfRangeException(nameof(amount));
+        ConflictReserve += amount;
+    }
+
+    public bool TrySpendConflictReserve(int amount)
+    {
+        if (amount < 0)
+            throw new ArgumentOutOfRangeException(nameof(amount));
+        if (ConflictReserve < amount)
+            return false;
+        ConflictReserve -= amount;
+        return true;
+    }
+}

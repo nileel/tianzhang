@@ -1,0 +1,44 @@
+# 金丹三实位装配与唯一账本验证记录
+
+任务：`N-JD-RULE-01A`（2026-07-27）
+
+## 可复现输入与结果
+
+`golden-core-assembly-n-jd-rule-01a` 直接读取以下非生产 CSV，按同一 `fixtureId` 配对冻结紫府输入和金丹静态行：
+
+| fixtureId | 完整紫府／账本实例 | 稳定实位 | 结果 |
+|---|---:|---:|---|
+| `jd.valid.one-mansion-one-seat` | 1 | 源位 1 | 通过；唯一核心、唯一丹相与唯一主承载。 |
+| `jd.valid.three-mansion-three-seats` | 3 | 源／化／界各 1 | 通过；三项主承载实例各不重复。 |
+| `jd.valid.five-mansion-three-seats` | 5 | 源／化／界各 1 | 通过；悟府、运府保留为合法输入及独立账本，不生成第四、第五实位。 |
+
+同一实例多处引用使用三府有效行已有的 `guardian_ming`：它保持源位主承载，同时作为化位辅助与丹相引用。运行时对该 ID 两次取得的是同一对象；扣除资源、冷却递减和 `conflictReserve` 变动均只发生一次。`guardian_hun` 保持独立资源、冷却和储备，证明不同 `abilityInstanceId` 不共享可变账本。
+
+以下既有非法行均由同一目标自测稳定拒绝：
+
+- `jd.invalid.fourth-stable-position` → `JD_STABLE_POSITION_LIMIT`
+- `jd.invalid.second-core` → `JD_CORE_NOT_UNIQUE`
+- `jd.invalid.second-danxiang` → `JD_DANXIANG_NOT_UNIQUE`
+- `jd.invalid.shared-instance-ledger` → `JD_ABILITY_LEDGER_OWNERSHIP_INVALID`
+
+## 实现边界
+
+`GoldenCoreAssembly` 只允许源、化、界三种枚举实位，按完整紫府神通实例建立唯一 `GoldenCoreAbilityLedgerBinding`，并对资源、冷却、冲突储备创建按实例索引的运行时状态。`Character` 仅允许把已装配实例绑定给既有术法／神通战斗槽；`Combat.Simulate` 在存在这种绑定时从实例账本读取并更新资源与冷却，否则保留原角色级行为。
+
+本卡没有实现冲突排序、QTE／跳过、跨阶挑战、实位死亡、占据结算、压阶或伤害表修改；冲突储备在本卡仅作为唯一账本字段，不裁定胜负。
+
+## 命令与实际结果
+
+```powershell
+dotnet run -c Release --project simulations/BattleSim -- --self-test golden-core-assembly-n-jd-rule-01a
+# 修改前：SELFTEST golden-core-assembly-n-jd-rule-01a FAIL: GoldenCoreAssembly is missing.
+
+dotnet build -c Release --no-restore simulations/BattleSim
+# 通过，0 警告，0 错误。
+
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-assembly-n-jd-rule-01a
+# SELFTEST golden-core-assembly-n-jd-rule-01a PASS
+
+dotnet run --no-build -c Release --project simulations/BattleSim
+# 通过；四阶段成长、五府预算、养基筑府与既有 BattleSim 矩阵审计均输出 PASS。
+```

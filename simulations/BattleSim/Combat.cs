@@ -266,6 +266,20 @@ static class Combat
             int mpA = ca.Primary["MP"], mpB = cb.Primary["MP"];
             int artCdA = 0, artCdB = 0;
             int divineCdA = 0, divineCdB = 0;
+            var goldenCoreRuntimeA = ca.CreateGoldenCoreRuntimeLedger(mpA);
+            var goldenCoreRuntimeB = cb.CreateGoldenCoreRuntimeLedger(mpB);
+            var artLedgerA = goldenCoreRuntimeA != null && !string.IsNullOrWhiteSpace(ca.ArtAbilityInstanceId)
+                ? goldenCoreRuntimeA.Get(ca.ArtAbilityInstanceId)
+                : null;
+            var artLedgerB = goldenCoreRuntimeB != null && !string.IsNullOrWhiteSpace(cb.ArtAbilityInstanceId)
+                ? goldenCoreRuntimeB.Get(cb.ArtAbilityInstanceId)
+                : null;
+            var divineLedgerA = goldenCoreRuntimeA != null && !string.IsNullOrWhiteSpace(ca.DivineAbilityInstanceId)
+                ? goldenCoreRuntimeA.Get(ca.DivineAbilityInstanceId)
+                : null;
+            var divineLedgerB = goldenCoreRuntimeB != null && !string.IsNullOrWhiteSpace(cb.DivineAbilityInstanceId)
+                ? goldenCoreRuntimeB.Get(cb.DivineAbilityInstanceId)
+                : null;
             HexCoord positionA = InitialPositionA;
             HexCoord positionB = InitialPositionB;
             double ctA = 0, ctB = 0;
@@ -315,10 +329,12 @@ static class Combat
                 // 秋水回血: water_physical每回合恢复1.5%最大HP
                 if (ca.Style == "water_physical") hpA = Math.Min(ca.Primary["HP"], hpA + (int)(ca.Primary["HP"] * 0.015));
                 if (cb.Style == "water_physical") hpB = Math.Min(cb.Primary["HP"], hpB + (int)(cb.Primary["HP"] * 0.015));
-                if (artCdA > 0) artCdA--;
-                if (artCdB > 0) artCdB--;
-                if (divineCdA > 0) divineCdA--;
-                if (divineCdB > 0) divineCdB--;
+                goldenCoreRuntimeA?.TickCooldowns();
+                goldenCoreRuntimeB?.TickCooldowns();
+                if (artLedgerA == null && artCdA > 0) artCdA--;
+                if (artLedgerB == null && artCdB > 0) artCdB--;
+                if (divineLedgerA == null && divineCdA > 0) divineCdA--;
+                if (divineLedgerB == null && divineCdB > 0) divineCdB--;
 
                 if (ctA <= ctB)
                 {
@@ -330,9 +346,9 @@ static class Combat
                     string atkType, skillElement = ""; double mult, defPen; int atk, def, minRange, maxRange; double resist;
                     bool waterSkillA = false;                    bool kuxingUsedA = false; int kuxingHpRecoverA = 0; bool kuxingIgnoreBlockA = false;
                     int artMPCostA = (ca.Style == "taiyi_fuxiu" && fudanA == maxFudan(ca.Realm)) ? 0 : (xuantongA > 0 ? (int)(ca.ArtMPCost * 0.70) : ca.ArtMPCost);
-                    bool divineReadyA = ca.DivineName != "" && divineCdA == 0;
+                    bool divineReadyA = ca.DivineName != "" && (divineLedgerA?.Cooldown ?? divineCdA) == 0;
                     bool kuxingReadyA = ca.Style == "yuqing_kuxing" && hpA > 2 && hpB > 0;
-                    bool artReadyA = mpA >= artMPCostA && artCdA == 0;
+                    bool artReadyA = (artLedgerA?.Resource ?? mpA) >= artMPCostA && (artLedgerA?.Cooldown ?? artCdA) == 0;
                     int actionA = SelectAction(battlefield, positionA, positionB, divineReadyA, ca.DivineMinRange, ca.DivineMaxRange,
                         kuxingReadyA, artReadyA, ca.ArtMinRange, ca.ArtMaxRange, ca.BasicAttackProfile,
                         out minRange, out maxRange);
@@ -342,7 +358,8 @@ static class Combat
                     if (actionA == DivineAction)
                     {
                         atkType = ca.DivineType; skillElement = ca.DivineElement; mult = ca.DivineMult; defPen = ca.DivineDefPen; minRange = ca.DivineMinRange; maxRange = ca.DivineMaxRange;
-                        divineCdA = ca.DivineCooldown;
+                        if (divineLedgerA != null) divineLedgerA.StartCooldown(ca.DivineCooldown);
+                        else divineCdA = ca.DivineCooldown;
                         waterSkillA = ca.Style == "water_physical";
                         if (waterSkillA) { shishuiOnB = Math.Min(shishuiOnB + 1, maxShishui(ca.Realm)); chuanliuA = 1; }
                     }
@@ -359,7 +376,16 @@ static class Combat
                     }                    else if (actionA == ArtAction)
                     {
                         atkType = ca.ArtType; skillElement = ca.ArtElement; mult = ca.ArtMult; defPen = 0; minRange = ca.ArtMinRange; maxRange = ca.ArtMaxRange;
-                        mpA -= artMPCostA; artCdA = ca.ArtCooldown;
+                        if (artLedgerA != null)
+                        {
+                            artLedgerA.TrySpendResource(artMPCostA);
+                            artLedgerA.StartCooldown(ca.ArtCooldown);
+                        }
+                        else
+                        {
+                            mpA -= artMPCostA;
+                            artCdA = ca.ArtCooldown;
+                        }
                         waterSkillA = ca.Style == "water_physical";
 
 
@@ -427,9 +453,9 @@ static class Combat
                     string atkType, skillElement = ""; double mult, defPen; int atk, def, minRange, maxRange; double resist;
                     bool waterSkillB = false;                    bool kuxingUsedB = false; int kuxingHpRecoverB = 0; bool kuxingIgnoreBlockB = false;
                     int artMPCostB = (cb.Style == "taiyi_fuxiu" && fudanB == maxFudan(cb.Realm)) ? 0 : (xuantongB > 0 ? (int)(cb.ArtMPCost * 0.70) : cb.ArtMPCost);
-                    bool divineReadyB = cb.DivineName != "" && divineCdB == 0;
+                    bool divineReadyB = cb.DivineName != "" && (divineLedgerB?.Cooldown ?? divineCdB) == 0;
                     bool kuxingReadyB = cb.Style == "yuqing_kuxing" && hpB > 2 && hpA > 0;
-                    bool artReadyB = mpB >= artMPCostB && artCdB == 0;
+                    bool artReadyB = (artLedgerB?.Resource ?? mpB) >= artMPCostB && (artLedgerB?.Cooldown ?? artCdB) == 0;
                     int actionB = SelectAction(battlefield, positionB, positionA, divineReadyB, cb.DivineMinRange, cb.DivineMaxRange,
                         kuxingReadyB, artReadyB, cb.ArtMinRange, cb.ArtMaxRange, cb.BasicAttackProfile,
                         out minRange, out maxRange);
@@ -439,7 +465,8 @@ static class Combat
                     if (actionB == DivineAction)
                     {
                         atkType = cb.DivineType; skillElement = cb.DivineElement; mult = cb.DivineMult; defPen = cb.DivineDefPen; minRange = cb.DivineMinRange; maxRange = cb.DivineMaxRange;
-                        divineCdB = cb.DivineCooldown;
+                        if (divineLedgerB != null) divineLedgerB.StartCooldown(cb.DivineCooldown);
+                        else divineCdB = cb.DivineCooldown;
                         waterSkillB = cb.Style == "water_physical";
                         if (waterSkillB) { shishuiOnA = Math.Min(shishuiOnA + 1, maxShishui(cb.Realm)); chuanliuB = 1; }
                     }
@@ -456,7 +483,16 @@ static class Combat
                     }                    else if (actionB == ArtAction)
                     {
                         atkType = cb.ArtType; skillElement = cb.ArtElement; mult = cb.ArtMult; defPen = 0; minRange = cb.ArtMinRange; maxRange = cb.ArtMaxRange;
-                        mpB -= artMPCostB; artCdB = cb.ArtCooldown;
+                        if (artLedgerB != null)
+                        {
+                            artLedgerB.TrySpendResource(artMPCostB);
+                            artLedgerB.StartCooldown(cb.ArtCooldown);
+                        }
+                        else
+                        {
+                            mpB -= artMPCostB;
+                            artCdB = cb.ArtCooldown;
+                        }
                         waterSkillB = cb.Style == "water_physical";
 
                     }

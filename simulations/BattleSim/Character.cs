@@ -56,6 +56,10 @@ class Character
     public int DivineCooldown = 5;       // 神通冷却回合数
     public int DivineMinRange = 1;
     public int DivineMaxRange = 1;
+    // N-JD-RULE-01A：金丹实位的静态装配与战斗账本绑定。
+    public GoldenCoreAssembly GoldenCoreAssembly { get; private set; }
+    public string ArtAbilityInstanceId { get; private set; } = "";
+    public string DivineAbilityInstanceId { get; private set; } = "";
 
     public Dictionary<string, int> Innate = new();
     public Dictionary<string, int> Primary = new();
@@ -197,6 +201,29 @@ class Character
             var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
             DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown; DivineMinRange = divCfg.MinRange; DivineMaxRange = divCfg.MaxRange;
         }
+    }
+
+    public void AssignGoldenCoreAssembly(
+        GoldenCoreAssembly assembly,
+        string artAbilityInstanceId = "",
+        string divineAbilityInstanceId = "")
+    {
+        if (assembly == null)
+            throw new ArgumentNullException(nameof(assembly));
+        ValidateAssemblyAbility(assembly, artAbilityInstanceId, nameof(artAbilityInstanceId));
+        ValidateAssemblyAbility(assembly, divineAbilityInstanceId, nameof(divineAbilityInstanceId));
+        GoldenCoreAssembly = assembly;
+        ArtAbilityInstanceId = artAbilityInstanceId;
+        DivineAbilityInstanceId = divineAbilityInstanceId;
+    }
+
+    internal GoldenCoreRuntimeLedger CreateGoldenCoreRuntimeLedger(int initialResource) =>
+        GoldenCoreAssembly?.CreateRuntimeLedger(initialResource);
+
+    static void ValidateAssemblyAbility(GoldenCoreAssembly assembly, string abilityInstanceId, string parameterName)
+    {
+        if (!string.IsNullOrWhiteSpace(abilityInstanceId) && !assembly.AbilityLedgers.ContainsKey(abilityInstanceId))
+            throw new ArgumentException("Ability instance must belong to the assigned golden-core assembly.", parameterName);
     }
 
 }
