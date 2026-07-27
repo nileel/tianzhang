@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-JD-SAMPLE-01",
+  "title": "金丹最小有效与非法样例",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "verification",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "D-JD-SCHEMA-01B 已于 2026-07-27 完成整表导入与失败关闭；本卡将既有内存型直接测试 fixture 提升为可复用的非生产 CSV 样例，前置已解除。",
+  "expectedPaths": [
+    "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv",
+    "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv.meta",
+    "src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv",
+    "src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv.meta",
+    "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs",
+    "开发管理/金丹静态样例验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-SAMPLE-01.txt",
+    "开发管理/任务归档/D-JD-SAMPLE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-JD-SAMPLE-01 · 金丹最小有效与非法样例
+
+## 来源与当前边界
+
+- `D-JD-SCHEMA-01A` 已锁定金丹静态语义，`D-JD-SCHEMA-01B` 已完成 `JindanStaticStateData`、整表失败关闭与直接 EditMode 测试；生产 `JindanStaticStates.csv` 仍只保留表头。
+- 现有直接测试以内存 catalog 和行构造器表达 fixture，没有可复用 fixture 目录。本卡只把该已锁定的最小样例迁为 `Assets/Tests/EditMode/Fixtures/` 下的非生产 CSV 源，供直接测试及后续 `N-JD-RULE-01A` 读取；不创建生产角色或外部权威表。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md` 的“根对象与唯一归属”“唯一丹枢核心与唯一丹相”“主承载、辅助连接与五府平等”“abilityInstanceId 唯一账本与冲突引用”“fixture 规格与稳定拒绝原因”。
+- `开发管理/任务归档/D-JD-SCHEMA-01A.txt` 与 `开发管理/任务归档/D-JD-SCHEMA-01B.txt` 的已锁定边界和完成记录。
+- `src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs`、`src/Assets/Scripts/Entity/JindanStaticStateData.cs` 的输入对象和 `JindanStaticReferenceCatalog`。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ParseFoundationPurpleMansionStates`、`ParseJindanStaticStates`、`ValidateJindanStaticState`、`ValidateJindanMansionInputs`、`ValidateJindanStablePositions`、`ValidateJindanAbilityLedgers`。
+- `src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs`、`src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs` 与 `开发管理/开发-技术经验.txt#asmdef 分层后的 csproj 排查`。
+
+## 实施范围
+
+- 新建成对的非生产 fixture CSV 和 Unity `.meta`：同一 fixture ID 下的 `foundationPurpleMansionState` 输入与 `jindanStaticState` 行必须能由现有解析器组成显式 catalog；不得写入 `src/Assets/DataConfig/` 或创建 Unity asset。
+- 将 `JindanStaticStateDataTests` 改为从这些 fixture 源读取一府一位、三府三位、五府三位三组有效组合，并断言五府完整输入、唯一核心／丹相、1～3 实位和每项已建府神通的唯一实例账本。
+- 在同一 fixture 源覆盖稳定失败原因：`JD_FPM_INPUT_NOT_FORMED`、`JD_MANSION_INPUT_INCOMPLETE`、`JD_UNKNOWN_STATIC_REFERENCE`、`JD_EFFECT_LOADOUT_INVALID`、`JD_STABLE_POSITION_LIMIT`、`JD_CORE_NOT_UNIQUE`、`JD_DANXIANG_NOT_UNIQUE`、`JD_PRIMARY_CARRIER_DUPLICATE`、`JD_CARRIER_REFERENCE_INVALID`、`JD_ABILITY_LEDGER_OWNERSHIP_INVALID`、`JD_CONFLICT_REFERENCE_INVALID`、`JD_LEGACY_OR_DISPLAY_FIELD`；每行只违反目标规则。
+- 新建验证记录，写明 fixture ID、预期、实际稳定结果和运行命令。完成时归档本卡、关闭父任务 `D-JD-SCHEMA-01` 并同步其 backlog／队列投影。
+
+## 禁止项
+
+- 不修改 `JindanStaticStates.csv`、`DataConfigImporter.cs`、数据链检查器、生产 asset、十七道路或五十一项正式内容档案。
+- 不新增或猜测正式名称、道路、效果、数值、默认主／辅承载、第二丹枢／丹相、第四实位、共享可变账本、BattleSim 行为或 UI。
+- 不用 fixture 数值或 in-memory catalog 充当生产外部权威；生产表不存在所需权威引用时仍必须失败关闭。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- 三组有效 fixture 都以完整五府输入导入，并分别保持一、三、三项稳定实位、唯一核心／丹相和逐实例账本；五府样例的第四、第五府仍为有效输入而非额外实位。
+- 每个非法 fixture 在 asset 写入前以指定稳定原因失败；后续 `N-JD-RULE-01A` 可读取同一非生产样例，不硬编码缺失内容。
+- 父任务 `D-JD-SCHEMA-01` 的三个子项均已归档，并在同一状态切片内关闭。
+
+## 停止条件
+
+- 现有契约或解析器无法表达三组有效组合及指定非法反例，或样例必须先生产正式内容／数值、修改静态语义、创建第二丹枢／丹相、第四实位、共享账本或生产权威表；停止并转为 `pending_decision`。

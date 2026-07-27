@@ -16,7 +16,7 @@
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
 | D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SAMPLE-01 | 金丹数据父任务；静态契约与导入失败关闭已归档，等待样例完成。 | — |
-| D-JD-SAMPLE-01 | P1 | Codex | 待建卡（前置已解除） | — | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
+| D-JD-SAMPLE-01 | P1 | codex | 已排队 | — | 金丹最小有效与非法样例 | `开发管理/任务卡/D-JD-SAMPLE-01.txt` |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
@@ -38,7 +38,7 @@
 
 - 依赖：`D-JD-SCHEMA-01B` 已于 2026-07-27 完成并归档；当前可按队列规则建卡。
 - 必读：`D-JD-SCHEMA-01A` 契约、`D-JD-SCHEMA-01B` 导入边界，以及金丹装配和全部紫府输入事实。
-- 预期路径：`D-JD-SCHEMA-01B` 建立的 fixture 目录、直接数据测试与本任务验证记录；建卡时展开实际路径。
+- 预期路径：新建 `src/Assets/Tests/EditMode/Fixtures/` 下的紫府与金丹非生产 fixture CSV（及 `.meta`）、`src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs` 与本任务验证记录；不得修改生产 CSV 或 asset。
 - 交付：至少一组覆盖一府一位、三府三位、五府三位的有效 fixture，以及重复实例、越权位格、第二丹相、非法主辅关系和缺失账本所有者的失败 fixture。
 - 禁止：样例不代表 51 项正式玩法档案、完整内容迁移、生产平衡或 UI；不得用虚构默认值使非法输入通过。
 - 验证：三个有效组合完整导入并保持唯一实例账本；每个非法样例以 `D-JD-SCHEMA-01B` 定义的稳定原因失败。
