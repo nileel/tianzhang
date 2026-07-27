@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-27：D-JD-SCHEMA-01A 已归档并锁定静态契约；本卡可只实现金丹静态数据对象、整表导入、数据链检查和直接 fixture，不生产正式内容或数值。",
+  "stateReason": "2026-07-27：已完成金丹静态数据对象、整表预校验、fixture 隔离和数据链检查；生产表保持仅表头，缺失外部权威目录的生产引用失败关闭。D-JD-SAMPLE-01 的前置已解除。",
   "expectedPaths": [
     "src/Assets/DataConfig/JindanStaticStates.csv",
     "src/Assets/DataConfig/JindanStaticStates.csv.meta",
@@ -76,3 +76,7 @@
 ## 停止条件
 
 - 实现需要改写 `D-JD-SCHEMA-01A` 静态语义、猜测默认值、保留旧字段兼容、引入第二丹枢／丹相、第四实位、共享可变账本或生产内容／数值；停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-27：新增 `JindanStaticStates.csv`、`JindanStaticStateData` 与 `DataConfigImporter` 的整表预校验和原子 asset 写入边界。直接 EditMode fixture 覆盖一府一位、三府三位、五府三位，以及 `JD_FPM_INPUT_NOT_FORMED`、`JD_MANSION_INPUT_INCOMPLETE`、`JD_UNKNOWN_STATIC_REFERENCE`、`JD_STABLE_POSITION_LIMIT`、`JD_CORE_NOT_UNIQUE`、`JD_DANXIANG_NOT_UNIQUE`、`JD_PRIMARY_CARRIER_DUPLICATE`、`JD_ABILITY_LEDGER_OWNERSHIP_INVALID`、`JD_CONFLICT_REFERENCE_INVALID` 和 `JD_LEGACY_OR_DISPLAY_FIELD`。生产 CSV 仅保留表头，未提供正式外部权威目录时非空生产行失败关闭；未创作道路、角色、数值、玩法或 UI。验证：Unity EditMode 204/204、`check-data-chain.ps1`、文本检查与 Git 差异检查。

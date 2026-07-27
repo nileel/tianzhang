@@ -15,9 +15,8 @@
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-SCHEMA-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01、C-FPD-EXPAND-01、N-FPD-GROWTH-01、N-FPD-MANSION-01、N-FPD-CULTIVATE-01、N-FPD-DANXIANG-01） | — | 将确认后的内容迁入 CSV/asset，并删除旧五段／道基品级字段的现行语义。 | — |
-| D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B、D-JD-SAMPLE-01 | 金丹数据父任务；静态契约已归档，等待导入失败关闭与样例完成。 | — |
-| D-JD-SCHEMA-01B | P1 | codex | 已排队 | — | 金丹数据导入与失败关闭 | 开发管理/任务卡/D-JD-SCHEMA-01B.txt |
-| D-JD-SAMPLE-01 | P1 | Codex | 阻塞 | D-JD-SCHEMA-01B | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
+| D-JD-SCHEMA-01 | P1 | Codex | 阻塞 | D-JD-SAMPLE-01 | 金丹数据父任务；静态契约与导入失败关闭已归档，等待样例完成。 | — |
+| D-JD-SAMPLE-01 | P1 | Codex | 待建卡（前置已解除） | — | 一府一位、三府三位、五府三位的最小有效样例与非法样例。 | — |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
@@ -31,25 +30,13 @@
 
 ### D-JD-SCHEMA-01 · 金丹数据父任务
 
-- 子任务：`D-JD-SCHEMA-01A` 锁定静态契约；`D-JD-SCHEMA-01B` 实现导入与失败关闭；`D-JD-SAMPLE-01` 建立可消费样例。
+- 子任务：`D-JD-SCHEMA-01A` 已锁定静态契约；`D-JD-SCHEMA-01B` 已归档导入与失败关闭；`D-JD-SAMPLE-01` 建立可消费样例。
 - 状态：父任务不直接进入队列；三个子任务均完成并归档后才关闭。
 - 禁止：不得把 51 项正式内容档案、生产平衡或 Unity 玩法实现并入本父任务。
 
-### D-JD-SCHEMA-01B · 金丹导入与失败关闭
-
-- 依赖：`D-JD-SCHEMA-01A` 已于 2026-07-27 完成并归档；进入队列前建立独立任务卡并实时展开实现路径。
-- 必读：`D-JD-SCHEMA-01A` 静态契约；现有数据模型、导入器、检查器和直接测试。
-- 预期路径：相关 CSV／asset、数据对象、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试；建卡时实时展开字面量路径。
-- 交付：实现数据对象、导入器、检查器、正反 fixture 和稳定错误原因。
-- 失败关闭：未知道路／效果／位格、同一实例重复结算、第二丹枢或第二丹相、超过三实位、缺少账本所有者、非法主辅引用与旧九品静默兼容。
-- 禁止：不生产 51 项正式内容档案，不填平衡值，不自动修复或截断非法输入。
-- 验证：相关 .NET／EditMode、`check-data-chain.ps1`、正反 fixture、文本检查和差异检查。
-- 完成条件：合法数据完整导入，所有非法 fixture 以稳定原因整表失败，随后解锁 `D-JD-SAMPLE-01`。
-- 停止条件：实现需要改变静态契约、补默认值、保留旧 schema fallback 或建立第二导入链。
-
 ### D-JD-SAMPLE-01 · 金丹最小有效与非法样例
 
-- 依赖：`D-JD-SCHEMA-01B` 完成并归档。
+- 依赖：`D-JD-SCHEMA-01B` 已于 2026-07-27 完成并归档；当前可按队列规则建卡。
 - 必读：`D-JD-SCHEMA-01A` 契约、`D-JD-SCHEMA-01B` 导入边界，以及金丹装配和全部紫府输入事实。
 - 预期路径：`D-JD-SCHEMA-01B` 建立的 fixture 目录、直接数据测试与本任务验证记录；建卡时展开实际路径。
 - 交付：至少一组覆盖一府一位、三府三位、五府三位的有效 fixture，以及重复实例、越权位格、第二丹相、非法主辅关系和缺失账本所有者的失败 fixture。

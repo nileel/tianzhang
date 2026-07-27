@@ -51,6 +51,7 @@ namespace TianZhang.Editor
         {
             _lang = null; LoadLanguage();
             ImportFoundationPurpleMansionStates();
+            ImportJindanStaticStates();
             ImportGongFa();
             ImportSpells();
             ImportSkills();
@@ -113,6 +114,37 @@ namespace TianZhang.Editor
 
         private const string FoundationPurpleMansionSchemaId = "foundationPurpleMansionState";
         private const int FoundationPurpleMansionSchemaVersion = 1;
+
+        private static readonly string[] JindanStaticColumns =
+        {
+            "schemaId",
+            "schemaVersion",
+            "characterId",
+            "foundationPurpleMansionStateRef",
+            "mansionInputs",
+            "jindanCoreBinding",
+            "danxiang",
+            "stablePositionBindings",
+            "abilityLedgerBindings",
+            "fixtureId",
+            "expect",
+            "fixtureOnlyNumericProfile",
+        };
+
+        private static readonly string[] LegacyJindanStaticColumns =
+        {
+            "developedMansions",
+            "mansionBindings",
+            "realmStage",
+            "legacyDanJiType",
+            "displayName",
+            "localizedName",
+            "roadDisplayName",
+            "positionDisplayName",
+        };
+
+        private const string JindanStaticSchemaId = "jindanStaticState";
+        private const int JindanStaticSchemaVersion = 1;
 
         private static readonly EnvironmentPhenomenonChannel[] EnvironmentPhenomenonChannels =
         {
@@ -535,6 +567,649 @@ namespace TianZhang.Editor
         }
 
         [MenuItem("天章/导入道基紫府状态配置")]
+        [MenuItem("天章/导入金丹静态状态配置")]
+        public static void ImportJindanStaticStates()
+        {
+            const string path = "Assets/DataConfig/JindanStaticStates.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Jindan static state CSV was not found: {path}", path);
+
+            // No production authority table exists in this slice. A non-empty production table must
+            // therefore fail closed instead of treating fixture identifiers as live content.
+            var states = ParseJindanStaticStates(
+                File.ReadAllLines(path),
+                path,
+                new JindanStaticReferenceCatalog(),
+                allowFixtures: false);
+            try
+            {
+                foreach (var state in states)
+                {
+                    string assetPath =
+                        $"Assets/Data/JindanStaticStates/JindanStaticState_{SanitizeName(state.characterId)}.asset";
+                    var asset = AssetDatabase.LoadAssetAtPath<JindanStaticStateData>(assetPath);
+                    bool isNew = asset == null;
+                    if (isNew)
+                    {
+                        asset = ScriptableObject.CreateInstance<JindanStaticStateData>();
+                        EnsureDirectory(assetPath);
+                    }
+
+                    CopyJindanStaticState(state, asset);
+                    if (isNew)
+                        AssetDatabase.CreateAsset(asset, assetPath);
+                    else
+                        EditorUtility.SetDirty(asset);
+                }
+            }
+            finally
+            {
+                foreach (var state in states)
+                    UnityEngine.Object.DestroyImmediate(state);
+            }
+        }
+
+        /// <summary>
+        /// Parses and validates the complete table before an import can create or update an asset.
+        /// The catalog is an external authority boundary: production callers must supply real
+        /// authorities, while EditMode fixtures may use an explicit in-memory catalog.
+        /// </summary>
+        public static JindanStaticStateData[] ParseJindanStaticStates(
+            string[] lines,
+            string sourceName,
+            JindanStaticReferenceCatalog referenceCatalog = null,
+            bool allowFixtures = true)
+        {
+            if (lines == null)
+                throw JindanError("JD_TABLE_INVALID", sourceName, "has no rows.");
+
+            int headerLineIndex = FindHeaderIndex(lines);
+            if (headerLineIndex < 0)
+                throw JindanError("JD_TABLE_INVALID", sourceName, "has no header row.");
+
+            var headers = FindHeader(lines);
+            RequireJindanStaticColumns(headers, sourceName);
+            var states = new List<JindanStaticStateData>();
+            var characterIds = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                for (int index = headerLineIndex + 1; index < lines.Length; index++)
+                {
+                    string line = lines[index];
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                        continue;
+
+                    var columns = ParseCSV(line);
+                    if (columns.Length != headers.Length)
+                    {
+                        throw JindanError(
+                            "JD_TABLE_INVALID",
+                            $"{sourceName} row {index + 1}",
+                            $"has {columns.Length} columns; expected {headers.Length}.");
+                    }
+
+                    var state = ParseJindanStaticStateRow(
+                        headers,
+                        columns,
+                        $"{sourceName} row {index + 1}",
+                        referenceCatalog,
+                        allowFixtures);
+                    if (!characterIds.Add(state.characterId))
+                    {
+                        UnityEngine.Object.DestroyImmediate(state);
+                        throw JindanError("JD_DUPLICATE_CHARACTER_ID", sourceName, $"repeats characterId '{state.characterId}'.");
+                    }
+
+                    states.Add(state);
+                }
+
+                return states.ToArray();
+            }
+            catch
+            {
+                foreach (var state in states)
+                    UnityEngine.Object.DestroyImmediate(state);
+                throw;
+            }
+        }
+
+        private static JindanStaticStateData ParseJindanStaticStateRow(
+            string[] headers,
+            string[] columns,
+            string sourceName,
+            JindanStaticReferenceCatalog referenceCatalog,
+            bool allowFixtures)
+        {
+            string fixtureId = GetJindanColumnValue(headers, columns, "fixtureId");
+            string expectation = GetJindanColumnValue(headers, columns, "expect");
+            string fixtureNumericProfile = GetJindanColumnValue(headers, columns, "fixtureOnlyNumericProfile");
+            bool hasFixtureData = !IsNone(fixtureId) || !IsNone(expectation) || !IsNone(fixtureNumericProfile);
+            if (!allowFixtures && hasFixtureData)
+                throw JindanError("JD_FIXTURE_IN_PRODUCTION", sourceName, "contains fixture-only fields.");
+            if (hasFixtureData)
+            {
+                RequireJindanReference(fixtureId, sourceName, "fixtureId", "JD_FIXTURE_INVALID");
+                if (expectation != "ACCEPT" && expectation != "REJECT")
+                    throw JindanError("JD_FIXTURE_INVALID", sourceName, "expect must be ACCEPT or REJECT.");
+                RequireJindanReference(fixtureNumericProfile, sourceName, "fixtureOnlyNumericProfile", "JD_FIXTURE_INVALID");
+            }
+
+            string schemaId = GetRequiredJindanColumnValue(headers, columns, "schemaId", sourceName);
+            int schemaVersion = ParseJindanInteger(
+                GetRequiredJindanColumnValue(headers, columns, "schemaVersion", sourceName),
+                sourceName,
+                "schemaVersion");
+            if (schemaId != JindanStaticSchemaId || schemaVersion != JindanStaticSchemaVersion)
+            {
+                throw JindanError(
+                    "JD_UNKNOWN_SCHEMA",
+                    sourceName,
+                    $"requires {JindanStaticSchemaId} v{JindanStaticSchemaVersion}.");
+            }
+
+            var state = ScriptableObject.CreateInstance<JindanStaticStateData>();
+            try
+            {
+                state.schemaId = schemaId;
+                state.schemaVersion = schemaVersion;
+                state.characterId = GetRequiredJindanColumnValue(headers, columns, "characterId", sourceName);
+                state.foundationPurpleMansionStateRef = GetRequiredJindanColumnValue(
+                    headers,
+                    columns,
+                    "foundationPurpleMansionStateRef",
+                    sourceName);
+                RequireJindanReference(state.characterId, sourceName, "characterId", "JD_UNKNOWN_STATIC_REFERENCE");
+                RequireJindanReference(
+                    state.foundationPurpleMansionStateRef,
+                    sourceName,
+                    "foundationPurpleMansionStateRef",
+                    "JD_UNKNOWN_STATIC_REFERENCE");
+                state.mansionInputs = ParseJindanMansionInputs(
+                    GetRequiredJindanColumnValue(headers, columns, "mansionInputs", sourceName),
+                    sourceName);
+                state.jindanCoreBinding = ParseJindanCoreBinding(
+                    GetRequiredJindanColumnValue(headers, columns, "jindanCoreBinding", sourceName),
+                    sourceName);
+                state.danxiang = ParseJindanDanxiang(
+                    GetRequiredJindanColumnValue(headers, columns, "danxiang", sourceName),
+                    sourceName);
+                state.stablePositionBindings = ParseJindanStablePositionBindings(
+                    GetRequiredJindanColumnValue(headers, columns, "stablePositionBindings", sourceName),
+                    sourceName);
+                state.abilityLedgerBindings = ParseJindanAbilityLedgerBindings(
+                    GetRequiredJindanColumnValue(headers, columns, "abilityLedgerBindings", sourceName),
+                    sourceName);
+
+                ValidateJindanStaticState(state, referenceCatalog, sourceName);
+                return state;
+            }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(state);
+                throw;
+            }
+        }
+
+        private static JindanMansionInput[] ParseJindanMansionInputs(string raw, string sourceName)
+        {
+            var inputs = new List<JindanMansionInput>();
+            foreach (string item in SplitJindanList(raw, '|', sourceName, "mansionInputs", "JD_MANSION_INPUT_INCOMPLETE"))
+            {
+                string[] parts = item.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 2 && parts.Length != 8)
+                    throw JindanError("JD_MANSION_INPUT_INCOMPLETE", sourceName, "has an invalid mansion input record.");
+
+                var input = new JindanMansionInput
+                {
+                    mansionKind = ParseJindanMansionKind(parts[0], sourceName),
+                    state = ParseJindanMansionState(parts[1], sourceName),
+                };
+                if (input.state == PurpleMansionBuildState.Complete)
+                {
+                    if (parts.Length != 8)
+                        throw JindanError("JD_MANSION_INPUT_INCOMPLETE", sourceName, "a complete mansion input lacks its frozen fields.");
+                    input.mansionInstanceId = parts[2];
+                    input.mansionBodyEffectBindingId = parts[3];
+                    input.guardianAbilityInstanceId = parts[4];
+                    input.sourceSpellId = parts[5];
+                    input.upgradePlanId = parts[6];
+                    input.sourceSpellDisposition = parts[7];
+                    RequireJindanReference(input.mansionInstanceId, sourceName, "mansionInstanceId", "JD_UNKNOWN_STATIC_REFERENCE");
+                    RequireJindanReference(input.mansionBodyEffectBindingId, sourceName, "mansionBodyEffectBindingId", "JD_UNKNOWN_STATIC_REFERENCE");
+                    RequireJindanReference(input.guardianAbilityInstanceId, sourceName, "guardianAbilityInstanceId", "JD_UNKNOWN_STATIC_REFERENCE");
+                    RequireJindanReference(input.sourceSpellId, sourceName, "sourceSpellId", "JD_UNKNOWN_STATIC_REFERENCE");
+                    RequireJindanReference(input.upgradePlanId, sourceName, "upgradePlanId", "JD_UNKNOWN_STATIC_REFERENCE");
+                    if (input.sourceSpellDisposition != "RETAIN" && input.sourceSpellDisposition != "REPLACE" && input.sourceSpellDisposition != "INTERNALIZE")
+                        throw JindanError("JD_FPM_INPUT_NOT_FORMED", sourceName, "has an invalid frozen source spell disposition.");
+                }
+                else if (parts.Length != 2 || input.state != PurpleMansionBuildState.NotBuilt)
+                {
+                    throw JindanError("JD_FPM_INPUT_NOT_FORMED", sourceName, "contains an unformed mansion input.");
+                }
+
+                inputs.Add(input);
+            }
+
+            return inputs.ToArray();
+        }
+
+        private static JindanCoreBindingData ParseJindanCoreBinding(string raw, string sourceName)
+        {
+            string[] parts = ParseSingleJindanRecord(raw, 5, sourceName, "jindanCoreBinding", "JD_CORE_NOT_UNIQUE");
+            var binding = new JindanCoreBindingData
+            {
+                jindanCoreBindingId = parts[0],
+                jindanInstanceId = parts[1],
+                boundDanshuCoreId = parts[2],
+                formationTransactionId = parts[3],
+                formationVersion = ParsePositiveJindanInteger(parts[4], sourceName, "formationVersion", "JD_CORE_NOT_UNIQUE"),
+            };
+            RequireJindanReference(binding.jindanCoreBindingId, sourceName, "jindanCoreBindingId", "JD_CORE_NOT_UNIQUE");
+            RequireJindanReference(binding.jindanInstanceId, sourceName, "jindanInstanceId", "JD_CORE_NOT_UNIQUE");
+            RequireJindanReference(binding.boundDanshuCoreId, sourceName, "boundDanshuCoreId", "JD_CORE_NOT_UNIQUE");
+            RequireJindanReference(binding.formationTransactionId, sourceName, "formationTransactionId", "JD_CORE_NOT_UNIQUE");
+            return binding;
+        }
+
+        private static JindanDanxiangData ParseJindanDanxiang(string raw, string sourceName)
+        {
+            string[] parts = ParseSingleJindanRecord(raw, 5, sourceName, "danxiang", "JD_DANXIANG_NOT_UNIQUE");
+            var danxiang = new JindanDanxiangData
+            {
+                danxiangInstanceId = parts[0],
+                jindanInstanceId = parts[1],
+                danxiangNameKey = parts[2],
+                danxingDefinitionId = IsNone(parts[3]) ? null : parts[3],
+                danxiangPresentationProfileId = parts[4],
+            };
+            RequireJindanReference(danxiang.danxiangInstanceId, sourceName, "danxiangInstanceId", "JD_DANXIANG_NOT_UNIQUE");
+            RequireJindanReference(danxiang.jindanInstanceId, sourceName, "jindanInstanceId", "JD_DANXIANG_NOT_UNIQUE");
+            RequireJindanReference(danxiang.danxiangNameKey, sourceName, "danxiangNameKey", "JD_LEGACY_OR_DISPLAY_FIELD");
+            RequireJindanReference(danxiang.danxiangPresentationProfileId, sourceName, "danxiangPresentationProfileId", "JD_UNKNOWN_STATIC_REFERENCE");
+            return danxiang;
+        }
+
+        private static JindanStablePositionBindingData[] ParseJindanStablePositionBindings(string raw, string sourceName)
+        {
+            var bindings = new List<JindanStablePositionBindingData>();
+            foreach (string item in SplitJindanList(raw, '|', sourceName, "stablePositionBindings", "JD_STABLE_POSITION_LIMIT"))
+            {
+                string[] parts = item.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 9)
+                    throw JindanError("JD_STABLE_POSITION_LIMIT", sourceName, "has an invalid stable position record.");
+                var binding = new JindanStablePositionBindingData
+                {
+                    positionId = parts[0],
+                    expectedPositionVersion = ParseNonNegativeJindanInteger(parts[1], sourceName, "expectedPositionVersion", "JD_UNKNOWN_STATIC_REFERENCE"),
+                    roadId = parts[2],
+                    positionType = ParseJindanPositionType(parts[3], sourceName),
+                    proofProfileId = parts[4],
+                    equippedBaseEffectId = parts[5],
+                    compatibilityProfileId = parts[6],
+                    primaryCarrierAbilityInstanceId = parts[7],
+                    auxiliaryCarrierAbilityInstanceIds = IsNone(parts[8])
+                        ? Array.Empty<string>()
+                        : SplitJindanList(parts[8], '+', sourceName, "auxiliaryCarrierAbilityInstanceIds", "JD_CARRIER_REFERENCE_INVALID"),
+                };
+                foreach (string id in new[]
+                {
+                    binding.positionId,
+                    binding.roadId,
+                    binding.proofProfileId,
+                    binding.equippedBaseEffectId,
+                    binding.compatibilityProfileId,
+                    binding.primaryCarrierAbilityInstanceId,
+                }.Concat(binding.auxiliaryCarrierAbilityInstanceIds))
+                {
+                    RequireJindanReference(id, sourceName, "stablePositionBindings", "JD_UNKNOWN_STATIC_REFERENCE");
+                }
+                bindings.Add(binding);
+            }
+
+            return bindings.ToArray();
+        }
+
+        private static JindanAbilityLedgerBindingData[] ParseJindanAbilityLedgerBindings(string raw, string sourceName)
+        {
+            var bindings = new List<JindanAbilityLedgerBindingData>();
+            foreach (string item in SplitJindanList(raw, '|', sourceName, "abilityLedgerBindings", "JD_ABILITY_LEDGER_OWNERSHIP_INVALID"))
+            {
+                string[] parts = item.Split(new[] { '~' }, StringSplitOptions.None);
+                if (parts.Length != 7)
+                    throw JindanError("JD_ABILITY_LEDGER_OWNERSHIP_INVALID", sourceName, "has an invalid ability ledger record.");
+                var binding = new JindanAbilityLedgerBindingData
+                {
+                    abilityInstanceId = parts[0],
+                    resourceDebitLedgerRef = NormalizeJindanOptionalReference(parts[1]),
+                    cooldownLedgerRef = NormalizeJindanOptionalReference(parts[2]),
+                    chargeLedgerRef = NormalizeJindanOptionalReference(parts[3]),
+                    costLedgerRef = NormalizeJindanOptionalReference(parts[4]),
+                    conflictReserveLedgerRef = NormalizeJindanOptionalReference(parts[5]),
+                    conflictCostProfileId = NormalizeJindanOptionalReference(parts[6]),
+                };
+                RequireJindanReference(binding.abilityInstanceId, sourceName, "abilityInstanceId", "JD_ABILITY_LEDGER_OWNERSHIP_INVALID");
+                bindings.Add(binding);
+            }
+            return bindings.ToArray();
+        }
+
+        private static void ValidateJindanStaticState(
+            JindanStaticStateData state,
+            JindanStaticReferenceCatalog catalog,
+            string sourceName)
+        {
+            if (catalog == null || catalog.foundationPurpleMansionStates == null)
+                throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "has no declared static reference authority.");
+
+            var foundation = catalog.foundationPurpleMansionStates.SingleOrDefault(value =>
+                value != null && value.characterId == state.characterId &&
+                value.foundationState != null &&
+                value.foundationState.foundationInstanceId == state.foundationPurpleMansionStateRef);
+            if (foundation == null)
+                throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "does not resolve foundationPurpleMansionStateRef for the same character.");
+            if (foundation.jindanLock == null || foundation.jindanLock.status != JindanLockStatus.Formed ||
+                foundation.foundationState.phase != FoundationPhase.Phase4 || foundation.mansionStates == null ||
+                foundation.mansionStates.Any(mansion => mansion == null || mansion.state == PurpleMansionBuildState.Embryo) ||
+                !foundation.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete))
+            {
+                throw JindanError("JD_FPM_INPUT_NOT_FORMED", sourceName, "does not reference a formed phase-4 foundation/purple mansion state.");
+            }
+
+            ValidateJindanMansionInputs(state, foundation, sourceName);
+            ValidateJindanDanxiang(state, catalog, sourceName);
+            ValidateJindanStablePositions(state, foundation, catalog, sourceName);
+            ValidateJindanAbilityLedgers(state, foundation, catalog, sourceName);
+        }
+
+        private static void ValidateJindanMansionInputs(
+            JindanStaticStateData state,
+            FoundationPurpleMansionStateData foundation,
+            string sourceName)
+        {
+            if (state.mansionInputs == null || state.mansionInputs.Length != 5 ||
+                state.mansionInputs.Any(input => input == null) ||
+                state.mansionInputs.Select(input => input.mansionKind).Distinct().Count() != 5 ||
+                foundation.mansionStates.Length != 5)
+            {
+                throw JindanError("JD_MANSION_INPUT_INCOMPLETE", sourceName, "must contain each of the five mansion inputs exactly once.");
+            }
+
+            foreach (var input in state.mansionInputs)
+            {
+                var frozen = foundation.mansionStates.SingleOrDefault(mansion => mansion.mansionKind == input.mansionKind);
+                if (frozen == null || frozen.state != input.state || input.state == PurpleMansionBuildState.Embryo)
+                    throw JindanError("JD_FPM_INPUT_NOT_FORMED", sourceName, "does not mirror the formed foundation snapshot.");
+                if (input.state != PurpleMansionBuildState.Complete)
+                    continue;
+
+                if (input.mansionInstanceId != frozen.mansionInstanceId ||
+                    input.mansionBodyEffectBindingId != frozen.mansionBodyEffectBindingId ||
+                    input.guardianAbilityInstanceId != frozen.guardianAbilityInstanceId ||
+                    input.sourceSpellId != frozen.sourceSpellId ||
+                    input.upgradePlanId != frozen.upgradePlanId ||
+                    input.sourceSpellDisposition != frozen.sourceSpellDisposition)
+                {
+                    throw JindanError("JD_FPM_INPUT_NOT_FORMED", sourceName, "changes a frozen complete mansion input.");
+                }
+            }
+        }
+
+        private static void ValidateJindanDanxiang(
+            JindanStaticStateData state,
+            JindanStaticReferenceCatalog catalog,
+            string sourceName)
+        {
+            if (state.jindanCoreBinding == null || state.danxiang == null ||
+                state.jindanCoreBinding.jindanInstanceId != state.danxiang.jindanInstanceId)
+            {
+                throw JindanError("JD_DANXIANG_NOT_UNIQUE", sourceName, "must have one danxiang bound to the sole jindan instance.");
+            }
+            if (!catalog.ContainsDanxiangPresentationProfile(state.danxiang.danxiangPresentationProfileId) ||
+                (!string.IsNullOrWhiteSpace(state.danxiang.danxingDefinitionId) &&
+                 !catalog.ContainsDanxingDefinition(state.danxiang.danxingDefinitionId)))
+            {
+                throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "has an unresolved danxiang reference.");
+            }
+        }
+
+        private static void ValidateJindanStablePositions(
+            JindanStaticStateData state,
+            FoundationPurpleMansionStateData foundation,
+            JindanStaticReferenceCatalog catalog,
+            string sourceName)
+        {
+            if (state.stablePositionBindings == null || state.stablePositionBindings.Length < 1 ||
+                state.stablePositionBindings.Length > 3 || state.stablePositionBindings.Any(binding => binding == null))
+            {
+                throw JindanError("JD_STABLE_POSITION_LIMIT", sourceName, "must contain one to three stable positions.");
+            }
+
+            if (state.stablePositionBindings.Select(binding => binding.positionId).Distinct(StringComparer.Ordinal).Count() != state.stablePositionBindings.Length ||
+                state.stablePositionBindings.Select(binding => binding.positionType).Distinct().Count() != state.stablePositionBindings.Length)
+            {
+                throw JindanError("JD_STABLE_POSITION_LIMIT", sourceName, "duplicates a stable position or position type.");
+            }
+
+            var completeAbilityIds = new HashSet<string>(
+                foundation.mansionStates.Where(mansion => mansion.state == PurpleMansionBuildState.Complete)
+                    .Select(mansion => mansion.guardianAbilityInstanceId),
+                StringComparer.Ordinal);
+            var primaryCarrierIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var binding in state.stablePositionBindings)
+            {
+                if (!primaryCarrierIds.Add(binding.primaryCarrierAbilityInstanceId))
+                    throw JindanError("JD_PRIMARY_CARRIER_DUPLICATE", sourceName, "uses one primary carrier for multiple stable positions.");
+                if (!completeAbilityIds.Contains(binding.primaryCarrierAbilityInstanceId) ||
+                    binding.auxiliaryCarrierAbilityInstanceIds == null ||
+                    binding.auxiliaryCarrierAbilityInstanceIds.Contains(binding.primaryCarrierAbilityInstanceId, StringComparer.Ordinal) ||
+                    binding.auxiliaryCarrierAbilityInstanceIds.Distinct(StringComparer.Ordinal).Count() != binding.auxiliaryCarrierAbilityInstanceIds.Length ||
+                    binding.auxiliaryCarrierAbilityInstanceIds.Any(id => !completeAbilityIds.Contains(id)))
+                {
+                    throw JindanError("JD_CARRIER_REFERENCE_INVALID", sourceName, "has an invalid primary or auxiliary carrier reference.");
+                }
+
+                var position = catalog.positions == null ? null : catalog.positions.SingleOrDefault(value =>
+                    value != null && value.positionId == binding.positionId);
+                var road = catalog.roads == null ? null : catalog.roads.SingleOrDefault(value =>
+                    value != null && value.roadId == binding.roadId);
+                if (position == null || road == null || position.version != binding.expectedPositionVersion ||
+                    position.roadId != binding.roadId || position.positionType != binding.positionType ||
+                    position.proofProfileId != binding.proofProfileId || road.baseEffectCandidateIds == null ||
+                    !road.baseEffectCandidateIds.Contains(binding.equippedBaseEffectId, StringComparer.Ordinal))
+                {
+                    throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "has an unresolved road, effect, position, or proof profile reference.");
+                }
+
+                var compatibility = catalog.compatibilityProfiles == null ? null : catalog.compatibilityProfiles.SingleOrDefault(value =>
+                    value != null && value.compatibilityProfileId == binding.compatibilityProfileId &&
+                    value.roadId == binding.roadId && value.positionId == binding.positionId &&
+                    value.equippedBaseEffectId == binding.equippedBaseEffectId &&
+                    value.primaryCarrierAbilityInstanceId == binding.primaryCarrierAbilityInstanceId &&
+                    value.auxiliaryCarrierAbilityInstanceIds != null &&
+                    value.auxiliaryCarrierAbilityInstanceIds.SequenceEqual(binding.auxiliaryCarrierAbilityInstanceIds, StringComparer.Ordinal));
+                if (compatibility == null)
+                    throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "has no unique compatible carrier profile.");
+            }
+        }
+
+        private static void ValidateJindanAbilityLedgers(
+            JindanStaticStateData state,
+            FoundationPurpleMansionStateData foundation,
+            JindanStaticReferenceCatalog catalog,
+            string sourceName)
+        {
+            var completeAbilityIds = foundation.mansionStates
+                .Where(mansion => mansion.state == PurpleMansionBuildState.Complete)
+                .Select(mansion => mansion.guardianAbilityInstanceId)
+                .OrderBy(id => id, StringComparer.Ordinal)
+                .ToArray();
+            if (state.abilityLedgerBindings == null || state.abilityLedgerBindings.Any(binding => binding == null) ||
+                state.abilityLedgerBindings.Select(binding => binding.abilityInstanceId).Distinct(StringComparer.Ordinal).Count() != state.abilityLedgerBindings.Length ||
+                !state.abilityLedgerBindings.Select(binding => binding.abilityInstanceId).OrderBy(id => id, StringComparer.Ordinal)
+                    .SequenceEqual(completeAbilityIds, StringComparer.Ordinal))
+            {
+                throw JindanError("JD_ABILITY_LEDGER_OWNERSHIP_INVALID", sourceName, "must have exactly one ledger binding for every complete mansion guardian ability.");
+            }
+
+            var usedLedgerReferences = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var binding in state.abilityLedgerBindings)
+            {
+                var ledgerRefs = new[]
+                {
+                    binding.resourceDebitLedgerRef,
+                    binding.cooldownLedgerRef,
+                    binding.chargeLedgerRef,
+                    binding.costLedgerRef,
+                    binding.conflictReserveLedgerRef,
+                }.Where(id => !string.IsNullOrWhiteSpace(id));
+                foreach (string ledgerRef in ledgerRefs)
+                {
+                    if (!catalog.ContainsLedgerReference(ledgerRef) || !usedLedgerReferences.Add(ledgerRef))
+                    {
+                        throw JindanError("JD_ABILITY_LEDGER_OWNERSHIP_INVALID", sourceName, "shares or cannot resolve an ability-owned mutable ledger.");
+                    }
+                }
+
+                bool hasConflictReserve = !string.IsNullOrWhiteSpace(binding.conflictReserveLedgerRef);
+                bool hasConflictCost = !string.IsNullOrWhiteSpace(binding.conflictCostProfileId);
+                if (hasConflictReserve != hasConflictCost || !catalog.ContainsConflictCostProfile(binding.conflictCostProfileId))
+                {
+                    throw JindanError("JD_CONFLICT_REFERENCE_INVALID", sourceName, "has an invalid conflict reserve or cost profile reference.");
+                }
+            }
+        }
+
+        private static string[] ParseSingleJindanRecord(string raw, int expectedParts, string sourceName, string fieldName, string failureCode)
+        {
+            if (string.IsNullOrWhiteSpace(raw) || raw.IndexOf('|') >= 0)
+                throw JindanError(failureCode, sourceName, $"has multiple or empty '{fieldName}' records.");
+            string[] parts = raw.Split(new[] { '~' }, StringSplitOptions.None).Select(part => part.Trim()).ToArray();
+            if (parts.Length != expectedParts)
+                throw JindanError(failureCode, sourceName, $"has an invalid '{fieldName}' record.");
+            return parts;
+        }
+
+        private static string[] SplitJindanList(string raw, char separator, string sourceName, string fieldName, string failureCode)
+        {
+            if (IsNone(raw))
+                throw JindanError(failureCode, sourceName, $"has an empty '{fieldName}' list.");
+            string[] values = raw.Split(new[] { separator }, StringSplitOptions.None).Select(value => value.Trim()).ToArray();
+            if (values.Length == 0 || values.Any(string.IsNullOrWhiteSpace))
+                throw JindanError(failureCode, sourceName, $"has an invalid '{fieldName}' list.");
+            return values;
+        }
+
+        private static string NormalizeJindanOptionalReference(string raw)
+        {
+            return IsNone(raw) ? null : raw.Trim();
+        }
+
+        private static void RequireJindanStaticColumns(string[] headers, string sourceName)
+        {
+            if (headers.Any(header => LegacyJindanStaticColumns.Contains(header?.Trim(), StringComparer.OrdinalIgnoreCase)))
+                throw JindanError("JD_LEGACY_OR_DISPLAY_FIELD", sourceName, "contains a legacy or display-text schema column.");
+            RequireExactColumns(headers, sourceName, JindanStaticColumns);
+        }
+
+        private static string GetRequiredJindanColumnValue(string[] headers, string[] columns, string name, string sourceName)
+        {
+            string value = GetJindanColumnValue(headers, columns, name);
+            if (IsNone(value))
+                throw JindanError("JD_TABLE_INVALID", sourceName, $"has an empty required column '{name}'.");
+            return value;
+        }
+
+        private static string GetJindanColumnValue(string[] headers, string[] columns, string name)
+        {
+            int index = FindColumnIndex(headers, name);
+            return index >= 0 && index < columns.Length ? columns[index].Trim() : "";
+        }
+
+        private static PurpleMansionKind ParseJindanMansionKind(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "MING" => PurpleMansionKind.Ming,
+                "HUN" => PurpleMansionKind.Hun,
+                "SHI" => PurpleMansionKind.Shi,
+                "WU" => PurpleMansionKind.Wu,
+                "YUN" => PurpleMansionKind.Yun,
+                _ => throw JindanError("JD_MANSION_INPUT_INCOMPLETE", sourceName, $"has unknown mansion kind '{raw}'."),
+            };
+        }
+
+        private static PurpleMansionBuildState ParseJindanMansionState(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "NOT_BUILT" => PurpleMansionBuildState.NotBuilt,
+                "EMBRYO" => PurpleMansionBuildState.Embryo,
+                "COMPLETE" => PurpleMansionBuildState.Complete,
+                _ => throw JindanError("JD_FPM_INPUT_NOT_FORMED", sourceName, $"has unknown mansion state '{raw}'."),
+            };
+        }
+
+        private static JindanStaticPositionType ParseJindanPositionType(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "SOURCE" => JindanStaticPositionType.Source,
+                "TRANSFORMATION" => JindanStaticPositionType.Transformation,
+                "DOMAIN" => JindanStaticPositionType.Domain,
+                _ => throw JindanError("JD_STABLE_POSITION_LIMIT", sourceName, $"has unknown position type '{raw}'."),
+            };
+        }
+
+        private static int ParseJindanInteger(string raw, string sourceName, string fieldName)
+        {
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
+                throw JindanError("JD_TABLE_INVALID", sourceName, $"has invalid integer '{raw}' in '{fieldName}'.");
+            return value;
+        }
+
+        private static int ParsePositiveJindanInteger(string raw, string sourceName, string fieldName, string failureCode)
+        {
+            int value = ParseJindanInteger(raw, sourceName, fieldName);
+            if (value < 1)
+                throw JindanError(failureCode, sourceName, $"'{fieldName}' must be positive.");
+            return value;
+        }
+
+        private static int ParseNonNegativeJindanInteger(string raw, string sourceName, string fieldName, string failureCode)
+        {
+            int value = ParseJindanInteger(raw, sourceName, fieldName);
+            if (value < 0)
+                throw JindanError(failureCode, sourceName, $"'{fieldName}' must not be negative.");
+            return value;
+        }
+
+        private static void RequireJindanReference(string value, string sourceName, string fieldName, string failureCode)
+        {
+            if (IsNone(value) || value.Any(character =>
+                !char.IsLetterOrDigit(character) && character != '_' && character != '-' && character != '.'))
+            {
+                throw JindanError(failureCode, sourceName, $"has invalid reference '{value}' in '{fieldName}'.");
+            }
+        }
+
+        private static InvalidDataException JindanError(string code, string sourceName, string message)
+        {
+            return new InvalidDataException($"{code}: {sourceName} {message}");
+        }
+
+        private static void CopyJindanStaticState(JindanStaticStateData source, JindanStaticStateData destination)
+        {
+            destination.schemaId = source.schemaId;
+            destination.schemaVersion = source.schemaVersion;
+            destination.characterId = source.characterId;
+            destination.foundationPurpleMansionStateRef = source.foundationPurpleMansionStateRef;
+            destination.mansionInputs = source.mansionInputs;
+            destination.jindanCoreBinding = source.jindanCoreBinding;
+            destination.danxiang = source.danxiang;
+            destination.stablePositionBindings = source.stablePositionBindings;
+            destination.abilityLedgerBindings = source.abilityLedgerBindings;
+        }
+
         public static void ImportFoundationPurpleMansionStates()
         {
             const string path = "Assets/DataConfig/FoundationPurpleMansionStates.csv";

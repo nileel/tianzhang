@@ -22,6 +22,7 @@
 | `Enemies.csv` | 敌人模板（ID化） | `Data/Characters/Char_Enemy_*.asset` |
 | `EnvironmentProfiles.csv` | 环境档案纯数据契约 | `Data/EnvironmentProfiles/EnvironmentProfile_*.asset` |
 | `FoundationPurpleMansionStates.csv` | 道基、紫府与修炼根状态（当前仅 schema） | `Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_*.asset` |
+| `JindanStaticStates.csv` | 金丹静态根（当前仅 schema） | `Data/JindanStaticStates/JindanStaticState_*.asset` |
 
 ## CSV 格式规则
 
@@ -58,6 +59,24 @@
   导入拒绝它们，故测试字面量不能生成生产 asset。
 - `phaseBoundarySetId`、功法／术法／神通／行动和数值档案仍是外部权威 ID；本表只保存
   稳定引用，不从旧角色字段或运行时槽位推断任何状态。
+
+## JindanStaticStates.csv 契约
+
+本表只消费 `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md` 的
+`jindanStaticState` 根对象。当前没有生产角色行；`D-JD-SAMPLE-01` 才能授权实际样例。
+表头固定，未知列以及旧 `developedMansions`、`mansionBindings`、`realmStage`、
+`legacyDanJiType` 和显示文本字段均会失败关闭。
+
+- `schemaId` 固定为 `jindanStaticState`，`schemaVersion` 固定为 `1`。集合用 `|`，记录字段用
+  `~`，辅助承载列表用 `+`；无可选引用写 `none`。
+- `mansionInputs` 必须明确包含命、魂、识、悟、运五行；已建府完整镜像同角色、`FORMED` 的
+  `foundationPurpleMansionState` 冻结输入。稳定实位为一至三项 `SOURCE`／`TRANSFORMATION`／`DOMAIN`，
+  每项一个不重复主承载。
+- 道路、效果、位格、道证、兼容档案、丹相、账本和冲突费用只保存稳定引用；导入器在 asset
+  写入前要求它们全部由同一批次或声明的外部权威目录解析。当前没有正式权威目录，因此非空生产
+  行会失败关闭，不能把 fixture ID 当成生产内容。
+- `fixtureId`、`expect` 和 `fixtureOnlyNumericProfile` 仅供 EditMode 直接 fixture；生产导入拒绝它们，
+  因而 fixture 字面量不能生成生产 asset。
 
 ## 添加多语言
 

@@ -1,0 +1,2 @@
+# 金丹静态根；生产内容由 D-JD-SAMPLE-01 单独授权。当前只固定 schema 表头。
+schemaId,schemaVersion,characterId,foundationPurpleMansionStateRef,mansionInputs,jindanCoreBinding,danxiang,stablePositionBindings,abilityLedgerBindings,fixtureId,expect,fixtureOnlyNumericProfile
