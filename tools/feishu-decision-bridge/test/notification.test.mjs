@@ -15,6 +15,7 @@ import { sendNotification } from '../src/send-notification-core.mjs';
 import { createSendIntentStore } from '../src/send-intent-store.mjs';
 import { ProviderRejectedError } from '../src/send-runtime.mjs';
 import { main } from '../src/send-notification.mjs';
+import { main as summarizeMain } from '../src/notification-summary.mjs';
 
 const NOW = new Date('2026-07-27T08:00:00.000Z');
 const HMAC_KEY = Buffer.alloc(32, 0x41).toString('base64');
@@ -276,6 +277,41 @@ test('private audit stores only hashes, kind, result and time, then reports fail
     }),
     { total: 2, undelivered: 1, byKind: { daily_report: 1 } },
   );
+});
+
+test('notification summary accepts PowerShell round-trip UTC ISO windows', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-notification-summary-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const configPath = join(root, 'private.json');
+  await writeFile(configPath, JSON.stringify({
+    schemaVersion: 1,
+    appId: 'notification_test_app',
+    appSecret: 'notification-secret',
+    recipient: { type: 'email', value: 'operator@example.invalid' },
+    expectedTenantKey: null,
+    pairedOperatorOpenIdHash: null,
+    hmacKey: HMAC_KEY,
+    stateRoot: root,
+  }));
+  const output = captureOutput();
+  let request;
+  const code = await summarizeMain([
+    '--since',
+    '2026-07-27T07:59:00.0000000Z',
+    '--until',
+    '2026-07-27T08:01:00.9999999Z',
+  ], {
+    stdout: output.stream,
+    env: { FEISHU_DECISION_CONFIG_PATH: configPath },
+    summarize: async (value) => {
+      request = value;
+      return { total: 1, undelivered: 0, byKind: {} };
+    },
+  });
+  assert.equal(code, 0);
+  assert.deepEqual(JSON.parse(output.read()), { total: 1, undelivered: 0, byKind: {} });
+  assert.equal(request.since.toISOString(), '2026-07-27T07:59:00.000Z');
+  assert.equal(request.until.toISOString(), '2026-07-27T08:01:00.999Z');
 });
 
 test('notification CLI returns one sanitized result and never creates decision bindings', async (t) => {

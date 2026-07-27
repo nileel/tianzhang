@@ -7,6 +7,7 @@ import { parsePrivateConfig } from './config.mjs';
 import { summarizeNotificationOutcomes } from './notification-audit.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
+const UTC_ISO_PATTERN = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,7}))?Z$/u;
 
 async function readBoundedJson(path) {
   let handle;
@@ -24,12 +25,20 @@ async function readBoundedJson(path) {
 }
 
 function parseIso(value) {
+  if (typeof value !== 'string') {
+    throw new Error('Invalid input');
+  }
+  const match = UTC_ISO_PATTERN.exec(value);
+  if (match === null) {
+    throw new Error('Invalid input');
+  }
   const milliseconds = Date.parse(value);
   if (!Number.isFinite(milliseconds)) {
     throw new Error('Invalid input');
   }
   const date = new Date(milliseconds);
-  if (date.toISOString() !== value) {
+  const normalized = `${match[1]}.${(match[2] ?? '').padEnd(3, '0').slice(0, 3)}Z`;
+  if (date.toISOString() !== normalized) {
     throw new Error('Invalid input');
   }
   return date;
