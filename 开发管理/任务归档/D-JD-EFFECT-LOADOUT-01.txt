@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-27：已消费 DEC-20260727-JDEFFECT01 的 A 回复；仅授权将已知效果越出其道路候选的拒绝分类为 JD_EFFECT_LOADOUT_INVALID，完成后解除 D-JD-SAMPLE-01。",
+  "stateReason": "2026-07-27：已区分未知静态效果与已知但越出绑定道路候选的效果；后者稳定返回 JD_EFFECT_LOADOUT_INVALID，D-JD-SAMPLE-01 前置已解除并恢复 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/DataConfigImporter.cs",
     "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs",
@@ -65,3 +65,7 @@
 ## 停止条件
 
 - 现有 catalog 无法不扩展静态语义地区分未知效果与已知但越权的效果，或修正需要修改契约、生产数据、样例 fixture、数值、运行时或 UI；停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-27：`ValidateJindanStablePositions` 先以同一显式 reference catalog 的全部道路候选确认效果是否已知；未知效果仍返回 `JD_UNKNOWN_STATIC_REFERENCE`，已知但不属于绑定 `roadId` 候选的效果在兼容档案校验前返回 `JD_EFFECT_LOADOUT_INVALID`。新增直接 EditMode 反例和未知效果断言；`D-JD-SAMPLE-01` 前置已解除并恢复 ready。验证：`run-unity-editmode-tests.ps1`、`check-data-chain.ps1`、`check-review-text.ps1 -Paths 开发管理,src,docs` 与任务卡后置检查均通过。

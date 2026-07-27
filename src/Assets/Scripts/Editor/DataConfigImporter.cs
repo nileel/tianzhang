@@ -1293,13 +1293,19 @@ namespace TianZhang.Editor
                     value != null && value.positionId == binding.positionId);
                 var road = catalog.roads == null ? null : catalog.roads.SingleOrDefault(value =>
                     value != null && value.roadId == binding.roadId);
+                bool hasKnownEffect = catalog.roads != null && catalog.roads.Any(value =>
+                    value != null && value.baseEffectCandidateIds != null &&
+                    value.baseEffectCandidateIds.Contains(binding.equippedBaseEffectId, StringComparer.Ordinal));
                 if (position == null || road == null || position.version != binding.expectedPositionVersion ||
                     position.roadId != binding.roadId || position.positionType != binding.positionType ||
                     position.proofProfileId != binding.proofProfileId || road.baseEffectCandidateIds == null ||
-                    !road.baseEffectCandidateIds.Contains(binding.equippedBaseEffectId, StringComparer.Ordinal))
+                    !hasKnownEffect)
                 {
                     throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "has an unresolved road, effect, position, or proof profile reference.");
                 }
+
+                if (!road.baseEffectCandidateIds.Contains(binding.equippedBaseEffectId, StringComparer.Ordinal))
+                    throw JindanError("JD_EFFECT_LOADOUT_INVALID", sourceName, "equips an effect outside its road candidates.");
 
                 var compatibility = catalog.compatibilityProfiles == null ? null : catalog.compatibilityProfiles.SingleOrDefault(value =>
                     value != null && value.compatibilityProfileId == binding.compatibilityProfileId &&

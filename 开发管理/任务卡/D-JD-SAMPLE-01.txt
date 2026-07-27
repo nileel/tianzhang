@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": ["D-JD-EFFECT-LOADOUT-01"],
-  "stateReason": "2026-07-27：决定 DEC-20260727-JDEFFECT01 已选择 A；样例卡保持禁止修改导入器，等待 D-JD-EFFECT-LOADOUT-01 仅修正已知效果越出本道路候选时的稳定拒绝码分类后重新 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：D-JD-EFFECT-LOADOUT-01 已归档；已知效果越出本道路候选稳定返回 JD_EFFECT_LOADOUT_INVALID，样例卡前置解除并恢复 ready。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv.meta",

@@ -48,6 +48,8 @@ namespace TianZhang.Tests
         [TestCase("inputNotFormed", "JD_FPM_INPUT_NOT_FORMED")]
         [TestCase("missingMansion", "JD_MANSION_INPUT_INCOMPLETE")]
         [TestCase("unknownStatic", "JD_UNKNOWN_STATIC_REFERENCE")]
+        [TestCase("unknownEffect", "JD_UNKNOWN_STATIC_REFERENCE")]
+        [TestCase("effectOutsideRoadCandidates", "JD_EFFECT_LOADOUT_INVALID")]
         [TestCase("fourthPosition", "JD_STABLE_POSITION_LIMIT")]
         [TestCase("secondCore", "JD_CORE_NOT_UNIQUE")]
         [TestCase("secondDanxiang", "JD_DANXIANG_NOT_UNIQUE")]
@@ -60,7 +62,7 @@ namespace TianZhang.Tests
             int completedMansions = fixture == "duplicatePrimary" || fixture == "sharedLedger" ? 3 : 1;
             int stablePositions = fixture == "duplicatePrimary" ? 3 : 1;
             var values = BuildValues(completedMansions, stablePositions);
-            var catalog = BuildCatalog(completedMansions, stablePositions);
+            var catalog = BuildCatalog(completedMansions, fixture == "effectOutsideRoadCandidates" ? 2 : stablePositions);
             string header = Header;
 
             switch (fixture)
@@ -73,6 +75,12 @@ namespace TianZhang.Tests
                     break;
                 case "unknownStatic":
                     values["stablePositionBindings"] = values["stablePositionBindings"].Replace("road_source", "road_unknown");
+                    break;
+                case "unknownEffect":
+                    values["stablePositionBindings"] = values["stablePositionBindings"].Replace("effect_source", "effect_unknown");
+                    break;
+                case "effectOutsideRoadCandidates":
+                    values["stablePositionBindings"] = values["stablePositionBindings"].Replace("effect_source", "effect_transformation");
                     break;
                 case "fourthPosition":
                     values["stablePositionBindings"] += "|position_four~1~road_four~SOURCE~proof_four~effect_four~compat_four~guardian_ming~none";
