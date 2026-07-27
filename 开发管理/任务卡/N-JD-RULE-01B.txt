@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-JD-RULE-01B",
+  "title": "确定性冲突与 QTE／跳过",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-27：N-JD-RULE-01A 已归档，三实位、唯一丹枢／丹相与按 abilityInstanceId 的账本接口已可消费；本卡只实现确定性冲突及 QTE／跳过同结果结算。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/Program.cs",
+    "开发管理/金丹冲突与QTE一致性验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-JD-RULE-01B.txt",
+    "开发管理/任务归档/N-JD-RULE-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-JD-RULE-01B · 确定性冲突与 QTE／跳过
+
+## 来源与当前边界
+
+- `N-JD-RULE-01A` 已归档：`GoldenCoreAssembly` 只接受源、化、界三种稳定实位，锁定唯一丹枢／丹相，并通过 `GoldenCoreRuntimeLedger` 按 `abilityInstanceId` 保有独立资源、冷却与冲突储备。
+- 现有非生产 fixture 已提供可消费的 `conflictReserveLedgerRef` 与 `conflictCostProfileId` 成对输入；本卡只把已锁定规则用于候选过滤、确定性排序与同一结算。
+- 本卡完成后才解除 `N-JD-RULE-01C`；父任务 `N-JD-RULE-01` 仍等待其完成。
+
+## 必查范围
+
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt#一、每位格一项效果与切换事务`、`#三、跨道路静态兼容契约`、`#四、同阶冲突与可选领域对抗`。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt#三、源位、化位、界位`、`#四、金丹三阶段与真实位格`、`#五、镇府神通主承载、丹枢核心与唯一丹相`。
+- `开发管理/任务归档/N-JD-RULE-01A.txt` 的完成记录及 `src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv` 的表头、三组 `jd.valid.*` 行。
+- `simulations/BattleSim/GameData.cs::GoldenCoreAssembly.Create`、`GoldenCoreRuntimeLedger`；`simulations/BattleSim/Character.cs::Character.AssignGoldenCoreAssembly`、`CreateGoldenCoreRuntimeLedger`；`simulations/BattleSim/Combat.cs::Combat.Simulate`；`simulations/BattleSim/BattleSimSelfTests.cs::Run`、`RunGoldenCoreAssemblyNjdrule01A`；`simulations/BattleSim/Program.cs::Main`。
+
+## 实施范围
+
+- 先过滤不满足已锁定静态兼容、稳定实位、唯一账本或冲突储备条件的候选；非法候选不得进入排序。
+- 按已锁定字段建立可观察、无随机性、无浮点权重和无隐藏输入的同阶冲突排序；同一固定输入必须给出同一胜者、拒绝原因与账本变化。
+- 将 QTE 与跳过限制为同一已选候选的输入方式：两者必须复用同一合法性、预算扣除、冷却与结算路径。
+- 新增独立 `golden-core-conflict-n-jd-rule-01b` 自测和验证记录，覆盖重复运行、非法候选过滤、同输入的 QTE／跳过一致性及账本独立性。
+
+## 禁止项
+
+- 不修改 `D-JD-SAMPLE-01` fixture、Unity 数据契约、生产 CSV／asset、源化界实位资格、唯一丹枢／丹相或 `N-JD-RULE-01A` 的账本所有权。
+- 不使用随机胜者、浮点权重、QTE 独占奖励或隐藏输入；不把 QTE／跳过拆成两套结算。
+- 不提前实现跨阶挑战、实位载体死亡、席位占据、压阶、伤害表调整或 `N-JD-RULE-01C` 范围。
+
+## 验证
+
+- 先让 `golden-core-conflict-n-jd-rule-01b` 在缺少目标行为时失败，再运行 `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b` 通过。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths <本卡实际修改路径>` 与 `git diff --cached --check`。
+
+## 完成条件
+
+- 非法候选在排序前稳定拒绝；固定输入重复运行得到同一胜者、原因和账本变化。
+- 同一合法选择的 QTE 与跳过得到完全相同的资格、预算与结算结果，且不改变实位、唯一实例或账本语义。
+- 验证记录保存可复现输入、结果与命令；完成后归档本卡、解除 `N-JD-RULE-01C` 的依赖投影，父任务继续等待其最后子任务。
+
+## 停止条件
+
+- 冲突优先级、资格、成本或失败原因不能由已锁定规则与现有静态输入确定，或实现需要随机胜者、未定义权重、QTE 独占收益、改写三实位／账本契约时，停止并转为 `pending_decision`。
