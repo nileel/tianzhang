@@ -1,0 +1,37 @@
+# 金丹静态样例验证记录
+
+状态：✅ 已验证（D-JD-SAMPLE-01，2026-07-27）
+
+## 成对非生产 fixture
+
+| Fixture ID | 紫府输入 | 金丹预期 | 实际结果 |
+|---|---|---|---|
+| `jd.valid.one-mansion-one-seat` | 五府完整；仅命府已建并 FORMED | 一项源位、一个核心／丹相、一条实例账本 | ACCEPT |
+| `jd.valid.three-mansion-three-seats` | 五府完整；命／魂／识三府已建并 FORMED | 源／化／界三项实位、一个核心／丹相、三条实例账本 | ACCEPT |
+| `jd.valid.five-mansion-three-seats` | 五府完整；五府均已建并 FORMED | 三项实位、一个核心／丹相、五条实例账本；第四、第五府不生成实位 | ACCEPT |
+
+紫府源为 `src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv`；金丹源为 `src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv`。测试按同一 `fixtureId` 解析前者后建立显式测试 catalog，不把 fixture 引入生产 CSV 或 asset。
+
+## 稳定拒绝原因
+
+| Fixture ID | 预期及实际拒绝码 |
+|---|---|
+| `jd.invalid.input-not-formed` | `JD_FPM_INPUT_NOT_FORMED` |
+| `jd.invalid.missing-mansion-input` | `JD_MANSION_INPUT_INCOMPLETE` |
+| `jd.invalid.unknown-static-reference` | `JD_UNKNOWN_STATIC_REFERENCE` |
+| `jd.invalid.effect-outside-road-candidates` | `JD_EFFECT_LOADOUT_INVALID` |
+| `jd.invalid.fourth-stable-position` | `JD_STABLE_POSITION_LIMIT` |
+| `jd.invalid.second-core` | `JD_CORE_NOT_UNIQUE` |
+| `jd.invalid.second-danxiang` | `JD_DANXIANG_NOT_UNIQUE` |
+| `jd.invalid.duplicate-primary-carrier` | `JD_PRIMARY_CARRIER_DUPLICATE` |
+| `jd.invalid.illegal-carrier-reference` | `JD_CARRIER_REFERENCE_INVALID` |
+| `jd.invalid.shared-instance-ledger` | `JD_ABILITY_LEDGER_OWNERSHIP_INVALID` |
+| `jd.invalid.conflict-reference-foreign` | `JD_CONFLICT_REFERENCE_INVALID` |
+| `jd.invalid.legacy-or-display-string` | `JD_LEGACY_OR_DISPLAY_FIELD` |
+
+## 运行记录
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过；仅输出仓库既有的 `SpellData.damageMultiplier` 过时警告。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src,docs`：通过。
