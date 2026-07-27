@@ -214,6 +214,8 @@ class Character
             throw new InvalidOperationException("A protected golden-core death cannot receive a replacement assembly.");
         if (assembly == null)
             throw new ArgumentNullException(nameof(assembly));
+        if (GoldenCoreAssembly != null)
+            throw new InvalidOperationException("An existing golden-core assembly may only change through safe primary-carrier reforging.");
         ValidateAssemblyAbility(assembly, artAbilityInstanceId, nameof(artAbilityInstanceId));
         ValidateAssemblyAbility(assembly, divineAbilityInstanceId, nameof(divineAbilityInstanceId));
         GoldenCoreAssembly = assembly;
@@ -223,6 +225,42 @@ class Character
 
     internal GoldenCoreRuntimeLedger CreateGoldenCoreRuntimeLedger(int initialResource) =>
         GoldenCoreAssembly?.CreateRuntimeLedger(initialResource);
+
+    internal GoldenCoreReforgeResolution ReforgeGoldenCorePrimaryCarrier(
+        GoldenCoreRuntimeLedger runtimeLedger,
+        GoldenCoreSeatType positionType,
+        string replacementAbilityInstanceId,
+        IReadOnlyList<string> auxiliaryCarrierAbilityInstanceIds,
+        string verifiedCompatibilityProfileId,
+        bool isSafeState)
+    {
+        if (!isSafeState)
+            return GoldenCoreReforgeResolution.Rejected("JD_REFORGE_SAFE_STATE_REQUIRED");
+        if (IsDead)
+            return GoldenCoreReforgeResolution.Rejected("JD_REFORGE_PROTECTED_DEATH");
+
+        var assembly = GoldenCoreAssembly;
+        if (assembly == null)
+            return GoldenCoreReforgeResolution.Rejected("JD_REFORGE_ASSEMBLY_UNAVAILABLE");
+        if (runtimeLedger == null || !ReferenceEquals(runtimeLedger.Assembly, assembly))
+            return GoldenCoreReforgeResolution.Rejected("JD_REFORGE_RUNTIME_LEDGER_INVALID");
+
+        try
+        {
+            var reforgedAssembly = assembly.ReforgePrimaryCarrier(
+                positionType,
+                replacementAbilityInstanceId,
+                auxiliaryCarrierAbilityInstanceIds,
+                verifiedCompatibilityProfileId);
+            runtimeLedger.RebindAssembly(reforgedAssembly);
+            GoldenCoreAssembly = reforgedAssembly;
+            return GoldenCoreReforgeResolution.Applied(positionType, replacementAbilityInstanceId);
+        }
+        catch (GoldenCoreAssemblyException ex)
+        {
+            return GoldenCoreReforgeResolution.Rejected(ex.Code);
+        }
+    }
 
     internal GoldenCoreConflictCandidatePreparation PrepareGoldenCoreConflictCandidate(
         GoldenCoreRuntimeLedger runtimeLedger,

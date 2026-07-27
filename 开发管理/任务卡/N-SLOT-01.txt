@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-FPD-DANXIANG-01"
-  ],
-  "stateReason": "五府府体预算已于 2026-07-25 完成；等待 N-FPD-DANXIANG-01 锁定丹相主辅预算。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-FPD-DANXIANG-01 已归档，1～5 府 × 1～3 位主辅预算、唯一实例账本与无额外槽位边界均已锁定；进入 ready 队列。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "docs/角色养成/术法槽位设计.txt",

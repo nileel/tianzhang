@@ -749,6 +749,42 @@ public sealed record GoldenCoreAssemblyInput(
     IReadOnlyList<string> CompleteMansionAbilityInstanceIds,
     IReadOnlyList<string> DanxiangAbilityInstanceIds);
 
+/// <summary>
+/// 丹相内单一稳定位格的主、辅预算。辅助连接共享一份上限，不因引用数量复制效果实例。
+/// </summary>
+public sealed record GoldenCoreSeatCarrierBudget(
+    GoldenCoreSeatType PositionType,
+    int AuxiliaryInputReferenceCount,
+    double PrimaryCarrierBudgetUnits,
+    double AuxiliaryInputBudgetUnits);
+
+/// <summary>
+/// 唯一丹相的审计预算；只描述已存在实例的组织边界，不创建普通效果槽或第二份运行账本。
+/// </summary>
+public sealed record GoldenCoreDanxiangBudget(
+    int CompleteMansionInputCount,
+    double CompleteMansionInputBudgetUnits,
+    int StableSeatCount,
+    IReadOnlyList<GoldenCoreSeatCarrierBudget> SeatBudgets,
+    int PrimaryCarrierManifestationLimit,
+    int AuxiliaryManifestationLimit,
+    int AddedOrdinaryEffectSlots,
+    int UniqueCoreCount,
+    int UniqueDanxiangCount);
+
+public sealed record GoldenCoreReforgeResolution(
+    bool IsApplied,
+    string Reason,
+    GoldenCoreSeatType? PositionType,
+    string PrimaryCarrierAbilityInstanceId)
+{
+    public static GoldenCoreReforgeResolution Applied(GoldenCoreSeatType positionType, string primaryCarrierAbilityInstanceId) =>
+        new(true, "JD_REFORGE_APPLIED", positionType, primaryCarrierAbilityInstanceId);
+
+    public static GoldenCoreReforgeResolution Rejected(string reason) =>
+        new(false, reason, null, "");
+}
+
 public sealed class GoldenCoreAssemblyException : InvalidOperationException
 {
     public GoldenCoreAssemblyException(string code, string message)
@@ -770,20 +806,45 @@ public sealed class GoldenCoreAssembly
         JindanDanxiangBinding danxiang,
         IReadOnlyDictionary<GoldenCoreSeatType, GoldenCoreSeatBinding> stableSeats,
         IReadOnlyDictionary<string, GoldenCoreAbilityLedgerBinding> abilityLedgers,
+        IReadOnlyList<string> completeMansionAbilityInstanceIds,
         IReadOnlyList<string> danxiangAbilityInstanceIds)
     {
         CoreBinding = coreBinding;
         Danxiang = danxiang;
         StableSeats = stableSeats;
         AbilityLedgers = abilityLedgers;
+        CompleteMansionAbilityInstanceIds = completeMansionAbilityInstanceIds;
         DanxiangAbilityInstanceIds = danxiangAbilityInstanceIds;
     }
+
+    public const double CompleteMansionInputBudgetUnitsPerMansion = 1.0;
+    public const double PrimaryCarrierBudgetUnitsPerStableSeat = 1.0;
+    public const double AuxiliaryInputBudgetCapPerStableSeat = 0.25;
 
     public JindanCoreBinding CoreBinding { get; }
     public JindanDanxiangBinding Danxiang { get; }
     public IReadOnlyDictionary<GoldenCoreSeatType, GoldenCoreSeatBinding> StableSeats { get; }
     public IReadOnlyDictionary<string, GoldenCoreAbilityLedgerBinding> AbilityLedgers { get; }
+    public IReadOnlyList<string> CompleteMansionAbilityInstanceIds { get; }
     public IReadOnlyList<string> DanxiangAbilityInstanceIds { get; }
+
+    public GoldenCoreDanxiangBudget DanxiangBudget => new(
+        CompleteMansionAbilityInstanceIds.Count,
+        CompleteMansionAbilityInstanceIds.Count * CompleteMansionInputBudgetUnitsPerMansion,
+        StableSeats.Count,
+        StableSeats.Values
+            .OrderBy(seat => seat.PositionType)
+            .Select(seat => new GoldenCoreSeatCarrierBudget(
+                seat.PositionType,
+                seat.AuxiliaryCarrierAbilityInstanceIds.Count,
+                PrimaryCarrierBudgetUnitsPerStableSeat,
+                seat.AuxiliaryCarrierAbilityInstanceIds.Count == 0 ? 0.0 : AuxiliaryInputBudgetCapPerStableSeat))
+            .ToArray(),
+        StableSeats.Count,
+        AuxiliaryManifestationLimit: 0,
+        AddedOrdinaryEffectSlots: 0,
+        UniqueCoreCount: 1,
+        UniqueDanxiangCount: 1);
 
     public static GoldenCoreAssembly Create(GoldenCoreAssemblyInput input)
     {
@@ -836,7 +897,7 @@ public sealed class GoldenCoreAssembly
         var primaryCarriers = new HashSet<string>(StringComparer.Ordinal);
         foreach (var seat in input.StableSeats)
         {
-            if (seat == null || !seats.TryAdd(seat.PositionType, seat))
+            if (seat == null || seats.ContainsKey(seat.PositionType))
                 throw new GoldenCoreAssemblyException("JD_STABLE_POSITION_LIMIT", "each source, transformation, or domain seat may occur once.");
             RequireReference(seat.PositionId, "JD_UNKNOWN_STATIC_REFERENCE", "position id is required.");
             RequireReference(seat.RoadId, "JD_UNKNOWN_STATIC_REFERENCE", "road id is required.");
@@ -850,18 +911,85 @@ public sealed class GoldenCoreAssembly
                 seat.AuxiliaryCarrierAbilityInstanceIds ?? Array.Empty<string>(),
                 "JD_CARRIER_REFERENCE_INVALID",
                 "auxiliary carrier");
-            if (auxiliaries.Contains(seat.PrimaryCarrierAbilityInstanceId, StringComparer.Ordinal) || auxiliaries.Any(id => !ledgers.ContainsKey(id)))
+            if (auxiliaries.Count > mansionAbilities.Count - 1 ||
+                auxiliaries.Contains(seat.PrimaryCarrierAbilityInstanceId, StringComparer.Ordinal) ||
+                auxiliaries.Any(id => !ledgers.ContainsKey(id)))
                 throw new GoldenCoreAssemblyException("JD_CARRIER_REFERENCE_INVALID", "auxiliary carriers must reference other owned ability instances.");
+
+            seats.Add(seat.PositionType, seat with
+            {
+                AuxiliaryCarrierAbilityInstanceIds = auxiliaries.OrderBy(id => id, StringComparer.Ordinal).ToArray(),
+            });
         }
 
-        var danxiangReferences = RequireDistinctReferences(
+        var declaredDanxiangReferences = RequireDistinctReferences(
             input.DanxiangAbilityInstanceIds,
             "JD_CARRIER_REFERENCE_INVALID",
             "danxiang ability");
-        if (danxiangReferences.Any(id => !ledgers.ContainsKey(id)))
+        if (declaredDanxiangReferences.Any(id => !ledgers.ContainsKey(id)))
             throw new GoldenCoreAssemblyException("JD_CARRIER_REFERENCE_INVALID", "danxiang may only reference owned ability instances.");
 
-        return new GoldenCoreAssembly(input.CoreBinding, input.Danxiang, seats, ledgers, danxiangReferences.ToArray());
+        // 丹相是唯一聚合体：显式引用只能补充展示/连接意图，不能排除任何完整紫府输入。
+        var allDanxiangReferences = new HashSet<string>(mansionAbilities, StringComparer.Ordinal);
+        allDanxiangReferences.UnionWith(declaredDanxiangReferences);
+        return new GoldenCoreAssembly(
+            input.CoreBinding,
+            input.Danxiang,
+            seats,
+            ledgers,
+            mansionAbilities.OrderBy(id => id, StringComparer.Ordinal).ToArray(),
+            allDanxiangReferences.OrderBy(id => id, StringComparer.Ordinal).ToArray());
+    }
+
+    internal GoldenCoreAssembly ReforgePrimaryCarrier(
+        GoldenCoreSeatType positionType,
+        string replacementAbilityInstanceId,
+        IReadOnlyList<string> auxiliaryCarrierAbilityInstanceIds,
+        string verifiedCompatibilityProfileId)
+    {
+        if (!StableSeats.TryGetValue(positionType, out var targetSeat))
+            throw new GoldenCoreAssemblyException("JD_REFORGE_POSITION_INVALID", "target stable seat is not occupied.");
+        RequireReference(replacementAbilityInstanceId, "JD_REFORGE_CARRIER_INVALID", "replacement primary carrier is required.");
+        RequireReference(verifiedCompatibilityProfileId, "JD_REFORGE_COMPATIBILITY_INVALID", "verified compatibility profile is required.");
+        if (!string.Equals(targetSeat.CompatibilityProfileId, verifiedCompatibilityProfileId, StringComparison.Ordinal))
+            throw new GoldenCoreAssemblyException("JD_REFORGE_COMPATIBILITY_INVALID", "replacement must use the target seat's verified compatibility profile.");
+        if (!AbilityLedgers.ContainsKey(replacementAbilityInstanceId))
+            throw new GoldenCoreAssemblyException("JD_REFORGE_CARRIER_INVALID", "replacement primary carrier must be an owned complete-mansion ability.");
+        if (StableSeats.Values.Any(seat => seat.PositionType != positionType &&
+                                           string.Equals(seat.PrimaryCarrierAbilityInstanceId, replacementAbilityInstanceId, StringComparison.Ordinal)))
+        {
+            throw new GoldenCoreAssemblyException("JD_REFORGE_PRIMARY_DUPLICATE", "replacement primary carrier is already bound to another stable seat.");
+        }
+
+        var replacementAuxiliaries = RequireDistinctReferences(
+            auxiliaryCarrierAbilityInstanceIds ?? Array.Empty<string>(),
+            "JD_REFORGE_CARRIER_INVALID",
+            "reforged auxiliary carrier");
+        if (replacementAuxiliaries.Count > CompleteMansionAbilityInstanceIds.Count - 1 ||
+            replacementAuxiliaries.Contains(replacementAbilityInstanceId, StringComparer.Ordinal) ||
+            replacementAuxiliaries.Any(id => !AbilityLedgers.ContainsKey(id)))
+        {
+            throw new GoldenCoreAssemblyException("JD_REFORGE_CARRIER_INVALID", "reforged auxiliaries must be distinct owned abilities other than the replacement primary carrier.");
+        }
+
+        var reforgedSeats = StableSeats.Values
+            .Select(seat => seat.PositionType == positionType
+                ? seat with
+                {
+                    PrimaryCarrierAbilityInstanceId = replacementAbilityInstanceId,
+                    AuxiliaryCarrierAbilityInstanceIds = replacementAuxiliaries.OrderBy(id => id, StringComparer.Ordinal).ToArray(),
+                }
+                : seat)
+            .OrderBy(seat => seat.PositionType)
+            .ToArray();
+
+        return Create(new GoldenCoreAssemblyInput(
+            CoreBinding,
+            Danxiang,
+            reforgedSeats,
+            AbilityLedgers.Values.OrderBy(binding => binding.AbilityInstanceId, StringComparer.Ordinal).ToArray(),
+            CompleteMansionAbilityInstanceIds,
+            DanxiangAbilityInstanceIds));
     }
 
     public GoldenCoreRuntimeLedger CreateRuntimeLedger(int initialResource)
@@ -914,7 +1042,7 @@ public sealed class GoldenCoreRuntimeLedger
             StringComparer.Ordinal);
     }
 
-    internal GoldenCoreAssembly Assembly { get; }
+    internal GoldenCoreAssembly Assembly { get; private set; }
 
     public GoldenCoreAbilityRuntimeState Get(string abilityInstanceId) =>
         states.TryGetValue(abilityInstanceId, out var state)
@@ -944,6 +1072,17 @@ public sealed class GoldenCoreRuntimeLedger
 
         states[carrierAbilityInstanceId].Release();
         return dispositions;
+    }
+
+    internal void RebindAssembly(GoldenCoreAssembly assembly)
+    {
+        if (assembly == null ||
+            !states.Keys.OrderBy(id => id, StringComparer.Ordinal)
+                .SequenceEqual(assembly.AbilityLedgers.Keys.OrderBy(id => id, StringComparer.Ordinal), StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException("A safe reforge must preserve the owned ability-instance ledger set.");
+        }
+        Assembly = assembly;
     }
 }
 

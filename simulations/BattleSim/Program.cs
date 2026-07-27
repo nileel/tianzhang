@@ -12,6 +12,7 @@ class Program
     record MansionBodyBudget(string Mansion, string ParameterRange, string TargetMetric, double BudgetUnits);
     record MansionBudgetFixture(string Name, Dictionary<string, int> Innate, string[] Mansions, double SoftAffinityCostMultiplier);
     record MansionBudgetAuditResult(int PalaceCount, double BudgetUnits, int AddedArtSlots, int AddedDivineArtSlots, int AddedStableSeats, int AddedDanXiang);
+    record DanxiangBudgetFixture(int MansionCount, int StableSeatCount);
     record FoundationGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 神识);
     record DaoFoundationCoreCurve(string ParameterId, double StartingNormalizedMagnitude, double MaximumNormalizedMagnitude, double Exponent);
     enum CultivationAuditAction { MortalToQi, FoundationTrial, FoundationGrowth, MansionEmbryo, MansionOpening, Recovery }
@@ -155,6 +156,8 @@ class Program
         RunFoundationGrowthAudit();
         Console.WriteLine();
         RunMansionBodyBudgetAudit();
+        Console.WriteLine();
+        RunDanxiangInputBudgetAudit();
         Console.WriteLine();
         RunCultivationCycleAudit();
         Console.WriteLine();
@@ -1324,6 +1327,171 @@ class Program
     {
         if (!condition)
             throw new InvalidOperationException($"府体预算审计失败：{message}");
+    }
+
+    static void RunDanxiangInputBudgetAudit()
+    {
+        Console.WriteLine("【全部紫府输入与主辅预算审计（N-FPD-DANXIANG-01）】");
+        Console.WriteLine($"  固定口径：完整紫府输入={GoldenCoreAssembly.CompleteMansionInputBudgetUnitsPerMansion:F2}/府；主承载={GoldenCoreAssembly.PrimaryCarrierBudgetUnitsPerStableSeat:F2}/位；每位辅助连接池上限={GoldenCoreAssembly.AuxiliaryInputBudgetCapPerStableSeat:F2}。辅助只组织既有实例，不新增普通效果槽或运行账本。");
+        Console.WriteLine("  1～5 府 × 1～3 稳定位格：");
+
+        for (int mansionCount = 1; mansionCount <= 5; mansionCount++)
+        {
+            for (int stableSeatCount = 1; stableSeatCount <= 3; stableSeatCount++)
+            {
+                var fixture = new DanxiangBudgetFixture(mansionCount, stableSeatCount);
+                if (stableSeatCount > mansionCount)
+                {
+                    AssertDanxiangAssemblyRejected(fixture, "JD_PRIMARY_CARRIER_DUPLICATE");
+                    Console.WriteLine($"    {mansionCount}府×{stableSeatCount}位：不成立（缺少第 {stableSeatCount} 项独立主承载）；不生成临时稳定席位。");
+                    continue;
+                }
+
+                var assembly = GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(fixture));
+                var budget = assembly.DanxiangBudget;
+                int expectedAuxiliaryReferences = stableSeatCount * (mansionCount - 1);
+                double expectedAuxiliaryBudget = mansionCount == 1
+                    ? 0.0
+                    : stableSeatCount * GoldenCoreAssembly.AuxiliaryInputBudgetCapPerStableSeat;
+
+                AssertDanxiangBudget(assembly.CompleteMansionAbilityInstanceIds.Count == mansionCount, $"{mansionCount}府×{stableSeatCount}位未保留全部完整紫府输入");
+                AssertDanxiangBudget(assembly.DanxiangAbilityInstanceIds.Count == mansionCount, $"{mansionCount}府×{stableSeatCount}位生成了不完整丹相输入");
+                AssertDanxiangBudget(assembly.AbilityLedgers.Count == mansionCount, $"{mansionCount}府×{stableSeatCount}位未按实例建立唯一账本");
+                AssertDanxiangBudget(budget.StableSeatCount == stableSeatCount && budget.PrimaryCarrierManifestationLimit == stableSeatCount, $"{mansionCount}府×{stableSeatCount}位主承载表现上限错误");
+                AssertDanxiangBudget(budget.CompleteMansionInputBudgetUnits == mansionCount * GoldenCoreAssembly.CompleteMansionInputBudgetUnitsPerMansion, $"{mansionCount}府×{stableSeatCount}位完整紫府输入预算错误");
+                AssertDanxiangBudget(budget.SeatBudgets.All(seat => seat.PrimaryCarrierBudgetUnits == GoldenCoreAssembly.PrimaryCarrierBudgetUnitsPerStableSeat), $"{mansionCount}府×{stableSeatCount}位主承载预算错误");
+                AssertDanxiangBudget(budget.SeatBudgets.Sum(seat => seat.AuxiliaryInputReferenceCount) == expectedAuxiliaryReferences, $"{mansionCount}府×{stableSeatCount}位未连接全部其余紫府为辅助输入");
+                AssertDanxiangBudget(Math.Abs(budget.SeatBudgets.Sum(seat => seat.AuxiliaryInputBudgetUnits) - expectedAuxiliaryBudget) < 0.0001, $"{mansionCount}府×{stableSeatCount}位辅助预算未受每位上限约束");
+                AssertDanxiangBudget(budget.AuxiliaryManifestationLimit == 0 && budget.AddedOrdinaryEffectSlots == 0 && budget.UniqueCoreCount == 1 && budget.UniqueDanxiangCount == 1, $"{mansionCount}府×{stableSeatCount}位出现额外效果槽、丹枢或丹相");
+
+                Console.WriteLine($"    {mansionCount}府×{stableSeatCount}位：输入={budget.CompleteMansionInputBudgetUnits:F2}，主={stableSeatCount * GoldenCoreAssembly.PrimaryCarrierBudgetUnitsPerStableSeat:F2}，辅={expectedAuxiliaryBudget:F2}（{expectedAuxiliaryReferences} 引用），账本={assembly.AbilityLedgers.Count}，组合表现≤{budget.PrimaryCarrierManifestationLimit}，槽/第二丹相=0/0");
+            }
+        }
+
+        var multiReferenceAssembly = GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(new DanxiangBudgetFixture(5, 3)));
+        var multiReferenceRuntime = multiReferenceAssembly.CreateRuntimeLedger(initialResource: 100);
+        const string sharedAbilityInstanceId = "guardian_1";
+        var sharedState = multiReferenceRuntime.Get(sharedAbilityInstanceId);
+        AssertDanxiangBudget(
+            multiReferenceAssembly.DanxiangAbilityInstanceIds.Contains(sharedAbilityInstanceId) &&
+            multiReferenceAssembly.StableSeats[GoldenCoreSeatType.Source].PrimaryCarrierAbilityInstanceId == sharedAbilityInstanceId &&
+            multiReferenceAssembly.StableSeats[GoldenCoreSeatType.Transformation].AuxiliaryCarrierAbilityInstanceIds.Contains(sharedAbilityInstanceId) &&
+            multiReferenceAssembly.StableSeats[GoldenCoreSeatType.Domain].AuxiliaryCarrierAbilityInstanceIds.Contains(sharedAbilityInstanceId) &&
+            ReferenceEquals(sharedState, multiReferenceRuntime.Get(sharedAbilityInstanceId)),
+            "同一实例的丹相、主承载与多处辅助引用未收敛到唯一账本");
+        AssertDanxiangBudget(sharedState.TrySpendResource(30) && sharedState.Resource == 70, "同一实例资源没有按唯一账本结算");
+        sharedState.StartCooldown(3);
+        multiReferenceRuntime.TickCooldowns();
+        AssertDanxiangBudget(sharedState.Cooldown == 2, "同一实例冷却没有按唯一账本结算");
+
+        var character = Character.Create(
+            "N-FPD-DANXIANG-01",
+            new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 },
+            "physical");
+        character.AssignGoldenCoreAssembly(multiReferenceAssembly, "guardian_1", "guardian_2");
+        var beforeUnsafeReforge = character.GoldenCoreAssembly;
+        var unsafeReforge = character.ReforgeGoldenCorePrimaryCarrier(
+            multiReferenceRuntime,
+            GoldenCoreSeatType.Transformation,
+            "guardian_5",
+            new[] { "guardian_1", "guardian_2", "guardian_3", "guardian_4" },
+            "compat_transformation",
+            isSafeState: false);
+        AssertDanxiangBudget(!unsafeReforge.IsApplied && unsafeReforge.Reason == "JD_REFORGE_SAFE_STATE_REQUIRED" && ReferenceEquals(beforeUnsafeReforge, character.GoldenCoreAssembly), "战斗/非安全状态重铸没有被原子拒绝");
+
+        var replacementState = multiReferenceRuntime.Get("guardian_5");
+        AssertDanxiangBudget(replacementState.TrySpendResource(11), "安全重铸前的替换实例资源预结算失败");
+        replacementState.StartCooldown(4);
+        var safeReforge = character.ReforgeGoldenCorePrimaryCarrier(
+            multiReferenceRuntime,
+            GoldenCoreSeatType.Transformation,
+            "guardian_5",
+            new[] { "guardian_1", "guardian_2", "guardian_3", "guardian_4" },
+            "compat_transformation",
+            isSafeState: true);
+        AssertDanxiangBudget(
+            safeReforge.IsApplied &&
+            safeReforge.Reason == "JD_REFORGE_APPLIED" &&
+            character.GoldenCoreAssembly.StableSeats[GoldenCoreSeatType.Transformation].PrimaryCarrierAbilityInstanceId == "guardian_5" &&
+            character.GoldenCoreAssembly.CompleteMansionAbilityInstanceIds.Count == 5 &&
+            character.GoldenCoreAssembly.DanxiangAbilityInstanceIds.Count == 5 &&
+            ReferenceEquals(multiReferenceRuntime.Assembly, character.GoldenCoreAssembly) &&
+            ReferenceEquals(replacementState, multiReferenceRuntime.Get("guardian_5")) &&
+            replacementState.Resource == 89 && replacementState.Cooldown == 4,
+            "安全重铸改变了唯一丹相输入或复制了资源/冷却账本");
+
+        bool directReplacementRejected = false;
+        try
+        {
+            character.AssignGoldenCoreAssembly(multiReferenceAssembly);
+        }
+        catch (InvalidOperationException)
+        {
+            directReplacementRejected = true;
+        }
+        AssertDanxiangBudget(directReplacementRejected, "existing assembly must not be replaced outside safe reforging");
+        Console.WriteLine("  多处引用／安全重铸：guardian_1 跨丹相、主承载和两处辅助后资源=70、冷却=2；guardian_5 安全重铸后沿用资源=89、冷却=4。结论：PASS。\n  第四、第五府保持完整输入与辅助连接；不会生成第四稳定位格、第二丹相或额外普通效果槽。");
+    }
+
+    static GoldenCoreAssemblyInput CreateDanxiangBudgetInput(DanxiangBudgetFixture fixture)
+    {
+        var abilityIds = Enumerable.Range(1, fixture.MansionCount)
+            .Select(index => $"guardian_{index}")
+            .ToArray();
+        var positionTypes = new[]
+        {
+            GoldenCoreSeatType.Source,
+            GoldenCoreSeatType.Transformation,
+            GoldenCoreSeatType.Domain,
+        };
+        var seats = Enumerable.Range(0, fixture.StableSeatCount)
+            .Select(index => new GoldenCoreSeatBinding(
+                $"position_{index + 1}",
+                $"road_{index + 1}",
+                positionTypes[index],
+                $"effect_{index + 1}",
+                $"compat_{positionTypes[index].ToString().ToLowerInvariant()}",
+                abilityIds[index % abilityIds.Length],
+                abilityIds.Where(id => id != abilityIds[index % abilityIds.Length]).ToArray()))
+            .ToArray();
+        var ledgers = abilityIds
+            .Select(id => new GoldenCoreAbilityLedgerBinding(
+                id,
+                $"ledger_{id}_resource",
+                $"ledger_{id}_cooldown",
+                $"ledger_{id}_charge",
+                $"ledger_{id}_cost",
+                "",
+                ""))
+            .ToArray();
+
+        return new GoldenCoreAssemblyInput(
+            new JindanCoreBinding("core_n_fpd_danxiang", "jindan_n_fpd_danxiang", "danshu_n_fpd_danxiang", "formation_n_fpd_danxiang", 1),
+            new JindanDanxiangBinding("danxiang_n_fpd_danxiang", "jindan_n_fpd_danxiang", "key_n_fpd_danxiang", "danxing_n_fpd_danxiang", "presentation_n_fpd_danxiang"),
+            seats,
+            ledgers,
+            abilityIds,
+            new[] { abilityIds[0] });
+    }
+
+    static void AssertDanxiangAssemblyRejected(DanxiangBudgetFixture fixture, string expectedCode)
+    {
+        try
+        {
+            GoldenCoreAssembly.Create(CreateDanxiangBudgetInput(fixture));
+        }
+        catch (GoldenCoreAssemblyException ex) when (ex.Code == expectedCode)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException($"{fixture.MansionCount}府×{fixture.StableSeatCount}位必须拒绝 {expectedCode}。");
+    }
+
+    static void AssertDanxiangBudget(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException($"丹相主辅预算审计失败：{message}");
     }
 
     static G2CoverageResult EvaluateG2Coverage(int seedsPerBuild, int distinctPairs, int battlesPerCell)
