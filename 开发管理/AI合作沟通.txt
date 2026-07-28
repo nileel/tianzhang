@@ -5,8 +5,8 @@
 
 ## 当前交接队列
 
-当前无有效交接项。
+- **C-GZ-CITY-01** / `0a9e847` / `docs/剧情/据点/关中城.txt`（新建）、`开发管理/任务卡/C-GZ-CITY-01.txt`、`开发管理/当前任务队列.txt`、`开发管理/任务列表/内容设计任务.txt` / 已验证：git diff --check 通过；据点 ID 与原型一致；功能/禁/启用状态完成；冒险入口与副本叙事一致；无新增 NPC/价格/数值/主线 / 未验证：check-review-text.ps1 因权限限制未运行；无 BattleSim 需求；未验证实际 Unity 场景中的城市加载 / 残留风险：禁用功能的文案仅为设计意图说明，进入 Unity 本地化后需要额外对齐 / 请求判断：Codex 复审关中城正式档案的字段完整性、信息边界和禁止项合规 / 下一步：Codex 纯 `2` 执行 C-GZ-CITY-01 复审
 
 ## 短格式
 
-任务 / 提交或 diff / 修改文件 / 已验证 / 未验证 / 残留风险 / 请求判断 / 下一步。
+C-GZ-CITY-01 / businessCommit `0a9e847`（pending_review） / 关中城正式档案新建 + 任务卡转 codex_review / git diff --check 通过 / 请求 Codex 复审
