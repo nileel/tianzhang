@@ -5,4 +5,26 @@
 
 ## 当前交接队列
 
+### C-GZ-ENEMY-01 · 石甲兽正式怪物档案
+
+- 方向：DeepSeek V4 Pro → Codex / ChatGPT5.5 复审
+- 任务：`C-GZ-ENEMY-01`
+- 业务提交：`3e7801ce6dcf2f48bdf5b055afd190ec68962704`（`State: pending_review`）
+- 修改文件：`docs/怪物/关陇玄域/石甲兽.txt`（新建）、`开发管理/任务卡/C-GZ-ENEMY-01.txt`（route→codex_review, owner→codex）、`开发管理/当前任务队列.txt`（同步字段）、`开发管理/任务列表/内容设计任务.txt`（同步主责与状态投影）
+- 已验证：
+  - 稳定ID `enemy_shijiahou` 与 Enemies.csv、Language.csv 一致
+  - 战斗数值仅引用 `Char_Enemy_enemy_shijiahou.asset` 模板，无重写
+  - 掉落候选 `item_shijia_piece`、`item_lingshi_low` 来源语义已说明，概率/数量明确交由 N-GZ-REWARD-01
+  - 不含黑曜石甲兽引用
+  - `check-task-cards ExternalPendingReview` 通过（status=ok）
+  - `git diff --check` 无空白问题
+- 未验证：
+  - 未运行 `check-review-text.ps1`（权限不可用）
+  - 未运行 BattleSim（本档案不修改战斗数值）
+  - 未运行 `check-data-chain.ps1`（不修改 CSV/asset）
+- 残留风险：
+  - 若有格式性审核项（如措辞不当、章节结构不符合规范），需 Codex 复审时发现
+  - 掉落候选的"来源语义"为设计解释，非 Enemies.csv 或 Language 既有记录；Codex 复审可确认是否需要调整或批准
+- 建议下一步：Codex / ChatGPT5.5 按 `开发管理/审核入口.txt` 路由读取审核规则，对 `docs/怪物/关陇玄域/石甲兽.txt` 与任务卡 §禁止项 逐项复审；通过后将任务卡归档并解除 D-ENEMY-01 与 C-GZ-BOUNTY-01 的内容前置
+
 ## 短格式
