@@ -5,4 +5,13 @@
 
 ## 当前交接队列
 
+- **C-GZ-ENEMY-01** | `a3ff18281f5411a7cb6d0102c60c7f38f372fcc3` | DeepSeek V4 Pro → Codex 复审
+  - 方向：石甲兽正式怪物档案完成，移交复审
+  - 任务/提交范围：新建 `docs/怪物/关陇玄域/石甲兽.txt`；更新任务卡、队列和 backlog 为 `codex_review/owner=codex`；新建归档文件
+  - 修改文件：`docs/怪物/关陇玄域/石甲兽.txt`（新建）、`开发管理/任务卡/C-GZ-ENEMY-01.txt`、`开发管理/当前任务队列.txt`、`开发管理/任务列表/内容设计任务.txt`、`开发管理/任务归档/C-GZ-ENEMY-01.txt`（新建）
+  - 已验证：稳定 ID (`enemy_shijiahou`) 与类型（`type_yaoshou`）→ Enemies CSV 一致；境界（`realm_lianqi`）/根骨(18)/体魄(16) → `CharacterData` asset 一致；AI（`ai_melee`）→ Enemies CSV 一致；掉落键（`item_shijia_piece`, `item_lingshi_low`）→ Enemies CSV 和 Language CSV 键存在；现有描述 `desc_enemy_shijiahou` → Language CSV 存在；外观描述「厚甲/迟缓/近战/格挡倾向」→ `CharacterData` asset `blockRate=15/blockReduction=25` 一致；无 `equippedSpells`/`equippedSkills` → asset 一致（数组均为空）；使用范围「guanzhong_wild 唯一正式敌人/enemyCount=1」→ `adventure_guanzhong_wild.txt` 第二节一致；逐项核对禁止项通过——无黑曜石甲兽引用、无具体概率/数量、无新能力/主线真相；`git diff --check` 通过；`check-task-cards ExternalPendingReview status=ok`
+  - 未验证：未运行 `check-review-text.ps1`（权限受限），建议 Codex 复审时补充执行
+  - 残留风险：低。档案围绕八个稳定键（ID/类型/AI/境界/战斗模板引用/装备/掉落/叙事定位）建立，均直接引用现行 CSV/asset/副本叙事可核验值。唯一语义性新增（生态动机、环境描述）均只从关陇玄域设定和副本叙事中推导，不引入新事实
+  - 建议下一步：Codex 复审档案与 `C-GZ-CITY-01` 关中城档案的一致性，以及 `adventure_guanzhong_wild.txt` 副本叙事和 `guanzhong-formal-content-framework-design.md#5.2` EnemyData 最低字段的对齐，通过后归档解除 D-ENEMY-01 的内容前置
+
 ## 短格式
