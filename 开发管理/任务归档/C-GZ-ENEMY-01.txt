@@ -1,0 +1,9 @@
+2026-07-29 · C-GZ-ENEMY-01 · 归档（DeepSeek V4 Pro → Codex 复审）
+=== 任务摘要 ===
+DeepSeek V4 Pro 为 `enemy_shijiahou`（石甲兽）新建正式怪物内容档案 `docs/怪物/关陇玄域/石甲兽.txt`，包含：稳定 ID、正式名称、妖兽类型、练气期低阶定位、关陇黄土旧道栖息环境、外观与战斗识别特征、近战 AI 行为语义、无术法/神通声明、掉落候选来源语义、单一冒险使用范围及排除声明。不修改数值、掉落概率、CSV、Language、asset 或 Unity。
+=== 变更范围 ===
+新建：docs/怪物/关陇玄域/石甲兽.txt
+更新：开发管理/任务卡/C-GZ-ENEMY-01.txt（route=codex_review, owner=codex, dispatchState=ready）
+更新：开发管理/当前任务队列.txt（同步 route/owner 变更）
+新建：开发管理/任务归档/C-GZ-ENEMY-01.txt（本文件）
+待提交：开发管理/AI合作沟通.txt（业务 SHA 登记）
