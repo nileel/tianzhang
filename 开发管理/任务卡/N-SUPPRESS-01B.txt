@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-SUPPRESS-01A"
-  ],
-  "stateReason": "2026-07-28：实现切片已从 N-SUPPRESS-01 拆出；等待 01A 明确旧审计开关的隔离／迁移和现行确定性资格、目标、成本及失败原因。",
+  "dispatchState": "frozen",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：DEC-20260728-NSUPPRESS01AFIELDS=B，仅保留旧审计且未授权新结算；本实现卡冻结，须由新的负责人决定重新授权后才能解冻。",
   "expectedPaths": [
     "simulations/BattleSim/GoldenCoreSuppressionExitStats.cs",
     "simulations/BattleSim/GameData.cs",
@@ -33,7 +31,7 @@
 
 ## 来源与当前边界
 
-- `N-SUPPRESS-01A` 完成后提供现行资格、目标、冲突与旧诊断处置；本卡只实施确定性结算。
+- `N-SUPPRESS-01A` 已确认旧审计的隔离边界；负责人选择只保留该审计，未授权本卡实施新的确定性结算。
 - 跨阶挑战和真实失位由 `N-JD-RULE-01C` 所有；本卡不得以削位／封丹绕过其资格和死亡边界。
 
 ## 必查范围
@@ -69,3 +67,7 @@
 ## 停止条件
 
 - 01A 仍有未裁定资格、成本、目标或旧诊断处置，或实现需要概率、隐藏权重、默认值或跨层兼容补丁时停止并转为 `pending_decision`。
+
+## 冻结记录
+
+- 2026-07-28：`DEC-20260728-NSUPPRESS01AFIELDS` 的 B 决定为“只隔离旧审计，不实施新结算”。本卡不修改 BattleSim、数值、docs 或生产数据；只有新的明确负责人决定才能恢复为可执行切片。

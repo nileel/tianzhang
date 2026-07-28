@@ -8,15 +8,16 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "discovery",
-  "dispatchState": "waiting_reply",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：DEC-20260728-NSUPPRESS01A 的 A 仅确认采用完整动作档案，未给出任何可结算字段；已发送 DEC-20260728-NSUPPRESS01AFIELDS 收集削位与封丹的精确资格、目标、成本、持续、输出和拒绝原因，禁止以旧参数或标签补全。",
+  "stateReason": "2026-07-28：DEC-20260728-NSUPPRESS01AFIELDS=B 已确认只隔离旧审计、不实施新结算；01A 已归档，01B 冻结，禁止以旧参数或标签补全。",
   "expectedPaths": [
     "开发管理/削位封丹现状与确定性实现输入.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-SUPPRESS-01A.txt",
-    "开发管理/任务归档/N-SUPPRESS-01A.txt"
+    "开发管理/任务归档/N-SUPPRESS-01A.txt",
+    "开发管理/任务卡/N-SUPPRESS-01B.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
 }
@@ -59,3 +60,9 @@
 ## 停止条件
 
 - 现行事实源不能唯一确定资格、成本、目标或失败原因时，停止并转为 `pending_decision`，不得代填概率或百分比。
+
+## 完成记录
+
+- 2026-07-28：签名决定证据确认 `DEC-20260728-NSUPPRESS01AFIELDS=B`，负责人选择只隔离旧审计、不实施新的削位／封丹结算。
+- 已锁定旧 `GoldenCoreSuppressionExitStats`、15/30/45 档位、封丹开关、出口与 TQ-015C-8～10 仅为历史审计；未将其转写为现行资格、目标、成本、持续、输出或拒绝原因。
+- `N-SUPPRESS-01B` 已转为冻结；本卡不修改 BattleSim、数值、docs 或生产数据。
