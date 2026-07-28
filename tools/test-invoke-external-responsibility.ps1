@@ -115,6 +115,7 @@ try {
   [IO.Directory]::CreateDirectory((Join-Path $repositoryRoot 'tools')) | Out-Null
 
   foreach ($toolName in @(
+      'automation-commit-metadata.ps1',
       'automation-workspace-guard.ps1',
       'automation-finalize-commit.ps1',
       'check-pending-whitespace.ps1',
@@ -196,6 +197,7 @@ param(
   [Parameter(ValueFromRemainingArguments = $true)]
   [string[]]$CliArguments
 )
+[Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
 $inputText = [Console]::In.ReadToEnd()
 $sessionFlag = if ($CliArguments -ccontains '--session-id') { '--session-id' } else { '--resume' }
 $sessionIndex = [Array]::IndexOf($CliArguments, $sessionFlag)
@@ -214,6 +216,25 @@ $sessionId = if ($sessionIndex -ge 0 -and $sessionIndex + 1 -lt $CliArguments.Co
   } | ConvertTo-Json -Depth 10),
   [Text.UTF8Encoding]::new($false)
 )
+function New-TestCommits {
+  param([switch]$InvalidMetadata)
+
+  $verify = if ($InvalidMetadata) {
+    '验证=外部 wrapper 测试通过'
+  } else {
+    '验证=外部 wrapper 测试通过；后续=等待 Codex 复审'
+  }
+  $message = "test: external business result`n`nAutomation: tzg-hourly-controller`nTask: TASK-EXT-001`nState: pending_review`nResult: 问题=缺少固定外部提交；完成=创建测试业务提交`nImpact: 影响=外部 wrapper 可核验实际元数据；边界=不修改生产任务`nVerify: $verify`nPlain: 发生=外部测试创建了可核验的业务提交；影响=只验证自动化收尾合同；需要=无需处理"
+  & git commit --allow-empty -q -m $message
+  if ($LASTEXITCODE -ne 0) { throw 'unable to create fake business commit' }
+  $businessCommit = [string](& git rev-parse HEAD)
+  & git commit --allow-empty -q -m 'test: external handoff result'
+  if ($LASTEXITCODE -ne 0) { throw 'unable to create fake handoff commit' }
+  [pscustomobject]@{
+    BusinessCommit = $businessCommit
+    HandoffCommit = [string](& git rev-parse HEAD)
+  }
+}
 switch ($env:TZG_FAKE_CLAUDE_MODE) {
   'invalid' {
     [Console]::Out.WriteLine('not-json')
@@ -236,13 +257,24 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
       handoffCommit = ('b' * 40)
     }
   }
-  default {
+  'invalid-metadata' {
+    $commits = New-TestCommits -InvalidMetadata
     $structuredOutput = [ordered]@{
       status = 'completed'
       identity = 'DeepSeek V4 Pro'
       sessionId = $sessionId
-      businessCommit = ('a' * 40)
-      handoffCommit = ('b' * 40)
+      businessCommit = $commits.BusinessCommit
+      handoffCommit = $commits.HandoffCommit
+    }
+  }
+  default {
+    $commits = New-TestCommits
+    $structuredOutput = [ordered]@{
+      status = 'completed'
+      identity = 'DeepSeek V4 Pro'
+      sessionId = $sessionId
+      businessCommit = $commits.BusinessCommit
+      handoffCommit = $commits.HandoffCommit
     }
   }
 }
@@ -347,6 +379,16 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
   Assert-True (
     [string]$record.input -match [regex]::Escape('full 40-character lowercase hexadecimal SHA')
   ) 'wrapper prompt omitted the full commit SHA requirement'
+  foreach ($metadataTemplate in @(
+      'AutomationResult 问题=<原问题>；完成=<具体交付>',
+      'AutomationImpact 影响=<实际行为变化>；边界=<明确未涉及范围>',
+      'AutomationVerify 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>',
+      'AutomationPlain 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>'
+    )) {
+    Assert-True (
+      [string]$record.input -match [regex]::Escape($metadataTemplate)
+    ) "wrapper prompt omitted metadata template: $metadataTemplate"
+  }
   $baselinePath = Join-Path $stateRoot "external-baselines\$runId.json"
   Assert-True (
     [string]$record.input -match [regex]::Escape($baselinePath)
@@ -389,6 +431,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
   Assert-True (
     $shortCommit.Json.PSObject.Properties.Name -cnotcontains 'businessCommit'
   ) 'wrapper normalized a short businessCommit SHA'
+
+  $env:TZG_FAKE_CLAUDE_MODE = 'invalid-metadata'
+  $invalidMetadata = Invoke-Wrapper `
+    -WrapperPath $wrapperPath `
+    -Root $repositoryRoot `
+    -StateRoot $stateRoot `
+    -RunId $runId
+  Assert-Equal -Actual ([string]$invalidMetadata.Json.status) -Expected 'failed' -Message 'invalid business metadata did not fail'
+  Assert-Equal -Actual ([string]$invalidMetadata.Json.detailCode) -Expected 'external_commit_metadata_invalid' -Message 'invalid business metadata detailCode mismatch'
 
   $env:TZG_FAKE_CLAUDE_MODE = 'identity-mismatch'
   $identityMismatch = Invoke-Wrapper `

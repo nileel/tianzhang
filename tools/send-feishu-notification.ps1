@@ -23,6 +23,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $script:SenderEntry = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-notification.mjs'
+$metadataContractPath = Join-Path $PSScriptRoot 'automation-commit-metadata.ps1'
+if (-not (Test-Path -LiteralPath $metadataContractPath -PathType Leaf)) {
+  throw 'Automation commit metadata contract is unavailable'
+}
+. $metadataContractPath
 
 function Write-InvalidResult {
   [Console]::Out.WriteLine('{"result":"INVALID_INPUT"}')
@@ -146,41 +151,20 @@ function Get-CommitFields {
     throw 'CommitSha is invalid'
   }
   $body = Invoke-GitUtf8Text -Root $Root -Arguments @('show', '-s', '--format=%B', $Sha)
-  $fields = [ordered]@{}
-  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify', 'Plain')) {
-    $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
-    if ($matches.Count -ne 1) {
-      throw 'Commit metadata is invalid'
-    }
-    $fields[$name] = $matches[0].Groups['value'].Value
-  }
-  if (
-    [string]$fields.Automation -cne 'tzg-hourly-controller' -or
-    [string]$fields.Task -cne $Id -or
-    [string]$fields.State -cne $ExpectedState
-  ) {
-    throw 'Commit metadata is invalid'
-  }
-  $result = [regex]::Match([string]$fields.Result, '^问题=(?<goal>.+?)；完成=(?<completed>.+)$')
-  $impact = [regex]::Match([string]$fields.Impact, '^影响=(?<impact>.+?)；边界=(?<boundary>.+)$')
-  $verify = [regex]::Match([string]$fields.Verify, '^验证=(?<verification>.+?)；后续=(?<next>.+)$')
-  $plain = [regex]::Match(
-    [string]$fields.Plain,
-    '^发生=(?<happened>.+?)；影响=(?<impact>.+?)；需要=(?<action>.+)$'
-  )
-  if (-not $result.Success -or -not $impact.Success -or -not $verify.Success -or -not $plain.Success) {
-    throw 'Commit notification metadata is invalid'
-  }
+  $metadata = ConvertFrom-TzgAutomationCommitMessage `
+    -Message $body `
+    -ExpectedTask $Id `
+    -ExpectedState $ExpectedState
   [ordered]@{
-    goal = $result.Groups['goal'].Value
-    completed = $result.Groups['completed'].Value
-    impact = $impact.Groups['impact'].Value
-    boundary = $impact.Groups['boundary'].Value
-    verification = $verify.Groups['verification'].Value
-    next = $verify.Groups['next'].Value
-    plainHappened = $plain.Groups['happened'].Value
-    plainImpact = $plain.Groups['impact'].Value
-    plainAction = $plain.Groups['action'].Value
+    goal = $metadata.Goal
+    completed = $metadata.Completed
+    impact = $metadata.Impact
+    boundary = $metadata.Boundary
+    verification = $metadata.Verification
+    next = $metadata.Next
+    plainHappened = $metadata.PlainHappened
+    plainImpact = $metadata.PlainImpact
+    plainAction = $metadata.PlainAction
   }
 }
 

@@ -96,7 +96,7 @@ $canonicalPrompt = @'
 5. 外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。
 6. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
-8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据与九个结构化通知子字段（含 `Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`）和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。
+8. 外部 wrapper 只会在固定入口已通过统一元数据契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 与九个结构化通知子字段后返回 completed；控制器不再读取提交正文或临时拼装元数据正则。控制器继续核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、handoff 无 Automation 元数据和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。
 9. 最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。
 '@
 
@@ -133,7 +133,7 @@ $canonicalRules = @'
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 按 `开发管理/当前任务队列.txt` 的固定行序查找 `dispatchState=ready`，依次识别 `codex_execute`、`external_execute`、`codex_review`，选择第一项当前可安全执行。
-- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
+- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。wrapper 返回 completed 前必须通过 `tools/automation-commit-metadata.ps1` 的统一契约核验实际业务提交。
 - 固定 wrapper 必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--output-format json` 与 `--json-schema`，只从 Claude CLI 官方结果 envelope 的 `session_id` 和 `structured_output` 读取终态，不从模型正文猜测 JSON；权限固定为 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
@@ -144,9 +144,9 @@ $canonicalRules = @'
 - `AutomationState=completed` 只表示责任方提交闭环；任务真实 lifecycle 通过 `taskState` 或同一提交中的任务卡/归档读取。
 - Codex 只经 `tools/invoke-codex-responsibility.ps1` 启动；固定 `RepositoryRoot` 的 current branch 和 HEAD，不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建 linked worktree 或任务分支。
 - Codex 固定调用器在责任方子进程内部使用 3000 秒上限，预留外层 300 秒完成进程树终止、live session 捕获、SaveInterruption、RecordResult 与 Release；超时且存在有效 session 与新增未提交路径时必须保存 interruption recovery。
-- runner timeout、deferred wait、workspace guard、automation-finalize-commit.ps1、Automation 元数据、RecordResult 与 Release 边界不变。
+- runner timeout、deferred wait、workspace guard、automation-finalize-commit.ps1、Automation 元数据、RecordResult 与 Release 边界不变；finalizer 在暂存前调用 `tools/automation-commit-metadata.ps1`。
 - 外部 AI 保留 `businessCommit` 与 `handoffCommit` 的连续双提交 closeout；handoff 不重复统计。
-- 外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。
+- 外部 wrapper 只在固定入口通过统一契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 元数据及九个通知子字段后返回 completed。控制器不读取业务提交正文或临时拼装元数据正则；外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`，该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。
 - 自动化摘要固定使用 `Result: 问题=<原问题>；完成=<具体交付>`、`Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>`、`Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`，九个子字段都非空。
 - 非维护终态在关闭后调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome`；普通队列维护和无业务变化轮询不发送，通知失败只记录脱敏投递状态。
 - 失败保留现场、runtime 与日志；不自动 stash、reset、revert、checkout 或 clean。
@@ -220,7 +220,7 @@ $canonicalWeeklyPrompt = @'
 
 $canonicalInvoker = @'
 RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate ResponsibilityTimeoutSeconds [int]$ResponsibilityTimeoutSeconds = 3000 $process.WaitForExit($timeoutMilliseconds) $process.Kill($true) exitCode = 124
-Test-NotificationMetadata Pattern = '^问题= Pattern = '^影响= Pattern = '^验证= Plain = [pscustomobject] 发生=(?<happened> send-feishu-notification.ps1 $runClosed $TaskId -cne 'QUEUE-MAINTENANCE'
+automation-commit-metadata.ps1 ConvertFrom-TzgAutomationCommitMessage send-feishu-notification.ps1 $runClosed $TaskId -cne 'QUEUE-MAINTENANCE'
 '@
 $canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding codex_session_id='
 $canonicalExternalInvoker = @'
@@ -239,7 +239,23 @@ Bash(git diff --check)
 ResponsibilityTimeoutSeconds = 3000
 external_lease_mismatch
 external_invalid_terminal
+automation-commit-metadata.ps1
+ConvertFrom-TzgAutomationCommitMessage
+external_commit_metadata_invalid
+AutomationVerify 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>
 '@
+$canonicalMetadataContract = @'
+function ConvertFrom-TzgAutomationCommitMessage
+Result: (?<result>
+Impact: (?<impact>
+Verify: (?<verify>
+Plain: (?<plain>
+问题=(?<goal>
+后续=(?<next>
+需要=(?<plainAction>
+MaximumCodePoints = 200
+'@
+$canonicalMetadataConsumer = 'automation-commit-metadata.ps1 ConvertFrom-TzgAutomationCommitMessage'
 $canonicalExternalCanary = "invoke-external-responsibility.ps1 -Action 'Start' -RunId -Owner"
 
 try {
@@ -258,12 +274,14 @@ try {
       'tools/codex-cli-session.ps1' = $canonicalRunner
       'tools/invoke-codex-responsibility.ps1' = $canonicalInvoker
       'tools/invoke-external-responsibility.ps1' = $canonicalExternalInvoker
+      'tools/automation-commit-metadata.ps1' = $canonicalMetadataContract
+      'tools/test-automation-commit-metadata.ps1' = 'metadata contract test fixture'
       'tools/test-invoke-external-responsibility.ps1' = 'external invoker test fixture'
       'tools/test-external-ai-self-commit.ps1' = $canonicalExternalCanary
       'tools/automation-workspace-guard.ps1' = 'guard fixture'
-      'tools/automation-finalize-commit.ps1' = 'finalizer fixture'
+      'tools/automation-finalize-commit.ps1' = $canonicalMetadataConsumer
       'tools/get-automation-briefing-source.ps1' = 'briefing source fixture'
-      'tools/send-feishu-notification.ps1' = 'notification sender fixture'
+      'tools/send-feishu-notification.ps1' = $canonicalMetadataConsumer
       'tools/get-feishu-notification-summary.ps1' = 'notification summary fixture'
       'tools/feishu-decision-bridge/src/send-notification.mjs' = 'ordinary notification fixture'
       'tools/feishu-decision-bridge/src/notification-summary.mjs' = 'notification summary fixture'
@@ -351,7 +369,7 @@ try {
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
-  $coreTransitionGateLine = '- 外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。'
+  $coreTransitionGateLine = '- 外部 wrapper 只在固定入口通过统一契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 元数据及九个通知子字段后返回 completed。控制器不读取业务提交正文或临时拼装元数据正则；外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`，该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($coreTransitionGateLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external transition gate' -Contains 'external transition gate in core rules'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
@@ -394,7 +412,7 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing decision-creation section' -Contains 'recovery read contract'
   Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules
 
-  $externalCloseoutLine = '8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据与九个结构化通知子字段（含 `Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`）和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。'
+  $externalCloseoutLine = '8. 外部 wrapper 只会在固定入口已通过统一元数据契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 与九个结构化通知子字段后返回 completed；控制器不再读取提交正文或临时拼装元数据正则。控制器继续核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、handoff 无 Automation 元数据和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。'
   $missingExternalCloseout = $canonicalPrompt.Replace($externalCloseoutLine, '8. 外部 AI 返回 completed 后只报告两个提交 SHA。')
   Write-Utf8File -Path $promptPath -Content $missingExternalCloseout
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingExternalCloseout
@@ -403,8 +421,8 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   $missingCompletedSessionId = $canonicalPrompt.Replace(
-    '只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`',
-    '只核验 owner 对应 identity、`businessCommit`、`handoffCommit`'
+    '控制器继续核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`',
+    '控制器继续核验 owner 对应 identity、`businessCommit`、`handoffCommit`'
   )
   Write-Utf8File -Path $promptPath -Content $missingCompletedSessionId
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingCompletedSessionId
@@ -562,7 +580,7 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   $invokerFixturePath = Join-Path $repositoryRoot 'tools/invoke-codex-responsibility.ps1'
-  Write-Utf8File -Path $invokerFixturePath -Content 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding'
+  Write-Utf8File -Path $invokerFixturePath -Content "IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding $canonicalMetadataConsumer"
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing fixed root and worktree prohibition' -Contains 'fixed root/worktree contract'
   Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker
 
@@ -571,7 +589,7 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing explicit UTF-8 stdin decoder' -Contains 'UTF-8 stdin contract'
   Write-Utf8File -Path $runnerFixturePath -Content $canonicalRunner
 
-  Write-Utf8File -Path $invokerFixturePath -Content 'RepositoryRoot using-git-worktrees git worktree add CodexDispatchReady taskState readyCount no_runnable_candidate'
+  Write-Utf8File -Path $invokerFixturePath -Content "RepositoryRoot using-git-worktrees git worktree add CodexDispatchReady taskState readyCount no_runnable_candidate $canonicalMetadataConsumer"
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing explicit UTF-8 stdin writer' -Contains 'UTF-8 stdin contract'
   Write-Utf8File -Path $invokerFixturePath -Content $canonicalInvoker
 

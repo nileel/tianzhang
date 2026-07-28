@@ -26,9 +26,15 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
+$metadataContractPath = Join-Path $PSScriptRoot 'automation-commit-metadata.ps1'
 $capturedSessionId = $null
 $sessionToUse = $null
 $result = $null
+
+if (-not (Test-Path -LiteralPath $metadataContractPath -PathType Leaf)) {
+  throw 'Automation commit metadata contract is unavailable'
+}
+. $metadataContractPath
 
 function Stop-External {
   param([string]$DetailCode)
@@ -69,6 +75,39 @@ function Invoke-GitRoot {
     Stop-External 'external_repository_invalid'
   }
   Normalize-FullPath ([string]$output[0])
+}
+
+function Invoke-GitUtf8Text {
+  param([string]$Path, [string[]]$Arguments, [string]$DetailCode)
+
+  $startInfo = [Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = 'git'
+  $startInfo.WorkingDirectory = $Path
+  $startInfo.UseShellExecute = $false
+  $startInfo.CreateNoWindow = $true
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
+  $startInfo.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
+  foreach ($argument in $Arguments) {
+    $startInfo.ArgumentList.Add($argument)
+  }
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    Stop-External $DetailCode
+  }
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $stdout = $stdoutTask.GetAwaiter().GetResult()
+  $null = $stderrTask.GetAwaiter().GetResult()
+  $exitCode = $process.ExitCode
+  $process.Dispose()
+  if ($exitCode -ne 0) {
+    Stop-External $DetailCode
+  }
+  $stdout.TrimEnd()
 }
 
 function Invoke-PwshJson {
@@ -156,7 +195,7 @@ function New-ExternalPrompt {
     'Implement only the selected task-card scope, run its minimum sufficient checks, and keep every change within ExpectedPaths.'
     'On success, update the same task card and its canonical queue/backlog projection to route=codex_review, owner=codex, dispatchState=ready without changing the task ID or body.'
     "After that transition and before creating businessCommit, run pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot $quotedRoot -TaskId $quotedTaskId -Postcondition ExternalPendingReview -OutputJson. Continue only when it returns status=ok."
-    'Create the path-limited businessCommit with tools/automation-finalize-commit.ps1, RequireAutomationMetadata, AutomationTask equal to this TaskId, AutomationState=pending_review, and the required Result, Impact, Verify, and Plain structures.'
+    'Create the path-limited businessCommit with tools/automation-finalize-commit.ps1 and RequireAutomationMetadata. Use these exact single-line structures: AutomationResult 问题=<原问题>；完成=<具体交付>, AutomationImpact 影响=<实际行为变化>；边界=<明确未涉及范围>, AutomationVerify 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>, AutomationPlain 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>. AutomationTask must equal this TaskId and AutomationState must be pending_review.'
     'Then modify only 开发管理/AI合作沟通.txt to record the real business SHA, verified and unverified work, and residual risk; create the handoffCommit with the same finalizer but without Automation metadata or repeated domain checks.'
     'Do not call hourly-automation-lease.ps1, self-review, widen paths, dispatch another agent, push, stash, reset, checkout, clean, or retry a failed command.'
     'Return only the structured object required by the supplied JSON schema. The wrapper uses the Claude CLI result envelope as the authoritative session ID.'
@@ -357,6 +396,7 @@ try {
 
   $requiredRepositoryTools = @(
     'tools/automation-workspace-guard.ps1'
+    'tools/automation-commit-metadata.ps1'
     'tools/check-pending-whitespace.ps1'
     'tools/check-task-cards.ps1'
     'tools/automation-finalize-commit.ps1'
@@ -481,6 +521,18 @@ try {
       Assert-CommitSha ([string]$terminal.handoffCommit)
       if ([string]$terminal.businessCommit -ceq [string]$terminal.handoffCommit) {
         Stop-External 'external_invalid_terminal'
+      }
+      try {
+        $businessBody = Invoke-GitUtf8Text `
+          -Path $resolvedRepositoryRoot `
+          -Arguments @('show', '-s', '--format=%B', [string]$terminal.businessCommit) `
+          -DetailCode 'external_commit_metadata_invalid'
+        $null = ConvertFrom-TzgAutomationCommitMessage `
+          -Message $businessBody `
+          -ExpectedTask $TaskId `
+          -ExpectedState 'pending_review'
+      } catch {
+        Stop-External 'external_commit_metadata_invalid'
       }
       $result = [ordered]@{
         status = 'completed'

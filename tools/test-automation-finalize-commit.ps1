@@ -192,17 +192,20 @@ try {
   $automationFields = @{
     AutomationTask = 'TASK-AUTO-001'
     AutomationState = 'completed'
-    AutomationResult = '完成自动化提交元数据测试'
-    AutomationImpact = '验证日报候选可以从提交正文稳定读取'
-    AutomationVerify = 'test-automation-finalize-commit 通过'
+    AutomationResult = '问题=自动化提交缺少统一元数据门禁；完成=finalizer 在提交前使用统一契约'
+    AutomationImpact = '影响=无效摘要不会进入提交历史；边界=不修改路径隔离与任务状态'
+    AutomationVerify = '验证=test-automation-finalize-commit 通过；后续=等待固定调用器复用同一契约'
     AutomationPlain = '发生=自动化提交能够保存通俗说明；影响=负责人收到任务通知时能看懂实际结果；需要=无需处理'
   }
   $invalidAutomationFields = @(
     ($automationFields.Clone() | ForEach-Object { $_.AutomationTask = ''; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationState = 'failed'; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationResult = "完成自动化提交元数据测试`n额外一行"; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationResult = '问题=缺少完成字段'; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationImpact = ''; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationImpact = '影响=缺少边界字段'; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationVerify = ''; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationVerify = '验证=缺少后续字段'; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationPlain = ''; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationPlain = '发生=缺少影响和动作'; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationPlain = "发生=$('长' * 201)；影响=不会进入提交；需要=无需处理"; $_ })
@@ -233,9 +236,9 @@ feat(test): 写入自动化成果摘要
 Automation: tzg-hourly-controller
 Task: TASK-AUTO-001
 State: completed
-Result: 完成自动化提交元数据测试
-Impact: 验证日报候选可以从提交正文稳定读取
-Verify: test-automation-finalize-commit 通过
+Result: 问题=自动化提交缺少统一元数据门禁；完成=finalizer 在提交前使用统一契约
+Impact: 影响=无效摘要不会进入提交历史；边界=不修改路径隔离与任务状态
+Verify: 验证=test-automation-finalize-commit 通过；后续=等待固定调用器复用同一契约
 Plain: 发生=自动化提交能够保存通俗说明；影响=负责人收到任务通知时能看懂实际结果；需要=无需处理
 '@.Replace("`r`n", "`n").TrimEnd()
   if ($automationBody -cne $expectedAutomationBody) { throw "automation metadata changed in Git: $automationBody" }

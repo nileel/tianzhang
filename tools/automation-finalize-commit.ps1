@@ -16,23 +16,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Assert-AutomationMetadata {
-  param([Parameter(Mandatory = $true)][string]$Message)
-
-  $singleLine = '[^\r\n]*\S[^\r\n]*'
-  $pattern = "\A$singleLine\r?\n\r?\n" +
-    'Automation: tzg-hourly-controller\r?\n' +
-    "Task: $singleLine\r?\n" +
-    'State: (?:completed|pending_review)\r?\n' +
-    "Result: $singleLine\r?\n" +
-    "Impact: $singleLine\r?\n" +
-    "Verify: $singleLine\r?\n" +
-    "Plain: $singleLine\r?\n?\z"
-
-  if (-not [regex]::IsMatch($Message, $pattern, [Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
-    throw 'CommitMessage does not match the required tzg-hourly-controller metadata format.'
-  }
+$metadataContractPath = Join-Path $PSScriptRoot 'automation-commit-metadata.ps1'
+if (-not (Test-Path -LiteralPath $metadataContractPath -PathType Leaf)) {
+  throw 'Automation commit metadata contract is unavailable.'
 }
+. $metadataContractPath
 
 function New-AutomationCommitMessage {
   param(
@@ -44,46 +32,6 @@ function New-AutomationCommitMessage {
     [string]$Verify,
     [string]$Plain
   )
-
-  foreach ($field in @{
-      Subject = $Subject
-      Task = $Task
-      Result = $Result
-      Impact = $Impact
-      Verify = $Verify
-      Plain = $Plain
-    }.GetEnumerator()) {
-    if ([string]::IsNullOrWhiteSpace([string]$field.Value) -or [string]$field.Value -match '[\r\n]') {
-      throw "$($field.Key) must be non-empty single-line text."
-    }
-  }
-  if ($State -notin @('completed', 'pending_review')) {
-    throw 'AutomationState must be completed or pending_review.'
-  }
-  $plainMatch = [regex]::Match(
-    $Plain,
-    '^发生=(?<happened>.+?)；影响=(?<impact>.+?)；需要=(?<action>.+)$'
-  )
-  if (-not $plainMatch.Success -or $Plain -match '[\x00-\x1F\x7F]') {
-    throw 'AutomationPlain must use 发生=<...>；影响=<...>；需要=<...>.'
-  }
-  foreach ($groupName in @('happened', 'impact', 'action')) {
-    $value = $plainMatch.Groups[$groupName].Value
-    $codePointCount = 0
-    for ($index = 0; $index -lt $value.Length; $index++) {
-      if (
-        [char]::IsHighSurrogate($value[$index]) -and
-        $index + 1 -lt $value.Length -and
-        [char]::IsLowSurrogate($value[$index + 1])
-      ) {
-        $index++
-      }
-      $codePointCount++
-    }
-    if ([string]::IsNullOrWhiteSpace($value) -or $codePointCount -gt 200) {
-      throw 'AutomationPlain fields must be non-empty and at most 200 Unicode code points.'
-    }
-  }
 
   @(
     $Subject,
@@ -245,7 +193,10 @@ if ($RequireAutomationMetadata) {
     -Impact $AutomationImpact `
     -Verify $AutomationVerify `
     -Plain $AutomationPlain
-  Assert-AutomationMetadata -Message $CommitMessage
+  $null = ConvertFrom-TzgAutomationCommitMessage `
+    -Message $CommitMessage `
+    -ExpectedTask $AutomationTask `
+    -ExpectedState $AutomationState
 }
 
 $paths = ConvertTo-NormalizedPaths $ExpectedPaths

@@ -95,6 +95,17 @@ $runner = Read-Utf8Contract -Path $runnerPath
 $externalInvokerPath = Join-Path $root 'tools\invoke-external-responsibility.ps1'
 Assert-Contract -Condition (Test-Path -LiteralPath $externalInvokerPath -PathType Leaf) -Message 'missing workflow component: tools\invoke-external-responsibility.ps1'
 $externalInvoker = Read-Utf8Contract -Path $externalInvokerPath
+$metadataContractPath = Join-Path $root 'tools\automation-commit-metadata.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $metadataContractPath -PathType Leaf) -Message 'missing workflow component: tools\automation-commit-metadata.ps1'
+$metadataContract = Read-Utf8Contract -Path $metadataContractPath
+$metadataContractTestPath = Join-Path $root 'tools\test-automation-commit-metadata.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $metadataContractTestPath -PathType Leaf) -Message 'missing workflow component: tools\test-automation-commit-metadata.ps1'
+$finalizerPath = Join-Path $root 'tools\automation-finalize-commit.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $finalizerPath -PathType Leaf) -Message 'missing workflow component: tools\automation-finalize-commit.ps1'
+$finalizer = Read-Utf8Contract -Path $finalizerPath
+$notificationPath = Join-Path $root 'tools\send-feishu-notification.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $notificationPath -PathType Leaf) -Message 'missing workflow component: tools\send-feishu-notification.ps1'
+$notification = Read-Utf8Contract -Path $notificationPath
 $externalInvokerTestPath = Join-Path $root 'tools\test-invoke-external-responsibility.ps1'
 Assert-Contract -Condition (Test-Path -LiteralPath $externalInvokerTestPath -PathType Leaf) -Message 'missing workflow component: tools\test-invoke-external-responsibility.ps1'
 $externalCanaryPath = Join-Path $root 'tools\test-external-ai-self-commit.ps1'
@@ -172,8 +183,8 @@ Assert-Contains -Text $prompt -Context 'success closeout order' -Values @(
   '全部成立后依次调用 `RecordResult -Category success` 与 `Release`'
 )
 Assert-Contains -Text $prompt -Context 'external outcome notification' -Values @(
-  '九个结构化通知子字段',
-  'Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>',
+  '固定入口已通过统一元数据契约核验',
+  '控制器不再读取提交正文或临时拼装元数据正则',
   'tools/send-feishu-notification.ps1',
   '-Kind TaskOutcome',
   '-Status pending_review',
@@ -234,9 +245,44 @@ $externalInvokerTokens = @(
   'Bash(git diff --check)',
   'ResponsibilityTimeoutSeconds = 3000',
   'external_lease_mismatch',
-  'external_invalid_terminal'
+  'external_invalid_terminal',
+  'automation-commit-metadata.ps1',
+  'ConvertFrom-TzgAutomationCommitMessage',
+  'external_commit_metadata_invalid',
+  'AutomationVerify 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>'
 )
 Assert-Contains -Text $externalInvoker -Context 'external responsibility invoker' -Values $externalInvokerTokens
+Assert-Contains -Text $metadataContract -Context 'automation commit metadata contract' -Values @(
+  'function ConvertFrom-TzgAutomationCommitMessage',
+  'Result: (?<result>',
+  'Impact: (?<impact>',
+  'Verify: (?<verify>',
+  'Plain: (?<plain>',
+  '问题=(?<goal>',
+  '后续=(?<next>',
+  '需要=(?<plainAction>',
+  'MaximumCodePoints = 200'
+)
+foreach ($consumer in @(
+    [pscustomobject]@{ Name = 'automation finalizer'; Text = $finalizer },
+    [pscustomobject]@{ Name = 'Codex responsibility invoker'; Text = $invoker },
+    [pscustomobject]@{ Name = 'external responsibility invoker'; Text = $externalInvoker },
+    [pscustomobject]@{ Name = 'notification sender'; Text = $notification }
+  )) {
+  Assert-Contains -Text $consumer.Text -Context "$($consumer.Name) metadata contract" -Values @(
+    'automation-commit-metadata.ps1',
+    'ConvertFrom-TzgAutomationCommitMessage'
+  )
+  foreach ($duplicatePattern in @(
+      "Pattern = '^问题=",
+      "[regex]::Match([string]`$fields.Result",
+      'function Test-NotificationMetadata'
+    )) {
+    Assert-Contract `
+      -Condition (-not $consumer.Text.Contains($duplicatePattern, [StringComparison]::Ordinal)) `
+      -Message "$($consumer.Name) duplicates automation metadata parsing: $duplicatePattern"
+  }
+}
 foreach ($forbiddenExternalCloseout in @('-Action RecordResult', '-Action Release', 'send-feishu-notification.ps1')) {
   Assert-Contract `
     -Condition (-not $externalInvoker.Contains($forbiddenExternalCloseout, [StringComparison]::OrdinalIgnoreCase)) `
@@ -425,12 +471,8 @@ Assert-Contains -Text $invoker -Context 'responsibility child deadline contract'
   'exitCode = 124'
 )
 Assert-Contains -Text $invoker -Context 'responsibility outcome notification contract' -Values @(
-  'Test-NotificationMetadata',
-  'Pattern = ''^问题=',
-  'Pattern = ''^影响=',
-  'Pattern = ''^验证=',
-  'Plain = [pscustomobject]',
-  '发生=(?<happened>',
+  'automation-commit-metadata.ps1',
+  'ConvertFrom-TzgAutomationCommitMessage',
   'send-feishu-notification.ps1',
   '$runClosed',
   '$TaskId -cne ''QUEUE-MAINTENANCE'''
@@ -554,6 +596,8 @@ foreach ($requiredPath in @(
     'tools\check-task-cards.ps1',
     'tools\codex-cli-session.ps1',
     'tools\invoke-codex-responsibility.ps1',
+    'tools\automation-commit-metadata.ps1',
+    'tools\test-automation-commit-metadata.ps1',
     'tools\automation-workspace-guard.ps1',
     'tools\automation-finalize-commit.ps1',
     'tools\get-automation-briefing-source.ps1',

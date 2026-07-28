@@ -30,6 +30,7 @@ $ErrorActionPreference = 'Stop'
 $runnerPath = Join-Path $PSScriptRoot 'codex-cli-session.ps1'
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $taskCardCheckerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
+$metadataContractPath = Join-Path $PSScriptRoot 'automation-commit-metadata.ps1'
 $notificationPath = $NotificationPath
 $result = $null
 $resultExitCode = 1
@@ -37,6 +38,11 @@ $capturedSessionId = $null
 $verifiedCommitSha = $null
 $decisionReply = $null
 $runClosed = $false
+
+if (-not (Test-Path -LiteralPath $metadataContractPath -PathType Leaf)) {
+  throw 'Automation commit metadata contract is unavailable'
+}
+. $metadataContractPath
 
 function Assert-StableArgument {
   param([AllowNull()][string]$Value, [string]$Name, [int]$MaximumLength = 512)
@@ -311,86 +317,6 @@ function Invoke-SessionRunner {
   [pscustomobject]@{ ExitCode = $exitCode; Summary = $summary; TimedOut = $false }
 }
 
-function Get-CommitMetadata {
-  param([string]$CommitSha)
-
-  $body = Invoke-GitUtf8Text -Arguments @('show', '-s', '--format=%B', $CommitSha)
-  $fields = [ordered]@{}
-  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify', 'Plain')) {
-    $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
-    if ($matches.Count -ne 1) {
-      return $null
-    }
-    $fields[$name] = $matches[0].Groups['value'].Value
-  }
-  [pscustomobject]$fields
-}
-
-function Test-NotificationMetadata {
-  param($Metadata)
-
-  if ($null -eq $Metadata) {
-    return $false
-  }
-  $contracts = [ordered]@{
-    Result = [pscustomobject]@{
-      Pattern = '^问题=(?<first>.+?)；完成=(?<second>.+)$'
-      Groups = @('first', 'second')
-      MaximumCodePoints = 1000
-    }
-    Impact = [pscustomobject]@{
-      Pattern = '^影响=(?<first>.+?)；边界=(?<second>.+)$'
-      Groups = @('first', 'second')
-      MaximumCodePoints = 1000
-    }
-    Verify = [pscustomobject]@{
-      Pattern = '^验证=(?<first>.+?)；后续=(?<second>.+)$'
-      Groups = @('first', 'second')
-      MaximumCodePoints = 1000
-    }
-    Plain = [pscustomobject]@{
-      Pattern = '^发生=(?<happened>.+?)；影响=(?<impact>.+?)；需要=(?<action>.+)$'
-      Groups = @('happened', 'impact', 'action')
-      MaximumCodePoints = 200
-    }
-  }
-  foreach ($entry in $contracts.GetEnumerator()) {
-    $value = [string]$Metadata.($entry.Key)
-    if (
-      [string]::IsNullOrWhiteSpace($value) -or
-      $value.Length -gt 2000 -or
-      $value -match '[\x00-\x1F\x7F]'
-    ) {
-      return $false
-    }
-    $match = [regex]::Match($value, [string]$entry.Value.Pattern)
-    if (-not $match.Success) {
-      return $false
-    }
-    foreach ($groupName in @($entry.Value.Groups)) {
-      $groupValue = $match.Groups[$groupName].Value
-      $codePointCount = 0
-      for ($index = 0; $index -lt $groupValue.Length; $index++) {
-        if (
-          [char]::IsHighSurrogate($groupValue[$index]) -and
-          $index + 1 -lt $groupValue.Length -and
-          [char]::IsLowSurrogate($groupValue[$index + 1])
-        ) {
-          $index++
-        }
-        $codePointCount++
-      }
-      if (
-        [string]::IsNullOrWhiteSpace($groupValue) -or
-        $codePointCount -gt [int]$entry.Value.MaximumCodePoints
-      ) {
-        return $false
-      }
-    }
-  }
-  $true
-}
-
 function Invoke-TaskCardEvidence {
   param(
     [string]$Postcondition,
@@ -581,14 +507,16 @@ try {
   }
   $matchingCommits = [Collections.Generic.List[string]]::new()
   foreach ($commitSha in $newCommits) {
-    $metadata = Get-CommitMetadata -CommitSha $commitSha
-    if (
-      $null -ne $metadata -and
-      [string]$metadata.Automation -ceq 'tzg-hourly-controller' -and
-      [string]$metadata.Task -ceq $TaskId -and
-      [string]$metadata.State -ceq 'completed' -and
-      (Test-NotificationMetadata -Metadata $metadata)
-    ) {
+    $metadata = try {
+      $body = Invoke-GitUtf8Text -Arguments @('show', '-s', '--format=%B', $commitSha)
+      ConvertFrom-TzgAutomationCommitMessage `
+        -Message $body `
+        -ExpectedTask $TaskId `
+        -ExpectedState 'completed'
+    } catch {
+      $null
+    }
+    if ($null -ne $metadata) {
       $matchingCommits.Add($commitSha)
     }
   }
