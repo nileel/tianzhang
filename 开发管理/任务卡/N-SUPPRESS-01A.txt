@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "discovery",
-  "dispatchState": "pending_decision",
+  "dispatchState": "waiting_reply",
   "blockedBy": [],
-  "stateReason": "2026-07-28：已确认 GoldenCoreSuppressionExitStats 仅为旧 15/30/45 与封丹开关审计；现行事实未定义两项动作的资格、目标、成本、持续、输出与拒绝原因。等待 DEC-20260728-NSUPPRESS01A，禁止以旧参数或标签补全。",
+  "stateReason": "2026-07-28：DEC-20260728-NSUPPRESS01A 的 A 仅确认采用完整动作档案，未给出任何可结算字段；已发送 DEC-20260728-NSUPPRESS01AFIELDS 收集削位与封丹的精确资格、目标、成本、持续、输出和拒绝原因，禁止以旧参数或标签补全。",
   "expectedPaths": [
     "开发管理/削位封丹现状与确定性实现输入.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
