@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-07-29：Codex 复审不通过；档案越界写入数值与掉落权重，并混入无直接事实支持的生态、能力和黑曜石甲兽对比，需由 DeepSeek 按任务卡重写后再提交复审。",
+  "stateReason": "2026-07-29：复审退回的定向重写已具备批准范围、完整任务卡和可用外部主责，进入队列等待 DeepSeek 按既定禁止项重写后再提交复审。",
   "expectedPaths": [
     "docs/怪物/关陇玄域/石甲兽.txt",
     "开发管理/任务列表/内容设计任务.txt",
