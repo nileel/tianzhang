@@ -157,10 +157,12 @@ try {
   $claudeAllowedTools = @(
     'Read'
     'Edit'
+    'Write'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 *)'
     'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 *)'
+    'Bash(git diff --check)'
   ) -join ','
   $claudePermissionArguments = @(
     '--permission-mode'
@@ -185,7 +187,7 @@ try {
   $taskArchiveRelativePath = "开发管理/任务归档/$taskId.txt"
   $taskBacklogRelativePath = '开发管理/任务列表/自动化任务.txt'
   $businessExpectedPaths = @(
-    'fixtures/business.txt'
+    'fixtures/generated-business.txt'
     $taskCardRelativePath
     '开发管理/当前任务队列.txt'
     $taskBacklogRelativePath
@@ -203,7 +205,7 @@ try {
     blockedBy = @()
     stateReason = $null
     expectedPaths = @(
-      'fixtures/business.txt'
+      'fixtures/generated-business.txt'
       $taskCardRelativePath
       $taskArchiveRelativePath
       '开发管理/当前任务队列.txt'
@@ -220,20 +222,19 @@ try {
     '## 来源与当前边界'
     '- 本卡已由 canary 调度器选中；不得重新扫描候选。'
     '## 必查范围'
-    '- `fixtures/business.txt` 与本卡的 canonical 投影。'
+    '- 新建 `fixtures/generated-business.txt` 并同步本卡的 canonical 投影。'
     '## 实施范围'
-    '- A：写入业务结果，并将同一卡转换为 codex_review ready。'
+    '- A：新建业务结果，并将同一卡转换为 codex_review ready。'
     '## 禁止项'
     '- 不创建第二张复审卡，不自审。'
     '## 验证'
-    '- check-pending-whitespace；check-task-cards ExternalPendingReview。'
+    '- check-pending-whitespace；check-task-cards ExternalPendingReview；git diff --check。'
     '## 完成条件'
     '- 同一 ID 的 card、queue、backlog 已进入待复审。'
     '## 停止条件'
     '- B：不修改并返回 blocked。'
   ) -join "`n"
   Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath $taskCardRelativePath -Content $taskCardText
-  Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath 'fixtures/business.txt' -Content "status=pending`nchoice=`nverified=`n"
   Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath '开发管理/当前任务队列.txt' -Content (@(
     '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
     '| --- | --- | --- | --- | --- | --- | --- | --- |'
@@ -266,6 +267,10 @@ try {
   Assert-CanaryEqual -Actual $baselineCardCheck.ExitCode -Expected 0 -Message "Initial canonical task projection is invalid: $($baselineCardCheck.Stderr)"
 
   $initialHead = Invoke-CanaryGit -RepositoryRoot $canaryRepository -Arguments @('rev-parse', 'HEAD')
+  $generatedBusinessPath = Join-Path $canaryRepository 'fixtures\generated-business.txt'
+  if (Test-Path -LiteralPath $generatedBusinessPath) {
+    throw 'Generated business fixture must not exist before the external session'
+  }
   $taskCardPath = Join-Path $canaryRepository $taskCardRelativePath
   $initialTaskCardText = [IO.File]::ReadAllText($taskCardPath, [Text.UTF8Encoding]::new($false, $true))
   $initialTaskBody = $initialTaskCardText.Substring(
@@ -290,7 +295,7 @@ When this exact session is resumed with the raw reply A, perform Phase 2 without
 2. Run these exact commands separately:
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Snapshot -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__'
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Check -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'
-3. Use your file editing tool to make fixtures/business.txt exactly:
+3. Use Write to create the previously nonexistent file fixtures/generated-business.txt exactly:
 status=approved
 choice=A
 verified=check-pending-whitespace
@@ -304,8 +309,8 @@ Make 开发管理/任务列表/自动化任务.txt exactly these three lines:
 | --- | --- | --- | --- | --- | --- | --- |
 | TASK-EXT-001 | P0 | codex | 已排队 | — | 外部责任方同卡待复审转换 | 开发管理/任务卡/TASK-EXT-001.txt |
 Do not modify the handoff file yet.
-4. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot '__REPOSITORY_ROOT__' -TaskId 'TASK-EXT-001' -Postcondition ExternalPendingReview. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Verify -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'.
-5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace 与 ExternalPendingReview 通过' -AutomationPlain '发生=外部责任方已完成授权修改并提交复审；影响=任务现在等待 Codex 检查后才能正式完成；需要=无需处理'. Save its stdout SHA as businessCommit.
+4. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot '__REPOSITORY_ROOT__' -TaskId 'TASK-EXT-001' -Postcondition ExternalPendingReview. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Verify -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'. Then run exactly: git diff --check.
+5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace、ExternalPendingReview 与 git diff --check 通过' -AutomationPlain '发生=外部责任方已完成授权修改并提交复审；影响=任务现在等待 Codex 检查后才能正式完成；需要=无需处理'. Save its stdout SHA as businessCommit.
 6. Modify only 开发管理/AI合作沟通.txt to exactly these six lines, substituting the real SHA:
 # AI合作沟通
 HANDOFF-EXT-001
@@ -364,6 +369,20 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
   if (-not $second.Stdout.Contains($expectedAuthor, [StringComparison]::Ordinal)) {
     throw 'Resumed external session did not return the owner-mapped identity'
   }
+  if (-not (Test-Path -LiteralPath $baselinePath -PathType Leaf)) {
+    throw 'External session did not create the private runtime baseline'
+  }
+  if (Test-Path -LiteralPath (Join-Path $canaryRepository '.claude')) {
+    throw 'External session created a repository-local .claude control path'
+  }
+  $generatedBusinessText = [IO.File]::ReadAllText(
+    $generatedBusinessPath,
+    [Text.UTF8Encoding]::new($false, $true)
+  ).Replace("`r`n", "`n")
+  Assert-CanaryEqual `
+    -Actual $generatedBusinessText.TrimEnd("`r", "`n") `
+    -Expected "status=approved`nchoice=A`nverified=check-pending-whitespace" `
+    -Message 'External session did not create the expected business file'
 
   $newCommitCount = [int](Invoke-CanaryGit `
     -RepositoryRoot $canaryRepository `
@@ -391,7 +410,7 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
       'State: pending_review',
       'Result: 完成外部责任方授权修改',
       'Impact: TASK-EXT-001 已进入待复审状态',
-      'Verify: check-pending-whitespace 与 ExternalPendingReview 通过',
+      'Verify: check-pending-whitespace、ExternalPendingReview 与 git diff --check 通过',
       'Plain: 发生=外部责任方已完成授权修改并提交复审；影响=任务现在等待 Codex 检查后才能正式完成；需要=无需处理'
     )) {
     if (-not $businessBody.Contains($requiredMetadata, [StringComparison]::Ordinal)) {

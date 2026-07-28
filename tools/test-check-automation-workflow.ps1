@@ -133,6 +133,7 @@ $canonicalRules = @'
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 按 `开发管理/当前任务队列.txt` 的固定行序查找 `dispatchState=ready`，依次识别 `codex_execute`、`external_execute`、`codex_review`，选择第一项当前可安全执行。
 - 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
+- 控制器必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
 - `事件发生时` 才更新状态；`队列为空` 时只做一次 QueueMaintenance，`本轮不执行新任务`。
@@ -276,6 +277,11 @@ try {
   Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration.Replace($ownerMappingLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing collaboration external owner mapping' -Contains 'external owner mapping in collaboration rules'
   Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
+
+  $externalLaunchClause = '控制器必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace("- $externalLaunchClause", '')
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external launch contract' -Contains 'external launch contract in core rules'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
   $dispatchReadyLine = '- Execution / Review 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($dispatchReadyLine, '')

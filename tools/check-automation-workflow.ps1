@@ -191,6 +191,18 @@ Assert-Contains -Text $prompt -Context 'external owner mapping in controller pro
 Assert-Contains -Text $rules -Context 'external owner mapping in core rules' -Values $externalOwnerMappingTokens
 Assert-Contains -Text $claudeRules -Context 'external owner mapping in CLAUDE.md' -Values $externalOwnerMappingTokens
 Assert-Contains -Text $collaborationRules -Context 'external owner mapping in collaboration rules' -Values $externalOwnerMappingTokens
+$externalLaunchContractTokens = @(
+  'external-baselines/<RunId>.json',
+  '启动外部 CLI 前创建',
+  '用户级私有 runtime',
+  '不得把 baseline 写入仓库或 `.claude/`',
+  '`--permission-mode dontAsk`',
+  '`--allowedTools`',
+  '`Read`、`Edit`、`Write`',
+  '`Bash(git diff --check)`',
+  '不得允许通配 Bash、任意 PowerShell 或任意 Git'
+)
+Assert-Contains -Text $rules -Context 'external launch contract in core rules' -Values $externalLaunchContractTokens
 $externalTransitionGateTokens = @(
   'tools/check-task-cards.ps1',
   '-TaskId <同一 TaskId>',
