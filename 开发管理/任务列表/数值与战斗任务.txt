@@ -13,8 +13,8 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | N-FPD-REGRESSION-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
-| N-SUPPRESS-01 | P2 | Codex | 阻塞（N-SUPPRESS-01A、N-SUPPRESS-01B） | — | 确定性削位与封丹父任务；不直接执行。 | — |
-| N-SUPPRESS-01A | P2 | codex | 已排队 | — | 削位／封丹现状与确定性实现输入 | 开发管理/任务卡/N-SUPPRESS-01A.txt |
+| N-SUPPRESS-01 | P2 | Codex | 待决定（N-SUPPRESS-01A） | DEC-20260728-NSUPPRESS01A | 确定性削位与封丹父任务；等待两项动作的档案、成本和输出决定。 | — |
+| N-SUPPRESS-01A | P2 | codex | 待决定 | — | 削位／封丹现状与确定性实现输入 | 开发管理/任务卡/N-SUPPRESS-01A.txt |
 | N-SUPPRESS-01B | P2 | codex | 阻塞 | N-SUPPRESS-01A | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |
 | N-AI-01 | P3 | Codex | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |
 

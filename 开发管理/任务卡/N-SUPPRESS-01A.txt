@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "discovery",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-07-28：N-GC-BASE-01 已归档，但现有 GoldenCoreSuppressionExitStats 仍是旧削位百分比和封丹开关诊断；先定位差距，避免把旧参数误作现行规则。",
+  "stateReason": "2026-07-28：已确认 GoldenCoreSuppressionExitStats 仅为旧 15/30/45 与封丹开关审计；现行事实未定义两项动作的资格、目标、成本、持续、输出与拒绝原因。等待 DEC-20260728-NSUPPRESS01A，禁止以旧参数或标签补全。",
   "expectedPaths": [
     "开发管理/削位封丹现状与确定性实现输入.txt",
     "开发管理/任务列表/数值与战斗任务.txt",

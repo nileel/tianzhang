@@ -1,0 +1,62 @@
+# 削位／封丹现状与确定性实现输入
+
+> 对应 `N-SUPPRESS-01A`。本记录只锁定现状、迁移边界和待决定输入；不改变 BattleSim、旧审计结论、数值或设定。
+
+## 结论
+
+`GoldenCoreSuppressionExitStats` 是单一控制台出口使用的历史压力审计，不是现行削位／封丹结算：其“削位”只按 `15/30/45` 百分比压低克隆金丹样本的 `MP`，其“封丹”只清空克隆样本的神通字段。它没有事件、合法目标、版本化授权、资源扣除、持续状态、冲突结算或稳定拒绝原因，不能作为 `N-SUPPRESS-01B` 的输入或默认值。
+
+现行规则已给出约束而未给出这两项动作的业务档案：跨阶操作无有效 `CrossTierChallengeGrant` 时必须失效／`SUPPRESSED`；grant 必须逐项声明来源、变量、操作、对象、范围、受益者、支点、资源、容量、时效、版本与显示来源。真实稳定金丹位格的剥离、毁坏或转移只能走原子死亡结算；`UNSTABLE`、资源耗尽、效果结束、庇护撤回和 `TEMPORARY` 权限失效均不得误写成失位。
+
+因此 `N-SUPPRESS-01A` 停在 `pending_decision`。不得以旧百分比、符修／玄感标签、样例 grant 或开关补全缺失字段。
+
+## 符号级现状
+
+| 区域 | 生产者／消费者 | 可保留的事实 | 不得承接为现行规则 |
+|---|---|---|---|
+| `GoldenCoreSuppressionExitStats.DefaultSwitchProfiles` | 定义 `削位15/30/45`，`MP` 保留率为 `0.85/0.70/0.55` | 历史审计档位与输出可复现 | 档位、百分比或“默认”不得成为资格、成本或强度 |
+| `ClassifyExit` | 读取紫府 `Realm/SubIndex`、闭环／府覆盖、`Style/GongFaName`；读取金丹的争席／占据快照 | 旧审计曾按这些快照分类 | `待争席`、`未占据`、`natural_candidate`、符修或玄感标签都不是动作资格或合法目标 |
+| `CreateTacticalScenario` | 只克隆 `Character`；启用后改克隆的 `Primary[MP]` 或 `Divine*` | 不污染原始样本 | 没有事件、账本、持续、目标状态或稳定拒绝原因 |
+| `Program.cs` 471、495、508 | 唯一代码消费者；输出“紫府圆满 vs 金丹初期压制战”审计、扫描三档并调用 `Combat.Simulate` | 旧对战输出可保留为历史基线 | 默认战斗、成丹阈值与金丹倍率未被此出口改变，不能把审计胜率视为结算 |
+| `BattleSimSelfTests.cs` TQ-015C-8～10 | 覆盖旧分类、开关开闭、85 MP 与 15/30/45 档 | 可证明旧审计行为未变 | 不是合法／非法资格、成本、目标、冲突或真实失位测试 |
+| `Character` 与 `Combat.Simulate` | `Simulate` 读取 `Primary`、神通和既有账本；`Character` 已保存候选／占据快照 | 新结算可在既有运行账本和战斗入口接入 | 现有字段没有削位／封丹事件状态，不能把诊断快照直接改写为占据结果 |
+
+对 `GoldenCoreSuppressionExitStats`、`GoldenCoreSuppressionSwitches`、`GoldenCoreSuppressionSwitchProfile`、`GoldenCoreSuppressionTacticalScenario`、`DefaultSwitchProfiles`、`ClassifyExit` 与 `CreateTacticalScenario` 的代码扫描结果只有该文件、上述 `Program.cs` 出口和 TQ-015C-8～10；没有其他生产结算消费者。
+
+## 可复用的现行边界
+
+1. `GameData.CrossTierChallengeGrant`／`CrossTierChallengeArchive` 与 `Combat.ResolveCrossTierChallenge` 已提供版本、来源、变量、挑战者、对象、范围、受益者、支点、资源／容量账本引用和时效的确定性资格重验。它只返回授权或 `JD_CHALLENGE_*` 原因，不扣资源、不决定冲突胜负，也没有现成的削位／封丹档案。
+2. `GoldenCoreConflictCandidates`／`GoldenCoreConflictResolver` 已接收显式变量权限、合法目标、兼容档案、成本档案、现实支点、已付成本、持续承载、脉冲成本与冷却；它只能结算两份准备好的金丹同阶候选，不能替削位／封丹猜测上述输入。
+3. `Combat.ResolveGoldenCoreCarrierDeath` 与 `Character.ResolveGoldenCoreCarrierDeath` 是真实稳定位格失去时的唯一原子死亡路径。封丹或暂时压制不得调用它；新结算也不得写 `FinalOccupancyState`、拆除 `GoldenCoreAssembly` 或改写 `JindanCoreBinding`。
+
+## 01B 的唯一所有者、路径与旧审计处置
+
+- 所有者与路由：`codex`／`codex_execute`，唯一后继卡为 `N-SUPPRESS-01B`。
+- 精确实现路径：`simulations/BattleSim/GoldenCoreSuppressionExitStats.cs`、`GameData.cs`、`Character.cs`、`Combat.cs`、`BattleSimSelfTests.cs`、`Program.cs`；验证记录为 `开发管理/确定性削位与封丹验证记录.txt`。不得新增 Unity、生产数据、数值表、位格权限或跨阶死亡实现路径。
+- 迁移策略：01B 先将 `GoldenCoreSuppressionExitStats` 及 TQ-015C-8～10 明确标为 legacy audit，并把 `Program` 的对应输出明确标为历史审计。保留其计算和结果，禁止新结算调用；`15/30/45`、开关、样本风格标签与 MP／神通字段清空不得映射到新输入。随后在同一既有文件中接入独立的确定性动作入口，不能复用旧类型或 profile。
+- 旧审计与新结算测试必须分离：保留旧三组测试仅保护历史输出；新测试只消费负责人确认的动作档案和固定事件输入。
+
+## 01B 自测矩阵
+
+| 分类 | 固定输入／断言 |
+|---|---|
+| 资格 | 完整 grant 的版本、挑战者、变量、来源与时效匹配授权；未知、失效、撤销、版本或挑战者／变量不匹配返回既有稳定 `JD_CHALLENGE_*` 原因且不改变状态 |
+| 合法目标 | 削位、封丹各自仅接受负责人确认的目标状态、对象与范围；不匹配返回确认的动作拒绝原因，不能用“待争席”或“未占据”猜测通过 |
+| 成本与承载 | 缺账本、成本不足、容量／支点或持续条件不满足时不扣费、不设状态；成功时只按确认的账本和时机结算 |
+| 冲突 | 对两份已确认的候选分别覆盖优先级胜负与脉冲平局；不把既有同阶 resolver 的输入常量当作动作默认值 |
+| 暂时状态 | 封丹与任何暂时压制只验证所确认的效果禁用／期限；`UNSTABLE`、资源耗尽、`TEMPORARY` 与庇护撤回保持非死亡、非失位 |
+| 真实失位隔离 | 断言新入口不调用 carrier-death 路径、不改 assembly／核心／最终占据；既有 N-JD-RULE-01C 死亡自测继续独立覆盖真正剥离 |
+| 幂等与旧审计 | 同一事件重复处理不二次扣费或写半状态；TQ-015C-8～10 的历史结果不变且不能作为新结算断言 |
+
+## 待负责人决定
+
+决策编号：`DEC-20260728-NSUPPRESS01A`。
+
+必须对“削位”和“封丹”各自给出下列可存档值，或明确取消该项结算：
+
+1. `TargetVariableId`、`AllowedOperationId`、`TargetId`、`ScopeId`、`BeneficiaryId`，以及唯一的合法目标状态；是否可作用于稳定实位必须明确。若为是，必须转交 N-JD-RULE-01C 的真实失位／死亡事务，不能由 01B 实现。
+2. 完整的 `CrossTierChallengeGrant` 来源种类、`grantId`、版本、挑战层级、支点、资源／容量账本引用、有效期与失效条件；同阶路径是否允许以及何时转入 `GoldenCoreConflictResolver`。
+3. 每个动作的成本类型、数量、扣除时点、持续／结束条件与重复事件键；当前档案只有账本引用，没有成本数额或结算时点。
+4. 输出枚举与动作级稳定拒绝原因：无资格时是否统一输出 `SUPPRESSED`，与 `JD_CHALLENGE_*`、目标不合法、成本不足、冲突未胜、重复事件之间的原因映射。
+
+在这些字段确定前，01B 不能实现合法资格、合法目标、冲突、结算或拒绝原因；任何“MP 保留率”“禁用神通”默认值都会违反本卡停止条件。
