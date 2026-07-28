@@ -135,6 +135,7 @@ function New-ExternalPrompt {
   $quotedRoot = Quote-Single $ResolvedRepositoryRoot
   $quotedBaseline = Quote-Single $BaselinePath
   $quotedExpectedPaths = Quote-Single $expectedPathText
+  $quotedTaskId = Quote-Single $TaskId
   @(
     '[TZG_EXTERNAL_RESPONSIBILITY]'
     "TaskId: $TaskId"
@@ -154,11 +155,12 @@ function New-ExternalPrompt {
     "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Check -RepositoryRoot $quotedRoot -BaselinePath $quotedBaseline -ExpectedPaths $quotedExpectedPaths"
     'Implement only the selected task-card scope, run its minimum sufficient checks, and keep every change within ExpectedPaths.'
     'On success, update the same task card and its canonical queue/backlog projection to route=codex_review, owner=codex, dispatchState=ready without changing the task ID or body.'
+    "After that transition and before creating businessCommit, run pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot $quotedRoot -TaskId $quotedTaskId -Postcondition ExternalPendingReview -OutputJson. Continue only when it returns status=ok."
     'Create the path-limited businessCommit with tools/automation-finalize-commit.ps1, RequireAutomationMetadata, AutomationTask equal to this TaskId, AutomationState=pending_review, and the required Result, Impact, Verify, and Plain structures.'
     'Then modify only 开发管理/AI合作沟通.txt to record the real business SHA, verified and unverified work, and residual risk; create the handoffCommit with the same finalizer but without Automation metadata or repeated domain checks.'
     'Do not call hourly-automation-lease.ps1, self-review, widen paths, dispatch another agent, push, stash, reset, checkout, clean, or retry a failed command.'
     'Return only the structured object required by the supplied JSON schema. The wrapper uses the Claude CLI result envelope as the authoritative session ID.'
-    'completed requires status, identity matching Identity, businessCommit, and handoffCommit.'
+    'completed requires status, identity matching Identity, and the full 40-character lowercase hexadecimal SHA for both businessCommit and handoffCommit. Never return abbreviated Git SHAs.'
     'needs_decision requires status, stable decisionId, one question, and two or three A/B/C options.'
     'blocked or failed requires status and a stable detailCode. If sessionId is included, it must match SessionId.'
   ) -join "`n"
@@ -174,8 +176,18 @@ function New-TerminalSchema {
       }
       identity = [ordered]@{ type = 'string' }
       sessionId = [ordered]@{ type = 'string' }
-      businessCommit = [ordered]@{ type = 'string' }
-      handoffCommit = [ordered]@{ type = 'string' }
+      businessCommit = [ordered]@{
+        type = 'string'
+        minLength = 40
+        maxLength = 40
+        pattern = '[0-9a-f]{40}$'
+      }
+      handoffCommit = [ordered]@{
+        type = 'string'
+        minLength = 40
+        maxLength = 40
+        pattern = '[0-9a-f]{40}$'
+      }
       decisionId = [ordered]@{ type = 'string' }
       question = [ordered]@{ type = 'string' }
       options = [ordered]@{

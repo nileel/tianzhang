@@ -218,6 +218,15 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
   'invalid' {
     [Console]::Out.WriteLine('not-json')
   }
+  'short-commit' {
+    $structuredOutput = [ordered]@{
+      status = 'completed'
+      identity = 'DeepSeek V4 Pro'
+      sessionId = $sessionId
+      businessCommit = '0a9e847'
+      handoffCommit = 'd9e95fc'
+    }
+  }
   'identity-mismatch' {
     $structuredOutput = [ordered]@{
       status = 'completed'
@@ -297,6 +306,30 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
   Assert-True (
     @($terminalSchema.properties.status.enum) -ccontains 'completed'
   ) 'wrapper terminal schema omitted completed'
+  Assert-Equal `
+    -Actual ([string]$terminalSchema.properties.businessCommit.pattern) `
+    -Expected '[0-9a-f]{40}$' `
+    -Message 'wrapper terminal schema did not require a full businessCommit SHA'
+  Assert-Equal `
+    -Actual ([int]$terminalSchema.properties.businessCommit.minLength) `
+    -Expected 40 `
+    -Message 'wrapper terminal schema businessCommit minimum length mismatch'
+  Assert-Equal `
+    -Actual ([int]$terminalSchema.properties.businessCommit.maxLength) `
+    -Expected 40 `
+    -Message 'wrapper terminal schema businessCommit maximum length mismatch'
+  Assert-Equal `
+    -Actual ([string]$terminalSchema.properties.handoffCommit.pattern) `
+    -Expected '[0-9a-f]{40}$' `
+    -Message 'wrapper terminal schema did not require a full handoffCommit SHA'
+  Assert-Equal `
+    -Actual ([int]$terminalSchema.properties.handoffCommit.minLength) `
+    -Expected 40 `
+    -Message 'wrapper terminal schema handoffCommit minimum length mismatch'
+  Assert-Equal `
+    -Actual ([int]$terminalSchema.properties.handoffCommit.maxLength) `
+    -Expected 40 `
+    -Message 'wrapper terminal schema handoffCommit maximum length mismatch'
   $allowedTools = [string]$arguments[[Array]::IndexOf($arguments, '--allowedTools') + 1]
   foreach ($requiredTool in @('Read', 'Edit', 'Write', 'Bash(git diff --check)')) {
     Assert-True ($allowedTools.Split(',') -ccontains $requiredTool) "allowed tools omitted $requiredTool"
@@ -308,6 +341,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
   Assert-True (
     [string]$record.input -match [regex]::Escape('fixtures/generated-business.txt')
   ) 'wrapper prompt omitted expected paths'
+  Assert-True (
+    [string]$record.input -match [regex]::Escape('-Postcondition ExternalPendingReview -OutputJson')
+  ) 'wrapper prompt omitted the pre-commit pending-review check'
+  Assert-True (
+    [string]$record.input -match [regex]::Escape('full 40-character lowercase hexadecimal SHA')
+  ) 'wrapper prompt omitted the full commit SHA requirement'
   $baselinePath = Join-Path $stateRoot "external-baselines\$runId.json"
   Assert-True (
     [string]$record.input -match [regex]::Escape($baselinePath)
@@ -338,6 +377,18 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
     -RunId $runId
   Assert-Equal -Actual ([string]$invalid.Json.status) -Expected 'failed' -Message 'invalid CLI output did not fail'
   Assert-Equal -Actual ([string]$invalid.Json.detailCode) -Expected 'external_invalid_terminal' -Message 'invalid CLI detailCode mismatch'
+
+  $env:TZG_FAKE_CLAUDE_MODE = 'short-commit'
+  $shortCommit = Invoke-Wrapper `
+    -WrapperPath $wrapperPath `
+    -Root $repositoryRoot `
+    -StateRoot $stateRoot `
+    -RunId $runId
+  Assert-Equal -Actual ([string]$shortCommit.Json.status) -Expected 'failed' -Message 'short commit SHAs did not fail'
+  Assert-Equal -Actual ([string]$shortCommit.Json.detailCode) -Expected 'external_invalid_terminal' -Message 'short commit SHA detailCode mismatch'
+  Assert-True (
+    $shortCommit.Json.PSObject.Properties.Name -cnotcontains 'businessCommit'
+  ) 'wrapper normalized a short businessCommit SHA'
 
   $env:TZG_FAKE_CLAUDE_MODE = 'identity-mismatch'
   $identityMismatch = Invoke-Wrapper `
