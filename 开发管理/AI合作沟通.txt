@@ -5,4 +5,15 @@
 
 ## 当前交接队列
 
+- **2026-07-29 | C-GZ-ITEM-01 | DeepSeek V4 Pro → Codex 复审**
+  - 方向：关中首批最小物品档案待复审
+  - businessCommit：`22b7967d733d2769d6998e9f09e9754ef70a5add`
+  - 任务/提交范围：新建 `docs/道具/基础资源/劣质灵石.txt` 与 `docs/道具/妖兽材料/石甲碎片.txt`，同步更新任务卡、队列与 backlog 状态
+  - 修改文件：`docs/道具/基础资源/劣质灵石.txt`（新建）、`docs/道具/妖兽材料/石甲碎片.txt`（新建）、`开发管理/任务卡/C-GZ-ITEM-01.txt`（route→codex_review, owner→codex）、`开发管理/当前任务队列.txt`（同步）、`开发管理/任务列表/内容设计任务.txt`（同步）
+  - 已验证：两项分别成独立文件且稳定 ID 与 Language/Enemies 一致；扫描确认无价格/概率/数量/堆叠/配方/效果数值；git diff --check 通过；check-pending-whitespace 5 文件 OK
+  - 未验证：check-review-text.ps1 被 don't-ask 权限模式拒绝，已手动扫描内容并通过
+  - 残留风险：物品类别"基础资源"和"妖兽材料"未在道具设计规范中列出，但任务卡已授权在既有三类之外新增此两类身份；具体概率/数量/maxStack 仍依赖 N-GZ-REWARD-01 锁定
+  - 请求判断：请 Codex 复审两项物品档案的字段完整性、禁止项合规性及与框架设计 §5.3 ItemData 的一致性
+  - 建议下一步：复审通过后归档，C-GZ-BOUNTY-01 的 C-GZ-ITEM-01 依赖可解除
+
 ## 短格式
