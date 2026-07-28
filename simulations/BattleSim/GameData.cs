@@ -157,20 +157,14 @@ static class GameData
 
         if (score >= 90)
             return new(
-                "成丹", "自然丹籍", "稳定占据", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
-                "自然候选", "natural_candidate", "待争席", "未占据", SeatCompetitionScore(score, weights), 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
+                "成丹", "自然丹籍", "候选未占据", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
+                "自然候选", "natural_candidate", "待争席", "未占据", 0, 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
                 1.08, 1.10);
 
         return new(
             "成丹", "敕封丹籍", "受敕承位", danName, danNature, legacyGrade, seat.TargetBranch, seat.TargetSeat, seat.SeatName, seat.DanPivot,
             "非自然候选", "granted", "不参与自然争席", "受敕承位", 0, 0, 0, ZifuCoreLoopPendingState, ZifuEligibilityPendingNote,
             1.0, 1.0);
-    }
-
-    static int SeatCompetitionScore(int score, Dictionary<string, double> weights)
-    {
-        double topWeight = weights.Count == 0 ? 0 : weights.Values.Max();
-        return score + (int)Math.Round(topWeight * 20);
     }
 
     public static GoldenCoreSeatProfile ResolveGoldenCoreSeat(Dictionary<string, double> weights)
@@ -1032,6 +1026,825 @@ public sealed class GoldenCoreAssembly
         if (string.IsNullOrWhiteSpace(value))
             throw new GoldenCoreAssemblyException(code, message);
     }
+}
+
+// N-SEAT-01B：争位候选与占据分离。协调器只关闭同一世界 tick 的完成集；
+// 注册表是唯一能改变位格占据、核心承载和候选终态的入口。
+public enum SeatCompetitionAttemptStatus
+{
+    Active,
+    AwaitingRegularTickClose,
+    CriticalContest,
+    AwaitingCriticalTickClose,
+    ReadyToBind,
+    Bound,
+    Invalidated,
+}
+
+public enum SeatCompetitionResolutionKind
+{
+    NoCompletion,
+    CriticalContestContinues,
+    UniqueReady,
+}
+
+public enum SeatCompetitionBindFailureReason
+{
+    None,
+    AttemptNotReady,
+    PositionUnavailable,
+    StalePositionVersion,
+    PreconditionsNotMet,
+    CoreInvariantViolation,
+}
+
+public sealed record SeatCompetitionTickResolution(
+    SeatCompetitionResolutionKind Kind,
+    string WinningAttemptId,
+    IReadOnlyList<string> AttemptIds);
+
+public sealed record SeatCompetitionBindResult(
+    bool Succeeded,
+    SeatCompetitionBindFailureReason FailureReason,
+    string BoundPositionId = "");
+
+public sealed class SeatProofProfileDefinition
+{
+    readonly HashSet<string> requiredAchievementIds;
+
+    public SeatProofProfileDefinition(
+        string profileId,
+        GoldenCoreSeatType seatType,
+        int regularProgressTarget,
+        int criticalProgressTarget,
+        IEnumerable<string> requiredAchievementIds)
+    {
+        RequireId(profileId, nameof(profileId));
+        if (regularProgressTarget <= 0)
+            throw new ArgumentOutOfRangeException(nameof(regularProgressTarget));
+        if (criticalProgressTarget <= 0)
+            throw new ArgumentOutOfRangeException(nameof(criticalProgressTarget));
+
+        ProfileId = profileId;
+        SeatType = seatType;
+        RegularProgressTarget = regularProgressTarget;
+        CriticalProgressTarget = criticalProgressTarget;
+        this.requiredAchievementIds = new HashSet<string>(
+            requiredAchievementIds ?? Array.Empty<string>(),
+            StringComparer.Ordinal);
+        if (this.requiredAchievementIds.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("Achievement IDs must be non-empty.", nameof(requiredAchievementIds));
+    }
+
+    public string ProfileId { get; }
+    public GoldenCoreSeatType SeatType { get; }
+    public int RegularProgressTarget { get; }
+    public int CriticalProgressTarget { get; }
+    public IReadOnlyCollection<string> RequiredAchievementIds => requiredAchievementIds;
+
+    public bool IsSatisfiedBy(SeatProofLedger ledger) =>
+        ledger != null && requiredAchievementIds.All(ledger.HasAchievement);
+
+    static void RequireId(string value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("A non-empty ID is required.", parameterName);
+    }
+}
+
+public sealed class SeatProofLedger
+{
+    readonly HashSet<string> achievementIds;
+
+    public SeatProofLedger(string actorId, IEnumerable<string> achievementIds)
+    {
+        if (string.IsNullOrWhiteSpace(actorId))
+            throw new ArgumentException("An actor ID is required.", nameof(actorId));
+
+        ActorId = actorId;
+        this.achievementIds = new HashSet<string>(
+            achievementIds ?? Array.Empty<string>(),
+            StringComparer.Ordinal);
+        if (this.achievementIds.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("Achievement IDs must be non-empty.", nameof(achievementIds));
+    }
+
+    public string ActorId { get; }
+    public bool HasAchievement(string achievementId) => achievementIds.Contains(achievementId);
+}
+
+public sealed record SeatCompetitionAttemptSnapshot(
+    string AttemptId,
+    string PositionId,
+    string ActorId,
+    string ProfileId,
+    string SiteId,
+    string CarrierAbilityInstanceId,
+    long ExpectedPositionVersion,
+    int RegularProgressTarget,
+    int CriticalProgressTarget,
+    int RegularProgress,
+    int CriticalProgress,
+    int CriticalRound,
+    SeatCompetitionAttemptStatus Status);
+
+public sealed class SeatCompetitionAttempt
+{
+    public SeatCompetitionAttempt(
+        string attemptId,
+        string positionId,
+        string actorId,
+        string profileId,
+        string siteId,
+        string carrierAbilityInstanceId,
+        long expectedPositionVersion,
+        int regularProgressTarget,
+        int criticalProgressTarget)
+    {
+        RequireId(attemptId, nameof(attemptId));
+        RequireId(positionId, nameof(positionId));
+        RequireId(actorId, nameof(actorId));
+        RequireId(profileId, nameof(profileId));
+        RequireId(siteId, nameof(siteId));
+        RequireId(carrierAbilityInstanceId, nameof(carrierAbilityInstanceId));
+        if (expectedPositionVersion < 0)
+            throw new ArgumentOutOfRangeException(nameof(expectedPositionVersion));
+        if (regularProgressTarget <= 0)
+            throw new ArgumentOutOfRangeException(nameof(regularProgressTarget));
+        if (criticalProgressTarget <= 0)
+            throw new ArgumentOutOfRangeException(nameof(criticalProgressTarget));
+
+        AttemptId = attemptId;
+        PositionId = positionId;
+        ActorId = actorId;
+        ProfileId = profileId;
+        SiteId = siteId;
+        CarrierAbilityInstanceId = carrierAbilityInstanceId;
+        ExpectedPositionVersion = expectedPositionVersion;
+        RegularProgressTarget = regularProgressTarget;
+        CriticalProgressTarget = criticalProgressTarget;
+        Status = SeatCompetitionAttemptStatus.Active;
+    }
+
+    public string AttemptId { get; }
+    public string PositionId { get; }
+    public string ActorId { get; }
+    public string ProfileId { get; }
+    public string SiteId { get; }
+    public string CarrierAbilityInstanceId { get; }
+    public long ExpectedPositionVersion { get; }
+    public int RegularProgressTarget { get; }
+    public int CriticalProgressTarget { get; }
+    public int RegularProgress { get; private set; }
+    public int CriticalProgress { get; private set; }
+    public int CriticalRound { get; private set; }
+    public SeatCompetitionAttemptStatus Status { get; private set; }
+
+    public void AdvanceRegular(int amount, SeatProofProfileDefinition profile, SeatProofLedger ledger)
+    {
+        if (Status != SeatCompetitionAttemptStatus.Active)
+            throw new InvalidOperationException("Only an active attempt can advance regular proof.");
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount));
+        if (!Matches(profile) || !Matches(ledger))
+            throw new InvalidOperationException("Attempt profile or proof ledger does not match.");
+
+        RegularProgress = Math.Min(RegularProgressTarget, checked(RegularProgress + amount));
+        if (RegularProgress == RegularProgressTarget && profile.IsSatisfiedBy(ledger))
+            Status = SeatCompetitionAttemptStatus.AwaitingRegularTickClose;
+    }
+
+    public void EnterCriticalContest()
+    {
+        if (Status != SeatCompetitionAttemptStatus.AwaitingRegularTickClose)
+            throw new InvalidOperationException("Critical contest requires regular completion.");
+
+        Status = SeatCompetitionAttemptStatus.CriticalContest;
+        CriticalProgress = 0;
+        CriticalRound = 1;
+    }
+
+    public void AdvanceCritical(int amount, SeatProofProfileDefinition profile, SeatProofLedger ledger)
+    {
+        if (Status != SeatCompetitionAttemptStatus.CriticalContest)
+            throw new InvalidOperationException("Attempt is not in critical contest.");
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount));
+        if (!Matches(profile) || !Matches(ledger) || !profile.IsSatisfiedBy(ledger))
+            throw new InvalidOperationException("Attempt profile or proof ledger does not match.");
+
+        CriticalProgress = Math.Min(CriticalProgressTarget, checked(CriticalProgress + amount));
+        if (CriticalProgress == CriticalProgressTarget)
+            Status = SeatCompetitionAttemptStatus.AwaitingCriticalTickClose;
+    }
+
+    internal void RestartCriticalRound()
+    {
+        if (Status != SeatCompetitionAttemptStatus.AwaitingCriticalTickClose)
+            throw new InvalidOperationException("Only simultaneous critical completion restarts a round.");
+
+        Status = SeatCompetitionAttemptStatus.CriticalContest;
+        CriticalProgress = 0;
+        CriticalRound = checked(CriticalRound + 1);
+    }
+
+    internal void MarkReadyToBind()
+    {
+        if (Status != SeatCompetitionAttemptStatus.AwaitingRegularTickClose &&
+            Status != SeatCompetitionAttemptStatus.AwaitingCriticalTickClose)
+        {
+            throw new InvalidOperationException("Attempt has not completed a closable stage.");
+        }
+
+        Status = SeatCompetitionAttemptStatus.ReadyToBind;
+    }
+
+    internal void MarkBound()
+    {
+        if (Status != SeatCompetitionAttemptStatus.ReadyToBind)
+            throw new InvalidOperationException("Only a ready attempt can bind.");
+        Status = SeatCompetitionAttemptStatus.Bound;
+    }
+
+    internal void Invalidate()
+    {
+        if (Status != SeatCompetitionAttemptStatus.Bound)
+            Status = SeatCompetitionAttemptStatus.Invalidated;
+    }
+
+    internal bool Matches(SeatProofProfileDefinition profile) =>
+        profile != null &&
+        string.Equals(ProfileId, profile.ProfileId, StringComparison.Ordinal) &&
+        RegularProgressTarget == profile.RegularProgressTarget &&
+        CriticalProgressTarget == profile.CriticalProgressTarget;
+
+    bool Matches(SeatProofLedger ledger) =>
+        ledger != null && string.Equals(ActorId, ledger.ActorId, StringComparison.Ordinal);
+
+    internal SeatCompetitionAttemptSnapshot CaptureState() => new(
+        AttemptId, PositionId, ActorId, ProfileId, SiteId, CarrierAbilityInstanceId,
+        ExpectedPositionVersion, RegularProgressTarget, CriticalProgressTarget,
+        RegularProgress, CriticalProgress, CriticalRound, Status);
+
+    internal static SeatCompetitionAttempt RestoreState(SeatCompetitionAttemptSnapshot snapshot)
+    {
+        if (snapshot == null || !Enum.IsDefined(snapshot.Status) ||
+            snapshot.RegularProgress < 0 || snapshot.RegularProgress > snapshot.RegularProgressTarget ||
+            snapshot.CriticalProgress < 0 || snapshot.CriticalProgress > snapshot.CriticalProgressTarget ||
+            snapshot.CriticalRound < 0)
+        {
+            throw new ArgumentException("Invalid seat competition attempt snapshot.", nameof(snapshot));
+        }
+
+        var result = new SeatCompetitionAttempt(
+            snapshot.AttemptId, snapshot.PositionId, snapshot.ActorId, snapshot.ProfileId,
+            snapshot.SiteId, snapshot.CarrierAbilityInstanceId, snapshot.ExpectedPositionVersion,
+            snapshot.RegularProgressTarget, snapshot.CriticalProgressTarget)
+        {
+            RegularProgress = snapshot.RegularProgress,
+            CriticalProgress = snapshot.CriticalProgress,
+            CriticalRound = snapshot.CriticalRound,
+            Status = snapshot.Status,
+        };
+        if (!result.HasConsistentState())
+            throw new ArgumentException("Inconsistent seat competition attempt snapshot.", nameof(snapshot));
+        return result;
+    }
+
+    bool HasConsistentState() => Status switch
+    {
+        SeatCompetitionAttemptStatus.Active => CriticalProgress == 0 && CriticalRound == 0,
+        SeatCompetitionAttemptStatus.AwaitingRegularTickClose =>
+            RegularProgress == RegularProgressTarget && CriticalProgress == 0 && CriticalRound == 0,
+        SeatCompetitionAttemptStatus.CriticalContest =>
+            RegularProgress == RegularProgressTarget && CriticalProgress < CriticalProgressTarget && CriticalRound > 0,
+        SeatCompetitionAttemptStatus.AwaitingCriticalTickClose =>
+            RegularProgress == RegularProgressTarget && CriticalProgress == CriticalProgressTarget && CriticalRound > 0,
+        SeatCompetitionAttemptStatus.ReadyToBind or SeatCompetitionAttemptStatus.Bound =>
+            RegularProgress == RegularProgressTarget &&
+            ((CriticalRound == 0 && CriticalProgress == 0) ||
+             (CriticalRound > 0 && CriticalProgress == CriticalProgressTarget)),
+        SeatCompetitionAttemptStatus.Invalidated => true,
+        _ => false,
+    };
+
+    static void RequireId(string value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("A non-empty ID is required.", parameterName);
+    }
+}
+
+public sealed record SeatCompetitionCompletionSnapshot(
+    string PositionId,
+    long WorldTick,
+    IReadOnlyList<string> AttemptIds);
+
+public sealed record SeatCompetitionCoordinatorSnapshot(
+    IReadOnlyList<SeatCompetitionAttemptSnapshot> Attempts,
+    IReadOnlyList<SeatCompetitionCompletionSnapshot> RegularCompletions,
+    IReadOnlyList<SeatCompetitionCompletionSnapshot> CriticalCompletions,
+    IReadOnlyList<SeatCompetitionCompletionSnapshot> ClosedRegularTicks,
+    IReadOnlyList<SeatCompetitionCompletionSnapshot> ClosedCriticalTicks);
+
+public sealed record SeatCompetitionCompletionKey
+{
+    public SeatCompetitionCompletionKey(string positionId, long worldTick)
+    {
+        if (string.IsNullOrWhiteSpace(positionId))
+            throw new ArgumentException("A position ID is required.", nameof(positionId));
+        if (worldTick < 0)
+            throw new ArgumentOutOfRangeException(nameof(worldTick));
+        PositionId = positionId;
+        WorldTick = worldTick;
+    }
+
+    public string PositionId { get; }
+    public long WorldTick { get; }
+}
+
+public sealed class SeatCompetitionCoordinator
+{
+    readonly Dictionary<string, SeatCompetitionAttempt> attempts = new(StringComparer.Ordinal);
+    readonly Dictionary<SeatCompetitionCompletionKey, List<string>> regularCompletions = new();
+    readonly Dictionary<SeatCompetitionCompletionKey, List<string>> criticalCompletions = new();
+    readonly HashSet<SeatCompetitionCompletionKey> closedRegularTicks = new();
+    readonly HashSet<SeatCompetitionCompletionKey> closedCriticalTicks = new();
+
+    public void Register(SeatCompetitionAttempt attempt)
+    {
+        if (attempt == null)
+            throw new ArgumentNullException(nameof(attempt));
+        if (!attempts.TryAdd(attempt.AttemptId, attempt))
+            throw new ArgumentException("Attempt ID already exists.", nameof(attempt));
+    }
+
+    public SeatCompetitionAttempt GetAttempt(string attemptId) =>
+        attemptId != null && attempts.TryGetValue(attemptId, out var attempt) ? attempt : null;
+
+    public void SubmitRegularCompletion(string attemptId, long worldTick)
+    {
+        var attempt = RequireAttempt(attemptId);
+        if (attempt.Status != SeatCompetitionAttemptStatus.AwaitingRegularTickClose)
+            throw new InvalidOperationException("Attempt has not completed the regular stage.");
+        AddCompletion(regularCompletions, criticalCompletions, closedRegularTicks, attempt.PositionId, worldTick, attemptId);
+    }
+
+    public void SubmitCriticalCompletion(string attemptId, long worldTick)
+    {
+        var attempt = RequireAttempt(attemptId);
+        if (attempt.Status != SeatCompetitionAttemptStatus.AwaitingCriticalTickClose)
+            throw new InvalidOperationException("Attempt has not completed the critical stage.");
+        AddCompletion(criticalCompletions, regularCompletions, closedCriticalTicks, attempt.PositionId, worldTick, attemptId);
+    }
+
+    public SeatCompetitionTickResolution CloseRegularTick(string positionId, long worldTick) =>
+        CloseTick(positionId, worldTick, regularCompletions, closedRegularTicks, false);
+
+    public SeatCompetitionTickResolution CloseCriticalTick(string positionId, long worldTick) =>
+        CloseTick(positionId, worldTick, criticalCompletions, closedCriticalTicks, true);
+
+    internal void InvalidateOthers(string positionId, string winningAttemptId)
+    {
+        foreach (var attempt in attempts.Values)
+        {
+            if (string.Equals(attempt.PositionId, positionId, StringComparison.Ordinal) &&
+                !string.Equals(attempt.AttemptId, winningAttemptId, StringComparison.Ordinal))
+            {
+                attempt.Invalidate();
+            }
+        }
+    }
+
+    public SeatCompetitionCoordinatorSnapshot CaptureState() => new(
+        attempts.Values.OrderBy(attempt => attempt.AttemptId, StringComparer.Ordinal)
+            .Select(attempt => attempt.CaptureState()).ToArray(),
+        CaptureOpen(regularCompletions),
+        CaptureOpen(criticalCompletions),
+        CaptureClosed(closedRegularTicks),
+        CaptureClosed(closedCriticalTicks));
+
+    public static SeatCompetitionCoordinator RestoreState(SeatCompetitionCoordinatorSnapshot snapshot)
+    {
+        if (snapshot == null)
+            throw new ArgumentNullException(nameof(snapshot));
+
+        var result = new SeatCompetitionCoordinator();
+        foreach (var attempt in snapshot.Attempts ?? Array.Empty<SeatCompetitionAttemptSnapshot>())
+            result.Register(SeatCompetitionAttempt.RestoreState(attempt));
+        RestoreClosed(result.closedRegularTicks, snapshot.ClosedRegularTicks);
+        RestoreClosed(result.closedCriticalTicks, snapshot.ClosedCriticalTicks);
+        var openAttemptIds = new HashSet<string>(StringComparer.Ordinal);
+        RestoreOpen(result, result.regularCompletions, result.closedRegularTicks,
+            snapshot.RegularCompletions, SeatCompetitionAttemptStatus.AwaitingRegularTickClose, openAttemptIds);
+        RestoreOpen(result, result.criticalCompletions, result.closedCriticalTicks,
+            snapshot.CriticalCompletions, SeatCompetitionAttemptStatus.AwaitingCriticalTickClose, openAttemptIds);
+        return result;
+    }
+
+    SeatCompetitionTickResolution CloseTick(
+        string positionId,
+        long worldTick,
+        IDictionary<SeatCompetitionCompletionKey, List<string>> completions,
+        ISet<SeatCompetitionCompletionKey> closedTicks,
+        bool isCritical)
+    {
+        var key = new SeatCompetitionCompletionKey(positionId, worldTick);
+        if (!closedTicks.Add(key))
+            return Empty();
+
+        var completed = TakeCompletions(completions, key);
+        if (completed.Count == 0)
+            return Empty();
+        if (completed.Count == 1)
+        {
+            completed[0].MarkReadyToBind();
+            return new SeatCompetitionTickResolution(
+                SeatCompetitionResolutionKind.UniqueReady,
+                completed[0].AttemptId,
+                new[] { completed[0].AttemptId });
+        }
+
+        foreach (var attempt in completed)
+        {
+            if (isCritical)
+                attempt.RestartCriticalRound();
+            else
+                attempt.EnterCriticalContest();
+        }
+        return new SeatCompetitionTickResolution(
+            SeatCompetitionResolutionKind.CriticalContestContinues,
+            "",
+            completed.Select(attempt => attempt.AttemptId).OrderBy(id => id, StringComparer.Ordinal).ToArray());
+    }
+
+    SeatCompetitionAttempt RequireAttempt(string attemptId) =>
+        GetAttempt(attemptId) ?? throw new KeyNotFoundException($"Unknown attempt: {attemptId}");
+
+    void AddCompletion(
+        IDictionary<SeatCompetitionCompletionKey, List<string>> store,
+        IReadOnlyDictionary<SeatCompetitionCompletionKey, List<string>> otherStore,
+        ISet<SeatCompetitionCompletionKey> closedTicks,
+        string positionId,
+        long worldTick,
+        string attemptId)
+    {
+        var key = new SeatCompetitionCompletionKey(positionId, worldTick);
+        if (closedTicks.Contains(key))
+            throw new InvalidOperationException("World tick is already closed.");
+        if (store.Any(pair => pair.Value.Contains(attemptId, StringComparer.Ordinal) && !Equals(pair.Key, key)) ||
+            otherStore.Values.Any(ids => ids.Contains(attemptId, StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException("Attempt already belongs to another open tick.");
+        }
+        if (!store.TryGetValue(key, out var ids))
+        {
+            ids = new List<string>();
+            store.Add(key, ids);
+        }
+        if (!ids.Contains(attemptId, StringComparer.Ordinal))
+            ids.Add(attemptId);
+    }
+
+    List<SeatCompetitionAttempt> TakeCompletions(
+        IDictionary<SeatCompetitionCompletionKey, List<string>> store,
+        SeatCompetitionCompletionKey key)
+    {
+        if (!store.Remove(key, out var ids))
+            return new List<SeatCompetitionAttempt>();
+        return ids.Select(RequireAttempt).ToList();
+    }
+
+    static IReadOnlyList<SeatCompetitionCompletionSnapshot> CaptureOpen(
+        IReadOnlyDictionary<SeatCompetitionCompletionKey, List<string>> source) =>
+        source.OrderBy(pair => pair.Key.PositionId, StringComparer.Ordinal)
+            .ThenBy(pair => pair.Key.WorldTick)
+            .Select(pair => new SeatCompetitionCompletionSnapshot(
+                pair.Key.PositionId,
+                pair.Key.WorldTick,
+                pair.Value.OrderBy(id => id, StringComparer.Ordinal).ToArray()))
+            .ToArray();
+
+    static IReadOnlyList<SeatCompetitionCompletionSnapshot> CaptureClosed(
+        IEnumerable<SeatCompetitionCompletionKey> source) =>
+        source.OrderBy(key => key.PositionId, StringComparer.Ordinal)
+            .ThenBy(key => key.WorldTick)
+            .Select(key => new SeatCompetitionCompletionSnapshot(key.PositionId, key.WorldTick, Array.Empty<string>()))
+            .ToArray();
+
+    static void RestoreClosed(
+        ISet<SeatCompetitionCompletionKey> destination,
+        IEnumerable<SeatCompetitionCompletionSnapshot> source)
+    {
+        foreach (var item in source ?? Array.Empty<SeatCompetitionCompletionSnapshot>())
+        {
+            if (item == null || item.AttemptIds == null || item.AttemptIds.Count != 0 ||
+                !destination.Add(new SeatCompetitionCompletionKey(item.PositionId, item.WorldTick)))
+            {
+                throw new ArgumentException("Invalid closed tick snapshot.", nameof(source));
+            }
+        }
+    }
+
+    static void RestoreOpen(
+        SeatCompetitionCoordinator coordinator,
+        IDictionary<SeatCompetitionCompletionKey, List<string>> destination,
+        ISet<SeatCompetitionCompletionKey> closed,
+        IEnumerable<SeatCompetitionCompletionSnapshot> source,
+        SeatCompetitionAttemptStatus expectedStatus,
+        ISet<string> openAttemptIds)
+    {
+        foreach (var item in source ?? Array.Empty<SeatCompetitionCompletionSnapshot>())
+        {
+            var key = item == null ? null : new SeatCompetitionCompletionKey(item.PositionId, item.WorldTick);
+            if (item == null || item.AttemptIds == null || item.AttemptIds.Count == 0 ||
+                key == null || closed.Contains(key) || destination.ContainsKey(key))
+            {
+                throw new ArgumentException("Invalid open completion snapshot.", nameof(source));
+            }
+
+            var ids = new List<string>();
+            foreach (var attemptId in item.AttemptIds)
+            {
+                var attempt = coordinator.GetAttempt(attemptId);
+                if (string.IsNullOrWhiteSpace(attemptId) || attempt == null ||
+                    !openAttemptIds.Add(attemptId) || attempt.Status != expectedStatus ||
+                    !string.Equals(attempt.PositionId, item.PositionId, StringComparison.Ordinal))
+                {
+                    throw new ArgumentException("Invalid open completion attempt.", nameof(source));
+                }
+                ids.Add(attemptId);
+            }
+            destination.Add(key, ids);
+        }
+    }
+
+    static SeatCompetitionTickResolution Empty() => new(
+        SeatCompetitionResolutionKind.NoCompletion,
+        "",
+        Array.Empty<string>());
+}
+
+public sealed record SeatCompetitionPositionSnapshot(
+    string PositionId,
+    string ProfileId,
+    GoldenCoreSeatType SeatType,
+    string HolderActorId,
+    long Version);
+
+public sealed class SeatCompetitionPositionRecord
+{
+    public SeatCompetitionPositionRecord(
+        string positionId,
+        string profileId,
+        GoldenCoreSeatType seatType,
+        long version = 0,
+        string holderActorId = "")
+    {
+        if (string.IsNullOrWhiteSpace(positionId) || string.IsNullOrWhiteSpace(profileId) ||
+            (!string.IsNullOrEmpty(holderActorId) && string.IsNullOrWhiteSpace(holderActorId)) ||
+            version < 0)
+        {
+            throw new ArgumentException("Position input is invalid.");
+        }
+        PositionId = positionId;
+        ProfileId = profileId;
+        SeatType = seatType;
+        Version = version;
+        HolderActorId = string.IsNullOrEmpty(holderActorId) ? "" : holderActorId;
+    }
+
+    public string PositionId { get; }
+    public string ProfileId { get; }
+    public GoldenCoreSeatType SeatType { get; }
+    public string HolderActorId { get; private set; }
+    public long Version { get; private set; }
+    internal bool IsAvailable => string.IsNullOrEmpty(HolderActorId);
+    internal bool CanAdvanceVersion => Version < long.MaxValue;
+
+    public void AdvanceVersionForWorldChange()
+    {
+        Version = checked(Version + 1);
+    }
+
+    internal void Bind(string actorId)
+    {
+        if (!IsAvailable || string.IsNullOrWhiteSpace(actorId))
+            throw new InvalidOperationException("Position binding is invalid.");
+        HolderActorId = actorId;
+        Version = checked(Version + 1);
+    }
+
+    internal SeatCompetitionPositionSnapshot CaptureState() =>
+        new(PositionId, ProfileId, SeatType, HolderActorId, Version);
+
+    internal static SeatCompetitionPositionRecord RestoreState(SeatCompetitionPositionSnapshot snapshot) =>
+        snapshot == null
+            ? throw new ArgumentNullException(nameof(snapshot))
+            : new SeatCompetitionPositionRecord(
+                snapshot.PositionId,
+                snapshot.ProfileId,
+                snapshot.SeatType,
+                snapshot.Version,
+                snapshot.HolderActorId);
+}
+
+public sealed record SeatCompetitionCoreSeatBinding(
+    string PositionId,
+    GoldenCoreSeatType SeatType,
+    string CarrierAbilityInstanceId);
+
+public sealed record SeatCompetitionCoreSnapshot(
+    string ActorId,
+    string CoreBindingId,
+    IReadOnlyList<SeatCompetitionCoreSeatBinding> Bindings);
+
+public sealed class SeatCompetitionCoreState
+{
+    readonly List<SeatCompetitionCoreSeatBinding> bindings = new();
+
+    public SeatCompetitionCoreState(string actorId)
+    {
+        if (string.IsNullOrWhiteSpace(actorId))
+            throw new ArgumentException("An actor ID is required.", nameof(actorId));
+        ActorId = actorId;
+    }
+
+    public string ActorId { get; }
+    public string CoreBindingId { get; private set; } = "";
+    public IReadOnlyList<SeatCompetitionCoreSeatBinding> Bindings => bindings;
+
+    internal bool CanAdd(
+        SeatCompetitionPositionRecord position,
+        SeatCompetitionAttempt attempt,
+        string newCoreBindingId)
+    {
+        if (position == null || attempt == null ||
+            !string.Equals(ActorId, attempt.ActorId, StringComparison.Ordinal) ||
+            bindings.Count >= 3 ||
+            (string.IsNullOrEmpty(CoreBindingId) && string.IsNullOrWhiteSpace(newCoreBindingId)) ||
+            (!string.IsNullOrEmpty(CoreBindingId) && !string.IsNullOrWhiteSpace(newCoreBindingId)))
+        {
+            return false;
+        }
+
+        return bindings.All(binding =>
+            binding.SeatType != position.SeatType &&
+            !string.Equals(binding.PositionId, position.PositionId, StringComparison.Ordinal) &&
+            !string.Equals(binding.CarrierAbilityInstanceId, attempt.CarrierAbilityInstanceId, StringComparison.Ordinal));
+    }
+
+    internal void Add(SeatCompetitionPositionRecord position, SeatCompetitionAttempt attempt, string newCoreBindingId)
+    {
+        if (string.IsNullOrEmpty(CoreBindingId))
+            CoreBindingId = newCoreBindingId;
+        bindings.Add(new SeatCompetitionCoreSeatBinding(
+            position.PositionId,
+            position.SeatType,
+            attempt.CarrierAbilityInstanceId));
+    }
+
+    public SeatCompetitionCoreSnapshot CaptureState() => new(
+        ActorId,
+        CoreBindingId,
+        bindings.OrderBy(binding => binding.PositionId, StringComparer.Ordinal).ToArray());
+
+    public static SeatCompetitionCoreState RestoreState(SeatCompetitionCoreSnapshot snapshot)
+    {
+        if (snapshot == null)
+            throw new ArgumentNullException(nameof(snapshot));
+        var result = new SeatCompetitionCoreState(snapshot.ActorId);
+        var source = snapshot.Bindings ?? Array.Empty<SeatCompetitionCoreSeatBinding>();
+        if ((string.IsNullOrWhiteSpace(snapshot.CoreBindingId) && source.Count != 0) ||
+            (!string.IsNullOrWhiteSpace(snapshot.CoreBindingId) && (source.Count < 1 || source.Count > 3)))
+        {
+            throw new ArgumentException("Core and position bindings are inconsistent.", nameof(snapshot));
+        }
+
+        var types = new HashSet<GoldenCoreSeatType>();
+        var positions = new HashSet<string>(StringComparer.Ordinal);
+        var carriers = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var binding in source)
+        {
+            if (binding == null || string.IsNullOrWhiteSpace(binding.PositionId) ||
+                string.IsNullOrWhiteSpace(binding.CarrierAbilityInstanceId) ||
+                !types.Add(binding.SeatType) || !positions.Add(binding.PositionId) ||
+                !carriers.Add(binding.CarrierAbilityInstanceId))
+            {
+                throw new ArgumentException("Core bindings are invalid or duplicated.", nameof(snapshot));
+            }
+        }
+
+        result.CoreBindingId = string.IsNullOrWhiteSpace(snapshot.CoreBindingId) ? "" : snapshot.CoreBindingId;
+        result.bindings.AddRange(source);
+        return result;
+    }
+}
+
+public sealed class SeatCompetitionBindRequest
+{
+    public SeatCompetitionBindRequest(
+        string attemptId,
+        string newCoreBindingId,
+        bool siteStillValid,
+        bool realityAnchorStillValid,
+        bool carrierStillCompatible,
+        bool keyEventsResolved)
+    {
+        if (string.IsNullOrWhiteSpace(attemptId))
+            throw new ArgumentException("An attempt ID is required.", nameof(attemptId));
+        AttemptId = attemptId;
+        NewCoreBindingId = string.IsNullOrWhiteSpace(newCoreBindingId) ? "" : newCoreBindingId;
+        SiteStillValid = siteStillValid;
+        RealityAnchorStillValid = realityAnchorStillValid;
+        CarrierStillCompatible = carrierStillCompatible;
+        KeyEventsResolved = keyEventsResolved;
+    }
+
+    public string AttemptId { get; }
+    public string NewCoreBindingId { get; }
+    public bool SiteStillValid { get; }
+    public bool RealityAnchorStillValid { get; }
+    public bool CarrierStillCompatible { get; }
+    public bool KeyEventsResolved { get; }
+}
+
+public sealed record SeatCompetitionPositionRegistrySnapshot(
+    IReadOnlyList<SeatCompetitionPositionSnapshot> Positions);
+
+public sealed class SeatCompetitionPositionRegistry
+{
+    readonly Dictionary<string, SeatCompetitionPositionRecord> positions = new(StringComparer.Ordinal);
+
+    public void Add(SeatCompetitionPositionRecord position)
+    {
+        if (position == null)
+            throw new ArgumentNullException(nameof(position));
+        if (!positions.TryAdd(position.PositionId, position))
+            throw new ArgumentException("Position ID already exists.", nameof(position));
+    }
+
+    public SeatCompetitionPositionRecord Get(string positionId) =>
+        positionId != null && positions.TryGetValue(positionId, out var position) ? position : null;
+
+    public SeatCompetitionBindResult TryBind(
+        SeatCompetitionBindRequest request,
+        SeatProofProfileDefinition profile,
+        SeatProofLedger ledger,
+        SeatCompetitionCoreState core,
+        SeatCompetitionCoordinator coordinator)
+    {
+        if (request == null || profile == null || ledger == null || core == null || coordinator == null)
+            throw new ArgumentNullException("Binding input is required.");
+
+        var attempt = coordinator.GetAttempt(request.AttemptId);
+        if (attempt == null || attempt.Status != SeatCompetitionAttemptStatus.ReadyToBind)
+            return Failed(SeatCompetitionBindFailureReason.AttemptNotReady);
+
+        var position = Get(attempt.PositionId);
+        if (position == null || !position.IsAvailable)
+            return Failed(SeatCompetitionBindFailureReason.PositionUnavailable);
+        if (position.Version != attempt.ExpectedPositionVersion)
+            return Failed(SeatCompetitionBindFailureReason.StalePositionVersion);
+
+        if (!position.CanAdvanceVersion || !attempt.Matches(profile) ||
+            !string.Equals(position.ProfileId, profile.ProfileId, StringComparison.Ordinal) ||
+            position.SeatType != profile.SeatType ||
+            !string.Equals(ledger.ActorId, attempt.ActorId, StringComparison.Ordinal) ||
+            !request.SiteStillValid || !request.RealityAnchorStillValid ||
+            !request.CarrierStillCompatible || !request.KeyEventsResolved ||
+            !profile.IsSatisfiedBy(ledger))
+        {
+            return Failed(SeatCompetitionBindFailureReason.PreconditionsNotMet);
+        }
+
+        if (!core.CanAdd(position, attempt, request.NewCoreBindingId))
+            return Failed(SeatCompetitionBindFailureReason.CoreInvariantViolation);
+
+        // 以上检查完成后，以下四项是不可分割的成功提交；任何拒绝均不会写入半状态。
+        core.Add(position, attempt, request.NewCoreBindingId);
+        position.Bind(attempt.ActorId);
+        attempt.MarkBound();
+        coordinator.InvalidateOthers(position.PositionId, attempt.AttemptId);
+        return new SeatCompetitionBindResult(true, SeatCompetitionBindFailureReason.None, position.PositionId);
+    }
+
+    public SeatCompetitionPositionRegistrySnapshot CaptureState() => new(
+        positions.Values.OrderBy(position => position.PositionId, StringComparer.Ordinal)
+            .Select(position => position.CaptureState()).ToArray());
+
+    public static SeatCompetitionPositionRegistry RestoreState(SeatCompetitionPositionRegistrySnapshot snapshot)
+    {
+        if (snapshot == null)
+            throw new ArgumentNullException(nameof(snapshot));
+        var result = new SeatCompetitionPositionRegistry();
+        foreach (var position in snapshot.Positions ?? Array.Empty<SeatCompetitionPositionSnapshot>())
+            result.Add(SeatCompetitionPositionRecord.RestoreState(position));
+        return result;
+    }
+
+    static SeatCompetitionBindResult Failed(SeatCompetitionBindFailureReason reason) =>
+        new(false, reason);
 }
 
 /// <summary>每个 abilityInstanceId 的可变战斗账本；同一实例始终返回同一个状态对象。</summary>

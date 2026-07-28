@@ -15,6 +15,7 @@ class Character
     // TQ-013B: 金丹兼容层。LegacyGCGrade 只用于调试回看，不驱动战斗强度。
     public string FormedState { get; set; } = "未成丹";
     public string DanJiType { get; set; } = "";
+    // 兼容诊断快照；常规成丹流程只通过 ApplyGoldenCoreCandidateResult 写入候选状态。
     public string OccupancyState { get; set; } = "未成丹";
     public string DanName { get; set; } = "";
     public string DanNature { get; set; } = "";
@@ -78,6 +79,33 @@ class Character
         var c = new Character { Name = name, Realm = "凡人", SubIndex = 0, Style = style };
         foreach (var k in InnateKeys) c.Innate[k] = innate[k];
         return c;
+    }
+
+    // N-SEAT-01B：角色只消费成丹候选快照；稳定占据只能由位格注册表原子绑定后确认。
+    internal void ApplyGoldenCoreCandidateResult(Cultivation.Result result)
+    {
+        LegacyGCGrade = result.LegacyGCGrade;
+        GCScore = result.GCScore;
+        FormedState = result.FormedState;
+        DanJiType = result.DanJiType;
+        OccupancyState = result.OccupancyState;
+        DanName = result.DanName;
+        DanNature = result.DanNature;
+        TargetBranch = result.TargetBranch;
+        TargetSeat = result.TargetSeat;
+        SeatName = result.SeatName;
+        DanPivot = result.DanPivot;
+        NaturalDanJiCandidateState = result.NaturalDanJiCandidateState;
+        SeatAccessState = result.SeatAccessState;
+        SeatCompetitionState = result.SeatCompetitionState;
+        FinalOccupancyState = result.FinalOccupancyState;
+        SeatCompetitionScore = result.SeatCompetitionScore;
+        ZifuDivineArtCount = result.ZifuDivineArtCount;
+        ZifuPalaceCoverageCount = result.ZifuPalaceCoverageCount;
+        ZifuCoreLoopState = result.ZifuCoreLoopState;
+        ZifuEligibilityNote = result.ZifuEligibilityNote;
+        DanJiStabilityMult = result.DanJiStabilityMultiplier;
+        DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
     }
 
     internal CombatStateRuntime StartCombatState(CombatLocalStateSnapshot initialState)

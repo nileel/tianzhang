@@ -40,6 +40,9 @@ static class BattleSimSelfTests
         if (suite == "golden-core-challenge-death-n-jd-rule-01c")
             return RunChecked(suite, RunGoldenCoreChallengeDeathNjdrule01C);
 
+        if (suite == "golden-core-seat-n-seat-01b")
+            return RunChecked(suite, RunGoldenCoreSeatNSeat01B);
+
         if (suite == "stage-matrix-b3")
             return RunChecked(suite, RunStageMatrixB3);
 
@@ -214,7 +217,7 @@ static class BattleSimSelfTests
             ["根骨"] = 0.45, ["魂魄"] = 0.15, ["神识"] = 0.15, ["资质"] = 0.15, ["气运"] = 0.10
         };
         var profile = resolver.Invoke(null, new object[] { 130, "黄品", physicalWeights })!;
-        AssertProfile(profile, "成丹", "自然丹籍", "稳定占据", "坤岳丹", "土", "一品");
+        AssertProfile(profile, "成丹", "自然丹籍", "候选未占据", "坤岳丹", "土", "一品");
 
         var temporary = resolver.Invoke(null, new object[] { 52, "无道基", physicalWeights })!;
         AssertProfile(temporary, "成丹", "暂寄丹籍", "暂寄", "坤岳丹", "土", "六品");
@@ -285,8 +288,7 @@ static class BattleSimSelfTests
         AssertEqual("未接入紫府神通/府位闭环，阈值待验证", ReadProperty(natural, "ZifuEligibilityNote"), "zifu eligibility note");
 
         var naturalScore = ReadProperty(natural, "SeatCompetitionScore");
-        if (naturalScore is not int naturalScoreInt || naturalScoreInt <= 0)
-            throw new InvalidOperationException($"natural seat competition score should be positive, got {naturalScore}.");
+        AssertEqual(0, naturalScore, "natural seat competition score stays diagnostic-only");
 
         var granted = resolver.Invoke(null, new object[] { 75, "黄品", physicalWeights })!;
         AssertEqual("非自然候选", ReadProperty(granted, "NaturalDanJiCandidateState"), "granted natural candidate state");
@@ -307,7 +309,7 @@ static class BattleSimSelfTests
         WriteProperty(character, "SeatAccessState", "natural_candidate");
         WriteProperty(character, "SeatCompetitionState", "待争席");
         WriteProperty(character, "FinalOccupancyState", "未占据");
-        WriteProperty(character, "SeatCompetitionScore", naturalScoreInt);
+        WriteProperty(character, "SeatCompetitionScore", naturalScore);
         WriteProperty(character, "ZifuEligibilityNote", "未接入紫府神通/府位闭环，阈值待验证");
         AssertEqual("待争席", ReadProperty(character, "SeatCompetitionState"), "character stores competition state");
     }
@@ -2383,6 +2385,249 @@ static class BattleSimSelfTests
         character.Primary["肉防"] = 1000;
         character.Primary["移力"] = movement;
         return character;
+    }
+
+    static void RunGoldenCoreSeatNSeat01B()
+    {
+        const string positionId = "seat-earth-source";
+        var profile = new SeatProofProfileDefinition(
+            "proof-earth-source",
+            GoldenCoreSeatType.Source,
+            regularProgressTarget: 2,
+            criticalProgressTarget: 2,
+            new[] { "dao-proof-earth" });
+        var ledgerA = new SeatProofLedger("actor-a", new[] { "dao-proof-earth" });
+
+        // 常规唯一完成必须在关闭世界 tick 后才就绪，且未关闭时没有候选绑定资格。
+        var uniqueCoordinator = new SeatCompetitionCoordinator();
+        var unique = CreateAttempt("attempt-unique", positionId, "actor-a", "carrier-a", expectedVersion: 3, profile);
+        uniqueCoordinator.Register(unique);
+        unique.AdvanceRegular(2, profile, ledgerA);
+        AssertEqual(SeatCompetitionAttemptStatus.AwaitingRegularTickClose, unique.Status, "regular completion awaits tick close");
+        uniqueCoordinator.SubmitRegularCompletion(unique.AttemptId, 10);
+        AssertEqual(SeatCompetitionAttemptStatus.AwaitingRegularTickClose, unique.Status, "submitted regular completion stays unbound");
+        var uniqueResolution = uniqueCoordinator.CloseRegularTick(positionId, 10);
+        AssertEqual(SeatCompetitionResolutionKind.UniqueReady, uniqueResolution.Kind, "unique regular close resolution");
+        AssertEqual("attempt-unique", uniqueResolution.WinningAttemptId, "unique regular winner");
+        AssertEqual(SeatCompetitionAttemptStatus.ReadyToBind, unique.Status, "unique regular close makes ready");
+        AssertEqual(SeatCompetitionResolutionKind.NoCompletion,
+            uniqueCoordinator.CloseRegularTick(positionId, 10).Kind,
+            "closed regular tick is idempotent");
+        AssertThrows<InvalidOperationException>(
+            () => uniqueCoordinator.SubmitRegularCompletion(unique.AttemptId, 10),
+            "late regular submission is rejected");
+
+        // 同 tick 常规完成只进入临界轮；展示排序不参与胜者判断。
+        var criticalCoordinator = new SeatCompetitionCoordinator();
+        var first = CreateAttempt("attempt-z", positionId, "actor-z", "carrier-z", 0, profile);
+        var second = CreateAttempt("attempt-a", positionId, "actor-a", "carrier-a", 0, profile);
+        var ledgerZ = new SeatProofLedger("actor-z", new[] { "dao-proof-earth" });
+        criticalCoordinator.Register(first);
+        criticalCoordinator.Register(second);
+        first.AdvanceRegular(2, profile, ledgerZ);
+        second.AdvanceRegular(2, profile, ledgerA);
+        criticalCoordinator.SubmitRegularCompletion(first.AttemptId, 20);
+        criticalCoordinator.SubmitRegularCompletion(second.AttemptId, 20);
+        var criticalStart = criticalCoordinator.CloseRegularTick(positionId, 20);
+        AssertEqual(SeatCompetitionResolutionKind.CriticalContestContinues, criticalStart.Kind, "same-tick regular close continues");
+        AssertSequence(new[] { "attempt-a", "attempt-z" }, criticalStart.AttemptIds, "critical participants use display-only ordinal order");
+        AssertEqual(1, first.CriticalRound, "first critical round starts at one");
+        AssertEqual(1, second.CriticalRound, "second critical round starts at one");
+
+        // 再次同刻完成重开稳定轮；下一轮唯一完成者才成为可绑定对象。
+        first.AdvanceCritical(2, profile, ledgerZ);
+        second.AdvanceCritical(2, profile, ledgerA);
+        criticalCoordinator.SubmitCriticalCompletion(first.AttemptId, 21);
+        criticalCoordinator.SubmitCriticalCompletion(second.AttemptId, 21);
+        var criticalRestart = criticalCoordinator.CloseCriticalTick(positionId, 21);
+        AssertEqual(SeatCompetitionResolutionKind.CriticalContestContinues, criticalRestart.Kind, "same-tick critical close restarts");
+        AssertEqual(2, first.CriticalRound, "first critical round increments");
+        AssertEqual(2, second.CriticalRound, "second critical round increments");
+        first.AdvanceCritical(2, profile, ledgerZ);
+        criticalCoordinator.SubmitCriticalCompletion(first.AttemptId, 22);
+        var criticalWinner = criticalCoordinator.CloseCriticalTick(positionId, 22);
+        AssertEqual(SeatCompetitionResolutionKind.UniqueReady, criticalWinner.Kind, "later unique critical completion wins");
+        AssertEqual("attempt-z", criticalWinner.WinningAttemptId, "unique critical winner is input-driven");
+        AssertEqual(SeatCompetitionAttemptStatus.CriticalContest, second.Status, "other contender continues until atomic bind");
+        AssertThrows<InvalidOperationException>(
+            () => criticalCoordinator.SubmitCriticalCompletion(first.AttemptId, 23),
+            "one attempt cannot join another open tick after ready");
+
+        // 版本、空位与前置条件拒绝都不得改变核心、占据或尝试状态。
+        AssertRejectedWithoutMutation(
+            SeatCompetitionBindFailureReason.StalePositionVersion,
+            CreateReadyContext(profile, ledgerA, positionId, version: 0, advanceVersion: true),
+            "position version change rejects binding");
+        AssertRejectedWithoutMutation(
+            SeatCompetitionBindFailureReason.PositionUnavailable,
+            CreateReadyContext(profile, ledgerA, positionId, version: 0, holderActorId: "existing-holder"),
+            "occupied position rejects binding");
+        AssertRejectedWithoutMutation(
+            SeatCompetitionBindFailureReason.PreconditionsNotMet,
+            CreateReadyContext(profile, ledgerA, positionId, version: 0, siteStillValid: false),
+            "invalid site rejects binding");
+
+        var notReadyRegistry = new SeatCompetitionPositionRegistry();
+        notReadyRegistry.Add(new SeatCompetitionPositionRecord(positionId, profile.ProfileId, profile.SeatType));
+        var notReadyCoordinator = new SeatCompetitionCoordinator();
+        var notReady = CreateAttempt("attempt-not-ready", positionId, "actor-a", "carrier-a", 0, profile);
+        notReadyCoordinator.Register(notReady);
+        var notReadyCore = new SeatCompetitionCoreState("actor-a");
+        var notReadyResult = notReadyRegistry.TryBind(
+            ValidRequest(notReady.AttemptId, "core-not-ready"), profile, ledgerA, notReadyCore, notReadyCoordinator);
+        AssertEqual(SeatCompetitionBindFailureReason.AttemptNotReady, notReadyResult.FailureReason, "unready attempt rejection");
+        AssertEqual(0, notReadyCore.Bindings.Count, "unready attempt leaves core empty");
+
+        var invariantContext = CreateReadyContext(profile, ledgerA, positionId, version: 0);
+        var duplicateCarrierCore = SeatCompetitionCoreState.RestoreState(new SeatCompetitionCoreSnapshot(
+            "actor-a",
+            "core-existing",
+            new[] { new SeatCompetitionCoreSeatBinding("other-source", GoldenCoreSeatType.Source, "carrier-a") }));
+        var invariantResult = invariantContext.Registry.TryBind(
+            ValidRequest(invariantContext.Attempt.AttemptId, ""), profile, ledgerA, duplicateCarrierCore, invariantContext.Coordinator);
+        AssertEqual(SeatCompetitionBindFailureReason.CoreInvariantViolation, invariantResult.FailureReason, "duplicate carrier rejects atomically");
+        AssertEqual(1, duplicateCarrierCore.Bindings.Count, "core invariant failure does not append binding");
+        AssertEqual(SeatCompetitionAttemptStatus.ReadyToBind, invariantContext.Attempt.Status, "core invariant failure keeps attempt ready");
+
+        // 第一位建唯一核心，第二位复用核心；成功绑定失效同位其他候选且没有双重占据。
+        var bindRegistry = new SeatCompetitionPositionRegistry();
+        bindRegistry.Add(new SeatCompetitionPositionRecord(positionId, profile.ProfileId, profile.SeatType));
+        var bindCoordinator = new SeatCompetitionCoordinator();
+        var winner = CreateAttempt("attempt-bind", positionId, "actor-a", "carrier-a", 0, profile);
+        var loser = CreateAttempt("attempt-loser", positionId, "actor-b", "carrier-b", 0, profile);
+        var ledgerB = new SeatProofLedger("actor-b", new[] { "dao-proof-earth" });
+        bindCoordinator.Register(winner);
+        bindCoordinator.Register(loser);
+        winner.AdvanceRegular(2, profile, ledgerA);
+        bindCoordinator.SubmitRegularCompletion(winner.AttemptId, 30);
+        bindCoordinator.CloseRegularTick(positionId, 30);
+        var core = new SeatCompetitionCoreState("actor-a");
+        var firstBind = bindRegistry.TryBind(
+            ValidRequest(winner.AttemptId, "core-a"), profile, ledgerA, core, bindCoordinator);
+        AssertEqual(true, firstBind.Succeeded, "first position binds");
+        AssertEqual("core-a", core.CoreBindingId, "first position creates unique core");
+        AssertEqual("actor-a", bindRegistry.Get(positionId).HolderActorId, "position holder set atomically");
+        AssertEqual(SeatCompetitionAttemptStatus.Bound, winner.Status, "winner becomes bound");
+        AssertEqual(SeatCompetitionAttemptStatus.Invalidated, loser.Status, "other same-position candidate invalidated");
+
+        var secondProfile = new SeatProofProfileDefinition("proof-fire-transform", GoldenCoreSeatType.Transformation, 1, 1, new[] { "dao-proof-fire" });
+        var secondLedger = new SeatProofLedger("actor-a", new[] { "dao-proof-fire" });
+        const string secondPositionId = "seat-fire-transform";
+        bindRegistry.Add(new SeatCompetitionPositionRecord(secondPositionId, secondProfile.ProfileId, secondProfile.SeatType));
+        var secondAttempt = CreateAttempt("attempt-second", secondPositionId, "actor-a", "carrier-c", 0, secondProfile);
+        bindCoordinator.Register(secondAttempt);
+        secondAttempt.AdvanceRegular(1, secondProfile, secondLedger);
+        bindCoordinator.SubmitRegularCompletion(secondAttempt.AttemptId, 31);
+        bindCoordinator.CloseRegularTick(secondPositionId, 31);
+        var secondBind = bindRegistry.TryBind(
+            ValidRequest(secondAttempt.AttemptId, ""), secondProfile, secondLedger, core, bindCoordinator);
+        AssertEqual(true, secondBind.Succeeded, "second position reuses core");
+        AssertEqual("core-a", core.CoreBindingId, "second position cannot replace core");
+        AssertEqual(2, core.Bindings.Count, "two distinct stable positions share one core");
+
+        // 保存/恢复保持关闭 tick、临界完成集、版本、占据和核心；恢复后不得重复关闭或绑定。
+        var openCoordinator = new SeatCompetitionCoordinator();
+        var savedAttempt = CreateAttempt("attempt-save", positionId, "actor-a", "carrier-save", 4, profile);
+        var savedRival = CreateAttempt("attempt-save-rival", positionId, "actor-z", "carrier-save-rival", 4, profile);
+        var savedRivalLedger = new SeatProofLedger("actor-z", new[] { "dao-proof-earth" });
+        openCoordinator.Register(savedAttempt);
+        openCoordinator.Register(savedRival);
+        savedAttempt.AdvanceRegular(2, profile, ledgerA);
+        savedRival.AdvanceRegular(2, profile, savedRivalLedger);
+        openCoordinator.SubmitRegularCompletion(savedAttempt.AttemptId, 40);
+        openCoordinator.SubmitRegularCompletion(savedRival.AttemptId, 40);
+        openCoordinator.CloseRegularTick(positionId, 40);
+        savedAttempt.AdvanceCritical(2, profile, ledgerA);
+        openCoordinator.SubmitCriticalCompletion(savedAttempt.AttemptId, 41);
+        var restoredCoordinator = SeatCompetitionCoordinator.RestoreState(openCoordinator.CaptureState());
+        AssertEqual(SeatCompetitionResolutionKind.UniqueReady,
+            restoredCoordinator.CloseCriticalTick(positionId, 41).Kind,
+            "restored open critical completion closes once");
+        AssertEqual(SeatCompetitionResolutionKind.NoCompletion,
+            restoredCoordinator.CloseCriticalTick(positionId, 41).Kind,
+            "restored closed critical tick stays idempotent");
+        var restoredRegistry = SeatCompetitionPositionRegistry.RestoreState(bindRegistry.CaptureState());
+        var restoredCore = SeatCompetitionCoreState.RestoreState(core.CaptureState());
+        AssertEqual("actor-a", restoredRegistry.Get(positionId).HolderActorId, "restored occupied position holder");
+        AssertEqual(1L, restoredRegistry.Get(positionId).Version, "restored position version");
+        AssertEqual(2, restoredCore.Bindings.Count, "restored core carrier bindings");
+        AssertEqual(SeatCompetitionBindFailureReason.AttemptNotReady,
+            restoredRegistry.TryBind(ValidRequest(winner.AttemptId, ""), profile, ledgerA, restoredCore, bindCoordinator).FailureReason,
+            "bound attempt cannot bind again");
+    }
+
+    static SeatCompetitionAttempt CreateAttempt(
+        string attemptId,
+        string positionId,
+        string actorId,
+        string carrierId,
+        long expectedVersion,
+        SeatProofProfileDefinition profile) => new(
+            attemptId,
+            positionId,
+            actorId,
+            profile.ProfileId,
+            "proof-site",
+            carrierId,
+            expectedVersion,
+            profile.RegularProgressTarget,
+            profile.CriticalProgressTarget);
+
+    static SeatCompetitionBindRequest ValidRequest(
+        string attemptId,
+        string newCoreBindingId,
+        bool siteStillValid = true) => new(
+            attemptId,
+            newCoreBindingId,
+            siteStillValid,
+            realityAnchorStillValid: true,
+            carrierStillCompatible: true,
+            keyEventsResolved: true);
+
+    static (SeatCompetitionPositionRegistry Registry, SeatCompetitionCoordinator Coordinator, SeatCompetitionAttempt Attempt, SeatCompetitionCoreState Core) CreateReadyContext(
+        SeatProofProfileDefinition profile,
+        SeatProofLedger ledger,
+        string positionId,
+        long version,
+        bool advanceVersion = false,
+        string holderActorId = "",
+        bool siteStillValid = true)
+    {
+        var registry = new SeatCompetitionPositionRegistry();
+        var position = new SeatCompetitionPositionRecord(positionId, profile.ProfileId, profile.SeatType, version, holderActorId);
+        if (advanceVersion)
+            position.AdvanceVersionForWorldChange();
+        registry.Add(position);
+        var coordinator = new SeatCompetitionCoordinator();
+        var attempt = CreateAttempt("attempt-ready", positionId, ledger.ActorId, "carrier-ready", version, profile);
+        coordinator.Register(attempt);
+        attempt.AdvanceRegular(profile.RegularProgressTarget, profile, ledger);
+        coordinator.SubmitRegularCompletion(attempt.AttemptId, 50);
+        coordinator.CloseRegularTick(positionId, 50);
+        return (registry, coordinator, attempt, new SeatCompetitionCoreState(ledger.ActorId));
+    }
+
+    static void AssertRejectedWithoutMutation(
+        SeatCompetitionBindFailureReason expectedReason,
+        (SeatCompetitionPositionRegistry Registry, SeatCompetitionCoordinator Coordinator, SeatCompetitionAttempt Attempt, SeatCompetitionCoreState Core) context,
+        string label)
+    {
+        var profile = new SeatProofProfileDefinition("proof-earth-source", GoldenCoreSeatType.Source, 2, 2, new[] { "dao-proof-earth" });
+        var ledger = new SeatProofLedger("actor-a", new[] { "dao-proof-earth" });
+        var position = context.Registry.Get(context.Attempt.PositionId);
+        var versionBefore = position.Version;
+        var holderBefore = position.HolderActorId;
+        var result = context.Registry.TryBind(
+            ValidRequest(context.Attempt.AttemptId, "core-rejected", siteStillValid: expectedReason != SeatCompetitionBindFailureReason.PreconditionsNotMet),
+            profile,
+            ledger,
+            context.Core,
+            context.Coordinator);
+        AssertEqual(expectedReason, result.FailureReason, label);
+        AssertEqual(0, context.Core.Bindings.Count, label + " keeps core unchanged");
+        AssertEqual(versionBefore, position.Version, label + " keeps version unchanged");
+        AssertEqual(holderBefore, position.HolderActorId, label + " keeps holder unchanged");
+        AssertEqual(SeatCompetitionAttemptStatus.ReadyToBind, context.Attempt.Status, label + " keeps attempt ready");
     }
 
     static void AssertProfile(object profile, string formedState, string danJiType, string occupancyState, string danName, string danNature, string legacyGrade)

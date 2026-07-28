@@ -282,9 +282,9 @@ class Program
         }
 
         Console.WriteLine();
-        Console.WriteLine("【席位竞争状态分布（TQ-015C-3字段拆分）】");
-        Console.WriteLine($"{"Build",-10} {"自然候选",-8} {"待争席",-8} {"受敕承位",-8} {"暂寄",-6} {"已占据",-8} {"主要最终状态",-12} {"最高争席分",-8}");
-        Console.WriteLine(new string('-', 84));
+        Console.WriteLine("【席位证位候选状态分布】");
+        Console.WriteLine($"{"Build",-10} {"自然候选",-8} {"待争席",-8} {"受敕承位",-8} {"暂寄",-6} {"已占据",-8} {"主要最终状态",-12}");
+        Console.WriteLine(new string('-', 74));
         for (int i = 0; i < N; i++)
         {
             int naturalCandidates = pool[i].Count(c => c.NaturalDanJiCandidateState == "自然候选");
@@ -292,24 +292,23 @@ class Program
             int grantedSeats = pool[i].Count(c => c.FinalOccupancyState == "受敕承位");
             int temporarySeats = pool[i].Count(c => c.FinalOccupancyState == "暂寄");
             int occupiedSeats = pool[i].Count(c => c.FinalOccupancyState == "已占据");
-            int bestCompetitionScore = pool[i].Select(c => c.SeatCompetitionScore).DefaultIfEmpty(0).Max();
             var majorFinalState = pool[i]
                 .GroupBy(c => c.FinalOccupancyState)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
                 .FirstOrDefault() ?? "-";
-            Console.WriteLine($"  {buildDefs[i].Name,-8} {naturalCandidates,6} {pendingCompetition,8} {grantedSeats,8} {temporarySeats,6} {occupiedSeats,8} {majorFinalState,-12} {bestCompetitionScore,8}");
+            Console.WriteLine($"  {buildDefs[i].Name,-8} {naturalCandidates,6} {pendingCompetition,8} {grantedSeats,8} {temporarySeats,6} {occupiedSeats,8} {majorFinalState,-12}");
         }
-        Console.WriteLine("  说明：自然丹籍列仍表示成丹类型；自然候选/待争席表示尚未结算席位竞争，当前不把候选直接视为已占据。");
-        Console.WriteLine("  席位竞争分只用于同一目标席位候选排序，不改变成丹阈值、战斗倍率或紫府神通门槛。");
+        Console.WriteLine("  说明：自然丹籍列只表示成丹类型；自然候选/待争席均未占据。");
+        Console.WriteLine("  世界级协调器只返回继续或唯一就绪；位格注册表在原子绑定后才确认占据或返回固定拒绝原因。");
 
         Console.WriteLine();
         Console.WriteLine("【席位竞争样本统计（TQ-015C-6按位格汇总）】");
-        Console.WriteLine($"{"SeatName",-18} {"样本",-6} {"自然候选",-8} {"敕封",-6} {"暂寄",-6} {"未成丹",-6} {"NA原因",-14} {"紫府未接入",-10}");
-        Console.WriteLine(new string('-', 92));
+        Console.WriteLine($"{"SeatName",-18} {"样本",-6} {"自然候选",-8} {"待争席",-8} {"敕封",-6} {"暂寄",-6} {"未成丹",-6} {"NA原因",-14} {"紫府未接入",-10}");
+        Console.WriteLine(new string('-', 102));
         foreach (var row in SeatCompetitionSampleStats.Summarize(pool.SelectMany(p => p), minimumSamples: 2))
         {
-            Console.WriteLine($"  {row.SeatName,-16} {row.SampleCount,4} {row.NaturalCandidateCount,8} {row.GrantedCount,6} {row.TemporaryCount,6} {row.UnformedCount,6} {row.NaReason,-14} {row.ZifuPendingCount,6}/{row.SampleCount,-3} {row.ZifuInputState}");
+            Console.WriteLine($"  {row.SeatName,-16} {row.SampleCount,4} {row.NaturalCandidateCount,8} {row.PendingCompetitionCount,8} {row.GrantedCount,6} {row.TemporaryCount,6} {row.UnformedCount,6} {row.NaReason,-14} {row.ZifuPendingCount,6}/{row.SampleCount,-3} {row.ZifuInputState}");
         }
         Console.WriteLine("  说明：本表只按目标 SeatName 汇总样本分布与 NA 原因；不结算席位胜者，不改变成丹阈值、战斗倍率或金丹样本筛选规则。");
 
@@ -765,28 +764,7 @@ class Program
 
     static void ApplyGoldenCoreResult(Character c, Cultivation.Result result)
     {
-        c.LegacyGCGrade = result.LegacyGCGrade;
-        c.GCScore = result.GCScore;
-        c.FormedState = result.FormedState;
-        c.DanJiType = result.DanJiType;
-        c.OccupancyState = result.OccupancyState;
-        c.DanName = result.DanName;
-        c.DanNature = result.DanNature;
-        c.TargetBranch = result.TargetBranch;
-        c.TargetSeat = result.TargetSeat;
-        c.SeatName = result.SeatName;
-        c.DanPivot = result.DanPivot;
-        c.NaturalDanJiCandidateState = result.NaturalDanJiCandidateState;
-        c.SeatAccessState = result.SeatAccessState;
-        c.SeatCompetitionState = result.SeatCompetitionState;
-        c.FinalOccupancyState = result.FinalOccupancyState;
-        c.SeatCompetitionScore = result.SeatCompetitionScore;
-        c.ZifuDivineArtCount = result.ZifuDivineArtCount;
-        c.ZifuPalaceCoverageCount = result.ZifuPalaceCoverageCount;
-        c.ZifuCoreLoopState = result.ZifuCoreLoopState;
-        c.ZifuEligibilityNote = result.ZifuEligibilityNote;
-        c.DanJiStabilityMult = result.DanJiStabilityMultiplier;
-        c.DanJiArtAffinityMult = result.DanJiArtAffinityMultiplier;
+        c.ApplyGoldenCoreCandidateResult(result);
     }
 
     static void RunFoundationGrowthAudit()

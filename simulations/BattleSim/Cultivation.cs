@@ -27,6 +27,7 @@ static class Cultivation
         string SeatAccessState = "none",
         string SeatCompetitionState = "未进入",
         string FinalOccupancyState = "未成丹",
+        // 仅保留旧快照兼容字段；N-SEAT-01B 不计算或使用它裁定争位。
         int SeatCompetitionScore = 0,
         int ZifuDivineArtCount = 0,
         int ZifuPalaceCoverageCount = 0,

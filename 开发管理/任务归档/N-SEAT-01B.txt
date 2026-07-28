@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：N-SEAT-01A 已确认 Unity JindanProofCoordinator／JindanPositionRegistry 的候选、tick、版本与原子绑定边界；按《金丹争位现状与确定性实现输入》实施。",
+  "stateReason": "2026-07-28：已实现版本化位格注册表、同 tick 临界稳定轮和原子绑定；专用及既有金丹自测、Release 构建与完整 BattleSim 运行均通过，N-SEAT-01 父任务关闭。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Cultivation.cs",
@@ -67,3 +67,7 @@
 ## 停止条件
 
 - 01A 仍有未裁定状态所有者、稳定轮输入或死亡提交边界，或实现需要随机／隐藏优先级、兼容补丁或新位格权限时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- 2026-07-28：已完成版本化空位、同 tick 临界稳定轮、唯一就绪与原子占据，并将旧分数降为零值兼容诊断；验证见《金丹确定性争位与原子占据验证记录》。

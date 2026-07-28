@@ -1,0 +1,27 @@
+# 金丹确定性争位与原子占据验证记录
+
+## 范围
+
+- 任务：`N-SEAT-01B`。
+- 实现：BattleSim 增加世界级 `SeatCompetitionCoordinator` 与版本化 `SeatCompetitionPositionRegistry`；候选只在同一 `(PositionId, WorldTick)` 关闭后进入临界续轮或唯一 `ReadyToBind`，占据只由注册表的单次绑定写入。
+- 边界：不修改金丹装配、冲突 QTE、跨阶挑战、实位载体死亡、伤害表或生产数据。死亡与跨阶仍由 `N-JD-RULE-01C` 所有。
+
+## 可复现结果
+
+1. 常规阶段唯一完成在世界 tick 关闭前保持待关闭，关闭后才成为唯一可绑定候选；重复关闭为空结果，迟到提交被拒绝。
+2. 同 tick 的常规或临界完成均返回继续并进入／重开显式临界稳定轮；参与者的序数排序只用于展示，胜者仅由后续唯一完成决定。
+3. 绑定依次重验空缺、版本、地点、现实支点、主承载、最低履历、关键事件和核心不变量。未就绪、空位失效、版本变化、前置失败和核心冲突均返回固定拒绝原因且不改变占据、版本、核心或候选状态。
+4. 第一位原子建立唯一核心与独立主承载；第二位复用原核心。成功后位格、核心、候选终态和同位其他候选同时更新，不产生双重绑定或半状态。
+5. 协调器、注册表与核心状态均可保存／恢复；恢复后保留已关闭 tick、开放完成集、临界轮、版本、占据和承载，不能重复关闭或重复绑定。
+
+## 已执行命令
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-seat-n-seat-01b`：通过。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-tq013b`、`golden-core-tq015c-3`、`golden-core-tq015c-6`、`golden-core-validation-base-n-gc-base-01`：全部通过。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：通过，退出码 0，耗时约 470.4 秒。
+
+## 结论
+
+- 旧 `SeatCompetitionScore` 保留为零值兼容诊断字段，不再计算、排序或暗示胜者；普通成丹结果只写入候选快照。
+- `N-SEAT-01A` 与 `N-SEAT-01B` 已完成，确定性争位与原子占据父任务 `N-SEAT-01` 已关闭。

@@ -11,6 +11,7 @@ static class SeatCompetitionSampleStats
         string SeatName,
         int SampleCount,
         int NaturalCandidateCount,
+        int PendingCompetitionCount,
         int GrantedCount,
         int TemporaryCount,
         int UnformedCount,
@@ -33,6 +34,7 @@ static class SeatCompetitionSampleStats
         int sampleCount = group.Count;
         int naturalCandidates = group.Count(c =>
             c.NaturalDanJiCandidateState == "自然候选" || c.SeatAccessState == "natural_candidate");
+        int pendingCompetition = group.Count(c => c.SeatCompetitionState == "待争席");
         int granted = group.Count(c => c.SeatAccessState == "granted" || c.FinalOccupancyState == "受敕承位");
         int temporary = group.Count(c => c.SeatAccessState == "temporary" || c.FinalOccupancyState == "暂寄");
         int unformed = group.Count(c => c.FormedState != "成丹" || string.IsNullOrEmpty(c.SeatName));
@@ -55,6 +57,7 @@ static class SeatCompetitionSampleStats
             seatName,
             sampleCount,
             naturalCandidates,
+            pendingCompetition,
             granted,
             temporary,
             unformed,
