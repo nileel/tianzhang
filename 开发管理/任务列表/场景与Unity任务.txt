@@ -25,8 +25,7 @@
 | U-TZ-CHARTER-MODEL-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、D-TZ-CHARTER-SAMPLE-01、M8 实现授权） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、M8 实现授权） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 冻结（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01、M8 实现授权） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
-| U-COMBAT-01 | P3 | Codex | 阻塞（U-COMBAT-01A、U-COMBAT-01B） | — | Unity 统一攻击档案与 2v2 消费父任务；不直接执行。 | — |
-| U-COMBAT-01A | P3 | codex | 已排队 | — | Unity 攻击档案消费者定位 | 开发管理/任务卡/U-COMBAT-01A.txt |
+| U-COMBAT-01 | P3 | Codex | 阻塞（U-COMBAT-01B；其独立任务卡由后续队列维护解除已完成的 01A 依赖） | — | Unity 统一攻击档案与 2v2 消费父任务；不直接执行。 | — |
 | U-COMBAT-01B | P3 | codex | 阻塞 | U-COMBAT-01A | Unity 攻击档案与 2v2 消费接入 | 开发管理/任务卡/U-COMBAT-01B.txt |
 
 ## 执行边界

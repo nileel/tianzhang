@@ -1,0 +1,59 @@
+# Unity 统一攻击档案消费者现状与实施输入
+
+> 来源任务：`U-COMBAT-01A`。本文件只记录 2026-07-28 工作树的 Unity 消费者、可复用空间边界与 `U-COMBAT-01B` 实施输入；不创建攻击档案、CSV、asset、导入器或运行时行为。
+
+## 结论
+
+- 现有 Unity 攻击链是旧原型的单目标 1v1 链：`ExplorationController` 接收 UI 命令，`TacticalCombatController` 固定持有一名 `Player` 和一名 `Enemy`，再调用 `CombatResolver`。`SpellData`、`DivineSkillData` 与 `ImportSpells`／`ImportSkills` 是术法、神通的遗留数据链；它们不是后续 `AttackProfiles.csv` 的共同权威。
+- 基础攻击没有 Unity `BasicAttackProfile` 或主战装备绑定消费者。`CombatResolver.BasicAttack` 直接以角色物理／神魂攻击力和固定 `1..1` 射程结算；`TacticalCombatController.ExecutePlayerBasicAttack` 只把当前会话敌人作为目标。没有直接事实时，不得为其新增无装备默认档案、功法名称映射或其他回退。
+- `SpatialQueryBoardFactory` 已能从 `TacticalGridModel` 和环境档案生成唯一空间快照，保留单位 ID 到格位的单一锚点、占位、加权有向边及效果通行性。这是后续共享空间查询的复用入口；它当前没有阵营、存活状态、范围中心、形状、范围命中集合或 2v2 战斗会话语义。
+- Unity 术法／神通单目标距离经 `CombatResolver.CanTarget` 调用 `SpatialQueryBoard.QueryRangeEntry(..., SpatialQueryKind.Attack, requireLineOfSight: true)`。这与攻击档案契约中范围效果只按声明的效果边阻断、不得把普通视线作为范围命中前置的规则不同；`U-COMBAT-01B` 不得把当前单目标路径直接当作范围命中路径。
+- BattleSim 的回合冷却与 Unity 的刻冷却仍没有权威换算。Unity 当前将 `cooldownTicks` 同时写入槽位冷却数组和 CT 惩罚，并按 CT 推进刻数递减；本文件不代填跨端换算。
+
+## 现有数据生产者与消费者
+
+| 攻击类别／语义 | 当前生产者 | 当前 Unity 消费者 | 已证实边界 |
+|---|---|---|---|
+| 基础攻击 | 无 Unity 攻击档案；角色自身 `PhysAtk`／`MagAtk` 和功法状态 | `TacticalCombatController.ExecutePlayerBasicAttack` → `CombatResolver.BasicAttack`；`SimpleAI` 在近战范围内调用同一方法 | `CombatResolver` 将射程硬编码为 `1..1`，按攻击者数值择物理／神魂攻击；没有资源或槽位冷却，也没有主战装备引用。 |
+| 术法 | `Assets/DataConfig/Spells.csv` → `DataConfigImporter.ImportSpells` → `SpellData` asset；玩家由 `SectSelectionManager.UpdateExplorationAbilities` 依角色已装备名称装入数组；旧探索敌人以 `CreateFallbackSpell` 临时创建 | `ExplorationController.playerSpells`、`TacticalCombatController.ExecutePlayerSpell`、`CombatResolver.CastSpell`、`SimpleAI.ExecuteTurn`、战斗按钮刷新 | 消费 `spellName`、`type`、双倍率、元素、`mpCost`、`cooldownTicks`、`minRange`／`maxRange` 与旧特殊字段。自指向仅以 `0..0` 特判；其他术法目标固定为当前敌人。 |
+| 神通 | `Assets/DataConfig/Skills.csv` → `DataConfigImporter.ImportSkills` → `DivineSkillData` asset；玩家由 `SectSelectionManager.UpdateExplorationAbilities` 装入数组 | `ExplorationController.playerSkills`、`TacticalCombatController.ExecutePlayerSkill`、`CombatResolver.UseSkill`、`SimpleAI.ExecuteTurn`、战斗按钮刷新 | 消费 `skillName`、`type`、单一 `damageMultiplier`、元素、`mpCost`、`cooldownTicks`、距离及领域／血脉展示字段；目标固定为当前敌人。 |
+| 资源与冷却 | `SpellData`／`DivineSkillData` 的遗留字段 | `TacticalCombatController` 先验 MP／槽位冷却；`CombatResolver` 消耗 MP、写 `SpellCooldowns`／`SkillCooldowns` 并调用 `CTBEngine.ApplySpellCooldown`；`CombatLoop` 按 CT 实际推进刻数调用 `AdvanceCooldowns` | `Character.EnsureCooldownArraySize` 以术法／神通槽位长度分配数组。`Character.SwapSpellInCombat` 仍把新术法冷却硬编码为 60；迁移时不得把这个旧常量或 asset 初值反向作为攻击档案权威。 |
+| 距离、目标与空间 | `ExplorationController.InitExploration` 从 `HexGrid` 创建 `TacticalGridModel`，再由 `SpatialQueryBoardFactory.TryCreate` 生成 `SpatialQuerySnapshot` | `TacticalCombatController.BeginCombat` 将同一 `SpatialBoard` 给 `CombatResolver`；`CanTarget`、`FindPathTowardTarget`、`SimpleAI` 和所有单目标行动使用它 | 快照包含占位和有向边，但不含队伍／阵营／死亡资格。`TacticalCombatSession` 只有 Player、Enemy 两个字段，故没有 Unity 2v2 调用点。 |
+
+## 导入与运行时边界
+
+`DataConfigImporter.ImportSpells` 与 `ImportSkills` 各自读取遗留 CSV、逐行创建或更新以显示名派生路径的 asset；短行只警告并跳过，之前行仍可落盘。这与统一攻击档案契约要求的“精确表头、先整表校验、ID 冲突失败、无半导入”的关闭语义不相容。因此后续不得把两个旧导入入口扩展为另一份共同权威或让新消费者在新旧字段之间回退。
+
+`SpellRange` 仅是旧 ScriptableObject 的展示枚举；当前真实施放距离由 `minRange`／`maxRange` 进入空间查询。`contentScope`、境界／元素要求由 `SectSelectionManager` 和 `IsAvailableTo` 在装入玩家数组前过滤；`sourceAffiliation` 只作为来源元数据，当前没有充当目标阵营。
+
+## 可复用空间入口与当前缺口
+
+1. 可复用入口是 `TacticalGridModel` → `SpatialQueryBoardFactory.TryCreate` → `SpatialQuerySnapshot.Board`。它已失败关闭未配置环境、缺格位、无效／重复有向边、重复单位锚点和没有来源 ID 的实体障碍。
+2. `SpatialQueryBoardTests` 已覆盖加权有向距离、基础攻击范围、实体障碍／视线、落点占位，以及工厂对环境投影和重复单位锚点的拒绝。`TacticalGridModelTests` 已覆盖格位投影、无空间快照时攻击失败关闭、加权距离优先于六角直觉距离、CT 冷却递减和单目标施放。
+3. 这套空间根可被后续 2v2 入口复用，但当前 `TacticalCombatSession`、`ExplorationController.currentCombatTarget`、`ExecutePlayerSpell`／`ExecutePlayerSkill` 与 UI 命令都没有“候选单位集合、中心格、阵营、状态或范围命中”输入。不得把 `UnitAnchors` 的字典或普通 `QueryLineOfSight` 误称为已实现的 2v2／范围消费者。
+
+## U-COMBAT-01B 精确实施输入
+
+| 路径 | 应处理的已证实职责 | 本卡限定的边界 |
+|---|---|---|
+| `src/Assets/Scripts/Combat/AttackProfileData.cs`（新增） | 按已锁定契约承载一个 `attackProfileId` 的全部 Unity typed asset 投影。 | 只承载契约字段；不建立第二套 Unity schema、构造器默认攻击参数或手工 asset 覆盖。 |
+| `src/Assets/Scripts/Editor/DataConfigImporter.cs` | 增加 `AttackProfiles.csv` 的独立整表校验与同 ID asset 生成／更新入口；必须在任一 asset 写入前完成校验。 | 不改写 `ImportSpells`／`ImportSkills` 使其成为共同权威，不接受短行跳过或部分导入。 |
+| `src/Assets/Scripts/Combat/CombatResolver.cs`、`TacticalCombatController.cs`、`EnemyAI.cs` | 将已切换的单目标行动改为只从同一攻击档案投影读取效果、资源、冷却和距离；保留单目标通过现有空间根查询的事实。 | 不为基础攻击补无装备／功法默认值；不把当前 `requireLineOfSight: true` 单目标路径套用于范围命中。 |
+| `src/Assets/Scripts/Map/ExplorationController.cs`、`src/Assets/Scripts/Game/SectSelectionManager.cs` | 替换玩家装载与旧敌人临时术法路径，使已切换消费者按稳定 ID 获得攻击档案。 | 不保留按显示名、旧 asset 或临时构造值回填新档案字段；不扩展为新的正式冒险入口。 |
+| `src/Assets/Tests/EditMode/AttackProfileDataTests.cs`（新增）、`TacticalGridModelTests.cs`、`SpatialQueryBoardTests.cs` | 覆盖严格导入／无半导入、逐字段投影、单目标距离与冷却，以及真实 2v2 调用点出现后的四单位占位、目标资格和范围拒绝原因。 | 不生产 CSV／asset fixture；跨端 fixture 与 BattleSim 冷却单位失败由 `D-COMBAT-02` 处理。 |
+
+`BattleUIManager.cs` 目前只把固定按钮索引转发给 `ICombatCommandHandler`，`TacticalGridModel.cs` 与 `SpatialQueryBoardFactory.cs` 已提供空间快照。除非 `U-COMBAT-01B` 先证明其调用接口需要新输入，这三处不应因统一档案而先行修改。
+
+## 直接测试与验证入口
+
+- `src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs`：现有 `SpellData` 两种伤害倍率独立存储的遗留断言。
+- `src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs`：现有术法／神通可用性字段与来源元数据边界。
+- `src/Assets/Tests/EditMode/TacticalGridModelTests.cs`：空间未配置失败关闭、加权距离、CT 冷却、普攻／术法行动、按钮命令转发。
+- `src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs`：环境快照、占位与有向空间查询的直接回归。
+- `dotnet build src/TianZhang.EditModeTests.csproj` 是 Unity 现行程序集的快速编译入口；`tools/run-unity-editmode-tests.ps1` 是需要运行 Unity EditMode 时的全套入口。
+
+## U-COMBAT-01B 停止条件
+
+- 若实施需要指定主战装备所有者、无装备攻击档案、任何攻击数值、范围形状／尺寸、阵营／尸体资格、具体 2v2 部署或 BattleSim 回合到 Unity 刻的换算，转为 `pending_decision`；本卡没有这些事实。
+- 若 Unity 侧出现第二个可能的正式 2v2 运行时调用者，或现有单目标普通视线规则与范围效果阻断规则无法隔离，先停止并以真实调用链裁定所有者。
+- 在获得四单位会话和候选／中心格输入前，不得声称 Unity 已接入 2v2 或范围伤害；只能复用已经存在的空间快照。

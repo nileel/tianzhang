@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "discovery",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：N-GROUP-02 与 D-COMBAT-01 已完成；先定位 Unity 基础攻击、术法、神通、目标和空间消费者，形成不猜测新所有者的实施输入。",
+  "stateReason": "2026-07-28：已完成只读消费者定位；实施输入已记录于 开发管理/Unity统一攻击档案消费者现状与实施输入.txt。现有 Unity 战斗链为单目标 1v1，空间快照可复用但尚无 2v2／范围消费者；未创建攻击参数、回退或冷却换算。",
   "expectedPaths": [
     "开发管理/Unity统一攻击档案消费者现状与实施输入.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -22,6 +22,12 @@
 }
 ---TASK-BODY---
 # U-COMBAT-01A · Unity 攻击档案消费者定位
+
+## 完成记录
+
+- 已新增 `开发管理/Unity统一攻击档案消费者现状与实施输入.txt`，逐项回链基础攻击、术法、神通、资源／冷却、距离、目标、空间快照和直接 EditMode 测试。
+- 已确认 `ExplorationController → TacticalCombatController → CombatResolver` 是旧原型单目标 1v1 消费链；`TacticalGridModel`／`SpatialQueryBoardFactory` 仅提供可复用格位与空间快照，不拥有 2v2 会话、阵营／状态或范围命中语义。
+- 已给出 `U-COMBAT-01B` 的精确修改路径、直接测试和停止条件；基础攻击装备所有者、范围内容参数和 BattleSim 回合到 Unity 刻的冷却换算仍未获得事实，未代填默认值。
 
 ## 来源与当前边界
 
