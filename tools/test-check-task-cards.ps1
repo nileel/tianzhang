@@ -188,6 +188,47 @@ try {
   Assert-True ($reviewDispatch.ExitCode -eq 0) "ready review should pass CodexDispatchReady: $($reviewDispatch.Output)"
   Assert-True (($reviewDispatch.Output | ConvertFrom-Json).taskState -ceq 'ready') 'review evidence taskState mismatch'
 
+  $externalDispatchRoot = Join-Path $tempRoot 'external-dispatch'
+  $externalDispatchFixture = New-Fixture $externalDispatchRoot
+  $externalDispatchCard = Copy-Metadata $externalDispatchFixture.Ready
+  $externalDispatchCard.route = 'external_execute'
+  $externalDispatchCard.owner = 'deepseek'
+  Set-Card $externalDispatchRoot $externalDispatchCard
+  Set-Queue $externalDispatchRoot @($externalDispatchCard)
+  Set-Backlog $externalDispatchRoot @($externalDispatchCard, $externalDispatchFixture.Blocked)
+  $externalDispatch = Invoke-Checker $externalDispatchRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'ExternalDispatchReady',
+    '-ExpectedOwner', 'deepseek',
+    '-OutputJson'
+  )
+  Assert-True ($externalDispatch.ExitCode -eq 0) "ready external task should pass ExternalDispatchReady: $($externalDispatch.Output)"
+  $externalDispatchEvidence = $externalDispatch.Output | ConvertFrom-Json
+  Assert-True ($externalDispatchEvidence.taskState -ceq 'ready') 'external dispatch taskState mismatch'
+  Assert-True ($externalDispatchEvidence.postcondition -ceq 'ExternalDispatchReady') 'external dispatch postcondition mismatch'
+  Assert-True (
+    @($externalDispatchEvidence.expectedPaths) -ccontains 'simulations/BattleSim/Combat.cs'
+  ) 'external dispatch evidence omitted expectedPaths'
+
+  $externalOwnerMismatch = Invoke-Checker $externalDispatchRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'ExternalDispatchReady',
+    '-ExpectedOwner', 'claude'
+  )
+  Assert-True ($externalOwnerMismatch.ExitCode -ne 0) 'ExternalDispatchReady accepted the wrong owner'
+  Assert-True (
+    $externalOwnerMismatch.Output -match 'ExternalDispatchReady requires route=external_execute owner=claude dispatchState=ready'
+  ) "external owner mismatch diagnostic is missing: $($externalOwnerMismatch.Output)"
+
+  $missingExpectedOwner = Invoke-Checker $externalDispatchRoot @(
+    '-TaskId', 'T-READY-01',
+    '-Postcondition', 'ExternalDispatchReady'
+  )
+  Assert-True ($missingExpectedOwner.ExitCode -ne 0) 'ExternalDispatchReady without ExpectedOwner should fail'
+  Assert-True (
+    $missingExpectedOwner.Output -match 'ExpectedOwner is required'
+  ) "missing ExpectedOwner diagnostic mismatch: $($missingExpectedOwner.Output)"
+
   foreach ($dispatchFailure in @(
       @{
         Name = 'execution card under review route'

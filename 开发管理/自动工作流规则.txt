@@ -32,8 +32,8 @@
 7. `队列为空` 时只调用一次 `QueueMaintenance`；本轮不执行新任务。队列维护按 `开发管理/状态与建议维护规则.txt` 处理 backlog 与状态事实，不制造缺乏权威来源的任务。
 
 - 外部 CLI 只在当前行真实选中、身份与主责匹配并取得租约后预检。责任方修改前仍调用 workspace guard 作最终判断。
-- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；owner 映射固定为 `owner=deepseek -> DeepSeek V4 Pro`、`owner=claude -> native Claude Code`。前者只使用已核验的 `http://127.0.0.1:15721` 同源端点，后者只使用原生 Claude Code。
-- 控制器必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
+- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；owner 映射固定为 `owner=deepseek -> DeepSeek V4 Pro`、`owner=claude -> native Claude Code`。前者只使用已核验的 `http://127.0.0.1:15721` 同源端点，后者只使用原生 Claude Code。
+- 固定 wrapper 必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--output-format json` 与 `--json-schema`，只从 Claude CLI 官方结果 envelope 的 `session_id` 和 `structured_output` 读取终态，不从模型正文猜测 JSON；权限固定为 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
 - 事件发生时才更新任务卡、队列或 runtime；普通轮次不为未发生的候选、阶段或进度建立中央 manifest、checkpoint、重试层、阶段状态机或第二套队列。
 
 ## 阻塞指纹与状态纠正

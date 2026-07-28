@@ -92,6 +92,14 @@ $invoker = Read-Utf8Contract -Path $invokerPath
 $runnerPath = Join-Path $root 'tools\codex-cli-session.ps1'
 Assert-Contract -Condition (Test-Path -LiteralPath $runnerPath -PathType Leaf) -Message 'missing workflow component: tools\codex-cli-session.ps1'
 $runner = Read-Utf8Contract -Path $runnerPath
+$externalInvokerPath = Join-Path $root 'tools\invoke-external-responsibility.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $externalInvokerPath -PathType Leaf) -Message 'missing workflow component: tools\invoke-external-responsibility.ps1'
+$externalInvoker = Read-Utf8Contract -Path $externalInvokerPath
+$externalInvokerTestPath = Join-Path $root 'tools\test-invoke-external-responsibility.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $externalInvokerTestPath -PathType Leaf) -Message 'missing workflow component: tools\test-invoke-external-responsibility.ps1'
+$externalCanaryPath = Join-Path $root 'tools\test-external-ai-self-commit.ps1'
+Assert-Contract -Condition (Test-Path -LiteralPath $externalCanaryPath -PathType Leaf) -Message 'missing workflow component: tools\test-external-ai-self-commit.ps1'
+$externalCanary = Read-Utf8Contract -Path $externalCanaryPath
 $agentsRules = Read-Utf8Contract -Path (Join-Path $root 'AGENTS.md')
 $claudeRules = Read-Utf8Contract -Path (Join-Path $root 'CLAUDE.md')
 $collaborationRules = Read-Utf8Contract -Path (Join-Path $root '开发管理\AI协作规则.txt')
@@ -192,10 +200,18 @@ Assert-Contains -Text $rules -Context 'external owner mapping in core rules' -Va
 Assert-Contains -Text $claudeRules -Context 'external owner mapping in CLAUDE.md' -Values $externalOwnerMappingTokens
 Assert-Contains -Text $collaborationRules -Context 'external owner mapping in collaboration rules' -Values $externalOwnerMappingTokens
 $externalLaunchContractTokens = @(
+  'tools/invoke-external-responsibility.ps1',
+  '不得由控制器临时拼装 Claude CLI 命令',
   'external-baselines/<RunId>.json',
   '启动外部 CLI 前创建',
   '用户级私有 runtime',
   '不得把 baseline 写入仓库或 `.claude/`',
+  '`--output-format json`',
+  '`--json-schema`',
+  'Claude CLI 官方结果 envelope',
+  '`session_id`',
+  '`structured_output`',
+  '不从模型正文猜测 JSON',
   '`--permission-mode dontAsk`',
   '`--allowedTools`',
   '`Read`、`Edit`、`Write`',
@@ -203,6 +219,36 @@ $externalLaunchContractTokens = @(
   '不得允许通配 Bash、任意 PowerShell 或任意 Git'
 )
 Assert-Contains -Text $rules -Context 'external launch contract in core rules' -Values $externalLaunchContractTokens
+$externalInvokerTokens = @(
+  "[ValidateSet('Start', 'Resume')]",
+  "[ValidateSet('deepseek', 'claude')]",
+  'ExternalDispatchReady',
+  "Get-Command 'claude.cmd'",
+  'external-baselines',
+  "'--output-format'",
+  "'--json-schema'",
+  'structured_output',
+  "'--permission-mode'",
+  "'dontAsk'",
+  "'--allowedTools'",
+  'Bash(git diff --check)',
+  'ResponsibilityTimeoutSeconds = 3000',
+  'external_lease_mismatch',
+  'external_invalid_terminal'
+)
+Assert-Contains -Text $externalInvoker -Context 'external responsibility invoker' -Values $externalInvokerTokens
+foreach ($forbiddenExternalCloseout in @('-Action RecordResult', '-Action Release', 'send-feishu-notification.ps1')) {
+  Assert-Contract `
+    -Condition (-not $externalInvoker.Contains($forbiddenExternalCloseout, [StringComparison]::OrdinalIgnoreCase)) `
+    -Message "external responsibility invoker contains forbidden closeout token: $forbiddenExternalCloseout"
+}
+Assert-Contains `
+  -Text $externalCanary `
+  -Context 'real external canary production route' `
+  -Values @('invoke-external-responsibility.ps1', '-Action', "'Start'", '-RunId', '-Owner')
+Assert-Contract `
+  -Condition (-not $externalCanary.Contains('--allowedTools', [StringComparison]::Ordinal)) `
+  -Message 'real external canary duplicates production allowed-tools assembly'
 $externalTransitionGateTokens = @(
   'tools/check-task-cards.ps1',
   '-TaskId <同一 TaskId>',

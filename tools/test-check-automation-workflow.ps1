@@ -84,6 +84,7 @@ $weeklyPromptPath = Join-Path $repositoryRoot '开发管理/每周项目总结�
 $agentsPath = Join-Path $repositoryRoot 'AGENTS.md'
 $claudePath = Join-Path $repositoryRoot 'CLAUDE.md'
 $collaborationPath = Join-Path $repositoryRoot '开发管理/AI协作规则.txt'
+$externalInvokerFixturePath = Join-Path $repositoryRoot 'tools/invoke-external-responsibility.ps1'
 
 $canonicalPrompt = @'
 # 每小时自动工作流薄路由
@@ -132,8 +133,8 @@ $canonicalRules = @'
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 按 `开发管理/当前任务队列.txt` 的固定行序查找 `dispatchState=ready`，依次识别 `codex_execute`、`external_execute`、`codex_review`，选择第一项当前可安全执行。
-- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
-- 控制器必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
+- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
+- 固定 wrapper 必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--output-format json` 与 `--json-schema`，只从 Claude CLI 官方结果 envelope 的 `session_id` 和 `structured_output` 读取终态，不从模型正文猜测 JSON；权限固定为 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
 - `事件发生时` 才更新状态；`队列为空` 时只做一次 QueueMaintenance，`本轮不执行新任务`。
@@ -222,6 +223,24 @@ RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::Op
 Test-NotificationMetadata Pattern = '^问题= Pattern = '^影响= Pattern = '^验证= Plain = [pscustomobject] 发生=(?<happened> send-feishu-notification.ps1 $runClosed $TaskId -cne 'QUEUE-MAINTENANCE'
 '@
 $canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding codex_session_id='
+$canonicalExternalInvoker = @'
+[ValidateSet('Start', 'Resume')]
+[ValidateSet('deepseek', 'claude')]
+ExternalDispatchReady
+Get-Command 'claude.cmd'
+external-baselines
+'--output-format'
+'--json-schema'
+structured_output
+'--permission-mode'
+'dontAsk'
+'--allowedTools'
+Bash(git diff --check)
+ResponsibilityTimeoutSeconds = 3000
+external_lease_mismatch
+external_invalid_terminal
+'@
+$canonicalExternalCanary = "invoke-external-responsibility.ps1 -Action 'Start' -RunId -Owner"
 
 try {
   foreach ($entry in @{
@@ -238,6 +257,9 @@ try {
       'tools/check-task-cards.ps1' = 'task card checker fixture'
       'tools/codex-cli-session.ps1' = $canonicalRunner
       'tools/invoke-codex-responsibility.ps1' = $canonicalInvoker
+      'tools/invoke-external-responsibility.ps1' = $canonicalExternalInvoker
+      'tools/test-invoke-external-responsibility.ps1' = 'external invoker test fixture'
+      'tools/test-external-ai-self-commit.ps1' = $canonicalExternalCanary
       'tools/automation-workspace-guard.ps1' = 'guard fixture'
       'tools/automation-finalize-commit.ps1' = 'finalizer fixture'
       'tools/get-automation-briefing-source.ps1' = 'briefing source fixture'
@@ -266,7 +288,8 @@ try {
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
   $ownerMappingLine = '- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。'
-  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($ownerMappingLine, '')
+  $coreOwnerMappingLine = '- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。'
+  Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($coreOwnerMappingLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external owner mapping' -Contains 'external owner mapping in core rules'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
 
@@ -278,10 +301,14 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing collaboration external owner mapping' -Contains 'external owner mapping in collaboration rules'
   Write-Utf8File -Path $collaborationPath -Content $canonicalCollaboration
 
-  $externalLaunchClause = '控制器必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。'
+  $externalLaunchClause = '固定 wrapper 必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--output-format json` 与 `--json-schema`，只从 Claude CLI 官方结果 envelope 的 `session_id` 和 `structured_output` 读取终态，不从模型正文猜测 JSON；权限固定为 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace("- $externalLaunchClause", '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external launch contract' -Contains 'external launch contract in core rules'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules
+
+  Remove-Item -LiteralPath $externalInvokerFixturePath -Force
+  Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing external responsibility invoker' -Contains 'tools\invoke-external-responsibility.ps1'
+  Write-Utf8File -Path $externalInvokerFixturePath -Content $canonicalExternalInvoker
 
   $dispatchReadyLine = '- Execution / Review 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($dispatchReadyLine, '')

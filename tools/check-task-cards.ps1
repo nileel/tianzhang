@@ -7,10 +7,12 @@ param(
   [string]$QueuePath = '开发管理/当前任务队列.txt',
   [string]$BacklogRoot = '开发管理/任务列表',
   [string]$TaskId,
-  [ValidateSet('CodexDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview')]
+  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview')]
   [string]$Postcondition,
   [ValidateSet('codex_execute', 'codex_review')]
   [string]$ExpectedRoute,
+  [ValidateSet('deepseek', 'claude')]
+  [string]$ExpectedOwner,
   [switch]$OutputJson
 )
 
@@ -147,12 +149,19 @@ try {
   $hasTaskId = -not [string]::IsNullOrWhiteSpace($TaskId)
   $hasPostcondition = -not [string]::IsNullOrWhiteSpace($Postcondition)
   $hasExpectedRoute = -not [string]::IsNullOrWhiteSpace($ExpectedRoute)
+  $hasExpectedOwner = -not [string]::IsNullOrWhiteSpace($ExpectedOwner)
   $taskState = $null
+  $taskExpectedPaths = $null
   Assert-Contract ($hasTaskId -eq $hasPostcondition) 'TaskId and Postcondition must be provided together'
   if ($Postcondition -ceq 'CodexDispatchReady') {
     Assert-Contract $hasExpectedRoute 'ExpectedRoute is required for CodexDispatchReady'
   } else {
     Assert-Contract (-not $hasExpectedRoute) 'ExpectedRoute is only valid for CodexDispatchReady'
+  }
+  if ($Postcondition -ceq 'ExternalDispatchReady') {
+    Assert-Contract $hasExpectedOwner 'ExpectedOwner is required for ExternalDispatchReady'
+  } else {
+    Assert-Contract (-not $hasExpectedOwner) 'ExpectedOwner is only valid for ExternalDispatchReady'
   }
   if ($hasTaskId) {
     Assert-Contract (
@@ -273,6 +282,21 @@ try {
     }
     Assert-Contract $postconditionSatisfied "CodexDispatchReady requires route=$ExpectedRoute owner=codex dispatchState=ready: $TaskId"
   }
+  if ($Postcondition -ceq 'ExternalDispatchReady') {
+    $postconditionSatisfied = $false
+    if ($cardById.ContainsKey($TaskId)) {
+      $metadata = $cardById[$TaskId].Metadata
+      $postconditionSatisfied =
+        [string]$metadata.route -ceq 'external_execute' -and
+        [string]$metadata.owner -ceq $ExpectedOwner -and
+        [string]$metadata.dispatchState -ceq 'ready'
+      if ($postconditionSatisfied) {
+        $taskState = [string]$metadata.dispatchState
+        $taskExpectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
+      }
+    }
+    Assert-Contract $postconditionSatisfied "ExternalDispatchReady requires route=external_execute owner=$ExpectedOwner dispatchState=ready: $TaskId"
+  }
   if ($Postcondition -ceq 'CodexClosedOrNonReady') {
     $postconditionSatisfied = $false
     if ($cardById.ContainsKey($TaskId)) {
@@ -327,6 +351,7 @@ try {
       taskId = if ($hasTaskId) { $TaskId } else { $null }
       taskState = $taskState
       postcondition = if ($hasPostcondition) { $Postcondition } else { $null }
+      expectedPaths = $taskExpectedPaths
     } | ConvertTo-Json -Compress))
   } else {
     Write-Output "check-task-cards: OK (cards=$($cards.Count) ready=$($readyCards.Count))"
