@@ -8,15 +8,16 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "discovery",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：N-GC-BASE-01 已归档，但 BattleSim 仍保留旧 SeatCompetitionScore 投影；先核对现有所有者与新原子争位规则，再进入实现。",
+  "stateReason": "2026-07-28：已定位旧 SeatCompetitionScore 投影，确认 Unity JindanProofCoordinator／JindanPositionRegistry 为确定性 tick、版本化空位和原子绑定的现行实现输入；N-SEAT-01B 已解除阻塞。",
   "expectedPaths": [
     "开发管理/金丹争位现状与确定性实现输入.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-SEAT-01A.txt",
-    "开发管理/任务归档/N-SEAT-01A.txt"
+    "开发管理/任务归档/N-SEAT-01A.txt",
+    "开发管理/任务卡/N-SEAT-01B.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
 }

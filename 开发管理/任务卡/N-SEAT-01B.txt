@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-SEAT-01A"
-  ],
-  "stateReason": "2026-07-28：实现切片已从 N-SEAT-01 拆出；等待 01A 清理旧 SeatCompetitionScore 语义并锁定唯一状态所有者与原子提交边界。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：N-SEAT-01A 已确认 Unity JindanProofCoordinator／JindanPositionRegistry 的候选、tick、版本与原子绑定边界；按《金丹争位现状与确定性实现输入》实施。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Cultivation.cs",

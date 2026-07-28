@@ -1,0 +1,61 @@
+# 金丹争位现状与确定性实现输入
+
+> N-SEAT-01A · 2026-07-28
+
+## 结论
+
+BattleSim 现有 `SeatCompetitionScore`、`待争席` 与按样本汇总的字段只会生成单角色的成丹候选快照；没有世界级空位、版本、同 tick 关闭或原子占据，不能据此裁定胜者。现行可复用的确定性实现输入已在 Unity `JindanProof` 领域内核中落地：`JindanProofCoordinator` 负责候选进度和世界 tick，`JindanPositionRegistry` 是版本化位格占据及唯一原子绑定入口。N-SEAT-01B 必须移植这一职责边界，不能把旧分数、角色／NPC ID、注册顺序或加载顺序带入裁定。
+
+## 规则与现有所有者
+
+- `docs/基础设定/金丹位格证位与争位规则.txt` 要求空位版本化、同刻常规完成进入临界争位、额外稳定阶段同刻完成则继续下一轮，直到唯一完成者通过原子绑定；明确禁止随机数、NPC ID、注册顺序、加载顺序和隐藏优先级决定胜者。
+- `docs/基础设定/元婴锚点与金丹位格设定.txt` 第六节规定真实位格丧失与丹毁死亡的原子边界；该边界由既有 `Character.ResolveGoldenCoreCarrierDeath`／N-JD-RULE-01C 所有。N-SEAT-01B 只处理已为空缺位格的证位绑定，不得把死亡、夺位或跨阶挑战并入本切片。
+- Unity `src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs` 是候选和 `(PositionId, WorldTick)` 关闭状态的唯一所有者：普通 tick 唯一完成者转 `ReadyToBind`，同刻多人成为 `CriticalContest`；临界 tick 唯一完成者转 `ReadyToBind`，同刻多人重置临界进度并递增轮次。关闭集合拒绝迟到提交，重复关闭返回空结果。
+- Unity `src/Assets/Scripts/Cultivation/JindanProof/JindanPositionRegistry.cs::TryBind` 是唯一占据写入入口。它先完整检查尝试状态、空缺、版本、档案／席位、履历、地点、主承载和核心不变量，再依次写入核心承载、位格持有者、尝试绑定并失效同位其他尝试；任何拒绝均发生在写入前。
+- 在 BattleSim 中，N-SEAT-01B 应保留这两个既有职责：位格注册表是唯一占据所有者，协调器只拥有候选和 tick 关闭状态。两者必须由同一模拟世界实例持有；`Character` 只能接收已绑定结果，不能自行宣告占据。
+
+## N-SEAT-01B 的确定输入与输出
+
+### 候选与稳定轮输入
+
+逐项移植 Unity `JindanProofAttempt`：`AttemptId`、`PositionId`、`ActorId`、`ProfileId`、`SiteId`、`CarrierAbilityInstanceId`、启动时 `ExpectedPositionVersion`、常规／临界进度目标、当前进度、临界轮次和状态。`JindanProofProfileDefinition` 的常规／临界目标与硬性履历要求是唯一进度阈值来源。
+
+1. 常规进度达到目标且硬性要求满足后，提交到同一 `(PositionId, WorldTick)`。
+2. 关闭该 tick：零人无结果；一人得到唯一 `ReadyToBind`；多人全部进入临界轮。
+3. 临界进度达到目标后，按同一键关闭。唯一完成者得到 `ReadyToBind`；多人全部重开下一临界轮。
+4. `AttemptId` 的序列化／展示排序只能使用序数排序；它不能参与胜者选择。
+
+### 绑定输入、输出与拒绝原因
+
+`TryBind` 的输入必须包含准备就绪的尝试、目标位格、位格档案、该角色永久履历、核心状态及地点仍有效／主承载仍兼容的事实。第一位必须提供新核心绑定 ID；第二、第三位必须不提供新核心绑定 ID，并继续使用原核心。输出只允许成功或以下固定拒绝原因：`AttemptNotReady`、`PositionUnavailable`、`StalePositionVersion`、`PreconditionsNotMet`、`CoreInvariantViolation`；地点、承载与履历失败统一为 `PreconditionsNotMet`，不得通过结果泄露未知条件。
+
+成功事务同时完成：核心／主承载写入、位格持有者与版本更新、尝试变为已绑定、其他同位尝试失效。失败时核心、位格、版本、尝试和其他候选均保持不变。现有 BattleSim `GoldenCoreAssembly` 的唯一核心、最多三位和主承载唯一性检查可复用为核心不变量；不得把 `SeatCompetitionScore` 作为额外比较项。
+
+## 旧 BattleSim 投影的处置
+
+| 现有位置 | 现状 | N-SEAT-01B 处置 |
+|---|---|---|
+| `GameData.ResolveGoldenCoreProfile` | 以成丹分和最高权重计算 `SeatCompetitionScore`，并把自然候选标成“待争席”。 | 保留成丹主题和目标位格描述作为候选起点；`SeatCompetitionScore` 不再计算或解释为胜者依据，候选不得在此写入稳定占据。 |
+| `Cultivation.Result` 与 `Program.ApplyGoldenCoreResult` | 将解析快照复制到角色。 | 仅传递候选／目标描述；世界级进度、版本和占据改由注册表与协调器持有。 |
+| `Character` | `SeatCompetitionState`、`FinalOccupancyState` 和分数字段均可被单角色直接写入。 | 绑定前不允许角色宣告占据；绑定成功后只消费事务结果。保留旧分数字段仅限兼容诊断，不能新增消费者。 |
+| `SeatCompetitionSampleStats` 与 `Program` 汇总 | 统计候选、暂寄、敕封及最高争席分，不结算胜者。 | 保留样本输入和候选分布诊断；移除“最高争席分”胜者暗示，改为注册表／协调器的继续、唯一或拒绝结果汇总。 |
+| `GoldenCoreValidationFixture` 与旧 `golden-core-tq015c-3/-6` 自测 | 固定自然候选快照并要求正分数。 | 仍可作为候选起点夹具；删除正分数／候选即占据的断言，新增确定性争位回归。 |
+| `GoldenCoreSuppressionExitStats` | 只把未占据自然候选识别为削位战术出口，不读取分数。 | 不在 N-SEAT-01B 修改；新实现必须继续明确“候选未占据”，供 N-SUPPRESS-01 独立处理。 |
+
+## 精确修改路径与自测矩阵
+
+N-SEAT-01B 的代码范围保持任务卡所列六个 BattleSim 文件：`GameData.cs` 放置位格记录、候选、协调器、绑定请求／结果和注册表；`Cultivation.cs` 与 `Character.cs` 去除单角色占据宣告；`SeatCompetitionSampleStats.cs` 与 `Program.cs` 改为输出协调结果；`BattleSimSelfTests.cs` 添加专用回归入口。验证记录写入 `开发管理/金丹确定性争位与原子占据验证记录.txt`。
+
+最小自测矩阵必须覆盖：
+
+1. 常规阶段唯一完成只能在 world tick 关闭后变为可绑定。
+2. 同 tick 常规完成进入临界轮，ID 排序只影响参与者展示。
+3. 同 tick 临界完成重开下一轮；后续唯一临界完成者胜出。
+4. 已关闭 tick 的重复关闭幂等，迟到提交和同一尝试提交到两个开放 tick 被拒绝。
+5. 空缺失效、版本变化、未就绪尝试、地点／承载／履历失败和核心不变量失败均无部分写入。
+6. 第一位原子建唯一核心与承载；后续位保留原核心；成功绑定失效同位其他候选且无双重占据。
+7. 保存／恢复保留候选、完成集合、已关闭 tick、临界轮、位格版本、占据和核心承载，恢复后不重复关闭或绑定。
+
+## 已排除的冲突
+
+当前 Unity 内核及其 `JindanProofCoordinatorTests`、`JindanPositionRegistryTests`、`JindanProofAcceptanceTests` 已覆盖上述所有者、稳定轮、拒绝和原子边界；没有需要负责人补定的稳定轮输入。BattleSim 与其冲突的只有旧 `SeatCompetitionScore` 投影及角色级占据语义，均由 N-SEAT-01B 在既定范围内替换。
