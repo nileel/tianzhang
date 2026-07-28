@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TianZhang.Entity;
 
 namespace TianZhang.Game
 {
@@ -259,6 +260,7 @@ namespace TianZhang.Game
         public List<QuestStateSaveData> quests = new List<QuestStateSaveData>();
         public List<InventoryStateSaveData> inventory = new List<InventoryStateSaveData>();
         public List<NpcStateSaveData> npcs = new List<NpcStateSaveData>();
+        public FoundationPurpleMansionSaveData playerFoundationPurpleMansionState;
     }
 
     internal sealed class GameSessionRestoredState
@@ -274,6 +276,7 @@ namespace TianZhang.Game
         public IReadOnlyList<QuestStateSnapshot> Quests { get; }
         public IReadOnlyList<InventoryStateSnapshot> Inventory { get; }
         public IReadOnlyList<NpcStateSnapshot> Npcs { get; }
+        public FoundationPurpleMansionSaveData PlayerFoundationPurpleMansionSaveData { get; }
 
         public GameSessionRestoredState(
             string currentWorldNodeId,
@@ -286,7 +289,8 @@ namespace TianZhang.Game
             SceneReturnTarget lastReturnTarget,
             IReadOnlyList<QuestStateSnapshot> quests,
             IReadOnlyList<InventoryStateSnapshot> inventory,
-            IReadOnlyList<NpcStateSnapshot> npcs)
+            IReadOnlyList<NpcStateSnapshot> npcs,
+            FoundationPurpleMansionSaveData playerFoundationPurpleMansionSaveData)
         {
             CurrentWorldNodeId = currentWorldNodeId;
             WorldYear = worldYear;
@@ -299,13 +303,15 @@ namespace TianZhang.Game
             Quests = quests;
             Inventory = inventory;
             Npcs = npcs;
+            PlayerFoundationPurpleMansionSaveData = playerFoundationPurpleMansionSaveData;
         }
     }
 
     public static class GameSessionSnapshot
     {
         public const int LegacySchemaVersion = 0;
-        public const int CurrentSchemaVersion = 1;
+        public const int StateCollectionsSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
 
         public static GameSessionSaveData Capture(GameSession session)
         {
@@ -322,7 +328,9 @@ namespace TianZhang.Game
                 worldTimeOfDayId = session.WorldTimeOfDayId,
                 currentSettlementId = session.CurrentSettlementId,
                 currentAdventureId = session.CurrentAdventureId,
-                lastReturnTarget = CaptureReturnTarget(session.LastReturnTarget)
+                lastReturnTarget = CaptureReturnTarget(session.LastReturnTarget),
+                playerFoundationPurpleMansionState = CaptureFoundationPurpleMansionState(
+                    session.PlayerFoundationPurpleMansionSaveData),
             };
 
             foreach (QuestStateSnapshot snapshot in session.QuestStates.Snapshots)
@@ -346,6 +354,7 @@ namespace TianZhang.Game
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
             if (data.schemaVersion != LegacySchemaVersion &&
+                data.schemaVersion != StateCollectionsSchemaVersion &&
                 data.schemaVersion != CurrentSchemaVersion)
             {
                 throw new NotSupportedException(
@@ -377,11 +386,18 @@ namespace TianZhang.Game
             var quests = new List<QuestStateSnapshot>();
             var inventory = new List<InventoryStateSnapshot>();
             var npcs = new List<NpcStateSnapshot>();
-            if (data.schemaVersion == CurrentSchemaVersion)
+            FoundationPurpleMansionSaveData playerFoundationPurpleMansionState = null;
+            if (data.schemaVersion == StateCollectionsSchemaVersion ||
+                data.schemaVersion == CurrentSchemaVersion)
             {
                 RestoreQuests(data.quests, quests);
                 RestoreInventory(data.inventory, inventory);
                 RestoreNpcs(data.npcs, npcs);
+            }
+            if (data.schemaVersion == CurrentSchemaVersion)
+            {
+                playerFoundationPurpleMansionState = RestoreFoundationPurpleMansionState(
+                    data.playerFoundationPurpleMansionState);
             }
 
             return new GameSessionRestoredState(
@@ -395,7 +411,77 @@ namespace TianZhang.Game
                 returnTarget,
                 quests,
                 inventory,
-                npcs);
+                npcs,
+                playerFoundationPurpleMansionState);
+        }
+
+        private static FoundationPurpleMansionSaveData CaptureFoundationPurpleMansionState(
+            FoundationPurpleMansionSaveData source)
+        {
+            return RestoreFoundationPurpleMansionState(source);
+        }
+
+        private static FoundationPurpleMansionSaveData RestoreFoundationPurpleMansionState(
+            FoundationPurpleMansionSaveData source)
+        {
+            if (source == null || IsAbsentFoundationPurpleMansionState(source))
+                return null;
+
+            if (!FoundationPurpleMansionRuntimeState.TryRestore(
+                    source,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out string failureReason))
+            {
+                throw new ArgumentException(failureReason, nameof(source));
+            }
+
+            return runtimeState.CaptureSaveData();
+        }
+
+        private static bool IsAbsentFoundationPurpleMansionState(
+            FoundationPurpleMansionSaveData source)
+        {
+            return string.IsNullOrEmpty(source.schemaId) && source.schemaVersion == 0 &&
+                string.IsNullOrEmpty(source.characterId) &&
+                IsEmpty(source.foundationState) && IsEmpty(source.mansionStates) &&
+                IsEmpty(source.effectBindings) && IsEmpty(source.guardianAbilities) &&
+                IsEmpty(source.enhancementNodes) && !source.hasCultivationActionState &&
+                IsEmpty(source.cultivationActionState) && !source.hasClosedRetreatPlan &&
+                IsEmpty(source.closedRetreatPlan) && IsEmpty(source.jindanLock) &&
+                !source.hasJindanFormationSnapshot &&
+                string.IsNullOrEmpty(source.lastClosedRetreatStopReason);
+        }
+
+        private static bool IsEmpty(FoundationStateRecord value)
+        {
+            return value == null || string.IsNullOrEmpty(value.foundationInstanceId);
+        }
+
+        private static bool IsEmpty<T>(IReadOnlyCollection<T> value)
+        {
+            return value == null || value.Count == 0;
+        }
+
+        private static bool IsEmpty(CultivationActionStateRecord value)
+        {
+            return value == null || string.IsNullOrEmpty(value.actionStateId);
+        }
+
+        private static bool IsEmpty(ClosedRetreatPlanRecord value)
+        {
+            return value == null || string.IsNullOrEmpty(value.actionStateId);
+        }
+
+        private static bool IsEmpty(JindanLockRecord value)
+        {
+            return value == null ||
+                (value.status == JindanLockStatus.PreJindan &&
+                 (value.formationSnapshot == null ||
+                  (string.IsNullOrEmpty(value.formationSnapshot.foundationInstanceId) &&
+                   (value.formationSnapshot.expansionGrantIds == null ||
+                    value.formationSnapshot.expansionGrantIds.Length == 0) &&
+                   (value.formationSnapshot.mansionStates == null ||
+                    value.formationSnapshot.mansionStates.Length == 0))));
         }
 
         private static QuestStateSaveData CaptureQuest(QuestStateSnapshot snapshot)

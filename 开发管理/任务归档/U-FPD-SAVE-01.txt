@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：U-FPD-RULE-01 已归档，TQ-070 已提供单一存档版本、迁移和失败关闭基础；本卡可在现有 GameSession 快照链持久化道基与紫府不可逆事实。",
+  "stateReason": "2026-07-28：GameSession schema 2 已持久化道基／紫府运行时事实；schema 0/1 迁移、当前版往返、非法结丹锁篡改拒绝与重复周期防护的直接 EditMode 验证通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Entity/FoundationPurpleMansionStateData.cs",
     "src/Assets/Scripts/Entity/Character.cs",
@@ -70,3 +70,9 @@
 ## 停止条件
 
 - 现有存档所有者不能承载状态、需要新建平行格式／兼容读取层，或无法区分定义版本、实例状态和已提交事务时停止并转为 `pending_decision`。
+
+## 完成记录
+
+- `FoundationPurpleMansionRuntimeState` 现在以可序列化快照保留镇府神通、强化节点、行动、停修原因、已提交周期与结丹形成快照；`Character` 与 `GameSession` 提供显式捕获／应用边界。
+- `GameSessionSnapshot` 升至 schema 2；schema 0／1 不伪造道基紫府状态，schema 2 在替换会话前完整验证，并拒绝形成金丹后的容量或五府篡改。
+- 验证：项目 EditMode 编译通过；三个直接相关 Unity EditMode 测试通过。全量 EditMode 仍受无关 CSV fixture 的 Windows 映射文件锁影响，详见 `开发管理/筑基紫府持久化验证记录.txt`。

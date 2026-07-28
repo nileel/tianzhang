@@ -15,7 +15,6 @@
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
 | U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
 | U-FPD-AI-01 | P2 | codex | 待决定 | — | NPC 自主修炼 | 开发管理/任务卡/U-FPD-AI-01.txt |
-| U-FPD-SAVE-01 | P2 | codex | 已排队 | — | 筑基与紫府持久化 | 开发管理/任务卡/U-FPD-SAVE-01.txt |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-UI-01A、U-FPD-UI-01B） | — | 筑基、紫府与唯一丹相界面父任务；不直接执行。 | — |
 | U-FPD-UI-01A | P2 | Codex | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
 | U-FPD-UI-01B | P2 | Codex | 阻塞（U-FPD-UI-01A、N-SLOT-01、N-FPD-DANXIANG-01） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |

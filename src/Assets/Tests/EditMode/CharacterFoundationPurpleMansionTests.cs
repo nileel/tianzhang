@@ -113,6 +113,52 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void RuntimeSaveDataRoundTripPreservesGuardianNodesStopReasonAndCommittedCycles()
+        {
+            FoundationPurpleMansionStateData state = CreatePausedEmbryoState();
+            state.enhancementNodes = new[]
+            {
+                new EnhancementNodeRecord
+                {
+                    nodeId = "node_ming_1",
+                    abilityInstanceId = "guardian_ming",
+                    nodeKind = EnhancementNodeKind.Cultivation,
+                    requirements = Array.Empty<string>(),
+                    effectBindingIds = Array.Empty<string>(),
+                },
+            };
+            CharacterData data = CreateCharacterData(state);
+            try
+            {
+                var character = Character.FromData(data, new HexCoord(0, 0));
+                Assert.IsTrue(character.TryRepeatClosedRetreatCycle("unused", false).Succeeded);
+
+                FoundationPurpleMansionSaveData pausedSave =
+                    character.CaptureFoundationPurpleMansionSaveData();
+                Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryRestore(
+                    pausedSave,
+                    out FoundationPurpleMansionRuntimeState pausedState,
+                    out string failureReason), failureReason);
+                Assert.AreEqual("INSUFFICIENT_NEXT_CYCLE_RESOURCES",
+                    pausedState.LastClosedRetreatStopReason);
+                Assert.AreEqual("guardian_ming", pausedState.GetGuardianAbilities()[0].abilityInstanceId);
+                Assert.AreEqual("node_ming_1", pausedState.GetEnhancementNodes()[0].nodeId);
+
+                Assert.IsTrue(pausedState.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
+                FoundationPurpleMansionSaveData committedSave = pausedState.CaptureSaveData();
+                Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryRestore(
+                    committedSave,
+                    out FoundationPurpleMansionRuntimeState restoredState,
+                    out failureReason), failureReason);
+                Assert.IsFalse(restoredState.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
+            }
+            finally
+            {
+                Destroy(data, state);
+            }
+        }
+
+        [Test]
         public void JindanCoordinatorLocksFoundationNurtureExpansionAndMansionOpening()
         {
             FoundationPurpleMansionStateData state = CreateCompleteState();

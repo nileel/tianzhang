@@ -205,6 +205,30 @@ namespace TianZhang.Entity
         public JindanFormationSnapshot formationSnapshot;
     }
 
+    /// <summary>
+    /// 可写入会话存档的道基／紫府运行时快照。
+    /// 它只承载角色运行期间已经形成的事实，不替代导入的 ScriptableObject 定义。
+    /// </summary>
+    [Serializable]
+    public sealed class FoundationPurpleMansionSaveData
+    {
+        public string schemaId;
+        public int schemaVersion;
+        public string characterId;
+        public FoundationStateRecord foundationState;
+        public PurpleMansionStateRecord[] mansionStates;
+        public FoundationEffectBinding[] effectBindings;
+        public GuardianAbilityRecord[] guardianAbilities;
+        public EnhancementNodeRecord[] enhancementNodes;
+        public bool hasCultivationActionState;
+        public CultivationActionStateRecord cultivationActionState;
+        public bool hasClosedRetreatPlan;
+        public ClosedRetreatPlanRecord closedRetreatPlan;
+        public JindanLockRecord jindanLock;
+        public bool hasJindanFormationSnapshot;
+        public string lastClosedRetreatStopReason;
+    }
+
     [CreateAssetMenu(fileName = "FoundationPurpleMansionState_", menuName = "天章/道基紫府状态数据")]
     public class FoundationPurpleMansionStateData : ScriptableObject
     {
@@ -234,21 +258,28 @@ namespace TianZhang.Entity
         public const string InvalidClosedRetreat = "FPM_INVALID_CLOSED_RETREAT";
         public const string JindanLockMutation = "FPM_JINDAN_LOCK_MUTATION";
 
+        private readonly string characterId;
         private readonly FoundationStateRecord foundationState;
         private readonly PurpleMansionStateRecord[] mansionStates;
         private readonly FoundationEffectBinding[] effectBindings;
+        private readonly GuardianAbilityRecord[] guardianAbilities;
+        private readonly EnhancementNodeRecord[] enhancementNodes;
         private CultivationActionStateRecord cultivationActionState;
         private readonly ClosedRetreatPlanRecord closedRetreatPlan;
         private JindanLockRecord jindanLock;
 
-        private FoundationPurpleMansionRuntimeState(FoundationPurpleMansionStateData source)
+        private FoundationPurpleMansionRuntimeState(FoundationPurpleMansionSaveData source)
         {
+            characterId = source.characterId;
             foundationState = Copy(source.foundationState);
             mansionStates = source.mansionStates.Select(Copy).ToArray();
             effectBindings = source.effectBindings.Select(Copy).ToArray();
+            guardianAbilities = source.guardianAbilities.Select(Copy).ToArray();
+            enhancementNodes = source.enhancementNodes.Select(Copy).ToArray();
             cultivationActionState = Copy(source.cultivationActionState);
             closedRetreatPlan = Copy(source.closedRetreatPlan);
             jindanLock = Copy(source.jindanLock);
+            LastClosedRetreatStopReason = source.lastClosedRetreatStopReason;
         }
 
         public FoundationPhase Phase => foundationState.phase;
@@ -265,7 +296,16 @@ namespace TianZhang.Entity
             out FoundationPurpleMansionRuntimeState runtimeState,
             out string failureReason)
         {
+            return TryRestore(CreateSaveData(source), out runtimeState, out failureReason);
+        }
+
+        public static bool TryRestore(
+            FoundationPurpleMansionSaveData source,
+            out FoundationPurpleMansionRuntimeState runtimeState,
+            out string failureReason)
+        {
             runtimeState = null;
+            NormalizeOptionalState(source);
             if (!HasRuntimeRoot(source, out failureReason))
                 return false;
 
@@ -293,9 +333,41 @@ namespace TianZhang.Entity
             return effectBindings.Select(Copy).ToArray();
         }
 
+        public GuardianAbilityRecord[] GetGuardianAbilities()
+        {
+            return guardianAbilities.Select(Copy).ToArray();
+        }
+
+        public EnhancementNodeRecord[] GetEnhancementNodes()
+        {
+            return enhancementNodes.Select(Copy).ToArray();
+        }
+
         public CultivationActionStateRecord GetCultivationActionState()
         {
             return Copy(cultivationActionState);
+        }
+
+        public FoundationPurpleMansionSaveData CaptureSaveData()
+        {
+            return new FoundationPurpleMansionSaveData
+            {
+                schemaId = "foundationPurpleMansionState",
+                schemaVersion = 1,
+                characterId = characterId,
+                foundationState = Copy(foundationState),
+                mansionStates = mansionStates.Select(Copy).ToArray(),
+                effectBindings = effectBindings.Select(Copy).ToArray(),
+                guardianAbilities = guardianAbilities.Select(Copy).ToArray(),
+                enhancementNodes = enhancementNodes.Select(Copy).ToArray(),
+                hasCultivationActionState = cultivationActionState != null,
+                cultivationActionState = Copy(cultivationActionState),
+                hasClosedRetreatPlan = closedRetreatPlan != null,
+                closedRetreatPlan = Copy(closedRetreatPlan),
+                jindanLock = Copy(jindanLock),
+                hasJindanFormationSnapshot = jindanLock.formationSnapshot != null,
+                lastClosedRetreatStopReason = LastClosedRetreatStopReason,
+            };
         }
 
         public FoundationPurpleMansionOperationResult TryNurtureFoundationCycle(string cycleId)
@@ -440,14 +512,25 @@ namespace TianZhang.Entity
         }
 
         private static bool HasRuntimeRoot(
-            FoundationPurpleMansionStateData source,
+            FoundationPurpleMansionSaveData source,
             out string failureReason)
         {
             failureReason = InvalidRuntimeState;
             if (source == null || source.schemaId != "foundationPurpleMansionState" ||
                 source.schemaVersion != 1 || source.foundationState == null ||
                 source.mansionStates == null || source.effectBindings == null ||
-                source.jindanLock == null || source.foundationState.expansionGrants == null)
+                source.guardianAbilities == null || source.enhancementNodes == null ||
+                source.jindanLock == null || source.foundationState.expansionGrants == null ||
+                string.IsNullOrWhiteSpace(source.characterId) ||
+                string.IsNullOrWhiteSpace(source.foundationState.foundationInstanceId))
+            {
+                return false;
+            }
+
+            if (source.hasCultivationActionState != (source.cultivationActionState != null) ||
+                source.hasClosedRetreatPlan != (source.closedRetreatPlan != null) ||
+                source.hasJindanFormationSnapshot !=
+                    (source.jindanLock.formationSnapshot != null))
             {
                 return false;
             }
@@ -480,6 +563,15 @@ namespace TianZhang.Entity
                 return false;
             }
 
+            if (source.effectBindings.Any(binding => binding == null ||
+                    binding.conditions == null || binding.parameters == null) ||
+                source.guardianAbilities.Any(ability => ability == null || ability.effectBindingIds == null) ||
+                source.enhancementNodes.Any(node => node == null ||
+                    node.requirements == null || node.effectBindingIds == null))
+            {
+                return false;
+            }
+
             int committedCapacity = source.mansionStates.Count(mansion =>
                 mansion.state == PurpleMansionBuildState.Embryo ||
                 mansion.state == PurpleMansionBuildState.Complete);
@@ -492,7 +584,10 @@ namespace TianZhang.Entity
             if (source.cultivationActionState != null &&
                 (source.cultivationActionState.committedCycleIds == null ||
                  source.cultivationActionState.numericProfileRefs == null ||
-                 source.cultivationActionState.numericProfileRefs.Length == 0))
+                 source.cultivationActionState.numericProfileRefs.Length == 0 ||
+                 source.cultivationActionState.committedCycleIds.Any(string.IsNullOrWhiteSpace) ||
+                 source.cultivationActionState.committedCycleIds.Distinct().Count() !=
+                    source.cultivationActionState.committedCycleIds.Length))
             {
                 failureReason = InvalidAction;
                 return false;
@@ -501,7 +596,9 @@ namespace TianZhang.Entity
             if (source.closedRetreatPlan != null &&
                 (source.cultivationActionState == null ||
                  source.closedRetreatPlan.stopConditions == null ||
-                 source.closedRetreatPlan.stopConditions.Length == 0))
+                 source.closedRetreatPlan.stopConditions.Length == 0 ||
+                 (source.lastClosedRetreatStopReason != null &&
+                  !source.closedRetreatPlan.stopConditions.Contains(source.lastClosedRetreatStopReason))))
             {
                 failureReason = InvalidClosedRetreat;
                 return false;
@@ -514,10 +611,112 @@ namespace TianZhang.Entity
                                    source.jindanLock.formationSnapshot != null &&
                                    foundation.phase == FoundationPhase.Phase4 &&
                                    !source.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Embryo) &&
-                                   source.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete);
+                                   source.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete) &&
+                                   MatchesFormationSnapshot(source);
             if (!validFormedLock)
                 failureReason = JindanLockMutation;
             return validFormedLock;
+        }
+
+        private static bool MatchesFormationSnapshot(FoundationPurpleMansionSaveData source)
+        {
+            JindanFormationSnapshot snapshot = source.jindanLock.formationSnapshot;
+            if (snapshot.mansionStates == null ||
+                snapshot.mansionStates.Length != source.mansionStates.Length ||
+                snapshot.mansionStates.Any(mansion => mansion == null) ||
+                snapshot.mansionStates.Select(mansion => mansion.mansionKind).Distinct().Count() !=
+                    snapshot.mansionStates.Length ||
+                snapshot.foundationInstanceId != source.foundationState.foundationInstanceId ||
+                snapshot.phase != source.foundationState.phase ||
+                snapshot.naturalMansionCapacity != source.foundationState.naturalMansionCapacity ||
+                snapshot.expansionGrantIds == null ||
+                !snapshot.expansionGrantIds.SequenceEqual(
+                    source.foundationState.expansionGrants.Select(grant => grant.grantId)))
+            {
+                return false;
+            }
+
+            foreach (PurpleMansionStateRecord mansion in source.mansionStates)
+            {
+                PurpleMansionSnapshot captured = snapshot.mansionStates.Single(item =>
+                    item.mansionKind == mansion.mansionKind);
+                if (captured.state != mansion.state ||
+                    captured.mansionBodyEffectBindingId != mansion.mansionBodyEffectBindingId ||
+                    captured.guardianAbilityInstanceId != mansion.guardianAbilityInstanceId)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static FoundationPurpleMansionSaveData CreateSaveData(
+            FoundationPurpleMansionStateData source)
+        {
+            return source == null
+                ? null
+                : new FoundationPurpleMansionSaveData
+                {
+                    schemaId = source.schemaId,
+                    schemaVersion = source.schemaVersion,
+                    characterId = source.characterId,
+                    foundationState = source.foundationState,
+                    mansionStates = source.mansionStates,
+                    effectBindings = source.effectBindings,
+                    guardianAbilities = source.guardianAbilities,
+                    enhancementNodes = source.enhancementNodes,
+                    hasCultivationActionState = source.cultivationActionState != null,
+                    cultivationActionState = source.cultivationActionState,
+                    hasClosedRetreatPlan = source.closedRetreatPlan != null,
+                    closedRetreatPlan = source.closedRetreatPlan,
+                    jindanLock = source.jindanLock,
+                    hasJindanFormationSnapshot = source.jindanLock != null &&
+                        source.jindanLock.formationSnapshot != null,
+                };
+        }
+
+        private static void NormalizeOptionalState(FoundationPurpleMansionSaveData source)
+        {
+            if (source == null)
+                return;
+
+            if (!source.hasCultivationActionState && IsEmpty(source.cultivationActionState))
+                source.cultivationActionState = null;
+            if (!source.hasClosedRetreatPlan && IsEmpty(source.closedRetreatPlan))
+                source.closedRetreatPlan = null;
+            if (source.jindanLock != null && !source.hasJindanFormationSnapshot &&
+                IsEmpty(source.jindanLock.formationSnapshot))
+            {
+                source.jindanLock.formationSnapshot = null;
+            }
+            if (string.IsNullOrEmpty(source.lastClosedRetreatStopReason))
+                source.lastClosedRetreatStopReason = null;
+        }
+
+        private static bool IsEmpty(CultivationActionStateRecord value)
+        {
+            return value != null && string.IsNullOrEmpty(value.actionStateId) &&
+                string.IsNullOrEmpty(value.targetRef) &&
+                string.IsNullOrEmpty(value.fixedCycleDefinitionId) &&
+                string.IsNullOrEmpty(value.lastStableBoundaryId) &&
+                (value.committedCycleIds == null || value.committedCycleIds.Length == 0) &&
+                string.IsNullOrEmpty(value.progressChannelId) &&
+                (value.numericProfileRefs == null || value.numericProfileRefs.Length == 0);
+        }
+
+        private static bool IsEmpty(ClosedRetreatPlanRecord value)
+        {
+            return value != null && string.IsNullOrEmpty(value.actionStateId) &&
+                string.IsNullOrEmpty(value.targetRef) &&
+                (value.stopConditions == null || value.stopConditions.Length == 0);
+        }
+
+        private static bool IsEmpty(JindanFormationSnapshot value)
+        {
+            return value != null && string.IsNullOrEmpty(value.foundationInstanceId) &&
+                (value.expansionGrantIds == null || value.expansionGrantIds.Length == 0) &&
+                (value.mansionStates == null || value.mansionStates.Length == 0);
         }
 
         private static FoundationPurpleMansionOperationResult Succeeded()
@@ -579,6 +778,27 @@ namespace TianZhang.Entity
             target = source.target,
             atomicEffectType = source.atomicEffectType,
             parameters = source.parameters.ToArray(),
+        };
+
+        private static GuardianAbilityRecord Copy(GuardianAbilityRecord source) => new GuardianAbilityRecord
+        {
+            abilityInstanceId = source.abilityInstanceId,
+            abilityDefinitionId = source.abilityDefinitionId,
+            mansionInstanceId = source.mansionInstanceId,
+            sourceSpellId = source.sourceSpellId,
+            upgradePlanId = source.upgradePlanId,
+            sourceSpellDisposition = source.sourceSpellDisposition,
+            form = source.form,
+            effectBindingIds = source.effectBindingIds.ToArray(),
+        };
+
+        private static EnhancementNodeRecord Copy(EnhancementNodeRecord source) => new EnhancementNodeRecord
+        {
+            nodeId = source.nodeId,
+            abilityInstanceId = source.abilityInstanceId,
+            nodeKind = source.nodeKind,
+            requirements = source.requirements.ToArray(),
+            effectBindingIds = source.effectBindingIds.ToArray(),
         };
 
         private static CultivationActionStateRecord Copy(CultivationActionStateRecord source)

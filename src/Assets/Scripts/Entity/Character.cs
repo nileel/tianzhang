@@ -90,6 +90,27 @@ namespace TianZhang.Entity
         // ---- 姓名 ----
         public string Name;
 
+        public FoundationPurpleMansionSaveData CaptureFoundationPurpleMansionSaveData()
+        {
+            return RequireFoundationPurpleMansionState().CaptureSaveData();
+        }
+
+        public void RestoreFoundationPurpleMansionSaveData(
+            FoundationPurpleMansionSaveData saveData)
+        {
+            if (!FoundationPurpleMansionRuntimeState.TryRestore(
+                    saveData,
+                    out FoundationPurpleMansionRuntimeState restoredState,
+                    out string failureReason))
+            {
+                throw new System.InvalidOperationException(failureReason);
+            }
+
+            FoundationPurpleMansionState = restoredState;
+            DevelopedMansions = new string[0];
+            MansionBindings = new string[0];
+        }
+
         public static Character FromData(CharacterData data, HexCoord startPos)
         {
             var c = new Character

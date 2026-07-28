@@ -1,5 +1,8 @@
 using System;
 using NUnit.Framework;
+using TianZhang.Core;
+using TianZhang.Cultivation.JindanProof;
+using TianZhang.Entity;
 using TianZhang.Game;
 using UnityEngine;
 
@@ -181,6 +184,61 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FoundationPurpleMansionSaveRoundTripMigratesVersionOneAndRejectsTamperedJindanState()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            FoundationPurpleMansionStateData state = CreateCompleteFoundationPurpleMansionState();
+            CharacterData profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.charName = "save_fixture";
+            profile.realmMultiplier = 3f;
+            profile.foundationPurpleMansionState = state;
+            try
+            {
+                session.BeginNewGame(profile, "jiangzuo_hub");
+                Character player = Character.FromData(profile, new HexCoord(0, 0));
+                Assert.IsTrue(new JindanProofCoordinator()
+                    .TryFormFoundationPurpleMansionLock(player).Succeeded);
+                session.CapturePlayerFoundationPurpleMansionState(player);
+
+                string savedJson = JsonUtility.ToJson(session.CaptureSaveData());
+                GameSessionSaveData saved = JsonUtility.FromJson<GameSessionSaveData>(savedJson);
+                Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion, saved.schemaVersion);
+                Assert.IsNotNull(saved.playerFoundationPurpleMansionState);
+
+                session.BeginNewGame(profile, "guanzhong_hub");
+                session.RestoreSaveData(saved);
+                Character restoredPlayer = Character.FromData(profile, new HexCoord(0, 0));
+                Assert.IsTrue(session.ApplyPlayerFoundationPurpleMansionState(restoredPlayer));
+                Assert.IsTrue(restoredPlayer.FoundationPurpleMansionState.IsJindanFormed);
+                Assert.AreEqual("guardian_ming", restoredPlayer.FoundationPurpleMansionState
+                    .GetGuardianAbilities()[0].abilityInstanceId);
+                Assert.AreEqual("node_ming_1", restoredPlayer.FoundationPurpleMansionState
+                    .GetEnhancementNodes()[0].nodeId);
+                Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                GameSessionSaveData tampered = JsonUtility.FromJson<GameSessionSaveData>(savedJson);
+                tampered.playerFoundationPurpleMansionState.foundationState.naturalMansionCapacity = 2;
+                tampered.playerFoundationPurpleMansionState.foundationState.releasedNaturalCapacity = 2;
+                tampered.playerFoundationPurpleMansionState.foundationState.totalMansionCapacity = 2;
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(tampered));
+                Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                saved.schemaVersion = GameSessionSnapshot.StateCollectionsSchemaVersion;
+                saved.playerFoundationPurpleMansionState = null;
+                session.RestoreSaveData(saved);
+                Assert.IsNull(session.PlayerFoundationPurpleMansionSaveData);
+                Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion,
+                    session.CaptureSaveData().schemaVersion);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+                UnityEngine.Object.DestroyImmediate(state);
+            }
+        }
+
+        [Test]
         public void InvalidOrUnsupportedSaveDataFailsBeforeChangingTheSession()
         {
             var sessionObject = new GameObject("GameSessionTest");
@@ -214,6 +272,97 @@ namespace TianZhang.Tests
                 data.schemaVersion = -1);
             AssertRejectedWithoutMutation<NotSupportedException>(session, baselineJson, data =>
                 data.schemaVersion = GameSessionSnapshot.CurrentSchemaVersion + 1);
+        }
+
+        private static FoundationPurpleMansionStateData CreateCompleteFoundationPurpleMansionState()
+        {
+            var state = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
+            state.schemaId = "foundationPurpleMansionState";
+            state.schemaVersion = 1;
+            state.characterId = "save_fixture";
+            state.foundationState = new FoundationStateRecord
+            {
+                foundationInstanceId = "foundation_save_fixture",
+                foundationDefinitionId = "foundation_definition",
+                sourceGongFaId = "gongfa_save_fixture",
+                phase = FoundationPhase.Phase4,
+                continuousProgress = 400f,
+                phaseBoundarySetId = "phase_boundaries",
+                naturalMansionCapacity = 1,
+                releasedNaturalCapacity = 1,
+                expansionGrants = Array.Empty<FoundationExpansionGrant>(),
+                expandedMansionCapacity = 0,
+                totalMansionCapacity = 1,
+            };
+            state.mansionStates = new[]
+            {
+                new PurpleMansionStateRecord
+                {
+                    mansionKind = PurpleMansionKind.Ming,
+                    state = PurpleMansionBuildState.Complete,
+                    mansionInstanceId = "mansion_ming",
+                    mansionBodyEffectBindingId = "MANSION_BODY_MING_YUAN_HUIHU",
+                    guardianAbilityInstanceId = "guardian_ming",
+                    sourceSpellId = "spell_ming",
+                    upgradePlanId = "upgrade_ming",
+                    sourceSpellDisposition = "RETAIN",
+                },
+                NotBuilt(PurpleMansionKind.Hun),
+                NotBuilt(PurpleMansionKind.Shi),
+                NotBuilt(PurpleMansionKind.Wu),
+                NotBuilt(PurpleMansionKind.Yun),
+            };
+            state.effectBindings = new[]
+            {
+                new FoundationEffectBinding
+                {
+                    effectBindingId = "MANSION_BODY_MING_YUAN_HUIHU",
+                    carrierKind = FoundationEffectCarrierKind.MansionBody,
+                    carrierId = "mansion_ming",
+                    order = 1,
+                    trigger = "fixture_trigger",
+                    conditions = Array.Empty<string>(),
+                    target = "fixture_target",
+                    atomicEffectType = "fixture_effect",
+                    parameters = Array.Empty<string>(),
+                },
+            };
+            state.guardianAbilities = new[]
+            {
+                new GuardianAbilityRecord
+                {
+                    abilityInstanceId = "guardian_ming",
+                    abilityDefinitionId = "ability_ming",
+                    mansionInstanceId = "mansion_ming",
+                    sourceSpellId = "spell_ming",
+                    upgradePlanId = "upgrade_ming",
+                    sourceSpellDisposition = "RETAIN",
+                    form = GuardianAbilityForm.Passive,
+                    effectBindingIds = Array.Empty<string>(),
+                },
+            };
+            state.enhancementNodes = new[]
+            {
+                new EnhancementNodeRecord
+                {
+                    nodeId = "node_ming_1",
+                    abilityInstanceId = "guardian_ming",
+                    nodeKind = EnhancementNodeKind.Cultivation,
+                    requirements = Array.Empty<string>(),
+                    effectBindingIds = Array.Empty<string>(),
+                },
+            };
+            state.jindanLock = new JindanLockRecord { status = JindanLockStatus.PreJindan };
+            return state;
+        }
+
+        private static PurpleMansionStateRecord NotBuilt(PurpleMansionKind kind)
+        {
+            return new PurpleMansionStateRecord
+            {
+                mansionKind = kind,
+                state = PurpleMansionBuildState.NotBuilt,
+            };
         }
 
         private static StateStepSnapshot Steps(bool firstValue)

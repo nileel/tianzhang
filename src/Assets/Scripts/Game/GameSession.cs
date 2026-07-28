@@ -35,6 +35,7 @@ namespace TianZhang.Game
         public QuestStateStore QuestStates { get; } = new QuestStateStore();
         public InventoryStateStore InventoryStates { get; } = new InventoryStateStore();
         public NpcStateStore NpcStates { get; } = new NpcStateStore();
+        public FoundationPurpleMansionSaveData PlayerFoundationPurpleMansionSaveData { get; private set; }
 
         /// <summary>
         /// 当前据点/副本 ID（用于返回流转时传递上下文）。
@@ -60,11 +61,13 @@ namespace TianZhang.Game
         public void SetPlayerProfile(CharacterData profile)
         {
             PlayerProfile = profile;
+            ResetFoundationPurpleMansionSaveData();
         }
 
         public void BeginNewGame(CharacterData profile, string startNodeId)
         {
             PlayerProfile = profile;
+            ResetFoundationPurpleMansionSaveData();
             CurrentWorldNodeId = string.IsNullOrEmpty(startNodeId) ? "jiangzuo_hub" : startNodeId;
             ResetWorldTime();
             ResetStateSnapshots();
@@ -76,6 +79,7 @@ namespace TianZhang.Game
         public void ClearSession()
         {
             PlayerProfile = null;
+            PlayerFoundationPurpleMansionSaveData = null;
             CurrentWorldNodeId = "jiangzuo_hub";
             ResetWorldTime();
             ResetStateSnapshots();
@@ -123,6 +127,25 @@ namespace TianZhang.Game
             LastReturnTarget = target;
         }
 
+        public void CapturePlayerFoundationPurpleMansionState(Character player)
+        {
+            PlayerFoundationPurpleMansionSaveData = player == null ||
+                !player.HasFoundationPurpleMansionState
+                ? null
+                : player.CaptureFoundationPurpleMansionSaveData();
+        }
+
+        public bool ApplyPlayerFoundationPurpleMansionState(Character player)
+        {
+            if (player == null)
+                throw new System.ArgumentNullException(nameof(player));
+            if (PlayerFoundationPurpleMansionSaveData == null)
+                return false;
+
+            player.RestoreFoundationPurpleMansionSaveData(PlayerFoundationPurpleMansionSaveData);
+            return true;
+        }
+
         public GameSessionSaveData CaptureSaveData()
         {
             return GameSessionSnapshot.Capture(this);
@@ -143,6 +166,7 @@ namespace TianZhang.Game
             CurrentSettlementId = restored.CurrentSettlementId;
             CurrentAdventureId = restored.CurrentAdventureId;
             LastReturnTarget = restored.LastReturnTarget;
+            PlayerFoundationPurpleMansionSaveData = restored.PlayerFoundationPurpleMansionSaveData;
         }
 
         private void ResetWorldTime()
@@ -158,6 +182,23 @@ namespace TianZhang.Game
             QuestStates.Clear();
             InventoryStates.Clear();
             NpcStates.Clear();
+        }
+
+        private void ResetFoundationPurpleMansionSaveData()
+        {
+            PlayerFoundationPurpleMansionSaveData = null;
+            if (PlayerProfile == null || PlayerProfile.foundationPurpleMansionState == null)
+                return;
+
+            if (!FoundationPurpleMansionRuntimeState.TryCreate(
+                    PlayerProfile.foundationPurpleMansionState,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out string failureReason))
+            {
+                throw new System.InvalidOperationException(failureReason);
+            }
+
+            PlayerFoundationPurpleMansionSaveData = runtimeState.CaptureSaveData();
         }
 
         private void OnDestroy()

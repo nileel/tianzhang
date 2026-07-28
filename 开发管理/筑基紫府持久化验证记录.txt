@@ -1,0 +1,20 @@
+# 筑基与紫府持久化验证记录
+
+任务：`U-FPD-SAVE-01`
+
+## 覆盖结论
+
+- `GameSession` 的单一存档所有者已升至 schema 2；schema 0 与 schema 1 明确迁移为不含道基／紫府运行时状态的合法旧档。
+- 当前版保存并恢复道基身份与阶段、容量与扩府记录、五府状态、镇府神通实例、强化节点、修炼行动、停修原因、已提交周期和结丹锁快照。
+- 恢复先以独立快照完成结构与结丹形成快照一致性校验；失败时不替换会话。结丹后容量篡改被 `FPM_JINDAN_LOCK_MUTATION` 拒绝，已提交修炼周期不会再次结算。
+
+## 已执行验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 error；`ExplorationController.cs` 与 `TacticalGridModelTests.cs` 各有 1 条既有 obsolete 警告。
+- Unity EditMode：`SessionStateSnapshotTests.FoundationPurpleMansionSaveRoundTripMigratesVersionOneAndRejectsTamperedJindanState` 通过。
+- Unity EditMode：`SessionStateSnapshotTests.CurrentSchemaJsonRoundTripRestoresWorldContextAndSeparateStateSteps` 通过。
+- Unity EditMode：`CharacterFoundationPurpleMansionTests.RuntimeSaveDataRoundTripPreservesGuardianNodesStopReasonAndCommittedCycles` 通过。
+
+## 已知验证边界
+
+- 全量 `tools/run-unity-editmode-tests.ps1` 受无关的 Windows 映射文件锁影响：`JindanStaticStateDataTests.ImportJindanStaticStatesRejectsTheWholeTableBeforeCreatingAnAsset` 无法写入其 CSV fixture；本任务直接相关的过滤测试均已单独通过。
