@@ -60,6 +60,11 @@ function makeDecision(overrides = {}) {
     ],
     recommendedOption: 'B',
     impactSummary: 'A 改动较大；B 风险较低；C 会延期。',
+    plainSummary: {
+      situation: '当前有三种做法，需要负责人确定采用哪一种。',
+      impact: 'A 改动较多，B 风险较低，C 会让任务推迟。',
+      action: '如果没有其他偏好，直接选择推荐的 B。',
+    },
     ...overrides,
   };
 }
@@ -333,6 +338,7 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
     unrelated: 'must-not-be-rendered',
   });
   decision.options[0].secret = 'option-secret';
+  decision.plainSummary.secret = 'plain-secret';
 
   const card = buildDecisionCard(decision, 'nonce-123');
   const encoded = JSON.stringify(card);
@@ -349,6 +355,19 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
   assert.match(encoded, /方案丙/);
   assert.match(encoded, /推荐.*B/);
   assert.match(encoded, /A 改动较大；B 风险较低；C 会延期/);
+  assert.match(encoded, /给负责人看的通俗版/);
+  assert.match(encoded, /现在为什么需要你决定：当前有三种做法/);
+  assert.match(encoded, /不同选择的实际区别：A 改动较多/);
+  assert.match(encoded, /你现在需要怎么选：如果没有其他偏好/);
+  const professionalIndex = card.elements.findIndex(
+    (element) => element.tag === 'div' && element.text.content.startsWith('推荐：'),
+  );
+  const plainIndex = card.elements.findIndex(
+    (element) => element.tag === 'div' && element.text.content.startsWith('给负责人看的通俗版'),
+  );
+  const actionIndex = card.elements.findIndex((element) => element.tag === 'action');
+  assert.ok(professionalIndex < plainIndex);
+  assert.ok(plainIndex < actionIndex);
   assert.ok(actionElement);
   assert.equal(actionElement.actions.length, 3);
   assert.deepEqual(
@@ -391,10 +410,11 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
   });
   assert.match(encoded, /长按复制格式/);
   assert.match(encoded, /DEC-20260716-ABC123：自定义 <你的方案>/);
-  assert.doesNotMatch(encoded, /must-not-leak|option-secret|unrelated|appSecret|hmacKey/i);
+  assert.doesNotMatch(encoded, /must-not-leak|option-secret|plain-secret|unrelated|appSecret|hmacKey/i);
 
   decision.question = 'mutated question';
   decision.options[0].label = 'mutated option';
+  decision.plainSummary.situation = 'mutated plain summary';
   assert.doesNotMatch(JSON.stringify(card), /mutated/);
 });
 
@@ -485,12 +505,43 @@ test('buildDecisionCard enforces bounded ASCII identifiers', async (t) => {
 });
 
 test('buildDecisionCard rejects decision accessors without executing getters', async (t) => {
-  for (const field of ['decisionId', 'taskId', 'question', 'options', 'recommendedOption', 'impactSummary']) {
+  for (const field of [
+    'decisionId',
+    'taskId',
+    'question',
+    'options',
+    'recommendedOption',
+    'impactSummary',
+    'plainSummary',
+  ]) {
     await t.test(field, () => {
       const decision = makeDecision();
       const original = decision[field];
       let getterCalls = 0;
       Object.defineProperty(decision, field, {
+        enumerable: true,
+        get() {
+          getterCalls += 1;
+          return original;
+        },
+      });
+
+      assert.throws(
+        () => buildDecisionCard(decision, 'nonce-1'),
+        /Invalid decision card input/,
+      );
+      assert.equal(getterCalls, 0);
+    });
+  }
+});
+
+test('buildDecisionCard rejects plain-summary accessors without executing getters', async (t) => {
+  for (const field of ['situation', 'impact', 'action']) {
+    await t.test(field, () => {
+      const decision = makeDecision();
+      const original = decision.plainSummary[field];
+      let getterCalls = 0;
+      Object.defineProperty(decision.plainSummary, field, {
         enumerable: true,
         get() {
           getterCalls += 1;
@@ -538,6 +589,16 @@ test('buildDecisionCard rejects blank decision fields and invalid recommendation
     ['non-string task id', makeDecision({ taskId: 57 }), 'nonce'],
     ['blank question', makeDecision({ question: '' }), 'nonce'],
     ['blank impact', makeDecision({ impactSummary: '' }), 'nonce'],
+    ['missing plain summary', makeDecision({ plainSummary: undefined }), 'nonce'],
+    ['blank plain situation', makeDecision({
+      plainSummary: { situation: '', impact: '影响', action: '选择 A' },
+    }), 'nonce'],
+    ['unsafe plain impact', makeDecision({
+      plainSummary: { situation: '需要决定', impact: '影响\u202e伪装', action: '选择 A' },
+    }), 'nonce'],
+    ['overlong plain action', makeDecision({
+      plainSummary: { situation: '需要决定', impact: '影响', action: '长'.repeat(201) },
+    }), 'nonce'],
     ['unknown recommendation', makeDecision({ recommendedOption: 'D' }), 'nonce'],
     ['blank nonce', makeDecision(), '  '],
   ];

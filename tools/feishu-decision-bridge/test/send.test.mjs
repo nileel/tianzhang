@@ -56,6 +56,11 @@ function makeDecision(overrides = {}) {
     ],
     recommendedOption: 'B',
     impactSummary: 'A 改动较大；B 风险较低；C 会延期。',
+    plainSummary: {
+      situation: '当前有三种做法，需要负责人确定采用哪一种。',
+      impact: 'A 改动较多，B 风险较低，C 会让任务推迟。',
+      action: '如果没有其他偏好，直接选择推荐的 B。',
+    },
     ...overrides,
   };
 }

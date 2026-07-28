@@ -133,6 +133,11 @@ test('canary CLI requires paired identity and emits only hashed delivery evidenc
     ],
     recommendedOption: 'A',
     impactSummary: '仅验证通道。',
+    plainSummary: {
+      situation: '现在需要确认飞书决策通道是否正常。',
+      impact: '这次选择只用于通道验证，不会修改项目内容。',
+      action: '请选择 A。',
+    },
   };
   const cardNonce = 'canary-nonce-0123456789';
   await writeFile(requestPath, JSON.stringify({ decision, cardNonce }));

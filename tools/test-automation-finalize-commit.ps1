@@ -24,7 +24,8 @@ function Invoke-Helper {
     [string]$AutomationState,
     [string]$AutomationResult,
     [string]$AutomationImpact,
-    [string]$AutomationVerify
+    [string]$AutomationVerify,
+    [string]$AutomationPlain
   )
 
   $previousPreference = $ErrorActionPreference
@@ -45,7 +46,8 @@ function Invoke-Helper {
         '-AutomationState', $AutomationState,
         '-AutomationResult', $AutomationResult,
         '-AutomationImpact', $AutomationImpact,
-        '-AutomationVerify', $AutomationVerify
+        '-AutomationVerify', $AutomationVerify,
+        '-AutomationPlain', $AutomationPlain
       )
     }
     $output = & $engine @arguments 2>&1
@@ -193,13 +195,17 @@ try {
     AutomationResult = '完成自动化提交元数据测试'
     AutomationImpact = '验证日报候选可以从提交正文稳定读取'
     AutomationVerify = 'test-automation-finalize-commit 通过'
+    AutomationPlain = '发生=自动化提交能够保存通俗说明；影响=负责人收到任务通知时能看懂实际结果；需要=无需处理'
   }
   $invalidAutomationFields = @(
     ($automationFields.Clone() | ForEach-Object { $_.AutomationTask = ''; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationState = 'failed'; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationResult = "完成自动化提交元数据测试`n额外一行"; $_ }),
     ($automationFields.Clone() | ForEach-Object { $_.AutomationImpact = ''; $_ }),
-    ($automationFields.Clone() | ForEach-Object { $_.AutomationVerify = ''; $_ })
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationVerify = ''; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationPlain = ''; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationPlain = '发生=缺少影响和动作'; $_ }),
+    ($automationFields.Clone() | ForEach-Object { $_.AutomationPlain = "发生=$('长' * 201)；影响=不会进入提交；需要=无需处理"; $_ })
   )
   foreach ($invalidAutomationFieldSet in $invalidAutomationFields) {
     $headBeforeInvalid = (Invoke-Git rev-parse HEAD) -join ''
@@ -230,6 +236,7 @@ State: completed
 Result: 完成自动化提交元数据测试
 Impact: 验证日报候选可以从提交正文稳定读取
 Verify: test-automation-finalize-commit 通过
+Plain: 发生=自动化提交能够保存通俗说明；影响=负责人收到任务通知时能看懂实际结果；需要=无需处理
 '@.Replace("`r`n", "`n").TrimEnd()
   if ($automationBody -cne $expectedAutomationBody) { throw "automation metadata changed in Git: $automationBody" }
 

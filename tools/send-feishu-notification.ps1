@@ -49,6 +49,32 @@ function Assert-StableText {
   }
 }
 
+function Get-UnicodeCodePointCount {
+  param([string]$Value)
+
+  $count = 0
+  for ($index = 0; $index -lt $Value.Length; $index++) {
+    if (
+      [char]::IsHighSurrogate($Value[$index]) -and
+      $index + 1 -lt $Value.Length -and
+      [char]::IsLowSurrogate($Value[$index + 1])
+    ) {
+      $index++
+    }
+    $count++
+  }
+  $count
+}
+
+function Assert-PlainText {
+  param([string]$Value, [string]$Name)
+
+  Assert-StableText -Value $Value -Name $Name -MaximumLength 400
+  if ((Get-UnicodeCodePointCount -Value $Value) -gt 200) {
+    throw "$Name is invalid"
+  }
+}
+
 function Get-TaskMeta {
   param([string]$Root, [string]$Id)
 
@@ -121,7 +147,7 @@ function Get-CommitFields {
   }
   $body = Invoke-GitUtf8Text -Root $Root -Arguments @('show', '-s', '--format=%B', $Sha)
   $fields = [ordered]@{}
-  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify')) {
+  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify', 'Plain')) {
     $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
     if ($matches.Count -ne 1) {
       throw 'Commit metadata is invalid'
@@ -138,7 +164,11 @@ function Get-CommitFields {
   $result = [regex]::Match([string]$fields.Result, '^问题=(?<goal>.+?)；完成=(?<completed>.+)$')
   $impact = [regex]::Match([string]$fields.Impact, '^影响=(?<impact>.+?)；边界=(?<boundary>.+)$')
   $verify = [regex]::Match([string]$fields.Verify, '^验证=(?<verification>.+?)；后续=(?<next>.+)$')
-  if (-not $result.Success -or -not $impact.Success -or -not $verify.Success) {
+  $plain = [regex]::Match(
+    [string]$fields.Plain,
+    '^发生=(?<happened>.+?)；影响=(?<impact>.+?)；需要=(?<action>.+)$'
+  )
+  if (-not $result.Success -or -not $impact.Success -or -not $verify.Success -or -not $plain.Success) {
     throw 'Commit notification metadata is invalid'
   }
   [ordered]@{
@@ -148,6 +178,9 @@ function Get-CommitFields {
     boundary = $impact.Groups['boundary'].Value
     verification = $verify.Groups['verification'].Value
     next = $verify.Groups['next'].Value
+    plainHappened = $plain.Groups['happened'].Value
+    plainImpact = $plain.Groups['impact'].Value
+    plainAction = $plain.Groups['action'].Value
   }
 }
 
@@ -193,10 +226,21 @@ function New-TaskRequest {
       boundary = '未把未提交或未核验内容计为完成'
       verification = '仅核验自动化终态与任务卡当前状态；没有业务提交可供领域验证'
       next = $next
+      plainHappened = "任务《$($meta.title)》本轮没有形成已经核验的完成结果，当前状态是$statusLabel"
+      plainImpact = '这项任务还不能算完成，目前没有确认游戏内容或项目行为已经改变'
+      plainAction = switch ($Status) {
+        'waiting_decision' { '请完成对应决策，自动工作流会在收到选择后继续' }
+        'waiting_reply' { '请回复当前等待的问题，自动工作流会在收到回复后继续' }
+        'blocked' { '需要先解除通知中说明的阻塞条件，再继续推进' }
+        default { '请先查看失败原因，再决定是否重新启动该任务' }
+      }
     }
   }
   foreach ($name in @('goal', 'completed', 'impact', 'boundary', 'verification', 'next')) {
     Assert-StableText -Value ([string]$fields[$name]) -Name $name
+  }
+  foreach ($name in @('plainHappened', 'plainImpact', 'plainAction')) {
+    Assert-PlainText -Value ([string]$fields[$name]) -Name $name
   }
   $eventTail = if ([string]::IsNullOrWhiteSpace($CommitSha)) {
     "$RunId`:$DetailCode"
@@ -215,6 +259,9 @@ function New-TaskRequest {
       boundary = [string]$fields.boundary
       verification = [string]$fields.verification
       next = [string]$fields.next
+      plainHappened = [string]$fields.plainHappened
+      plainImpact = [string]$fields.plainImpact
+      plainAction = [string]$fields.plainAction
       commitSha = if ([string]::IsNullOrWhiteSpace($CommitSha)) { $null } else { $CommitSha }
     }
     idempotencyKey = "task_outcome:$TaskId`:$Status`:$eventTail"

@@ -16,6 +16,7 @@
 ## 创建决定恢复
 
 - 本节只在普通责任方实际到达新的用户决定事件后即时读取；没有决定事件时不得读取本节或创建 recovery。
+- 决定请求必须在现有专业问题、A/B/C 选项、推荐项和专业影响之外同时提供 `plainSummary.situation`、`plainSummary.impact`、`plainSummary.action`，分别回答“现在为什么需要你决定”“不同选择的实际区别”“你现在需要怎么选”。三个通俗字段必须非空、单行、各不超过 200 个 Unicode code point，并由同一决定事实支持；决策卡先显示专业内容，再显示通俗版和回复控件。发送层不得临时猜测、补写或截断通俗内容。
 - 修改前等待决定时保存 `trigger=decision`、TaskId、owner、repository、DecisionId 和消费请求路径，释放租约并退出。schema 3 的 decision recovery 不保存 session ID，不保存未提交修改，也不把半成品交给下一责任方。
 - 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
 - 旧 `pending-bindings.json` 不是新决定的互斥锁；责任方不得因看到旧 binding 就跳过发送或直接记录 `waiting_decision`。新 accepted send 会原子更新 binding，租约工具只接受对应的消费请求。

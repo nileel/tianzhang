@@ -18,6 +18,7 @@ const TASK_STATUS_LABELS = Object.freeze({
 const MAX_TITLE_CODE_POINTS = 120;
 const MAX_REPORT_CODE_POINTS = 6000;
 const MAX_TASK_FIELD_CODE_POINTS = 1000;
+const MAX_PLAIN_FIELD_CODE_POINTS = 200;
 const MAX_TASK_ID_CODE_POINTS = 128;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/;
 const CONTROL_PATTERN = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
@@ -104,6 +105,9 @@ function buildTaskCard(notification) {
     'boundary',
     'verification',
     'next',
+    'plainHappened',
+    'plainImpact',
+    'plainAction',
     'commitSha',
   ];
   const fields = snapshotExact(notification, keys);
@@ -119,6 +123,9 @@ function buildTaskCard(notification) {
     || !validText(fields.boundary, MAX_TASK_FIELD_CODE_POINTS)
     || !validText(fields.verification, MAX_TASK_FIELD_CODE_POINTS)
     || !validText(fields.next, MAX_TASK_FIELD_CODE_POINTS)
+    || !validText(fields.plainHappened, MAX_PLAIN_FIELD_CODE_POINTS)
+    || !validText(fields.plainImpact, MAX_PLAIN_FIELD_CODE_POINTS)
+    || !validText(fields.plainAction, MAX_PLAIN_FIELD_CODE_POINTS)
     || !(fields.commitSha === null || (
       typeof fields.commitSha === 'string' && COMMIT_PATTERN.test(fields.commitSha)
     ))
@@ -148,6 +155,12 @@ function buildTaskCard(notification) {
       plainText(`3. 实际影响与明确边界\n影响：${fields.impact}\n边界：${fields.boundary}`),
       plainText(`4. 验证结果\n${fields.verification}`),
       plainText(`5. 后续关系\n${fields.next}`),
+      plainText(
+        `6. 给负责人看的通俗版\n`
+        + `发生了什么：${fields.plainHappened}\n`
+        + `对项目或游戏的实际影响：${fields.plainImpact}\n`
+        + `你是否需要做什么：${fields.plainAction}`,
+      ),
       {
         tag: 'note',
         elements: [{ tag: 'plain_text', content: footer }],

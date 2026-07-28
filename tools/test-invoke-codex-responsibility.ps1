@@ -335,7 +335,7 @@ function Write-FakeUtf8 {
 function Commit-CompletedResult {
   param([string[]]$Paths)
   & git add -A -- @Paths
-  $message = "test: automation result`n`nAutomation: tzg-hourly-controller`nTask: $($env:RESPONSIBILITY_TEST_TASK_ID)`nState: completed`nResult: 问题=fixture problem；完成=fixture completed`nImpact: 影响=no downstream impact；边界=fixture boundary`nVerify: 验证=fixture verification；后续=fixture next"
+  $message = "test: automation result`n`nAutomation: tzg-hourly-controller`nTask: $($env:RESPONSIBILITY_TEST_TASK_ID)`nState: completed`nResult: 问题=fixture problem；完成=fixture completed`nImpact: 影响=no downstream impact；边界=fixture boundary`nVerify: 验证=fixture verification；后续=fixture next`nPlain: 发生=测试任务形成了已核验结果；影响=负责人可以直接理解本轮结果；需要=无需处理"
   & git commit -q -m $message
 }
 

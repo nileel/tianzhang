@@ -305,7 +305,7 @@ Make 开发管理/任务列表/自动化任务.txt exactly these three lines:
 | TASK-EXT-001 | P0 | codex | 已排队 | — | 外部责任方同卡待复审转换 | 开发管理/任务卡/TASK-EXT-001.txt |
 Do not modify the handoff file yet.
 4. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot '__REPOSITORY_ROOT__' -TaskId 'TASK-EXT-001' -Postcondition ExternalPendingReview. Then run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Verify -RepositoryRoot '__REPOSITORY_ROOT__' -BaselinePath '__BASELINE_PATH__' -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__'.
-5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace 与 ExternalPendingReview 通过'. Save its stdout SHA as businessCommit.
+5. Run exactly: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -ExpectedPaths '__BUSINESS_EXPECTED_PATHS__' -CommitMessage 'test(external): create business commit' -RequireAutomationMetadata -AutomationTask 'TASK-EXT-001' -AutomationState 'pending_review' -AutomationResult '完成外部责任方授权修改' -AutomationImpact 'TASK-EXT-001 已进入待复审状态' -AutomationVerify 'check-pending-whitespace 与 ExternalPendingReview 通过' -AutomationPlain '发生=外部责任方已完成授权修改并提交复审；影响=任务现在等待 Codex 检查后才能正式完成；需要=无需处理'. Save its stdout SHA as businessCommit.
 6. Modify only 开发管理/AI合作沟通.txt to exactly these six lines, substituting the real SHA:
 # AI合作沟通
 HANDOFF-EXT-001
@@ -391,7 +391,8 @@ If resumed with B, output {"status":"blocked"} without modifying the repository.
       'State: pending_review',
       'Result: 完成外部责任方授权修改',
       'Impact: TASK-EXT-001 已进入待复审状态',
-      'Verify: check-pending-whitespace 与 ExternalPendingReview 通过'
+      'Verify: check-pending-whitespace 与 ExternalPendingReview 通过',
+      'Plain: 发生=外部责任方已完成授权修改并提交复审；影响=任务现在等待 Codex 检查后才能正式完成；需要=无需处理'
     )) {
     if (-not $businessBody.Contains($requiredMetadata, [StringComparison]::Ordinal)) {
       throw "Business commit metadata is missing: $requiredMetadata"

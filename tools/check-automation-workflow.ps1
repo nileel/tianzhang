@@ -164,7 +164,8 @@ Assert-Contains -Text $prompt -Context 'success closeout order' -Values @(
   '全部成立后依次调用 `RecordResult -Category success` 与 `Release`'
 )
 Assert-Contains -Text $prompt -Context 'external outcome notification' -Values @(
-  '六个结构化通知子字段',
+  '九个结构化通知子字段',
+  'Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>',
   'tools/send-feishu-notification.ps1',
   '-Kind TaskOutcome',
   '-Status pending_review',
@@ -273,7 +274,8 @@ Assert-Contains -Text $rules -Context 'automation notification metadata' -Values
   'Result: 问题=<原问题>；完成=<具体交付>',
   'Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>',
   'Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>',
-  '六个子字段',
+  'Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>',
+  '九个子字段',
   'tools/send-feishu-notification.ps1 -Kind TaskOutcome',
   '普通队列维护和无业务变化轮询不发送',
   '通知失败只记录脱敏投递状态'
@@ -303,6 +305,13 @@ Assert-Contains -Text $recoveryRules -Context 'recovery read contract' -Values @
   '只读取 `创建决定恢复`',
   '未到达决定事件时不得读取本文件',
   '## 创建决定恢复'
+)
+Assert-Contains -Text $recoveryRules -Context 'decision plain-language contract' -Values @(
+  'plainSummary.situation',
+  'plainSummary.impact',
+  'plainSummary.action',
+  '先显示专业内容，再显示通俗版和回复控件',
+  '不得临时猜测、补写或截断'
 )
 $creationSectionIndex = $recoveryRules.IndexOf('## 创建决定恢复', [StringComparison]::Ordinal)
 $decisionSectionIndex = $recoveryRules.IndexOf('## 决定恢复', [StringComparison]::Ordinal)
@@ -359,9 +368,11 @@ Assert-Contains -Text $invoker -Context 'responsibility child deadline contract'
 )
 Assert-Contains -Text $invoker -Context 'responsibility outcome notification contract' -Values @(
   'Test-NotificationMetadata',
-  'Result = ''^问题=',
-  'Impact = ''^影响=',
-  'Verify = ''^验证=',
+  'Pattern = ''^问题=',
+  'Pattern = ''^影响=',
+  'Pattern = ''^验证=',
+  'Plain = [pscustomobject]',
+  '发生=(?<happened>',
   'send-feishu-notification.ps1',
   '$runClosed',
   '$TaskId -cne ''QUEUE-MAINTENANCE'''

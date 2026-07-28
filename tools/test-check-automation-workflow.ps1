@@ -95,7 +95,7 @@ $canonicalPrompt = @'
 5. 外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。
 6. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
-8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据与六个结构化通知子字段和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。
+8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据与九个结构化通知子字段（含 `Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`）和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。
 9. 最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。
 '@
 
@@ -145,7 +145,7 @@ $canonicalRules = @'
 - runner timeout、deferred wait、workspace guard、automation-finalize-commit.ps1、Automation 元数据、RecordResult 与 Release 边界不变。
 - 外部 AI 保留 `businessCommit` 与 `handoffCommit` 的连续双提交 closeout；handoff 不重复统计。
 - 外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。
-- 自动化摘要固定使用 `Result: 问题=<原问题>；完成=<具体交付>`、`Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>`、`Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`，六个子字段都非空。
+- 自动化摘要固定使用 `Result: 问题=<原问题>；完成=<具体交付>`、`Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>`、`Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`，九个子字段都非空。
 - 非维护终态在关闭后调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome`；普通队列维护和无业务变化轮询不发送，通知失败只记录脱敏投递状态。
 - 失败保留现场、runtime 与日志；不自动 stash、reset、revert、checkout 或 clean。
 '@
@@ -162,6 +162,7 @@ $canonicalRecoveryRules = @'
 ## 创建决定恢复
 
 - 仅实际到达新的用户决定事件后进入本节。
+- 决定请求同时包含 plainSummary.situation、plainSummary.impact、plainSummary.action；卡片先显示专业内容，再显示通俗版和回复控件，发送层不得临时猜测、补写或截断。
 - 仅 PROVIDER_ACCEPTED 后调用 SaveRecovery。
 
 ## 决定恢复
@@ -217,7 +218,7 @@ $canonicalWeeklyPrompt = @'
 
 $canonicalInvoker = @'
 RepositoryRoot using-git-worktrees git worktree add IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding StandardInputEncoding CodexDispatchReady taskState readyCount no_runnable_candidate ResponsibilityTimeoutSeconds [int]$ResponsibilityTimeoutSeconds = 3000 $process.WaitForExit($timeoutMilliseconds) $process.Kill($true) exitCode = 124
-Test-NotificationMetadata Result = '^问题= Impact = '^影响= Verify = '^验证= send-feishu-notification.ps1 $runClosed $TaskId -cne 'QUEUE-MAINTENANCE'
+Test-NotificationMetadata Pattern = '^问题= Pattern = '^影响= Pattern = '^验证= Plain = [pscustomobject] 发生=(?<happened> send-feishu-notification.ps1 $runClosed $TaskId -cne 'QUEUE-MAINTENANCE'
 '@
 $canonicalRunner = 'IO.StreamReader Console]::OpenStandardInput Text.UTF8Encoding codex_session_id='
 
@@ -360,7 +361,7 @@ try {
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing decision-creation section' -Contains 'recovery read contract'
   Write-Utf8File -Path $recoveryRulesPath -Content $canonicalRecoveryRules
 
-  $externalCloseoutLine = '8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据与六个结构化通知子字段和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。'
+  $externalCloseoutLine = '8. 外部 AI 返回 completed 后，只核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、Automation 元数据与九个结构化通知子字段（含 `Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`）和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。'
   $missingExternalCloseout = $canonicalPrompt.Replace($externalCloseoutLine, '8. 外部 AI 返回 completed 后只报告两个提交 SHA。')
   Write-Utf8File -Path $promptPath -Content $missingExternalCloseout
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingExternalCloseout

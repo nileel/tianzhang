@@ -4,6 +4,7 @@ import { formatCustomReplyCommand } from './custom-reply.mjs';
 const OPTION_KEYS = ['A', 'B', 'C'];
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const DECISION_ID_PATTERN = /^DEC-[0-9]{8}-[A-Z0-9]+$/;
+const MAX_PLAIN_FIELD_CODE_POINTS = 200;
 const INVALID_FIELD = Symbol('invalid-field');
 const MISSING_FIELD = Symbol('missing-field');
 
@@ -67,6 +68,24 @@ function snapshotOptions(value) {
   return options;
 }
 
+function snapshotPlainSummary(value) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const situation = readDataField(descriptors, 'situation');
+  const impact = readDataField(descriptors, 'impact');
+  const action = readDataField(descriptors, 'action');
+  if (
+    situation === INVALID_FIELD
+    || impact === INVALID_FIELD
+    || action === INVALID_FIELD
+  ) {
+    return null;
+  }
+  return { situation, impact, action };
+}
+
 function snapshotDecision(value) {
   if (!isPlainObject(value)) {
     return null;
@@ -78,6 +97,7 @@ function snapshotDecision(value) {
   const optionsValue = readDataField(descriptors, 'options');
   const recommendedOption = readDataField(descriptors, 'recommendedOption');
   const impactSummary = readDataField(descriptors, 'impactSummary');
+  const plainSummaryValue = readDataField(descriptors, 'plainSummary');
   if (
     decisionId === INVALID_FIELD
     || taskId === INVALID_FIELD
@@ -85,11 +105,13 @@ function snapshotDecision(value) {
     || optionsValue === INVALID_FIELD
     || recommendedOption === INVALID_FIELD
     || impactSummary === INVALID_FIELD
+    || plainSummaryValue === INVALID_FIELD
   ) {
     return null;
   }
   const options = snapshotOptions(optionsValue);
-  if (options === null) {
+  const plainSummary = snapshotPlainSummary(plainSummaryValue);
+  if (options === null || plainSummary === null) {
     return null;
   }
   return {
@@ -100,6 +122,7 @@ function snapshotDecision(value) {
     options,
     recommendedOption,
     impactSummary,
+    plainSummary,
   };
 }
 
@@ -113,6 +136,10 @@ function isSafeDisplayText(value) {
     && isSafeSingleLine(value);
 }
 
+function isPlainSummaryText(value) {
+  return isSafeDisplayText(value) && [...value].length <= MAX_PLAIN_FIELD_CODE_POINTS;
+}
+
 function validateInput(decision, cardNonce) {
   if (
     decision === null
@@ -122,6 +149,9 @@ function validateInput(decision, cardNonce) {
     || !isSafeDisplayText(decision.question)
     || !OPTION_KEYS.includes(decision.recommendedOption)
     || !isSafeDisplayText(decision.impactSummary)
+    || !isPlainSummaryText(decision.plainSummary.situation)
+    || !isPlainSummaryText(decision.plainSummary.impact)
+    || !isPlainSummaryText(decision.plainSummary.action)
     || !isIdentifier(cardNonce)
   ) {
     return false;
@@ -181,6 +211,16 @@ export function buildDecisionCard(input, cardNonce) {
         text: {
           tag: 'plain_text',
           content: `推荐：${decision.recommendedOption}\n影响：${decision.impactSummary}`,
+        },
+      },
+      {
+        tag: 'div',
+        text: {
+          tag: 'plain_text',
+          content: `给负责人看的通俗版\n`
+            + `现在为什么需要你决定：${decision.plainSummary.situation}\n`
+            + `不同选择的实际区别：${decision.plainSummary.impact}\n`
+            + `你现在需要怎么选：${decision.plainSummary.action}`,
         },
       },
       {

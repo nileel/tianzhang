@@ -491,6 +491,11 @@ function Invoke-Canary {
       )
       recommendedOption = 'A'
       impactSummary = '仅验证通知、身份与回执，不修改项目业务状态。'
+      plainSummary = [ordered]@{
+        situation = '现在需要确认飞书决策通道能正常发送并接收选择。'
+        impact = '这只影响通道验证，不会修改游戏内容或项目任务状态。'
+        action = '按卡片说明选择 A 或提交指定的验证文字。'
+      }
     }
     Write-PrivateJsonAtomic $sendRequestPath ([ordered]@{ decision = $decision; cardNonce = $cardNonce })
     $sendHelper = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-canary.mjs'

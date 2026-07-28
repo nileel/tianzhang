@@ -207,7 +207,7 @@ function New-ResponsibilityPrompt {
     '先完整读取仓库 AGENTS.md、开发管理/自动工作流规则.txt 和上述入口。'
     '本自动化责任方由单写入租约隔离，必须直接在上述 RepositoryRoot 的当前分支工作；不得创建或切换 linked worktree、任务分支，不得调用 using-git-worktrees 或 git worktree add。'
     '责任方端到端实施、最小充分验证并使用 automation-finalize-commit.ps1 创建路径限定提交。'
-    '自动化业务提交的三行摘要必须使用以下单行结构且六个子字段都非空：Result: 问题=<原问题>；完成=<具体交付>，Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>，Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>。'
+    '自动化业务提交必须通过 AutomationResult、AutomationImpact、AutomationVerify 和 AutomationPlain 同时提供专业事实与负责人通俗版：Result: 问题=<原问题>；完成=<具体交付>，Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>，Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>，Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>。九个子字段都非空，三个通俗子字段各不超过 200 个 Unicode code point。'
     'Execution、Review、QueueMaintenance 责任方仅在实际到达新的用户决定事件时，才读取 开发管理/自动工作流恢复规则.txt 的“创建决定恢复”一节；未到达决定事件时不得读取该文件。'
     '不得自行调用 RecordResult 或 Release；固定调用器会根据 Git 与 runtime 核验结果后统一关闭本轮。'
   )
@@ -316,7 +316,7 @@ function Get-CommitMetadata {
 
   $body = Invoke-GitUtf8Text -Arguments @('show', '-s', '--format=%B', $CommitSha)
   $fields = [ordered]@{}
-  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify')) {
+  foreach ($name in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify', 'Plain')) {
     $matches = [regex]::Matches($body, "(?m)^$([regex]::Escape($name)):\s*(?<value>.+?)\s*$")
     if ($matches.Count -ne 1) {
       return $null
@@ -332,12 +332,29 @@ function Test-NotificationMetadata {
   if ($null -eq $Metadata) {
     return $false
   }
-  $patterns = [ordered]@{
-    Result = '^问题=(?<first>.+?)；完成=(?<second>.+)$'
-    Impact = '^影响=(?<first>.+?)；边界=(?<second>.+)$'
-    Verify = '^验证=(?<first>.+?)；后续=(?<second>.+)$'
+  $contracts = [ordered]@{
+    Result = [pscustomobject]@{
+      Pattern = '^问题=(?<first>.+?)；完成=(?<second>.+)$'
+      Groups = @('first', 'second')
+      MaximumCodePoints = 1000
+    }
+    Impact = [pscustomobject]@{
+      Pattern = '^影响=(?<first>.+?)；边界=(?<second>.+)$'
+      Groups = @('first', 'second')
+      MaximumCodePoints = 1000
+    }
+    Verify = [pscustomobject]@{
+      Pattern = '^验证=(?<first>.+?)；后续=(?<second>.+)$'
+      Groups = @('first', 'second')
+      MaximumCodePoints = 1000
+    }
+    Plain = [pscustomobject]@{
+      Pattern = '^发生=(?<happened>.+?)；影响=(?<impact>.+?)；需要=(?<action>.+)$'
+      Groups = @('happened', 'impact', 'action')
+      MaximumCodePoints = 200
+    }
   }
-  foreach ($entry in $patterns.GetEnumerator()) {
+  foreach ($entry in $contracts.GetEnumerator()) {
     $value = [string]$Metadata.($entry.Key)
     if (
       [string]::IsNullOrWhiteSpace($value) -or
@@ -346,15 +363,29 @@ function Test-NotificationMetadata {
     ) {
       return $false
     }
-    $match = [regex]::Match($value, $entry.Value)
-    if (
-      -not $match.Success -or
-      [string]::IsNullOrWhiteSpace($match.Groups['first'].Value) -or
-      [string]::IsNullOrWhiteSpace($match.Groups['second'].Value) -or
-      $match.Groups['first'].Value.Length -gt 1000 -or
-      $match.Groups['second'].Value.Length -gt 1000
-    ) {
+    $match = [regex]::Match($value, [string]$entry.Value.Pattern)
+    if (-not $match.Success) {
       return $false
+    }
+    foreach ($groupName in @($entry.Value.Groups)) {
+      $groupValue = $match.Groups[$groupName].Value
+      $codePointCount = 0
+      for ($index = 0; $index -lt $groupValue.Length; $index++) {
+        if (
+          [char]::IsHighSurrogate($groupValue[$index]) -and
+          $index + 1 -lt $groupValue.Length -and
+          [char]::IsLowSurrogate($groupValue[$index + 1])
+        ) {
+          $index++
+        }
+        $codePointCount++
+      }
+      if (
+        [string]::IsNullOrWhiteSpace($groupValue) -or
+        $codePointCount -gt [int]$entry.Value.MaximumCodePoints
+      ) {
+        return $false
+      }
     }
   }
   $true

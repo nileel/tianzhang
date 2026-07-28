@@ -96,6 +96,7 @@ State: completed
 Result: 问题=缺少可理解的任务通知；完成=形成五段式普通通知
 Impact: 影响=任务终态可直接理解；边界=未改变任务或租约状态
 Verify: 验证=适配器直接测试通过；后续=等待飞书金丝雀
+Plain: 发生=任务通知已经同时包含专业内容和通俗解释；影响=负责人不参与写代码也能看懂本轮结果；需要=无需处理
 '@
   & git -C $repoRoot commit -q -m $message
   $structuredSha = [string](& git -C $repoRoot rev-parse HEAD)
@@ -128,6 +129,9 @@ exit $exitCode
   Assert-Equal -Actual $taskResult.Request.notification.completed -Expected '形成五段式普通通知' -Message 'Completed work was not parsed'
   Assert-Equal -Actual $taskResult.Request.notification.boundary -Expected '未改变任务或租约状态' -Message 'Task boundary was not parsed'
   Assert-Equal -Actual $taskResult.Request.notification.next -Expected '等待飞书金丝雀' -Message 'Task next relationship was not parsed'
+  Assert-Equal -Actual $taskResult.Request.notification.plainHappened -Expected '任务通知已经同时包含专业内容和通俗解释' -Message 'Plain-language outcome was not parsed'
+  Assert-Equal -Actual $taskResult.Request.notification.plainImpact -Expected '负责人不参与写代码也能看懂本轮结果' -Message 'Plain-language impact was not parsed'
+  Assert-Equal -Actual $taskResult.Request.notification.plainAction -Expected '无需处理' -Message 'Plain-language action was not parsed'
   Assert-Equal -Actual $taskResult.Request.notification.commitSha -Expected $structuredSha -Message 'Commit SHA was not transported'
 
   $blockedResult = Invoke-Facade -Arguments @(
@@ -140,6 +144,9 @@ exit $exitCode
   )
   Assert-Equal -Actual $blockedResult.ExitCode -Expected 0 -Message 'No-commit terminal notification failed'
   Assert-True -Condition $blockedResult.Request.notification.completed.Contains('未形成已核验业务提交') -Message 'No-commit terminal fabricated completed work'
+  Assert-True -Condition $blockedResult.Request.notification.plainHappened.Contains('没有形成已经核验的完成结果') -Message 'No-commit terminal lacked a plain-language outcome'
+  Assert-Equal -Actual $blockedResult.Request.notification.plainImpact -Expected '这项任务还不能算完成，目前没有确认游戏内容或项目行为已经改变' -Message 'No-commit terminal plain-language impact mismatch'
+  Assert-Equal -Actual $blockedResult.Request.notification.plainAction -Expected '需要先解除通知中说明的阻塞条件，再继续推进' -Message 'No-commit terminal plain-language action mismatch'
   Assert-Equal -Actual $blockedResult.Request.notification.commitSha -Expected $null -Message 'No-commit terminal invented a commit'
 
   $reportBody = "# 净成果`n`n- 完整正文`n- 第二行"

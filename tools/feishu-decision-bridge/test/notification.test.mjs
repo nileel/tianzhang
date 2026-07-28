@@ -56,6 +56,9 @@ function makeTaskNotification(overrides = {}) {
     boundary: '未新增 NPC 全知信息或每日全世界扫描',
     verification: 'BattleSim 构建和固定场景回归通过',
     next: '解锁 Unity 共用消费，仍按固定队列推进',
+    plainHappened: 'NPC 现在会按已经确认的规则选择修炼行动',
+    plainImpact: '相同情况下会得到稳定结果，后续更容易调整和检查',
+    plainAction: '无需处理',
     commitSha: '0123456789abcdef0123456789abcdef01234567',
     ...overrides,
   };
@@ -94,12 +97,30 @@ test('report cards preserve the complete body and have no reply controls', () =>
   assert.equal(card.elements.some((element) => ['action', 'form'].includes(element.tag)), false);
 });
 
-test('task outcome cards expose all five content sections and no reply controls', () => {
+test('task outcome cards keep professional sections before the three plain-language points', () => {
   const card = buildNotificationCard(makeTaskNotification());
   const text = JSON.stringify(card);
-  for (const heading of ['任务目标', '本次完成', '实际影响与明确边界', '验证结果', '后续关系']) {
+  for (const heading of [
+    '任务目标',
+    '本次完成',
+    '实际影响与明确边界',
+    '验证结果',
+    '后续关系',
+    '给负责人看的通俗版',
+    '发生了什么',
+    '对项目或游戏的实际影响',
+    '你是否需要做什么',
+  ]) {
     assert.match(text, new RegExp(heading));
   }
+  const contents = card.elements
+    .filter((element) => element.tag === 'div')
+    .map((element) => element.text.content);
+  assert.ok(contents.findIndex((content) => content.startsWith('5. 后续关系')) >= 0);
+  assert.ok(
+    contents.findIndex((content) => content.startsWith('5. 后续关系'))
+    < contents.findIndex((content) => content.startsWith('6. 给负责人看的通俗版')),
+  );
   assert.match(text, /0123456789ab/u);
   assert.equal(card.elements.some((element) => ['action', 'form'].includes(element.tag)), false);
 });
@@ -107,6 +128,14 @@ test('task outcome cards expose all five content sections and no reply controls'
 test('notification cards reject incomplete fields and overlong reports instead of truncating', () => {
   assert.throws(
     () => buildNotificationCard(makeTaskNotification({ boundary: '' })),
+    /^Error: Invalid notification card input$/,
+  );
+  assert.throws(
+    () => buildNotificationCard(makeTaskNotification({ plainAction: '' })),
+    /^Error: Invalid notification card input$/,
+  );
+  assert.throws(
+    () => buildNotificationCard(makeTaskNotification({ plainImpact: '长'.repeat(201) })),
     /^Error: Invalid notification card input$/,
   );
   assert.throws(
