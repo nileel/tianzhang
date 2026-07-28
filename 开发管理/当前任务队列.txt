@@ -5,3 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| C-GZ-CITY-01 | external_execute | deepseek | P1 | content | design | 关中城正式内容档案 | 开发管理/任务卡/C-GZ-CITY-01.txt |
+| C-GZ-ENEMY-01 | external_execute | deepseek | P1 | content | design | 石甲兽正式怪物档案 | 开发管理/任务卡/C-GZ-ENEMY-01.txt |
+| C-GZ-ITEM-01 | external_execute | deepseek | P1 | content | design | 关中首批最小物品档案 | 开发管理/任务卡/C-GZ-ITEM-01.txt |

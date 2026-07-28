@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-GZ-ITEM-01",
+  "title": "关中首批最小物品档案",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：负责人确认正式掉落与悬赏奖励必须引用 ItemData；本卡为 item_lingshi_low 与 item_shijia_piece 建立独立内容身份，不扩展完整经济或装备系统。",
+  "expectedPaths": [
+    "docs/道具/基础资源/劣质灵石.txt",
+    "docs/道具/妖兽材料/石甲碎片.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/任务卡/C-GZ-ITEM-01.txt",
+    "开发管理/任务归档/C-GZ-ITEM-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-GZ-ITEM-01 · 关中首批最小物品档案
+
+## 来源与当前边界
+
+- `Enemies.csv` 已引用 `item_shijia_piece` 与 `item_lingshi_low`，`Language.csv` 已提供“石甲碎片”和“劣质灵石”，但仓库没有对应独立物品档案或运行时 `ItemData`。
+- 本卡只建立首批正式物品身份和用途边界，供掉落与一次性悬赏引用；不建设商店、价格、装备、使用效果或全局经济。
+- 现有道具规范只完整覆盖丹药、天材地宝和唯一剧情遗物；本卡按已确认的最小正式框架新增“基础资源／妖兽材料”身份，不把二者伪装成上述三类。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#5.3 ItemData`、`#八、首批正式内容`。
+- `docs/道具/道具设计规范.txt` 的效果绑定、品级不自动映射数值和每项独立文件原则。
+- `src/Assets/DataConfig/Language.csv::item_shijia_piece|item_lingshi_low`。
+- `src/Assets/DataConfig/Enemies.csv::enemy_shijiahou` 的现有掉落引用。
+- 完成后的 `docs/怪物/关陇玄域/石甲兽.txt` 若本卡执行时已存在；不存在时只使用当前 CSV／Language 事实，不预判其复审结论。
+
+## 实施范围
+
+- 新建 `docs/道具/基础资源/劣质灵石.txt`，明确：
+  - 稳定 ID `item_lingshi_low`、正式名称、基础资源类别、可堆叠身份。
+  - 首轮仅作为怪物掉落或悬赏奖励的库存单位，不宣称完整货币兑换、商店价格或修炼效果。
+- 新建 `docs/道具/妖兽材料/石甲碎片.txt`，明确：
+  - 稳定 ID `item_shijia_piece`、正式名称、妖兽材料类别、可堆叠身份。
+  - 来源为正式石甲兽掉落候选；首轮不定义炼器配方、售价或使用效果。
+- 两个文件分别声明内容范围、描述、来源、允许用途和未开放用途。具体掉落概率、授予数量和 `maxStack` 交由 `N-GZ-REWARD-01` 锁定。
+
+## 禁止项
+
+- 不填写价格、汇率、修炼收益、装备效果、炼器配方、掉落概率、奖励数量或堆叠上限。
+- 不把劣质灵石写成统一经济基准，也不把石甲碎片写成已经可交易／可炼器的完成系统。
+- 不修改 CSV、Language、asset、背包、掉落、悬赏、商店或存档代码。
+- 不批量补齐其他 Enemies CSV 行引用的物品。
+
+## 验证
+
+- 两项完成品分别成文件，稳定 ID、类别、来源、允许用途和禁止用途完整。
+- 与 Language／Enemies 现有 ID 和显示名逐项一致，不创建第二名称或同义 ID。
+- 扫描并确认没有价格、概率、数量、堆叠上限、配方或效果数值。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/道具,开发管理` 与 `git diff --check`。
+
+## 完成条件
+
+- `item_lingshi_low` 与 `item_shijia_piece` 获得独立、可映射到后续 `ItemData` 的正式内容档案，且不虚构未实现经济用途。
+- 外部责任方完成后将同一卡转换为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，标记「⚠️ 已修改/未审核」并提交交接；不得自审。
+- Codex 复审通过并归档后解除 `D-ITEM-01` 的内容前置；具体参数仍等待 `N-GZ-REWARD-01`。
+
+## 停止条件
+
+- 物品身份必须先决定价格、完整货币层级、配方、效果或全局经济规则才能成立，或当前稳定 ID／显示名存在冲突时停止并转为 `pending_decision`，不得填写临时数值。

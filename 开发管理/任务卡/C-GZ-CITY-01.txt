@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-GZ-CITY-01",
+  "title": "关中城正式内容档案",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-28：负责人确认最小正式生产框架及任务线；本卡作为首个内容叶子，建立 guanzhong_city 的正式事实档案，不实现 Unity。",
+  "expectedPaths": [
+    "docs/剧情/据点/关中城.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/任务卡/C-GZ-CITY-01.txt",
+    "开发管理/任务归档/C-GZ-CITY-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-GZ-CITY-01 · 关中城正式内容档案
+
+## 来源与当前边界
+
+- 负责人已确认 `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` 的方案 A：内容可以少，但城市必须使用可复用的正式数据框架。
+- 当前 `guanzhong_city` 只存在于硬编码 `PrototypeSettlements` 和关中野外薄切片引用中。本卡只建立内容事实，不修改 Unity、CSV、asset、存档或任务状态。
+- 本次专项授权只覆盖关中城及石甲兽悬赏直接需要的功能；不解冻其他地区城市、商店、经济、NPC 或主线扩写。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#五、正式数据模型`、`#八、首批正式内容`。
+- `docs/剧情/剧情生产规范.txt#7. 据点对话与氛围文本`、`#五、玩法接口字段`。
+- `docs/地图/关陇玄域.txt` 中关陇地貌、低阶势力与安全据点直接事实。
+- `docs/剧情/副本叙事/adventure_guanzhong_wild.txt` 中 `guanzhong_city` 入口、返回和信息边界。
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs::SettlementSceneController.PrototypeSettlements` 中现行关中城原型字段，只作为迁移证据。
+
+## 实施范围
+
+- 新建 `docs/剧情/据点/关中城.txt`，明确：
+  - 稳定 ID `guanzhong_city`、正式名称、据点类型、地区和所有者。
+  - 黄土城镇的低成本视觉主题与关陇外围定位，不新增主线真相。
+  - `bounty_board` 为首个可用功能。
+  - 坊市、客栈、情报保留为可见但未开放功能，并分别给出不承诺玩法完成度的简短禁用原因。
+  - 正式冒险入口 `guanzhong_wild`、进入条件和返回关中城规则。
+  - 首轮允许的文本／日志表现、信息边界和重复访问规则。
+- 所有运行时引用使用稳定 ID；显示文本不得代替数据身份。
+
+## 禁止项
+
+- 不新增 NPC、对话树、商店库存、价格、客栈恢复、情报交易、声望、地区主线或世界状态。
+- 不修改 `SettlementSceneController`、场景、CSV、Language、asset、存档或测试。
+- 不把禁用功能写成已经可操作，也不通过“敬请期待”等占位入口冒充已实现功能。
+- 不改变 `guanzhong_wild` 既有进入／返回上下文或石甲兽战斗规则。
+
+## 验证
+
+- 对照剧情生产规范检查据点 ID、服务、冒险入口、信息边界和禁用状态说明完整。
+- 核对 `guanzhong_city -> guanzhong_wild -> guanzhong_city` 与既有副本叙事一致。
+- 扫描并确认没有新增 NPC、价格、奖励数值、主线真相或其他地区内容。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理` 与 `git diff --check`。
+
+## 完成条件
+
+- 关中城拥有可直接映射到后续 `SettlementData` 的独立正式档案，功能可用／禁用和副本入口无歧义。
+- 外部责任方完成后将同一卡转换为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，标记「⚠️ 已修改/未审核」并提交交接；不得自审。
+- Codex 复审通过并归档后解除 `D-SETTLEMENT-01` 的内容前置；`C-GZ-BOUNTY-01` 仍等待另外两项内容叶子。
+
+## 停止条件
+
+- 现行地图与副本事实无法支持“关中城”身份，或完成档案必须先定义新势力、NPC、经济、奖励数值或主线信息时停止并转为 `pending_decision`，不得自行补设定。
