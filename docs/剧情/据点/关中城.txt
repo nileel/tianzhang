@@ -1,7 +1,5 @@
 # 关中城 · 正式内容档案
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：全文新建 `docs/剧情/据点/关中城.txt`，建立关中城正式据点档案，不修改 Unity/CSV/asset/场景或任务状态。
-
 > 文件用途：为 `guanzhong_city` 建立独立、可映射到后续 `SettlementData` 的正式内容事实。本文件只写内容设计事实，不包含运行时实现、CSV 字段或 Unity 绑定。
 > 依据：`docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` 方案 A；`docs/剧情/剧情生产规范.txt` §7（据点对话与氛围文本）与 §5（玩法接口字段）；`docs/地图/关陇玄域.txt` 关陇地貌与低阶势力事实；`docs/剧情/副本叙事/adventure_guanzhong_wild.txt` 入口与返回边界。
 

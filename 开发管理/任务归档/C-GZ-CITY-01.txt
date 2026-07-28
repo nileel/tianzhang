@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-28：DeepSeek V4 Pro 完成关中城正式内容档案，⚠️ 已修改/未审核；已转为 codex_review 等待 Codex 复审。",
+  "stateReason": "2026-07-29：Codex 独立复审提交 0a9e847 通过；关中城正式内容档案字段、功能启用/禁用、冒险入口与信息边界均符合任务卡和直接事实源。",
   "expectedPaths": [
     "docs/剧情/据点/关中城.txt",
     "开发管理/任务列表/内容设计任务.txt",
@@ -72,3 +72,7 @@
 ## 停止条件
 
 - 现行地图与副本事实无法支持"关中城"身份，或完成档案必须先定义新势力、NPC、经济、奖励数值或主线信息时停止并转为 `pending_decision`，不得自行补设定。
+
+## 完成记录
+
+- 2026-07-29：Codex 独立复审 DeepSeek V4 Pro 提交 `0a9e847`，结论通过。`SettlementData` 最低字段、`bounty_board` 唯一启用状态和三项独立禁用原因均已核对；`guanzhong_city -> guanzhong_wild -> guanzhong_city` 的入口、胜败返回和重复规则与副本叙事一致；未发现新增 NPC、价格、奖励数值、主线信息、Unity、CSV、asset 或存档改动。`check-review-text.ps1 -Paths docs/剧情,开发管理` 与目标提交的 `git diff --check` 均通过。
