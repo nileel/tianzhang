@@ -4,13 +4,13 @@
   "id": "C-GZ-CITY-01",
   "title": "关中城正式内容档案",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "content",
   "stage": "design",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-07-28：负责人确认最小正式生产框架及任务线；本卡作为首个内容叶子，建立 guanzhong_city 的正式事实档案，不实现 Unity。",
+  "stateReason": "2026-07-28：DeepSeek V4 Pro 完成关中城正式内容档案，⚠️ 已修改/未审核；已转为 codex_review 等待 Codex 复审。",
   "expectedPaths": [
     "docs/剧情/据点/关中城.txt",
     "开发管理/任务列表/内容设计任务.txt",
@@ -53,7 +53,7 @@
 
 - 不新增 NPC、对话树、商店库存、价格、客栈恢复、情报交易、声望、地区主线或世界状态。
 - 不修改 `SettlementSceneController`、场景、CSV、Language、asset、存档或测试。
-- 不把禁用功能写成已经可操作，也不通过“敬请期待”等占位入口冒充已实现功能。
+- 不把禁用功能写成已经可操作，也不通过"敬请期待"等占位入口冒充已实现功能。
 - 不改变 `guanzhong_wild` 既有进入／返回上下文或石甲兽战斗规则。
 
 ## 验证
@@ -71,4 +71,4 @@
 
 ## 停止条件
 
-- 现行地图与副本事实无法支持“关中城”身份，或完成档案必须先定义新势力、NPC、经济、奖励数值或主线信息时停止并转为 `pending_decision`，不得自行补设定。
+- 现行地图与副本事实无法支持"关中城"身份，或完成档案必须先定义新势力、NPC、经济、奖励数值或主线信息时停止并转为 `pending_decision`，不得自行补设定。
