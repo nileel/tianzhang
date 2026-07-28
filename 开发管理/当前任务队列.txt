@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-FPD-AI-01 | codex_execute | codex | P2 | unity | implementation | NPC 自主修炼 | 开发管理/任务卡/U-FPD-AI-01.txt |
 | U-FPD-SAVE-01 | codex_execute | codex | P2 | unity | implementation | 筑基与紫府持久化 | 开发管理/任务卡/U-FPD-SAVE-01.txt |
 | N-SEAT-01A | codex_execute | codex | P2 | battlesim | discovery | 争位现状与确定性实现输入 | 开发管理/任务卡/N-SEAT-01A.txt |
 | N-SUPPRESS-01A | codex_execute | codex | P2 | battlesim | discovery | 削位／封丹现状与确定性实现输入 | 开发管理/任务卡/N-SUPPRESS-01A.txt |

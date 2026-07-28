@@ -7,10 +7,10 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
-  "stage": "implementation",
-  "dispatchState": "ready",
+  "stage": "decision",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-07-28：U-FPD-RULE-01 与 N-FPD-NPC-01 均已归档；现有 GameSession 世界日推进、NPC 状态存储和数据化权重运行时可作为唯一接入点。",
+  "stateReason": "2026-07-28：已确认现有 NpcStateStore 未保存当前修炼行动或完整周期边界，FoundationPurpleMansionRuntimeState 只接入养基／开府两类提交且没有五类行动的共同开始／提交入口；在不新增成长状态或修改存档 schema 的边界内，无法实现世界日与存读档不重复结算、不丢失当前行动的完成条件。待决定是先授权共同生命周期与 NPC 持久化前置，还是将本卡收窄为仅决策接口。",
   "expectedPaths": [
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs",
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs.meta",
@@ -37,6 +37,12 @@
 
 - `U-FPD-RULE-01` 已建立唯一道基／紫府运行时状态；`N-FPD-NPC-01` 已建立同一生产 CSV、Unity runtime 与 BattleSim 只读投影的权重结果。
 - `GameSession.AdvanceWorldDay` 是现有世界日推进入口，`NpcStateStore` 是现有 NPC 会话状态所有者；本卡只在规定事件接入自主行动，不建立第二套世界 tick 或成长状态。
+
+## 已触发的待决策
+
+- 现有 `NpcStateStore` 仅持有 `NpcId`、`WorldNodeId` 与通用步骤，不能保存选中的行动、固定目标、已提交周期或停止原因；`GameSessionSaveData` 亦没有这些字段。
+- `FoundationPurpleMansionRuntimeState` 只有养基与开府的周期提交方法，未提供筑基考验、府胚蕴养、证位及五类行动共同的开始／稳定边界接口。`NpcJindanProofPolicy` 只判断证位硬门槛，不能提交其行动生命周期。
+- 因此在本卡“不得新增第二套成长／NPC 状态、不得修改存档 schema”的边界内，不能同时满足共享硬条件、事件驱动重算与存读档不重复结算／不丢失当前行动。需要决定：先授权共同生命周期与 NPC 持久化前置，或明确将本卡仅收窄为不执行、不持久化的决策接口。
 
 ## 必查范围
 
@@ -73,3 +79,7 @@
 ## 停止条件
 
 - 现有所有者无法容纳调度而必须建立第二套成长／世界时间服务，或实现需要 NPC 全知、每日全世界扫描、硬编码行为顺序或未确认参数时停止并转为 `pending_decision`。
+
+## 当前状态
+
+- 已按停止条件转为 `pending_decision`；未写入 Unity 运行时、权重数据、存档 schema 或测试，以免用并行状态或未覆盖的行动生命周期绕过缺失事实。
