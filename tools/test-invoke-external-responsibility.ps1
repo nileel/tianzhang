@@ -374,6 +374,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
     [string]$record.input -match [regex]::Escape('fixtures/generated-business.txt')
   ) 'wrapper prompt omitted expected paths'
   Assert-True (
+    [string]$record.input -match [regex]::Escape('the exact matching entry in 开发管理/未通过审核清单.txt')
+  ) 'wrapper prompt omitted review-return evidence routing'
+  Assert-True (
     [string]$record.input -match [regex]::Escape('-Postcondition ExternalPendingReview -OutputJson')
   ) 'wrapper prompt omitted the pre-commit pending-review check'
   Assert-True (

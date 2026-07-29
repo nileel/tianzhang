@@ -28,48 +28,51 @@
 ## 来源与当前边界
 
 - `enemy_shijiahou` 已有 Enemies CSV 行、Language 键、`CharacterData` asset 和正式 Adventure 引用，但 `type`、`aiType`、`realm`、`dropTable` 与描述未进入完整运行时结构。
-- 本卡只把现有石甲兽升格为可追踪的正式怪物内容档案；不修改数值、掉落概率、AI 算法、CSV、asset 或 Unity。
+- 本卡只把现有石甲兽升格为可追踪的正式怪物内容档案；不修改数值、掉落概率、AI 算法、CSV、asset 或 Unity，也不把 CSV 候选字段写成当前运行时已经消费的行为。
 - `docs/地图/漠北荒域.txt` 中的“黑曜石甲兽”是另一个高阶怪物名称，本卡不得将其事实并入低阶 `enemy_shijiahou`。
+- 本轮为 `REV-C-GZ-ENEMY-01-02` 定向返工。正文只允许写“实施范围”列出的正向事实；没有列出的生态、生理、材质、战斗属性、结算或运行时行为一律删除，不以合理推测补齐。
 
 ## 必查范围
 
+- `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt::REV-C-GZ-ENEMY-01-02`、`开发管理/AI合作沟通.txt::C-GZ-ENEMY-01`。
 - `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#5.2 EnemyData`、`#八、首批正式内容`。
 - `docs/剧情/副本叙事/adventure_guanzhong_wild.txt` 中石甲兽的叙事定位、遭遇范围与禁止项。
-- `docs/地图/关陇玄域.txt` 中黄土、废墟、残余灵气和低阶异兽直接事实。
 - `src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`、`Language.csv::enemy_shijiahou|desc_enemy_shijiahou|item_shijia_piece|item_lingshi_low`。
 - `src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset` 中现行战斗模板字段，只作为迁移证据。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportEnemies` 与 `src/Assets/Scripts/Combat/TacticalCombatController.cs::CreateDropItems` 的当前消费者边界。
 
 ## 实施范围
 
-- 新建 `docs/怪物/关陇玄域/石甲兽.txt`，明确：
+- 完整重写 `docs/怪物/关陇玄域/石甲兽.txt`，不沿用现有长篇结构；只保留：
   - 稳定 ID `enemy_shijiahou`、正式名称、内容范围和妖兽类型。
-  - 练气期低阶定位、关陇黄土旧道栖息环境、受残余灵气惊扰的行为动机。
-  - 外观与战斗识别特征，只描述厚甲、迟缓、近战和格挡倾向，不新增未实现能力。
+  - 练气期低阶定位，以及厚甲、迟缓、近战和格挡倾向四项定性识别。
   - AI 类别 `ai_melee` 及“接近目标、相邻基础攻击、不能行动时防御”的最小行为语义。
-  - 当前无装备术法／神通，战斗数值继续引用既有模板，不在本卡重写。
-  - 掉落候选 `item_shijia_piece`、`item_lingshi_low` 的来源语义；概率和数量明确交由 `N-GZ-REWARD-01` 锁定。
-  - 在 `guanzhong_wild` 中作为唯一正式敌人的用途与重复遭遇边界。
+  - 当前无装备术法／神通；战斗数值只指向既有模板，不列字段、具体值或高低结论。
+  - `Enemies.csv` 对 `item_shijia_piece`、`item_lingshi_low` 的候选 ID 引用；明确当前导入器和掉落结算不消费该候选结构，概率与数量等待 `N-GZ-REWARD-01`。
+  - 在 `guanzhong_wild` 中作为单敌遭遇的内容用途与可重复进入边界。
 
 ## 禁止项
 
-- 不修改一级／二级属性、境界倍率、伤害、格挡、CT、掉落概率或数量。
+- 不写一级／二级属性、境界倍率、伤害、格挡数值、CT／行动条、暴击、闪避、魂盾、掉落概率或数量。
 - 不新增术法、神通、Boss 阶段、远程攻击、特殊状态或专属经济用途。
 - 不修改 CSV、Language、asset、场景、导入器、AI 或战斗代码。
 - 不引用黑曜石甲兽、高阶关陇主线或龙脊之变核心真相补齐本怪物。
+- 不描述结构化结算、`dropEntries`／`dropTable` 消费、fallback、`realmMultiplier` 或其他当前未实现的运行时规则。
+- 不补写体型、感官、食性、食物链、甲壳形成、晶化／矿化、掉落过程、材质、炼器、阵法、补灵或经济效果。
 
 ## 验证
 
-- 逐项核对稳定 ID、类型、境界、环境、AI、战斗模板引用、掉落候选和使用范围。
-- 对照 Enemies／Language 现有行，确认没有改写或遗漏现行身份；数值只作为引用，不在正文宣称已平衡。
-- 扫描并确认没有黑曜石甲兽混入、具体概率／数量、新能力或主线真相。
+- 将每条正向断言逐项映射到任务卡允许项及对应直接事实源；不能映射的句子删除。
+- 对照 Enemies／Language、Adventure、asset 和当前消费者，确认只保留身份、定性识别、AI、模板指针、候选 ID 和使用范围。
+- 对目标档案扫描并确认没有 CT／行动条、暴击、闪避、魂盾、当前结构化结算、材质／生态、具体概率／数量、新能力或主线真相。
 - 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理` 与 `git diff --check`。
 
 ## 完成条件
 
-- 石甲兽拥有可直接映射到后续 `EnemyData` 的独立正式档案，内容身份与通用 `CharacterData` 战斗模板边界明确。
+- 石甲兽拥有可映射到后续 `EnemyData` 的最小独立档案，且候选数据、战斗模板和当前运行时之间的边界明确。
 - 外部责任方完成后将同一卡转换为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，标记「⚠️ 已修改/未审核」并提交交接；不得自审。
 - Codex 复审通过并归档后解除 `D-ENEMY-01` 的内容前置；掉落数值仍等待 `N-GZ-REWARD-01`。
 
 ## 停止条件
 
-- 正式怪物身份需要新增能力、战斗数值、掉落概率、经济用途或与现行关陇事实冲突时停止并转为 `pending_decision`；不得用当前 fallback 或显示文本补作事实源。
+- 白名单之外的内容被认为是档案成立的必要条件，或直接事实源之间存在冲突时停止并转为 `pending_decision`；不得自行补写生态、属性、结算或用途。

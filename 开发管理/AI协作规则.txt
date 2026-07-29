@@ -46,9 +46,10 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 调度器必须先真实选中合法外部候选、取得单写入租约并给出任务授权范围，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份；无合法外部候选时不得预检或空转调用。外部责任方启动后自行读取任务卡与必要事实源，并端到端完成：
 
 1. 调用 `tools/automation-workspace-guard.ps1` 记录基线，确认授权范围与人工改动不冲突。
-2. 实施修改、运行任务直接要求的最小充分验证并标记「⚠️ 已修改/未审核」；成功后把同一任务卡更新为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，在原队列行就地同步且保持同一 ID、标题和正文，不创建第二张复审卡。
-3. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、上述同一任务卡/队列状态和直接验证结果，保持 `State: pending_review`。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain` 分别传入事实字段；后四项严格使用 `问题=<原问题>；完成=<具体交付>`、`影响=<实际行为变化>；边界=<明确未涉及范围>`、`验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>` 的单行结构。九个子字段都非空且由本任务事实支持；三个通俗子字段各不超过 200 个 Unicode code point，避免只有参与开发才知道的实现细节。finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
-4. 随后只修改 `开发管理/AI合作沟通.txt`，登记真实 `businessCommit` SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`；第二次不得重跑领域检查。`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
+2. 若任务卡 `stateReason` 带有 `REV-*` 问题编号或明确说明由复审退回，修改前先读 `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 中同一问题编号的最新条目和 `开发管理/AI合作沟通.txt` 当前同一卡条目；只消费该匹配项，不读取无关审核历史。最新条目的定向返工范围是原任务卡的收窄边界，不得只按原卡重新生成。
+3. 实施修改、运行任务直接要求的最小充分验证并标记「⚠️ 已修改/未审核」；成功后把同一任务卡更新为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，在原队列行就地同步且保持同一 ID、标题和正文，不创建第二张复审卡。
+4. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、上述同一任务卡/队列状态和直接验证结果，保持 `State: pending_review`。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain` 分别传入事实字段；后四项严格使用 `问题=<原问题>；完成=<具体交付>`、`影响=<实际行为变化>；边界=<明确未涉及范围>`、`验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>` 的单行结构。九个子字段都非空且由本任务事实支持；三个通俗子字段各不超过 200 个 Unicode code point，避免只有参与开发才知道的实现细节。finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
+5. 随后只修改 `开发管理/AI合作沟通.txt`，登记真实 `businessCommit` SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`；第二次不得重跑领域检查。`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
 
 外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不得读取业务 diff、重跑业务验证、stage 或 commit。控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。外部责任方不得自审、扩大授权路径、并行派发、stash、reset、checkout、clean 或推送远端。需要负责人决定时，外部 CLI 保存原 session 后退出，并由原 session 续跑。
 

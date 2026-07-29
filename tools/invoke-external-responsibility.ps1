@@ -189,6 +189,7 @@ function New-ExternalPrompt {
     'The hourly controller already selected this exact external_execute task and holds its single-writer lease.'
     'Work directly in RepositoryRoot on its current branch. Do not create or switch worktrees or branches, and do not rescan the queue for another task.'
     'Read AGENTS.md, 开发管理/自动工作流规则.txt, 开发管理/AI协作规则.txt, 开发管理/DeepSeek工作提示词.txt, 开发管理/当前任务队列.txt, and the exact task card 开发管理/任务卡/' + $TaskId + '.txt.'
+    'If the selected task card stateReason names a REV-* finding or says the task was returned by review, read 开发管理/审核入口.txt, the exact matching entry in 开发管理/未通过审核清单.txt, and the current matching entry in 开发管理/AI合作沟通.txt before editing. Use only that latest matching finding, and treat its narrower correction scope as binding.'
     'Before any repository change, run these exact commands separately:'
     "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Snapshot -RepositoryRoot $quotedRoot -BaselinePath $quotedBaseline"
     "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-workspace-guard.ps1 Check -RepositoryRoot $quotedRoot -BaselinePath $quotedBaseline -ExpectedPaths $quotedExpectedPaths"
