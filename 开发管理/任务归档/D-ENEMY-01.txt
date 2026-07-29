@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：C-GZ-ENEMY-01 已完成并归档；石甲兽的稳定身份、最小 AI 语义、战斗模板指针、候选物品和冒险范围均已审核，现可只建立不含掉落参数或 Unity 消费的 EnemyData 契约。",
+  "stateReason": "2026-07-30：已建立 EnemyData、AI、战斗模板与结构化掉落契约；未填掉落参数，未修改 CSV、asset、导入器或运行时。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-30-guanzhong-enemy-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -63,3 +63,8 @@
 ## 停止条件
 
 - 若契约必须填入未批准的掉落参数、战斗数值、AI 行为细节、额外怪物内容或把 fallback 作为正式能力，停止并转为 `pending_decision`；不得用候选值或兼容分支补齐。
+
+## 完成记录
+
+- 2026-07-30：新建 `docs/superpowers/specs/2026-07-30-guanzhong-enemy-data-contract.md`，锁定同一 `Enemies.csv` 行单向生成 `CharacterData` 与 `EnemyData` 的边界、`ai_melee` 引用语义、石甲兽字段归属、结构化掉落字段、候选物品参数留白及正反 fixture 规格。
+- 未修改 `Enemies.csv`、Language、asset、导入器、Adventure、Combat、AI、掉落结算、场景或测试；现有 fallback 与 `realmMultiplier` 文字掉落仅作为后续迁移边界。
