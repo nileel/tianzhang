@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "N-GZ-REWARD-01",
+  "title": "首批掉落、堆叠与悬赏奖励参数",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "decision",
+  "dispatchState": "pending_decision",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：C-GZ-ENEMY-01、C-GZ-ITEM-01 与 C-GZ-BOUNTY-01 均已完成，原内容前置已解除；但没有已批准的奖励物品、授予数量、掉落概率或 maxStack。现有 Enemies.csv 30/50 仅是未消费候选，不能充当参数事实。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-30-guanzhong-reward-parameter-decision.md",
+    "开发管理/关中首批掉落与悬赏奖励参数验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-GZ-REWARD-01.txt",
+    "开发管理/任务归档/N-GZ-REWARD-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# N-GZ-REWARD-01 · 首批掉落、堆叠与悬赏奖励参数
+
+## 来源与当前边界
+
+- 本卡只在负责人给出已批准参数及验证目标后锁定首批掉落、堆叠和一次性悬赏奖励；不执行 CSV、asset、导入器、背包、掉落或悬赏实现。
+
+## 已触发的待决策
+
+- `C-GZ-ENEMY-01`、`C-GZ-ITEM-01` 与 `C-GZ-BOUNTY-01` 已完成，已提供石甲兽、两项候选物品、一次性悬赏、奖励类别和禁止项；它们都明确没有锁定奖励物品、数量、掉落概率或 `maxStack`。
+- `Enemies.csv::enemy_shijiahou` 的 `item_shijia_piece:30|item_lingshi_low:50` 是现有未消费候选。现有导入器和掉落结算不读取它，且已审核内容将概率／数量明确留给本卡，不能把该旧行直接升级为正式参数。
+- 项目没有首批经济预算、价格、库存或奖励强度目标可据以推导参数。负责人需明确：石甲兽的正式掉落项及每项概率／数量、两个物品的 `maxStack`、一次性悬赏的正式奖励项及数量，以及这些数值应以何种已批准目标验证。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#5.2 EnemyData`、`#5.3 ItemData`、`#5.4 BountyData`、`#6.5 背包原子提交`、`#八、首批正式内容`、`#十、验证矩阵`、`#十一、任务依赖结构` 与“本设计不改变角色战斗数值”的边界。
+- `docs/怪物/关陇玄域/石甲兽.txt`、`docs/道具/基础资源/劣质灵石.txt`、`docs/道具/妖兽材料/石甲碎片.txt`、`docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt`、`src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`。
+- `开发管理/任务归档/C-GZ-ENEMY-01.txt`、`开发管理/任务归档/C-GZ-ITEM-01.txt`、`开发管理/任务归档/C-GZ-BOUNTY-01.txt` 与 `开发管理/任务列表/数据链路任务.txt::N-GZ-REWARD-01`。
+
+## 实施范围
+
+- 负责人先提供上述参数及其验证目标；收到新决定后，先把该决定写入 `docs/superpowers/specs/2026-07-30-guanzhong-reward-parameter-decision.md`，再补齐实际数据、检查与运行时任务的精确 `expectedPaths`。
+- 后续只锁定首批石甲兽掉落、两项物品堆叠上限和一次性石甲兽悬赏奖励；不建立价格、商店、装备、全局经济、每日刷新或其他内容。
+
+## 禁止项
+
+- 不从候选 CSV 值、物品名称、直觉、默认值或未实现背包行为推导正式参数。
+- 不修改 CSV、asset、导入器、BattleSim、Unity、掉落、背包、悬赏或物品／怪物／任务档案。
+- 不把参数缺失以 fallback、概率范围、占位奖励、临时经济模型或第二数据源掩盖。
+
+## 验证
+
+- 负责人决定必须一次明确石甲兽掉落项及其概率／数量、两项物品 `maxStack`、一次性悬赏奖励项及数量，以及可检验这些参数的已批准目标；未满足时保持待决定。
+- 收到决定后，先核对其与四项已审核内容事实、正式数据模型和本卡边界一致，再为实际参数切片补齐直接验证与完整预期路径；本待决定卡不运行数值或实现检查。
+
+## 完成条件
+
+- 只有负责人决定提供完整参数和验证目标后，才将本卡改为具备完整预期路径与直接验证的可执行切片；在此之前不进入 ready 队列。
+
+## 停止条件
+
+- 若参数需要以未批准的经济模型、价格、商店、概率规则、战斗数值或运行时默认值推导，继续保持 `pending_decision`；不得自行填入候选或猜测值。
+
+## 当前状态
+
+- 已转为 `pending_decision`，不在当前 ready 队列中；本轮没有生成或修改任何奖励参数。

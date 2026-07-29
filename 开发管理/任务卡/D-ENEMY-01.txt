@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-ENEMY-01",
+  "title": "怪物、AI 与掉落数据契约",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：C-GZ-ENEMY-01 已完成并归档；石甲兽的稳定身份、最小 AI 语义、战斗模板指针、候选物品和冒险范围均已审核，现可只建立不含掉落参数或 Unity 消费的 EnemyData 契约。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-30-guanzhong-enemy-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-ENEMY-01.txt",
+    "开发管理/任务归档/D-ENEMY-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-ENEMY-01 · 怪物、AI 与掉落数据契约
+
+## 来源与当前边界
+
+- `C-GZ-ENEMY-01` 已完成并归档，已锁定 `enemy_shijiahou` 的低阶身份、`ai_melee` 最小行为语义、既有 `CharacterData` 战斗模板指针、两项候选物品 ID 和 `guanzhong_wild` 的单敌范围。
+- `Enemies.csv` 现有字段尚未形成 `EnemyData`；导入器仍只投影通用 `CharacterData`，运行时仍有旧的 fallback 敌人和基于 `realmMultiplier` 的文字掉落。它们都是后续迁移边界，不能视为正式怪物或掉落实现。
+- 本卡只定义可实施的怪物、AI、战斗模板和掉落结构契约；不修改战斗数值、候选参数、CSV、asset、导入器或运行时。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#四、事实源与生成链`、`#5.2 EnemyData`、`#6.1 ContentCatalogData`、`#6.3 怪物与战斗`、`#九、失败关闭与校验`、`#十、验证矩阵`、`#十一、任务依赖结构` 与 `#十三、停止条件`。
+- `开发管理/任务归档/C-GZ-ENEMY-01.txt`、`docs/怪物/关陇玄域/石甲兽.txt`、`docs/剧情/副本叙事/adventure_guanzhong_wild.txt`、`src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`、`src/Assets/DataConfig/Language.csv::enemy_shijiahou|desc_enemy_shijiahou`。
+- `src/Assets/Scripts/Entity/CharacterData.cs::CharacterData`、`src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportEnemies`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs`、`src/Assets/Scripts/Map/ExplorationController.cs::CreateFallbackEnemy`、`src/Assets/Scripts/Combat/EnemyAI.cs` 的当前所有者与迁移边界。
+- `开发管理/任务列表/数据链路任务.txt::D-ENEMY-01`。
+
+## 实施范围
+
+- 新建 `docs/superpowers/specs/2026-07-30-guanzhong-enemy-data-contract.md`，定义 `EnemyData` 的稳定 ID、语言键、生产范围、怪物类别、AI 档案、境界、`CharacterData` 模板与结构化掉落字段，并明确同一 `Enemies.csv` 行只能单向生成两类投影。
+- 定义 `ai_melee` 的数据引用边界、正式冒险只按 `EnemyData` 启动、`CharacterData` 只承载通用战斗属性、掉落条目的正式物品 ID／概率／正整数数量及可注入随机源；未知引用、非法概率、非法数量、投影不一致、缺失 AI 或掉落必须失败关闭。
+- 写出首批石甲兽的字段归属、候选物品留白和正反 fixture 规格；明确实际掉落概率与数量由 `N-GZ-REWARD-01` 决定，`realmMultiplier` 和 fallback 不得成为正式掉落权威。
+
+## 禁止项
+
+- 不修改 `Enemies.csv`、Language、`CharacterData` asset、导入器、Adventure、Combat、AI、掉落结算、场景或测试。
+- 不填入掉落概率／数量、战斗属性、额外怪物生态、专属模型、动画、音效、特效、团队 AI、随机遭遇或其他怪物内容。
+- 不建立 Unity 专属平行 schema、默认敌人、默认 AI、`realmMultiplier` 掉落换算、fallback 或第二空间／目标选择语义。
+
+## 验证
+
+- 逐字段核对已审核怪物事实、通用战斗模板与怪物专属语义的边界、正式掉落的参数所有者以及所有失败关闭条件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- 后续 `N-GZ-REWARD-01`、`U-CONTENT-CATALOG-01` 与 `U-ENEMY-01` 可依本契约增加参数、投影和消费，而无需猜测 EnemyData 字段、AI 语义、模板所有者或掉落失败关闭规则。
+- 契约不声称石甲兽已由正式 EnemyData 消费，也不改变现有战斗或掉落行为。
+
+## 停止条件
+
+- 若契约必须填入未批准的掉落参数、战斗数值、AI 行为细节、额外怪物内容或把 fallback 作为正式能力，停止并转为 `pending_decision`；不得用候选值或兼容分支补齐。

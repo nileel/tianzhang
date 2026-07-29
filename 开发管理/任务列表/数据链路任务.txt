@@ -14,11 +14,11 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| D-SETTLEMENT-01 | P1 | Codex | 阻塞（C-GZ-CITY-01） | — | 定义 `SettlementData`、城市功能条目、冒险入口、生产范围和失败关闭契约。 | — |
-| D-ITEM-01 | P1 | Codex | 阻塞（C-GZ-ITEM-01） | — | 定义最小 `ItemData`、正式物品身份、数量和堆叠约束契约。 | — |
-| D-ENEMY-01 | P1 | Codex | 阻塞（C-GZ-ENEMY-01） | — | 定义 `EnemyData`、`CharacterData` 战斗模板、AI 档案和结构化掉落契约。 | — |
+| D-SETTLEMENT-01 | P1 | codex | 已排队 | — | 城市与功能入口数据契约 | `开发管理/任务卡/D-SETTLEMENT-01.txt` |
+| D-ITEM-01 | P1 | codex | 已排队 | — | 最小物品数据契约 | `开发管理/任务卡/D-ITEM-01.txt` |
+| D-ENEMY-01 | P1 | codex | 已排队 | — | 怪物、AI 与掉落数据契约 | `开发管理/任务卡/D-ENEMY-01.txt` |
 | D-BOUNTY-01 | P1 | Codex | 阻塞（C-GZ-BOUNTY-01、D-SETTLEMENT-01、D-ITEM-01、D-ENEMY-01） | — | 定义 `defeat_enemy`、一次性状态、地点约束、奖励和跨表引用契约。 | — |
-| N-GZ-REWARD-01 | P1 | Codex | 阻塞（C-GZ-ENEMY-01、C-GZ-ITEM-01、C-GZ-BOUNTY-01） | — | 只锁定首批石甲兽掉落概率／数量、物品堆叠上限与一次性悬赏奖励，不建立全局经济。 | — |
+| N-GZ-REWARD-01 | P1 | codex | 待决定 | — | 首批掉落、堆叠与悬赏奖励参数 | `开发管理/任务卡/N-GZ-REWARD-01.txt` |
 | U-CONTENT-CATALOG-01 | P1 | Codex | 阻塞（D-SETTLEMENT-01、D-ITEM-01、D-ENEMY-01、D-BOUNTY-01、N-GZ-REWARD-01） | — | 实现 CSV 整表导入、跨表校验、GUID 保持和四领域只读 `ContentCatalogData`。 | — |
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |

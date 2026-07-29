@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-ITEM-01",
+  "title": "最小物品数据契约",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：C-GZ-ITEM-01 已完成并归档；两项物品已有稳定身份、类别、可堆叠候选和未开放用途边界，现可只建立不含参数或库存实现的 ItemData 契约。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-30-guanzhong-item-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-ITEM-01.txt",
+    "开发管理/任务归档/D-ITEM-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-ITEM-01 · 最小物品数据契约
+
+## 来源与当前边界
+
+- `C-GZ-ITEM-01` 已完成并归档，已锁定 `item_lingshi_low` 与 `item_shijia_piece` 的稳定身份、类别、可堆叠语义和未来库存候选边界。
+- 当前仓库没有 `ItemData`、正式物品目录或库存消费者；`Enemies.csv` 中的候选掉落列也尚未被导入器与运行时消费。本卡只定义数据契约，不把候选或原型解释为已可授予物品。
+- 掉落概率、授予数量、`maxStack`、价格和经济结论均无已批准参数，继续由 `N-GZ-REWARD-01` 的负责人决定处理。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#四、事实源与生成链`、`#5.2 EnemyData` 的掉落引用边界、`#5.3 ItemData`、`#6.5 背包原子提交`、`#九、失败关闭与校验`、`#十、验证矩阵`、`#十一、任务依赖结构` 与 `#十三、停止条件`。
+- `开发管理/任务归档/C-GZ-ITEM-01.txt`、`docs/道具/基础资源/劣质灵石.txt`、`docs/道具/妖兽材料/石甲碎片.txt`、`src/Assets/DataConfig/Language.csv::item_lingshi_low|item_shijia_piece`、`src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportEnemies`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs::InventoryStateStore` 的现有候选数据与库存状态边界。
+- `开发管理/任务列表/数据链路任务.txt::D-ITEM-01`。
+
+## 实施范围
+
+- 新建 `docs/superpowers/specs/2026-07-30-guanzhong-item-data-contract.md`，定义 `ItemData` 的稳定 ID、显示／描述键、生产范围、类别和 `maxStack`，以及 docs -> CSV -> 导入器 -> 保持 GUID 的 asset -> 只读目录的单一事实源边界。
+- 定义物品 ID、数量、堆叠上限、语言引用、生产范围和跨表引用的整表失败关闭条件；明确掉落与悬赏奖励都只能引用正式 `itemId`，并须由未来同一原子授予入口消费。
+- 写出首批两项物品的可表达身份和正反 fixture 规格，明确参数字段在 `N-GZ-REWARD-01` 未决前必须缺失，不能以候选、CSV 旧值或默认值填充。
+
+## 禁止项
+
+- 不修改 CSV、Language、asset、导入器、背包、掉落、悬赏、场景、Unity 测试或现有物品档案。
+- 不定义价格、汇率、商店、装备、使用效果、炼器、合成、经济循环或全局道具编辑器。
+- 不把候选 ID、未来库存用途或现有 `InventoryStateStore` 解释为正式物品授权，不增加第二物品数据源、默认堆叠上限或兼容回退。
+
+## 验证
+
+- 逐字段核对两项已审核物品身份、未来引用边界、唯一生产者和失败关闭条件；确认 fixture 不填掉落、奖励、数量或堆叠生产值。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- 后续 `N-GZ-REWARD-01`、`U-CONTENT-CATALOG-01` 与 `U-ITEM-GRANT-01` 可依据本契约添加参数、导入和原子授予，而无需猜测物品字段、所有者、堆叠或失败关闭语义。
+- 契约不把任何物品写成已进入背包、已掉落、已领取或拥有价格／使用效果。
+
+## 停止条件
+
+- 若完成契约必须确定奖励物品、数量、概率、堆叠值、价格、使用效果或新增库存机制，停止并转为 `pending_decision`；不得以当前候选或默认值补齐。

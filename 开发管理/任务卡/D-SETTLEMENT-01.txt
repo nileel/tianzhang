@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-SETTLEMENT-01",
+  "title": "城市与功能入口数据契约",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：C-GZ-CITY-01 已完成并归档；关中城的稳定身份、功能和野外入口已具备唯一内容事实，现可只建立不含生产数据或 Unity 消费的 SettlementData 契约。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-30-guanzhong-settlement-data-contract.md",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-SETTLEMENT-01.txt",
+    "开发管理/任务归档/D-SETTLEMENT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-SETTLEMENT-01 · 城市与功能入口数据契约
+
+## 来源与当前边界
+
+- `C-GZ-CITY-01` 已完成并归档，已锁定 `guanzhong_city`、`bounty_board`、未开放功能的禁用语义及 `guanzhong_wild` 冒险入口。
+- `SettlementSceneController` 仍以 `PrototypeSettlements` 硬编码城市，`SettlementDefinition` 仍是原型结构；本卡只定义后续正式数据链，不能将原型结构或 placeholder 日志说成已迁移行为。
+- 本卡只产出可实施的数据契约；CSV、asset、导入器、目录、场景消费者及功能分发分别由后续任务处理。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#四、事实源与生成链`、`#5.1 SettlementData`、`#6.1 ContentCatalogData`、`#6.2 城市场景`、`#九、失败关闭与校验`、`#十、验证矩阵`、`#十一、任务依赖结构` 与 `#十三、停止条件`。
+- `开发管理/任务归档/C-GZ-CITY-01.txt` 与 `docs/剧情/据点/关中城.txt` 中 `guanzhong_city`、`bounty_board`、禁用功能和 `guanzhong_wild` 的已审核事实。
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs::PrototypeSettlements|TryGetSettlement`、`src/Assets/Scripts/Settlement/SettlementDefinition.cs::SettlementDefinition`、`src/Assets/Scripts/World/WorldSceneController.cs` 的现有原型所有者与 `settlementId` 上下文。
+- `开发管理/任务列表/数据链路任务.txt::D-SETTLEMENT-01`。
+
+## 实施范围
+
+- 新建 `docs/superpowers/specs/2026-07-30-guanzhong-settlement-data-contract.md`，定义 `SettlementData` 的稳定 ID、语言键、生产范围、类型、地区、所属、视觉主题、功能及冒险入口字段，并明确 docs -> CSV -> 导入器 -> 保持 GUID 的 asset -> 只读目录 -> 消费者的单向边界。
+- 定义功能条目的 `featureId`、显示键、`enabled|disabled` 可用性与禁用原因约束；启用功能必须有已注册处理器，禁用功能不得调用处理器，未知城市与未知引用必须失败关闭并保留世界返回出口。
+- 明确首批只引用已审核的 `guanzhong_city`、`bounty_board` 和 `guanzhong_wild`，并写出后续正反 fixture 所需的合法与非法输入；不得填入生产 CSV、asset、处理器或额外城市内容。
+
+## 禁止项
+
+- 不修改 CSV、Language、asset、导入器、`SettlementSceneController`、场景、Unity 测试或任何城市内容。
+- 不把原型城市数组、placeholder 服务日志或未实现的功能分发器当成正式消费能力，不建立万能内容节点、第二数据源、默认城市或 fallback。
+- 不新增其他城市、服务、悬赏类型、NPC、价格、商店、UI、运行时规则或未批准参数。
+
+## 验证
+
+- 逐字段核对稳定内容事实、生产者、后续投影、功能可用性及失败关闭边界；正反 fixture 规格不包含生产值。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- 后续 `U-CONTENT-CATALOG-01` 与 `U-SETTLEMENT-01` 可仅依本契约建立单向导入与城市消费，不需猜测字段、禁用行为、入口语义或 fallback。
+- 契约不声称现有场景已数据化，也不改变任何生产内容、运行时行为或数值。
+
+## 停止条件
+
+- 若契约必须指定尚无已审核事实的城市、功能处理器、显示文本、视觉资源、价格、奖励或运行时行为，停止并转为 `pending_decision`；不得以原型或默认值补齐。
