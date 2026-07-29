@@ -4,18 +4,19 @@
   "id": "C-GZ-BOUNTY-01",
   "title": "一次性石甲兽悬赏内容档案",
   "priority": "P1",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-07-29：DeepSeek V4 Pro 完成一次性石甲兽悬赏内容档案；任务/悬赏 ID、发布地点、目标、状态、接口、失败关闭、一次性规则和 D 级演出均已映射到必查事实源；未填写具体奖励物品、数值、NPC 或主线信息。已标记「⚠️ 已修改/未审核」并移交 Codex 复审。",
+  "stateReason": "2026-07-29：Codex 独立复审提交 530a350 结论为部分通过。REV-C-GZ-BOUNTY-01-01：档案把尚未存在的 BountyRuntime、BountyStateStore、悬赏板分发器、schema 3 和领奖原子提交写成现在时运行时行为，违反本卡仅定义后续契约、不得断言当前已实现的边界。需由 DeepSeek 仅收窄该档案表述后重新标记未审核并移交复审。",
   "expectedPaths": [
     "docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt",
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
     "开发管理/任务卡/C-GZ-BOUNTY-01.txt",
     "开发管理/任务归档/C-GZ-BOUNTY-01.txt"
   ],
@@ -75,3 +76,11 @@
 
 - 若完成档案必须先决定具体奖励物品、数量、概率、堆叠、价格、战斗数值、NPC 身份、对话文本、经济规则或新增任务类型，停止并转为 `pending_decision`；不得以默认值、候选值或合理想象补齐。
 - 若发布地点、目标、一次性规则或奖励类别无法同时与城市、副本、怪物、物品和正式框架事实一致，停止并记录冲突；不得改写既有内容或运行时事实来制造闭环。
+
+## 审核反馈（2026-07-29）
+
+- 结论：部分通过，需按 `REV-C-GZ-BOUNTY-01-01` 定向返工。
+- 已通过：叙事／悬赏 ID、`guanzhong_city -> bounty_board` 入口、`guanzhong_wild -> enemy_shijiahou` 目标、四状态路径、一次性规则、候选物品留白、失败关闭与 D 级演出均与直接事实源及本卡边界一致。
+- 未通过：完成品把 `BountyRuntime`、`BountyStateStore`、`SettlementFeatureDispatcher`、schema 3 与 `GameSession` 原子领奖以现在时描述为运行时行为；当前源码没有这些悬赏所有者，当前存档 schema 仍为 2。
+- 返工范围：只修订 `docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt`，明确所有悬赏状态、进度、领奖、背包和存档内容均是后续数据／运行时必须遵守的契约，不能写成已接入能力；保留已通过内容，不修改 Unity、CSV、asset、存档或数值。
+- 复核：修订后保留「⚠️ 已修改/未审核」，运行剧情／管理文本检查与 `git diff --check`，再转为 `codex_review`。
