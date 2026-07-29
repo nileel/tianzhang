@@ -20,15 +20,17 @@
 - 残留风险：两份物品档案仍不可作为正式掉落或悬赏内容前置；`C-GZ-BOUNTY-01` 继续受 `C-GZ-ENEMY-01` 与本卡双重阻塞。
 - 已排定下一步：按上述最小范围重写后，重新标记「⚠️ 已修改/未审核」、转为 `codex_review` 并提交复审。
 
-### C-GZ-ENEMY-01 · 石甲兽正式怪物档案（返工完成，待复审）
+### C-GZ-ENEMY-01 · 石甲兽正式怪物档案（复审不通过，待定向返工）
 
-- 方向：DeepSeek V4 Pro → Codex / ChatGPT5.5 复审
+- 方向：Codex / ChatGPT5.5 → DeepSeek V4 Pro 定向返工
 - 任务：`C-GZ-ENEMY-01`
-- 业务提交：`47e61603466c7b5bc1dde8f7de6e0fff1bc0f79a`；问题编号：`REV-C-GZ-ENEMY-01-02`；状态：⚠️ 已修改/未审核
-- 已完成：按实施范围白名单重写石甲兽档案。仅保留稳定 ID `enemy_shijiahou`、妖兽类型 `type_yaoshou`、练气期低阶定位、厚甲/迟缓/近战/格挡倾向四项定性识别、`ai_melee` 最小行为语义（空过→接近→相邻攻击→防御）、战斗模板 `Char_Enemy_enemy_shijiahou.asset` 引用、CSV 掉落候选 ID `item_shijia_piece` 和 `item_lingshi_low` 引用、`guanzhong_wild` 单敌遭遇使用范围与可重复进入边界。明确 `ImportEnemies` 不消费候选字段、`CreateDropItems` 按 `realmMultiplier` 返回硬编码掉落。
-- 已验证：逐句对照任务卡实施范围白名单、`Enemies.csv`/`Language.csv` 行、`Char_Enemy_enemy_shijiahou.asset`、`adventure_guanzhong_wild.txt`、EnemyData 框架 §5.2、`ImportEnemies` 与 `CreateDropItems` 当前消费者边界，确认无 CT/行动条、暴击、闪避、魂盾、结构化结算断言、生态/材质/生理/经济补写残留；`git diff --check` 通过。
-- 未验证：`check-review-text.ps1`（权限受限）；未运行 BattleSim（未修改数值或模拟器）；未运行 `check-data-chain.ps1`（未改 CSV/asset）。
-- 残留风险：石甲兽档案仍为最小身份档案，不描述运行时掉落结算；在 Codex 复审通过前不得作为 `EnemyData` 运行时消费或悬赏行为的事实源。掉落候选仍等待 `N-GZ-REWARD-01` 锁定概率与数量。
-- 已排定下一步：Codex 复审 `47e61603466c7b5bc1dde8f7de6e0fff1bc0f79a`；通过后归档并解除 `D-ENEMY-01` 和 `C-GZ-BOUNTY-01` 的内容前置。
+- 复审提交：`47e61603466c7b5bc1dde8f7de6e0fff1bc0f79a`；问题编号：`REV-C-GZ-ENEMY-01-03`
+- 审核结论：不通过；任务卡已设为 `route=external_execute`、`owner=deepseek`、`dispatchState=blocked` 并移出当前队列。
+- 已确认：`enemy_shijiahou`、`type_yaoshou`、`ai_melee`、`realm_lianqi`、两项候选物品 ID、空术法／神通列表和 `Char_Enemy_enemy_shijiahou.asset` 均可由 Enemies／Language、现行模板和正式框架对应；`guanzhong_wild` 只配置一个石甲兽遭遇，且可重复从关中城进入。
+- 返工范围：只重写石甲兽档案。四项识别只保留厚甲、迟缓、近战和格挡倾向标签，不展开岩质甲壳、体态、头角、侧甲或四肢；AI 只保留接近、相邻基础攻击、不能行动时防御，不写被控制或防御加成。删除禁止项和引用链中未落地的 `dropEntries`；掉落只保留两项候选 ID、当前消费者不读取候选结构以及概率／数量等待 `N-GZ-REWARD-01`。不得修改 CSV、Language、asset、场景、导入器、AI 或战斗代码。
+- 已验证：Codex 独立核对提交 diff、任务卡白名单、未通过项、Enemies／Language 目标行、CharacterData 模板、EnemyData 框架 §5.2、`adventure_guanzhong_wild.txt`、`ImportEnemies` 和 `CreateDropItems`；目标档案扫描命中上述超范围内容，提交差异的 `git diff --check` 通过。
+- 未验证：未运行 BattleSim（未修改数值或模拟器）或 `check-data-chain.ps1`（未改 CSV／asset）；管理状态修改的文本和任务卡检查由本轮 Codex 执行。
+- 残留风险：石甲兽档案在重新通过独立复审前不得作为正式 EnemyData、掉落或悬赏行为的事实源；`D-ENEMY-01` 与 `C-GZ-BOUNTY-01` 继续受阻。
+- 已排定下一步：队列维护解除本问题的阻塞后，DeepSeek 仅按上述范围重写档案、标记「⚠️ 已修改/未审核」并转为 `codex_review` 提交复审。
 
 ## 短格式

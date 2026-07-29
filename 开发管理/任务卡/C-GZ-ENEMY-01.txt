@@ -4,13 +4,15 @@
   "id": "C-GZ-ENEMY-01",
   "title": "石甲兽正式怪物档案",
   "priority": "P1",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-07-29：REV-C-GZ-ENEMY-01-02 定向返工完成；DeepSeek 已按最小范围仅重写石甲兽档案，删除 CT/行动条、暴击、闪避、魂盾及结构化结算断言；交由 Codex 复审。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "REV-C-GZ-ENEMY-01-03"
+  ],
+  "stateReason": "2026-07-29：Codex 复审提交 47e61603466c7b5bc1dde8f7de6e0fff1bc0f79a 不通过。档案仍把岩质甲壳、体态、攻击动作、被控制及防御加成等范围外内容写入正文，并在引用链保留未落地的 EnemyData.dropEntries；须由 DeepSeek 按 REV-C-GZ-ENEMY-01-03 仅重写怪物档案后再送复审。",
   "expectedPaths": [
     "docs/怪物/关陇玄域/石甲兽.txt",
     "开发管理/任务列表/内容设计任务.txt",

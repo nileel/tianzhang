@@ -6,10 +6,10 @@
 
 ## 当前未通过/待复核项
 
-- **C-GZ-ENEMY-01（复审不通过）** | 目标提交：`3d984a0114c680669e2de5ac0cd4b9b37c22d7e2`（前次问题：`REV-C-GZ-ENEMY-01-01`）
-  - 问题编号：`REV-C-GZ-ENEMY-01-02`
-  - 事实依据：档案仍称“战斗胜利后生成结构化结算，掉落条目由既有 `Enemies.csv` 定义”。实际 `DataConfigImporter.ImportEnemies` 未消费 `type`、`aiType`、`realm`、`dropTable` 或 `description`，`TacticalCombatController.CreateDropItems` 仍按 `realmMultiplier` 返回硬编码文本，故该句仍把后续 `EnemyData` 目标写成当前运行时行为，违反任务卡边界。档案的“战斗识别特征”还保留“行动条推进速度低”、低暴击、无闪避、无魂盾等 CT 或范围外属性断言；任务卡仅授权厚甲、迟缓、近战和格挡倾向。
-  - 建议修复范围：仅重写 `docs/怪物/关陇玄域/石甲兽.txt`。保留稳定 ID、类型、练气期低阶、关中野外单敌用途、`ai_melee` 最小行为、战斗模板引用、无装备能力和 CSV 掉落候选 ID；删除当前结构化掉落／CSV 消费断言及范围外 CT、暴击、闪避、魂盾断言。掉落仅说明候选 ID，概率与数量由 `N-GZ-REWARD-01` 锁定；不得修改 CSV、Language、asset、场景、AI 或战斗代码。
+- **C-GZ-ENEMY-01（复审仍不通过）** | 目标提交：`47e61603466c7b5bc1dde8f7de6e0fff1bc0f79a`（前次问题：`REV-C-GZ-ENEMY-01-02`）
+  - 问题编号：`REV-C-GZ-ENEMY-01-03`
+  - 事实依据：提交删除了上一轮的 CT、暴击、闪避、魂盾与当前结构化结算断言，但档案仍把任务卡未授权的材料、生理和战斗细节写成四项定性识别：岩质甲壳、背甲、低重心、头角、侧甲和收拢四肢。AI 段又把“不能行动时防御”扩成被控制及获得防御加成；引用链仍列出未落地的 `EnemyData.dropEntries`。任务卡仅允许厚甲、迟缓、近战、格挡倾向四个定性标签，以及接近目标、相邻基础攻击、不能行动时防御的最小语义；并要求正文只保留实施范围的正向事实。`ImportEnemies` 不消费候选字段，`CreateDropItems` 仍按 `realmMultiplier` 返回硬编码文本，故也不能以未来 `EnemyData` 字段补足当前档案。
+  - 建议修复范围：仅从零重写 `docs/怪物/关陇玄域/石甲兽.txt`。保留稳定 ID、正式名称、内容范围、妖兽类型、练气期低阶、四项定性标签、`ai_melee` 最小语义、无装备术法／神通、既有战斗模板指针、两项 CSV 候选 ID 和 `guanzhong_wild` 单敌／可重复进入边界；删除四项标签的材料、体态、攻击动作和格挡展开，删除“被控制”“防御加成”、禁止项与引用链中的未实现字段。掉落仅说明候选 ID、当前消费者不读取它们且概率／数量等待 `N-GZ-REWARD-01`；不得修改 CSV、Language、asset、场景、AI 或战斗代码。
 
 - **C-GZ-ITEM-01（复审不通过）** | 目标提交：`3df513723b3b013f61ef99c141d89c5d1c33e0da`（前次问题：`REV-C-GZ-ITEM-01-01`）
   - 问题编号：`REV-C-GZ-ITEM-01-02`
