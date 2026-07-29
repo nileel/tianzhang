@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-ITEM-01 | codex_execute | codex | P1 | data | design | 最小物品数据契约 | 开发管理/任务卡/D-ITEM-01.txt |
 | D-ENEMY-01 | codex_execute | codex | P1 | data | design | 怪物、AI 与掉落数据契约 | 开发管理/任务卡/D-ENEMY-01.txt |

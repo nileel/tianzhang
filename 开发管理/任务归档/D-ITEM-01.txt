@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：C-GZ-ITEM-01 已完成并归档；两项物品已有稳定身份、类别、可堆叠候选和未开放用途边界，现可只建立不含参数或库存实现的 ItemData 契约。",
+  "stateReason": "2026-07-30：已建立最小 ItemData 契约，固定两项物品身份、字段、整表失败关闭、跨表引用与原子授予边界；未填入奖励、数量、maxStack、价格或库存实现。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-30-guanzhong-item-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -63,3 +63,7 @@
 ## 停止条件
 
 - 若完成契约必须确定奖励物品、数量、概率、堆叠值、价格、使用效果或新增库存机制，停止并转为 `pending_decision`；不得以当前候选或默认值补齐。
+
+## 完成记录
+
+- 2026-07-30：新增 `docs/superpowers/specs/2026-07-30-guanzhong-item-data-contract.md`，定义最小 ItemData 字段、两项已审核身份、参数闸门、整表与跨表失败关闭、同一原子授予入口及正反 fixture 规格。未修改 CSV、Language、asset、导入器、背包、掉落、悬赏、场景或 Unity 测试。
