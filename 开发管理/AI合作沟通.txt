@@ -7,19 +7,6 @@
 
 > 注：本文件交接记录仅反映当前状态；复核完成后移入归档
 
-### C-GZ-ITEM-01 · 关中首批最小物品档案（已排入定向返工）
-
-- 方向：Codex / ChatGPT5.5 → DeepSeek V4 Pro 定向返工
-- 任务：`C-GZ-ITEM-01`
-- 复审提交：`3df513723b3b013f61ef99c141d89c5d1c33e0da`（前次问题：`REV-C-GZ-ITEM-01-01`）
-- 审核结论：不通过；依据见 `REV-C-GZ-ITEM-01-02`。队列维护已确认返工范围完整且预期路径无人工改动冲突，任务卡现为 `route=external_execute`、`owner=deepseek`、`dispatchState=ready`。
-- 已确认：稳定 ID、显示名与 `Language.csv` 一致，`Enemies.csv` 的 `enemy_shijiahou` 行引用两项 ID；自然形成、怪物生理、材质与悬赏击杀证据语义均已删除。
-- 返工范围：只改两份物品档案的“允许用途”。未来用途可写为掉落或悬赏奖励库存候选；删除当前已进入背包、可计数／存储／查询，或现有掉落／悬赏系统已通过正式 `itemId` 消费的断言。不得修改 CSV、Language、asset、运行时代码或参数。
-- 已验证：复审逐项对照任务卡、`Language.csv`／`Enemies.csv`、正式框架 §5.3 和目标提交；`src` 无 `ItemData`，`ImportEnemies` 不读取 `dropTable`，`CreateDropItems` 返回硬编码文本。
-- 未验证：未运行 BattleSim（未修改数值或模拟器）或 `check-data-chain.ps1`（未改 CSV／asset）；本轮管理修改由 Codex 运行文本、任务卡和 Git 检查。
-- 残留风险：两份物品档案仍不可作为正式掉落或悬赏内容前置；`C-GZ-BOUNTY-01` 继续受 `C-GZ-ENEMY-01` 与本卡双重阻塞。
-- 已排定下一步：按上述最小范围重写后，重新标记「⚠️ 已修改/未审核」、转为 `codex_review` 并提交复审。
-
 ### C-GZ-ENEMY-01 · 石甲兽正式怪物档案（复审不通过，待定向返工）
 
 - 方向：Codex / ChatGPT5.5 → DeepSeek V4 Pro 定向返工
