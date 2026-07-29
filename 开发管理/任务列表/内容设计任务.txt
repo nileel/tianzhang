@@ -15,8 +15,8 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| C-GZ-ENEMY-01 | P1 | deepseek | 阻塞 | REV-C-GZ-ENEMY-01-01 | 石甲兽正式怪物档案 | 开发管理/任务卡/C-GZ-ENEMY-01.txt |
-| C-GZ-ITEM-01 | P1 | deepseek | 阻塞 | REV-C-GZ-ITEM-01-01 | 关中首批最小物品档案 | 开发管理/任务卡/C-GZ-ITEM-01.txt |
+| C-GZ-ENEMY-01 | P1 | deepseek | 已排队 | — | 石甲兽正式怪物档案 | 开发管理/任务卡/C-GZ-ENEMY-01.txt |
+| C-GZ-ITEM-01 | P1 | deepseek | 已排队 | — | 关中首批最小物品档案 | 开发管理/任务卡/C-GZ-ITEM-01.txt |
 | C-GZ-BOUNTY-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 阻塞（C-GZ-CITY-01、C-GZ-ENEMY-01、C-GZ-ITEM-01） | — | 建立 `bounty_guanzhong_shijiahou` 的发布地点、击败目标、一次性规则、奖励类别和信息边界；不填写未验证参数。 | — |
 | A-GZ-PRESENT-01 | P2 | Codex 规划；外部资源责任方执行 | 阻塞（U-GZ-FORMAL-E2E-01） | — | 在功能闸门后补关中城、悬赏板和石甲兽的正式视觉／音效资源，不改变规则。 | — |
 | C-JD-NAME-01 | P1 | DeepSeek V4 Pro 执行；Codex 复审；用户确认 | 待用户确认 | — | 51 项名称候选已由 Codex 复审通过；用户确认前不得写入正式显示事实，且 D-JD-SCHEMA-01 前不得进入数据契约。 | — |
