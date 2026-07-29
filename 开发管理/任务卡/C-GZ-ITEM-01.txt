@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": ["REV-C-GZ-ITEM-01-02"],
-  "stateReason": "2026-07-29：Codex 复审不通过；两份档案的允许用途仍将背包、掉落与悬赏按正式 itemId 的未来候选边界写成当前运行时能力，需由 DeepSeek 仅改写该用途措辞后再提交复审。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-29：REV-C-GZ-ITEM-01-02 已提供完整且路径无冲突的定向返工范围；现由 DeepSeek 仅改写两份档案的允许用途措辞并重新提交 Codex 复审。",
   "expectedPaths": [
     "docs/道具/基础资源/劣质灵石.txt",
     "docs/道具/妖兽材料/石甲碎片.txt",
