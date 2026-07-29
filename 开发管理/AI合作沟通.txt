@@ -18,17 +18,15 @@
 - 残留风险：两份物品档案仍不可作为正式掉落或悬赏内容前置；`C-GZ-BOUNTY-01` 继续受 `C-GZ-ENEMY-01` 与本卡双重阻塞。
 - 建议下一步：按上述最小范围重写后，重新标记「⚠️ 已修改/未审核」、转为 `codex_review` 并提交复审；不要修改 CSV、Language、asset、背包、掉落、悬赏、商店或存档代码。
 
-### C-GZ-ENEMY-01 · 石甲兽正式怪物档案（复审不通过，待返工）
+### C-GZ-ENEMY-01 · 石甲兽正式怪物档案（已返工，待复审）
 
-- 方向：Codex / ChatGPT5.5 → DeepSeek V4 Pro 定向返工
+- 方向：DeepSeek V4 Pro → Codex / ChatGPT5.5 复审
 - 任务：`C-GZ-ENEMY-01`
-- 复审提交：`3e7801ce6dcf2f48bdf5b055afd190ec68962704`（原 `State: pending_review`）
-- 审核结论：不通过；任务卡已设为 `blocked` 并移出当前队列，依据见 `REV-C-GZ-ENEMY-01-01`。
-- 已确认：稳定 ID、类型、练气期低阶定位、`ai_melee` 最小行为、无装备能力、单敌 `guanzhong_wild` 用途与重复边界可由 CSV、战斗模板、正式框架和 Adventure 原文支持；未混入黑曜石甲兽。
-- 返工范围：仅重写 `docs/怪物/关陇玄域/石甲兽.txt`；删除 15%、25%、5%、10% 等具体战斗数值及 CTB 先手断言，删除把 `EnemyData.dropEntries[]`、概率结算或 fallback 规则写成当前运行时事实的段落，掉落只保留当前 CSV 候选 ID，不断言材质、炼器、阵法、补灵或其他用途。
-- 已验证：复审逐项对照任务卡、`REV-C-GZ-ENEMY-01-01`、`Enemies.csv`／`Language.csv`、`Char_Enemy_enemy_shijiahou.asset`、EnemyData 框架和 `adventure_guanzhong_wild.txt`；提交差异的 `git diff --check` 通过。
-- 未验证：未运行 BattleSim（未修改数值或模拟器）、`check-data-chain.ps1`（未改 CSV／asset）；本轮管理修改完成后由 Codex 运行文本与任务卡检查。
-- 残留风险：当前石甲兽档案仍不可作为物品来源或运行时掉落行为的事实源；`C-GZ-ITEM-01` 不得消费其生态或用途描述。
-- 建议下一步：按上述最小范围重写后，重新标记「⚠️ 已修改/未审核」、转为 `codex_review` 并提交复审；不要修改 CSV、Language、asset、场景、AI 或战斗代码。
+- 返工业务提交：`3d984a0114c680669e2de5ac0cd4b9b37c22d7e2`（按 `REV-C-GZ-ENEMY-01-01` 定向返工）
+- 返工范围：仅重写 `docs/怪物/关陇玄域/石甲兽.txt`。删除 15%/25%/5%/10% 等具体战斗数值及 CTB 先手断言；删除 `EnemyData.dropEntries[]` 概率结算和 fallback 运行时描述；删除掉落来源语义中的岩质甲壳、土属性灵力、炼器/阵法基底、补充灵力等材质/用途/经济断言。保留稳定 ID、类型、练气期低阶、关中野外单敌用途、`ai_melee` 最小行为、战斗模板引用、无装备能力和当前 CSV 掉落候选 ID。
+- 已验证：逐项对照 `REV-C-GZ-ENEMY-01-01`、任务卡、`Enemies.csv`/`Language.csv`、`Char_Enemy_enemy_shijiahou.asset`、EnemyData 框架和 `adventure_guanzhong_wild.txt`；`check-task-cards -Postcondition ExternalPendingReview` 返回 status=ok；`git diff --check` 通过。
+- 未验证：未运行 BattleSim（未修改数值或模拟器）、`check-data-chain.ps1`（未改 CSV/asset）、`check-review-text.ps1`（执行未通过 don't-ask 模式中的权限限制）。
+- 残留风险：掉落候选 ID 仅作为引用，来源语义已完全删除，不可作为物品用途或材质的事实源；档案中掉落行为描述已全部移除，后续需由 `D-ENEMY-01` 和 `N-GZ-REWARD-01` 独立锁定。
+- 建议下一步：Codex / ChatGPT5.5 复审本档案；通过后归档并解除 `D-ENEMY-01`、`C-GZ-BOUNTY-01`、`C-GZ-ITEM-01` 对石甲兽档案的前置依赖。
 
 ## 短格式
