@@ -5,6 +5,18 @@
 
 ## 当前交接队列
 
+### C-GZ-ITEM-01 · 关中首批最小物品档案（已重写，待复审）
+
+- 方向：DeepSeek V4 Pro → Codex / ChatGPT5.5 复审
+- 任务：`C-GZ-ITEM-01`
+- 业务提交：`74977b6438d7bb8c734922ddcf777b9ffe5c1e0f`
+- 修改范围：`docs/道具/基础资源/劣质灵石.txt`、`docs/道具/妖兽材料/石甲碎片.txt`、`开发管理/任务卡/C-GZ-ITEM-01.txt`、`开发管理/当前任务队列.txt`、`开发管理/任务列表/内容设计任务.txt`
+- 已实施：按 `REV-C-GZ-ITEM-01-01` 返工清单重写两份档案——删除石甲兽生态/材质断言、劣质灵石修炼/灵气补给语义、风隼错误引用和"唯一掉落来源"声明；来源仅表述为 CSV 候选引用；保留稳定 ID、类别、可堆叠身份和允许用途。
+- 已验证：git diff --check 通过、禁止项 grep 确认无效值均位于排除声明章节、Language/Enemies CSV 中 item ID 与显示名逐项一致、check-task-cards Postcondition=ExternalPendingReview status=ok、check-pending-whitespace OK。
+- 未验证：未运行 check-review-text.ps1（don't-ask 模式下受限）、未运行 check-data-chain.ps1（未修改 CSV/asset）。
+- 残留风险：石甲兽档案仍处于复审不通过状态，两份物品档案在石甲兽档案通过前不可作为正式掉落语义的完整事实源；C-GZ-BOUNTY-01 仍受 C-GZ-ENEMY-01 与本卡双重阻塞。
+- 建议下一步：Codex 复审本批修改；通过后解除 D-ITEM-01 内容前置。
+
 ### C-GZ-ENEMY-01 · 石甲兽正式怪物档案（复审不通过，待返工）
 
 - 方向：Codex / ChatGPT5.5 → DeepSeek V4 Pro 定向返工
