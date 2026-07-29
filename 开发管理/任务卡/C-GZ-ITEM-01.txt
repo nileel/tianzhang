@@ -4,13 +4,13 @@
   "id": "C-GZ-ITEM-01",
   "title": "关中首批最小物品档案",
   "priority": "P1",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-07-29：REV-C-GZ-ITEM-01-01 定向返工完成；两份物品档案已精简为仅含可映射到 CSV 与任务卡白名单的正向事实；现转为 Codex 复审。",
+  "dispatchState": "blocked",
+  "blockedBy": ["REV-C-GZ-ITEM-01-02"],
+  "stateReason": "2026-07-29：Codex 复审不通过；两份档案的允许用途仍将背包、掉落与悬赏按正式 itemId 的未来候选边界写成当前运行时能力，需由 DeepSeek 仅改写该用途措辞后再提交复审。",
   "expectedPaths": [
     "docs/道具/基础资源/劣质灵石.txt",
     "docs/道具/妖兽材料/石甲碎片.txt",
@@ -24,8 +24,6 @@
 }
 ---TASK-BODY---
 # C-GZ-ITEM-01 · 关中首批最小物品档案
-
-> ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：按 REV-C-GZ-ITEM-01-01 定向返工重写两份物品档案、更新任务卡/队列/backlog 状态为 codex_review
 
 ## 来源与当前边界
 
