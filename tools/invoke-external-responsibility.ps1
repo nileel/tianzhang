@@ -55,6 +55,22 @@ function Assert-StableText {
   }
 }
 
+function Assert-RequiredProperties {
+  param(
+    [AllowNull()][object]$Value,
+    [string[]]$Names
+  )
+  if ($null -eq $Value) {
+    Stop-External 'external_invalid_terminal'
+  }
+  $properties = @($Value.PSObject.Properties | ForEach-Object { [string]$_.Name })
+  foreach ($name in $Names) {
+    if ($properties -cnotcontains $name) {
+      Stop-External 'external_invalid_terminal'
+    }
+  }
+}
+
 function Normalize-FullPath {
   param([string]$Path)
   [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
@@ -198,7 +214,10 @@ function New-ExternalPrompt {
     "After that transition and before creating businessCommit, run pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -RepositoryRoot $quotedRoot -TaskId $quotedTaskId -Postcondition ExternalPendingReview -OutputJson. Continue only when it returns status=ok."
     'Create the path-limited businessCommit with tools/automation-finalize-commit.ps1 and RequireAutomationMetadata. Use these exact single-line structures: AutomationResult 问题=<原问题>；完成=<具体交付>, AutomationImpact 影响=<实际行为变化>；边界=<明确未涉及范围>, AutomationVerify 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>, AutomationPlain 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>. AutomationTask must equal this TaskId and AutomationState must be pending_review.'
     'Then modify only 开发管理/AI合作沟通.txt to record the real business SHA, verified and unverified work, and residual risk; create the handoffCommit with the same finalizer but without Automation metadata or repeated domain checks.'
+    'When check-pending-whitespace.ps1 needs more than one path, invoke it separately once per path with exactly one -Paths <single path>. Never pass comma-separated paths, PowerShell array expressions, Get-ChildItem, cd &&, or another shell.'
+    'If an exact allowed command is denied, do not build a compound command or permission workaround. Return a structured blocked or failed terminal object when the task cannot continue within the allowed commands.'
     'Do not call hourly-automation-lease.ps1, self-review, widen paths, dispatch another agent, push, stash, reset, checkout, clean, or retry a failed command.'
+    'Do not end the turn with progress narration such as preparing to run the next check. Continue with allowed tool calls until closeout is complete, or return a structured blocked or failed terminal object.'
     'Return only the structured object required by the supplied JSON schema. The wrapper uses the Claude CLI result envelope as the authoritative session ID.'
     'completed requires status, identity matching Identity, and the full 40-character lowercase hexadecimal SHA for both businessCommit and handoffCommit. Never return abbreviated Git SHAs.'
     'needs_decision requires status, stable decisionId, one question, and two or three A/B/C options.'
@@ -495,6 +514,9 @@ try {
   } catch {
     Stop-External 'external_invalid_terminal'
   }
+  Assert-RequiredProperties `
+    -Value $envelope `
+    -Names @('type', 'subtype', 'is_error', 'session_id', 'structured_output')
   if (
     [string]$envelope.type -cne 'result' -or
     [string]$envelope.subtype -cne 'success' -or
@@ -505,6 +527,7 @@ try {
     Stop-External 'external_invalid_terminal'
   }
   $terminal = $envelope.structured_output
+  Assert-RequiredProperties -Value $terminal -Names @('status')
   if (
     $terminal.PSObject.Properties.Name -contains 'sessionId' -and
     -not [string]::IsNullOrWhiteSpace([string]$terminal.sessionId) -and
@@ -515,6 +538,9 @@ try {
 
   switch ([string]$terminal.status) {
     'completed' {
+      Assert-RequiredProperties `
+        -Value $terminal `
+        -Names @('identity', 'businessCommit', 'handoffCommit')
       if ([string]$terminal.identity -cne $identity) {
         Stop-External 'external_identity_mismatch'
       }
@@ -546,6 +572,9 @@ try {
       }
     }
     'needs_decision' {
+      Assert-RequiredProperties `
+        -Value $terminal `
+        -Names @('decisionId', 'question', 'options')
       Assert-StableText -Value ([string]$terminal.decisionId) -DetailCode 'external_invalid_terminal'
       Assert-StableText -Value ([string]$terminal.question) -DetailCode 'external_invalid_terminal' -MaximumLength 1000
       $options = @($terminal.options | ForEach-Object { [string]$_ })
@@ -566,6 +595,7 @@ try {
       }
     }
     { $_ -cin @('blocked', 'failed') } {
+      Assert-RequiredProperties -Value $terminal -Names @('detailCode')
       Assert-StableText -Value ([string]$terminal.detailCode) -DetailCode 'external_invalid_terminal'
       $result = [ordered]@{
         status = [string]$terminal.status

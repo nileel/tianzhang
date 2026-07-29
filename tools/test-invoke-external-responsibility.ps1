@@ -235,9 +235,35 @@ function New-TestCommits {
     HandoffCommit = [string](& git rev-parse HEAD)
   }
 }
+$structuredOutput = $null
+$omitStructuredOutput = $false
 switch ($env:TZG_FAKE_CLAUDE_MODE) {
   'invalid' {
     [Console]::Out.WriteLine('not-json')
+  }
+  'missing-structured-output' {
+    $omitStructuredOutput = $true
+  }
+  'empty-structured-output' {
+    $structuredOutput = [ordered]@{}
+  }
+  'completed-missing-field' {
+    $structuredOutput = [ordered]@{
+      status = 'completed'
+      identity = 'DeepSeek V4 Pro'
+    }
+  }
+  'decision-missing-field' {
+    $structuredOutput = [ordered]@{
+      status = 'needs_decision'
+      decisionId = 'DEC-TEST'
+      question = 'Choose one option.'
+    }
+  }
+  'failed-missing-field' {
+    $structuredOutput = [ordered]@{
+      status = 'failed'
+    }
   }
   'short-commit' {
     $structuredOutput = [ordered]@{
@@ -279,13 +305,16 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
   }
 }
 if ($env:TZG_FAKE_CLAUDE_MODE -cne 'invalid') {
-  [Console]::Out.WriteLine(([ordered]@{
+  $envelope = [ordered]@{
     type = 'result'
     subtype = 'success'
     is_error = $false
     session_id = $sessionId
-    structured_output = $structuredOutput
-  } | ConvertTo-Json -Compress -Depth 10))
+  }
+  if (-not $omitStructuredOutput) {
+    $envelope.structured_output = $structuredOutput
+  }
+  [Console]::Out.WriteLine(($envelope | ConvertTo-Json -Compress -Depth 10))
 }
 '@
   Write-Utf8 -Path (Join-Path $fakeBin 'claude.cmd') -Text @'
@@ -382,6 +411,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
   Assert-True (
     [string]$record.input -match [regex]::Escape('full 40-character lowercase hexadecimal SHA')
   ) 'wrapper prompt omitted the full commit SHA requirement'
+  Assert-True (
+    [string]$record.input -match [regex]::Escape('exactly one -Paths <single path>')
+  ) 'wrapper prompt omitted the single-path whitespace-check contract'
+  Assert-True (
+    [string]$record.input -match [regex]::Escape('Never pass comma-separated paths')
+  ) 'wrapper prompt did not forbid Bash-to-PowerShell path arrays'
+  Assert-True (
+    [string]$record.input -match [regex]::Escape('Do not end the turn with progress narration')
+  ) 'wrapper prompt did not forbid narration-only termination'
   foreach ($metadataTemplate in @(
       'AutomationResult 问题=<原问题>；完成=<具体交付>',
       'AutomationImpact 影响=<实际行为变化>；边界=<明确未涉及范围>',
@@ -422,6 +460,29 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
     -RunId $runId
   Assert-Equal -Actual ([string]$invalid.Json.status) -Expected 'failed' -Message 'invalid CLI output did not fail'
   Assert-Equal -Actual ([string]$invalid.Json.detailCode) -Expected 'external_invalid_terminal' -Message 'invalid CLI detailCode mismatch'
+
+  foreach ($mode in @(
+      'missing-structured-output',
+      'empty-structured-output',
+      'completed-missing-field',
+      'decision-missing-field',
+      'failed-missing-field'
+    )) {
+    $env:TZG_FAKE_CLAUDE_MODE = $mode
+    $missingField = Invoke-Wrapper `
+      -WrapperPath $wrapperPath `
+      -Root $repositoryRoot `
+      -StateRoot $stateRoot `
+      -RunId $runId
+    Assert-Equal `
+      -Actual ([string]$missingField.Json.status) `
+      -Expected 'failed' `
+      -Message "$mode did not fail"
+    Assert-Equal `
+      -Actual ([string]$missingField.Json.detailCode) `
+      -Expected 'external_invalid_terminal' `
+      -Message "$mode detailCode mismatch"
+  }
 
   $env:TZG_FAKE_CLAUDE_MODE = 'short-commit'
   $shortCommit = Invoke-Wrapper `

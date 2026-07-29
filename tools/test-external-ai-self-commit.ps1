@@ -134,6 +134,7 @@ try {
   [IO.Directory]::CreateDirectory($canaryRuntime) | Out-Null
   [IO.Directory]::CreateDirectory((Join-Path $canaryRepository 'tools')) | Out-Null
   foreach ($toolName in @(
+    'automation-commit-metadata.ps1',
     'automation-workspace-guard.ps1',
     'automation-finalize-commit.ps1',
     'check-pending-whitespace.ps1',
