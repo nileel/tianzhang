@@ -14,7 +14,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| D-BOUNTY-01 | P1 | Codex | 阻塞（C-GZ-BOUNTY-01、D-SETTLEMENT-01、D-ITEM-01） | — | 定义 `defeat_enemy`、一次性状态、地点约束、奖励和跨表引用契约。 | — |
+| D-BOUNTY-01 | P1 | codex | 已排队 | — | 悬赏目标、状态与奖励数据契约 | `开发管理/任务卡/D-BOUNTY-01.txt` |
 | N-GZ-REWARD-01 | P1 | codex | 待决定 | — | 首批掉落、堆叠与悬赏奖励参数 | `开发管理/任务卡/N-GZ-REWARD-01.txt` |
 | U-CONTENT-CATALOG-01 | P1 | Codex | 阻塞（D-SETTLEMENT-01、D-ITEM-01、D-BOUNTY-01、N-GZ-REWARD-01） | — | 实现 CSV 整表导入、跨表校验、GUID 保持和四领域只读 `ContentCatalogData`。 | — |
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
