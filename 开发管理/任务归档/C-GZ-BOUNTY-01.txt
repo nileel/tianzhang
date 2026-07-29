@@ -4,13 +4,13 @@
   "id": "C-GZ-BOUNTY-01",
   "title": "一次性石甲兽悬赏内容档案",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-29：Codex 独立复审提交 530a350 结论为部分通过。REV-C-GZ-BOUNTY-01-01：档案把尚未存在的 BountyRuntime、BountyStateStore、悬赏板分发器、schema 3 和领奖原子提交写成现在时运行时行为，违反本卡仅定义后续契约、不得断言当前已实现的边界。需由 DeepSeek 仅收窄该档案表述后重新标记未审核并移交复审。",
+  "stateReason": "2026-07-29：用户要求不再交由 DeepSeek 返工；Codex 接管 REV-C-GZ-BOUNTY-01-01，明确当前仅有既有冒险通路，并把悬赏状态、进度、领奖、背包原子提交和 schema 3 全部收窄为后续契约后直接闭环。",
   "expectedPaths": [
     "docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt",
     "开发管理/任务列表/内容设计任务.txt",
@@ -84,3 +84,7 @@
 - 未通过：完成品把 `BountyRuntime`、`BountyStateStore`、`SettlementFeatureDispatcher`、schema 3 与 `GameSession` 原子领奖以现在时描述为运行时行为；当前源码没有这些悬赏所有者，当前存档 schema 仍为 2。
 - 返工范围：只修订 `docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt`，明确所有悬赏状态、进度、领奖、背包和存档内容均是后续数据／运行时必须遵守的契约，不能写成已接入能力；保留已通过内容，不修改 Unity、CSV、asset、存档或数值。
 - 复核：修订后保留「⚠️ 已修改/未审核」，运行剧情／管理文本检查与 `git diff --check`，再转为 `codex_review`。
+
+## 完成记录
+
+- 2026-07-29：用户明确要求 Codex 直接接管，不再交给 DeepSeek。Codex 按 `REV-C-GZ-BOUNTY-01-01` 仅修订悬赏档案：新增当前实现边界，将四状态、`RecordDefeat`、城市功能分发、原子领奖和 schema 3 存档全部标为后续契约，并保留既有 Adventure 通路、稳定 ID、地点、目标、失败关闭、一次性规则、奖励留白和 D 级演出。未修改 Unity、CSV、asset、存档、背包、奖励参数、战斗数值、NPC 或主线内容。

@@ -1,4 +1,4 @@
-# 未通过审核清单（⚠️ 待复核）
+# 未通过审核清单（✅ 已审核）
 
 ## 用途
 
@@ -6,13 +6,7 @@
 
 ## 当前未通过/待复核项
 
-### REV-C-GZ-BOUNTY-01-01 · 一次性石甲兽悬赏内容档案
-
-- 任务／提交：`C-GZ-BOUNTY-01`；`530a3504fcc37e09d5a8ccc1514b299573504cf3`。
-- 结论：部分通过；已将同一卡设为 `blocked` 并移出当前队列。
-- 证据：目标档案把 `BountyRuntime`、`BountyStateStore`、`SettlementFeatureDispatcher`、schema 3 与 `GameSession` 原子领奖写成现有行为；实时源码没有上述悬赏所有者，`GameSessionSnapshot.CurrentSchemaVersion` 仍为 2。
-- 定向返工：仅修订 `docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt`，把所有未接入的悬赏、背包与存档行为明确为后续契约或正式框架引用；保留已核对通过的 ID、入口、目标、失败关闭、一次性规则、奖励留白和 D 级演出。
-- 复核门槛：保留「⚠️ 已修改/未审核」，通过剧情／管理文本检查和 `git diff --check` 后转 `codex_review`；不需要 BattleSim、数据链检查或 Unity 编译，除非返工越出文档范围。
+当前无未通过或待复核项。
 
 ## 复审路由
 

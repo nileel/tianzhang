@@ -7,16 +7,4 @@
 
 > 注：本文件交接记录仅反映当前状态；复核完成后移入归档
 
-### C-GZ-BOUNTY-01 · 一次性石甲兽悬赏内容档案（定向返工，⚠️ 待复核）
-
-- 方向：Codex / ChatGPT5.5 → DeepSeek V4 Pro 定向返工 → Codex / ChatGPT5.5 复审
-- 任务：`C-GZ-BOUNTY-01`
-- 复审对象：业务提交 `530a3504fcc37e09d5a8ccc1514b299573504cf3`；原 Run ID：`9d9fdfcb-b3de-446c-9c92-348c4bbac7db`；原会话：`22d77f7d-e0d5-4c70-b63c-a4993a73bd47`。
-- 复审结论：部分通过。ID、入口、目标、四状态路径、失败关闭、一次性规则、奖励留白与 D 级演出均已通过；未填写具体奖励物品、数量、概率、战斗数值、NPC 或主线信息。
-- 问题：`REV-C-GZ-BOUNTY-01-01`。档案把框架中尚待实施的 `BountyRuntime`、`BountyStateStore`、`SettlementFeatureDispatcher`、schema 3 和 `GameSession` 原子领奖写成现在时运行时行为；实时源码的悬赏实现不存在，当前存档 schema 为 2。
-- 定向范围：只修改悬赏档案，将上述段落改为后续数据／运行时契约或框架引用，明确当前尚未接入；保留已通过的内容，不改 Unity、CSV、asset、存档、数值、奖励物品或任务边界。
-- 已验证：复审方已核对目标提交、任务卡、城市／副本／怪物／物品档案、正式框架、剧情规范与实时 Unity 所有者；剧情／管理文本检查通过，目标提交 `git diff --check` 通过。
-- 未运行：BattleSim（未改角色数值或模拟器）；`check-data-chain.ps1`（未改 CSV、asset 或 Unity 数据链路）；Unity 编译／测试（本轮只审查文本和现有所有者，不改代码）。
-- 下一步：DeepSeek V4 Pro 按同一卡定向返工，保留「⚠️ 已修改/未审核」并转回 `codex_review`；通过后才能归档并解除后续前置。
-
 ## 短格式

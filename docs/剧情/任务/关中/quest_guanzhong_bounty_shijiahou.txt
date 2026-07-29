@@ -1,6 +1,6 @@
 # 石甲兽悬赏 · 一次性除害令
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：新建 `docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt`
+✅ 已审核（2026-07-29 Codex 按 `REV-C-GZ-BOUNTY-01-01` 直接修正）；原修改方：DeepSeek V4 Pro；修正范围：仅收窄未接入运行时表述
 
 任务ID：`quest_guanzhong_bounty_shijiahou`
 正式悬赏ID：`bounty_guanzhong_shijiahou`
@@ -8,19 +8,24 @@
 所属章节/地区：关中／关陇玄域（`guanzhong`）
 依据文件：`docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md`；`docs/剧情/剧情生产规范.txt`；`docs/剧情/据点/关中城.txt`；`docs/剧情/副本叙事/adventure_guanzhong_wild.txt`；`docs/怪物/关陇玄域/石甲兽.txt`；`docs/道具/基础资源/劣质灵石.txt`；`docs/道具/妖兽材料/石甲碎片.txt`
 
+## 当前实现边界
+
+- 当前项目只有 `guanzhong_city -> guanzhong_wild -> guanzhong_city` 的既有冒险与战斗通路；悬赏接取、进度、领奖、背包原子提交和悬赏存档均未接入。
+- 本文件为后续 `BountyData`、悬赏运行时与界面接入保留内容契约。下文涉及四状态转换、`RecordDefeat`、`Claim`、`SettlementFeatureDispatcher`、`GameSession` 原子领奖或 schema 3 的内容，均表示后续实现必须遵守的规则，不表示当前源码已有对应类型、处理器或行为。
+
 ## 一、概要
 
-- 一句话简介：关中城悬赏板发布石甲兽除害令——黄土旧道上的石甲兽阻路伤人，关陇坊市联盟出赏金请修士击杀。
-- 玩家目标：在关中城悬赏板接取除害令，前往关中野外击败石甲兽，返回悬赏板领取奖励。
+- 一句话简介：本档案定义关中城悬赏板后续可发布的石甲兽除害令——黄土旧道上的石甲兽阻路伤人，关陇坊市联盟出赏金请修士击杀。
+- 玩家目标（接入后）：在关中城悬赏板接取除害令，前往关中野外击败石甲兽，返回悬赏板领取奖励。
 - 叙事作用：以一次不承担主线信息的一次性悬赏，验证关陇外围"黄土、残余灵气、低阶异兽与坊市悬赏"的可玩氛围，不展开地区主线、势力线或 NPC 个人分支。
 
 ## 二、触发条件
 
 - 接取地点：关中城（`guanzhong_city`）的悬赏板（`bounty_board`）
 - 接取 NPC：无（悬赏板为功能入口，不设接取或提交 NPC）
-- 前置条件：玩家当前位于关中城；悬赏板已启用且悬赏状态为 `Available`
-- 排斥条件：本悬赏已处于 `Claimed` 状态时不再在悬赏板出现；`Accepted` 或 `ObjectiveCompleted` 期间不可重复接取
-- 触发条件字段建议：
+- 内容契约前置：后续悬赏功能接入后，玩家位于关中城且本悬赏状态为 `Available`
+- 排斥条件（后续契约）：本悬赏已处于 `Claimed` 状态时不再在悬赏板出现；`Accepted` 或 `ObjectiveCompleted` 期间不可重复接取
+- 后续数据字段建议：
   - `locationId`: `guanzhong_city`
   - `featureId`: `bounty_board`
   - `stateFlagsAdded`: `bounty_guanzhong_shijiahou_accepted`
@@ -35,26 +40,26 @@
 
 ## 四、流程
 
-| 阶段 | 地点 | 玩家行为 | NPC/敌人反应 | 状态变化 | 演出 |
-|------|------|----------|-------------|----------|------|
-| 接取 | 关中城·悬赏板 | 阅读悬赏令并接取 | 悬赏板记录接取状态 | `Available -> Accepted`；写入 `bounty_guanzhong_shijiahou` 实例，进度为 0 | D：悬赏板文本 |
-| 前往 | 关中城·冒险入口 | 从关中城进入关中野外 | — | 写入 `CurrentAdventureId=guanzhong_wild`，返回目标 `Settlement(guanzhong_city)` | D：环境日志 |
+| 阶段 | 地点 | 玩家行为 | NPC/敌人反应 | 当前行为／后续契约 | 演出 |
+|------|------|----------|-------------|-------------------|------|
+| 接取 | 关中城·悬赏板 | 阅读悬赏令并接取 | 悬赏板记录接取状态 | 后续契约：`Available -> Accepted`，创建 `bounty_guanzhong_shijiahou` 实例且进度为 0；当前未接入 | D：悬赏板文本 |
+| 前往 | 关中城·冒险入口 | 从关中城进入关中野外 | — | 当前既有通路写入 `CurrentAdventureId=guanzhong_wild` 与返回目标 `Settlement(guanzhong_city)`；不代表悬赏已接取 | D：环境日志 |
 | 遭遇 | 关中野外·黄土旧道 | 对石甲兽发起 CTB 战斗 | 石甲兽以 `ai_melee` 行为应战（接近、近战基础攻击、无法行动时防御） | 不新增任务或世界状态 | D：战斗日志 |
-| 胜利 | 关中野外·黄土旧道 | 击败石甲兽 | 石甲兽被击退 | 悬赏进度从 0 推进至目标值；状态 `Accepted -> ObjectiveCompleted` | D：结果日志 |
+| 胜利 | 关中野外·黄土旧道 | 击败石甲兽 | 石甲兽被击退 | 后续契约：仅在合法悬赏实例存在时将进度从 0 推进至目标值，并执行 `Accepted -> ObjectiveCompleted`；当前战斗不写悬赏状态 | D：结果日志 |
 | 返回 | 关中城 | 回到关中城据点场景 | — | 清除 Adventure 上下文，恢复城市功能面板 | D：环境日志 |
-| 领奖 | 关中城·悬赏板 | 在悬赏板提交除害令并领取赏金 | 悬赏板确认完成并发放奖励 | `ObjectiveCompleted -> Claimed`；奖励通过背包原子提交一次性授予 | D：悬赏板文本 |
+| 领奖 | 关中城·悬赏板 | 在悬赏板提交除害令并领取赏金 | 悬赏板确认完成并发放奖励 | 后续契约：`ObjectiveCompleted -> Claimed`，奖励经背包原子提交一次性授予；当前没有领奖处理器或悬赏奖励写入 | D：悬赏板文本 |
 
-- 阶段推进规则：`RecordDefeat` 只接受 Adventure 所有者在胜利结算时提交的结构化 `adventureId + enemyId`；同时满足悬赏状态为 `Accepted`、`objectiveType=defeat_enemy`、敌人 ID 等于 `targetEnemyId`、冒险 ID 等于 `allowedAdventureId` 时才增加进度。单场战斗至多提交一次悬赏进度。
-- 领奖规则：悬赏领奖同时构造新的背包状态与 `Claimed` 悬赏状态，由 `GameSession` 在同一次提交中替换。任意校验失败时背包与悬赏状态均保持不变，禁止半领取状态。
+- 后续阶段推进契约：未来的 `RecordDefeat` 入口只接受 Adventure 所有者在胜利结算时提交的结构化 `adventureId + enemyId`；同时满足悬赏状态为 `Accepted`、`objectiveType=defeat_enemy`、敌人 ID 等于 `targetEnemyId`、冒险 ID 等于 `allowedAdventureId` 时才增加进度。单场战斗至多提交一次悬赏进度。当前源码不具备该悬赏入口。
+- 后续领奖契约：实现悬赏领奖时，必须同时构造新的背包状态与 `Claimed` 悬赏状态，并由正式会话所有者在同一次提交中替换；任意校验失败时两者均保持不变。当前 `GameSession` 没有该原子领奖能力。
 
 ## 五、选项与分支
 
-本悬赏为线性流程，不设玩家选项分支。悬赏状态机固定为 `Available -> Accepted -> ObjectiveCompleted -> Claimed`，不提供中途放弃、替换目标或转为其他悬赏类型的路径。
+本悬赏为线性流程，不设玩家选项分支。后续悬赏状态机契约固定为 `Available -> Accepted -> ObjectiveCompleted -> Claimed`，不提供中途放弃、替换目标或转为其他悬赏类型的路径；当前项目尚未实现该状态机。
 
 ## 六、玩法接口
 
-- Settlement：关中城通过 `SettlementFeatureDispatcher` 将 `bounty_board` 功能交给已注册的悬赏处理器；悬赏板负责接取（`Accept`）、进度查看（`GetState`）和领奖入口（`Claim`），不判断规则合法性
-- Adventure：关中城入口 `guanzhong_wild` 写入 Adventure 上下文并绑定唯一敌人 `enemy_shijiahou`（`enemyCount=1`）；胜利后由 Adventure 所有者向悬赏运行时提交结算
+- Settlement：按正式框架，后续城市接入应由 `SettlementFeatureDispatcher` 将 `bounty_board` 功能交给悬赏处理器；悬赏板只提供接取、进度查看和领奖入口，不判断规则合法性。当前源码没有该分发器或已注册的悬赏处理器
+- Adventure：当前关中城入口 `guanzhong_wild` 写入 Adventure 上下文并绑定唯一敌人 `enemy_shijiahou`（`enemyCount=1`）；未来悬赏运行时接入后，才由 Adventure 所有者向其提交胜利结算
 - Combat：为一次 CTB 战斗，敌人为 `enemy_shijiahou`（`ai_melee`），不使用 fallback 敌人或文字掉落
 - 道具/奖励：奖励类别为低阶基础资源；具体 `itemId`、授予数量、掉落概率、堆叠上限、价格和经济结论均由 `N-GZ-REWARD-01` 锁定。当前候选物品 `item_shijia_piece` 和 `item_lingshi_low` 仅作为未来奖励库存候选，不写成当前悬赏已批准或已进入背包的事实
 - 声望/关系：不改变任何势力或 NPC 关系
@@ -62,7 +67,7 @@
 
 ## 七、失败与回退
 
-| 情况 | 悬赏状态变化 | 玩家状态变化 |
+| 情况 | 后续悬赏契约 | 玩家状态变化 |
 |------|------------|------------|
 | 战斗中败北 | 不变（仍为 `Accepted`，进度不变） | 清除 Adventure 上下文，返回关中城；保留当前世界节点与角色档案 |
 | 主动退出关中野外 | 不变（进度不推进） | 同上 |
@@ -74,15 +79,15 @@
 | 关中野外配置失败（石甲兽引用缺失或绑定数量不为一） | 不变 | Adventure 场景拒绝启动遭遇；"返回来源"出口仍可用，不伪造完成也不软锁据点入口 |
 
 - 关中野外遭遇本身可重复进入，每次重演同一场低阶石甲兽遭遇，不累积独立状态或升级为支线。
-- 存档恢复时验证 schema、ID、状态、进度、重复项和内容引用，非法状态或进度拒绝恢复。
+- 后续 `U-BOUNTY-01B` 实现 schema 3 后，悬赏存档恢复必须验证 schema、ID、状态、进度、重复项和内容引用，非法状态或进度拒绝恢复。当前存档 schema 为 2，不保存或恢复悬赏状态。
 
 ## 八、对话需求
 
 - 需要全文对白：否
 - 只需摘要：是。悬赏板文本仅需以下三类：
   - 接取界面摘要——"黄土旧道石甲兽阻路伤人，击杀有赏。——坊市联盟"
-  - 进度查看摘要——显示当前悬赏状态与目标进度
-  - 领奖确认摘要——确认除害令完成并发放赏金
+  - 进度查看摘要——后续界面显示悬赏状态与目标进度
+  - 领奖确认摘要——后续界面确认除害令完成并发放赏金
 - 演出等级：D（文本／日志）。不要求角色立绘、镜头、音效或特效。
 
 ## 九、禁止项与事实源复核
@@ -107,7 +112,7 @@
 - 一次性规则与正式框架 `repeatPolicy=one_time` 及 §8 首批正式内容一致
 - 奖励类别"低阶基础资源"、物品候选边界与劣质灵石/石甲碎片档案中"未来库存候选"一致；不越过 `N-GZ-REWARD-01` 的锁定范围
 - 演出等级 D 与正式框架 §8 石甲兽悬赏定位一致
-- `RecordDefeat` 的 `adventureId + enemyId` 匹配规则与正式框架 §6.4 一致
-- 背包原子提交与正式框架 §6.5 一致
-- 存档 schema 3 迁移边界与正式框架 §7 一致
+- 后续 `RecordDefeat` 的 `adventureId + enemyId` 匹配契约与正式框架 §6.4 一致，不表示当前已有该入口
+- 后续背包原子提交契约引用正式框架 §6.5；当前 `GameSession` 未实现悬赏领奖提交
+- schema 3 是正式框架 §7 的后续迁移目标；当前存档 schema 明确为 2
 - 失败关闭规则与正式框架 §9 一致
