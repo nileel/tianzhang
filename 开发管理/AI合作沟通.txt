@@ -7,4 +7,15 @@
 
 > 注：本文件交接记录仅反映当前状态；复核完成后移入归档
 
+### C-GZ-BOUNTY-01 · 一次性石甲兽悬赏内容档案（外部现场已恢复，待复审）
+
+- 方向：DeepSeek V4 Pro → Codex / ChatGPT5.5 复审
+- 任务：`C-GZ-BOUNTY-01`
+- 业务提交：`530a3504fcc37e09d5a8ccc1514b299573504cf3`；原 Run ID：`9d9fdfcb-b3de-446c-9c92-348c4bbac7db`；原会话：`22d77f7d-e0d5-4c70-b63c-a4993a73bd47`；状态：⚠️ 已修改/未审核
+- 已完成：建立独立的一次性石甲兽悬赏档案，固定叙事任务 ID、正式悬赏 ID、关中城悬赏板入口、关中野外石甲兽目标、`Available -> Accepted -> ObjectiveCompleted -> Claimed` 状态、失败关闭、一次性领奖和 D 级文本／日志边界；未填写具体奖励物品、数量、概率、战斗数值、NPC 或主线信息。人工恢复时只修正同一卡 backlog 的 `codex / 已排队` 投影，未改写业务正文。
+- 已验证：四个业务路径分别通过待提交空白检查；`docs/剧情` 与 `开发管理` 审核文本检查通过；`git diff --cached --check` 通过；任务卡 `ExternalPendingReview` 后置条件返回 `status=ok`。
+- 未验证：未运行 BattleSim（未修改角色数值或模拟器）；未运行 `check-data-chain.ps1`（未改 CSV、asset 或 Unity 数据链路）；本次人工恢复不等同于原外部会话返回 `completed`。
+- 残留风险：具体奖励物品、数量、概率和经济结论仍等待后续奖励任务；悬赏数据、运行时、存档、背包和表现资源尚未实施。本档案在 Codex 复审通过前不得作为已审核事实。
+- 已排定下一步：Codex 复审业务提交 `530a3504fcc37e09d5a8ccc1514b299573504cf3`；通过后归档并解除后续悬赏数据与奖励设计的内容前置。
+
 ## 短格式
