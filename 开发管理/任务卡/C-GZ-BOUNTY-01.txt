@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-GZ-BOUNTY-01",
+  "title": "一次性石甲兽悬赏内容档案",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-29：C-GZ-CITY-01、C-GZ-ENEMY-01 与 C-GZ-ITEM-01 均已归档完成；负责人已确认的关中最小正式框架允许建立一次性石甲兽悬赏的独立内容档案。",
+  "expectedPaths": [
+    "docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/任务卡/C-GZ-BOUNTY-01.txt",
+    "开发管理/任务归档/C-GZ-BOUNTY-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-GZ-BOUNTY-01 · 一次性石甲兽悬赏内容档案
+
+## 来源与当前边界
+
+- 负责人已确认 `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` 的方案 A：首轮只支持 `defeat_enemy` 类型、一次性石甲兽悬赏和已确认的关中薄切片；不解冻其他悬赏、任务类型或地区内容。
+- `C-GZ-CITY-01`、`C-GZ-ENEMY-01` 与 `C-GZ-ITEM-01` 已完成并归档。本卡只据此建立 `bounty_guanzhong_shijiahou` 的独立 L3 固定支线内容档案，不修改 CSV、asset、Unity、存档、掉落、背包或数值。
+- 当前可确定的是发布地点、击败目标、一次性规则、奖励类别和信息边界。具体奖励物品、数量、掉落概率与堆叠上限仍由 `N-GZ-REWARD-01` 锁定；不得将候选物品写成已批准的奖励条目。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#五、正式数据模型` 中 `BountyData`、`#六、Unity 组件与职责` 中悬赏运行时、`#七、悬赏状态与存档`、`#八、首批正式内容`、`#九、失败关闭与校验`、`#十、验证矩阵`、`#十一、任务依赖结构` 与 `#十三、停止条件`。
+- `docs/剧情/剧情生产规范.txt#二、剧情类型与最低字段` 中固定支线/任务链、`#四、触发条件与状态变量`、`#五、玩法接口字段`、`#六、分支、失败与回退`、`#七、信息边界与禁止项`、`#八、文件组织`、`#九、通用模板` 中 L3 单任务模板、`#十、AI 生产流程` 与 `#十一、审核清单`。
+- `docs/剧情/据点/关中城.txt` 的城市功能、玩法接口与重复访问规则。
+- `docs/剧情/副本叙事/adventure_guanzhong_wild.txt` 的触发与入口、敌人与流程、玩法接口、失败／退出与重复边界。
+- `docs/怪物/关陇玄域/石甲兽.txt` 的稳定 ID、使用范围与未锁定掉落边界。
+- `docs/道具/基础资源/劣质灵石.txt`、`docs/道具/妖兽材料/石甲碎片.txt` 的稳定身份与未开放用途。
+- `开发管理/任务列表/内容设计任务.txt::C-GZ-BOUNTY-01`、`开发管理/任务归档/C-GZ-CITY-01.txt`、`开发管理/任务归档/C-GZ-ENEMY-01.txt`、`开发管理/任务归档/C-GZ-ITEM-01.txt`。
+
+## 实施范围
+
+- 新建 `docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt`，开头标记 `⚠️ 已修改/未审核`，并按 L3 固定支线模板单独成文件。
+- 明确任务／悬赏身份：叙事任务 ID `quest_guanzhong_bounty_shijiahou`，正式悬赏 ID `bounty_guanzhong_shijiahou`，类型 `defeat_enemy`，地区 `guanzhong`，发布地点与服务入口为 `guanzhong_city` 的 `bounty_board`；发布方只写关陇坊市联盟，不新增接取或提交 NPC。
+- 明确前置、流程与状态：玩家位于关中城且从悬赏板接取；目标只为在 `guanzhong_wild` 击败 `enemy_shijiahou`；运行时目标状态固定为 `Available -> Accepted -> ObjectiveCompleted -> Claimed`，每项悬赏只能领取一次。该文件只定义后续数据／运行时所需内容契约，不得断言当前系统已实现这些状态。
+- 明确奖励和接口边界：奖励类别为低阶基础资源，不填写具体 `itemId`、数量、概率、强度、`maxStack`、价格或经济结论；城市只提供接取、进度查看和领奖入口，战斗结算、背包原子提交和存档迁移均只引用正式框架的后续职责。
+- 明确失败与重复：败北、主动退出、错误地点、错误敌人和重复领奖均不推进或不改变悬赏状态；`Claimed` 后不再在悬赏板出现。关中野外遭遇本身仍可重复进入，不新增主线、地区状态、声望、NPC 关系或世界状态。
+- 明确演出为 D 级文本／日志，且只保留石甲兽阻路、关中城悬赏入口和低阶外围氛围；不扩展世界真相、势力线、NPC、对话树或地区主线。
+
+## 禁止项
+
+- 不填写奖励物品、授予数量、掉落概率、堆叠上限、价格、伤害、战斗属性或其他未验证数值。
+- 不将候选 `item_shijia_piece`、`item_lingshi_low` 写成当前悬赏奖励或当前已进入背包的事实。
+- 不修改 `docs/剧情/据点/关中城.txt`、`docs/剧情/副本叙事/adventure_guanzhong_wild.txt`、怪物／物品档案、CSV、Language、asset、Unity、存档、背包、掉落或悬赏运行时代码。
+- 不新增随机悬赏池、每日刷新、其他目标类型、通用条件表达式、商店、装备、完整 NPC 发布者、额外地区任务或表现资源。
+- 不把现有 `QuestStateStore` 解释为已存在的悬赏系统，不建立第二套任务、状态、背包、场景或存档所有者。
+- 不写龙脊之变、灵脉机制、重要 NPC、高阶道路、地区主线线索或未经事实源支持的怪物生态／材料用途。
+
+## 验证
+
+- 检查完成品为单独 L3 固定支线文件，任务与悬赏 ID、地点、目标、状态、接口、失败关闭、一次性规则和 D 级演出均可追溯到必查范围。
+- 逐项核对 `guanzhong_city`、`bounty_board`、`guanzhong_wild`、`enemy_shijiahou` 与两项候选物品 ID；只将物品保留为未锁定的奖励类别边界。
+- 扫描目标文件，确认不含具体物品、数量、概率、堆叠、价格、战斗数值、未实现断言、NPC、主线信息、其他任务类型或随机／每日机制。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs/剧情,开发管理` 与 `git diff --check`。
+
+## 完成条件
+
+- `bounty_guanzhong_shijiahou` 拥有可直接映射到后续 `BountyData` 的独立内容档案，发布地点、击败目标、一次性状态、奖励类别和信息边界均无歧义，且不伪造未批准参数或运行时能力。
+- 外部责任方完成后将同一卡转换为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，保留 `⚠️ 已修改/未审核` 标记并提交交接；不得自审。
+- Codex 复审通过并归档后，`D-BOUNTY-01` 与 `N-GZ-REWARD-01` 的内容前置解除；其余数据、数值与 Unity 依赖仍按各自任务推进。
+
+## 停止条件
+
+- 若完成档案必须先决定具体奖励物品、数量、概率、堆叠、价格、战斗数值、NPC 身份、对话文本、经济规则或新增任务类型，停止并转为 `pending_decision`；不得以默认值、候选值或合理想象补齐。
+- 若发布地点、目标、一次性规则或奖励类别无法同时与城市、副本、怪物、物品和正式框架事实一致，停止并记录冲突；不得改写既有内容或运行时事实来制造闭环。
