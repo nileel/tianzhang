@@ -2,92 +2,30 @@
 
 > 稳定 ID：`enemy_shijiahou`
 > 内容范围：`guanzhong`（关陇玄域·关中野外）
-> 状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：按 REV-C-GZ-ENEMY-01-02 定向返工重写，仅保留实施范围所列正向事实，删除 CT/行动条、暴击、闪避、魂盾及结构化结算断言
-> 关联框架：`docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` §5.2 EnemyData
+> 状态：✅ 已审核（2026-07-29 Codex 直接修正 `REV-C-GZ-ENEMY-01-03`）
 
-## 一、身份标识
+## 身份
 
-| 字段 | 值 | 来源 |
-|------|-----|------|
-| enemyId | `enemy_shijiahou` | `Enemies.csv` |
-| displayNameKey | `enemy_shijiahou` → 石甲兽 | `Language.csv` |
-| descriptionKey | `desc_enemy_shijiahou` → 低阶妖兽，皮糙肉厚，适合新手练手 | `Language.csv` |
-| contentScope | `guanzhong` | 关中野外 |
-| enemyTypeId | `type_yaoshou` | `Enemies.csv`，妖兽 |
-| aiProfileId | `ai_melee` | `Enemies.csv`，近战 AI |
-| realmId | `realm_lianqi` | `Enemies.csv`，练气期 |
-| combatTemplate | `Char_Enemy_enemy_shijiahou.asset` | 通用 `CharacterData` 战斗模板 |
+- 正式名称：石甲兽
+- 稳定 ID：`enemy_shijiahou`
+- 物种类型：妖兽（`type_yaoshou`）
+- 境界定位：练气期低阶（`realm_lianqi`）
+- 内容范围：`guanzhong`
 
-## 二、战斗识别
+## 战斗识别
 
-石甲兽为**练气期低阶妖兽**，四项定性识别特征：
+- 定性识别：厚甲、迟缓、近战、格挡倾向
+- AI 类别：`ai_melee`
+- 最小行为：接近目标；相邻时进行基础攻击；不能行动时防御
+- 当前无已装备术法或神通
+- 战斗数值只引用既有模板 `Char_Enemy_enemy_shijiahou.asset`，本档案不列字段、具体值或高低结论
 
-- **厚甲**：体表覆盖多层岩质甲壳，背甲最为厚重。
-- **迟缓**：移动缓慢，重心极低。
-- **近战**：以头角顶撞或侧甲撞击进行单目标近战基础攻击。
-- **格挡倾向**：遇敌后压低重心、收拢四肢，以厚甲天然形成格挡姿态。
+## 掉落候选
 
-### AI 行为
+- `Enemies.csv` 候选 ID：`item_shijia_piece`、`item_lingshi_low`
+- 当前导入器和掉落结算不读取上述候选 ID；具体概率与数量等待 `N-GZ-REWARD-01`
 
-AI 类别：`ai_melee`（近战 AI）
+## 使用范围
 
-最小行为语义：
-
-1. **尝试已装备能力**：无已装备术法/神通，此步空过。
-2. **接近目标**：向目标移动，缩短距离至相邻。
-3. **相邻基础攻击**：与目标相邻时发动普通近战攻击。
-4. **不能行动时防御**：被控制、无法移动或无法攻击时进入防御状态，获得防御加成。
-
-### 术法与神通
-
-- 当前无已装备术法
-- 当前无已装备神通
-
-### 战斗数值
-
-战斗数值全部来自既有 `CharacterData` 模板（`Char_Enemy_enemy_shijiahou.asset`），本档案只引用、不列出具体字段、数值或高低结论。
-
-## 三、掉落候选
-
-`Enemies.csv` 中 `enemy_shijiahou` 行的候选物品引用：
-
-| 候选物品 | itemId |
-|----------|--------|
-| 石甲碎片 | `item_shijia_piece` |
-| 劣质灵石 | `item_lingshi_low` |
-
-当前导入器（`DataConfigImporter.ImportEnemies`）不消费上述候选字段；战斗掉落结算（`TacticalCombatController.CreateDropItems`）按 `realmMultiplier` 返回硬编码掉落，不读取候选 ID。具体掉落概率与数量由 `N-GZ-REWARD-01`（首批掉落、堆叠与悬赏奖励参数）锁定，本档案不对数值、掉落行为或结算方式做出结论。
-
-## 四、使用范围
-
-- **唯一正式 Adventure**：`guanzhong_wild`（关中野外·石甲兽阻路），作为单敌遭遇（`enemyCount=1`）出现。
-- **遭遇流程**：从关中城（`guanzhong_city`）进入野外入口 → 遭遇石甲兽 → 胜利或败北后返回关中城。
-- **可重复进入**：每次从关中城进入均触发同一场低阶石甲兽遭遇；不累积独立状态，不因重复次数改变强度、行为或掉落。
-- 关中城外其他 Adventure 或地区不得直接复用本档案的 `enemyId`。
-
-## 五、禁止项
-
-本档案明确排除以下内容：
-
-- 不写一级/二级属性、境界倍率、伤害、格挡数值、CT/行动条、暴击、闪避、魂盾、掉落概率或数量。
-- 不新增术法、神通、Boss 阶段、远程攻击、特殊状态或专属经济用途。
-- 不修改 `Enemies.csv`、`Language.csv`、`Char_Enemy_enemy_shijiahou.asset`、场景、导入器、AI 或战斗代码。
-- 不引用黑曜石甲兽（`docs/地图/漠北荒域.txt` 中的高阶怪物）的任何事实。
-- 不描述结构化结算、`dropEntries`/`dropTable` 消费、fallback、`realmMultiplier` 或其他当前未实现的运行时规则。
-- 不补写体型、感官、食性、食物链、甲壳形成、晶化/矿化、掉落过程、材质、炼器、阵法、补灵或经济效果。
-
-## 六、引用链与后续依赖
-
-```text
-docs/怪物/关陇玄域/石甲兽.txt（本档案）
-  → EnemyData（enemyId, displayNameKey, descriptionKey, contentScope, enemyTypeId, aiProfileId, realmId, combatTemplate, dropEntries）
-  → Char_Enemy_enemy_shijiahou.asset（combatTemplate：战斗属性）
-  → Enemies.csv（生产投影）
-  → Language.csv（本地化显示文本）
-  → guanzhong_wild（唯一正式 Adventure 引用）
-```
-
-后续任务依赖：
-- `D-ENEMY-01`（怪物、AI、战斗模板与掉落契约）：消费本档案的事实定义。
-- `C-GZ-BOUNTY-01`（一次性石甲兽悬赏）：消费本档案的 enemyId 与掉落候选为悬赏目标。
-- `N-GZ-REWARD-01`（首批掉落、堆叠与悬赏奖励参数）：消费本档案的掉落候选锁定具体数值。
+- 在 `guanzhong_wild` 中作为单敌遭遇
+- 每次从关中城重新进入 `guanzhong_wild` 时可重复触发该遭遇

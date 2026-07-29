@@ -4,18 +4,17 @@
   "id": "C-GZ-ENEMY-01",
   "title": "石甲兽正式怪物档案",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "REV-C-GZ-ENEMY-01-03"
-  ],
-  "stateReason": "2026-07-29：Codex 复审提交 47e61603466c7b5bc1dde8f7de6e0fff1bc0f79a 不通过。档案仍把岩质甲壳、体态、攻击动作、被控制及防御加成等范围外内容写入正文，并在引用链保留未落地的 EnemyData.dropEntries；须由 DeepSeek 按 REV-C-GZ-ENEMY-01-03 仅重写怪物档案后再送复审。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-29：Codex 接管 REV-C-GZ-ENEMY-01-03 的定向返工，从零重写档案，只保留任务白名单内的身份、四项标签、最小 AI 语义、模板指针、候选 ID 和使用范围。",
   "expectedPaths": [
     "docs/怪物/关陇玄域/石甲兽.txt",
     "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/任务列表/审核与交接任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
@@ -32,11 +31,11 @@
 - `enemy_shijiahou` 已有 Enemies CSV 行、Language 键、`CharacterData` asset 和正式 Adventure 引用，但 `type`、`aiType`、`realm`、`dropTable` 与描述未进入完整运行时结构。
 - 本卡只把现有石甲兽升格为可追踪的正式怪物内容档案；不修改数值、掉落概率、AI 算法、CSV、asset 或 Unity，也不把 CSV 候选字段写成当前运行时已经消费的行为。
 - `docs/地图/漠北荒域.txt` 中的“黑曜石甲兽”是另一个高阶怪物名称，本卡不得将其事实并入低阶 `enemy_shijiahou`。
-- 本轮为 `REV-C-GZ-ENEMY-01-02` 定向返工。正文只允许写“实施范围”列出的正向事实；没有列出的生态、生理、材质、战斗属性、结算或运行时行为一律删除，不以合理推测补齐。
+- 本卡先后处理 `REV-C-GZ-ENEMY-01-02` 与 `REV-C-GZ-ENEMY-01-03`。正文只允许写“实施范围”列出的正向事实；没有列出的生态、生理、材质、战斗属性、结算或运行时行为一律删除，不以合理推测补齐。
 
 ## 必查范围
 
-- `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt::REV-C-GZ-ENEMY-01-02`、`开发管理/AI合作沟通.txt::C-GZ-ENEMY-01`。
+- `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt::REV-C-GZ-ENEMY-01-02|REV-C-GZ-ENEMY-01-03`、`开发管理/AI合作沟通.txt::C-GZ-ENEMY-01`。
 - `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#5.2 EnemyData`、`#八、首批正式内容`。
 - `docs/剧情/副本叙事/adventure_guanzhong_wild.txt` 中石甲兽的叙事定位、遭遇范围与禁止项。
 - `src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`、`Language.csv::enemy_shijiahou|desc_enemy_shijiahou|item_shijia_piece|item_lingshi_low`。
@@ -78,3 +77,7 @@
 ## 停止条件
 
 - 白名单之外的内容被认为是档案成立的必要条件，或直接事实源之间存在冲突时停止并转为 `pending_decision`；不得自行补写生态、属性、结算或用途。
+
+## 完成记录
+
+- 2026-07-29：用户要求排查连续返工并在必要时由 Codex 接管。Codex 按 `REV-C-GZ-ENEMY-01-03` 从零重写石甲兽档案，只保留稳定身份、练气期低阶、厚甲／迟缓／近战／格挡倾向四项标签、`ai_melee` 最小语义、空术法／神通、既有战斗模板指针、两项 CSV 候选 ID，以及 `guanzhong_wild` 单敌和可重复进入边界；未修改 CSV、Language、asset、场景、导入器、AI、战斗代码或数值。
