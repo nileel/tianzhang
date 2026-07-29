@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：C-GZ-CITY-01 已完成并归档；关中城的稳定身份、功能和野外入口已具备唯一内容事实，现可只建立不含生产数据或 Unity 消费的 SettlementData 契约。",
+  "stateReason": "2026-07-30：已建立关中城 SettlementData 字段、功能可用性、入口引用、单向生产链与失败关闭契约；未修改任何生产数据或 Unity 消费者。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-30-guanzhong-settlement-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -63,3 +63,7 @@
 ## 停止条件
 
 - 若契约必须指定尚无已审核事实的城市、功能处理器、显示文本、视觉资源、价格、奖励或运行时行为，停止并转为 `pending_decision`；不得以原型或默认值补齐。
+
+## 完成记录
+
+- 2026-07-30：已完成 `SettlementData` 字段、功能可用性、冒险入口、单向生产链、正反 fixture 与失败关闭契约；未创建生产 CSV、Language、asset、导入器、目录、场景消费者或处理器，也未修改 Unity 运行时行为。
