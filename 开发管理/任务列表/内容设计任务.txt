@@ -65,7 +65,6 @@
 | C-TZ-CHARTER-ENTRIES-01B3 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `玄冰地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B4 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `瘴林地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B5 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `风漠地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B6 | P1 | codex | 已排队 | — | 水府地纪独立生态包 | `开发管理/任务卡/C-TZ-CHARTER-ENTRIES-01B6.txt` |
 | C-TZ-CHARTER-ENTRIES-01B7 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `星野地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B8 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `阴壤地纪` 独立生态包。 | — |
 | C-STORY-04 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 低阶势力生态与一条样板地方节点成长线；中后期可成为地方授权者、见证者或受益共同体。 | — |
