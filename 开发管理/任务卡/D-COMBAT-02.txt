@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-COMBAT-02",
+  "title": "跨端攻击档案 fixture 与差异检查",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "verification",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：D-COMBAT-01 已锁定唯一 CSV 权威与失败关闭契约，U-COMBAT-01B 已完成 Unity 攻击档案承载和消费者接入并明确解除本卡依赖；当前只补非生产 fixture 与 BattleSim/Unity 同 ID 投影差异检查。",
+  "expectedPaths": [
+    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
+    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "开发管理/攻击档案跨端fixture验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-02.txt",
+    "开发管理/任务归档/D-COMBAT-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-COMBAT-02 · 跨端攻击档案 fixture 与差异检查
+
+## 来源与当前边界
+
+- `D-COMBAT-01` 已锁定 `AttackProfiles.csv -> AttackProfileData -> Unity/BattleSim` 的单向权威、34 列语义、范围配置、失败关闭和跨端投影字段；本卡只验证该契约，不建立第二套 schema。
+- `U-COMBAT-01B` 已实现 Unity `AttackProfileData`、严格整表解析、基础攻击外键、1v1／2v2 消费和共享范围查询，并明确未生产 CSV／asset fixture、攻击参数或冷却换算；其完成已解除本卡唯一依赖。
+- BattleSim 仍由 `GameData.AttackProfile`、`ArtConfig`、`DivineConfig` 承载旧配置。本卡只建立非生产测试投影和差异证据，不把 fixture 接入默认模拟，不切换生产消费者，也不移除旧配置。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md#唯一权威关系`、`#CSV 表头与字段`、`#范围配置与跨字段合法性`、`#导入边界与失败关闭`、`#Unity 与 BattleSim 的消费投影`、`#迁移顺序、fixture 与差异检查`。
+- `开发管理/Unity攻击档案与2v2消费验证记录.txt#已交付行为`、`#验证`、`#后续`；`开发管理/任务归档/D-COMBAT-01.txt` 与 `开发管理/任务归档/U-COMBAT-01B.txt` 的完成边界。
+- `src/Assets/Scripts/Combat/AttackProfileData.cs::AttackProfileData`；`src/Assets/Scripts/Editor/DataConfigImporter.cs::AttackProfileColumns|TryValidateAttackProfileCsv|TryParseAttackProfiles|AttackProfileImportRow.CopyTo`；`src/Assets/Tests/EditMode/AttackProfileDataTests.cs`。
+- `simulations/BattleSim/GameData.cs::AttackProfile|ArtConfig|DivineConfig`、`simulations/BattleSim/BattleSimSelfTests.cs::Run|ReadFixtureRows|FindRepositoryRoot`，以及 `simulations/BattleSim/Combat.cs::SelectAction` 和基础攻击／术法／神通直接读取点。
+
+## 实施范围
+
+- 新增一份位于既有 EditMode `Fixtures` 目录的非生产 CSV，使用契约原表头，至少覆盖 `basic`、`art`、`divine`，单目标以及圆形、直线、扇形范围配置；测试显示键和数值只服务逐字段投影，不写入 `Language.csv`、生产 `AttackProfiles.csv` 或 asset。
+- Unity 侧复用现有严格解析和 `AttackProfileImportRow.CopyTo`，提供最窄测试投影入口；BattleSim 侧在独立 self-test 中读取同一物理 fixture，并投影到现有三类载体。两端均以原 CSV 行为唯一断言源，按同一 `attackProfileId` 精确比较种类、效果、元素、双倍率、资源、规范冷却、距离和全部范围目标字段；任一缺列、丢列、默认补值或字段差异均非 0 失败。
+- 负例从合法 fixture 行一次只变异一个条件，至少覆盖重复 ID、短行、未知引用、非法数值／区间、错误种类专属字段、三种非法形状、未知范围枚举、单目标混入范围列、asset ID 冲突、未支持效果语义和 `battlesim_cooldown_unit_unresolved`；Unity 失败不得写入部分 asset，BattleSim 失败不得回落到旧静态配置。
+- 新增验证记录，保存 fixture 身份、覆盖矩阵、双端命令、稳定失败原因和仍未授权的生产迁移边界。
+
+## 禁止项
+
+- 不创建或填写生产 `src/Assets/DataConfig/AttackProfiles.csv`，不生成生产 `AttackProfileData` asset，不指定武器、术法、神通、范围尺寸或目标资格等内容参数。
+- 不修改战斗伤害、AI、范围结算、装备所有权、角色装配、默认模拟矩阵或 Unity 运行时消费者；不让测试 fixture 成为生产回退。
+- 不猜测 BattleSim 回合与 Unity 刻的换算，不以名称、asset 路径、构造器默认值或旧 `GameData` 数值补齐投影。
+
+## 验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02`。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，确认攻击档案直接用例与既有 EditMode 回归结果。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 同一非生产 CSV 行在 Unity 与 BattleSim 中形成逐字段一致的显式投影；全部指定负例稳定失败，且没有部分 asset、旧配置回退或隐藏默认值。
+- 验证记录明确本卡只证明契约和投影可对齐；具体生产内容切换仍必须另开迁移切片。
+
+## 停止条件
+
+- 若任一端无法表达已声明字段、必须修改生产消费者或生产数据才能完成，停止并按根因拆分后续任务；不得在本卡增加兼容层。
+- 若需要决定武器内容、攻击参数、范围配置、目标资格、阻断或冷却单位换算，转为 `pending_decision`，不得从旧值或 fixture 推导。
