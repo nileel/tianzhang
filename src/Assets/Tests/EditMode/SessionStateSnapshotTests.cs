@@ -239,6 +239,89 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void NpcCultivationStateRoundTripsOnlyInCurrentSchemaAndInvalidStateFailsAtomically()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            FoundationPurpleMansionStateData state = CreateCompleteFoundationPurpleMansionState();
+            try
+            {
+                Assert.That(FoundationPurpleMansionRuntimeState.TryCreate(
+                    state,
+                    out FoundationPurpleMansionRuntimeState runtime,
+                    out string failureReason), Is.True, failureReason);
+                Assert.That(runtime.TryStartCultivationAction(
+                    CultivationActionKind.FoundationNurture,
+                    "npc_action_nurture",
+                    "foundation_save_fixture",
+                    "cycle_nurture",
+                    "boundary_started",
+                    "progress_nurture",
+                    new[] { "numeric_nurture" }).Succeeded, Is.True);
+                Assert.That(runtime.TryCommitCultivationActionCycle("world_day_18").Succeeded, Is.True);
+                Assert.That(runtime.TryPauseCultivationAction("RESOURCE_INSUFFICIENT").Succeeded, Is.True);
+                session.NpcStates.Set(new NpcStateSnapshot(
+                    "npc_save_fixture",
+                    "jiangzuo_hub",
+                    Steps(true),
+                    runtime.CaptureSaveData()));
+
+                GameSessionSaveData current = session.CaptureSaveData();
+                Assert.That(current.schemaVersion, Is.EqualTo(GameSessionSnapshot.CurrentSchemaVersion));
+                Assert.That(current.npcs[0].foundationPurpleMansionState.cultivationActionState.targetRef,
+                    Is.EqualTo("foundation_save_fixture"));
+
+                string currentJson = JsonUtility.ToJson(current);
+                session.ClearSession();
+                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(currentJson));
+                Assert.That(session.NpcStates.TryGet("npc_save_fixture", out NpcStateSnapshot restored), Is.True);
+                Assert.That(restored.FoundationPurpleMansionState.cultivationActionState.actionStateId,
+                    Is.EqualTo("npc_action_nurture"));
+                Assert.That(restored.FoundationPurpleMansionState.cultivationActionState.committedCycleIds,
+                    Is.EquivalentTo(new[] { "world_day_18" }));
+                Assert.That(restored.FoundationPurpleMansionState.lastClosedRetreatStopReason,
+                    Is.EqualTo("RESOURCE_INSUFFICIENT"));
+
+                foreach (int legacyVersion in new[]
+                {
+                    GameSessionSnapshot.LegacySchemaVersion,
+                    GameSessionSnapshot.StateCollectionsSchemaVersion,
+                    GameSessionSnapshot.FoundationPurpleMansionSchemaVersion,
+                })
+                {
+                    GameSessionSaveData legacy = JsonUtility.FromJson<GameSessionSaveData>(currentJson);
+                    legacy.schemaVersion = legacyVersion;
+                    session.RestoreSaveData(legacy);
+                    if (legacyVersion == GameSessionSnapshot.LegacySchemaVersion)
+                    {
+                        Assert.That(session.NpcStates.Count, Is.EqualTo(0));
+                    }
+                    else
+                    {
+                        Assert.That(session.NpcStates.TryGet("npc_save_fixture", out NpcStateSnapshot migrated), Is.True);
+                        Assert.That(migrated.FoundationPurpleMansionState, Is.Null);
+                    }
+                }
+
+                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(currentJson));
+                GameSessionSaveData invalid = JsonUtility.FromJson<GameSessionSaveData>(currentJson);
+                invalid.npcs[0].foundationPurpleMansionState.foundationState.totalMansionCapacity = 0;
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(invalid));
+                Assert.That(JsonUtility.ToJson(session.CaptureSaveData()), Is.EqualTo(currentJson));
+
+                invalid = JsonUtility.FromJson<GameSessionSaveData>(currentJson);
+                invalid.npcs[0].foundationPurpleMansionState =
+                    new FoundationPurpleMansionSaveData();
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(invalid));
+                Assert.That(JsonUtility.ToJson(session.CaptureSaveData()), Is.EqualTo(currentJson));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(state);
+            }
+        }
+
+        [Test]
         public void InvalidOrUnsupportedSaveDataFailsBeforeChangingTheSession()
         {
             var sessionObject = new GameObject("GameSessionTest");

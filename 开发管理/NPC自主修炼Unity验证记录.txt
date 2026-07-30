@@ -1,0 +1,19 @@
+# NPC 自主修炼 Unity 验证记录
+
+任务：`U-FPD-AI-01`
+
+## 覆盖结论
+
+- `FoundationPurpleMansionRuntimeState` 现在以同一份行动状态承载筑基考验、养基、府胚蕴养、开府考验与结丹证位的开始、稳定边界推进、周期提交、暂停和终止；行动、目标、周期与停止原因均使用已保存的稳定 ID，重复周期被拒绝。
+- `NpcCultivationActionCoordinator` 先按道基／紫府目标与证位硬门槛过滤候选，再调用既有数据化权重投影稳定排序。它只接受 profile 声明的重算触发器，不持有 NPC 列表、世界 tick 或玩家不可知事实。
+- `GameSession.AdvanceWorldDay` 不扫描 NPC；指定事件才经现有 `NpcStateStore` 重算单个 NPC，并将选中的行动回写同一 NPC 会话状态。
+- `GameSessionSaveData` 已升至 schema 3。schema 0／1／2 不会伪造 NPC 进行中行动；schema 3 往返保存 NPC 道基／紫府状态、当前行动、固定目标、已提交周期和停止原因。恢复会先完整校验再原子替换，非法成长状态失败关闭。
+
+## 已执行验证
+
+- Unity EditMode 全套：229/229 通过；直接覆盖五类共同生命周期、硬门槛先过滤、词典序稳定选择、声明事件重算、资源不足、世界日不扫描与存档往返／迁移／非法档原子拒绝。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 error；`ExplorationController.cs` 与 `TacticalGridModelTests.cs` 各有 1 条既有 obsolete 警告。
+
+## 已知边界
+
+- 本切片不新增生产权重、数值预算、UI、第二套 NPC 成长状态或世界时间服务；世界、资源、境界目标、寿元和环境事件的实际发出者继续由后续正式系统接入。

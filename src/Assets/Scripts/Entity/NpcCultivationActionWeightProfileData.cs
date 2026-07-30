@@ -154,6 +154,7 @@ namespace TianZhang.Entity
         private readonly Dictionary<string, NpcCultivationWeightCapPolicy> caps;
         private readonly Dictionary<string, NpcCultivationWeightDiminishingPolicy> diminishing;
         private readonly Dictionary<string, NpcCultivationRiskGate> riskGates;
+        private readonly HashSet<string> recalculationTriggers;
 
         private NpcCultivationActionWeightProfileRuntime(NpcCultivationActionWeightProfileData source)
         {
@@ -162,6 +163,9 @@ namespace TianZhang.Entity
             caps = source.capPolicies.ToDictionary(row => row.capPolicyId, StringComparer.Ordinal);
             diminishing = source.diminishingPolicies.ToDictionary(row => row.diminishingPolicyId, StringComparer.Ordinal);
             riskGates = source.riskGates.ToDictionary(row => row.riskGateRef, StringComparer.Ordinal);
+            recalculationTriggers = new HashSet<string>(
+                source.recalculationTriggers.Select(row => row.triggerStableId),
+                StringComparer.Ordinal);
         }
 
         public static bool TryCreate(
@@ -175,6 +179,12 @@ namespace TianZhang.Entity
 
             runtime = new NpcCultivationActionWeightProfileRuntime(source);
             return true;
+        }
+
+        public bool DeclaresRecalculationTrigger(string triggerStableId)
+        {
+            return !string.IsNullOrWhiteSpace(triggerStableId) &&
+                recalculationTriggers.Contains(triggerStableId);
         }
 
         public NpcCultivationActionDecisionResult Evaluate(NpcCultivationActionDecisionContext context)

@@ -61,6 +61,7 @@ namespace TianZhang.Entity
         FoundationNurture,
         MansionEmbryoNurture,
         MansionOpeningTrial,
+        JindanProof,
     }
 
     public enum CultivationActionStatus
@@ -348,6 +349,121 @@ namespace TianZhang.Entity
             return Copy(cultivationActionState);
         }
 
+        public FoundationPurpleMansionOperationResult CanStartCultivationAction(
+            CultivationActionKind actionKind,
+            string targetRef)
+        {
+            if (IsJindanFormed)
+                return Rejected(JindanLockMutation);
+            if (!Enum.IsDefined(typeof(CultivationActionKind), actionKind) ||
+                string.IsNullOrWhiteSpace(targetRef) || HasBlockingCultivationAction() ||
+                !HasActionTarget(actionKind, targetRef))
+            {
+                return Rejected(InvalidAction);
+            }
+
+            return Succeeded();
+        }
+
+        public FoundationPurpleMansionOperationResult TryStartCultivationAction(
+            CultivationActionKind actionKind,
+            string actionStateId,
+            string targetRef,
+            string fixedCycleDefinitionId,
+            string initialStableBoundaryId,
+            string progressChannelId,
+            IEnumerable<string> numericProfileRefs)
+        {
+            FoundationPurpleMansionOperationResult gate = CanStartCultivationAction(
+                actionKind,
+                targetRef);
+            if (!gate.Succeeded || string.IsNullOrWhiteSpace(actionStateId) ||
+                string.IsNullOrWhiteSpace(fixedCycleDefinitionId) ||
+                string.IsNullOrWhiteSpace(initialStableBoundaryId) ||
+                string.IsNullOrWhiteSpace(progressChannelId))
+            {
+                return Rejected(InvalidAction);
+            }
+
+            string[] profiles = numericProfileRefs == null
+                ? null
+                : numericProfileRefs.ToArray();
+            if (profiles == null || profiles.Length == 0 ||
+                profiles.Any(string.IsNullOrWhiteSpace) ||
+                profiles.Distinct(StringComparer.Ordinal).Count() != profiles.Length ||
+                cultivationActionState != null &&
+                cultivationActionState.actionStateId == actionStateId)
+            {
+                return Rejected(InvalidAction);
+            }
+
+            cultivationActionState = new CultivationActionStateRecord
+            {
+                actionStateId = actionStateId,
+                actionKind = actionKind,
+                status = CultivationActionStatus.Active,
+                targetRef = targetRef,
+                fixedCycleDefinitionId = fixedCycleDefinitionId,
+                lastStableBoundaryId = initialStableBoundaryId,
+                committedCycleIds = Array.Empty<string>(),
+                progressChannelId = progressChannelId,
+                numericProfileRefs = profiles,
+            };
+            LastClosedRetreatStopReason = null;
+            return Succeeded();
+        }
+
+        public FoundationPurpleMansionOperationResult TryAdvanceCultivationAction(
+            string stableBoundaryId)
+        {
+            if (cultivationActionState == null ||
+                cultivationActionState.status != CultivationActionStatus.Active ||
+                string.IsNullOrWhiteSpace(stableBoundaryId))
+            {
+                return Rejected(InvalidAction);
+            }
+
+            cultivationActionState.lastStableBoundaryId = stableBoundaryId;
+            return Succeeded();
+        }
+
+        public FoundationPurpleMansionOperationResult TryCommitCultivationActionCycle(
+            string cycleId)
+        {
+            return TryCommitCurrentCycle(cycleId);
+        }
+
+        public FoundationPurpleMansionOperationResult TryPauseCultivationAction(
+            string stopReason)
+        {
+            if (cultivationActionState == null ||
+                cultivationActionState.status != CultivationActionStatus.Active ||
+                string.IsNullOrWhiteSpace(stopReason))
+            {
+                return Rejected(InvalidAction);
+            }
+
+            cultivationActionState.status = CultivationActionStatus.Paused;
+            LastClosedRetreatStopReason = stopReason;
+            return Succeeded();
+        }
+
+        public FoundationPurpleMansionOperationResult TryTerminateCultivationAction(
+            string stopReason)
+        {
+            if (cultivationActionState == null ||
+                (cultivationActionState.status != CultivationActionStatus.Active &&
+                 cultivationActionState.status != CultivationActionStatus.Paused) ||
+                string.IsNullOrWhiteSpace(stopReason))
+            {
+                return Rejected(InvalidAction);
+            }
+
+            cultivationActionState.status = CultivationActionStatus.Terminated;
+            LastClosedRetreatStopReason = stopReason;
+            return Succeeded();
+        }
+
         public FoundationPurpleMansionSaveData CaptureSaveData()
         {
             return new FoundationPurpleMansionSaveData
@@ -455,6 +571,8 @@ namespace TianZhang.Entity
                 return Succeeded();
             }
 
+            if (cultivationActionState.status == CultivationActionStatus.Paused)
+                cultivationActionState.status = CultivationActionStatus.Active;
             return TryCommitCurrentCycle(cycleId);
         }
 
@@ -491,6 +609,7 @@ namespace TianZhang.Entity
         private FoundationPurpleMansionOperationResult TryCommitCurrentCycle(string cycleId)
         {
             if (string.IsNullOrWhiteSpace(cycleId) || cultivationActionState == null ||
+                cultivationActionState.status != CultivationActionStatus.Active ||
                 cultivationActionState.status == CultivationActionStatus.Completed ||
                 cultivationActionState.status == CultivationActionStatus.Failed ||
                 cultivationActionState.status == CultivationActionStatus.Terminated ||
@@ -504,6 +623,38 @@ namespace TianZhang.Entity
             cultivationActionState.status = CultivationActionStatus.Active;
             LastClosedRetreatStopReason = null;
             return Succeeded();
+        }
+
+        private bool HasBlockingCultivationAction()
+        {
+            return cultivationActionState != null &&
+                (cultivationActionState.status == CultivationActionStatus.Ready ||
+                 cultivationActionState.status == CultivationActionStatus.Active ||
+                 cultivationActionState.status == CultivationActionStatus.Paused);
+        }
+
+        private bool HasActionTarget(CultivationActionKind actionKind, string targetRef)
+        {
+            switch (actionKind)
+            {
+                case CultivationActionKind.FoundationTrial:
+                case CultivationActionKind.FoundationNurture:
+                    return targetRef == foundationState.foundationInstanceId;
+                case CultivationActionKind.MansionEmbryoNurture:
+                case CultivationActionKind.MansionOpeningTrial:
+                    return mansionStates.Any(mansion =>
+                        mansion.state == PurpleMansionBuildState.Embryo &&
+                        mansion.embryoId == targetRef);
+                case CultivationActionKind.JindanProof:
+                    return targetRef == foundationState.foundationInstanceId &&
+                        foundationState.phase == FoundationPhase.Phase4 &&
+                        mansionStates.Any(mansion =>
+                            mansion.state == PurpleMansionBuildState.Complete) &&
+                        !mansionStates.Any(mansion =>
+                            mansion.state == PurpleMansionBuildState.Embryo);
+                default:
+                    return false;
+            }
         }
 
         private PurpleMansionStateRecord GetMansion(PurpleMansionKind mansionKind)
@@ -582,12 +733,27 @@ namespace TianZhang.Entity
             }
 
             if (source.cultivationActionState != null &&
-                (source.cultivationActionState.committedCycleIds == null ||
+                (!Enum.IsDefined(
+                    typeof(CultivationActionKind),
+                    source.cultivationActionState.actionKind) ||
+                 !Enum.IsDefined(
+                    typeof(CultivationActionStatus),
+                    source.cultivationActionState.status) ||
+                 string.IsNullOrWhiteSpace(source.cultivationActionState.actionStateId) ||
+                 string.IsNullOrWhiteSpace(source.cultivationActionState.targetRef) ||
+                 string.IsNullOrWhiteSpace(source.cultivationActionState.fixedCycleDefinitionId) ||
+                 string.IsNullOrWhiteSpace(source.cultivationActionState.lastStableBoundaryId) ||
+                 string.IsNullOrWhiteSpace(source.cultivationActionState.progressChannelId) ||
+                 source.cultivationActionState.committedCycleIds == null ||
                  source.cultivationActionState.numericProfileRefs == null ||
                  source.cultivationActionState.numericProfileRefs.Length == 0 ||
                  source.cultivationActionState.committedCycleIds.Any(string.IsNullOrWhiteSpace) ||
                  source.cultivationActionState.committedCycleIds.Distinct().Count() !=
-                    source.cultivationActionState.committedCycleIds.Length))
+                    source.cultivationActionState.committedCycleIds.Length ||
+                 source.cultivationActionState.numericProfileRefs.Any(string.IsNullOrWhiteSpace) ||
+                 source.cultivationActionState.numericProfileRefs.Distinct().Count() !=
+                    source.cultivationActionState.numericProfileRefs.Length ||
+                 !HasActionTarget(source, source.cultivationActionState)))
             {
                 failureReason = InvalidAction;
                 return false;
@@ -649,6 +815,32 @@ namespace TianZhang.Entity
             }
 
             return true;
+        }
+
+        private static bool HasActionTarget(
+            FoundationPurpleMansionSaveData source,
+            CultivationActionStateRecord action)
+        {
+            switch (action.actionKind)
+            {
+                case CultivationActionKind.FoundationTrial:
+                case CultivationActionKind.FoundationNurture:
+                    return action.targetRef == source.foundationState.foundationInstanceId;
+                case CultivationActionKind.MansionEmbryoNurture:
+                case CultivationActionKind.MansionOpeningTrial:
+                    return source.mansionStates.Any(mansion =>
+                        mansion.state == PurpleMansionBuildState.Embryo &&
+                        mansion.embryoId == action.targetRef);
+                case CultivationActionKind.JindanProof:
+                    return action.targetRef == source.foundationState.foundationInstanceId &&
+                        source.foundationState.phase == FoundationPhase.Phase4 &&
+                        source.mansionStates.Any(mansion =>
+                            mansion.state == PurpleMansionBuildState.Complete) &&
+                        !source.mansionStates.Any(mansion =>
+                            mansion.state == PurpleMansionBuildState.Embryo);
+                default:
+                    return false;
+            }
         }
 
         private static FoundationPurpleMansionSaveData CreateSaveData(

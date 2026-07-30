@@ -76,8 +76,18 @@ namespace TianZhang.Game
         public string NpcId { get; }
         public string WorldNodeId { get; }
         public StateStepSnapshot Steps { get; }
+        public FoundationPurpleMansionSaveData FoundationPurpleMansionState { get; }
 
         public NpcStateSnapshot(string npcId, string worldNodeId, StateStepSnapshot steps)
+            : this(npcId, worldNodeId, steps, null)
+        {
+        }
+
+        public NpcStateSnapshot(
+            string npcId,
+            string worldNodeId,
+            StateStepSnapshot steps,
+            FoundationPurpleMansionSaveData foundationPurpleMansionState)
         {
             if (string.IsNullOrWhiteSpace(npcId))
                 throw new ArgumentException("NPC ID must not be empty.", nameof(npcId));
@@ -87,6 +97,24 @@ namespace TianZhang.Game
             NpcId = npcId;
             WorldNodeId = worldNodeId;
             Steps = steps ?? throw new ArgumentNullException(nameof(steps));
+            FoundationPurpleMansionState = RestoreFoundationPurpleMansionState(
+                foundationPurpleMansionState);
+        }
+
+        private static FoundationPurpleMansionSaveData RestoreFoundationPurpleMansionState(
+            FoundationPurpleMansionSaveData source)
+        {
+            if (source == null)
+                return null;
+            if (!FoundationPurpleMansionRuntimeState.TryRestore(
+                    source,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out string failureReason))
+            {
+                throw new ArgumentException(failureReason, nameof(source));
+            }
+
+            return runtimeState.CaptureSaveData();
         }
     }
 
@@ -234,6 +262,8 @@ namespace TianZhang.Game
         public string npcId;
         public string worldNodeId;
         public StateStepSaveData steps;
+        public bool hasFoundationPurpleMansionState;
+        public FoundationPurpleMansionSaveData foundationPurpleMansionState;
     }
 
     [Serializable]
@@ -311,7 +341,8 @@ namespace TianZhang.Game
     {
         public const int LegacySchemaVersion = 0;
         public const int StateCollectionsSchemaVersion = 1;
-        public const int CurrentSchemaVersion = 2;
+        public const int FoundationPurpleMansionSchemaVersion = 2;
+        public const int CurrentSchemaVersion = 3;
 
         public static GameSessionSaveData Capture(GameSession session)
         {
@@ -355,6 +386,7 @@ namespace TianZhang.Game
                 throw new ArgumentNullException(nameof(data));
             if (data.schemaVersion != LegacySchemaVersion &&
                 data.schemaVersion != StateCollectionsSchemaVersion &&
+                data.schemaVersion != FoundationPurpleMansionSchemaVersion &&
                 data.schemaVersion != CurrentSchemaVersion)
             {
                 throw new NotSupportedException(
@@ -388,13 +420,18 @@ namespace TianZhang.Game
             var npcs = new List<NpcStateSnapshot>();
             FoundationPurpleMansionSaveData playerFoundationPurpleMansionState = null;
             if (data.schemaVersion == StateCollectionsSchemaVersion ||
+                data.schemaVersion == FoundationPurpleMansionSchemaVersion ||
                 data.schemaVersion == CurrentSchemaVersion)
             {
                 RestoreQuests(data.quests, quests);
                 RestoreInventory(data.inventory, inventory);
-                RestoreNpcs(data.npcs, npcs);
+                RestoreNpcs(
+                    data.npcs,
+                    npcs,
+                    data.schemaVersion == CurrentSchemaVersion);
             }
-            if (data.schemaVersion == CurrentSchemaVersion)
+            if (data.schemaVersion == FoundationPurpleMansionSchemaVersion ||
+                data.schemaVersion == CurrentSchemaVersion)
             {
                 playerFoundationPurpleMansionState = RestoreFoundationPurpleMansionState(
                     data.playerFoundationPurpleMansionState);
@@ -438,7 +475,7 @@ namespace TianZhang.Game
             return runtimeState.CaptureSaveData();
         }
 
-        private static bool IsAbsentFoundationPurpleMansionState(
+        internal static bool IsAbsentFoundationPurpleMansionState(
             FoundationPurpleMansionSaveData source)
         {
             return string.IsNullOrEmpty(source.schemaId) && source.schemaVersion == 0 &&
@@ -509,7 +546,11 @@ namespace TianZhang.Game
             {
                 npcId = snapshot.NpcId,
                 worldNodeId = snapshot.WorldNodeId,
-                steps = CaptureSteps(snapshot.Steps)
+                steps = CaptureSteps(snapshot.Steps),
+                hasFoundationPurpleMansionState =
+                    snapshot.FoundationPurpleMansionState != null,
+                foundationPurpleMansionState = CaptureFoundationPurpleMansionState(
+                    snapshot.FoundationPurpleMansionState),
             };
         }
 
@@ -575,17 +616,32 @@ namespace TianZhang.Game
 
         private static void RestoreNpcs(
             IReadOnlyList<NpcStateSaveData> source,
-            ICollection<NpcStateSnapshot> destination)
+            ICollection<NpcStateSnapshot> destination,
+            bool restoreFoundationPurpleMansionState)
         {
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (NpcStateSaveData item in source ?? Array.Empty<NpcStateSaveData>())
             {
                 if (item == null)
                     throw new ArgumentException("NPC state must not be null.", nameof(source));
+                if (restoreFoundationPurpleMansionState &&
+                    item.hasFoundationPurpleMansionState !=
+                    (item.foundationPurpleMansionState != null &&
+                     !IsAbsentFoundationPurpleMansionState(
+                         item.foundationPurpleMansionState)))
+                {
+                    throw new ArgumentException(
+                        "NPC cultivation-state presence flag does not match its payload.",
+                        nameof(source));
+                }
                 var snapshot = new NpcStateSnapshot(
                     item.npcId,
                     item.worldNodeId,
-                    RestoreSteps(item.steps));
+                    RestoreSteps(item.steps),
+                    restoreFoundationPurpleMansionState &&
+                    item.hasFoundationPurpleMansionState
+                        ? item.foundationPurpleMansionState
+                        : null);
                 if (!ids.Add(snapshot.NpcId))
                     throw new ArgumentException("Duplicate NPC ID.", nameof(source));
                 destination.Add(snapshot);

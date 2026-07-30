@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：用户选择方案一，授权在现有 FoundationPurpleMansionRuntimeState 中补齐五类行动的共同生命周期，并通过现有 NpcStateStore 与 GameSession 存档所有者版本化持久化 NPC 成长状态；不得建立平行成长、NPC 状态或世界时间服务。实施路径、迁移边界与直接测试已明确，转为 ready。",
+  "stateReason": "2026-07-30：在现有 FoundationPurpleMansionRuntimeState、NpcStateStore 与 GameSession 中完成五类 NPC 修炼行动生命周期、事件重算和 schema 3 持久化；Unity EditMode 229/229 通过，项目编译通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs",
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs.meta",
@@ -85,4 +85,10 @@
 
 ## 当前状态
 
-- 方案一已获用户授权，当前为 `ready`；实施必须复用既有成长、NPC 会话、世界时间和存档所有者，不得以平行状态或默认行动绕过迁移与原子提交。
+- 已完成并归档；保持现有成长、NPC 会话、世界时间和存档所有者，未建立平行状态或默认行动。
+
+## 完成记录
+
+- 已在同一 `FoundationPurpleMansionRuntimeState` 中完成五类行动的开始、推进、提交、暂停与终止边界；重复稳定周期被拒绝。
+- 已将 NPC 成长快照嵌入现有 `NpcStateStore` 和 `GameSession` schema 3；schema 0／1／2 迁移不产生进行中行动，当前版恢复先校验再原子替换。
+- 验证：Unity EditMode 229/229 通过；`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 error；2 条既有 obsolete 警告）。

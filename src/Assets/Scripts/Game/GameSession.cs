@@ -1,4 +1,5 @@
 using UnityEngine;
+using TianZhang.Cultivation;
 using TianZhang.Entity;
 
 namespace TianZhang.Game
@@ -97,6 +98,50 @@ namespace TianZhang.Game
             {
                 WorldDay++;
             }
+        }
+
+        /// <summary>
+        /// 由世界、资源、境界目标、寿元或环境事件调用的单个 NPC 重算入口。
+        /// 它从不由 <see cref="AdvanceWorldDay"/> 扫描全部 NPC，也不接收玩家排程输入。
+        /// </summary>
+        public NpcCultivationActionRecalculationResult RecalculateNpcCultivation(
+            string npcId,
+            NpcCultivationActionCoordinator coordinator,
+            NpcCultivationActionRecalculationRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(npcId))
+                throw new System.ArgumentException("NPC ID must not be empty.", nameof(npcId));
+            if (coordinator == null)
+                throw new System.ArgumentNullException(nameof(coordinator));
+            if (request == null)
+                throw new System.ArgumentNullException(nameof(request));
+            if (!NpcStates.TryGet(npcId, out NpcStateSnapshot npc))
+                return NpcCultivationActionRecalculationResult.Rejected(
+                    NpcCultivationActionCoordinator.NpcNotFound);
+            string failureReason = null;
+            if (npc.FoundationPurpleMansionState == null ||
+                !FoundationPurpleMansionRuntimeState.TryRestore(
+                    npc.FoundationPurpleMansionState,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out failureReason))
+            {
+                return NpcCultivationActionRecalculationResult.Rejected(
+                    failureReason ?? NpcCultivationActionCoordinator.MissingCultivationState);
+            }
+
+            NpcCultivationActionRecalculationResult result = coordinator.Recalculate(
+                runtimeState,
+                request);
+            if (result.Succeeded)
+            {
+                NpcStates.Set(new NpcStateSnapshot(
+                    npc.NpcId,
+                    npc.WorldNodeId,
+                    npc.Steps,
+                    runtimeState.CaptureSaveData()));
+            }
+
+            return result;
         }
 
         public void SetWorldNode(string nodeId)
