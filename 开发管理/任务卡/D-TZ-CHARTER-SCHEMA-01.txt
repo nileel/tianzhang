@@ -1,0 +1,84 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-TZ-CHARTER-SCHEMA-01",
+  "title": "册界体系数据契约与失败关闭",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：C-TZ-CHARTER-ENTRIES-01B6 已复审完成并明确解除内容前置，M8 最小纵向切片已有条件授权；本卡只建立独立静态定义、动态状态数据边界和整表失败关闭，不生产样例或运行时玩法。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md",
+    "src/Assets/DataConfig/CharterRuleDefinitions.csv",
+    "src/Assets/DataConfig/CharterRuleDefinitions.csv.meta",
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/Scripts/Content/CharterRuleDefinitionData.cs",
+    "src/Assets/Scripts/Content/CharterRuleDefinitionData.cs.meta",
+    "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
+    "src/Assets/Scripts/World/CharterRuntimeStateData.cs.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
+    "src/Assets/Tests/EditMode/CharterRuleDataTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "tools/tests/check-data-chain-tests.ps1",
+    "开发管理/册界体系数据契约验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-TZ-CHARTER-SCHEMA-01.txt",
+    "开发管理/任务归档/D-TZ-CHARTER-SCHEMA-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-TZ-CHARTER-SCHEMA-01 · 册界体系数据契约与失败关闭
+
+## 来源与当前边界
+
+- M3、M4 与 `C-TZ-CHARTER-ENTRIES-01B6` 已完成；2026-07-30 的负责人决定只条件授权 `SCHEMA → SAMPLE → MODEL → SAVE → SLICE` 最小纵向切片，其余九条 M7 内容继续冻结。
+- `docs/基础设定/册界天章与地区规则交互规则.txt` 的十八字段、调用事务、节点／范围、正负原子提交、金丹挑战和元婴受锚是唯一规则语义；本卡不重写这些规则。
+- Unity 当前只有战场 `EnvironmentProfileData`，没有地区长期规则定义或状态所有者；`RuleConflictInstance` 与 `CrossTierChallengeGrant` 当前也只有 BattleSim 所有者。本卡只建立稳定数据引用和失败关闭，不移植运行时结算。
+
+## 必查范围
+
+- `docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md#M4：建立册界规则、范围和高阶冲突边界`、`#M8：数据与运行时纵向切片`。
+- `docs/基础设定/册界天章与地区规则交互规则.txt` 的“完整规则条目”“范围、节点与传播”“调用事务与失败关闭”“金丹冲突与元婴受锚”“承载、维护与世界代价”；`docs/道具/剧情遗物/册界天章.txt#遗物字段`、`#调用原则`。
+- `docs/道具/剧情遗物/册界天章条目/水府地纪.txt` 的十八字段、现实供给、环境档案引用和禁止项；只用于证明契约可表达，不在本卡迁入生产行。
+- `src/Assets/DataConfig/JindanStaticStates.csv`、`EnvironmentProfiles.csv`、`README.txt`；`src/Assets/Scripts/Entity/JindanStaticStateData.cs`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs::EnvironmentProfileData`。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportJindanStaticStates|ImportEnvironmentProfiles` 及整表预校验／原子 asset 写入辅助方法；对应直接 EditMode 测试与 `tools/check-data-chain.ps1`。
+
+## 实施范围
+
+- 新建规格文件，固定唯一生产表 `CharterRuleDefinitions.csv`、`CharterRuleDefinitionData` 投影和 `CharterRuntimeStateData` 动态状态边界。生产表本卡只保留精确表头；水府地纪、门禁、设施、节点和非法样例由 `D-TZ-CHARTER-SAMPLE-01` 负责。
+- 静态定义完整承载十八字段，并以稳定 ID 引用遗物权限要求、组织授权、节点类型／锚点、传播边界、现实供给、正负提交、世界变量、冲突／跨阶资格、失败策略、事件输出和战场 `environmentProfile` 输出；未知引用必须在写 asset 前失败。
+- 动态状态与静态定义分离，至少表达已登记条目、天章／界印状态、节点状态、组织授权版本、当前覆盖集合、条目／节点占用、现实供给、正负提交结果及当前地区规则。它只提供可验证的数据对象，不接入 `GameSession`、存档版本或运行时调用。
+- `DataConfigImporter` 先解析和校验完整定义表，再原子创建或更新 asset；非空生产行必须取得显式外部引用目录，不能由显示文本、路径、默认枚举或测试 fixture 补齐。扩展数据链检查与直接测试，锁定表头、定义／状态隔离和稳定拒绝原因。
+
+## 禁止项
+
+- 不修改或扩充 `EnvironmentProfiles.csv`、`EnvironmentProfileData`，不把地区长期状态、节点、授权或占用写入战场环境档案。
+- 不生产水府地纪或其他条目行、地区分布、门禁／设施／节点样例、CSV 数值、资源倍率、天气频率、经济产出或 Unity asset 内容。
+- 不实现三项遗产调用、节点连通、世界状态提交、金丹冲突、元婴受锚、存档、场景、UI 或 BattleSim；不建立第二套冲突或环境引擎。
+
+## 验证
+
+- 直接 EditMode 覆盖：合法空生产表；十八字段完整投影；定义与动态状态分离；未知条目／遗物／授权／节点／边界／变量／冲突／环境引用；覆盖越界；正负提交缺一；定义 ID 与状态 ID 混用；整表失败不写 asset。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/DataConfig,src/Assets/Scripts,src/Assets/Tests,tools`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 静态条目和动态状态具有唯一、分层的数据契约；任一非法定义或引用在 asset 写入前整表失败，没有半状态、默认补值或 `EnvironmentProfileData` 反向所有权。
+- `D-TZ-CHARTER-SAMPLE-01` 可只依据本契约迁入一个门禁、一个设施、一个节点和水府地纪的有效／非法样例，无需再决定 schema。
+
+## 停止条件
+
+- 若契约必须先实现运行时规则、完整九域天气、动态经济、任意变量编辑器、第二套环境／冲突引擎或猜测倍率／概率／价格，停止并拆回对应后续任务。
+- 若现行事实无法区分静态定义与动态状态，或必须把长期状态塞进 `EnvironmentProfileData` 才能继续，转为 `pending_decision`，不得添加兼容层。

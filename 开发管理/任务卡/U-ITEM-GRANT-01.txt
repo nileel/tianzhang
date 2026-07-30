@@ -1,0 +1,76 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ITEM-GRANT-01",
+  "title": "结构化物品原子授予",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：U-CONTENT-CATALOG-01 已归档并提供正式 ItemData、ContentCatalogData.TryGetItem 与已批准 maxStack；现有 GameSession/InventoryStateStore 是唯一库存状态所有者，本卡可建立掉落与悬赏共用的原子授予入口。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Game/InventoryGrantService.cs",
+    "src/Assets/Scripts/Game/InventoryGrantService.cs.meta",
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
+    "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs",
+    "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs.meta",
+    "开发管理/关中物品原子授予验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ITEM-GRANT-01.txt",
+    "开发管理/任务归档/U-ITEM-GRANT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ITEM-GRANT-01 · 结构化物品原子授予
+
+## 来源与当前边界
+
+- `U-CONTENT-CATALOG-01` 已完成两项正式 `ItemData`、生产范围、`maxStack=99`、跨表校验和 `ContentCatalogData.TryGetItem`；本卡只消费这些输入，不修改 CSV、asset、导入器或目录。
+- `GameSession` 已是跨场景会话所有者，`InventoryStateStore` 以稳定 `itemId` 保存数量并由现有存档快照读写；当前 `Set`／`ReplaceAll` 不是经过目录和堆叠校验的物品授予入口。
+- 普通掉落与悬赏奖励必须复用同一入口。本卡只建立该入口和直接测试，不实现敌人掉落、悬赏状态、领奖、面板或经济系统。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-30-guanzhong-item-data-contract.md#目的与单向边界`、`#ItemData 最小字段`、`#引用、授予与失败关闭`、`#fixture 规格`、`#后续顺序与非目标`。
+- `docs/superpowers/specs/2026-07-30-guanzhong-reward-parameter-decision.md#物品堆叠上限`、`#后续原子提交要求`、`#下游消费边界`。
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#ContentCatalogData`、`#背包原子提交`、`#运行阶段`、`#验证矩阵`、`#停止条件`。
+- `src/Assets/Scripts/Content/ItemData.cs::ItemData`、`ContentCatalogData.cs::TryGetItem`；`src/Assets/Scripts/Game/GameSession.cs::InventoryStates|CaptureSaveData|RestoreSaveData|ResetStateSnapshots`。
+- `src/Assets/Scripts/Game/SessionStateSnapshots.cs::StateStepSnapshot|InventoryStateSnapshot|InventoryStateStore|GameSessionSnapshot` 与 `src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`。
+
+## 实施范围
+
+- 在现有 Gameplay／Game 所有者旁新增聚焦的 `InventoryGrantService`，定义稳定的结构化授予请求与结果；`GameSession` 只提供委托给该服务的薄入口，不复制目录、校验或候选快照逻辑。
+- 对整个授予批次先解析正式 `ItemData`，验证生产范围、正整数数量、已批准正 `maxStack`、重复 ID 合并、当前数量和 checked 累加结果；全部合法后构造完整候选库存并只调用一次 `InventoryStateStore.ReplaceAll`。
+- 任一未知／非生产物品、空请求、非法数量、重复合并溢出、现有非法库存或累计超过 `maxStack` 都返回稳定原因，库存逐项保持引用前数量，不发生部分授予。
+- 保持七个状态步骤独立：数量提交成功只建立 `Applied=true`、`Completed=true` 的新库存快照；`Shown`／`Clicked`／`Opened`／`Selected` 不由领域服务伪造，`Persisted` 在保存所有者实际持久化前保持 false。失败不改变既有步骤。
+
+## 禁止项
+
+- 不修改 `ItemData`、`ContentCatalogData`、CSV、Language、asset、导入器、存档 schema、掉落参数或现有生产物品。
+- 不实现敌人掉落随机、战斗结算、悬赏接取／计数／领奖、背包 UI、价格、商店、装备、使用、炼器、合成或经济循环。
+- 不新增第二个库存容器、全局单例、默认物品、名称／路径映射、超限截断、拆批提交或失败重试层。
+
+## 验证
+
+- 直接 EditMode 覆盖：空批次、单项、多项、重复 ID 合并、已有堆叠累加、恰达上限、未知／非生产 ID、零／负数量、单项和合并溢出、超堆叠、多项中间失败、成功状态步骤及失败前后库存完全相同。
+- 现有 `SessionStateSnapshotTests` 保持通过，证明新入口复用同一库存与保存所有者。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 掉落和悬赏后续调用者可提交同一结构化批次并得到全成或全败结果；唯一库存状态仍由 `GameSession.InventoryStates` 保存，存档快照链不变。
+- 完成本卡解除 `U-ENEMY-01` 的原子授予前置并将其按状态事件转入队列，同时解除 `U-BOUNTY-01A` 的物品授予前置；`U-ENEMY-01` 未完成前不得把悬赏或正式端到端任务转为 ready。
+
+## 停止条件
+
+- 若实现必须新建平行背包、修改存档 schema、猜测物品参数、直接解释显示名／路径，或抢先实现掉落／悬赏／UI，停止并回到对应任务。
+- 若现有库存状态无法原子替换而需要跨多个所有者补偿或重试，停止并先报告根因，不叠加兼容层。

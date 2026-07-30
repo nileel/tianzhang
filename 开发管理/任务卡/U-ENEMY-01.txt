@@ -1,0 +1,84 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ENEMY-01",
+  "title": "正式敌人遭遇与结构化掉落",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-ITEM-GRANT-01"
+  ],
+  "stateReason": "2026-07-31：U-CONTENT-CATALOG-01 已提供 EnemyData、ai_melee、战斗模板和结构化掉落，但当前仓库尚无掉落与悬赏共用的原子物品授予入口；必须先完成 U-ITEM-GRANT-01，避免正式掉落直接写库存或保留文字 fallback。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "开发管理/关中正式敌人遭遇验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ENEMY-01.txt",
+    "开发管理/任务归档/U-ENEMY-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ENEMY-01 · 正式敌人遭遇与结构化掉落
+
+## 来源与当前边界
+
+- `U-CONTENT-CATALOG-01` 已完成 `enemy_shijiahou` 的 `EnemyData`、`ai_melee`、`combatTemplate`、两项结构化掉落和只读目录；本卡只迁移正式消费者，不修改内容数据、参数或导入器。
+- 正式链当前是 `AdventureSceneController` 直绑 `CharacterData[]`，`ExplorationController` 只保留模板并允许 `CreateFallbackEnemy`，`TacticalCombatController.ResolveBattleEnd` 又按 `realmMultiplier` 生成文字掉落；根因是正式遭遇没有保留 `EnemyData` 身份到结算。
+- `AdventureSceneController` 继续拥有正式遭遇结算与返回；`TacticalCombatController` 继续拥有单场成员／胜负；`GameSession.InventoryStates` 与 `InventoryGrantService` 是物品写入边界。本卡不得建立平行所有者。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-30-guanzhong-enemy-data-contract.md#EnemyData 数据模型`、`#AI 档案与正式遭遇边界`、`#结构化掉落契约`、`#失败关闭与 fixture 规格`、`#后续实现边界`。
+- `docs/superpowers/specs/2026-07-30-guanzhong-reward-parameter-decision.md#石甲兽普通掉落`、`#后续原子提交要求`；`docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#怪物与战斗`、`#背包原子提交`、`#运行阶段`、`#验证矩阵`。
+- `src/Assets/Scripts/Content/EnemyData.cs::EnemyData|EnemyDropEntry`、`ContentCatalogData.cs::TryGetEnemy`；`src/Assets/Scripts/Adventure/AdventureSceneController.cs::ConfigureCurrentAdventureEncounter|ResolveEncounterAndReturn|ReportEncounterConfigurationFailure`。
+- `src/Assets/Scripts/Map/ExplorationController.cs::InitExploration|SpawnEnemies|CreateFallbackEnemy|StartBattle|EndBattle`；`src/Assets/Scripts/Combat/TacticalCombatController.cs::TacticalCombatSession|ResolveBattleEnd|CreateDropItems`、`EnemyAI.cs::IAIController|SimpleAI`。
+- `src/Assets/Scripts/Editor/SceneBuilder.cs::BuildAdventureScene|ValidateSceneArchitectureShellsForBatchMode`、`src/Assets/Scenes/AdventureScene.unity` 与 `AdventureSceneControllerTests`／`SceneArchitectureEditorTests`。
+
+## 实施范围
+
+- 将正式 `guanzhong_wild` 的序列化输入改为唯一 `ContentCatalogData` 与环境档案引用；按稳定 ID 解析 `enemy_shijiahou`，完整验证生产范围、`ai_melee`、战斗模板和掉落后，才把 `EnemyData` 交给探索遭遇。
+- `ExplorationController` 的正式分支从 `EnemyData.combatTemplate` 创建角色，并在 `EnemyUnit` 中持续保留同一 `EnemyData`；正式分支缺失数据时在生成或战斗状态变化前拒绝，不调用 `CreateFallbackEnemy`。旧不可达原型 fallback 只保留为非正式边界。
+- 将 `ai_melee` 显式解析到现有确定性“能力 → 接近 → 基础攻击 → 防御”行为；未知或不匹配 AI 在开战前稳定失败，不默认为 `SimpleAI`。
+- 以可注入随机源逐项结算 `EnemyDropEntry`，严格使用 `[0,100) < dropChancePercent`；建立包含 `enemyId`、`adventureId`、`dropGrants[]` 和 `outcome` 的 `FormalEncounterResult`。胜利结果由 Adventure 所有者只消费一次，并通过既有物品原子授予入口提交；任一授予失败不产生部分库存，仍保留返回来源出口和可观察失败原因。
+- 删除正式链对 `realmMultiplier` 文字掉落和 `CreateDropItems` 的读取；战斗层只报告稳定胜负／败方成员，正式怪物身份与掉落由持有 `EnemyData` 的上层结算。
+
+## 禁止项
+
+- 不修改石甲兽战斗数值、掉落概率／数量、物品堆叠、攻击档案、空间查询、CTB、伤害、范围结算或玩家能力。
+- 不新增怪物、AI 类型、团队策略、随机遭遇、表现资源、第二套战斗／场景／库存所有者、默认敌人、默认 AI、默认掉落或名称映射。
+- 不实现悬赏接取、击败计数、领奖、存档迁移或 UI；结构化击败结果只为其提供后续稳定输入。
+
+## 验证
+
+- 直接 EditMode 覆盖：正式目录按 ID 生成唯一石甲兽；角色与 `EnemyData` 身份保持配对；`ai_melee` 确定性行动；100%／50% 独立掉落与注入随机边界；稳定结构化结果；库存全成／全败；胜负只消费一次；返回来源不变。
+- 缺目录、未知／非生产敌人、AI、模板、掉落、物品或原子授予失败均返回稳定原因；正式场景不生成 fallback、不输出文字掉落，且失败前无战斗／库存半状态。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode` 对正式 Adventure 序列化绑定通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Scenes,src/Assets/Tests`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 正式 Adventure 只消费同一 `EnemyData` 并沿战斗全程保留稳定身份；`ai_melee`、击败结果和掉落全部结构化，普通掉落通过唯一库存入口原子提交，缺配置不回退。
+- 当 `U-ITEM-GRANT-01` 同时完成后，解除 `U-BOUNTY-01A` 的两个前置并按状态事件建立后续任务卡；端到端与表现任务仍保持原依赖。
+
+## 停止条件
+
+- 若正式链无法在不复制战斗／空间状态的前提下保留 `EnemyData`，或必须修改生产数值、创建第二战斗所有者、重新启用旧场景或依赖 fallback 才能继续，停止并报告根因。
+- 若物品原子授予入口在本卡执行时仍不可用，停止并将本卡转为 `blocked`；不得直接写 `InventoryStateStore`、保留文字掉落或添加临时兼容路径。

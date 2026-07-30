@@ -12,8 +12,8 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-ITEM-GRANT-01 | P1 | Codex | 阻塞（U-CONTENT-CATALOG-01） | — | 建立掉落与悬赏奖励共用的结构化物品原子授予入口。 | — |
-| U-ENEMY-01 | P1 | Codex | 阻塞（U-CONTENT-CATALOG-01） | — | 让正式遭遇消费 `EnemyData`、`ai_melee`、稳定击败结果和结构化掉落，禁止 fallback。 | — |
+| U-ITEM-GRANT-01 | P1 | codex | 已排队 | — | 结构化物品原子授予 | `开发管理/任务卡/U-ITEM-GRANT-01.txt` |
+| U-ENEMY-01 | P1 | codex | 阻塞 | U-ITEM-GRANT-01 | 正式敌人遭遇与结构化掉落 | `开发管理/任务卡/U-ENEMY-01.txt` |
 | U-BOUNTY-01A | P1 | Codex | 阻塞（U-ITEM-GRANT-01、U-ENEMY-01） | — | 实现一次性悬赏状态机、地点／敌人校验、击败计数和防重复结算。 | — |
 | U-BOUNTY-01B | P1 | Codex | 阻塞（U-BOUNTY-01A） | — | 增加独立 `BountyStateStore`、存档 schema 3 与版本 0／1／2 迁移。 | — |
 | U-BOUNTY-01C | P1 | Codex | 阻塞（U-BOUNTY-01B） | — | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | — |
