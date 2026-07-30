@@ -22,7 +22,7 @@
 | D-FPD-MIGRATE-01D | P1 | Codex | 阻塞（C-FPD-NAME-01、N-FPD-DANXIANG-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
 | D-FPD-MIGRATE-01E | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 待建卡（前置已完成） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
-| D-COMBAT-02 | P3 | codex | 已排队 | — | 跨端攻击档案 fixture 与差异检查 | `开发管理/任务卡/D-COMBAT-02.txt` |
+| D-COMBAT-02 | P3 | codex | 待决定 | — | 跨端攻击档案 fixture 与差异检查 | `开发管理/任务卡/D-COMBAT-02.txt` |
 
 ## G3 任务执行边界
 

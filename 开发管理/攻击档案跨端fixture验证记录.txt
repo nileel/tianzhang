@@ -1,0 +1,31 @@
+# D-COMBAT-02 · 跨端攻击档案 fixture 验证记录
+
+日期：2026-07-31
+状态：待负责人决定；未形成生产或非生产数据提交。
+
+## 已确认的阻断事实
+
+- 契约要求 `circle` 的 `areaFacing` 为空，并禁止 BattleSim 为满足旧构造器而填入任意朝向。
+- `simulations/BattleSim/GameData.cs::AreaShapeConfig` 的第五个位置参数是不可空 `HexDirection Facing`；现有枚举没有“无朝向”成员。
+- 以同一 34 列行做本地非持久化投影探针时，圆形行只能得到 `east`，与 CSV 的空值不同。探针已撤回，没有产生 fixture、asset、生产 CSV、运行时消费者或 BattleSim 静态配置改动。
+
+## 原定覆盖矩阵与当前结果
+
+| 项目 | 原定 fixture 覆盖 | 当前结果 |
+|------|------------------|----------|
+| `basic` 单目标 | 稳定 ID、物理倍率、资源/冷却、距离 | 未实施：统一 fixture 在圆形字段前即被阻断 |
+| `art` 圆形范围 | 中心、半径、阻断、阵营、状态及空朝向 | 阻断：BattleSim 不能无默认表达空朝向 |
+| `art` 直线范围 | 长度、朝向、阻断、目标资格 | 未实施：不得只提交部分覆盖 |
+| `divine` 扇形范围 | 长度、半径、朝向、目标资格 | 未实施：不得只提交部分覆盖 |
+| 负例与逐字段差异 | Unity/BattleSim 同 ID 失败关闭 | 未实施：缺少合法正向 BattleSim 投影基线 |
+
+## 已执行验证与未执行项
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
+- BattleSim 非持久化投影探针：失败原因稳定为圆形 CSV 空 `areaFacing` 被旧载体强制为 `east`；这是预期的停止证据，不是可接受的回归通过。
+- Unity EditMode、数据链、完整跨端差异检查未运行：没有可提交的合法 fixture 或实现切片，运行它们不会验证被阻断的字段承载。
+
+## 未授权边界与所需决定
+
+- 未修改 `GameData.AreaShapeConfig`、`Combat`、生产 `AttackProfiles.csv`、AttackProfileData asset、战斗伤害、AI、范围结算或冷却单位换算。
+- 需要负责人选择：A）授权独立 BattleSim 载体迁移以表达圆形无朝向（推荐）；B）修改契约并指定圆形稳定朝向；C）重新定义 D-COMBAT-02 的覆盖范围。未作决定前不得从旧枚举值推导方向。
