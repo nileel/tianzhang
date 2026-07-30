@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-07-30：四项数据契约和 N-GZ-REWARD-01 已解除字段、引用与参数前置，但契约仍明确禁止为物品描述、悬赏标题／描述和关中城功能文本擅填生产 Language 键。等待负责人对 DEC-20260730-CATLANG 的授权；在此之前不创建 CSV、asset、ContentCatalogData 或运行时消费者。",
+  "stateReason": "2026-07-30：负责人对 DEC-20260730-CATLANG 选择 A，授权将既有已审核关中城、两项物品及石甲兽悬赏档案中的最小文本原样投影为生产 Language 键。任务已解除待决定状态，可在既定数据导入与只读目录边界内实施。",
   "expectedPaths": [
     "src/Assets/DataConfig/README.txt",
     "src/Assets/DataConfig/Settlements.csv",
@@ -66,11 +66,11 @@
 - 现有 `DataConfigImporter.ImportEnemies` 仍逐行新建 `CharacterData`，没有四领域整表预验证、双投影原子更新、GUID 保持或 `ContentCatalogData`；本卡只建立数据导入与只读目录，不接入城市、战斗、掉落、背包、悬赏或存档消费者。
 - `2026-07-30` 的四份契约均要求生产 CSV 引用可解析的 Language 键，并明确禁止用显示名、默认文案或未批准文本补齐。当前物品描述、悬赏标题／描述及关中城功能文本没有已批准的生产 Language 键，故本卡先等待 `DEC-20260730-CATALOG-LANGUAGE`。
 
-## 待决定
+## 已决定
 
-- 决策 ID：`DEC-20260730-CATLANG`。
-- 需要确认：是否授权把现有已审核关中城、两项物品和石甲兽悬赏档案中的最小文本原样投影为生产 Language 键；或由负责人提供逐项键和值；或继续冻结该正式导入切片。
-- 未收到并核验决定前，保持 `pending_decision`，不得创建生产 CSV、Unity asset、目录或任何运行时消费者。
+- 决策 ID：`DEC-20260730-CATLANG`；负责人于 2026-07-30 选择 A。
+- 已授权将既有已审核关中城、两项物品和石甲兽悬赏档案中的最小文本原样投影为生产 Language 键。
+- 任务现为 `ready`；实施仍仅限既定正式数据导入与只读目录边界，不得新增或改写未经批准的生产文本、键、参数或消费者。
 
 ## 必查范围
 

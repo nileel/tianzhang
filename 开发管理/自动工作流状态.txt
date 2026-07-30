@@ -11,7 +11,6 @@
 
 ## 当前人工阻塞与恢复所有权
 
-- 2026-07-30（Asia/Hong_Kong）`U-CONTENT-CATALOG-01` 的四份数据契约虽已具备字段、引用、失败关闭和奖励参数，但仍明确禁止为物品描述、悬赏标题／描述及关中城功能文本自行补入生产 Language 键。已登记 `DEC-20260730-CATLANG`；在负责人选择最小授权、提供精确文本或继续冻结前，任务保持 `pending_decision`，不生成 CSV、asset、目录或运行时行为。
 - 2026-07-24 00:37（Asia/Hong_Kong）`DEC-20260724-ENVPROFILE` 的 A 回复已形成有效签名 processed 证据；01:19 的旧控制器仍恢复等待决定的原 session，导致该回复未进入责任方。现已取消 decision 原 session 恢复、即时桥接中继、pending resume 队列和独立决定触发器；后续每小时轮次直接读取 A 证据并用新的责任方 session 继续原 TaskId。
 - 2026-07-23 01:38（Asia/Hong_Kong）负责人明确恢复自动化；已先清除逻辑暂停并确认 `lease`、`recovery`、`pendingResumes` 均为空，再通过自动化管理接口将 `tzg-hourly-controller` 与 `tzg-daily-automation-briefing` 设为 `ACTIVE`。错过的 01:00 日报按同一只读 Git 数据源手动补跑，不改日常时间表。
 - 原责任方 session `019f891d-a12a-7230-944a-0b9e1db14220` 的失联改动已完成恢复处理；当时 runtime 的 `lease`、`recovery` 与 `pendingResumes` 均为空，本地不再有孤立测试文件。
