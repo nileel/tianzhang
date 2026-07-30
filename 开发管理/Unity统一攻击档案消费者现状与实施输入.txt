@@ -44,6 +44,13 @@
 
 `BattleUIManager.cs` 目前只把固定按钮索引转发给 `ICombatCommandHandler`，`TacticalGridModel.cs` 与 `SpatialQueryBoardFactory.cs` 已提供空间快照。除非 `U-COMBAT-01B` 先证明其调用接口需要新输入，这三处不应因统一档案而先行修改。
 
+## U-COMBAT-01B0 已锁定的实施补充
+
+- `TacticalCombatController.currentSession` 是 Unity 唯一战斗会话所有者；它将从 `Player`／`Enemy` 二人字段迁为双方有序成员会话。`ExplorationController.StartBattle` 的现有 1v1 入口也只构造该模型的单成员双方输入，不能保留二人兼容入口或由最近敌人补齐 2v2。
+- `ExplorationController` 是部署生产者：所有成员先取得既有 `CTBUnit.Id` 并写入同一 `HexGrid`，遭遇开始前再由当前格盘和环境档案替换式生成一个 `SpatialQuerySnapshot`。会话只接受成员 ID、位置、格盘占用与 `UnitAnchors` 一致的 setup；快照不增加阵营、存活或候选语义。
+- 阵营和存活资格由会话成员记录提供；单目标必须提交会话内的显式目标单位 ID。范围只从 `AttackProfileData` 读取中心、形状、距离、声明效果阻断、阵营和状态，并以同一 `SpatialQueryBoard` 的 `Area` 路径查询；普通视线、`sourceAffiliation`、显示名、`SpellRange` 和调用方默认值均不能替代声明。
+- `CharacterData` 是现有角色装配所有者，`Character.FromData` 是运行时复制点。`U-COMBAT-01B` 将以两个互斥的基础攻击外键承载主战装备或显式无装备引用，并在缺失、冲突、未知 ID 或绑定种类不符时稳定失败；不创建武器内容、默认档案或攻击参数。完整设计见 `docs/superpowers/specs/2026-07-30-unity-2v2-session-and-basic-attack-owner-design.md`。
+
 ## 直接测试与验证入口
 
 - `src/Assets/Tests/EditMode/SpellDamageMultiplierTests.cs`：现有 `SpellData` 两种伤害倍率独立存储的遗留断言。

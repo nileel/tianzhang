@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-01B0"
-  ],
-  "stateReason": "2026-07-30：负责人选择方案 A，先由独立前置 U-COMBAT-01B0 锁定 Unity 2v2 会话所有者、单位部署、目标资格和基础攻击 attackProfileId 绑定所有者；本卡在该前置完成前保持 blocked。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：U-COMBAT-01B0 已完成，已锁定 TacticalCombatController 为唯一会话所有者、ExplorationController 为部署生产者、会话加 AttackProfileData 为目标资格边界，以及 CharacterData/Character 为基础攻击外键装配链；实现无需默认档案、第二套空间查询或生产参数。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/AttackProfileData.cs",
     "src/Assets/Scripts/Combat/AttackProfileData.cs.meta",
@@ -20,6 +18,8 @@
     "src/Assets/Scripts/Combat/CombatResolver.cs",
     "src/Assets/Scripts/Combat/TacticalCombatController.cs",
     "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/CharacterData.cs",
     "src/Assets/Scripts/Map/ExplorationController.cs",
     "src/Assets/Scripts/Game/SectSelectionManager.cs",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
@@ -84,4 +84,4 @@
 
 ## 当前状态
 
-- 已按负责人方案 A 转为 `blocked`，只阻塞于 `U-COMBAT-01B0`；不在当前 ready 队列中。本次状态事件没有生成或修改 Unity 代码、CSV、asset、fixture 或测试。
+- `U-COMBAT-01B0` 已完成并锁定会话、部署、目标资格和基础攻击装配所有者；本卡现为 `ready`。实现仍不得生成生产攻击档案、CSV／asset fixture、武器内容、范围参数或冷却换算。

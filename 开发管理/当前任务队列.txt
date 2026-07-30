@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-COMBAT-01B0 | codex_execute | codex | P3 | unity | design | Unity 2v2 会话与基础攻击绑定所有者设计 | 开发管理/任务卡/U-COMBAT-01B0.txt |
+| U-COMBAT-01B | codex_execute | codex | P3 | unity | implementation | Unity 攻击档案与 2v2 消费接入 | 开发管理/任务卡/U-COMBAT-01B.txt |

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：负责人为 U-COMBAT-01B 选择方案 A，授权先建立独立前置，锁定 Unity 2v2 会话所有者、单位部署、目标资格和基础攻击 attackProfileId 绑定所有者；现有消费者定位、BattleSim 2v2 规则与统一攻击档案契约已提供直接事实。",
+  "stateReason": "2026-07-30：已完成 Unity 2v2 会话、部署、目标资格和基础攻击 attackProfileId 绑定所有者设计。TacticalCombatController 是唯一会话所有者，ExplorationController 生产部署与当前空间快照，CharacterData/Character 负责基础攻击外键；未修改 Unity 运行时、CSV、asset、场景、参数或冷却换算。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-30-unity-2v2-session-and-basic-attack-owner-design.md",
     "开发管理/Unity统一攻击档案消费者现状与实施输入.txt",
@@ -24,6 +24,13 @@
 }
 ---TASK-BODY---
 # U-COMBAT-01B0 · Unity 2v2 会话与基础攻击绑定所有者设计
+
+## 完成记录
+
+- 已新增 `docs/superpowers/specs/2026-07-30-unity-2v2-session-and-basic-attack-owner-design.md`，将唯一会话、部署、目标资格和基础攻击绑定逐项映射到现有 Unity 调用链、修改路径和直接测试。
+- 已锁定 `TacticalCombatController.currentSession` 为唯一会话所有者，`ExplorationController` 为部署与快照生产者，`TacticalCombatSession` 为阵营、存活、稳定输入顺序、行动推进和全灭判断的承载；现有 1v1 入口将作为同一模型的单成员双方输入迁移。
+- 已锁定 `CharacterData → Character` 为基础攻击外键装配链，并规定缺失、歧义、未知档案或绑定种类不符时的稳定失败；没有创建武器内容、无装备档案 ID、攻击参数或回退。
+- 已解除 `U-COMBAT-01B` 的唯一前置，将其转为 `ready` 并在原队列位置替换本卡。
 
 ## 来源与当前边界
 
@@ -57,16 +64,16 @@
 
 ## 验证
 
-- 逐项证明会话、部署、目标资格和基础攻击绑定各自只有一个所有者，并能映射到现有完整逻辑单元和直接测试。
-- 对照统一攻击档案契约与既有 2v2 决定，确认设计没有新增生产参数、平行 schema、默认回退、普通视线范围前置或协同 AI。
+- 已用完整调用单元和直接测试证明会话、部署、目标资格和基础攻击绑定各有一个所有者。
+- 已对照统一攻击档案契约与既有 2v2 决定，确认设计没有生产参数、平行 schema、默认回退、普通视线范围前置或协同 AI。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs`。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 - `git diff --check`。
 
 ## 完成条件
 
-- `U-COMBAT-01B` 获得无需猜测的 Unity 2v2 会话、部署、目标资格和基础攻击绑定所有者，以及精确修改路径和直接测试。
-- 本卡完成归档时，同步将 `U-COMBAT-01B` 的 `blockedBy` 清空、转为 `ready` 并按固定顺序插入当前任务队列。
+- `U-COMBAT-01B` 已获得无需猜测的 Unity 2v2 会话、部署、目标资格和基础攻击绑定所有者，以及精确修改路径和直接测试。
+- 本卡完成归档时，已同步将 `U-COMBAT-01B` 的 `blockedBy` 清空、转为 `ready` 并按固定顺序插入当前任务队列。
 
 ## 停止条件
 

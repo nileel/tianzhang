@@ -33,8 +33,7 @@
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex | 阻塞（U-TZ-CHARTER-MODEL-01） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 阻塞（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 | U-COMBAT-01 | P3 | Codex | 阻塞（U-COMBAT-01B） | — | Unity 统一攻击档案与 2v2 消费父任务；不直接执行。 | — |
-| U-COMBAT-01B0 | P3 | codex | 已排队 | — | Unity 2v2 会话与基础攻击绑定所有者设计 | 开发管理/任务卡/U-COMBAT-01B0.txt |
-| U-COMBAT-01B | P3 | codex | 阻塞 | U-COMBAT-01B0 | Unity 攻击档案与 2v2 消费接入 | 开发管理/任务卡/U-COMBAT-01B.txt |
+| U-COMBAT-01B | P3 | codex | 已排队 | — | Unity 攻击档案与 2v2 消费接入 | 开发管理/任务卡/U-COMBAT-01B.txt |
 
 ## 执行边界
 
@@ -75,8 +74,8 @@
 ### U-COMBAT-01 · Unity 统一攻击档案与 2v2 消费父任务
 
 - `U-COMBAT-01A` 只读定位基础攻击、术法、神通、距离、目标、范围、资源和冷却消费者，并产出精确实施输入。
-- 负责人已为 `U-COMBAT-01B` 选择方案 A；`U-COMBAT-01B0` 先锁定 Unity 2v2 会话所有者、单位部署、目标资格和基础攻击 `attackProfileId` 绑定所有者，不修改运行时。
-- `U-COMBAT-01B` 在 01B0 完成后依据已锁定所有权接入统一攻击档案和 2v2 共享空间语义；不生产 CSV／asset fixture。
+- 负责人已为 `U-COMBAT-01B` 选择方案 A；`U-COMBAT-01B0` 已锁定 Unity 2v2 会话所有者、单位部署、目标资格和基础攻击 `attackProfileId` 绑定所有者，未修改运行时。
+- `U-COMBAT-01B` 已解除阻塞，按上述已锁定所有权接入统一攻击档案和 2v2 共享空间语义；不生产 CSV／asset fixture。
 - 父任务不直接进入队列；两项均完成后关闭并解除 `D-COMBAT-02` 的依赖。
 
 ## 《天章》册界体系后续 Unity 任务卡
