@@ -1879,12 +1879,10 @@ namespace TianZhang.Editor
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Charter rule definition CSV was not found: {path}", path);
 
-            // This schema task intentionally has no production authority directory or content rows.
-            // A later content task must provide real owners instead of promoting fixture IDs.
             var definitions = ParseCharterRuleDefinitions(
                 File.ReadAllLines(path),
                 path,
-                new CharterRuleReferenceCatalog());
+                CreateProductionCharterRuleReferenceCatalog());
             try
             {
                 foreach (var definition in definitions)
@@ -1911,6 +1909,121 @@ namespace TianZhang.Editor
                 foreach (var definition in definitions)
                     UnityEngine.Object.DestroyImmediate(definition);
             }
+        }
+
+        /// <summary>
+        /// The one approved D-TZ-CHARTER-SAMPLE-01 reference directory. It records only the
+        /// existing old water-station/pump-gate access, seal-management, connected waterworks,
+        /// registered supplies, limited conflict qualification, and env_guanzhong_wild output
+        /// named by the approved water bureau chronicle sources. It does not create a runtime
+        /// transaction, a second node registry, regional state, or new world content.
+        /// </summary>
+        public static CharterRuleReferenceCatalog CreateProductionCharterRuleReferenceCatalog()
+        {
+            return new CharterRuleReferenceCatalog
+            {
+                displayNameKeys = new[] { "charter_entry_suifu_diji" },
+                ruleFamilyIds = new[] { "rule_family_five_element_chronicle" },
+                relationElementIds = new[] { "element_water" },
+                phenomenonIds = new[] { "rain", "drizzle" },
+                relicIds = new[] { "relic_world_charter", "relic_taixuan_realm_seal" },
+                organizationAuthorizationVersionIds = new[]
+                {
+                    "authorization_suifu_water_basin_v1",
+                    "authorization_taixuan_seal_old_water_station_management_v1",
+                },
+                authorityRequirements = new[]
+                {
+                    new CharterAuthorityRequirement
+                    {
+                        // 《开阖九章》通行旧水驿至地下泵房门禁，界印确认管理者、
+                        // 受益者与守卫／档案响应；本定义仍只保存其稳定权限引用。
+                        authorityId = "authority_suifu_kaihe_passage_and_seal_management_v1",
+                        relicId = "relic_world_charter",
+                        organizationAuthorizationVersionIds = new[]
+                        {
+                            "authorization_suifu_water_basin_v1",
+                            "authorization_taixuan_seal_old_water_station_management_v1",
+                        },
+                    },
+                },
+                nodeTypeIds = new[]
+                {
+                    "node_type_charter",
+                    "node_type_waterworks",
+                    "node_type_river_wetland",
+                },
+                nodeIds = new[]
+                {
+                    "node_old_water_station_charter",
+                    "node_old_water_station_waterworks",
+                    "node_old_water_station_river_wetland",
+                },
+                propagationBoundaries = new[]
+                {
+                    new CharterPropagationBoundaryReference
+                    {
+                        propagationBoundaryProfileId = "propagation_suifu_watershed",
+                        allowedCoverageIds = new[]
+                        {
+                            "coverage_old_water_station_charter",
+                            "coverage_old_water_station_waterworks",
+                            "coverage_old_water_station_river_wetland",
+                        },
+                    },
+                },
+                realitySupplyIds = new[]
+                {
+                    "supply_suifu_registered_seasonal_rain",
+                    "supply_suifu_connected_water_balance",
+                    "supply_suifu_wetland_land_capacity",
+                },
+                commits = new[]
+                {
+                    new CharterCommitReference
+                    {
+                        commitId = "commit_suifu_diji_positive_ecology",
+                        realitySupplyIds = new[]
+                        {
+                            "supply_suifu_registered_seasonal_rain",
+                            "supply_suifu_connected_water_balance",
+                            "supply_suifu_wetland_land_capacity",
+                        },
+                    },
+                    new CharterCommitReference
+                    {
+                        commitId = "commit_suifu_diji_negative_reallocation",
+                        realitySupplyIds = new[]
+                        {
+                            "supply_suifu_registered_seasonal_rain",
+                            "supply_suifu_connected_water_balance",
+                            "supply_suifu_wetland_land_capacity",
+                        },
+                    },
+                },
+                worldVariableIds = new[]
+                {
+                    "seasonal_precipitation_distribution",
+                    "wetland_waterline_state",
+                    "water_element_spirit_flow",
+                    "aquatic_resource_yield",
+                },
+                conflicts = new[]
+                {
+                    new CharterConflictReference
+                    {
+                        conflictProfileId = "conflict_charter_water_basin",
+                        crossTierChallengeGrantIds = new[] { "cross_tier_charter_water_basin_v1" },
+                    },
+                },
+                worldEventIds = new[]
+                {
+                    "event_suifu_water_redistribution",
+                    "event_suifu_downstream_supply_delay",
+                },
+                environmentProfileIds = new[] { "env_guanzhong_wild" },
+                ruleEntryIds = new[] { "charter_entry_suifu_diji" },
+            };
         }
 
         /// <summary>

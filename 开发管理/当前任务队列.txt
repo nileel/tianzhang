@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-TZ-CHARTER-SAMPLE-01 | codex_execute | codex | P1 | data | implementation | 册界纵向样例数据 | `开发管理/任务卡/D-TZ-CHARTER-SAMPLE-01.txt` |

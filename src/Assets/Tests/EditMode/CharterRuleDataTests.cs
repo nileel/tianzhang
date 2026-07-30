@@ -141,47 +141,97 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void ImportCharterRuleDefinitionsRejectsTheWholeProductionTableBeforeCreatingAnAsset()
+        public void ProductionCharterRuleDefinitionImportsTheApprovedWaterBureauChronicleAndProjectsItsAsset()
         {
             const string sourceAssetPath = "Assets/DataConfig/CharterRuleDefinitions.csv";
-            const string importedAssetPath = "Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_charter_fixture.asset";
-            string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
-            byte[] originalContents = File.ReadAllBytes(sourceFilePath);
-
-            try
-            {
-                AssetDatabase.DeleteAsset(importedAssetPath);
-                File.WriteAllText(sourceFilePath, Header + "\n" + ValidRow + "\n");
-                AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
-
-                var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ImportCharterRuleDefinitions());
-                StringAssert.StartsWith("CHARTER_REFERENCE_CATALOG_UNDECLARED:", exception.Message);
-                Assert.IsNull(AssetDatabase.LoadAssetAtPath<CharterRuleDefinitionData>(importedAssetPath));
-            }
-            finally
-            {
-                AssetDatabase.DeleteAsset(importedAssetPath);
-                File.WriteAllBytes(sourceFilePath, originalContents);
-                AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
-            }
-        }
-
-        [Test]
-        public void ProductionCharterRuleDefinitionCsvRemainsTheAuthorizedEmptySchema()
-        {
+            const string importedAssetPath = "Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_charter_entry_suifu_diji.asset";
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
             var definitions = DataConfigImporter.ParseCharterRuleDefinitions(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
-                new CharterRuleReferenceCatalog());
+                DataConfigImporter.CreateProductionCharterRuleReferenceCatalog());
+
             try
             {
-                Assert.AreEqual(0, definitions.Length);
+                var definition = definitions.Single();
+                Assert.AreEqual("charter_entry_suifu_diji", definition.ruleEntryId);
+                Assert.AreEqual("charter_entry_suifu_diji", definition.displayName);
+                Assert.AreEqual("propagation_suifu_watershed", definition.propagationBoundaryProfileId);
+                Assert.AreEqual("conflict_charter_water_basin", definition.conflictProfileId);
+                CollectionAssert.AreEqual(
+                    new[] { "rain", "drizzle" },
+                    definition.compatiblePhenomena);
+                CollectionAssert.AreEqual(
+                    new[]
+                    {
+                        "seasonal_precipitation_distribution",
+                        "wetland_waterline_state",
+                        "water_element_spirit_flow",
+                        "aquatic_resource_yield",
+                    },
+                    definition.affectedWorldVariables);
             }
             finally
             {
                 DestroyAll(definitions);
             }
+
+            DataConfigImporter.ImportCharterRuleDefinitions();
+            AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
+            var asset = AssetDatabase.LoadAssetAtPath<CharterRuleDefinitionData>(importedAssetPath);
+            Assert.IsNotNull(asset);
+            Assert.AreEqual("charter_entry_suifu_diji", asset.ruleEntryId);
+            Assert.AreEqual(CharterRuleScopeType.ConnectedNodes, asset.scopeType);
+            Assert.AreEqual(CharterRuleScopeTierCap.Area, asset.scopeTierCap);
+            Assert.AreEqual(CharterRuleFailurePolicy.Reject, asset.failurePolicy);
+            Assert.AreEqual("env_guanzhong_wild", asset.worldEventOutputs[0].environmentProfileId);
+        }
+
+        [TestCase(7, "authority_suifu_without_kaihe_passage_v1", "CHARTER_UNKNOWN_AUTHORITY_REFERENCE")]
+        [TestCase(7, "authority_suifu_passage_without_seal_management_v1", "CHARTER_UNKNOWN_AUTHORITY_REFERENCE")]
+        [TestCase(7, "authority_suifu_without_legal_authorization_v1", "CHARTER_UNKNOWN_AUTHORITY_REFERENCE")]
+        [TestCase(11, "node_old_water_station_disconnected", "CHARTER_UNKNOWN_NODE_REFERENCE")]
+        [TestCase(5, "commit_suifu_positive_without_registered_supply", "CHARTER_ATOMIC_COMMIT_INCOMPLETE")]
+        [TestCase(13, "coverage_suifu_outside_connected_watershed", "CHARTER_COVERAGE_OUT_OF_BOUNDARY")]
+        [TestCase(13, "coverage_suifu_yuanying_anchor", "CHARTER_COVERAGE_OUT_OF_BOUNDARY")]
+        [TestCase(15, "conflict_charter_water_basin_without_challenge", "CHARTER_UNKNOWN_CONFLICT_REFERENCE")]
+        [TestCase(5, "none", "CHARTER_ATOMIC_COMMIT_INCOMPLETE")]
+        [TestCase(6, "none", "CHARTER_ATOMIC_COMMIT_INCOMPLETE")]
+        public void ProductionCharterRuleDefinitionRejectsUndeclaredOrIncompleteBoundaryFixtures(
+            int changedColumn,
+            string changedValue,
+            string expectedReason)
+        {
+            string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
+            string productionRow = File.ReadAllLines(sourceFilePath)
+                .Single(line => line.StartsWith("charter_entry_", StringComparison.Ordinal));
+            var values = productionRow.Split(',');
+            values[changedColumn] = changedValue;
+
+            AssertParseFails(
+                string.Join(",", values),
+                DataConfigImporter.CreateProductionCharterRuleReferenceCatalog(),
+                expectedReason);
+        }
+
+        [Test]
+        public void ProductionCharterAuthorityDirectoryKeepsPassageManagementAndChallengeReferencesExplicit()
+        {
+            var catalog = DataConfigImporter.CreateProductionCharterRuleReferenceCatalog();
+            var authority = catalog.FindAuthority("authority_suifu_kaihe_passage_and_seal_management_v1");
+            var conflict = catalog.FindConflict("conflict_charter_water_basin");
+
+            Assert.IsNotNull(authority);
+            Assert.AreEqual("relic_world_charter", authority.relicId);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    "authorization_suifu_water_basin_v1",
+                    "authorization_taixuan_seal_old_water_station_management_v1",
+                },
+                authority.organizationAuthorizationVersionIds);
+            Assert.IsTrue(catalog.ContainsRelic("relic_taixuan_realm_seal"));
+            CollectionAssert.AreEqual(new[] { "cross_tier_charter_water_basin_v1" }, conflict.crossTierChallengeGrantIds);
         }
 
         private static void AssertParseFails(

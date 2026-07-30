@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46488c7a76da4322ba06e916a0fc4ba5, type: 3}
+  m_Name: CharterRuleDefinition_charter_entry_suifu_diji
+  m_EditorClassIdentifier: TianZhang.Domain::TianZhang.Content.CharterRuleDefinitionData
+  ruleEntryId: charter_entry_suifu_diji
+  displayName: charter_entry_suifu_diji
+  ruleFamily: rule_family_five_element_chronicle
+  relationElement: element_water
+  compatiblePhenomena:
+  - rain
+  - drizzle
+  positiveCommit: commit_suifu_diji_positive_ecology
+  negativeCommit: commit_suifu_diji_negative_reallocation
+  requiredAuthority: authority_suifu_kaihe_passage_and_seal_management_v1
+  requiredNodeTypes:
+  - node_type_charter
+  - node_type_waterworks
+  - node_type_river_wetland
+  scopeType: 1
+  scopeTierCap: 1
+  anchorNodeIds:
+  - node_old_water_station_charter
+  - node_old_water_station_waterworks
+  - node_old_water_station_river_wetland
+  propagationBoundaryProfileId: propagation_suifu_watershed
+  currentCoverageSet:
+  - coverage_old_water_station_charter
+  - coverage_old_water_station_waterworks
+  - coverage_old_water_station_river_wetland
+  affectedWorldVariables:
+  - seasonal_precipitation_distribution
+  - wetland_waterline_state
+  - water_element_spirit_flow
+  - aquatic_resource_yield
+  conflictProfileId: conflict_charter_water_basin
+  failurePolicy: 0
+  worldEventOutputs:
+  - eventId: event_suifu_water_redistribution
+    environmentProfileId: env_guanzhong_wild
+  - eventId: event_suifu_downstream_supply_delay
+    environmentProfileId: env_guanzhong_wild
