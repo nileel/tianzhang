@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-ITEM-GRANT-01"
-  ],
-  "stateReason": "2026-07-31：U-CONTENT-CATALOG-01 已提供 EnemyData、ai_melee、战斗模板和结构化掉落，但当前仓库尚无掉落与悬赏共用的原子物品授予入口；必须先完成 U-ITEM-GRANT-01，避免正式掉落直接写库存或保留文字 fallback。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：U-ITEM-GRANT-01 已完成并归档，正式目录、EnemyData 与唯一物品原子授予入口均已具备；本卡可按既定范围实施正式敌人遭遇与结构化掉落。",
   "expectedPaths": [
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
