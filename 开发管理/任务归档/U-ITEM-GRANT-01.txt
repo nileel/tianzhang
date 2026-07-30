@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：U-CONTENT-CATALOG-01 已归档并提供正式 ItemData、ContentCatalogData.TryGetItem 与已批准 maxStack；现有 GameSession/InventoryStateStore 是唯一库存状态所有者，本卡可建立掉落与悬赏共用的原子授予入口。",
+  "stateReason": "2026-07-31：已完成结构化物品原子授予；GameSession 仍是唯一库存所有者，批次在全量校验后一次性替换库存。验证记录见 开发管理/关中物品原子授予验证记录.txt。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/InventoryGrantService.cs",
     "src/Assets/Scripts/Game/InventoryGrantService.cs.meta",
@@ -74,3 +74,9 @@
 
 - 若实现必须新建平行背包、修改存档 schema、猜测物品参数、直接解释显示名／路径，或抢先实现掉落／悬赏／UI，停止并回到对应任务。
 - 若现有库存状态无法原子替换而需要跨多个所有者补偿或重试，停止并先报告根因，不叠加兼容层。
+
+## 完成结果
+
+- 已新增 `InventoryGrantService` 的结构化请求、结果和稳定失败原因；它只消费正式目录与现有 `InventoryStateStore`，先构造完整候选库存，成功时一次性替换。
+- `GameSession.GrantItems` 是唯一薄委托入口；成功快照只设置 `Applied=true`、`Completed=true`，其余状态步骤均保持 false，存档 schema 和快照链未改动。
+- 直接 EditMode 6/6、现有 `SessionStateSnapshotTests` 8/8 与 .NET 构建通过；完整 EditMode 仍有 1 项既有无关日志断言失败，详见验证记录。

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using TianZhang.Content;
 using UnityEngine;
 using TianZhang.Cultivation;
 using TianZhang.Entity;
@@ -15,6 +17,7 @@ namespace TianZhang.Game
         public const string InitialWorldTimeOfDayId = "dawn";
 
         private static GameSession instance;
+        private readonly InventoryGrantService inventoryGrantService = new InventoryGrantService();
 
         public static GameSession Instance
         {
@@ -194,6 +197,13 @@ namespace TianZhang.Game
         public GameSessionSaveData CaptureSaveData()
         {
             return GameSessionSnapshot.Capture(this);
+        }
+
+        public InventoryGrantResult GrantItems(
+            ContentCatalogData catalog,
+            IReadOnlyList<InventoryGrantRequest> requests)
+        {
+            return inventoryGrantService.Grant(InventoryStates, catalog, requests);
         }
 
         public void RestoreSaveData(GameSessionSaveData data)

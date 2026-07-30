@@ -12,7 +12,6 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-ITEM-GRANT-01 | P1 | codex | 已排队 | — | 结构化物品原子授予 | `开发管理/任务卡/U-ITEM-GRANT-01.txt` |
 | U-ENEMY-01 | P1 | codex | 阻塞 | U-ITEM-GRANT-01 | 正式敌人遭遇与结构化掉落 | `开发管理/任务卡/U-ENEMY-01.txt` |
 | U-BOUNTY-01A | P1 | Codex | 阻塞（U-ITEM-GRANT-01、U-ENEMY-01） | — | 实现一次性悬赏状态机、地点／敌人校验、击败计数和防重复结算。 | — |
 | U-BOUNTY-01B | P1 | Codex | 阻塞（U-BOUNTY-01A） | — | 增加独立 `BountyStateStore`、存档 schema 3 与版本 0／1／2 迁移。 | — |

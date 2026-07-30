@@ -1,0 +1,17 @@
+# 关中物品原子授予验证记录
+
+## U-ITEM-GRANT-01 · 2026-07-31
+
+- 原子性：`InventoryGrantService` 先解析正式目录、合并重复稳定 ID、检查数量、现有库存与堆叠上限；全部通过后才对 `GameSession.InventoryStates` 调用一次 `ReplaceAll`。
+- 失败关闭：空批次、未知或非生产物品、非法数量、合并整数溢出、无效 `maxStack`、现有非法库存与超上限均返回稳定原因，失败前后保存快照相同。
+- 状态边界：成功的新物品快照只标记 `Applied=true`、`Completed=true`；`Shown`、`Clicked`、`Opened`、`Selected` 与 `Persisted` 均不由授予服务伪造。未新增背包、目录、存档或场景所有者。
+
+## 已执行验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告、0 错误。
+- Unity 6000.3.18f1 EditMode：新增 `InventoryGrantServiceTests` 6/6 通过；既有 `SessionStateSnapshotTests` 8/8 通过。
+- 完整 EditMode：261/262 通过；唯一失败为既有 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 缺少预期的排除日志，未涉及本卡修改路径。
+
+## 后续
+
+- 掉落和悬赏消费者现可提交同一结构化批次；本轮未修改 `U-ENEMY-01` 的任务卡或队列投影，后续解阻塞应在其自身状态事件中完成。
