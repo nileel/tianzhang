@@ -68,6 +68,32 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void AreaQueryUsesEffectPathWithoutRequiringOrdinaryLineOfSight()
+        {
+            var cells = CreateCells(Origin, East, EastTwo);
+            cells[East] = new SpatialCellRules(0, false, true, false, 0);
+            var board = new SpatialQueryBoard(
+                cells,
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(1, true, true),
+                    [new SpatialDirectedEdge(East, EastTwo)] = new SpatialEdgeRules(1, true, true),
+                },
+                new SpatialQueryLimits(1, 16));
+
+            Assert.IsFalse(board.QueryLineOfSight(Origin, EastTwo).HasLineOfSight);
+            var area = board.QueryRangeEntry(
+                Origin,
+                EastTwo,
+                0,
+                2,
+                SpatialQueryKind.Area,
+                requireLineOfSight: false,
+                activeEffectBlockers: 0);
+            Assert.IsTrue(area.IsInRange, area.Reason);
+        }
+
+        [Test]
         public void DifferentHeightFailsClosed()
         {
             var cells = CreateCells(Origin, East);

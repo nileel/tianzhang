@@ -24,7 +24,7 @@
 | D-FPD-MIGRATE-01E | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
 | D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 阻塞（C-TZ-CHARTER-ENTRIES-01B6） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
 | D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 阻塞（D-TZ-CHARTER-SCHEMA-01、C-TZ-CHARTER-ENTRIES-01B6） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
-| D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
+| D-COMBAT-02 | P3 | Codex | 已解除依赖，待排队 | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
 
 ## G3 任务执行边界
 

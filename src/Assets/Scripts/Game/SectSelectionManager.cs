@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Entity;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
@@ -340,6 +341,25 @@ namespace TianZhang.Game
             player.CritDamage = charData.critDamage;
             player.EquippedSpellIds = charData.equippedSpells;
             player.EquippedSkillIds = charData.equippedSkills;
+            player.MainEquipmentBasicAttackProfileId = charData.mainEquipmentBasicAttackProfileId;
+            player.UnarmedBasicAttackProfileId = charData.unarmedBasicAttackProfileId;
+            if (!string.IsNullOrWhiteSpace(player.MainEquipmentBasicAttackProfileId) &&
+                string.IsNullOrWhiteSpace(player.UnarmedBasicAttackProfileId))
+            {
+                player.BasicAttackProfileId = player.MainEquipmentBasicAttackProfileId;
+                player.BasicAttackBindingKind = "main_equipment";
+            }
+            else if (string.IsNullOrWhiteSpace(player.MainEquipmentBasicAttackProfileId) &&
+                     !string.IsNullOrWhiteSpace(player.UnarmedBasicAttackProfileId))
+            {
+                player.BasicAttackProfileId = player.UnarmedBasicAttackProfileId;
+                player.BasicAttackBindingKind = "unarmed_fallback";
+            }
+            else
+            {
+                player.BasicAttackProfileId = null;
+                player.BasicAttackBindingKind = null;
+            }
             player.AvailableSpells = charData.availableSpells;
             player.RealmStage = charData.realmStage;
             player.RealmMultiplier = charData.realmMultiplier;
@@ -394,67 +414,82 @@ namespace TianZhang.Game
         {
             if (ctrl == null) return;
 
-            // Load SpellData assets for equipped spells
-            var spellList = new System.Collections.Generic.List<Combat.SpellData>();
+            var knownProfiles = new System.Collections.Generic.List<Combat.AttackProfileData>();
+            if (ctrl.attackProfiles != null)
+                knownProfiles.AddRange(ctrl.attackProfiles.Where(profile => profile != null));
+
+            var spellList = new System.Collections.Generic.List<Combat.AttackProfileData>();
             if (charData.equippedSpells != null)
             {
-                foreach (var spellName in charData.equippedSpells)
+                foreach (var profileId in charData.equippedSpells)
                 {
-                    var id = GetSpellAssetId(spellName);
-                    var spath = "Assets/Data/Spells/Spell_spell_" + id + ".asset";
-                    var asset = LoadAsset<Combat.SpellData>(spath);
-                    if (asset != null
-                        && Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope)
-                        && asset.IsAvailableTo(player))
+                    var asset = LoadAttackProfile(profileId);
+                    if (asset != null && asset.profileKind == Combat.AttackProfileKind.Art && asset.IsAvailableTo(player))
                     {
                         spellList.Add(asset);
-                    }
-                    else if (asset != null && !Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
-                    {
-                        Debug.LogWarning($"[SectSelection] Excluded non-player spell: {spellName} ({spath}) scope={asset.contentScope}");
+                        AddKnownProfile(knownProfiles, asset);
                     }
                     else if (asset != null)
                     {
-                        Debug.LogWarning($"[SectSelection] Excluded unavailable spell: {spellName} realm={asset.realmRequirement} element={asset.elementRequirement}");
+                        Debug.LogWarning($"[SectSelection] Excluded unresolved art profile: {profileId}");
                     }
                     else
                     {
-                        Debug.LogWarning($"[SectSelection] Spell asset not found: {spellName} ({spath})");
+                        Debug.LogWarning($"[SectSelection] Attack profile not found: {profileId}");
                     }
                 }
             }
             ctrl.playerSpells = spellList.ToArray();
-            Debug.Log($"[SectSelection] Loaded {spellList.Count} spells for ExplorationController");
+            Debug.Log($"[SectSelection] Loaded {spellList.Count} art profiles for ExplorationController");
 
-            var skillList = new System.Collections.Generic.List<Combat.DivineSkillData>();
+            var skillList = new System.Collections.Generic.List<Combat.AttackProfileData>();
             if (charData.equippedSkills != null)
             {
-                foreach (var skillId in charData.equippedSkills)
+                foreach (var profileId in charData.equippedSkills)
                 {
-                    var path = "Assets/Data/Skills/Skill_" + skillId + ".asset";
-                    var asset = LoadAsset<Combat.DivineSkillData>(path);
-                    if (asset != null
-                        && Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope)
-                        && asset.IsAvailableTo(player))
+                    var asset = LoadAttackProfile(profileId);
+                    if (asset != null && asset.profileKind == Combat.AttackProfileKind.Divine && asset.IsAvailableTo(player))
                     {
                         skillList.Add(asset);
-                    }
-                    else if (asset != null && !Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
-                    {
-                        Debug.LogWarning($"[SectSelection] Excluded non-player skill: {skillId} ({path}) scope={asset.contentScope}");
+                        AddKnownProfile(knownProfiles, asset);
                     }
                     else if (asset != null)
                     {
-                        Debug.LogWarning($"[SectSelection] Excluded unavailable skill: {skillId} realm={asset.realmRequirement}");
+                        Debug.LogWarning($"[SectSelection] Excluded unresolved divine profile: {profileId}");
                     }
                     else
                     {
-                        Debug.LogWarning($"[SectSelection] Skill asset not found: {skillId} ({path})");
+                        Debug.LogWarning($"[SectSelection] Attack profile not found: {profileId}");
                     }
                 }
             }
             ctrl.playerSkills = skillList.ToArray();
-            Debug.Log($"[SectSelection] Loaded {skillList.Count} skills for ExplorationController");
+            Debug.Log($"[SectSelection] Loaded {skillList.Count} divine profiles for ExplorationController");
+
+            string basicProfileId = player.BasicAttackProfileId;
+            if (!string.IsNullOrWhiteSpace(basicProfileId))
+            {
+                var basicProfile = LoadAttackProfile(basicProfileId);
+                if (basicProfile != null)
+                    AddKnownProfile(knownProfiles, basicProfile);
+            }
+            ctrl.attackProfiles = knownProfiles.ToArray();
+        }
+
+        private static Combat.AttackProfileData LoadAttackProfile(string attackProfileId)
+        {
+            if (string.IsNullOrWhiteSpace(attackProfileId))
+                return null;
+            return LoadAsset<Combat.AttackProfileData>(
+                "Assets/Data/AttackProfiles/AttackProfile_" + attackProfileId + ".asset");
+        }
+
+        private static void AddKnownProfile(
+            System.Collections.Generic.List<Combat.AttackProfileData> profiles,
+            Combat.AttackProfileData profile)
+        {
+            if (profile != null && !profiles.Contains(profile))
+                profiles.Add(profile);
         }
 
         private static string GetSectRouteId(string sectName)
@@ -467,23 +502,6 @@ namespace TianZhang.Game
                 "太虚观" => "route_taixu",
                 _ => "route_sanxiu",
             };
-        }
-
-        // Spell Chinese name -> CSV ID mapping
-        private static readonly Dictionary<string, string> SpellAssetIds = new()
-        {
-            ["玄水咒"] = "xuanshuizhou", ["沧浪击"] = "canglangji", ["安神符"] = "anshenfu",
-            ["金光破岳"] = "jinguangpoyue", ["流火灵符"] = "liuhuolingfu",
-            ["引雷诀"] = "yinleijue", ["苦行剑式"] = "kuxingjianshi", ["剑罡护体"] = "jianganghuti",
-            ["铁骨功"] = "tiegugong", ["破阵冲锋"] = "pozhenchongfeng", ["玄甲铁壁"] = "xuanjiatiebi",
-            ["暗蚀"] = "tx_anshi", ["幽冥引"] = "youmingyin", ["入梦诀"] = "rumengjue",
-            ["聚灵术"] = "julingshu", ["川流劲"] = "chuanliujin", ["灵光闪"] = "lingguangshan",
-            ["暗噬"] = "anshi",
-        };
-
-        private static string GetSpellAssetId(string chineseName)
-        {
-            return SpellAssetIds.TryGetValue(chineseName, out var id) ? id : chineseName;
         }
 
         // GongFa Chinese name -> CSV asset ID mapping

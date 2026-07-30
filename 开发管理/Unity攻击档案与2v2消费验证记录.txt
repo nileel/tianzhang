@@ -1,0 +1,21 @@
+# U-COMBAT-01B · Unity 攻击档案与 2v2 消费验证记录
+
+日期：2026-07-30
+
+## 已交付行为
+
+- `AttackProfileData` 承载统一攻击档案；导入器严格校验 34 列、稳定 ID、条件字段、角色基础攻击外键和同 ID asset 冲突，校验失败不写入 asset。
+- `TacticalCombatController` 以单一 `TacticalCombatSession` 接收 1v1 或 2v2 部署，固定输入顺序、阵营、存活和显式单位 ID 目标资格；空间格位仍只读取同一快照的 `Board` 与锚点视图。
+- 基础攻击、术法、神通与敌方 AI 只消费解析后的攻击档案；缺失、歧义、种类不符、未解决效果或冷却槽不符均稳定拒绝，没有默认攻击、名称映射或旧资产回退。
+- 范围选择复用共享 `SpatialQueryBoard` 的 Area 查询和档案声明的阻挡、阵营、状态与形状；本卡未实现范围伤害、治疗、协同走位、团队 AI、生产 CSV／asset 或冷却单位换算。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告、0 错误。
+- Unity EditMode 完整运行：235 项中 234 项通过；`AttackProfileDataTests`、`TacticalCombatControllerTests` 与 `SpatialQueryBoardTests` 共 20 项全部通过。
+- 完整运行唯一失败为既有 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`：它断言旧 `SpellData`／`DivineSkillData` 读取时的日志，而本卡已按契约移除这两个旧资产作为运行时消费者；不影响本卡直接回归。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过。
+
+## 后续
+
+- `D-COMBAT-02` 已解除对 `U-COMBAT-01` 的依赖，待常规队列维护按数据链任务进入后续 fixture 与差异检查。

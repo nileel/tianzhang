@@ -61,6 +61,10 @@ namespace TianZhang.Entity
         public int MaxSkillSlots;      // 神通槽位上限
         public string[] AvailableSpells; // 术法库（已学会的全部术法）
         public string[] AvailableSkills; // 神通库
+        public string MainEquipmentBasicAttackProfileId;
+        public string UnarmedBasicAttackProfileId;
+        public string BasicAttackProfileId;
+        public string BasicAttackBindingKind;
         public int CombatSwapsUsed;     // 本场战斗已换法次数
         public const int MaxCombatSwaps = 2; // 每场最多临阵换法次数
         public string[] DevelopedMansions; // 已主修紫府府位
@@ -204,6 +208,20 @@ namespace TianZhang.Entity
             c.MaxSkillSlots = data.maxSkillSlots > 0 ? data.maxSkillSlots : skillSlots;
             c.EquippedSpellIds = CloneAndTrim(data.equippedSpells, c.MaxSpellSlots, "术法", c.Name);
             c.EquippedSkillIds = CloneAndTrim(data.equippedSkills, c.MaxSkillSlots, "神通", c.Name);
+            c.MainEquipmentBasicAttackProfileId = data.mainEquipmentBasicAttackProfileId;
+            c.UnarmedBasicAttackProfileId = data.unarmedBasicAttackProfileId;
+            if (!string.IsNullOrWhiteSpace(c.MainEquipmentBasicAttackProfileId) &&
+                string.IsNullOrWhiteSpace(c.UnarmedBasicAttackProfileId))
+            {
+                c.BasicAttackProfileId = c.MainEquipmentBasicAttackProfileId;
+                c.BasicAttackBindingKind = "main_equipment";
+            }
+            else if (string.IsNullOrWhiteSpace(c.MainEquipmentBasicAttackProfileId) &&
+                     !string.IsNullOrWhiteSpace(c.UnarmedBasicAttackProfileId))
+            {
+                c.BasicAttackProfileId = c.UnarmedBasicAttackProfileId;
+                c.BasicAttackBindingKind = "unarmed_fallback";
+            }
             // 术法/神通冷却初始化
             c.SpellCooldowns = new int[Mathf.Max(c.EquippedSpellIds.Length, c.MaxSpellSlots)];
             c.SkillCooldowns = new int[Mathf.Max(c.EquippedSkillIds.Length, c.MaxSkillSlots)];

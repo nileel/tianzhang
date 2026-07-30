@@ -31,8 +31,10 @@ namespace TianZhang.Map
         public CharacterData[] enemyTemplates; // 从 Enemies.csv 导入的敌人模板池
 
         [Header("术法/神通")]
-        public SpellData[] playerSpells;
-        public DivineSkillData[] playerSkills;
+        public AttackProfileData[] playerSpells;
+        public AttackProfileData[] playerSkills;
+        [Tooltip("当前遭遇可解析的统一攻击档案；由导入器生成的 asset 在此作为只读输入。")]
+        public AttackProfileData[] attackProfiles;
 
         [Header("视野")]
         public int playerSightRange = 8;       // 玩家视野范围(格)
@@ -79,8 +81,8 @@ namespace TianZhang.Map
         {
             public Character character;
             public CharacterData data;
-            public SpellData[] spells;
-            public DivineSkillData[] skills;
+            public AttackProfileData[] spells;
+            public AttackProfileData[] skills;
             public GameObject marker;
             public bool defeated;
         }
@@ -286,12 +288,12 @@ namespace TianZhang.Map
             cd.realmMultiplier = 1.5f;
             cd.gongFaName = "抱元守一经"; // 默认太一道庭功法（对应五行=水）
             cd.equippedSpells = playerSpells != null
-                ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "")
+                ? System.Array.ConvertAll(playerSpells, s => s?.attackProfileId ?? "")
                 : new string[0];
             cd.equippedSkills = playerSkills != null
-                ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "")
+                ? System.Array.ConvertAll(playerSkills, s => s?.attackProfileId ?? "")
                 : new string[0];
-            cd.availableSpells = new string[] { "玄水咒", "沧浪击", "安神符", "金光破岳", "流火灵符" };
+            cd.availableSpells = cd.equippedSpells;
             return cd;
         }
 
@@ -330,11 +332,8 @@ namespace TianZhang.Map
                 enemy.CTBUnit.Id = nextUnitId++;
                 tilemapManager.Grid.SetOccupied(coord, enemy.CTBUnit.Id);
 
-                var spells = new SpellData[template.equippedSpells?.Length ?? 0];
-                for (int i = 0; i < spells.Length; i++)
-                {
-                    spells[i] = CreateFallbackSpell(template.equippedSpells[i]);
-                }
+                var spells = ResolveAttackProfiles(template.equippedSpells, AttackProfileKind.Art);
+                var skills = ResolveAttackProfiles(template.equippedSkills, AttackProfileKind.Divine);
 
                 var marker = tilemapManager.PlaceUnitMarker(coord, Color.red, template.charName);
                 marker.transform.localScale = Vector3.one * 0.6f;
@@ -344,7 +343,7 @@ namespace TianZhang.Map
                     character = enemy,
                     data = template,
                     spells = spells,
-                    skills = new DivineSkillData[0],
+                    skills = skills,
                     marker = marker,
                     defeated = false,
                 });
@@ -382,24 +381,69 @@ namespace TianZhang.Map
             return data;
         }
 
-        private SpellData CreateFallbackSpell(string name)
+        private AttackProfileData[] ResolveAttackProfiles(string[] profileIds, AttackProfileKind expectedKind)
         {
-            var s = ScriptableObject.CreateInstance<SpellData>();
-            s.spellName = name;
-            s.minRange = 1; s.maxRange = 3;
-            s.mpCost = 15; s.cooldownTicks = 30;
-            s.damageMultiplier = 1.2f;
-            // 五行推测：根据术法名中的关键字
-            if (name != null)
+            if (profileIds == null || profileIds.Length == 0)
+                return new AttackProfileData[0];
+
+            var result = new List<AttackProfileData>(profileIds.Length);
+            foreach (string profileId in profileIds)
             {
-                if (name.Contains("水") || name.Contains("川") || name.Contains("浪")) s.element = "水";
-                else if (name.Contains("火") || name.Contains("焰") || name.Contains("丹")) s.element = "火";
-                else if (name.Contains("雷") || name.Contains("电")) s.element = "雷";
-                else if (name.Contains("金") || name.Contains("剑")) s.element = "金";
-                else if (name.Contains("土") || name.Contains("石") || name.Contains("山") || name.Contains("岩")) s.element = "土";
-                else if (name.Contains("木") || name.Contains("草") || name.Contains("藤")) s.element = "木";
+                var profile = attackProfiles == null
+                    ? null
+                    : System.Array.Find(
+                        attackProfiles,
+                        candidate => candidate != null && candidate.attackProfileId == profileId);
+                if (profile == null || profile.profileKind != expectedKind)
+                {
+                    Debug.LogWarning($"[Exploration] 攻击档案未解析或种类不符: {profileId}");
+                    continue;
+                }
+                result.Add(profile);
             }
-            return s;
+            return result.ToArray();
+        }
+
+        private bool TryRefreshEncounterSnapshot(out string reason)
+        {
+            var tacticalGrid = TacticalGridModel.FromHexGrid(
+                tilemapManager.allHexCoords,
+                tilemapManager.Grid);
+            if (!SpatialQueryBoardFactory.TryCreate(
+                    tacticalGrid,
+                    environmentProfile,
+                    out spatialQuerySnapshot,
+                    out reason))
+            {
+                return false;
+            }
+
+            resolver.SpatialBoard = spatialQuerySnapshot.Board;
+            return true;
+        }
+
+        private AttackProfileData[] GetKnownAttackProfiles()
+        {
+            var result = new List<AttackProfileData>();
+            void AddRange(AttackProfileData[] profiles)
+            {
+                if (profiles == null) return;
+                foreach (var profile in profiles)
+                {
+                    if (profile != null && !result.Contains(profile))
+                        result.Add(profile);
+                }
+            }
+
+            AddRange(attackProfiles);
+            AddRange(playerSpells);
+            AddRange(playerSkills);
+            foreach (var enemy in enemies)
+            {
+                AddRange(enemy.spells);
+                AddRange(enemy.skills);
+            }
+            return result.ToArray();
         }
 
         // ==================== 探索输入 ====================
@@ -552,12 +596,33 @@ namespace TianZhang.Map
             state = GameState.BattlePrep;
             waitingForMoveInput = false;
             currentCombatTarget = enemy.character;
+            if (!TryRefreshEncounterSnapshot(out string snapshotReason))
+            {
+                AddLog("遭遇空间快照创建失败: " + snapshotReason);
+                adventureSceneController?.ReportEncounterConfigurationFailure(snapshotReason);
+                state = GameState.Exploration;
+                return;
+            }
+
+            var setup = new TacticalCombatSetup(
+                new[] { player },
+                new[] { enemy.character },
+                spatialQuerySnapshot.Board,
+                spatialQuerySnapshot.UnitAnchors,
+                GetKnownAttackProfiles());
+            if (!tacticalCombatController.TryBeginCombat(
+                    setup,
+                    tilemapManager.Grid,
+                    out _,
+                    out string setupReason))
+            {
+                AddLog("遭遇配置被拒绝: " + setupReason);
+                adventureSceneController?.ReportEncounterConfigurationFailure(setupReason);
+                state = GameState.Exploration;
+                return;
+            }
+
             adventureSceneController?.BeginEncounter();
-            tacticalCombatController.BeginCombat(
-                player,
-                enemy.character,
-                tilemapManager.Grid,
-                spatialQuerySnapshot.Board);
 
             GetCombatLogAdapter().AnnounceBattleStart(player.Name, enemy.character.Name);
 
@@ -652,78 +717,27 @@ namespace TianZhang.Map
             if (uiManager == null) return;
 
             uiManager.RefreshSpellButtons(
-                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.spellName ?? "?") : new string[0],
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.displayNameKey ?? "?") : new string[0],
                 player.SpellCooldowns,
                 player.CurrentMP,
-                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.mpCost ?? 0) : new int[0],
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.resourceCost ?? 0) : new int[0],
                 player.MaxSpellSlots,
-                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => TianZhang.Combat.DamageCalculator.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
             uiManager.RefreshSkillButtons(
-                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.skillName ?? "?") : new string[0],
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.displayNameKey ?? "?") : new string[0],
                 player.SkillCooldowns,
                 player.CurrentMP,
-                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.mpCost ?? 0) : new int[0],
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.resourceCost ?? 0) : new int[0],
                 -1,
-                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => { string e = TianZhang.Combat.DamageCalculator.ResolveElement(s?.element ?? ""); return string.IsNullOrEmpty(e) ? TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName) : e; }) : new string[0]);
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => TianZhang.Combat.DamageCalculator.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
             uiManager.SetActionButtonsInteractable(interactable);
-        }
-
-private void ExecutePlayerAI(EnemyUnit enemyUnit)
-        {
-            player.FaceTarget(enemyUnit.character.Position);
-
-            // 优先术法
-            if (playerSpells != null)
-            {
-                for (int i = 0; i < playerSpells.Length; i++)
-                {
-                    if (player.SpellCooldowns[i] <= 0
-                        && player.CurrentMP >= playerSpells[i].mpCost
-                        && resolver.CanTarget(
-                            player.Position,
-                            enemyUnit.character.Position,
-                            playerSpells[i].minRange,
-                            playerSpells[i].maxRange,
-                            out _))
-                    {
-                        var result = resolver.CastSpell(player, enemyUnit.character, i, playerSpells[i]);
-                        AddLog(result.Message);
-                        hasMovedThisTurn = true;
-                        return;
-                    }
-                }
-            }
-
-            // 移动到敌人相邻
-            if (!resolver.CanTarget(player.Position, enemyUnit.character.Position, 1, 1, out _))
-            {
-                var path = resolver.FindPathTowardTarget(player, enemyUnit.character);
-                if (path != null && path.Count > 0)
-                {
-                    tilemapManager.Grid.ClearOccupied(player.Position);
-                    player.Position = path[path.Count - 1];
-                    tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
-                    if (playerMarker != null)
-                        playerMarker.transform.position = tilemapManager.HexToWorld(player.Position);
-                    AddLog($"{player.Name} 移动 {path.Count} 格");
-                }
-            }
-
-            // 攻击
-            if (resolver.CanTarget(player.Position, enemyUnit.character.Position, 1, 1, out _))
-            {
-                bool useMagic = player.MagAtk > player.PhysAtk;
-                var result = resolver.BasicAttack(player, enemyUnit.character, useMagic);
-                AddLog(result.Message);
-            }
-
-            hasMovedThisTurn = true;
         }
 
         private void ExecuteEnemyAI(EnemyUnit enemyUnit, Character ch)
         {
             var result = tacticalCombatController.ExecuteEnemyTurn(
-                enemyUnit.character, player,
+                enemyUnit.character.CTBUnit.Id,
+                player.CTBUnit.Id,
                 enemyUnit.spells.Length > 0 ? enemyUnit.spells : null,
                 enemyUnit.skills.Length > 0 ? enemyUnit.skills : null,
                 tilemapManager.Grid);
@@ -769,7 +783,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
             // 换入第一个可用术法到槽位0
             string newSpell = swappable[0];
-            var result = tacticalCombatController.ExecutePlayerSwapSpell(0, newSpell);
+            var result = tacticalCombatController.ExecuteSwapSpell(player.CTBUnit.Id, 0, newSpell);
             AddActionLog(result);
             if (result.Success)
             {
@@ -789,7 +803,9 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            var result = tacticalCombatController.ExecutePlayerBasicAttack();
+            var result = tacticalCombatController.ExecuteBasicAttack(
+                player.CTBUnit.Id,
+                currentCombatTarget.CTBUnit.Id);
             AddActionLog(result);
             if (!result.Success)
             {
@@ -804,7 +820,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = tacticalCombatController.ExecutePlayerGuard();
+            var result = tacticalCombatController.ExecuteGuard(player.CTBUnit.Id);
             AddActionLog(result);
             if (!result.Success)
             {
@@ -819,7 +835,7 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = tacticalCombatController.ExecutePlayerWait();
+            var result = tacticalCombatController.ExecuteWait(player.CTBUnit.Id);
             AddActionLog(result);
             if (!result.Success)
             {
@@ -834,7 +850,12 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = tacticalCombatController.ExecutePlayerSpell(index, playerSpells);
+            if (currentCombatTarget == null) return;
+            var result = tacticalCombatController.ExecuteArt(
+                player.CTBUnit.Id,
+                currentCombatTarget.CTBUnit.Id,
+                index,
+                playerSpells);
             AddActionLog(result);
             if (!result.Success)
             {
@@ -849,7 +870,11 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            var result = tacticalCombatController.ExecutePlayerSkill(index, playerSkills);
+            var result = tacticalCombatController.ExecuteDivine(
+                player.CTBUnit.Id,
+                currentCombatTarget.CTBUnit.Id,
+                index,
+                playerSkills);
             AddActionLog(result);
             if (!result.Success)
             {
@@ -869,7 +894,11 @@ private void ExecutePlayerAI(EnemyUnit enemyUnit)
 
         private void EndBattle(EnemyUnit enemyUnit)
         {
-            var endResult = tacticalCombatController.ResolveBattleEnd(enemyUnit.data, tilemapManager.Grid);
+            var defeatedEnemyData = new Dictionary<int, CharacterData>
+            {
+                [enemyUnit.character.CTBUnit.Id] = enemyUnit.data,
+            };
+            var endResult = tacticalCombatController.ResolveBattleEnd(defeatedEnemyData, tilemapManager.Grid);
             if (endResult.Outcome == TacticalCombatEndOutcome.Defeat)
             {
                 AddLog(endResult.Message);

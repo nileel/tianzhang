@@ -1,0 +1,76 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-COMBAT-01B",
+  "title": "Unity 攻击档案与 2v2 消费接入",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：已接入统一 AttackProfileData、严格导入、显式 1v1／2v2 会话和共享范围查询；基础攻击、术法、神通及 AI 均失败关闭且无默认档案或旧资产回退。已关闭 U-COMBAT-01，并解除 D-COMBAT-02 依赖。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Combat/AttackProfileData.cs",
+    "src/Assets/Scripts/Combat/AttackProfileData.cs.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Scripts/Combat/CombatResolver.cs",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/CharacterData.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "开发管理/Unity攻击档案与2v2消费验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-01B.txt",
+    "开发管理/任务归档/U-COMBAT-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-COMBAT-01B · Unity 攻击档案与 2v2 消费接入
+
+## 完成记录
+
+- 新增统一 `AttackProfileData` 和严格导入边界，角色基础攻击只由两个外键中的恰好一个绑定；缺失、歧义、未知 ID、绑定种类不符和重复 asset ID 均稳定失败。
+- `TacticalCombatSession` 现在承载 1v1／2v2 的成员、阵营、存活、稳定输入顺序和显式目标资格；`ExplorationController` 只生产部署与同一空间快照的只读 `Board`／锚点视图。
+- 基础攻击、术法、神通、AI 与范围选择均消费攻击档案；范围选择只复用 `SpatialQueryBoard`，没有复制空间查询、生产攻击数值、范围伤害、团队 AI、冷却换算或 fixture。
+- 验证记录见 `开发管理/Unity攻击档案与2v2消费验证记录.txt`；已关闭父任务 `U-COMBAT-01` 并解除 `D-COMBAT-02` 依赖。
+
+## 来源与当前边界
+
+- `D-COMBAT-01` 是攻击档案的唯一数据契约；本卡只实现 Unity 承载和消费者，不生产 CSV、asset fixture 或攻击参数。
+
+## 必查范围
+
+- 已核对 Unity 消费者实施输入、统一攻击档案契约、2v2 会话设计及实际战斗、空间、角色和导入器逻辑单元。
+
+## 实施范围
+
+- 仅接入攻击档案承载、严格导入、角色基础攻击外键、显式会话目标资格和共享空间范围选择。
+
+## 禁止项
+
+- 未建立默认档案、名称映射、兼容回退、第二套空间查询、生产攻击数值、范围伤害、团队 AI 或冷却单位换算。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj` 通过，0 警告、0 错误。
+- Unity EditMode 的攻击档案、战斗会话和空间查询直接用例共 20 项通过；完整运行 235 项中 234 项通过，唯一旧资产日志断言失败已在验证记录中说明。
+- `tools/check-data-chain.ps1` 通过；提交前执行文本、任务卡、空白与暂存差异检查。
+
+## 完成条件
+
+- Unity 只消费统一攻击档案与共享空间语义，坏数据稳定失败；父任务已关闭且 `D-COMBAT-02` 已解除依赖。
+
+## 停止条件
+
+- 未触发停止条件；实施没有要求平行 schema、默认值、生产参数或第二套空间查询。

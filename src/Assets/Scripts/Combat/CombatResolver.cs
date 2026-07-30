@@ -37,6 +37,40 @@ namespace TianZhang.Combat
             public string Message;
         }
 
+        public readonly struct AreaTargetCandidate
+        {
+            public AreaTargetCandidate(
+                int unitId,
+                HexCoord position,
+                bool isAlive,
+                AttackAreaTargetFaction faction)
+            {
+                UnitId = unitId;
+                Position = position;
+                IsAlive = isAlive;
+                Faction = faction;
+            }
+
+            public int UnitId { get; }
+            public HexCoord Position { get; }
+            public bool IsAlive { get; }
+            public AttackAreaTargetFaction Faction { get; }
+        }
+
+        public sealed class AreaTargetingResult
+        {
+            public AreaTargetingResult(HexCoord? center, IReadOnlyList<int> hitUnitIds, string rejectionReason)
+            {
+                Center = center;
+                HitUnitIds = hitUnitIds ?? System.Array.Empty<int>();
+                RejectionReason = rejectionReason ?? string.Empty;
+            }
+
+            public HexCoord? Center { get; }
+            public IReadOnlyList<int> HitUnitIds { get; }
+            public string RejectionReason { get; }
+        }
+
         private readonly struct FudanActionBonus
         {
             public readonly float DamageMultiplier;
@@ -85,234 +119,301 @@ namespace TianZhang.Combat
             return new ActionResult { Success = true, Message = msg };
         }
 
-        /// <summary>普通攻击</summary>
-        public ActionResult BasicAttack(Character attacker, Character defender,
-            bool useMagic = false)
+        /// <summary>基础攻击只消费已解析的统一攻击档案。</summary>
+        public ActionResult BasicAttack(Character attacker, Character defender, AttackProfileData profile)
         {
-            if (!CanTarget(attacker.Position, defender.Position, 1, 1, out _))
-                return new ActionResult { Success = false, Message = "目标不在近战范围" };
-
-            // 朝向目标
-            attacker.FaceTarget(defender.Position);
-
-            DamageCalculator.DamageResult damage;
-            float mult = 1f;
-            if (useMagic && attacker.GongFaName == "抱元守一经")
-                mult = 1f + attacker.ShouyiStacks * 0.05f;
-
-            FudanActionBonus fudanBonus = new FudanActionBonus(1f, 0f, false);
-            if (useMagic)
-            {
-                fudanBonus = ConsumeFudanForMagicAction(attacker);
-                mult *= fudanBonus.DamageMultiplier;
-            }
-
-            if (useMagic)
-                damage = DamageCalculator.CalcMagic(
-                    attacker.MagAtk,
-                    mult,
-                    attacker,
-                    defender,
-                    cannotDodge: fudanBonus.WasFull,
-                    magicDefensePenetrationPercent: fudanBonus.MagicDefensePenetrationPercent);
-            else
-                damage = DamageCalculator.CalcPhysical(
-                    attacker.PhysAtk,
-                    mult * ConsumeLeijieForPhysicalAction(attacker),
-                    attacker,
-                    defender);
-
-            if (damage.IsHit)
-                defender.TakeDamage(damage.FinalDamage);
-
-            // 守一：出手后+1层
-            if (attacker.GongFaName == "抱元守一经")
-                attacker.ShouyiStacks = Mathf.Min(attacker.ShouyiStacks + 1, attacker.MaxShouyi());
-            // 符胆：出手后+1层
-            if (attacker.GongFaName == "云篆度人经")
-                attacker.FudanStacks = Mathf.Min(attacker.FudanStacks + 1, attacker.MaxFudan());
-
-            string log = $"{attacker.Name} {(useMagic ? "神魂" : "物理")}攻击 {defender.Name}: {damage.Log}";
-            BattleLog.Add(log);
-            Debug.Log(log);
-
-            return new ActionResult { Success = true, Damage = damage, Message = log };
+            return ExecuteSingleTargetProfile(attacker, defender, profile, AttackProfileKind.Basic, null, -1, "攻击");
         }
 
-        /// <summary>施放术法</summary>
-        public ActionResult CastSpell(Character caster, Character target,
-            int spellIndex, SpellData spell)
+        public ActionResult CastSpell(Character caster, Character target, int spellIndex, AttackProfileData profile)
         {
-            // 冷却检查
-            if (caster.SpellCooldowns[spellIndex] > 0)
-                return new ActionResult { Success = false, Message = $"{spell.spellName} 冷却中" };
+            return ExecuteSingleTargetProfile(caster, target, profile, AttackProfileKind.Art,
+                caster.SpellCooldowns, spellIndex, "施放");
+        }
 
-            // MP检查（符胆满层：零耗MP）
-            bool fudanMax = caster.GongFaName == "云篆度人经" && caster.FudanStacks == caster.MaxFudan();
-            int effectiveMpCost = fudanMax ? 0 : spell.mpCost;
-            if (!caster.ConsumeMP(effectiveMpCost))
-                return new ActionResult { Success = false, Message = "灵力不足" };
+        public ActionResult UseSkill(Character caster, Character target, int skillIndex, AttackProfileData profile)
+        {
+            return ExecuteSingleTargetProfile(caster, target, profile, AttackProfileKind.Divine,
+                caster.SkillCooldowns, skillIndex, "神通");
+        }
 
-            // 射程检查（自指向术法 minRange=0 maxRange=0 跳过）
-            bool isSelfTarget = spell.minRange == 0 && spell.maxRange == 0;
-            if (!isSelfTarget)
+        public AreaTargetingResult ResolveAreaTargets(
+            AttackProfileData profile,
+            Character caster,
+            HexCoord? requestedTargetCell,
+            IReadOnlyList<AreaTargetCandidate> candidates)
+        {
+            if (profile == null || !profile.TryValidate(out _) || profile.targetingMode != AttackTargetingMode.Area)
+                return new AreaTargetingResult(null, null, "attack_profile_area_unresolved");
+            if (SpatialBoard == null || caster == null || candidates == null)
+                return new AreaTargetingResult(null, null, SpatialQueryReasons.QueryBoardNotConfigured);
+
+            HexCoord center;
+            if (profile.areaCenterKind == AttackAreaCenterKind.Caster)
             {
-                if (!CanTarget(caster.Position, target.Position, spell.minRange, spell.maxRange, out _))
-                    return new ActionResult { Success = false, Message = "目标不在射程范围" };
+                center = caster.Position;
+            }
+            else if (requestedTargetCell.HasValue)
+            {
+                center = requestedTargetCell.Value;
+            }
+            else
+            {
+                return new AreaTargetingResult(null, null, "target_cell_invalid_or_out_of_bounds");
             }
 
-            // 设置冷却
-            caster.SpellCooldowns[spellIndex] = spell.cooldownTicks;
+            var spatialCenter = ToSpatial(center);
+            if (!SpatialBoard.Cells.Contains(spatialCenter))
+                return new AreaTargetingResult(null, null, "target_cell_invalid_or_out_of_bounds");
 
-            // CT冷却惩罚
-            Engine.ApplySpellCooldown(caster.CTBUnit, spell.cooldownTicks);
+            var source = ToSpatial(caster.Position);
+            var castDistance = SpatialBoard.QueryRangeEntry(
+                source,
+                spatialCenter,
+                profile.minCastRange,
+                profile.maxCastRange,
+                SpatialQueryKind.Area,
+                requireLineOfSight: false,
+                activeEffectBlockers: 0);
+            if (!castDistance.IsInRange)
+                return new AreaTargetingResult(center, null, "cast_distance_out_of_range");
 
-            // 朝向目标
-            caster.FaceTarget(target.Position);
+            var castPropagation = SpatialBoard.QueryRangeEntry(
+                source,
+                spatialCenter,
+                profile.minCastRange,
+                profile.maxCastRange,
+                SpatialQueryKind.Area,
+                requireLineOfSight: false,
+                activeEffectBlockers: (ulong)profile.areaEffectBlockers);
+            if (!castPropagation.IsInRange)
+                return new AreaTargetingResult(center, null, "declared_effect_blocker");
 
-            DamageCalculator.DamageResult damage = default;
-            string msg;
-
-            switch (spell.type)
+            var hits = new List<int>();
+            bool propagationBlocked = false;
+            bool stateRejected = false;
+            bool factionRejected = false;
+            foreach (var candidate in candidates)
             {
-                case SpellType.Physical:
-                    damage = DamageCalculator.CalcPhysical(caster.PhysAtk,
-                        spell.physicalDamageMultiplier * ConsumeLeijieForPhysicalAction(caster),
-                        caster, target, spell.cannotBlock, spell.element, spell.cannotDodge);
-                    if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
-                    msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
-                    break;
+                if (!IsWithinAreaShape(center, candidate.Position, profile))
+                    continue;
 
-                case SpellType.Magic:
-                    float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
-                    FudanActionBonus spellFudanBonus = ConsumeFudanForMagicAction(caster);
+                var propagation = SpatialBoard.QueryMetricDistance(
+                    spatialCenter,
+                    ToSpatial(candidate.Position),
+                    SpatialQueryKind.Area,
+                    activeEffectBlockers: (ulong)profile.areaEffectBlockers,
+                    canTraverse: coord => IsWithinAreaEnvelope(center, FromSpatial(coord), profile));
+                if (!propagation.IsReachable)
+                {
+                    propagationBlocked = true;
+                    continue;
+                }
 
-                    damage = DamageCalculator.CalcMagic(caster.MagAtk,
-                        spell.soulDamageMultiplier * syMult * spellFudanBonus.DamageMultiplier,
+                var requiredState = candidate.IsAlive
+                    ? AttackAreaTargetState.Alive
+                    : AttackAreaTargetState.Corpse;
+                if ((profile.areaAllowedStates & requiredState) == 0)
+                {
+                    stateRejected = true;
+                    continue;
+                }
+                if ((profile.areaAllowedFactions & candidate.Faction) == 0)
+                {
+                    factionRejected = true;
+                    continue;
+                }
+                hits.Add(candidate.UnitId);
+            }
+
+            if (hits.Count > 0)
+                return new AreaTargetingResult(center, hits, string.Empty);
+            if (propagationBlocked)
+                return new AreaTargetingResult(center, null, "declared_effect_blocker");
+            if (stateRejected)
+                return new AreaTargetingResult(center, null, "target_state_or_corpse_ineligible");
+            if (factionRejected)
+                return new AreaTargetingResult(center, null, "target_faction_ineligible");
+            return new AreaTargetingResult(center, null, "no_legal_target");
+        }
+
+        private ActionResult ExecuteSingleTargetProfile(
+            Character caster,
+            Character target,
+            AttackProfileData profile,
+            AttackProfileKind expectedKind,
+            int[] cooldowns,
+            int cooldownIndex,
+            string actionVerb)
+        {
+            if (caster == null || target == null || profile == null ||
+                !profile.TryValidate(out _) || profile.profileKind != expectedKind ||
+                profile.targetingMode != AttackTargetingMode.Single)
+            {
+                return Failure("attack_profile_unresolved");
+            }
+            if (!CanResolveSingleTargetEffect(profile))
+                return Failure("attack_profile_effect_unresolved");
+            if (cooldowns != null && (cooldownIndex < 0 || cooldownIndex >= cooldowns.Length))
+                return Failure("attack_profile_cooldown_slot_invalid");
+            if (cooldowns != null && cooldowns[cooldownIndex] > 0)
+                return Failure($"{profile.displayNameKey} 冷却中");
+            if (!CanTarget(caster.Position, target.Position, profile.minCastRange, profile.maxCastRange, out _))
+                return Failure("目标不在射程范围");
+            if (profile.resourceKind == AttackResourceKind.Mp && !caster.ConsumeMP(profile.resourceCost))
+                return Failure("灵力不足");
+
+            caster.FaceTarget(target.Position);
+            var result = ApplyProfileEffect(caster, target, profile, actionVerb);
+            if (!result.Success)
+                return result;
+
+            if (cooldowns != null)
+                cooldowns[cooldownIndex] = profile.cooldownTicks;
+            if (profile.cooldownTicks > 0)
+                Engine.ApplySpellCooldown(caster.CTBUnit, profile.cooldownTicks);
+            return result;
+        }
+
+        private ActionResult ApplyProfileEffect(Character caster, Character target, AttackProfileData profile, string actionVerb)
+        {
+            DamageCalculator.DamageResult damage;
+            switch (profile.effectType)
+            {
+                case AttackEffectType.Physical:
+                    damage = DamageCalculator.CalcPhysical(
+                        caster.PhysAtk,
+                        profile.physicalDamageMultiplier * ConsumeLeijieForPhysicalAction(caster),
                         caster,
                         target,
-                        spell.element,
-                        spell.cannotDodge || spellFudanBonus.WasFull,
-                        spell.penetratingShield,
-                        spellFudanBonus.MagicDefensePenetrationPercent);
+                        skillElement: profile.damageElementId);
                     if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
-                    msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
-
-                case SpellType.Hybrid:
-                    var physicalDamage = DamageCalculator.CalcPhysical(caster.PhysAtk,
-                        spell.physicalDamageMultiplier * ConsumeLeijieForPhysicalAction(caster),
-                        caster, target, spell.cannotBlock, spell.element, spell.cannotDodge);
-                    float hybridSoulMultiplier = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
-                    FudanActionBonus hybridFudanBonus = ConsumeFudanForMagicAction(caster);
-                    var soulDamage = DamageCalculator.CalcMagic(caster.MagAtk,
-                        spell.soulDamageMultiplier * hybridSoulMultiplier * hybridFudanBonus.DamageMultiplier,
-                        caster, target, spell.element, spell.cannotDodge || hybridFudanBonus.WasFull,
-                        spell.penetratingShield, hybridFudanBonus.MagicDefensePenetrationPercent);
+                case AttackEffectType.Magic:
+                    damage = CalculateMagicProfileDamage(caster, target, profile);
+                    if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
+                    break;
+                case AttackEffectType.Hybrid:
+                    var physicalDamage = DamageCalculator.CalcPhysical(
+                        caster.PhysAtk,
+                        profile.physicalDamageMultiplier * ConsumeLeijieForPhysicalAction(caster),
+                        caster,
+                        target,
+                        skillElement: profile.damageElementId);
+                    var soulDamage = CalculateMagicProfileDamage(caster, target, profile);
                     if (physicalDamage.IsHit) target.TakeDamage(physicalDamage.FinalDamage);
                     if (soulDamage.IsHit) target.TakeDamage(soulDamage.FinalDamage);
                     damage = new DamageCalculator.DamageResult
                     {
                         FinalDamage = physicalDamage.FinalDamage + soulDamage.FinalDamage,
                         IsHit = physicalDamage.IsHit || soulDamage.IsHit,
-                        Log = $"{physicalDamage.Log}; {soulDamage.Log}"
+                        Log = $"{physicalDamage.Log}; {soulDamage.Log}",
                     };
-                    msg = $"{caster.Name} 施放 {spell.spellName} → {target.Name}: {damage.Log}";
                     break;
-
-                case SpellType.Heal:
-                    caster.Heal(spell.healAmount);
-                    msg = $"{caster.Name} 施放 {spell.spellName}: 恢复{spell.healAmount}HP";
+                case AttackEffectType.Heal:
+                    target.Heal(profile.healAmount);
+                    damage = default;
+                    damage.Log = $"恢复{profile.healAmount}HP";
                     break;
-
-                case SpellType.Buff:
-                    msg = $"{caster.Name} 施放 {spell.spellName}: 获得增益";
-                    break;
-
-                case SpellType.Movement:
-                    // 位移术法（如缩地成寸）：TODO
-                    msg = $"{caster.Name} 施放 {spell.spellName}（位移）";
-                    break;
-
                 default:
-                    msg = $"{caster.Name} 施放 {spell.spellName}";
-                    break;
+                    return Failure("attack_profile_effect_unresolved");
             }
 
-            // 守一：出手后+1层
-            if (caster.GongFaName == "抱元守一经")
-                caster.ShouyiStacks = Mathf.Min(caster.ShouyiStacks + 1, caster.MaxShouyi());
-            // 符胆：行动结束补1层；若本次神魂行动已消耗符胆，则从消耗后的层数开始回补。
-            if (caster.GongFaName == "云篆度人经")
-                caster.FudanStacks = Mathf.Min(caster.FudanStacks + 1, caster.MaxFudan());
-
-            // 眩晕判定
-            if (spell.stunChance > 0 && Random.value * 100f < spell.stunChance)
-            {
-                msg += " [眩晕!]";
-                // TODO: 目标下回合跳过
-            }
-
-            BattleLog.Add(msg);
-            Debug.Log(msg);
-
-            return new ActionResult { Success = true, Damage = damage, Message = msg };
+            AdvanceGongFaActionState(caster);
+            string log = $"{caster.Name} {actionVerb} {profile.displayNameKey} → {target.Name}: {damage.Log}";
+            BattleLog.Add(log);
+            Debug.Log(log);
+            return new ActionResult { Success = true, Damage = damage, Message = log };
         }
 
-        /// <summary>使用神通</summary>
-        public ActionResult UseSkill(Character caster, Character target,
-            int skillIndex, DivineSkillData skill)
+        private static bool CanResolveSingleTargetEffect(AttackProfileData profile)
         {
-            if (caster.SkillCooldowns[skillIndex] > 0)
-                return new ActionResult { Success = false, Message = $"{skill.skillName} 冷却中" };
+            return profile.effectType is AttackEffectType.Physical or AttackEffectType.Magic or
+                AttackEffectType.Hybrid or AttackEffectType.Heal;
+        }
 
-            if (!caster.ConsumeMP(skill.mpCost))
-                return new ActionResult { Success = false, Message = "灵力不足" };
+        private static DamageCalculator.DamageResult CalculateMagicProfileDamage(
+            Character caster,
+            Character target,
+            AttackProfileData profile)
+        {
+            float shouyiMultiplier = caster.GongFaName == "抱元守一经"
+                ? 1f + caster.ShouyiStacks * 0.05f
+                : 1f;
+            FudanActionBonus fudanBonus = ConsumeFudanForMagicAction(caster);
+            return DamageCalculator.CalcMagic(
+                caster.MagAtk,
+                profile.soulDamageMultiplier * shouyiMultiplier * fudanBonus.DamageMultiplier,
+                caster,
+                target,
+                profile.damageElementId,
+                fudanBonus.WasFull,
+                magicDefensePenetrationPercent: profile.defensePenetration + fudanBonus.MagicDefensePenetrationPercent);
+        }
 
-            if (!CanTarget(caster.Position, target.Position, skill.minRange, skill.maxRange, out _))
-                return new ActionResult { Success = false, Message = "目标不在射程范围" };
-
-            caster.SkillCooldowns[skillIndex] = skill.cooldownTicks;
-            Engine.ApplySpellCooldown(caster.CTBUnit, skill.cooldownTicks);
-            caster.FaceTarget(target.Position);
-
-            DamageCalculator.DamageResult damage;
-            if (skill.type == SpellType.Physical)
-            {
-                damage = DamageCalculator.CalcPhysical(caster.PhysAtk,
-                    skill.damageMultiplier * ConsumeLeijieForPhysicalAction(caster),
-                    caster, target, skill.cannotBlock, skill.element, skill.cannotDodge);
-            }
-            else
-            {
-                float syMult = caster.GongFaName == "抱元守一经" ? 1f + caster.ShouyiStacks * 0.05f : 1f;
-                FudanActionBonus fudanBonus = ConsumeFudanForMagicAction(caster);
-                damage = DamageCalculator.CalcMagic(
-                    caster.MagAtk,
-                    skill.damageMultiplier * syMult * fudanBonus.DamageMultiplier,
-                    caster,
-                    target,
-                    skill.element,
-                    skill.cannotDodge || fudanBonus.WasFull,
-                    skill.penetratingShield,
-                    fudanBonus.MagicDefensePenetrationPercent);
-            }
-
-            if (damage.IsHit) target.TakeDamage(damage.FinalDamage);
-
-            // 守一：出手后+1层
+        private static void AdvanceGongFaActionState(Character caster)
+        {
             if (caster.GongFaName == "抱元守一经")
                 caster.ShouyiStacks = Mathf.Min(caster.ShouyiStacks + 1, caster.MaxShouyi());
-            // 符胆：出手后+1层
             if (caster.GongFaName == "云篆度人经")
                 caster.FudanStacks = Mathf.Min(caster.FudanStacks + 1, caster.MaxFudan());
-
-            string msg = $"{caster.Name} 神通·{skill.skillName} → {target.Name}: {damage.Log}";
-            BattleLog.Add(msg);
-            Debug.Log(msg);
-
-            return new ActionResult { Success = true, Damage = damage, Message = msg };
         }
+
+        private static bool IsWithinAreaEnvelope(HexCoord center, HexCoord target, AttackProfileData profile)
+        {
+            int originalInnerRadius = profile.areaInnerRadius;
+            return IsWithinAreaShape(center, target, profile, originalInnerRadius: 0);
+        }
+
+        private static bool IsWithinAreaShape(HexCoord center, HexCoord target, AttackProfileData profile, int? originalInnerRadius = null)
+        {
+            int distance = center.Distance(target);
+            int innerRadius = originalInnerRadius ?? profile.areaInnerRadius;
+            if (innerRadius > 0 && distance <= innerRadius)
+                return false;
+            return profile.areaShapeKind switch
+            {
+                AttackAreaShapeKind.Circle => distance <= profile.areaRadius,
+                AttackAreaShapeKind.Line => IsOnLine(center, target, profile.areaFacing, profile.areaLength),
+                AttackAreaShapeKind.Fan => IsInFan(
+                    center,
+                    target,
+                    profile.areaFacing,
+                    profile.areaLength,
+                    profile.areaFanHalfAngleSteps),
+                _ => false,
+            };
+        }
+
+        private static bool IsOnLine(HexCoord center, HexCoord target, int facing, int length)
+        {
+            var current = center;
+            for (int step = 1; step <= length; step++)
+            {
+                current = current.Neighbor(facing);
+                if (current == target)
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool IsInFan(HexCoord center, HexCoord target, int facing, int length, int halfAngleSteps)
+        {
+            if (center.Distance(target) > length)
+                return false;
+            if (target == center)
+                return true;
+
+            var offset = new HexCoord(target.q - center.q, target.r - center.r);
+            for (int step = 0; step < facing; step++)
+                offset = new HexCoord(-offset.r, offset.q + offset.r);
+            return halfAngleSteps == 0
+                ? offset.r == 0 && offset.q > 0
+                : offset.q >= 0 && offset.q + offset.r >= 0;
+        }
+
+        private static ActionResult Failure(string message) =>
+            new ActionResult { Success = false, Message = message };
 
         private static FudanActionBonus ConsumeFudanForMagicAction(Character character)
         {

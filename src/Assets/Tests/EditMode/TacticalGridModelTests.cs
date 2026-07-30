@@ -250,6 +250,42 @@ namespace TianZhang.Tests
 
     public class CombatMechanismTests
     {
+        private static AttackProfileData CreateBasicProfile(AttackEffectType effectType)
+        {
+            var profile = ScriptableObject.CreateInstance<AttackProfileData>();
+            profile.hideFlags = HideFlags.HideAndDontSave;
+            profile.attackProfileId = effectType == AttackEffectType.Magic
+                ? "test_basic_magic"
+                : "test_basic_physical";
+            profile.displayNameKey = effectType == AttackEffectType.Magic ? "神魂攻击" : "物理攻击";
+            profile.profileKind = AttackProfileKind.Basic;
+            profile.basicBindingKind = BasicAttackBindingKind.MainEquipment;
+            profile.effectType = effectType;
+            profile.damageElementId = "element_none";
+            profile.physicalDamageMultiplier = effectType is AttackEffectType.Physical or AttackEffectType.Hybrid ? 1f : 0f;
+            profile.soulDamageMultiplier = effectType is AttackEffectType.Magic or AttackEffectType.Hybrid ? 1f : 0f;
+            profile.resourceKind = AttackResourceKind.None;
+            profile.minCastRange = 1;
+            profile.maxCastRange = 3;
+            profile.targetingMode = AttackTargetingMode.Single;
+            profile.areaFacing = -1;
+            return profile;
+        }
+
+        private static AttackProfileData CreateDivineMagicProfile(string displayNameKey)
+        {
+            var profile = CreateBasicProfile(AttackEffectType.Magic);
+            profile.attackProfileId = "test_divine_magic";
+            profile.displayNameKey = displayNameKey;
+            profile.profileKind = AttackProfileKind.Divine;
+            profile.basicBindingKind = BasicAttackBindingKind.Unknown;
+            profile.contentScope = "player";
+            profile.sourceAffiliation = "test";
+            profile.realmRequirementId = "realm_fanren";
+            profile.elementRequirementId = "element_none";
+            return profile;
+        }
+
         [Test]
         public void CritDamageUsesBaseOnePointFivePlusPercentagePointBonuses()
         {
@@ -267,36 +303,22 @@ namespace TianZhang.Tests
                 Engine = engine,
                 SpatialBoard = SpatialQueryTestFixture.CreateOpenBoard(),
             };
-            var skill = ScriptableObject.CreateInstance<DivineSkillData>();
-            try
-            {
-                skill.skillName = "符胆神通回归";
-                skill.type = SpellType.Magic;
-                skill.minRange = 1;
-                skill.maxRange = 3;
-                skill.mpCost = 0;
-                skill.cooldownTicks = 0;
-                skill.damageMultiplier = 1f;
+            var skill = CreateDivineMagicProfile("符胆神通回归");
 
-                var baseCaster = CreateFudanCaster(engine, "无符胆", 0);
-                var baseTarget = CreateTarget(engine, "基准目标");
-                LogAssert.Expect(LogType.Log, new Regex("无符胆 神通·符胆神通回归"));
-                var baseResult = resolver.UseSkill(baseCaster, baseTarget, 0, skill);
+            var baseCaster = CreateFudanCaster(engine, "无符胆", 0);
+            var baseTarget = CreateTarget(engine, "基准目标");
+            LogAssert.Expect(LogType.Log, new Regex("无符胆 神通 符胆神通回归.*基准目标"));
+            var baseResult = resolver.UseSkill(baseCaster, baseTarget, 0, skill);
 
-                var fullCaster = CreateFudanCaster(engine, "满符胆", 5);
-                var fullTarget = CreateTarget(engine, "满层目标");
-                LogAssert.Expect(LogType.Log, new Regex("满符胆 神通·符胆神通回归"));
-                var fullResult = resolver.UseSkill(fullCaster, fullTarget, 0, skill);
+            var fullCaster = CreateFudanCaster(engine, "满符胆", 5);
+            var fullTarget = CreateTarget(engine, "满层目标");
+            LogAssert.Expect(LogType.Log, new Regex("满符胆 神通 符胆神通回归.*满层目标"));
+            var fullResult = resolver.UseSkill(fullCaster, fullTarget, 0, skill);
 
-                Assert.IsTrue(baseResult.Success);
-                Assert.IsTrue(fullResult.Success);
-                Assert.Greater(fullResult.Damage.FinalDamage, baseResult.Damage.FinalDamage);
-                Assert.AreEqual(1, fullCaster.FudanStacks);
-            }
-            finally
-            {
-                Object.DestroyImmediate(skill);
-            }
+            Assert.IsTrue(baseResult.Success);
+            Assert.IsTrue(fullResult.Success);
+            Assert.Greater(fullResult.Damage.FinalDamage, baseResult.Damage.FinalDamage);
+            Assert.AreEqual(1, fullCaster.FudanStacks);
         }
 
         [Test]
@@ -311,8 +333,8 @@ namespace TianZhang.Tests
 
             var baseAttacker = CreateLeijieCombatant(engine, "未蓄雷", new HexCoord(0, 0));
             var baseTarget = CreateTarget(engine, "基准目标");
-            LogAssert.Expect(LogType.Log, new Regex("未蓄雷 物理攻击 基准目标"));
-            var baseResult = resolver.BasicAttack(baseAttacker, baseTarget, false);
+            LogAssert.Expect(LogType.Log, new Regex("未蓄雷 攻击 物理攻击.*基准目标"));
+            var baseResult = resolver.BasicAttack(baseAttacker, baseTarget, CreateBasicProfile(AttackEffectType.Physical));
 
             var chargedAttacker = CreateLeijieCombatant(engine, "已蓄雷", new HexCoord(0, 0));
             chargedAttacker.TakeDamage(1);
@@ -320,12 +342,12 @@ namespace TianZhang.Tests
             chargedAttacker.TakeDamage(1);
 
             var chargedTarget = CreateTarget(engine, "蓄雷目标");
-            LogAssert.Expect(LogType.Log, new Regex("已蓄雷 物理攻击 蓄雷目标"));
-            var chargedResult = resolver.BasicAttack(chargedAttacker, chargedTarget, false);
+            LogAssert.Expect(LogType.Log, new Regex("已蓄雷 攻击 物理攻击.*蓄雷目标"));
+            var chargedResult = resolver.BasicAttack(chargedAttacker, chargedTarget, CreateBasicProfile(AttackEffectType.Physical));
 
             var spentTarget = CreateTarget(engine, "耗尽目标");
-            LogAssert.Expect(LogType.Log, new Regex("已蓄雷 物理攻击 耗尽目标"));
-            var spentResult = resolver.BasicAttack(chargedAttacker, spentTarget, false);
+            LogAssert.Expect(LogType.Log, new Regex("已蓄雷 攻击 物理攻击.*耗尽目标"));
+            var spentResult = resolver.BasicAttack(chargedAttacker, spentTarget, CreateBasicProfile(AttackEffectType.Physical));
 
             Assert.IsTrue(baseResult.Success);
             Assert.IsTrue(chargedResult.Success);
@@ -346,15 +368,15 @@ namespace TianZhang.Tests
             var caster = CreateMagicCaster(engine, "神魂测试者", new HexCoord(0, 0));
 
             var freshDefender = CreateLeijieCombatant(engine, "未满雷劫", new HexCoord(1, 0));
-            LogAssert.Expect(LogType.Log, new Regex("神魂测试者 神魂攻击 未满雷劫"));
-            var freshResult = resolver.BasicAttack(caster, freshDefender, true);
+            LogAssert.Expect(LogType.Log, new Regex("神魂测试者 攻击 神魂攻击.*未满雷劫"));
+            var freshResult = resolver.BasicAttack(caster, freshDefender, CreateBasicProfile(AttackEffectType.Magic));
 
             var chargedDefender = CreateLeijieCombatant(engine, "满层雷劫", new HexCoord(1, 0));
             for (int i = 0; i < 5; i++)
                 chargedDefender.TakeDamage(1);
 
-            LogAssert.Expect(LogType.Log, new Regex("神魂测试者 神魂攻击 满层雷劫"));
-            var chargedResult = resolver.BasicAttack(caster, chargedDefender, true);
+            LogAssert.Expect(LogType.Log, new Regex("神魂测试者 攻击 神魂攻击.*满层雷劫"));
+            var chargedResult = resolver.BasicAttack(caster, chargedDefender, CreateBasicProfile(AttackEffectType.Magic));
 
             Assert.IsTrue(freshResult.Success);
             Assert.IsTrue(chargedResult.Success);
@@ -391,14 +413,14 @@ namespace TianZhang.Tests
             var normalCaster = CreateMagicCaster(engine, "普通神魂", new HexCoord(0, 0), "含弘光大典");
             var normalTarget = CreateTarget(engine, "普通目标");
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("普通神魂 神魂攻击 普通目标"));
-            var normalResult = resolver.BasicAttack(normalCaster, normalTarget, true);
+                LogAssert.Expect(LogType.Log, new Regex("普通神魂 攻击 神魂攻击.*普通目标"));
+            var normalResult = resolver.BasicAttack(normalCaster, normalTarget, CreateBasicProfile(AttackEffectType.Magic));
 
             var xuanganCaster = CreateMagicCaster(engine, "玄感神魂", new HexCoord(0, 0), "南华玄感录");
             var xuanganTarget = CreateTarget(engine, "玄感目标");
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("玄感神魂 神魂攻击 玄感目标"));
-            var xuanganResult = resolver.BasicAttack(xuanganCaster, xuanganTarget, true);
+                LogAssert.Expect(LogType.Log, new Regex("玄感神魂 攻击 神魂攻击.*玄感目标"));
+            var xuanganResult = resolver.BasicAttack(xuanganCaster, xuanganTarget, CreateBasicProfile(AttackEffectType.Magic));
 
             Assert.IsTrue(normalResult.Success);
             Assert.IsTrue(xuanganResult.Success);
@@ -417,13 +439,13 @@ namespace TianZhang.Tests
 
             var neutralDefender = CreateTarget(engine, "普通防御", "秋水游心经");
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("物理测试者 物理攻击 普通防御"));
-            var neutralResult = resolver.BasicAttack(attacker, neutralDefender, false);
+                LogAssert.Expect(LogType.Log, new Regex("物理测试者 攻击 物理攻击.*普通防御"));
+            var neutralResult = resolver.BasicAttack(attacker, neutralDefender, CreateBasicProfile(AttackEffectType.Physical));
 
             var hanhongDefender = CreateTarget(engine, "含弘防御", "含弘光大典");
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("物理测试者 物理攻击 含弘防御"));
-            var hanhongResult = resolver.BasicAttack(attacker, hanhongDefender, false);
+                LogAssert.Expect(LogType.Log, new Regex("物理测试者 攻击 物理攻击.*含弘防御"));
+            var hanhongResult = resolver.BasicAttack(attacker, hanhongDefender, CreateBasicProfile(AttackEffectType.Physical));
 
             Assert.IsTrue(neutralResult.Success);
             Assert.IsTrue(hanhongResult.Success);
@@ -442,27 +464,27 @@ namespace TianZhang.Tests
             var physicalAttacker = CreateLeijieCombatant(engine, "载物物理", new HexCoord(0, 0));
             var fullPhysicalTarget = CreateTarget(engine, "满血物防", "含弘光大典");
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("载物物理 物理攻击 满血物防"));
-            var fullPhysical = resolver.BasicAttack(physicalAttacker, fullPhysicalTarget, false);
+                LogAssert.Expect(LogType.Log, new Regex("载物物理 攻击 物理攻击.*满血物防"));
+            var fullPhysical = resolver.BasicAttack(physicalAttacker, fullPhysicalTarget, CreateBasicProfile(AttackEffectType.Physical));
 
             var lowPhysicalTarget = CreateTarget(engine, "残血物防", "含弘光大典");
             lowPhysicalTarget.CurrentHP = lowPhysicalTarget.MaxHP / 2;
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("载物物理 物理攻击 残血物防"));
-            var lowPhysical = resolver.BasicAttack(physicalAttacker, lowPhysicalTarget, false);
+                LogAssert.Expect(LogType.Log, new Regex("载物物理 攻击 物理攻击.*残血物防"));
+            var lowPhysical = resolver.BasicAttack(physicalAttacker, lowPhysicalTarget, CreateBasicProfile(AttackEffectType.Physical));
 
             var fullMagicCaster = CreateMagicCaster(engine, "载物神魂满", new HexCoord(0, 0), "抱元守一经");
             var fullMagicTarget = CreateTarget(engine, "满血魂防", "含弘光大典");
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("载物神魂满 神魂攻击 满血魂防"));
-            var fullMagic = resolver.BasicAttack(fullMagicCaster, fullMagicTarget, true);
+                LogAssert.Expect(LogType.Log, new Regex("载物神魂满 攻击 神魂攻击.*满血魂防"));
+            var fullMagic = resolver.BasicAttack(fullMagicCaster, fullMagicTarget, CreateBasicProfile(AttackEffectType.Magic));
 
             var lowMagicCaster = CreateMagicCaster(engine, "载物神魂残", new HexCoord(0, 0), "抱元守一经");
             var lowMagicTarget = CreateTarget(engine, "残血魂防", "含弘光大典");
             lowMagicTarget.CurrentHP = lowMagicTarget.MaxHP / 2;
             if (expectLogs)
-                LogAssert.Expect(LogType.Log, new Regex("载物神魂残 神魂攻击 残血魂防"));
-            var lowMagic = resolver.BasicAttack(lowMagicCaster, lowMagicTarget, true);
+                LogAssert.Expect(LogType.Log, new Regex("载物神魂残 攻击 神魂攻击.*残血魂防"));
+            var lowMagic = resolver.BasicAttack(lowMagicCaster, lowMagicTarget, CreateBasicProfile(AttackEffectType.Magic));
 
             Assert.IsTrue(fullPhysical.Success);
             Assert.IsTrue(lowPhysical.Success);
@@ -479,10 +501,13 @@ namespace TianZhang.Tests
             var attacker = CreateLeijieCombatant(engine, "未配置攻击者", new HexCoord(0, 0));
             var target = CreateTarget(engine, "未配置目标");
 
-            var result = new CombatResolver { Engine = engine }.BasicAttack(attacker, target);
+            var result = new CombatResolver { Engine = engine }.BasicAttack(
+                attacker,
+                target,
+                CreateBasicProfile(AttackEffectType.Physical));
 
             Assert.IsFalse(result.Success);
-            Assert.AreEqual("目标不在近战范围", result.Message);
+            Assert.AreEqual("目标不在射程范围", result.Message);
         }
 
         [Test]
@@ -497,9 +522,9 @@ namespace TianZhang.Tests
             var attacker = CreateLeijieCombatant(engine, "压缩边攻击者", new HexCoord(0, 0));
             var target = CreateTarget(engine, "压缩边目标");
             target.Position = new HexCoord(2, 0);
-            LogAssert.Expect(LogType.Log, new Regex("压缩边攻击者 物理攻击 压缩边目标"));
+            LogAssert.Expect(LogType.Log, new Regex("压缩边攻击者 攻击 物理攻击.*压缩边目标"));
 
-            var result = resolver.BasicAttack(attacker, target);
+            var result = resolver.BasicAttack(attacker, target, CreateBasicProfile(AttackEffectType.Physical));
 
             Assert.IsTrue(result.Success);
         }
@@ -651,6 +676,16 @@ namespace TianZhang.Tests
 
     public class TacticalCombatControllerTests
     {
+        private readonly List<AttackProfileData> temporaryProfiles = new List<AttackProfileData>();
+
+        [TearDown]
+        public void DestroyTemporaryProfiles()
+        {
+            foreach (var profile in temporaryProfiles)
+                Object.DestroyImmediate(profile);
+            temporaryProfiles.Clear();
+        }
+
         [Test]
         public void BeginCombatResetsCtbLinksGridFacesTargetsAndInitializesGongFaStacks()
         {
@@ -666,11 +701,10 @@ namespace TianZhang.Tests
             player.CTBUnit.NextActionThreshold = 130f;
             enemy.CTBUnit.CT = 150f;
 
-            var session = controller.BeginCombat(
-                player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
+            var session = Begin(controller, grid, player, enemy);
 
-            Assert.AreSame(player, session.Player);
-            Assert.AreSame(enemy, session.Enemy);
+            Assert.AreSame(player, session.Members[0].Character);
+            Assert.AreSame(enemy, session.Members[1].Character);
             Assert.AreSame(grid, controller.Resolver.Grid);
             Assert.AreEqual(0f, player.CTBUnit.CT);
             Assert.AreEqual(0, player.CTBUnit.PendingCooldownPenalty);
@@ -698,7 +732,7 @@ namespace TianZhang.Tests
             fast.SpellCooldowns[0] = 5;
             slow.SpellCooldowns[0] = 5;
 
-            controller.BeginCombat(fast, slow, grid, SpatialQueryTestFixture.CreateOpenBoard());
+            Begin(controller, grid, fast, slow);
             var next = controller.AdvanceUntilAction();
             controller.AdvanceCooldowns(next.TicksElapsed);
 
@@ -716,10 +750,10 @@ namespace TianZhang.Tests
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
 
-            controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
+            Begin(controller, grid, player, enemy);
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
-            var hit = controller.ExecutePlayerBasicAttack();
+            var hit = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
 
             Assert.IsTrue(hit.Success);
             Assert.AreEqual(0f, player.CTBUnit.CT);
@@ -728,10 +762,10 @@ namespace TianZhang.Tests
             enemy.Position = new HexCoord(3, 0);
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
-            var outOfRange = controller.ExecutePlayerBasicAttack();
+            var outOfRange = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
 
             Assert.IsFalse(outOfRange.Success);
-            Assert.AreEqual("目标不在近战范围", outOfRange.Message);
+            Assert.AreEqual("目标不在射程范围", outOfRange.Message);
             Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
         }
 
@@ -742,41 +776,30 @@ namespace TianZhang.Tests
             var controller = new TacticalCombatController();
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(3, 0), controller.Engine);
-            var spell = ScriptableObject.CreateInstance<SpellData>();
-            try
-            {
-                spell.spellName = "测试术法";
-                spell.type = SpellType.Magic;
-                spell.minRange = 1;
-                spell.maxRange = 1;
-                spell.mpCost = 10;
-                spell.cooldownTicks = 20;
-                spell.damageMultiplier = 1f;
+            var art = CreateArt("art_test");
+            player.EquippedSpellIds = new[] { art.attackProfileId };
 
-                controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
-                player.CTBUnit.CT = CTBEngine.ActionThreshold;
-                int mpBefore = player.CurrentMP;
+            Begin(controller, grid, player, enemy, art);
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+            int mpBefore = player.CurrentMP;
 
-                var outOfRange = controller.ExecutePlayerSpell(0, new[] { spell });
+            var outOfRange = controller.ExecuteArt(
+                player.CTBUnit.Id, enemy.CTBUnit.Id, 0, new[] { art });
 
-                Assert.IsFalse(outOfRange.Success);
-                Assert.AreEqual("超出射程", outOfRange.Message);
-                Assert.AreEqual(mpBefore, player.CurrentMP);
-                Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
+            Assert.IsFalse(outOfRange.Success);
+            Assert.AreEqual("目标不在射程范围", outOfRange.Message);
+            Assert.AreEqual(mpBefore, player.CurrentMP);
+            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
 
-                enemy.Position = new HexCoord(1, 0);
+            enemy.Position = new HexCoord(1, 0);
 
-                var cast = controller.ExecutePlayerSpell(0, new[] { spell });
+            var cast = controller.ExecuteArt(
+                player.CTBUnit.Id, enemy.CTBUnit.Id, 0, new[] { art });
 
-                Assert.IsTrue(cast.Success);
-                Assert.AreEqual(0f, player.CTBUnit.CT);
-                Assert.AreEqual(20, player.SpellCooldowns[0]);
-                Assert.Less(player.CurrentMP, mpBefore);
-            }
-            finally
-            {
-                Object.DestroyImmediate(spell);
-            }
+            Assert.IsTrue(cast.Success);
+            Assert.AreEqual(0f, player.CTBUnit.CT);
+            Assert.AreEqual(20, player.SpellCooldowns[0]);
+            Assert.Less(player.CurrentMP, mpBefore);
         }
 
         [Test]
@@ -787,10 +810,10 @@ namespace TianZhang.Tests
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
 
-            controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
+            Begin(controller, grid, player, enemy);
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
-            var guard = controller.ExecutePlayerGuard();
+            var guard = controller.ExecuteGuard(player.CTBUnit.Id);
 
             Assert.IsTrue(guard.Success);
             Assert.IsTrue(player.IsGuarding);
@@ -798,7 +821,7 @@ namespace TianZhang.Tests
 
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
-            var wait = controller.ExecutePlayerWait();
+            var wait = controller.ExecuteWait(player.CTBUnit.Id);
 
             Assert.IsTrue(wait.Success);
             Assert.IsFalse(player.IsGuarding);
@@ -815,10 +838,10 @@ namespace TianZhang.Tests
             player.EquippedSpellIds = new[] { "old-spell" };
             player.AvailableSpells = new[] { "old-spell", "new-spell", "backup-spell" };
 
-            controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
+            Begin(controller, grid, player, enemy);
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
-            var swapped = controller.ExecutePlayerSwapSpell(0, "new-spell");
+            var swapped = controller.ExecuteSwapSpell(player.CTBUnit.Id, 0, "new-spell");
 
             Assert.IsTrue(swapped.Success);
             Assert.AreEqual("临阵换法: old-spell → new-spell (CD×2, 剩余1次)", swapped.Message);
@@ -830,7 +853,7 @@ namespace TianZhang.Tests
             player.CombatSwapsUsed = Character.MaxCombatSwaps;
             player.CTBUnit.CT = CTBEngine.ActionThreshold;
 
-            var exhausted = controller.ExecutePlayerSwapSpell(0, "backup-spell");
+            var exhausted = controller.ExecuteSwapSpell(player.CTBUnit.Id, 0, "backup-spell");
 
             Assert.IsFalse(exhausted.Success);
             Assert.AreEqual("本场战斗换法次数已用完", exhausted.Message);
@@ -874,10 +897,12 @@ namespace TianZhang.Tests
             {
                 enemyData.realmMultiplier = 2.0f;
                 grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-                controller.BeginCombat(player, enemy, grid, SpatialQueryTestFixture.CreateOpenBoard());
+                Begin(controller, grid, player, enemy);
                 enemy.TakeDamage(enemy.CurrentHP);
 
-                var result = controller.ResolveBattleEnd(enemyData, grid);
+                var result = controller.ResolveBattleEnd(
+                    new Dictionary<int, CharacterData> { [enemy.CTBUnit.Id] = enemyData },
+                    grid);
 
                 Assert.AreEqual(TacticalCombatEndOutcome.Victory, result.Outcome);
                 Assert.AreEqual("击败了 敌人！", result.Message);
@@ -911,7 +936,80 @@ namespace TianZhang.Tests
                 SkillCooldowns = new int[1],
             };
             character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
+            character.MainEquipmentBasicAttackProfileId = "basic_main";
+            character.BasicAttackProfileId = "basic_main";
+            character.BasicAttackBindingKind = "main_equipment";
             return character;
+        }
+
+        private TacticalCombatSession Begin(
+            TacticalCombatController controller,
+            HexGrid grid,
+            Character player,
+            Character enemy,
+            params AttackProfileData[] additionalProfiles)
+        {
+            grid.SetOccupied(player.Position, player.CTBUnit.Id);
+            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
+            var profiles = new List<AttackProfileData> { CreateBasicAttack() };
+            if (additionalProfiles != null)
+                profiles.AddRange(additionalProfiles);
+            var anchors = new Dictionary<int, SpatialHexCoord>
+            {
+                [player.CTBUnit.Id] = new SpatialHexCoord(player.Position.q, player.Position.r),
+                [enemy.CTBUnit.Id] = new SpatialHexCoord(enemy.Position.q, enemy.Position.r),
+            };
+            var setup = new TacticalCombatSetup(
+                new[] { player },
+                new[] { enemy },
+                SpatialQueryTestFixture.CreateOpenBoard(),
+                anchors,
+                profiles);
+            Assert.IsTrue(controller.TryBeginCombat(setup, grid, out var session, out var reason), reason);
+            return session;
+        }
+
+        private AttackProfileData CreateBasicAttack()
+        {
+            var profile = ScriptableObject.CreateInstance<AttackProfileData>();
+            temporaryProfiles.Add(profile);
+            profile.attackProfileId = "basic_main";
+            profile.displayNameKey = "basic_main_name";
+            profile.profileKind = AttackProfileKind.Basic;
+            profile.basicBindingKind = BasicAttackBindingKind.MainEquipment;
+            profile.effectType = AttackEffectType.Physical;
+            profile.damageElementId = "element_none";
+            profile.physicalDamageMultiplier = 1f;
+            profile.resourceKind = AttackResourceKind.None;
+            profile.minCastRange = 1;
+            profile.maxCastRange = 1;
+            profile.targetingMode = AttackTargetingMode.Single;
+            profile.areaFacing = -1;
+            return profile;
+        }
+
+        private AttackProfileData CreateArt(string id)
+        {
+            var profile = ScriptableObject.CreateInstance<AttackProfileData>();
+            temporaryProfiles.Add(profile);
+            profile.attackProfileId = id;
+            profile.displayNameKey = id + "_name";
+            profile.profileKind = AttackProfileKind.Art;
+            profile.contentScope = "player";
+            profile.sourceAffiliation = "test";
+            profile.realmRequirementId = "realm_fanren";
+            profile.elementRequirementId = "element_none";
+            profile.effectType = AttackEffectType.Magic;
+            profile.damageElementId = "element_none";
+            profile.soulDamageMultiplier = 1f;
+            profile.resourceKind = AttackResourceKind.Mp;
+            profile.resourceCost = 10;
+            profile.cooldownTicks = 20;
+            profile.minCastRange = 1;
+            profile.maxCastRange = 1;
+            profile.targetingMode = AttackTargetingMode.Single;
+            profile.areaFacing = -1;
+            return profile;
         }
     }
 
@@ -1034,24 +1132,13 @@ namespace TianZhang.Tests
                     .GetField("character", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
                     .GetValue(firstEnemy);
                 var resolver = GetPrivateField<CombatResolver>(exploration, "resolver");
-                var tacticalController = GetPrivateField<TacticalCombatController>(
-                    exploration,
-                    "tacticalCombatController");
-                var snapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
-
                 player.Position = new HexCoord(0, 0);
                 enemy.Position = new HexCoord(1, 0);
                 Assert.IsTrue(resolver.CanTarget(player.Position, enemy.Position, 1, 1, out var reason), reason);
 
-                tacticalController.BeginCombat(
-                    player,
-                    enemy,
-                    exploration.tilemapManager.Grid,
-                    snapshot.Board);
                 controller.BeginEncounter();
 
                 Assert.AreEqual(AdventureSceneState.Combat, controller.CurrentState);
-                Assert.AreSame(enemy, tacticalController.CurrentSession.Enemy);
             }
             finally
             {
