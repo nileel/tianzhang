@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：C-GZ-BOUNTY-01、D-SETTLEMENT-01、D-ENEMY-01 与 D-ITEM-01 均已完成；本卡只建立 BountyData 契约，奖励物品、数量、掉落概率与 maxStack 继续等待 N-GZ-REWARD-01 的负责人决定。",
+  "stateReason": "2026-07-30：已建立 BountyData 的字段、稳定引用、四状态、一次性计数、原子领奖与失败关闭契约；奖励物品、数量、掉落概率和 maxStack 继续等待 N-GZ-REWARD-01 的负责人决定。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md",
     "开发管理/任务列表/数据链路任务.txt",
@@ -65,3 +65,7 @@
 ## 停止条件
 
 - 若契约必须填入未批准的奖励或掉落参数，建立第二状态／背包／存档所有者，或把现有 Quest／Inventory 原型解释为正式悬赏能力，停止并转为 `pending_decision`；不得以候选值、默认奖励或兼容分支补齐。
+
+## 完成记录
+
+- 2026-07-30：新增 `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md`，定义 `BountyData` 字段、已审核稳定引用、四状态生命周期、`adventureId + enemyId` 单场计数、原子领奖、整表/跨表失败关闭与正反 fixture 规格。未创建生产数据或运行时能力；奖励物品、数量、掉落概率和 `maxStack` 继续由 `N-GZ-REWARD-01` 待负责人决定。
