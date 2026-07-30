@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-COMBAT-01B0",
+  "title": "Unity 2v2 会话与基础攻击绑定所有者设计",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：负责人为 U-COMBAT-01B 选择方案 A，授权先建立独立前置，锁定 Unity 2v2 会话所有者、单位部署、目标资格和基础攻击 attackProfileId 绑定所有者；现有消费者定位、BattleSim 2v2 规则与统一攻击档案契约已提供直接事实。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-30-unity-2v2-session-and-basic-attack-owner-design.md",
+    "开发管理/Unity统一攻击档案消费者现状与实施输入.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-01B.txt",
+    "开发管理/任务卡/U-COMBAT-01B0.txt",
+    "开发管理/任务归档/U-COMBAT-01B0.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-COMBAT-01B0 · Unity 2v2 会话与基础攻击绑定所有者设计
+
+## 来源与当前边界
+
+- `U-COMBAT-01A` 已确认 Unity 当前只有 `TacticalCombatSession.Player`／`Enemy`、单目标行动接口和不含阵营／状态的空间锚点，无法直接承载 2v2。
+- `D-COMBAT-01` 已锁定 `AttackProfiles.csv -> AttackProfileData -> Unity/BattleSim` 的单向权威，以及基础攻击必须由主战装备或明确无装备绑定所有者引用 `attackProfileId`；不得回退到硬编码普攻。
+- 负责人已选择方案 A，授权本卡先锁定缺失所有权与接口，再恢复 `U-COMBAT-01B`。本卡只产出可实施设计和精确路径，不修改 Unity 运行时。
+
+## 必查范围
+
+- `开发管理/Unity统一攻击档案消费者现状与实施输入.txt` 的“结论”“可复用空间入口与当前缺口”“U-COMBAT-01B 精确实施输入”和停止条件。
+- `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md` 的唯一权威关系、基础攻击绑定、范围配置、Unity 消费投影与停止条件。
+- `开发管理/2v2范围技能协同走位与团队AI参数事实源及决策输入.txt` 的 2v2 部署、单目标选择、范围目标资格、协同走位独立边界和已锁定负责人决定。
+- `src/Assets/Scripts/Combat/TacticalCombatController.cs::TacticalCombatSession`、`TacticalCombatController.BeginCombat`、行动推进、玩家行动与结束判断完整逻辑单元及直接测试。
+- `src/Assets/Scripts/Map/ExplorationController.cs::StartBattle`、`CombatLoop`、敌人集合与空间快照创建调用链。
+- `src/Assets/Scripts/Combat/CombatResolver.cs::BasicAttack`、`CanTarget`，角色当前装备／能力装载所有者，以及 `SpatialQuerySnapshot`／`TacticalGridModel` 的单位锚点与占格接口。
+
+## 实施范围
+
+- 在单一设计文件中锁定 Unity 2v2 会话的唯一运行时所有者，明确双方成员集合、阵营、存活资格、稳定输入顺序、行动推进、结束判断和当前 1v1 正式入口如何作为同一会话模型的单成员输入。
+- 锁定单位部署的生产者、输入和失败关闭规则，保证四名参与者的稳定单位 ID、格位与 `SpatialQuerySnapshot.UnitAnchors` 一致；不新建第二套格位、占格或距离所有者。
+- 锁定单目标与范围目标资格的输入边界：阵营／状态来自同一战斗会话，空间合法性复用现有共享查询，`sourceAffiliation`、显示名、普通视线和调用方默认值不得替代攻击档案声明。
+- 锁定基础攻击 `attackProfileId` 的角色装配／装备绑定所有者及缺失时的稳定失败结果；不指定生产武器、无装备档案 ID 或任何攻击参数。
+- 为 `U-COMBAT-01B` 展开实际修改类型、方法、直接调用者、测试路径与接口迁移顺序；只有无需猜测所有者、默认值和第二套查询时才解除其阻塞并转为 ready。
+
+## 禁止项
+
+- 不修改 C#、CSV、asset、场景、预制体、BattleSim、生产攻击数值、冷却单位或范围形状尺寸。
+- 不建立第二套战斗会话、空间查询、占格、阵营、存活或目标合法性所有者。
+- 不实现目标选择 UI、协同走位、完整团队 AI、治疗、尸体系统或新的冒险内容。
+- 不用兼容重载、默认敌人、默认档案、显示名映射或旧 `SpellData`／`DivineSkillData` 回退掩盖缺失输入。
+
+## 验证
+
+- 逐项证明会话、部署、目标资格和基础攻击绑定各自只有一个所有者，并能映射到现有完整逻辑单元和直接测试。
+- 对照统一攻击档案契约与既有 2v2 决定，确认设计没有新增生产参数、平行 schema、默认回退、普通视线范围前置或协同 AI。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- `U-COMBAT-01B` 获得无需猜测的 Unity 2v2 会话、部署、目标资格和基础攻击绑定所有者，以及精确修改路径和直接测试。
+- 本卡完成归档时，同步将 `U-COMBAT-01B` 的 `blockedBy` 清空、转为 `ready` 并按固定顺序插入当前任务队列。
+
+## 停止条件
+
+- 若现有调用链存在两个可能的正式会话／部署／装配所有者，或锁定基础攻击绑定必须先批准具体装备系统、生产 `attackProfileId`、攻击数值、范围参数或冷却换算，则停止并转为 `pending_decision`，不得自行选择默认值。

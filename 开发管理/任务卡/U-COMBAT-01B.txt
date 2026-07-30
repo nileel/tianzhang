@@ -7,10 +7,12 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
-  "stage": "decision",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-07-30：实际代码确认 TacticalCombatSession 与 BeginCombat 固定为一名 Player 和一名 Enemy，攻击接口均只接受一个 target；空间快照只提供占位锚点，不承载阵营、状态或范围命中。基础攻击也没有主战装备或无装备 attackProfileId 所有者。按本卡停止条件转为 pending_decision，未修改 Unity、CSV、asset 或测试。",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-01B0"
+  ],
+  "stateReason": "2026-07-30：负责人选择方案 A，先由独立前置 U-COMBAT-01B0 锁定 Unity 2v2 会话所有者、单位部署、目标资格和基础攻击 attackProfileId 绑定所有者；本卡在该前置完成前保持 blocked。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/AttackProfileData.cs",
     "src/Assets/Scripts/Combat/AttackProfileData.cs.meta",
@@ -40,11 +42,11 @@
 - `U-COMBAT-01A` 完成后提供精确 Unity 消费者和实施路径；`D-COMBAT-01` 是唯一数据契约。
 - 本卡只建立 Unity 数据承载与运行时消费，不生产 CSV／asset fixture；后者仍由 `D-COMBAT-02` 负责。
 
-## 已触发的待决策
+## 已批准决定与前置
 
 - 实际运行时所有者确认 `TacticalCombatSession` 只有 `Player`／`Enemy` 两个字段，`TacticalCombatController.BeginCombat` 也只接收这两名单位；基础攻击、术法、神通与 AI 的行动接口均只接收一个目标。`SpatialQuerySnapshot` 只保存单位 ID 到格位的占位锚点，不能提供 2v2 的阵营、存活状态、候选集合或范围命中资格。
 - 基础攻击没有主战装备或明确无装备 `attackProfileId` 的现有所有者；若在此处补建默认档案、装备绑定、阵营／状态规则或第二套范围查询，将违反本卡禁止项和数据契约的失败关闭边界。
-- 需要负责人在以下方向中选择：A（推荐）先建立独立前置设计／实现切片，锁定 2v2 会话所有者、单位部署、目标资格以及基础攻击档案绑定所有者，之后恢复本卡；B 将本卡收窄为仅攻击档案承载和严格导入，推迟全部运行时消费者与 2v2 接入；C 提供已批准的现有 2v2 运行时入口及基础攻击 `attackProfileId` 所有者，使本卡按该精确入口继续。三种方向都不得据此补写生产攻击数值、范围形状或冷却换算。
+- 负责人已选择方案 A：先执行 `U-COMBAT-01B0`，以现有 Unity 调用链和已批准 2v2／攻击档案事实锁定上述四项所有权与精确接口，再恢复本卡。该决定不授权补写生产攻击数值、范围形状、冷却换算、协同走位或完整团队 AI。
 
 ## 必查范围
 
@@ -82,4 +84,4 @@
 
 ## 当前状态
 
-- 已转为 `pending_decision`，不在当前 ready 队列中。本轮只完成运行时所有者核验和状态纠正；没有生成或修改 Unity 代码、CSV、asset、fixture 或测试。
+- 已按负责人方案 A 转为 `blocked`，只阻塞于 `U-COMBAT-01B0`；不在当前 ready 队列中。本次状态事件没有生成或修改 Unity 代码、CSV、asset、fixture 或测试。
