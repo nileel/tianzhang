@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-07-30：四项数据契约和 N-GZ-REWARD-01 已解除字段、引用与参数前置，但契约仍明确禁止为物品描述、悬赏标题／描述和关中城功能文本擅填生产 Language 键。等待负责人对 DEC-20260730-CATALOG-LANGUAGE 的授权；在此之前不创建 CSV、asset、ContentCatalogData 或运行时消费者。",
+  "stateReason": "2026-07-30：四项数据契约和 N-GZ-REWARD-01 已解除字段、引用与参数前置，但契约仍明确禁止为物品描述、悬赏标题／描述和关中城功能文本擅填生产 Language 键。等待负责人对 DEC-20260730-CATLANG 的授权；在此之前不创建 CSV、asset、ContentCatalogData 或运行时消费者。",
   "expectedPaths": [
     "src/Assets/DataConfig/README.txt",
     "src/Assets/DataConfig/Settlements.csv",
@@ -68,7 +68,7 @@
 
 ## 待决定
 
-- 决策 ID：`DEC-20260730-CATALOG-LANGUAGE`。
+- 决策 ID：`DEC-20260730-CATLANG`。
 - 需要确认：是否授权把现有已审核关中城、两项物品和石甲兽悬赏档案中的最小文本原样投影为生产 Language 键；或由负责人提供逐项键和值；或继续冻结该正式导入切片。
 - 未收到并核验决定前，保持 `pending_decision`，不得创建生产 CSV、Unity asset、目录或任何运行时消费者。
 
