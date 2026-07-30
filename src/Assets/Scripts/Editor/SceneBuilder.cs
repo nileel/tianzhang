@@ -13,6 +13,7 @@ using TianZhang.Map;
 using TianZhang.World;
 using TianZhang.Settlement;
 using TianZhang.Adventure;
+using TianZhang.Content;
 using TianZhang.Tactical;
 using UnityEngine.InputSystem.UI;
 
@@ -160,6 +161,7 @@ namespace TianZhang.Editor
             ValidateStartMenuShell(StartMenuScenePath);
             ValidateSceneShell(WorldScenePath, "WorldRoot", typeof(TianZhang.World.WorldSceneController));
             ValidateSceneShell(SettlementScenePath, "SettlementRoot", typeof(TianZhang.Settlement.SettlementSceneController));
+            ValidateSettlementSceneBindings();
             ValidateSceneShell(AdventureScenePath, "AdventureRoot", typeof(TianZhang.Adventure.AdventureSceneController));
 
             Debug.Log("[TQ-016] Scene architecture shells validated successfully.");
@@ -208,6 +210,30 @@ namespace TianZhang.Editor
         {
             if (!condition)
                 throw new InvalidOperationException(message);
+        }
+
+        private static void ValidateSettlementSceneBindings()
+        {
+            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
+            var view = UnityEngine.Object.FindFirstObjectByType<SettlementSceneView>();
+            var dispatcher = UnityEngine.Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            Require(controller != null, "Settlement scene is missing SettlementSceneController.");
+            Require(view != null, "Settlement scene is missing SettlementSceneView.");
+            Require(dispatcher != null, "Settlement scene is missing SettlementFeatureDispatcher.");
+            Require(catalog != null, "Settlement scene is missing the formal ContentCatalogData asset.");
+
+            var serializedController = new SerializedObject(controller);
+            Require(
+                serializedController.FindProperty("contentCatalog").objectReferenceValue == catalog,
+                "Settlement scene does not serialize the formal ContentCatalogData reference.");
+            Require(
+                serializedController.FindProperty("sceneView").objectReferenceValue == view,
+                "Settlement scene does not serialize the SettlementSceneView reference.");
+            Require(
+                serializedController.FindProperty("featureDispatcher").objectReferenceValue == dispatcher,
+                "Settlement scene does not serialize the SettlementFeatureDispatcher reference.");
         }
         /// <summary>
 
@@ -401,7 +427,121 @@ namespace TianZhang.Editor
         public static void BuildSettlementScene()
         {
             BuildEmptyScene(SettlementScenePath, "SettlementRoot", new Color(0.12f, 0.1f, 0.08f), typeof(TianZhang.Settlement.SettlementSceneController));
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                SettlementScenePath,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+
+            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            Require(controller != null, "Settlement scene is missing SettlementSceneController.");
+            Require(catalog != null, "Settlement scene is missing the formal ContentCatalogData asset.");
+
+            var canvasGo = new GameObject("UICanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = canvasGo.GetComponent<Canvas>();
+            SetSerializedComponentName(canvas, "SettlementCanvas");
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 80;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            SetSerializedComponentName(scaler, "SettlementCanvasScaler");
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            SetSerializedComponentName(canvasGo.GetComponent<GraphicRaycaster>(), "SettlementGraphicRaycaster");
+
+            var panelGo = new GameObject("SettlementPanel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
+            panelGo.transform.SetParent(canvasGo.transform, false);
+            var panelRect = panelGo.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0f, 0f);
+            panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0f, 0.5f);
+            panelRect.anchoredPosition = new Vector2(24f, 0f);
+            panelRect.sizeDelta = new Vector2(420f, -48f);
+            var panelImage = panelGo.GetComponent<Image>();
+            SetSerializedComponentName(panelImage, "SettlementPanelImage");
+            panelImage.color = new Color(0.06f, 0.05f, 0.04f, 0.9f);
+            var layout = panelGo.GetComponent<VerticalLayoutGroup>();
+            SetSerializedComponentName(layout, "SettlementPanelLayout");
+            layout.padding = new RectOffset(24, 24, 24, 24);
+            layout.spacing = 10f;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+
+            CreateSettlementText("SettlementTitle", panelGo.transform, "据点", 30, Color.white, 44f);
+            var nameText = CreateSettlementText("SettlementNameText", panelGo.transform, "据点数据", 24, Color.yellow, 38f);
+            var detailText = CreateSettlementText("SettlementDetailText", panelGo.transform, "正在读取据点数据", 14, new Color(0.85f, 0.85f, 0.75f), 56f);
+            var statusText = CreateSettlementText("SettlementStatusText", panelGo.transform, "等待据点数据", 14, Color.gray, 56f);
+            var featureButton = CreateSettlementButton("SettlementFeature_bounty_board", "功能入口", panelGo.transform, out Text featureButtonText);
+            var adventureButton = CreateSettlementButton("SettlementAdventure_guanzhong_wild", "副本入口", panelGo.transform, out Text adventureButtonText);
+            var returnButton = CreateSettlementButton("ReturnToWorldButton", "返回主世界", panelGo.transform, out Text returnButtonText);
+            returnButton.GetComponent<Image>().color = new Color(0.32f, 0.38f, 0.28f, 1f);
+            returnButtonText.text = "返回主世界";
+
+            var view = panelGo.AddComponent<SettlementSceneView>();
+            SetSerializedComponentName(view, "SettlementSceneView");
+            view.Configure(
+                nameText,
+                detailText,
+                statusText,
+                featureButton,
+                featureButtonText,
+                adventureButton,
+                adventureButtonText,
+                returnButton);
+
+            var dispatcherGo = new GameObject("SettlementFeatureDispatcher");
+            var dispatcher = dispatcherGo.AddComponent<SettlementFeatureDispatcher>();
+            SetSerializedComponentName(dispatcher, "SettlementFeatureDispatcher");
+            controller.Configure(catalog, view, dispatcher);
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
+                SettlementScenePath);
             Debug.Log("<color=cyan>天章据点场景已生成</color>");
+        }
+
+        private static Text CreateSettlementText(
+            string name,
+            Transform parent,
+            string text,
+            int fontSize,
+            Color color,
+            float preferredHeight)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(LayoutElement));
+            go.transform.SetParent(parent, false);
+            var label = go.GetComponent<Text>();
+            label.text = text;
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = fontSize;
+            label.color = color;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.verticalOverflow = VerticalWrapMode.Overflow;
+            SetSerializedComponentName(label, name + "Label");
+            var layoutElement = go.GetComponent<LayoutElement>();
+            SetSerializedComponentName(layoutElement, name + "LayoutElement");
+            layoutElement.preferredHeight = preferredHeight;
+            return label;
+        }
+
+        private static Button CreateSettlementButton(string name, string labelText, Transform parent, out Text label)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            go.transform.SetParent(parent, false);
+            var image = go.GetComponent<Image>();
+            SetSerializedComponentName(image, name + "Image");
+            image.color = new Color(0.18f, 0.22f, 0.18f, 1f);
+            var button = go.GetComponent<Button>();
+            SetSerializedComponentName(button, name + "Button");
+            var layoutElement = go.GetComponent<LayoutElement>();
+            SetSerializedComponentName(layoutElement, name + "LayoutElement");
+            layoutElement.preferredHeight = 40f;
+            label = CreateSettlementText("Label", go.transform, labelText, 16, Color.white, 40f);
+            var labelRect = label.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.sizeDelta = Vector2.zero;
+            return button;
         }
 
         [MenuItem("Tools/天章/生成副本场景")]

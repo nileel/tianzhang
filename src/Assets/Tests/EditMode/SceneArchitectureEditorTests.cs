@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TianZhang.Adventure;
 using TianZhang.Combat;
+using TianZhang.Content;
 using TianZhang.Cultivation;
 using TianZhang.Editor;
 using TianZhang.Game;
@@ -210,64 +211,62 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SettlementSceneControllerBuildsCurrentSettlementUiFromSession()
+        public void SettlementSceneControllerReadsGuanzhongFromSerializedCatalog()
         {
             DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
             var sessionGo = new GameObject("GameSessionTest");
-            var controllerGo = new GameObject("SettlementSceneControllerTest");
             try
             {
                 var session = sessionGo.AddComponent<GameSession>();
                 session.SetWorldNode("guanzhong_hub");
                 session.SetSettlementId("guanzhong_city");
-                var controller = controllerGo.AddComponent<SettlementSceneController>();
+                var controller = Object.FindFirstObjectByType<SettlementSceneController>();
 
                 InvokeStart(controller);
 
-                Assert.AreEqual("guanzhong_city", controller.CurrentSettlement.id);
-                Assert.IsTrue(controller.TryGetSettlement("taiyi_sect", out var sect));
-                Assert.AreEqual(SettlementType.Sect, sect.settlementType);
+                Assert.AreEqual("guanzhong_city", controller.CurrentSettlement.settlementId);
                 Assert.IsTrue(controller.TryGetSettlement("guanzhong_city", out var city));
-                Assert.AreEqual(SettlementType.City, city.settlementType);
-                Assert.AreEqual("关中城", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
-                StringAssert.Contains("城池", GameObject.Find("SettlementTypeText")?.GetComponent<Text>()?.text);
-                StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementReturnContextText")?.GetComponent<Text>()?.text);
-                Assert.AreEqual(4, CountButtonsWithPrefix("SettlementService_"));
+                Assert.AreEqual("content_scope_production", city.contentScope);
+                Assert.IsFalse(controller.TryGetSettlement("taiyi_sect", out _));
+                Assert.AreEqual("settlement_guanzhong_city", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementStatusText")?.GetComponent<Text>()?.text);
+                Assert.AreEqual(1, CountButtonsWithPrefix("SettlementFeature_"));
                 Assert.IsTrue(GameObject.Find("SettlementAdventure_guanzhong_wild").GetComponent<Button>().interactable);
                 Assert.IsNotNull(GameObject.Find("ReturnToWorldButton"));
             }
             finally
             {
-                DestroySettlementUi();
-                Object.DestroyImmediate(controllerGo);
                 Object.DestroyImmediate(sessionGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
 
         [Test]
-        public void SettlementSceneControllerFallsBackToDefaultSettlementWhenSessionIdIsUnknown()
+        public void SettlementSceneControllerFailsClosedForUnknownSettlementAndKeepsWorldReturn()
         {
             DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
             var sessionGo = new GameObject("GameSessionTest");
-            var controllerGo = new GameObject("SettlementSceneControllerTest");
             try
             {
                 var session = sessionGo.AddComponent<GameSession>();
+                session.SetWorldNode("guanzhong_hub");
                 session.SetSettlementId("missing_settlement");
-                var controller = controllerGo.AddComponent<SettlementSceneController>();
+                var controller = Object.FindFirstObjectByType<SettlementSceneController>();
 
                 InvokeStart(controller);
 
-                Assert.AreEqual("taiyi_sect", controller.CurrentSettlement.id);
-                Assert.AreEqual("太一道庭", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
-                StringAssert.Contains("宗门", GameObject.Find("SettlementTypeText")?.GetComponent<Text>()?.text);
-                Assert.IsNotNull(GameObject.Find("SettlementAdventure_taiyi_trial"));
+                Assert.IsNull(controller.CurrentSettlement);
+                Assert.AreEqual(SettlementSceneController.SettlementMissingReason, controller.LastFailureReason);
+                Assert.AreEqual("据点不可用", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
+                Assert.IsNotNull(GameObject.Find("ReturnToWorldButton"));
+                StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementDetailText")?.GetComponent<Text>()?.text);
             }
             finally
             {
-                DestroySettlementUi();
-                Object.DestroyImmediate(controllerGo);
                 Object.DestroyImmediate(sessionGo);
                 DestroyExistingSceneFlowAndSession();
             }
@@ -446,65 +445,101 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SettlementSceneControllerBuildsClickableAdventureEntrances()
+        public void SettlementSceneControllerPreservesGuanzhongAdventureReturnTarget()
         {
             DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
             var sessionGo = new GameObject("GameSessionTest");
-            var controllerGo = new GameObject("SettlementSceneControllerTest");
             try
             {
                 var session = sessionGo.AddComponent<GameSession>();
-                session.SetSettlementId("taiyi_sect");
-                var controller = controllerGo.AddComponent<SettlementSceneController>();
+                session.SetSettlementId("guanzhong_city");
+                var controller = Object.FindFirstObjectByType<SettlementSceneController>();
 
                 InvokeStart(controller);
 
                 var target = controller.BuildAdventureReturnTarget();
                 Assert.AreEqual("SettlementScene", target.SceneName);
-                Assert.AreEqual("taiyi_sect", target.SettlementId);
+                Assert.AreEqual("guanzhong_city", target.SettlementId);
 
-                var entranceButton = GameObject.Find("SettlementAdventure_taiyi_trial")?.GetComponent<Button>();
+                var entranceButton = GameObject.Find("SettlementAdventure_guanzhong_wild")?.GetComponent<Button>();
                 Assert.IsNotNull(entranceButton);
                 Assert.IsTrue(entranceButton.interactable);
-                StringAssert.Contains("taiyi_trial", entranceButton.GetComponentInChildren<Text>().text);
+                StringAssert.Contains("guanzhong_wild", entranceButton.GetComponentInChildren<Text>().text);
             }
             finally
             {
-                DestroySettlementUi();
-                Object.DestroyImmediate(controllerGo);
                 Object.DestroyImmediate(sessionGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
 
         [Test]
-        public void SettlementSceneControllerBuildsClickableServicePlaceholders()
+        public void SettlementFeatureDispatcherFailsClosedUntilBountyHandlerIsRegistered()
         {
-            DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("GameSessionTest");
-            var controllerGo = new GameObject("SettlementSceneControllerTest");
+            var dispatcherGo = new GameObject("SettlementFeatureDispatcherTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetSettlementId("taiyi_sect");
-                var controller = controllerGo.AddComponent<SettlementSceneController>();
+                var dispatcher = dispatcherGo.AddComponent<SettlementFeatureDispatcher>();
+                var enabledBounty = new SettlementFeatureData
+                {
+                    featureId = SettlementFeatureDispatcher.BountyBoardFeatureId,
+                    availability = "enabled"
+                };
 
-                InvokeStart(controller);
+                Assert.IsFalse(dispatcher.TryDispatch(enabledBounty, out var missingHandlerReason));
+                Assert.AreEqual(
+                    SettlementFeatureDispatcher.FeatureHandlerUnregisteredReason + ":bounty_board",
+                    missingHandlerReason);
 
-                AssertServiceButtonLogsPlaceholder("修炼", "taiyi_sect");
-                AssertServiceButtonLogsPlaceholder("功法", "taiyi_sect");
-                AssertServiceButtonLogsPlaceholder("任务", "taiyi_sect");
+                dispatcher.RegisterInitialFeatureHandlers();
+                Assert.IsTrue(dispatcher.TryDispatch(enabledBounty, out var bountyReason));
+                Assert.AreEqual(SettlementFeatureDispatcher.BountyBoardEntryReadyReason, bountyReason);
+                Assert.AreEqual(SettlementFeatureDispatcher.BountyBoardFeatureId, dispatcher.LastDispatchedFeatureId);
 
-                Assert.IsTrue(controller.SelectSettlement("guanzhong_city"));
-                AssertServiceButtonLogsPlaceholder("坊市", "guanzhong_city");
+                Assert.IsFalse(dispatcher.TryDispatch(new SettlementFeatureData
+                {
+                    featureId = "market",
+                    availability = "enabled"
+                }, out var unknownReason));
+                Assert.AreEqual(SettlementFeatureDispatcher.FeatureUnknownReason + ":market", unknownReason);
+
+                Assert.IsFalse(dispatcher.TryDispatch(new SettlementFeatureData
+                {
+                    featureId = SettlementFeatureDispatcher.BountyBoardFeatureId,
+                    availability = "disabled",
+                    disabledReasonKey = "settlement_feature_disabled"
+                }, out var disabledReason));
+                Assert.AreEqual(
+                    SettlementFeatureDispatcher.FeatureDisabledReason + ":settlement_feature_disabled",
+                    disabledReason);
             }
             finally
             {
-                DestroySettlementUi();
-                Object.DestroyImmediate(controllerGo);
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
+                Object.DestroyImmediate(dispatcherGo);
             }
+        }
+
+        [Test]
+        public void SettlementSceneBuilderSerializesFormalCatalogAndPresentationReferences()
+        {
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
+
+            var controller = Object.FindFirstObjectByType<SettlementSceneController>();
+            var view = Object.FindFirstObjectByType<SettlementSceneView>();
+            var dispatcher = Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            var serializedController = new SerializedObject(controller);
+
+            Assert.IsNotNull(controller);
+            Assert.IsNotNull(view);
+            Assert.IsNotNull(dispatcher);
+            Assert.AreSame(catalog, serializedController.FindProperty("contentCatalog").objectReferenceValue);
+            Assert.AreSame(view, serializedController.FindProperty("sceneView").objectReferenceValue);
+            Assert.AreSame(dispatcher, serializedController.FindProperty("featureDispatcher").objectReferenceValue);
         }
 
         [Test]
@@ -700,25 +735,6 @@ namespace TianZhang.Tests
         {
             return Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .Count(button => button.name.StartsWith(prefix));
-        }
-
-        private static void AssertServiceButtonLogsPlaceholder(string service, string settlementId)
-        {
-            var button = GameObject.Find("SettlementService_" + service)?.GetComponent<Button>();
-            Assert.IsNotNull(button, service);
-            Assert.IsTrue(button.interactable, service);
-
-            LogAssert.Expect(
-                LogType.Log,
-                new Regex("\\[SettlementScene\\].*service=" + Regex.Escape(service) + ".*settlement=" + Regex.Escape(settlementId)));
-            button.onClick.Invoke();
-        }
-
-        private static void DestroySettlementUi()
-        {
-            var canvas = GameObject.Find("UICanvas");
-            if (canvas != null)
-                Object.DestroyImmediate(canvas);
         }
 
         private static void DestroyAdventureUi()

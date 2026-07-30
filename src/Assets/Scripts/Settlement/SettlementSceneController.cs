@@ -1,68 +1,69 @@
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+using System;
+using TianZhang.Content;
 using TianZhang.Game;
+using UnityEngine;
 
 namespace TianZhang.Settlement
 {
-    public class SettlementSceneController : MonoBehaviour
+    public sealed class SettlementSceneController : MonoBehaviour
     {
-        private const string DefaultSettlementId = "taiyi_sect";
+        public const string GuanzhongSettlementId = "guanzhong_city";
+        public const string ProductionContentScope = "content_scope_production";
+        public const string CatalogMissingReason = "settlement_catalog_missing";
+        public const string SettlementMissingReason = "settlement_not_found";
+        public const string SettlementOutOfScopeReason = "settlement_not_in_first_batch_production_scope";
+        public const string AdventureUnavailableReason = "settlement_adventure_not_available";
 
-        private static readonly SettlementDefinition[] PrototypeSettlements =
+        [SerializeField] private ContentCatalogData contentCatalog;
+        [SerializeField] private SettlementSceneView sceneView;
+        [SerializeField] private SettlementFeatureDispatcher featureDispatcher;
+
+        public SettlementData CurrentSettlement { get; private set; }
+        public string CurrentSettlementId => CurrentSettlement == null ? null : CurrentSettlement.settlementId;
+        public string LastFailureReason { get; private set; }
+
+        public void Configure(
+            ContentCatalogData catalog,
+            SettlementSceneView view,
+            SettlementFeatureDispatcher dispatcher)
         {
-            new SettlementDefinition { id = "taiyi_sect", displayName = "太一道庭", settlementType = SettlementType.Sect, regionId = "jiangzuo", ownerFactionId = "taiyi", availableServices = new[] { "修炼", "功法", "任务", "法坛" }, adventureEntrances = new[] { "taiyi_trial" }, visualTheme = "water_talisman" },
-            new SettlementDefinition { id = "guanzhong_city", displayName = "关中城", settlementType = SettlementType.City, regionId = "guanzhong", ownerFactionId = "neutral", availableServices = new[] { "坊市", "悬赏", "客栈", "情报" }, adventureEntrances = new[] { "guanzhong_wild" }, visualTheme = "city_earth" },
-            new SettlementDefinition { id = "zhongzhou_city", displayName = "中州城", settlementType = SettlementType.City, regionId = "zhongzhou", ownerFactionId = "neutral", availableServices = new[] { "坊市", "传送", "悬赏", "情报" }, adventureEntrances = new[] { "zhongzhou_wild" }, visualTheme = "capital" }
-        };
-
-        private Text settlementNameText;
-        private Text settlementTypeText;
-        private Text settlementDetailText;
-        private Text returnContextText;
-        private Transform serviceListParent;
-        private Transform adventureListParent;
-        private Button returnToWorldButton;
-
-        public IReadOnlyList<SettlementDefinition> Settlements => PrototypeSettlements;
-        public SettlementDefinition CurrentSettlement { get; private set; }
-        public string CurrentSettlementId => CurrentSettlement?.id ?? DefaultSettlementId;
+            contentCatalog = catalog;
+            sceneView = view;
+            featureDispatcher = dispatcher;
+        }
 
         private void Start()
         {
-            BuildSettlementUi();
-            if (!SelectSettlement(GameSession.Instance?.CurrentSettlementId))
-                SelectSettlement(DefaultSettlementId);
+            if (sceneView != null)
+                sceneView.SetReturnToWorldAction(ReturnToWorld);
 
-            Debug.Log("[SettlementScene] definitions=" + PrototypeSettlements.Length);
-        }
-
-        public bool TryGetSettlement(string settlementId, out SettlementDefinition settlement)
-        {
-            settlement = null;
-            if (string.IsNullOrEmpty(settlementId))
-                return false;
-
-            foreach (var candidate in PrototypeSettlements)
+            if (featureDispatcher == null)
             {
-                if (candidate.id == settlementId)
-                {
-                    settlement = candidate;
-                    return true;
-                }
+                ShowFailure(SettlementFeatureDispatcher.DispatcherMissingReason);
+                return;
             }
 
-            return false;
+            featureDispatcher.RegisterInitialFeatureHandlers();
+            SelectSettlement(GameSession.Instance == null ? null : GameSession.Instance.CurrentSettlementId);
+        }
+
+        public bool TryGetSettlement(string settlementId, out SettlementData settlement)
+        {
+            return TryGetFormalSettlement(settlementId, out settlement, out _);
         }
 
         public bool SelectSettlement(string settlementId)
         {
-            if (!TryGetSettlement(settlementId, out var settlement))
+            if (!TryGetFormalSettlement(settlementId, out SettlementData settlement, out string reason))
+            {
+                ShowFailure(reason);
                 return false;
+            }
 
             CurrentSettlement = settlement;
+            LastFailureReason = null;
             if (GameSession.Instance != null)
-                GameSession.Instance.SetSettlementId(settlement.id);
+                GameSession.Instance.SetSettlementId(settlement.settlementId);
 
             RefreshSettlementUi();
             return true;
@@ -70,15 +71,20 @@ namespace TianZhang.Settlement
 
         public void ReturnToWorld()
         {
-            var nodeId = ResolveReturnWorldNodeId();
             if (SceneFlowManager.Instance != null)
-                SceneFlowManager.Instance.EnterWorld(nodeId);
+                SceneFlowManager.Instance.EnterWorld(ResolveReturnWorldNodeId());
         }
 
         public bool EnterAdventure(string adventureId)
         {
-            if (string.IsNullOrEmpty(adventureId) || SceneFlowManager.Instance == null)
+            if (CurrentSettlement == null ||
+                string.IsNullOrWhiteSpace(adventureId) ||
+                !ContainsAdventureEntrance(CurrentSettlement, adventureId) ||
+                SceneFlowManager.Instance == null)
+            {
+                sceneView?.ShowAdventureResult(AdventureUnavailableReason);
                 return false;
+            }
 
             SceneFlowManager.Instance.EnterAdventure(adventureId, BuildAdventureReturnTarget());
             return true;
@@ -91,212 +97,100 @@ namespace TianZhang.Settlement
 
         public string ResolveReturnWorldNodeId()
         {
-            return GameSession.Instance != null ? GameSession.Instance.CurrentWorldNodeId : "jiangzuo_hub";
+            return GameSession.Instance == null ? "jiangzuo_hub" : GameSession.Instance.CurrentWorldNodeId;
         }
 
-        private void BuildSettlementUi()
+        private bool TryGetFormalSettlement(string settlementId, out SettlementData settlement, out string reason)
         {
-            if (GameObject.Find("SettlementPanel") != null)
+            settlement = null;
+            if (contentCatalog == null)
             {
-                settlementNameText = GameObject.Find("SettlementNameText")?.GetComponent<Text>();
-                settlementTypeText = GameObject.Find("SettlementTypeText")?.GetComponent<Text>();
-                settlementDetailText = GameObject.Find("SettlementDetailText")?.GetComponent<Text>();
-                returnContextText = GameObject.Find("SettlementReturnContextText")?.GetComponent<Text>();
-                serviceListParent = GameObject.Find("SettlementServiceList")?.transform;
-                adventureListParent = GameObject.Find("SettlementAdventureList")?.transform;
-                returnToWorldButton = GameObject.Find("ReturnToWorldButton")?.GetComponent<Button>();
-                return;
+                reason = CatalogMissingReason;
+                return false;
             }
 
-            var canvas = EnsureUICanvas();
+            if (string.IsNullOrWhiteSpace(settlementId) ||
+                !contentCatalog.TryGetSettlement(settlementId, out settlement))
+            {
+                reason = SettlementMissingReason;
+                return false;
+            }
 
-            var panelGo = new GameObject("SettlementPanel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
-            panelGo.transform.SetParent(canvas.transform, false);
-            var panelRt = panelGo.GetComponent<RectTransform>();
-            panelRt.anchorMin = new Vector2(0f, 0f);
-            panelRt.anchorMax = new Vector2(0f, 1f);
-            panelRt.pivot = new Vector2(0f, 0.5f);
-            panelRt.anchoredPosition = new Vector2(24f, 0f);
-            panelRt.sizeDelta = new Vector2(420f, -48f);
-            panelGo.GetComponent<Image>().color = new Color(0.06f, 0.05f, 0.04f, 0.9f);
-            var panelLayout = panelGo.GetComponent<VerticalLayoutGroup>();
-            panelLayout.padding = new RectOffset(24, 24, 24, 24);
-            panelLayout.spacing = 10f;
-            panelLayout.childForceExpandWidth = true;
-            panelLayout.childForceExpandHeight = false;
+            if (!string.Equals(settlement.settlementId, GuanzhongSettlementId, StringComparison.Ordinal) ||
+                !string.Equals(settlement.contentScope, ProductionContentScope, StringComparison.Ordinal))
+            {
+                settlement = null;
+                reason = SettlementOutOfScopeReason;
+                return false;
+            }
 
-            CreateText("SettlementTitle", panelGo.transform, "据点", 30, Color.white, TextAnchor.MiddleCenter, 44f);
-            settlementNameText = CreateText("SettlementNameText", panelGo.transform, "", 24, Color.yellow, TextAnchor.MiddleCenter, 38f).GetComponent<Text>();
-            settlementTypeText = CreateText("SettlementTypeText", panelGo.transform, "", 16, Color.white, TextAnchor.MiddleCenter, 28f).GetComponent<Text>();
-            settlementDetailText = CreateText("SettlementDetailText", panelGo.transform, "", 14, new Color(0.85f, 0.85f, 0.75f), TextAnchor.MiddleCenter, 56f).GetComponent<Text>();
-
-            CreateText("SettlementServiceTitle", panelGo.transform, "可用服务", 18, Color.white, TextAnchor.MiddleLeft, 30f);
-            serviceListParent = CreateListContainer("SettlementServiceList", panelGo.transform);
-
-            CreateText("SettlementAdventureTitle", panelGo.transform, "副本入口占位", 18, Color.white, TextAnchor.MiddleLeft, 30f);
-            adventureListParent = CreateListContainer("SettlementAdventureList", panelGo.transform);
-
-            returnContextText = CreateText("SettlementReturnContextText", panelGo.transform, "", 14, Color.gray, TextAnchor.MiddleCenter, 34f).GetComponent<Text>();
-            returnToWorldButton = CreateButton("ReturnToWorldButton", panelGo.transform, "返回主世界", new Color(0.32f, 0.38f, 0.28f, 1f)).GetComponent<Button>();
-            returnToWorldButton.onClick.AddListener(ReturnToWorld);
+            reason = null;
+            return true;
         }
 
         private void RefreshSettlementUi()
         {
-            if (CurrentSettlement == null)
+            if (sceneView == null || CurrentSettlement == null)
                 return;
 
-            if (settlementNameText != null)
-                settlementNameText.text = CurrentSettlement.displayName;
-
-            if (settlementTypeText != null)
-                settlementTypeText.text = GetSettlementTypeLabel(CurrentSettlement.settlementType) + " / " + CurrentSettlement.id;
-
-            if (settlementDetailText != null)
-                settlementDetailText.text = "区域: " + CurrentSettlement.regionId + "\n势力: " + CurrentSettlement.ownerFactionId;
-
-            if (returnContextText != null)
-                returnContextText.text = "返回主世界节点: " + ResolveReturnWorldNodeId();
-
-            RebuildServiceList();
-            RebuildAdventureList();
+            sceneView.ShowSettlement(CurrentSettlement, ResolveReturnWorldNodeId());
+            BindFeature(CurrentSettlement.features);
+            BindAdventure(CurrentSettlement.adventureEntranceIds);
         }
 
-        private void RebuildServiceList()
+        private void BindFeature(SettlementFeatureData[] features)
         {
-            if (serviceListParent == null)
-                return;
-
-            ClearChildren(serviceListParent);
-            var services = CurrentSettlement.availableServices;
-            if (services == null || services.Length == 0)
+            if (features == null || features.Length != 1)
             {
-                CreateText("SettlementService_Empty", serviceListParent, "暂无服务", 14, Color.gray, TextAnchor.MiddleLeft, 28f);
+                sceneView.ShowFeatureResult("settlement_feature_cardinality_invalid");
                 return;
             }
 
-            foreach (var service in services)
-            {
-                var button = CreateButton("SettlementService_" + service, serviceListParent, service, new Color(0.18f, 0.22f, 0.18f, 1f)).GetComponent<Button>();
-                var capturedService = service;
-                button.onClick.AddListener(() => LogServicePlaceholder(capturedService));
-            }
+            sceneView.BindFeature(features[0], DispatchFeature);
         }
 
-        private void LogServicePlaceholder(string service)
+        private void BindAdventure(string[] adventureEntranceIds)
         {
-            Debug.Log("[SettlementScene] service=" + service + " settlement=" + CurrentSettlementId + " placeholder");
-        }
-
-        private void RebuildAdventureList()
-        {
-            if (adventureListParent == null)
-                return;
-
-            ClearChildren(adventureListParent);
-            var entrances = CurrentSettlement.adventureEntrances;
-            if (entrances == null || entrances.Length == 0)
+            if (adventureEntranceIds == null || adventureEntranceIds.Length != 1)
             {
-                CreateText("SettlementAdventure_Empty", adventureListParent, "暂无副本入口", 14, Color.gray, TextAnchor.MiddleLeft, 28f);
+                sceneView.ShowAdventureResult(AdventureUnavailableReason);
                 return;
             }
 
-            foreach (var adventureId in entrances)
+            sceneView.BindAdventure(adventureEntranceIds[0], adventureId => EnterAdventure(adventureId));
+        }
+
+        private void DispatchFeature(SettlementFeatureData feature)
+        {
+            if (featureDispatcher == null)
             {
-                var button = CreateButton("SettlementAdventure_" + adventureId, adventureListParent, "进入副本: " + adventureId, new Color(0.18f, 0.18f, 0.24f, 1f)).GetComponent<Button>();
-                var capturedAdventureId = adventureId;
-                button.onClick.AddListener(() => EnterAdventure(capturedAdventureId));
+                sceneView?.ShowFeatureResult(SettlementFeatureDispatcher.DispatcherMissingReason);
+                return;
             }
+
+            featureDispatcher.TryDispatch(feature, out string reason);
+            sceneView?.ShowFeatureResult(reason);
         }
 
-        private static GameObject EnsureUICanvas()
+        private void ShowFailure(string reason)
         {
-            var canvasGo = GameObject.Find("UICanvas");
-            if (canvasGo != null)
-                return canvasGo;
-
-            canvasGo = new GameObject("UICanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            var canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 80;
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            return canvasGo;
+            CurrentSettlement = null;
+            LastFailureReason = reason;
+            sceneView?.ShowFailure(reason, ResolveReturnWorldNodeId());
         }
 
-        private static Transform CreateListContainer(string name, Transform parent)
+        private static bool ContainsAdventureEntrance(SettlementData settlement, string adventureId)
         {
-            var containerGo = new GameObject(name, typeof(RectTransform), typeof(VerticalLayoutGroup));
-            containerGo.transform.SetParent(parent, false);
-            var layout = containerGo.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 6f;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            containerGo.AddComponent<LayoutElement>().preferredHeight = 180f;
-            return containerGo.transform;
-        }
+            if (settlement.adventureEntranceIds == null)
+                return false;
 
-        private static GameObject CreateText(string name, Transform parent, string text, int fontSize, Color color, TextAnchor anchor, float preferredHeight)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(LayoutElement));
-            go.transform.SetParent(parent, false);
-            var label = go.GetComponent<Text>();
-            label.text = text;
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            label.fontSize = fontSize;
-            label.color = color;
-            label.alignment = anchor;
-            label.horizontalOverflow = HorizontalWrapMode.Wrap;
-            label.verticalOverflow = VerticalWrapMode.Overflow;
-            go.GetComponent<LayoutElement>().preferredHeight = preferredHeight;
-            return go;
-        }
-
-        private static GameObject CreateButton(string name, Transform parent, string labelText, Color color)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
-            go.transform.SetParent(parent, false);
-            go.GetComponent<Image>().color = color;
-            go.GetComponent<LayoutElement>().preferredHeight = 40f;
-
-            var label = CreateText("Label", go.transform, labelText, 16, Color.white, TextAnchor.MiddleCenter, 40f);
-            var labelRt = label.GetComponent<RectTransform>();
-            labelRt.anchorMin = Vector2.zero;
-            labelRt.anchorMax = Vector2.one;
-            labelRt.sizeDelta = Vector2.zero;
-            return go;
-        }
-
-        private static string GetSettlementTypeLabel(SettlementType type)
-        {
-            switch (type)
+            foreach (string entranceId in settlement.adventureEntranceIds)
             {
-                case SettlementType.City:
-                    return "城池";
-                case SettlementType.Sect:
-                    return "宗门";
-                case SettlementType.Cave:
-                    return "洞府";
-                case SettlementType.Market:
-                    return "坊市";
-                case SettlementType.Special:
-                    return "特殊地点";
-                default:
-                    return type.ToString();
+                if (string.Equals(entranceId, adventureId, StringComparison.Ordinal))
+                    return true;
             }
-        }
 
-        private static void ClearChildren(Transform parent)
-        {
-            for (var i = parent.childCount - 1; i >= 0; i--)
-            {
-                var child = parent.GetChild(i).gameObject;
-                if (Application.isPlaying)
-                    Destroy(child);
-                else
-                    DestroyImmediate(child);
-            }
+            return false;
         }
     }
 }

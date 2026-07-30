@@ -1,0 +1,23 @@
+# U-SETTLEMENT-01 · 关中据点功能分发验证记录
+
+## 交付范围
+
+- `SettlementScene` 以序列化 `ContentCatalogData` 查询 `GameSession.CurrentSettlementId`，只接纳生产范围的 `guanzhong_city`。
+- 视图、功能分发器和目录引用由 `SceneBuilder.BuildSettlementScene` 生成并保存到场景；未新增 Canvas、场景、会话或存档所有者。
+- `bounty_board` 只抵达待后续面板接入的本地窄入口；没有领取、结算、奖励、持久化或面板行为。
+
+## 执行验证
+
+| 检查 | 结果 | 证据 |
+|---|---|---|
+| `dotnet build src/TianZhang.EditModeTests.csproj` | 通过 | 0 警告、0 错误。 |
+| Unity `SceneBuilder.BuildSettlementScene` | 通过 | 已生成并保存 `SettlementScene` 的目录、视图和分发器序列化引用。 |
+| 据点定向 EditMode | 通过 | 5/5：稳定 ID 读取、未知据点失败关闭、冒险返回、分发失败关闭、场景绑定。 |
+| Unity EditMode 全量 | 有已知无关失败 | 239/240；仅 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 因既有预期日志未出现失败。 |
+| `tools/check-data-chain.ps1` | 通过 | 数据链检查 OK。 |
+| `tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Scenes,src/Assets/Tests` | 通过 | 616 个文件检查通过。 |
+
+## 未覆盖与残留风险
+
+- 未运行 Play Mode／Game View；本卡无坐标、视觉资源或多表面布局修改，场景序列化和直接 EditMode 已覆盖数据与回调所有者。
+- 全量 EditMode 的唯一失败属于炼神能力的现有日志断言；本卡未改动其脚本、数据或测试。

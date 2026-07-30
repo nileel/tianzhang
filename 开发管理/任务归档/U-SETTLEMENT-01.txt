@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-SETTLEMENT-01",
+  "title": "关中数据驱动据点与功能分发",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：已将 SettlementScene 切换为 ContentCatalogData 的 guanzhong_city 稳定 ID 查询，完成独立视图、bounty_board 窄分发和失败关闭；直接构建、场景序列化与定向 EditMode 验证通过。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs.meta",
+    "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
+    "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs.meta",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "开发管理/关中据点功能分发验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-SETTLEMENT-01.txt",
+    "开发管理/任务归档/U-SETTLEMENT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-SETTLEMENT-01 · 关中数据驱动据点与功能分发
+
+## 来源与当前边界
+
+- 上游 `U-CONTENT-CATALOG-01` 已提供并验证同 GUID 的 `guanzhong_city` SettlementData、ContentCatalogData 只读查询和正式 Adventure 返回上下文。
+- 本卡只迁移正式 `SettlementScene` 的关中消费者；目录、CSV、asset、导入器、语言键、城市内容、数值和 Adventure 所有者均不在修改范围内。
+
+## 必查范围
+
+- 关中正式内容框架、SettlementData 数据契约、运行时唯一所有者记录、Unity 结构图，以及 Settlement、Content、GameSession、SceneFlowManager、SceneBuilder 和直接 EditMode 测试。
+
+## 实施范围
+
+- `SettlementSceneController` 现在仅通过场景序列化的 `ContentCatalogData.TryGetSettlement(GameSession.CurrentSettlementId)` 消费 `guanzhong_city` 生产范围数据；未知、缺失或范围外据点不会回退到原型城市，并保留返回主世界出口。
+- 展示逻辑已移入 `SettlementSceneView`，由 `SceneBuilder` 创建同一 Canvas、视图组件、分发器和目录引用；场景不再由控制器按名称搜索或运行时创建 UI。
+- `SettlementFeatureDispatcher` 只登记 `bounty_board` 窄入口。禁用、未知、未注册和处理失败都有稳定失败原因，且入口不实施悬赏状态、奖励、存档或面板。
+- `guanzhong_wild` 仍通过既有 `SceneFlowManager.EnterAdventure` 进入，返回目标仍为 `Settlement(guanzhong_city)`。
+
+## 禁止项
+
+- 未实现悬赏状态机、奖励、背包、存档迁移、悬赏面板、随机池、每日刷新、通用条件、其他城市、服务器、数据库或联网接口。
+- 未引入默认城市回退、名称映射、兼容路径、第二 Canvas、第二场景、第二会话或第二存档所有者。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告、0 错误。
+- Unity EditMode：本卡 5 项据点／分发／场景绑定测试通过；全量结果为 239/240，通过外的唯一失败是既有 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 日志断言，与本卡路径无交集。
+- `tools/check-data-chain.ps1` 与 `tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Scenes,src/Assets/Tests`：通过。
+
+## 完成条件
+
+- 关中据点只以稳定 ID 读取已验证目录数据，功能点击不再进入原型字符串或 placeholder 成功流程。
+- World／Adventure 进入与返回上下文保持由既有 `GameSession` 和 `SceneFlowManager` 所有；下游悬赏、物品和敌人任务没有被提前实现或解除。
+
+## 停止条件
+
+- 若目录、场景引用或窄入口需要默认值、兼容回退、悬赏规则、奖励、存档或面板才能继续，本卡应停止而非扩大实现。实施中未命中该条件。
