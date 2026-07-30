@@ -7,4 +7,15 @@
 
 > 注：本文件交接记录仅反映当前状态；复核完成后移入归档
 
+### C-TZ-CHARTER-ENTRIES-01B6 · 水府地纪独立生态包（待复审）
+
+- 业务提交：`61eb3391250f5ba536dbb7b8d8a11143af6ab710`（DeepSeek V4 Pro；businessCommit；State=pending_review）。
+- 方向：按 M8 最小切片前置专项授权，生产水府地纪原子生态包，完成后转入 Codex 复审。
+- 修改文件：新建 `docs/道具/剧情遗物/册界天章条目/水府地纪.txt`；更新 `开发管理/当前任务队列.txt`、`开发管理/任务卡/C-TZ-CHARTER-ENTRIES-01B6.txt`、`开发管理/任务列表/内容设计任务.txt` 的 route/owner/stateReason 字段。
+- 已验证：手工逐字段走查覆盖全部 18 个规则字段；天气／地形演化／灵气结构／资源产出四项原子提交不可拆分；正负提交、范围、节点、授权、现实供给、金丹冲突与元婴受锚可逐项定位；来源地区只写关中野外现行环境档案支持的候选，取得方式只写类别；git diff --check 通过；check-pending-whitespace 全部通过；check-task-cards ExternalPendingReview 返回 ok。
+- 未验证：check-review-text.ps1 因 don't-ask 权限被拒绝，未运行；未执行 BattleSim（本任务不涉及数值）；未验证后续数据契约映射。
+- 残留风险：条目中具体资源产出量、天气频率等留待 `D-TZ-CHARTER-SCHEMA-01` 量化；check-review-text 未运行，可能有格式或标记遗漏等待复审检查。
+- 请求判断：请 Codex 复审水府地纪是否完整覆盖 M4 十八个规则字段、四项原子提交（天气、地形、灵气、资源）不可拆分，以及正负提交、范围、授权、金丹冲突和元婴受锚是否均可无歧义映射到后续数据契约。
+- 建议下一步：复审通过后解除 `D-TZ-CHARTER-SCHEMA-01` 内容前置，按 SCHEMA → SAMPLE → MODEL → SAVE → SLICE 顺序继续 M8 纵向切片。
+
 ## 短格式
