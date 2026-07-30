@@ -81,6 +81,21 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 - `phaseBoundarySetId`、功法／术法／神通／行动和数值档案仍是外部权威 ID；本表只保存
   稳定引用，不从旧角色字段或运行时槽位推断任何状态。
 
+## CharterRuleDefinitions.csv 契约
+
+本表只消费 `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md` 的
+十八字段静态条目定义；当前只固定表头，`D-TZ-CHARTER-SAMPLE-01` 才能迁入首个生产条目。
+它与 `CharterRuntimeStateData` 严格分离，不能把地区长期状态写入
+`EnvironmentProfileData`。
+
+- 表头固定为 `ruleEntryId,displayName,ruleFamily,relationElement,compatiblePhenomena,positiveCommit,negativeCommit,requiredAuthority,requiredNodeTypes,scopeType,scopeTierCap,anchorNodeIds,propagationBoundaryProfileId,currentCoverageSet,affectedWorldVariables,conflictProfileId,failurePolicy,worldEventOutputs`；未知列、缺列和空的生产字段失败关闭。
+- 集合以 `|` 分隔；`worldEventOutputs` 的单项格式为
+  `eventId~environmentProfileId`。`displayName` 必须是 Language 键而非显示文本。
+- 非空生产行必须通过显式外部目录解析遗物权限、组织授权、节点、边界、现实供给、提交、变量、冲突／跨阶资格、事件和环境档案。当前没有生产目录，导入器拒绝所有非空生产行，不能用 fixture 或路径补齐。
+- `scopeType` 只接受 `SINGLE_NODE`、`CONNECTED_NODES`、`REGIONAL_HUB`；
+  `scopeTierCap` 只接受 `NODE`、`AREA`、`REGION`；`failurePolicy` 只接受
+  `REJECT`、`SUSPEND`、`SAFE_DOWNGRADE`，均不得依靠默认值。
+
 ## JindanStaticStates.csv 契约
 
 本表只消费 `docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md` 的

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：C-TZ-CHARTER-ENTRIES-01B6 已复审完成并明确解除内容前置，M8 最小纵向切片已有条件授权；本卡只建立独立静态定义、动态状态数据边界和整表失败关闭，不生产样例或运行时玩法。",
+  "stateReason": "2026-07-31：已建立十八字段静态定义、动态状态边界、外部目录失败关闭和数据链表头审计；生产表仍仅有表头，样例与运行时继续由后续切片负责。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md",
     "src/Assets/DataConfig/CharterRuleDefinitions.csv",
@@ -82,3 +82,9 @@
 
 - 若契约必须先实现运行时规则、完整九域天气、动态经济、任意变量编辑器、第二套环境／冲突引擎或猜测倍率／概率／价格，停止并拆回对应后续任务。
 - 若现行事实无法区分静态定义与动态状态，或必须把长期状态塞进 `EnvironmentProfileData` 才能继续，转为 `pending_decision`，不得添加兼容层。
+
+## 完成记录
+
+- 2026-07-31：新增 `CharterRuleDefinitions.csv` 十八字段 schema、静态定义与动态状态数据对象、显式外部目录及整表预校验导入。未知引用、覆盖越界、正负提交不完整、定义／状态 ID 混用和未声明生产目录均以稳定原因失败。
+- 验证：`.NET` 构建、数据链单测与数据链检查通过；EditMode 中本卡 16/16 通过。全套 EditMode 255/256，唯一既有失败仍是旧术法日志断言与当前攻击档案加载器日志不一致，未修改其路径。
+- 边界：生产 CSV 仅有表头，未创建册界 asset、样例、规则事务、存档或 Unity 交互；后续样例由 `D-TZ-CHARTER-SAMPLE-01` 负责。

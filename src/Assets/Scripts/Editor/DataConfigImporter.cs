@@ -56,6 +56,7 @@ namespace TianZhang.Editor
             ImportNpcCultivationActionWeightProfiles();
             ImportFoundationPurpleMansionStates();
             ImportJindanStaticStates();
+            ImportCharterRuleDefinitions();
             ImportGongFa();
             ImportSpells();
             ImportSkills();
@@ -1074,6 +1075,28 @@ namespace TianZhang.Editor
             "elementRelationRefs",
         };
 
+        private static readonly string[] CharterRuleDefinitionColumns =
+        {
+            "ruleEntryId",
+            "displayName",
+            "ruleFamily",
+            "relationElement",
+            "compatiblePhenomena",
+            "positiveCommit",
+            "negativeCommit",
+            "requiredAuthority",
+            "requiredNodeTypes",
+            "scopeType",
+            "scopeTierCap",
+            "anchorNodeIds",
+            "propagationBoundaryProfileId",
+            "currentCoverageSet",
+            "affectedWorldVariables",
+            "conflictProfileId",
+            "failurePolicy",
+            "worldEventOutputs",
+        };
+
         private static readonly string[] AttackProfileColumns =
         {
             "attackProfileId", "displayNameKey", "profileKind", "basicBindingKind",
@@ -1847,6 +1870,439 @@ namespace TianZhang.Editor
             destination.phenomenonChannels = source.phenomenonChannels;
             destination.phenomenonPairs = source.phenomenonPairs;
             destination.elementRelationRefs = source.elementRelationRefs;
+        }
+
+        [MenuItem("天章/导入册界规则定义配置")]
+        public static void ImportCharterRuleDefinitions()
+        {
+            const string path = "Assets/DataConfig/CharterRuleDefinitions.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Charter rule definition CSV was not found: {path}", path);
+
+            // This schema task intentionally has no production authority directory or content rows.
+            // A later content task must provide real owners instead of promoting fixture IDs.
+            var definitions = ParseCharterRuleDefinitions(
+                File.ReadAllLines(path),
+                path,
+                new CharterRuleReferenceCatalog());
+            try
+            {
+                foreach (var definition in definitions)
+                {
+                    string assetPath =
+                        $"Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_{SanitizeName(definition.ruleEntryId)}.asset";
+                    var asset = AssetDatabase.LoadAssetAtPath<CharterRuleDefinitionData>(assetPath);
+                    bool isNew = asset == null;
+                    if (isNew)
+                    {
+                        asset = ScriptableObject.CreateInstance<CharterRuleDefinitionData>();
+                        EnsureDirectory(assetPath);
+                    }
+
+                    CopyCharterRuleDefinition(definition, asset);
+                    if (isNew)
+                        AssetDatabase.CreateAsset(asset, assetPath);
+                    else
+                        EditorUtility.SetDirty(asset);
+                }
+            }
+            finally
+            {
+                foreach (var definition in definitions)
+                    UnityEngine.Object.DestroyImmediate(definition);
+            }
+        }
+
+        /// <summary>
+        /// Parses and validates the complete definition table before import can write an asset.
+        /// The caller supplies every external authority explicitly; this importer never infers one
+        /// from display text, paths, enum defaults, EnvironmentProfileData, or test fixtures.
+        /// </summary>
+        public static CharterRuleDefinitionData[] ParseCharterRuleDefinitions(
+            string[] lines,
+            string sourceName,
+            CharterRuleReferenceCatalog referenceCatalog = null)
+        {
+            if (lines == null)
+                throw CharterError("CHARTER_TABLE_INVALID", sourceName, "has no rows.");
+
+            int headerLineIndex = FindHeaderIndex(lines);
+            if (headerLineIndex < 0)
+                throw CharterError("CHARTER_TABLE_INVALID", sourceName, "has no header row.");
+
+            var headers = FindHeader(lines);
+            RequireExactColumns(headers, sourceName, CharterRuleDefinitionColumns);
+            var definitions = new List<CharterRuleDefinitionData>();
+            var ruleEntryIds = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                for (int index = headerLineIndex + 1; index < lines.Length; index++)
+                {
+                    string line = lines[index];
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                        continue;
+
+                    var columns = ParseCSV(line);
+                    if (columns.Length != headers.Length)
+                    {
+                        throw CharterError(
+                            "CHARTER_TABLE_INVALID",
+                            $"{sourceName} row {index + 1}",
+                            $"has {columns.Length} columns; expected {headers.Length}.");
+                    }
+
+                    var definition = ParseCharterRuleDefinitionRow(
+                        headers,
+                        columns,
+                        $"{sourceName} row {index + 1}",
+                        referenceCatalog);
+                    if (!ruleEntryIds.Add(definition.ruleEntryId))
+                    {
+                        UnityEngine.Object.DestroyImmediate(definition);
+                        throw CharterError("CHARTER_DUPLICATE_RULE_ENTRY", sourceName, $"repeats ruleEntryId '{definition.ruleEntryId}'.");
+                    }
+
+                    definitions.Add(definition);
+                }
+
+                return definitions.ToArray();
+            }
+            catch
+            {
+                foreach (var definition in definitions)
+                    UnityEngine.Object.DestroyImmediate(definition);
+                throw;
+            }
+        }
+
+        private static CharterRuleDefinitionData ParseCharterRuleDefinitionRow(
+            string[] headers,
+            string[] columns,
+            string sourceName,
+            CharterRuleReferenceCatalog catalog)
+        {
+            if (catalog == null || !catalog.HasDeclaredAuthority)
+            {
+                throw CharterError(
+                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
+                    sourceName,
+                    "requires an explicit external reference catalog before a production row can import.");
+            }
+
+            var definition = ScriptableObject.CreateInstance<CharterRuleDefinitionData>();
+            try
+            {
+                definition.ruleEntryId = GetRequiredCharterColumnValue(headers, columns, "ruleEntryId", sourceName);
+                RequireCharterReference(definition.ruleEntryId, sourceName, "ruleEntryId", "CHARTER_TABLE_INVALID");
+                definition.displayName = GetRequiredCharterColumnValue(headers, columns, "displayName", sourceName);
+                RequireCharterReference(definition.displayName, sourceName, "displayName", "CHARTER_UNKNOWN_DISPLAY_NAME_REFERENCE");
+                if (!catalog.ContainsDisplayNameKey(definition.displayName))
+                    throw CharterError("CHARTER_UNKNOWN_DISPLAY_NAME_REFERENCE", sourceName, "has an unresolved displayName key.");
+
+                definition.ruleFamily = GetRequiredCharterColumnValue(headers, columns, "ruleFamily", sourceName);
+                RequireCharterReference(definition.ruleFamily, sourceName, "ruleFamily", "CHARTER_UNKNOWN_RULE_FAMILY_REFERENCE");
+                if (!catalog.ContainsRuleFamily(definition.ruleFamily))
+                    throw CharterError("CHARTER_UNKNOWN_RULE_FAMILY_REFERENCE", sourceName, "has an unresolved ruleFamily.");
+
+                definition.relationElement = GetRequiredCharterColumnValue(headers, columns, "relationElement", sourceName);
+                RequireCharterReference(definition.relationElement, sourceName, "relationElement", "CHARTER_UNKNOWN_RELATION_ELEMENT_REFERENCE");
+                if (!catalog.ContainsRelationElement(definition.relationElement))
+                    throw CharterError("CHARTER_UNKNOWN_RELATION_ELEMENT_REFERENCE", sourceName, "has an unresolved relationElement.");
+
+                definition.compatiblePhenomena = ParseCharterReferenceList(
+                    GetRequiredCharterColumnValue(headers, columns, "compatiblePhenomena", sourceName),
+                    sourceName,
+                    "compatiblePhenomena",
+                    "CHARTER_UNKNOWN_PHENOMENON_REFERENCE");
+                foreach (string phenomenon in definition.compatiblePhenomena)
+                {
+                    if (!catalog.ContainsPhenomenon(phenomenon))
+                        throw CharterError("CHARTER_UNKNOWN_PHENOMENON_REFERENCE", sourceName, $"has an unresolved compatible phenomenon '{phenomenon}'.");
+                }
+
+                definition.positiveCommit = GetRequiredCharterColumnValue(headers, columns, "positiveCommit", sourceName);
+                definition.negativeCommit = GetRequiredCharterColumnValue(headers, columns, "negativeCommit", sourceName);
+                ValidateCharterCommit(definition.positiveCommit, catalog, sourceName, "positiveCommit");
+                ValidateCharterCommit(definition.negativeCommit, catalog, sourceName, "negativeCommit");
+
+                definition.requiredAuthority = GetRequiredCharterColumnValue(headers, columns, "requiredAuthority", sourceName);
+                ValidateCharterAuthority(definition.requiredAuthority, catalog, sourceName);
+
+                definition.requiredNodeTypes = ParseCharterReferenceList(
+                    GetRequiredCharterColumnValue(headers, columns, "requiredNodeTypes", sourceName),
+                    sourceName,
+                    "requiredNodeTypes",
+                    "CHARTER_UNKNOWN_NODE_TYPE_REFERENCE");
+                foreach (string nodeType in definition.requiredNodeTypes)
+                {
+                    if (!catalog.ContainsNodeType(nodeType))
+                        throw CharterError("CHARTER_UNKNOWN_NODE_TYPE_REFERENCE", sourceName, $"has an unresolved required node type '{nodeType}'.");
+                }
+
+                definition.scopeType = ParseCharterScopeType(
+                    GetRequiredCharterColumnValue(headers, columns, "scopeType", sourceName),
+                    sourceName);
+                definition.scopeTierCap = ParseCharterScopeTierCap(
+                    GetRequiredCharterColumnValue(headers, columns, "scopeTierCap", sourceName),
+                    sourceName);
+                definition.anchorNodeIds = ParseCharterReferenceList(
+                    GetRequiredCharterColumnValue(headers, columns, "anchorNodeIds", sourceName),
+                    sourceName,
+                    "anchorNodeIds",
+                    "CHARTER_UNKNOWN_NODE_REFERENCE");
+                foreach (string nodeId in definition.anchorNodeIds)
+                {
+                    if (!catalog.ContainsNode(nodeId))
+                        throw CharterError("CHARTER_UNKNOWN_NODE_REFERENCE", sourceName, $"has an unresolved anchor node '{nodeId}'.");
+                }
+
+                definition.propagationBoundaryProfileId = GetRequiredCharterColumnValue(
+                    headers, columns, "propagationBoundaryProfileId", sourceName);
+                var boundary = catalog.FindPropagationBoundary(definition.propagationBoundaryProfileId);
+                if (boundary == null || boundary.allowedCoverageIds == null)
+                    throw CharterError("CHARTER_UNKNOWN_BOUNDARY_REFERENCE", sourceName, "has an unresolved propagation boundary.");
+                definition.currentCoverageSet = ParseCharterReferenceList(
+                    GetRequiredCharterColumnValue(headers, columns, "currentCoverageSet", sourceName),
+                    sourceName,
+                    "currentCoverageSet",
+                    "CHARTER_COVERAGE_OUT_OF_BOUNDARY");
+                foreach (string coverageId in definition.currentCoverageSet)
+                {
+                    if (!boundary.allowedCoverageIds.Contains(coverageId, StringComparer.Ordinal))
+                    {
+                        throw CharterError(
+                            "CHARTER_COVERAGE_OUT_OF_BOUNDARY",
+                            sourceName,
+                            $"covers '{coverageId}' outside propagation boundary '{definition.propagationBoundaryProfileId}'.");
+                    }
+                }
+
+                definition.affectedWorldVariables = ParseCharterReferenceList(
+                    GetRequiredCharterColumnValue(headers, columns, "affectedWorldVariables", sourceName),
+                    sourceName,
+                    "affectedWorldVariables",
+                    "CHARTER_UNKNOWN_VARIABLE_REFERENCE");
+                foreach (string variableId in definition.affectedWorldVariables)
+                {
+                    if (!catalog.ContainsWorldVariable(variableId))
+                        throw CharterError("CHARTER_UNKNOWN_VARIABLE_REFERENCE", sourceName, $"has an unresolved world variable '{variableId}'.");
+                }
+
+                definition.conflictProfileId = GetRequiredCharterColumnValue(headers, columns, "conflictProfileId", sourceName);
+                RequireCharterReference(definition.conflictProfileId, sourceName, "conflictProfileId", "CHARTER_UNKNOWN_CONFLICT_REFERENCE");
+                if (catalog.FindConflict(definition.conflictProfileId) == null)
+                    throw CharterError("CHARTER_UNKNOWN_CONFLICT_REFERENCE", sourceName, "has an unresolved conflict or cross-tier challenge profile.");
+
+                definition.failurePolicy = ParseCharterFailurePolicy(
+                    GetRequiredCharterColumnValue(headers, columns, "failurePolicy", sourceName),
+                    sourceName);
+                definition.worldEventOutputs = ParseCharterWorldEventOutputs(
+                    GetRequiredCharterColumnValue(headers, columns, "worldEventOutputs", sourceName),
+                    catalog,
+                    sourceName);
+                return definition;
+            }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(definition);
+                throw;
+            }
+        }
+
+        private static void ValidateCharterCommit(
+            string commitId,
+            CharterRuleReferenceCatalog catalog,
+            string sourceName,
+            string fieldName)
+        {
+            RequireCharterReference(commitId, sourceName, fieldName, "CHARTER_ATOMIC_COMMIT_INCOMPLETE");
+            var commit = catalog.FindCommit(commitId);
+            if (commit == null || commit.realitySupplyIds == null || commit.realitySupplyIds.Length == 0)
+            {
+                throw CharterError(
+                    "CHARTER_ATOMIC_COMMIT_INCOMPLETE",
+                    sourceName,
+                    $"has no resolvable {fieldName} with declared reality supply.");
+            }
+            foreach (string supplyId in commit.realitySupplyIds)
+            {
+                if (!catalog.ContainsRealitySupply(supplyId))
+                    throw CharterError("CHARTER_UNKNOWN_REALITY_SUPPLY_REFERENCE", sourceName, $"has an unresolved reality supply '{supplyId}'.");
+            }
+        }
+
+        private static void ValidateCharterAuthority(
+            string authorityId,
+            CharterRuleReferenceCatalog catalog,
+            string sourceName)
+        {
+            RequireCharterReference(authorityId, sourceName, "requiredAuthority", "CHARTER_UNKNOWN_AUTHORITY_REFERENCE");
+            var authority = catalog.FindAuthority(authorityId);
+            if (authority == null)
+                throw CharterError("CHARTER_UNKNOWN_AUTHORITY_REFERENCE", sourceName, "has an unresolved requiredAuthority.");
+            if (!catalog.ContainsRelic(authority.relicId))
+                throw CharterError("CHARTER_UNKNOWN_RELIC_REFERENCE", sourceName, "references an unknown charter relic permission.");
+            foreach (string authorizationVersionId in authority.organizationAuthorizationVersionIds ?? Array.Empty<string>())
+            {
+                if (!catalog.ContainsOrganizationAuthorizationVersion(authorizationVersionId))
+                {
+                    throw CharterError(
+                        "CHARTER_UNKNOWN_AUTHORIZATION_REFERENCE",
+                        sourceName,
+                        $"references unknown organization authorization '{authorizationVersionId}'.");
+                }
+            }
+        }
+
+        private static CharterWorldEventOutputData[] ParseCharterWorldEventOutputs(
+            string raw,
+            CharterRuleReferenceCatalog catalog,
+            string sourceName)
+        {
+            var outputs = new List<CharterWorldEventOutputData>();
+            foreach (string entry in SplitCharterRequired(raw, '|', sourceName, "worldEventOutputs", "CHARTER_TABLE_INVALID"))
+            {
+                string[] parts = entry.Split(new[] { '~' }, StringSplitOptions.None).Select(value => value.Trim()).ToArray();
+                if (parts.Length != 2)
+                    throw CharterError("CHARTER_TABLE_INVALID", sourceName, $"has invalid worldEventOutputs entry '{entry}'.");
+                RequireCharterReference(parts[0], sourceName, "worldEventOutputs.eventId", "CHARTER_UNKNOWN_EVENT_REFERENCE");
+                RequireCharterReference(parts[1], sourceName, "worldEventOutputs.environmentProfileId", "CHARTER_UNKNOWN_ENVIRONMENT_PROFILE_REFERENCE");
+                if (!catalog.ContainsWorldEvent(parts[0]))
+                    throw CharterError("CHARTER_UNKNOWN_EVENT_REFERENCE", sourceName, $"has an unresolved world event '{parts[0]}'.");
+                if (!catalog.ContainsEnvironmentProfile(parts[1]))
+                {
+                    throw CharterError(
+                        "CHARTER_UNKNOWN_ENVIRONMENT_PROFILE_REFERENCE",
+                        sourceName,
+                        $"has an unresolved environmentProfile output '{parts[1]}'.");
+                }
+                outputs.Add(new CharterWorldEventOutputData
+                {
+                    eventId = parts[0],
+                    environmentProfileId = parts[1],
+                });
+            }
+
+            return outputs.ToArray();
+        }
+
+        private static string[] ParseCharterReferenceList(
+            string raw,
+            string sourceName,
+            string fieldName,
+            string failureCode)
+        {
+            var values = SplitCharterRequired(raw, '|', sourceName, fieldName, failureCode);
+            var unique = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string value in values)
+            {
+                RequireCharterReference(value, sourceName, fieldName, failureCode);
+                if (!unique.Add(value))
+                    throw CharterError(failureCode, sourceName, $"repeats '{value}' in '{fieldName}'.");
+            }
+            return values;
+        }
+
+        private static string[] SplitCharterRequired(
+            string raw,
+            char separator,
+            string sourceName,
+            string fieldName,
+            string failureCode)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                throw CharterError(failureCode, sourceName, $"has empty required field '{fieldName}'.");
+            string[] values = raw.Split(new[] { separator }, StringSplitOptions.None).Select(value => value.Trim()).ToArray();
+            if (values.Length == 0 || values.Any(string.IsNullOrWhiteSpace))
+                throw CharterError(failureCode, sourceName, $"has an invalid '{fieldName}' list.");
+            return values;
+        }
+
+        private static CharterRuleScopeType ParseCharterScopeType(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "SINGLE_NODE" => CharterRuleScopeType.SingleNode,
+                "CONNECTED_NODES" => CharterRuleScopeType.ConnectedNodes,
+                "REGIONAL_HUB" => CharterRuleScopeType.RegionalHub,
+                _ => throw CharterError("CHARTER_SCOPE_INVALID", sourceName, $"has unknown explicit scopeType '{raw}'."),
+            };
+        }
+
+        private static CharterRuleScopeTierCap ParseCharterScopeTierCap(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "NODE" => CharterRuleScopeTierCap.Node,
+                "AREA" => CharterRuleScopeTierCap.Area,
+                "REGION" => CharterRuleScopeTierCap.Region,
+                _ => throw CharterError("CHARTER_SCOPE_TIER_INVALID", sourceName, $"has unknown explicit scopeTierCap '{raw}'."),
+            };
+        }
+
+        private static CharterRuleFailurePolicy ParseCharterFailurePolicy(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "REJECT" => CharterRuleFailurePolicy.Reject,
+                "SUSPEND" => CharterRuleFailurePolicy.Suspend,
+                "SAFE_DOWNGRADE" => CharterRuleFailurePolicy.SafeDowngrade,
+                _ => throw CharterError("CHARTER_FAILURE_POLICY_INVALID", sourceName, $"has unknown explicit failurePolicy '{raw}'."),
+            };
+        }
+
+        private static string GetRequiredCharterColumnValue(
+            string[] headers,
+            string[] columns,
+            string name,
+            string sourceName)
+        {
+            string value = GetRequiredColumnValue(headers, columns, name, sourceName);
+            if (string.IsNullOrWhiteSpace(value))
+                throw CharterError("CHARTER_TABLE_INVALID", sourceName, $"has an empty required column '{name}'.");
+            return value.Trim();
+        }
+
+        private static void RequireCharterReference(
+            string value,
+            string sourceName,
+            string fieldName,
+            string failureCode)
+        {
+            if (string.IsNullOrWhiteSpace(value) || string.Equals(value, "none", StringComparison.OrdinalIgnoreCase) || value.Any(character =>
+                !char.IsLetterOrDigit(character) && character != '_' && character != '-' && character != '.'))
+            {
+                throw CharterError(failureCode, sourceName, $"has invalid reference '{value}' in '{fieldName}'.");
+            }
+        }
+
+        private static InvalidDataException CharterError(string code, string sourceName, string message)
+        {
+            return new InvalidDataException($"{code}: {sourceName} {message}");
+        }
+
+        private static void CopyCharterRuleDefinition(
+            CharterRuleDefinitionData source,
+            CharterRuleDefinitionData destination)
+        {
+            destination.ruleEntryId = source.ruleEntryId;
+            destination.displayName = source.displayName;
+            destination.ruleFamily = source.ruleFamily;
+            destination.relationElement = source.relationElement;
+            destination.compatiblePhenomena = source.compatiblePhenomena;
+            destination.positiveCommit = source.positiveCommit;
+            destination.negativeCommit = source.negativeCommit;
+            destination.requiredAuthority = source.requiredAuthority;
+            destination.requiredNodeTypes = source.requiredNodeTypes;
+            destination.scopeType = source.scopeType;
+            destination.scopeTierCap = source.scopeTierCap;
+            destination.anchorNodeIds = source.anchorNodeIds;
+            destination.propagationBoundaryProfileId = source.propagationBoundaryProfileId;
+            destination.currentCoverageSet = source.currentCoverageSet;
+            destination.affectedWorldVariables = source.affectedWorldVariables;
+            destination.conflictProfileId = source.conflictProfileId;
+            destination.failurePolicy = source.failurePolicy;
+            destination.worldEventOutputs = source.worldEventOutputs;
         }
 
         [MenuItem("天章/导入道基紫府状态配置")]

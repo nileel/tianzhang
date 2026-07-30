@@ -6,6 +6,19 @@ $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $checkerPath = Join-Path $repoRoot 'tools/check-data-chain.ps1'
 $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("tianzhang-data-chain-test-" + [Guid]::NewGuid())
 
+function Copy-FixtureSource {
+    param([string]$RelativePath)
+
+    $sourcePath = Join-Path $repoRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+        throw "Required checker fixture source is missing: $RelativePath"
+    }
+
+    $destinationPath = Join-Path $fixtureRoot $RelativePath
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destinationPath) | Out-Null
+    Copy-Item -LiteralPath $sourcePath -Destination $destinationPath -Force
+}
+
 function Write-FixtureFile {
     param([string]$RelativePath, [string]$Content)
 
@@ -27,6 +40,7 @@ function New-ValidFixture {
     $skillHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,sourceAffiliation,contentScope'
     $skillRow = 'skill_fixture,1,1,4,1,1,1,0,0,0,0,0,0,0,desc_fixture,element_water,realm_lianqi,faction_fixture,player'
     $script:environmentProfileHeader = 'profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs'
+    $script:charterRuleDefinitionHeader = 'ruleEntryId,displayName,ruleFamily,relationElement,compatiblePhenomena,positiveCommit,negativeCommit,requiredAuthority,requiredNodeTypes,scopeType,scopeTierCap,anchorNodeIds,propagationBoundaryProfileId,currentCoverageSet,affectedWorldVariables,conflictProfileId,failurePolicy,worldEventOutputs'
 
     Write-FixtureFile (Join-Path "docs/$cultivation" "$gongFa/fixture/fixture.txt") 'fixture'
     Write-FixtureFile (Join-Path "docs/$cultivation" "$spells/fixture/fixture.txt") 'fixture'
@@ -35,11 +49,32 @@ function New-ValidFixture {
     Write-FixtureFile 'src/Assets/DataConfig/Spells.csv' "# fixture`n$spellHeader`n$spellRow`n"
     Write-FixtureFile 'src/Assets/DataConfig/Skills.csv' "# fixture`n$skillHeader`n$skillRow`n"
     Write-FixtureFile 'src/Assets/DataConfig/EnvironmentProfiles.csv' "# fixture`n$script:environmentProfileHeader`n"
+    Write-FixtureFile 'src/Assets/DataConfig/CharterRuleDefinitions.csv' "# fixture`n$script:charterRuleDefinitionHeader`n"
     Write-FixtureFile 'src/Assets/DataConfig/Language.csv' "realm_lianqi,练气`n"
     Write-FixtureFile 'src/Assets/Data/GongFa/GongFa_gongfa_fixture.asset' "contentScope: player`n"
     Write-FixtureFile 'src/Assets/Data/Spells/Spell_spell_fixture.asset' "contentScope: player`nrealmRequirement: realm_lianqi`nelementRequirement: element_water_root`nsourceAffiliation: faction_fixture`n"
     Write-FixtureFile 'src/Assets/Data/Skills/Skill_skill_fixture.asset' "contentScope: player`nrealmRequirement: realm_lianqi`nsourceAffiliation: faction_fixture`n"
     Write-FixtureFile 'tools/data-chain-warning-waivers.json' '[]'
+
+    foreach ($relativePath in @(
+        'src/Assets/DataConfig/Language.csv',
+        'src/Assets/DataConfig/Settlements.csv',
+        'src/Assets/DataConfig/Items.csv',
+        'src/Assets/DataConfig/Bounties.csv',
+        'src/Assets/DataConfig/Enemies.csv',
+        'src/Assets/DataConfig/FoundationPurpleMansionStates.csv',
+        'src/Assets/DataConfig/JindanStaticStates.csv',
+        'src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv',
+        'src/Assets/Data/Settlements/Settlement_guanzhong_city.asset',
+        'src/Assets/Data/Items/Item_item_lingshi_low.asset',
+        'src/Assets/Data/Items/Item_item_shijia_piece.asset',
+        'src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset',
+        'src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset',
+        'src/Assets/Data/ContentCatalog/ContentCatalog.asset',
+        'src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset'
+    )) {
+        Copy-FixtureSource $relativePath
+    }
 }
 
 function Invoke-Checker {
@@ -67,6 +102,10 @@ try {
 
     (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv')).Replace($script:environmentProfileHeader, "$script:environmentProfileHeader,unknown") | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv')
     Assert-CheckerResult -Name 'environment schema unknown column' -ShouldPass $false -ExpectedRuleId 'CSV_SCHEMA_UNKNOWN_COLUMN'
+    New-ValidFixture
+
+    (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterRuleDefinitions.csv')).Replace($script:charterRuleDefinitionHeader, "$script:charterRuleDefinitionHeader,unknown") | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterRuleDefinitions.csv')
+    Assert-CheckerResult -Name 'charter schema unknown column' -ShouldPass $false -ExpectedRuleId 'CSV_SCHEMA_UNKNOWN_COLUMN'
     New-ValidFixture
 
     Add-Content -LiteralPath (Join-Path $fixtureRoot (Join-Path "docs/$cultivation" "$spells/fixture/extra.txt")) -Value 'extra'

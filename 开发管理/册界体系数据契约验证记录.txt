@@ -1,0 +1,29 @@
+# 册界体系数据契约验证记录
+
+状态：✅ 已验证（D-TZ-CHARTER-SCHEMA-01，2026-07-31）
+
+## 契约结果
+
+- `CharterRuleDefinitions.csv` 只保留 M4 规定的十八字段表头；没有生产条目、节点、门禁、设施、地区分布、数值或 Unity asset。
+- `CharterRuleDefinitionData` 完整投影条目定义；`CharterRuntimeStateData` 仅记录已登记条目、天章／界印状态、节点、组织授权版本、覆盖、占用、现实供给、正负提交结果和当前地区规则的稳定状态。
+- 静态条目只能经外部目录引用遗物权限、组织授权、节点、传播边界、现实供给、原子提交、世界变量、冲突／跨阶资格、事件及战场 `environmentProfile` 输出；环境档案没有获得长期地区状态所有权。
+
+## 直接断言
+
+`CharterRuleDataTests` 的 16 项 EditMode 断言均通过，覆盖：
+
+- 合法空生产表、十八字段投影、定义与动态状态分离。
+- 未知遗物、授权、节点类型／锚点、边界、变量、冲突与环境档案引用，以及覆盖越界。
+- 正负提交任一缺失、未知条目、定义 ID／状态 ID 混用和无外部生产目录。
+- 整表在 asset 写入前拒绝，未创建半 asset。
+
+## 运行记录
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告、0 错误。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`：通过，包含册界表头未知列拒绝。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：册界 16/16 通过；全套为 255/256。唯一既有失败是 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 仍期待旧“Excluded non-player spell”日志，而当前未改动的攻击档案加载器输出“Excluded unresolved art profile”。
+
+## 后续边界
+
+`D-TZ-CHARTER-SAMPLE-01` 才能提供一个已有门禁、公共设施、节点及水府地纪的真实外部目录和正反样例。规则事务、金丹冲突、元婴受锚、存档与 Unity 交互仍未接入。
