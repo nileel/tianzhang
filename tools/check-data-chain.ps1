@@ -64,7 +64,12 @@ function Get-ContentDocs {
 }
 
 function Get-CsvTable {
-  param([string]$RelativePath, [string[]]$ExpectedHeaders, [string[]]$OptionalHeaders = @())
+  param(
+    [string]$RelativePath,
+    [string[]]$ExpectedHeaders,
+    [string[]]$OptionalHeaders = @(),
+    [string[]]$AllowedContentScopes = @('player', 'reserved')
+  )
   $path = Join-Path $root $RelativePath
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
     Add-Error 'MISSING_CSV' $RelativePath "Missing CSV: $RelativePath"
@@ -104,8 +109,8 @@ function Get-CsvTable {
         Add-Finding 'REQUIRED_FIELD_EMPTY' "${RelativePath}:${rowKey}:$header" 'Required field is empty.'
       }
     }
-    if ($row.Contains('contentScope') -and $row['contentScope'] -notin @('player', 'reserved')) {
-      Add-Finding 'CONTENT_SCOPE_INVALID' "${RelativePath}:$rowKey" "contentScope '$($row['contentScope'])' is not player or reserved."
+    if ($row.Contains('contentScope') -and -not [string]::IsNullOrWhiteSpace([string]$row['contentScope']) -and $row['contentScope'] -notin $AllowedContentScopes) {
+      Add-Finding 'CONTENT_SCOPE_INVALID' "${RelativePath}:$rowKey" "contentScope '$($row['contentScope'])' is not approved for this table."
     }
     $rows += [pscustomobject]$row
   }
@@ -170,6 +175,110 @@ function Test-AssetCoverage {
         Add-Finding 'ASSET_REQUIREMENT_MISMATCH' "${Label}:$($row.name):$assetField" "Asset value '$assetValue' differs from CSV $csvField '$csvValue'."
       }
     }
+  }
+}
+
+function Test-FormalContentAsset {
+  param([string]$Label, [string]$RelativePath, [hashtable]$ExpectedFields)
+
+  $path = Join-Path $root $RelativePath
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+    Add-Finding 'FORMAL_CONTENT_ASSET_MISSING' $Label "Missing generated asset: $RelativePath"
+    return
+  }
+
+  foreach ($field in $ExpectedFields.Keys) {
+    $expected = [string]$ExpectedFields[$field]
+    $matches = @(Select-String -LiteralPath $path -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
+    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne $expected) {
+      Add-Finding 'FORMAL_CONTENT_ASSET_FIELD_MISMATCH' "${Label}:$field" "Asset field must equal '$expected'."
+    }
+  }
+}
+
+function Test-FormalContentCatalog {
+  param([object]$Settlements, [object]$Items, [object]$Bounties, [object]$Enemies, [string[]]$LanguageIds)
+
+  $expectedIds = @{
+    Settlements = @('guanzhong_city')
+    Items = @('item_lingshi_low', 'item_shijia_piece')
+    Bounties = @('bounty_guanzhong_shijiahou')
+  }
+  foreach ($kind in $expectedIds.Keys) {
+    $rows = @((Get-Variable -Name $kind -ValueOnly).Rows)
+    $idField = switch ($kind) {
+      'Settlements' { 'settlementId' }
+      'Items' { 'itemId' }
+      'Bounties' { 'bountyId' }
+    }
+    $actualIds = @($rows | ForEach-Object { [string]$_.PSObject.Properties[$idField].Value } | Sort-Object -Unique)
+    if ($rows.Count -ne $expectedIds[$kind].Count -or @($expectedIds[$kind] | Where-Object { $_ -notin $actualIds }).Count -ne 0) {
+      Add-Finding 'FORMAL_CONTENT_ROW_SET_INVALID' $kind 'CSV must contain exactly the approved first-batch production IDs.'
+    }
+  }
+
+  $requiredLanguageIds = @(
+    'settlement_guanzhong_city',
+    'settlement_feature_bounty_board',
+    'item_lingshi_low',
+    'item_shijia_piece',
+    'item_lingshi_low_description',
+    'item_shijia_piece_description',
+    'enemy_shijiahou',
+    'desc_enemy_shijiahou',
+    'bounty_guanzhong_shijiahou_title',
+    'bounty_guanzhong_shijiahou_description'
+  )
+  foreach ($languageId in $requiredLanguageIds) {
+    if ($languageId -notin $LanguageIds) { Add-Finding 'FORMAL_CONTENT_LANGUAGE_MISSING' $languageId 'Formal content projection references a missing Language key.' }
+  }
+
+  $settlement = @($Settlements.Rows | Where-Object { $_.settlementId -ceq 'guanzhong_city' })
+  if ($settlement.Count -eq 1 -and ($settlement[0].contentScope -cne 'content_scope_production' -or $settlement[0].features -cne 'bounty_board~settlement_feature_bounty_board~enabled~' -or $settlement[0].adventureEntranceIds -cne 'guanzhong_wild')) {
+    Add-Finding 'FORMAL_SETTLEMENT_PROJECTION_INVALID' 'guanzhong_city' 'Settlement production fields differ from the approved projection.'
+  }
+
+  $itemsById = @{}
+  foreach ($item in $Items.Rows) { $itemsById[[string]$item.itemId] = $item }
+  foreach ($itemId in @('item_lingshi_low', 'item_shijia_piece')) {
+    if (-not $itemsById.ContainsKey($itemId) -or $itemsById[$itemId].contentScope -cne 'content_scope_production' -or $itemsById[$itemId].maxStack -cne '99') {
+      Add-Finding 'FORMAL_ITEM_PROJECTION_INVALID' $itemId 'Item production scope or maxStack differs from the approved parameter decision.'
+    }
+  }
+
+  $bounty = @($Bounties.Rows | Where-Object { $_.bountyId -ceq 'bounty_guanzhong_shijiahou' })
+  if ($bounty.Count -eq 1 -and ($bounty[0].issuerSettlementId -cne 'guanzhong_city' -or $bounty[0].targetEnemyId -cne 'enemy_shijiahou' -or $bounty[0].allowedAdventureId -cne 'guanzhong_wild' -or $bounty[0].rewardEntries -cne 'item_lingshi_low@3' -or $bounty[0].repeatPolicy -cne 'one_time')) {
+    Add-Finding 'FORMAL_BOUNTY_PROJECTION_INVALID' 'bounty_guanzhong_shijiahou' 'Bounty production fields differ from the approved projection.'
+  }
+
+  $enemy = @($Enemies.Rows | Where-Object { $_.name -ceq 'enemy_shijiahou' })
+  if ($enemy.Count -ne 1 -or $enemy[0].contentScope -cne 'guanzhong' -or $enemy[0].dropEntries -cne 'item_shijia_piece@100@1|item_lingshi_low@50@1') {
+    Add-Finding 'FORMAL_ENEMY_PROJECTION_INVALID' 'enemy_shijiahou' 'Enemy production scope or structured drop entries differ from the approved decision.'
+  }
+  foreach ($row in @($Enemies.Rows | Where-Object { $_.name -cne 'enemy_shijiahou' })) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$row.contentScope) -or -not [string]::IsNullOrWhiteSpace([string]$row.dropEntries)) {
+      Add-Finding 'FORMAL_ENEMY_SCOPE_LEAK' ([string]$row.name) 'Only enemy_shijiahou may enter the formal content directory.'
+    }
+  }
+
+  Test-FormalContentAsset 'Settlement:guanzhong_city' 'src/Assets/Data/Settlements/Settlement_guanzhong_city.asset' @{
+    settlementId = 'guanzhong_city'; contentScope = 'content_scope_production'; displayNameKey = 'settlement_guanzhong_city'
+  }
+  Test-FormalContentAsset 'Enemy:enemy_shijiahou' 'src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset' @{
+    enemyId = 'enemy_shijiahou'; contentScope = 'guanzhong'; aiProfileId = 'ai_melee'; realmId = 'realm_lianqi'
+  }
+  Test-FormalContentAsset 'Item:item_lingshi_low' 'src/Assets/Data/Items/Item_item_lingshi_low.asset' @{
+    itemId = 'item_lingshi_low'; contentScope = 'content_scope_production'; maxStack = '99'
+  }
+  Test-FormalContentAsset 'Item:item_shijia_piece' 'src/Assets/Data/Items/Item_item_shijia_piece.asset' @{
+    itemId = 'item_shijia_piece'; contentScope = 'content_scope_production'; maxStack = '99'
+  }
+  Test-FormalContentAsset 'Bounty:bounty_guanzhong_shijiahou' 'src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset' @{
+    bountyId = 'bounty_guanzhong_shijiahou'; contentScope = 'content_scope_production'; targetEnemyId = 'enemy_shijiahou'; repeatPolicy = 'one_time'
+  }
+  $catalogPath = Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset'
+  if (-not (Test-Path -LiteralPath $catalogPath -PathType Leaf)) {
+    Add-Finding 'FORMAL_CONTENT_CATALOG_MISSING' 'ContentCatalog' 'The single read-only content catalog asset is missing.'
   }
 }
 
@@ -270,6 +379,10 @@ $schemas = [ordered]@{
   GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
   Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
+  Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
+  Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack')
+  Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
+  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries')
   EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','phase','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','releasedNaturalCapacity','expansionGrants','expandedMansionCapacity','totalMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
   JindanStaticStates = @('schemaId','schemaVersion','characterId','foundationPurpleMansionStateRef','mansionInputs','jindanCoreBinding','danxiang','stablePositionBindings','abilityLedgerBindings','fixtureId','expect','fixtureOnlyNumericProfile')
@@ -279,6 +392,10 @@ $tables = [ordered]@{
   GongFa = Get-CsvTable 'src/Assets/DataConfig/GongFa.csv' $schemas.GongFa
   Spells = Get-CsvTable 'src/Assets/DataConfig/Spells.csv' $schemas.Spells
   Skills = Get-CsvTable 'src/Assets/DataConfig/Skills.csv' $schemas.Skills
+  Settlements = Get-CsvTable 'src/Assets/DataConfig/Settlements.csv' $schemas.Settlements @() @('content_scope_production')
+  Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @() @('content_scope_production')
+  Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
+  Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries') @('guanzhong')
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   FoundationPurpleMansionStates = Get-CsvTable 'src/Assets/DataConfig/FoundationPurpleMansionStates.csv' $schemas.FoundationPurpleMansionStates @('expansionGrants','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','fixtureId','expect','fixtureOnlyNumericProfile')
   JindanStaticStates = Get-CsvTable 'src/Assets/DataConfig/JindanStaticStates.csv' $schemas.JindanStaticStates @('fixtureId','expect','fixtureOnlyNumericProfile')
@@ -294,6 +411,7 @@ Test-AssetCoverage 'GongFa' $tables.GongFa.Rows 'src/Assets/Data/GongFa' 'GongFa
 Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
 Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
 Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfiles
+Test-FormalContentCatalog $tables.Settlements $tables.Items $tables.Bounties $tables.Enemies $languageIds
 
 foreach ($row in $tables.FoundationPurpleMansionStates.Rows) {
   foreach ($field in @('fixtureId', 'expect', 'fixtureOnlyNumericProfile')) {

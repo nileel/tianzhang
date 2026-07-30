@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：负责人对 DEC-20260730-CATLANG 选择 A，授权将既有已审核关中城、两项物品及石甲兽悬赏档案中的最小文本原样投影为生产 Language 键。任务已解除待决定状态，可在既定数据导入与只读目录边界内实施。",
+  "stateReason": "2026-07-30：已完成正式内容目录导入与只读查询；四领域 CSV 经整表与跨表预验证后生成 GUID 保持的资产及 ContentCatalogData，未接入任何消费者。验证记录见 开发管理/正式内容目录数据链验证记录.txt。",
   "expectedPaths": [
     "src/Assets/DataConfig/README.txt",
     "src/Assets/DataConfig/Settlements.csv",
@@ -108,3 +108,9 @@
 ## 停止条件
 
 - 生产 Language 文本、键或用途仍无负责人授权，或实现需要修改消费者、补设定、默认值、兼容路径、第二目录、其他内容或未批准参数时，保持或转为 `pending_decision`；不得补丁化推进。
+
+## 完成结果
+
+- 已实现 `docs -> CSV -> 整表／跨表校验 -> GUID 保持 asset -> ContentCatalogData` 的五项获批生产投影，坏行在写入前失败。
+- 已确认 `Char_Enemy_enemy_shijiahou.asset` GUID 保持；目录只提供稳定 ID 查找与发布方悬赏查询，不接入城市、战斗、掉落、背包、悬赏、存档、UI 或场景消费者。
+- 直接 EditMode 4/4、`dotnet build src/TianZhang.EditModeTests.csproj` 和 `check-data-chain.ps1 -FailOnMissingAssets` 均通过；详情见验证记录。

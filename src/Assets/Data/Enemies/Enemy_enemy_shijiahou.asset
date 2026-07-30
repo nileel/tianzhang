@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: add1d98152d27604e8c5f5cd6e830dd4, type: 3}
+  m_Name: Enemy_enemy_shijiahou
+  m_EditorClassIdentifier: TianZhang.Domain::TianZhang.Content.EnemyData
+  enemyId: enemy_shijiahou
+  displayNameKey: enemy_shijiahou
+  descriptionKey: desc_enemy_shijiahou
+  contentScope: guanzhong
+  enemyTypeId: type_yaoshou
+  aiProfileId: ai_melee
+  realmId: realm_lianqi
+  combatTemplate: {fileID: 11400000, guid: d8e383ae0eda4443a17f4f151191127d, type: 2}
+  dropEntries:
+  - itemId: item_shijia_piece
+    dropChancePercent: 100
+    quantity: 1
+  - itemId: item_lingshi_low
+    dropChancePercent: 50
+    quantity: 1

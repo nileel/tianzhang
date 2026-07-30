@@ -20,6 +20,9 @@
 | `Skills.csv` | 神通配置（ID化） | `Data/Skills/Skill_*.asset` |
 | `Characters.csv` | 角色模板（ID化） | `Data/Characters/Char_*.asset` |
 | `Enemies.csv` | 敌人模板（ID化） | `Data/Characters/Char_Enemy_*.asset` |
+| `Settlements.csv` | 正式据点投影 | `Data/Settlements/Settlement_*.asset` |
+| `Items.csv` | 正式物品投影 | `Data/Items/Item_*.asset` |
+| `Bounties.csv` | 正式悬赏投影 | `Data/Bounties/Bounty_*.asset` |
 | `EnvironmentProfiles.csv` | 环境档案纯数据契约 | `Data/EnvironmentProfiles/EnvironmentProfile_*.asset` |
 | `FoundationPurpleMansionStates.csv` | 道基、紫府与修炼根状态（当前仅 schema） | `Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_*.asset` |
 | `JindanStaticStates.csv` | 金丹静态根（当前仅 schema） | `Data/JindanStaticStates/JindanStaticState_*.asset` |
@@ -30,6 +33,24 @@
 - `#` 开头为注释，导入时跳过
 - 字段分隔：`,` | 数组分隔：`|` | 键值分隔：`:`
 - **文本字段填 ID**（不是中文），ID 在 Language.csv 中定义
+
+## 关中首批正式内容目录
+
+`Settlements.csv`、`Items.csv`、`Bounties.csv` 与 `Enemies.csv` 中唯一带有
+`contentScope` 的石甲兽行共同构成首批正式内容投影。导入器会先读取并验证四张表、
+Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
+`Data/ContentCatalog/ContentCatalog.asset`。
+
+- 首批只允许 `guanzhong_city`、`enemy_shijiahou`、`item_lingshi_low`、
+  `item_shijia_piece` 与 `bounty_guanzhong_shijiahou`。其他 `Enemies.csv` 行保持
+  既有战斗模板输入，不能因导入而升格进正式内容目录。
+- `Enemies.csv.dropTable` 是旧候选文本；正式石甲兽掉落只由 `dropEntries` 的
+  `itemId@dropChancePercent@quantity` 表达。
+- `features` 使用 `featureId~displayNameKey~availability~disabledReasonKey`，多个条目用
+  `|` 分隔；`adventureEntranceIds` 用 `|` 分隔。
+- `Bounties.csv.rewardEntries` 使用 `itemId@quantity`，多个条目用 `|` 分隔。
+- 任一表头、行数、Language、稳定 ID、参数、路径或跨表引用不合法时，导入在写入任何
+  正式内容 asset 前失败；目录只提供查找，不接入场景、战斗、掉落、背包、悬赏或存档。
 
 ## EnvironmentProfiles.csv 契约
 

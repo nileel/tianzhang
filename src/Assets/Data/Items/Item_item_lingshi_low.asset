@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a001282d41cc4f489a3dd734de44fa3, type: 3}
+  m_Name: Item_item_lingshi_low
+  m_EditorClassIdentifier: TianZhang.Domain::TianZhang.Content.ItemData
+  itemId: item_lingshi_low
+  displayNameKey: item_lingshi_low
+  descriptionKey: item_lingshi_low_description
+  contentScope: content_scope_production
+  itemCategory: basic_resource
+  maxStack: 99

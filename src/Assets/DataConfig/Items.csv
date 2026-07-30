@@ -1,0 +1,4 @@
+# 首批正式物品生产投影；不包含价格、用途或库存状态。
+itemId,displayNameKey,descriptionKey,contentScope,itemCategory,maxStack
+item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_production,basic_resource,99
+item_shijia_piece,item_shijia_piece,item_shijia_piece_description,content_scope_production,monster_material,99

@@ -1,0 +1,3 @@
+# 首批正式悬赏生产投影；奖励只使用已批准的稳定物品 ID 与数量。
+bountyId,titleKey,descriptionKey,contentScope,issuerSettlementId,objectiveType,targetEnemyId,requiredCount,allowedAdventureId,rewardEntries,repeatPolicy
+bounty_guanzhong_shijiahou,bounty_guanzhong_shijiahou_title,bounty_guanzhong_shijiahou_description,content_scope_production,guanzhong_city,defeat_enemy,enemy_shijiahou,1,guanzhong_wild,item_lingshi_low@3,one_time

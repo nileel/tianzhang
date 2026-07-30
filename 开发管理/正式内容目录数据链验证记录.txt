@@ -1,0 +1,14 @@
+# 正式内容目录数据链验证记录
+
+## U-CONTENT-CATALOG-01 · 2026-07-30
+
+- 生产投影：`guanzhong_city`、`enemy_shijiahou`、`item_lingshi_low`、`item_shijia_piece`、`bounty_guanzhong_shijiahou` 已由 CSV 导入为四类 ScriptableObject，并由唯一 `ContentCatalogData` 只读索引关联。
+- 原子性与身份：导入器先解析 Language、据点、物品、悬赏和敌人全表，再执行交叉引用与获批参数检查；石甲兽坏奖励行会在写入前失败，既有 `Char_Enemy_enemy_shijiahou.asset` GUID 保持不变。
+- 边界：未接入据点、战斗、掉落、背包、悬赏、存档、UI 或场景消费者；旧 `dropTable` 未成为正式掉落参数源。
+
+## 已执行验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告、0 错误。
+- Unity 6000.3.18f1 EditMode `TianZhang.Tests.ContentCatalogDataTests`：通过，4/4；覆盖四领域投影、Language／跨表失败、整表失败原子性、石甲兽 GUID 保持和只读查询。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；既有功法／术法／神通覆盖为 29/29、83/83、31/31，Language key 407。
+- 完整 EditMode 尝试曾以非零退出，目标类单独运行通过；本卡未修改其余测试或战斗逻辑。

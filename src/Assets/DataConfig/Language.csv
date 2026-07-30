@@ -100,6 +100,13 @@ desc_enemy_huangyesanxiu,练气期散修，以水法自保，掉落散修通用�
 enemy_fengsun,风隼
 item_fengsun_feather,风隼翎羽
 desc_enemy_fengsun,风系妖兽，迅捷灵动擅长闪避，以翎羽为刃伤敌
+# === 关中正式内容目录 ===
+settlement_guanzhong_city,关中城
+settlement_feature_bounty_board,悬赏板
+item_lingshi_low_description,劣质灵石是稳定 ID 为 `item_lingshi_low` 的基础资源。
+item_shijia_piece_description,石甲碎片是稳定 ID 为 `item_shijia_piece` 的妖兽材料。
+bounty_guanzhong_shijiahou_title,石甲兽悬赏 · 一次性除害令
+bounty_guanzhong_shijiahou_description,黄土旧道石甲兽阻路伤人，击杀有赏。——坊市联盟
 # === 新增门派 ===
 faction_yuqingya,玉清崖
 faction_hunyuanshan,混元山

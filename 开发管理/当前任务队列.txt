@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-CONTENT-CATALOG-01 | codex_execute | codex | P1 | data | implementation | 正式内容目录导入与只读查询 | 开发管理/任务卡/U-CONTENT-CATALOG-01.txt |

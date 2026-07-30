@@ -1,0 +1,3 @@
+# 首批正式据点生产投影；文本字段只引用 Language.csv 键。
+settlementId,displayNameKey,contentScope,settlementType,regionId,ownerFactionId,visualThemeId,features,adventureEntranceIds
+guanzhong_city,settlement_guanzhong_city,content_scope_production,settlement_type_city,guanzhong,faction_neutral,visual_theme_loess_city,bounty_board~settlement_feature_bounty_board~enabled~,guanzhong_wild
