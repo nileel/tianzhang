@@ -1,0 +1,78 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-TZ-CHARTER-SAMPLE-01",
+  "title": "册界纵向样例数据",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：D-TZ-CHARTER-SCHEMA-01 已完成并保持十八字段失败关闭；水府地纪已复审，现有遗物、门禁和环境档案事实足以建立一个不扩写内容的纵向样例。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/CharterRuleDefinitions.csv",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/Data/CharterRuleDefinitions.meta",
+    "src/Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_charter_entry_suifu_diji.asset",
+    "src/Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_charter_entry_suifu_diji.asset.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
+    "开发管理/册界纵向样例数据验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-TZ-CHARTER-SAMPLE-01.txt",
+    "开发管理/任务归档/D-TZ-CHARTER-SAMPLE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-TZ-CHARTER-SAMPLE-01 · 册界纵向样例数据
+
+## 来源与当前边界
+
+- `D-TZ-CHARTER-SCHEMA-01` 已完成：`CharterRuleDefinitions.csv` 已固定十八字段、定义／动态状态分离和整表失败关闭，但生产表及生产目录为空。
+- `C-TZ-CHARTER-ENTRIES-01B6` 已复审通过：水府地纪是已批准的唯一 M8 条目完成品，M7 的其他条目和地区分布仍冻结。
+- 既有事实已给出《开阖九章》可操作的旧制门禁、太玄界印对旧水驿受益者／管理者的限定、以及水府地纪沿同一流域和已接通水工／册界节点的传播边界。`env_guanzhong_wild` 是唯一可引用的正式环境档案。
+
+## 必查范围
+
+- `docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md#M4：建立册界规则、范围和高阶冲突边界`、`#M8：数据与运行时纵向切片`。
+- `docs/基础设定/册界天章与地区规则交互规则.txt` 的“完整规则条目”“范围、节点与传播”“调用事务与失败关闭”“金丹冲突与元婴受锚”“水府地纪结构走查”。
+- `docs/道具/剧情遗物/册界天章条目/水府地纪.txt` 的十八字段、授权与节点、范围、现实供给、金丹冲突、元婴受锚和禁止项；`docs/道具/剧情遗物/册界天章.txt#场景一：只有《开阖九章》`、`#场景二：只有太玄界印`、`#场景三：三者齐备`；`docs/道具/剧情遗物/太玄界印.txt#遗物字段`、`#单件场景：只有太玄界印`；`docs/角色养成/术法/上古太玄道庭/开阖九章.txt#功能术法字段`、`#失败原因`。
+- `src/Assets/DataConfig/CharterRuleDefinitions.csv`、`Language.csv`、`EnvironmentProfiles.csv`、`README.txt`；`src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset`。
+- `src/Assets/Scripts/Content/CharterRuleDefinitionData.cs::CharterRuleReferenceCatalog`；`src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportCharterRuleDefinitions|ParseCharterRuleDefinitions|ParseCharterRuleDefinitionRow`；`src/Assets/Tests/EditMode/CharterRuleDataTests.cs`；`tools/check-data-chain.ps1` 与 `tools/tests/check-data-chain-tests.ps1` 的 CharterRuleDefinitions 表头检查。
+
+## 实施范围
+
+- 只把已完成的水府地纪映射为一个生产 `CharterRuleDefinitions.csv` 行，并补其语言键、由导入器生成的定义 asset，以及可审计的显式外部引用目录；目录只能声明现有旧水驿／地下泵房门禁、太玄界印管理场景、连通水工与册界节点、已登记现实供给、正负提交、已有限制的冲突／受锚资格和 `env_guanzhong_wild`。
+- 所有十八字段必须有唯一稳定 ID；范围保持连通节点和片区上限，覆盖只列同一流域且已接通的锚点／水工节点。门禁仅验证《开阖九章》的目标识别和失败原因；公共设施仅验证界印的管理者、受益者与守卫／档案响应。
+- 把当前生产表“空 schema”断言替换为首条样例的成功导入、asset 投影及逐项非法 fixture 失败关闭；非法覆盖无通行许可、只有通行无管理权、无授权、节点断开、现实供给不足、覆盖越界、正负提交不完整、金丹挑战资格缺失和元婴受锚仍尝试覆盖。
+- 新建本卡验证记录，清楚区分通过的有效样例、每类稳定拒绝码和既有未修改的全套 EditMode 失败（如存在）。
+
+## 禁止项
+
+- 不新增地区、NPC、任务、势力、九域分布、条目、掉落、取得剧情、倍率、概率、资源产量、价格或每日经济模拟；不得把样例写成整域生产配置。
+- 不新建第二套节点、授权、提交、冲突、环境或运行时引擎；不把地区长期状态反写入 `EnvironmentProfileData`，不实现规则事务、存档、场景、UI、金丹结算或 BattleSim。
+- 不以 fixture、显示文本、路径、默认值或不在本卡直接事实源中的内容代替外部引用；如现有事实不能为门禁、设施或节点给出合法稳定映射，停止并将本卡转为 `pending_decision`。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/DataConfig,src/Assets/Data,src/Assets/Scripts,src/Assets/Tests,tools`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 一个真实的水府地纪样例能完整导入并生成唯一 `CharterRuleDefinitionData` asset；后续运行时切片只消费其稳定 ID 和既有 `env_guanzhong_wild` 输出，无需硬编码或默认补值。
+- 每个非法 fixture 都在 asset 写入前以稳定原因失败，且没有半 asset、半覆盖、隐藏授权、未付代价或越界环境状态；不将本卡完成表述为规则已可游玩。
+
+## 停止条件
+
+- 若现行事实不能合法映射一个已有门禁、公共设施或册界／水工节点，或必须创作新地点、组织授权、内容条目、地区分布、数值或规则事务才能继续，立即停止并转为 `pending_decision`。
+- 若实现需要完整 M7、九域天气、动态经济、规则编辑器、第二套环境／冲突引擎或 BattleSim 数值假设，停止并回到相应冻结或后续任务。
