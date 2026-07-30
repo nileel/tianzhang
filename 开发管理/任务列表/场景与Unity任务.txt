@@ -12,7 +12,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-SETTLEMENT-01 | P1 | Codex | 阻塞（U-CONTENT-CATALOG-01） | — | 让据点场景按稳定 ID 读取 `SettlementData`，接入本地城市功能分发器并显示禁用原因。 | — |
+| U-SETTLEMENT-01 | P1 | codex | 已排队 | — | 关中数据驱动据点与功能分发 | `开发管理/任务卡/U-SETTLEMENT-01.txt` |
 | U-ITEM-GRANT-01 | P1 | Codex | 阻塞（U-CONTENT-CATALOG-01） | — | 建立掉落与悬赏奖励共用的结构化物品原子授予入口。 | — |
 | U-ENEMY-01 | P1 | Codex | 阻塞（U-CONTENT-CATALOG-01） | — | 让正式遭遇消费 `EnemyData`、`ai_melee`、稳定击败结果和结构化掉落，禁止 fallback。 | — |
 | U-BOUNTY-01A | P1 | Codex | 阻塞（U-SETTLEMENT-01、U-ITEM-GRANT-01、U-ENEMY-01） | — | 实现一次性悬赏状态机、地点／敌人校验、击败计数和防重复结算。 | — |
