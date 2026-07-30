@@ -1,0 +1,110 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CONTENT-CATALOG-01",
+  "title": "正式内容目录导入与只读查询",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "pending_decision",
+  "blockedBy": [],
+  "stateReason": "2026-07-30：四项数据契约和 N-GZ-REWARD-01 已解除字段、引用与参数前置，但契约仍明确禁止为物品描述、悬赏标题／描述和关中城功能文本擅填生产 Language 键。等待负责人对 DEC-20260730-CATALOG-LANGUAGE 的授权；在此之前不创建 CSV、asset、ContentCatalogData 或运行时消费者。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/DataConfig/Settlements.csv",
+    "src/Assets/DataConfig/Settlements.csv.meta",
+    "src/Assets/DataConfig/Items.csv",
+    "src/Assets/DataConfig/Items.csv.meta",
+    "src/Assets/DataConfig/Bounties.csv",
+    "src/Assets/DataConfig/Bounties.csv.meta",
+    "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/Scripts/Content/SettlementData.cs",
+    "src/Assets/Scripts/Content/SettlementData.cs.meta",
+    "src/Assets/Scripts/Content/EnemyData.cs",
+    "src/Assets/Scripts/Content/EnemyData.cs.meta",
+    "src/Assets/Scripts/Content/ItemData.cs",
+    "src/Assets/Scripts/Content/ItemData.cs.meta",
+    "src/Assets/Scripts/Content/BountyData.cs",
+    "src/Assets/Scripts/Content/BountyData.cs.meta",
+    "src/Assets/Scripts/Content/ContentCatalogData.cs",
+    "src/Assets/Scripts/Content/ContentCatalogData.cs.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Data/Settlements/Settlement_guanzhong_city.asset",
+    "src/Assets/Data/Settlements/Settlement_guanzhong_city.asset.meta",
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset",
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta",
+    "src/Assets/Data/Items/Item_item_lingshi_low.asset",
+    "src/Assets/Data/Items/Item_item_lingshi_low.asset.meta",
+    "src/Assets/Data/Items/Item_item_shijia_piece.asset",
+    "src/Assets/Data/Items/Item_item_shijia_piece.asset.meta",
+    "src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset",
+    "src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "开发管理/正式内容目录数据链验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/自动工作流状态.txt",
+    "开发管理/任务卡/U-CONTENT-CATALOG-01.txt",
+    "开发管理/任务归档/U-CONTENT-CATALOG-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# U-CONTENT-CATALOG-01 · 正式内容目录导入与只读查询
+
+## 来源与当前边界
+
+- `D-SETTLEMENT-01`、`D-ENEMY-01`、`D-ITEM-01`、`D-BOUNTY-01` 已完成对应数据契约，`N-GZ-REWARD-01` 已批准石甲兽两项掉落、两项 `maxStack` 与一次性悬赏奖励参数。
+- 现有 `DataConfigImporter.ImportEnemies` 仍逐行新建 `CharacterData`，没有四领域整表预验证、双投影原子更新、GUID 保持或 `ContentCatalogData`；本卡只建立数据导入与只读目录，不接入城市、战斗、掉落、背包、悬赏或存档消费者。
+- `2026-07-30` 的四份契约均要求生产 CSV 引用可解析的 Language 键，并明确禁止用显示名、默认文案或未批准文本补齐。当前物品描述、悬赏标题／描述及关中城功能文本没有已批准的生产 Language 键，故本卡先等待 `DEC-20260730-CATALOG-LANGUAGE`。
+
+## 待决定
+
+- 决策 ID：`DEC-20260730-CATALOG-LANGUAGE`。
+- 需要确认：是否授权把现有已审核关中城、两项物品和石甲兽悬赏档案中的最小文本原样投影为生产 Language 键；或由负责人提供逐项键和值；或继续冻结该正式导入切片。
+- 未收到并核验决定前，保持 `pending_decision`，不得创建生产 CSV、Unity asset、目录或任何运行时消费者。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#四、事实源与生成链`、`#五、正式数据模型`、`#6.1 ContentCatalogData`、`#九、失败关闭与校验`、`#十、验证矩阵`、`#十一、任务依赖结构`、`#十三、停止条件`。
+- `docs/superpowers/specs/2026-07-30-guanzhong-settlement-data-contract.md`、`2026-07-30-guanzhong-enemy-data-contract.md`、`2026-07-30-guanzhong-item-data-contract.md`、`2026-07-30-guanzhong-bounty-data-contract.md` 的字段、整表／跨表失败关闭、fixture 与非目标章节；`docs/superpowers/specs/2026-07-30-guanzhong-reward-parameter-decision.md`。
+- `docs/剧情/据点/关中城.txt`、`docs/怪物/关陇玄域/石甲兽.txt`、`docs/道具/基础资源/劣质灵石.txt`、`docs/道具/妖兽材料/石甲碎片.txt`、`docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt` 中已审核的稳定 ID、文本和用途。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportAll|ImportEnemies|ImportEnvironmentProfiles`、`src/Assets/Scripts/Entity/CharacterData.cs`、`src/Assets/Scripts/Grid/EnvironmentProfileData.cs`、`src/Assets/DataConfig/README.txt`、`src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`、`src/Assets/DataConfig/Language.csv` 与直接 EditMode 测试。
+- `开发管理/开发-技术经验.txt#策划配置化规则`、`开发管理/设计-当前状态.txt#Unity 正式链`、`开发管理/任务列表/数据链路任务.txt::U-CONTENT-CATALOG-01`。
+
+## 实施范围
+
+- 只为 `guanzhong_city`、`enemy_shijiahou`、`item_lingshi_low`、`item_shijia_piece` 和 `bounty_guanzhong_shijiahou` 建立获批生产 CSV 投影、四类 ScriptableObject、整表／跨表预验证、同 ID 原位更新与 `ContentCatalogData` 的只读 ID 查询。
+- 在写入任一目标 asset 前验证全部相关 CSV、Language 与领域引用；同 ID 重复、路径／ID／GUID 冲突、缺失或非法引用、未批准参数和任何坏行均整体失败，并保持目标 asset 集合不变。
+- `Enemies.csv` 的同一生产行原子更新既有 `CharacterData` 与新 `EnemyData`，并保持既有战斗模板 GUID；目录只暴露生产范围的四领域查找，不保存玩家状态、不加载场景、不执行战斗、掉落、奖励或悬赏。
+- 只添加直接 EditMode 正反 fixture、数据链检查和验证记录；不把 fixture 当生产内容，也不把现有候选掉落文本当作第二参数源。
+
+## 禁止项
+
+- 不在决定前猜测、改写或新创生产 Language 文本、键、奖励、概率、数量、堆叠、价格、经济或战斗数值。
+- 不接入 `SettlementSceneController`、`AdventureSceneController`、`ExplorationController`、战斗、掉落、背包、悬赏、存档、UI 或场景；这些消费者分别留给既有下游任务。
+- 不将城市、怪物、物品和悬赏压成万能节点，不新增服务器、数据库、编辑器工具、条件表达式、随机任务池、每日刷新、默认资产、名称映射、兼容回退或第二内容目录。
+- 不把其他 CSV 行自动升格为生产内容，不扩展其他地区、敌人、物品、悬赏或剧情。
+
+## 验证
+
+- 直接 EditMode 覆盖四类生产投影、Language／跨表引用、整表原子失败、GUID 保持、重复 ID／路径冲突、坏参数与目录只读查询。
+- `dotnet build src/TianZhang.EditModeTests.csproj`、相关 Unity EditMode、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/DataConfig,src/Assets/Scripts,src/Assets/Tests,tools`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 四类获批生产数据只能沿 `docs -> CSV -> 整表校验 -> 保持 GUID 的 asset -> ContentCatalogData` 单向流动；坏数据不会留下半导入或被默认值、候选文本、名称或旧路径掩盖。
+- `U-SETTLEMENT-01`、`U-ITEM-GRANT-01` 与 `U-ENEMY-01` 可在不猜测字段、参数或目录所有者的前提下转为各自的下游实施输入。
+
+## 停止条件
+
+- 生产 Language 文本、键或用途仍无负责人授权，或实现需要修改消费者、补设定、默认值、兼容路径、第二目录、其他内容或未批准参数时，保持或转为 `pending_decision`；不得补丁化推进。
