@@ -7,10 +7,10 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
-  "stage": "decision",
-  "dispatchState": "pending_decision",
+  "stage": "implementation",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-07-28：已确认现有 NpcStateStore 未保存当前修炼行动或完整周期边界，FoundationPurpleMansionRuntimeState 只接入养基／开府两类提交且没有五类行动的共同开始／提交入口；在不新增成长状态或修改存档 schema 的边界内，无法实现世界日与存读档不重复结算、不丢失当前行动的完成条件。待决定是先授权共同生命周期与 NPC 持久化前置，还是将本卡收窄为仅决策接口。",
+  "stateReason": "2026-07-30：用户选择方案一，授权在现有 FoundationPurpleMansionRuntimeState 中补齐五类行动的共同生命周期，并通过现有 NpcStateStore 与 GameSession 存档所有者版本化持久化 NPC 成长状态；不得建立平行成长、NPC 状态或世界时间服务。实施路径、迁移边界与直接测试已明确，转为 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs",
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs.meta",
@@ -38,11 +38,11 @@
 - `U-FPD-RULE-01` 已建立唯一道基／紫府运行时状态；`N-FPD-NPC-01` 已建立同一生产 CSV、Unity runtime 与 BattleSim 只读投影的权重结果。
 - `GameSession.AdvanceWorldDay` 是现有世界日推进入口，`NpcStateStore` 是现有 NPC 会话状态所有者；本卡只在规定事件接入自主行动，不建立第二套世界 tick 或成长状态。
 
-## 已触发的待决策
+## 已确认决定
 
 - 现有 `NpcStateStore` 仅持有 `NpcId`、`WorldNodeId` 与通用步骤，不能保存选中的行动、固定目标、已提交周期或停止原因；`GameSessionSaveData` 亦没有这些字段。
 - `FoundationPurpleMansionRuntimeState` 只有养基与开府的周期提交方法，未提供筑基考验、府胚蕴养、证位及五类行动共同的开始／稳定边界接口。`NpcJindanProofPolicy` 只判断证位硬门槛，不能提交其行动生命周期。
-- 因此在本卡“不得新增第二套成长／NPC 状态、不得修改存档 schema”的边界内，不能同时满足共享硬条件、事件驱动重算与存读档不重复结算／不丢失当前行动。需要决定：先授权共同生命周期与 NPC 持久化前置，或明确将本卡仅收窄为不执行、不持久化的决策接口。
+- 2026-07-30 用户选择方案一：在现有道基／紫府运行时补齐五类行动的共同开始、推进、提交、暂停与终止边界，并在现有 `NpcStateStore`、`GameSessionSaveData` 和迁移所有者中持久化 NPC 成长状态；不建立第二套状态或世界 tick。
 
 ## 必查范围
 
@@ -54,6 +54,8 @@
 
 ## 实施范围
 
+- 在 `FoundationPurpleMansionRuntimeState` 内补齐筑基考验、养基、府胚蕴养、开府考验与结丹证位共用的行动生命周期；行动实例、目标与周期使用稳定 ID，重复周期拒绝再次提交。
+- 扩展现有 NPC 会话快照和 `GameSession` 版本化存档，保存 NPC 的道基／紫府状态、当前行动、固定目标、已提交周期和停止原因；旧 schema 不伪造进行中行动，恢复前完整校验并原子替换。
 - 先用现有道基／紫府硬门槛过滤非法行动，再以数据化权重对合法行动稳定排序。
 - 只在档案声明的世界日、资源、境界目标、寿元或环境事件重算，不每日扫描全世界。
 - 将选中行动提交到既有 NPC 状态和道基／紫府行动生命周期；玩家不能逐个替 NPC 排程。
@@ -62,11 +64,12 @@
 
 - 不新增第二套角色成长、NPC 状态或世界时间服务，不硬编码行动顺序。
 - 不读取 NPC 不可知的玩家／世界隐藏事实，不让寿元权重绕过第四阶段、至少一府或证位硬条件。
-- 不修改生产权重、数值预算、存档 schema 或 UI。
+- 不修改生产权重、数值预算或 UI；存档变化只能复用现有 `GameSession` schema 与迁移入口，不建立平行格式、静默 fallback 或默认行动。
 
 ## 验证
 
-- EditMode 覆盖非法先过滤、固定输入稳定排序、事件触发重算、资源不足、寿元边界和重复世界日不重复提交。
+- EditMode 覆盖五类行动的共同生命周期、非法先过滤、固定输入稳定排序、事件触发重算、资源不足、寿元边界和重复世界日不重复提交。
+- 存档测试覆盖 schema 0／1／2 迁移、当前版 NPC 成长状态往返、行动中途保存读取、非法档失败关闭和同一周期不重复结算。
 - `dotnet build src/TianZhang.EditModeTests.csproj`。
 - 可用时运行直接相关 Unity EditMode 测试。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
@@ -82,4 +85,4 @@
 
 ## 当前状态
 
-- 已按停止条件转为 `pending_decision`；未写入 Unity 运行时、权重数据、存档 schema 或测试，以免用并行状态或未覆盖的行动生命周期绕过缺失事实。
+- 方案一已获用户授权，当前为 `ready`；实施必须复用既有成长、NPC 会话、世界时间和存档所有者，不得以平行状态或默认行动绕过迁移与原子提交。

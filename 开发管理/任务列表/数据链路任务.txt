@@ -23,8 +23,8 @@
 | D-FPD-MIGRATE-01C | P1 | Codex | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
 | D-FPD-MIGRATE-01D | P1 | Codex | 阻塞（C-FPD-NAME-01、N-FPD-DANXIANG-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
 | D-FPD-MIGRATE-01E | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
-| D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 冻结（M7、M8 实现授权） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
-| D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 冻结（D-TZ-CHARTER-SCHEMA-01、M7、M8 实现授权） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
+| D-TZ-CHARTER-SCHEMA-01 | P1 | Codex | 阻塞（C-TZ-CHARTER-ENTRIES-01） | — | 建立地区规则条目、遗物权限、册界节点、授权、覆盖范围与当前状态的独立数据契约；不得把长期世界状态塞入 `EnvironmentProfileData`。 | — |
+| D-TZ-CHARTER-SAMPLE-01 | P1 | Codex | 阻塞（D-TZ-CHARTER-SCHEMA-01、C-TZ-CHARTER-ENTRIES-01） | — | 迁入一个旧门禁、一个公共设施、一个册界节点和一条五行地纪的有效纵向样例及非法 fixture。 | — |
 | D-COMBAT-02 | P3 | Codex | 阻塞（U-COMBAT-01） | — | 建立 BattleSim/Unity 共用攻击档案 fixture 与差异检查；攻击档案数据契约已归档。 | — |
 
 ## G3 任务执行边界
@@ -47,11 +47,11 @@
 
 ## 《天章》册界体系后续数据任务卡
 
-共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、三项核心遗产文件及 M7 完成品。两项任务均属于 M8，实现授权前不得进入当前任务队列。
+共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、三项核心遗产文件及 M7 完成品。两项任务均属于 M8；2026-07-30 已获既定最小纵向切片的条件授权，但依赖满足前不得进入当前任务队列。
 
 ### D-TZ-CHARTER-SCHEMA-01 · 册界体系数据契约
 
-- 依赖与状态：M7 父任务完成并通过复审、用户明确授权 M8；当前冻结。C-ENV-PROFILE-01 与 D-ENV-SCHEMA-01 只提供环境档案语义，不代替本任务的地区长期状态契约。
+- 依赖与状态：M8 已获条件授权；当前阻塞于 M7 父任务完成并通过复审。C-ENV-PROFILE-01 与 D-ENV-SCHEMA-01 只提供环境档案语义，不代替本任务的地区长期状态契约。
 - 预期路径：新建 `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md`；修改 `src/Assets/DataConfig/`、对应 ScriptableObject 数据模型、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试。进入当前队列前必须实时扫描并展开全部字面量路径和新表名。
 - 数据边界：分别定义静态条目、遗物权限要求、册界节点、组织授权与传播边界档案，以及玩家已登记条目、界印状态、节点状态、当前覆盖集合、条目／节点占用和当前地区规则等动态状态；定义层与状态层不得混表。
 - 必需字段：完整承载 M4 的十八个规则字段，并为门禁目标识别、公共设施受益者／管理者、节点连通、版本化授权、现实供给、正负原子提交、金丹挑战资格和元婴受锚提供稳定 ID 引用。战场 `environmentProfile` 只能作为输出引用，不能反向成为地区状态所有者。
@@ -62,7 +62,7 @@
 
 ### D-TZ-CHARTER-SAMPLE-01 · 册界纵向样例数据
 
-- 依赖与状态：D-TZ-CHARTER-SCHEMA-01 完成；M7 十条内容与 C-ENV-PROFILE-01 已复审；用户明确授权 M8。当前冻结。
+- 依赖与状态：M8 已获条件授权；当前阻塞于 D-TZ-CHARTER-SCHEMA-01 完成，以及 M7 十条内容与 C-ENV-PROFILE-01 已复审。
 - 预期路径：D-TZ-CHARTER-SCHEMA-01 建立的 CSV、asset、导入器 fixture 与直接相关 EditMode 测试；进入当前队列前从现行门派、地图和遗物事实源选定一个已有门禁、一个已有公共设施和一个已有册界节点，并展开所有字面量路径。
 - 有效样例：门禁只验证《开阖九章》的目标识别与失败原因；公共设施只验证太玄界印的管理者、受益者及守卫／档案响应；节点只验证授权、连通和据点级覆盖；规则固定选用已有结构走查的 `水府地纪`，只输出一个现有 `environmentProfile` 引用。
 - 非法 fixture：至少覆盖无通行许可、只有通行而无管理权、无授权、节点断开、现实供给不足、覆盖越界、正负提交不完整、金丹挑战资格缺失和元婴受锚仍尝试覆盖。
