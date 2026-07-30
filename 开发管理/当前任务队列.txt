@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| C-TZ-CHARTER-ENTRIES-01B6 | external_execute | deepseek | P1 | content | design | 水府地纪独立生态包 | 开发管理/任务卡/C-TZ-CHARTER-ENTRIES-01B6.txt |

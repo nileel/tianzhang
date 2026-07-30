@@ -10,7 +10,7 @@
 - 2026-07-25 负责人选择完整依赖方案，另行解冻 `C-FPD-MANSION-01` 与 `C-FPD-CULTIVATE-01` 的机制设计切片；不解冻其他内容任务、M7、M8 或批量内容生产。
 - 高阶内容不批量删除；先按 NPC、资料片、宗门秘术或历史说明分类。
 - 2026-07-22 用户专项授权的《天章》宇宙观 M0—M6 与 M9 已完成事实源迁移：世界背景、世界主线、三项遗产格式和册界规则结构已落地；M7 册界条目、M8 CSV／Unity／运行时／保存／UI 均未执行，且未进入当前任务队列。
-- 2026-07-30 用户条件授权 M8 按既定最小纵向切片实施；该决定不授权 M7。M8 继续等待 M7 完成复审，并按 `SCHEMA → SAMPLE → MODEL → SAVE → SLICE` 的依赖顺序推进。
+- 2026-07-30 用户将 M8 的内容前置从完整 M7 收窄为水府地纪，专项授权 `C-TZ-CHARTER-ENTRIES-01B6` 内容生产，并条件授权后续按 `SCHEMA → SAMPLE → MODEL → SAVE → SLICE` 推进；其余九条 M7 内容继续冻结。
 
 ## 任务
 
@@ -55,17 +55,17 @@
 | C-STORY-WM-L2B | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章势力线细化。 | — |
 | C-STORY-WM-L2C | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章 NPC 分支细化。 | — |
 | C-STORY-WM-L2D | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章终局演出细化。 | — |
-| C-TZ-CHARTER-ENTRIES-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（M7 未授权；01A、01B 未完成） | — | M7 父任务；只负责两个内容批次的依赖、跨条目地区分布和最终一致性收口，不直接替代子任务生产。 | — |
+| C-TZ-CHARTER-ENTRIES-01 | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（完整 M7 未授权；01A、01B 未完成） | — | M7 父任务；只负责两个内容批次的依赖、跨条目地区分布和最终一致性收口，不直接替代子任务生产。 | — |
 | C-TZ-CHARTER-ENTRIES-01A | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权；C-TZ-CHARTER-ENTRIES-01A1～01A2） | — | 灵机与劫威两项条目父任务；只负责批次收口。 | — |
 | C-TZ-CHARTER-ENTRIES-01A1 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `灵机聚散` 独立条目。 | — |
 | C-TZ-CHARTER-ENTRIES-01A2 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `劫威缓厉` 独立条目。 | — |
-| C-TZ-CHARTER-ENTRIES-01B | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权；C-TZ-CHARTER-ENTRIES-01B1～01B8） | — | 八项五行地纪父任务；只负责批次收口。 | — |
+| C-TZ-CHARTER-ENTRIES-01B | P1 | Codex 规划；DeepSeek V4 Pro 执行；Codex 复审 | 冻结（其余七项未授权；C-TZ-CHARTER-ENTRIES-01B1～01B8） | — | 八项五行地纪父任务；只负责批次收口。 | — |
 | C-TZ-CHARTER-ENTRIES-01B1 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `雷泽地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B2 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `火脉地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B3 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `玄冰地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B4 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `瘴林地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B5 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `风漠地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B6 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `水府地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B6 | P1 | deepseek | 已排队 | — | 水府地纪独立生态包 | `开发管理/任务卡/C-TZ-CHARTER-ENTRIES-01B6.txt` |
 | C-TZ-CHARTER-ENTRIES-01B7 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `星野地纪` 独立生态包。 | — |
 | C-TZ-CHARTER-ENTRIES-01B8 | P1 | DeepSeek V4 Pro 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `阴壤地纪` 独立生态包。 | — |
 | C-STORY-04 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 低阶势力生态与一条样板地方节点成长线；中后期可成为地方授权者、见证者或受益共同体。 | — |
@@ -108,7 +108,7 @@
 
 ## 《天章》册界条目后续内容任务卡
 
-共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、`docs/道具/剧情遗物/册界天章.txt` 与 `docs/道具/道具设计规范.txt`。M4 已完成；本组任务仍受内容冻结约束，不表示 M7 已获执行授权。
+共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、`docs/道具/剧情遗物/册界天章.txt` 与 `docs/道具/道具设计规范.txt`。M4 已完成；2026-07-30 只专项解冻 `C-TZ-CHARTER-ENTRIES-01B6`，不表示完整 M7 或其他九条获执行授权。
 
 ### C-TZ-CHARTER-ENTRIES-01 · M7 册界条目父任务
 
@@ -132,7 +132,7 @@
 
 ### C-TZ-CHARTER-ENTRIES-01B · 八项五行地纪批次
 
-- 依赖与状态：C-ENV-PROFILE-01 完成、内容冻结由用户明确解除；由 DeepSeek V4 Pro 逐文件生产并标记「⚠️ 已修改/未审核」，Codex 复审。
+- 依赖与状态：C-ENV-PROFILE-01 已完成；完整 01B 批次仍冻结。2026-07-30 只专项解冻 `01B6` 水府地纪，由 DeepSeek V4 Pro 逐文件生产并标记「⚠️ 已修改/未审核」，Codex 复审。
 - 子任务：`C-TZ-CHARTER-ENTRIES-01B1`～`01B8` 依次生产雷泽、火脉、玄冰、瘴林、风漠、水府、星野、阴壤地纪；每张子任务内部的天气、地形演化、灵气结构和资源产出仍是不可拆分生态包。
 - 准确文件：新建 `docs/道具/剧情遗物/册界天章条目/雷泽地纪.txt`、`火脉地纪.txt`、`玄冰地纪.txt`、`瘴林地纪.txt`、`风漠地纪.txt`、`水府地纪.txt`、`星野地纪.txt`、`阴壤地纪.txt`。
 - 交付：每条完整声明 M4 的规则字段，并以一个不可拆分生态包同时提交天气、地形演化、灵气结构和资源产出；母属性固定读取雷归金、火归火、冰归水、瘴／风归木、水归水、星归火、阴归土，派生身份仍保留。
@@ -140,6 +140,7 @@
 - 验证：八个文件逐一通过字段与原子生态包检查；每条均有实际负面提交、真实传播边界、资源守恒来源、金丹冲突与元婴受锚结果；不出现独立天气／地形／灵气／资源自由滑杆。
 - 完成条件：八项地纪可由后续数据任务无歧义映射为条目和环境档案引用，且没有新增数值、掉落、任务、CSV 或运行时实现。
 - 停止条件：现行地图或环境档案不能支持某项现象，或必须先确定具体倍率、频率、产量和价格；记录缺口，不以新地区设定或占位默认值补齐。
+- `01B6` 的当前执行边界、精确路径与验证读取 `开发管理/任务卡/C-TZ-CHARTER-ENTRIES-01B6.txt`；该叶子通过不关闭 01B 父任务。
 
 ## 筑基、紫府与丹相后续内容任务卡
 
