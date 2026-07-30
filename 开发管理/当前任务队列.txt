@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| N-GZ-REWARD-01 | codex_execute | codex | P1 | data | design | 首批掉落、堆叠与悬赏奖励参数 | 开发管理/任务卡/N-GZ-REWARD-01.txt |
 | U-COMBAT-01B0 | codex_execute | codex | P3 | unity | design | Unity 2v2 会话与基础攻击绑定所有者设计 | 开发管理/任务卡/U-COMBAT-01B0.txt |
