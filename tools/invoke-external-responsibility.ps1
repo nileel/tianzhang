@@ -447,7 +447,7 @@ try {
 
   $baseUrl = Get-ConfiguredBaseUrl
   $isDeepSeek = Test-DeepSeekEndpoint $baseUrl
-  $identity = if ($isDeepSeek) { 'DeepSeek V4 Pro' } else { 'Claude Code' }
+  $identity = if ($isDeepSeek) { 'DeepSeek V4 Flash' } else { 'Claude Code' }
   if (
     ($Owner -ceq 'deepseek' -and -not $isDeepSeek) -or
     ($Owner -ceq 'claude' -and $isDeepSeek)

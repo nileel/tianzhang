@@ -16,13 +16,13 @@
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
-| D-FPD-MIGRATE-01A | P1 | Codex | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |
-| D-FPD-MIGRATE-01B | P1 | Codex | 阻塞（C-FPD-SPELL-01） | — | 四批古修术法 docs／CSV／asset 迁移。 | — |
-| D-FPD-MIGRATE-01C | P1 | Codex | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
-| D-FPD-MIGRATE-01D | P1 | Codex | 阻塞（C-FPD-NAME-01、N-FPD-DANXIANG-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
-| D-FPD-MIGRATE-01E | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
-| D-COMBAT-02A | P3 | codex | 已排队 | — | BattleSim 范围朝向可空迁移 | `开发管理/任务卡/D-COMBAT-02A.txt` |
-| D-COMBAT-02 | P3 | codex | 阻塞 | D-COMBAT-02A | 跨端攻击档案 fixture 与差异检查 | `开发管理/任务卡/D-COMBAT-02.txt` |
+| D-FPD-MIGRATE-01A | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01B | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SPELL-01） | — | 四批古修术法 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01C | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01D | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、N-FPD-DANXIANG-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
+| D-FPD-MIGRATE-01E | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
+| D-COMBAT-02A | P3 | deepseek | 已排队 | — | BattleSim 范围朝向可空迁移 | `开发管理/任务卡/D-COMBAT-02A.txt` |
+| D-COMBAT-02 | P3 | deepseek | 阻塞 | D-COMBAT-02A | 跨端攻击档案 fixture 与差异检查 | `开发管理/任务卡/D-COMBAT-02.txt` |
 
 ## G3 任务执行边界
 

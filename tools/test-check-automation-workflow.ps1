@@ -93,7 +93,7 @@ $canonicalPrompt = @'
 2. `Show` 返回 recovery 时才读取 `开发管理/自动工作流恢复规则.txt` 并映射 `Recovery`；没有 recovery 时不得读取恢复规则。
 3. 无 recovery 时读取 `开发管理/自动工作流规则.txt` 与 `开发管理/当前任务队列.txt`，按行顺序检查，选择第一项当前可安全执行的任务，每轮只为一个 TaskId 调用 `Acquire`。临时运行冲突本轮跳过且不修改任务卡或队列顺序。
 4. `codex_execute -> Execution`，`codex_review -> Review`，外部 route 调用既有 wrapper；仅队列为空时调用 `QueueMaintenance` 一次，本轮不执行新任务。Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`。
-5. 外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Pro`。
+5. 外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。外部身份先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`；`http://127.0.0.1:15721` 同源地址统一命名为 `DeepSeek V4 Flash`。
 6. 固定调用器的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
 7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。
 8. 外部 wrapper 只会在固定入口已通过统一元数据契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 与九个结构化通知子字段后返回 completed；控制器不再读取提交正文或临时拼装元数据正则。控制器继续核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、handoff 无 Automation 元数据和相对基线新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review`。终态无效且无残留时记录 failed 后释放；存在新增未提交路径时保留现场和租约并转人工阻塞。飞书返回任何失败都不得改变终态。
@@ -104,8 +104,8 @@ $canonicalClaude = @'
 # Claude / DeepSeek
 
 - 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
-- `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
-- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
+- `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Flash`。
+- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。
 '@
 
 $canonicalAgents = @'
@@ -119,8 +119,8 @@ $canonicalCollaboration = @'
 # AI协作规则
 
 - 进程 `ANTHROPIC_BASE_URL` 为空时补读 `~/.claude/settings.json`。
-- `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Pro`。
-- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。
+- `http://127.0.0.1:15721` 同源地址（含 `/claude-desktop`）实际身份与修改方为 `DeepSeek V4 Flash`。
+- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。
 - 控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
@@ -133,7 +133,7 @@ $canonicalRules = @'
 - 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 按 `开发管理/当前任务队列.txt` 的固定行序查找 `dispatchState=ready`，依次识别 `codex_execute`、`external_execute`、`codex_review`，选择第一项当前可安全执行。
-- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。wrapper 返回 completed 前必须通过 `tools/automation-commit-metadata.ps1` 的统一契约核验实际业务提交。
+- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。wrapper 返回 completed 前必须通过 `tools/automation-commit-metadata.ps1` 的统一契约核验实际业务提交。
 - 固定 wrapper 必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--output-format json` 与 `--json-schema`，只从 Claude CLI 官方结果 envelope 的 `session_id` 和 `structured_output` 读取终态，不从模型正文猜测 JSON；权限固定为 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
 - 每行核对当前执行器可用性、`临时运行条件` 与当前路径冲突；临时冲突只跳过本轮，不修改任务卡或队列顺序。
 - 同一稳定 fingerprint 连续两轮才逻辑暂停；`明确任务阻塞` 或投影不一致时停止业务执行并完成状态纠正事件。
@@ -297,7 +297,7 @@ try {
 
   Assert-Passes -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Paused canonical fixture'
 
-  $ownerMappingClause = '外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`'
+  $ownerMappingClause = '外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`'
   $missingPromptOwnerMapping = $canonicalPrompt.Replace($ownerMappingClause, '外部 route 调用既有 wrapper')
   Write-Utf8File -Path $promptPath -Content $missingPromptOwnerMapping
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $missingPromptOwnerMapping
@@ -305,8 +305,8 @@ try {
   Write-Utf8File -Path $promptPath -Content $canonicalPrompt
   Write-Automation -Root $automationRoot -Id 'tzg-hourly-controller' -Status 'PAUSED' -Prompt $canonicalPrompt
 
-  $ownerMappingLine = '- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。'
-  $coreOwnerMappingLine = '- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。'
+  $ownerMappingLine = '- 自动 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。'
+  $coreOwnerMappingLine = '- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules.Replace($coreOwnerMappingLine, '')
   Assert-Fails -Result (Invoke-Checker -RepositoryRoot $repositoryRoot -AutomationRoot $automationRoot) -Context 'Missing core external owner mapping' -Contains 'external owner mapping in core rules'
   Write-Utf8File -Path $rulesPath -Content $canonicalRules

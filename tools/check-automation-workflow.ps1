@@ -164,7 +164,7 @@ Assert-Contains -Text $prompt -Context 'external closeout contract' -Values @(
   'ANTHROPIC_BASE_URL',
   '~/.claude/settings.json',
   'http://127.0.0.1:15721',
-  'DeepSeek V4 Pro',
+  'DeepSeek V4 Flash',
   'RecordResult -Category success',
   'Release',
   '相对基线新增未提交路径',
@@ -198,12 +198,12 @@ $identityTokens = @(
   '~/.claude/settings.json',
   'http://127.0.0.1:15721',
   '同源地址',
-  'DeepSeek V4 Pro'
+  'DeepSeek V4 Flash'
 )
 $externalOwnerMappingTokens = @(
   '已选中的 `external_execute` 同一任务卡',
   '不得重新扫描候选',
-  'owner=deepseek -> DeepSeek V4 Pro',
+  'owner=deepseek -> DeepSeek V4 Flash',
   'owner=claude -> native Claude Code'
 )
 Assert-Contains -Text $prompt -Context 'external owner mapping in controller prompt' -Values $externalOwnerMappingTokens

@@ -250,7 +250,7 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
   'completed-missing-field' {
     $structuredOutput = [ordered]@{
       status = 'completed'
-      identity = 'DeepSeek V4 Pro'
+      identity = 'DeepSeek V4 Flash'
     }
   }
   'decision-missing-field' {
@@ -268,7 +268,7 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
   'short-commit' {
     $structuredOutput = [ordered]@{
       status = 'completed'
-      identity = 'DeepSeek V4 Pro'
+      identity = 'DeepSeek V4 Flash'
       sessionId = $sessionId
       businessCommit = '0a9e847'
       handoffCommit = 'd9e95fc'
@@ -287,7 +287,7 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
     $commits = New-TestCommits -InvalidMetadata
     $structuredOutput = [ordered]@{
       status = 'completed'
-      identity = 'DeepSeek V4 Pro'
+      identity = 'DeepSeek V4 Flash'
       sessionId = $sessionId
       businessCommit = $commits.BusinessCommit
       handoffCommit = $commits.HandoffCommit
@@ -297,7 +297,7 @@ switch ($env:TZG_FAKE_CLAUDE_MODE) {
     $commits = New-TestCommits
     $structuredOutput = [ordered]@{
       status = 'completed'
-      identity = 'DeepSeek V4 Pro'
+      identity = 'DeepSeek V4 Flash'
       sessionId = $sessionId
       businessCommit = $commits.BusinessCommit
       handoffCommit = $commits.HandoffCommit
@@ -346,7 +346,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0fake-claude.ps1" %*
     -RunId $runId
   Assert-Equal -Actual $start.ExitCode -Expected 0 -Message "valid wrapper start failed: $($start.Stderr)"
   Assert-Equal -Actual ([string]$start.Json.status) -Expected 'completed' -Message "wrapper start status mismatch: $($start.Stdout) stderr=$($start.Stderr)"
-  Assert-Equal -Actual ([string]$start.Json.identity) -Expected 'DeepSeek V4 Pro' -Message 'wrapper identity mismatch'
+  Assert-Equal -Actual ([string]$start.Json.identity) -Expected 'DeepSeek V4 Flash' -Message 'wrapper identity mismatch'
   Assert-Equal -Actual ([string]$start.Json.runId) -Expected $runId -Message 'wrapper runId mismatch'
   Assert-Equal -Actual ([string]$start.Json.taskId) -Expected 'TASK-EXT-001' -Message 'wrapper taskId mismatch'
   Assert-True ([Guid]::TryParse([string]$start.Json.sessionId, [ref]([Guid]::Empty))) 'wrapper did not return a real sessionId'

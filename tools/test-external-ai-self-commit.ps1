@@ -153,11 +153,11 @@ try {
     }
   }
   $expectedAuthor = if ($baseUrl -match '^http://127\.0\.0\.1:15721(?:/|$)') {
-    'DeepSeek V4 Pro'
+    'DeepSeek V4 Flash'
   } else {
     'Claude Code'
   }
-  $externalOwner = if ($expectedAuthor -ceq 'DeepSeek V4 Pro') { 'deepseek' } else { 'claude' }
+  $externalOwner = if ($expectedAuthor -ceq 'DeepSeek V4 Flash') { 'deepseek' } else { 'claude' }
 
   Write-CanaryFile -RepositoryRoot $canaryRepository -RelativePath 'AGENTS.md' -Content @'
 # External AI Canary Rules

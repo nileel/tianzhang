@@ -1,6 +1,6 @@
 ﻿# AI协作规则
 
-当本项目同时使用 Codex / ChatGPT5.5 与 DeepSeek V4 Pro 时，按本文件分工。用户当次明确指令优先，但不得违反 `AGENTS.md`。
+当本项目同时使用 Codex / ChatGPT5.5 与 DeepSeek V4 Flash 时，按本文件分工。用户当次明确指令优先，但不得违反 `AGENTS.md`。
 
 ## 总原则
 
@@ -17,31 +17,39 @@
 
 ### Codex / ChatGPT5.5
 
-- 跨文档系统设计、架构判断和代码评审。
-- BattleSim 数值评估、矩阵和结论可靠性判断。
-- 阶段规划、优先级、风险与 BattleSim→Unity 同步策略。
-- 总结及复杂 Unity 方案。
+- 未决需求、跨文档系统语义、核心架构、公共接口和数据所有者的定稿。
+- 任务拆分、优先级、风险边界、验收条件，以及 BattleSim→Unity 同步策略。
+- BattleSim 数值目标与最终结论、存档／安全／自动化控制面的方案和恢复决策。
+- DeepSeek 交付的独立复审、冲突裁决和高风险结果签收。
 
-### DeepSeek V4 Pro
+### DeepSeek V4 Flash
 
 - 按规范批量生产内容；每项完成品单独成文件。
 - 文档清洗、CSV / Language / asset 对齐、机械一致性检查。
-- 已明确设计的局部 Unity / BattleSim 实现、bug fix、UI 文案和导入字段补齐。
-- 回归清单、边界用例和素材规模扩展。
+- 事实源、设计和验收条件已锁定的 Unity / BattleSim / 工具实现、bug fix、重构与迁移；不再按规模或跨文件数量限制，直接 build / test 必须闭合。
+- 跨文件、跨模块 Code Agent 根因诊断与实施、全链回归、边界用例、批量迁移和素材规模扩展。
+- 在 Codex 已冻结 schema、回滚边界和验收矩阵后，执行存档、安全或自动化控制面中的明确实现切片；完成后必须交 Codex 独立复审。
+
+### 能力校准后的分派边界
+
+- 官方 2026-07-31 更新将 API 实际版本升级为 `DeepSeek-V4-Flash-0731`，模型名仍为 `deepseek-v4-flash`；官方给出的 Agent 成绩包括 Terminal Bench 2.1 82.7、NL2Repo 54.2、DeepSWE 54.4、Toolathlon verified 70.3、Automation Bench 25.1，并明确说明远超 V4-Pro-Preview。公开 Code Agent 基准使用 DeepSeek Harness 极简模式、`max`、`top_p=0.95`、`temperature=1.0`；本项目 Claude CLI 调用保持 `max`，其余两项只视为该基准口径，不作为 Anthropic 兼容调用的必需路由参数。
+- 依据 2026-07-31 `DeepSeek-V4-Flash-0731` 正式版的 Agent 能力校准：只要任务卡已冻结事实源、目标语义、授权路径、停止条件和可运行验收，就默认 `external_execute / deepseek`；适用于小型到大型、单模块到跨模块的代码与数据工作。
+- Codex 默认不再保留已锁定规格下的实现主责，只保留未决架构／语义／所有者选择、任务拆分、数值目标与结论、高风险恢复决策及最终复审。存档、安全和自动化控制面可由 DeepSeek 执行，但必须先由 Codex 锁定方案、回滚与验收，且不得由 DeepSeek 自审。
+- 任务实施中若发现必须改变已锁定语义、扩大授权路径或重新选择所有者，DeepSeek 立即停止并交回 Codex，不叠加兼容分支或自行重构工作流。
 
 ### Claude CLI / WF3-CLAUDE-ONE
 
 WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI 仅有 DeepSeek / Claude 执行范围，不是 Codex 主责角色：
 
-1. 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
+1. 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Flash`，不得自称 Codex 或 Claude。
 2. 其他 Claude CLI 环境的实际身份与修改方为 Claude Code。
-3. 普通选题只消费 `route=external_execute`、`dispatchState=ready` 且 owner 与执行器一致的有序队列卡；映射固定为 `owner=deepseek -> DeepSeek V4 Pro`、`owner=claude -> native Claude Code`。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
+3. 普通选题只消费 `route=external_execute`、`dispatchState=ready` 且 owner 与执行器一致的有序队列卡；映射固定为 `owner=deepseek -> DeepSeek V4 Flash`、`owner=claude -> native Claude Code`。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
 4. `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 行为。
 5. 手动选题前在输出与 automation memory 记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
 
 ### 每小时控制器内的 Claude / DeepSeek wrapper
 
-`tzg-hourly-controller` 可以在同一租约内串行调用 Claude CLI 作为外部执行器，但这不会恢复 WF3，也不会赋予子进程 Codex 权限。自动 wrapper 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Pro`，`owner=claude -> native Claude Code`。owner 与已核验执行器不一致时不得启动，也不得改派另一 owner。
+`tzg-hourly-controller` 可以在同一租约内串行调用 Claude CLI 作为外部执行器，但这不会恢复 WF3，也不会赋予子进程 Codex 权限。自动 wrapper 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。owner 与已核验执行器不一致时不得启动，也不得改派另一 owner。
 
 调度器必须先真实选中合法外部候选、取得单写入租约并给出任务授权范围，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份；无合法外部候选时不得预检或空转调用。外部责任方启动后自行读取任务卡与必要事实源，并端到端完成：
 

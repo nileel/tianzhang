@@ -7,13 +7,13 @@
 
 ## 实际身份与修改方
 
-- 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Pro`，不得自称 Codex 或 Claude。
+- 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Flash`，不得自称 Codex 或 Claude。
 - 其他 Claude CLI 环境的实际身份与修改方为 `Claude Code`。
 - 原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、执行范围、未审核标记和交接格式，不采用其中的 DeepSeek 身份或修改方名称。
 
 ## 主责与复审边界
 
-- 普通选题只消费有序队列中 `route=external_execute`、`dispatchState=ready` 且 owner 与实际执行器一致的任务卡；映射固定为 `owner=deepseek -> DeepSeek V4 Pro`、`owner=claude -> native Claude Code`。
+- 普通选题只消费有序队列中 `route=external_execute`、`dispatchState=ready` 且 owner 与实际执行器一致的任务卡；映射固定为 `owner=deepseek -> DeepSeek V4 Flash`、`owner=claude -> native Claude Code`。
 - 自动 wrapper 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选，也不得把 `owner=deepseek` 与 `owner=claude` 相互改派。
 - `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 的 owner 映射和已选卡边界。
 - 不得自审、预填审核方结论、扩大授权路径、另行并行派发或推送远端。
