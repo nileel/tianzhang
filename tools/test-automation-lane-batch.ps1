@@ -44,19 +44,48 @@ function Invoke-ProductionExternalPreflightCase {
   )
 
   $resultPath = Join-Path $externalPreflightStateRoot "results\$Name.json"
-  $output = @(
-    & pwsh -NoProfile -ExecutionPolicy Bypass -File $productionExternalWorker `
-      -Action Start `
-      -RepositoryRoot $RepositoryRoot `
-      -TaskId 'EXTERNAL-PREFLIGHT' `
-      -RunId ([Guid]::NewGuid().ToString()) `
-      -BatchId $BatchId `
-      -LaneId 'deepseek' `
-      -ResultPath $resultPath `
-      -StateRoot $externalPreflightStateRoot `
-      -ResponsibilityTimeoutSeconds 1 2>&1
+  $arguments = @(
+    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $productionExternalWorker,
+    '-Action', 'Start',
+    '-RepositoryRoot', $RepositoryRoot,
+    '-TaskId', 'EXTERNAL-PREFLIGHT',
+    '-RunId', ([Guid]::NewGuid().ToString()),
+    '-BatchId', $BatchId,
+    '-LaneId', 'deepseek',
+    '-ResultPath', $resultPath,
+    '-StateRoot', $externalPreflightStateRoot,
+    '-ResponsibilityTimeoutSeconds', '1'
   )
-  if ($LASTEXITCODE -ne 1 -or $output.Count -ne 1) {
+  $startInfo = [Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = 'pwsh'
+  $startInfo.WorkingDirectory = if (Test-Path -LiteralPath $RepositoryRoot -PathType Container) {
+    [IO.Path]::GetFullPath($RepositoryRoot)
+  } else {
+    $repositorySource
+  }
+  $startInfo.UseShellExecute = $false
+  $startInfo.CreateNoWindow = $true
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
+  $startInfo.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
+  foreach ($argument in $arguments) {
+    $startInfo.ArgumentList.Add($argument)
+  }
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    throw "production external preflight case $Name did not start"
+  }
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $stdout = $stdoutTask.GetAwaiter().GetResult()
+  $stderr = $stderrTask.GetAwaiter().GetResult()
+  $exitCode = $process.ExitCode
+  $process.Dispose()
+  $output = @($stdout -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  if ($exitCode -ne 1 -or $output.Count -ne 1 -or -not [string]::IsNullOrWhiteSpace($stderr)) {
     throw "production external preflight case $Name returned an invalid result: $(@($output) -join ' ')"
   }
   $terminal = $output[0] | ConvertFrom-Json -Depth 100

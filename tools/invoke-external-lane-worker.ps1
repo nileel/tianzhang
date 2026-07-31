@@ -20,6 +20,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 
 $corePath = Join-Path $PSScriptRoot 'automation-lane-core.ps1'
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'

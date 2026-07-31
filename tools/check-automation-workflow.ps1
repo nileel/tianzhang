@@ -219,6 +219,7 @@ Assert-Contains $contracts.externalWorker @(
   'http',
   '127.0.0.1',
   '15721',
+  '[Console]::OutputEncoding',
   'Resolve-ExternalLaneRepositoryRoot',
   'external_lane_repository_path_invalid',
   'external_lane_git_root_unavailable',
