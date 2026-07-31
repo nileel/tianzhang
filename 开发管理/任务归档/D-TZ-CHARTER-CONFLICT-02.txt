@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：D-TZ-CHARTER-CONFLICT-01 已锁定一份 World shared source 由 TianZhang.Gameplay 与 BattleSim linked compile 共用；本卡迁移现有 BattleSim 跨阶资格与金丹冲突决定，不创建 Unity 册界模型或存档。",
+  "stateReason": "2026-07-31：已迁移为唯一 World shared source；Unity 与 BattleSim 均编译同一契约，BattleSim 仅保留账本适配与一次性写入，U-TZ-CHARTER-MODEL-01 已解除此前置。",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterConflictRules.cs",
     "src/Assets/Scripts/World/CharterConflictRules.cs.meta",
@@ -73,3 +73,7 @@
 ## 停止条件
 
 - 若同一源码不能在 Unity C# 9／`netstandard2.1` 和 BattleSim 编译，或任何既有直接结果改变，停止；不得通过复制、兼容分支、存档迁移或默认路径掩盖问题。
+
+## 完成记录
+
+- 2026-07-31：新增 `World/CharterConflictRules.cs` 作为唯一 v1 纯契约；BattleSim linked compile 同一文本，跨阶档案与金丹决定已迁出 `GameData.cs`，旧跨阶 wrapper 与旧 resolver 已删除。Unity EditMode 项目编译、BattleSim Release 构建与完整默认运行均通过；未修改册界模型、存档、样例、场景、UI、静态数据或数值。

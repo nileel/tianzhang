@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using TianZhang.World;
 
 namespace BattleSim;
 
@@ -769,57 +770,50 @@ static class BattleSimSelfTests
 
         var first = CreateConflictParticipant("first", reserve: 6);
         var second = CreateConflictParticipant("second", reserve: 4);
-        var qte = Combat.ResolveGoldenCoreConflict(
-            first.Character,
-            first.RuntimeLedger,
-            CreateConflictCandidateInput("left", "conflict-cost-first"),
-            second.Character,
-            second.RuntimeLedger,
-            CreateConflictCandidateInput("right", "conflict-cost-second"),
-            GoldenCoreConflictInputMode.Qte);
+        var firstInput = CreateConflictCandidateInput("left", "conflict-cost-first");
+        var secondInput = CreateConflictCandidateInput("right", "conflict-cost-second");
+        var qte = CreateRuleConflictInstance(
+            first.Character.PrepareGoldenCoreConflictCandidate(first.RuntimeLedger, firstInput),
+            second.Character.PrepareGoldenCoreConflictCandidate(second.RuntimeLedger, secondInput)).Decide(null);
 
         var skippedFirst = CreateConflictParticipant("skip-first", reserve: 6);
         var skippedSecond = CreateConflictParticipant("skip-second", reserve: 4);
-        var skipped = Combat.ResolveGoldenCoreConflict(
-            skippedFirst.Character,
-            skippedFirst.RuntimeLedger,
-            CreateConflictCandidateInput("left", "conflict-cost-skip-first"),
-            skippedSecond.Character,
-            skippedSecond.RuntimeLedger,
-            CreateConflictCandidateInput("right", "conflict-cost-skip-second"),
-            GoldenCoreConflictInputMode.Skip);
+        var skippedFirstInput = CreateConflictCandidateInput("left", "conflict-cost-skip-first");
+        var skippedSecondInput = CreateConflictCandidateInput("right", "conflict-cost-skip-second");
+        var skipped = CreateRuleConflictInstance(
+            skippedFirst.Character.PrepareGoldenCoreConflictCandidate(skippedFirst.RuntimeLedger, skippedFirstInput),
+            skippedSecond.Character.PrepareGoldenCoreConflictCandidate(skippedSecond.RuntimeLedger, skippedSecondInput)).Decide(null);
 
-        var expected = new GoldenCoreConflictResolution(
-            GoldenCoreConflictOutcome.LeftWins,
-            "PULSE_ADVANTAGE",
-            "left",
-            3,
-            2,
-            6,
-            4,
-            0);
-        if (!Equals(expected, qte) || !Equals(expected, skipped))
-            throw new InvalidOperationException("QTE and skip must resolve the same selected candidates through one deterministic pulse result.");
+        AssertConflictDecision(qte, "left", "PULSE_ADVANTAGE", 3, 2, 6, 4, true, "QTE direct decision");
+        AssertConflictDecision(skipped, "left", "PULSE_ADVANTAGE", 3, 2, 6, 4, true, "skip direct decision");
+        if (first.RuntimeLedger.Get("guardian_ming").ConflictReserve != 6 || second.RuntimeLedger.Get("guardian_ming").ConflictReserve != 4)
+            throw new InvalidOperationException("shared conflict decisions must not mutate BattleSim ledgers.");
+
+        var appliedQte = Combat.ResolveGoldenCoreConflict(
+            first.Character, first.RuntimeLedger, firstInput, second.Character, second.RuntimeLedger, secondInput, GoldenCoreConflictInputMode.Qte);
+        var appliedSkip = Combat.ResolveGoldenCoreConflict(
+            skippedFirst.Character, skippedFirst.RuntimeLedger, skippedFirstInput, skippedSecond.Character, skippedSecond.RuntimeLedger, skippedSecondInput, GoldenCoreConflictInputMode.Skip);
+        AssertConflictDecision(appliedQte, "left", "PULSE_ADVANTAGE", 3, 2, 6, 4, true, "QTE adapter decision");
+        AssertConflictDecision(appliedSkip, "left", "PULSE_ADVANTAGE", 3, 2, 6, 4, true, "skip adapter decision");
         AssertConflictRuntime(first.RuntimeLedger, 0, 3, "QTE left");
         AssertConflictRuntime(second.RuntimeLedger, 0, 3, "QTE right");
         AssertConflictRuntime(skippedFirst.RuntimeLedger, 0, 3, "skip left");
         AssertConflictRuntime(skippedSecond.RuntimeLedger, 0, 3, "skip right");
 
         var sorting = CreateThreeSeatConflictParticipant("sorting", sourceReserve: 7, transformationReserve: 5);
-        var sortingResult = Combat.ResolveGoldenCoreConflict(
-            sorting.Character,
-            sorting.RuntimeLedger,
-            CreateConflictCandidateInput("source", "conflict-cost-sorting-guardian_ming"),
-            sorting.Character,
-            sorting.RuntimeLedger,
-            CreateConflictCandidateInput(
+        var sortingResult = CreateRuleConflictInstance(
+            sorting.Character.PrepareGoldenCoreConflictCandidate(
+                sorting.RuntimeLedger,
+                CreateConflictCandidateInput("source", "conflict-cost-sorting-guardian_ming")),
+            sorting.Character.PrepareGoldenCoreConflictCandidate(
+                sorting.RuntimeLedger,
+                CreateConflictCandidateInput(
                 "transformation",
                 "conflict-cost-sorting-guardian_hun",
                 abilityInstanceId: "guardian_hun",
                 positionType: GoldenCoreSeatType.Transformation,
-                compatibilityProfileId: "compat_transformation"),
-            GoldenCoreConflictInputMode.Skip);
-        if (sortingResult.Outcome != GoldenCoreConflictOutcome.LeftWins || sortingResult.Reason != "POSITION_TIER" ||
+                compatibilityProfileId: "compat_transformation"))).Decide(null);
+        if (sortingResult.Outcome != RuleConflictOutcome.LeftWins || sortingResult.Reason != "POSITION_TIER" ||
             sorting.RuntimeLedger.Get("guardian_ming").ConflictReserve != 7 || sorting.RuntimeLedger.Get("guardian_hun").ConflictReserve != 5)
         {
             throw new InvalidOperationException("fixed seat ranking must decide before pulse spending and retain independent ledgers.");
@@ -828,60 +822,34 @@ static class BattleSimSelfTests
 
     static void RunGoldenCoreChallengeDeathNjdrule01C()
     {
-        var grant = new CrossTierChallengeGrant(
-            "grant-n-jd-rule-01c",
-            DefinitionVersion: 7,
-            TargetVariableId: "fixture-higher-rule-variable",
-            ChallengerId: "challenger-n-jd-rule-01c",
-            QualificationSource: CrossTierChallengeSourceKind.YuanyingOrthodoxy,
-            AllowedOperationId: "fixture-direct-conflict",
-            TargetId: "fixture-higher-rule-target",
-            ScopeId: "fixture-scope",
-            BeneficiaryId: "challenger-n-jd-rule-01c",
-            RealityAnchorId: "fixture-anchor",
-            ResourceLedgerRef: "fixture-resource-ledger",
-            CapacityLedgerRef: "fixture-capacity-ledger",
-            ChallengeRuleTier: 2,
-            EffectiveAtTick: 10,
-            ExpiresAtTick: 20,
-            IsRevoked: false,
-            RevocationReason: "",
-            DisplaySource: "fixture-yuanying-orthodoxy");
+        var grant = CreateChallengeGrant();
         var archive = new CrossTierChallengeArchive(new[] { grant });
-        var validRequest = new CrossTierChallengeRequest(
-            "challenge-event-n-jd-rule-01c",
-            grant.GrantId,
-            grant.DefinitionVersion,
-            grant.TargetVariableId,
-            grant.ChallengerId,
-            WorldTick: 12);
-        var authorized = Combat.ResolveCrossTierChallenge(archive, validRequest);
-        var repeatedAuthorization = Combat.ResolveCrossTierChallenge(archive, validRequest);
-        if (!authorized.IsEligible || authorized.Reason != "JD_CHALLENGE_AUTHORIZED" || !Equals(authorized, repeatedAuthorization))
+        var validRequest = CreateChallengeRequest();
+        var authorized = archive.Resolve(validRequest);
+        var repeatedAuthorization = archive.Resolve(validRequest);
+        if (!authorized.IsEligible || authorized.Reason != "JD_CHALLENGE_AUTHORIZED" ||
+            !repeatedAuthorization.IsEligible || repeatedAuthorization.Reason != authorized.Reason ||
+            !ReferenceEquals(authorized.Grant, repeatedAuthorization.Grant))
             throw new InvalidOperationException("a valid versioned challenge must authorize deterministically without mutating repeated events.");
 
         AssertChallengeRejection(
-            Combat.ResolveCrossTierChallenge(archive, validRequest with { GrantId = "unknown-grant" }),
+            archive.Resolve(CreateChallengeRequest(grantId: "unknown-grant")),
             "JD_CHALLENGE_GRANT_UNKNOWN",
             "unknown challenge grant");
         AssertChallengeRejection(
-            Combat.ResolveCrossTierChallenge(archive, validRequest with { ExpectedDefinitionVersion = grant.DefinitionVersion - 1 }),
+            archive.Resolve(CreateChallengeRequest(expectedDefinitionVersion: grant.DefinitionVersion - 1)),
             "JD_CHALLENGE_VERSION_MISMATCH",
             "version mismatch challenge grant");
         AssertChallengeRejection(
-            Combat.ResolveCrossTierChallenge(
-                new CrossTierChallengeArchive(new[] { grant with { ExpiresAtTick = 11 } }),
-                validRequest),
+            new CrossTierChallengeArchive(new[] { CreateChallengeGrant(expiresAtTick: 11) }).Resolve(validRequest),
             "JD_CHALLENGE_EXPIRED",
             "expired challenge grant");
         AssertChallengeRejection(
-            Combat.ResolveCrossTierChallenge(
-                new CrossTierChallengeArchive(new[] { grant with { IsRevoked = true, RevocationReason = "fixture-revoked" } }),
-                validRequest),
+            new CrossTierChallengeArchive(new[] { CreateChallengeGrant(isRevoked: true, revocationReason: "fixture-revoked") }).Resolve(validRequest),
             "JD_CHALLENGE_REVOKED",
             "revoked challenge grant");
         AssertChallengeRejection(
-            Combat.ResolveCrossTierChallenge(archive, validRequest with { TargetVariableId = "wrong-variable" }),
+            archive.Resolve(CreateChallengeRequest(targetVariableId: "wrong-variable")),
             "JD_CHALLENGE_TARGET_MISMATCH",
             "target mismatch challenge grant");
 
@@ -944,6 +912,127 @@ static class BattleSimSelfTests
     {
         if (resolution.IsEligible || resolution.Reason != expectedReason || resolution.Grant != null)
             throw new InvalidOperationException($"{label} must reject with {expectedReason}.");
+    }
+
+    static CrossTierChallengeGrant CreateChallengeGrant(
+        string allowedOperationId = "fixture-direct-conflict",
+        string targetId = "fixture-higher-rule-target",
+        string scopeId = "fixture-scope",
+        string beneficiaryId = "challenger-n-jd-rule-01c",
+        string realityAnchorId = "fixture-anchor",
+        string resourceLedgerRef = "fixture-resource-ledger",
+        string capacityLedgerRef = "fixture-capacity-ledger",
+        int expiresAtTick = 20,
+        bool isRevoked = false,
+        string revocationReason = "")
+    {
+        return new CrossTierChallengeGrant(
+            "grant-n-jd-rule-01c",
+            7,
+            "fixture-higher-rule-variable",
+            "challenger-n-jd-rule-01c",
+            CrossTierChallengeSourceKind.YuanyingOrthodoxy,
+            allowedOperationId,
+            targetId,
+            scopeId,
+            beneficiaryId,
+            realityAnchorId,
+            resourceLedgerRef,
+            capacityLedgerRef,
+            2,
+            10,
+            expiresAtTick,
+            isRevoked,
+            revocationReason,
+            "fixture-yuanying-orthodoxy");
+    }
+
+    static CrossTierChallengeRequest CreateChallengeRequest(
+        string grantId = "grant-n-jd-rule-01c",
+        int expectedDefinitionVersion = 7,
+        string targetVariableId = "fixture-higher-rule-variable")
+    {
+        return new CrossTierChallengeRequest(
+            "challenge-event-n-jd-rule-01c",
+            grantId,
+            expectedDefinitionVersion,
+            targetVariableId,
+            "challenger-n-jd-rule-01c",
+            12);
+    }
+
+    static RuleConflictInstance CreateRuleConflictInstance(
+        GoldenCoreConflictCandidatePreparation leftPreparation,
+        GoldenCoreConflictCandidatePreparation rightPreparation)
+    {
+        if (!leftPreparation.IsEligible || !rightPreparation.IsEligible)
+            throw new InvalidOperationException("direct shared conflict fixtures require prepared candidates.");
+
+        GoldenCoreConflictCandidate left = leftPreparation.Candidate;
+        GoldenCoreConflictCandidate right = rightPreparation.Candidate;
+        return new RuleConflictInstance(
+            RuleConflictInstance.ContractVersionV1,
+            "battle-sim:" + left.Input.CandidateId + ":" + right.Input.CandidateId,
+            RuleConflictKind.JindanSameVariable,
+            "battle-sim-jindan-conflict",
+            left.Input.VariableId,
+            "jindan-same-variable",
+            left.Input.TargetId,
+            "battle-sim",
+            "battle-sim",
+            "battle-sim",
+            "battle-sim",
+            "battle-sim",
+            0,
+            ToRuleConflictCandidate(left),
+            ToRuleConflictCandidate(right),
+            null);
+    }
+
+    static RuleConflictCandidate ToRuleConflictCandidate(GoldenCoreConflictCandidate candidate)
+    {
+        GoldenCoreConflictCandidateInput input = candidate.Input;
+        return new RuleConflictCandidate(
+            input.CandidateId,
+            input.VariableId,
+            input.TargetId,
+            input.HasVariableAuthority,
+            input.HasLegalTarget,
+            ConflictPositionRank(input.PositionType),
+            input.RealityAnchorRank,
+            input.AlreadyPaidCost,
+            input.HasActiveContinuousCarrier,
+            candidate.RuntimeState.ConflictReserve,
+            input.PulseCost,
+            input.SettlementCooldown);
+    }
+
+    static int ConflictPositionRank(GoldenCoreSeatType positionType)
+    {
+        return positionType == GoldenCoreSeatType.Source ? 3 :
+            positionType == GoldenCoreSeatType.Transformation ? 2 :
+            positionType == GoldenCoreSeatType.Domain ? 1 : 0;
+    }
+
+    static void AssertConflictDecision(
+        RuleConflictDecision decision,
+        string winnerCandidateId,
+        string reason,
+        int leftPulses,
+        int rightPulses,
+        int leftReserveSpent,
+        int rightReserveSpent,
+        bool requiresLedgerSettlement,
+        string label)
+    {
+        if (decision.Outcome != RuleConflictOutcome.LeftWins || decision.WinnerCandidateId != winnerCandidateId ||
+            decision.Reason != reason || decision.LeftPulses != leftPulses || decision.RightPulses != rightPulses ||
+            decision.LeftReserveSpent != leftReserveSpent || decision.RightReserveSpent != rightReserveSpent ||
+            decision.LeftSettlementCooldown != 3 || decision.RightSettlementCooldown != 3 ||
+            decision.RejectedCandidateCount != 0 || decision.RequiresLedgerSettlement != requiresLedgerSettlement)
+        {
+            throw new InvalidOperationException(label + " must preserve the shared deterministic conflict decision.");
+        }
     }
 
     static (Character Character, GoldenCoreRuntimeLedger RuntimeLedger) CreateConflictParticipant(string prefix, int reserve)

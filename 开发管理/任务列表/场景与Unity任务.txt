@@ -12,7 +12,6 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| D-TZ-CHARTER-CONFLICT-02 | P1 | codex | 已排队 | — | 册界跨端冲突契约唯一实现迁移 | `开发管理/任务卡/D-TZ-CHARTER-CONFLICT-02.txt` |
 | U-BOUNTY-01A | P1 | Codex | 待建立任务卡（前置均完成） | — | 实现一次性悬赏状态机、地点／敌人校验、击败计数和防重复结算。 | — |
 | U-BOUNTY-01B | P1 | Codex | 阻塞（U-BOUNTY-01A） | — | 增加独立 `BountyStateStore`、存档 schema 3 与版本 0／1／2 迁移。 | — |
 | U-BOUNTY-01C | P1 | Codex | 阻塞（U-BOUNTY-01B） | — | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | — |
@@ -27,7 +26,7 @@
 | U-JD-RULE-01A | P2 | Codex | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-TZ-CHARTER-MODEL-01 | P1 | Codex | 阻塞（D-TZ-CHARTER-CONFLICT-02） | D-TZ-CHARTER-CONFLICT-02 | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
+| U-TZ-CHARTER-MODEL-01 | P1 | Codex | 待建立任务卡（前置已完成） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex | 阻塞（U-TZ-CHARTER-MODEL-01） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 阻塞（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 
@@ -76,15 +75,9 @@
 
 共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、三项核心遗产文件，以及 D-TZ-CHARTER-SCHEMA-01／SAMPLE-01 的有效数据。三项任务均属于 M8；2026-07-30 已获既定最小纵向切片的条件授权，但依赖满足前不得进入当前任务队列。
 
-### D-TZ-CHARTER-CONFLICT-02 · 册界跨端冲突契约唯一实现迁移
-
-- 依赖与状态：`D-TZ-CHARTER-CONFLICT-01` 已完成；共享所有者锁定为由 `TianZhang.Gameplay` 编译、BattleSim linked compile 的 `World/CharterConflictRules.cs`。本卡已进入当前队列。
-- 范围：迁入现有 BattleSim `CrossTierChallenge*` 和金丹冲突决定，建立 v1 `RuleConflictInstance`、双端直接测试并删除旧第二入口；完整范围读取任务卡。
-- 边界：不实现 Unity 册界模型、存档、样例、场景或数值，不复制结算或保留兼容 wrapper。
-
 ### U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
 
-- 依赖与状态：M8 已获条件授权；`D-TZ-CHARTER-SCHEMA-01` 与 `D-TZ-CHARTER-SAMPLE-01` 已完成并提供有效与非法 fixture。2026-07-31 负责人后续改选 A；本卡等待 `D-TZ-CHARTER-CONFLICT-02` 完成共享实现迁移，不得绕过该前置进入队列。
+- 依赖与状态：M8 已获条件授权；`D-TZ-CHARTER-SCHEMA-01`、`D-TZ-CHARTER-SAMPLE-01` 与 `D-TZ-CHARTER-CONFLICT-02` 已完成。共享冲突／跨阶授权已由同一 `World/CharterConflictRules.cs` 供 Unity 与 BattleSim 编译；下次队列维护可建立本卡执行卡，不得绕过该实现。
 - 预期路径：现有世界状态、据点交互、设施权限、规则冲突与地区事件所有者，相关数据模型和 `src/Assets/Tests/EditMode`；进入当前队列前必须实时扫描并展开字面量路径，不得先假设新服务名称。
 - 范围：《开阖九章》只处理旧门禁／传送阵目标识别、通行许可与稳定失败原因；太玄界印只处理公共设施的管理者、受益者、守卫／档案响应；册界模型只处理完整条目登记、节点连通、版本化授权、据点级覆盖、现实供给、正负原子提交和地区事件输出。
 - 冲突：命中同变量金丹介入时复用既有 `RuleConflictInstance` 和版本化 `CrossTierChallengeGrant`；没有挑战资格就拒绝覆盖。命中元婴道路锚点固定进入受锚状态，不把它降格为金丹冲突，也不自动获胜。

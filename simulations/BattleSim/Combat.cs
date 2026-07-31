@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TianZhang.World;
 
 namespace BattleSim;
 
@@ -255,25 +256,98 @@ static class Combat
         return rawDmg;
     }
 
-    public static GoldenCoreConflictResolution ResolveGoldenCoreConflict(
+    public static RuleConflictDecision ResolveGoldenCoreConflict(
         Character left,
         GoldenCoreRuntimeLedger leftRuntimeLedger,
         GoldenCoreConflictCandidateInput leftInput,
         Character right,
         GoldenCoreRuntimeLedger rightRuntimeLedger,
         GoldenCoreConflictCandidateInput rightInput,
-        GoldenCoreConflictInputMode inputMode) =>
-        GoldenCoreConflictResolver.Resolve(
-            left.PrepareGoldenCoreConflictCandidate(leftRuntimeLedger, leftInput),
-            right.PrepareGoldenCoreConflictCandidate(rightRuntimeLedger, rightInput),
-            inputMode);
+        GoldenCoreConflictInputMode inputMode)
+    {
+        if (inputMode != GoldenCoreConflictInputMode.Qte && inputMode != GoldenCoreConflictInputMode.Skip)
+            return RuleConflictDecision.Rejected("JD_CONFLICT_INPUT_MODE_INVALID", 0, null);
 
-    public static CrossTierChallengeResolution ResolveCrossTierChallenge(
-        CrossTierChallengeArchive archive,
-        CrossTierChallengeRequest request) =>
-        archive == null
-            ? CrossTierChallengeResolution.Rejected("JD_CHALLENGE_ARCHIVE_UNAVAILABLE")
-            : archive.Resolve(request);
+        GoldenCoreConflictCandidatePreparation leftPreparation = left.PrepareGoldenCoreConflictCandidate(leftRuntimeLedger, leftInput);
+        GoldenCoreConflictCandidatePreparation rightPreparation = right.PrepareGoldenCoreConflictCandidate(rightRuntimeLedger, rightInput);
+        int rejectedCandidateCount = (leftPreparation.IsEligible ? 0 : 1) + (rightPreparation.IsEligible ? 0 : 1);
+        if (rejectedCandidateCount > 0)
+        {
+            string rejectionReason = !leftPreparation.IsEligible
+                ? leftPreparation.RejectionCode
+                : rightPreparation.RejectionCode;
+            return RuleConflictDecision.Rejected(rejectionReason, rejectedCandidateCount, null);
+        }
+
+        RuleConflictInstance conflict = CreateGoldenCoreConflict(leftPreparation.Candidate, rightPreparation.Candidate);
+        RuleConflictDecision decision = conflict.Decide(null);
+        if (decision.RequiresLedgerSettlement)
+        {
+            ApplyGoldenCoreSettlement(leftPreparation.Candidate.RuntimeState, decision.LeftReserveSpent, decision.LeftSettlementCooldown);
+            ApplyGoldenCoreSettlement(rightPreparation.Candidate.RuntimeState, decision.RightReserveSpent, decision.RightSettlementCooldown);
+        }
+
+        return decision;
+    }
+
+    static RuleConflictInstance CreateGoldenCoreConflict(GoldenCoreConflictCandidate left, GoldenCoreConflictCandidate right)
+    {
+        GoldenCoreConflictCandidateInput leftInput = left.Input;
+        GoldenCoreConflictCandidateInput rightInput = right.Input;
+        return new RuleConflictInstance(
+            RuleConflictInstance.ContractVersionV1,
+            "battle-sim:" + leftInput.CandidateId + ":" + rightInput.CandidateId,
+            RuleConflictKind.JindanSameVariable,
+            "battle-sim-jindan-conflict",
+            leftInput.VariableId,
+            "jindan-same-variable",
+            leftInput.TargetId,
+            "battle-sim",
+            "battle-sim",
+            "battle-sim",
+            "battle-sim",
+            "battle-sim",
+            0,
+            ToRuleConflictCandidate(left),
+            ToRuleConflictCandidate(right),
+            null);
+    }
+
+    static RuleConflictCandidate ToRuleConflictCandidate(GoldenCoreConflictCandidate candidate)
+    {
+        GoldenCoreConflictCandidateInput input = candidate.Input;
+        return new RuleConflictCandidate(
+            input.CandidateId,
+            input.VariableId,
+            input.TargetId,
+            input.HasVariableAuthority,
+            input.HasLegalTarget,
+            PositionRank(input.PositionType),
+            input.RealityAnchorRank,
+            input.AlreadyPaidCost,
+            input.HasActiveContinuousCarrier,
+            candidate.RuntimeState.ConflictReserve,
+            input.PulseCost,
+            input.SettlementCooldown);
+    }
+
+    static void ApplyGoldenCoreSettlement(GoldenCoreAbilityRuntimeState runtimeState, int reserveSpent, int cooldown)
+    {
+        if (reserveSpent > 0 && !runtimeState.TrySpendConflictReserve(reserveSpent))
+            throw new InvalidOperationException("conflict reserve changed during deterministic settlement.");
+        runtimeState.StartCooldown(cooldown);
+    }
+
+    static int PositionRank(GoldenCoreSeatType positionType)
+    {
+        return positionType == GoldenCoreSeatType.Source
+            ? 3
+            : positionType == GoldenCoreSeatType.Transformation
+                ? 2
+                : positionType == GoldenCoreSeatType.Domain
+                    ? 1
+                    : 0;
+    }
 
     public static GoldenCoreCarrierDeathResolution ResolveGoldenCoreCarrierDeath(
         Character character,
