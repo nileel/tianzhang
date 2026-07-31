@@ -4,8 +4,10 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $corePath = Join-Path $PSScriptRoot 'automation-lane-core.ps1'
+$integrationPath = Join-Path $PSScriptRoot 'automation-lane-integration.ps1'
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 . $corePath
+. $integrationPath
 
 function Assert-True {
   param([bool]$Condition, [string]$Message)

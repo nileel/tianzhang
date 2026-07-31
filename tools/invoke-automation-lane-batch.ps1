@@ -18,11 +18,13 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $corePath = Join-Path $PSScriptRoot 'automation-lane-core.ps1'
+$integrationPath = Join-Path $PSScriptRoot 'automation-lane-integration.ps1'
 $leasePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $guardPath = Join-Path $PSScriptRoot 'automation-workspace-guard.ps1'
 $taskCheckerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
 $aclPath = Join-Path $PSScriptRoot 'private-path-acl.ps1'
 . $corePath
+. $integrationPath
 . $aclPath
 
 function Invoke-BatchLease {
@@ -581,7 +583,7 @@ $initializationCleanup = $null
 $stage = 'initialize'
 
 try {
-  foreach ($path in @($corePath, $leasePath, $guardPath, $taskCheckerPath, $aclPath)) {
+  foreach ($path in @($corePath, $integrationPath, $leasePath, $guardPath, $taskCheckerPath, $aclPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
       throw "Required coordinator component is missing: $path"
     }

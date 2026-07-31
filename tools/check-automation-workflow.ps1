@@ -89,6 +89,7 @@ $paths = [ordered]@{
   claude = 'CLAUDE.md'
   lease = 'tools/hourly-automation-lease.ps1'
   core = 'tools/automation-lane-core.ps1'
+  integration = 'tools/automation-lane-integration.ps1'
   batch = 'tools/invoke-automation-lane-batch.ps1'
   codexWorker = 'tools/invoke-codex-lane-worker.ps1'
   externalWorker = 'tools/invoke-external-lane-worker.ps1'
@@ -98,7 +99,6 @@ $paths = [ordered]@{
   metadata = 'tools/automation-commit-metadata.ps1'
   notification = 'tools/send-feishu-notification.ps1'
   legacyCodex = 'tools/invoke-codex-responsibility.ps1'
-  legacyExternal = 'tools/invoke-external-responsibility.ps1'
   guard = 'tools/automation-workspace-guard.ps1'
   laneTests = 'tools/test-automation-lanes.ps1'
   batchTests = 'tools/test-automation-lane-batch.ps1'
@@ -180,14 +180,18 @@ Assert-Contains $contracts.core @(
   'maxConcurrent = 2',
   'Select-TzgAutomationLaneBatch',
   'Test-TzgTaskDependsOn',
-  'Get-TzgLaneIntegrationPreflight',
-  'Merge-TzgCoordinatorChanges',
-  'Merge-TzgTaskProjectionTable',
   'Test-TzgCandidateCommit',
-  'Invoke-TzgLaneCanonicalIntegration',
   'Test-TzgLaneCleanupAllowed'
 ) 'lane core'
 Assert-Contract (-not $contracts.core.Contains("laneId = 'simulated-third'", [StringComparison]::Ordinal)) 'simulated third lane leaked into production configuration'
+Assert-Contains $contracts.integration @(
+  'Get-TzgLaneIntegrationPreflight',
+  'Merge-TzgCoordinatorChanges',
+  'Merge-TzgTaskProjectionTable',
+  'Invoke-TzgLaneCanonicalIntegration',
+  'Restore-TzgIntegrationSnapshot',
+  'Invoke-TzgFinalizer'
+) 'lane integration'
 Assert-Contains $contracts.batch @(
   "ValidateSet('Start', 'Recover')",
   'Start-BatchLaneWorker',
@@ -203,7 +207,8 @@ Assert-Contains $contracts.batch @(
   'integrationState',
   '.worktrees\automation',
   'worktree add --detach',
-  'initializationCleanup'
+  'initializationCleanup',
+  'automation-lane-integration.ps1'
 ) 'fixed batch coordinator'
 Assert-Contains $contracts.codexWorker @(
   '[TZG_AUTOMATION_LANE_WORKER]',
@@ -231,6 +236,7 @@ Assert-Contains $contracts.externalWorker @(
   'Test-TzgCandidateCommit'
 ) 'external lane worker'
 foreach ($worker in @($contracts.codexWorker, $contracts.externalWorker)) {
+  Assert-Contract (-not $worker.Contains('automation-lane-integration.ps1', [StringComparison]::OrdinalIgnoreCase)) 'lane worker loads integration implementation'
   foreach ($forbidden in @('-Action RecordResult', '-Action Release', 'send-feishu-notification.ps1')) {
     Assert-Contract (-not $worker.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) "lane worker contains forbidden closeout token: $forbidden"
   }
@@ -281,10 +287,18 @@ Assert-Contains $contracts.recovery @(
 foreach ($consumer in @(
     [pscustomobject]@{ Text = $contracts.finalizer; Context = 'automation finalizer' },
     [pscustomobject]@{ Text = $contracts.notification; Context = 'notification sender' },
-    [pscustomobject]@{ Text = $contracts.legacyCodex; Context = 'legacy Codex invoker' },
-    [pscustomobject]@{ Text = $contracts.legacyExternal; Context = 'legacy external invoker' }
+    [pscustomobject]@{ Text = $contracts.legacyCodex; Context = 'legacy Codex invoker' }
   )) {
   Assert-Contains $consumer.Text @('automation-commit-metadata.ps1', 'ConvertFrom-TzgAutomationCommitMessage') "$($consumer.Context) metadata contract"
+}
+Assert-Contains $contracts.legacyCodex @(
+  "ValidateSet('QueueMaintenance', 'Recovery')",
+  'SaveInterruption',
+  'ClearRecovery',
+  'ReadDecisionReplyFromStdin'
+) 'maintenance and recovery invoker'
+foreach ($retiredRoute in @("'Execution'", "'Review'")) {
+  Assert-Contract (-not $contracts.legacyCodex.Contains($retiredRoute, [StringComparison]::Ordinal)) "retired Codex route remains: $retiredRoute"
 }
 Assert-Contains $contracts.daily @(
   'tools/get-automation-briefing-source.ps1',
@@ -342,6 +356,7 @@ if ($RequireLegacyRetired) {
   foreach ($legacyPath in @(
       'tools/hourly-controller-v2',
       'tools/automation-controller.ps1',
+      'tools/invoke-external-responsibility.ps1',
       '开发管理/自动工作流任务注册表.json'
     )) {
     Assert-Contract (-not (Test-Path -LiteralPath (Join-Path $root $legacyPath))) "legacy workflow path still exists: $legacyPath"

@@ -22,7 +22,6 @@ $fakeBin = Join-Path $testRoot 'bin'
 $gitRoot = Join-Path $testRoot 'repo'
 $tracePath = Join-Path $testRoot 'stdin.txt'
 $notificationTracePath = Join-Path $testRoot 'notification-args.json'
-$childPidPath = Join-Path $testRoot 'timeout-child-pid.txt'
 $stateRoot = Join-Path $automationStateRoot "tzg-invoke-responsibility-tests\$testId"
 $bridgeRoot = Join-Path $automationStateRoot "tzg-feishu-decision-bridge\invoke-test-$testId"
 $decisionRequestPath = Join-Path $bridgeRoot 'decision-request.json'
@@ -166,8 +165,8 @@ function Invoke-Responsibility {
     [string]$Case,
     [string]$TaskId,
     [string]$RunId,
-    [ValidateSet('Execution', 'Review', 'QueueMaintenance', 'Recovery')]
-    [string]$Route = 'Execution',
+    [ValidateSet('QueueMaintenance', 'Recovery')]
+    [string]$Route = 'QueueMaintenance',
     [ValidateSet('Start', 'Resume')]
     [string]$Action = 'Start',
     [string]$ResumeSessionId,
@@ -233,11 +232,6 @@ function Invoke-Responsibility {
   $startInfo.Environment['RESPONSIBILITY_TEST_SESSION_ID'] = $sessionId
   $startInfo.Environment['RESPONSIBILITY_TEST_STDIN_PATH'] = $tracePath
   $startInfo.Environment['RESPONSIBILITY_TEST_TASK_ID'] = $TaskId
-  $startInfo.Environment['RESPONSIBILITY_TEST_RUN_ID'] = $RunId
-  $startInfo.Environment['RESPONSIBILITY_TEST_STATE_ROOT'] = $stateRoot
-  $startInfo.Environment['RESPONSIBILITY_TEST_LEASE_PATH'] = $leasePath
-  $startInfo.Environment['RESPONSIBILITY_TEST_DECISION_PATH'] = $decisionRequestPath
-  $startInfo.Environment['RESPONSIBILITY_TEST_CHILD_PID_PATH'] = $childPidPath
   $startInfo.Environment['RESPONSIBILITY_TEST_NOTIFICATION_TRACE'] = $notificationTracePath
   $startInfo.Environment['RESPONSIBILITY_TEST_NOTIFICATION_EXIT'] = [string]$NotificationExitCode
 
@@ -349,10 +343,6 @@ function Commit-CompletedResult {
 }
 
 switch ($env:RESPONSIBILITY_TEST_CASE) {
-  'commit-success' {
-    [IO.File]::WriteAllText((Join-Path (Get-Location) 'result.txt'), $env:RESPONSIBILITY_TEST_TASK_ID, [Text.UTF8Encoding]::new($false))
-    Commit-CompletedResult -Paths @('result.txt')
-  }
   'commit-blocked' {
     $taskId = $env:RESPONSIBILITY_TEST_TASK_ID
     $cardPath = Join-Path (Get-Location) "开发管理/任务卡/$taskId.txt"
@@ -368,24 +358,6 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     Write-FakeUtf8 -Path $backlogPath -Text $backlogText
     Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
     Commit-CompletedResult -Paths @('result.txt', '开发管理/任务卡', '开发管理/当前任务队列.txt', '开发管理/任务列表/自动化任务.txt')
-  }
-  'commit-archived' {
-    $taskId = $env:RESPONSIBILITY_TEST_TASK_ID
-    $cardPath = Join-Path (Get-Location) "开发管理/任务卡/$taskId.txt"
-    $archivePath = Join-Path (Get-Location) "开发管理/任务归档/$taskId.txt"
-    $cardText = [IO.File]::ReadAllText($cardPath).Replace('"dispatchState": "ready"', '"dispatchState": "completed"')
-    Write-FakeUtf8 -Path $archivePath -Text $cardText
-    Remove-Item -LiteralPath $cardPath -Force
-    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/当前任务队列.txt') -Text (@(
-      '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
-      '| --- | --- | --- | --- | --- | --- | --- | --- |'
-    ) -join "`n")
-    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/任务列表/自动化任务.txt') -Text (@(
-      '| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |'
-      '| --- | --- | --- | --- | --- | --- | --- |'
-    ) -join "`n")
-    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
-    Commit-CompletedResult -Paths @('result.txt', '开发管理')
   }
   'commit-queue-corrected-empty' {
     $cardPath = @(Get-ChildItem -LiteralPath (Join-Path (Get-Location) '开发管理/任务卡') -Filter '*.txt' -File)[0].FullName
@@ -412,68 +384,10 @@ switch ($env:RESPONSIBILITY_TEST_CASE) {
     Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text 'queue refilled'
     Commit-CompletedResult -Paths @('result.txt', '开发管理')
   }
-  'matching-commit-with-lifecycle-residue' {
-    $taskId = $env:RESPONSIBILITY_TEST_TASK_ID
-    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'result.txt') -Text $taskId
-    Commit-CompletedResult -Paths @('result.txt')
-
-    $cardPath = Join-Path (Get-Location) "开发管理/任务卡/$taskId.txt"
-    $cardText = [IO.File]::ReadAllText($cardPath)
-    $cardText = $cardText.Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": null', '"stateReason": "test blocked"')
-    Write-FakeUtf8 -Path $cardPath -Text $cardText
-    Write-FakeUtf8 -Path (Join-Path (Get-Location) '开发管理/当前任务队列.txt') -Text (@(
-      '| ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |'
-      '| --- | --- | --- | --- | --- | --- | --- | --- |'
-    ) -join "`n")
-    $backlogPath = Join-Path (Get-Location) '开发管理/任务列表/自动化任务.txt'
-    $backlogText = [IO.File]::ReadAllText($backlogPath).Replace('| 已排队 |', '| 阻塞 |')
-    Write-FakeUtf8 -Path $backlogPath -Text $backlogText
-  }
   'child-failed-with-change' {
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'orphan.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
     $global:LASTEXITCODE = 9
     exit 9
-  }
-  'timeout-with-change' {
-    Write-FakeUtf8 -Path (Join-Path (Get-Location) 'orphan-timeout.txt') -Text 'preserve timed-out work'
-    Write-FakeUtf8 -Path $env:RESPONSIBILITY_TEST_CHILD_PID_PATH -Text ([string]$PID)
-    Start-Sleep -Seconds 10
-  }
-  'unverified-commit-with-change' {
-    [IO.File]::WriteAllText((Join-Path (Get-Location) 'manual-with-residue.txt'), 'manual commit', [Text.UTF8Encoding]::new($false))
-    & git add manual-with-residue.txt
-    & git commit -q -m 'test: unrelated manual commit with residue'
-    [IO.File]::WriteAllText((Join-Path (Get-Location) 'orphan-after-commit.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
-    $global:LASTEXITCODE = 9
-    exit 9
-  }
-  'unverified-commit-only' {
-    [IO.File]::WriteAllText((Join-Path (Get-Location) 'manual-only.txt'), 'manual commit', [Text.UTF8Encoding]::new($false))
-    & git add manual-only.txt
-    & git commit -q -m 'test: unrelated manual commit only'
-  }
-  'unverified-two-commits-only' {
-    foreach ($index in 1..2) {
-      $path = "manual-only-$index.txt"
-      [IO.File]::WriteAllText((Join-Path (Get-Location) $path), "manual commit $index", [Text.UTF8Encoding]::new($false))
-      & git add -- $path
-      & git commit -q -m "test: unrelated manual commit $index"
-    }
-  }
-  'child-failed-removes-baseline-changes' {
-    [IO.File]::WriteAllText((Join-Path (Get-Location) 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false))
-    Remove-Item -LiteralPath (Join-Path (Get-Location) 'existing-untracked.txt') -Force
-    $global:LASTEXITCODE = 9
-    exit 9
-  }
-  'decision-waiting' {
-    & pwsh -NoProfile -ExecutionPolicy Bypass -File $env:RESPONSIBILITY_TEST_LEASE_PATH `
-      -Action SaveRecovery `
-      -StateRoot $env:RESPONSIBILITY_TEST_STATE_ROOT `
-      -RunId $env:RESPONSIBILITY_TEST_RUN_ID `
-      -DecisionId 'decision-invoker-test' `
-      -DecisionRequestPath $env:RESPONSIBILITY_TEST_DECISION_PATH | Out-Null
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
   'no-outcome' { }
   default { throw "Unknown case: $($env:RESPONSIBILITY_TEST_CASE)" }
@@ -492,47 +406,6 @@ exit [int]$env:RESPONSIBILITY_TEST_NOTIFICATION_EXIT
 '@
   [IO.File]::WriteAllText($fakeNotificationPath, $fakeNotification, [Text.UTF8Encoding]::new($false))
 
-  foreach ($preflightCase in @(
-      @{
-        Name = 'execution rejects review card'
-        TaskId = 'task-preflight-review'
-        CardRoute = 'codex_review'
-        CardState = 'ready'
-        InvokeRoute = 'Execution'
-      },
-      @{
-        Name = 'review rejects execution card'
-        TaskId = 'task-preflight-execution'
-        CardRoute = 'codex_execute'
-        CardState = 'ready'
-        InvokeRoute = 'Review'
-      },
-      @{
-        Name = 'execution rejects non-ready card'
-        TaskId = 'task-preflight-blocked'
-        CardRoute = 'codex_execute'
-        CardState = 'blocked'
-        InvokeRoute = 'Execution'
-      }
-    )) {
-    Reset-GitFixture
-    Set-TaskProjectionFixture `
-      -TaskId $preflightCase.TaskId `
-      -Route $preflightCase.CardRoute `
-      -DispatchState $preflightCase.CardState
-    $preflightRun = Acquire-TestLease -TaskId $preflightCase.TaskId
-    $preflightResult = Invoke-Responsibility `
-      -Case 'no-outcome' `
-      -TaskId $preflightCase.TaskId `
-      -RunId $preflightRun `
-      -Route $preflightCase.InvokeRoute
-    Assert-True -Condition ($preflightResult.ExitCode -ne 0) -Message "$($preflightCase.Name) unexpectedly succeeded"
-    Assert-Equal -Actual $preflightResult.Json.status -Expected 'failed' -Message "$($preflightCase.Name) status mismatch"
-    Assert-Equal -Actual $preflightResult.Json.detailCode -Expected 'route_precondition_failed' -Message "$($preflightCase.Name) detail mismatch"
-    Assert-True -Condition (-not (Test-Path -LiteralPath $tracePath)) -Message "$($preflightCase.Name) started the runner"
-    Assert-LeaseReleased | Out-Null
-  }
-
   Reset-GitFixture
   Set-TaskProjectionFixture -TaskId 'task-queue-route-mismatch' -DispatchState 'blocked'
   $queueRouteMismatchRun = Acquire-TestLease -TaskId 'task-queue-route-mismatch'
@@ -544,77 +417,6 @@ exit [int]$env:RESPONSIBILITY_TEST_NOTIFICATION_EXIT
   Assert-Equal -Actual $queueRouteMismatch.ExitCode -Expected 1 -Message 'QueueMaintenance accepted a non-special TaskId'
   Assert-Equal -Actual $queueRouteMismatch.Json.detailCode -Expected 'route_precondition_failed' -Message 'QueueMaintenance TaskId binding detail mismatch'
   Assert-True -Condition (-not (Test-Path -LiteralPath $tracePath)) -Message 'QueueMaintenance TaskId mismatch started the runner'
-  Assert-LeaseReleased | Out-Null
-
-  $taskId = 'task-invoker-unicode-prompt'
-  Set-TaskProjectionFixture -TaskId $taskId
-  $runId = Acquire-TestLease -TaskId $taskId
-  $unchangedReady = Invoke-Responsibility -Case 'commit-success' -TaskId $taskId -RunId $runId
-  Assert-True -Condition ($unchangedReady.ExitCode -ne 0) -Message 'Result-only completed commit unexpectedly succeeded'
-  Assert-Equal -Actual $unchangedReady.Json.status -Expected 'blocked' -Message 'Result-only completed status mismatch'
-  Assert-Equal -Actual $unchangedReady.Json.category -Expected 'blocked' -Message 'Result-only completed category mismatch'
-  Assert-Equal -Actual $unchangedReady.Json.detailCode -Expected 'unverified_commit_shape' -Message 'Result-only completed detail mismatch'
-  Assert-True -Condition ($null -eq $unchangedReady.Json.commitSha) -Message 'Result-only completed invocation returned a commit SHA'
-  $transportedPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True -Condition ($transportedPrompt.Contains($taskId)) -Message 'Task id was not transported through stdin'
-  Assert-True -Condition ($transportedPrompt.Contains('模型核验证明')) -Message 'Unicode prompt text was not transported through stdin'
-  Assert-True -Condition ($transportedPrompt.Contains("`n")) -Message 'Multiline prompt was not transported through stdin'
-  Assert-True -Condition ($transportedPrompt.Contains("RepositoryRoot: $gitRoot")) -Message 'Repository root was not transported through stdin'
-  Assert-True -Condition ($transportedPrompt.Contains('不得创建或切换 linked worktree、任务分支')) -Message 'Automated responsibility worktree prohibition was not transported through stdin'
-  Assert-NormalRoutePrompt -Prompt $transportedPrompt -Context 'Normal execution'
-  Assert-LeaseReleased | Out-Null
-
-  Reset-GitFixture
-  $blockedTaskId = 'task-blocked-closeout'
-  Set-TaskProjectionFixture -TaskId $blockedTaskId
-  $blockedRun = Acquire-TestLease -TaskId $blockedTaskId
-  $blockedCompleted = Invoke-Responsibility -Case 'commit-blocked' -TaskId $blockedTaskId -RunId $blockedRun
-  Assert-Equal -Actual $blockedCompleted.ExitCode -Expected 0 -Message ("Blocked transition invocation failed: json=$($blockedCompleted.Json | ConvertTo-Json -Compress -Depth 10) stderr=$($blockedCompleted.Stderr)")
-  Assert-Equal -Actual $blockedCompleted.Json.status -Expected 'completed' -Message 'Blocked transition status mismatch'
-  Assert-Equal -Actual $blockedCompleted.Json.category -Expected 'success' -Message 'Blocked transition category mismatch'
-  Assert-Equal -Actual $blockedCompleted.Json.taskState -Expected 'blocked' -Message 'Blocked transition taskState mismatch'
-  Assert-True -Condition ([string]$blockedCompleted.Json.commitSha -match '^[0-9a-f]{40}$') -Message 'Blocked transition did not return a commit SHA'
-  Assert-LeaseReleased | Out-Null
-
-  Reset-GitFixture
-  $archivedTaskId = 'task-archived-closeout'
-  Set-TaskProjectionFixture -TaskId $archivedTaskId
-  $archivedRun = Acquire-TestLease -TaskId $archivedTaskId
-  $archivedCompleted = Invoke-Responsibility -Case 'commit-archived' -TaskId $archivedTaskId -RunId $archivedRun
-  Assert-Equal -Actual $archivedCompleted.ExitCode -Expected 0 -Message ("Archived transition invocation failed: json=$($archivedCompleted.Json | ConvertTo-Json -Compress -Depth 10) stderr=$($archivedCompleted.Stderr)")
-  Assert-Equal -Actual $archivedCompleted.Json.status -Expected 'completed' -Message 'Archived transition status mismatch'
-  Assert-Equal -Actual $archivedCompleted.Json.category -Expected 'success' -Message 'Archived transition category mismatch'
-  Assert-Equal -Actual $archivedCompleted.Json.taskState -Expected 'completed' -Message 'Archived transition taskState mismatch'
-  Assert-True -Condition ([string]$archivedCompleted.Json.commitSha -match '^[0-9a-f]{40}$') -Message 'Archived transition did not return a commit SHA'
-  Assert-LeaseReleased | Out-Null
-
-  Reset-GitFixture
-  $notificationTaskId = 'task-notification-failure'
-  Set-TaskProjectionFixture -TaskId $notificationTaskId
-  $notificationRun = Acquire-TestLease -TaskId $notificationTaskId
-  $notificationCompleted = Invoke-Responsibility `
-    -Case 'commit-archived' `
-    -TaskId $notificationTaskId `
-    -RunId $notificationRun `
-    -UseFakeNotification `
-    -NotificationExitCode 21
-  Assert-Equal -Actual $notificationCompleted.ExitCode -Expected 0 -Message 'Notification failure changed successful task exit code'
-  Assert-Equal -Actual $notificationCompleted.Json.status -Expected 'completed' -Message 'Notification failure changed successful task status'
-  Assert-LeaseReleased | Out-Null
-  Assert-True -Condition (Test-Path -LiteralPath $notificationTracePath) -Message 'Closed task did not invoke notification adapter'
-  $notificationArguments = @([IO.File]::ReadAllText($notificationTracePath) | ConvertFrom-Json)
-  foreach ($requiredArgument in @('TaskOutcome', $notificationTaskId, 'completed', [string]$notificationCompleted.Json.commitSha)) {
-    Assert-True -Condition ($requiredArgument -in $notificationArguments) -Message "Notification adapter missed argument: $requiredArgument"
-  }
-
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-review' -Route 'codex_review'
-  $reviewRun = Acquire-TestLease -TaskId 'task-review'
-  $reviewCompleted = Invoke-Responsibility -Case 'commit-archived' -TaskId 'task-review' -RunId $reviewRun -Route 'Review'
-  Assert-Equal -Actual $reviewCompleted.ExitCode -Expected 0 -Message 'Review invocation failed'
-  Assert-Equal -Actual $reviewCompleted.Json.status -Expected 'completed' -Message 'Review status mismatch'
-  $reviewPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-NormalRoutePrompt -Prompt $reviewPrompt -Context 'Normal review'
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
@@ -660,284 +462,44 @@ exit [int]$env:RESPONSIBILITY_TEST_NOTIFICATION_EXIT
   Assert-LeaseReleased | Out-Null
 
   Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-no-outcome'
-  $noOutcomeRun = Acquire-TestLease -TaskId 'task-no-outcome'
-  $noOutcome = Invoke-Responsibility -Case 'no-outcome' -TaskId 'task-no-outcome' -RunId $noOutcomeRun
-  Assert-True -Condition ($noOutcome.ExitCode -ne 0) -Message 'No-outcome invocation unexpectedly succeeded'
-  Assert-Equal -Actual $noOutcome.Json.status -Expected 'failed' -Message 'No-outcome status mismatch'
-  Assert-True -Condition ($null -eq $noOutcome.Json.commitSha) -Message 'No-outcome invocation invented a commit SHA'
-  Assert-LeaseReleased | Out-Null
-
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-interrupted'
-  $interruptedRun = Acquire-TestLease -TaskId 'task-interrupted'
-  $interrupted = Invoke-Responsibility -Case 'child-failed-with-change' -TaskId 'task-interrupted' -RunId $interruptedRun
-  Assert-True -Condition ($interrupted.ExitCode -ne 0) -Message 'Interrupted invocation unexpectedly succeeded'
-  Assert-Equal -Actual $interrupted.Json.status -Expected 'interrupted' -Message 'Interrupted status mismatch'
-  Assert-True -Condition (Test-Path -LiteralPath (Join-Path $gitRoot 'orphan.txt')) -Message 'Interrupted invocation removed the orphaned change'
+  Set-TaskProjectionFixture -TaskId 'task-maintenance-recovery' -DispatchState 'blocked'
+  $interruptedRun = Acquire-TestLease -TaskId 'QUEUE-MAINTENANCE'
+  $interrupted = Invoke-Responsibility `
+    -Case 'child-failed-with-change' `
+    -TaskId 'QUEUE-MAINTENANCE' `
+    -RunId $interruptedRun `
+    -Route 'QueueMaintenance'
+  Assert-True -Condition ($interrupted.ExitCode -ne 0) -Message 'Queue maintenance interruption unexpectedly succeeded'
+  Assert-Equal -Actual $interrupted.Json.status -Expected 'interrupted' -Message 'Queue maintenance interruption status mismatch'
+  Assert-True -Condition (Test-Path -LiteralPath (Join-Path $gitRoot 'orphan.txt')) -Message 'Queue maintenance interruption removed unfinished work'
   $interruptedState = Assert-LeaseReleased
-  Assert-Equal -Actual $interruptedState.state.recovery.trigger -Expected 'interruption' -Message 'Interrupted invocation did not save interruption recovery'
-  Assert-Equal -Actual $interruptedState.state.recovery.resumeId -Expected $sessionId -Message 'Interruption recovery lost session id'
-  Assert-True -Condition ('orphan.txt' -in @($interruptedState.state.recovery.changedPaths)) -Message 'Interruption recovery lost changed path'
+  Assert-Equal -Actual $interruptedState.state.recovery.trigger -Expected 'interruption' -Message 'Queue maintenance interruption did not save recovery'
+  Assert-Equal -Actual $interruptedState.state.recovery.resumeId -Expected $sessionId -Message 'Queue maintenance interruption lost session id'
+  Assert-True -Condition ('orphan.txt' -in @($interruptedState.state.recovery.changedPaths)) -Message 'Queue maintenance interruption lost changed path'
 
   $recoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
     StateRoot = $stateRoot
-    TaskId = 'task-interrupted'
+    TaskId = 'QUEUE-MAINTENANCE'
     Owner = 'codex'
     RepositoryRoot = $gitRoot
     ResumeRecovery = $true
   }
-  Assert-Equal -Actual $recoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Interrupted fixture could not reacquire recovery'
-  $invalidInterruptionResume = Invoke-Responsibility `
-    -Case 'commit-success' `
-    -TaskId 'task-interrupted' `
+  Assert-Equal -Actual $recoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Queue maintenance recovery could not be acquired'
+  $interruptionResumed = Invoke-Responsibility `
+    -Case 'commit-queue-corrected-empty' `
+    -TaskId 'QUEUE-MAINTENANCE' `
     -RunId $recoveryLease.runId `
     -Route 'Recovery' `
     -Action 'Resume' `
     -ResumeSessionId $sessionId
-  Assert-Equal -Actual $invalidInterruptionResume.ExitCode -Expected 2 -Message 'Ready interruption recovery returned wrong exit code'
-  Assert-Equal -Actual $invalidInterruptionResume.Json.status -Expected 'blocked' -Message 'Ready interruption recovery status mismatch'
-  $invalidInterruptionState = Assert-LeaseReleased
-  Assert-True -Condition ($null -ne $invalidInterruptionState.state.recovery) -Message 'Invalid interruption recovery was cleared'
-
-  $validInterruptionLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-interrupted'
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-  }
-  Assert-Equal -Actual $validInterruptionLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Interrupted fixture could not reacquire after invalid closeout'
-  $interruptionResumed = Invoke-Responsibility `
-    -Case 'commit-blocked' `
-    -TaskId 'task-interrupted' `
-    -RunId $validInterruptionLease.runId `
-    -Route 'Recovery' `
-    -Action 'Resume' `
-    -ResumeSessionId $sessionId
-  Assert-Equal -Actual $interruptionResumed.ExitCode -Expected 0 -Message 'Valid interruption recovery invocation failed'
-  Assert-Equal -Actual $interruptionResumed.Json.status -Expected 'completed' -Message 'Valid interruption recovery status mismatch'
-  Assert-Equal -Actual $interruptionResumed.Json.taskState -Expected 'blocked' -Message 'Valid interruption recovery taskState mismatch'
+  Assert-Equal -Actual $interruptionResumed.ExitCode -Expected 0 -Message 'Queue maintenance recovery invocation failed'
+  Assert-Equal -Actual $interruptionResumed.Json.status -Expected 'completed' -Message 'Queue maintenance recovery status mismatch'
+  Assert-Equal -Actual $interruptionResumed.Json.readyCount -Expected 0 -Message 'Queue maintenance recovery readyCount mismatch'
   $interruptionPrompt = [IO.File]::ReadAllText($tracePath)
   Assert-True -Condition ($interruptionPrompt.Contains('开发管理/自动工作流恢复规则.txt')) -Message 'Interruption recovery did not load recovery rules'
-  Assert-True -Condition ($interruptionPrompt.Contains('这是原 CLI session 的续跑，不创建新责任方。')) -Message 'Interruption recovery did not Resume the original session'
-  Assert-True -Condition ($interruptionPrompt.Contains('这是中断恢复，恢复原责任方的同一 TaskId')) -Message 'Interruption recovery lost its route wording'
-  Assert-LeaseReleased | Out-Null
-
-  Reset-GitFixture
-  Remove-Item -LiteralPath $childPidPath -Force -ErrorAction SilentlyContinue
-  Set-TaskProjectionFixture -TaskId 'task-timeout'
-  $timeoutRun = Acquire-TestLease -TaskId 'task-timeout'
-  $timeoutWatch = [Diagnostics.Stopwatch]::StartNew()
-  $timedOut = Invoke-Responsibility `
-    -Case 'timeout-with-change' `
-    -TaskId 'task-timeout' `
-    -RunId $timeoutRun `
-    -ResponsibilityTimeoutSeconds 1
-  $timeoutWatch.Stop()
-  Assert-True -Condition ($timedOut.ExitCode -ne 0) -Message 'Timed-out invocation unexpectedly succeeded'
-  Assert-Equal -Actual $timedOut.Json.status -Expected 'interrupted' -Message 'Timed-out invocation status mismatch'
-  Assert-Equal -Actual $timedOut.Json.sessionId -Expected $sessionId -Message 'Timed-out invocation lost live session id'
-  Assert-True -Condition ($timeoutWatch.Elapsed.TotalSeconds -lt 8) -Message 'Timed-out invocation did not honor its internal deadline'
-  Assert-True -Condition (Test-Path -LiteralPath (Join-Path $gitRoot 'orphan-timeout.txt')) -Message 'Timed-out invocation removed unfinished work'
-  Assert-True -Condition (Test-Path -LiteralPath $childPidPath) -Message 'Timed-out fixture did not record its child pid'
-  $timedOutChildPid = [int][IO.File]::ReadAllText($childPidPath)
-  Assert-True -Condition ($null -eq (Get-Process -Id $timedOutChildPid -ErrorAction SilentlyContinue)) -Message 'Timed-out responsibility child process leaked'
-  $timedOutState = Assert-LeaseReleased
-  Assert-Equal -Actual $timedOutState.state.recovery.trigger -Expected 'interruption' -Message 'Timed-out invocation did not save interruption recovery'
-  Assert-Equal -Actual $timedOutState.state.recovery.resumeId -Expected $sessionId -Message 'Timed-out recovery lost session id'
-  Assert-True -Condition ('orphan-timeout.txt' -in @($timedOutState.state.recovery.changedPaths)) -Message 'Timed-out recovery lost changed path'
-  $timedOutRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-timeout'
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-  }
-  Assert-Equal -Actual $timedOutRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Timed-out recovery could not be reacquired'
-  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $timedOutRecoveryLease.runId } | Out-Null
-  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $timedOutRecoveryLease.runId } | Out-Null
-
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-commit-with-residue'
-  $commitWithResidueRun = Acquire-TestLease -TaskId 'task-commit-with-residue'
-  $commitWithResidue = Invoke-Responsibility -Case 'unverified-commit-with-change' -TaskId 'task-commit-with-residue' -RunId $commitWithResidueRun
-  Assert-True -Condition ($commitWithResidue.ExitCode -ne 0) -Message 'Commit-with-residue invocation unexpectedly succeeded'
-  Assert-Equal -Actual $commitWithResidue.Json.status -Expected 'interrupted' -Message 'Commit-with-residue status mismatch'
-  Assert-True -Condition (Test-Path -LiteralPath (Join-Path $gitRoot 'orphan-after-commit.txt')) -Message 'Commit-with-residue invocation removed task residue'
-  $commitWithResidueState = Assert-LeaseReleased
-  Assert-Equal -Actual $commitWithResidueState.state.recovery.trigger -Expected 'interruption' -Message 'Commit-with-residue recovery trigger mismatch'
-  Assert-Equal -Actual $commitWithResidueState.state.recovery.resumeId -Expected $sessionId -Message 'Commit-with-residue recovery lost session id'
-  Assert-True -Condition ('orphan-after-commit.txt' -in @($commitWithResidueState.state.recovery.changedPaths)) -Message 'Commit-with-residue recovery lost changed path'
-
-  $commitWithResidueRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-commit-with-residue'
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-  }
-  Assert-Equal -Actual $commitWithResidueRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Commit-with-residue recovery could not be reacquired'
-  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $commitWithResidueRecoveryLease.runId } | Out-Null
-  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $commitWithResidueRecoveryLease.runId } | Out-Null
-
-  Reset-GitFixture
-  $lifecycleResidueTaskId = 'task-matching-lifecycle-residue'
-  Set-TaskProjectionFixture -TaskId $lifecycleResidueTaskId
-  $lifecycleResidueRun = Acquire-TestLease -TaskId $lifecycleResidueTaskId
-  $lifecycleResidue = Invoke-Responsibility `
-    -Case 'matching-commit-with-lifecycle-residue' `
-    -TaskId $lifecycleResidueTaskId `
-    -RunId $lifecycleResidueRun
-  Assert-True -Condition ($lifecycleResidue.ExitCode -ne 0) -Message 'Matching commit with lifecycle residue unexpectedly succeeded'
-  Assert-Equal -Actual $lifecycleResidue.Json.status -Expected 'interrupted' -Message 'Matching commit with lifecycle residue status mismatch'
-  Assert-True -Condition ($null -eq $lifecycleResidue.Json.commitSha) -Message 'Matching commit with lifecycle residue returned a verified commit'
-  $lifecycleResidueState = Assert-LeaseReleased
-  Assert-Equal -Actual $lifecycleResidueState.state.recovery.trigger -Expected 'interruption' -Message 'Matching commit with lifecycle residue recovery trigger mismatch'
-  Assert-Equal -Actual $lifecycleResidueState.state.recovery.resumeId -Expected $sessionId -Message 'Matching commit with lifecycle residue recovery lost session id'
-  Assert-Equal `
-    -Actual @($lifecycleResidueState.state.recovery.changedPaths).Count `
-    -Expected 3 `
-    -Message 'Matching commit with lifecycle residue recovery changed-path count mismatch'
-  foreach ($residuePath in @(
-      "开发管理/任务卡/$lifecycleResidueTaskId.txt",
-      '开发管理/当前任务队列.txt',
-      '开发管理/任务列表/自动化任务.txt'
-    )) {
-    & git -C $gitRoot diff --quiet -- $residuePath
-    $residueDiffExit = $LASTEXITCODE
-    Assert-Equal `
-      -Actual $residueDiffExit `
-      -Expected 1 `
-      -Message "Matching commit with lifecycle residue did not preserve uncommitted path: $residuePath"
-  }
-  $lifecycleResidueRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = $lifecycleResidueTaskId
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-  }
-  Assert-Equal -Actual $lifecycleResidueRecoveryLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Matching commit with lifecycle residue recovery could not be reacquired'
-  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $lifecycleResidueRecoveryLease.runId } | Out-Null
-  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $lifecycleResidueRecoveryLease.runId } | Out-Null
-
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-commit-only'
-  $commitOnlyRun = Acquire-TestLease -TaskId 'task-commit-only'
-  $commitOnly = Invoke-Responsibility -Case 'unverified-commit-only' -TaskId 'task-commit-only' -RunId $commitOnlyRun
-  Assert-True -Condition ($commitOnly.ExitCode -ne 0) -Message 'Commit-only invocation unexpectedly succeeded'
-  Assert-Equal -Actual $commitOnly.Json.status -Expected 'blocked' -Message 'Commit-only status mismatch'
-  Assert-Equal -Actual $commitOnly.Json.detailCode -Expected 'unverified_commit_shape' -Message 'Commit-only detail code mismatch'
-  $commitOnlyState = Assert-LeaseReleased
-  Assert-Equal -Actual $commitOnlyState.state.lastResult.category -Expected 'blocked' -Message 'Commit-only result category mismatch'
-  Assert-Equal -Actual $commitOnlyState.state.lastResult.detailCode -Expected 'unverified_commit_shape' -Message 'Commit-only recorded detail mismatch'
-  Assert-True -Condition ($null -eq $commitOnlyState.state.recovery) -Message 'Commit-only invocation invented recovery'
-
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-two-commits-only'
-  $twoCommitsOnlyRun = Acquire-TestLease -TaskId 'task-two-commits-only'
-  $twoCommitsOnly = Invoke-Responsibility -Case 'unverified-two-commits-only' -TaskId 'task-two-commits-only' -RunId $twoCommitsOnlyRun
-  Assert-True -Condition ($twoCommitsOnly.ExitCode -ne 0) -Message 'Two-commit-only invocation unexpectedly succeeded'
-  Assert-Equal -Actual $twoCommitsOnly.Json.status -Expected 'blocked' -Message 'Two-commit-only status mismatch'
-  Assert-Equal -Actual $twoCommitsOnly.Json.detailCode -Expected 'unverified_commit_shape' -Message 'Two-commit-only detail code mismatch'
-  $twoCommitsOnlyState = Assert-LeaseReleased
-  Assert-Equal -Actual $twoCommitsOnlyState.state.lastResult.category -Expected 'blocked' -Message 'Two-commit-only result category mismatch'
-  Assert-Equal -Actual $twoCommitsOnlyState.state.lastResult.detailCode -Expected 'unverified_commit_shape' -Message 'Two-commit-only recorded detail mismatch'
-  Assert-True -Condition ($null -eq $twoCommitsOnlyState.state.recovery) -Message 'Two-commit-only invocation invented recovery'
-
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-removes-baseline'
-  [IO.File]::WriteAllText((Join-Path $gitRoot 'seed.txt'), 'modified before resume', [Text.UTF8Encoding]::new($false))
-  [IO.File]::WriteAllText((Join-Path $gitRoot 'existing-untracked.txt'), 'existing before resume', [Text.UTF8Encoding]::new($false))
-  $removedBaselineRun = Acquire-TestLease -TaskId 'task-removes-baseline'
-  $removedBaseline = Invoke-Responsibility -Case 'child-failed-removes-baseline-changes' -TaskId 'task-removes-baseline' -RunId $removedBaselineRun
-  Assert-True -Condition ($removedBaseline.ExitCode -ne 0) -Message 'Baseline-removal invocation unexpectedly succeeded'
-  Assert-Equal -Actual $removedBaseline.Json.status -Expected 'interrupted' -Message 'Baseline-removal invocation did not preserve interruption recovery'
-  $removedBaselineState = Assert-LeaseReleased
-  Assert-Equal -Actual $removedBaselineState.state.recovery.trigger -Expected 'interruption' -Message 'Baseline-removal recovery trigger mismatch'
-  Assert-True -Condition ('seed.txt' -in @($removedBaselineState.state.recovery.changedPaths)) -Message 'Restored tracked file was not recorded as changed by the resume'
-  Assert-True -Condition ('existing-untracked.txt' -in @($removedBaselineState.state.recovery.changedPaths)) -Message 'Deleted untracked file was not recorded as changed by the resume'
-  $removedBaselineRecoveryLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-removes-baseline'
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-  }
-  Invoke-LeaseJson -Action ClearRecovery -Parameters @{ StateRoot = $stateRoot; RunId = $removedBaselineRecoveryLease.runId } | Out-Null
-  Invoke-LeaseJson -Action Release -Parameters @{ StateRoot = $stateRoot; RunId = $removedBaselineRecoveryLease.runId } | Out-Null
-  Reset-GitFixture
-  Set-TaskProjectionFixture -TaskId 'task-decision'
-  $decisionRun = Acquire-TestLease -TaskId 'task-decision'
-  $waiting = Invoke-Responsibility -Case 'decision-waiting' -TaskId 'task-decision' -RunId $decisionRun
-  Assert-Equal -Actual $waiting.ExitCode -Expected 0 -Message 'Decision waiting invocation failed'
-  Assert-Equal -Actual $waiting.Json.status -Expected 'waiting_decision' -Message 'Decision waiting status mismatch'
-  $waitingState = Assert-LeaseReleased
-  Assert-Equal -Actual $waitingState.state.recovery.trigger -Expected 'decision' -Message 'Decision recovery trigger mismatch'
-
-  $decisionResumeLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-decision'
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-    DecisionId = 'decision-invoker-test'
-  }
-  Assert-Equal -Actual $decisionResumeLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Decision recovery could not be reacquired'
-  $oldSessionDecision = Invoke-Responsibility `
-    -Case 'commit-success' `
-    -TaskId 'task-decision' `
-    -RunId $decisionResumeLease.runId `
-    -Route 'Recovery' `
-    -Action 'Resume' `
-    -ResumeSessionId $sessionId `
-    -DecisionId 'decision-invoker-test' `
-    -DecisionOption 'A'
-  Assert-Equal -Actual $oldSessionDecision.ExitCode -Expected 1 -Message 'Decision reply incorrectly accepted an original-session resume'
-  Assert-Equal -Actual $oldSessionDecision.Json.status -Expected 'failed' -Message 'Rejected original-session decision returned wrong status'
-  $invalidDecisionResume = Invoke-Responsibility `
-    -Case 'commit-success' `
-    -TaskId 'task-decision' `
-    -RunId $decisionResumeLease.runId `
-    -Route 'Recovery' `
-    -Action 'Start' `
-    -DecisionId 'decision-invoker-test' `
-    -DecisionOption 'A'
-  Assert-Equal -Actual $invalidDecisionResume.ExitCode -Expected 2 -Message 'Ready decision recovery returned wrong exit code'
-  Assert-Equal -Actual $invalidDecisionResume.Json.status -Expected 'blocked' -Message 'Ready decision recovery status mismatch'
-  $invalidDecisionState = Assert-LeaseReleased
-  Assert-True -Condition ($null -ne $invalidDecisionState.state.recovery) -Message 'Invalid decision recovery was cleared'
-
-  $validDecisionLease = Invoke-LeaseJson -Action Acquire -Parameters @{
-    StateRoot = $stateRoot
-    TaskId = 'task-decision'
-    Owner = 'codex'
-    RepositoryRoot = $gitRoot
-    ResumeRecovery = $true
-    DecisionId = 'decision-invoker-test'
-  }
-  Assert-Equal -Actual $validDecisionLease.status -Expected 'RECOVERY_ACQUIRED' -Message 'Decision recovery could not reacquire after invalid closeout'
-  $resumed = Invoke-Responsibility `
-    -Case 'commit-blocked' `
-    -TaskId 'task-decision' `
-    -RunId $validDecisionLease.runId `
-    -Route 'Recovery' `
-    -Action 'Start' `
-    -DecisionId 'decision-invoker-test' `
-    -DecisionOption 'A'
-  Assert-Equal -Actual $resumed.ExitCode -Expected 0 -Message 'Valid fresh decision invocation failed'
-  Assert-Equal -Actual $resumed.Json.status -Expected 'completed' -Message 'Valid fresh decision invocation status mismatch'
-  Assert-Equal -Actual $resumed.Json.taskState -Expected 'blocked' -Message 'Valid decision recovery taskState mismatch'
-  $decisionPrompt = [IO.File]::ReadAllText($tracePath)
-  Assert-True -Condition ($decisionPrompt.StartsWith("[TZG_DECISION_REPLY runId=$($validDecisionLease.runId)]`nA")) -Message 'Decision option was not transported with the fresh-session protocol'
-  Assert-True -Condition ($decisionPrompt.Contains('这是新的 CLI-native 责任方会话。')) -Message 'Decision reply did not start a new responsibility session'
-  Assert-True `
-    -Condition $decisionPrompt.Contains('开发管理/自动工作流恢复规则.txt') `
-    -Message 'Recovery route did not load recovery rules'
-  Assert-True -Condition ($decisionPrompt.Contains('这是带决定回复的新责任方会话')) -Message 'Decision recovery lost its fresh-session route wording'
-  $resumedState = Assert-LeaseReleased
-  Assert-True -Condition ($null -eq $resumedState.state.recovery) -Message 'Completed decision resume did not clear recovery'
+  Assert-True -Condition ($interruptionPrompt.Contains('这是原 CLI session 的续跑，不创建新责任方。')) -Message 'Interruption recovery did not resume the original session'
+  $interruptionState = Assert-LeaseReleased
+  Assert-True -Condition ($null -eq $interruptionState.state.recovery) -Message 'Completed interruption recovery was not cleared'
 
   Reset-GitFixture
   Set-TaskProjectionFixture -TaskId 'task-decision-stdin'
@@ -979,12 +541,19 @@ exit [int]$env:RESPONSIBILITY_TEST_NOTIFICATION_EXIT
     -Route 'Recovery' `
     -Action 'Start' `
     -DecisionId 'decision-invoker-stdin' `
-    -DecisionInput $customDecision
+    -DecisionInput $customDecision `
+    -UseFakeNotification `
+    -NotificationExitCode 21
   Assert-Equal -Actual $stdinResumed.ExitCode -Expected 0 -Message 'Stdin fresh decision invocation failed'
   Assert-Equal -Actual $stdinResumed.Json.taskState -Expected 'blocked' -Message 'Stdin fresh decision taskState mismatch'
   $stdinDecisionPrompt = [IO.File]::ReadAllText($tracePath)
   Assert-True -Condition ($stdinDecisionPrompt.StartsWith("[TZG_DECISION_REPLY runId=$($stdinResumeLease.runId)]`n$customDecision")) -Message 'Signed bridge decision was not transported through stdin'
   Assert-LeaseReleased | Out-Null
+  Assert-True -Condition (Test-Path -LiteralPath $notificationTracePath) -Message 'Completed task-bearing recovery did not invoke notification adapter'
+  $notificationArguments = @([IO.File]::ReadAllText($notificationTracePath) | ConvertFrom-Json)
+  foreach ($requiredArgument in @('TaskOutcome', 'task-decision-stdin', 'completed', [string]$stdinResumed.Json.commitSha)) {
+    Assert-True -Condition ($requiredArgument -in $notificationArguments) -Message "Notification adapter missed recovery argument: $requiredArgument"
+  }
 
   Write-Output 'test-invoke-codex-responsibility: OK'
 } finally {

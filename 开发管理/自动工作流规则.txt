@@ -21,6 +21,7 @@
 ## 通用 lanes[] 与生产配置
 
 - 生产配置由 `tools/automation-lane-core.ps1` 返回：`maxConcurrent=2`，只启用 `codex` 与 `deepseek`。
+- Worker 只加载 `tools/automation-lane-core.ps1`；batch coordinator 另加载 `tools/automation-lane-integration.ps1`。core 负责配置、路径、schema、任务读取、选题、Worker 终态、候选验证与私有 JSON；integration 负责集成预检、共享投影合并、补丁应用、后置条件、finalizer、快照恢复与 canonical integration。
 - `codex` 接受 `codex_execute`、`codex_review`；`deepseek` 接受 `external_execute` 且 `owner=deepseek`，身份固定为 DeepSeek V4 Flash。
 - lane 保存 `laneId`、owner、identity、acceptedRoutes、invoker、taskClaim、worktree、branch、baseCommit、workerPaths、coordinatorPaths、factPaths、process/session、workerTerminal、integrationState 和原队列序号。
 - 数据结构、选择算法和两两冲突检查不得依赖两个固定数组位置。测试可注入模拟第三 lane；生产配置不得包含虚假第三 AI。
@@ -33,6 +34,7 @@
 4. 没有安全第二项时无损退化为单路；一路失败、blocked 或 needs_decision 不取消另一独立 lane。
 5. claim 在 `Show.state.batch.lanes[].taskClaim` 可见。手动选题必须跳过已 claim 的同一任务，除非普通管理上下文明确取消该 lane。
 6. 队列为空时仍只运行一次既有 `QueueMaintenance` 串行入口，本轮不执行新业务任务；维护不占用第二个业务 lane，也不滚动补位。
+7. 旧普通 `Execution`、`Review` 与 external responsibility 入口已退役；仅 QueueMaintenance 与旧 decision/interruption Recovery 继续使用 `tools/invoke-codex-responsibility.ps1`，不得把该入口重新用于新业务 lane。
 
 ## Worker 路径与候选提交合同
 
