@@ -1,16 +1,15 @@
-# 每小时自动工作流薄路由
+# 每小时自动工作流多通道薄路由
 
-你只负责读取调度状态、选择一个责任方并报告已核验结果；不得实施业务、代做验证、stage、commit 或复审。模型身份按 `AGENTS.md` 的 request metadata 规则确认。
+你只负责读取控制面、调用固定 batch coordinator 并报告已核验结果；不得实施业务、代做领域验证、stage、commit、复审或临时拼装 Worker/集成命令。模型身份按 `AGENTS.md` 的 request metadata 规则确认。
 
-1. 每轮第一项通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。只按返回的 `leaseStatus` 判断租约：`active` 才报告 occupied；`expired` 且无 recovery 时继续调度并由 `Acquire` 替换过期租约。逻辑暂停时立即输出 `suspended` 并结束，不读取任何项目路由源、不取得租约、不启动责任方。
-2. `Show` 返回 recovery 时才读取 `开发管理/自动工作流恢复规则.txt`，按该文件核对并映射 `Recovery`；没有 recovery 时不得读取恢复规则。恢复未满足启动条件时只报告 recovery 状态并结束。
-3. 无 recovery 时读取 `开发管理/自动工作流规则.txt` 与 `开发管理/当前任务队列.txt`，按行顺序核对任务卡的 ready 投影、route、owner、当前执行器可用性和当前路径冲突，选择第一项当前可安全执行的任务。临时运行冲突只跳过本轮并继续下一行，不修改任务卡或队列顺序；明确 blocker 或投影不一致时停止业务执行并进入状态纠正事件。每轮只为一个 TaskId 调用 `Acquire`。
-4. `codex_execute -> Execution`，`codex_review -> Review`，外部 route 调用既有 wrapper；仅队列为空时调用一次 `QueueMaintenance`，本轮不执行新任务。Codex 路由只调用 `tools/invoke-codex-responsibility.ps1`；队列维护接受固定调用器返回的结构化 `readyCount`，不另用 `rg` 无匹配证明不存在。
-5. 外部 route 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选。owner 映射固定为 `owner=deepseek -> DeepSeek V4 Flash`、`owner=claude -> native Claude Code`：前者先读进程 `ANTHROPIC_BASE_URL`，为空时只补读 `~/.claude/settings.json`，并只接受 `http://127.0.0.1:15721` 同源地址；后者使用原生 Claude Code，不得改接该 DeepSeek 端点。identity 与 owner 不匹配时不启动外部 CLI，记录 failed 并释放当前租约。
-6. 固定调用器或外部 wrapper 的 `tools.shell_command` 不得使用 180000 毫秒（三分钟）硬超时；`timeout_ms` 必须设为 3300000 毫秒作为单轮上限，与现有 3600 秒租约对齐并保留 5 分钟边界。
-7. 调用返回 `Script running with cell ID ...` 时，保留同一 cell ID 并继续调用 `functions.wait`；空输出、yield 或尚未返回都不是终态，不得据此结束本轮、记录结果、释放租约或启动第二责任方。等待同一次调用返回，不重新启动。
-8. Codex 路线由固定调用器根据 Git 与 runtime 统一收尾。外部 wrapper 只会在固定入口已通过统一元数据契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 与九个结构化通知子字段后返回 completed；控制器不再读取提交正文或临时拼装元数据正则。控制器继续核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、handoff 无 Automation 元数据，以及相对启动基线没有新增未提交路径，再运行 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该检查只验证生命周期/投影，不读取业务 diff 或重跑领域验证。全部成立后依次调用 `RecordResult -Category success` 与 `Release`，再调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status pending_review` 并传入同一 TaskId、runId 与已核验 `businessCommit`。
-9. 外部终态无效且没有相对基线新增未提交路径时，控制器调用 `RecordResult -Category failed` 后 `Release`，再对非 `QUEUE-MAINTENANCE` 任务调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome -Status failed` 并传入稳定 detailCode；存在新增未提交路径时保留现场和租约，报告人工阻塞并结束，不伪造 recovery，不启动第二责任方。飞书返回任何失败都不得改变已经记录的业务终态、租约、recovery 或退出类别，不自动重试。
-10. 相同稳定 fingerprint 连续两轮达到规则阈值时只报告逻辑暂停，自动化任务不得管理自身配置。最终只报告 route、TaskId、category、taskState 或 readyCount、sessionId、commitSha 或 recovery 状态。
+1. 每轮第一项调用 `tools/hourly-automation-lease.ps1 -Action Show`。`pauseRequested=true` 时立即输出 `suspended`，不读取队列或路由源。
+2. `Show.state.batch != null` 时不得选择新任务：开放 batch 调用 `tools/invoke-automation-lane-batch.ps1 -Action Recover`；已关闭且保留证据的 batch 只报告 batchId、laneId、TaskId、workerStatus、integrationState 和需要的普通管理操作。
+3. `Show.state.batch == null` 且存在旧 recovery 时才读取 `开发管理/自动工作流恢复规则.txt`，按匹配入口恢复；没有旧 recovery 时不得读取恢复规则。
+4. 无 batch/recovery 时读取 `开发管理/自动工作流规则.txt` 和有序队列。队列非空只调用 `tools/invoke-automation-lane-batch.ps1 -Action Start -Model <已核验模型>`；固定 coordinator 负责重读队列、取得协调器 lease、选择/claim、为已选 lane 创建各自隔离 worktree、启动 Codex 与 DeepSeek V4 Flash lane、按完成事件串行集成、记录结果和清理。
+5. 生产配置只启用 `codex`、`deepseek`，`maxConcurrent=2`。每 lane 每 batch 最多一项，不滚动补位；一路失败或需要决定不得取消另一路独立工作。
+6. 队列为空时只调用一次既有 `QueueMaintenance` 串行入口，本轮不执行新增业务任务。
+7. 外层 `tools.shell_command` 不得使用 180000 毫秒硬超时；使用 3300000 毫秒。返回 `Script running with cell ID ...` 时保留同一 cell ID 并调用 `functions.wait`；空输出、yield 或未返回不是终态，不得重新启动或开启第二批。
+8. 最终只报告 batchId，以及每 lane 的 route、TaskId、workerStatus、integrationState、sessionId、canonical businessCommit/handoffCommit 或稳定 detailCode。候选 SHA 不得当成正式交付或成功通知。
+9. `held_conflict`、`stale_selection`、`needs_decision`、证据不一致或实时 prompt 未同步时保持现场并明确要求普通管理上下文处理；不得自动 stash、reset、checkout、clean、revert、删除证据或编辑 automation TOML。
 
-不硬编码具体任务、决定、复审编号、业务路径、实现步骤或业务检查；不创建替代自动化，不编辑 automation TOML，不自动 stash、reset、checkout、clean、revert 或推送远端。
+不硬编码具体任务、决定、复审编号、业务路径或实现步骤；不创建替代自动化，不直接调用 Codex/Claude CLI，不推送远端。

@@ -47,19 +47,19 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 4. `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 行为。
 5. 手动选题前在输出与 automation memory 记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
 
-### 每小时控制器内的 Claude / DeepSeek wrapper
+### 每小时控制器内的 DeepSeek lane wrapper
 
-`tzg-hourly-controller` 可以在同一租约内串行调用 Claude CLI 作为外部执行器，但这不会恢复 WF3，也不会赋予子进程 Codex 权限。自动 wrapper 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。owner 与已核验执行器不一致时不得启动，也不得改派另一 owner。
+`tzg-hourly-controller` 通过通用 `lanes[]` 同时运行独立 Codex 与 DeepSeek Worker。外部 wrapper 只消费协调器已经 claim 的 `external_execute/owner=deepseek` 同一任务卡；`owner=deepseek -> DeepSeek V4 Flash`，不得重新扫描候选、改派 owner 或领取复审。
 
-调度器必须先真实选中合法外部候选、取得单写入租约并给出任务授权范围，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份；无合法外部候选时不得预检或空转调用。外部责任方启动后自行读取任务卡与必要事实源，并端到端完成：
+协调器取得唯一 lease、核对 `workerPaths/coordinatorPaths` 并创建 DeepSeek 专用 worktree 后，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份。DeepSeek Worker：
 
-1. 调用 `tools/automation-workspace-guard.ps1` 记录基线，确认授权范围与人工改动不冲突。
-2. 若任务卡 `stateReason` 带有 `REV-*` 问题编号或明确说明由复审退回，修改前先读 `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 中同一问题编号的最新条目和 `开发管理/AI合作沟通.txt` 当前同一卡条目；只消费该匹配项，不读取无关审核历史。最新条目的定向返工范围是原任务卡的收窄边界，不得只按原卡重新生成。
-3. 实施修改、运行任务直接要求的最小充分验证并标记「⚠️ 已修改/未审核」；成功后把同一任务卡更新为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，在原队列行就地同步且保持同一 ID、标题和正文，不创建第二张复审卡。
-4. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、上述同一任务卡/队列状态和直接验证结果，保持 `State: pending_review`。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain` 分别传入事实字段；后四项严格使用 `问题=<原问题>；完成=<具体交付>`、`影响=<实际行为变化>；边界=<明确未涉及范围>`、`验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>` 的单行结构。九个子字段都非空且由本任务事实支持；三个通俗子字段各不超过 200 个 Unicode code point，避免只有参与开发才知道的实现细节。finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
-5. 随后只修改 `开发管理/AI合作沟通.txt`，登记真实 `businessCommit` SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`；第二次不得重跑领域检查。`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
+1. 只在传入 worktree 和 `workerPaths` 内实施、验证并标记「⚠️ 已修改/未审核」；不得修改 task card、队列、backlog 或交接文件。
+2. 若 `stateReason` 命中 `REV-*`，仍只读取审核入口和同编号最新返工证据，遵守收窄边界。
+3. 成功时创建一个只含 `workerPaths` 的内部候选提交，返回 candidate SHA、实际路径、验证、正式提交事实、`codex_review/codex/ready` transition 和 `coordinatorPaths` 内的完整机械变更提案；候选不使用正式 Automation 元数据，不通知。
+4. 固定串行集成器重新核验 claim、父提交、路径、人工变化和任务投影后，应用候选与管理提案，创建 `State: pending_review` 的 canonical businessCommit；随后只更新 `开发管理/AI合作沟通.txt` 创建 handoffCommit。handoff 不使用 Automation 标记，不重复领域验证。
+5. completed、needs_decision、blocked、failed 都绑定 batchId/laneId/taskId/identity/session。DeepSeek 不得自审、扩大授权、另行派发、stash、reset、checkout、clean 或推送。
 
-外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不得读取业务 diff、重跑业务验证、stage 或 commit。控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。外部责任方不得自审、扩大授权路径、并行派发、stash、reset、checkout、clean 或推送远端。需要负责人决定时，外部 CLI 保存原 session 后退出，并由原 session 续跑。
+只有固定集成器可以运行 `ExternalPendingReview` 后置条件、创建正式两个提交、更新 runtime、释放协调器 lease 和发送结果通知。
 
 ## 验证成本控制（适用于所有工作）
 
@@ -72,7 +72,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 ## 交接
 
 1. 派工时明确主责、任务类型、允许修改范围、必读事实源和验证命令；外部责任方只接受有序队列已选中的 `external_execute` 同一任务卡。
-2. DeepSeek 的修改只能标「⚠️ 已修改/未审核」，不得预填审核方结论；外部执行任务按本文件的 `businessCommit` + `handoffCommit` 边界自行创建本地提交。
+2. DeepSeek 的修改只能标「⚠️ 已修改/未审核」，不得预填审核方结论；自动 lane 只创建 worker candidate，由固定集成器创建正式 `businessCommit` + `handoffCommit`。手动 DeepSeek 仍按手动 worktree 与交接边界提交。
 3. 需要审核或判断时，DeepSeek 在 `AI合作沟通.txt` 写入短 ID、方向、任务/提交范围、修改文件、已验证、未验证、残留风险、请求判断和建议下一步。
 4. Codex 消费交接时先读审核入口和匹配条目，再以 diff、事实源和可重复命令独立验证。
 5. 长期阻塞项进入未通过清单或 backlog；已处理且无后续价值的交接条目移入归档。
@@ -87,7 +87,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 2. 纯 `1` / `2` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`；选中行后读取同一 ID 的 `开发管理/任务卡/<ID>.txt`。纯 `2` 再按审核入口加载该项需要的未通过条目、交接证据和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
 4. 纯 `1` 从队首向后选择当前 AI 可执行的第一项 `codex_execute` 或 `external_execute`；不消费 `codex_review`。
-5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用自动化 `Show` 并重读同一任务卡与队列；只有 `lease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成。任一条件不满足就停止合并并报告，不覆盖主工作区、不修改自动化 runtime。控制器启动的固定责任方和外部 wrapper 仍直接使用租约覆盖的传入主工作区。
+5. 手动 Codex / DeepSeek / Claude 纯 `1` 先跳过 `Show.state.batch.lanes[].taskClaim` 已认领任务；选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree。合并前重新 `Show` 并重读卡与队列；只有 `lease=null`、`batch=null`、原投影未变且目标路径不与主工作区人工改动冲突时才集成。自动 Worker 使用协调器传入的独立 worktree，只提交 worker candidate；不得直接使用主工作区。
 6. 纯 `2` 从队首向后选择第一项 `codex_review`；DeepSeek / Claude 不得自审。
 7. 路径冲突或执行器暂不可用时可在本轮继续检查下一行，但不修改顺序；明确逻辑阻塞必须先转状态并移出队列。
 8. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。

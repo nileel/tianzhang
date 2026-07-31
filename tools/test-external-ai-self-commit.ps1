@@ -181,7 +181,7 @@ try {
     $taskBacklogRelativePath
   )
   $taskMetadata = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     id = $taskId
     title = '外部责任方同卡待复审转换'
     priority = 'P0'
@@ -194,6 +194,16 @@ try {
     stateReason = $null
     expectedPaths = @(
       'fixtures/generated-business.txt'
+      $taskCardRelativePath
+      $taskArchiveRelativePath
+      '开发管理/当前任务队列.txt'
+      $taskBacklogRelativePath
+      '开发管理/AI合作沟通.txt'
+    )
+    workerPaths = @(
+      'fixtures/generated-business.txt'
+    )
+    coordinatorPaths = @(
       $taskCardRelativePath
       $taskArchiveRelativePath
       '开发管理/当前任务队列.txt'

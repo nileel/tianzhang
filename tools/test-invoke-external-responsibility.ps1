@@ -133,7 +133,7 @@ try {
   Write-Utf8 -Path (Join-Path $repositoryRoot '开发管理/AI合作沟通.txt') -Text '# AI合作沟通'
 
   $metadata = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     id = 'TASK-EXT-001'
     title = '固定外部入口测试'
     priority = 'P0'
@@ -146,6 +146,16 @@ try {
     stateReason = '验证固定外部入口'
     expectedPaths = @(
       'fixtures/generated-business.txt'
+      '开发管理/任务列表/自动化任务.txt'
+      '开发管理/当前任务队列.txt'
+      '开发管理/AI合作沟通.txt'
+      '开发管理/任务卡/TASK-EXT-001.txt'
+      '开发管理/任务归档/TASK-EXT-001.txt'
+    )
+    workerPaths = @(
+      'fixtures/generated-business.txt'
+    )
+    coordinatorPaths = @(
       '开发管理/任务列表/自动化任务.txt'
       '开发管理/当前任务队列.txt'
       '开发管理/AI合作沟通.txt'

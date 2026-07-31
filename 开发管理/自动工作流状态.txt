@@ -1,13 +1,14 @@
 # 自动工作流状态（✅ 已审核）
 
-> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、recovery 与 lastResult 以本机 schema 3 runtime 为准；业务结果以 Git 为准。
+> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、batch、recovery 与 lastResult 以本机 schema 4 runtime 为准；业务结果以 Git 为准。
 
 ## 已确认架构
 
 - 唯一写入入口为 `tzg-hourly-controller`；旧 WF1、WF3、WF4 已归档。每日简报只读。
-- 权威设计为 `docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
-- 旧 controller v2、机器任务注册表、manifest 和中央状态机已退出活动代码；单写入租约、workspace guard、CLI-native session、决策恢复和 Git 元数据保留。
-- 外部 AI 继续创建 `businessCommit` 与仅含交接登记的 `handoffCommit`，后者不重复统计。
+- 权威设计为 `docs/superpowers/specs/2026-07-31-parallel-automation-lanes-design.md`。
+- 仓库内已迁移为 schema-4 协调器 lease、通用 `lanes[]`、显式 task claim、隔离 Worker worktree 和固定串行集成器；生产配置只允许 Codex 与 DeepSeek V4 Flash，`maxConcurrent=2`。
+- Worker 只创建 workerPaths candidate；固定集成器创建 canonical businessCommit。DeepSeek 任务随后形成只含交接登记的 handoffCommit，继续进入 Codex 独立复审。
+- 2026-07-31：自动化管理能力在本次实施上下文不可用，实时 `tzg-hourly-controller` prompt 尚未同步；并行生产模式未部署、不得启用。仓库实现通过检查后须由普通管理上下文暂停控制器、同步完整 prompt、运行无业务 canary，再恢复小时调度。
 
 ## 当前人工阻塞与恢复所有权
 

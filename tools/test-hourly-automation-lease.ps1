@@ -199,7 +199,7 @@ try {
   [IO.File]::WriteAllText($legacyStatePath, ($legacyState | ConvertTo-Json -Compress -Depth 10), [Text.UTF8Encoding]::new($false))
   Set-PrivatePathAcl -Path $legacyStatePath
   $migratedLegacy = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $legacyStateRoot }
-  Assert-Equal -Actual $migratedLegacy.Json.state.schemaVersion -Expected 3 -Message 'Legacy runtime was not migrated in memory'
+  Assert-Equal -Actual $migratedLegacy.Json.state.schemaVersion -Expected 4 -Message 'Legacy runtime was not migrated in memory'
   Assert-True -Condition ($null -eq $migratedLegacy.Json.state.PSObject.Properties['pendingResumes']) -Message 'Legacy migration retained the removed pending resume queue'
   Assert-True -Condition ($null -eq $migratedLegacy.Json.state.lastResult.runId) -Message 'Legacy result migration invented a run id'
 
@@ -233,7 +233,7 @@ try {
   [IO.File]::WriteAllText($legacyV2StatePath, ($legacyV2State | ConvertTo-Json -Compress -Depth 10), [Text.UTF8Encoding]::new($false))
   Set-PrivatePathAcl -Path $legacyV2StatePath
   $migratedLegacyV2 = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $legacyV2StateRoot }
-  Assert-Equal -Actual $migratedLegacyV2.Json.state.schemaVersion -Expected 3 -Message 'Schema v2 runtime was not migrated in memory'
+  Assert-Equal -Actual $migratedLegacyV2.Json.state.schemaVersion -Expected 4 -Message 'Schema v2 runtime was not migrated in memory'
   Assert-True -Condition ($null -eq $migratedLegacyV2.Json.state.PSObject.Properties['pendingResumes']) -Message 'Schema v2 migration retained the removed pending resume queue'
   Assert-True -Condition ($null -eq $migratedLegacyV2.Json.state.recovery.PSObject.Properties['resumeKind']) -Message 'Schema v2 decision migration retained the resume kind'
   Assert-True -Condition ($null -eq $migratedLegacyV2.Json.state.recovery.PSObject.Properties['resumeId']) -Message 'Schema v2 decision migration retained the resume id'
@@ -678,9 +678,9 @@ try {
 
   $finalShow = Invoke-LeaseTool -Action Show -Parameters @{ StateRoot = $stateRoot }
   $topLevelNames = @($finalShow.Json.state.PSObject.Properties.Name | Sort-Object)
-  $expectedTopLevelNames = @('blocking', 'lastResult', 'lease', 'recovery', 'schemaVersion') | Sort-Object
+  $expectedTopLevelNames = @('batch', 'blocking', 'lastResult', 'lease', 'recovery', 'schemaVersion') | Sort-Object
   Assert-Equal -Actual ($topLevelNames -join ',') -Expected ($expectedTopLevelNames -join ',') -Message 'Runtime state schema has unexpected top-level fields'
-  Assert-Equal -Actual $finalShow.Json.state.schemaVersion -Expected 3 -Message 'Runtime schema version mismatch'
+  Assert-Equal -Actual $finalShow.Json.state.schemaVersion -Expected 4 -Message 'Runtime schema version mismatch'
   Assert-True -Condition ($null -eq $finalShow.Json.state.lease) -Message 'Final lease was not released'
   Assert-True -Condition ($null -eq $finalShow.Json.state.recovery) -Message 'Final recovery was not cleared'
 

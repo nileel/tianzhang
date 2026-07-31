@@ -81,7 +81,7 @@ function Set-TaskProjectionFixture {
   $title = "Invoker fixture $TaskId"
   $stateReason = if ($DispatchState -ceq 'blocked') { 'test blocked' } else { $null }
   $metadata = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     id = $TaskId
     title = $title
     priority = 'P2'
@@ -94,6 +94,15 @@ function Set-TaskProjectionFixture {
     stateReason = $stateReason
     expectedPaths = @(
       'result.txt'
+      '开发管理/当前任务队列.txt'
+      '开发管理/任务列表/自动化任务.txt'
+      "开发管理/任务卡/$TaskId.txt"
+      "开发管理/任务归档/$TaskId.txt"
+    )
+    workerPaths = @(
+      'result.txt'
+    )
+    coordinatorPaths = @(
       '开发管理/当前任务队列.txt'
       '开发管理/任务列表/自动化任务.txt'
       "开发管理/任务卡/$TaskId.txt"

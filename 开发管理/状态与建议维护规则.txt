@@ -18,11 +18,11 @@
 
 ## 自动工作流分层
 
-- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
+- 控制器调度：`Show` 返回未关闭 batch 时先恢复同一 batch；没有 batch 但返回 existing legacy recovery 时才路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 
 1. `自动工作流规则.txt` 是稳定策略事实源；控制器提示只引用，不复制实现规则。
-2. 本机 schema-3 runtime 只保存租约、条件性 recovery 指针、blocking fingerprint / count / pause flag 和 last result；实时自动化配置不复制到项目状态文件。
+2. 本机 schema-4 runtime 只保存协调器租约、未关闭 batch 与通用 lanes/task claims、条件性 legacy recovery 指针、blocking fingerprint / count / pause flag 和 last result；实时自动化配置不复制到项目状态文件。
 3. `自动工作流状态.txt` 只记录需长期保留的迁移事实、人工阻塞、恢复所有权和已核验提交；普通空转、有效锁和逐轮轨迹不写入 Git。
 4. 队列只在新任务/切片进入、解除阻塞、解冻、优先级/主责/授权/固定顺序变化、完成、阻塞、待决定、等待回复、复审转换、取消或队列为空时维护。
 5. 新任务或重新 ready 的任务一次性按“用户明确顺序 → P 优先级 → 高优先级下游解锁量 → 等待时间 → 稳定 ID”插入固定位置；普通轮次不重算顺序。
@@ -35,7 +35,7 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 
 1. `设计-当前状态.txt` 只写已验证结果、当前版本、已知风险和数据快照；未执行的下一步不写入正文。
 2. 状态标记使用“审核完成”“⚠️ 已修改/未审核”“⚠️ 待复核”“❌ 未接入”。完成结论必须可指向验证命令、提交号或审核证据。
-3. 当前队列只保存 ID、route、owner、priority、domain、stage、title 和 task-card path；独立卡头是结构化字段唯一事实源，正文保存来源、必查范围、实施范围、禁止项、验证、完成条件和停止条件。
+3. 当前队列只保存 ID、route、owner、priority、domain、stage、title 和 task-card path；独立卡头是结构化字段唯一事实源，正文保存来源、必查范围、实施范围、禁止项、验证、完成条件和停止条件。任务卡 schema 2 必须显式保存 `workerPaths` 与 `coordinatorPaths`，`expectedPaths` 必须严格等于两者并集；两类路径不得重复或交叉。
 4. `必查范围` 优先使用 `文档路径#章节`、`代码路径::类型.符号`、`CSV/JSON路径::实体ID` 或 `资源目录::用途/资源ID`；路径自身已经是不可再分的短事实源时可以只写路径。
 5. 代码必查范围覆盖目标类型和方法、直接调用者与被调用者、相关测试，以及任务卡指定的当前所有者或事实源；CSV 覆盖表头和目标 ID 行；JSON 覆盖目标对象和直接引用；Unity `.asset` 覆盖目标资源及必要引用；`.meta` 只用于 GUID、导入和依赖身份，不承载业务说明。
 6. 既有任务卡的路径级 `必读` 默认要求先定位其中与任务相关的章节、符号或实体，不表示整份加载。只有任务卡明确写“完整文件”、无法保持语义边界、检索无结果或存在事实冲突时才读取全文；修改前仍须读取目标完整逻辑单元。
@@ -48,7 +48,7 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 - `blocked/frozen/pending_decision/waiting_reply` -> active card + backlog, never queue
 - `completed` -> card moved to 任务归档 and removed from queue/backlog
 
-新卡完成时只移入精确路径 `开发管理/任务归档/<ID>.txt`；每张活跃卡的 `expectedPaths` 必须同时包含 `开发管理/任务卡/<ID>.txt` 与 `开发管理/任务归档/<ID>.txt`。历史合并归档保持原样，默认检查不递归扫描。
+新卡完成时只移入精确路径 `开发管理/任务归档/<ID>.txt`；每张活跃卡的 `coordinatorPaths` 与 `expectedPaths` 必须同时包含 `开发管理/当前任务队列.txt`、`开发管理/任务卡/<ID>.txt`、`开发管理/任务归档/<ID>.txt` 和 source backlog。外部执行卡还必须把 `开发管理/AI合作沟通.txt` 分类为 coordinatorPath。历史合并归档保持原样，默认检查不递归扫描。
 
 ## 建议与闭环
 

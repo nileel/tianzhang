@@ -1,67 +1,80 @@
 # 自动工作流规则
 
-本文件只定义每小时薄路由的稳定调度边界。业务实施、领域验证、审核与任务维护继续以各自入口为准。
+本文件定义每小时自动化的稳定调度、隔离、集成和恢复边界。业务事实、领域验证、审核和任务维护仍以各自入口为准。
 
 ## 事实源与实时配置
 
-- 任务的唯一活跃事实是 `开发管理/当前任务队列.txt` 中的有序行及其 `开发管理/任务卡/<ID>.txt`；审核、沟通、backlog 与摘要只在对应责任方入口或队列为空后的维护事件中读取，不参与普通轮次的候选汇总。
-- 生产 prompt、schedule、workdir 和 status 以实时 automation 配置为准，只由自动化任务之外的普通管理上下文通过 Codex 自动化管理能力变更；不得编辑 automation TOML，自动化任务不得管理自身配置或等待自动化管理服务。
-- schema 3 私有 runtime 只保存租约、条件化恢复指针、阻塞计数和最后结果；飞书状态继续保存于用户级私有目录并使用 ACL 与原子写入。不得保存 provider token、tenant key 或消息标识原文。
+- 任务唯一活跃事实是 `开发管理/当前任务队列.txt` 的有序 ready 行与同 ID 任务卡；任务卡 schema 2 的 `workerPaths`、`coordinatorPaths` 和 `expectedPaths` 是路径授权事实。
+- 生产 prompt、schedule、workdir 和 status 只由普通管理上下文通过自动化管理能力变更；不得编辑 `~/.codex/automations/**/automation.toml`，自动化任务不得管理自身配置。
+- 私有 runtime 使用 schema 4，保存协调器 lease、未关闭 batch、通用 `lanes[]`、旧决定/中断 recovery、阻塞计数和最后结果；不得保存 provider token、tenant key、用户标识或消息标识原文。
+- 仓库实现、实时 prompt 和生产状态未同时通过契约检查时，不启用并行生产模式。
 
-## Show、逻辑暂停与单写入租约
+## Show、协调器租约与恢复优先
 
-- 每轮在读取当前任务队列或任何项目路由源前，先通过 `tools/hourly-automation-lease.ps1` 调用 `Show`。
-- `pauseRequested=true` 表示工具级逻辑暂停；立即输出 `suspended` 并结束，不读取队列、不取得租约、不启动责任方，也不读取或更新自身 automation 配置。
-- `Show` 返回的 `leaseStatus` 是租约有效性的唯一调度判断：只有 `active` 表示占用；`expired` 且无 recovery 时不得报告 occupied，继续队列判断并由 `Acquire` 替换过期租约。
-- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
-- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
-- 任何项目写入前必须取得租约。每轮一个责任方；租约占用时不启动第二写入者。
-- 调度器只读取状态、选择任务、取得租约、调用责任方入口并报告已核验结果；不实施、不做领域验证、不 stage、不 commit、不复审。
-- Codex 路由的结果记录与租约释放由固定调用器统一完成；外部路线只由持有当前 Run ID 的控制器在核验终态后关闭。责任方不得自行调用 `RecordResult` 或 `Release`。
+1. 每轮在读取队列或项目路由源前先调用 `tools/hourly-automation-lease.ps1 -Action Show`。
+2. `pauseRequested=true` 时立即报告 `suspended`，不读取队列、不取得租约、不启动 Worker。
+3. `Show.state.batch != null` 时不选择新任务：开放 batch 调用 `tools/invoke-automation-lane-batch.ps1 -Action Recover`；已关闭且保留证据的 batch 只报告 `held_conflict`、`stale_selection`、`needs_decision` 或证据不一致，等待普通管理上下文处理。
+4. 没有 batch 时才读取有序队列；只有 `leaseStatus=active` 表示占用，过期 lease 由 `ResumeBatch` 或新 `Acquire` 按现有证据处理。
+5. 同一仓库同一时间只有一个协调器 lease。它保护队列快照、task claim、自动 worktree、固定集成器、共享任务投影和 runtime；Worker 不持有主工作区写权限。
+6. 旧 decision/interruption recovery 继续按 `开发管理/自动工作流恢复规则.txt` 的条件读取；普通责任方仍只在实际到达新决定事件时读取“创建决定恢复”。
 
-## 固定队列顺序与事件驱动调度
+## 通用 lanes[] 与生产配置
 
-普通轮次只按当前队列行序处理，不汇总多来源候选，也不维持固定队列深度：
+- 生产配置由 `tools/automation-lane-core.ps1` 返回：`maxConcurrent=2`，只启用 `codex` 与 `deepseek`。
+- `codex` 接受 `codex_execute`、`codex_review`；`deepseek` 接受 `external_execute` 且 `owner=deepseek`，身份固定为 DeepSeek V4 Flash。
+- lane 保存 `laneId`、owner、identity、acceptedRoutes、invoker、taskClaim、worktree、branch、baseCommit、workerPaths、coordinatorPaths、factPaths、process/session、workerTerminal、integrationState 和原队列序号。
+- 数据结构、选择算法和两两冲突检查不得依赖两个固定数组位置。测试可注入模拟第三 lane；生产配置不得包含虚假第三 AI。
 
-1. 读取当前短队列 `开发管理/当前任务队列.txt`。
-2. 按已保存的行顺序逐行检查，不重排、不按类别建立第二套优先级。
-3. 对每行核对任务卡的 `dispatchState=ready` 投影、route、owner、依赖、内容冻结、当前执行器可用性和当前路径冲突。
-4. 选择第一项当前可安全执行的任务；`codex_execute` 映射 `Execution`，`codex_review` 映射 `Review`，`external_execute` 进入既有外部 wrapper。
-5. `临时运行条件` 不满足、执行器暂时不可用或与人工 staged、unstaged、untracked 改动存在临时路径冲突时，只跳过本轮并继续下一行，不修改任务卡或队列顺序。
-6. 遇到 `明确任务阻塞` 或队列投影与任务卡不一致时，停止业务执行并完成状态纠正事件；不得用临时跳过掩盖需要持久化的状态变化。
-7. `队列为空` 时只调用一次 `QueueMaintenance`；本轮不执行新任务。队列维护按 `开发管理/状态与建议维护规则.txt` 处理 backlog 与状态事实，不制造缺乏权威来源的任务。
+## 每小时选题与 task claim
 
-- 外部 CLI 只在当前行真实选中、身份与主责匹配并取得租约后预检。责任方修改前仍调用 workspace guard 作最终判断。
-- 外部路线只调用 `tools/invoke-external-responsibility.ps1`，不得由控制器临时拼装 Claude CLI 命令。固定 wrapper 只消费已选中的 `external_execute` 同一任务卡，不得重新扫描候选；owner 映射固定为 `owner=deepseek -> DeepSeek V4 Flash`、`owner=claude -> native Claude Code`。前者只使用已核验的 `http://127.0.0.1:15721` 同源端点，后者只使用原生 Claude Code。wrapper 返回 completed 前必须通过 `tools/automation-commit-metadata.ps1` 的统一契约核验实际业务提交。
-- 固定 wrapper 必须在启动外部 CLI 前创建 `~/.codex/automation-state/tzg-hourly-controller-runtime/external-baselines/<RunId>.json` 的父目录并确认其位于用户级私有 runtime 内，不得把 baseline 写入仓库或 `.claude/`。外部 CLI 固定使用 `--output-format json` 与 `--json-schema`，只从 Claude CLI 官方结果 envelope 的 `session_id` 和 `structured_output` 读取终态，不从模型正文猜测 JSON；权限固定为 `--permission-mode dontAsk`，`--allowedTools` 只包含 `Read`、`Edit`、`Write`、现有 guard / 检查 / finalizer 的限定 `pwsh -File` 命令和精确的 `Bash(git diff --check)`，不得允许通配 Bash、任意 PowerShell 或任意 Git。
-- 事件发生时才更新任务卡、队列或 runtime；普通轮次不为未发生的候选、阶段或进度建立中央 manifest、checkpoint、重试层、阶段状态机或第二套队列。
+1. 取得协调器 lease 后重新读取 Git HEAD、队列、任务卡和人工 staged/unstaged/untracked 路径，防止选择与认领之间竞态。
+2. 按队列原行序扫描，为每个空闲 lane 选择遇到的第一项安全任务；每 lane 每 batch 最多一项，本 batch 结束前不滚动补位。
+3. 候选必须是同一 ready 投影，route/owner 与 lane 匹配，且不与已选任务存在直接/传递依赖、workerPaths/factPaths 冲突、同一 taskId 或人工路径冲突。
+4. 没有安全第二项时无损退化为单路；一路失败、blocked 或 needs_decision 不取消另一独立 lane。
+5. claim 在 `Show.state.batch.lanes[].taskClaim` 可见。手动选题必须跳过已 claim 的同一任务，除非普通管理上下文明确取消该 lane。
+6. 队列为空时仍只运行一次既有 `QueueMaintenance` 串行入口，本轮不执行新业务任务；维护不占用第二个业务 lane，也不滚动补位。
 
-## 阻塞指纹与状态纠正
+## Worker 路径与候选提交合同
 
-- 所有有序队列行均因当前运行条件临时不可执行时，记录稳定 fingerprint。只有同一稳定 fingerprint 连续两轮仍未变化，才设置 `pauseRequested=true`；先记录结果并释放租约，再报告“runtime 已逻辑暂停，界面尚未同步”并结束。
-- 成功、成功补任务、明确任务阻塞的状态纠正事件或阻塞集合实质变化会重置计数。逻辑暂停期间普通 `Acquire` 返回 `SUSPENDED`。
-- 明确 blocker 必须写回任务卡及队列投影所要求的合法状态，再由对应维护入口提交；不得让显式阻塞任务依靠每轮临时跳过继续留在 ready 队列。
-- 逻辑暂停恢复只由外部普通管理上下文执行：确认 lease 与 recovery 均为空，先调用 `ClearBlocking` 成功清除逻辑暂停，再通过自动化管理能力把完整现有配置设为 `ACTIVE`。
+- 自动 Worker 使用各自唯一分支和自动 worktree；不得共享 Git index、分支、session，不得访问其他 lane worktree，不得切换分支、创建额外 worktree、推送或调用租约收尾。
+- `tools/invoke-codex-lane-worker.ps1` 与 `tools/invoke-external-lane-worker.ps1` 只允许候选提交包含 `workerPaths`。`coordinatorPaths` 不得由 Worker 写入、stage 或提交。
+- completed 终态必须包含 batch/lane/task/identity/session、完整 candidate SHA、实际 changedPaths、验证结果、正式提交九个事实字段、期望 transition 和 coordinatorChanges。候选父提交必须等于 lane baseCommit，changedPaths 必须是 workerPaths 子集，worktree 必须干净。
+- 候选提交不是正式交付，不使用正式 Automation 元数据，不发送成功通知。
+- DeepSeek completed 必须提议 `codex_review/codex/ready` 以及正式交接内容；不得自审或预填 Codex 结论。
 
-## 固定责任方入口与等待
+## 完成事件、串行集成与正式提交
 
-- 普通执行按纯 `1`；复审按审核入口与纯 `2`；队列维护按状态与建议维护规则；恢复按 `开发管理/自动工作流恢复规则.txt`。四种路由责任方都自行读取事实源、完成其范围内修改、最小充分验证、更新状态并提交。
-- 普通 Codex 执行、复审、队列维护与恢复不得使用 Desktop/VS Code rollout；取得租约后只调用 `tools/invoke-codex-responsibility.ps1`，由该固定入口向 `tools/codex-cli-session.ps1` 写入标准输入。控制器不得临时拼装 ProcessStartInfo、编码或 here-string 启动逻辑；已在 Node REPL 核验的模型值通过固定入口传给 runner 与责任方。
-- `Execution` / `Review` 启动 runner 前必须让同一 TaskId 通过 `CodexDispatchReady`，并以 `ExpectedRoute` 精确核对 ready 卡的 route 与 owner。
-- 固定调用器只在提交元数据匹配且任务卡检查通过后记录成功：所有非 `QUEUE-MAINTENANCE` TaskId（包括 task-bearing `Recovery`）使用同一 TaskId 的 `CodexClosedOrNonReady`，只接受 exact completed archive 或 `{blocked,frozen,pending_decision,waiting_reply}` active 非 ready 卡；只有 `QUEUE-MAINTENANCE` 与其 recovery 使用全局投影。仍为 ready 或投影无效的提交沿用现有 blocked / failed closeout，不新增修复层。
-- `QueueMaintenance` 使用 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 分类并作为候选存在性证据，无需再用 `rg` 无匹配证明不存在；只有大于 0 才记录 `refilled`，等于 0 但存在合法事实修正提交时记录 `success`，等于 0 且没有提交或工作区变化时记录既有 `blocked/no_runnable_candidate` 并使用稳定 fingerprint，不制造任务、无事实提交、recovery 或重试层。
-- 固定调用器传入的 `RepositoryRoot` 当前工作区、current branch 与 `HEAD` 是 Codex 自动化责任方唯一 Git 实施和结果核验面；单写入租约已经提供隔离，责任方不得调用 `using-git-worktrees` 或 `git worktree add`，不得创建或切换 linked worktree、任务分支。
-- 固定调用器或外部 wrapper 的 `tools.shell_command` 不得使用 180000 毫秒硬超时；`timeout_ms` 使用 3300000 毫秒单轮上限，与 3600 秒租约对齐并保留 5 分钟边界。
-- Codex 固定调用器在责任方子进程内部使用 3000 秒上限，预留外层 300 秒完成进程树终止、live session 捕获、`SaveInterruption`、`RecordResult` 与 `Release`；超时且存在有效 session 与新增未提交路径时必须保存 interruption recovery，不从模型正文猜测终态。
-- 调用返回 `Script running with cell ID ...` 时保留同一 cell ID 并继续调用 `functions.wait`。外层 shell timeout、yield、空输出或尚未返回只表示外层仍未取得终态，不等于责任方失败；不得据此记录失败、释放租约、重新启动或启动第二责任方。固定调用器内部截止完成关闭后返回的 JSON 才是终态。
-- 进度只投影 `selected`、`session_started`、`running`、`waiting_decision`、`completed`、`failed`；调度器和 runner 不从模型正文猜测阶段，不输出 prompt、原始 JSONL、回复或 child stderr。
+- 固定协调器内的固定串行集成器监听每个 lane 的结果文件/进程事件。前序先完成可立即集成；后序先完成只保存终态，等待所有更前序 lane 进入稳定终态。
+- 前序失败、blocked 或 needs_decision 后，后序若无依赖仍继续集成；本 batch 不补新任务。
+- 每次集成前重新核验主分支 HEAD、同一队列行、任务卡 hash、route/owner/state、依赖、人工路径、已集成本 batch 提交、候选父提交和 changedPaths。
+- 人工修改 workerPaths 返回 `held_conflict`；人工修改同一任务卡、队列投影、coordinatorPaths 或 factPaths 返回 `stale_selection`。不自动解决冲突，不 stash、reset、checkout 覆盖、clean 或覆盖人工文件。
+- 固定集成器先以 `git apply --check` 验证候选补丁，再应用 worker 修改；共享 coordinatorChanges 按“lane 基线、当前主分支、Worker 提议”机械三方合并，同一任务投影行或其他共享内容冲突时保留为 `held_conflict`，不覆盖前序已集成结果。随后运行任务卡后置条件、路径/空白/Git 检查，并通过现有 finalizer 创建每任务独立 canonical businessCommit。
+- DeepSeek 任务的 businessCommit 使用 `State: pending_review`，随后只修改 `开发管理/AI合作沟通.txt` 创建 handoffCommit；handoff 不使用 Automation 元数据、不重复领域验证。Codex 任务使用 `State: completed`。
+- 两个任务不压成批次大提交；正式通知只在对应任务 canonical 提交和投影核验后发送。
 
-## 提交、外部 closeout 与失败保全
+## 失败、恢复与安全清理
 
-- 所有由控制器启动的 Codex 执行、复审、队列维护和外部 AI `businessCommit` 都通过 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata` 创建路径限定提交。`CommitMessage` 只传单行标题，稳定任务 ID、状态、结果、影响、验证和负责人通俗版分别通过 `AutomationTask`、`AutomationState`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain` 传入；finalizer 固定生成 `Automation: tzg-hourly-controller` 正文，并在暂存前通过 `tools/automation-commit-metadata.ps1` 的统一契约校验。未来自动化业务提交的四行必须分别使用 `Result: 问题=<原问题>；完成=<具体交付>`、`Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>`、`Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`。九个子字段都必须非空、单行并由任务事实与已执行验证支持；三个通俗子字段各不超过 200 个 Unicode code point，避免代码符号、文件路径、提交号、测试命令和内部状态名，确实绕不开的专业词必须在同一句中补充白话解释。
-- Codex 与队列维护传入 `AutomationState=completed`，它只表示当前责任方提交闭环，不等于任务卡 `dispatchState=completed`；控制器与日报通过固定调用器返回的 `taskState` / `readyCount` 或同一提交中的任务卡/归档读取真实结果。外部业务传入 `AutomationState=pending_review`，创建含业务修改、待复审状态和直接验证结果的 `businessCommit`；随后只修改 `开发管理/AI合作沟通.txt` 创建连续的 `handoffCommit`，登记真实业务 SHA、已验证、未验证和残留风险，第二次不重跑领域检查。
-- `handoffCommit` 不使用 Automation 标记，也不启用 `RequireAutomationMetadata`；日报不得将其重复统计为业务产出。外部 AI 不自审、不扩大授权路径、不并行派发、不推送。
-- 外部 wrapper 只在固定入口通过统一契约核验实际 `businessCommit` 的 Task、`State: pending_review`、Automation 元数据及上述九个通知子字段后返回 completed。控制器不再读取业务提交正文或临时拼装元数据正则，只继续核验 owner 对应 identity、`sessionId`、`businessCommit`、`handoffCommit`、提交父子关系、handoff 无 Automation 元数据，以及相对启动基线没有新增未提交路径。外部 completed 终态还必须让同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview`；该门禁只验证生命周期/投影，不读取业务 diff 或重跑领域验证，并且先于 `RecordResult -Category success` 与 `Release`。全部成立后依次调用 `RecordResult -Category success` 与 `Release`。
-- 外部终态无效且相对启动基线没有新增未提交路径时，控制器记录 `failed` 后释放租约；存在新增未提交路径时保留现场和租约并转人工阻塞，不伪造 recovery，不启动第二责任方。
-- 非 `QUEUE-MAINTENANCE` 任务在 `RecordResult` 与 `Release` 均成功后调用 `tools/send-feishu-notification.ps1 -Kind TaskOutcome`：已核验 Codex 提交发送 `completed`，外部 `businessCommit` 发送 `pending_review`，无提交的 `waiting_decision`、`waiting_reply`、`blocked` 或 `failed` 使用稳定终态与任务卡状态说明“未形成已核验业务提交”。任务结果卡片必须先完整显示现有专业五段，再显示 `发生了什么`、`对项目或游戏的实际影响`、`你是否需要做什么` 三个负责人短点；无直接游戏效果或无需负责人操作时必须明说。普通队列维护和无业务变化轮询不发送。通知失败只记录脱敏投递状态，不改变提交、任务卡、租约、recovery、终态类别或退出码，也不自动重试。
-- 失败时保持或恢复 `PAUSED`，保留提交、runtime 与日志；不自动 stash、reset、revert、checkout、clean 或删除旧私有备份。只修复受影响切片并重跑直接检查。
+- workerTerminal 沿用 `completed`、`needs_decision`、`blocked`、`failed`；integrationState 使用 `pending`、`waiting`、`integrating`、`integrated`、`held_conflict`、`stale_selection`、`failed`。
+- 控制器中断后，`Recover` 只接受同 batch/lane/task/worktree/branch/base/process/session/result 链：进程仍运行则继续等待；结果已完成则继续原序集成；证据不一致则保留现场并失败关闭，不猜测或重建提交。
+- 已 integrated lane 不重复执行、提交或通知。未关闭 batch 处理完成前不领取新任务。
+- 只有 integrated，或 confirmed clean 且没有候选/业务修改的 blocked/failed lane 才删除自动 worktree；needs_decision、held_conflict、stale_selection、completed 但集成失败或证据不完整的 lane 保留现场。
+- batch 有保留证据时可以释放过期协调器进程，但 batch claim 保留在 `Show`，后续普通轮次不得选择新任务。
+- 通知失败只记录脱敏投递状态，不改变提交、任务卡、batch、lane 终态或退出码，不自动重试。
+
+## 固定入口与等待
+
+- 新业务 batch 只调用 `tools/invoke-automation-lane-batch.ps1 -Action Start`；恢复只调用同脚本 `-Action Recover`。控制器不得临时拼装 Codex/Claude 命令、worktree 或集成步骤。
+- Codex lane 由固定 wrapper 调用 `tools/codex-cli-session.ps1`，外部 lane 只由固定 wrapper 调用 Claude CLI；`owner=deepseek` 只接受已核验的 `http://127.0.0.1:15721` 同源端点。
+- 外层工具调用使用 3300000 毫秒单轮上限；返回 `Script running with cell ID ...` 时继续等待同一 cell。yield、空输出或尚未返回都不是终态，不得重新启动或启动第二批。
+- 每个 Worker 最长 3000 秒，协调器预留 300 秒完成终止证据、串行集成、runtime 和通知收尾。
+
+## 提交元数据
+
+canonical businessCommit 继续由 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata` 创建，使用：
+
+- `Result: 问题=<原问题>；完成=<具体交付>`
+- `Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>`
+- `Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`
+- `Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>`
+
+九个子字段必须非空、单行并由实际任务与验证支持；三个通俗字段各不超过 200 个 Unicode code point。Worker 候选不得伪造该正式状态。

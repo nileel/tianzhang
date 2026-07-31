@@ -32,7 +32,7 @@ function Get-Metadata {
     [string]$StateReason = $null
   )
   [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     id = $Id
     title = $Title
     priority = $Priority
@@ -45,6 +45,17 @@ function Get-Metadata {
     stateReason = $StateReason
     expectedPaths = @(
       'simulations/BattleSim/Combat.cs'
+      '开发管理/任务列表/数值与战斗任务.txt'
+      '开发管理/当前任务队列.txt'
+      "开发管理/任务卡/$Id.txt"
+      "开发管理/任务归档/$Id.txt"
+    )
+    workerPaths = @(
+      'simulations/BattleSim/Combat.cs'
+    )
+    coordinatorPaths = @(
+      '开发管理/任务列表/数值与战斗任务.txt'
+      '开发管理/当前任务队列.txt'
       "开发管理/任务卡/$Id.txt"
       "开发管理/任务归档/$Id.txt"
     )
@@ -293,20 +304,27 @@ try {
     @{ Name = 'filename ID mismatch'; Expected = 'filename/id mismatch'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.id = 'T-OTHER-01'; Set-Card $root $m -FileName 'T-READY-01.txt' } },
     @{ Name = 'duplicate ID'; Expected = 'duplicate card ID'; Change = { param($root, $f) $m = Copy-Metadata $f.Blocked; $m.id = 'T-READY-01'; Set-Card $root $m -FileName 'T-BLOCKED-01.txt' } },
     @{ Name = 'illegal enums'; Expected = 'invalid route'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.route = 'bad'; Set-Card $root $m } },
-    @{ Name = 'illegal schema version'; Expected = 'illegal schemaVersion'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.schemaVersion = 2; Set-Card $root $m } },
+    @{ Name = 'illegal schema version'; Expected = 'illegal schemaVersion'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.schemaVersion = 1; Set-Card $root $m } },
     @{ Name = 'illegal priority'; Expected = 'invalid priority'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.priority = 'P4'; Set-Card $root $m } },
     @{ Name = 'illegal owner'; Expected = 'invalid owner'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.owner = 'bad'; Set-Card $root $m } },
     @{ Name = 'illegal domain'; Expected = 'invalid domain'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.domain = 'bad'; Set-Card $root $m } },
     @{ Name = 'illegal stage'; Expected = 'invalid stage'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.stage = 'bad'; Set-Card $root $m } },
     @{ Name = 'illegal dispatch state'; Expected = 'invalid dispatch state'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.dispatchState = 'bad'; Set-Card $root $m } },
+    @{ Name = 'missing workerPaths'; Expected = "missing metadata field 'workerPaths'"; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.Remove('workerPaths'); Set-Card $root $m } },
+    @{ Name = 'empty workerPaths'; Expected = 'workerPaths must not be empty'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.workerPaths = @(); $m.expectedPaths = @($m.coordinatorPaths); Set-Card $root $m } },
+    @{ Name = 'overlapping path classes'; Expected = 'workerPaths/coordinatorPaths overlap'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.coordinatorPaths += 'simulations/BattleSim/Combat.cs'; Set-Card $root $m } },
+    @{ Name = 'nested path classes'; Expected = 'workerPaths/coordinatorPaths overlap'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.workerPaths = @('simulations/BattleSim.v1'); $m.coordinatorPaths += 'simulations/BattleSim.v1/Combat.cs'; $m.expectedPaths = @($m.workerPaths + $m.coordinatorPaths); Set-Card $root $m } },
+    @{ Name = 'classification union mismatch'; Expected = 'expectedPaths must equal workerPaths union coordinatorPaths'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths += 'extra.txt'; Set-Card $root $m } },
+    @{ Name = 'source backlog outside coordinatorPaths'; Expected = 'sourceBacklog must be a coordinatorPath'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.coordinatorPaths = @($m.coordinatorPaths | Where-Object { $_ -cne $m.sourceBacklog }); $m.expectedPaths = @($m.workerPaths + $m.coordinatorPaths); Set-Card $root $m } },
+    @{ Name = 'queue outside coordinatorPaths'; Expected = 'queue must be a coordinatorPath'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.coordinatorPaths = @($m.coordinatorPaths | Where-Object { $_ -cne '开发管理/当前任务队列.txt' }); $m.expectedPaths = @($m.workerPaths + $m.coordinatorPaths); Set-Card $root $m } },
     @{ Name = 'rooted expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('C:/bad.txt'); Set-Card $root $m } },
     @{ Name = 'backslash expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('folder\bad.txt'); Set-Card $root $m } },
     @{ Name = 'wildcard expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('folder/*.txt'); Set-Card $root $m } },
     @{ Name = 'dot expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('folder/./bad.txt'); Set-Card $root $m } },
     @{ Name = 'parent expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('../bad.txt'); Set-Card $root $m } },
     @{ Name = 'directory expected path'; Expected = 'invalid repository-relative path'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('folder'); Set-Card $root $m } },
-    @{ Name = 'missing exact active-card authorization'; Expected = 'missing exact active-card authorization'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('simulations/BattleSim/Combat.cs', '开发管理/任务归档/T-READY-01.txt'); Set-Card $root $m } },
-    @{ Name = 'missing exact archive authorization'; Expected = 'missing exact archive authorization'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.expectedPaths = @('simulations/BattleSim/Combat.cs', '开发管理/任务卡/T-READY-01.txt'); Set-Card $root $m } },
+    @{ Name = 'missing exact active-card authorization'; Expected = 'missing exact active-card authorization'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.coordinatorPaths = @($m.coordinatorPaths | Where-Object { $_ -cne '开发管理/任务卡/T-READY-01.txt' }); $m.expectedPaths = @($m.workerPaths + $m.coordinatorPaths); Set-Card $root $m } },
+    @{ Name = 'missing exact archive authorization'; Expected = 'missing exact archive authorization'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.coordinatorPaths = @($m.coordinatorPaths | Where-Object { $_ -cne '开发管理/任务归档/T-READY-01.txt' }); $m.expectedPaths = @($m.workerPaths + $m.coordinatorPaths); Set-Card $root $m } },
     @{ Name = 'route owner mismatch'; Expected = 'route/owner mismatch'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.owner = 'claude'; Set-Card $root $m } },
     @{ Name = 'missing body heading'; Expected = 'missing body heading'; Change = { param($root, $f) Set-Card $root $f.Ready -Headings @('来源与当前边界') } },
     @{ Name = 'H1 mismatch'; Expected = 'H1 mismatch'; Change = { param($root, $f) $path = Join-Path $root '开发管理/任务卡/T-READY-01.txt'; (Get-Content -Raw $path).Replace('# T-READY-01 · 合法 ready 卡', '# bad') | Set-Content -LiteralPath $path -Encoding utf8 } },
