@@ -47,7 +47,7 @@
 
 ### D-TZ-CHARTER-SCHEMA-01 · 册界体系数据契约
 
-- 依赖与状态：M8 已获条件授权；`C-TZ-CHARTER-ENTRIES-01B6` 已完成并通过复审，`D-TZ-CHARTER-SCHEMA-01` 已完成并归档；随后 `D-TZ-CHARTER-SAMPLE-01` 已完成水府地纪样例导入。下一项 Unity 纯规则模型因跨端冲突承载边界待 `D-TZ-CHARTER-MODEL-DEC-01` 的负责人决定；不等待完整 M7。C-ENV-PROFILE-01 与 D-ENV-SCHEMA-01 只提供环境档案语义，不代替本任务的地区长期状态契约。
+- 依赖与状态：M8 已获条件授权；`C-TZ-CHARTER-ENTRIES-01B6` 已完成并通过复审，`D-TZ-CHARTER-SCHEMA-01` 已完成并归档；随后 `D-TZ-CHARTER-SAMPLE-01` 已完成水府地纪样例导入。2026-07-31 负责人对 `DEC-20260731-TZCHARTERMODEL01` 选择 C：不启动下一项 Unity 纯规则模型，等待跨端承载方案或更具体授权；不等待完整 M7。C-ENV-PROFILE-01 与 D-ENV-SCHEMA-01 只提供环境档案语义，不代替本任务的地区长期状态契约。
 - 预期路径：新建 `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md`；修改 `src/Assets/DataConfig/`、对应 ScriptableObject 数据模型、`DataConfigImporter`、`tools/check-data-chain.ps1` 与直接相关 EditMode 测试。进入当前队列前必须实时扫描并展开全部字面量路径和新表名。
 - 数据边界：分别定义静态条目、遗物权限要求、册界节点、组织授权与传播边界档案，以及玩家已登记条目、界印状态、节点状态、当前覆盖集合、条目／节点占用和当前地区规则等动态状态；定义层与状态层不得混表。
 - 必需字段：完整承载 M4 的十八个规则字段，并为门禁目标识别、公共设施受益者／管理者、节点连通、版本化授权、现实供给、正负原子提交、金丹挑战资格和元婴受锚提供稳定 ID 引用。战场 `environmentProfile` 只能作为输出引用，不能反向成为地区状态所有者。

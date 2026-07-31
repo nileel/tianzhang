@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "pending_decision",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：实时扫描确认 Unity 没有可复用的 RuleConflictInstance 或 CrossTierChallengeGrant 所有者，现有跨阶授权只在独立 BattleSim 中承载；等待 DEC-20260731-TZCHARTERMODEL01 决定是否授权跨端共享、缩小 M8 模型边界或暂缓该切片。",
+  "stateReason": "2026-07-31：负责人对 DEC-20260731-TZCHARTERMODEL01 选择 C；不授权跨端共享、不缩小冲突路径，U-TZ-CHARTER-MODEL-01 冻结等待跨端承载方案或更具体授权。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/任务列表/数据链路任务.txt",
@@ -37,21 +37,16 @@
 - `src/Assets/Scripts/Game/GameSession.cs::GameSession`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::CharterRuntimeStateData`。
 - `simulations/BattleSim/GameData.cs::CrossTierChallengeGrant|CrossTierChallengeArchive`、`simulations/BattleSim/Combat.cs` 的跨阶授权重验入口。
 
-## 实施范围
+## 已确认决定
 
-- 只记录负责人对跨端承载边界的选择，并同步本卡、`U-TZ-CHARTER-MODEL-01` 与队列状态；不实施任何业务规则。
+- 负责人于 2026-07-31 对 `DEC-20260731-TZCHARTERMODEL01` 选择 C：保持现有范围，不启动册界 Unity 模型，先等待负责人给出跨端承载方案或更具体授权。
+- 不授权建立 Unity 与 BattleSim 共同消费的冲突／跨阶授权契约，也不将模型缩小为以默认拒绝承载金丹冲突或元婴受锚输入。
+- `U-TZ-CHARTER-MODEL-01` 已冻结；后续只有新的跨端承载方案或更具体授权能重新建立可执行切片。
 
-## 待负责人决定
+## 结果与边界
 
-- A：授权建立可由 Unity 与 BattleSim 共同消费的冲突／跨阶授权契约，并把现有 BattleSim 语义迁为唯一实现；随后另立边界明确的架构切片。
-- B：授权将 `U-TZ-CHARTER-MODEL-01` 缩小为非冲突路径，所有金丹冲突与元婴受锚输入先以稳定拒绝结束，并另立完整冲突接入任务。
-- C：保持现有范围，不启动册界 Unity 模型，先等待负责人给出跨端承载方案或更具体授权。
-
-## 推荐与边界
-
-- 推荐 C：当前任务不应擅自新建共享组件、复制 BattleSim 规则或修改 M8 的冲突验收语义。
-- 本卡只记录决定和队列状态；不修改 Unity、BattleSim、数据契约、样例或场景。
-- 回复后由新的恢复责任方按所选方案更新本卡、`U-TZ-CHARTER-MODEL-01` 及队列；未获选择前不得把后者设为 ready。
+- 已归档本决定卡，并同步分线 backlog 与自动工作流长期阻塞事实；当前任务队列中的 `U-ENEMY-01` 不受影响。
+- 本卡只记录决定和队列状态；未修改 Unity、BattleSim、数据契约、样例或场景。
 
 ## 禁止项
 
@@ -65,8 +60,8 @@
 
 ## 完成条件
 
-- 负责人已选择 A、B、C 或提供等效明确授权；恢复责任方已将选择同步为可验证的任务状态和队列投影。
+- 负责人已选择 C；恢复责任方已将选择同步为可验证的任务状态和队列投影。
 
 ## 停止条件
 
-- 决定通道未确认投递、回复与决策 ID 不匹配，或选择仍不能消除跨端承载歧义时，保持待决定状态，不启动 `U-TZ-CHARTER-MODEL-01`。
+- 未给出跨端承载方案或更具体授权时，`U-TZ-CHARTER-MODEL-01` 保持冻结，不启动册界 Unity 模型。

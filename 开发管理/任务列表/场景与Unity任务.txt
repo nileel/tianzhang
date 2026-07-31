@@ -27,8 +27,7 @@
 | U-JD-RULE-01A | P2 | Codex | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| D-TZ-CHARTER-MODEL-DEC-01 | P1 | codex | 待决定 | — | 册界模型跨端冲突承载决定 | `开发管理/任务卡/D-TZ-CHARTER-MODEL-DEC-01.txt` |
-| U-TZ-CHARTER-MODEL-01 | P1 | Codex | 阻塞（D-TZ-CHARTER-MODEL-DEC-01） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
+| U-TZ-CHARTER-MODEL-01 | P1 | Codex | 冻结（负责人选择 C；等待跨端承载方案或更具体授权） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex | 阻塞（U-TZ-CHARTER-MODEL-01） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex | 阻塞（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 
@@ -79,7 +78,7 @@
 
 ### U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
 
-- 依赖与状态：M8 已获条件授权；当前阻塞于 D-TZ-CHARTER-SCHEMA-01、D-TZ-CHARTER-SAMPLE-01 完成并提供有效与非法 fixture。
+- 依赖与状态：M8 已获条件授权；`D-TZ-CHARTER-SCHEMA-01` 与 `D-TZ-CHARTER-SAMPLE-01` 已完成并提供有效与非法 fixture。2026-07-31 负责人对 `DEC-20260731-TZCHARTERMODEL01` 选择 C；不启动本 Unity 纯规则模型，等待跨端承载方案或更具体授权。
 - 预期路径：现有世界状态、据点交互、设施权限、规则冲突与地区事件所有者，相关数据模型和 `src/Assets/Tests/EditMode`；进入当前队列前必须实时扫描并展开字面量路径，不得先假设新服务名称。
 - 范围：《开阖九章》只处理旧门禁／传送阵目标识别、通行许可与稳定失败原因；太玄界印只处理公共设施的管理者、受益者、守卫／档案响应；册界模型只处理完整条目登记、节点连通、版本化授权、据点级覆盖、现实供给、正负原子提交和地区事件输出。
 - 冲突：命中同变量金丹介入时复用既有 `RuleConflictInstance` 和版本化 `CrossTierChallengeGrant`；没有挑战资格就拒绝覆盖。命中元婴道路锚点固定进入受锚状态，不把它降格为金丹冲突，也不自动获胜。
