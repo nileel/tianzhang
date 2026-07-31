@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-COMBAT-02A",
+  "title": "BattleSim 范围朝向可空迁移",
+  "priority": "P3",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：负责人对 D-COMBAT-02 的载体冲突选择 A，授权独立迁移 BattleSim AreaShapeConfig，使 circle 可显式表达无朝向；本卡只完成该载体与直接消费者迁移。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Battlefield.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "开发管理/BattleSim范围朝向可空迁移验证记录.txt",
+    "开发管理/攻击档案跨端fixture验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-02.txt",
+    "开发管理/任务卡/D-COMBAT-02A.txt",
+    "开发管理/任务归档/D-COMBAT-02A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-COMBAT-02A · BattleSim 范围朝向可空迁移
+
+## 来源与当前边界
+
+- `D-COMBAT-02` 已确认唯一根因：攻击档案契约要求 `circle` 的 `areaFacing` 为空，但 `GameData.AreaShapeConfig.Facing` 是不可空 `HexDirection`，现有载体只能伪造方向。
+- 负责人于 2026-07-31 选择 A，授权先迁移 BattleSim 生产载体；本卡不建立跨端 fixture，不改变攻击档案契约或范围结算语义。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md#范围配置与跨字段合法性`、`#Unity 与 BattleSim 的消费投影`、`#迁移顺序、fixture 与差异检查`。
+- `simulations/BattleSim/GameData.cs::AreaShapeConfig`。
+- `simulations/BattleSim/Battlefield.cs::ValidateAreaTargetingConfig|IsWithinAreaShape`。
+- `simulations/BattleSim/BattleSimSelfTests.cs` 中全部 `AreaShapeConfig` 构造与范围形状直接测试。
+- `开发管理/攻击档案跨端fixture验证记录.txt#已确认的阻断事实`、`#未授权边界与所需决定`。
+
+## 实施范围
+
+- 将 `AreaShapeConfig.Facing` 收窄迁移为可显式表达无朝向的类型；`circle` 只接受空朝向，`line` 与 `fan` 仍要求已定义的非空六角方向。
+- 调整 `Battlefield` 的配置验证和形状判断，使任何方向取值只发生在已验证的直线或扇形路径；圆形不得读取、填充或保存默认方向。
+- 更新直接 self-test 和既有构造点，覆盖圆形空朝向成功、圆形带方向拒绝、直线／扇形缺方向拒绝，以及既有合法范围结果不变。
+- 完成后只解除 `D-COMBAT-02` 的载体前置；跨端 fixture、逐字段差异和负例仍由原卡实施。
+
+## 禁止项
+
+- 不新增 `None`／`Unknown` 等伪方向枚举，不用 `East` 或其他默认值代表无朝向。
+- 不修改范围命中算法、阻断、阵营、目标状态、攻击参数、冷却、生产 CSV、Unity 数据或运行时消费者。
+- 不把本迁移扩大为 `D-COMBAT-02` 的 fixture 实施或生产攻击档案切换。
+
+## 验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- BattleSim 载体能无默认值地表达圆形无朝向，并继续强制直线／扇形使用合法方向；既有合法范围结果不变。
+- `D-COMBAT-02` 可恢复为 `ready`，且无需修改已锁定契约或生产消费者。
+
+## 停止条件
+
+- 若可空迁移要求改变范围结算语义、攻击参数、生产数据或 Unity 消费者，停止并报告新根因，不增加兼容枚举或默认分支。

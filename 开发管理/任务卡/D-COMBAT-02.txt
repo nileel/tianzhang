@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "data",
   "stage": "verification",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-07-31：已确认 BattleSim GameData.AreaShapeConfig 的 Facing 为不可空 HexDirection，而契约要求 circle 的 areaFacing 为空；在不修改生产载体/消费者且不伪造方向的本卡边界内无法形成准确投影，等待负责人决定迁移前置。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-02A"
+  ],
+  "stateReason": "2026-07-31：负责人选择 A，授权先由 D-COMBAT-02A 迁移 BattleSim AreaShapeConfig 以表达圆形无朝向；本卡等待该载体前置完成后恢复跨端 fixture 验证。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
@@ -74,8 +76,8 @@
 - 若任一端无法表达已声明字段、必须修改生产消费者或生产数据才能完成，停止并按根因拆分后续任务；不得在本卡增加兼容层。
 - 若需要决定武器内容、攻击参数、范围配置、目标资格、阻断或冷却单位换算，转为 `pending_decision`，不得从旧值或 fixture 推导。
 
-## 已触发停止条件（2026-07-31）
+## 已触发停止条件与负责人决定（2026-07-31）
 
 - 已确认 `simulations/BattleSim/GameData.cs::AreaShapeConfig` 要求 `HexDirection Facing`，没有可表达“无朝向”的值；圆形范围的契约则要求 `areaFacing` 为空，且明确禁止为适配旧构造器任意补一个方向。
 - 非生产投影探针在圆形行上只能得到 `east`，没有保留该半成品、fixture 或测试入口；继续实现将违反唯一 CSV 权威与无默认补值边界。
-- 需要负责人在以下方向中决定：A）授权单独的 BattleSim 生产载体迁移，使圆形朝向可空后再恢复本卡；B）修改已锁定契约，规定圆形的稳定方向；C）重新授权本卡范围。当前推荐 A，因为 B 会把原本无语义的字段伪造为数据。
+- 负责人已选择 A：先由独立 `D-COMBAT-02A` 迁移 BattleSim 载体，使圆形朝向可空；不修改已锁定契约，不为圆形伪造稳定方向。
