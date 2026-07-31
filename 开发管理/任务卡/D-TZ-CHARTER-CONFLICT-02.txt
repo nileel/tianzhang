@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-TZ-CHARTER-CONFLICT-02",
+  "title": "册界跨端冲突契约唯一实现迁移",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：D-TZ-CHARTER-CONFLICT-01 已锁定一份 World shared source 由 TianZhang.Gameplay 与 BattleSim linked compile 共用；本卡迁移现有 BattleSim 跨阶资格与金丹冲突决定，不创建 Unity 册界模型或存档。",
+  "expectedPaths": [
+    "src/Assets/Scripts/World/CharterConflictRules.cs",
+    "src/Assets/Scripts/World/CharterConflictRules.cs.meta",
+    "src/Assets/Tests/EditMode/CharterConflictRulesTests.cs",
+    "src/Assets/Tests/EditMode/CharterConflictRulesTests.cs.meta",
+    "simulations/BattleSim/BattleSim.csproj",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/自动工作流状态.txt",
+    "开发管理/任务卡/D-TZ-CHARTER-CONFLICT-02.txt",
+    "开发管理/任务归档/D-TZ-CHARTER-CONFLICT-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-TZ-CHARTER-CONFLICT-02 · 册界跨端冲突契约唯一实现迁移
+
+## 来源与当前边界
+
+- `D-TZ-CHARTER-CONFLICT-01` 已锁定 `src/Assets/Scripts/World/CharterConflictRules.cs` 为唯一 shared source：现有 `World/TianZhang.Gameplay.asmref` 使其属于 `TianZhang.Gameplay`，BattleSim 以 linked compile 消费同一文本。
+- 当前 `RuleConflictInstance` 不存在；`GameData.cs` 的 `GoldenCoreConflict*` 与 `CrossTierChallenge*` 是已验证的 BattleSim 语义。`Combat.ResolveCrossTierChallenge` 是旧跨阶 wrapper，`Combat.ResolveGoldenCoreConflict` 是金丹适配／账本写入入口。
+- 本卡只实施共同纯契约和 BattleSim 迁移。`U-TZ-CHARTER-MODEL-01` 仍等待本卡完成，不能提前创建 Unity 册界纯规则、存档、样例、场景或数值。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-31-tianzhang-charter-cross-runtime-conflict-contract-design.md` 全文。
+- `src/Assets/Scripts/World/TianZhang.Gameplay.asmref`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::CharterRuntimeStateData`、`src/Assets/Scripts/Game/GameSession.cs::GameSession`、`src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`。
+- `simulations/BattleSim/BattleSim.csproj`、`GameData.cs::CrossTierChallengeGrant|CrossTierChallengeArchive|GoldenCoreConflictCandidates|GoldenCoreConflictResolver`、`Combat.cs::ResolveGoldenCoreConflict|ResolveCrossTierChallenge`、`Character.cs::PrepareGoldenCoreConflictCandidate` 和 `BattleSimSelfTests.cs::RunGoldenCoreConflictNjdrule01B|RunGoldenCoreChallengeDeathNjdrule01C`。
+
+## 实施范围
+
+- 创建一份无 Unity／BattleSim 类型依赖的 shared source，以 v1 显式版本、稳定原因和无副作用决定实现 `CrossTierChallenge*` 与 `RuleConflictInstance`；跨阶 archive 保持全部既有 `JD_CHALLENGE_*` 语义。
+- 把 `GameData.cs` 的跨阶类型／archive 与金丹决定顺序迁出；BattleSim 仅保留装配、席位、能力账本的输入适配和对 shared result 的一次性账本写入。
+- `BattleSim.csproj` 只增加 shared source 的 linked compile；不改生成的 Unity csproj，不建 asmdef、NuGet、服务端、存档或平行 DTO。
+- 新增 Unity EditMode 纯契约测试，迁移 BattleSim 自测至 shared 直接入口；完成时确认不存在旧跨阶 wrapper、旧 resolver、同名别名或第二套结算。
+
+## 禁止项
+
+- 不修改 `GameSession`、`CharterRuntimeStateData`、静态数据契约、CSV／asset、样例、场景、UI、BattleSim 数值、角色境界或保存 schema。
+- 不把金丹冲突或元婴受锚变为默认拒绝／成功；元婴受锚只返回共享的受锚决定，不进入金丹结算。
+- 不留下兼容层、转发 wrapper、DTO 镜像或并行 resolver；若双端构建边界不能承载同一实现，停止并保留失败证据。
+
+## 验证
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`
+- `dotnet build src/TianZhang.EditModeTests.csproj`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- Unity 与 BattleSim 编译同一 shared source；已有 BattleSim 跨阶／金丹直接测试的理由、幂等、储备扣除和冷却结果保持，Unity EditMode 覆盖 v1、全字段绑定和元婴受锚。
+- `U-TZ-CHARTER-MODEL-01` 只在本卡完成后按状态事件解除该前置并建立其执行卡；未完成时保持等待。
+
+## 停止条件
+
+- 若同一源码不能在 Unity C# 9／`netstandard2.1` 和 BattleSim 编译，或任何既有直接结果改变，停止；不得通过复制、兼容分支、存档迁移或默认路径掩盖问题。

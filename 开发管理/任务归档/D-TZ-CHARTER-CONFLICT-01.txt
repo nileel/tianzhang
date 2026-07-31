@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-TZ-CHARTER-CONFLICT-01",
+  "title": "册界跨端冲突契约架构设计",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-07-31：已根据负责人选择 A 锁定 Unity 与 BattleSim 共用的唯一冲突／跨阶授权契约；D-TZ-CHARTER-CONFLICT-02 已建立并排队迁移现有 BattleSim 语义，U-TZ-CHARTER-MODEL-01 继续等待该实现完成。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-31-tianzhang-charter-cross-runtime-conflict-contract-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/自动工作流状态.txt",
+    "开发管理/任务卡/D-TZ-CHARTER-CONFLICT-01.txt",
+    "开发管理/任务卡/D-TZ-CHARTER-CONFLICT-02.txt",
+    "开发管理/任务归档/D-TZ-CHARTER-CONFLICT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-TZ-CHARTER-CONFLICT-01 · 册界跨端冲突契约架构设计
+
+## 来源与当前边界
+
+- `D-TZ-CHARTER-SCHEMA-01` 与 `D-TZ-CHARTER-SAMPLE-01` 已完成；水府地纪的有效与非法数据样例可供后续模型消费。
+- 负责人于 2026-07-31 在获知 A/B 差异后明确改选 A：授权 Unity 与 BattleSim 共用冲突／跨阶授权契约，并将现有 BattleSim 语义迁为唯一实现。
+- 实时扫描确认原卡文字中的 `RuleConflictInstance` 尚不存在；现有同变量金丹结算为 `GoldenCoreConflict*`，跨阶资格为 `CrossTierChallenge*`，且 Unity 没有对应所有者。
+
+## 必查范围
+
+- 已核验旧决定卡、册界数据契约、`GameSession`、`CharterRuntimeStateData`、Unity asmref／生成项目、BattleSim 项目引用，以及金丹冲突与跨阶授权的完整定义和调用点。
+
+## 实施范围
+
+- 本卡只产出共享边界、契约、迁移顺序、测试矩阵和后继实施卡；不创建共享源码或修改运行时。
+
+## 完成结果
+
+- 已在 `docs/superpowers/specs/2026-07-31-tianzhang-charter-cross-runtime-conflict-contract-design.md` 锁定唯一 source owner：`src/Assets/Scripts/World/CharterConflictRules.cs` 由 `TianZhang.Gameplay` 编译、由 BattleSim linked compile 消费。
+- 已锁定 v1 字段、版本、稳定拒绝原因、金丹／跨阶／元婴分层、BattleSim 迁移顺序、删除边界、失败关闭和双端直接测试矩阵。
+- 已建立并排队 `D-TZ-CHARTER-CONFLICT-02`；它完成前 `U-TZ-CHARTER-MODEL-01` 保持等待，不创建 Unity 册界模型或第二套结算。
+
+## 禁止项
+
+- 不复制 BattleSim 规则、不创建平行 Unity 所有者、不变更存档、数据契约、样例、场景或数值，也不把金丹冲突或元婴受锚降为默认路径。
+
+## 验证
+
+- 对 Unity asmref／生成项目、`GameSession`／`CharterRuntimeStateData`、BattleSim 项目引用、`GoldenCoreConflict*`／`CrossTierChallenge*` 定义及所有调用点完成实时符号扫描。
+- `tools/check-review-text.ps1`、`tools/check-task-cards.ps1`、待处理空白检查和暂存差异检查随本卡提交运行。
+
+## 保留边界
+
+- 本卡未创建共享模块，未改 Unity／BattleSim 运行时、存档、数据契约、样例、场景或数值。
+- 若后续实施无法在同一 source 保持双端构建与现有 BattleSim 行为，按 `D-TZ-CHARTER-CONFLICT-02` 停止条件保留失败证据，不回退为复制或默认拒绝。
+
+## 完成条件
+
+- 唯一共享所有者、依赖方向、v1 字段、迁移顺序、消费者切换、失败关闭和双端测试都已落到准确路径；`D-TZ-CHARTER-CONFLICT-02` 已进入队列。
+
+## 停止条件
+
+- 实时构建边界若不能承载同一实现，后继任务必须停止并报告具体编译或语义冲突，不以第二结算、兼容层或存档迁移推进。
