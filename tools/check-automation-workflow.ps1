@@ -228,7 +228,11 @@ Assert-Contains $contracts.agents @('taskClaim', 'workerPaths', '固定串行集
 Assert-Contains $contracts.collaboration @('candidate', '固定串行集成器', '不得自审') 'AI collaboration boundary'
 Assert-Contains $contracts.deepseek @('candidate commit', 'coordinatorChanges', '不得先写入', '固定集成器') 'DeepSeek lane boundary'
 Assert-Contains $contracts.claude @('task claim', 'lane worktree', 'candidate') 'Claude/DeepSeek entry boundary'
-Assert-Contains $contracts.status @('并行生产模式未部署', '实时 `tzg-hourly-controller` prompt 尚未同步') 'deployment status'
+Assert-Contains $contracts.status @(
+  '实时 status 以 automation 配置为准'
+  'schema 4 runtime'
+  '生产配置只允许 Codex 与 DeepSeek V4 Flash'
+) 'deployment status routing'
 Assert-Contains $contracts.laneTests @('simulated-third', 'worker intervals did not overlap', 'held_conflict', 'stale_selection', 'ResumeBatch') 'lane test coverage'
 Assert-Contains $contracts.batchTests @('fake worker passed', 'batch did not integrate both lanes in queue order', 'canonical commit order is invalid') 'batch canary coverage'
 

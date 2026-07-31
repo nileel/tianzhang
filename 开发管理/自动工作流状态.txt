@@ -8,7 +8,7 @@
 - 权威设计为 `docs/superpowers/specs/2026-07-31-parallel-automation-lanes-design.md`。
 - 仓库内已迁移为 schema-4 协调器 lease、通用 `lanes[]`、显式 task claim、隔离 Worker worktree 和固定串行集成器；生产配置只允许 Codex 与 DeepSeek V4 Flash，`maxConcurrent=2`。
 - Worker 只创建 workerPaths candidate；固定集成器创建 canonical businessCommit。DeepSeek 任务随后形成只含交接登记的 handoffCommit，继续进入 Codex 独立复审。
-- 2026-07-31：自动化管理能力在本次实施上下文不可用，实时 `tzg-hourly-controller` prompt 尚未同步；并行生产模式未部署、不得启用。仓库实现通过检查后须由普通管理上下文暂停控制器、同步完整 prompt、运行无业务 canary，再恢复小时调度。
+- 2026-08-01：负责人已通过自动化管理界面同步实时 `tzg-hourly-controller` prompt；实时 prompt 与仓库 canonical prompt 完全一致，`check-automation-workflow.ps1 -RequireActive -RequireLegacyRetired` 通过。专用临时仓库双 Worker canary 已通过，确认两路结果按原队列顺序形成独立 canonical 提交、临时 runtime 在完成后清空，真实主工作区未新增污染；并行生产配置已部署。小时业务调度仍由 `MANUAL-AUTOMATION-DEPLOY-BLOCK` 人工租约临时阻断，当前占用和到期时间以 `Show` 为准。
 
 ## 当前人工阻塞与恢复所有权
 
