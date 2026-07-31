@@ -605,11 +605,15 @@ function Test-TzgLaneCleanupAllowed {
   if ([string]$Lane.integrationState -ceq 'integrated') {
     return $true
   }
+  $hasCandidateCommit =
+    $null -ne $Lane.workerTerminal -and
+    $Lane.workerTerminal.PSObject.Properties.Name -contains 'candidateCommit' -and
+    -not [string]::IsNullOrWhiteSpace([string]$Lane.workerTerminal.candidateCommit)
   if (
     [string]$Lane.integrationState -ceq 'failed' -and
     $null -ne $Lane.workerTerminal -and
     [string]$Lane.workerTerminal.status -cin @('blocked', 'failed') -and
-    [string]::IsNullOrWhiteSpace([string]$Lane.workerTerminal.candidateCommit)
+    -not $hasCandidateCommit
   ) {
     return $true
   }

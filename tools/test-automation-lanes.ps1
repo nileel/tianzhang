@@ -226,6 +226,21 @@ exit $ExitCode
   Assert-True ($processOne.ExitCode -ne 0 -and $processTwo.ExitCode -eq 0) 'one worker failure incorrectly cancelled the other'
   Assert-True ([long]$twoTimes[1] -lt [long]$oneTimes[1]) 'reverse worker completion was not simulated'
 
+  $failedLaneWithoutCandidate = [pscustomobject]@{
+    integrationState = 'failed'
+    workerTerminal = [pscustomobject]@{ status = 'failed'; detailCode = 'lane_process_lost' }
+  }
+  Assert-True `
+    (Test-TzgLaneCleanupAllowed -Lane $failedLaneWithoutCandidate) `
+    'failed lane without a candidate was not safe to clean'
+  $failedLaneWithCandidate = [pscustomobject]@{
+    integrationState = 'failed'
+    workerTerminal = [pscustomobject]@{ status = 'failed'; candidateCommit = ('a' * 40) }
+  }
+  Assert-True `
+    (-not (Test-TzgLaneCleanupAllowed -Lane $failedLaneWithCandidate)) `
+    'failed lane candidate evidence was incorrectly safe to clean'
+
   $repository = Join-Path $testRoot 'repo'
   $baseCommit = New-TestRepository -Path $repository
   $worktreeA = Join-Path $testRoot 'worker-a'

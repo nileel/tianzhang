@@ -149,7 +149,11 @@ Assert-Contains $contracts.rules @(
   '不得自审',
   '模拟第三 lane',
   '生产配置不得包含虚假第三 AI',
-  '安全清理'
+  '安全清理',
+  '.worktrees/automation/<batchId>/<laneId>',
+  '先创建 detached worktree',
+  'batch 尚未写入 runtime',
+  'Worker 尚未启动'
 ) 'workflow rules'
 Assert-Contains $contracts.lease @(
   'schemaVersion = 4',
@@ -196,7 +200,10 @@ Assert-Contains $contracts.batch @(
   'Remove-SafeLaneWorktrees',
   'ResumeBatch',
   'workerTerminal',
-  'integrationState'
+  'integrationState',
+  '.worktrees\automation',
+  'worktree add --detach',
+  'initializationCleanup'
 ) 'fixed batch coordinator'
 Assert-Contains $contracts.codexWorker @(
   '[TZG_AUTOMATION_LANE_WORKER]',
@@ -234,7 +241,15 @@ Assert-Contains $contracts.status @(
   '生产配置只允许 Codex 与 DeepSeek V4 Flash'
 ) 'deployment status routing'
 Assert-Contains $contracts.laneTests @('simulated-third', 'worker intervals did not overlap', 'held_conflict', 'stale_selection', 'ResumeBatch') 'lane test coverage'
-Assert-Contains $contracts.batchTests @('fake worker passed', 'batch did not integrate both lanes in queue order', 'canonical commit order is invalid') 'batch canary coverage'
+Assert-Contains $contracts.batchTests @(
+  'fake worker passed',
+  'batch did not integrate both lanes in queue order',
+  'canonical commit order is invalid',
+  'production-length path was not checked out',
+  'failed initialization left coordinator lease',
+  'failed initialization left lane branch',
+  'one worker failure did not preserve independent lane progress'
+) 'batch canary coverage'
 
 foreach ($routeContract in @(
     [pscustomobject]@{ Text = $contracts.agents; Context = 'AGENTS recovery route' },

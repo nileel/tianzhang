@@ -37,6 +37,7 @@
 ## Worker 路径与候选提交合同
 
 - 自动 Worker 使用各自唯一分支和自动 worktree；不得共享 Git index、分支、session，不得访问其他 lane worktree，不得切换分支、创建额外 worktree、推送或调用租约收尾。
+- 自动 worktree 固定使用主仓库内的短路径 `.worktrees/automation/<batchId>/<laneId>`；私有 StateRoot 只保存 runtime 与证据，不承载仓库 checkout。协调器先创建 detached worktree，成功后才创建 lane 分支，避免 checkout 失败遗留分支。
 - `tools/invoke-codex-lane-worker.ps1` 与 `tools/invoke-external-lane-worker.ps1` 只允许候选提交包含 `workerPaths`。`coordinatorPaths` 不得由 Worker 写入、stage 或提交。
 - completed 终态必须包含 batch/lane/task/identity/session、完整 candidate SHA、实际 changedPaths、验证结果、正式提交九个事实字段、期望 transition 和 coordinatorChanges。候选父提交必须等于 lane baseCommit，changedPaths 必须是 workerPaths 子集，worktree 必须干净。
 - 候选提交不是正式交付，不使用正式 Automation 元数据，不发送成功通知。
@@ -58,6 +59,7 @@
 - 控制器中断后，`Recover` 只接受同 batch/lane/task/worktree/branch/base/process/session/result 链：进程仍运行则继续等待；结果已完成则继续原序集成；证据不一致则保留现场并失败关闭，不猜测或重建提交。
 - 已 integrated lane 不重复执行、提交或通知。未关闭 batch 处理完成前不领取新任务。
 - 只有 integrated，或 confirmed clean 且没有候选/业务修改的 blocked/failed lane 才删除自动 worktree；needs_decision、held_conflict、stale_selection、completed 但集成失败或证据不完整的 lane 保留现场。
+- batch 尚未写入 runtime、Worker 尚未启动时，初始化失败只在逐项确认自动 worktree 干净、分支仍位于 baseCommit 且路径属于固定短路径后清理，并记录失败、释放协调器 lease；任一证据不满足则保留现场与 lease，不猜测清理。
 - batch 有保留证据时可以释放过期协调器进程，但 batch claim 保留在 `Show`，后续普通轮次不得选择新任务。
 - 通知失败只记录脱敏投递状态，不改变提交、任务卡、batch、lane 终态或退出码，不自动重试。
 

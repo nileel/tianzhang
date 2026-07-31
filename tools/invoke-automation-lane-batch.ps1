@@ -81,6 +81,91 @@ function Get-BatchInputs {
   }
 }
 
+function Assert-AutomationWorktreePath {
+  param([Parameter(Mandatory = $true)][string]$Path)
+
+  $root = [IO.Path]::GetFullPath($script:automationWorktreeRoot).TrimEnd('\', '/')
+  $fullPath = [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
+  $relative = [IO.Path]::GetRelativePath($root, $fullPath)
+  $segments = @($relative -split '[\\/]')
+  if (
+    $relative.StartsWith('..', [StringComparison]::Ordinal) -or
+    [IO.Path]::IsPathRooted($relative) -or
+    $segments.Count -ne 2 -or
+    @($segments | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -ne 0
+  ) {
+    throw "Unsafe automation worktree path: $fullPath"
+  }
+  $fullPath
+}
+
+function Remove-UnstartedLaneArtifacts {
+  param(
+    [Parameter(Mandatory = $true)][string]$Worktree,
+    [Parameter(Mandatory = $true)][string]$Branch,
+    [Parameter(Mandatory = $true)][string]$BaseCommit
+  )
+
+  $worktreePath = Assert-AutomationWorktreePath -Path $Worktree
+  if (Test-Path -LiteralPath $worktreePath) {
+    $status = @(& git -C $worktreePath status --porcelain --untracked-files=all 2>$null)
+    if ($LASTEXITCODE -eq 0) {
+      if ($status.Count -ne 0) {
+        throw "Unstarted lane worktree is not clean: $worktreePath"
+      }
+      $removeOutput = @(& git -C $script:resolvedRepositoryRoot worktree remove $worktreePath 2>&1)
+      if ($LASTEXITCODE -ne 0) {
+        throw "Unable to remove unstarted lane worktree: $(@($removeOutput) -join ' ')"
+      }
+    } else {
+      Remove-Item -LiteralPath $worktreePath -Recurse -Force
+    }
+  }
+
+  $branchRef = "refs/heads/$Branch"
+  $branchCommit = @(& git -C $script:resolvedRepositoryRoot show-ref --verify --hash $branchRef 2>$null)
+  if ($LASTEXITCODE -eq 0) {
+    if ($branchCommit.Count -ne 1 -or [string]$branchCommit[0] -cne $BaseCommit) {
+      throw "Unstarted lane branch moved from its base commit: $Branch"
+    }
+    $checkedOut = @(& git -C $script:resolvedRepositoryRoot worktree list --porcelain) -contains "branch $branchRef"
+    if ($checkedOut) {
+      throw "Unstarted lane branch is still checked out: $Branch"
+    }
+    $deleteOutput = @(& git -C $script:resolvedRepositoryRoot branch -D $Branch 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to remove unstarted lane branch: $(@($deleteOutput) -join ' ')"
+    }
+  }
+
+  $batchWorktreeDirectory = Split-Path -Parent $worktreePath
+  if (
+    (Test-Path -LiteralPath $batchWorktreeDirectory -PathType Container) -and
+    @(Get-ChildItem -Force -LiteralPath $batchWorktreeDirectory).Count -eq 0
+  ) {
+    Remove-Item -LiteralPath $batchWorktreeDirectory -Force
+  }
+}
+
+function Remove-UnpublishedBatchDirectory {
+  param([Parameter(Mandatory = $true)][string]$Path)
+
+  $batchesRoot = [IO.Path]::GetFullPath((Join-Path $StateRoot 'batches')).TrimEnd('\', '/')
+  $fullPath = [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
+  $relative = [IO.Path]::GetRelativePath($batchesRoot, $fullPath)
+  if (
+    $relative.StartsWith('..', [StringComparison]::Ordinal) -or
+    [IO.Path]::IsPathRooted($relative) -or
+    [string]::IsNullOrWhiteSpace($relative) -or
+    $relative -match '[\\/]'
+  ) {
+    throw "Unsafe unpublished batch directory: $fullPath"
+  }
+  if (Test-Path -LiteralPath $fullPath) {
+    Remove-Item -LiteralPath $fullPath -Recurse -Force
+  }
+}
+
 function New-BatchLane {
   param(
     [Parameter(Mandatory = $true)][object]$Selection,
@@ -92,15 +177,39 @@ function New-BatchLane {
   $laneId = [string]$Selection.lane.laneId
   $taskId = [string]$Selection.taskId
   $safeTaskId = $taskId -replace '[^A-Za-z0-9._-]', '-'
-  $worktree = Join-Path $BatchDirectory "worktrees\$laneId"
+  $worktree = Join-Path $script:automationWorktreeRoot "$BatchId\$laneId"
+  $worktree = Assert-AutomationWorktreePath -Path $worktree
   $branch = "automation/$BatchId/$laneId/$safeTaskId"
+  if (Test-Path -LiteralPath $worktree) {
+    throw "Lane worktree target already exists: $worktree"
+  }
+  $null = @(& git -C $script:resolvedRepositoryRoot show-ref --verify --quiet "refs/heads/$branch" 2>$null)
+  if ($LASTEXITCODE -eq 0) {
+    throw "Lane branch already exists: $branch"
+  }
+  $script:pendingLaneArtifacts = [pscustomobject]@{
+    worktree = $worktree
+    branch = $branch
+    baseCommit = $BaseCommit
+  }
   [IO.Directory]::CreateDirectory((Split-Path -Parent $worktree)) | Out-Null
-  $output = @(& git -C $script:resolvedRepositoryRoot worktree add -b $branch $worktree $BaseCommit 2>&1)
-  if ($LASTEXITCODE -ne 0) {
-    throw "Unable to create lane worktree: $(@($output) -join ' ')"
+  try {
+    $output = @(& git -C $script:resolvedRepositoryRoot worktree add --detach $worktree $BaseCommit 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to create detached lane worktree: $(@($output) -join ' ')"
+    }
+    $output = @(& git -C $worktree switch -c $branch 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to create lane branch: $(@($output) -join ' ')"
+    }
+  } catch {
+    $createFailure = $_
+    Remove-UnstartedLaneArtifacts -Worktree $worktree -Branch $branch -BaseCommit $BaseCommit
+    $script:pendingLaneArtifacts = $null
+    throw $createFailure
   }
   $resultPath = Join-Path $BatchDirectory "results\$laneId.json"
-  [pscustomobject][ordered]@{
+  $laneResult = [pscustomobject][ordered]@{
     laneId = $laneId
     owner = [string]$Selection.lane.owner
     identity = [string]$Selection.lane.identity
@@ -132,6 +241,8 @@ function New-BatchLane {
     integrationState = 'pending'
     queueIndex = [int]$Selection.queueIndex
   }
+  $script:pendingLaneArtifacts = $null
+  $laneResult
 }
 
 function Start-BatchLaneWorker {
@@ -455,10 +566,18 @@ function Complete-BatchCloseout {
 }
 
 $script:resolvedRepositoryRoot = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
+$script:automationWorktreeRoot = Join-Path $script:resolvedRepositoryRoot '.worktrees\automation'
 $script:batchStatePath = $null
+$script:pendingLaneArtifacts = $null
 $processes = @{}
 $result = $null
 $batch = $null
+$batchId = $null
+$batchDirectory = $null
+$runId = $null
+$createdLanes = [Collections.Generic.List[object]]::new()
+$workersStarted = $false
+$initializationCleanup = $null
 $stage = 'initialize'
 
 try {
@@ -555,7 +674,7 @@ try {
     }
 
     $stage = 'create_lanes'
-    $lanes = [Collections.Generic.List[object]]::new()
+    $lanes = $createdLanes
     foreach ($selected in $freshSelection) {
       $lanes.Add((New-BatchLane `
         -Selection $selected `
@@ -578,6 +697,7 @@ try {
     }
     $stage = 'start_workers'
     Save-CurrentBatch -Batch $batch
+    $workersStarted = $true
     foreach ($lane in $batch.lanes) {
       $processes[[string]$lane.laneId] = Start-BatchLaneWorker -Batch $batch -Lane $lane
     }
@@ -688,12 +808,60 @@ try {
     }
   }
 } catch {
+  if (
+    $Action -ceq 'Start' -and
+    -not [string]::IsNullOrWhiteSpace($runId) -and
+    -not $workersStarted
+  ) {
+    try {
+      $controlState = Invoke-BatchLease -LeaseAction Show
+      if ($null -eq $controlState.state.batch) {
+        if ($null -ne $script:pendingLaneArtifacts) {
+          Remove-UnstartedLaneArtifacts `
+            -Worktree ([string]$script:pendingLaneArtifacts.worktree) `
+            -Branch ([string]$script:pendingLaneArtifacts.branch) `
+            -BaseCommit ([string]$script:pendingLaneArtifacts.baseCommit)
+          $script:pendingLaneArtifacts = $null
+        }
+        for ($laneIndex = $createdLanes.Count - 1; $laneIndex -ge 0; $laneIndex--) {
+          $createdLane = $createdLanes[$laneIndex]
+          Remove-UnstartedLaneArtifacts `
+            -Worktree ([string]$createdLane.worktree) `
+            -Branch ([string]$createdLane.branch) `
+            -BaseCommit ([string]$createdLane.baseCommit)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($batchDirectory)) {
+          Remove-UnpublishedBatchDirectory -Path $batchDirectory
+        }
+        $failureDetailCode = "batch_${stage}_failed"
+        $recorded = Invoke-BatchLease -LeaseAction RecordResult -Parameters @{
+          RunId = $runId
+          TaskId = 'AUTOMATION-BATCH'
+          Category = 'failed'
+          DetailCode = $failureDetailCode
+        }
+        if ([string]$recorded.status -cne 'RECORDED') {
+          throw "Unable to record initialization failure: $($recorded.status)"
+        }
+        $released = Invoke-BatchLease -LeaseAction Release -Parameters @{ RunId = $runId }
+        if ([string]$released.status -cne 'RELEASED') {
+          throw "Unable to release initialization lease: $($released.status)"
+        }
+        $initializationCleanup = 'completed'
+      }
+    } catch {
+      $initializationCleanup = 'preserved'
+    }
+  }
   if ($null -eq $result) {
     $result = [ordered]@{
       status = 'failed'
-      batchId = if ($null -ne $batch) { [string]$batch.batchId } else { $null }
+      batchId = if (-not [string]::IsNullOrWhiteSpace($batchId)) { $batchId } else { $null }
       detailCode = "batch_${stage}_failed"
       lanes = @()
+    }
+    if ($null -ne $initializationCleanup) {
+      $result.initializationCleanup = $initializationCleanup
     }
   }
 }

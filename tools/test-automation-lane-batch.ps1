@@ -5,9 +5,15 @@ Set-StrictMode -Version Latest
 
 $repositorySource = Split-Path -Parent $PSScriptRoot
 $coordinator = Join-Path $PSScriptRoot 'invoke-automation-lane-batch.ps1'
-$tempRoot = Join-Path ([IO.Path]::GetTempPath()) "tzg-lane-batch-$([Guid]::NewGuid().ToString('N'))"
+$gitCommonDirectory = (& git -C $repositorySource rev-parse --path-format=absolute --git-common-dir).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'Unable to locate the main repository for batch test isolation.' }
+$mainRepositoryRoot = Split-Path -Parent ([IO.Path]::GetFullPath($gitCommonDirectory))
+$workspaceTempBase = Join-Path $mainRepositoryRoot '.worktrees'
+$tempRoot = Join-Path $workspaceTempBase "tb-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
 $privateBase = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.codex\automation-state'
 $stateRoot = Join-Path $privateBase "tzg-lane-batch-test-$([Guid]::NewGuid().ToString('N'))"
+$failureStateRoot = Join-Path $privateBase "tzg-lane-batch-failure-test-$([Guid]::NewGuid().ToString('N'))"
+$workerFailureStateRoot = Join-Path $privateBase "tzg-lane-worker-failure-test-$([Guid]::NewGuid().ToString('N'))"
 
 function Invoke-Git {
   param([string]$Root, [string[]]$Arguments)
@@ -147,14 +153,34 @@ $terminal = [ordered]@{
 [Console]::Out.WriteLine(($terminal | ConvertTo-Json -Compress -Depth 100))
 '@
 
+$lostWorker = @'
+#requires -Version 7.0
+param(
+  [string]$Action,
+  [string]$RepositoryRoot,
+  [string]$TaskId,
+  [string]$RunId,
+  [string]$BatchId,
+  [string]$LaneId,
+  [string]$ResultPath,
+  [string]$StateRoot,
+  [string]$Model
+)
+exit 17
+'@
+
 try {
-  $repository = Join-Path $tempRoot 'repo'
+  $repository = Join-Path $tempRoot 'r'
   [IO.Directory]::CreateDirectory($repository) | Out-Null
   $null = Invoke-Git $repository @('init', '-q')
   $null = Invoke-Git $repository @('config', 'user.email', 'batch-test@example.invalid')
   $null = Invoke-Git $repository @('config', 'user.name', 'Batch Test')
+  Write-Utf8 (Join-Path $repository '.gitignore') ".worktrees/`n"
   Write-Utf8 (Join-Path $repository 'a.txt') "a0`n"
   Write-Utf8 (Join-Path $repository 'b.txt') "b0`n"
+  Write-Utf8 `
+    (Join-Path $repository 'src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset.meta') `
+    "production-length fixture`n"
   Write-Utf8 (Join-Path $repository '开发管理/任务卡/A.txt') (New-Card A codex_execute codex a.txt)
   Write-Utf8 (Join-Path $repository '开发管理/任务卡/B.txt') (New-Card B external_execute deepseek b.txt -External)
   Write-Utf8 (Join-Path $repository '开发管理/当前任务队列.txt') @'
@@ -185,6 +211,99 @@ try {
   Write-Utf8 (Join-Path $repository 'tools/invoke-external-lane-worker.ps1') $fakeWorker
   $null = Invoke-Git $repository @('add', '--', '.')
   $null = Invoke-Git $repository @('commit', '-q', '-m', 'fixture base')
+
+  $productionLengthRelativePath = 'src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset.meta'
+  $legacyWorktreeFixture = Join-Path $stateRoot "batches\$('0' * 36)\worktrees\deepseek"
+  if ((Join-Path $legacyWorktreeFixture $productionLengthRelativePath).Length -lt 260) {
+    throw 'production-length path was not checked out at the Windows boundary fixture'
+  }
+
+  $failureRepository = Join-Path $tempRoot 'f'
+  $cloneOutput = @(& git clone -q $repository $failureRepository 2>&1)
+  if ($LASTEXITCODE -ne 0) { throw "failure fixture clone failed: $(@($cloneOutput) -join ' ')" }
+  Write-Utf8 (Join-Path $failureRepository '.worktrees') "worktree-root-blocker`n"
+  $failureOutput = @(
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File $coordinator `
+      -Action Start `
+      -RepositoryRoot $failureRepository `
+      -StateRoot $failureStateRoot `
+      -Model test-model `
+      -CoordinatorTimeoutSeconds 30 2>&1
+  )
+  $failureExitCode = $LASTEXITCODE
+  if ($failureExitCode -ne 1 -or $failureOutput.Count -ne 1) {
+    throw "initialization failure fixture returned an invalid result: $(@($failureOutput) -join ' ')"
+  }
+  $failureResult = $failureOutput[0] | ConvertFrom-Json -Depth 100
+  if (
+    [string]$failureResult.status -cne 'failed' -or
+    [string]$failureResult.detailCode -cne 'batch_create_lanes_failed' -or
+    [string]$failureResult.initializationCleanup -cne 'completed'
+  ) {
+    throw "initialization failure was not closed safely: $($failureOutput[0])"
+  }
+  $failureShow = @(
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'hourly-automation-lease.ps1') `
+      -Action Show `
+      -StateRoot $failureStateRoot
+  )[0] | ConvertFrom-Json -Depth 100
+  if ($null -ne $failureShow.state.lease) {
+    throw 'failed initialization left coordinator lease'
+  }
+  if ($null -ne $failureShow.state.batch) {
+    throw 'failed initialization left batch claim'
+  }
+  if ([string]$failureShow.state.lastResult.detailCode -cne 'batch_create_lanes_failed') {
+    throw 'failed initialization did not record its terminal detail'
+  }
+  $failureBranches = @(& git -C $failureRepository branch --list 'automation/*')
+  if ($LASTEXITCODE -ne 0 -or $failureBranches.Count -ne 0) {
+    throw "failed initialization left lane branch: $(@($failureBranches) -join ' ')"
+  }
+  $failureWorktrees = @(& git -C $failureRepository worktree list --porcelain | Where-Object { $_ -like 'worktree *' })
+  if ($LASTEXITCODE -ne 0 -or $failureWorktrees.Count -ne 1) {
+    throw "failed initialization left lane worktree: $(@($failureWorktrees) -join ' ')"
+  }
+
+  $workerFailureRepository = Join-Path $tempRoot 'w'
+  $cloneOutput = @(& git clone -q $repository $workerFailureRepository 2>&1)
+  if ($LASTEXITCODE -ne 0) { throw "worker failure fixture clone failed: $(@($cloneOutput) -join ' ')" }
+  $null = Invoke-Git $workerFailureRepository @('config', 'user.email', 'batch-test@example.invalid')
+  $null = Invoke-Git $workerFailureRepository @('config', 'user.name', 'Batch Test')
+  Write-Utf8 (Join-Path $workerFailureRepository 'tools/invoke-codex-lane-worker.ps1') $lostWorker
+  $workerFailureOutput = @(
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File $coordinator `
+      -Action Start `
+      -RepositoryRoot $workerFailureRepository `
+      -StateRoot $workerFailureStateRoot `
+      -Model test-model `
+      -CoordinatorTimeoutSeconds 30 2>&1
+  )
+  if ($LASTEXITCODE -ne 0 -or $workerFailureOutput.Count -ne 1) {
+    throw "worker failure batch did not close: $(@($workerFailureOutput) -join ' ')"
+  }
+  $workerFailureResult = $workerFailureOutput[0] | ConvertFrom-Json -Depth 100
+  if (
+    [string]$workerFailureResult.status -cne 'completed' -or
+    [string]$workerFailureResult.lanes[0].workerStatus -cne 'failed' -or
+    [string]$workerFailureResult.lanes[0].integrationState -cne 'failed' -or
+    [string]$workerFailureResult.lanes[1].workerStatus -cne 'completed' -or
+    [string]$workerFailureResult.lanes[1].integrationState -cne 'integrated'
+  ) {
+    throw "one worker failure did not preserve independent lane progress: $($workerFailureOutput[0])"
+  }
+  $workerFailureShow = @(
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'hourly-automation-lease.ps1') `
+      -Action Show `
+      -StateRoot $workerFailureStateRoot
+  )[0] | ConvertFrom-Json -Depth 100
+  if ($null -ne $workerFailureShow.state.lease -or $null -ne $workerFailureShow.state.batch) {
+    throw 'worker failure batch did not release and clear runtime'
+  }
+  $workerFailureBranches = @(& git -C $workerFailureRepository branch --list 'automation/*')
+  if ($LASTEXITCODE -ne 0 -or $workerFailureBranches.Count -ne 0) {
+    throw "worker failure batch left lane branch: $(@($workerFailureBranches) -join ' ')"
+  }
 
   $output = @(
     & pwsh -NoProfile -ExecutionPolicy Bypass -File $coordinator `
@@ -231,14 +350,16 @@ try {
   }
   Write-Output 'test-automation-lane-batch: OK'
 } finally {
-  foreach ($path in @($tempRoot, $stateRoot)) {
+  foreach ($path in @($tempRoot, $stateRoot, $failureStateRoot, $workerFailureStateRoot)) {
     if (Test-Path -LiteralPath $path) {
       $fullPath = [IO.Path]::GetFullPath($path)
       $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
       $privatePrefix = [IO.Path]::GetFullPath($privateBase).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+      $workspaceTempPrefix = [IO.Path]::GetFullPath($workspaceTempBase).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
       if (
         $fullPath.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase) -or
-        $fullPath.StartsWith($privatePrefix, [StringComparison]::OrdinalIgnoreCase)
+        $fullPath.StartsWith($privatePrefix, [StringComparison]::OrdinalIgnoreCase) -or
+        $fullPath.StartsWith($workspaceTempPrefix, [StringComparison]::OrdinalIgnoreCase)
       ) {
         Remove-Item -LiteralPath $fullPath -Recurse -Force
       }
