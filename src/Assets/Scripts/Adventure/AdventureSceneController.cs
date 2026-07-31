@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TianZhang.Combat;
+using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Map;
@@ -19,14 +20,16 @@ namespace TianZhang.Adventure
 
     public class AdventureSceneController : MonoBehaviour
     {
-        private const string GuanzhongWildAdventureId = "guanzhong_wild";
-
-        [SerializeField] private CharacterData[] guanzhongWildEnemyTemplates = System.Array.Empty<CharacterData>();
+        [SerializeField] private ContentCatalogData contentCatalog;
         [SerializeField] private EnvironmentProfileData guanzhongWildEnvironmentProfile;
 
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
         public TacticalCombatEndOutcome LastEncounterOutcome { get; private set; } = TacticalCombatEndOutcome.Ongoing;
+        public FormalEncounterResult LastFormalEncounterResult { get; private set; }
+        public string EncounterResolutionFailureReason { get; private set; }
         public string CurrentAdventureId => GameSession.Instance?.CurrentAdventureId ?? "prototype_adventure";
+        public bool RequiresFormalEncounter =>
+            CurrentAdventureId == FormalEncounterRules.GuanzhongWildAdventureId;
 
         private Text adventureIdText;
         private Text sourceText;
@@ -35,6 +38,9 @@ namespace TianZhang.Adventure
         private ExplorationController explorationController;
         private string encounterConfigurationError;
         private EnvironmentPresentationSnapshot environmentPresentation;
+        private IFormalEncounterRandomSource encounterRandomSource =
+            new SystemFormalEncounterRandomSource();
+        private bool formalEncounterConsumed;
 
         private void Awake()
         {
@@ -70,10 +76,20 @@ namespace TianZhang.Adventure
 
         public void ResolveEncounterAndReturn(TacticalCombatEndOutcome outcome)
         {
+            ResolveEncounterAndReturn(outcome, null);
+        }
+
+        public void ResolveEncounterAndReturn(
+            TacticalCombatEndOutcome outcome,
+            EnemyData defeatedEnemy)
+        {
             if (outcome != TacticalCombatEndOutcome.Victory && outcome != TacticalCombatEndOutcome.Defeat)
                 throw new System.ArgumentOutOfRangeException(nameof(outcome), outcome, "Only completed encounter outcomes may return to the source scene.");
 
             LastEncounterOutcome = outcome;
+            if (RequiresFormalEncounter)
+                ConsumeFormalEncounterResult(outcome, defeatedEnemy);
+
             MarkReturning();
             if (SceneFlowManager.Instance != null)
                 SceneFlowManager.Instance.ReturnToPreviousScene();
@@ -111,9 +127,9 @@ namespace TianZhang.Adventure
             return "来源: 未记录";
         }
 
-        public void SetGuanzhongWildEnemyTemplates(CharacterData[] enemyTemplates)
+        public void SetContentCatalog(ContentCatalogData catalog)
         {
-            guanzhongWildEnemyTemplates = enemyTemplates ?? System.Array.Empty<CharacterData>();
+            contentCatalog = catalog;
         }
 
         public void SetGuanzhongWildEnvironmentProfile(EnvironmentProfileData environmentProfile)
@@ -121,10 +137,18 @@ namespace TianZhang.Adventure
             guanzhongWildEnvironmentProfile = environmentProfile;
         }
 
+        public void SetEncounterRandomSource(IFormalEncounterRandomSource randomSource)
+        {
+            encounterRandomSource = randomSource;
+        }
+
         private void ConfigureCurrentAdventureEncounter()
         {
             encounterConfigurationError = null;
-            if (CurrentAdventureId != GuanzhongWildAdventureId)
+            EncounterResolutionFailureReason = null;
+            LastFormalEncounterResult = null;
+            formalEncounterConsumed = false;
+            if (!RequiresFormalEncounter)
                 return;
 
             explorationController = FindFirstObjectByType<ExplorationController>();
@@ -134,11 +158,16 @@ namespace TianZhang.Adventure
                 return;
             }
 
-            if (guanzhongWildEnemyTemplates == null ||
-                guanzhongWildEnemyTemplates.Length != 1 ||
-                guanzhongWildEnemyTemplates[0] == null)
+            explorationController.ClearFormalEncounter();
+            if (!FormalEncounterRules.TryResolveGuanzhongEnemy(
+                    contentCatalog,
+                    out EnemyData enemy,
+                    out IAIController aiController,
+                    out string enemyReason))
             {
-                BlockGuanzhongWildEncounter("guanzhong_wild 必须绑定且只能绑定一个正式石甲兽 CharacterData，已阻止遭遇启动。");
+                BlockGuanzhongWildEncounter(
+                    FormalEncounterRules.GuanzhongWildAdventureId +
+                    " 正式敌人配置被拒绝: " + enemyReason);
                 return;
             }
 
@@ -149,10 +178,11 @@ namespace TianZhang.Adventure
                 return;
             }
 
+            explorationController.ConfigureFormalEncounter(enemy, aiController);
             explorationController.ConfigureEnvironmentProfile(guanzhongWildEnvironmentProfile);
             explorationController.enabled = true;
             explorationController.enemyCount = 1;
-            explorationController.enemyTemplates = guanzhongWildEnemyTemplates;
+            explorationController.enemyTemplates = System.Array.Empty<CharacterData>();
         }
 
         private void BlockGuanzhongWildEncounter(string error)
@@ -167,6 +197,64 @@ namespace TianZhang.Adventure
         public void ReportEncounterConfigurationFailure(string error)
         {
             BlockGuanzhongWildEncounter(error);
+        }
+
+        private void ConsumeFormalEncounterResult(
+            TacticalCombatEndOutcome outcome,
+            EnemyData defeatedEnemy)
+        {
+            if (formalEncounterConsumed)
+            {
+                RecordEncounterResolutionFailure(FormalEncounterRules.AlreadyConsumedReason);
+                return;
+            }
+
+            formalEncounterConsumed = true;
+            if (!FormalEncounterResult.TryCreate(
+                    contentCatalog,
+                    defeatedEnemy,
+                    CurrentAdventureId,
+                    outcome,
+                    encounterRandomSource,
+                    out FormalEncounterResult result,
+                    out string resultReason))
+            {
+                RecordEncounterResolutionFailure(resultReason);
+                return;
+            }
+
+            LastFormalEncounterResult = result;
+            if (outcome != TacticalCombatEndOutcome.Victory ||
+                result.DropGrants.Count == 0)
+            {
+                return;
+            }
+
+            var session = GameSession.Instance;
+            if (session == null)
+            {
+                RecordEncounterResolutionFailure(FormalEncounterRules.SessionMissingReason);
+                return;
+            }
+
+            var requests = new List<InventoryGrantRequest>(result.DropGrants.Count);
+            foreach (FormalDropGrant grant in result.DropGrants)
+                requests.Add(new InventoryGrantRequest(grant.ItemId, grant.Quantity));
+
+            InventoryGrantResult grantResult = session.GrantItems(contentCatalog, requests);
+            if (!grantResult.Applied)
+            {
+                RecordEncounterResolutionFailure(
+                    "formal_encounter_inventory_grant_failed:" +
+                    grantResult.FailureReason);
+            }
+        }
+
+        private void RecordEncounterResolutionFailure(string reason)
+        {
+            EncounterResolutionFailureReason = reason;
+            Debug.LogError("[AdventureScene] 正式遭遇结算失败: " + reason);
+            RefreshAdventureUi();
         }
 
         public void SetEnvironmentPresentation(EnvironmentPresentationSnapshot presentation)
@@ -221,9 +309,14 @@ namespace TianZhang.Adventure
                 adventureIdText.text = "当前副本: " + GetAdventureDisplayName();
 
             if (sourceText != null)
-                sourceText.text = string.IsNullOrEmpty(encounterConfigurationError)
+            {
+                string encounterError = string.IsNullOrEmpty(encounterConfigurationError)
+                    ? EncounterResolutionFailureReason
+                    : encounterConfigurationError;
+                sourceText.text = string.IsNullOrEmpty(encounterError)
                     ? BuildSourceDescription()
-                    : encounterConfigurationError + "\n" + BuildSourceDescription();
+                    : encounterError + "\n" + BuildSourceDescription();
+            }
 
             if (environmentFeedbackText != null)
                 environmentFeedbackText.text = BuildEnvironmentFeedbackDescription();
@@ -234,7 +327,9 @@ namespace TianZhang.Adventure
 
         private string GetAdventureDisplayName()
         {
-            return CurrentAdventureId == GuanzhongWildAdventureId ? "关中野外" : CurrentAdventureId;
+            return CurrentAdventureId == FormalEncounterRules.GuanzhongWildAdventureId
+                ? "关中野外"
+                : CurrentAdventureId;
         }
 
         private string BuildEnvironmentFeedbackDescription()

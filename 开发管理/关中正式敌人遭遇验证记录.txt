@@ -1,0 +1,21 @@
+# 关中正式敌人遭遇验证记录
+
+## U-ENEMY-01 · 2026-07-31
+
+- 身份与所有者：`AdventureSceneController` 从唯一正式目录按 `enemy_shijiahou` 解析 `EnemyData`，`ExplorationController.EnemyUnit` 持续保留同一引用；Adventure 继续负责正式结算与返回，战斗控制器只负责成员和胜负，库存仍由 `GameSession` 唯一持有。
+- 失败关闭：进入探索前验证关中范围、`ai_melee`、战斗模板、结构化掉落及生产物品；正式生成与开战均拒绝缺失身份或 AI，不进入原型 fallback。未知目录、敌人、范围、AI、模板、掉落和物品均返回稳定原因。
+- 结构化结算：胜利按可注入 `[0,100)` 随机源逐项执行严格 `< dropChancePercent` 判定，结果包含敌人 ID、副本 ID、掉落授予列表与胜负；Adventure 只消费一次，并通过既有原子授予入口全成或全败。
+- 边界：未修改石甲兽战斗数值、掉落概率或数量、物品堆叠、攻击档案、空间查询、CTB、伤害、悬赏、存档或表现资源。
+
+## 已执行验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 警告、0 错误。
+- Unity 6000.3.18f1 EditMode：本任务相关正式目录、EnemyData 身份、显式 AI、概率边界、结构化结果、原子库存、一次消费、返回与场景测试 14/14 通过。
+- 完整 EditMode：278/279 通过；唯一失败为既有 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 缺少其预期攻击档案排除日志，连续两次结果一致，未涉及本卡修改路径。
+- `SceneBuilder.ValidateSceneArchitectureShellsForBatchMode`：通过，正式 Adventure 场景序列化目录与 `env_guanzhong_wild` 绑定均正确。
+- `tools/check-data-chain.ps1`：通过，功法、术法、神通数量与语言键链路均正常。
+- `tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Scenes,src/Assets/Tests`：通过，检查 631 个文件。
+
+## 后续
+
+- `U-ITEM-GRANT-01` 与 `U-ENEMY-01` 的实现前置均已完成；`U-BOUNTY-01A` 可在后续独立状态维护事件中建立准确任务卡并进入近期调度。

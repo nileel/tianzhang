@@ -86,15 +86,15 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void FormalAndRebuiltAdventureScenesBindTheSameFormalShijiahou()
+        public void FormalAndRebuiltAdventureScenesBindTheSameProductionCatalog()
         {
             EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
-            var formalEnemyGuid = GetFormalAdventureEnemyGuid();
+            var formalCatalogGuid = GetFormalAdventureCatalogGuid();
 
             SceneBuilder.BuildAdventureScene();
             EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
 
-            Assert.AreEqual(formalEnemyGuid, GetFormalAdventureEnemyGuid());
+            Assert.AreEqual(formalCatalogGuid, GetFormalAdventureCatalogGuid());
         }
 
         [Test]
@@ -679,21 +679,21 @@ namespace TianZhang.Tests
             Assert.IsNotNull(controller.GetComponent(expectedControllerType), expectedControllerType.Name);
         }
 
-        private static string GetFormalAdventureEnemyGuid()
+        private static string GetFormalAdventureCatalogGuid()
         {
             var controller = Object.FindFirstObjectByType<AdventureSceneController>();
             Assert.IsNotNull(controller);
             var serializedController = new SerializedObject(controller);
-            var guanzhongEnemyTemplates = serializedController.FindProperty("guanzhongWildEnemyTemplates");
-            Assert.IsNotNull(guanzhongEnemyTemplates);
-            Assert.AreEqual(1, guanzhongEnemyTemplates.arraySize);
+            var catalogProperty = serializedController.FindProperty("contentCatalog");
+            Assert.IsNotNull(catalogProperty);
 
-            var enemy = guanzhongEnemyTemplates.GetArrayElementAtIndex(0).objectReferenceValue as TianZhang.Entity.CharacterData;
-            Assert.IsNotNull(enemy);
-            Assert.AreEqual("石甲兽", enemy.charName);
+            var catalog = catalogProperty.objectReferenceValue as ContentCatalogData;
+            Assert.IsNotNull(catalog);
+            Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
+            Assert.IsNotNull(enemy.combatTemplate);
 
-            var assetPath = AssetDatabase.GetAssetPath(enemy);
-            Assert.AreEqual("Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset", assetPath);
+            var assetPath = AssetDatabase.GetAssetPath(catalog);
+            Assert.AreEqual("Assets/Data/ContentCatalog/ContentCatalog.asset", assetPath);
             return AssetDatabase.AssetPathToGUID(assetPath);
         }
 

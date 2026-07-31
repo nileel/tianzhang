@@ -12,12 +12,11 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-ENEMY-01 | P1 | codex | 已排队 | — | 正式敌人遭遇与结构化掉落 | `开发管理/任务卡/U-ENEMY-01.txt` |
 | D-TZ-CHARTER-CONFLICT-01 | P1 | codex | 已排队 | — | 册界跨端冲突契约架构设计 | `开发管理/任务卡/D-TZ-CHARTER-CONFLICT-01.txt` |
-| U-BOUNTY-01A | P1 | Codex | 阻塞（U-ITEM-GRANT-01、U-ENEMY-01） | — | 实现一次性悬赏状态机、地点／敌人校验、击败计数和防重复结算。 | — |
+| U-BOUNTY-01A | P1 | Codex | 待建立任务卡（前置均完成） | — | 实现一次性悬赏状态机、地点／敌人校验、击败计数和防重复结算。 | — |
 | U-BOUNTY-01B | P1 | Codex | 阻塞（U-BOUNTY-01A） | — | 增加独立 `BountyStateStore`、存档 schema 3 与版本 0／1／2 迁移。 | — |
 | U-BOUNTY-01C | P1 | Codex | 阻塞（U-BOUNTY-01B） | — | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | — |
-| U-GZ-FORMAL-E2E-01 | P1 | Codex | 阻塞（U-ITEM-GRANT-01、U-ENEMY-01、U-BOUNTY-01C） | — | 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环。 | — |
+| U-GZ-FORMAL-E2E-01 | P1 | Codex | 阻塞（U-BOUNTY-01C） | — | 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环。 | — |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
 | U-MECH-02B / TQ-028 | P2 | Codex | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |

@@ -1,4 +1,5 @@
-﻿using TianZhang.Core;
+﻿using System;
+using TianZhang.Core;
 using TianZhang.Entity;
 
 namespace TianZhang.Combat
@@ -13,6 +14,29 @@ namespace TianZhang.Combat
         string ExecuteTurn(Character self, Character target,
             AttackProfileData[] arts, AttackProfileData[] divines, AttackProfileData basicAttack,
             CombatResolver resolver);
+    }
+
+    public static class EnemyAIProfileResolver
+    {
+        public const string MeleeProfileId = "ai_melee";
+        public const string UnknownProfileReason = "formal_enemy_ai_profile_unknown";
+
+        public static bool TryResolve(
+            string aiProfileId,
+            out IAIController controller,
+            out string reason)
+        {
+            if (string.Equals(aiProfileId, MeleeProfileId, StringComparison.Ordinal))
+            {
+                controller = new SimpleAI();
+                reason = string.Empty;
+                return true;
+            }
+
+            controller = null;
+            reason = UnknownProfileReason;
+            return false;
+        }
     }
 
     public class SimpleAI : IAIController

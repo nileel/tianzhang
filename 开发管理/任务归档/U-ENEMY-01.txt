@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：U-ITEM-GRANT-01 已完成并归档，正式目录、EnemyData 与唯一物品原子授予入口均已具备；本卡可按既定范围实施正式敌人遭遇与结构化掉落。",
+  "stateReason": "2026-07-31：正式 Adventure 已按稳定 ID 消费 EnemyData，显式解析 ai_melee，生成结构化遭遇结果并通过唯一库存入口原子授予；验证记录见 开发管理/关中正式敌人遭遇验证记录.txt。",
   "expectedPaths": [
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
@@ -80,3 +80,10 @@
 
 - 若正式链无法在不复制战斗／空间状态的前提下保留 `EnemyData`，或必须修改生产数值、创建第二战斗所有者、重新启用旧场景或依赖 fallback 才能继续，停止并报告根因。
 - 若物品原子授予入口在本卡执行时仍不可用，停止并将本卡转为 `blocked`；不得直接写 `InventoryStateStore`、保留文字掉落或添加临时兼容路径。
+
+## 完成结果
+
+- 正式 `guanzhong_wild` 场景只序列化正式目录和环境档案；Adventure 按稳定 ID 解析石甲兽，完整验证范围、AI、战斗模板、掉落与物品后才启动探索。
+- 探索敌人全程保留同一 `EnemyData` 和显式 `ai_melee` 控制器；正式分支缺配置会在生成或开战前失败关闭，不会使用原型 fallback。
+- 战斗层只返回胜负与败方单位 ID；Adventure 逐项生成结构化掉落，一次消费结果并通过 `GameSession.GrantItems` 原子入库，失败仍进入返回状态并保留稳定原因。
+- .NET 构建、正式场景批处理绑定和本任务相关 EditMode 14/14 通过；完整 EditMode 278/279 通过，唯一失败为既有炼神保留能力加载用例，详见验证记录。

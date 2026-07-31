@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TianZhang.Adventure;
 using TianZhang.Core;
+using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.HexTile;
@@ -46,6 +48,8 @@ namespace TianZhang.Map
         private CombatLogAdapter combatLogAdapter;
         private AdventureSceneController adventureSceneController;
         private EnvironmentProfileData environmentProfile;
+        private EnemyData formalEncounterEnemy;
+        private IAIController formalEncounterAiController;
         private SpatialQuerySnapshot spatialQuerySnapshot;
         private Character player;
         private List<EnemyUnit> enemies = new List<EnemyUnit>();
@@ -81,6 +85,8 @@ namespace TianZhang.Map
         {
             public Character character;
             public CharacterData data;
+            public EnemyData enemyData;
+            public IAIController aiController;
             public AttackProfileData[] spells;
             public AttackProfileData[] skills;
             public GameObject marker;
@@ -95,6 +101,20 @@ namespace TianZhang.Map
         public void ConfigureEnvironmentProfile(EnvironmentProfileData profile)
         {
             environmentProfile = profile;
+        }
+
+        public void ConfigureFormalEncounter(
+            EnemyData enemy,
+            IAIController aiController)
+        {
+            formalEncounterEnemy = enemy;
+            formalEncounterAiController = aiController;
+        }
+
+        public void ClearFormalEncounter()
+        {
+            formalEncounterEnemy = null;
+            formalEncounterAiController = null;
         }
 
         private void Update()
@@ -117,6 +137,16 @@ namespace TianZhang.Map
         {
             state = GameState.Loading;
             adventureSceneController = FindFirstObjectByType<AdventureSceneController>();
+            if (adventureSceneController != null &&
+                adventureSceneController.RequiresFormalEncounter &&
+                (formalEncounterEnemy == null || formalEncounterAiController == null))
+            {
+                adventureSceneController.ReportEncounterConfigurationFailure(
+                    "formal_encounter_enemy_not_configured");
+                enabled = false;
+                yield break;
+            }
+
             if (environmentProfile == null)
             {
                 adventureSceneController?.ReportEncounterConfigurationFailure(
@@ -147,7 +177,12 @@ namespace TianZhang.Map
             playerMarker = tilemapManager.PlaceUnitMarker(playerStart, Color.cyan, "玩家");
 
             // 生成敌人
-            SpawnEnemies();
+            if (!SpawnEnemies(out string spawnReason))
+            {
+                adventureSceneController?.ReportEncounterConfigurationFailure(spawnReason);
+                enabled = false;
+                yield break;
+            }
 
             var tacticalGrid = TacticalGridModel.FromHexGrid(
                 tilemapManager.allHexCoords,
@@ -299,8 +334,18 @@ namespace TianZhang.Map
 
         // ==================== 敌人生成 ====================
 
-        private void SpawnEnemies()
+        private bool SpawnEnemies(out string reason)
         {
+            bool isFormalEncounter = formalEncounterEnemy != null;
+            if (isFormalEncounter &&
+                (formalEncounterEnemy.combatTemplate == null ||
+                 formalEncounterAiController == null ||
+                 enemyCount != 1))
+            {
+                reason = "formal_encounter_spawn_configuration_invalid";
+                return false;
+            }
+
             var rng = new System.Random(123);
             int spawned = 0;
             int maxAttempts = 500;
@@ -321,7 +366,15 @@ namespace TianZhang.Map
 
                 // 选择一个敌人模板
                 CharacterData template = null;
-                if (enemyTemplates != null && enemyTemplates.Length > 0)
+                EnemyData enemyData = null;
+                IAIController aiController = tacticalCombatController.AIController;
+                if (isFormalEncounter)
+                {
+                    enemyData = formalEncounterEnemy;
+                    template = formalEncounterEnemy.combatTemplate;
+                    aiController = formalEncounterAiController;
+                }
+                else if (enemyTemplates != null && enemyTemplates.Length > 0)
                     template = enemyTemplates[spawned % enemyTemplates.Length];
                 else
                     template = CreateFallbackEnemy(spawned);
@@ -342,6 +395,8 @@ namespace TianZhang.Map
                 {
                     character = enemy,
                     data = template,
+                    enemyData = enemyData,
+                    aiController = aiController,
                     spells = spells,
                     skills = skills,
                     marker = marker,
@@ -352,6 +407,14 @@ namespace TianZhang.Map
             }
 
             Debug.Log($"敌人生成: {spawned}/{enemyCount}");
+            if (isFormalEncounter && spawned != 1)
+            {
+                reason = "formal_encounter_spawn_failed";
+                return false;
+            }
+
+            reason = string.Empty;
+            return true;
         }
 
         private CharacterData CreateFallbackEnemy(int index)
@@ -592,6 +655,15 @@ namespace TianZhang.Map
         private void StartBattle(EnemyUnit enemy)
         {
             if (enemy.defeated) return;
+            if (adventureSceneController != null &&
+                adventureSceneController.RequiresFormalEncounter &&
+                (!ReferenceEquals(enemy.enemyData, formalEncounterEnemy) ||
+                 enemy.aiController == null))
+            {
+                adventureSceneController.ReportEncounterConfigurationFailure(
+                    "formal_encounter_runtime_identity_invalid");
+                return;
+            }
 
             state = GameState.BattlePrep;
             waitingForMoveInput = false;
@@ -740,6 +812,7 @@ namespace TianZhang.Map
                 player.CTBUnit.Id,
                 enemyUnit.spells.Length > 0 ? enemyUnit.spells : null,
                 enemyUnit.skills.Length > 0 ? enemyUnit.skills : null,
+                enemyUnit.aiController,
                 tilemapManager.Grid);
 
             AddLog($"{enemyUnit.character.Name}: {result}");
@@ -885,26 +958,17 @@ namespace TianZhang.Map
             RefreshUI();
         }
 
-        // ==================== 掉落 ====================
-
-        private void HandleDrop(IReadOnlyList<string> dropItems)
-        {
-            GetCombatLogAdapter().AppendDropItems(dropItems);
-        }
-
         private void EndBattle(EnemyUnit enemyUnit)
         {
-            var defeatedEnemyData = new Dictionary<int, CharacterData>
-            {
-                [enemyUnit.character.CTBUnit.Id] = enemyUnit.data,
-            };
-            var endResult = tacticalCombatController.ResolveBattleEnd(defeatedEnemyData, tilemapManager.Grid);
+            var endResult = tacticalCombatController.ResolveBattleEnd(tilemapManager.Grid);
             if (endResult.Outcome == TacticalCombatEndOutcome.Defeat)
             {
                 AddLog(endResult.Message);
                 SetStatus("败北");
                 state = GameState.Ended;
-                adventureSceneController?.ResolveEncounterAndReturn(endResult.Outcome);
+                adventureSceneController?.ResolveEncounterAndReturn(
+                    endResult.Outcome,
+                    enemyUnit.enemyData);
             }
             else if (endResult.Outcome == TacticalCombatEndOutcome.Victory)
             {
@@ -913,8 +977,15 @@ namespace TianZhang.Map
                 enemyUnit.defeated = true;
                 enemyUnit.marker?.SetActive(false);
 
-                // 掉落
-                HandleDrop(endResult.DropItems);
+                if (adventureSceneController != null &&
+                    adventureSceneController.RequiresFormalEncounter &&
+                    !endResult.DefeatedEnemyUnitIds.Contains(
+                        enemyUnit.character.CTBUnit.Id))
+                {
+                    adventureSceneController.ReportEncounterConfigurationFailure(
+                        "formal_encounter_defeated_member_mismatch");
+                    enemyUnit.enemyData = null;
+                }
 
                 // 正式 AdventureScene 的单场闭环在结算后立即返回来源上下文。
                 state = GameState.Ended;
@@ -930,7 +1001,9 @@ namespace TianZhang.Map
                 }
 
                 RefreshUI();
-                adventureSceneController?.ResolveEncounterAndReturn(endResult.Outcome);
+                adventureSceneController?.ResolveEncounterAndReturn(
+                    endResult.Outcome,
+                    enemyUnit.enemyData);
             }
         }
 

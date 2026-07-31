@@ -163,6 +163,7 @@ namespace TianZhang.Editor
             ValidateSceneShell(SettlementScenePath, "SettlementRoot", typeof(TianZhang.Settlement.SettlementSceneController));
             ValidateSettlementSceneBindings();
             ValidateSceneShell(AdventureScenePath, "AdventureRoot", typeof(TianZhang.Adventure.AdventureSceneController));
+            ValidateAdventureSceneBindings();
 
             Debug.Log("[TQ-016] Scene architecture shells validated successfully.");
         }
@@ -234,6 +235,27 @@ namespace TianZhang.Editor
             Require(
                 serializedController.FindProperty("featureDispatcher").objectReferenceValue == dispatcher,
                 "Settlement scene does not serialize the SettlementFeatureDispatcher reference.");
+        }
+
+        private static void ValidateAdventureSceneBindings()
+        {
+            var controller = UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            Require(controller != null, "Adventure scene is missing AdventureSceneController.");
+            Require(catalog != null, "Adventure scene is missing the formal ContentCatalogData asset.");
+            Require(environment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileData.");
+
+            var serializedController = new SerializedObject(controller);
+            Require(
+                serializedController.FindProperty("contentCatalog").objectReferenceValue == catalog,
+                "Adventure scene does not serialize the formal ContentCatalogData reference.");
+            Require(
+                serializedController.FindProperty("guanzhongWildEnvironmentProfile").objectReferenceValue ==
+                environment,
+                "Adventure scene does not serialize env_guanzhong_wild EnvironmentProfileData.");
         }
         /// <summary>
 
@@ -553,15 +575,15 @@ namespace TianZhang.Editor
                 UnityEditor.SceneManagement.OpenSceneMode.Single);
 
             var adventureController = UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
-            var guanzhongWildEnemy = AssetDatabase.LoadAssetAtPath<CharacterData>(
-                "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            var contentCatalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
             var guanzhongWildEnvironment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             Require(adventureController != null, "Adventure scene is missing AdventureSceneController.");
-            Require(guanzhongWildEnemy != null, "Adventure scene is missing the formal stone-armored beast CharacterData.");
+            Require(contentCatalog != null, "Adventure scene is missing the formal ContentCatalogData.");
             Require(guanzhongWildEnvironment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileData.");
             SetSerializedComponentName(adventureController, "AdventureSceneController");
-            adventureController.SetGuanzhongWildEnemyTemplates(new[] { guanzhongWildEnemy });
+            adventureController.SetContentCatalog(contentCatalog);
             adventureController.SetGuanzhongWildEnvironmentProfile(guanzhongWildEnvironment);
 
             var gridGo = new GameObject("HexGrid");

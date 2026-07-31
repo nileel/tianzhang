@@ -7,6 +7,7 @@ using UnityEngine.TestTools;
 using UnityEngine.UI;
 using TianZhang.Adventure;
 using TianZhang.Combat;
+using TianZhang.Content;
 using TianZhang.Core;
 using TianZhang.Core.SpatialRules;
 using TianZhang.Editor;
@@ -862,57 +863,67 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void CreateDropItemsUsesDefeatedEnemyRealmThresholds()
+        public void MeleeAiProfileResolvesToExistingSimpleAiAndUnknownProfileFails()
         {
-            var weak = ScriptableObject.CreateInstance<CharacterData>();
-            var middle = ScriptableObject.CreateInstance<CharacterData>();
-            var strong = ScriptableObject.CreateInstance<CharacterData>();
-            try
-            {
-                weak.realmMultiplier = 1.2f;
-                middle.realmMultiplier = 1.3f;
-                strong.realmMultiplier = 2.0f;
+            Assert.IsTrue(
+                EnemyAIProfileResolver.TryResolve(
+                    EnemyAIProfileResolver.MeleeProfileId,
+                    out var aiController,
+                    out var reason),
+                reason);
+            Assert.IsInstanceOf<SimpleAI>(aiController);
 
-                CollectionAssert.AreEqual(new[] { "灵石×5" }, TacticalCombatController.CreateDropItems(weak));
-                CollectionAssert.AreEqual(new[] { "灵石×5", "下品丹药×1" }, TacticalCombatController.CreateDropItems(middle));
-                CollectionAssert.AreEqual(new[] { "灵石×5", "中品丹药×1" }, TacticalCombatController.CreateDropItems(strong));
-            }
-            finally
-            {
-                Object.DestroyImmediate(weak);
-                Object.DestroyImmediate(middle);
-                Object.DestroyImmediate(strong);
-            }
+            Assert.IsFalse(
+                EnemyAIProfileResolver.TryResolve("ai_unknown", out var unknown, out reason));
+            Assert.IsNull(unknown);
+            Assert.AreEqual(EnemyAIProfileResolver.UnknownProfileReason, reason);
+
+            var grid = new HexGrid();
+            var controller = new TacticalCombatController();
+            var player = CreateCombatant(
+                "玩家",
+                "含弘光大典",
+                new HexCoord(0, 0),
+                controller.Engine);
+            var enemy = CreateCombatant(
+                "石甲兽",
+                "含弘光大典",
+                new HexCoord(1, 0),
+                controller.Engine);
+            Begin(controller, grid, player, enemy);
+            int playerHpBefore = player.CurrentHP;
+
+            string action = controller.ExecuteEnemyTurn(
+                enemy.CTBUnit.Id,
+                player.CTBUnit.Id,
+                null,
+                null,
+                aiController,
+                grid);
+
+            StringAssert.Contains("物理伤害", action);
+            Assert.Less(player.CurrentHP, playerHpBefore);
         }
 
         [Test]
-        public void ResolveBattleEndClearsDefeatedEnemyOccupancyAndReportsDrops()
+        public void ResolveBattleEndClearsDefeatedEnemyOccupancyAndReportsIdentityOnly()
         {
             var grid = new HexGrid();
             var controller = new TacticalCombatController();
             var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
             var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
-            var enemyData = ScriptableObject.CreateInstance<CharacterData>();
-            try
-            {
-                enemyData.realmMultiplier = 2.0f;
-                grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-                Begin(controller, grid, player, enemy);
-                enemy.TakeDamage(enemy.CurrentHP);
+            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
+            Begin(controller, grid, player, enemy);
+            enemy.TakeDamage(enemy.CurrentHP);
 
-                var result = controller.ResolveBattleEnd(
-                    new Dictionary<int, CharacterData> { [enemy.CTBUnit.Id] = enemyData },
-                    grid);
+            var result = controller.ResolveBattleEnd(grid);
 
-                Assert.AreEqual(TacticalCombatEndOutcome.Victory, result.Outcome);
-                Assert.AreEqual("击败了 敌人！", result.Message);
-                CollectionAssert.AreEqual(new[] { "灵石×5", "中品丹药×1" }, result.DropItems);
-                Assert.IsFalse(grid.IsOccupied(enemy.Position));
-            }
-            finally
-            {
-                Object.DestroyImmediate(enemyData);
-            }
+            Assert.AreEqual(TacticalCombatEndOutcome.Victory, result.Outcome);
+            Assert.AreEqual("击败了 敌人！", result.Message);
+            CollectionAssert.AreEqual(
+                new[] { enemy.CTBUnit.Id },
+                result.DefeatedEnemyUnitIds);
+            Assert.IsFalse(grid.IsOccupied(enemy.Position));
         }
 
         private static Character CreateCombatant(string name, string gongFa, HexCoord position, CTBEngine engine)
@@ -1013,6 +1024,245 @@ namespace TianZhang.Tests
         }
     }
 
+    public class FormalEncounterResultTests
+    {
+        private readonly List<Object> temporaryObjects = new List<Object>();
+
+        [TearDown]
+        public void DestroyTemporaryObjects()
+        {
+            foreach (Object value in temporaryObjects)
+                Object.DestroyImmediate(value);
+            temporaryObjects.Clear();
+        }
+
+        [Test]
+        public void ProductionCatalogResolvesStableEnemyAndExplicitMeleeAi()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+
+            Assert.IsTrue(
+                FormalEncounterRules.TryResolveGuanzhongEnemy(
+                    catalog,
+                    out EnemyData enemy,
+                    out IAIController aiController,
+                    out string reason),
+                reason);
+            Assert.AreEqual(FormalEncounterRules.ShijiahouEnemyId, enemy.enemyId);
+            Assert.IsNotNull(enemy.combatTemplate);
+            Assert.IsInstanceOf<SimpleAI>(aiController);
+        }
+
+        [Test]
+        public void ConfigurationRejectsMissingCatalogAndUnknownAiBeforeCombat()
+        {
+            Assert.IsFalse(
+                FormalEncounterRules.TryResolveGuanzhongEnemy(
+                    null,
+                    out _,
+                    out _,
+                    out string reason));
+            Assert.AreEqual(FormalEncounterRules.CatalogMissingReason, reason);
+
+            var emptyCatalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            emptyCatalog.ReplaceEntries(null, null, null, null);
+            AssertRejected(emptyCatalog, FormalEncounterRules.EnemyMissingReason);
+
+            var fixture = CreateFixture();
+            fixture.Enemy.aiProfileId = "ai_unknown";
+
+            Assert.IsFalse(
+                FormalEncounterRules.TryResolveGuanzhongEnemy(
+                    fixture.Catalog,
+                    out _,
+                    out _,
+                    out reason));
+            Assert.AreEqual(EnemyAIProfileResolver.UnknownProfileReason, reason);
+        }
+
+        [Test]
+        public void ConfigurationRejectsInvalidScopeTemplateDropsAndItemsBeforeCombat()
+        {
+            var fixture = CreateFixture();
+            fixture.Enemy.contentScope = "other_scope";
+            AssertRejected(fixture.Catalog, FormalEncounterRules.EnemyScopeInvalidReason);
+
+            fixture = CreateFixture();
+            fixture.Enemy.combatTemplate = null;
+            AssertRejected(fixture.Catalog, FormalEncounterRules.CombatTemplateMissingReason);
+
+            fixture = CreateFixture();
+            fixture.Enemy.dropEntries = System.Array.Empty<EnemyDropEntry>();
+            AssertRejected(fixture.Catalog, FormalEncounterRules.DropsMissingReason);
+
+            fixture = CreateFixture();
+            fixture.Enemy.dropEntries[0].itemId = "item_missing";
+            AssertRejected(
+                fixture.Catalog,
+                FormalEncounterRules.DropItemMissingReason + ":item_missing");
+
+            fixture = CreateFixture();
+            Assert.IsTrue(fixture.Catalog.TryGetItem("item_shijia_piece", out ItemData item));
+            item.contentScope = "reserved";
+            AssertRejected(
+                fixture.Catalog,
+                FormalEncounterRules.DropItemNotProductionReason + ":item_shijia_piece");
+        }
+
+        [Test]
+        public void VictoryRollsDropsIndependentlyWithStrictLessThanComparison()
+        {
+            var fixture = CreateFixture();
+
+            Assert.IsTrue(
+                FormalEncounterResult.TryCreate(
+                    fixture.Catalog,
+                    fixture.Enemy,
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    TacticalCombatEndOutcome.Victory,
+                    new SequenceRandomSource(99, 49),
+                    out FormalEncounterResult bothDrops,
+                    out string reason),
+                reason);
+            Assert.AreEqual(FormalEncounterRules.ShijiahouEnemyId, bothDrops.EnemyId);
+            Assert.AreEqual(2, bothDrops.DropGrants.Count);
+
+            Assert.IsTrue(
+                FormalEncounterResult.TryCreate(
+                    fixture.Catalog,
+                    fixture.Enemy,
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    TacticalCombatEndOutcome.Victory,
+                    new SequenceRandomSource(0, 50),
+                    out FormalEncounterResult thresholdResult,
+                    out reason),
+                reason);
+            Assert.AreEqual(1, thresholdResult.DropGrants.Count);
+            Assert.AreEqual("item_shijia_piece", thresholdResult.DropGrants[0].ItemId);
+        }
+
+        [Test]
+        public void ResultRejectsDifferentEnemyIdentityAndOutOfRangeRandomValue()
+        {
+            var fixture = CreateFixture();
+            var differentEnemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+
+            Assert.IsFalse(
+                FormalEncounterResult.TryCreate(
+                    fixture.Catalog,
+                    differentEnemy,
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    TacticalCombatEndOutcome.Victory,
+                    new SequenceRandomSource(0, 0),
+                    out _,
+                    out string reason));
+            Assert.AreEqual(FormalEncounterRules.EnemyIdentityMismatchReason, reason);
+
+            Assert.IsFalse(
+                FormalEncounterResult.TryCreate(
+                    fixture.Catalog,
+                    fixture.Enemy,
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    TacticalCombatEndOutcome.Victory,
+                    new SequenceRandomSource(100),
+                    out _,
+                    out reason));
+            Assert.AreEqual(FormalEncounterRules.RandomValueInvalidReason, reason);
+        }
+
+        private FormalFixture CreateFixture()
+        {
+            var template = Track(ScriptableObject.CreateInstance<CharacterData>());
+            template.charName = "石甲兽";
+
+            var guaranteedItem = CreateItem("item_shijia_piece");
+            var chanceItem = CreateItem("item_lingshi_low");
+            var enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+            enemy.enemyId = FormalEncounterRules.ShijiahouEnemyId;
+            enemy.contentScope = FormalEncounterRules.GuanzhongContentScope;
+            enemy.aiProfileId = EnemyAIProfileResolver.MeleeProfileId;
+            enemy.combatTemplate = template;
+            enemy.dropEntries = new[]
+            {
+                new EnemyDropEntry
+                {
+                    itemId = guaranteedItem.itemId,
+                    dropChancePercent = 100,
+                    quantity = 1,
+                },
+                new EnemyDropEntry
+                {
+                    itemId = chanceItem.itemId,
+                    dropChancePercent = 50,
+                    quantity = 1,
+                },
+            };
+
+            var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.ReplaceEntries(
+                null,
+                new[] { enemy },
+                new[] { guaranteedItem, chanceItem },
+                null);
+            return new FormalFixture(catalog, enemy);
+        }
+
+        private ItemData CreateItem(string itemId)
+        {
+            var item = Track(ScriptableObject.CreateInstance<ItemData>());
+            item.itemId = itemId;
+            item.contentScope = InventoryGrantService.ProductionContentScope;
+            item.maxStack = 99;
+            return item;
+        }
+
+        private static void AssertRejected(ContentCatalogData catalog, string expectedReason)
+        {
+            Assert.IsFalse(
+                FormalEncounterRules.TryResolveGuanzhongEnemy(
+                    catalog,
+                    out _,
+                    out _,
+                    out string reason));
+            Assert.AreEqual(expectedReason, reason);
+        }
+
+        private T Track<T>(T value)
+            where T : Object
+        {
+            temporaryObjects.Add(value);
+            return value;
+        }
+
+        private sealed class FormalFixture
+        {
+            public ContentCatalogData Catalog { get; }
+            public EnemyData Enemy { get; }
+
+            public FormalFixture(ContentCatalogData catalog, EnemyData enemy)
+            {
+                Catalog = catalog;
+                Enemy = enemy;
+            }
+        }
+
+        internal sealed class SequenceRandomSource : IFormalEncounterRandomSource
+        {
+            private readonly Queue<int> values;
+
+            public SequenceRandomSource(params int[] values)
+            {
+                this.values = new Queue<int>(values);
+            }
+
+            public int NextPercent()
+            {
+                return values.Dequeue();
+            }
+        }
+    }
+
     public class CombatLogAdapterTests
     {
         [Test]
@@ -1092,6 +1342,21 @@ namespace TianZhang.Tests
                 var snapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
                 Assert.IsNotNull(snapshot);
                 Assert.AreEqual(2, snapshot.Board.UnitsPerRange);
+                var enemies = (System.Collections.IList)exploration.GetType()
+                    .GetField("enemies", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .GetValue(exploration);
+                var firstEnemy = enemies[0];
+                var formalEnemyData = (EnemyData)firstEnemy.GetType()
+                    .GetField("enemyData")
+                    .GetValue(firstEnemy);
+                var combatTemplate = (CharacterData)firstEnemy.GetType()
+                    .GetField("data")
+                    .GetValue(firstEnemy);
+                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
+                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var expectedEnemy));
+                Assert.AreSame(expectedEnemy, formalEnemyData);
+                Assert.AreSame(expectedEnemy.combatTemplate, combatTemplate);
             }
             finally
             {
@@ -1163,11 +1428,11 @@ namespace TianZhang.Tests
 
                 var controller = Object.FindFirstObjectByType<AdventureSceneController>();
                 var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
-                var expectedEnemy = AssetDatabase.LoadAssetAtPath<CharacterData>(
-                    "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
                 Assert.IsNotNull(controller);
                 Assert.IsNotNull(exploration);
-                Assert.IsNotNull(expectedEnemy);
+                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var expectedEnemy));
 
                 exploration.enemyCount = 3;
                 exploration.enemyTemplates = System.Array.Empty<CharacterData>();
@@ -1176,7 +1441,10 @@ namespace TianZhang.Tests
 
                 StringAssert.Contains("关中野外", GameObject.Find("AdventureIdText")?.GetComponent<Text>()?.text);
                 Assert.AreEqual(1, exploration.enemyCount);
-                CollectionAssert.AreEqual(new[] { expectedEnemy }, exploration.enemyTemplates);
+                CollectionAssert.IsEmpty(exploration.enemyTemplates);
+                Assert.AreSame(
+                    expectedEnemy,
+                    GetPrivateField<EnemyData>(exploration, "formalEncounterEnemy"));
             }
             finally
             {
@@ -1187,7 +1455,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void GuanzhongWildWithoutFormalEnemyBlocksEncounterButKeepsReturnExit()
+        public void GuanzhongWildWithoutFormalCatalogBlocksEncounterButKeepsReturnExit()
         {
             DestroyExistingSceneFlowAndSession();
             SceneBuilder.BuildAdventureScene();
@@ -1206,15 +1474,13 @@ namespace TianZhang.Tests
                 Assert.IsNotNull(exploration);
 
                 var serializedController = new SerializedObject(controller);
-                var guanzhongEnemyTemplates = serializedController.FindProperty("guanzhongWildEnemyTemplates");
-                if (guanzhongEnemyTemplates != null)
-                {
-                    guanzhongEnemyTemplates.arraySize = 0;
-                    serializedController.ApplyModifiedPropertiesWithoutUndo();
-                }
+                var catalogProperty = serializedController.FindProperty("contentCatalog");
+                Assert.IsNotNull(catalogProperty);
+                catalogProperty.objectReferenceValue = null;
+                serializedController.ApplyModifiedPropertiesWithoutUndo();
 
                 exploration.enabled = true;
-                LogAssert.Expect(LogType.Error, new Regex("guanzhong_wild.*石甲兽"));
+                LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.CatalogMissingReason));
                 InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
                 InvokeStart(controller);
 
@@ -1226,6 +1492,109 @@ namespace TianZhang.Tests
             {
                 DestroyAdventureUi();
                 Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void FormalVictoryGrantsStructuredDropsOnlyOnce()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var controllerGo = new GameObject("FormalAdventureControllerTest");
+            var explorationGo = new GameObject("FormalExplorationControllerTest");
+            var sessionGo = new GameObject("FormalGameSessionTest");
+            try
+            {
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
+                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
+                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
+                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
+                controller.SetContentCatalog(catalog);
+                controller.SetGuanzhongWildEnvironmentProfile(
+                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+                controller.SetEncounterRandomSource(
+                    new FormalEncounterResultTests.SequenceRandomSource(99, 49));
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+
+                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+
+                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
+                Assert.AreEqual(FormalEncounterRules.ShijiahouEnemyId, controller.LastFormalEncounterResult.EnemyId);
+                Assert.AreEqual("guanzhong_city", session.LastReturnTarget.SettlementId);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_shijia_piece", out var piece));
+                Assert.AreEqual(1, piece.Quantity);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out var lingshi));
+                Assert.AreEqual(1, lingshi.Quantity);
+
+                LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
+                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+
+                Assert.AreEqual(FormalEncounterRules.AlreadyConsumedReason, controller.EncounterResolutionFailureReason);
+                Assert.AreEqual(2, session.InventoryStates.Count);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_shijia_piece", out piece));
+                Assert.AreEqual(1, piece.Quantity);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out lingshi));
+                Assert.AreEqual(1, lingshi.Quantity);
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(explorationGo);
+                Object.DestroyImmediate(controllerGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void FormalVictoryInventoryFailureIsAtomicAndObservable()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var controllerGo = new GameObject("FormalAdventureControllerTest");
+            var explorationGo = new GameObject("FormalExplorationControllerTest");
+            var sessionGo = new GameObject("FormalGameSessionTest");
+            try
+            {
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
+                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
+                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
+                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
+                session.InventoryStates.Set(
+                    new InventoryStateSnapshot(
+                        "item_shijia_piece",
+                        99,
+                        new StateStepSnapshot(false, false, false, false, false, false, false)));
+                controller.SetContentCatalog(catalog);
+                controller.SetGuanzhongWildEnvironmentProfile(
+                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+                controller.SetEncounterRandomSource(
+                    new FormalEncounterResultTests.SequenceRandomSource(0, 0));
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+
+                LogAssert.Expect(LogType.Error, new Regex("StackLimitExceeded"));
+                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+
+                StringAssert.Contains("StackLimitExceeded", controller.EncounterResolutionFailureReason);
+                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
+                Assert.AreEqual("guanzhong_city", session.LastReturnTarget.SettlementId);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_shijia_piece", out var piece));
+                Assert.AreEqual(99, piece.Quantity);
+                Assert.IsFalse(session.InventoryStates.TryGet("item_lingshi_low", out _));
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(explorationGo);
+                Object.DestroyImmediate(controllerGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }

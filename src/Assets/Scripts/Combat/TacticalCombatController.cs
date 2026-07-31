@@ -233,18 +233,18 @@ namespace TianZhang.Combat
     {
         public TacticalCombatEndOutcome Outcome { get; }
         public string Message { get; }
-        public IReadOnlyList<string> DropItems { get; }
+        public IReadOnlyList<int> DefeatedEnemyUnitIds { get; }
 
         public bool IsEnded => Outcome != TacticalCombatEndOutcome.Ongoing;
 
         public TacticalCombatEndResult(
             TacticalCombatEndOutcome outcome,
             string message,
-            IReadOnlyList<string> dropItems = null)
+            IReadOnlyList<int> defeatedEnemyUnitIds = null)
         {
             Outcome = outcome;
             Message = message ?? string.Empty;
-            DropItems = dropItems ?? Array.Empty<string>();
+            DefeatedEnemyUnitIds = defeatedEnemyUnitIds ?? Array.Empty<int>();
         }
     }
 
@@ -414,21 +414,7 @@ namespace TianZhang.Combat
             };
         }
 
-        public static IReadOnlyList<string> CreateDropItems(CharacterData enemyData)
-        {
-            var dropItems = new List<string> { "灵石×5" };
-            float realmMultiplier = enemyData != null ? enemyData.realmMultiplier : 0f;
-            if (realmMultiplier >= 2.0f)
-                dropItems.Add("中品丹药×1");
-            else if (realmMultiplier >= 1.3f)
-                dropItems.Add("下品丹药×1");
-
-            return dropItems;
-        }
-
-        public TacticalCombatEndResult ResolveBattleEnd(
-            IReadOnlyDictionary<int, CharacterData> defeatedEnemyData,
-            HexGrid grid)
+        public TacticalCombatEndResult ResolveBattleEnd(HexGrid grid)
         {
             EnsureSession();
             if (!currentSession.HasLivingMembers(TacticalCombatTeam.Player))
@@ -440,20 +426,19 @@ namespace TianZhang.Combat
             if (currentSession.HasLivingMembers(TacticalCombatTeam.Enemy))
                 return new TacticalCombatEndResult(TacticalCombatEndOutcome.Ongoing, string.Empty);
 
-            var drops = new List<string>();
             var defeated = currentSession.GetDefeatedMembers(TacticalCombatTeam.Enemy).ToList();
             foreach (var member in defeated)
             {
                 member.Character.CTBUnit.IsAlive = false;
                 grid?.ClearOccupied(member.Character.Position);
-                CharacterData data = null;
-                defeatedEnemyData?.TryGetValue(member.Character.CTBUnit.Id, out data);
-                drops.AddRange(CreateDropItems(data));
             }
             string message = defeated.Count == 1
                 ? $"击败了 {defeated[0].Character.Name}！"
                 : "击败了敌方队伍！";
-            return new TacticalCombatEndResult(TacticalCombatEndOutcome.Victory, message, drops);
+            return new TacticalCombatEndResult(
+                TacticalCombatEndOutcome.Victory,
+                message,
+                defeated.Select(member => member.Character.CTBUnit.Id).ToArray());
         }
 
         public string ExecuteEnemyTurn(
@@ -461,12 +446,15 @@ namespace TianZhang.Combat
             int targetUnitId,
             AttackProfileData[] arts,
             AttackProfileData[] divines,
+            IAIController aiController,
             HexGrid grid)
         {
             if (!TryResolveSingleTarget(actorUnitId, targetUnitId, out var actor, out var target, out var failure))
                 return failure.Message;
+            if (aiController == null)
+                return EnemyAIProfileResolver.UnknownProfileReason;
             Resolver.Grid = grid ?? throw new ArgumentNullException(nameof(grid));
-            return AIController.ExecuteTurn(
+            return aiController.ExecuteTurn(
                 actor.Character,
                 target.Character,
                 arts,
