@@ -1,10 +1,14 @@
 #requires -Version 7.0
 
+[CmdletBinding()]
+param([switch]$ExternalPreflightOnly)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $repositorySource = Split-Path -Parent $PSScriptRoot
 $coordinator = Join-Path $PSScriptRoot 'invoke-automation-lane-batch.ps1'
+$productionExternalWorker = Join-Path $PSScriptRoot 'invoke-external-lane-worker.ps1'
 $gitCommonDirectory = (& git -C $repositorySource rev-parse --path-format=absolute --git-common-dir).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Unable to locate the main repository for batch test isolation.' }
 $mainRepositoryRoot = Split-Path -Parent ([IO.Path]::GetFullPath($gitCommonDirectory))
@@ -14,6 +18,9 @@ $privateBase = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.codex\a
 $stateRoot = Join-Path $privateBase "tzg-lane-batch-test-$([Guid]::NewGuid().ToString('N'))"
 $failureStateRoot = Join-Path $privateBase "tzg-lane-batch-failure-test-$([Guid]::NewGuid().ToString('N'))"
 $workerFailureStateRoot = Join-Path $privateBase "tzg-lane-worker-failure-test-$([Guid]::NewGuid().ToString('N'))"
+$externalPreflightStateRoot = Join-Path $privateBase "tzg-external-lane-preflight-test-$([Guid]::NewGuid().ToString('N'))"
+$externalPreflightRepository = $null
+$externalPreflightWorktree = $null
 
 function Invoke-Git {
   param([string]$Root, [string[]]$Arguments)
@@ -26,6 +33,128 @@ function Write-Utf8 {
   param([string]$Path, [string]$Text)
   [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null
   [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($true))
+}
+
+function Invoke-ProductionExternalPreflightCase {
+  param(
+    [Parameter(Mandatory = $true)][string]$Name,
+    [Parameter(Mandatory = $true)][string]$RepositoryRoot,
+    [Parameter(Mandatory = $true)][string]$BatchId,
+    [Parameter(Mandatory = $true)][string]$ExpectedDetailCode
+  )
+
+  $resultPath = Join-Path $externalPreflightStateRoot "results\$Name.json"
+  $output = @(
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File $productionExternalWorker `
+      -Action Start `
+      -RepositoryRoot $RepositoryRoot `
+      -TaskId 'EXTERNAL-PREFLIGHT' `
+      -RunId ([Guid]::NewGuid().ToString()) `
+      -BatchId $BatchId `
+      -LaneId 'deepseek' `
+      -ResultPath $resultPath `
+      -StateRoot $externalPreflightStateRoot `
+      -ResponsibilityTimeoutSeconds 1 2>&1
+  )
+  if ($LASTEXITCODE -ne 1 -or $output.Count -ne 1) {
+    throw "production external preflight case $Name returned an invalid result: $(@($output) -join ' ')"
+  }
+  $terminal = $output[0] | ConvertFrom-Json -Depth 100
+  if (
+    [string]$terminal.status -cne 'failed' -or
+    [string]$terminal.detailCode -cne $ExpectedDetailCode -or
+    $null -ne $terminal.sessionId -or
+    $terminal.PSObject.Properties.Name -contains 'candidateCommit'
+  ) {
+    throw "production external preflight case $Name reached the wrong boundary: $($output[0])"
+  }
+  if (-not (Test-Path -LiteralPath $resultPath -PathType Leaf)) {
+    throw "production external preflight case $Name did not persist its terminal"
+  }
+  $persisted = [Text.UTF8Encoding]::new($false, $true).GetString(
+    [IO.File]::ReadAllBytes($resultPath)
+  ) | ConvertFrom-Json -Depth 100
+  if ([string]$persisted.detailCode -cne $ExpectedDetailCode) {
+    throw "production external preflight case $Name persisted the wrong detailCode"
+  }
+}
+
+function Remove-ProductionExternalPreflightWorktree {
+  if (
+    -not [string]::IsNullOrWhiteSpace([string]$script:externalPreflightRepository) -and
+    -not [string]::IsNullOrWhiteSpace([string]$script:externalPreflightWorktree) -and
+    (Test-Path -LiteralPath $script:externalPreflightRepository -PathType Container) -and
+    (Test-Path -LiteralPath $script:externalPreflightWorktree -PathType Container)
+  ) {
+    $output = @(
+      & git -C $script:externalPreflightRepository worktree remove $script:externalPreflightWorktree 2>&1
+    )
+    if ($LASTEXITCODE -ne 0) {
+      throw "unable to remove production external preflight worktree: $(@($output) -join ' ')"
+    }
+  }
+  $script:externalPreflightWorktree = $null
+}
+
+function Test-ProductionExternalWorkerPreflight {
+  if (-not (Test-Path -LiteralPath $productionExternalWorker -PathType Leaf)) {
+    throw 'production external worker is missing'
+  }
+  $script:externalPreflightRepository = Join-Path $tempRoot 'external-preflight'
+  [IO.Directory]::CreateDirectory($script:externalPreflightRepository) | Out-Null
+  $null = Invoke-Git $script:externalPreflightRepository @('init', '-q')
+  $null = Invoke-Git $script:externalPreflightRepository @('config', 'user.email', 'external-preflight@example.invalid')
+  $null = Invoke-Git $script:externalPreflightRepository @('config', 'user.name', 'External Preflight Test')
+  $null = Invoke-Git $script:externalPreflightRepository @('commit', '--allow-empty', '-q', '-m', 'external preflight base')
+
+  $batchId = [Guid]::NewGuid().ToString()
+  $script:externalPreflightWorktree = Join-Path `
+    $script:externalPreflightRepository `
+    ".worktrees\automation\$batchId\deepseek"
+  $null = Invoke-Git $script:externalPreflightRepository @(
+    'worktree', 'add', '--detach', $script:externalPreflightWorktree, 'HEAD'
+  )
+  $nonGitDirectory = Join-Path $externalPreflightStateRoot 'non-git-directory'
+  $childDirectory = Join-Path $script:externalPreflightWorktree 'child'
+  [IO.Directory]::CreateDirectory($nonGitDirectory) | Out-Null
+  [IO.Directory]::CreateDirectory($childDirectory) | Out-Null
+
+  $originalBaseUrl = [string]$env:ANTHROPIC_BASE_URL
+  try {
+    $env:ANTHROPIC_BASE_URL = 'http://127.0.0.1:1'
+    Invoke-ProductionExternalPreflightCase `
+      -Name 'linked-worktree' `
+      -RepositoryRoot $script:externalPreflightWorktree `
+      -BatchId $batchId `
+      -ExpectedDetailCode 'external_lane_claim_mismatch'
+    Invoke-ProductionExternalPreflightCase `
+      -Name 'non-git-directory' `
+      -RepositoryRoot $nonGitDirectory `
+      -BatchId ([Guid]::NewGuid().ToString()) `
+      -ExpectedDetailCode 'external_lane_git_root_unavailable'
+    Invoke-ProductionExternalPreflightCase `
+      -Name 'worktree-child' `
+      -RepositoryRoot $childDirectory `
+      -BatchId $batchId `
+      -ExpectedDetailCode 'external_lane_repository_mismatch'
+    Invoke-ProductionExternalPreflightCase `
+      -Name 'missing-path' `
+      -RepositoryRoot (Join-Path $tempRoot 'external-preflight-missing') `
+      -BatchId ([Guid]::NewGuid().ToString()) `
+      -ExpectedDetailCode 'external_lane_repository_path_invalid'
+    Invoke-ProductionExternalPreflightCase `
+      -Name 'relative-path' `
+      -RepositoryRoot 'external-preflight-relative' `
+      -BatchId ([Guid]::NewGuid().ToString()) `
+      -ExpectedDetailCode 'external_lane_repository_path_invalid'
+  } finally {
+    if ([string]::IsNullOrEmpty($originalBaseUrl)) {
+      Remove-Item Env:ANTHROPIC_BASE_URL -ErrorAction SilentlyContinue
+    } else {
+      $env:ANTHROPIC_BASE_URL = $originalBaseUrl
+    }
+  }
+  Remove-ProductionExternalPreflightWorktree
 }
 
 function New-Card {
@@ -170,6 +299,12 @@ exit 17
 '@
 
 try {
+  Test-ProductionExternalWorkerPreflight
+  if ($ExternalPreflightOnly) {
+    Write-Output 'test-automation-lane-batch external preflight: OK'
+    return
+  }
+
   $repository = Join-Path $tempRoot 'r'
   [IO.Directory]::CreateDirectory($repository) | Out-Null
   $null = Invoke-Git $repository @('init', '-q')
@@ -350,7 +485,14 @@ try {
   }
   Write-Output 'test-automation-lane-batch: OK'
 } finally {
-  foreach ($path in @($tempRoot, $stateRoot, $failureStateRoot, $workerFailureStateRoot)) {
+  Remove-ProductionExternalPreflightWorktree
+  foreach ($path in @(
+      $tempRoot,
+      $stateRoot,
+      $failureStateRoot,
+      $workerFailureStateRoot,
+      $externalPreflightStateRoot
+    )) {
     if (Test-Path -LiteralPath $path) {
       $fullPath = [IO.Path]::GetFullPath($path)
       $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar

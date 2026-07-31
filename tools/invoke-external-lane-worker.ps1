@@ -75,6 +75,45 @@ function Resolve-ExternalLaneResultPath {
   $fullPath
 }
 
+function Resolve-ExternalLaneRepositoryRoot {
+  param([string]$Path)
+
+  $resolvedRoot = $null
+  $pathExists = $false
+  try {
+    if ([IO.Path]::IsPathFullyQualified($Path)) {
+      $resolvedRoot = [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
+      $pathExists = Test-Path -LiteralPath $resolvedRoot -PathType Container
+    }
+  } catch { }
+  if ([string]::IsNullOrWhiteSpace($resolvedRoot) -or -not $pathExists) {
+    Stop-ExternalLane 'external_lane_repository_path_invalid'
+  }
+
+  try {
+    $gitOutput = @(& git -C $resolvedRoot rev-parse --show-toplevel 2>&1)
+    $gitExitCode = $LASTEXITCODE
+  } catch {
+    Stop-ExternalLane 'external_lane_git_root_unavailable'
+  }
+  if (
+    $gitExitCode -ne 0 -or
+    $gitOutput.Count -ne 1 -or
+    [string]::IsNullOrWhiteSpace([string]$gitOutput[0])
+  ) {
+    Stop-ExternalLane 'external_lane_git_root_unavailable'
+  }
+  try {
+    $gitRoot = [IO.Path]::GetFullPath([string]$gitOutput[0]).TrimEnd('\', '/')
+  } catch {
+    Stop-ExternalLane 'external_lane_git_root_unavailable'
+  }
+  if ($gitRoot -ine $resolvedRoot) {
+    Stop-ExternalLane 'external_lane_repository_mismatch'
+  }
+  $resolvedRoot
+}
+
 function Invoke-ExternalLaneShow {
   $output = @(
     & pwsh -NoProfile -ExecutionPolicy Bypass -File $leasePath `
@@ -126,25 +165,23 @@ try {
     }
   }
   $resolvedResultPath = Resolve-ExternalLaneResultPath -Path $ResultPath
-  $script:resolvedRepositoryRoot = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
-  $gitRoot = (& git -C $script:resolvedRepositoryRoot rev-parse --show-toplevel 2>$null).Trim()
-  if ($LASTEXITCODE -ne 0 -or [IO.Path]::GetFullPath($gitRoot).TrimEnd('\', '/') -ine $script:resolvedRepositoryRoot) {
-    Stop-ExternalLane 'external_lane_repository_invalid'
-  }
+  $script:resolvedRepositoryRoot = Resolve-ExternalLaneRepositoryRoot -Path $RepositoryRoot
   $shown = Invoke-ExternalLaneShow
   $batch = $shown.state.batch
-  $laneMatches = @($batch.lanes | Where-Object {
-    [string]$_.laneId -ceq $LaneId -and
-    [string]$_.taskClaim.taskId -ceq $TaskId
-  })
   if (
     [string]$shown.status -cne 'OK' -or
     [string]$shown.leaseStatus -cne 'active' -or
     $null -eq $batch -or
     [string]$batch.batchId -cne $BatchId -or
-    [string]$batch.runId -cne $RunId -or
-    $laneMatches.Count -ne 1
+    [string]$batch.runId -cne $RunId
   ) {
+    Stop-ExternalLane 'external_lane_claim_mismatch'
+  }
+  $laneMatches = @($batch.lanes | Where-Object {
+    [string]$_.laneId -ceq $LaneId -and
+    [string]$_.taskClaim.taskId -ceq $TaskId
+  })
+  if ($laneMatches.Count -ne 1) {
     Stop-ExternalLane 'external_lane_claim_mismatch'
   }
   $lane = $laneMatches[0]

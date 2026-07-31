@@ -219,6 +219,10 @@ Assert-Contains $contracts.externalWorker @(
   'http',
   '127.0.0.1',
   '15721',
+  'Resolve-ExternalLaneRepositoryRoot',
+  'external_lane_repository_path_invalid',
+  'external_lane_git_root_unavailable',
+  'external_lane_repository_mismatch',
   "'--json-schema'",
   "'--permission-mode', 'dontAsk'",
   'codex_review',
@@ -248,7 +252,12 @@ Assert-Contains $contracts.batchTests @(
   'production-length path was not checked out',
   'failed initialization left coordinator lease',
   'failed initialization left lane branch',
-  'one worker failure did not preserve independent lane progress'
+  'one worker failure did not preserve independent lane progress',
+  'production external preflight case',
+  'external_lane_claim_mismatch',
+  'external_lane_git_root_unavailable',
+  'external_lane_repository_mismatch',
+  'external_lane_repository_path_invalid'
 ) 'batch canary coverage'
 
 foreach ($routeContract in @(
