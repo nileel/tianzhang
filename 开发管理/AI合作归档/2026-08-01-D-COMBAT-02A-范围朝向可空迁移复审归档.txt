@@ -1,0 +1,26 @@
+# D-COMBAT-02A · BattleSim 范围朝向可空迁移复审归档
+
+- 完成日期：2026-08-01
+- 修改方：DeepSeek V4 Flash
+- 复审方：Codex / gpt-5.6-terra
+- 结论：通过
+
+## 提交链
+
+- 业务提交：`981549b8f63ad47cc8c3e8a9080e6fc43561542f`。
+- 定向返工提交：`0c6ac870a1858dc4688f4fb0ff0f35d5a56028a8`。
+- 交接提交：`24fc37a`、`4f87d03`。
+
+## 复审结果
+
+- `AreaShapeConfig.Facing` 已成为 `HexDirection?`；circle 仅接受空朝向，line 与 fan 仅接受已定义的非空方向。
+- circle 的范围判断不读取朝向；line／fan 只在验证已保证非空后读取方向。
+- 定向断言直接覆盖圆形带朝向、line／fan 缺朝向和 line／fan 非法非空方向的拒绝；无伪方向枚举或默认值回退。
+- 本卡未建立跨端 fixture，未修改范围结算、Unity、生产 CSV／数据或运行时消费者；`D-COMBAT-02` 已解除载体前置并恢复 ready。
+
+## 验证
+
+- Release 构建：通过，0 警告、0 错误。
+- 完整 BattleSim 主模拟：通过。
+- `group-area-targeting-n-group-02`：本卡朝向断言通过，随后在既有 formal 2v2 范围中心坐标断言失败（期望 `{Q=6,R=0}`，实际 `{Q=6,R=-1}`）；该失败不依赖本次朝向迁移，未在本卡范围修复。
+- `check-review-text`：通过（647 文件）。

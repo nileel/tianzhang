@@ -1,8 +1,8 @@
 # D-COMBAT-02A · BattleSim 范围朝向可空迁移验证记录
 
 日期：2026-08-01
-状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash
-复审请求：待 Codex / ChatGPT5.5 复审
+状态：✅ 复审通过；修改方：DeepSeek V4 Flash；复审方：Codex / gpt-5.6-terra
+复审结论：范围朝向可空迁移符合已锁定契约；已解除 `D-COMBAT-02` 的载体前置。
 
 ## 已交付行为
 
@@ -23,10 +23,10 @@
 
 ## 验证
 
-- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
-- `dotnet run --no-build -c Release --project simulations/BattleSim`：完整主模拟自测 exit 0。
-- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-area-targeting-n-group-02`：套件线性执行到既有失败点 `formal 2v2 records the resolved target-cell area center` 之前，本任务全部朝向断言（含新增三拒绝）均通过；该 `formal 2v2` 断言失败为基线 HEAD（2e894aa）既有失败，与本任务改动无关（已在临时基线 worktree 复核确认）。
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`：OK（645 文件）。
+- `dotnet build -c Release --no-restore simulations/BattleSim`：复审独立执行通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：复审独立执行的完整主模拟 exit 0。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-area-targeting-n-group-02`：线性执行通过本任务全部朝向断言（圆形空朝向成功、圆形带朝向拒绝、直线／扇形空或非法朝向拒绝）后，仍在既有 `formal 2v2 records the resolved target-cell area center` 坐标断言失败；该失败不读取或依赖圆形朝向，未在本卡范围修复。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`：复审独立执行 OK（647 文件）。
 - 提交前 `tools/check-pending-whitespace.ps1` 与暂存后 `git diff --cached --check`：见提交记录。
 
 ## 残留风险

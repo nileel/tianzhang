@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-02A"
-  ],
-  "stateReason": "2026-07-31：负责人选择 A，授权先由 D-COMBAT-02A 迁移 BattleSim AreaShapeConfig 以表达圆形无朝向；本卡等待该载体前置完成后恢复跨端 fixture 验证。按 DeepSeek-V4-Flash-0731 正式版 Agent 能力校准，本卡在前置完成后由 DeepSeek V4 Flash 执行、Codex 复审。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-01：D-COMBAT-02A 已通过 Codex 独立复审，BattleSim AreaShapeConfig 现可让 circle 显式表达无朝向，故解除本卡唯一前置并恢复跨端 fixture 验证。按 DeepSeek-V4-Flash-0731 正式版 Agent 能力校准，本卡由 DeepSeek V4 Flash 执行、Codex 复审。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
