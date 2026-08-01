@@ -1797,14 +1797,40 @@ static class BattleSimSelfTests
             "area targeting rejects an unknown state flag");
         AssertThrows<ArgumentException>(
             () => new HexBattlefield().ResolveAreaTargeting(
-                areaConfig with { Shape = areaConfig.Shape with { Facing = (HexDirection)999 } },
+                lineConfig with { Shape = lineConfig.Shape with { Facing = (HexDirection)999 } },
                 caster,
                 casterTeam: 0,
                 casterIndex: 0,
-                targetCell,
+                targetCell: caster,
                 effectiveRangeModifier: 0,
-                candidates),
-            "area targeting rejects an unknown shape facing");
+                new[]
+                {
+                    new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(1, 0), IsAlive: true),
+                }),
+            "line area targeting rejects an unknown non-null facing");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                lineConfig with
+                {
+                    Name = "fixture-fan",
+                    Shape = new GameData.AreaShapeConfig(
+                        GameData.AreaShapeKind.Fan,
+                        Radius: 0,
+                        Length: 2,
+                        FanHalfAngleSteps: 1,
+                        Facing: (HexDirection)999,
+                        InnerRadius: 0),
+                },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell: caster,
+                effectiveRangeModifier: 0,
+                new[]
+                {
+                    new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(2, -1), IsAlive: true),
+                }),
+            "fan area targeting rejects an unknown non-null facing");
 
         AssertThrows<ArgumentException>(
             () => new HexBattlefield().ResolveAreaTargeting(

@@ -15,7 +15,10 @@
 - 更新 `simulations/BattleSim/BattleSimSelfTests.cs` 直接构造点：circle 构造改 `Facing: null`，line/fan 保持显式 `Facing: HexDirection.East`；并新增以下拒绝断言（全部在既有非法枚举断言之后）：
   - 圆形带朝向拒绝（`circle area targeting rejects any non-null facing`）；
   - 直线缺朝向拒绝（`line area targeting rejects a null facing`）；
-  - 扇形缺朝向拒绝（`fan area targeting rejects a null facing`）。
+  - 扇形缺朝向拒绝（`fan area targeting rejects a null facing`）；
+  - 直线非法非空方向拒绝（`line area targeting rejects an unknown non-null facing`，`Facing = (HexDirection)999`）；
+  - 扇形非法非空方向拒绝（`fan area targeting rejects an unknown non-null facing`，`Facing = (HexDirection)999`）。
+- 原 `area targeting rejects an unknown shape facing` 断言改用 `areaConfig`（circle）并设 `(HexDirection)999`，迁移后只命中 circle 的“拒绝一切非空朝向”，无法覆盖 line/fan 的 `Enum.IsDefined` 检查，故按复审意见改为分别使用 `lineConfig` 与 fan 形状直接断言非法非空方向；circle 的非法非空方向语义由既有 `circle area targeting rejects any non-null facing`（`Facing = HexDirection.East`）断言覆盖。
 - 未新增 `None`/`Unknown` 伪方向枚举，未用 `East` 或其他默认值代表无朝向，未修改范围命中算法、阻断、阵营、目标状态、攻击参数或冷却，未修改生产 CSV / Unity 数据 / Unity 运行时消费者，未建立跨端 fixture。
 
 ## 验证
