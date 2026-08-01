@@ -1598,7 +1598,7 @@ static class BattleSimSelfTests
                 Radius: 2,
                 Length: 0,
                 FanHalfAngleSteps: 0,
-                Facing: HexDirection.East,
+                Facing: null,
                 InnerRadius: 1),
             GameData.AreaEffectBlocker.DirectedEdge,
             GameData.AreaTargetFaction.Enemy,
@@ -1805,6 +1805,52 @@ static class BattleSimSelfTests
                 effectiveRangeModifier: 0,
                 candidates),
             "area targeting rejects an unknown shape facing");
+
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                areaConfig with { Shape = areaConfig.Shape with { Facing = HexDirection.East } },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell,
+                effectiveRangeModifier: 0,
+                candidates),
+            "circle area targeting rejects any non-null facing");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                lineConfig with { Shape = lineConfig.Shape with { Facing = null } },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell: caster,
+                effectiveRangeModifier: 0,
+                new[]
+                {
+                    new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(1, 0), IsAlive: true),
+                }),
+            "line area targeting rejects a null facing");
+        AssertThrows<ArgumentException>(
+            () => new HexBattlefield().ResolveAreaTargeting(
+                lineConfig with
+                {
+                    Shape = new GameData.AreaShapeConfig(
+                        GameData.AreaShapeKind.Fan,
+                        Radius: 0,
+                        Length: 2,
+                        FanHalfAngleSteps: 1,
+                        Facing: null,
+                        InnerRadius: 0),
+                },
+                caster,
+                casterTeam: 0,
+                casterIndex: 0,
+                targetCell: caster,
+                effectiveRangeModifier: 0,
+                new[]
+                {
+                    new GameData.AreaTargetCandidate(Index: 2, Team: 1, Position: new HexCoord(2, -1), IsAlive: true),
+                }),
+            "fan area targeting rejects a null facing");
 
         var areaActor = GroupTestCharacter(
             "area-observation-a1",

@@ -1,0 +1,32 @@
+# D-COMBAT-02A · BattleSim 范围朝向可空迁移验证记录
+
+日期：2026-08-01
+状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash
+复审请求：待 Codex / ChatGPT5.5 复审
+
+## 已交付行为
+
+- `simulations/BattleSim/GameData.cs::AreaShapeConfig` 的第五个参数 `Facing` 迁移为可空 `HexDirection?`；`null` 显式表达无朝向，不依赖任何伪方向枚举或默认值。
+- `simulations/BattleSim/Battlefield.cs::ValidateAreaTargetingConfig` 收窄形状验证：
+  - `circle` 只接受 `Facing == null`（空朝向），带朝向拒绝；
+  - `line`、`fan` 要求 `Facing.HasValue` 且 `Enum.IsDefined`（已定义的非空六角方向），缺朝向拒绝；
+  - 既有非法枚举值（`(HexDirection)999`）仍拒绝。
+- `simulations/BattleSim/Battlefield.cs::IsWithinAreaShape` 圆形路径不读取任何朝向；直线与扇形只在验证已保证 `Facing` 非空后才经 `shape.Facing!.Value` 取方向值。
+- 更新 `simulations/BattleSim/BattleSimSelfTests.cs` 直接构造点：circle 构造改 `Facing: null`，line/fan 保持显式 `Facing: HexDirection.East`；并新增以下拒绝断言（全部在既有非法枚举断言之后）：
+  - 圆形带朝向拒绝（`circle area targeting rejects any non-null facing`）；
+  - 直线缺朝向拒绝（`line area targeting rejects a null facing`）；
+  - 扇形缺朝向拒绝（`fan area targeting rejects a null facing`）。
+- 未新增 `None`/`Unknown` 伪方向枚举，未用 `East` 或其他默认值代表无朝向，未修改范围命中算法、阻断、阵营、目标状态、攻击参数或冷却，未修改生产 CSV / Unity 数据 / Unity 运行时消费者，未建立跨端 fixture。
+
+## 验证
+
+- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：完整主模拟自测 exit 0。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test group-area-targeting-n-group-02`：套件线性执行到既有失败点 `formal 2v2 records the resolved target-cell area center` 之前，本任务全部朝向断言（含新增三拒绝）均通过；该 `formal 2v2` 断言失败为基线 HEAD（2e894aa）既有失败，与本任务改动无关（已在临时基线 worktree 复核确认）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations`：OK（645 文件）。
+- 提交前 `tools/check-pending-whitespace.ps1` 与暂存后 `git diff --cached --check`：见提交记录。
+
+## 残留风险
+
+- `group-area-targeting-n-group-02` 套件存在与本次迁移无关的既有失败断言（`formal 2v2` 范围中心坐标），未在本任务范围修复；建议由 Codex 在复审或后续任务中评估。
+- 本卡只完成 BattleSim 载体迁移，未建立跨端 fixture，未实施 D-COMBAT-02 的完整 fixture 与差异检查，未解除 D-COMBAT-02 之外的前置。

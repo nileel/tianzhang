@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-COMBAT-02A | external_execute | deepseek | P3 | battlesim | migration | BattleSim 范围朝向可空迁移 | `开发管理/任务卡/D-COMBAT-02A.txt` |
+| D-COMBAT-02A | codex_review | codex | P3 | battlesim | migration | BattleSim 范围朝向可空迁移 | `开发管理/任务卡/D-COMBAT-02A.txt` |

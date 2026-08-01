@@ -516,18 +516,22 @@ sealed class HexBattlefield
         }
 
         var shape = config.Shape;
-        if (shape.InnerRadius < 0 || !Enum.IsDefined(shape.Facing))
+        if (shape.InnerRadius < 0)
             throw new ArgumentException("Area shape configuration is invalid.", nameof(config));
         switch (shape.Kind)
         {
+            // 圆形必须无朝向：不读取、填充或保存默认方向；直线与扇形仍要求已定义的非空六角方向。
             case GameData.AreaShapeKind.Circle when shape.Radius >= 0 && shape.Length == 0 &&
-                                                    shape.FanHalfAngleSteps == 0 && shape.InnerRadius <= shape.Radius:
+                                                    shape.FanHalfAngleSteps == 0 && shape.InnerRadius <= shape.Radius &&
+                                                    shape.Facing == null:
                 return;
             case GameData.AreaShapeKind.Line when shape.Radius == 0 && shape.Length > 0 &&
-                                                  shape.FanHalfAngleSteps == 0 && shape.InnerRadius < shape.Length:
+                                                  shape.FanHalfAngleSteps == 0 && shape.InnerRadius < shape.Length &&
+                                                  shape.Facing.HasValue && Enum.IsDefined(shape.Facing.Value):
                 return;
             case GameData.AreaShapeKind.Fan when shape.Radius == 0 && shape.Length > 0 &&
-                                                 shape.FanHalfAngleSteps is >= 0 and <= 1 && shape.InnerRadius < shape.Length:
+                                                 shape.FanHalfAngleSteps is >= 0 and <= 1 && shape.InnerRadius < shape.Length &&
+                                                 shape.Facing.HasValue && Enum.IsDefined(shape.Facing.Value):
                 return;
             default:
                 throw new ArgumentException("Area shape configuration is invalid.", nameof(config));
@@ -559,9 +563,10 @@ sealed class HexBattlefield
 
         return shape.Kind switch
         {
+            // 圆形不读取任何朝向；直线与扇形只在验证已保证 Facing 非空后才取方向值。
             GameData.AreaShapeKind.Circle => distance <= shape.Radius,
-            GameData.AreaShapeKind.Line => IsOnLine(center, target, shape.Facing, shape.Length),
-            GameData.AreaShapeKind.Fan => IsInFan(center, target, shape.Facing, shape.Length, shape.FanHalfAngleSteps),
+            GameData.AreaShapeKind.Line => IsOnLine(center, target, shape.Facing!.Value, shape.Length),
+            GameData.AreaShapeKind.Fan => IsInFan(center, target, shape.Facing!.Value, shape.Length, shape.FanHalfAngleSteps),
             _ => false,
         };
     }

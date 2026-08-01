@@ -348,12 +348,14 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         All = DirectedEdge,
     }
 
+    // Facing 是可空朝向：circle 必须为空以表达无朝向，line 与 fan 必须为已定义的非空六角方向；
+    // 任何方向取值只发生在经过验证的直线或扇形路径，圆形不得读取、填充或保存默认方向。
     public sealed record AreaShapeConfig(
         AreaShapeKind Kind,
         int Radius,
         int Length,
         int FanHalfAngleSteps,
-        HexDirection Facing,
+        HexDirection? Facing,
         int InnerRadius);
 
     public sealed record AreaTargetingConfig(
