@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "id": "D-COMBAT-02",
   "title": "跨端攻击档案 fixture 与差异检查",
   "priority": "P3",
@@ -23,23 +23,7 @@
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-02.txt",
-    "开发管理/任务归档/D-COMBAT-02.txt",
-    "开发管理/AI合作沟通.txt"
-  ],
-  "workerPaths": [
-    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
-    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
-    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
-    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
-    "simulations/BattleSim/BattleSimSelfTests.cs",
-    "开发管理/攻击档案跨端fixture验证记录.txt"
-  ],
-  "coordinatorPaths": [
-    "开发管理/任务列表/数据链路任务.txt",
-    "开发管理/当前任务队列.txt",
-    "开发管理/任务卡/D-COMBAT-02.txt",
-    "开发管理/任务归档/D-COMBAT-02.txt",
-    "开发管理/AI合作沟通.txt"
+    "开发管理/任务归档/D-COMBAT-02.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
 }

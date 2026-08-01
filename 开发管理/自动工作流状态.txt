@@ -1,17 +1,13 @@
 # 自动工作流状态（✅ 已审核）
 
-> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、batch、recovery 与 lastResult 以本机 schema 4 runtime 为准；业务结果以 Git 为准。
+> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；lease、recovery 与 lastResult 以本机 schema 3 runtime 为准；业务结果以 Git 为准。
 
 ## 已确认架构
 
 - 唯一写入入口为 `tzg-hourly-controller`；旧 WF1、WF3、WF4 已归档。每日简报只读。
-- 权威设计为 `docs/superpowers/specs/2026-07-31-parallel-automation-lanes-design.md`。
-- 仓库内已迁移为 schema-4 协调器 lease、通用 `lanes[]`、显式 task claim、隔离 Worker worktree 和固定串行集成器；生产配置只允许 Codex 与 DeepSeek V4 Flash，`maxConcurrent=2`。
-- Worker 只创建 workerPaths candidate；固定集成器创建 canonical businessCommit。DeepSeek 任务随后形成只含交接登记的 handoffCommit，继续进入 Codex 独立复审。
-- 2026-08-01：负责人已通过自动化管理界面同步实时 `tzg-hourly-controller` prompt；实时 prompt 与仓库 canonical prompt 完全一致，`check-automation-workflow.ps1 -RequireActive -RequireLegacyRetired` 通过。专用临时仓库双 Worker canary 已通过，确认两路结果按原队列顺序形成独立 canonical 提交、临时 runtime 在完成后清空，真实主工作区未新增污染；并行生产配置已部署。同步与订正期间使用的 `MANUAL-AUTOMATION-DEPLOY-BLOCK` 人工租约现已释放，实时占用和恢复状态以 `Show` 为准。
-- 2026-08-01 02:37：首次自然轮次在 `create_lanes` 阶段暴露 Windows 长路径缺口；旧自动 worktree 位于私有 StateRoot，生产最长跟踪文件的完整 checkout 路径达到 260 字符，Git 创建 lane 分支后未能完成 worktree。该轮没有 batch、Worker、candidate 或业务提交；现已改用 `.worktrees/automation/<batchId>/<laneId>` 短路径、detached-first 建分支和未发布初始化失败清理，并通过真实长路径、初始化失败无残留、单 lane 失败继续及双 lane 成功回归。旧协调器租约已记录 `batch_create_lanes_failed` 后释放，孤立分支已确认仍在 baseCommit 后删除。
-- 2026-08-01 05:15：自然轮次 batch `2d4beddc-7fe3-418b-baec-ababe306dbeb` 将旧合并错误精确收敛为 `external_lane_repository_mismatch`。按协调器同构 `ProcessStartInfo` 启动生产 external Worker 后确认：子进程控制台输出编码为 CP936，Git 根路径的 UTF-8 字节被解码成乱码，中文仓库路径因此误判不一致；现已固定 Worker 控制台 UTF-8，并由直接启动生产 Worker 的 linked-worktree fixture 覆盖路径无效、Git 根不可用、根不一致与合法根四类终态。修复提交为 `54965bf`、`c73ce70`。
-- 2026-08-01：lane 生产脚本已收敛为 core 与 integration 两层；Worker 只加载 core，batch coordinator 加载两层。旧 external responsibility 及 Codex `Execution` / `Review` 普通入口已删除，只保留 QueueMaintenance 与旧 recovery。活跃生产组件因显式增加 integration 层为 5→6；按拆分前后各 6 个范围内生产脚本统一口径，物理行数 3981→3331（净减 650），PowerShell AST 条件控制点 463→402（净减 61）。batch coordinator 保持单文件，仅因加载 integration 增至 872 行，未按行数拆分。
+- 权威设计为 `docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
+- 旧 controller v2、机器任务注册表、manifest 和中央状态机已退出活动代码；单写入租约、workspace guard、CLI-native session、决策恢复和 Git 元数据保留。
+- 外部 AI 继续创建 `businessCommit` 与仅含交接登记的 `handoffCommit`，后者不重复统计。
 
 ## 当前人工阻塞与恢复所有权
 

@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "id": "D-COMBAT-02A",
   "title": "BattleSim 范围朝向可空迁移",
   "priority": "P3",
@@ -21,23 +21,7 @@
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-02.txt",
     "开发管理/任务卡/D-COMBAT-02A.txt",
-    "开发管理/任务归档/D-COMBAT-02A.txt",
-    "开发管理/AI合作沟通.txt"
-  ],
-  "workerPaths": [
-    "simulations/BattleSim/GameData.cs",
-    "simulations/BattleSim/Battlefield.cs",
-    "simulations/BattleSim/BattleSimSelfTests.cs",
-    "开发管理/BattleSim范围朝向可空迁移验证记录.txt",
-    "开发管理/攻击档案跨端fixture验证记录.txt"
-  ],
-  "coordinatorPaths": [
-    "开发管理/任务列表/数据链路任务.txt",
-    "开发管理/当前任务队列.txt",
-    "开发管理/任务卡/D-COMBAT-02.txt",
-    "开发管理/任务卡/D-COMBAT-02A.txt",
-    "开发管理/任务归档/D-COMBAT-02A.txt",
-    "开发管理/AI合作沟通.txt"
+    "开发管理/任务归档/D-COMBAT-02A.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
 }

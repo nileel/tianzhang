@@ -3,7 +3,7 @@
 本文件只定义 durable recovery 的创建与处理细节，只有两个读取条件：
 
 1. 每轮先调用 `tools/hourly-automation-lease.ps1 Show`；`Show.recovery != null` 时，恢复 route 读取本文件中的对应恢复规则。
-2. QueueMaintenance 普通责任方实际到达新的用户决定事件时，只读取 `创建决定恢复` 一节。
+2. Execution、Review 或 QueueMaintenance 普通责任方实际到达新的用户决定事件时，只读取 `创建决定恢复` 一节。
 
 普通责任方未到达决定事件时不得读取本文件，也不得预执行这里的协议。
 

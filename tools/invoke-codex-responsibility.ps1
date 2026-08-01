@@ -6,7 +6,7 @@ param(
   [ValidateSet('Start', 'Resume')]
   [string]$Action,
   [Parameter(Mandatory = $true)]
-  [ValidateSet('QueueMaintenance', 'Recovery')]
+  [ValidateSet('Execution', 'Review', 'QueueMaintenance', 'Recovery')]
   [string]$Route,
   [Parameter(Mandatory = $true)]
   [string]$RepositoryRoot,
@@ -172,6 +172,12 @@ function Invoke-LeaseAction {
 
 function Get-RouteInstruction {
   switch ($Route) {
+    'Execution' {
+      '按 开发管理/AI协作规则.txt 的纯 1 入口执行，但只处理本次指定 TaskId 和其独立任务卡。'
+    }
+    'Review' {
+      '按 开发管理/审核入口.txt 与纯 2 入口复审，但只处理本次指定 TaskId 和其独立任务卡。'
+    }
     'QueueMaintenance' {
       '按 开发管理/状态与建议维护规则.txt 维护空队列或状态事件；本轮不执行新增业务任务。'
     }
@@ -208,7 +214,7 @@ function New-ResponsibilityPrompt {
     '本自动化责任方由单写入租约隔离，必须直接在上述 RepositoryRoot 的当前分支工作；不得创建或切换 linked worktree、任务分支，不得调用 using-git-worktrees 或 git worktree add。'
     '责任方端到端实施、最小充分验证并使用 automation-finalize-commit.ps1 创建路径限定提交。'
     '自动化业务提交必须通过 AutomationResult、AutomationImpact、AutomationVerify 和 AutomationPlain 同时提供专业事实与负责人通俗版：Result: 问题=<原问题>；完成=<具体交付>，Impact: 影响=<实际行为变化>；边界=<明确未涉及范围>，Verify: 验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>，Plain: 发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>。九个子字段都非空，三个通俗子字段各不超过 200 个 Unicode code point。'
-    'QueueMaintenance 责任方仅在实际到达新的用户决定事件时，才读取 开发管理/自动工作流恢复规则.txt 的“创建决定恢复”一节；未到达决定事件时不得读取该文件。'
+    'Execution、Review、QueueMaintenance 责任方仅在实际到达新的用户决定事件时，才读取 开发管理/自动工作流恢复规则.txt 的“创建决定恢复”一节；未到达决定事件时不得读取该文件。'
     '不得自行调用 RecordResult 或 Release；固定调用器会根据 Git 与 runtime 核验结果后统一关闭本轮。'
   )
   $lines -join "`n"
@@ -312,7 +318,10 @@ function Invoke-SessionRunner {
 }
 
 function Invoke-TaskCardEvidence {
-  param([string]$Postcondition)
+  param(
+    [string]$Postcondition,
+    [string]$ExpectedRoute
+  )
 
   $arguments = @(
     '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $taskCardCheckerPath,
@@ -322,6 +331,10 @@ function Invoke-TaskCardEvidence {
   if (-not [string]::IsNullOrWhiteSpace($Postcondition)) {
     $arguments += @('-TaskId', $TaskId, '-Postcondition', $Postcondition)
   }
+  if (-not [string]::IsNullOrWhiteSpace($ExpectedRoute)) {
+    $arguments += @('-ExpectedRoute', $ExpectedRoute)
+  }
+
   $output = @(& pwsh @arguments 2>&1)
   $exitCode = $LASTEXITCODE
   if ($exitCode -ne 0) {
@@ -445,12 +458,27 @@ try {
     }
   }
 
+  $expectedRoute = switch ($Route) {
+    'Execution' { 'codex_execute' }
+    'Review' { 'codex_review' }
+    default { $null }
+  }
   $routeTaskBindingValid = if ($Route -ceq 'QueueMaintenance') {
     $TaskId -ceq 'QUEUE-MAINTENANCE'
-  } else {
+  } elseif ($Route -ceq 'Recovery') {
     $true
+  } else {
+    $TaskId -cne 'QUEUE-MAINTENANCE'
   }
-  if (-not $routeTaskBindingValid) {
+  $dispatchEvidence = if ($null -ne $expectedRoute -and $routeTaskBindingValid) {
+    Invoke-TaskCardEvidence -Postcondition 'CodexDispatchReady' -ExpectedRoute $expectedRoute
+  } else {
+    $null
+  }
+  $preflightValid =
+    $routeTaskBindingValid -and
+    ($null -eq $expectedRoute -or ($null -ne $dispatchEvidence -and $dispatchEvidence.Succeeded))
+  if (-not $preflightValid) {
     Close-Run -Category 'failed' -DetailCode 'route_precondition_failed'
     $result = [ordered]@{
       status = 'failed'; category = 'failed'; taskId = $TaskId; runId = $RunId

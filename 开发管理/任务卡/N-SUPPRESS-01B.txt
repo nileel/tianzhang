@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "id": "N-SUPPRESS-01B",
   "title": "确定性削位与封丹结算",
   "priority": "P2",
@@ -19,21 +19,6 @@
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/Program.cs",
     "开发管理/确定性削位与封丹验证记录.txt",
-    "开发管理/任务列表/数值与战斗任务.txt",
-    "开发管理/当前任务队列.txt",
-    "开发管理/任务卡/N-SUPPRESS-01B.txt",
-    "开发管理/任务归档/N-SUPPRESS-01B.txt"
-  ],
-  "workerPaths": [
-    "simulations/BattleSim/GoldenCoreSuppressionExitStats.cs",
-    "simulations/BattleSim/GameData.cs",
-    "simulations/BattleSim/Character.cs",
-    "simulations/BattleSim/Combat.cs",
-    "simulations/BattleSim/BattleSimSelfTests.cs",
-    "simulations/BattleSim/Program.cs",
-    "开发管理/确定性削位与封丹验证记录.txt"
-  ],
-  "coordinatorPaths": [
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-SUPPRESS-01B.txt",

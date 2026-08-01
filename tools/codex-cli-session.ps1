@@ -8,9 +8,7 @@ param(
   [string]$TaskId,
   [string]$RunId,
   [string]$SessionId,
-  [string]$Model,
-  [string]$OutputSchemaPath,
-  [string]$OutputLastMessagePath
+  [string]$Model
 )
 
 $ErrorActionPreference = 'Stop'
@@ -39,22 +37,6 @@ try {
   if ($Action -ceq 'Resume' -and [string]::IsNullOrWhiteSpace($SessionId)) {
     throw 'SessionId is required for Resume.'
   }
-  $hasOutputSchema = -not [string]::IsNullOrWhiteSpace($OutputSchemaPath)
-  $hasOutputMessage = -not [string]::IsNullOrWhiteSpace($OutputLastMessagePath)
-  if ($hasOutputSchema -ne $hasOutputMessage) {
-    throw 'OutputSchemaPath and OutputLastMessagePath must be provided together.'
-  }
-  if ($hasOutputSchema) {
-    foreach ($path in @($OutputSchemaPath, $OutputLastMessagePath)) {
-      if (-not [IO.Path]::IsPathFullyQualified($path)) {
-        throw 'Structured output paths must be absolute.'
-      }
-    }
-    if (-not (Test-Path -LiteralPath $OutputSchemaPath -PathType Leaf)) {
-      throw 'OutputSchemaPath does not exist.'
-    }
-    [IO.Directory]::CreateDirectory((Split-Path -Parent $OutputLastMessagePath)) | Out-Null
-  }
 
   $stdinReader = [IO.StreamReader]::new(
     [Console]::OpenStandardInput(),
@@ -76,19 +58,10 @@ try {
     if (-not [string]::IsNullOrWhiteSpace($Model)) {
       $arguments += @('-m', $Model)
     }
-    $arguments += @('-s', 'danger-full-access')
-    if ($hasOutputSchema) {
-      $arguments += @('--output-schema', $OutputSchemaPath, '-o', $OutputLastMessagePath)
-    }
-    $arguments += '-'
+    $arguments += @('-s', 'danger-full-access', '-')
     $arguments
   } else {
-    $arguments = @('exec', 'resume', '--json')
-    if ($hasOutputSchema) {
-      $arguments += @('--output-schema', $OutputSchemaPath, '-o', $OutputLastMessagePath)
-    }
-    $arguments += @($SessionId, '-')
-    $arguments
+    @('exec', 'resume', '--json', $SessionId, '-')
   }
 
   Push-Location -LiteralPath $resolvedRepositoryRoot

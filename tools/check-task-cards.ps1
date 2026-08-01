@@ -58,13 +58,6 @@ function Assert-RepositoryFilePath {
   Assert-Contract (-not [string]::IsNullOrEmpty([IO.Path]::GetExtension($Value))) "invalid repository-relative path in ${Label}: $Value"
 }
 
-function Test-RepositoryPathOverlap {
-  param([string]$Left, [string]$Right)
-  $Left.Equals($Right, [StringComparison]::OrdinalIgnoreCase) -or
-    $Left.StartsWith($Right.TrimEnd('/') + '/', [StringComparison]::OrdinalIgnoreCase) -or
-    $Right.StartsWith($Left.TrimEnd('/') + '/', [StringComparison]::OrdinalIgnoreCase)
-}
-
 function Get-TableRows {
   param([string]$Path, [string[]]$Header, [string]$Kind)
   $lines = @((Read-Utf8Text $Path) -split "`n")
@@ -113,28 +106,12 @@ function Get-Card {
   $jsonText = $text.Substring($metaMarkers[0].Index + $metaMarkers[0].Length, $bodyMarkers[0].Index - ($metaMarkers[0].Index + $metaMarkers[0].Length)).Trim()
   try { $metadata = $jsonText | ConvertFrom-Json -Depth 100 } catch { throw "invalid JSON: $Path" }
   Assert-Contract ($null -ne $metadata) "invalid JSON: $Path"
-  $required = @(
-    'schemaVersion',
-    'id',
-    'title',
-    'priority',
-    'route',
-    'owner',
-    'domain',
-    'stage',
-    'dispatchState',
-    'blockedBy',
-    'stateReason',
-    'expectedPaths',
-    'workerPaths',
-    'coordinatorPaths',
-    'sourceBacklog'
-  )
+  $required = @('schemaVersion', 'id', 'title', 'priority', 'route', 'owner', 'domain', 'stage', 'dispatchState', 'blockedBy', 'stateReason', 'expectedPaths', 'sourceBacklog')
   foreach ($field in $required) {
     Assert-Contract ($metadata.PSObject.Properties.Name -contains $field) "missing metadata field '$field': $Path"
   }
 
-  Assert-Contract ($metadata.schemaVersion -eq 2) "illegal schemaVersion: $Path"
+  Assert-Contract ($metadata.schemaVersion -eq 1) "illegal schemaVersion: $Path"
   $routes = @('codex_execute', 'external_execute', 'codex_review')
   $owners = @('codex', 'deepseek', 'claude')
   $domains = @('unity', 'battlesim', 'data', 'content', 'management', 'automation')
@@ -147,30 +124,8 @@ function Get-Card {
   Assert-Contract ($states -ccontains $metadata.dispatchState) "invalid dispatch state: $Path"
   Assert-Contract ($metadata.priority -cmatch '^P[0-3]$') "invalid priority: $Path"
   Assert-Contract (($metadata.expectedPaths -is [System.Collections.IEnumerable]) -and -not ($metadata.expectedPaths -is [string])) "invalid expectedPaths: $Path"
-  Assert-Contract (($metadata.workerPaths -is [System.Collections.IEnumerable]) -and -not ($metadata.workerPaths -is [string])) "invalid workerPaths: $Path"
-  Assert-Contract (($metadata.coordinatorPaths -is [System.Collections.IEnumerable]) -and -not ($metadata.coordinatorPaths -is [string])) "invalid coordinatorPaths: $Path"
   foreach ($expectedPath in $metadata.expectedPaths) { Assert-RepositoryFilePath ([string]$expectedPath) 'expectedPaths' }
-  foreach ($workerPath in $metadata.workerPaths) { Assert-RepositoryFilePath ([string]$workerPath) 'workerPaths' }
-  foreach ($coordinatorPath in $metadata.coordinatorPaths) { Assert-RepositoryFilePath ([string]$coordinatorPath) 'coordinatorPaths' }
-  $expectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
-  $workerPaths = @($metadata.workerPaths | ForEach-Object { [string]$_ })
-  $coordinatorPaths = @($metadata.coordinatorPaths | ForEach-Object { [string]$_ })
-  Assert-Contract ($workerPaths.Count -gt 0) "workerPaths must not be empty: $Path"
-  Assert-Contract ($coordinatorPaths.Count -gt 0) "coordinatorPaths must not be empty: $Path"
-  Assert-Contract (@($expectedPaths | Sort-Object -Unique).Count -eq $expectedPaths.Count) "duplicate expectedPaths: $Path"
-  Assert-Contract (@($workerPaths | Sort-Object -Unique).Count -eq $workerPaths.Count) "duplicate workerPaths: $Path"
-  Assert-Contract (@($coordinatorPaths | Sort-Object -Unique).Count -eq $coordinatorPaths.Count) "duplicate coordinatorPaths: $Path"
-  foreach ($workerPath in $workerPaths) {
-    foreach ($coordinatorPath in $coordinatorPaths) {
-      Assert-Contract (-not (Test-RepositoryPathOverlap $workerPath $coordinatorPath)) "workerPaths/coordinatorPaths overlap: $Path"
-    }
-  }
-  $classifiedPaths = @($workerPaths + $coordinatorPaths | Sort-Object -Unique)
-  Assert-Contract (
-    (($expectedPaths | Sort-Object) -join "`n") -ceq (($classifiedPaths | Sort-Object) -join "`n")
-  ) "expectedPaths must equal workerPaths union coordinatorPaths: $Path"
   Assert-RepositoryFilePath ([string]$metadata.sourceBacklog) 'sourceBacklog'
-  Assert-Contract ($coordinatorPaths -ccontains [string]$metadata.sourceBacklog) "sourceBacklog must be a coordinatorPath: $Path"
   Assert-Contract ((($metadata.route -in @('codex_execute', 'codex_review')) -and $metadata.owner -ceq 'codex') -or ($metadata.route -ceq 'external_execute' -and $metadata.owner -in @('deepseek', 'claude'))) "route/owner mismatch: $Path"
   Assert-Contract (($null -eq $metadata.blockedBy) -or (($metadata.blockedBy -is [System.Collections.IEnumerable]) -and -not ($metadata.blockedBy -is [string]))) "invalid blockedBy: $Path"
   if (-not $AllowCompleted) {
@@ -197,8 +152,6 @@ try {
   $hasExpectedOwner = -not [string]::IsNullOrWhiteSpace($ExpectedOwner)
   $taskState = $null
   $taskExpectedPaths = $null
-  $taskWorkerPaths = $null
-  $taskCoordinatorPaths = $null
   Assert-Contract ($hasTaskId -eq $hasPostcondition) 'TaskId and Postcondition must be provided together'
   if ($Postcondition -ceq 'CodexDispatchReady') {
     Assert-Contract $hasExpectedRoute 'ExpectedRoute is required for CodexDispatchReady'
@@ -232,12 +185,8 @@ try {
     $id = [string]$card.Metadata.id
     Assert-Contract ((Split-Path -Leaf $card.Path) -ceq "$id.txt") "filename/id mismatch: $($card.Path)"
     $expectedPaths = @($card.Metadata.expectedPaths | ForEach-Object { [string]$_ })
-    $coordinatorPaths = @($card.Metadata.coordinatorPaths | ForEach-Object { [string]$_ })
     Assert-Contract ($expectedPaths -ccontains "开发管理/任务卡/$id.txt") "missing exact active-card authorization: $id"
     Assert-Contract ($expectedPaths -ccontains "开发管理/任务归档/$id.txt") "missing exact archive authorization: $id"
-    Assert-Contract ($coordinatorPaths -ccontains "开发管理/任务卡/$id.txt") "active task card must be a coordinatorPath: $id"
-    Assert-Contract ($coordinatorPaths -ccontains "开发管理/任务归档/$id.txt") "task archive must be a coordinatorPath: $id"
-    Assert-Contract ($coordinatorPaths -ccontains $QueuePath) "queue must be a coordinatorPath: $id"
   }
 
   $queueFile = Join-Path $repositoryPath $QueuePath
@@ -329,9 +278,6 @@ try {
         [string]$metadata.dispatchState -ceq 'ready'
       if ($postconditionSatisfied) {
         $taskState = [string]$metadata.dispatchState
-        $taskExpectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
-        $taskWorkerPaths = @($metadata.workerPaths | ForEach-Object { [string]$_ })
-        $taskCoordinatorPaths = @($metadata.coordinatorPaths | ForEach-Object { [string]$_ })
       }
     }
     Assert-Contract $postconditionSatisfied "CodexDispatchReady requires route=$ExpectedRoute owner=codex dispatchState=ready: $TaskId"
@@ -347,8 +293,6 @@ try {
       if ($postconditionSatisfied) {
         $taskState = [string]$metadata.dispatchState
         $taskExpectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
-        $taskWorkerPaths = @($metadata.workerPaths | ForEach-Object { [string]$_ })
-        $taskCoordinatorPaths = @($metadata.coordinatorPaths | ForEach-Object { [string]$_ })
       }
     }
     Assert-Contract $postconditionSatisfied "ExternalDispatchReady requires route=external_execute owner=$ExpectedOwner dispatchState=ready: $TaskId"
@@ -408,8 +352,6 @@ try {
       taskState = $taskState
       postcondition = if ($hasPostcondition) { $Postcondition } else { $null }
       expectedPaths = $taskExpectedPaths
-      workerPaths = $taskWorkerPaths
-      coordinatorPaths = $taskCoordinatorPaths
     } | ConvertTo-Json -Compress))
   } else {
     Write-Output "check-task-cards: OK (cards=$($cards.Count) ready=$($readyCards.Count))"

@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('Show', 'Acquire', 'ResumeBatch', 'SaveBatch', 'ClearBatch', 'SaveRecovery', 'SaveInterruption', 'ClearRecovery', 'RecordResult', 'ClearBlocking', 'Release')]
+  [ValidateSet('Show', 'Acquire', 'SaveRecovery', 'SaveInterruption', 'ClearRecovery', 'RecordResult', 'ClearBlocking', 'Release')]
   [string]$Action,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$TaskId,
@@ -22,9 +22,7 @@ param(
   [string]$ClaudeSessionId,
   [switch]$HasUncommittedChanges,
   [switch]$ResumeRecovery,
-  [string]$ChangedPaths,
-  [string]$BatchStatePath,
-  [string]$BatchId
+  [string]$ChangedPaths
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,9 +32,8 @@ $aclScript = Join-Path $PSScriptRoot 'private-path-acl.ps1'
 
 function New-RuntimeState {
   [pscustomobject][ordered]@{
-    schemaVersion = 4
+    schemaVersion = 3
     lease = $null
-    batch = $null
     recovery = $null
     blocking = [pscustomobject][ordered]@{
       fingerprint = $null
@@ -316,179 +313,17 @@ function Assert-PropertySet {
   }
 }
 
-function Assert-AutomationBatch {
-  param(
-    [Parameter(Mandatory = $true)]
-    [object]$Batch,
-    [AllowNull()]
-    [object]$Lease
-  )
-
-  Assert-PropertySet -Object $Batch -Expected @(
-    'schemaVersion',
-    'batchId',
-    'runId',
-    'repositoryRoot',
-    'status',
-    'baseCommit',
-    'queueHash',
-    'manualBaselinePath',
-    'startedAt',
-    'maxConcurrent',
-    'lanes'
-  ) -Context 'automation batch'
-  if ($Batch.schemaVersion -ne 1) {
-    throw [IO.InvalidDataException]::new('Unsupported automation batch schema')
-  }
-  foreach ($property in @('batchId', 'runId')) {
-    $parsed = [Guid]::Empty
-    if (-not [Guid]::TryParse([string]$Batch.$property, [ref]$parsed)) {
-      throw [IO.InvalidDataException]::new("Automation batch $property is invalid")
-    }
-  }
-  if ([string]$Batch.status -cnotin @('open', 'closed')) {
-    throw [IO.InvalidDataException]::new('Automation batch status is invalid')
-  }
-  if ([string]$Batch.baseCommit -cnotmatch '\A[0-9a-f]{40,64}\z') {
-    throw [IO.InvalidDataException]::new('Automation batch baseCommit is invalid')
-  }
-  if ([string]$Batch.queueHash -cnotmatch '\A[0-9a-f]{64}\z') {
-    throw [IO.InvalidDataException]::new('Automation batch queueHash is invalid')
-  }
-  if ($Batch.maxConcurrent -isnot [long] -or [int]$Batch.maxConcurrent -lt 1 -or [int]$Batch.maxConcurrent -gt 16) {
-    throw [IO.InvalidDataException]::new('Automation batch maxConcurrent is invalid')
-  }
-  $batchRepositoryRoot = Resolve-RepositoryRoot -Path ([string]$Batch.repositoryRoot)
-  $baselinePath = Resolve-ApprovedPrivateFile -Path ([string]$Batch.manualBaselinePath) -ParameterName 'manualBaselinePath'
-  if ([string]::IsNullOrWhiteSpace($baselinePath)) {
-    throw [IO.InvalidDataException]::new('Automation batch baseline is invalid')
-  }
-  if ($null -ne $Lease) {
-    if (
-      [string]$Lease.runId -cne [string]$Batch.runId -or
-      [string]$Lease.repositoryRoot -ine $batchRepositoryRoot
-    ) {
-      throw [IO.InvalidDataException]::new('Automation batch does not match the coordinator lease')
-    }
-  }
-
-  $lanes = @($Batch.lanes)
-  if ($lanes.Count -lt 1 -or $lanes.Count -gt [int]$Batch.maxConcurrent) {
-    throw [IO.InvalidDataException]::new('Automation batch lane count is invalid')
-  }
-  $laneIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-  $taskIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-  $queueIndexes = [Collections.Generic.HashSet[int]]::new()
-  foreach ($lane in $lanes) {
-    Assert-PropertySet -Object $lane -Expected @(
-      'laneId',
-      'owner',
-      'identity',
-      'acceptedRoutes',
-      'invoker',
-      'taskClaim',
-      'worktree',
-      'branch',
-      'baseCommit',
-      'workerPaths',
-      'coordinatorPaths',
-      'factPaths',
-      'processOrSession',
-      'workerTerminal',
-      'integrationState',
-      'queueIndex'
-    ) -Context 'automation lane'
-    foreach ($property in @('laneId', 'owner', 'identity', 'invoker', 'worktree', 'branch')) {
-      if ([string]::IsNullOrWhiteSpace([string]$lane.$property)) {
-        throw [IO.InvalidDataException]::new("Automation lane $property is invalid")
-      }
-    }
-    if (-not $laneIds.Add([string]$lane.laneId)) {
-      throw [IO.InvalidDataException]::new('Automation batch contains duplicate laneId')
-    }
-    if ([string]$lane.baseCommit -cne [string]$Batch.baseCommit) {
-      throw [IO.InvalidDataException]::new('Automation lane baseCommit does not match the batch')
-    }
-    if ([string]$lane.integrationState -cnotin @('pending', 'waiting', 'integrating', 'integrated', 'held_conflict', 'stale_selection', 'failed')) {
-      throw [IO.InvalidDataException]::new('Automation lane integrationState is invalid')
-    }
-    if ($lane.queueIndex -isnot [long] -or [int]$lane.queueIndex -lt 0 -or -not $queueIndexes.Add([int]$lane.queueIndex)) {
-      throw [IO.InvalidDataException]::new('Automation lane queueIndex is invalid')
-    }
-    Assert-PropertySet -Object $lane.taskClaim -Expected @(
-      'taskId',
-      'route',
-      'owner',
-      'dispatchState',
-      'cardHash',
-      'queueRowHash'
-    ) -Context 'automation task claim'
-    if (
-      [string]::IsNullOrWhiteSpace([string]$lane.taskClaim.taskId) -or
-      -not $taskIds.Add([string]$lane.taskClaim.taskId) -or
-      [string]$lane.taskClaim.owner -cne [string]$lane.owner -or
-      [string]$lane.taskClaim.dispatchState -cne 'ready' -or
-      [string]$lane.taskClaim.cardHash -cnotmatch '\A[0-9a-f]{64}\z' -or
-      [string]$lane.taskClaim.queueRowHash -cnotmatch '\A[0-9a-f]{64}\z'
-    ) {
-      throw [IO.InvalidDataException]::new('Automation task claim is invalid')
-    }
-    if (@($lane.acceptedRoutes) -cnotcontains [string]$lane.taskClaim.route) {
-      throw [IO.InvalidDataException]::new('Automation task route is not accepted by its lane')
-    }
-    $workerPaths = @(Convert-ChangedPaths -Value (@($lane.workerPaths) -join '|'))
-    $coordinatorPaths = @(Convert-ChangedPaths -Value (@($lane.coordinatorPaths) -join '|'))
-    $factPaths = @(Convert-ChangedPaths -Value (@($lane.factPaths) -join '|'))
-    if ($workerPaths.Count -lt 1 -or $coordinatorPaths.Count -lt 1) {
-      throw [IO.InvalidDataException]::new('Automation lane path classification is empty')
-    }
-    foreach ($workerPath in $workerPaths) {
-      if ($coordinatorPaths -ccontains $workerPath) {
-        throw [IO.InvalidDataException]::new('Automation lane path classifications overlap')
-      }
-    }
-    Assert-PropertySet -Object $lane.processOrSession -Expected @(
-      'state',
-      'processId',
-      'sessionId',
-      'resultPath',
-      'startedAt',
-      'completedAt'
-    ) -Context 'automation lane process/session'
-    if ([string]$lane.processOrSession.state -cnotin @('pending', 'running', 'terminal')) {
-      throw [IO.InvalidDataException]::new('Automation lane process/session state is invalid')
-    }
-    if (-not [string]::IsNullOrWhiteSpace([string]$lane.processOrSession.resultPath)) {
-      $resultPath = [IO.Path]::GetFullPath([string]$lane.processOrSession.resultPath)
-      if (-not (Test-PathWithinRoot -Path $resultPath -Root (Get-ApprovedPrivateRoot))) {
-        throw [IO.InvalidDataException]::new('Automation lane resultPath is outside the private runtime')
-      }
-    }
-    if ($null -ne $lane.workerTerminal) {
-      if (
-        [string]$lane.workerTerminal.status -cnotin @('completed', 'needs_decision', 'blocked', 'failed') -or
-        [string]$lane.workerTerminal.batchId -cne [string]$Batch.batchId -or
-        [string]$lane.workerTerminal.laneId -cne [string]$lane.laneId -or
-        [string]$lane.workerTerminal.taskId -cne [string]$lane.taskClaim.taskId
-      ) {
-        throw [IO.InvalidDataException]::new('Automation lane worker terminal is invalid')
-      }
-    }
-  }
-}
-
 function Assert-RuntimeState {
   param([Parameter(Mandatory = $true)][object]$State)
 
   Assert-PropertySet -Object $State -Expected @(
     'schemaVersion',
     'lease',
-    'batch',
     'recovery',
     'blocking',
     'lastResult'
   ) -Context 'runtime state'
-  if ($State.schemaVersion -ne 4) {
+  if ($State.schemaVersion -ne 3) {
     throw [IO.InvalidDataException]::new('Unsupported runtime state schema')
   }
   if ($null -ne $State.lease) {
@@ -500,9 +335,6 @@ function Assert-RuntimeState {
       'startedAt',
       'expiresAt'
     ) -Context 'lease'
-  }
-  if ($null -ne $State.batch) {
-    Assert-AutomationBatch -Batch $State.batch -Lease $State.lease
   }
   if ($null -ne $State.recovery) {
     $recoveryTrigger = [string]$State.recovery.trigger
@@ -557,10 +389,10 @@ function Assert-RuntimeState {
 function Convert-RuntimeStateSchema {
   param([Parameter(Mandatory = $true)][object]$State)
 
-  if ($State.schemaVersion -eq 4) {
+  if ($State.schemaVersion -eq 3) {
     return $State
   }
-  if ($State.schemaVersion -cnotin @(1, 2, 3)) {
+  if ($State.schemaVersion -cnotin @(1, 2)) {
     throw [IO.InvalidDataException]::new('Unsupported runtime state schema')
   }
   if ($State.schemaVersion -eq 1 -and $null -ne $State.recovery) {
@@ -601,9 +433,8 @@ function Convert-RuntimeStateSchema {
     }
   }
   [pscustomobject][ordered]@{
-    schemaVersion = 4
+    schemaVersion = 3
     lease = $State.lease
-    batch = $null
     recovery = $recovery
     blocking = $State.blocking
     lastResult = $State.lastResult
@@ -707,12 +538,11 @@ function New-Lease {
     [Parameter(Mandatory = $true)]
     [DateTimeOffset]$Now,
     [Parameter(Mandatory = $true)]
-    [int]$DurationSeconds,
-    [string]$ExistingRunId
+    [int]$DurationSeconds
   )
 
   [pscustomobject][ordered]@{
-    runId = if ([string]::IsNullOrWhiteSpace($ExistingRunId)) { [Guid]::NewGuid().ToString() } else { $ExistingRunId }
+    runId = [Guid]::NewGuid().ToString()
     taskId = $LeaseTaskId
     owner = $LeaseOwner
     repositoryRoot = $LeaseRepositoryRoot
@@ -793,13 +623,6 @@ try {
             taskId = $state.lease.taskId
             owner = $state.lease.owner
             expiresAt = $state.lease.expiresAt
-          }
-          break
-        }
-        if ($null -ne $state.batch) {
-          $result = New-Result -Status 'BATCH_ONLY' -Values @{
-            batchId = $state.batch.batchId
-            batchStatus = $state.batch.status
           }
           break
         }
@@ -931,112 +754,6 @@ try {
         $result = New-Result -Status 'RECOVERY_SAVED' -Values @{ recovery = $state.recovery }
       }
 
-      'SaveBatch' {
-        if (-not (Test-CurrentRun -Lease $state.lease -ExpectedRunId $RunId)) {
-          $result = New-Result -Status 'RUN_ID_MISMATCH'
-          $resultExitCode = 2
-          break
-        }
-        $normalizedBatchPath = Resolve-ApprovedPrivateFile `
-          -Path $BatchStatePath `
-          -ParameterName 'BatchStatePath'
-        try {
-          $batchBytes = [IO.File]::ReadAllBytes($normalizedBatchPath)
-          if ($batchBytes.Length -gt 4194304) {
-            throw [IO.InvalidDataException]::new('Automation batch exceeds 4 MiB')
-          }
-          $batchText = [Text.UTF8Encoding]::new($false, $true).GetString($batchBytes)
-          $batch = $batchText | ConvertFrom-Json -Depth 100
-        } catch {
-          throw [IO.InvalidDataException]::new('BatchStatePath must contain valid UTF-8 JSON', $_.Exception)
-        }
-        Assert-AutomationBatch -Batch $batch -Lease $state.lease
-        $state.batch = $batch
-        Write-RuntimeState -Path $statePath -State $state
-        $result = New-Result -Status 'BATCH_SAVED' -Values @{
-          batchId = $state.batch.batchId
-          lanes = @($state.batch.lanes).Count
-          batchStatus = $state.batch.status
-        }
-      }
-
-      'ResumeBatch' {
-        Assert-StableText -Value $BatchId -ParameterName 'BatchId'
-        $parsedBatchId = [Guid]::Empty
-        if (-not [Guid]::TryParse($BatchId, [ref]$parsedBatchId)) {
-          throw [ArgumentException]::new('BatchId is invalid')
-        }
-        if ($null -eq $state.batch -or [string]$state.batch.batchId -cne $BatchId) {
-          $result = New-Result -Status 'BATCH_NOT_FOUND'
-          $resultExitCode = 2
-          break
-        }
-        if ([bool]$state.blocking.pauseRequested) {
-          $result = New-Result -Status 'SUSPENDED'
-          break
-        }
-        $leaseExpired = Test-LeaseExpired -Lease $state.lease -Now $now
-        if ($null -ne $state.lease -and -not $leaseExpired) {
-          $result = New-Result -Status 'BUSY' -Values @{
-            runId = $state.lease.runId
-            taskId = $state.lease.taskId
-            owner = $state.lease.owner
-            expiresAt = $state.lease.expiresAt
-          }
-          break
-        }
-        $state.lease = New-Lease `
-          -LeaseTaskId 'AUTOMATION-BATCH' `
-          -LeaseOwner 'coordinator' `
-          -LeaseRepositoryRoot ([string]$state.batch.repositoryRoot) `
-          -Now $now `
-          -DurationSeconds $LeaseSeconds `
-          -ExistingRunId ([string]$state.batch.runId)
-        Write-RuntimeState -Path $statePath -State $state
-        $result = New-Result -Status 'BATCH_RESUMED' -Values @{
-          runId = $state.lease.runId
-          batchId = $state.batch.batchId
-          batchStatus = $state.batch.status
-          expiresAt = $state.lease.expiresAt
-        }
-      }
-
-      'ClearBatch' {
-        if (-not (Test-CurrentRun -Lease $state.lease -ExpectedRunId $RunId)) {
-          $result = New-Result -Status 'RUN_ID_MISMATCH'
-          $resultExitCode = 2
-          break
-        }
-        if ($null -eq $state.batch) {
-          $result = New-Result -Status 'BATCH_NOT_FOUND'
-          $resultExitCode = 2
-          break
-        }
-        if ([string]$state.batch.status -cne 'closed') {
-          $result = New-Result -Status 'BATCH_NOT_CLOSED'
-          $resultExitCode = 2
-          break
-        }
-        $preserved = @($state.batch.lanes | Where-Object {
-          [string]$_.integrationState -cin @('held_conflict', 'stale_selection') -or
-          (
-            [string]$_.integrationState -ceq 'failed' -and
-            (
-              $null -eq $_.workerTerminal -or
-              [string]$_.workerTerminal.status -cin @('completed', 'needs_decision')
-            )
-          )
-        })
-        if ($preserved.Count -gt 0) {
-          $result = New-Result -Status 'BATCH_EVIDENCE_PRESERVED'
-          $resultExitCode = 2
-          break
-        }
-        $state.batch = $null
-        Write-RuntimeState -Path $statePath -State $state
-        $result = New-Result -Status 'BATCH_CLEARED'
-      }
-
       'SaveInterruption' {
         if (-not (Test-CurrentRun -Lease $state.lease -ExpectedRunId $RunId)) {
           $result = New-Result -Status 'RUN_ID_MISMATCH'
@@ -1157,11 +874,6 @@ try {
       'Release' {
         if (-not (Test-CurrentRun -Lease $state.lease -ExpectedRunId $RunId)) {
           $result = New-Result -Status 'RUN_ID_MISMATCH'
-          $resultExitCode = 2
-          break
-        }
-        if ($null -ne $state.batch -and [string]$state.batch.status -cne 'closed') {
-          $result = New-Result -Status 'BATCH_OPEN'
           $resultExitCode = 2
           break
         }

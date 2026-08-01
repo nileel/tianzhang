@@ -50,7 +50,7 @@
 
 - 技术实现只查 `开发管理/开发-技术经验.txt` 中与当前问题相关的章节；系统事实只查 `开发管理/设计-当前状态.txt` 中的相关部分。
 - 修改或诊断定时自动工作流时先查 `开发管理/自动工作流规则.txt`，再按其路由读取状态和任务事实源。
-- 控制器调度：`Show` 返回未关闭 `batch` 时先调用固定 batch coordinator 恢复；没有 batch 但返回 existing legacy recovery 时才路由到 `开发管理/自动工作流恢复规则.txt`。
+- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
 - 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
 - 生成或整理角色立绘时先查 `assets/generated-character-art/README.md`、目标角色直接事实和目标用途提示词；直接事实不足时才补读更广背景，确需比较、生成或编辑时才加载图片本体。
 
@@ -70,8 +70,8 @@
 - 如果修复开始连续叠加补丁、跨越多个原定边界或突破停止条件，立即停止并重新判断根因。
 - 默认使用与风险和影响面相称的最小充分验证；相关输入未变化时不重复同范围检查。共享基础设施、安全/写入隔离、不可逆迁移、核心架构或数据语义、数值平衡、外部交接复审、已有失败/冲突证据或用户明确要求时才升级验证。
 - 项目 PowerShell 脚本只支持 PowerShell 7；独立进程使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。
-- 手动 AI 对话（Codex / DeepSeek / Claude）执行纯 `1` 的 ready 队列任务时，先调用自动化 `Show` 并跳过 `state.batch.lanes[].taskClaim` 已认领的同一任务；选中任务后、任何项目写入前必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用自动化 `Show` 并重读同一任务卡与队列；只有 `lease=null`、`batch=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成，任一条件不满足就停止合并并报告。其他手动写入任务在 `Show` 返回非空 lease 或 batch 时使用 `.worktrees/` 隔离，也只在两者均为空且待合并路径不冲突时合并回主工作区。只读对话不需要 worktree。
-- 控制器启动的自动 Worker 不属于手动对话；协调器为每个 lane 创建并传入唯一自动 worktree、分支和 task claim。Worker 必须只在传入的 `RepositoryRoot` 工作，不得自行调用 `using-git-worktrees`、`git worktree add`，不得创建/切换分支或访问其他 lane；只提交 `workerPaths` 候选。主分支、Git index 和 `coordinatorPaths` 只由固定串行集成器更新。
+- 手动 AI 对话（Codex / DeepSeek / Claude）执行纯 `1` 的 ready 队列任务时，选中任务后、任何项目写入前必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用自动化 `Show` 并重读同一任务卡与队列；只有 `lease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成，任一条件不满足就停止合并并报告。其他手动写入任务在 `Show` 返回非空 lease 时使用 `.worktrees/` 隔离，也只在 `lease=null` 且待合并路径不冲突时合并回主工作区。只读对话不需要 worktree。
+- 控制器启动的 Codex CLI 自动化责任方不属于手动对话；单写入租约已经提供隔离，必须直接在固定调用器传入的 `RepositoryRoot` 当前分支工作，不得使用 `using-git-worktrees`、`git worktree add`，也不得创建或切换 linked worktree / 任务分支。
 - 暂存前对本轮预期路径运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。不得 stage 或提交无关改动。
 - 审核文本检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
 - docs / CSV / Unity 数据链路检查只在相关路径变化时运行：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`
