@@ -8,3 +8,16 @@
 > 注：本文件交接记录仅反映当前状态；复核完成后移入归档
 
 当前无有效交接条目。
+
+## D-COMBAT-02A · 交接：BattleSim 范围朝向可空迁移（待 Codex 复审）
+
+- 短 ID：`D-COMBAT-02A`
+- 方向：DeepSeek V4 Flash 已完成实施并标记「⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash」；请求 Codex / ChatGPT5.5 独立复审。
+- businessCommit：`981549b8f63ad47cc8c3e8a9080e6fc43561542f`
+- 任务/提交范围：`simulations/BattleSim/GameData.cs`、`simulations/BattleSim/Battlefield.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`开发管理/BattleSim范围朝向可空迁移验证记录.txt`、`开发管理/攻击档案跨端fixture验证记录.txt`、`开发管理/任务列表/数据链路任务.txt`、`开发管理/当前任务队列.txt`、`开发管理/任务卡/D-COMBAT-02A.txt`
+- 修改文件：`GameData.cs::AreaShapeConfig.Facing` 改 `HexDirection?`；`Battlefield.cs::ValidateAreaTargetingConfig` 圆形仅接受空朝向、line/fan 要求非空合法方向；`IsWithinAreaShape` 圆形不读朝向、直线/扇形仅在验证后取值；self-test 更新构造点并新增三个拒绝断言。
+- 已验证：`dotnet build -c Release --no-restore`（0 警告 0 错误）；`dotnet run --no-build -c Release`（完整主模拟 exit 0）；`--self-test group-area-targeting-n-group-02` 中本任务全部朝向断言通过；`check-review-text` OK；`check-pending-whitespace` 全部路径 OK；`git diff --cached --check` OK。
+- 未验证：跨端 fixture（本卡禁止建立，属 D-COMBAT-02）。
+- 残留风险：`group-area-targeting-n-group-02` 套件存在与本迁移无关的既有失败断言（`formal 2v2` 范围中心坐标，基线 HEAD 复核一致），未在本任务范围修复。
+- 请求判断：建议 Codex 复审本迁移是否符合「circle 空朝向、line/fan 非空方向、圆形不读/填/存默认方向」的契约语义；并评估上述既有 `formal 2v2` 失败是否为独立缺陷。
+- 建议下一步：Codex 复审通过后，D-COMBAT-02 可恢复为 ready 实施跨端 fixture 与差异检查。
