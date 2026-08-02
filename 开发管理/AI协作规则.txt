@@ -9,9 +9,8 @@
 - `当前任务队列.txt` 只保存有序 ready 投影；`设计-当前状态.txt` 只放已验证事实和当前风险；分线 backlog 与建议索引的维护细则见 `开发管理/状态与建议维护规则.txt`。
 - 任务卡的 `必读` / `必查范围` 统一按 `开发管理/状态与建议维护规则.txt` 解释：先定位相关章节、符号、实体或用途，再读取当前步骤需要的原文；路径级条目不默认等于整份加载，修改前仍读取目标完整逻辑单元。
 - 交接材料只记录当前线索、疑点和待判断项，不能替代 docs、管理文件、BattleSim、Unity 代码或 git diff。
-- 普通定时调度先读 `开发管理/自动工作流规则.txt`。
-- 控制器调度：`Show` 返回 existing recovery 时优先路由到 `开发管理/自动工作流恢复规则.txt`。
-- 普通责任方：实际到达新的用户决定事件时才即时只读取 `创建决定恢复`；未到达决定事件时不得读取恢复规则。
+- 普通定时调度先读 `开发管理/自动工作流规则.txt`。`codex-hourly-worker` 与 `deepseek-hourly-trigger` 是两个独立 automation，互不启动、暂停、恢复或管理对方。
+- 固定入口 `Show` 返回本 owner run 时只按 run state 读取 `开发管理/自动工作流恢复规则.txt`；无本 owner run 时才按共享队列选择新任务。
 
 ## 主责
 
@@ -47,19 +46,15 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 4. `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 行为。
 5. 手动选题前在输出与 automation memory 记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
 
-### 每小时控制器内的 Claude / DeepSeek wrapper
+### 两个独立小时责任链
 
-`tzg-hourly-controller` 可以在同一租约内串行调用 Claude CLI 作为外部执行器，但这不会恢复 WF3，也不会赋予子进程 Codex 权限。自动 wrapper 只消费调度器已选中的 `external_execute` 同一任务卡，不得重新扫描候选；`owner=deepseek -> DeepSeek V4 Flash`，`owner=claude -> native Claude Code`。owner 与已核验执行器不一致时不得启动，也不得改派另一 owner。
-
-调度器必须先真实选中合法外部候选、取得单写入租约并给出任务授权范围，才预检 Claude CLI、`ANTHROPIC_BASE_URL` 和代理身份；无合法外部候选时不得预检或空转调用。外部责任方启动后自行读取任务卡与必要事实源，并端到端完成：
-
-1. 调用 `tools/automation-workspace-guard.ps1` 记录基线，确认授权范围与人工改动不冲突。
-2. 若任务卡 `stateReason` 带有 `REV-*` 问题编号或明确说明由复审退回，修改前先读 `开发管理/审核入口.txt`、`开发管理/未通过审核清单.txt` 中同一问题编号的最新条目和 `开发管理/AI合作沟通.txt` 当前同一卡条目；只消费该匹配项，不读取无关审核历史。最新条目的定向返工范围是原任务卡的收窄边界，不得只按原卡重新生成。
-3. 实施修改、运行任务直接要求的最小充分验证并标记「⚠️ 已修改/未审核」；成功后把同一任务卡更新为 `route=codex_review`、`owner=codex`、`dispatchState=ready`，在原队列行就地同步且保持同一 ID、标题和正文，不创建第二张复审卡。
-4. 使用 `tools/automation-finalize-commit.ps1` 和路径限定的 expected paths 创建 `businessCommit`；提交只含业务、上述同一任务卡/队列状态和直接验证结果，保持 `State: pending_review`。由 `tzg-hourly-controller` 派发时启用 `RequireAutomationMetadata`，`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=pending_review`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain` 分别传入事实字段；后四项严格使用 `问题=<原问题>；完成=<具体交付>`、`影响=<实际行为变化>；边界=<明确未涉及范围>`、`验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>` 的单行结构。九个子字段都非空且由本任务事实支持；三个通俗子字段各不超过 200 个 Unicode code point，避免只有参与开发才知道的实现细节。finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。
-5. 随后只修改 `开发管理/AI合作沟通.txt`，登记真实 `businessCommit` SHA、已验证、未验证和残留风险，再以同一 finalizer 创建只含交接文件的 `handoffCommit`；第二次不得重跑领域检查。`handoffCommit 不使用 Automation 标记`，也不启用元数据门禁。
-
-外层 Codex只接收 `completed`、`needs_decision`、`blocked` 或 `failed`，以及两个 SHA 或恢复 session；不得读取业务 diff、重跑业务验证、stage 或 commit。控制器只在同一 TaskId 通过 `tools/check-task-cards.ps1 -TaskId <同一 TaskId> -Postcondition ExternalPendingReview` 的生命周期/投影检查后，才调用 `RecordResult -Category success` 与 `Release`；不读取业务 diff 或重跑领域验证。外部责任方不得自审、扩大授权路径、并行派发、stash、reset、checkout、clean 或推送远端。需要负责人决定时，外部 CLI 保存原 session 后退出，并由原 session 续跑。
+- `codex-hourly-worker` 只前台调用 `tools/invoke-codex-hourly.ps1`。固定入口只处理 `codex_execute/codex`、`codex_review/codex`、QueueMaintenance 与 Codex 自身 run；不得启动 DeepSeek 或消费 `external_execute/deepseek`。
+- `deepseek-hourly-trigger` 不是业务责任方，只前台调用 `tools/invoke-deepseek-hourly.ps1 -Action RunOnce` 并原样报告结构化终态；不得读队列、任务卡或模型正文。
+- 固定 DeepSeek Windows 入口才负责 `Show`、选择第一项合法 `external_execute/deepseek/ready`、原子 claim、创建 `.worktrees/automation/<runId>/deepseek`、启动并核验 DeepSeek candidate、在最新 `master` 上机械生成正式提交序列、取得短时 `integrationLease` 与 fast-forward。
+- DeepSeek 只接收已经领取的 taskId、runId、baseCommit、candidate branch 和 worktree。它只在 owner worktree 实施、直接验证并创建一个 candidate，不修改共享任务投影或 handoff，不集成、不自审、不管理 runtime 或 automation。
+- 固定入口核验 candidate SHA、父链、changed paths、结构化 `candidateResult` 与 worktree 清洁状态后，在 canonical branch 机械把原任务转换为 `codex_review/codex/ready`，创建连续的 `businessCommit` 与只含 `开发管理/AI合作沟通.txt` 的 `handoffCommit`。二者一次 fast-forward 进入 `master`，审核前不解锁依赖。
+- Codex 与 DeepSeek 可以并行开发不同 taskId；主工作区写入由最长 300 秒的 `integrationLease` 串行化。任务事实、最新 `master`、相关人工改动或证据变化阻止集成，不自动解冲突或叠加重试。
+- run 的 `developing`、`candidate_ready`、`canonical_ready`、`integrated` 与 `attention_required` 恢复都由对应固定入口按证据推进。新的小时轮次不是模型对话 resume；无法接管的未提交修改或决定等待保留现场并进入 `attention_required`。
 
 ## 验证成本控制（适用于所有工作）
 
@@ -87,13 +82,13 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 2. 纯 `1` / `2` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`；选中行后读取同一 ID 的 `开发管理/任务卡/<ID>.txt`。纯 `2` 再按审核入口加载该项需要的未通过条目、交接证据和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
 4. 纯 `1` 从队首向后选择当前 AI 可执行的第一项 `codex_execute` 或 `external_execute`；不消费 `codex_review`。
-5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用自动化 `Show` 并重读同一任务卡与队列；只有 `lease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成。任一条件不满足就停止合并并报告，不覆盖主工作区、不修改自动化 runtime。控制器启动的固定责任方和外部 wrapper 仍直接使用租约覆盖的传入主工作区。
+5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 4 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、`integrationLease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成。固定小时入口则只在 `.worktrees/automation/<runId>/<owner>` 实施，并由脚本在短时 `integrationLease` 下集成。
 6. 纯 `2` 从队首向后选择第一项 `codex_review`；DeepSeek / Claude 不得自审。
 7. 路径冲突或执行器暂不可用时可在本轮继续检查下一行，但不修改顺序；明确逻辑阻塞必须先转状态并移出队列。
 8. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。
 9. 选定真实对象后、读取实施细则前，调用 `tools.codex_app__set_thread_title`：`1` 为 `TZG｜<中文简述>`，`2` 为 `TZG｜复审：<中文简述>`。简述使用任务卡或复审事实源的中文标题；无候选或改名失败不阻断流程。
 10. 命中审核、未审核、交接或复审路由时，按审核入口读取细则与相应事实源；普通执行任务按任务卡必查范围先定位、后读取，发现新依赖时补读，修改前读取目标完整逻辑单元。不得处理另一个 AI 主责的高风险任务，应写入交接请求。
-11. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。由 `tzg-hourly-controller` 启动的 Codex 执行、复审和队列维护统一使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`；`CommitMessage` 只传单行标题，并以 `AutomationTask`、`AutomationState=completed`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain` 分别传入事实字段，后四项严格使用 `问题=<原问题>；完成=<具体交付>`、`影响=<实际行为变化>；边界=<明确未涉及范围>`、`验证=<关键检查与结果>；后续=<解锁项、剩余依赖或下一状态>`、`发生=<负责人短句>；影响=<负责人短句>；需要=<负责人短句>` 的单行结构。九个子字段都非空且由本任务事实支持；三个通俗子字段各不超过 200 个 Unicode code point，明确说明发生了什么、实际影响以及负责人是否需要操作。finalizer 固定生成 `Automation: tzg-hourly-controller` 正文。`AutomationState=completed` 只表示责任方提交闭环，不表示任务卡已完成。固定调用器在 Execution / Review 启动前以 `CodexDispatchReady` 核对同一 TaskId 的 route、owner 与 ready 状态；提交后，普通任务和 task-bearing Recovery 统一使用 `CodexClosedOrNonReady`，只有 QueueMaintenance 与 maintenance recovery 使用全局 `readyCount`。`readyCount>0` 才是 `refilled`；干净的零候选维护记录既有 `blocked/no_runnable_candidate` 且不制造提交。控制器和简报读取返回的 `taskState`、`readyCount` 或同一提交中的任务投影。
+11. 完成后按“验证成本控制”选择最小充分验证集并合并执行一次，只提交本轮文件；完成队列任务时同步更新同一任务卡、backlog 和 `当前任务队列.txt`。固定小时入口的 candidate／正式提交统一遵守 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata` 的九字段合同；`AutomationState=completed` 只表示 Codex 责任方提交闭环，DeepSeek 正式业务提交使用 `pending_review`。`Result`、`Impact`、`Verify`、`Plain` 分别使用 `问题/完成`、`影响/边界`、`验证/后续`、`发生/影响/需要` 的单行结构，并由实际事实与验证支持。QueueMaintenance 以全局 `readyCount` 证明结果；零候选且无变化时不制造提交。
 
 ### 角色例外
 

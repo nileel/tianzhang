@@ -12,7 +12,7 @@
    - `## 未闭环`：只列 `blocked`、`frozen`、`pending_decision`、`waiting_reply` 与 `pending_review`，并说明继续推进所缺条件。
    - `## 接下来`：列当前固定队首最多三项及已知直接依赖，注明快照时间。
    - `## 异常`：只在元数据无效、生命周期无法核验、提交与 diff 不符、工作区存在未提交路径、runtime 存在需人工介入的异常，或本时间窗存在未投递飞书通知时输出。
-7. 调用 `tools/hourly-automation-lease.ps1 -Action Show` 只读检查控制面，并用 `git status --short` 判断工作区是否存在未提交路径；不得读取或归因无关 diff。有效租约属于正常运行，不作为异常；逻辑暂停、遗留 recovery 或其他需人工介入的控制面状态才进入异常。
+7. 调用 `tools/hourly-automation-lease.ps1 -Action Show` 只读检查 schema 4 控制面，并用 `git status --short` 判断工作区是否存在未提交路径；不得读取或归因无关 diff。正常的 Codex／DeepSeek owner run 与有效短时 `integrationLease` 不作为异常；`attention_required`、过期或不一致的集成证据、`MIGRATION_REQUIRED` 及其他需人工介入状态才进入异常。
 8. 调用 `tools/get-feishu-notification-summary.ps1 -Since <Since 的 ISO 时间> -Until <Until 的 ISO 时间>` 只读取得本时间窗投递摘要。`undelivered>0` 时在“异常”中只写未投递总数与 `task_outcome`、`daily_report`、`weekly_report` 分类数；`SOURCE_UNAVAILABLE` 时写明投递审计不可用，不读取私有目录或 provider 信息。
 9. 没有候选时明确写“本时间窗没有带有效 Automation 元数据的业务提交”，但仍输出当前队首；候选源失败时明确报告 `source_error`，不得用旧 memory 填充。
 10. 先形成不超过 6000 个 Unicode code point 的最终 Markdown 正文，正文不得包含独立成行的 PowerShell here-string 终止符。标题固定为 `天章日报 · YYYY-MM-DD`。正文确定后只调用一次 `tools/send-feishu-notification.ps1 -Kind DailyReport -WindowUntil <Until 的 ISO 时间> -Title <标题> -Body <完整正文>`，不得截断、缩写或另写飞书版。

@@ -18,6 +18,7 @@ $defaultDocuments = @(
   '开发管理/自动工作流规则.txt',
   '开发管理/自动工作流恢复规则.txt',
   '开发管理/自动工作流控制器提示词.txt',
+  '开发管理/DeepSeek小时触发提示词.txt',
   '开发管理/当前任务队列.txt',
   'docs/superpowers/plans/2026-07-15-feishu-decision-channel-implementation.md'
 )
@@ -42,6 +43,12 @@ if (Test-Path -LiteralPath $taskCardRoot -PathType Container) {
 $defaultDocuments = @($defaultDocuments | Select-Object -Unique)
 $defaultRequiredVersions = @(
   'tools/hourly-automation-lease.ps1',
+  'tools/select-hourly-task.ps1',
+  'tools/invoke-codex-hourly.ps1',
+  'tools/invoke-codex-candidate.ps1',
+  'tools/invoke-deepseek-hourly.ps1',
+  'tools/invoke-deepseek-responsibility.ps1',
+  'tools/set-task-pending-review.ps1',
   'tools/check-automation-workflow.ps1',
   'tools/check-review-text.ps1',
   'tools/check-data-chain.ps1',

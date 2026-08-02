@@ -14,7 +14,7 @@
 2. 只对拟写入成果的提交读取必要 diff。Automation 提交按 `Task` 与任务生命周期归并；人工提交必须由任务卡、任务归档或其修改的权威事实源支持。无法确认完整逻辑单元时只列为数据质量问题，不根据提交标题猜测。
 3. 当前阶段和风险读取 `开发管理/设计-当前状态.txt`；当前调度顺序读取 `开发管理/当前任务队列.txt` 与队首相关任务卡；只在本周变化需要解释依赖时读取直接相关的分线 backlog。
 4. 设定与设计事实读取 `docs/`，任务状态读取 `开发管理/`，数值结论只引用已有 BattleSim 实际结果，Unity 当前行为读取 `src/`。本次总结不重跑领域验证。
-5. 可调用 `tools/hourly-automation-lease.ps1 -Action Show` 只读检查控制面。有效租约属于正常运行；只有逻辑暂停、遗留 recovery 或其他需人工介入的状态才列为风险。
+5. 可调用 `tools/hourly-automation-lease.ps1 -Action Show` 只读检查 schema 4 控制面。正常的 owner run 与有效短时 `integrationLease` 不列为风险；只有 `attention_required`、过期或不一致的集成证据、`MIGRATION_REQUIRED` 及其他需人工介入状态才列为风险。
 6. 只用 `git status --short` 判断是否存在未提交路径；不得读取、归因或纳入无关工作区 diff。
 7. 每个拟进入“风险与决定”的事项都必须按当前事实交叉核验并标为以下一种：`ready`、`blocked`、`frozen`、`pending_decision` / `waiting_reply`、`pending_review`、`completed`、`no_task`、`boundary_only` 或 `evidence_conflict`。核验顺序为活跃任务卡、完成归档、当前队列与相关 backlog，再按领域路由核对 `docs/`、BattleSim 已有结果或 Unity `src/` 当前行为；摘要和索引只作线索。
 8. `completed` 不得列为当前风险；`boundary_only` 不得伪装成待办；`frozen` 只有在阻塞当前固定队列、需要负责人授权或属于已确认近期重点时才进入本节；`evidence_conflict` 必须写明冲突两侧且不采用旧结论。每项风险或决定写对应任务 ID，没有任务时明确写 `no_task`，并在同一章节内分开“风险”和“待决定”。

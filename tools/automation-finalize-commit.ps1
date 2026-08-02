@@ -219,7 +219,7 @@ $beforeIndex = Get-IndexEntries
 Push-Location $script:Repository
 try {
   if ($changedExistingFiles.Count -gt 0) {
-    & (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths ($changedExistingFiles -join '|')
+    $null = & (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths ($changedExistingFiles -join '|')
     if ($LASTEXITCODE -ne 0) { throw 'Whitespace verification failed.' }
   }
 } finally {

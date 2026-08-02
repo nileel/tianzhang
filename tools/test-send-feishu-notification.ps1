@@ -37,7 +37,8 @@ function Invoke-Facade {
     ExitCode = $exitCode
     Output = @($output) -join "`n"
     Request = if (Test-Path -LiteralPath $tracePath) {
-      [IO.File]::ReadAllText($tracePath) | ConvertFrom-Json -Depth 30
+      $rawRequest = [IO.File]::ReadAllText($tracePath)
+      try { $rawRequest | ConvertFrom-Json -Depth 30 } catch { throw "Notification test request is invalid JSON: $rawRequest" }
     } else {
       $null
     }
@@ -102,6 +103,8 @@ Plain: 发生=任务通知已经同时包含专业内容和通俗解释；影响
   $structuredSha = [string](& git -C $repoRoot rev-parse HEAD)
 
   $fakeNode = @'
+[Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 $raw = @($input) -join "`n"
 [IO.File]::WriteAllText(
   $env:FEISHU_NOTIFICATION_TEST_TRACE,
@@ -114,7 +117,7 @@ $result = if ($exitCode -eq 0) { 'PROVIDER_ACCEPTED' } else { 'DELIVERY_FAILED' 
 exit $exitCode
 '@
   Write-TestUtf8 -Path $fakeNodeScriptPath -Text $fakeNode
-  Write-TestUtf8 -Path $fakeNodePath -Text "@echo off`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"$fakeNodeScriptPath`" %*`r`nexit /b %ERRORLEVEL%`r`n"
+  Write-TestUtf8 -Path $fakeNodePath -Text "@echo off`r`nchcp 65001 >nul`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"$fakeNodeScriptPath`" %*`r`nexit /b %ERRORLEVEL%`r`n"
 
   $taskResult = Invoke-Facade -Arguments @(
     '-Kind', 'TaskOutcome',

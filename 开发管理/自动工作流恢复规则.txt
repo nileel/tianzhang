@@ -1,50 +1,42 @@
 # 自动工作流恢复规则
 
-本文件只定义 durable recovery 的创建与处理细节，只有两个读取条件：
+本文件只处理 schema 4 中已经存在的 owner run。固定入口每轮先 `Show`；某 owner run 非空时只按其状态恢复，不选择新任务，也不接管另一个 owner。
 
-1. 每轮先调用 `tools/hourly-automation-lease.ps1 Show`；`Show.recovery != null` 时，恢复 route 读取本文件中的对应恢复规则。
-2. Execution、Review 或 QueueMaintenance 普通责任方实际到达新的用户决定事件时，只读取 `创建决定恢复` 一节。
+## 共同边界
 
-普通责任方未到达决定事件时不得读取本文件，也不得预执行这里的协议。
+- 先核对 owner、runId、taskId、repository、baseCommit、worktree、candidate／canonical branch 和 runtime 记录；任一关键证据不一致都转 `attention_required` 并保留现场。
+- Codex 入口只恢复 `runs.codex`，DeepSeek 固定 Windows 入口只恢复 `runs.deepseek`。新的 automation 轮次是机械恢复触发，不是模型对话 resume。
+- 不把半成品交给另一 owner，不创建兼容 branch、第二 recovery 对象、后台重试或自动冲突解决器；不 stash、reset、checkout、clean、revert 或泛化删除 worktree。
+- `attention_required` 是未收尾 run 的私有恢复事实，不代替任务卡 blocker。核验后若问题已构成任务级阻塞，Codex 普通管理上下文按任务维护规则写回任务卡和队列，再显式处理该 run。
 
-## 读取条件与共同边界
+## developing
 
-- recovery 优先于普通队列调度。普通 `Acquire` 返回 `RECOVERY_ONLY` 时立即停止，不转换、复制或绕过现有 recovery。
-- 先按 `trigger` 区分 `decision recovery` 与 `interruption recovery`，再核对原 TaskId、owner、repository；不得把一种恢复当成另一种恢复。
-- 恢复仍由固定调用器进入同一 TaskId 的责任方；每轮只恢复一个责任方，不实施第二项业务任务。
+- 固定入口仍在同一次前台调用中且责任方进程运行时，只继续等待同一进程；外层 yield、空输出或尚未退出不是失败，不得启动第二责任方。
+- 责任方已结束且 owner worktree 仍精确位于 `.worktrees/automation/<runId>/<owner>`、当前 candidate branch 等于 runtime、HEAD 等于 baseCommit 且工作树干净时，可以重新进入一次 candidate 执行；同一入口不得在一次调用中隐式多次重跑。
+- 存在未提交修改、额外提交、session 身份不明、路径越界、权限／用户决定等待或进程终态不可核验时，保留 worktree 并转 `attention_required`。DeepSeek 不恢复旧 Claude 对话，不把未提交内容交给新会话。
+- QueueMaintenance 的干净 worktree 若没有产生 candidate，以 `no_candidate` 原子关闭；不制造空提交或恢复记录。
 
-## 创建决定恢复
+## candidate_ready
 
-- 本节只在普通责任方实际到达新的用户决定事件后即时读取；没有决定事件时不得读取本节或创建 recovery。
-- 决定请求必须在现有专业问题、A/B/C 选项、推荐项和专业影响之外同时提供 `plainSummary.situation`、`plainSummary.impact`、`plainSummary.action`，分别回答“现在为什么需要你决定”“不同选择的实际区别”“你现在需要怎么选”。三个通俗字段必须非空、单行、各不超过 200 个 Unicode code point，并由同一决定事实支持；决策卡先显示专业内容，再显示通俗版和回复控件。发送层不得临时猜测、补写或截断通俗内容。
-- 修改前等待决定时保存 `trigger=decision`、TaskId、owner、repository、DecisionId 和消费请求路径，释放租约并退出。schema 3 的 decision recovery 不保存 session ID，不保存未提交修改，也不把半成品交给下一责任方。
-- 只有 `send-decision.mjs` 返回 `PROVIDER_ACCEPTED` 后，原发送请求路径已原子转换为消费请求；责任方必须把该同一路径作为 `DecisionRequestPath` 交给 `SaveRecovery`，其他发送结果不得保存 recovery。
-- 旧 `pending-bindings.json` 不是新决定的互斥锁；责任方不得因看到旧 binding 就跳过发送或直接记录 `waiting_decision`。新 accepted send 会原子更新 binding，租约工具只接受对应的消费请求。
+- 不重新运行 Codex 或 DeepSeek 业务。固定入口只核验原 candidate SHA、父链、branch、changed paths、结构化 `candidateResult` 与 worktree 清洁状态。
+- 证据完整时在最新 `master` 上重新预构建 canonical；任务事实或相关路径变化、文本冲突、验证失败或 candidate 证据缺失时转 `attention_required`。
+- 已存在但 runtime 未记录的 canonical branch 视为证据不完整，不猜测采用或覆盖。
 
-## 决定恢复
+## canonical_ready
 
-- 飞书桥收到 A/B/C 或自定义回复后只写入签名证据并确认，不取得租约、不启动模型、不 Resume、不轮询；已处理证据可按同一 DecisionId 幂等读取。
-- 后续每小时控制器遇到 decision recovery 时直接调用 `consume-reply.mjs` 读取对应消费请求。无回复时不得 Acquire；有回复时以精确 DecisionId 调用 `Acquire -ResumeRecovery`，再由固定调用器使用 `-Action Start -Route Recovery` 启动新的责任方 session。不存在独立决定触发器，不得恢复等待决定的原 session。
-- decision recovery 不得包含 `resumeKind` 或 `resumeId`；决定恢复始终是 fresh `Start`，不得 `Resume` 原 session。
+- 不重新开发、不重新生成候选。先核对 canonical branch、`canonicalBase`、`canonicalHead`、正式提交序列与任务后置条件。
+- `master == canonicalBase` 且正式路径与主工作区人工改动不冲突时，申请短时 `integrationLease` 并执行一次 fast-forward。
+- `master` 已前进但 canonical worktree 干净且 candidate 证据仍完整时，回到 `candidate_ready`，下一轮基于新 HEAD 重建；真正冲突或证据不一致转 `attention_required`。
+- `integrationLease` 被另一 run 持有时只返回 `occupied`，保留 `canonical_ready`，不等待或启动新业务。
 
-## 中断恢复
+## integrated
 
-- 已有未提交任务修改时停止普通调度，只允许中断恢复路径处理，不把半成品交给另一责任方。
-- CLI 责任方异常退出且相对启动基线产生新改动时，固定调用器以原 session ID 和新增路径保存 `trigger=interruption` recovery；没有唯一 session ID 时保留租约和现场并转人工阻塞，不伪造恢复指针。
-- 下一轮只允许完全匹配的原 TaskId、owner、repository 通过 `Acquire -ResumeRecovery` 取得新租约并 `Resume` 原 session。interruption recovery 保留 session ID，只有该路径允许 Resume 原 session。
-- 现有 task-owned Desktop recovery 只允许原任务人工完成；普通自动化收到 `RECOVERY_ONLY` 后停止，不转换、复制或迁移 rollout。
+- `master` 必须已经等于记录的 `canonicalHead`。固定入口只调用 `CompleteRun` 完成尚未记录的关闭并释放同一集成租约。
+- 不重复 fast-forward、业务验证、业务通知、DeepSeek handoff 或 candidate 执行。
+- 若 `master` 与记录不一致，转 `attention_required`，不得伪造成功。
 
-## UTF-8 决定回复
+## attention_required
 
-- A/B/C 选项通过固定调用器的 `DecisionOption` 传入；自定义回复只通过标准输入传入，不拼接到命令行。
-- 自定义回复由 tools/invoke-codex-responsibility.ps1 使用
-  `[IO.StreamReader]` + `[Console]::OpenStandardInput()` +
-  `[Text.UTF8Encoding]::new($false)` 读取。
-  测试驱动器以 StandardInputEncoding=UTF-8 写入。
-  不得改为系统代码页或普通 `[Console]::In.ReadToEnd()`。
-
-## 失败关闭
-
-- 决定回复缺失、DecisionId 不匹配或恢复租约未取得时，只报告对应 recovery 状态并结束，不启动责任方。
-- 中断恢复没有唯一 session ID、路径不匹配或现场无法安全接管时保留 recovery、租约与现场并转人工阻塞，不伪造成功、失败或恢复指针。
-- runner 的空输出、yield 或尚未返回不是恢复终态；继续等待同一次调用，直到取得唯一终态摘要。
+- 自动轮次只报告 owner、taskId、runId 和脱敏 `recoveryReason` 后结束；不选择新任务、不修改业务事实、不自动清理。
+- 普通管理上下文必须先核验主工作区、owner worktree、branch、提交、进程和 runtime，再决定是补齐任务级 blocker、人工完成可证明的关闭，还是保留证据并暂停两个 automation。
+- 需要负责人决定时，先按正常任务生命周期把任务转换为 `pending_decision` 并提交；不得把等待决定只藏在 runtime，也不得恢复旧 Desktop／Cowork session。
