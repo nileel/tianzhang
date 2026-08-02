@@ -1179,6 +1179,18 @@ static class BattleSimSelfTests
             Array.Empty<string>());
     }
 
+    static readonly string[] AttackProfileHeaders =
+    {
+        "attackProfileId", "displayNameKey", "profileKind", "basicBindingKind",
+        "contentScope", "sourceAffiliation", "realmRequirementId", "elementRequirementId",
+        "effectType", "damageElementId", "physicalDamageMultiplier", "soulDamageMultiplier",
+        "healAmount", "buffMultiplier", "defensePenetration", "resourceKind", "resourceCost",
+        "cooldownTicks", "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
+        "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
+        "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
+        "isDomain", "isBloodline", "specialEffectTextKey",
+    };
+
     static IReadOnlyList<Dictionary<string, string>> ReadFixtureRows(string fileName)
     {
         var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fileName))
@@ -1198,6 +1210,11 @@ static class BattleSimSelfTests
     static void RunAttackProfileDCombat02()
     {
         const string fixtureName = "AttackProfiles.fixture.csv";
+        var rawFixtureLines = File.ReadAllLines(Path.Combine(
+                FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fixtureName))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
+            .ToArray();
+        ValidateAttackProfileTable(rawFixtureLines);
         var rows = ReadFixtureRows(fixtureName);
         AssertEqual(6, rows.Count, $"{fixtureName} row count");
 
@@ -1229,6 +1246,7 @@ static class BattleSimSelfTests
             ParseInt(artSingle["minCastRange"]),
             ParseInt(artSingle["maxCastRange"]));
         AssertArtProjection(artSingle, artSingleProfile, "art_fixture_single");
+        AssertEqual((GameData.AreaTargetingConfig)null, artSingleProfile.AreaTargeting, "art_fixture_single must be single target");
 
         var artCircleProfile = new GameData.ArtConfig(
             artCircle["attackProfileId"],
@@ -1254,6 +1272,7 @@ static class BattleSimSelfTests
                 ParseAreaEffectBlockers(artCircle["areaEffectBlockers"]),
                 ParseAreaTargetFactions(artCircle["areaAllowedFactions"]),
                 ParseAreaTargetStates(artCircle["areaAllowedStates"])));
+        AssertArtProjection(artCircle, artCircleProfile, "art_fixture_circle");
         AssertAreaProjection(artCircle, artCircleProfile.AreaTargeting, "art_fixture_circle");
 
         var artFanProfile = new GameData.ArtConfig(
@@ -1280,6 +1299,7 @@ static class BattleSimSelfTests
                 ParseAreaEffectBlockers(artFan["areaEffectBlockers"]),
                 ParseAreaTargetFactions(artFan["areaAllowedFactions"]),
                 ParseAreaTargetStates(artFan["areaAllowedStates"])));
+        AssertArtProjection(artFan, artFanProfile, "art_fixture_fan");
         AssertAreaProjection(artFan, artFanProfile.AreaTargeting, "art_fixture_fan");
 
         var divineLineProfile = new GameData.DivineConfig(
@@ -1305,7 +1325,9 @@ static class BattleSimSelfTests
                     ParseInt(divineLine["areaInnerRadius"])),
                 ParseAreaEffectBlockers(divineLine["areaEffectBlockers"]),
                 ParseAreaTargetFactions(divineLine["areaAllowedFactions"]),
-                ParseAreaTargetStates(divineLine["areaAllowedStates"])));
+                ParseAreaTargetStates(divineLine["areaAllowedStates"])),
+            MPCost: ParseInt(divineLine["resourceCost"]));
+        AssertDivineProjection(divineLine, divineLineProfile, "divine_fixture_line");
         AssertAreaProjection(divineLine, divineLineProfile.AreaTargeting, "divine_fixture_line");
 
         // 圆形无朝向：直线/扇形必须非空朝向；圆形必须为空，任何默认方向都失败。
@@ -1313,10 +1335,6 @@ static class BattleSimSelfTests
         AssertEqual(false, artCircleProfile.AreaTargeting.Shape.Facing.HasValue, "circle facing must not have a value");
 
         // 负例：从合法 fixture 行一次只变异一个条件，全部稳定失败且不回落到旧静态配置。
-        var rawFixtureLines = File.ReadAllLines(Path.Combine(
-                FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fixtureName))
-            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
-            .ToArray();
         var fixtureHeaders = rawFixtureLines[0].Split(',');
         var basicMainLine = rawFixtureLines[1];
         var basicUnarmedLine = rawFixtureLines[2];
@@ -1359,6 +1377,9 @@ static class BattleSimSelfTests
             return new[] { rawFixtureLines[0], basicMainLine, basicUnarmedLine, artSingleLine, artCircleLine, artFanLine, divineLineLine, mutatedLine };
         }
 
+        var renamedHeaders = (string[])fixtureHeaders.Clone();
+        renamedHeaders[1] = "renamedDisplayNameKey";
+        AssertTableRejected(new[] { string.Join(",", renamedHeaders) }.Concat(rawFixtureLines.Skip(1)).ToArray(), "attack_profile_header_not_exact");
         AssertTableRejected(TableWithDuplicatedId(MutateRowLine(artSingleLine, "attackProfileId", "basic_fixture_main")), "attack_profile_id_duplicate");
         AssertTableRejected(TableWith(ShortRowLine(artSingleLine)), "attack_profile_short_or_extra_row");
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "realmRequirementId", "realm_unknown")), "attack_profile_requirement_reference_unknown");
@@ -1402,10 +1423,26 @@ static class BattleSimSelfTests
     {
         AssertEqual(row["attackProfileId"], profile.Name, $"{label} id");
         AssertEqual(ParseDouble(row["soulDamageMultiplier"]), profile.Mult, $"{label} mult");
+        AssertEqual(ParseInt(row["resourceCost"]), profile.MPCost, $"{label} resource cost");
+        AssertEqual(ParseInt(row["cooldownTicks"]), profile.Cooldown, $"{label} cooldown");
         AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
         AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
         AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
-        AssertEqual((GameData.AreaTargetingConfig)null, profile.AreaTargeting, $"{label} must be single target");
+    }
+
+    static void AssertDivineProjection(
+        IReadOnlyDictionary<string, string> row,
+        GameData.DivineConfig profile,
+        string label)
+    {
+        AssertEqual(row["attackProfileId"], profile.Name, $"{label} id");
+        AssertEqual(ParseDouble(row["physicalDamageMultiplier"]), profile.Mult, $"{label} mult");
+        AssertEqual(ParseDouble(row["defensePenetration"]), profile.DefPen, $"{label} defense penetration");
+        AssertEqual(ParseInt(row["resourceCost"]), profile.MPCost, $"{label} resource cost");
+        AssertEqual(ParseInt(row["cooldownTicks"]), profile.Cooldown, $"{label} cooldown");
+        AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
+        AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
+        AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
     }
 
     static void AssertAreaProjection(
@@ -1454,8 +1491,7 @@ static class BattleSimSelfTests
     static void ValidateAttackProfileTable(IReadOnlyList<string> lines)
     {
         var headers = lines[0].Split(',');
-        const int expectedFieldCount = 34;
-        if (headers.Length != expectedFieldCount)
+        if (!headers.SequenceEqual(AttackProfileHeaders, StringComparer.Ordinal))
             throw new InvalidOperationException("attack_profile_header_not_exact");
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var line in lines.Skip(1))

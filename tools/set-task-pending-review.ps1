@@ -79,6 +79,10 @@ try {
   foreach ($requiredPath in @($cardRelativePath, '开发管理/当前任务队列.txt', $sourceBacklog)) {
     if ($expectedPaths -cnotcontains $requiredPath) { throw "Task expectedPaths does not authorize $requiredPath" }
   }
+  $reviewListPath = '开发管理/未通过审核清单.txt'
+  if ($expectedPaths -cnotcontains $reviewListPath) {
+    $metadata.expectedPaths = @($expectedPaths + $reviewListPath)
+  }
 
   $metadata.route = 'codex_review'
   $metadata.owner = 'codex'

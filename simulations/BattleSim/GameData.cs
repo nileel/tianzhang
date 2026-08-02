@@ -403,7 +403,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         string Element = "",
         int MinRange = 1,
         int MaxRange = 1,
-        AreaTargetingConfig AreaTargeting = null);
+        AreaTargetingConfig AreaTargeting = null,
+        int MPCost = 0);
     public readonly record struct ElementMatch(double DamageMultiplier, double CritRateBonus, double CritDamageBonus);
     public static readonly ForcedMovementConfig BreakFormationChargeKnockback = new("破阵冲锋·击退", 1);
     public static readonly MovementControlConfig RootedControl = new("定身", true);

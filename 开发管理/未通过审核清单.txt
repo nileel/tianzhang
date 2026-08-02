@@ -6,13 +6,6 @@
 
 ## 当前未通过/待复核项
 
-### D-COMBAT-02 · 跨端攻击档案 fixture 与差异检查
-
-- 结论：不通过；首次业务提交 `f8df02db040eb1968086034a9fa74e72a0d8605e` 新增 `src/Assets/Tests/EditMode/Fixtures/`，但遗漏 Unity 目录身份文件 `src/Assets/Tests/EditMode/Fixtures.meta`。
-- 证据：Codex 独立复审 worktree 运行 Unity 验证后产生该未跟踪 `.meta`；控制器因 `codex_uncommitted_changes` 进入 `attention_required`，未创建或集成复审 candidate。
-- 返工：只补交 `src/Assets/Tests/EditMode/Fixtures.meta`，不得修改首次交付的 CSV、代码或扩大生产迁移范围；执行原任务卡验证后重新请求 Codex 复审。
-- 复核：确认目录 `.meta` 已进入修复 business commit、owner worktree 清洁、任务重新转换为 `codex_review/codex/ready`；通过后删除本条。
-
 ## 复审路由
 
 复审时先读 `开发管理/审核入口.txt`，再读 `开发管理/AI合作沟通.txt` 当前条目与 `开发管理/任务列表/审核与交接任务.txt`。

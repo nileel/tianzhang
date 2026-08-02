@@ -187,6 +187,9 @@ try {
     $expectedPaths = @($card.Metadata.expectedPaths | ForEach-Object { [string]$_ })
     Assert-Contract ($expectedPaths -ccontains "开发管理/任务卡/$id.txt") "missing exact active-card authorization: $id"
     Assert-Contract ($expectedPaths -ccontains "开发管理/任务归档/$id.txt") "missing exact archive authorization: $id"
+    if ([string]$card.Metadata.route -ceq 'codex_review') {
+      Assert-Contract ($expectedPaths -ccontains '开发管理/未通过审核清单.txt') "missing review-list authorization: $id"
+    }
   }
 
   $queueFile = Join-Path $repositoryPath $QueuePath

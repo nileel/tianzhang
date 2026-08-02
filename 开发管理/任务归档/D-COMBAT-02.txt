@@ -8,11 +8,15 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 已补齐表头及 Art/Divine 逐字段投影验收并完成复审",
   "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
     "src/Assets/Tests/EditMode/Fixtures.meta",
+    "开发管理/攻击档案跨端fixture验证记录.txt",
+    "开发管理/未通过审核清单.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-02.txt",
@@ -88,3 +92,10 @@
 - Codex 在独立 owner worktree 复跑 Unity 验证后发现未跟踪的 `src/Assets/Tests/EditMode/Fixtures.meta`；首次业务提交新增 `Fixtures/` 目录及目录内 fixture，却未提交 Unity 目录 `.meta`，复审结论为不通过。
 - 本轮返工只允许补交 `src/Assets/Tests/EditMode/Fixtures.meta`；不得修改首次交付的 CSV、代码、验证记录或扩大生产迁移范围。
 - 修复后执行本卡既定验证并按外部交付边界重新转为 `codex_review/codex/ready`，由 Codex 独立复审；当前未通过清单在复审通过前保留。
+
+## Codex 复审通过与完成（2026-08-02）
+
+- 已确认 `Fixtures.meta` 纳入正式修复提交，Unity 目录身份遗漏消除，相关输入与此前通过的 Unity 攻击档案验证一致。
+- 复审追加发现并修复 BattleSim 精确 34 列表头校验、Art 公共投影断言和 Divine 公共投影断言缺口；经负责人明确授权，为 `DivineConfig` 增加默认值为 `0` 的末尾可选 `MPCost`，不改变既有静态配置或 Character 消费行为。
+- 自动化合同测试、BattleSim 定向 self-test、Release 完整运行、数据链和管理文本检查均通过；详细证据见 `开发管理/攻击档案跨端fixture验证记录.txt`。
+- 本卡只完成非生产 fixture 与差异检查；生产 CSV／asset 和实际消费者切换仍属于独立迁移切片。

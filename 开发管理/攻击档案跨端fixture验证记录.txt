@@ -63,3 +63,12 @@
 
 - 未创建或填写生产 `src/Assets/DataConfig/AttackProfiles.csv`，未生成生产 `AttackProfileData` asset，未指定武器、术法、神通、范围尺寸或目标资格等内容参数，未修改战斗伤害、AI、范围结算、装备所有权、角色装配、默认模拟矩阵或 Unity 运行时消费者。
 - 本卡只证明契约与投影可对齐；具体生产内容切换仍必须另开迁移切片（契约「迁移顺序、fixture 与差异检查」第 6 条），并在该切片同时移除消费者对遗留 CSV／asset／`GameData` 硬编码值的读取。
+
+## 2026-08-02 Codex 复审修复与闭环
+
+- 根因一：BattleSim 仅比较表头列数，无法拒绝同为 34 列但列名或顺序错误的表；现改为按契约原表头顺序敏感比较，并增加同列数改名负例。
+- 根因二：正例只完整断言单目标 `ArtConfig`，圆形／扇形只断言范围字段，`DivineConfig` 也只断言范围字段；现对三行 art 统一断言倍率、MP 成本、冷却、元素与距离，对 divine 断言倍率、破防、MP 成本、冷却、元素与距离，再分别断言范围配置。
+- `DivineConfig` 原来没有资源成本承载。负责人追加授权后，只在现有可选参数末尾增加默认值为 `0` 的 `MPCost`，fixture 通过命名参数传入 `12`；既有静态神通配置和 `Character.AssignArts` 消费行为未改。
+- `src/Assets/Tests/EditMode/Fixtures.meta` 已在修复业务提交中，owner worktree 干净；此前登记的目录身份遗漏已消除。
+- 验证：自动化 transition／任务卡检查、Codex candidate／hourly 包装器测试全部通过；BattleSim Release `--no-restore` 构建 0 警告 0 错误，`attack-profile-d-combat-02` self-test PASS，完整 BattleSim 以 exit 0 完成（656 秒）；`check-data-chain.ps1` 为 OK。
+- Unity 输入未变化，因此不重复此前已通过的 9 项攻击档案用例与 286/288 全量测试；两项无关基线失败的输入也未变化。

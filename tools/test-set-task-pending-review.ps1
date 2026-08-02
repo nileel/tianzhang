@@ -52,6 +52,8 @@ try {
   Assert-Equal ([string]$updatedMetadata.route) 'codex_review' 'Task route was not updated'
   Assert-Equal ([string]$updatedMetadata.owner) 'codex' 'Task owner was not updated'
   Assert-Equal ([string]$updatedMetadata.dispatchState) 'ready' 'Task state was not retained as ready'
+  Assert-True (@($updatedMetadata.expectedPaths) -ccontains '开发管理/未通过审核清单.txt') 'Review-list authorization was not added'
+  Assert-Equal (@($updatedMetadata.expectedPaths | Where-Object { $_ -ceq '开发管理/未通过审核清单.txt' }).Count) 1 'Review-list authorization was duplicated'
   Assert-True (([IO.File]::ReadAllText((Join-Path $testRoot '开发管理/当前任务队列.txt'))) -match '\| codex_review \| codex \|') 'Queue projection was not updated'
   Assert-True (([IO.File]::ReadAllText((Join-Path $testRoot '开发管理/任务列表/自动化任务.txt'))) -match '\| codex \| 已排队 \|') 'Backlog projection was not updated'
 
