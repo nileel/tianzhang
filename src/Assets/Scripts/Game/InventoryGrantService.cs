@@ -57,47 +57,97 @@ namespace TianZhang.Game
     {
         public const string ProductionContentScope = "content_scope_production";
 
+        /// <summary>
+        /// 普通授予：先构造并校验完整新快照，全部合法后一次性替换背包。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：拆分候选构造与替换
+        /// </summary>
         public InventoryGrantResult Grant(
             InventoryStateStore inventory,
             ContentCatalogData catalog,
             IReadOnlyList<InventoryGrantRequest> requests)
         {
+            if (!TryBuildGrant(
+                    inventory,
+                    catalog,
+                    requests,
+                    out IReadOnlyList<InventoryStateSnapshot> candidate,
+                    out InventoryGrantFailureReason failureReason))
+            {
+                return InventoryGrantResult.Rejected(failureReason);
+            }
+
+            ApplyGrant(inventory, candidate);
+            return InventoryGrantResult.Succeeded();
+        }
+
+        /// <summary>
+        /// 只构造并校验全部授予后的新库存快照，不修改背包；失败时返回稳定原因且候选为空。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
+        /// </summary>
+        public bool TryBuildGrant(
+            InventoryStateStore inventory,
+            ContentCatalogData catalog,
+            IReadOnlyList<InventoryGrantRequest> requests,
+            out IReadOnlyList<InventoryStateSnapshot> candidate,
+            out InventoryGrantFailureReason failureReason)
+        {
+            candidate = null;
             if (inventory == null)
                 throw new ArgumentNullException(nameof(inventory));
             if (catalog == null)
-                return InventoryGrantResult.Rejected(InventoryGrantFailureReason.CatalogMissing);
+            {
+                failureReason = InventoryGrantFailureReason.CatalogMissing;
+                return false;
+            }
             if (requests == null || requests.Count == 0)
-                return InventoryGrantResult.Rejected(InventoryGrantFailureReason.EmptyRequest);
+            {
+                failureReason = InventoryGrantFailureReason.EmptyRequest;
+                return false;
+            }
 
             var quantitiesByItemId = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (InventoryGrantRequest request in requests)
             {
                 if (request == null || string.IsNullOrWhiteSpace(request.ItemId))
-                    return InventoryGrantResult.Rejected(InventoryGrantFailureReason.ItemIdInvalid);
+                {
+                    failureReason = InventoryGrantFailureReason.ItemIdInvalid;
+                    return false;
+                }
                 if (request.Quantity <= 0)
-                    return InventoryGrantResult.Rejected(InventoryGrantFailureReason.QuantityInvalid);
+                {
+                    failureReason = InventoryGrantFailureReason.QuantityInvalid;
+                    return false;
+                }
 
                 if (!TryAddQuantity(quantitiesByItemId, request.ItemId, request.Quantity))
-                    return InventoryGrantResult.Rejected(InventoryGrantFailureReason.QuantityOverflow);
+                {
+                    failureReason = InventoryGrantFailureReason.QuantityOverflow;
+                    return false;
+                }
             }
 
-            var candidate = new Dictionary<string, InventoryStateSnapshot>(StringComparer.Ordinal);
+            var candidateById = new Dictionary<string, InventoryStateSnapshot>(StringComparer.Ordinal);
             foreach (InventoryStateSnapshot snapshot in inventory.Snapshots)
             {
                 if (!IsExistingSnapshotValid(snapshot, catalog))
-                    return InventoryGrantResult.Rejected(
-                        InventoryGrantFailureReason.ExistingInventoryInvalid);
+                {
+                    failureReason = InventoryGrantFailureReason.ExistingInventoryInvalid;
+                    return false;
+                }
 
-                candidate.Add(snapshot.ItemId, snapshot);
+                candidateById.Add(snapshot.ItemId, snapshot);
             }
 
             foreach (KeyValuePair<string, int> grant in quantitiesByItemId)
             {
                 InventoryGrantFailureReason itemFailure = ValidateGrantItem(catalog, grant.Key, out ItemData item);
                 if (itemFailure != InventoryGrantFailureReason.None)
-                    return InventoryGrantResult.Rejected(itemFailure);
+                {
+                    failureReason = itemFailure;
+                    return false;
+                }
 
-                int currentQuantity = candidate.TryGetValue(grant.Key, out InventoryStateSnapshot current)
+                int currentQuantity = candidateById.TryGetValue(grant.Key, out InventoryStateSnapshot current)
                     ? current.Quantity
                     : 0;
                 int nextQuantity;
@@ -107,13 +157,17 @@ namespace TianZhang.Game
                 }
                 catch (OverflowException)
                 {
-                    return InventoryGrantResult.Rejected(InventoryGrantFailureReason.QuantityOverflow);
+                    failureReason = InventoryGrantFailureReason.QuantityOverflow;
+                    return false;
                 }
 
                 if (nextQuantity > item.maxStack)
-                    return InventoryGrantResult.Rejected(InventoryGrantFailureReason.StackLimitExceeded);
+                {
+                    failureReason = InventoryGrantFailureReason.StackLimitExceeded;
+                    return false;
+                }
 
-                candidate[grant.Key] = new InventoryStateSnapshot(
+                candidateById[grant.Key] = new InventoryStateSnapshot(
                     grant.Key,
                     nextQuantity,
                     new StateStepSnapshot(
@@ -126,8 +180,24 @@ namespace TianZhang.Game
                         persisted: false));
             }
 
-            inventory.ReplaceAll(candidate.Values);
-            return InventoryGrantResult.Succeeded();
+            candidate = new List<InventoryStateSnapshot>(candidateById.Values);
+            failureReason = InventoryGrantFailureReason.None;
+            return true;
+        }
+
+        /// <summary>
+        /// 用已通过 <see cref="TryBuildGrant"/> 校验的完整快照一次性替换背包；替换本身不再失败。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
+        /// </summary>
+        public void ApplyGrant(
+            InventoryStateStore inventory,
+            IReadOnlyList<InventoryStateSnapshot> candidate)
+        {
+            if (inventory == null)
+                throw new ArgumentNullException(nameof(inventory));
+            if (candidate == null)
+                throw new ArgumentNullException(nameof(candidate));
+            inventory.ReplaceAll(candidate);
         }
 
         private static bool TryAddQuantity(

@@ -4,13 +4,13 @@
   "id": "U-BOUNTY-01A",
   "title": "关中一次性悬赏状态机与计数",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-02：D-BOUNTY-01、U-CONTENT-CATALOG-01、U-SETTLEMENT-01、U-ITEM-GRANT-01 与 U-ENEMY-01 均已完成；首批生产 BountyData、敌人结算和原子库存入口已可用。本卡只实施无存档的悬赏规则与击败计数。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Game/BountyRuntime.cs",
     "src/Assets/Scripts/Game/BountyRuntime.cs.meta",
@@ -27,7 +27,8 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-BOUNTY-01A.txt",
-    "开发管理/任务归档/U-BOUNTY-01A.txt"
+    "开发管理/任务归档/U-BOUNTY-01A.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

@@ -194,6 +194,43 @@ namespace TianZhang.Tests
                 InventoryGrantFailureReason.ItemNotFound);
         }
 
+        [Test]
+        public void TryBuildGrantSeparatesCandidateConstructionFromReplacement()
+        {
+            ContentCatalogData catalog = CreateCatalog(CreateItem("item_lingshi_low", 99));
+            var store = new InventoryStateStore();
+            store.Set(new InventoryStateSnapshot("item_lingshi_low", 5, UnappliedSteps()));
+            var service = new InventoryGrantService();
+
+            Assert.IsTrue(
+                service.TryBuildGrant(
+                    store,
+                    catalog,
+                    new[] { new InventoryGrantRequest("item_lingshi_low", 3) },
+                    out IReadOnlyList<InventoryStateSnapshot> candidate,
+                    out InventoryGrantFailureReason failureReason),
+                failureReason.ToString());
+            Assert.AreEqual(5, store.TryGet("item_lingshi_low", out InventoryStateSnapshot before)
+                ? before.Quantity
+                : -1);
+
+            service.ApplyGrant(store, candidate);
+
+            Assert.AreEqual(8, store.TryGet("item_lingshi_low", out InventoryStateSnapshot after)
+                ? after.Quantity
+                : -1);
+
+            Assert.IsFalse(
+                service.TryBuildGrant(
+                    store,
+                    catalog,
+                    new[] { new InventoryGrantRequest("item_unknown", 1) },
+                    out _,
+                    out failureReason));
+            Assert.AreEqual(InventoryGrantFailureReason.ItemNotFound, failureReason);
+            Assert.AreEqual(8, store.TryGet("item_lingshi_low", out after) ? after.Quantity : -1);
+        }
+
         private static GameSession CreateSession()
         {
             return new GameObject("InventoryGrantSession").AddComponent<GameSession>();

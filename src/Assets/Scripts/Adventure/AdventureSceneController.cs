@@ -224,13 +224,17 @@ namespace TianZhang.Adventure
             }
 
             LastFormalEncounterResult = result;
-            if (outcome != TacticalCombatEndOutcome.Victory ||
-                result.DropGrants.Count == 0)
-            {
+            if (outcome != TacticalCombatEndOutcome.Victory)
                 return;
-            }
 
+            // ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：正式胜利结算点登记悬赏进度
             var session = GameSession.Instance;
+            if (session != null)
+                session.RecordBountyDefeat(contentCatalog, result.AdventureId, result.EnemyId);
+
+            if (result.DropGrants.Count == 0)
+                return;
+
             if (session == null)
             {
                 RecordEncounterResolutionFailure(FormalEncounterRules.SessionMissingReason);

@@ -1600,6 +1600,100 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FormalVictoryRegistersAcceptedBountyProgressOnlyOnce()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var controllerGo = new GameObject("FormalBountyAdventureTest");
+            var explorationGo = new GameObject("FormalBountyExplorationTest");
+            var sessionGo = new GameObject("FormalBountySessionTest");
+            try
+            {
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetSettlementId("guanzhong_city");
+                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
+                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
+                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
+                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
+                BountyActionResult accept = session.AcceptBounty(catalog, "bounty_guanzhong_shijiahou");
+                Assert.IsTrue(accept.Succeeded, accept.FailureReason);
+                controller.SetContentCatalog(catalog);
+                controller.SetGuanzhongWildEnvironmentProfile(
+                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+                controller.SetEncounterRandomSource(
+                    new FormalEncounterResultTests.SequenceRandomSource(99, 49));
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+
+                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+
+                BountyStateSnapshot state = session.GetBountyState("bounty_guanzhong_shijiahou");
+                Assert.AreEqual(BountyStatus.ObjectiveCompleted, state.Status);
+                Assert.AreEqual(1, state.Progress);
+
+                LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
+                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+
+                Assert.AreEqual(FormalEncounterRules.AlreadyConsumedReason, controller.EncounterResolutionFailureReason);
+                state = session.GetBountyState("bounty_guanzhong_shijiahou");
+                Assert.AreEqual(BountyStatus.ObjectiveCompleted, state.Status);
+                Assert.AreEqual(1, state.Progress);
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(explorationGo);
+                Object.DestroyImmediate(controllerGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void FormalDefeatDoesNotRegisterBountyProgress()
+        {
+            DestroyExistingSceneFlowAndSession();
+            var controllerGo = new GameObject("FormalBountyDefeatTest");
+            var explorationGo = new GameObject("FormalBountyDefeatExplorationTest");
+            var sessionGo = new GameObject("FormalBountyDefeatSessionTest");
+            try
+            {
+                var controller = controllerGo.AddComponent<AdventureSceneController>();
+                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
+                var session = sessionGo.AddComponent<GameSession>();
+                session.SetSettlementId("guanzhong_city");
+                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
+                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
+                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
+                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
+                BountyActionResult accept = session.AcceptBounty(catalog, "bounty_guanzhong_shijiahou");
+                Assert.IsTrue(accept.Succeeded, accept.FailureReason);
+                controller.SetContentCatalog(catalog);
+                controller.SetGuanzhongWildEnvironmentProfile(
+                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+                controller.SetEncounterRandomSource(
+                    new FormalEncounterResultTests.SequenceRandomSource(0, 0));
+                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+
+                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Defeat, enemy);
+
+                BountyStateSnapshot state = session.GetBountyState("bounty_guanzhong_shijiahou");
+                Assert.AreEqual(BountyStatus.Accepted, state.Status);
+                Assert.AreEqual(0, state.Progress);
+            }
+            finally
+            {
+                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(explorationGo);
+                Object.DestroyImmediate(controllerGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
         public void NonGuanzhongAdventureDoesNotConsumeGuanzhongBinding()
         {
             DestroyExistingSceneFlowAndSession();
