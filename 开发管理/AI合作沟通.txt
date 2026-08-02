@@ -35,3 +35,15 @@
 - 残留风险：run-unity-editmode-tests.ps1 对任何失败以非 0 退出：既有 2 项基线失败（与本卡路径无交集、多份记录已登记）使严格门禁退出码为 1，Codex 复跑预期同样结果；candidate 只证明目录 .meta 修复与投影基线不变。Fixtures.meta GUID 为自著值（全仓唯一），后续引用该目录须沿用。任务生命周期转换由固定入口机械完成，candidate 未包含。
 - 请求判断：请 Codex 按审核入口复审实际集成结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一任务卡定向返工。
+
+### DSH-U-BOUNTY-01A-cd3dd5dc22a8 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01A 的实现结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01A
+- 业务提交：cd3dd5dc22a89f6e65219c2e3c404b988ecbb5c7
+- 修改文件：开发管理/关中悬赏状态机与计数验证记录.txt、src/Assets/Scripts/Adventure/AdventureSceneController.cs、src/Assets/Scripts/Game/BountyRuntime.cs、src/Assets/Scripts/Game/BountyRuntime.cs.meta、src/Assets/Scripts/Game/BountyStateStore.cs、src/Assets/Scripts/Game/BountyStateStore.cs.meta、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Scripts/Game/InventoryGrantService.cs、src/Assets/Tests/EditMode/BountyRuntimeTests.cs、src/Assets/Tests/EditMode/BountyRuntimeTests.cs.meta、src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs、src/Assets/Tests/EditMode/TacticalGridModelTests.cs
+- 已验证：Unity 6000.3.18f1 EditMode：本卡直接测试 38/38 通过（BountyRuntimeTests 13/13、InventoryGrantServiceTests 7/7、TacticalGridModelTests 4/4、AdventureSceneControllerTests 14/14）；完整 EditMode 304 项：302 通过、2 失败，均为与本卡路径无关的既有失败（DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad 与 U-ENEMY-01/U-ITEM-GRANT-01 记录一致；CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 仅引用 TianZhang.World）；tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests：OK（249 文件）；tools/check-pending-whitespace.ps1：OK（12 文件）；提交脚本内 git diff --cached --check 通过；候选提交为 baseCommit a405dd5 唯一直接后继，worktree 干净，changed paths 全为 CandidatePaths 子集
+- 未验证：dotnet build src/TianZhang.EditModeTests.csproj 不可运行：该 csproj 不在仓库（git ls-files 无此文件）；以 Unity EditMode 全量编译作为 C# 构建闸门；完整 EditMode 全绿未达成：2 项既有无关失败（DataConfigImporterContentScopeTests 缺预期排除日志、CharterConflictRulesTests 册界 PULSE_ADVANTAGE 期望），连续多轮一致且不涉及本卡路径
+- 残留风险：悬赏实例仅会话内，存档保存与恢复属 U-BOUNTY-01B；领奖原子性依赖 BountyRuntime 的校验顺序与两个 ReplaceAll 无失败路径，测试已覆盖堆叠超限、奖励物品缺失与多实例隔离；2 项既有 EditMode 失败（DataConfigImporterContentScopeTests、CharterConflictRulesTests）未在本卡处理，Codex 复审时可独立核验其与本次修改无关。
+- 请求判断：请 Codex 按审核入口复审实际集成结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一任务卡定向返工。
