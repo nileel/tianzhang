@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-02：DeepSeek V4 Flash 已完成跨端 fixture 实施与双端验证（BattleSim attack-profile-d-combat-02 self-test PASS，Unity EditMode 攻击档案用例回归中），按外部执行任务边界创建业务提交与交接登记，任务在队列中转换为 codex_review/codex/ready 待 Codex 独立复审；未自审、未解锁依赖。",
+  "stateReason": "2026-08-02：DeepSeek V4 Flash 已完成跨端 fixture 实施与双端验证；BattleSim attack-profile-d-combat-02 self-test PASS，Unity EditMode 286/288 通过且攻击档案 5 项直接用例全部通过，另 2 项为任务路径外的既有基线失败。按外部执行任务边界创建业务提交与交接登记，任务在队列中转换为 codex_review/codex/ready 待 Codex 独立复审；未自审、未解锁依赖。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
