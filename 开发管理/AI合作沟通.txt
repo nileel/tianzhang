@@ -1,4 +1,4 @@
-# AI合作沟通（✅ 已审核）
+# AI合作沟通（⚠️ 存在待审核交接）
 
 > 用途：本文件只记录当前有效交接线索、疑点、待判断项和协作备忘。
 > 历史过程记录已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
@@ -23,3 +23,15 @@
 - 残留风险：Unity EditMode 另有 2 项与本卡路径无交集的既有基线失败——`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（多份验证记录已登记：旧日志断言与现行加载器不一致）与 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（纯内存逻辑断言 `PULSE_ADVANTAGE` 得到 `PULSE_NEUTRAL`，2026-07-31 `D-TZ-CHARTER-CONFLICT-02` 迁移后无全量 EditMode 复测记录）；本会话 Unity 测试输出 `EditModeTestResults.xml` 已于集成前删除，未进入提交。
 - 请求判断：DeepSeek 补交目录 `.meta` 后重新独立复审首次交付；当前复审因 worktree 不清洁提前失败，未对其余交付范围形成通过结论。
 - 建议下一步：DeepSeek 只补交 `Fixtures.meta` 并复跑既定验证，重新交由 Codex 复审；具体生产内容切换（生产 `AttackProfiles.csv`、生产 asset、运行时消费者）必须另开迁移切片，不得在本卡扩展。
+
+### DSH-D-COMBAT-02-91eb751a5374 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 D-COMBAT-02 的实现结果等待 Codex 独立复审。
+- 任务：D-COMBAT-02
+- 业务提交：91eb751a5374c9c22d7bd6b1eb070531361f0920
+- 修改文件：src/Assets/Tests/EditMode/Fixtures.meta
+- 已验证：BattleSim Release 构建通过（0 警告 0 错误；worktree 首次需隐式还原，与首次交付记录一致）；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02 → PASS；Unity EditMode（tools/run-unity-editmode-tests.ps1）：288 执行 / 286 通过 / 2 失败，均与首次交付登记的既有基线逐项一致（LianShenReservedAbilitiesRemainExcludedAtPlayerLoad：Expected log did not appear；AuthorizedGrantBindsEveryConflictIdentityField：PULSE_NEUTRAL vs PULSE_ADVANTAGE）；AttackProfileDataTests 直接用例 9/9 通过；Unity 运行后无新未跟踪文件：Fixtures.meta 以自著 GUID 1f7e9d2c4b6a4f8e9d3c5a7b8e2f4a6d 被接受，未再生（复审失败模式已消除）；tools/check-data-chain.ps1 → OK；tools/check-review-text.ps1（开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests）→ 无违规；tools/check-pending-whitespace.ps1 → OK；git diff --cached --check（finalize 脚本内置）→ 通过；candidate 提交 1638b5138bd29a5bfed94094d4900df8b3fc4ab9：baseCommit cb48a56 直接后继、单路径、worktree 清洁
+- 未验证：dotnet build src/TianZhang.EditModeTests.csproj — 不适用：仓库无该 csproj（全仓仅 simulations/BattleSim/BattleSim.csproj）；Unity EditMode 由 run-unity-editmode-tests.ps1 承载，与首次交付记录结论一致；Codex 独立复审 — 未执行（按外部交付边界转 codex_review/codex/ready 后由 Codex 复核，DeepSeek 不得自审）；首次交付的 CSV/代码/验证记录内容 — 本轮未复验（输入未变化），证据以 开发管理/攻击档案跨端fixture验证记录.txt 为准
+- 残留风险：run-unity-editmode-tests.ps1 对任何失败以非 0 退出：既有 2 项基线失败（与本卡路径无交集、多份记录已登记）使严格门禁退出码为 1，Codex 复跑预期同样结果；candidate 只证明目录 .meta 修复与投影基线不变。Fixtures.meta GUID 为自著值（全仓唯一），后续引用该目录须沿用。任务生命周期转换由固定入口机械完成，candidate 未包含。
+- 请求判断：请 Codex 按审核入口复审实际集成结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一任务卡定向返工。
