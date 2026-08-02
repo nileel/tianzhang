@@ -12,7 +12,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-BOUNTY-01A | P1 | codex | 已排队 | — | 关中一次性悬赏状态机与计数 | 开发管理/任务卡/U-BOUNTY-01A.txt |
+| U-BOUNTY-01A | P1 | deepseek | 阻塞 | — | 关中一次性悬赏状态机与计数 | 开发管理/任务卡/U-BOUNTY-01A.txt |
 | U-BOUNTY-01B | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-BOUNTY-01A） | — | 增加独立 `BountyStateStore`、存档 schema 3 与版本 0／1／2 迁移。 | — |
 | U-BOUNTY-01C | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-BOUNTY-01B） | — | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | — |
 | U-GZ-FORMAL-E2E-01 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-BOUNTY-01C） | — | 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环。 | — |

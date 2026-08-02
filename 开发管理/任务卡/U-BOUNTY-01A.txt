@@ -4,13 +4,13 @@
   "id": "U-BOUNTY-01A",
   "title": "关中一次性悬赏状态机与计数",
   "priority": "P1",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-02：Codex 独立复审结论为部分通过。BountyRuntime.Accept 未验证 ContentCatalogData 中的 issuerSettlementId 与 targetEnemyId 引用；现有直接测试甚至在城市和敌人目录均为空时接取成功，违反运行时缺失或失效的城市入口、目标必须拒绝且不改状态的失败关闭契约。需由 DeepSeek 仅补齐引用校验与直接负例后重新移交复审。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/BountyRuntime.cs",
     "src/Assets/Scripts/Game/BountyRuntime.cs.meta",
@@ -77,3 +77,11 @@
 ## 停止条件
 
 - 若实现需要修改 schema／迁移、场景或 UI、生产数据／参数、第二状态或存档所有者，或无法在既有 Adventure 单次消费点登记，停止并保持本卡为非完成状态；不得以兼容层、默认值或重复结算继续推进。
+
+## 审核反馈（2026-08-02）
+
+- 结论：部分通过，需按 `REV-U-BOUNTY-01A-01` 定向返工；本卡保持未完成，`U-BOUNTY-01B` 继续阻塞。
+- 已通过：四状态主路径、重复与非法转换、Adventure 胜利单次登记／败北不登记、奖励与库存原子失败关闭、会话清理和禁止项边界均与目标提交及独立 Unity 结果一致。
+- 未通过：`BountyRuntime.ValidateBountyForAccept` 只校验悬赏自身字段和奖励，没有要求 `issuerSettlementId`、`targetEnemyId` 能从同一 `ContentCatalogData` 解析；`BountyRuntimeTests.CreateCatalog` 明确以空城市、空敌人目录建立测试目录，`LegalTransitionsFlowThroughAllFourStatesAndGrantRewards` 仍可接取。该行为违反数据契约“五、整表、跨表与运行时失败关闭”中“运行时缺失或失效的城市入口、目标时拒绝该悬赏”的要求。
+- 定向返工：只在 `BountyRuntime` 的接取校验中补齐发布城市与目标敌人的目录引用失败关闭及稳定原因，并在 `BountyRuntimeTests` 增加缺失城市、缺失目标敌人均拒绝且状态仍为 `Available` 的直接负例；同步修正验证记录。不得修改生产数据、Adventure、存档、UI、数值或另建兼容层。
+- 独立验证：Unity 6000.3.18f1 EditMode 完整执行 304 项，302 通过、2 失败；`BountyRuntimeTests` 13/13、`InventoryGrantServiceTests` 7/7、`AdventureSceneControllerTests` 14/14 通过。两项失败仍为 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`，均不引用本卡修改路径。Unity 本轮生成忽略的项目文件后，`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 警告、0 错误）。

@@ -1,10 +1,18 @@
-# 未通过审核清单（✅ 已审核）
+# 未通过审核清单（⚠️ 待复核）
 
 ## 用途
 
 记录当前仍未通过、已返工待复核或必须由 `2` 流程处理的审核项。历史审核过程已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
 
 ## 当前未通过/待复核项
+
+### REV-U-BOUNTY-01A-01 · 关中一次性悬赏状态机与计数
+
+- 任务／提交：`U-BOUNTY-01A`；业务提交 `cd3dd5dc22a89f6e65219c2e3c404b988ecbb5c7`。
+- 结论：部分通过；同一卡已设为 `external_execute/deepseek/blocked` 并移出当前队列，`U-BOUNTY-01B` 继续阻塞。
+- 证据：`BountyRuntime.ValidateBountyForAccept` 未检查 `issuerSettlementId` 与 `targetEnemyId` 是否存在于同一 `ContentCatalogData`；`BountyRuntimeTests.CreateCatalog` 以空城市、空敌人目录构造目录后，合法状态流测试仍接取成功。锁定数据契约要求运行时缺失或失效的城市入口、目标必须拒绝该悬赏，不得创建状态转换。
+- 定向返工：仅补齐接取时发布城市与目标敌人的目录引用失败关闭和稳定原因，增加缺失城市、缺失目标敌人均拒绝且状态不变的直接 EditMode 负例，并同步修正 `开发管理/关中悬赏状态机与计数验证记录.txt`；不得扩展到 Adventure、存档、UI、生产数据、数值或兼容层。
+- 复核门槛：`BountyRuntimeTests` 新旧用例通过；Unity EditMode 完整结果除已登记的两项无关基线失败外不新增失败；`check-review-text.ps1`、任务卡投影检查、待提交空白检查与 `git diff --cached --check` 通过。复审通过后删除本条并归档同一卡。
 
 ## 复审路由
 
