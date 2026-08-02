@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-BOUNTY-01A | external_execute | deepseek | P1 | unity | implementation | 关中一次性悬赏状态机与计数 | 开发管理/任务卡/U-BOUNTY-01A.txt |
+| U-BOUNTY-01A | codex_review | codex | P1 | unity | implementation | 关中一次性悬赏状态机与计数 | 开发管理/任务卡/U-BOUNTY-01A.txt |

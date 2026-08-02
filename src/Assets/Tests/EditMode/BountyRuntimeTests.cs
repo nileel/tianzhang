@@ -143,6 +143,32 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void AcceptRejectsMissingIssuerSettlementReferenceWithoutMutation()
+        {
+            GameSession session = CreateSession();
+            ContentCatalogData missingSettlementCatalog = CreateCatalog(includeSettlement: false);
+
+            AssertRejected(
+                session.AcceptBounty(missingSettlementCatalog, BountyId),
+                BountyRuntimeRules.SettlementMissingReason);
+
+            Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
+        }
+
+        [Test]
+        public void AcceptRejectsMissingTargetEnemyReferenceWithoutMutation()
+        {
+            GameSession session = CreateSession();
+            ContentCatalogData missingEnemyCatalog = CreateCatalog(includeEnemy: false);
+
+            AssertRejected(
+                session.AcceptBounty(missingEnemyCatalog, BountyId),
+                BountyRuntimeRules.TargetEnemyMissingReason);
+
+            Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
+        }
+
+        [Test]
         public void AcceptRejectsRepeatedAcceptInEveryNonAvailableState()
         {
             GameSession session = CreateSession();
@@ -287,8 +313,14 @@ namespace TianZhang.Tests
             ContentCatalogData catalog = CreateCatalog();
             Assert.IsTrue(catalog.TryGetBounty(BountyId, out BountyData first));
             Assert.IsTrue(catalog.TryGetItem("item_lingshi_low", out ItemData rewardItem));
+            Assert.IsTrue(catalog.TryGetSettlement(SettlementId, out SettlementData settlement));
+            Assert.IsTrue(catalog.TryGetEnemy(EnemyId, out EnemyData enemy));
             BountyData second = CreateBounty(SecondBountyId, requiredCount: 2);
-            catalog.ReplaceEntries(null, null, new[] { rewardItem }, new[] { first, second });
+            catalog.ReplaceEntries(
+                new[] { settlement },
+                new[] { enemy },
+                new[] { rewardItem },
+                new[] { first, second });
 
             AssertSucceeded(session.AcceptBounty(catalog, BountyId));
             AssertSucceeded(session.AcceptBounty(catalog, SecondBountyId));
@@ -329,7 +361,9 @@ namespace TianZhang.Tests
         private ContentCatalogData CreateCatalog(
             string rewardItemScope = "content_scope_production",
             int rewardMaxStack = 99,
-            int rewardQuantity = 3)
+            int rewardQuantity = 3,
+            bool includeSettlement = true,
+            bool includeEnemy = true)
         {
             ItemData reward = Track(ScriptableObject.CreateInstance<ItemData>());
             reward.itemId = "item_lingshi_low";
@@ -337,8 +371,27 @@ namespace TianZhang.Tests
             reward.maxStack = rewardMaxStack;
 
             BountyData bounty = CreateBounty(BountyId, rewardQuantity: rewardQuantity);
+
+            SettlementData settlement = null;
+            if (includeSettlement)
+            {
+                settlement = Track(ScriptableObject.CreateInstance<SettlementData>());
+                settlement.settlementId = SettlementId;
+            }
+
+            EnemyData enemy = null;
+            if (includeEnemy)
+            {
+                enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+                enemy.enemyId = EnemyId;
+            }
+
             ContentCatalogData catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
-            catalog.ReplaceEntries(null, null, new[] { reward }, new[] { bounty });
+            catalog.ReplaceEntries(
+                includeSettlement ? new[] { settlement } : null,
+                includeEnemy ? new[] { enemy } : null,
+                new[] { reward },
+                new[] { bounty });
             return catalog;
         }
 

@@ -46,11 +46,13 @@ namespace TianZhang.Game
         public const string BountyMissingReason = "bounty_missing";
         public const string BountyNotProductionReason = "bounty_not_production";
         public const string WrongSettlementReason = "bounty_wrong_settlement";
+        public const string SettlementMissingReason = "bounty_settlement_missing";
         public const string RepeatedAcceptReason = "bounty_accept_repeated";
         public const string ObjectiveTypeUnsupportedReason = "bounty_objective_type_unsupported";
         public const string RepeatPolicyUnsupportedReason = "bounty_repeat_policy_unsupported";
         public const string RequiredCountInvalidReason = "bounty_required_count_invalid";
         public const string TargetInvalidReason = "bounty_target_invalid";
+        public const string TargetEnemyMissingReason = "bounty_target_enemy_missing";
         public const string AdventureInvalidReason = "bounty_adventure_invalid";
         public const string RewardInvalidReason = "bounty_reward_invalid";
         public const string RewardItemMissingReason = "bounty_reward_item_missing";
@@ -75,7 +77,7 @@ namespace TianZhang.Game
         private readonly InventoryGrantService inventoryGrantService = new InventoryGrantService();
 
         /// <summary>
-        /// 接取：只接受可解析的生产范围悬赏、玩家位于发布城市且状态为 Available。
+        /// 接取：只接受可解析的生产范围悬赏（发布城市与目标敌人均能从同一目录解析）、玩家位于发布城市且状态为 Available。
         /// </summary>
         public BountyActionResult Accept(
             BountyStateStore store,
@@ -237,6 +239,8 @@ namespace TianZhang.Game
             }
             if (!string.Equals(bounty.issuerSettlementId, settlementId, StringComparison.Ordinal))
                 return BountyRuntimeRules.WrongSettlementReason;
+            if (!catalog.TryGetSettlement(bounty.issuerSettlementId, out _))
+                return BountyRuntimeRules.SettlementMissingReason;
             if (!string.Equals(
                     bounty.objectiveType,
                     BountyRuntimeRules.SupportedObjectiveType,
@@ -248,6 +252,8 @@ namespace TianZhang.Game
                 return BountyRuntimeRules.RequiredCountInvalidReason;
             if (string.IsNullOrWhiteSpace(bounty.targetEnemyId))
                 return BountyRuntimeRules.TargetInvalidReason;
+            if (!catalog.TryGetEnemy(bounty.targetEnemyId, out _))
+                return BountyRuntimeRules.TargetEnemyMissingReason;
             if (string.IsNullOrWhiteSpace(bounty.allowedAdventureId))
                 return BountyRuntimeRules.AdventureInvalidReason;
             if (!string.Equals(

@@ -3,20 +3,27 @@
 ## U-BOUNTY-01A · 2026-08-02
 
 - 状态机：独立 `BountyStateStore`（无实例即 `Available`）与纯规则 `BountyRuntime` 实现 `Accept`、`RecordDefeat`、`Claim`、`GetState`；只接受生产范围、`defeat_enemy` 与 `one_time`，非法城市入口、敌人、地点、状态、进度或重复请求均返回稳定原因且不改状态。
+- 目录引用：`Accept` 接取校验除悬赏自身字段外，还要求发布城市 `issuerSettlementId` 与目标敌人 `targetEnemyId` 都能从同一 `ContentCatalogData` 解析（`TryGetSettlement` / `TryGetEnemy`）；任一缺失返回 `bounty_settlement_missing` / `bounty_target_enemy_missing` 且实例保持 `Available`。
 - 击败计数：`AdventureSceneController` 在既有正式胜利结算点以已消费的结构化 `adventureId + enemyId` 至多登记一次；败北、错误敌人与错误地点不计数；掉落授予仍走原入口，不重做战斗。
 - 原子领奖：`Claim` 先复验奖励结构与物品引用，再经 `InventoryGrantService.TryBuildGrant` 构造完整新库存快照；全部合法后才与 `Claimed` 状态由 `GameSession` 一次性替换（`ApplyGrant` + `BountyStates.ReplaceAll`）。任一校验失败时库存与悬赏状态均完全不变。
 - 库存拆分：`InventoryGrantService` 将候选构造（`TryBuildGrant`）与替换（`ApplyGrant`）分开，`Grant` 行为保持不变，既有授予测试全部通过。
 - 边界：未修改 `SessionStateSnapshots.cs`、schema、读档恢复、Bounty CSV / Language / asset、数值、掉落概率、堆叠上限、UI、城市功能分发或存档所有者；`BeginNewGame` / `ClearSession` 只清空会话内悬赏实例。
 
+## 定向返工（REV-U-BOUNTY-01A-01 · 2026-08-02）
+
+- 按审核反馈只在 `BountyRuntime.ValidateBountyForAccept` 补齐发布城市与目标敌人的目录引用失败关闭及稳定原因，不扩展到生产数据、Adventure、存档、UI、数值或兼容层。
+- `BountyRuntimeTests.CreateCatalog` 默认纳入 `guanzhong_city` 据点与 `enemy_shijiahou` 敌人（新增 `includeSettlement` / `includeEnemy` 开关）；多实例测试重建目录时保留城市与敌人条目。
+- 新增直接负例：`AcceptRejectsMissingIssuerSettlementReferenceWithoutMutation`（缺失发布城市 → `bounty_settlement_missing`，状态仍 `Available`）、`AcceptRejectsMissingTargetEnemyReferenceWithoutMutation`（缺失目标敌人 → `bounty_target_enemy_missing`，状态仍 `Available`）。
+
 ## 已执行验证（Unity 6000.3.18f1 EditMode）
 
-- 本卡直接测试 38/38 通过：`BountyRuntimeTests` 13/13（四状态合法转换、全部非法转换、错误城市／敌人／地点、单场重复登记、负数与超目标拒绝、奖励原子成功／失败、多实例隔离、新档清空）；`InventoryGrantServiceTests` 7/7（含新增 `TryBuildGrant` 拆分测试）；`TacticalGridModelTests` 4/4 与 `AdventureSceneControllerTests` 14/14（含新增正式胜利只登记一次、败北不登记）。
-- 完整 EditMode：304 项，302 通过、2 失败，均为与本卡路径无关的既有失败：
+- 本卡直接测试 40/40 通过：`BountyRuntimeTests` 15/15（四状态合法转换、全部非法转换、错误城市／敌人／地点、缺失城市与缺失目标敌人目录引用拒绝、单场重复登记、负数与超目标拒绝、奖励原子成功／失败、多实例隔离、新档清空）；`InventoryGrantServiceTests` 7/7（含新增 `TryBuildGrant` 拆分测试）；`TacticalGridModelTests` 4/4 与 `AdventureSceneControllerTests` 14/14（含新增正式胜利只登记一次、败北不登记，均经生产目录接取后验证）。
+- 完整 EditMode：306 项，304 通过、2 失败，均为与本卡路径无关的既有失败：
   - `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`：与 U-ENEMY-01、U-ITEM-GRANT-01 记录一致的既有失败（缺少预期攻击档案排除日志）。
   - `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`：World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`，该测试仅引用 `TianZhang.World`，不涉及本卡任何修改路径。
 - 任务卡列出的 `dotnet build src/TianZhang.EditModeTests.csproj` 不可运行：该 csproj 不在仓库（`git ls-files` 无此文件，磁盘亦无）；Unity EditMode 运行已编译全部项目 asmdef 程序集，作为本卡 C# 构建与测试闸门。
-- `tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 248 个文件。
-- `tools/check-pending-whitespace.ps1`（仅本卡 expectedPaths）：通过，检查 11 个文件；`git diff --cached --check` 由最终提交脚本执行。
+- `tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 249 个文件。
+- `tools/check-pending-whitespace.ps1`（仅本卡 expectedPaths）：通过，检查 3 个文件；`git diff --cached --check` 由最终提交脚本执行。
 
 ## 后续
 
