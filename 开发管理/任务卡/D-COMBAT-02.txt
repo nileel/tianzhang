@@ -4,20 +4,15 @@
   "id": "D-COMBAT-02",
   "title": "跨端攻击档案 fixture 与差异检查",
   "priority": "P3",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "data",
-  "stage": "verification",
+  "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-02：DeepSeek V4 Flash 已完成跨端 fixture 实施与双端验证；BattleSim attack-profile-d-combat-02 self-test PASS，Unity EditMode 286/288 通过且攻击档案 5 项直接用例全部通过，另 2 项为任务路径外的既有基线失败。按外部执行任务边界创建业务提交与交接登记，任务在队列中转换为 codex_review/codex/ready 待 Codex 独立复审；未自审、未解锁依赖。",
+  "stateReason": "2026-08-02：Codex 独立复审未通过；首次 Unity 验证在新增 Fixtures 目录生成未跟踪的 Fixtures.meta，证明原业务提交遗漏 Unity 目录身份文件。根因和修复范围已锁定，仅补交 src/Assets/Tests/EditMode/Fixtures.meta 并复跑任务验证；按负责人指令重新置为 external_execute/deepseek/ready，修复后仍须 Codex 独立复审。",
   "expectedPaths": [
-    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
-    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
-    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
-    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
-    "simulations/BattleSim/BattleSimSelfTests.cs",
-    "开发管理/攻击档案跨端fixture验证记录.txt",
+    "src/Assets/Tests/EditMode/Fixtures.meta",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-02.txt",
@@ -82,8 +77,14 @@
 
 ## 已实施与验证（2026-08-02，DeepSeek V4 Flash，⚠️ 已修改/未审核）
 
-- 已在 owner worktree `d-combat-02-deepseek-recovery` 实施并验证，业务提交与交接登记待 Codex 独立复审。
+- 已在 owner worktree `d-combat-02-deepseek-recovery` 完成首次实施与验证，并形成首次业务提交和交接登记；随后 Codex 独立复审发现目录 `.meta` 遗漏。
 - 证据与覆盖矩阵：`开发管理/攻击档案跨端fixture验证记录.txt`。
-- 实施范围只含本卡 expectedPaths：非生产 fixture（CSV + meta）、Unity 最窄投影入口（`DataConfigImporter.TryBuildAttackProfileProjection` / `TryValidateAttackProfileAssetIdProjection`）、Unity EditMode 用例、BattleSim `attack-profile-d-combat-02` self-test、验证记录、任务卡/队列/backlog 转换。
+- 原交付提交范围为非生产 fixture（CSV + meta）、Unity 最窄投影入口（`DataConfigImporter.TryBuildAttackProfileProjection` / `TryValidateAttackProfileAssetIdProjection`）、Unity EditMode 用例、BattleSim `attack-profile-d-combat-02` self-test、验证记录、任务卡/队列/backlog 转换。
 - 未创建或填写生产 `src/Assets/DataConfig/AttackProfiles.csv`，未生成生产 AttackProfileData asset，未切换任何运行时消费者，未指定武器/术法/神通内容参数。
 - 具体生产内容切换仍必须另开迁移切片（契约「迁移顺序、fixture 与差异检查」第 6 条）。
+
+## 复审未通过与返工范围（2026-08-02）
+
+- Codex 在独立 owner worktree 复跑 Unity 验证后发现未跟踪的 `src/Assets/Tests/EditMode/Fixtures.meta`；首次业务提交新增 `Fixtures/` 目录及目录内 fixture，却未提交 Unity 目录 `.meta`，复审结论为不通过。
+- 本轮返工只允许补交 `src/Assets/Tests/EditMode/Fixtures.meta`；不得修改首次交付的 CSV、代码、验证记录或扩大生产迁移范围。
+- 修复后执行本卡既定验证并按外部交付边界重新转为 `codex_review/codex/ready`，由 Codex 独立复审；当前未通过清单在复审通过前保留。
