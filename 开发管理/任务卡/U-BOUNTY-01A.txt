@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-02：Codex 独立复审结论为部分通过。BountyRuntime.Accept 未验证 ContentCatalogData 中的 issuerSettlementId 与 targetEnemyId 引用；现有直接测试甚至在城市和敌人目录均为空时接取成功，违反运行时缺失或失效的城市入口、目标必须拒绝且不改状态的失败关闭契约。需由 DeepSeek 仅补齐引用校验与直接负例后重新移交复审。",
+  "stateReason": "2026-08-02：用户确认继续完成本卡，按 REV-U-BOUNTY-01A-01 恢复为 DeepSeek ready。仅补齐 BountyRuntime.Accept 对 issuerSettlementId 与 targetEnemyId 的同目录引用校验、直接负例与验证记录，然后重新移交 Codex 复审。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/BountyRuntime.cs",
     "src/Assets/Scripts/Game/BountyRuntime.cs.meta",
