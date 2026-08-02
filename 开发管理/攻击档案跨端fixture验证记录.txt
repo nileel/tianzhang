@@ -1,31 +1,65 @@
 # D-COMBAT-02 · 跨端攻击档案 fixture 验证记录
 
-日期：2026-07-31（原始）；2026-08-01（更新）
-状态：`D-COMBAT-02A` 已通过 Codex 独立复审，BattleSim 圆形范围现可无默认值地表达空朝向；`D-COMBAT-02` 的唯一前置已解除并恢复为 ready，仍未形成生产或非生产数据提交。
+日期：2026-07-31（原始阻断）；2026-08-01（前置解除）；2026-08-02（DeepSeek V4 Flash 实施与双端验证，⚠️ 已修改/未审核）
 
-## 已确认的阻断事实
+## 历史阻断与前置解除（保留）
 
-- 契约要求 `circle` 的 `areaFacing` 为空，并禁止 BattleSim 为满足旧构造器而填入任意朝向。
-- `simulations/BattleSim/GameData.cs::AreaShapeConfig` 的第五个位置参数是不可空 `HexDirection Facing`；现有枚举没有“无朝向”成员。
-- 以同一 34 列行做本地非持久化投影探针时，圆形行只能得到 `east`，与 CSV 的空值不同。探针已撤回，没有产生 fixture、asset、生产 CSV、运行时消费者或 BattleSim 静态配置改动。
+- 2026-07-31 停止条件：契约要求 `circle` 的 `areaFacing` 为空，而 `GameData.AreaShapeConfig` 的第五个位置参数是不可空 `HexDirection Facing`；圆形行投影探针只能得到 `east`，与 CSV 空值不一致。探针已撤回，未产生任何实现。
+- 2026-08-01 `D-COMBAT-02A` 通过 Codex 独立复审：`AreaShapeConfig.Facing` 迁移为可空，circle 可显式表达无朝向，line／fan 仍强制合法非空方向。`D-COMBAT-02` 唯一前置解除，恢复 ready。
 
-## 原定覆盖矩阵与当前结果
+## 2026-08-02 实施与验证（DeepSeek V4 Flash）
 
-| 项目 | 原定 fixture 覆盖 | 当前结果 |
-|------|------------------|----------|
-| `basic` 单目标 | 稳定 ID、物理倍率、资源/冷却、距离 | 未实施：`D-COMBAT-02` 已恢复 ready，等待统一 fixture 实施 |
-| `art` 圆形范围 | 中心、半径、阻断、阵营、状态及空朝向 | 前置已解除：BattleSim 可显式表达空朝向，fixture 尚未实施 |
-| `art` 直线范围 | 长度、朝向、阻断、目标资格 | 未实施：与圆形／扇形统一 fixture 一并实施 |
-| `divine` 扇形范围 | 长度、半径、朝向、目标资格 | 未实施：与单目标／圆形／直线统一 fixture 一并实施 |
-| 负例与逐字段差异 | Unity/BattleSim 同 ID 失败关闭 | 未实施：等待合法统一 fixture 建立后实施 |
+### fixture 身份
 
-## 已执行验证与未执行项
+- `src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv`（+ `.meta`，TextScriptImporter，guid `a3d7f9b21c4e5a608b7d9e1f2c3a4b5c`）。
+- 3 行注释 + 契约原表头（34 列，与 `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md`「CSV 表头与字段」逐字一致）+ 6 行数据，每行恰 34 字段。
+- 覆盖：`basic`×2（`main_equipment`／`unarmed_fallback` 单目标）、`art`×3（单目标、`caster` 圆形、`target_cell` 扇形）、`divine`×1（`target_cell` 直线）。显示键只服务逐字段投影，不写入 Language.csv、生产 `AttackProfiles.csv` 或任何 asset。
 
-- `dotnet build -c Release --no-restore simulations/BattleSim`：通过，0 警告、0 错误。
-- BattleSim 非持久化投影探针：失败原因稳定为圆形 CSV 空 `areaFacing` 被旧载体强制为 `east`；这是预期的停止证据，不是可接受的回归通过。
-- Unity EditMode、数据链、完整跨端差异检查未运行：没有可提交的合法 fixture 或实现切片，运行它们不会验证被阻断的字段承载。
+### 恢复半成品的根因与最小修复
 
-## 未授权边界与负责人决定
+1. art 三行尾随空字段使字段数 35/35/36 vs 34（既有 `ParseCSV`／`ReadFixtureRows` 按列数严格失败关闭）→ 行重写为恰 34 字段。
+2. 扇形行尾列错位（恢复行继承原稿中间多一逗号导致的位移：`areaAllowedStates` 读到 `enemy`）→ 按测试断言值重建尾列；阵营按契约允许的子集以单值 `ally` 承载——BattleSim 按原 CSV 行逐字 `Split(',')` 读取，双值阵营字段（`ally,enemy`）无法在 34 列对齐下解析，且契约正例矩阵未要求多值阵营。
+3. Unity `AttackProfileDataTests` 以 `lines[1]` 当表头，而 fixture 有 3 行注释（表头在第 4 行）→ 改为取首个非注释行；变异用例的合表同时剔除重复表头行。
+4. Unity 变异用例朝向索引 25→26（`areaFacing` 列）、扇形扇角越界值 `"east"`→`"2"`（并补合法朝向使检查到达形状契约）。
+5. BattleSim `ValidateAttackProfileTable` 的效果／资源／冷却／距离检查只对 `area` 行生效，单目标行变异负例全部误通过 → 移到每行（与 Unity `ParseAttackProfileRow` 顺序一致）。
+6. BattleSim 负例 `areaAllowedFactions="ally,enemy"` 实际合法（字典序子集）→ 改未知枚举 `neutral`。
+7. BattleSim 负例表以数据行充当 `lines[0]` 表头（行字典空值键冲突）→ 表头行前置；重复 ID 负例以显式追加同 ID 行表达（变异 ID 后按 ID 匹配会替换掉原行）。
+8. `AssertEqual(null, …)` 泛型推断编译错误 → 显式 `(GameAreaTargetingConfig)null`。
+9. Unity 测试缺 `using System;` 与 `UnityEngine.Object` 限定（`StringComparer`／`Object` 二义性）→ 补齐。
 
-- 未修改 `GameData.AreaShapeConfig`、`Combat`、生产 `AttackProfiles.csv`、AttackProfileData asset、战斗伤害、AI、范围结算或冷却单位换算。
-- 负责人于 2026-07-31 选择 A：授权独立 `D-COMBAT-02A` 迁移 BattleSim 载体以表达圆形无朝向；不修改契约，不从旧枚举值推导方向。原 `D-COMBAT-02` 等待该前置完成后恢复。
+### 覆盖矩阵（正例，双端逐字段断言）
+
+| 行 | 关键投影 |
+|---|---|
+| `basic_fixture_main` | basic / main_equipment / physical / element_none / 1.0 / none・0・0 / 1..1 / single |
+| `basic_fixture_unarmed` | unarmed_fallback / 0.9 |
+| `art_fixture_single` | art / player・fixture_sect・realm_fanren・element_none / magic / element_water / 1.5 / mp・8・0 / 2..3 / single |
+| `art_fixture_circle` | area / caster / circle / r2 / 空朝向（BattleSim `Facing=null`，Unity `areaFacing=-1`）/ inner1 / none / enemy / alive |
+| `art_fixture_fan` | area / target_cell / fan / len2・steps1 / north_east / inner0 / none / ally / alive |
+| `divine_fixture_line` | divine / physical / element_fire / 0.8 / defPen2.5 / mp・12・0 / 2..4 / line / len3 / east / directed_edge / isDomain |
+
+### 负例与失败关闭
+
+- Unity `TryBuildAttackProfileProjection`（最窄投影入口，复用既有严格解析与 `CopyTo`，失败销毁全部临时对象、不写 asset）：重复 ID、短行、未知展示键、未知境界／元素需求、负资源、倒置区间、非数值倍率、错误种类专属字段（basic 混入 contentScope）、三种非法形状（圆形带朝向、直线带半径、扇形扇角越界）、未知形状／朝向、单目标混入范围列、未知阻断。
+- BattleSim `ValidateAttackProfileTable` 18 项：重复 ID、短行、未知境界／元素需求、未知元素、负资源、非法区间、三种非法形状、未知形状／朝向／阻断／阵营／状态、单目标混入范围列、`battlesim_cooldown_unit_unresolved`、`unsupported_effect_semantics`。
+- asset ID 冲突：`TryValidateAttackProfileAssetIdProjection` 对非规范路径同 ID asset 返回 `attack_profile_asset_id_duplicate`（测试在既有 Fixtures 旁创建并清理临时 asset，不写生产目录）。
+
+### 稳定失败原因（契约锁定）
+
+- `battlesim_cooldown_unit_unresolved`：CSV 的 `cooldownTicks` 是 Unity 刻；BattleSim 回合与刻无权威换算前，非零值拒绝，不读旧回合默认值。
+- `unsupported_effect_semantics`：heal／buff／debuff／movement 在既有 BattleSim 载体无字段，拒绝而非丢列。
+- 圆形无朝向：line／fan 强制合法非空六角方向；circle 空朝向不补任何默认方向。
+
+### 双端命令与结果
+
+- `dotnet build -c Release simulations/BattleSim`（worktree 首次需隐式还原）：**通过**，0 警告 0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02`：**PASS**。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：**不适用**——仓库无该 csproj（全仓仅 `simulations/BattleSim/BattleSim.csproj`）；Unity EditMode 由 `run-unity-editmode-tests.ps1` 承载。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：**286/288 通过**；攻击档案 5 项直接用例与既有回归全部通过。2 项失败均为与本卡无关的既有基线失败：`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（多份验证记录已登记：旧日志断言与现行加载器不一致）与 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（纯内存逻辑，2026-07-31 D-TZ-CHARTER-CONFLICT-02 迁移后未复测的全量回归缺口，与本卡修改路径无交集）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：**OK**（docs/csv 计数与 language keys 一致）。
+- 审核文本与任务卡检查：见提交前验证段（check-review-text / check-task-cards）。
+
+### 仍未授权的生产迁移边界
+
+- 未创建或填写生产 `src/Assets/DataConfig/AttackProfiles.csv`，未生成生产 `AttackProfileData` asset，未指定武器、术法、神通、范围尺寸或目标资格等内容参数，未修改战斗伤害、AI、范围结算、装备所有权、角色装配、默认模拟矩阵或 Unity 运行时消费者。
+- 本卡只证明契约与投影可对齐；具体生产内容切换仍必须另开迁移切片（契约「迁移顺序、fixture 与差异检查」第 6 条），并在该切片同时移除消费者对遗留 CSV／asset／`GameData` 硬编码值的读取。

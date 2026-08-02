@@ -1,0 +1,10 @@
+# 非生产攻击档案样例（D-COMBAT-02）
+# 使用统一契约原表头；只服务 EditMode 测试与 BattleSim self-test 的逐字段投影断言，
+# 不写入 Language.csv、生产 AttackProfiles.csv 或任何 asset。
+attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,cooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey
+basic_fixture_main,name_fixture_basic_main,basic,main_equipment,,,,,physical,element_none,1,,,,,none,0,0,1,1,single,,,,,,,,,,,,,
+basic_fixture_unarmed,name_fixture_basic_unarmed,basic,unarmed_fallback,,,,,physical,element_none,0.9,,,,,none,0,0,1,1,single,,,,,,,,,,,,,
+art_fixture_single,name_fixture_art_single,art,,player,fixture_sect,realm_fanren,element_none,magic,element_water,,1.5,,,,mp,8,0,2,3,single,,,,,,,,,,,,,
+art_fixture_circle,name_fixture_art_circle,art,,player,fixture_sect,realm_fanren,element_none,magic,element_ice,,1.25,,,,mp,6,0,0,0,area,caster,circle,2,0,0,,1,none,enemy,alive,,,
+art_fixture_fan,name_fixture_art_fan,art,,player,fixture_sect,realm_lianqi,element_none,magic,element_earth,,1.1,,,,mp,5,0,1,3,area,target_cell,fan,0,2,1,north_east,0,none,ally,alive,,,
+divine_fixture_line,name_fixture_divine_line,divine,,player,fixture_sect,realm_zhuji,element_fire,physical,element_fire,0.8,,,,2.5,mp,12,0,2,4,area,target_cell,line,0,3,0,east,1,directed_edge,enemy,alive,1,0,special_fixture_divine

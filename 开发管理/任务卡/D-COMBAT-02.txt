@@ -4,13 +4,13 @@
   "id": "D-COMBAT-02",
   "title": "跨端攻击档案 fixture 与差异检查",
   "priority": "P3",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "data",
   "stage": "verification",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-01：D-COMBAT-02A 已通过 Codex 独立复审，BattleSim AreaShapeConfig 现可让 circle 显式表达无朝向，故解除本卡唯一前置并恢复跨端 fixture 验证。按 DeepSeek-V4-Flash-0731 正式版 Agent 能力校准，本卡由 DeepSeek V4 Flash 执行、Codex 复审。",
+  "stateReason": "2026-08-02：DeepSeek V4 Flash 已完成跨端 fixture 实施与双端验证（BattleSim attack-profile-d-combat-02 self-test PASS，Unity EditMode 攻击档案用例回归中），按外部执行任务边界创建业务提交与交接登记，任务在队列中转换为 codex_review/codex/ready 待 Codex 独立复审；未自审、未解锁依赖。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
@@ -79,3 +79,11 @@
 - 已确认 `simulations/BattleSim/GameData.cs::AreaShapeConfig` 要求 `HexDirection Facing`，没有可表达“无朝向”的值；圆形范围的契约则要求 `areaFacing` 为空，且明确禁止为适配旧构造器任意补一个方向。
 - 非生产投影探针在圆形行上只能得到 `east`，没有保留该半成品、fixture 或测试入口；继续实现将违反唯一 CSV 权威与无默认补值边界。
 - 负责人已选择 A：先由独立 `D-COMBAT-02A` 迁移 BattleSim 载体，使圆形朝向可空；不修改已锁定契约，不为圆形伪造稳定方向。
+
+## 已实施与验证（2026-08-02，DeepSeek V4 Flash，⚠️ 已修改/未审核）
+
+- 已在 owner worktree `d-combat-02-deepseek-recovery` 实施并验证，业务提交与交接登记待 Codex 独立复审。
+- 证据与覆盖矩阵：`开发管理/攻击档案跨端fixture验证记录.txt`。
+- 实施范围只含本卡 expectedPaths：非生产 fixture（CSV + meta）、Unity 最窄投影入口（`DataConfigImporter.TryBuildAttackProfileProjection` / `TryValidateAttackProfileAssetIdProjection`）、Unity EditMode 用例、BattleSim `attack-profile-d-combat-02` self-test、验证记录、任务卡/队列/backlog 转换。
+- 未创建或填写生产 `src/Assets/DataConfig/AttackProfiles.csv`，未生成生产 AttackProfileData asset，未切换任何运行时消费者，未指定武器/术法/神通内容参数。
+- 具体生产内容切换仍必须另开迁移切片（契约「迁移顺序、fixture 与差异检查」第 6 条）。

@@ -104,6 +104,9 @@ static class BattleSimSelfTests
         if (suite == "group-area-targeting-n-group-02")
             return RunChecked(suite, RunGroupAreaTargetingNGroup02);
 
+        if (suite == "attack-profile-d-combat-02")
+            return RunChecked(suite, RunAttackProfileDCombat02);
+
         if (suite == "group-action-priority-n-group-02")
             return RunChecked(suite, RunGroupActionPriorityNGroup02);
 
@@ -1190,6 +1193,486 @@ static class BattleSimSelfTests
             return headers.Select((header, index) => (header, value: values[index]))
                 .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
         }).ToArray();
+    }
+
+    static void RunAttackProfileDCombat02()
+    {
+        const string fixtureName = "AttackProfiles.fixture.csv";
+        var rows = ReadFixtureRows(fixtureName);
+        AssertEqual(6, rows.Count, $"{fixtureName} row count");
+
+        var basicMain = rows.Single(row => row["attackProfileId"] == "basic_fixture_main");
+        var basicUnarmed = rows.Single(row => row["attackProfileId"] == "basic_fixture_unarmed");
+        var artSingle = rows.Single(row => row["attackProfileId"] == "art_fixture_single");
+        var artCircle = rows.Single(row => row["attackProfileId"] == "art_fixture_circle");
+        var artFan = rows.Single(row => row["attackProfileId"] == "art_fixture_fan");
+        var divineLine = rows.Single(row => row["attackProfileId"] == "divine_fixture_line");
+
+        // 正例：同一 CSV 行逐字段投影到既有三类载体（basic -> AttackProfile，
+        // art -> ArtConfig，divine -> DivineConfig），不读取任何旧 GameData 静态配置。
+        var basicProfile = new GameData.AttackProfile(
+            basicMain["attackProfileId"],
+            "物理",
+            ParseDouble(basicMain["physicalDamageMultiplier"]),
+            GameData.NormalizeElement(basicMain["damageElementId"]),
+            ParseInt(basicMain["minCastRange"]),
+            ParseInt(basicMain["maxCastRange"]));
+        AssertBasicProjection(basicMain, basicProfile, "basic_fixture_main");
+
+        var artSingleProfile = new GameData.ArtConfig(
+            artSingle["attackProfileId"],
+            "神魂",
+            ParseDouble(artSingle["soulDamageMultiplier"]),
+            ParseInt(artSingle["resourceCost"]),
+            ParseInt(artSingle["cooldownTicks"]),
+            GameData.NormalizeElement(artSingle["damageElementId"]),
+            ParseInt(artSingle["minCastRange"]),
+            ParseInt(artSingle["maxCastRange"]));
+        AssertArtProjection(artSingle, artSingleProfile, "art_fixture_single");
+
+        var artCircleProfile = new GameData.ArtConfig(
+            artCircle["attackProfileId"],
+            "神魂",
+            ParseDouble(artCircle["soulDamageMultiplier"]),
+            ParseInt(artCircle["resourceCost"]),
+            ParseInt(artCircle["cooldownTicks"]),
+            GameData.NormalizeElement(artCircle["damageElementId"]),
+            ParseInt(artCircle["minCastRange"]),
+            ParseInt(artCircle["maxCastRange"]),
+            new GameData.AreaTargetingConfig(
+                artCircle["attackProfileId"],
+                GameData.AreaCenterKind.Caster,
+                ParseInt(artCircle["minCastRange"]),
+                ParseInt(artCircle["maxCastRange"]),
+                new GameData.AreaShapeConfig(
+                    GameData.AreaShapeKind.Circle,
+                    ParseInt(artCircle["areaRadius"]),
+                    ParseInt(artCircle["areaLength"]),
+                    ParseInt(artCircle["areaFanHalfAngleSteps"]),
+                    Facing: null,
+                    ParseInt(artCircle["areaInnerRadius"])),
+                ParseAreaEffectBlockers(artCircle["areaEffectBlockers"]),
+                ParseAreaTargetFactions(artCircle["areaAllowedFactions"]),
+                ParseAreaTargetStates(artCircle["areaAllowedStates"])));
+        AssertAreaProjection(artCircle, artCircleProfile.AreaTargeting, "art_fixture_circle");
+
+        var artFanProfile = new GameData.ArtConfig(
+            artFan["attackProfileId"],
+            "神魂",
+            ParseDouble(artFan["soulDamageMultiplier"]),
+            ParseInt(artFan["resourceCost"]),
+            ParseInt(artFan["cooldownTicks"]),
+            GameData.NormalizeElement(artFan["damageElementId"]),
+            ParseInt(artFan["minCastRange"]),
+            ParseInt(artFan["maxCastRange"]),
+            new GameData.AreaTargetingConfig(
+                artFan["attackProfileId"],
+                GameData.AreaCenterKind.TargetCell,
+                ParseInt(artFan["minCastRange"]),
+                ParseInt(artFan["maxCastRange"]),
+                new GameData.AreaShapeConfig(
+                    GameData.AreaShapeKind.Fan,
+                    ParseInt(artFan["areaRadius"]),
+                    ParseInt(artFan["areaLength"]),
+                    ParseInt(artFan["areaFanHalfAngleSteps"]),
+                    ParseHexDirection(artFan["areaFacing"]),
+                    ParseInt(artFan["areaInnerRadius"])),
+                ParseAreaEffectBlockers(artFan["areaEffectBlockers"]),
+                ParseAreaTargetFactions(artFan["areaAllowedFactions"]),
+                ParseAreaTargetStates(artFan["areaAllowedStates"])));
+        AssertAreaProjection(artFan, artFanProfile.AreaTargeting, "art_fixture_fan");
+
+        var divineLineProfile = new GameData.DivineConfig(
+            divineLine["attackProfileId"],
+            "物理",
+            ParseDouble(divineLine["physicalDamageMultiplier"]),
+            ParseDouble(divineLine["defensePenetration"]),
+            ParseInt(divineLine["cooldownTicks"]),
+            GameData.NormalizeElement(divineLine["damageElementId"]),
+            ParseInt(divineLine["minCastRange"]),
+            ParseInt(divineLine["maxCastRange"]),
+            new GameData.AreaTargetingConfig(
+                divineLine["attackProfileId"],
+                GameData.AreaCenterKind.TargetCell,
+                ParseInt(divineLine["minCastRange"]),
+                ParseInt(divineLine["maxCastRange"]),
+                new GameData.AreaShapeConfig(
+                    GameData.AreaShapeKind.Line,
+                    ParseInt(divineLine["areaRadius"]),
+                    ParseInt(divineLine["areaLength"]),
+                    ParseInt(divineLine["areaFanHalfAngleSteps"]),
+                    ParseHexDirection(divineLine["areaFacing"]),
+                    ParseInt(divineLine["areaInnerRadius"])),
+                ParseAreaEffectBlockers(divineLine["areaEffectBlockers"]),
+                ParseAreaTargetFactions(divineLine["areaAllowedFactions"]),
+                ParseAreaTargetStates(divineLine["areaAllowedStates"])));
+        AssertAreaProjection(divineLine, divineLineProfile.AreaTargeting, "divine_fixture_line");
+
+        // 圆形无朝向：直线/扇形必须非空朝向；圆形必须为空，任何默认方向都失败。
+        AssertEqual((HexDirection?)null, artCircleProfile.AreaTargeting.Shape.Facing, "circle facing must be null");
+        AssertEqual(false, artCircleProfile.AreaTargeting.Shape.Facing.HasValue, "circle facing must not have a value");
+
+        // 负例：从合法 fixture 行一次只变异一个条件，全部稳定失败且不回落到旧静态配置。
+        var rawFixtureLines = File.ReadAllLines(Path.Combine(
+                FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fixtureName))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
+            .ToArray();
+        var fixtureHeaders = rawFixtureLines[0].Split(',');
+        var basicMainLine = rawFixtureLines[1];
+        var basicUnarmedLine = rawFixtureLines[2];
+        var artSingleLine = rawFixtureLines[3];
+        var artCircleLine = rawFixtureLines[4];
+        var artFanLine = rawFixtureLines[5];
+        var divineLineLine = rawFixtureLines[6];
+
+        string MutateRowLine(string line, string field, string value)
+        {
+            var columns = line.Split(',');
+            columns[Array.IndexOf(fixtureHeaders, field)] = value;
+            return string.Join(",", columns);
+        }
+
+        string ShortRowLine(string line)
+        {
+            var columns = line.Split(',');
+            return string.Join(",", columns.Take(columns.Length - 1));
+        }
+
+        string[] TableWith(params string[] replacedRows)
+        {
+            var rows = new List<string> { basicMainLine, basicUnarmedLine, artSingleLine, artCircleLine, artFanLine, divineLineLine };
+            foreach (var replaced in replacedRows)
+            {
+                for (int index = 0; index < rows.Count; index++)
+                {
+                    if (rows[index].Split(',')[0] == replaced.Split(',')[0])
+                        rows[index] = replaced;
+                }
+            }
+            // ValidateAttackProfileTable 把 lines[0] 当表头；负例表必须带原表头行。
+            return new[] { rawFixtureLines[0] }.Concat(rows).ToArray();
+        }
+
+        // 重复 ID：变异后的行以同 ID 追加进合法整表，表头行保持为 lines[0]。
+        string[] TableWithDuplicatedId(string mutatedLine)
+        {
+            return new[] { rawFixtureLines[0], basicMainLine, basicUnarmedLine, artSingleLine, artCircleLine, artFanLine, divineLineLine, mutatedLine };
+        }
+
+        AssertTableRejected(TableWithDuplicatedId(MutateRowLine(artSingleLine, "attackProfileId", "basic_fixture_main")), "attack_profile_id_duplicate");
+        AssertTableRejected(TableWith(ShortRowLine(artSingleLine)), "attack_profile_short_or_extra_row");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "realmRequirementId", "realm_unknown")), "attack_profile_requirement_reference_unknown");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "damageElementId", "element_unknown")), "attack_profile_damage_element_unknown");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "resourceCost", "-1")), "attack_profile_resourceCost_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "minCastRange", "4")), "attack_profile_cast_range_invalid");
+        // 三种非法形状：圆形带朝向、直线带半径、扇形扇角越界。
+        AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaFacing", "east")), "attack_profile_area_shape_contract_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(divineLineLine, "areaRadius", "1")), "attack_profile_area_shape_contract_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artFanLine, "areaFanHalfAngleSteps", "2")), "attack_profile_area_shape_contract_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaShapeKind", "hex")), "attack_profile_area_shape_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artFanLine, "areaFacing", "north")), "attack_profile_area_facing_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artFanLine, "areaFacing", "")), "attack_profile_area_facing_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(divineLineLine, "areaEffectBlockers", "sight_blocked")), "attack_profile_area_blocker_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaAllowedFactions", "neutral")), "attack_profile_areaAllowedFactions_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaAllowedStates", "ghost")), "attack_profile_areaAllowedStates_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "cooldownTicks", "4")), "battlesim_cooldown_unit_unresolved");
+        // 单目标混入范围列：只把单目标行填入一个范围列。
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "areaCenterKind", "caster")), "single_target_area_fields_present");
+        // 未支持效果语义：heal 行在既有 BattleSim 载体上没有对应字段。
+        AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "effectType", "heal")), "unsupported_effect_semantics");
+    }
+
+    static void AssertBasicProjection(
+        IReadOnlyDictionary<string, string> row,
+        GameData.AttackProfile profile,
+        string label)
+    {
+        AssertEqual(row["attackProfileId"], profile.Name, $"{label} id");
+        AssertEqual(ParseDouble(row["physicalDamageMultiplier"]), profile.Mult, $"{label} mult");
+        AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
+        AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
+        AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
+        AssertEqual((GameData.AreaTargetingConfig)null, profile.AreaTargeting, $"{label} must be single target");
+    }
+
+    static void AssertArtProjection(
+        IReadOnlyDictionary<string, string> row,
+        GameData.ArtConfig profile,
+        string label)
+    {
+        AssertEqual(row["attackProfileId"], profile.Name, $"{label} id");
+        AssertEqual(ParseDouble(row["soulDamageMultiplier"]), profile.Mult, $"{label} mult");
+        AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
+        AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
+        AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
+        AssertEqual((GameData.AreaTargetingConfig)null, profile.AreaTargeting, $"{label} must be single target");
+    }
+
+    static void AssertAreaProjection(
+        IReadOnlyDictionary<string, string> row,
+        GameData.AreaTargetingConfig config,
+        string label)
+    {
+        AssertEqual(row["attackProfileId"], config.Name, $"{label} area name");
+        AssertEqual(ParseAreaCenterKind(row["areaCenterKind"]), config.CenterKind, $"{label} center kind");
+        AssertEqual(ParseInt(row["minCastRange"]), config.MinCastRange, $"{label} area min range");
+        AssertEqual(ParseInt(row["maxCastRange"]), config.MaxCastRange, $"{label} area max range");
+        AssertEqual(ParseAreaShapeKind(row["areaShapeKind"]), config.Shape.Kind, $"{label} shape kind");
+        AssertEqual(ParseInt(row["areaRadius"]), config.Shape.Radius, $"{label} radius");
+        AssertEqual(ParseInt(row["areaLength"]), config.Shape.Length, $"{label} length");
+        AssertEqual(ParseInt(row["areaFanHalfAngleSteps"]), config.Shape.FanHalfAngleSteps, $"{label} fan half angle");
+        AssertEqual(ParseInt(row["areaInnerRadius"]), config.Shape.InnerRadius, $"{label} inner radius");
+        AssertEqual(ParseAreaEffectBlockers(row["areaEffectBlockers"]), config.EffectBlockers, $"{label} blockers");
+        AssertEqual(ParseAreaTargetFactions(row["areaAllowedFactions"]), config.AllowedFactions, $"{label} factions");
+        AssertEqual(ParseAreaTargetStates(row["areaAllowedStates"]), config.AllowedStates, $"{label} states");
+        if (string.IsNullOrEmpty(row["areaFacing"]))
+        {
+            AssertEqual((HexDirection?)null, config.Shape.Facing, $"{label} facing must be null");
+        }
+        else
+        {
+            AssertEqual((HexDirection?)ParseHexDirection(row["areaFacing"]), config.Shape.Facing, $"{label} facing");
+        }
+    }
+
+    static void AssertTableRejected(IReadOnlyList<string> lines, string expectedCode)
+    {
+        try
+        {
+            ValidateAttackProfileTable(lines);
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (!string.Equals(ex.Message, expectedCode, StringComparison.Ordinal))
+                throw new InvalidOperationException($"expected rejection '{expectedCode}' but got '{ex.Message}'.");
+            return;
+        }
+
+        throw new InvalidOperationException($"table must be rejected with '{expectedCode}'.");
+    }
+
+    static void ValidateAttackProfileTable(IReadOnlyList<string> lines)
+    {
+        var headers = lines[0].Split(',');
+        const int expectedFieldCount = 34;
+        if (headers.Length != expectedFieldCount)
+            throw new InvalidOperationException("attack_profile_header_not_exact");
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var line in lines.Skip(1))
+        {
+            var values = line.Split(',');
+            if (values.Length != headers.Length)
+                throw new InvalidOperationException("attack_profile_short_or_extra_row");
+            var row = headers.Select((header, index) => (header, value: values[index]))
+                .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
+
+            string profileKind = row["profileKind"];
+            string targetingMode = row["targetingMode"];
+            if (profileKind is not ("basic" or "art" or "divine"))
+                throw new InvalidOperationException("attack_profile_kind_invalid");
+            if (!ids.Add(row["attackProfileId"]))
+                throw new InvalidOperationException("attack_profile_id_duplicate");
+            if (row["realmRequirementId"] is not (
+                "" or "realm_fanren" or "realm_lianqi" or "realm_zhuji" or
+                "realm_jindan" or "realm_yuanying" or "realm_huashen"))
+                throw new InvalidOperationException("attack_profile_requirement_reference_unknown");
+
+            if (profileKind == "basic")
+            {
+                if (row["resourceKind"] != "none" || row["resourceCost"] != "0" || row["cooldownTicks"] != "0")
+                    throw new InvalidOperationException("basic_attack_resource_or_cooldown_invalid");
+            }
+            else if (row["cooldownTicks"] != "0")
+            {
+                // 契约固定 CSV 的 cooldownTicks 为规范值，但仓库尚无 BattleSim 回合与 Unity 刻的
+                // 权威换算；BattleSim 投影遇到非零 cooldownTicks 必须失败，不能读取旧回合默认值。
+                throw new InvalidOperationException("battlesim_cooldown_unit_unresolved");
+            }
+
+            // 效果、资源与冷却、距离合法性对每一行生效（含单目标），
+            // 与 Unity 导入器 ParseAttackProfileRow 的逐行校验顺序一致。
+            string effectType = row["effectType"];
+            if (effectType is "physical" or "magic" or "hybrid")
+            {
+                if (string.IsNullOrEmpty(row["damageElementId"]) || !IsKnownElement(row["damageElementId"]))
+                    throw new InvalidOperationException("attack_profile_damage_element_unknown");
+                if (effectType is "physical" or "hybrid" && !ParseNonNegativeDouble(row["physicalDamageMultiplier"], "physicalDamageMultiplier"))
+                    throw new InvalidOperationException("attack_profile_physicalDamageMultiplier_invalid");
+                if (effectType is "magic" or "hybrid" && !ParseNonNegativeDouble(row["soulDamageMultiplier"], "soulDamageMultiplier"))
+                    throw new InvalidOperationException("attack_profile_soulDamageMultiplier_invalid");
+            }
+            else if (effectType is "heal" or "buff" or "debuff" or "movement")
+            {
+                // 既有 BattleSim 载体（AttackProfile/ArtConfig/DivineConfig）没有治疗量、增益倍率
+                // 或移动语义字段；当前投影不能表达已声明效果时必须拒绝，不能丢列或读旧默认值。
+                throw new InvalidOperationException("unsupported_effect_semantics");
+            }
+            else
+            {
+                throw new InvalidOperationException("attack_profile_effect_type_invalid");
+            }
+
+            string resourceKind = row["resourceKind"];
+            if (resourceKind is not ("none" or "mp"))
+                throw new InvalidOperationException("attack_profile_resource_kind_invalid");
+            if (!ParseNonNegativeInt(row["resourceCost"], "resourceCost"))
+                throw new InvalidOperationException("attack_profile_resourceCost_invalid");
+            if (!ParseNonNegativeInt(row["cooldownTicks"], "cooldownTicks"))
+                throw new InvalidOperationException("attack_profile_cooldownTicks_invalid");
+
+            int minCastRange = ParseInt(row["minCastRange"]);
+            int maxCastRange = ParseInt(row["maxCastRange"]);
+            if (minCastRange < 0 || maxCastRange < minCastRange)
+                throw new InvalidOperationException("attack_profile_cast_range_invalid");
+
+            if (targetingMode == "single")
+            {
+                if (row["areaCenterKind"] != "" || row["areaShapeKind"] != "" ||
+                    row["areaRadius"] != "" || row["areaLength"] != "" ||
+                    row["areaFanHalfAngleSteps"] != "" || row["areaFacing"] != "" ||
+                    row["areaInnerRadius"] != "" || row["areaEffectBlockers"] != "" ||
+                    row["areaAllowedFactions"] != "" || row["areaAllowedStates"] != "")
+                    throw new InvalidOperationException("single_target_area_fields_present");
+                continue;
+            }
+
+            if (targetingMode != "area")
+                throw new InvalidOperationException("attack_profile_targeting_mode_invalid");
+
+            var centerKind = ParseAreaCenterKind(row["areaCenterKind"]);
+            var shapeKind = ParseAreaShapeKind(row["areaShapeKind"]);
+            if (centerKind == GameData.AreaCenterKind.Caster && (minCastRange != 0 || maxCastRange != 0))
+                throw new InvalidOperationException("caster_center_range_invalid");
+            if (string.IsNullOrEmpty(row["areaAllowedFactions"]))
+                throw new InvalidOperationException("attack_profile_areaAllowedFactions_invalid");
+            if (string.IsNullOrEmpty(row["areaAllowedStates"]))
+                throw new InvalidOperationException("attack_profile_areaAllowedStates_invalid");
+
+            int radius = ParseInt(row["areaRadius"]);
+            int length = ParseInt(row["areaLength"]);
+            int fanSteps = ParseInt(row["areaFanHalfAngleSteps"]);
+            int innerRadius = ParseInt(row["areaInnerRadius"]);
+            switch (shapeKind)
+            {
+                case GameData.AreaShapeKind.Circle:
+                    if (radius < 0 || length != 0 || fanSteps != 0 || innerRadius < 0 || innerRadius > radius)
+                        throw new InvalidOperationException("attack_profile_area_shape_contract_invalid");
+                    if (!string.IsNullOrEmpty(row["areaFacing"]))
+                        throw new InvalidOperationException("attack_profile_area_shape_contract_invalid");
+                    break;
+                case GameData.AreaShapeKind.Line:
+                    if (radius != 0 || length <= 0 || fanSteps != 0 || innerRadius < 0 || innerRadius >= length)
+                        throw new InvalidOperationException("attack_profile_area_shape_contract_invalid");
+                    if (string.IsNullOrEmpty(row["areaFacing"]) || !IsDefinedHexDirection(row["areaFacing"]))
+                        throw new InvalidOperationException("attack_profile_area_facing_invalid");
+                    break;
+                case GameData.AreaShapeKind.Fan:
+                    if (radius != 0 || length <= 0 || fanSteps is < 0 or > 1 || innerRadius < 0 || innerRadius >= length)
+                        throw new InvalidOperationException("attack_profile_area_shape_contract_invalid");
+                    if (string.IsNullOrEmpty(row["areaFacing"]) || !IsDefinedHexDirection(row["areaFacing"]))
+                        throw new InvalidOperationException("attack_profile_area_facing_invalid");
+                    break;
+            }
+
+            ParseAreaEffectBlockers(row["areaEffectBlockers"]);
+            ParseAreaTargetFactions(row["areaAllowedFactions"]);
+            ParseAreaTargetStates(row["areaAllowedStates"]);
+        }
+    }
+
+    static bool IsKnownElement(string value) => value is
+        "element_metal" or "element_wood" or "element_water" or "element_fire" or
+        "element_earth" or "element_wind" or "element_thunder" or "element_ice" or
+        "element_dark" or "element_star" or "element_poison" or "element_chaos" or
+        "element_none";
+
+    static bool ParseNonNegativeInt(string value, string fieldName)
+    {
+        return int.TryParse(value, out int parsed) && parsed >= 0;
+    }
+
+    static bool ParseNonNegativeDouble(string value, string fieldName)
+    {
+        return double.TryParse(value, out double parsed) && parsed >= 0;
+    }
+
+    static int ParseInt(string value) => int.Parse(value);
+
+    static double ParseDouble(string value) => double.Parse(value);
+
+    static bool IsDefinedHexDirection(string value) => value is
+        "east" or "north_east" or "north_west" or "west" or "south_west" or "south_east";
+
+    static HexDirection ParseHexDirection(string value) => value switch
+    {
+        "east" => HexDirection.East,
+        "north_east" => HexDirection.NorthEast,
+        "north_west" => HexDirection.NorthWest,
+        "west" => HexDirection.West,
+        "south_west" => HexDirection.SouthWest,
+        "south_east" => HexDirection.SouthEast,
+        _ => throw new InvalidOperationException("attack_profile_area_facing_invalid"),
+    };
+
+    static GameData.AreaCenterKind ParseAreaCenterKind(string value) => value switch
+    {
+        "caster" => GameData.AreaCenterKind.Caster,
+        "target_cell" => GameData.AreaCenterKind.TargetCell,
+        _ => throw new InvalidOperationException("attack_profile_area_center_invalid"),
+    };
+
+    static GameData.AreaShapeKind ParseAreaShapeKind(string value) => value switch
+    {
+        "circle" => GameData.AreaShapeKind.Circle,
+        "line" => GameData.AreaShapeKind.Line,
+        "fan" => GameData.AreaShapeKind.Fan,
+        _ => throw new InvalidOperationException("attack_profile_area_shape_invalid"),
+    };
+
+    static GameData.AreaEffectBlocker ParseAreaEffectBlockers(string value) => value switch
+    {
+        "none" => GameData.AreaEffectBlocker.None,
+        "directed_edge" => GameData.AreaEffectBlocker.DirectedEdge,
+        _ => throw new InvalidOperationException("attack_profile_area_blocker_invalid"),
+    };
+
+    static GameData.AreaTargetFaction ParseAreaTargetFactions(string value)
+    {
+        var parts = value.Split(',');
+        if (parts.Length == 0 || parts.Any(string.IsNullOrEmpty) ||
+            !parts.SequenceEqual(parts.OrderBy(item => item, StringComparer.Ordinal)))
+            throw new InvalidOperationException("attack_profile_areaAllowedFactions_invalid");
+        long result = 0;
+        foreach (var part in parts)
+        {
+            result |= part switch
+            {
+                "enemy" => (long)GameData.AreaTargetFaction.Enemy,
+                "ally" => (long)GameData.AreaTargetFaction.Ally,
+                "self" => (long)GameData.AreaTargetFaction.Self,
+                _ => throw new InvalidOperationException("attack_profile_areaAllowedFactions_invalid"),
+            };
+        }
+        return (GameData.AreaTargetFaction)result;
+    }
+
+    static GameData.AreaTargetState ParseAreaTargetStates(string value)
+    {
+        var parts = value.Split(',');
+        if (parts.Length == 0 || parts.Any(string.IsNullOrEmpty) ||
+            !parts.SequenceEqual(parts.OrderBy(item => item, StringComparer.Ordinal)))
+            throw new InvalidOperationException("attack_profile_areaAllowedStates_invalid");
+        long result = 0;
+        foreach (var part in parts)
+        {
+            result |= part switch
+            {
+                "alive" => (long)GameData.AreaTargetState.Alive,
+                "corpse" => (long)GameData.AreaTargetState.Corpse,
+                _ => throw new InvalidOperationException("attack_profile_areaAllowedStates_invalid"),
+            };
+        }
+        return (GameData.AreaTargetState)result;
     }
 
     static string FindRepositoryRoot()

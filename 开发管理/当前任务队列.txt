@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-COMBAT-02 | external_execute | deepseek | P3 | data | verification | 跨端攻击档案 fixture 与差异检查 | `开发管理/任务卡/D-COMBAT-02.txt` |
+| D-COMBAT-02 | codex_review | codex | P3 | data | verification | 跨端攻击档案 fixture 与差异检查 | `开发管理/任务卡/D-COMBAT-02.txt` |

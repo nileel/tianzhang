@@ -4526,6 +4526,90 @@ namespace TianZhang.Editor
             return TryParseAttackProfiles(lines, languageKeys, "AttackProfiles.csv", out _, out reason);
         }
 
+        /// <summary>
+        /// 供 EditMode fixture 投影：按契约原表头严格解析后，把每行经
+        /// <see cref="AttackProfileImportRow.CopyTo"/> 投影为内存 <see cref="AttackProfileData"/>，
+        /// 不写入 AssetDatabase、不创建任何 asset。任一字段失败时整批失败并销毁全部临时对象。
+        /// </summary>
+        public static bool TryBuildAttackProfileProjection(
+            string[] lines,
+            IReadOnlyCollection<string> languageKeys,
+            out AttackProfileData[] profiles,
+            out string reason)
+        {
+            profiles = Array.Empty<AttackProfileData>();
+            if (!TryParseAttackProfiles(lines, languageKeys, "AttackProfiles.fixture.csv", out var rows, out reason))
+                return false;
+
+            var created = new List<AttackProfileData>();
+            try
+            {
+                foreach (var row in rows)
+                {
+                    var profile = ScriptableObject.CreateInstance<AttackProfileData>();
+                    row.CopyTo(profile);
+                    if (!profile.TryValidate(out string validationReason))
+                        throw new InvalidDataException(validationReason);
+                    created.Add(profile);
+                }
+
+                profiles = created.ToArray();
+                reason = string.Empty;
+                return true;
+            }
+            catch (InvalidDataException exception)
+            {
+                reason = exception.Message;
+                foreach (var profile in created)
+                    UnityEngine.Object.DestroyImmediate(profile);
+                created.Clear();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 供 EditMode fixture 验证同 ID asset 冲突：按契约规范路径
+        /// (Assets/Data/AttackProfiles/AttackProfile_&lt;id&gt;.asset) 扫描既有
+        /// <see cref="AttackProfileData"/> asset，任一既有 asset 的 ID 与路径不一致即失败。
+        /// 不写入任何 asset。
+        /// </summary>
+        public static bool TryValidateAttackProfileAssetIdProjection(
+            IReadOnlyCollection<string> attackProfileIds,
+            out string reason)
+        {
+            var canonicalPaths = attackProfileIds.ToDictionary(
+                id => id,
+                id => $"Assets/Data/AttackProfiles/AttackProfile_{id}.asset",
+                StringComparer.Ordinal);
+            foreach (string guid in AssetDatabase.FindAssets("t:AttackProfileData"))
+            {
+                string existingPath = AssetDatabase.GUIDToAssetPath(guid);
+                var existing = AssetDatabase.LoadAssetAtPath<AttackProfileData>(existingPath);
+                if (existing != null && !string.IsNullOrWhiteSpace(existing.attackProfileId) &&
+                    canonicalPaths.TryGetValue(existing.attackProfileId, out string canonicalPath) &&
+                    !string.Equals(existingPath, canonicalPath, StringComparison.Ordinal))
+                {
+                    reason = "attack_profile_asset_id_duplicate";
+                    return false;
+                }
+            }
+
+            foreach (var id in attackProfileIds)
+            {
+                string path = $"Assets/Data/AttackProfiles/AttackProfile_{id}.asset";
+                var existing = AssetDatabase.LoadAssetAtPath<AttackProfileData>(path);
+                if (existing != null && !string.IsNullOrEmpty(existing.attackProfileId) &&
+                    !string.Equals(existing.attackProfileId, id, StringComparison.Ordinal))
+                {
+                    reason = "attack_profile_asset_id_conflict";
+                    return false;
+                }
+            }
+
+            reason = string.Empty;
+            return true;
+        }
+
         private sealed class AttackProfileImportRow
         {
             public string AttackProfileId;
