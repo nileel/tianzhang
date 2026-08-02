@@ -289,6 +289,29 @@ try {
   } -AllowedExitCodes @(2)
   Assert-Equal ([string]$attentionComplete.Json.status) 'RUN_NOT_COMPLETABLE' 'Attention run was incorrectly cleared'
 
+  $attentionMismatch = Invoke-Runtime -Action CompleteRun -Parameters @{
+    StateRoot = $attentionRoot
+    Owner = 'deepseek'
+    RunId = [string]$attentionRun.Json.run.runId
+    CompletionCategory = 'failed'
+    DetailCode = 'manual_attention_closeout'
+    ExpectedRecoveryReason = 'different recovery reason'
+  } -AllowedExitCodes @(2)
+  Assert-Equal ([string]$attentionMismatch.Json.status) 'RUN_NOT_COMPLETABLE' 'Attention run accepted mismatched recovery evidence'
+
+  $attentionResolved = Invoke-Runtime -Action CompleteRun -Parameters @{
+    StateRoot = $attentionRoot
+    Owner = 'deepseek'
+    RunId = [string]$attentionRun.Json.run.runId
+    CompletionCategory = 'failed'
+    DetailCode = 'manual_attention_closeout'
+    ExpectedRecoveryReason = 'uncommitted changes remain'
+  }
+  Assert-Equal ([string]$attentionResolved.Json.status) 'RUN_COMPLETED' 'Attention run was not manually closed'
+  Assert-Equal ([string]$attentionResolved.Json.recoveryReason) 'uncommitted changes remain' 'Attention closeout omitted recovery evidence'
+  $afterAttention = Invoke-Runtime -Action Show -Parameters @{ StateRoot = $attentionRoot }
+  Assert-True ($null -eq $afterAttention.Json.state.runs.deepseek) 'Manual attention closeout retained the owner run'
+
   [IO.Directory]::CreateDirectory($migrationRoot) | Out-Null
   Set-PrivatePathAcl -Path $migrationRoot -Directory
   $migrationPath = Join-Path $migrationRoot 'runtime.json'

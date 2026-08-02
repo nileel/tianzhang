@@ -27,6 +27,7 @@ param(
   [string]$CanonicalBase,
   [string]$CanonicalHead,
   [string]$RecoveryReason,
+  [string]$ExpectedRecoveryReason,
   [string]$ExpectedMainHead,
   [ValidateRange(1, 3600)]
   [int]$IntegrationLeaseSeconds = 300,
@@ -690,9 +691,21 @@ try {
           $resultExitCode = 2
           break
         }
+        $attentionCompletion =
+          $CompletionCategory -ceq 'failed' -and
+          [string]$run.state -ceq 'attention_required' -and
+          -not [string]::IsNullOrWhiteSpace($ExpectedRecoveryReason) -and
+          $ExpectedRecoveryReason -ceq [string]$run.recoveryReason -and
+          $null -eq $run.candidateCommit -and
+          $null -eq $run.candidateResult -and
+          $null -eq $run.canonicalBranch -and
+          $null -eq $run.canonicalBase -and
+          $null -eq $run.canonicalHead -and
+          $null -eq $state.integrationLease
         $validCompletion =
           ($CompletionCategory -ceq 'success' -and [string]$run.state -ceq 'integrated') -or
-          ($CompletionCategory -cin @('no_candidate', 'failed') -and [string]$run.state -ceq 'developing' -and $null -eq $run.candidateCommit)
+          ($CompletionCategory -cin @('no_candidate', 'failed') -and [string]$run.state -ceq 'developing' -and $null -eq $run.candidateCommit) -or
+          $attentionCompletion
         if (-not $validCompletion) {
           $result = New-Result -Status 'RUN_NOT_COMPLETABLE'
           $resultExitCode = 2
@@ -709,13 +722,17 @@ try {
         $completedRun = $run
         $state.runs.$Owner = $null
         Write-RuntimeState -Path $statePath -State $state
-        $result = New-Result -Status 'RUN_COMPLETED' -Values @{
+        $completionValues = @{
           runId = $RunId
           taskId = $completedRun.taskId
           owner = $Owner
           category = $CompletionCategory
           detailCode = $DetailCode
         }
+        if ($attentionCompletion) {
+          $completionValues.recoveryReason = [string]$completedRun.recoveryReason
+        }
+        $result = New-Result -Status 'RUN_COMPLETED' -Values $completionValues
       }
     }
   } finally {
