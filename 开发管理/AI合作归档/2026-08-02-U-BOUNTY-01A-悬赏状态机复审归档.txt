@@ -1,0 +1,29 @@
+# U-BOUNTY-01A · 关中一次性悬赏状态机与计数复审归档
+
+- 完成日期：2026-08-02
+- 修改方：DeepSeek V4 Flash
+- 复审方：Codex / gpt-5.6-sol
+- 结论：通过
+
+## 提交链
+
+- 首轮业务提交：`cd3dd5dc22a89f6e65219c2e3c404b988ecbb5c7`；交接提交：`0903e8f5a3bfc7aa518ee9e705e7bf4df72981b3`。
+- 首轮复审提交：`4478127eba16ff42ff2ac88fbd852e7b9ddcdce3`，结论为部分通过，登记 `REV-U-BOUNTY-01A-01`。
+- 定向返工业务提交：`b433dc464f71e0b56740a9452336af3448899529`；交接提交：`faaa31ce3bc5cbc7b0d07e147018ff9d0e4a0646`。
+- 最终复审提交：`561f064cbaa6588fe7d4c16bb835396d4a9a96c9`。
+
+## 复审结果
+
+- 首轮实现的四状态闭环、Adventure 胜利单次登记、奖励与状态原子提交及禁止项边界通过；首轮复审发现 `Accept` 未验证发布城市和目标敌人是否存在于同一内容目录。
+- 定向返工只补齐 `issuerSettlementId` 与 `targetEnemyId` 的目录引用失败关闭、稳定原因和两项直接负例；缺失任一引用时拒绝接取且状态保持 `Available`。
+- 最终复审通过并归档任务；`U-BOUNTY-01B` 前置已完成，可进入任务卡规划。
+
+## 自动化恢复记录
+
+- DeepSeek run `be05cab8-b811-4288-a1f0-a568f670919f` 先提交代码与测试、后写验证记录，因不满足单一候选提交契约而未集成；人工收口仅将该 run 的候选差异与其已写验证记录合成同卡业务提交，没有重跑模型或扩展范围。
+
+## 验证
+
+- Unity 6000.3.18f1 EditMode：306 项，304 通过；2 项失败均为已登记且与本卡修改路径无关的既有基线失败。
+- `BountyRuntimeTests`：15/15 通过；新增缺失城市和缺失目标敌人负例均通过。
+- `check-review-text`、`check-pending-whitespace`、任务卡投影检查和 `git diff --cached --check` 通过。
