@@ -18,7 +18,7 @@
 ## 身份与执行边界
 
 - 被问到“你是谁”或纯 `1` / `2` 工作流要求确认身份时，Codex 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`，以实际值为准。
-- 每小时控制器启动的 Codex 责任方使用控制器通过 `tools/codex-cli-session.ps1 -Model` 和首条 stdin 传入的核验证明；不因 `codex exec` 子会话返回 `unknown` 再次阻塞。细节读取 `开发管理/AI协作规则.txt`。
+- 每小时共享入口启动的 Codex 责任方使用 adapter 通过 `tools/codex-cli-session.ps1 -Model` 和首条 stdin 传入的核验证明；不因 `codex exec` 子会话返回 `unknown` 再次阻塞。细节读取 `开发管理/AI协作规则.txt`。
 - Claude Code、DeepSeek 和 Claude wrapper 的身份、主责、提交与复审边界读取 `CLAUDE.md` 及其路由的专项事实源。
 - 不得以“能够实现”推导出“获得任务主责”；DeepSeek / Claude 不得自审。
 
@@ -69,8 +69,8 @@
 - 如果修复开始连续叠加补丁、跨越多个原定边界或突破停止条件，立即停止并重新判断根因。
 - 默认使用与风险和影响面相称的最小充分验证；相关输入未变化时不重复同范围检查。共享基础设施、安全/写入隔离、不可逆迁移、核心架构或数据语义、数值平衡、外部交接复审、已有失败/冲突证据或用户明确要求时才升级验证。
 - 项目 PowerShell 脚本只支持 PowerShell 7；独立进程使用 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。
-- 手动 AI 对话（Codex / DeepSeek / Claude）执行纯 `1` 的 ready 队列任务时，选中任务后、任何项目写入前必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 4 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、`integrationLease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成，任一条件不满足就停止合并并报告。其他手动写入任务在存在任一活动 run 或 `integrationLease` 时使用 `.worktrees/` 隔离，也只在待合并 taskId 未被占用、`integrationLease=null` 且路径不冲突时合并回主工作区。只读对话不需要 worktree。
-- 固定小时入口启动的 Codex / DeepSeek 自动化责任方不属于手动对话；固定脚本必须在 `.worktrees/automation/<runId>/<owner>` 创建并记录项目拥有的 linked worktree，责任方只在该 worktree 的 run 专属 branch 实施、验证和提交。只有固定入口能在短时 `integrationLease` 下把已核验 canonical branch fast-forward 到 `master`。
+- 手动 AI 对话（Codex / DeepSeek / Claude）执行纯 `1` 的 ready 队列任务时，选中任务后、任何项目写入前必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 5 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、进程持有型集成锁空闲、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才通过 `tools/invoke-project-integration.ps1` 取得同一集成锁并执行 fast-forward，任一条件不满足就停止集成并报告。其他手动写入任务在存在任一活动 run 或集成锁被持有时使用 `.worktrees/` 隔离，也只在待合并 taskId 未被占用、锁空闲且路径不冲突时合并回主工作区。只读对话不需要 worktree。
+- 固定小时入口启动的 Codex / DeepSeek 自动化责任方不属于手动对话；共享脚本必须在 `.worktrees/automation/<runId>/<owner>` 创建并记录项目拥有的 linked worktree，责任方只在该 worktree 的 run 专属 branch 实施、验证和提交。共享入口在最新 `master` 上重放和验证后，通过与手动正式集成相同的进程持有型排他锁 fast-forward 到 `master`。
 - 暂存前对本轮预期路径运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。不得 stage 或提交无关改动。
 - 审核文本检查：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`
 - docs / CSV / Unity 数据链路检查只在相关路径变化时运行：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`

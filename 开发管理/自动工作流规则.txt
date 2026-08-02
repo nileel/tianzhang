@@ -1,62 +1,53 @@
 # 自动工作流规则
 
-本文件只定义两个独立小时入口的稳定边界。业务实施、领域验证、审核与任务维护仍以任务卡和对应专项入口为准。
+本文件定义 Codex / DeepSeek 两个独立小时定时器共用的唯一编排边界。业务事实仍以任务卡和有序队列为准；模型只负责 candidate，确定性的 PowerShell 共享内核负责 Git、runtime、任务投影、验证、集成、通知和清理。
 
 ## 实时入口与事实源
 
-- `codex-hourly-worker` 每小时处理 Codex 自己的 `codex_execute/codex/ready`、`codex_review/codex/ready`、既有 Codex run 和空队列维护；不得启动 DeepSeek。
-- `deepseek-hourly-trigger` 是无业务判断的薄触发器，只前台调用 `tools/invoke-deepseek-hourly.ps1 -Action RunOnce` 并原样报告结构化终态；不得读取队列、任务卡或模型正文。
-- 固定 Windows 脚本 `tools/invoke-codex-hourly.ps1` 与 `tools/invoke-deepseek-hourly.ps1` 是两个生产业务入口。它们共享有序队列，但各自只选择属于自己的第一项合法任务。
-- 任务唯一活跃事实为 `开发管理/当前任务队列.txt` 的有序行及同 ID `开发管理/任务卡/<ID>.txt`。候选选择必须先通过完整任务投影检查，不从交接、backlog 或摘要另建候选池。
-- 生产 prompt、schedule、folder、model 和 enabled 状态以实时 automation 配置为准，只由自动化任务之外的普通管理上下文通过 Codex automation 管理能力变更；不得编辑 automation TOML，两个 automation 不得管理彼此或自身。
-- 电脑休眠、触发延迟或 automation 服务不可用只形成真实缺跑；不增加 Windows Task Scheduler、后台守护进程、补跑或重试层。
+- `codex-hourly-worker` 每小时 `:15` 前台调用 `tools/invoke-hourly-owner.ps1 -Owner codex -Action RunOnce -Model <实际 model>`；`deepseek-hourly-trigger` 每小时 `:45` 前台调用同一脚本并传入 `-Owner deepseek -Action RunOnce`。两个定时器继续独立运行，可分别开发不同 taskId。
+- automation 对话只等待同一前台调用并原样展示单个结构化终态，不读队列、任务卡或模型正文，不管理自身或另一 automation。
+- 实时 prompt、schedule、folder、model、notification policy 和 enabled 状态以 automation 配置为准，只通过 Codex automation 管理能力变更，不编辑 TOML。
+- 任务唯一活跃事实是 `开发管理/当前任务队列.txt` 的有序行及同 ID `开发管理/任务卡/<ID>.txt`；交接、摘要和 runtime 只提供证据或诊断信息。
 
-## schema 4 runtime 与 claim
+## schema 5 runtime 与 owner 并行
 
-- `tools/hourly-automation-lease.ps1` 的用户级私有 runtime 顶层固定为 `schemaVersion=4`、`runs.codex`、`runs.deepseek` 与 `integrationLease`；使用 ACL、互斥锁和原子写入，不保存 provider 凭据或完整私有地址。
-- DeepSeek 固定入口按 owner 与规范化 `StateRoot` 持有单实例互斥；同一状态根已有前台调用时，新调用在读取或修改 runtime 前返回 `occupied/deepseek_entry_running`，不得把前一调用的在途 worktree 误判为恢复证据。
-- 每个固定入口先调用统一 `Show`。已有本 owner run 时只处理该 run，不选择第二个任务；无 run 时才确定性选题并调用 `ClaimRun`。
-- Codex 与 DeepSeek 可以同时拥有不同 taskId 的 run；同一 taskId 不能同时出现在两个 run。owner 不得领取对方 route。
-- Codex 只领取 `codex_execute/codex`、`codex_review/codex`；DeepSeek 只领取 `external_execute/deepseek`。同一 owner 内保持队列原相对顺序并跳过另一 owner 的行。
-- QueueMaintenance 只在共享 ready 队列真实为空、Codex run 为空、没有待集成结果且无有效 `integrationLease` 时，以保留 ID `QUEUE-MAINTENANCE` 由 Codex claim。DeepSeek 不得领取维护 run。
-- schema 1～3 只有在旧 lease、recovery 和逻辑暂停均为空时才可机械迁移；存在旧活动事实时返回 `MIGRATION_REQUIRED`，不得猜测迁移或覆盖。
+- `tools/hourly-automation-lease.ps1` 的私有 runtime 固定为 `schemaVersion=5` 与 `runs.codex`、`runs.deepseek`，使用 ACL、互斥锁和原子写入。持久状态不再保存 `integrationLease`、恢复队列或 provider 凭据。
+- 每个 owner 同时最多一个 run；Codex 与 DeepSeek 可拥有不同 taskId 的 run，同一 taskId 不得重复领取。Codex 只领取 `codex_execute/codex/ready`、`codex_review/codex/ready` 和 QueueMaintenance；DeepSeek 只领取 `external_execute/deepseek/ready`。
+- 新调用先 `Show`。本 owner run 非空时只返回 taskId、runId、state 和脱敏原因，不恢复、重放、关闭或领取新任务；人工处置规则见 `开发管理/自动工作流恢复规则.txt`。
+- schema 4 只有在两个 owner run 都为空且旧集成租约为空时才机械迁移到 schema 5；否则返回 `MIGRATION_REQUIRED`，不得猜测、覆盖或自动迁移旧活动现场。
+- run 阶段保留 `developing`、`candidate_ready`、`canonical_ready`、`integrated`、`attention_required`，用于准确记录停止位置，不用于跨自动轮次恢复。
 
-## owner worktree 与 candidate
+## 共享内核与 owner adapter
 
-- 每个 run 的项目拥有 worktree 固定为 `.worktrees/automation/<runId>/<owner>`，candidate branch 固定绑定 owner、runId、baseCommit。自动责任方只在该 worktree 实施、验证和提交，不直接修改主工作区。
-- Codex candidate 通过 `tools/invoke-codex-candidate.ps1` 启动固定 `codex-cli-session.ps1 -Model`；外层已核验并传入的模型值是子会话身份证明，子会话不因缺少 request metadata 重复阻塞。
-- DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway，并显式使用 `deepseek-v4-flash`。身份、provider 或模型不符立即失败。
-- 责任方只接收已经 claim 的 taskId、runId、baseCommit、worktree 和 candidate branch；不得重扫队列、claim、管理 runtime、创建其他 worktree/branch、修改主工作区、集成或自审。
-- 普通 candidate 的实际 changed paths 必须是任务 `expectedPaths` 的子集。QueueMaintenance 只能修改状态维护规则授权的任务卡、当前队列、分线 backlog、设计／开发建议、当前状态和自动工作流状态事实。
-- candidate 必须是 baseCommit 的唯一直接后继、worktree 干净、提交元数据和结构化 `candidateResult` 完整。DeepSeek candidate 不修改共享生命周期或 handoff；这些由固定入口在 canonical 阶段机械重建。
-- candidate 不是正式交付，不进入日报、不发通知、不解锁依赖。正常运行不自动删除 owner worktree 或证据 branch。
+- 共享入口唯一实现 runtime `Show`／claim／状态写入、worktree 与 branch 生命周期、candidate 核验、路径冲突检查、最新 `master` 重放、正式提交、组合验证、排他集成、`CompleteRun`、通知和成功清理。
+- `tools/hourly-owner-adapter.ps1` 只定义 owner 的 route、candidate 启动脚本、模型／身份和正式结果合同。adapter 不读写 runtime，不含 Git 集成、通知或清理逻辑。
+- Codex candidate 通过 `tools/invoke-codex-candidate.ps1` 和 `tools/codex-cli-session.ps1` 启动；必须使用 `codex exec --output-schema` 与 `--output-last-message` 的私有结构化终态，不从自然语言正文猜测状态。
+- DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway 和 `deepseek-v4-flash`，身份或模型不符立即停止。
+- 每个 run 的项目拥有 worktree 固定为 `.worktrees/automation/<runId>/<owner>`。责任方只能在该 worktree 的 candidate branch 实施、验证并形成一个与 run、base、changed paths 和 candidateResult 精确绑定的提交。
 
-## canonical 与短时集成
+## 最新 master 重放、验证与正式提交
 
-- `candidate_ready` 由固定入口在同一 owner worktree 创建 run 专属 canonical branch，并以当前最新 `master` 为 `canonicalBase` 重放候选。
-- 集成前重新核验原任务卡 digest、route、owner、ready 投影、依赖、candidate 证据和最新 `master`。任务事实或相关路径已变化、重放冲突、验证失败或证据不完整时转 `attention_required`，主工作区不变。
-- Codex canonical 形成一个路径限定正式提交。DeepSeek canonical 机械恢复最新共享投影，创建连续的 `businessCommit` 与仅含 `开发管理/AI合作沟通.txt` 的 `handoffCommit`；原任务就地转换为 `codex_review/codex/ready`，不新建复审卡、不解锁依赖。
-- 只有 canonical 全部通过后才申请最长 300 秒的 `integrationLease`。租约只保护主工作区最终复核与一次 `git merge --ff-only <canonicalHead>`，不覆盖开发或长时间验证。
-- 集成时 `master` 必须仍等于 `canonicalBase`，主工作区不得在正式 changed paths 上存在 staged、unstaged 或 untracked 冲突。无关人工改动不暂存、不提交、不清理。
-- 若另一个 owner 先推进 `master`，且当前 canonical worktree 可核验且干净，则本 run 回到 `candidate_ready`，下一轮只在新 HEAD 上重建 canonical；文本／事实冲突进入 `attention_required`，不自动解冲突。
-- fast-forward 后先把 run 标为 `integrated`，再用单个原子 `CompleteRun` 记录结果、清除本 owner run 并释放同一 `integrationLease`。`integrated` 恢复只关闭记录，不重复提交或通知。
+- candidate 完整核验后，共享入口取得 `tools/hourly-integration-lock.ps1` 的进程持有型排他锁，再读取当时最新 `master`、任务卡、队列、依赖和主工作区相关路径；正式结果只在 owner worktree 中基于该 HEAD 重放并在持锁阶段完成组合验证。
+- 自动集成与手动正式集成都必须通过同一个排他锁；手动 fast-forward 使用 `tools/invoke-project-integration.ps1`。锁只串行正式重放、验证和集成，不阻止另一 owner 在独立 worktree 开发。
+- Codex 正式结果形成一个路径限定提交。DeepSeek 正式结果形成一个原子提交，同时包含业务变化、原任务 `codex_review/codex/ready` 的 `pending_review` 投影和 `开发管理/AI合作沟通.txt` 的交接证据；DeepSeek 不自审、不解锁依赖，后续由 Codex 独立复审。
+- 正式提交继续使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`。DeepSeek 使用 `AutomationState=pending_review`；Codex 按任务实际后置状态写入合同。`Result`、`Impact`、`Verify`、`Plain` 必须由实际证据与验证支持。
+- 主工作区必须仍位于取得锁时的 `master`，且正式路径不得与 staged、unstaged 或 untracked 人工改动冲突。冲突、事实变化、验证失败或拒绝 fast-forward 均停止并保留现场，不自动解冲突或重试。
 
-## 提交、复审与通知
+## 决策 checkpoint、失败与清理
 
-- 正式 automation 提交继续使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata` 的九字段合同：`AutomationTask`、`AutomationState`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain`。
-- Codex candidate 使用 `AutomationState=completed`，只表示本责任方提交闭环；实际任务状态仍由任务卡／归档投影证明。DeepSeek 正式业务提交使用 `AutomationState=pending_review`；handoff 提交不带 Automation 标记。
-- `Result`、`Impact`、`Verify`、`Plain` 分别严格使用 `问题=...；完成=...`、`影响=...；边界=...`、`验证=...；后续=...`、`发生=...；影响=...；需要=...` 的单行结构。九个子字段均非空并由事实和实际验证支持；通俗子字段各不超过 200 个 Unicode code point。
-- 非 QueueMaintenance 的成功 `CompleteRun` 后发送一次 `tools/send-feishu-notification.ps1 -Kind TaskOutcome`：DeepSeek 发送已核验 `businessCommit` 的 `pending_review`；Codex 按实际任务转换发送 `completed`、`blocked`、`waiting_decision`、`waiting_reply` 或 `failed`。通知失败只返回脱敏投递状态，不回滚提交、不恢复 run、不重试业务。
-- DeepSeek 不得复审自己的结果。Codex 复审读取 `master` 实际组合与审核证据，不用旧 candidate 代替。
+- 普通失败、崩溃、残留、冲突或验证失败不得使用恢复路径；共享内核记录准确阶段和原因后停止。新的自动轮次只报告该 run。
+- 开发中确需负责人决定时，模型必须停止猜测，形成唯一一个干净 checkpoint 提交和结构化 `decisionResult`，精确绑定 taskId、decisionId、baseCommit、branch、SHA、授权路径与验证证据。
+- 共享入口把任务机械转换为 `pending_decision` 或 `waiting_reply` 并正式提交，但不合并 checkpoint 业务变化；关闭当前 run 后发送决策卡。长连接桥只负责接收入站回复。
+- 有效回复由 decisionId、taskId、当前任务摘要和操作者身份验证。下一次对应 owner 调用先把原任务恢复为原 route／owner／`ready`，再从最新 `master` 创建新 run、新 worktree和新模型会话，以 `cherry-pick --no-commit` 吸收 checkpoint；不恢复旧模型会话。普通失败不能冒充 decision checkpoint。
+- 正常成功在 fast-forward 后写入 `integrated` 并调用 `CompleteRun`。只有 worktree 路径、runId、owner、branch、HEAD、正式 SHA、主分支可达性和工作树清洁全部精确匹配时，才删除该 run 的 worktree 与临时 branch；任一证据异常都不清理。
 
-## QueueMaintenance 与恢复
+## 通知与 QueueMaintenance
 
-- QueueMaintenance 按 `开发管理/状态与建议维护规则.txt` 只提升或建立当前可安全形成的 ready 卡并排序；本轮不执行新业务任务。零候选且无事实变化时以 `no_candidate` 关闭，不制造提交、recovery 或阻塞计数。
-- run 状态只使用 `developing`、`candidate_ready`、`canonical_ready`、`integrated`、`attention_required`。恢复细则见 `开发管理/自动工作流恢复规则.txt`。
-- 明确 blocker 必须由责任方通过合法任务生命周期提交写回任务卡和队列投影。进程、session、worktree、branch、提交或 runtime 证据不一致时保留现场并进入 `attention_required`，不得用兼容分支、重试层、stash、reset、checkout、clean 或自动删除掩盖。
+- 普通 TaskOutcome 使用飞书 REST API 直接出站，不依赖长连接桥健康；投递失败只返回脱敏状态，不回滚业务、不恢复 run、不创建重试队列。长连接桥仅负责入站回复。
+- QueueMaintenance 只属于 Codex，按 `开发管理/状态与建议维护规则.txt` 维护队列，不执行本轮新业务。产生事实变化时返回 `maintenance_completed`，不伪装成业务 `completed`、不发送普通 TaskOutcome；无变化时返回 `no_candidate`。
 
-## Canary、暂停与回滚
+## Canary、暂停与停止
 
-- 新生产入口启用前必须运行 `tools/invoke-deepseek-hourly.ps1 -Action Canary`，使用专用私有状态和 canary worktree，证明 Windows PowerShell 7、Git、项目检查、真实 DeepSeek gateway／模型、owner worktree 与主工作区隔离。canary 不读取生产队列、不 claim 生产任务、不修改 `master`。
-- 系统性错误时通过实时 automation 管理能力同时暂停 `codex-hourly-worker` 与 `deepseek-hourly-trigger`，保留 runtime、worktree、candidate 和 canonical 证据。
-- 只有 `integrationLease=null`、没有 `integrated` 未关闭 run、主工作区已核验且旧 runtime 无活动事实时才允许回滚或重新启用；不得长期保留新旧双 runtime、旧通用 external wrapper 生产路径或第二套调度机制。
+- 新入口启用前分别运行 `tools/invoke-hourly-owner.ps1 -Owner codex -Action Canary` 和 `-Owner deepseek -Action Canary`，使用专用私有 runtime 与 canary worktree，核验真实模型／gateway、结构化终态、主工作区隔离和成功清理。
+- 代码、runtime 迁移、canary 和实时配置全部核验通过前，两个写入 automation 必须保持暂停。系统性错误时同时暂停，保留 runtime、worktree、candidate 和正式证据。
+- 不新增第二 runtime、后台守护、通用重试队列、自动冲突解决、事故专用迁移或长期兼容入口。命中设计停止条件时立即停止，不用兼容分支或额外恢复层绕过。

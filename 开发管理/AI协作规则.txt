@@ -48,13 +48,12 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ### 两个独立小时责任链
 
-- `codex-hourly-worker` 只前台调用 `tools/invoke-codex-hourly.ps1`。固定入口只处理 `codex_execute/codex`、`codex_review/codex`、QueueMaintenance 与 Codex 自身 run；不得启动 DeepSeek 或消费 `external_execute/deepseek`。
-- `deepseek-hourly-trigger` 不是业务责任方，只前台调用 `tools/invoke-deepseek-hourly.ps1 -Action RunOnce` 并原样报告结构化终态；不得读队列、任务卡或模型正文。
-- 固定 DeepSeek Windows 入口才负责 `Show`、选择第一项合法 `external_execute/deepseek/ready`、原子 claim、创建 `.worktrees/automation/<runId>/deepseek`、启动并核验 DeepSeek candidate、在最新 `master` 上机械生成正式提交序列、取得短时 `integrationLease` 与 fast-forward。
+- `codex-hourly-worker` 与 `deepseek-hourly-trigger` 分别前台调用 `tools/invoke-hourly-owner.ps1 -Owner codex|deepseek` 并原样报告结构化终态；两者保留独立定时器，但不复制编排实现。
+- 共享入口统一负责 `Show`、确定性选题、原子 claim、`.worktrees/automation/<runId>/<owner>`、candidate 核验、最新 `master` 重放、组合验证、排他集成、关闭、通知与成功清理。adapter 只保留 route、模型启动、身份和 candidate 合同差异。
 - DeepSeek 只接收已经领取的 taskId、runId、baseCommit、candidate branch 和 worktree。它只在 owner worktree 实施、直接验证并创建一个 candidate，不修改共享任务投影或 handoff，不集成、不自审、不管理 runtime 或 automation。
-- 固定入口核验 candidate SHA、父链、changed paths、结构化 `candidateResult` 与 worktree 清洁状态后，在 canonical branch 机械把原任务转换为 `codex_review/codex/ready`，创建连续的 `businessCommit` 与只含 `开发管理/AI合作沟通.txt` 的 `handoffCommit`。二者一次 fast-forward 进入 `master`，审核前不解锁依赖。
-- Codex 与 DeepSeek 可以并行开发不同 taskId；主工作区写入由最长 300 秒的 `integrationLease` 串行化。任务事实、最新 `master`、相关人工改动或证据变化阻止集成，不自动解冲突或叠加重试。
-- run 的 `developing`、`candidate_ready`、`canonical_ready`、`integrated` 与 `attention_required` 恢复都由对应固定入口按证据推进。新的小时轮次不是模型对话 resume；无法接管的未提交修改或决定等待保留现场并进入 `attention_required`。
+- 共享入口核验 DeepSeek candidate 后，在最新 `master` 上形成一个原子正式提交，同时包含业务变化、`codex_review/codex/ready` 的 pending review 投影和 `AI合作沟通.txt` 交接证据；审核前不解锁依赖。
+- Codex 与 DeepSeek 可以并行开发不同 taskId；自动与手动正式集成统一由进程持有型排他锁串行化。任务事实、最新 `master`、相关人工改动或证据变化阻止集成，不自动解冲突或叠加重试。
+- run 的 `developing`、`candidate_ready`、`canonical_ready`、`integrated` 与 `attention_required` 只保留诊断阶段；本 owner run 非空时新的小时轮次只报告，不自动恢复、重放、关闭或领取新任务。只有精确绑定且已有有效回复的 decision checkpoint 可由新 run、新 worktree 和新模型会话受控继续。
 
 ## 验证成本控制（适用于所有工作）
 
@@ -67,7 +66,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 ## 交接
 
 1. 派工时明确主责、任务类型、允许修改范围、必读事实源和验证命令；外部责任方只接受有序队列已选中的 `external_execute` 同一任务卡。
-2. DeepSeek 的修改只能标「⚠️ 已修改/未审核」，不得预填审核方结论；外部执行任务按本文件的 `businessCommit` + `handoffCommit` 边界自行创建本地提交。
+2. DeepSeek 的修改只能标「⚠️ 已修改/未审核」，不得预填审核方结论；自动外部执行由共享入口把业务变化、pending review 投影和 handoff 证据收敛为一个原子正式提交。
 3. 需要审核或判断时，DeepSeek 在 `AI合作沟通.txt` 写入短 ID、方向、任务/提交范围、修改文件、已验证、未验证、残留风险、请求判断和建议下一步。
 4. Codex 消费交接时先读审核入口和匹配条目，再以 diff、事实源和可重复命令独立验证。
 5. 长期阻塞项进入未通过清单或 backlog；已处理且无后续价值的交接条目移入归档。
@@ -78,11 +77,11 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ### 通用步骤
 
-1. 先确认身份：Codex / ChatGPT5.5 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；每小时控制器经 `tools/codex-cli-session.ps1` 启动的 Codex 责任方使用控制器以 `-Model` 和首条 stdin 输入传递的核验结果，不因 `codex exec` 不继承 request metadata 而重复阻塞；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
+1. 先确认身份：Codex / ChatGPT5.5 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；每小时共享入口经 `tools/codex-cli-session.ps1` 启动的 Codex 责任方使用 adapter 以 `-Model` 和首条 stdin 输入传递的核验结果，不因 `codex exec` 不继承 request metadata 而重复阻塞；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
 2. 纯 `1` / `2` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`；选中行后读取同一 ID 的 `开发管理/任务卡/<ID>.txt`。纯 `2` 再按审核入口加载该项需要的未通过条目、交接证据和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
 4. 纯 `1` 从队首向后选择当前 AI 可执行的第一项 `codex_execute` 或 `external_execute`；不消费 `codex_review`。
-5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 4 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、`integrationLease=null`、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才以 fast-forward 或 cherry-pick 集成。固定小时入口则只在 `.worktrees/automation/<runId>/<owner>` 实施，并由脚本在短时 `integrationLease` 下集成。
+5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 5 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、集成锁空闲、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才通过 `tools/invoke-project-integration.ps1` 持有同一锁执行 fast-forward。固定小时入口只在 `.worktrees/automation/<runId>/<owner>` 实施，并由共享脚本持有同一锁重放、验证和集成。
 6. 纯 `2` 从队首向后选择第一项 `codex_review`；DeepSeek / Claude 不得自审。
 7. 路径冲突或执行器暂不可用时可在本轮继续检查下一行，但不修改顺序；明确逻辑阻塞必须先转状态并移出队列。
 8. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。

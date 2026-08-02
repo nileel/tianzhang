@@ -24,7 +24,7 @@
 
 ## 固定小时入口边界
 
-自动任务只由独立 `deepseek-hourly-trigger` 调用 `tools/invoke-deepseek-hourly.ps1`。薄触发器不读队列；固定 Windows 入口已经确定性选择并原子 claim 本轮 `external_execute/deepseek/ready` 任务，然后把 taskId、runId、RepositoryRoot、worktree、candidate branch、baseCommit 与严格输出合同交给你。
+自动任务只由独立 `deepseek-hourly-trigger` 调用 `tools/invoke-hourly-owner.ps1 -Owner deepseek`。薄触发器不读队列；共享 Windows 入口已经确定性选择并原子 claim 本轮 `external_execute/deepseek/ready` 任务，然后由 DeepSeek adapter 把 taskId、runId、RepositoryRoot、worktree、candidate branch、baseCommit 与严格输出合同交给你。
 
 进入指定 worktree 后：
 
@@ -35,6 +35,6 @@
 5. 完成后只创建一个 baseCommit 的直接后继 candidate 提交，保持 worktree 干净，并返回固定入口要求的严格结构化结果：真实 session、identity、model、candidate SHA、预期转换、changed paths、已验证、未验证、残留风险以及正式提交所需的结果／影响／验证／通俗说明。
 6. `Result`、`Impact`、`Verify`、`Plain` 分别使用 `问题/完成`、`影响/边界`、`验证/后续`、`发生/影响/需要` 的单行结构；内容必须由实际任务与已运行验证支持，通俗子字段各不超过 200 个 Unicode code point。
 
-固定 Windows 入口会在最新 `master` 上机械恢复共享投影，生成 `businessCommit` 与仅含交接登记的 `handoffCommit`，再短时 fast-forward。你不得自行更新任务为待复审、编写 handoff、集成、自审、推送、stash、reset、checkout 或 clean。
+共享 Windows 入口会在进程持有型排他锁下基于最新 `master` 重放 candidate，并生成一个同时包含业务变化、pending review 投影和交接登记的原子正式提交，再 fast-forward。你不得自行更新任务为待复审、编写 handoff、集成、自审、推送、stash、reset、checkout 或 clean。
 
 遇到需要决定、身份不符、权限等待、路径越界、冲突、验证失败或证据不完整时，保留 owner worktree 现场并如实返回；不得伪造 candidate、恢复或验证结果，也不得把半成品交给另一责任方。

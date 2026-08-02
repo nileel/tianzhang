@@ -1,42 +1,25 @@
-# 自动工作流恢复规则
+# 自动工作流人工处置规则
 
-本文件只处理 schema 4 中已经存在的 owner run。固定入口每轮先 `Show`；某 owner run 非空时只按其状态恢复，不选择新任务，也不接管另一个 owner。
+本文件处理 schema 5 中已存在的 owner run。固定入口每轮先 `Show`；本 owner run 非空时只报告 owner、taskId、runId、state 和脱敏原因，不自动恢复、重跑、重放、关闭、清理或领取新任务。
 
-## 共同边界
+## 共同核验
 
-- 先核对 owner、runId、taskId、repository、baseCommit、worktree、candidate／canonical branch 和 runtime 记录；任一关键证据不一致都转 `attention_required` 并保留现场。
-- Codex 入口只恢复 `runs.codex`，DeepSeek 固定 Windows 入口只恢复 `runs.deepseek`。新的 automation 轮次是机械恢复触发，不是模型对话 resume。
-- 不把半成品交给另一 owner，不创建兼容 branch、第二 recovery 对象、后台重试或自动冲突解决器；不 stash、reset、checkout、clean、revert 或泛化删除 worktree。
-- `attention_required` 是未收尾 run 的私有恢复事实，不代替任务卡 blocker。核验后若问题已构成任务级阻塞，Codex 普通管理上下文按任务维护规则写回任务卡和队列，再显式处理该 run。
+- 普通管理上下文先核对 owner、runId、taskId、repository、baseCommit、taskCardDigest、worktree、candidate／canonical branch、提交、进程和 runtime 记录；任一关键证据不一致都保留现场。
+- `developing` 表示实施尚未形成合法 candidate；`candidate_ready` 表示 candidate 已核验但尚未形成正式结果；`canonical_ready` 表示正式提交已预构建但未集成；`integrated` 表示 `master` 已 fast-forward 但 run 尚未安全关闭；`attention_required` 表示需要人工判断。阶段只供诊断，不授权自动推进。
+- 不把半成品交给另一 owner，不恢复旧模型会话，不创建兼容 branch、第二 recovery 对象、后台重试或自动冲突解决器；不 stash、reset、checkout、clean、revert 或泛化删除 worktree。
+- 只有证据满足 `CompleteRun` 的精确关闭合同才可人工关闭；否则保留 run 和 worktree，并在必要时继续暂停两个 automation。
 
-## developing
+## 各阶段人工处理
 
-- 固定入口仍在同一次前台调用中且责任方进程运行时，只继续等待同一进程；外层 yield、空输出或尚未退出不是失败，不得启动第二责任方。
-- 责任方已结束且 owner worktree 仍精确位于 `.worktrees/automation/<runId>/<owner>`、当前 candidate branch 等于 runtime、HEAD 等于 baseCommit 且工作树干净时，可以重新进入一次 candidate 执行；同一入口不得在一次调用中隐式多次重跑。
-- 存在未提交修改、额外提交、session 身份不明、路径越界、权限／用户决定等待或进程终态不可核验时，保留 worktree 并转 `attention_required`。DeepSeek 不恢复旧 Claude 对话，不把未提交内容交给新会话。
-- QueueMaintenance 的干净 worktree 若没有产生 candidate，以 `no_candidate` 原子关闭；不制造空提交或恢复记录。
+- `developing`：核对责任方是否仍运行、worktree 是否干净或包含未提交业务现场。不得用新自动轮次重跑。干净且无业务结果的精确现场可按关闭合同处理；有修改或证据不明时保留。
+- `candidate_ready`：核对 candidate SHA、唯一父链、branch、changed paths、candidateResult 和工作树。不得自动重放；由普通管理上下文决定人工完成、关闭或保留。
+- `canonical_ready`：核对 canonical base/head、正式路径、任务投影和验证证据。需要集成时必须通过 `tools/invoke-project-integration.ps1` 取得与自动入口相同的进程持有型锁；任何路径冲突或 HEAD 变化都停止。
+- `integrated`：先证明 `master` 已包含记录的 formal SHA、任务后置状态正确且没有重复通知／清理风险，再精确调用 `CompleteRun`；不得重复 fast-forward 或业务执行。
+- `attention_required`：只报告并等待普通管理上下文核验。runtime 原因不能代替任务卡 blocker；若已构成任务级阻塞，按任务维护规则提交任务卡和队列投影。
 
-## candidate_ready
+## 唯一自动继续例外：decision checkpoint
 
-- 不重新运行 Codex 或 DeepSeek 业务。固定入口只核验原 candidate SHA、父链、branch、changed paths、结构化 `candidateResult` 与 worktree 清洁状态。
-- 证据完整时在最新 `master` 上重新预构建 canonical；任务事实或相关路径变化、文本冲突、验证失败或 candidate 证据缺失时转 `attention_required`。
-- 已存在但 runtime 未记录的 canonical branch 视为证据不完整，不猜测采用或覆盖。
-
-## canonical_ready
-
-- 不重新开发、不重新生成候选。先核对 canonical branch、`canonicalBase`、`canonicalHead`、正式提交序列与任务后置条件。
-- `master == canonicalBase` 且正式路径与主工作区人工改动不冲突时，申请短时 `integrationLease` 并执行一次 fast-forward。
-- `master` 已前进但 canonical worktree 干净且 candidate 证据仍完整时，回到 `candidate_ready`，下一轮基于新 HEAD 重建；真正冲突或证据不一致转 `attention_required`。
-- `integrationLease` 被另一 run 持有时只返回 `occupied`，保留 `canonical_ready`，不等待或启动新业务。
-
-## integrated
-
-- `master` 必须已经等于记录的 `canonicalHead`。固定入口只调用 `CompleteRun` 完成尚未记录的关闭并释放同一集成租约。
-- 不重复 fast-forward、业务验证、业务通知、DeepSeek handoff 或 candidate 执行。
-- 若 `master` 与记录不一致，转 `attention_required`，不得伪造成功。
-
-## attention_required
-
-- 自动轮次只报告 owner、taskId、runId 和脱敏 `recoveryReason` 后结束；不选择新任务、不修改业务事实、不自动清理。
-- 普通管理上下文必须先核验主工作区、owner worktree、branch、提交、进程和 runtime，再决定是补齐任务级 blocker、人工完成可证明的关闭，还是保留证据并暂停两个 automation。
-- 需要负责人决定时，先按正常任务生命周期把任务转换为 `pending_decision` 并提交；不得把等待决定只藏在 runtime，也不得恢复旧 Desktop／Cowork session。
+- decision checkpoint 不是普通失败恢复。它必须具有干净 checkpoint 提交和结构化决策合同，精确绑定 taskId、decisionId、baseCommit、branch、SHA、授权路径、验证证据与任务摘要。
+- 共享入口已把任务转换为 `pending_decision` 或 `waiting_reply` 并关闭原 run 后，长连接桥只负责接收和鉴权回复；没有有效回复时不推进。
+- 有效回复到达后，下一次对应 owner 调用可机械恢复原 route／owner／`ready` 投影，并从最新 `master` 创建新 run、新 worktree 与新模型会话，通过 `cherry-pick --no-commit` 吸收 checkpoint。旧模型会话不恢复。
+- checkpoint worktree 只有在新 run 成功吸收并完成正常安全集成、且精确清理合同满足后才删除。普通崩溃、残留、冲突、验证失败或拒绝 fast-forward 不能进入此路径。
