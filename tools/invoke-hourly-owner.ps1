@@ -330,7 +330,7 @@ function Remove-ExactSuccessfulWorktree {
     if ($LASTEXITCODE -ne 0) { return 'retained_unintegrated' }
     $currentBranch = Invoke-GitText $worktree @('branch', '--show-current')
     if ([string]$Run.canonicalBranch -cne $currentBranch) { return 'retained_branch_mismatch' }
-    $null = Invoke-GitText $script:root @('worktree', 'remove', $worktree) 'hourly_cleanup_failed'
+    $null = Invoke-GitText $script:root @('worktree', 'remove', '--force', $worktree) 'hourly_cleanup_failed'
     foreach ($branch in @([string]$Run.candidateBranch, [string]$Run.canonicalBranch) | Sort-Object -Unique) {
       & git -C $script:root show-ref --verify --quiet "refs/heads/$branch" 2>$null
       if ($LASTEXITCODE -eq 0) { $null = Invoke-GitText $script:root @('branch', '-D', $branch) 'hourly_cleanup_failed' }

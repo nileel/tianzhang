@@ -57,7 +57,7 @@ try {
     )) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $tool) -Destination (Join-Path $mainRoot "tools/$tool")
   }
-  Write-Utf8 -Path (Join-Path $mainRoot '.gitignore') -Text ".worktrees/`n"
+  Write-Utf8 -Path (Join-Path $mainRoot '.gitignore') -Text ".worktrees/`ngenerated/`n"
   Write-Utf8 -Path (Join-Path $mainRoot 'AGENTS.md') -Text '# hourly fixture rules'
   Write-Utf8 -Path (Join-Path $mainRoot 'CLAUDE.md') -Text '# hourly fixture Claude rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流规则.txt') -Text '# workflow rules'
@@ -106,6 +106,8 @@ $sessionId = $CliArguments[$sessionIndex + 1]
 if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $terminal = [ordered]@{ status = 'verified'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash' }
 } else {
+  [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'generated')) | Out-Null
+  [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'generated/cache.bin'), 'ignored generated artifact', [Text.UTF8Encoding]::new($false))
   [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'fixtures')) | Out-Null
   [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixtures/business.txt'), 'hourly candidate', [Text.UTF8Encoding]::new($false))
   & git add -- fixtures/business.txt
