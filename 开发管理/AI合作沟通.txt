@@ -7,4 +7,18 @@
 
 > 注：本文件交接记录仅反映当前状态；复核完成后移入归档
 
-当前无有效交接条目。
+当前有效交接条目：见下方 D-COMBAT-02。
+
+## D-COMBAT-02 · 交接：跨端攻击档案 fixture 与差异检查（待 Codex 复审）
+
+- 短 ID：`D-COMBAT-02`
+- 方向：DeepSeek V4 Flash 已完成恢复半成品的根因修正、实施与双端验证，标记「⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash」；请求 Codex / ChatGPT5.5 独立复审。
+- businessCommit：`f8df02db040eb1968086034a9fa74e72a0d8605e`
+- 任务/提交范围：`src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv`（+ `.meta`）、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/AttackProfileDataTests.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`开发管理/攻击档案跨端fixture验证记录.txt`、`开发管理/任务列表/数据链路任务.txt`、`开发管理/当前任务队列.txt`、`开发管理/任务卡/D-COMBAT-02.txt`；任务卡已转换为 `codex_review/codex/ready`，队列与 backlog 投影同步。
+- 修改文件：非生产 fixture（34 列契约原表头，basic×2／art×3／divine×1，单目标＋圆形／扇形／直线）；`DataConfigImporter.cs` 新增 `TryBuildAttackProfileProjection`／`TryValidateAttackProfileAssetIdProjection` 两个最窄投影入口；`AttackProfileDataTests.cs` 新增 4 项用例（逐字段投影、逐列变异失败、无部分 asset、asset ID 冲突）；`BattleSimSelfTests.cs` 新增 `attack-profile-d-combat-02` self-test（正例逐字段投影＋18 项负例）。
+- 恢复半成品根因（详见验证记录）：art 行尾随空字段 35/35/36 vs 34；扇形行尾列错位；Unity 测试 `lines[1]` 表头 vs 3 注释行；变异用例朝向索引 25→26 与扇角值 `"east"`→`"2"`；BattleSim 校验器效果/资源/距离检查只对 area 行生效；负例 `ally,enemy` 实际合法；负例表缺表头行与重复 ID 表达；`AssertEqual(null,…)` 泛型推断；`using System;` 与 `UnityEngine.Object` 限定。
+- 已验证：`dotnet build -c Release simulations/BattleSim`（0 警告 0 错误）；`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02`（PASS）；`tools/run-unity-editmode-tests.ps1`（286/288，攻击档案 5 项直接用例与既有回归全过）；`check-data-chain.ps1`（OK）；`check-review-text.ps1`（OK，652 文件）；`check-task-cards.ps1 -Postcondition ExternalPendingReview`（OK）；`check-pending-whitespace.ps1`（9 路径 OK）；`git diff --cached --check`（OK）。
+- 未验证：`dotnet build src/TianZhang.EditModeTests.csproj` 不适用（仓库无该 csproj，全仓仅 `simulations/BattleSim/BattleSim.csproj`；Unity EditMode 由 `run-unity-editmode-tests.ps1` 承载）；BattleSim 默认全量 run 未运行（任务卡只要求本套件；本卡改动为增量套件与纯新增方法，不影响既有套件）。
+- 残留风险：Unity EditMode 另有 2 项与本卡路径无交集的既有基线失败——`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（多份验证记录已登记：旧日志断言与现行加载器不一致）与 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（纯内存逻辑断言 `PULSE_ADVANTAGE` 得到 `PULSE_NEUTRAL`，2026-07-31 `D-TZ-CHARTER-CONFLICT-02` 迁移后无全量 EditMode 复测记录）；工作树另残留本会话 Unity 测试输出 `EditModeTestResults.xml`（未提交、超出 expectedPaths 的再生性产物，建议集成前删除）。
+- 请求判断：建议 Codex 复审 fixture 与契约的逐字段对齐、双端投影一致性、负例失败关闭、以及 fan 行以单值阵营 `ally` 承载的取舍（BattleSim 按原 CSV 行逐字 `Split(',')` 读取，双值阵营字段 `ally,enemy` 无法保持 34 列对齐；契约允许任意非空子集，正例矩阵未要求多值阵营）；并评估上述 `CharterConflictRulesTests` 失败是否需拆独立修复卡。
+- 建议下一步：Codex 复审通过后按审核入口关闭本卡；具体生产内容切换（生产 `AttackProfiles.csv`、生产 asset、运行时消费者）必须另开迁移切片，不得在本卡扩展。
