@@ -140,6 +140,7 @@ function New-CandidatePrompt {
     'If the task card stateReason names a REV-* finding or says the task was returned by review, read only the matching review entry routed by 开发管理/审核入口.txt before editing.'
     'Implement and verify only this task in RepositoryRoot. Candidate changes are limited to CandidatePaths.'
     'Do not modify the task card, current queue, source backlog, task archive, AI合作沟通, main workspace, runtime, another worktree, or any branch other than the current candidate branch.'
+    'Do not create temporary, diagnostic, conversion, or helper files anywhere under RepositoryRoot. Inspect existing outputs directly; if that is impossible, return blocked with a stable detailCode before committing.'
     'Do not stash, reset, checkout, switch, clean, push, self-review, dispatch another agent, or start/manage Codex automation.'
     'Before committing, run the task-card checks and required path/whitespace/Git checks. Do not claim a verification that was not run.'
     "Create exactly one candidate commit with: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $quotedRoot -ExpectedPaths $quotedPaths -CommitMessage 'candidate($TaskId): DeepSeek implementation'"
