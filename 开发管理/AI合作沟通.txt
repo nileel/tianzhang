@@ -36,6 +36,19 @@
 - 请求判断：请 Codex 按审核入口复审实际集成结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一任务卡定向返工。
 
+### DSH-U-BOUNTY-01A-b433dc464f71 · DeepSeek 定向返工交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01A 已按 `REV-U-BOUNTY-01A-01` 定向返工，等待 Codex 独立复审。
+- 任务：U-BOUNTY-01A
+- 业务提交：b433dc464f71e0b56740a9452336af3448899529
+- 修改文件：src/Assets/Scripts/Game/BountyRuntime.cs、src/Assets/Tests/EditMode/BountyRuntimeTests.cs、开发管理/关中悬赏状态机与计数验证记录.txt，以及同卡待复审投影。
+- 已验证：DeepSeek 执行 Unity 6000.3.18f1 EditMode 306 项，304 通过、2 项为已登记的无关基线失败；`BountyRuntimeTests` 15/15，通过新增缺失城市与缺失目标敌人两项负例；`check-review-text.ps1`、`check-pending-whitespace.ps1` 与 `git diff --cached --check` 通过。
+- 未验证：Codex 独立复审尚未执行；任务卡所列 `src/TianZhang.EditModeTests.csproj` 不存在，沿用 Unity EditMode 编译与测试闸门。
+- 残留风险：悬赏实例仍仅限会话内，存档属于 U-BOUNTY-01B；两项既有全量测试失败不涉及本次修改路径。
+- 恢复说明：DeepSeek run `be05cab8-b811-4288-a1f0-a568f670919f` 先提交代码与测试、后写验证记录，因不满足单一候选提交契约而未集成；本提交只把该 run 的候选差异与其已写验证记录合并为干净的同卡业务提交，没有重跑模型或扩展范围。
+- 请求判断：请 Codex 按审核入口复审实际集成结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则停止自动返工并重新判断根因。
+
 ### DSH-U-BOUNTY-01A-cd3dd5dc22a8 · DeepSeek 自动交接（⚠️ 未审核）
 
 - 方向：任务 U-BOUNTY-01A 的实现结果等待 Codex 独立复审。
