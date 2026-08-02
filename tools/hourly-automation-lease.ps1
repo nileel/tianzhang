@@ -250,22 +250,6 @@ function Assert-CandidateResult {
   }
 }
 
-function Assert-FinalizerReadyCandidateResult {
-  param([object]$CandidateResult)
-
-  $contracts = @(
-    @{ Field = 'result'; Pattern = '^问题=.+；完成=.+' },
-    @{ Field = 'impact'; Pattern = '^影响=.+；边界=.+' },
-    @{ Field = 'verify'; Pattern = '^验证=.+；后续=.+' },
-    @{ Field = 'plain'; Pattern = '^发生=.+；影响=.+；需要=.+' }
-  )
-  foreach ($contract in $contracts) {
-    if ([string]$CandidateResult.($contract.Field) -cnotmatch [string]$contract.Pattern) {
-      throw [ArgumentException]::new("candidateResult.$($contract.Field) is not finalizer-ready")
-    }
-  }
-}
-
 function Assert-Run {
   param([object]$Run, [string]$ExpectedOwner)
 
@@ -464,7 +448,6 @@ function Read-CandidateResult {
     throw [ArgumentException]::new('CandidateResultPath must contain valid UTF-8 JSON')
   }
   Assert-CandidateResult -CandidateResult $candidateResult
-  Assert-FinalizerReadyCandidateResult -CandidateResult $candidateResult
   $candidateResult
 }
 
@@ -593,22 +576,6 @@ try {
           break
         }
         $currentState = [string]$run.state
-        $candidateEvidenceVacant = $null -eq $run.candidateCommit -and $null -eq $run.candidateResult
-        $candidateEvidenceMatches =
-          $null -ne $run.candidateCommit -and
-          [string]$run.candidateCommit -ceq $CandidateCommit -and
-          $null -ne $run.candidateResult
-        $attentionCandidateRecovery =
-          $Owner -ceq 'deepseek' -and
-          $currentState -ceq 'attention_required' -and
-          $RunState -ceq 'candidate_ready' -and
-          -not [string]::IsNullOrWhiteSpace($ExpectedRecoveryReason) -and
-          $ExpectedRecoveryReason -ceq [string]$run.recoveryReason -and
-          ($candidateEvidenceVacant -or $candidateEvidenceMatches) -and
-          $null -eq $run.canonicalBranch -and
-          $null -eq $run.canonicalBase -and
-          $null -eq $run.canonicalHead -and
-          $null -eq $state.integrationLease
         $allowed = switch ($currentState) {
           'developing' { @('developing', 'candidate_ready', 'attention_required') }
           'candidate_ready' { @('canonical_ready', 'attention_required') }
@@ -616,7 +583,7 @@ try {
           'integrated' { @() }
           'attention_required' { @() }
         }
-        if ($RunState -cnotin $allowed -and -not $attentionCandidateRecovery) {
+        if ($RunState -cnotin $allowed) {
           throw [ArgumentException]::new("Invalid run state transition: $currentState -> $RunState")
         }
         if (-not [string]::IsNullOrWhiteSpace($SessionKind)) {
@@ -633,13 +600,10 @@ try {
           }
           $run.sessionId = $SessionId
         }
-        if ($RunState -ceq 'candidate_ready' -and ($currentState -ceq 'developing' -or $attentionCandidateRecovery)) {
+        if ($RunState -ceq 'candidate_ready' -and $currentState -ceq 'developing') {
           Assert-GitSha -Value $CandidateCommit -ParameterName 'CandidateCommit'
           $run.candidateCommit = $CandidateCommit
           $run.candidateResult = Read-CandidateResult -Path $CandidateResultPath -NormalizedStateRoot $normalizedStateRoot
-          if ($attentionCandidateRecovery) {
-            $run.recoveryReason = $null
-          }
         }
         if ($RunState -ceq 'candidate_ready' -and $currentState -ceq 'canonical_ready') {
           $run.canonicalBranch = $null
