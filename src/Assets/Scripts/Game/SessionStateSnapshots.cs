@@ -266,6 +266,18 @@ namespace TianZhang.Game
         public FoundationPurpleMansionSaveData foundationPurpleMansionState;
     }
 
+    /// <summary>
+    /// 悬赏实例存档投影；只保存 bountyId、状态与进度。
+    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：schema 3 悬赏存档投影
+    /// </summary>
+    [Serializable]
+    public sealed class BountyStateSaveData
+    {
+        public string bountyId;
+        public BountyStatus status;
+        public int progress;
+    }
+
     [Serializable]
     public sealed class SceneReturnTargetSaveData
     {
@@ -290,6 +302,7 @@ namespace TianZhang.Game
         public List<QuestStateSaveData> quests = new List<QuestStateSaveData>();
         public List<InventoryStateSaveData> inventory = new List<InventoryStateSaveData>();
         public List<NpcStateSaveData> npcs = new List<NpcStateSaveData>();
+        public List<BountyStateSaveData> bounties = new List<BountyStateSaveData>();
         public FoundationPurpleMansionSaveData playerFoundationPurpleMansionState;
     }
 
@@ -306,6 +319,7 @@ namespace TianZhang.Game
         public IReadOnlyList<QuestStateSnapshot> Quests { get; }
         public IReadOnlyList<InventoryStateSnapshot> Inventory { get; }
         public IReadOnlyList<NpcStateSnapshot> Npcs { get; }
+        public IReadOnlyList<BountyStateSnapshot> Bounties { get; }
         public FoundationPurpleMansionSaveData PlayerFoundationPurpleMansionSaveData { get; }
 
         public GameSessionRestoredState(
@@ -320,6 +334,7 @@ namespace TianZhang.Game
             IReadOnlyList<QuestStateSnapshot> quests,
             IReadOnlyList<InventoryStateSnapshot> inventory,
             IReadOnlyList<NpcStateSnapshot> npcs,
+            IReadOnlyList<BountyStateSnapshot> bounties,
             FoundationPurpleMansionSaveData playerFoundationPurpleMansionSaveData)
         {
             CurrentWorldNodeId = currentWorldNodeId;
@@ -333,6 +348,7 @@ namespace TianZhang.Game
             Quests = quests;
             Inventory = inventory;
             Npcs = npcs;
+            Bounties = bounties;
             PlayerFoundationPurpleMansionSaveData = playerFoundationPurpleMansionSaveData;
         }
     }
@@ -376,6 +392,10 @@ namespace TianZhang.Game
                 data.npcs.Add(CaptureNpc(snapshot));
             data.npcs.Sort((left, right) => string.CompareOrdinal(left.npcId, right.npcId));
 
+            foreach (BountyStateSnapshot snapshot in session.BountyStates.Snapshots)
+                data.bounties.Add(CaptureBounty(snapshot));
+            data.bounties.Sort((left, right) => string.CompareOrdinal(left.bountyId, right.bountyId));
+
             Restore(data);
             return data;
         }
@@ -418,6 +438,7 @@ namespace TianZhang.Game
             var quests = new List<QuestStateSnapshot>();
             var inventory = new List<InventoryStateSnapshot>();
             var npcs = new List<NpcStateSnapshot>();
+            var bounties = new List<BountyStateSnapshot>();
             FoundationPurpleMansionSaveData playerFoundationPurpleMansionState = null;
             if (data.schemaVersion == StateCollectionsSchemaVersion ||
                 data.schemaVersion == FoundationPurpleMansionSchemaVersion ||
@@ -429,6 +450,10 @@ namespace TianZhang.Game
                     data.npcs,
                     npcs,
                     data.schemaVersion == CurrentSchemaVersion);
+            }
+            if (data.schemaVersion == CurrentSchemaVersion)
+            {
+                RestoreBounties(data.bounties, bounties);
             }
             if (data.schemaVersion == FoundationPurpleMansionSchemaVersion ||
                 data.schemaVersion == CurrentSchemaVersion)
@@ -449,6 +474,7 @@ namespace TianZhang.Game
                 quests,
                 inventory,
                 npcs,
+                bounties,
                 playerFoundationPurpleMansionState);
         }
 
@@ -554,6 +580,16 @@ namespace TianZhang.Game
             };
         }
 
+        private static BountyStateSaveData CaptureBounty(BountyStateSnapshot snapshot)
+        {
+            return new BountyStateSaveData
+            {
+                bountyId = snapshot.BountyId,
+                status = snapshot.Status,
+                progress = snapshot.Progress,
+            };
+        }
+
         private static StateStepSaveData CaptureSteps(StateStepSnapshot steps)
         {
             return new StateStepSaveData
@@ -644,6 +680,28 @@ namespace TianZhang.Game
                         : null);
                 if (!ids.Add(snapshot.NpcId))
                     throw new ArgumentException("Duplicate NPC ID.", nameof(source));
+                destination.Add(snapshot);
+            }
+        }
+
+        private static void RestoreBounties(
+            IReadOnlyList<BountyStateSaveData> source,
+            ICollection<BountyStateSnapshot> destination)
+        {
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (BountyStateSaveData item in source ?? Array.Empty<BountyStateSaveData>())
+            {
+                if (item == null)
+                    throw new ArgumentException("Bounty state must not be null.", nameof(source));
+                var snapshot = new BountyStateSnapshot(item.bountyId, item.status, item.progress);
+                if (snapshot.Status == BountyStatus.Available)
+                {
+                    throw new ArgumentException(
+                        "An Available bounty has no instance and must not be restored.",
+                        nameof(source));
+                }
+                if (!ids.Add(snapshot.BountyId))
+                    throw new ArgumentException("Duplicate bounty ID.", nameof(source));
                 destination.Add(snapshot);
             }
         }

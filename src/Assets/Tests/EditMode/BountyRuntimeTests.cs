@@ -350,6 +350,56 @@ namespace TianZhang.Tests
             Assert.Throws<ArgumentException>(() => session.GetBountyState(" "));
         }
 
+        [Test]
+        public void RestoredClaimedTerminalStateStaysStableAndRejectsReclaimAndReRecord()
+        {
+            GameSession session = CreateSession();
+            ContentCatalogData catalog = CreateCatalog();
+            AssertSucceeded(session.AcceptBounty(catalog, BountyId));
+            AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
+            AssertSucceeded(session.ClaimBounty(catalog, BountyId));
+            string savedJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+            session.ClearSession();
+            session.SetSettlementId(SettlementId);
+            session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(savedJson), catalog);
+
+            AssertState(session, BountyStatus.Claimed, 1);
+            AssertRejected(session.ClaimBounty(catalog, BountyId), BountyRuntimeRules.RepeatedClaimReason);
+            AssertRejected(
+                session.RecordBountyDefeat(catalog, AdventureId, EnemyId),
+                BountyRuntimeRules.NotAcceptedReason);
+            AssertRejected(session.AcceptBounty(catalog, BountyId), BountyRuntimeRules.RepeatedAcceptReason);
+            AssertState(session, BountyStatus.Claimed, 1);
+            Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+        }
+
+        [Test]
+        public void RestoredObjectiveCompletedCanBeClaimedExactlyOnceWithoutResettlement()
+        {
+            GameSession session = CreateSession();
+            ContentCatalogData catalog = CreateCatalog();
+            AssertSucceeded(session.AcceptBounty(catalog, BountyId));
+            AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
+            AssertState(session, BountyStatus.ObjectiveCompleted, 1);
+            string savedJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+            session.ClearSession();
+            session.SetSettlementId(SettlementId);
+            session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(savedJson), catalog);
+
+            AssertState(session, BountyStatus.ObjectiveCompleted, 1);
+            AssertSucceeded(session.ClaimBounty(catalog, BountyId));
+            AssertState(session, BountyStatus.Claimed, 1);
+            AssertRejected(session.ClaimBounty(catalog, BountyId), BountyRuntimeRules.RepeatedClaimReason);
+            AssertRejected(
+                session.RecordBountyDefeat(catalog, AdventureId, EnemyId),
+                BountyRuntimeRules.NotAcceptedReason);
+            Assert.IsTrue(session.InventoryStates.TryGet(
+                "item_lingshi_low", out InventoryStateSnapshot granted));
+            Assert.AreEqual(3, granted.Quantity);
+        }
+
         private GameSession CreateSession()
         {
             sessionGo = new GameObject("BountyRuntimeSession");

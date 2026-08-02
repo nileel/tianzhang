@@ -41,7 +41,7 @@ namespace TianZhang.Game
         public InventoryStateStore InventoryStates { get; } = new InventoryStateStore();
         public NpcStateStore NpcStates { get; } = new NpcStateStore();
         /// <summary>
-        /// 本次会话的悬赏实例状态；存档与恢复由 U-BOUNTY-01B 负责。
+        /// 本次会话的悬赏实例状态；存档与恢复由 GameSession 快照链路负责。
         /// </summary>
         public BountyStateStore BountyStates { get; } = new BountyStateStore();
         public FoundationPurpleMansionSaveData PlayerFoundationPurpleMansionSaveData { get; private set; }
@@ -246,13 +246,22 @@ namespace TianZhang.Game
             return bountyRuntime.GetState(BountyStates, bountyId);
         }
 
-        public void RestoreSaveData(GameSessionSaveData data)
+        /// <summary>
+        /// 恢复存档：先经快照链路完成 schema、ID、状态、进度与重复项校验，再校验悬赏内容
+        /// 引用与目标进度；全部通过后才一次性替换会话集合，任一失败保持整个会话不变。
+        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：schema 3 悬赏存档接入
+        /// </summary>
+        public void RestoreSaveData(GameSessionSaveData data, ContentCatalogData catalog)
         {
+            if (catalog == null)
+                throw new System.ArgumentNullException(nameof(catalog));
             GameSessionRestoredState restored = GameSessionSnapshot.Restore(data);
+            ValidateRestoredBounties(catalog, restored.Bounties);
 
             QuestStates.ReplaceAll(restored.Quests);
             InventoryStates.ReplaceAll(restored.Inventory);
             NpcStates.ReplaceAll(restored.Npcs);
+            BountyStates.ReplaceAll(restored.Bounties);
             CurrentWorldNodeId = restored.CurrentWorldNodeId;
             WorldYear = restored.WorldYear;
             WorldSeasonId = restored.WorldSeasonId;
@@ -262,6 +271,28 @@ namespace TianZhang.Game
             CurrentAdventureId = restored.CurrentAdventureId;
             LastReturnTarget = restored.LastReturnTarget;
             PlayerFoundationPurpleMansionSaveData = restored.PlayerFoundationPurpleMansionSaveData;
+        }
+
+        private static void ValidateRestoredBounties(
+            ContentCatalogData catalog,
+            IReadOnlyList<BountyStateSnapshot> bounties)
+        {
+            foreach (BountyStateSnapshot snapshot in bounties)
+            {
+                if (!catalog.TryGetBounty(snapshot.BountyId, out BountyData bounty) || bounty == null)
+                {
+                    throw new System.ArgumentException(
+                        "Bounty content reference is unresolvable: " + snapshot.BountyId,
+                        "data");
+                }
+                if (snapshot.Progress > bounty.requiredCount)
+                {
+                    throw new System.ArgumentOutOfRangeException(
+                        "data",
+                        snapshot.Progress,
+                        "Bounty progress must not exceed its target.");
+                }
+            }
         }
 
         private void ResetWorldTime()

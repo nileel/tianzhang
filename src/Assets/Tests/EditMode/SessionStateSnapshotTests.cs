@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using TianZhang.Content;
 using TianZhang.Core;
 using TianZhang.Cultivation.JindanProof;
 using TianZhang.Entity;
@@ -10,11 +12,15 @@ namespace TianZhang.Tests
 {
     public sealed class SessionStateSnapshotTests
     {
+        private readonly List<UnityEngine.Object> temporaryAssets = new List<UnityEngine.Object>();
+
         [TearDown]
         public void TearDown()
         {
             if (GameSession.Instance != null)
                 UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
+            foreach (UnityEngine.Object asset in temporaryAssets)
+                UnityEngine.Object.DestroyImmediate(asset);
         }
 
         [Test]
@@ -123,7 +129,7 @@ namespace TianZhang.Tests
                 var serialized = JsonUtility.FromJson<GameSessionSaveData>(json);
 
                 session.BeginNewGame(profile, "jiangzuo_hub");
-                session.RestoreSaveData(serialized);
+                session.RestoreSaveData(serialized, CreateCatalog());
 
                 Assert.AreSame(profile, session.PlayerProfile);
                 Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion, serialized.schemaVersion);
@@ -164,7 +170,7 @@ namespace TianZhang.Tests
                 "\"currentAdventureId\":\"legacy_trial\",\"lastReturnTarget\":{" +
                 "\"sceneName\":\"WorldScene\",\"worldNodeId\":\"legacy_hub\"}}";
 
-            session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(legacyJson));
+            session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(legacyJson), CreateCatalog());
 
             Assert.AreEqual("legacy_hub", session.CurrentWorldNodeId);
             Assert.AreEqual(386, session.WorldYear);
@@ -207,7 +213,7 @@ namespace TianZhang.Tests
                 Assert.IsNotNull(saved.playerFoundationPurpleMansionState);
 
                 session.BeginNewGame(profile, "guanzhong_hub");
-                session.RestoreSaveData(saved);
+                session.RestoreSaveData(saved, CreateCatalog());
                 Character restoredPlayer = Character.FromData(profile, new HexCoord(0, 0));
                 Assert.IsTrue(session.ApplyPlayerFoundationPurpleMansionState(restoredPlayer));
                 Assert.IsTrue(restoredPlayer.FoundationPurpleMansionState.IsJindanFormed);
@@ -221,12 +227,12 @@ namespace TianZhang.Tests
                 tampered.playerFoundationPurpleMansionState.foundationState.naturalMansionCapacity = 2;
                 tampered.playerFoundationPurpleMansionState.foundationState.releasedNaturalCapacity = 2;
                 tampered.playerFoundationPurpleMansionState.foundationState.totalMansionCapacity = 2;
-                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(tampered));
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(tampered, CreateCatalog()));
                 Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
 
                 saved.schemaVersion = GameSessionSnapshot.StateCollectionsSchemaVersion;
                 saved.playerFoundationPurpleMansionState = null;
-                session.RestoreSaveData(saved);
+                session.RestoreSaveData(saved, CreateCatalog());
                 Assert.IsNull(session.PlayerFoundationPurpleMansionSaveData);
                 Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion,
                     session.CaptureSaveData().schemaVersion);
@@ -273,7 +279,7 @@ namespace TianZhang.Tests
 
                 string currentJson = JsonUtility.ToJson(current);
                 session.ClearSession();
-                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(currentJson));
+                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(currentJson), CreateCatalog());
                 Assert.That(session.NpcStates.TryGet("npc_save_fixture", out NpcStateSnapshot restored), Is.True);
                 Assert.That(restored.FoundationPurpleMansionState.cultivationActionState.actionStateId,
                     Is.EqualTo("npc_action_nurture"));
@@ -291,7 +297,7 @@ namespace TianZhang.Tests
                 {
                     GameSessionSaveData legacy = JsonUtility.FromJson<GameSessionSaveData>(currentJson);
                     legacy.schemaVersion = legacyVersion;
-                    session.RestoreSaveData(legacy);
+                    session.RestoreSaveData(legacy, CreateCatalog());
                     if (legacyVersion == GameSessionSnapshot.LegacySchemaVersion)
                     {
                         Assert.That(session.NpcStates.Count, Is.EqualTo(0));
@@ -303,16 +309,16 @@ namespace TianZhang.Tests
                     }
                 }
 
-                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(currentJson));
+                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(currentJson), CreateCatalog());
                 GameSessionSaveData invalid = JsonUtility.FromJson<GameSessionSaveData>(currentJson);
                 invalid.npcs[0].foundationPurpleMansionState.foundationState.totalMansionCapacity = 0;
-                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(invalid));
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(invalid, CreateCatalog()));
                 Assert.That(JsonUtility.ToJson(session.CaptureSaveData()), Is.EqualTo(currentJson));
 
                 invalid = JsonUtility.FromJson<GameSessionSaveData>(currentJson);
                 invalid.npcs[0].foundationPurpleMansionState =
                     new FoundationPurpleMansionSaveData();
-                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(invalid));
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(invalid, CreateCatalog()));
                 Assert.That(JsonUtility.ToJson(session.CaptureSaveData()), Is.EqualTo(currentJson));
             }
             finally
@@ -355,6 +361,114 @@ namespace TianZhang.Tests
                 data.schemaVersion = -1);
             AssertRejectedWithoutMutation<NotSupportedException>(session, baselineJson, data =>
                 data.schemaVersion = GameSessionSnapshot.CurrentSchemaVersion + 1);
+        }
+
+        [Test]
+        public void BountyInstancesRoundTripInCurrentSchemaAndLegacyVersionsRestoreEmpty()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalog(
+                "bounty_round_trip",
+                "bounty_round_trip_claimed",
+                "bounty_round_trip_second");
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                session.SetSettlementId("guanzhong_city");
+                session.SetAdventureId("guanzhong_wild");
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip", BountyStatus.Accepted, 0));
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip_second", BountyStatus.ObjectiveCompleted, 1));
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip_claimed", BountyStatus.Claimed, 1));
+
+                GameSessionSaveData saved = session.CaptureSaveData();
+                Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion, saved.schemaVersion);
+                Assert.AreEqual(3, saved.bounties.Count);
+                Assert.AreEqual("bounty_round_trip", saved.bounties[0].bountyId);
+                Assert.AreEqual(BountyStatus.Accepted, saved.bounties[0].status);
+                Assert.AreEqual("bounty_round_trip_claimed", saved.bounties[1].bountyId);
+                Assert.AreEqual(BountyStatus.Claimed, saved.bounties[1].status);
+                Assert.AreEqual("bounty_round_trip_second", saved.bounties[2].bountyId);
+                string savedJson = JsonUtility.ToJson(saved);
+
+                session.ClearSession();
+                session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(savedJson),
+                    catalog);
+
+                Assert.IsTrue(session.BountyStates.TryGet(
+                    "bounty_round_trip", out BountyStateSnapshot accepted));
+                Assert.AreEqual(BountyStatus.Accepted, accepted.Status);
+                Assert.AreEqual(0, accepted.Progress);
+                Assert.IsTrue(session.BountyStates.TryGet(
+                    "bounty_round_trip_second", out BountyStateSnapshot completed));
+                Assert.AreEqual(BountyStatus.ObjectiveCompleted, completed.Status);
+                Assert.AreEqual(1, completed.Progress);
+                Assert.IsTrue(session.BountyStates.TryGet(
+                    "bounty_round_trip_claimed", out BountyStateSnapshot claimed));
+                Assert.AreEqual(BountyStatus.Claimed, claimed.Status);
+                Assert.AreEqual(1, claimed.Progress);
+                Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                foreach (int legacyVersion in new[]
+                {
+                    GameSessionSnapshot.LegacySchemaVersion,
+                    GameSessionSnapshot.StateCollectionsSchemaVersion,
+                    GameSessionSnapshot.FoundationPurpleMansionSchemaVersion,
+                })
+                {
+                    GameSessionSaveData legacy =
+                        JsonUtility.FromJson<GameSessionSaveData>(savedJson);
+                    legacy.schemaVersion = legacyVersion;
+                    session.RestoreSaveData(legacy, catalog);
+                    Assert.AreEqual(0, session.BountyStates.Count);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void RestoreRejectsUnresolvableDuplicateOrIllegalBountyStateAtomically()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalog("bounty_round_trip");
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip", BountyStatus.Accepted, 1));
+                string baselineJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[0].bountyId = "bounty_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[0].bountyId = "", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties.Add(Clone(data.bounties[0])), catalog);
+                AssertRejectedWithoutMutation<ArgumentOutOfRangeException>(session, baselineJson, data =>
+                    data.bounties[0].status = (BountyStatus)99, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[0].status = BountyStatus.Available, catalog);
+                AssertRejectedWithoutMutation<ArgumentOutOfRangeException>(session, baselineJson, data =>
+                    data.bounties[0].progress = -1, catalog);
+                AssertRejectedWithoutMutation<ArgumentOutOfRangeException>(session, baselineJson, data =>
+                    data.bounties[0].progress = 2, catalog);
+                Assert.Throws<ArgumentNullException>(() => session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(baselineJson),
+                    null));
+                Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
         }
 
         private static FoundationPurpleMansionStateData CreateCompleteFoundationPurpleMansionState()
@@ -471,17 +585,20 @@ namespace TianZhang.Tests
             Assert.IsTrue(steps.Persisted);
         }
 
-        private static void AssertRejectedWithoutMutation<TException>(
+        private void AssertRejectedWithoutMutation<TException>(
             GameSession session,
             string baselineJson,
-            Action<GameSessionSaveData> mutate)
+            Action<GameSessionSaveData> mutate,
+            ContentCatalogData catalog = null)
             where TException : Exception
         {
             GameSessionSaveData invalid =
                 JsonUtility.FromJson<GameSessionSaveData>(baselineJson);
             mutate(invalid);
 
-            Assert.Throws<TException>(() => session.RestoreSaveData(invalid));
+            Assert.Throws<TException>(() => session.RestoreSaveData(
+                invalid,
+                catalog ?? CreateCatalog()));
             Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
         }
 
@@ -498,6 +615,29 @@ namespace TianZhang.Tests
         private static NpcStateSaveData Clone(NpcStateSaveData source)
         {
             return JsonUtility.FromJson<NpcStateSaveData>(JsonUtility.ToJson(source));
+        }
+
+        private static BountyStateSaveData Clone(BountyStateSaveData source)
+        {
+            return JsonUtility.FromJson<BountyStateSaveData>(JsonUtility.ToJson(source));
+        }
+
+        private ContentCatalogData CreateCatalog(params string[] bountyIds)
+        {
+            var bounties = new List<BountyData>();
+            foreach (string bountyId in bountyIds)
+            {
+                var bounty = ScriptableObject.CreateInstance<BountyData>();
+                bounty.bountyId = bountyId;
+                bounty.requiredCount = 1;
+                temporaryAssets.Add(bounty);
+                bounties.Add(bounty);
+            }
+
+            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            temporaryAssets.Add(catalog);
+            catalog.ReplaceEntries(null, null, null, bounties.ToArray());
+            return catalog;
         }
     }
 }

@@ -34,3 +34,24 @@
 - 复审业务提交 `b433dc464f71e0b56740a9452336af3448899529` 通过：`BountyRuntime.ValidateBountyForAccept` 在创建实例前通过同一 `ContentCatalogData.TryGetSettlement` / `TryGetEnemy` 校验发布城市与目标敌人，缺失时分别返回稳定原因且状态保持 `Available`；修复未扩展到 Adventure、存档、UI、生产数据或数值。
 - 独立 Unity 6000.3.18f1 EditMode 完整执行 306 项，304 通过、2 失败；`BountyRuntimeTests` 15/15、`InventoryGrantServiceTests` 7/7、`TacticalGridModelTests` 4/4、`AdventureSceneControllerTests` 14/14 通过。两项失败仍为已登记且与本卡路径无关的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
 - Unity 生成忽略的工程投影后，`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 警告、0 错误）。本卡复审通过并关闭，存档 schema 3 与迁移仍由 `U-BOUNTY-01B` 独立实施。
+
+## U-BOUNTY-01B · 2026-08-03
+
+- schema 3 投影：`GameSessionSaveData` 新增 `bounties[]`（只含 `bountyId`、`status`、`progress`），`GameSessionSnapshot.Capture` 按 `bountyId` 排序保存会话内悬赏实例；`GameSessionRestoredState` 携带悬赏快照。
+- 迁移语义：版本 0／1／2 保持既有世界／场景、任务、背包、NPC 与筑基紫府迁移不变，悬赏集合恢复为空；版本 3 对合法悬赏状态无损往返。
+- 恢复校验（先于任何会话集合替换，任一失败整个会话不变）：快照链路校验版本、空／重复悬赏 ID、非法状态（含存档中出现 `Available` 无实例态）与负进度；`GameSession.RestoreSaveData(data, catalog)` 再校验悬赏引用可由既有 `ContentCatalogData.TryGetBounty` 解析、进度不超过 `requiredCount` 目标。内容目录按既有单一存档边界以参数传入，不建立第二存档、全局单例目录或静默兼容读取层。
+- 原子替换：全部校验通过后才经 `ReplaceAll` 一次性替换任务、背包、NPC 与悬赏集合；`BountyRuntime` 未修改，领取与战斗计数行为未被改写。
+- 终态稳定性：恢复后的 `Claimed` 保持一次性终态，`Claim`／`RecordDefeat`／`Accept` 均稳定拒绝且不重复结算；恢复后的 `ObjectiveCompleted` 可恰好领奖一次。
+- 边界：未修改 Bounty CSV／Language／asset、奖励参数、掉落概率、堆叠上限、UI、`QuestStateStore` 语义、Adventure 结算或数值；`U-BOUNTY-01C` 的 UI 接入边界未触碰。
+
+## U-BOUNTY-01B 已执行验证（Unity 6000.3.18f1 EditMode，2026-08-03）
+
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目；首次运行重建 Library，共执行两轮，第二轮结果如下）。完整 EditMode：310 项，308 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。脚本因该 2 项既有失败以退出码 2 结束，属其零失败门禁的预期行为。
+- 本卡直接用例：`SessionStateSnapshotTests` 10/10（新增 `BountyInstancesRoundTripInCurrentSchemaAndLegacyVersionsRestoreEmpty`、`RestoreRejectsUnresolvableDuplicateOrIllegalBountyStateAtomically`）；`BountyRuntimeTests` 17/17（新增 `RestoredClaimedTerminalStateStaysStableAndRejectsReclaimAndReRecord`、`RestoredObjectiveCompletedCanBeClaimedExactlyOnceWithoutResettlement`）；`AdventureSceneControllerTests` 14/14、`TacticalGridModelTests` 4/4 等既有用例未回归。
+- 首轮新增 1 项失败并已修正：`RestoreRejectsUnresolvableDuplicateOrIllegalBountyStateAtomically` 的超目标进度用例未把含悬赏的目录传入断言辅助函数，得到“引用不可解析”异常；修正为所有篡改用例统一传入同一目录后第二轮全部通过，生产代码行为未被修改。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 252 个文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（本卡 candidate 路径）：通过，检查 5 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+
+## 后续
+
+- `U-BOUNTY-01C` 接入悬赏板界面与城市入口；本卡存档事实仍只由 `GameSession` 与其既有快照链路拥有。
