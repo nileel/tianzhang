@@ -14,6 +14,7 @@
 ## schema 4 runtime 与 claim
 
 - `tools/hourly-automation-lease.ps1` 的用户级私有 runtime 顶层固定为 `schemaVersion=4`、`runs.codex`、`runs.deepseek` 与 `integrationLease`；使用 ACL、互斥锁和原子写入，不保存 provider 凭据或完整私有地址。
+- DeepSeek 固定入口按 owner 与规范化 `StateRoot` 持有单实例互斥；同一状态根已有前台调用时，新调用在读取或修改 runtime 前返回 `occupied/deepseek_entry_running`，不得把前一调用的在途 worktree 误判为恢复证据。
 - 每个固定入口先调用统一 `Show`。已有本 owner run 时只处理该 run，不选择第二个任务；无 run 时才确定性选题并调用 `ClaimRun`。
 - Codex 与 DeepSeek 可以同时拥有不同 taskId 的 run；同一 taskId 不能同时出现在两个 run。owner 不得领取对方 route。
 - Codex 只领取 `codex_execute/codex`、`codex_review/codex`；DeepSeek 只领取 `external_execute/deepseek`。同一 owner 内保持队列原相对顺序并跳过另一 owner 的行。

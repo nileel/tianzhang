@@ -35,6 +35,15 @@ function Stop-Hourly {
 
 function Normalize-FullPath { param([string]$Path) [IO.Path]::GetFullPath($Path).TrimEnd('\', '/') }
 
+function Get-InvocationMutexName {
+  param([string]$Owner, [string]$Root)
+  $identity = "$Owner`n$((Normalize-FullPath $Root).ToUpperInvariant())"
+  $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+    [Text.UTF8Encoding]::new($false).GetBytes($identity)
+  )).ToLowerInvariant()
+  "Local\TZG-Hourly-$Owner-$digest"
+}
+
 function Test-PathWithin {
   param([string]$Path, [string]$Root)
   $fullPath = Normalize-FullPath $Path
@@ -455,6 +464,8 @@ function Invoke-Canary {
 }
 
 $finalResult = $null
+$invocationMutex = $null
+$invocationMutexHeld = $false
 try {
   foreach ($path in @($runtimePath, $selectorPath, $responsibilityPath, $transitionPath, $finalizerPath, $checkerPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'deepseek_dependency_missing' }
@@ -471,7 +482,16 @@ try {
     Normalize-FullPath $StateRoot
   }
 
-  if ($Action -ceq 'Canary') {
+  $invocationMutex = [Threading.Mutex]::new($false, (Get-InvocationMutexName -Owner 'deepseek' -Root $script:effectiveStateRoot))
+  try {
+    $invocationMutexHeld = $invocationMutex.WaitOne(0)
+  } catch [Threading.AbandonedMutexException] {
+    $invocationMutexHeld = $true
+  }
+
+  if (-not $invocationMutexHeld) {
+    $finalResult = [ordered]@{ status = 'occupied'; owner = 'deepseek'; detailCode = 'deepseek_entry_running' }
+  } elseif ($Action -ceq 'Canary') {
     $finalResult = Invoke-Canary
   } else {
     $shown = Invoke-Runtime -RuntimeAction Show
@@ -517,6 +537,13 @@ try {
 } catch {
   $detailCode = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'deepseek_hourly_failed' }
   $finalResult = [ordered]@{ status = 'failed'; owner = 'deepseek'; detailCode = $detailCode }
+} finally {
+  if ($invocationMutexHeld) {
+    $invocationMutex.ReleaseMutex()
+  }
+  if ($null -ne $invocationMutex) {
+    $invocationMutex.Dispose()
+  }
 }
 
 [Console]::Out.WriteLine(($finalResult | ConvertTo-Json -Compress -Depth 40))

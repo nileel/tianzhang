@@ -576,6 +576,18 @@ try {
           break
         }
         $currentState = [string]$run.state
+        $attentionCandidateRecovery =
+          $Owner -ceq 'deepseek' -and
+          $currentState -ceq 'attention_required' -and
+          $RunState -ceq 'candidate_ready' -and
+          -not [string]::IsNullOrWhiteSpace($ExpectedRecoveryReason) -and
+          $ExpectedRecoveryReason -ceq [string]$run.recoveryReason -and
+          $null -eq $run.candidateCommit -and
+          $null -eq $run.candidateResult -and
+          $null -eq $run.canonicalBranch -and
+          $null -eq $run.canonicalBase -and
+          $null -eq $run.canonicalHead -and
+          $null -eq $state.integrationLease
         $allowed = switch ($currentState) {
           'developing' { @('developing', 'candidate_ready', 'attention_required') }
           'candidate_ready' { @('canonical_ready', 'attention_required') }
@@ -583,7 +595,7 @@ try {
           'integrated' { @() }
           'attention_required' { @() }
         }
-        if ($RunState -cnotin $allowed) {
+        if ($RunState -cnotin $allowed -and -not $attentionCandidateRecovery) {
           throw [ArgumentException]::new("Invalid run state transition: $currentState -> $RunState")
         }
         if (-not [string]::IsNullOrWhiteSpace($SessionKind)) {
@@ -600,10 +612,13 @@ try {
           }
           $run.sessionId = $SessionId
         }
-        if ($RunState -ceq 'candidate_ready' -and $currentState -ceq 'developing') {
+        if ($RunState -ceq 'candidate_ready' -and ($currentState -ceq 'developing' -or $attentionCandidateRecovery)) {
           Assert-GitSha -Value $CandidateCommit -ParameterName 'CandidateCommit'
           $run.candidateCommit = $CandidateCommit
           $run.candidateResult = Read-CandidateResult -Path $CandidateResultPath -NormalizedStateRoot $normalizedStateRoot
+          if ($attentionCandidateRecovery) {
+            $run.recoveryReason = $null
+          }
         }
         if ($RunState -ceq 'candidate_ready' -and $currentState -ceq 'canonical_ready') {
           $run.canonicalBranch = $null

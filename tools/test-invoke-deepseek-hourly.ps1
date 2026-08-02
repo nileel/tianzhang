@@ -8,6 +8,15 @@ function Assert-Equal { param($Actual, $Expected, [string]$Message) if ($Actual 
 function Write-Utf8 { param([string]$Path, [string]$Text) [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null; [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false)) }
 function Invoke-Git { param([string]$Root, [string[]]$Arguments) $output = @(& git -C $Root @Arguments 2>&1); if ($LASTEXITCODE -ne 0) { throw "git failed: $($Arguments -join ' '): $(@($output) -join "`n")" }; (@($output) -join "`n").Trim() }
 
+function Get-InvocationMutexName {
+  param([string]$Owner, [string]$Root)
+  $identity = "$Owner`n$([IO.Path]::GetFullPath($Root).TrimEnd('\', '/').ToUpperInvariant())"
+  $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+    [Text.UTF8Encoding]::new($false).GetBytes($identity)
+  )).ToLowerInvariant()
+  "Local\TZG-Hourly-$Owner-$digest"
+}
+
 function Invoke-Hourly {
   param([string]$Action, [switch]$UseStateRoot)
   $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $hourlyPath, '-Action', $Action, '-RepositoryRoot', $mainRoot, '-ResponsibilityTimeoutSeconds', '30', '-OutputJson')
@@ -122,6 +131,19 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $env:ANTHROPIC_BASE_URL = 'http://127.0.0.1:15721/claude-desktop'
   $env:TZG_FAKE_CLAUDE_RECORD = $recordPath
   $env:TZG_FAKE_MAIN_ROOT = $mainRoot
+
+  $entryMutex = [Threading.Mutex]::new($false, (Get-InvocationMutexName -Owner 'deepseek' -Root $stateRoot))
+  Assert-True $entryMutex.WaitOne(0) 'Unable to hold the DeepSeek entry mutex for the fixture'
+  try {
+    $occupied = Invoke-Hourly -Action RunOnce -UseStateRoot
+    Assert-Equal $occupied.ExitCode 0 "Contended RunOnce process failed: $($occupied.Stderr)"
+    Assert-Equal ([string]$occupied.Json.status) 'occupied' 'Contended RunOnce did not stop at the entry mutex'
+    Assert-Equal ([string]$occupied.Json.detailCode) 'deepseek_entry_running' 'Contended RunOnce detail mismatch'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $stateRoot 'runtime.json'))) 'Contended RunOnce changed runtime state'
+  } finally {
+    $entryMutex.ReleaseMutex()
+    $entryMutex.Dispose()
+  }
 
   $run = Invoke-Hourly -Action RunOnce -UseStateRoot
   Assert-Equal $run.ExitCode 0 "RunOnce process failed: $($run.Stderr)"

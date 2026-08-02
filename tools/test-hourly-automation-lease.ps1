@@ -109,6 +109,7 @@ $stateRoot = Join-Path $automationStateRoot "tzg-hourly-runtime-tests\$testId"
 $migrationRoot = Join-Path $automationStateRoot "tzg-hourly-runtime-migration-tests\$testId"
 $activeLegacyRoot = Join-Path $automationStateRoot "tzg-hourly-runtime-active-legacy-tests\$testId"
 $attentionRoot = Join-Path $automationStateRoot "tzg-hourly-runtime-attention-tests\$testId"
+$attentionCandidateRoot = Join-Path $automationStateRoot "tzg-hourly-runtime-attention-candidate-tests\$testId"
 $statePath = Join-Path $stateRoot 'runtime.json'
 $script:baseCommit = [string](& git -C $repositoryRoot rev-parse HEAD)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve repository HEAD' }
@@ -312,6 +313,42 @@ try {
   $afterAttention = Invoke-Runtime -Action Show -Parameters @{ StateRoot = $attentionRoot }
   Assert-True ($null -eq $afterAttention.Json.state.runs.deepseek) 'Manual attention closeout retained the owner run'
 
+  $attentionCandidate = Claim-Run -StateRoot $attentionCandidateRoot -Owner deepseek -TaskId 'TASK-ATTENTION-CANDIDATE' -Route external_execute
+  $attentionCandidateRunId = [string]$attentionCandidate.Json.run.runId
+  $attentionCandidateResultPath = Join-Path $attentionCandidateRoot "candidate-results\$attentionCandidateRunId.json"
+  Write-PrivateJson -Path $attentionCandidateResultPath -Value (New-CandidateResult -ChangedPath 'fixtures/recovered.txt')
+  $null = Invoke-Runtime -Action UpdateRun -Parameters @{
+    StateRoot = $attentionCandidateRoot
+    Owner = 'deepseek'
+    RunId = $attentionCandidateRunId
+    RunState = 'attention_required'
+    RecoveryReason = 'concurrent entry observed in-progress changes'
+  }
+  $attentionCandidateMismatch = Invoke-Runtime -Action UpdateRun -Parameters @{
+    StateRoot = $attentionCandidateRoot
+    Owner = 'deepseek'
+    RunId = $attentionCandidateRunId
+    RunState = 'candidate_ready'
+    CandidateCommit = (('f' * 40) -join '')
+    CandidateResultPath = $attentionCandidateResultPath
+    ExpectedRecoveryReason = 'different recovery reason'
+  } -AllowedExitCodes @(2)
+  Assert-Equal ([string]$attentionCandidateMismatch.Json.status) 'INVALID_ARGUMENT' 'Attention candidate recovery accepted mismatched evidence'
+  $attentionCandidateRecovered = Invoke-Runtime -Action UpdateRun -Parameters @{
+    StateRoot = $attentionCandidateRoot
+    Owner = 'deepseek'
+    RunId = $attentionCandidateRunId
+    RunState = 'candidate_ready'
+    SessionKind = 'claude_cli'
+    SessionId = [Guid]::NewGuid().ToString()
+    CandidateCommit = (('f' * 40) -join '')
+    CandidateResultPath = $attentionCandidateResultPath
+    ExpectedRecoveryReason = 'concurrent entry observed in-progress changes'
+  }
+  Assert-Equal ([string]$attentionCandidateRecovered.Json.run.state) 'candidate_ready' 'Verified attention candidate was not recovered'
+  Assert-Equal ([string]$attentionCandidateRecovered.Json.run.candidateCommit) (('f' * 40) -join '') 'Recovered candidate commit mismatch'
+  Assert-True ($null -eq $attentionCandidateRecovered.Json.run.recoveryReason) 'Recovered candidate retained stale attention reason'
+
   [IO.Directory]::CreateDirectory($migrationRoot) | Out-Null
   Set-PrivatePathAcl -Path $migrationRoot -Directory
   $migrationPath = Join-Path $migrationRoot 'runtime.json'
@@ -364,7 +401,7 @@ try {
 
   Write-Output 'test-hourly-automation-lease: OK'
 } finally {
-  foreach ($cleanupPath in @($stateRoot, $migrationRoot, $activeLegacyRoot, $attentionRoot)) {
+  foreach ($cleanupPath in @($stateRoot, $migrationRoot, $activeLegacyRoot, $attentionRoot, $attentionCandidateRoot)) {
     if (-not (Test-Path -LiteralPath $cleanupPath)) { continue }
     $resolved = [IO.Path]::GetFullPath($cleanupPath)
     $approvedPrefix = [IO.Path]::GetFullPath($automationStateRoot).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
