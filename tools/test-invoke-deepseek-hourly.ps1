@@ -25,7 +25,7 @@ function Invoke-Hourly {
 
 $testId = [Guid]::NewGuid().ToString('N')
 $temporaryBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/')
-$testRoot = Join-Path $temporaryBase "tzg-deepseek-hourly-test-$testId"
+$testRoot = Join-Path $temporaryBase "tzg-中文-deepseek-hourly-test-$testId"
 $mainRoot = Join-Path $testRoot 'repository'
 $fakeBin = Join-Path $testRoot 'bin'
 $recordPath = Join-Path $testRoot 'claude-record.json'
@@ -160,7 +160,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $env:PATH = $originalPath; $env:ANTHROPIC_BASE_URL = $originalBaseUrl; $env:TZG_FAKE_CLAUDE_RECORD = $originalRecord; $env:TZG_FAKE_MAIN_ROOT = $originalMain
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
-    if (-not $resolved.StartsWith($temporaryBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-deepseek-hourly-test-$testId") { throw "Unsafe hourly-test cleanup: $resolved" }
+    if (-not $resolved.StartsWith($temporaryBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-中文-deepseek-hourly-test-$testId") { throw "Unsafe hourly-test cleanup: $resolved" }
     Remove-Item -LiteralPath $resolved -Recurse -Force
   }
   if (Test-Path -LiteralPath $stateRoot) {

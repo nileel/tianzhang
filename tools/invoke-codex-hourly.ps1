@@ -67,16 +67,10 @@ function Invoke-GitText {
 
 function Invoke-JsonTool {
   param([string]$Path, [string[]]$Arguments, [string]$DetailCode, [int[]]$AllowedExitCodes = @(0))
-  $startInfo = [Diagnostics.ProcessStartInfo]::new()
-  $startInfo.FileName = 'pwsh'; $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
-  $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
-  foreach ($argument in @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $Path) + $Arguments) { $startInfo.ArgumentList.Add($argument) }
-  $process = [Diagnostics.Process]::new(); $process.StartInfo = $startInfo
-  if (-not $process.Start()) { Stop-Hourly $DetailCode }
-  $stdoutTask = $process.StandardOutput.ReadToEndAsync(); $stderrTask = $process.StandardError.ReadToEndAsync(); $process.WaitForExit()
-  $stdout = $stdoutTask.GetAwaiter().GetResult(); $null = $stderrTask.GetAwaiter().GetResult(); $exitCode = $process.ExitCode; $process.Dispose()
+  $stdout = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $Path @Arguments 2>$null)
+  $exitCode = $LASTEXITCODE
   if ($exitCode -notin $AllowedExitCodes) { Stop-Hourly $DetailCode }
-  $lines = @($stdout -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+  $lines = @($stdout | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   if ($lines.Count -ne 1) { Stop-Hourly $DetailCode }
   try { $lines[0] | ConvertFrom-Json -Depth 100 } catch { Stop-Hourly $DetailCode }
 }
