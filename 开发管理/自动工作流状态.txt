@@ -13,6 +13,7 @@
 ## 当前人工阻塞与恢复所有权
 
 - 2026-08-02：负责人确认独立 Codex／DeepSeek 小时入口方案；固定 Windows 入口 canary 已核验 `pwshMajor=7`、Git、`local_deepseek_gateway`、`deepseek-v4-flash`、私有状态隔离和 project-owned canary worktree 清理，主工作区 HEAD 与状态未被 canary 改变。
+- 2026-08-02：独立入口实现已合并；实时 `codex-hourly-worker` 与 `deepseek-hourly-trigger` 已创建，日报／周报提示词已同步，旧 `tzg-hourly-controller` 已删除。两个新写入 automation 因主工作区保留旧 DeepSeek 轮次的 D-COMBAT-02 未提交现场而保持暂停；schema 4 runtime 当前无 owner run 或集成租约。
 - 2026-07-31：负责人先对 `DEC-20260731-TZCHARTERMODEL01` 选择 C，随后在获知 A/B 实际差异后明确改选 A；已授权 Unity 与 BattleSim 共用冲突／跨阶授权契约，并将现有 BattleSim 语义迁为唯一实现。`D-TZ-CHARTER-CONFLICT-01` 已锁定 shared source、契约和迁移边界；`D-TZ-CHARTER-CONFLICT-02` 已完成唯一实现迁移，`U-TZ-CHARTER-MODEL-01` 已解除该前置，等待队列维护建立执行卡，不再等待负责人决定。
 - 2026-07-31：负责人对 `D-COMBAT-02` 选择 A，授权独立迁移 BattleSim 范围载体，使圆形显式表达无朝向；`D-COMBAT-02A` 已建立并排队，原跨端 fixture 任务等待该前置完成，不修改既定契约。
 - 2026-07-24 00:37（Asia/Hong_Kong）`DEC-20260724-ENVPROFILE` 的 A 回复已形成有效签名 processed 证据；01:19 的旧控制器仍恢复等待决定的原 session，导致该回复未进入责任方。现已取消 decision 原 session 恢复、即时桥接中继、pending resume 队列和独立决定触发器；后续每小时轮次直接读取 A 证据并用新的责任方 session 继续原 TaskId。

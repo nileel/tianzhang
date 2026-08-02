@@ -1,7 +1,7 @@
 # Codex 与 DeepSeek 独立小时入口、worktree 开发和 Codex 复审设计
 
 > 日期：2026-08-01
-> 状态：负责人已确认；实现与 2026-08-02 固定 Windows 入口 canary 已通过，待生产合并与实时 automation 切换
+> 状态：已实施并合并；2026-08-02 固定 Windows 入口 canary 与实时配置检查已通过，两个新写入 automation 因旧 D-COMBAT-02 未提交现场暂保持暂停
 > 取代方向：不继续采用已撤销的中央 batch、通用 `lanes[]` 和单控制器启动外部 AI 方案
 > 当前自动责任方：Codex、DeepSeek V4 Flash
 
