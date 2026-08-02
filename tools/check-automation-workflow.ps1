@@ -49,9 +49,10 @@ Assert-Contract (Test-Path -LiteralPath $root -PathType Container) "RepositoryRo
 Assert-Contract (Test-Path -LiteralPath $automationDirectory -PathType Container) "AutomationRoot does not exist: $automationDirectory"
 
 $requiredScripts = @(
-  'tools/hourly-automation-lease.ps1', 'tools/select-hourly-task.ps1',
-  'tools/invoke-codex-hourly.ps1', 'tools/invoke-codex-candidate.ps1', 'tools/codex-cli-session.ps1',
-  'tools/invoke-deepseek-hourly.ps1', 'tools/invoke-deepseek-responsibility.ps1', 'tools/set-task-pending-review.ps1',
+  'tools/hourly-automation-lease.ps1', 'tools/hourly-integration-lock.ps1', 'tools/hourly-owner-adapter.ps1',
+  'tools/invoke-hourly-owner.ps1', 'tools/invoke-project-integration.ps1', 'tools/select-hourly-task.ps1',
+  'tools/invoke-codex-candidate.ps1', 'tools/codex-cli-session.ps1',
+  'tools/invoke-deepseek-responsibility.ps1', 'tools/set-task-pending-review.ps1', 'tools/set-task-automation-state.ps1',
   'tools/automation-finalize-commit.ps1', 'tools/send-feishu-notification.ps1'
 )
 foreach ($relative in $requiredScripts) {
@@ -61,27 +62,36 @@ foreach ($relative in $requiredScripts) {
 }
 
 $runtime = Read-Utf8 (Join-Path $root 'tools/hourly-automation-lease.ps1')
-Assert-Contains $runtime 'schema 4 runtime' @(
-  "[ValidateSet('Show', 'ClaimRun', 'UpdateRun', 'AcquireIntegration', 'ReleaseIntegration', 'CompleteRun')]",
-  'schemaVersion = 4', "runs = [pscustomobject][ordered]@{", 'integrationLease = $null'
+Assert-Contains $runtime 'schema 5 runtime' @(
+  "[ValidateSet('Show', 'ClaimRun', 'UpdateRun', 'CompleteRun')]",
+  'schemaVersion = 5', "runs = [pscustomobject][ordered]@{", 'integrationLockStatus'
 )
-Assert-DoesNotContain $runtime 'schema 4 runtime' @("'Acquire'", "'RecordResult'", "'SaveRecovery'", "'SaveInterruption'")
+Assert-DoesNotContain $runtime 'schema 5 runtime' @("'AcquireIntegration'", "'ReleaseIntegration'", 'integrationLease =', "'RecordResult'", "'SaveRecovery'", "'SaveInterruption'")
+
+$sharedEntry = Read-Utf8 (Join-Path $root 'tools/invoke-hourly-owner.ps1')
+$adapter = Read-Utf8 (Join-Path $root 'tools/hourly-owner-adapter.ps1')
+Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree')
+Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-flash')
+Assert-DoesNotContain $adapter 'owner adapter' @('git ', 'hourly-automation-lease.ps1', 'Enter-TzgIntegrationLock', 'CompleteRun')
 
 $rules = Read-Utf8 (Join-Path $root '开发管理/自动工作流规则.txt')
 $recovery = Read-Utf8 (Join-Path $root '开发管理/自动工作流恢复规则.txt')
 $codexPrompt = Read-Utf8 (Join-Path $root '开发管理/自动工作流控制器提示词.txt')
 $deepseekPrompt = Read-Utf8 (Join-Path $root '开发管理/DeepSeek小时触发提示词.txt')
-Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourly-trigger', 'runs.codex', 'runs.deepseek', 'integrationLease', '.worktrees/automation/<runId>/<owner>', 'candidate_ready', 'canonical_ready', 'CompleteRun')
+Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourly-trigger', 'invoke-hourly-owner.ps1', 'runs.codex', 'runs.deepseek', 'schemaVersion=5', '.worktrees/automation/<runId>/<owner>', 'candidate_ready', 'canonical_ready', 'CompleteRun', 'maintenance_completed')
+Assert-DoesNotContain $rules 'workflow rules' @('integrationLease', 'invoke-codex-hourly.ps1', 'invoke-deepseek-hourly.ps1')
 Assert-DoesNotContain $rules 'workflow rules' @('invoke-codex-responsibility.ps1', 'invoke-external-responsibility.ps1', 'RecordResult -Category success', 'pauseRequested=true')
-Assert-Contains $recovery 'recovery rules' @('developing', 'candidate_ready', 'canonical_ready', 'integrated', 'attention_required', '不重复')
-Assert-Contains $codexPrompt 'Codex worker prompt' @('invoke-codex-hourly.ps1', '-Model "<实际 model>"', '不启动 DeepSeek', '不读取队列或任务卡')
-Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-deepseek-hourly.ps1', '-Action RunOnce', '不得读取队列', '不得选择或 claim 任务')
+Assert-Contains $recovery 'recovery rules' @('developing', 'candidate_ready', 'canonical_ready', 'integrated', 'attention_required', '只报告', 'decision checkpoint')
+Assert-Contains $codexPrompt 'Codex worker prompt' @('invoke-hourly-owner.ps1', '-Owner codex', '-Model "<实际 model>"', '不读取队列或任务卡')
+Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', '不得读取队列')
 
 if ($RequireLegacyRetired) {
   foreach ($relative in @(
       'tools/invoke-codex-responsibility.ps1', 'tools/test-invoke-codex-responsibility.ps1',
       'tools/invoke-external-responsibility.ps1', 'tools/test-invoke-external-responsibility.ps1',
       'tools/test-external-ai-self-commit.ps1', 'tools/hourly-controller-v2', 'tools/automation-controller.ps1'
+      'tools/invoke-codex-hourly.ps1', 'tools/test-invoke-codex-hourly.ps1',
+      'tools/invoke-deepseek-hourly.ps1', 'tools/test-invoke-deepseek-hourly.ps1'
     )) { Assert-Contract (-not (Test-Path -LiteralPath (Join-Path $root $relative))) "legacy workflow path still exists: $relative" }
 }
 

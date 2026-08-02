@@ -2,13 +2,13 @@
 
 [CmdletBinding()]
 param(
-  [ValidateSet('Start', 'Resume')]
-  [string]$Action,
-  [string]$RepositoryRoot,
-  [string]$TaskId,
-  [string]$RunId,
-  [string]$SessionId,
-  [string]$Model
+  [Parameter(Mandatory = $true)][ValidateSet('Start')][string]$Action,
+  [Parameter(Mandatory = $true)][string]$RepositoryRoot,
+  [Parameter(Mandatory = $true)][string]$TaskId,
+  [Parameter(Mandatory = $true)][string]$RunId,
+  [Parameter(Mandatory = $true)][string]$Model,
+  [Parameter(Mandatory = $true)][string]$OutputSchemaPath,
+  [Parameter(Mandatory = $true)][string]$OutputLastMessagePath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,78 +16,45 @@ $runnerExitCode = 1
 $childExitCode = $null
 $resultStatus = 'failed'
 $resultSessionId = $null
+$detailCode = 'runner_initialization_failed'
 $script:threadStartedCount = 0
 $script:threadStartedId = $null
 
 try {
-  if ([string]::IsNullOrWhiteSpace($Action) -or
-      [string]::IsNullOrWhiteSpace($RepositoryRoot) -or
-      [string]::IsNullOrWhiteSpace($TaskId) -or
-      [string]::IsNullOrWhiteSpace($RunId)) {
-    throw 'Required argument is missing.'
+  $detailCode = 'runner_argument_invalid'
+  foreach ($value in @($RepositoryRoot, $TaskId, $RunId, $Model, $OutputSchemaPath, $OutputLastMessagePath)) {
+    if ([string]::IsNullOrWhiteSpace($value) -or $value -match '[\x00-\x1F\x7F]') { throw 'Required argument is invalid' }
   }
-  if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot)) {
-    throw 'RepositoryRoot must be an absolute path.'
+  if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot) -or -not [IO.Path]::IsPathFullyQualified($OutputSchemaPath) -or -not [IO.Path]::IsPathFullyQualified($OutputLastMessagePath)) {
+    throw 'Paths must be absolute'
   }
+  $root = [IO.Path]::GetFullPath($RepositoryRoot)
+  $detailCode = 'runner_path_unavailable'
+  if (-not (Test-Path -LiteralPath $root -PathType Container) -or -not (Test-Path -LiteralPath $OutputSchemaPath -PathType Leaf)) { throw 'Required path is unavailable' }
+  if (Test-Path -LiteralPath $OutputLastMessagePath) { throw 'OutputLastMessagePath must not already exist' }
 
-  $resolvedRepositoryRoot = [IO.Path]::GetFullPath($RepositoryRoot)
-  if (-not (Test-Path -LiteralPath $resolvedRepositoryRoot -PathType Container)) {
-    throw 'RepositoryRoot does not exist.'
-  }
-  if ($Action -ceq 'Resume' -and [string]::IsNullOrWhiteSpace($SessionId)) {
-    throw 'SessionId is required for Resume.'
-  }
-
-  $stdinReader = [IO.StreamReader]::new(
-    [Console]::OpenStandardInput(),
-    [Text.UTF8Encoding]::new($false, $true),
-    $false
+  $detailCode = 'runner_input_invalid'
+  $stdinReader = [IO.StreamReader]::new([Console]::OpenStandardInput(), [Text.UTF8Encoding]::new($false, $true), $false)
+  try { $inputText = $stdinReader.ReadToEnd() } finally { $stdinReader.Dispose() }
+  $detailCode = 'runner_codex_unavailable'
+  $codexCommand = Get-Command codex -CommandType Application -ErrorAction Stop | Select-Object -First 1
+  if ($null -eq $codexCommand) { throw 'Codex command was not found' }
+  $arguments = @(
+    'exec', '--json', '-m', $Model, '-s', 'danger-full-access',
+    '--output-schema', $OutputSchemaPath, '--output-last-message', $OutputLastMessagePath, '-'
   )
-  try {
-    $inputText = $stdinReader.ReadToEnd()
-  } finally {
-    $stdinReader.Dispose()
-  }
-  $codexCommand = Get-Command codex -CommandType Application, ExternalScript -ErrorAction Stop | Select-Object -First 1
-  if ($null -eq $codexCommand) {
-    throw 'Codex command was not found.'
-  }
 
-  $childArguments = if ($Action -ceq 'Start') {
-    $arguments = @('exec', '--json')
-    if (-not [string]::IsNullOrWhiteSpace($Model)) {
-      $arguments += @('-m', $Model)
-    }
-    $arguments += @('-s', 'danger-full-access', '-')
-    $arguments
-  } else {
-    @('exec', 'resume', '--json', $SessionId, '-')
-  }
-
-  Push-Location -LiteralPath $resolvedRepositoryRoot
+  Push-Location -LiteralPath $root
   try {
-    $inputText | & $codexCommand @childArguments 2>$null | ForEach-Object {
+    $detailCode = 'runner_codex_failed'
+    $inputText | & $codexCommand @arguments 2>$null | ForEach-Object {
       $line = [string]$_
-      if ([string]::IsNullOrWhiteSpace($line)) {
-        return
-      }
-
-      try {
-        $event = $line | ConvertFrom-Json -ErrorAction Stop
-      } catch {
-        return
-      }
-
-      if ([string]$event.type -cne 'thread.started') {
-        return
-      }
-
+      if ([string]::IsNullOrWhiteSpace($line)) { return }
+      try { $event = $line | ConvertFrom-Json -ErrorAction Stop } catch { return }
+      if ([string]$event.type -cne 'thread.started') { return }
       $script:threadStartedCount++
-      $threadIdProperty = $event.PSObject.Properties['thread_id']
-      $threadId = if ($null -ne $threadIdProperty) { [string]$threadIdProperty.Value } else { $null }
-      if (-not [string]::IsNullOrWhiteSpace($threadId)) {
-        [Console]::Error.WriteLine("codex_session_id=$threadId")
-      }
+      $property = $event.PSObject.Properties['thread_id']
+      $threadId = if ($null -ne $property) { [string]$property.Value } else { $null }
       if ($script:threadStartedCount -eq 1) {
         $script:threadStartedId = $threadId
         [Console]::Error.WriteLine('session_started')
@@ -99,31 +66,20 @@ try {
     Pop-Location
   }
 
-  $hasUniqueSession = $script:threadStartedCount -eq 1 -and
-    -not [string]::IsNullOrWhiteSpace($script:threadStartedId)
-  $sessionMatchesAction = $hasUniqueSession -and
-    ($Action -ceq 'Start' -or $script:threadStartedId -ceq $SessionId)
-  if ($sessionMatchesAction) {
-    $resultSessionId = $script:threadStartedId
-  }
-
-  if ($childExitCode -eq 0 -and $sessionMatchesAction) {
+  $detailCode = if ($script:threadStartedCount -eq 1) { 'runner_terminal_missing' } else { 'runner_thread_contract_invalid' }
+  if ($script:threadStartedCount -eq 1 -and -not [string]::IsNullOrWhiteSpace($script:threadStartedId)) { $resultSessionId = $script:threadStartedId }
+  if ($childExitCode -eq 0 -and $null -ne $resultSessionId -and (Test-Path -LiteralPath $OutputLastMessagePath -PathType Leaf)) {
     $resultStatus = 'ok'
+    $detailCode = $null
     $runnerExitCode = 0
   }
 } catch {
   $resultStatus = 'failed'
-  $runnerExitCode = 1
 } finally {
-  $summary = [ordered]@{
-    status = $resultStatus
-    action = $Action
-    taskId = $TaskId
-    runId = $RunId
-    sessionId = $resultSessionId
-    exitCode = $childExitCode
-  }
-  [Console]::Out.WriteLine(($summary | ConvertTo-Json -Compress))
+  [Console]::Out.WriteLine(([ordered]@{
+    status = $resultStatus; action = 'Start'; taskId = $TaskId; runId = $RunId
+    sessionId = $resultSessionId; exitCode = $childExitCode; detailCode = $detailCode
+  } | ConvertTo-Json -Compress))
 }
 
 exit $runnerExitCode

@@ -34,16 +34,6 @@ function makeConfig(stateRoot, overrides = {}) {
   });
 }
 
-function makeHealth(overrides = {}) {
-  return {
-    status: 'CONNECTED',
-    updatedAt: NOW.toISOString(),
-    pid: 4321,
-    pidAlive: true,
-    ...overrides,
-  };
-}
-
 function makeTaskNotification(overrides = {}) {
   return {
     kind: 'task_outcome',
@@ -185,7 +175,6 @@ test('ordinary notifications use deterministic idempotency and do not resend acc
     idempotencyKey: 'task_outcome:N-FPD-NPC-01:completed:0123456789abcdef',
     transport,
     intentStore: store,
-    health: makeHealth(),
     now: NOW,
   };
   const first = await sendNotification(request);
@@ -204,20 +193,19 @@ test('ordinary notifications use deterministic idempotency and do not resend acc
   assert.equal(card.elements.some((element) => ['action', 'form'].includes(element.tag)), false);
 });
 
-test('ordinary notifications fail closed for unhealthy, rejected, and unknown outcomes', async () => {
+test('ordinary notifications send without bridge health and fail closed for rejected and unknown outcomes', async () => {
   const config = makeConfig(resolve(tmpdir(), 'tzg-notification-outcome-test'));
   let calls = 0;
-  const unavailable = await sendNotification({
+  const accepted = await sendNotification({
     config,
     notification: makeTaskNotification(),
-    idempotencyKey: 'unavailable',
-    transport: { async sendInteractive() { calls += 1; } },
+    idempotencyKey: 'bridge-independent',
+    transport: { async sendInteractive() { calls += 1; return { messageId: 'om_direct', chatId: 'oc_direct' }; } },
     intentStore: passThroughStore(),
-    health: makeHealth({ status: 'UNAVAILABLE' }),
     now: NOW,
   });
-  assert.deepEqual(unavailable, { result: 'CHANNEL_UNAVAILABLE' });
-  assert.equal(calls, 0);
+  assert.equal(accepted.result, 'PROVIDER_ACCEPTED');
+  assert.equal(calls, 1);
 
   const rejected = await sendNotification({
     config,
@@ -225,7 +213,6 @@ test('ordinary notifications fail closed for unhealthy, rejected, and unknown ou
     idempotencyKey: 'rejected',
     transport: { async sendInteractive() { throw new ProviderRejectedError(); } },
     intentStore: passThroughStore(),
-    health: makeHealth(),
     now: NOW,
   });
   assert.equal(rejected.result, 'DELIVERY_FAILED');
@@ -236,7 +223,6 @@ test('ordinary notifications fail closed for unhealthy, rejected, and unknown ou
     idempotencyKey: 'unknown',
     transport: { async sendInteractive() { throw new Error('private provider detail'); } },
     intentStore: passThroughStore(),
-    health: makeHealth(),
     now: NOW,
   });
   assert.equal(unknown.result, 'PROVIDER_OUTCOME_UNKNOWN');
@@ -260,14 +246,12 @@ test('ordinary notification unknown outcomes are persisted without automatic ret
       },
     },
     intentStore: store,
-    health: makeHealth(),
     now: NOW,
   };
   assert.equal((await sendNotification(request)).result, 'PROVIDER_OUTCOME_UNKNOWN');
   assert.equal((await sendNotification({
     ...request,
     now: new Date(NOW.getTime() + 60_000),
-    health: makeHealth({ updatedAt: new Date(NOW.getTime() + 60_000).toISOString() }),
   })).result, 'PROVIDER_OUTCOME_UNKNOWN');
   assert.equal(calls, 1);
 });
@@ -371,7 +355,6 @@ test('notification CLI returns one sanitized result and never creates decision b
     stdout: output.stream,
     env: { FEISHU_DECISION_CONFIG_PATH: configPath },
     now: () => NOW,
-    readHealth: async () => makeHealth(),
     createTransport: async () => ({
       async sendInteractive() {
         return { messageId: 'om_private', chatId: 'oc_private' };

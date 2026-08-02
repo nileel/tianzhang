@@ -10,6 +10,7 @@ param(
   [string]$TaskId,
   [string]$RunId,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
+  [string]$ResumeContextPath,
   [ValidateRange(1, 86400)]
   [int]$ResponsibilityTimeoutSeconds = 3000
 )
@@ -20,6 +21,8 @@ Set-StrictMode -Version Latest
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $capturedSessionId = $null
 $modelName = 'deepseek-v4-flash'
+$script:stage = 'initialize'
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 
 function Stop-DeepSeek {
   param([string]$DetailCode)
@@ -118,10 +121,26 @@ function Get-CandidatePaths {
   @($Metadata.expectedPaths | ForEach-Object { [string]$_ } | Where-Object { -not $excluded.Contains($_) })
 }
 
+function Read-ResumeContext {
+  if ([string]::IsNullOrWhiteSpace($ResumeContextPath)) { return $null }
+  $state = Normalize-FullPath $StateRoot
+  $path = Normalize-FullPath $ResumeContextPath
+  if (-not $path.StartsWith($state + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-DeepSeek 'deepseek_resume_context_invalid' }
+  Assert-PrivatePathAcl -Path $path
+  try { $context = [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 30 } catch { Stop-DeepSeek 'deepseek_resume_context_invalid' }
+  if ([string]$context.taskId -cne $TaskId -or [string]::IsNullOrWhiteSpace([string]$context.decisionId) -or [string]::IsNullOrWhiteSpace([string]$context.replyValue)) { Stop-DeepSeek 'deepseek_resume_context_invalid' }
+  $context
+}
+
+function Get-WorkingChangedPaths {
+  @((Invoke-GitText @('-c', 'core.quotepath=false', 'diff', '--name-only', '--no-renames', 'HEAD')) -split '\r?\n' |
+    Where-Object { $_ } | ForEach-Object { $_.Replace('\', '/') } | Sort-Object -Unique)
+}
+
 function Quote-Single { param([string]$Value) "'" + $Value.Replace("'", "''") + "'" }
 
 function New-CandidatePrompt {
-  param([string[]]$CandidatePaths)
+  param([string[]]$CandidatePaths, [AllowNull()][object]$ResumeContext)
   $pathText = $CandidatePaths -join '|'
   $quotedRoot = Quote-Single $script:resolvedRepositoryRoot
   $quotedPaths = Quote-Single $pathText
@@ -134,6 +153,7 @@ function New-CandidatePrompt {
     "Model: $modelName"
     "RepositoryRoot: $script:resolvedRepositoryRoot"
     "CandidatePaths: $pathText"
+    $(if ($null -eq $ResumeContext) { 'No checkpoint reply context is present.' } else { "A verified checkpoint was mechanically replayed. Reply context: $($ResumeContext | ConvertTo-Json -Compress -Depth 10). Use it only for the matching decisionId and do not resume an old model session." })
     ''
     'The fixed Windows entry already selected and atomically claimed this exact task. Do not scan the queue, claim another task, or modify runtime.'
     'Read AGENTS.md, CLAUDE.md, 开发管理/自动工作流规则.txt, 开发管理/AI协作规则.txt, 开发管理/DeepSeek工作提示词.txt, and the exact task card.'
@@ -147,7 +167,8 @@ function New-CandidatePrompt {
     'Do not use RequireAutomationMetadata for the candidate. The fixed Windows entry creates formal business and handoff commits later.'
     'Return only the supplied structured object. completed requires the full candidate SHA, exact changed paths, verified/unverified arrays, residual risk, and the four finalizer-ready metadata values.'
     'Use expectedTransition=codex_review/codex/ready. The four finalizer-ready values must use these exact single-line forms: result="问题=...；完成=...", impact="影响=...；边界=...", verify="验证=...；后续=...", and plain="发生=...；影响=...；需要=...".'
-    'needs_decision, blocked or failed must preserve the worktree and return a stable detailCode; do not retry with widened permissions.'
+    'If a decision becomes necessary, stop guessing, create one clean direct-successor checkpoint commit containing only legal CandidatePaths, and return needs_decision with its SHA, exact paths, verification/risk evidence, and the complete three-option decision card fields. Do not change task lifecycle in the checkpoint.'
+    'blocked or failed must restore the worktree to its initial state and return a stable detailCode. Ordinary failure must not masquerade as a decision checkpoint.'
   ) -join "`n"
 }
 
@@ -192,7 +213,21 @@ function New-TerminalSchema {
       plain = [ordered]@{ type = 'string' }
       decisionId = [ordered]@{ type = 'string' }
       question = [ordered]@{ type = 'string' }
-      options = [ordered]@{ type = 'array'; items = [ordered]@{ type = 'string' }; minItems = 2; maxItems = 3 }
+      options = [ordered]@{
+        type = 'array'; minItems = 3; maxItems = 3
+        items = [ordered]@{
+          type = 'object'
+          properties = [ordered]@{ key = [ordered]@{ type = 'string'; enum = @('A', 'B', 'C') }; label = [ordered]@{ type = 'string' } }
+          required = @('key', 'label'); additionalProperties = $false
+        }
+      }
+      recommendedOption = [ordered]@{ type = 'string'; enum = @('A', 'B', 'C') }
+      impactSummary = [ordered]@{ type = 'string' }
+      plainSummary = [ordered]@{
+        type = 'object'
+        properties = [ordered]@{ situation = [ordered]@{ type = 'string' }; impact = [ordered]@{ type = 'string' }; action = [ordered]@{ type = 'string' } }
+        required = @('situation', 'impact', 'action'); additionalProperties = $false
+      }
       detailCode = [ordered]@{ type = 'string' }
     }
     required = @('status')
@@ -304,13 +339,55 @@ function Assert-CandidateEvidence {
   }
 }
 
+function Assert-DecisionCheckpoint {
+  param([object]$Terminal, [string[]]$CandidatePaths, [string]$BaseCommit, [string]$CandidateBranch)
+  foreach ($field in @(
+      'identity', 'model', 'candidateCommit', 'changedPaths', 'verified', 'unverified', 'residualRisk',
+      'decisionId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary'
+    )) {
+    if ($Terminal.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_invalid_terminal' }
+  }
+  if ([string]$Terminal.identity -cne 'DeepSeek V4 Flash' -or [string]$Terminal.model -cne $modelName) { Stop-DeepSeek 'deepseek_identity_mismatch' }
+  $commit = [string]$Terminal.candidateCommit
+  if (
+    (Invoke-GitText @('rev-parse', 'HEAD')) -cne $commit -or
+    (Invoke-GitText @('branch', '--show-current')) -cne $CandidateBranch -or
+    (Invoke-GitText @('rev-list', '--count', "$BaseCommit..$commit")) -cne '1' -or
+    (Invoke-GitText @('rev-parse', "$commit^")) -cne $BaseCommit -or
+    -not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))
+  ) { Stop-DeepSeek 'deepseek_checkpoint_invalid' }
+  $actual = @((Invoke-GitText @('-c', 'core.quotepath=false', 'diff', '--name-only', '--no-renames', "$BaseCommit..$commit")) -split '\r?\n' | Where-Object { $_ } | ForEach-Object { $_.Replace('\', '/') } | Sort-Object -Unique)
+  $reported = @($Terminal.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+  if ($actual.Count -eq 0 -or ($actual -join "`0") -cne ($reported -join "`0")) { Stop-DeepSeek 'deepseek_checkpoint_paths_invalid' }
+  foreach ($path in $actual) { if ($CandidatePaths -cnotcontains $path) { Stop-DeepSeek 'deepseek_checkpoint_paths_invalid' } }
+  Assert-StringArray -Value $Terminal.verified -DetailCode 'deepseek_invalid_terminal'
+  Assert-StringArray -Value $Terminal.unverified -DetailCode 'deepseek_invalid_terminal'
+  $options = @($Terminal.options)
+  if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC') { Stop-DeepSeek 'deepseek_decision_invalid' }
+  foreach ($option in $options) { Assert-StableText -Value ([string]$option.label) -DetailCode 'deepseek_decision_invalid' }
+  foreach ($value in @(
+      [string]$Terminal.decisionId, [string]$Terminal.question, [string]$Terminal.recommendedOption,
+      [string]$Terminal.impactSummary, [string]$Terminal.plainSummary.situation,
+      [string]$Terminal.plainSummary.impact, [string]$Terminal.plainSummary.action, [string]$Terminal.residualRisk
+    )) { Assert-StableText -Value $value -DetailCode 'deepseek_decision_invalid' }
+  [ordered]@{
+    category = 'decision_checkpoint'; decisionId = [string]$Terminal.decisionId; question = [string]$Terminal.question
+    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } })
+    recommendedOption = [string]$Terminal.recommendedOption; impactSummary = [string]$Terminal.impactSummary; plainSummary = $Terminal.plainSummary
+    checkpointCommit = $commit; baseCommit = $BaseCommit; branch = $CandidateBranch; changedPaths = $actual
+    verified = @($Terminal.verified | ForEach-Object { [string]$_ }); unverified = @($Terminal.unverified | ForEach-Object { [string]$_ }); residualRisk = [string]$Terminal.residualRisk
+  }
+}
+
 $result = $null
 try {
+  $script:stage = 'repository'
   if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot)) { Stop-DeepSeek 'deepseek_repository_invalid' }
   $script:resolvedRepositoryRoot = Normalize-FullPath (Resolve-Path -LiteralPath $RepositoryRoot).Path
   if (-not (Test-Path -LiteralPath (Join-Path $script:resolvedRepositoryRoot '.git'))) { Stop-DeepSeek 'deepseek_repository_invalid' }
   if ((Invoke-GitText @('rev-parse', '--is-inside-work-tree') 'deepseek_repository_invalid') -cne 'true') { Stop-DeepSeek 'deepseek_repository_invalid' }
   if ($PSVersionTable.PSVersion.Major -lt 7) { Stop-DeepSeek 'deepseek_pwsh_unavailable' }
+  $script:stage = 'identity'
   if (-not (Test-DeepSeekEndpoint (Get-ConfiguredBaseUrl))) { Stop-DeepSeek 'deepseek_identity_unavailable' }
   $claudeCommands = @(Get-Command 'claude.cmd' -CommandType Application -ErrorAction SilentlyContinue)
   if ($claudeCommands.Count -eq 0) { Stop-DeepSeek 'deepseek_cli_unavailable' }
@@ -319,6 +396,7 @@ try {
   }
 
   if ($Action -ceq 'Canary') {
+    $script:stage = 'canary_cli'
     $beforeHead = Invoke-GitText @('rev-parse', 'HEAD')
     $beforeStatus = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')
     $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CanaryPrompt) -AllowedTools 'Read'
@@ -336,6 +414,7 @@ try {
       pwshMajor = $PSVersionTable.PSVersion.Major; git = 'available'
     }
   } else {
+    $script:stage = 'runtime'
     Assert-StableText -Value $TaskId -DetailCode 'deepseek_task_invalid'
     Assert-StableText -Value $RunId -DetailCode 'deepseek_run_invalid'
     $runtime = Invoke-PwshJson -ScriptPath $runtimePath -Arguments @('-Action', 'Show', '-StateRoot', $StateRoot) -DetailCode 'deepseek_runtime_mismatch'
@@ -348,7 +427,15 @@ try {
     ) { Stop-DeepSeek 'deepseek_runtime_mismatch' }
     if ((Invoke-GitText @('branch', '--show-current')) -cne [string]$run.candidateBranch) { Stop-DeepSeek 'deepseek_worktree_mismatch' }
     if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne [string]$run.baseCommit) { Stop-DeepSeek 'deepseek_worktree_mismatch' }
-    if (-not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-DeepSeek 'deepseek_worktree_dirty' }
+    $script:stage = 'worktree'
+    $resumeContext = Read-ResumeContext
+    $initialPaths = @(Get-WorkingChangedPaths)
+    if ($null -eq $resumeContext -and $initialPaths.Count -ne 0) { Stop-DeepSeek 'deepseek_worktree_dirty' }
+    if ($null -ne $resumeContext) {
+      $expectedInitial = @($resumeContext.checkpointChangedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+      if (($initialPaths -join "`0") -cne ($expectedInitial -join "`0")) { Stop-DeepSeek 'deepseek_resume_context_invalid' }
+    }
+    $script:stage = 'task'
     $taskCardPath = Join-Path $script:resolvedRepositoryRoot "开发管理/任务卡/$TaskId.txt"
     $task = Read-TaskMetadata -Path $taskCardPath
     if ([string]$task.Digest -cne [string]$run.taskCardDigest) { Stop-DeepSeek 'deepseek_task_changed' }
@@ -368,7 +455,9 @@ try {
       'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 *)',
       'Bash(dotnet build *)', 'Bash(dotnet run *)', 'Bash(git diff --check)', 'Bash(git status --short)'
     ) -join ','
-    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths) -AllowedTools $allowedTools
+    $script:stage = 'candidate_cli'
+    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths -ResumeContext $resumeContext) -AllowedTools $allowedTools
+    $script:stage = 'candidate_evidence'
     switch ([string]$terminal.status) {
       'completed' {
         $candidateResult = Assert-CandidateEvidence -Terminal $terminal -CandidatePaths $candidatePaths -BaseCommit ([string]$run.baseCommit) -CandidateBranch ([string]$run.candidateBranch)
@@ -379,22 +468,23 @@ try {
         }
       }
       'needs_decision' {
-        foreach ($field in @('decisionId', 'question', 'options')) { if ($terminal.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_invalid_terminal' } }
-        Assert-StableText -Value ([string]$terminal.decisionId) -DetailCode 'deepseek_invalid_terminal'
-        Assert-StableText -Value ([string]$terminal.question) -DetailCode 'deepseek_invalid_terminal'
-        Assert-StringArray -Value $terminal.options -DetailCode 'deepseek_invalid_terminal'
-        $result = [ordered]@{ status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = $capturedSessionId; decisionId = [string]$terminal.decisionId; question = [string]$terminal.question; options = @($terminal.options) }
+        $decision = Assert-DecisionCheckpoint -Terminal $terminal -CandidatePaths $candidatePaths -BaseCommit ([string]$run.baseCommit) -CandidateBranch ([string]$run.candidateBranch)
+        $result = [ordered]@{
+          status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = $capturedSessionId
+          candidateCommit = [string]$decision.checkpointCommit; candidateResult = $decision
+        }
       }
       { $_ -cin @('blocked', 'failed') } {
         if ($terminal.PSObject.Properties.Name -cnotcontains 'detailCode') { Stop-DeepSeek 'deepseek_invalid_terminal' }
         Assert-StableText -Value ([string]$terminal.detailCode) -DetailCode 'deepseek_invalid_terminal'
+        if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne [string]$run.baseCommit -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-DeepSeek 'deepseek_terminal_worktree_invalid' }
         $result = [ordered]@{ status = [string]$terminal.status; taskId = $TaskId; runId = $RunId; sessionId = $capturedSessionId; detailCode = [string]$terminal.detailCode }
       }
       default { Stop-DeepSeek 'deepseek_invalid_terminal' }
     }
   }
 } catch {
-  $detailCode = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'deepseek_wrapper_error' }
+  $detailCode = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { "deepseek_wrapper_$($script:stage)" }
   $result = [ordered]@{ status = 'failed'; taskId = $TaskId; runId = $RunId; sessionId = $capturedSessionId; detailCode = $detailCode }
 }
 

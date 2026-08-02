@@ -88,6 +88,9 @@ try {
   $metadata.owner = 'codex'
   $metadata.dispatchState = 'ready'
   $metadata.stateReason = 'DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审'
+  foreach ($field in @('automationCheckpoint', 'automationReply')) {
+    if ($metadata.PSObject.Properties.Name -contains $field) { $metadata.PSObject.Properties.Remove($field) }
+  }
   $newCard = @(
     '---TASK-META---',
     ($metadata | ConvertTo-Json -Depth 100),

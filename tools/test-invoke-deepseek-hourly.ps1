@@ -19,7 +19,7 @@ function Get-InvocationMutexName {
 
 function Invoke-Hourly {
   param([string]$Action, [switch]$UseStateRoot)
-  $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $hourlyPath, '-Action', $Action, '-RepositoryRoot', $mainRoot, '-ResponsibilityTimeoutSeconds', '30', '-OutputJson')
+  $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $hourlyPath, '-Owner', 'deepseek', '-Action', $Action, '-RepositoryRoot', $mainRoot, '-ResponsibilityTimeoutSeconds', '30', '-OutputJson')
   if ($UseStateRoot) { $arguments += @('-StateRoot', $stateRoot) }
   $startInfo = [Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = 'pwsh'; $startInfo.WorkingDirectory = $mainRoot; $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
@@ -40,7 +40,7 @@ $fakeBin = Join-Path $testRoot 'bin'
 $recordPath = Join-Path $testRoot 'claude-record.json'
 $approvedStateRoot = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\automation-state')).TrimEnd('\', '/')
 $stateRoot = Join-Path $approvedStateRoot "tzg-deepseek-hourly-test-$testId"
-$hourlyPath = Join-Path $PSScriptRoot 'invoke-deepseek-hourly.ps1'
+$hourlyPath = Join-Path $PSScriptRoot 'invoke-hourly-owner.ps1'
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
 $originalBaseUrl = $env:ANTHROPIC_BASE_URL
@@ -96,7 +96,7 @@ try {
   $initialHead = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
 
   Write-Utf8 -Path (Join-Path $fakeBin 'fake-claude.ps1') -Text @'
-param([Parameter(ValueFromRemainingArguments = $true)][string[]]$CliArguments)
+$CliArguments = @($args)
 [Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 $prompt = [Console]::In.ReadToEnd()
@@ -138,12 +138,22 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
     $occupied = Invoke-Hourly -Action RunOnce -UseStateRoot
     Assert-Equal $occupied.ExitCode 0 "Contended RunOnce process failed: $($occupied.Stderr)"
     Assert-Equal ([string]$occupied.Json.status) 'occupied' 'Contended RunOnce did not stop at the entry mutex'
-    Assert-Equal ([string]$occupied.Json.detailCode) 'deepseek_entry_running' 'Contended RunOnce detail mismatch'
+    Assert-Equal ([string]$occupied.Json.detailCode) 'owner_entry_running' 'Contended RunOnce detail mismatch'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $stateRoot 'runtime.json'))) 'Contended RunOnce changed runtime state'
   } finally {
     $entryMutex.ReleaseMutex()
     $entryMutex.Dispose()
   }
+
+  $base = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'master')
+  $preexisting = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $stateRoot -Owner deepseek -TaskId $taskId -Route external_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest ('f' * 64))[0] | ConvertFrom-Json -Depth 50
+  $reported = Invoke-Hourly -Action RunOnce -UseStateRoot
+  Assert-Equal ([string]$reported.Json.status) 'existing_run' 'Existing run was automatically resumed'
+  Assert-Equal ([string]$reported.Json.runId) ([string]$preexisting.run.runId) 'Existing run report lost run identity'
+  Assert-True (-not (Test-Path -LiteralPath ([string]$preexisting.run.worktree))) 'Existing run report created a worktree'
+  $reason = 'fixture manual closeout'
+  $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action UpdateRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$preexisting.run.runId) -RunState attention_required -RecoveryReason $reason)
+  $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action CompleteRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$preexisting.run.runId) -CompletionCategory failed -DetailCode fixture_closeout -ExpectedRecoveryReason $reason)
 
   $run = Invoke-Hourly -Action RunOnce -UseStateRoot
   Assert-Equal $run.ExitCode 0 "RunOnce process failed: $($run.Stderr)"
@@ -151,20 +161,22 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-Equal ([string]$run.Json.category) 'success' 'RunOnce category mismatch'
   Assert-Equal ([string]$run.Json.taskId) $taskId 'RunOnce task mismatch'
   Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('branch', '--show-current')) 'master' 'Main branch changed'
-  Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')) ([string]$run.Json.canonicalHead) 'Main HEAD did not fast-forward to canonical head'
-  Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-list', '--count', "$initialHead..HEAD")) '3' 'Expected unrelated + business + handoff commits'
+  Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')) ([string]$run.Json.formalHead) 'Main HEAD did not fast-forward to formal head'
+  Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-list', '--count', "$initialHead..HEAD")) '2' 'Expected unrelated + one atomic DeepSeek formal commit'
   $subjects = Invoke-Git -Root $mainRoot -Arguments @('log', '--format=%s', '--reverse', "$initialHead..HEAD")
   Assert-True ($subjects -match 'concurrent unrelated main change') 'Concurrent unrelated commit was lost'
   Assert-True ($subjects -match "feat\($taskId\): complete DeepSeek task") 'Business commit was not integrated'
-  Assert-True ($subjects -match "handoff\($taskId\): register DeepSeek result") 'Handoff commit was not integrated'
+  Assert-True ($subjects -notmatch "handoff\($taskId\):") 'A separate handoff commit was created'
   $cardAfter = [IO.File]::ReadAllText((Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"))
   Assert-True ($cardAfter -match '"route": "codex_review"') 'Integrated task was not routed to review'
   Assert-True (([IO.File]::ReadAllText((Join-Path $mainRoot '开发管理/AI合作沟通.txt'))) -match '⚠️ 未审核') 'Integrated handoff was not recorded'
   Assert-True (Test-Path -LiteralPath (Join-Path $mainRoot 'fixtures/business.txt') -PathType Leaf) 'Business file was not integrated'
-  $runtime = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action Show -StateRoot $stateRoot)
+  $runtime = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action Show -StateRoot $stateRoot -RepositoryRoot $mainRoot)
   $runtimeJson = $runtime[0] | ConvertFrom-Json -Depth 50
   Assert-True ($null -eq $runtimeJson.state.runs.deepseek) 'Completed run remained active'
-  Assert-True ($null -eq $runtimeJson.state.integrationLease) 'Completed integration lease remained active'
+  Assert-True ([int]$runtimeJson.state.schemaVersion -eq 5) 'Runtime did not use schema 5'
+  Assert-Equal ([string]$runtimeJson.integrationLockStatus) 'none' 'Integration lock remained held'
+  Assert-Equal ([string]$run.Json.cleanup) 'cleaned' 'Successful worktree was not precisely cleaned'
 
   $none = Invoke-Hourly -Action RunOnce -UseStateRoot
   Assert-Equal ([string]$none.Json.status) 'no_candidate' 'Second run did not skip cleanly'
@@ -174,10 +186,9 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-Equal ([string]$canary.Json.status) 'verified' "Canary did not verify: $($canary.Stdout)"
   Assert-Equal ([string]$canary.Json.model) 'deepseek-v4-flash' 'Canary model mismatch'
   Assert-Equal ([string]$canary.Json.privateState) 'isolated' 'Canary private state was not isolated'
-  Assert-True (-not (Test-Path -LiteralPath ([string]$canary.Json.worktree))) 'Successful canary worktree was not cleaned'
   Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Canary changed main workspace'
 
-  Write-Output 'test-invoke-deepseek-hourly: OK'
+  Write-Output 'test-invoke-hourly-owner: OK'
 } finally {
   $env:PATH = $originalPath; $env:ANTHROPIC_BASE_URL = $originalBaseUrl; $env:TZG_FAKE_CLAUDE_RECORD = $originalRecord; $env:TZG_FAKE_MAIN_ROOT = $originalMain
   if (Test-Path -LiteralPath $testRoot) {

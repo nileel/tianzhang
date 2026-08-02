@@ -6,7 +6,6 @@ import { hashSendIntentKey } from './send-intent-store.mjs';
 import { ProviderRejectedError } from './send-runtime.mjs';
 
 const PROVIDER = 'feishu';
-const MAX_HEALTH_AGE_MS = 120_000;
 const PROVIDER_ID_PATTERN = /^[\x21-\x7e]{1,256}$/;
 const KEY_CONTROL_PATTERN = /[\u0000-\u001f\u007f]/u;
 
@@ -51,22 +50,6 @@ function dataFields(value, keys) {
     fields[key] = descriptor.value;
   }
   return fields;
-}
-
-function healthy(health, now) {
-  const fields = dataFields(health, ['status', 'updatedAt', 'pid', 'pidAlive']);
-  if (
-    fields === null
-    || fields.status !== 'CONNECTED'
-    || typeof fields.updatedAt !== 'string'
-    || !Number.isInteger(fields.pid)
-    || fields.pid <= 0
-    || fields.pidAlive !== true
-  ) {
-    return false;
-  }
-  const age = now.getTime() - Date.parse(fields.updatedAt);
-  return Number.isFinite(age) && age >= 0 && age <= MAX_HEALTH_AGE_MS;
 }
 
 function validMember(object, name, type) {
@@ -117,7 +100,6 @@ export async function sendNotification(request) {
     'idempotencyKey',
     'transport',
     'intentStore',
-    'health',
     'now',
   ]);
   if (fields === null) {
@@ -140,10 +122,6 @@ export async function sendNotification(request) {
   ) {
     throw new Error('Invalid notification request');
   }
-  if (!healthy(fields.health, fields.now)) {
-    return { result: 'CHANNEL_UNAVAILABLE' };
-  }
-
   let card;
   try {
     card = buildNotificationCard(fields.notification);

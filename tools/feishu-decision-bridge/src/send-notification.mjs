@@ -8,7 +8,7 @@ import { recordNotificationOutcome } from './notification-audit.mjs';
 import { parsePrivateConfig } from './config.mjs';
 import { sendNotification } from './send-notification-core.mjs';
 import { createSendIntentStore } from './send-intent-store.mjs';
-import { createLarkTransport, readHealthSnapshot } from './send-runtime.mjs';
+import { createLarkTransport } from './send-runtime.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const INVALID_RESULT = Object.freeze({ result: 'INVALID_INPUT' });
@@ -94,20 +94,6 @@ function configPath(env, getHomedir) {
   return path;
 }
 
-function healthy(health, now) {
-  if (!isPlainObject(health)) {
-    return false;
-  }
-  const age = now.getTime() - Date.parse(health.updatedAt);
-  return health.status === 'CONNECTED'
-    && Number.isInteger(health.pid)
-    && health.pid > 0
-    && health.pidAlive === true
-    && Number.isFinite(age)
-    && age >= 0
-    && age <= 120_000;
-}
-
 function writeResult(stdout, result) {
   stdout.write(`${JSON.stringify({ result: result.result })}\n`);
 }
@@ -118,7 +104,6 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
   const env = dependencies.env ?? process.env;
   const getHomedir = dependencies.homedir ?? systemHomedir;
   const getNow = dependencies.now ?? (() => new Date());
-  const readHealth = dependencies.readHealth ?? readHealthSnapshot;
   const createTransport = dependencies.createTransport ?? createLarkTransport;
   const createIntentStore = dependencies.createIntentStore ?? createSendIntentStore;
   const send = dependencies.send ?? sendNotification;
@@ -142,35 +127,23 @@ export async function main(argv = process.argv.slice(2), dependencies = {}) {
     return RESULT_CODES.get(INVALID_RESULT.result);
   }
 
-  let health;
-  try {
-    health = await readHealth(config.stateRoot, now);
-  } catch {
-    health = { status: 'UNAVAILABLE', updatedAt: null, pid: null, pidAlive: false };
-  }
-
   let result;
-  if (!healthy(health, now)) {
-    result = { result: 'CHANNEL_UNAVAILABLE' };
-  } else {
-    try {
-      const transport = await createTransport(config);
-      const intentStore = createIntentStore(config.stateRoot, { retryUnknown: false });
-      result = await send({
-        config,
-        notification: request.notification,
-        idempotencyKey: request.idempotencyKey,
-        transport,
-        intentStore,
-        health,
-        now,
-      });
-      if (!RESULT_CODES.has(result?.result)) {
-        result = INVALID_RESULT;
-      }
-    } catch {
-      result = { result: 'CHANNEL_UNAVAILABLE' };
+  try {
+    const transport = await createTransport(config);
+    const intentStore = createIntentStore(config.stateRoot, { retryUnknown: false });
+    result = await send({
+      config,
+      notification: request.notification,
+      idempotencyKey: request.idempotencyKey,
+      transport,
+      intentStore,
+      now,
+    });
+    if (!RESULT_CODES.has(result?.result)) {
+      result = INVALID_RESULT;
     }
+  } catch {
+    result = { result: 'CHANNEL_UNAVAILABLE' };
   }
 
   try {
