@@ -12,7 +12,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-BOUNTY-01B | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 待建立任务卡（前置已完成） | — | 增加独立 `BountyStateStore`、存档 schema 3 与版本 0／1／2 迁移。 | — |
+| U-BOUNTY-01B | P1 | deepseek | 已排队 | — | 悬赏状态 schema 3 存档迁移 | 开发管理/任务卡/U-BOUNTY-01B.txt |
 | U-BOUNTY-01C | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-BOUNTY-01B） | — | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | — |
 | U-GZ-FORMAL-E2E-01 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-BOUNTY-01C） | — | 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环。 | — |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
@@ -25,7 +25,7 @@
 | U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-TZ-CHARTER-MODEL-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 待建立任务卡（前置已完成） | — | 接入三项遗产与册界节点的纯规则模型，复用既有世界状态提交和金丹冲突边界。 | — |
+| U-TZ-CHARTER-MODEL-01 | P1 | deepseek | 已排队 | — | 三项遗产与册界纯规则模型 | 开发管理/任务卡/U-TZ-CHARTER-MODEL-01.txt |
 | U-TZ-CHARTER-SAVE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-TZ-CHARTER-MODEL-01） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 

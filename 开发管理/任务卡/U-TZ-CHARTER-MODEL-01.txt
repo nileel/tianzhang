@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-TZ-CHARTER-MODEL-01",
+  "title": "三项遗产与册界纯规则模型",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "D-TZ-CHARTER-SCHEMA-01、D-TZ-CHARTER-SAMPLE-01 与 D-TZ-CHARTER-CONFLICT-02 已完成并通过复审；共享冲突契约已是唯一实现。",
+  "expectedPaths": [
+    "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
+    "src/Assets/Scripts/World/CharterRuleRuntime.cs",
+    "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
+    "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs",
+    "开发管理/册界纵向样例数据验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-MODEL-01.txt",
+    "开发管理/任务归档/U-TZ-CHARTER-MODEL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
+
+## 来源与当前边界
+
+- `D-TZ-CHARTER-SCHEMA-01` 与 `D-TZ-CHARTER-SAMPLE-01` 已提供唯一的 `CharterRuleDefinitions` 静态定义、一个水府地纪有效样例和失败关闭的外部目录；它们没有调用规则事务。
+- `D-TZ-CHARTER-CONFLICT-02` 已把跨阶资格与金丹／元婴冲突迁入唯一的 shared `TianZhang.World.CharterConflictRules`；本卡只消费其输入和决定，不能复制 resolver 或 grant。
+- 本卡是无场景、无 UI、无存档的纯规则模型切片。`CharterRuntimeStateData` 继续是动态稳定状态承载，环境档案继续只是事件输出引用。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md#所有权与分层`、`#动态状态边界`。
+- `docs/superpowers/specs/2026-07-31-tianzhang-charter-cross-runtime-conflict-contract-design.md#唯一所有者与依赖方向`、`#契约 v1`、`#直接测试矩阵`。
+- `开发管理/任务列表/场景与Unity任务.txt#《天章》册界体系后续 Unity 任务卡`、`开发管理/册界纵向样例数据验证记录.txt`。
+- `src/Assets/Scripts/Content/CharterRuleDefinitionData.cs::CharterRuleDefinitionData|CharterRuleReferenceCatalog`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::CharterRuntimeStateData.TryValidate`、`src/Assets/Scripts/World/CharterConflictRules.cs::CrossTierChallengeArchive|RuleConflictInstance.Decide`。
+- `src/Assets/Tests/EditMode/CharterRuleDataTests.cs`、`src/Assets/Tests/EditMode/CharterConflictRulesTests.cs`、`simulations/BattleSim/BattleSim.csproj` 的 shared-source 编译引用。
+
+## 实施范围
+
+- 在 `TianZhang.World` 建立一个不持有场景、Unity 对象、全局单例、存档或 BattleSim 账本的纯规则入口；输入仅为已校验定义、动态状态、稳定 ID 和明确的调用请求。
+- 依次校验《开阖九章》的通行条件、太玄界印的公共设施管理／受益资格、节点连通、授权版本、传播范围、现实供给和完整正负提交；缺任一条件时返回稳定拒绝且不替换状态。
+- 对成功调用一次性构造新的动态状态并在全部校验成功后替换；事件只输出定义已声明的 `environmentProfile` 引用，不能反向改写环境档案。
+- 同变量金丹介入只构造完整 v1 `RuleConflictInstance` 并消费 shared 决定；无合法跨阶授权时拒绝覆盖。命中元婴道路锚点只返回受锚结果，不降格为金丹冲突、不开支或提交覆盖。
+- 新增直接 EditMode 测试覆盖通行不等于管理、管理不等于改规则、节点断开、覆盖越界、原子拒绝、金丹冲突、元婴受锚和事件唯一记录；在既有样例验证记录补充实际命令和结果。
+
+## 禁止项
+
+- 不创建第二套节点、授权、冲突、世界状态、存档、环境档案、场景、服务端或 UI 所有者；不修改 `GameSession`、存档 schema、CSV、asset、导入器或 BattleSim 账本。
+- 不实现完整九域模拟、第二据点、规则编辑器、天气／经济系统、上界地图、剧情任务、未定义数值、倍率、概率、产量或价格。
+- 不复制 `CrossTierChallenge*`、`RuleConflictInstance` 或 resolver，不补默认通行、授权、供给、覆盖或成功结果。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，确认册界规则与冲突直接用例通过；如全量仍有既有无关基线失败，逐项记录而不掩盖。
+- `dotnet build -c Release --no-restore simulations/BattleSim`。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests`。
+- 提交前运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 在不加载场景或 UI 的前提下，模型能确定性返回成功或稳定拒绝；状态、授权、覆盖和提交只经单一动态状态承载原子变化。
+- 水府地纪样例可观察地证明通行、归属、节点、授权、供给、范围、事件、金丹冲突和元婴受锚边界，且 shared 冲突语义没有分叉。
+
+## 停止条件
+
+- 若现有动态状态承载无法表达结果而必须建立平行状态／存档／冲突服务，停止并交回 Codex 重新确定所有者。
+- 若实现需要未锁定的数值、完整九域、第二据点、规则编辑器、剧情或环境经济模拟，停止并保持下游非 ready。

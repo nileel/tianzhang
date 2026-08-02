@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-BOUNTY-01B",
+  "title": "悬赏状态 schema 3 存档迁移",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "U-BOUNTY-01A 已复审完成；悬赏状态机与会话存储已具备，现进入独立的 schema 3 存档切片。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "src/Assets/Tests/EditMode/BountyRuntimeTests.cs",
+    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-BOUNTY-01B.txt",
+    "开发管理/任务归档/U-BOUNTY-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-BOUNTY-01B · 悬赏状态 schema 3 存档迁移
+
+## 来源与当前边界
+
+- `U-BOUNTY-01A` 已完成独立 `BountyStateStore`、四状态机和原子领奖；其会话内悬赏实例尚未进入保存或恢复。
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` 与 `2026-07-30-guanzhong-bounty-data-contract.md` 已锁定 schema 3：版本 0／1／2 保持既有迁移并得到空悬赏集合，版本 3 往返 `bounties[]`。
+- 本卡只接入现有 `GameSession` 的单一存档边界，不创建平行存档、任务状态或内容目录所有者。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#七、悬赏状态与存档`、`#十、验证矩阵`、`#十三、停止条件`。
+- `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md#四、状态、计数与原子领奖契约`、`#五、整表、跨表与运行时失败关闭`、`#六、fixture 规格`。
+- `src/Assets/Scripts/Game/GameSession.cs::CaptureSaveData|RestoreSaveData`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs::GameSessionSaveData|GameSessionRestoredState|GameSessionSnapshot.Capture|GameSessionSnapshot.Restore`、`src/Assets/Scripts/Game/BountyStateStore.cs::BountyStateStore|BountyStateSnapshot`。
+- `src/Assets/Scripts/Content/ContentCatalogData.cs::TryGetBounty`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`、`src/Assets/Tests/EditMode/BountyRuntimeTests.cs`。
+
+## 实施范围
+
+- 在现有 `GameSessionSaveData`、捕获、迁移中间态与恢复原子替换链路中增加悬赏实例的 schema 3 投影；保存字段只包含 `bountyId`、状态与进度。
+- 版本 0、1、2 保持既有世界／场景、任务、背包、NPC 与筑基紫府迁移语义，并将悬赏集合恢复为空；版本 3 对合法悬赏状态往返且不重复领取或结算。
+- 恢复在替换任何会话集合前校验版本、空或重复 ID、非法状态、负数或超目标进度以及无法由现有内容目录解析的悬赏引用；任一失败保持整个会话不变。
+- 在既有 EditMode 用例中覆盖 schema 0／1／2 迁移、schema 3 JSON 往返、未知或重复 ID、非法状态／进度、篡改后的原子失败与已领取终态稳定性，并把实际命令和结果写入既有悬赏验证记录。
+
+## 禁止项
+
+- 不修改 Bounty CSV、Language、asset、奖励参数、掉落概率、堆叠上限、悬赏板、城市功能分发、Adventure 结算、数值或经济。
+- 不把 `QuestStateStore` 重解释为悬赏，不建立第二存档、全局目录查找、静默删除进度或默认成功／默认奖励。
+- 不改变 `U-BOUNTY-01C` 的 UI 接入边界，也不提前完成关中端到端闭环。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，确认 `SessionStateSnapshotTests` 与 `BountyRuntimeTests` 直接用例通过；如全量仍有既有无关基线失败，逐项记录而不掩盖。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- 提交前运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- schema 3 能无损保存并原子恢复合法悬赏实例；schema 0／1／2 不伪造实例，任何非法版本、引用、状态、进度或重复项均失败关闭且不改变既有会话。
+- 存档事实仍只有 `GameSession` 与其既有快照链路拥有，领取与战斗计数行为未被改写。
+
+## 停止条件
+
+- 若恢复必须建立第二存档、全局单例目录、静默兼容读取层，或现有边界无法验证定义与实例的稳定引用，停止并交回 Codex 重新锁定所有者。
+- 若实现需要填入未批准的奖励、物品、掉落、数量、概率或经济参数，停止并保持本卡不扩展。
