@@ -1,0 +1,78 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-BOUNTY-01A",
+  "title": "关中一次性悬赏状态机与计数",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-02：D-BOUNTY-01、U-CONTENT-CATALOG-01、U-SETTLEMENT-01、U-ITEM-GRANT-01 与 U-ENEMY-01 均已完成；首批生产 BountyData、敌人结算和原子库存入口已可用。本卡只实施无存档的悬赏规则与击败计数。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Game/BountyRuntime.cs",
+    "src/Assets/Scripts/Game/BountyRuntime.cs.meta",
+    "src/Assets/Scripts/Game/BountyStateStore.cs",
+    "src/Assets/Scripts/Game/BountyStateStore.cs.meta",
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/InventoryGrantService.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Tests/EditMode/BountyRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/BountyRuntimeTests.cs.meta",
+    "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-BOUNTY-01A.txt",
+    "开发管理/任务归档/U-BOUNTY-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-BOUNTY-01A · 关中一次性悬赏状态机与计数
+
+## 来源与当前边界
+
+- `D-BOUNTY-01`、`U-CONTENT-CATALOG-01`、`U-SETTLEMENT-01`、`U-ITEM-GRANT-01` 与 `U-ENEMY-01` 已完成；`bounty_guanzhong_shijiahou` 的生产数据、只读目录、正式敌人结算和库存原子授予均可复用。
+- 本卡实现 `Available -> Accepted -> ObjectiveCompleted -> Claimed` 的纯运行时规则、Adventure 的单次击败登记，以及奖励与状态的同次提交；存档 schema 3／迁移由 `U-BOUNTY-01B`，悬赏板 UI 与城市接入由 `U-BOUNTY-01C`。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` 的“6.4 悬赏运行时”“6.5 背包原子提交”“十、验证矩阵”“十一、任务依赖结构”“十三、停止条件”。
+- `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md` 的“四、状态、计数与原子领奖契约”“五、整表、跨表与运行时失败关闭”“六、fixture 规格”“七、后续顺序与非目标”。
+- `src/Assets/Scripts/Content/BountyData.cs::BountyData`、`src/Assets/Scripts/Content/ContentCatalogData.cs::TryGetBounty`、`src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset` 与 `src/Assets/DataConfig/Bounties.csv` 的首批生产悬赏事实。
+- `src/Assets/Scripts/Game/GameSession.cs::GameSession`、`src/Assets/Scripts/Game/InventoryGrantService.cs::InventoryGrantService.Grant`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::ConsumeFormalEncounterResult`、`src/Assets/Scripts/Adventure/FormalEncounterResult.cs::FormalEncounterResult.TryCreate`，以及 `src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs` 和 `src/Assets/Tests/EditMode/TacticalGridModelTests.cs` 的直接测试所有者。
+- `开发管理/关中正式敌人遭遇验证记录.txt`、`开发管理/关中物品原子授予验证记录.txt`、`开发管理/关中首批掉落与悬赏奖励参数验证记录.txt`。
+
+## 实施范围
+
+- 在 `BountyRuntime` 与独立 `BountyStateStore` 中以稳定 ID 实现 `Accept`、`RecordDefeat`、`Claim`、`GetState`；只支持生产范围、`defeat_enemy` 与 `one_time`，非法城市入口、敌人、地点、胜负、状态、进度或重复请求均返回稳定原因且不改状态。
+- `GameSession` 仅持有本次会话的 Bounty 实例状态；将库存候选构造与替换分开，使 `Claim` 先完整校验奖励、数量和堆叠，再一次性替换库存与 `Claimed` 状态。任一失败必须同时保留两者原状。
+- 在既有 `AdventureSceneController.ConsumeFormalEncounterResult` 的正式胜利结算点，在同一已消费的结构化 `adventureId + enemyId` 上至多登记一次悬赏进度；掉落授予仍按现有入口执行，不重做战斗或返回所有者。
+- 新增直接 EditMode 测试，覆盖四个合法状态、全部非法转换、错误地点／敌人、败北、单场重复登记、负数与超目标拒绝、奖励原子成功／失败，以及 Adventure 只登记一次。
+
+## 禁止项
+
+- 不修改 Bounty CSV、Language、asset、目录、导入器、奖励数值、掉落概率、堆叠上限、敌人 AI、CTB、伤害、场景、悬赏 UI 或城市功能分发。
+- 不修改 `SessionStateSnapshots.cs`、`GameSessionSnapshot` 或 schema；不得提前实现 schema 3、版本 0／1／2 迁移、读档恢复或持久化标记。
+- 不复用或重新解释 `QuestStateStore`，不新增第二个会话、背包、场景流转或存档所有者；不得加入随机池、每日刷新、其他目标类型、NPC、价格、经济、默认奖励或 fallback。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- Unity EditMode：`BountyRuntimeTests`、`InventoryGrantServiceTests` 与直接覆盖正式 Adventure 单次结算的 `TacticalGridModelTests`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- 提交前运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（仅本卡 expectedPaths）与 `git diff --cached --check`。
+
+## 完成条件
+
+- 首批稳定 ID 在关中城入口可接取；仅合法胜利登记一次并在目标数达到时转为完成；非法请求始终不改变实例状态。
+- 领奖只在完成态一次成功，库存与 `Claimed` 原子同步；任一奖励校验失败时两份状态均完全不变。
+- 存档、UI、数据与数值边界未被改动，验证记录可复现本卡的直接检查结果。
+
+## 停止条件
+
+- 若实现需要修改 schema／迁移、场景或 UI、生产数据／参数、第二状态或存档所有者，或无法在既有 Adventure 单次消费点登记，停止并保持本卡为非完成状态；不得以兼容层、默认值或重复结算继续推进。
