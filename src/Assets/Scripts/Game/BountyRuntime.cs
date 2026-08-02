@@ -6,7 +6,6 @@ namespace TianZhang.Game
 {
     /// <summary>
     /// 悬赏动作结果；失败时返回稳定原因且不修改任何状态。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件
     /// </summary>
     public sealed class BountyActionResult
     {
@@ -34,7 +33,6 @@ namespace TianZhang.Game
 
     /// <summary>
     /// 悬赏规则稳定原因与支持范围；只使用稳定 ID，不依赖显示名或路径。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件
     /// </summary>
     public static class BountyRuntimeRules
     {
@@ -70,7 +68,6 @@ namespace TianZhang.Game
 
     /// <summary>
     /// 悬赏纯规则边界：只通过稳定 ID、只读目录与会话状态交互，不接触界面。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件
     /// </summary>
     public sealed class BountyRuntime
     {

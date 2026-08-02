@@ -42,7 +42,6 @@ namespace TianZhang.Game
         public NpcStateStore NpcStates { get; } = new NpcStateStore();
         /// <summary>
         /// 本次会话的悬赏实例状态；存档与恢复由 U-BOUNTY-01B 负责。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增字段
         /// </summary>
         public BountyStateStore BountyStates { get; } = new BountyStateStore();
         public FoundationPurpleMansionSaveData PlayerFoundationPurpleMansionSaveData { get; private set; }
@@ -214,7 +213,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 在玩家当前据点接取悬赏；只接受位于 issuerSettlementId 且状态为 Available 的悬赏。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
         /// </summary>
         public BountyActionResult AcceptBounty(ContentCatalogData catalog, string bountyId)
         {
@@ -223,7 +221,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 由 Adventure 胜利结算点提交结构化 adventureId + enemyId；同一场胜利至多推进一次。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
         /// </summary>
         public BountyActionResult RecordBountyDefeat(
             ContentCatalogData catalog,
@@ -235,7 +232,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 领奖：先完整校验奖励与堆叠，再一次性替换库存与 Claimed 状态；任一失败两者均不变。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
         /// </summary>
         public BountyActionResult ClaimBounty(ContentCatalogData catalog, string bountyId)
         {
@@ -244,7 +240,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 查询悬赏实例；无实例时返回 Available。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
         /// </summary>
         public BountyStateSnapshot GetBountyState(string bountyId)
         {

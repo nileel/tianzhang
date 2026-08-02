@@ -5,7 +5,6 @@ namespace TianZhang.Game
 {
     /// <summary>
     /// 悬赏实例状态；无实例即为 <see cref="BountyStatus.Available"/>。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件
     /// </summary>
     public enum BountyStatus
     {
@@ -17,7 +16,6 @@ namespace TianZhang.Game
 
     /// <summary>
     /// 单个悬赏实例快照；进度必须非负，其余语义约束由 <see cref="BountyRuntime"/> 校验。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件
     /// </summary>
     public sealed class BountyStateSnapshot
     {
@@ -42,7 +40,6 @@ namespace TianZhang.Game
 
     /// <summary>
     /// 会话级悬赏实例存储；与 QuestStateStore 语义无关，独立保存悬赏状态。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件
     /// </summary>
     public sealed class BountyStateStore
     {

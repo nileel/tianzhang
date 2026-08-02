@@ -227,7 +227,6 @@ namespace TianZhang.Adventure
             if (outcome != TacticalCombatEndOutcome.Victory)
                 return;
 
-            // ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：正式胜利结算点登记悬赏进度
             var session = GameSession.Instance;
             if (session != null)
                 session.RecordBountyDefeat(contentCatalog, result.AdventureId, result.EnemyId);

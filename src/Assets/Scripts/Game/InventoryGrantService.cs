@@ -59,7 +59,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 普通授予：先构造并校验完整新快照，全部合法后一次性替换背包。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：拆分候选构造与替换
         /// </summary>
         public InventoryGrantResult Grant(
             InventoryStateStore inventory,
@@ -82,7 +81,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 只构造并校验全部授予后的新库存快照，不修改背包；失败时返回稳定原因且候选为空。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
         /// </summary>
         public bool TryBuildGrant(
             InventoryStateStore inventory,
@@ -187,7 +185,6 @@ namespace TianZhang.Game
 
         /// <summary>
         /// 用已通过 <see cref="TryBuildGrant"/> 校验的完整快照一次性替换背包；替换本身不再失败。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增方法
         /// </summary>
         public void ApplyGrant(
             InventoryStateStore inventory,

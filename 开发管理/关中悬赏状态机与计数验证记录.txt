@@ -28,3 +28,9 @@
 ## 后续
 
 - `U-BOUNTY-01B` 实施 schema 3 悬赏持久化与迁移；`U-BOUNTY-01C` 接入悬赏板界面与城市入口。本卡悬赏实例仅限会话内，存档保存与恢复不在本卡范围。
+
+## Codex 独立复审（2026-08-02）
+
+- 复审业务提交 `b433dc464f71e0b56740a9452336af3448899529` 通过：`BountyRuntime.ValidateBountyForAccept` 在创建实例前通过同一 `ContentCatalogData.TryGetSettlement` / `TryGetEnemy` 校验发布城市与目标敌人，缺失时分别返回稳定原因且状态保持 `Available`；修复未扩展到 Adventure、存档、UI、生产数据或数值。
+- 独立 Unity 6000.3.18f1 EditMode 完整执行 306 项，304 通过、2 失败；`BountyRuntimeTests` 15/15、`InventoryGrantServiceTests` 7/7、`TacticalGridModelTests` 4/4、`AdventureSceneControllerTests` 14/14 通过。两项失败仍为已登记且与本卡路径无关的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
+- Unity 生成忽略的工程投影后，`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 警告、0 错误）。本卡复审通过并关闭，存档 schema 3 与迁移仍由 `U-BOUNTY-01B` 独立实施。
