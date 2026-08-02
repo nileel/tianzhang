@@ -145,7 +145,7 @@ function New-CandidatePrompt {
     "Create exactly one candidate commit with: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $quotedRoot -ExpectedPaths $quotedPaths -CommitMessage 'candidate($TaskId): DeepSeek implementation'"
     'Do not use RequireAutomationMetadata for the candidate. The fixed Windows entry creates formal business and handoff commits later.'
     'Return only the supplied structured object. completed requires the full candidate SHA, exact changed paths, verified/unverified arrays, residual risk, and the four finalizer-ready metadata values.'
-    'Use expectedTransition=codex_review/codex/ready. result, impact, verify and plain must respectively use the existing 问题/完成, 影响/边界, 验证/后续, 发生/影响/需要 single-line structures.'
+    'Use expectedTransition=codex_review/codex/ready. The four finalizer-ready values must use these exact single-line forms: result="问题=...；完成=...", impact="影响=...；边界=...", verify="验证=...；后续=...", and plain="发生=...；影响=...；需要=...".'
     'needs_decision, blocked or failed must preserve the worktree and return a stable detailCode; do not retry with widened permissions.'
   ) -join "`n"
 }

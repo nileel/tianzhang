@@ -45,7 +45,7 @@
 
 - 正式 automation 提交继续使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata` 的九字段合同：`AutomationTask`、`AutomationState`、`AutomationResult`、`AutomationImpact`、`AutomationVerify`、`AutomationPlain`。
 - Codex candidate 使用 `AutomationState=completed`，只表示本责任方提交闭环；实际任务状态仍由任务卡／归档投影证明。DeepSeek 正式业务提交使用 `AutomationState=pending_review`；handoff 提交不带 Automation 标记。
-- `Result`、`Impact`、`Verify`、`Plain` 分别使用 `问题/完成`、`影响/边界`、`验证/后续`、`发生/影响/需要` 的单行结构。九个子字段均非空并由事实和实际验证支持；通俗子字段各不超过 200 个 Unicode code point。
+- `Result`、`Impact`、`Verify`、`Plain` 分别严格使用 `问题=...；完成=...`、`影响=...；边界=...`、`验证=...；后续=...`、`发生=...；影响=...；需要=...` 的单行结构。九个子字段均非空并由事实和实际验证支持；通俗子字段各不超过 200 个 Unicode code point。
 - 非 QueueMaintenance 的成功 `CompleteRun` 后发送一次 `tools/send-feishu-notification.ps1 -Kind TaskOutcome`：DeepSeek 发送已核验 `businessCommit` 的 `pending_review`；Codex 按实际任务转换发送 `completed`、`blocked`、`waiting_decision`、`waiting_reply` 或 `failed`。通知失败只返回脱敏投递状态，不回滚提交、不恢复 run、不重试业务。
 - DeepSeek 不得复审自己的结果。Codex 复审读取 `master` 实际组合与审核证据，不用旧 candidate 代替。
 

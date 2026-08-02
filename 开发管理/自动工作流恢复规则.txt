@@ -39,5 +39,6 @@
 
 - 自动轮次只报告 owner、taskId、runId 和脱敏 `recoveryReason` 后结束；不选择新任务、不修改业务事实、不自动清理。
 - 普通管理上下文必须先核验主工作区、owner worktree、branch、提交、进程和 runtime，再决定是补齐任务级 blocker、人工完成可证明的关闭，还是保留证据并暂停两个 automation。
-- 若已证明 `attention_required` 由同一 DeepSeek 入口的并发调用误判，而原调用随后留下了完整、干净、路径合法的唯一 candidate 与结构化结果，普通管理上下文可用精确匹配的原 `recoveryReason` 将该 run 恢复为 `candidate_ready`；runtime 已有 candidate／canonical 证据或存在 `integrationLease` 时不得使用此恢复。
+- 若已证明 `attention_required` 由同一 DeepSeek 入口的并发调用误判，而原调用随后留下了完整、干净、路径合法的唯一 candidate 与 finalizer-ready 结构化结果，普通管理上下文可用精确匹配的原 `recoveryReason` 将尚未记录 candidate 证据的 run 恢复为 `candidate_ready`。
+- 已记录同一 candidate 的 canonical 构建若在写入 canonical 证据前因结果格式失败，普通管理上下文可在不改变事实陈述的前提下把结果机械改成精确 finalizer 格式，再以匹配的 `recoveryReason` 和同一 candidate SHA 返回 `candidate_ready`；candidate SHA 不同、runtime 已有 canonical 证据或存在 `integrationLease` 时不得使用。
 - 需要负责人决定时，先按正常任务生命周期把任务转换为 `pending_decision` 并提交；不得把等待决定只藏在 runtime，也不得恢复旧 Desktop／Cowork session。

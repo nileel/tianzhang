@@ -348,6 +348,23 @@ try {
   Assert-Equal ([string]$attentionCandidateRecovered.Json.run.state) 'candidate_ready' 'Verified attention candidate was not recovered'
   Assert-Equal ([string]$attentionCandidateRecovered.Json.run.candidateCommit) (('f' * 40) -join '') 'Recovered candidate commit mismatch'
   Assert-True ($null -eq $attentionCandidateRecovered.Json.run.recoveryReason) 'Recovered candidate retained stale attention reason'
+  $null = Invoke-Runtime -Action UpdateRun -Parameters @{
+    StateRoot = $attentionCandidateRoot
+    Owner = 'deepseek'
+    RunId = $attentionCandidateRunId
+    RunState = 'attention_required'
+    RecoveryReason = 'canonical build failed before evidence was recorded'
+  }
+  $attentionCandidateRetried = Invoke-Runtime -Action UpdateRun -Parameters @{
+    StateRoot = $attentionCandidateRoot
+    Owner = 'deepseek'
+    RunId = $attentionCandidateRunId
+    RunState = 'candidate_ready'
+    CandidateCommit = (('f' * 40) -join '')
+    CandidateResultPath = $attentionCandidateResultPath
+    ExpectedRecoveryReason = 'canonical build failed before evidence was recorded'
+  }
+  Assert-Equal ([string]$attentionCandidateRetried.Json.run.state) 'candidate_ready' 'Recorded candidate could not recover after a pre-evidence canonical failure'
 
   [IO.Directory]::CreateDirectory($migrationRoot) | Out-Null
   Set-PrivatePathAcl -Path $migrationRoot -Directory

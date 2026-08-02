@@ -129,6 +129,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--model') + 1]) 'deepseek-v4-flash' 'Wrapper did not pin the model'
   Assert-True ([string]$record.prompt -match 'fixed Windows entry already selected') 'Candidate prompt omitted fixed-entry boundary'
   Assert-True ([string]$record.prompt -match 'Do not modify the task card') 'Candidate prompt omitted lifecycle exclusion'
+  Assert-True ([string]$record.prompt -match 'result="问题=\.\.\.；完成=\.\.\."') 'Candidate prompt omitted the exact finalizer metadata form'
   $allowedTools = [string]$arguments[[Array]::IndexOf($arguments, '--allowedTools') + 1]
   Assert-True (-not $allowedTools.Contains('Bash(*)', [StringComparison]::Ordinal)) 'Wrapper allowed wildcard Bash'
 
