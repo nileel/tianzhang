@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-03：U-TZ-CHARTER-MODEL-01 已完成复审。当前 CharterRuleReferenceCatalog 仅由 Editor 导入器创建，GameSession schema 3 也未持有册界状态；先由 Codex 锁定运行时静态校验、迁移和原子恢复方案，再建立外部实施卡。",
+  "stateReason": "等待负责人决定：任务完成条件要求创建 U-TZ-CHARTER-SAVE-01 的外部实施卡，但本 run 初始 expectedPaths 未包含开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt；应如何处理该路径合同冲突？",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -18,7 +18,57 @@
     "开发管理/任务卡/U-TZ-CHARTER-SAVE-01A.txt",
     "开发管理/任务归档/U-TZ-CHARTER-SAVE-01A.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "U-TZ-CHARTER-SAVE-01A",
+    "sourceRunId": "d64b1474-a0f1-4240-9b51-a4e1febbf502",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "U-TZ-CHARTER-SAVE-01A-PATHS-01",
+    "question": "任务完成条件要求创建 U-TZ-CHARTER-SAVE-01 的外部实施卡，但本 run 初始 expectedPaths 未包含开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt；应如何处理该路径合同冲突？",
+    "options": [
+      {
+        "key": "A",
+        "label": "更正允许路径"
+      },
+      {
+        "key": "B",
+        "label": "免建实施卡关闭"
+      },
+      {
+        "key": "C",
+        "label": "保持阻塞"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "设计规范已冻结；需先把下游实施卡路径纳入允许路径，才能合法创建、排队并关闭本设计卡。",
+    "plainSummary": {
+      "action": "选择 A：更正允许路径后重新派发。",
+      "situation": "候选路径合同遗漏了必需下游任务卡。",
+      "impact": "当前 checkpoint 不改变任务生命周期。"
+    },
+    "checkpointCommit": "2255afc0fe7e5d37e26ec5cba96cf9655385798a",
+    "baseCommit": "2675fb5a95612866fe179ed2844da33ac3e4f3b0",
+    "branch": "codex/automation/codex/d64b1474-a0f1-4240-9b51-a4e1febbf502/candidate",
+    "changedPaths": [
+      "docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md"
+    ],
+    "verified": [
+      "git diff --check -- docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md",
+      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SAVE-01A -Postcondition CodexDispatchReady -ExpectedRoute codex_execute",
+      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs",
+      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md",
+      "git diff --cached --check"
+    ],
+    "unverified": [
+      "无法创建开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt：该路径不在本 run 初始 expectedPaths 中。"
+    ],
+    "residualRisk": "若不更正候选允许路径，创建下游外部实施卡会被固定入口拒绝，或任务会在缺少必需实施卡时错误关闭。",
+    "taskContextDigest": "7c86e74d308c31734fb83c3c3b79c2dea893f258872cbeb0e6b7d585177fe844",
+    "createdAt": "2026-08-03T20:25:42.3975351+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # U-TZ-CHARTER-SAVE-01A · 锁定册界状态持久化的静态校验与迁移边界
