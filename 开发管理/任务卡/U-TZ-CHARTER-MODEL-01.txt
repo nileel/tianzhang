@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-03 Codex 独立复审不通过：金丹介入可绕过版本化挑战授权，已分配现实供给可被重复消费；等待同一卡最窄返工。",
+  "stateReason": "负责人已通过 DEC-20260803-REV5882771ABE76 选择 DeepSeek 按未通过审核清单返工",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
     "src/Assets/Scripts/World/CharterRuleRuntime.cs",
