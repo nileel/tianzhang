@@ -93,7 +93,7 @@ function New-TerminalSchema {
       verified = @{ type = 'array'; items = @{ type = 'string' } }
       unverified = @{ type = 'array'; items = @{ type = 'string' } }
       residualRisk = @{ type = 'string' }; result = @{ type = 'string' }; impact = @{ type = 'string' }; verify = @{ type = 'string' }; plain = @{ type = 'string' }
-      decisionId = @{ type = 'string' }
+      decisionId = @{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }
       question = @{ type = 'string' }
       options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' } }; required = @('key', 'label'); additionalProperties = $false } }
       recommendedOption = @{ type = 'string' }
@@ -200,6 +200,7 @@ function Assert-Decision {
   $options = @($Terminal.options)
   if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC') { Stop-Candidate 'codex_decision_invalid' }
   foreach ($value in @([string]$Terminal.decisionId, [string]$Terminal.question, [string]$Terminal.recommendedOption, [string]$Terminal.impactSummary, [string]$Terminal.plainSummary.situation, [string]$Terminal.plainSummary.impact, [string]$Terminal.plainSummary.action)) { if ([string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_decision_invalid' } }
+  if ([string]$Terminal.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { Stop-Candidate 'codex_decision_invalid' }
   [ordered]@{
     category = 'decision_checkpoint'; decisionId = [string]$Terminal.decisionId; question = [string]$Terminal.question
     options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } }); recommendedOption = [string]$Terminal.recommendedOption

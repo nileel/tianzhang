@@ -34,6 +34,15 @@ try{
 
   $meta=Read-Meta (Join-Path $root '开发管理\任务卡\TASK-A.txt')
   $pause=[ordered]@{schemaVersion=1;taskId='TASK-A';sourceRunId='run-a';owner='deepseek';route='external_execute';decisionId='DEC-20260803-TESTA';question='选择哪一种？';options=@(@{key='A';label='甲'},@{key='B';label='乙'},@{key='C';label='丙'});recommendedOption='B';impactSummary='B 风险最低';plainSummary=@{situation='需要决定';impact='会影响实现';action='请选择 B'};checkpointCommit=('a'*40);baseCommit=('b'*40);branch='codex/automation/deepseek/run-a/candidate';changedPaths=@('result.txt');verified=@('test');unverified=@('none');residualRisk='none';taskContextDigest=(Get-ContextDigest $meta);createdAt='2026-08-03T00:00:00.0000000+00:00'}
+  $projectionPaths=@('开发管理\任务卡\TASK-A.txt','开发管理\当前任务队列.txt','开发管理\任务列表\自动化任务.txt')
+  $beforeInvalid=@($projectionPaths|ForEach-Object{[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([IO.File]::ReadAllBytes((Join-Path $root $_))))})
+  $invalidPause=($pause|ConvertTo-Json -Compress -Depth 20)|ConvertFrom-Json -Depth 20
+  $invalidPause.decisionId='TASK-A-PATHS-01'
+  $invalidPausePath=Join-Path $root 'invalid-pause.json'; Write-Utf8 $invalidPausePath ($invalidPause|ConvertTo-Json -Compress -Depth 20)
+  $invalidPaused=Invoke-State 'PauseDecision' 'TASK-A' $invalidPausePath @(1)
+  Assert-Equal $invalidPaused.status 'failed' 'Invalid decisionId was accepted'
+  $afterInvalid=@($projectionPaths|ForEach-Object{[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([IO.File]::ReadAllBytes((Join-Path $root $_))))})
+  Assert-Equal ($afterInvalid -join '|') ($beforeInvalid -join '|') 'Invalid decisionId changed task projections'
   $pausePath=Join-Path $root 'pause.json'; Write-Utf8 $pausePath ($pause|ConvertTo-Json -Compress -Depth 20)
   $paused=Invoke-State 'PauseDecision' 'TASK-A' $pausePath
   Assert-Equal $paused.dispatchState 'pending_decision' 'Pause did not change state'

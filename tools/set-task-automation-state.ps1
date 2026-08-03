@@ -104,6 +104,7 @@ try {
     'PauseDecision' {
       if ([string]$meta.dispatchState -cne 'ready' -or $queueIndex -lt 0 -or [string]$context.taskContextDigest -cne (Get-TaskContextDigest $meta)) { throw 'Pause precondition failed' }
       foreach ($name in @('sourceRunId', 'owner', 'route', 'decisionId', 'question', 'checkpointCommit', 'baseCommit', 'branch', 'createdAt')) { if ([string]::IsNullOrWhiteSpace([string]$context.$name)) { throw 'Checkpoint context is incomplete' } }
+      if ([string]$context.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { throw 'Checkpoint decisionId is invalid' }
       $context | Add-Member -NotePropertyName queueIndex -NotePropertyValue $queueIndex -Force
       $meta.dispatchState = 'pending_decision'
       $meta.stateReason = "等待负责人决定：$([string]$context.question)"
