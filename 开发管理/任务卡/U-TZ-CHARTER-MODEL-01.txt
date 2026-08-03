@@ -4,13 +4,13 @@
   "id": "U-TZ-CHARTER-MODEL-01",
   "title": "三项遗产与册界纯规则模型",
   "priority": "P1",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-03 Codex 独立复审不通过：金丹介入可绕过版本化挑战授权，已分配现实供给可被重复消费；等待同一卡最窄返工。",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
     "src/Assets/Scripts/World/CharterRuleRuntime.cs",
@@ -72,6 +72,13 @@
 
 - 在不加载场景或 UI 的前提下，模型能确定性返回成功或稳定拒绝；状态、授权、覆盖和提交只经单一动态状态承载原子变化。
 - 水府地纪样例可观察地证明通行、归属、节点、授权、供给、范围、事件、金丹冲突和元婴受锚边界，且 shared 冲突语义没有分叉。
+
+## Codex 独立复审未通过（2026-08-03）
+
+- `JindanSameVariable` 在 `crossTierChallengeRequest=null` 时仍进入 shared 决定并返回成功，违反“无合法跨阶授权时拒绝覆盖”；返工必须要求版本化请求、目录声明与 archive 资格同时成立，并补稳定拒绝用例。
+- 成功事务把同一现实供给的 `allocated` 记录追加在旧 `registered` 记录之后；下一次调用仍命中旧记录并再次成功，违反现实供给与正负提交的一次性原子边界。返工必须按稳定 ID 替换／结转唯一供给状态，并覆盖重复调用拒绝。
+- 冲突结果目前只对 `Rejected`／`Anchored` 分流，`RightWins` 或 `Neutral` 也会构造规则 `NextState`。返工必须明确哪一侧代表本次册界调用，并证明败方／中立不会提交规则状态或事件；不得在本卡内复制 shared resolver 或新增账本所有者。
+- 复审核验临时加入两条反例后，Unity EditMode 为 320 项中 316 通过、4 失败：两项既有基线加上述“缺跨阶请求仍成功”“已分配供给仍可复用”两项新增失败。临时反例已撤回，证据登记在 `开发管理/未通过审核清单.txt`。
 
 ## 停止条件
 

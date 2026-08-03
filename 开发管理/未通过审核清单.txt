@@ -6,7 +6,14 @@
 
 ## 当前未通过/待复核项
 
-当前无未通过或待复核项。
+### U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
+
+- 审核对象：正式提交 `8b822525d2d2940a45a552750e87f61b8da7efa2`；结论：不通过。
+- 金丹授权失败关闭缺口：`CharterRuleRuntime.Invoke` 只在跨阶请求非空时核验声明 grant；`JindanSameVariable` 把 `crossTierChallengeRequest` 设为空后仍可得到 shared 胜负并提交 `NextState`，违反任务卡“无合法跨阶授权时拒绝覆盖”。
+- 现实供给重复消费：`Succeed` 向 `realitySupplyStates` 追加 `allocated`，却保留同 ID 的旧 `registered`；`IsRegisteredSupply` 下一次仍命中旧记录，使同一供给、正负提交和节点占用可重复结算。
+- 冲突结果未约束提交：除 `Rejected`／`Anchored` 外，`RightWins` 与 `Neutral` 也直接走 `Succeed`；当前请求没有锁定哪一候选代表册界调用，无法证明败方或中立不会提交规则状态。
+- 直接证据：在独立复审 worktree 临时增加“缺跨阶请求必须拒绝”和“已分配供给不可复用”两条反例，运行 `tools/run-unity-editmode-tests.ps1` 得到 320 项中 316 通过、4 失败；新增两项均按预期失败，另两项为已登记基线。临时反例随后撤回，未进入提交。
+- 最窄返工：同一卡只修授权失败关闭、shared 决定到本次调用结果的明确映射、供给唯一状态结转及对应直接测试；不得复制 resolver、扩展存档／场景／UI、修改 shared 冲突排序或新增账本所有者。返工完成后重新转 `codex_review/codex/ready`，由 Codex 独立复审。
 
 ## 复审路由
 

@@ -53,3 +53,12 @@
 - 事件唯一记录：成功只输出定义已声明的 `event_suifu_water_redistribution`／`event_suifu_downstream_supply_delay` 的 `env_guanzhong_wild` 引用，逐条唯一，状态不含环境档案。
 - 金丹冲突：同变量介入构造完整 v1 实例消费 shared 决定；无 archive → `JD_CHALLENGE_ARCHIVE_UNAVAILABLE`、未声明 grant → `charter_unknown_conflict_grant`、撤销 grant → `JD_CHALLENGE_REVOKED`、合法授权 → 携带 `LeftWins` 决定原子应用，无第二套 resolver。
 - 元婴受锚：命中受锚只返回 `TZ_CHARTER_CONFLICT_YUANYING_ANCHORED`，不降格金丹、不开支、不提交覆盖。
+
+## Codex 独立复审结果（2026-08-03）
+
+结论：不通过，原“8/8 直接用例通过”不足以证明任务卡的失败关闭与一次性原子边界。
+
+- 临时反例 `JindanInterventionWithoutCrossTierRequestCannotCommitRuleState` 证明：`crossTierChallengeRequest=null` 时仍可返回成功并构造 `NextState`，版本化挑战资格可被绕过。
+- 临时反例 `AllocatedRealitySupplyCannotBeConsumedAgain` 证明：首次成功后同一供给同时保留 `registered` 与新增 `allocated`，第二次调用仍成功，现实供给、提交与占用可重复结算。
+- 代码检查还确认 `RightWins`／`Neutral` 未阻止规则提交，且请求没有明确哪一候选代表本次册界调用。
+- 权威 Unity 入口执行 320 项：316 通过、4 失败；新增两项失败为本次复审问题，另两项为原记录既有基线。临时反例已撤回，返工范围与后续复核要求见 `开发管理/未通过审核清单.txt`。
