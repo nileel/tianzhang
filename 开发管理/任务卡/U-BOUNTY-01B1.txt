@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-04：负责人同意将受控恢复审计确认的悬赏存档状态／进度组合缺口建立为独立任务；必须从最新 master 最小重做，不复用旧 51efd154-de6c-4c3e-bcd0-11f99e7cc07d 候选。",
+  "stateReason": "自动责任方确认阻塞：PW_EXEC_PERMISSION_DENIED",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
