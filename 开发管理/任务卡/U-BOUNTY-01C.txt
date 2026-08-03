@@ -1,0 +1,80 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-BOUNTY-01C",
+  "title": "建立正式悬赏面板并接入关中城 `bounty_board` 功能。",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "U-BOUNTY-01A 的四状态规则与 U-BOUNTY-01B 的 schema 3 存档迁移均已完成并通过 Codex 独立复审；现有城市功能入口仍只返回 pending-panel 原因。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs",
+    "src/Assets/Scripts/Settlement/BountyBoardView.cs",
+    "src/Assets/Scripts/Settlement/BountyBoardView.cs.meta",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs.meta",
+    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-BOUNTY-01C.txt",
+    "开发管理/任务归档/U-BOUNTY-01C.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-BOUNTY-01C · 建立正式悬赏面板并接入关中城 `bounty_board` 功能。
+
+## 来源与当前边界
+
+- `U-BOUNTY-01A` 已提供由 `GameSession` 持有的 `BountyStateStore`、`Accept`、`RecordDefeat`、`Claim` 与稳定失败原因；`U-BOUNTY-01B` 已把同一实例经 schema 3 原子保存／恢复。两卡均已由 Codex 独立复审关闭。
+- `SettlementSceneController` 已按当前据点从唯一 `ContentCatalogData` 读取 `SettlementData`，只将功能点击交给 `SettlementFeatureDispatcher`；`bounty_board` 是唯一已注册的功能，但当前只返回 `bounty_board_entry_ready_pending_panel`。
+- 本卡只把现有正式 `guanzhong_city` 的单个 `bounty_board` 接入可观察的悬赏面板；UI 提交请求并显示结果，不判断悬赏规则、不拥有实例状态、奖励、存档、遭遇或场景流转。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#6.2 城市场景`、`#6.4 悬赏运行时`、`#6.5 背包原子提交`、`#9.2 运行阶段`、`#十、验证矩阵`。
+- `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md#五、整表、跨表与运行时失败关闭`、`#六、fixture 规格`、`#七、后续顺序与非目标`、`#八、验证口径`。
+- `开发管理/任务列表/场景与Unity任务.txt#任务`、`开发管理/关中悬赏状态机与计数验证记录.txt#U-BOUNTY-01B`、`开发管理/任务归档/U-BOUNTY-01B.txt`。
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs::Start|RefreshSettlementUi|DispatchFeature`、`src/Assets/Scripts/Settlement/SettlementSceneView.cs::BindFeature|ShowFeatureResult`、`src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs::RegisterInitialFeatureHandlers|TryDispatch`。
+- `src/Assets/Scripts/Game/GameSession.cs::AcceptBounty|ClaimBounty|GetBountyState`、`src/Assets/Scripts/Game/BountyRuntime.cs::Accept|Claim|GetState`、`src/Assets/Scripts/Content/ContentCatalogData.cs::GetBountiesByIssuer`。
+- `src/Assets/Scripts/Editor/SceneBuilder.cs::BuildSettlementScene`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs::SettlementFeatureDispatcherFailsClosedUntilBountyHandlerIsRegistered|SettlementSceneBuilderSerializesFormalCatalogAndPresentationReferences`、`src/Assets/Tests/EditMode/BountyRuntimeTests.cs`。
+
+## 实施范围
+
+- 在 `Settlement` 现有程序集内建立一个独立、序列化引用的 `BountyBoardView`，由 `SettlementSceneView` 持有并由 `SettlementSceneController` 在 `bounty_board` 成功分发后打开；在 `SceneBuilder.BuildSettlementScene` 创建并绑定面板，随后提交重建的 `SettlementScene.unity` 与新脚本相邻 `.meta`。
+- 面板只枚举当前正式据点由 `ContentCatalogData.GetBountiesByIssuer` 返回的悬赏，显示稳定 ID、当前状态、进度与现有结果／失败原因；不能在 UI 中伪造目标、奖励、成功日志、状态转换或默认条目。
+- 接取和领奖只能将 `bountyId` 交给当前 `GameSession.AcceptBounty`／`ClaimBounty`；每次调用后从同一 `GameSession.GetBountyState` 刷新显示。`Accepted`、`ObjectiveCompleted`、`Claimed`、目录缺失、非正式据点、非法请求及领取失败均显示实际稳定结果且不改 UI 以外的状态。
+- 将 `SettlementFeatureDispatcher` 的已接入原因与现有 pending-panel 占位原因区分；未知、禁用、未注册或处理异常的 feature 继续失败关闭，且不得打开面板。
+- 新增直接 EditMode 用例覆盖：关中城唯一的生产悬赏可打开并接取、`ObjectiveCompleted` 可领取、`Claimed` 不可重复领取、非法／非生产／非当前据点请求不伪造显示或变更状态、未知／禁用功能不打开面板；扩展场景构建用例证明面板、视图和序列化引用存在。把实际命令和结果写入既有悬赏验证记录。
+
+## 禁止项
+
+- 不修改 `GameSession`、`BountyRuntime`、`BountyStateStore`、schema 3、内容目录、CSV、Language、asset、奖励参数、掉落概率、堆叠上限、战斗计数、Adventure 结算或世界／副本返回所有者。
+- 不增加第二 Canvas、第二据点、服务器、数据库、联网、随机悬赏池、每日刷新、通用条件表达式、完整商店、任务日志、NPC、经济、专属美术／动画／音效／特效或新的 BountyData。
+- 不把面板塞入 `SettlementSceneController`、`GameSession` 或运行时动态生成的大控制器；不替换现有场景 GUID、序列化字段或正式 `AdventureScene` 入口。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，确认 `BountyBoardViewTests`、`BountyRuntimeTests` 与 `SceneArchitectureEditorTests` 直接用例通过；若全量仍有已登记的无关基线失败，逐项记录而不掩盖。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 玩家只能从当前正式 `guanzhong_city` 的已启用 `bounty_board` 打开面板，并能观察与提交已有的接取／领奖规则；状态与库存的唯一写入仍在 `GameSession`，面板仅刷新实际结果。
+- 重新生成据点场景后，面板、视图、控制器和分发器的序列化引用完整；未知、禁用、缺失或非法输入保持失败关闭，正式冒险入口和现有返回上下文未改变。
+
+## 停止条件
+
+- 若现有 `Settlement` 视图／控制器无法容纳面板而必须新增第二 Canvas、平行场景、平行会话／存档、全局 UI 单例或改写 `GameSession`／`BountyRuntime` 所有权，停止并交回 Codex 重新确定边界。
+- 若实施需要未批准的奖励、物品、掉落、数值、其他城市、悬赏、目标类型、表现资源、经济或任务语义，停止并保持下游 `U-GZ-FORMAL-E2E-01` 非 ready。
