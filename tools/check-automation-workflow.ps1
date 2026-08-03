@@ -82,8 +82,8 @@ Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourl
 Assert-DoesNotContain $rules 'workflow rules' @('integrationLease', 'invoke-codex-hourly.ps1', 'invoke-deepseek-hourly.ps1')
 Assert-DoesNotContain $rules 'workflow rules' @('invoke-codex-responsibility.ps1', 'invoke-external-responsibility.ps1', 'RecordResult -Category success', 'pauseRequested=true')
 Assert-Contains $recovery 'recovery rules' @('developing', 'candidate_ready', 'canonical_ready', 'integrated', 'attention_required', '只报告', 'decision checkpoint')
-Assert-Contains $codexPrompt 'Codex worker prompt' @('invoke-hourly-owner.ps1', '-Owner codex', '-Model "<实际 model>"', '不读取队列或任务卡')
-Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', '不得读取队列')
+Assert-Contains $codexPrompt 'Codex worker prompt' @('invoke-hourly-owner.ps1', '-Owner codex', '-Model "<实际 model>"', '不读取队列、任务卡')
+Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', '不读取队列、任务卡')
 
 if ($RequireLegacyRetired) {
   foreach ($relative in @(

@@ -11,7 +11,7 @@
 
 ## schema 5 runtime 与 owner 并行
 
-- `tools/hourly-automation-lease.ps1` 的私有 runtime 固定为 `schemaVersion=5` 与 `runs.codex`、`runs.deepseek`，使用 ACL、互斥锁和原子写入。持久状态不再保存 `integrationLease`、恢复队列或 provider 凭据。
+- `tools/hourly-automation-lease.ps1` 的私有 runtime 固定为 `schemaVersion=5` 与 `runs.codex`、`runs.deepseek`，使用 ACL、互斥锁和原子写入。持久状态不再保存集成租约、恢复队列或 provider 凭据。
 - 每个 owner 同时最多一个 run；Codex 与 DeepSeek 可拥有不同 taskId 的 run，同一 taskId 不得重复领取。Codex 只领取 `codex_execute/codex/ready`、`codex_review/codex/ready` 和 QueueMaintenance；DeepSeek 只领取 `external_execute/deepseek/ready`。
 - 新调用先 `Show`。本 owner run 非空时只返回 taskId、runId、state 和脱敏原因，不恢复、重放、关闭或领取新任务；人工处置规则见 `开发管理/自动工作流恢复规则.txt`。
 - schema 4 只有在两个 owner run 都为空且旧集成租约为空时才机械迁移到 schema 5；否则返回 `MIGRATION_REQUIRED`，不得猜测、覆盖或自动迁移旧活动现场。
