@@ -4,13 +4,13 @@
   "id": "U-TZ-CHARTER-MODEL-01",
   "title": "三项遗产与册界纯规则模型",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "D-TZ-CHARTER-SCHEMA-01、D-TZ-CHARTER-SAMPLE-01 与 D-TZ-CHARTER-CONFLICT-02 已完成并通过复审；共享冲突契约已是唯一实现。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
     "src/Assets/Scripts/World/CharterRuleRuntime.cs",
@@ -22,7 +22,8 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-TZ-CHARTER-MODEL-01.txt",
-    "开发管理/任务归档/U-TZ-CHARTER-MODEL-01.txt"
+    "开发管理/任务归档/U-TZ-CHARTER-MODEL-01.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

@@ -23,3 +23,33 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过；G3 计数为功法 29/29、术法 83/83、神通 31/31。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：册界新增生产导入和拒绝断言均通过；全套 272 项中 271 通过。唯一既有失败为 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`，它仍期待旧日志 “Excluded non-player spell”，现有未改动加载器输出 “Excluded unresolved art profile”。
 - 未修改数值、倍率、概率或战斗表现，故未运行 BattleSim。
+
+## U-TZ-CHARTER-MODEL-01 纯规则模型运行记录（2026-08-03）
+
+> ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：`CharterRuleRuntime.cs`（＋.meta）、`CharterRuntimeStateData.cs`、`CharterRuleRuntimeTests.cs`（＋.meta）、本记录。
+
+在既有水府地纪样例上新增 `TianZhang.World.CharterRuleRuntime` 纯规则入口，不持有场景、Unity 对象、单例、存档或 BattleSim 账本；输入仅为已校验定义、参考目录、动态状态、稳定 ID 和显式调用请求。按固定事务顺序校验：天章通行（遗物识别＋通行者／门禁目标）→ 界印管理／受益（界印识别＋管理者／受益者）→ 授权版本组合（`requiredAuthority` 全部版本被动态状态识别）→ 节点连通（锚点参与且涉及节点已登记连通）→ 传播范围（覆盖在流域边界内且未越出当前已接通覆盖）→ 现实供给（已登记并覆盖两个提交声明供给）→ 完整正负提交（与定义一致且均声明供给）→ 冲突扫描（只构造完整 v1 `RuleConflictInstance` 消费 shared 决定；元婴受锚只返回受锚结果）→ 原子构造新状态并只输出定义已声明的 `environmentProfile` 事件引用。
+
+实际命令与结果：
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：全套 318 项中 316 通过、2 项既有无关基线失败（逐项记录见下）；册界直接用例全部通过：`CharterRuleRuntimeTests` 8/8、`CharterRuleDataTests` 26/26、`CharterConflictRulesTests` 4/5。
+  - 既有失败 1：`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（与 2026-07-31 记录一致的已知基线失败：仍期待旧日志 "Excluded non-player spell"，现有未改动加载器输出 "Excluded unresolved art profile"）。
+  - 既有失败 2：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（`CharterConflictRules.cs`／`CharterConflictRulesTests.cs` 均来自 D-TZ-CHARTER-CONFLICT-02 提交 e1ffda9，本任务未改动；断言期望 `PULSE_ADVANTAGE`，shared 实现按既有优先序对等储备返回 `PULSE_NEUTRAL`）。
+- `dotnet build -c Release simulations/BattleSim`（worktree 无 obj，先隐式 restore）：通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b`：PASS。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests`：OK（664 个文件）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`：status ok、readyCount 1。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`：OK（6 个文件）。
+- Unity 验证完成后工作树仅含任务卡授权路径；两个新增 `.meta`（`CharterRuleRuntime.cs.meta`、`CharterRuleRuntimeTests.cs.meta`）随同一候选提交受 Git 跟踪，无验证生成的未跟踪现场。
+
+水府地纪纵向样例的可观察边界（`CharterRuleRuntimeTests` 直接用例）：
+
+- 通行：天章遗物识别为 `recognized` 且通行者、门禁目标明确才通过；未识别 → `charter_passage_denied`。
+- 通行不等于管理：已有通行但界印未识别 → `charter_seal_management_denied`，不替换状态。
+- 管理不等于改规则：仅界印管理版本被识别、缺少流域组织授权 → `charter_authorization_version_denied`。
+- 节点断开：任一涉及节点 `disconnected` 或未登记 → `charter_node_disconnected`。
+- 覆盖越界：覆盖越出流域边界或未接通集合 → `charter_coverage_out_of_boundary`。
+- 原子拒绝：负提交与定义不一致 → `charter_atomic_commit_incomplete`；供给未覆盖两个提交或未登记 → `charter_reality_supply_unavailable`。
+- 事件唯一记录：成功只输出定义已声明的 `event_suifu_water_redistribution`／`event_suifu_downstream_supply_delay` 的 `env_guanzhong_wild` 引用，逐条唯一，状态不含环境档案。
+- 金丹冲突：同变量介入构造完整 v1 实例消费 shared 决定；无 archive → `JD_CHALLENGE_ARCHIVE_UNAVAILABLE`、未声明 grant → `charter_unknown_conflict_grant`、撤销 grant → `JD_CHALLENGE_REVOKED`、合法授权 → 携带 `LeftWins` 决定原子应用，无第二套 resolver。
+- 元婴受锚：命中受锚只返回 `TZ_CHARTER_CONFLICT_YUANYING_ANCHORED`，不降格金丹、不开支、不提交覆盖。

@@ -75,6 +75,112 @@ namespace TianZhang.World
         public CharterCommitResultStateData[] negativeCommitResults;
         public string[] currentRegionRuleEntryIds;
 
+        /// <summary>
+        /// Returns an independent copy of this state so a rule transaction can build its next
+        /// state without mutating the input instance or sharing record instances.
+        /// </summary>
+        public CharterRuntimeStateData CreateCopy()
+        {
+            return new CharterRuntimeStateData
+            {
+                stateId = stateId,
+                charterRelicState = charterRelicState,
+                worldSealState = worldSealState,
+                registeredRuleEntryIds = CopyStrings(registeredRuleEntryIds),
+                nodeStates = CopyNodes(nodeStates),
+                organizationAuthorizationVersions = CopyAuthorizations(organizationAuthorizationVersions),
+                currentCoverageSet = CopyStrings(currentCoverageSet),
+                ruleEntryOccupancies = CopyOccupancies(ruleEntryOccupancies),
+                nodeOccupancies = CopyOccupancies(nodeOccupancies),
+                realitySupplyStates = CopySupplies(realitySupplyStates),
+                positiveCommitResults = CopyCommitResults(positiveCommitResults),
+                negativeCommitResults = CopyCommitResults(negativeCommitResults),
+                currentRegionRuleEntryIds = CopyStrings(currentRegionRuleEntryIds),
+            };
+        }
+
+        private static string[] CopyStrings(string[] values)
+        {
+            if (values == null)
+                return null;
+            var copy = new string[values.Length];
+            Array.Copy(values, copy, values.Length);
+            return copy;
+        }
+
+        private static CharterNodeRuntimeStateData[] CopyNodes(CharterNodeRuntimeStateData[] values)
+        {
+            if (values == null)
+                return null;
+            var copy = new CharterNodeRuntimeStateData[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+                copy[i] = value == null ? null : new CharterNodeRuntimeStateData { nodeId = value.nodeId, state = value.state };
+            }
+            return copy;
+        }
+
+        private static CharterAuthorizationVersionStateData[] CopyAuthorizations(CharterAuthorizationVersionStateData[] values)
+        {
+            if (values == null)
+                return null;
+            var copy = new CharterAuthorizationVersionStateData[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+                copy[i] = value == null
+                    ? null
+                    : new CharterAuthorizationVersionStateData { authorizationVersionId = value.authorizationVersionId, state = value.state };
+            }
+            return copy;
+        }
+
+        private static CharterOccupancyStateData[] CopyOccupancies(CharterOccupancyStateData[] values)
+        {
+            if (values == null)
+                return null;
+            var copy = new CharterOccupancyStateData[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+                copy[i] = value == null
+                    ? null
+                    : new CharterOccupancyStateData { resourceId = value.resourceId, occupancyId = value.occupancyId };
+            }
+            return copy;
+        }
+
+        private static CharterRealitySupplyStateData[] CopySupplies(CharterRealitySupplyStateData[] values)
+        {
+            if (values == null)
+                return null;
+            var copy = new CharterRealitySupplyStateData[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+                copy[i] = value == null
+                    ? null
+                    : new CharterRealitySupplyStateData { realitySupplyId = value.realitySupplyId, state = value.state };
+            }
+            return copy;
+        }
+
+        private static CharterCommitResultStateData[] CopyCommitResults(CharterCommitResultStateData[] values)
+        {
+            if (values == null)
+                return null;
+            var copy = new CharterCommitResultStateData[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+                copy[i] = value == null
+                    ? null
+                    : new CharterCommitResultStateData { commitId = value.commitId, resultState = value.resultState };
+            }
+            return copy;
+        }
+
         public bool TryValidate(
             CharterRuleDefinitionData[] definitions,
             CharterRuleReferenceCatalog catalog,
