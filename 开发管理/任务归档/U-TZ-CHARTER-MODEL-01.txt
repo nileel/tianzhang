@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-03：Codex 独立复审正式业务提交 389a08a 通过；重复候选 ID 失败关闭、供给唯一结转与 shared 冲突结果映射均满足任务卡。",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
     "src/Assets/Scripts/World/CharterRuleRuntime.cs",
@@ -90,3 +90,9 @@
 
 - 若现有动态状态承载无法表达结果而必须建立平行状态／存档／冲突服务，停止并交回 Codex 重新确定所有者。
 - 若实现需要未锁定的数值、完整九域、第二据点、规则编辑器、剧情或环境经济模拟，停止并保持下游非 ready。
+
+## Codex 复审通过与完成（2026-08-03）
+
+- 已独立复审正式业务提交 `389a08a7c2a5123cf712a33537e480a4b7cf3897` 及其在 `3b39b12` 之上的限定 diff：册界调用层拒绝左右 `CandidateId` 重复的金丹请求，因而 `charterCandidateId` 唯一绑定本次册界侧；正常互异候选仍只消费 shared `RuleConflictInstance.Decide` 的赢家结果。
+- 独立 Unity EditMode 执行 323 项，321 通过；`CharterRuleRuntimeTests` 13/13 全通过，包含重复候选 ID、缺跨阶请求、败方／中立不提交和供给不可重复消费。两项失败均为已登记且不在本卡路径的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（`PULSE_NEUTRAL` 对旧期望 `PULSE_ADVANTAGE`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（旧日志断言）。
+- `dotnet build -c Release --no-restore simulations/BattleSim`（在本 worktree 先 restore 以生成缺失 assets 后）0 警告、0 错误；`golden-core-conflict-n-jd-rule-01b` PASS。复审结论：通过；本轮只关闭同一卡，不改 shared resolver、存档、场景、UI、数值或下游实现。

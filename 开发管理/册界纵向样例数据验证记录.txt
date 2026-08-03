@@ -122,3 +122,9 @@
 重复候选 ID 返工后水府地纪纵向样例的可观察边界增量：
 
 - 左右候选使用同一 `CandidateId`（`charterCandidateId` 等于该 ID、archive 可解析）→ `charter_invocation_request_invalid`，不进入 shared 决定、不提交规则状态或事件；正常互异候选的合法授权路径不受影响（13/13 直接用例通过）。
+
+## Codex 独立复审通过（2026-08-03）
+
+- 审核正式业务提交 `389a08a7c2a5123cf712a33537e480a4b7cf3897` 相对 `3b39b12` 的限定 diff，并回查动态状态、共享冲突契约、有效样例与任务卡。重复候选 ID 在调用层稳定拒绝；没有复制 resolver、grant 或账本所有者。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：323 项中 321 通过，`CharterRuleRuntimeTests` 13/13 全通过；仅保留已登记的两项无关基线失败（`PULSE_NEUTRAL` 对旧 `PULSE_ADVANTAGE` 期望、LianShen 旧日志断言）。
+- 为满足 `--no-restore` 验证前提，在全新 worktree 运行 `dotnet restore simulations/BattleSim` 后，`dotnet build -c Release --no-restore simulations/BattleSim` 为 0 警告、0 错误；`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b` 为 PASS。复审结论：通过。

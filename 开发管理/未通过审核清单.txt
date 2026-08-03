@@ -1,4 +1,4 @@
-# 未通过审核清单（⚠️ 待复核）
+# 未通过审核清单（✅ 已审核）
 
 ## 用途
 
@@ -6,14 +6,4 @@
 
 ## 当前未通过/待复核项
 
-### U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
-
-- 审核对象：正式提交 `ae0fbf9827baa5aa01533c1c3e4d30c885e130ae`；结论：部分通过，仍需返工。
-- 已确认修复：缺版本化跨阶请求时稳定拒绝，目录声明与 archive 资格继续由既有所有者核验；现实供给按稳定 ID 唯一结转并拒绝重复消费；赢家不等于册界候选或 shared 中立无赢家时均不提交规则状态与事件。
-- 册界侧仍未唯一绑定：`IsCharterCandidateDeclared` 只判断 `charterCandidateId` 等于左或右候选 ID，未要求两侧 `CandidateId` 互异。左右候选使用同一 ID 时，请求无法声明哪一侧代表册界调用；任一侧获胜都会返回同一 `WinnerCandidateId` 并走成功提交。
-- 直接证据：在独立复审 worktree 临时增加 `DuplicateCandidateIdsCannotDeclareWhichSideRepresentsTheCharterInvocation`，运行 `tools/run-unity-editmode-tests.ps1` 得到 323 项中 320 通过、3 失败；新增反例期望稳定拒绝但实际 `Succeeded=true`，另两项为已登记且与本卡无关的既有基线。临时反例随后撤回，未进入提交。
-- 最窄返工：同一卡只需在册界调用层拒绝左右候选重复 ID（或采用等价的唯一侧绑定）并保留直接反例；不得修改 shared resolver、冲突排序、存档／场景／UI 或新增账本所有者。返工完成后重新转 `codex_review/codex/ready`，由 Codex 独立复审。
-
-## 复审路由
-
-复审时先读 `开发管理/审核入口.txt`，再读 `开发管理/AI合作沟通.txt` 当前条目与 `开发管理/任务列表/审核与交接任务.txt`。
+当前没有需要复核的条目。
