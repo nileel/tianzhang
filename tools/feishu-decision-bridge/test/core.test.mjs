@@ -418,6 +418,19 @@ test('buildDecisionCard renders the question, A/B/C options, recommendation, and
   assert.doesNotMatch(JSON.stringify(card), /mutated/);
 });
 
+test('buildDecisionCard can enforce a fixed three-option decision without custom reply UI', () => {
+  const card = buildDecisionCard(makeDecision({ allowCustomReply: false }), 'nonce-fixed-options');
+  const encoded = JSON.stringify(card);
+
+  assert.equal(card.elements.find((element) => element.tag === 'action').actions.length, 3);
+  assert.equal(card.elements.some((element) => element.tag === 'form'), false);
+  assert.doesNotMatch(encoded, /自定义方案|长按复制格式|decision_custom_reply/);
+  assert.throws(
+    () => buildDecisionCard(makeDecision({ allowCustomReply: 'false' }), 'nonce-fixed-options'),
+    /Invalid decision card input/,
+  );
+});
+
 test('buildDecisionCard uses a fixed task placeholder and never infers a missing taskId', () => {
   const decision = makeDecision({ taskSummary: 'TQ-MUST-NOT-BE-INFERRED' });
   delete decision.taskId;

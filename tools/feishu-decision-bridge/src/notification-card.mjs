@@ -2,6 +2,7 @@ const REPORT_KINDS = new Set(['daily_report', 'weekly_report']);
 const TASK_STATUSES = new Set([
   'completed',
   'pending_review',
+  'requeued',
   'blocked',
   'waiting_decision',
   'waiting_reply',
@@ -10,6 +11,7 @@ const TASK_STATUSES = new Set([
 const TASK_STATUS_LABELS = Object.freeze({
   completed: '已完成',
   pending_review: '待复审',
+  requeued: '已重新排队',
   blocked: '阻塞',
   waiting_decision: '待决定',
   waiting_reply: '待回复',
@@ -141,7 +143,7 @@ function buildTaskCard(notification) {
     header: {
       template: fields.status === 'completed'
         ? 'green'
-        : fields.status === 'pending_review'
+        : ['pending_review', 'requeued'].includes(fields.status)
           ? 'blue'
           : fields.status === 'failed'
             ? 'red'

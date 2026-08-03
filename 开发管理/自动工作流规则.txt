@@ -39,6 +39,7 @@
 - 开发中确需负责人决定时，模型必须停止猜测，形成唯一一个干净 checkpoint 提交和结构化 `decisionResult`，精确绑定 taskId、decisionId、baseCommit、branch、SHA、授权路径与验证证据。
 - 共享入口把任务机械转换为 `pending_decision` 或 `waiting_reply` 并正式提交，但不合并 checkpoint 业务变化；关闭当前 run 后发送决策卡。长连接桥只负责接收入站回复。
 - 有效回复由 decisionId、taskId、当前任务摘要和操作者身份验证。下一次对应 owner 调用先把原任务恢复为原 route／owner／`ready`，再从最新 `master` 创建新 run、新 worktree和新模型会话，以 `cherry-pick --no-commit` 吸收 checkpoint；不恢复旧模型会话。普通失败不能冒充 decision checkpoint。
+- Codex 自动复审不通过或部分通过且需返工时，任务仍按审核合同转为 `blocked` 并移出队列，但不发送普通阻塞结果卡；共享入口改发一次性返工决策卡。A 交回 DeepSeek、B 改由 Codex、C 保持阻塞。该决策只绑定 taskId、被复审提交、复审提交、任务摘要和未通过条目摘要，不含 checkpoint；A/B 在核验回复、任务未被 run 占用且取得同一集成锁后把同一卡重新设为对应 execute route／owner／`ready`，下一轮创建全新 run。C 不改仓库事实。无回复、投递失败或证据变化均不得自动返工、重试或走 checkpoint 恢复。
 - 正常成功在 fast-forward 后写入 `integrated` 并调用 `CompleteRun`。只有 worktree 路径、runId、owner、branch、HEAD、正式 SHA、主分支可达性和工作树清洁全部精确匹配时，才删除该 run 的 worktree 与临时 branch；任一证据异常都不清理。
 
 ## 通知与 QueueMaintenance

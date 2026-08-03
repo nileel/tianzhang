@@ -137,6 +137,18 @@ exit $exitCode
   Assert-Equal -Actual $taskResult.Request.notification.plainAction -Expected '无需处理' -Message 'Plain-language action was not parsed'
   Assert-Equal -Actual $taskResult.Request.notification.commitSha -Expected $structuredSha -Message 'Commit SHA was not transported'
 
+  $requeuedResult = Invoke-Facade -Arguments @(
+    '-Kind', 'TaskOutcome',
+    '-RepositoryRoot', $repoRoot,
+    '-TaskId', $taskId,
+    '-Status', 'requeued',
+    '-RunId', 'DEC-20260803-REQUEUE',
+    '-CommitSha', $structuredSha
+  )
+  Assert-Equal -Actual $requeuedResult.ExitCode -Expected 0 -Message 'Requeued task notification failed'
+  Assert-Equal -Actual $requeuedResult.Request.notification.status -Expected 'requeued' -Message 'Requeued task status changed in transport'
+  Assert-Equal -Actual $requeuedResult.Request.notification.commitSha -Expected $structuredSha -Message 'Requeued task commit was not transported'
+
   $blockedResult = Invoke-Facade -Arguments @(
     '-Kind', 'TaskOutcome',
     '-RepositoryRoot', $repoRoot,

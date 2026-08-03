@@ -8,7 +8,7 @@ param(
 
   [string]$RepositoryRoot,
   [string]$TaskId,
-  [ValidateSet('completed', 'pending_review', 'blocked', 'waiting_decision', 'waiting_reply', 'failed')]
+  [ValidateSet('completed', 'pending_review', 'requeued', 'blocked', 'waiting_decision', 'waiting_reply', 'failed')]
   [string]$Status,
   [string]$RunId,
   [string]$CommitSha,
@@ -177,12 +177,13 @@ function New-TaskRequest {
   Assert-StableText -Value $RunId -Name 'RunId' -MaximumLength 256
   $meta = Get-TaskMeta -Root $root -Id $TaskId
   $fields = if (-not [string]::IsNullOrWhiteSpace($CommitSha)) {
-    if ($Status -notin @('completed', 'pending_review')) {
+    if ($Status -notin @('completed', 'pending_review', 'requeued')) {
       throw 'CommitSha is invalid for this status'
     }
-    Get-CommitFields -Root $root -Sha $CommitSha -Id $TaskId -ExpectedState $Status
+    $expectedCommitState = if ($Status -ceq 'requeued') { 'completed' } else { $Status }
+    Get-CommitFields -Root $root -Sha $CommitSha -Id $TaskId -ExpectedState $expectedCommitState
   } else {
-    if ($Status -in @('completed', 'pending_review')) {
+    if ($Status -in @('completed', 'pending_review', 'requeued')) {
       throw 'CommitSha is required for this status'
     }
     Assert-StableText -Value $DetailCode -Name 'DetailCode' -MaximumLength 256

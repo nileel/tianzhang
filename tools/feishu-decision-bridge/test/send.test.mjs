@@ -701,6 +701,23 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
     },
   });
 
+  await writeFile(requestPath, JSON.stringify({
+    decision: makeDecision({
+      decisionId: 'DEC-20260716-NOCUSTOM',
+      allowCustomReply: false,
+    }),
+    attemptNumber: 2,
+  }));
+  const fixedOptions = await run(['--request-file', requestPath]);
+  assert.equal(fixedOptions.code, 0);
+  const fixedBinding = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
+  assert.equal(fixedBinding[0].decisionId, 'DEC-20260716-NOCUSTOM');
+  assert.equal(fixedBinding[0].allowCustomReply, false);
+  assert.equal(
+    JSON.parse(await readFile(requestPath, 'utf8')).pendingDecision.allowCustomReply,
+    false,
+  );
+
   await writeFile(requestPath, sendRequestText);
   const delayedNow = new Date(NOW.getTime() + (3 * 60 * 60 * 1000));
   const cachedAccepted = await run(['--request-file', requestPath], {

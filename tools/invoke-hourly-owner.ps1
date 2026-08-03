@@ -21,6 +21,7 @@ $checkerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
 $transitionPath = Join-Path $PSScriptRoot 'set-task-pending-review.ps1'
 $taskStatePath = Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
 $finalizerPath = Join-Path $PSScriptRoot 'automation-finalize-commit.ps1'
+$whitespacePath = Join-Path $PSScriptRoot 'check-pending-whitespace.ps1'
 $notificationPath = Join-Path $PSScriptRoot 'send-feishu-notification.ps1'
 $decisionSenderPath = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-decision.mjs'
 $decisionConsumerPath = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\consume-reply.mjs'
@@ -97,6 +98,45 @@ function Get-TaskContextDigest {
   }
   $json = $context | ConvertTo-Json -Compress -Depth 20
   [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($json))).ToLowerInvariant()
+}
+
+function Get-QueueTaskIndex {
+  param([string]$Root, [string]$TaskId)
+  $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes((Join-Path $Root '开发管理\当前任务队列.txt'))).TrimStart([char]0xFEFF)
+  $ids = [Collections.Generic.List[string]]::new()
+  $inTable = $false
+  foreach ($line in @($text -split '\r?\n')) {
+    if (-not $line.Trim().StartsWith('|')) {
+      if ($inTable -and $ids.Count -gt 0) { break }
+      continue
+    }
+    $cells = @($line.Trim().Trim('|').Split('|') | ForEach-Object { $_.Trim().Trim([char]96) })
+    if (-not $inTable) {
+      if (($cells -join "`0") -ceq (@('ID', '路由', '主责', '优先级', '领域', '阶段', '标题', '任务卡') -join "`0")) { $inTable = $true }
+      continue
+    }
+    if ($cells.Count -ne 8 -or $cells[0] -match '^-+$') { continue }
+    $ids.Add([string]$cells[0])
+  }
+  $matches = @(for ($index = 0; $index -lt $ids.Count; $index++) { if ($ids[$index] -ceq $TaskId) { $index } })
+  if ($matches.Count -gt 1) { Stop-Hourly 'hourly_queue_duplicate' }
+  if ($matches.Count -eq 0) { return -1 }
+  [int]$matches[0]
+}
+
+function Get-ReviewEntryEvidence {
+  param([string]$Root, [string]$TaskId)
+  $path = Join-Path $Root '开发管理\未通过审核清单.txt'
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'review_rework_entry_missing' }
+  $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($path)).TrimStart([char]0xFEFF).Replace("`r`n", "`n").Replace("`r", "`n")
+  $pattern = '(?ms)^###\s+' + [regex]::Escape($TaskId) + '\s+·[^\n]*\n.*?(?=^###\s+|^##\s+|\z)'
+  $matches = [regex]::Matches($text, $pattern)
+  if ($matches.Count -ne 1) { Stop-Hourly 'review_rework_entry_invalid' }
+  $entry = $matches[0].Value.TrimEnd()
+  $commit = [regex]::Match($entry, '审核对象：正式提交 `(?<sha>[0-9a-f]{40,64})`；结论：(?:不通过|部分通过)')
+  if (-not $commit.Success) { Stop-Hourly 'review_rework_entry_invalid' }
+  $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($entry))).ToLowerInvariant()
+  [pscustomobject]@{ Path = '开发管理/未通过审核清单.txt'; Digest = $digest; ReviewedCommit = $commit.Groups['sha'].Value }
 }
 
 function Test-PathOverlap {
@@ -243,7 +283,7 @@ function Invoke-CombinedValidation {
   if ($contentCheckPaths.Count -gt 0) {
     $expected = $contentCheckPaths -join '|'
     Push-Location -LiteralPath $Worktree
-    try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths $expected 2>&1) } finally { Pop-Location }
+    try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $whitespacePath -ExpectedPaths $expected 2>&1) } finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { Stop-Hourly 'hourly_whitespace_failed' }
   }
   $null = Invoke-GitText $Worktree @('diff', '--check', "$Base..$Head") 'hourly_diff_check_failed'
@@ -265,12 +305,19 @@ function Build-And-IntegrateCandidate {
   $lock = Enter-TzgIntegrationLock -RepositoryRoot $script:root -TimeoutSeconds $IntegrationLockTimeoutSeconds
   if ($null -eq $lock) { Set-Attention $Run 'integration lock wait timed out'; return [ordered]@{ status = 'attention_required'; taskId = $Run.taskId; runId = $Run.runId; detailCode = 'integration_lock_timeout' } }
   $formalHead = $null
+  $reviewedCommit = $null
+  $reviewQueueIndex = -1
   try {
     $worktree = Assert-WorktreePath $Run
     if ((Invoke-GitText $worktree @('branch', '--show-current')) -cne [string]$Run.candidateBranch -or (Invoke-GitText $worktree @('rev-parse', 'HEAD')) -cne [string]$Run.candidateCommit -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText $worktree @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-Hourly 'hourly_candidate_evidence_invalid' }
     $task = if ([string]$Run.route -ceq 'queue_maintenance') { $null } else { Read-TaskMetadata $script:root ([string]$Run.taskId) }
     if ($null -ne $task -and ([string]$task.Digest -cne [string]$Run.taskCardDigest -or [string]$task.Metadata.route -cne [string]$Run.route -or [string]$task.Metadata.owner -cne $Owner -or [string]$task.Metadata.dispatchState -cne 'ready')) { Stop-Hourly 'hourly_task_changed_after_claim' }
     if ($null -eq $task -and (Get-NormalizedTextDigest (Join-Path $script:root '开发管理\当前任务队列.txt')) -cne [string]$Run.taskCardDigest) { Stop-Hourly 'hourly_queue_changed_after_claim' }
+    if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review') {
+      $reviewedCommit = Invoke-GitText $script:root @('log', '-1', '--format=%H', '--', "开发管理/任务卡/$($Run.taskId).txt") 'review_rework_reviewed_commit_missing'
+      $reviewQueueIndex = Get-QueueTaskIndex -Root $script:root -TaskId ([string]$Run.taskId)
+      if ($reviewedCommit -cnotmatch '^[0-9a-f]{40,64}$' -or $reviewQueueIndex -lt 0) { Stop-Hourly 'review_rework_source_invalid' }
+    }
     $latest = Invoke-GitText $script:root @('rev-parse', 'master')
     $formalPaths = Get-FormalPaths -Run $Run -Task $task
     if ($latest -cne [string]$Run.baseCommit) {
@@ -305,7 +352,12 @@ function Build-And-IntegrateCandidate {
     Assert-Postcondition -Run $Run -Worktree $script:root
     $null = Invoke-Runtime -RuntimeAction UpdateRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; RunState = 'integrated'; CanonicalHead = $formalHead }
     $closed = Invoke-Runtime -RuntimeAction CompleteRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; CompletionCategory = 'success'; DetailCode = "commit_$($formalHead.Substring(0, 12))" }
-    [ordered]@{ status = if ([string]$Run.route -ceq 'queue_maintenance') { 'maintenance_completed' } else { 'completed' }; category = 'success'; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; canonicalBranch = $canonicalBranch; detailCode = $closed.detailCode }
+    $result = [ordered]@{ status = if ([string]$Run.route -ceq 'queue_maintenance') { 'maintenance_completed' } else { 'completed' }; category = 'success'; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; canonicalBranch = $canonicalBranch; detailCode = $closed.detailCode }
+    if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
+      $result.reviewedCommit = $reviewedCommit
+      $result.reviewQueueIndex = $reviewQueueIndex
+    }
+    $result
   } catch {
     $detail = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'hourly_formal_failed' }
     if ($null -ne $formalHead -and (Invoke-GitText $script:root @('rev-parse', 'HEAD')) -ceq $formalHead) {
@@ -318,6 +370,14 @@ function Build-And-IntegrateCandidate {
 function Invoke-BestEffortNotification {
   param([object]$Run, [object]$Outcome)
   if ([string]$Run.route -ceq 'queue_maintenance' -or [string]$Outcome.status -ne 'completed') { return 'skipped' }
+  if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
+    try {
+      $context = New-ReviewReworkDecisionContext -Run $Run -Outcome $Outcome
+      return Send-ReviewReworkDecision -Context $context
+    } catch {
+      return '{"result":"INVALID_INPUT"}'
+    }
+  }
   $status = if ($Owner -ceq 'deepseek') { 'pending_review' } else { switch ([string]$Run.candidateResult.expectedTransition) { 'completed' { 'completed' }; 'blocked' { 'blocked' }; 'frozen' { 'blocked' }; 'pending_decision' { 'waiting_decision' }; 'waiting_reply' { 'waiting_reply' }; default { 'failed' } } }
   $arguments = @('-Kind', 'TaskOutcome', '-RepositoryRoot', $script:root, '-TaskId', [string]$Run.taskId, '-Status', $status, '-RunId', [string]$Run.runId)
   if ($status -cin @('completed', 'pending_review')) { $arguments += @('-CommitSha', [string]$Outcome.formalHead) } else { $arguments += @('-DetailCode', "task_$status") }
@@ -424,6 +484,276 @@ function Send-DecisionCheckpoint {
     if ($output.Count -eq 1) { return [string]$output[0] }
   } catch {}
   '{"result":"CHANNEL_UNAVAILABLE"}'
+}
+
+function Set-ReviewReworkRecordField {
+  param([object]$Record, [string]$Name, [object]$Value)
+  if ($Record -is [Collections.IDictionary]) { $Record[$Name] = $Value }
+  else { $Record | Add-Member -NotePropertyName $Name -NotePropertyValue $Value -Force }
+}
+
+function Write-ReviewReworkRecord {
+  param([object]$Record)
+  if ([string]$Record.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { Stop-Hourly 'review_rework_context_invalid' }
+  Write-PrivateJson 'review-rework-decisions' "$($Record.decisionId).json" $Record
+}
+
+function New-ReviewReworkDecisionContext {
+  param([object]$Run, [object]$Outcome)
+  if (
+    $Owner -cne 'codex' -or
+    [string]$Run.route -cne 'codex_review' -or
+    [string]$Run.candidateResult.expectedTransition -cne 'blocked' -or
+    [string]$Outcome.formalHead -cnotmatch '^[0-9a-f]{40,64}$' -or
+    [string]$Outcome.reviewedCommit -cnotmatch '^[0-9a-f]{40,64}$' -or
+    [int]$Outcome.reviewQueueIndex -lt 0
+  ) { Stop-Hourly 'review_rework_context_invalid' }
+  $task = Read-TaskMetadata $script:root ([string]$Run.taskId)
+  if (
+    [string]$task.Metadata.dispatchState -cne 'blocked' -or
+    (Get-QueueTaskIndex -Root $script:root -TaskId ([string]$Run.taskId)) -ge 0 -or
+    @($task.Metadata.expectedPaths | ForEach-Object { [string]$_ }) -cnotcontains '开发管理/未通过审核清单.txt'
+  ) { Stop-Hourly 'review_rework_task_invalid' }
+  $entry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$Run.taskId)
+  if ([string]$entry.ReviewedCommit -cne [string]$Outcome.reviewedCommit) { Stop-Hourly 'review_rework_reviewed_commit_changed' }
+  $taskCommit = Invoke-GitText $script:root @('log', '-1', '--format=%H', '--', "开发管理/任务卡/$($Run.taskId).txt") 'review_rework_review_commit_invalid'
+  if ($taskCommit -cne [string]$Outcome.formalHead) { Stop-Hourly 'review_rework_review_commit_invalid' }
+  & git -C $script:root merge-base --is-ancestor ([string]$Outcome.reviewedCommit) ([string]$Outcome.formalHead) 2>$null
+  if ($LASTEXITCODE -ne 0) { Stop-Hourly 'review_rework_review_commit_invalid' }
+  $reason = [string]$task.Metadata.stateReason
+  if ([string]::IsNullOrWhiteSpace($reason) -or $reason -match '[\r\n]') { Stop-Hourly 'review_rework_summary_invalid' }
+  $decisionId = "DEC-$([DateTimeOffset]::Now.ToString('yyyyMMdd'))-REV$(([string]$Outcome.formalHead).Substring(0, 12).ToUpperInvariant())"
+  [ordered]@{
+    schemaVersion = 1; kind = 'review_rework'; status = 'awaiting_reply'; decisionId = $decisionId; taskId = [string]$Run.taskId
+    reviewedCommit = [string]$Outcome.reviewedCommit; reviewCommit = [string]$Outcome.formalHead
+    taskDigest = [string]$task.Digest; taskContextDigest = Get-TaskContextDigest $task.Metadata; reviewEntryDigest = [string]$entry.Digest
+    queueIndex = [int]$Outcome.reviewQueueIndex; createdAt = [DateTimeOffset]::Now.ToString('o'); sendResult = $null
+    question = "任务 $($Run.taskId) 复审未通过，是否安排返工？"
+    options = @(
+      [ordered]@{ key = 'A'; label = '交回 DeepSeek 返工' },
+      [ordered]@{ key = 'B'; label = '改由 Codex 返工' },
+      [ordered]@{ key = 'C'; label = '暂不返工，保持阻塞' }
+    )
+    recommendedOption = 'A'; impactSummary = $reason
+    plainSummary = [ordered]@{
+      situation = 'Codex 已确认任务存在需返工问题，当前已阻塞且不会被定时器领取。'
+      impact = 'A 或 B 会重新排队并创建全新任务轮次；C 保持现状。'
+      action = '建议选择 A；未选择前不会自动继续。'
+    }
+  }
+}
+
+function Send-ReviewReworkDecision {
+  param([object]$Context)
+  $recordPath = Join-Path $script:effectiveStateRoot "review-rework-decisions\$($Context.decisionId).json"
+  if (Test-Path -LiteralPath $recordPath -PathType Leaf) {
+    try { $existing = [IO.File]::ReadAllText($recordPath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50 } catch { Stop-Hourly 'review_rework_context_invalid' }
+    if ([string]$existing.taskId -cne [string]$Context.taskId -or [string]$existing.reviewCommit -cne [string]$Context.reviewCommit) { Stop-Hourly 'review_rework_context_collision' }
+    return '{"result":"ALREADY_REGISTERED"}'
+  }
+  $null = Write-ReviewReworkRecord $Context
+  $request = [ordered]@{
+    decision = [ordered]@{
+      decisionId = [string]$Context.decisionId; taskId = [string]$Context.taskId; question = [string]$Context.question
+      options = @($Context.options); recommendedOption = [string]$Context.recommendedOption; impactSummary = [string]$Context.impactSummary
+      plainSummary = $Context.plainSummary; allowCustomReply = $false
+    }
+    attemptNumber = 1
+  }
+  $requestPath = Write-PrivateJson 'decision-requests' "$($Context.decisionId).json" $request
+  $wire = '{"result":"CHANNEL_UNAVAILABLE"}'
+  try {
+    $output = @(& node $decisionSenderPath --request-file $requestPath 2>$null)
+    if ($output.Count -eq 1) { $wire = [string]$output[0] }
+  } catch {}
+  try { $sendResult = $wire | ConvertFrom-Json -Depth 20 } catch { $sendResult = [pscustomobject]@{ result = 'INVALID_INPUT' } }
+  Set-ReviewReworkRecordField -Record $Context -Name sendResult -Value $sendResult
+  if ([string]$sendResult.result -cne 'PROVIDER_ACCEPTED') { Set-ReviewReworkRecordField -Record $Context -Name status -Value 'delivery_failed' }
+  $null = Write-ReviewReworkRecord $Context
+  $wire
+}
+
+function Find-AnsweredReviewRework {
+  $directory = Join-Path $script:effectiveStateRoot 'review-rework-decisions'
+  if (-not (Test-Path -LiteralPath $directory -PathType Container)) { return [ordered]@{ status = 'none' } }
+  $records = @()
+  foreach ($file in Get-ChildItem -LiteralPath $directory -Filter 'DEC-*.json' -File) {
+    try {
+      Assert-PrivatePathAcl -Path $file.FullName
+      $record = [IO.File]::ReadAllText($file.FullName, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50
+      if ([int]$record.schemaVersion -eq 1 -and [string]$record.kind -ceq 'review_rework' -and [string]$record.status -ceq 'awaiting_reply') { $records += [pscustomobject]@{ Path = $file.FullName; Record = $record } }
+    } catch { return [ordered]@{ status = 'attention_required'; detailCode = 'review_rework_context_invalid' } }
+  }
+  foreach ($item in @($records | Sort-Object { [string]$_.Record.createdAt }, { [string]$_.Record.decisionId })) {
+    $record = $item.Record
+    $requestPath = Join-Path $script:effectiveStateRoot "decision-requests\$($record.decisionId).json"
+    if (-not (Test-Path -LiteralPath $requestPath -PathType Leaf)) { return [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; detailCode = 'review_rework_request_missing'; context = $record; contextPath = $item.Path } }
+    try { $snapshot = [IO.File]::ReadAllText($requestPath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 30 } catch { return [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; detailCode = 'review_rework_request_invalid'; context = $record; contextPath = $item.Path } }
+    if ($snapshot.PSObject.Properties.Name -contains 'decision') { continue }
+    $output = @(& node $decisionConsumerPath --request-file $requestPath 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $output.Count -ne 1) { return [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; detailCode = 'review_rework_reply_invalid'; context = $record; contextPath = $item.Path } }
+    try { $reply = $output[0] | ConvertFrom-Json -Depth 30 } catch { return [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; detailCode = 'review_rework_reply_invalid'; context = $record; contextPath = $item.Path } }
+    if ([string]$reply.result -ceq 'NO_REPLY') { continue }
+    if ([string]$reply.result -cne 'OPTION_ACCEPTED' -or [string]$reply.optionKey -cnotin @('A', 'B', 'C')) { return [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; detailCode = 'review_rework_reply_invalid'; context = $record; contextPath = $item.Path } }
+    return [ordered]@{ status = 'answered'; taskId = [string]$record.taskId; context = $record; contextPath = $item.Path; reply = $reply }
+  }
+  [ordered]@{ status = 'none' }
+}
+
+function Remove-ReviewReworkWorktree {
+  param([string]$Worktree, [string]$Branch, [string]$FormalHead)
+  try {
+    if (
+      -not (Test-Path -LiteralPath $Worktree) -or
+      -not [string]::IsNullOrWhiteSpace((Invoke-GitText $Worktree @('status', '--porcelain=v1', '--untracked-files=all'))) -or
+      (Invoke-GitText $Worktree @('branch', '--show-current')) -cne $Branch -or
+      (Invoke-GitText $Worktree @('rev-parse', 'HEAD')) -cne $FormalHead
+    ) { return 'retained_evidence_mismatch' }
+    & git -C $script:root merge-base --is-ancestor $FormalHead master 2>$null
+    if ($LASTEXITCODE -ne 0) { return 'retained_unintegrated' }
+    $null = Invoke-GitText $script:root @('-c', 'core.longPaths=true', 'worktree', 'remove', '--force', $Worktree) 'review_rework_cleanup_failed'
+    & git -C $script:root show-ref --verify --quiet "refs/heads/$Branch" 2>$null
+    if ($LASTEXITCODE -eq 0) { $null = Invoke-GitText $script:root @('branch', '-D', $Branch) 'review_rework_cleanup_failed' }
+    $parent = Split-Path -Parent $Worktree
+    if ((Test-Path -LiteralPath $parent) -and @(Get-ChildItem -LiteralPath $parent -Force).Count -eq 0) { Remove-Item -LiteralPath $parent -Force }
+    'cleaned'
+  } catch { 'retained_cleanup_failed' }
+}
+
+function Invoke-ReviewReworkNotification {
+  param([object]$Result)
+  $arguments = @('-Kind', 'TaskOutcome', '-RepositoryRoot', $script:root, '-TaskId', [string]$Result.taskId, '-RunId', [string]$Result.decisionId)
+  if ([string]$Result.optionKey -ceq 'C') { $arguments += @('-Status', 'blocked', '-DetailCode', 'review_rework_kept_blocked') }
+  else { $arguments += @('-Status', 'requeued', '-CommitSha', [string]$Result.formalHead) }
+  try {
+    $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $notificationPath @arguments 2>$null)
+    if ($LASTEXITCODE -eq 0 -and $output.Count -eq 1) { return [string]$output[0] }
+  } catch {}
+  'failed'
+}
+
+function Apply-AnsweredReviewRework {
+  param([object]$Answered)
+  $record = $Answered.context
+  $lock = Enter-TzgIntegrationLock -RepositoryRoot $script:root -TimeoutSeconds $IntegrationLockTimeoutSeconds
+  if ($null -eq $lock) {
+    Set-ReviewReworkRecordField -Record $record -Name status -Value 'attention_required'
+    Set-ReviewReworkRecordField -Record $record -Name detailCode -Value 'integration_lock_timeout'
+    $null = Write-ReviewReworkRecord $record
+    return [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'integration_lock_timeout' }
+  }
+  $worktree = $null
+  $branch = $null
+  $formalHead = $null
+  $result = $null
+  try {
+    Assert-PrivatePathAcl -Path ([string]$Answered.contextPath)
+    $record = [IO.File]::ReadAllText([string]$Answered.contextPath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50
+    if ([string]$record.status -cne 'awaiting_reply') {
+      return [ordered]@{ status = 'review_rework_already_consumed'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId }
+    }
+    $reply = $Answered.reply
+    if (
+      [int]$record.schemaVersion -ne 1 -or [string]$record.kind -cne 'review_rework' -or
+      [string]$reply.result -cne 'OPTION_ACCEPTED' -or [string]$reply.optionKey -cnotin @('A', 'B', 'C') -or
+      [string]$reply.source -cne 'feishu_card' -or [string]$reply.evidenceHash -cnotmatch '^[0-9a-f]{64}$'
+    ) { Stop-Hourly 'review_rework_reply_invalid' }
+    $shown = Invoke-Runtime -RuntimeAction Show -Parameters @{ RepositoryRoot = $script:root }
+    if ([string]$shown.status -cne 'OK' -or @($shown.activeTaskIds | ForEach-Object { [string]$_ }) -ccontains [string]$record.taskId) { Stop-Hourly 'review_rework_task_occupied' }
+    $task = Read-TaskMetadata $script:root ([string]$record.taskId)
+    if (
+      [string]$task.Digest -cne [string]$record.taskDigest -or
+      (Get-TaskContextDigest $task.Metadata) -cne [string]$record.taskContextDigest -or
+      [string]$task.Metadata.dispatchState -cne 'blocked' -or
+      (Get-QueueTaskIndex -Root $script:root -TaskId ([string]$record.taskId)) -ge 0
+    ) { Stop-Hourly 'review_rework_task_changed' }
+    $entry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$record.taskId)
+    if ([string]$entry.Digest -cne [string]$record.reviewEntryDigest -or [string]$entry.ReviewedCommit -cne [string]$record.reviewedCommit) { Stop-Hourly 'review_rework_entry_changed' }
+    $taskCommit = Invoke-GitText $script:root @('log', '-1', '--format=%H', '--', "开发管理/任务卡/$($record.taskId).txt") 'review_rework_review_commit_invalid'
+    if ($taskCommit -cne [string]$record.reviewCommit) { Stop-Hourly 'review_rework_review_commit_invalid' }
+    & git -C $script:root merge-base --is-ancestor ([string]$record.reviewedCommit) ([string]$record.reviewCommit) 2>$null
+    if ($LASTEXITCODE -ne 0) { Stop-Hourly 'review_rework_review_commit_invalid' }
+    & git -C $script:root merge-base --is-ancestor ([string]$record.reviewCommit) master 2>$null
+    if ($LASTEXITCODE -ne 0) { Stop-Hourly 'review_rework_review_commit_invalid' }
+    if ([string]$reply.optionKey -ceq 'C') {
+      Set-ReviewReworkRecordField -Record $record -Name status -Value 'consumed'
+      Set-ReviewReworkRecordField -Record $record -Name optionKey -Value 'C'
+      Set-ReviewReworkRecordField -Record $record -Name replyEvidenceHash -Value ([string]$reply.evidenceHash)
+      Set-ReviewReworkRecordField -Record $record -Name consumedAt -Value ([DateTimeOffset]::Now.ToString('o'))
+      $null = Write-ReviewReworkRecord $record
+      $result = [ordered]@{ status = 'review_rework_blocked'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; optionKey = 'C'; detailCode = 'review_rework_kept_blocked' }
+    } else {
+      $latest = Invoke-GitText $script:root @('rev-parse', 'master')
+      $paths = @("开发管理/任务卡/$($record.taskId).txt", '开发管理/当前任务队列.txt', [string]$task.Metadata.sourceBacklog)
+      $evidencePaths = @($paths + '开发管理/未通过审核清单.txt')
+      if (Test-MainPathConflict $evidencePaths) { Stop-Hourly 'review_rework_main_path_conflict' }
+      $decisionKey = ([string]$record.decisionId).ToLowerInvariant()
+      $worktree = Normalize-FullPath (Join-Path $script:root ".worktrees\automation\decisions\$decisionKey")
+      $branch = "codex/automation/decision/$decisionKey/state-$($latest.Substring(0, 12))"
+      if (Test-Path -LiteralPath $worktree) { Stop-Hourly 'review_rework_worktree_exists' }
+      & git -C $script:root show-ref --verify --quiet "refs/heads/$branch" 2>$null
+      if ($LASTEXITCODE -eq 0) { Stop-Hourly 'review_rework_branch_exists' }
+      [IO.Directory]::CreateDirectory((Split-Path -Parent $worktree)) | Out-Null
+      $null = Invoke-GitText $script:root @('worktree', 'add', '-b', $branch, $worktree, $latest) 'review_rework_worktree_failed'
+      $transition = [ordered]@{
+        schemaVersion = 1; kind = 'review_rework'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId
+        optionKey = [string]$reply.optionKey; queueIndex = [int]$record.queueIndex; taskDigest = [string]$record.taskDigest
+        taskContextDigest = [string]$record.taskContextDigest; reviewCommit = [string]$record.reviewCommit
+        reviewEntryDigest = [string]$record.reviewEntryDigest; replyEvidenceHash = [string]$reply.evidenceHash
+      }
+      $transitionPath = Write-PrivateJson 'state-transitions' "$($record.decisionId)-RequeueReview.json" $transition
+      $projection = Invoke-JsonTool $taskStatePath @('-Action', 'RequeueReview', '-RepositoryRoot', $worktree, '-TaskId', [string]$record.taskId, '-ContextPath', $transitionPath) 'review_rework_projection_failed'
+      if ([string]$projection.status -cne 'updated') { Stop-Hourly 'review_rework_projection_failed' }
+      $changedPaths = @($projection.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+      if (($changedPaths -join "`0") -cne (@($paths | Sort-Object -Unique) -join "`0")) { Stop-Hourly 'review_rework_projection_paths_invalid' }
+      Push-Location -LiteralPath $worktree
+      try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $whitespacePath -ExpectedPaths ($changedPaths -join '|') 2>&1) } finally { Pop-Location }
+      if ($LASTEXITCODE -ne 0) { Stop-Hourly 'review_rework_whitespace_failed' }
+      $targetLabel = if ([string]$reply.optionKey -ceq 'A') { 'DeepSeek' } else { 'Codex' }
+      $formalHead = Invoke-Finalizer $worktree @(
+        '-ExpectedPaths', ($changedPaths -join '|'), '-CommitMessage', "chore($($record.taskId)): requeue review rework",
+        '-RequireAutomationMetadata', '-AutomationTask', [string]$record.taskId, '-AutomationState', 'completed',
+        '-AutomationResult', "问题=Codex 复审未通过；完成=负责人选择 $targetLabel 按同一卡返工并重新排队",
+        '-AutomationImpact', '影响=任务恢复为可领取状态；边界=没有恢复旧 run、旧会话或旧 worktree',
+        '-AutomationVerify', '验证=任务卡、队列与 backlog 投影检查通过；后续=由对应 owner 的新轮次领取',
+        '-AutomationPlain', "发生=负责人已选择 $targetLabel 返工；影响=任务已重新排队但尚未开始新 run；需要=无需再次手动确认"
+      )
+      if ((@(Get-ChangedPaths $worktree "$latest..$formalHead") -join "`0") -cne ($changedPaths -join "`0")) { Stop-Hourly 'review_rework_formal_paths_invalid' }
+      $null = Invoke-GitText $worktree @('diff', '--check', "$latest..$formalHead") 'review_rework_diff_check_failed'
+      $postcondition = if ([string]$reply.optionKey -ceq 'A') { @('-Postcondition', 'ExternalDispatchReady', '-ExpectedOwner', 'deepseek') } else { @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', 'codex_execute') }
+      $evidence = Invoke-JsonTool $checkerPath (@('-RepositoryRoot', $worktree, '-TaskId', [string]$record.taskId) + $postcondition + '-OutputJson') 'review_rework_postcondition_failed'
+      if ([string]$evidence.status -cne 'ok') { Stop-Hourly 'review_rework_postcondition_failed' }
+      $currentEntry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$record.taskId)
+      if (
+        [string]$currentEntry.Digest -cne [string]$record.reviewEntryDigest -or
+        (Invoke-GitText $script:root @('branch', '--show-current')) -cne 'master' -or
+        (Invoke-GitText $script:root @('rev-parse', 'HEAD')) -cne $latest -or
+        (Test-MainPathConflict $evidencePaths)
+      ) { Stop-Hourly 'review_rework_integration_precondition_changed' }
+      $null = Invoke-GitText $script:root @('merge', '--ff-only', $formalHead) 'review_rework_fast_forward_failed'
+      $rootEvidence = Invoke-JsonTool $checkerPath (@('-RepositoryRoot', $script:root, '-TaskId', [string]$record.taskId) + $postcondition + '-OutputJson') 'review_rework_postcondition_failed'
+      if ([string]$rootEvidence.status -cne 'ok') { Stop-Hourly 'review_rework_postcondition_failed' }
+      Set-ReviewReworkRecordField -Record $record -Name status -Value 'consumed'
+      Set-ReviewReworkRecordField -Record $record -Name optionKey -Value ([string]$reply.optionKey)
+      Set-ReviewReworkRecordField -Record $record -Name replyEvidenceHash -Value ([string]$reply.evidenceHash)
+      Set-ReviewReworkRecordField -Record $record -Name formalHead -Value $formalHead
+      Set-ReviewReworkRecordField -Record $record -Name consumedAt -Value ([DateTimeOffset]::Now.ToString('o'))
+      $null = Write-ReviewReworkRecord $record
+      $cleanup = Remove-ReviewReworkWorktree -Worktree $worktree -Branch $branch -FormalHead $formalHead
+      $result = [ordered]@{ status = 'review_rework_requeued'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; optionKey = [string]$reply.optionKey; formalHead = $formalHead; cleanup = $cleanup }
+    }
+  } catch {
+    $detail = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'review_rework_apply_failed' }
+    Set-ReviewReworkRecordField -Record $record -Name status -Value 'attention_required'
+    Set-ReviewReworkRecordField -Record $record -Name detailCode -Value $detail
+    if (-not [string]::IsNullOrWhiteSpace($branch)) { Set-ReviewReworkRecordField -Record $record -Name evidenceBranch -Value $branch }
+    if (-not [string]::IsNullOrWhiteSpace($worktree)) { Set-ReviewReworkRecordField -Record $record -Name evidenceWorktree -Value ".worktrees/automation/decisions/$(([string]$record.decisionId).ToLowerInvariant())" }
+    if (-not [string]::IsNullOrWhiteSpace($formalHead)) { Set-ReviewReworkRecordField -Record $record -Name formalHead -Value $formalHead }
+    try { $null = Write-ReviewReworkRecord $record } catch {}
+    $result = [ordered]@{ status = 'attention_required'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = $detail }
+  } finally { Exit-TzgIntegrationLock -Handle $lock }
+  if ([string]$result.status -cin @('review_rework_requeued', 'review_rework_blocked')) { $result.notification = Invoke-ReviewReworkNotification $result }
+  $result
 }
 
 function Find-AnsweredCheckpoint {
@@ -540,7 +870,7 @@ $invocationMutex = $null
 $invocationHeld = $false
 try {
   $script:stage = 'dependencies'
-  foreach ($path in @($runtimePath, $selectorPath, $checkerPath, $taskStatePath, $finalizerPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_dependency_missing' } }
+  foreach ($path in @($runtimePath, $selectorPath, $checkerPath, $taskStatePath, $finalizerPath, $whitespacePath, $notificationPath, $decisionSenderPath, $decisionConsumerPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_dependency_missing' } }
   if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot)) { Stop-Hourly 'hourly_repository_invalid' }
   $script:root = Normalize-FullPath (Resolve-Path -LiteralPath $RepositoryRoot).Path
   if (-not (Test-Path -LiteralPath (Join-Path $script:root '.git'))) { Stop-Hourly 'hourly_repository_invalid' }
@@ -560,7 +890,20 @@ try {
     if ($null -ne $run) {
       $final = [ordered]@{ status = 'existing_run'; owner = $Owner; taskId = $run.taskId; runId = $run.runId; state = $run.state; detailCode = $run.recoveryReason }
     } else {
-      $answered = Find-AnsweredCheckpoint
+      $reviewDecision = Find-AnsweredReviewRework
+      if ([string]$reviewDecision.status -ceq 'answered') { $final = Apply-AnsweredReviewRework $reviewDecision }
+      elseif ([string]$reviewDecision.status -ceq 'attention_required') {
+        if ($reviewDecision.PSObject.Properties.Name -contains 'context' -and $null -ne $reviewDecision.context) {
+          try {
+            Set-ReviewReworkRecordField -Record $reviewDecision.context -Name status -Value 'attention_required'
+            Set-ReviewReworkRecordField -Record $reviewDecision.context -Name detailCode -Value ([string]$reviewDecision.detailCode)
+            $null = Write-ReviewReworkRecord $reviewDecision.context
+          } catch {}
+        }
+        $attentionTask = if ($reviewDecision.PSObject.Properties.Name -contains 'taskId') { [string]$reviewDecision.taskId } else { $null }
+        $final = [ordered]@{ status = 'attention_required'; owner = $Owner; taskId = $attentionTask; detailCode = [string]$reviewDecision.detailCode }
+      }
+      $answered = if ($null -eq $final) { Find-AnsweredCheckpoint } else { [ordered]@{ status = 'none' } }
       $restored = $null
       if ([string]$answered.status -ceq 'answered') { $restored = Restore-AnsweredCheckpoint $answered }
       elseif ([string]$answered.status -ceq 'attention_required') { $final = $answered }

@@ -98,6 +98,7 @@ function snapshotDecision(value) {
   const recommendedOption = readDataField(descriptors, 'recommendedOption');
   const impactSummary = readDataField(descriptors, 'impactSummary');
   const plainSummaryValue = readDataField(descriptors, 'plainSummary');
+  const allowCustomReply = readDataField(descriptors, 'allowCustomReply', false);
   if (
     decisionId === INVALID_FIELD
     || taskId === INVALID_FIELD
@@ -123,6 +124,7 @@ function snapshotDecision(value) {
     recommendedOption,
     impactSummary,
     plainSummary,
+    allowCustomReply: allowCustomReply === MISSING_FIELD ? true : allowCustomReply,
   };
 }
 
@@ -152,6 +154,7 @@ function validateInput(decision, cardNonce) {
     || !isPlainSummaryText(decision.plainSummary.situation)
     || !isPlainSummaryText(decision.plainSummary.impact)
     || !isPlainSummaryText(decision.plainSummary.action)
+    || typeof decision.allowCustomReply !== 'boolean'
     || !isIdentifier(cardNonce)
   ) {
     return false;
@@ -249,45 +252,47 @@ export function buildDecisionCard(input, cardNonce) {
           },
         })),
       },
-      {
-        tag: 'form',
-        name: 'customDecisionForm',
-        elements: [
-          {
-            tag: 'input',
-            name: 'customDecision',
-            input_type: 'multiline_text',
-            placeholder: {
+      ...(decision.allowCustomReply ? [
+        {
+          tag: 'form',
+          name: 'customDecisionForm',
+          elements: [
+            {
+              tag: 'input',
+              name: 'customDecision',
+              input_type: 'multiline_text',
+              placeholder: {
+                tag: 'plain_text',
+                content: '输入你希望采用的方案（最多 1000 字）',
+              },
+            },
+            {
+              tag: 'button',
+              name: 'submitCustomDecision',
+              action_type: 'form_submit',
+              text: {
+                tag: 'plain_text',
+                content: '提交自定义方案',
+              },
+              type: 'primary',
+              value: {
+                kind: 'decision_custom_reply',
+                decisionId: decision.decisionId,
+                cardNonce,
+              },
+            },
+          ],
+        },
+        {
+          tag: 'note',
+          elements: [
+            {
               tag: 'plain_text',
-              content: '输入你希望采用的方案（最多 1000 字）',
+              content: `也可直接发消息（长按复制格式）：\n${formatCustomReplyCommand(decision.decisionId)}`,
             },
-          },
-      {
-        tag: 'button',
-        name: 'submitCustomDecision',
-        action_type: 'form_submit',
-            text: {
-              tag: 'plain_text',
-              content: '提交自定义方案',
-            },
-            type: 'primary',
-            value: {
-              kind: 'decision_custom_reply',
-              decisionId: decision.decisionId,
-              cardNonce,
-            },
-          },
-        ],
-      },
-      {
-        tag: 'note',
-        elements: [
-          {
-            tag: 'plain_text',
-            content: `也可直接发消息（长按复制格式）：\n${formatCustomReplyCommand(decision.decisionId)}`,
-          },
-        ],
-      },
+          ],
+        },
+      ] : []),
     ],
   };
 }

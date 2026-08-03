@@ -115,6 +115,12 @@ test('task outcome cards keep professional sections before the three plain-langu
   assert.equal(card.elements.some((element) => ['action', 'form'].includes(element.tag)), false);
 });
 
+test('requeued task outcome is rendered as a distinct non-completion status', () => {
+  const card = buildNotificationCard(makeTaskNotification({ status: 'requeued' }));
+  assert.equal(card.header.template, 'blue');
+  assert.equal(card.header.title.content, '天章自动化 · 已重新排队');
+});
+
 test('notification cards reject incomplete fields and overlong reports instead of truncating', () => {
   assert.throws(
     () => buildNotificationCard(makeTaskNotification({ boundary: '' })),

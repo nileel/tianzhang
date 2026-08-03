@@ -161,7 +161,7 @@ async function writePendingBinding({ stateRoot, decision, result, now }) {
     kind: 'decision_reply',
     decisionId: decision.decisionId,
     allowedOptions: decision.options.map((option) => option.key),
-    allowCustomReply: true,
+    allowCustomReply: decision.allowCustomReply !== false,
     issuedAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + DECISION_TTL_MS).toISOString(),
     cardNonceHash: result.cardNonceHash,
@@ -188,7 +188,7 @@ async function writeRecoveryRequest({ requestPath, decision, result, now }) {
   const pendingDecision = {
     decisionId: decision.decisionId,
     allowedOptions: decision.options.map((option) => option.key),
-    allowCustomReply: true,
+    allowCustomReply: decision.allowCustomReply !== false,
     createdAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + DECISION_TTL_MS).toISOString(),
     cardNonceHash: result.cardNonceHash,

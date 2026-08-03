@@ -2,7 +2,7 @@
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $true)][ValidateSet('PauseDecision', 'ResumeReady', 'Block')][string]$Action,
+  [Parameter(Mandatory = $true)][ValidateSet('PauseDecision', 'ResumeReady', 'Block', 'RequeueReview')][string]$Action,
   [Parameter(Mandatory = $true)][string]$RepositoryRoot,
   [Parameter(Mandatory = $true)][string]$TaskId,
   [Parameter(Mandatory = $true)][string]$ContextPath
@@ -14,6 +14,12 @@ Set-StrictMode -Version Latest
 function Read-Utf8 { param([string]$Path) [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF) }
 function Write-Utf8 { param([string]$Path, [string]$Text) [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false)) }
 function Normalize-Cell { param([string]$Value) $Value.Trim().Trim([char]96) }
+
+function Get-NormalizedTextDigest {
+  param([string]$Path)
+  $text = Read-Utf8 $Path
+  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($text.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+}
 
 function Get-TaskContextDigest {
   param([object]$Metadata)
@@ -129,13 +135,45 @@ try {
       $queue.Rows.RemoveAt($queueIndex)
       $backlog.Rows[$backlogIndex][3] = '阻塞'
     }
+    'RequeueReview' {
+      if (
+        [string]$context.kind -cne 'review_rework' -or
+        [string]$context.optionKey -cnotin @('A', 'B') -or
+        [string]$context.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$' -or
+        [string]$context.reviewCommit -cnotmatch '^[0-9a-f]{40,64}$' -or
+        [string]$context.reviewEntryDigest -cnotmatch '^[0-9a-f]{64}$' -or
+        [string]$context.replyEvidenceHash -cnotmatch '^[0-9a-f]{64}$' -or
+        [string]$meta.dispatchState -cne 'blocked' -or
+        $queueIndex -ge 0 -or
+        [string]$context.taskDigest -cne (Get-NormalizedTextDigest $cardPath) -or
+        [string]$context.taskContextDigest -cne (Get-TaskContextDigest $meta) -or
+        @($meta.expectedPaths | ForEach-Object { [string]$_ }) -cnotcontains '开发管理/未通过审核清单.txt'
+      ) { throw 'Review requeue precondition failed' }
+      $target = if ([string]$context.optionKey -ceq 'A') {
+        [ordered]@{ route = 'external_execute'; owner = 'deepseek'; label = 'DeepSeek' }
+      } else {
+        [ordered]@{ route = 'codex_execute'; owner = 'codex'; label = 'Codex' }
+      }
+      $meta.route = [string]$target.route
+      $meta.owner = [string]$target.owner
+      $meta.dispatchState = 'ready'
+      $meta.stateReason = "负责人已通过 $([string]$context.decisionId) 选择 $([string]$target.label) 按未通过审核清单返工"
+      foreach ($field in @('automationCheckpoint', 'automationReply')) {
+        if ($meta.PSObject.Properties.Name -contains $field) { $meta.PSObject.Properties.Remove($field) }
+      }
+      $row = @([string]$meta.id, [string]$meta.route, [string]$meta.owner, [string]$meta.priority, [string]$meta.domain, [string]$meta.stage, [string]$meta.title, "开发管理/任务卡/$TaskId.txt")
+      $insert = [Math]::Min([Math]::Max(0, [int]$context.queueIndex), $queue.Rows.Count)
+      $queue.Rows.Insert($insert, $row)
+      $backlog.Rows[$backlogIndex][2] = [string]$meta.owner
+      $backlog.Rows[$backlogIndex][3] = '已排队'
+    }
   }
 
   Write-Card -Path $cardPath -Metadata $meta -Body $card.Body
   Write-Table $queue
   Write-Table $backlog
   $checkArgs = @('-RepositoryRoot', $root, '-TaskId', $TaskId)
-  if ($Action -cne 'ResumeReady') {
+  if ($Action -notin @('ResumeReady', 'RequeueReview')) {
     $checkArgs += @('-Postcondition', 'CodexClosedOrNonReady')
   } elseif ([string]$meta.owner -ceq 'codex') {
     $checkArgs += @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', [string]$meta.route)
