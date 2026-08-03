@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-TZ-CHARTER-SAVE-01A",
+  "title": "锁定册界状态持久化的静态校验与迁移边界",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-03：U-TZ-CHARTER-MODEL-01 已完成复审。当前 CharterRuleReferenceCatalog 仅由 Editor 导入器创建，GameSession schema 3 也未持有册界状态；先由 Codex 锁定运行时静态校验、迁移和原子恢复方案，再建立外部实施卡。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SAVE-01A.txt",
+    "开发管理/任务归档/U-TZ-CHARTER-SAVE-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-TZ-CHARTER-SAVE-01A · 锁定册界状态持久化的静态校验与迁移边界
+
+## 来源与当前边界
+
+- `U-TZ-CHARTER-MODEL-01` 已完成并归档：`CharterRuntimeStateData` 是唯一动态状态承载，`CharterRuleRuntime` 只接受已验证的定义与引用目录，并且不接入 `GameSession`、存档、场景或 UI。
+- `GameSessionSnapshot` 当前 schema 为 3，`GameSession.RestoreSaveData` 只接收现有 `ContentCatalogData`；`ContentCatalogData` 没有册界定义或引用目录。唯一生产 `CharterRuleReferenceCatalog` 目前由 `DataConfigImporter.CreateProductionCharterRuleReferenceCatalog` 在 `Assets/Scripts/Editor` 创建，不能被当作玩家运行时静态校验所有者。
+- 本卡只冻结后续保存实现的唯一运行时校验来源、迁移和原子恢复边界；不实现保存功能、不修改静态数据、场景、UI、BattleSim 或纯规则事务。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md#所有权与分层`、`#动态状态边界`。
+- `docs/superpowers/specs/2026-07-31-tianzhang-charter-cross-runtime-conflict-contract-design.md#唯一所有者与依赖方向`、`#契约 v1`。
+- `开发管理/任务归档/U-TZ-CHARTER-MODEL-01.txt#来源与当前边界`、`#完成条件`、`#Codex 复审通过与完成（2026-08-03）`。
+- `开发管理/任务列表/场景与Unity任务.txt#U-TZ-CHARTER-SAVE-01`、`开发管理/任务归档/U-FPD-SAVE-01.txt`。
+- `src/Assets/Scripts/Game/GameSession.cs::BeginNewGame|ClearSession|CaptureSaveData|RestoreSaveData`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs::GameSessionSaveData|GameSessionRestoredState|GameSessionSnapshot.Capture|GameSessionSnapshot.Restore`。
+- `src/Assets/Scripts/Content/ContentCatalogData.cs::ContentCatalogData`、`src/Assets/Scripts/Content/CharterRuleDefinitionData.cs::CharterRuleDefinitionData|CharterRuleReferenceCatalog`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::CreateCopy|TryValidate`、`src/Assets/Scripts/Editor/DataConfigImporter.cs::CreateProductionCharterRuleReferenceCatalog`。
+- `src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`、`src/Assets/Tests/EditMode/CharterRuleDataTests.cs`、`src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs`。
+
+## 实施范围
+
+- 新建设计规范，明确唯一玩家运行时静态校验来源及其生命周期：它必须解析已导入的 `CharterRuleDefinitionData` 与已批准引用目录，不能调用 Editor 导入器、复制 fixture、硬编码默认权限或建立第二套定义／节点／授权目录。
+- 明确 `GameSession` 何时持有和替换 `CharterRuntimeStateData`，以及保存数据、当前 schema、旧 schema 0～3 的未接入状态、下一版迁移、定义版本和实例状态的边界。旧档缺少册界字段只能恢复为明确未接入状态，不能伪造遗物识别、授权、节点、覆盖、供给、占用或提交结果。
+- 锁定恢复前的完整校验顺序：版本、结构、稳定 ID、定义／状态分层、节点、授权版本、覆盖、占用、供给、正负提交和当前地区规则都成功后，才与既有会话集合进行一次原子替换。任一失败必须保留原会话，且不重复结算已分配供给、占用或提交。
+- 列出下游 `U-TZ-CHARTER-SAVE-01` 的精确实现路径、直接 EditMode 用例和验证命令，并把它保留为外部实施、Codex 复审的后续卡；本卡完成前不得建立该业务执行卡。
+
+## 禁止项
+
+- 不修改 `GameSession`、`SessionStateSnapshots`、`ContentCatalogData`、`CharterRuntimeStateData`、`CharterRuleRuntime`、导入器、CSV、asset、场景、UI、BattleSim 或任何存档字段。
+- 不创建第二套存档、静默兼容层、运行时读取 Editor API、默认 ID、默认授权、默认供给或半恢复状态。
+- 不扩展水府地纪以外的 M7 内容，不实现单据点交互、环境效果、经济／天气模拟、数值、概率、产量或新剧情。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SAVE-01A -Postcondition CodexDispatchReady -ExpectedRoute codex_execute`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs`。
+- 提交前运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 规范让后续实现无需再选择静态校验来源、状态所有者、schema 迁移或原子恢复顺序；运行时、Editor 导入和 shared 冲突契约的职责不重叠。
+- `U-TZ-CHARTER-SAVE-01` 获得完整、可验证且路径字面量的实施卡；不能证明该条件时保持其阻塞，不以占位保存或默认化数据补位。
+
+## 停止条件
+
+- 若唯一运行时静态校验来源需要增加未批准的生产条目、节点、授权、环境档案、数据表或玩家行为语义，停止并转为 `pending_decision`；不得把选择伪装成实现细节。
+- 若现有会话所有者不能进行一次原子替换且只能通过第二套存档、双写、fallback 或兼容读取层完成，停止并返回架构决定，不实施代码。

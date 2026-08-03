@@ -24,7 +24,8 @@
 | U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-TZ-CHARTER-SAVE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 待建立任务卡（前置已完成） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
+| U-TZ-CHARTER-SAVE-01A | P1 | codex | 已排队 | — | 锁定册界状态持久化的静态校验与迁移边界 | 开发管理/任务卡/U-TZ-CHARTER-SAVE-01A.txt |
+| U-TZ-CHARTER-SAVE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-TZ-CHARTER-SAVE-01A） | — | 保存／读取已登记条目、界印、节点、授权、占用与当前地区规则状态。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 
 ## 执行边界
@@ -74,7 +75,7 @@
 
 ### U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
 
-- 依赖与状态：M8 已获条件授权；`D-TZ-CHARTER-SCHEMA-01`、`D-TZ-CHARTER-SAMPLE-01` 与 `D-TZ-CHARTER-CONFLICT-02` 已完成。共享冲突／跨阶授权已由同一 `World/CharterConflictRules.cs` 供 Unity 与 BattleSim 编译；下次队列维护可建立本卡执行卡，不得绕过该实现。
+- 依赖与状态：已完成并归档至 `开发管理/任务归档/U-TZ-CHARTER-MODEL-01.txt`。共享冲突／跨阶授权继续由同一 `World/CharterConflictRules.cs` 供 Unity 与 BattleSim 编译；后续保存链只能消费已验证的纯规则结果，不得绕过该实现。
 - 预期路径：现有世界状态、据点交互、设施权限、规则冲突与地区事件所有者，相关数据模型和 `src/Assets/Tests/EditMode`；进入当前队列前必须实时扫描并展开字面量路径，不得先假设新服务名称。
 - 范围：《开阖九章》只处理旧门禁／传送阵目标识别、通行许可与稳定失败原因；太玄界印只处理公共设施的管理者、受益者、守卫／档案响应；册界模型只处理完整条目登记、节点连通、版本化授权、据点级覆盖、现实供给、正负原子提交和地区事件输出。
 - 冲突：命中同变量金丹介入时复用既有 `RuleConflictInstance` 和版本化 `CrossTierChallengeGrant`；没有挑战资格就拒绝覆盖。命中元婴道路锚点固定进入受锚状态，不把它降格为金丹冲突，也不自动获胜。
@@ -85,8 +86,8 @@
 
 ### U-TZ-CHARTER-SAVE-01 · 册界状态持久化
 
-- 依赖与状态：M8 已获条件授权；当前阻塞于 U-TZ-CHARTER-MODEL-01 完成，并复用 S-SAVE-01 已建立的版本、迁移和失败关闭边界。
-- 预期路径：S-SAVE-01 确认的存档所有者、世界／地区状态快照与直接相关 EditMode 测试；进入当前队列前展开全部字面量路径，不另建平行存档格式。
+- 依赖与状态：M8 已获条件授权，`U-TZ-CHARTER-MODEL-01` 已完成；当前先阻塞于 `U-TZ-CHARTER-SAVE-01A` 锁定运行时静态校验来源、schema 迁移和原子恢复边界，并复用 S-SAVE-01 已建立的版本与失败关闭原则。
+- 预期路径：设计完成后以 `U-TZ-CHARTER-SAVE-01A` 的冻结路径为准，使用 S-SAVE-01 确认的存档所有者、世界／地区状态快照与直接相关 EditMode 测试；不另建平行存档格式。
 - 范围：持久化玩家已登记条目、太玄界印认主／权限状态、册界节点完好与连通状态、版本化组织授权、当前覆盖集合、条目／节点占用、正负提交结果及当前地区规则；《开阖九章》只保存确有持久事实的识别／通行状态。
 - 验证：新档、合法旧档迁移、未知 ID 拒绝、保存读取幂等、调用中断无半提交、节点断开后的重检、授权版本变化、占用释放和重复读取不重复结算；篡改覆盖或删除负面提交必须失败关闭。
 - 完成条件：读档后条目、界印、节点、授权、覆盖、占用和地区规则与保存前一致，唯一事务不会重复提交，旧档缺失新体系时使用明确的未接入状态而非伪造默认授权。
