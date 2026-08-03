@@ -6,4 +6,3 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | U-TZ-CHARTER-MODEL-01 | external_execute | deepseek | P1 | unity | implementation | 三项遗产与册界纯规则模型 | 开发管理/任务卡/U-TZ-CHARTER-MODEL-01.txt |
-| C-STORY-WM-L1A | codex_execute | codex | P1 | content | implementation | 第二章《坤舆残篇》L1 骨架 | 开发管理/任务卡/C-STORY-WM-L1A.txt |
