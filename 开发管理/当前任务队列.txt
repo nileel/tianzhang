@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-BOUNTY-01C | external_execute | deepseek | P1 | unity | implementation | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | 开发管理/任务卡/U-BOUNTY-01C.txt |

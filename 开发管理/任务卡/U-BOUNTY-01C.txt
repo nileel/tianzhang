@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "U-BOUNTY-01A 的四状态规则与 U-BOUNTY-01B 的 schema 3 存档迁移均已完成并通过 Codex 独立复审；现有城市功能入口仍只返回 pending-panel 原因。",
+  "stateReason": "自动责任方确认阻塞：EXECUTION_PERMISSION_DENIED",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
     "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
