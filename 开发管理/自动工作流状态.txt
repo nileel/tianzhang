@@ -1,19 +1,22 @@
 # 自动工作流状态（✅ 已审核）
 
-> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；owner run 与短时集成租约以本机 schema 4 runtime 为准；业务结果以 Git 为准。
+> 本文件只保留迁移事实、人工阻塞、恢复所有权和最近已核验提交。实时 status 以 automation 配置为准；owner run 以本机 schema 5 runtime 为准；进程持有型集成锁以实时 `Show` 为准；业务结果以 Git 为准。
 
 ## 已确认架构
 
 - 两个独立写入入口为 `codex-hourly-worker` 与 `deepseek-hourly-trigger`；前者只处理 Codex 路由，后者只调用固定 DeepSeek Windows 入口。每日简报只读。
 - 权威设计为 `docs/superpowers/specs/2026-08-01-independent-codex-deepseek-hourly-worktree-design.md`。
 - 旧 controller v2、schema 3 长业务租约、通用 external wrapper 生产入口、机器任务注册表、manifest 和中央状态机均退出活动路径。
-- 两个 owner 各自在 `.worktrees/automation/<runId>/<owner>` 形成 candidate／canonical；最长 300 秒的 `integrationLease` 只保护一次 fast-forward。
+- 两个 owner 各自在 `.worktrees/automation/<runId>/<owner>` 形成 candidate／canonical；共享进程持有型排他锁只保护一次核验与 fast-forward，不再把短时集成租约写入 runtime。
 - DeepSeek 正式结果仍是连续的 `businessCommit` 与仅含交接登记的 `handoffCommit`，后者不重复统计；审核前不解锁依赖。
 
 ## 当前人工阻塞与恢复所有权
 
 - 2026-08-02：负责人确认独立 Codex／DeepSeek 小时入口方案；固定 Windows 入口 canary 已核验 `pwshMajor=7`、Git、`local_deepseek_gateway`、`deepseek-v4-flash`、私有状态隔离和 project-owned canary worktree 清理，主工作区 HEAD 与状态未被 canary 改变。
-- 2026-08-02：独立入口实现已合并；实时 `codex-hourly-worker` 与 `deepseek-hourly-trigger` 已创建，日报／周报提示词已同步，旧 `tzg-hourly-controller` 已删除。两个新写入 automation 因主工作区保留旧 DeepSeek 轮次的 D-COMBAT-02 未提交现场而保持暂停；schema 4 runtime 当前无 owner run 或集成租约。
+- 2026-08-04：独立入口实现保持活动架构；实时 `codex-hourly-worker` 与 `deepseek-hourly-trigger` 的启用状态只以 automation 配置为准。本次受控恢复与 canary 完成前两者保持暂停；schema 5 runtime 已核验为两个 owner 均为空、`activeTaskIds` 为空、进程持有型集成锁空闲。
+- 2026-08-04：旧 QueueMaintenance run `3355f006-0335-4413-9404-99a745d4c611` 的候选树只含负责人批准保留的两行 backlog 事实修正；仅修正 Automation 提交元数据后形成 `306212c96f1638059ef3a15bb1532c7ffdaa3b75`，已通过共享集成锁 fast-forward、精确关闭 runtime 并清理该 run 现场。
+- 2026-08-04：`U-TZ-CHARTER-SAVE-01A` 按负责人当前 Codex 对话选择 A 人工恢复：补入下游任务卡路径，恢复 `codex_execute/codex/ready` 与原队列位置，同步 backlog，删除旧 checkpoint `2255afc0fe7e5d37e26ec5cba96cf9655385798a`，未创建 `automationReply`。decisionId／PauseDecision 合同与无写入负例随 `3223e574fed32faa3f96bd0919bf3e2ddd097ac5` 集成。
+- 2026-08-04：无 runtime 所有权现场逐个取证；`014f81a0-.../deepseek` 与 `04b8d73f-.../codex` 已证明为被拒绝或被正式提交覆盖的冗余现场并精确清理。`51efd154-.../deepseek` 含 master 尚未覆盖的悬赏状态／进度一致性证据，同时其旧实现改变 catalog 必填边界且自身相关测试失败，因此保留现场，不直接集成，后续另卡处理。
 - 2026-07-31：负责人先对 `DEC-20260731-TZCHARTERMODEL01` 选择 C，随后在获知 A/B 实际差异后明确改选 A；已授权 Unity 与 BattleSim 共用冲突／跨阶授权契约，并将现有 BattleSim 语义迁为唯一实现。`D-TZ-CHARTER-CONFLICT-01` 已锁定 shared source、契约和迁移边界；`D-TZ-CHARTER-CONFLICT-02` 已完成唯一实现迁移，`U-TZ-CHARTER-MODEL-01` 已解除该前置，等待队列维护建立执行卡，不再等待负责人决定。
 - 2026-07-31：负责人对 `D-COMBAT-02` 选择 A，授权独立迁移 BattleSim 范围载体，使圆形显式表达无朝向；`D-COMBAT-02A` 已建立并排队，原跨端 fixture 任务等待该前置完成，不修改既定契约。
 - 2026-07-24 00:37（Asia/Hong_Kong）`DEC-20260724-ENVPROFILE` 的 A 回复已形成有效签名 processed 证据；01:19 的旧控制器仍恢复等待决定的原 session，导致该回复未进入责任方。现已取消 decision 原 session 恢复、即时桥接中继、pending resume 队列和独立决定触发器；后续每小时轮次直接读取 A 证据并用新的责任方 session 继续原 TaskId。
@@ -22,6 +25,8 @@
 
 ## 最近已核验提交
 
+- 2026-08-04 QueueMaintenance 两行 backlog 事实修正恢复并集成：`306212c96f1638059ef3a15bb1532c7ffdaa3b75`。
+- 2026-08-04 小时自动化 decisionId 合同与 `U-TZ-CHARTER-SAVE-01A` 人工 A 恢复：`3223e574fed32faa3f96bd0919bf3e2ddd097ac5`。
 - 2026-07-21 手动生产金丝雀完成 TQ-069：`b2ec7930aa2476df82c48cff23e7f22667d83c20`。
 - 2026-07-21 自然轮次完成 N-DIST-01：`954f5c8fc92dda8373660671f71190bed094bdb6`；随后完成 N-ENV-01：`5108bbead888d93d836742f532d2fce011f54634`。
 - 2026-07-22 队列维护补入 N-GROUP-02A：`fa383fbbbc787e841717d65583bcb359d1c094f4`。控制器当时遗漏报告该 SHA，Git 元数据本身有效。
@@ -33,5 +38,5 @@
 
 - 业务成果：Git 提交、任务归档和任务卡验证结果。
 - 调度轨迹：Codex 自动化任务及其 memory。
-- 本机 owner run 与集成租约：用户级 `tzg-hourly-controller-runtime/runtime.json`。
+- 本机 owner run：用户级 `tzg-hourly-controller-runtime/runtime.json`；进程持有型集成锁不写入该文件，以 schema 5 `Show` 的实时结果为准。
 - 飞书桥状态：用户级 `tzg-feishu-decision-bridge/`。
