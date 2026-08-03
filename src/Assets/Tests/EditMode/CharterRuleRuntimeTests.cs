@@ -12,8 +12,10 @@ namespace TianZhang.Tests
     /// <summary>
     /// Direct EditMode coverage of the pure charter rule transaction on the approved water
     /// bureau chronicle sample: passage is not management, management is not rule change,
-    /// disconnected nodes, out-of-boundary coverage, atomic rejection, jindan conflict,
-    /// yuanying anchoring, and uniquely recorded declared event outputs.
+    /// disconnected nodes, out-of-boundary coverage, atomic rejection, versioned cross-tier
+    /// authorization, the charter side mapping of the shared decision, one-time reality
+    /// supply consumption, jindan conflict, yuanying anchoring, and uniquely recorded
+    /// declared event outputs.
     /// </summary>
     public sealed class CharterRuleRuntimeTests
     {
@@ -167,13 +169,15 @@ namespace TianZhang.Tests
             Assert.AreEqual(1, result.NextState.ruleEntryOccupancies.Length);
             Assert.AreEqual(RuleEntryId, result.NextState.ruleEntryOccupancies[0].resourceId);
             Assert.AreEqual(3, result.NextState.nodeOccupancies.Length);
-            // 三个已登记供给结转，三个本次供给原子占用。
-            Assert.AreEqual(6, result.NextState.realitySupplyStates.Length);
-            Assert.AreEqual(CharterRuleRuntime.RegisteredSupplyState, result.NextState.realitySupplyStates[0].state);
-            Assert.AreEqual(CharterRuleRuntime.AllocatedSupplyState, result.NextState.realitySupplyStates[3].state);
+            // 三个已登记供给按稳定 ID 唯一结转为本轮 allocated，不残留旧 registered 记录。
+            Assert.AreEqual(3, result.NextState.realitySupplyStates.Length);
+            Assert.AreEqual(CharterRuleRuntime.AllocatedSupplyState, result.NextState.realitySupplyStates[0].state);
             Assert.AreEqual(
                 3,
                 result.NextState.realitySupplyStates.Count(supply => supply.state == CharterRuleRuntime.AllocatedSupplyState));
+            Assert.AreEqual(
+                3,
+                result.NextState.realitySupplyStates.Select(supply => supply.realitySupplyId).Distinct().Count());
             Assert.AreEqual(1, result.NextState.positiveCommitResults.Length);
             Assert.AreEqual(1, result.NextState.negativeCommitResults.Length);
             Assert.IsTrue(result.NextState.TryValidate(new[] { definition }, catalog, out var stateReason), stateReason);
@@ -220,6 +224,12 @@ namespace TianZhang.Tests
                 "JD_CHALLENGE_REVOKED",
                 CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, revoked));
 
+            // 请求未锁定哪一候选代表本次册界调用 → 请求无效，不进入 shared 决定。
+            var undeclaredSide = BuildJindanRequest(charterCandidateId: "candidate_not_participating");
+            AssertRejected(
+                CharterRuleRuntimeReasons.InvalidRequest,
+                CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), undeclaredSide, BuildEligibleArchive()));
+
             // 合法跨阶授权 → 只消费 shared 决定并原子应用。
             var authorized = CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, BuildEligibleArchive());
             Assert.IsTrue(authorized.Succeeded, authorized.Reason);
@@ -227,6 +237,71 @@ namespace TianZhang.Tests
             Assert.AreEqual(RuleConflictOutcome.LeftWins, authorized.ConflictDecision.Outcome);
             Assert.AreEqual("jindan_left", authorized.ConflictDecision.WinnerCandidateId);
             Assert.IsNotNull(authorized.NextState);
+        }
+
+        [Test]
+        public void JindanInterventionWithoutCrossTierRequestCannotCommitRuleState()
+        {
+            // 版本化跨阶请求缺失时，即使 archive 可解析也无合法跨阶授权 → 拒绝覆盖，不替换状态。
+            var request = BuildJindanRequest();
+            request.crossTierChallengeRequest = null;
+
+            AssertRejected(
+                CharterRuleRuntimeReasons.CrossTierAuthorizationDenied,
+                CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, BuildEligibleArchive()));
+        }
+
+        [Test]
+        public void CharterSideThatLosesTheConflictDoesNotCommitRuleStateOrEvents()
+        {
+            // 本次册界调用声明右侧候选，shared 决定左侧获胜 → 败方不提交规则状态或事件。
+            var request = BuildJindanRequest(charterCandidateId: "jindan_right");
+
+            var result = CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, BuildEligibleArchive());
+
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(CharterRuleRuntimeReasons.ConflictNotWon, result.Reason);
+            Assert.IsNotNull(result.ConflictDecision);
+            Assert.AreEqual(RuleConflictOutcome.LeftWins, result.ConflictDecision.Outcome);
+            Assert.AreEqual("jindan_left", result.ConflictDecision.WinnerCandidateId);
+            Assert.IsNull(result.NextState);
+            Assert.IsNull(result.EmittedEvents);
+        }
+
+        [Test]
+        public void NeutralConflictDecisionDoesNotCommitRuleStateOrEvents()
+        {
+            // 同优先级同脉冲 → shared 返回中立且无赢家；本次册界调用未赢得冲突 → 不提交规则状态或事件。
+            var request = BuildJindanRequest();
+            request.leftCandidate = CreateCandidate("jindan_left", positionRank: 2);
+            request.rightCandidate = CreateCandidate("jindan_right", positionRank: 2);
+
+            var result = CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, BuildEligibleArchive());
+
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(CharterRuleRuntimeReasons.ConflictNotWon, result.Reason);
+            Assert.IsNotNull(result.ConflictDecision);
+            Assert.AreEqual(RuleConflictOutcome.Neutral, result.ConflictDecision.Outcome);
+            Assert.IsNull(result.NextState);
+            Assert.IsNull(result.EmittedEvents);
+        }
+
+        [Test]
+        public void AllocatedRealitySupplyCannotBeConsumedAgain()
+        {
+            // 首次成功把三个已登记供给唯一结转为本轮 allocated，不残留旧 registered 记录。
+            var request = BuildValidRequest();
+            var first = CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, null);
+            Assert.IsTrue(first.Succeeded, first.Reason);
+            Assert.AreEqual(3, first.NextState.realitySupplyStates.Length);
+            Assert.AreEqual(
+                3,
+                first.NextState.realitySupplyStates.Count(supply => supply.state == CharterRuleRuntime.AllocatedSupplyState));
+
+            // 同一供给、正负提交与占用从结转后的状态再次调用 → 稳定拒绝，不替换状态。
+            AssertRejected(
+                CharterRuleRuntimeReasons.RealitySupplyUnavailable,
+                CharterRuleRuntime.Invoke(definition, catalog, first.NextState, request, null));
         }
 
         [Test]
@@ -326,7 +401,9 @@ namespace TianZhang.Tests
             };
         }
 
-        private static CharterRuleInvocationRequest BuildJindanRequest(string grantId = DeclaredGrantId)
+        private static CharterRuleInvocationRequest BuildJindanRequest(
+            string grantId = DeclaredGrantId,
+            string charterCandidateId = "jindan_left")
         {
             var request = BuildValidRequest();
             request.hasConflictIntervention = true;
@@ -348,6 +425,7 @@ namespace TianZhang.Tests
                 "water_element_spirit_flow",
                 "jindan_challenger",
                 100);
+            request.charterCandidateId = charterCandidateId;
             return request;
         }
 

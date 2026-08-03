@@ -62,3 +62,16 @@
 - Codex 复审结论：不通过。`JindanSameVariable` 可在 `crossTierChallengeRequest=null` 时成功提交；成功状态保留同供给的旧 `registered` 并追加 `allocated`，导致下一次重复消费；`RightWins`／`Neutral` 也没有阻止规则 `NextState`。
 - 独立验证：临时增加两条反例后运行 Unity EditMode，320 项中 316 通过、4 失败；两项新增失败精确命中上述授权与供给问题，另两项为原交接已记录基线。临时测试已撤回，未进入正式变更。
 - 建议下一步：只按 `开发管理/未通过审核清单.txt` 的最窄范围返工；不得自动重跑，返工完成后再转 Codex 复审。
+
+### DSH-U-TZ-CHARTER-MODEL-01-cb47c7d1 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-MODEL-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-MODEL-01
+- 候选提交：e80a4f9b4b419ba6a150b91f224550b9fe66dc43
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/册界纵向样例数据验证记录.txt、src/Assets/Scripts/World/CharterRuleRuntime.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs
+- 已验证：Unity EditMode 全套 322 项中 320 通过、2 项既有无关基线失败（CharterRuleRuntimeTests 12/12 含 4 项新增返工反例用例、CharterRuleDataTests 26/26、CharterConflictRulesTests 4/5）；dotnet build -c Release simulations/BattleSim：0 警告 0 错误（worktree 无 obj，先隐式 restore）；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b：PASS；check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests：OK（665 个文件）；check-task-cards.ps1 -OutputJson：status ok、readyCount 1；check-pending-whitespace.ps1：OK（8 个候选路径 / 3 个变更文件）；git diff --cached --check：通过（finalize 脚本内执行）；Unity 验证后工作树干净，两个 .meta 仍受 Git 跟踪，无验证生成未跟踪现场
+- 未验证：tools/check-data-chain.ps1 未运行：本轮无 docs/CSV/Unity 数据链路文件变化，任务卡未要求；dotnet build -c Release --no-restore 因全新 worktree 无 obj 资产文件改为隐式 restore 后构建，与首轮候选处理一致
+- 残留风险：正式集成与 Codex 独立复审由固定入口执行；共享 CharterConflictRules.cs 未改动，其 1 项既有基线失败（AuthorizedGrantBindsEveryConflictIdentityField 期待 PULSE_ADVANTAGE、shared 返回 PULSE_NEUTRAL）与本卡无关；新增稳定拒绝原因 charter_cross_tier_authorization_denied、charter_conflict_not_won 与请求字段 charterCandidateId 属本模型自有词汇，后续 U-TZ-CHARTER-SAVE-01 接入时须按同一契约序列化。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

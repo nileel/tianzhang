@@ -22,6 +22,8 @@ namespace TianZhang.World
         public const string AtomicCommitIncomplete = "charter_atomic_commit_incomplete";
         public const string VariableOutOfBoundary = "charter_variable_out_of_boundary";
         public const string UnknownConflictGrant = "charter_unknown_conflict_grant";
+        public const string CrossTierAuthorizationDenied = "charter_cross_tier_authorization_denied";
+        public const string ConflictNotWon = "charter_conflict_not_won";
     }
 
     /// <summary>
@@ -58,6 +60,7 @@ namespace TianZhang.World
         public RuleConflictCandidate leftCandidate;
         public RuleConflictCandidate rightCandidate;
         public CrossTierChallengeRequest crossTierChallengeRequest;
+        public string charterCandidateId;
         public int worldTick;
     }
 
@@ -136,19 +139,33 @@ namespace TianZhang.World
                 return Rejected(CharterRuleRuntimeReasons.RealitySupplyUnavailable);
 
             // 8. 冲突扫描：只构造完整 v1 实例并消费 shared 决定；元婴受锚只返回受锚结果。
+            //    同变量金丹介入必须同时成立版本化请求、目录声明与 archive 资格，缺任一即拒绝覆盖；
+            //    只有 shared 决定赢家正是本次册界调用声明候选时，规则才提交状态与事件。
             RuleConflictDecision conflictDecision = null;
             if (request.hasConflictIntervention)
             {
                 if (!Contains(definition.affectedWorldVariables, request.targetVariableId))
                     return Rejected(CharterRuleRuntimeReasons.VariableOutOfBoundary);
-                if (!HasDeclaredConflictGrant(definition, catalog, request))
-                    return Rejected(CharterRuleRuntimeReasons.UnknownConflictGrant);
+                if (request.conflictKind == RuleConflictKind.JindanSameVariable)
+                {
+                    if (request.crossTierChallengeRequest == null)
+                        return Rejected(CharterRuleRuntimeReasons.CrossTierAuthorizationDenied);
+                    if (!HasDeclaredConflictGrant(definition, catalog, request))
+                        return Rejected(CharterRuleRuntimeReasons.UnknownConflictGrant);
+                }
 
                 conflictDecision = BuildConflictInstance(request).Decide(crossTierChallengeArchive);
                 if (conflictDecision.Outcome == RuleConflictOutcome.Rejected)
                     return Rejected(conflictDecision.Reason, conflictDecision);
                 if (conflictDecision.Outcome == RuleConflictOutcome.Anchored)
                     return Anchored(conflictDecision);
+                if (!string.Equals(
+                        conflictDecision.WinnerCandidateId,
+                        request.charterCandidateId,
+                        StringComparison.Ordinal))
+                {
+                    return Rejected(CharterRuleRuntimeReasons.ConflictNotWon, conflictDecision);
+                }
             }
 
             // 9. 全部通过后一次性构造新的动态状态，事件只输出定义已声明的引用。
@@ -210,13 +227,15 @@ namespace TianZhang.World
                     return false;
                 }
                 if (request.conflictKind == RuleConflictKind.JindanSameVariable &&
-                    (request.leftCandidate == null || request.rightCandidate == null))
+                    (request.leftCandidate == null || request.rightCandidate == null ||
+                     !IsCharterCandidateDeclared(request)))
                 {
                     return false;
                 }
                 if (request.conflictKind == RuleConflictKind.YuanyingAnchored &&
                     (request.leftCandidate != null || request.rightCandidate != null ||
-                     request.crossTierChallengeRequest != null))
+                     request.crossTierChallengeRequest != null ||
+                     !string.IsNullOrWhiteSpace(request.charterCandidateId)))
                 {
                     return false;
                 }
@@ -372,12 +391,18 @@ namespace TianZhang.World
             CharterRuleReferenceCatalog catalog,
             CharterRuleInvocationRequest request)
         {
-            if (request.crossTierChallengeRequest == null)
-                return true;
             CharterConflictReference conflict = catalog.FindConflict(definition.conflictProfileId);
             if (conflict == null || conflict.crossTierChallengeGrantIds == null)
                 return false;
             return Contains(conflict.crossTierChallengeGrantIds, request.crossTierChallengeRequest.GrantId);
+        }
+
+        private static bool IsCharterCandidateDeclared(CharterRuleInvocationRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.charterCandidateId))
+                return false;
+            return string.Equals(request.charterCandidateId, request.leftCandidate.CandidateId, StringComparison.Ordinal) ||
+                   string.Equals(request.charterCandidateId, request.rightCandidate.CandidateId, StringComparison.Ordinal);
         }
 
         private static RuleConflictInstance BuildConflictInstance(CharterRuleInvocationRequest request)
@@ -426,7 +451,9 @@ namespace TianZhang.World
             }
             foreach (string supplyId in request.realitySupplyIds)
             {
-                next.realitySupplyStates = Append(next.realitySupplyStates, new CharterRealitySupplyStateData
+                // 现实供给按稳定 ID 唯一结转：旧 registered 记录被本轮 allocated 记录替换，
+                // 同一供给、正负提交与占用只能结算一次，不残留可复用的旧登记记录。
+                next.realitySupplyStates = ReplaceOrAppendSupply(next.realitySupplyStates, new CharterRealitySupplyStateData
                 {
                     realitySupplyId = supplyId,
                     state = AllocatedSupplyState,
@@ -515,6 +542,23 @@ namespace TianZhang.World
         {
             var list = new List<T>(values ?? Array.Empty<T>());
             list.Add(value);
+            return list.ToArray();
+        }
+
+        private static CharterRealitySupplyStateData[] ReplaceOrAppendSupply(
+            CharterRealitySupplyStateData[] values,
+            CharterRealitySupplyStateData record)
+        {
+            var list = new List<CharterRealitySupplyStateData>(values ?? Array.Empty<CharterRealitySupplyStateData>());
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] != null &&
+                    string.Equals(list[i].realitySupplyId, record.realitySupplyId, StringComparison.Ordinal))
+                {
+                    list.RemoveAt(i);
+                }
+            }
+            list.Add(record);
             return list.ToArray();
         }
 

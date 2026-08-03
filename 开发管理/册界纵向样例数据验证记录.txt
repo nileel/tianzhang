@@ -62,3 +62,30 @@
 - 临时反例 `AllocatedRealitySupplyCannotBeConsumedAgain` 证明：首次成功后同一供给同时保留 `registered` 与新增 `allocated`，第二次调用仍成功，现实供给、提交与占用可重复结算。
 - 代码检查还确认 `RightWins`／`Neutral` 未阻止规则提交，且请求没有明确哪一候选代表本次册界调用。
 - 权威 Unity 入口执行 320 项：316 通过、4 失败；新增两项失败为本次复审问题，另两项为原记录既有基线。临时反例已撤回，返工范围与后续复核要求见 `开发管理/未通过审核清单.txt`。
+
+## U-TZ-CHARTER-MODEL-01 复审返工记录（2026-08-03）
+
+> ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：`CharterRuleRuntime.cs`、`CharterRuleRuntimeTests.cs`、本记录。
+
+按 `开发管理/未通过审核清单.txt` 的最窄返工，在同一卡只修三项缺口，不复制 resolver、不改 shared 冲突排序、不扩展存档／场景／UI、不新增账本所有者：
+
+- 授权失败关闭：同变量金丹介入现在要求版本化跨阶请求、冲突目录声明与 archive 资格三项同时成立。`crossTierChallengeRequest` 为空时直接稳定拒绝 `charter_cross_tier_authorization_denied`，不再进入 shared 决定；目录声明失败仍为 `charter_unknown_conflict_grant`；archive 资格失败仍原样消费 shared 理由。
+- shared 决定到本次调用结果的明确映射：请求新增 `charterCandidateId` 声明哪一候选代表本次册界调用（必须等于左或右候选 ID，否则请求无效）。只有 `WinnerCandidateId` 正是该候选时规则才提交状态与事件；败方或中立（无赢家）一律返回 `charter_conflict_not_won`，不替换状态、不输出事件。
+- 供给唯一状态结转：成功事务按稳定 ID 用本轮 `allocated` 记录替换旧 `registered` 记录，同一现实供给、正负提交和节点占用只能结算一次，不再残留可复用的旧登记记录。
+
+实际命令与结果：
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：全套 322 项中 320 通过、2 项既有无关基线失败（与首次运行记录完全一致，逐项记录见下）；册界直接用例全部通过：`CharterRuleRuntimeTests` 12/12（含 4 项新增返工用例：`JindanInterventionWithoutCrossTierRequestCannotCommitRuleState`、`CharterSideThatLosesTheConflictDoesNotCommitRuleStateOrEvents`、`NeutralConflictDecisionDoesNotCommitRuleStateOrEvents`、`AllocatedRealitySupplyCannotBeConsumedAgain`）、`CharterRuleDataTests` 26/26、`CharterConflictRulesTests` 4/5。
+  - 既有失败 1：`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（与 2026-07-31 记录一致的已知基线失败：仍期待旧日志 "Excluded non-player spell"，现有未改动加载器输出 "Excluded unresolved art profile"）。
+  - 既有失败 2：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（`CharterConflictRules.cs`／`CharterConflictRulesTests.cs` 均来自 D-TZ-CHARTER-CONFLICT-02 提交 e1ffda9，本任务未改动；断言期望 `PULSE_ADVANTAGE`，shared 实现按既有优先序对等储备返回 `PULSE_NEUTRAL`）。
+- `dotnet build -c Release simulations/BattleSim`（worktree 无 obj，先隐式 restore）：通过，0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b`：PASS（shared 冲突语义未分叉）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests`：OK（665 个文件）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`：OK（3 个文件）。
+- Unity 验证完成后工作树仅含本轮修改文件，两个既有 `.meta`（`CharterRuleRuntime.cs.meta`、`CharterRuleRuntimeTests.cs.meta`）仍随同一候选提交受 Git 跟踪，无验证生成的未跟踪现场。
+
+返工后水府地纪纵向样例的可观察边界增量：
+
+- 缺版本化跨阶请求 → `charter_cross_tier_authorization_denied`，即使 archive 可解析也不进入 shared 决定、不替换状态。
+- 请求未锁定本册界调用候选 → `charter_invocation_request_invalid`；声明败方候选 → `charter_conflict_not_won`；同优先级同脉冲中立 → `charter_conflict_not_won`，均不提交规则状态或事件。
+- 首次成功把三个已登记供给唯一结转为本轮 `allocated`；从结转后状态再次调用同一供给 → `charter_reality_supply_unavailable`，不替换状态。
