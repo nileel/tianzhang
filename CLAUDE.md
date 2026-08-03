@@ -29,5 +29,5 @@
 
 ## 外部责任方边界
 
-- `deepseek-hourly-trigger` 只调用 `tools/invoke-deepseek-hourly.ps1`；固定脚本负责 `Show`、确定性选题、claim、owner worktree、候选核验、canonical 与短时集成。薄触发器和 DeepSeek 模型都不得管理 automation。
-- DeepSeek 只在给定 owner worktree 创建单一 candidate；固定入口机械生成正式 `businessCommit` 与 `handoffCommit`。完整 candidate、复审、恢复和禁止操作规则以 `开发管理/自动工作流规则.txt`、`开发管理/AI协作规则.txt` 与 `开发管理/DeepSeek工作提示词.txt` 为准。
+- `deepseek-hourly-trigger` 只调用 `tools/invoke-hourly-owner.ps1 -Owner deepseek`；共享入口负责 `Show`、确定性选题、claim、owner worktree、候选核验、最新 `master` 重放与排他集成。薄触发器和 DeepSeek 模型都不得管理 automation。
+- DeepSeek 只在给定 owner worktree 创建单一 candidate；共享入口机械形成一个同时包含业务变化、pending review 投影和交接证据的正式提交。完整 candidate、复审、恢复和禁止操作规则以 `开发管理/自动工作流规则.txt`、`开发管理/AI协作规则.txt` 与 `开发管理/DeepSeek工作提示词.txt` 为准。
