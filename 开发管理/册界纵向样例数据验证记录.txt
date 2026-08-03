@@ -89,3 +89,12 @@
 - 缺版本化跨阶请求 → `charter_cross_tier_authorization_denied`，即使 archive 可解析也不进入 shared 决定、不替换状态。
 - 请求未锁定本册界调用候选 → `charter_invocation_request_invalid`；声明败方候选 → `charter_conflict_not_won`；同优先级同脉冲中立 → `charter_conflict_not_won`，均不提交规则状态或事件。
 - 首次成功把三个已登记供给唯一结转为本轮 `allocated`；从结转后状态再次调用同一供给 → `charter_reality_supply_unavailable`，不替换状态。
+
+## Codex 返工复审结果（2026-08-03）
+
+结论：部分通过，原三项返工主体已生效，但册界候选侧仍未被稳定 ID 唯一锁定，任务继续阻塞等待最窄返工。
+
+- 静态核对确认：缺版本化请求、未声明 grant 与 archive 资格失败均失败关闭；供给唯一结转后不可重复消费；赢家不等于 `charterCandidateId` 或中立无赢家时不构造 `NextState`、不输出事件。
+- `IsCharterCandidateDeclared` 只校验 `charterCandidateId` 等于左或右候选 ID。若左右候选使用同一 `CandidateId`，该字段无法区分册界侧；shared 决定返回任一侧获胜时，`WinnerCandidateId` 都与它相等，当前实现会成功提交规则状态和事件。
+- 临时反例 `DuplicateCandidateIdsCannotDeclareWhichSideRepresentsTheCharterInvocation` 以同一 ID 构造左右候选并期望 `charter_invocation_request_invalid`；实际得到 `Succeeded=true`。权威 Unity 入口执行 323 项：320 通过、3 失败；新增失败精确命中该问题，另两项为既有无关基线。临时测试已撤回，未进入正式变更。
+- 最窄返工只需让册界调用层拒绝重复候选 ID（或等价地保证 `charterCandidateId` 唯一对应一侧）并保留直接测试；shared resolver、冲突排序、供给结转、存档、场景与 UI 均不改。

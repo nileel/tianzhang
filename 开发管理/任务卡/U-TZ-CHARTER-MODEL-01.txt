@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-03 Codex 返工复审部分通过：左右候选可使用相同 CandidateId，charterCandidateId 仍不能唯一锁定册界侧；等待负责人选择返工主责。",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
     "src/Assets/Scripts/World/CharterRuleRuntime.cs",
@@ -79,6 +79,12 @@
 - 成功事务把同一现实供给的 `allocated` 记录追加在旧 `registered` 记录之后；下一次调用仍命中旧记录并再次成功，违反现实供给与正负提交的一次性原子边界。返工必须按稳定 ID 替换／结转唯一供给状态，并覆盖重复调用拒绝。
 - 冲突结果目前只对 `Rejected`／`Anchored` 分流，`RightWins` 或 `Neutral` 也会构造规则 `NextState`。返工必须明确哪一侧代表本次册界调用，并证明败方／中立不会提交规则状态或事件；不得在本卡内复制 shared resolver 或新增账本所有者。
 - 复审核验临时加入两条反例后，Unity EditMode 为 320 项中 316 通过、4 失败：两项既有基线加上述“缺跨阶请求仍成功”“已分配供给仍可复用”两项新增失败。临时反例已撤回，证据登记在 `开发管理/未通过审核清单.txt`。
+
+## Codex 返工复审部分通过（2026-08-03）
+
+- 已确认原三项返工主体有效：金丹分支缺版本化请求时稳定拒绝，目录声明与 archive 资格仍由既有所有者核验；供给按稳定 ID 唯一结转后不可重复消费；shared 决定的赢家与 `charterCandidateId` 不同或无赢家时不提交规则状态和事件。
+- 仍有一项失败关闭缺口：`IsCharterCandidateDeclared` 只判断 `charterCandidateId` 是否等于左或右候选 ID，却未要求两侧候选 ID 互异。左右候选使用同一 `CandidateId` 时，该字段不能唯一锁定哪一侧代表册界调用；任一侧获胜都会得到相同 `WinnerCandidateId` 并成功提交。
+- 复审核验临时加入重复候选 ID 反例后，Unity EditMode 为 323 项中 320 通过、3 失败：新增反例得到 `Succeeded=true`，另两项为已登记且与本卡无关的既有基线。临时反例已撤回，最窄返工只需拒绝重复候选 ID（或等价地保证册界侧唯一绑定）并保留直接测试，不得修改 shared resolver。
 
 ## 停止条件
 
