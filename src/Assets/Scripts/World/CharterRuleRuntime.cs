@@ -140,7 +140,8 @@ namespace TianZhang.World
 
             // 8. 冲突扫描：只构造完整 v1 实例并消费 shared 决定；元婴受锚只返回受锚结果。
             //    同变量金丹介入必须同时成立版本化请求、目录声明与 archive 资格，缺任一即拒绝覆盖；
-            //    只有 shared 决定赢家正是本次册界调用声明候选时，规则才提交状态与事件。
+            //    左右候选 ID 互异使 charterCandidateId 唯一锁定册界侧，只有 shared 决定赢家正是该
+            //    声明候选时，规则才提交状态与事件。
             RuleConflictDecision conflictDecision = null;
             if (request.hasConflictIntervention)
             {
@@ -400,6 +401,10 @@ namespace TianZhang.World
         private static bool IsCharterCandidateDeclared(CharterRuleInvocationRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.charterCandidateId))
+                return false;
+            // 册界侧唯一绑定：左右候选 ID 必须互异，charterCandidateId 才能唯一锁定哪一侧代表本次册界调用；
+            // 两侧同 ID 时 shared 任一侧获胜都会返回同一 WinnerCandidateId，无法区分册界侧，请求直接无效。
+            if (string.Equals(request.leftCandidate.CandidateId, request.rightCandidate.CandidateId, StringComparison.Ordinal))
                 return false;
             return string.Equals(request.charterCandidateId, request.leftCandidate.CandidateId, StringComparison.Ordinal) ||
                    string.Equals(request.charterCandidateId, request.rightCandidate.CandidateId, StringComparison.Ordinal);

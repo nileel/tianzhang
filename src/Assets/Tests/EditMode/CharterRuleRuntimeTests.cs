@@ -13,9 +13,9 @@ namespace TianZhang.Tests
     /// Direct EditMode coverage of the pure charter rule transaction on the approved water
     /// bureau chronicle sample: passage is not management, management is not rule change,
     /// disconnected nodes, out-of-boundary coverage, atomic rejection, versioned cross-tier
-    /// authorization, the charter side mapping of the shared decision, one-time reality
-    /// supply consumption, jindan conflict, yuanying anchoring, and uniquely recorded
-    /// declared event outputs.
+    /// authorization, the charter side mapping of the shared decision (unique candidate id
+    /// binding, losing side and neutral never commit), one-time reality supply consumption,
+    /// jindan conflict, yuanying anchoring, and uniquely recorded declared event outputs.
     /// </summary>
     public sealed class CharterRuleRuntimeTests
     {
@@ -266,6 +266,19 @@ namespace TianZhang.Tests
             Assert.AreEqual("jindan_left", result.ConflictDecision.WinnerCandidateId);
             Assert.IsNull(result.NextState);
             Assert.IsNull(result.EmittedEvents);
+        }
+
+        [Test]
+        public void DuplicateCandidateIdsCannotDeclareWhichSideRepresentsTheCharterInvocation()
+        {
+            // 左右候选使用同一 CandidateId 时，charterCandidateId 无法唯一锁定哪一侧代表本次册界调用：
+            // shared 任一侧获胜都会返回同一 WinnerCandidateId。请求无效，稳定拒绝且不进入 shared 决定。
+            var request = BuildJindanRequest();
+            request.rightCandidate = CreateCandidate("jindan_left", positionRank: 2);
+
+            AssertRejected(
+                CharterRuleRuntimeReasons.InvalidRequest,
+                CharterRuleRuntime.Invoke(definition, catalog, BuildValidState(), request, BuildEligibleArchive()));
         }
 
         [Test]

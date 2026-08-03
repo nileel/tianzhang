@@ -75,3 +75,16 @@
 - 残留风险：正式集成与 Codex 独立复审由固定入口执行；共享 CharterConflictRules.cs 未改动，其 1 项既有基线失败（AuthorizedGrantBindsEveryConflictIdentityField 期待 PULSE_ADVANTAGE、shared 返回 PULSE_NEUTRAL）与本卡无关；新增稳定拒绝原因 charter_cross_tier_authorization_denied、charter_conflict_not_won 与请求字段 charterCandidateId 属本模型自有词汇，后续 U-TZ-CHARTER-SAVE-01 接入时须按同一契约序列化。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-TZ-CHARTER-MODEL-01-efca96c9 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-MODEL-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-MODEL-01
+- 候选提交：ae38004b431eadece0bd76fec67d64e051fa4418
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/册界纵向样例数据验证记录.txt、src/Assets/Scripts/World/CharterRuleRuntime.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs
+- 已验证：Unity EditMode：323 项中 321 通过、2 项既有无关基线失败（逐项记录）；CharterRuleRuntimeTests 13/13 含新增 DuplicateCandidateIdsCannotDeclareWhichSideRepresentsTheCharterInvocation、CharterRuleDataTests 26/26、CharterConflictRulesTests 4/5；dotnet build -c Release simulations/BattleSim：通过，0 警告、0 错误；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b：PASS；check-review-text：OK（665 个文件）；check-pending-whitespace：OK（8 个文件；finalize 提交前再验 3 个改动文件）；git diff --cached --check：通过（finalize 脚本内执行）；Unity 验证后工作树干净，两个 .meta 均受 Git 跟踪，无验证生成的未跟踪现场；candidate 提交仅含 3 个授权路径，为 base 3b39b12 直接后继
+- 未验证：无任务卡要求且未运行的验证项：check-task-cards 不在本卡验证清单内，未运行；两项既有无关基线失败（LianShen 旧日志断言、PULSE_ADVANTAGE 断言）未在本任务修复，属 D-TZ-CHARTER-CONFLICT-02 及既有加载器遗留，已逐项记录
+- 残留风险：全套 323 项仍有 2 项既有无关基线失败（DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad 旧日志断言、CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 的 PULSE 断言，均来自未改动既有代码，已逐项记录）；重复 ID 拒绝位于请求校验层，若未来 shared 层合法化重复候选 ID 语义，本拒绝将保持保守关闭
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
