@@ -12,6 +12,16 @@ $fixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ('tzg-whitespace-check-' + [
 try {
     New-Item -ItemType Directory -Path $fixtureRoot -Force | Out-Null
 
+    $missingFile = Join-Path $fixtureRoot 'missing.txt'
+    $missingOutput = & $checker -Paths @($missingFile) 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        throw 'Expected an explicitly requested missing path to fail.'
+    }
+    if (($missingOutput -join "`n") -notmatch 'Missing path:') {
+        throw "Expected a missing-path diagnostic. Actual: $($missingOutput -join "`n")"
+    }
+    Write-Host 'PASS rejects an explicitly requested missing path'
+
     $badFile = Join-Path $fixtureRoot 'untracked-trailing-space.txt'
     [IO.File]::WriteAllText($badFile, "line with trailing space `n", [Text.UTF8Encoding]::new($false))
 

@@ -106,8 +106,11 @@ function Test-PathOverlap {
 }
 
 function Get-ChangedPaths {
-  param([string]$Root, [string]$Range)
-  @((Invoke-GitText -Root $Root -Arguments @('-c', 'core.quotepath=false', 'diff', '--name-only', '--no-renames', $Range)) -split '\r?\n' | Where-Object { $_ } | ForEach-Object { $_.Replace('\', '/') } | Sort-Object -Unique)
+  param([string]$Root, [string]$Range, [string]$DiffFilter)
+  $arguments = @('-c', 'core.quotepath=false', 'diff', '--name-only', '--no-renames')
+  if (-not [string]::IsNullOrWhiteSpace($DiffFilter)) { $arguments += "--diff-filter=$DiffFilter" }
+  $arguments += $Range
+  @((Invoke-GitText -Root $Root -Arguments $arguments) -split '\r?\n' | Where-Object { $_ } | ForEach-Object { $_.Replace('\', '/') } | Sort-Object -Unique)
 }
 
 function Get-StatusPaths {
@@ -236,10 +239,13 @@ function Invoke-CombinedValidation {
   $changed = @(Get-ChangedPaths $Worktree "$Base..$Head")
   if ($changed.Count -eq 0) { Stop-Hourly 'hourly_formal_empty' }
   foreach ($path in $changed) { if ($Paths -cnotcontains $path) { Stop-Hourly 'hourly_formal_path_violation' } }
-  $expected = $changed -join '|'
-  Push-Location -LiteralPath $Worktree
-  try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths $expected 2>&1) } finally { Pop-Location }
-  if ($LASTEXITCODE -ne 0) { Stop-Hourly 'hourly_whitespace_failed' }
+  $contentCheckPaths = @(Get-ChangedPaths $Worktree "$Base..$Head" 'ACMRTUXB')
+  if ($contentCheckPaths.Count -gt 0) {
+    $expected = $contentCheckPaths -join '|'
+    Push-Location -LiteralPath $Worktree
+    try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-pending-whitespace.ps1') -ExpectedPaths $expected 2>&1) } finally { Pop-Location }
+    if ($LASTEXITCODE -ne 0) { Stop-Hourly 'hourly_whitespace_failed' }
+  }
   $null = Invoke-GitText $Worktree @('diff', '--check', "$Base..$Head") 'hourly_diff_check_failed'
   Assert-Postcondition -Run $Run -Worktree $Worktree
   if (@($changed | Where-Object { $_ -match '^(docs/|src/Assets/(?:Resources|StreamingAssets)/|.+\.(?:csv|json)$)' }).Count -gt 0) {

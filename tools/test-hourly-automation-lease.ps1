@@ -40,7 +40,8 @@ $repo = Join-Path ([IO.Path]::GetTempPath()) "tzg-hourly-runtime-repo-$([Guid]::
 try {
   [IO.Directory]::CreateDirectory($repo) | Out-Null
   & git -C $repo init -q; & git -C $repo config user.name 'Runtime Test'; & git -C $repo config user.email 'runtime@example.invalid'
-  [IO.File]::WriteAllText((Join-Path $repo 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false)); & git -C $repo add seed.txt; & git -C $repo commit -q -m 'test: seed'
+  [IO.File]::WriteAllText((Join-Path $repo '.gitignore'), ".worktrees/`n", [Text.UTF8Encoding]::new($false))
+  [IO.File]::WriteAllText((Join-Path $repo 'seed.txt'), 'seed', [Text.UTF8Encoding]::new($false)); & git -C $repo add .gitignore seed.txt; & git -C $repo commit -q -m 'test: seed'
   $head = [string](& git -C $repo rev-parse HEAD)
   $digest = 'a' * 64
 
@@ -74,6 +75,58 @@ try {
   Assert-Equal $mismatch.Json.status 'RUN_NOT_COMPLETABLE' 'Mismatched attention closeout was accepted'
   $manual = Invoke-Runtime CompleteRun @{ Owner='deepseek'; RunId=$deepRun.runId; CompletionCategory='failed'; DetailCode='manual'; ExpectedRecoveryReason='exact reason' }
   Assert-Equal $manual.Json.status 'RUN_COMPLETED' 'Exact attention closeout failed'
+
+  $abandon = Invoke-Runtime ClaimRun @{ Owner='codex'; TaskId='TASK-A'; Route='codex_review'; RepositoryRoot=$repo; MainBranch='master'; BaseCommit=$head; TaskCardDigest=('e' * 64) }
+  $abandonRun = $abandon.Json.run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$abandonRun.worktree))) | Out-Null
+  & git -C $repo worktree add -q -b ([string]$abandonRun.candidateBranch) ([string]$abandonRun.worktree) $head
+  Assert-Equal $LASTEXITCODE 0 'Candidate evidence worktree was not created'
+  [IO.File]::WriteAllText((Join-Path ([string]$abandonRun.worktree) 'result.txt'), 'candidate', [Text.UTF8Encoding]::new($false))
+  & git -C ([string]$abandonRun.worktree) add result.txt
+  & git -C ([string]$abandonRun.worktree) commit -q -m 'test: candidate evidence'
+  $abandonCandidate = [string](& git -C ([string]$abandonRun.worktree) rev-parse HEAD)
+  $null = Invoke-Runtime UpdateRun @{ Owner='codex'; RunId=$abandonRun.runId; RunState='candidate_ready'; SessionKind='codex_cli'; SessionId='session-a'; CandidateCommit=$abandonCandidate; CandidateResultPath=(New-ResultFile $abandonRun.runId) }
+  $formalBranch = "codex/automation/codex/$($abandonRun.runId)/canonical-manual"
+  & git -C ([string]$abandonRun.worktree) switch -q -c $formalBranch
+  [IO.File]::WriteAllText((Join-Path ([string]$abandonRun.worktree) 'formal.txt'), 'formal', [Text.UTF8Encoding]::new($false))
+  & git -C ([string]$abandonRun.worktree) add formal.txt
+  & git -C ([string]$abandonRun.worktree) commit -q -m 'test: unrecorded formal evidence'
+  $formalHead = [string](& git -C ([string]$abandonRun.worktree) rev-parse HEAD)
+  $attentionWithCandidate = Invoke-Runtime UpdateRun @{ Owner='codex'; RunId=$abandonRun.runId; RunState='attention_required'; RecoveryReason='formal integration stopped: hourly_whitespace_failed' }
+  Assert-Equal $attentionWithCandidate.Json.run.state 'attention_required' 'Candidate attention transition failed'
+  $closeEvidence = @{
+    Owner='codex'; RunId=$abandonRun.runId; CompletionCategory='failed'; DetailCode='manual_abandon'
+    ExpectedRecoveryReason='formal integration stopped: hourly_whitespace_failed'; ExpectedCandidateCommit=$abandonCandidate
+    ExpectedWorktree=[string]$abandonRun.worktree; ExpectedWorktreeBranch=$formalBranch; ExpectedWorktreeHead=$formalHead
+  }
+  $wrongCandidate = @{} + $closeEvidence; $wrongCandidate.ExpectedCandidateCommit = 'f' * 40
+  $rejectedCandidate = Invoke-Runtime CompleteRun $wrongCandidate @(2)
+  Assert-Equal $rejectedCandidate.Json.status 'RUN_NOT_COMPLETABLE' 'Mismatched candidate evidence was accepted'
+  $wrongRecovery = @{} + $closeEvidence; $wrongRecovery.ExpectedRecoveryReason = 'wrong recovery reason'
+  $rejectedRecovery = Invoke-Runtime CompleteRun $wrongRecovery @(2)
+  Assert-Equal $rejectedRecovery.Json.status 'RUN_NOT_COMPLETABLE' 'Mismatched candidate recovery reason was accepted'
+  $wrongWorktree = @{} + $closeEvidence; $wrongWorktree.ExpectedWorktree = Join-Path $repo '.worktrees/automation/wrong/codex'
+  $rejectedWorktree = Invoke-Runtime CompleteRun $wrongWorktree @(2)
+  Assert-Equal $rejectedWorktree.Json.status 'RUN_NOT_COMPLETABLE' 'Mismatched evidence worktree was accepted'
+  $wrongBranch = @{} + $closeEvidence; $wrongBranch.ExpectedWorktreeBranch = "$formalBranch-wrong"
+  $rejectedBranch = Invoke-Runtime CompleteRun $wrongBranch @(2)
+  Assert-Equal $rejectedBranch.Json.status 'RUN_NOT_COMPLETABLE' 'Mismatched worktree branch was accepted'
+  $wrongHead = @{} + $closeEvidence; $wrongHead.ExpectedWorktreeHead = 'a' * 40
+  $rejectedHead = Invoke-Runtime CompleteRun $wrongHead @(2)
+  Assert-Equal $rejectedHead.Json.status 'RUN_NOT_COMPLETABLE' 'Mismatched worktree HEAD was accepted'
+  [IO.File]::WriteAllText((Join-Path ([string]$abandonRun.worktree) 'dirty.txt'), 'dirty', [Text.UTF8Encoding]::new($false))
+  $rejectedDirty = Invoke-Runtime CompleteRun $closeEvidence @(2)
+  Assert-Equal $rejectedDirty.Json.status 'RUN_NOT_COMPLETABLE' 'Dirty evidence worktree was accepted'
+  Remove-Item -LiteralPath (Join-Path ([string]$abandonRun.worktree) 'dirty.txt') -Force
+  $masterBeforeAbandon = [string](& git -C $repo rev-parse master)
+  $abandoned = Invoke-Runtime CompleteRun $closeEvidence
+  Assert-Equal $abandoned.Json.status 'RUN_COMPLETED' 'Exact candidate attention closeout failed'
+  Assert-True ([bool]$abandoned.Json.evidenceRetained) 'Candidate attention closeout did not report retained evidence'
+  Assert-True (Test-Path -LiteralPath ([string]$abandonRun.worktree) -PathType Container) 'Candidate attention closeout removed evidence worktree'
+  Assert-Equal ([string](& git -C $repo rev-parse "refs/heads/$([string]$abandonRun.candidateBranch)")) $abandonCandidate 'Candidate attention closeout changed evidence branch'
+  Assert-Equal ([string](& git -C $repo rev-parse master)) $masterBeforeAbandon 'Candidate attention closeout changed master'
+  $afterAbandon = Invoke-Runtime Show @{ RepositoryRoot=$repo }
+  Assert-True ($null -eq $afterAbandon.Json.state.runs.codex) 'Candidate attention closeout left the owner occupied'
 
   $pause = Invoke-Runtime ClaimRun @{ Owner='codex'; TaskId='TASK-P'; Route='codex_execute'; RepositoryRoot=$repo; MainBranch='master'; BaseCommit=$head; TaskCardDigest=('d' * 64) }
   $pauseRun = $pause.Json.run

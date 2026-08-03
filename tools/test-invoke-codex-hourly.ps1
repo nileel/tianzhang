@@ -53,6 +53,7 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流规则.txt') -Text '# workflow rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI协作规则.txt') -Text '# collaboration rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流状态.txt') -Text '# fixture automation status'
+  Write-Utf8 -Path (Join-Path $mainRoot '开发管理/任务卡/.gitkeep') -Text ''
   Write-Utf8 -Path (Join-Path $mainRoot 'unrelated.txt') -Text 'base'
   $metadata = [ordered]@{
     schemaVersion = 1; id = $taskId; title = 'Codex hourly fixture'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'
@@ -62,8 +63,8 @@ try {
   }
   $card = @(
     '---TASK-META---', ($metadata | ConvertTo-Json -Depth 10), '---TASK-BODY---', "# $taskId · Codex hourly fixture",
-    '## 来源与当前边界', '- fixture', '## 必查范围', '- fixture', '## 实施范围', '- block fixture task',
-    '## 禁止项', '- no extra paths', '## 验证', '- task-card checker', '## 完成条件', '- blocked state', '## 停止条件', '- invalid projection'
+    '## 来源与当前边界', '- fixture', '## 必查范围', '- fixture', '## 实施范围', '- archive fixture task',
+    '## 禁止项', '- no extra paths', '## 验证', '- task-card checker', '## 完成条件', '- completed archive', '## 停止条件', '- invalid projection'
   ) -join "`n"
   Write-Utf8 -Path (Join-Path $mainRoot "开发管理/任务卡/$taskId.txt") -Text $card
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/当前任务队列.txt') -Text (@(
@@ -107,15 +108,18 @@ if ($prompt.Contains('Route: QueueMaintenance')) {
 }
 $taskId = 'TASK-CODEX-HOURLY'
 $cardPath = Join-Path ([Environment]::CurrentDirectory) "开发管理/任务卡/$taskId.txt"
-$card = [IO.File]::ReadAllText($cardPath).Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": "fixture"', '"stateReason": "fixture blocker confirmed"')
-[IO.File]::WriteAllText($cardPath, $card, [Text.UTF8Encoding]::new($false))
+$archivePath = Join-Path ([Environment]::CurrentDirectory) "开发管理/任务归档/$taskId.txt"
+$card = [IO.File]::ReadAllText($cardPath).Replace('"dispatchState": "ready"', '"dispatchState": "completed"').Replace('"stateReason": "fixture"', '"stateReason": "fixture completion confirmed"')
+[IO.Directory]::CreateDirectory((Split-Path -Parent $archivePath)) | Out-Null
+[IO.File]::WriteAllText($archivePath, $card, [Text.UTF8Encoding]::new($false))
+[IO.File]::Delete($cardPath)
 $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
 $queue = @([IO.File]::ReadAllLines($queuePath) | Where-Object { $_ -notmatch '^\| TASK-CODEX-HOURLY \|' }) -join "`n"
 [IO.File]::WriteAllText($queuePath, $queue, [Text.UTF8Encoding]::new($false))
 $backlogPath = Join-Path ([Environment]::CurrentDirectory) '开发管理/任务列表/自动化任务.txt'
-$backlog = [IO.File]::ReadAllText($backlogPath).Replace('| TASK-CODEX-HOURLY | P1 | codex | 已排队 |', '| TASK-CODEX-HOURLY | P1 | codex | 阻塞 |')
+$backlog = @([IO.File]::ReadAllLines($backlogPath) | Where-Object { $_ -notmatch '^\| TASK-CODEX-HOURLY \|' }) -join "`n"
 [IO.File]::WriteAllText($backlogPath, $backlog, [Text.UTF8Encoding]::new($false))
-$finalizerOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths '开发管理/任务列表/自动化任务.txt|开发管理/任务卡/TASK-CODEX-HOURLY.txt|开发管理/当前任务队列.txt' -CommitMessage 'test: close Codex hourly fixture' -RequireAutomationMetadata -AutomationTask TASK-CODEX-HOURLY -AutomationState completed -AutomationResult '问题=测试任务仍可调度；完成=确认阻塞并移出队列' -AutomationImpact '影响=验证 Codex 小时入口；边界=不修改真实任务' -AutomationVerify '验证=任务投影检查通过；后续=等待固定入口集成' -AutomationPlain '发生=测试任务被标记为暂不可执行；影响=只验证自动流程；需要=无需处理' 2>&1)
+$finalizerOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths '开发管理/任务列表/自动化任务.txt|开发管理/任务归档/TASK-CODEX-HOURLY.txt|开发管理/任务卡/TASK-CODEX-HOURLY.txt|开发管理/当前任务队列.txt' -CommitMessage 'test: archive Codex hourly fixture' -RequireAutomationMetadata -AutomationTask TASK-CODEX-HOURLY -AutomationState completed -AutomationResult '问题=测试任务等待闭环；完成=归档任务并移出队列' -AutomationImpact '影响=验证 Codex 删除路径集成；边界=不修改真实任务' -AutomationVerify '验证=任务归档投影检查通过；后续=等待固定入口集成' -AutomationPlain '发生=测试任务已完成并归档；影响=只验证自动流程；需要=无需处理' 2>&1)
 $commit = if ($finalizerOutput.Count) { [string]$finalizerOutput[-1] } else { '' }
 [IO.File]::AppendAllText($env:TZG_FAKE_CODEX_TRACE, "`nFINALIZER=$LASTEXITCODE|$(@($finalizerOutput) -join ' // ')", [Text.UTF8Encoding]::new($false))
 if ($LASTEXITCODE -ne 0 -or $commit -notmatch '^[0-9a-f]{40,64}$') { throw 'fake Codex commit failed' }
@@ -126,10 +130,10 @@ if ($LASTEXITCODE -ne 0 -or $commit -notmatch '^[0-9a-f]{40,64}$') { throw 'fake
 if ($LASTEXITCODE -ne 0) { throw 'fake concurrent main commit failed' }
 [IO.File]::WriteAllText($outputPath, ([ordered]@{
   status='completed'; identity='Codex'; model='test-codex-model'; candidateCommit=$commit
-  expectedTransition='blocked'; changedPaths=@('开发管理/任务列表/自动化任务.txt','开发管理/任务卡/TASK-CODEX-HOURLY.txt','开发管理/当前任务队列.txt')
-  verified=@('任务投影检查通过'); unverified=@('none'); residualRisk='fixture only'
-  result='问题=测试任务仍可调度；完成=确认阻塞并移出队列'; impact='影响=验证 Codex 小时入口；边界=不修改真实任务'
-  verify='验证=任务投影检查通过；后续=等待固定入口集成'; plain='发生=测试任务被标记为暂不可执行；影响=只验证自动流程；需要=无需处理'
+  expectedTransition='completed'; changedPaths=@('开发管理/任务列表/自动化任务.txt','开发管理/任务归档/TASK-CODEX-HOURLY.txt','开发管理/任务卡/TASK-CODEX-HOURLY.txt','开发管理/当前任务队列.txt')
+  verified=@('任务归档投影检查通过'); unverified=@('none'); residualRisk='fixture only'
+  result='问题=测试任务等待闭环；完成=归档任务并移出队列'; impact='影响=验证 Codex 删除路径集成；边界=不修改真实任务'
+  verify='验证=任务归档投影检查通过；后续=等待固定入口集成'; plain='发生=测试任务已完成并归档；影响=只验证自动流程；需要=无需处理'
 } | ConvertTo-Json -Compress -Depth 10), [Text.UTF8Encoding]::new($false))
 [Console]::Out.WriteLine(([ordered]@{ type = 'thread.started'; thread_id = [Guid]::NewGuid().ToString() } | ConvertTo-Json -Compress))
 '@
@@ -144,7 +148,8 @@ if ($LASTEXITCODE -ne 0) { throw 'fake concurrent main commit failed' }
   if ([string]$run.Json.status -cne 'completed') {
     $active = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action Show -StateRoot $stateRoot)[0] | ConvertFrom-Json -Depth 50
     $candidateMessage = if ($null -ne $active.state.runs.codex) { Invoke-Git -Root ([string]$active.state.runs.codex.worktree) -Arguments @('show','-s','--format=%B','HEAD') } else { 'missing' }
-    throw "Codex RunOnce did not complete: $($run.Stdout) stderr=$($run.Stderr) candidateMessage=$($candidateMessage | ConvertTo-Json -Compress) trace=$([IO.File]::ReadAllText($tracePath))"
+    $postcondition = if ($null -ne $active.state.runs.codex) { @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $mainRoot 'tools/check-task-cards.ps1') -RepositoryRoot ([string]$active.state.runs.codex.worktree) -TaskId $taskId -Postcondition CodexClosedOrNonReady -OutputJson 2>&1) -join ' // ' } else { 'missing' }
+    throw "Codex RunOnce did not complete: $($run.Stdout) stderr=$($run.Stderr) candidateMessage=$($candidateMessage | ConvertTo-Json -Compress) postcondition=$postcondition trace=$([IO.File]::ReadAllText($tracePath))"
   }
   Assert-Equal ([string]$run.Json.taskId) $taskId 'Codex RunOnce task mismatch'
   Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('branch', '--show-current')) 'master' 'Main branch changed'
@@ -152,9 +157,10 @@ if ($LASTEXITCODE -ne 0) { throw 'fake concurrent main commit failed' }
   Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-list', '--count', "$initialHead..HEAD")) '2' 'Expected unrelated + Codex candidate commits'
   $subjects = Invoke-Git -Root $mainRoot -Arguments @('log', '--format=%s', '--reverse', "$initialHead..HEAD")
   Assert-True ($subjects -match 'concurrent unrelated main change') 'Concurrent unrelated commit was lost'
-  Assert-True ($subjects -match 'close Codex hourly fixture') 'Codex candidate commit was not integrated'
-  $cardAfter = [IO.File]::ReadAllText((Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"))
-  Assert-True ($cardAfter -match '"dispatchState": "blocked"') 'Integrated task was not blocked'
+  Assert-True ($subjects -match 'archive Codex hourly fixture') 'Codex candidate commit was not integrated'
+  Assert-True (-not (Test-Path -LiteralPath (Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"))) 'Integrated task kept the deleted active card'
+  $cardAfter = [IO.File]::ReadAllText((Join-Path $mainRoot "开发管理/任务归档/$taskId.txt"))
+  Assert-True ($cardAfter -match '"dispatchState": "completed"') 'Integrated task archive was not completed'
   $runtime = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action Show -StateRoot $stateRoot -RepositoryRoot $mainRoot)
   $runtimeJson = $runtime[0] | ConvertFrom-Json -Depth 50
   Assert-True ($null -eq $runtimeJson.state.runs.codex) 'Completed Codex run remained active'

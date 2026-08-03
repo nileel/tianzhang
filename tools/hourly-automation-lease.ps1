@@ -24,6 +24,10 @@ param(
   [string]$CanonicalHead,
   [string]$RecoveryReason,
   [string]$ExpectedRecoveryReason,
+  [string]$ExpectedCandidateCommit,
+  [string]$ExpectedWorktree,
+  [string]$ExpectedWorktreeBranch,
+  [string]$ExpectedWorktreeHead,
   [ValidateSet('success', 'no_candidate', 'failed', 'paused')][string]$CompletionCategory,
   [string]$DetailCode
 )
@@ -102,6 +106,52 @@ function Resolve-RepositoryRoot {
   $inside = @(& git -C $full rev-parse --is-inside-work-tree 2>$null)
   if ($LASTEXITCODE -ne 0 -or $inside.Count -ne 1 -or [string]$inside[0] -cne 'true') { throw [ArgumentException]::new('RepositoryRoot must be a Git root') }
   $full
+}
+
+function Normalize-FullPath {
+  param([string]$Path)
+  [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
+}
+
+function Test-AbandonedAttentionEvidence {
+  param(
+    [object]$Run,
+    [string]$CandidateCommit,
+    [string]$Worktree,
+    [string]$WorktreeBranch,
+    [string]$WorktreeHead
+  )
+  try {
+    $repository = Resolve-RepositoryRoot -Path ([string]$Run.repositoryRoot)
+    $recordedWorktree = Normalize-FullPath ([string]$Run.worktree)
+    $providedWorktree = Normalize-FullPath $Worktree
+    $ownedWorktree = Normalize-FullPath (Join-Path $repository ".worktrees\automation\$([string]$Run.runId)\$([string]$Run.owner)")
+    if ($providedWorktree -cne $recordedWorktree -or $providedWorktree -cne $ownedWorktree) { return $false }
+    if ([string]$Run.candidateCommit -cne $CandidateCommit -or $null -eq $Run.candidateResult) { return $false }
+    if ($null -ne $Run.canonicalBranch -or $null -ne $Run.canonicalBase -or $null -ne $Run.canonicalHead) { return $false }
+    if (-not $WorktreeBranch.StartsWith("codex/automation/$([string]$Run.owner)/$([string]$Run.runId)/", [StringComparison]::Ordinal)) { return $false }
+    if (-not (Test-Path -LiteralPath $providedWorktree -PathType Container)) { return $false }
+
+    $registered = $false
+    $worktreeList = @(& git -C $repository worktree list --porcelain 2>$null)
+    if ($LASTEXITCODE -ne 0) { return $false }
+    foreach ($line in $worktreeList) {
+      if ($line.StartsWith('worktree ', [StringComparison]::Ordinal) -and (Normalize-FullPath $line.Substring(9)) -ceq $providedWorktree) { $registered = $true; break }
+    }
+    if (-not $registered) { return $false }
+
+    $topLevel = @(& git -C $providedWorktree rev-parse --show-toplevel 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $topLevel.Count -ne 1 -or (Normalize-FullPath ([string]$topLevel[0])) -cne $providedWorktree) { return $false }
+    $branch = @(& git -C $providedWorktree branch --show-current 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $branch.Count -ne 1 -or [string]$branch[0] -cne $WorktreeBranch) { return $false }
+    $head = @(& git -C $providedWorktree rev-parse HEAD 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $head.Count -ne 1 -or [string]$head[0] -cne $WorktreeHead) { return $false }
+    $candidateHead = @(& git -C $repository rev-parse "refs/heads/$([string]$Run.candidateBranch)" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $candidateHead.Count -ne 1 -or [string]$candidateHead[0] -cne $CandidateCommit) { return $false }
+    $status = @(& git -C $providedWorktree status --porcelain=v1 --untracked-files=all 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $status.Count -ne 0) { return $false }
+    $true
+  } catch { $false }
 }
 
 function Get-StateMutexName {
@@ -284,9 +334,21 @@ try {
       foreach ($name in @('Owner', 'RunId', 'CompletionCategory', 'DetailCode')) { Assert-StableText -Value ([string](Get-Variable -Name $name -ValueOnly)) -Name $name -MaximumLength 2000 }
       $run = Get-OwnerRun -State $state -ExpectedOwner $Owner -ExpectedRunId $RunId
       if ($null -eq $run) { Write-ResultAndExit -Result (New-Result -Status 'RUN_ID_MISMATCH') -ExitCode 2 }
-      $attentionClose = $CompletionCategory -ceq 'failed' -and [string]$run.state -ceq 'attention_required' -and
+      $emptyAttentionClose = $CompletionCategory -ceq 'failed' -and [string]$run.state -ceq 'attention_required' -and
         -not [string]::IsNullOrWhiteSpace($ExpectedRecoveryReason) -and $ExpectedRecoveryReason -ceq [string]$run.recoveryReason -and
         $null -eq $run.candidateCommit -and $null -eq $run.candidateResult -and $null -eq $run.canonicalBranch -and $null -eq $run.canonicalBase -and $null -eq $run.canonicalHead
+      $candidateAttentionClose = $false
+      if ($CompletionCategory -ceq 'failed' -and [string]$run.state -ceq 'attention_required' -and
+          -not [string]::IsNullOrWhiteSpace($ExpectedRecoveryReason) -and $ExpectedRecoveryReason -ceq [string]$run.recoveryReason -and
+          -not [string]::IsNullOrWhiteSpace($ExpectedCandidateCommit) -and -not [string]::IsNullOrWhiteSpace($ExpectedWorktree) -and
+          -not [string]::IsNullOrWhiteSpace($ExpectedWorktreeBranch) -and -not [string]::IsNullOrWhiteSpace($ExpectedWorktreeHead)) {
+        Assert-GitSha -Value $ExpectedCandidateCommit -Name 'ExpectedCandidateCommit'
+        Assert-StableText -Value $ExpectedWorktree -Name 'ExpectedWorktree' -MaximumLength 2000
+        Assert-StableText -Value $ExpectedWorktreeBranch -Name 'ExpectedWorktreeBranch' -MaximumLength 500
+        Assert-GitSha -Value $ExpectedWorktreeHead -Name 'ExpectedWorktreeHead'
+        $candidateAttentionClose = Test-AbandonedAttentionEvidence -Run $run -CandidateCommit $ExpectedCandidateCommit -Worktree $ExpectedWorktree -WorktreeBranch $ExpectedWorktreeBranch -WorktreeHead $ExpectedWorktreeHead
+      }
+      $attentionClose = $emptyAttentionClose -or $candidateAttentionClose
       $valid = ($CompletionCategory -cin @('success', 'paused') -and [string]$run.state -ceq 'integrated') -or
         ($CompletionCategory -cin @('no_candidate', 'failed') -and [string]$run.state -ceq 'developing' -and $null -eq $run.candidateCommit) -or $attentionClose
       if (-not $valid) { Write-ResultAndExit -Result (New-Result -Status 'RUN_NOT_COMPLETABLE') -ExitCode 2 }
@@ -294,6 +356,7 @@ try {
       Write-StateAtomic -Path $statePath -State $state
       $values = @{ runId = $RunId; taskId = $run.taskId; owner = $Owner; category = $CompletionCategory; detailCode = $DetailCode }
       if ($attentionClose) { $values.recoveryReason = [string]$run.recoveryReason }
+      if ($candidateAttentionClose) { $values.evidenceRetained = $true }
       Write-ResultAndExit -Result (New-Result -Status 'RUN_COMPLETED' -Values $values)
     }
   }

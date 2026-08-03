@@ -469,6 +469,7 @@ param()
         '开发管理/自动工作流规则.txt',
         '开发管理/自动工作流恢复规则.txt',
         '开发管理/自动工作流控制器提示词.txt',
+        '开发管理/DeepSeek小时触发提示词.txt',
         '开发管理/当前任务队列.txt',
         '开发管理/任务列表/内容设计任务.txt',
         '开发管理/任务列表/场景与Unity任务.txt',
@@ -480,6 +481,12 @@ param()
     )
     $defaultRequiredVersionPaths = @(
         'tools/hourly-automation-lease.ps1',
+        'tools/select-hourly-task.ps1',
+        'tools/invoke-codex-hourly.ps1',
+        'tools/invoke-codex-candidate.ps1',
+        'tools/invoke-deepseek-hourly.ps1',
+        'tools/invoke-deepseek-responsibility.ps1',
+        'tools/set-task-pending-review.ps1',
         'tools/check-automation-workflow.ps1',
         'tools/check-review-text.ps1',
         'tools/check-data-chain.ps1',
