@@ -336,7 +336,7 @@ function Remove-ExactSuccessfulWorktree {
     if ($LASTEXITCODE -ne 0) { return 'retained_unintegrated' }
     $currentBranch = Invoke-GitText $worktree @('branch', '--show-current')
     if ([string]$Run.canonicalBranch -cne $currentBranch) { return 'retained_branch_mismatch' }
-    $null = Invoke-GitText $script:root @('worktree', 'remove', '--force', $worktree) 'hourly_cleanup_failed'
+    $null = Invoke-GitText $script:root @('-c', 'core.longPaths=true', 'worktree', 'remove', '--force', $worktree) 'hourly_cleanup_failed'
     foreach ($branch in @([string]$Run.candidateBranch, [string]$Run.canonicalBranch) | Sort-Object -Unique) {
       & git -C $script:root show-ref --verify --quiet "refs/heads/$branch" 2>$null
       if ($LASTEXITCODE -eq 0) { $null = Invoke-GitText $script:root @('branch', '-D', $branch) 'hourly_cleanup_failed' }
@@ -502,7 +502,7 @@ function Remove-ConsumedCheckpointWorktree {
     $checkpoint = $Restored.checkpoint; $worktree = Normalize-FullPath ([string]$Restored.oldWorktree)
     if (-not (Test-Path -LiteralPath $worktree) -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText $worktree @('status', '--porcelain=v1', '--untracked-files=all')))) { return 'retained_checkpoint_evidence' }
     if ((Invoke-GitText $script:root @('rev-parse', [string]$checkpoint.branch)) -cne [string]$checkpoint.checkpointCommit) { return 'retained_checkpoint_branch' }
-    $null = Invoke-GitText $script:root @('worktree', 'remove', $worktree) 'checkpoint_cleanup_failed'
+    $null = Invoke-GitText $script:root @('-c', 'core.longPaths=true', 'worktree', 'remove', $worktree) 'checkpoint_cleanup_failed'
     $prefix = "refs/heads/codex/automation/$Owner/$($checkpoint.sourceRunId)/"
     $refs = @((Invoke-GitText $script:root @('for-each-ref', '--format=%(refname)', $prefix)) -split '\r?\n' | Where-Object { $_ })
     foreach ($ref in $refs) { $null = Invoke-GitText $script:root @('branch', '-D', $ref.Substring('refs/heads/'.Length)) 'checkpoint_cleanup_failed' }
@@ -527,7 +527,7 @@ function Invoke-Canary {
     [ordered]@{ status = 'verified'; owner = $Owner; identity = $wrapper.identity; model = $wrapper.model; privateState = 'isolated'; mainHead = $beforeHead }
   } finally {
     if ($success) {
-      $null = Invoke-GitText $script:root @('worktree', 'remove', $worktree) 'hourly_canary_cleanup_failed'; $null = Invoke-GitText $script:root @('branch', '-D', $branch) 'hourly_canary_cleanup_failed'
+      $null = Invoke-GitText $script:root @('-c', 'core.longPaths=true', 'worktree', 'remove', $worktree) 'hourly_canary_cleanup_failed'; $null = Invoke-GitText $script:root @('branch', '-D', $branch) 'hourly_canary_cleanup_failed'
       $parent = Split-Path -Parent $worktree; if ((Test-Path -LiteralPath $parent) -and @(Get-ChildItem -LiteralPath $parent -Force).Count -eq 0) { Remove-Item -LiteralPath $parent -Force }
     }
   }

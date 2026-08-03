@@ -108,6 +108,9 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
 } else {
   [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'generated')) | Out-Null
   [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'generated/cache.bin'), 'ignored generated artifact', [Text.UTF8Encoding]::new($false))
+  $longCache = Join-Path ([Environment]::CurrentDirectory) ("generated/{0}/{1}" -f ('a' * 120), ('b' * 120))
+  [IO.Directory]::CreateDirectory($longCache) | Out-Null
+  [IO.File]::WriteAllText((Join-Path $longCache 'unity-cache.bin'), 'ignored long-path Unity artifact', [Text.UTF8Encoding]::new($false))
   [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'fixtures')) | Out-Null
   [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixtures/business.txt'), 'hourly candidate', [Text.UTF8Encoding]::new($false))
   & git add -- fixtures/business.txt
@@ -179,6 +182,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-True ([int]$runtimeJson.state.schemaVersion -eq 5) 'Runtime did not use schema 5'
   Assert-Equal ([string]$runtimeJson.integrationLockStatus) 'none' 'Integration lock remained held'
   Assert-Equal ([string]$run.Json.cleanup) 'cleaned' 'Successful worktree was not precisely cleaned'
+  Assert-True (-not (Test-Path -LiteralPath (Join-Path $mainRoot ".worktrees/automation/$([string]$run.Json.runId)/deepseek"))) 'Successful long-path worktree directory remained on disk'
 
   $none = Invoke-Hourly -Action RunOnce -UseStateRoot
   Assert-Equal ([string]$none.Json.status) 'no_candidate' 'Second run did not skip cleanly'
