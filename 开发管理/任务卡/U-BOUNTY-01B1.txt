@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-BOUNTY-01B1",
+  "title": "悬赏存档状态与进度组合失败关闭修复",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-04：负责人同意将受控恢复审计确认的悬赏存档状态／进度组合缺口建立为独立任务；必须从最新 master 最小重做，不复用旧 51efd154-de6c-4c3e-bcd0-11f99e7cc07d 候选。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-BOUNTY-01B1.txt",
+    "开发管理/任务归档/U-BOUNTY-01B1.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-BOUNTY-01B1 · 悬赏存档状态与进度组合失败关闭修复
+
+## 来源与当前边界
+
+- `U-BOUNTY-01B` 已完成 schema 3 悬赏保存、旧版本空集合迁移、内容引用、重复项、基础状态与进度范围校验，并由 Codex 独立复审关闭；本卡不重开其余已通过范围。
+- 2026-08-04 受控恢复审计确认：当前 `GameSession.ValidateRestoredBounties` 会拒绝未知引用与超目标进度，但仍可接受 `Accepted` 且进度已达到目标，以及 `ObjectiveCompleted`／`Claimed` 且进度低于目标的存档。这些组合不能由现有状态机合法产生，违反既定状态与计数契约。
+- 旧 worktree `51efd154-de6c-4c3e-bcd0-11f99e7cc07d` 只作为缺口线索保留；其把 `catalog` 改为可选、移动校验职责且自身 round-trip fixture 失败，不是实现输入，不得 cherry-pick 或复制。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#七、悬赏状态与存档`、`#十、验证矩阵`、`#十三、停止条件`。
+- `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md#四、状态、计数与原子领奖契约`、`#五、整表、跨表与运行时失败关闭`、`#六、fixture 规格`。
+- `开发管理/任务归档/U-BOUNTY-01B.txt#来源与当前边界`、`#实施范围`、`#Codex 复审通过与完成（2026-08-03）`。
+- `src/Assets/Scripts/Game/GameSession.cs::RestoreSaveData|ValidateRestoredBounties`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs::GameSessionSnapshot.Restore|RestoreBounties`。
+- `src/Assets/Scripts/Game/BountyStateStore.cs::BountyStateSnapshot|BountyStateStore`、`src/Assets/Scripts/Game/BountyRuntime.cs::RecordDefeat|Claim`。
+- `src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs` 中 schema 3 往返、非法悬赏状态与原子失败用例；`src/Assets/Tests/EditMode/BountyRuntimeTests.cs` 中状态迁移和恢复后终态用例。
+
+## 实施范围
+
+- 保持 `GameSession.RestoreSaveData(data, catalog)` 的 `catalog` 必填契约、现有 schema 3 投影和 `GameSession.ValidateRestoredBounties` 校验所有权；只在当前内容引用与目标进度校验处补齐状态／进度组合约束。
+- 已解析 `BountyData.requiredCount` 后，`Accepted` 只允许 `progress < requiredCount`；`ObjectiveCompleted` 与 `Claimed` 只允许 `progress == requiredCount`。既有空 ID、未知状态、`Available`、负数、重复 ID、未知内容引用和超目标进度规则保持不变。
+- 在既有 `SessionStateSnapshotTests` 增加合法正例与非法组合负例：至少覆盖 `Accepted == target`、`ObjectiveCompleted < target`、`Claimed < target`，并证明每次拒绝后整个会话 JSON 与基线一致。
+- 在既有悬赏验证记录追加实际命令、直接测试结果与已知无关基线；不把旧 worktree 的测试结果冒充为新实现证据。
+
+## 禁止项
+
+- 不把 `catalog` 改为可选，不把内容目录校验移动到 `GameSessionSnapshot`，不修改 schema、保存字段、状态枚举、状态迁移、领奖、战斗计数或原子替换顺序。
+- 不读取、合并、cherry-pick 或复制旧 `51efd154-...` worktree 的实现；只从最新 `master` 和本卡列出的正式事实源实施。
+- 不修改 Bounty CSV、Language、asset、UI、悬赏板、场景、奖励、掉落、数值、经济、Adventure 结算、`U-BOUNTY-01C` 或正式端到端边界。
+- 不增加 fallback、兼容分支、重试层、默认状态、静默归一化或第二套存档／校验所有者。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，确认 `SessionStateSnapshotTests` 与 `BountyRuntimeTests` 直接相关用例通过；全量既有无关失败逐项记录，不得掩盖本卡失败。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- schema 3 恢复只接受状态机可合法产生的状态／进度组合；非法组合在替换任何会话集合前失败，并保持整个会话不变。
+- `catalog` 必填、内容引用校验、快照层与会话层所有权、状态迁移、领奖和计数行为均未改变；提交只包含任务卡授权路径。
+
+## 停止条件
+
+- 若补齐组合校验必须修改 schema、状态枚举、运行时迁移、内容目录所有权或原子替换边界，停止并交回 Codex 重新确认根因，不增加兼容层。
+- 若正式契约无法唯一确定合法状态／进度组合，或现有合法运行时能够产生本卡拟拒绝的组合，停止并提交直接证据，不猜测修复。
