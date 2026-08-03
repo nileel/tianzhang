@@ -14,8 +14,10 @@
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
     "src/Assets/Scripts/World/CharterRuleRuntime.cs",
+    "src/Assets/Scripts/World/CharterRuleRuntime.cs.meta",
     "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
     "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs.meta",
     "开发管理/册界纵向样例数据验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -48,6 +50,7 @@
 - 对成功调用一次性构造新的动态状态并在全部校验成功后替换；事件只输出定义已声明的 `environmentProfile` 引用，不能反向改写环境档案。
 - 同变量金丹介入只构造完整 v1 `RuleConflictInstance` 并消费 shared 决定；无合法跨阶授权时拒绝覆盖。命中元婴道路锚点只返回受锚结果，不降格为金丹冲突、不开支或提交覆盖。
 - 新增直接 EditMode 测试覆盖通行不等于管理、管理不等于改规则、节点断开、覆盖越界、原子拒绝、金丹冲突、元婴受锚和事件唯一记录；在既有样例验证记录补充实际命令和结果。
+- 两个新增 Unity C# 文件的相邻 `.meta` 必须作为同一候选提交的一部分；运行 Unity 验证后再次检查工作树，不得把验证生成的 `.meta` 留为未跟踪现场。
 
 ## 禁止项
 
@@ -61,6 +64,7 @@
 - `dotnet build -c Release --no-restore simulations/BattleSim`。
 - `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b`。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests`。
+- Unity 验证完成后确认两个新增 `.meta` 已受 Git 跟踪，且除任务卡授权路径外没有 staged、unstaged 或 untracked 变更。
 - 提交前运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
 
 ## 完成条件
