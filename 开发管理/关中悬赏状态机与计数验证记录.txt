@@ -55,3 +55,9 @@
 ## 后续
 
 - `U-BOUNTY-01C` 接入悬赏板界面与城市入口；本卡存档事实仍只由 `GameSession` 与其既有快照链路拥有。
+
+## Codex 独立复审与完成（2026-08-03）
+
+- 独立复审正式业务提交 `3c14ae73ca5b5d363f36f5af84953b3c25b66413` 通过：schema 3 只投影 `bountyId`、`status`、`progress`；版本 0／1／2 保持原迁移语义并恢复空悬赏集合；版本 3 在任何会话集合替换前完成版本、ID、状态、进度、重复项和 `ContentCatalogData` 引用校验，未建立第二存档、全局目录或兼容读取层。
+- 独立 Unity 6000.3.18f1 EditMode 完整执行 310 项，308 通过、2 失败；`SessionStateSnapshotTests` 10/10、`BountyRuntimeTests` 17/17 通过。两项失败仍为已登记且与本卡路径无关的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
+- Unity 生成忽略的工程投影后，`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 警告、0 错误）。本卡新增代码中的临时未审核标记已移除，任务归档；`U-BOUNTY-01C` 前置已完成，后续由独立队列维护建立任务卡，本轮未实现 UI 或正式端到端闭环。

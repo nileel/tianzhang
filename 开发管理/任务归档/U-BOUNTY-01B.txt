@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-03：Codex 独立复审正式业务提交 3c14ae7 通过；schema 3 往返、0/1/2 迁移、失败关闭与原子恢复满足任务卡。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
@@ -69,3 +69,9 @@
 
 - 若恢复必须建立第二存档、全局单例目录、静默兼容读取层，或现有边界无法验证定义与实例的稳定引用，停止并交回 Codex 重新锁定所有者。
 - 若实现需要填入未批准的奖励、物品、掉落、数量、概率或经济参数，停止并保持本卡不扩展。
+
+## Codex 复审通过与完成（2026-08-03）
+
+- 已独立复审正式业务提交 `3c14ae73ca5b5d363f36f5af84953b3c25b66413`：schema 3 悬赏投影、版本 0／1／2 空集合迁移、内容引用与进度上限校验均位于既有 `GameSession` 快照链路；校验完成后才替换任务、背包、NPC 与悬赏集合，非法输入保持整个会话不变。
+- 独立 Unity 6000.3.18f1 EditMode 完整执行 310 项，308 通过、2 项为已登记且与本卡路径无关的基线失败；`SessionStateSnapshotTests` 10/10、`BountyRuntimeTests` 17/17 通过。Unity 生成忽略的工程投影后，`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 警告、0 错误）。
+- 复审结论：通过。已移除本卡新增代码中的临时未审核标记并关闭同一卡；`U-BOUNTY-01C` 前置已完成，但本轮不创建其任务卡、不实现 UI、生产数据、数值或正式端到端闭环。

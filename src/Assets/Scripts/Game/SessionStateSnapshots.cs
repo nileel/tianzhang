@@ -268,7 +268,6 @@ namespace TianZhang.Game
 
     /// <summary>
     /// 悬赏实例存档投影；只保存 bountyId、状态与进度。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：schema 3 悬赏存档投影
     /// </summary>
     [Serializable]
     public sealed class BountyStateSaveData

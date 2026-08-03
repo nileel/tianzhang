@@ -249,7 +249,6 @@ namespace TianZhang.Game
         /// <summary>
         /// 恢复存档：先经快照链路完成 schema、ID、状态、进度与重复项校验，再校验悬赏内容
         /// 引用与目标进度；全部通过后才一次性替换会话集合，任一失败保持整个会话不变。
-        /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：schema 3 悬赏存档接入
         /// </summary>
         public void RestoreSaveData(GameSessionSaveData data, ContentCatalogData catalog)
         {
