@@ -343,6 +343,10 @@ function Build-And-IntegrateCandidate {
       $null = Invoke-GitText $worktree @('cherry-pick', [string]$Run.candidateCommit) 'hourly_candidate_replay_failed'
       $formalHead = Invoke-GitText $worktree @('rev-parse', 'HEAD')
     }
+    if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
+      $reviewEntry = Get-ReviewEntryEvidence -Root $worktree -TaskId ([string]$Run.taskId)
+      if ([string]$reviewEntry.ReviewedCommit -cne [string]$reviewedCommit) { Stop-Hourly 'review_rework_reviewed_commit_changed' }
+    }
     Invoke-CombinedValidation -Run $Run -Worktree $worktree -Base $latest -Head $formalHead -Paths $formalPaths
     $updated = Invoke-Runtime -RuntimeAction UpdateRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; RunState = 'canonical_ready'; CanonicalBranch = $canonicalBranch; CanonicalBase = $latest; CanonicalHead = $formalHead }
     $Run = $updated.run

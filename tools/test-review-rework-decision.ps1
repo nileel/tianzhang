@@ -178,6 +178,9 @@ try {
     $reviewCommit = [string](& git -C $integrationRoot rev-parse HEAD)
 
     $source = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'invoke-hourly-owner.ps1'))
+    Assert-True ($source.Contains('Get-ReviewEntryEvidence -Root $worktree -TaskId')) 'Formal integration did not validate review evidence before fast-forward'
+    $candidateSource = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'))
+    Assert-True ($candidateSource.Contains('不得使用短 SHA、二级任务标题或「复审对象」等替代表述')) 'Codex review prompt omitted the canonical review-entry contract'
     $tokens = $null
     $errors = $null
     $ast = [Management.Automation.Language.Parser]::ParseInput($source, [ref]$tokens, [ref]$errors)

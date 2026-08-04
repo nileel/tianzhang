@@ -134,7 +134,7 @@ function New-Prompt {
   param([object]$Run, [AllowNull()][object]$ResumeContext, [string[]]$CandidatePaths)
   $routeInstruction = switch ($Route) {
     'Execution' { '按指定 codex_execute 任务实施。' }
-    'Review' { '按审核入口复审指定 codex_review 任务。' }
+    'Review' { "按审核入口复审指定 codex_review 任务。结论为不通过或部分通过且需返工时，必须在开发管理/未通过审核清单.txt 使用三级标题 '### $TaskId · <标题>'，并以 '- 审核对象：正式提交 ``<完整 SHA>``；结论：不通过。' 或 '- 审核对象：正式提交 ``<完整 SHA>``；结论：部分通过，仍需返工。' 记录本轮被复审提交；完整 SHA 必须在修改任务卡前通过 git log -1 --format=%H -- 开发管理/任务卡/$TaskId.txt 取得。不得使用短 SHA、二级任务标题或「复审对象」等替代表述。" }
     'QueueMaintenance' { '只做空队列维护；本轮不执行新增业务任务。' }
   }
   $resumeInstruction = if ($null -eq $ResumeContext) {
