@@ -2,6 +2,17 @@
 
 Set-StrictMode -Version Latest
 
+function Test-HourlyOwnerModelVerified {
+  param(
+    [Parameter(Mandatory = $true)][ValidateSet('codex', 'deepseek')][string]$Owner,
+    [AllowNull()][string]$Model
+  )
+
+  if ($Owner -cne 'codex') { return $true }
+  if ([string]::IsNullOrWhiteSpace($Model) -or $Model -match '[\x00-\x1F\x7F]') { return $false }
+  $Model -cmatch '^gpt-[A-Za-z0-9][A-Za-z0-9._-]*$'
+}
+
 function Get-HourlyOwnerAdapter {
   param(
     [Parameter(Mandatory = $true)][ValidateSet('codex', 'deepseek')][string]$Owner,

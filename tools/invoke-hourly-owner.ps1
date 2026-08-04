@@ -885,7 +885,10 @@ try {
   $invocationMutex = [Threading.Mutex]::new($false, (Get-InvocationMutexName $Owner $script:effectiveStateRoot))
   try { $invocationHeld = $invocationMutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $invocationHeld = $true }
   if (-not $invocationHeld) { $final = [ordered]@{ status = 'occupied'; owner = $Owner; detailCode = 'owner_entry_running' } }
-  elseif ($Action -ceq 'Canary') { $final = Invoke-Canary }
+  elseif ($Action -ceq 'Canary') {
+    if (-not (Test-HourlyOwnerModelVerified -Owner $Owner -Model $Model)) { Stop-Hourly 'hourly_codex_model_unverified' }
+    $final = Invoke-Canary
+  }
   else {
     $script:stage = 'runtime_show'
     $shown = Invoke-Runtime -RuntimeAction Show -Parameters @{ RepositoryRoot = $script:root }
@@ -894,6 +897,7 @@ try {
     if ($null -ne $run) {
       $final = [ordered]@{ status = 'existing_run'; owner = $Owner; taskId = $run.taskId; runId = $run.runId; state = $run.state; detailCode = $run.recoveryReason }
     } else {
+      if (-not (Test-HourlyOwnerModelVerified -Owner $Owner -Model $Model)) { Stop-Hourly 'hourly_codex_model_unverified' }
       $reviewDecision = Find-AnsweredReviewRework
       if ([string]$reviewDecision.status -ceq 'answered') { $final = Apply-AnsweredReviewRework $reviewDecision }
       elseif ([string]$reviewDecision.status -ceq 'attention_required') {
