@@ -61,3 +61,21 @@
 - 独立复审正式业务提交 `3c14ae73ca5b5d363f36f5af84953b3c25b66413` 通过：schema 3 只投影 `bountyId`、`status`、`progress`；版本 0／1／2 保持原迁移语义并恢复空悬赏集合；版本 3 在任何会话集合替换前完成版本、ID、状态、进度、重复项和 `ContentCatalogData` 引用校验，未建立第二存档、全局目录或兼容读取层。
 - 独立 Unity 6000.3.18f1 EditMode 完整执行 310 项，308 通过、2 失败；`SessionStateSnapshotTests` 10/10、`BountyRuntimeTests` 17/17 通过。两项失败仍为已登记且与本卡路径无关的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
 - Unity 生成忽略的工程投影后，`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 警告、0 错误）。本卡新增代码中的临时未审核标记已移除，任务归档；`U-BOUNTY-01C` 前置已完成，后续由独立队列维护建立任务卡，本轮未实现 UI 或正式端到端闭环。
+
+## U-BOUNTY-01B1 · 2026-08-04
+
+- 组合失败关闭：`GameSession.ValidateRestoredBounties` 在既有内容引用与超目标进度校验后，按已解析 `BountyData.requiredCount` 补齐状态／进度组合约束——`Accepted` 只允许 `progress < requiredCount`，`ObjectiveCompleted`／`Claimed` 只允许 `progress == requiredCount`。这些组合之外的存档（`Accepted == target`、`ObjectiveCompleted < target`、`Claimed < target`）不能由现有状态机合法产生：`RecordDefeat` 在进度达到目标时同次转换为 `ObjectiveCompleted`，`Claim` 只接受 `progress == requiredCount` 并保持进度。任一非法组合在替换任何会话集合前失败，整个会话不变。
+- 既有规则保持不变：空 ID、未知状态、`Available`、负进度、重复 ID、未知内容引用与超目标进度仍分别按原位置与异常类型拒绝；`catalog` 仍为必填，快照层与会话层所有权、状态迁移、领奖与计数行为未修改。
+- 用例：`SessionStateSnapshotTests` 新增 `RestoreRejectsBountyStateProgressCombinationsTheRuntimeCannotProduce`（目标 1 下 `Accepted==target`、`Claimed<target`、`ObjectiveCompleted<target` 各拒绝一次，每次拒绝后会话 JSON 与基线一致）与 `RestoreAcceptsAcceptedProgressBeforeTargetAndRejectsItAtTarget`（目标 2 的 `Accepted` 进度 1 无损往返正例、进度达到目标负例）；既有原子拒绝用例的种子由 `Accepted/1` 调整为合法组合 `Accepted/0`，其全部篡改用例与异常类型不变。
+- 边界：未修改 schema、保存字段、状态枚举、`BountyRuntime` 状态迁移、领奖、战斗计数、原子替换顺序、Bounty CSV／Language／asset、UI 或数值；未读取或复制旧 `51efd154-...` worktree 实现。
+
+## U-BOUNTY-01B1 已执行验证（Unity 6000.3.18f1 EditMode，2026-08-04）
+
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目，首轮重建 Library）。Unity 进程退出码 2（其零失败门禁行为），完整 EditMode：333 项，331 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。
+- 本卡直接用例：`SessionStateSnapshotTests` 16/16（新增 `RestoreRejectsBountyStateProgressCombinationsTheRuntimeCannotProduce`、`RestoreAcceptsAcceptedProgressBeforeTargetAndRejectsItAtTarget` 均通过；既有 `BountyInstancesRoundTripInCurrentSchemaAndLegacyVersionsRestoreEmpty`、`RestoreRejectsUnresolvableDuplicateOrIllegalBountyStateAtomically` 未回归）；`BountyRuntimeTests` 17/17、`AdventureSceneControllerTests` 14/14、`TacticalGridModelTests` 4/4 等既有用例未回归。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 258 个文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'src/Assets/Scripts/Game/GameSession.cs|src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs|开发管理/关中悬赏状态机与计数验证记录.txt'`：通过，检查 3 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+
+## 后续
+
+- 本卡组合失败关闭待 Codex 独立复审；`U-BOUNTY-01C` 接入悬赏板界面与城市入口，存档事实仍只由 `GameSession` 与其既有快照链路拥有。

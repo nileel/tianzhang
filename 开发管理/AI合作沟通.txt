@@ -101,3 +101,16 @@
 - 残留风险：1) 全量 EditMode 仍有 2 项与本卡路径无交集的既有登记基线失败：CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField（shared 对等储备返回 PULSE_NEUTRAL、断言 PULSE_ADVANTAGE，文件来自 D-TZ-CHARTER-CONFLICT-02）与 DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad（旧日志断言），需 Codex 按既有登记裁决；2) 新增 asset/.meta GUID 为手工生成，Unity 已接受未改写；3) 静态目录 definitionCatalogVersion 固定为 1，将来定义目录版本变更须先建立独立迁移契约；4) 共享入口须在转换卡片为 codex_review/codex/ready 后复跑 ExternalPendingReview 后置条件。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-BOUNTY-01B1-f295b809 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01B1 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01B1
+- 候选提交：5fb13eb9c5e5306bc716998cf28709b2e6a32653
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中悬赏状态机与计数验证记录.txt、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：Unity 6000.3.18f1 EditMode：333 项，331 通过、2 失败（均为已登记无关基线）；SessionStateSnapshotTests 16/16（含新增 RestoreRejectsBountyStateProgressCombinationsTheRuntimeCannotProduce、RestoreAcceptsAcceptedProgressBeforeTargetAndRejectsItAtTarget）、BountyRuntimeTests 17/17、AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4；新校验拒绝 Accepted==target、ObjectiveCompleted&lt;target、Claimed&lt;target，每次拒绝后整个会话 JSON 与基线一致（AssertRejectedWithoutMutation 断言）；check-review-text.ps1 通过（258 文件）；check-pending-whitespace.ps1 通过（3 文件）；git diff --cached --check 通过；automation-finalize-commit.ps1 创建候选提交并复验路径与空白
+- 未验证：Codex 独立复审未执行（DeepSeek 不得自审），待 codex_review/codex/ready；共享入口基于最新 master 的重放、组合验证与正式集成未执行（由共享内核在 candidate 核验后持锁完成）；改动后的 C# 未单独跑 dotnet build（项目无 csproj 路径，以 Unity EditMode 编译运行全部 asmdef 程序集为编译闸门，与 U-BOUNTY-01B 记录口径一致）
+- 残留风险：完整 EditMode 仍有 2 项与本卡路径无关的已登记基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad），运行脚本按零失败门禁以非零退出码结束；新组合校验抛 ArgumentException，既有超目标进度规则保持 ArgumentOutOfRangeException 不变；若未来合法运行时能产生被拒组合，需按停止条件重新确认契约（当前 BountyRuntime 无法产生）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

@@ -356,6 +356,28 @@ namespace TianZhang.Game
                         snapshot.Progress,
                         "Bounty progress must not exceed its target.");
                 }
+                // 状态机可合法产生的组合：Accepted 尚未达到目标，ObjectiveCompleted／Claimed 恰好
+                // 达到目标。其余组合不能由现有运行时产生，恢复时失败关闭。
+                switch (snapshot.Status)
+                {
+                    case BountyStatus.Accepted:
+                        if (snapshot.Progress >= bounty.requiredCount)
+                        {
+                            throw new System.ArgumentException(
+                                "An Accepted bounty must not have reached its target progress.",
+                                "data");
+                        }
+                        break;
+                    case BountyStatus.ObjectiveCompleted:
+                    case BountyStatus.Claimed:
+                        if (snapshot.Progress != bounty.requiredCount)
+                        {
+                            throw new System.ArgumentException(
+                                "A completed or claimed bounty must match its target progress exactly.",
+                                "data");
+                        }
+                        break;
+                }
             }
         }
 

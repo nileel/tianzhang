@@ -4,13 +4,13 @@
   "id": "U-BOUNTY-01B1",
   "title": "悬赏存档状态与进度组合失败关闭修复",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-04：已修复自动责任方权限根因；Claude Code 使用 bypassPermissions 且不再传 allowedTools，隔离 DeepSeek PowerShell canary 已通过，恢复 external_execute/deepseek/ready。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
@@ -18,7 +18,8 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-BOUNTY-01B1.txt",
-    "开发管理/任务归档/U-BOUNTY-01B1.txt"
+    "开发管理/任务归档/U-BOUNTY-01B1.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

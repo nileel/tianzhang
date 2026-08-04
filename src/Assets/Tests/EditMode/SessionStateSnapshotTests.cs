@@ -446,7 +446,7 @@ namespace TianZhang.Tests
             {
                 session.BeginNewGame(null, "jiangzuo_hub");
                 session.BountyStates.Set(new BountyStateSnapshot(
-                    "bounty_round_trip", BountyStatus.Accepted, 1));
+                    "bounty_round_trip", BountyStatus.Accepted, 0));
                 string baselineJson = JsonUtility.ToJson(session.CaptureSaveData());
 
                 AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
@@ -467,6 +467,77 @@ namespace TianZhang.Tests
                     JsonUtility.FromJson<GameSessionSaveData>(baselineJson),
                     null));
                 Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void RestoreRejectsBountyStateProgressCombinationsTheRuntimeCannotProduce()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalog(
+                "bounty_round_trip",
+                "bounty_round_trip_second",
+                "bounty_round_trip_claimed");
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip", BountyStatus.Accepted, 0));
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip_second", BountyStatus.ObjectiveCompleted, 1));
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip_claimed", BountyStatus.Claimed, 1));
+                string baselineJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+                // 捕获按 bountyId 排序：Accepted 在 [0]，Claimed 在 [1]，ObjectiveCompleted 在 [2]。
+                // 非法组合：Accepted 已达到目标、Claimed／ObjectiveCompleted 低于目标；每次拒绝后
+                // 整个会话 JSON 与基线一致。
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[0].progress = 1, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[1].progress = 0, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[2].progress = 0, catalog);
+                Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void RestoreAcceptsAcceptedProgressBeforeTargetAndRejectsItAtTarget()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithRequiredCount("bounty_round_trip", 2);
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                session.BountyStates.Set(new BountyStateSnapshot(
+                    "bounty_round_trip", BountyStatus.Accepted, 1));
+                string baselineJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+                // 正例：目标 2 的 Accepted 进度 1 可以无损往返，校验使用已解析的 requiredCount。
+                session.ClearSession();
+                session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(baselineJson),
+                    catalog);
+                Assert.IsTrue(session.BountyStates.TryGet(
+                    "bounty_round_trip", out BountyStateSnapshot accepted));
+                Assert.AreEqual(BountyStatus.Accepted, accepted.Status);
+                Assert.AreEqual(1, accepted.Progress);
+                Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // 负例：Accepted 进度达到目标（2）不能由状态机产生，恢复失败且会话不变。
+                AssertRejectedWithoutMutation<ArgumentException>(session, baselineJson, data =>
+                    data.bounties[0].progress = 2, catalog);
             }
             finally
             {
@@ -849,6 +920,21 @@ namespace TianZhang.Tests
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
             temporaryAssets.Add(catalog);
             catalog.ReplaceEntries(null, null, null, bounties.ToArray());
+            return catalog;
+        }
+
+        private ContentCatalogData CreateCatalogWithRequiredCount(
+            string bountyId,
+            int requiredCount)
+        {
+            var bounty = ScriptableObject.CreateInstance<BountyData>();
+            bounty.bountyId = bountyId;
+            bounty.requiredCount = requiredCount;
+            temporaryAssets.Add(bounty);
+
+            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            temporaryAssets.Add(catalog);
+            catalog.ReplaceEntries(null, null, null, new[] { bounty });
             return catalog;
         }
 
