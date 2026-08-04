@@ -25,7 +25,7 @@
 | U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-TZ-CHARTER-SAVE-01 | P1 | codex | 阻塞 | — | 册界状态持久化 | 开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt |
+| U-TZ-CHARTER-SAVE-01 | P1 | deepseek | 已排队 | — | 册界状态持久化 | 开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
 
 ## 执行边界
