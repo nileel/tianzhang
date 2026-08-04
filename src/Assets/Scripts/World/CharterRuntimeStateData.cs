@@ -52,6 +52,9 @@ namespace TianZhang.World
         public const string UnknownBoundary = "charter_state_unknown_boundary";
         public const string UnknownAuthorization = "charter_state_unknown_authorization";
         public const string UnknownCoverage = "charter_state_unknown_coverage";
+        public const string DuplicateNode = "charter_state_duplicate_node";
+        public const string DuplicateAuthorization = "charter_state_duplicate_authorization";
+        public const string DuplicateCoverage = "charter_state_duplicate_coverage";
         public const string UnknownRealitySupply = "charter_state_unknown_reality_supply";
         public const string UnknownCommit = "charter_state_unknown_commit";
         public const string DuplicateOccupancy = "charter_state_duplicate_occupancy";
@@ -269,11 +272,17 @@ namespace TianZhang.World
             CharterRuleReferenceCatalog catalog,
             out string reason)
         {
+            var nodeIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var value in values ?? Array.Empty<CharterNodeRuntimeStateData>())
             {
                 if (value == null || string.IsNullOrWhiteSpace(value.state))
                 {
                     reason = CharterRuntimeStateReasons.InvalidState;
+                    return false;
+                }
+                if (!nodeIds.Add(value.nodeId))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateNode;
                     return false;
                 }
                 if (!catalog.ContainsNode(value.nodeId))
@@ -292,11 +301,17 @@ namespace TianZhang.World
             CharterRuleReferenceCatalog catalog,
             out string reason)
         {
+            var versionIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var value in values ?? Array.Empty<CharterAuthorizationVersionStateData>())
             {
                 if (value == null || string.IsNullOrWhiteSpace(value.state))
                 {
                     reason = CharterRuntimeStateReasons.InvalidState;
+                    return false;
+                }
+                if (!versionIds.Add(value.authorizationVersionId))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateAuthorization;
                     return false;
                 }
                 if (!catalog.ContainsOrganizationAuthorizationVersion(value.authorizationVersionId))
@@ -320,9 +335,20 @@ namespace TianZhang.World
                     .Where(boundary => boundary != null && boundary.allowedCoverageIds != null)
                     .SelectMany(boundary => boundary.allowedCoverageIds),
                 StringComparer.Ordinal);
+            var coverageIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (string value in values ?? Array.Empty<string>())
             {
-                if (string.IsNullOrWhiteSpace(value) || !allowedCoverage.Contains(value))
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    reason = CharterRuntimeStateReasons.UnknownCoverage;
+                    return false;
+                }
+                if (!coverageIds.Add(value))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateCoverage;
+                    return false;
+                }
+                if (!allowedCoverage.Contains(value))
                 {
                     reason = CharterRuntimeStateReasons.UnknownCoverage;
                     return false;

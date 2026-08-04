@@ -308,6 +308,80 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void StaticCatalogValidatorRejectsDuplicateAuthorityBoundaryCommitAndConflictRecords()
+        {
+            var duplicateAuthority = BuildCatalog();
+            duplicateAuthority.authorityRequirements = new[]
+            {
+                new CharterAuthorityRequirement
+                {
+                    authorityId = "authority_water",
+                    relicId = "relic_world_charter",
+                    organizationAuthorizationVersionIds = new[] { "authorization_water_v1" },
+                },
+                new CharterAuthorityRequirement
+                {
+                    authorityId = "authority_water",
+                    relicId = "relic_world_charter",
+                    organizationAuthorizationVersionIds = new[] { "authorization_water_v1" },
+                },
+            };
+            Assert.IsFalse(CharterRuleCatalogValidator.TryValidateCatalog(
+                duplicateAuthority,
+                out string authorityReason));
+            Assert.AreEqual(CharterRuleCatalogReasons.DuplicateCatalogId, authorityReason);
+
+            var duplicateBoundary = BuildCatalog();
+            duplicateBoundary.propagationBoundaries = new[]
+            {
+                new CharterPropagationBoundaryReference
+                {
+                    propagationBoundaryProfileId = "boundary_watershed",
+                    allowedCoverageIds = new[] { "coverage_anchor", "coverage_water" },
+                },
+                new CharterPropagationBoundaryReference
+                {
+                    propagationBoundaryProfileId = "boundary_watershed",
+                    allowedCoverageIds = new[] { "coverage_anchor" },
+                },
+            };
+            Assert.IsFalse(CharterRuleCatalogValidator.TryValidateCatalog(
+                duplicateBoundary,
+                out string boundaryReason));
+            Assert.AreEqual(CharterRuleCatalogReasons.DuplicateCatalogId, boundaryReason);
+
+            var duplicateCommit = BuildCatalog();
+            duplicateCommit.commits = new[]
+            {
+                new CharterCommitReference { commitId = "commit_positive", realitySupplyIds = new[] { "supply_upstream" } },
+                new CharterCommitReference { commitId = "commit_positive", realitySupplyIds = new[] { "supply_downstream" } },
+            };
+            Assert.IsFalse(CharterRuleCatalogValidator.TryValidateCatalog(
+                duplicateCommit,
+                out string commitReason));
+            Assert.AreEqual(CharterRuleCatalogReasons.AtomicCommitIncomplete, commitReason);
+
+            var duplicateConflict = BuildCatalog();
+            duplicateConflict.conflicts = new[]
+            {
+                new CharterConflictReference
+                {
+                    conflictProfileId = "conflict_water",
+                    crossTierChallengeGrantIds = new[] { "cross_tier_water_v1" },
+                },
+                new CharterConflictReference
+                {
+                    conflictProfileId = "conflict_water",
+                    crossTierChallengeGrantIds = new[] { "cross_tier_water_v1" },
+                },
+            };
+            Assert.IsFalse(CharterRuleCatalogValidator.TryValidateCatalog(
+                duplicateConflict,
+                out string conflictReason));
+            Assert.AreEqual(CharterRuleCatalogReasons.DuplicateCatalogId, conflictReason);
+        }
+
+        [Test]
         public void ContentCatalogDataExposesOnlyTheSingleApprovedStaticCatalogFailClosed()
         {
             var without = ScriptableObject.CreateInstance<ContentCatalogData>();
@@ -440,6 +514,83 @@ namespace TianZhang.Tests
                 };
                 Assert.IsFalse(duplicateSupply.TryValidate(new[] { definition }, catalog, out var supplyReason));
                 Assert.AreEqual(CharterRuntimeStateReasons.DuplicateRealitySupply, supplyReason);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
+        public void DynamicStateRejectsDuplicateNodeAuthorizationAndCoverageStableIds()
+        {
+            var definition = ScriptableObject.CreateInstance<CharterRuleDefinitionData>();
+            definition.ruleEntryId = "charter_fixture";
+            definition.anchorNodeIds = new[] { "node_anchor", "node_water" };
+            definition.propagationBoundaryProfileId = "boundary_watershed";
+            definition.currentCoverageSet = new[] { "coverage_anchor", "coverage_water" };
+            definition.requiredAuthority = "authority_water";
+            definition.positiveCommit = "commit_positive";
+            definition.negativeCommit = "commit_negative";
+            try
+            {
+                var catalog = BuildCatalog();
+                var state = new CharterRuntimeStateData
+                {
+                    stateId = "charter_runtime_duplicate_fixture",
+                    charterRelicState = "recognized",
+                    worldSealState = "recognized",
+                    registeredRuleEntryIds = new[] { "charter_fixture" },
+                    nodeStates = new[]
+                    {
+                        new CharterNodeRuntimeStateData { nodeId = "node_anchor", state = "connected" },
+                        new CharterNodeRuntimeStateData { nodeId = "node_water", state = "connected" },
+                    },
+                    currentCoverageSet = new[] { "coverage_anchor", "coverage_water" },
+                    organizationAuthorizationVersions = new[]
+                    {
+                        new CharterAuthorizationVersionStateData
+                        {
+                            authorizationVersionId = "authorization_water_v1",
+                            state = "recognized",
+                        },
+                    },
+                };
+
+                Assert.IsTrue(state.TryValidate(new[] { definition }, catalog, out var validReason), validReason);
+
+                var duplicateNode = state.CreateCopy();
+                duplicateNode.nodeStates = new[]
+                {
+                    new CharterNodeRuntimeStateData { nodeId = "node_anchor", state = "connected" },
+                    new CharterNodeRuntimeStateData { nodeId = "node_anchor", state = "connected" },
+                    new CharterNodeRuntimeStateData { nodeId = "node_water", state = "connected" },
+                };
+                Assert.IsFalse(duplicateNode.TryValidate(new[] { definition }, catalog, out var nodeReason));
+                Assert.AreEqual(CharterRuntimeStateReasons.DuplicateNode, nodeReason);
+
+                var duplicateAuthorization = state.CreateCopy();
+                duplicateAuthorization.organizationAuthorizationVersions = new[]
+                {
+                    new CharterAuthorizationVersionStateData
+                    {
+                        authorizationVersionId = "authorization_water_v1",
+                        state = "recognized",
+                    },
+                    new CharterAuthorizationVersionStateData
+                    {
+                        authorizationVersionId = "authorization_water_v1",
+                        state = "recognized",
+                    },
+                };
+                Assert.IsFalse(duplicateAuthorization.TryValidate(new[] { definition }, catalog, out var authorizationReason));
+                Assert.AreEqual(CharterRuntimeStateReasons.DuplicateAuthorization, authorizationReason);
+
+                var duplicateCoverage = state.CreateCopy();
+                duplicateCoverage.currentCoverageSet =
+                    new[] { "coverage_anchor", "coverage_anchor", "coverage_water" };
+                Assert.IsFalse(duplicateCoverage.TryValidate(new[] { definition }, catalog, out var coverageReason));
+                Assert.AreEqual(CharterRuntimeStateReasons.DuplicateCoverage, coverageReason);
             }
             finally
             {

@@ -656,13 +656,35 @@ namespace TianZhang.Tests
                 AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
                     data.charterRuntimeState.nodeStates[0].nodeId = "node_unknown", catalog);
                 AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.nodeStates =
+                        new[]
+                        {
+                            data.charterRuntimeState.nodeStates[0],
+                            data.charterRuntimeState.nodeStates[0],
+                        }, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
                     data.charterRuntimeState.organizationAuthorizationVersions[0].authorizationVersionId =
                         "authorization_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.organizationAuthorizationVersions =
+                        new[]
+                        {
+                            data.charterRuntimeState.organizationAuthorizationVersions[0],
+                            data.charterRuntimeState.organizationAuthorizationVersions[0],
+                        }, catalog);
                 AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
                     data.charterRuntimeState.organizationAuthorizationVersions =
                         Array.Empty<CharterAuthorizationVersionStateData>(), catalog);
                 AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
                     data.charterRuntimeState.currentCoverageSet[0] = "coverage_other", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.currentCoverageSet =
+                        new[]
+                        {
+                            data.charterRuntimeState.currentCoverageSet[0],
+                            data.charterRuntimeState.currentCoverageSet[0],
+                            data.charterRuntimeState.currentCoverageSet[1],
+                        }, catalog);
                 AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
                     data.charterRuntimeState.ruleEntryOccupancies =
                         new[]

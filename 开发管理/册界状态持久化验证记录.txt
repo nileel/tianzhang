@@ -1,7 +1,26 @@
 # 册界状态持久化验证记录
 
-任务：`U-TZ-CHARTER-SAVE-01`（candidate，待 Codex 独立复审）
+任务：`U-TZ-CHARTER-SAVE-01`（返工 candidate，待 Codex 独立复核）
 修改方：DeepSeek V4 Flash
+
+## 返工（未通过清单 DEC-20260804-REV6C24F5E231D0）
+
+- Codex 复审不通过项：`CharterRuntimeStateData.TryValidate` 未拒绝重复的节点状态、组织授权
+  版本或当前覆盖稳定 ID；`CharterRuleCatalogValidator.TryValidateCatalog` 也未独立拒绝重复的
+  授权、边界、提交或冲突目录记录。
+- 已按返工边界补齐（未新增目录、默认值、兼容读取层，未改变规则结算）：
+  - `TryValidateNodeStates` 维护已见 nodeId 集合，重复稳定 ID 拒绝为
+    `DuplicateNode`（`charter_state_duplicate_node`）。
+  - `TryValidateAuthorizationStates` 维护已见 authorizationVersionId 集合，重复稳定 ID 拒绝为
+    `DuplicateAuthorization`（`charter_state_duplicate_authorization`）。
+  - `TryValidateCoverage` 维护已见覆盖 ID 集合，重复稳定 ID 拒绝为
+    `DuplicateCoverage`（`charter_state_duplicate_coverage`）。
+  - `TryValidateCatalog` 在授权、边界、提交、冲突四个记录数组各自维护已见键集合，重复记录
+    拒绝为 `DuplicateCatalogId`（提交记录保持 `AtomicCommitIncomplete` 既有族）。
+- 新增 EditMode 反例：`StaticCatalogValidatorRejectsDuplicateAuthorityBoundaryCommitAndConflictRecords`、
+  `DynamicStateRejectsDuplicateNodeAuthorizationAndCoverageStableIds`；
+  `CharterSaveRestoreRejectsInvalidPayloadsAtomically` 增加重复节点、重复组织授权版本、
+  重复当前覆盖的读档失败关闭用例。
 
 ## 覆盖结论
 
@@ -19,33 +38,24 @@
   覆盖、占用、供给、正负提交、当前地区规则及条目与定义的边界／授权／提交配对关系），全部通过后才
   与既有会话集合一次原子替换；读档不调用规则事务，不重放供给、占用、提交、冲突或事件。
 
-## 已执行验证
+## 已执行验证（返工轮）
 
 - `tools/check-data-chain.ps1`：通过（docs/csv counts、language keys、check-data-chain: OK）。
-- `tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：通过（658 files）。
-- `tools/check-pending-whitespace.ps1 -ExpectedPaths <candidate 全路径>`：通过（18 files checked）。
+- `tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：通过（659 files）。
+- `tools/check-pending-whitespace.ps1 -ExpectedPaths <candidate 全路径>`：通过（6 files checked）。
 - `git diff --cached --check`：通过（正式 candidate 提交时）。
-- `tools/run-unity-editmode-tests.ps1`：331 执行 / 329 通过 / 2 失败。全部直接用例通过：
-  生产静态目录（`ProductionStaticCatalogResolvesOnlyTheImportedDefinitionAndTheApprovedDirectory`、
-  `StaticCatalogValidatorRejectsUndeclaredDuplicateOrZeroVersionDirectories`、
-  `ContentCatalogDataExposesOnlyTheSingleApprovedStaticCatalogFailClosed`）、schema 4 往返深复制
-  （`CharterRuntimeStateRoundTripsInSchemaFourAndLegacyVersionsRestoreUnaccessed`）、schema 0～3
-  明确未接入、版本／presence／稳定 ID／提交篡改失败关闭与原子拒绝
-  （`CharterSaveRestoreRejectsInvalidPayloadsAtomically`）、重复读取不重复结算
-  （`CharterRestoreDoesNotReSettleAllocatedSuppliesOccupanciesOrCommits`）、缺静态目录失败关闭
-  （`CharterPresenceRestoreFailsClosedWithoutTheStaticCatalog`）、条目边界／授权／提交配对关系
-  负例（`DynamicStateRejectsNodesOrCoverageOutsideTheEntryDefinitionBoundary`）、导入器共用
-  Runtime 校验（`ProductionCharterRuleDefinitionImportsTheApprovedWaterBureauChronicleAndProjectsItsAsset`
-  等原有用例全数保持）。曾因 `JsonUtility` 把 JSON null 反序列化为默认实例触发 presence 误判，
-  已按既有 `IsAbsentFoundationPurpleMansionState` 惯例以 `IsAbsentCharterRuntimeState` 明确
-  空 payload 语义后全数通过。
+- `tools/run-unity-editmode-tests.ps1`：335 执行 / 333 通过 / 2 失败（退出码 2 为脚本零失败
+  门禁的预期行为）。返工新增反例 `StaticCatalogValidatorRejectsDuplicateAuthorityBoundaryCommitAndConflictRecords`、
+  `DynamicStateRejectsDuplicateNodeAuthorizationAndCoverageStableIds` 全部通过；扩展后的
+  `CharterSaveRestoreRejectsInvalidPayloadsAtomically`（重复节点、重复组织授权版本、重复当前
+  覆盖）通过；schema 4 往返、schema 0～3 未接入、原子拒绝、不重复结算等既有直接用例全数保持。
 - 2 项失败均为已登记且与本卡路径无交集的既有基线（多份验证记录与 `AI合作沟通.txt` 已登记）：
   `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（shared 对等储备
   返回 `PULSE_NEUTRAL`，断言 `PULSE_ADVANTAGE`，文件来自 `D-TZ-CHARTER-CONFLICT-02`，不在本卡
   路径）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`
-  （旧日志断言与现行加载器不一致）。运行脚本因此以退出码 2 结束，属其零失败门禁的预期行为。
+  （旧日志断言与现行加载器不一致）。
 - `tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SAVE-01 -Postcondition ExternalPendingReview`：
-  当前 candidate 阶段按预期不通过——卡片仍为 `external_execute/deepseek/ready`，该后置条件要求
+  当前 candidate 阶段按预期不满足——卡片仍为 `external_execute/deepseek/ready`，该后置条件要求
   卡片已转换为 `codex_review/codex/ready`；转换由共享 Windows 入口在正式提交中与 pending review
   投影原子完成，须由共享入口在转换后复跑通过。
 
@@ -54,4 +64,4 @@
 - 全量 EditMode 的 2 项既有基线失败（见上方）不属本卡路径，未修复、未掩盖；共享冲突契约
   所有者（Codex）需按既有登记裁决 `PULSE_ADVANTAGE` 断言与对等储备实现的不一致。
 - 共享入口正式提交后需复跑 `check-task-cards.ps1 -TaskId U-TZ-CHARTER-SAVE-01 -Postcondition
-  ExternalPendingReview` 与 `check-review-text.ps1`，再交由 Codex 独立复审。
+  ExternalPendingReview` 与 `check-review-text.ps1`，再交由 Codex 独立复核返工结果。

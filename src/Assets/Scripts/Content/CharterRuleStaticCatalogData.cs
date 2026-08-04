@@ -147,9 +147,11 @@ namespace TianZhang.Content
                 return false;
             }
 
+            var authorityIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (CharterAuthorityRequirement authority in catalog.authorityRequirements ?? Array.Empty<CharterAuthorityRequirement>())
             {
                 if (authority == null || string.IsNullOrWhiteSpace(authority.authorityId) ||
+                    !authorityIds.Add(authority.authorityId) ||
                     !HasUniqueIds(authority.organizationAuthorizationVersionIds))
                 {
                     reason = CharterRuleCatalogReasons.DuplicateCatalogId;
@@ -170,9 +172,11 @@ namespace TianZhang.Content
                 }
             }
 
+            var boundaryIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (CharterPropagationBoundaryReference boundary in catalog.propagationBoundaries ?? Array.Empty<CharterPropagationBoundaryReference>())
             {
                 if (boundary == null || string.IsNullOrWhiteSpace(boundary.propagationBoundaryProfileId) ||
+                    !boundaryIds.Add(boundary.propagationBoundaryProfileId) ||
                     boundary.allowedCoverageIds == null || boundary.allowedCoverageIds.Length == 0 ||
                     !HasUniqueIds(boundary.allowedCoverageIds))
                 {
@@ -181,9 +185,11 @@ namespace TianZhang.Content
                 }
             }
 
+            var commitIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (CharterCommitReference commit in catalog.commits ?? Array.Empty<CharterCommitReference>())
             {
                 if (commit == null || string.IsNullOrWhiteSpace(commit.commitId) ||
+                    !commitIds.Add(commit.commitId) ||
                     commit.realitySupplyIds == null || commit.realitySupplyIds.Length == 0 ||
                     !HasUniqueIds(commit.realitySupplyIds))
                 {
@@ -200,9 +206,11 @@ namespace TianZhang.Content
                 }
             }
 
+            var conflictIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (CharterConflictReference conflict in catalog.conflicts ?? Array.Empty<CharterConflictReference>())
             {
                 if (conflict == null || string.IsNullOrWhiteSpace(conflict.conflictProfileId) ||
+                    !conflictIds.Add(conflict.conflictProfileId) ||
                     conflict.crossTierChallengeGrantIds == null ||
                     conflict.crossTierChallengeGrantIds.Length == 0 ||
                     !HasUniqueIds(conflict.crossTierChallengeGrantIds))
