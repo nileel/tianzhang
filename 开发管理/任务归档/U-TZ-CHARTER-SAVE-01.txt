@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-04：Codex 独立复审正式业务提交 bdf58dba9773a65f2b0e54414eda9d0bf5d48ef8 通过；重复稳定 ID 失败关闭、schema 4 原子恢复和唯一静态目录均满足任务卡。",
   "expectedPaths": [
     "src/Assets/Scripts/Content/CharterRuleDefinitionData.cs",
     "src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs",
@@ -86,3 +86,9 @@
 
 - 若唯一运行时静态目录需要未批准的生产条目、节点、授权、环境档案、数据表或玩家行为语义，停止并转为 `pending_decision`；不得把选择伪装成实现细节。
 - 若现有会话所有者不能一次原子替换且只能靠第二套存档、双写、fallback 或兼容读取层完成，停止并返回架构决定，不实施代码。
+
+## Codex 复审通过与完成（2026-08-04）
+
+- 已独立复审正式业务提交 `bdf58dba9773a65f2b0e54414eda9d0bf5d48ef8` 及其限定返工 diff：`CharterRuntimeStateData` 对重复节点、组织授权版本和当前覆盖稳定 ID 失败关闭；`CharterRuleCatalogValidator` 对重复授权、边界、提交和冲突记录失败关闭。该校验仍只消费单一静态目录与动态状态，未引入默认值、兼容读取层或规则重算。
+- 独立 Unity EditMode 完整执行 335 项，333 通过；本卡直接相关的 `CharterRuleDataTests`、`CharterRuleRuntimeTests` 与册界 `SessionStateSnapshotTests` 共 49/49 通过。两项失败均为已登记且不在本卡路径的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
+- `check-data-chain`、`check-review-text -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`、限定 diff 的 `git diff --check` 和复审前置 `check-task-cards -Postcondition ExternalPendingReview` 均通过。复审结论：通过；本轮只关闭同一卡，不修改规则事务、冲突 shared source、CSV、场景、UI、BattleSim 或数值。
