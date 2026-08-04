@@ -13,6 +13,7 @@ using TianZhang.Combat;
 using TianZhang.Cultivation;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Tactical;
+using TianZhang.World;
 
 namespace TianZhang.Editor
 {
@@ -57,6 +58,7 @@ namespace TianZhang.Editor
             ImportFoundationPurpleMansionStates();
             ImportJindanStaticStates();
             ImportCharterRuleDefinitions();
+            ImportCharterSites();
             ImportGongFa();
             ImportSpells();
             ImportSkills();
@@ -94,11 +96,54 @@ namespace TianZhang.Editor
             "contentScope", "dropEntries"
         };
 
+        private static readonly string[] CharterSiteColumns =
+        {
+            "siteId", "displayNameKey", "settlementId",
+            "passageCapabilityId", "passageOperatorId", "passageTargetId", "passageProtocolState",
+            "passageStructureState", "passagePowerState", "interactionTimeProfileId", "recognitionTiming",
+            "operationTiming", "cancellationPolicy",
+            "facilityId", "sealRelicId", "sealManagerId", "sealBeneficiaryId", "sealAuthorizationVersionId",
+            "ruleEntryId", "ruleEntryOccupancyId", "nodeOccupancyId",
+            "jindanConflictEventId", "jindanChallengeEventId",
+            "grantId", "grantDefinitionVersion", "grantTargetVariableId", "grantChallengerId",
+            "grantQualificationSource", "grantAllowedOperationId", "grantTargetId", "grantScopeId",
+            "grantBeneficiaryId", "grantRealityAnchorId", "grantResourceLedgerRef", "grantCapacityLedgerRef",
+            "grantChallengeRuleTier", "grantEffectiveAtTick", "grantExpiresAtTick", "grantIsRevoked",
+            "grantRevocationReason", "grantDisplaySource",
+            "leftCandidateId", "leftCandidateTargetVariableId", "leftCandidateTargetId",
+            "leftCandidateHasVariableAuthority", "leftCandidateHasLegalTarget", "leftCandidatePositionRank",
+            "leftCandidateRealityAnchorRank", "leftCandidateAlreadyPaidCost",
+            "leftCandidateHasActiveContinuousCarrier", "leftCandidateConflictReserve", "leftCandidatePulseCost",
+            "leftCandidateSettlementCooldown",
+            "rightCandidateId", "rightCandidateTargetVariableId", "rightCandidateTargetId",
+            "rightCandidateHasVariableAuthority", "rightCandidateHasLegalTarget", "rightCandidatePositionRank",
+            "rightCandidateRealityAnchorRank", "rightCandidateAlreadyPaidCost",
+            "rightCandidateHasActiveContinuousCarrier", "rightCandidateConflictReserve", "rightCandidatePulseCost",
+            "rightCandidateSettlementCooldown",
+            "charterCandidateId",
+            "yuanyingConflictEventId", "yuanyingTargetVariableId", "yuanyingTargetId", "yuanyingScopeId",
+            "yuanyingRealityAnchorId"
+        };
+
         private const string ContentScopeProduction = "content_scope_production";
         private const string GuanzhongScope = "guanzhong";
         private const string GuanzhongSettlementId = "guanzhong_city";
         private const string ShijiahouEnemyId = "enemy_shijiahou";
         private const string ShijiahouBountyId = "bounty_guanzhong_shijiahou";
+
+        // 旧水驿站点契约的固定自有语义：通行能力、交互时间档案、门禁可操作状态与交互时序。
+        private const string CharterSiteId = "charter_site_old_water_station";
+        private const string CharterSiteDisplayNameKey = "charter_site_old_water_station";
+        private const string CharterSiteDisplayNameText = "旧水驿";
+        private const string CharterPassageCapabilityId = "capability_kaihe_jiuzhang_v1";
+        private const string CharterGateProtocolState = "compatible";
+        private const string CharterGateStructureState = "intact";
+        private const string CharterGatePowerState = "available";
+        private const string CharterInteractionTimeProfileId = "interaction_time_old_water_station_gate_v1";
+        private const string CharterRecognitionTiming = "instant";
+        private const string CharterOperationTiming = "sustained_guided";
+        private const string CharterCancellationPolicy = "no_commit_on_cancel";
+        private const string CharterSiteAssetPath = "Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset";
 
         public sealed class ContentCatalogImportPreview
         {
@@ -2303,6 +2348,699 @@ namespace TianZhang.Editor
             destination.conflictProfileId = source.conflictProfileId;
             destination.failurePolicy = source.failurePolicy;
             destination.worldEventOutputs = source.worldEventOutputs;
+        }
+
+        /// <summary>
+        /// Imports the single approved charter site production chain
+        /// <c>CharterSites.csv -> CharterSiteData asset -> ContentCatalogData reference</c>. The whole
+        /// table, its cross-table references and the shared conflict decision are validated in memory
+        /// before any asset is written.
+        /// </summary>
+        [MenuItem("天章/导入册界站点契约")]
+        public static void ImportCharterSites()
+        {
+            const string path = "Assets/DataConfig/CharterSites.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Charter site CSV was not found: {path}", path);
+
+            var language = ParseContentLanguage(
+                ReadRequiredContentFile("Assets/DataConfig/Language.csv"),
+                "Language.csv");
+            RequireLanguageText(language, CharterSiteDisplayNameKey, CharterSiteDisplayNameText, "Language.csv");
+
+            // The site row resolves cross-contract references only through the single approved
+            // static catalog; an invalid catalog fails closed before any site row can import.
+            CharterRuleStaticCatalogData staticCatalog = LoadCharterRuleStaticCatalog();
+            if (!staticCatalog.TryValidateDefinitions(out string catalogReason))
+            {
+                throw CharterError(
+                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
+                    path,
+                    $"the approved static catalog is invalid: {catalogReason}");
+            }
+
+            var sites = ParseCharterSites(
+                File.ReadAllLines(path),
+                path,
+                language,
+                staticCatalog.ReferenceCatalog,
+                staticCatalog.Definitions);
+            if (sites[0].jindanGrant.definitionVersion != staticCatalog.DefinitionCatalogVersion)
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    path,
+                    $"grant definitionVersion '{sites[0].jindanGrant.definitionVersion}' must equal the static catalog version '{staticCatalog.DefinitionCatalogVersion}'.");
+            }
+
+            try
+            {
+                var site = UpsertContentAsset(sites[0], CharterSiteAssetPath, CopyCharterSite);
+                var catalog = UpsertCatalogAsset("Assets/Data/ContentCatalog/ContentCatalog.asset");
+                catalog.SetCharterSites(new[] { site });
+                EditorUtility.SetDirty(catalog);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+            finally
+            {
+                foreach (var site in sites)
+                    UnityEngine.Object.DestroyImmediate(site);
+            }
+        }
+
+        /// <summary>
+        /// Parses and validates the complete charter site table before any asset can be written.
+        /// Cross-table references (settlement, display key, relic, authorization, rule entry, world
+        /// variable, node and the conflict grant directory) and the shared conflict decision must
+        /// all resolve; a single violation fails the whole table closed.
+        /// </summary>
+        public static CharterSiteData[] ParseCharterSites(
+            string[] lines,
+            string sourceName,
+            Dictionary<string, string> language,
+            CharterRuleReferenceCatalog referenceCatalog,
+            CharterRuleDefinitionData[] definitions)
+        {
+            if (lines == null)
+                throw CharterError("CHARTER_SITE_TABLE_INVALID", sourceName, "has no rows.");
+
+            int headerLineIndex = FindHeaderIndex(lines);
+            if (headerLineIndex < 0)
+                throw CharterError("CHARTER_SITE_TABLE_INVALID", sourceName, "has no header row.");
+
+            var headers = FindHeader(lines);
+            RequireExactColumns(headers, sourceName, CharterSiteColumns);
+            if (referenceCatalog == null || !referenceCatalog.HasDeclaredAuthority)
+            {
+                throw CharterError(
+                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
+                    sourceName,
+                    "requires an explicit external reference catalog before a production row can import.");
+            }
+            if (!CharterRuleCatalogValidator.TryValidateCatalog(referenceCatalog, out string catalogReason))
+            {
+                throw CharterError(
+                    MapCharterCatalogReason(catalogReason),
+                    sourceName,
+                    catalogReason);
+            }
+
+            var sites = new List<CharterSiteData>();
+            try
+            {
+                for (int index = headerLineIndex + 1; index < lines.Length; index++)
+                {
+                    string line = lines[index];
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                        continue;
+
+                    var columns = ParseCSV(line);
+                    if (columns.Length != headers.Length)
+                    {
+                        throw CharterError(
+                            "CHARTER_SITE_TABLE_INVALID",
+                            $"{sourceName} row {index + 1}",
+                            $"has {columns.Length} columns; expected {headers.Length}.");
+                    }
+
+                    var site = ParseCharterSiteRow(
+                        headers, columns, $"{sourceName} row {index + 1}", language, referenceCatalog, definitions);
+                    sites.Add(site);
+                }
+
+                if (sites.Count != 1 || sites[0].siteId != CharterSiteId)
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_NOT_UNIQUE",
+                        sourceName,
+                        $"must contain only the approved '{CharterSiteId}' production row.");
+                }
+
+                return sites.ToArray();
+            }
+            catch
+            {
+                foreach (var site in sites)
+                    UnityEngine.Object.DestroyImmediate(site);
+                throw;
+            }
+        }
+
+        private static CharterSiteData ParseCharterSiteRow(
+            string[] headers,
+            string[] columns,
+            string sourceName,
+            Dictionary<string, string> language,
+            CharterRuleReferenceCatalog catalog,
+            CharterRuleDefinitionData[] definitions)
+        {
+            var site = ScriptableObject.CreateInstance<CharterSiteData>();
+            try
+            {
+                // 站点身份
+                site.siteId = GetRequiredCharterColumnValue(headers, columns, "siteId", sourceName);
+                RequireCharterReference(site.siteId, sourceName, "siteId", "CHARTER_SITE_TABLE_INVALID");
+                site.displayNameKey = RequiredLanguageKey(
+                    language,
+                    GetRequiredCharterColumnValue(headers, columns, "displayNameKey", sourceName),
+                    sourceName,
+                    "displayNameKey");
+                site.settlementId = GetRequiredCharterColumnValue(headers, columns, "settlementId", sourceName);
+                RequireCharterReference(site.settlementId, sourceName, "settlementId", "CHARTER_SITE_UNKNOWN_SETTLEMENT");
+                if (site.settlementId != GuanzhongSettlementId)
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_UNKNOWN_SETTLEMENT",
+                        sourceName,
+                        $"references unknown settlement '{site.settlementId}'.");
+                }
+
+                // 通行：固定能力、固定交互时间档案与显式可操作的门禁状态。
+                site.passageCapabilityId = GetRequiredCharterColumnValue(headers, columns, "passageCapabilityId", sourceName);
+                RequireCharterReference(site.passageCapabilityId, sourceName, "passageCapabilityId", "CHARTER_SITE_CAPABILITY_MISMATCH");
+                if (site.passageCapabilityId != CharterPassageCapabilityId)
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_CAPABILITY_MISMATCH",
+                        sourceName,
+                        $"passageCapabilityId must be the approved '{CharterPassageCapabilityId}'.");
+                }
+                site.passageOperatorId = GetRequiredCharterColumnValue(headers, columns, "passageOperatorId", sourceName);
+                RequireCharterReference(site.passageOperatorId, sourceName, "passageOperatorId", "CHARTER_SITE_TABLE_INVALID");
+                site.passageTargetId = GetRequiredCharterColumnValue(headers, columns, "passageTargetId", sourceName);
+                RequireCharterReference(site.passageTargetId, sourceName, "passageTargetId", "CHARTER_SITE_TABLE_INVALID");
+                site.passageProtocolState = GetRequiredCharterColumnValue(headers, columns, "passageProtocolState", sourceName);
+                site.passageStructureState = GetRequiredCharterColumnValue(headers, columns, "passageStructureState", sourceName);
+                site.passagePowerState = GetRequiredCharterColumnValue(headers, columns, "passagePowerState", sourceName);
+                if (site.passageProtocolState != CharterGateProtocolState ||
+                    site.passageStructureState != CharterGateStructureState ||
+                    site.passagePowerState != CharterGatePowerState)
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_GATE_NOT_OPERABLE",
+                        sourceName,
+                        "the declared gate must be protocol compatible, structurally intact and powered.");
+                }
+                site.interactionTimeProfileId = GetRequiredCharterColumnValue(headers, columns, "interactionTimeProfileId", sourceName);
+                RequireCharterReference(site.interactionTimeProfileId, sourceName, "interactionTimeProfileId", "CHARTER_SITE_TIME_PROFILE_MISMATCH");
+                if (site.interactionTimeProfileId != CharterInteractionTimeProfileId)
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_TIME_PROFILE_MISMATCH",
+                        sourceName,
+                        $"interactionTimeProfileId must be the approved '{CharterInteractionTimeProfileId}'.");
+                }
+                site.recognitionTiming = GetRequiredCharterColumnValue(headers, columns, "recognitionTiming", sourceName);
+                site.operationTiming = GetRequiredCharterColumnValue(headers, columns, "operationTiming", sourceName);
+                site.cancellationPolicy = GetRequiredCharterColumnValue(headers, columns, "cancellationPolicy", sourceName);
+                if (site.recognitionTiming != CharterRecognitionTiming ||
+                    site.operationTiming != CharterOperationTiming ||
+                    site.cancellationPolicy != CharterCancellationPolicy)
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_TIMING_SEMANTICS_INVALID",
+                        sourceName,
+                        "the interaction time profile must declare instant recognition, sustained guided operation and no commit on cancel.");
+                }
+
+                // 管理：太玄界印与设施职责；通行资格不能自动成为管理资格。
+                site.facilityId = GetRequiredCharterColumnValue(headers, columns, "facilityId", sourceName);
+                RequireCharterReference(site.facilityId, sourceName, "facilityId", "CHARTER_SITE_TABLE_INVALID");
+                site.sealRelicId = GetRequiredCharterColumnValue(headers, columns, "sealRelicId", sourceName);
+                RequireCharterReference(site.sealRelicId, sourceName, "sealRelicId", "CHARTER_SITE_UNKNOWN_RELIC_REFERENCE");
+                if (!catalog.ContainsRelic(site.sealRelicId))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_UNKNOWN_RELIC_REFERENCE",
+                        sourceName,
+                        $"references unknown relic '{site.sealRelicId}'.");
+                }
+                site.sealManagerId = GetRequiredCharterColumnValue(headers, columns, "sealManagerId", sourceName);
+                RequireCharterReference(site.sealManagerId, sourceName, "sealManagerId", "CHARTER_SITE_MANAGER_INVALID");
+                site.sealBeneficiaryId = GetRequiredCharterColumnValue(headers, columns, "sealBeneficiaryId", sourceName);
+                RequireCharterReference(site.sealBeneficiaryId, sourceName, "sealBeneficiaryId", "CHARTER_SITE_BENEFICIARY_MISSING");
+                if (string.Equals(site.sealManagerId, site.passageOperatorId, StringComparison.Ordinal))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_MANAGER_INVALID",
+                        sourceName,
+                        "passage qualification cannot grant management qualification.");
+                }
+                site.sealAuthorizationVersionId = GetRequiredCharterColumnValue(headers, columns, "sealAuthorizationVersionId", sourceName);
+                RequireCharterReference(site.sealAuthorizationVersionId, sourceName, "sealAuthorizationVersionId", "CHARTER_SITE_UNKNOWN_AUTHORIZATION_REFERENCE");
+                if (!catalog.ContainsOrganizationAuthorizationVersion(site.sealAuthorizationVersionId))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_UNKNOWN_AUTHORIZATION_REFERENCE",
+                        sourceName,
+                        $"references unknown organization authorization version '{site.sealAuthorizationVersionId}'.");
+                }
+
+                // 册界：条目必须由静态目录解析，占用 ID 为本站点自有身份。
+                site.ruleEntryId = GetRequiredCharterColumnValue(headers, columns, "ruleEntryId", sourceName);
+                RequireCharterReference(site.ruleEntryId, sourceName, "ruleEntryId", "CHARTER_SITE_UNKNOWN_RULE_ENTRY_REFERENCE");
+                CharterRuleDefinitionData definition = definitions == null
+                    ? null
+                    : definitions.FirstOrDefault(value => value != null &&
+                        string.Equals(value.ruleEntryId, site.ruleEntryId, StringComparison.Ordinal));
+                if (definition == null || !catalog.ContainsRuleEntry(site.ruleEntryId))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_UNKNOWN_RULE_ENTRY_REFERENCE",
+                        sourceName,
+                        $"references unknown rule entry '{site.ruleEntryId}'.");
+                }
+                site.ruleEntryOccupancyId = GetRequiredCharterColumnValue(headers, columns, "ruleEntryOccupancyId", sourceName);
+                RequireCharterReference(site.ruleEntryOccupancyId, sourceName, "ruleEntryOccupancyId", "CHARTER_SITE_TABLE_INVALID");
+                site.nodeOccupancyId = GetRequiredCharterColumnValue(headers, columns, "nodeOccupancyId", sourceName);
+                RequireCharterReference(site.nodeOccupancyId, sourceName, "nodeOccupancyId", "CHARTER_SITE_TABLE_INVALID");
+
+                // 金丹样例：版本化 grant、左右候选与册界侧唯一绑定。
+                site.jindanConflictEventId = GetRequiredCharterColumnValue(headers, columns, "jindanConflictEventId", sourceName);
+                RequireCharterReference(site.jindanConflictEventId, sourceName, "jindanConflictEventId", "CHARTER_SITE_TABLE_INVALID");
+                site.jindanChallengeEventId = GetRequiredCharterColumnValue(headers, columns, "jindanChallengeEventId", sourceName);
+                RequireCharterReference(site.jindanChallengeEventId, sourceName, "jindanChallengeEventId", "CHARTER_SITE_TABLE_INVALID");
+                site.jindanGrant = ParseCharterSiteGrant(headers, columns, sourceName, site, definition, catalog);
+                site.leftCandidate = ParseCharterSiteCandidate(headers, columns, sourceName, "left", site.jindanGrant);
+                site.rightCandidate = ParseCharterSiteCandidate(headers, columns, sourceName, "right", site.jindanGrant);
+                site.charterCandidateId = GetRequiredCharterColumnValue(headers, columns, "charterCandidateId", sourceName);
+                RequireCharterReference(site.charterCandidateId, sourceName, "charterCandidateId", "CHARTER_SITE_CHARTER_SIDE_UNDECLARED");
+                if (string.Equals(site.leftCandidate.candidateId, site.rightCandidate.candidateId, StringComparison.Ordinal) ||
+                    (!string.Equals(site.charterCandidateId, site.leftCandidate.candidateId, StringComparison.Ordinal) &&
+                     !string.Equals(site.charterCandidateId, site.rightCandidate.candidateId, StringComparison.Ordinal)))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_CHARTER_SIDE_UNDECLARED",
+                        sourceName,
+                        "the charter side must uniquely bind one distinct candidate id.");
+                }
+
+                // 元婴样例：只携带受锚身份，不夹带金丹候选、grant 或可覆盖结果。
+                site.yuanyingConflictEventId = GetRequiredCharterColumnValue(headers, columns, "yuanyingConflictEventId", sourceName);
+                RequireCharterReference(site.yuanyingConflictEventId, sourceName, "yuanyingConflictEventId", "CHARTER_SITE_YUANYING_INVALID");
+                site.yuanyingTargetVariableId = GetRequiredCharterColumnValue(headers, columns, "yuanyingTargetVariableId", sourceName);
+                RequireCharterReference(site.yuanyingTargetVariableId, sourceName, "yuanyingTargetVariableId", "CHARTER_SITE_YUANYING_INVALID");
+                if (!catalog.ContainsWorldVariable(site.yuanyingTargetVariableId))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_UNKNOWN_WORLD_VARIABLE_REFERENCE",
+                        sourceName,
+                        $"references unknown world variable '{site.yuanyingTargetVariableId}'.");
+                }
+                site.yuanyingTargetId = GetRequiredCharterColumnValue(headers, columns, "yuanyingTargetId", sourceName);
+                RequireCharterReference(site.yuanyingTargetId, sourceName, "yuanyingTargetId", "CHARTER_SITE_YUANYING_INVALID");
+                if (!catalog.ContainsNode(site.yuanyingTargetId))
+                {
+                    throw CharterError(
+                        "CHARTER_SITE_UNKNOWN_NODE_REFERENCE",
+                        sourceName,
+                        $"references unknown node '{site.yuanyingTargetId}'.");
+                }
+                site.yuanyingScopeId = GetRequiredCharterColumnValue(headers, columns, "yuanyingScopeId", sourceName);
+                RequireCharterReference(site.yuanyingScopeId, sourceName, "yuanyingScopeId", "CHARTER_SITE_YUANYING_INVALID");
+                site.yuanyingRealityAnchorId = GetRequiredCharterColumnValue(headers, columns, "yuanyingRealityAnchorId", sourceName);
+                RequireCharterReference(site.yuanyingRealityAnchorId, sourceName, "yuanyingRealityAnchorId", "CHARTER_SITE_YUANYING_INVALID");
+
+                // 导入验证用同一 shared 决定消费完整 grant、请求与左右候选：册界侧必须稳定未获胜。
+                RequireStableCharterSideNotWon(site, sourceName);
+
+                return site;
+            }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(site);
+                throw;
+            }
+        }
+
+        private static CharterSiteCrossTierChallengeGrantData ParseCharterSiteGrant(
+            string[] headers,
+            string[] columns,
+            string sourceName,
+            CharterSiteData site,
+            CharterRuleDefinitionData definition,
+            CharterRuleReferenceCatalog catalog)
+        {
+            var grant = new CharterSiteCrossTierChallengeGrantData
+            {
+                grantId = GetRequiredCharterColumnValue(headers, columns, "grantId", sourceName),
+                definitionVersion = ParseCharterSiteInteger(headers, columns, "grantDefinitionVersion", sourceName),
+                targetVariableId = GetRequiredCharterColumnValue(headers, columns, "grantTargetVariableId", sourceName),
+                challengerId = GetRequiredCharterColumnValue(headers, columns, "grantChallengerId", sourceName),
+                qualificationSource = GetRequiredCharterColumnValue(headers, columns, "grantQualificationSource", sourceName),
+                allowedOperationId = GetRequiredCharterColumnValue(headers, columns, "grantAllowedOperationId", sourceName),
+                targetId = GetRequiredCharterColumnValue(headers, columns, "grantTargetId", sourceName),
+                scopeId = GetRequiredCharterColumnValue(headers, columns, "grantScopeId", sourceName),
+                beneficiaryId = GetRequiredCharterColumnValue(headers, columns, "grantBeneficiaryId", sourceName),
+                realityAnchorId = GetRequiredCharterColumnValue(headers, columns, "grantRealityAnchorId", sourceName),
+                resourceLedgerRef = GetRequiredCharterColumnValue(headers, columns, "grantResourceLedgerRef", sourceName),
+                capacityLedgerRef = GetRequiredCharterColumnValue(headers, columns, "grantCapacityLedgerRef", sourceName),
+                challengeRuleTier = ParseCharterSiteInteger(headers, columns, "grantChallengeRuleTier", sourceName),
+                effectiveAtTick = ParseCharterSiteInteger(headers, columns, "grantEffectiveAtTick", sourceName),
+                expiresAtTick = ParseCharterSiteInteger(headers, columns, "grantExpiresAtTick", sourceName),
+                isRevoked = ParseCharterSiteBool(headers, columns, "grantIsRevoked", sourceName),
+                revocationReason = ParseCharterSiteOptionalReference(headers, columns, "grantRevocationReason", sourceName),
+                displaySource = GetRequiredCharterColumnValue(headers, columns, "grantDisplaySource", sourceName),
+            };
+
+            foreach (string value in new[]
+            {
+                grant.grantId, grant.targetVariableId, grant.challengerId, grant.qualificationSource,
+                grant.allowedOperationId, grant.targetId, grant.scopeId, grant.beneficiaryId,
+                grant.realityAnchorId, grant.resourceLedgerRef, grant.capacityLedgerRef, grant.displaySource,
+            })
+            {
+                RequireCharterReference(value, sourceName, "grant field", "CHARTER_SITE_GRANT_INVALID");
+            }
+
+            if (grant.definitionVersion <= 0 || grant.challengeRuleTier <= 0 ||
+                grant.effectiveAtTick < 0 || grant.expiresAtTick < grant.effectiveAtTick)
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    sourceName,
+                    "grant version, tier and effect/expiry ticks must form a valid explicit window.");
+            }
+            if (grant.isRevoked && string.IsNullOrEmpty(grant.revocationReason))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    sourceName,
+                    "a revoked grant must declare its revocation reason.");
+            }
+            if (!grant.isRevoked && !string.IsNullOrEmpty(grant.revocationReason))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    sourceName,
+                    "an active grant must not declare a revocation reason.");
+            }
+            if (!string.Equals(grant.beneficiaryId, site.sealBeneficiaryId, StringComparison.Ordinal))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    sourceName,
+                    "grant beneficiary must equal the site seal beneficiary.");
+            }
+
+            // grantId 必须已经列在水府地纪冲突档案的跨阶资格目录中，不另建授权来源。
+            CharterConflictReference conflict = catalog.FindConflict(definition.conflictProfileId);
+            if (conflict == null ||
+                !conflict.crossTierChallengeGrantIds.Contains(grant.grantId, StringComparer.Ordinal))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_UNKNOWN_GRANT_REFERENCE",
+                    sourceName,
+                    $"grantId '{grant.grantId}' is not listed in the '{definition.conflictProfileId}' conflict directory.");
+            }
+            if (!catalog.ContainsWorldVariable(grant.targetVariableId))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_UNKNOWN_WORLD_VARIABLE_REFERENCE",
+                    sourceName,
+                    $"references unknown world variable '{grant.targetVariableId}'.");
+            }
+            if (!catalog.ContainsNode(grant.targetId))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_UNKNOWN_NODE_REFERENCE",
+                    sourceName,
+                    $"references unknown node '{grant.targetId}'.");
+            }
+            // 来源必须是共享枚举的显式成员名，不允许数字或未知字面量。
+            if (grant.qualificationSource != nameof(CrossTierChallengeSourceKind.JindanProtection) &&
+                grant.qualificationSource != nameof(CrossTierChallengeSourceKind.YuanyingOrthodoxy) &&
+                grant.qualificationSource != nameof(CrossTierChallengeSourceKind.DedicatedGreatFormation) &&
+                grant.qualificationSource != nameof(CrossTierChallengeSourceKind.NarrativeRelic))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    sourceName,
+                    $"has unknown qualificationSource '{grant.qualificationSource}'.");
+            }
+
+            return grant;
+        }
+
+        private static CharterSiteRuleConflictCandidateData ParseCharterSiteCandidate(
+            string[] headers,
+            string[] columns,
+            string sourceName,
+            string side,
+            CharterSiteCrossTierChallengeGrantData grant)
+        {
+            string prefix = side + "Candidate";
+            var candidate = new CharterSiteRuleConflictCandidateData
+            {
+                candidateId = GetRequiredCharterColumnValue(headers, columns, prefix + "Id", sourceName),
+                targetVariableId = GetRequiredCharterColumnValue(headers, columns, prefix + "TargetVariableId", sourceName),
+                targetId = GetRequiredCharterColumnValue(headers, columns, prefix + "TargetId", sourceName),
+                hasVariableAuthority = ParseCharterSiteBool(headers, columns, prefix + "HasVariableAuthority", sourceName),
+                hasLegalTarget = ParseCharterSiteBool(headers, columns, prefix + "HasLegalTarget", sourceName),
+                positionRank = ParseCharterSiteInteger(headers, columns, prefix + "PositionRank", sourceName),
+                realityAnchorRank = ParseCharterSiteInteger(headers, columns, prefix + "RealityAnchorRank", sourceName),
+                alreadyPaidCost = ParseCharterSiteInteger(headers, columns, prefix + "AlreadyPaidCost", sourceName),
+                hasActiveContinuousCarrier = ParseCharterSiteBool(headers, columns, prefix + "HasActiveContinuousCarrier", sourceName),
+                conflictReserve = ParseCharterSiteInteger(headers, columns, prefix + "ConflictReserve", sourceName),
+                pulseCost = ParseCharterSiteInteger(headers, columns, prefix + "PulseCost", sourceName),
+                settlementCooldown = ParseCharterSiteInteger(headers, columns, prefix + "SettlementCooldown", sourceName),
+            };
+
+            RequireCharterReference(candidate.candidateId, sourceName, side + " candidate", "CHARTER_SITE_CANDIDATE_INVALID");
+            if (!string.Equals(candidate.targetVariableId, grant.targetVariableId, StringComparison.Ordinal) ||
+                !string.Equals(candidate.targetId, grant.targetId, StringComparison.Ordinal))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_CANDIDATE_MISMATCH",
+                    sourceName,
+                    $"{side} candidate must match the grant variable and target.");
+            }
+            if (candidate.positionRank < 0 || candidate.realityAnchorRank < 0 || candidate.alreadyPaidCost < 0 ||
+                candidate.conflictReserve < 0 || candidate.pulseCost <= 0 || candidate.settlementCooldown < 0)
+            {
+                throw CharterError(
+                    "CHARTER_SITE_CANDIDATE_INVALID",
+                    sourceName,
+                    $"{side} candidate has an invalid numeric field.");
+            }
+
+            return candidate;
+        }
+
+        /// <summary>
+        /// Consumes the same shared conflict decision the player runtime uses: a complete versioned
+        /// grant, a versioned challenge request and both candidates enter one
+        /// <see cref="RuleConflictInstance.Decide"/>. The row is rejected when the deterministic
+        /// winner is the charter side, the decision is neutral/rejected, or the grant does not
+        /// authorize the challenge — never forced in UI or runtime.
+        /// </summary>
+        private static void RequireStableCharterSideNotWon(CharterSiteData site, string sourceName)
+        {
+            var grant = new CrossTierChallengeGrant(
+                site.jindanGrant.grantId,
+                site.jindanGrant.definitionVersion,
+                site.jindanGrant.targetVariableId,
+                site.jindanGrant.challengerId,
+                ParseCharterSiteSourceKind(site.jindanGrant.qualificationSource, sourceName),
+                site.jindanGrant.allowedOperationId,
+                site.jindanGrant.targetId,
+                site.jindanGrant.scopeId,
+                site.jindanGrant.beneficiaryId,
+                site.jindanGrant.realityAnchorId,
+                site.jindanGrant.resourceLedgerRef,
+                site.jindanGrant.capacityLedgerRef,
+                site.jindanGrant.challengeRuleTier,
+                site.jindanGrant.effectiveAtTick,
+                site.jindanGrant.expiresAtTick,
+                site.jindanGrant.isRevoked,
+                site.jindanGrant.revocationReason,
+                site.jindanGrant.displaySource);
+            var archive = new CrossTierChallengeArchive(new[] { grant });
+            var request = new CrossTierChallengeRequest(
+                site.jindanChallengeEventId,
+                grant.GrantId,
+                grant.DefinitionVersion,
+                grant.TargetVariableId,
+                grant.ChallengerId,
+                grant.EffectiveAtTick);
+            var instance = new RuleConflictInstance(
+                RuleConflictInstance.ContractVersionV1,
+                site.jindanConflictEventId,
+                RuleConflictKind.JindanSameVariable,
+                site.ruleEntryId,
+                grant.TargetVariableId,
+                grant.AllowedOperationId,
+                grant.TargetId,
+                grant.ScopeId,
+                grant.BeneficiaryId,
+                grant.RealityAnchorId,
+                grant.ResourceLedgerRef,
+                grant.CapacityLedgerRef,
+                grant.EffectiveAtTick,
+                BuildCharterSiteConflictCandidate(site.leftCandidate),
+                BuildCharterSiteConflictCandidate(site.rightCandidate),
+                request);
+
+            RuleConflictDecision decision = instance.Decide(archive);
+            if (decision.Outcome != RuleConflictOutcome.LeftWins && decision.Outcome != RuleConflictOutcome.RightWins)
+            {
+                throw CharterError(
+                    "CHARTER_SITE_CONFLICT_NOT_STABLE",
+                    sourceName,
+                    $"shared decision returned {decision.Outcome}; the charter side must deterministically not win.");
+            }
+            if (decision.CrossTierAuthorization == null || !decision.CrossTierAuthorization.IsEligible)
+            {
+                throw CharterError(
+                    "CHARTER_SITE_CONFLICT_NOT_STABLE",
+                    sourceName,
+                    $"the versioned grant did not authorize the challenge: {decision.Reason}");
+            }
+            if (string.Equals(decision.WinnerCandidateId, site.charterCandidateId, StringComparison.Ordinal))
+            {
+                throw CharterError(
+                    "CHARTER_SITE_CONFLICT_NOT_STABLE",
+                    sourceName,
+                    $"shared decision winner '{decision.WinnerCandidateId}' is the charter side.");
+            }
+        }
+
+        private static RuleConflictCandidate BuildCharterSiteConflictCandidate(CharterSiteRuleConflictCandidateData data)
+        {
+            return new RuleConflictCandidate(
+                data.candidateId,
+                data.targetVariableId,
+                data.targetId,
+                data.hasVariableAuthority,
+                data.hasLegalTarget,
+                data.positionRank,
+                data.realityAnchorRank,
+                data.alreadyPaidCost,
+                data.hasActiveContinuousCarrier,
+                data.conflictReserve,
+                data.pulseCost,
+                data.settlementCooldown);
+        }
+
+        private static CrossTierChallengeSourceKind ParseCharterSiteSourceKind(string value, string sourceName)
+        {
+            if (value == nameof(CrossTierChallengeSourceKind.JindanProtection))
+                return CrossTierChallengeSourceKind.JindanProtection;
+            if (value == nameof(CrossTierChallengeSourceKind.YuanyingOrthodoxy))
+                return CrossTierChallengeSourceKind.YuanyingOrthodoxy;
+            if (value == nameof(CrossTierChallengeSourceKind.DedicatedGreatFormation))
+                return CrossTierChallengeSourceKind.DedicatedGreatFormation;
+            if (value == nameof(CrossTierChallengeSourceKind.NarrativeRelic))
+                return CrossTierChallengeSourceKind.NarrativeRelic;
+            throw CharterError("CHARTER_SITE_GRANT_INVALID", sourceName, $"has unknown qualificationSource '{value}'.");
+        }
+
+        private static int ParseCharterSiteInteger(string[] headers, string[] columns, string name, string sourceName)
+        {
+            string raw = GetRequiredCharterColumnValue(headers, columns, name, sourceName);
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
+                throw CharterError("CHARTER_SITE_TABLE_INVALID", sourceName, $"has invalid integer '{raw}' in '{name}'.");
+            return value;
+        }
+
+        private static bool ParseCharterSiteBool(string[] headers, string[] columns, string name, string sourceName)
+        {
+            string raw = GetRequiredCharterColumnValue(headers, columns, name, sourceName);
+            if (raw == "true")
+                return true;
+            if (raw == "false")
+                return false;
+            throw CharterError("CHARTER_SITE_TABLE_INVALID", sourceName, $"has invalid boolean '{raw}' in '{name}'.");
+        }
+
+        private static string ParseCharterSiteOptionalReference(string[] headers, string[] columns, string name, string sourceName)
+        {
+            string raw = GetRequiredCharterColumnValue(headers, columns, name, sourceName);
+            if (string.Equals(raw, "none", StringComparison.OrdinalIgnoreCase))
+                return string.Empty;
+            RequireCharterReference(raw, sourceName, name, "CHARTER_SITE_GRANT_INVALID");
+            return raw;
+        }
+
+        private static void CopyCharterSite(CharterSiteData source, CharterSiteData target)
+        {
+            target.siteId = source.siteId;
+            target.displayNameKey = source.displayNameKey;
+            target.settlementId = source.settlementId;
+            target.passageCapabilityId = source.passageCapabilityId;
+            target.passageOperatorId = source.passageOperatorId;
+            target.passageTargetId = source.passageTargetId;
+            target.passageProtocolState = source.passageProtocolState;
+            target.passageStructureState = source.passageStructureState;
+            target.passagePowerState = source.passagePowerState;
+            target.interactionTimeProfileId = source.interactionTimeProfileId;
+            target.recognitionTiming = source.recognitionTiming;
+            target.operationTiming = source.operationTiming;
+            target.cancellationPolicy = source.cancellationPolicy;
+            target.facilityId = source.facilityId;
+            target.sealRelicId = source.sealRelicId;
+            target.sealManagerId = source.sealManagerId;
+            target.sealBeneficiaryId = source.sealBeneficiaryId;
+            target.sealAuthorizationVersionId = source.sealAuthorizationVersionId;
+            target.ruleEntryId = source.ruleEntryId;
+            target.ruleEntryOccupancyId = source.ruleEntryOccupancyId;
+            target.nodeOccupancyId = source.nodeOccupancyId;
+            target.jindanConflictEventId = source.jindanConflictEventId;
+            target.jindanChallengeEventId = source.jindanChallengeEventId;
+            target.jindanGrant = CopyCharterSiteGrant(source.jindanGrant);
+            target.leftCandidate = CopyCharterSiteCandidate(source.leftCandidate);
+            target.rightCandidate = CopyCharterSiteCandidate(source.rightCandidate);
+            target.charterCandidateId = source.charterCandidateId;
+            target.yuanyingConflictEventId = source.yuanyingConflictEventId;
+            target.yuanyingTargetVariableId = source.yuanyingTargetVariableId;
+            target.yuanyingTargetId = source.yuanyingTargetId;
+            target.yuanyingScopeId = source.yuanyingScopeId;
+            target.yuanyingRealityAnchorId = source.yuanyingRealityAnchorId;
+        }
+
+        private static CharterSiteCrossTierChallengeGrantData CopyCharterSiteGrant(CharterSiteCrossTierChallengeGrantData source)
+        {
+            return new CharterSiteCrossTierChallengeGrantData
+            {
+                grantId = source.grantId,
+                definitionVersion = source.definitionVersion,
+                targetVariableId = source.targetVariableId,
+                challengerId = source.challengerId,
+                qualificationSource = source.qualificationSource,
+                allowedOperationId = source.allowedOperationId,
+                targetId = source.targetId,
+                scopeId = source.scopeId,
+                beneficiaryId = source.beneficiaryId,
+                realityAnchorId = source.realityAnchorId,
+                resourceLedgerRef = source.resourceLedgerRef,
+                capacityLedgerRef = source.capacityLedgerRef,
+                challengeRuleTier = source.challengeRuleTier,
+                effectiveAtTick = source.effectiveAtTick,
+                expiresAtTick = source.expiresAtTick,
+                isRevoked = source.isRevoked,
+                revocationReason = source.revocationReason,
+                displaySource = source.displaySource,
+            };
+        }
+
+        private static CharterSiteRuleConflictCandidateData CopyCharterSiteCandidate(CharterSiteRuleConflictCandidateData source)
+        {
+            return new CharterSiteRuleConflictCandidateData
+            {
+                candidateId = source.candidateId,
+                targetVariableId = source.targetVariableId,
+                targetId = source.targetId,
+                hasVariableAuthority = source.hasVariableAuthority,
+                hasLegalTarget = source.hasLegalTarget,
+                positionRank = source.positionRank,
+                realityAnchorRank = source.realityAnchorRank,
+                alreadyPaidCost = source.alreadyPaidCost,
+                hasActiveContinuousCarrier = source.hasActiveContinuousCarrier,
+                conflictReserve = source.conflictReserve,
+                pulseCost = source.pulseCost,
+                settlementCooldown = source.settlementCooldown,
+            };
         }
 
         [MenuItem("天章/导入道基紫府状态配置")]

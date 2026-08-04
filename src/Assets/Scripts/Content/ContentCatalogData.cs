@@ -12,6 +12,7 @@ namespace TianZhang.Content
         [SerializeField] private ItemData[] items = Array.Empty<ItemData>();
         [SerializeField] private BountyData[] bounties = Array.Empty<BountyData>();
         [SerializeField] private CharterRuleStaticCatalogData charterRuleStaticCatalog;
+        [SerializeField] private CharterSiteData[] charterSites = Array.Empty<CharterSiteData>();
 
         public CharterRuleStaticCatalogData CharterRuleStaticCatalog => charterRuleStaticCatalog;
 
@@ -44,6 +45,20 @@ namespace TianZhang.Content
         public void SetCharterRuleStaticCatalog(CharterRuleStaticCatalogData staticCatalog)
         {
             charterRuleStaticCatalog = staticCatalog;
+        }
+
+        /// <summary>
+        /// Fail-closed access to the single approved production charter site. It resolves only by
+        /// exact stable ID; Editor import, fixtures and defaulted data never substitute for it.
+        /// </summary>
+        public bool TryGetCharterSite(string siteId, out CharterSiteData site)
+        {
+            return TryFind(charterSites, siteId, value => value.siteId, out site);
+        }
+
+        public void SetCharterSites(CharterSiteData[] sites)
+        {
+            charterSites = sites == null ? Array.Empty<CharterSiteData>() : (CharterSiteData[])sites.Clone();
         }
 
         public bool TryGetSettlement(string settlementId, out SettlementData settlement)

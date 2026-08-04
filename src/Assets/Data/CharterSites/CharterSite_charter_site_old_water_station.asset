@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b76e70cca83d473bb1e208ea87a21039, type: 3}
+  m_Name: CharterSite_charter_site_old_water_station
+  m_EditorClassIdentifier: TianZhang.Domain::TianZhang.Content.CharterSiteData
+  siteId: charter_site_old_water_station
+  displayNameKey: charter_site_old_water_station
+  settlementId: guanzhong_city
+  passageCapabilityId: capability_kaihe_jiuzhang_v1
+  passageOperatorId: operator_old_water_station
+  passageTargetId: gate_old_water_station_pump
+  passageProtocolState: compatible
+  passageStructureState: intact
+  passagePowerState: available
+  interactionTimeProfileId: interaction_time_old_water_station_gate_v1
+  recognitionTiming: instant
+  operationTiming: sustained_guided
+  cancellationPolicy: no_commit_on_cancel
+  facilityId: facility_old_water_station
+  sealRelicId: relic_taixuan_realm_seal
+  sealManagerId: manager_old_water_station
+  sealBeneficiaryId: beneficiary_water_basin
+  sealAuthorizationVersionId: authorization_taixuan_seal_old_water_station_management_v1
+  ruleEntryId: charter_entry_suifu_diji
+  ruleEntryOccupancyId: occupancy_suifu_diji_v1
+  nodeOccupancyId: occupancy_suifu_waterworks_v1
+  jindanConflictEventId: conflict_suifu_water_spirit_001
+  jindanChallengeEventId: challenge_suifu_001
+  jindanGrant:
+    grantId: cross_tier_charter_water_basin_v1
+    definitionVersion: 1
+    targetVariableId: water_element_spirit_flow
+    challengerId: jindan_challenger
+    qualificationSource: JindanProtection
+    allowedOperationId: charter_apply
+    targetId: node_old_water_station_waterworks
+    scopeId: scope_suifu_water_basin
+    beneficiaryId: beneficiary_water_basin
+    realityAnchorId: anchor_suifu_waterway
+    resourceLedgerRef: ledger_suifu_resource
+    capacityLedgerRef: ledger_suifu_capacity
+    challengeRuleTier: 1
+    effectiveAtTick: 0
+    expiresAtTick: 500
+    isRevoked: 0
+    revocationReason:
+    displaySource: charter_site_old_water_station
+  leftCandidate:
+    candidateId: jindan_left
+    targetVariableId: water_element_spirit_flow
+    targetId: node_old_water_station_waterworks
+    hasVariableAuthority: 1
+    hasLegalTarget: 1
+    positionRank: 3
+    realityAnchorRank: 1
+    alreadyPaidCost: 2
+    hasActiveContinuousCarrier: 1
+    conflictReserve: 6
+    pulseCost: 2
+    settlementCooldown: 3
+  rightCandidate:
+    candidateId: jindan_right
+    targetVariableId: water_element_spirit_flow
+    targetId: node_old_water_station_waterworks
+    hasVariableAuthority: 1
+    hasLegalTarget: 1
+    positionRank: 2
+    realityAnchorRank: 1
+    alreadyPaidCost: 2
+    hasActiveContinuousCarrier: 1
+    conflictReserve: 6
+    pulseCost: 2
+    settlementCooldown: 3
+  charterCandidateId: jindan_right
+  yuanyingConflictEventId: anchor_suifu_water_001
+  yuanyingTargetVariableId: wetland_waterline_state
+  yuanyingTargetId: node_old_water_station_river_wetland
+  yuanyingScopeId: scope_suifu_water_basin
+  yuanyingRealityAnchorId: anchor_yuanying_road

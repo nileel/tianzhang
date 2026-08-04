@@ -360,6 +360,106 @@ function Test-NpcCultivationActionWeightProfile {
   }
 }
 
+function Test-CharterSiteProjection {
+  param([object]$Table, [string[]]$LanguageIds)
+
+  $rows = @($Table.Rows)
+  if ($rows.Count -ne 1 -or $rows[0].siteId -cne 'charter_site_old_water_station') {
+    Add-Finding 'CHARTER_SITE_ROW_SET_INVALID' 'CharterSites' 'CSV must contain exactly the approved charter_site_old_water_station production row.'
+    return
+  }
+
+  $site = $rows[0]
+  $fixedFields = @{
+    settlementId = 'guanzhong_city'
+    passageCapabilityId = 'capability_kaihe_jiuzhang_v1'
+    passageProtocolState = 'compatible'
+    passageStructureState = 'intact'
+    passagePowerState = 'available'
+    interactionTimeProfileId = 'interaction_time_old_water_station_gate_v1'
+    recognitionTiming = 'instant'
+    operationTiming = 'sustained_guided'
+    cancellationPolicy = 'no_commit_on_cancel'
+    sealRelicId = 'relic_taixuan_realm_seal'
+    sealAuthorizationVersionId = 'authorization_taixuan_seal_old_water_station_management_v1'
+    ruleEntryId = 'charter_entry_suifu_diji'
+    grantId = 'cross_tier_charter_water_basin_v1'
+    grantQualificationSource = 'JindanProtection'
+  }
+  foreach ($name in $fixedFields.Keys) {
+    $value = [string]$site.PSObject.Properties[$name].Value
+    if ($value -cne $fixedFields[$name]) {
+      Add-Finding 'CHARTER_SITE_PROJECTION_INVALID' "CharterSites:$name" "Field must equal '$($fixedFields[$name])'."
+    }
+  }
+
+  $displayNameKey = [string]$site.PSObject.Properties['displayNameKey'].Value
+  if ($displayNameKey -notin $LanguageIds) {
+    Add-Finding 'CHARTER_SITE_LANGUAGE_MISSING' "CharterSites:$displayNameKey" 'Site display name key must exist in Language.csv.'
+  }
+
+  # 金丹样例：两侧候选互异；册界侧唯一绑定右侧候选，且左侧位别更高 → 确定性赢家不是册界侧。
+  $leftCandidateId = [string]$site.PSObject.Properties['leftCandidateId'].Value
+  $rightCandidateId = [string]$site.PSObject.Properties['rightCandidateId'].Value
+  $charterCandidateId = [string]$site.PSObject.Properties['charterCandidateId'].Value
+  if ($leftCandidateId -ceq $rightCandidateId) {
+    Add-Finding 'CHARTER_SITE_CANDIDATE_IDS_NOT_DISTINCT' 'CharterSites' 'Left and right candidate ids must be distinct.'
+  }
+  if ($charterCandidateId -cne $rightCandidateId) {
+    Add-Finding 'CHARTER_SITE_CHARTER_SIDE_UNDECLARED' 'CharterSites' "charterCandidateId must uniquely bind the right candidate '$rightCandidateId'."
+  }
+  $leftRank = [int]$site.PSObject.Properties['leftCandidatePositionRank'].Value
+  $rightRank = [int]$site.PSObject.Properties['rightCandidatePositionRank'].Value
+  if ($leftRank -le $rightRank) {
+    Add-Finding 'CHARTER_SITE_CHARTER_SIDE_NOT_STABLE' 'CharterSites' 'The charter side must deterministically lose the shared decision.'
+  }
+
+  # 元婴样例不得夹带金丹候选、grant 或可覆盖结果。
+  $yuanyingVariable = [string]$site.PSObject.Properties['yuanyingTargetVariableId'].Value
+  $grantVariable = [string]$site.PSObject.Properties['grantTargetVariableId'].Value
+  if ($yuanyingVariable -ceq $grantVariable) {
+    Add-Finding 'CHARTER_SITE_YUANYING_NOT_ISOLATED' 'CharterSites' 'Yuanying sample must target a different variable than the jindan grant.'
+  }
+
+  $assetDir = 'src/Assets/Data/CharterSites'
+  $assetName = 'CharterSite_charter_site_old_water_station.asset'
+  $assetPath = Join-Path $root (Join-Path $assetDir $assetName)
+  if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+    Add-Finding 'CHARTER_SITE_ASSET_MISSING' 'CharterSites' "CSV site has no matching asset: $assetDir/$assetName"
+    return
+  }
+  $assetNames = @(Get-ChildItem -LiteralPath (Join-Path $root $assetDir) -File -Filter *.asset | Select-Object -ExpandProperty Name)
+  if ($assetNames.Count -ne 1 -or $assetNames[0] -cne $assetName) {
+    Add-Finding 'CHARTER_SITE_ASSET_COVERAGE_INVALID' 'CharterSites' 'Charter site asset directory must contain exactly its one matching asset.'
+  }
+  foreach ($field in @('siteId', 'displayNameKey', 'settlementId', 'passageCapabilityId', 'interactionTimeProfileId', 'grantId', 'charterCandidateId')) {
+    $expected = [string]$site.PSObject.Properties[$field].Value
+    # grantId 序列化在 jindanGrant 嵌套对象内（四级缩进），其余检查字段为站点顶层字段。
+    $indent = if ($field -ceq 'grantId') { '    ' } else { '  ' }
+    $matches = @(Select-String -LiteralPath $assetPath -Pattern "^$([regex]::Escape($indent))$([regex]::Escape($field)):\s*(\S+)\s*$").Matches
+    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne $expected) {
+      Add-Finding 'CHARTER_SITE_ASSET_FIELD_MISMATCH' "CharterSite:$field" "Asset field must equal '$expected'."
+    }
+  }
+
+  # 唯一生产站点 asset 必须由内容目录按同一 GUID 引用。
+  $metaPath = Join-Path $root (Join-Path $assetDir "$assetName.meta")
+  $catalogPath = Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset'
+  if (-not (Test-Path -LiteralPath $metaPath -PathType Leaf)) {
+    Add-Finding 'CHARTER_SITE_ASSET_META_MISSING' 'CharterSites' 'Charter site asset .meta is missing.'
+    return
+  }
+  $guid = @(Select-String -LiteralPath $metaPath -Pattern '^\s*guid:\s*([0-9a-f]{32})\s*$').Matches
+  if ($guid.Count -ne 1) {
+    Add-Finding 'CHARTER_SITE_ASSET_META_INVALID' 'CharterSites' 'Charter site asset .meta must declare exactly one guid.'
+    return
+  }
+  if (-not (Test-Path -LiteralPath $catalogPath -PathType Leaf) -or
+      -not (Select-String -LiteralPath $catalogPath -Pattern ([regex]::Escape($guid[0].Groups[1].Value)) -Quiet)) {
+    Add-Finding 'CHARTER_SITE_CATALOG_REFERENCE_MISSING' 'CharterSites' 'ContentCatalog.asset must reference the single approved charter site asset.'
+  }
+}
+
 function Load-Waivers {
   $path = Join-Path $root 'tools/data-chain-warning-waivers.json'
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Error 'WAIVER_FILE_MISSING' 'tools/data-chain-warning-waivers.json' 'The precise-warning waiver file is required.'; return @() }
@@ -385,6 +485,7 @@ $schemas = [ordered]@{
   Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries')
   EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
+  CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','phase','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','releasedNaturalCapacity','expansionGrants','expandedMansionCapacity','totalMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
   JindanStaticStates = @('schemaId','schemaVersion','characterId','foundationPurpleMansionStateRef','mansionInputs','jindanCoreBinding','danxiang','stablePositionBindings','abilityLedgerBindings','fixtureId','expect','fixtureOnlyNumericProfile')
   NpcCultivationActionWeightProfiles = @('schemaId','schemaVersion','profileId','sourceContentHash','authorityKind','recordKind','recordId','actionStableId','legalityRuleSetRef','baseWeight','subjectiveRiskGateRef','enabled','sourceKind','selectorRef','priorityDelta','applicationOrder','capPolicyRef','diminishingPolicyRef','actionTotalCapPolicyRef','scope','minimum','maximum','appliesAfterSourceKind','inputBasis','activationThreshold','segments','outputBound','tieBreakPolicy','triggerStableId','riskThresholdDelta','knownEvidenceRefs','riskAssessmentRef','baseRiskThreshold','lifespanCapPolicyRef')
@@ -399,6 +500,7 @@ $tables = [ordered]@{
   Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries') @('guanzhong')
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
+  CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites
   FoundationPurpleMansionStates = Get-CsvTable 'src/Assets/DataConfig/FoundationPurpleMansionStates.csv' $schemas.FoundationPurpleMansionStates @('expansionGrants','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','fixtureId','expect','fixtureOnlyNumericProfile')
   JindanStaticStates = Get-CsvTable 'src/Assets/DataConfig/JindanStaticStates.csv' $schemas.JindanStaticStates @('fixtureId','expect','fixtureOnlyNumericProfile')
   NpcCultivationActionWeightProfiles = Get-CsvTable 'src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv' $schemas.NpcCultivationActionWeightProfiles $schemas.NpcCultivationActionWeightProfiles
@@ -414,6 +516,7 @@ Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
 Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
 Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfiles
 Test-FormalContentCatalog $tables.Settlements $tables.Items $tables.Bounties $tables.Enemies $languageIds
+Test-CharterSiteProjection $tables.CharterSites $languageIds
 
 foreach ($row in $tables.FoundationPurpleMansionStates.Rows) {
   foreach ($field in @('fixtureId', 'expect', 'fixtureOnlyNumericProfile')) {

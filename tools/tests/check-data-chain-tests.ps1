@@ -41,6 +41,8 @@ function New-ValidFixture {
     $skillRow = 'skill_fixture,1,1,4,1,1,1,0,0,0,0,0,0,0,desc_fixture,element_water,realm_lianqi,faction_fixture,player'
     $script:environmentProfileHeader = 'profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs'
     $script:charterRuleDefinitionHeader = 'ruleEntryId,displayName,ruleFamily,relationElement,compatiblePhenomena,positiveCommit,negativeCommit,requiredAuthority,requiredNodeTypes,scopeType,scopeTierCap,anchorNodeIds,propagationBoundaryProfileId,currentCoverageSet,affectedWorldVariables,conflictProfileId,failurePolicy,worldEventOutputs'
+    $script:charterSiteHeader = 'siteId,displayNameKey,settlementId,passageCapabilityId,passageOperatorId,passageTargetId,passageProtocolState,passageStructureState,passagePowerState,interactionTimeProfileId,recognitionTiming,operationTiming,cancellationPolicy,facilityId,sealRelicId,sealManagerId,sealBeneficiaryId,sealAuthorizationVersionId,ruleEntryId,ruleEntryOccupancyId,nodeOccupancyId,jindanConflictEventId,jindanChallengeEventId,grantId,grantDefinitionVersion,grantTargetVariableId,grantChallengerId,grantQualificationSource,grantAllowedOperationId,grantTargetId,grantScopeId,grantBeneficiaryId,grantRealityAnchorId,grantResourceLedgerRef,grantCapacityLedgerRef,grantChallengeRuleTier,grantEffectiveAtTick,grantExpiresAtTick,grantIsRevoked,grantRevocationReason,grantDisplaySource,leftCandidateId,leftCandidateTargetVariableId,leftCandidateTargetId,leftCandidateHasVariableAuthority,leftCandidateHasLegalTarget,leftCandidatePositionRank,leftCandidateRealityAnchorRank,leftCandidateAlreadyPaidCost,leftCandidateHasActiveContinuousCarrier,leftCandidateConflictReserve,leftCandidatePulseCost,leftCandidateSettlementCooldown,rightCandidateId,rightCandidateTargetVariableId,rightCandidateTargetId,rightCandidateHasVariableAuthority,rightCandidateHasLegalTarget,rightCandidatePositionRank,rightCandidateRealityAnchorRank,rightCandidateAlreadyPaidCost,rightCandidateHasActiveContinuousCarrier,rightCandidateConflictReserve,rightCandidatePulseCost,rightCandidateSettlementCooldown,charterCandidateId,yuanyingConflictEventId,yuanyingTargetVariableId,yuanyingTargetId,yuanyingScopeId,yuanyingRealityAnchorId'
+    $script:charterSiteRow = 'charter_site_old_water_station,charter_site_old_water_station,guanzhong_city,capability_kaihe_jiuzhang_v1,operator_old_water_station,gate_old_water_station_pump,compatible,intact,available,interaction_time_old_water_station_gate_v1,instant,sustained_guided,no_commit_on_cancel,facility_old_water_station,relic_taixuan_realm_seal,manager_old_water_station,beneficiary_water_basin,authorization_taixuan_seal_old_water_station_management_v1,charter_entry_suifu_diji,occupancy_suifu_diji_v1,occupancy_suifu_waterworks_v1,conflict_suifu_water_spirit_001,challenge_suifu_001,cross_tier_charter_water_basin_v1,1,water_element_spirit_flow,jindan_challenger,JindanProtection,charter_apply,node_old_water_station_waterworks,scope_suifu_water_basin,beneficiary_water_basin,anchor_suifu_waterway,ledger_suifu_resource,ledger_suifu_capacity,1,0,500,false,none,charter_site_old_water_station,jindan_left,water_element_spirit_flow,node_old_water_station_waterworks,true,true,3,1,2,true,6,2,3,jindan_right,water_element_spirit_flow,node_old_water_station_waterworks,true,true,2,1,2,true,6,2,3,jindan_right,anchor_suifu_water_001,wetland_waterline_state,node_old_water_station_river_wetland,scope_suifu_water_basin,anchor_yuanying_road'
 
     Write-FixtureFile (Join-Path "docs/$cultivation" "$gongFa/fixture/fixture.txt") 'fixture'
     Write-FixtureFile (Join-Path "docs/$cultivation" "$spells/fixture/fixture.txt") 'fixture'
@@ -50,6 +52,26 @@ function New-ValidFixture {
     Write-FixtureFile 'src/Assets/DataConfig/Skills.csv' "# fixture`n$skillHeader`n$skillRow`n"
     Write-FixtureFile 'src/Assets/DataConfig/EnvironmentProfiles.csv' "# fixture`n$script:environmentProfileHeader`n"
     Write-FixtureFile 'src/Assets/DataConfig/CharterRuleDefinitions.csv' "# fixture`n$script:charterRuleDefinitionHeader`n"
+    Write-FixtureFile 'src/Assets/DataConfig/CharterSites.csv' "# fixture`n$script:charterSiteHeader`n$script:charterSiteRow`n"
+    Write-FixtureFile 'src/Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset' @'
+  siteId: charter_site_old_water_station
+  displayNameKey: charter_site_old_water_station
+  settlementId: guanzhong_city
+  passageCapabilityId: capability_kaihe_jiuzhang_v1
+  interactionTimeProfileId: interaction_time_old_water_station_gate_v1
+  grantId: cross_tier_charter_water_basin_v1
+  charterCandidateId: jindan_right
+'@
+    Write-FixtureFile 'src/Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset.meta' @'
+fileFormatVersion: 2
+guid: d22b5344c9094d70a4755bec21554c95
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData:
+  assetBundleName:
+  assetBundleVariant:
+'@
     Write-FixtureFile 'src/Assets/DataConfig/Language.csv' "realm_lianqi,练气`n"
     Write-FixtureFile 'src/Assets/Data/GongFa/GongFa_gongfa_fixture.asset' "contentScope: player`n"
     Write-FixtureFile 'src/Assets/Data/Spells/Spell_spell_fixture.asset' "contentScope: player`nrealmRequirement: realm_lianqi`nelementRequirement: element_water_root`nsourceAffiliation: faction_fixture`n"
@@ -135,6 +157,18 @@ try {
 
     Add-Content -LiteralPath (Join-Path $fixtureRoot (Join-Path "docs/$cultivation" "$skills/fixture/unwaived.txt")) -Value 'unwaived'
     Assert-CheckerResult -Name 'unwaived new warning' -ShouldPass $false -ExpectedRuleId 'DOC_CSV_COUNT_MISMATCH'
+
+    (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterSites.csv')).Replace($script:charterSiteHeader, "$script:charterSiteHeader,unknown") | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterSites.csv')
+    Assert-CheckerResult -Name 'charter site schema unknown column' -ShouldPass $false -ExpectedRuleId 'CSV_SCHEMA_UNKNOWN_COLUMN'
+    New-ValidFixture
+
+    (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterSites.csv')).Replace('jindan_right,anchor_suifu_water_001', 'jindan_left,anchor_suifu_water_001') | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterSites.csv')
+    Assert-CheckerResult -Name 'charter site charter side undeclared' -ShouldPass $false -ExpectedRuleId 'CHARTER_SITE_CHARTER_SIDE_UNDECLARED'
+    New-ValidFixture
+
+    (Get-Content -Raw (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterSites.csv')).Replace('true,true,3,1,2,true,6,2,3,jindan_right,water_element_spirit_flow', 'true,true,2,1,2,true,6,2,3,jindan_right,water_element_spirit_flow') | Set-Content -Encoding utf8 (Join-Path $fixtureRoot 'src/Assets/DataConfig/CharterSites.csv')
+    Assert-CheckerResult -Name 'charter site charter side not stable' -ShouldPass $false -ExpectedRuleId 'CHARTER_SITE_CHARTER_SIDE_NOT_STABLE'
+    New-ValidFixture
 }
 finally {
     if (Test-Path -LiteralPath $fixtureRoot) { Remove-Item -Recurse -Force -LiteralPath $fixtureRoot }

@@ -26,6 +26,7 @@
 | `EnvironmentProfiles.csv` | 环境档案纯数据契约 | `Data/EnvironmentProfiles/EnvironmentProfile_*.asset` |
 | `FoundationPurpleMansionStates.csv` | 道基、紫府与修炼根状态（当前仅 schema） | `Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_*.asset` |
 | `JindanStaticStates.csv` | 金丹静态根（当前仅 schema） | `Data/JindanStaticStates/JindanStaticState_*.asset` |
+| `CharterSites.csv` | 册界单据点站点契约 | `Data/CharterSites/CharterSite_*.asset` |
 
 ## CSV 格式规则
 
@@ -114,6 +115,44 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
   全部外部引用都由同一目录解析；零、缺失或不匹配的 `definitionCatalogVersion` 不得从默认值推断。
 - `GameSessionSnapshot` schema 4 保存／恢复成对记录状态 presence、定义目录版本与深复制状态；
   schema 0～3 只恢复明确未接入状态，读档不重放供给、占用、提交、冲突或事件。
+
+## CharterSites.csv 契约
+
+本表只消费 `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`
+的站点数据契约；当前唯一生产站点是 `charter_site_old_water_station`（旧水驿，归属
+`guanzhong_city`）。`CharterSiteData` 只拥有静态站点契约，不保存玩家已完成动作；
+`ContentCatalogData` 只持有唯一生产 asset 并提供只读精确查询。
+
+- 表头按语义分组固定为：站点身份（`siteId`、`displayNameKey`、`settlementId`）、通行
+  （`passageCapabilityId`、`passageOperatorId`、`passageTargetId`、`passageProtocolState`、
+  `passageStructureState`、`passagePowerState`、`interactionTimeProfileId`、`recognitionTiming`、
+  `operationTiming`、`cancellationPolicy`）、管理（`facilityId`、`sealRelicId`、
+  `sealManagerId`、`sealBeneficiaryId`、`sealAuthorizationVersionId`）、册界（`ruleEntryId`、
+  `ruleEntryOccupancyId`、`nodeOccupancyId`）、金丹样例（`jindanConflictEventId`、
+  `jindanChallengeEventId` 与 `grant*`、`leftCandidate*`、`rightCandidate*`、`charterCandidateId`
+  前缀列）和元婴样例（`yuanying*` 五列）；未知列、缺列和空的生产字段失败关闭。
+- 站点自有 ID 必须在本表内唯一、非空并满足固定语义：`passageCapabilityId` 固定为
+  `capability_kaihe_jiuzhang_v1`，`interactionTimeProfileId` 固定为
+  `interaction_time_old_water_station_gate_v1`，同一行显式声明“识别瞬时
+  （`recognitionTiming=instant`）、操作持续引导（`operationTiming=sustained_guided`）、取消不提交
+  （`cancellationPolicy=no_commit_on_cancel`）”；门禁协议、结构与供能必须显式为
+  `compatible`／`intact`／`available`。操作者、管理者和受益者是本站点职责 ID，不伪装成全局
+  角色 ID，通行资格不能成为管理资格。
+- 跨契约字段由既有定义与静态目录解析：`settlementId` 必须为唯一正式据点 `guanzhong_city`；
+  `sealRelicId`、`sealAuthorizationVersionId`、`ruleEntryId`、grant／元婴的世界变量与节点必须
+  在 `CharterRuleStaticCatalog.asset` 的批准目录中解析；锚点、覆盖、正负提交和现实供给不在
+  本表重复抄写。
+- 金丹 grant 由本站点静态数据完整拥有：`grantId` 必须已经列在水府地纪 `conflictProfileId`
+  冲突档案的 `crossTierChallengeGrantIds` 目录中，`grantDefinitionVersion` 必须等于当前静态
+  目录版本；版本、变量、操作、对象、范围、受益者、现实支点、资源／容量账本、层级、生效／
+  失效 tick、撤销状态／原因和显示来源均显式声明。左右候选以 `leftCandidate*`／
+  `rightCandidate*` 前缀完整承载十二字段，不得由运行时补默认值；两侧候选 ID 互异，
+  `charterCandidateId` 唯一锁定册界侧。
+- 导入验证用同一 shared 决定消费完整 grant、版本化请求与左右候选；确定性赢家不是
+  `charterCandidateId` 时整行才通过（册界侧稳定未获胜），字段变化使该结论不再稳定时整表拒绝。
+- 元婴样例只携带冲突事件、目标变量、对象、范围与道路锚点五个身份 ID，结果固定为受锚且不
+  提交状态；夹带金丹候选、grant 或可覆盖结果时整表拒绝。任一非法输入都在写入任何 asset 前
+  失败关闭。
 
 ## JindanStaticStates.csv 契约
 
