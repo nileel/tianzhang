@@ -495,7 +495,7 @@ namespace TianZhang.Tests
 
                 dispatcher.RegisterInitialFeatureHandlers();
                 Assert.IsTrue(dispatcher.TryDispatch(enabledBounty, out var bountyReason));
-                Assert.AreEqual(SettlementFeatureDispatcher.BountyBoardEntryReadyReason, bountyReason);
+                Assert.AreEqual(SettlementFeatureDispatcher.BountyBoardEntryOpenedReason, bountyReason);
                 Assert.AreEqual(SettlementFeatureDispatcher.BountyBoardFeatureId, dispatcher.LastDispatchedFeatureId);
 
                 Assert.IsFalse(dispatcher.TryDispatch(new SettlementFeatureData
@@ -530,6 +530,7 @@ namespace TianZhang.Tests
             var controller = Object.FindFirstObjectByType<SettlementSceneController>();
             var view = Object.FindFirstObjectByType<SettlementSceneView>();
             var dispatcher = Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
+            var board = Object.FindFirstObjectByType<BountyBoardView>(FindObjectsInactive.Include);
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
             var serializedController = new SerializedObject(controller);
@@ -537,9 +538,22 @@ namespace TianZhang.Tests
             Assert.IsNotNull(controller);
             Assert.IsNotNull(view);
             Assert.IsNotNull(dispatcher);
+            Assert.IsNotNull(board);
             Assert.AreSame(catalog, serializedController.FindProperty("contentCatalog").objectReferenceValue);
             Assert.AreSame(view, serializedController.FindProperty("sceneView").objectReferenceValue);
             Assert.AreSame(dispatcher, serializedController.FindProperty("featureDispatcher").objectReferenceValue);
+
+            var serializedView = new SerializedObject(view);
+            Assert.AreSame(board, serializedView.FindProperty("bountyBoardView").objectReferenceValue);
+
+            var serializedBoard = new SerializedObject(board);
+            Assert.IsNotNull(serializedBoard.FindProperty("entriesText").objectReferenceValue);
+            Assert.IsNotNull(serializedBoard.FindProperty("resultText").objectReferenceValue);
+            Assert.IsNotNull(serializedBoard.FindProperty("acceptButton").objectReferenceValue);
+            Assert.IsNotNull(serializedBoard.FindProperty("claimButton").objectReferenceValue);
+            Assert.IsNotNull(serializedBoard.FindProperty("closeButton").objectReferenceValue);
+            Assert.AreEqual("BountyBoardPanel", board.gameObject.name);
+            Assert.IsFalse(board.IsOpen, "BountyBoardPanel must stay closed until the bounty_board feature is dispatched.");
         }
 
         [Test]

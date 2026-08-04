@@ -1,0 +1,361 @@
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using NUnit.Framework;
+using TianZhang.Content;
+using TianZhang.Editor;
+using TianZhang.Game;
+using TianZhang.Settlement;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+
+namespace TianZhang.Tests
+{
+    public sealed class BountyBoardViewTests
+    {
+        private const string BountyId = "bounty_guanzhong_shijiahou";
+        private const string DraftBountyId = "bounty_guanzhong_draft";
+        private const string OtherSettlementBountyId = "bounty_other_city";
+        private const string SettlementId = "guanzhong_city";
+        private const string AdventureId = "guanzhong_wild";
+        private const string EnemyId = "enemy_shijiahou";
+
+        private readonly List<UnityEngine.Object> temporaryAssets = new List<UnityEngine.Object>();
+        private GameObject sessionGo;
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (sessionGo != null)
+                UnityEngine.Object.DestroyImmediate(sessionGo);
+            DestroyExistingSceneFlowAndSession();
+            foreach (UnityEngine.Object asset in temporaryAssets)
+                UnityEngine.Object.DestroyImmediate(asset);
+        }
+
+        [Test]
+        public void ProductionGuanzhongBountyOpensBoardAndAcceptsFromBoard()
+        {
+            GameSession session = OpenBuiltSettlementScene(out BountyBoardView board, out _);
+            try
+            {
+                Assert.IsFalse(board.IsOpen);
+                var featureButton = GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>();
+
+                featureButton.onClick.Invoke();
+
+                Assert.IsTrue(board.IsOpen);
+                Assert.AreEqual(BountyId, board.CurrentBountyId);
+                Assert.AreEqual(1, board.ListedBountyCount);
+                StringAssert.Contains("bounty_board_entry_opened", BoardStatusText().text);
+                StringAssert.Contains(BountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
+
+                GetBoardButton(board, "acceptButton").onClick.Invoke();
+
+                Assert.AreEqual(BountyStatus.Accepted, session.GetBountyState(BountyId).Status);
+                StringAssert.Contains(BountyId + " | Accepted | 0/1", BoardEntriesText(board).text);
+                Assert.AreEqual(BountyBoardView.BoardAcceptSucceededReason + ":" + BountyId, board.LastResultReason);
+
+                GetBoardButton(board, "closeButton").onClick.Invoke();
+                Assert.IsFalse(board.IsOpen);
+            }
+            finally
+            {
+                DestroyImmediateSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void ObjectiveCompletedBountyCanBeClaimedFromBoard()
+        {
+            GameSession session = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
+            try
+            {
+                GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
+                GetBoardButton(board, "acceptButton").onClick.Invoke();
+                AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
+
+                GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
+                StringAssert.Contains(BountyId + " | ObjectiveCompleted | 1/1", BoardEntriesText(board).text);
+
+                GetBoardButton(board, "claimButton").onClick.Invoke();
+
+                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
+                StringAssert.Contains(BountyId + " | Claimed | 1/1", BoardEntriesText(board).text);
+                Assert.AreEqual(BountyBoardView.BoardClaimSucceededReason + ":" + BountyId, board.LastResultReason);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out InventoryStateSnapshot granted));
+                Assert.AreEqual(3, granted.Quantity);
+            }
+            finally
+            {
+                DestroyImmediateSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void ClaimedBountyCannotBeClaimedAgainFromBoard()
+        {
+            GameSession session = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
+            try
+            {
+                GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
+                GetBoardButton(board, "acceptButton").onClick.Invoke();
+                AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
+                GetBoardButton(board, "claimButton").onClick.Invoke();
+                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
+
+                GetBoardButton(board, "claimButton").onClick.Invoke();
+
+                Assert.AreEqual(BountyRuntimeRules.RepeatedClaimReason, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
+                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out InventoryStateSnapshot granted));
+                Assert.AreEqual(3, granted.Quantity);
+            }
+            finally
+            {
+                DestroyImmediateSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void IllegalNonProductionAndWrongSettlementRequestsDoNotFabricateDisplayOrState()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
+            GameSession session = CreateSession();
+            BountyBoardView board = FindBoardFromBuiltScene();
+            ContentCatalogData catalog = CreateCatalogWithOutOfScopeBounties();
+            try
+            {
+                board.Show(catalog, SettlementId, session);
+
+                StringAssert.Contains(BountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                StringAssert.Contains(DraftBountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                Assert.IsFalse(BoardEntriesText(board).text.Contains(OtherSettlementBountyId));
+
+                board.SubmitAccept(DraftBountyId);
+                Assert.AreEqual(BountyRuntimeRules.BountyNotProductionReason, board.LastResultReason);
+                Assert.IsFalse(session.BountyStates.TryGet(DraftBountyId, out _));
+
+                board.SubmitAccept(OtherSettlementBountyId);
+                Assert.AreEqual(BountyRuntimeRules.WrongSettlementReason, board.LastResultReason);
+                Assert.IsFalse(session.BountyStates.TryGet(OtherSettlementBountyId, out _));
+
+                board.SubmitAccept("bounty_unknown");
+                Assert.AreEqual(BountyRuntimeRules.BountyMissingReason, board.LastResultReason);
+                Assert.IsFalse(session.BountyStates.TryGet("bounty_unknown", out _));
+
+                StringAssert.Contains(BountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                StringAssert.Contains(DraftBountyId + " | Available | 0/1", BoardEntriesText(board).text);
+            }
+            finally
+            {
+                DestroyImmediateSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void UnknownAndDisabledFeaturesDoNotOpenBoard()
+        {
+            OpenBuiltSettlementScene(out BountyBoardView board, out _);
+            try
+            {
+                var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
+                var dispatchFeature = typeof(SettlementSceneController).GetMethod(
+                    "DispatchFeature",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                dispatchFeature.Invoke(controller, new object[]
+                {
+                    new SettlementFeatureData
+                    {
+                        featureId = SettlementFeatureDispatcher.BountyBoardFeatureId,
+                        availability = "disabled",
+                        disabledReasonKey = "settlement_feature_disabled",
+                    },
+                });
+                Assert.IsFalse(board.IsOpen);
+                StringAssert.Contains(
+                    SettlementFeatureDispatcher.FeatureDisabledReason + ":settlement_feature_disabled",
+                    BoardStatusText().text);
+
+                dispatchFeature.Invoke(controller, new object[]
+                {
+                    new SettlementFeatureData
+                    {
+                        featureId = "market",
+                        availability = "enabled",
+                    },
+                });
+                Assert.IsFalse(board.IsOpen);
+                StringAssert.Contains(
+                    SettlementFeatureDispatcher.FeatureUnknownReason + ":market",
+                    BoardStatusText().text);
+            }
+            finally
+            {
+                DestroyImmediateSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void HandlerExceptionFailsClosedWithoutOpeningBoard()
+        {
+            OpenBuiltSettlementScene(out BountyBoardView board, out _);
+            try
+            {
+                var dispatcher = UnityEngine.Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
+                var handlersField = typeof(SettlementFeatureDispatcher).GetField(
+                    "handlers",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var handlers = (Dictionary<string, Func<SettlementFeatureData, string>>)handlersField.GetValue(dispatcher);
+                handlers[SettlementFeatureDispatcher.BountyBoardFeatureId] = _ =>
+                    throw new InvalidOperationException("bounty_board_handler_boom");
+
+                LogAssert.Expect(
+                    LogType.Error,
+                    new Regex("SettlementFeatureDispatcher.*bounty_board.*bounty_board_handler_boom"));
+                GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
+
+                Assert.IsFalse(board.IsOpen);
+                StringAssert.Contains(
+                    SettlementFeatureDispatcher.FeatureHandlerFailedReason + ":bounty_board",
+                    BoardStatusText().text);
+            }
+            finally
+            {
+                DestroyImmediateSceneFlowAndSession();
+            }
+        }
+
+        private GameSession OpenBuiltSettlementScene(
+            out BountyBoardView board,
+            out ContentCatalogData catalog)
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
+
+            sessionGo = new GameObject("BountyBoardSession");
+            GameSession session = sessionGo.AddComponent<GameSession>();
+            session.SetWorldNode("guanzhong_hub");
+            session.SetSettlementId(SettlementId);
+
+            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
+            controller.GetType()
+                .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(controller, null);
+
+            board = FindBoardFromBuiltScene();
+            catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            return session;
+        }
+
+        private static BountyBoardView FindBoardFromBuiltScene()
+        {
+            return UnityEngine.Object.FindFirstObjectByType<BountyBoardView>(FindObjectsInactive.Include);
+        }
+
+        private GameSession CreateSession()
+        {
+            sessionGo = new GameObject("BountyBoardSession");
+            GameSession session = sessionGo.AddComponent<GameSession>();
+            session.SetSettlementId(SettlementId);
+            return session;
+        }
+
+        private ContentCatalogData CreateCatalogWithOutOfScopeBounties()
+        {
+            ContentCatalogData catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            var settlement = Track(ScriptableObject.CreateInstance<SettlementData>());
+            settlement.settlementId = SettlementId;
+            var enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+            enemy.enemyId = EnemyId;
+            var reward = Track(ScriptableObject.CreateInstance<ItemData>());
+            reward.itemId = "item_lingshi_low";
+            reward.contentScope = InventoryGrantService.ProductionContentScope;
+            reward.maxStack = 99;
+
+            BountyData production = Track(CreateBounty(BountyId, scope: InventoryGrantService.ProductionContentScope));
+            BountyData draft = Track(CreateBounty(DraftBountyId, scope: "content_scope_draft"));
+            BountyData otherSettlement = Track(CreateBounty(OtherSettlementBountyId, scope: InventoryGrantService.ProductionContentScope));
+            otherSettlement.issuerSettlementId = "other_city";
+
+            catalog.ReplaceEntries(
+                new[] { settlement },
+                new[] { enemy },
+                new[] { reward },
+                new[] { production, draft, otherSettlement });
+            return catalog;
+        }
+
+        private BountyData CreateBounty(string bountyId, string scope)
+        {
+            BountyData bounty = Track(ScriptableObject.CreateInstance<BountyData>());
+            bounty.bountyId = bountyId;
+            bounty.contentScope = scope;
+            bounty.issuerSettlementId = SettlementId;
+            bounty.objectiveType = "defeat_enemy";
+            bounty.targetEnemyId = EnemyId;
+            bounty.requiredCount = 1;
+            bounty.allowedAdventureId = AdventureId;
+            bounty.rewardEntries = new[]
+            {
+                new BountyRewardEntry { itemId = "item_lingshi_low", quantity = 3 },
+            };
+            bounty.repeatPolicy = "one_time";
+            return bounty;
+        }
+
+        private T Track<T>(T value)
+            where T : UnityEngine.Object
+        {
+            temporaryAssets.Add(value);
+            return value;
+        }
+
+        private static Button GetBoardButton(BountyBoardView board, string propertyName)
+        {
+            var serialized = new SerializedObject(board);
+            return serialized.FindProperty(propertyName).objectReferenceValue as Button;
+        }
+
+        private static Text BoardEntriesText(BountyBoardView board)
+        {
+            var serialized = new SerializedObject(board);
+            return serialized.FindProperty("entriesText").objectReferenceValue as Text;
+        }
+
+        private static Text BoardStatusText()
+        {
+            return GameObject.Find("SettlementStatusText")?.GetComponent<Text>();
+        }
+
+        private static void AssertSucceeded(BountyActionResult result)
+        {
+            Assert.IsTrue(result.Succeeded, result.FailureReason);
+        }
+
+        private void DestroyImmediateSceneFlowAndSession()
+        {
+            if (sessionGo != null)
+                UnityEngine.Object.DestroyImmediate(sessionGo);
+            sessionGo = null;
+            DestroyExistingSceneFlowAndSession();
+        }
+
+        private static void DestroyExistingSceneFlowAndSession()
+        {
+            if (SceneFlowManager.Instance != null)
+                UnityEngine.Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
+            if (GameSession.Instance != null)
+                UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
+        }
+    }
+}

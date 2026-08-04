@@ -85,3 +85,24 @@
 ## 后续
 
 - `U-BOUNTY-01C` 仍作为独立阻塞任务接入悬赏板界面与城市入口；其是否恢复 ready 只由该任务卡决定，存档事实继续只由 `GameSession` 与其既有快照链路拥有。
+
+## U-BOUNTY-01C · 2026-08-04
+
+- 面板接入：新增独立 `BountyBoardView`（Settlement 程序集内、场景序列化引用），由 `SettlementSceneView` 持有；`SettlementSceneController` 只在 `bounty_board` 成功分发且返回已接入原因后经视图打开面板。面板只枚举当前正式据点由 `ContentCatalogData.GetBountiesByIssuer` 返回的悬赏，逐行显示稳定 ID、实际状态与进度（`id | 状态 | 进度/目标`），接取／领奖只把 `bountyId` 交给当前 `GameSession.AcceptBounty`／`ClaimBounty`，每次调用后从同一 `GameSession.GetBountyState` 刷新显示；不判断悬赏规则、不拥有实例状态，不伪造目标、奖励、成功日志、状态转换或默认条目。
+- 分发器区分：`SettlementFeatureDispatcher` 的已接入原因由 pending-panel 占位原因 `bounty_board_entry_ready_pending_panel` 改为 `bounty_board_entry_opened`；未知、禁用、未注册或处理异常的 feature 仍返回稳定原因并失败关闭，不打开面板。
+- 场景重建：`SceneBuilder.BuildSettlementScene` 创建 `BountyBoardPanel`（初始非激活）与标题、条目、结果文本及接取／领奖／关闭按钮，序列化引用绑定到 `BountyBoardView`，`SettlementSceneView` 再持有面板引用；重新生成场景后面板、视图、控制器与分发器引用完整，正式场景 meta GUID 与冒险入口未改变。
+- 用例：新增 `BountyBoardViewTests` 6 项直接用例——关中唯一生产悬赏经功能按钮打开并接取、完成态可领奖并授予 `item_lingshi_low`、`Claimed` 不可重复领奖、非法／非生产／非当前据点请求显示实际稳定原因且不改状态、未知／禁用功能不打开面板、处理器异常失败关闭；`SceneArchitectureEditorTests` 的分发器用例改断言已接入原因，场景构建用例扩展证明面板、视图和序列化引用存在。
+- 边界：未修改 `GameSession`、`BountyRuntime`、`BountyStateStore`、schema 3、内容目录、CSV、Language、asset、奖励参数、掉落概率、堆叠上限、战斗计数、Adventure 结算或世界／副本返回所有者；未增加第二 Canvas、第二据点、随机悬赏池、每日刷新或新的 BountyData。
+
+## U-BOUNTY-01C 已执行验证（Unity 6000.3.18f1 EditMode，2026-08-04）
+
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目；首轮重建 Library，终轮结果如下）。完整 EditMode：341 项，339 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。脚本因该 2 项既有失败以非零退出，属其零失败门禁的预期行为。
+- 本卡直接用例：`BountyBoardViewTests` 6/6、`SceneArchitectureEditorTests` 22/22（含分发器已接入原因与场景序列化引用扩展用例）、`BountyRuntimeTests` 17/17、`SessionStateSnapshotTests` 16/16、`AdventureSceneControllerTests` 14/14、`TacticalGridModelTests` 4/4 全部通过。实现迭代中修正两处测试问题并如实重跑：按钮监听改为 `Show` 时绑定（场景保存重开后不丢失），领奖用例先重新打开面板刷新完成态显示；终轮无本卡失败。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：0 错误通过，保留 2 项无关 Charter 静态目录字段警告（与 U-BOUNTY-01B1 记录一致）。
+- 场景重建：以同一 Unity 6000.3.18f1 批处理执行 `-executeMethod TianZhang.Editor.SceneBuilder.BuildSettlementScene` 生成 `SettlementScene.unity`，面板初始非激活，视图与面板序列化引用完整，场景 meta GUID 不变。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests`：通过，检查 258 个文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（本卡 candidate 路径）：通过，检查 11 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+
+## 后续
+
+- `U-GZ-FORMAL-E2E-01` 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环；本卡悬赏事实仍只由 `GameSession` 与其既有快照链路拥有。

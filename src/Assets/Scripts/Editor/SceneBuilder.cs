@@ -508,7 +508,8 @@ namespace TianZhang.Editor
                 featureButtonText,
                 adventureButton,
                 adventureButtonText,
-                returnButton);
+                returnButton,
+                CreateBountyBoard(canvasGo.transform));
 
             var dispatcherGo = new GameObject("SettlementFeatureDispatcher");
             var dispatcher = dispatcherGo.AddComponent<SettlementFeatureDispatcher>();
@@ -519,6 +520,51 @@ namespace TianZhang.Editor
                 UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
                 SettlementScenePath);
             Debug.Log("<color=cyan>天章据点场景已生成</color>");
+        }
+
+        private static BountyBoardView CreateBountyBoard(Transform canvas)
+        {
+            var boardGo = new GameObject(
+                "BountyBoardPanel",
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(VerticalLayoutGroup));
+            boardGo.transform.SetParent(canvas, false);
+            var boardRect = boardGo.GetComponent<RectTransform>();
+            boardRect.anchorMin = new Vector2(0.5f, 0.5f);
+            boardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            boardRect.pivot = new Vector2(0.5f, 0.5f);
+            boardRect.anchoredPosition = Vector2.zero;
+            boardRect.sizeDelta = new Vector2(560f, 520f);
+            var boardImage = boardGo.GetComponent<Image>();
+            SetSerializedComponentName(boardImage, "BountyBoardPanelImage");
+            boardImage.color = new Color(0.05f, 0.07f, 0.1f, 0.95f);
+            var boardLayout = boardGo.GetComponent<VerticalLayoutGroup>();
+            SetSerializedComponentName(boardLayout, "BountyBoardPanelLayout");
+            boardLayout.padding = new RectOffset(24, 24, 24, 24);
+            boardLayout.spacing = 8f;
+            boardLayout.childForceExpandWidth = true;
+            boardLayout.childForceExpandHeight = false;
+
+            var title = CreateSettlementText("BountyBoardTitleText", boardGo.transform, "悬赏面板", 26, Color.white, 40f);
+            var entries = CreateSettlementText(
+                "BountyBoardEntriesText",
+                boardGo.transform,
+                "等待悬赏数据",
+                14,
+                new Color(0.85f, 0.85f, 0.75f),
+                200f);
+            var result = CreateSettlementText("BountyBoardResultText", boardGo.transform, "等待悬赏操作", 14, Color.gray, 36f);
+            var acceptButton = CreateSettlementButton("BountyBoardAcceptButton", "接取", boardGo.transform, out Text acceptText);
+            var claimButton = CreateSettlementButton("BountyBoardClaimButton", "领奖", boardGo.transform, out Text claimText);
+            var closeButton = CreateSettlementButton("BountyBoardCloseButton", "关闭", boardGo.transform, out Text closeText);
+            closeButton.GetComponent<Image>().color = new Color(0.32f, 0.38f, 0.28f, 1f);
+
+            var board = boardGo.AddComponent<BountyBoardView>();
+            SetSerializedComponentName(board, "BountyBoardView");
+            board.Configure(title, entries, result, acceptButton, claimButton, closeButton);
+            boardGo.SetActive(false);
+            return board;
         }
 
         private static Text CreateSettlementText(

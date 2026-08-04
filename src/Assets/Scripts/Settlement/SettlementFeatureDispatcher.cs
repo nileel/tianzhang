@@ -14,7 +14,7 @@ namespace TianZhang.Settlement
         public const string FeatureUnknownReason = "settlement_feature_unknown";
         public const string FeatureHandlerUnregisteredReason = "settlement_feature_handler_unregistered";
         public const string FeatureHandlerFailedReason = "settlement_feature_handler_failed";
-        public const string BountyBoardEntryReadyReason = "bounty_board_entry_ready_pending_panel";
+        public const string BountyBoardEntryOpenedReason = "bounty_board_entry_opened";
 
         private readonly Dictionary<string, Func<SettlementFeatureData, string>> handlers =
             new Dictionary<string, Func<SettlementFeatureData, string>>(StringComparer.Ordinal);
@@ -74,7 +74,7 @@ namespace TianZhang.Settlement
 
         private static string EnterBountyBoard(SettlementFeatureData feature)
         {
-            return BountyBoardEntryReadyReason;
+            return BountyBoardEntryOpenedReason;
         }
     }
 }

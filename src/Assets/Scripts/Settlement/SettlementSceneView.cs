@@ -1,5 +1,6 @@
 using System;
 using TianZhang.Content;
+using TianZhang.Game;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,7 @@ namespace TianZhang.Settlement
         [SerializeField] private Button adventureButton;
         [SerializeField] private Text adventureButtonText;
         [SerializeField] private Button returnToWorldButton;
+        [SerializeField] private BountyBoardView bountyBoardView;
 
         public void Configure(
             Text nameText,
@@ -24,7 +26,8 @@ namespace TianZhang.Settlement
             Text nextFeatureButtonText,
             Button nextAdventureButton,
             Text nextAdventureButtonText,
-            Button nextReturnToWorldButton)
+            Button nextReturnToWorldButton,
+            BountyBoardView nextBountyBoard)
         {
             settlementNameText = nameText;
             settlementDetailText = detailText;
@@ -34,6 +37,7 @@ namespace TianZhang.Settlement
             adventureButton = nextAdventureButton;
             adventureButtonText = nextAdventureButtonText;
             returnToWorldButton = nextReturnToWorldButton;
+            bountyBoardView = nextBountyBoard;
         }
 
         public void SetReturnToWorldAction(Action action)
@@ -95,6 +99,12 @@ namespace TianZhang.Settlement
         public void ShowFeatureResult(string reason)
         {
             SetStatus(reason);
+        }
+
+        public void OpenBountyBoard(ContentCatalogData catalog, string settlementId, GameSession session)
+        {
+            if (bountyBoardView != null)
+                bountyBoardView.Show(catalog, settlementId, session);
         }
 
         public void ShowAdventureResult(string reason)

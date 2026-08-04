@@ -4,13 +4,13 @@
   "id": "U-BOUNTY-01C",
   "title": "建立正式悬赏面板并接入关中城 `bounty_board` 功能。",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-04：U-BOUNTY-01B1 已完成并通过 Codex 独立复审；负责人明确要求恢复，本卡前置已满足，现按原 external_execute/deepseek 主责人工恢复 ready。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
     "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
@@ -26,7 +26,8 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-BOUNTY-01C.txt",
-    "开发管理/任务归档/U-BOUNTY-01C.txt"
+    "开发管理/任务归档/U-BOUNTY-01C.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

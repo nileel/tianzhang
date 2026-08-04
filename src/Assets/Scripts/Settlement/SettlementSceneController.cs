@@ -168,8 +168,20 @@ namespace TianZhang.Settlement
                 return;
             }
 
-            featureDispatcher.TryDispatch(feature, out string reason);
+            if (!featureDispatcher.TryDispatch(feature, out string reason))
+            {
+                sceneView?.ShowFeatureResult(reason);
+                return;
+            }
+
             sceneView?.ShowFeatureResult(reason);
+            if (string.Equals(
+                    reason,
+                    SettlementFeatureDispatcher.BountyBoardEntryOpenedReason,
+                    StringComparison.Ordinal))
+            {
+                sceneView?.OpenBountyBoard(contentCatalog, CurrentSettlementId, GameSession.Instance);
+            }
         }
 
         private void ShowFailure(string reason)

@@ -127,3 +127,16 @@
 - 残留风险：2 项既有 EditMode 基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 的 PULSE_ADVANTAGE 断言、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad 旧日志断言）与返工路径无交集，未修复未掩盖，仍待其所有者 Codex 按既有登记裁决；check-task-cards ExternalPendingReview 后置条件须由共享入口在正式转换后复跑；返工失败关闭的完整性由 Codex 独立复审最终确认。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-BOUNTY-01C-b24a577f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01C 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01C
+- 候选提交：0b41242930b16c63f8cae2516300f593888ac493
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中悬赏状态机与计数验证记录.txt、src/Assets/Scenes/SettlementScene.unity、src/Assets/Scripts/Editor/SceneBuilder.cs、src/Assets/Scripts/Settlement/BountyBoardView.cs、src/Assets/Scripts/Settlement/BountyBoardView.cs.meta、src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs、src/Assets/Scripts/Settlement/SettlementSceneController.cs、src/Assets/Scripts/Settlement/SettlementSceneView.cs、src/Assets/Tests/EditMode/BountyBoardViewTests.cs、src/Assets/Tests/EditMode/BountyBoardViewTests.cs.meta、src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs
+- 已验证：EditMode 终轮 341 项：339 通过、2 失败，失败均为与本卡路径无关的已登记基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField；DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad），逐项记录未掩盖；本卡直接用例全通过：BountyBoardViewTests 6/6、SceneArchitectureEditorTests 22/22、BountyRuntimeTests 17/17、SessionStateSnapshotTests 16/16、AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4；dotnet build src/TianZhang.EditModeTests.csproj：0 错误（保留 2 项既有无关 Charter 字段警告）；tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests：通过，258 个文件；tools/check-pending-whitespace.ps1：通过 11 个文件；git diff --cached --check 通过；SettlementScene.unity 以同一 Unity 6000.3.18f1 批处理重建：面板初始非激活、视图与面板序列化引用完整、场景 meta GUID 未变；场景序列化引用由扩展后的场景构建用例断言；candidate 为 baseCommit 2236516 的直接后继，changed paths 恰为 11 项 expectedPaths 子集，worktree 清洁
+- 未验证：Codex 独立复审（待 Codex 复审，不预填结论）；共享入口基于最新 master 的重放、原子正式提交与排他集成（candidate 不执行正式集成，不更新队列/任务卡投影）；面板按钮作用于枚举首条悬赏，多悬赏条目下的交互未验证（本轮生产数据唯一 bounty_guanzhong_shijiahou）
+- 残留风险：全量 EditMode 仍有 2 项与本卡路径无关的既有基线失败（已逐项登记，脚本按其零失败门禁非零退出）；重建场景使既有对象的序列化 fileID 重排，属于任务要求的“提交重建场景”流程固有结果，已由 22 项场景架构用例与序列化引用断言覆盖；面板的接取／领奖作用于目录枚举首条悬赏，本轮正式数据唯一，多条目选择交互留待后续任务。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
