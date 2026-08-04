@@ -1,0 +1,110 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-TZ-CHARTER-SLICE-01B",
+  "title": "Settlement 单据点交互与最小 UI",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-TZ-CHARTER-SLICE-01A"
+  ],
+  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 U-TZ-CHARTER-SLICE-01A，前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Settlement/CharterSiteController.cs",
+    "src/Assets/Scripts/Settlement/CharterSiteController.cs.meta",
+    "src/Assets/Scripts/Settlement/CharterSiteView.cs",
+    "src/Assets/Scripts/Settlement/CharterSiteView.cs.meta",
+    "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Tests/EditMode/CharterSiteViewTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteViewTests.cs.meta",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "开发管理/册界单据点交互与UI验证记录.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01B.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01C.txt",
+    "开发管理/任务归档/U-TZ-CHARTER-SLICE-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-TZ-CHARTER-SLICE-01B · Settlement 单据点交互与最小 UI
+
+## 来源与当前边界
+
+- 唯一批准依据是 `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`，尤其是“五、玩家交互与数据流”“六、UI 与场景边界”“七、失败关闭与原子性”“8.3”和“九、验证矩阵”。
+- 本卡只消费完成并通过独立复审的 01A 动作、preparation 和结果；不得在 Settlement 层重建前置状态、请求、冲突或提交规则。
+- 现有 `SettlementScene`、`SettlementSceneController`、`SettlementSceneView` 和唯一 `UICanvas` 保持正式所有者；父项 `U-TZ-CHARTER-SLICE-01` 不直接执行。
+
+## 目标与非目标
+
+- 目标：在正式 `guanzhong_city` 的旧水驿入口打开唯一站点面板，以明确顺序提交 01A 动作并显示真实稳定 ID、缺口、结果和失败原因。
+- 目标：新增独立 `CharterSiteController`／`CharterSiteView`，重建正式 `SettlementScene` 后保持全部序列化引用完整。
+- 非目标：不在 UI 实现规则、candidate、长期状态、存档、冲突排序或环境投影；不创建第二 Canvas、第二 Settlement 场景或全局 UI 单例。
+
+## 根因与生产契约
+
+- 根因是现有 Settlement 没有册界站点入口；若把规则塞入既有控制器、SceneBuilder 默认值或 UI 布尔，会绕过 01A 的唯一生产入口并让表现层成为状态所有者。
+- `SettlementSceneController` 只从 `ContentCatalogData` 精确取得当前站点、提供同一 `GameSession` 引用并打开面板；`CharterSiteController` 只调用 01A 动作／评估入口，`CharterSiteView` 只提交和刷新结果。
+- 面板显示的完成度只能来自 `CharterSiteInteractionProgress` 或正式调用后的 `GameSession.CharterRuntimeState`；通行不能自动授予管理权，UI 不得伪造 recognized／connected／registered。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md#五、玩家交互与数据流`、`#六、UI-与场景边界`、`#七、失败关闭与原子性`、`#83-U-TZ-CHARTER-SLICE-01B-Settlement-单据点交互与最小-UI`。
+- 完成后的 `开发管理/任务归档/U-TZ-CHARTER-SLICE-01A.txt`、`src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs` 和直接测试。
+- `src/Assets/Scripts/Settlement/SettlementSceneController.cs::Start|RefreshSettlementUi|DispatchFeature`、`src/Assets/Scripts/Settlement/SettlementSceneView.cs::BindFeature|ShowFeatureResult` 及当前 bounty 面板接入的直接调用链，保持 sibling 职责隔离。
+- `src/Assets/Scripts/Content/ContentCatalogData.cs::TryGetSettlement` 及完成后的站点精确查询；`src/Assets/Scripts/Game/GameSession.cs` 的册界公开入口只读／调用边界。
+- `src/Assets/Scripts/Editor/SceneBuilder.cs::BuildSettlementScene`、`src/Assets/Scenes/SettlementScene.unity`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` 的 Settlement 构建、唯一 Canvas 和序列化引用用例。
+
+## 前置依赖与后继关系
+
+- 直接前置：`U-TZ-CHARTER-SLICE-01A`；当前 `dispatchState=blocked`。
+- 直接后继：`U-TZ-CHARTER-SLICE-01C`。本卡完成并通过 Codex 独立复审后才把 01C 转为 `ready`。
+- 主责为 DeepSeek，`route=external_execute`；解除阻塞后保持原主责，候选形成后转换为 `codex_review/codex/ready`。
+
+## 实施范围
+
+- 新增独立、序列化引用的 `CharterSiteController` 与 `CharterSiteView`；在现有 `SettlementSceneView` 下持有面板，由 Settlement 控制器只在当前正式据点、唯一启用站点和目录引用合法时打开。
+- 面板按批准的通行、管理、节点、登记／授权／供给、金丹、元婴、正式调用顺序提交 01A 动作；每次调用后刷新站点、当前步骤、真实 ID、授权缺口、节点、供给、冲突决定、状态和稳定原因。
+- 从长期状态重建正式提交后的显示；离开面板前尚未提交的 progress 可按 01A 契约丢弃，不把临时步骤保存到 UI 或会话。
+- 扩展 `SceneBuilder.BuildSettlementScene` 和正式场景序列化引用；新增直接视图／控制器用例和场景构建断言，将实际结果写入验证记录。
+
+## 禁止项
+
+- 不修改 `CharterSiteInteractionRuntime`、`GameSession`、`CharterRuleRuntime`、`CharterConflictRules`、schema 4、CSV、asset、Adventure 环境规则或 BattleSim。
+- 不把步骤规则塞入 `SettlementSceneController`／`SettlementSceneView`，不以按钮可用性、显示文本、SceneBuilder 默认或本地布尔代替实际结果。
+- 不创建第二 Canvas、第二场景、全局 UI 单例、完整册界编辑器、九域地图、动态经济面板、NPC／剧情任务或表现资源精修。
+
+## 失败关闭要求
+
+- 站点缺失、重复、禁用、非当前据点，目录／会话引用缺失或未知请求时返回稳定原因且不打开面板、不推进 progress。
+- 任一步失败只显示 01A 的实际原因和此前合法临时进度；不得写长期状态、自动跳步、补默认 ID 或把通行提升为管理资格。
+- 金丹和元婴结果必须显示真实未提交状态；正式失败不把 candidate 写进会话。重新生成场景若引用不完整或出现第二 Canvas，验证失败并停止。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，覆盖正确据点打开、各步骤刷新、金丹／元婴／正式结果、未知／禁用／非当前站点不打开、失败不伪造以及场景序列化引用。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`，验证正式场景与现有目录／asset 引用没有断链。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests`。
+- 候选正式转换后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01B -Postcondition ExternalPendingReview`；提交前运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 只能从正式 `guanzhong_city` 打开唯一旧水驿站点；所有按钮按固定顺序提交 01A 动作并显示真实稳定 ID、进度、结果和失败原因。
+- 重新生成 `SettlementScene` 后面板、视图、控制器、目录和会话引用完整，仍只有一个 `UICanvas`。
+- UI 不拥有或复制规则、candidate、冲突或长期状态；非法／未知站点失败关闭，既有悬赏和正式场景所有者未被改写。
+
+## 停止条件
+
+- 需要第二 Canvas／Settlement 场景、平行会话／存档、全局 UI 单例、控制器内规则复制、默认站点或修改 01A 契约时停止并回报。
+- 实施跨入 01C 环境投影、完整编辑器／地图／经济或未批准内容与表现资源时停止，不连续扩卡。

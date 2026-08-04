@@ -1,0 +1,115 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-TZ-CHARTER-SITE-01",
+  "title": "旧水驿最小站点数据契约",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-04：D-TZ-CHARTER-SAMPLE-01、U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01A、U-ENV-RULE-01B 均已完成并归档；本卡是批准拆分中的第一张合法叶子，按固定队列规则排在既有 U-BOUNTY-01C 复审之后。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/CharterSites.csv",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/Scripts/Content/CharterSiteData.cs",
+    "src/Assets/Scripts/Content/CharterSiteData.cs.meta",
+    "src/Assets/Scripts/Content/ContentCatalogData.cs",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Data/CharterSites.meta",
+    "src/Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset",
+    "src/Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Tests/EditMode/CharterSiteDataTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteDataTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "tools/tests/check-data-chain-tests.ps1",
+    "开发管理/册界单据点站点数据验证记录.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-TZ-CHARTER-SITE-01.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01A.txt",
+    "开发管理/任务归档/D-TZ-CHARTER-SITE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-TZ-CHARTER-SITE-01 · 旧水驿最小站点数据契约
+
+## 来源与当前边界
+
+- 唯一批准依据是 `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`，尤其是“一、目标与授权边界”“三、站点数据契约”“七、失败关闭与原子性”“8.1”“九、验证矩阵”和“十、统一停止条件”。
+- `D-TZ-CHARTER-SAMPLE-01`、`U-TZ-CHARTER-MODEL-01`、`U-TZ-CHARTER-SAVE-01`、`U-ENV-RULE-01A`、`U-ENV-RULE-01B` 已完成并归档；依赖必须使用实际叶子 `U-ENV-RULE-01A`／`U-ENV-RULE-01B`，不得回写已关闭父项 `U-ENV-RULE-01`。
+- 本卡只建立 `charter_site_old_water_station` 的最小生产数据链；父项 `U-TZ-CHARTER-SLICE-01` 仍是汇总父项，不由本卡直接执行或关闭。
+
+## 目标与非目标
+
+- 目标：建立 `CharterSites.csv -> DataConfigImporter -> CharterSiteData asset -> ContentCatalogData` 的唯一生产链，完整承载旧水驿的站点、通行、管理、册界、金丹样例和元婴样例身份，并提供只读精确查询。
+- 目标：用同一 shared 冲突决定验证完整金丹 grant、请求和左右候选，稳定证明确定性赢家不是 `charterCandidateId`。
+- 非目标：不实现 `CharterSiteInteractionRuntime`、`GameSession` 调用入口、Settlement UI、Adventure 投影、场景或保存逻辑；不新增第二站点、第二条册界条目、战斗数值或表现资源。
+
+## 根因与生产契约
+
+- 根因是旧门禁目标、操作者、设施管理者、受益者及两类高阶演示的完整身份仍只存在于 EditMode 字面量；若直接做场景，会把 fixture、控制器硬编码或默认候选误升格为生产事实。
+- `CharterSiteData` 只拥有静态站点契约，不保存玩家已完成动作。`ContentCatalogData` 只持有唯一生产 asset 并提供只读查询，不保存进度、不执行规则。
+- `passageCapabilityId=capability_kaihe_jiuzhang_v1` 和 `interactionTimeProfileId=interaction_time_old_water_station_gate_v1` 是本站点自有稳定身份；操作者、管理者和受益者是站点职责 ID，不伪装成全局 `CharacterData` ID。其余跨契约字段必须由现有静态目录解析。
+- 金丹 grant 必须完整承载批准规格列出的版本、变量、操作、对象、范围、受益者、现实支点、资源／容量账本、持续、失效和来源；左右候选的完整属性不得由运行时补默认值。元婴样例不得携带金丹候选、grant 或可直接覆盖结果。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md#三、站点数据契约`、`#四、所有权与运行时边界`、`#七、失败关闭与原子性`、`#8.1-D-TZ-CHARTER-SITE-01-旧水驿最小站点数据契约`。
+- `开发管理/任务归档/D-TZ-CHARTER-SAMPLE-01.txt`、`开发管理/任务归档/U-TZ-CHARTER-MODEL-01.txt`、`开发管理/任务归档/U-TZ-CHARTER-SAVE-01.txt`、`开发管理/任务归档/U-ENV-RULE-01A.txt`、`开发管理/任务归档/U-ENV-RULE-01B.txt`。
+- `src/Assets/Scripts/Content/ContentCatalogData.cs::ContentCatalogData`、`src/Assets/Scripts/Content/CharterRuleDefinitionData.cs::CharterRuleDefinitionData|CharterRuleReferenceCatalog`、`src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs::CharterRuleStaticCatalogData|CharterRuleCatalogValidator`。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::CommitContentCatalog|ImportCharterRuleDefinitions|CreateProductionCharterRuleReferenceCatalog` 及其直接调用者；`src/Assets/Scripts/World/CharterConflictRules.cs::CrossTierChallengeGrant` 和 shared 决定入口。
+- `src/Assets/DataConfig/CharterRuleDefinitions.csv::charter_entry_suifu_diji`、`src/Assets/DataConfig/EnvironmentProfiles.csv::env_guanzhong_wild`、`src/Assets/DataConfig/Language.csv` 表头和目标键；`src/Assets/Tests/EditMode/CharterRuleDataTests.cs` 中生产目录、导入和非法 fixture 直接用例。
+
+## 前置依赖与后继关系
+
+- 已完成前置：`D-TZ-CHARTER-SAMPLE-01`、`U-TZ-CHARTER-MODEL-01`、`U-TZ-CHARTER-SAVE-01`、`U-ENV-RULE-01A`、`U-ENV-RULE-01B`。
+- 直接后继：`U-TZ-CHARTER-SLICE-01A`。本卡完成并通过 Codex 独立复审后，才可把 01A 从 `blocked` 转为 `ready`；不得同时推进 01A 业务实现。
+- 主责为 DeepSeek，`route=external_execute`、`dispatchState=ready`；形成候选后按项目合同转换为 `codex_review/codex/ready`，由 Codex 独立复审。
+
+## 实施范围
+
+- 冻结并实现明确的 `CharterSites.csv` 表头；完整投影唯一 `charter_site_old_water_station` 行、语言键、`CharterSiteData`、相邻 `.meta`、生产 asset 和 `ContentCatalogData` 引用。
+- 扩展导入器，在写入任何 asset 前完成整表、跨表、唯一生产站点、门禁、管理、条目、遗物、授权、节点、覆盖、供给、提交、冲突 grant、世界变量、环境档案和显示键校验。
+- 导入验证用同一 shared 决定消费完整 grant 与左右候选，证明册界候选稳定未获胜；字段变化使该结论不再稳定时拒绝整行。
+- 新增直接正反 EditMode 用例，并把实际命令、结果、稳定拒绝原因和生成 asset／目录证据写入 `开发管理/册界单据点站点数据验证记录.txt`；按完成事件同步本卡、backlog、队列和直接后继卡。
+
+## 禁止项
+
+- 不修改 `CharterRuleRuntime`、`CharterConflictRules` 语义、`GameSession`、保存 schema 4、Settlement／Adventure 控制器、场景、UI、BattleSim、数值或已批准的水府地纪／`env_guanzhong_wild` 内容。
+- 不使用自由 JSON、无约束键值串、测试 fixture、SceneBuilder 隐藏默认、显示文本、资源路径、候选默认值或默认站点代替生产字段。
+- 不增加全局角色身份系统、第二静态目录、第二冲突授权来源、持久 `CrossTierChallengeArchive`、动态完成度字段或完整 M7。
+
+## 失败关闭要求
+
+- 空、非法或重复站点 ID，非唯一生产站点，任何未知跨表引用，门禁协议／结构／供能不合法，管理者或受益者缺失，以及把通行资格当管理资格，均须在写入任何 asset 前整表拒绝。
+- 金丹 grant 或任一候选缺批准字段、`grantId` 未列入水府地纪冲突目录、shared 决定不能稳定得到“册界侧未获胜”，或元婴样例夹带金丹候选／grant／覆盖结果时整表拒绝。
+- 失败不得保留半生成 asset、默认值、旧目录引用或强制 UI／运行时结果；若站点契约不能完整承载版本化 grant，停止并建立独立根因任务。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，直接覆盖唯一生产行、字段投影、完整金丹决定、元婴隔离和逐类非法 fixture。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`。
+- 候选正式转换后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-TZ-CHARTER-SITE-01 -Postcondition ExternalPendingReview`；提交前运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 生产目录可按稳定 ID 精确取得唯一旧水驿站点；合法 CSV 行全部字段无损投影到唯一 asset，跨表引用均指向现有批准事实。
+- 完整 grant、请求和左右候选经同一 shared 决定稳定得到册界侧未获胜；所有非法输入均在任何 asset 写入前失败关闭。
+- 没有 fixture、场景硬编码、候选默认值、默认站点、动态玩家进度或第二目录；实际验证证据已记录，候选已转换为 Codex 独立复审。
+
+## 停止条件
+
+- 需要修改 shared 冲突语义、`CharterRuleRuntime`、保存 schema、场景／UI、战斗数值，或需要第二据点、第二条目、完整角色身份系统、动态经济／九域模拟时停止，不把缺口塞入本卡。
+- 实施开始跨入 01A 的临时状态／会话职责，或必须以测试 helper、代码硬编码、默认 archive 才能形成生产站点时停止并回报根因。

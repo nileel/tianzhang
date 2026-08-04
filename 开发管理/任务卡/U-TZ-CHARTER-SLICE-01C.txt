@@ -1,0 +1,104 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-TZ-CHARTER-SLICE-01C",
+  "title": "Adventure 环境引用与反馈",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-TZ-CHARTER-SLICE-01B"
+  ],
+  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 U-TZ-CHARTER-SLICE-01B，前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs",
+    "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs.meta",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs",
+    "src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs.meta",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "开发管理/册界单据点环境引用验证记录.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01C.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01D.txt",
+    "开发管理/任务归档/U-TZ-CHARTER-SLICE-01C.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-TZ-CHARTER-SLICE-01C · Adventure 环境引用与反馈
+
+## 来源与当前边界
+
+- 唯一批准依据是 `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`，尤其是“四、所有权与运行时边界”“五、玩家交互与数据流”“六、UI 与场景边界”“七、失败关闭与原子性”“8.4”和“九、验证矩阵”。
+- `U-ENV-RULE-01A` 和 `U-ENV-RULE-01B` 已完成；本卡只把册界正式结果单向解析到既有环境消费者，不重做环境运行时或表现规则。
+- 本卡只在 01B 完成并通过独立复审后执行；父项 `U-TZ-CHARTER-SLICE-01` 不直接执行。
+
+## 目标与非目标
+
+- 目标：将当前地区已生效的水府地纪条目解析为其定义声明的 `env_guanzhong_wild`，精确匹配正式 Adventure 已序列化的同 ID asset，并显示条目事件、档案 ID 和稳定原因。
+- 目标：建立独立 `CharterEnvironmentProjection`，保持 `EnvironmentProfileData` 是战场档案所有者、`GameSession.CharterRuntimeState` 是册界长期状态所有者。
+- 非目标：不修改环境参数、`TacticalGridModel` 规则、册界长期状态、Settlement UI、保存 schema、战斗数值或场景表现资产。
+
+## 根因与生产契约
+
+- 根因是成功调用虽可在 `currentRegionRuleEntryIds` 记录已生效条目，但 Adventure 尚无从该长期结果到定义事件输出再到现有环境 asset 的生产适配入口。
+- `CharterEnvironmentProjection` 只读取 `GameSession.CharterRuntimeState`、`ContentCatalogData` 的册界定义／静态目录和 Adventure 已序列化的 `guanzhongWildEnvironmentProfile`；只返回解析结果，不保存状态、不执行规则。
+- 只有当前地区已生效条目可产生环境引用；必须按稳定 ID 精确匹配现有 asset，不允许按名称、路径、显示文本或默认档案推断。环境消费者不得反写条目、覆盖、供给、提交或地区状态。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md#四、所有权与运行时边界`、`#五、玩家交互与数据流`、`#六、UI-与场景边界`、`#七、失败关闭与原子性`、`#84-U-TZ-CHARTER-SLICE-01C-Adventure-环境引用与反馈`。
+- 完成后的 `开发管理/任务归档/U-TZ-CHARTER-SLICE-01B.txt`、`开发管理/任务归档/U-ENV-RULE-01A.txt`、`开发管理/任务归档/U-ENV-RULE-01B.txt`。
+- `src/Assets/Scripts/Game/GameSession.cs::CharterRuntimeState`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::currentRegionRuleEntryIds`、`src/Assets/Scripts/Content/CharterRuleDefinitionData.cs` 的事件输出／`environmentProfileId` 完整逻辑单元。
+- `src/Assets/Scripts/Content/ContentCatalogData.cs::ContentCatalogData` 和 `CharterRuleStaticCatalogData` 精确定义查询；`src/Assets/Scripts/Adventure/AdventureSceneController.cs::SetContentCatalog|SetGuanzhongWildEnvironmentProfile|Start`。
+- `src/Assets/Scripts/Grid/EnvironmentProfileData.cs::EnvironmentProfileData`、`src/Assets/Scripts/Grid/TacticalGridModel.cs::TryConfigureEnvironmentProfile`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs::FormalAndRebuiltAdventureScenesBindTheProductionEnvironmentProfile`；这些环境规则所有者只读。
+
+## 前置依赖与后继关系
+
+- 直接前置：`U-TZ-CHARTER-SLICE-01B`；当前 `dispatchState=blocked`。
+- 直接后继：`U-TZ-CHARTER-SLICE-01D`。本卡完成并通过 Codex 独立复审后才把 01D 转为 `ready`。
+- 主责为 DeepSeek，`route=external_execute`；解除阻塞后保持原主责，候选形成后转换为 `codex_review/codex/ready`。
+
+## 实施范围
+
+- 新增无状态 `CharterEnvironmentProjection`，从当前地区已生效条目解析唯一定义、事件输出和 `environmentProfileId`，并与 Adventure 已序列化 asset 的 `profileId` 精确匹配。
+- `AdventureSceneController` 只调用投影、显示条目事件／档案 ID／稳定错误，并把匹配成功的既有 asset 交给现有环境链；不创建或修改 `EnvironmentProfileData`。
+- 直接测试覆盖当前地区水府地纪成功、非当前地区／未生效条目不输出、未知／重复定义、缺失／重复环境 ID、asset ID 错配和长期状态不变；扩展场景架构断言保护现有序列化引用。
+- 将实际命令、结果、稳定拒绝原因和不反写证据写入 `开发管理/册界单据点环境引用验证记录.txt`。
+
+## 禁止项
+
+- 不修改 `CharterSiteInteractionRuntime`、`GameSession`、`CharterRuleRuntime`、`CharterConflictRules`、`EnvironmentProfileData`、`TacticalGridModel`、`SpatialQueryBoardFactory`、环境参数、schema 4、Settlement 场景／UI 或 BattleSim。
+- 不新增第二环境状态所有者、默认环境档案、环境搜索／自动选择、按路径／名称／显示文本匹配、反向册界写入或完整环境编辑器。
+- 不修改 `AdventureScene.unity` 或 `SceneBuilder`；现有 `contentCatalog` 与 `guanzhongWildEnvironmentProfile` 序列化引用必须复用。
+
+## 失败关闭要求
+
+- 当前地区条目缺失、重复、未知、未生效，定义事件输出缺失／越界，环境 ID 缺失／重复，或与序列化 asset 的 `profileId` 不一致时返回稳定错误，不使用 fallback。
+- 任何失败或成功解析都不得修改 `GameSession.CharterRuntimeState`、条目定义或环境 asset；测试须比较调用前后长期状态。
+- 若现有静态目录不能唯一解析环境输出而必须增加第二目录、默认档案或反向写入，停止并建立独立根因任务。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，覆盖当前地区精确解析、缺失／重复／越界／错配、正式序列化引用和不反写。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`。
+- 候选正式转换后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01C -Postcondition ExternalPendingReview`；提交前运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 只有当前地区已生效的水府地纪能解析为定义声明的 `env_guanzhong_wild`，且只精确匹配现有正式序列化 asset。
+- 缺失、重复、越界或 asset ID 错配均稳定失败关闭；成功与失败都不反写册界长期状态或环境档案。
+- Adventure 只消费既有 `U-ENV-RULE-01A/01B` 链，没有第二环境服务、默认档案或规则复制。
+
+## 停止条件
+
+- 需要修改环境规则／参数、`TacticalGridModel`、Adventure 场景／SceneBuilder、册界长期状态、保存 schema、第二目录或默认匹配时停止并回报。
+- 实施跨入 01D E2E 闸门、完整天气／经济／编辑器、战斗数值或表现资源时停止，不扩张本卡。

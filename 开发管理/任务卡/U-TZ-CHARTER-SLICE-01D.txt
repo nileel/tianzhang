@@ -1,0 +1,106 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-TZ-CHARTER-SLICE-01D",
+  "title": "单据点端到端闸门",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-TZ-CHARTER-SLICE-01C"
+  ],
+  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 U-TZ-CHARTER-SLICE-01C，前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "expectedPaths": [
+    "src/Assets/Tests/PlayMode.meta",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef.meta",
+    "src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs.meta",
+    "tools/run-unity-playmode-tests.ps1",
+    "tools/test-run-unity-playmode-tests.ps1",
+    "开发管理/册界单据点端到端验证记录.txt",
+    "开发管理/设计-当前状态.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01D.txt",
+    "开发管理/任务归档/U-TZ-CHARTER-SLICE-01D.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-TZ-CHARTER-SLICE-01D · 单据点端到端闸门
+
+## 来源与当前边界
+
+- 唯一批准依据是 `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`，尤其是“五、玩家交互与数据流”“七、失败关闭与原子性”“8.5”“九、验证矩阵”和“十、统一停止条件”。
+- 本卡只在 01C 完成并通过独立复审后执行；此前四张叶子的业务实现均须已经独立复审，01D 不替代各层直接测试。
+- 本卡只补端到端验证入口和最终状态收口，不新增业务规则；只有本卡通过 Codex 独立复审后才关闭汇总父项 `U-TZ-CHARTER-SLICE-01`。
+
+## 目标与非目标
+
+- 目标：在正式场景连续验证旧水驿通行、界印管理、节点、登记／供给、金丹未获胜、元婴受锚、正式调用、Adventure 环境反馈、schema 4 保存／读取和重复消费失败。
+- 目标：建立可重复运行的 PlayMode asmdef、直接用例和命令入口，并把可审计结果收口到验证记录与 `设计-当前状态.txt`。
+- 非目标：不新增或修复业务规则、数据、UI、场景、环境适配、保存格式、数值或表现资源；发现缺口必须回到所属叶子，不在闸门叠加补丁。
+
+## 根因与生产契约
+
+- 根因是分层 EditMode 通过不能单独证明正式场景、唯一会话、序列化目录／环境 asset、保存读取和完整玩家顺序在同一闭环中成立。
+- PlayMode 用例只驱动正式 `SettlementScene`／`AdventureScene` 和公开生产入口，断言各层实际结果；不得复制 candidate、请求、冲突、环境解析或存档实现来制造测试通过。
+- 长期状态唯一读取自 `GameSession.CharterRuntimeState`；首次正式成功后的目录版本与状态必须保持原子，读档后结果一致，相同供给不可再次消费。金丹和元婴步骤不得留下 `NextState` 或事件输出。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md#五、玩家交互与数据流`、`#七、失败关闭与原子性`、`#85-U-TZ-CHARTER-SLICE-01D-单据点端到端闸门`、`#九、验证矩阵`、`#十、统一停止条件`。
+- `开发管理/任务归档/D-TZ-CHARTER-SITE-01.txt`、`开发管理/任务归档/U-TZ-CHARTER-SLICE-01A.txt`、`开发管理/任务归档/U-TZ-CHARTER-SLICE-01B.txt`、`开发管理/任务归档/U-TZ-CHARTER-SLICE-01C.txt` 及四份直接验证记录。
+- `src/Assets/Scenes/SettlementScene.unity`、`src/Assets/Scenes/AdventureScene.unity`、`src/Assets/Scripts/Settlement/CharterSiteController.cs`、`src/Assets/Scripts/Settlement/CharterSiteView.cs`、`src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs` 和直接公开调用链；这些业务文件只读。
+- `src/Assets/Scripts/Game/GameSession.cs::CharterRuntimeState|CharterDefinitionCatalogVersion|CaptureSaveData|RestoreSaveData`、`src/Assets/Scripts/Game/SessionStateSnapshots.cs::GameSessionSnapshot.Capture|Restore`；这些生产文件只读。
+- 现有测试 asmdef、Unity 测试 runner 约定、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs` 中第一章／悬赏／Adventure 唯一所有者断言，以及项目 PowerShell 7 脚本风格。
+
+## 前置依赖与后继关系
+
+- 直接前置：`U-TZ-CHARTER-SLICE-01C`；当前 `dispatchState=blocked`。
+- 后继关系：无业务叶子后继。本卡完成并通过 Codex 独立复审后，归档本卡并从 backlog／队列移除，同时关闭汇总父项 `U-TZ-CHARTER-SLICE-01`；此前不得提前关闭父项。
+- 主责为 DeepSeek，`route=external_execute`；解除阻塞后保持原主责，候选形成后转换为 `codex_review/codex/ready`。
+
+## 实施范围
+
+- 建立 `src/Assets/Tests/PlayMode`、`TianZhang.PlayModeTests.asmdef` 和 `CharterVerticalSlicePlayModeTests`，只通过正式场景与公开入口执行批准的十步流程。
+- 用例从空 `GameSession.CharterRuntimeState` 开始，逐步断言五类临时证明、完整 candidate、三份独立请求、金丹未获胜、元婴受锚、首次正式原子提交和 `env_guanzhong_wild` 反馈。
+- 保存、退出、读取后断言长期状态、`CharterDefinitionCatalogVersion`、水府地纪生效和环境引用一致；再次使用相同供给、提交或占用须稳定失败且状态不变。
+- 新增 PowerShell 7 PlayMode runner 及其自测，记录实际命令、通过／失败数和稳定原因；仅在全部证据通过后更新 `设计-当前状态.txt` 并关闭父项。
+
+## 禁止项
+
+- 不修改任何业务脚本、CSV、asset、正式场景、`CharterRuleRuntime`、`CharterConflictRules`、schema 4、环境参数、BattleSim、数值、奖励、第一章或悬赏实现。
+- 不在测试中调用旧 `BuildValidState`、手工赋值会话长期状态、复制规则、伪造默认站点／环境、跳过正式 UI／控制器或使用第二场景／Canvas／会话／存档所有者。
+- 不把发现的业务缺口用测试专用分支、重试、兼容层或新状态掩盖；不扩展第二据点、完整 M7、九域／经济／编辑器／上界地图。
+
+## 失败关闭要求
+
+- 任一正式步骤、场景引用、目录版本、事件输出、环境匹配、保存读取或重复消费断言失败，闸门保持失败；记录最窄归属叶子和证据，不更新完成状态、不关闭父项。
+- 金丹或元婴产生 `NextState`／事件输出，首次失败写入状态或版本，首次成功未原子写入两者，读档不一致，或重复消费改变状态，均为阻断性失败。
+- PlayMode runner 无法稳定返回真实退出码／结果时停止修复 runner 本身；若需业务改动才能通过，退回对应叶子建立返工，不在 01D 修改越界路径。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-run-unity-playmode-tests.ps1`，验证 runner 参数、退出码和失败传播。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，执行正式场景完整纵向流程和失败节点。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`，确认新增 asmdef／meta 与正式场景、目录和 asset 链未断裂。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`。
+- 候选正式转换后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01D -Postcondition ExternalPendingReview`；提交前运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- PlayMode 在正式场景从空册界长期状态连续完成批准流程；三类评估边界、首次原子提交、`env_guanzhong_wild` 精确反馈、schema 4 读档和重复消费失败均有直接证据。
+- 读档后长期状态与目录版本一致，第一章、关中悬赏和正式 Adventure 所有者未被改写；测试未复制业务规则或伪造生产状态。
+- 直接验证记录和 `设计-当前状态.txt` 只写已验证结论；Codex 独立复审通过后关闭本卡与汇总父项 `U-TZ-CHARTER-SLICE-01`。
+
+## 停止条件
+
+- 需要修改任一业务叶子路径、shared 冲突语义、schema 4、正式场景所有权、第二 Canvas／会话／存档／环境服务、战斗数值或未批准内容时停止并退回根因任务。
+- E2E 失败要求连续叠加补丁、跨越相邻叶子职责或扩大批准路径时停止，不以闸门任务承担返工实现。

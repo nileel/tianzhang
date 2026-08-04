@@ -1,0 +1,107 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-TZ-CHARTER-SLICE-01A",
+  "title": "会话交互桥与原子提交",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-TZ-CHARTER-SITE-01"
+  ],
+  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 D-TZ-CHARTER-SITE-01，前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "expectedPaths": [
+    "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs",
+    "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta",
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs.meta",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "开发管理/册界单据点运行时交互验证记录.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01A.txt",
+    "开发管理/任务卡/U-TZ-CHARTER-SLICE-01B.txt",
+    "开发管理/任务归档/U-TZ-CHARTER-SLICE-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-TZ-CHARTER-SLICE-01A · 会话交互桥与原子提交
+
+## 来源与当前边界
+
+- 唯一批准依据是 `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`，尤其是“二、现状根因与采用方案”“四、所有权与运行时边界”“4.1”“五、玩家交互与数据流”“七、失败关闭与原子性”“8.2”和“九、验证矩阵”。
+- 本卡只在 `D-TZ-CHARTER-SITE-01` 完成并通过独立复审后执行；只消费其唯一生产 `CharterSiteData` 和既有册界静态目录。
+- `GameSession` 继续是唯一长期 `CharterRuntimeStateData` 所有者；父项 `U-TZ-CHARTER-SLICE-01` 仍不直接执行。
+
+## 目标与非目标
+
+- 目标：实现无场景依赖的 `CharterSiteInteractionRuntime`、短生命周期 `CharterSiteInteractionProgress`，以及从五类真实动作证明构造不可直接持久化 `CharterInvocationPreparation` 的唯一生产入口。
+- 目标：为金丹、元婴和正式调用分别从同一 candidate 派生各自形态的 `InvocationRequest`，并由 `GameSession` 唯一原子提交有效 `NextState`。
+- 非目标：不实现 Settlement UI、Adventure 环境表现、第二会话／存档／冲突所有者，不修改 schema 4、`CharterRuleRuntime` 或 `CharterConflictRules`。
+
+## 根因与生产契约
+
+- 根因是现有 `CharterRuleRuntime.Invoke` 要求调用前状态已含天章／界印识别、授权、连通节点、覆盖和已登记供给，而生产代码只在读档时替换长期状态；合法候选构造目前仅存在测试 `BuildValidState` helper。
+- `CharterSiteInteractionRuntime` 是前置状态／candidate 生产者，只拥有本次打开站点后的临时证明；candidate 和 progress 都不是第二套长期状态，离开场景可丢弃，不能保存或直接赋给会话。
+- `CharterInvocationPreparation` 固定 candidate、站点静态引用、临时 `CrossTierChallengeArchive` 和目录版本，不携带单一可变请求。三次评估必须各自新建请求：金丹请求带完整左右候选与 challenge，元婴请求只置 `YuanyingAnchored` 且不带候选／challenge，正式请求不带冲突介入。
+- 首次正式成功只允许在 `NextState.TryValidate` 通过且目录版本一致时，把 `CharterRuntimeState` 与 `CharterDefinitionCatalogVersion` 从 0 原子替换；首次失败两者保持 null／0。已有长期状态必须继续使用当前状态，不能重新自举 registered candidate 绕过重复消费拒绝。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md#四、所有权与运行时边界`、`#41-前置动作到候选状态的唯一映射`、`#五、玩家交互与数据流`、`#七、失败关闭与原子性`、`#82-U-TZ-CHARTER-SLICE-01A-会话交互桥与原子提交`。
+- 完成后的 `开发管理/任务归档/D-TZ-CHARTER-SITE-01.txt`、`src/Assets/Scripts/Content/CharterSiteData.cs::CharterSiteData`、`src/Assets/Scripts/Content/ContentCatalogData.cs::ContentCatalogData`。
+- `src/Assets/Scripts/Game/GameSession.cs::CharterRuntimeState|CharterDefinitionCatalogVersion|CaptureSaveData|RestoreSaveData|ResetCharterRuntimeState`。
+- `src/Assets/Scripts/World/CharterRuleRuntime.cs::InvocationRequest|InvocationResult|Invoke`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::CharterRuntimeStateData.CreateCopy|TryValidate`、`src/Assets/Scripts/World/CharterConflictRules.cs` 的请求、grant、archive 与 shared 决定完整逻辑单元；这些文件只读。
+- `src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs::BuildValidState`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs` 的 schema 4／长期状态用例，以及新增运行时测试的直接调用链。
+
+## 前置依赖与后继关系
+
+- 直接前置：`D-TZ-CHARTER-SITE-01`；当前 `dispatchState=blocked`，不得因基础依赖已完成而越过这一直接前序。
+- 直接后继：`U-TZ-CHARTER-SLICE-01B`。本卡完成并通过 Codex 独立复审后才把 01B 转为 `ready`。
+- 主责为 DeepSeek，`route=external_execute`；解除阻塞后保持原主责，候选形成后转换为 `codex_review/codex/ready`。
+
+## 实施范围
+
+- 实现严格有序的五类临时证明：通行、管理、节点接通、条目／天章／授权确认、三个既有现实供给准备；每步校验站点静态身份与实际动作结果，只推进对应 progress。
+- 仅在五类证明全部成立后构造 candidate：`worldSealState`／`charterRelicState`／授权为 `recognized`，实际节点为 `connected`，实际供给为 `registered`；`registeredRuleEntryIds`、占用、提交结果和 `currentRegionRuleEntryIds` 在调用前必须为空。
+- 从同一 preparation 独立构造并执行三次请求；金丹稳定返回 `charter_conflict_not_won`，元婴稳定返回 `TZ_CHARTER_CONFLICT_YUANYING_ANCHORED`，二者 `NextState` 与事件输出为空且不提交。
+- 在 `GameSession` 建立唯一正式提交入口；正常调用只接受完整、可校验且目录版本一致的 `NextState`，首次成功原子写入长期状态与目录版本，重复调用继续消费现有长期状态。
+- 新增直接 EditMode 用例，从空 `GameSession.CharterRuntimeState` 自举，不再用旧 `BuildValidState` helper 冒充生产入口；扩展 schema 4 保存／读取、首次失败、首次成功和重复消费断言，并记录实际验证。
+
+## 禁止项
+
+- 不修改 `CharterRuleRuntime.cs`、`CharterConflictRules.cs`、`SessionStateSnapshots.cs` 或保存 schema；不复制合法性、冲突排序、结算、静态目录或保存格式。
+- 不让 preparation 携带或复用一个可变 `InvocationRequest`；不把 candidate、progress、临时 archive 或 UI 状态保存到 `GameSession`。
+- 不实现 UI、场景、Adventure 投影、第二账本、默认 recognized／connected／registered、fixture fallback、全局角色 ID、完整 M7 或数值。
+
+## 失败关闭要求
+
+- 动作越序、目录缺失、未知／禁用／非当前据点站点、静态身份与动作结果不一致时返回稳定原因；失败只保留本次交互已完成的此前临时步骤，不写长期状态。
+- 缺任一证明、candidate 不能通过现有静态／动态校验，或三种请求形态字段互相污染时不得构造／执行正式 preparation，不得用 helper、默认值或 UI 布尔补齐。
+- 金丹未获胜、元婴受锚、首次正式失败均不得改变长期状态；首次失败目录版本保持 0。已有长期状态的重复失败保持原实例内容不变。
+- 若必须修改 shared 规则、冲突语义或 schema 4 才能完成，立即停止并建立独立根因任务。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，直接覆盖空状态自举、五步正序和每类越序、失败不变、candidate 完整映射、三份请求互不共享、金丹失败、元婴受锚、首次唯一原子提交、schema 4 往返和重复消费。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`。
+- 候选正式转换后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01A -Postcondition ExternalPendingReview`；提交前运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 从 `GameSession.CharterRuntimeState == null` 开始，合法五步可构造字段完整、通过现有校验且长期结果字段为空的 candidate；缺任一步不可构造。
+- 三次评估从同一 candidate 分别派生自身请求且互不共享可变实例；金丹与元婴不提交，正式调用只提交一次。
+- 首次成功原子写入 `CharterRuntimeState` 与当前 `CharterDefinitionCatalogVersion`，首次失败保持 null／0；读档后 schema 4 长期结果稳定，重复供给继续失败关闭。
+
+## 停止条件
+
+- 需要修改 `CharterRuleRuntime`、`CharterConflictRules`、保存 schema、第二长期所有者、第二 archive／账本、默认候选或兼容分支时停止并回报直接证据。
+- 实施跨入 01B 的 UI／场景或 01C 的环境表现职责，或无法从空状态以真实动作证明自举时停止，不叠加补丁。

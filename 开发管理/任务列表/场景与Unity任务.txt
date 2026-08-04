@@ -24,7 +24,11 @@
 | U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-TZ-CHARTER-SLICE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-TZ-CHARTER-SAVE-01、U-ENV-RULE-01） | — | 在一个据点接入门禁、公共设施、册界节点、水府地纪、冲突样例和最小状态反馈。 | — |
+| U-TZ-CHARTER-SLICE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-TZ-CHARTER-SITE-01、U-TZ-CHARTER-SLICE-01A～01D） | — | 单据点纵向切片汇总父项；不直接执行，五张叶子卡完成后关闭。 | — |
+| U-TZ-CHARTER-SLICE-01A | P1 | deepseek | 阻塞 | D-TZ-CHARTER-SITE-01 | 会话交互桥与原子提交 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01A.txt |
+| U-TZ-CHARTER-SLICE-01B | P1 | deepseek | 阻塞 | U-TZ-CHARTER-SLICE-01A | Settlement 单据点交互与最小 UI | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01B.txt |
+| U-TZ-CHARTER-SLICE-01C | P1 | deepseek | 阻塞 | U-TZ-CHARTER-SLICE-01B | Adventure 环境引用与反馈 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01C.txt |
+| U-TZ-CHARTER-SLICE-01D | P1 | deepseek | 阻塞 | U-TZ-CHARTER-SLICE-01C | 单据点端到端闸门 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01D.txt |
 
 ## 执行边界
 
@@ -69,7 +73,7 @@
 
 ## 《天章》册界体系后续 Unity 任务卡
 
-共同事实源：`docs/superpowers/plans/2026-07-22-tianzhang-cosmology-story-and-rules-migration.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、三项核心遗产文件，以及 D-TZ-CHARTER-SCHEMA-01／SAMPLE-01 的有效数据。三项任务均属于 M8；2026-07-30 已获既定最小纵向切片的条件授权，但依赖满足前不得进入当前任务队列。
+共同事实源：`docs/superpowers/specs/2026-08-04-tianzhang-charter-site-vertical-slice-task-decomposition-design.md`、`docs/基础设定/册界天章与地区规则交互规则.txt`、三项核心遗产文件，以及已完成的 SAMPLE、MODEL、SAVE、`U-ENV-RULE-01A`／`U-ENV-RULE-01B`。批准规格已把汇总父项拆为 `D-TZ-CHARTER-SITE-01 -> U-TZ-CHARTER-SLICE-01A -> 01B -> 01C -> 01D`；父项不直接执行。
 
 ### U-TZ-CHARTER-MODEL-01 · 三项遗产与册界纯规则模型
 
@@ -93,13 +97,12 @@
 
 ### U-TZ-CHARTER-SLICE-01 · 单据点纵向可玩切片
 
-- 依赖与状态：M8 已获条件授权；当前阻塞于 U-TZ-CHARTER-MODEL-01、U-TZ-CHARTER-SAVE-01 与 U-ENV-RULE-01 完成，以及 D-TZ-CHARTER-SAMPLE-01 可用。
-- 预期路径：现行唯一 `AdventureScene` 冒险入口、一个已有据点／设施交互所有者、战场环境档案消费接口、统一 `UICanvas` 下的最小状态反馈和直接相关 EditMode／PlayMode 测试；进入当前队列前实时扫描并展开字面量路径。
-- 可玩流程：识别并开启一个旧门禁 → 以界印或合法组织授权确定一个公共设施的管理者与受益者 → 修复／接通一个册界节点 → 登记并调用 `水府地纪` → 输出一个确定性 `environmentProfile` 引用 → 分别观察一个金丹介入冲突和一个元婴受锚拒绝 → 保存、退出并读档复核。
-- 表现边界：UI 只显示真实字段、覆盖集合、授权缺口、现实供给、正负提交和稳定失败原因；不创建完整册界编辑器、九域地图面板、动态经济看板或第二 Canvas。战场环境只消费引用，不反向修改长期地区状态。
-- 验证：据点级正常流程和每个失败节点均可观察；EditMode 验证规则与存档，PlayMode 验证交互和统一 UI，数据链验证引用完整；不涉及新数值时不运行 BattleSim，涉及倍率、概率或产量时停止并先建立数值任务。
-- 完成条件：一个据点内完整证明通行、归属、节点、条目、环境引用、金丹冲突、元婴受锚与保存读取闭环；第一章和关中现有任务不被重写，正式冒险入口仍唯一。
-- 停止条件：切片需要第二据点、整域天气／经济模拟、任意规则编辑器、新剧情任务、上界地图、完整境界表或未确认资源数值。
+- 父项只汇总 `D-TZ-CHARTER-SITE-01`、`U-TZ-CHARTER-SLICE-01A`、`01B`、`01C`、`01D`，不建立任务卡、不进入 ready 队列；五张叶子均完成并通过 Codex 独立复审后，由 01D 关闭父项。
+- 实际依赖：`D-TZ-CHARTER-SAMPLE-01`、`U-TZ-CHARTER-MODEL-01`、`U-TZ-CHARTER-SAVE-01`、`U-ENV-RULE-01A`、`U-ENV-RULE-01B` 均已完成；不得再使用已关闭父项 `U-ENV-RULE-01` 作为叶子依赖。当前入口 `D-TZ-CHARTER-SITE-01` 已 ready，其余四卡只阻塞于各自直接前序。
+- 生产契约：`CharterSiteInteractionRuntime` 是临时前置状态／candidate 生产者，`GameSession` 是唯一长期 `CharterRuntimeStateData` 所有者；金丹、元婴、正式调用从同一 candidate 分别构造请求，首次正式成功时状态与目录版本原子写入。
+- 固定边界：schema 保持 4，不修改 `CharterRuleRuntime`／`CharterConflictRules`；金丹完整候选稳定产生“册界侧未获胜”，并从空 `CharterRuntimeState` 自举到可正式调用状态。
+- 五张业务卡均由 DeepSeek 执行，候选完成后转换为 Codex 独立复审；第一张 ready 卡按固定顺序排在既有 `U-BOUNTY-01C` 复审之后，后续不得越序。
+- 统一停止条件：需要第二据点／场景／Canvas／会话／存档／冲突或环境所有者，完整 M7／九域／动态经济／规则编辑器／上界地图，schema 升级、战斗数值或跨叶子叠加补丁时停止并回到根因。
 
 ## 默认验证
 
