@@ -76,6 +76,12 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 258 个文件。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'src/Assets/Scripts/Game/GameSession.cs|src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs|开发管理/关中悬赏状态机与计数验证记录.txt'`：通过，检查 3 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
 
+## U-BOUNTY-01B1 · Codex 独立复审与完成（2026-08-04）
+
+- 审核正式业务提交 `3cef310c812b7c2ec67497433d854f880e8fa1bb` 通过：`GameSession.ValidateRestoredBounties` 在 `GameSessionSnapshot.Restore` 已完成 DTO、ID、状态、负进度与重复项校验之后、任何会话集合替换之前，继续以同一必填 `ContentCatalogData` 解析每个 `BountyData`。它保留超目标进度拒绝，并补齐 `Accepted < requiredCount`、`ObjectiveCompleted == requiredCount`、`Claimed == requiredCount` 的组合约束；`BountyRuntime.RecordDefeat` 达标时同次改为 `ObjectiveCompleted`，`Claim` 只接受等于目标的完成态，未改状态迁移、领奖或计数。
+- 独立验证：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 执行 335 项，333 通过、2 项既有无关基线失败：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`；直接 `SessionStateSnapshotTests` 16/16 与 `BountyRuntimeTests` 17/17 均通过。`dotnet build src/TianZhang.EditModeTests.csproj` 0 错误通过，保留 2 项无关 Charter 静态目录字段警告。
+- 复审结论：通过。任务归档并移除队列／backlog 投影；未触及 schema、保存字段、状态枚举、状态迁移、领取、战斗计数、内容目录、UI、CSV、数值或经济。
+
 ## 后续
 
-- 本卡组合失败关闭待 Codex 独立复审；`U-BOUNTY-01C` 接入悬赏板界面与城市入口，存档事实仍只由 `GameSession` 与其既有快照链路拥有。
+- `U-BOUNTY-01C` 仍作为独立阻塞任务接入悬赏板界面与城市入口；其是否恢复 ready 只由该任务卡决定，存档事实继续只由 `GameSession` 与其既有快照链路拥有。

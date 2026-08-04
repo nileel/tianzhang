@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-04：Codex 独立复审正式业务提交 3cef310c812b7c2ec67497433d854f880e8fa1bb 通过；状态进度组合失败关闭、原子恢复与直接验证满足任务卡。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
@@ -70,3 +70,9 @@
 
 - 若补齐组合校验必须修改 schema、状态枚举、运行时迁移、内容目录所有权或原子替换边界，停止并交回 Codex 重新确认根因，不增加兼容层。
 - 若正式契约无法唯一确定合法状态／进度组合，或现有合法运行时能够产生本卡拟拒绝的组合，停止并提交直接证据，不猜测修复。
+
+## Codex 复审通过与完成（2026-08-04）
+
+- 已独立复审正式业务提交 `3cef310c812b7c2ec67497433d854f880e8fa1bb`：`ValidateRestoredBounties` 在既有内容引用和超目标校验后，按已解析 `requiredCount` 拒绝 `Accepted == target` 与 `ObjectiveCompleted`／`Claimed < target`，快照解析和所有会话集合替换仍在其前后保持唯一所有权与原子边界。
+- 独立验证：Unity 6000.3.18f1 EditMode 共 335 项，333 通过、2 项为已登记且无关的基线失败；`SessionStateSnapshotTests` 16/16、`BountyRuntimeTests` 17/17 通过。`dotnet build src/TianZhang.EditModeTests.csproj` 以 0 错误通过（2 项既有 Charter 静态目录字段警告）。
+- 复审结论：通过。已归档同一卡并移除其队列与 backlog 投影；未修改 schema、状态迁移、领取、战斗计数、内容目录、UI、数据或数值。
