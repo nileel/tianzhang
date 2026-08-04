@@ -120,3 +120,10 @@
 ## 后续
 
 - `U-GZ-FORMAL-E2E-01` 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环；本卡悬赏事实仍只由 `GameSession` 与其既有快照链路拥有。
+
+## U-BOUNTY-01C · Codex 独立复审与完成（2026-08-05）
+
+- 审核对象：正式提交 `12c631af662faf276d59ce796e51d85f31506944`。复核已解决的成功显示问题：`BountyBoardView.SubmitAccept`／`SubmitClaim` 成功后清空结果区，仅经同一 `GameSession.GetBountyState` 刷新实际 `Accepted`／`ObjectiveCompleted`／`Claimed` 状态；失败仍显示 `BountyActionResult.FailureReason`。不再存在 UI 自造成功日志、状态或奖励。
+- 静态所有者与持久化复核：当前据点的启用 `bounty_board` 依次经 `SettlementFeatureDispatcher`、`SettlementSceneController.DispatchFeature`、`SettlementSceneView.OpenBountyBoard` 打开独立序列化的 `BountyBoardView`；未知、禁用、未注册和处理异常均失败关闭。`SceneBuilder` 在既有 Canvas 创建初始关闭面板，`BountyBoardView.cs.meta` GUID `c7b1a8f4e2d649b38f5a0c1d2e3f4a5b` 与 `SettlementScene.unity` 脚本引用一致，控制器、视图及按钮引用由直接 EditMode 用例复核。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：Unity 6000.3.18f1 完成 341 项，339 通过；`BountyBoardViewTests` 6/6、`SceneArchitectureEditorTests` 22/22、`BountyRuntimeTests` 17/17 通过。全量的 2 项失败仍是登记的无关基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（`PULSE_ADVANTAGE`／`PULSE_NEUTRAL` 不符）及 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期保留术法排除日志）。
+- `dotnet build src/TianZhang.EditModeTests.csproj`：0 错误通过，保留 2 个既有 `CharterRuleStaticCatalogData` CS0649 警告。复审通过；本卡归档，未通过项、队列和 backlog 投影已移除。

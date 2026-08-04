@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-05：Codex 独立复审正式业务提交 12c631af662faf276d59ce796e51d85f31506944 通过；悬赏板只转交既有 GameSession 请求并刷新实际状态，场景序列化引用与失败关闭均已复核。",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
     "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
@@ -79,3 +79,10 @@
 
 - 若现有 `Settlement` 视图／控制器无法容纳面板而必须新增第二 Canvas、平行场景、平行会话／存档、全局 UI 单例或改写 `GameSession`／`BountyRuntime` 所有权，停止并交回 Codex 重新确定边界。
 - 若实施需要未批准的奖励、物品、掉落、数值、其他城市、悬赏、目标类型、表现资源、经济或任务语义，停止并保持下游 `U-GZ-FORMAL-E2E-01` 非 ready。
+
+## Codex 独立复审通过与完成（2026-08-05）
+
+- 已复审正式业务提交 `12c631af662faf276d59ce796e51d85f31506944` 及其完整实现历史：`BountyBoardView` 仅将 ID 转交当前 `GameSession.AcceptBounty`／`ClaimBounty`，随后由同一会话 `GetBountyState` 刷新；成功不再写入 UI 自造的 `bounty_accept_ok`／`bounty_claim_ok`，失败继续显示运行时稳定原因。状态和库存写入仍在既有 `GameSession`／`BountyRuntime`。
+- 已核对入口链路与序列化：`SettlementSceneController` 仅在已注册、启用的 `bounty_board` 返回 `bounty_board_entry_opened` 后经 `SettlementSceneView` 打开面板；未知、禁用、未注册及处理异常仍失败关闭。`SceneBuilder` 在既有 Canvas 创建初始关闭的 `BountyBoardPanel`，其 `BountyBoardView` GUID 和控制器／视图／按钮引用均与 `SettlementScene.unity` 一致；未新增 Canvas、场景、会话或存档所有者，也未改变 Adventure 返回入口。
+- 独立验证：Unity 6000.3.18f1 EditMode 执行 341 项，339 通过；本卡 `BountyBoardViewTests` 6/6、`SceneArchitectureEditorTests` 22/22、`BountyRuntimeTests` 17/17 通过。仅两项已登记无关基线失败：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 和 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。`dotnet build src/TianZhang.EditModeTests.csproj` 0 错误、保留 2 个既有 Charter 警告。
+- 复审结论：通过。已清理本卡未通过记录，任务归档并移除队列与 backlog 投影。
