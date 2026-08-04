@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立复审不通过：静态目录与动态状态未完整拒绝重复稳定 ID，等待负责人选择最窄返工主责",
   "expectedPaths": [
     "src/Assets/Scripts/Content/CharterRuleDefinitionData.cs",
     "src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs",

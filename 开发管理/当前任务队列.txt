@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-TZ-CHARTER-SAVE-01 | codex_review | codex | P1 | unity | migration | 册界状态持久化 | 开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt |
 | U-BOUNTY-01B1 | external_execute | deepseek | P1 | unity | implementation | 悬赏存档状态与进度组合失败关闭修复 | 开发管理/任务卡/U-BOUNTY-01B1.txt |

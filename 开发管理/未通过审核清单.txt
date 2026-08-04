@@ -6,4 +6,12 @@
 
 ## 当前未通过/待复核项
 
-当前没有需要复核的条目。
+## U-TZ-CHARTER-SAVE-01 · 册界状态持久化
+
+- 状态：❌ 未通过（Codex 独立复审，2026-08-04）
+- 复审对象：`435a314`（DeepSeek 正式业务提交及其 `codex_review/codex/ready` 投影）。
+- 问题：`CharterRuntimeStateData.TryValidate` 未拒绝重复的节点状态、组织授权版本或当前覆盖稳定 ID；`CharterRuleCatalogValidator.TryValidateCatalog` 也未独立拒绝重复的授权、边界、提交或冲突目录记录。该实现可接受含重复稳定 ID 的 schema 4 payload／静态目录，违反保存契约的失败关闭要求。
+- 复现依据：`src/Assets/Scripts/World/CharterRuntimeStateData.cs` 的节点、授权与覆盖校验只验证有效性，未维护已见 ID 集合；`src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs` 只验证基础字符串数组，未验证上述记录数组的键唯一性。
+- 返工边界：仅补齐 Runtime 共享校验的重复稳定 ID 拒绝及对应 EditMode 反例；不得新增目录、默认值、兼容读取层或改变规则结算。
+- 已验证：`tools/run-unity-editmode-tests.ps1` 为 331 执行、329 通过、2 项既有无关基线失败；`check-data-chain.ps1`、`check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests` 与本卡 `ExternalPendingReview` 后置条件通过。
+- 待决：负责人选择 DeepSeek V4 Flash 或 Codex 承担最窄返工后，才将同一卡转换为对应 execute 路由并重新入队。
