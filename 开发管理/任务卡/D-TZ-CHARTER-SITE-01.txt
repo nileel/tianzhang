@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-05：Codex 独立复审部分通过；生产数据链与直接 EditMode 证据有效，但 check-data-chain-tests 的有效 fixture 与生产序列化不一致而失败，待返工修正 fixture 并重跑完整验证。",
   "expectedPaths": [
     "src/Assets/DataConfig/CharterSites.csv",
     "src/Assets/DataConfig/Language.csv",
@@ -113,3 +113,9 @@
 
 - 需要修改 shared 冲突语义、`CharterRuleRuntime`、保存 schema、场景／UI、战斗数值，或需要第二据点、第二条目、完整角色身份系统、动态经济／九域模拟时停止，不把缺口塞入本卡。
 - 实施开始跨入 01A 的临时状态／会话职责，或必须以测试 helper、代码硬编码、默认 archive 才能形成生产站点时停止并回报根因。
+
+## Codex 独立复审部分通过（2026-08-05）
+
+- 已复审正式业务提交 `2d401d4bc4e3eaa36390bd102a2c2e752c73aa9a` 的限定 diff、生产 CSV／asset／目录引用和 shared 决定调用；未发现越过本卡边界的运行时、保存、场景、UI、BattleSim 或数值改动。生产 `check-data-chain.ps1` 通过，Unity EditMode 为 378 项中 376 通过；两项失败均为已登记且不在本卡路径的既有基线，新增 `CharterSiteDataTests` 未出现在失败结果中。
+- 未通过项：任务要求的 `tools/tests/check-data-chain-tests.ps1` 在“valid fixture”即失败。其 fixture 把 `grantId` 写成站点顶层的两级缩进，而正式 `CharterSiteData` asset 把该字段序列化为 `jindanGrant` 下的四级缩进；因此 checker 正确报告 `CHARTER_SITE_ASSET_FIELD_MISMATCH`，测试未能验证自身的有效基线。`dotnet build src/TianZhang.EditModeTests.csproj` 也无法运行，因为该项目文件不在本 worktree。
+- 返工必须只修正 checker 测试 fixture 的嵌套 `jindanGrant.grantId` 序列化，并重跑该测试、数据链检查、Unity EditMode 与可用的编译闸门；不得通过放宽生产 checker、扁平化生产 asset 或跳过验证掩盖问题。任务保持 `blocked`，01A 继续阻塞。

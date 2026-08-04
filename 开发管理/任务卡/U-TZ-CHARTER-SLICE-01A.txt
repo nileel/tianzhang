@@ -12,7 +12,7 @@
   "blockedBy": [
     "D-TZ-CHARTER-SITE-01"
   ],
-  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 D-TZ-CHARTER-SITE-01，前序完成并通过 Codex 独立复审后才可转为 ready。 2026-08-05：直接前序 D-TZ-CHARTER-SITE-01 已形成 candidate（DeepSeek V4 Flash，待 Codex 独立复审），本卡仍保持 blocked；复审通过后才可转为 ready。",
+  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 D-TZ-CHARTER-SITE-01，前序完成并通过 Codex 独立复审后才可转为 ready。2026-08-05：直接前序独立复审部分通过但因 check-data-chain-tests 有效 fixture 序列化不匹配返工，前序保持 blocked；本卡继续 blocked。",
   "expectedPaths": [
     "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs",
     "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta",

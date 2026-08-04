@@ -98,7 +98,7 @@
 
 - 父项只汇总 `D-TZ-CHARTER-SITE-01`、`U-TZ-CHARTER-SLICE-01A`、`01B`、`01C`、`01D`，不建立任务卡、不进入 ready 队列；五张叶子均完成并通过 Codex 独立复审后，由 01D 关闭父项。
 - 实际依赖：`D-TZ-CHARTER-SAMPLE-01`、`U-TZ-CHARTER-MODEL-01`、`U-TZ-CHARTER-SAVE-01`、`U-ENV-RULE-01A`、`U-ENV-RULE-01B` 均已完成；不得再使用已关闭父项 `U-ENV-RULE-01` 作为叶子依赖。当前入口 `D-TZ-CHARTER-SITE-01` 已 ready，其余四卡只阻塞于各自直接前序。
-- `D-TZ-CHARTER-SITE-01` 已形成 candidate（2026-08-05，DeepSeek V4 Flash；⚠️ 已修改/未审核）：唯一生产站点 `charter_site_old_water_station` 的 `CharterSites.csv -> DataConfigImporter -> CharterSiteData asset -> ContentCatalogData` 数据链、整表与跨表失败关闭、共享冲突决定（完整 grant／请求／左右候选稳定得到册界侧未获胜）和生产 asset／目录引用均已落地；证据见 `开发管理/册界单据点站点数据验证记录.txt`。待 Codex 独立复审通过后，由固定入口把 `U-TZ-CHARTER-SLICE-01A` 转为 ready。
+- `D-TZ-CHARTER-SITE-01` 于 2026-08-05 经 Codex 独立复审部分通过：唯一生产站点数据链、生产 asset／目录引用与 shared 冲突决定证据有效，但 `tools/tests/check-data-chain-tests.ps1` 的有效 fixture 与 `jindanGrant` 嵌套序列化不一致而失败，任务已保持 blocked 等待定向返工；证据和返工要求见 `开发管理/未通过审核清单.txt`。`U-TZ-CHARTER-SLICE-01A` 继续 blocked，不得转为 ready。
 - 生产契约：`CharterSiteInteractionRuntime` 是临时前置状态／candidate 生产者，`GameSession` 是唯一长期 `CharterRuntimeStateData` 所有者；金丹、元婴、正式调用从同一 candidate 分别构造请求，首次正式成功时状态与目录版本原子写入。
 - 固定边界：schema 保持 4，不修改 `CharterRuleRuntime`／`CharterConflictRules`；金丹完整候选稳定产生“册界侧未获胜”，并从空 `CharterRuntimeState` 自举到可正式调用状态。
 - 五张业务卡均由 DeepSeek 执行，候选完成后转换为 Codex 独立复审；第一张 ready 卡按固定顺序排在既有 `U-BOUNTY-01C` 复审之后，后续不得越序。
