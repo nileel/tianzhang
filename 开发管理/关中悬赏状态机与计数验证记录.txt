@@ -103,6 +103,20 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests`：通过，检查 258 个文件。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（本卡 candidate 路径）：通过，检查 11 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
 
+## U-BOUNTY-01C 定向返工（DEC-20260805-REV8F1A7928E4D5 · 2026-08-05）
+
+- 复审结论：部分通过，仍需返工（审核对象：正式提交 `7da36456017cc4ad3c9ae896034d7e0ebb3fb0c1`）。根因：`BountyBoardView.SubmitAccept`／`SubmitClaim` 在成功时自行写入 `bounty_accept_ok:<id>`／`bounty_claim_ok:<id>`，`GameSession` 的成功 `BountyActionResult` 不产生该结果字面量，任务卡又禁止 UI 伪造成功日志；成功显示应只反映同一 `GameSession.GetBountyState` 刷新的实际状态。
+- 返工实施：删除 `BoardAcceptSucceededReason`／`BoardClaimSucceededReason` 两个常量与成功分支写入；接取／领奖成功后不写任何结果字面量（结果区清空），只保留 `Refresh` 后按同一 `GameSession.GetBountyState` 得到的实际状态行（`id | 状态 | 进度/目标`）作为唯一成功显示；失败继续显示 `GameSession` 返回的稳定失败原因（`bounty_claim_repeated`、`bounty_not_production`、`bounty_wrong_settlement`、`bounty_missing` 等）。`BountyBoardViewTests` 移除两处伪造成功日志断言，改为断言成功后结果区为空（`LastResultReason == null`），既有失败原因断言未变。
+- 边界：未修改 `GameSession`、`BountyRuntime`、`BountyStateStore`、schema 3、内容目录、CSV、Language、asset、奖励参数、掉落概率、堆叠上限、战斗计数、Adventure 结算、场景构建或世界／副本返回所有者。
+
+## U-BOUNTY-01C 定向返工已执行验证（Unity 6000.3.18f1 EditMode，2026-08-05）
+
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目；首轮重建 Library）。Unity 进程退出码 2（其零失败门禁行为），完整 EditMode：341 项，339 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。
+- 本卡直接用例：`BountyBoardViewTests` 6/6（接取与领奖成功后结果区为空且条目显示刷新后的实际状态；重复领奖、非法／非生产／非当前据点请求、未知／禁用功能、处理器异常用例未回归）；`SceneArchitectureEditorTests` 22/22、`BountyRuntimeTests` 17/17、`SessionStateSnapshotTests` 16/16、`AdventureSceneControllerTests` 14/14、`TacticalGridModelTests` 4/4 全部通过，未回归。
+- `dotnet build src/TianZhang.EditModeTests.csproj`（Unity 生成忽略的工程投影后）：0 错误通过，保留 2 项无关 Charter 静态目录字段警告（与既有记录一致）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests`：通过，检查 263 个文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（本卡 candidate 路径）：通过，检查 3 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+
 ## 后续
 
 - `U-GZ-FORMAL-E2E-01` 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环；本卡悬赏事实仍只由 `GameSession` 与其既有快照链路拥有。

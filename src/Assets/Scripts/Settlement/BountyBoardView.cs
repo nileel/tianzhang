@@ -18,8 +18,6 @@ namespace TianZhang.Settlement
         public const string BoardNoBountiesReason = "bounty_board_no_bounties";
         public const string BoardCatalogMissingReason = "bounty_board_catalog_missing";
         public const string BoardSessionMissingReason = "bounty_board_session_missing";
-        public const string BoardAcceptSucceededReason = "bounty_accept_ok";
-        public const string BoardClaimSucceededReason = "bounty_claim_ok";
 
         [SerializeField] private Text titleText;
         [SerializeField] private Text entriesText;
@@ -112,9 +110,8 @@ namespace TianZhang.Settlement
             }
 
             BountyActionResult result = session.AcceptBounty(catalog, bountyId);
-            SetResult(result.Succeeded
-                ? BoardAcceptSucceededReason + ":" + bountyId
-                : result.FailureReason);
+            // 成功不写入任何结果字面量：成功显示只反映 Refresh 后同一 GameSession.GetBountyState 的实际状态。
+            SetResult(result.Succeeded ? null : result.FailureReason);
             Refresh();
         }
 
@@ -127,9 +124,7 @@ namespace TianZhang.Settlement
             }
 
             BountyActionResult result = session.ClaimBounty(catalog, bountyId);
-            SetResult(result.Succeeded
-                ? BoardClaimSucceededReason + ":" + bountyId
-                : result.FailureReason);
+            SetResult(result.Succeeded ? null : result.FailureReason);
             Refresh();
         }
 

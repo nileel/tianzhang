@@ -5,5 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-BOUNTY-01C | external_execute | deepseek | P1 | unity | implementation | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | 开发管理/任务卡/U-BOUNTY-01C.txt |
+| U-BOUNTY-01C | codex_review | codex | P1 | unity | implementation | 建立正式悬赏面板并接入关中城 `bounty_board` 功能。 | 开发管理/任务卡/U-BOUNTY-01C.txt |
 | D-TZ-CHARTER-SITE-01 | external_execute | deepseek | P1 | data | implementation | 旧水驿最小站点数据契约 | 开发管理/任务卡/D-TZ-CHARTER-SITE-01.txt |

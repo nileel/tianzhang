@@ -58,7 +58,7 @@ namespace TianZhang.Tests
 
                 Assert.AreEqual(BountyStatus.Accepted, session.GetBountyState(BountyId).Status);
                 StringAssert.Contains(BountyId + " | Accepted | 0/1", BoardEntriesText(board).text);
-                Assert.AreEqual(BountyBoardView.BoardAcceptSucceededReason + ":" + BountyId, board.LastResultReason);
+                Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
 
                 GetBoardButton(board, "closeButton").onClick.Invoke();
                 Assert.IsFalse(board.IsOpen);
@@ -86,7 +86,7 @@ namespace TianZhang.Tests
 
                 Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
                 StringAssert.Contains(BountyId + " | Claimed | 1/1", BoardEntriesText(board).text);
-                Assert.AreEqual(BountyBoardView.BoardClaimSucceededReason + ":" + BountyId, board.LastResultReason);
+                Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out InventoryStateSnapshot granted));
                 Assert.AreEqual(3, granted.Quantity);
             }

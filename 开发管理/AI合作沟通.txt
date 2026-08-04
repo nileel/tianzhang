@@ -140,3 +140,16 @@
 - 残留风险：全量 EditMode 仍有 2 项与本卡路径无关的既有基线失败（已逐项登记，脚本按其零失败门禁非零退出）；重建场景使既有对象的序列化 fileID 重排，属于任务要求的“提交重建场景”流程固有结果，已由 22 项场景架构用例与序列化引用断言覆盖；面板的接取／领奖作用于目录枚举首条悬赏，本轮正式数据唯一，多条目选择交互留待后续任务。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-BOUNTY-01C-d6fbbb6f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01C 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01C
+- 候选提交：d9865f32b1b18c5e533f6b09d93312befa32ca92
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中悬赏状态机与计数验证记录.txt、src/Assets/Scripts/Settlement/BountyBoardView.cs、src/Assets/Tests/EditMode/BountyBoardViewTests.cs
+- 已验证：Unity EditMode 6000.3.18f1 全量 341 项：339 通过、2 项既有无关基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；BountyBoardViewTests 6/6（含修改后的接取与领奖成功用例）、BountyRuntimeTests 17/17、SceneArchitectureEditorTests 22/22、SessionStateSnapshotTests 16/16、AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4 全部通过；dotnet build src/TianZhang.EditModeTests.csproj：0 错误、2 项既有无关 Charter 警告；tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests：通过（260 文件）；tools/check-pending-whitespace.ps1（3 文件）与提交后 git show --check：通过；git 状态：candidate 提交 d9865f32b1b18c5e533f6b09d93312befa32ca92 为 baseCommit 2f902e0 唯一直接后继，changed paths 为 CandidatePaths 子集，工作树干净
+- 未验证：SettlementScene.unity 场景重建未执行：本返工不触碰场景、脚本 GUID 或序列化引用，面板已由前轮场景构建存在；dotnet test 未单独运行：EditMode 用例以 Unity 批处理为权威闸门（既有记录口径），dotnet build 仅作编译闸门
+- 残留风险：返工后正式提交仍需 Codex 独立复审（外部责任方不自审）；若复审要求成功结果区显示语义化提示而非清空，需再做窄幅返工。既有 2 项无关 EditMode 基线失败与 2 项无关构建警告继续存在。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
