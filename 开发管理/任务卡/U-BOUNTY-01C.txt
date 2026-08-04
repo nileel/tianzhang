@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-BOUNTY-01B1"
-  ],
-  "stateReason": "2026-08-04：负责人在当前 Codex 对话同意采用更稳妥方式处理；U-BOUNTY-01C 等待 U-BOUNTY-01B1 完成并通过 Codex 独立复审后，才人工恢复 ready；原模糊阻塞 EXECUTION_PERMISSION_DENIED 已收敛为明确前置 U-BOUNTY-01B1。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-04：U-BOUNTY-01B1 已完成并通过 Codex 独立复审；负责人明确要求恢复，本卡前置已满足，现按原 external_execute/deepseek 主责人工恢复 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
     "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
