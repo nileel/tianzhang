@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人在 2026-08-03 的当前 Codex 对话中选择 A；已补入缺失路径 开发管理/任务卡/U-TZ-CHARTER-SAVE-01.txt；旧 checkpoint SHA 2255afc0fe7e5d37e26ec5cba96cf9655385798a 仅作人工追溯证据；新 run 从最新 master 重新实施，不恢复旧模型会话或自动吸收旧 checkpoint。",
+  "stateReason": "2026-08-04：已建立唯一玩家运行时静态目录、schema 4 未接入迁移与一次原子恢复契约；U-TZ-CHARTER-SAVE-01 已作为 external_execute/deepseek/ready 实施卡进入队列，完成后由 Codex 独立复审。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -68,3 +68,9 @@
 
 - 若唯一运行时静态校验来源需要增加未批准的生产条目、节点、授权、环境档案、数据表或玩家行为语义，停止并转为 `pending_decision`；不得把选择伪装成实现细节。
 - 若现有会话所有者不能进行一次原子替换且只能通过第二套存档、双写、fallback 或兼容读取层完成，停止并返回架构决定，不实施代码。
+
+## 完成记录（2026-08-04）
+
+- 已在 `docs/superpowers/specs/2026-08-03-tianzhang-charter-save-contract-design.md` 冻结以 `ContentCatalogData` 引用单一 `CharterRuleStaticCatalogData` 为唯一玩家运行时静态校验来源；Editor factory、fixture 和默认数据均不进入玩家保存链。
+- 已锁定 schema 4 的 presence／定义目录版本／动态状态投影，schema 0～3 只恢复明确未接入状态；完整校验先于单一会话替换，读档不重放供给、占用、提交、冲突或事件。
+- 已创建完整的 `U-TZ-CHARTER-SAVE-01` external_execute/deepseek 实施卡并入队，列明精确路径、直接 EditMode 反例和后续 Codex 独立复审转换。
