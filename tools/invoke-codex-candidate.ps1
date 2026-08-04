@@ -24,6 +24,13 @@ $checkerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
 
 function Stop-Candidate { param([string]$Code) $e = [InvalidOperationException]::new($Code); $e.Data['DetailCode'] = $Code; throw $e }
 function Normalize-FullPath { param([string]$Path) [IO.Path]::GetFullPath($Path).TrimEnd('\', '/') }
+function Quote-Single { param([string]$Value) "'" + $Value.Replace("'", "''") + "'" }
+
+$canaryProbePath = '.tzg-codex-canary-probe.txt'
+$canaryResultText = '问题=候选提交合同需要真实核验；完成=canary 已通过正式 finalizer 创建提交'
+$canaryImpactText = '影响=验证 Codex 候选提交元数据链路；边界=仅修改隔离 canary worktree'
+$canaryVerifyText = '验证=提交元数据与终态字段一致；后续=由外层清理 canary worktree'
+$canaryPlainText = '发生=自动化完成了一次隔离提交探针；影响=不会进入主分支；需要=无需处理'
 
 function Invoke-GitText {
   param([string[]]$Arguments, [string]$DetailCode = 'codex_git_failed')
@@ -77,8 +84,12 @@ function New-TerminalSchema {
   if ($Action -ceq 'Canary') {
     return ([ordered]@{
       type = 'object'
-      properties = [ordered]@{ status = @{ type = 'string'; enum = @('verified') }; identity = @{ type = 'string' }; model = @{ type = 'string' } }
-      required = @('status', 'identity', 'model')
+      properties = [ordered]@{
+        status = @{ type = 'string'; enum = @('verified') }; identity = @{ type = 'string' }; model = @{ type = 'string' }
+        candidateCommit = @{ type = 'string'; pattern = '^[0-9a-f]{40,64}$' }
+        result = @{ type = 'string' }; impact = @{ type = 'string' }; verify = @{ type = 'string' }; plain = @{ type = 'string' }
+      }
+      required = @('status', 'identity', 'model', 'candidateCommit', 'result', 'impact', 'verify', 'plain')
       additionalProperties = $false
     } | ConvertTo-Json -Compress -Depth 10)
   }
@@ -120,7 +131,7 @@ function Read-ResumeContext {
 }
 
 function New-Prompt {
-  param([object]$Run, [AllowNull()][object]$ResumeContext)
+  param([object]$Run, [AllowNull()][object]$ResumeContext, [string[]]$CandidatePaths)
   $routeInstruction = switch ($Route) {
     'Execution' { '按指定 codex_execute 任务实施。' }
     'Review' { '按审核入口复审指定 codex_review 任务。' }
@@ -131,6 +142,8 @@ function New-Prompt {
   } else {
     "已机械核验并重放 checkpoint。负责人回复上下文：$($ResumeContext | ConvertTo-Json -Compress -Depth 10)。只把它用于对应 decisionId，不恢复旧模型会话。"
   }
+  $pathText = if ($CandidatePaths.Count -gt 0) { $CandidatePaths -join '|' } else { '<ACTUAL_CHANGED_PATHS_FROM_ALLOWED_QUEUE_MAINTENANCE_SET>' }
+  $finalizerCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $(Quote-Single $script:root) -ExpectedPaths $(Quote-Single $pathText) -CommitMessage $(Quote-Single "candidate($TaskId): Codex implementation") -RequireAutomationMetadata -AutomationTask $(Quote-Single $TaskId) -AutomationState 'completed' -AutomationResult '<RESULT>' -AutomationImpact '<IMPACT>' -AutomationVerify '<VERIFY>' -AutomationPlain '<PLAIN>'"
   @(
     '[TZG_CODEX_CANDIDATE]'
     "模型核验证明：外层已核验并传入 $Model；返回 model 必须精确等于该值。"
@@ -138,11 +151,32 @@ function New-Prompt {
     $routeInstruction; $resumeInstruction
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
+    "CandidatePaths: $pathText"
+    '正常完成时，先确定 result/impact/verify/plain 四个单行值；值中不得含单引号或控制字符。然后把下面命令中的四个占位符替换为这些值并原样执行一次：'
+    $finalizerCommand
+    '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
     '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及完整三选一决策卡字段。checkpoint 不得改变任务生命周期。'
     '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
     '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组，plainSummary 填三个空字符串；固定 wrapper 只按实际 status 核验必需字段。'
     '除 QueueMaintenance 的 no_candidate 外，最终只输出符合 schema 的 JSON 对象。'
+  ) -join "`n"
+}
+
+function New-CanaryPrompt {
+  $finalizerCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $(Quote-Single $script:root) -ExpectedPaths $(Quote-Single $canaryProbePath) -CommitMessage 'canary: verify Codex candidate metadata contract' -RequireAutomationMetadata -AutomationTask $(Quote-Single $TaskId) -AutomationState 'completed' -AutomationResult $(Quote-Single $canaryResultText) -AutomationImpact $(Quote-Single $canaryImpactText) -AutomationVerify $(Quote-Single $canaryVerifyText) -AutomationPlain $(Quote-Single $canaryPlainText)"
+  @(
+    '[TZG_CODEX_CANARY]'
+    "模型核验证明：外层已核验并传入 $Model；返回 model 必须精确等于该值。"
+    '这是隔离 canary worktree。不得读取任务队列、领取业务任务、修改其他 worktree、调用 runtime 或管理 automation。'
+    "只创建仓库根目录文件 $canaryProbePath，内容为 TZG_CODEX_CANDIDATE_METADATA_CANARY，然后原样执行以下唯一提交命令："
+    $finalizerCommand
+    "返回 status=verified、identity=Codex、model=$Model、完整 candidateCommit，并逐字返回以下四值："
+    "result=$canaryResultText"
+    "impact=$canaryImpactText"
+    "verify=$canaryVerifyText"
+    "plain=$canaryPlainText"
+    '只输出符合 schema 的 JSON 对象。'
   ) -join "`n"
 }
 
@@ -216,11 +250,29 @@ try {
   if (-not (Test-Path -LiteralPath (Join-Path $script:root '.git'))) { Stop-Candidate 'codex_repository_invalid' }
   if ($Action -ceq 'Canary') {
     $beforeHead = Invoke-GitText @('rev-parse', 'HEAD'); $beforeStatus = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')
-    $runOutput = Invoke-Runner -Prompt "[TZG_CODEX_CANARY] Return only a JSON object with status=verified, identity=Codex, model=$Model. Do not modify files or read the task queue."
+    if (-not [string]::IsNullOrWhiteSpace($beforeStatus)) { Stop-Candidate 'codex_canary_modified_repository' }
+    $runOutput = Invoke-Runner -Prompt (New-CanaryPrompt)
     $terminal = $runOutput.Terminal
     if ([string]$runOutput.Runner.status -cne 'ok' -or [string]$terminal.status -cne 'verified' -or [string]$terminal.identity -cne 'Codex' -or [string]$terminal.model -cne $Model) { Stop-Candidate 'codex_canary_identity_mismatch' }
-    if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne $beforeHead -or (Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')) -cne $beforeStatus) { Stop-Candidate 'codex_canary_modified_repository' }
-    $result = [ordered]@{ status = 'verified'; identity = 'Codex'; model = $Model; sessionId = [string]$runOutput.Runner.sessionId; pwshMajor = $PSVersionTable.PSVersion.Major; git = 'available' }
+    $head = Invoke-GitText @('rev-parse', 'HEAD')
+    if (
+      $head -cne [string]$terminal.candidateCommit -or
+      (Invoke-GitText @('rev-list', '--count', "$beforeHead..$head")) -cne '1' -or
+      (Invoke-GitText @('rev-parse', "$head^")) -cne $beforeHead -or
+      -not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))
+    ) { Stop-Candidate 'codex_canary_modified_repository' }
+    $changed = @(Get-ChangedPaths -Range "$beforeHead..$head")
+    if ($changed.Count -ne 1 -or $changed[0] -cne $canaryProbePath) { Stop-Candidate 'codex_canary_modified_repository' }
+    try {
+      $metadataContract = ConvertFrom-TzgAutomationCommitMessage -Message (Invoke-GitText @('show', '-s', '--format=%B', $head)) -ExpectedTask $TaskId -ExpectedState 'completed'
+    } catch { Stop-Candidate 'codex_canary_metadata_invalid' }
+    foreach ($pair in @(
+        @([string]$metadataContract.ResultText, $canaryResultText, [string]$terminal.result),
+        @([string]$metadataContract.ImpactText, $canaryImpactText, [string]$terminal.impact),
+        @([string]$metadataContract.VerifyText, $canaryVerifyText, [string]$terminal.verify),
+        @([string]$metadataContract.PlainText, $canaryPlainText, [string]$terminal.plain)
+      )) { if ($pair[0] -cne $pair[1] -or $pair[0] -cne $pair[2]) { Stop-Candidate 'codex_canary_metadata_invalid' } }
+    $result = [ordered]@{ status = 'verified'; identity = 'Codex'; model = $Model; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = $head; pwshMajor = $PSVersionTable.PSVersion.Major; git = 'available' }
   } else {
     if ([string]::IsNullOrWhiteSpace($Route)) { Stop-Candidate 'codex_route_invalid' }
     $shown = Invoke-JsonTool -Path $runtimePath -Arguments @('-Action', 'Show', '-StateRoot', $StateRoot) -DetailCode 'codex_runtime_mismatch'
@@ -243,7 +295,7 @@ try {
       if ([string]$metadata.route -cne $expectedRoute -or [string]$metadata.owner -cne 'codex' -or [string]$metadata.dispatchState -cne 'ready') { Stop-Candidate 'codex_task_not_ready' }
       $expectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
     }
-    $runOutput = Invoke-Runner -Prompt (New-Prompt -Run $run -ResumeContext $resume)
+    $runOutput = Invoke-Runner -Prompt (New-Prompt -Run $run -ResumeContext $resume -CandidatePaths $expectedPaths)
     $terminal = $runOutput.Terminal
     if ([string]$runOutput.Runner.status -cne 'ok' -or [string]$terminal.identity -cne 'Codex' -or [string]$terminal.model -cne $Model) { Stop-Candidate 'codex_runner_failed' }
     $head = Invoke-GitText @('rev-parse', 'HEAD'); $status = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')
@@ -263,6 +315,14 @@ try {
           Stop-Candidate $metadataDetail
         }
         $changed = @(Get-ChangedPaths -Range "$($run.baseCommit)..$head")
+        $reported = @($terminal.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+        if (($changed -join "`0") -cne ($reported -join "`0")) { Stop-Candidate 'codex_candidate_path_mismatch' }
+        foreach ($pair in @(
+            @([string]$metadataContract.ResultText, [string]$terminal.result),
+            @([string]$metadataContract.ImpactText, [string]$terminal.impact),
+            @([string]$metadataContract.VerifyText, [string]$terminal.verify),
+            @([string]$metadataContract.PlainText, [string]$terminal.plain)
+          )) { if ($pair[0] -cne $pair[1]) { Stop-Candidate 'codex_candidate_metadata_fields_invalid' } }
         if ($Route -ceq 'QueueMaintenance') { foreach ($path in $changed) { if (-not (Test-QueueMaintenancePath $path)) { Stop-Candidate 'codex_candidate_path_violation' } } } else { foreach ($path in $changed) { if ($expectedPaths -cnotcontains $path) { Stop-Candidate 'codex_candidate_path_violation' } } }
         $transition = if ($Route -ceq 'QueueMaintenance') { $e = Invoke-JsonTool -Path $checkerPath -Arguments @('-RepositoryRoot', $script:root, '-OutputJson') -DetailCode 'codex_candidate_postcondition_failed'; "queue_ready_count=$([int]$e.readyCount)" } else { $e = Invoke-JsonTool -Path $checkerPath -Arguments @('-RepositoryRoot', $script:root, '-TaskId', $TaskId, '-Postcondition', 'CodexClosedOrNonReady', '-OutputJson') -DetailCode 'codex_candidate_postcondition_failed'; [string]$e.taskState }
         $candidateResult = [ordered]@{ category = 'completed'; expectedTransition = $transition; changedPaths = $changed; verified = @([string]$metadataContract.Verification); unverified = @([string]$metadataContract.Next); residualRisk = [string]$metadataContract.Next; result = [string]$metadataContract.ResultText; impact = [string]$metadataContract.ImpactText; verify = [string]$metadataContract.VerifyText; plain = [string]$metadataContract.PlainText }

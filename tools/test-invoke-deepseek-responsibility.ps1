@@ -94,7 +94,7 @@ $sessionIndex = [Array]::IndexOf($CliArguments, '--session-id')
 $sessionId = $CliArguments[$sessionIndex + 1]
 [IO.File]::WriteAllText($env:TZG_FAKE_CLAUDE_RECORD, ([ordered]@{ arguments = $CliArguments; prompt = $prompt; cwd = [Environment]::CurrentDirectory } | ConvertTo-Json -Depth 10), [Text.UTF8Encoding]::new($false))
 if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
-  $terminal = [ordered]@{ status = 'verified'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash' }
+  $terminal = [ordered]@{ status = 'verified'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; pwshProbe = 'TZG_DEEPSEEK_PWSH_CANARY' }
 } else {
   [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'fixtures')) | Out-Null
   [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixtures/business.txt'), 'candidate', [Text.UTF8Encoding]::new($false))
@@ -131,13 +131,19 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-True ([string]$record.prompt -match 'Do not modify the task card') 'Candidate prompt omitted lifecycle exclusion'
   Assert-True ([string]$record.prompt -match 'Do not create temporary, diagnostic, conversion, or helper files anywhere under RepositoryRoot') 'Candidate prompt omitted repository temporary-file exclusion'
   Assert-True ([string]$record.prompt -match 'result="问题=\.\.\.；完成=\.\.\."') 'Candidate prompt omitted the exact finalizer metadata form'
-  $allowedTools = [string]$arguments[[Array]::IndexOf($arguments, '--allowedTools') + 1]
-  Assert-True (-not $allowedTools.Contains('Bash(*)', [StringComparison]::Ordinal)) 'Wrapper allowed wildcard Bash'
+  Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--permission-mode') + 1]) 'bypassPermissions' 'Wrapper did not restore unrestricted Claude Code permissions'
+  Assert-Equal ([Array]::IndexOf($arguments, '--allowedTools')) -1 'Wrapper retained an allowedTools restriction'
 
   $canary = Invoke-Wrapper -Action Canary -Root $mainRoot -TaskId '' -RunId ''
   Assert-Equal ([string]$canary.Json.status) 'verified' 'Canary did not verify'
   Assert-Equal ([string]$canary.Json.providerEndpointCategory) 'local_deepseek_gateway' 'Canary endpoint category mismatch'
   Assert-Equal ([int]$canary.Json.pwshMajor) 7 'Canary did not verify PowerShell 7'
+  Assert-Equal ([string]$canary.Json.pwshProbe) 'TZG_DEEPSEEK_PWSH_CANARY' 'Canary did not verify Claude Code PowerShell execution'
+  $canaryRecord = Get-Content -Raw -LiteralPath $recordPath | ConvertFrom-Json -Depth 20
+  Assert-True ([string]$canaryRecord.prompt -match 'Write-Output TZG_DEEPSEEK_PWSH_CANARY') 'Canary prompt omitted the PowerShell permission probe'
+  $canaryArguments = @($canaryRecord.arguments | ForEach-Object { [string]$_ })
+  Assert-Equal ([string]$canaryArguments[[Array]::IndexOf($canaryArguments, '--permission-mode') + 1]) 'bypassPermissions' 'Canary did not use unrestricted permissions'
+  Assert-Equal ([Array]::IndexOf($canaryArguments, '--allowedTools')) -1 'Canary retained an allowedTools restriction'
 
   $env:ANTHROPIC_BASE_URL = 'https://api.anthropic.com'
   $identityFailure = Invoke-Wrapper -Action Canary -Root $mainRoot -TaskId '' -RunId ''

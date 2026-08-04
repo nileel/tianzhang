@@ -20,6 +20,7 @@ $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
 $originalTrace = $env:TZG_FAKE_CODEX_TRACE
+$originalMismatch = $env:TZG_FAKE_CODEX_MISMATCH
 $taskId = 'TASK-CODEX-CANDIDATE'
 
 try {
@@ -72,44 +73,113 @@ param([Parameter(ValueFromRemainingArguments = $true)][string[]]$CliArguments)
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 $prompt = [Console]::In.ReadToEnd()
 [IO.File]::WriteAllText($env:TZG_FAKE_CODEX_TRACE, $prompt, [Text.UTF8Encoding]::new($false))
-$taskId = 'TASK-CODEX-CANDIDATE'
-$cardPath = Join-Path ([Environment]::CurrentDirectory) "开发管理/任务卡/$taskId.txt"
-$card = [IO.File]::ReadAllText($cardPath)
-$card = $card.Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": "fixture"', '"stateReason": "fixture blocker confirmed"')
-[IO.File]::WriteAllText($cardPath, $card, [Text.UTF8Encoding]::new($false))
-$queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
-$queue = @([IO.File]::ReadAllLines($queuePath) | Where-Object { $_ -notmatch '^\| TASK-CODEX-CANDIDATE \|' }) -join "`n"
-[IO.File]::WriteAllText($queuePath, $queue, [Text.UTF8Encoding]::new($false))
-$backlogPath = Join-Path ([Environment]::CurrentDirectory) '开发管理/任务列表/自动化任务.txt'
-$backlog = [IO.File]::ReadAllText($backlogPath).Replace('| TASK-CODEX-CANDIDATE | P1 | codex | 已排队 |', '| TASK-CODEX-CANDIDATE | P1 | codex | 阻塞 |')
-[IO.File]::WriteAllText($backlogPath, $backlog, [Text.UTF8Encoding]::new($false))
-& git add -- $cardPath $queuePath $backlogPath
-$message = "test: close Codex candidate fixture`n`nAutomation: tzg-hourly-controller`nTask: TASK-CODEX-CANDIDATE`nState: completed`nResult: 问题=测试任务仍可调度；完成=确认阻塞并移出队列`nImpact: 影响=验证 Codex 候选入口；边界=不修改真实任务`nVerify: 验证=任务投影检查通过；后续=等待固定入口集成`nPlain: 发生=测试任务被标记为暂不可执行；影响=只验证自动流程；需要=无需处理"
-& git commit -q -m $message
-if ($LASTEXITCODE -ne 0) { throw 'fake Codex commit failed' }
+$outputIndex = [Array]::IndexOf($CliArguments, '--output-last-message')
+if ($outputIndex -lt 0) { throw 'fake Codex output path missing' }
+$outputPath = $CliArguments[$outputIndex + 1]
+$modelIndex = [Array]::IndexOf($CliArguments, '-m')
+$model = $CliArguments[$modelIndex + 1]
+if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
+  $probePath = Join-Path ([Environment]::CurrentDirectory) '.tzg-codex-canary-probe.txt'
+  $probeText = if ($env:TZG_FAKE_CODEX_MISMATCH -eq '1') { 'TZG_CODEX_CANDIDATE_METADATA_CANARY_MISMATCH' } else { 'TZG_CODEX_CANDIDATE_METADATA_CANARY' }
+  [IO.File]::WriteAllText($probePath, $probeText, [Text.UTF8Encoding]::new($false))
+  $resultText = '问题=候选提交合同需要真实核验；完成=canary 已通过正式 finalizer 创建提交'
+  $impactText = '影响=验证 Codex 候选提交元数据链路；边界=仅修改隔离 canary worktree'
+  $verifyText = '验证=提交元数据与终态字段一致；后续=由外层清理 canary worktree'
+  $plainText = '发生=自动化完成了一次隔离提交探针；影响=不会进入主分支；需要=无需处理'
+  $commit = [string](& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+    -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths '.tzg-codex-canary-probe.txt' `
+    -CommitMessage 'canary: verify Codex candidate metadata contract' -RequireAutomationMetadata `
+    -AutomationTask 'CANARY' -AutomationState 'completed' -AutomationResult $resultText `
+    -AutomationImpact $impactText -AutomationVerify $verifyText -AutomationPlain $plainText | Select-Object -Last 1)
+  if ($LASTEXITCODE -ne 0) { throw 'fake Codex canary commit failed' }
+  $terminal = [ordered]@{
+    status = 'verified'; identity = 'Codex'; model = $model; candidateCommit = [string]$commit
+    result = $(if ($env:TZG_FAKE_CODEX_MISMATCH -eq '1') { '问题=终态故意不一致；完成=验证拒绝路径' } else { $resultText })
+    impact = $impactText; verify = $verifyText; plain = $plainText
+  }
+} else {
+  $taskId = 'TASK-CODEX-CANDIDATE'
+  $cardPath = Join-Path ([Environment]::CurrentDirectory) "开发管理/任务卡/$taskId.txt"
+  $card = [IO.File]::ReadAllText($cardPath)
+  $card = $card.Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": "fixture"', '"stateReason": "fixture blocker confirmed"')
+  [IO.File]::WriteAllText($cardPath, $card, [Text.UTF8Encoding]::new($false))
+  $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
+  $queue = @([IO.File]::ReadAllLines($queuePath) | Where-Object { $_ -notmatch '^\| TASK-CODEX-CANDIDATE \|' }) -join "`n"
+  [IO.File]::WriteAllText($queuePath, $queue, [Text.UTF8Encoding]::new($false))
+  $backlogPath = Join-Path ([Environment]::CurrentDirectory) '开发管理/任务列表/自动化任务.txt'
+  $backlog = [IO.File]::ReadAllText($backlogPath).Replace('| TASK-CODEX-CANDIDATE | P1 | codex | 已排队 |', '| TASK-CODEX-CANDIDATE | P1 | codex | 阻塞 |')
+  [IO.File]::WriteAllText($backlogPath, $backlog, [Text.UTF8Encoding]::new($false))
+  $resultText = '问题=测试任务仍可调度；完成=确认阻塞并移出队列'
+  $impactText = '影响=验证 Codex 候选入口；边界=不修改真实任务'
+  $verifyText = '验证=任务投影检查通过；后续=等待固定入口集成'
+  $plainText = '发生=测试任务被标记为暂不可执行；影响=只验证自动流程；需要=无需处理'
+  $paths = "开发管理/任务列表/自动化任务.txt|开发管理/当前任务队列.txt|开发管理/任务卡/$taskId.txt"
+  $commit = [string](& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+    -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths $paths `
+    -CommitMessage 'test: close Codex candidate fixture' -RequireAutomationMetadata `
+    -AutomationTask $taskId -AutomationState 'completed' -AutomationResult $resultText `
+    -AutomationImpact $impactText -AutomationVerify $verifyText -AutomationPlain $plainText | Select-Object -Last 1)
+  if ($LASTEXITCODE -ne 0) { throw 'fake Codex commit failed' }
+  $changedPaths = @(& git -c core.quotepath=false diff --name-only --no-renames "$commit^..$commit")
+  $terminal = [ordered]@{
+    status = 'completed'; identity = 'Codex'; model = $model; candidateCommit = [string]$commit
+    expectedTransition = 'blocked'; changedPaths = $changedPaths; verified = @('task-card checker passed')
+    unverified = @('none'); residualRisk = 'fixture only'; result = $resultText; impact = $impactText; verify = $verifyText; plain = $plainText
+  }
+}
+[IO.File]::WriteAllText($outputPath, ($terminal | ConvertTo-Json -Compress -Depth 20), [Text.UTF8Encoding]::new($false))
 [Console]::Out.WriteLine(([ordered]@{ type = 'thread.started'; thread_id = [Guid]::NewGuid().ToString() } | ConvertTo-Json -Compress))
 '@
   Write-Utf8 -Path (Join-Path $fakeBin 'codex.cmd') -Text "@echo off`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"%~dp0fake-codex.ps1`" %*"
   $env:PATH = "$fakeBin;$originalPath"
   $env:TZG_FAKE_CODEX_TRACE = $tracePath
-  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Route Execution -RepositoryRoot ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId) -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
+  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId) -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
   Assert-Equal $LASTEXITCODE 0 'Codex candidate wrapper process failed'
   Assert-Equal $output.Count 1 'Codex candidate wrapper output count mismatch'
   $candidate = $output[0] | ConvertFrom-Json -Depth 50
-  Assert-Equal ([string]$candidate.status) 'completed' "Codex candidate failed: $($candidate | ConvertTo-Json -Compress -Depth 20)"
+  $candidateRepositoryEvidence = [ordered]@{
+    head = Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-parse', 'HEAD')
+    base = $base
+    count = Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")
+    parent = Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-parse', 'HEAD^')
+    status = Invoke-Git -Root ([string]$run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')
+  }
+  Assert-Equal ([string]$candidate.status) 'completed' "Codex candidate failed: $($candidate | ConvertTo-Json -Compress -Depth 20); repository=$($candidateRepositoryEvidence | ConvertTo-Json -Compress)"
   Assert-True ([string]$candidate.sessionId -ne '') 'Codex candidate sessionId is missing'
   Assert-Equal ([string]$candidate.candidateResult.expectedTransition) 'blocked' 'Codex candidate transition mismatch'
   Assert-True (@($candidate.candidateResult.changedPaths) -ccontains "开发管理/任务卡/$taskId.txt") 'Codex candidate lost task-card path'
   $trace = [IO.File]::ReadAllText($tracePath)
   Assert-True ($trace -match '\[TZG_CODEX_CANDIDATE\]') 'Codex candidate prompt marker is missing'
   Assert-True ($trace -match 'claim') 'Codex candidate prompt omitted fixed claim boundary'
-  Assert-True ($trace -match 'worktree/branch') 'Codex candidate prompt omitted worktree boundary'
+  Assert-True ($trace -match 'worktree') 'Codex candidate prompt omitted worktree boundary'
+  Assert-True ($trace -match 'automation-finalize-commit\.ps1') 'Codex candidate prompt omitted the formal finalizer'
+  Assert-True ($trace -match '-RequireAutomationMetadata') 'Codex candidate prompt omitted required automation metadata'
+  Assert-True ($trace -match "-AutomationTask '$taskId'") 'Codex candidate prompt omitted the exact task metadata'
+  Assert-True ($trace -match '必须与该提交的四个元数据值逐字一致') 'Codex candidate prompt omitted terminal/commit value synchronization'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex candidate did not create exactly one commit'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex candidate worktree is dirty'
 
+  $canaryBase = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
+  $canaryOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Canary -RepositoryRoot $mainRoot -TaskId 'CANARY' -RunId "CANARY-$testId" -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
+  $canary = $canaryOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$canary.status) 'verified' "Codex canary failed: $($canary | ConvertTo-Json -Compress -Depth 20)"
+  Assert-True ([string]$canary.candidateCommit -cmatch '^[0-9a-f]{40}$') 'Codex canary commit is invalid'
+  Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-list', '--count', "$canaryBase..HEAD")) '1' 'Codex canary did not create one probe commit'
+  Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex canary repository is dirty'
+  $canaryTrace = [IO.File]::ReadAllText($tracePath)
+  Assert-True ($canaryTrace -match '\[TZG_CODEX_CANARY\]') 'Codex canary prompt marker is missing'
+  Assert-True ($canaryTrace -match '-RequireAutomationMetadata') 'Codex canary did not exercise metadata finalization'
+
+  $env:TZG_FAKE_CODEX_MISMATCH = '1'
+  $mismatchOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Canary -RepositoryRoot $mainRoot -TaskId 'CANARY' -RunId "CANARY-MISMATCH-$testId" -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
+  $mismatch = $mismatchOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$mismatch.status) 'failed' 'Codex canary accepted terminal/commit metadata mismatch'
+  Assert-Equal ([string]$mismatch.detailCode) 'codex_canary_metadata_invalid' 'Codex canary mismatch failure code is unstable'
+  $env:TZG_FAKE_CODEX_MISMATCH = $null
+
   Write-Output 'test-invoke-codex-candidate: OK'
 } finally {
-  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace
+  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     if (-not $resolved.StartsWith($tempBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-codex-candidate-test-$testId") { throw "Unsafe Codex candidate test cleanup: $resolved" }

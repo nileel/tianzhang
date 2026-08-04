@@ -177,7 +177,8 @@ function New-CanaryPrompt {
     '[TZG_DEEPSEEK_WINDOWS_CANARY]'
     'Read AGENTS.md and CLAUDE.md from the current repository.'
     'Do not read the task queue, claim work, modify files, create commits, or invoke another agent.'
-    'Return only the supplied structured object with status=verified, identity=DeepSeek V4 Flash, model=deepseek-v4-flash.'
+    'Run exactly this harmless PowerShell probe: pwsh -NoProfile -ExecutionPolicy Bypass -Command "Write-Output TZG_DEEPSEEK_PWSH_CANARY"'
+    'Return only the supplied structured object with status=verified, identity=DeepSeek V4 Flash, model=deepseek-v4-flash, and pwshProbe=TZG_DEEPSEEK_PWSH_CANARY.'
   ) -join "`n"
 }
 
@@ -189,6 +190,7 @@ function New-TerminalSchema {
         status = [ordered]@{ type = 'string'; enum = @('verified', 'failed') }
         identity = [ordered]@{ type = 'string' }
         model = [ordered]@{ type = 'string' }
+        pwshProbe = [ordered]@{ type = 'string' }
         detailCode = [ordered]@{ type = 'string' }
       }
       required = @('status')
@@ -236,7 +238,7 @@ function New-TerminalSchema {
 }
 
 function Invoke-ClaudeSession {
-  param([string]$Executable, [string]$Prompt, [string]$AllowedTools)
+  param([string]$Executable, [string]$Prompt)
   $session = [Guid]::NewGuid().ToString()
   $startInfo = [Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = $Executable
@@ -252,7 +254,7 @@ function Invoke-ClaudeSession {
   foreach ($argument in @(
       '--session-id', $session, '--print', '--model', $modelName,
       '--output-format', 'json', '--json-schema', (New-TerminalSchema),
-      '--permission-mode', 'dontAsk', '--allowedTools', $AllowedTools
+      '--permission-mode', 'bypassPermissions'
     )) { $startInfo.ArgumentList.Add($argument) }
   $process = [Diagnostics.Process]::new()
   $process.StartInfo = $startInfo
@@ -399,11 +401,12 @@ try {
     $script:stage = 'canary_cli'
     $beforeHead = Invoke-GitText @('rev-parse', 'HEAD')
     $beforeStatus = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')
-    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CanaryPrompt) -AllowedTools 'Read'
+    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CanaryPrompt)
     if (
       [string]$terminal.status -cne 'verified' -or
       [string]$terminal.identity -cne 'DeepSeek V4 Flash' -or
-      [string]$terminal.model -cne $modelName
+      [string]$terminal.model -cne $modelName -or
+      [string]$terminal.pwshProbe -cne 'TZG_DEEPSEEK_PWSH_CANARY'
     ) { Stop-DeepSeek 'deepseek_canary_identity_mismatch' }
     if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne $beforeHead -or (Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')) -cne $beforeStatus) {
       Stop-DeepSeek 'deepseek_canary_modified_repository'
@@ -411,7 +414,7 @@ try {
     $result = [ordered]@{
       status = 'verified'; identity = 'DeepSeek V4 Flash'; model = $modelName
       providerEndpointCategory = 'local_deepseek_gateway'; sessionId = $capturedSessionId
-      pwshMajor = $PSVersionTable.PSVersion.Major; git = 'available'
+      pwshMajor = $PSVersionTable.PSVersion.Major; pwshProbe = 'TZG_DEEPSEEK_PWSH_CANARY'; git = 'available'
     }
   } else {
     $script:stage = 'runtime'
@@ -445,18 +448,8 @@ try {
     }
     $candidatePaths = @(Get-CandidatePaths -Metadata $metadata)
     if ($candidatePaths.Count -eq 0) { Stop-DeepSeek 'deepseek_no_candidate_paths' }
-    $allowedTools = @(
-      'Read', 'Edit', 'Write',
-      'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 *)',
-      'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 *)',
-      'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 *)',
-      'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 *)',
-      'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 *)',
-      'Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 *)',
-      'Bash(dotnet build *)', 'Bash(dotnet run *)', 'Bash(git diff --check)', 'Bash(git status --short)'
-    ) -join ','
     $script:stage = 'candidate_cli'
-    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths -ResumeContext $resumeContext) -AllowedTools $allowedTools
+    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths -ResumeContext $resumeContext)
     $script:stage = 'candidate_evidence'
     switch ([string]$terminal.status) {
       'completed' {
