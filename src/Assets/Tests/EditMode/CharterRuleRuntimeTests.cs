@@ -5,6 +5,7 @@ using NUnit.Framework;
 using TianZhang.Content;
 using TianZhang.Editor;
 using TianZhang.World;
+using UnityEditor;
 using UnityEngine;
 
 namespace TianZhang.Tests
@@ -41,7 +42,12 @@ namespace TianZhang.Tests
         [SetUp]
         public void SetUp()
         {
-            catalog = DataConfigImporter.CreateProductionCharterRuleReferenceCatalog();
+            // 生产输入只来自唯一静态目录 asset 的批准目录与已导入定义，不调用 Editor factory。
+            var staticCatalog = AssetDatabase.LoadAssetAtPath<CharterRuleStaticCatalogData>(
+                "Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset");
+            Assert.IsNotNull(staticCatalog, "The single approved charter static catalog asset is missing.");
+            Assert.That(staticCatalog.TryValidateDefinitions(out string catalogReason), Is.True, catalogReason);
+            catalog = staticCatalog.ReferenceCatalog;
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
             definition = DataConfigImporter.ParseCharterRuleDefinitions(
                 File.ReadAllLines(sourceFilePath),

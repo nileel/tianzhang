@@ -91,11 +91,29 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 - 表头固定为 `ruleEntryId,displayName,ruleFamily,relationElement,compatiblePhenomena,positiveCommit,negativeCommit,requiredAuthority,requiredNodeTypes,scopeType,scopeTierCap,anchorNodeIds,propagationBoundaryProfileId,currentCoverageSet,affectedWorldVariables,conflictProfileId,failurePolicy,worldEventOutputs`；未知列、缺列和空的生产字段失败关闭。
 - 集合以 `|` 分隔；`worldEventOutputs` 的单项格式为
   `eventId~environmentProfileId`。`displayName` 必须是 Language 键而非显示文本。
-- 生产行必须通过 `DataConfigImporter.CreateProductionCharterRuleReferenceCatalog` 的显式外部目录解析遗物权限、组织授权、节点、边界、现实供给、提交、变量、冲突／跨阶资格、事件和环境档案。当前目录只声明旧水驿／地下泵房门禁、太玄界印管理场景、已接通水工／册界节点、已登记现实供给、`conflict_charter_water_basin` 和 `env_guanzhong_wild`；不能用 fixture、显示文本或路径补齐。
+- 生产行必须通过唯一静态目录 `Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset`
+  中批准的 `CharterRuleReferenceCatalog` 解析遗物权限、组织授权、节点、边界、现实供给、提交、
+  变量、冲突／跨阶资格、事件和环境档案。导入器只读取该 canonical asset 的批准目录，不再持有
+  第二份硬编码生产目录；十八字段与全部外部引用由 `CharterRuleCatalogValidator` 这一共享校验
+  解析，玩家运行时与导入器调用同一实现。当前目录只声明旧水驿／地下泵房门禁、太玄界印管理
+  场景、已接通水工／册界节点、已登记现实供给、`conflict_charter_water_basin` 和
+  `env_guanzhong_wild`；不能用 fixture、显示文本或路径补齐。
 - 首条样例保持 `CONNECTED_NODES`／`AREA`，仅列出同一流域内已接通节点的可枚举覆盖；它只输出 `env_guanzhong_wild`，不把地区长期状态反写入环境档案，也不表示规则事务、存档、场景或 UI 已实现。
 - `scopeType` 只接受 `SINGLE_NODE`、`CONNECTED_NODES`、`REGIONAL_HUB`；
   `scopeTierCap` 只接受 `NODE`、`AREA`、`REGION`；`failurePolicy` 只接受
   `REJECT`、`SUSPEND`、`SAFE_DOWNGRADE`，均不得依靠默认值。
+
+## CharterRuleStaticCatalog 静态目录
+
+`Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset` 是玩家运行时唯一的册界
+静态校验来源，只保存两类静态输入：已导入 `CharterRuleDefinitionData` 的直接 asset 引用，以及
+一个已批准、可序列化的 `CharterRuleReferenceCatalog`。`ContentCatalogData` 只保存这个 asset 的
+单一引用并暴露失败关闭的取得方法；Editor 导入、fixture 和默认化数据不参与保存或恢复。
+
+- 目录显式声明、目录内无重复稳定 ID、每个定义具有唯一 `ruleEntryId`，且每个定义的十八字段及
+  全部外部引用都由同一目录解析；零、缺失或不匹配的 `definitionCatalogVersion` 不得从默认值推断。
+- `GameSessionSnapshot` schema 4 保存／恢复成对记录状态 presence、定义目录版本与深复制状态；
+  schema 0～3 只恢复明确未接入状态，读档不重放供给、占用、提交、冲突或事件。
 
 ## JindanStaticStates.csv 契约
 

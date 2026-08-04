@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TianZhang.Entity;
+using TianZhang.World;
 
 namespace TianZhang.Game
 {
@@ -303,6 +304,9 @@ namespace TianZhang.Game
         public List<NpcStateSaveData> npcs = new List<NpcStateSaveData>();
         public List<BountyStateSaveData> bounties = new List<BountyStateSaveData>();
         public FoundationPurpleMansionSaveData playerFoundationPurpleMansionState;
+        public bool hasCharterRuntimeState;
+        public int charterDefinitionCatalogVersion;
+        public CharterRuntimeStateData charterRuntimeState;
     }
 
     internal sealed class GameSessionRestoredState
@@ -320,6 +324,9 @@ namespace TianZhang.Game
         public IReadOnlyList<NpcStateSnapshot> Npcs { get; }
         public IReadOnlyList<BountyStateSnapshot> Bounties { get; }
         public FoundationPurpleMansionSaveData PlayerFoundationPurpleMansionSaveData { get; }
+        public bool HasCharterRuntimeState { get; }
+        public int CharterDefinitionCatalogVersion { get; }
+        public CharterRuntimeStateData CharterRuntimeState { get; }
 
         public GameSessionRestoredState(
             string currentWorldNodeId,
@@ -334,7 +341,10 @@ namespace TianZhang.Game
             IReadOnlyList<InventoryStateSnapshot> inventory,
             IReadOnlyList<NpcStateSnapshot> npcs,
             IReadOnlyList<BountyStateSnapshot> bounties,
-            FoundationPurpleMansionSaveData playerFoundationPurpleMansionSaveData)
+            FoundationPurpleMansionSaveData playerFoundationPurpleMansionSaveData,
+            bool hasCharterRuntimeState,
+            int charterDefinitionCatalogVersion,
+            CharterRuntimeStateData charterRuntimeState)
         {
             CurrentWorldNodeId = currentWorldNodeId;
             WorldYear = worldYear;
@@ -349,6 +359,9 @@ namespace TianZhang.Game
             Npcs = npcs;
             Bounties = bounties;
             PlayerFoundationPurpleMansionSaveData = playerFoundationPurpleMansionSaveData;
+            HasCharterRuntimeState = hasCharterRuntimeState;
+            CharterDefinitionCatalogVersion = charterDefinitionCatalogVersion;
+            CharterRuntimeState = charterRuntimeState;
         }
     }
 
@@ -357,7 +370,9 @@ namespace TianZhang.Game
         public const int LegacySchemaVersion = 0;
         public const int StateCollectionsSchemaVersion = 1;
         public const int FoundationPurpleMansionSchemaVersion = 2;
-        public const int CurrentSchemaVersion = 3;
+        public const int BountySchemaVersion = 3;
+        public const int CharterSchemaVersion = 4;
+        public const int CurrentSchemaVersion = 4;
 
         public static GameSessionSaveData Capture(GameSession session)
         {
@@ -377,7 +392,17 @@ namespace TianZhang.Game
                 lastReturnTarget = CaptureReturnTarget(session.LastReturnTarget),
                 playerFoundationPurpleMansionState = CaptureFoundationPurpleMansionState(
                     session.PlayerFoundationPurpleMansionSaveData),
+                hasCharterRuntimeState = session.CharterRuntimeState != null,
+                charterDefinitionCatalogVersion =
+                    session.CharterRuntimeState == null ? 0 : session.CharterDefinitionCatalogVersion,
+                charterRuntimeState = session.CharterRuntimeState?.CreateCopy(),
             };
+            if (data.hasCharterRuntimeState && data.charterDefinitionCatalogVersion <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Charter runtime state requires a positive definition catalog version; " +
+                    "zero or missing versions are never inferred.");
+            }
 
             foreach (QuestStateSnapshot snapshot in session.QuestStates.Snapshots)
                 data.quests.Add(CaptureQuest(snapshot));
@@ -406,7 +431,8 @@ namespace TianZhang.Game
             if (data.schemaVersion != LegacySchemaVersion &&
                 data.schemaVersion != StateCollectionsSchemaVersion &&
                 data.schemaVersion != FoundationPurpleMansionSchemaVersion &&
-                data.schemaVersion != CurrentSchemaVersion)
+                data.schemaVersion != BountySchemaVersion &&
+                data.schemaVersion != CharterSchemaVersion)
             {
                 throw new NotSupportedException(
                     "Unsupported game session save schema: " + data.schemaVersion);
@@ -441,24 +467,59 @@ namespace TianZhang.Game
             FoundationPurpleMansionSaveData playerFoundationPurpleMansionState = null;
             if (data.schemaVersion == StateCollectionsSchemaVersion ||
                 data.schemaVersion == FoundationPurpleMansionSchemaVersion ||
-                data.schemaVersion == CurrentSchemaVersion)
+                data.schemaVersion == BountySchemaVersion ||
+                data.schemaVersion == CharterSchemaVersion)
             {
                 RestoreQuests(data.quests, quests);
                 RestoreInventory(data.inventory, inventory);
                 RestoreNpcs(
                     data.npcs,
                     npcs,
-                    data.schemaVersion == CurrentSchemaVersion);
+                    data.schemaVersion == BountySchemaVersion ||
+                    data.schemaVersion == CharterSchemaVersion);
             }
-            if (data.schemaVersion == CurrentSchemaVersion)
+            if (data.schemaVersion == BountySchemaVersion ||
+                data.schemaVersion == CharterSchemaVersion)
             {
                 RestoreBounties(data.bounties, bounties);
             }
             if (data.schemaVersion == FoundationPurpleMansionSchemaVersion ||
-                data.schemaVersion == CurrentSchemaVersion)
+                data.schemaVersion == BountySchemaVersion ||
+                data.schemaVersion == CharterSchemaVersion)
             {
                 playerFoundationPurpleMansionState = RestoreFoundationPurpleMansionState(
                     data.playerFoundationPurpleMansionState);
+            }
+
+            // schema 4 成对记录册界状态 presence、定义目录版本与深复制状态；schema 0～3 没有册界
+            // 字段，只恢复为明确未接入状态。错误 presence 组合与零/缺失版本一律失败关闭；
+            // JsonUtility 会把 JSON 中的 null 反序列化为默认实例，故空 payload 按明确未接入处理。
+            bool hasCharterRuntimeState = false;
+            int charterDefinitionCatalogVersion = 0;
+            CharterRuntimeStateData charterRuntimeState = null;
+            if (data.schemaVersion == CharterSchemaVersion)
+            {
+                if (data.hasCharterRuntimeState)
+                {
+                    if (IsAbsentCharterRuntimeState(data.charterRuntimeState) ||
+                        data.charterDefinitionCatalogVersion <= 0)
+                    {
+                        throw new ArgumentException(
+                            "Charter runtime state presence requires a non-empty payload and a positive definition catalog version.",
+                            nameof(data));
+                    }
+
+                    hasCharterRuntimeState = true;
+                    charterDefinitionCatalogVersion = data.charterDefinitionCatalogVersion;
+                    charterRuntimeState = data.charterRuntimeState.CreateCopy();
+                }
+                else if (!IsAbsentCharterRuntimeState(data.charterRuntimeState) ||
+                         data.charterDefinitionCatalogVersion != 0)
+                {
+                    throw new ArgumentException(
+                        "Charter runtime state presence flag does not match its payload.",
+                        nameof(data));
+                }
             }
 
             return new GameSessionRestoredState(
@@ -474,7 +535,10 @@ namespace TianZhang.Game
                 inventory,
                 npcs,
                 bounties,
-                playerFoundationPurpleMansionState);
+                playerFoundationPurpleMansionState,
+                hasCharterRuntimeState,
+                charterDefinitionCatalogVersion,
+                charterRuntimeState);
         }
 
         private static FoundationPurpleMansionSaveData CaptureFoundationPurpleMansionState(
@@ -512,6 +576,28 @@ namespace TianZhang.Game
                 IsEmpty(source.closedRetreatPlan) && IsEmpty(source.jindanLock) &&
                 !source.hasJindanFormationSnapshot &&
                 string.IsNullOrEmpty(source.lastClosedRetreatStopReason);
+        }
+
+        /// <summary>
+        /// A default-instantiated charter payload (all stable IDs, states and records empty) is the
+        /// explicit un-accessed state; JsonUtility materializes a default instance for JSON null.
+        /// </summary>
+        internal static bool IsAbsentCharterRuntimeState(CharterRuntimeStateData source)
+        {
+            return source == null ||
+                string.IsNullOrEmpty(source.stateId) &&
+                string.IsNullOrEmpty(source.charterRelicState) &&
+                string.IsNullOrEmpty(source.worldSealState) &&
+                IsEmpty(source.registeredRuleEntryIds) &&
+                IsEmpty(source.nodeStates) &&
+                IsEmpty(source.organizationAuthorizationVersions) &&
+                IsEmpty(source.currentCoverageSet) &&
+                IsEmpty(source.ruleEntryOccupancies) &&
+                IsEmpty(source.nodeOccupancies) &&
+                IsEmpty(source.realitySupplyStates) &&
+                IsEmpty(source.positiveCommitResults) &&
+                IsEmpty(source.negativeCommitResults) &&
+                IsEmpty(source.currentRegionRuleEntryIds);
         }
 
         private static bool IsEmpty(FoundationStateRecord value)

@@ -11,6 +11,40 @@ namespace TianZhang.Content
         [SerializeField] private EnemyData[] enemies = Array.Empty<EnemyData>();
         [SerializeField] private ItemData[] items = Array.Empty<ItemData>();
         [SerializeField] private BountyData[] bounties = Array.Empty<BountyData>();
+        [SerializeField] private CharterRuleStaticCatalogData charterRuleStaticCatalog;
+
+        public CharterRuleStaticCatalogData CharterRuleStaticCatalog => charterRuleStaticCatalog;
+
+        /// <summary>
+        /// Fail-closed access to the single approved charter static directory. It resolves only when
+        /// the asset reference exists and its version, declared catalog and definitions all validate;
+        /// Editor import, fixtures and defaulted data never substitute for it.
+        /// </summary>
+        public bool TryGetCharterRuleStaticCatalog(
+            out CharterRuleStaticCatalogData staticCatalog,
+            out string reason)
+        {
+            if (charterRuleStaticCatalog == null)
+            {
+                staticCatalog = null;
+                reason = "charter_static_catalog_unavailable";
+                return false;
+            }
+            if (!charterRuleStaticCatalog.TryValidateDefinitions(out reason))
+            {
+                staticCatalog = null;
+                return false;
+            }
+
+            staticCatalog = charterRuleStaticCatalog;
+            reason = null;
+            return true;
+        }
+
+        public void SetCharterRuleStaticCatalog(CharterRuleStaticCatalogData staticCatalog)
+        {
+            charterRuleStaticCatalog = staticCatalog;
+        }
 
         public bool TryGetSettlement(string settlementId, out SettlementData settlement)
         {

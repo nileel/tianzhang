@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using TianZhang.Content;
 using TianZhang.Core;
 using TianZhang.Cultivation.JindanProof;
 using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.World;
+using UnityEditor;
 using UnityEngine;
 
 namespace TianZhang.Tests
@@ -471,6 +474,215 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void CharterRuntimeStateRoundTripsInSchemaFourAndLegacyVersionsRestoreUnaccessed()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            int version = LoadProductionStaticCatalog().DefinitionCatalogVersion;
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                string savedJson = JsonUtility.ToJson(BuildCharterSaveData(BuildValidCharterState(), version));
+                session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(savedJson),
+                    catalog);
+
+                Assert.IsNotNull(session.CharterRuntimeState);
+                Assert.AreEqual(version, session.CharterDefinitionCatalogVersion);
+                Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // 保存链只捕获深复制：篡改已捕获 payload 或已恢复存档 DTO 都不影响会话状态。
+                GameSessionSaveData captured = session.CaptureSaveData();
+                captured.charterRuntimeState.registeredRuleEntryIds = new[] { "tampered_entry" };
+                captured.charterRuntimeState.realitySupplyStates = Array.Empty<CharterRealitySupplyStateData>();
+                Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                GameSessionSaveData loaded = JsonUtility.FromJson<GameSessionSaveData>(savedJson);
+                session.RestoreSaveData(loaded, catalog);
+                loaded.charterRuntimeState.registeredRuleEntryIds[0] = "tampered_entry";
+                loaded.charterRuntimeState.positiveCommitResults =
+                    Array.Empty<CharterCommitResultStateData>();
+                Assert.AreEqual(savedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // schema 0～3 只恢复明确未接入：无状态、版本 0、presence false。
+                foreach (int legacyVersion in new[]
+                {
+                    GameSessionSnapshot.LegacySchemaVersion,
+                    GameSessionSnapshot.StateCollectionsSchemaVersion,
+                    GameSessionSnapshot.FoundationPurpleMansionSchemaVersion,
+                    GameSessionSnapshot.BountySchemaVersion,
+                })
+                {
+                    GameSessionSaveData legacy = JsonUtility.FromJson<GameSessionSaveData>(savedJson);
+                    legacy.schemaVersion = legacyVersion;
+                    session.RestoreSaveData(legacy, catalog);
+
+                    Assert.IsNull(session.CharterRuntimeState);
+                    Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+                    GameSessionSaveData recaptured = session.CaptureSaveData();
+                    Assert.IsFalse(recaptured.hasCharterRuntimeState);
+                    Assert.AreEqual(0, recaptured.charterDefinitionCatalogVersion);
+                    Assert.IsNull(recaptured.charterRuntimeState);
+                }
+
+                // schema 4 presence=false 只接受空 payload 与版本 0 → 明确未接入。
+                session.RestoreSaveData(BuildCharterSaveData(null, 0), catalog);
+                Assert.IsNull(session.CharterRuntimeState);
+                Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+                GameSessionSaveData absent = session.CaptureSaveData();
+                Assert.IsFalse(absent.hasCharterRuntimeState);
+                Assert.AreEqual(0, absent.charterDefinitionCatalogVersion);
+                Assert.IsNull(absent.charterRuntimeState);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void CharterSaveRestoreRejectsInvalidPayloadsAtomically()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            int version = LoadProductionStaticCatalog().DefinitionCatalogVersion;
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                string baselineJson = JsonUtility.ToJson(BuildCharterSaveData(BuildValidCharterState(), version));
+                session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(baselineJson),
+                    catalog);
+                string seededJson = JsonUtility.ToJson(session.CaptureSaveData());
+                Assert.AreEqual(baselineJson, seededJson);
+
+                // 版本与 presence 组合失败关闭。
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterDefinitionCatalogVersion = version + 1, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState = null, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterDefinitionCatalogVersion = 0, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.hasCharterRuntimeState = false, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                {
+                    data.hasCharterRuntimeState = false;
+                    data.charterDefinitionCatalogVersion = 1;
+                }, catalog);
+
+                // 条目、节点、授权、覆盖、占用、供给、正负提交与当前地区篡改失败关闭。
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.registeredRuleEntryIds[0] = "entry_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.registeredRuleEntryIds =
+                        new[] { "charter_entry_suifu_diji", "charter_entry_suifu_diji" }, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.currentRegionRuleEntryIds[0] = "entry_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.nodeStates[0].nodeId = "node_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.organizationAuthorizationVersions[0].authorizationVersionId =
+                        "authorization_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.organizationAuthorizationVersions =
+                        Array.Empty<CharterAuthorizationVersionStateData>(), catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.currentCoverageSet[0] = "coverage_other", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.ruleEntryOccupancies =
+                        new[]
+                        {
+                            data.charterRuntimeState.ruleEntryOccupancies[0],
+                            data.charterRuntimeState.ruleEntryOccupancies[0],
+                        }, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.realitySupplyStates =
+                        new[]
+                        {
+                            data.charterRuntimeState.realitySupplyStates[0],
+                            data.charterRuntimeState.realitySupplyStates[0],
+                        }, catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.negativeCommitResults =
+                        Array.Empty<CharterCommitResultStateData>(), catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.positiveCommitResults[0].commitId = "commit_unknown", catalog);
+                AssertRejectedWithoutMutation<ArgumentException>(session, seededJson, data =>
+                    data.charterRuntimeState.nodeStates[0].state = "", catalog);
+
+                // 非法档对完整旧会话的原子拒绝：每次失败后会话 JSON 与种子完全一致。
+                Assert.AreEqual(seededJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void CharterRestoreDoesNotReSettleAllocatedSuppliesOccupanciesOrCommits()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            int version = LoadProductionStaticCatalog().DefinitionCatalogVersion;
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(
+                        JsonUtility.ToJson(BuildCharterSaveData(BuildValidCharterState(), version))),
+                    catalog);
+                string firstJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+                // 重复读取只恢复已保存的 allocated／结果事实，不重放供给、占用或提交结算。
+                session.RestoreSaveData(
+                    JsonUtility.FromJson<GameSessionSaveData>(firstJson),
+                    catalog);
+                Assert.AreEqual(firstJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                Assert.AreEqual(3, session.CharterRuntimeState.realitySupplyStates.Length);
+                Assert.AreEqual(
+                    3,
+                    session.CharterRuntimeState.realitySupplyStates.Count(
+                        supply => supply.state == "allocated"));
+                Assert.AreEqual(1, session.CharterRuntimeState.ruleEntryOccupancies.Length);
+                Assert.AreEqual(3, session.CharterRuntimeState.nodeOccupancies.Length);
+                Assert.AreEqual(1, session.CharterRuntimeState.positiveCommitResults.Length);
+                Assert.AreEqual(1, session.CharterRuntimeState.negativeCommitResults.Length);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void CharterPresenceRestoreFailsClosedWithoutTheStaticCatalog()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            int version = LoadProductionStaticCatalog().DefinitionCatalogVersion;
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                string baselineJson = JsonUtility.ToJson(session.CaptureSaveData());
+                GameSessionSaveData charterSave = BuildCharterSaveData(BuildValidCharterState(), version);
+
+                // 没有唯一静态目录的 ContentCatalogData 不能为 schema 4 presence 提供校验来源。
+                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(charterSave, CreateCatalog()));
+                Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
         private static FoundationPurpleMansionStateData CreateCompleteFoundationPurpleMansionState()
         {
             var state = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
@@ -638,6 +850,149 @@ namespace TianZhang.Tests
             temporaryAssets.Add(catalog);
             catalog.ReplaceEntries(null, null, null, bounties.ToArray());
             return catalog;
+        }
+
+        private ContentCatalogData CreateCatalogWithCharterStaticCatalog()
+        {
+            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            temporaryAssets.Add(catalog);
+            catalog.SetCharterRuleStaticCatalog(LoadProductionStaticCatalog());
+            return catalog;
+        }
+
+        private static CharterRuleStaticCatalogData LoadProductionStaticCatalog()
+        {
+            var staticCatalog = AssetDatabase.LoadAssetAtPath<CharterRuleStaticCatalogData>(
+                "Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset");
+            Assert.IsNotNull(staticCatalog, "The single approved charter static catalog asset is missing.");
+            return staticCatalog;
+        }
+
+        private static GameSessionSaveData BuildCharterSaveData(
+            CharterRuntimeStateData state,
+            int definitionCatalogVersion)
+        {
+            return new GameSessionSaveData
+            {
+                schemaVersion = GameSessionSnapshot.CharterSchemaVersion,
+                currentWorldNodeId = "guanzhong_hub",
+                worldYear = GameSession.InitialWorldYear,
+                worldSeasonId = GameSession.InitialWorldSeasonId,
+                worldDay = 5,
+                worldTimeOfDayId = GameSession.InitialWorldTimeOfDayId,
+                hasCharterRuntimeState = state != null,
+                charterDefinitionCatalogVersion = state == null ? 0 : definitionCatalogVersion,
+                charterRuntimeState = state,
+            };
+        }
+
+        private static CharterRuntimeStateData BuildValidCharterState()
+        {
+            return new CharterRuntimeStateData
+            {
+                stateId = "charter_runtime_save_fixture",
+                charterRelicState = "recognized",
+                worldSealState = "recognized",
+                registeredRuleEntryIds = new[] { "charter_entry_suifu_diji" },
+                currentRegionRuleEntryIds = new[] { "charter_entry_suifu_diji" },
+                nodeStates = new[]
+                {
+                    new CharterNodeRuntimeStateData
+                    {
+                        nodeId = "node_old_water_station_charter",
+                        state = "connected",
+                    },
+                    new CharterNodeRuntimeStateData
+                    {
+                        nodeId = "node_old_water_station_waterworks",
+                        state = "connected",
+                    },
+                    new CharterNodeRuntimeStateData
+                    {
+                        nodeId = "node_old_water_station_river_wetland",
+                        state = "connected",
+                    },
+                },
+                organizationAuthorizationVersions = new[]
+                {
+                    new CharterAuthorizationVersionStateData
+                    {
+                        authorizationVersionId = "authorization_suifu_water_basin_v1",
+                        state = "recognized",
+                    },
+                    new CharterAuthorizationVersionStateData
+                    {
+                        authorizationVersionId = "authorization_taixuan_seal_old_water_station_management_v1",
+                        state = "recognized",
+                    },
+                },
+                currentCoverageSet = new[]
+                {
+                    "coverage_old_water_station_charter",
+                    "coverage_old_water_station_waterworks",
+                    "coverage_old_water_station_river_wetland",
+                },
+                ruleEntryOccupancies = new[]
+                {
+                    new CharterOccupancyStateData
+                    {
+                        resourceId = "charter_entry_suifu_diji",
+                        occupancyId = "occupancy_save_fixture_v1",
+                    },
+                },
+                nodeOccupancies = new[]
+                {
+                    new CharterOccupancyStateData
+                    {
+                        resourceId = "node_old_water_station_charter",
+                        occupancyId = "occupancy_save_waterworks_v1",
+                    },
+                    new CharterOccupancyStateData
+                    {
+                        resourceId = "node_old_water_station_waterworks",
+                        occupancyId = "occupancy_save_waterworks_v1",
+                    },
+                    new CharterOccupancyStateData
+                    {
+                        resourceId = "node_old_water_station_river_wetland",
+                        occupancyId = "occupancy_save_waterworks_v1",
+                    },
+                },
+                realitySupplyStates = new[]
+                {
+                    new CharterRealitySupplyStateData
+                    {
+                        realitySupplyId = "supply_suifu_registered_seasonal_rain",
+                        state = "allocated",
+                    },
+                    new CharterRealitySupplyStateData
+                    {
+                        realitySupplyId = "supply_suifu_connected_water_balance",
+                        state = "allocated",
+                    },
+                    new CharterRealitySupplyStateData
+                    {
+                        realitySupplyId = "supply_suifu_wetland_land_capacity",
+                        state = "allocated",
+                    },
+                },
+                positiveCommitResults = new[]
+                {
+                    new CharterCommitResultStateData
+                    {
+                        commitId = "commit_suifu_diji_positive_ecology",
+                        resultState = "applied",
+                    },
+                },
+                negativeCommitResults = new[]
+                {
+                    new CharterCommitResultStateData
+                    {
+                        commitId = "commit_suifu_diji_negative_reallocation",
+                        resultState = "applied",
+                    },
+                },
+            };
         }
     }
 }

@@ -886,6 +886,8 @@ namespace TianZhang.Editor
                 };
                 var catalog = UpsertCatalogAsset("Assets/Data/ContentCatalog/ContentCatalog.asset");
                 catalog.ReplaceEntries(settlements, enemies, items, bounties);
+                // 内容目录只保存唯一静态目录的单一引用；缺失或非法时导入失败关闭。
+                catalog.SetCharterRuleStaticCatalog(LoadCharterRuleStaticCatalog());
                 EditorUtility.SetDirty(catalog);
             }
             finally
@@ -1879,10 +1881,21 @@ namespace TianZhang.Editor
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Charter rule definition CSV was not found: {path}", path);
 
+            // The importer only reads the approved catalog from the single canonical static catalog
+            // asset; it no longer holds a second hard-coded production directory.
+            CharterRuleStaticCatalogData staticCatalog = LoadCharterRuleStaticCatalog();
+            if (!staticCatalog.TryValidateDefinitions(out string catalogReason))
+            {
+                throw CharterError(
+                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
+                    path,
+                    $"the approved static catalog is invalid: {catalogReason}");
+            }
+
             var definitions = ParseCharterRuleDefinitions(
                 File.ReadAllLines(path),
                 path,
-                CreateProductionCharterRuleReferenceCatalog());
+                staticCatalog.ReferenceCatalog);
             try
             {
                 foreach (var definition in definitions)
@@ -1912,118 +1925,21 @@ namespace TianZhang.Editor
         }
 
         /// <summary>
-        /// The one approved D-TZ-CHARTER-SAMPLE-01 reference directory. It records only the
-        /// existing old water-station/pump-gate access, seal-management, connected waterworks,
-        /// registered supplies, limited conflict qualification, and env_guanzhong_wild output
-        /// named by the approved water bureau chronicle sources. It does not create a runtime
-        /// transaction, a second node registry, regional state, or new world content.
+        /// Loads the one approved production charter static catalog asset. It is the only place the
+        /// importer may read the approved reference directory from; a missing or invalid asset fails
+        /// closed before any CSV row can import.
         /// </summary>
-        public static CharterRuleReferenceCatalog CreateProductionCharterRuleReferenceCatalog()
+        public static CharterRuleStaticCatalogData LoadCharterRuleStaticCatalog()
         {
-            return new CharterRuleReferenceCatalog
+            const string catalogPath = "Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset";
+            var staticCatalog = AssetDatabase.LoadAssetAtPath<CharterRuleStaticCatalogData>(catalogPath);
+            if (staticCatalog == null)
             {
-                displayNameKeys = new[] { "charter_entry_suifu_diji" },
-                ruleFamilyIds = new[] { "rule_family_five_element_chronicle" },
-                relationElementIds = new[] { "element_water" },
-                phenomenonIds = new[] { "rain", "drizzle" },
-                relicIds = new[] { "relic_world_charter", "relic_taixuan_realm_seal" },
-                organizationAuthorizationVersionIds = new[]
-                {
-                    "authorization_suifu_water_basin_v1",
-                    "authorization_taixuan_seal_old_water_station_management_v1",
-                },
-                authorityRequirements = new[]
-                {
-                    new CharterAuthorityRequirement
-                    {
-                        // 《开阖九章》通行旧水驿至地下泵房门禁，界印确认管理者、
-                        // 受益者与守卫／档案响应；本定义仍只保存其稳定权限引用。
-                        authorityId = "authority_suifu_kaihe_passage_and_seal_management_v1",
-                        relicId = "relic_world_charter",
-                        organizationAuthorizationVersionIds = new[]
-                        {
-                            "authorization_suifu_water_basin_v1",
-                            "authorization_taixuan_seal_old_water_station_management_v1",
-                        },
-                    },
-                },
-                nodeTypeIds = new[]
-                {
-                    "node_type_charter",
-                    "node_type_waterworks",
-                    "node_type_river_wetland",
-                },
-                nodeIds = new[]
-                {
-                    "node_old_water_station_charter",
-                    "node_old_water_station_waterworks",
-                    "node_old_water_station_river_wetland",
-                },
-                propagationBoundaries = new[]
-                {
-                    new CharterPropagationBoundaryReference
-                    {
-                        propagationBoundaryProfileId = "propagation_suifu_watershed",
-                        allowedCoverageIds = new[]
-                        {
-                            "coverage_old_water_station_charter",
-                            "coverage_old_water_station_waterworks",
-                            "coverage_old_water_station_river_wetland",
-                        },
-                    },
-                },
-                realitySupplyIds = new[]
-                {
-                    "supply_suifu_registered_seasonal_rain",
-                    "supply_suifu_connected_water_balance",
-                    "supply_suifu_wetland_land_capacity",
-                },
-                commits = new[]
-                {
-                    new CharterCommitReference
-                    {
-                        commitId = "commit_suifu_diji_positive_ecology",
-                        realitySupplyIds = new[]
-                        {
-                            "supply_suifu_registered_seasonal_rain",
-                            "supply_suifu_connected_water_balance",
-                            "supply_suifu_wetland_land_capacity",
-                        },
-                    },
-                    new CharterCommitReference
-                    {
-                        commitId = "commit_suifu_diji_negative_reallocation",
-                        realitySupplyIds = new[]
-                        {
-                            "supply_suifu_registered_seasonal_rain",
-                            "supply_suifu_connected_water_balance",
-                            "supply_suifu_wetland_land_capacity",
-                        },
-                    },
-                },
-                worldVariableIds = new[]
-                {
-                    "seasonal_precipitation_distribution",
-                    "wetland_waterline_state",
-                    "water_element_spirit_flow",
-                    "aquatic_resource_yield",
-                },
-                conflicts = new[]
-                {
-                    new CharterConflictReference
-                    {
-                        conflictProfileId = "conflict_charter_water_basin",
-                        crossTierChallengeGrantIds = new[] { "cross_tier_charter_water_basin_v1" },
-                    },
-                },
-                worldEventIds = new[]
-                {
-                    "event_suifu_water_redistribution",
-                    "event_suifu_downstream_supply_delay",
-                },
-                environmentProfileIds = new[] { "env_guanzhong_wild" },
-                ruleEntryIds = new[] { "charter_entry_suifu_diji" },
-            };
+                throw new InvalidDataException(
+                    $"The single approved charter static catalog is missing: {catalogPath}");
+            }
+
+            return staticCatalog;
         }
 
         /// <summary>
@@ -2045,6 +1961,21 @@ namespace TianZhang.Editor
 
             var headers = FindHeader(lines);
             RequireExactColumns(headers, sourceName, CharterRuleDefinitionColumns);
+            if (referenceCatalog == null || !referenceCatalog.HasDeclaredAuthority)
+            {
+                throw CharterError(
+                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
+                    sourceName,
+                    "requires an explicit external reference catalog before a production row can import.");
+            }
+            if (!CharterRuleCatalogValidator.TryValidateCatalog(referenceCatalog, out string catalogReason))
+            {
+                throw CharterError(
+                    MapCharterCatalogReason(catalogReason),
+                    sourceName,
+                    catalogReason);
+            }
+
             var definitions = new List<CharterRuleDefinitionData>();
             var ruleEntryIds = new HashSet<string>(StringComparer.Ordinal);
             try
@@ -2094,14 +2025,6 @@ namespace TianZhang.Editor
             string sourceName,
             CharterRuleReferenceCatalog catalog)
         {
-            if (catalog == null || !catalog.HasDeclaredAuthority)
-            {
-                throw CharterError(
-                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
-                    sourceName,
-                    "requires an explicit external reference catalog before a production row can import.");
-            }
-
             var definition = ScriptableObject.CreateInstance<CharterRuleDefinitionData>();
             try
             {
@@ -2109,49 +2032,29 @@ namespace TianZhang.Editor
                 RequireCharterReference(definition.ruleEntryId, sourceName, "ruleEntryId", "CHARTER_TABLE_INVALID");
                 definition.displayName = GetRequiredCharterColumnValue(headers, columns, "displayName", sourceName);
                 RequireCharterReference(definition.displayName, sourceName, "displayName", "CHARTER_UNKNOWN_DISPLAY_NAME_REFERENCE");
-                if (!catalog.ContainsDisplayNameKey(definition.displayName))
-                    throw CharterError("CHARTER_UNKNOWN_DISPLAY_NAME_REFERENCE", sourceName, "has an unresolved displayName key.");
 
                 definition.ruleFamily = GetRequiredCharterColumnValue(headers, columns, "ruleFamily", sourceName);
                 RequireCharterReference(definition.ruleFamily, sourceName, "ruleFamily", "CHARTER_UNKNOWN_RULE_FAMILY_REFERENCE");
-                if (!catalog.ContainsRuleFamily(definition.ruleFamily))
-                    throw CharterError("CHARTER_UNKNOWN_RULE_FAMILY_REFERENCE", sourceName, "has an unresolved ruleFamily.");
-
                 definition.relationElement = GetRequiredCharterColumnValue(headers, columns, "relationElement", sourceName);
                 RequireCharterReference(definition.relationElement, sourceName, "relationElement", "CHARTER_UNKNOWN_RELATION_ELEMENT_REFERENCE");
-                if (!catalog.ContainsRelationElement(definition.relationElement))
-                    throw CharterError("CHARTER_UNKNOWN_RELATION_ELEMENT_REFERENCE", sourceName, "has an unresolved relationElement.");
-
                 definition.compatiblePhenomena = ParseCharterReferenceList(
                     GetRequiredCharterColumnValue(headers, columns, "compatiblePhenomena", sourceName),
                     sourceName,
                     "compatiblePhenomena",
                     "CHARTER_UNKNOWN_PHENOMENON_REFERENCE");
-                foreach (string phenomenon in definition.compatiblePhenomena)
-                {
-                    if (!catalog.ContainsPhenomenon(phenomenon))
-                        throw CharterError("CHARTER_UNKNOWN_PHENOMENON_REFERENCE", sourceName, $"has an unresolved compatible phenomenon '{phenomenon}'.");
-                }
 
                 definition.positiveCommit = GetRequiredCharterColumnValue(headers, columns, "positiveCommit", sourceName);
+                RequireCharterReference(definition.positiveCommit, sourceName, "positiveCommit", "CHARTER_ATOMIC_COMMIT_INCOMPLETE");
                 definition.negativeCommit = GetRequiredCharterColumnValue(headers, columns, "negativeCommit", sourceName);
-                ValidateCharterCommit(definition.positiveCommit, catalog, sourceName, "positiveCommit");
-                ValidateCharterCommit(definition.negativeCommit, catalog, sourceName, "negativeCommit");
+                RequireCharterReference(definition.negativeCommit, sourceName, "negativeCommit", "CHARTER_ATOMIC_COMMIT_INCOMPLETE");
 
                 definition.requiredAuthority = GetRequiredCharterColumnValue(headers, columns, "requiredAuthority", sourceName);
-                ValidateCharterAuthority(definition.requiredAuthority, catalog, sourceName);
-
+                RequireCharterReference(definition.requiredAuthority, sourceName, "requiredAuthority", "CHARTER_UNKNOWN_AUTHORITY_REFERENCE");
                 definition.requiredNodeTypes = ParseCharterReferenceList(
                     GetRequiredCharterColumnValue(headers, columns, "requiredNodeTypes", sourceName),
                     sourceName,
                     "requiredNodeTypes",
                     "CHARTER_UNKNOWN_NODE_TYPE_REFERENCE");
-                foreach (string nodeType in definition.requiredNodeTypes)
-                {
-                    if (!catalog.ContainsNodeType(nodeType))
-                        throw CharterError("CHARTER_UNKNOWN_NODE_TYPE_REFERENCE", sourceName, $"has an unresolved required node type '{nodeType}'.");
-                }
-
                 definition.scopeType = ParseCharterScopeType(
                     GetRequiredCharterColumnValue(headers, columns, "scopeType", sourceName),
                     sourceName);
@@ -2163,56 +2066,38 @@ namespace TianZhang.Editor
                     sourceName,
                     "anchorNodeIds",
                     "CHARTER_UNKNOWN_NODE_REFERENCE");
-                foreach (string nodeId in definition.anchorNodeIds)
-                {
-                    if (!catalog.ContainsNode(nodeId))
-                        throw CharterError("CHARTER_UNKNOWN_NODE_REFERENCE", sourceName, $"has an unresolved anchor node '{nodeId}'.");
-                }
 
                 definition.propagationBoundaryProfileId = GetRequiredCharterColumnValue(
                     headers, columns, "propagationBoundaryProfileId", sourceName);
-                var boundary = catalog.FindPropagationBoundary(definition.propagationBoundaryProfileId);
-                if (boundary == null || boundary.allowedCoverageIds == null)
-                    throw CharterError("CHARTER_UNKNOWN_BOUNDARY_REFERENCE", sourceName, "has an unresolved propagation boundary.");
+                RequireCharterReference(definition.propagationBoundaryProfileId, sourceName, "propagationBoundaryProfileId", "CHARTER_UNKNOWN_BOUNDARY_REFERENCE");
                 definition.currentCoverageSet = ParseCharterReferenceList(
                     GetRequiredCharterColumnValue(headers, columns, "currentCoverageSet", sourceName),
                     sourceName,
                     "currentCoverageSet",
                     "CHARTER_COVERAGE_OUT_OF_BOUNDARY");
-                foreach (string coverageId in definition.currentCoverageSet)
-                {
-                    if (!boundary.allowedCoverageIds.Contains(coverageId, StringComparer.Ordinal))
-                    {
-                        throw CharterError(
-                            "CHARTER_COVERAGE_OUT_OF_BOUNDARY",
-                            sourceName,
-                            $"covers '{coverageId}' outside propagation boundary '{definition.propagationBoundaryProfileId}'.");
-                    }
-                }
-
                 definition.affectedWorldVariables = ParseCharterReferenceList(
                     GetRequiredCharterColumnValue(headers, columns, "affectedWorldVariables", sourceName),
                     sourceName,
                     "affectedWorldVariables",
                     "CHARTER_UNKNOWN_VARIABLE_REFERENCE");
-                foreach (string variableId in definition.affectedWorldVariables)
-                {
-                    if (!catalog.ContainsWorldVariable(variableId))
-                        throw CharterError("CHARTER_UNKNOWN_VARIABLE_REFERENCE", sourceName, $"has an unresolved world variable '{variableId}'.");
-                }
-
                 definition.conflictProfileId = GetRequiredCharterColumnValue(headers, columns, "conflictProfileId", sourceName);
                 RequireCharterReference(definition.conflictProfileId, sourceName, "conflictProfileId", "CHARTER_UNKNOWN_CONFLICT_REFERENCE");
-                if (catalog.FindConflict(definition.conflictProfileId) == null)
-                    throw CharterError("CHARTER_UNKNOWN_CONFLICT_REFERENCE", sourceName, "has an unresolved conflict or cross-tier challenge profile.");
-
                 definition.failurePolicy = ParseCharterFailurePolicy(
                     GetRequiredCharterColumnValue(headers, columns, "failurePolicy", sourceName),
                     sourceName);
                 definition.worldEventOutputs = ParseCharterWorldEventOutputs(
                     GetRequiredCharterColumnValue(headers, columns, "worldEventOutputs", sourceName),
-                    catalog,
                     sourceName);
+
+                // 十八字段与全部外部引用由同一共享校验解析：导入器与玩家运行时调用同一实现，
+                // 不保留第二份硬编码目录或 Editor-only 校验。
+                if (!CharterRuleCatalogValidator.TryValidateDefinition(definition, catalog, out string reason))
+                {
+                    throw CharterError(
+                        MapCharterCatalogReason(reason),
+                        sourceName,
+                        reason);
+                }
                 return definition;
             }
             catch
@@ -2222,54 +2107,65 @@ namespace TianZhang.Editor
             }
         }
 
-        private static void ValidateCharterCommit(
-            string commitId,
-            CharterRuleReferenceCatalog catalog,
-            string sourceName,
-            string fieldName)
+        private static string MapCharterCatalogReason(string reason)
         {
-            RequireCharterReference(commitId, sourceName, fieldName, "CHARTER_ATOMIC_COMMIT_INCOMPLETE");
-            var commit = catalog.FindCommit(commitId);
-            if (commit == null || commit.realitySupplyIds == null || commit.realitySupplyIds.Length == 0)
+            switch (reason)
             {
-                throw CharterError(
-                    "CHARTER_ATOMIC_COMMIT_INCOMPLETE",
-                    sourceName,
-                    $"has no resolvable {fieldName} with declared reality supply.");
-            }
-            foreach (string supplyId in commit.realitySupplyIds)
-            {
-                if (!catalog.ContainsRealitySupply(supplyId))
-                    throw CharterError("CHARTER_UNKNOWN_REALITY_SUPPLY_REFERENCE", sourceName, $"has an unresolved reality supply '{supplyId}'.");
-            }
-        }
-
-        private static void ValidateCharterAuthority(
-            string authorityId,
-            CharterRuleReferenceCatalog catalog,
-            string sourceName)
-        {
-            RequireCharterReference(authorityId, sourceName, "requiredAuthority", "CHARTER_UNKNOWN_AUTHORITY_REFERENCE");
-            var authority = catalog.FindAuthority(authorityId);
-            if (authority == null)
-                throw CharterError("CHARTER_UNKNOWN_AUTHORITY_REFERENCE", sourceName, "has an unresolved requiredAuthority.");
-            if (!catalog.ContainsRelic(authority.relicId))
-                throw CharterError("CHARTER_UNKNOWN_RELIC_REFERENCE", sourceName, "references an unknown charter relic permission.");
-            foreach (string authorizationVersionId in authority.organizationAuthorizationVersionIds ?? Array.Empty<string>())
-            {
-                if (!catalog.ContainsOrganizationAuthorizationVersion(authorizationVersionId))
-                {
-                    throw CharterError(
-                        "CHARTER_UNKNOWN_AUTHORIZATION_REFERENCE",
-                        sourceName,
-                        $"references unknown organization authorization '{authorizationVersionId}'.");
-                }
+                case CharterRuleCatalogReasons.CatalogUndeclared:
+                    return "CHARTER_REFERENCE_CATALOG_UNDECLARED";
+                case CharterRuleCatalogReasons.DuplicateCatalogId:
+                    return "CHARTER_REFERENCE_CATALOG_DUPLICATE_ID";
+                case CharterRuleCatalogReasons.DuplicateRuleEntryId:
+                    return "CHARTER_DUPLICATE_RULE_ENTRY";
+                case CharterRuleCatalogReasons.UnknownRuleEntry:
+                    return "CHARTER_UNKNOWN_RULE_ENTRY_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownDisplayNameKey:
+                    return "CHARTER_UNKNOWN_DISPLAY_NAME_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownRuleFamily:
+                    return "CHARTER_UNKNOWN_RULE_FAMILY_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownRelationElement:
+                    return "CHARTER_UNKNOWN_RELATION_ELEMENT_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownPhenomenon:
+                    return "CHARTER_UNKNOWN_PHENOMENON_REFERENCE";
+                case CharterRuleCatalogReasons.AtomicCommitIncomplete:
+                    return "CHARTER_ATOMIC_COMMIT_INCOMPLETE";
+                case CharterRuleCatalogReasons.UnknownRealitySupply:
+                    return "CHARTER_UNKNOWN_REALITY_SUPPLY_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownAuthority:
+                    return "CHARTER_UNKNOWN_AUTHORITY_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownRelic:
+                    return "CHARTER_UNKNOWN_RELIC_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownAuthorization:
+                    return "CHARTER_UNKNOWN_AUTHORIZATION_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownNodeType:
+                    return "CHARTER_UNKNOWN_NODE_TYPE_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownNode:
+                    return "CHARTER_UNKNOWN_NODE_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownBoundary:
+                    return "CHARTER_UNKNOWN_BOUNDARY_REFERENCE";
+                case CharterRuleCatalogReasons.CoverageOutOfBoundary:
+                    return "CHARTER_COVERAGE_OUT_OF_BOUNDARY";
+                case CharterRuleCatalogReasons.UnknownVariable:
+                    return "CHARTER_UNKNOWN_VARIABLE_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownConflict:
+                    return "CHARTER_UNKNOWN_CONFLICT_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownWorldEvent:
+                    return "CHARTER_UNKNOWN_EVENT_REFERENCE";
+                case CharterRuleCatalogReasons.UnknownEnvironmentProfile:
+                    return "CHARTER_UNKNOWN_ENVIRONMENT_PROFILE_REFERENCE";
+                case CharterRuleCatalogReasons.InvalidScopeType:
+                    return "CHARTER_SCOPE_INVALID";
+                case CharterRuleCatalogReasons.InvalidScopeTierCap:
+                    return "CHARTER_SCOPE_TIER_INVALID";
+                case CharterRuleCatalogReasons.InvalidFailurePolicy:
+                    return "CHARTER_FAILURE_POLICY_INVALID";
+                default:
+                    return "CHARTER_TABLE_INVALID";
             }
         }
 
         private static CharterWorldEventOutputData[] ParseCharterWorldEventOutputs(
             string raw,
-            CharterRuleReferenceCatalog catalog,
             string sourceName)
         {
             var outputs = new List<CharterWorldEventOutputData>();
@@ -2280,15 +2176,6 @@ namespace TianZhang.Editor
                     throw CharterError("CHARTER_TABLE_INVALID", sourceName, $"has invalid worldEventOutputs entry '{entry}'.");
                 RequireCharterReference(parts[0], sourceName, "worldEventOutputs.eventId", "CHARTER_UNKNOWN_EVENT_REFERENCE");
                 RequireCharterReference(parts[1], sourceName, "worldEventOutputs.environmentProfileId", "CHARTER_UNKNOWN_ENVIRONMENT_PROFILE_REFERENCE");
-                if (!catalog.ContainsWorldEvent(parts[0]))
-                    throw CharterError("CHARTER_UNKNOWN_EVENT_REFERENCE", sourceName, $"has an unresolved world event '{parts[0]}'.");
-                if (!catalog.ContainsEnvironmentProfile(parts[1]))
-                {
-                    throw CharterError(
-                        "CHARTER_UNKNOWN_ENVIRONMENT_PROFILE_REFERENCE",
-                        sourceName,
-                        $"has an unresolved environmentProfile output '{parts[1]}'.");
-                }
                 outputs.Add(new CharterWorldEventOutputData
                 {
                     eventId = parts[0],

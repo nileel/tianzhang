@@ -21,3 +21,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 523aaf1074176d742b2f77a3be488137, type: 2}
   bounties:
   - {fileID: 11400000, guid: 143ef2025cac7c94fb00f6991de7b556, type: 2}
+  charterRuleStaticCatalog: {fileID: 11400000, guid: c3594c99fad348dfaccbdc026e3920d4, type: 2}

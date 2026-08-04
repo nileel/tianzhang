@@ -46,12 +46,23 @@ namespace TianZhang.World
         public const string InvalidState = "charter_state_invalid";
         public const string CatalogUndeclared = "charter_state_catalog_undeclared";
         public const string UnknownRuleEntry = "charter_state_unknown_rule_entry";
+        public const string DuplicateRuleEntry = "charter_state_duplicate_rule_entry";
         public const string DefinitionIdMixed = "charter_state_definition_id_mixed";
         public const string UnknownNode = "charter_state_unknown_node";
+        public const string UnknownBoundary = "charter_state_unknown_boundary";
         public const string UnknownAuthorization = "charter_state_unknown_authorization";
         public const string UnknownCoverage = "charter_state_unknown_coverage";
         public const string UnknownRealitySupply = "charter_state_unknown_reality_supply";
         public const string UnknownCommit = "charter_state_unknown_commit";
+        public const string DuplicateOccupancy = "charter_state_duplicate_occupancy";
+        public const string DuplicateRealitySupply = "charter_state_duplicate_reality_supply";
+        public const string DuplicateCommitResult = "charter_state_duplicate_commit_result";
+        public const string EntryAnchorMissing = "charter_state_entry_anchor_missing";
+        public const string NodeOutsideEntryBoundary = "charter_state_node_outside_entry_boundary";
+        public const string EntryCoverageMissing = "charter_state_entry_coverage_missing";
+        public const string CoverageOutsideEntryBoundary = "charter_state_coverage_outside_entry_boundary";
+        public const string AuthorizationRequirementMismatch = "charter_state_authorization_requirement_mismatch";
+        public const string CommitPairIncomplete = "charter_state_commit_pair_incomplete";
     }
 
     /// <summary>
@@ -209,7 +220,8 @@ namespace TianZhang.World
                 !TryValidateOccupancies(nodeOccupancies, definitionIds, catalog, false, out reason) ||
                 !TryValidateRealitySupplies(realitySupplyStates, catalog, out reason) ||
                 !TryValidateCommitResults(positiveCommitResults, catalog, out reason) ||
-                !TryValidateCommitResults(negativeCommitResults, catalog, out reason))
+                !TryValidateCommitResults(negativeCommitResults, catalog, out reason) ||
+                !TryValidateEntryRelationships(definitions, catalog, out reason))
             {
                 return false;
             }
@@ -223,11 +235,17 @@ namespace TianZhang.World
             ISet<string> definitionIds,
             out string reason)
         {
+            var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (string value in values ?? Array.Empty<string>())
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     reason = CharterRuntimeStateReasons.InvalidState;
+                    return false;
+                }
+                if (!ids.Add(value))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateRuleEntry;
                     return false;
                 }
                 if (string.Equals(value, stateId, StringComparison.Ordinal))
@@ -322,11 +340,17 @@ namespace TianZhang.World
             bool isRuleEntryOccupancy,
             out string reason)
         {
+            var resourceIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var value in values ?? Array.Empty<CharterOccupancyStateData>())
             {
                 if (value == null || string.IsNullOrWhiteSpace(value.resourceId) || string.IsNullOrWhiteSpace(value.occupancyId))
                 {
                     reason = CharterRuntimeStateReasons.InvalidState;
+                    return false;
+                }
+                if (!resourceIds.Add(value.resourceId))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateOccupancy;
                     return false;
                 }
                 if (isRuleEntryOccupancy && !definitionIds.Contains(value.resourceId))
@@ -350,11 +374,17 @@ namespace TianZhang.World
             CharterRuleReferenceCatalog catalog,
             out string reason)
         {
+            var supplyIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var value in values ?? Array.Empty<CharterRealitySupplyStateData>())
             {
                 if (value == null || string.IsNullOrWhiteSpace(value.state))
                 {
                     reason = CharterRuntimeStateReasons.InvalidState;
+                    return false;
+                }
+                if (!supplyIds.Add(value.realitySupplyId))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateRealitySupply;
                     return false;
                 }
                 if (!catalog.ContainsRealitySupply(value.realitySupplyId))
@@ -373,6 +403,7 @@ namespace TianZhang.World
             CharterRuleReferenceCatalog catalog,
             out string reason)
         {
+            var commitIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var value in values ?? Array.Empty<CharterCommitResultStateData>())
             {
                 if (value == null || string.IsNullOrWhiteSpace(value.resultState))
@@ -380,9 +411,183 @@ namespace TianZhang.World
                     reason = CharterRuntimeStateReasons.InvalidState;
                     return false;
                 }
+                if (!commitIds.Add(value.commitId))
+                {
+                    reason = CharterRuntimeStateReasons.DuplicateCommitResult;
+                    return false;
+                }
                 if (catalog.FindCommit(value.commitId) == null)
                 {
                     reason = CharterRuntimeStateReasons.UnknownCommit;
+                    return false;
+                }
+            }
+
+            reason = CharterRuntimeStateReasons.Ok;
+            return true;
+        }
+
+        /// <summary>
+        /// Validates the complete relationship between every registered/current-region entry and its
+        /// static definition: nodes and coverage belong to the definition boundary, authorization
+        /// matches the definition requirement, and positive/negative commit results stay paired.
+        /// It only validates saved results and never re-executes rules, conflicts or events.
+        /// </summary>
+        private bool TryValidateEntryRelationships(
+            CharterRuleDefinitionData[] definitions,
+            CharterRuleReferenceCatalog catalog,
+            out string reason)
+        {
+            var entryIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string entryId in (registeredRuleEntryIds ?? Array.Empty<string>())
+                         .Concat(currentRegionRuleEntryIds ?? Array.Empty<string>()))
+            {
+                if (!string.IsNullOrWhiteSpace(entryId))
+                    entryIds.Add(entryId);
+            }
+            if (entryIds.Count == 0)
+            {
+                reason = CharterRuntimeStateReasons.Ok;
+                return true;
+            }
+
+            var entries = new List<CharterRuleDefinitionData>();
+            foreach (string entryId in entryIds)
+            {
+                CharterRuleDefinitionData definition = null;
+                foreach (CharterRuleDefinitionData candidate in definitions ?? Array.Empty<CharterRuleDefinitionData>())
+                {
+                    if (candidate != null && string.Equals(candidate.ruleEntryId, entryId, StringComparison.Ordinal))
+                    {
+                        definition = candidate;
+                        break;
+                    }
+                }
+                if (definition == null)
+                {
+                    reason = CharterRuntimeStateReasons.UnknownRuleEntry;
+                    return false;
+                }
+                entries.Add(definition);
+            }
+
+            // 节点与覆盖属于其定义边界。
+            var anchors = new HashSet<string>(StringComparer.Ordinal);
+            var boundaryCoverage = new HashSet<string>(StringComparer.Ordinal);
+            foreach (CharterRuleDefinitionData entry in entries)
+            {
+                foreach (string anchorId in entry.anchorNodeIds ?? Array.Empty<string>())
+                {
+                    if (!string.IsNullOrWhiteSpace(anchorId))
+                        anchors.Add(anchorId);
+                }
+                if (string.IsNullOrWhiteSpace(entry.propagationBoundaryProfileId))
+                    continue;
+                CharterPropagationBoundaryReference boundary =
+                    catalog.FindPropagationBoundary(entry.propagationBoundaryProfileId);
+                if (boundary == null || boundary.allowedCoverageIds == null)
+                {
+                    reason = CharterRuntimeStateReasons.UnknownBoundary;
+                    return false;
+                }
+                foreach (string coverageId in boundary.allowedCoverageIds)
+                {
+                    if (!string.IsNullOrWhiteSpace(coverageId))
+                        boundaryCoverage.Add(coverageId);
+                }
+            }
+
+            var stateNodes = new HashSet<string>(
+                (nodeStates ?? Array.Empty<CharterNodeRuntimeStateData>())
+                    .Where(record => record != null && !string.IsNullOrWhiteSpace(record.nodeId))
+                    .Select(record => record.nodeId),
+                StringComparer.Ordinal);
+            foreach (string anchorId in anchors)
+            {
+                if (!stateNodes.Contains(anchorId))
+                {
+                    reason = CharterRuntimeStateReasons.EntryAnchorMissing;
+                    return false;
+                }
+            }
+            foreach (string nodeId in stateNodes)
+            {
+                if (!anchors.Contains(nodeId))
+                {
+                    reason = CharterRuntimeStateReasons.NodeOutsideEntryBoundary;
+                    return false;
+                }
+            }
+
+            var stateCoverage = new HashSet<string>(
+                (currentCoverageSet ?? Array.Empty<string>()).Where(value => !string.IsNullOrWhiteSpace(value)),
+                StringComparer.Ordinal);
+            foreach (CharterRuleDefinitionData entry in entries)
+            {
+                foreach (string coverageId in entry.currentCoverageSet ?? Array.Empty<string>())
+                {
+                    if (string.IsNullOrWhiteSpace(coverageId) || !stateCoverage.Contains(coverageId))
+                    {
+                        reason = CharterRuntimeStateReasons.EntryCoverageMissing;
+                        return false;
+                    }
+                }
+            }
+            foreach (string coverageId in stateCoverage)
+            {
+                if (!boundaryCoverage.Contains(coverageId))
+                {
+                    reason = CharterRuntimeStateReasons.CoverageOutsideEntryBoundary;
+                    return false;
+                }
+            }
+
+            // 授权与定义要求匹配：条目要求的组织授权版本必须出现在状态中。
+            var stateAuthorizations = new HashSet<string>(
+                (organizationAuthorizationVersions ?? Array.Empty<CharterAuthorizationVersionStateData>())
+                    .Where(record => record != null && !string.IsNullOrWhiteSpace(record.authorizationVersionId))
+                    .Select(record => record.authorizationVersionId),
+                StringComparer.Ordinal);
+            foreach (CharterRuleDefinitionData entry in entries)
+            {
+                if (string.IsNullOrWhiteSpace(entry.requiredAuthority))
+                    continue;
+                CharterAuthorityRequirement authority = catalog.FindAuthority(entry.requiredAuthority);
+                if (authority == null)
+                {
+                    reason = CharterRuntimeStateReasons.UnknownAuthorization;
+                    return false;
+                }
+                foreach (string versionId in authority.organizationAuthorizationVersionIds ?? Array.Empty<string>())
+                {
+                    if (!stateAuthorizations.Contains(versionId))
+                    {
+                        reason = CharterRuntimeStateReasons.AuthorizationRequirementMismatch;
+                        return false;
+                    }
+                }
+            }
+
+            // 正负提交成对且都能解析：已记录的一方必须与另一方同时存在。
+            var positiveCommits = new HashSet<string>(
+                (positiveCommitResults ?? Array.Empty<CharterCommitResultStateData>())
+                    .Where(record => record != null && !string.IsNullOrWhiteSpace(record.commitId))
+                    .Select(record => record.commitId),
+                StringComparer.Ordinal);
+            var negativeCommits = new HashSet<string>(
+                (negativeCommitResults ?? Array.Empty<CharterCommitResultStateData>())
+                    .Where(record => record != null && !string.IsNullOrWhiteSpace(record.commitId))
+                    .Select(record => record.commitId),
+                StringComparer.Ordinal);
+            foreach (CharterRuleDefinitionData entry in entries)
+            {
+                if (string.IsNullOrWhiteSpace(entry.positiveCommit) || string.IsNullOrWhiteSpace(entry.negativeCommit))
+                    continue;
+                bool hasPositive = positiveCommits.Contains(entry.positiveCommit);
+                bool hasNegative = negativeCommits.Contains(entry.negativeCommit);
+                if (hasPositive != hasNegative)
+                {
+                    reason = CharterRuntimeStateReasons.CommitPairIncomplete;
                     return false;
                 }
             }

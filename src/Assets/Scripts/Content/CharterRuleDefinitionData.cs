@@ -56,9 +56,12 @@ namespace TianZhang.Content
     }
 
     /// <summary>
-    /// Import-time authority only. This schema does not create a second rule, node, authorization,
+    /// The one approved external reference directory. It is a serializable data type so the single
+    /// production static catalog asset can hold it and both the importer and the player runtime can
+    /// validate against the same instance. It does not create a second rule, node, authorization,
     /// commit, conflict, or environment registry; production rows must resolve through real owners.
     /// </summary>
+    [Serializable]
     public sealed class CharterRuleReferenceCatalog
     {
         public string[] displayNameKeys;
@@ -136,6 +139,7 @@ namespace TianZhang.Content
         }
     }
 
+    [Serializable]
     public sealed class CharterAuthorityRequirement
     {
         public string authorityId;
@@ -143,18 +147,21 @@ namespace TianZhang.Content
         public string[] organizationAuthorizationVersionIds;
     }
 
+    [Serializable]
     public sealed class CharterPropagationBoundaryReference
     {
         public string propagationBoundaryProfileId;
         public string[] allowedCoverageIds;
     }
 
+    [Serializable]
     public sealed class CharterCommitReference
     {
         public string commitId;
         public string[] realitySupplyIds;
     }
 
+    [Serializable]
     public sealed class CharterConflictReference
     {
         public string conflictProfileId;
