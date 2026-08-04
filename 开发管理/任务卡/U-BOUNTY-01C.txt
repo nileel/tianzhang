@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-05：Codex 独立复审确认正式提交将 UI 自造 bounty_accept_ok/bounty_claim_ok 成功日志，违反本卡禁止伪造成功日志的边界；其余范围部分通过，等待负责人选择返工执行器。",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
     "src/Assets/Scripts/Settlement/SettlementSceneController.cs",

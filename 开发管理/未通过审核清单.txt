@@ -5,3 +5,10 @@
 记录当前仍未通过、已返工待复核或必须由 `2` 流程处理的审核项。历史审核过程已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
 
 ## 当前未通过/待复核项
+
+### U-BOUNTY-01C · 建立正式悬赏面板并接入关中城 `bounty_board` 功能。
+
+- 审核对象：正式提交 `7da36456017cc4ad3c9ae896034d7e0ebb3fb0c1`；结论：部分通过，仍需返工。
+- 根因：`BountyBoardView.SubmitAccept` 与 `SubmitClaim` 在成功时自行写入 `bounty_accept_ok:<id>`、`bounty_claim_ok:<id>`。`GameSession` 的成功 `BountyActionResult` 没有该结果字面量，任务卡又明确禁止 UI 伪造成功日志；成功显示应只反映同一 `GameSession.GetBountyState` 刷新的实际状态。
+- 返工范围：移除这两个 UI 伪造成功日志及其断言；成功后以刷新后的实际状态为唯一显示，失败继续显示 `GameSession` 返回的稳定失败原因。不得改动 `GameSession`、`BountyRuntime`、内容目录、奖励或场景所有者。
+- 独立证据：Unity EditMode 341 项中 339 通过；`BountyBoardViewTests`、`BountyRuntimeTests`、`SessionStateSnapshotTests` 与 `SceneArchitectureEditorTests` 共 61 项通过。仅有既有无关失败 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`；`dotnet build src/TianZhang.EditModeTests.csproj` 为 0 错误、2 个既有警告。
