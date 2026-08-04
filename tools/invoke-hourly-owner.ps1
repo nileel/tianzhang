@@ -289,8 +289,13 @@ function Invoke-CombinedValidation {
   $null = Invoke-GitText $Worktree @('diff', '--check', "$Base..$Head") 'hourly_diff_check_failed'
   Assert-Postcondition -Run $Run -Worktree $Worktree
   if (@($changed | Where-Object { $_ -match '^(docs/|src/Assets/(?:Resources|StreamingAssets)/|.+\.(?:csv|json)$)' }).Count -gt 0) {
-    $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Worktree 'tools\check-data-chain.ps1') 2>&1)
-    if ($LASTEXITCODE -ne 0) { Stop-Hourly 'hourly_data_chain_failed' }
+    $dataChainExitCode = 1
+    Push-Location -LiteralPath $Worktree
+    try {
+      $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Worktree 'tools\check-data-chain.ps1') 2>&1)
+      $dataChainExitCode = $LASTEXITCODE
+    } finally { Pop-Location }
+    if ($dataChainExitCode -ne 0) { Stop-Hourly 'hourly_data_chain_failed' }
   }
 }
 

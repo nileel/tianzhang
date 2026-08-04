@@ -71,6 +71,11 @@ Assert-DoesNotContain $runtime 'schema 5 runtime' @("'AcquireIntegration'", "'Re
 $sharedEntry = Read-Utf8 (Join-Path $root 'tools/invoke-hourly-owner.ps1')
 $adapter = Read-Utf8 (Join-Path $root 'tools/hourly-owner-adapter.ps1')
 Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree', 'review_rework', 'Apply-AnsweredReviewRework', 'allowCustomReply = $false', 'hourly_codex_model_unverified')
+$combinedValidationMatch = [regex]::Match($sharedEntry, '(?s)function Invoke-CombinedValidation\s*\{(?<body>.*?)\r?\n\}\r?\n\r?\nfunction Test-MainPathConflict')
+Assert-Contract $combinedValidationMatch.Success 'shared owner entry is missing combined validation'
+$combinedValidation = $combinedValidationMatch.Groups['body'].Value
+Assert-Contract ([regex]::Matches($combinedValidation, [regex]::Escape('Push-Location -LiteralPath $Worktree')).Count -ge 2) 'shared owner entry does not run data-chain validation from the worktree'
+Assert-Contains $combinedValidation 'combined validation' @('$dataChainExitCode = $LASTEXITCODE', "Stop-Hourly 'hourly_data_chain_failed'")
 $taskState = Read-Utf8 (Join-Path $root 'tools/set-task-automation-state.ps1')
 Assert-Contains $taskState 'task state transition' @('RequeueReview', 'review_rework', 'ExternalDispatchReady', 'CodexDispatchReady')
 Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-flash', 'Test-HourlyOwnerModelVerified')
