@@ -13,9 +13,9 @@ namespace TianZhang.Tests
     /// <summary>
     /// Direct EditMode coverage of the scene-independent charter site interaction bridge on the
     /// approved old water station: bootstrap from an unaccessed <c>GameSession.CharterRuntimeState</c>,
-    /// the five proofs in fixed order, every out-of-order and static-identity mismatch rejection,
-    /// the complete candidate mapping with empty long-term result fields, the three request shapes
-    /// derived without shared mutable instances, the stable jindan loss and yuanying anchor, and
+    /// the five proofs in fixed order, every out-of-order, static-identity mismatch and duplicate-ID
+    /// rejection, the complete candidate mapping with empty long-term result fields, the three request
+    /// shapes derived without shared mutable instances, the stable jindan loss and yuanying anchor, and
     /// the one-time formal consumption at rule level.
     /// </summary>
     public sealed class CharterSiteInteractionRuntimeTests
@@ -361,6 +361,39 @@ namespace TianZhang.Tests
             Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, second.Reason);
             Assert.IsNull(second.NextState);
             Assert.IsNull(second.EmittedEvents);
+        }
+
+        [Test]
+        public void DuplicateIdsInAnyActionSetRejectedWithoutAdvancing()
+        {
+            CharterSiteInteractionRuntime runtime = CreateRuntime(LoadProductionSite());
+            AssertOk(runtime.VerifyPassage(CapabilityId, OperatorId, TargetId));
+            AssertOk(runtime.VerifyManagement(ManagerId, BeneficiaryId));
+
+            // 重复节点：左侧重复 ID 只补齐长度、不能补齐缺失项，未完整集合不得误判为通过。
+            AssertRejected(CharterSiteInteractionReasons.NodeSetMismatch,
+                runtime.ConnectNodes(new[] { CharterNode, CharterNode, WaterworksNode }));
+            Assert.IsNull(runtime.Progress.ConnectedNodeIds);
+            Assert.IsFalse(runtime.Progress.RuleEntryRegistrationVerified);
+
+            AssertOk(runtime.ConnectNodes(AllNodes));
+
+            // 重复授权版本：集合仍不完整（缺水面授权），但重复 ID 可把长度补到与右侧一致。
+            AssertRejected(CharterSiteInteractionReasons.AuthorizationMismatch,
+                runtime.VerifyRuleEntryRegistration(RuleEntryId, CharterRelicId,
+                    new[] { SealAuthorization, SealAuthorization }));
+            Assert.IsFalse(runtime.Progress.RuleEntryRegistrationVerified);
+
+            AssertOk(runtime.VerifyRuleEntryRegistration(RuleEntryId, CharterRelicId, AllAuthorizations));
+
+            // 重复供给：集合仍不完整（缺湿地承载），但重复 ID 可把长度补到与声明并集一致。
+            AssertRejected(CharterSiteInteractionReasons.SupplySetMismatch,
+                runtime.PrepareRealitySupplies(new[] { SupplyRain, SupplyRain, SupplyBalance }));
+            Assert.IsNull(runtime.Progress.RegisteredRealitySupplyIds);
+
+            // 任何重复拒绝后，正确完整集合仍只推进自身证明。
+            AssertOk(runtime.PrepareRealitySupplies(AllSupplies));
+            Assert.IsTrue(runtime.Progress.IsComplete);
         }
 
         private void CompleteAllSteps(CharterSiteInteractionRuntime runtime)

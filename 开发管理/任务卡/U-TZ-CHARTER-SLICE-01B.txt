@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-TZ-CHARTER-SLICE-01A"
   ],
-  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 U-TZ-CHARTER-SLICE-01A，前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "stateReason": "2026-08-05：批准规格已冻结职责和路径；直接前序 U-TZ-CHARTER-SLICE-01A 于 2026-08-05 复审部分通过并定向返工中（见未通过审核清单），前序完成并通过 Codex 独立复审后才可转为 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/CharterSiteController.cs",
     "src/Assets/Scripts/Settlement/CharterSiteController.cs.meta",

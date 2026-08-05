@@ -925,6 +925,66 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void CharterSecondCandidateRebootstrapCannotCommitAfterFirstSuccess()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                CharterSiteInteractionRuntime runtime = CreateCharterInteractionRuntime();
+                CompleteCharterInteractionSteps(runtime);
+                Assert.That(runtime.TryCreatePreparation(
+                    out CharterInvocationPreparation preparation, out string prepReason), Is.True, prepReason);
+                CharterRuleInvocationResult first = runtime.EvaluateFormal(
+                    preparation, null, 100, "applied", "applied");
+                Assert.IsTrue(first.Succeeded, first.Reason);
+                Assert.IsTrue(session.CommitCharterFormalResult(catalog, first, preparation.CatalogVersion).Succeeded);
+                Assert.IsNotNull(session.CharterRuntimeState);
+
+                CharterRuntimeStateData committed = session.CharterRuntimeState;
+                string committedJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+                // 直接反例：首次提交后即使再以同一 preparation 和 null 求值（candidate 重自举）
+                // 仍返回成功，唯一提交入口也必须拒绝第二次成功提交，长期状态保持原实例内容不变。
+                CharterRuleInvocationResult rebootstrap = runtime.EvaluateFormal(
+                    preparation, null, 100, "applied", "applied");
+                Assert.IsTrue(rebootstrap.Succeeded, rebootstrap.Reason);
+                CharterInvocationCommitResult secondCommit =
+                    session.CommitCharterFormalResult(catalog, rebootstrap, preparation.CatalogVersion);
+                Assert.IsFalse(secondCommit.Succeeded);
+                Assert.AreEqual(CharterInvocationCommitReasons.AlreadyCommitted, secondCommit.Reason);
+                Assert.AreSame(committed, session.CharterRuntimeState);
+                Assert.AreEqual(committedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // 会话唯一正式调用入口与当前状态绑定：已有长期状态时不再以 candidate 重自举，
+                // 继续消费现有状态并失败关闭，不尝试第二次提交。
+                CharterInvocationCommitResult bound =
+                    session.InvokeCharterFormal(runtime, preparation, catalog, 100, "applied", "applied");
+                Assert.IsFalse(bound.Succeeded);
+                Assert.AreEqual(CharterInvocationCommitReasons.InvalidResult, bound.Reason);
+                Assert.AreSame(committed, session.CharterRuntimeState);
+                Assert.AreEqual(committedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // 未接入状态下的首次正式调用仍经同一入口自举并一次原子提交。
+                session.ClearSession();
+                session.BeginNewGame(null, "jiangzuo_hub");
+                Assert.IsNull(session.CharterRuntimeState);
+                Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+                CharterInvocationCommitResult firstBound =
+                    session.InvokeCharterFormal(runtime, preparation, catalog, 100, "applied", "applied");
+                Assert.IsTrue(firstBound.Succeeded, firstBound.Reason);
+                Assert.IsNotNull(session.CharterRuntimeState);
+                Assert.AreEqual(preparation.CatalogVersion, session.CharterDefinitionCatalogVersion);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
         private static CharterSiteInteractionRuntime CreateCharterInteractionRuntime()
         {
             var site = AssetDatabase.LoadAssetAtPath<CharterSiteData>(

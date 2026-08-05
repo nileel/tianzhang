@@ -2,10 +2,12 @@
 
 任务：`U-TZ-CHARTER-SLICE-01A`（会话交互桥与原子提交）
 修改方：DeepSeek V4 Flash
-RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`
+RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`（实施轮）；定向返工轮
+`eb1832fd-8985-452c-8ba0-7f72fb365b90`（2026-08-05）
 
 审核状态：Codex 于 2026-08-05 独立复审正式提交
 `2573431911967bc79069ab813d60c0c8aa22c183`，结论为部分通过，仍需按任务卡和未通过审核清单定向返工。
+返工已按 2026-08-05 定向要求完成并登记于下方「定向返工」，待 Codex 复核。
 
 ## 实施结论
 
@@ -86,3 +88,55 @@ RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`
   工作树不保留测试改动。此路径绕过已有长期状态必须消费 allocated 供给的失败关闭。
 - `SameIdSet` 也没有拒绝左侧重复 ID；返工须覆盖重复节点、授权和供给均拒绝且不推进，连同正式
   重自举反例一起复核。
+
+## 定向返工（2026-08-05，待 Codex 复核）
+
+返工对象：`2573431911967bc79069ab813d60c0c8aa22c183` 复审两项未通过项；只修改
+`CharterSiteInteractionRuntime`、`GameSession` 与直接 EditMode 测试，未修改
+`CharterRuleRuntime`、`CharterConflictRules`、保存 schema、站点数据、UI、场景、BattleSim 或数值。
+
+### 返工结论
+
+- 正式调用与会话当前状态绑定：`GameSession` 新增唯一正式调用入口
+  `InvokeCharterFormal(runtime, preparation, catalog, worldTick, positive, negative)`，只以
+  `CharterRuntimeState` 作为 `EvaluateFormal` 的当前状态——未接入（null）时以 candidate 自举
+  一次，已有长期状态时只能消费该状态，candidate 永不重新自举；规则级失败（如
+  `charter_reality_supply_unavailable`）直接失败关闭，不尝试提交。
+- 拒绝第二次 candidate 重自举提交：`CommitCharterFormalResult` 在已有
+  `CharterRuntimeState` 时以新稳定原因 `charter_commit_already_committed` 拒绝任何成功
+  `NextState`，即使该结果来自同一 preparation 的 null 重自举求值；原实例内容与保存链输出不变。
+  首次成功仍只从 null／0 一次原子替换，首次失败保持 null／0。
+- 三类动作集合严格拒绝重复 ID：`SameIdSet` 先要求左侧唯一数与长度相等，重复节点
+  （`charter_interaction_node_set_mismatch`）、重复授权版本（
+  `charter_interaction_authorization_mismatch`）、重复供给（
+  `charter_interaction_supply_set_mismatch`）均失败关闭且不推进，未完整集合不再因重复 ID 补齐
+  长度而误判通过。
+
+### 实际验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：成功（0 错误，2 个既有 CS0649 警告来自
+  序列化字段的 `CharterRuleStaticCatalogData`，与本轮改动无关）。本轮 Unity 运行生成了
+  gitignore 的 csproj 与 Library，使此前两轮“无该 csproj 文件”的构建检查得以实际执行。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：Unity
+  6000.3.18f1 EditMode 实际执行 391 项、389 通过、2 失败；失败仍为已登记且不在本卡路径的
+  既有基线——`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`
+  （PULSE 断言）与
+  `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`
+  （LogAssert 期望），与 D-TZ-CHARTER-SITE-01 及本卡实施轮登记基线一致。新增直接反例
+  `DuplicateIdsInAnyActionSetRejectedWithoutAdvancing` 与
+  `CharterSecondCandidateRebootstrapCannotCommitAfterFirstSuccess` 均通过；17 项册界直接
+  用例（CharterSiteInteractionRuntimeTests 9 项、SessionStateSnapshotTests 册界 8 项）全部通过。
+- 反例断言：首次提交后以同一 preparation 和 null 重自举求值仍返回成功（既有纯规则行为），
+  但 `CommitCharterFormalResult` 返回 `charter_commit_already_committed`，`CharterRuntimeState`
+  实例与存档 JSON 均不变；会话绑定入口 `InvokeCharterFormal` 在已有长期状态时返回
+  `charter_commit_invalid_result`（规则级 RealitySupplyUnavailable 失败关闭）且不提交；清空会话
+  后首次调用仍经同一入口自举并一次原子提交。重复节点／授权／供给三类反例均稳定拒绝且不推进。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths
+  开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：OK（668 文件）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1` 与暂存后
+  `git diff --cached --check`：见提交前门禁结果。
+- `check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01A -Postcondition ExternalPendingReview`：
+  按合同由共享入口在候选正式转换后复跑，candidate 不修改任务生命周期；01B 保持 blocked。
+- 残留风险：重复 ID 拒绝与第二次提交拒绝的消费方（01B UI）尚未实施；既有 2 项基线失败
+  （PULSE 断言、LogAssert 期望）仍由其所有者任务处理；`dotnet build` 依赖 Unity 生成的
+  gitignore csproj，全新 worktree 未运行 Unity 前仍不可直接执行。

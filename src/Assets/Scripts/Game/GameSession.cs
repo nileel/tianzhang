@@ -294,10 +294,39 @@ namespace TianZhang.Game
         }
 
         /// <summary>
-        /// 唯一正式提交入口：只接受完整、可校验且目录版本一致的成功规则结果。首次成功把
-        /// <see cref="CharterRuntimeState"/> 与 <see cref="CharterDefinitionCatalogVersion"/> 从
-        /// 未接入状态（null／0）一次原子替换为当前生产目录版本；首次失败保持 null／0，已有
-        /// 长期状态的重复调用失败保持原实例内容不变。candidate 永远不会直接赋值给会话。
+        /// 唯一正式调用入口：把会话当前长期状态绑定到规则求值。未接入时（
+        /// <see cref="CharterRuntimeState"/> 为 null）以 preparation 的 candidate 自举一次；
+        /// 已有长期状态只能消费该状态，candidate 永不重新自举；提交仍只经
+        /// <see cref="CommitCharterFormalResult"/> 唯一入口，candidate 永远不会直接赋值给会话。
+        /// </summary>
+        public CharterInvocationCommitResult InvokeCharterFormal(
+            CharterSiteInteractionRuntime runtime,
+            CharterInvocationPreparation preparation,
+            ContentCatalogData catalog,
+            int worldTick,
+            string positiveCommitResultState,
+            string negativeCommitResultState)
+        {
+            if (runtime == null || preparation == null)
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.InvalidResult);
+            CharterRuleInvocationResult result = runtime.EvaluateFormal(
+                preparation,
+                CharterRuntimeState,
+                worldTick,
+                positiveCommitResultState,
+                negativeCommitResultState);
+            if (!result.Succeeded || result.NextState == null)
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.InvalidResult);
+            return CommitCharterFormalResult(catalog, result, preparation.CatalogVersion);
+        }
+
+        /// <summary>
+        /// 唯一正式提交入口：只接受完整、可校验且目录版本一致的成功规则结果，且只在会话从未
+        /// 接入（null／0）时允许提交——第二次成功提交（例如以 candidate 重自举绕过重复供给拒绝）
+        /// 一律以 <see cref="CharterInvocationCommitReasons.AlreadyCommitted"/> 拒绝，已有长期
+        /// 状态保持原实例内容不变。首次成功把 <see cref="CharterRuntimeState"/> 与
+        /// <see cref="CharterDefinitionCatalogVersion"/> 从 null／0 一次原子替换为当前生产目录
+        /// 版本；首次失败两者保持 null／0。candidate 永远不会直接赋值给会话。
         /// </summary>
         public CharterInvocationCommitResult CommitCharterFormalResult(
             ContentCatalogData catalog,
@@ -306,6 +335,8 @@ namespace TianZhang.Game
         {
             if (result == null || !result.Succeeded || result.NextState == null)
                 return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.InvalidResult);
+            if (CharterRuntimeState != null)
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.AlreadyCommitted);
             if (catalog == null || !catalog.TryGetCharterRuleStaticCatalog(
                     out CharterRuleStaticCatalogData staticCatalog,
                     out string catalogReason))
@@ -468,6 +499,7 @@ namespace TianZhang.Game
     {
         public const string Ok = "";
         public const string InvalidResult = "charter_commit_invalid_result";
+        public const string AlreadyCommitted = "charter_commit_already_committed";
         public const string CatalogUnavailable = "charter_commit_catalog_unavailable";
         public const string VersionMismatch = "charter_commit_version_mismatch";
         public const string StateInvalid = "charter_commit_state_invalid";

@@ -723,6 +723,11 @@ namespace TianZhang.World
         {
             if (left == null || right == null)
                 return false;
+            // 动作集合必须严格唯一：左侧重复 ID 只补齐长度、不能补齐缺失项，未完整集合不得
+            // 误判为通过；节点、授权或供给任一重复都直接拒绝。
+            var leftIds = new HashSet<string>(left, StringComparer.Ordinal);
+            if (leftIds.Count != left.Length)
+                return false;
             var rightIds = new HashSet<string>(right, StringComparer.Ordinal);
             if (rightIds.Count != left.Length)
                 return false;
