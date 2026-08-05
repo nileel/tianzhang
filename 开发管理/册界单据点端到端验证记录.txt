@@ -3,9 +3,8 @@
 任务：`U-TZ-CHARTER-SLICE-01D`（单据点端到端闸门）
 修改方：DeepSeek V4 Flash
 RunId：`c50a8a23-7595-4cff-a210-4017d1b5eb5e`
-审核状态：⚠️ 已修改/未审核；待 Codex 独立复审。候选经共享入口转换
-`codex_review/codex/ready` 后，Codex 独立复审通过才关闭本卡与汇总父项
-`U-TZ-CHARTER-SLICE-01`。
+审核状态：Codex 于 2026-08-05 独立复审部分通过，任务保持 blocked；PlayMode runner 的
+2/2 通过结果有效，但尚未证明保存读取和重复消费时完整长期状态不变。
 
 ## 实施结论
 

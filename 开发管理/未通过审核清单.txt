@@ -6,4 +6,8 @@
 
 ## 当前未通过/待复核项
 
-当前无待复核项。
+### U-TZ-CHARTER-SLICE-01D · 单据点端到端闸门
+
+- 审核对象：正式提交 `8e73184ebd43747c03d287a1b24b7b520224803b`；结论：部分通过，仍需返工。
+- 已确认：正式场景 PlayMode runner 实际执行 2/2 通过，runner 自测 11 项 PASS，新增程序集与命令入口未改写业务所有者。
+- 返工范围：读档后的 `AssertCharterStateEquivalent` 必须逐项比较 `CharterRuntimeStateData` 的全部标量、字符串集合与记录内容；两处重复消费失败节点须保留独立前态副本并比较完整内容，不能只检查数组长度或同一对象引用。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 于 2026-08-05 独立复审部分通过：读档与重复消费的 PlayMode 状态完整性断言不足，任务保持 blocked，等待负责人决定定向返工。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode.meta",
     "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
@@ -102,3 +102,9 @@
 
 - 需要修改任一业务叶子路径、shared 冲突语义、schema 4、正式场景所有权、第二 Canvas／会话／存档／环境服务、战斗数值或未批准内容时停止并退回根因任务。
 - E2E 失败要求连续叠加补丁、跨越相邻叶子职责或扩大批准路径时停止，不以闸门任务承担返工实现。
+
+## Codex 独立复审（2026-08-05）
+
+- 审核正式提交 `8e73184ebd43747c03d287a1b24b7b520224803b`：正式场景流程、PlayMode asmdef、runner 和命令入口均在批准路径内，实际 PlayMode 2/2 通过，runner 自测 11 项 PASS。
+- 阻断问题：`AssertCharterStateEquivalent` 只比较两个字符串数组内容，其余动态记录仅比较长度；两处重复消费失败节点只用 `Assert.AreSame` 检查同一引用。`CharterRuntimeStateData` 还包含遗物、界印、节点、授权、覆盖、占用、供给及正负提交记录，因此等长或原地修改的错误状态会通过现有闸门，未满足读档一致与失败不变的直接证据要求。
+- 结论：部分通过，仍需返工。只补足 01D PlayMode 的完整深比较和失败前态比较后重新复审；本卡与汇总父项 `U-TZ-CHARTER-SLICE-01` 均不得关闭。
