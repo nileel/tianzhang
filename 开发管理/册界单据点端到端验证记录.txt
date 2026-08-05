@@ -1,0 +1,101 @@
+# 册界单据点端到端验证记录
+
+任务：`U-TZ-CHARTER-SLICE-01D`（单据点端到端闸门）
+修改方：DeepSeek V4 Flash
+RunId：`c50a8a23-7595-4cff-a210-4017d1b5eb5e`
+审核状态：⚠️ 已修改/未审核；待 Codex 独立复审。候选经共享入口转换
+`codex_review/codex/ready` 后，Codex 独立复审通过才关闭本卡与汇总父项
+`U-TZ-CHARTER-SLICE-01`。
+
+## 实施结论
+
+- 新增 PlayMode 测试程序集 `src/Assets/Tests/PlayMode`（`PlayMode.meta`、
+  `TianZhang.PlayModeTests.asmdef(.meta)`、`CharterVerticalSlicePlayModeTests.cs(.meta)`）：
+  只引用既有生产程序集（Foundation／Domain／Combat／Gameplay）与
+  `UnityEngine.TestRunner`，`includePlatforms` 为空（编辑器与目标平台均可编译），
+  不引用 UnityEditor、不复制 candidate、请求、冲突、环境解析或存档实现。
+- `CharterVerticalSlicePlayModeTests` 两项 `[UnityTest]`，只驱动正式
+  `SettlementScene`／`AdventureScene` 与公开生产入口：
+  1. `FormalScenesCompleteTheApprovedTenStepFlow`：经 `SceneFlowManager.EnterSettlement`
+     进入正式 SettlementScene，从空 `GameSession.CharterRuntimeState`（目录版本 0）开始；
+     正式入口按钮打开唯一旧水驿面板；未做证明时评估失败关闭
+     （`charter_interaction_preparation_incomplete`）、越序管理动作失败关闭
+     （`charter_interaction_action_out_of_order`）；五类临时证明按固定顺序推进并逐段刷新
+     步骤显示；金丹评估稳定返回 `charter_conflict_not_won`（无 `NextState`／事件输出、
+     会话不变）；元婴评估稳定返回 `TZ_CHARTER_CONFLICT_YUANYING_ANCHORED`（无
+     `NextState`／事件输出、会话不变）；首次正式调用经 `GameSession` 唯一提交入口原子写入，
+     目录版本随长期状态一次替换，面板从长期状态重建显示并输出
+     `env_guanzhong_wild` 环境引用；同一面板再次正式调用稳定失败
+     （`charter_reality_supply_unavailable`）且保持原实例；`SceneFlowManager.EnterAdventure`
+     进入正式 AdventureScene，遭遇启动未被投影阻断，环境反馈区显示条目
+     `charter_entry_suifu_diji`、事件 `event_suifu_water_redistribution` 与档案
+     `env_guanzhong_wild`；`CaptureSaveData`／`RestoreSaveData` 往返后长期状态与目录版本
+     一致、水府地纪仍登记且生效、同一生产目录与序列化档案 ID 仍可解析；读档后再次进入
+     Adventure 环境反馈仍显示；读档后重新进入 Settlement 完成五类证明后再正式调用稳定失败
+     （`charter_reality_supply_unavailable`），读档恢复的长期状态与目录版本保持不变。
+  2. `FormalAdventureShowsStableReasonWithoutCommittedCharterState`：未正式调用（长期状态
+     为空）进入正式 AdventureScene，环境反馈只显示稳定原因
+     `charter_environment_projection_no_long_term_state`，既有遭遇启动不被投影阻断
+     （`Exploration`），会话仍未被写入。
+- 测试驱动方式：场景流转只经 `SceneFlowManager` 生产入口；面板只经正式按钮
+  （`SettlementCharterSiteEntry`、`CharterSitePassageButton` 等）点击；断言只读公开
+  控制器／会话属性与面板显示文本；保存／读取经 `GameSession` 公开存档入口；目录引用只读取
+  正式 SettlementScene 序列化的唯一 `ContentCatalogData` 资产（反射读序列化字段，不新建
+  目录）。未修改任何业务脚本、CSV、asset、正式场景、`CharterRuleRuntime`、
+  `CharterConflictRules`、schema 4、环境参数、BattleSim、数值、奖励、第一章或悬赏实现；
+  未调用旧 `BuildValidState`、未手工赋值会话长期状态、未伪造默认站点／环境、未使用第二
+  场景／Canvas／会话／存档所有者。
+- 新增 `tools/run-unity-playmode-tests.ps1`（与 `run-unity-editmode-tests.ps1` 同一模式：
+  受保护工作区快照与恢复、结果 XML 实时校验、`-ValidateResultOnly`、失败传播非零退出码；
+  `-testPlatform PlayMode`）与 `tools/test-run-unity-playmode-tests.ps1` 自测（不起动
+  Unity，覆盖参数校验、退出码与失败传播）。
+- 未通过审核清单无新增项（PlayMode 2/2 全部通过）；`开发管理/设计-当前状态.txt` 已按
+  全部证据收口（见下方「状态收口」）。
+
+## 实际验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-run-unity-playmode-tests.ps1`：
+  11 项 PASS（缺失结果 XML、`ValidateResultOnly` 缺 `ResultXmlPath`、不可解析 XML、
+  非 `test-run` 根元素、缺 `total` 属性、零执行、计数不完整、失败运行传播、全通过运行、
+  缺 Unity 可执行文件且不启动、缺项目路径）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：
+  Unity 6000.3.18f1 PlayMode 实际执行 2 项、2 项通过、`result=Passed`、runner 退出码 0；
+  正式场景完整纵向流程与失败节点全部通过。运行历史：首次启动（全新 worktree 首次导入）
+  因许可证握手／UPM 包解析的瞬时启动失败退出码 1，重试后正常（runner 按失败传播合同如实
+  返回非零退出码，与 runner 逻辑无关）；第一次成功运行 1/2 通过，失败项为步骤显示断言
+  使用全等比较（正式视图步骤文本格式为「当前步骤: &lt;id&gt;」），改为包含断言后终态
+  2/2 通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK
+  （功法 29/29、术法 83/83、神通 31/31；language keys 409；新增 asmdef／meta 与正式场景、
+  目录和 asset 链未断裂）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths
+  开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：OK（670 文件）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`：OK
+  （cards=2 ready=1）。`-TaskId U-TZ-CHARTER-SLICE-01D -Postcondition ExternalPendingReview`
+  按合同由共享入口在候选正式转换（`codex_review/codex/ready`）后复跑，candidate 不修改
+  任务生命周期。
+- `tools/check-pending-whitespace.ps1 -ExpectedPaths '<候选 10 条路径>'` 与暂存后
+  `git diff --cached --check`：见提交前门禁结果。
+
+## 残留风险
+
+- PlayMode 只在本机 Unity 6000.3.18f1 编辑器运行，未在独立 player 设备上执行（项目无该
+  设施）；测试程序集 `includePlatforms` 为空以便目标平台可编译，但本闸门只承诺编辑器
+  PlayMode 运行。
+- 环境投影、冲突决定、原子提交与存档恢复的逐项单元断言仍由 01A／01B／01C EditMode 用例
+  承担；本闸门证明的是正式场景单一闭环中这些结果可观察、可保存、可恢复且重复消费稳定失败，
+  不替代各层直接测试。
+- 既有 2 项 EditMode 基线失败（PULSE 断言、LogAssert 期望）不在本卡路径，仍由其所有者
+  任务处理；本卡未复跑 EditMode 全量（相关输入未变化，不重复同范围检查）。
+- 首次 Unity 启动瞬时失败（许可证握手／UPM 解析取消）重试后通过；runner 已按失败传播
+  合同如实返回非零退出码与稳定原因，不掩盖失败。
+- 关本卡与汇总父项 `U-TZ-CHARTER-SLICE-01` 必须以 Codex 独立复审通过为前提，本卡不自行
+  关闭父项。
+
+## 状态收口
+
+- `开发管理/设计-当前状态.txt`：「CSV／运行时／保存／UI」行与「当前风险与下一步」第 7 条
+  已更新为已验证事实：schema 4 保存链已含册界长期状态；单据点已接入正式 SettlementScene
+  面板、`GameSession` 唯一提交入口与正式 AdventureScene 的 `env_guanzhong_wild` 环境
+  反馈；E2E PlayMode 闸门 2/2 通过（待 Codex 独立复审）；完整 M7 其余九条内容继续冻结。
+- 未通过审核清单：无新增项。
