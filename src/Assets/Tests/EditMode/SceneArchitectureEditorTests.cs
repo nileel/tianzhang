@@ -29,6 +29,8 @@ namespace TianZhang.Tests
             "Assets/Scenes/AdventureScene.unity",
         };
 
+        private const string CharterSiteEntryId = "charter_site_old_water_station";
+
         [Test]
         public void SceneArchitectureShellsAreRegisteredAndLoadWithExpectedControllers()
         {
@@ -531,6 +533,8 @@ namespace TianZhang.Tests
             var view = Object.FindFirstObjectByType<SettlementSceneView>();
             var dispatcher = Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
             var board = Object.FindFirstObjectByType<BountyBoardView>(FindObjectsInactive.Include);
+            var charterView = Object.FindFirstObjectByType<CharterSiteView>(FindObjectsInactive.Include);
+            var charterController = Object.FindFirstObjectByType<CharterSiteController>(FindObjectsInactive.Include);
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
             var serializedController = new SerializedObject(controller);
@@ -539,12 +543,18 @@ namespace TianZhang.Tests
             Assert.IsNotNull(view);
             Assert.IsNotNull(dispatcher);
             Assert.IsNotNull(board);
+            Assert.IsNotNull(charterView);
+            Assert.IsNotNull(charterController);
             Assert.AreSame(catalog, serializedController.FindProperty("contentCatalog").objectReferenceValue);
             Assert.AreSame(view, serializedController.FindProperty("sceneView").objectReferenceValue);
             Assert.AreSame(dispatcher, serializedController.FindProperty("featureDispatcher").objectReferenceValue);
+            Assert.AreEqual(CharterSiteEntryId, serializedController.FindProperty("charterSiteId").stringValue);
 
             var serializedView = new SerializedObject(view);
             Assert.AreSame(board, serializedView.FindProperty("bountyBoardView").objectReferenceValue);
+            Assert.AreSame(charterView, serializedView.FindProperty("charterSiteView").objectReferenceValue);
+            Assert.IsNotNull(serializedView.FindProperty("charterSiteEntryButton").objectReferenceValue);
+            Assert.IsNotNull(serializedView.FindProperty("charterSiteEntryText").objectReferenceValue);
 
             var serializedBoard = new SerializedObject(board);
             Assert.IsNotNull(serializedBoard.FindProperty("entriesText").objectReferenceValue);
@@ -554,6 +564,69 @@ namespace TianZhang.Tests
             Assert.IsNotNull(serializedBoard.FindProperty("closeButton").objectReferenceValue);
             Assert.AreEqual("BountyBoardPanel", board.gameObject.name);
             Assert.IsFalse(board.IsOpen, "BountyBoardPanel must stay closed until the bounty_board feature is dispatched.");
+
+            var serializedCharterView = new SerializedObject(charterView);
+            Assert.AreSame(charterController, serializedCharterView.FindProperty("controller").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("siteText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("stepText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("identityText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("authorizationText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("nodeText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("supplyText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("environmentText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("resultText").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("passageButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("managementButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("nodeButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("registrationButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("supplyButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("jindanButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("yuanyingButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("formalButton").objectReferenceValue);
+            Assert.IsNotNull(serializedCharterView.FindProperty("closeButton").objectReferenceValue);
+            Assert.AreEqual("CharterSitePanel", charterView.gameObject.name);
+            Assert.IsFalse(charterView.IsOpen, "CharterSitePanel must stay closed until the old water station entry is opened.");
+        }
+
+        [Test]
+        public void FormalSettlementSceneBindsCharterSitePanelAndKeepsSingleCanvas()
+        {
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
+
+            var controller = Object.FindFirstObjectByType<SettlementSceneController>();
+            var charterView = Object.FindFirstObjectByType<CharterSiteView>(FindObjectsInactive.Include);
+            var charterController = Object.FindFirstObjectByType<CharterSiteController>(FindObjectsInactive.Include);
+            Assert.IsNotNull(controller);
+            Assert.IsNotNull(charterView, "The formal SettlementScene must already contain the charter site panel.");
+            Assert.IsNotNull(charterController);
+
+            var serializedController = new SerializedObject(controller);
+            Assert.AreEqual(CharterSiteEntryId, serializedController.FindProperty("charterSiteId").stringValue);
+
+            var serializedView = new SerializedObject(Object.FindFirstObjectByType<SettlementSceneView>());
+            Assert.AreSame(charterView, serializedView.FindProperty("charterSiteView").objectReferenceValue);
+
+            var serializedCharterView = new SerializedObject(charterView);
+            Assert.AreSame(charterController, serializedCharterView.FindProperty("controller").objectReferenceValue);
+
+            Assert.AreEqual(1, CountCanvases(), "SettlementScene must keep exactly one UICanvas.");
+        }
+
+        [Test]
+        public void FormalAndRebuiltSettlementScenesBindTheSameCharterSitePanel()
+        {
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
+            string formalSiteId = GetSerializedCharterSiteId();
+            bool formalHasPanel = Object.FindFirstObjectByType<CharterSiteView>(FindObjectsInactive.Include) != null;
+
+            SceneBuilder.BuildSettlementScene();
+            EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
+
+            Assert.IsTrue(formalHasPanel);
+            Assert.AreEqual(formalSiteId, GetSerializedCharterSiteId());
+            Assert.IsNotNull(Object.FindFirstObjectByType<CharterSiteView>(FindObjectsInactive.Include));
+            Assert.IsNotNull(Object.FindFirstObjectByType<CharterSiteController>(FindObjectsInactive.Include));
+            Assert.AreEqual(1, CountCanvases(), "The rebuilt SettlementScene must keep exactly one UICanvas.");
         }
 
         [Test]
@@ -749,6 +822,21 @@ namespace TianZhang.Tests
         {
             return Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .Count(button => button.name.StartsWith(prefix));
+        }
+
+        private static int CountCanvases()
+        {
+            return Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
+        }
+
+        private static string GetSerializedCharterSiteId()
+        {
+            var controller = Object.FindFirstObjectByType<SettlementSceneController>();
+            Assert.IsNotNull(controller);
+            var serializedController = new SerializedObject(controller);
+            var siteIdProperty = serializedController.FindProperty("charterSiteId");
+            Assert.IsNotNull(siteIdProperty);
+            return siteIdProperty.stringValue;
         }
 
         private static void DestroyAdventureUi()

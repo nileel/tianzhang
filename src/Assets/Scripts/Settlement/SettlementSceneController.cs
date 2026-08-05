@@ -13,29 +13,42 @@ namespace TianZhang.Settlement
         public const string SettlementMissingReason = "settlement_not_found";
         public const string SettlementOutOfScopeReason = "settlement_not_in_first_batch_production_scope";
         public const string AdventureUnavailableReason = "settlement_adventure_not_available";
+        public const string CharterSitePanelMissingReason = "settlement_charter_site_panel_missing";
+        public const string CharterSiteMissingReason = "settlement_charter_site_missing";
+        public const string CharterSiteNotCurrentReason = "settlement_charter_site_not_current_settlement";
+        public const string CharterSiteStaticCatalogReason = "settlement_charter_static_catalog_unavailable";
+        public const string CharterSiteSessionMissingReason = "settlement_charter_session_missing";
+        public const string CharterSiteEntryOpenedReason = "charter_site_entry_opened";
 
         [SerializeField] private ContentCatalogData contentCatalog;
         [SerializeField] private SettlementSceneView sceneView;
         [SerializeField] private SettlementFeatureDispatcher featureDispatcher;
+        [SerializeField] private string charterSiteId;
 
         public SettlementData CurrentSettlement { get; private set; }
         public string CurrentSettlementId => CurrentSettlement == null ? null : CurrentSettlement.settlementId;
         public string LastFailureReason { get; private set; }
+        public string LastCharterSiteReason { get; private set; }
 
         public void Configure(
             ContentCatalogData catalog,
             SettlementSceneView view,
-            SettlementFeatureDispatcher dispatcher)
+            SettlementFeatureDispatcher dispatcher,
+            string nextCharterSiteId)
         {
             contentCatalog = catalog;
             sceneView = view;
             featureDispatcher = dispatcher;
+            charterSiteId = nextCharterSiteId;
         }
 
         private void Start()
         {
             if (sceneView != null)
+            {
                 sceneView.SetReturnToWorldAction(ReturnToWorld);
+                sceneView.BindCharterSiteEntry(RequestOpenCharterSite);
+            }
 
             if (featureDispatcher == null)
             {
@@ -67,6 +80,61 @@ namespace TianZhang.Settlement
 
             RefreshSettlementUi();
             return true;
+        }
+
+        /// <summary>
+        /// 打开旧水驿入口：只从 <see cref="ContentCatalogData"/> 按站点 ID 精确取得唯一站点，并校验
+        /// 站点属于当前正式据点、唯一静态目录可校验且会话引用存在；任一不合法返回稳定原因且不打开面板。
+        /// </summary>
+        public void RequestOpenCharterSite()
+        {
+            if (CurrentSettlement == null)
+            {
+                ShowCharterSiteEntryFailure(SettlementMissingReason);
+                return;
+            }
+            if (sceneView == null || !sceneView.HasCharterSitePanel)
+            {
+                ShowCharterSiteEntryFailure(CharterSitePanelMissingReason);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(charterSiteId))
+            {
+                ShowCharterSiteEntryFailure(CharterSiteMissingReason);
+                return;
+            }
+            if (contentCatalog == null ||
+                !contentCatalog.TryGetCharterSite(charterSiteId, out CharterSiteData site))
+            {
+                ShowCharterSiteEntryFailure(CharterSiteMissingReason + ":" + charterSiteId);
+                return;
+            }
+            if (!string.Equals(site.settlementId, CurrentSettlementId, StringComparison.Ordinal))
+            {
+                ShowCharterSiteEntryFailure(CharterSiteNotCurrentReason + ":" + site.settlementId);
+                return;
+            }
+            if (!contentCatalog.TryGetCharterRuleStaticCatalog(
+                    out CharterRuleStaticCatalogData staticCatalog,
+                    out string catalogReason))
+            {
+                ShowCharterSiteEntryFailure(CharterSiteStaticCatalogReason + ":" + catalogReason);
+                return;
+            }
+            if (GameSession.Instance == null)
+            {
+                ShowCharterSiteEntryFailure(CharterSiteSessionMissingReason);
+                return;
+            }
+            if (!sceneView.OpenCharterSite(
+                    site, staticCatalog, contentCatalog, GameSession.Instance, out string openReason))
+            {
+                ShowCharterSiteEntryFailure(openReason);
+                return;
+            }
+
+            LastCharterSiteReason = CharterSiteEntryOpenedReason + ":" + site.siteId;
+            sceneView.SetCharterSiteEntryText(LastCharterSiteReason);
         }
 
         public void ReturnToWorld()
@@ -189,6 +257,12 @@ namespace TianZhang.Settlement
             CurrentSettlement = null;
             LastFailureReason = reason;
             sceneView?.ShowFailure(reason, ResolveReturnWorldNodeId());
+        }
+
+        private void ShowCharterSiteEntryFailure(string reason)
+        {
+            LastCharterSiteReason = reason;
+            sceneView?.SetCharterSiteEntryText("charter_site_entry_unavailable:" + reason);
         }
 
         private static bool ContainsAdventureEntrance(SettlementData settlement, string adventureId)

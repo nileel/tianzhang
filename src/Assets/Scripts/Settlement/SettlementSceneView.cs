@@ -17,6 +17,9 @@ namespace TianZhang.Settlement
         [SerializeField] private Text adventureButtonText;
         [SerializeField] private Button returnToWorldButton;
         [SerializeField] private BountyBoardView bountyBoardView;
+        [SerializeField] private Button charterSiteEntryButton;
+        [SerializeField] private Text charterSiteEntryText;
+        [SerializeField] private CharterSiteView charterSiteView;
 
         public void Configure(
             Text nameText,
@@ -27,7 +30,10 @@ namespace TianZhang.Settlement
             Button nextAdventureButton,
             Text nextAdventureButtonText,
             Button nextReturnToWorldButton,
-            BountyBoardView nextBountyBoard)
+            BountyBoardView nextBountyBoard,
+            Button nextCharterSiteEntryButton,
+            Text nextCharterSiteEntryText,
+            CharterSiteView nextCharterSiteView)
         {
             settlementNameText = nameText;
             settlementDetailText = detailText;
@@ -38,6 +44,46 @@ namespace TianZhang.Settlement
             adventureButtonText = nextAdventureButtonText;
             returnToWorldButton = nextReturnToWorldButton;
             bountyBoardView = nextBountyBoard;
+            charterSiteEntryButton = nextCharterSiteEntryButton;
+            charterSiteEntryText = nextCharterSiteEntryText;
+            charterSiteView = nextCharterSiteView;
+        }
+
+        public bool HasCharterSitePanel => charterSiteView != null;
+
+        public void BindCharterSiteEntry(Action onClick)
+        {
+            if (charterSiteEntryButton == null)
+                return;
+
+            charterSiteEntryButton.onClick.RemoveAllListeners();
+            if (onClick != null)
+                charterSiteEntryButton.onClick.AddListener(() => onClick());
+        }
+
+        public void SetCharterSiteEntryText(string value)
+        {
+            if (charterSiteEntryText != null)
+                charterSiteEntryText.text = value;
+        }
+
+        /// <summary>
+        /// 打开唯一站点面板：只由 Settlement 控制器在目录取得站点、静态目录和会话引用都合法时调用。
+        /// </summary>
+        public bool OpenCharterSite(
+            CharterSiteData site,
+            CharterRuleStaticCatalogData staticCatalog,
+            ContentCatalogData catalog,
+            GameSession session,
+            out string reason)
+        {
+            if (charterSiteView == null)
+            {
+                reason = SettlementSceneController.CharterSitePanelMissingReason;
+                return false;
+            }
+
+            return charterSiteView.Show(site, staticCatalog, catalog, session, out reason);
         }
 
         public void SetReturnToWorldAction(Action action)

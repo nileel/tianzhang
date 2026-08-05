@@ -1,0 +1,83 @@
+# 册界单据点交互与UI验证记录
+
+任务：`U-TZ-CHARTER-SLICE-01B`（Settlement 单据点交互与最小 UI）
+修改方：DeepSeek V4 Flash
+RunId：`5afcce61-4c94-41a7-9307-cb8182ef14ae`
+审核状态：⚠️ 已修改/未审核；变更范围：`CharterSiteController.cs(.meta)`、`CharterSiteView.cs(.meta)`、
+`SettlementSceneController.cs`、`SettlementSceneView.cs`、`SceneBuilder.cs`、
+`SettlementScene.unity`、`CharterSiteViewTests.cs(.meta)`、`SceneArchitectureEditorTests.cs`、
+本验证记录；待 Codex 复审。
+
+## 实施结论
+
+- 新增独立 `CharterSiteController`／`CharterSiteView`（TianZhang.Gameplay 程序集）与唯一
+  `CharterSitePanel`（挂在唯一 `UICanvas` 下、与 BountyBoardPanel 同级，初始关闭）。Settlement
+  场景新增“旧水驿入口”按钮与入口状态文本；点击入口时 `SettlementSceneController` 只从
+  `ContentCatalogData.TryGetCharterSite(charterSiteId)` 按场景序列化站点 ID 精确取得唯一站点，
+  校验站点属于当前正式据点、`TryGetCharterRuleStaticCatalog` 可校验且 `GameSession.Instance`
+  存在；任一失败返回稳定原因（`settlement_charter_site_missing:<id>`／
+  `settlement_charter_site_not_current_settlement:<settlementId>`／
+  `settlement_charter_static_catalog_unavailable:<原因>`／`settlement_charter_session_missing`）
+  且不打开面板、不推进 progress。面板打开的唯一门禁仍是 01A 失败关闭入口
+  `CharterSiteInteractionRuntime.TryCreate`（站点非空、属于当前据点、唯一静态目录可校验）。
+- `CharterSiteController` 只调用 01A 动作／评估入口，不复制规则：通行、管理、节点、登记／授权、
+  供给五步动作输入全部取站点声明与目录声明数据（通行 capability／operator／target、管理
+  manager／beneficiary、节点=定义锚点集合、登记=站点条目＋权威要求遗物与授权版本集合、供给=
+  正负提交声明的供给并集），集合校验与顺序推进完全由 01A 运行时唯一执行；金丹、元婴、正式评估
+  从同一 preparation 各自派生请求，正式求值绑定会话当前长期状态（未接入时以 candidate 自举
+  一次），成功结果只经 `GameSession.CommitCharterFormalResult` 唯一提交入口写入，candidate 永不
+  赋值给会话。
+- `CharterSiteView` 只提交动作并刷新结果：显示站点 ID 与目录版本、当前步骤（由真实 progress 与
+  长期状态推导，不保存 UI 计数器）、真实稳定 ID（通行 operator／target、管理 manager／beneficiary、
+  条目、权威遗物、册界候选）、授权要求与已确认状态、声明与已接通节点、声明与已准备供给、环境引用
+  （正式结果 `EmittedEvents` 的 eventId:environmentProfileId）、最近稳定原因、冲突决定
+  （outcome＋获胜候选）与长期状态摘要（stateId、遗物／界印状态、已登记条目、当前地区条目、正负
+  提交、供给、占用）。正式提交后的显示从 `GameSession.CharterRuntimeState` 重建；关闭面板按 01A
+  契约丢弃本次交互的临时 progress 与 candidate，不写会话、不保存，重新打开是全新交互。
+- `SceneBuilder.BuildSettlementScene` 扩展：新增旧水驿入口按钮＋入口状态文本与 `CharterSitePanel`
+  （9 文本＋9 按钮），写入全部序列化引用（Settlement 控制器的 contentCatalog／sceneView／
+  featureDispatcher／charterSiteId，Settlement 视图的 bountyBoardView／charterSiteView／
+  charterSiteEntryButton／charterSiteEntryText，CharterSiteView 的 controller 与 9 文本／9 按钮）；
+  `ValidateSettlementSceneBindings` 同步扩展校验。正式 `SettlementScene.unity` 由该构建器重新生成，
+  重建后引用保持完整，仍只有一个 `UICanvas`。
+- 未修改 `CharterSiteInteractionRuntime`、`GameSession`、`CharterRuleRuntime`、`CharterConflictRules`、
+  schema 4、CSV、asset、Adventure 环境规则或 BattleSim；未创建第二 Canvas／第二场景／全局 UI 单例；
+  步骤规则未塞入 Settlement 控制器／视图。
+
+## 实际验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：成功（0 错误；2 个既有 CS0649 警告来自
+  `CharterRuleStaticCatalogData` 序列化字段，与 01A 基线一致）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：Unity
+  6000.3.18f1 EditMode 实际执行 400 项、398 通过、2 失败；失败仍为已登记且不在本卡路径的既有
+  基线——`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（PULSE 断言）
+  与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`
+  （LogAssert 期望），与 01A 验证记录登记基线一致。新增 `CharterSiteViewTests` 7/7 通过：正确据点
+  打开并显示真实稳定 ID、五步固定顺序提交且每步刷新、金丹／元婴真实冲突决定（`charter_conflict_not_won`
+  ＋LeftWins＋`jindan_left`、`TZ_CHARTER_CONFLICT_YUANYING_ANCHORED`＋Anchored）且不写会话、
+  正式唯一原子提交并从长期状态重建显示＋重复调用失败关闭、越序与缺证明稳定原因、未知站点／非当前
+  据点／静态目录缺失不打开面板、关闭丢弃临时进度；场景架构断言（含新增
+  `FormalSettlementSceneBindsCharterSitePanelAndKeepsSingleCanvas` 与
+  `FormalAndRebuiltSettlementScenesBindTheSameCharterSitePanel` 两项）全部通过，正式与重建场景均
+  只有一个 `UICanvas`；既有 Settlement／BountyBoard／场景架构用例全部通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK——正式场景与现有
+  目录／asset 引用无断链，册界站点单行投影与唯一 asset 保持（`charter_site_old_water_station`）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,
+  src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests`：OK（668 文件）。
+- `tools/check-pending-whitespace.ps1 -ExpectedPaths '<候选 13 条路径>'` 与暂存后
+  `git diff --cached --check`：见提交前门禁结果。
+- `check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01B -Postcondition ExternalPendingReview`：
+  按合同由共享入口在候选正式转换后复跑，candidate 不修改任务生命周期。
+
+## 残留风险
+
+- 环境引用显示来自正式求值结果 `EmittedEvents`（`event_suifu_water_redistribution:env_guanzhong_wild`
+  等）；实际 Adventure 投影与 asset 精确匹配由 01C 实施，本卡不建立第二环境状态所有者。
+- “唯一启用站点”按站点契约无启用字段解释为目录唯一站点：`ContentCatalogData.TryGetCharterSite`
+  只按稳定 ID 精确查询，单行唯一性由 `check-data-chain.ps1` 的 CHARTER_SITE_ROW_SET_INVALID 规则
+  保证（与 01A 记录口径一致）；重复站点行在数据链检查层失败关闭。
+- 面板的声明集合（锚点节点、正负提交供给并集、权威授权版本）由控制器从唯一静态目录读取，作为动作
+  输入与显示；集合相等与重复 ID 校验仍由 01A 运行时唯一执行，面板不复制校验规则。
+- 评估世界刻使用切片内声明常量 100（位于站点 grant 声明窗口 [0, 500] 内，与 01A 直接测试同值）；
+  正式世界刻接入属于 01D E2E 范围。
+- 既有 2 项基线失败（PULSE 断言、LogAssert 期望）仍由其所有者任务处理。

@@ -27,6 +27,8 @@ namespace TianZhang.Editor
         private const string SettlementScenePath = "Assets/Scenes/SettlementScene.unity";
         private const string AdventureScenePath = "Assets/Scenes/AdventureScene.unity";
         private const string HybridTacticalPrototypeScenePath = "Assets/Scenes/HybridTacticalPrototype.unity";
+        // 01B 新增：唯一正式册界站点入口 ID（⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：01B 面板接入）
+        private const string CharterSiteEntryId = "charter_site_old_water_station";
 
         /// <summary>
         /// 创建正交主相机（⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro）
@@ -218,11 +220,15 @@ namespace TianZhang.Editor
             var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
             var view = UnityEngine.Object.FindFirstObjectByType<SettlementSceneView>();
             var dispatcher = UnityEngine.Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
+            var charterSiteView = UnityEngine.Object.FindFirstObjectByType<CharterSiteView>(FindObjectsInactive.Include);
+            var charterSiteController = UnityEngine.Object.FindFirstObjectByType<CharterSiteController>(FindObjectsInactive.Include);
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
             Require(controller != null, "Settlement scene is missing SettlementSceneController.");
             Require(view != null, "Settlement scene is missing SettlementSceneView.");
             Require(dispatcher != null, "Settlement scene is missing SettlementFeatureDispatcher.");
+            Require(charterSiteView != null, "Settlement scene is missing CharterSiteView.");
+            Require(charterSiteController != null, "Settlement scene is missing CharterSiteController.");
             Require(catalog != null, "Settlement scene is missing the formal ContentCatalogData asset.");
 
             var serializedController = new SerializedObject(controller);
@@ -235,6 +241,28 @@ namespace TianZhang.Editor
             Require(
                 serializedController.FindProperty("featureDispatcher").objectReferenceValue == dispatcher,
                 "Settlement scene does not serialize the SettlementFeatureDispatcher reference.");
+            Require(
+                serializedController.FindProperty("charterSiteId").stringValue == CharterSiteEntryId,
+                "Settlement scene does not serialize the formal charter site entry id.");
+
+            var serializedView = new SerializedObject(view);
+            Require(
+                serializedView.FindProperty("bountyBoardView").objectReferenceValue != null,
+                "Settlement scene does not serialize the BountyBoardView reference.");
+            Require(
+                serializedView.FindProperty("charterSiteView").objectReferenceValue == charterSiteView,
+                "Settlement scene does not serialize the CharterSiteView reference.");
+            Require(
+                serializedView.FindProperty("charterSiteEntryButton").objectReferenceValue != null,
+                "Settlement scene does not serialize the charter site entry button.");
+
+            var serializedCharterView = new SerializedObject(charterSiteView);
+            Require(
+                serializedCharterView.FindProperty("controller").objectReferenceValue == charterSiteController,
+                "CharterSitePanel does not serialize its CharterSiteController reference.");
+            Require(
+                serializedCharterView.FindProperty("resultText").objectReferenceValue != null,
+                "CharterSitePanel does not serialize its result text.");
         }
 
         private static void ValidateAdventureSceneBindings()
@@ -494,6 +522,8 @@ namespace TianZhang.Editor
             var statusText = CreateSettlementText("SettlementStatusText", panelGo.transform, "等待据点数据", 14, Color.gray, 56f);
             var featureButton = CreateSettlementButton("SettlementFeature_bounty_board", "功能入口", panelGo.transform, out Text featureButtonText);
             var adventureButton = CreateSettlementButton("SettlementAdventure_guanzhong_wild", "副本入口", panelGo.transform, out Text adventureButtonText);
+            var charterSiteEntryButton = CreateSettlementButton("SettlementCharterSiteEntry", "旧水驿入口", panelGo.transform, out Text charterSiteEntryLabel);
+            var charterSiteEntryText = CreateSettlementText("SettlementCharterSiteEntryStatus", panelGo.transform, "旧水驿入口: 未打开", 14, Color.gray, 30f);
             var returnButton = CreateSettlementButton("ReturnToWorldButton", "返回主世界", panelGo.transform, out Text returnButtonText);
             returnButton.GetComponent<Image>().color = new Color(0.32f, 0.38f, 0.28f, 1f);
             returnButtonText.text = "返回主世界";
@@ -509,12 +539,15 @@ namespace TianZhang.Editor
                 adventureButton,
                 adventureButtonText,
                 returnButton,
-                CreateBountyBoard(canvasGo.transform));
+                CreateBountyBoard(canvasGo.transform),
+                charterSiteEntryButton,
+                charterSiteEntryText,
+                CreateCharterSitePanel(canvasGo.transform));
 
             var dispatcherGo = new GameObject("SettlementFeatureDispatcher");
             var dispatcher = dispatcherGo.AddComponent<SettlementFeatureDispatcher>();
             SetSerializedComponentName(dispatcher, "SettlementFeatureDispatcher");
-            controller.Configure(catalog, view, dispatcher);
+            controller.Configure(catalog, view, dispatcher, CharterSiteEntryId);
 
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
                 UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
@@ -565,6 +598,80 @@ namespace TianZhang.Editor
             board.Configure(title, entries, result, acceptButton, claimButton, closeButton);
             boardGo.SetActive(false);
             return board;
+        }
+
+        private static CharterSiteView CreateCharterSitePanel(Transform canvas)
+        {
+            var panelGo = new GameObject(
+                "CharterSitePanel",
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(VerticalLayoutGroup));
+            panelGo.transform.SetParent(canvas, false);
+            var panelRect = panelGo.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.anchoredPosition = new Vector2(0f, -60f);
+            panelRect.sizeDelta = new Vector2(820f, 1020f);
+            var panelImage = panelGo.GetComponent<Image>();
+            SetSerializedComponentName(panelImage, "CharterSitePanelImage");
+            panelImage.color = new Color(0.07f, 0.05f, 0.04f, 0.96f);
+            var panelLayout = panelGo.GetComponent<VerticalLayoutGroup>();
+            SetSerializedComponentName(panelLayout, "CharterSitePanelLayout");
+            panelLayout.padding = new RectOffset(20, 20, 20, 20);
+            panelLayout.spacing = 6f;
+            panelLayout.childForceExpandWidth = true;
+            panelLayout.childForceExpandHeight = false;
+
+            var titleText = CreateSettlementText("CharterSiteTitleText", panelGo.transform, "旧水驿 · 册界单据点", 26, Color.white, 38f);
+            var siteText = CreateSettlementText("CharterSiteSiteText", panelGo.transform, "等待站点数据", 14, Color.yellow, 36f);
+            var stepText = CreateSettlementText("CharterSiteStepText", panelGo.transform, "等待交互", 14, Color.white, 30f);
+            var identityText = CreateSettlementText("CharterSiteIdentityText", panelGo.transform, "等待身份数据", 14, new Color(0.85f, 0.85f, 0.75f), 64f);
+            var authorizationText = CreateSettlementText("CharterSiteAuthorizationText", panelGo.transform, "等待授权数据", 14, new Color(0.85f, 0.85f, 0.75f), 36f);
+            var nodeText = CreateSettlementText("CharterSiteNodeText", panelGo.transform, "等待节点数据", 14, new Color(0.85f, 0.85f, 0.75f), 36f);
+            var supplyText = CreateSettlementText("CharterSiteSupplyText", panelGo.transform, "等待供给数据", 14, new Color(0.85f, 0.85f, 0.75f), 36f);
+            var environmentText = CreateSettlementText("CharterSiteEnvironmentText", panelGo.transform, "等待环境引用", 14, new Color(0.85f, 0.85f, 0.75f), 36f);
+            var resultText = CreateSettlementText("CharterSiteResultText", panelGo.transform, "等待操作", 14, Color.gray, 96f);
+
+            var passageButton = CreateSettlementButton("CharterSitePassageButton", "通行", panelGo.transform, out Text passageText);
+            var managementButton = CreateSettlementButton("CharterSiteManagementButton", "管理", panelGo.transform, out Text managementText);
+            var nodeButton = CreateSettlementButton("CharterSiteNodeButton", "接通节点", panelGo.transform, out Text nodeButtonText);
+            var registrationButton = CreateSettlementButton("CharterSiteRegistrationButton", "登记与授权", panelGo.transform, out Text registrationText);
+            var supplyButton = CreateSettlementButton("CharterSiteSupplyButton", "准备供给", panelGo.transform, out Text supplyButtonText);
+            var jindanButton = CreateSettlementButton("CharterSiteJindanButton", "金丹介入", panelGo.transform, out Text jindanText);
+            var yuanyingButton = CreateSettlementButton("CharterSiteYuanyingButton", "元婴受锚", panelGo.transform, out Text yuanyingText);
+            var formalButton = CreateSettlementButton("CharterSiteFormalButton", "正式调用", panelGo.transform, out Text formalText);
+            var closeButton = CreateSettlementButton("CharterSiteCloseButton", "关闭并丢弃进度", panelGo.transform, out Text closeText);
+            closeButton.GetComponent<Image>().color = new Color(0.32f, 0.38f, 0.28f, 1f);
+
+            var charterController = panelGo.AddComponent<CharterSiteController>();
+            SetSerializedComponentName(charterController, "CharterSiteController");
+            var charterView = panelGo.AddComponent<CharterSiteView>();
+            SetSerializedComponentName(charterView, "CharterSiteView");
+            charterController.Configure(charterView);
+            charterView.Configure(
+                titleText,
+                siteText,
+                stepText,
+                identityText,
+                authorizationText,
+                nodeText,
+                supplyText,
+                environmentText,
+                resultText,
+                passageButton,
+                managementButton,
+                nodeButton,
+                registrationButton,
+                supplyButton,
+                jindanButton,
+                yuanyingButton,
+                formalButton,
+                closeButton,
+                charterController);
+            panelGo.SetActive(false);
+            return charterView;
         }
 
         private static Text CreateSettlementText(

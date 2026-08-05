@@ -24,7 +24,7 @@
 | U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
 | U-TZ-CHARTER-SLICE-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-TZ-CHARTER-SITE-01、U-TZ-CHARTER-SLICE-01A～01D） | — | 单据点纵向切片汇总父项；不直接执行，五张叶子卡完成后关闭。 | — |
-| U-TZ-CHARTER-SLICE-01B | P1 | deepseek | 已排队 | — | Settlement 单据点交互与最小 UI | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01B.txt |
+| U-TZ-CHARTER-SLICE-01B | P1 | codex | 已排队 | — | Settlement 单据点交互与最小 UI | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01B.txt |
 | U-TZ-CHARTER-SLICE-01C | P1 | deepseek | 阻塞 | U-TZ-CHARTER-SLICE-01B | Adventure 环境引用与反馈 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01C.txt |
 | U-TZ-CHARTER-SLICE-01D | P1 | deepseek | 阻塞 | U-TZ-CHARTER-SLICE-01C | 单据点端到端闸门 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01D.txt |
 
