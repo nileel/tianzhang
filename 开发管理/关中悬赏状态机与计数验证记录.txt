@@ -149,3 +149,29 @@
 ## 后续
 
 - Codex 复审部分通过，任务已移出 ready 队列并保持 blocked；只允许定向把正向链路改为经既有场景流和悬赏面板所有者驱动后重新复审，本卡仍未修改生产所有者、内容或存档事实。
+
+## U-GZ-FORMAL-E2E-01 定向返工（Codex 复审部分通过后，2026-08-05）
+
+- 返工内容：正向链路改为经既有场景流与悬赏面板所有者驱动，唯一生产 ID 不变（`guanzhong_city`／`guanzhong_wild`／`enemy_shijiahou`／`bounty_guanzhong_shijiahou`）：
+  - 接取：`SceneFlowManager.PrepareSettlementEntry("guanzhong_city")` 持久化据点与返回上下文后，经 `BountyBoardView.Show` 打开正式据点悬赏、`SubmitAccept` 提交唯一生产悬赏；不再直接调用 `GameSession.SetSettlementId`／`SetReturnTarget`／`AcceptBounty`。
+  - 进入冒险：`SceneFlowManager.PrepareAdventureEntry("guanzhong_wild", SceneReturnTarget.Settlement("guanzhong_city"))` 持久化副本与据点返回上下文；不再直接调用 `GameSession.SetAdventureId`／`SetReturnTarget`。
+  - 正式遭遇配置：打开唯一生产 `Assets/Scenes/AdventureScene.unity`，先经 `SerializedObject` 断言控制器序列化绑定生产 `ContentCatalog.asset`（GUID `0ac725d32d7afec44aecaee423eb7649`）与 `EnvironmentProfile_env_guanzhong_wild.asset`（GUID `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6`），再经生产 Awake 链路触发配置；不再反射调用 `ConfigureCurrentAdventureEncounter`。
+  - 返回：`ResolveEncounterAndReturn` 经 `SceneFlowManager.ReturnToPreviousScene` → `PrepareReturnToPreviousScene` 提交据点还原、副本清空与返回目标清空；场景加载不在 EditMode 范围（与既有 `AdventureSceneControllerTests` 约定一致，`SceneManager.LoadScene` 在 EditMode 抛出 `InvalidOperationException`，会话事实已在加载尝试前提交）。
+  - 重复结算失败关闭：同一控制器经流重新进入 `guanzhong_wild` 后二次消费仍稳定拒绝（`formal_encounter_already_consumed`），不重复掉落或进度。
+  - 领奖：回到关中城后经 `BountyBoardView.Show`＋`SubmitClaim`；不再直接调用 `GameSession.ClaimBounty`。重复接取与重复领奖仍经面板稳定拒绝。
+- 失败关闭用例 `FormalGuanzhongChainFailsClosedOnNonProductionMissingOrIllegalInputs` 不变（Codex 复审已确认其断言有效）。
+- 根因：返工未暴露生产根因，未修改 `GameSession`、`SceneFlowManager`、`AdventureSceneController`、`BountyBoardView` 或任何内容／存档所有者；未新增第二所有者、数值、CSV／Language／asset、场景或存档格式。
+
+## U-GZ-FORMAL-E2E-01 定向返工已执行验证（Unity 6000.3.18f1 EditMode，2026-08-05）
+
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目；本轮复用已有 Library）。Unity 进程退出码 2（其零失败门禁行为），完整 EditMode：415 项，413 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。
+- 本卡直接用例：`GuanzhongFormalEndToEndTests` 2/2（返工后的 `FormalGuanzhongProductionChainAcceptsDefeatsDropsReturnsClaimsSavesAndRestoresOnce` 经场景流与面板所有者驱动通过；`FormalGuanzhongChainFailsClosedOnNonProductionMissingOrIllegalInputs` 不变通过）；`BountyBoardViewTests` 6/6、`BountyRuntimeTests` 17/17、`AdventureSceneControllerTests` 14/14、`SessionStateSnapshotTests` 20/20、`TacticalGridModelTests` 4/4、`FormalEncounterResultTests` 5/5、`SceneArchitectureEditorTests` 26/26、`CharterSiteViewTests` 7/7 全部通过，未回归。
+- `dotnet build src/TianZhang.EditModeTests.csproj`（Unity 生成忽略的工程投影后）：0 错误通过，保留 2 项无关 Charter 静态目录字段警告（与既有记录一致）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过（本卡未改 CSV／Language／数据资产，作为任务卡列出的链路闸门复核）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 271 个文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（本卡 candidate 路径）：通过，检查 2 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+- 运行后清理：Unity 首次导入为本卡范围外生成的未跟踪 `src/Assets/DataConfig/CharterSites.csv.meta` 已删除，工作区只保留本卡 candidate 文件。
+
+## 后续
+
+- 返工候选待 Codex 独立复审；通过后本卡经正式入口以 pending review 投影形成正式提交。本卡仍未修改生产所有者、内容或存档事实。

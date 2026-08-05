@@ -175,3 +175,16 @@
 - 残留风险：端到端用例在 EditMode 中驱动会话状态与 Prepare* 方法链，不执行实际场景加载、输入设备或战斗 UI 交互；若未来场景序列化引用或 Build Settings 变化，需在 PlayMode/运行验收中复核。全量运行因 2 项既有无关基线失败保持非零退出码，属已登记状态。Unity 首次导入可能再次生成范围外 .meta 文件，提交前已清理并记录。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-GZ-FORMAL-E2E-01-b8936e8c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-FORMAL-E2E-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-GZ-FORMAL-E2E-01
+- 候选提交：190aff979d593fb35837161c01f786a1408f6180
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中悬赏状态机与计数验证记录.txt、src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs
+- 已验证：Unity 6000.3.18f1 EditMode 全量 415 项：413 通过、2 项既有无关基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；GuanzhongFormalEndToEndTests 返工后 2/2 通过（正向链经场景流/面板所有者驱动；失败关闭用例不变）；BountyBoardViewTests 6/6、BountyRuntimeTests 17/17、AdventureSceneControllerTests 14/14、SessionStateSnapshotTests 20/20、TacticalGridModelTests 4/4、FormalEncounterResultTests 5/5、SceneArchitectureEditorTests 26/26、CharterSiteViewTests 7/7 未回归；dotnet build src/TianZhang.EditModeTests.csproj：0 错误，2 项既有无关 Charter 字段警告；check-data-chain.ps1：OK；check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests：OK（271 个文件）；check-pending-whitespace.ps1（candidate 路径 2 文件）+ git diff --cached --check：OK；candidate 提交经 automation-finalize-commit.ps1 创建：父提交为 base 08aa7f9，仅含 2 个 CandidatePaths 文件，工作区干净
+- 未验证：SceneManager.LoadScene 实际场景切换不在 EditMode 范围（既有约定，未执行；返回会话事实已由测试断言）；BattleSim 未运行（本卡无 BattleSim/数值/经济改动，设计不要求）
+- 残留风险：EditMode 不能执行 SceneManager.LoadScene 场景切换（返回会话事实已断言，边界与既有 AdventureSceneControllerTests 约定一致）；遭遇配置经 InvokeAwake 生产触发（EditMode 不自动触发 Awake，与已接受的 SceneArchitectureEditorTests 模式一致）；2 项既有无关基线失败仍存在（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；重复结算失败关闭经流重新进入同一控制器验证，场景重载下为新实例的语义由既有 AdventureSceneControllerTests 覆盖。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

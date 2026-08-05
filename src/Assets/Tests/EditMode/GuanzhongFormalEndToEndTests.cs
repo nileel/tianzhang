@@ -8,8 +8,10 @@ using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Map;
+using TianZhang.Settlement;
 using TianZhang.Tactical;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -18,7 +20,12 @@ namespace TianZhang.Tests
     /// <summary>
     /// 关中正式接取至存档端到端闸门：同一 GameSession 经正式入口完成唯一生产链
     /// （guanzhong_city 接取 -> guanzhong_wild 击败石甲兽 -> 普通掉落 -> 据点返回 ->
-    /// 领取悬赏 -> 保存并读取），并证明非生产或缺失的敌人、掉落、目录、悬赏引用与
+    /// 领取悬赏 -> 保存并读取）。正向链路经既有场景流与悬赏面板所有者驱动：
+    /// <see cref="SceneFlowManager.PrepareSettlementEntry"/>、
+    /// <see cref="SceneFlowManager.PrepareAdventureEntry"/>、
+    /// <see cref="BountyBoardView.Show"/>／<see cref="BountyBoardView.SubmitAccept"/>／
+    /// <see cref="BountyBoardView.SubmitClaim"/>，正式遭遇配置经唯一生产 Adventure 场景的
+    /// 控制器 Awake 生产链路完成。同时证明非生产或缺失的敌人、掉落、目录、悬赏引用与
     /// 非法保存输入失败关闭，不伪造胜利、掉落、进度、领取或恢复结果。
     /// </summary>
     public sealed class GuanzhongFormalEndToEndTests
@@ -44,10 +51,11 @@ namespace TianZhang.Tests
         public void FormalGuanzhongProductionChainAcceptsDefeatsDropsReturnsClaimsSavesAndRestoresOnce()
         {
             DestroyExistingSceneFlowAndSession();
+            // 唯一生产 Adventure 场景：控制器序列化绑定生产目录与 env_guanzhong_wild 环境档案。
+            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
             GameObject sessionGo = null;
             GameObject flowGo = null;
-            var controllerGo = new GameObject("FormalE2EAdventureController");
-            var explorationGo = new GameObject("FormalE2EExplorationController");
+            GameObject boardGo = null;
             var profile = ScriptableObject.CreateInstance<CharacterData>();
             try
             {
@@ -57,44 +65,71 @@ namespace TianZhang.Tests
                 session.BeginNewGame(profile, "guanzhong_hub");
                 ContentCatalogData catalog = LoadProductionCatalog();
 
-                // 1. 接取：进入关中城后，唯一生产悬赏从 Available 接取为 Accepted。
-                session.SetSettlementId(SettlementId);
-                session.SetReturnTarget(SceneReturnTarget.World(session.CurrentWorldNodeId));
-                BountyStateSnapshot before = session.GetBountyState(BountyId);
-                Assert.AreEqual(BountyStatus.Available, before.Status);
-                AssertSucceeded(session.AcceptBounty(catalog, BountyId));
+                // 1. 进入关中城：由 SceneFlowManager.PrepareSettlementEntry 持久化据点与返回上下文。
+                flowGo = new GameObject("FormalE2ESceneFlow");
+                SceneFlowManager flow = flowGo.AddComponent<SceneFlowManager>();
+                Assert.AreEqual("SettlementScene", flow.PrepareSettlementEntry(SettlementId));
+                Assert.AreEqual(SettlementId, session.CurrentSettlementId);
+                Assert.AreEqual("WorldScene", session.LastReturnTarget.SceneName);
+                Assert.AreEqual("guanzhong_hub", session.LastReturnTarget.WorldNodeId);
+
+                // 2. 接取：BountyBoardView.Show 打开正式据点悬赏，SubmitAccept 提交唯一生产悬赏。
+                boardGo = new GameObject("FormalE2EBountyBoard");
+                BountyBoardView board = boardGo.AddComponent<BountyBoardView>();
+                board.Show(catalog, SettlementId, session);
+                Assert.AreEqual(1, board.ListedBountyCount);
+                Assert.AreEqual(BountyId, board.CurrentBountyId);
+                Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
+                board.SubmitAccept(BountyId);
                 BountyStateSnapshot accepted = session.GetBountyState(BountyId);
                 Assert.AreEqual(BountyStatus.Accepted, accepted.Status);
                 Assert.AreEqual(0, accepted.Progress);
+                Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 // 重复接取失败关闭，不改变状态。
-                Assert.AreEqual(
-                    BountyRuntimeRules.RepeatedAcceptReason,
-                    session.AcceptBounty(catalog, BountyId).FailureReason);
+                board.SubmitAccept(BountyId);
+                Assert.AreEqual(BountyRuntimeRules.RepeatedAcceptReason, board.LastResultReason);
                 Assert.AreEqual(BountyStatus.Accepted, session.GetBountyState(BountyId).Status);
 
-                // 2. 进入正式冒险：控制器组件在副本上下文未设置时创建（Awake 不提前配置），
-                //    随后按 PrepareAdventureEntry 的语义设置副本与据点返回上下文。
-                explorationGo.AddComponent<ExplorationController>();
-                AdventureSceneController controller = controllerGo.AddComponent<AdventureSceneController>();
-                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                session.SetReturnTarget(SceneReturnTarget.Settlement(SettlementId));
-                controller.SetContentCatalog(catalog);
-                controller.SetGuanzhongWildEnvironmentProfile(LoadProductionEnvironmentProfile());
-                controller.SetEncounterRandomSource(new SequenceRandomSource(99, 49));
+                // 3. 进入正式冒险：由 SceneFlowManager.PrepareAdventureEntry 持久化副本与据点返回上下文。
+                Assert.AreEqual(
+                    "AdventureScene",
+                    flow.PrepareAdventureEntry(
+                        FormalEncounterRules.GuanzhongWildAdventureId,
+                        SceneReturnTarget.Settlement(SettlementId)));
                 Assert.AreEqual(AdventureId, session.CurrentAdventureId);
                 Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
                 Assert.AreEqual(SettlementId, session.LastReturnTarget.SettlementId);
 
-                // 3. 正式遭遇配置成功：只绑定正式石甲兽，不依赖 fallback。
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
+                // 4. 正式遭遇配置：唯一生产场景的控制器经生产 Awake 链路绑定正式石甲兽；
+                //    序列化绑定必须是生产目录与 env_guanzhong_wild，不依赖测试注入。
+                AdventureSceneController controller =
+                    UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
+                Assert.IsNotNull(controller, "The formal AdventureScene must contain AdventureSceneController.");
+                var serializedController = new SerializedObject(controller);
+                Assert.AreEqual(
+                    catalog,
+                    serializedController.FindProperty("contentCatalog").objectReferenceValue,
+                    "The formal AdventureScene must bind the single production content catalog.");
+                Assert.AreEqual(
+                    LoadProductionEnvironmentProfile(),
+                    serializedController.FindProperty("guanzhongWildEnvironmentProfile").objectReferenceValue,
+                    "The formal AdventureScene must bind env_guanzhong_wild.");
+                controller.SetEncounterRandomSource(new SequenceRandomSource(99, 49));
+                InvokeAwake(controller);
                 ExplorationController boundExploration =
-                    GetPrivateField<ExplorationController>(controller, "explorationController");
+                    UnityEngine.Object.FindFirstObjectByType<ExplorationController>();
+                Assert.IsNotNull(boundExploration, "The formal AdventureScene must contain ExplorationController.");
                 Assert.IsTrue(boundExploration.enabled);
                 Assert.AreEqual(1, boundExploration.enemyCount);
 
-                // 4. 正式胜利结算：普通掉落与悬赏进度各只提交一次，返回上下文保持据点。
+                // 5. 正式胜利结算：普通掉落与悬赏进度各只提交一次；返回链路经
+                //    SceneFlowManager.ReturnToPreviousScene 的 PrepareReturnToPreviousScene 提交
+                //    据点还原、副本清空与返回目标清空。场景加载不在 EditMode 范围，与既有
+                //    AdventureSceneControllerTests 约定一致（SceneManager.LoadScene 在 EditMode 抛出
+                //    InvalidOperationException，会话事实已在加载尝试前提交）。
                 Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out EnemyData enemy));
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                Assert.Throws<InvalidOperationException>(
+                    () => controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy));
 
                 Assert.AreEqual(TacticalCombatEndOutcome.Victory, controller.LastEncounterOutcome);
                 Assert.IsNotNull(controller.LastFormalEncounterResult);
@@ -105,41 +140,43 @@ namespace TianZhang.Tests
                 Assert.AreEqual(1, completed.Progress);
                 Assert.AreEqual(1, InventoryQuantity(session, "item_shijia_piece"));
                 Assert.AreEqual(1, InventoryQuantity(session, "item_lingshi_low"));
-                Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
-                Assert.AreEqual(SettlementId, session.LastReturnTarget.SettlementId);
+                Assert.AreEqual(SettlementId, session.CurrentSettlementId);
+                Assert.IsNull(session.CurrentAdventureId);
+                Assert.IsTrue(string.IsNullOrEmpty(session.LastReturnTarget.SceneName));
 
-                // 重复结算失败关闭：不重复掉落或进度。
+                // 6. 重复结算失败关闭：同一控制器经流重新进入后二次消费仍稳定拒绝，不重复掉落或进度。
+                Assert.AreEqual(
+                    "AdventureScene",
+                    flow.PrepareAdventureEntry(
+                        FormalEncounterRules.GuanzhongWildAdventureId,
+                        SceneReturnTarget.Settlement(SettlementId)));
                 LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                Assert.Throws<InvalidOperationException>(
+                    () => controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy));
                 Assert.AreEqual(
                     FormalEncounterRules.AlreadyConsumedReason,
                     controller.EncounterResolutionFailureReason);
                 Assert.AreEqual(1, InventoryQuantity(session, "item_shijia_piece"));
                 Assert.AreEqual(1, InventoryQuantity(session, "item_lingshi_low"));
                 Assert.AreEqual(BountyStatus.ObjectiveCompleted, session.GetBountyState(BountyId).Status);
-
-                // 5. 据点返回：PrepareReturnToPreviousScene 还原关中城据点并清空副本上下文。
-                flowGo = new GameObject("FormalE2ESceneFlow");
-                SceneFlowManager flow = flowGo.AddComponent<SceneFlowManager>();
-                Assert.AreEqual("SettlementScene", flow.PrepareReturnToPreviousScene());
                 Assert.AreEqual(SettlementId, session.CurrentSettlementId);
                 Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsTrue(string.IsNullOrEmpty(session.LastReturnTarget.SceneName));
 
-                // 6. 领取悬赏：普通掉落与悬赏奖励各只授予一次。
-                AssertSucceeded(session.ClaimBounty(catalog, BountyId));
+                // 7. 回到关中城后经悬赏面板领奖：普通掉落与悬赏奖励各只授予一次。
+                board.Show(catalog, SettlementId, session);
+                board.SubmitClaim(BountyId);
                 BountyStateSnapshot claimed = session.GetBountyState(BountyId);
                 Assert.AreEqual(BountyStatus.Claimed, claimed.Status);
                 Assert.AreEqual(1, claimed.Progress);
                 Assert.AreEqual(1, InventoryQuantity(session, "item_shijia_piece"));
                 Assert.AreEqual(4, InventoryQuantity(session, "item_lingshi_low"));
+                Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 // 重复领奖失败关闭。
-                Assert.AreEqual(
-                    BountyRuntimeRules.RepeatedClaimReason,
-                    session.ClaimBounty(catalog, BountyId).FailureReason);
+                board.SubmitClaim(BountyId);
+                Assert.AreEqual(BountyRuntimeRules.RepeatedClaimReason, board.LastResultReason);
                 Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
 
-                // 7. 保存并以全新会话读取：Claimed、库存与据点／返回事实无损保留。
+                // 8. 保存并以全新会话读取：Claimed、库存与据点／返回事实无损保留。
                 GameSessionSaveData saved = session.CaptureSaveData();
                 Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion, saved.schemaVersion);
                 string savedJson = JsonUtility.ToJson(saved);
@@ -165,10 +202,12 @@ namespace TianZhang.Tests
                     UnityEngine.Object.DestroyImmediate(sessionGo);
                 if (flowGo != null)
                     UnityEngine.Object.DestroyImmediate(flowGo);
-                UnityEngine.Object.DestroyImmediate(controllerGo);
-                UnityEngine.Object.DestroyImmediate(explorationGo);
+                if (boardGo != null)
+                    UnityEngine.Object.DestroyImmediate(boardGo);
                 UnityEngine.Object.DestroyImmediate(profile);
                 DestroyExistingSceneFlowAndSession();
+                // 生产 Adventure 场景的控制器不参与本卡其他用例：恢复干净场景避免残留对象串扰。
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             }
         }
 
@@ -499,6 +538,15 @@ namespace TianZhang.Tests
                 methodName,
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             Assert.IsNotNull(method, "Missing private method " + methodName);
+            method.Invoke(target, null);
+        }
+
+        private static void InvokeAwake(MonoBehaviour target)
+        {
+            var method = target.GetType().GetMethod(
+                "Awake",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method, "Missing private Awake method");
             method.Invoke(target, null);
         }
 
