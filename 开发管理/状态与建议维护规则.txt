@@ -27,6 +27,7 @@
 5. 新任务或重新 ready 的任务一次性按“用户明确顺序 → P 优先级 → 高优先级下游解锁量 → 等待时间 → 稳定 ID”插入固定位置；普通轮次不重算顺序。
 6. 明确逻辑阻塞立即写入任务卡和 backlog，并从 ready 队列移除；执行器暂不可用或实时路径冲突只是本轮临时跳过，不改卡、不改顺序。
 7. 队列为空时只提升或建立当前能够安全形成的 ready 卡并排序、提交；本轮不执行新任务。没有合法来源时不制造任务，也不制造无事实变化提交。
+8. 空队列维护先扫描各分线 backlog 中所有明确标为阻塞的任务，再决定是否制卡：对阻塞描述中明确出现的稳定任务 ID，依次核对 `开发管理/任务卡/<ID>.txt` 与 `开发管理/任务归档/<ID>.txt`；backlog 中“阻塞”字样本身不能证明前置仍未完成。命名 blocker 在活跃卡和完成归档中都不存在时保持阻塞，不猜测完成状态；同一 ID 同时存在活跃卡与完成归档等事实冲突时保持阻塞，不提升下游任务。命名前置已完成但仍有其他真实条件时，改写为实际剩余 blocker；全部前置已完成且现有事实足以满足 runnable 合同（完整 expectedPaths、验证、完成条件和停止条件）时，同步 backlog、建立完整任务卡并按既有排序规则入队。完成全部阻塞项核对后仍没有合法候选，才允许无修改返回 `no_candidate`。
 
 runnable 必须同时满足：状态待处理；前置完成；主责已授权给可用执行器；没有待决策；内容冻结与项目闸门满足；任务卡能给出完整预期修改路径与验证；预期路径不与现有人工改动冲突。外部 CLI 只在真实选中合法候选并取得租约后预检；不得因执行器临时不可用改派主责。
 
@@ -65,4 +66,4 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 - 资产版本边界仅在相关路径变化时运行 `tools/check-asset-versioning.ps1`。
 - 只在创建/修改任务卡、改变任务状态、改变队列、队列补位或提交相关管理文件前运行 `tools/check-task-cards.ps1`；普通每小时轮次不运行全量检查器。
 - `tools/check-task-cards.ps1 -TaskId <ID> -Postcondition CodexDispatchReady -ExpectedRoute <codex_execute|codex_review>` 只接受同 ID、`owner=codex`、`dispatchState=ready` 且 route 精确匹配的 active 卡；`CodexClosedOrNonReady` 只接受 exact completed archive 或同 ID 的 `{blocked,frozen,pending_decision,waiting_reply}` active 非 ready 卡；`ExternalPendingReview` 只接受同 ID 的 `route=codex_review`、`owner=codex`、`dispatchState=ready` active 卡。省略 postcondition 时保持全局投影检查；附加 `-OutputJson` 时输出同一检查结果的 `cardCount`、`readyCount`、`taskId`、`taskState` 与 `postcondition` 瞬时证据，不写入 runtime。
-- `QueueMaintenance` 以 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 作为候选存在性证据，无需再用 `rg` 无匹配证明不存在。
+- `QueueMaintenance` 以 `tools/check-task-cards.ps1 -OutputJson` 返回的 `readyCount` 作为候选存在性证据，无需再用 `rg` 无匹配证明不存在；但 `readyCount` 只反映已经存在的任务卡与投影，不能替代对 backlog 命名 blocker 的新鲜度检查——只有先完成上述阻塞核对并刷新投影/制卡后，仍无合法候选时才返回 `no_candidate`。

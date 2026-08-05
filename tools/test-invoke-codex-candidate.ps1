@@ -16,6 +16,7 @@ $fakeBin = Join-Path $testRoot 'bin'
 $tracePath = Join-Path $testRoot 'codex-trace.txt'
 $approvedState = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\automation-state')).TrimEnd('\', '/')
 $stateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId"
+$qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
 $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
@@ -97,6 +98,12 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     result = $(if ($env:TZG_FAKE_CODEX_MISMATCH -eq '1') { '问题=终态故意不一致；完成=验证拒绝路径' } else { $resultText })
     impact = $impactText; verify = $verifyText; plain = $plainText
   }
+} elseif ($prompt.Contains('Route: QueueMaintenance')) {
+  $terminal = [ordered]@{
+    status = 'no_candidate'; identity = 'Codex'; model = $model
+    candidateCommit = $null; changedPaths = @(); verified = @(); unverified = @()
+    residualRisk = ''; result = ''; impact = ''; verify = ''; plain = ''
+  }
 } else {
   $taskId = 'TASK-CODEX-CANDIDATE'
   $cardPath = Join-Path ([Environment]::CurrentDirectory) "开发管理/任务卡/$taskId.txt"
@@ -159,6 +166,33 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex candidate did not create exactly one commit'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex candidate worktree is dirty'
 
+  $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
+  $qmTaskId = 'QUEUE-MAINTENANCE'
+  $queueText = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes((Join-Path $mainRoot '开发管理/当前任务队列.txt'))).TrimStart([char]0xFEFF)
+  $queueDigest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($queueText.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+  $qmClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $qmStateRoot -Owner codex -TaskId $qmTaskId -Route queue_maintenance -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $queueDigest)
+  $qmRun = ($qmClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$qmRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$qmRun.candidateBranch, [string]$qmRun.worktree, $base) | Out-Null
+  $qmOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route QueueMaintenance -RepositoryRoot ([string]$qmRun.worktree) -TaskId $qmTaskId -RunId ([string]$qmRun.runId) -Model 'test-codex-model' -StateRoot $qmStateRoot -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal $LASTEXITCODE 0 'Codex QueueMaintenance wrapper process failed'
+  Assert-Equal $qmOutput.Count 1 'Codex QueueMaintenance wrapper output count mismatch'
+  $qm = $qmOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$qm.status) 'no_candidate' "Codex QueueMaintenance no_candidate failed: $($qm | ConvertTo-Json -Compress -Depth 20)"
+  Assert-Equal ([string]$qm.detailCode) 'no_runnable_candidate' 'Codex QueueMaintenance no_candidate detail code mismatch'
+  Assert-True ([string]$qm.sessionId -ne '') 'Codex QueueMaintenance sessionId is missing'
+  Assert-Equal (Invoke-Git -Root ([string]$qmRun.worktree) -Arguments @('rev-parse', 'HEAD')) $base 'Codex QueueMaintenance must not create a commit'
+  Assert-Equal (Invoke-Git -Root ([string]$qmRun.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex QueueMaintenance worktree must stay clean'
+  $qmTrace = [IO.File]::ReadAllText($tracePath)
+  Assert-True ($qmTrace -match 'Route: QueueMaintenance') 'QueueMaintenance prompt lost its route'
+  Assert-True ($qmTrace -match '扫描各分线 backlog 中所有明确标为阻塞的任务') 'QueueMaintenance prompt must scan all backlog blocking items'
+  Assert-True ($qmTrace -match '开发管理/任务卡/<ID>\.txt 与 开发管理/任务归档/<ID>\.txt') 'QueueMaintenance prompt must query active cards and completion archives'
+  Assert-True ($qmTrace -match '不能证明前置仍未完成') 'QueueMaintenance prompt must not trust stale backlog text directly'
+  Assert-True ($qmTrace -match '完成全部阻塞项核对后仍没有合法候选，才允许返回 no_candidate') 'QueueMaintenance prompt must only return no_candidate after checking all blockers'
+  Assert-True ($qmTrace -match '本轮不执行新增业务任务') 'QueueMaintenance prompt must not execute new business tasks'
+  Assert-True ($qmTrace -match 'automation-finalize-commit\.ps1') 'QueueMaintenance prompt omitted the formal finalizer'
+  Assert-True ($qmTrace -match '-RequireAutomationMetadata') 'QueueMaintenance prompt omitted required automation metadata'
+
   $canaryBase = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
   $canaryOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Canary -RepositoryRoot $mainRoot -TaskId 'CANARY' -RunId "CANARY-$testId" -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
   $canary = $canaryOutput[0] | ConvertFrom-Json -Depth 30
@@ -189,5 +223,10 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedState = [IO.Path]::GetFullPath($stateRoot)
     if (-not $resolvedState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedState) -cne "tzg-codex-candidate-test-$testId") { throw "Unsafe Codex candidate state cleanup: $resolvedState" }
     Remove-Item -LiteralPath $resolvedState -Recurse -Force
+  }
+  if (Test-Path -LiteralPath $qmStateRoot) {
+    $resolvedQmState = [IO.Path]::GetFullPath($qmStateRoot)
+    if (-not $resolvedQmState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedQmState) -cne "tzg-codex-candidate-test-$testId-qm") { throw "Unsafe Codex QueueMaintenance state cleanup: $resolvedQmState" }
+    Remove-Item -LiteralPath $resolvedQmState -Recurse -Force
   }
 }
