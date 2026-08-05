@@ -776,6 +776,195 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void CharterFirstFormalCommitWritesStateAndVersionAtomicallyAndRoundTrips()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            int version = LoadProductionStaticCatalog().DefinitionCatalogVersion;
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                string unaccessedJson = JsonUtility.ToJson(session.CaptureSaveData());
+                CharterSiteInteractionRuntime runtime = CreateCharterInteractionRuntime();
+                CompleteCharterInteractionSteps(runtime);
+                Assert.That(runtime.TryCreatePreparation(
+                    out CharterInvocationPreparation preparation, out string prepReason), Is.True, prepReason);
+
+                CharterRuleInvocationResult result = runtime.EvaluateFormal(
+                    preparation, null, 100, "applied", "applied");
+                Assert.IsTrue(result.Succeeded, result.Reason);
+
+                // 首次成功：长期状态与目录版本从 null／0 一次原子替换为当前生产目录版本。
+                CharterInvocationCommitResult commit =
+                    session.CommitCharterFormalResult(catalog, result, preparation.CatalogVersion);
+                Assert.IsTrue(commit.Succeeded, commit.Reason);
+                Assert.IsNotNull(session.CharterRuntimeState);
+                Assert.AreEqual(version, session.CharterDefinitionCatalogVersion);
+                Assert.AreEqual(1, session.CharterRuntimeState.registeredRuleEntryIds.Length);
+                Assert.AreEqual(1, session.CharterRuntimeState.currentRegionRuleEntryIds.Length);
+                Assert.AreEqual(3, session.CharterRuntimeState.nodeOccupancies.Length);
+                Assert.AreEqual(1, session.CharterRuntimeState.positiveCommitResults.Length);
+                Assert.AreEqual(1, session.CharterRuntimeState.negativeCommitResults.Length);
+                Assert.AreEqual(
+                    3,
+                    session.CharterRuntimeState.realitySupplyStates.Count(
+                        supply => supply.state == CharterRuleRuntime.AllocatedSupplyState));
+
+                // schema 4 保存／读取保持长期结果；读档不重复结算。
+                string committedJson = JsonUtility.ToJson(session.CaptureSaveData());
+                Assert.AreNotEqual(unaccessedJson, committedJson);
+                session.ClearSession();
+                session.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(committedJson), catalog);
+                Assert.AreEqual(committedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+                Assert.IsNotNull(session.CharterRuntimeState);
+                Assert.AreEqual(version, session.CharterDefinitionCatalogVersion);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void CharterFirstFormalFailureKeepsUnaccessedStateAndZeroVersion()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            int version = LoadProductionStaticCatalog().DefinitionCatalogVersion;
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                string unaccessedJson = JsonUtility.ToJson(session.CaptureSaveData());
+                CharterSiteInteractionRuntime runtime = CreateCharterInteractionRuntime();
+                CompleteCharterInteractionSteps(runtime);
+                Assert.That(runtime.TryCreatePreparation(
+                    out CharterInvocationPreparation preparation, out string prepReason), Is.True, prepReason);
+                CharterRuleInvocationResult result = runtime.EvaluateFormal(
+                    preparation, null, 100, "applied", "applied");
+                Assert.IsTrue(result.Succeeded, result.Reason);
+
+                // 目录版本不一致 → 首次失败，长期状态与版本保持 null／0。
+                CharterInvocationCommitResult versionMismatch =
+                    session.CommitCharterFormalResult(catalog, result, version + 1);
+                Assert.IsFalse(versionMismatch.Succeeded);
+                Assert.AreEqual(CharterInvocationCommitReasons.VersionMismatch, versionMismatch.Reason);
+                Assert.IsNull(session.CharterRuntimeState);
+                Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+                Assert.AreEqual(unaccessedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // 无效结果（金丹未获胜）→ 失败关闭，不写候选。
+                CharterRuleInvocationResult jindan = runtime.EvaluateJindan(preparation, 100, "applied", "applied");
+                Assert.IsFalse(jindan.Succeeded);
+                CharterInvocationCommitResult invalidResult =
+                    session.CommitCharterFormalResult(catalog, jindan, preparation.CatalogVersion);
+                Assert.IsFalse(invalidResult.Succeeded);
+                Assert.AreEqual(CharterInvocationCommitReasons.InvalidResult, invalidResult.Reason);
+                Assert.IsNull(session.CharterRuntimeState);
+                Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+                Assert.AreEqual(unaccessedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+
+                // 规则级首次失败 → 提交拒绝，目录版本保持 0。
+                CharterRuleInvocationResult failed = runtime.EvaluateFormal(
+                    preparation, null, 100, "", "");
+                Assert.IsFalse(failed.Succeeded);
+                CharterInvocationCommitResult failedCommit =
+                    session.CommitCharterFormalResult(catalog, failed, preparation.CatalogVersion);
+                Assert.IsFalse(failedCommit.Succeeded);
+                Assert.AreEqual(CharterInvocationCommitReasons.InvalidResult, failedCommit.Reason);
+                Assert.IsNull(session.CharterRuntimeState);
+                Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+                Assert.AreEqual(unaccessedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        [Test]
+        public void CharterRepeatedFormalConsumptionKeepsCommittedStateUnchanged()
+        {
+            var sessionObject = new GameObject("GameSessionTest");
+            var session = sessionObject.AddComponent<GameSession>();
+            ContentCatalogData catalog = CreateCatalogWithCharterStaticCatalog();
+            try
+            {
+                session.BeginNewGame(null, "jiangzuo_hub");
+                CharterSiteInteractionRuntime runtime = CreateCharterInteractionRuntime();
+                CompleteCharterInteractionSteps(runtime);
+                Assert.That(runtime.TryCreatePreparation(
+                    out CharterInvocationPreparation preparation, out string prepReason), Is.True, prepReason);
+                CharterRuleInvocationResult first = runtime.EvaluateFormal(
+                    preparation, null, 100, "applied", "applied");
+                Assert.IsTrue(first.Succeeded, first.Reason);
+                Assert.IsTrue(session.CommitCharterFormalResult(catalog, first, preparation.CatalogVersion).Succeeded);
+
+                CharterRuntimeStateData committed = session.CharterRuntimeState;
+                string committedJson = JsonUtility.ToJson(session.CaptureSaveData());
+
+                // 重复调用必须继续消费现有长期状态；全新 registered 候选不自举，allocated 供给拒绝重复消费。
+                CharterRuleInvocationResult second = runtime.EvaluateFormal(
+                    preparation, session.CharterRuntimeState, 100, "applied", "applied");
+                Assert.IsFalse(second.Succeeded);
+                Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, second.Reason);
+                CharterInvocationCommitResult commit =
+                    session.CommitCharterFormalResult(catalog, second, preparation.CatalogVersion);
+                Assert.IsFalse(commit.Succeeded);
+                Assert.AreEqual(CharterInvocationCommitReasons.InvalidResult, commit.Reason);
+
+                // 已有长期状态的重复失败保持原实例内容不变。
+                Assert.AreSame(committed, session.CharterRuntimeState);
+                Assert.AreEqual(committedJson, JsonUtility.ToJson(session.CaptureSaveData()));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sessionObject);
+            }
+        }
+
+        private static CharterSiteInteractionRuntime CreateCharterInteractionRuntime()
+        {
+            var site = AssetDatabase.LoadAssetAtPath<CharterSiteData>(
+                "Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset");
+            Assert.IsNotNull(site, "The single approved charter site asset is missing.");
+            Assert.That(CharterSiteInteractionRuntime.TryCreate(
+                site, LoadProductionStaticCatalog(), "guanzhong_city",
+                out CharterSiteInteractionRuntime runtime, out string reason), Is.True, reason);
+            return runtime;
+        }
+
+        private static void CompleteCharterInteractionSteps(CharterSiteInteractionRuntime runtime)
+        {
+            Assert.That(runtime.VerifyPassage(
+                "capability_kaihe_jiuzhang_v1", "operator_old_water_station", "gate_old_water_station_pump").Succeeded,
+                Is.True);
+            Assert.That(runtime.VerifyManagement(
+                "manager_old_water_station", "beneficiary_water_basin").Succeeded, Is.True);
+            Assert.That(runtime.ConnectNodes(new[]
+            {
+                "node_old_water_station_charter",
+                "node_old_water_station_waterworks",
+                "node_old_water_station_river_wetland",
+            }).Succeeded, Is.True);
+            Assert.That(runtime.VerifyRuleEntryRegistration(
+                "charter_entry_suifu_diji",
+                "relic_world_charter",
+                new[]
+                {
+                    "authorization_suifu_water_basin_v1",
+                    "authorization_taixuan_seal_old_water_station_management_v1",
+                }).Succeeded, Is.True);
+            Assert.That(runtime.PrepareRealitySupplies(new[]
+            {
+                "supply_suifu_registered_seasonal_rain",
+                "supply_suifu_connected_water_balance",
+                "supply_suifu_wetland_land_capacity",
+            }).Succeeded, Is.True);
+        }
+
         private static FoundationPurpleMansionStateData CreateCompleteFoundationPurpleMansionState()
         {
             var state = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();

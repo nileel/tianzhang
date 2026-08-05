@@ -150,3 +150,16 @@
 - 残留风险：返工后正式提交仍需 Codex 独立复审（外部责任方不自审）；若复审要求成功结果区显示语义化提示而非清空，需再做窄幅返工。既有 2 项无关 EditMode 基线失败与 2 项无关构建警告继续存在。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-TZ-CHARTER-SLICE-01A-ae57896a · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-SLICE-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-SLICE-01A
+- 候选提交：9753b19d6cf00265b7e4c0a415df16b2618e59f4
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/册界单据点运行时交互验证记录.txt、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs、src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta、src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs、src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs.meta、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：Unity EditMode 389 项执行、387 通过；新增 11 项全部通过；金丹评估稳定返回 charter_conflict_not_won（shared 决定赢家 jindan_left，册界侧 jindan_right 未获胜）；元婴评估稳定返回 TZ_CHARTER_CONFLICT_YUANYING_ANCHORED 且 NextState/事件为空；首次正式提交原子写入 CharterRuntimeState 与 CharterDefinitionCatalogVersion=1；首次失败保持 null/0；重复消费以现有长期状态调用时 RealitySupplyUnavailable 且会话 JSON 不变；schema 4 保存／读取往返保持长期结果；check-review-text OK（668 文件）；check-pending-whitespace OK（9 文件）与 git diff --cached --check 通过
+- 未验证：dotnet build src/TianZhang.EditModeTests.csproj 不可运行：本 worktree 无该 csproj（与 D-TZ-CHARTER-SITE-01 返工轮一致）；check-task-cards -TaskId U-TZ-CHARTER-SLICE-01A -Postcondition ExternalPendingReview 由共享入口在候选正式转换后复跑；全量 EditMode 2 项已登记既有基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 与 DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad，与本卡路径无交集）；站点“禁用”状态在站点契约无启用字段，未实现（与批准规格一致）
+- 残留风险：candidate 与 progress 的丢弃语义尚无场景消费方（01B 未实施，UI 层证据待后继）；正式重复调用由调用方传入现有长期状态作为 currentState，否则 fresh registered 候选可绕过重复消费拒绝（API 契约已由测试锁定正确路径）；全量 EditMode 仍有 2 项已登记且与本卡路径无交集的既有基线失败，由其所有者任务处理。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

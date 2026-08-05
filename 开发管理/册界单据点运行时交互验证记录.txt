@@ -1,0 +1,83 @@
+# 册界单据点运行时交互验证记录
+
+任务：`U-TZ-CHARTER-SLICE-01A`（会话交互桥与原子提交）
+修改方：DeepSeek V4 Flash
+RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`
+
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增
+`src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs` 及 `.meta`、新增
+`src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs` 及 `.meta`、修改
+`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`、
+新增本验证记录。结论待 Codex 独立复审。
+
+## 实施结论
+
+- 新增无场景依赖的 `CharterSiteInteractionRuntime`：`TryCreate` 只接受站点静态引用、唯一静态
+  目录与当前据点，站点缺失、目录缺失或站点不属于当前据点时失败关闭（稳定原因
+  `charter_interaction_site_unavailable`／`charter_interaction_catalog_unavailable`／
+  `charter_interaction_site_not_current_settlement`）；站点声明门禁不可操作
+  （协议非 `compatible`、结构非 `intact`、供能非 `available`，或交互时间档非
+  `instant`／`sustained_guided`／`no_commit_on_cancel`）时停在本步（
+  `charter_interaction_passage_unavailable`）。
+- 五类临时证明严格有序推进，每步先校验站点静态身份与实际动作结果一致：
+  1. 通行：动作必须使用站点声明的 `capability_kaihe_jiuzhang_v1`、操作者
+     `operator_old_water_station` 与目标 `gate_old_water_station_pump`，成功只记录
+     passage 证明与已验证 operator／target；
+  2. 管理：操作者不等于管理者，动作必须使用站点声明的 `manager_old_water_station`／
+     `beneficiary_water_basin`，且站点声明的界印与授权版本可在目录解析；
+  3. 节点接通：动作节点必须都在目录中且与定义锚点集合完全一致（缺失、未知或越界不推进）；
+  4. 条目登记与授权：动作必须使用站点声明条目、权威遗物 `relic_world_charter`，授权版本集合
+     必须与权威要求完全一致且包含站点声明的界印授权版本；
+  5. 现实供给：动作供给必须都在目录中且与正负提交声明的供给并集完全一致。
+  任何越序动作返回 `charter_interaction_action_out_of_order`，只保留此前已完成的临时步骤。
+- `CharterInvocationPreparation` 只在五类证明全部成立后构造：固定
+  `CandidateState`（`stateId=charter_runtime_charter_site_old_water_station`，
+  `charterRelicState/worldSealState=recognized`、实际节点 `connected`、授权版本 `recognized`、
+  覆盖只取定义与传播边界共同允许集合、三个实际供给 `registered`；`registeredRuleEntryIds`、
+  占用、正负提交结果与 `currentRegionRuleEntryIds` 在调用前为空）、站点静态引用、临时
+  `CrossTierChallengeArchive`（只由站点 grant 构造，不新增持久 archive）与静态目录版本；
+  候选必须通过现有 `CharterRuntimeStateData.TryValidate` 且不携带单一可变请求，缺任一证明
+  （`charter_interaction_preparation_incomplete`）、grant 无法构造
+  （`charter_interaction_grant_invalid`）或候选校验失败（`charter_interaction_candidate_invalid`）
+  时不可构造。candidate 与 progress 都不是第二套长期状态，不保存、不赋值给会话。
+- 三次评估从同一 preparation 各自新建请求且互不共享可变实例：金丹请求带完整左右候选与
+  `crossTierChallengeRequest`（`challenge_suifu_001`／`cross_tier_charter_water_basin_v1`），
+  经现有 shared 决定稳定返回 `charter_conflict_not_won`（确定性赢家 `jindan_left`，
+  册界侧 `jindan_right` 未获胜），`NextState` 与事件输出为空；元婴请求只置
+  `YuanyingAnchored` 且不带候选／请求／册界候选 ID，稳定返回
+  `TZ_CHARTER_CONFLICT_YUANYING_ANCHORED`，`NextState` 为空；正式请求不带冲突介入，从空
+  会话以 candidate 为 `currentState` 调用现有纯规则，一次构造完整 `NextState`。
+- `GameSession.CommitCharterFormalResult` 是唯一正式提交入口：只接受完整、可校验且目录版本
+  一致的 `NextState`（`charter_commit_invalid_result`／`charter_commit_catalog_unavailable`／
+  `charter_commit_version_mismatch`／`charter_commit_state_invalid` 失败关闭）。首次成功把
+  `CharterRuntimeState` 与 `CharterDefinitionCatalogVersion` 从 null／0 一次原子替换为当前
+  生产目录版本（1）；首次失败两者保持 null／0。已有长期状态时 `EvaluateFormal` 必须继续消费
+  当前长期状态（allocated 供给拒绝重复消费），全新 registered 候选不再自举。
+
+## 实际验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：不可运行——本 worktree 无该 csproj 文件
+  （与 `D-TZ-CHARTER-SITE-01` 返工轮相同，仅存在 `simulations/BattleSim/BattleSim.csproj`）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：Unity
+  6000.3.18f1 EditMode 实际执行 389 项、387 通过、2 失败；失败仍为已登记且不在本卡路径的
+  既有基线——`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`
+  （PULSE 断言，左右默认候选同脉冲故为 `PULSE_NEUTRAL`）与
+  `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`
+  （LogAssert 期望未出现），与 `D-TZ-CHARTER-SITE-01` 验证记录第 61-63 行登记基线一致。
+  新增 `CharterSiteInteractionRuntimeTests` 8/8 通过、`SessionStateSnapshotTests` 全部通过
+  （含新增 3 项），`CharterSiteDataTests`、`CharterRuleRuntimeTests`、`CharterRuleDataTests`
+  等既有册界用例全部通过。覆盖：空状态自举、五步正序、每类越序、静态身份不一致稳定拒绝、
+  门禁不可用／非当前据点／目录缺失失败关闭、缺任一证明不可构造 candidate、candidate 完整
+  映射与长期结果字段为空、三份请求互不共享、金丹 `charter_conflict_not_won`、元婴受锚、
+  首次唯一原子提交、schema 4 保存读取往返与重复消费拒绝。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths
+  开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：OK（667 文件）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1
+  -ExpectedPaths '<本卡候选 9 条路径>'`：OK（9 文件）。
+- 暂存后 `git diff --cached --check`：通过。
+- `check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01A -Postcondition ExternalPendingReview`：
+  按合同由共享入口在候选正式转换后复跑，candidate 不修改任务生命周期。
+- 残留风险：candidate 与 progress 的丢弃语义只在运行时边界成立，尚未有场景消费方；01B
+  未实施前无 UI 层证据。全量 EditMode 仍有 2 项与本卡路径无交集的已登记既有基线失败（见上），
+  由其所有者任务处理。`CharterSiteInteractionRuntime` 不检查站点“禁用”状态——站点契约无
+  启用字段，与批准规格一致。

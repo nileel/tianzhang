@@ -293,6 +293,42 @@ namespace TianZhang.Game
             CharterDefinitionCatalogVersion = restored.CharterDefinitionCatalogVersion;
         }
 
+        /// <summary>
+        /// 唯一正式提交入口：只接受完整、可校验且目录版本一致的成功规则结果。首次成功把
+        /// <see cref="CharterRuntimeState"/> 与 <see cref="CharterDefinitionCatalogVersion"/> 从
+        /// 未接入状态（null／0）一次原子替换为当前生产目录版本；首次失败保持 null／0，已有
+        /// 长期状态的重复调用失败保持原实例内容不变。candidate 永远不会直接赋值给会话。
+        /// </summary>
+        public CharterInvocationCommitResult CommitCharterFormalResult(
+            ContentCatalogData catalog,
+            CharterRuleInvocationResult result,
+            int expectedCatalogVersion)
+        {
+            if (result == null || !result.Succeeded || result.NextState == null)
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.InvalidResult);
+            if (catalog == null || !catalog.TryGetCharterRuleStaticCatalog(
+                    out CharterRuleStaticCatalogData staticCatalog,
+                    out string catalogReason))
+            {
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.CatalogUnavailable);
+            }
+            if (expectedCatalogVersion != staticCatalog.DefinitionCatalogVersion)
+            {
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.VersionMismatch);
+            }
+            if (!result.NextState.TryValidate(
+                    staticCatalog.Definitions,
+                    staticCatalog.ReferenceCatalog,
+                    out string stateReason))
+            {
+                return CharterInvocationCommitResult.Rejected(CharterInvocationCommitReasons.StateInvalid);
+            }
+
+            CharterRuntimeState = result.NextState;
+            CharterDefinitionCatalogVersion = staticCatalog.DefinitionCatalogVersion;
+            return CharterInvocationCommitResult.SucceededResult();
+        }
+
         private static void ValidateRestoredCharterState(
             ContentCatalogData catalog,
             GameSessionRestoredState restored)
@@ -424,6 +460,33 @@ namespace TianZhang.Game
         {
             if (instance == this)
                 instance = null;
+        }
+    }
+
+    /// <summary>Stable rejection reasons of the single formal charter commit entry.</summary>
+    public static class CharterInvocationCommitReasons
+    {
+        public const string Ok = "";
+        public const string InvalidResult = "charter_commit_invalid_result";
+        public const string CatalogUnavailable = "charter_commit_catalog_unavailable";
+        public const string VersionMismatch = "charter_commit_version_mismatch";
+        public const string StateInvalid = "charter_commit_state_invalid";
+    }
+
+    /// <summary>Outcome of one formal charter commit attempt; it never mutates state on rejection.</summary>
+    public sealed class CharterInvocationCommitResult
+    {
+        public bool Succeeded;
+        public string Reason;
+
+        public static CharterInvocationCommitResult SucceededResult()
+        {
+            return new CharterInvocationCommitResult { Succeeded = true, Reason = CharterInvocationCommitReasons.Ok };
+        }
+
+        public static CharterInvocationCommitResult Rejected(string reason)
+        {
+            return new CharterInvocationCommitResult { Succeeded = false, Reason = reason };
         }
     }
 }
