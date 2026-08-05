@@ -16,22 +16,24 @@
 6. 重要 NPC 继续使用独立精绘水墨立绘。玩家拥有由外观模块组合的标准姿势全身水墨立绘；角色详情显示全身，对话和行动轴分别裁切同一合成结果。
 7. 玩家立绘的最终线稿、水彩、人物比例和精细度不在本设计中批准。正式图层生产前必须另做风格样张评审；本轮生成的视觉草图只说明载体和数据关系，不是正式资源。
 8. 人形角色按人形骨架族群复用动画；妖兽不套用人形骨架。首批只建设当前正式内容需要的人形族群和石甲兽重型四足族群。
-9. 现有 `HybridTacticalPrototype.unity` 继续作为隔离的 2.5D 表现测试台，不拥有第二套 CTB 或战斗规则；实际玩家与石甲兽对战只在正式战斗所有者接入后验证。
+9. 正式 `AdventureScene` 已由 `AdventureSceneController`、`ExplorationController` 和 `TacticalCombatController` 运行玩家与石甲兽的 CTB 闭环；后续正式接入只把现有 Billboard 单位标记替换为 3D 单位表现。`HybridTacticalPrototype.unity` 继续作为隔离的 2.5D 表现测试台，不拥有第二套 CTB 或战斗规则。
 
 ## 二、当前事实与问题
 
 ### 2.1 玩法与镜头约束
 
 - 游戏是 2D 沙盒世界、六角格战棋玩法的修仙游戏，战斗使用 CTB。
-- 单位具有六个明确朝向；移动、攻击、视野、作用路径、高度和占位读取共享六角规则数据。
+- 正式 `AdventureScene.unity` 已绑定 `AdventureSceneController` 与 `ExplorationController`；现有运行链由 `TacticalCombatController` 协调 `CTBEngine` 与 `CombatResolver`，包含 Loading／Exploration／Combat／Returning 状态、`TryBeginCombat`、`AdvanceUntilAction`、玩家／敌人行动和 `ResolveBattleEnd`，正式 CTB 战斗不是本设计的待建依赖。
+- 六向朝向已有规则实现：`HexCoord.Directions`、`DirectionTo`、`DirectionDiff` 提供六个方向及方向差，`Character.Facing` 与 `FaceTarget` 保存和更新规则朝向；`GetFacingHitModifier` 对正面／侧面／背面使用 0.85／1.0／1.15 命中修正，`GetFacingDamageModifier` 使用 1.0／1.15／1.3 伤害修正。
+- 移动、攻击、视野、作用路径、高度和占位读取共享六角规则数据；运行时 3D 根节点只投影现有规则朝向。
 - 2.5D 只改变表现。Unity `Transform`、碰撞体、模型高度、动画位移和相机不能成为规则事实源。
-- `HybridTacticalPrototype.unity` 已有正交斜俯视相机、立体六角地块、点击选格、高亮与共享空间查询，但当前单位仍是 Billboard 标记，场景也不包含正式 `AdventureSceneController` 或 CTB 战斗。
+- `HybridTacticalPrototype.unity` 已有正交斜俯视相机、立体六角地块、点击选格、高亮与共享空间查询，但当前单位仍是 Billboard 标记，场景自身也不包含正式 `AdventureSceneController` 或 CTB 战斗；这一事实只描述隔离原型，不表示正式 Adventure 缺少战斗。
 
 ### 2.2 当前角色美术状态
 
 - 已生成苻渊、谢观微两名重要 NPC 的无字立绘、题字氛围版和透明对话立绘。
 - 这些立绘使用干笔线稿、半透明水彩、低饱和配色和纸张质感，适合对话、角色详情和剧情演出，不适合直接缩成六角格行动单位。
-- 2D 正式 Adventure 表现和隔离 2.5D 原型均仍使用圆点或简单 Billboard 单位标记。
+- 2D 正式 Adventure 目前由 `ExplorationController` 调用 `HexTilemapManager.PlaceUnitMarker` 实例化 Sprite 单位标记，隔离 2.5D 原型仍使用简单 Billboard 标记。
 - `src/Assets/Art/` 目录当前不存在，因此也尚未建立正式角色模型、材质、动画和 Prefab 生产链。
 
 ### 2.3 当前数据边界
@@ -113,6 +115,7 @@
 ### 6.2 非人形族群
 
 - 妖兽按形体族群复用骨架，不为每个物种默认创建专属运行框架，也不强行套用人形骨架。
+- 石甲兽不是待从零建立的敌人：`CreateFallbackEnemy` 模板池已有“石甲兽”战斗数值模板，正式关中遭遇的 `EnemyData` 也已通过 `combatTemplate` 引用 `enemy_shijiahou` 角色模板。当前缺口是 3D 模型、重型四足骨骼、动画族群及其表现接入，不是敌人规则、AI 或数值模板。
 - 当前首个非人形族群是重型四足，服务正式石甲兽：厚甲、迟缓、近战和格挡倾向必须在轮廓与动作节奏中可读。
 - 石甲兽首批动作覆盖待机、移动、受击、倒地、基础攻击和防御。
 - 飞禽、轻型四足、蛇虫、灵体和大型首领只在对应正式内容进入生产时新增族群或专属骨架，本设计不提前建设空目录与空控制器。
@@ -284,7 +287,7 @@
 
 ### 12.4 石甲兽技术样例
 
-制作重型四足骨架、石甲兽模型和批准动作，证明非人形管线而不改变其 AI、攻击档案或数值。
+制作重型四足骨架、石甲兽模型和批准动作，直接消费现有 `enemy_shijiahou` 的 `EnemyData.combatTemplate` 与 AI 结果，证明非人形表现管线而不重建或改变其敌人规则、攻击档案和数值。
 
 ### 12.5 外观与立绘数据切片
 
@@ -296,11 +299,11 @@
 - 玩家模块化立绘样张必须至少选择 2 种发型、2 套服装和 2 个脸型，并覆盖所选条目的完整笛卡尔积，最低为八种组合；单一组合不能作为图层兼容性和风格稳定性的批准证据。
 - 玩家立绘必须与现有 NPC 立绘并排比较；在风格获批前只保留技术图层样例，不批量生产脸型、发型和服装立绘。
 
-### 12.7 正式 Adventure 接入
+### 12.7 正式 Adventure 表现替换
 
-- 让正式 Adventure／战斗渲染路径消费已经验证的 3D 单位表现。
-- 实际玩家与石甲兽 CTB 对战只在正式 `TacticalCombatController` 和既有场景所有者中运行。
-- 隔离原型不升级为第二正式战斗场景。
+- 在正式 `AdventureScene` 中，把 `ExplorationController` 通过 `PlaceUnitMarker` 创建的现有 Sprite／Billboard 单位标记替换为已经验证的 3D 单位表现。
+- 保留现有 `AdventureSceneController`、`ExplorationController`、`TacticalCombatController`、CTB 循环、AI、伤害、结算与返回流程；3D 表现只消费既有位置、朝向、行动和战斗结束结果。
+- 隔离原型不升级为第二正式战斗场景，也不承担正式 CTB 验证所有权。
 
 ### 12.8 创角内容扩充
 
@@ -345,7 +348,7 @@
 4. 石甲兽模型与重型四足动画任务。
 5. AppearanceProfile／目录／组装器／立绘合成器的数据与存档设计。
 6. 玩家全身立绘风格样张评审。
-7. 正式 Adventure 3D 单位接入任务。
+7. 正式 Adventure Billboard 到 3D 单位表现替换任务。
 8. 首版创角外观内容批次。
 
 任何后续任务只消费本设计批准的边界，不因“模型已经可显示”推导出正式场景、完整换装、全部妖兽或最终立绘风格已经获批。
