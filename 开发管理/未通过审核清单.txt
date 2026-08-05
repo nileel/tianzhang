@@ -5,3 +5,10 @@
 记录当前仍未通过、已返工待复核或必须由 `2` 流程处理的审核项。历史审核过程已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
 
 ## 当前未通过/待复核项
+
+### U-TZ-CHARTER-SLICE-01A · 会话交互桥与原子提交
+
+- 审核对象：正式提交 `2573431911967bc79069ab813d60c0c8aa22c183`；结论：部分通过，仍需返工。
+- 问题：已有 `GameSession.CharterRuntimeState` 后，调用方仍可把 null 传给 `EvaluateFormal` 以 candidate 重自举；`CommitCharterFormalResult` 仍接受第二个成功 `NextState`。临时 EditMode 反例确认第二次提交实际返回成功。`SameIdSet` 也未拒绝左侧重复 ID，可能错误推进节点、授权或供给证明。
+- 返工：仅在 `CharterSiteInteractionRuntime`、`GameSession` 与直接 EditMode 测试中把正式调用与会话当前状态绑定、拒绝第二次 candidate 重自举提交，并严格拒绝三类输入集合重复 ID；不修改 shared 规则、保存 schema、站点数据、UI、场景、BattleSim 或数值。
+- 复核：运行直接新反例与 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；`dotnet build src/TianZhang.EditModeTests.csproj` 继续因项目文件缺失而不可运行，需如实记录。

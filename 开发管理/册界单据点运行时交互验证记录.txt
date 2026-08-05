@@ -4,11 +4,8 @@
 修改方：DeepSeek V4 Flash
 RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增
-`src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs` 及 `.meta`、新增
-`src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs` 及 `.meta`、修改
-`src/Assets/Scripts/Game/GameSession.cs`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`、
-新增本验证记录。结论待 Codex 独立复审。
+审核状态：Codex 于 2026-08-05 独立复审正式提交
+`2573431911967bc79069ab813d60c0c8aa22c183`，结论为部分通过，仍需按任务卡和未通过审核清单定向返工。
 
 ## 实施结论
 
@@ -81,3 +78,11 @@ RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`
   未实施前无 UI 层证据。全量 EditMode 仍有 2 项与本卡路径无交集的已登记既有基线失败（见上），
   由其所有者任务处理。`CharterSiteInteractionRuntime` 不检查站点“禁用”状态——站点契约无
   启用字段，与批准规格一致。
+
+## Codex 复审补充
+
+- 临时 EditMode 反例显示：首次成功提交后，仍以同一 preparation 和 null 传给
+  `EvaluateFormal` 会再次得到成功结果，`CommitCharterFormalResult` 也返回成功；该反例已撤回，
+  工作树不保留测试改动。此路径绕过已有长期状态必须消费 allocated 供给的失败关闭。
+- `SameIdSet` 也没有拒绝左侧重复 ID；返工须覆盖重复节点、授权和供给均拒绝且不推进，连同正式
+  重自举反例一起复核。
