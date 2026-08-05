@@ -101,7 +101,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
 } elseif ($prompt.Contains('Route: QueueMaintenance')) {
   $terminal = [ordered]@{
     status = 'no_candidate'; identity = 'Codex'; model = $model
-    candidateCommit = $null; changedPaths = @(); verified = @(); unverified = @()
+    candidateCommit = ''; changedPaths = @(); verified = @(); unverified = @()
     residualRisk = ''; result = ''; impact = ''; verify = ''; plain = ''
   }
 } else {
@@ -188,6 +188,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($qmTrace -match '扫描各分线 backlog 中所有明确标为阻塞的任务') 'QueueMaintenance prompt must scan all backlog blocking items'
   Assert-True ($qmTrace -match '开发管理/任务卡/<ID>\.txt 与 开发管理/任务归档/<ID>\.txt') 'QueueMaintenance prompt must query active cards and completion archives'
   Assert-True ($qmTrace -match '不能证明前置仍未完成') 'QueueMaintenance prompt must not trust stale backlog text directly'
+  Assert-True ($qmTrace -match '在活跃任务卡和完成归档中都不存在时保持阻塞') 'QueueMaintenance prompt must require both blocker facts to be absent'
+  Assert-True ($qmTrace -match '同一 ID 同时存在活跃任务卡与完成归档时保持阻塞') 'QueueMaintenance prompt must keep conflicting blocker facts blocked'
   Assert-True ($qmTrace -match '完成全部阻塞项核对后仍没有合法候选，才允许返回 no_candidate') 'QueueMaintenance prompt must only return no_candidate after checking all blockers'
   Assert-True ($qmTrace -match '本轮不执行新增业务任务') 'QueueMaintenance prompt must not execute new business tasks'
   Assert-True ($qmTrace -match 'automation-finalize-commit\.ps1') 'QueueMaintenance prompt omitted the formal finalizer'
