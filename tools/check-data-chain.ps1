@@ -252,12 +252,12 @@ function Test-FormalContentCatalog {
   }
 
   $enemy = @($Enemies.Rows | Where-Object { $_.name -ceq 'enemy_shijiahou' })
-  if ($enemy.Count -ne 1 -or $enemy[0].contentScope -cne 'guanzhong' -or $enemy[0].dropEntries -cne 'item_shijia_piece@100@1|item_lingshi_low@50@1') {
-    Add-Finding 'FORMAL_ENEMY_PROJECTION_INVALID' 'enemy_shijiahou' 'Enemy production scope or structured drop entries differ from the approved decision.'
+  if ($enemy.Count -ne 1 -or $enemy[0].contentScope -cne 'guanzhong' -or $enemy[0].dropEntries -cne 'item_shijia_piece@100@1|item_lingshi_low@50@1' -or $enemy[0].unarmedBasicAttackProfileId -cne 'basic_unarmed') {
+    Add-Finding 'FORMAL_ENEMY_PROJECTION_INVALID' 'enemy_shijiahou' 'Enemy production scope, structured drop entries or basic attack binding differ from the approved decision.'
   }
   foreach ($row in @($Enemies.Rows | Where-Object { $_.name -cne 'enemy_shijiahou' })) {
-    if (-not [string]::IsNullOrWhiteSpace([string]$row.contentScope) -or -not [string]::IsNullOrWhiteSpace([string]$row.dropEntries)) {
-      Add-Finding 'FORMAL_ENEMY_SCOPE_LEAK' ([string]$row.name) 'Only enemy_shijiahou may enter the formal content directory.'
+    if (-not [string]::IsNullOrWhiteSpace([string]$row.contentScope) -or -not [string]::IsNullOrWhiteSpace([string]$row.dropEntries) -or -not [string]::IsNullOrWhiteSpace([string]$row.unarmedBasicAttackProfileId)) {
+      Add-Finding 'FORMAL_ENEMY_SCOPE_LEAK' ([string]$row.name) 'Only enemy_shijiahou may enter the formal content directory or bind the production basic attack.'
     }
   }
 
@@ -275,6 +275,9 @@ function Test-FormalContentCatalog {
   }
   Test-FormalContentAsset 'Bounty:bounty_guanzhong_shijiahou' 'src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset' @{
     bountyId = 'bounty_guanzhong_shijiahou'; contentScope = 'content_scope_production'; targetEnemyId = 'enemy_shijiahou'; repeatPolicy = 'one_time'
+  }
+  Test-FormalContentAsset 'EnemyTemplate:enemy_shijiahou' 'src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset' @{
+    unarmedBasicAttackProfileId = 'basic_unarmed'
   }
   $catalogPath = Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset'
   if (-not (Test-Path -LiteralPath $catalogPath -PathType Leaf)) {
@@ -357,6 +360,103 @@ function Test-NpcCultivationActionWeightProfile {
     if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne [string]$manifest.$field) {
       Add-Finding 'NPC_WEIGHT_ASSET_MANIFEST_MISMATCH' "${label}:$field" 'Asset manifest field must exactly match the CSV manifest.'
     }
+  }
+}
+
+function Test-FormalAttackProfileProjection {
+  param([object]$Table, [string[]]$LanguageIds)
+
+  $rows = @($Table.Rows)
+  if ($rows.Count -ne 1 -or $rows[0].attackProfileId -cne 'basic_unarmed') {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'CSV must contain exactly the approved basic_unarmed production row.'
+    return
+  }
+
+  $row = $rows[0]
+  $fixedFields = @{
+    profileKind = 'basic'
+    basicBindingKind = 'unarmed_fallback'
+    effectType = 'physical'
+    damageElementId = 'element_none'
+    physicalDamageMultiplier = '1.0'
+    resourceKind = 'none'
+    resourceCost = '0'
+    cooldownTicks = '0'
+    minCastRange = '1'
+    maxCastRange = '1'
+    targetingMode = 'single'
+  }
+  foreach ($name in $fixedFields.Keys) {
+    $value = [string]$row.PSObject.Properties[$name].Value
+    if ($value -cne $fixedFields[$name]) {
+      Add-Finding 'ATTACK_PROFILE_PROJECTION_INVALID' "AttackProfiles:$name" "Field must equal '$($fixedFields[$name])'."
+    }
+  }
+
+  foreach ($name in @('contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey')) {
+    $value = [string]$row.PSObject.Properties[$name].Value
+    if (-not [string]::IsNullOrWhiteSpace($value)) {
+      Add-Finding 'ATTACK_PROFILE_UNUSED_FIELD_NONEMPTY' "AttackProfiles:$name" 'The unarmed single-target row must leave this column empty.'
+    }
+  }
+
+  $displayKey = [string]$row.displayNameKey
+  if ($displayKey -notin $LanguageIds) {
+    Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' "AttackProfiles:$displayKey" 'displayNameKey must exist in Language.csv.'
+  }
+  $languagePath = Join-ProjectPath @('src', 'Assets', 'DataConfig', 'Language.csv')
+  $displayLine = @(Get-Content -LiteralPath $languagePath -Encoding UTF8 | Where-Object { $_ -and -not $_.StartsWith('#') -and $_.StartsWith($displayKey + ',') })
+  if ($displayLine.Count -ne 1 -or (($displayLine[0] -split ',', 2)[1].Trim() -cne '徒手')) {
+    Add-Finding 'ATTACK_PROFILE_LANGUAGE_TEXT_INVALID' "AttackProfiles:$displayKey" 'Language value must be 徒手.'
+  }
+
+  # 单向链 CSV -> asset：规范路径必须存在且关键字段与 CSV 一致。
+  $assetPath = 'src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset'
+  $absoluteAssetPath = Join-ProjectPath @('src', 'Assets', 'Data', 'AttackProfiles', 'AttackProfile_basic_unarmed.asset')
+  if (-not (Test-Path -LiteralPath $absoluteAssetPath -PathType Leaf)) {
+    Add-Finding 'ATTACK_PROFILE_ASSET_MISSING' 'AttackProfiles' "CSV profile has no matching asset: $assetPath"
+    return
+  }
+  foreach ($field in @('attackProfileId', 'displayNameKey', 'damageElementId')) {
+    $expected = [string]$row.PSObject.Properties[$field].Value
+    $matches = @(Select-String -LiteralPath $absoluteAssetPath -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
+    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne $expected) {
+      Add-Finding 'ATTACK_PROFILE_ASSET_FIELD_MISMATCH' "AttackProfile:$field" "Asset field must equal '$expected'."
+    }
+  }
+  foreach ($field in @('physicalDamageMultiplier', 'minCastRange', 'maxCastRange', 'resourceCost', 'cooldownTicks')) {
+    $expected = [double][string]$row.PSObject.Properties[$field].Value
+    $matches = @(Select-String -LiteralPath $absoluteAssetPath -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
+    if ($matches.Count -ne 1 -or [double]$matches[0].Groups[1].Value -ne $expected) {
+      Add-Finding 'ATTACK_PROFILE_ASSET_FIELD_MISMATCH' "AttackProfile:$field" "Asset numeric field must equal '$expected'."
+    }
+  }
+  # 枚举序列化：Basic=1、UnarmedFallback=2、Physical=1、None=1、Single=1。
+  $enumFields = @{
+    profileKind = '1'; basicBindingKind = '2'; effectType = '1'; resourceKind = '1'; targetingMode = '1'
+  }
+  foreach ($field in $enumFields.Keys) {
+    $matches = @(Select-String -LiteralPath $absoluteAssetPath -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
+    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne $enumFields[$field]) {
+      Add-Finding 'ATTACK_PROFILE_ASSET_ENUM_MISMATCH' "AttackProfile:$field" "Asset enum must equal '$($enumFields[$field])'."
+    }
+  }
+
+  # 场景引用：AdventureScene.unity 必须序列化同一 asset 的 GUID（场景重建不丢失引用）。
+  $metaPath = Join-ProjectPath @('src', 'Assets', 'Data', 'AttackProfiles', 'AttackProfile_basic_unarmed.asset.meta')
+  if (-not (Test-Path -LiteralPath $metaPath -PathType Leaf)) {
+    Add-Finding 'ATTACK_PROFILE_ASSET_META_MISSING' 'AttackProfiles' 'Attack profile asset .meta is missing.'
+    return
+  }
+  $guid = @(Select-String -LiteralPath $metaPath -Pattern '^\s*guid:\s*([0-9a-f]{32})\s*$').Matches
+  if ($guid.Count -ne 1) {
+    Add-Finding 'ATTACK_PROFILE_ASSET_META_INVALID' 'AttackProfiles' 'Attack profile asset .meta must declare exactly one guid.'
+    return
+  }
+  $scenePath = Join-ProjectPath @('src', 'Assets', 'Scenes', 'AdventureScene.unity')
+  if (-not (Test-Path -LiteralPath $scenePath -PathType Leaf) -or
+      -not (Select-String -LiteralPath $scenePath -Pattern ([regex]::Escape($guid[0].Groups[1].Value)) -Quiet)) {
+    Add-Finding 'ADVENTURE_SCENE_ATTACK_PROFILE_REFERENCE_MISSING' 'AdventureScene' 'AdventureScene.unity must reference the production basic_unarmed asset.'
   }
 }
 
@@ -482,7 +582,8 @@ $schemas = [ordered]@{
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
-  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries')
+  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId')
+  AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','cooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey')
   EnvironmentProfiles = @('profileId','directedEdges','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
@@ -497,7 +598,8 @@ $tables = [ordered]@{
   Settlements = Get-CsvTable 'src/Assets/DataConfig/Settlements.csv' $schemas.Settlements @() @('content_scope_production')
   Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @() @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
-  Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries') @('guanzhong')
+  Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId') @('guanzhong')
+  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey')
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
   CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites
@@ -516,6 +618,7 @@ Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
 Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
 Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfiles
 Test-FormalContentCatalog $tables.Settlements $tables.Items $tables.Bounties $tables.Enemies $languageIds
+Test-FormalAttackProfileProjection $tables.AttackProfiles $languageIds
 Test-CharterSiteProjection $tables.CharterSites $languageIds
 
 foreach ($row in $tables.FoundationPurpleMansionStates.Rows) {

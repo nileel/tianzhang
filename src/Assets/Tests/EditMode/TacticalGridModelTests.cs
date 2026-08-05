@@ -13,6 +13,7 @@ using TianZhang.Core.SpatialRules;
 using TianZhang.Editor;
 using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.Game.CharacterCreation;
 using TianZhang.Tactical;
 using UnityEditor.SceneManagement;
 
@@ -1021,6 +1022,116 @@ namespace TianZhang.Tests
             profile.targetingMode = AttackTargetingMode.Single;
             profile.areaFacing = -1;
             return profile;
+        }
+
+        [Test]
+        public void FormalNewPlayerAndShijiahouResolveTheSameProductionBasicUnarmedProfile()
+        {
+            var engine = new CTBEngine();
+            var controller = new TacticalCombatController(engine, new CombatResolver());
+            var grid = new HexGrid();
+
+            var playerData = CharacterCreationRules.BuildCharacterData(
+                CharacterCreationCatalog.CreateDefaultDraft());
+            var player = Character.FromData(playerData, new HexCoord(0, 0));
+            Object.DestroyImmediate(playerData);
+
+            var shijiahou = AssetDatabase.LoadAssetAtPath<CharacterData>(
+                "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            Assert.IsNotNull(shijiahou, "formal shijiahou template asset must exist");
+            var enemy = Character.FromData(shijiahou, new HexCoord(1, 0));
+
+            var basicUnarmed = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
+                "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
+            Assert.IsNotNull(basicUnarmed, "production basic_unarmed asset must exist");
+
+            player.CTBUnit = engine.RegisterUnit(player.Reaction, player);
+            enemy.CTBUnit = engine.RegisterUnit(enemy.Reaction, enemy);
+            player.CTBUnit.Id = 1;
+            enemy.CTBUnit.Id = 2;
+            grid.SetOccupied(player.Position, player.CTBUnit.Id);
+            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
+            var anchors = new Dictionary<int, SpatialHexCoord>
+            {
+                [player.CTBUnit.Id] = new SpatialHexCoord(player.Position.q, player.Position.r),
+                [enemy.CTBUnit.Id] = new SpatialHexCoord(enemy.Position.q, enemy.Position.r),
+            };
+
+            var setup = new TacticalCombatSetup(
+                new[] { player },
+                new[] { enemy },
+                SpatialQueryTestFixture.CreateOpenBoard(),
+                anchors,
+                new[] { basicUnarmed });
+
+            Assert.IsTrue(controller.TryBeginCombat(setup, grid, out var session, out var reason), reason);
+            Assert.AreSame(basicUnarmed, session.Members[0].BasicAttackProfile);
+            Assert.AreSame(basicUnarmed, session.Members[1].BasicAttackProfile);
+
+            player.CTBUnit.CT = CTBEngine.ActionThreshold;
+            enemy.CTBUnit.CT = CTBEngine.ActionThreshold;
+            var playerAttack = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
+            Assert.IsTrue(playerAttack.Success, playerAttack.Message);
+            var enemyAttack = controller.ExecuteBasicAttack(enemy.CTBUnit.Id, player.CTBUnit.Id);
+            Assert.IsTrue(enemyAttack.Success, enemyAttack.Message);
+        }
+
+        [Test]
+        public void ProductionChainRejectsAmbiguousAndKindMismatchedBindingsAtSessionEntry()
+        {
+            var engine = new CTBEngine();
+            var controller = new TacticalCombatController(engine, new CombatResolver());
+            var grid = new HexGrid();
+            var mainEquipment = CreateBasicAttack();
+            var basicUnarmed = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
+                "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
+            Assert.IsNotNull(basicUnarmed);
+
+            // 两槽同时非空 → 歧义；任何会话建立前稳定失败。
+            var ambiguousData = ScriptableObject.CreateInstance<CharacterData>();
+            ambiguousData.mainEquipmentBasicAttackProfileId = mainEquipment.attackProfileId;
+            ambiguousData.unarmedBasicAttackProfileId = basicUnarmed.attackProfileId;
+            var ambiguous = Character.FromData(ambiguousData, new HexCoord(0, 0));
+            Object.DestroyImmediate(ambiguousData);
+            Assert.IsTrue(RejectsSetup(controller, grid, ambiguous, basicUnarmed, out var ambiguousReason));
+            Assert.AreEqual("basic_attack_binding_missing_or_ambiguous", ambiguousReason);
+
+            // 无装备槽引用 main_equipment 种类档案 → 绑定种类不符。
+            var mismatchedData = ScriptableObject.CreateInstance<CharacterData>();
+            mismatchedData.unarmedBasicAttackProfileId = mainEquipment.attackProfileId;
+            var mismatched = Character.FromData(mismatchedData, new HexCoord(0, 0));
+            Object.DestroyImmediate(mismatchedData);
+            Assert.IsTrue(RejectsSetup(controller, grid, mismatched, basicUnarmed, out var kindReason));
+            Assert.AreEqual("basic_attack_profile_binding_kind_invalid", kindReason);
+        }
+
+        private bool RejectsSetup(
+            TacticalCombatController controller,
+            HexGrid grid,
+            Character player,
+            AttackProfileData basicUnarmed,
+            out string reason)
+        {
+            var engine = controller.Engine;
+            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), engine);
+            player.CTBUnit = engine.RegisterUnit(player.Reaction, player);
+            player.CTBUnit.Id = 1;
+            enemy.CTBUnit.Id = 2;
+            grid.SetOccupied(player.Position, player.CTBUnit.Id);
+            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
+            var anchors = new Dictionary<int, SpatialHexCoord>
+            {
+                [player.CTBUnit.Id] = new SpatialHexCoord(player.Position.q, player.Position.r),
+                [enemy.CTBUnit.Id] = new SpatialHexCoord(enemy.Position.q, enemy.Position.r),
+            };
+
+            var setup = new TacticalCombatSetup(
+                new[] { player },
+                new[] { enemy },
+                SpatialQueryTestFixture.CreateOpenBoard(),
+                anchors,
+                new[] { basicUnarmed, CreateBasicAttack() });
+            return !controller.TryBeginCombat(setup, grid, out _, out reason);
         }
     }
 

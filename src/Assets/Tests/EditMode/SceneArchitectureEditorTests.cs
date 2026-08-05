@@ -121,6 +121,19 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void FormalAndRebuiltAdventureScenesBindTheSameProductionBasicUnarmedProfile()
+        {
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+            var formalGuid = GetFormalAdventureBasicUnarmedGuid();
+            Assert.IsFalse(string.IsNullOrEmpty(formalGuid));
+
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            Assert.AreEqual(formalGuid, GetFormalAdventureBasicUnarmedGuid());
+        }
+
+        [Test]
         public void FormalAdventureSceneResolvesTheCharterEnvironmentProjectionFromCommittedSession()
         {
             DestroyExistingSceneFlowAndSession();
@@ -858,6 +871,23 @@ namespace TianZhang.Tests
 
             var assetPath = AssetDatabase.GetAssetPath(catalog);
             Assert.AreEqual("Assets/Data/ContentCatalog/ContentCatalog.asset", assetPath);
+            return AssetDatabase.AssetPathToGUID(assetPath);
+        }
+
+        private static string GetFormalAdventureBasicUnarmedGuid()
+        {
+            var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
+            Assert.IsNotNull(exploration, "Adventure scene must keep its ExplorationController.");
+            Assert.IsNotNull(exploration.attackProfiles, "Adventure scene must serialize the production attack profile reference.");
+            Assert.AreEqual(1, exploration.attackProfiles.Length);
+            var profile = exploration.attackProfiles[0];
+            Assert.IsNotNull(profile);
+            Assert.AreEqual("basic_unarmed", profile.attackProfileId);
+            Assert.AreEqual(AttackProfileKind.Basic, profile.profileKind);
+            Assert.AreEqual(BasicAttackBindingKind.UnarmedFallback, profile.basicBindingKind);
+
+            var assetPath = AssetDatabase.GetAssetPath(profile);
+            Assert.AreEqual("Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset", assetPath);
             return AssetDatabase.AssetPathToGUID(assetPath);
         }
 

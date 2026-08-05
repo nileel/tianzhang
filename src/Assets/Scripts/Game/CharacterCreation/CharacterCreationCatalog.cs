@@ -6,6 +6,8 @@ namespace TianZhang.Game.CharacterCreation
     {
         public const int CreationBudget = 10;
         public const int CraftSkillStartingPoints = 3;
+        // 新建角色唯一无装备基础攻击档案 ID（生产 AttackProfiles.csv 中 basic_unarmed 行）。
+        public const string BasicUnarmedAttackProfileId = "basic_unarmed";
 
         public static readonly SpiritRootOption[] VisibleSpiritRoots =
         {

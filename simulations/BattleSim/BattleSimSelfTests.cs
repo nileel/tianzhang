@@ -107,6 +107,9 @@ static class BattleSimSelfTests
         if (suite == "attack-profile-d-combat-02")
             return RunChecked(suite, RunAttackProfileDCombat02);
 
+        if (suite == "basic-unarmed-production-d-combat-prod-01")
+            return RunChecked(suite, RunBasicUnarmedProductionDCombatProd01);
+
         if (suite == "group-action-priority-n-group-02")
             return RunChecked(suite, RunGroupActionPriorityNGroup02);
 
@@ -1401,6 +1404,76 @@ static class BattleSimSelfTests
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "areaCenterKind", "caster")), "single_target_area_fields_present");
         // 未支持效果语义：heal 行在既有 BattleSim 载体上没有对应字段。
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "effectType", "heal")), "unsupported_effect_semantics");
+    }
+
+    /// <summary>
+    /// D-COMBAT-PROD-01：只证明生产 AttackProfiles.csv 的 basic_unarmed 行逐字段等于
+    /// GameData.UnarmedBasicAttack 的迁移值；不切换任何 BattleSim 生产消费者。
+    /// </summary>
+    static void RunBasicUnarmedProductionDCombatProd01()
+    {
+        const string profilePath = "src/Assets/DataConfig/AttackProfiles.csv";
+        var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), profilePath))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
+            .ToArray();
+        ValidateAttackProfileTable(lines);
+        var rows = ReadCsvRows(profilePath);
+        AssertEqual(1, rows.Count, "AttackProfiles.csv production row count");
+        var row = rows.Single(entry => entry["attackProfileId"] == "basic_unarmed");
+
+        AssertEqual("basic", row["profileKind"], "basic_unarmed profile kind");
+        AssertEqual("unarmed_fallback", row["basicBindingKind"], "basic_unarmed binding kind");
+        AssertEqual("physical", row["effectType"], "basic_unarmed effect type");
+        AssertEqual("element_none", row["damageElementId"], "basic_unarmed damage element");
+
+        // 迁移字段与 GameData.UnarmedBasicAttack 逐项一致（名称经生产 Language 键解析）。
+        AssertEqual(GameData.UnarmedBasicAttack.Type, "物理", "UnarmedBasicAttack type source");
+        AssertEqual(ParseDouble(row["physicalDamageMultiplier"]), GameData.UnarmedBasicAttack.Mult, "physical multiplier migration");
+        AssertEqual(GameData.NormalizeElement(row["damageElementId"]), GameData.UnarmedBasicAttack.Element, "element migration");
+        AssertEqual(ParseInt(row["minCastRange"]), GameData.UnarmedBasicAttack.MinRange, "min range migration");
+        AssertEqual(ParseInt(row["maxCastRange"]), GameData.UnarmedBasicAttack.MaxRange, "max range migration");
+        AssertEqual("none", row["resourceKind"], "basic_unarmed resource kind");
+        AssertEqual(0, ParseInt(row["resourceCost"]), "basic_unarmed resource cost");
+        AssertEqual(0, ParseInt(row["cooldownTicks"]), "basic_unarmed cooldown");
+        AssertEqual("single", row["targetingMode"], "basic_unarmed targeting mode");
+        AssertEqual(1, ParseInt(row["minCastRange"]), "basic_unarmed min cast range");
+        AssertEqual(1, ParseInt(row["maxCastRange"]), "basic_unarmed max cast range");
+
+        AssertEqual(GameData.UnarmedBasicAttack.Name, "徒手", "UnarmedBasicAttack display name source");
+        AssertEqual(ReadLanguageCsv()[row["displayNameKey"]], GameData.UnarmedBasicAttack.Name, "display key resolves to 徒手");
+    }
+
+    static IReadOnlyList<Dictionary<string, string>> ReadCsvRows(string relativePath)
+    {
+        var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), relativePath))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
+            .ToArray();
+        var headers = lines[0].Split(',');
+        return lines.Skip(1).Select(line =>
+        {
+            var values = line.Split(',');
+            if (values.Length != headers.Length)
+                throw new InvalidOperationException($"{relativePath} has a malformed CSV row.");
+            return headers.Select((header, index) => (header, value: values[index]))
+                .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
+        }).ToArray();
+    }
+
+    static IReadOnlyDictionary<string, string> ReadLanguageCsv()
+    {
+        var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), "src", "Assets", "DataConfig", "Language.csv"))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'))
+            .ToArray();
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var line in lines)
+        {
+            int separator = line.IndexOf(',');
+            if (separator <= 0)
+                continue;
+            result[line.Substring(0, separator).Trim()] = line.Substring(separator + 1).Trim();
+        }
+
+        return result;
     }
 
     static void AssertBasicProjection(

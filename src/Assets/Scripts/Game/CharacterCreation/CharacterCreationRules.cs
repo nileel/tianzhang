@@ -70,6 +70,8 @@ namespace TianZhang.Game.CharacterCreation
             profile.availableSpells = sectRoute != null ? CloneArray(sectRoute.StartingSpells) : new string[0];
             profile.equippedSkills = new string[0];
             profile.availableSkills = new string[0];
+            // 角色装配所有者显式绑定生产无装备普攻档案；战斗调用点不再补默认值。
+            profile.unarmedBasicAttackProfileId = CharacterCreationCatalog.BasicUnarmedAttackProfileId;
 
             profile.rootBone = innate.RootBone;
             profile.physique = innate.RootBone;

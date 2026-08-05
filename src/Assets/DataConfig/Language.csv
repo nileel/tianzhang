@@ -107,6 +107,8 @@ item_lingshi_low_description,劣质灵石是稳定 ID 为 `item_lingshi_low` 的
 item_shijia_piece_description,石甲碎片是稳定 ID 为 `item_shijia_piece` 的妖兽材料。
 bounty_guanzhong_shijiahou_title,石甲兽悬赏 · 一次性除害令
 bounty_guanzhong_shijiahou_description,黄土旧道石甲兽阻路伤人，击杀有赏。——坊市联盟
+# === 攻击档案 ===
+attack_profile_basic_unarmed,徒手
 # === 新增门派 ===
 faction_yuqingya,玉清崖
 faction_hunyuanshan,混元山

@@ -93,7 +93,7 @@ namespace TianZhang.Editor
             "name", "type", "aiType", "realm", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
             "reaction", "talent", "blockRate", "blockReduction", "soulShieldRate", "soulShieldReduction",
             "dodgeRate", "critRate", "critDamage", "hitRateBonus", "equippedSpells", "dropTable", "description",
-            "contentScope", "dropEntries"
+            "contentScope", "dropEntries", "unarmedBasicAttackProfileId"
         };
 
         private static readonly string[] CharterSiteColumns =
@@ -542,6 +542,8 @@ namespace TianZhang.Editor
             template.hitRateBonus = ParseFloat(Required(table, row, "hitRateBonus"), sourceName, "hitRateBonus");
             template.equippedSpells = ParseOptionalStableIdList(Value(table, row, "equippedSpells"), sourceName, "equippedSpells");
             template.equippedSkills = Array.Empty<string>();
+            // 敌人模板基础攻击外键由本表显式给出；石甲兽行引用生产 basic_unarmed 档案。
+            template.unarmedBasicAttackProfileId = Value(table, row, "unarmedBasicAttackProfileId");
             return template;
         }
 
@@ -583,7 +585,10 @@ namespace TianZhang.Editor
                 enemy.enemyTypeId != "type_yaoshou" ||
                 enemy.aiProfileId != "ai_melee" ||
                 enemy.realmId != "realm_lianqi" ||
-                enemy.dropEntries.Length != 2)
+                enemy.dropEntries.Length != 2 ||
+                enemy.combatTemplate == null ||
+                enemy.combatTemplate.unarmedBasicAttackProfileId !=
+                CharacterCreationCatalog.BasicUnarmedAttackProfileId)
             {
                 throw new InvalidDataException($"{sourceName} does not match the approved '{ShijiahouEnemyId}' projection.");
             }
@@ -980,6 +985,7 @@ namespace TianZhang.Editor
             target.hitRateBonus = source.hitRateBonus;
             target.equippedSpells = (string[])source.equippedSpells.Clone();
             target.equippedSkills = Array.Empty<string>();
+            target.unarmedBasicAttackProfileId = source.unarmedBasicAttackProfileId;
             EditorUtility.SetDirty(target);
             return target;
         }
@@ -1003,7 +1009,8 @@ namespace TianZhang.Editor
                    target.critDamage == source.critDamage &&
                    target.hitRateBonus == source.hitRateBonus &&
                    target.equippedSpells.SequenceEqual(source.equippedSpells) &&
-                   target.equippedSkills.SequenceEqual(source.equippedSkills);
+                   target.equippedSkills.SequenceEqual(source.equippedSkills) &&
+                   target.unarmedBasicAttackProfileId == source.unarmedBasicAttackProfileId;
         }
 
         private static T UpsertContentAsset<T>(T source, string assetPath, Action<T, T> copy)

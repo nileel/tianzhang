@@ -1,0 +1,5 @@
+# 统一攻击档案生产表（D-COMBAT-01 契约）
+# 本表是攻击参数的唯一可编辑生产者；Asset 只能由严格导入器生成/更新，BattleSim 只读投影。
+# 当前唯一生产行 basic_unarmed：迁移自 BattleSim GameData.UnarmedBasicAttack 的逐字段值。
+attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,cooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey
+basic_unarmed,attack_profile_basic_unarmed,basic,unarmed_fallback,,,,,physical,element_none,1.0,,,,,none,0,0,1,1,single,,,,,,,,,,,,,

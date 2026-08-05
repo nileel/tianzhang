@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using TianZhang.Content;
 using TianZhang.Editor;
+using TianZhang.Entity;
 using UnityEditor;
 using UnityEngine;
 
@@ -49,6 +50,28 @@ namespace TianZhang.Tests
                 Assert.AreEqual("bounty_guanzhong_shijiahou", bounty.bountyId);
                 Assert.AreEqual("item_lingshi_low", bounty.rewardEntries[0].itemId);
                 Assert.AreEqual(3, bounty.rewardEntries[0].quantity);
+            }
+            finally
+            {
+                DestroyPreview(preview);
+            }
+        }
+
+        [Test]
+        public void FormalEnemyTemplateExplicitlyBindsTheBasicUnarmedAttackProfile()
+        {
+            var preview = ParseProductionPreview();
+            try
+            {
+                var enemy = preview.enemies[0];
+                Assert.AreEqual("enemy_shijiahou", enemy.enemyId);
+                var template = preview.enemyTemplates.Single(candidate => candidate == enemy.combatTemplate);
+                Assert.AreEqual("basic_unarmed", template.unarmedBasicAttackProfileId);
+                Assert.IsTrue(string.IsNullOrEmpty(template.mainEquipmentBasicAttackProfileId));
+
+                var runtimeEnemy = Character.FromData(template, new TianZhang.Core.HexCoord(1, 0));
+                Assert.AreEqual("basic_unarmed", runtimeEnemy.BasicAttackProfileId);
+                Assert.AreEqual("unarmed_fallback", runtimeEnemy.BasicAttackBindingKind);
             }
             finally
             {

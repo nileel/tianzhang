@@ -198,6 +198,25 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void NewPlayerProfileExplicitlyBindsTheBasicUnarmedFallbackProfile()
+        {
+            var draft = CharacterCreationCatalog.CreateDefaultDraft();
+
+            var profile = CharacterCreationRules.BuildCharacterData(draft);
+
+            Assert.AreEqual(
+                CharacterCreationCatalog.BasicUnarmedAttackProfileId,
+                profile.unarmedBasicAttackProfileId);
+            Assert.IsTrue(string.IsNullOrEmpty(profile.mainEquipmentBasicAttackProfileId));
+
+            var character = Character.FromData(profile, new TianZhang.Core.HexCoord(0, 0));
+            Assert.AreEqual(
+                CharacterCreationCatalog.BasicUnarmedAttackProfileId,
+                character.BasicAttackProfileId);
+            Assert.AreEqual("unarmed_fallback", character.BasicAttackBindingKind);
+        }
+
+        [Test]
         public void DormantHiddenRootDoesNotChangeRuntimeDerivedCombatStats()
         {
             var baselineDraft = CharacterCreationCatalog.CreateDefaultDraft();

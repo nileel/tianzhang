@@ -9,6 +9,7 @@ using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.HexTile;
 using TianZhang.Game;
+using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
 using TianZhang.World;
 using TianZhang.Settlement;
@@ -781,6 +782,11 @@ namespace TianZhang.Editor
             exploration.mapRadius = 6;
             exploration.obstaclePercent = 0;
             exploration.enemyCount = 1;
+            // 场景构建所有者显式绑定唯一生产无装备普攻档案；场景重建后引用不丢失。
+            var basicUnarmed = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
+                $"Assets/Data/AttackProfiles/AttackProfile_{CharacterCreationCatalog.BasicUnarmedAttackProfileId}.asset");
+            Require(basicUnarmed != null, "Adventure scene is missing the production basic_unarmed AttackProfileData asset.");
+            exploration.attackProfiles = new[] { basicUnarmed };
 
             var uiGo = new GameObject("BattleUIManager");
             exploration.uiManager = uiGo.AddComponent<BattleUIManager>();

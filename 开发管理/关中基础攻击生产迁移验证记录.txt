@@ -1,0 +1,73 @@
+# 关中基础攻击生产迁移验证记录（D-COMBAT-PROD-01）
+
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：生产 `AttackProfiles.csv`、`Language.csv`、`Enemies.csv`、严格导入器敌人绑定链、角色创建装配、`SceneBuilder` 场景引用、生成 asset/场景、BattleSim 自测、`check-data-chain.ps1`、EditMode/PlayMode 用例与本记录；不修改战斗消费者、环境档案或任何范围外资产。
+
+## 一、唯一生产链
+
+```text
+AttackProfiles.csv (basic_unarmed)
+  -> DataConfigImporter.ImportAttackProfiles 整表校验（表头/语言键/绑定种类/asset 路径）
+  -> Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset
+  -> AdventureScene.unity ExplorationController.attackProfiles（场景重建后引用仍存在）
+  -> TacticalCombatController.TryResolveBasicAttackProfile 只读消费
+
+Enemies.csv (enemy_shijiahou.unarmedBasicAttackProfileId = basic_unarmed)
+  -> DataConfigImporter.BuildEnemyTemplate -> Char_Enemy_enemy_shijiahou.asset
+
+CharacterCreationRules.BuildCharacterData -> unarmedBasicAttackProfileId = basic_unarmed（新建玩家）
+```
+
+- 生产行逐字段：`profileKind=basic`、`basicBindingKind=unarmed_fallback`、`effectType=physical`、`damageElementId=element_none`、物理倍率 `1.0`、`resourceKind=none`/`0`/冷却 `0`、距离 `1..1`、`targetingMode=single`，其余种类/范围专属列全部为空；显示键 `attack_profile_basic_unarmed`，中文“徒手”。
+- 未在 `StartBattle` / `TryResolveBasicAttackProfile` 补任何默认 ID；未建立第二数据源、Resources 搜索或运行时 AssetDatabase。
+
+## 二、实际命令与结果
+
+### BattleSim（`simulations/BattleSim`）
+
+- `dotnet restore`（全新 worktree 缺 NuGet 资产文件，需先隐式还原；与既有记录口径一致）。
+- `dotnet build -c Release --no-restore simulations/BattleSim`：0 警告、0 错误。
+- `dotnet run --no-build -c Release --project simulations/BattleSim`：完整默认运行 553 行输出，exit 0（既有四阶段成长、金丹、距离模型等全部结论未变）。
+- `--self-test basic-unarmed-production-d-combat-prod-01`（新增）：PASS——生产 CSV 行逐字段等于 `GameData.UnarmedBasicAttack`（Type=物理、Mult=1.0、NormalizeElement(element_none)=""、1..1、none/0/0、single），显示键在 Language.csv 解析为“徒手”；只证明迁移一致性，未切换任何 BattleSim 生产消费者。
+- `--self-test distance-model-tq055`：PASS（既有普攻距离结论未变）。
+- `--self-test attack-profile-d-combat-02`：PASS（既有 fixture 契约回归）。
+
+### Unity 生成（6000.3.18f1 batchmode `-executeMethod`）
+
+- `TianZhang.Editor.DataConfigImporter.ImportAttackProfiles`：`[AttackProfiles] 已严格导入 1 个攻击档案`；生成 `AttackProfile_basic_unarmed.asset`（attackProfileId=basic_unarmed、profileKind=1、basicBindingKind=2、effectType=1、resourceKind=1、targetingMode=1、physicalDamageMultiplier=1、1..1、resourceCost/cooldownTicks=0）。
+- `TianZhang.Editor.DataConfigImporter.ImportContentCatalog`：写入 `Char_Enemy_enemy_shijiahou.asset` 的 `unarmedBasicAttackProfileId: basic_unarmed`（mainEquipment 槽为空）；其他敌人模板 asset 无绑定。
+- 再次 `ImportAttackProfiles`：`ValidateCharacterBasicAttackBindings` 通过（石甲兽 asset 绑定与 CSV 行种类一致），0 错误。
+- `TianZhang.Editor.SceneBuilder.BuildAdventureScene`：`attackProfiles: - {fileID: 11400000, guid: 4c65a0a3f37a8c54a93ca75086a6a2a1, type: 2}`（与 asset .meta 同一 GUID）。
+
+### Unity 测试
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：0 错误（2 个既有 CS0649 警告，来自 `CharterRuleStaticCatalogData`，与本卡无关）。
+- `tools/run-unity-editmode-tests.ps1`：**426 执行 / 424 通过 / 2 失败**。新增 8 项直接用例全部通过：
+  - `AttackProfileDataTests`：生产行逐字段投影、非法缺失/歧义/种类不符变异失败关闭（display key 未知、绑定种类非法、kind=art、kind=heal、元素未知、倍率非数值、资源/冷却非法、区间非法、单目标混入范围列、重复 ID）、真实导入生成规范 asset 且绑定校验通过。
+  - `CharacterCreationTests`：新建玩家显式绑定 `basic_unarmed` 且运行时复制 `unarmed_fallback`。
+  - `ContentCatalogDataTests`：石甲兽模板经 `Enemies.csv -> BuildEnemyTemplate` 显式绑定同一 ID，运行时复制正确。
+  - `SceneArchitectureEditorTests`：正式场景与重建场景序列化同一 `basic_unarmed` asset GUID（场景重建不丢失引用）。
+  - `TacticalGridModelTests`：正式新建玩家与石甲兽在同一生产档案上建立会话并双方完成基础攻击；两槽歧义与无装备槽引用 main_equipment 种类档案在会话建立前稳定失败（`basic_attack_binding_missing_or_ambiguous` / `basic_attack_profile_binding_kind_invalid`）。
+  - 2 项失败为已登记、与本卡路径无交集的既有基线（见 `开发管理/册界单据点交互与UI验证记录.txt`、`开发管理/AI合作沟通.txt`）：
+    1. `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`：纯内存逻辑断言 `PULSE_ADVANTAGE` 得到 `PULSE_NEUTRAL`，由共享冲突契约所有者（Codex）裁决；
+    2. `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`：旧日志断言（`Excluded non-player spell ... scope=reserved`）与现行攻击档案加载器不一致。
+- `tools/run-unity-playmode-tests.ps1`：**4 执行 / 4 通过 / 0 失败**。新增 `GuanzhongBasicAttackPlayModeTests.FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides`：正式 `guanzhong_wild` 入口 → 新建玩家与石甲兽运行时绑定与场景引用断言 → 沿既有寻路接近石甲兽 → 建立会话（双方成员 `BasicAttackProfile` 为同一生产 asset，不再返回三类装配错误）→ 玩家在相邻格沿已声明有向边完成基础攻击（Success）→ 敌方侧从同一档案解析并执行基础攻击，其结果受冻结环境边样本约束而非绑定错误。
+
+### 数据链与文本检查
+
+- `tools/check-data-chain.ps1 -FailOnMissingAssets`：**OK**。新增 `AttackProfiles` 生产表检查（唯一 basic_unarmed 行、逐字段固定投影、未用列全空、Language 键“徒手”、asset 存在且字段/枚举/数值与 CSV 一致、场景含同一 GUID 引用）与 `Enemies` 表/石甲兽模板 asset 绑定检查。
+- `tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests`：OK（353 个文件）。
+- `tools/check-pending-whitespace.ps1`（暂存前）与 `git diff --cached --check`（暂存后）：通过。
+
+## 三、环境约束说明（既有冻结输入，非本卡路径）
+
+`env_guanzhong_wild` 的有向边样本（`EnvironmentProfiles.csv`，U-ENV-RULE-01B 冻结）只声明 6 条单向边；石甲兽生成点距离玩家 ≥4，落在该样本簇之外，因此正式场景棋盘上“双方互攻均命中”在现有环境输入下不可达（反向边未声明 → `目标不在射程范围`）。本卡证明：
+- 双方在同一档案上完成基础攻击的成功路径由 EditMode 会话用例（合法双向棋盘、同一生产 asset 与生产绑定）证明；
+- 正式场景中的摆位受该冻结样本约束，PlayMode 用例显式把石甲兽摆到样本唯一可达受击格 (1,-1)、玩家走到攻击源 (1,0) 后玩家攻击命中，敌方攻击同样解析同一档案、结果仅为射程约束而非绑定错误。
+该边样本是否扩展属于环境所有者（U-ENV-RULE-01B / Codex）的范围，不在本卡候选路径内。
+
+## 四、残留风险与后续
+
+- 待 Codex 独立复审（`codex_review/codex/ready` 投影由共享入口完成）。
+- 既有 2 项 EditMode 基线失败仍由其所有者任务处理。
+- 仓库既有缺口：`src/Assets/DataConfig/CharterSites.csv.meta` 未纳入版本控制，Unity 每次导入会重新生成；本卡未提交该文件（不在候选路径），未纳入本卡范围。
+- 本卡未切换 BattleSim 生产消费者、未修改战斗消费者/环境档案/掉落/奖励/数值，未建立默认回退或第二数据源。

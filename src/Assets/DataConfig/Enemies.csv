@@ -1,7 +1,7 @@
 ﻿# 敌人/怪物模板配置表（所有文本字段使用 Language.csv 中的 ID）
-name,type,aiType,realm,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,equippedSpells,dropTable,description,contentScope,dropEntries
-enemy_shijiahou,type_yaoshou,ai_melee,realm_lianqi,1.2,18,16,6,6,6,4,15,25,0,0,0,5,10,0,,item_shijia_piece:30|item_lingshi_low:50,desc_enemy_shijiahou,guanzhong,item_shijia_piece@100@1|item_lingshi_low@50@1
-enemy_fengsun,type_yaoshou,ai_ranged,realm_lianqi,1.4,7,5,13,8,20,10,0,0,0,0,18,8,20,0,,item_fengsun_feather:30|item_lingshi_low:40,desc_enemy_fengsun,,
-enemy_yanweihu,type_yaoshou,ai_magic,realm_lianqi,1.3,8,6,16,12,14,8,0,0,8,15,10,5,15,5,spell_liuhuolingfu,item_yanwei_fur:25|item_huoling_crystal:15,desc_enemy_yanweihu,,
-enemy_xueyingmoxiu,type_moxiu,ai_magic,realm_zhuji,2.0,12,10,18,16,14,10,5,0,10,15,5,10,25,5,spell_anshi,item_mohe_piece:40|item_xuelian_stone:20,desc_enemy_xueyingmoxiu,,
-enemy_huangyesanxiu,faction_sanxiu,ai_ranged,realm_lianqi,1.5,12,12,10,10,10,8,8,15,5,0,5,8,15,0,spell_xuanshuizhou,item_sanxiu_token:60|item_lingshi_bag:30,desc_enemy_huangyesanxiu,,
+name,type,aiType,realm,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,equippedSpells,dropTable,description,contentScope,dropEntries,unarmedBasicAttackProfileId
+enemy_shijiahou,type_yaoshou,ai_melee,realm_lianqi,1.2,18,16,6,6,6,4,15,25,0,0,0,5,10,0,,item_shijia_piece:30|item_lingshi_low:50,desc_enemy_shijiahou,guanzhong,item_shijia_piece@100@1|item_lingshi_low@50@1,basic_unarmed
+enemy_fengsun,type_yaoshou,ai_ranged,realm_lianqi,1.4,7,5,13,8,20,10,0,0,0,0,18,8,20,0,,item_fengsun_feather:30|item_lingshi_low:40,desc_enemy_fengsun,,,
+enemy_yanweihu,type_yaoshou,ai_magic,realm_lianqi,1.3,8,6,16,12,14,8,0,0,8,15,10,5,15,5,spell_liuhuolingfu,item_yanwei_fur:25|item_huoling_crystal:15,desc_enemy_yanweihu,,,
+enemy_xueyingmoxiu,type_moxiu,ai_magic,realm_zhuji,2.0,12,10,18,16,14,10,5,0,10,15,5,10,25,5,spell_anshi,item_mohe_piece:40|item_xuelian_stone:20,desc_enemy_xueyingmoxiu,,,
+enemy_huangyesanxiu,faction_sanxiu,ai_ranged,realm_lianqi,1.5,12,12,10,10,10,8,8,15,5,0,5,8,15,0,spell_xuanshuizhou,item_sanxiu_token:60|item_lingshi_bag:30,desc_enemy_huangyesanxiu,,,

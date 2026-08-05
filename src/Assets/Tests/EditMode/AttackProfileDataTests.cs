@@ -320,6 +320,156 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void ProductionAttackProfileCsvProjectsExactlyTheApprovedBasicUnarmedRow()
+        {
+            var lines = File.ReadAllLines(ProductionAbsolutePath());
+            var languageKeys = new HashSet<string>(ProductionLanguageKeys(), StringComparer.Ordinal);
+            Assert.IsTrue(
+                DataConfigImporter.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
+                reason);
+            try
+            {
+                Assert.AreEqual(1, projected.Length);
+                var profile = projected[0];
+                Assert.AreEqual("basic_unarmed", profile.attackProfileId);
+                Assert.AreEqual("attack_profile_basic_unarmed", profile.displayNameKey);
+                Assert.AreEqual(AttackProfileKind.Basic, profile.profileKind);
+                Assert.AreEqual(BasicAttackBindingKind.UnarmedFallback, profile.basicBindingKind);
+                Assert.AreEqual(AttackEffectType.Physical, profile.effectType);
+                Assert.AreEqual("element_none", profile.damageElementId);
+                Assert.AreEqual(1f, profile.physicalDamageMultiplier, 0.0001f);
+                Assert.AreEqual(0f, profile.soulDamageMultiplier, 0.0001f);
+                Assert.AreEqual(AttackResourceKind.None, profile.resourceKind);
+                Assert.AreEqual(0, profile.resourceCost);
+                Assert.AreEqual(0, profile.cooldownTicks);
+                Assert.AreEqual(1, profile.minCastRange);
+                Assert.AreEqual(1, profile.maxCastRange);
+                Assert.AreEqual(AttackTargetingMode.Single, profile.targetingMode);
+                Assert.AreEqual(AttackAreaShapeKind.Unknown, profile.areaShapeKind);
+                Assert.AreEqual(-1, profile.areaFacing);
+                Assert.IsTrue(string.IsNullOrEmpty(profile.contentScope));
+                Assert.IsTrue(string.IsNullOrEmpty(profile.sourceAffiliation));
+                Assert.IsTrue(string.IsNullOrEmpty(profile.realmRequirementId));
+                Assert.IsTrue(string.IsNullOrEmpty(profile.elementRequirementId));
+                Assert.IsTrue(string.IsNullOrEmpty(profile.specialEffectTextKey));
+                Assert.IsFalse(profile.isDomain);
+                Assert.IsFalse(profile.isBloodline);
+                Assert.AreEqual("徒手", ProductionLanguageValue(profile.displayNameKey), "display key must resolve to 徒手");
+            }
+            finally
+            {
+                foreach (var profile in projected)
+                    UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
+        public void ProductionBasicUnarmedRowFailsClosedOnIllegalMutations()
+        {
+            var lines = File.ReadAllLines(ProductionAbsolutePath());
+            var languageKeys = new HashSet<string>(ProductionLanguageKeys(), StringComparer.Ordinal);
+            string header = lines.First(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'));
+            string row = lines.First(line => line.StartsWith("basic_unarmed,", System.StringComparison.Ordinal));
+            string[] columns = header.Split(',');
+
+            string Mutate(string field, string value, string source = null)
+            {
+                var mutated = (source ?? row).Split(',');
+                mutated[Array.IndexOf(columns, field)] = value;
+                return string.Join(",", mutated);
+            }
+
+            void AssertRejects(string mutated, string expectedPrefix)
+            {
+                Assert.IsFalse(
+                    DataConfigImporter.TryValidateAttackProfileCsv(new[] { header, mutated }, languageKeys, out var reason),
+                    $"mutated production row must fail: {expectedPrefix}");
+                StringAssert.StartsWith(expectedPrefix, reason);
+            }
+
+            AssertRejects(Mutate("displayNameKey", "name_unknown"), "attack_profile_display_key_unknown");
+            AssertRejects(Mutate("basicBindingKind", "weapon"), "basic_attack_binding_kind_invalid");
+            AssertRejects(Mutate("profileKind", "art"), "attack_profile_basicBindingKind_must_be_empty");
+            // 种类改为 heal：清掉仅物理行适用的倍率与元素列后，heal 仍要求治疗量 → 失败关闭。
+            string healRow = Mutate("effectType", "heal");
+            healRow = Mutate("physicalDamageMultiplier", "", healRow);
+            healRow = Mutate("damageElementId", "", healRow);
+            AssertRejects(healRow, "attack_profile_required_healAmount_missing");
+            AssertRejects(Mutate("damageElementId", "element_unknown"), "attack_profile_damage_element_unknown");
+            AssertRejects(Mutate("physicalDamageMultiplier", "abc"), "attack_profile_physicalDamageMultiplier_invalid");
+            AssertRejects(Mutate("resourceCost", "5"), "basic_attack_resource_or_cooldown_invalid");
+            AssertRejects(Mutate("cooldownTicks", "2"), "basic_attack_resource_or_cooldown_invalid");
+            AssertRejects(Mutate("minCastRange", "3"), "attack_profile_cast_range_invalid");
+            AssertRejects(Mutate("areaCenterKind", "caster"), "attack_profile_areaCenterKind_must_be_empty");
+
+            Assert.IsFalse(
+                DataConfigImporter.TryValidateAttackProfileCsv(
+                    new[] { header, row, row }, languageKeys, out var duplicateReason),
+                "duplicated production row must fail");
+            StringAssert.StartsWith("attack_profile_id_duplicate", duplicateReason);
+        }
+
+        [Test]
+        public void ProductionImportWritesCanonicalBasicUnarmedAssetAndValidatesBindings()
+        {
+            // 真实导入：整表、语言键、asset ID 与绑定种类全部合法时生成/更新规范路径 asset。
+            DataConfigImporter.ImportAttackProfiles();
+
+            const string assetPath = "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<AttackProfileData>(assetPath);
+            Assert.IsNotNull(asset, "production import must generate the canonical basic_unarmed asset");
+            Assert.AreEqual("basic_unarmed", asset.attackProfileId);
+            Assert.AreEqual("attack_profile_basic_unarmed", asset.displayNameKey);
+            Assert.AreEqual(AttackProfileKind.Basic, asset.profileKind);
+            Assert.AreEqual(BasicAttackBindingKind.UnarmedFallback, asset.basicBindingKind);
+            Assert.AreEqual(AttackEffectType.Physical, asset.effectType);
+            Assert.AreEqual("element_none", asset.damageElementId);
+            Assert.AreEqual(1f, asset.physicalDamageMultiplier, 0.0001f);
+            Assert.AreEqual(AttackResourceKind.None, asset.resourceKind);
+            Assert.AreEqual(0, asset.resourceCost);
+            Assert.AreEqual(0, asset.cooldownTicks);
+            Assert.AreEqual(1, asset.minCastRange);
+            Assert.AreEqual(1, asset.maxCastRange);
+            Assert.AreEqual(AttackTargetingMode.Single, asset.targetingMode);
+            Assert.IsTrue(asset.TryValidate(out var validationReason), validationReason);
+            Assert.IsTrue(
+                DataConfigImporter.TryValidateAttackProfileAssetIdProjection(
+                    new[] { "basic_unarmed" }, out var idReason),
+                idReason);
+
+            // 石甲兽模板 asset 显式引用同一档案：导入绑定校验必须通过（ImportAttackProfiles 已成功）。
+            var shijiahou = AssetDatabase.LoadAssetAtPath<CharacterData>(
+                "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            Assert.IsNotNull(shijiahou);
+            Assert.AreEqual("basic_unarmed", shijiahou.unarmedBasicAttackProfileId);
+            Assert.IsTrue(string.IsNullOrEmpty(shijiahou.mainEquipmentBasicAttackProfileId));
+        }
+
+        private static string ProductionAbsolutePath()
+        {
+            return Path.Combine(Application.dataPath, "DataConfig", "AttackProfiles.csv");
+        }
+
+        private static HashSet<string> ProductionLanguageKeys()
+        {
+            string path = Path.Combine(Application.dataPath, "DataConfig", "Language.csv");
+            return new HashSet<string>(
+                File.ReadAllLines(path)
+                    .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'))
+                    .Select(line => line.Split(',')[0].Trim()),
+                StringComparer.Ordinal);
+        }
+
+        private static string ProductionLanguageValue(string key)
+        {
+            string path = Path.Combine(Application.dataPath, "DataConfig", "Language.csv");
+            return File.ReadAllLines(path)
+                .Where(line => line.StartsWith(key + ",", System.StringComparison.Ordinal))
+                .Select(line => line.Substring(line.IndexOf(',') + 1).Trim())
+                .FirstOrDefault();
+        }
+
+        [Test]
         public void AssetIdConflictOnCanonicalPathFailsClosedWithoutMutation()
         {
             // 非规范路径上存在同 ID asset：同一 attackProfileId 映射到多个 asset 路径必须失败。

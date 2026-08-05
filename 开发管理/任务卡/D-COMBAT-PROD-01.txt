@@ -4,13 +4,13 @@
   "id": "D-COMBAT-PROD-01",
   "title": "关中薄切片基础攻击生产迁移",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "data",
   "stage": "migration",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-05：用户在正式关中野外运行时确认基础攻击装配失败，并批准以 BattleSim 既有徒手普攻为唯一迁移输入，生产一个 basic_unarmed 无装备档案供新建玩家与石甲兽显式绑定；现有消费者、契约与验证入口已足以执行。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -38,7 +38,8 @@
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-PROD-01.txt",
-    "开发管理/任务归档/D-COMBAT-PROD-01.txt"
+    "开发管理/任务归档/D-COMBAT-PROD-01.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
 }
