@@ -134,7 +134,7 @@
 - 各只授予一次：重复接取、重复结算与重复领奖均稳定拒绝；重复结算不重复掉落或进度，读取不重放掉落或奖励。
 - 失败关闭：同一闸门直接用例证明缺失目录（配置被阻止且胜利结算失败）、非生产敌人身份（目录外草稿敌人 `EnemyIdentityMismatch`）、缺失敌人（目录不可解析 `EnemyMissing`）、非生产范围敌人（`EnemyScopeInvalid`）、缺失掉落（`DropsMissing`）、非生产／非当前据点／未知悬赏引用、领取时缺失悬赏引用与非法保存输入（`Claimed` 进度与目标不符、未知悬赏引用）均不伪造胜利、掉落、进度、领取或恢复结果；恢复拒绝原子且会话 JSON 不变。
 - 根因：直接用例未暴露生产根因，未修改 `GameSession`、`SceneFlowManager`、`AdventureSceneController`、`BountyBoardView` 或任何内容／存档所有者；未新增第二所有者、数值、CSV／Language／asset、场景或存档格式。
-- ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增 `src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs`（含相邻 .meta）与本节记录。
+- Codex 复审后结论为部分通过、任务保持 blocked：直接用例与失败关闭断言有效，但正向链路绕过 `SceneFlowManager.PrepareSettlementEntry`、`SceneFlowManager.PrepareAdventureEntry` 与 `BountyBoardView.Show`／`SubmitAccept`／`SubmitClaim`，不能证明正式城市接取和进入冒险链路；返工与完整审核对象记录见 `开发管理/未通过审核清单.txt`。
 
 ## U-GZ-FORMAL-E2E-01 已执行验证（Unity 6000.3.18f1 EditMode，2026-08-05）
 
@@ -148,4 +148,4 @@
 
 ## 后续
 
-- candidate 交回共享入口，正式提交形成 `codex_review/codex/ready` 的 pending review 投影，由 Codex 独立复审；本卡未修改任何生产所有者、内容或存档事实。
+- Codex 复审部分通过，任务已移出 ready 队列并保持 blocked；只允许定向把正向链路改为经既有场景流和悬赏面板所有者驱动后重新复审，本卡仍未修改生产所有者、内容或存档事实。

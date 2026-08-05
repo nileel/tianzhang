@@ -6,4 +6,8 @@
 
 ## 当前未通过/待复核项
 
-- 当前无待复核项。
+### U-GZ-FORMAL-E2E-01 · 关中正式接取至存档端到端闸门
+
+- 审核对象：正式提交 `78153533947846185011d4191e076ac0f33c1988`；结论：部分通过，仍需返工。
+- 直接用例与失败关闭断言通过，但正向链路直接调用 `GameSession.SetSettlementId`、`SetAdventureId`、`SetReturnTarget` 与 `AcceptBounty`／`ClaimBounty`，并反射调用 `AdventureSceneController.ConfigureCurrentAdventureEncounter`；它没有经过 `SceneFlowManager.PrepareSettlementEntry`、`PrepareAdventureEntry` 或 `BountyBoardView.Show`／`SubmitAccept`／`SubmitClaim`。
+- 定向返工只需让正向用例经上述既有场景流与面板所有者驱动，继续使用唯一生产 ID；不得修改内容、数值、存档 schema、场景、全局状态或新增所有者。完成后重新运行本卡 EditMode、构建和数据／文本检查。

@@ -20,7 +20,6 @@ namespace TianZhang.Tests
     /// （guanzhong_city 接取 -> guanzhong_wild 击败石甲兽 -> 普通掉落 -> 据点返回 ->
     /// 领取悬赏 -> 保存并读取），并证明非生产或缺失的敌人、掉落、目录、悬赏引用与
     /// 非法保存输入失败关闭，不伪造胜利、掉落、进度、领取或恢复结果。
-    /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增文件（U-GZ-FORMAL-E2E-01）
     /// </summary>
     public sealed class GuanzhongFormalEndToEndTests
     {

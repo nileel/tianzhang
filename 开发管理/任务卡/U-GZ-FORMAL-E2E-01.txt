@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 复审部分通过：直接用例与失败关闭断言通过，但正向链路直接写入 GameSession 并反射调用 AdventureSceneController 私有配置，未经过 SceneFlowManager.PrepareSettlementEntry/PrepareAdventureEntry 或 BountyBoardView.Show/SubmitAccept/SubmitClaim，不能证明正式城市接取至冒险链路。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Scripts/Game/SceneFlowManager.cs",
