@@ -2,9 +2,10 @@
 
 任务：`U-TZ-CHARTER-SLICE-01D`（单据点端到端闸门）
 修改方：DeepSeek V4 Flash
-RunId：`c50a8a23-7595-4cff-a210-4017d1b5eb5e`
-审核状态：Codex 于 2026-08-05 独立复审部分通过，任务保持 blocked；PlayMode runner 的
-2/2 通过结果有效，但尚未证明保存读取和重复消费时完整长期状态不变。
+RunId：`34430243-527a-4e4d-8f85-ecd3537b2f6c`
+审核状态：Codex 于 2026-08-05 独立复审部分通过，任务保持 blocked；本轮已按返工范围补齐
+`CharterRuntimeStateData` 完整深比较与两处重复消费失败节点的独立前态副本内容比较，
+PlayMode 复跑 2/2 通过；待 Codex 独立复审。
 
 ## 实施结论
 
@@ -25,13 +26,13 @@ RunId：`c50a8a23-7595-4cff-a210-4017d1b5eb5e`
      `NextState`／事件输出、会话不变）；首次正式调用经 `GameSession` 唯一提交入口原子写入，
      目录版本随长期状态一次替换，面板从长期状态重建显示并输出
      `env_guanzhong_wild` 环境引用；同一面板再次正式调用稳定失败
-     （`charter_reality_supply_unavailable`）且保持原实例；`SceneFlowManager.EnterAdventure`
+     （`charter_reality_supply_unavailable`）且完整内容不变；`SceneFlowManager.EnterAdventure`
      进入正式 AdventureScene，遭遇启动未被投影阻断，环境反馈区显示条目
      `charter_entry_suifu_diji`、事件 `event_suifu_water_redistribution` 与档案
      `env_guanzhong_wild`；`CaptureSaveData`／`RestoreSaveData` 往返后长期状态与目录版本
      一致、水府地纪仍登记且生效、同一生产目录与序列化档案 ID 仍可解析；读档后再次进入
      Adventure 环境反馈仍显示；读档后重新进入 Settlement 完成五类证明后再正式调用稳定失败
-     （`charter_reality_supply_unavailable`），读档恢复的长期状态与目录版本保持不变。
+     （`charter_reality_supply_unavailable`），读档恢复的长期状态完整内容不变。
   2. `FormalAdventureShowsStableReasonWithoutCommittedCharterState`：未正式调用（长期状态
      为空）进入正式 AdventureScene，环境反馈只显示稳定原因
      `charter_environment_projection_no_long_term_state`，既有遭遇启动不被投影阻断
@@ -48,31 +49,55 @@ RunId：`c50a8a23-7595-4cff-a210-4017d1b5eb5e`
   受保护工作区快照与恢复、结果 XML 实时校验、`-ValidateResultOnly`、失败传播非零退出码；
   `-testPlatform PlayMode`）与 `tools/test-run-unity-playmode-tests.ps1` 自测（不起动
   Unity，覆盖参数校验、退出码与失败传播）。
-- 未通过审核清单无新增项（PlayMode 2/2 全部通过）；`开发管理/设计-当前状态.txt` 已按
-  全部证据收口（见下方「状态收口」）。
+- 未通过审核清单保留 `U-TZ-CHARTER-SLICE-01D` 返工条目（由审核方在复审后按审核入口
+  更新）；`开发管理/设计-当前状态.txt` 已按返工后证据收口（见下方「状态收口」）。
+
+## 返工（2026-08-05，Codex 部分通过后）
+
+- 返工范围（审核结论原文）：读档后的 `AssertCharterStateEquivalent` 必须逐项比较
+  `CharterRuntimeStateData` 的全部标量、字符串集合与记录内容；两处重复消费失败节点须保留
+  独立前态副本并比较完整内容，不能只检查数组长度或同一对象引用。
+- `AssertCharterStateEquivalent` 已改为逐项比较全部字段：`stateId`、
+  `charterRelicState`、`worldSealState` 三个标量；`registeredRuleEntryIds`、
+  `currentRegionRuleEntryIds`、`currentCoverageSet` 三个字符串集合；
+  `nodeStates`、`organizationAuthorizationVersions`、`ruleEntryOccupancies`、
+  `nodeOccupancies`、`realitySupplyStates`、`positiveCommitResults`、
+  `negativeCommitResults` 七组记录（每组按序比较存在性、长度与每条记录的两个字符串字段）。
+- 两处重复消费失败节点（首次提交后同一面板再调用、读档后重新完成证明再调用）在执行失败
+  调用前用生产 `CharterRuntimeStateData.CreateCopy()` 保留独立前态副本，失败后对该副本
+  与会话当前长期状态做完整深比较，并同时断言目录版本不变；不再使用 `Assert.AreSame`
+  同一引用检查或仅数组长度比较。
+- 深比较未复制任何业务规则或存档实现：`CreateCopy()` 是生产长期状态类型的公开拷贝入口，
+  存档快照 `GameSessionSnapshot.Capture` 本身也经它取独立副本；断言只比较公开字段。
+- 未修改任何业务脚本、CSV、asset、正式场景、规则、schema、数值、环境参数、runner 及其
+  自测；本轮只改动 01D PlayMode 用例、本验证记录与 `设计-当前状态.txt`。
 
 ## 实际验证
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-run-unity-playmode-tests.ps1`：
   11 项 PASS（缺失结果 XML、`ValidateResultOnly` 缺 `ResultXmlPath`、不可解析 XML、
   非 `test-run` 根元素、缺 `total` 属性、零执行、计数不完整、失败运行传播、全通过运行、
-  缺 Unity 可执行文件且不启动、缺项目路径）。
+  缺 Unity 可执行文件且不启动、缺项目路径）。本轮 runner 未变化，复跑仍 11 项 PASS。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：
-  Unity 6000.3.18f1 PlayMode 实际执行 2 项、2 项通过、`result=Passed`、runner 退出码 0；
-  正式场景完整纵向流程与失败节点全部通过。运行历史：首次启动（全新 worktree 首次导入）
-  因许可证握手／UPM 包解析的瞬时启动失败退出码 1，重试后正常（runner 按失败传播合同如实
-  返回非零退出码，与 runner 逻辑无关）；第一次成功运行 1/2 通过，失败项为步骤显示断言
-  使用全等比较（正式视图步骤文本格式为「当前步骤: &lt;id&gt;」），改为包含断言后终态
-  2/2 通过。
+  Unity 6000.3.18f1 PlayMode 复跑 2 项、2 项通过、`result=Passed`、runner 退出码 0；
+  深比较返工后的正式场景完整纵向流程、读档一致断言与两处重复消费失败节点全部通过
+  （结果 XML：total=2、passed=2、failed=0、inconclusive=0、skipped=0、result=Passed）。
+  复跑历史：首次复跑因新增 `using System;` 与 `UnityEngine.Object` 产生 `Object` 二义
+  编译错误（CS0104，runner 如实返回非零退出码）；移除该 using、把
+  `Action<int,T,T>` 改为完全限定 `System.Action<int,T,T>` 后终态 2/2 通过，未改动
+  任何业务或测试断言语义。
+- 首轮运行历史（`8e73184` 正式提交）：首次启动（全新 worktree 首次导入）因许可证握手／
+  UPM 包解析的瞬时启动失败退出码 1，重试后正常（runner 按失败传播合同如实返回非零退出码，
+  与 runner 逻辑无关）；第一次成功运行 1/2 通过，失败项为步骤显示断言使用全等比较（正式
+  视图步骤文本格式为「当前步骤: &lt;id&gt;」），改为包含断言后终态 2/2 通过。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK
   （功法 29/29、术法 83/83、神通 31/31；language keys 409；新增 asmdef／meta 与正式场景、
-  目录和 asset 链未断裂）。
+  目录和 asset 链未断裂；本轮未改动数据链路径）。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths
-  开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：OK（670 文件）。
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`：OK
-  （cards=2 ready=1）。`-TaskId U-TZ-CHARTER-SLICE-01D -Postcondition ExternalPendingReview`
-  按合同由共享入口在候选正式转换（`codex_review/codex/ready`）后复跑，candidate 不修改
-  任务生命周期。
+  开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：OK。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`：OK。
+  `-TaskId U-TZ-CHARTER-SLICE-01D -Postcondition ExternalPendingReview` 按合同由共享
+  入口在候选正式转换（`codex_review/codex/ready`）后复跑，candidate 不修改任务生命周期。
 - `tools/check-pending-whitespace.ps1 -ExpectedPaths '<候选 10 条路径>'` 与暂存后
   `git diff --cached --check`：见提交前门禁结果。
 
@@ -88,13 +113,20 @@ RunId：`c50a8a23-7595-4cff-a210-4017d1b5eb5e`
   任务处理；本卡未复跑 EditMode 全量（相关输入未变化，不重复同范围检查）。
 - 首次 Unity 启动瞬时失败（许可证握手／UPM 解析取消）重试后通过；runner 已按失败传播
   合同如实返回非零退出码与稳定原因，不掩盖失败。
+- Unity 导入会生成未跟踪的 `src/Assets/DataConfig/CharterSites.csv.meta`（该 .meta 自
+  `D-TZ-CHARTER-SITE-01` 起从未随 candidate 提交，属站点卡已知授权路径缺口，见
+  `开发管理/册界单据点站点数据验证记录.txt` 与 `2d401d4` 提交消息）；已按既有模式删除
+  该未跟踪文件以保持候选现场干净，缺口仍由共享入口／Codex 复审按站点卡既有登记处理，
+  不属于 01D 路径。
 - 关本卡与汇总父项 `U-TZ-CHARTER-SLICE-01` 必须以 Codex 独立复审通过为前提，本卡不自行
   关闭父项。
 
 ## 状态收口
 
 - `开发管理/设计-当前状态.txt`：「CSV／运行时／保存／UI」行与「当前风险与下一步」第 7 条
-  已更新为已验证事实：schema 4 保存链已含册界长期状态；单据点已接入正式 SettlementScene
-  面板、`GameSession` 唯一提交入口与正式 AdventureScene 的 `env_guanzhong_wild` 环境
-  反馈；E2E PlayMode 闸门 2/2 通过（待 Codex 独立复审）；完整 M7 其余九条内容继续冻结。
-- 未通过审核清单：无新增项。
+  已更新为返工后已验证事实：schema 4 保存链已含册界长期状态；单据点已接入正式
+  SettlementScene 面板、`GameSession` 唯一提交入口与正式 AdventureScene 的
+  `env_guanzhong_wild` 环境反馈；01D 已补齐完整状态深比较与失败前态内容比较，PlayMode
+  复跑 2/2 通过（待 Codex 独立复审）；完整 M7 其余九条内容继续冻结。
+- 未通过审核清单：保留 `U-TZ-CHARTER-SLICE-01D` 返工条目，由 Codex 复审后按审核入口
+  更新。

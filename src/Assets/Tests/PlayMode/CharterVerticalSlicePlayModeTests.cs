@@ -145,11 +145,13 @@ namespace TianZhang.Tests
             StringAssert.Contains("charter_step_committed", PanelText("CharterSiteStepText").text);
             StringAssert.Contains(EnvironmentProfileId, PanelText("CharterSiteEnvironmentText").text);
 
-            // 8. 重复消费失败节点：同一面板再次正式调用稳定失败，长期状态保持原实例。
+            // 8. 重复消费失败节点：同一面板再次正式调用稳定失败，长期状态保留独立前态副本并
+            //    逐项比较完整内容不变（不只看同一引用或数组长度）。
             CharterRuntimeStateData committedState = GameSession.Instance.CharterRuntimeState;
+            CharterRuntimeStateData committedStateBeforeRepeat = committedState.CreateCopy();
             ClickByName("CharterSiteFormalButton");
             Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, charterController.LastReason);
-            Assert.AreSame(committedState, GameSession.Instance.CharterRuntimeState);
+            AssertCharterStateEquivalent(committedStateBeforeRepeat, GameSession.Instance.CharterRuntimeState);
             Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
 
             // 9. 进入正式 AdventureScene：生产入口持久化 adventureId；环境投影从已提交长期状态
@@ -191,7 +193,7 @@ namespace TianZhang.Tests
             StringAssert.Contains(EnvironmentProfileId, feedbackAfterRestore);
 
             // 12. 读档后重复消费失败节点：重新进入 Settlement、完成五类证明后再次正式调用
-            //     稳定失败，读档恢复的长期状态与目录版本保持不变。
+            //     稳定失败，读档恢复的长期状态保留独立前态副本并逐项比较完整内容不变。
             flow.EnterSettlement(SettlementId);
             yield return null;
 
@@ -207,10 +209,11 @@ namespace TianZhang.Tests
             ClickByName("CharterSiteSupplyButton");
             Assert.IsTrue(restoredController.Progress.IsComplete);
 
-            CharterRuntimeStateData restoredState = GameSession.Instance.CharterRuntimeState;
+            CharterRuntimeStateData restoredStateBeforeRepeat =
+                GameSession.Instance.CharterRuntimeState.CreateCopy();
             ClickByName("CharterSiteFormalButton");
             Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, restoredController.LastReason);
-            Assert.AreSame(restoredState, GameSession.Instance.CharterRuntimeState);
+            AssertCharterStateEquivalent(restoredStateBeforeRepeat, GameSession.Instance.CharterRuntimeState);
             Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
         }
 
@@ -271,17 +274,172 @@ namespace TianZhang.Tests
                 "Conflict evaluations must never emit world events.");
         }
 
+        /// <summary>
+        /// 逐项比较 <see cref="CharterRuntimeStateData"/> 的全部标量、字符串集合与记录内容：
+        /// 读档往返和失败节点前后都必须保持完整内容相等，不允许只比较数组长度或同一对象
+        /// 引用（否则等长或原地修改的错误状态会通过闸门）。
+        /// </summary>
         private static void AssertCharterStateEquivalent(
             CharterRuntimeStateData expected,
             CharterRuntimeStateData actual)
         {
-            Assert.AreEqual(expected.stateId, actual.stateId);
-            CollectionAssert.AreEqual(expected.registeredRuleEntryIds, actual.registeredRuleEntryIds);
-            CollectionAssert.AreEqual(expected.currentRegionRuleEntryIds, actual.currentRegionRuleEntryIds);
-            Assert.AreEqual(expected.positiveCommitResults.Length, actual.positiveCommitResults.Length);
-            Assert.AreEqual(expected.negativeCommitResults.Length, actual.negativeCommitResults.Length);
-            Assert.AreEqual(expected.realitySupplyStates.Length, actual.realitySupplyStates.Length);
-            Assert.AreEqual(expected.ruleEntryOccupancies.Length, actual.ruleEntryOccupancies.Length);
+            Assert.AreEqual(expected.stateId, actual.stateId, "stateId");
+            Assert.AreEqual(expected.charterRelicState, actual.charterRelicState, "charterRelicState");
+            Assert.AreEqual(expected.worldSealState, actual.worldSealState, "worldSealState");
+            AssertStringArrayEquivalent(expected.registeredRuleEntryIds, actual.registeredRuleEntryIds, "registeredRuleEntryIds");
+            AssertStringArrayEquivalent(expected.currentRegionRuleEntryIds, actual.currentRegionRuleEntryIds, "currentRegionRuleEntryIds");
+            AssertStringArrayEquivalent(expected.currentCoverageSet, actual.currentCoverageSet, "currentCoverageSet");
+            AssertNodeStatesEquivalent(expected.nodeStates, actual.nodeStates);
+            AssertAuthorizationVersionsEquivalent(
+                expected.organizationAuthorizationVersions,
+                actual.organizationAuthorizationVersions);
+            AssertOccupancyRecordsEquivalent(
+                "ruleEntryOccupancies",
+                expected.ruleEntryOccupancies,
+                actual.ruleEntryOccupancies);
+            AssertOccupancyRecordsEquivalent(
+                "nodeOccupancies",
+                expected.nodeOccupancies,
+                actual.nodeOccupancies);
+            AssertRealitySupplyStatesEquivalent(expected.realitySupplyStates, actual.realitySupplyStates);
+            AssertCommitResultsEquivalent(
+                "positiveCommitResults",
+                expected.positiveCommitResults,
+                actual.positiveCommitResults);
+            AssertCommitResultsEquivalent(
+                "negativeCommitResults",
+                expected.negativeCommitResults,
+                actual.negativeCommitResults);
+        }
+
+        private static void AssertStringArrayEquivalent(string[] expected, string[] actual, string label)
+        {
+            if (expected == null || actual == null)
+            {
+                Assert.AreEqual(expected, actual, label + " presence");
+                return;
+            }
+            Assert.AreEqual(expected.Length, actual.Length, label + " length");
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], actual[i], label + "[" + i + "]");
+            }
+        }
+
+        /// <summary>
+        /// 按序逐项比较记录数组：先比较存在性与长度，再逐条比较两个字符串字段。
+        /// </summary>
+        private static void AssertRecordArrayEquivalent<T>(
+            T[] expected,
+            T[] actual,
+            string label,
+            System.Action<int, T, T> compareRecord)
+        {
+            if (expected == null || actual == null)
+            {
+                Assert.AreEqual(expected, actual, label + " presence");
+                return;
+            }
+            Assert.AreEqual(expected.Length, actual.Length, label + " length");
+            for (int i = 0; i < expected.Length; i++)
+            {
+                compareRecord(i, expected[i], actual[i]);
+            }
+        }
+
+        private static void AssertNodeStatesEquivalent(
+            CharterNodeRuntimeStateData[] expected,
+            CharterNodeRuntimeStateData[] actual)
+        {
+            AssertRecordArrayEquivalent(expected, actual, "nodeStates", (i, left, right) =>
+            {
+                if (left == null || right == null)
+                {
+                    Assert.AreEqual(left, right, "nodeStates[" + i + "] record presence");
+                    return;
+                }
+                Assert.AreEqual(left.nodeId, right.nodeId, "nodeStates[" + i + "].nodeId");
+                Assert.AreEqual(left.state, right.state, "nodeStates[" + i + "].state");
+            });
+        }
+
+        private static void AssertAuthorizationVersionsEquivalent(
+            CharterAuthorizationVersionStateData[] expected,
+            CharterAuthorizationVersionStateData[] actual)
+        {
+            AssertRecordArrayEquivalent(
+                expected,
+                actual,
+                "organizationAuthorizationVersions",
+                (i, left, right) =>
+                {
+                    if (left == null || right == null)
+                    {
+                        Assert.AreEqual(left, right, "organizationAuthorizationVersions[" + i + "] record presence");
+                        return;
+                    }
+                    Assert.AreEqual(
+                        left.authorizationVersionId,
+                        right.authorizationVersionId,
+                        "organizationAuthorizationVersions[" + i + "].authorizationVersionId");
+                    Assert.AreEqual(
+                        left.state,
+                        right.state,
+                        "organizationAuthorizationVersions[" + i + "].state");
+                });
+        }
+
+        private static void AssertOccupancyRecordsEquivalent(
+            string label,
+            CharterOccupancyStateData[] expected,
+            CharterOccupancyStateData[] actual)
+        {
+            AssertRecordArrayEquivalent(expected, actual, label, (i, left, right) =>
+            {
+                if (left == null || right == null)
+                {
+                    Assert.AreEqual(left, right, label + "[" + i + "] record presence");
+                    return;
+                }
+                Assert.AreEqual(left.resourceId, right.resourceId, label + "[" + i + "].resourceId");
+                Assert.AreEqual(left.occupancyId, right.occupancyId, label + "[" + i + "].occupancyId");
+            });
+        }
+
+        private static void AssertRealitySupplyStatesEquivalent(
+            CharterRealitySupplyStateData[] expected,
+            CharterRealitySupplyStateData[] actual)
+        {
+            AssertRecordArrayEquivalent(expected, actual, "realitySupplyStates", (i, left, right) =>
+            {
+                if (left == null || right == null)
+                {
+                    Assert.AreEqual(left, right, "realitySupplyStates[" + i + "] record presence");
+                    return;
+                }
+                Assert.AreEqual(
+                    left.realitySupplyId,
+                    right.realitySupplyId,
+                    "realitySupplyStates[" + i + "].realitySupplyId");
+                Assert.AreEqual(left.state, right.state, "realitySupplyStates[" + i + "].state");
+            });
+        }
+
+        private static void AssertCommitResultsEquivalent(
+            string label,
+            CharterCommitResultStateData[] expected,
+            CharterCommitResultStateData[] actual)
+        {
+            AssertRecordArrayEquivalent(expected, actual, label, (i, left, right) =>
+            {
+                if (left == null || right == null)
+                {
+                    Assert.AreEqual(left, right, label + "[" + i + "] record presence");
+                    return;
+                }
+                Assert.AreEqual(left.commitId, right.commitId, label + "[" + i + "].commitId");
+                Assert.AreEqual(left.resultState, right.resultState, label + "[" + i + "].resultState");
+            });
         }
     }
 }
