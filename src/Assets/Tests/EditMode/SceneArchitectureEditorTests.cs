@@ -30,6 +30,14 @@ namespace TianZhang.Tests
         };
 
         private const string CharterSiteEntryId = "charter_site_old_water_station";
+        private const string CharterRuleEntryId = "charter_entry_suifu_diji";
+        private const string CharterSettlementId = "guanzhong_city";
+        private const string CharterCapabilityId = "capability_kaihe_jiuzhang_v1";
+        private const string CharterOperatorId = "operator_old_water_station";
+        private const string CharterTargetId = "gate_old_water_station_pump";
+        private const string CharterManagerId = "manager_old_water_station";
+        private const string CharterBeneficiaryId = "beneficiary_water_basin";
+        private const string CharterRelicId = "relic_world_charter";
 
         [Test]
         public void SceneArchitectureShellsAreRegisteredAndLoadWithExpectedControllers()
@@ -110,6 +118,75 @@ namespace TianZhang.Tests
 
             Assert.AreEqual("a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6", formalEnvironmentGuid);
             Assert.AreEqual(formalEnvironmentGuid, GetFormalAdventureEnvironmentGuid());
+        }
+
+        [Test]
+        public void FormalAdventureSceneResolvesTheCharterEnvironmentProjectionFromCommittedSession()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("CharterEnvironmentSceneSession");
+            try
+            {
+                CreateCommittedCharterSession(sessionGo);
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                Assert.IsNotNull(controller);
+                InvokeAwake(controller);
+                InvokeStart(controller);
+
+                Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
+                var feedbackText = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>();
+                Assert.IsNotNull(feedbackText, "The formal AdventureScene must keep its environment feedback text.");
+                StringAssert.Contains(CharterRuleEntryId, feedbackText.text);
+                StringAssert.Contains("event_suifu_water_redistribution", feedbackText.text);
+                StringAssert.Contains("env_guanzhong_wild", feedbackText.text);
+            }
+            finally
+            {
+                var canvas = GameObject.Find("UICanvas");
+                if (canvas != null)
+                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
+        }
+
+        [Test]
+        public void FormalAdventureSceneShowsStableReasonWithoutCommittedCharterState()
+        {
+            DestroyExistingSceneFlowAndSession();
+            SceneBuilder.BuildAdventureScene();
+            EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
+
+            var sessionGo = new GameObject("CharterEnvironmentSceneSession");
+            try
+            {
+                var session = sessionGo.AddComponent<GameSession>();
+                session.BeginNewGame(null, "jiangzuo_hub");
+                session.SetAdventureId("guanzhong_wild");
+
+                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
+                Assert.IsNotNull(controller);
+                InvokeAwake(controller);
+                InvokeStart(controller);
+
+                // 未接入册界长期状态时只显示稳定原因；既有 U-ENV-RULE-01B 环境链与遭遇启动不受投影阻断。
+                Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
+                var feedbackText = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>();
+                Assert.IsNotNull(feedbackText);
+                StringAssert.Contains(CharterEnvironmentProjectionReasons.NoLongTermState, feedbackText.text);
+            }
+            finally
+            {
+                var canvas = GameObject.Find("UICanvas");
+                if (canvas != null)
+                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(sessionGo);
+                DestroyExistingSceneFlowAndSession();
+            }
         }
 
         [Test]
@@ -816,6 +893,69 @@ namespace TianZhang.Tests
             controller.GetType()
                 .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                 .Invoke(controller, null);
+        }
+
+        private static void InvokeAwake(MonoBehaviour controller)
+        {
+            controller.GetType()
+                .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(controller, null);
+        }
+
+        private static GameSession CreateCommittedCharterSession(GameObject sessionGo)
+        {
+            GameSession session = sessionGo.AddComponent<GameSession>();
+            session.BeginNewGame(null, "jiangzuo_hub");
+            session.SetAdventureId("guanzhong_wild");
+
+            var staticCatalog = AssetDatabase.LoadAssetAtPath<CharterRuleStaticCatalogData>(
+                "Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset");
+            var site = AssetDatabase.LoadAssetAtPath<CharterSiteData>(
+                "Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset");
+            Assert.IsNotNull(staticCatalog, "The single approved charter static catalog asset is missing.");
+            Assert.IsNotNull(site, "The single approved charter site asset is missing.");
+            Assert.That(CharterSiteInteractionRuntime.TryCreate(
+                site, staticCatalog, CharterSettlementId, out CharterSiteInteractionRuntime runtime, out string createReason),
+                Is.True, createReason);
+
+            AssertCharterOk(runtime.VerifyPassage(CharterCapabilityId, CharterOperatorId, CharterTargetId));
+            AssertCharterOk(runtime.VerifyManagement(CharterManagerId, CharterBeneficiaryId));
+            AssertCharterOk(runtime.ConnectNodes(new[]
+            {
+                "node_old_water_station_charter",
+                "node_old_water_station_waterworks",
+                "node_old_water_station_river_wetland",
+            }));
+            AssertCharterOk(runtime.VerifyRuleEntryRegistration(
+                CharterRuleEntryId,
+                CharterRelicId,
+                new[] { "authorization_suifu_water_basin_v1", "authorization_taixuan_seal_old_water_station_management_v1" }));
+            AssertCharterOk(runtime.PrepareRealitySupplies(new[]
+            {
+                "supply_suifu_registered_seasonal_rain",
+                "supply_suifu_connected_water_balance",
+                "supply_suifu_wetland_land_capacity",
+            }));
+
+            Assert.That(runtime.TryCreatePreparation(out CharterInvocationPreparation preparation, out string prepReason),
+                Is.True, prepReason);
+            CharterRuleInvocationResult result = runtime.EvaluateFormal(
+                preparation, null, 100, "applied", "applied");
+            Assert.IsTrue(result.Succeeded, result.Reason);
+
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            Assert.IsNotNull(catalog, "The formal ContentCatalogData asset is missing.");
+            CharterInvocationCommitResult commit = session.CommitCharterFormalResult(
+                catalog, result, preparation.CatalogVersion);
+            Assert.IsTrue(commit.Succeeded, commit.Reason);
+            Assert.IsNotNull(session.CharterRuntimeState);
+            return session;
+        }
+
+        private static void AssertCharterOk(CharterInteractionActionResult result)
+        {
+            Assert.IsTrue(result.Succeeded, result.Reason);
         }
 
         private static int CountButtonsWithPrefix(string prefix)

@@ -41,6 +41,7 @@ namespace TianZhang.Adventure
         private IFormalEncounterRandomSource encounterRandomSource =
             new SystemFormalEncounterRandomSource();
         private bool formalEncounterConsumed;
+        private CharterEnvironmentProjectionResult charterEnvironmentProjection;
 
         private void Awake()
         {
@@ -148,6 +149,7 @@ namespace TianZhang.Adventure
             EncounterResolutionFailureReason = null;
             LastFormalEncounterResult = null;
             formalEncounterConsumed = false;
+            charterEnvironmentProjection = null;
             if (!RequiresFormalEncounter)
                 return;
 
@@ -177,6 +179,15 @@ namespace TianZhang.Adventure
                 BlockGuanzhongWildEncounter("guanzhong_wild 必须显式绑定 env_guanzhong_wild 环境档案，已阻止遭遇启动。");
                 return;
             }
+
+            // 投影结果无论成功或失败都只用于显示：成功显示条目事件／档案 ID，失败显示稳定原因；
+            // 环境链仍由上方既有绑定门禁与 U-ENV-RULE-01B 表现链唯一消费，投影不阻断遭遇启动。
+            CharterEnvironmentProjection.TryResolve(
+                GameSession.Instance == null ? null : GameSession.Instance.CharterRuntimeState,
+                contentCatalog,
+                guanzhongWildEnvironmentProfile.profileId,
+                out CharterEnvironmentProjectionResult environmentProjection);
+            charterEnvironmentProjection = environmentProjection;
 
             explorationController.ConfigureFormalEncounter(enemy, aiController);
             explorationController.ConfigureEnvironmentProfile(guanzhongWildEnvironmentProfile);
@@ -337,10 +348,23 @@ namespace TianZhang.Adventure
 
         private string BuildEnvironmentFeedbackDescription()
         {
+            var lines = new List<string>();
+            if (charterEnvironmentProjection != null)
+            {
+                lines.Add(charterEnvironmentProjection.Succeeded
+                    ? "册界环境引用: 条目=" + JoinIds(charterEnvironmentProjection.RuleEntryIds) +
+                      "；事件=" + JoinIds(charterEnvironmentProjection.EventIds) +
+                      "；档案=" + charterEnvironmentProjection.EnvironmentProfileId
+                    : "册界环境引用拒绝: " + charterEnvironmentProjection.Reason);
+            }
+
             if (environmentPresentation == null)
-                return string.Empty;
+                return string.Join("\n", lines);
             if (!environmentPresentation.IsConfigured)
-                return "环境反馈拒绝: " + environmentPresentation.FailureReason;
+            {
+                lines.Add("环境反馈拒绝: " + environmentPresentation.FailureReason);
+                return string.Join("\n", lines);
+            }
 
             var channels = new List<string>();
             foreach (var channel in environmentPresentation.PhenomenonChannels)
@@ -355,9 +379,15 @@ namespace TianZhang.Adventure
                     FormatInteractionState(edge.InteractionAllowed, edge.InteractionReason));
             }
 
-            return "地表原型: " + string.Join("、", environmentPresentation.SurfacePrototypeRefs) + "\n" +
-                "现象通道: " + string.Join("、", channels) + "\n" +
-                "格边: " + string.Join("；", edges);
+            lines.Add("地表原型: " + string.Join("、", environmentPresentation.SurfacePrototypeRefs));
+            lines.Add("现象通道: " + string.Join("、", channels));
+            lines.Add("格边: " + string.Join("；", edges));
+            return string.Join("\n", lines);
+        }
+
+        private static string JoinIds(string[] ids)
+        {
+            return ids == null || ids.Length == 0 ? "无" : string.Join("、", ids);
         }
 
         private static string FormatInteractionState(bool allowed, string reason)

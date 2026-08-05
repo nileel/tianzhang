@@ -1,0 +1,75 @@
+# 册界单据点环境引用验证记录
+
+任务：`U-TZ-CHARTER-SLICE-01C`（Adventure 环境引用与反馈）
+修改方：DeepSeek V4 Flash
+RunId：`3096ecd9-a80f-48a5-a077-e6d8992e2861`
+审核状态：⚠️ 已修改/未审核；变更范围：`CharterEnvironmentProjection.cs(.meta)`、
+`AdventureSceneController.cs`、`CharterEnvironmentProjectionTests.cs(.meta)`、
+`SceneArchitectureEditorTests.cs`、本验证记录、`未通过审核清单.txt`、
+`任务卡/U-TZ-CHARTER-SLICE-01D.txt`；待 Codex 复审。
+
+## 实施结论
+
+- 新增无状态 `CharterEnvironmentProjection`（TianZhang.Gameplay 程序集，TianZhang.Adventure
+  命名空间）：只读取 `GameSession.CharterRuntimeState` 的 `currentRegionRuleEntryIds`、
+  `ContentCatalogData` 唯一静态目录（`TryGetCharterRuleStaticCatalog`）与 Adventure 已序列化
+  `guanzhongWildEnvironmentProfile` 的 `profileId`；不保存状态、不执行规则、不反写条目、覆盖、
+  供给、提交或地区状态。
+- 解析规则：当前地区无已生效条目（未接入长期状态／`currentRegionRuleEntryIds` 为空）返回
+  `charter_environment_projection_no_long_term_state`／`..._no_current_region_entry`；条目集合
+  重复返回 `..._duplicate_current_region_entry`；条目在唯一静态目录无对应定义返回
+  `..._unknown_rule_entry`；所有已生效条目解析出的环境档案 ID 多于一个互异值返回
+  `..._duplicate_environment_id`；解析结果与序列化 asset 的 `profileId` 不一致（或 asset 未绑定）
+  返回 `..._asset_profile_mismatch`；静态目录缺失或校验失败返回 `..._catalog_unavailable:<目录
+  稳定代码>`——重复定义（`charter_catalog_duplicate_rule_entry`）、事件输出缺失
+  （`charter_catalog_unknown_world_event`）、环境 ID 越界（`charter_catalog_unknown_environment_profile`）
+  等定义级失败由唯一静态目录校验失败关闭并原样传播，投影不复制定义有效性规则、不提供 fallback。
+- `AdventureSceneController.ConfigureCurrentAdventureEncounter` 在既有环境绑定门禁（
+  U-ENV-RULE-01B 原样保留：profile 非空且 `profileId == env_guanzhong_wild`）之后调用投影；
+  投影结果无论成功或失败都只用于显示——成功在环境反馈区显示
+  「册界环境引用: 条目=…；事件=…；档案=…」，失败显示「册界环境引用拒绝: <稳定原因>」。
+  环境链仍由既有绑定门禁与 U-ENV-RULE-01B 表现链唯一消费，投影不阻断遭遇启动；非正式副本
+  （非 `guanzhong_wild`）不调用投影、不显示引用行。
+- 未修改 `AdventureScene.unity`、`SceneBuilder`、`EnvironmentProfileData`、`TacticalGridModel`、
+  `CharterSiteInteractionRuntime`、`GameSession`、`CharterRuleRuntime`、`CharterConflictRules`、
+  schema 4、CSV、asset 或 BattleSim；未新增第二环境状态所有者、默认环境档案、环境搜索／自动选择
+  或按路径／名称／显示文本匹配。
+
+## 实际验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：项目文件在仓库中不存在（与 01A 验证记录一致
+  的既有事实，Unity 编译以 EditMode 测试运行器为准），不重复登记为本次失败。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：Unity
+  6000.3.18f1 EditMode 实际执行 413 项、411 通过、2 失败；失败仍为已登记且不在本卡路径的既有
+  基线——`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（PULSE 断言）
+  与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`
+  （LogAssert 期望），与 01A/01B 验证记录登记基线一致。新增 `CharterEnvironmentProjectionTests`
+  11/11 通过：当前地区水府地纪成功解析（条目 `charter_entry_suifu_diji`、事件
+  `event_suifu_water_redistribution`／`event_suifu_downstream_supply_delay`、档案
+  `env_guanzhong_wild`，经正式 01A 提交链构造会话）、未接入长期状态失败关闭、已登记但未生效条目
+  不输出、空／重复当前地区条目失败关闭、未知条目失败关闭、重复定义／事件输出缺失／环境 ID 越界
+  经目录校验传播稳定代码、多互异环境 ID（有效目录）失败关闭、asset 错配（含未绑定）失败关闭、
+  全部成败路径长期状态不变；场景架构新增 `FormalAdventureSceneResolvesTheCharterEnvironmentProjectionFromCommittedSession`
+  与 `FormalAdventureSceneShowsStableReasonWithoutCommittedCharterState` 两项全通过：正式场景＋
+  生产序列化引用＋已提交会话解析成功并在 UI 显示条目事件／档案 ID，未接入会话显示稳定原因且既有
+  U-ENV-RULE-01B 遭遇启动不被阻断；既有 8 项 `AdventureSceneControllerTests`（
+  GuanzhongWild／FormalVictory／FormalDefeat）与全部场景架构用例继续通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,
+  src/Assets/Scripts,src/Assets/Tests`：OK（669 文件）。
+- `tools/check-pending-whitespace.ps1 -ExpectedPaths '<候选 9 条路径>'` 与暂存后
+  `git diff --cached --check`：见提交前门禁结果。
+- `check-task-cards.ps1 -TaskId U-TZ-CHARTER-SLICE-01C -Postcondition ExternalPendingReview`：
+  按合同由共享入口在候选正式转换后复跑，candidate 不修改任务生命周期。
+
+## 残留风险
+
+- 投影只读取当前地区已生效条目；`registeredRuleEntryIds` 中尚未生效的条目不产生环境引用，符合
+  “只有当前地区已生效条目可产生环境引用”。
+- 定义级失败（重复定义、事件输出缺失、环境 ID 越界）以唯一静态目录稳定代码传播
+  （`charter_environment_projection_catalog_unavailable:<目录代码>`），投影自身不复制定义校验；
+  该行为由直接用例断言并可在 Codex 复审时核对。
+- 环境链仍由 U-ENV-RULE-01B 既有绑定门禁（profile 非空且 `profileId == env_guanzhong_wild`）
+  门控；投影只增加引用显示与稳定原因，不改变遭遇启动行为——与既有 8 项
+  `AdventureSceneControllerTests` 一致。
+- 正式世界刻、保存读取与重复消费的端到端闭环属于 01D PlayMode 闸门范围。
+- 既有 2 项基线失败（PULSE 断言、LogAssert 期望）仍由其所有者任务处理。
