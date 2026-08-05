@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 于 2026-08-05 独立复审通过正式提交 d561a9647d0b3861c2827d3c8a31e56836c8576d；任务归档并解除 01D 阻塞。",
   "expectedPaths": [
     "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs",
     "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs.meta",
@@ -100,3 +100,9 @@
 
 - 需要修改环境规则／参数、`TacticalGridModel`、Adventure 场景／SceneBuilder、册界长期状态、保存 schema、第二目录或默认匹配时停止并回报。
 - 实施跨入 01D E2E 闸门、完整天气／经济／编辑器、战斗数值或表现资源时停止，不扩张本卡。
+
+## Codex 独立复审通过（2026-08-05）
+
+- 已核对正式提交 `d561a9647d0b3861c2827d3c8a31e56836c8576d`、批准规格、唯一静态目录和正式 Adventure 场景序列化引用：投影只读取当前地区已生效条目，精确匹配既有 `env_guanzhong_wild` asset 的 `profileId`，不反写册界或环境档案。
+- 独立验证：`tools/run-unity-editmode-tests.ps1` 实际执行 413 项、411 项通过；本卡 `CharterEnvironmentProjectionTests` 11/11 通过，正式场景的成功显示与未接入稳定原因断言通过。另有 2 项已登记且与本卡路径无关的既有基线失败。`check-review-text`、提交差异空白检查均通过；`dotnet build src/TianZhang.EditModeTests.csproj` 因仓库未跟踪该 Unity 生成项目文件而不可执行。
+- 结论：通过。归档本卡并解除 `U-TZ-CHARTER-SLICE-01D` 阻塞；端到端正式场景、保存读取和重复消费闭环仍由 01D 验证。

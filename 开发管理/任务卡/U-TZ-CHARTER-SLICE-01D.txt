@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-TZ-CHARTER-SLICE-01C"
-  ],
-  "stateReason": "2026-08-05：直接前序 U-TZ-CHARTER-SLICE-01C 已完成 DeepSeek 实现并形成 candidate，等待 Codex 独立复审；本卡保持 blocked，前序通过独立复审后才可转为 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-05：直接前序 U-TZ-CHARTER-SLICE-01C 已通过 Codex 独立复审并归档；本卡恢复 external_execute/deepseek/ready。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode.meta",
     "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",

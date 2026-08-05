@@ -6,9 +6,4 @@
 
 ## 当前未通过/待复核项
 
-### U-TZ-CHARTER-SLICE-01C · Adventure 环境引用与反馈（2026-08-05 实现完成，待复核）
-
-- 对象：DeepSeek 按任务卡完成的独立实现；候选形成后由共享入口转 `codex_review/codex/ready` 交 Codex 独立复核。
-- 内容：新增无状态 `CharterEnvironmentProjection`，只把当前地区已生效条目（`GameSession.CharterRuntimeState.currentRegionRuleEntryIds`）经唯一静态目录解析为定义声明的环境输出，并与 Adventure 已序列化 `guanzhongWildEnvironmentProfile` 的 `profileId` 精确匹配；缺失／重复／未知条目、重复环境 ID、asset 错配与目录级失败（重复定义、事件输出缺失、环境 ID 越界）均以稳定代码失败关闭，不反写长期状态或环境 asset。`AdventureSceneController` 只调用投影、显示条目事件／档案 ID／稳定错误，匹配成功才把既有 asset 交给现有环境链；未修改场景、SceneBuilder、环境规则、`TacticalGridModel` 或册界长期状态。
-- 验证（DeepSeek 已运行）：实际命令与结果见 `开发管理/册界单据点环境引用验证记录.txt`；`check-review-text`（669 文件）通过。
-- 待复核：Codex 独立复核候选 diff 与直接用例后更新本条状态；复核通过前任务保持待审核，`U-TZ-CHARTER-SLICE-01D` 继续阻塞。
+当前无待复核项。

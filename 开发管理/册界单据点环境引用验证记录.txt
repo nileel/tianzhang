@@ -3,10 +3,11 @@
 任务：`U-TZ-CHARTER-SLICE-01C`（Adventure 环境引用与反馈）
 修改方：DeepSeek V4 Flash
 RunId：`3096ecd9-a80f-48a5-a077-e6d8992e2861`
-审核状态：⚠️ 已修改/未审核；变更范围：`CharterEnvironmentProjection.cs(.meta)`、
+审核状态：Codex 于 2026-08-05 独立复审通过正式提交
+`d561a9647d0b3861c2827d3c8a31e56836c8576d`；变更范围：`CharterEnvironmentProjection.cs(.meta)`、
 `AdventureSceneController.cs`、`CharterEnvironmentProjectionTests.cs(.meta)`、
 `SceneArchitectureEditorTests.cs`、本验证记录、`未通过审核清单.txt`、
-`任务卡/U-TZ-CHARTER-SLICE-01D.txt`；待 Codex 复审。
+`任务卡/U-TZ-CHARTER-SLICE-01D.txt`。
 
 ## 实施结论
 
@@ -73,3 +74,9 @@ RunId：`3096ecd9-a80f-48a5-a077-e6d8992e2861`
   `AdventureSceneControllerTests` 一致。
 - 正式世界刻、保存读取与重复消费的端到端闭环属于 01D PlayMode 闸门范围。
 - 既有 2 项基线失败（PULSE 断言、LogAssert 期望）仍由其所有者任务处理。
+
+## Codex 独立复审
+
+- 复核正式提交、任务契约、唯一静态目录及正式场景引用后结论为通过：投影未创建第二环境状态所有者，所有失败关闭原因都来自投影或唯一目录，环境链继续只消费既有 `EnvironmentProfileData`。
+- 复跑 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：413 项执行、411 项通过；`CharterEnvironmentProjectionTests` 11/11 通过，新增场景断言通过。2 项失败与已登记基线逐字一致且不在本卡路径：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 的 `PULSE_NEUTRAL`／`PULSE_ADVANTAGE` 断言，以及 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 的缺失 LogAssert 警告。
+- `dotnet build src/TianZhang.EditModeTests.csproj` 仍因该 Unity 生成项目文件不在仓库而不可执行；`check-review-text`（670 文件）和 `git diff --check d561a964^ d561a964` 通过。01D 已解除阻塞，端到端闭环仍待其 PlayMode 闸门。

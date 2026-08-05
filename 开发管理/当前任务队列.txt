@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-TZ-CHARTER-SLICE-01C | codex_review | codex | P1 | unity | implementation | Adventure 环境引用与反馈 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01C.txt |
+| U-TZ-CHARTER-SLICE-01D | external_execute | deepseek | P1 | unity | verification | 单据点端到端闸门 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01D.txt |
