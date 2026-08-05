@@ -1,0 +1,104 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-GZ-UI-TEXT-01",
+  "title": "关中正式薄切片基础 UI 文本接入",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-05：用户在实际运行中确认多处 UI 仍直接显示字段名和内部 ID，并批准覆盖新建角色到关中战斗/返回的完整正式薄切片；现有显示所有者、Language 数据与 PlayMode runner 已足以形成独立 P1 实施卡。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationManager.cs",
+    "src/Assets/Scripts/World/WorldSceneController.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs",
+    "src/Assets/Scripts/Settlement/BountyBoardView.cs",
+    "src/Assets/Scripts/Settlement/CharterSiteController.cs",
+    "src/Assets/Scripts/Settlement/CharterSiteView.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Game/BattleUIManager.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Scenes/WorldScene.unity",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteViewTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs.meta",
+    "src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta",
+    "tools/check-data-chain.ps1",
+    "开发管理/关中正式薄切片UI文本验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-UI-TEXT-01.txt",
+    "开发管理/任务归档/U-GZ-UI-TEXT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-UI-TEXT-01 · 关中正式薄切片基础 UI 文本接入
+
+## 来源与当前边界
+
+- 用户在实际运行正式关中野外时确认 UI 多处仍直接显示字段名、稳定原因和档案/地表/现象 ID；现有 `AdventureSceneController.BuildEnvironmentFeedbackDescription`、`BountyBoardView.SetResult` 等玩家可见表现点可直接输出内部协议值。
+- 用户于 2026-08-05 明确要求本卡覆盖整体正式薄切片：新建角色、世界、关中城、悬赏、已接入的单据点、关中野外、战斗、结算和返回；不是只修当前 AdventureScene 面板。
+- 当前正式内容仍只批准关中小族出身、关中城、关中野外的一场战斗及已完成的水府地纪单据点切片。本卡只为既有实体和状态接入最小显示文本，不解冻其他系统或创作新设定。
+- 内部稳定 ID、枚举和拒绝原因继续作为数据、日志和测试事实；本卡只在现有 UI 表现所有者处建立单向玩家显示，不修改业务状态语义或失败关闭结果。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-05-guanzhong-basic-attack-and-ui-task-design.md#四、U-GZ-UI-TEXT-01 设计`。
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#6.2 城市场景`、`#6.3 怪物与战斗`、`#6.4 悬赏运行时`、`#9.2 运行阶段`、`#十、验证矩阵`；已批准实体的显示事实只从对应生产 CSV/asset 与直接 docs 读取。
+- `src/Assets/DataConfig/Language.csv` 以及正式 `Settlements.csv`、`Bounties.csv`、`Enemies.csv`、`Items.csv`、`CharterSites.csv` 中本卡命中的生产实体；不得读取 fixture 或冻结内容补显示文本。
+- `CharacterCreationManager` 的字段刷新/确认完整逻辑；`WorldSceneController`、`SettlementSceneController|SettlementSceneView` 的节点/功能显示与直接场景调用。
+- `BountyBoardView::Show|Refresh|SetResult`、`CharterSiteController` 的稳定原因所有权与 `CharterSiteView` 的玩家显示；`AdventureSceneController::RefreshPresentation|BuildEnvironmentFeedbackDescription|FormatInteractionState`、`ExplorationController::AddLog|StartBattle|CombatLoop`、`BattleUIManager` 的状态/槽位/日志刷新。
+- `SceneBuilder` 的四个正式场景构建与校验入口、四份正式 scene，以及 expectedPaths 中列出的直接 EditMode/PlayMode 测试；执行前逐控件列出当前实际显示的生产值，修改前读取每个目标完整刷新逻辑单元。
+
+## 实施范围
+
+- 建立一份逐控件审计清单，覆盖新建角色确认、世界节点、关中城功能与悬赏、旧水驿单据点、关中野外环境/遭遇、战斗面板/日志、结算与返回；清单记录内部值、显示所有者、批准显示事实和直接测试，不用全局字符串搜索结果代替运行路径。
+- 玩家界面显示既有正式实体的中文名称和可理解状态，不直接显示清单内的字段名、稳定 ID、枚举名、档案 ID 或机器拒绝码。优先复用已导入 asset 的显示字段和现有 `Language.csv` 键，只为当前生产实体、状态和反馈补最小缺失键。
+- 对运行时生成的稳定原因，只在相应现有 view/controller 的表现边界映射为玩家文本；原始 reason 继续保留在结果对象、`LastReason`/失败字段、Debug 日志和测试中。未知/非法输入必须显示可理解的失败而非伪造成功，同时日志仍能观察稳定原因。
+- 保持四个正式场景的现有 Canvas、控件层次与交互；只有 SceneBuilder 中的默认文本或 scene 序列化文本属于根因时才同步更新，场景重建后不得恢复内部字段显示。
+- 增加生产映射与缺键/未知原因 EditMode 用例，并扩展现有正式 PlayMode runner：从新建角色进入世界和关中城，打开悬赏/单据点，进入关中野外并完成战斗/结算/返回的关键面板断言；测试必须同时证明玩家显示文本与内部 reason 分层。
+- 把审计清单、实际命令、测试数和任何既有无关失败写入新验证记录；业务完成后按外部交付边界转为 `codex_review/codex/ready`，由 Codex 独立复审。
+
+## 禁止项
+
+- 不修改 UI 布局、Canvas 结构、字体、颜色、动画、美术资源、交互顺序或场景所有权；不新增第二套本地化服务、全局 UI 状态或平行文本目录。
+- 不把显示文本写回稳定 ID/reason 字段，不删除或吞掉内部失败原因，不以隐藏控件、空字符串或固定“未知错误”冒充完成。
+- 不使用全局正则替换所有下划线文本；不得误改玩家自定义名字、技术日志或合法内容。每个变化必须对应审计清单中的实际正式控件。
+- 不新增剧情、NPC、怪物、悬赏、物品、册界条目、地区、技能、数值或冻结系统占位文本；没有批准显示事实时停止该项并保留证据，不自行创作设定。
+- 不借文本任务改变角色创建规则、战斗、AI、掉落、奖励、存档、悬赏状态机、册界事务或环境规则。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，覆盖审计清单中的生产显示映射、缺键、未知原因及内部 reason 保留。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，覆盖新建角色、世界、关中城、悬赏/单据点、关中野外、战斗、结算与返回的关键玩家可见文本。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests`。
+- 暂存前对本卡预期路径运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 正常正式路径从新建角色到关中野外战斗、结算和返回，不再直接显示审计清单内的字段名、稳定 ID、档案 ID、枚举或机器拒绝码；四个正式场景重建后结果一致。
+- 每项玩家文本都可追溯到现有生产显示字段、Language 键或经批准的本卡最小状态文案；没有 fixture、冻结内容、第二本地化服务或业务语义变化。
+- 非法输入仍失败关闭，玩家获得可理解反馈，开发日志和内部结果仍保留原始稳定原因；EditMode 与 PlayMode 有直接、可重复证据。
+
+## 停止条件
+
+- 任一玩家可见字段需要创作未批准设定、解冻新内容、改变业务状态/场景/交互所有者或新增第二本地化服务时停止并交回 Codex。
+- 只有删除稳定原因、隐藏错误、全局字符串替换、重做 Canvas/布局或跨出 expectedPaths 才能完成时停止，不叠加表现兜底或范围外重构。

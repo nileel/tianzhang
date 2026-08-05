@@ -6,3 +6,5 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | U-GZ-FORMAL-E2E-01 | codex_review | codex | P1 | unity | verification | 关中正式接取至存档端到端闸门 | 开发管理/任务卡/U-GZ-FORMAL-E2E-01.txt |
+| D-COMBAT-PROD-01 | external_execute | deepseek | P1 | data | migration | 关中薄切片基础攻击生产迁移 | 开发管理/任务卡/D-COMBAT-PROD-01.txt |
+| U-GZ-UI-TEXT-01 | external_execute | deepseek | P1 | unity | implementation | 关中正式薄切片基础 UI 文本接入 | 开发管理/任务卡/U-GZ-UI-TEXT-01.txt |

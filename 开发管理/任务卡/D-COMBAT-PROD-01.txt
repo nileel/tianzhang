@@ -1,0 +1,101 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-COMBAT-PROD-01",
+  "title": "关中薄切片基础攻击生产迁移",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "data",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-05：用户在正式关中野外运行时确认基础攻击装配失败，并批准以 BattleSim 既有徒手普攻为唯一迁移输入，生产一个 basic_unarmed 无装备档案供新建玩家与石甲兽显式绑定；现有消费者、契约与验证入口已足以执行。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/DataConfig/AttackProfiles.csv.meta",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationCatalog.cs",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Data/AttackProfiles.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "tools/check-data-chain.ps1",
+    "开发管理/关中基础攻击生产迁移验证记录.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-PROD-01.txt",
+    "开发管理/任务归档/D-COMBAT-PROD-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-COMBAT-PROD-01 · 关中薄切片基础攻击生产迁移
+
+## 来源与当前边界
+
+- 用户在正式 `guanzhong_wild` 接近 `enemy_shijiahou` 时实际命中 `basic_attack_binding_missing_or_ambiguous`。当前 `TacticalCombatController.TryCreateMembers` 先校验玩家；新建角色没有基础攻击外键，石甲兽模板同样未绑定，正式 `AdventureScene` 的 `attackProfiles` 为空，仓库也只有非生产 fixture。
+- `D-COMBAT-01` 已锁定 `AttackProfiles.csv -> AttackProfileData -> Unity/BattleSim` 的唯一权威，`U-COMBAT-01B` 已完成消费者和失败关闭，`D-COMBAT-02` 只完成非生产跨端 fixture；三者都明确把生产内容迁移留给独立切片。
+- 用户于 2026-08-05 批准只生产一个通用无装备普攻档案，供当前新建玩家与明确无装备的石甲兽共同使用；迁移值只来自 `GameData.UnarmedBasicAttack`，不新增武器系统或第二档案。
+- 当前 `U-GZ-FORMAL-E2E-01` 只验证既有悬赏/存档组合链，且禁止修改生产 CSV、asset、场景和战斗规则，不能承担本根因修复。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-05-guanzhong-basic-attack-and-ui-task-design.md#三、D-COMBAT-PROD-01 设计`。
+- `docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md#唯一权威关系`、`#CSV 表头与字段`、`#导入边界与失败关闭`、`#Unity 与 BattleSim 的消费投影`、`#迁移顺序、fixture 与差异检查`。
+- `docs/superpowers/specs/2026-07-30-unity-2v2-session-and-basic-attack-owner-design.md#六、基础攻击绑定`、`#七、U-COMBAT-01B 精确实施顺序`；`开发管理/任务归档/U-COMBAT-01B.txt`、`开发管理/任务归档/D-COMBAT-02.txt` 的生产迁移边界。
+- `simulations/BattleSim/GameData.cs::AttackProfile|UnarmedBasicAttack`、`BattleSimSelfTests.cs::RunDistanceModelTq055`；角色数值结论以本卡实际 BattleSim 运行结果为准。
+- `src/Assets/Scripts/Editor/DataConfigImporter.cs::ImportAttackProfiles|BuildEnemyTemplate|ValidateCharacterBasicAttackBindings`、`SceneBuilder.cs::BuildAdventureScene`；`CharacterCreationCatalog.cs` 的现有稳定内容常量边界与 `CharacterCreationRules.cs::BuildProfile`。
+- `src/Assets/Scripts/Combat/TacticalCombatController.cs::TryCreateMembers|TryResolveBasicAttackProfile`、`src/Assets/Scripts/Map/ExplorationController.cs::CreatePlayer|SpawnEnemies|GetKnownAttackProfiles|StartBattle`；这些消费者只用于核对，不因本卡增加默认回退。
+- `src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`、`Language.csv`、`src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset`、`AdventureScene.unity::ExplorationController` 及 expectedPaths 中列出的直接 EditMode/PlayMode 测试。
+
+## 实施范围
+
+- 新建生产 `AttackProfiles.csv`，只登记 `basic_unarmed` 一行；显示键进入生产 `Language.csv`，中文为“徒手”。行字段固定为 `profileKind=basic`、`basicBindingKind=unarmed_fallback`、`effectType=physical`、`damageElementId=element_none`、物理倍率 `1.0`、无资源/消耗/冷却、距离 `1..1`、单目标，其他种类或范围专属列为空。
+- 继续复用现有严格导入器生成规范路径 `AttackProfile_basic_unarmed.asset`；整表、语言键、asset ID 与绑定种类任一非法时在任何 asset 写入前失败，不使用测试 fixture 或手工 asset 作为第二权威。
+- 在角色装配所有者中让所有当前新建玩家显式写入 `unarmedBasicAttackProfileId=basic_unarmed`；在 `Enemies.csv -> BuildEnemyTemplate -> Char_Enemy_enemy_shijiahou.asset` 单向链中使石甲兽显式引用同一 ID。不得在 `StartBattle` 或 `TryResolveBasicAttackProfile` 按调用场景、名称或空值补默认 ID。
+- 在 `SceneBuilder.BuildAdventureScene` 与生成的正式 `AdventureScene` 中显式绑定同一生成 asset，保证场景重建后 `ExplorationController.attackProfiles` 仍包含它；不建立 Resources 搜索、运行时 AssetDatabase 或第二目录。
+- 增加生产行逐字段投影、玩家/敌人绑定、场景引用、非法缺失/歧义/种类不符与正式接敌 PlayMode 用例；BattleSim 自测只证明 `basic_unarmed` 的迁移字段与 `GameData.UnarmedBasicAttack` 一致，不切换 BattleSim 生产消费者。
+- 把实际命令、测试数和任何既有无关失败写入新验证记录；业务完成后按外部交付边界转为 `codex_review/codex/ready`，由 Codex 独立复审。
+
+## 禁止项
+
+- 不新增武器、主战法宝、装备槽、第二基础攻击档案、术法/神通生产迁移、范围伤害、团队 AI 或冷却换算。
+- 不改变玩家、石甲兽属性、伤害公式、AI、CTB、寻路、掉落、悬赏奖励或经济参数；不把既有值迁移写成新的平衡结论。
+- 不读取测试 fixture、功法名、显示名、旧 Unity asset、构造器默认值或调用方常量作为生产回退；不允许两槽同时非空或空字符串代表已选择无装备。
+- 不把所有历史 `CharacterData` 批量补成同一普攻；本卡只覆盖当前正式新建玩家与 `enemy_shijiahou`。若严格导入被其他未迁移角色 asset 阻塞，按真实根因停止并交回 Codex，不放宽校验或批量越界迁移。
+
+## 验证
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`；记录当前完整输出，不以文本推断数值结论。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，覆盖生产行、导入、角色/敌人绑定、场景重建与失败关闭直接用例。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，覆盖正式 `guanzhong_wild` 接近石甲兽、建立会话及双方基础攻击。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests`。
+- 暂存前对本卡预期路径运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- `basic_unarmed` 的生产 CSV 行、语言键、生成 asset、玩家装配、石甲兽装配与场景引用逐项可追溯且只有一个参数权威；场景重建不丢失引用。
+- 正式关中野外接敌不再返回 `basic_attack_binding_missing_or_ambiguous`、`basic_attack_profile_not_found` 或 `basic_attack_profile_binding_kind_invalid`，双方可在相邻格消费同一档案完成基础攻击。
+- 合法生产链、坏数据失败关闭、BattleSim 字段一致性、EditMode 和 PlayMode 均有可重复证据；没有默认回退、第二数据源或范围外数值变化。
+
+## 停止条件
+
+- 任一必需统一档案字段无法从已批准值或统一契约唯一确定，或实现要求选择武器内容、第二攻击档案、不同敌人倍率、额外范围/元素/冷却语义时停止并交回 Codex。
+- 只能通过修改战斗消费者、放宽严格导入、运行时搜索 asset、读取 fixture、批量迁移范围外角色或建立第二数据源才能通过时停止，不叠加兼容补丁。

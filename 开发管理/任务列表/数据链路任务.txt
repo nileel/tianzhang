@@ -14,6 +14,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| D-COMBAT-PROD-01 | P1 | deepseek | 已排队 | — | 关中薄切片基础攻击生产迁移 | 开发管理/任务卡/D-COMBAT-PROD-01.txt |
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
 | D-FPD-MIGRATE-01A | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |
@@ -26,6 +27,7 @@
 
 - TQ-059 已固定：`realmReq`、`elementReq` 为 `runtime_gate`；术法／神通原 `affiliation` 已改名为 metadata-only 的 `sourceAffiliation`。
 - D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
+- `D-COMBAT-PROD-01` 只迁移用户批准的一个 `basic_unarmed` 生产档案，以 `GameData.UnarmedBasicAttack` 为数值输入并显式接入当前新建玩家、石甲兽和正式场景；不建立武器系统、第二档案或 fixture 回退。
 
 ## 筑基、紫府与丹相后续数据任务卡
 
