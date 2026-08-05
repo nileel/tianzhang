@@ -20,20 +20,6 @@ python 'C:\Users\WINDOWS\.codex\skills\.system\imagegen\scripts\remove_chroma_ke
 
 验收：输出必须为 RGBA PNG，四角 alpha 为 0；人物完整；没有背景、地面、投影或可见绿幕边。
 
-## 苻渊 / 坤元真君
-
-```text
-Use case: background-extraction
-Asset type: transparent-background full-body dialogue character portrait for a 2D xianxia tactics RPG
-Primary request: Generate one full-body standing portrait of 苻渊 / Fu Yuan / 坤元真君. Use the first no-title Fu Yuan portrait as the identity and style reference, but make this version a pure character cutout for dialogue use.
-Scene/backdrop: The source image must have a perfectly flat solid #00ff00 chroma-key background for background removal. The background must be one uniform color with no paper texture, no shadows, no gradients, no ink wash, no floor, no reflections, no contact shadow, and no lighting variation.
-Subject: A powerful older male xianxia cultivator, late seventies but imposing; broad shoulders, sturdy body, weathered calm face, white hair and beard after spiritual collapse, hair tied in a simple topknot. He wears one old black Daoist robe, worn and unornamented, with layered loose sleeves and a heavy grounded silhouette. No weapon and no external artifact. His robe may contain restrained cracked earth-vein ochre/gold lines as part of the clothing surface, not as background effects.
-Style/medium: Chinese xianxia ink-wash character art, expressive dry-brush black linework, hand-drawn sketch quality, semi-transparent watercolor washes inside the figure, low-saturation palette, elegant rough line economy, matching the first no-title portrait's watercolor and ink texture.
-Composition/framing: Tall vertical full-body portrait, centered calm three-quarter standing pose, feet visible, generous padding around the figure. Keep all visible marks attached to the character silhouette or clothing. No oversized ghost sketch behind him, no sweeping background brush arcs, no cracked ground plane, no smoke cloud, no halo.
-Color palette: black robe, charcoal ink, warm stone gray, muted ochre, dull antique gold, small restrained earth-yellow highlights. Do not use #00ff00 anywhere in the subject.
-Constraints: Pure character only for later transparent PNG cutout. Crisp readable silhouette. No readable text, no Chinese calligraphy, no title, no seal, no UI, no watermark, no logo, no modern elements, no photorealism, no 3D render, no elaborate armor, no sword, no staff, no background illustration.
-```
-
 ## 苻渊 / 含弘真君（黑白金站立对话版）
 
 ```text
