@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 于 2026-08-05 独立复审通过正式提交 ed9deec6a55a74db2c710ebcb5f6e5d13af3e9ff；任务归档并解除 01C 阻塞。",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/CharterSiteController.cs",
     "src/Assets/Scripts/Settlement/CharterSiteController.cs.meta",
@@ -106,3 +106,9 @@
 
 - 需要第二 Canvas／Settlement 场景、平行会话／存档、全局 UI 单例、控制器内规则复制、默认站点或修改 01A 契约时停止并回报。
 - 实施跨入 01C 环境投影、完整编辑器／地图／经济或未批准内容与表现资源时停止，不连续扩卡。
+
+## Codex 独立复审通过（2026-08-05）
+
+- 已核对正式提交 `ed9deec6a55a74db2c710ebcb5f6e5d13af3e9ff` 与批准规格、01A 运行时边界及正式场景序列化引用；站点入口只在正式关中据点按稳定 ID 解析，面板只消费 01A 动作／评估结果，正式状态仍只经 `GameSession.CommitCharterFormalResult` 写入。
+- 独立验证：`dotnet build src/TianZhang.EditModeTests.csproj` 以 0 错误、2 个既有 CS0649 警告通过；Unity EditMode 实际执行 400 项、398 项通过，新增 CharterSiteViewTests 7/7 与场景绑定用例通过，另有 2 项已登记且与本卡路径无关的既有基线失败。数据链、审核文本与提交差异检查均通过。
+- 结论：通过。归档本卡并解除 `U-TZ-CHARTER-SLICE-01C` 阻塞；环境投影与 asset 精确匹配仍严格留在 01C。

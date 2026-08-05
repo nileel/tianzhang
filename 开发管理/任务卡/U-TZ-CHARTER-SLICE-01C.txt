@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-TZ-CHARTER-SLICE-01B"
-  ],
-  "stateReason": "2026-08-04：批准规格已冻结职责和路径；当前只阻塞于直接前序 U-TZ-CHARTER-SLICE-01B，前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-05：直接前序 U-TZ-CHARTER-SLICE-01B 已经 Codex 独立复审通过并归档；本卡恢复 external_execute/deepseek/ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs",
     "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs.meta",
