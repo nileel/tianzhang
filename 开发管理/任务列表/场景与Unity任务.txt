@@ -12,17 +12,17 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-GZ-FORMAL-E2E-01 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-BOUNTY-01C） | — | 验证接取、冒险、击败、掉落、返回、领奖和保存／读取的正式闭环。 | — |
+| U-GZ-FORMAL-E2E-01 | P1 | deepseek | 已排队 | — | 关中正式接取至存档端到端闸门 | 开发管理/任务卡/U-GZ-FORMAL-E2E-01.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
 | U-MECH-02B / TQ-028 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-UI-01A、U-FPD-UI-01B） | — | 筑基、紫府与唯一丹相界面父任务；不直接执行。 | — |
 | U-FPD-UI-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
-| U-FPD-UI-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-FPD-UI-01A、N-SLOT-01、N-FPD-DANXIANG-01） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
+| U-FPD-UI-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-FPD-UI-01A） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
 | U-JD-RULE-01 | P2 | Codex | 阻塞（U-JD-RULE-01A、U-JD-RULE-01B、U-JD-RULE-01C） | — | 金丹 Unity 规则父任务；不直接执行。 | — |
-| U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01、N-FPD-DANXIANG-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
-| U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A、N-JD-RULE-01B） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
-| U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B、N-JD-RULE-01C） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
+| U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
+| U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
+| U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
 
 ## 执行边界
 
@@ -47,7 +47,7 @@
 
 - 父任务不直接进入队列；`U-FPD-UI-01A` 与 `U-FPD-UI-01B` 均完成后关闭。
 - `U-FPD-UI-01A` 只显示第一至第四阶段、天然／已释放／扩府／总容量、0～5 座紫府未建／府胚／建成、每府府体与镇府神通；只依赖已迁移的真实道基／紫府字段。
-- `U-FPD-UI-01B` 只显示结丹不可逆确认，以及一个丹枢核心／一个丹相中的 1～3 主承载与辅助输入；等待 01A、`N-SLOT-01` 和 `N-FPD-DANXIANG-01`。
+- `U-FPD-UI-01B` 只显示结丹不可逆确认，以及一个丹枢核心／一个丹相中的 1～3 主承载与辅助输入；`N-SLOT-01` 与 `N-FPD-DANXIANG-01` 已归档完成，当前只等待 01A。
 - 两个子任务都使用 2026-07-17 UI 规格，不复用未采纳样图布局；未知信息不泄露，第四、第五府可见但不生成额外位格、丹相或槽位。
 - 进入队列前分别扫描现有境界／角色 UI 所有者与直接 EditMode／PlayMode 测试，不从颜色、名称、静态图或假数据推断规则状态。
 

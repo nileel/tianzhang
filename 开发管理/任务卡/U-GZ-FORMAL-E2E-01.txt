@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-GZ-FORMAL-E2E-01",
+  "title": "关中正式接取至存档端到端闸门",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-05：U-BOUNTY-01C 已由 Codex 独立复审归档，原有唯一命名前置完成；既有正式框架已给出完整端到端闭环、验证与停止边界，现建立 P1 验证卡。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/SceneFlowManager.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Scripts/Settlement/BountyBoardView.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
+    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-FORMAL-E2E-01.txt",
+    "开发管理/任务归档/U-GZ-FORMAL-E2E-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-FORMAL-E2E-01 · 关中正式接取至存档端到端闸门
+
+## 来源与当前边界
+
+- `U-BOUNTY-01A`、`U-BOUNTY-01B` 与 `U-BOUNTY-01C` 已依次完成；`U-BOUNTY-01C` 于 2026-08-05 经 Codex 独立复审归档。它是本卡 backlog 投影中的唯一命名前置。
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md` 已锁定唯一生产闭环：`guanzhong_city` 接取 `bounty_guanzhong_shijiahou`，进入 `guanzhong_wild`，击败 `enemy_shijiahou`，获得普通掉落，返回关中城领取悬赏，保存并读取后仍为 `Claimed`。
+- 本卡只把已完成的城市、冒险、悬赏、背包、返回和 schema 3 保存链组合为可重复的端到端验证闸门。状态与库存仍只由现有 `GameSession` 所有，正式遭遇结算和返回仍只由 `AdventureSceneController` 与 `SceneFlowManager` 所有。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#6.2 城市场景`、`#6.3 怪物与战斗`、`#6.4 悬赏运行时`、`#6.5 背包原子提交`、`#七、悬赏状态与存档`、`#9.2 运行阶段`、`#十、验证矩阵`、`#十三、停止条件`。
+- `开发管理/关中悬赏状态机与计数验证记录.txt#U-BOUNTY-01B`、`#U-BOUNTY-01C` 与 `#后续`；`开发管理/任务归档/U-BOUNTY-01B.txt`、`开发管理/任务归档/U-BOUNTY-01C.txt`。
+- `src/Assets/Scripts/Game/GameSession.cs::AcceptBounty|RecordBountyDefeat|ClaimBounty|CaptureSaveData|RestoreSaveData`、`src/Assets/Scripts/Game/SceneFlowManager.cs::PrepareSettlementEntry|PrepareAdventureEntry|PrepareReturnToPreviousScene`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::ResolveEncounterAndReturn|ConsumeFormalEncounterResult`、`src/Assets/Scripts/Settlement/BountyBoardView.cs::Show|SubmitAccept|SubmitClaim`。
+- `src/Assets/Tests/EditMode/BountyBoardViewTests.cs`、`src/Assets/Tests/EditMode/TacticalGridModelTests.cs::AdventureSceneControllerTests`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs` 与现有生产目录及场景引用。
+
+## 实施范围
+
+- 新增一个直接 EditMode 端到端用例，按唯一生产 ID 完整驱动接取、正式 Adventure 胜利结算、普通掉落、据点返回、领奖、保存和恢复；断言恢复后悬赏仍为 `Claimed`、普通掉落与悬赏奖励各只授予一次，且当前据点／冒险返回上下文符合现行链路。
+- 用同一用例证明失败关闭：非生产或缺失的敌人、掉落、目录、悬赏引用或非法保存输入不得伪造胜利、掉落、进度、领取或恢复结果。直接修复该用例暴露的根因时，只可修改 `GameSession`、`SceneFlowManager`、`AdventureSceneController` 或 `BountyBoardView` 中相应的现有所有者。
+- 把实际命令、直接用例结果及任何登记的无关基线失败写入既有悬赏验证记录；不得把端到端通过误写为数值、内容或美术授权。
+
+## 禁止项
+
+- 不新增或修改城市、怪物、悬赏、物品、掉落参数、CSV、Language、asset、内容范围、数值、经济、第二据点、第二 Canvas、服务器、场景、会话、存档格式或全局状态所有者。
+- 不重写 `BountyRuntime`、`BountyStateStore`、schema 3、战斗规则、AI、CTB、伤害、冷却、槽位、寻路或正式目录；不以测试 fixture、默认 ID、fallback 敌人或手工状态注入冒充正式闭环。
+- 若根因不在本卡列出的现有所有者，或修复需要扩展授权路径、数据语义、存档 schema、场景边界或数值，停止并交回 Codex，不添加兼容分支或平行机制。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`，确认新的端到端用例、`BountyBoardViewTests`、`BountyRuntimeTests`、`AdventureSceneControllerTests` 与 `SessionStateSnapshotTests` 直接用例通过；全量已有无关基线失败逐项记录，不掩盖。
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 同一 `GameSession` 经正式入口完成唯一生产链，悬赏状态依次为 `Available`、`Accepted`、`ObjectiveCompleted`、`Claimed`；普通掉落和悬赏奖励各只提交一次，保存／读取后 `Claimed`、库存、据点与返回事实无损保留。
+- 所有非法或缺失输入保持失败关闭，不新增第二所有者或跨出预期路径；证据明确区分本卡直接结果和既有无关基线失败。
+
+## 停止条件
+
+- 需要修改生产内容、掉落／奖励数值、CSV／asset、schema、场景结构、第二存档／会话／Canvas／服务或任一未列出的所有者时停止并交回 Codex。
+- 无法通过真实生产 ID、实际目录和现有场景／会话链形成完整证据，或必须依赖默认值、手工注入状态、旧原型 fallback、静默恢复或重复结算时停止并保持本卡非完成。
