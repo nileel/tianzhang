@@ -1,15 +1,15 @@
 # 册界单据点站点数据验证记录
 
-任务：`D-TZ-CHARTER-SITE-01`（旧水驿最小站点数据契约；candidate，返工后待 Codex 独立复审）
+任务：`D-TZ-CHARTER-SITE-01`（旧水驿最小站点数据契约；已通过 Codex 独立复审并归档）
 修改方：DeepSeek V4 Flash
 RunId：`f21b28c4-2a3b-4a26-87c5-f706cca51e9c`
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：CharterSites.csv、Language.csv、
+审核完成；修改方：DeepSeek V4 Flash；Codex 复审通过的正式提交：
+`0fc31e7e561150ee206412faccd9944ba41f08fd`。业务变更范围：CharterSites.csv、Language.csv、
 DataConfig/README.txt、CharterSiteData.cs、ContentCatalogData.cs、DataConfigImporter.cs、
-CharterSites.meta、CharterSite_charter_site_old_water_station.asset 及 .meta、
-ContentCatalog.asset、CharterSiteDataTests.cs、check-data-chain.ps1、
-check-data-chain-tests.ps1、本验证记录、任务列表/场景与Unity任务.txt、
-任务卡/U-TZ-CHARTER-SLICE-01A.txt。
+CharterSites.meta、CharterSite_charter_site_old_water_station.asset 及 .meta、ContentCatalog.asset、
+CharterSiteDataTests.cs、check-data-chain.ps1、check-data-chain-tests.ps1、本验证记录、
+任务列表/场景与Unity任务.txt、任务卡/U-TZ-CHARTER-SLICE-01A.txt。
 
 本轮为 Codex 复审返工（DEC-20260805-REV1EE4D2C25998 选择 DeepSeek），返工仅修改
 check-data-chain-tests.ps1 的有效 fixture 嵌套与更新本验证记录，其余实现范围同上。
@@ -130,3 +130,8 @@ check-data-chain-tests.ps1 的有效 fixture 嵌套与更新本验证记录，�
     转换后 `codex_review/codex/ready`），须由共享 Windows 入口在正式提交中原子转换后复跑。
 - 返工残留风险：与首轮一致（见上），另维持 `CharterSites.csv.meta` 授权路径缺口说明；返工
   仅改测试 fixture，生产数据链、asset 与导入器均未触碰。
+
+## Codex 独立复审结论（2026-08-05）
+
+- 结论：通过。复审确认有效 fixture 的 `grantId` 已在 `jindanGrant` 块内四级缩进，和生产 asset 的序列化结构一致；没有放宽 checker 或以默认值掩盖问题。
+- 独立验证：`check-data-chain-tests.ps1` 14/14 PASS；`check-data-chain.ps1` OK；`check-review-text.ps1` OK（667 文件）；Unity EditMode 的 `CharterSiteDataTests` 37/37 PASS。全量 EditMode 的两项既有、无关基线失败仍存在；本 worktree 无 `src/TianZhang.EditModeTests.csproj`，无法执行该 dotnet build 命令。

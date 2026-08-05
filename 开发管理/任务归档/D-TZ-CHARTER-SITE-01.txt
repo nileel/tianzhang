@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-05：Codex 已复审返工后的正式提交 0fc31e7e561150ee206412faccd9944ba41f08fd 并通过；数据链检查 fixture 已与生产 asset 嵌套序列化一致，直接后继 U-TZ-CHARTER-SLICE-01A 已解除阻塞。",
   "expectedPaths": [
     "src/Assets/DataConfig/CharterSites.csv",
     "src/Assets/DataConfig/Language.csv",
@@ -119,3 +119,9 @@
 - 已复审正式业务提交 `2d401d4bc4e3eaa36390bd102a2c2e752c73aa9a` 的限定 diff、生产 CSV／asset／目录引用和 shared 决定调用；未发现越过本卡边界的运行时、保存、场景、UI、BattleSim 或数值改动。生产 `check-data-chain.ps1` 通过，Unity EditMode 为 378 项中 376 通过；两项失败均为已登记且不在本卡路径的既有基线，新增 `CharterSiteDataTests` 未出现在失败结果中。
 - 未通过项：任务要求的 `tools/tests/check-data-chain-tests.ps1` 在“valid fixture”即失败。其 fixture 把 `grantId` 写成站点顶层的两级缩进，而正式 `CharterSiteData` asset 把该字段序列化为 `jindanGrant` 下的四级缩进；因此 checker 正确报告 `CHARTER_SITE_ASSET_FIELD_MISMATCH`，测试未能验证自身的有效基线。`dotnet build src/TianZhang.EditModeTests.csproj` 也无法运行，因为该项目文件不在本 worktree。
 - 返工必须只修正 checker 测试 fixture 的嵌套 `jindanGrant.grantId` 序列化，并重跑该测试、数据链检查、Unity EditMode 与可用的编译闸门；不得通过放宽生产 checker、扁平化生产 asset 或跳过验证掩盖问题。任务保持 `blocked`，01A 继续阻塞。
+
+## Codex 独立复审通过（2026-08-05）
+
+- 已复审返工后的正式提交 `0fc31e7e561150ee206412faccd9944ba41f08fd`。修复只把 checker 的有效 fixture 改为与生产 asset 相同的 `jindanGrant.grantId` 四级嵌套；未放宽生产 checker、未改写生产 asset，也未触及运行时、保存、场景、UI、BattleSim 或数值边界。
+- 独立验证：`check-data-chain-tests.ps1` 14/14 通过且 valid fixture 首项通过；`check-data-chain.ps1` 通过；`check-review-text.ps1` 通过（667 文件）；`git diff --check` 通过。Unity EditMode 实际执行 378 项、376 通过，`CharterSiteDataTests` 37/37 通过；仅余两项已登记且不在本卡路径的既有基线失败。`dotnet build src/TianZhang.EditModeTests.csproj` 不可运行，因为 worktree 中不存在该项目文件。
+- 结论：通过。任务归档，直接后继 `U-TZ-CHARTER-SLICE-01A` 已解除 `D-TZ-CHARTER-SITE-01` 阻塞并恢复 `external_execute/deepseek/ready`。

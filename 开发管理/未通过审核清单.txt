@@ -5,9 +5,3 @@
 记录当前仍未通过、已返工待复核或必须由 `2` 流程处理的审核项。历史审核过程已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
 
 ## 当前未通过/待复核项
-
-### D-TZ-CHARTER-SITE-01 · 旧水驿最小站点数据契约
-
-- 审核对象：正式提交 `2d401d4bc4e3eaa36390bd102a2c2e752c73aa9a`；结论：部分通过，仍需返工。
-- 根因：`tools/tests/check-data-chain-tests.ps1` 的有效 fixture 将 `grantId` 写在站点顶层；生产 asset 实际将其序列化在 `jindanGrant` 下。测试因此在有效基线得到 `CHARTER_SITE_ASSET_FIELD_MISMATCH`，无法证明数据链检查器的测试套件有效。
-- 返工范围：仅把 fixture 改为与 `CharterSiteData` 的嵌套序列化一致，并重跑 `check-data-chain-tests`、`check-data-chain`、Unity EditMode 和可用的编译闸门；不得放宽 checker 或改写生产 asset 规避失败。
