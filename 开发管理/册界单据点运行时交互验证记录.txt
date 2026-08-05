@@ -140,3 +140,9 @@ RunId：`ae57896a-11e9-4424-9a88-3e9ce85d7c75`（实施轮）；定向返工轮
 - 残留风险：重复 ID 拒绝与第二次提交拒绝的消费方（01B UI）尚未实施；既有 2 项基线失败
   （PULSE 断言、LogAssert 期望）仍由其所有者任务处理；`dotnet build` 依赖 Unity 生成的
   gitignore csproj，全新 worktree 未运行 Unity 前仍不可直接执行。
+
+## Codex 独立复审通过（2026-08-05）
+
+- 复审正式提交 `6cc2a04b5d4ac8079219d4a24863aa002046cf71` 相对 `b41f3ff` 的限定 diff：`InvokeCharterFormal` 只把会话当前 `CharterRuntimeState` 交给 `EvaluateFormal`，`CommitCharterFormalResult` 对已有长期状态的第二个成功 `NextState` 稳定返回 `charter_commit_already_committed`，`SameIdSet` 拒绝左侧重复 ID。未修改 shared 规则、保存 schema、站点数据、UI、场景、BattleSim 或数值。
+- 独立验证：`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 错误、2 个既有 CS0649 警告）；`tools/run-unity-editmode-tests.ps1` 执行 391 项、389 项通过。9 项 `CharterSiteInteractionRuntimeTests` 与 `CharterSecondCandidateRebootstrapCannotCommitAfterFirstSuccess` 均通过；失败仅为已登记且无路径交集的 PULSE 断言和 LogAssert 基线。
+- 结论：通过。01A 归档，01B 解除阻塞并转为 `external_execute/deepseek/ready`。

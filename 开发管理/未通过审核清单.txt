@@ -6,16 +6,4 @@
 
 ## 当前未通过/待复核项
 
-### U-TZ-CHARTER-SLICE-01A · 会话交互桥与原子提交
-
-- 审核对象：正式提交 `2573431911967bc79069ab813d60c0c8aa22c183`；结论：部分通过，仍需返工。
-- 问题：已有 `GameSession.CharterRuntimeState` 后，调用方仍可把 null 传给 `EvaluateFormal` 以 candidate 重自举；`CommitCharterFormalResult` 仍接受第二个成功 `NextState`。临时 EditMode 反例确认第二次提交实际返回成功。`SameIdSet` 也未拒绝左侧重复 ID，可能错误推进节点、授权或供给证明。
-- 返工：仅在 `CharterSiteInteractionRuntime`、`GameSession` 与直接 EditMode 测试中把正式调用与会话当前状态绑定、拒绝第二次 candidate 重自举提交，并严格拒绝三类输入集合重复 ID；不修改 shared 规则、保存 schema、站点数据、UI、场景、BattleSim 或数值。
-- 复核：运行直接新反例与 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；`dotnet build src/TianZhang.EditModeTests.csproj` 继续因项目文件缺失而不可运行，需如实记录。
-
-### U-TZ-CHARTER-SLICE-01A · 会话交互桥与原子提交（2026-08-05 返工完成，待复核）
-
-- 返工对象：DeepSeek 按同一任务卡与未通过清单完成的定向返工；候选形成后由共享入口转 `codex_review/codex/ready` 交 Codex 独立复核。
-- 返工内容：`GameSession` 新增唯一正式调用入口 `InvokeCharterFormal`，正式调用与 `CharterRuntimeState` 绑定，已有长期状态只能消费该状态、candidate 不再重自举；`CommitCharterFormalResult` 在已有长期状态时以新稳定原因 `charter_commit_already_committed` 拒绝第二次成功提交，原实例内容不变；`CharterSiteInteractionRuntime.SameIdSet` 严格拒绝左侧重复 ID，重复节点／授权／供给均失败关闭且不推进。
-- 验证（DeepSeek 已运行）：Unity EditMode 全量执行与直接反例（第二次 candidate 重自举提交拒绝、会话绑定入口失败关闭、三类动作集合重复 ID 拒绝）的实际结果见 `开发管理/册界单据点运行时交互验证记录.txt` 的「定向返工」；`check-review-text`、`check-pending-whitespace` 与 `git diff --cached --check` 结果同记录。
-- 待复核：Codex 独立复核返工 diff 与直接反例后更新本条状态；复核通过前任务保持 blocked，`U-TZ-CHARTER-SLICE-01B` 继续阻塞。
+当前无待复核项。

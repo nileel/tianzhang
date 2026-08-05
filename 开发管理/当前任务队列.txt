@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-TZ-CHARTER-SLICE-01A | codex_review | codex | P1 | unity | implementation | 会话交互桥与原子提交 | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01A.txt |
+| U-TZ-CHARTER-SLICE-01B | external_execute | deepseek | P1 | unity | implementation | Settlement 单据点交互与最小 UI | 开发管理/任务卡/U-TZ-CHARTER-SLICE-01B.txt |

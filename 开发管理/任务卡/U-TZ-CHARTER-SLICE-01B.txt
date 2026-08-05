@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-TZ-CHARTER-SLICE-01A"
-  ],
-  "stateReason": "2026-08-05：批准规格已冻结职责和路径；直接前序 U-TZ-CHARTER-SLICE-01A 于 2026-08-05 复审部分通过并定向返工中（见未通过审核清单），前序完成并通过 Codex 独立复审后才可转为 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-05：直接前序 U-TZ-CHARTER-SLICE-01A 已经 Codex 独立复审通过并归档；本卡恢复 external_execute/deepseek/ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Settlement/CharterSiteController.cs",
     "src/Assets/Scripts/Settlement/CharterSiteController.cs.meta",
