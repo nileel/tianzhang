@@ -3,9 +3,9 @@
 任务：`U-TZ-CHARTER-SLICE-01D`（单据点端到端闸门）
 修改方：DeepSeek V4 Flash
 RunId：`34430243-527a-4e4d-8f85-ecd3537b2f6c`
-审核状态：Codex 于 2026-08-05 独立复审部分通过，任务保持 blocked；本轮已按返工范围补齐
-`CharterRuntimeStateData` 完整深比较与两处重复消费失败节点的独立前态副本内容比较，
-PlayMode 复跑 2/2 通过；待 Codex 独立复审。
+审核状态：Codex 于 2026-08-05 独立复审通过正式提交 `c35bab65a336fbc2ec816b5c14b20b84a391a0d2`；
+返工已补齐 `CharterRuntimeStateData` 完整深比较与两处重复消费失败节点的独立前态副本内容比较，
+本轮独立 PlayMode 复跑通过；任务与单据点汇总父项已关闭。
 
 ## 实施结论
 
@@ -49,8 +49,8 @@ PlayMode 复跑 2/2 通过；待 Codex 独立复审。
   受保护工作区快照与恢复、结果 XML 实时校验、`-ValidateResultOnly`、失败传播非零退出码；
   `-testPlatform PlayMode`）与 `tools/test-run-unity-playmode-tests.ps1` 自测（不起动
   Unity，覆盖参数校验、退出码与失败传播）。
-- 未通过审核清单保留 `U-TZ-CHARTER-SLICE-01D` 返工条目（由审核方在复审后按审核入口
-  更新）；`开发管理/设计-当前状态.txt` 已按返工后证据收口（见下方「状态收口」）。
+- Codex 已独立复审通过返工结果，返工清单条目和已消费交接已清理；`开发管理/设计-当前状态.txt`
+  已按通过结论收口（见下方「状态收口」）。
 
 ## 返工（2026-08-05，Codex 部分通过后）
 
@@ -118,15 +118,13 @@ PlayMode 复跑 2/2 通过；待 Codex 独立复审。
   `开发管理/册界单据点站点数据验证记录.txt` 与 `2d401d4` 提交消息）；已按既有模式删除
   该未跟踪文件以保持候选现场干净，缺口仍由共享入口／Codex 复审按站点卡既有登记处理，
   不属于 01D 路径。
-- 关本卡与汇总父项 `U-TZ-CHARTER-SLICE-01` 必须以 Codex 独立复审通过为前提，本卡不自行
-  关闭父项。
+- 本卡与汇总父项 `U-TZ-CHARTER-SLICE-01` 已在 Codex 独立复审通过后关闭；完整 M7 其余九条
+  内容与地区分布继续冻结。
 
 ## 状态收口
 
 - `开发管理/设计-当前状态.txt`：「CSV／运行时／保存／UI」行与「当前风险与下一步」第 7 条
-  已更新为返工后已验证事实：schema 4 保存链已含册界长期状态；单据点已接入正式
+  已更新为通过后的已验证事实：schema 4 保存链已含册界长期状态；单据点已接入正式
   SettlementScene 面板、`GameSession` 唯一提交入口与正式 AdventureScene 的
-  `env_guanzhong_wild` 环境反馈；01D 已补齐完整状态深比较与失败前态内容比较，PlayMode
-  复跑 2/2 通过（待 Codex 独立复审）；完整 M7 其余九条内容继续冻结。
-- 未通过审核清单：保留 `U-TZ-CHARTER-SLICE-01D` 返工条目，由 Codex 复审后按审核入口
-  更新。
+  `env_guanzhong_wild` 环境反馈；01D 完整深比较与失败前态内容比较经独立复审通过，汇总父项
+  已关闭；完整 M7 其余九条内容继续冻结。

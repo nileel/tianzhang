@@ -17,7 +17,7 @@
 | 三项核心遗产 | 审核完成 | 《开阖九章》只负责通行，太玄界印只负责归属与行政权限，《册界天章》只负责已登记规则的地区调衡；三者格式、边界和组合场景已写入事实源。 | 未生成可收集册界条目、掉落、任务链、数据或可玩交互。 |
 | 册界规则结构 | 审核完成 | 规则字段、节点范围、授权、现实支点、原子生态包、代价、事务提交及金丹／元婴冲突边界已建立，并复用现有山河节点与确定性冲突语义。 | 完整 M7 的十条内容与地区分布未生产；水府地纪叶子已获专项授权。 |
 | 册界条目内容 | ❌ 未接入 | 未执行完整 M7，没有批量册界条目或正式地区分布表。 | 只允许生产水府地纪作为 M8 最小前置；其余九条继续冻结。 |
-| CSV／运行时／保存／UI | ⚠️ 部分接入 | `D-TZ-CHARTER-SCHEMA-01`、`D-TZ-CHARTER-SAMPLE-01`、`D-TZ-CHARTER-CONFLICT-02` 与 `U-TZ-CHARTER-MODEL-01` 已完成（水府地纪唯一生产样例、shared 冲突契约与纯规则模型）；`D-TZ-CHARTER-SITE-01` 已建立唯一旧水驿站点契约与只读目录；`U-TZ-CHARTER-SLICE-01A/01B/01C` 已完成：五类临时证明与唯一 candidate 入口、`GameSession.CommitCharterFormalResult` 唯一原子提交、schema 4 保存链含册界长期状态、正式 SettlementScene 单据点面板、正式 AdventureScene 对已生效水府地纪的 `env_guanzhong_wild` 环境反馈。01D 的正式场景 PlayMode runner 实际执行 2/2 通过；返工已把保存读取与重复消费断言升级为 `CharterRuntimeStateData` 全部标量、字符串集合与记录内容的逐项深比较（两处失败节点保留独立前态副本），复跑 2/2 通过。 | 完整 M7 的十条内容与地区分布未生产；水府地纪是唯一生产样例。01D 深比较返工已完成、仍待 Codex 独立复审；本卡通过前不得关闭单据点汇总父项 `U-TZ-CHARTER-SLICE-01`，其余九条 M7 内容继续冻结。 |
+| CSV／运行时／保存／UI | ⚠️ 部分接入 | `D-TZ-CHARTER-SCHEMA-01`、`D-TZ-CHARTER-SAMPLE-01`、`D-TZ-CHARTER-CONFLICT-02` 与 `U-TZ-CHARTER-MODEL-01` 已完成（水府地纪唯一生产样例、shared 冲突契约与纯规则模型）；`D-TZ-CHARTER-SITE-01` 已建立唯一旧水驿站点契约与只读目录；`U-TZ-CHARTER-SLICE-01A/01B/01C` 已完成：五类临时证明与唯一 candidate 入口、`GameSession.CommitCharterFormalResult` 唯一原子提交、schema 4 保存链含册界长期状态、正式 SettlementScene 单据点面板、正式 AdventureScene 对已生效水府地纪的 `env_guanzhong_wild` 环境反馈。01D 的正式场景 PlayMode runner 已独立复审通过；保存读取与重复消费断言逐项深比较 `CharterRuntimeStateData` 全部标量、字符串集合与记录内容，两处失败节点保留独立前态副本。 | 完整 M7 的十条内容与地区分布未生产；水府地纪是唯一生产样例。单据点汇总父项 `U-TZ-CHARTER-SLICE-01` 已关闭，其余九条 M7 内容继续冻结。 |
 | 数值与经济验证 | 不适用本轮 | 本轮是叙事与规则结构迁移；未修改 BattleSim、CSV、Unity 参数或现有经济表，未声称任何新强度、产出或胜率结论。昆仑残片旧突破加成已作为无效设定承诺删除，不是数值调优。 | M7/M8 若引入倍率、渡劫概率、资源产出或经济效果，必须另行运行 BattleSim 或经济验证。 |
 
 ## 可信度闸门
@@ -77,7 +77,7 @@
 4. 金丹新规则进入运行时前，必须先关闭 schema、有效样例、BattleSim、Unity 与数据导入的对应任务；不得把文档口径当作已实现功能。
 5. `C-JD-LORE-MIGRATE-01` 剩余范围完成前，未在 2026-07-22 联合复核清单内的旧道路、旧矩阵或源/化/界表达不得视为现行金丹事实。
 6. 道基四阶段名称、一级属性重分配、扩府道具内容和槽位预算未锁定；道基核心曲线、五府府体效果与养基／筑府周期参数已验证。旧五段 BattleSim/Unity 数值只能作为实现迁移证据，不能直接平均拆分或改名沿用。
-7. 册界单据点切片已接入：正式 SettlementScene 单据点面板 → `GameSession` 唯一提交入口 → schema 4 保存链 → 正式 AdventureScene 对已生效水府地纪的 `env_guanzhong_wild` 环境反馈。01D PlayMode runner 在正式场景十步流程 2/2 通过；Codex 复审指出的保存读取与重复消费深比较缺口已返工补齐（逐项比较全部标量、字符串集合与记录内容，失败节点保留独立前态副本），复跑 2/2 通过，01D 仍保持 blocked 待 Codex 独立复审，汇总父项不得关闭。完整 M7 其余九条内容与地区分布仍未生产，未授权内容不得表述为已可收集、已可调用或已影响地区表现。
+7. 册界单据点切片已接入：正式 SettlementScene 单据点面板 → `GameSession` 唯一提交入口 → schema 4 保存链 → 正式 AdventureScene 对已生效水府地纪的 `env_guanzhong_wild` 环境反馈。01D PlayMode runner 在正式场景十步流程已独立复审通过；保存读取与重复消费逐项深比较全部标量、字符串集合与记录内容，失败节点保留独立前态副本，汇总父项已关闭。完整 M7 其余九条内容与地区分布仍未生产，未授权内容不得表述为已可收集、已可调用或已影响地区表现。
 
 ## 归档
 

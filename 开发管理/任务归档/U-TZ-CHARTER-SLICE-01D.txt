@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 于 2026-08-05 独立复审通过正式提交 c35bab65a336fbc2ec816b5c14b20b84a391a0d2；任务归档并关闭单据点汇总父项 U-TZ-CHARTER-SLICE-01。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode.meta",
     "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
@@ -108,3 +108,9 @@
 - 审核正式提交 `8e73184ebd43747c03d287a1b24b7b520224803b`：正式场景流程、PlayMode asmdef、runner 和命令入口均在批准路径内，实际 PlayMode 2/2 通过，runner 自测 11 项 PASS。
 - 阻断问题：`AssertCharterStateEquivalent` 只比较两个字符串数组内容，其余动态记录仅比较长度；两处重复消费失败节点只用 `Assert.AreSame` 检查同一引用。`CharterRuntimeStateData` 还包含遗物、界印、节点、授权、覆盖、占用、供给及正负提交记录，因此等长或原地修改的错误状态会通过现有闸门，未满足读档一致与失败不变的直接证据要求。
 - 结论：部分通过，仍需返工。只补足 01D PlayMode 的完整深比较和失败前态比较后重新复审；本卡与汇总父项 `U-TZ-CHARTER-SLICE-01` 均不得关闭。
+
+## Codex 独立复审通过（2026-08-05）
+
+- 已核对正式提交 `c35bab65a336fbc2ec816b5c14b20b84a391a0d2`、批准规格、`CharterRuntimeStateData` 的全部字段和 `CreateCopy()` 深复制语义：读档比较已逐项覆盖全部标量、字符串集合与记录字段，两处重复消费失败节点均以独立前态副本比较完整内容，未改写业务所有者或复制业务规则。
+- 独立验证：`tools/test-run-unity-playmode-tests.ps1` 11 项 PASS；`tools/run-unity-playmode-tests.ps1` 返回 0 且结果 XML 完整通过；`check-data-chain`、`check-review-text` 与目标提交的空白差异检查均通过。
+- 结论：通过。归档本卡、清理已消费交接和返工清单条目，并关闭汇总父项 `U-TZ-CHARTER-SLICE-01`；完整 M7 其余九条内容继续冻结。
