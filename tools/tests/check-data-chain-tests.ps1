@@ -59,7 +59,8 @@ function New-ValidFixture {
   settlementId: guanzhong_city
   passageCapabilityId: capability_kaihe_jiuzhang_v1
   interactionTimeProfileId: interaction_time_old_water_station_gate_v1
-  grantId: cross_tier_charter_water_basin_v1
+  jindanGrant:
+    grantId: cross_tier_charter_water_basin_v1
   charterCandidateId: jindan_right
 '@
     Write-FixtureFile 'src/Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset.meta' @'

@@ -14,7 +14,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| D-TZ-CHARTER-SITE-01 | P1 | deepseek | 已排队 | — | 旧水驿最小站点数据契约 | 开发管理/任务卡/D-TZ-CHARTER-SITE-01.txt |
+| D-TZ-CHARTER-SITE-01 | P1 | codex | 已排队 | — | 旧水驿最小站点数据契约 | 开发管理/任务卡/D-TZ-CHARTER-SITE-01.txt |
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
 | D-FPD-MIGRATE-01A | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |

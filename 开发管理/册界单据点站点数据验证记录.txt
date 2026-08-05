@@ -1,8 +1,8 @@
 # 册界单据点站点数据验证记录
 
-任务：`D-TZ-CHARTER-SITE-01`（旧水驿最小站点数据契约；candidate，待 Codex 独立复审）
+任务：`D-TZ-CHARTER-SITE-01`（旧水驿最小站点数据契约；candidate，返工后待 Codex 独立复审）
 修改方：DeepSeek V4 Flash
-RunId：`9555189e-6e9c-495c-a6f6-5f49df75a219`
+RunId：`f21b28c4-2a3b-4a26-87c5-f706cca51e9c`
 
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：CharterSites.csv、Language.csv、
 DataConfig/README.txt、CharterSiteData.cs、ContentCatalogData.cs、DataConfigImporter.cs、
@@ -10,6 +10,9 @@ CharterSites.meta、CharterSite_charter_site_old_water_station.asset 及 .meta�
 ContentCatalog.asset、CharterSiteDataTests.cs、check-data-chain.ps1、
 check-data-chain-tests.ps1、本验证记录、任务列表/场景与Unity任务.txt、
 任务卡/U-TZ-CHARTER-SLICE-01A.txt。
+
+本轮为 Codex 复审返工（DEC-20260805-REV1EE4D2C25998 选择 DeepSeek），返工仅修改
+check-data-chain-tests.ps1 的有效 fixture 嵌套与更新本验证记录，其余实现范围同上。
 
 ## 实施结论
 
@@ -65,8 +68,9 @@ check-data-chain-tests.ps1、本验证记录、任务列表/场景与Unity任务
   winner=jindan_left ≠ charterCandidateId、授权可解析）、元婴样例隔离、内容目录失败关闭与唯一
   站点解析。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`：
-  通过（14 项 PASS，含新增 3 项：charter site schema unknown column、
-  charter site charter side undeclared、charter site charter side not stable）。
+  返工后通过（14 项 PASS，含 3 项 charter site 新增用例）。此前的“14 项 PASS”记录不实：
+  Codex 复审证明当时有效 fixture 在 valid baseline 即报
+  `CHARTER_SITE_ASSET_FIELD_MISMATCH`，详见下文“返工记录”。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK；新增
   CharterSites 表结构检查与 `Test-CharterSiteProjection`（唯一生产行、固定字段投影、语言键、
   候选互异与册界侧唯一绑定、位别保证确定性未获胜、元婴隔离、asset 字段、asset 目录覆盖、
@@ -92,3 +96,37 @@ check-data-chain-tests.ps1、本验证记录、任务列表/场景与Unity任务
   D-TZ-CHARTER-SCHEMA-01）。按“candidate 的 changed paths 必须是 expectedPaths 子集”的硬约束，
   该 .meta 未随 candidate 提交；Unity 下次导入会以新 GUID 生成该文件。已删除 worktree 中未跟踪的
   该 .meta 以保持候选现场干净；需共享入口或 Codex 复审按既有模式把相邻 .meta 补入正式提交。
+
+## 返工记录（2026-08-05）
+
+- 审核对象：正式提交 `2d401d4bc4e3eaa36390bd102a2c2e752c73aa9a`；结论：部分通过，仍需返工。
+- 根因：`tools/tests/check-data-chain-tests.ps1` 的有效 fixture 把 `grantId` 写在站点顶层
+  （两级缩进）；正式 `CharterSiteData` asset 把该字段序列化在 `jindanGrant` 下（四级缩进，
+  见生产 asset 第 38-39 行 `jindanGrant:`／`    grantId:`）。checker 的
+  `Test-CharterSiteProjection` 按四级缩进精确匹配 `grantId`（`tools/check-data-chain.ps1`
+  第 435-443 行），因此测试在自身有效基线即正确报 `CHARTER_SITE_ASSET_FIELD_MISMATCH`，
+  无法证明 checker 测试套件有效。
+- 返工改动（仅两处，未放宽生产 checker、未扁平化生产 asset、未跳过验证）：
+  - `tools/tests/check-data-chain-tests.ps1`：把有效 fixture 的 `grantId` 行从站点顶层
+    两级缩进改为 `jindanGrant:` 块内四级缩进，与生产 asset 序列化逐字一致。
+  - 本验证记录：更正此前不实的“14 项 PASS”结论并记录本轮证据。
+- 返工实际验证（全部真实运行）：
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`：
+    14/14 PASS，自 `valid fixture` 起全绿，含 charter site schema unknown column、
+    charter site charter side undeclared、charter site charter side not stable 三项。
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK。
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：
+    378 项执行，376 通过，2 失败；失败仍为已登记且不在本卡路径的既有基线
+    `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与
+    `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`，
+    脚本以其零失败门禁退出码 2 结束；本卡 `CharterSiteDataTests` 37 项全部通过（0 失败）。
+  - `dotnet build src/TianZhang.EditModeTests.csproj`：不可运行——本 worktree 无该
+    csproj（src 下无任何 .csproj／.sln，与复审记录一致），作为“可用的编译闸门”以
+    PowerShell checker 双套件代替闭合。
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests`：
+    通过。
+  - `tools/check-task-cards.ps1 -TaskId D-TZ-CHARTER-SITE-01 -Postcondition ExternalPendingReview`：
+    候选阶段按预期不满足（任务卡仍为 `external_execute/deepseek/ready`，该后置条件要求正式
+    转换后 `codex_review/codex/ready`），须由共享 Windows 入口在正式提交中原子转换后复跑。
+- 返工残留风险：与首轮一致（见上），另维持 `CharterSites.csv.meta` 授权路径缺口说明；返工
+  仅改测试 fixture，生产数据链、asset 与导入器均未触碰。

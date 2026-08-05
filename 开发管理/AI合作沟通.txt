@@ -153,3 +153,16 @@
 - 残留风险：返工后正式提交仍需 Codex 独立复审（外部责任方不自审）；若复审要求成功结果区显示语义化提示而非清空，需再做窄幅返工。既有 2 项无关 EditMode 基线失败与 2 项无关构建警告继续存在。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-D-TZ-CHARTER-SITE-01-f21b28c4 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 D-TZ-CHARTER-SITE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：D-TZ-CHARTER-SITE-01
+- 候选提交：6c3a7165e14f53076b6842cf0697bdd297de9b29
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/册界单据点站点数据验证记录.txt、tools/tests/check-data-chain-tests.ps1
+- 已验证：pwsh tools/tests/check-data-chain-tests.ps1：14/14 PASS，自 valid fixture 起全绿（此前失败门禁，现已真实通过）；pwsh tools/check-data-chain.ps1：OK；pwsh tools/run-unity-editmode-tests.ps1：378 项执行 376 通过 2 失败，失败均为已登记且不在本卡路径的既有基线，CharterSiteDataTests 37/37 通过；pwsh tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests：OK（667 文件）；tools/check-pending-whitespace.ps1：OK（2 文件，直接运行且 finalizer 内复跑）；git diff --cached --check：由 automation-finalize-commit.ps1 暂存后执行通过；candidate 提交仅含 CandidatePaths 内 2 个变化路径，提交后 worktree 干净
+- 未验证：dotnet build src/TianZhang.EditModeTests.csproj：本 worktree 无该 csproj（src 下无任何 .csproj/.sln），不可运行，与复审记录一致；tools/check-task-cards.ps1 -TaskId D-TZ-CHARTER-SITE-01 -Postcondition ExternalPendingReview：候选阶段任务卡仍为 external_execute/deepseek/ready，按预期不满足（exit 1），须由共享 Windows 入口在正式提交原子转换后复跑
+- 残留风险：CharterSites.csv.meta 授权路径缺口仍在：预期路径未列相邻 .meta，candidate 不含该文件；Unity EditMode 运行已重新生成该文件，为保持候选现场干净已按首轮记录删除，需共享入口按既有模式在正式提交补入。全量 EditMode 仍有 2 项已登记既有基线失败（不在本卡路径，由 Codex 按既有登记裁决）。返工仅改测试 fixture 与验证记录，生产数据链、asset、导入器均未触碰。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
