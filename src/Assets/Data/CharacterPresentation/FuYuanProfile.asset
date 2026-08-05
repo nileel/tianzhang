@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a46f750bfb654de418640b6e8ef0b6c5, type: 3}
+  m_Name: FuYuanProfile
+  m_EditorClassIdentifier: TianZhang.Gameplay::TianZhang.Game.CharacterPresentation.CharacterPresentationDefinition
+  characterId: npc_fu_yuan
+  displayNameTraditional: "\u82FB\u6DF5"
+  daoTitleTraditional: "\u542B\u5F18\u771F\u541B"
+  characterFullBody: {fileID: 21300000, guid: 5fb93345e95160e43b8c6475506cb5a2, type: 3}
+  dialogueOverride: {fileID: 0}
+  profileBackground16x9: {fileID: 21300000, guid: 58491386efcced945ace75da964f37e0, type: 3}
+  profileFx: {fileID: 21300000, guid: 0d3adc851bf493149b39e7d10238d1d1, type: 3}
+  nameArt: {fileID: 21300000, guid: 55fc3df4385b5fa4eb27ea0bc69d5613, type: 3}
+  daoTitleArt: {fileID: 21300000, guid: 1aa9c5338159f8e4cb56e22c3691bdee, type: 3}
+  seal: {fileID: 21300000, guid: 36b628416ba6327489cb77c4455e1dbe, type: 3}
+  staticPreview16x9: {fileID: 21300000, guid: 90126e65a85c5ae45b4bf77f2c35ce09, type: 3}
