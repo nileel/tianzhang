@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-05：Codex 独立复审正式业务提交 8bd8c0ea3bd28a4ab0007c5bd27bb02486cbe8b0 通过；正式端到端用例经场景流、悬赏面板与生产 Adventure 场景驱动，并保留失败关闭与存档恢复断言。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Scripts/Game/SceneFlowManager.cs",
@@ -72,3 +72,9 @@
 
 - 需要修改生产内容、掉落／奖励数值、CSV／asset、schema、场景结构、第二存档／会话／Canvas／服务或任一未列出的所有者时停止并交回 Codex。
 - 无法通过真实生产 ID、实际目录和现有场景／会话链形成完整证据，或必须依赖默认值、手工注入状态、旧原型 fallback、静默恢复或重复结算时停止并保持本卡非完成。
+
+## Codex 独立复审与完成（2026-08-05）
+
+- 已复审正式业务提交 `8bd8c0ea3bd28a4ab0007c5bd27bb02486cbe8b0`：正向用例经 `SceneFlowManager.PrepareSettlementEntry`／`PrepareAdventureEntry` 驱动会话上下文，并经 `BountyBoardView.Show`／`SubmitAccept`／`SubmitClaim` 调用既有所有者；唯一生产 `AdventureScene` 的序列化目录和 `env_guanzhong_wild` 绑定已断言，控制器同一 `Awake` 链路完成正式石甲兽配置。胜利结算、返回、重复拒绝、保存与恢复均保留在同一会话链中，未修改生产所有者、内容、数值或存档格式。
+- 独立验证：Unity 6000.3.18f1 EditMode 执行 415 项，413 通过；本卡 `GuanzhongFormalEndToEndTests` 2/2、`BountyBoardViewTests` 6/6、`BountyRuntimeTests` 17/17、`AdventureSceneControllerTests` 14/14、`SessionStateSnapshotTests` 20/20、`TacticalGridModelTests` 4/4、`FormalEncounterResultTests` 5/5、`SceneArchitectureEditorTests` 26/26 与 `CharterSiteViewTests` 7/7 通过。仅 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 为已登记无关基线失败。`dotnet build src/TianZhang.EditModeTests.csproj` 以 0 错误通过，保留 2 个无关 CS0649 警告。
+- 复审结论：通过。任务归档并移除队列、backlog 投影及临时未通过审核记录。

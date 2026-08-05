@@ -175,3 +175,9 @@
 ## 后续
 
 - 返工候选待 Codex 独立复审；通过后本卡经正式入口以 pending review 投影形成正式提交。本卡仍未修改生产所有者、内容或存档事实。
+
+## U-GZ-FORMAL-E2E-01 · Codex 独立复审（2026-08-05）
+
+- 审核正式业务提交 `8bd8c0ea3bd28a4ab0007c5bd27bb02486cbe8b0` 通过：返工后的正向用例以唯一生产 ID 经 `SceneFlowManager.PrepareSettlementEntry`／`PrepareAdventureEntry` 与 `BountyBoardView.Show`／`SubmitAccept`／`SubmitClaim` 驱动；生产 `AdventureScene` 的目录与 `env_guanzhong_wild` 序列化绑定经断言，控制器通过既有 `Awake` 链路配置并结算石甲兽。掉落、悬赏进度、返回、一次性领取和 schema 3 保存恢复保持在既有所有者内。
+- 独立验证：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 执行 415 项，413 通过；`GuanzhongFormalEndToEndTests` 2/2 与直接相关的 `BountyBoardViewTests` 6/6、`BountyRuntimeTests` 17/17、`AdventureSceneControllerTests` 14/14、`SessionStateSnapshotTests` 20/20、`TacticalGridModelTests` 4/4、`FormalEncounterResultTests` 5/5、`SceneArchitectureEditorTests` 26/26、`CharterSiteViewTests` 7/7 通过。两项失败仍是已登记、无关的 Charter／数据导入基线。`dotnet build src/TianZhang.EditModeTests.csproj` 0 错误通过，保留 2 个无关 CS0649 警告。
+- 结论：通过；本卡归档，已清理队列、backlog 投影与临时未通过审核记录。
