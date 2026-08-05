@@ -152,12 +152,12 @@ function New-Prompt {
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
     "CandidatePaths: $pathText"
-    '正常完成时，先确定 result/impact/verify/plain 四个单行值；值中不得含单引号或控制字符。然后把下面命令中的四个占位符替换为这些值并原样执行一次：'
+    '正常完成时，先确定 result/impact/verify/plain 四个单行值；值中不得含单引号或控制字符。四值必须逐字满足以下格式，不得省略字段名、等号或中文分号：result=问题=<问题>；完成=<完成>，impact=影响=<影响>；边界=<边界>，verify=验证=<验证>；后续=<后续>，plain=发生=<发生>；影响=<影响>；需要=<需要>。然后把下面命令中的四个占位符替换为完整四值并原样执行一次：'
     $finalizerCommand
     '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
     '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及完整三选一决策卡字段。checkpoint 不得改变任务生命周期。'
-    '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
+    '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
     '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组，plainSummary 填三个空字符串；固定 wrapper 只按实际 status 核验必需字段。'
     '除 QueueMaintenance 的 no_candidate 外，最终只输出符合 schema 的 JSON 对象。'
   ) -join "`n"
@@ -337,7 +337,9 @@ try {
         $result = [ordered]@{ status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = [string]$decision.checkpointCommit; candidateResult = $decision }
       }
       { $_ -cin @('blocked', 'failed') } {
-        if ($head -cne [string]$run.baseCommit -or -not [string]::IsNullOrWhiteSpace($status) -or [string]::IsNullOrWhiteSpace([string]$terminal.detailCode)) { Stop-Candidate 'codex_terminal_invalid' }
+        if ($head -cne [string]$run.baseCommit) { Stop-Candidate 'codex_failed_head_changed' }
+        if (-not [string]::IsNullOrWhiteSpace($status)) { Stop-Candidate 'codex_failed_dirty_worktree' }
+        if ([string]::IsNullOrWhiteSpace([string]$terminal.detailCode)) { Stop-Candidate 'codex_terminal_invalid' }
         $result = [ordered]@{ status = [string]$terminal.status; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; detailCode = [string]$terminal.detailCode }
       }
       default { Stop-Candidate 'codex_terminal_invalid' }

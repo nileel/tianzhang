@@ -17,11 +17,13 @@ $tracePath = Join-Path $testRoot 'codex-trace.txt'
 $approvedState = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\automation-state')).TrimEnd('\', '/')
 $stateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId"
 $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
+$failureStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-failure"
 $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
 $originalTrace = $env:TZG_FAKE_CODEX_TRACE
 $originalMismatch = $env:TZG_FAKE_CODEX_MISMATCH
+$originalDirtyFailure = $env:TZG_FAKE_CODEX_DIRTY_FAILURE
 $taskId = 'TASK-CODEX-CANDIDATE'
 
 try {
@@ -98,6 +100,15 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     result = $(if ($env:TZG_FAKE_CODEX_MISMATCH -eq '1') { '问题=终态故意不一致；完成=验证拒绝路径' } else { $resultText })
     impact = $impactText; verify = $verifyText; plain = $plainText
   }
+} elseif ($env:TZG_FAKE_CODEX_DIRTY_FAILURE -eq '1') {
+  $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
+  [IO.File]::WriteAllText($queuePath, ([IO.File]::ReadAllText($queuePath) + "`n<!-- dirty failure fixture -->"), [Text.UTF8Encoding]::new($false))
+  $terminal = [ordered]@{
+    status = 'failed'; identity = 'Codex'; model = $model; candidateCommit = ''; expectedTransition = ''
+    changedPaths = @('开发管理/当前任务队列.txt'); verified = @(); unverified = @('candidate commit not created')
+    residualRisk = 'fixture dirty worktree'; result = ''; impact = ''; verify = ''; plain = ''
+    detailCode = 'AUTOMATION_METADATA_CONTRACT_INVALID'
+  }
 } elseif ($prompt.Contains('Route: QueueMaintenance')) {
   $terminal = [ordered]@{
     status = 'no_candidate'; identity = 'Codex'; model = $model
@@ -162,9 +173,25 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($trace -match 'automation-finalize-commit\.ps1') 'Codex candidate prompt omitted the formal finalizer'
   Assert-True ($trace -match '-RequireAutomationMetadata') 'Codex candidate prompt omitted required automation metadata'
   Assert-True ($trace -match "-AutomationTask '$taskId'") 'Codex candidate prompt omitted the exact task metadata'
+  Assert-True ($trace -match 'result=问题=<问题>；完成=<完成>') 'Codex candidate prompt omitted the exact Result grammar'
+  Assert-True ($trace -match 'impact=影响=<影响>；边界=<边界>') 'Codex candidate prompt omitted the exact Impact grammar'
+  Assert-True ($trace -match 'verify=验证=<验证>；后续=<后续>') 'Codex candidate prompt omitted the exact Verify grammar'
+  Assert-True ($trace -match 'plain=发生=<发生>；影响=<影响>；需要=<需要>') 'Codex candidate prompt omitted the exact Plain grammar'
+  Assert-True ($trace -match '技术失败同样先恢复工作树到本轮初始状态') 'Codex candidate prompt omitted the clean technical-failure boundary'
   Assert-True ($trace -match '必须与该提交的四个元数据值逐字一致') 'Codex candidate prompt omitted terminal/commit value synchronization'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex candidate did not create exactly one commit'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex candidate worktree is dirty'
+
+  $failureClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $failureStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
+  $failureRun = ($failureClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$failureRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$failureRun.candidateBranch, [string]$failureRun.worktree, $base) | Out-Null
+  $env:TZG_FAKE_CODEX_DIRTY_FAILURE = '1'
+  $failureOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$failureRun.worktree) -TaskId $taskId -RunId ([string]$failureRun.runId) -Model 'test-codex-model' -StateRoot $failureStateRoot -ResponsibilityTimeoutSeconds 30)
+  $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $null
+  $failure = $failureOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$failure.status) 'failed' 'Codex dirty technical failure was not rejected'
+  Assert-Equal ([string]$failure.detailCode) 'codex_failed_dirty_worktree' 'Codex dirty technical failure kept the misleading terminal-invalid code'
 
   $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
   $qmTaskId = 'QUEUE-MAINTENANCE'
@@ -215,7 +242,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
 
   Write-Output 'test-invoke-codex-candidate: OK'
 } finally {
-  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch
+  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     if (-not $resolved.StartsWith($tempBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-codex-candidate-test-$testId") { throw "Unsafe Codex candidate test cleanup: $resolved" }
@@ -230,5 +257,10 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedQmState = [IO.Path]::GetFullPath($qmStateRoot)
     if (-not $resolvedQmState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedQmState) -cne "tzg-codex-candidate-test-$testId-qm") { throw "Unsafe Codex QueueMaintenance state cleanup: $resolvedQmState" }
     Remove-Item -LiteralPath $resolvedQmState -Recurse -Force
+  }
+  if (Test-Path -LiteralPath $failureStateRoot) {
+    $resolvedFailureState = [IO.Path]::GetFullPath($failureStateRoot)
+    if (-not $resolvedFailureState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedFailureState) -cne "tzg-codex-candidate-test-$testId-failure") { throw "Unsafe Codex failure state cleanup: $resolvedFailureState" }
+    Remove-Item -LiteralPath $resolvedFailureState -Recurse -Force
   }
 }
