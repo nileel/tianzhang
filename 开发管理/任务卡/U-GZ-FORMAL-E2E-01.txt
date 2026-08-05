@@ -4,13 +4,13 @@
   "id": "U-GZ-FORMAL-E2E-01",
   "title": "关中正式接取至存档端到端闸门",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-05：U-BOUNTY-01C 已由 Codex 独立复审归档，原有唯一命名前置完成；既有正式框架已给出完整端到端闭环、验证与停止边界，现建立 P1 验证卡。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Scripts/Game/SceneFlowManager.cs",
@@ -22,7 +22,8 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-FORMAL-E2E-01.txt",
-    "开发管理/任务归档/U-GZ-FORMAL-E2E-01.txt"
+    "开发管理/任务归档/U-GZ-FORMAL-E2E-01.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

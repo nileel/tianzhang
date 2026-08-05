@@ -127,3 +127,25 @@
 - 静态所有者与持久化复核：当前据点的启用 `bounty_board` 依次经 `SettlementFeatureDispatcher`、`SettlementSceneController.DispatchFeature`、`SettlementSceneView.OpenBountyBoard` 打开独立序列化的 `BountyBoardView`；未知、禁用、未注册和处理异常均失败关闭。`SceneBuilder` 在既有 Canvas 创建初始关闭面板，`BountyBoardView.cs.meta` GUID `c7b1a8f4e2d649b38f5a0c1d2e3f4a5b` 与 `SettlementScene.unity` 脚本引用一致，控制器、视图及按钮引用由直接 EditMode 用例复核。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：Unity 6000.3.18f1 完成 341 项，339 通过；`BountyBoardViewTests` 6/6、`SceneArchitectureEditorTests` 22/22、`BountyRuntimeTests` 17/17 通过。全量的 2 项失败仍是登记的无关基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（`PULSE_ADVANTAGE`／`PULSE_NEUTRAL` 不符）及 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期保留术法排除日志）。
 - `dotnet build src/TianZhang.EditModeTests.csproj`：0 错误通过，保留 2 个既有 `CharterRuleStaticCatalogData` CS0649 警告。复审通过；本卡归档，未通过项、队列和 backlog 投影已移除。
+
+## U-GZ-FORMAL-E2E-01 · 2026-08-05
+
+- 端到端闸门：新增 `GuanzhongFormalEndToEndTests` 直接 EditMode 用例，用唯一生产 ID（`guanzhong_city`／`guanzhong_wild`／`enemy_shijiahou`／`bounty_guanzhong_shijiahou`）在同一个 `GameSession` 上完整驱动正式闭环：进入关中城接取（`Available` -> `Accepted`）→ 正式 Adventure 胜利结算（普通掉落 `item_shijia_piece`×1 与 `item_lingshi_low`×1，悬赏 0/1 -> 1/1 `ObjectiveCompleted`）→ 据点返回（`PrepareReturnToPreviousScene` 还原 `guanzhong_city` 据点并清空副本上下文）→ 领取悬赏（`Claimed`，奖励 `item_lingshi_low`×3，与掉落合计 ×4）→ 保存并以全新会话读取；恢复后悬赏仍为 `Claimed`、`item_shijia_piece` 仍为 1、`item_lingshi_low` 仍为 4，世界／据点／返回事实无损。进入冒险上下文按 `PrepareAdventureEntry` 的会话语义设置（副本 ID 与据点返回目标由会话持有），返回链路直接调用 `PrepareReturnToPreviousScene`；场景加载不在 EditMode 范围内，与既有 `AdventureSceneControllerTests` 一致。
+- 各只授予一次：重复接取、重复结算与重复领奖均稳定拒绝；重复结算不重复掉落或进度，读取不重放掉落或奖励。
+- 失败关闭：同一闸门直接用例证明缺失目录（配置被阻止且胜利结算失败）、非生产敌人身份（目录外草稿敌人 `EnemyIdentityMismatch`）、缺失敌人（目录不可解析 `EnemyMissing`）、非生产范围敌人（`EnemyScopeInvalid`）、缺失掉落（`DropsMissing`）、非生产／非当前据点／未知悬赏引用、领取时缺失悬赏引用与非法保存输入（`Claimed` 进度与目标不符、未知悬赏引用）均不伪造胜利、掉落、进度、领取或恢复结果；恢复拒绝原子且会话 JSON 不变。
+- 根因：直接用例未暴露生产根因，未修改 `GameSession`、`SceneFlowManager`、`AdventureSceneController`、`BountyBoardView` 或任何内容／存档所有者；未新增第二所有者、数值、CSV／Language／asset、场景或存档格式。
+- ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：新增 `src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs`（含相邻 .meta）与本节记录。
+
+## U-GZ-FORMAL-E2E-01 已执行验证（Unity 6000.3.18f1 EditMode，2026-08-05）
+
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目；首轮重建 Library）。Unity 进程退出码 2（其零失败门禁行为），完整 EditMode：415 项，413 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。
+- 本卡直接用例：`GuanzhongFormalEndToEndTests` 2/2（`FormalGuanzhongProductionChainAcceptsDefeatsDropsReturnsClaimsSavesAndRestoresOnce`、`FormalGuanzhongChainFailsClosedOnNonProductionMissingOrIllegalInputs`）；`BountyBoardViewTests` 6/6、`BountyRuntimeTests` 17/17、`AdventureSceneControllerTests` 14/14、`SessionStateSnapshotTests` 20/20、`TacticalGridModelTests` 4/4、`FormalEncounterResultTests` 5/5 全部通过，未回归。
+- `dotnet build src/TianZhang.EditModeTests.csproj`（Unity 生成忽略的工程投影后）：0 错误通过，保留 2 项无关 Charter 静态目录字段警告（与既有记录一致）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过（本卡未改 CSV／Language／数据资产，作为任务卡列出的链路闸门复核）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 269 个文件。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`（本卡 candidate 路径）：通过，检查 7 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+- 运行后清理：Unity 首次导入为本卡范围外生成的未跟踪 `src/Assets/DataConfig/CharterSites.csv.meta` 已删除，工作区只保留本卡新增文件。
+
+## 后续
+
+- candidate 交回共享入口，正式提交形成 `codex_review/codex/ready` 的 pending review 投影，由 Codex 独立复审；本卡未修改任何生产所有者、内容或存档事实。
