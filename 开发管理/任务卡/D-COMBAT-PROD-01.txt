@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：本卡方案 A 已授权把 EnvironmentProfiles.csv 与生成 asset 纳入路径并为 env_guanzhong_wild 既有相邻格补齐反向有向边；但该输入变更会使不在 expectedPaths 内的环境所有者测试 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs::GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized（嵌入冻结 6 边生产行并断言 CSV/asset 逐项同步）必然失败，EditMode 无法闭合。请决定该测试的同步责任方。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260806-ENVTEST",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -94,6 +94,14 @@
     "taskContextDigest": "d01532988437d484584cb8f6f46b586b951606694f8e77f7249c5d33bfcd45c0",
     "createdAt": "2026-08-06T14:55:59.3444444+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260806-ENVTEST",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "11a4af0df3991b6f94727bcfdfa9cdb9cb4c00e5e328833c260826527e989f7d"
   }
 }
 ---TASK-BODY---
