@@ -6,7 +6,7 @@
 - 决定方：项目负责人。
 - 已选方向：所有 `external_execute / deepseek` 自动任务默认获得 `src/` 内 Unity 受版本控制源树的候选新增与修改权限；非 `src/` 路径继续由任务卡逐项授权。
 - 安全收敛：缓存、日志、本机状态和生成工程文件即使位于 `src/` 也不授权；任务卡未预计的删除不授权。
-- 本文是审核后的第二版冻结合同，只修订设计，不实施代码、不改任务卡、不处置当前活动 runtime。
+- 本文是经两轮审核收敛后的冻结合同，只修订设计，不实施代码、不改任务卡、不处置当前活动 runtime。
 
 ## 二、背景与根因
 
@@ -31,6 +31,8 @@
 不采用“只在 finalizer 对 `*.meta` 等生成物放白名单”的替代方案。该方案能缓解当前 `.meta` 个案，但 DeepSeek 仍不能主动新增任务卡未预知的 C#、测试、场景、asset 或 Package/ProjectSettings 文件，会继续把常规 Unity 实施升级成负责人决策，不满足已确认的默认授权目标。
 
 也不接受“删除文件无法精确枚举”的事实判断。Git 的 NUL 分隔 name-status/status 输出配合 `--no-renames` 可以稳定列出删除路径；真正需要解决的是删除是否授权以及证据是否充分，而不是路径能否枚举。
+
+`src/Packages/**` 与 `src/ProjectSettings/**` 保持在允许源树内是明确的产品授权决定，不是未经识别的前缀副作用：Unity 依赖声明、依赖锁和工程设置本身属于可受审的版本控制工程源，部分跨模块任务确需新增或修改它们。`src/UserSettings/**` 属于本机状态，当前仓库由 `.gitignore` 排除，并继续由 `forbidden_generated` 硬拒绝。若以后要把 Packages 或 ProjectSettings 收回任务卡精确授权，应作为新的权限政策变更单独决策，不能在实现时隐式收窄负责人已经确认的 `src` 授权。
 
 ## 四、目标与非目标
 
@@ -235,7 +237,7 @@ DeepSeek 在调用专属 finalizer 前，应删除本 run 产生且确认无关�
 - 运行新增或更新的 PowerShell 直接测试。
 - 运行 `check-review-text.ps1`、相关 `check-data-chain.ps1`、预提交空白检查和 `git diff --cached --check`。
 - 在一次性隔离 fixture 中运行 DeepSeek canary，任务卡不预列 canary 新 C#/`.meta`，证明其能形成候选并准确报告 `expandedSrcPaths`。
-- canary 预置一个无关的允许源树副作用，证明 DeepSeek 必须选择“纳入并解释”或“清理”，结束后 worktree 为空。
+- canary 在模型启动前预置一个由 fixture 明确标记为“与任务无关”的允许源树哨兵文件；DeepSeek 必须清理它，哨兵不得出现在 candidate diff、`changedPaths` 或 `expandedSrcPaths` 中，结束后 worktree 为空。该用例验证模型遵守任务语义；生产机械层仍不凭文件名猜测相关性。
 - canary 分别尝试 `src/Library` 生成物和未授权非 `src` 文件，证明两者被拒绝。
 - 运行 Codex canary，证明其不能修改任务卡未预列的 `src` 文件。
 - 证明 formal 重放只作用于 canary 实际文件，未把其他 `src` 内容带入提交。
