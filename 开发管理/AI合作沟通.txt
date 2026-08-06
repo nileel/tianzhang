@@ -292,3 +292,16 @@
 - 残留风险：候选具体位置名称（玄冥泉眼／潮衡渡／沧溟泽国）与全部内容均为未审核状态；Codex 复审不通过时需按普通返工同步修改名称、路径与索引引用，不设独立重命名阶段。效果正式名称仍属 DS-JINDAN-NAMES-20260718-01，本文只引用 effect_id 与矩阵功能性临时代号。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01F-0be095da · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01F 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01F
+- 候选提交：dcd5de86c028e24ff1e8595e32b4b26ea72f742b
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Sight_TRANSFORM01_镜门.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Sight_DOMAIN01_无翳庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Sight_SOURCE_观照真瞳.txt
+- 已验证：3 份位置文档均含设计规范 §十一 13 大节且逐项通过 §十二检查清单；positionId 全局唯一并登记索引（§六 3 条；§四 15→18；§五 注与头部标记同步）；效果白名单仅引用 ROAD_SIGHT 三项既有 effect_id，无越界效果引用；check-review-text：OK（718 文件）；check-pending-whitespace：OK（4 文件）；git diff --cached --check：OK；仅 4 个 CandidatePaths 被修改，工作树干净，candidate 为 baseCommit e1482a1 直接后继
+- 未验证：Codex 独立复审未执行（属于后续审核责任方，DeepSeek 不得自审）；候选名（观照真瞳／镜门／无翳庭）未经用户确认，未进入正式显示事实；效果正式显示名称待 DS-JINDAN-NAMES-20260718-01 完成，本批次未定稿；正式提交的 pending_review 投影与交接证据由共享入口在最新 master 上重放生成，未在本 worktree 执行
+- 残留风险：3 个具体位置候选名（观照真瞳／镜门／无翳庭）未经 Codex 复审与用户确认；文档与索引为「已修改/未审核」状态，复审不通过时需按普通返工同步修改名称、路径与引用（无独立重命名阶段）；效果正式名称仍待 DS-JINDAN-NAMES-20260718-01，本文档未定稿显示名
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
