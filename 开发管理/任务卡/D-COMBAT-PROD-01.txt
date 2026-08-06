@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：DEC-20260806-ENVTEST 回复 A 承诺把 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs 加入本卡 expectedPaths 由 DeepSeek 同步其嵌入生产行（12 边）后继续返工；但该路径扩展未写入任务卡，本 run CandidatePaths 不含该文件，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 checkpoint 守卫拒绝路径外改动。实测 EditMode 门禁 426/423/3 失败，第 3 项正是 GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized（嵌入冻结 6 边生产行，12 边 CSV 下必然失败），EditMode 无法在本 run 闭合。请决定该测试同步的执行方式。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260806-ENVTESTSYNC",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -102,6 +102,14 @@
     "taskContextDigest": "d01532988437d484584cb8f6f46b586b951606694f8e77f7249c5d33bfcd45c0",
     "createdAt": "2026-08-06T16:00:31.5967957+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260806-ENVTESTSYNC",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "364b17067e8df90f00057ea1029c32838ed6f0b3fbeafd28de089e02a3e56dec"
   }
 }
 ---TASK-BODY---
