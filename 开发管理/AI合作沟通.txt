@@ -240,3 +240,16 @@
 - 残留风险：候选名与全部内容整体待 Codex 独立复审；复审不通过时需按普通返工同步修改名称、路径与索引引用（不设独立重命名阶段）；效果正式名称任务完成前不得把临时代号作为正式显示事实；证位阈值与山河周期数值均指向配置档案，未在本批次锁定。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01B-289913e8 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01B 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01B
+- 候选提交：350e590c5a456054ec21a12f9375a640f414cd8c
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_FiveElements_Fire_TRANSFORM01_燃犀渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Fire_DOMAIN01_长明赤野.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Fire_SOURCE_赫曦炉心.txt
+- 已验证：check-review-text -Paths docs,开发管理（706 文件）通过；check-pending-whitespace（4 候选路径）通过；git diff --cached --check 通过；git diff --check 通过；三份文档均含 13 大节且 §十二检查清单 19 项全部勾选；positionId 全局唯一且已登记索引（仅存在于新文档与索引 §五/§六）；索引条目与三份文档的 positionId、seatNameKey、road_id、白名单、证位档案版本一致，§四数量汇总与 §五火道路行已同步
+- 未验证：Codex 独立复审（按责任链由 Codex 执行，DeepSeek 不自审）；BattleSim 数值验证（任务不涉及数值强度，按任务卡无需运行）
+- 残留风险：具体位置候选名（赫曦炉心/燃犀渡/长明赤野）与三份文档全文未经 Codex 复审；复审不通过时按普通返工同步修改名称、路径与引用（positionId 不变），复审通过前不进入正式显示事实。candidate 为 baseCommit 1c4eaeb 的直接后继，路径与 run/base/expectedPaths 精确绑定。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
