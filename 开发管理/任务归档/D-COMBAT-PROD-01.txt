@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 已独立复审正式提交 20995c14c447884fcee4988a34509b6c50a41774；关中正式接敌双方基础攻击、生产数据链和授权环境边返工均已闭合。",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -50,6 +50,12 @@
 ---TASK-BODY---
 # D-COMBAT-PROD-01 · 关中薄切片基础攻击生产迁移
 
+## Codex 独立复审通过与完成（2026-08-06）
+
+- 审核正式提交 `20995c14c447884fcee4988a34509b6c50a41774`：通过。负责人授权的 `env_guanzhong_wild` 6 条反向边、生成 asset 与嵌入生产行的 12 边同步均已核对，未触及战斗消费者、其他环境档案、AI、数值或回退机制。
+- 独立验证：BattleSim Release 构建和 `basic-unarmed-production-d-combat-prod-01`、`distance-model-tq055`、`environment-rules-n-env-01` 自测通过；正式 PlayMode 4/4 通过，目标用例确认双方相邻格以同一 `basic_unarmed` 完成基础攻击；EditMode 426 执行、424 通过，仅有已登记且与本卡无交集的两项基线失败；数据链、审核文本和差异空白检查通过。
+- 完整 BattleSim 默认运行在审核环境连续 300 秒未完成，未作为本轮独立通过证据；其输入未变，正式提交验证记录保留同一运行 exit 0 的 553 行结果。该运行时长不影响已直接覆盖的生产迁移字段与正式双向攻击门禁。
+
 ## 负责人一次性收口决定（2026-08-06）
 
 - 负责人在 Codex 当前对话中选择 `DEC-20260806-ENVTESTSYNC2` 方案 A：把 `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs` 实际加入本卡授权路径，仍由 DeepSeek 闭合返工。
@@ -62,11 +68,11 @@
 - 负责人选择方案 A：把 `src/Assets/DataConfig/EnvironmentProfiles.csv` 与生成的 `EnvironmentProfile_env_guanzhong_wild.asset(.meta)` 纳入本卡授权路径，由 DeepSeek 在全新 run 中继续返工。
 - 本次扩展只允许为 `env_guanzhong_wild` 既有相邻格补齐反向有向边并保留现有 6 条边；不得扩展到其他环境档案、战斗消费者、AI、数值或回退机制。
 
-## Codex 复审结论（2026-08-06）
+## 历史 Codex 复审结论（2026-08-06）
 
 - 审核正式提交 `e7d90ab235f9ef7bb7c87120f2580dfa8cdd46c4`：部分通过。生产 CSV、生成 asset、新建玩家与石甲兽显式绑定、场景引用、失败关闭与 BattleSim 迁移字段均已独立核对。
 - 未满足完成条件：正式 `guanzhong_wild` 的新增 PlayMode 用例明确断言石甲兽向玩家执行同一 `basic_unarmed` 时返回“目标不在射程范围”；验证记录也确认这是冻结的单向 `env_guanzhong_wild` 边造成的。故正式场景下双方不能在相邻格均完成基础攻击。
-- 本卡保持 `blocked` 并移出队列。返工必须先取得环境边输入的授权与所有者范围；不得以战斗消费者默认回退、名称推断或测试专用摆位掩盖该正式路径缺口。
+- 当时本卡曾保持 `blocked` 并移出队列。后续环境边授权、12 边输入同步与本次复审已闭合该缺口；全过程未使用战斗消费者默认回退、名称推断或测试专用摆位掩盖正式路径。
 
 ## 来源与当前边界
 
