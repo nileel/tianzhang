@@ -471,7 +471,35 @@ namespace TianZhang.Editor
         public static void BuildWorldScene()
         {
             BuildEmptyScene(WorldScenePath, "WorldRoot", new Color(0.1f, 0.15f, 0.08f), typeof(TianZhang.World.WorldSceneController));
+            AssignSceneLanguageTables(WorldScenePath, typeof(TianZhang.World.WorldSceneController));
             Debug.Log("<color=cyan>天章主世界场景已生成</color>");
+        }
+
+        /// <summary>
+        /// 四个正式场景的显示组件都序列化同一个 Language.csv TextAsset 引用（U-GZ-UI-TEXT-01）：
+        /// 视图运行时从该唯一文本源解析玩家显示文本，场景重建后引用不丢失。
+        /// </summary>
+        private static void AssignSceneLanguageTables(string scenePath, params System.Type[] componentTypes)
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                scenePath,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+            var table = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataConfig/Language.csv");
+            Require(table != null, scenePath + " must serialize the Language.csv TextAsset.");
+            foreach (System.Type type in componentTypes)
+            {
+                var component = UnityEngine.Object.FindFirstObjectByType(type, FindObjectsInactive.Include);
+                Require(component != null, scenePath + " missing " + type.Name + " for the language table.");
+                var serialized = new SerializedObject(component);
+                var property = serialized.FindProperty("languageTable");
+                Require(property != null, type.Name + " must declare the serialized languageTable field.");
+                property.objectReferenceValue = table;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene(),
+                scenePath);
         }
 
         [MenuItem("Tools/天章/生成据点场景")]
@@ -544,6 +572,7 @@ namespace TianZhang.Editor
                 charterSiteEntryButton,
                 charterSiteEntryText,
                 CreateCharterSitePanel(canvasGo.transform));
+            AssignLanguageTable(view);
 
             var dispatcherGo = new GameObject("SettlementFeatureDispatcher");
             var dispatcher = dispatcherGo.AddComponent<SettlementFeatureDispatcher>();
@@ -720,6 +749,14 @@ namespace TianZhang.Editor
             return button;
         }
 
+        private static void AssignLanguageTable(UnityEngine.Object component)
+        {
+            var serialized = new SerializedObject(component);
+            serialized.FindProperty("languageTable").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataConfig/Language.csv");
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         [MenuItem("Tools/天章/生成副本场景")]
         public static void BuildAdventureScene()
         {
@@ -739,6 +776,7 @@ namespace TianZhang.Editor
             SetSerializedComponentName(adventureController, "AdventureSceneController");
             adventureController.SetContentCatalog(contentCatalog);
             adventureController.SetGuanzhongWildEnvironmentProfile(guanzhongWildEnvironment);
+            AssignLanguageTable(adventureController);
 
             var gridGo = new GameObject("HexGrid");
             var grid = gridGo.AddComponent<Grid>();

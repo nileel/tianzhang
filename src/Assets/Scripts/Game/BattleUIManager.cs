@@ -530,6 +530,9 @@ namespace TianZhang.Game
         {
             if (logText == null || logScroll == null) return;
 
+            // 日志里的稳定 ID / 原因键只做显示映射；原始值保留在 Debug 日志与结果对象中。
+            message = TianZhang.Settlement.UiText.ResolveEmbedded(message);
+
             logLineCount++;
             if (logLineCount > MaxLogLines)
             {

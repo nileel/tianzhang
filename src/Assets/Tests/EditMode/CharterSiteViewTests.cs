@@ -31,6 +31,8 @@ namespace TianZhang.Tests
         private const string BeneficiaryId = "beneficiary_water_basin";
         private const string RuleEntryId = "charter_entry_suifu_diji";
         private const string AuthorityRelicId = "relic_world_charter";
+        private const string YuanyingAnchoredReason = "TZ_CHARTER_CONFLICT_YUANYING_ANCHORED";
+        private const string EnvironmentProfileId = "env_guanzhong_wild";
         private const string CharterNode = "node_old_water_station_charter";
         private const string WaterworksNode = "node_old_water_station_waterworks";
         private const string RiverWetlandNode = "node_old_water_station_river_wetland";
@@ -64,24 +66,26 @@ namespace TianZhang.Tests
                 GameObject.Find("SettlementCharterSiteEntry").GetComponent<Button>().onClick.Invoke();
 
                 Assert.IsTrue(panel.IsOpen);
+                // 稳定原因与站点 ID 保留在控制器字段；玩家面板只显示中文名与可理解状态。
                 Assert.AreEqual(
                     SettlementSceneController.CharterSiteEntryOpenedReason + ":" + SiteId,
                     controller.LastCharterSiteReason);
-                StringAssert.Contains(SiteId, PanelText(panel, "siteText").text);
-                StringAssert.Contains(SettlementId, PanelText(panel, "siteText").text);
-                StringAssert.Contains(OperatorId, PanelText(panel, "identityText").text);
-                StringAssert.Contains(TargetId, PanelText(panel, "identityText").text);
-                StringAssert.Contains(ManagerId, PanelText(panel, "identityText").text);
-                StringAssert.Contains(BeneficiaryId, PanelText(panel, "identityText").text);
-                StringAssert.Contains(RuleEntryId, PanelText(panel, "identityText").text);
-                StringAssert.Contains(AuthorityRelicId, PanelText(panel, "identityText").text);
-                StringAssert.Contains(CharterNode, PanelText(panel, "nodeText").text);
-                StringAssert.Contains(WaterworksNode, PanelText(panel, "nodeText").text);
-                StringAssert.Contains(RiverWetlandNode, PanelText(panel, "nodeText").text);
-                StringAssert.Contains(SupplyRain, PanelText(panel, "supplyText").text);
-                StringAssert.Contains(SupplyBalance, PanelText(panel, "supplyText").text);
-                StringAssert.Contains(SupplyLand, PanelText(panel, "supplyText").text);
-                StringAssert.Contains("charter_step_passage", PanelText(panel, "stepText").text);
+                StringAssert.Contains("旧水驿", PanelText(panel, "siteText").text);
+                StringAssert.Contains("关中城", PanelText(panel, "siteText").text);
+                StringAssert.Contains("通行: 未确认", PanelText(panel, "identityText").text);
+                StringAssert.Contains("管理: 未确认", PanelText(panel, "identityText").text);
+                StringAssert.Contains("水府地纪", PanelText(panel, "identityText").text);
+                StringAssert.Contains("已声明", PanelText(panel, "identityText").text);
+                StringAssert.Contains("声明节点: 3 个", PanelText(panel, "nodeText").text);
+                StringAssert.Contains("声明供给: 3 项", PanelText(panel, "supplyText").text);
+                StringAssert.Contains("通行确认", PanelText(panel, "stepText").text);
+                // 玩家显示不再直接暴露稳定 ID / 协议标识。
+                StringAssert.DoesNotContain(SiteId, PanelText(panel, "siteText").text);
+                StringAssert.DoesNotContain(OperatorId, PanelText(panel, "identityText").text);
+                StringAssert.DoesNotContain(TargetId, PanelText(panel, "identityText").text);
+                StringAssert.DoesNotContain(AuthorityRelicId, PanelText(panel, "identityText").text);
+                StringAssert.DoesNotContain(CharterNode, PanelText(panel, "nodeText").text);
+                StringAssert.DoesNotContain(SupplyRain, PanelText(panel, "supplyText").text);
                 Assert.IsNull(GameSession.Instance.CharterRuntimeState);
             }
             finally
@@ -104,30 +108,30 @@ namespace TianZhang.Tests
                 Assert.IsTrue(controller.Progress.PassageVerified);
                 Assert.AreEqual(OperatorId, controller.Progress.PassageOperatorId);
                 Assert.AreEqual(TargetId, controller.Progress.PassageTargetId);
-                StringAssert.Contains("charter_step_management", PanelText(panel, "stepText").text);
+                StringAssert.Contains("管理确认", PanelText(panel, "stepText").text);
 
                 ClickPanelButton(panel, "managementButton");
                 Assert.IsTrue(controller.Progress.ManagementVerified);
-                StringAssert.Contains("charter_step_nodes", PanelText(panel, "stepText").text);
+                StringAssert.Contains("接通节点", PanelText(panel, "stepText").text);
 
                 ClickPanelButton(panel, "nodeButton");
                 CollectionAssert.AreEqual(
                     new[] { CharterNode, WaterworksNode, RiverWetlandNode },
                     controller.Progress.ConnectedNodeIds);
-                StringAssert.Contains("charter_step_registration", PanelText(panel, "stepText").text);
-                StringAssert.Contains(CharterNode, PanelText(panel, "nodeText").text);
+                StringAssert.Contains("条目登记", PanelText(panel, "stepText").text);
+                StringAssert.Contains("已接通: 3 个", PanelText(panel, "nodeText").text);
 
                 ClickPanelButton(panel, "registrationButton");
                 Assert.IsTrue(controller.Progress.RuleEntryRegistrationVerified);
-                StringAssert.Contains("charter_step_supplies", PanelText(panel, "stepText").text);
-                StringAssert.Contains("已确认: 是", PanelText(panel, "authorizationText").text);
+                StringAssert.Contains("准备供给", PanelText(panel, "stepText").text);
+                StringAssert.Contains("登记确认: 已完成", PanelText(panel, "authorizationText").text);
 
                 ClickPanelButton(panel, "supplyButton");
                 CollectionAssert.AreEqual(
                     new[] { SupplyRain, SupplyBalance, SupplyLand },
                     controller.Progress.RegisteredRealitySupplyIds);
-                StringAssert.Contains("charter_step_evaluation", PanelText(panel, "stepText").text);
-                StringAssert.Contains(SupplyRain, PanelText(panel, "supplyText").text);
+                StringAssert.Contains("评估推演", PanelText(panel, "stepText").text);
+                StringAssert.Contains("已准备: 3 项", PanelText(panel, "supplyText").text);
 
                 Assert.IsNull(GameSession.Instance.CharterRuntimeState);
                 Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
@@ -145,16 +149,21 @@ namespace TianZhang.Tests
             try
             {
                 OpenPanelAndCompleteSteps(panel);
+                var controller = UnityEngine.Object.FindFirstObjectByType<CharterSiteController>(
+                    FindObjectsInactive.Include);
 
                 ClickPanelButton(panel, "jindanButton");
-                StringAssert.Contains(CharterRuleRuntimeReasons.ConflictNotWon, PanelText(panel, "resultText").text);
-                StringAssert.Contains("LeftWins", PanelText(panel, "resultText").text);
-                StringAssert.Contains("jindan_left", PanelText(panel, "resultText").text);
+                // 玩家文本与内部稳定原因分层：显示中文结果，LastReason 保留原始原因。
+                Assert.AreEqual(CharterRuleRuntimeReasons.ConflictNotWon, controller.LastReason);
+                StringAssert.Contains("册界候选未获胜", PanelText(panel, "resultText").text);
+                StringAssert.Contains("左侧候选获胜", PanelText(panel, "resultText").text);
+                StringAssert.DoesNotContain("jindan_left", PanelText(panel, "resultText").text);
                 Assert.IsNull(GameSession.Instance.CharterRuntimeState);
 
                 ClickPanelButton(panel, "yuanyingButton");
-                StringAssert.Contains("TZ_CHARTER_CONFLICT_YUANYING_ANCHORED", PanelText(panel, "resultText").text);
-                StringAssert.Contains("Anchored", PanelText(panel, "resultText").text);
+                Assert.AreEqual(YuanyingAnchoredReason, controller.LastReason);
+                StringAssert.Contains("元婴受锚成功", PanelText(panel, "resultText").text);
+                StringAssert.Contains("已受锚", PanelText(panel, "resultText").text);
                 Assert.IsNull(GameSession.Instance.CharterRuntimeState);
                 Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
             }
@@ -172,21 +181,27 @@ namespace TianZhang.Tests
             {
                 OpenPanelAndCompleteSteps(panel);
                 GameSession session = GameSession.Instance;
+                var controller = UnityEngine.Object.FindFirstObjectByType<CharterSiteController>(
+                    FindObjectsInactive.Include);
 
                 ClickPanelButton(panel, "formalButton");
                 Assert.IsNotNull(session.CharterRuntimeState);
                 Assert.AreEqual(1, session.CharterDefinitionCatalogVersion);
-                StringAssert.Contains(CharterSiteController.FormalCommittedReason, PanelText(panel, "resultText").text);
-                StringAssert.Contains("charter_step_committed", PanelText(panel, "stepText").text);
-                StringAssert.Contains("charter_entry_suifu_diji", PanelText(panel, "resultText").text);
-                StringAssert.Contains("env_guanzhong_wild", PanelText(panel, "environmentText").text);
+                Assert.AreEqual(CharterSiteController.FormalCommittedReason, controller.LastReason);
+                StringAssert.Contains("正式提交成功", PanelText(panel, "resultText").text);
+                StringAssert.Contains("已正式提交", PanelText(panel, "stepText").text);
+                StringAssert.Contains("登记条目 1", PanelText(panel, "resultText").text);
+                StringAssert.DoesNotContain(RuleEntryId, PanelText(panel, "resultText").text);
+                StringAssert.Contains("已生效", PanelText(panel, "environmentText").text);
+                StringAssert.DoesNotContain(EnvironmentProfileId, PanelText(panel, "environmentText").text);
                 StringAssert.Contains("长期状态", PanelText(panel, "resultText").text);
                 CollectionAssert.Contains(session.CharterRuntimeState.registeredRuleEntryIds, RuleEntryId);
 
                 CharterRuntimeStateData committedState = session.CharterRuntimeState;
                 ClickPanelButton(panel, "formalButton");
                 Assert.AreSame(committedState, session.CharterRuntimeState, "已有长期状态必须保持原实例内容不变。");
-                StringAssert.Contains(CharterRuleRuntimeReasons.RealitySupplyUnavailable, PanelText(panel, "resultText").text);
+                Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, controller.LastReason);
+                StringAssert.Contains("现实供给不可用", PanelText(panel, "resultText").text);
             }
             finally
             {
@@ -206,21 +221,18 @@ namespace TianZhang.Tests
 
                 ClickPanelButton(panel, "managementButton");
                 Assert.IsFalse(controller.Progress.ManagementVerified);
-                StringAssert.Contains(
-                    CharterSiteInteractionReasons.ActionOutOfOrder,
-                    PanelText(panel, "resultText").text);
+                Assert.AreEqual(CharterSiteInteractionReasons.ActionOutOfOrder, controller.LastReason);
+                StringAssert.Contains("步骤顺序不正确", PanelText(panel, "resultText").text);
 
                 ClickPanelButton(panel, "jindanButton");
                 Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-                StringAssert.Contains(
-                    CharterSiteInteractionReasons.PreparationIncomplete,
-                    PanelText(panel, "resultText").text);
+                Assert.AreEqual(CharterSiteInteractionReasons.PreparationIncomplete, controller.LastReason);
+                StringAssert.Contains("前置步骤尚未完成", PanelText(panel, "resultText").text);
 
                 ClickPanelButton(panel, "formalButton");
                 Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-                StringAssert.Contains(
-                    CharterSiteInteractionReasons.PreparationIncomplete,
-                    PanelText(panel, "resultText").text);
+                Assert.AreEqual(CharterSiteInteractionReasons.PreparationIncomplete, controller.LastReason);
+                StringAssert.Contains("前置步骤尚未完成", PanelText(panel, "resultText").text);
             }
             finally
             {
@@ -247,8 +259,9 @@ namespace TianZhang.Tests
                 Assert.AreEqual(
                     SettlementSceneController.CharterSiteMissingReason + ":" + SiteId,
                     controller.LastCharterSiteReason);
+                // 玩家入口文本只显示可理解失败；稳定原因保留在控制器字段。
                 StringAssert.Contains(
-                    SettlementSceneController.CharterSiteMissingReason,
+                    "单据点入口不可用",
                     GameObject.Find("SettlementCharterSiteEntryStatus").GetComponent<Text>().text);
 
                 // 站点存在但不属于当前据点：拒绝打开。
@@ -299,7 +312,7 @@ namespace TianZhang.Tests
                     FindObjectsInactive.Include);
                 Assert.IsTrue(panel.IsOpen);
                 Assert.IsFalse(reopened.Progress.PassageVerified, "重新打开必须是全新交互，临时 progress 已丢弃。");
-                StringAssert.Contains("charter_step_passage", PanelText(panel, "stepText").text);
+                StringAssert.Contains("通行确认", PanelText(panel, "stepText").text);
             }
             finally
             {

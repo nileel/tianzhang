@@ -157,9 +157,16 @@ namespace TianZhang.Settlement
                 BountyStateSnapshot state = session.GetBountyState(bounty.bountyId);
                 if (rows.Length > 0)
                     rows.Append('\n');
-                rows.Append(bounty.bountyId)
-                    .Append(" | ").Append(state.Status)
-                    .Append(" | ").Append(state.Progress).Append('/').Append(bounty.requiredCount);
+                // 标题优先解析已批准 titleKey；缺键（非正式实体）回退稳定 ID，不伪造占位文本。
+                string resolvedTitle = string.IsNullOrWhiteSpace(bounty.titleKey)
+                    ? null
+                    : UiText.Resolve(bounty.titleKey);
+                string title = string.IsNullOrEmpty(resolvedTitle) || resolvedTitle == bounty.titleKey
+                    ? bounty.bountyId
+                    : resolvedTitle;
+                rows.Append(title)
+                    .Append(" | ").Append(StatusDisplay(state.Status))
+                    .Append(" | 进度 ").Append(state.Progress).Append('/').Append(bounty.requiredCount);
             }
 
             currentBountyId = listedBounties.Count == 0 ? null : listedBounties[0].bountyId;
@@ -181,9 +188,32 @@ namespace TianZhang.Settlement
 
         private void SetResult(string reason)
         {
+            // 内部稳定原因始终保留在 LastResultReason；玩家文本只做单向映射，不吞掉失败。
             lastResultReason = reason;
             if (resultText != null)
-                resultText.text = reason;
+                resultText.text = UiText.ReasonDisplay(reason, "操作失败");
+        }
+
+        private static string StatusDisplay(BountyStatus status)
+        {
+            string key;
+            switch (status)
+            {
+                case BountyStatus.Accepted:
+                    key = "bounty_status_accepted";
+                    break;
+                case BountyStatus.ObjectiveCompleted:
+                    key = "bounty_status_completed";
+                    break;
+                case BountyStatus.Claimed:
+                    key = "bounty_status_claimed";
+                    break;
+                default:
+                    key = "bounty_status_available";
+                    break;
+            }
+
+            return UiText.Resolve(key);
         }
     }
 }

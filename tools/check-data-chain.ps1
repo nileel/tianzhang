@@ -560,6 +560,91 @@ function Test-CharterSiteProjection {
   }
 }
 
+function Test-UiTextProjection {
+  param([string[]]$LanguageIds)
+
+  # U-GZ-UI-TEXT-01：玩家显示边界引用的最小键集必须存在于 Language.csv（键值即稳定 ID / 稳定原因）。
+  $requiredKeys = @(
+    'region_guanzhong', 'adventure_guanzhong_wild', 'surface_grassland', 'surface_loess', 'world_node_type_hub',
+    'charter_step_unopened', 'charter_step_passage', 'charter_step_management', 'charter_step_nodes',
+    'charter_step_registration', 'charter_step_supplies', 'charter_step_evaluation', 'charter_step_committed',
+    'bounty_status_available', 'bounty_status_accepted', 'bounty_status_completed', 'bounty_status_claimed',
+    'settlement_catalog_missing', 'settlement_not_found', 'settlement_not_in_first_batch_production_scope',
+    'settlement_adventure_not_available', 'settlement_feature_missing', 'settlement_feature_disabled',
+    'settlement_feature_unknown', 'settlement_feature_dispatcher_missing', 'settlement_feature_handler_failed',
+    'settlement_charter_site_panel_missing', 'settlement_charter_site_missing',
+    'settlement_charter_site_not_current_settlement', 'settlement_charter_static_catalog_unavailable',
+    'settlement_charter_session_missing', 'charter_site_entry_opened', 'charter_site_entry_unavailable',
+    'bounty_board_entry_opened',
+    'bounty_board_no_bounties', 'bounty_board_catalog_missing', 'bounty_board_session_missing',
+    'bounty_catalog_missing', 'bounty_id_invalid', 'bounty_missing', 'bounty_not_production',
+    'bounty_wrong_settlement', 'bounty_settlement_missing', 'bounty_accept_repeated',
+    'bounty_objective_type_unsupported', 'bounty_repeat_policy_unsupported', 'bounty_required_count_invalid',
+    'bounty_target_invalid', 'bounty_target_enemy_missing', 'bounty_adventure_invalid', 'bounty_reward_invalid',
+    'bounty_reward_item_missing', 'bounty_reward_item_not_production', 'bounty_reward_item_stack_invalid',
+    'bounty_not_accepted', 'bounty_not_completed', 'bounty_claim_repeated', 'bounty_defeat_wrong_adventure',
+    'bounty_defeat_wrong_enemy', 'bounty_progress_invalid', 'bounty_progress_out_of_range',
+    'bounty_claim_inventory_rejected',
+    'charter_panel_formal_committed', 'charter_panel_controller_missing',
+    'charter_interaction_input_invalid', 'charter_interaction_site_unavailable',
+    'charter_interaction_site_not_current_settlement', 'charter_interaction_catalog_unavailable',
+    'charter_interaction_definition_missing', 'charter_interaction_action_out_of_order',
+    'charter_interaction_passage_unavailable', 'charter_interaction_passage_mismatch',
+    'charter_interaction_management_mismatch', 'charter_interaction_seal_declaration_unresolved',
+    'charter_interaction_node_unknown', 'charter_interaction_node_set_mismatch',
+    'charter_interaction_entry_mismatch', 'charter_interaction_relic_mismatch',
+    'charter_interaction_authorization_mismatch', 'charter_interaction_supply_unknown',
+    'charter_interaction_supply_set_mismatch', 'charter_interaction_preparation_incomplete',
+    'charter_interaction_grant_invalid', 'charter_interaction_candidate_invalid',
+    'charter_invocation_request_invalid', 'charter_passage_denied', 'charter_seal_management_denied',
+    'charter_authorization_version_denied', 'charter_node_disconnected', 'charter_coverage_out_of_boundary',
+    'charter_reality_supply_unavailable', 'charter_atomic_commit_incomplete', 'charter_variable_out_of_boundary',
+    'charter_unknown_conflict_grant', 'charter_cross_tier_authorization_denied', 'charter_conflict_not_won',
+    'charter_environment_projection_no_long_term_state',
+    'charter_environment_projection_no_current_region_entry',
+    'charter_environment_projection_duplicate_current_region_entry',
+    'charter_environment_projection_unknown_rule_entry',
+    'charter_environment_projection_catalog_unavailable',
+    'charter_environment_projection_duplicate_environment_id',
+    'charter_environment_projection_asset_profile_mismatch',
+    'formal_encounter_catalog_missing', 'formal_encounter_enemy_missing', 'formal_encounter_enemy_scope_invalid',
+    'formal_encounter_combat_template_missing', 'formal_encounter_drops_missing', 'formal_encounter_drop_invalid',
+    'formal_encounter_drop_item_missing', 'formal_encounter_drop_item_not_production',
+    'formal_encounter_drop_item_stack_invalid', 'formal_encounter_already_consumed',
+    'formal_encounter_session_missing', 'formal_encounter_inventory_grant_failed',
+    'formal_encounter_enemy_not_configured', 'formal_encounter_spawn_failed',
+    'formal_encounter_runtime_identity_invalid', 'formal_encounter_defeated_member_mismatch',
+    'cell_not_configured', 'directed_edge_not_configured', 'reverse_directed_edge_not_permitted',
+    'directed_edge_blocks_movement', 'directed_edge_blocks_effects', 'entity_obstacle', 'movement_blocked',
+    'sight_blocked', 'height_rule_unconfigured', 'no_legal_path_within_query_limit', 'below_min_range',
+    'above_max_range', 'occupied', 'distance_budget_exhausted', 'spatial_query_not_configured'
+  )
+  foreach ($key in $requiredKeys) {
+    if ($key -notin $LanguageIds) {
+      Add-Finding 'UI_TEXT_LANGUAGE_MISSING' $key 'Player-visible UI text projection references a missing Language key.'
+    }
+  }
+
+  # 三个正式场景必须序列化 Language.csv TextAsset（场景重建不丢失玩家显示文本源）。
+  $languageMetaPath = Join-Path $root 'src/Assets/DataConfig/Language.csv.meta'
+  if (-not (Test-Path -LiteralPath $languageMetaPath -PathType Leaf)) {
+    Add-Finding 'UI_TEXT_LANGUAGE_META_MISSING' 'Language.csv' 'Language.csv.meta is missing.'
+    return
+  }
+  $languageGuid = @(Select-String -LiteralPath $languageMetaPath -Pattern '^\s*guid:\s*([0-9a-f]{32})\s*$').Matches
+  if ($languageGuid.Count -ne 1) {
+    Add-Finding 'UI_TEXT_LANGUAGE_META_INVALID' 'Language.csv' 'Language.csv.meta must declare exactly one guid.'
+    return
+  }
+  foreach ($scene in @('WorldScene', 'SettlementScene', 'AdventureScene')) {
+    $scenePath = Join-Path $root "src/Assets/Scenes/$scene.unity"
+    if (-not (Test-Path -LiteralPath $scenePath -PathType Leaf) -or
+        -not (Select-String -LiteralPath $scenePath -Pattern ([regex]::Escape($languageGuid[0].Groups[1].Value)) -Quiet)) {
+      Add-Finding 'UI_TEXT_SCENE_LANGUAGE_REFERENCE_MISSING' $scene "$scene.unity must serialize the Language.csv TextAsset reference."
+    }
+  }
+}
+
 function Load-Waivers {
   $path = Join-Path $root 'tools/data-chain-warning-waivers.json'
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Error 'WAIVER_FILE_MISSING' 'tools/data-chain-warning-waivers.json' 'The precise-warning waiver file is required.'; return @() }
@@ -620,6 +705,7 @@ Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfile
 Test-FormalContentCatalog $tables.Settlements $tables.Items $tables.Bounties $tables.Enemies $languageIds
 Test-FormalAttackProfileProjection $tables.AttackProfiles $languageIds
 Test-CharterSiteProjection $tables.CharterSites $languageIds
+Test-UiTextProjection $languageIds
 
 foreach ($row in $tables.FoundationPurpleMansionStates.Rows) {
   foreach ($field in @('fixtureId', 'expect', 'fixtureOnlyNumericProfile')) {

@@ -9,6 +9,7 @@ using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.HexTile;
+using TianZhang.Settlement;
 using TianZhang.Tactical;
 
 namespace TianZhang.Map
@@ -735,7 +736,7 @@ namespace TianZhang.Map
                 if (nextUnit == null)
                 {
                     AddLog("CTB推进超时，战斗中止");
-                    SetStatus("CTB异常");
+                    SetStatus("战斗异常");
                     state = GameState.Ended;
                     break;
                 }
@@ -789,14 +790,14 @@ namespace TianZhang.Map
             if (uiManager == null) return;
 
             uiManager.RefreshSpellButtons(
-                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.displayNameKey ?? "?") : new string[0],
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => UiText.Resolve(s?.displayNameKey ?? "?")) : new string[0],
                 player.SpellCooldowns,
                 player.CurrentMP,
                 playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.resourceCost ?? 0) : new int[0],
                 player.MaxSpellSlots,
                 playerSpells != null ? System.Array.ConvertAll(playerSpells, s => TianZhang.Combat.DamageCalculator.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
             uiManager.RefreshSkillButtons(
-                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.displayNameKey ?? "?") : new string[0],
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => UiText.Resolve(s?.displayNameKey ?? "?")) : new string[0],
                 player.SkillCooldowns,
                 player.CurrentMP,
                 playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.resourceCost ?? 0) : new int[0],

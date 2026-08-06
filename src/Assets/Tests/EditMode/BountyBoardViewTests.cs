@@ -50,14 +50,15 @@ namespace TianZhang.Tests
                 Assert.IsTrue(board.IsOpen);
                 Assert.AreEqual(BountyId, board.CurrentBountyId);
                 Assert.AreEqual(1, board.ListedBountyCount);
-                StringAssert.Contains("bounty_board_entry_opened", BoardStatusText().text);
-                StringAssert.Contains(BountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                // 玩家显示只呈现已批准悬赏标题与中文状态；稳定 ID 保留在 board 与会话对象中。
+                StringAssert.Contains("悬赏板已打开", BoardStatusText().text);
+                StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
 
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
 
                 Assert.AreEqual(BountyStatus.Accepted, session.GetBountyState(BountyId).Status);
-                StringAssert.Contains(BountyId + " | Accepted | 0/1", BoardEntriesText(board).text);
+                StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
 
                 GetBoardButton(board, "closeButton").onClick.Invoke();
@@ -80,12 +81,12 @@ namespace TianZhang.Tests
                 AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
 
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
-                StringAssert.Contains(BountyId + " | ObjectiveCompleted | 1/1", BoardEntriesText(board).text);
+                StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 目标已完成 | 进度 1/1", BoardEntriesText(board).text);
 
                 GetBoardButton(board, "claimButton").onClick.Invoke();
 
                 Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
-                StringAssert.Contains(BountyId + " | Claimed | 1/1", BoardEntriesText(board).text);
+                StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已领取 | 进度 1/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out InventoryStateSnapshot granted));
                 Assert.AreEqual(3, granted.Quantity);
@@ -134,8 +135,9 @@ namespace TianZhang.Tests
             {
                 board.Show(catalog, SettlementId, session);
 
-                StringAssert.Contains(BountyId + " | Available | 0/1", BoardEntriesText(board).text);
-                StringAssert.Contains(DraftBountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
+                // 非正式（无批准标题）悬赏：显示回退为稳定 ID 本身，不伪造占位文本。
+                StringAssert.Contains(DraftBountyId + " | 可接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.IsFalse(BoardEntriesText(board).text.Contains(OtherSettlementBountyId));
 
                 board.SubmitAccept(DraftBountyId);
@@ -150,8 +152,8 @@ namespace TianZhang.Tests
                 Assert.AreEqual(BountyRuntimeRules.BountyMissingReason, board.LastResultReason);
                 Assert.IsFalse(session.BountyStates.TryGet("bounty_unknown", out _));
 
-                StringAssert.Contains(BountyId + " | Available | 0/1", BoardEntriesText(board).text);
-                StringAssert.Contains(DraftBountyId + " | Available | 0/1", BoardEntriesText(board).text);
+                StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
+                StringAssert.Contains(DraftBountyId + " | 可接取 | 进度 0/1", BoardEntriesText(board).text);
             }
             finally
             {
@@ -180,9 +182,8 @@ namespace TianZhang.Tests
                     },
                 });
                 Assert.IsFalse(board.IsOpen);
-                StringAssert.Contains(
-                    SettlementFeatureDispatcher.FeatureDisabledReason + ":settlement_feature_disabled",
-                    BoardStatusText().text);
+                // 玩家只看到可理解的禁用反馈；稳定原因保留在控制器结果中。
+                Assert.AreEqual("功能未开放", BoardStatusText().text);
 
                 dispatchFeature.Invoke(controller, new object[]
                 {
@@ -193,9 +194,7 @@ namespace TianZhang.Tests
                     },
                 });
                 Assert.IsFalse(board.IsOpen);
-                StringAssert.Contains(
-                    SettlementFeatureDispatcher.FeatureUnknownReason + ":market",
-                    BoardStatusText().text);
+                Assert.AreEqual("功能不存在", BoardStatusText().text);
             }
             finally
             {
@@ -223,9 +222,7 @@ namespace TianZhang.Tests
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
 
                 Assert.IsFalse(board.IsOpen);
-                StringAssert.Contains(
-                    SettlementFeatureDispatcher.FeatureHandlerFailedReason + ":bounty_board",
-                    BoardStatusText().text);
+                Assert.AreEqual("功能操作失败", BoardStatusText().text);
             }
             finally
             {
@@ -299,6 +296,7 @@ namespace TianZhang.Tests
         {
             BountyData bounty = Track(ScriptableObject.CreateInstance<BountyData>());
             bounty.bountyId = bountyId;
+            bounty.titleKey = bountyId + "_title";
             bounty.contentScope = scope;
             bounty.issuerSettlementId = SettlementId;
             bounty.objectiveType = "defeat_enemy";

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TianZhang.Game;
+using TianZhang.Settlement;
 
 namespace TianZhang.World
 {
@@ -15,6 +16,7 @@ namespace TianZhang.World
             new WorldNodeDefinition { id = "zhongzhou_hub", regionId = "zhongzhou", displayName = "中州天域", nodeType = WorldNodeType.RegionHub, connectedNodeIds = new[] { "longxi_hub" }, settlementId = "zhongzhou_city" }
         };
 
+        [SerializeField] private TextAsset languageTable = null;
         private Text selectedNodeText;
         private Text selectedNodeDescription;
         private Button enterLocationButton;
@@ -23,8 +25,21 @@ namespace TianZhang.World
         public string SelectedNodeId { get; private set; } = "jiangzuo_hub";
         public WorldNodeDefinition SelectedNode { get; private set; }
 
+        /// <summary>玩家显示用节点中文名；未知节点返回原 ID（不伪造）。</summary>
+        public static string NodeDisplayName(string nodeId)
+        {
+            foreach (WorldNodeDefinition node in PrototypeNodes)
+            {
+                if (node.id == nodeId)
+                    return node.displayName;
+            }
+
+            return nodeId;
+        }
+
         private void Start()
         {
+            UiText.Load(languageTable);
             BuildWorldNodeUi();
             if (!SelectNode(GameSession.Instance?.CurrentWorldNodeId ?? SelectedNodeId))
                 SelectNode("jiangzuo_hub");
@@ -240,11 +255,11 @@ namespace TianZhang.World
         {
             var entry = "暂无可进入地点";
             if (!string.IsNullOrEmpty(node.settlementId))
-                entry = "据点: " + node.settlementId;
+                entry = "据点: " + UiText.ResolveId("settlement_", node.settlementId);
             else if (node.adventureIds != null && node.adventureIds.Length > 0)
-                entry = "副本: " + node.adventureIds[0];
+                entry = "副本: " + UiText.ResolveId("adventure_", node.adventureIds[0]);
 
-            return node.regionId + " / " + node.nodeType + "\n" + entry;
+            return node.displayName + "（" + UiText.Resolve("world_node_type_hub") + "）\n" + entry;
         }
 
         private static bool HasLocationEntry(WorldNodeDefinition node)

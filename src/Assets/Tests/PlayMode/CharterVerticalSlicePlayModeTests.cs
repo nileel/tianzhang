@@ -76,13 +76,15 @@ namespace TianZhang.Tests
             Assert.IsNotNull(panel, "The formal SettlementScene must keep the charter site panel.");
             Assert.IsNotNull(charterController);
             Assert.IsTrue(panel.IsOpen);
-            StringAssert.Contains(SiteId, PanelText("CharterSiteSiteText").text);
-            StringAssert.Contains("charter_step_passage", PanelText("CharterSiteStepText").text);
+            // 玩家显示分层：面板显示中文名与步骤状态，稳定 ID 保留在控制器字段。
+            StringAssert.Contains("旧水驿", PanelText("CharterSiteSiteText").text);
+            StringAssert.DoesNotContain(SiteId, PanelText("CharterSiteSiteText").text);
+            StringAssert.Contains("通行确认", PanelText("CharterSiteStepText").text);
 
             // 3. 越序失败节点：未完成五类证明时任何评估都不构造请求、不推进、不写会话。
             ClickByName("CharterSiteYuanyingButton");
             Assert.AreEqual(CharterSiteInteractionReasons.PreparationIncomplete, charterController.LastReason);
-            StringAssert.Contains("charter_step_passage", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("通行确认", PanelText("CharterSiteStepText").text);
             Assert.IsNull(GameSession.Instance.CharterRuntimeState);
 
             // 4. 五类临时证明按固定顺序推进，每步只推进临时 progress。
@@ -92,24 +94,24 @@ namespace TianZhang.Tests
 
             ClickByName("CharterSitePassageButton");
             Assert.IsTrue(charterController.Progress.PassageVerified);
-            StringAssert.Contains("charter_step_management", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("管理确认", PanelText("CharterSiteStepText").text);
 
             ClickByName("CharterSiteManagementButton");
             Assert.IsTrue(charterController.Progress.ManagementVerified);
-            StringAssert.Contains("charter_step_nodes", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("接通节点", PanelText("CharterSiteStepText").text);
 
             ClickByName("CharterSiteNodeButton");
             Assert.AreEqual(3, charterController.Progress.ConnectedNodeIds.Length);
-            StringAssert.Contains("charter_step_registration", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("条目登记", PanelText("CharterSiteStepText").text);
 
             ClickByName("CharterSiteRegistrationButton");
             Assert.IsTrue(charterController.Progress.RuleEntryRegistrationVerified);
-            StringAssert.Contains("charter_step_supplies", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("准备供给", PanelText("CharterSiteStepText").text);
 
             ClickByName("CharterSiteSupplyButton");
             Assert.AreEqual(3, charterController.Progress.RegisteredRealitySupplyIds.Length);
             Assert.IsTrue(charterController.Progress.IsComplete);
-            StringAssert.Contains("charter_step_evaluation", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("评估推演", PanelText("CharterSiteStepText").text);
             Assert.IsNull(GameSession.Instance.CharterRuntimeState);
             Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
 
@@ -142,8 +144,10 @@ namespace TianZhang.Tests
             Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
             CollectionAssert.Contains(GameSession.Instance.CharterRuntimeState.registeredRuleEntryIds, RuleEntryId);
             CollectionAssert.Contains(GameSession.Instance.CharterRuntimeState.currentRegionRuleEntryIds, RuleEntryId);
-            StringAssert.Contains("charter_step_committed", PanelText("CharterSiteStepText").text);
-            StringAssert.Contains(EnvironmentProfileId, PanelText("CharterSiteEnvironmentText").text);
+            Assert.AreEqual(CharterSiteController.FormalCommittedReason, charterController.LastReason);
+            StringAssert.Contains("已正式提交", PanelText("CharterSiteStepText").text);
+            StringAssert.Contains("已生效", PanelText("CharterSiteEnvironmentText").text);
+            StringAssert.DoesNotContain(EnvironmentProfileId, PanelText("CharterSiteEnvironmentText").text);
 
             // 8. 重复消费失败节点：同一面板再次正式调用稳定失败，长期状态保留独立前态副本并
             //    逐项比较完整内容不变（不只看同一引用或数组长度）。
@@ -164,9 +168,15 @@ namespace TianZhang.Tests
             Assert.IsNotNull(adventure, "The formal AdventureScene must bind its adventure controller.");
             Assert.AreEqual(AdventureSceneState.Exploration, adventure.CurrentState);
             string feedback = GameObject.Find("EnvironmentFeedbackText").GetComponent<Text>().text;
-            StringAssert.Contains(RuleEntryId, feedback);
-            StringAssert.Contains(WaterRedistributionEventId, feedback);
-            StringAssert.Contains(EnvironmentProfileId, feedback);
+            // 玩家显示只呈现已批准中文名与可理解状态；原始条目/事件/档案 ID 保留在投影对象中。
+            StringAssert.Contains("册界环境引用: 已生效", feedback);
+            StringAssert.Contains("水府地纪", feedback);
+            StringAssert.DoesNotContain(RuleEntryId, feedback);
+            StringAssert.DoesNotContain(EnvironmentProfileId, feedback);
+            CharterEnvironmentProjectionResult projection = ReadProjection(adventure);
+            CollectionAssert.Contains(projection.RuleEntryIds, RuleEntryId);
+            CollectionAssert.Contains(projection.EventIds, WaterRedistributionEventId);
+            Assert.AreEqual(EnvironmentProfileId, projection.EnvironmentProfileId);
 
             // 10. schema 4 保存／读取：长期状态与目录版本原子恢复，水府地纪仍登记且生效，
             //     同一生产目录与序列化档案 ID 仍可解析。
@@ -189,8 +199,9 @@ namespace TianZhang.Tests
             var adventureAfterRestore = Object.FindFirstObjectByType<AdventureSceneController>();
             Assert.AreEqual(AdventureSceneState.Exploration, adventureAfterRestore.CurrentState);
             string feedbackAfterRestore = GameObject.Find("EnvironmentFeedbackText").GetComponent<Text>().text;
-            StringAssert.Contains(RuleEntryId, feedbackAfterRestore);
-            StringAssert.Contains(EnvironmentProfileId, feedbackAfterRestore);
+            StringAssert.Contains("册界环境引用: 已生效", feedbackAfterRestore);
+            StringAssert.DoesNotContain(RuleEntryId, feedbackAfterRestore);
+            Assert.AreEqual(EnvironmentProfileId, ReadProjection(adventureAfterRestore).EnvironmentProfileId);
 
             // 12. 读档后重复消费失败节点：重新进入 Settlement、完成五类证明后再次正式调用
             //     稳定失败，读档恢复的长期状态保留独立前态副本并逐项比较完整内容不变。
@@ -236,9 +247,26 @@ namespace TianZhang.Tests
             Assert.AreEqual(AdventureSceneState.Exploration, adventure.CurrentState,
                 "The projection must not block the existing encounter startup chain.");
             string feedback = GameObject.Find("EnvironmentFeedbackText").GetComponent<Text>().text;
-            StringAssert.Contains(CharterEnvironmentProjectionReasons.NoLongTermState, feedback);
+            // 未提交长期状态时显示可理解失败；原始稳定原因保留在投影对象中。
+            StringAssert.Contains("册界环境引用未生效", feedback);
+            StringAssert.DoesNotContain(CharterEnvironmentProjectionReasons.NoLongTermState, feedback);
+            Assert.AreEqual(
+                CharterEnvironmentProjectionReasons.NoLongTermState,
+                ReadProjection(adventure).Reason);
             Assert.IsNull(GameSession.Instance.CharterRuntimeState);
             Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+        }
+
+        /// <summary>读取 Adventure 控制器的只读投影对象（显示边界；原始条目/事件/档案 ID 仍保留）。</summary>
+        private static CharterEnvironmentProjectionResult ReadProjection(AdventureSceneController adventure)
+        {
+            var field = typeof(AdventureSceneController).GetField(
+                "charterEnvironmentProjection",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, "The formal adventure controller must keep its environment projection.");
+            var projection = field.GetValue(adventure) as CharterEnvironmentProjectionResult;
+            Assert.IsNotNull(projection, "The formal adventure controller must resolve its environment projection.");
+            return projection;
         }
 
         private static void ClickByName(string gameObjectName)

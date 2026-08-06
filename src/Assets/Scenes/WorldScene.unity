@@ -331,6 +331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a0e1ed9a11c4506bc118ae8ce77c757, type: 3}
   m_Name:
   m_EditorClassIdentifier: TianZhang.Runtime::TianZhang.World.WorldSceneController
+  languageTable: {fileID: 4900000, guid: 08efd85865d65cb4ebf674cd6f9ee484, type: 3}
 --- !u!4 &1667608751
 Transform:
   m_ObjectHideFlags: 0

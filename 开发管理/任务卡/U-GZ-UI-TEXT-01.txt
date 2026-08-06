@@ -4,15 +4,16 @@
   "id": "U-GZ-UI-TEXT-01",
   "title": "关中正式薄切片基础 UI 文本接入",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-05：用户在实际运行中确认多处 UI 仍直接显示字段名和内部 ID，并批准覆盖新建角色到关中战斗/返回的完整正式薄切片；现有显示所有者、Language 数据与 PlayMode runner 已足以形成独立 P1 实施卡。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/DataConfig/Language.csv",
+    "src/Assets/DataConfig/CharterSites.csv.meta",
     "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationManager.cs",
     "src/Assets/Scripts/World/WorldSceneController.cs",
     "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
@@ -43,7 +44,8 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-UI-TEXT-01.txt",
-    "开发管理/任务归档/U-GZ-UI-TEXT-01.txt"
+    "开发管理/任务归档/U-GZ-UI-TEXT-01.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

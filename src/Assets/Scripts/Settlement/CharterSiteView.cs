@@ -138,32 +138,27 @@ namespace TianZhang.Settlement
             CharterSiteInteractionProgress progress = controller.Progress;
 
             SetText(titleText, "旧水驿 · 册界单据点");
-            SetText(siteText, "站点: " + SafeId(site == null ? null : site.siteId) +
-                " | 据点: " + SafeId(site == null ? null : site.settlementId) +
+            SetText(siteText, "站点: " + UiText.Resolve(site == null ? null : site.siteId) +
+                " | 据点: " + UiText.ResolveId("settlement_", site == null ? null : site.settlementId) +
                 " | 目录版本: " + controller.CatalogVersion);
-            SetText(stepText, "当前步骤: " + controller.CurrentStepId);
+            SetText(stepText, "当前步骤: " + UiText.Resolve(controller.CurrentStepId));
 
             var identity = new StringBuilder();
-            identity.Append("通行: ").Append(SafeId(site == null ? null : site.passageCapabilityId))
-                .Append("｜").Append(SafeId(site == null ? null : site.passageOperatorId))
-                .Append("→").Append(SafeId(site == null ? null : site.passageTargetId))
-                .Append("；管理: ").Append(SafeId(site == null ? null : site.sealManagerId))
-                .Append("/").Append(SafeId(site == null ? null : site.sealBeneficiaryId))
-                .Append("；条目: ").Append(SafeId(site == null ? null : site.ruleEntryId))
-                .Append("；遗物: ").Append(SafeId(controller.AuthorityCharterRelicId))
-                .Append("；册界候选: ").Append(SafeId(site == null ? null : site.charterCandidateId));
+            identity.Append("通行: ").Append(progress != null && progress.PassageVerified ? "已确认" : "未确认")
+                .Append("；管理: ").Append(progress != null && progress.ManagementVerified ? "已确认" : "未确认")
+                .Append("；登记条目: ").Append(UiText.Resolve(site == null ? null : site.ruleEntryId))
+                .Append("；册界候选: ").Append(string.IsNullOrWhiteSpace(site == null ? null : site.charterCandidateId) ? "未声明" : "已声明");
             SetText(identityText, identity.ToString());
 
             var authorization = new StringBuilder();
-            authorization.Append("授权要求: ").Append(JoinIds(controller.RequiredAuthorizationVersionIds))
-                .Append("；站点界印授权: ").Append(SafeId(site == null ? null : site.sealAuthorizationVersionId))
-                .Append("；已确认: ").Append(progress != null && progress.RuleEntryRegistrationVerified ? "是" : "否");
+            authorization.Append("授权要求: 已声明 ").Append(controller.RequiredAuthorizationVersionIds.Length).Append(" 项")
+                .Append("；登记确认: ").Append(progress != null && progress.RuleEntryRegistrationVerified ? "已完成" : "未完成");
             SetText(authorizationText, authorization.ToString());
 
-            SetText(nodeText, "声明节点: " + JoinIds(controller.DeclaredNodeIds) +
-                "；已接通: " + JoinIds(progress == null ? null : progress.ConnectedNodeIds));
-            SetText(supplyText, "声明供给: " + JoinIds(controller.DeclaredSupplyIds) +
-                "；已准备: " + JoinIds(progress == null ? null : progress.RegisteredRealitySupplyIds));
+            SetText(nodeText, "声明节点: " + controller.DeclaredNodeIds.Length + " 个；已接通: " +
+                (progress == null || progress.ConnectedNodeIds == null ? 0 : progress.ConnectedNodeIds.Length) + " 个");
+            SetText(supplyText, "声明供给: " + controller.DeclaredSupplyIds.Length + " 项；已准备: " +
+                (progress == null || progress.RegisteredRealitySupplyIds == null ? 0 : progress.RegisteredRealitySupplyIds.Length) + " 项");
             SetText(environmentText, BuildEnvironmentLine());
             SetText(resultText, BuildResultLine());
         }
@@ -173,121 +168,46 @@ namespace TianZhang.Settlement
             CharterRuleInvocationResult evaluation = controller.LastEvaluation;
             if (evaluation == null || evaluation.EmittedEvents == null || evaluation.EmittedEvents.Length == 0)
                 return "环境引用: 无";
-            var sb = new StringBuilder();
-            sb.Append("环境引用: ");
-            for (int i = 0; i < evaluation.EmittedEvents.Length; i++)
-            {
-                CharterRuleEventOutput output = evaluation.EmittedEvents[i];
-                if (i > 0)
-                    sb.Append(", ");
-                sb.Append(SafeId(output == null ? null : output.eventId))
-                    .Append(":").Append(SafeId(output == null ? null : output.environmentProfileId));
-            }
-            return sb.ToString();
+            return "环境引用: 已生效（" + evaluation.EmittedEvents.Length + " 条事件）";
         }
 
         private string BuildResultLine()
         {
             var sb = new StringBuilder();
-            sb.Append("结果: ").Append(controller.LastReason);
+            sb.Append("结果: ").Append(UiText.ReasonDisplay(controller.LastReason, "操作失败"));
             CharterRuleInvocationResult evaluation = controller.LastEvaluation;
             if (evaluation != null && evaluation.ConflictDecision != null)
-            {
-                sb.Append("；冲突决定: ").Append(evaluation.ConflictDecision.Outcome)
-                    .Append("；获胜候选: ").Append(SafeId(evaluation.ConflictDecision.WinnerCandidateId));
-            }
+                sb.Append("；冲突决定: ").Append(ConflictOutcomeDisplay(evaluation.ConflictDecision.Outcome));
             sb.Append("；").Append(BuildLongTermSummary(controller.LongTermState));
             return sb.ToString();
+        }
+
+        private static string ConflictOutcomeDisplay(RuleConflictOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case RuleConflictOutcome.LeftWins:
+                    return "左侧候选获胜";
+                case RuleConflictOutcome.RightWins:
+                    return "右侧候选获胜";
+                case RuleConflictOutcome.Neutral:
+                    return "平局";
+                case RuleConflictOutcome.Rejected:
+                    return "已拒绝";
+                case RuleConflictOutcome.Anchored:
+                    return "已受锚";
+                default:
+                    return "未决";
+            }
         }
 
         private static string BuildLongTermSummary(CharterRuntimeStateData state)
         {
             if (state == null)
                 return "长期状态: 未接入";
-            var sb = new StringBuilder();
-            sb.Append("长期状态: stateId=").Append(SafeId(state.stateId))
-                .Append("；遗物=").Append(SafeId(state.charterRelicState))
-                .Append("；界印=").Append(SafeId(state.worldSealState))
-                .Append("；已登记条目=").Append(JoinIds(state.registeredRuleEntryIds))
-                .Append("；当前地区条目=").Append(JoinIds(state.currentRegionRuleEntryIds))
-                .Append("；正负提交=").Append(JoinCommitResults(state.positiveCommitResults))
-                .Append("/").Append(JoinCommitResults(state.negativeCommitResults))
-                .Append("；供给=").Append(JoinSupplies(state.realitySupplyStates))
-                .Append("；占用=").Append(JoinOccupancies(state.ruleEntryOccupancies));
-            return sb.ToString();
-        }
-
-        private static string JoinCommitResults(CharterCommitResultStateData[] values)
-        {
-            if (values == null || values.Length == 0)
-                return "无";
-            var sb = new StringBuilder();
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i > 0)
-                    sb.Append(", ");
-                CharterCommitResultStateData value = values[i];
-                if (value == null)
-                    sb.Append("null");
-                else
-                    sb.Append(SafeId(value.commitId)).Append(":").Append(SafeId(value.resultState));
-            }
-            return sb.ToString();
-        }
-
-        private static string JoinSupplies(CharterRealitySupplyStateData[] values)
-        {
-            if (values == null || values.Length == 0)
-                return "无";
-            var sb = new StringBuilder();
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i > 0)
-                    sb.Append(", ");
-                CharterRealitySupplyStateData value = values[i];
-                if (value == null)
-                    sb.Append("null");
-                else
-                    sb.Append(SafeId(value.realitySupplyId)).Append(":").Append(SafeId(value.state));
-            }
-            return sb.ToString();
-        }
-
-        private static string JoinOccupancies(CharterOccupancyStateData[] values)
-        {
-            if (values == null || values.Length == 0)
-                return "无";
-            var sb = new StringBuilder();
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i > 0)
-                    sb.Append(", ");
-                CharterOccupancyStateData value = values[i];
-                if (value == null)
-                    sb.Append("null");
-                else
-                    sb.Append(SafeId(value.resourceId)).Append(":").Append(SafeId(value.occupancyId));
-            }
-            return sb.ToString();
-        }
-
-        private static string JoinIds(string[] values)
-        {
-            if (values == null || values.Length == 0)
-                return "无";
-            var sb = new StringBuilder();
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i > 0)
-                    sb.Append(", ");
-                sb.Append(SafeId(values[i]));
-            }
-            return sb.ToString();
-        }
-
-        private static string SafeId(string value)
-        {
-            return string.IsNullOrWhiteSpace(value) ? "空" : value;
+            int registered = state.registeredRuleEntryIds == null ? 0 : state.registeredRuleEntryIds.Length;
+            int supplies = state.realitySupplyStates == null ? 0 : state.realitySupplyStates.Length;
+            return "长期状态: 已接入（登记条目 " + registered + "，供给 " + supplies + "）";
         }
 
         private static void SetText(Text label, string value)

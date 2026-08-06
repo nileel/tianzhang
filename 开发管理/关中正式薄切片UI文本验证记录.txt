@@ -1,0 +1,144 @@
+# 关中正式薄切片 UI 文本验证记录（U-GZ-UI-TEXT-01）
+
+> 修改方：DeepSeek V4 Flash；状态：⚠️ 已修改/未审核；待 Codex 复审。
+> 任务卡：`开发管理/任务卡/U-GZ-UI-TEXT-01.txt`；设计：`docs/superpowers/specs/2026-08-05-guanzhong-basic-attack-and-ui-task-design.md#四`、
+> `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md`（6.2/6.3/6.4/9.2/十）。
+> 事实源：`src/Assets/DataConfig/Language.csv` 与正式 `Settlements.csv`、`Bounties.csv`、`Enemies.csv`、
+> `Items.csv`、`CharterSites.csv`、`EnvironmentProfiles.csv`、`AttackProfiles.csv` 中本卡命中的生产实体。
+
+## 一、逐控件审计清单
+
+清单按正式玩家路径（新建角色 → 主世界 → 关中城 → 悬赏/单据点 → 关中野外 → 战斗 → 结算 → 返回）逐控件登记：
+内部值 → 显示所有者 → 批准显示事实 → 处理方式 → 直接测试。玩家显示只做单向映射，稳定 ID / 原因始终保留在
+数据对象、`LastReason`/失败字段、Debug 日志与测试断言中。
+
+### 1. 新建角色与开局确认（StartMenuScene）
+
+| 控件 | 内部值示例 | 显示所有者 | 批准显示事实 | 处理 | 直接测试 |
+| --- | --- | --- | --- | --- | --- |
+| 门派按钮 | 太一道庭（目录中文显示名） | SectSelectionManager | 目录既有中文显示名 | 无变化（已为中文） | 既有 |
+| 选中门派文本 | "Selected: 太一道庭" | SectSelectionManager（不在本卡路径内） | — | 记录：英文前缀 root cause 在范围外脚本，未改（场景默认文本为空串，非根因） | — |
+| 角色创建摘要 | 先天购买点/显性灵根/技艺点等 | SectSelectionManager | 目录既有中文显示名 | 无变化（已为中文） | 既有 |
+
+### 2. 主世界（WorldSceneController）
+
+| 控件 | 内部值示例 | 显示所有者 | 批准显示事实 | 处理 | 直接测试 |
+| --- | --- | --- | --- | --- | --- |
+| SelectedWorldNodeText | 关陇玄域（节点中文显示名） | WorldSceneController | 节点既有中文显示名 | 无变化 | 新增断言 |
+| SelectedWorldNodeDescription 第一行 | "guanzhong / RegionHub" | WorldSceneController | 节点中文显示名 + `world_node_type_hub` 最小状态文案 | 映射为"关陇玄域（区域枢纽）" | SceneArchitectureEditorTests 新增断言 |
+| SelectedWorldNodeDescription 第二行 | "据点: guanzhong_city" | WorldSceneController | `settlement_guanzhong_city` 键 | `UiText.ResolveId("settlement_", id)` → 关中城 | 同上 |
+| SelectedWorldNodeDescription 第二行（非正式实体） | "副本: longxi_trial" / "据点: taiyi_sect" / "据点: zhongzhou_city" | WorldSceneController | 无批准显示事实（未接入/冻结系统） | 按 4.3 禁止项保留内部值、不生成占位文本；已记录证据 | — |
+
+### 3. 关中城（SettlementSceneView / SettlementSceneController）
+
+| 控件 | 内部值示例 | 显示所有者 | 批准显示事实 | 处理 | 直接测试 |
+| --- | --- | --- | --- | --- | --- |
+| SettlementNameText | settlement_guanzhong_city | SettlementSceneView | `settlement_guanzhong_city` 键 | `UiText.Resolve` → 关中城 | SceneArchitectureEditorTests / GuanzhongFormalUiTextTests |
+| SettlementDetailText | "据点: guanzhong_city\n区域: guanzhong" | SettlementSceneView | `settlement_guanzhong_city` 键 + `region_guanzhong` 键 | 解析 → "据点: 关中城\n区域: 关中" | 同上 |
+| SettlementStatusText（加载成功） | settlement_loaded:...; return_world:... | SettlementSceneView | 最小状态文案 + 节点中文显示名 | "据点已加载 · 返回世界：关陇玄域" | 同上 |
+| SettlementStatusText（失败原因） | settlement_not_found / settlement_feature_disabled:... / settlement_feature_unknown:market / settlement_feature_handler_failed:... / settlement_adventure_not_available / bounty_board_entry_opened | SettlementSceneView | reason 键映射 + 兜底 | `UiText.ReasonDisplay` → 中文；未知原因回退"功能不可用/副本不可用"并保留原始原因到日志 | BountyBoardViewTests 更新 |
+| SettlementFeature_bounty_board 按钮 | settlement_feature_bounty_board | SettlementSceneView | 同键 | 解析 → 悬赏板 | SceneArchitectureEditorTests |
+| SettlementAdventure_guanzhong_wild 按钮 | "进入副本: guanzhong_wild" | SettlementSceneView | `adventure_guanzhong_wild` 键 | 解析 → "进入副本: 关中野外" | 同上 |
+| SettlementCharterSiteEntryStatus | charter_site_entry_unavailable:settlement_charter_site_missing:... | SettlementSceneView | `charter_site_entry_*` 键映射 | "旧水驿入口: 单据点不存在"（原因保留在 LastCharterSiteReason） | CharterSiteViewTests 更新 |
+
+### 4. 悬赏板（BountyBoardView）
+
+| 控件 | 内部值示例 | 显示所有者 | 批准显示事实 | 处理 | 直接测试 |
+| --- | --- | --- | --- | --- | --- |
+| BountyBoardEntriesText | "bounty_guanzhong_shijiahou \| Available \| 0/1" | BountyBoardView | `bounty_guanzhong_shijiahou_title` 键 + `bounty_status_*` 键 | "石甲兽悬赏 · 一次性除害令 \| 可接取 \| 进度 0/1"；无 titleKey 的悬赏回退稳定 ID（不伪造） | BountyBoardViewTests 更新 |
+| BountyBoardResultText | bounty_not_accepted / bounty_claim_repeated / bounty_board_no_bounties 等 | BountyBoardView | reason 键映射 + 兜底 | `UiText.ReasonDisplay` → 中文；`LastResultReason` 保留原始原因；成功不写结果字面量 | BountyBoardViewTests 更新 |
+
+### 5. 旧水驿单据点（CharterSiteView / CharterSiteController）
+
+| 控件 | 内部值示例 | 显示所有者 | 批准显示事实 | 处理 | 直接测试 |
+| --- | --- | --- | --- | --- | --- |
+| CharterSiteSiteText | "站点: charter_site_old_water_station \| 据点: guanzhong_city" | CharterSiteView | `charter_site_old_water_station` / `settlement_guanzhong_city` 键 | 解析 → "站点: 旧水驿 \| 据点: 关中城" | CharterSiteViewTests / CharterVerticalSlicePlayModeTests 更新 |
+| CharterSiteStepText | charter_step_passage 等 8 值 | CharterSiteView | `charter_step_*` 最小状态键 | 映射 → 通行确认/管理确认/接通节点/条目登记/准备供给/评估推演/已正式提交/尚未打开 | 同上 |
+| CharterSiteIdentityText | capability_kaihe_jiuzhang_v1 等协议 ID 串 | CharterSiteView | 通行/管理进度状态 + `charter_entry_suifu_diji` 键 | 状态化 → "通行: 未确认；管理: 未确认；登记条目: 水府地纪；册界候选: 已声明"（协议 ID 无批准显示事实，不显示） | CharterSiteViewTests 更新 |
+| CharterSiteAuthorizationText | authorization_* 版本 ID 串 | CharterSiteView | 授权要求声明数量 + 登记确认状态 | 状态化 → "授权要求: 已声明 N 项；登记确认: 已完成/未完成" | 同上 |
+| CharterSiteNodeText / SupplyText | node_* / supply_* ID 串 | CharterSiteView | 声明与已接通/已准备数量状态 | 状态化 → "声明节点: 3 个；已接通: N 个" / "声明供给: 3 项；已准备: N 项" | 同上 |
+| CharterSiteEnvironmentText | event_* : env_guanzhong_wild | CharterSiteView | 环境引用生效状态 | 状态化 → "环境引用: 无 / 已生效（N 条事件）" | 同上 |
+| CharterSiteResultText | charter_panel_formal_committed / charter_conflict_not_won / LeftWins / 长期状态 ID 串 | CharterSiteView | reason 键映射 + 冲突结果枚举中文 + 长期状态计数 | "结果: 正式提交成功；冲突决定: 左侧候选获胜；长期状态: 已接入（登记条目 N，供给 N）"；`LastReason`/`LastEvaluation` 保留原始值 | CharterSiteViewTests / CharterVerticalSlicePlayModeTests 更新 |
+
+### 6. 关中野外与战斗（AdventureSceneController / ExplorationController / BattleUIManager）
+
+| 控件 | 内部值示例 | 显示所有者 | 批准显示事实 | 处理 | 直接测试 |
+| --- | --- | --- | --- | --- | --- |
+| AdventureIdText | 当前副本: guanzhong_wild | AdventureSceneController | `adventure_guanzhong_wild` 键 | 解析 → "当前副本: 关中野外" | TacticalGridModelTests 既有断言保持 |
+| AdventureSourceText | "来源据点: guanzhong_city" / 遭遇错误文本 | AdventureSceneController | `settlement_guanzhong_city` 键 + 节点中文显示名 + reason 键嵌入解析 | 解析 + `UiText.ResolveEmbedded`；原始原因保留在字段与 Debug 日志 | GuanzhongFormalUiTextPlayModeTests 新增 |
+| EnvironmentFeedbackText 投影 | "条目=charter_entry_suifu_diji；事件=event_...；档案=env_guanzhong_wild" | AdventureSceneController | `charter_entry_suifu_diji` 键 + 生效状态文案 | "册界环境引用: 已生效（条目: 水府地纪）"；失败显示 reason 映射；原始 ID 保留在投影对象 | CharterVerticalSlicePlayModeTests 更新 |
+| EnvironmentFeedbackText 地表 | surface_grassland / surface_loess | AdventureSceneController | `surface_*` 键（生产环境档案的状态文案） | 解析 → "地表: 草地、黄土" | GuanzhongFormalUiTextPlayModeTests 新增 |
+| EnvironmentFeedbackText 格边 | 拒绝(directed_edge_blocks_movement 等) | AdventureSceneController | 空间原因键映射 + 兜底 | "移动不允许（移动受阻）"；未知原因回退"受限"并保留原因 | 同上 |
+| EnvironmentFeedbackText 未配置 | 环境反馈拒绝: <reason> | AdventureSceneController | 最小状态文案 | "环境反馈: 未生效"；原始原因保留在投影对象并写开发日志 | 同上 |
+| 术法/神通按钮标签 | attack_profile_basic_unarmed | ExplorationController → BattleUIManager | `attack_profile_*` 键 | 解析 → 徒手 | GuanzhongFormalUiTextTests.ResolveEmbedded |
+| 战斗日志 | "无名修士 攻击 attack_profile_basic_unarmed → 石甲兽" | BattleUIManager.AddLog | Language 键嵌入解析 | `UiText.ResolveEmbedded` → "攻击 徒手"；未映射文本原样保留 | GuanzhongFormalUiTextTests |
+| 战斗横幅 | 胜利 / 败北 / CTB异常 | ExplorationController | 既有中文 + 最小状态文案 | "CTB异常" → "战斗异常" | 新增（回归） |
+
+### 7. 未批准显示事实项（按 4.3 停止并保留证据）
+
+- 世界节点 `longxi_trial`（副本）、`taiyi_sect`、`zhongzhou_city`（据点）：非正式实体，无批准显示事实，不生成占位文本，保留内部值。
+- 单据点协议 ID（capability/operator/target/manager/beneficiary/relic/authorization 版本/节点/供给/事件/占用/候选 ID）：无批准显示事实，改为状态化显示，ID 保留在数据对象与控制器字段。
+- StartMenu 选中文本英文前缀 "Selected:"：root cause 在 `SectSelectionManager`（不在本卡 expectedPaths），场景默认文本为空串非根因，未修改，留待后续任务。
+- 战斗日志中未映射的机器原因（如攻击档案装配错误码）：显示原样保留于日志文本，开发日志可见，不伪造成功。
+
+## 二、修改文件
+
+- `src/Assets/DataConfig/Language.csv`：新增生产实体/状态/反馈的最小玩家显示键（键值即稳定 ID / 稳定原因）。
+- `src/Assets/Scripts/Settlement/SettlementSceneView.cs`：新增共享 `UiText` 解析器（唯一文本源 Language.csv，幂等加载，单向映射）+ 据点显示映射 + languageTable 序列化引用。
+- `src/Assets/Scripts/World/WorldSceneController.cs`：节点显示名查找 + 描述映射 + languageTable 引用。
+- `src/Assets/Scripts/Settlement/BountyBoardView.cs`、`CharterSiteView.cs`：条目/结果/面板文本状态化映射。
+- `src/Assets/Scripts/Adventure/AdventureSceneController.cs`：来源/环境反馈/副本名映射 + languageTable 引用。
+- `src/Assets/Scripts/Map/ExplorationController.cs`：技能按钮标签解析、"战斗异常"横幅。
+- `src/Assets/Scripts/Game/BattleUIManager.cs`：战斗日志嵌入键解析。
+- `src/Assets/Scripts/Editor/SceneBuilder.cs`：四个场景的显示组件序列化 Language.csv 引用（场景重建不丢失）。
+- `src/Assets/Scenes/WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity`：序列化 languageTable 引用。
+- 测试：`SceneArchitectureEditorTests`、`BountyBoardViewTests`、`CharterSiteViewTests`、`CharterVerticalSlicePlayModeTests` 更新断言；
+  新增 `GuanzhongFormalUiTextTests`（EditMode）、`GuanzhongFormalUiTextPlayModeTests`（PlayMode，含 .meta）。
+- `tools/check-data-chain.ps1`：新增 UI 文本投影校验（键集存在性 + 场景 languageTable 引用）。
+- `开发管理/关中正式薄切片UI文本验证记录.txt`：本记录。
+
+## 三、实际命令与结果
+
+| 命令 | 结果 |
+| --- | --- |
+| `dotnet build src/TianZhang.EditModeTests.csproj` | OK：0 错误；2 个警告均为既有 `CharterRuleStaticCatalogData` 序列化字段 CS0649（dotnet 构建视角），与本卡新增字段无关（新增字段已显式置空消除警告） |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` | 432 执行 / 430 通过 / 2 失败；2 项失败与 baseCommit 独立基线逐项一致（见第五节），脚本以退出码 2 结束属其零失败门禁预期行为 |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1` | 5 执行 / 5 通过 / 0 失败，含新增完整薄切片 runner |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` | OK：language keys=544；含新增 UI 文本投影校验（键集存在性 + 三场景 languageTable 引用） |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests` | OK（356 文件） |
+| `tools/check-pending-whitespace.ps1`（暂存前） | OK（22 个候选路径） |
+| `git diff --cached --check`（暂存后） | 由 `tools/automation-finalize-commit.ps1` 提交前执行 |
+
+基线对照：baseCommit（29781b3）独立全量 EditMode 运行 426 执行 / 424 通过 / 2 失败，失败项与本卡运行完全一致；
+本卡新增的 6 个 EditMode 用例与 1 个 PlayMode 用例全部通过。`AdventurePanelDoesNotOverlapPlayerHud` 为顺序相关用例，
+本卡新增场景重建用例已在其清理中恢复"最后打开 AdventureScene"的既有状态，回归通过。
+
+## 四、测试数统计
+
+| 套件 | 新增 | 更新 | 结果 |
+| --- | --- | --- | --- |
+| EditMode：GuanzhongFormalUiTextTests | 6（生产映射/缺键回退/未知原因保留/嵌入键解析/步骤与状态键/场景重建中文） | — | 6/6 通过 |
+| EditMode：SceneArchitectureEditorTests | 世界节点显示断言 2 处、环境反馈/副本入口/投影断言 5 处 | 8 处 | 全通过 |
+| EditMode：BountyBoardViewTests | 悬赏条目中文/状态/回退断言 6 处 | 6 处 | 全通过 |
+| EditMode：CharterSiteViewTests | 玩家显示+内部原因分层断言 5 处 | 5 处 | 全通过 |
+| PlayMode：GuanzhongFormalUiTextPlayModeTests | 1（新建角色→世界→关中城→悬赏→单据点→野外→战斗→结算→返回→领奖） | — | 1/1 通过 |
+| PlayMode：CharterVerticalSlicePlayModeTests | 投影/面板中文断言 2 处 | 2 处 | 全通过 |
+
+## 五、既有无关失败（与 baseCommit 基线逐项一致，均已登记于多份历史验证记录）
+
+1. `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`：纯内存逻辑断言 `PULSE_ADVANTAGE`
+   得到 `PULSE_NEUTRAL`；与本卡路径无交集（`D-TZ-CHARTER-CONFLICT-02` 迁移后无全量复测记录）。
+2. `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`：断言旧
+   `SpellData`／`DivineSkillData` 读取时的日志格式（"Excluded non-player spell: ... scope=reserved"），
+   现行加载器输出 `Excluded unresolved art/divine profile`；测试文件与加载器均不在本卡路径内。
+
+另：Unity 导入会在工作区生成未跟踪的 `src/Assets/DataConfig/CharterSites.csv.meta`（仓库既有缺口：
+`CharterSites.csv` 从未提交 .meta）；该文件不在本卡候选路径内，candidate 不包含它，留待后续任务补交。
+
+## 六、残留风险与后续
+
+- 非正式实体（longxi_trial / taiyi_sect / zhongzhou_city / StartMenu 英文前缀）仍显示内部值，待后续内容批准后补显示名。
+- `UiText` 表在未加载时按键回退（不伪造文本）；正式场景均序列化同一 Language.csv 引用，重建后一致。
+- 战斗日志中未映射的机器原因仍原样显示于日志文本（开发可见），不伪造成功。
+- 本卡未改变任何业务状态语义、交互顺序、Canvas/布局、字体、颜色或美术资源；未新增第二本地化服务或平行文本目录。
+- 交接：业务完成后由共享入口转为 `codex_review/codex/ready`，待 Codex 独立复审。

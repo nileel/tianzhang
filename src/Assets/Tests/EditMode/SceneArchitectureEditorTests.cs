@@ -153,9 +153,12 @@ namespace TianZhang.Tests
                 Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
                 var feedbackText = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>();
                 Assert.IsNotNull(feedbackText, "The formal AdventureScene must keep its environment feedback text.");
-                StringAssert.Contains(CharterRuleEntryId, feedbackText.text);
-                StringAssert.Contains("event_suifu_water_redistribution", feedbackText.text);
-                StringAssert.Contains("env_guanzhong_wild", feedbackText.text);
+                // 玩家显示只呈现已批准中文名与生效状态；原始条目/事件/档案 ID 保留在投影对象中。
+                StringAssert.Contains("册界环境引用: 已生效", feedbackText.text);
+                StringAssert.Contains("水府地纪", feedbackText.text);
+                StringAssert.DoesNotContain(CharterRuleEntryId, feedbackText.text);
+                StringAssert.DoesNotContain("event_suifu_water_redistribution", feedbackText.text);
+                StringAssert.DoesNotContain("env_guanzhong_wild", feedbackText.text);
             }
             finally
             {
@@ -186,11 +189,13 @@ namespace TianZhang.Tests
                 InvokeAwake(controller);
                 InvokeStart(controller);
 
-                // 未接入册界长期状态时只显示稳定原因；既有 U-ENV-RULE-01B 环境链与遭遇启动不受投影阻断。
+                // 未接入册界长期状态时只显示可理解失败；原始稳定原因保留在投影对象中，
+                // 既有 U-ENV-RULE-01B 环境链与遭遇启动不受投影阻断。
                 Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
                 var feedbackText = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>();
                 Assert.IsNotNull(feedbackText);
-                StringAssert.Contains(CharterEnvironmentProjectionReasons.NoLongTermState, feedbackText.text);
+                StringAssert.Contains("册界环境引用未生效", feedbackText.text);
+                StringAssert.DoesNotContain(CharterEnvironmentProjectionReasons.NoLongTermState, feedbackText.text);
             }
             finally
             {
@@ -278,6 +283,8 @@ namespace TianZhang.Tests
             {
                 sessionGo.AddComponent<GameSession>();
                 var controller = controllerGo.AddComponent<WorldSceneController>();
+                TianZhang.Settlement.UiText.Load(
+                    AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataConfig/Language.csv"));
 
                 typeof(WorldSceneController)
                     .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -290,6 +297,13 @@ namespace TianZhang.Tests
                 Assert.AreEqual(4, nodeButtons.Length);
                 Assert.IsNotNull(GameObject.Find("WorldNodePanel"));
                 Assert.IsNotNull(GameObject.Find("EnterLocationButton"));
+
+                // 正式路径节点描述只显示中文显示名与已批准据点名，不显示 regionId / 枚举 / 稳定 ID。
+                controller.SelectNode("guanzhong_hub");
+                Assert.AreEqual("关陇玄域", GameObject.Find("SelectedWorldNodeText")?.GetComponent<Text>()?.text);
+                Assert.AreEqual(
+                    "关陇玄域（区域枢纽）\n据点: 关中城",
+                    GameObject.Find("SelectedWorldNodeDescription")?.GetComponent<Text>()?.text);
             }
             finally
             {
@@ -322,8 +336,16 @@ namespace TianZhang.Tests
                 Assert.IsTrue(controller.TryGetSettlement("guanzhong_city", out var city));
                 Assert.AreEqual("content_scope_production", city.contentScope);
                 Assert.IsFalse(controller.TryGetSettlement("taiyi_sect", out _));
-                Assert.AreEqual("settlement_guanzhong_city", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
-                StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementStatusText")?.GetComponent<Text>()?.text);
+                // 玩家显示只呈现已批准中文名与可理解状态；稳定 ID 保留在会话与目录对象中。
+                Assert.AreEqual("关中城", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("据点已加载", GameObject.Find("SettlementStatusText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("关陇玄域", GameObject.Find("SettlementStatusText")?.GetComponent<Text>()?.text);
+                Assert.AreEqual(
+                    "悬赏板",
+                    GameObject.Find("SettlementFeature_bounty_board").GetComponentInChildren<Text>().text);
+                Assert.AreEqual(
+                    "进入副本: 关中野外",
+                    GameObject.Find("SettlementAdventure_guanzhong_wild").GetComponentInChildren<Text>().text);
                 Assert.AreEqual(1, CountButtonsWithPrefix("SettlementFeature_"));
                 Assert.IsTrue(GameObject.Find("SettlementAdventure_guanzhong_wild").GetComponent<Button>().interactable);
                 Assert.IsNotNull(GameObject.Find("ReturnToWorldButton"));
@@ -355,7 +377,9 @@ namespace TianZhang.Tests
                 Assert.AreEqual(SettlementSceneController.SettlementMissingReason, controller.LastFailureReason);
                 Assert.AreEqual("据点不可用", GameObject.Find("SettlementNameText")?.GetComponent<Text>()?.text);
                 Assert.IsNotNull(GameObject.Find("ReturnToWorldButton"));
-                StringAssert.Contains("guanzhong_hub", GameObject.Find("SettlementDetailText")?.GetComponent<Text>()?.text);
+                // 失败关闭仍给出可理解反馈；返回目标用中文节点名，稳定原因保留在 LastFailureReason。
+                Assert.AreEqual("据点不存在", GameObject.Find("SettlementStatusText")?.GetComponent<Text>()?.text);
+                StringAssert.Contains("关陇玄域", GameObject.Find("SettlementDetailText")?.GetComponent<Text>()?.text);
             }
             finally
             {
@@ -558,7 +582,9 @@ namespace TianZhang.Tests
                 var entranceButton = GameObject.Find("SettlementAdventure_guanzhong_wild")?.GetComponent<Button>();
                 Assert.IsNotNull(entranceButton);
                 Assert.IsTrue(entranceButton.interactable);
-                StringAssert.Contains("guanzhong_wild", entranceButton.GetComponentInChildren<Text>().text);
+                // 玩家显示使用已批准副本名，不显示稳定 ID；返回上下文仍以 ID 精确持久化。
+                StringAssert.Contains("关中野外", entranceButton.GetComponentInChildren<Text>().text);
+                StringAssert.DoesNotContain("guanzhong_wild", entranceButton.GetComponentInChildren<Text>().text);
             }
             finally
             {
@@ -770,13 +796,16 @@ namespace TianZhang.Tests
 
                 var controller = controllerGo.AddComponent<AdventureSceneController>();
                 controller.SetEnvironmentPresentation(EnvironmentPresentationSnapshot.Create(model));
+                TianZhang.Settlement.UiText.Load(
+                    AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataConfig/Language.csv"));
                 InvokeStart(controller);
 
                 string feedback = GameObject.Find("EnvironmentFeedbackText")?.GetComponent<Text>()?.text;
-                StringAssert.Contains("surface_grassland", feedback);
+                StringAssert.Contains("草地", feedback);
                 StringAssert.Contains("气流", feedback);
                 StringAssert.Contains("格边", feedback);
                 StringAssert.Contains("移动允许", feedback);
+                StringAssert.DoesNotContain("surface_grassland", feedback);
                 StringAssert.DoesNotContain("surface_default", feedback);
             }
             finally

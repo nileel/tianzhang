@@ -1036,6 +1036,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b1f6655a35f43b3be5f34d7a735de9a, type: 3}
   m_Name: SettlementSceneView
   m_EditorClassIdentifier: TianZhang.Gameplay::TianZhang.Settlement.SettlementSceneView
+  languageTable: {fileID: 4900000, guid: 08efd85865d65cb4ebf674cd6f9ee484, type: 3}
   settlementNameText: {fileID: 1917973273}
   settlementDetailText: {fileID: 1485660822}
   settlementStatusText: {fileID: 1132573894}
