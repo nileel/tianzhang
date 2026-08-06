@@ -4,13 +4,13 @@
   "id": "D-COMBAT-PROD-01",
   "title": "关中薄切片基础攻击生产迁移",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "data",
   "stage": "migration",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "负责人在 Codex 对话中一次性选择 DEC-20260806-ENVTESTSYNC2 方案 A；EnvironmentProfileDataTests.cs 已实际加入 expectedPaths。下一 DeepSeek run 先以 cherry-pick --no-commit 机械重放 checkpoint 226b3c2，再同步该测试的 12 边生产行并完成既定门禁；除出现新的范围外根因外不得再次请求同一决策。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -45,71 +45,7 @@
     "开发管理/任务归档/D-COMBAT-PROD-01.txt",
     "开发管理/未通过审核清单.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "D-COMBAT-PROD-01",
-    "sourceRunId": "460fd1da-2427-4c2e-bdd6-74892d958632",
-    "owner": "deepseek",
-    "route": "external_execute",
-    "decisionId": "DEC-20260806-ENVTESTSYNC2",
-    "question": "DEC-20260806-ENVTESTSYNC 回复 A（feishu_card，evidenceHash 364b17067e8df90f00057ea1029c32838ed6f0b3fbeafd28de089e02a3e56dec）已核验，任务已恢复 ready（stateReason：负责人回复已核验，恢复原任务：DEC-20260806-ENVTESTSYNC），checkpoint 30a54817 已机械重放并暂存 5 个路径内文件；但方案 A 承诺的路径扩展第二次未写入任务卡：HEAD 3c66d9b 的 expectedPaths 与本 run CandidatePaths 均不含 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 checkpoint 路径守卫（deepseek_checkpoint_paths_invalid）拒绝路径外改动，本 run 无法同步该测试。静态断言：GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 嵌入冻结 6 边生产行并逐索引断言 CSV/asset 同步，12 边 CSV 下必然失败，EditMode 门禁（426/423/3）无法在本 run 闭合。请决定该测试同步的最终执行方式。",
-    "options": [
-      {
-        "key": "A",
-        "label": "共享入口把 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs 实际写入本卡 expectedPaths（前两次接受的方案 A 均未落实该扩展），下一 run 由 DeepSeek 同步其嵌入生产行（12 边）并重跑 EditMode/PlayMode 门禁后闭合本卡；本 checkpoint 已含全部路径内返工（CSV 12 边、严格导入器重新生成的 asset、PlayMode 双向攻击断言与验证记录）"
-      },
-      {
-        "key": "B",
-        "label": "该环境测试改由 Codex 同步（或由 Codex 扩展路径并更新测试）；DeepSeek 路径内返工已在本 checkpoint 完成，Codex 同步后按既有复审流程闭合"
-      },
-      {
-        "key": "C",
-        "label": "保持 blocked：不修改环境输入，返工停止；本 checkpoint 不合并，无业务影响"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 使返工在 DeepSeek 单点闭环，唯一前置是共享入口落实已两次接受但未执行的 expectedPaths 扩展，之后一次最终 EditMode 全量重跑；B 需已归档的环境所有者（Codex）介入更新测试后再轮换复审；C 完成条件在现有输入下仍不可达，返工停止。",
-    "plainSummary": {
-      "situation": "已两次选择 A（扩展路径由 DeepSeek 同步环境测试），但共享入口两次都未把该测试写入任务卡 expectedPaths，本 run 仍无权修改该测试",
-      "impact": "其余返工（12 边 CSV、重新生成的 asset、PlayMode 双向攻击断言）已在本 checkpoint 完成并实测验证，仅剩该测试同步阻塞 EditMode 与任务闭合",
-      "action": "请选择 A（落实路径扩展后由 DeepSeek 继续）、B（改由 Codex 同步）或 C（保持阻塞）"
-    },
-    "checkpointCommit": "226b3c2746d67f4bf2e1f4ebf3c3cec3509af09b",
-    "baseCommit": "3c66d9bfd3e9bd1e18647f12d41395ccf17a3588",
-    "branch": "codex/automation/deepseek/460fd1da-2427-4c2e-bdd6-74892d958632/candidate",
-    "changedPaths": [
-      "开发管理/关中基础攻击生产迁移验证记录.txt",
-      "开发管理/未通过审核清单.txt",
-      "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
-      "src/Assets/DataConfig/EnvironmentProfiles.csv",
-      "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
-    ],
-    "verified": [
-      "静态核对：任务卡 D-COMBAT-PROD-01 automationReply=OPTION_ACCEPTED/replyValue=A（decisionId DEC-20260806-ENVTESTSYNC，source=feishu_card，evidenceHash 364b17067e8df90f00057ea1029c32838ed6f0b3fbeafd28de089e02a3e56dec，与本 run 回复上下文一致），stateReason=负责人回复已核验，恢复原任务：DEC-20260806-ENVTESTSYNC；HEAD 3c66d9b 的 expectedPaths 与本 run CandidatePaths 均不含 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs，方案 A 承诺的路径扩展第二次未写入任务卡（恢复提交 3c66d9b 仅更新 stateReason 与 automationCheckpoint 元数据）",
-      "已核对：本 run 暂存的 5 个文件与 checkpoint 30a54817 逐字节一致（git diff 30a54817 -- 5 文件为空），已运行验证与 checkpoint 同输入：CSV 12 条边全部满足 DataConfigImporter.ParseDirectedEdges 语法且 12 条均存在反向配对；Unity 6000.3.18f1 batchmode 重新生成 EnvironmentProfile_env_guanzhong_wild.asset（exit 0，12 条边顺序与 CSV 一致，GUID 与 .meta 未变）；PlayMode 4 执行/4 通过/0 失败（双方相邻格均完成基础攻击且不返回三类装配错误）；EditMode 426 执行/423 通过/3 失败（2 项既有登记基线 CharterConflictRulesTests、DataConfigImporterContentScopeTests + EnvironmentProfileDataTests.GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 嵌入冻结 6 边生产行，12 边 CSV 下必然失败）",
-      "已运行：tools/check-data-chain.ps1 -FailOnMissingAssets 输出 check-data-chain: OK（docs/csv counts 与 language keys 410 正常）；tools/check-pending-whitespace.ps1 5 文件 OK；git diff --cached --check 通过",
-      "静态核对：src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs:72-105 GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 嵌入冻结 6 边生产行（GuanzhongWildRow）并逐索引断言 CSV 与生成 asset 同步；12 边 CSV 下必然失败；该文件不在本卡 expectedPaths，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 Assert-DecisionCheckpoint 的 deepseek_checkpoint_paths_invalid 均拒绝路径外改动，本 run 无法合法同步该测试",
-      "checkpoint 226b3c2746d67f4bf2e1f4ebf3c3cec3509af09b 为 baseCommit 3c66d9b 直接后继（rev-list count=1、parent 精确匹配）、branch=codex/automation/deepseek/460fd1da-2427-4c2e-bdd6-74892d958632/candidate、仅含 5 个合法 CandidatePath、工作区含未跟踪文件全净"
-    ],
-    "unverified": [
-      "EnvironmentProfileDataTests.cs 嵌入生产行同步（12 边）未实施：不在本 run 授权路径（两次接受的方案 A 均未落实 expectedPaths 扩展），等待 DEC-20260806-ENVTESTSYNC2 决定",
-      "EditMode 门禁未闭合：上述第 3 项失败需测试同步后重跑全量门禁确认",
-      "BattleSim 未重跑：本轮无 BattleSim 改动，沿用 checkpoint 30a54817 上一轮同范围已通过结论（basic-unarmed-production-d-combat-prod-01、distance-model-tq055、attack-profile-d-combat-02 均 PASS）"
-    ],
-    "residualRisk": "决策未决期间本 checkpoint 不合并，无业务影响。若选 A，需要共享入口把 EnvironmentProfileDataTests.cs 实际写入任务卡 expectedPaths（前两次接受的方案 A 均未落实该扩展），下一 run 由 DeepSeek 同步测试并重跑 EditMode/PlayMode 门禁后闭合；若入口再次不落实，将第三次出现同一机械缺口。若选 B，改由 Codex 同步测试，DeepSeek 业务返工待 Codex 同步后按既有复审流程闭合。反向边输入已在本 checkpoint 经 PlayMode 4/4 回归确认；2 项既有 EditMode 基线失败（CharterConflictRulesTests、DataConfigImporterContentScopeTests）仍由各自所有者处理。仓库既有缺口 CharterSites.csv.meta 未纳入版本控制，Unity 每次导入重新生成，本卡未提交。",
-    "taskContextDigest": "e81b6135e8648e1c2deb210836113bfe80c677e565c44dfa791bdef4a6edeec1",
-    "createdAt": "2026-08-06T16:51:56.5467798+08:00",
-    "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20260806-ENVTESTSYNC2",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "codex_conversation",
-    "evidenceHash": "d351a6b62dd7891461303f9fb84cc2f11acdf8562abc5bd8232bed7509a7d687"
-  }
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
 }
 ---TASK-BODY---
 # D-COMBAT-PROD-01 · 关中薄切片基础攻击生产迁移

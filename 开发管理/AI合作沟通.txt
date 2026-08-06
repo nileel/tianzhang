@@ -201,3 +201,16 @@
 - 残留风险：冻结环境边样本下正式场景仅玩家侧攻击可命中（测试摆位与说明见验证记录）；既有 2 项 EditMode 基线失败仍待其所有者；CharterSites.csv.meta 未跟踪缺口为仓库既有状态；本卡未切换 BattleSim 生产消费者，未建立默认回退或第二数据源。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-D-COMBAT-PROD-01-0fbb40da · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 D-COMBAT-PROD-01 的原子正式结果等待 Codex 独立复审。
+- 任务：D-COMBAT-PROD-01
+- 候选提交：e24a507c1e4ddff38a6773dd09b139e07cdd8e4f
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中基础攻击生产迁移验证记录.txt、开发管理/未通过审核清单.txt、src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset、src/Assets/DataConfig/EnvironmentProfiles.csv、src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs、src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- 已验证：静态核对：任务卡 D-COMBAT-PROD-01 stateReason 与 automationReply 指向 DEC-20260806-ENVTESTSYNC2 收口授权（OPTION_ACCEPTED/A，codex_conversation，evidenceHash d351a6b62dd7891461303f9fb84cc2f11acdf8562abc5bd8232bed7509a7d687），EnvironmentProfileDataTests.cs 已实际写入任务卡 expectedPaths 与本 run CandidatePaths，无新决策需求；已执行 git cherry-pick --no-commit 226b3c2746d67f4bf2e1f4ebf3c3cec3509af09b 机械重放 5 个路径内文件（CSV 12 边、重新生成的 asset、PlayMode 双向断言、验证记录、未通过清单），git diff 226b3c2 --cached 对 5 文件为空（逐字节一致），未恢复旧模型会话；已同步 EnvironmentProfileDataTests.cs 的 GuanzhongWildRow 为已批准 12 条有向边（保留原 6 条+反向 6 条），cmp 核对嵌入行与生产 EnvironmentProfiles.csv 数据行逐字节一致；BattleSim：dotnet build -c Release --no-restore 0 警告 0 错误；--self-test basic-unarmed-production-d-combat-prod-01、distance-model-tq055、attack-profile-d-combat-02 均 PASS；完整默认运行 exit 0（553 行输出）；EditMode：tools/run-unity-editmode-tests.ps1（6000.3.18f1 batchmode）426 执行/424 通过/2 失败，失败仅为 2 项已登记既有基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 由上轮必然失败转为 Passed，EditMode 门禁闭合；PlayMode：tools/run-unity-playmode-tests.ps1 4 执行/4 通过/0 失败；FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides 断言玩家 (1,0)→(1,-1) 与石甲兽 (1,-1)→(1,0) 双方相邻格均完成基础攻击且不返回三类装配错误；tools/check-data-chain.ps1 -FailOnMissingAssets 输出 check-data-chain: OK（language keys 410 正常）；tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests OK（355 个文件）；提交前检查：check-pending-whitespace.ps1（6 文件）OK、git diff --cached --check 通过（finalize 脚本内置）；候选提交 e24a507 为 HEAD 0be5a72 直接后继、仅含 6 个合法 CandidatePath、工作区干净（Unity 重新生成的未跟踪 CharterSites.csv.meta 已清理）
+- 未验证：2 项已登记 EditMode 既有基线失败（CharterConflictRulesTests、DataConfigImporterContentScopeTests）与本卡路径无交集，由各自所有者任务处理，本 run 未验证其修复；仓库既有缺口 src/Assets/DataConfig/CharterSites.csv.meta 未纳入版本控制（Unity 每次导入重新生成），不在本卡候选路径，未提交；BattleSim 生产消费者未切换：本卡只证明 basic_unarmed 迁移字段与 GameData.UnarmedBasicAttack 一致，数值平衡结论仍以 BattleSim 实际运行口径为准
+- 残留风险：候选提交未合并：需 Codex 独立复审后由共享入口在最新 master 重放并 fast-forward（expectedTransition=codex_review/codex/ready）。若复审发现新的范围外根因，按自动工作流规则另行路由；本卡完成条件已在现有授权输入下全部实测闭合，不再请求同一决策。2 项 EditMode 基线失败与 CharterSites.csv.meta 缺口为仓库既有问题，不由本卡处理。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

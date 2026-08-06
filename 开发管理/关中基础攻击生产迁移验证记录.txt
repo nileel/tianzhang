@@ -1,6 +1,6 @@
 # 关中基础攻击生产迁移验证记录（D-COMBAT-PROD-01）
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：生产 `AttackProfiles.csv`、`Language.csv`、`Enemies.csv`、严格导入器敌人绑定链、角色创建装配、`SceneBuilder` 场景引用、生成 asset/场景、BattleSim 自测、`check-data-chain.ps1`、EditMode/PlayMode 用例与本记录；不修改战斗消费者、环境档案或任何范围外资产。
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：生产 `AttackProfiles.csv`、`Language.csv`、`Enemies.csv`、严格导入器敌人绑定链、角色创建装配、`SceneBuilder` 场景引用、生成 asset/场景、BattleSim 自测、`check-data-chain.ps1`、EditMode/PlayMode 用例与本记录；返工轮（2026-08-06）另含授权后的 `EnvironmentProfiles.csv` 反向环境边输入与重新生成的 `EnvironmentProfile_env_guanzhong_wild.asset`、PlayMode 双方基础攻击断言；收口轮（DEC-20260806-ENVTESTSYNC2 回复 A）同步 `EnvironmentProfileDataTests.cs` 嵌入生产行为 12 条有向边并闭合全部门禁；不修改战斗消费者、其他环境档案或任何范围外资产。
 
 ## 一、唯一生产链
 
@@ -63,7 +63,7 @@ CharacterCreationRules.BuildCharacterData -> unarmedBasicAttackProfileId = basic
 `env_guanzhong_wild` 的有向边样本（`EnvironmentProfiles.csv`，U-ENV-RULE-01B 冻结）只声明 6 条单向边；石甲兽生成点距离玩家 ≥4，落在该样本簇之外，因此正式场景棋盘上“双方互攻均命中”在现有环境输入下不可达（反向边未声明 → `目标不在射程范围`）。本卡证明：
 - 双方在同一档案上完成基础攻击的成功路径由 EditMode 会话用例（合法双向棋盘、同一生产 asset 与生产绑定）证明；
 - 正式场景中的摆位受该冻结样本约束，PlayMode 用例显式把石甲兽摆到样本唯一可达受击格 (1,-1)、玩家走到攻击源 (1,0) 后玩家攻击命中，敌方攻击同样解析同一档案、结果仅为射程约束而非绑定错误。
-该边样本是否扩展属于环境所有者（U-ENV-RULE-01B / Codex）的范围，不在本卡候选路径内。
+该边样本是否扩展属于环境所有者（U-ENV-RULE-01B / Codex）的范围，不在本卡候选路径内。注：该表述已被 2026-08-06 负责人范围决定与 DEC-20260806-ENVTEST 回复 A 取代（见第五节）。
 
 ## 四、残留风险与后续
 
@@ -71,3 +71,61 @@ CharacterCreationRules.BuildCharacterData -> unarmedBasicAttackProfileId = basic
 - 既有 2 项 EditMode 基线失败仍由其所有者任务处理。
 - 仓库既有缺口：`src/Assets/DataConfig/CharterSites.csv.meta` 未纳入版本控制，Unity 每次导入会重新生成；本卡未提交该文件（不在候选路径），未纳入本卡范围。
 - 本卡未切换 BattleSim 生产消费者、未修改战斗消费者/环境档案/掉落/奖励/数值，未建立默认回退或第二数据源。
+
+## 五、返工轮（2026-08-06，DEC-20260806-ENVTEST 回复 A）
+
+负责人范围决定（2026-08-06）已授权把 `EnvironmentProfiles.csv` 与生成 asset 纳入本卡路径，并为 `env_guanzhong_wild` 既有相邻格补齐反向有向边（保留原 6 条，共 12 条）；第三节“冻结输入”表述自此不再适用。
+
+### 决策与 checkpoint 重放
+
+- DEC-20260806-ENVTEST（feishu_card，OPTION_ACCEPTED/A）：扩展 expectedPaths 加入 `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs` 由 DeepSeek 同步其嵌入生产行，并继续完成返工。
+- checkpoint `0e94e599`（仅含 `EnvironmentProfiles.csv` 12 边）已机械重放为本 run 暂存变更；本记录为路径内返工与门禁实测结果。
+
+### 静态核对（本轮输入）
+
+- `EnvironmentProfiles.csv`：12 条边全部满足 `DataConfigImporter.ParseDirectedEdges` 语法（端点拓扑相邻、键唯一、metric=2、允许移动/效果=1）；12 条均存在反向配对；除 edges 段外行内容与提交版完全一致（脚本核对）。
+- `EnvironmentProfile_env_guanzhong_wild.asset` 经严格导入器重新生成（`Unity.exe -batchmode -nographics -quit -executeMethod TianZhang.Editor.DataConfigImporter.ImportEnvironmentProfiles`，6000.3.18f1，exit 0）：12 条边、顺序与 CSV 完全一致、全部 `metricDistanceUnits=2`/`allowsMovement=1`/`allowsEffects=1`；asset GUID（a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6）与 .meta 未变。
+
+### Unity 测试（门禁实测）
+
+- `tools/run-unity-playmode-tests.ps1`：**4 执行 / 4 通过 / 0 失败**。`GuanzhongBasicAttackPlayModeTests.FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides` 已更新为双方断言：玩家 (1,0)→(1,-1) 与石甲兽 (1,-1)→(1,0)（反向边已声明）均成功完成基础攻击，且不返回三类基础攻击装配错误。
+- `tools/run-unity-editmode-tests.ps1`：**426 执行 / 423 通过 / 3 失败**：
+  1. `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`：既有登记基线，由共享冲突契约所有者（Codex）处理；
+  2. `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`：既有登记基线，由内容所有者处理；
+  3. `EnvironmentProfileDataTests.GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized`：嵌入冻结 6 边生产行并断言 CSV/asset 逐项同步，12 边 CSV 下必然失败；同步该测试需要 DEC-20260806-ENVTEST 方案 A 承诺的 expectedPaths 扩展（把该文件加入本卡路径），但该扩展未写入任务卡，本 run CandidatePaths 不含该文件，`automation-finalize-commit.ps1` 的 Assert-ExternalIndexUnchanged 拒绝路径外改动 → EditMode 无法在本 run 闭合，已按决策机制如实上报。
+
+### 其他检查
+
+- `tools/check-data-chain.ps1 -FailOnMissingAssets`：**OK**。
+- `tools/check-pending-whitespace.ps1`（-Fix 消除 Unity 生成的 `m_EditorClassIdentifier: ` 尾随空格后复查，通过）与 `git diff --cached --check`（暂存后）：通过。
+- BattleSim 无改动，沿用上一轮已通过的同范围运行结论（`--self-test basic-unarmed-production-d-combat-prod-01`、`distance-model-tq055`、`attack-profile-d-combat-02` 均 PASS）。
+
+## 六、本轮残留风险与后续
+
+- 唯一未闭合项：`EnvironmentProfileDataTests.cs` 嵌入生产行同步（12 边）不在本 run 授权路径；等待负责人就路径扩展（由 DeepSeek 同步测试）/改派 Codex/保持阻塞作出决定（DEC-20260806-ENVTESTSYNC）。
+- 反向边生效后环境反馈、敌方寻路与遭遇消费端已在本轮经 PlayMode 4/4 回归确认；EditMode 除上述 3 项失败外全部通过（426/423）。
+- 待 Codex 独立复审（`codex_review/codex/ready` 投影由共享入口完成）。
+
+## 七、收口轮（2026-08-06，DEC-20260806-ENVTESTSYNC2 回复 A，任务卡 expectedPaths 已落实）
+
+负责人一次性收口决定（2026-08-06）：`DEC-20260806-ENVTESTSYNC2` 方案 A（codex_conversation，OPTION_ACCEPTED/A，evidenceHash d351a6b62dd7891461303f9fb84cc2f11acdf8562abc5bd8232bed7509a7d687）；`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs` 已实际写入任务卡 expectedPaths 与本 run CandidatePaths。
+
+### checkpoint 重放与测试同步
+
+- `git cherry-pick --no-commit 226b3c2746d67f4bf2e1f4ebf3c3cec3509af09b`：机械重放 5 个路径内文件（`EnvironmentProfiles.csv` 12 边、重新生成的 asset、PlayMode 双向攻击断言、验证记录、未通过审核清单），`git diff 226b3c2 --cached` 对 5 文件为空（逐字节一致）。
+- `GuanzhongWildRow` 同步为已批准的 12 条有向边（保留原 6 条 + 反向 6 条）；`cmp` 核对嵌入行与生产 `EnvironmentProfiles.csv` 数据行逐字节一致。
+- 本决定未授权其他环境档案、战斗消费者、AI、数值、回退机制或自动化控制面改动；本轮无此类改动。
+
+### 门禁实测（本 run 全新执行）
+
+- BattleSim：`dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"` 0 警告 0 错误；`--self-test basic-unarmed-production-d-combat-prod-01`、`distance-model-tq055`、`attack-profile-d-combat-02` 均 PASS；完整默认运行 exit 0（553 行输出，既有结论未变）。
+- EditMode：`tools/run-unity-editmode-tests.ps1`（6000.3.18f1 batchmode，项目库已就绪）**426 执行 / 424 通过 / 2 失败**。`EnvironmentProfileDataTests.GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized` 由上一轮必然失败转为 **Passed**（12 边嵌入行与 CSV/生成 asset 逐项同步断言通过）；仅剩 2 项已登记、与本卡路径无交集的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（共享冲突契约所有者处理）、`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（内容所有者处理）。EditMode 门禁已闭合。
+- PlayMode：`tools/run-unity-playmode-tests.ps1` **4 执行 / 4 通过 / 0 失败**；`FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides` 断言玩家 (1,0)→(1,-1) 与石甲兽 (1,-1)→(1,0) 双方相邻格均成功完成基础攻击，且不返回三类基础攻击装配错误。
+- 数据链与文本：`tools/check-data-chain.ps1 -FailOnMissingAssets` 输出 `check-data-chain: OK`（docs/csv counts 与 language keys 410 正常）；`tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests` OK（355 个文件）。
+- 提交前检查：`tools/check-pending-whitespace.ps1`（变更文件）与 `git diff --cached --check` 通过；`git status` 除本卡路径内暂存/待暂存改动与 Unity 重新生成的未跟踪 `CharterSites.csv.meta`（仓库既有缺口，不在本卡路径，已清理）外无其他改动。
+
+### 收口轮残留风险与后续
+
+- 全部完成条件已实测闭合：`basic_unarmed` 生产 CSV 行、语言键、生成 asset、玩家装配、石甲兽装配与场景引用逐项可追溯且单一参数权威；正式关中野外接敌双方可在相邻格消费同一档案完成基础攻击，不再返回三类装配错误；无默认回退、第二数据源或范围外数值变化。
+- 既有 2 项 EditMode 基线失败仍由各自所有者任务处理；`CharterSites.csv.meta` 未纳入版本控制缺口未纳入本卡范围。
+- 待 Codex 独立复审（`codex_review/codex/ready` 投影由共享入口完成）。

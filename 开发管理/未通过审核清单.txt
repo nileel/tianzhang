@@ -11,4 +11,6 @@
 - 审核对象：正式提交 `e7d90ab235f9ef7bb7c87120f2580dfa8cdd46c4`；结论：部分通过，仍需返工。
 - 已通过：`basic_unarmed` 的唯一 CSV/asset 链、玩家与石甲兽显式绑定、场景引用、失败关闭和 BattleSim 迁移字段均已独立核对。
 - 返工依据：正式 `guanzhong_wild` 的 PlayMode 用例证明敌方以同一档案反向攻击时返回“目标不在射程范围”；冻结 `env_guanzhong_wild` 有向边没有反向边，因此未达到双方相邻格均完成基础攻击的完成条件。
-- 返工边界：先由环境边输入所有者取得授权并修复正式可达性；不得改战斗消费者、添加默认档案回退、名称推断或测试专用摆位替代正式路径。
+- 返工进展（2026-08-06，DEC-20260806-ENVTEST 回复 A）：负责人已授权把 `EnvironmentProfiles.csv` 与生成 asset 纳入本卡路径；DeepSeek 返工轮已补齐 6 条反向有向边（共 12 条）、经严格导入器重新生成 `EnvironmentProfile_env_guanzhong_wild.asset`，PlayMode 门禁 4/4 通过（双方相邻格均完成基础攻击）。
+- 收口进展（2026-08-06，DEC-20260806-ENVTESTSYNC2 回复 A，codex_conversation）：`src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs` 已实际写入任务卡 expectedPaths，DeepSeek 收口轮已把其嵌入生产行同步为 12 条有向边（与生产 CSV 数据行逐字节一致）；EditMode 门禁 426 执行/424 通过/2 失败，仅剩 2 项与本卡无交集的已登记既有基线，`GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized` 通过，返工全部闭合，待 Codex 独立复审。
+- 返工边界：不得改战斗消费者、添加默认档案回退、名称推断或测试专用摆位替代正式路径。

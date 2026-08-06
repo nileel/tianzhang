@@ -20,19 +20,16 @@ namespace TianZhang.Tests
     /// 进入正式 guanzhong_wild，接近石甲兽建立会话，双方在相邻格消费同一 basic_unarmed 档案
     /// 执行基础攻击。只驱动既有正式生产入口与公开控制器 API；不复制遭遇、会话、绑定或攻击
     /// 实现，也不在战斗调用点补默认档案。
-    /// 环境边样本说明：env_guanzhong_wild 的有向边样本（U-ENV-RULE-01B 冻结输入，不在本卡
-    /// 路径内）只声明 6 条单向边；石甲兽生成点（距离玩家 ≥4）落在该样本簇之外。测试因此把
-    /// 石甲兽摆到样本中唯一可从相邻格命中的受击格 (1,-1)，再沿真实移动把玩家走到攻击源 (1,0)；
-    /// 玩家攻击方向 (1,0)→(1,-1) 为已声明边。反向边未声明，因此敌方攻击的空间结果受同一冻结
-    /// 样本约束，断言其失败原因不是三类绑定错误；双方在同一档案上完成攻击的成功路径由
-    /// EditMode 会话用例（合法双向棋盘）证明。
+    /// 环境边说明：负责人范围决定（2026-08-06）已授权把 env_guanzhong_wild 既有相邻格的反向
+    /// 有向边纳入本卡路径（EnvironmentProfiles.csv 共 12 条，保留原 6 条并补齐反向 6 条）。
+    /// 测试把石甲兽摆到受击格 (1,-1)，沿真实移动把玩家走到攻击源 (1,0)，两格间正反方向均为
+    /// 已声明边，因此玩家与石甲兽在相邻格均完成基础攻击，且不返回三类基础攻击装配错误。
     /// </summary>
     public sealed class GuanzhongBasicAttackPlayModeTests
     {
         private const string AdventureId = "guanzhong_wild";
         private const string SettlementId = "guanzhong_city";
         private const string BasicUnarmedProfileId = "basic_unarmed";
-        private const string NotInRangeReason = "目标不在射程范围";
 
         private GameObject flowGo;
 
@@ -90,7 +87,7 @@ namespace TianZhang.Tests
             // 接近石甲兽：沿既有寻路逐步移动到其相邻空格（正式点击路径的移动部分）。
             yield return MovePlayerToNeighbor(exploration, enemy);
 
-            // 冻结有向边样本摆位：把石甲兽移到唯一可从相邻格命中的受击格 (1,-1)。
+            // 相邻格摆位：把石甲兽移到受击格 (1,-1)，玩家沿真实移动走到攻击源 (1,0)。
             RepositionEnemy(exploration, enemy, new HexCoord(1, -1));
             yield return MovePlayerTo(exploration, new HexCoord(1, 0));
 
@@ -108,12 +105,10 @@ namespace TianZhang.Tests
             var playerResult = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
             Assert.IsTrue(playerResult.Success, "player basic attack: " + playerResult.Message);
 
-            // 敌方侧：同一档案解析并执行；反向边未声明，空间结果受冻结边样本约束，
-            // 但绝不返回三类基础攻击装配错误。
+            // 敌方侧：同一档案解析并执行；反向边 (1,-1)→(1,0) 已随返工授权声明，
+            // 双方在相邻格均完成基础攻击，且绝不返回三类基础攻击装配错误。
             var enemyResult = controller.ExecuteBasicAttack(enemy.CTBUnit.Id, player.CTBUnit.Id);
-            Assert.IsFalse(enemyResult.Success);
-            Assert.AreEqual(NotInRangeReason, enemyResult.Message,
-                "the frozen env edge sample declares no reverse edge for the enemy direction.");
+            Assert.IsTrue(enemyResult.Success, "enemy basic attack: " + enemyResult.Message);
             Assert.AreNotEqual("basic_attack_binding_missing_or_ambiguous", enemyResult.Message);
             Assert.AreNotEqual("basic_attack_profile_not_found", enemyResult.Message);
             Assert.AreNotEqual("basic_attack_profile_binding_kind_invalid", enemyResult.Message);
