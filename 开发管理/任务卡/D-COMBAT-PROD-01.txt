@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260806-ENVTEST",
+  "stateReason": "等待负责人决定：DEC-20260806-ENVTEST 回复 A 承诺把 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs 加入本卡 expectedPaths 由 DeepSeek 同步其嵌入生产行（12 边）后继续返工；但该路径扩展未写入任务卡，本 run CandidatePaths 不含该文件，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 checkpoint 守卫拒绝路径外改动。实测 EditMode 门禁 426/423/3 失败，第 3 项正是 GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized（嵌入冻结 6 边生产行，12 边 CSV 下必然失败），EditMode 无法在本 run 闭合。请决定该测试同步的执行方式。",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -48,60 +48,60 @@
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "D-COMBAT-PROD-01",
-    "sourceRunId": "324b8ed0-9036-4d43-8a93-e55ec108ff36",
+    "sourceRunId": "6799128d-e070-4834-8c92-9716c2bf5c59",
     "owner": "deepseek",
     "route": "external_execute",
-    "decisionId": "DEC-20260806-ENVTEST",
-    "question": "本卡方案 A 已授权把 EnvironmentProfiles.csv 与生成 asset 纳入路径并为 env_guanzhong_wild 既有相邻格补齐反向有向边；但该输入变更会使不在 expectedPaths 内的环境所有者测试 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs::GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized（嵌入冻结 6 边生产行并断言 CSV/asset 逐项同步）必然失败，EditMode 无法闭合。请决定该测试的同步责任方。",
+    "decisionId": "DEC-20260806-ENVTESTSYNC",
+    "question": "DEC-20260806-ENVTEST 回复 A 承诺把 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs 加入本卡 expectedPaths 由 DeepSeek 同步其嵌入生产行（12 边）后继续返工；但该路径扩展未写入任务卡，本 run CandidatePaths 不含该文件，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 checkpoint 守卫拒绝路径外改动。实测 EditMode 门禁 426/423/3 失败，第 3 项正是 GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized（嵌入冻结 6 边生产行，12 边 CSV 下必然失败），EditMode 无法在本 run 闭合。请决定该测试同步的执行方式。",
     "options": [
       {
         "key": "A",
-        "label": "扩展本卡 expectedPaths 加入 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs，由 DeepSeek 同步其嵌入生产行（12 边）后继续完成返工"
+        "label": "把 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs 加入本卡 expectedPaths，下一 run 由 DeepSeek 同步其嵌入生产行（12 边）并重跑 EditMode/PlayMode 门禁后闭合本卡；本 checkpoint 已含全部路径内返工（CSV 12 边、严格导入器重新生成的 asset、PlayMode 双向攻击断言与验证记录）"
       },
       {
         "key": "B",
-        "label": "改由 Codex 更新该环境测试（或扩展路径），DeepSeek 不再继续本卡"
+        "label": "该环境测试改由 Codex 同步（或由 Codex 扩展路径并更新测试）；DeepSeek 路径内返工已在本 checkpoint 完成，Codex 同步后按既有复审流程闭合"
       },
       {
         "key": "C",
-        "label": "保持 blocked，不修改环境输入（返工停止）"
+        "label": "保持 blocked：不修改环境输入，返工停止；本 checkpoint 不合并，无业务影响"
       }
     ],
     "recommendedOption": "A",
-    "impactSummary": "A 使返工在 DeepSeek 单点闭环，唯一额外改动为该测试嵌入生产行的同步；B 需已归档的环境所有者（Codex）介入更新测试后再轮换；C 完成条件在现有输入下不可达，返工无法闭合。",
+    "impactSummary": "A 使返工在 DeepSeek 单点闭环，唯一额外改动为该测试嵌入生产行同步与一次最终 EditMode 全量重跑；B 需已归档的环境所有者（Codex）介入更新测试后再轮换复审；C 完成条件在现有输入下仍不可达，返工停止。",
     "plainSummary": {
-      "situation": "授权补齐 env_guanzhong_wild 反向环境边，但变更会使不在本卡路径内的环境所有者测试（嵌入旧 6 边生产行）必然失败",
-      "impact": "DeepSeek 无权修改该测试；不改则 EditMode 无法通过、返工无法闭合",
-      "action": "请选择 A（扩展路径由 DeepSeek 同步测试）或 B（Codex 更新测试）"
+      "situation": "上轮决策已选 A（扩展路径由 DeepSeek 同步环境测试），但路径扩展未写入任务卡，本 run 无法修改该测试",
+      "impact": "其余返工（反向边、重新生成的 asset、PlayMode 双向攻击断言）已在本 checkpoint 完成并实测验证，仅剩该测试同步阻塞 EditMode 闭合",
+      "action": "请选择 A（扩展路径后由 DeepSeek 继续）、B（改由 Codex 同步）或 C（保持阻塞）"
     },
-    "checkpointCommit": "0e94e599be33d5b790acb5376c2892c9045941ef",
-    "baseCommit": "7fe2d3c87faa179e4eb711da56bdbd8c08cd47e3",
-    "branch": "codex/automation/deepseek/324b8ed0-9036-4d43-8a93-e55ec108ff36/candidate",
+    "checkpointCommit": "30a54817e27b13e5717bfa213893e00741823882",
+    "baseCommit": "0d616052a133608fce7b2f5c27c66a620b2d523a",
+    "branch": "codex/automation/deepseek/6799128d-e070-4834-8c92-9716c2bf5c59/candidate",
     "changedPaths": [
-      "src/Assets/DataConfig/EnvironmentProfiles.csv"
+      "开发管理/关中基础攻击生产迁移验证记录.txt",
+      "开发管理/未通过审核清单.txt",
+      "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
+      "src/Assets/DataConfig/EnvironmentProfiles.csv",
+      "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
     ],
     "verified": [
-      "静态核对：EnvironmentProfiles.csv 已追加 6 条反向有向边（0:0>-1:0、1:0>0:0、1:-1>1:0、0:1>0:0、-1:1>0:1、-1:1>-1:0，均 @2@1@1），与既有 6 条构成 12 条；逐条符合 DataConfigImporter.ParseDirectedEdges 语法（端点拓扑相邻、键唯一、metric=2、允许移动/效果=1）",
-      "已运行：tools/check-data-chain.ps1 -FailOnMissingAssets 输出 check-data-chain: OK；tools/check-pending-whitespace.ps1（1 文件）OK；checkpoint 经 automation-finalize-commit.ps1（无 RequireAutomationMetadata）创建，为 base 7fe2d3c 直接后继、仅含 1 个 CandidatePath、工作区含未跟踪文件全净",
-      "静态核对（决策证据）：src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs:75-105 GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 嵌入冻结 6 边生产行并断言 CSV 与生成 asset 逐索引等于该行（directedEdges.Length 相等断言在第 113 行）；12 边 CSV 下必然失败；该文件不在本卡 expectedPaths，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 拒绝路径外改动"
+      "静态核对：EnvironmentProfiles.csv 12 条边全部满足 DataConfigImporter.ParseDirectedEdges 语法（端点拓扑相邻、键唯一、metric=2、允许移动/效果=1），12 条均存在反向配对，除 edges 段外行内容与提交版完全一致；本 run 暂存内容与 checkpoint 0e94e599 逐字节一致（blob f29b2d8a）",
+      "已运行：Unity 6000.3.18f1 batchmode -executeMethod TianZhang.Editor.DataConfigImporter.ImportEnvironmentProfiles 重新生成 EnvironmentProfile_env_guanzhong_wild.asset（exit 0）：12 条边、顺序与 CSV 完全一致、全部 metricDistanceUnits=2/allowsMovement=1/allowsEffects=1，GUID（a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6）与 .meta 未变",
+      "已运行：tools/run-unity-playmode-tests.ps1 4 执行/4 通过/0 失败；FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides 已更新为双方相邻格均成功完成基础攻击且不返回三类装配错误",
+      "已运行：tools/run-unity-editmode-tests.ps1 426 执行/423 通过/3 失败：2 项既有登记基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）+ EnvironmentProfileDataTests.GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized（嵌入冻结 6 边生产行并断言 CSV/asset 逐项同步，12 边 CSV 下必然失败；该文件不在本 run CandidatePaths）",
+      "已运行：tools/check-data-chain.ps1 -FailOnMissingAssets 输出 check-data-chain: OK；tools/check-review-text.ps1 OK（355 文件）；check-pending-whitespace（5 文件）与 git diff --cached --check 通过",
+      "决策证据：任务卡 automationReply=OPTION_ACCEPTED/replyValue=A（feishu_card，evidenceHash 11a4af0df3991b6f94727bcfdfa9cdb9cb4c00e5e328833c260826527e989f7d）承诺 expectedPaths 扩展；任务卡 expectedPaths 与本 run CandidatePaths 均不含 EnvironmentProfileDataTests.cs；automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 checkpoint 路径守卫（deepseek_checkpoint_paths_invalid）拒绝路径外改动",
+      "checkpoint 30a54817 为 baseCommit 0d61605 直接后继、仅含 5 个合法 CandidatePath、工作区含未跟踪文件全净"
     ],
     "unverified": [
-      "EnvironmentProfile_env_guanzhong_wild.asset 未重新导入：Unity batchmode 未运行（checkpoint 合同要求工作区含未跟踪文件全净，且决策未决前不产生导入副作用）",
-      "EditMode/PlayMode 门禁未运行；GuanzhongBasicAttackPlayModeTests 双向攻击成功断言更新未实施（依赖决策结果）",
-      "BattleSim 未运行（本轮无 BattleSim 改动，既有运行结论仍有效）"
+      "EnvironmentProfileDataTests.cs 嵌入生产行同步（12 边）未实施：不在本 run 授权路径，等待 DEC-20260806-ENVTESTSYNC 决定",
+      "EditMode 门禁未闭合：上述第 3 项失败需测试同步后重跑全量门禁确认",
+      "BattleSim 未重跑：本轮无 BattleSim 改动，沿用上一轮同范围已通过结论（basic-unarmed-production-d-combat-prod-01、distance-model-tq055、attack-profile-d-combat-02 均 PASS）"
     ],
-    "residualRisk": "决策未决期间 CSV（12 边）与 asset（6 边）暂不一致，直至下轮经严格导入器重新生成；若选择 C，本 checkpoint 不合并、无业务影响。反向边生效后环境反馈、敌方寻路与遭遇消费端需在返工轮经 EditMode/PlayMode 回归确认。2 项既有 EditMode 基线失败（CharterConflictRulesTests、DataConfigImporterContentScopeTests）仍由各自所有者处理。",
+    "residualRisk": "决策未决期间本 checkpoint 不合并，若选 C 反向边输入不进入主分支、无业务影响。若选 A，下一 run 同步测试后需重跑 EditMode 全量门禁确认闭合；反向边生效后环境反馈、敌方寻路与遭遇消费端已在本轮经 PlayMode 4/4 回归确认。2 项既有 EditMode 基线失败（CharterConflictRulesTests、DataConfigImporterContentScopeTests）仍由各自所有者处理。仓库既有缺口 CharterSites.csv.meta 未纳入版本控制，Unity 每次导入重新生成，本卡未提交（不在候选路径）。",
     "taskContextDigest": "d01532988437d484584cb8f6f46b586b951606694f8e77f7249c5d33bfcd45c0",
-    "createdAt": "2026-08-06T14:55:59.3444444+08:00",
+    "createdAt": "2026-08-06T16:00:31.5967957+08:00",
     "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20260806-ENVTEST",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "11a4af0df3991b6f94727bcfdfa9cdb9cb4c00e5e328833c260826527e989f7d"
   }
 }
 ---TASK-BODY---
