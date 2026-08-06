@@ -152,7 +152,7 @@ function New-Prompt {
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
     "CandidatePaths: $pathText"
-    '正常完成时，先确定 result/impact/verify/plain 四个单行值；值中不得含单引号或控制字符。四值必须逐字满足以下格式，不得省略字段名、等号或中文分号：result=问题=<问题>；完成=<完成>，impact=影响=<影响>；边界=<边界>，verify=验证=<验证>；后续=<后续>，plain=发生=<发生>；影响=<影响>；需要=<需要>。然后把下面命令中的四个占位符替换为完整四值并原样执行一次：'
+    '正常完成时，先确定四个 PowerShell 参数的原始单行值；值中不得含单引号或控制字符。-AutomationResult 的值精确为 问题=<问题>；完成=<完成>，-AutomationImpact 的值精确为 影响=<影响>；边界=<边界>，-AutomationVerify 的值精确为 验证=<验证>；后续=<后续>，-AutomationPlain 的值精确为 发生=<发生>；影响=<影响>；需要=<需要>。result、impact、verify、plain 仅是最终 JSON 字段名，不是参数值的一部分；不得把 result=、impact=、verify=、plain= 写入对应参数值。然后把下面命令中的四个占位符替换为上述原始值并原样执行一次：'
     $finalizerCommand
     '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
