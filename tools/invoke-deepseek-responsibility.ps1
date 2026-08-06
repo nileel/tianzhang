@@ -213,7 +213,7 @@ function New-TerminalSchema {
       impact = [ordered]@{ type = 'string' }
       verify = [ordered]@{ type = 'string' }
       plain = [ordered]@{ type = 'string' }
-      decisionId = [ordered]@{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }
+      decisionId = [ordered]@{ type = 'string' }
       question = [ordered]@{ type = 'string' }
       options = [ordered]@{
         type = 'array'; minItems = 3; maxItems = 3

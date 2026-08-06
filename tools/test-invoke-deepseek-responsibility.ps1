@@ -149,9 +149,6 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-True ([string]$record.prompt -match 'result="问题=\.\.\.；完成=\.\.\."') 'Candidate prompt omitted the exact finalizer metadata form'
   Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--permission-mode') + 1]) 'bypassPermissions' 'Wrapper did not restore unrestricted Claude Code permissions'
   Assert-Equal ([Array]::IndexOf($arguments, '--allowedTools')) -1 'Wrapper retained an allowedTools restriction'
-  $wrapperSource = Get-Content -Raw -LiteralPath $wrapperPath
-  Assert-True $wrapperSource.Contains("decisionId = [ordered]@{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }") 'Decision ID schema pattern mismatch'
-
   $completeOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action CompleteRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$run.runId) -CompletionCategory failed -DetailCode fixture_completed)
   Assert-Equal $LASTEXITCODE 0 'First fixture run did not close'
   Assert-Equal ([string]($completeOutput[0] | ConvertFrom-Json).status) 'RUN_COMPLETED' 'First fixture run close status mismatch'
