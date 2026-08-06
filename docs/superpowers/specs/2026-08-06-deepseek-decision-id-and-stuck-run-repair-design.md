@@ -18,8 +18,9 @@
 
 修改 `tools/invoke-deepseek-responsibility.ps1`：
 
-- 在结构化输出 schema 的 `decisionId` 字段加入与 Codex、状态投影和飞书决策卡一致的正则 `^DEC-[0-9]{8}-[A-Z0-9]+$`。
-- 在 `Assert-DecisionCheckpoint` 中再次执行同一格式校验，失败统一返回既有 `deepseek_decision_invalid`，使错误停在 candidate 核验阶段，不进入共享状态转换。
+- 结构化输出 schema 只保留 `decisionId` 的字符串类型约束，不承担格式校验。该 schema 经命令行 wrapper 传递，不能作为权威合同边界。
+- 只在 `Assert-DecisionCheckpoint` 中新增与 Codex、状态投影和飞书决策卡一致的格式校验 `^DEC-[0-9]{8}-[A-Z0-9]+$`；失败统一返回既有 `deepseek_decision_invalid`，使错误停在 candidate 核验阶段，不进入共享状态转换。
+- 状态投影继续保留原有的最终合同校验，但不新增状态、分支或处理层。
 - 不新增兼容格式、自动改写、重试或第二套 ID 生成器。
 
 ### 2. 记录方案 A 的任务授权
@@ -50,12 +51,11 @@
 
 ## 测试与验收
 
-- 扩展 `tools/test-invoke-deepseek-responsibility.ps1`，覆盖 schema 正则存在，以及带额外连字符的 ID 在 candidate 边界被拒绝为 `deepseek_decision_invalid`。
+- 扩展 `tools/test-invoke-deepseek-responsibility.ps1`，覆盖带额外连字符的 ID 在 candidate 边界被拒绝为 `deepseek_decision_invalid`；不增加 schema 源码形态断言。
 - 运行 `tools/test-invoke-deepseek-responsibility.ps1`。
-- 运行 `tools/test-hourly-decision-checkpoint.ps1`，确认合法 ID 的状态投影和非法 ID 的失败关闭语义未回归。
-- 运行 DeepSeek `Canary`，确认真实 gateway、模型身份、结构化终态、worktree 隔离和清理仍通过。
 - 对本轮路径运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`。
-- 因未修改 Unity、CSV 内容或业务 asset，本修复不运行 BattleSim、Unity 或数据链检查。
+- 设计文档变化后运行 `tools/check-data-chain.ps1`；不修改 Unity、CSV 内容或业务 asset，因此不运行 BattleSim 或 Unity 验证。
+- `tools/test-hourly-decision-checkpoint.ps1` 和 DeepSeek `Canary` 已在相关输入未变化的上一版修复中通过，本次精简不重复运行。
 
 ## 停止条件与残余风险
 
