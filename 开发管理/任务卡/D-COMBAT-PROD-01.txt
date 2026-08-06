@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：DEC-20260806-ENVTESTSYNC 回复 A（feishu_card，evidenceHash 364b17067e8df90f00057ea1029c32838ed6f0b3fbeafd28de089e02a3e56dec）已核验，任务已恢复 ready（stateReason：负责人回复已核验，恢复原任务：DEC-20260806-ENVTESTSYNC），checkpoint 30a54817 已机械重放并暂存 5 个路径内文件；但方案 A 承诺的路径扩展第二次未写入任务卡：HEAD 3c66d9b 的 expectedPaths 与本 run CandidatePaths 均不含 src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs，automation-finalize-commit.ps1 的 Assert-ExternalIndexUnchanged 与 checkpoint 路径守卫（deepseek_checkpoint_paths_invalid）拒绝路径外改动，本 run 无法同步该测试。静态断言：GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 嵌入冻结 6 边生产行并逐索引断言 CSV/asset 同步，12 边 CSV 下必然失败，EditMode 门禁（426/423/3）无法在本 run 闭合。请决定该测试同步的最终执行方式。",
+  "stateReason": "负责人在 Codex 对话中一次性选择 DEC-20260806-ENVTESTSYNC2 方案 A；EnvironmentProfileDataTests.cs 已实际加入 expectedPaths。下一 DeepSeek run 先以 cherry-pick --no-commit 机械重放 checkpoint 226b3c2，再同步该测试的 12 边生产行并完成既定门禁；除出现新的范围外根因外不得再次请求同一决策。",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
@@ -31,6 +31,7 @@
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
     "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs",
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
@@ -97,13 +98,28 @@
       "BattleSim 未重跑：本轮无 BattleSim 改动，沿用 checkpoint 30a54817 上一轮同范围已通过结论（basic-unarmed-production-d-combat-prod-01、distance-model-tq055、attack-profile-d-combat-02 均 PASS）"
     ],
     "residualRisk": "决策未决期间本 checkpoint 不合并，无业务影响。若选 A，需要共享入口把 EnvironmentProfileDataTests.cs 实际写入任务卡 expectedPaths（前两次接受的方案 A 均未落实该扩展），下一 run 由 DeepSeek 同步测试并重跑 EditMode/PlayMode 门禁后闭合；若入口再次不落实，将第三次出现同一机械缺口。若选 B，改由 Codex 同步测试，DeepSeek 业务返工待 Codex 同步后按既有复审流程闭合。反向边输入已在本 checkpoint 经 PlayMode 4/4 回归确认；2 项既有 EditMode 基线失败（CharterConflictRulesTests、DataConfigImporterContentScopeTests）仍由各自所有者处理。仓库既有缺口 CharterSites.csv.meta 未纳入版本控制，Unity 每次导入重新生成，本卡未提交。",
-    "taskContextDigest": "d01532988437d484584cb8f6f46b586b951606694f8e77f7249c5d33bfcd45c0",
+    "taskContextDigest": "e81b6135e8648e1c2deb210836113bfe80c677e565c44dfa791bdef4a6edeec1",
     "createdAt": "2026-08-06T16:51:56.5467798+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260806-ENVTESTSYNC2",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "codex_conversation",
+    "evidenceHash": "d351a6b62dd7891461303f9fb84cc2f11acdf8562abc5bd8232bed7509a7d687"
   }
 }
 ---TASK-BODY---
 # D-COMBAT-PROD-01 · 关中薄切片基础攻击生产迁移
+
+## 负责人一次性收口决定（2026-08-06）
+
+- 负责人在 Codex 当前对话中选择 `DEC-20260806-ENVTESTSYNC2` 方案 A：把 `src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs` 实际加入本卡授权路径，仍由 DeepSeek 闭合返工。
+- 下一 DeepSeek run 必须先在新 candidate worktree 中执行 `git cherry-pick --no-commit 226b3c2746d67f4bf2e1f4ebf3c3cec3509af09b`，只机械重放已验证的 5 个路径内文件，不恢复旧模型会话；随后把 `GuanzhongWildRow` 同步为已批准的 12 条有向边。
+- 重放与测试同步后运行本卡既定 EditMode、PlayMode、数据链和提交前检查。已经登记的 2 项无关 EditMode 基线失败不构成新决策；只有出现新的范围外根因或本次授权仍不能闭合验收时才停止。
+- 本决定不授权其他环境档案、战斗消费者、AI、数值、回退机制或自动化控制面改动。
 
 ## 负责人范围决定（2026-08-06）
 
