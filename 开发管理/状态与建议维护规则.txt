@@ -48,7 +48,7 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 - `blocked/frozen/pending_decision/waiting_reply` -> active card + backlog, never queue
 - `completed` -> card moved to 任务归档 and removed from queue/backlog
 
-新卡完成时只移入精确路径 `开发管理/任务归档/<ID>.txt`；每张活跃卡的 `expectedPaths` 必须同时包含 `开发管理/任务卡/<ID>.txt` 与 `开发管理/任务归档/<ID>.txt`。历史合并归档保持原样，默认检查不递归扫描。
+新卡完成时只移入精确路径 `开发管理/任务归档/<ID>.txt`；每张活跃卡的 `expectedPaths` 必须同时包含 `开发管理/任务卡/<ID>.txt` 与 `开发管理/任务归档/<ID>.txt`。凡任务可能创建、移动或首次导入 `src/Assets/` 下的 Unity 文件或目录，`expectedPaths` 必须同时列出目标及其对应 `.meta`；新目录本身的 `.meta` 也须列出。历史合并归档保持原样，默认检查不递归扫描。
 
 ## 建议与闭环
 
