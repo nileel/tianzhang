@@ -21,7 +21,7 @@
 | C-HS-YY-JD-01 | P1 | codex | 阻塞 | C-HS-YY-JD-01A、C-HS-YY-JD-01B、C-HS-YY-JD-01C、C-HS-YY-JD-01D、C-HS-YY-JD-01E、C-HS-YY-JD-01F、C-HS-YY-JD-01G、C-HS-YY-JD-01H、C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01K、C-HS-YY-JD-01L、C-HS-YY-JD-01M、C-HS-YY-JD-01N、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q | 金丹位格内容生产父任务 | 开发管理/任务卡/C-HS-YY-JD-01.txt |
 | C-HS-YY-JD-01A | P1 | codex | 已排队 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
 | C-HS-YY-JD-01B | P1 | codex | 已排队 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
-| C-HS-YY-JD-01C | P1 | deepseek | 已排队 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
+| C-HS-YY-JD-01C | P1 | codex | 已排队 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
 | C-HS-YY-JD-01D | P1 | deepseek | 已排队 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
 | C-HS-YY-JD-01E | P1 | deepseek | 已排队 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
 | C-HS-YY-JD-01F | P1 | deepseek | 已排队 | — | 金丹位格·见识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
