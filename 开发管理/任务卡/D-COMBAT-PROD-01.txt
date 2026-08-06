@@ -10,12 +10,13 @@
   "stage": "migration",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20260806-REVE49911B60ACB 选择 DeepSeek 按未通过审核清单返工",
+  "stateReason": "负责人于 2026-08-06 选择方案 A，授权 DeepSeek 补齐 env_guanzhong_wild 反向环境边后继续返工",
   "expectedPaths": [
     "src/Assets/DataConfig/AttackProfiles.csv",
     "src/Assets/DataConfig/AttackProfiles.csv.meta",
     "src/Assets/DataConfig/Language.csv",
     "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/DataConfig/EnvironmentProfiles.csv",
     "src/Assets/Scripts/Editor/DataConfigImporter.cs",
     "src/Assets/Scripts/Editor/SceneBuilder.cs",
     "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationCatalog.cs",
@@ -24,6 +25,8 @@
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta",
     "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+    "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
+    "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset.meta",
     "src/Assets/Scenes/AdventureScene.unity",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
@@ -45,6 +48,11 @@
 }
 ---TASK-BODY---
 # D-COMBAT-PROD-01 · 关中薄切片基础攻击生产迁移
+
+## 负责人范围决定（2026-08-06）
+
+- 负责人选择方案 A：把 `src/Assets/DataConfig/EnvironmentProfiles.csv` 与生成的 `EnvironmentProfile_env_guanzhong_wild.asset(.meta)` 纳入本卡授权路径，由 DeepSeek 在全新 run 中继续返工。
+- 本次扩展只允许为 `env_guanzhong_wild` 既有相邻格补齐反向有向边并保留现有 6 条边；不得扩展到其他环境档案、战斗消费者、AI、数值或回退机制。
 
 ## Codex 复审结论（2026-08-06）
 

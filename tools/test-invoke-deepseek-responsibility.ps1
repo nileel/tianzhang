@@ -36,6 +36,7 @@ $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
 $originalBaseUrl = $env:ANTHROPIC_BASE_URL
 $originalRecord = $env:TZG_FAKE_CLAUDE_RECORD
+$originalFakeMode = $env:TZG_FAKE_CLAUDE_MODE
 $taskId = 'TASK-DEEPSEEK-CANDIDATE'
 
 try {
@@ -95,6 +96,21 @@ $sessionId = $CliArguments[$sessionIndex + 1]
 [IO.File]::WriteAllText($env:TZG_FAKE_CLAUDE_RECORD, ([ordered]@{ arguments = $CliArguments; prompt = $prompt; cwd = [Environment]::CurrentDirectory } | ConvertTo-Json -Depth 10), [Text.UTF8Encoding]::new($false))
 if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $terminal = [ordered]@{ status = 'verified'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; pwshProbe = 'TZG_DEEPSEEK_PWSH_CANARY' }
+} elseif ($env:TZG_FAKE_CLAUDE_MODE -ceq 'invalid-decision') {
+  [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'fixtures')) | Out-Null
+  [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixtures/business.txt'), 'checkpoint', [Text.UTF8Encoding]::new($false))
+  & git add -- fixtures/business.txt
+  & git commit -q -m 'candidate(TASK-DEEPSEEK-CANDIDATE): invalid decision fixture'
+  if ($LASTEXITCODE -ne 0) { throw 'fake decision checkpoint commit failed' }
+  $commit = [string](& git rev-parse HEAD)
+  $terminal = [ordered]@{
+    status = 'needs_decision'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = $commit
+    changedPaths = @('fixtures/business.txt'); verified = @('git diff --check passed'); unverified = @('none'); residualRisk = 'fixture only'
+    decisionId = 'DEC-20260806-INVALID-SCOPE'; question = 'Choose a fixture option.'
+    options = @(@{ key = 'A'; label = 'Option A' }, @{ key = 'B'; label = 'Option B' }, @{ key = 'C'; label = 'Option C' })
+    recommendedOption = 'A'; impactSummary = 'Fixture impact'
+    plainSummary = @{ situation = 'Fixture decision'; impact = 'Fixture only'; action = 'Choose A' }
+  }
 } else {
   [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'fixtures')) | Out-Null
   [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixtures/business.txt'), 'candidate', [Text.UTF8Encoding]::new($false))
@@ -133,6 +149,23 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   Assert-True ([string]$record.prompt -match 'result="问题=\.\.\.；完成=\.\.\."') 'Candidate prompt omitted the exact finalizer metadata form'
   Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--permission-mode') + 1]) 'bypassPermissions' 'Wrapper did not restore unrestricted Claude Code permissions'
   Assert-Equal ([Array]::IndexOf($arguments, '--allowedTools')) -1 'Wrapper retained an allowedTools restriction'
+  $wrapperSource = Get-Content -Raw -LiteralPath $wrapperPath
+  Assert-True $wrapperSource.Contains("decisionId = [ordered]@{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }") 'Decision ID schema pattern mismatch'
+
+  $completeOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action CompleteRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$run.runId) -CompletionCategory failed -DetailCode fixture_completed)
+  Assert-Equal $LASTEXITCODE 0 'First fixture run did not close'
+  Assert-Equal ([string]($completeOutput[0] | ConvertFrom-Json).status) 'RUN_COMPLETED' 'First fixture run close status mismatch'
+  $secondClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $stateRoot -Owner deepseek -TaskId $taskId -Route external_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $baseCommit -TaskCardDigest $digest)
+  Assert-Equal $LASTEXITCODE 0 'Invalid-decision fixture claim failed'
+  $secondRun = ($secondClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$secondRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$secondRun.candidateBranch, [string]$secondRun.worktree, $baseCommit) | Out-Null
+  $env:TZG_FAKE_CLAUDE_MODE = 'invalid-decision'
+  $invalidDecision = Invoke-Wrapper -Action Candidate -Root ([string]$secondRun.worktree) -TaskId $taskId -RunId ([string]$secondRun.runId)
+  Assert-Equal $invalidDecision.ExitCode 0 "Invalid-decision wrapper process failed: $($invalidDecision.Stderr)"
+  Assert-Equal ([string]$invalidDecision.Json.status) 'failed' 'Invalid decision ID did not fail at the candidate boundary'
+  Assert-Equal ([string]$invalidDecision.Json.detailCode) 'deepseek_decision_invalid' 'Invalid decision ID failure code mismatch'
+  $env:TZG_FAKE_CLAUDE_MODE = $originalFakeMode
 
   $canary = Invoke-Wrapper -Action Canary -Root $mainRoot -TaskId '' -RunId ''
   Assert-Equal ([string]$canary.Json.status) 'verified' 'Canary did not verify'
@@ -152,7 +185,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
 
   Write-Output 'test-invoke-deepseek-responsibility: OK'
 } finally {
-  $env:PATH = $originalPath; $env:ANTHROPIC_BASE_URL = $originalBaseUrl; $env:TZG_FAKE_CLAUDE_RECORD = $originalRecord
+  $env:PATH = $originalPath; $env:ANTHROPIC_BASE_URL = $originalBaseUrl; $env:TZG_FAKE_CLAUDE_RECORD = $originalRecord; $env:TZG_FAKE_CLAUDE_MODE = $originalFakeMode
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     if (-not $resolved.StartsWith($temporaryBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-deepseek-wrapper-test-$testId") { throw "Unsafe wrapper-test cleanup: $resolved" }

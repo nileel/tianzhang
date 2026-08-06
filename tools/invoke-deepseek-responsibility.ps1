@@ -213,7 +213,7 @@ function New-TerminalSchema {
       impact = [ordered]@{ type = 'string' }
       verify = [ordered]@{ type = 'string' }
       plain = [ordered]@{ type = 'string' }
-      decisionId = [ordered]@{ type = 'string' }
+      decisionId = [ordered]@{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }
       question = [ordered]@{ type = 'string' }
       options = [ordered]@{
         type = 'array'; minItems = 3; maxItems = 3
@@ -350,6 +350,7 @@ function Assert-DecisionCheckpoint {
     if ($Terminal.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_invalid_terminal' }
   }
   if ([string]$Terminal.identity -cne 'DeepSeek V4 Flash' -or [string]$Terminal.model -cne $modelName) { Stop-DeepSeek 'deepseek_identity_mismatch' }
+  if ([string]$Terminal.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { Stop-DeepSeek 'deepseek_decision_invalid' }
   $commit = [string]$Terminal.candidateCommit
   if (
     (Invoke-GitText @('rev-parse', 'HEAD')) -cne $commit -or
