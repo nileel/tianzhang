@@ -11,12 +11,31 @@
 - 高阶内容不批量删除；先按 NPC、资料片、宗门秘术或历史说明分类。
 - 2026-07-22 用户专项授权的《天章》宇宙观 M0—M6 与 M9 已完成事实源迁移：世界背景、世界主线、三项遗产格式和册界规则结构已落地；M7 册界条目、M8 CSV／Unity／运行时／保存／UI 均未执行，且未进入当前任务队列。
 - 2026-07-30 用户将 M8 的内容前置从完整 M7 收窄为水府地纪；`C-TZ-CHARTER-ENTRIES-01B6` 已完成并通过复审，已解除 `D-TZ-CHARTER-SCHEMA-01` 前置。后续按 `SCHEMA → SAMPLE → MODEL → SAVE → SLICE` 推进；其余九条 M7 内容继续冻结。
+- 2026-08-07 用户定稿金丹位格批量内容生产方案：按 17 条道路各生产 1 源位＋1 化位＋1 界位共 51 份具体位置文档；主卡 `C-HS-YY-JD-01` 只做跨道路收口，17 张子卡 `C-HS-YY-JD-01A`～`01Q` 由 DeepSeek V4 Flash 生产、Codex 独立复审。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-GZ-PRESENT-01 | P2 | Codex 规划；外部资源责任方执行 | 阻塞（U-GZ-FORMAL-E2E-01） | — | 在功能闸门后补关中城、悬赏板和石甲兽的正式视觉／音效资源，不改变规则。 | — |
+| C-HS-YY-JD-01 | P1 | codex | 阻塞 | C-HS-YY-JD-01A、C-HS-YY-JD-01B、C-HS-YY-JD-01C、C-HS-YY-JD-01D、C-HS-YY-JD-01E、C-HS-YY-JD-01F、C-HS-YY-JD-01G、C-HS-YY-JD-01H、C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01K、C-HS-YY-JD-01L、C-HS-YY-JD-01M、C-HS-YY-JD-01N、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q | 金丹位格内容生产父任务 | 开发管理/任务卡/C-HS-YY-JD-01.txt |
+| C-HS-YY-JD-01A | P1 | deepseek | 已排队 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
+| C-HS-YY-JD-01B | P1 | deepseek | 已排队 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
+| C-HS-YY-JD-01C | P1 | deepseek | 已排队 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
+| C-HS-YY-JD-01D | P1 | deepseek | 已排队 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
+| C-HS-YY-JD-01E | P1 | deepseek | 已排队 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
+| C-HS-YY-JD-01F | P1 | deepseek | 已排队 | — | 金丹位格·见识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
+| C-HS-YY-JD-01G | P1 | deepseek | 已排队 | — | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
+| C-HS-YY-JD-01H | P1 | deepseek | 已排队 | — | 金丹位格·息识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
+| C-HS-YY-JD-01I | P1 | deepseek | 已排队 | — | 金丹位格·食识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
+| C-HS-YY-JD-01J | P1 | deepseek | 已排队 | — | 金丹位格·身识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
+| C-HS-YY-JD-01K | P1 | deepseek | 已排队 | — | 金丹位格·意识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01K.txt |
+| C-HS-YY-JD-01L | P1 | deepseek | 已排队 | — | 金丹位格·阴道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01L.txt |
+| C-HS-YY-JD-01M | P1 | deepseek | 已排队 | — | 金丹位格·阳道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01M.txt |
+| C-HS-YY-JD-01N | P1 | deepseek | 已排队 | — | 金丹位格·宇道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01N.txt |
+| C-HS-YY-JD-01O | P1 | deepseek | 已排队 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
+| C-HS-YY-JD-01P | P1 | deepseek | 已排队 | — | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
+| C-HS-YY-JD-01Q | P1 | deepseek | 已排队 | — | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
 | C-FPD-NAME-01 | P1 | DeepSeek V4 Flash 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | — | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 | — |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
 | C-FPD-GONGFA-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |
