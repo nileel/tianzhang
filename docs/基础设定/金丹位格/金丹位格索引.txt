@@ -9,6 +9,7 @@
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记见识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记闻识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记息识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记食识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 
 > 本文是金丹具体位置正式登记与数量汇总的唯一索引事实源。结构与数量规则以 `docs/基础设定/元婴锚点与金丹位格设定.txt` 为准；单文档生产以同目录 `金丹位格设计规范.txt` 为准；道路与基础效果以 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 为准；证位档案以 `docs/基础设定/金丹位格证位与争位规则.txt` 及独立位置文档为准。索引只提供登记、计数与定位，不能替代具体位置文档。
 
@@ -61,7 +62,7 @@
 | 当前具体位置合计 | 51 | 17 源位＋17 化位＋17 界位 |
 | 基础效果 | 51 | 与具体位置是不同对象，只是当前数量相同 |
 | 基础效果位别版本 | 153 | 每个 `effect_id` 各有源版、化版、界版 |
-| 已完成独立位置文档 | 24 | 木道路 1 源位＋1 化位＋1 界位、火道路 1 源位＋1 化位＋1 界位、土道路 1 源位＋1 化位＋1 界位、金道路 1 源位＋1 化位＋1 界位、水道路 1 源位＋1 化位＋1 界位、见识道路 1 源位＋1 化位＋1 界位、闻识道路 1 源位＋1 化位＋1 界位、息识道路 1 源位＋1 化位＋1 界位（2026-08-07 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
+| 已完成独立位置文档 | 27 | 木道路 1 源位＋1 化位＋1 界位、火道路 1 源位＋1 化位＋1 界位、土道路 1 源位＋1 化位＋1 界位、金道路 1 源位＋1 化位＋1 界位、水道路 1 源位＋1 化位＋1 界位、见识道路 1 源位＋1 化位＋1 界位、闻识道路 1 源位＋1 化位＋1 界位、息识道路 1 源位＋1 化位＋1 界位、食识道路 1 源位＋1 化位＋1 界位（2026-08-07 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
 
 ## 五、十七道路初始结构
 
@@ -96,10 +97,11 @@
 > 注（2026-08-07 本批次）：见识道路 3 个初始具体位置（`JD_SixConsciousness_Sight_SOURCE`、`JD_SixConsciousness_Sight_TRANSFORM01`、`JD_SixConsciousness_Sight_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-07 本批次）：闻识道路 3 个初始具体位置（`JD_SixConsciousness_Hearing_SOURCE`、`JD_SixConsciousness_Hearing_TRANSFORM01`、`JD_SixConsciousness_Hearing_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-07 本批次）：息识道路 3 个初始具体位置（`JD_SixConsciousness_Breath_SOURCE`、`JD_SixConsciousness_Breath_TRANSFORM01`、`JD_SixConsciousness_Breath_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
+> 注（2026-08-07 本批次）：食识道路 3 个初始具体位置（`JD_SixConsciousness_Ingest_SOURCE`、`JD_SixConsciousness_Ingest_TRANSFORM01`、`JD_SixConsciousness_Ingest_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 
 ## 六、正式具体位置登记表
 
-本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、见识道路、闻识道路与息识道路）登记 24 个待审核条目：
+本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、见识道路、闻识道路、息识道路与食识道路）登记 27 个待审核条目：
 
 | `positionId` | 具体位置名称／`seatNameKey` | `road_id` | `positionType`／`positionNameKey` | 理念摘要 | 效果白名单摘要 | 证位档案标识与版本 | 位置档案版本 | 内容状态 | 审核记录 | 正式文档路径 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -127,3 +129,6 @@
 | `JD_SixConsciousness_Breath_SOURCE` | 万灵枢 | `ROAD_BREATH` | `SOURCE`／源位 | 息识道路唯一根本来源与直接规则操作——「非独立有情灵性对象的控制、灵气流通与灵性启寂」三通道（灵性控制、灵气调御、灵性启寂）的共同根本来源 | `BREATH_CONTROL`、`BREATH_QI`、`BREATH_AWAKEN` | `PROOF_BREATH_SOURCE_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Breath_SOURCE_万灵枢.txt` |
 | `JD_SixConsciousness_Breath_TRANSFORM01` | 驭机渡 | `ROAD_BREATH` | `TRANSFORM`／化位 | 息识道路力量的一条固定传播／筛选途径——对灵性对象按固定条件拒绝、暂停或改接一种命令（拒面：一类灵性对象固定拒绝／暂停／改接一种命令；调面：一种灵气固定执行一种调御操作；启面：一类对象自动启用或关闭预设接口） | `BREATH_CONTROL`、`BREATH_QI`、`BREATH_AWAKEN` | `PROOF_BREATH_TRANSFORM01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Breath_TRANSFORM01_驭机渡.txt` |
 | `JD_SixConsciousness_Breath_DOMAIN01` | 启寂坛 | `ROAD_BREATH` | `DOMAIN`／界位 | 对范围内公共灵性节点、灵气与器物维持一条固定弱息识规则的领域形态（公共灵性节点只接受登记阵营一类粗控制的弱控制、一条弱灵气规则常驻的弱调御、公共器物统一获得弱响应规则或外来灵性接口保持沉寂的弱启寂） | `BREATH_CONTROL`、`BREATH_QI`、`BREATH_AWAKEN` | `PROOF_BREATH_DOMAIN01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Breath_DOMAIN01_启寂坛.txt` |
+| `JD_SixConsciousness_Ingest_SOURCE` | 百味玄关 | `ROAD_INGEST` | `SOURCE`／源位 | 食识道路唯一根本来源与直接规则操作——「进入生命体的效果如何吸收、解释和定量转化」三通道（吸收反转、吸收增减、吸收拒止）的共同根本来源 | `INGEST_INVERT`、`INGEST_SCALE`、`INGEST_BLOCK` | `PROOF_INGEST_SOURCE_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Ingest_SOURCE_百味玄关.txt` |
+| `JD_SixConsciousness_Ingest_TRANSFORM01` | 化津炉 | `ROAD_INGEST` | `TRANSFORM`／化位 | 食识道路力量的一条固定传播／筛选途径——对摄入路径按固定条件统一反转／增减／拒止（转面：一种摄入路径统一执行一条预设反转；衡面：一种摄入路径固定执行增幅或衰减并承担统一过载；拒面：一类摄入统一阻止或延迟吸收） | `INGEST_INVERT`、`INGEST_SCALE`、`INGEST_BLOCK` | `PROOF_INGEST_TRANSFORM01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Ingest_TRANSFORM01_化津炉.txt` |
+| `JD_SixConsciousness_Ingest_DOMAIN01` | 谷神场 | `ROAD_INGEST` | `DOMAIN`／界位 | 对范围内一类摄入维持一种弱转化规则的领域形态（选定阵营吸收的一类效果只有一小部分按固定方向反转的弱反转、范围内一类摄入获得弱增幅或弱衰减的弱增减、范围内固定执行一条弱广域摄入规则的弱拒止） | `INGEST_INVERT`、`INGEST_SCALE`、`INGEST_BLOCK` | `PROOF_INGEST_DOMAIN01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Ingest_DOMAIN01_谷神场.txt` |
