@@ -4,13 +4,13 @@
   "id": "C-HS-YY-JD-01G",
   "title": "金丹位格·闻识道路三位置内容生产",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "content",
   "stage": "design",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-07：用户定稿金丹位格批量内容生产方案；六识道路子卡建立为 ready，等待 DeepSeek V4 Flash 生产并标记「⚠️ 已修改/未审核」。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt",
     "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt",
@@ -19,7 +19,8 @@
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/C-HS-YY-JD-01G.txt",
-    "开发管理/任务归档/C-HS-YY-JD-01G.txt"
+    "开发管理/任务归档/C-HS-YY-JD-01G.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
 }

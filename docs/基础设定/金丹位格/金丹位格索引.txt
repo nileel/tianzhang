@@ -7,6 +7,7 @@
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记金道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记水道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记见识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记闻识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 
 > 本文是金丹具体位置正式登记与数量汇总的唯一索引事实源。结构与数量规则以 `docs/基础设定/元婴锚点与金丹位格设定.txt` 为准；单文档生产以同目录 `金丹位格设计规范.txt` 为准；道路与基础效果以 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 为准；证位档案以 `docs/基础设定/金丹位格证位与争位规则.txt` 及独立位置文档为准。索引只提供登记、计数与定位，不能替代具体位置文档。
 
@@ -59,7 +60,7 @@
 | 当前具体位置合计 | 51 | 17 源位＋17 化位＋17 界位 |
 | 基础效果 | 51 | 与具体位置是不同对象，只是当前数量相同 |
 | 基础效果位别版本 | 153 | 每个 `effect_id` 各有源版、化版、界版 |
-| 已完成独立位置文档 | 18 | 木道路 1 源位＋1 化位＋1 界位、火道路 1 源位＋1 化位＋1 界位、土道路 1 源位＋1 化位＋1 界位、金道路 1 源位＋1 化位＋1 界位、水道路 1 源位＋1 化位＋1 界位、见识道路 1 源位＋1 化位＋1 界位（2026-08-07 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
+| 已完成独立位置文档 | 21 | 木道路 1 源位＋1 化位＋1 界位、火道路 1 源位＋1 化位＋1 界位、土道路 1 源位＋1 化位＋1 界位、金道路 1 源位＋1 化位＋1 界位、水道路 1 源位＋1 化位＋1 界位、见识道路 1 源位＋1 化位＋1 界位、闻识道路 1 源位＋1 化位＋1 界位（2026-08-07 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
 
 ## 五、十七道路初始结构
 
@@ -92,10 +93,11 @@
 > 注（2026-08-07 本批次）：金道路 3 个初始具体位置（`JD_FiveElements_Metal_SOURCE`、`JD_FiveElements_Metal_TRANSFORM01`、`JD_FiveElements_Metal_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-07 本批次）：水道路 3 个初始具体位置（`JD_FiveElements_Water_SOURCE`、`JD_FiveElements_Water_TRANSFORM01`、`JD_FiveElements_Water_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-07 本批次）：见识道路 3 个初始具体位置（`JD_SixConsciousness_Sight_SOURCE`、`JD_SixConsciousness_Sight_TRANSFORM01`、`JD_SixConsciousness_Sight_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
+> 注（2026-08-07 本批次）：闻识道路 3 个初始具体位置（`JD_SixConsciousness_Hearing_SOURCE`、`JD_SixConsciousness_Hearing_TRANSFORM01`、`JD_SixConsciousness_Hearing_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 
 ## 六、正式具体位置登记表
 
-本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路与见识道路）登记 18 个待审核条目：
+本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、见识道路与闻识道路）登记 21 个待审核条目：
 
 | `positionId` | 具体位置名称／`seatNameKey` | `road_id` | `positionType`／`positionNameKey` | 理念摘要 | 效果白名单摘要 | 证位档案标识与版本 | 位置档案版本 | 内容状态 | 审核记录 | 正式文档路径 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -117,3 +119,6 @@
 | `JD_SixConsciousness_Sight_SOURCE` | 观照真瞳 | `ROAD_SIGHT` | `SOURCE`／源位 | 见识道路唯一根本来源与直接规则操作——「观察者能看见、指认和辨识什么」三通道（视觉锁定、视觉剥夺、形相改写）的共同根本来源 | `SIGHT_LOCK`、`SIGHT_BLIND`、`SIGHT_IMAGE` | `PROOF_SIGHT_SOURCE_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Sight_SOURCE_观照真瞳.txt` |
 | `JD_SixConsciousness_Sight_TRANSFORM01` | 镜门 | `ROAD_SIGHT` | `TRANSFORM`／化位 | 见识道路力量的一条固定传播／筛选途径——对观察者视野按固定条件筛选／伪装（锁镜：预设类别自动锁定；蔽镜：视野半径朝向压缩；伪镜：统一形相与隐藏信息组） | `SIGHT_LOCK`、`SIGHT_BLIND`、`SIGHT_IMAGE` | `PROOF_SIGHT_TRANSFORM01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Sight_TRANSFORM01_镜门.txt` |
 | `JD_SixConsciousness_Sight_DOMAIN01` | 无翳庭 | `ROAD_SIGHT` | `DOMAIN`／界位 | 对区域内视觉信息维持一条固定弱见识规则的领域形态（粗轮廓与最后已知位置的粗锁定、切断共享视野保留本地视觉的粗剥夺、只失去一类精确细节的粗遮蔽） | `SIGHT_LOCK`、`SIGHT_BLIND`、`SIGHT_IMAGE` | `PROOF_SIGHT_DOMAIN01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Sight_DOMAIN01_无翳庭.txt` |
+| `JD_SixConsciousness_Hearing_SOURCE` | 天籁元钟 | `ROAD_HEARING` | `SOURCE`／源位 | 闻识道路唯一根本来源与直接规则操作——「声音、行动声讯、传令通道与物质共振」的共同根本来源 | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` | `PROOF_HEARING_SOURCE_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt` |
+| `JD_SixConsciousness_Hearing_TRANSFORM01` | 传响廊 | `ROAD_HEARING` | `TRANSFORM`／化位 | 闻识道路力量的一条固定传播／筛选途径——经传声／传振媒介对行动声讯作固定筛选（聆廊：预设行为类别声讯过滤；封廊：一类命令只许邻接或实体信使传令；振廊：固定频率增振或消振） | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` | `PROOF_HEARING_TRANSFORM01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt` |
+| `JD_SixConsciousness_Hearing_DOMAIN01` | 万籁场 | `ROAD_HEARING` | `DOMAIN`／界位 | 对区域内行动声迹与传令维持一条固定弱闻识规则的领域形态（行动声迹短暂回响的弱听取、远程协同只能传递粗命令的弱传令、强动作与脆弱结构持续受同一弱共振规则） | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` | `PROOF_HEARING_DOMAIN01_01` / 1.0 | 1.0 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Hearing_DOMAIN01_万籁场.txt` |
