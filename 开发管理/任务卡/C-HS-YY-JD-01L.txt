@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-08 Codex 独立复审不通过：三份位置文档仍缺完整证位阶段、绑定前合法能力入口、最终原子重验及并行／临界争位；主场景维护、NPC 响应、分项山河结果与事件、四类实例版本策略尚未落为可执行规则。正式提交 6e11433ae29801fb188e2e2cf150cd8658d1c55d 已登记未通过审核清单，待负责人决定返工责任方。",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_YinYang_Yin_SOURCE_玄牝之门.txt",
     "docs/基础设定/金丹位格/化位/JD_YinYang_Yin_TRANSFORM01_潜曜关.txt",
