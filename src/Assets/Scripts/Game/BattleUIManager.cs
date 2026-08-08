@@ -530,8 +530,9 @@ namespace TianZhang.Game
         {
             if (logText == null || logScroll == null) return;
 
-            // 日志里的稳定 ID / 原因键只做显示映射；原始值保留在 Debug 日志与结果对象中。
-            message = TianZhang.Settlement.UiText.ResolveEmbedded(message);
+            // 战斗日志原样呈现：不做整条日志的 Language 键全局替换，避免误改玩家自定义名称或
+            // 技术日志中的合法内容；稳定 ID / 原因继续保留在日志文本、Debug 日志与结果对象中。
+            // 档案键只在已证明的显示字段（术法/神通按钮标签）由源端解析为中文。
 
             logLineCount++;
             if (logLineCount > MaxLogLines)

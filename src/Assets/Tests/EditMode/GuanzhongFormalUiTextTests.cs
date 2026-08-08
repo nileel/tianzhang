@@ -12,7 +12,8 @@ namespace TianZhang.Tests
 {
     /// <summary>
     /// 正式薄切片玩家显示文本 EditMode 闸门（U-GZ-UI-TEXT-01）：生产实体的中文显示映射、
-    /// 缺键回退、未知原因回退且原始稳定原因保留在开发日志、复合文本嵌入键解析，以及场景重建后
+    /// 缺键回退、未知原因回退且原始稳定原因保留在开发日志、已证明显示字段（遭遇错误文本）的
+    /// 嵌入键解析、战斗日志原样保留（自定义名称与技术日志含 Language 键时不改写）、场景重建后
     /// 正式控件仍呈现中文。显示边界只做单向映射，不修改稳定 ID / 原因字段。
     /// </summary>
     public sealed class GuanzhongFormalUiTextTests
@@ -81,11 +82,104 @@ namespace TianZhang.Tests
         {
             UiText.Load(LoadLanguageTable());
 
+            // ResolveEmbedded 只用于已证明的显示字段（AdventureSourceText 遭遇错误文本等），
+            // 不用于任意整条战斗日志；战斗日志按原样保留（见 BattleLog...Verbatim 用例）。
             string logLine = "无名修士 攻击 attack_profile_basic_unarmed → 石甲兽: 命中 10";
             Assert.AreEqual("无名修士 攻击 徒手 → 石甲兽: 命中 10", UiText.ResolveEmbedded(logLine));
 
             string unknown = "unknown_machine_token 保持原样";
             Assert.AreEqual(unknown, UiText.ResolveEmbedded(unknown));
+        }
+
+        [Test]
+        public void BattleLogPreservesCustomNamesAndTechnicalLogsVerbatim()
+        {
+            UiText.Load(LoadLanguageTable());
+
+            // 整条日志不做全局键替换（复审返工项）：玩家自定义名称或技术日志只要含有 Language 键
+            // 子串（如 attack_profile_basic_unarmed）就必须原样保留，不得被改写为"徒手"。
+            var host = new GameObject("BattleLogVerbatimHost");
+            try
+            {
+                var ui = host.AddComponent<BattleUIManager>();
+                typeof(BattleUIManager)
+                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(ui, null);
+
+                var logText = GameObject.Find("LogText").GetComponent<Text>();
+                Assert.IsNotNull(logText, "the battle log text must be built by Awake.");
+
+                ui.AddLog("我的角色 attack_profile_basic_unarmed 的存档已保存");
+                ui.AddLog("技术日志: settlement_guanzhong_city 已加载 attack_profile_basic_unarmed");
+
+                Assert.AreEqual(
+                    "我的角色 attack_profile_basic_unarmed 的存档已保存\n" +
+                    "技术日志: settlement_guanzhong_city 已加载 attack_profile_basic_unarmed\n",
+                    logText.text);
+            }
+            finally
+            {
+                var canvas = GameObject.Find("UICanvas");
+                if (canvas != null)
+                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void BattleUiDoesNotResolveProfileKeysAtButtonOrLogFields()
+        {
+            UiText.Load(LoadLanguageTable());
+
+            // 已证明的战斗档案显示字段（术法/神通按钮标签）由 ExplorationController 源端
+            // `UiText.Resolve` 解析为中文后传入；BattleUIManager 本身是透传层，原始档案键
+            // 传入时保持原样，不得在 UI 层再做整串替换。
+            var host = new GameObject("BattleUiRawFieldHost");
+            try
+            {
+                var ui = host.AddComponent<BattleUIManager>();
+                typeof(BattleUIManager)
+                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(ui, null);
+
+                ui.RefreshSpellButtons(
+                    new[] { "attack_profile_basic_unarmed" },
+                    new[] { 0 },
+                    10,
+                    new[] { 0 },
+                    1);
+                Assert.AreEqual("attack_profile_basic_unarmed", ButtonLabel("BtnSpell0"));
+
+                var logText = GameObject.Find("LogText").GetComponent<Text>();
+                ui.AddLog("未知原因 attack_profile_basic_unarmed 保持原样");
+                StringAssert.Contains("attack_profile_basic_unarmed", logText.text);
+
+                // 对照：同一键的玩家显示映射仍由源端 UiText.Resolve 提供（显示字段专用）。
+                Assert.AreEqual("徒手", UiText.Resolve("attack_profile_basic_unarmed"));
+            }
+            finally
+            {
+                var canvas = GameObject.Find("UICanvas");
+                if (canvas != null)
+                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        private static string ButtonLabel(string buttonName)
+        {
+            // 动作栏默认隐藏（BuildUI 关闭 ActionBar），需用 FindObjectsOfTypeAll 查找非激活控件。
+            foreach (var button in Resources.FindObjectsOfTypeAll<Button>())
+            {
+                if (button.name != buttonName)
+                    continue;
+                var label = button.GetComponentInChildren<Text>();
+                Assert.IsNotNull(label, buttonName + " must carry a label text.");
+                return label.text;
+            }
+
+            Assert.Fail(buttonName + " must exist after building the battle UI.");
+            return null;
         }
 
         [Test]

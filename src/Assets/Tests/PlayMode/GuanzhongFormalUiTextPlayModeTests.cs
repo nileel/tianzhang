@@ -123,7 +123,8 @@ namespace TianZhang.Tests
             StringAssert.DoesNotContain("env_guanzhong_wild", feedback.text);
             StringAssert.DoesNotContain("surface_grassland", feedback.text);
 
-            // 6. 探索接近石甲兽并建立战斗：战斗横幅与日志只呈现中文（档案键解析为"徒手"）。
+            // 6. 探索接近石甲兽并建立战斗：战斗横幅为中文；战斗日志按原样呈现（整条日志不做
+            // 全局键替换，档案键只在已证明的显示字段——术法/神通按钮标签——源端解析为中文）。
             var exploration = Object.FindFirstObjectByType<ExplorationController>();
             Assert.IsNotNull(exploration);
             yield return WaitUntilSpawned(exploration);
@@ -134,9 +135,14 @@ namespace TianZhang.Tests
             InvokeStartBattle(exploration, enemyUnit);
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
 
-            var logText = GameObject.Find("LogText")?.GetComponent<Text>();
-            if (logText != null)
-                StringAssert.DoesNotContain("attack_profile_basic_unarmed", logText.text);
+            // 战斗开始公告以既有中文格式原样进入日志，稳定原因继续保留在日志文本中。
+            // 直接读取当前场景 BattleUIManager 的日志字段：战斗 UI 的 Canvas 是 DontDestroyOnLoad，
+            // GameObject.Find("LogText") 可能命中此前测试遗留的空日志。
+            var battleUi = Object.FindFirstObjectByType<BattleUIManager>();
+            Assert.IsNotNull(battleUi, "the formal AdventureScene must bind its battle UI manager.");
+            var logText = (Text)ReadField(battleUi, "logText");
+            Assert.IsNotNull(logText, "the battle UI manager must have built its log text.");
+            StringAssert.Contains("=== 战斗开始！", logText.text);
 
             // 7. 结算胜利：击败石甲兽后由既有 CombatLoop 走正式结算并返回关中城。
             enemy.TakeDamage(9999);

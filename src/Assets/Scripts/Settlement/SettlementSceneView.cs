@@ -108,7 +108,11 @@ namespace TianZhang.Settlement
             return unknownFallback ?? string.Empty;
         }
 
-        /// <summary>复合文本（战斗日志等）边界的单向解析：把嵌入的已知 Language 键替换为中文，其余原样保留。</summary>
+        /// <summary>
+        /// 复合文本（遭遇错误等已证明显示字段）边界的单向解析：把嵌入的已知 Language 键替换为中文，
+        /// 其余原样保留。只允许用于内容已证明为机器原因/键的显示字段（如 AdventureSourceText 的
+        /// 遭遇错误），不得用于任意整条战斗日志或用户文本（会误改自定义名称/技术日志）。
+        /// </summary>
         public static string ResolveEmbedded(string text)
         {
             if (string.IsNullOrEmpty(text) || !loaded)

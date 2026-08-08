@@ -5,6 +5,8 @@
 > `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md`（6.2/6.3/6.4/9.2/十）。
 > 事实源：`src/Assets/DataConfig/Language.csv` 与正式 `Settlements.csv`、`Bounties.csv`、`Enemies.csv`、
 > `Items.csv`、`CharterSites.csv`、`EnvironmentProfiles.csv`、`AttackProfiles.csv` 中本卡命中的生产实体。
+> 复审返工（2026-08-09）：Codex 对正式提交 `867da4dc29a6ea02676240db715637b4977afaa0` 结论"不通过"，
+> 返工项为移除 `BattleUIManager.AddLog` 整条日志的全局键替换（详见第七节返工记录）。
 
 ## 一、逐控件审计清单
 
@@ -70,8 +72,8 @@
 | EnvironmentFeedbackText 地表 | surface_grassland / surface_loess | AdventureSceneController | `surface_*` 键（生产环境档案的状态文案） | 解析 → "地表: 草地、黄土" | GuanzhongFormalUiTextPlayModeTests 新增 |
 | EnvironmentFeedbackText 格边 | 拒绝(directed_edge_blocks_movement 等) | AdventureSceneController | 空间原因键映射 + 兜底 | "移动不允许（移动受阻）"；未知原因回退"受限"并保留原因 | 同上 |
 | EnvironmentFeedbackText 未配置 | 环境反馈拒绝: <reason> | AdventureSceneController | 最小状态文案 | "环境反馈: 未生效"；原始原因保留在投影对象并写开发日志 | 同上 |
-| 术法/神通按钮标签 | attack_profile_basic_unarmed | ExplorationController → BattleUIManager | `attack_profile_*` 键 | 解析 → 徒手 | GuanzhongFormalUiTextTests.ResolveEmbedded |
-| 战斗日志 | "无名修士 攻击 attack_profile_basic_unarmed → 石甲兽" | BattleUIManager.AddLog | Language 键嵌入解析 | `UiText.ResolveEmbedded` → "攻击 徒手"；未映射文本原样保留 | GuanzhongFormalUiTextTests |
+| 术法/神通按钮标签 | attack_profile_basic_unarmed | ExplorationController → BattleUIManager | `attack_profile_*` 键 | 源端 `UiText.Resolve` 解析 → 徒手（唯一已证明的战斗档案显示字段） | GuanzhongFormalUiTextTests.BattleUiDoesNotResolveProfileKeysAtButtonOrLogFields |
+| 战斗日志 | "无名修士 攻击 attack_profile_basic_unarmed → 石甲兽" | BattleUIManager.AddLog | 稳定原因保留在日志（复审返工项） | 原样保留，不做整条日志的全局键替换；档案键只在按钮标签等已证明显示字段解析 | GuanzhongFormalUiTextTests.BattleLogPreservesCustomNamesAndTechnicalLogsVerbatim |
 | 战斗横幅 | 胜利 / 败北 / CTB异常 | ExplorationController | 既有中文 + 最小状态文案 | "CTB异常" → "战斗异常" | 新增（回归） |
 
 ### 7. 未批准显示事实项（按 4.3 停止并保留证据）
@@ -84,12 +86,12 @@
 ## 二、修改文件
 
 - `src/Assets/DataConfig/Language.csv`：新增生产实体/状态/反馈的最小玩家显示键（键值即稳定 ID / 稳定原因）。
-- `src/Assets/Scripts/Settlement/SettlementSceneView.cs`：新增共享 `UiText` 解析器（唯一文本源 Language.csv，幂等加载，单向映射）+ 据点显示映射 + languageTable 序列化引用。
+- `src/Assets/Scripts/Settlement/SettlementSceneView.cs`：新增共享 `UiText` 解析器（唯一文本源 Language.csv，幂等加载，单向映射）+ 据点显示映射 + languageTable 序列化引用；`ResolveEmbedded` 注释收窄为已证明显示字段（遭遇错误文本）边界。
 - `src/Assets/Scripts/World/WorldSceneController.cs`：节点显示名查找 + 描述映射 + languageTable 引用。
 - `src/Assets/Scripts/Settlement/BountyBoardView.cs`、`CharterSiteView.cs`：条目/结果/面板文本状态化映射。
 - `src/Assets/Scripts/Adventure/AdventureSceneController.cs`：来源/环境反馈/副本名映射 + languageTable 引用。
 - `src/Assets/Scripts/Map/ExplorationController.cs`：技能按钮标签解析、"战斗异常"横幅。
-- `src/Assets/Scripts/Game/BattleUIManager.cs`：战斗日志嵌入键解析。
+- `src/Assets/Scripts/Game/BattleUIManager.cs`：~~战斗日志嵌入键解析~~ 移除（复审返工项：整条日志不再做全局键替换，日志原样保留，稳定原因留在日志文本；档案键只在术法/神通按钮标签等已证明显示字段源端解析）。
 - `src/Assets/Scripts/Editor/SceneBuilder.cs`：四个场景的显示组件序列化 Language.csv 引用（场景重建不丢失）。
 - `src/Assets/Scenes/WorldScene.unity` / `SettlementScene.unity` / `AdventureScene.unity`：序列化 languageTable 引用。
 - 测试：`SceneArchitectureEditorTests`、`BountyBoardViewTests`、`CharterSiteViewTests`、`CharterVerticalSlicePlayModeTests` 更新断言；
@@ -102,26 +104,27 @@
 | 命令 | 结果 |
 | --- | --- |
 | `dotnet build src/TianZhang.EditModeTests.csproj` | OK：0 错误；2 个警告均为既有 `CharterRuleStaticCatalogData` 序列化字段 CS0649（dotnet 构建视角），与本卡新增字段无关（新增字段已显式置空消除警告） |
-| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` | 432 执行 / 430 通过 / 2 失败；2 项失败与 baseCommit 独立基线逐项一致（见第五节），脚本以退出码 2 结束属其零失败门禁预期行为 |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` | 434 执行 / 432 通过 / 2 失败；2 项失败与 baseCommit 独立基线逐项一致（见第五节），脚本以退出码 2 结束属其零失败门禁预期行为；本卡返工新增的 2 个 EditMode 用例全部通过 |
 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1` | 5 执行 / 5 通过 / 0 失败，含新增完整薄切片 runner |
 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` | OK：language keys=544；含新增 UI 文本投影校验（键集存在性 + 三场景 languageTable 引用） |
-| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests` | OK（356 文件） |
-| `tools/check-pending-whitespace.ps1`（暂存前） | OK（22 个候选路径） |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests` | OK（377 文件） |
+| `tools/check-pending-whitespace.ps1`（暂存前） | OK（5 个返工候选路径） |
 | `git diff --cached --check`（暂存后） | 由 `tools/automation-finalize-commit.ps1` 提交前执行 |
 
 基线对照：baseCommit（29781b3）独立全量 EditMode 运行 426 执行 / 424 通过 / 2 失败，失败项与本卡运行完全一致；
 本卡新增的 6 个 EditMode 用例与 1 个 PlayMode 用例全部通过。`AdventurePanelDoesNotOverlapPlayerHud` 为顺序相关用例，
 本卡新增场景重建用例已在其清理中恢复"最后打开 AdventureScene"的既有状态，回归通过。
+返工轮：EditMode 434 执行 / 432 通过（较上轮 +2 为返工新增用例，既有 2 项失败不变），PlayMode 5/5 通过。
 
 ## 四、测试数统计
 
 | 套件 | 新增 | 更新 | 结果 |
 | --- | --- | --- | --- |
-| EditMode：GuanzhongFormalUiTextTests | 6（生产映射/缺键回退/未知原因保留/嵌入键解析/步骤与状态键/场景重建中文） | — | 6/6 通过 |
+| EditMode：GuanzhongFormalUiTextTests | 6（生产映射/缺键回退/未知原因保留/嵌入键解析/步骤与状态键/场景重建中文）+ 2（返工：战斗日志原样保留自定义名与技术日志、按钮/日志字段不再解析档案键） | 注释与断言边界收窄 | 8/8 通过 |
 | EditMode：SceneArchitectureEditorTests | 世界节点显示断言 2 处、环境反馈/副本入口/投影断言 5 处 | 8 处 | 全通过 |
 | EditMode：BountyBoardViewTests | 悬赏条目中文/状态/回退断言 6 处 | 6 处 | 全通过 |
 | EditMode：CharterSiteViewTests | 玩家显示+内部原因分层断言 5 处 | 5 处 | 全通过 |
-| PlayMode：GuanzhongFormalUiTextPlayModeTests | 1（新建角色→世界→关中城→悬赏→单据点→野外→战斗→结算→返回→领奖） | — | 1/1 通过 |
+| PlayMode：GuanzhongFormalUiTextPlayModeTests | 1（新建角色→世界→关中城→悬赏→单据点→野外→战斗→结算→返回→领奖） | 战斗日志断言改为"开始公告原样呈现"（返工后日志不再解析档案键） | 1/1 通过 |
 | PlayMode：CharterVerticalSlicePlayModeTests | 投影/面板中文断言 2 处 | 2 处 | 全通过 |
 
 ## 五、既有无关失败（与 baseCommit 基线逐项一致，均已登记于多份历史验证记录）
@@ -139,6 +142,19 @@
 
 - 非正式实体（longxi_trial / taiyi_sect / zhongzhou_city / StartMenu 英文前缀）仍显示内部值，待后续内容批准后补显示名。
 - `UiText` 表在未加载时按键回退（不伪造文本）；正式场景均序列化同一 Language.csv 引用，重建后一致。
-- 战斗日志中未映射的机器原因仍原样显示于日志文本（开发可见），不伪造成功。
+- 战斗日志按原样呈现，未映射的机器原因仍显示于日志文本（开发可见），不伪造成功；自定义名称与技术日志含 Language 键时不再被改写。
 - 本卡未改变任何业务状态语义、交互顺序、Canvas/布局、字体、颜色或美术资源；未新增第二本地化服务或平行文本目录。
 - 交接：业务完成后由共享入口转为 `codex_review/codex/ready`，待 Codex 独立复审。
+
+## 七、复审返工记录（2026-08-09）
+
+- 审核对象：正式提交 `867da4dc29a6ea02676240db715637b4977afaa0`；结论：不通过（登记于 `开发管理/未通过审核清单.txt`）。
+- 问题：`BattleUIManager.AddLog` 将任意整条日志传入 `UiText.ResolveEmbedded`，后者逐键全串替换；玩家自定义名称或技术日志只要含有 Language 键（例如 `attack_profile_basic_unarmed`）就会被改写为"徒手"，违反本卡禁止误改玩家自定义名字、技术日志或合法内容的边界。
+- 返工内容：
+  1. `BattleUIManager.AddLog` 移除整条日志的 `ResolveEmbedded` 全局替换，日志按原样呈现；稳定原因继续保留在日志文本、Debug 日志与结果对象中。
+  2. 档案键解析只保留在已证明的战斗档案显示字段——术法/神通按钮标签——由 `ExplorationController.RefreshCombatButtons` 源端 `UiText.Resolve` 完成（既有实现，未扩大显示面）。
+  3. `UiText.ResolveEmbedded` 注释收窄为已证明显示字段（AdventureSourceText 遭遇错误文本）边界；该字段内容为机器原因，属本卡已登记显示事实，不受影响。
+  4. 新增 EditMode 用例：`BattleLogPreservesCustomNamesAndTechnicalLogsVerbatim`（自定义名称与技术日志含 Language 键时原样保留）、`BattleUiDoesNotResolveProfileKeysAtButtonOrLogFields`（按钮/日志字段不解析档案键，源端 `UiText.Resolve` 仍提供玩家映射）。
+  5. PlayMode 断言从"日志不含档案键"改为"战斗开始公告原样呈现"，与返工后日志原样保留的边界一致。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、EditMode 8/8（本卡用例）、PlayMode 5/5、数据链/文本/空白检查通过（见第三节实际命令）。
+- 未改变：任务卡、当前队列、backlog、AI合作沟通、runtime；不新增 Language 键、不修改任何业务状态语义。

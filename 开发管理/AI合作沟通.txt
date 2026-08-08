@@ -487,3 +487,16 @@
 - 残留风险：三份位置文档与索引条目为「待审核」状态：Codex 复审不通过时需按普通返工同步修改名称、路径与引用（不设独立重命名阶段），positionId 一经正式引用不得因改名而变化；索引中 42 个待审核条目与 9 个已审核条目的数量口径依赖后续各批次审核结论同步；本批次新增的媒介/设施叙述性名称与三面（判/移/先）、三弱规则（弱改写/弱转移/弱果先因后）表述未经用户与 Codex 确认；正式效果名称与显示字段仍待 DS-JINDAN-NAMES-20260718-01 定稿。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-GZ-UI-TEXT-01-bd2c64d9 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-UI-TEXT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-GZ-UI-TEXT-01
+- 候选提交：ffa5a007ddfb5d209410c8798ee695d7f0d57cad
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中正式薄切片UI文本验证记录.txt、src/Assets/Scripts/Game/BattleUIManager.cs、src/Assets/Scripts/Settlement/SettlementSceneView.cs、src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs、src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs
+- 已验证：dotnet build src/TianZhang.EditModeTests.csproj：0 错误，2 个既有 CS0649 警告；EditMode：434 执行 / 432 通过 / 2 失败，2 项失败与 baseCommit 基线逐项一致，返工新增 2 用例全过；PlayMode：5 执行 / 5 通过 / 0 失败，含完整薄切片 runner；check-data-chain.ps1：OK（language keys=544）；check-review-text.ps1：OK（377 文件）；check-pending-whitespace.ps1：OK（5 个返工候选路径）；git diff --cached --check：OK；automation-finalize-commit.ps1 生成唯一 candidate 提交，worktree 干净，为 base 251968c 直接后继，changed paths 全部在 expectedPaths 内
+- 未验证：Codex 独立复核（pending_review，按外部交付边界转 codex_review/codex/ready）；未通过审核清单.txt 的返工状态行由共享入口在正式提交时投影，candidate 未改动
+- 残留风险：战斗日志按原样呈现，含 Language 键子串的机器原因/档案键在日志文本中原样可见（稳定原因保留在日志属本卡设计边界，由 Codex 复核确认）；术法/神通按钮标签中文显示依赖 ExplorationController 源端既有 UiText.Resolve 保持；AdventureSourceText 遭遇错误文本仍使用 ResolveEmbedded（已证明显示字段，内容为机器原因，非用户文本）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
