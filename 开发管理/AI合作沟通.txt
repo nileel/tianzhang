@@ -461,3 +461,16 @@
 - 残留风险：内容与候选名均为「待审核」状态；Codex 复审不通过时需按普通返工同步修改名称、路径与引用（不改 positionId）；索引数量口径（48 份已完成文档）以复审通过后为准。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01L-85dfc422 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01L 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01L
+- 候选提交：64d590e4b8d7182462cbc523d73842d59b430bc8
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/界位/JD_YinYang_Yin_DOMAIN01_朔夜庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt
+- 已验证：check-review-text 通过（750 文件，docs 与开发管理）；check-pending-whitespace 通过（候选路径 5 文件；finalize 阶段 3 文件）；git diff --check 通过（无空白/行尾错误）；返工项修复：朔夜庭 §8.1–8.3 战棋段不再读取只属山河层的 MountainRiverCycleProfile，改用合法战棋持续／维持配置（与 C-HS-YY-JD-01K 万机局同款措辞），战棋实例与山河实例分离（§8.1 第 9 项、§10 第 2 项『战斗领域实例永不转正为山河实例』）；位置档案版本 1.1→1.2 全文档一致：头部变更说明、§一版本字段、§十 规则版本（259/267/273/279 行）、§12.3 存档版本、§十三 索引登记行，以及索引 changelog 头与 §六 朔夜庭行；新增 §十三 检查清单项：战棋领域持续与维持只使用战棋持续／维持配置，不读取山河层 MountainRiverCycleProfile（8.1–8.3）；未通过审核清单 C-HS-YY-JD-01L 返工状态按 C-HS-YY-JD-01K 先例更新为已完成返工、待 Codex 复核；positionId JD_YinYang_Yin_DOMAIN01 全局唯一且与索引 §六 登记一致（1.2、待审核）；candidate 提交为 baseCommit cfe8c41 的直接后继，worktree 干净，changed paths 为 expectedPaths 子集
+- 未验证：Codex 独立复审（DeepSeek 不自审，按路由交 Codex 复核）；BattleSim 未运行——本轮为文档分层措辞返工，无数值/平衡变化，任务卡明确不涉及数值强度时无需运行；玄牝之门、潜曜关两文档本轮无变化——返工项仅指向朔夜庭，且经检索二者战棋段均无 MountainRiverCycleProfile 引用
+- 残留风险：阳道路长昼庭、水道路沧溟泽国等已审核或待审核的界位文档 §8.1 战棋段仍存在同款「领域按周期运行，周期定义由 MountainRiverCycleProfile 读取」措辞；不在本任务授权路径内，未改动。Codex 复核时如确认属同源分层问题，需另立任务定向处理，不应在本卡内扩散。另：朔夜庭位置档案版本升至 1.2，若此前存在引用旧版本 1.1 的存档/山河实例，按 §12.3 迁移策略由版本档案重验处理；candidate 阶段尚无正式引用。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
