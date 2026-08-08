@@ -29,7 +29,7 @@
 | C-HS-YY-JD-01H | P1 | codex | 阻塞 | — | 金丹位格·息识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
 | C-HS-YY-JD-01I | P1 | codex | 阻塞 | — | 金丹位格·食识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
 | C-HS-YY-JD-01J | P1 | codex | 阻塞 | — | 金丹位格·身识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
-| C-HS-YY-JD-01K | P1 | codex | 阻塞 | — | 金丹位格·意识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01K.txt |
+| C-HS-YY-JD-01K | P1 | deepseek | 已排队 | — | 金丹位格·意识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01K.txt |
 | C-HS-YY-JD-01L | P1 | codex | 阻塞 | — | 金丹位格·阴道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01L.txt |
 | C-HS-YY-JD-01N | P1 | deepseek | 已排队 | — | 金丹位格·宇道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01N.txt |
 | C-HS-YY-JD-01O | P1 | deepseek | 已排队 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
@@ -45,16 +45,16 @@
 | C-FPD-GONGFA-01E | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 太一道庭 9 部功法迁移。 | — |
 | C-FPD-GONGFA-01F | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 玉清崖 4 部功法迁移。 | — |
 | C-FPD-SPELL-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结、C-FPD-SPELL-01A～01D） | — | 11 项古修术法迁移父任务；只负责四批一致性收口。 | — |
-| C-FPD-SPELL-01A | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | `北冥引`、`扶摇`、`无待` 升格迁移。 | — |
-| C-FPD-SPELL-01B | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | `通变`、`演卦` 升格迁移。 | — |
-| C-FPD-SPELL-01C | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | `守真`、`玉液`、`穷理` 升格迁移。 | — |
-| C-FPD-SPELL-01D | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | `冥微`、`任化`、`守分` 升格迁移。 | — |
+| C-FPD-SPELL-01A | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 北冥引`、`扶摇`、`无待` 升格迁移。 | — |
+| C-FPD-SPELL-01B | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 通变`、`演卦` 升格迁移。 | — |
+| C-FPD-SPELL-01C | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 守真`、`玉液`、`穷理` 升格迁移。 | — |
+| C-FPD-SPELL-01D | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 冥微`、`任化`、`守分` 升格迁移。 | — |
 | C-FPD-SHENTONG-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 迁移 `宿慧轮回`，删除道基品质倍率并补齐镇府神通或其他合法来源边界。 | — |
 | C-FPD-LORE-MIGRATE-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 | — |
 | C-JD-COMBO-01 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 内容冻结（D-JD-SCHEMA-01、N-JD-RULE-01 前） | — | 基于三实位与兼容契约设计组合档案；不得绕过确定性冲突规则。 | — |
 | C-JD-LORE-MIGRATE-01 | P1 | Codex | 内容冻结（C-JD-LORE-MIGRATE-01A～01C） | — | 旧源／化／界叙事语义迁移父任务；只负责三批一致性收口。 | — |
-| C-JD-LORE-MIGRATE-01A | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | `空无般若经`、`抱元守一经` 两部功法语义重判。 | — |
-| C-JD-LORE-MIGRATE-01B | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | `守真` 一项术法语义重判。 | — |
+| C-JD-LORE-MIGRATE-01A | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 空无般若经`、`抱元守一经` 两部功法语义重判。 | — |
+| C-JD-LORE-MIGRATE-01B | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 守真` 一项术法语义重判。 | — |
 | C-JD-LORE-MIGRATE-01C | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 卫长庚、谢凌沧、姚观寂、祝融烈四名 NPC 语义重判。 | — |
 | C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 冻结（薄内容切片外） | — | 太一道庭法箓 CSV/BattleSim/Unity 字段方案。 | — |
 | C-GUXIU-03 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 古修第一批神通；每个完成品单独文件。 | — |
