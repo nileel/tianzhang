@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-08：Codex 独立复审正式提交 b39a86998fe3fbec51ac3d8c6b17b054b11f153a 通过；阳道路三位置文档、索引登记与任务投影均符合任务卡和直接事实源。",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_YinYang_Yang_SOURCE_扶桑天门.txt",
     "docs/基础设定/金丹位格/化位/JD_YinYang_Yang_TRANSFORM01_曜行关.txt",
@@ -76,3 +76,7 @@
 
 - 任一位置文档需要新增未确认的道路权限、效果、组合配方、位格类型或数值预算时停止并回到根因。
 - 位置理念无法在 `ROAD_YANG` 三项既有 `effect_id` 白名单内自洽，或需要第二套命名/登记体系时停止并交回 Codex。
+
+## 完成记录
+
+- 2026-08-08：Codex 独立复审 DeepSeek V4 Flash 正式提交 `b39a86998fe3fbec51ac3d8c6b17b054b11f153a`，结论通过。三个 `positionId`、白名单与源／化／界版本、三层证位、五种登位路径、战棋／主场景／山河／生命周期以及索引登记均与任务卡和直接事实源一致；未发现新增道路权限、效果、组合、数值或运行时改动。`tools/check-review-text.ps1 -Paths docs,开发管理` 与目标提交及本轮变更的 `git diff --check` 均通过；未运行 `check-data-chain`（无 CSV／asset 改动）或 BattleSim（无数值参数、模拟器改动或新的平衡结论）。
