@@ -12,9 +12,6 @@
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记食识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记身识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记意识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记阴道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：阴道路 3 个待审核条目按 C-HS-YY-JD-01L 未通过审核清单共同返工项同步返工说明，位置档案版本升至 1.1（2026-08-08 返工）；待 Codex 复审。
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：阴道路朔夜庭条目按 C-HS-YY-JD-01L 未通过审核清单返工项同步返工说明，战棋领域持续与维持改用合法战棋持续／维持配置，位置档案版本升至 1.2（2026-08-09 返工）；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：意识道路 3 个待审核条目按 C-HS-YY-JD-01K 未通过审核清单共同返工项与分层返工项同步返工说明，位置档案版本升至 1.1（2026-08-08 返工）；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记宙道路 3 个待审核具体位置条目（源位／化位／界位），同步 §四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记因道路 3 个待审核具体位置条目（源位／化位／界位），同步 §四、§五 与 §六；待 Codex 复审。
@@ -70,7 +67,7 @@
 | 当前具体位置合计 | 51 | 17 源位＋17 化位＋17 界位 |
 | 基础效果 | 51 | 与具体位置是不同对象，只是当前数量相同 |
 | 基础效果位别版本 | 153 | 每个 `effect_id` 各有源版、化版、界版 |
-| 已完成独立位置文档 | 48 | 木道路 1 源位＋1 化位＋1 界位、火道路 1 源位＋1 化位＋1 界位、土道路 1 源位＋1 化位＋1 界位、金道路 1 源位＋1 化位＋1 界位、水道路 1 源位＋1 化位＋1 界位、见识道路 1 源位＋1 化位＋1 界位、闻识道路 1 源位＋1 化位＋1 界位、息识道路 1 源位＋1 化位＋1 界位、食识道路 1 源位＋1 化位＋1 界位、身识道路 1 源位＋1 化位＋1 界位、意识道路 1 源位＋1 化位＋1 界位、阴道路 1 源位＋1 化位＋1 界位（内容与候选名待审核，未计入已审核正式事实），阳道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宇道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宙道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实），因道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
+| 已完成独立位置文档 | 48 | 木道路 1 源位＋1 化位＋1 界位、火道路 1 源位＋1 化位＋1 界位、土道路 1 源位＋1 化位＋1 界位、金道路 1 源位＋1 化位＋1 界位、水道路 1 源位＋1 化位＋1 界位、见识道路 1 源位＋1 化位＋1 界位、闻识道路 1 源位＋1 化位＋1 界位、息识道路 1 源位＋1 化位＋1 界位、食识道路 1 源位＋1 化位＋1 界位、身识道路 1 源位＋1 化位＋1 界位、意识道路 1 源位＋1 化位＋1 界位、阴道路 1 源位＋1 化位＋1 界位（2026-08-09 返工后；Codex 复审通过，计入已审核正式事实），阳道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宇道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宙道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实），因道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
 
 ## 五、十七道路初始结构
 
@@ -108,7 +105,7 @@
 > 注（2026-08-07 本批次）：食识道路 3 个初始具体位置（`JD_SixConsciousness_Ingest_SOURCE`、`JD_SixConsciousness_Ingest_TRANSFORM01`、`JD_SixConsciousness_Ingest_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：身识道路 3 个初始具体位置（`JD_SixConsciousness_Body_SOURCE`、`JD_SixConsciousness_Body_TRANSFORM01`、`JD_SixConsciousness_Body_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：意识道路 3 个初始具体位置（`JD_SixConsciousness_Action_SOURCE`、`JD_SixConsciousness_Action_TRANSFORM01`、`JD_SixConsciousness_Action_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
-> 注（2026-08-08 本批次）：阴道路 3 个初始具体位置（`JD_YinYang_Yin_SOURCE`、`JD_YinYang_Yin_TRANSFORM01`、`JD_YinYang_Yin_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
+> 注（2026-08-09 返工后）：阴道路 3 个初始具体位置（`JD_YinYang_Yin_SOURCE`、`JD_YinYang_Yin_TRANSFORM01`、`JD_YinYang_Yin_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：阳道路 3 个初始具体位置（`JD_YinYang_Yang_SOURCE`、`JD_YinYang_Yang_TRANSFORM01`、`JD_YinYang_Yang_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：宇道路 3 个初始具体位置（`JD_Cosmos_Space_SOURCE`、`JD_Cosmos_Space_TRANSFORM01`、`JD_Cosmos_Space_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：宙道路 3 个初始具体位置（`JD_Cosmos_Time_SOURCE`、`JD_Cosmos_Time_TRANSFORM01`、`JD_Cosmos_Time_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
@@ -116,7 +113,7 @@
 
 ## 六、正式具体位置登记表
 
-本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、见识道路、闻识道路、息识道路与食识道路；2026-08-08，身识道路、意识道路、阴道路、阳道路、宇道路、宙道路与因道路）登记 42 个待审核条目与 6 个已审核条目：
+本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、见识道路、闻识道路、息识道路与食识道路；2026-08-08，身识道路、意识道路、阴道路、阳道路、宇道路、宙道路与因道路）登记 39 个待审核条目与 9 个已审核条目：
 
 | `positionId` | 具体位置名称／`seatNameKey` | `road_id` | `positionType`／`positionNameKey` | 理念摘要 | 效果白名单摘要 | 证位档案标识与版本 | 位置档案版本 | 内容状态 | 审核记录 | 正式文档路径 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -153,9 +150,9 @@
 | `JD_SixConsciousness_Action_SOURCE` | 发念枢 | `ROAD_ACTION` | `SOURCE`／源位 | 意识道路唯一根本来源与直接规则操作——「当前行动的操作类别、目标集合与已形成行动意图」三通道（行动选项编辑、目标集合编辑、行动意图锁定）的共同根本来源 | `ACTION_OPTION_EDIT`、`ACTION_TARGET_EDIT`、`ACTION_INTENT_LOCK` | `PROOF_ACTION_SOURCE_01` / 1.0 | 1.1 | 待审核 | 待 Codex 复审（2026-08-08 返工后；候选名未审核） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Action_SOURCE_发念枢.txt` |
 | `JD_SixConsciousness_Action_TRANSFORM01` | 行止门 | `ROAD_ACTION` | `TRANSFORM`／化位 | 意识道路力量的一条固定传播／筛选途径——对行动按固定条件统一关闭／恢复一种操作、应用一条预设目标规则或锁定第一份指定类别意图（止面：一类角色统一关闭或恢复一种预设操作；制面：一类角色统一应用一条预设目标规则；锁面：符合条件者形成的第一份指定类别意图自动锁定） | `ACTION_OPTION_EDIT`、`ACTION_TARGET_EDIT`、`ACTION_INTENT_LOCK` | `PROOF_ACTION_TRANSFORM01_01` / 1.0 | 1.1 | 待审核 | 待 Codex 复审（2026-08-08 返工后；候选名未审核） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Action_TRANSFORM01_行止门.txt` |
 | `JD_SixConsciousness_Action_DOMAIN01` | 万机局 | `ROAD_ACTION` | `DOMAIN`／界位 | 对范围内一类行动维持一种弱规则的领域形态（范围内一类操作附加公开且较弱的使用条件的弱选项、一类行动采用粗目标规则的弱目标、选定阵营必须提前公开并锁定下一行动粗类别的弱意图） | `ACTION_OPTION_EDIT`、`ACTION_TARGET_EDIT`、`ACTION_INTENT_LOCK` | `PROOF_ACTION_DOMAIN01_01` / 1.0 | 1.1 | 待审核 | 待 Codex 复审（2026-08-08 返工后；候选名未审核） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Action_DOMAIN01_万机局.txt` |
-| `JD_YinYang_Yin_SOURCE` | 玄牝之门 | `ROAD_YIN` | `SOURCE`／源位 | 阴道路唯一根本来源与直接规则操作——「太阴、极阴之气主导的潜伏、寒封与有益状态压抑」三通道（绝隐、太阴寒封、增益寂灭）的共同根本来源 | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` | `PROOF_YIN_SOURCE_01` / 1.0 | 1.1 | 待审核 | 待 Codex 复审（2026-08-08 返工后；候选名未审核） | `docs/基础设定/金丹位格/源位/JD_YinYang_Yin_SOURCE_玄牝之门.txt` |
-| `JD_YinYang_Yin_TRANSFORM01` | 潜曜关 | `ROAD_YIN` | `TRANSFORM`／化位 | 阴道路力量的一条固定传播／筛选途径——对符合条件者按固定条件进入潜伏、积累寒度或统一清除禁止增益（隐面：局部自动使符合条件者隐身，但其发动攻击、术法或强交互时立即现形；封面：局部筛选一类对象，使其持续积累寒度并按固定阈值减速或冻结；灭面：预设一个 `statusTag`，统一清除并禁止同时符合该标签与 `BUFF`／`MIXED` 极性的临时状态） | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` | `PROOF_YIN_TRANSFORM01_01` / 1.0 | 1.1 | 待审核 | 待 Codex 复审（2026-08-08 返工后；候选名未审核） | `docs/基础设定/金丹位格/化位/JD_YinYang_Yin_TRANSFORM01_潜曜关.txt` |
-| `JD_YinYang_Yin_DOMAIN01` | 朔夜庭 | `ROAD_YIN` | `DOMAIN`／界位 | 对范围内选定阵营维持一种弱阴域规则的领域形态（选定阵营在广域中获得弱隐身、敌人进入邻接或预设近距即现形的弱绝隐；范围内形成弱太阴寒域、移动和高频运转持续受寒但不会全场静止的弱寒封；预设一个标签、选定阵营不能获得该标签且来源为 `OTHER_ABILITY` 或 `ENVIRONMENT` 的新 `BUFF`／`MIXED`、已有状态自身能力装备触发与系统代价不被全域清除的弱增益寂灭） | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` | `PROOF_YIN_DOMAIN01_01` / 1.0 | 1.2 | 待审核 | 待 Codex 复审（2026-08-09 返工后；候选名未审核） | `docs/基础设定/金丹位格/界位/JD_YinYang_Yin_DOMAIN01_朔夜庭.txt` |
+| `JD_YinYang_Yin_SOURCE` | 玄牝之门 | `ROAD_YIN` | `SOURCE`／源位 | 阴道路唯一根本来源与直接规则操作——「太阴、极阴之气主导的潜伏、寒封与有益状态压抑」三通道（绝隐、太阴寒封、增益寂灭）的共同根本来源 | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` | `PROOF_YIN_SOURCE_01` / 1.0 | 1.1 | 已审核 | Codex 复审通过（2026-08-09） | `docs/基础设定/金丹位格/源位/JD_YinYang_Yin_SOURCE_玄牝之门.txt` |
+| `JD_YinYang_Yin_TRANSFORM01` | 潜曜关 | `ROAD_YIN` | `TRANSFORM`／化位 | 阴道路力量的一条固定传播／筛选途径——对符合条件者按固定条件进入潜伏、积累寒度或统一清除禁止增益（隐面：局部自动使符合条件者隐身，但其发动攻击、术法或强交互时立即现形；封面：局部筛选一类对象，使其持续积累寒度并按固定阈值减速或冻结；灭面：预设一个 `statusTag`，统一清除并禁止同时符合该标签与 `BUFF`／`MIXED` 极性的临时状态） | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` | `PROOF_YIN_TRANSFORM01_01` / 1.0 | 1.1 | 已审核 | Codex 复审通过（2026-08-09） | `docs/基础设定/金丹位格/化位/JD_YinYang_Yin_TRANSFORM01_潜曜关.txt` |
+| `JD_YinYang_Yin_DOMAIN01` | 朔夜庭 | `ROAD_YIN` | `DOMAIN`／界位 | 对范围内选定阵营维持一种弱阴域规则的领域形态（选定阵营在广域中获得弱隐身、敌人进入邻接或预设近距即现形的弱绝隐；范围内形成弱太阴寒域、移动和高频运转持续受寒但不会全场静止的弱寒封；预设一个标签、选定阵营不能获得该标签且来源为 `OTHER_ABILITY` 或 `ENVIRONMENT` 的新 `BUFF`／`MIXED`、已有状态自身能力装备触发与系统代价不被全域清除的弱增益寂灭） | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` | `PROOF_YIN_DOMAIN01_01` / 1.0 | 1.2 | 已审核 | Codex 复审通过（2026-08-09） | `docs/基础设定/金丹位格/界位/JD_YinYang_Yin_DOMAIN01_朔夜庭.txt` |
 | `JD_YinYang_Yang_SOURCE` | 扶桑天门 | `ROAD_YANG` | `SOURCE`／源位 | 阳道路唯一根本来源与直接规则操作——「太阳、极阳之气主导的贯照、亢奋与有害状态祛除」三通道（太阳贯照、极阳亢奋、减益祛禁）的共同根本来源 | `YANG_RADIANCE`、`YANG_SURGE`、`YANG_DEBUFF_LOCK` | `PROOF_YANG_SOURCE_01` / 1.0 | 1.0 | 已审核 | Codex 复审通过（2026-08-08） | `docs/基础设定/金丹位格/源位/JD_YinYang_Yang_SOURCE_扶桑天门.txt` |
 | `JD_YinYang_Yang_TRANSFORM01` | 曜行关 | `ROAD_YANG` | `TRANSFORM`／化位 | 阳道路力量的一条固定传播／筛选途径——对符合条件者按固定条件进入强光照明／破隐、过曝或预设亢奋路径（照面：局部筛选一种行为，使移动、攻击或施法者脚下生成固定照明／破隐区，或对进入者施加短暂过曝；炽面：局部筛选一类模块，统一进入预设亢奋路径；祛面：预设一个 `statusTag`，统一清除并禁止同时符合该标签与 `DEBUFF`／`MIXED` 极性的临时状态） | `YANG_RADIANCE`、`YANG_SURGE`、`YANG_DEBUFF_LOCK` | `PROOF_YANG_TRANSFORM01_01` / 1.0 | 1.0 | 已审核 | Codex 复审通过（2026-08-08） | `docs/基础设定/金丹位格/化位/JD_YinYang_Yang_TRANSFORM01_曜行关.txt` |
 | `JD_YinYang_Yang_DOMAIN01` | 长昼庭 | `ROAD_YANG` | `DOMAIN`／界位 | 对范围内选定阵营维持一种弱阳域规则的领域形态（战场维持弱日照、黑暗和普通隐匿难以完全遮蔽行动但同阶阴道与见识仍须冲突结算的弱贯照；选定阵营的一类主动输出获得弱亢奋同时全域积累共同热压的弱亢奋；预设一个标签、选定阵营不能获得该标签且来源为 `OTHER_ABILITY` 或 `ENVIRONMENT` 的新 `DEBUFF`／`MIXED`、已有状态自身能力装备触发与系统代价不被全域清除的弱减益祛禁） | `YANG_RADIANCE`、`YANG_SURGE`、`YANG_DEBUFF_LOCK` | `PROOF_YANG_DOMAIN01_01` / 1.0 | 1.0 | 已审核 | Codex 复审通过（2026-08-08） | `docs/基础设定/金丹位格/界位/JD_YinYang_Yang_DOMAIN01_长昼庭.txt` |
