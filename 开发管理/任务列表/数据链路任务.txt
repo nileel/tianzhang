@@ -21,12 +21,22 @@
 | D-FPD-MIGRATE-01C | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
 | D-FPD-MIGRATE-01D | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、N-FPD-DANXIANG-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
 | D-FPD-MIGRATE-01E | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
+| D-CHAR-APPEARANCE-01 | P2 | Codex | 阻塞（U-SHIJIAHOU-3D-PROTO-01） | — | AppearanceProfile／目录／组装器／立绘合成器的数据与存档设计。 | — |
 
 ## G3 任务执行边界
 
 - TQ-059 已固定：`realmReq`、`elementReq` 为 `runtime_gate`；术法／神通原 `affiliation` 已改名为 metadata-only 的 `sourceAffiliation`。
 - D-COMBAT-01/02 必须以 CSV/asset 为唯一权威来源，坏数据非 0 退出，BattleSim 与 Unity 同一档案的类型、元素、距离和目标语义一致。
 - `D-COMBAT-PROD-01` 只迁移用户批准的一个 `basic_unarmed` 生产档案，以 `GameData.UnarmedBasicAttack` 为数值输入并显式接入当前新建玩家、石甲兽和正式场景；不建立武器系统、第二档案或 fixture 回退。
+
+## 运行时角色外观数据与存档后续任务
+
+### D-CHAR-APPEARANCE-01 · AppearanceProfile、目录、组装与立绘合成数据闭环
+
+- 共同事实源：`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`；只消费已经通过技术验证的人形与石甲兽样例，不提前生产完整创角内容。
+- 范围：设计并建立 `AppearanceProfile`、`AppearanceCatalog`、`CharacterVisualAssembler` 与 `PortraitComposer` 的最小数据闭环，保存稳定外观 ID、明确 `none` 语义、版本与迁移规则，并证明保存、读取、跨场景返回后外观一致且缓存可重建。
+- 目录统一解析 Body、Head、Hair、Headwear、Outfit、MainHand、Artifact；外观只消费已批准的装备可见投影，不保存或复制战斗属性、装备属性、技能、骨骼 Transform、Prefab 实例或 UI 裁切结果。
+- 建卡前必须实时扫描现有角色创建草稿、`CharacterData`、保存所有者、装备投影、数据导入／asset 目录与直接测试，冻结精确 schema、expectedPaths、旧档迁移、非法引用失败关闭和原子恢复顺序；若必须另建平行存档格式、装备库存或规则状态所有者则停止。
 
 ## 筑基、紫府与丹相后续数据任务卡
 
