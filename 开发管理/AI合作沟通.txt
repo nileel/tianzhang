@@ -383,3 +383,16 @@
 - 残留风险：三份文档的具体位置名称与全部内容均为本批次候选，标记「⚠️ 已修改/未审核」；Codex 复审不通过时需按普通返工同步修改名称、路径与索引引用，复审通过前不进入正式显示事实。矩阵、效果、装配、证位规则及任何数值/运行时均未改动。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01M-af446ed0 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01M 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01M
+- 候选提交：6258645a97787700be1472d999f7b29124674078
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_YinYang_Yang_TRANSFORM01_曜行关.txt、docs/基础设定/金丹位格/界位/JD_YinYang_Yang_DOMAIN01_长昼庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_YinYang_Yang_SOURCE_扶桑天门.txt
+- 已验证：金丹位格设计规范 §十二 检查清单：3 份位置文档 §十三 逐项勾选通过，13 大节合同（含白名单逐项适配、三层证位、五种登位路径、战棋/主场景/山河/组织影响/生命周期）齐全；pwsh tools/check-review-text.ps1 -Paths 'docs,开发管理'：OK（739 files）；pwsh tools/check-pending-whitespace.ps1（4 个 ExpectedPaths）：OK；finalize 脚本内部复跑同样 OK；git diff --cached --check：OK；暂存内容仅 4 个 CandidatePaths（889 insertions、2 deletions）；positionId 全局唯一：JD_YinYang_Yang_SOURCE / JD_YinYang_Yang_TRANSFORM01 / JD_YinYang_Yang_DOMAIN01 除本批次索引条目与三份新文档外无任何既有引用；索引一致性：§四数量汇总 36→39、§五阳道路注、§六 3 个待审核条目与三份文档 §十三 登记段逐字段一致，均标「待审核」
+- 未验证：check-data-chain：未运行（本轮无 CSV/Unity asset 变化，任务卡不要求）；BattleSim：未运行（不涉及数值强度，任务卡明确无需运行）；Codex 独立复审：未进行（按边界不得自审，待 Codex 复审）
+- 残留风险：三个具体位置名称为本批次候选名（扶桑天门/曜行关/长昼庭），内容与候选名均待审核；Codex 复审不通过时需按普通返工同步名称、路径与引用，不设独立重命名阶段；效果正式名称仍待 DS-JINDAN-NAMES-20260718-01，本轮只引用 effect_id 与矩阵功能性临时代号；本批次未定义初始占据者与历史状态。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
