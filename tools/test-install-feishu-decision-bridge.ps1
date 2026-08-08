@@ -196,7 +196,7 @@ try {
     ProcessId = 901
     ParentProcessId = 1
     Name = 'pwsh.exe'
-    CommandLine = 'pwsh.exe -File start-feishu-decision-bridge.ps1'
+    CommandLine = "pwsh.exe -File `"$([IO.Path]::GetFullPath($startTool))`""
   })
   $fake.State.Processes.Add([pscustomobject]@{
     ProcessId = 102
@@ -253,10 +253,9 @@ try {
       [IO.Path]::GetFileName([string]$installedTask.Plan.execute) -ine 'pwsh.exe') {
     throw 'Install did not replace the legacy task with one enabled running hidden PowerShell task'
   }
-  if ($fake.State.StoppedProcessIds.Count -ne 2 -or
-      $fake.State.StoppedProcessIds[0] -ne 100 -or
-      $fake.State.StoppedProcessIds[1] -ne 101) {
-    throw "Install did not stop verified bridge processes across the parent-exit race: $($fake.State.StoppedProcessIds -join ',')"
+  $stoppedBridgeIds = @($fake.State.StoppedProcessIds | Sort-Object)
+  if (($stoppedBridgeIds -join ',') -cne '100,101,901') {
+    throw "Install did not stop the exact detached bridge process chain: $($fake.State.StoppedProcessIds -join ',')"
   }
   $calls = @($fake.State.Calls)
   $nodeIndex = [Array]::IndexOf($calls, 'node-version')

@@ -183,25 +183,19 @@ function Assert-PackageLock {
 
 function Stop-VerifiedLegacyBridgeProcesses {
   $processes = @(Invoke-Adapter 'GetProcesses')
-  $liveIds = [Collections.Generic.HashSet[int]]::new()
-  foreach ($process in $processes) {
-    $processId = 0
-    if ([int]::TryParse([string]$process.ProcessId, [ref]$processId) -and $processId -gt 0) {
-      $liveIds.Add($processId) | Out-Null
-    }
-  }
   $entry = [IO.Path]::GetFullPath($script:BridgeEntry)
+  $startScript = [IO.Path]::GetFullPath($script:StartScript)
   $entryPattern = '(?i)(?:^|\s)"?' + [regex]::Escape($entry) + '"?(?:\s|$)'
+  $startPattern = '(?i)(?:^|\s)"?' + [regex]::Escape($startScript) + '"?(?:\s|$)'
   foreach ($process in $processes) {
     $processId = 0
-    $parentProcessId = 0
     if (
-      [string]$process.Name -cne 'node.exe' -or
       -not [int]::TryParse([string]$process.ProcessId, [ref]$processId) -or
       $processId -le 0 -or
-      -not [int]::TryParse([string]$process.ParentProcessId, [ref]$parentProcessId) -or
-      $liveIds.Contains($parentProcessId) -or
-      [string]$process.CommandLine -notmatch $entryPattern
+      -not (
+        ([string]$process.Name -ceq 'node.exe' -and [string]$process.CommandLine -match $entryPattern) -or
+        ([string]$process.Name -ceq 'pwsh.exe' -and [string]$process.CommandLine -match $startPattern)
+      )
     ) {
       continue
     }
