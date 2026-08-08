@@ -30,7 +30,7 @@
 | C-HS-YY-JD-01I | P1 | codex | 阻塞 | — | 金丹位格·食识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
 | C-HS-YY-JD-01J | P1 | codex | 阻塞 | — | 金丹位格·身识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
 | C-HS-YY-JD-01K | P1 | codex | 已排队 | — | 金丹位格·意识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01K.txt |
-| C-HS-YY-JD-01L | P1 | codex | 已排队 | — | 金丹位格·阴道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01L.txt |
+| C-HS-YY-JD-01L | P1 | codex | 阻塞 | — | 金丹位格·阴道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01L.txt |
 | C-HS-YY-JD-01O | P1 | codex | 已排队 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
 | C-HS-YY-JD-01P | P1 | codex | 已排队 | — | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
 | C-HS-YY-JD-01Q | P1 | deepseek | 已排队 | — | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |

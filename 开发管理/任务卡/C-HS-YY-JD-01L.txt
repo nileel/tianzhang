@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-09：Codex 复审不通过；朔夜庭在完整战棋玩法中令领域周期读取仅属山河层的 MountainRiverCycleProfile，违反层级边界，待选择返工负责人后定向返工。",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_YinYang_Yin_SOURCE_玄牝之门.txt",
     "docs/基础设定/金丹位格/化位/JD_YinYang_Yin_TRANSFORM01_潜曜关.txt",
