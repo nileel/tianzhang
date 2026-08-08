@@ -213,6 +213,9 @@ try {
   if ($plan.multipleInstances -ne 'IgnoreNew' -or -not $plan.hidden -or $plan.launchMode -cne 'WINDOWLESS_WSCRIPT') {
     throw 'Plan did not enforce hidden single-instance startup'
   }
+  if ($plan.restartCount -ne 3 -or $plan.restartInterval -cne 'PT1M') {
+    throw 'Plan did not enforce the fixed finite restart policy'
+  }
   if (-not [IO.Path]::IsPathFullyQualified([string]$plan.execute) -or
       [IO.Path]::GetFileName([string]$plan.execute) -ine 'wscript.exe' -or
       [IO.Path]::GetFileName([string]$plan.execute) -ieq 'pwsh.exe') {
@@ -237,13 +240,17 @@ try {
   $firstInstall = Invoke-Script -Path $installTool -Arguments @('Install', '-ConfigPath', $configPath, '-SchedulerAdapter', $fake.Adapter)
   Assert-Code $firstInstall 0 'first Install'
   $firstOutput = $firstInstall.Output | ConvertFrom-Json
-  if ($firstOutput.result -ne 'INSTALLED' -or -not $firstOutput.updated) { throw 'legacy task upgrade summary was invalid' }
+  if ($firstOutput.result -ne 'INSTALLED' -or -not $firstOutput.updated -or
+      $firstOutput.restartCount -ne 3 -or $firstOutput.restartInterval -cne 'PT1M') {
+    throw 'legacy task upgrade summary was invalid'
+  }
   if ($fake.State.Tasks.Count -ne 1 -or -not $fake.State.Tasks.ContainsKey('TianZhang-Feishu-Decision-Bridge')) {
     throw 'Install did not preserve exactly one fixed task during in-place upgrade'
   }
   $installedTask = $fake.State.Tasks[$taskName]
   if (-not $installedTask.Enabled -or $installedTask.State -cne 'Running' -or
       $installedTask.Plan.launchMode -cne 'WINDOWLESS_WSCRIPT' -or
+      $installedTask.Plan.restartCount -ne 3 -or $installedTask.Plan.restartInterval -cne 'PT1M' -or
       [IO.Path]::GetFileName([string]$installedTask.Plan.execute) -ine 'wscript.exe') {
     throw 'Install did not replace the legacy direct-pwsh task with one enabled running windowless task'
   }

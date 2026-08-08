@@ -57,6 +57,8 @@ function Get-TaskPlan {
     launchMode = 'WINDOWLESS_WSCRIPT'
     hidden = $true
     multipleInstances = 'IgnoreNew'
+    restartCount = 3
+    restartInterval = 'PT1M'
   }
 }
 
@@ -97,7 +99,9 @@ function New-RealSchedulerAdapter {
       $identity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
       $taskAction = New-ScheduledTaskAction -Execute $Plan.execute -Argument $Plan.arguments -WorkingDirectory $Plan.workingDirectory
       $trigger = New-ScheduledTaskTrigger -AtLogOn -User $identity
-      $settings = New-ScheduledTaskSettingsSet -Hidden -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero)
+      $settings = New-ScheduledTaskSettingsSet -Hidden -StartWhenAvailable -MultipleInstances IgnoreNew `
+        -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount ([int]$Plan.restartCount) `
+        -RestartInterval ([Xml.XmlConvert]::ToTimeSpan([string]$Plan.restartInterval))
       $principal = New-ScheduledTaskPrincipal -UserId $identity -LogonType Interactive -RunLevel Limited
       Register-ScheduledTask -TaskName $Plan.taskName -Action $taskAction -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
     }
@@ -318,6 +322,8 @@ switch ($Action) {
       updated = $null -ne $existing
       multipleInstances = 'IgnoreNew'
       launchMode = 'WINDOWLESS_WSCRIPT'
+      restartCount = [int]$plan.restartCount
+      restartInterval = [string]$plan.restartInterval
     })
   }
   'Start' {

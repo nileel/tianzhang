@@ -125,7 +125,8 @@ function Get-QueueTaskIndex {
 }
 
 function Get-ReviewEntryEvidence {
-  param([string]$Root, [string]$TaskId)
+  param([string]$Root, [string]$TaskId, [string]$ExpectedReviewedCommit)
+  if ($ExpectedReviewedCommit -cnotmatch '^[0-9a-f]{40,64}$') { Stop-Hourly 'review_rework_entry_invalid' }
   $path = Join-Path $Root '开发管理\未通过审核清单.txt'
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'review_rework_entry_missing' }
   $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($path)).TrimStart([char]0xFEFF).Replace("`r`n", "`n").Replace("`r", "`n")
@@ -133,10 +134,10 @@ function Get-ReviewEntryEvidence {
   $matches = [regex]::Matches($text, $pattern)
   if ($matches.Count -ne 1) { Stop-Hourly 'review_rework_entry_invalid' }
   $entry = $matches[0].Value.TrimEnd()
-  $commit = [regex]::Match($entry, '审核对象：正式提交 `(?<sha>[0-9a-f]{40,64})`；结论：(?:不通过|部分通过)')
-  if (-not $commit.Success) { Stop-Hourly 'review_rework_entry_invalid' }
+  $commitMatches = @([regex]::Matches($entry, '审核对象：正式提交 `(?<sha>[0-9a-f]{40,64})`；结论：(?:不通过|部分通过)') | Where-Object { [string]$_.Groups['sha'].Value -ceq $ExpectedReviewedCommit })
+  if ($commitMatches.Count -ne 1) { Stop-Hourly 'review_rework_entry_invalid' }
   $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($entry))).ToLowerInvariant()
-  [pscustomobject]@{ Path = '开发管理/未通过审核清单.txt'; Digest = $digest; ReviewedCommit = $commit.Groups['sha'].Value }
+  [pscustomobject]@{ Path = '开发管理/未通过审核清单.txt'; Digest = $digest; ReviewedCommit = $ExpectedReviewedCommit }
 }
 
 function Test-PathOverlap {
@@ -349,7 +350,7 @@ function Build-And-IntegrateCandidate {
       $formalHead = Invoke-GitText $worktree @('rev-parse', 'HEAD')
     }
     if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
-      $reviewEntry = Get-ReviewEntryEvidence -Root $worktree -TaskId ([string]$Run.taskId)
+      $reviewEntry = Get-ReviewEntryEvidence -Root $worktree -TaskId ([string]$Run.taskId) -ExpectedReviewedCommit $reviewedCommit
       if ([string]$reviewEntry.ReviewedCommit -cne [string]$reviewedCommit) { Stop-Hourly 'review_rework_reviewed_commit_changed' }
     }
     Invoke-CombinedValidation -Run $Run -Worktree $worktree -Base $latest -Head $formalHead -Paths $formalPaths
@@ -392,6 +393,33 @@ function Invoke-BestEffortNotification {
   if ($status -cin @('completed', 'pending_review')) { $arguments += @('-CommitSha', [string]$Outcome.formalHead) } else { $arguments += @('-DetailCode', "task_$status") }
   try { $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $notificationPath @arguments 2>$null); if ($LASTEXITCODE -eq 0 -and $output.Count -eq 1) { return [string]$output[0] } } catch {}
   'failed'
+}
+
+function Invoke-AttentionNotification {
+  param([object]$Run, [string]$DetailCode)
+  try {
+    $output = @(
+      & pwsh -NoProfile -ExecutionPolicy Bypass -File $notificationPath `
+        -Kind TaskOutcome -RepositoryRoot $script:root -TaskId ([string]$Run.taskId) `
+        -Status failed -RunId ([string]$Run.runId) -DetailCode $DetailCode 2>$null
+    )
+    if ($output.Count -eq 1) { return [string]$output[0] }
+  } catch {}
+  'failed'
+}
+
+function Add-AttentionNotification {
+  param([AllowNull()][object]$Final, [AllowNull()][object]$Run)
+  if (
+    $null -eq $Final -or
+    $null -eq $Run -or
+    [string]$Final.status -cne 'attention_required' -or
+    [string]::IsNullOrWhiteSpace([string]$Final.detailCode) -or
+    [string]::IsNullOrWhiteSpace([string]$Run.taskId) -or
+    [string]::IsNullOrWhiteSpace([string]$Run.runId)
+  ) { return $Final }
+  $Final.notification = Invoke-AttentionNotification -Run $Run -DetailCode ([string]$Final.detailCode)
+  $Final
 }
 
 function Remove-ExactSuccessfulWorktree {
@@ -523,7 +551,7 @@ function New-ReviewReworkDecisionContext {
     (Get-QueueTaskIndex -Root $script:root -TaskId ([string]$Run.taskId)) -ge 0 -or
     @($task.Metadata.expectedPaths | ForEach-Object { [string]$_ }) -cnotcontains '开发管理/未通过审核清单.txt'
   ) { Stop-Hourly 'review_rework_task_invalid' }
-  $entry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$Run.taskId)
+  $entry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$Run.taskId) -ExpectedReviewedCommit ([string]$Outcome.reviewedCommit)
   if ([string]$entry.ReviewedCommit -cne [string]$Outcome.reviewedCommit) { Stop-Hourly 'review_rework_reviewed_commit_changed' }
   $taskCommit = Invoke-GitText $script:root @('log', '-1', '--format=%H', '--', "开发管理/任务卡/$($Run.taskId).txt") 'review_rework_review_commit_invalid'
   if ($taskCommit -cne [string]$Outcome.formalHead) { Stop-Hourly 'review_rework_review_commit_invalid' }
@@ -676,7 +704,7 @@ function Apply-AnsweredReviewRework {
       [string]$task.Metadata.dispatchState -cne 'blocked' -or
       (Get-QueueTaskIndex -Root $script:root -TaskId ([string]$record.taskId)) -ge 0
     ) { Stop-Hourly 'review_rework_task_changed' }
-    $entry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$record.taskId)
+    $entry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$record.taskId) -ExpectedReviewedCommit ([string]$record.reviewedCommit)
     if ([string]$entry.Digest -cne [string]$record.reviewEntryDigest -or [string]$entry.ReviewedCommit -cne [string]$record.reviewedCommit) { Stop-Hourly 'review_rework_entry_changed' }
     $taskCommit = Invoke-GitText $script:root @('log', '-1', '--format=%H', '--', "开发管理/任务卡/$($record.taskId).txt") 'review_rework_review_commit_invalid'
     if ($taskCommit -cne [string]$record.reviewCommit) { Stop-Hourly 'review_rework_review_commit_invalid' }
@@ -732,7 +760,7 @@ function Apply-AnsweredReviewRework {
       $postcondition = if ([string]$reply.optionKey -ceq 'A') { @('-Postcondition', 'ExternalDispatchReady', '-ExpectedOwner', 'deepseek') } else { @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', 'codex_execute') }
       $evidence = Invoke-JsonTool $checkerPath (@('-RepositoryRoot', $worktree, '-TaskId', [string]$record.taskId) + $postcondition + '-OutputJson') 'review_rework_postcondition_failed'
       if ([string]$evidence.status -cne 'ok') { Stop-Hourly 'review_rework_postcondition_failed' }
-      $currentEntry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$record.taskId)
+      $currentEntry = Get-ReviewEntryEvidence -Root $script:root -TaskId ([string]$record.taskId) -ExpectedReviewedCommit ([string]$record.reviewedCommit)
       if (
         [string]$currentEntry.Digest -cne [string]$record.reviewEntryDigest -or
         (Invoke-GitText $script:root @('branch', '--show-current')) -cne 'master' -or
@@ -997,4 +1025,5 @@ try {
   if ($null -ne $invocationMutex) { $invocationMutex.Dispose() }
 }
 
+$final = Add-AttentionNotification -Final $final -Run $run
 [Console]::Out.WriteLine(($final | ConvertTo-Json -Compress -Depth 50))

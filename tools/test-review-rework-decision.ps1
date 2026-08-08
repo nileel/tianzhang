@@ -167,6 +167,8 @@ try {
     $reviewList = @(
       '# 未通过审核清单', '', '## 当前未通过/待复核项', '',
       "### $integrationTask · 集成返工", '',
+      "- 审核对象：正式提交 ``$('1' * 40)``；结论：不通过。",
+      '- 历史返工：上一轮问题已处理。',
       "- 审核对象：正式提交 ``$reviewedCommit``；结论：不通过。",
       '- 最窄返工：只修直接问题。', '', '## 复审路由', '', '按审核入口复审。', ''
     ) -join "`n"
@@ -187,6 +189,27 @@ try {
     Assert-Equal @($errors).Count 0 'Shared owner entry did not parse for integration test'
     foreach ($functionAst in @($ast.FindAll({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] }, $false))) {
       Invoke-Expression $functionAst.Extent.Text
+    }
+    $selectedReview = Get-ReviewEntryEvidence -Root $integrationRoot -TaskId $integrationTask -ExpectedReviewedCommit $reviewedCommit
+    Assert-Equal $selectedReview.ReviewedCommit $reviewedCommit 'Review evidence did not select the current reviewed commit among historical entries'
+    $missingRejected = $false
+    try { $null = Get-ReviewEntryEvidence -Root $integrationRoot -TaskId $integrationTask -ExpectedReviewedCommit ('f' * 40) }
+    catch { $missingRejected = $_.Exception.Data['DetailCode'] -ceq 'review_rework_entry_invalid' }
+    Assert-True $missingRejected 'Review evidence accepted a missing current reviewed commit'
+    $reviewListPath = Join-Path $integrationRoot '开发管理\未通过审核清单.txt'
+    $reviewListOriginal = [IO.File]::ReadAllText($reviewListPath)
+    try {
+      $duplicated = $reviewListOriginal.Replace(
+        '- 最窄返工：只修直接问题。',
+        "- 审核对象：正式提交 ``$reviewedCommit``；结论：不通过。`n- 最窄返工：只修直接问题。"
+      )
+      Write-Utf8 $reviewListPath $duplicated
+      $duplicateRejected = $false
+      try { $null = Get-ReviewEntryEvidence -Root $integrationRoot -TaskId $integrationTask -ExpectedReviewedCommit $reviewedCommit }
+      catch { $duplicateRejected = $_.Exception.Data['DetailCode'] -ceq 'review_rework_entry_invalid' }
+      Assert-True $duplicateRejected 'Review evidence accepted duplicate current reviewed commits'
+    } finally {
+      Write-Utf8 $reviewListPath $reviewListOriginal
     }
     . (Join-Path $PSScriptRoot 'private-path-acl.ps1')
     . (Join-Path $PSScriptRoot 'hourly-integration-lock.ps1')
