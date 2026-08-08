@@ -70,7 +70,7 @@
 
 ### 4.3 飞书桥有限自恢复
 
-现有 `TianZhang-Feishu-Decision-Bridge` 计划任务继续使用 AtLogOn、隐藏窗口、`IgnoreNew` 和零执行时限。安装器把设置补充为：
+现有 `TianZhang-Feishu-Decision-Bridge` 计划任务继续使用 AtLogOn、隐藏窗口、`IgnoreNew` 和零执行时限。任务动作直接托管带 `-WindowStyle Hidden` 的 `pwsh`，避免中间 `wscript` 提前退出后桥进程脱离任务生命周期。安装器把设置补充为：
 
 - `RestartCount=3`；
 - `RestartInterval=PT1M`。

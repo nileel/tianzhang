@@ -15,7 +15,6 @@ $script:TaskName = 'TianZhang-Feishu-Decision-Bridge'
 $script:RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $script:PackageRoot = Join-Path $PSScriptRoot 'feishu-decision-bridge'
 $script:StartScript = Join-Path $PSScriptRoot 'start-feishu-decision-bridge.ps1'
-$script:HiddenLauncher = Join-Path $PSScriptRoot 'start-feishu-decision-bridge-hidden.vbs'
 $script:BridgeEntry = Join-Path $script:PackageRoot 'src\bridge.mjs'
 
 function Resolve-AbsolutePath {
@@ -36,25 +35,20 @@ function Write-SanitizedJson {
 function Get-TaskPlan {
   $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
   if ($null -eq $pwsh) { throw 'PowerShell 7 is unavailable' }
-  $wscript = Get-Command wscript.exe -ErrorAction SilentlyContinue
-  if ($null -eq $wscript) { throw 'Windows Script Host is unavailable' }
   $pwshPath = Resolve-AbsolutePath $pwsh.Source 'PowerShell 7'
-  $wscriptPath = Resolve-AbsolutePath $wscript.Source 'Windows Script Host'
   $startScript = Resolve-AbsolutePath $script:StartScript 'start script'
-  $hiddenLauncher = Resolve-AbsolutePath $script:HiddenLauncher 'hidden launcher'
-  foreach ($path in @($pwshPath, $wscriptPath, $startScript, $hiddenLauncher)) {
+  foreach ($path in @($pwshPath, $startScript)) {
     if ($path.Contains('"', [StringComparison]::Ordinal)) { throw 'Launch path is invalid' }
   }
-  if (-not (Test-Path -LiteralPath $hiddenLauncher -PathType Leaf)) { throw 'Hidden launcher is unavailable' }
   [ordered]@{
     schemaVersion = 1
     taskName = $script:TaskName
     trigger = 'AtLogOn'
-    execute = $wscriptPath
-    arguments = "//B //NoLogo `"$hiddenLauncher`" `"$pwshPath`" `"$startScript`""
+    execute = $pwshPath
+    arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$startScript`""
     workingDirectory = [IO.Path]::GetFullPath($script:RepositoryRoot)
     startScript = $startScript
-    launchMode = 'WINDOWLESS_WSCRIPT'
+    launchMode = 'HIDDEN_PWSH'
     hidden = $true
     multipleInstances = 'IgnoreNew'
     restartCount = 3
@@ -321,7 +315,7 @@ switch ($Action) {
       taskName = $script:TaskName
       updated = $null -ne $existing
       multipleInstances = 'IgnoreNew'
-      launchMode = 'WINDOWLESS_WSCRIPT'
+      launchMode = [string]$plan.launchMode
       restartCount = [int]$plan.restartCount
       restartInterval = [string]$plan.restartInterval
     })
@@ -337,7 +331,7 @@ switch ($Action) {
       result = 'STARTED'
       taskName = $script:TaskName
       enabled = $true
-      launchMode = 'WINDOWLESS_WSCRIPT'
+      launchMode = [string]$plan.launchMode
     })
   }
   'Stop' {
@@ -350,7 +344,7 @@ switch ($Action) {
       taskName = $script:TaskName
       enabled = [bool](Invoke-Adapter 'IsTaskEnabled' @($script:TaskName))
       privateStatePreserved = $true
-      launchMode = 'WINDOWLESS_WSCRIPT'
+      launchMode = [string]$plan.launchMode
     })
   }
   'Enable' {
@@ -362,7 +356,7 @@ switch ($Action) {
       result = 'ENABLED'
       taskName = $script:TaskName
       enabled = $true
-      launchMode = 'WINDOWLESS_WSCRIPT'
+      launchMode = [string]$plan.launchMode
     })
   }
   'Disable' {
@@ -376,7 +370,7 @@ switch ($Action) {
       taskName = $script:TaskName
       enabled = $false
       privateStatePreserved = $true
-      launchMode = 'WINDOWLESS_WSCRIPT'
+      launchMode = [string]$plan.launchMode
     })
   }
   'Uninstall' {
@@ -407,7 +401,7 @@ switch ($Action) {
       installed = $state -cne 'NotInstalled'
       taskState = $state
       enabled = $enabled
-      launchMode = 'WINDOWLESS_WSCRIPT'
+      launchMode = [string]$plan.launchMode
       bridgeStatus = $health.bridgeStatus
       cardStatus = $health.cardStatus
       healthAgeSeconds = $health.healthAgeSeconds

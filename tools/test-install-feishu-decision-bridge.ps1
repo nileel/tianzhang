@@ -210,24 +210,23 @@ try {
   if ($plan.taskName -ne 'TianZhang-Feishu-Decision-Bridge' -or $plan.trigger -ne 'AtLogOn') {
     throw 'Plan did not use the fixed task identity and login trigger'
   }
-  if ($plan.multipleInstances -ne 'IgnoreNew' -or -not $plan.hidden -or $plan.launchMode -cne 'WINDOWLESS_WSCRIPT') {
+  if ($plan.multipleInstances -ne 'IgnoreNew' -or -not $plan.hidden -or $plan.launchMode -cne 'HIDDEN_PWSH') {
     throw 'Plan did not enforce hidden single-instance startup'
   }
   if ($plan.restartCount -ne 3 -or $plan.restartInterval -cne 'PT1M') {
     throw 'Plan did not enforce the fixed finite restart policy'
   }
   if (-not [IO.Path]::IsPathFullyQualified([string]$plan.execute) -or
-      [IO.Path]::GetFileName([string]$plan.execute) -ine 'wscript.exe' -or
-      [IO.Path]::GetFileName([string]$plan.execute) -ieq 'pwsh.exe') {
-    throw 'Plan did not use an absolute system wscript.exe action'
+      [IO.Path]::GetFileName([string]$plan.execute) -ine 'pwsh.exe') {
+    throw 'Plan did not use an absolute PowerShell action'
   }
   if ([IO.Path]::GetFullPath([string]$plan.startScript) -ne [IO.Path]::GetFullPath($startTool)) {
     throw 'Plan did not target the fixed bridge start script'
   }
   $pwshPath = [IO.Path]::GetFullPath((Get-Command pwsh -ErrorAction Stop).Source)
-  $expectedArguments = "//B //NoLogo `"$([IO.Path]::GetFullPath($hiddenLauncher))`" `"$pwshPath`" `"$([IO.Path]::GetFullPath($startTool))`""
+  $expectedArguments = "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$([IO.Path]::GetFullPath($startTool))`""
   if ([string]$plan.arguments -cne $expectedArguments) {
-    throw "Plan startup arguments were not the fixed windowless command: $($plan.arguments)"
+    throw "Plan startup arguments were not the fixed hidden PowerShell command: $($plan.arguments)"
   }
   if ($plan.arguments.Contains($configPath, [StringComparison]::OrdinalIgnoreCase) -or
       $plan.arguments.Contains($secret, [StringComparison]::Ordinal) -or
@@ -249,10 +248,10 @@ try {
   }
   $installedTask = $fake.State.Tasks[$taskName]
   if (-not $installedTask.Enabled -or $installedTask.State -cne 'Running' -or
-      $installedTask.Plan.launchMode -cne 'WINDOWLESS_WSCRIPT' -or
+      $installedTask.Plan.launchMode -cne 'HIDDEN_PWSH' -or
       $installedTask.Plan.restartCount -ne 3 -or $installedTask.Plan.restartInterval -cne 'PT1M' -or
-      [IO.Path]::GetFileName([string]$installedTask.Plan.execute) -ine 'wscript.exe') {
-    throw 'Install did not replace the legacy direct-pwsh task with one enabled running windowless task'
+      [IO.Path]::GetFileName([string]$installedTask.Plan.execute) -ine 'pwsh.exe') {
+    throw 'Install did not replace the legacy task with one enabled running hidden PowerShell task'
   }
   if ($fake.State.StoppedProcessIds.Count -ne 2 -or
       $fake.State.StoppedProcessIds[0] -ne 100 -or
@@ -338,7 +337,7 @@ try {
   Assert-Code $status 0 'Status'
   $statusOutput = $status.Output | ConvertFrom-Json
   if (-not $statusOutput.installed -or $statusOutput.taskState -ne 'Ready' -or
-      -not $statusOutput.enabled -or $statusOutput.launchMode -cne 'WINDOWLESS_WSCRIPT') {
+      -not $statusOutput.enabled -or $statusOutput.launchMode -cne 'HIDDEN_PWSH') {
     throw 'Status did not report the fake installed task'
   }
   if ($statusOutput.bridgeStatus -ne 'CONNECTED' -or $statusOutput.cardStatus -ne 'CONNECTED' -or
@@ -370,7 +369,7 @@ try {
   Assert-Code $disabledStatus 0 'disabled Status'
   $disabledStatusOutput = $disabledStatus.Output | ConvertFrom-Json
   if (-not $disabledStatusOutput.installed -or $disabledStatusOutput.enabled -or
-      $disabledStatusOutput.launchMode -cne 'WINDOWLESS_WSCRIPT') {
+      $disabledStatusOutput.launchMode -cne 'HIDDEN_PWSH') {
     throw 'Status did not report enabled=false for the disabled task'
   }
 
@@ -392,7 +391,7 @@ try {
   Assert-Code $uninstalledStatus 0 'uninstalled Status'
   $uninstalledStatusOutput = $uninstalledStatus.Output | ConvertFrom-Json
   if ($uninstalledStatusOutput.installed -or $null -ne $uninstalledStatusOutput.enabled -or
-      $uninstalledStatusOutput.launchMode -cne 'WINDOWLESS_WSCRIPT') {
+      $uninstalledStatusOutput.launchMode -cne 'HIDDEN_PWSH') {
     throw 'Status did not report enabled=null for an uninstalled task'
   }
 
