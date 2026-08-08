@@ -396,3 +396,16 @@
 - 残留风险：三个具体位置名称为本批次候选名（扶桑天门/曜行关/长昼庭），内容与候选名均待审核；Codex 复审不通过时需按普通返工同步名称、路径与引用，不设独立重命名阶段；效果正式名称仍待 DS-JINDAN-NAMES-20260718-01，本轮只引用 effect_id 与矩阵功能性临时代号；本批次未定义初始占据者与历史状态。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01N-3ec0ebab · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01N 的原子正式结果等待 Codex 独立复审；原自动 run 因共享管理路径变化停在 `hourly_revalidation_required`，本条由普通管理上下文基于最新 `master` 补齐，不恢复旧模型会话。
+- 任务：C-HS-YY-JD-01N
+- 候选提交：2068d5eac76baae71fa7ae70e335cd6e9faa85d6
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_Cosmos_Space_TRANSFORM01_折尺门.txt、docs/基础设定/金丹位格/界位/JD_Cosmos_Space_DOMAIN01_咫尺天.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_Cosmos_Space_SOURCE_六合枢.txt
+- 已验证：三份文档均含 §十一 13 大节完整骨架（源位/化位/界位各 13 节，逐项通过设计规范 §十二检查清单）；positionId 全局唯一：JD_Cosmos_Space_SOURCE / JD_Cosmos_Space_TRANSFORM01 / JD_Cosmos_Space_DOMAIN01 在三文档与索引中引用一致，未与既有 51 位置重复；效果白名单仅引用 ROAD_SPACE 既有三项 effect_id（SPACE_SCALE/SPACE_TRANSIT/SPACE_SEAL），逐项填写适配理由与位置理念收窄项；证位档案区分道路共享履历＋位格类型通用要求＋位置专属成就三层，五种登位路径均给出宇道路具体入口；未越 ROAD_SPACE 不可越界项（不动态增删邻接/不创造土地/不无落点传送/不自动取得主权）；候选的 pending-whitespace、review-text 与 staged diff 检查通过；索引 §四数量 39→42、§五宇道路注、§六3条待审核条目同步完成，均标记「⚠️ 已修改/未审核」。
+- 未验证：Codex 独立复审未进行（DeepSeek 不自审）；候选具体位置名称（六合枢/折尺门/咫尺天）未进入正式显示事实。
+- 残留风险：本批次3个具体位置名称与内容为候选，待 Codex 复审；复审不通过时按普通返工同步修改名称、路径与引用，不设置独立重命名阶段。未运行 BattleSim（无数值强度变化）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
