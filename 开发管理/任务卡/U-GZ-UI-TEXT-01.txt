@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 复审不通过：BattleUIManager 对整条战斗日志替换 Language 键，会误改包含键名的玩家自定义名称和技术日志；等待负责人决定最窄返工方。",
   "expectedPaths": [
     "src/Assets/DataConfig/Language.csv",
     "src/Assets/DataConfig/CharterSites.csv.meta",
