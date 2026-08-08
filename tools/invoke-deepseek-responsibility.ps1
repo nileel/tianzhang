@@ -233,6 +233,26 @@ function New-TerminalSchema {
       detailCode = [ordered]@{ type = 'string' }
     }
     required = @('status')
+    oneOf = @(
+      [ordered]@{
+        properties = [ordered]@{ status = [ordered]@{ const = 'completed' } }
+        required = @(
+          'identity', 'model', 'candidateCommit', 'expectedTransition', 'changedPaths', 'verified', 'unverified',
+          'residualRisk', 'result', 'impact', 'verify', 'plain'
+        )
+      }
+      [ordered]@{
+        properties = [ordered]@{ status = [ordered]@{ const = 'needs_decision' } }
+        required = @(
+          'identity', 'model', 'candidateCommit', 'changedPaths', 'verified', 'unverified', 'residualRisk',
+          'decisionId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary'
+        )
+      }
+      [ordered]@{
+        properties = [ordered]@{ status = [ordered]@{ enum = @('blocked', 'failed') } }
+        required = @('detailCode')
+      }
+    )
     additionalProperties = $false
   } | ConvertTo-Json -Compress -Depth 20)
 }

@@ -8,6 +8,21 @@ function Assert-Equal { param($Actual, $Expected, [string]$Message) if ($Actual 
 function Write-Utf8 { param([string]$Path, [string]$Text) [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null; [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false)) }
 function Invoke-Git { param([string]$Root, [string[]]$Arguments) $output = @(& git -C $Root @Arguments 2>&1); if ($LASTEXITCODE -ne 0) { throw "git failed: $($Arguments -join ' '): $(@($output) -join "`n")" }; (@($output) -join "`n").Trim() }
 
+function Test-ConditionalRequiredSchema {
+  param([object]$Schema, [Collections.IDictionary]$Terminal)
+  $status = [string]$Terminal['status']
+  $matches = @($Schema.oneOf | Where-Object {
+      $rule = $_.properties.status
+      if ($rule.PSObject.Properties.Name -ccontains 'const') { return [string]$rule.const -ceq $status }
+      @($rule.enum | ForEach-Object { [string]$_ }) -ccontains $status
+    })
+  if ($matches.Count -ne 1) { return $false }
+  foreach ($field in @($matches[0].required)) {
+    if (-not $Terminal.Contains([string]$field)) { return $false }
+  }
+  $true
+}
+
 function Invoke-Wrapper {
   param([string]$Action, [string]$Root, [string]$TaskId, [string]$RunId)
   $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $wrapperPath, '-Action', $Action, '-RepositoryRoot', $Root, '-StateRoot', $stateRoot, '-ResponsibilityTimeoutSeconds', '30')
@@ -143,6 +158,30 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $record = Get-Content -Raw -LiteralPath $recordPath | ConvertFrom-Json -Depth 20
   $arguments = @($record.arguments | ForEach-Object { [string]$_ })
   Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--model') + 1]) 'deepseek-v4-flash' 'Wrapper did not pin the model'
+  $terminalSchema = [string]$arguments[[Array]::IndexOf($arguments, '--json-schema') + 1] | ConvertFrom-Json -Depth 50
+  $completedTerminal = [ordered]@{
+    status = 'completed'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = 'a' * 40
+    expectedTransition = 'codex_review/codex/ready'; changedPaths = @('fixtures/business.txt'); verified = @('passed')
+    unverified = @('none'); residualRisk = 'fixture'; result = 'fixture'; impact = 'fixture'; verify = 'fixture'; plain = 'fixture'
+  }
+  Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $completedTerminal) 'Complete terminal schema rejected its full contract'
+  $completedWithoutPaths = [ordered]@{} + $completedTerminal
+  $completedWithoutPaths.Remove('changedPaths')
+  Assert-True (-not (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $completedWithoutPaths)) 'Complete terminal schema accepted missing changedPaths'
+  $decisionTerminal = [ordered]@{
+    status = 'needs_decision'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = 'b' * 40
+    changedPaths = @('fixtures/business.txt'); verified = @('passed'); unverified = @('none'); residualRisk = 'fixture'
+    decisionId = 'DEC-20260809-FIXTURE'; question = 'Choose.'; options = @(); recommendedOption = 'A'
+    impactSummary = 'fixture'; plainSummary = [ordered]@{ situation = 'fixture'; impact = 'fixture'; action = 'fixture' }
+  }
+  Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $decisionTerminal) 'Decision terminal schema rejected its full contract'
+  $decisionWithoutQuestion = [ordered]@{} + $decisionTerminal
+  $decisionWithoutQuestion.Remove('question')
+  Assert-True (-not (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $decisionWithoutQuestion)) 'Decision terminal schema accepted a missing required field'
+  foreach ($status in @('blocked', 'failed')) {
+    Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal ([ordered]@{ status = $status; detailCode = 'fixture_terminal' })) "$status terminal schema rejected detailCode"
+    Assert-True (-not (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal ([ordered]@{ status = $status }))) "$status terminal schema accepted missing detailCode"
+  }
   Assert-True ([string]$record.prompt -match 'fixed Windows entry already selected') 'Candidate prompt omitted fixed-entry boundary'
   Assert-True ([string]$record.prompt -match 'Do not modify the task card') 'Candidate prompt omitted lifecycle exclusion'
   Assert-True ([string]$record.prompt -match 'Do not create temporary, diagnostic, conversion, or helper files anywhere under RepositoryRoot') 'Candidate prompt omitted repository temporary-file exclusion'
