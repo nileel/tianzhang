@@ -12,7 +12,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| N-FPD-REGRESSION-01 | P1 | DeepSeek V4 Flash 执行矩阵；Codex 复审并定案 | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
+| N-FPD-REGRESSION-01 | P2 | DeepSeek V4 Flash 执行矩阵；Codex 复审并定案 | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SUPPRESS-01 | P2 | Codex | 冻结（仅保留旧审计） | DEC-20260728-NSUPPRESS01AFIELDS=B | 确定性削位与封丹父任务；负责人仅保留旧审计，不授权新结算。 | — |
 | N-SUPPRESS-01B | P2 | codex | 冻结 | — | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |
 | N-AI-01 | P3 | Codex 锁定决定；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（N-AI-DEC-01～03） | — | 战棋 AI 门派特色策略与 Boss 模板；现行所有者定位已完成，等待负责人锁定三项策略／模板决定。 | — |

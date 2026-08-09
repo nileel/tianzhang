@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01F",
+  "title": "GameRuntime、保存与应用用例",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01E"],
+  "stateReason": "等待 01E 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01F.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01F.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01F · GameRuntime、保存与应用用例
+
+## 来源与当前边界
+
+- 对应架构设计阶段 6，建立薄 GameRuntime、新保存 schema 1、导航契约与应用用例。
+
+## 必查范围
+
+- 01E 架构证据；架构设计 §5.4、阶段 6；现行 GameSession、保存、状态 store、场景上下文、悬赏、NPC 修炼和册界调用者／测试。
+
+## 实施范围
+
+- GameRuntime 只组合独立状态所有者；新 schema 1 原子保存各模块快照，不读取旧存档；建立新游戏、清空、保存、恢复、导航和进入／返回用例。
+
+## 禁止项
+
+- 不迁移旧 schema 4，不让 GameRuntime 实现战斗、悬赏、册界或修炼算法，不允许 Feature 绕过用例直接写状态。
+
+## 验证
+
+- 新档、清空、保存读取幂等、非法档失败关闭、导航往返、悬赏／NPC／册界用例与快照原子性。解阻塞前展开完整路径并运行程序集、.NET、Unity EditMode 和相关数据链。
+
+## 完成条件
+
+- 各模块快照只有一个写入者，恢复失败无半状态，新档与清空共用初始化入口，导航契约稳定。
+
+## 停止条件
+
+- 需要兼容旧存档、第二保存格式、共享可变状态或提前修改场景壳时停止。

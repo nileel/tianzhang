@@ -15,13 +15,13 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
-| D-FPD-MIGRATE-01 | P1 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
-| D-FPD-MIGRATE-01A | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |
-| D-FPD-MIGRATE-01B | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SPELL-01） | — | 四批古修术法 docs／CSV／asset 迁移。 | — |
-| D-FPD-MIGRATE-01C | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
-| D-FPD-MIGRATE-01D | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
-| D-FPD-MIGRATE-01E | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
-| D-CHAR-APPEARANCE-01 | P2 | Codex | 阻塞（U-SHIJIAHOU-3D-PROTO-01） | — | AppearanceProfile／目录／组装器／立绘合成器的数据与存档设计。 | — |
+| D-FPD-MIGRATE-01 | P2 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
+| D-FPD-MIGRATE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SPELL-01） | — | 四批古修术法 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
+| D-FPD-MIGRATE-01D | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
+| D-FPD-MIGRATE-01E | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
+| D-CHAR-APPEARANCE-01 | P1 | codex | 阻塞 | U-SHIJIAHOU-3D-PROTO-01 | 外观数据与存档 | 开发管理/任务卡/D-CHAR-APPEARANCE-01.txt |
 
 ## G3 任务执行边界
 

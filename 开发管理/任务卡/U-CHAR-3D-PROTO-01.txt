@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-3D-PROTO-01",
+  "title": "2.5D 几何占位测试台",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-URP-VISUAL-BASELINE-01"],
+  "stateReason": "等待 URP 正式薄切片视觉基础通过",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-3D-PROTO-01.txt",
+    "开发管理/任务归档/U-CHAR-3D-PROTO-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-3D-PROTO-01 · 2.5D 几何占位测试台
+
+## 来源与当前边界
+
+- 只用正面明确的几何占位体证明固定正交斜俯视下的 2.5D 技术参数。
+
+## 必查范围
+
+- 重构后 `HybridTacticalPrototype.unity` 或 01H 确认的等价测试夹具、唯一 `Character.Facing`／Spatial 方向语义、相机和 URP 技术视觉基线。
+
+## 实施范围
+
+- 验证模型缩放、六向旋转、地块高度、阴影、选中反馈和相机裁切；六个 Facing 索引与规则邻格中心方向逐项对齐。
+
+## 禁止项
+
+- 不接入 CTB、AI、伤害或正式遭遇，不成为第二战斗所有者，不生产正式角色资源。
+
+## 验证
+
+- 六向逐项对照、高低地块、阴影、选中和裁切矩阵；解阻塞前展开场景、脚本、asset、测试和 `.meta` 精确路径。
+
+## 完成条件
+
+- 固定镜头与六向技术参数可直接被玩家人形和四足样例消费，规则结果未改变。
+
+## 停止条件
+
+- 需要复制战斗运行时、修改 Spatial／Facing 规则或提前导入正式模型时停止。

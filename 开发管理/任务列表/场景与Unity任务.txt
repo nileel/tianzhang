@@ -5,14 +5,35 @@
 ## 当前事实
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
-- 当前 P1 主线是最小状态模型；项目派生 asmdef 边界已由 TQ-067 完成，不得把已完成的 G1 切片重新排入队列。
-- 2026-07-28 负责人确认关中最小正式生产框架：城市、怪物、物品与一次性击杀悬赏进入 P1；正式 Adventure 所有者、场景返回上下文和现有状态 store 继续复用，不新增服务器或第二套场景／存档所有者。
+- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已作为唯一可执行架构阶段进入队首，01B～01H 依次阻塞。
+- 架构重建完成前，URP 与正式美术 Unity 链保持 blocked；Blender、项目骨架和平台评估只有在路径与责任方独立时才可并行，且不得接入 Unity 正式路径。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
+| U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01A、U-ARCH-REBUILD-01B、U-ARCH-REBUILD-01C、U-ARCH-REBUILD-01D、U-ARCH-REBUILD-01E、U-ARCH-REBUILD-01F、U-ARCH-REBUILD-01G、U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
+| U-ARCH-REBUILD-01A | P1 | codex | 已排队 | — | 冻结、行为基线与目标程序集骨架 | 开发管理/任务卡/U-ARCH-REBUILD-01A.txt |
+| U-ARCH-REBUILD-01B | P1 | codex | 阻塞 | U-ARCH-REBUILD-01A | Foundation、唯一坐标与 Spatial | 开发管理/任务卡/U-ARCH-REBUILD-01B.txt |
+| U-ARCH-REBUILD-01C | P1 | codex | 阻塞 | U-ARCH-REBUILD-01B | Content schema 与领域导入器 | 开发管理/任务卡/U-ARCH-REBUILD-01C.txt |
+| U-ARCH-REBUILD-01D | P1 | codex | 阻塞 | U-ARCH-REBUILD-01C | Character、Cultivation 与 World | 开发管理/任务卡/U-ARCH-REBUILD-01D.txt |
+| U-ARCH-REBUILD-01E | P1 | codex | 阻塞 | U-ARCH-REBUILD-01D | Combat、CTB 与战术运行时 | 开发管理/任务卡/U-ARCH-REBUILD-01E.txt |
+| U-ARCH-REBUILD-01F | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E | GameRuntime、保存与应用用例 | 开发管理/任务卡/U-ARCH-REBUILD-01F.txt |
+| U-ARCH-REBUILD-01G | P1 | codex | 阻塞 | U-ARCH-REBUILD-01F | Feature、Bootstrap、正式场景与最小 UI | 开发管理/任务卡/U-ARCH-REBUILD-01G.txt |
+| U-ARCH-REBUILD-01H | P1 | codex | 阻塞 | U-ARCH-REBUILD-01G | 遗留删除、结构文档、总验收与 URP 交接 | 开发管理/任务卡/U-ARCH-REBUILD-01H.txt |
+| A-CHAR-BLENDER-SETUP-01 | P1 | codex | 阻塞 | — | Blender 工作站环境 | 开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt |
+| A-CHAR-HUMANOID-RIG-01 | P1 | codex | 阻塞 | A-CHAR-BLENDER-SETUP-01 | 项目统一评估骨架与三条动作 | 开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt |
+| A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-HUMANOID-RIG-01 | Meshy／Tripo 3D 一次性选型 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
+| U-URP-PREFLIGHT-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01H | URP 迁移预检 | 开发管理/任务卡/U-URP-PREFLIGHT-01.txt |
+| U-URP-MIGRATE-01 | P1 | codex | 阻塞 | U-URP-PREFLIGHT-01 | URP 安装、绑定与完整迁移 | 开发管理/任务卡/U-URP-MIGRATE-01.txt |
+| U-URP-VISUAL-BASELINE-01 | P1 | codex | 阻塞 | U-URP-MIGRATE-01 | URP 正式薄切片视觉基础重建 | 开发管理/任务卡/U-URP-VISUAL-BASELINE-01.txt |
+| U-CHAR-3D-PROTO-01 | P1 | codex | 阻塞 | U-URP-VISUAL-BASELINE-01 | 2.5D 几何占位测试台 | 开发管理/任务卡/U-CHAR-3D-PROTO-01.txt |
+| U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-3D-PROTO-01、A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
+| U-SHIJIAHOU-3D-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-HUMANOID-PROTO-01 | 石甲兽重型四足技术样例 | 开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt |
+| A-CHAR-PORTRAIT-STYLE-01 | P1 | codex | 阻塞 | D-CHAR-APPEARANCE-01 | Toon 与模块化立绘风格样张 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt |
+| U-CHAR-3D-FORMAL-01 | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-STYLE-01 | 正式 Adventure 3D 替换 | 开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt |
+| U-CHAR-CREATION-VISUAL-01 | P1 | codex | 阻塞 | U-CHAR-3D-FORMAL-01 | 完整首版创角外观批次 | 开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
 | U-MECH-02B / TQ-028 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-UI-01A、U-FPD-UI-01B） | — | 筑基、紫府与唯一丹相界面父任务；不直接执行。 | — |
@@ -22,13 +43,6 @@
 | U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
 | U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
 | U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
-| U-URP-MIGRATE-01 | P2 | Codex | 待建卡（实施路径扫描） | — | Built-in 到 URP 的独立迁移与正式场景回归。 | — |
-| U-CHAR-3D-PROTO-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-URP-MIGRATE-01） | — | 2.5D 真实单位表现接口与隔离测试台。 | — |
-| U-CHAR-HUMANOID-PROTO-01 | P2 | Codex 规划；外部资源责任方执行；Codex 复审 | 阻塞（U-CHAR-3D-PROTO-01） | — | 双体型人形模块化、共享骨骼、基础动画与 Toon 材质技术样例。 | — |
-| U-SHIJIAHOU-3D-PROTO-01 | P2 | Codex 规划；外部资源责任方执行；Codex 复审 | 阻塞（U-CHAR-HUMANOID-PROTO-01） | — | 石甲兽模型、重型四足骨骼与动画技术样例。 | — |
-| A-CHAR-PORTRAIT-STYLE-01 | P2 | Codex 规划；外部资源责任方执行；Codex 复审 | 阻塞（D-CHAR-APPEARANCE-01） | — | 玩家模块化全身立绘与运行时 Toon 材质风格样张评审。 | — |
-| U-CHAR-3D-FORMAL-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（A-CHAR-PORTRAIT-STYLE-01） | — | 正式 Adventure 的 Billboard 到 3D 单位表现替换。 | — |
-| U-CHAR-CREATION-VISUAL-01 | P2 | Codex 规划；外部资源责任方执行；Codex 复审 | 阻塞（U-CHAR-3D-FORMAL-01） | — | 首版创角外观内容批次与正式角色创建 UI 接入。 | — |
 
 ## 执行边界
 
@@ -38,50 +52,16 @@
 - TQ-068/069/070 必须区分 `shown`、`clicked`、`opened`、`selected`、`applied`、`completed`、`persisted`，并为各状态明确持久化所有者。
 - TQ-074 不得用假资源或虚构登记替代真实资源闭环。
 
-## 运行时角色美术、URP 与 2.5D 后续任务
+## Unity 架构、URP 与角色美术主线
 
-共同事实源：`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`。该设计已批准运行时角色采用固定正交斜俯视的 2.5D 低模 3D“水墨棋偶”，但当前项目仍是 Built-in Render Pipeline；以下八项必须保持独立任务边界，依赖满足并完成实施路径扫描后再建立活跃任务卡，不提前进入 ready 队列。
+共同事实源：`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`、`docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md`、`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`。架构重建是最高顺序的 Unity 前置；架构期间冻结 Runtime、正式场景、CSV、导入器和相关 asset 功能开发，只恢复功能完整、视觉简陋的正式薄切片。
 
-固定顺序为 `U-URP-MIGRATE-01 -> U-CHAR-3D-PROTO-01 -> U-CHAR-HUMANOID-PROTO-01 -> U-SHIJIAHOU-3D-PROTO-01 -> D-CHAR-APPEARANCE-01 -> A-CHAR-PORTRAIT-STYLE-01 -> U-CHAR-3D-FORMAL-01 -> U-CHAR-CREATION-VISUAL-01`。正式场景替换必须等待技术、数据、存档与风格闸门全部通过。
-
-### U-URP-MIGRATE-01 · Built-in 到 URP 独立迁移
-
-- 范围：安装与当前 Unity 版本相容的 URP，建立并绑定 Pipeline Asset 与 Quality 配置，迁移现有材质并处理 Tilemap、Sprite、UI、TextMesh Pro、六角地块和透明高亮兼容。
-- 回归：正式场景入口、相机、透明排序、选格射线、色彩空间、UI、Tilemap、高亮和已有验证必须保持成立；`HybridTacticalPrototype.unity` 不能替代正式 Adventure 回归证据。
-- 边界：不新增角色模型、外观字段、换装、动画或正式美术资源；不得保留两套渲染管线、复制场景或增加静默材质回退。若迁移需要修改 CTB、六角空间、伤害、AI 或场景流转规则，立即停止并回查根因。
-- 建卡条件：先实时扫描 Unity 版本、Packages、Graphics／Quality 设置、正式 Build Settings 场景、全部现有材质／Shader、相机、Tilemap、UI／TMP、高亮与选格所有者，并展开精确 expectedPaths、回滚边界和直接 EditMode／PlayMode 验证。
-
-### U-CHAR-3D-PROTO-01 · 2.5D 真实单位表现接口与测试台
-
-- 只在现有 `HybridTacticalPrototype.unity` 建立真实 3D 单位表现接口，先用正面明确的几何占位体验证缩放、六向旋转、地块高度、阴影、选中反馈和相机裁切。
-- 六个 `Character.Facing` 索引必须复用批准的唯一角度表，并与对应规则邻格中心方向逐项对齐；场景不接入 CTB、AI、伤害或正式遭遇，也不成为第二套战斗所有者。
-
-### U-CHAR-HUMANOID-PROTO-01 · 人形模块化技术样例
-
-- 生产男、女基础体型、各一个脸型、两种发型、一套双体型整身服装和一件主手器物；两种体型共用同一 Humanoid 骨架、绑定姿势和基础动画。
-- 证明模块组装、固定六向映射、Toon 材质、批准动作中的蒙皮稳定，以及服装与身体之间无明显穿模或接缝；不扩成完整捏脸、身体滑杆、任意散件或全部创角内容。
-
-### U-SHIJIAHOU-3D-PROTO-01 · 石甲兽重型四足技术样例
-
-- 生产石甲兽模型、重型四足骨骼和待机、移动、受击、倒地、基础攻击、防御动作，直接消费既有 `enemy_shijiahou`、正式 `EnemyData.combatTemplate` 与 AI 结果。
-- 只证明非人形表现管线；不得重建或修改敌人规则、攻击档案、数值、占格或 AI，也不得套用人形外观档案和骨架。
-
-### A-CHAR-PORTRAIT-STYLE-01 · Toon 材质与玩家模块化全身立绘样张评审
-
-- 只批准风格样张，不生产完整首版创角资源，也不把技术草图或现有重要 NPC 独立立绘直接定为玩家模块化成品。
-- 分别评审运行时角色 Toon 材质样张与玩家标准姿势全身立绘样张。玩家立绘至少选择 2 种发型、2 套服装和 2 个脸型，并覆盖完整笛卡尔积，最低八种组合；必须与现有 NPC 立绘并排比较线稿、水彩、比例、精细度、主配色与身份一致性。
-- 全身、对话半身和行动轴头像必须来自同一合成结果的裁切；样张需证明固定锚点、图层遮挡、面部清晰度和组合稳定性，不为每个 UI 表面另造不同身份结果。
-- 未通过评审时只保留技术图层样例，不批量生产脸型、发型和服装立绘；若组合必须依赖随机替代、手工逐图修补、不同 UI 专用母版或修改规则／装备／存档所有权，停止并回到图层规范或数据根因。
-
-### U-CHAR-3D-FORMAL-01 · 正式 Adventure 3D 单位表现替换
-
-- 在正式 `AdventureScene` 中，以已验证的 3D 单位表现替换 `ExplorationController` 通过 `PlaceUnitMarker` 创建的 Sprite／Billboard 标记。
-- 保留 `AdventureSceneController`、`ExplorationController`、`TacticalCombatController`、CTB、AI、伤害、结算与返回所有权；接入前后六角坐标、占位、可达格、射程、视线、拒绝原因和战斗结果必须一致。
-
-### U-CHAR-CREATION-VISUAL-01 · 首版创角外观内容批次
-
-- 技术、风格、数据与存档闸门全部通过后，按批准范围补齐两种体型各 3 个脸型、4 档肤色、6 种发型、6 种发色、3 套双体型初始服装及少量服装辅色，并接入正式角色创建 UI。
-- 不新增面部或身体滑杆、任意上下装散件、布料／发丝模拟、完整装备外观或未批准妖兽；正式资源须遵守 `docs/资源管理/美术资源版本管理规范.md` 与资源登记册流程。
+- 架构链固定为 `U-ARCH-REBUILD-01A -> 01B -> 01C -> 01D -> 01E -> 01F -> 01G -> 01H`；父项不直接执行，只有八项全部完成才关闭。每阶段独立提交、验证和架构复审，未通过时不提前修改下游。
+- 美术工具链固定为 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01 -> A-CHAR-AI-PLATFORM-EVAL-01`。它可以在路径与责任方独立时推进，但不得向 Unity 正式路径接入资产；平台路线失败时才建立条件回退 `A-CHAR-BLENDER-TEMPLATE-01`，不同时维持两条生产路线。
+- Unity 视觉链固定为 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01`。预检只扫描重构后正式路径；迁移不兼容已删除的 Built-in 临时视觉；视觉基础不生产正式角色或关中最终装修。
+- 真实角色链在 `U-CHAR-3D-PROTO-01` 与平台／模板资源前置汇合，随后执行玩家基础人形、石甲兽、外观数据、风格样张、正式 Adventure 替换和完整创角批次。石甲兽技术样例不拥有角色级音效或战斗 VFX；它们由 `A-GZ-PRESENT-01` 独立负责。
+- `U-CHAR-3D-FORMAL-01` 只消费 01H 确认的新 Adventure、Combat 与 CombatPresentation 契约，不继续锁定旧 `ExplorationController`、`TacticalCombatController` 或 BattleUIManager。
+- 首批真实资源产生时触发 `AVM-03 / TQ-074`；原始工程与生成记录进入 `assets/source/characters/`，通过闸门的 Unity 资源才进入 `src/Assets/Art/Characters/`。
 
 ## 筑基、紫府与丹相后续 Unity 任务卡
 

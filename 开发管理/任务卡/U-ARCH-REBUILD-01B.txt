@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01B",
+  "title": "Foundation、唯一坐标与 Spatial",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01A"],
+  "stateReason": "等待 01A 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01B.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01B.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01B · Foundation、唯一坐标与 Spatial
+
+## 来源与当前边界
+
+- 对应架构设计阶段 2，只迁移 Foundation、六角坐标、空间查询与 CTB 归属边界。
+
+## 必查范围
+
+- 01A 架构证据；架构设计 §5.1、阶段 2；当前 Core、SpatialRules、Grid 纯逻辑和直接测试的完整逻辑单元。
+
+## 实施范围
+
+- 冻结唯一六角坐标语义，迁移格位、邻接、范围、视线、路径和可达格纯查询；CTB 从 Foundation 移至 Combat；删除重复转换和旧 namespace。
+
+## 禁止项
+
+- 不改 Combat 数值、Feature、场景、Renderer、URP 或内容；不以隐式转换掩盖两套坐标差异。
+
+## 验证
+
+- 坐标、邻接、范围、阻挡、方向、可达格及既有 1v1／2v2 空间结果；程序集边界、.NET、Unity EditMode 与文本／差异检查。解阻塞前必须把实时扫描得到的源码、测试和 `.meta` 字面量路径写入本卡。
+
+## 完成条件
+
+- 仓库只剩一套权威六角坐标语义；Spatial 不引用场景、Renderer、Character 或 Combat；既有空间结果一致。
+
+## 停止条件
+
+- 两套坐标存在未记录语义差异，或验证必须跨越 Content／Character 下游时停止。

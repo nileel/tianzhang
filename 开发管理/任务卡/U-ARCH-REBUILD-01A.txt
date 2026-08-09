@@ -1,0 +1,150 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01A",
+  "title": "冻结、行为基线与目标程序集骨架",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "架构设计已书面批准，当前无活动 run，可建立第一阶段基线与程序集骨架",
+  "expectedPaths": [
+    "docs/superpowers/plans/2026-08-09-unity-modular-architecture-rebuild-01a.md",
+    "开发管理/架构重建行为基线-U-ARCH-REBUILD-01A.txt",
+    "UNITY_STRUCTURE.md",
+    "tools/check-unity-assembly-boundaries.ps1",
+    "src/Assets/Scripts/Core/README.md",
+    "src/Assets/Scripts/Core/README.md.meta",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Scripts/Combat/README.md.meta",
+    "src/Assets/Scripts/Editor/README.md",
+    "src/Assets/Scripts/Editor/README.md.meta",
+    "src/Assets/Scripts/Modules.meta",
+    "src/Assets/Scripts/Modules/Spatial.meta",
+    "src/Assets/Scripts/Modules/Spatial/TianZhang.Spatial.asmdef",
+    "src/Assets/Scripts/Modules/Spatial/TianZhang.Spatial.asmdef.meta",
+    "src/Assets/Scripts/Modules/Spatial/README.md",
+    "src/Assets/Scripts/Modules/Spatial/README.md.meta",
+    "src/Assets/Scripts/Modules/Content.meta",
+    "src/Assets/Scripts/Modules/Content/TianZhang.Content.asmdef",
+    "src/Assets/Scripts/Modules/Content/TianZhang.Content.asmdef.meta",
+    "src/Assets/Scripts/Modules/Content/README.md",
+    "src/Assets/Scripts/Modules/Content/README.md.meta",
+    "src/Assets/Scripts/Modules/Character.meta",
+    "src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef",
+    "src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef.meta",
+    "src/Assets/Scripts/Modules/Character/README.md",
+    "src/Assets/Scripts/Modules/Character/README.md.meta",
+    "src/Assets/Scripts/Modules/Cultivation.meta",
+    "src/Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef",
+    "src/Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef.meta",
+    "src/Assets/Scripts/Modules/Cultivation/README.md",
+    "src/Assets/Scripts/Modules/Cultivation/README.md.meta",
+    "src/Assets/Scripts/Modules/World.meta",
+    "src/Assets/Scripts/Modules/World/TianZhang.World.asmdef",
+    "src/Assets/Scripts/Modules/World/TianZhang.World.asmdef.meta",
+    "src/Assets/Scripts/Modules/World/README.md",
+    "src/Assets/Scripts/Modules/World/README.md.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef",
+    "src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/README.md",
+    "src/Assets/Scripts/Modules/GameplayContracts/README.md.meta",
+    "src/Assets/Scripts/Modules/Features.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/README.md",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/README.md.meta",
+    "src/Assets/Scripts/Modules/Features/WorldMap.meta",
+    "src/Assets/Scripts/Modules/Features/WorldMap/TianZhang.Features.WorldMap.asmdef",
+    "src/Assets/Scripts/Modules/Features/WorldMap/TianZhang.Features.WorldMap.asmdef.meta",
+    "src/Assets/Scripts/Modules/Features/WorldMap/README.md",
+    "src/Assets/Scripts/Modules/Features/WorldMap/README.md.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/TianZhang.Features.Settlement.asmdef",
+    "src/Assets/Scripts/Modules/Features/Settlement/TianZhang.Features.Settlement.asmdef.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/README.md",
+    "src/Assets/Scripts/Modules/Features/Settlement/README.md.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef",
+    "src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/README.md",
+    "src/Assets/Scripts/Modules/Features/Adventure/README.md.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md.meta",
+    "src/Assets/Scripts/Modules/Infrastructure.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/TianZhang.Infrastructure.Persistence.asmdef",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/TianZhang.Infrastructure.Persistence.asmdef.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/README.md",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/README.md.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/README.md",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/README.md.meta",
+    "src/Assets/Scripts/Modules/Bootstrap.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef",
+    "src/Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/README.md",
+    "src/Assets/Scripts/Modules/Bootstrap/README.md.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/ArchitectureBaselineEditorTests.cs",
+    "src/Assets/Tests/EditMode/ArchitectureBaselineEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01A.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01A.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01A · 冻结、行为基线与目标程序集骨架
+
+## 来源与当前边界
+
+- 执行已批准架构设计的阶段 0、阶段 1；只冻结行为结果并建立目标程序集空骨架，不迁移领域实现。
+- 当前实际程序集为 Foundation、Domain、Combat、Gameplay、Editor 与测试；旧 `TianZhang.Runtime.asmdef` 无活动源码，不把它当新架构入口。
+
+## 必查范围
+
+- 完整 `docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md` 的 §二、§四、§六阶段 0/1、§七、§八和共同停止条件。
+- `UNITY_STRUCTURE.md` 的正式场景、Runtime、Content、Assembly 和验证入口；全部现行 `.asmdef`／`.asmref` 与 `AssemblyBoundaryEditorTests.cs` 完整逻辑单元。
+- `开发管理/开发-技术经验.txt` 的 asmdef 分层与 `.meta` 规则；实时 schema 5 状态与主工作区路径隔离。
+
+## 实施范围
+
+- 写出只包含输入、结果、稳定 ID 与状态变化的薄切片行为基线，不冻结旧 UI 布局或 Built-in 视觉。
+- 在 `Modules/` 建立 Spatial、Content、Character、Cultivation、World、Gameplay.Contracts、五个 Feature、两项 Infrastructure 和唯一 Bootstrap 的目标 asmdef／README 空骨架；继续复用现有 Foundation、Combat、Editor，当前阶段不复制同名程序集。
+- 建立可机械检查的单向依赖图和故意非法引用负例；Bootstrap 壳只负责组合入口，不承载业务逻辑。
+- 更新根结构索引与独立实施记录；一个提交只包含本卡字面量路径。
+
+## 禁止项
+
+- 不迁移规则类，不改场景、CSV、导入器、asset、URP、3D 角色或正式美术；不增加旧 API adapter、双写、fallback 或第二 Bootstrap。
+- 不手改 Unity 生成的 `.csproj`／`.sln`，不把空程序集编译缺席伪装成实现完成。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`，包含故意非法依赖负例。
+- `dotnet build src/TianZhang.EditModeTests.csproj`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理,docs/superpowers/specs,UNITY_STRUCTURE.md,src/Assets/Scripts,src/Assets/Tests`。
+- 对本卡 expectedPaths 运行 pending whitespace；暂存后运行 `git diff --cached --check`，`.meta` 合法空值尾随空格按项目规则处理。
+
+## 完成条件
+
+- 行为基线有限且可复验；目标模块、依赖方向、README 与唯一 Bootstrap 壳存在；检查器能拒绝循环、Domain→Feature、兄弟 Feature 和 Editor→Player 等非法引用；现有薄切片行为未改变。
+
+## 停止条件
+
+- 空骨架无法在不迁移下游业务的前提下编译，或必须建立重复程序集、长期兼容层、第二组合根、URP／美术变更时停止并回到 01A 边界设计。

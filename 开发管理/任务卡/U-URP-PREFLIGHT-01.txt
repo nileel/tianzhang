@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-URP-PREFLIGHT-01",
+  "title": "URP 迁移预检",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "discovery",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01H"],
+  "stateReason": "等待架构重建总验收与 URP 交接完成",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-URP-PREFLIGHT-01.txt",
+    "开发管理/任务归档/U-URP-PREFLIGHT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-URP-PREFLIGHT-01 · URP 迁移预检
+
+## 来源与当前边界
+
+- 只扫描 01H 交接后的正式路径并冻结迁移范围；本任务不安装 URP、不改变渲染行为。
+
+## 必查范围
+
+- 实际 Unity 版本、当前官方 URP 兼容信息、Packages、Graphics／Quality、Build Settings、保留材质／Shader、相机、Tilemap、Sprite、UI／TMP、高亮、选格和直接测试。
+
+## 实施范围
+
+- 形成 `U-URP-MIGRATE-01` 的精确 expectedPaths、包版本、材质清单、回滚边界、人工视觉检查和 EditMode／PlayMode 回归。
+
+## 禁止项
+
+- 不扫描架构阶段已删除的旧场景／视觉，不猜包版本，不安装包，不修改 CTB、空间、伤害、AI、存档或场景流转。
+
+## 验证
+
+- 实时文件／设置扫描、官方版本依据、正式场景与回归入口交叉检查；解阻塞时把迁移卡更新为完整字面量路径。
+
+## 完成条件
+
+- URP 版本、保留资产、迁移／回滚范围和最小充分验证无待决策，迁移任务可合法进入 ready。
+
+## 停止条件
+
+- 兼容版本、精确路径、材质清单、回滚或正式场景回归无法冻结时停止。

@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-CREATION-VISUAL-01",
+  "title": "完整首版创角外观批次",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-CHAR-3D-FORMAL-01"],
+  "stateReason": "等待正式 Adventure 3D 替换通过全部技术、风格、数据与存档闸门",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt",
+    "开发管理/任务归档/U-CHAR-CREATION-VISUAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-CREATION-VISUAL-01 · 完整首版创角外观批次
+
+## 来源与当前边界
+
+- 技术、风格、数据与存档闸门全部通过后的首版创角内容批次。
+
+## 必查范围
+
+- 角色美术批准范围、正式 3D 替换、外观目录／保存、PortraitComposer、正式角色创建 Feature／UI 和资源版本规范。
+
+## 实施范围
+
+- 补齐两种体型各三个脸型、四档肤色、六种发型、六种发色、三套双体型初始服装和少量辅色，并接入正式角色创建 UI。
+
+## 禁止项
+
+- 不扩成完整捏脸、身体滑杆、任意散件、布料／发丝模拟、完整装备外观或未批准妖兽。
+
+## 验证
+
+- 组合矩阵、稳定 ID、保存读取、立绘裁切、正式 UI、跨场景与 Adventure 显示；解阻塞前展开全部源资产、Unity、数据、测试、登记和 `.meta` 路径。
+
+## 完成条件
+
+- 批次内容完整接入创角、保存、立绘与正式 3D 显示，所有组合使用同一稳定外观身份。
+
+## 停止条件
+
+- 需要新增范围、随机替代、逐组合手工例外、第二目录／存档或规则变化时停止。

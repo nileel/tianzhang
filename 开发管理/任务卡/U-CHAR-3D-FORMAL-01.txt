@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-3D-FORMAL-01",
+  "title": "正式 Adventure 3D 替换",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["A-CHAR-PORTRAIT-STYLE-01"],
+  "stateReason": "等待技术、数据、存档与风格闸门全部通过",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt",
+    "开发管理/任务归档/U-CHAR-3D-FORMAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-3D-FORMAL-01 · 正式 Adventure 3D 替换
+
+## 来源与当前边界
+
+- 以已验证玩家与石甲兽 3D 表现替换重构后正式 Adventure 的临时单位占位。
+
+## 必查范围
+
+- 01H 确认的新 Adventure、Combat、CombatPresentation 契约，正式场景、角色样例、外观目录、CTB／AI／伤害／结算／返回直接测试。
+
+## 实施范围
+
+- 只替换视觉表现与组合接入，接入前后六角、占位、可达、射程、视线、拒绝原因和战斗结果一致。
+
+## 禁止项
+
+- 不锁定或恢复旧 ExplorationController、TacticalCombatController、BattleUIManager，不修改规则、数值或存档所有权。
+
+## 验证
+
+- 正式 Adventure 端到端、六向、高低地块、选中／受击、战斗结算与返回；解阻塞前展开场景、Prefab、脚本、asset、测试和 `.meta` 路径。
+
+## 完成条件
+
+- 正式 Adventure 使用已验证 3D 玩家与石甲兽，规则和场景流转结果与替换前一致。
+
+## 停止条件
+
+- 接入必须修改 Combat／Spatial／AI／伤害／保存规则或恢复旧所有者时停止。

@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-GZ-PRESENT-01",
+  "title": "关中正式场景与角色级表现资源",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-URP-VISUAL-BASELINE-01", "U-SHIJIAHOU-3D-PROTO-01"],
+  "stateReason": "等待 URP 技术视觉基础与石甲兽技术样例通过",
+  "expectedPaths": [
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-GZ-PRESENT-01.txt",
+    "开发管理/任务归档/A-GZ-PRESENT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# A-GZ-PRESENT-01 · 关中正式场景与角色级表现资源
+
+## 来源与当前边界
+
+- 负责关中城、悬赏板、关中野外环境的正式场景表现，以及石甲兽角色级音效与战斗 VFX。
+
+## 必查范围
+
+- 关中城市／悬赏／野外直接设定，URP 视觉基线、石甲兽技术样例、正式场景所有者、音效／VFX 接口和美术资源版本规范。
+
+## 实施范围
+
+- 生产并接入场景级视觉／环境音效、石甲兽攻击／受击／防御音效，以及命中／受击／格挡 VFX；先冻结精确资源清单和验收。
+
+## 禁止项
+
+- 不生成、导入或验收石甲兽模型、四足骨架、模型材质、技术 Prefab 或角色动画；不改变规则、数值或战斗所有者。
+
+## 验证
+
+- 三个关中表面的视觉／环境音效矩阵、石甲兽角色级音效／VFX、正式场景功能回归和资源版本闭环；解阻塞前展开源资源、Unity、测试、登记和 `.meta` 路径。
+
+## 完成条件
+
+- 关中正式场景与角色级表现达到批准展示范围，且与石甲兽技术资产、AVM 和规则所有权无重复。
+
+## 停止条件
+
+- 资源清单、expectedPaths 或验收无法冻结，或与石甲兽模型／动画、AVM、战斗规则开始重复拥有时停止。

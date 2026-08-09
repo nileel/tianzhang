@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E",
+  "title": "Combat、CTB 与战术运行时",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01D"],
+  "stateReason": "等待 01D 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E · Combat、CTB 与战术运行时
+
+## 来源与当前边界
+
+- 对应架构设计阶段 5，只迁移战斗输入、会话、调度、命令、结算和结果所有权。
+
+## 必查范围
+
+- 01D 架构证据；架构设计 §5.3、阶段 5；CTB、CombatResolver、EnemyAI、TacticalCombatController、直接调用者和测试完整逻辑单元。
+
+## 实施范围
+
+- 固定 `CombatantSnapshot` 与攻击档案投影输入；拆分会话、回合调度、命令、行动解析、单位集合和结果；Renderer、按钮、日志与动画移出 Combat。
+
+## 禁止项
+
+- Combat 不引用 Character 或 Feature 实现，不改变 BattleSim 数值语义，不用临时公式或旧控制器 adapter 保持编译。
+
+## 验证
+
+- 无 Scene／MonoBehaviour／UI 的确定性 CTB、伤害、范围、拒绝原因及 1v1／2v2 规则；程序集、.NET、Unity EditMode。解阻塞前展开完整源码、测试与 `.meta` 路径；数值语义变化必须运行 BattleSim 并停止本阶段。
+
+## 完成条件
+
+- Combat 成为纯战术运行时，EnemyAI 只消费合法行动集合，旧 `TacticalCombatController` Hub 职责删除。
+
+## 停止条件
+
+- 迁移改变数值语义、需要场景/UI 才能运行，或必须提前重写 Feature 时停止。

@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-HUMANOID-PROTO-01",
+  "title": "玩家基础人形技术样例",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-CHAR-3D-PROTO-01", "A-CHAR-AI-PLATFORM-EVAL-01"],
+  "stateReason": "等待 2.5D 测试台与固定人形平台选型；若平台路线失败则改为单一 Blender 模板 blocker",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt",
+    "开发管理/任务归档/U-CHAR-HUMANOID-PROTO-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-HUMANOID-PROTO-01 · 玩家基础人形技术样例
+
+## 来源与当前边界
+
+- 两条前置链汇合后的第一项真实角色样例；平台选型与固定人形基线不能替代模块化玩家人形验证。
+
+## 必查范围
+
+- 角色美术设计、人形平台／模板结果、统一骨架、2.5D 测试台、资源版本规范和重构后 Character／Presentation 契约。
+
+## 实施范围
+
+- 生产男、女基础体型、各一脸型、两种发型、一套双体型服装和一件主手器物；验证批准动作、六向、Toon、蒙皮与接缝。
+
+## 禁止项
+
+- 不扩为完整创角批次，不长期保留平台与 Blender 两条路线，不改变角色、装备、战斗或存档规则。
+
+## 验证
+
+- 源工程、骨架、动作、模块组合、六向、材质、穿模／接缝和 Unity 测试夹具；解阻塞前展开全部原始、导出、Unity、测试、登记和 `.meta` 路径。
+
+## 完成条件
+
+- 两种体型共享唯一骨架并在固定战术镜头下稳定显示、动作和组装，达到后续石甲兽与外观数据消费门槛。
+
+## 停止条件
+
+- 必须放宽平台门槛、增加第二骨架、随机替代模块或修改规则所有权时停止。

@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-APPEARANCE-01",
+  "title": "外观数据与存档",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-SHIJIAHOU-3D-PROTO-01"],
+  "stateReason": "等待玩家与石甲兽技术样例通过，避免数据契约锁定未经验证的资源形状",
+  "expectedPaths": [
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-APPEARANCE-01.txt",
+    "开发管理/任务归档/D-CHAR-APPEARANCE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-APPEARANCE-01 · 外观数据与存档
+
+## 来源与当前边界
+
+- 为已验证角色资源建立最小外观目录、组装、立绘合成与保存闭环，不生产完整创角内容。
+
+## 必查范围
+
+- 角色美术设计、玩家／石甲兽样例、重构后 Character、GameRuntime、保存、装备可见投影、Content 导入和直接测试。
+
+## 实施范围
+
+- 建立 `AppearanceProfile`、`AppearanceCatalog`、`CharacterVisualAssembler`、`PortraitComposer`，冻结稳定 ID、合法 `none`、版本迁移、保存读取和缓存重建。
+
+## 禁止项
+
+- 不复制装备、战斗或存档所有权，不保存 Transform、Prefab 实例、UI 裁切或战斗属性，不建立平行存档格式。
+
+## 验证
+
+- 正反目录引用、合法 none、版本迁移、保存读取幂等、跨场景一致和缓存重建；解阻塞前展开 schema、CSV／asset、导入器、运行时、测试和 `.meta` 路径。
+
+## 完成条件
+
+- 外观 ID 可原子保存恢复，非法引用失败关闭，组装与立绘消费同一稳定身份结果。
+
+## 停止条件
+
+- 需要第二存档、装备库存、规则状态所有者、静默默认资源或未验证资源类型时停止。

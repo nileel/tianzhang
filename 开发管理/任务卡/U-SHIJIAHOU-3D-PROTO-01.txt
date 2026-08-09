@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-SHIJIAHOU-3D-PROTO-01",
+  "title": "石甲兽重型四足技术样例",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-CHAR-HUMANOID-PROTO-01"],
+  "stateReason": "等待玩家基础人形证明角色资源管线",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt",
+    "开发管理/任务归档/U-SHIJIAHOU-3D-PROTO-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-SHIJIAHOU-3D-PROTO-01 · 石甲兽重型四足技术样例
+
+## 来源与当前边界
+
+- 证明非人形重型四足资源链，固定人形平台结论不能直接外推。
+
+## 必查范围
+
+- 石甲兽直接设定、`enemy_shijiahou`、重构后 `EnemyData.combatTemplate`／AI 结果、2.5D 测试台与美术资源版本规范。
+
+## 实施范围
+
+- 生产模型、四足骨架、模型材质、技术 Prefab，以及待机、移动、受击、倒地、基础攻击、防御动作。
+
+## 禁止项
+
+- 不重建规则、数值、占格、攻击档案或 AI；不套用人形骨架；不拥有角色级音效与命中／受击／格挡 VFX。
+
+## 验证
+
+- 原点、缩放、朝向、地面贴合、阴影、动作、Prefab、六向与既有战斗结果；解阻塞前展开全部源资产、Unity、测试、登记和 `.meta` 路径。
+
+## 完成条件
+
+- 石甲兽可在技术测试台稳定表现并直接消费既有战斗数据，为正式 Adventure 与关中表现任务提供合法前置。
+
+## 停止条件
+
+- 必须修改敌人规则／数值、复用不适用的人形骨架或把音效／VFX 混入本卡时停止。

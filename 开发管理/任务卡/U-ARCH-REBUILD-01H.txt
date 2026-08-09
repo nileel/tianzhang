@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01H",
+  "title": "遗留删除、结构文档、总验收与 URP 交接",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01G"],
+  "stateReason": "等待 01G 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01H.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01H.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01H · 遗留删除、结构文档、总验收与 URP 交接
+
+## 来源与当前边界
+
+- 合并架构设计阶段 8、阶段 9；只删除遗留、刷新上下文结构、执行总验收并为 URP 预检交接。
+
+## 必查范围
+
+- 01A～01G 架构证据；架构设计 §六阶段 8/9、§七、§九、§十；实时 asmdef、旧类名／GUID／Resources／UnityEvent／Animator／序列化引用和正式场景入口。
+
+## 实施范围
+
+- 删除旧 runtime asmdef／asmref、namespace、场景、原型入口、一次性探针和兼容层；建立四份聚焦结构图与模块 README；完成全套编译、EditMode、正式薄切片、数据链和上下文读取演练。
+
+## 禁止项
+
+- 不恢复旧视觉，不保留旧新双轨，不在本阶段加入 URP、3D 角色或正式美术，不用文档掩盖实时引用残留。
+
+## 验证
+
+- 全部命名程序集编译、Unity EditMode 全套、新正式薄切片 PlayMode／batch、数据链、程序集依赖、旧引用、文本和差异检查；四个代表任务完成一次性上下文读取。解阻塞前展开全部删除／新增路径。
+
+## 完成条件
+
+- 无旧运行时类型的 C#、场景、Prefab 或资源引用；结构图与实时工程一致；新 Adventure、Combat、Presentation、Content、Bootstrap、正式场景和资产所有者明确，`U-URP-PREFLIGHT-01` 获得稳定扫描基线。
+
+## 停止条件
+
+- 旧引用无法证明清除、总验收失败、需要下游 URP／美术补丁或跨两个以上未完成边界才能验证时停止。

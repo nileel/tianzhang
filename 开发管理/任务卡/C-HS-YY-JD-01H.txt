@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "C-HS-YY-JD-01H",
   "title": "金丹位格·息识道路三位置内容生产",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_review",
   "owner": "codex",
   "domain": "content",

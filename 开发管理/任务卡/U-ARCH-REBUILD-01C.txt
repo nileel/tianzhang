@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01C",
+  "title": "Content schema 与领域导入器",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01B"],
+  "stateReason": "等待 01B 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01C.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01C.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01C · Content schema 与领域导入器
+
+## 来源与当前边界
+
+- 对应架构设计阶段 3，只重建不可变定义、Unity asset 适配和领域导入链。
+
+## 必查范围
+
+- 01B 架构证据；架构设计 §5.6、阶段 3；现行 Content、DataConfigImporter、CSV／asset 链、检查器和直接导入测试。
+
+## 实施范围
+
+- 建立共享读取、诊断、原子提交基础设施和 Character、Combat、Cultivation、World、Settlement 领域导入器；各领域独立完成读取、校验、投影、提交。
+
+## 禁止项
+
+- 不跨领域半提交，不用静默默认 ID 或新旧资产双写，不在通用 CSV 工具中承载领域字段语义。
+
+## 验证
+
+- 正反 fixture、单域失败隔离、全量确定性、数据链、程序集、.NET 与 Unity EditMode。解阻塞前展开全部 CSV、asset、导入器、检查器、测试和 `.meta` 字面量路径。
+
+## 完成条件
+
+- 任一领域可独立导入且失败不写其他领域资产；共享工具不知道领域字段；旧 `DataConfigImporter` 单体删除。
+
+## 停止条件
+
+- 需要跨领域半提交、静默兼容或未批准内容／数值创作时停止。

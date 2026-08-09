@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01D",
+  "title": "Character、Cultivation 与 World",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01C"],
+  "stateReason": "等待 01C 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01D.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01D.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01D · Character、Cultivation 与 World
+
+## 来源与当前边界
+
+- 对应架构设计阶段 4，拆分角色、修炼和世界长期状态所有者。
+
+## 必查范围
+
+- 01C 架构证据；架构设计 §5.2、§5.4、阶段 4；Character、Cultivation、GameSession 中相关状态与直接调用者／测试。
+
+## 实施范围
+
+- 拆分角色身份、属性、资源与装载；建立独立 Cultivation 状态；拆分 Quest、Inventory、NPC、Bounty、Charter、WorldClock 所有者并为每个状态建立快照测试。
+
+## 禁止项
+
+- Character 不持有 UI、场景或战斗控制器；Cultivation 不依赖 Character 实现；不建立共享可变状态桶或万能 Contracts。
+
+## 验证
+
+- 每个状态 Capture／Restore 或等价快照、册界唯一提交、纯规则无场景测试、程序集与直接回归。解阻塞前展开完整源码、测试与 `.meta` 路径。
+
+## 完成条件
+
+- 三个领域职责单一、依赖单向、长期状态各有唯一写入者，纯规则测试无需打开场景。
+
+## 停止条件
+
+- 为拆循环需要承载大量无关接口的万能契约或必须提前改 Combat／Feature 时停止。

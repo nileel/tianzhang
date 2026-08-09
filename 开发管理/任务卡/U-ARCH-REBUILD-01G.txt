@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01G",
+  "title": "Feature、Bootstrap、正式场景与最小 UI",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01F"],
+  "stateReason": "等待 01F 完成并通过独立架构复审",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01G.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01G.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01G · Feature、Bootstrap、正式场景与最小 UI
+
+## 来源与当前边界
+
+- 对应架构设计阶段 7，重写五个 Feature、唯一 Bootstrap、四个正式场景壳与最小可操作 UI。
+
+## 必查范围
+
+- 01F 架构证据；架构设计 §5.5、阶段 7；现行角色创建、World、Settlement、Adventure、Combat Presentation、SceneBuilder、Build Settings 和直接 PlayMode／EditMode 测试。
+
+## 实施范围
+
+- 通过用例和 Gameplay.Contracts 组合五个 Feature；每场景唯一组合根；Adventure 调用新 Combat API 并消费结果；重建最小功能 UI，不恢复旧视觉。
+
+## 禁止项
+
+- Feature 不引用兄弟实现，不复制场景或 Bootstrap，不恢复旧 Built-in 样式，不让 Hybrid Prototype 成为正式依赖。
+
+## 验证
+
+- 新建角色→世界→据点→悬赏→Adventure→战斗→结算→返回→保存读取端到端；Build Settings 唯一正式入口、场景组合根与程序集边界。解阻塞前展开全部场景、脚本、测试、asset 和 `.meta` 路径。
+
+## 完成条件
+
+- 四个正式场景以最小 UI 完整可操作，功能结果与基线一致，旧 ExplorationController、BattleUIManager 和旧场景入口不再作为运行时所有者。
+
+## 停止条件
+
+- 必须恢复旧 UI／Built-in 表现、建立兄弟 Feature 依赖或改变规则／数值时停止。

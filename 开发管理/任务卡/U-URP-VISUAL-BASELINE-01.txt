@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-URP-VISUAL-BASELINE-01",
+  "title": "URP 正式薄切片视觉基础重建",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-URP-MIGRATE-01"],
+  "stateReason": "等待 URP 安装、绑定与完整迁移通过",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-URP-VISUAL-BASELINE-01.txt",
+    "开发管理/任务归档/U-URP-VISUAL-BASELINE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-URP-VISUAL-BASELINE-01 · URP 正式薄切片视觉基础重建
+
+## 来源与当前边界
+
+- 在完成 URP 迁移后主动重建统一技术视觉，不把兼容迁移当成视觉基线。
+
+## 必查范围
+
+- 架构交接后的四个正式场景、URP 配置、Sprite／Tilemap／透明物／占位 3D／TMP／按钮、六角表现和各 HUD 所有者。
+
+## 实施范围
+
+- 重建相机、灯光、背景、构图、材质规范、六角地块、可达／选中／高亮／遮挡／单位占位，以及 World／Settlement／Adventure／Combat HUD 基础视觉。
+
+## 禁止项
+
+- 不生产正式角色、模块化外观、石甲兽、关中最终装修、音效、批量资源、玩法或数值。
+
+## 验证
+
+- 四场景人工视觉矩阵、UI 状态、透明排序、占位 3D、六角反馈与功能回归；解阻塞前展开完整场景、asset、脚本、测试和 `.meta` 路径。
+
+## 完成条件
+
+- 后续 Toon、正式场景资源和 3D 角色拥有统一、稳定且可测试的 URP 技术底座。
+
+## 停止条件
+
+- 必须混入正式资源、规则变化、第二视觉管线或静默回退才能成立时停止。

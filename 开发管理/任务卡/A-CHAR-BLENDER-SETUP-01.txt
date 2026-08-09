@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BLENDER-SETUP-01",
+  "title": "Blender 工作站环境",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [],
+  "stateReason": "管理迁移已完成拆卡；等待确认与架构 worktree 路径独立的本机安装工作面后再进入 ready",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt",
+    "开发管理/任务归档/A-CHAR-BLENDER-SETUP-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BLENDER-SETUP-01 · Blender 工作站环境
+
+## 来源与当前边界
+
+- 来自已批准美术主线；只建立最小本机 Blender 环境，不生产角色资源。
+
+## 必查范围
+
+- 美术主线设计 §3.1、AI 3D 平台评估设计的工具要求、`assets/generated-character-art/README.md` 与本机现有软件事实。
+
+## 实施范围
+
+- 选择并安装兼容正式版本，记录版本与可执行路径；验证启动、源工程保存、FBX 导入／导出、材质槽查看和三角面统计。
+
+## 禁止项
+
+- 不预装自动修模、平台桥接、批处理或第三方重拓扑插件；不建立骨架、不消费正式生成槽位、不接入 Unity。
+
+## 验证
+
+- 真实 Blender 进程与一个临时、可清理的保存／FBX 往返证据；进入 ready 前冻结安装方式、记录路径和不触碰 Unity 的 expectedPaths。
+
+## 完成条件
+
+- Blender 可按批准流程稳定启动、保存、导入、导出和检查模型，版本与路径可复现。
+
+## 停止条件
+
+- 需要未批准插件、额外自动修补层、无法确认授权或必须修改 Unity 正式路径时停止。

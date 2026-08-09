@@ -12,76 +12,77 @@
 - 2026-07-22 用户专项授权的《天章》宇宙观 M0—M6 与 M9 已完成事实源迁移：世界背景、世界主线、三项遗产格式和册界规则结构已落地；M7 册界条目、M8 CSV／Unity／运行时／保存／UI 均未执行，且未进入当前任务队列。
 - 2026-07-30 用户将 M8 的内容前置从完整 M7 收窄为水府地纪；`C-TZ-CHARTER-ENTRIES-01B6` 已完成并通过复审，已解除 `D-TZ-CHARTER-SCHEMA-01` 前置。后续按 `SCHEMA → SAMPLE → MODEL → SAVE → SLICE` 推进；其余九条 M7 内容继续冻结。
 - 2026-08-07 用户定稿金丹位格批量内容生产方案：按 17 条道路各生产 1 源位＋1 化位＋1 界位共 51 份具体位置文档；主卡 `C-HS-YY-JD-01` 只做跨道路收口，17 张子卡 `C-HS-YY-JD-01A`～`01Q` 由 DeepSeek V4 Flash 生产、Codex 独立复审。
+- 2026-08-09 已批准把未完成金丹、筑基／紫府、世界主线和册界内容调整为 P2；现有成果与复审任务保留，`C-HS-YY-JD-01K` 继续等待 Codex 独立复审。`A-GZ-PRESENT-01` 提升为 P1，但阻塞于 URP 视觉基线与石甲兽技术样例。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| A-GZ-PRESENT-01 | P2 | Codex 规划；外部资源责任方执行 | 阻塞（正式表现资源的预期路径与验收未冻结） | — | 在功能闸门后补关中城、悬赏板和石甲兽的正式视觉／音效资源，不改变规则。 | — |
-| C-HS-YY-JD-01 | P1 | codex | 阻塞 | C-HS-YY-JD-01A、C-HS-YY-JD-01B、C-HS-YY-JD-01C、C-HS-YY-JD-01D、C-HS-YY-JD-01E、C-HS-YY-JD-01F、C-HS-YY-JD-01G、C-HS-YY-JD-01H、C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01K、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q | 金丹位格内容生产父任务 | 开发管理/任务卡/C-HS-YY-JD-01.txt |
-| C-HS-YY-JD-01A | P1 | codex | 阻塞 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
-| C-HS-YY-JD-01B | P1 | codex | 阻塞 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
-| C-HS-YY-JD-01C | P1 | codex | 阻塞 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
-| C-HS-YY-JD-01D | P1 | codex | 阻塞 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
-| C-HS-YY-JD-01E | P1 | codex | 阻塞 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
-| C-HS-YY-JD-01F | P1 | codex | 阻塞 | — | 金丹位格·见识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
-| C-HS-YY-JD-01G | P1 | codex | 阻塞 | — | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
-| C-HS-YY-JD-01H | P1 | codex | 阻塞 | — | 金丹位格·息识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
-| C-HS-YY-JD-01I | P1 | codex | 阻塞 | — | 金丹位格·食识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
-| C-HS-YY-JD-01J | P1 | codex | 阻塞 | — | 金丹位格·身识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
-| C-HS-YY-JD-01K | P1 | codex | 已排队 | — | 金丹位格·意识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01K.txt |
-| C-HS-YY-JD-01O | P1 | codex | 阻塞 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
-| C-HS-YY-JD-01P | P1 | codex | 阻塞 | — | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
-| C-HS-YY-JD-01Q | P1 | codex | 阻塞 | — | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
-| C-FPD-NAME-01 | P1 | DeepSeek V4 Flash 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | — | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 | — |
+| A-GZ-PRESENT-01 | P1 | codex | 阻塞 | U-URP-VISUAL-BASELINE-01、U-SHIJIAHOU-3D-PROTO-01 | 关中正式场景与角色级表现资源 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
+| C-HS-YY-JD-01 | P2 | codex | 阻塞 | C-HS-YY-JD-01A、C-HS-YY-JD-01B、C-HS-YY-JD-01C、C-HS-YY-JD-01D、C-HS-YY-JD-01E、C-HS-YY-JD-01F、C-HS-YY-JD-01G、C-HS-YY-JD-01H、C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01K、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q | 金丹位格内容生产父任务 | 开发管理/任务卡/C-HS-YY-JD-01.txt |
+| C-HS-YY-JD-01A | P2 | codex | 阻塞 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
+| C-HS-YY-JD-01B | P2 | codex | 阻塞 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
+| C-HS-YY-JD-01C | P2 | codex | 阻塞 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
+| C-HS-YY-JD-01D | P2 | codex | 阻塞 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
+| C-HS-YY-JD-01E | P2 | codex | 阻塞 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
+| C-HS-YY-JD-01F | P2 | codex | 阻塞 | — | 金丹位格·见识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
+| C-HS-YY-JD-01G | P2 | codex | 阻塞 | — | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
+| C-HS-YY-JD-01H | P2 | codex | 阻塞 | — | 金丹位格·息识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
+| C-HS-YY-JD-01I | P2 | codex | 阻塞 | — | 金丹位格·食识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
+| C-HS-YY-JD-01J | P2 | codex | 阻塞 | — | 金丹位格·身识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
+| C-HS-YY-JD-01K | P2 | codex | 已排队 | — | 金丹位格·意识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01K.txt |
+| C-HS-YY-JD-01O | P2 | codex | 阻塞 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
+| C-HS-YY-JD-01P | P2 | codex | 阻塞 | — | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
+| C-HS-YY-JD-01Q | P2 | codex | 阻塞 | — | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
+| C-FPD-NAME-01 | P2 | DeepSeek V4 Flash 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | — | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 | — |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
-| C-FPD-GONGFA-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |
-| C-FPD-GONGFA-01A | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 古修 5 部功法迁移。 | — |
-| C-FPD-GONGFA-01B | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 混元山 4 部功法迁移。 | — |
-| C-FPD-GONGFA-01C | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 兰台书院与散修 2 部功法迁移。 | — |
-| C-FPD-GONGFA-01D | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 太虚观 5 部功法迁移。 | — |
-| C-FPD-GONGFA-01E | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 太一道庭 9 部功法迁移。 | — |
-| C-FPD-GONGFA-01F | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 玉清崖 4 部功法迁移。 | — |
-| C-FPD-SPELL-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结、C-FPD-SPELL-01A～01D） | — | 11 项古修术法迁移父任务；只负责四批一致性收口。 | — |
-| C-FPD-SPELL-01A | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 北冥引`、`扶摇`、`无待` 升格迁移。 | — |
-| C-FPD-SPELL-01B | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 通变`、`演卦` 升格迁移。 | — |
-| C-FPD-SPELL-01C | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 守真`、`玉液`、`穷理` 升格迁移。 | — |
-| C-FPD-SPELL-01D | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 冥微`、`任化`、`守分` 升格迁移。 | — |
-| C-FPD-SHENTONG-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 迁移 `宿慧轮回`，删除道基品质倍率并补齐镇府神通或其他合法来源边界。 | — |
+| C-FPD-GONGFA-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |
+| C-FPD-GONGFA-01A | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 古修 5 部功法迁移。 | — |
+| C-FPD-GONGFA-01B | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 混元山 4 部功法迁移。 | — |
+| C-FPD-GONGFA-01C | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 兰台书院与散修 2 部功法迁移。 | — |
+| C-FPD-GONGFA-01D | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 太虚观 5 部功法迁移。 | — |
+| C-FPD-GONGFA-01E | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 太一道庭 9 部功法迁移。 | — |
+| C-FPD-GONGFA-01F | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 玉清崖 4 部功法迁移。 | — |
+| C-FPD-SPELL-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结、C-FPD-SPELL-01A～01D） | — | 11 项古修术法迁移父任务；只负责四批一致性收口。 | — |
+| C-FPD-SPELL-01A | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 北冥引`、`扶摇`、`无待` 升格迁移。 | — |
+| C-FPD-SPELL-01B | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 通变`、`演卦` 升格迁移。 | — |
+| C-FPD-SPELL-01C | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 守真`、`玉液`、`穷理` 升格迁移。 | — |
+| C-FPD-SPELL-01D | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 冥微`、`任化`、`守分` 升格迁移。 | — |
+| C-FPD-SHENTONG-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（内容冻结） | — | 迁移 `宿慧轮回`，删除道基品质倍率并补齐镇府神通或其他合法来源边界。 | — |
 | C-FPD-LORE-MIGRATE-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 | — |
 | C-JD-COMBO-01 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 内容冻结（D-JD-SCHEMA-01、N-JD-RULE-01 前） | — | 基于三实位与兼容契约设计组合档案；不得绕过确定性冲突规则。 | — |
-| C-JD-LORE-MIGRATE-01 | P1 | Codex | 内容冻结（C-JD-LORE-MIGRATE-01A～01C） | — | 旧源／化／界叙事语义迁移父任务；只负责三批一致性收口。 | — |
-| C-JD-LORE-MIGRATE-01A | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 空无般若经`、`抱元守一经` 两部功法语义重判。 | — |
-| C-JD-LORE-MIGRATE-01B | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 守真` 一项术法语义重判。 | — |
-| C-JD-LORE-MIGRATE-01C | P1 | Codex | 内容冻结（结构规则迁移完成后） | — | 卫长庚、谢凌沧、姚观寂、祝融烈四名 NPC 语义重判。 | — |
+| C-JD-LORE-MIGRATE-01 | P2 | Codex | 内容冻结（C-JD-LORE-MIGRATE-01A～01C） | — | 旧源／化／界叙事语义迁移父任务；只负责三批一致性收口。 | — |
+| C-JD-LORE-MIGRATE-01A | P2 | Codex | 内容冻结（结构规则迁移完成后） | — | 空无般若经`、`抱元守一经` 两部功法语义重判。 | — |
+| C-JD-LORE-MIGRATE-01B | P2 | Codex | 内容冻结（结构规则迁移完成后） | — | 守真` 一项术法语义重判。 | — |
+| C-JD-LORE-MIGRATE-01C | P2 | Codex | 内容冻结（结构规则迁移完成后） | — | 卫长庚、谢凌沧、姚观寂、祝融烈四名 NPC 语义重判。 | — |
 | C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 冻结（薄内容切片外） | — | 太一道庭法箓 CSV/BattleSim/Unity 字段方案。 | — |
 | C-GUXIU-03 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 古修第一批神通；每个完成品单独文件。 | — |
 | C-SANXIU-01 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 散修通用内容可玩性补强清单。 | — |
 | C-NPC-01 | P2 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 重要 NPC 源/化/界字段后的叙事扩写。 | — |
-| C-STORY-WM-P0 | P0 | Codex | 冻结（薄内容切片外） | — | 世界主线 P0 后续扩写；已完成前置不再重复排期。 | — |
-| C-STORY-WM-L1 | P1 | Codex | 阻塞（C-STORY-WM-L1B～L1F；均仍冻结） | — | 第二至第七章 L1 骨架父任务；只负责跨章收口。 | — |
-| C-STORY-WM-L1B | P1 | Codex | 冻结（薄内容切片外） | — | 第三章 L1 骨架。 | — |
-| C-STORY-WM-L1C | P1 | Codex | 冻结（薄内容切片外） | — | 第四章 L1 骨架。 | — |
-| C-STORY-WM-L1D | P1 | Codex | 冻结（薄内容切片外） | — | 第五章 L1 骨架。 | — |
-| C-STORY-WM-L1E | P1 | Codex | 冻结（薄内容切片外） | — | 第六章 L1 骨架。 | — |
-| C-STORY-WM-L1F | P1 | Codex | 冻结（薄内容切片外） | — | 第七章 L1 骨架。 | — |
+| C-STORY-WM-P0 | P2 | Codex | 冻结（薄内容切片外） | — | 世界主线后续扩写；已完成前置不再重复排期。 | — |
+| C-STORY-WM-L1 | P2 | Codex | 阻塞（C-STORY-WM-L1B～L1F；均仍冻结） | — | 第二至第七章 L1 骨架父任务；只负责跨章收口。 | — |
+| C-STORY-WM-L1B | P2 | Codex | 冻结（薄内容切片外） | — | 第三章 L1 骨架。 | — |
+| C-STORY-WM-L1C | P2 | Codex | 冻结（薄内容切片外） | — | 第四章 L1 骨架。 | — |
+| C-STORY-WM-L1D | P2 | Codex | 冻结（薄内容切片外） | — | 第五章 L1 骨架。 | — |
+| C-STORY-WM-L1E | P2 | Codex | 冻结（薄内容切片外） | — | 第六章 L1 骨架。 | — |
+| C-STORY-WM-L1F | P2 | Codex | 冻结（薄内容切片外） | — | 第七章 L1 骨架。 | — |
 | C-STORY-WM-L2 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外；C-STORY-WM-L2A～L2D） | — | L2/L3/L4 父任务；只负责四类内容的跨章收口。 | — |
 | C-STORY-WM-L2A | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章地区主线细化。 | — |
 | C-STORY-WM-L2B | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章势力线细化。 | — |
 | C-STORY-WM-L2C | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章 NPC 分支细化。 | — |
 | C-STORY-WM-L2D | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 第二至第七章终局演出细化。 | — |
-| C-TZ-CHARTER-ENTRIES-01 | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 冻结（完整 M7 未授权；01A、01B 未完成） | — | M7 父任务；只负责两个内容批次的依赖、跨条目地区分布和最终一致性收口，不直接替代子任务生产。 | — |
-| C-TZ-CHARTER-ENTRIES-01A | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权；C-TZ-CHARTER-ENTRIES-01A1～01A2） | — | 灵机与劫威两项条目父任务；只负责批次收口。 | — |
-| C-TZ-CHARTER-ENTRIES-01A1 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `灵机聚散` 独立条目。 | — |
-| C-TZ-CHARTER-ENTRIES-01A2 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `劫威缓厉` 独立条目。 | — |
-| C-TZ-CHARTER-ENTRIES-01B | P1 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 冻结（其余七项未授权；C-TZ-CHARTER-ENTRIES-01B1～01B8） | — | 八项五行地纪父任务；只负责批次收口。 | — |
-| C-TZ-CHARTER-ENTRIES-01B1 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `雷泽地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B2 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `火脉地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B3 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `玄冰地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B4 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `瘴林地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B5 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `风漠地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B7 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `星野地纪` 独立生态包。 | — |
-| C-TZ-CHARTER-ENTRIES-01B8 | P1 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `阴壤地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01 | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 冻结（完整 M7 未授权；01A、01B 未完成） | — | M7 父任务；只负责两个内容批次的依赖、跨条目地区分布和最终一致性收口，不直接替代子任务生产。 | — |
+| C-TZ-CHARTER-ENTRIES-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权；C-TZ-CHARTER-ENTRIES-01A1～01A2） | — | 灵机与劫威两项条目父任务；只负责批次收口。 | — |
+| C-TZ-CHARTER-ENTRIES-01A1 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `灵机聚散` 独立条目。 | — |
+| C-TZ-CHARTER-ENTRIES-01A2 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `劫威缓厉` 独立条目。 | — |
+| C-TZ-CHARTER-ENTRIES-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 冻结（其余七项未授权；C-TZ-CHARTER-ENTRIES-01B1～01B8） | — | 八项五行地纪父任务；只负责批次收口。 | — |
+| C-TZ-CHARTER-ENTRIES-01B1 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `雷泽地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B2 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `火脉地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B3 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `玄冰地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B4 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `瘴林地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B5 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `风漠地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B7 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `星野地纪` 独立生态包。 | — |
+| C-TZ-CHARTER-ENTRIES-01B8 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 冻结（内容授权） | — | 生产 `阴壤地纪` 独立生态包。 | — |
 | C-STORY-04 | P2 | Codex 规划；DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 低阶势力生态与一条样板地方节点成长线；中后期可成为地方授权者、见证者或受益共同体。 | — |
 | C-QUEST-01 | P2 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 宗门入门支线任务首批；一任务一文件。 | — |
 | C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 据点通用称谓、寒暄和任务入口文案表。 | — |

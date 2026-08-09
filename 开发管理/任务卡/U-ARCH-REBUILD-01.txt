@@ -1,0 +1,60 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01",
+  "title": "Unity 模块化架构重建父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-ARCH-REBUILD-01A",
+    "U-ARCH-REBUILD-01B",
+    "U-ARCH-REBUILD-01C",
+    "U-ARCH-REBUILD-01D",
+    "U-ARCH-REBUILD-01E",
+    "U-ARCH-REBUILD-01F",
+    "U-ARCH-REBUILD-01G",
+    "U-ARCH-REBUILD-01H"
+  ],
+  "stateReason": "父项不直接执行；等待 01A 至 01H 全部完成",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01 · Unity 模块化架构重建父项
+
+## 来源与当前边界
+
+- 唯一设计事实源为 `docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`；本卡只汇总 01A～01H，不直接修改源码。
+
+## 必查范围
+
+- 八张子卡的归档状态、架构证据、复审结论，以及设计 §10.2 的十三项父项完成条件。
+
+## 实施范围
+
+- 01A～01H 全部完成后，核对依赖单向性、唯一所有者、正式薄切片、遗留删除、结构文档和 URP 交接，再关闭父项并解除 `U-URP-PREFLIGHT-01`。
+
+## 禁止项
+
+- 不代替子任务实现，不用父项提交补齐未通过阶段，不把旧 API、旧场景、旧存档或旧 Built-in 视觉恢复为完成条件。
+
+## 验证
+
+- 逐项核对八张归档卡和设计 §10.2；运行父项关闭时任务卡指定的总验收与管理投影检查。
+
+## 完成条件
+
+- 01A～01H 全部完成且十三项架构完成条件有直接证据，URP 预检获得稳定的新路径和所有者基线。
+
+## 停止条件
+
+- 任一子任务未完成、复审未通过或需要下游补丁才能证明当前阶段时停止关闭父项。

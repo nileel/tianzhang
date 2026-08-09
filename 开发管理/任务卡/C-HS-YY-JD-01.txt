@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "C-HS-YY-JD-01",
   "title": "金丹位格内容生产父任务",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",

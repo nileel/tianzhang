@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-HUMANOID-RIG-01",
+  "title": "项目统一评估骨架与三条动作",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["A-CHAR-BLENDER-SETUP-01"],
+  "stateReason": "等待 Blender 工作站环境完成",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt",
+    "开发管理/任务归档/A-CHAR-HUMANOID-RIG-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-HUMANOID-RIG-01 · 项目统一评估骨架与三条动作
+
+## 来源与当前边界
+
+- 为 Meshy／Tripo 公平 A/B 提供唯一项目骨架基线，不生产玩家完整人形。
+
+## 必查范围
+
+- 美术主线设计 §3.1、AI 平台评估设计的换绑口径、角色美术设计的朝向／单位／原点要求和美术资源版本规范。
+
+## 实施范围
+
+- 冻结 Humanoid 骨骼名、绑定姿势、本地 `+Z` 正面、单位、底部中心原点与 Avatar 映射；制作待机、移动、攻击三条动作及统一换绑／权重转移方法。
+
+## 禁止项
+
+- 不生产完整身体、脸型、发型、服装、武器或正式 Animator；不使用平台自动骨架替代项目骨架。
+
+## 验证
+
+- Blender 源文件、三条动作、骨骼／权重检查和 FBX 往返；进入 ready 前展开源工程、导出、记录和登记的精确路径。
+
+## 完成条件
+
+- 同一骨架与三条动作可用于两平台候选的可重复换绑和 Unity Humanoid 映射评估。
+
+## 停止条件
+
+- 需要第二项目骨架、平台专用骨名、未批准动作或无法稳定换绑时停止。

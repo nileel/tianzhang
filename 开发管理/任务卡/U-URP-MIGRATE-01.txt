@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-URP-MIGRATE-01",
+  "title": "URP 安装、绑定与完整迁移",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-URP-PREFLIGHT-01"],
+  "stateReason": "等待 URP 预检冻结版本、路径、迁移和回滚范围",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-URP-MIGRATE-01.txt",
+    "开发管理/任务归档/U-URP-MIGRATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-URP-MIGRATE-01 · URP 安装、绑定与完整迁移
+
+## 来源与当前边界
+
+- 按预检一次完成包安装、Pipeline Asset／Quality 绑定、保留资产迁移和正式场景回归。
+
+## 必查范围
+
+- 已完成预检卡与其精确路径；架构重建后正式场景、保留材质／Shader、相机、UI／TMP、Tilemap、Sprite、高亮、选格和直接测试。
+
+## 实施范围
+
+- 安装批准版本，建立并绑定唯一 URP 配置，迁移保留表现，使重构后的最小功能壳继续可见。
+
+## 禁止项
+
+- 不保留两套渲染管线，不复制场景，不增加静默材质回退，不迁移已删除的 Built-in 临时视觉，不新增角色、外观或正式美术。
+
+## 验证
+
+- 正式场景入口、相机、最小 UI、Tilemap、Sprite、TMP、透明排序、高亮、选格、EditMode／PlayMode 和人工视觉检查。
+
+## 完成条件
+
+- 项目只使用已批准 URP，所有保留正式入口与功能回归成立，没有半迁移状态。
+
+## 停止条件
+
+- 迁移需要修改 CTB、六角空间、伤害、AI、存档或场景流转规则时停止并回查根因。

@@ -1,0 +1,51 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-AI-PLATFORM-EVAL-01",
+  "title": "Meshy／Tripo 3D 一次性选型",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": ["A-CHAR-HUMANOID-RIG-01"],
+  "stateReason": "等待项目统一评估骨架与三条动作完成",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务归档/A-CHAR-AI-PLATFORM-EVAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-AI-PLATFORM-EVAL-01 · Meshy／Tripo 3D 一次性选型
+
+## 来源与当前边界
+
+- 完整执行 `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md`，只做固定人形平台一次性选型。
+
+## 必查范围
+
+- 评估设计全文、苻渊四视图直接事实、统一骨架／动作、美术资源版本规范和两平台当时实际授权／付费隐私条件。
+
+## 实施范围
+
+- 两平台各使用三个正式槽位与同一预算；统一移除／停用平台骨架、换绑项目骨架、转移权重并记录有限修整时间；最终只选一个默认平台或判定通用平台路线不成立。
+
+## 禁止项
+
+- 不长期维护双平台，不引入第三平台，不降低门槛，不让候选直接进入 Unity 正式资源目录。
+
+## 验证
+
+- 按批准评分表、槽位证据、Blender 修整计时、统一骨架三动作与来源登记复核；进入 ready 前展开全部参考、原始工程、导出、证据和登记路径。
+
+## 完成条件
+
+- 选出一个可复现的固定人形主平台；若失败，则同一状态事件建立 `A-CHAR-BLENDER-TEMPLATE-01` 并把下游 blocker 切换为单一路线。
+
+## 停止条件
+
+- 缺四视图、骨架、三动作、付费私有生成授权，或结果只能靠双平台／额外自动修补成立时停止。
