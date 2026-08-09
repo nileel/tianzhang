@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "01A 实施提交已形成，等待另一个 Codex 会话进行独立架构复审；01B 继续 blocked",
+  "stateReason": "2026-08-09：Codex 独立架构复审正式提交 390b0b3daab9f8839a3cb0700bfa8371bfad3386 通过；01A 已归档，01B～01H 仍保持 blocked。",
   "expectedPaths": [
     "docs/superpowers/plans/2026-08-09-unity-modular-architecture-rebuild-01a.md",
     "开发管理/架构重建行为基线-U-ARCH-REBUILD-01A.txt",
@@ -155,3 +155,9 @@
 - 审核目标依赖图、空模块、唯一 `GameBootstrap` 壳、README、行为基线和故意非法负例；本次实施不自报独立复审完成。
 - `dotnet build src/TianZhang.EditModeTests.csproj` 为 0 error；01A 结构直接用例 5/5、行为基线相关直接用例 88/88 通过。
 - 全套 EditMode 为 436/438：`AuthorizedGrantBindsEveryConflictIdentityField` 与 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 失败。`e155f6d` 已同时包含前者两侧默认储备相等却期待 `PULSE_ADVANTAGE`、后者加载器只查 `AttackProfiles/AttackProfile_<id>.asset` 而测试只加载旧 Spell／Skill asset 的不一致；本卡不得修改这些范围。
+
+## Codex 独立复审通过与完成（2026-08-09）
+
+- 已独立复审正式提交 `390b0b3daab9f8839a3cb0700bfa8371bfad3386`：目标 asmdef 依赖图、所有 README、唯一空 `GameBootstrap`、行为基线和四类故意非法依赖负例均符合本卡与批准架构设计阶段 0／1。
+- `tools/check-unity-assembly-boundaries.ps1`、`check-review-text.ps1` 通过；`dotnet build src/TianZhang.EditModeTests.csproj` 为 0 error、2 个既有 CS0649 warning；Unity EditMode 为 436/438，01A 五项结构直接用例均通过。
+- 两项全量 EditMode 失败与 `e155f6d` 已登记基线一致，且不涉及本卡路径：`AuthorizedGrantBindsEveryConflictIdentityField` 与 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。复审结论：通过。
