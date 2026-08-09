@@ -5,7 +5,7 @@
 ## 当前事实
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
-- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已通过独立架构复审并归档，01B～01H 继续依次阻塞。
+- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已通过独立架构复审并归档。2026-08-10 实时扫描确认 01B 同时跨越 Character 的 CTB 持有与 EnvironmentProfile Content 边界，命中任务停止条件；阶段 2 边界重新明确前，01B～01H 继续依次阻塞。
 - 架构重建完成前，URP 与正式美术 Unity 链保持 blocked；Blender、项目骨架和平台评估只有在路径与责任方独立时才可并行，且不得接入 Unity 正式路径。
 
 ## 任务

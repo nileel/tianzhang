@@ -10,7 +10,7 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "01A 已完成并通过独立架构复审；解阻塞前仍须实时扫描并在本卡冻结阶段 2 的源码、测试与 .meta 字面量路径",
+  "stateReason": "2026-08-10 实时扫描命中本卡停止条件：CTB 迁移必须改 Character 持有的 CTBUnit，Spatial/Factory 迁移必须跨入 EnvironmentProfile Content 边界；阶段 2 边界重新明确前不得冻结猜测路径或设为 ready",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -49,3 +49,11 @@
 ## 停止条件
 
 - 两套坐标存在未记录语义差异，或验证必须跨越 Content／Character 下游时停止。
+
+## 2026-08-10 实时扫描停止证据
+
+- 扫描命令：用 `git ls-files` 枚举当前源码、测试、asmdef 与 `.meta`；再用 `rg -l` 按 `HexCoord`、`HexGrid`、`CTBEngine`、`SpatialHexCoord`、`SpatialQueryBoard`、`TacticalGridModel` 与 `SpatialQueryBoardFactory` 定位直接定义、调用者和测试。所有命中的现有 `.cs` 均存在对应 `.meta`。
+- 坐标差异已有记录：`Core/HexCoord.cs` 含 Unity `Vector2Int`／`Vector3`／`Mathf` 转换和可写 `q/r/s`，`Core/SpatialRules/SpatialHexCoord.cs` 是纯 `Q/R` 值类型；方向与拓扑距离语义一致，但纯 Spatial 类型不能直接保留 Unity 转换。该差异已写入 `开发管理/2.5D共享空间查询契约对齐方案.txt`，不属于新的未记录坐标冲突。
+- Character 边界命中：`src/Assets/Scripts/Entity/Character.cs` 直接保存 `HexCoord Position` 与 `CTBEngine.CTBUnit`。把 CTB 从 Foundation 移入 Combat 会令 Domain 反向依赖 Combat，除非同步重写 Character 的战斗期状态所有权；这已经越过阶段 2 的 CTB 路径迁移。
+- Content 边界命中：`src/Assets/Scripts/Grid/TacticalGridModel.cs` 直接保存并创建 `EnvironmentProfileRuntime`，`src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs` 直接消费 `EnvironmentProfileData`。该 ScriptableObject 还被 `AdventureSceneController`、`ExplorationController`、`DataConfigImporter` 和多项 EditMode／PlayMode 测试直接使用；把 Factory 移入 `Infrastructure` 而不同时重划 Content 会形成反向程序集依赖。
+- 结论：本轮不猜测 `Modules/Spatial`、`Infrastructure/UnityContent` 或 `Combat/Turns` 的新增文件名，不把广泛下游路径写入 `expectedPaths`，也不建立兼容层。须先在已批准架构设计中明确“阶段 2 如何解除 Character 的 CTB 持有”和“EnvironmentProfile 归属在阶段 2 还是阶段 3”，随后才重新扫描并冻结字面量路径。
