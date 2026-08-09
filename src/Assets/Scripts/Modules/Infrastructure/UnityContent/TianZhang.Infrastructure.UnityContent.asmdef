@@ -1,0 +1,7 @@
+{
+    "name": "TianZhang.Infrastructure.UnityContent",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content"
+    ]
+}

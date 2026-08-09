@@ -1,0 +1,9 @@
+{
+    "name": "TianZhang.Features.WorldMap",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content",
+        "TianZhang.World",
+        "TianZhang.Gameplay.Contracts"
+    ]
+}

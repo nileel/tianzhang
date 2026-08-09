@@ -1,0 +1,6 @@
+{
+    "name": "TianZhang.Gameplay.Contracts",
+    "references": [
+        "TianZhang.Foundation"
+    ]
+}

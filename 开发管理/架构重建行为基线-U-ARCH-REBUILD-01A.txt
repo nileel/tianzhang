@@ -1,0 +1,48 @@
+# 架构重建薄切片行为基线
+
+> 本基线只冻结输入、稳定 ID、可观察状态变化和结果。UI 布局、颜色、材质、Shader、相机构图和旧 Built-in 视觉不属于验收事实。
+
+## BASELINE-SLICE: character-creation
+
+- 输入：合法角色创建草稿选择 `origin_minor_clan`，并完成属性、灵根与生活技能校验。
+- 稳定 ID：`origin_minor_clan`、出生节点 `guanzhong_hub`、无装备基础攻击 `basic_unarmed`。
+- 状态变化：草稿构建为角色数据；新游戏清空旧会话状态并写入角色与出生世界节点。
+- 结果：角色数据保留创建元数据；无主手装备时基础攻击绑定为 `basic_unarmed`／`unarmed_fallback`。
+- 直接证明：`CharacterCreationTests`、`SceneArchitectureEditorTests`、`SessionStateSnapshotTests`。
+
+## BASELINE-SLICE: world-settlement-adventure
+
+- 输入：当前节点 `guanzhong_hub`，进入据点 `guanzhong_city`，再进入冒险 `guanzhong_wild`。
+- 稳定 ID：`guanzhong_hub`、`guanzhong_city`、`guanzhong_wild`。
+- 状态变化：世界返回上下文 -> 当前据点与世界节点 -> 当前冒险与据点返回上下文。
+- 结果：正式场景顺序为 `WorldScene` -> `SettlementScene` -> `AdventureScene`；返回后恢复 `guanzhong_city` 并清空当前冒险与已消费返回目标。
+- 直接证明：`SceneArchitectureEditorTests`、`GuanzhongFormalEndToEndTests`。
+
+## BASELINE-SLICE: bounty-combat-return
+
+- 输入：在 `guanzhong_city` 接取 `bounty_guanzhong_shijiahou`，在 `guanzhong_wild` 击败 `enemy_shijiahou`，随后返回并领取。
+- 稳定 ID：`bounty_guanzhong_shijiahou`、`enemy_shijiahou`、`item_shijia_piece`、`item_lingshi_low`、`basic_unarmed`。
+- 状态变化：`Available -> Accepted(0) -> ObjectiveCompleted(1) -> Claimed(1)`；胜利结算同时将当前 Adventure 清空并恢复据点。
+- 结果：正式胜利产生一份 `item_shijia_piece` 与一份普通 `item_lingshi_low`；一次性悬赏再授予三份 `item_lingshi_low`，最终数量为 1／4。重复接取、重复结算和重复领取均失败关闭且不重复写入。
+- 直接证明：`BountyRuntimeTests`、`GuanzhongFormalEndToEndTests`、`AttackProfileDataTests`。
+
+## BASELINE-SLICE: save-restore
+
+- 输入：捕获已领取悬赏、库存、`guanzhong_hub` 世界节点和 `guanzhong_city` 据点的当前会话，再由新会话读取。
+- 稳定 ID：`bounty_guanzhong_shijiahou`、`item_shijia_piece`、`item_lingshi_low`、`guanzhong_hub`、`guanzhong_city`；当前 schema 为 `4`。
+- 状态变化：运行时状态 -> schema 4 快照 -> 新会话等价状态。
+- 结果：`Claimed(1)`、库存 1／4、世界节点和据点保持；当前冒险为空，返回目标已消费。非法或不支持的输入在修改会话前失败关闭。
+- 直接证明：`SessionStateSnapshotTests`、`GuanzhongFormalEndToEndTests`。
+
+## BASELINE-SLICE: charter
+
+- 输入：在 `guanzhong_city` 使用 `charter_site_old_water_station`，按固定顺序验证通行、管理、节点连接、`charter_entry_suifu_diji` 登记和现实供给准备，再执行正式册界消费。
+- 稳定 ID：`charter_site_old_water_station`、`charter_entry_suifu_diji`、`relic_world_charter`、`node_old_water_station_charter`。
+- 状态变化：五项证明依次从未完成变为完成；首次正式成功写入 `charter_runtime_charter_site_old_water_station`、条目登记、节点／供给占用与两个环境事件。
+- 结果：越序输入不推进状态；同一已分配供给的再次正式消费失败关闭；schema 4 保存读取保持提交结果且不重复结算。
+- 直接证明：`CharterSiteInteractionRuntimeTests`、`SessionStateSnapshotTests`、`SceneArchitectureEditorTests`。
+
+## 复验入口
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
+- 重点直接用例：`CharacterCreationTests`、`SceneArchitectureEditorTests`、`BountyRuntimeTests`、`GuanzhongFormalEndToEndTests`、`SessionStateSnapshotTests`、`CharterSiteInteractionRuntimeTests`。

@@ -1,0 +1,10 @@
+{
+    "name": "TianZhang.Features.CharacterCreation",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content",
+        "TianZhang.Character",
+        "TianZhang.Cultivation",
+        "TianZhang.Gameplay.Contracts"
+    ]
+}

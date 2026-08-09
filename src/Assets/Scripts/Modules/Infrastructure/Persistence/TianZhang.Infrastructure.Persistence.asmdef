@@ -1,0 +1,11 @@
+{
+    "name": "TianZhang.Infrastructure.Persistence",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content",
+        "TianZhang.Character",
+        "TianZhang.Cultivation",
+        "TianZhang.World",
+        "TianZhang.Gameplay.Contracts"
+    ]
+}

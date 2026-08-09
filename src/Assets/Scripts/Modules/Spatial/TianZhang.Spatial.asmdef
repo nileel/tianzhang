@@ -1,0 +1,6 @@
+{
+    "name": "TianZhang.Spatial",
+    "references": [
+        "TianZhang.Foundation"
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "name": "TianZhang.Cultivation",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content",
+        "TianZhang.Character"
+    ]
+}

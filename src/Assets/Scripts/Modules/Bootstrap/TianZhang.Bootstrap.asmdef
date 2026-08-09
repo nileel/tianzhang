@@ -1,0 +1,13 @@
+{
+    "name": "TianZhang.Bootstrap",
+    "references": [
+        "TianZhang.Gameplay.Contracts",
+        "TianZhang.Features.CharacterCreation",
+        "TianZhang.Features.WorldMap",
+        "TianZhang.Features.Settlement",
+        "TianZhang.Features.Adventure",
+        "TianZhang.Features.CombatPresentation",
+        "TianZhang.Infrastructure.Persistence",
+        "TianZhang.Infrastructure.UnityContent"
+    ]
+}

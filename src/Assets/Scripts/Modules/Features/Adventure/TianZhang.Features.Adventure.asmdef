@@ -1,0 +1,11 @@
+{
+    "name": "TianZhang.Features.Adventure",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content",
+        "TianZhang.Character",
+        "TianZhang.World",
+        "TianZhang.Combat",
+        "TianZhang.Gameplay.Contracts"
+    ]
+}

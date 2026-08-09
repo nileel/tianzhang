@@ -1,0 +1,7 @@
+{
+    "name": "TianZhang.World",
+    "references": [
+        "TianZhang.Foundation",
+        "TianZhang.Content"
+    ]
+}
