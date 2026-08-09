@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01A"],
-  "stateReason": "等待 01A 完成并通过独立架构复审",
+  "blockedBy": [],
+  "stateReason": "01A 已完成并通过独立架构复审；解阻塞前仍须实时扫描并在本卡冻结阶段 2 的源码、测试与 .meta 字面量路径",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

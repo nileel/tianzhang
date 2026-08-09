@@ -13,8 +13,8 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
-| U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01A、U-ARCH-REBUILD-01B、U-ARCH-REBUILD-01C、U-ARCH-REBUILD-01D、U-ARCH-REBUILD-01E、U-ARCH-REBUILD-01F、U-ARCH-REBUILD-01G、U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
-| U-ARCH-REBUILD-01B | P1 | codex | 阻塞 | U-ARCH-REBUILD-01A | Foundation、唯一坐标与 Spatial | 开发管理/任务卡/U-ARCH-REBUILD-01B.txt |
+| U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01B、U-ARCH-REBUILD-01C、U-ARCH-REBUILD-01D、U-ARCH-REBUILD-01E、U-ARCH-REBUILD-01F、U-ARCH-REBUILD-01G、U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
+| U-ARCH-REBUILD-01B | P1 | codex | 阻塞 | — | Foundation、唯一坐标与 Spatial | 开发管理/任务卡/U-ARCH-REBUILD-01B.txt |
 | U-ARCH-REBUILD-01C | P1 | codex | 阻塞 | U-ARCH-REBUILD-01B | Content schema 与领域导入器 | 开发管理/任务卡/U-ARCH-REBUILD-01C.txt |
 | U-ARCH-REBUILD-01D | P1 | codex | 阻塞 | U-ARCH-REBUILD-01C | Character、Cultivation 与 World | 开发管理/任务卡/U-ARCH-REBUILD-01D.txt |
 | U-ARCH-REBUILD-01E | P1 | codex | 阻塞 | U-ARCH-REBUILD-01D | Combat、CTB 与战术运行时 | 开发管理/任务卡/U-ARCH-REBUILD-01E.txt |
