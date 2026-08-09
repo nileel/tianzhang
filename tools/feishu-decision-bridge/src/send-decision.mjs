@@ -14,6 +14,12 @@ import { createLarkTransport, readHealthSnapshot } from './send-runtime.mjs';
 
 const MAX_JSON_BYTES = 64 * 1024;
 const DECISION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const HEX_PATTERN = /^[0-9a-f]{64}$/;
+const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const BINDING_KEYS = [
+  'kind', 'decisionId', 'allowedOptions', 'allowCustomReply', 'issuedAt', 'expiresAt',
+  'cardNonceHash', 'providerMessageIdHash', 'providerChatIdHash',
+];
 const INVALID_RESULT = Object.freeze({ result: 'INVALID_INPUT' });
 
 function isPlainObject(value) {
@@ -22,6 +28,129 @@ function isPlainObject(value) {
   }
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
+}
+
+function exactDataObject(value, keys) {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+  const ownKeys = Reflect.ownKeys(value);
+  if (
+    ownKeys.length !== keys.length
+    || ownKeys.some((key) => typeof key !== 'string' || !keys.includes(key))
+  ) {
+    return null;
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const result = Object.create(null);
+  for (const key of keys) {
+    const descriptor = descriptors[key];
+    if (!descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) {
+      return null;
+    }
+    result[key] = descriptor.value;
+  }
+  return result;
+}
+
+function exactDataArray(value) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) {
+    return null;
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  if (
+    descriptors.length?.value !== value.length
+    || Reflect.ownKeys(value).length !== value.length + 1
+  ) {
+    return null;
+  }
+  const result = [];
+  for (let index = 0; index < value.length; index += 1) {
+    const descriptor = descriptors[String(index)];
+    if (!descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) {
+      return null;
+    }
+    result.push(descriptor.value);
+  }
+  return result;
+}
+
+function parseExactIso(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const time = Date.parse(value);
+  return Number.isFinite(time) && new Date(time).toISOString() === value ? time : null;
+}
+
+function snapshotDecisionBinding(value) {
+  const fields = exactDataObject(value, BINDING_KEYS);
+  const allowedOptions = exactDataArray(fields?.allowedOptions);
+  const issuedAtMs = parseExactIso(fields?.issuedAt);
+  const expiresAtMs = parseExactIso(fields?.expiresAt);
+  if (
+    fields === null
+    || fields.kind !== 'decision_reply'
+    || typeof fields.decisionId !== 'string'
+    || !IDENTIFIER_PATTERN.test(fields.decisionId)
+    || allowedOptions === null
+    || allowedOptions.length !== 3
+    || allowedOptions.some((option, index) => option !== ['A', 'B', 'C'][index])
+    || typeof fields.allowCustomReply !== 'boolean'
+    || issuedAtMs === null
+    || expiresAtMs === null
+    || typeof fields.cardNonceHash !== 'string'
+    || !HEX_PATTERN.test(fields.cardNonceHash)
+    || typeof fields.providerMessageIdHash !== 'string'
+    || !HEX_PATTERN.test(fields.providerMessageIdHash)
+    || typeof fields.providerChatIdHash !== 'string'
+    || !HEX_PATTERN.test(fields.providerChatIdHash)
+  ) {
+    return null;
+  }
+  return {
+    binding: {
+      kind: 'decision_reply',
+      decisionId: fields.decisionId,
+      allowedOptions: [...allowedOptions],
+      allowCustomReply: fields.allowCustomReply,
+      issuedAt: fields.issuedAt,
+      expiresAt: fields.expiresAt,
+      cardNonceHash: fields.cardNonceHash,
+      providerMessageIdHash: fields.providerMessageIdHash,
+      providerChatIdHash: fields.providerChatIdHash,
+    },
+    expiresAtMs,
+  };
+}
+
+async function readActiveBindings(path, now) {
+  let raw;
+  try {
+    raw = await readBoundedJson(path);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+  const values = exactDataArray(raw);
+  if (values === null) {
+    throw new Error('Invalid pending bindings');
+  }
+  const seen = new Set();
+  const bindings = [];
+  for (const value of values) {
+    const snapshot = snapshotDecisionBinding(value);
+    if (snapshot === null || seen.has(snapshot.binding.decisionId)) {
+      throw new Error('Invalid pending bindings');
+    }
+    seen.add(snapshot.binding.decisionId);
+    if (snapshot.expiresAtMs >= now.getTime()) {
+      bindings.push(snapshot.binding);
+    }
+  }
+  return bindings;
 }
 
 async function readBoundedJson(path) {
@@ -168,8 +297,13 @@ async function writePendingBinding({ stateRoot, decision, result, now }) {
     providerMessageIdHash: result.providerMessageIdHash,
     providerChatIdHash: result.providerChatIdHash,
   };
+  const existing = await readActiveBindings(path, now);
+  const bindings = [
+    ...existing.filter((candidate) => candidate.decisionId !== binding.decisionId),
+    binding,
+  ];
   try {
-    await writeFile(temporaryPath, `${JSON.stringify([binding])}\n`, {
+    await writeFile(temporaryPath, `${JSON.stringify(bindings)}\n`, {
       encoding: 'utf8',
       flag: 'wx',
       mode: 0o600,

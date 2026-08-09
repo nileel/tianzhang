@@ -711,8 +711,11 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
   const fixedOptions = await run(['--request-file', requestPath]);
   assert.equal(fixedOptions.code, 0);
   const fixedBinding = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
-  assert.equal(fixedBinding[0].decisionId, 'DEC-20260716-NOCUSTOM');
-  assert.equal(fixedBinding[0].allowCustomReply, false);
+  assert.deepEqual(
+    fixedBinding.map((candidate) => candidate.decisionId),
+    ['DEC-20260716-ABC123', 'DEC-20260716-NOCUSTOM'],
+  );
+  assert.equal(fixedBinding[1].allowCustomReply, false);
   assert.equal(
     JSON.parse(await readFile(requestPath, 'utf8')).pendingDecision.allowCustomReply,
     false,
@@ -730,6 +733,70 @@ test('main enforces the request-file CLI contract and emits one sanitized JSON l
     JSON.parse(await readFile(requestPath, 'utf8')).pendingDecision.createdAt,
     NOW.toISOString(),
   );
+  const replacedBinding = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
+  assert.deepEqual(
+    replacedBinding.map((candidate) => candidate.decisionId),
+    ['DEC-20260716-NOCUSTOM', 'DEC-20260716-ABC123'],
+  );
+  assert.equal(
+    replacedBinding.filter((candidate) => candidate.decisionId === 'DEC-20260716-ABC123').length,
+    1,
+  );
+
+  const expiredBinding = {
+    ...replacedBinding[0],
+    decisionId: 'DEC-20260716-EXPIRED',
+    issuedAt: new Date(NOW.getTime() - 2_000).toISOString(),
+    expiresAt: new Date(NOW.getTime() - 1_000).toISOString(),
+  };
+  await writeFile(
+    join(root, 'pending-bindings.json'),
+    JSON.stringify([...replacedBinding, expiredBinding]),
+  );
+  await writeFile(requestPath, JSON.stringify({
+    decision: makeDecision({ decisionId: 'DEC-20260716-THIRD' }),
+    attemptNumber: 1,
+  }));
+  const pruned = await run(['--request-file', requestPath]);
+  assert.equal(pruned.code, 0);
+  const prunedBindings = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
+  assert.deepEqual(
+    prunedBindings.map((candidate) => candidate.decisionId),
+    ['DEC-20260716-NOCUSTOM', 'DEC-20260716-ABC123', 'DEC-20260716-THIRD'],
+  );
+
+  for (const [name, invalidBindings] of [
+    ['non-array', { binding: prunedBindings[0] }],
+    ['duplicate decision', [prunedBindings[0], prunedBindings[0]]],
+  ]) {
+    await t.test(`pending binding store rejects ${name}`, async () => {
+      const invalidText = JSON.stringify(invalidBindings);
+      const invalidRequestText = JSON.stringify({
+        decision: makeDecision({
+          decisionId: `DEC-20260716-INVALID${name.replace(/[^A-Za-z0-9]/gu, '').toUpperCase()}`,
+        }),
+        attemptNumber: 1,
+      });
+      await writeFile(join(root, 'pending-bindings.json'), invalidText);
+      await writeFile(requestPath, invalidRequestText);
+      const invalidStore = await run(['--request-file', requestPath], {
+        send: async () => ({
+          result: 'PROVIDER_ACCEPTED',
+          acceptedAt: NOW.toISOString(),
+          targetHash: 'a'.repeat(64),
+          providerMessageIdHash: 'b'.repeat(64),
+          providerChatIdHash: 'c'.repeat(64),
+          cardNonceHash: 'd'.repeat(64),
+          intentKeyHash: 'e'.repeat(64),
+        }),
+      });
+      assert.equal(invalidStore.code, 23);
+      assert.equal(assertOneJsonLine(invalidStore.stdout).result, 'PROVIDER_OUTCOME_UNKNOWN');
+      assert.equal(await readFile(join(root, 'pending-bindings.json'), 'utf8'), invalidText);
+      assert.equal(await readFile(requestPath, 'utf8'), invalidRequestText);
+    });
+  }
+  await writeFile(join(root, 'pending-bindings.json'), JSON.stringify(prunedBindings));
 
   await writeFile(requestPath, sendRequestText);
   const transitionFailed = await run(['--request-file', requestPath], {
@@ -1339,7 +1406,7 @@ test('two concurrent calls for one intent invoke transport exactly once', async 
   assert.equal(calls, 1);
 });
 
-test('main replaces a stale completed binding after a newly accepted send', async (t) => {
+test('main preserves another live binding after a newly accepted send', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-send-stale-binding-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const requestPath = join(root, 'request.json');
@@ -1376,6 +1443,8 @@ test('main replaces a stale completed binding after a newly accepted send', asyn
   assert.equal(code, 0);
   assert.equal(assertOneJsonLine(stdout).result, 'PROVIDER_ACCEPTED');
   const bindings = JSON.parse(await readFile(join(root, 'pending-bindings.json'), 'utf8'));
-  assert.equal(bindings.length, 1);
-  assert.equal(bindings[0].decisionId, 'DEC-20260716-ABC123');
+  assert.deepEqual(
+    bindings.map((binding) => binding.decisionId),
+    ['DEC-COMPLETED-OLD', 'DEC-20260716-ABC123'],
+  );
 });
