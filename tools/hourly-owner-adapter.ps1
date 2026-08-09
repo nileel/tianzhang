@@ -48,6 +48,42 @@ function Get-HourlyOwnerAdapter {
   }
 }
 
+function Get-HourlyFormalCommitContract {
+  param(
+    [Parameter(Mandatory = $true)][object]$Adapter,
+    [Parameter(Mandatory = $true)][object]$Run
+  )
+
+  $owner = [string]$Adapter.owner
+  $route = [string]$Run.route
+  $taskId = [string]$Run.taskId
+  if ([string]::IsNullOrWhiteSpace($taskId) -or $taskId -match '[\x00-\x1F\x7F]') {
+    throw 'Formal commit taskId is invalid'
+  }
+
+  if ($owner -ceq 'codex') {
+    $subject = switch ($route) {
+      'queue_maintenance' {
+        if ($taskId -cne 'QUEUE-MAINTENANCE') { throw 'QueueMaintenance taskId is invalid' }
+        'chore(QUEUE-MAINTENANCE): maintain task queue'
+      }
+      'codex_execute' { "feat($taskId): complete Codex task" }
+      'codex_review' { "review($taskId): complete Codex review" }
+      default { throw 'Codex formal route is invalid' }
+    }
+    return [pscustomobject][ordered]@{ subject = $subject; state = 'completed' }
+  }
+
+  if ($owner -ceq 'deepseek' -and $route -ceq 'external_execute') {
+    return [pscustomobject][ordered]@{
+      subject = "feat($taskId): complete DeepSeek task"
+      state = 'pending_review'
+    }
+  }
+
+  throw 'Formal owner route is invalid'
+}
+
 function Get-HourlyCandidateArguments {
   param(
     [Parameter(Mandatory = $true)][object]$Adapter,

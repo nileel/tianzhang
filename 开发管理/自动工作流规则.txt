@@ -5,7 +5,7 @@
 ## 实时入口与事实源
 
 - `codex-hourly-worker` 每小时 `:15` 前台调用 `tools/invoke-hourly-owner.ps1 -Owner codex -Action RunOnce -Model <实际 model>`；`deepseek-hourly-trigger` 每小时 `:45` 前台调用同一脚本并传入 `-Owner deepseek -Action RunOnce`。两个定时器继续独立运行，可分别开发不同 taskId。
-- automation 对话只等待同一前台调用并原样展示单个结构化终态，不读队列、任务卡或模型正文，不管理自身或另一 automation。
+- automation 对话只等待同一前台调用；项目业务输出仍是单个结构化终态 JSON，Desktop 展示层在其后追加恰好一个简短 `::inbox-item`。触发层不读队列、任务卡或模型正文，不管理自身或另一 automation；automation memory 只记录本轮时间与脚本终态摘要，不参与项目事实、选题、runtime 或恢复判断。
 - 实时 prompt、schedule、folder、model、notification policy 和 enabled 状态以 automation 配置为准，只通过 Codex automation 管理能力变更，不编辑 TOML。
 - 任务唯一活跃事实是 `开发管理/当前任务队列.txt` 的有序行及同 ID `开发管理/任务卡/<ID>.txt`；交接、摘要和 runtime 只提供证据或诊断信息。
 
@@ -30,7 +30,7 @@
 - candidate 完整核验后，共享入口取得 `tools/hourly-integration-lock.ps1` 的进程持有型排他锁，再读取当时最新 `master`、任务卡、队列、依赖和主工作区相关路径；正式结果只在 owner worktree 中基于该 HEAD 重放并在持锁阶段完成组合验证。
 - 自动集成与手动正式集成都必须通过同一个排他锁；手动 fast-forward 使用 `tools/invoke-project-integration.ps1`。锁只串行正式重放、验证和集成，不阻止另一 owner 在独立 worktree 开发。
 - Codex 正式结果形成一个路径限定提交。DeepSeek 正式结果形成一个原子提交，同时包含业务变化、原任务 `codex_review/codex/ready` 的 `pending_review` 投影和 `开发管理/AI合作沟通.txt` 的交接证据；DeepSeek 不自审、不解锁依赖，后续由 Codex 独立复审。
-- 正式提交继续使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`。DeepSeek 使用 `AutomationState=pending_review`；Codex 按任务实际后置状态写入合同。`Result`、`Impact`、`Verify`、`Plain` 必须由实际证据与验证支持。
+- 正式提交继续使用 `tools/automation-finalize-commit.ps1 -RequireAutomationMetadata`。DeepSeek 使用 `AutomationState=pending_review`；Codex 使用 `AutomationState=completed`，表示本轮 Codex 责任方结果已闭环。任务卡实际后置状态由 candidate 的 `expectedTransition` 与 postcondition 表示，不得把 `ready`、`blocked`、`archived` 等任务状态写入 Automation `State`。`Result`、`Impact`、`Verify`、`Plain` 必须由实际证据与验证支持。
 - 主工作区必须仍位于取得锁时的 `master`，且正式路径不得与 staged、unstaged 或 untracked 人工改动冲突。冲突、事实变化、验证失败或拒绝 fast-forward 均停止并保留现场，不自动解冲突或重试。
 
 ## 决策 checkpoint、失败与清理
@@ -45,7 +45,7 @@
 ## 通知与 QueueMaintenance
 
 - 普通 TaskOutcome 使用飞书 REST API 直接出站，不依赖长连接桥健康；投递失败只返回脱敏状态，不回滚业务、不恢复 run、不创建重试队列。长连接桥仅负责入站回复。
-- QueueMaintenance 只属于 Codex，按 `开发管理/状态与建议维护规则.txt` 维护队列，不执行本轮新业务。产生事实变化时返回 `maintenance_completed`，不伪装成业务 `completed`、不发送普通 TaskOutcome；无变化时返回 `no_candidate`。
+- QueueMaintenance 只属于 Codex，按 `开发管理/状态与建议维护规则.txt` 维护队列，不执行本轮新业务。它只对“本轮移除最后一个具名前置”的直接下游卡继续收口，不重新分类其他原本 `blockedBy=[]` 的活跃卡。产生事实变化时返回 `maintenance_completed`，不伪装成业务 `completed`、不发送普通 TaskOutcome；无变化时返回 `no_candidate`，不得机械重写准确说明来制造维护提交。
 
 ## Canary、暂停与停止
 

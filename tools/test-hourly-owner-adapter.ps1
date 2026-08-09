@@ -19,6 +19,19 @@ Assert-Equal $deepseek.model 'deepseek-v4-flash' 'DeepSeek model is invalid'
 Assert-Equal ($deepseek.allowedRoutes -join ',') 'external_execute' 'DeepSeek route is invalid'
 Assert-True ($deepseek.formalMode -eq 'external_pending_review') 'DeepSeek formal mode is invalid'
 
+$queueFormal = Get-HourlyFormalCommitContract -Adapter $codex -Run ([pscustomobject]@{ route='queue_maintenance'; taskId='QUEUE-MAINTENANCE' })
+$executeFormal = Get-HourlyFormalCommitContract -Adapter $codex -Run ([pscustomobject]@{ route='codex_execute'; taskId='T-EXEC' })
+$reviewFormal = Get-HourlyFormalCommitContract -Adapter $codex -Run ([pscustomobject]@{ route='codex_review'; taskId='T-REVIEW' })
+$deepseekFormal = Get-HourlyFormalCommitContract -Adapter $deepseek -Run ([pscustomobject]@{ route='external_execute'; taskId='T-EXT' })
+Assert-Equal $queueFormal.subject 'chore(QUEUE-MAINTENANCE): maintain task queue' 'QueueMaintenance formal subject is invalid'
+Assert-Equal $executeFormal.subject 'feat(T-EXEC): complete Codex task' 'Codex execute formal subject is invalid'
+Assert-Equal $reviewFormal.subject 'review(T-REVIEW): complete Codex review' 'Codex review formal subject is invalid'
+Assert-Equal $queueFormal.state 'completed' 'QueueMaintenance formal state is invalid'
+Assert-Equal $executeFormal.state 'completed' 'Codex execute formal state is invalid'
+Assert-Equal $reviewFormal.state 'completed' 'Codex review formal state is invalid'
+Assert-Equal $deepseekFormal.subject 'feat(T-EXT): complete DeepSeek task' 'DeepSeek formal subject changed'
+Assert-Equal $deepseekFormal.state 'pending_review' 'DeepSeek formal state changed'
+
 $fakeRun = [pscustomobject]@{ route='codex_review'; worktree='C:\fixture'; taskId='T-1'; runId='R-1' }
 $codexArgs = Get-HourlyCandidateArguments -Adapter $codex -Run $fakeRun -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath 'C:\state\resume.json'
 Assert-True ($codexArgs -contains 'Review' -and $codexArgs -contains 'gpt-test' -and $codexArgs -contains 'C:\state\resume.json') 'Codex candidate arguments are incomplete'

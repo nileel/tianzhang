@@ -243,6 +243,39 @@ Plain: 发生=自动化提交能够保存通俗说明；影响=负责人收到�
 '@.Replace("`r`n", "`n").TrimEnd()
   if ($automationBody -cne $expectedAutomationBody) { throw "automation metadata changed in Git: $automationBody" }
 
+  $replayBase = (Invoke-Git rev-parse HEAD) -join ''
+  Write-Utf8 (Join-Path $repo $expected) "candidate tree replay change`n"
+  Invoke-Git add -- $expected | Out-Null
+  Invoke-Git commit --only -m 'candidate(TEST): Codex implementation' -- $expected | Out-Null
+  $candidateSha = (Invoke-Git rev-parse HEAD) -join ''
+  $candidateTree = (Invoke-Git rev-parse "$candidateSha^{tree}") -join ''
+  Invoke-Git switch --detach $replayBase | Out-Null
+  Invoke-Git cherry-pick --no-commit $candidateSha | Out-Null
+  $formalReplay = Invoke-Helper `
+    -ExpectedPaths $expected `
+    -CommitMessage 'feat(TEST): complete Codex task' `
+    -RequireAutomationMetadata `
+    @automationFields
+  if ($formalReplay.Code -ne 0) { throw "candidate tree replay finalization failed: $($formalReplay.Output)" }
+  $formalSha = (Invoke-Git rev-parse HEAD) -join ''
+  $formalTree = (Invoke-Git rev-parse 'HEAD^{tree}') -join ''
+  $formalSubject = (Invoke-Git log -1 --format=%s) -join ''
+  $formalBody = ((Invoke-Git log -1 --format=%B) -join "`n").Replace("`r`n", "`n")
+  if ($formalSha -ceq $candidateSha) { throw 'formal replay reused the candidate commit identity' }
+  if ($formalTree -cne $candidateTree) { throw 'formal replay changed the candidate tree' }
+  if ($formalSubject -cne 'feat(TEST): complete Codex task' -or $formalSubject.StartsWith('candidate(', [StringComparison]::Ordinal)) {
+    throw "formal replay kept an invalid subject: $formalSubject"
+  }
+  foreach ($line in @(
+      'State: completed',
+      "Result: $($automationFields.AutomationResult)",
+      "Impact: $($automationFields.AutomationImpact)",
+      "Verify: $($automationFields.AutomationVerify)",
+      "Plain: $($automationFields.AutomationPlain)"
+    )) {
+    if (-not $formalBody.Contains($line, [StringComparison]::Ordinal)) { throw "formal replay metadata is missing: $line" }
+  }
+
   $headBeforeMissing = (Invoke-Git rev-parse HEAD) -join ''
   $missing = Invoke-Helper 'missing.txt' 'test: must not commit'
   if ($missing.Code -eq 0) { throw 'missing expected path was accepted' }

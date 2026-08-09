@@ -165,7 +165,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal ([string]$candidate.status) 'completed' "Codex candidate failed: $($candidate | ConvertTo-Json -Compress -Depth 20); repository=$($candidateRepositoryEvidence | ConvertTo-Json -Compress)"
   Assert-True ([string]$candidate.sessionId -ne '') 'Codex candidate sessionId is missing'
   Assert-Equal ([string]$candidate.candidateResult.expectedTransition) 'blocked' 'Codex candidate transition mismatch'
-  Assert-True (@($candidate.candidateResult.changedPaths) -ccontains "开发管理/任务卡/$taskId.txt") 'Codex candidate lost task-card path'
+  Assert-True (@($candidate.candidateResult.changedPaths) -ccontains "开发管理/任务卡/$taskId.txt") "Codex candidate lost task-card path: $(@($candidate.candidateResult.changedPaths) -join '|')"
   $trace = [IO.File]::ReadAllText($tracePath)
   Assert-True ($trace -match '\[TZG_CODEX_CANDIDATE\]') 'Codex candidate prompt marker is missing'
   Assert-True ($trace -match 'claim') 'Codex candidate prompt omitted fixed claim boundary'
@@ -219,7 +219,11 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($qmTrace -match '不能证明前置仍未完成') 'QueueMaintenance prompt must not trust stale backlog text directly'
   Assert-True ($qmTrace -match '在活跃任务卡和完成归档中都不存在时保持阻塞') 'QueueMaintenance prompt must require both blocker facts to be absent'
   Assert-True ($qmTrace -match '同一 ID 同时存在活跃任务卡与完成归档时保持阻塞') 'QueueMaintenance prompt must keep conflicting blocker facts blocked'
-  Assert-True ($qmTrace -match '完成全部阻塞项核对后仍没有合法候选，才允许返回 no_candidate') 'QueueMaintenance prompt must only return no_candidate after checking all blockers'
+  Assert-True ($qmTrace.Contains('本轮移除使该卡的 blockedBy 从非空变为空')) 'QueueMaintenance prompt must close the directly affected card when the final named blocker is removed'
+  Assert-True ($qmTrace.Contains('不得顺带扫描其他原本就是 blockedBy=[] 的活跃卡')) 'QueueMaintenance prompt must not classify unrelated blocker-free cards'
+  Assert-True ($qmTrace.Contains('负责人决定、内容冻结、外部工作面、项目闸门、事实冲突或停止条件')) 'QueueMaintenance prompt must preserve non-repository blockers'
+  Assert-True ($qmTrace.Contains('不得因准确的 stateReason 未变化而机械重写或制造维护提交')) 'QueueMaintenance prompt must not manufacture unchanged maintenance commits'
+  Assert-True ($qmTrace -match '完成全部阻塞项核对及上述直接受影响卡的收口后仍没有合法候选，才允许返回 no_candidate') 'QueueMaintenance prompt must only return no_candidate after checking all blockers'
   Assert-True ($qmTrace -match '本轮不执行新增业务任务') 'QueueMaintenance prompt must not execute new business tasks'
   Assert-True ($qmTrace -match 'automation-finalize-commit\.ps1') 'QueueMaintenance prompt omitted the formal finalizer'
   Assert-True ($qmTrace -match '-RequireAutomationMetadata') 'QueueMaintenance prompt omitted required automation metadata'

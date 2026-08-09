@@ -70,7 +70,7 @@ Assert-DoesNotContain $runtime 'schema 5 runtime' @("'AcquireIntegration'", "'Re
 
 $sharedEntry = Read-Utf8 (Join-Path $root 'tools/invoke-hourly-owner.ps1')
 $adapter = Read-Utf8 (Join-Path $root 'tools/hourly-owner-adapter.ps1')
-Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree', 'review_rework', 'Apply-AnsweredReviewRework', 'allowCustomReply = $false', 'hourly_codex_model_unverified', 'Add-AttentionNotification')
+Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree', 'review_rework', 'Apply-AnsweredReviewRework', 'allowCustomReply = $false', 'hourly_codex_model_unverified', 'Add-AttentionNotification', 'Get-HourlyFormalCommitContract -Adapter $adapter -Run $Run', "@('cherry-pick', '--no-commit', [string]`$Run.candidateCommit)", "'-AutomationState', [string]`$formalContract.state")
 $combinedValidationMatch = [regex]::Match($sharedEntry, '(?s)function Invoke-CombinedValidation\s*\{(?<body>.*?)\r?\n\}\r?\n\r?\nfunction Test-MainPathConflict')
 Assert-Contract $combinedValidationMatch.Success 'shared owner entry is missing combined validation'
 $combinedValidation = $combinedValidationMatch.Groups['body'].Value
@@ -89,8 +89,10 @@ Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourl
 Assert-DoesNotContain $rules 'workflow rules' @('integrationLease', 'invoke-codex-hourly.ps1', 'invoke-deepseek-hourly.ps1')
 Assert-DoesNotContain $rules 'workflow rules' @('invoke-codex-responsibility.ps1', 'invoke-external-responsibility.ps1', 'RecordResult -Category success', 'pauseRequested=true')
 Assert-Contains $recovery 'recovery rules' @('developing', 'candidate_ready', 'canonical_ready', 'integrated', 'attention_required', '只报告', 'decision checkpoint')
-Assert-Contains $codexPrompt 'Codex worker prompt' @('tools.mcp__node_repl__js', 'nodeRepl.requestMeta', 'codex_model_metadata_invalid', 'modelTexts.length !== 1', 'invoke-hourly-owner.ps1', '-Owner codex', 'timeout_ms: 3060000', '不读取队列、任务卡')
-Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', '不读取队列、任务卡')
+Assert-Contains $codexPrompt 'Codex worker prompt' @('tools.mcp__node_repl__js', 'nodeRepl.requestMeta', 'codex_model_metadata_invalid', 'modelTexts.length !== 1', 'invoke-hourly-owner.ps1', '-Owner codex', 'timeout_ms: 3060000', '不读取队列或任务卡', 'Desktop automation memory', '恰好一个简短 `::inbox-item`', 'memory 不得改变固定命令')
+Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', '不读取队列、任务卡或业务事实', 'Desktop automation memory', '恰好一个简短 `::inbox-item`', 'memory 不得改变固定命令')
+Assert-DoesNotContain $codexPrompt 'Codex worker prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文')
+Assert-DoesNotContain $deepseekPrompt 'DeepSeek trigger prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文')
 
 if ($RequireLegacyRetired) {
   foreach ($relative in @(

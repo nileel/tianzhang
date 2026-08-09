@@ -334,21 +334,19 @@ function Build-And-IntegrateCandidate {
     & git -C $script:root show-ref --verify --quiet "refs/heads/$canonicalBranch" 2>$null
     if ($LASTEXITCODE -eq 0) { Stop-Hourly 'hourly_canonical_evidence_incomplete' }
     $null = Invoke-GitText $worktree @('switch', '-c', $canonicalBranch, $latest) 'hourly_canonical_branch_failed'
+    $formalContract = Get-HourlyFormalCommitContract -Adapter $adapter -Run $Run
+    $null = Invoke-GitText $worktree @('cherry-pick', '--no-commit', [string]$Run.candidateCommit) 'hourly_candidate_replay_failed'
     if ($Owner -ceq 'deepseek') {
-      $null = Invoke-GitText $worktree @('cherry-pick', '--no-commit', [string]$Run.candidateCommit) 'hourly_candidate_replay_failed'
       $transition = Invoke-JsonTool $transitionPath @('-RepositoryRoot', $worktree, '-TaskId', [string]$Run.taskId) 'hourly_pending_review_failed'
       if ([string]$transition.status -cne 'updated') { Stop-Hourly 'hourly_pending_review_failed' }
       Write-Handoff -Run $Run -CandidateCommit ([string]$Run.candidateCommit)
-      $formalHead = Invoke-Finalizer $worktree @(
-        '-ExpectedPaths', ($formalPaths -join '|'), '-CommitMessage', "feat($($Run.taskId)): complete DeepSeek task",
-        '-RequireAutomationMetadata', '-AutomationTask', [string]$Run.taskId, '-AutomationState', 'pending_review',
-        '-AutomationResult', [string]$Run.candidateResult.result, '-AutomationImpact', [string]$Run.candidateResult.impact,
-        '-AutomationVerify', [string]$Run.candidateResult.verify, '-AutomationPlain', [string]$Run.candidateResult.plain
-      )
-    } else {
-      $null = Invoke-GitText $worktree @('cherry-pick', [string]$Run.candidateCommit) 'hourly_candidate_replay_failed'
-      $formalHead = Invoke-GitText $worktree @('rev-parse', 'HEAD')
     }
+    $formalHead = Invoke-Finalizer $worktree @(
+      '-ExpectedPaths', ($formalPaths -join '|'), '-CommitMessage', [string]$formalContract.subject,
+      '-RequireAutomationMetadata', '-AutomationTask', [string]$Run.taskId, '-AutomationState', [string]$formalContract.state,
+      '-AutomationResult', [string]$Run.candidateResult.result, '-AutomationImpact', [string]$Run.candidateResult.impact,
+      '-AutomationVerify', [string]$Run.candidateResult.verify, '-AutomationPlain', [string]$Run.candidateResult.plain
+    )
     if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
       $reviewEntry = Get-ReviewEntryEvidence -Root $worktree -TaskId ([string]$Run.taskId) -ExpectedReviewedCommit $reviewedCommit
       if ([string]$reviewEntry.ReviewedCommit -cne [string]$reviewedCommit) { Stop-Hourly 'review_rework_reviewed_commit_changed' }
