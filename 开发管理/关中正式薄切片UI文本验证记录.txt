@@ -144,7 +144,7 @@
 - `UiText` 表在未加载时按键回退（不伪造文本）；正式场景均序列化同一 Language.csv 引用，重建后一致。
 - 战斗日志按原样呈现，未映射的机器原因仍显示于日志文本（开发可见），不伪造成功；自定义名称与技术日志含 Language 键时不再被改写。
 - 本卡未改变任何业务状态语义、交互顺序、Canvas/布局、字体、颜色或美术资源；未新增第二本地化服务或平行文本目录。
-- 交接：业务完成后由共享入口转为 `codex_review/codex/ready`，待 Codex 独立复审。
+- 复审：2026-08-09 Codex 已独立复审正式提交 `46c8f98be30a4dc66fc5946a908b056f77990c7a` 并通过；任务已归档。
 
 ## 七、复审返工记录（2026-08-09）
 
@@ -158,3 +158,8 @@
   5. PlayMode 断言从"日志不含档案键"改为"战斗开始公告原样呈现"，与返工后日志原样保留的边界一致。
 - 验证：`dotnet build src/TianZhang.EditModeTests.csproj`、EditMode 8/8（本卡用例）、PlayMode 5/5、数据链/文本/空白检查通过（见第三节实际命令）。
 - 未改变：任务卡、当前队列、backlog、AI合作沟通、runtime；不新增 Language 键、不修改任何业务状态语义。
+
+## 八、Codex 独立复审结论（2026-08-09）
+
+- 结论：通过。`BattleUIManager.AddLog` 已移除对任意整条日志的 `ResolveEmbedded` 调用；术法/神通按钮标签仍由 `ExplorationController.RefreshCombatButtons` 的源端 `UiText.Resolve` 映射。自定义名称与技术日志含 Language 键的两条返工用例均通过。
+- 复验：`dotnet build src/TianZhang.EditModeTests.csproj` 0 错误；EditMode 434 执行 / 432 通过（本卡 8/8 通过，2 项既有无关失败）；PlayMode 5/5 通过；`tools/check-data-chain.ps1` 通过。管理文本与任务卡检查见本轮候选提交。

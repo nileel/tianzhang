@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-09：Codex 独立复审正式提交 46c8f98be30a4dc66fc5946a908b056f77990c7a 通过；战斗日志不再全局替换 Language 键，任务归档。",
   "expectedPaths": [
     "src/Assets/DataConfig/Language.csv",
     "src/Assets/DataConfig/CharterSites.csv.meta",
@@ -104,3 +104,10 @@
 
 - 任一玩家可见字段需要创作未批准设定、解冻新内容、改变业务状态/场景/交互所有者或新增第二本地化服务时停止并交回 Codex。
 - 只有删除稳定原因、隐藏错误、全局字符串替换、重做 Canvas/布局或跨出 expectedPaths 才能完成时停止，不叠加表现兜底或范围外重构。
+
+## Codex 独立复审通过与完成（2026-08-09）
+
+- 已复审正式提交 `46c8f98be30a4dc66fc5946a908b056f77990c7a` 相对 `867da4dc29a6ea02676240db715637b4977afaa0` 的返工限定 diff、直接调用链和批准规格。`BattleUIManager.AddLog` 现只追加原始消息，不再调用 `UiText.ResolveEmbedded`；`ExplorationController.RefreshCombatButtons` 仍在唯一已证明的术法/神通按钮标签源端调用 `UiText.Resolve`。
+- 直接用例证明含 `attack_profile_basic_unarmed` 的玩家自定义名与技术日志原样保留；`AdventureSourceText` 仍是唯一 `ResolveEmbedded` 表现调用点，内容为遭遇机器原因。稳定原因继续留在日志、结果对象与开发日志，未改变业务状态、场景、Canvas 或语言表所有者。
+- 独立验证：`dotnet build src/TianZhang.EditModeTests.csproj` 为 0 错误（2 个既有 CS0649 警告）；EditMode 434 执行、432 通过，本卡 `GuanzhongFormalUiTextTests` 8/8 通过，另 2 项失败为既登记且不在本卡路径的基线；PlayMode 5/5 通过，含完整薄切片 runner；数据链检查通过。
+- 复审结论：通过。已清理本卡未通过记录，任务归档并移除队列与 backlog 投影。
