@@ -18,7 +18,7 @@
     "src/Assets/Scripts/Settlement/BountyBoardView.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
-    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-FORMAL-E2E-01.txt",
@@ -39,7 +39,7 @@
 ## 必查范围
 
 - `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#6.2 城市场景`、`#6.3 怪物与战斗`、`#6.4 悬赏运行时`、`#6.5 背包原子提交`、`#七、悬赏状态与存档`、`#9.2 运行阶段`、`#十、验证矩阵`、`#十三、停止条件`。
-- `开发管理/关中悬赏状态机与计数验证记录.txt#U-BOUNTY-01B`、`#U-BOUNTY-01C` 与 `#后续`；`开发管理/任务归档/U-BOUNTY-01B.txt`、`开发管理/任务归档/U-BOUNTY-01C.txt`。
+- `开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt#U-BOUNTY-01B`、`#U-BOUNTY-01C` 与 `#后续`；`开发管理/任务归档/U-BOUNTY-01B.txt`、`开发管理/任务归档/U-BOUNTY-01C.txt`。
 - `src/Assets/Scripts/Game/GameSession.cs::AcceptBounty|RecordBountyDefeat|ClaimBounty|CaptureSaveData|RestoreSaveData`、`src/Assets/Scripts/Game/SceneFlowManager.cs::PrepareSettlementEntry|PrepareAdventureEntry|PrepareReturnToPreviousScene`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::ResolveEncounterAndReturn|ConsumeFormalEncounterResult`、`src/Assets/Scripts/Settlement/BountyBoardView.cs::Show|SubmitAccept|SubmitClaim`。
 - `src/Assets/Tests/EditMode/BountyBoardViewTests.cs`、`src/Assets/Tests/EditMode/TacticalGridModelTests.cs::AdventureSceneControllerTests`、`src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs` 与现有生产目录及场景引用。
 

@@ -18,7 +18,7 @@
     "simulations/BattleSim/SeatCompetitionSampleStats.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/Program.cs",
-    "开发管理/金丹确定性争位与原子占据验证记录.txt",
+    "开发管理/任务归档/验证记录/金丹确定性争位与原子占据验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-SEAT-01B.txt",

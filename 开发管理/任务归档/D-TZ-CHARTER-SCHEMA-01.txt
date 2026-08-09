@@ -25,7 +25,7 @@
     "src/Assets/Tests/EditMode/CharterRuleDataTests.cs.meta",
     "tools/check-data-chain.ps1",
     "tools/tests/check-data-chain-tests.ps1",
-    "开发管理/册界体系数据契约验证记录.txt",
+    "开发管理/任务归档/验证记录/册界体系数据契约验证记录.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-TZ-CHARTER-SCHEMA-01.txt",

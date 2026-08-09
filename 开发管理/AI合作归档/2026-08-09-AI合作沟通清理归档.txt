@@ -1,0 +1,502 @@
+# AI合作沟通清理归档（截至 2026-08-09）
+
+> 用途：本文件只记录当前有效交接线索、疑点、待判断项和协作备忘。
+> 历史过程记录已归档至 `开发管理/任务归档/2026-07-12-管理入口瘦身前状态归档.txt`；当前状态以本文件为准。
+
+## 当前交接队列
+
+> 注：本文件交接记录仅反映当前状态；复核完成后移入归档
+
+当前有效交接条目：见下方 D-COMBAT-02。
+
+## D-COMBAT-02 · 交接：跨端攻击档案 fixture 与差异检查（复审未通过，待 DeepSeek 返工）
+
+- 短 ID：`D-COMBAT-02`
+- 方向：首次 DeepSeek V4 Flash 交付已完成实施与双端验证，但 Codex 独立复审发现新增 Unity 目录遗漏 `Fixtures.meta`，结论为不通过；同一卡已按负责人指令退回 `external_execute/deepseek/ready` 做最窄返工。
+- businessCommit：`f8df02db040eb1968086034a9fa74e72a0d8605e`
+- 首次任务/提交范围：`src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv`（+ `.meta`）、`src/Assets/Scripts/Editor/DataConfigImporter.cs`、`src/Assets/Tests/EditMode/AttackProfileDataTests.cs`、`simulations/BattleSim/BattleSimSelfTests.cs`、`开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt`、`开发管理/任务列表/数据链路任务.txt`、`开发管理/当前任务队列.txt`、`开发管理/任务卡/D-COMBAT-02.txt`；首次交付时任务转换为 `codex_review/codex/ready`，本次复审未通过后已按最窄返工范围重新转换为 `external_execute/deepseek/ready`。
+- 修改文件：非生产 fixture（34 列契约原表头，basic×2／art×3／divine×1，单目标＋圆形／扇形／直线）；`DataConfigImporter.cs` 新增 `TryBuildAttackProfileProjection`／`TryValidateAttackProfileAssetIdProjection` 两个最窄投影入口；`AttackProfileDataTests.cs` 新增 4 项用例（逐字段投影、逐列变异失败、无部分 asset、asset ID 冲突）；`BattleSimSelfTests.cs` 新增 `attack-profile-d-combat-02` self-test（正例逐字段投影＋18 项负例）。
+- 恢复半成品根因（详见验证记录）：art 行尾随空字段 35/35/36 vs 34；扇形行尾列错位；Unity 测试 `lines[1]` 表头 vs 3 注释行；变异用例朝向索引 25→26 与扇角值 `"east"`→`"2"`；BattleSim 校验器效果/资源/距离检查只对 area 行生效；负例 `ally,enemy` 实际合法；负例表缺表头行与重复 ID 表达；`AssertEqual(null,…)` 泛型推断；`using System;` 与 `UnityEngine.Object` 限定。
+- 已验证：`dotnet build -c Release simulations/BattleSim`（0 警告 0 错误）；`dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02`（PASS）；`tools/run-unity-editmode-tests.ps1`（286/288，攻击档案 5 项直接用例与既有回归全过）；`check-data-chain.ps1`（OK）；`check-review-text.ps1`（OK，652 文件）；`check-task-cards.ps1 -Postcondition ExternalPendingReview`（OK）；`check-pending-whitespace.ps1`（9 路径 OK）；`git diff --cached --check`（OK）。
+- Codex 复审结论：不通过；复跑 Unity 验证后出现未跟踪的 `src/Assets/Tests/EditMode/Fixtures.meta`，首次业务提交没有保存新目录的 Unity 身份。返工只补交该文件，现有 CSV、代码与生产边界不变；详见 `开发管理/未通过审核清单.txt`。
+- 未验证：`dotnet build src/TianZhang.EditModeTests.csproj` 不适用（仓库无该 csproj，全仓仅 `simulations/BattleSim/BattleSim.csproj`；Unity EditMode 由 `run-unity-editmode-tests.ps1` 承载）；BattleSim 默认全量 run 未运行（任务卡只要求本套件；本卡改动为增量套件与纯新增方法，不影响既有套件）。
+- 残留风险：Unity EditMode 另有 2 项与本卡路径无交集的既有基线失败——`DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（多份验证记录已登记：旧日志断言与现行加载器不一致）与 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（纯内存逻辑断言 `PULSE_ADVANTAGE` 得到 `PULSE_NEUTRAL`，2026-07-31 `D-TZ-CHARTER-CONFLICT-02` 迁移后无全量 EditMode 复测记录）；本会话 Unity 测试输出 `EditModeTestResults.xml` 已于集成前删除，未进入提交。
+- 请求判断：DeepSeek 补交目录 `.meta` 后重新独立复审首次交付；当前复审因 worktree 不清洁提前失败，未对其余交付范围形成通过结论。
+- 建议下一步：DeepSeek 只补交 `Fixtures.meta` 并复跑既定验证，重新交由 Codex 复审；具体生产内容切换（生产 `AttackProfiles.csv`、生产 asset、运行时消费者）必须另开迁移切片，不得在本卡扩展。
+
+### DSH-D-COMBAT-02-91eb751a5374 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 D-COMBAT-02 的实现结果等待 Codex 独立复审。
+- 任务：D-COMBAT-02
+- 业务提交：91eb751a5374c9c22d7bd6b1eb070531361f0920
+- 修改文件：src/Assets/Tests/EditMode/Fixtures.meta
+- 已验证：BattleSim Release 构建通过（0 警告 0 错误；worktree 首次需隐式还原，与首次交付记录一致）；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02 → PASS；Unity EditMode（tools/run-unity-editmode-tests.ps1）：288 执行 / 286 通过 / 2 失败，均与首次交付登记的既有基线逐项一致（LianShenReservedAbilitiesRemainExcludedAtPlayerLoad：Expected log did not appear；AuthorizedGrantBindsEveryConflictIdentityField：PULSE_NEUTRAL vs PULSE_ADVANTAGE）；AttackProfileDataTests 直接用例 9/9 通过；Unity 运行后无新未跟踪文件：Fixtures.meta 以自著 GUID 1f7e9d2c4b6a4f8e9d3c5a7b8e2f4a6d 被接受，未再生（复审失败模式已消除）；tools/check-data-chain.ps1 → OK；tools/check-review-text.ps1（开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests）→ 无违规；tools/check-pending-whitespace.ps1 → OK；git diff --cached --check（finalize 脚本内置）→ 通过；candidate 提交 1638b5138bd29a5bfed94094d4900df8b3fc4ab9：baseCommit cb48a56 直接后继、单路径、worktree 清洁
+- 未验证：dotnet build src/TianZhang.EditModeTests.csproj — 不适用：仓库无该 csproj（全仓仅 simulations/BattleSim/BattleSim.csproj）；Unity EditMode 由 run-unity-editmode-tests.ps1 承载，与首次交付记录结论一致；Codex 独立复审 — 未执行（按外部交付边界转 codex_review/codex/ready 后由 Codex 复核，DeepSeek 不得自审）；首次交付的 CSV/代码/验证记录内容 — 本轮未复验（输入未变化），证据以 开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt 为准
+- 残留风险：run-unity-editmode-tests.ps1 对任何失败以非 0 退出：既有 2 项基线失败（与本卡路径无交集、多份记录已登记）使严格门禁退出码为 1，Codex 复跑预期同样结果；candidate 只证明目录 .meta 修复与投影基线不变。Fixtures.meta GUID 为自著值（全仓唯一），后续引用该目录须沿用。任务生命周期转换由固定入口机械完成，candidate 未包含。
+- 请求判断：请 Codex 按审核入口复审实际集成结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一任务卡定向返工。
+
+### DSH-U-BOUNTY-01B-acfdbf41 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01B 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01B
+- 候选提交：131db55e87facbe82ceee052ece1ca6e5a5e0e2d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Scripts/Game/SessionStateSnapshots.cs、src/Assets/Tests/EditMode/BountyRuntimeTests.cs、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：Unity 6000.3.18f1 EditMode 完整执行 310 项：308 通过、2 失败，失败均为已登记且与本卡路径无关的既有基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；脚本因此以退出码 2 结束，属其零失败门禁预期行为；本卡直接用例全部通过：SessionStateSnapshotTests 10/10、BountyRuntimeTests 17/17（含 4 个新增用例：schema 3 往返与 0/1/2 迁移、未知/重复 ID/非法状态/非法进度原子拒绝、Claimed 终态稳定性、恢复后恰好领奖一次）；既有 AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4 等未回归；check-review-text（开发管理,src/Assets/Scripts,src/Assets/Tests）通过，252 个文件；check-pending-whitespace 通过，5 个 candidate 路径；git diff --cached --check 由 tools/automation-finalize-commit.ps1 在提交前执行通过；candidate 131db55e 为 baseCommit 13adbf5 的唯一直接后继，worktree 干净，changed paths 恰为 5 个 CandidatePaths 且为 expectedPaths 子集
+- 未验证：任务卡列出的 dotnet build src/TianZhang.EditModeTests.csproj 不可运行：该 csproj 不在仓库（git ls-files 无此文件、磁盘亦无，与 U-BOUNTY-01A 记录一致）；Unity EditMode 运行已编译全部项目 asmdef 程序集，作为本卡 C# 构建与测试闸门
+- 残留风险：恢复时的内容引用与超目标进度校验依赖调用方传入的 ContentCatalogData；当前仓库尚无生产读档调用点（RestoreSaveData 仅测试调用），正式存档系统接入时须按新契约传入与保存时一致的目录；完整 EditMode 仍有 2 项与本卡无关的既有失败。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-GZ-UI-TEXT-01-914ea350 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-UI-TEXT-01 的原子正式结果等待 Codex 独立复审；本条由普通管理上下文按人工恢复规则补齐，不恢复旧模型会话。
+- 任务：U-GZ-UI-TEXT-01
+- 候选提交：c4f0e12076b0774e3afb208ef00e7526f95e492e
+- 正式提交：与本交接、`pending_review` 投影及 `src/Assets/DataConfig/CharterSites.csv.meta` 补交处于同一原子提交。
+- 修改文件：候选提交的 22 个业务／验证文件，以及 `src/Assets/DataConfig/CharterSites.csv.meta`、任务卡、来源 backlog、当前队列和本交接文件；`.meta` 使用主工作区在本 run 之前已存在的 GUID `2b929e1b00d1a664691a42e8e1e41f19`，未采用 run 后生成的另一 GUID，两个 GUID 均无外部引用。
+- 已验证：人工恢复已从最新 master 无提交重放候选；`dotnet build src/TianZhang.EditModeTests.csproj` 为 0 错误、2 项既有无关警告；Unity EditMode 为 430/432，失败仍精确是已登记的两项既有无关基线；PlayMode 5/5；数据链与文本检查通过；Unity 接受补交的 `.meta`，运行后文件 SHA-256 仍为 `E03E11263F4639C77D58B8DDB438C39C38740A1C73CCB72C7CBD648F6578B2B9`，没有再次生成同路径副作用。
+- 未验证：Codex 独立复审尚未执行；候选记录中的两项既有 EditMode 基线失败仍由各自所有者处理。
+- 残留风险：候选涉及 22 个业务／测试文件，当前只恢复已经形成的候选及缺失 `.meta`，不在本轮提前作审核通过结论。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+### DSH-U-TZ-CHARTER-MODEL-01-76715422 · DeepSeek 自动交接（Codex 复审未通过，待返工）
+
+- 方向：任务 U-TZ-CHARTER-MODEL-01 的原子正式结果已由 Codex 独立复审；发现授权失败关闭与供给原子性缺口，同一卡已阻塞等待最窄返工。
+- 任务：U-TZ-CHARTER-MODEL-01
+- 候选提交：c1094a7309815e9893801f09ed552f98055db68c
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt、src/Assets/Scripts/World/CharterRuleRuntime.cs、src/Assets/Scripts/World/CharterRuleRuntime.cs.meta、src/Assets/Scripts/World/CharterRuntimeStateData.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs.meta
+- 已验证：Unity EditMode 全套 318 项中 316 通过；册界直接用例 CharterRuleRuntimeTests 8/8、CharterRuleDataTests 26/26、CharterConflictRulesTests 4/5（1 项为既有基线失败）；dotnet build -c Release simulations/BattleSim（worktree 无 obj，先隐式 restore）：0 警告 0 错误；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b：PASS；pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests：OK（664 个文件）；pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson：status ok、readyCount 1；pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1：OK（6 个文件）；git diff --cached --check：OK；Unity 验证后工作树仅含任务卡授权路径，两个新增 .meta 随同一候选提交受 Git 跟踪，无未跟踪现场
+- 未验证：dotnet build -c Release --no-restore simulations/BattleSim 未按字面运行：全新 worktree 缺 NuGet 资产文件，需先隐式 restore，编译结果等价；BattleSim 未运行全量自测，仅按任务卡运行 golden-core-conflict-n-jd-rule-01b 目标用例；既有基线失败 CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 未被修复：文件不在候选路径内，需由共享冲突契约所有者（Codex）裁决 PULSE_ADVANTAGE 断言与对等储备 PULSE_NEUTRAL 实现的不一致；既有基线失败 DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad（旧日志断言）未处理
+- 残留风险：两项既有无关基线失败保留在全量 EditMode 中（均已逐项记录，未掩盖）：CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 期望 PULSE_ADVANTAGE 而 shared 实现对等储备返回 PULSE_NEUTRAL（文件来自 D-TZ-CHARTER-CONFLICT-02 提交 e1ffda9，不在本卡路径）；LianShenReservedAbilitiesRemainExcludedAtPlayerLoad 旧日志断言。另：运行状态词表（recognized/connected/registered/allocated）由本任务定为稳定字面量，后续保存链须复用；.meta GUID 为手工生成，Unity 已接受未改写。
+- Codex 复审结论：不通过。`JindanSameVariable` 可在 `crossTierChallengeRequest=null` 时成功提交；成功状态保留同供给的旧 `registered` 并追加 `allocated`，导致下一次重复消费；`RightWins`／`Neutral` 也没有阻止规则 `NextState`。
+- 独立验证：临时增加两条反例后运行 Unity EditMode，320 项中 316 通过、4 失败；两项新增失败精确命中上述授权与供给问题，另两项为原交接已记录基线。临时测试已撤回，未进入正式变更。
+- 建议下一步：只按 `开发管理/未通过审核清单.txt` 的最窄范围返工；不得自动重跑，返工完成后再转 Codex 复审。
+
+### DSH-U-TZ-CHARTER-MODEL-01-cb47c7d1 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-MODEL-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-MODEL-01
+- 候选提交：e80a4f9b4b419ba6a150b91f224550b9fe66dc43
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt、src/Assets/Scripts/World/CharterRuleRuntime.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs
+- 已验证：Unity EditMode 全套 322 项中 320 通过、2 项既有无关基线失败（CharterRuleRuntimeTests 12/12 含 4 项新增返工反例用例、CharterRuleDataTests 26/26、CharterConflictRulesTests 4/5）；dotnet build -c Release simulations/BattleSim：0 警告 0 错误（worktree 无 obj，先隐式 restore）；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b：PASS；check-review-text.ps1 -Paths 开发管理,docs,simulations,src/Assets/Scripts,src/Assets/Tests：OK（665 个文件）；check-task-cards.ps1 -OutputJson：status ok、readyCount 1；check-pending-whitespace.ps1：OK（8 个候选路径 / 3 个变更文件）；git diff --cached --check：通过（finalize 脚本内执行）；Unity 验证后工作树干净，两个 .meta 仍受 Git 跟踪，无验证生成未跟踪现场
+- 未验证：tools/check-data-chain.ps1 未运行：本轮无 docs/CSV/Unity 数据链路文件变化，任务卡未要求；dotnet build -c Release --no-restore 因全新 worktree 无 obj 资产文件改为隐式 restore 后构建，与首轮候选处理一致
+- 残留风险：正式集成与 Codex 独立复审由固定入口执行；共享 CharterConflictRules.cs 未改动，其 1 项既有基线失败（AuthorizedGrantBindsEveryConflictIdentityField 期待 PULSE_ADVANTAGE、shared 返回 PULSE_NEUTRAL）与本卡无关；新增稳定拒绝原因 charter_cross_tier_authorization_denied、charter_conflict_not_won 与请求字段 charterCandidateId 属本模型自有词汇，后续 U-TZ-CHARTER-SAVE-01 接入时须按同一契约序列化。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+### DSH-U-TZ-CHARTER-MODEL-01-efca96c9 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-MODEL-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-MODEL-01
+- 候选提交：ae38004b431eadece0bd76fec67d64e051fa4418
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt、src/Assets/Scripts/World/CharterRuleRuntime.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs
+- 已验证：Unity EditMode：323 项中 321 通过、2 项既有无关基线失败（逐项记录）；CharterRuleRuntimeTests 13/13 含新增 DuplicateCandidateIdsCannotDeclareWhichSideRepresentsTheCharterInvocation、CharterRuleDataTests 26/26、CharterConflictRulesTests 4/5；dotnet build -c Release simulations/BattleSim：通过，0 警告、0 错误；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test golden-core-conflict-n-jd-rule-01b：PASS；check-review-text：OK（665 个文件）；check-pending-whitespace：OK（8 个文件；finalize 提交前再验 3 个改动文件）；git diff --cached --check：通过（finalize 脚本内执行）；Unity 验证后工作树干净，两个 .meta 均受 Git 跟踪，无验证生成的未跟踪现场；candidate 提交仅含 3 个授权路径，为 base 3b39b12 直接后继
+- 未验证：无任务卡要求且未运行的验证项：check-task-cards 不在本卡验证清单内，未运行；两项既有无关基线失败（LianShen 旧日志断言、PULSE_ADVANTAGE 断言）未在本任务修复，属 D-TZ-CHARTER-CONFLICT-02 及既有加载器遗留，已逐项记录
+- 残留风险：全套 323 项仍有 2 项既有无关基线失败（DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad 旧日志断言、CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 的 PULSE 断言，均来自未改动既有代码，已逐项记录）；重复 ID 拒绝位于请求校验层，若未来 shared 层合法化重复候选 ID 语义，本拒绝将保持保守关闭
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+### DSH-U-TZ-CHARTER-SAVE-01-6a6ef32a · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-SAVE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-SAVE-01
+- 候选提交：0508aa2eabf348ba17a4a0319d6a28d64daf5414
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/册界状态持久化验证记录.txt、src/Assets/Data/CharterRuleStaticCatalog.meta、src/Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset、src/Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset.meta、src/Assets/Data/ContentCatalog/ContentCatalog.asset、src/Assets/DataConfig/README.txt、src/Assets/Scripts/Content/CharterRuleDefinitionData.cs、src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs、src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs.meta、src/Assets/Scripts/Content/ContentCatalogData.cs、src/Assets/Scripts/Editor/DataConfigImporter.cs、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Scripts/Game/SessionStateSnapshots.cs、src/Assets/Scripts/World/CharterRuntimeStateData.cs、src/Assets/Tests/EditMode/CharterRuleDataTests.cs、src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：tools/run-unity-editmode-tests.ps1：331 执行/329 通过；本卡全部直接用例通过（生产静态目录、schema 4 往返深复制、schema 0～3 明确未接入、版本/presence/稳定 ID/提交篡改失败关闭与原子拒绝、重复读取不重复结算、缺静态目录失败关闭、条目边界/授权/提交配对负例、导入器共用 Runtime 校验）；tools/check-data-chain.ps1：OK；tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests：OK（659 files）；tools/check-pending-whitespace.ps1 -ExpectedPaths <candidate 全路径>：OK（18 files）；git diff --cached --check：OK（finalize 脚本内置执行）；candidate 提交 0508aa2eabf348ba17a4a0319d6a28d64daf5414：baseCommit 41e5671 直接后继，17 个 changed paths 均为 expectedPaths 子集，worktree 干净
+- 未验证：tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SAVE-01 -Postcondition ExternalPendingReview：candidate 阶段按预期不满足（卡片仍为 external_execute/deepseek/ready，须由共享入口在正式提交的 pending review 投影后复跑）；Codex 独立复审：未执行（本卡禁止自审，按流程由 Codex 复审）
+- 残留风险：1) 全量 EditMode 仍有 2 项与本卡路径无交集的既有登记基线失败：CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField（shared 对等储备返回 PULSE_NEUTRAL、断言 PULSE_ADVANTAGE，文件来自 D-TZ-CHARTER-CONFLICT-02）与 DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad（旧日志断言），需 Codex 按既有登记裁决；2) 新增 asset/.meta GUID 为手工生成，Unity 已接受未改写；3) 静态目录 definitionCatalogVersion 固定为 1，将来定义目录版本变更须先建立独立迁移契约；4) 共享入口须在转换卡片为 codex_review/codex/ready 后复跑 ExternalPendingReview 后置条件。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-BOUNTY-01B1-f295b809 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01B1 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01B1
+- 候选提交：5fb13eb9c5e5306bc716998cf28709b2e6a32653
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：Unity 6000.3.18f1 EditMode：333 项，331 通过、2 失败（均为已登记无关基线）；SessionStateSnapshotTests 16/16（含新增 RestoreRejectsBountyStateProgressCombinationsTheRuntimeCannotProduce、RestoreAcceptsAcceptedProgressBeforeTargetAndRejectsItAtTarget）、BountyRuntimeTests 17/17、AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4；新校验拒绝 Accepted==target、ObjectiveCompleted&lt;target、Claimed&lt;target，每次拒绝后整个会话 JSON 与基线一致（AssertRejectedWithoutMutation 断言）；check-review-text.ps1 通过（258 文件）；check-pending-whitespace.ps1 通过（3 文件）；git diff --cached --check 通过；automation-finalize-commit.ps1 创建候选提交并复验路径与空白
+- 未验证：Codex 独立复审未执行（DeepSeek 不得自审），待 codex_review/codex/ready；共享入口基于最新 master 的重放、组合验证与正式集成未执行（由共享内核在 candidate 核验后持锁完成）；改动后的 C# 未单独跑 dotnet build（项目无 csproj 路径，以 Unity EditMode 编译运行全部 asmdef 程序集为编译闸门，与 U-BOUNTY-01B 记录口径一致）
+- 残留风险：完整 EditMode 仍有 2 项与本卡路径无关的已登记基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad），运行脚本按零失败门禁以非零退出码结束；新组合校验抛 ArgumentException，既有超目标进度规则保持 ArgumentOutOfRangeException 不变；若未来合法运行时能产生被拒组合，需按停止条件重新确认契约（当前 BountyRuntime 无法产生）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-TZ-CHARTER-SAVE-01-08aa1886 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-TZ-CHARTER-SAVE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-TZ-CHARTER-SAVE-01
+- 候选提交：534ddaadae108cede07583a3cd4b7029985561ff
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/册界状态持久化验证记录.txt、开发管理/未通过审核清单.txt、src/Assets/Scripts/Content/CharterRuleStaticCatalogData.cs、src/Assets/Scripts/World/CharterRuntimeStateData.cs、src/Assets/Tests/EditMode/CharterRuleDataTests.cs、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：tools/run-unity-editmode-tests.ps1：335 执行/333 通过/2 项已登记既有基线失败（退出码 2 为脚本零失败门禁预期行为）；返工新增 StaticCatalogValidatorRejectsDuplicateAuthorityBoundaryCommitAndConflictRecords、DynamicStateRejectsDuplicateNodeAuthorizationAndCoverageStableIds 与扩展的 CharterSaveRestoreRejectsInvalidPayloadsAtomically（重复节点/组织授权版本/当前覆盖读档失败关闭）全部通过，schema 4 往返、schema 0~3 未接入、原子拒绝、不重复结算等既有直接用例全数保持；tools/check-data-chain.ps1：通过（docs/csv counts、language keys、check-data-chain: OK）；tools/check-review-text.ps1 -Paths 开发管理,docs,src/Assets/Scripts,src/Assets/Tests：通过（659 files）；tools/check-pending-whitespace.ps1：通过（6 files checked）；git diff --cached --check：通过；candidate 核验：534ddaadae108cede07583a3cd4b7029985561ff 为 baseCommit 14337951c91fd8c23ad65868f05fd67832c8d111 的直接后继，working tree clean，changed paths 全部在 ExpectedPaths 内
+- 未验证：tools/check-task-cards.ps1 -TaskId U-TZ-CHARTER-SAVE-01 -Postcondition ExternalPendingReview：已运行但 candidate 阶段按预期不满足（卡片仍为 external_execute/deepseek/ready，该后置条件要求已转换 codex_review/codex/ready），须由共享 Windows 入口在正式提交中原子转换后复跑；全量 EditMode 的 2 项失败为已登记既有基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad），与本卡路径无交集，未修复未掩盖，由其所有者 Codex 按既有登记裁决
+- 残留风险：2 项既有 EditMode 基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 的 PULSE_ADVANTAGE 断言、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad 旧日志断言）与返工路径无交集，未修复未掩盖，仍待其所有者 Codex 按既有登记裁决；check-task-cards ExternalPendingReview 后置条件须由共享入口在正式转换后复跑；返工失败关闭的完整性由 Codex 独立复审最终确认。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-BOUNTY-01C-b24a577f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01C 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01C
+- 候选提交：0b41242930b16c63f8cae2516300f593888ac493
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt、src/Assets/Scenes/SettlementScene.unity、src/Assets/Scripts/Editor/SceneBuilder.cs、src/Assets/Scripts/Settlement/BountyBoardView.cs、src/Assets/Scripts/Settlement/BountyBoardView.cs.meta、src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs、src/Assets/Scripts/Settlement/SettlementSceneController.cs、src/Assets/Scripts/Settlement/SettlementSceneView.cs、src/Assets/Tests/EditMode/BountyBoardViewTests.cs、src/Assets/Tests/EditMode/BountyBoardViewTests.cs.meta、src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs
+- 已验证：EditMode 终轮 341 项：339 通过、2 失败，失败均为与本卡路径无关的已登记基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField；DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad），逐项记录未掩盖；本卡直接用例全通过：BountyBoardViewTests 6/6、SceneArchitectureEditorTests 22/22、BountyRuntimeTests 17/17、SessionStateSnapshotTests 16/16、AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4；dotnet build src/TianZhang.EditModeTests.csproj：0 错误（保留 2 项既有无关 Charter 字段警告）；tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests：通过，258 个文件；tools/check-pending-whitespace.ps1：通过 11 个文件；git diff --cached --check 通过；SettlementScene.unity 以同一 Unity 6000.3.18f1 批处理重建：面板初始非激活、视图与面板序列化引用完整、场景 meta GUID 未变；场景序列化引用由扩展后的场景构建用例断言；candidate 为 baseCommit 2236516 的直接后继，changed paths 恰为 11 项 expectedPaths 子集，worktree 清洁
+- 未验证：Codex 独立复审（待 Codex 复审，不预填结论）；共享入口基于最新 master 的重放、原子正式提交与排他集成（candidate 不执行正式集成，不更新队列/任务卡投影）；面板按钮作用于枚举首条悬赏，多悬赏条目下的交互未验证（本轮生产数据唯一 bounty_guanzhong_shijiahou）
+- 残留风险：全量 EditMode 仍有 2 项与本卡路径无关的既有基线失败（已逐项登记，脚本按其零失败门禁非零退出）；重建场景使既有对象的序列化 fileID 重排，属于任务要求的“提交重建场景”流程固有结果，已由 22 项场景架构用例与序列化引用断言覆盖；面板的接取／领奖作用于目录枚举首条悬赏，本轮正式数据唯一，多条目选择交互留待后续任务。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-BOUNTY-01C-d6fbbb6f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-BOUNTY-01C 的原子正式结果等待 Codex 独立复审。
+- 任务：U-BOUNTY-01C
+- 候选提交：d9865f32b1b18c5e533f6b09d93312befa32ca92
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt、src/Assets/Scripts/Settlement/BountyBoardView.cs、src/Assets/Tests/EditMode/BountyBoardViewTests.cs
+- 已验证：Unity EditMode 6000.3.18f1 全量 341 项：339 通过、2 项既有无关基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；BountyBoardViewTests 6/6（含修改后的接取与领奖成功用例）、BountyRuntimeTests 17/17、SceneArchitectureEditorTests 22/22、SessionStateSnapshotTests 16/16、AdventureSceneControllerTests 14/14、TacticalGridModelTests 4/4 全部通过；dotnet build src/TianZhang.EditModeTests.csproj：0 错误、2 项既有无关 Charter 警告；tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scenes,src/Assets/Scripts,src/Assets/Tests：通过（260 文件）；tools/check-pending-whitespace.ps1（3 文件）与提交后 git show --check：通过；git 状态：candidate 提交 d9865f32b1b18c5e533f6b09d93312befa32ca92 为 baseCommit 2f902e0 唯一直接后继，changed paths 为 CandidatePaths 子集，工作树干净
+- 未验证：SettlementScene.unity 场景重建未执行：本返工不触碰场景、脚本 GUID 或序列化引用，面板已由前轮场景构建存在；dotnet test 未单独运行：EditMode 用例以 Unity 批处理为权威闸门（既有记录口径），dotnet build 仅作编译闸门
+- 残留风险：返工后正式提交仍需 Codex 独立复审（外部责任方不自审）；若复审要求成功结果区显示语义化提示而非清空，需再做窄幅返工。既有 2 项无关 EditMode 基线失败与 2 项无关构建警告继续存在。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-TZ-CHARTER-SLICE-01A-ae57896a · 已消费的 DeepSeek 自动交接
+
+- 方向：Codex 已消费本交接并判定正式结果部分通过，返工要求已写入任务卡和未通过审核清单。
+- 任务：U-TZ-CHARTER-SLICE-01A
+- 候选提交：9753b19d6cf00265b7e4c0a415df16b2618e59f4
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/册界单据点运行时交互验证记录.txt、src/Assets/Scripts/Game/GameSession.cs、src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs、src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta、src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs、src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs.meta、src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
+- 已验证：Unity EditMode 389 项执行、387 通过；新增 11 项全部通过；金丹评估稳定返回 charter_conflict_not_won（shared 决定赢家 jindan_left，册界侧 jindan_right 未获胜）；元婴评估稳定返回 TZ_CHARTER_CONFLICT_YUANYING_ANCHORED 且 NextState/事件为空；首次正式提交原子写入 CharterRuntimeState 与 CharterDefinitionCatalogVersion=1；首次失败保持 null/0；重复消费以现有长期状态调用时 RealitySupplyUnavailable 且会话 JSON 不变；schema 4 保存／读取往返保持长期结果；check-review-text OK（668 文件）；check-pending-whitespace OK（9 文件）与 git diff --cached --check 通过
+- 未验证：dotnet build src/TianZhang.EditModeTests.csproj 不可运行：本 worktree 无该 csproj（与 D-TZ-CHARTER-SITE-01 返工轮一致）；check-task-cards -TaskId U-TZ-CHARTER-SLICE-01A -Postcondition ExternalPendingReview 由共享入口在候选正式转换后复跑；全量 EditMode 2 项已登记既有基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField 与 DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad，与本卡路径无交集）；站点“禁用”状态在站点契约无启用字段，未实现（与批准规格一致）
+- 残留风险：candidate 与 progress 的丢弃语义尚无场景消费方（01B 未实施，UI 层证据待后继）；正式重复调用由调用方传入现有长期状态作为 currentState，否则 fresh registered 候选可绕过重复消费拒绝（API 契约已由测试锁定正确路径）；全量 EditMode 仍有 2 项已登记且与本卡路径无交集的既有基线失败，由其所有者任务处理。
+- 审核结论：正式提交 `2573431911967bc79069ab813d60c0c8aa22c183` 部分通过，任务保持 blocked；正式调用重自举与重复集合校验须定向返工。
+
+### DSH-U-GZ-FORMAL-E2E-01-f3cfd518 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-FORMAL-E2E-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-GZ-FORMAL-E2E-01
+- 候选提交：7887af141a97d166e45c0f1e4f419d980a642a9c
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt、src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs、src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta
+- 已验证：Unity 6000.3.18f1 EditMode 全量：415 项，413 通过，仅 2 项既有无关基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；本卡直接用例 GuanzhongFormalEndToEndTests 2/2 通过：FormalGuanzhongProductionChainAcceptsDefeatsDropsReturnsClaimsSavesAndRestoresOnce、FormalGuanzhongChainFailsClosedOnNonProductionMissingOrIllegalInputs；既有直接套件未回归：BountyBoardViewTests 6/6、BountyRuntimeTests 17/17、AdventureSceneControllerTests 14/14、SessionStateSnapshotTests 20/20、TacticalGridModelTests 4/4、FormalEncounterResultTests 5/5；dotnet build src/TianZhang.EditModeTests.csproj（Unity 生成投影后）：0 错误，保留 2 项既有 Charter CS0649 警告；tools/check-data-chain.ps1：通过；tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests：通过（269 个文件）；tools/check-pending-whitespace.ps1（7 个候选路径）：通过；automation-finalize-commit.ps1 在提交前执行 git diff --cached --check；candidate 提交 7887af141a97d166e45c0f1e4f419d980a642a9c 为 baseCommit 2b4d243 的直接后继，changed paths 为 ExpectedPaths 子集，提交后工作区干净；运行后清理：Unity 首次导入为本卡范围外生成的未跟踪 src/Assets/DataConfig/CharterSites.csv.meta 已删除
+- 未验证：实际场景加载与播放链路（EnterSettlement/EnterAdventure/ReturnToPreviousScene 的 SceneManager.LoadScene）不在 EditMode 范围，与既有 AdventureSceneControllerTests 一致，未在运行中验证；4 个生产所有者文件未修改（直接用例未暴露根因），本卡无生产代码行为变更需验证；新增测试为未审核标记，正式业务结论待 Codex 独立复审
+- 残留风险：端到端用例在 EditMode 中驱动会话状态与 Prepare* 方法链，不执行实际场景加载、输入设备或战斗 UI 交互；若未来场景序列化引用或 Build Settings 变化，需在 PlayMode/运行验收中复核。全量运行因 2 项既有无关基线失败保持非零退出码，属已登记状态。Unity 首次导入可能再次生成范围外 .meta 文件，提交前已清理并记录。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-GZ-FORMAL-E2E-01-b8936e8c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-FORMAL-E2E-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-GZ-FORMAL-E2E-01
+- 候选提交：190aff979d593fb35837161c01f786a1408f6180
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt、src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs
+- 已验证：Unity 6000.3.18f1 EditMode 全量 415 项：413 通过、2 项既有无关基线失败（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；GuanzhongFormalEndToEndTests 返工后 2/2 通过（正向链经场景流/面板所有者驱动；失败关闭用例不变）；BountyBoardViewTests 6/6、BountyRuntimeTests 17/17、AdventureSceneControllerTests 14/14、SessionStateSnapshotTests 20/20、TacticalGridModelTests 4/4、FormalEncounterResultTests 5/5、SceneArchitectureEditorTests 26/26、CharterSiteViewTests 7/7 未回归；dotnet build src/TianZhang.EditModeTests.csproj：0 错误，2 项既有无关 Charter 字段警告；check-data-chain.ps1：OK；check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests：OK（271 个文件）；check-pending-whitespace.ps1（candidate 路径 2 文件）+ git diff --cached --check：OK；candidate 提交经 automation-finalize-commit.ps1 创建：父提交为 base 08aa7f9，仅含 2 个 CandidatePaths 文件，工作区干净
+- 未验证：SceneManager.LoadScene 实际场景切换不在 EditMode 范围（既有约定，未执行；返回会话事实已由测试断言）；BattleSim 未运行（本卡无 BattleSim/数值/经济改动，设计不要求）
+- 残留风险：EditMode 不能执行 SceneManager.LoadScene 场景切换（返回会话事实已断言，边界与既有 AdventureSceneControllerTests 约定一致）；遭遇配置经 InvokeAwake 生产触发（EditMode 不自动触发 Awake，与已接受的 SceneArchitectureEditorTests 模式一致）；2 项既有无关基线失败仍存在（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；重复结算失败关闭经流重新进入同一控制器验证，场景重载下为新实例的语义由既有 AdventureSceneControllerTests 覆盖。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-D-COMBAT-PROD-01-a7f53607 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 D-COMBAT-PROD-01 的原子正式结果等待 Codex 独立复审。
+- 任务：D-COMBAT-PROD-01
+- 候选提交：0cb09dd680523e55d1d8e22350d54f5b029e21f8
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中基础攻击生产迁移验证记录.txt、simulations/BattleSim/BattleSimSelfTests.cs、src/Assets/Data/AttackProfiles.meta、src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset、src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta、src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset、src/Assets/DataConfig/AttackProfiles.csv、src/Assets/DataConfig/AttackProfiles.csv.meta、src/Assets/DataConfig/Enemies.csv、src/Assets/DataConfig/Language.csv、src/Assets/Scenes/AdventureScene.unity、src/Assets/Scripts/Editor/DataConfigImporter.cs、src/Assets/Scripts/Editor/SceneBuilder.cs、src/Assets/Scripts/Game/CharacterCreation/CharacterCreationCatalog.cs、src/Assets/Scripts/Game/CharacterCreation/CharacterCreationRules.cs、src/Assets/Tests/EditMode/AttackProfileDataTests.cs、src/Assets/Tests/EditMode/CharacterCreationTests.cs、src/Assets/Tests/EditMode/ContentCatalogDataTests.cs、src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs、src/Assets/Tests/EditMode/TacticalGridModelTests.cs、src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs、src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta、tools/check-data-chain.ps1
+- 已验证：dotnet restore + dotnet build -c Release --no-restore simulations/BattleSim：0 警告 0 错误；dotnet run --no-build -c Release --project simulations/BattleSim：完整默认运行 553 行输出 exit 0；BattleSim --self-test basic-unarmed-production-d-combat-prod-01（新增）、distance-model-tq055、attack-profile-d-combat-02：全部 PASS；Unity 6000.3.18f1 批处理：ImportAttackProfiles 严格导入 1 个档案并生成规范 asset，ImportContentCatalog 写入石甲兽 unarmedBasicAttackProfileId，重导绑定校验通过，SceneBuilder.BuildAdventureScene 场景序列化同一 asset GUID；dotnet build src/TianZhang.EditModeTests.csproj：0 错误（2 个既有 CS0649 警告与本卡无关）；tools/run-unity-editmode-tests.ps1：426 执行 / 424 通过；8 项新增直接用例全部通过，2 项失败为已登记既有基线（CharterConflictRulesTests PULSE 断言、DataConfigImporterContentScopeTests 旧日志断言，见册界单据点交互与UI验证记录/AI合作沟通）；tools/run-unity-playmode-tests.ps1：4 执行 / 4 通过（新增正式 guanzhong_wild 接近石甲兽、建立会话、双方消费同一档案用例）；tools/check-data-chain.ps1 -FailOnMissingAssets：OK（新增 AttackProfiles 生产表、asset、场景引用与敌人绑定链检查）；tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests：OK（354 文件）；tools/check-pending-whitespace.ps1（23 个候选路径）与 git diff --cached --check：通过；候选提交 0cb09dd680523e55d1d8e22350d54f5b029e21f8 为 baseCommit 66e7370 直接后继，23 个候选路径精确匹配，worktree 清洁
+- 未验证：既有 2 项 EditMode 基线失败未修复：不在本卡候选路径，由各自所有者任务处理；正式场景中敌方反向攻击命中：受冻结 env_guanzhong_wild 有向边样本（6 条单向边，U-ENV-RULE-01B）约束，双方互攻成功由 EditMode 会话用例（合法双向棋盘、同一生产 asset 与绑定）证明；边样本扩展属环境所有者范围；仓库既有缺口 src/Assets/DataConfig/CharterSites.csv.meta 未纳入版本控制（Unity 每次导入重新生成），不在本卡路径；候选提交未运行完整仓库回归（超出本卡最小充分验证范围）
+- 残留风险：冻结环境边样本下正式场景仅玩家侧攻击可命中（测试摆位与说明见验证记录）；既有 2 项 EditMode 基线失败仍待其所有者；CharterSites.csv.meta 未跟踪缺口为仓库既有状态；本卡未切换 BattleSim 生产消费者，未建立默认回退或第二数据源。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-D-COMBAT-PROD-01-0fbb40da · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 D-COMBAT-PROD-01 的原子正式结果等待 Codex 独立复审。
+- 任务：D-COMBAT-PROD-01
+- 候选提交：e24a507c1e4ddff38a6773dd09b139e07cdd8e4f
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中基础攻击生产迁移验证记录.txt、开发管理/未通过审核清单.txt、src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset、src/Assets/DataConfig/EnvironmentProfiles.csv、src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs、src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- 已验证：静态核对：任务卡 D-COMBAT-PROD-01 stateReason 与 automationReply 指向 DEC-20260806-ENVTESTSYNC2 收口授权（OPTION_ACCEPTED/A，codex_conversation，evidenceHash d351a6b62dd7891461303f9fb84cc2f11acdf8562abc5bd8232bed7509a7d687），EnvironmentProfileDataTests.cs 已实际写入任务卡 expectedPaths 与本 run CandidatePaths，无新决策需求；已执行 git cherry-pick --no-commit 226b3c2746d67f4bf2e1f4ebf3c3cec3509af09b 机械重放 5 个路径内文件（CSV 12 边、重新生成的 asset、PlayMode 双向断言、验证记录、未通过清单），git diff 226b3c2 --cached 对 5 文件为空（逐字节一致），未恢复旧模型会话；已同步 EnvironmentProfileDataTests.cs 的 GuanzhongWildRow 为已批准 12 条有向边（保留原 6 条+反向 6 条），cmp 核对嵌入行与生产 EnvironmentProfiles.csv 数据行逐字节一致；BattleSim：dotnet build -c Release --no-restore 0 警告 0 错误；--self-test basic-unarmed-production-d-combat-prod-01、distance-model-tq055、attack-profile-d-combat-02 均 PASS；完整默认运行 exit 0（553 行输出）；EditMode：tools/run-unity-editmode-tests.ps1（6000.3.18f1 batchmode）426 执行/424 通过/2 失败，失败仅为 2 项已登记既有基线（CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField、DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad）；GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized 由上轮必然失败转为 Passed，EditMode 门禁闭合；PlayMode：tools/run-unity-playmode-tests.ps1 4 执行/4 通过/0 失败；FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides 断言玩家 (1,0)→(1,-1) 与石甲兽 (1,-1)→(1,0) 双方相邻格均完成基础攻击且不返回三类装配错误；tools/check-data-chain.ps1 -FailOnMissingAssets 输出 check-data-chain: OK（language keys 410 正常）；tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,src/Assets/Scripts,src/Assets/Tests OK（355 个文件）；提交前检查：check-pending-whitespace.ps1（6 文件）OK、git diff --cached --check 通过（finalize 脚本内置）；候选提交 e24a507 为 HEAD 0be5a72 直接后继、仅含 6 个合法 CandidatePath、工作区干净（Unity 重新生成的未跟踪 CharterSites.csv.meta 已清理）
+- 未验证：2 项已登记 EditMode 既有基线失败（CharterConflictRulesTests、DataConfigImporterContentScopeTests）与本卡路径无交集，由各自所有者任务处理，本 run 未验证其修复；仓库既有缺口 src/Assets/DataConfig/CharterSites.csv.meta 未纳入版本控制（Unity 每次导入重新生成），不在本卡候选路径，未提交；BattleSim 生产消费者未切换：本卡只证明 basic_unarmed 迁移字段与 GameData.UnarmedBasicAttack 一致，数值平衡结论仍以 BattleSim 实际运行口径为准
+- 残留风险：候选提交未合并：需 Codex 独立复审后由共享入口在最新 master 重放并 fast-forward（expectedTransition=codex_review/codex/ready）。若复审发现新的范围外根因，按自动工作流规则另行路由；本卡完成条件已在现有授权输入下全部实测闭合，不再请求同一决策。2 项 EditMode 基线失败与 CharterSites.csv.meta 缺口为仓库既有问题，不由本卡处理。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01A-edee9442 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01A
+- 候选提交：d74a0f4633ed688dabc0fa64f6185a678db9caa3
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_FiveElements_Wood_TRANSFORM01_荣枯关.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Wood_DOMAIN01_扶疏天.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Wood_SOURCE_青帝祖庭.txt
+- 已验证：check-review-text（docs,开发管理）：OK，703 文件通过；check-pending-whitespace：OK，4 个候选路径通过；git diff --cached --check 通过；git diff --check 通过；三份位置文档均含 13 大节固定骨架，positionId 唯一且已登记索引；效果白名单三项均逐项填写适配理由与理念收窄项；未引用未登记 comboProfileId，未写任何未经 BattleSim 的数值；索引 §一/§四/§五/§六 与本批次 3 个待审核条目一致，均已标「⚠️ 已修改/未审核」；candidate 为 baseCommit 470065d 的直接后继，仅含 4 个候选路径；工作树干净
+- 未验证：候选具体位置名称（青帝祖庭/荣枯关/扶疏天）未审核，待 Codex 复审；效果正式显示名未审核：本文只引用 effect_id 与矩阵功能性临时代号，正式名待 DS-JINDAN-NAMES-20260718-01；数值与平衡结论未验证：文档仅引用配置档案（JindanBaseEffectLoadoutTuning、mountainRiverUpkeepProfileId 等），未运行 BattleSim、未写入具体数值
+- 残留风险：候选名与全部内容整体待 Codex 独立复审；复审不通过时需按普通返工同步修改名称、路径与索引引用（不设独立重命名阶段）；效果正式名称任务完成前不得把临时代号作为正式显示事实；证位阈值与山河周期数值均指向配置档案，未在本批次锁定。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01B-289913e8 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01B 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01B
+- 候选提交：350e590c5a456054ec21a12f9375a640f414cd8c
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_FiveElements_Fire_TRANSFORM01_燃犀渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Fire_DOMAIN01_长明赤野.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Fire_SOURCE_赫曦炉心.txt
+- 已验证：check-review-text -Paths docs,开发管理（706 文件）通过；check-pending-whitespace（4 候选路径）通过；git diff --cached --check 通过；git diff --check 通过；三份文档均含 13 大节且 §十二检查清单 19 项全部勾选；positionId 全局唯一且已登记索引（仅存在于新文档与索引 §五/§六）；索引条目与三份文档的 positionId、seatNameKey、road_id、白名单、证位档案版本一致，§四数量汇总与 §五火道路行已同步
+- 未验证：Codex 独立复审（按责任链由 Codex 执行，DeepSeek 不自审）；BattleSim 数值验证（任务不涉及数值强度，按任务卡无需运行）
+- 残留风险：具体位置候选名（赫曦炉心/燃犀渡/长明赤野）与三份文档全文未经 Codex 复审；复审不通过时按普通返工同步修改名称、路径与引用（positionId 不变），复审通过前不进入正式显示事实。candidate 为 baseCommit 1c4eaeb 的直接后继，路径与 run/base/expectedPaths 精确绑定。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01C-406e53ad · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01C 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01C
+- 候选提交：3ff0a59a5aa0522c84aacf1ba0607c4e5038e76c
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_FiveElements_Earth_TRANSFORM01_载岳回廊.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Earth_DOMAIN01_厚境垣.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Earth_SOURCE_坤舆地髓.txt
+- 已验证：check-review-text: OK（709 文件，-Paths docs,dev-mgmt）；check-pending-whitespace: OK（4 文件，直接运行与 finalize 脚本内部各一次）；git diff --check 通过；git diff --cached --check 通过（finalize 脚本提交前执行）；candidate 提交恰好包含 4 个候选路径，是 baseCommit 4a980c2 的直接后继，工作树干净；三份文档均按 §十一 13 大节固定骨架完整生产，§十二检查清单 18 项逐项自检通过；positionId 全局唯一（JD_FiveElements_Earth_SOURCE/TRANSFORM01/DOMAIN01），索引条目与文档名称、理念摘要、证位档案标识、路径一致；白名单仅引用 ROAD_EARTH 既有三项 effect_id，位别版本按位格类型（源/化/界版）调用，未越过矩阵与不可越界项
+- 未验证：三份文档内容与候选名称未经 Codex 独立复审（本批次设计上为待审核）；未运行 BattleSim（任务卡：不涉及数值强度时无需运行）；未运行 check-data-chain（本轮无 CSV/asset 变化）
+- 残留风险：三份文档为候选内容：具体位置名称（坤舆地髓/载岳回廊/厚境垣）、证位档案标识（PROOF_EARTH_SOURCE_01 等）与理念属首次生产，Codex 复审不通过时需按普通返工同步修改名称、路径与索引引用；文档引用的配置档案字段（JindanBaseEffectLoadoutTuning、mountainRiverUpkeepProfileId 等）仅按既有样板引用，未做运行时核验。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01D-9e2e82e1 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01D 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01D
+- 候选提交：047297b6e1508da187c024e835cd1f60ae50f453
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_FiveElements_Metal_TRANSFORM01_从革渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Metal_DOMAIN01_肃刃原.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Metal_SOURCE_白帝砧.txt
+- 已验证：check-pending-whitespace.ps1 对4个预期路径通过；check-review-text.ps1 -Paths docs,dev-mgmt 通过（712文件）；git diff --cached --check 通过；三份文档均为13大节固定骨架（## 一级节计数各13）；positionId唯一：索引共12个唯一positionId，三份文档各自含本positionId且互引一致；白名单仅引用ROAD_METAL三项effect_id并逐项填写适配/收窄理由，未新增效果或位格类型；git status工作树清洁，提交仅含4个授权路径；commit 047297b6e1508da187c024e835cd1f60ae50f453 为baseCommit直接后继且唯一
+- 未验证：Codex独立复审未进行（按分工由Codex执行，DeepSeek不自审）；具体位置候选名称（白帝砧/从革渡/肃刃原）未经Codex/用户确认，属本批次候选；BattleSim未运行：任务不涉及数值强度，任务卡明确无需运行；check-data-chain.ps1未运行：本任务无CSV/asset变化
+- 残留风险：三份文档与索引条目为「待审核」状态，位置理念与候选名（白帝砧/从革渡/肃刃原）需Codex复审；若复审不通过须按普通返工同步修改文档名称、路径与索引引用，返工范围仍限于本4个授权路径。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01E-b539a204 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01E 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01E
+- 候选提交：2e1fb7d9549d3a35db106632731be659c2cd51cb
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_FiveElements_Water_TRANSFORM01_潮衡渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Water_DOMAIN01_沧溟泽国.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Water_SOURCE_玄冥泉眼.txt
+- 已验证：三份位置文档按金丹位格设计规范 §十一 13 大节合同完成，§十三检查清单逐项覆盖 §十二检查清单；positionId（JD_FiveElements_Water_SOURCE／TRANSFORM01／DOMAIN01）全局唯一且已登记金丹位格索引 §六；效果白名单仅引用 ROAD_WATER 既有三项 WATER_MANIFEST／WATER_FIELD／WATER_TIDE，未新增效果、组合配方、位格类型或第二源位；三层证位条件与五种登位路径均给出水道路本位置具体入口；check-review-text.ps1 -Paths docs,开发管理 通过（715 文件）；check-pending-whitespace.ps1 通过（4 文件）；git diff --check 与 git diff --cached --check 通过；worktree 干净；candidate 提交仅含 4 个 CandidatePaths 且为 baseCommit 直接后继
+- 未验证：Codex 独立复审（按要求不自审，标记「待 Codex 复审」）；候选具体位置名称（玄冥泉眼／潮衡渡／沧溟泽国）未经审核，不进入正式显示事实；效果正式名称（属 DS-JINDAN-NAMES-20260718-01）
+- 残留风险：候选具体位置名称（玄冥泉眼／潮衡渡／沧溟泽国）与全部内容均为未审核状态；Codex 复审不通过时需按普通返工同步修改名称、路径与索引引用，不设独立重命名阶段。效果正式名称仍属 DS-JINDAN-NAMES-20260718-01，本文只引用 effect_id 与矩阵功能性临时代号。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01F-0be095da · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01F 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01F
+- 候选提交：dcd5de86c028e24ff1e8595e32b4b26ea72f742b
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Sight_TRANSFORM01_镜门.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Sight_DOMAIN01_无翳庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Sight_SOURCE_观照真瞳.txt
+- 已验证：3 份位置文档均含设计规范 §十一 13 大节且逐项通过 §十二检查清单；positionId 全局唯一并登记索引（§六 3 条；§四 15→18；§五 注与头部标记同步）；效果白名单仅引用 ROAD_SIGHT 三项既有 effect_id，无越界效果引用；check-review-text：OK（718 文件）；check-pending-whitespace：OK（4 文件）；git diff --cached --check：OK；仅 4 个 CandidatePaths 被修改，工作树干净，candidate 为 baseCommit e1482a1 直接后继
+- 未验证：Codex 独立复审未执行（属于后续审核责任方，DeepSeek 不得自审）；候选名（观照真瞳／镜门／无翳庭）未经用户确认，未进入正式显示事实；效果正式显示名称待 DS-JINDAN-NAMES-20260718-01 完成，本批次未定稿；正式提交的 pending_review 投影与交接证据由共享入口在最新 master 上重放生成，未在本 worktree 执行
+- 残留风险：3 个具体位置候选名（观照真瞳／镜门／无翳庭）未经 Codex 复审与用户确认；文档与索引为「已修改/未审核」状态，复审不通过时需按普通返工同步修改名称、路径与引用（无独立重命名阶段）；效果正式名称仍待 DS-JINDAN-NAMES-20260718-01，本文档未定稿显示名
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01G-da30439f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01G 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01G
+- 候选提交：7a4795464decd8ca0e6ca1445459038dcc320e7f
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Hearing_DOMAIN01_万籁场.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt
+- 已验证：candidate 提交 7a47954 为 baseCommit ef8a6c2 的直接后继，工作树干净，仅含 CandidatePaths 4 个文件（889 插入、2 删除）；check-review-text.ps1 -Paths docs,开发管理 通过（721 文件）；check-pending-whitespace.ps1 通过（4 文件）；git diff --cached --check 通过；3 份文档逐项满足金丹位格设计规范 §十二 检查清单，13 大节（§一–§十三）结构完整，positionId 全局唯一且已登记索引；索引 §四 数量汇总 18→21、§五 闻识道路注与 §六 3 个待审核条目与文档一致，均标记「⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash」；矩阵 §二 ROAD_HEARING 不可越界项（不改 CT、不强制独立有情服从、不隔空作用无传声媒介对象）在三份文档白名单收窄项与不可越界项中逐项落实，未新增道路权限、效果、组合配方、位格类型或数值
+- 未验证：Codex 独立复审未执行（DeepSeek 不得自审）——三份文档理念、候选名（天籁元钟/传响廊/万籁场）与索引条目内容语义待复审；效果正式名称未发布（DS-JINDAN-NAMES-20260718-01），文档只引用 effect_id 与矩阵功能性临时代号；check-data-chain 未运行（本轮无 CSV/asset 变化）；BattleSim 未运行（任务卡明确不涉及数值强度）
+- 残留风险：三份位置文档的理念、白名单收窄项与证位成就均为 DeepSeek 按矩阵与规范原文推演，未经 Codex 独立复审；具体位置名称为本批次候选名，复审不通过时需按普通返工同步修改名称、路径与索引引用；主场景/山河细节为设定稿，未经运行时验证。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01H-3a8ce2c0 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01H 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01H
+- 候选提交：cb8db20ba7c466618cef141e1ae2e44da13f4b5d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Breath_TRANSFORM01_驭机渡.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Breath_DOMAIN01_启寂坛.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Breath_SOURCE_万灵枢.txt
+- 已验证：pwsh tools/check-review-text.ps1 -Paths docs,开发管理：OK（724 文件）；tools/check-pending-whitespace.ps1（4 个 expectedPaths，暂存前与 finalize 脚本内各跑一次）：OK；git diff --cached --check：通过，无空白错误；三份文档 positionId 全局唯一（全目录 24 份位置文档各 1 个身份字段）且已登记金丹位格索引 §六；金丹位格索引同步：§四已完成独立文档 21→24、§五息识道路注、§六登记 24 个待审核条目并含息识道路 3 行；candidate 提交为 baseCommit afb1690 的唯一直接后继，changed paths 恰好等于 4 个 CandidatePaths，工作树干净
+- 未验证：BattleSim 未运行：本任务为纯内容生产，不涉及数值强度（任务卡明确无需运行）；check-data-chain.ps1 未运行：无 CSV / asset 变化；Codex 独立复审未执行：候选名（万灵枢／驭机渡／启寂坛）与内容按本批次方案标「⚠️ 已修改/未审核」，待 Codex 复审
+- 残留风险：具体位置名称与内容为本批次 DeepSeek 生产候选，未经 Codex 独立复审与用户确认；复审不通过时需按普通返工同步修改名称、路径与引用，不设置独立重命名阶段；三份文档的效果白名单收窄项与化位「拒/调/启」三面、界位「弱控制/弱调御/弱启寂」表述需复审确认未越 ROAD_BREATH 权限边界。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01I-8f79474c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01I 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01I
+- 候选提交：9dc77dc1c6ad55c0cb101ccb27dc008a12bbc3a0
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Ingest_TRANSFORM01_化津炉.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Ingest_DOMAIN01_谷神场.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Ingest_SOURCE_百味玄关.txt
+- 已验证：check-review-text（docs,开发管理，727 文件）通过；check-pending-whitespace（4 文件）通过；git diff --cached --check 通过；positionId 全局唯一（每个 ID 仅出现于自身文档、两个同道路位置文档对比表与索引，与既有批次模式一致）且已登记索引；3 份文档各 13 大节齐全、§十二检查清单 19 项逐项 [x]；seatNameKey、理念摘要、效果白名单、证位档案标识与索引条目逐项一致；索引 §四数量汇总 24→27、§五注行与 §六登记 3 条目同步，无残留旧计数；candidate 提交 9dc77dc 为 base（af564ca）唯一直接后继，changed paths 精确等于 4 个 CandidatePaths，工作树干净
+- 未验证：Codex 独立复审（候选名与内容；待 codex_review/codex/ready 转换）；BattleSim（任务卡注明不涉及数值强度，无需运行）；check-data-chain（本批次无 CSV/asset 变化，未运行）
+- 残留风险：3 个具体位置名称（百味玄关／化津炉／谷神场）为本批次候选名，positionId 与命名均待 Codex 独立复审；复审不通过时需按普通返工同步修改名称、路径与引用（不设独立重命名阶段），通过前不进入正式显示事实。未运行 BattleSim（任务卡明确不涉及数值强度）与 check-data-chain（无 CSV/asset 变化）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01J-fcabf4fb · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01J 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01J
+- 候选提交：f0e6bc92d91a634d781de5c6c869008b38f11d63
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Body_TRANSFORM01_易骨关.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Body_DOMAIN01_法身庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Body_SOURCE_形骸祖窍.txt
+- 已验证：三份位置文档按金丹位格设计规范 §十一 13 大节固定骨架逐节完整（源位形骸祖窍、化位易骨关、界位法身庭）；positionId 全局唯一（JD_SixConsciousness_Body_SOURCE/TRANSFORM01/DOMAIN01），三份文档与索引 §六 条目一致；效果白名单仅含 ROAD_BODY 既有三项 BODY_SIZE/BODY_MORPH/BODY_INTERFACE，逐项适配理由、位置理念收窄项与矩阵 §五 回指完整，未新增效果、位格类型或第二源位；三层证位条件（道路共享履历＋位格类型通用要求＋位置专属成就）与五种登位路径逐份写出身识道路本位置具体入口；战棋玩法、主场景玩法、山河周期结算按每效果 10 项完整循环分节，未拿「山河落点」替代主场景玩法；check-review-text：OK（730 files）；check-pending-whitespace：OK（4 files）；git diff --cached --check：通过；金丹位格索引 §四 已完成独立文档 30、§五 身识道路行注、§六 30 个待审核条目同步一致
+- 未验证：具体位置候选名（形骸祖窍/易骨关/法身庭）未经 Codex 复审，未进入正式显示事实；三份文档内容未经 Codex 独立复审（自审禁止）；证位档案标识 PROOF_BODY_SOURCE_01 / PROOF_BODY_TRANSFORM01_01 / PROOF_BODY_DOMAIN01_01 为候选标识，待复审确认；证位成就与山河实例的具体周期数、阈值数值未锁定（由档案配置读取）
+- 残留风险：具体位置候选名（形骸祖窍/易骨关/法身庭）与三份文档内容未经 Codex 独立复审；复审不通过时需按普通返工同步修改名称、路径与引用；证位成就与山河实例的具体周期数、阈值未锁定数值（按档案配置读取，本文件不锁定平衡数值）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01K-e357d97c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01K 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01K
+- 候选提交：62f992c3e99127456486f6ce882b99c93ffd50cb
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_SixConsciousness_Action_TRANSFORM01_行止门.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Action_DOMAIN01_万机局.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Action_SOURCE_发念枢.txt
+- 已验证：check-pending-whitespace（4 个候选文件通过，执行 2 次）；check-review-text -Paths docs,开发管理（733 文件通过）；git diff --cached --check（finalizer 内执行通过）；三份文档 §十二 检查清单逐项自检通过，positionId 全局唯一且与索引一致；候选提交为基提交 900c494 直接后继，仅含 4 个 expectedPaths，工作树干净
+- 未验证：Codex 独立复审（按工作流由 Codex 执行，DeepSeek 不自审）；BattleSim（任务卡明确不涉及数值强度，无需运行）
+- 残留风险：三份文档与索引条目为待审核候选内容，具体位置名称（发念枢/行止门/万机局）为本批次候选名，尚未经 Codex 复审，复审通过前不进入正式显示事实；不涉及数值强度，未运行 BattleSim
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01L-9718b47c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01L 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01L
+- 候选提交：0c46a3b156c34ac4dd1d1f9c199fd4f3721e0774
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_YinYang_Yin_TRANSFORM01_潜曜关.txt、docs/基础设定/金丹位格/界位/JD_YinYang_Yin_DOMAIN01_朔夜庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_YinYang_Yin_SOURCE_玄牝之门.txt
+- 已验证：check-pending-whitespace.ps1：4 个目标文件通过（暂存前与 finalize 内共两轮）；check-review-text.ps1 -Paths docs,开发管理：736 个文件通过；git diff --cached --check：通过，无空白错误；positionId 全局唯一：JD_YinYang_Yin_SOURCE／TRANSFORM01／DOMAIN01 仅存在于本轮 4 个文件；索引一致性：§六 36 条待审核登记行、§四数量 36、§五阴道路注已同步，无残留 33
+- 未验证：check-data-chain.ps1 未运行：本轮无 CSV／asset 变化；BattleSim 未运行：本轮为文档内容生产，不涉及数值强度；Codex 独立复审未进行：属固定入口正式提交后的审核路由，DeepSeek 不自审
+- 残留风险：三份文档的具体位置名称与全部内容均为本批次候选，标记「⚠️ 已修改/未审核」；Codex 复审不通过时需按普通返工同步修改名称、路径与索引引用，复审通过前不进入正式显示事实。矩阵、效果、装配、证位规则及任何数值/运行时均未改动。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01M-af446ed0 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01M 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01M
+- 候选提交：6258645a97787700be1472d999f7b29124674078
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_YinYang_Yang_TRANSFORM01_曜行关.txt、docs/基础设定/金丹位格/界位/JD_YinYang_Yang_DOMAIN01_长昼庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_YinYang_Yang_SOURCE_扶桑天门.txt
+- 已验证：金丹位格设计规范 §十二 检查清单：3 份位置文档 §十三 逐项勾选通过，13 大节合同（含白名单逐项适配、三层证位、五种登位路径、战棋/主场景/山河/组织影响/生命周期）齐全；pwsh tools/check-review-text.ps1 -Paths 'docs,开发管理'：OK（739 files）；pwsh tools/check-pending-whitespace.ps1（4 个 ExpectedPaths）：OK；finalize 脚本内部复跑同样 OK；git diff --cached --check：OK；暂存内容仅 4 个 CandidatePaths（889 insertions、2 deletions）；positionId 全局唯一：JD_YinYang_Yang_SOURCE / JD_YinYang_Yang_TRANSFORM01 / JD_YinYang_Yang_DOMAIN01 除本批次索引条目与三份新文档外无任何既有引用；索引一致性：§四数量汇总 36→39、§五阳道路注、§六 3 个待审核条目与三份文档 §十三 登记段逐字段一致，均标「待审核」
+- 未验证：check-data-chain：未运行（本轮无 CSV/Unity asset 变化，任务卡不要求）；BattleSim：未运行（不涉及数值强度，任务卡明确无需运行）；Codex 独立复审：未进行（按边界不得自审，待 Codex 复审）
+- 残留风险：三个具体位置名称为本批次候选名（扶桑天门/曜行关/长昼庭），内容与候选名均待审核；Codex 复审不通过时需按普通返工同步名称、路径与引用，不设独立重命名阶段；效果正式名称仍待 DS-JINDAN-NAMES-20260718-01，本轮只引用 effect_id 与矩阵功能性临时代号；本批次未定义初始占据者与历史状态。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01N-3ec0ebab · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01N 的原子正式结果等待 Codex 独立复审；原自动 run 因共享管理路径变化停在 `hourly_revalidation_required`，本条由普通管理上下文基于最新 `master` 补齐，不恢复旧模型会话。
+- 任务：C-HS-YY-JD-01N
+- 候选提交：2068d5eac76baae71fa7ae70e335cd6e9faa85d6
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_Cosmos_Space_TRANSFORM01_折尺门.txt、docs/基础设定/金丹位格/界位/JD_Cosmos_Space_DOMAIN01_咫尺天.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_Cosmos_Space_SOURCE_六合枢.txt
+- 已验证：三份文档均含 §十一 13 大节完整骨架（源位/化位/界位各 13 节，逐项通过设计规范 §十二检查清单）；positionId 全局唯一：JD_Cosmos_Space_SOURCE / JD_Cosmos_Space_TRANSFORM01 / JD_Cosmos_Space_DOMAIN01 在三文档与索引中引用一致，未与既有 51 位置重复；效果白名单仅引用 ROAD_SPACE 既有三项 effect_id（SPACE_SCALE/SPACE_TRANSIT/SPACE_SEAL），逐项填写适配理由与位置理念收窄项；证位档案区分道路共享履历＋位格类型通用要求＋位置专属成就三层，五种登位路径均给出宇道路具体入口；未越 ROAD_SPACE 不可越界项（不动态增删邻接/不创造土地/不无落点传送/不自动取得主权）；候选的 pending-whitespace、review-text 与 staged diff 检查通过；索引 §四数量 39→42、§五宇道路注、§六3条待审核条目同步完成，均标记「⚠️ 已修改/未审核」。
+- 未验证：Codex 独立复审未进行（DeepSeek 不自审）；候选具体位置名称（六合枢/折尺门/咫尺天）未进入正式显示事实。
+- 残留风险：本批次3个具体位置名称与内容为候选，待 Codex 复审；复审不通过时按普通返工同步修改名称、路径与引用，不设置独立重命名阶段。未运行 BattleSim（无数值强度变化）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01L-9ec2caf6 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01L 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01L
+- 候选提交：b018598a3fafc6d6ba7e652f51fae1592ce922dd
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_YinYang_Yin_TRANSFORM01_潜曜关.txt、docs/基础设定/金丹位格/界位/JD_YinYang_Yin_DOMAIN01_朔夜庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_YinYang_Yin_SOURCE_玄牝之门.txt
+- 已验证：check-pending-whitespace.ps1：5 个 candidate 路径全部通过（提交前与 finalize 脚本内各一次）；check-review-text.ps1 -Paths docs,开发管理：OK（742 文件）；git diff --check：无空白错误；提交核验：b018598a 为 baseCommit bb99c09 的直接后继，changed paths 精确等于 5 个 CandidatePaths，worktree 干净；结构核验：三份文档均新增 §4.4（完整证位阶段/绑定前合法能力入口/最终原子重验/并行与临界争位）、§九 维护/NPC/失败三组实际规则、§十 10.1–10.3 分效山河结果与事件、§12.3 四类实例版本策略；§九/§十 编号连续无重复；版本号 1.1 与索引一致
+- 未验证：BattleSim：未运行——本任务为设定内容返工，无数值强度变化（任务卡明确不涉及数值强度时无需运行）；check-data-chain.ps1：未运行——无 CSV/asset 变化；Codex 独立复审：未执行——DeepSeek 不得自审，三份文档与索引保持「待审核」标记
+- 残留风险：1. 三份位置文档与索引条目仍为「⚠️ 已修改/未审核」候选状态，具体位置名称为本批次候选名，须 Codex 独立复核通过后才进入正式显示事实。2. 返工内容（证位阶段、维护/NPC/失败规则、山河结果与事件、版本策略）按 `证位与争位规则.txt` §四–§五、§八、`金丹位格设计规范.txt` §四/§七/§八/§十.3 与 `金丹基础效果装配与冲突规则.txt` §六 编写，规则细节待 Codex 复核确认。3. 山河周期结果与事件的具体数值依赖配置档案，未经 BattleSim 验证，文档未锁定任何数值。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01K-e46ac5c3 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01K 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01K
+- 候选提交：4db30226d3cbadbacf7acbfe8886ecfe16841845
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Action_TRANSFORM01_行止门.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Action_DOMAIN01_万机局.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Action_SOURCE_发念枢.txt
+- 已验证：check-pending-whitespace 通过（5 文件）；check-review-text 通过（742 文件，docs 与开发管理）；git diff --cached --check 通过；三份位置文档 §十二 检查清单逐项通过（含新增 4.4、10.1–10.3、12.3 条目）；三份文档 positionId 全局唯一且与金丹位格索引 §六 登记一致；万机局 §八 战棋段已无 MountainRiverCycleProfile 引用（仅头部变更说明与检查清单保留该文字）；位置档案版本、山河规则版本与索引版本引用一致（1.1）
+- 未验证：BattleSim 未运行：本任务不涉及数值强度，任务卡明确无需运行；check-data-chain 未运行：本轮无 CSV / asset 变化
+- 残留风险：万机局战棋持续／维持配置按审核反馈采用通称表述，既有事实源中无具名档案名，具体配置命名留待 Codex 复核确认；返工内容（含候选名称、证位入口与山河事件）尚未经 Codex 独立复审，未进入正式显示事实。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01O-563ed700 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01O 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01O
+- 候选提交：b3204ecceeab173d58274a9a60a601620c37e0bf
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_Cosmos_Time_TRANSFORM01_刻漏关.txt、docs/基础设定/金丹位格/界位/JD_Cosmos_Time_DOMAIN01_迟速庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_Cosmos_Time_SOURCE_岁序轮.txt
+- 已验证：check-review-text（-Paths docs,开发管理）：OK（745 文件）；check-pending-whitespace（4 个预期路径）：OK（暂存前与 finalizer 内共两次）；git diff --cached --check：通过，无空白错误；3 份新位置文档各含 13 个 ## 大节，符合金丹位格设计规范 §十一 骨架；positionId JD_Cosmos_Time_SOURCE/TRANSFORM01/DOMAIN01 全局唯一且已登记索引 §六；索引 §四 已完成独立位置文档 42→45、§五 宙道路注、§六 39 待审核＋6 已审核条目及 3 行登记同步一致；候选提交为 baseCommit 9822589 的直接后继，changed paths 恰为 4 个预期路径，工作树干净
+- 未验证：check-data-chain：未运行（无 CSV/asset 变化，任务卡仅在涉及 CSV 或 asset 变化时要求）；BattleSim：未运行（无数值强度变化，任务卡明确不涉及）
+- 残留风险：三个具体位置名称（岁序轮/刻漏关/迟速庭）为本批次候选名，Codex 复审不通过时需按普通返工同步修改名称、路径与索引引用；效果正式名称仍待 DS-JINDAN-NAMES-20260718-01；索引条目的审核记录由 Codex 复审结论填充，本轮未预填审核方结论。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01P-ec62cc7f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01P 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01P
+- 候选提交：56d6a61fa601edf40d29dab97192f844c03ddada
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_CauseEffect_Cause_TRANSFORM01_移契门.txt、docs/基础设定/金丹位格/界位/JD_CauseEffect_Cause_DOMAIN01_万应场.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_CauseEffect_Cause_SOURCE_缘起枢.txt
+- 已验证：check-review-text.ps1 -Paths docs,开发管理 通过（748 文件）；check-pending-whitespace.ps1 通过（4 文件，无尾随空白）；git diff --cached --check 通过，无空白错误；三份文档 13 大节骨架齐全，检查清单 19 项全部勾选，0 项未勾；金丹位格索引 §六 48 行＝42 待审核＋6 已审核，与批次说明一致；金丹位格索引 §四 已完成独立位置文档 45→48，含因道路说明；positionId JD_CauseEffect_Cause_SOURCE/TRANSFORM01/DOMAIN01 全局唯一，已登记索引；三份文档效果白名单逐项适配理由与位置理念收窄项齐全，仅引用 ROAD_CAUSE 既有 effect_id
+- 未验证：Codex 独立复审（预期后续 codex_review 步骤，未预填审核结论）；候选具体位置名称（缘起枢／移契门／万应场）审核（本批次候选名，未审核）；BattleSim 数值验证（任务卡明确不涉及数值强度，无需运行）
+- 残留风险：内容与候选名均为「待审核」状态；Codex 复审不通过时需按普通返工同步修改名称、路径与引用（不改 positionId）；索引数量口径（48 份已完成文档）以复审通过后为准。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01L-85dfc422 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01L 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01L
+- 候选提交：64d590e4b8d7182462cbc523d73842d59b430bc8
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/界位/JD_YinYang_Yin_DOMAIN01_朔夜庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt
+- 已验证：check-review-text 通过（750 文件，docs 与开发管理）；check-pending-whitespace 通过（候选路径 5 文件；finalize 阶段 3 文件）；git diff --check 通过（无空白/行尾错误）；返工项修复：朔夜庭 §8.1–8.3 战棋段不再读取只属山河层的 MountainRiverCycleProfile，改用合法战棋持续／维持配置（与 C-HS-YY-JD-01K 万机局同款措辞），战棋实例与山河实例分离（§8.1 第 9 项、§10 第 2 项『战斗领域实例永不转正为山河实例』）；位置档案版本 1.1→1.2 全文档一致：头部变更说明、§一版本字段、§十 规则版本（259/267/273/279 行）、§12.3 存档版本、§十三 索引登记行，以及索引 changelog 头与 §六 朔夜庭行；新增 §十三 检查清单项：战棋领域持续与维持只使用战棋持续／维持配置，不读取山河层 MountainRiverCycleProfile（8.1–8.3）；未通过审核清单 C-HS-YY-JD-01L 返工状态按 C-HS-YY-JD-01K 先例更新为已完成返工、待 Codex 复核；positionId JD_YinYang_Yin_DOMAIN01 全局唯一且与索引 §六 登记一致（1.2、待审核）；candidate 提交为 baseCommit cfe8c41 的直接后继，worktree 干净，changed paths 为 expectedPaths 子集
+- 未验证：Codex 独立复审（DeepSeek 不自审，按路由交 Codex 复核）；BattleSim 未运行——本轮为文档分层措辞返工，无数值/平衡变化，任务卡明确不涉及数值强度时无需运行；玄牝之门、潜曜关两文档本轮无变化——返工项仅指向朔夜庭，且经检索二者战棋段均无 MountainRiverCycleProfile 引用
+- 残留风险：阳道路长昼庭、水道路沧溟泽国等已审核或待审核的界位文档 §8.1 战棋段仍存在同款「领域按周期运行，周期定义由 MountainRiverCycleProfile 读取」措辞；不在本任务授权路径内，未改动。Codex 复核时如确认属同源分层问题，需另立任务定向处理，不应在本卡内扩散。另：朔夜庭位置档案版本升至 1.2，若此前存在引用旧版本 1.1 的存档/山河实例，按 §12.3 迁移策略由版本档案重验处理；candidate 阶段尚无正式引用。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01Q-954dbcf8 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01Q 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01Q
+- 候选提交：c855fc76508f1b194ca8996ccb601fcbb947af03
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/基础设定/金丹位格/化位/JD_CauseEffect_Result_TRANSFORM01_定谳门.txt、docs/基础设定/金丹位格/界位/JD_CauseEffect_Result_DOMAIN01_收缘庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_CauseEffect_Result_SOURCE_报成镜.txt
+- 已验证：三份位置文档按金丹位格设计规范 §十一 13 大节固定骨架完整生产：源位写明唯一根本来源、最直接规则操作与不可分裂原因；化位写明固定传播/筛选途径（判/移/先三面）及与同道路其他化位区分标准；界位写明领域形态（弱改写/弱转移/弱果先因后）及与同道路其他界位区分标准；与同道路其他位置的差异可由规则对象、媒介、传播/领域结构验证；效果白名单开放所属道路完整效果库 RESULT_REWRITE／RESULT_TRANSFER／RESULT_BEFORE_CAUSE 三项，逐项填写适配理由与位置理念收窄项；装配由位格类型决定调用源版/化版/界版，位置理念不被单一效果位别版本取代；三层证位条件（果道路共享履历三指标＋位格类型通用要求＋位置专属成就三则）与五种登位路径（夺取/继承/敕封/暂寄/独立应位）均给出本位置具体入口，未跳过个人完整证位；战棋玩法、主场景玩法、山河周期结算、世界与组织影响、AI/知识显示/存档/版本/生命周期各节按规范逐项完整；全程遵守 ROAD_RESULT 不可越界项（不免除因债；不改受保护历史；不直接改境界、位格或人格），未新增效果、第二源位、组合配方或数值；positionId 全局唯一且已登记索引：JD_CauseEffect_Result_SOURCE／JD_CauseEffect_Result_TRANSFORM01／JD_CauseEffect_Result_DOMAIN01 在 §六 各登记一行，全库检索无重复；金丹位格索引同步：新增 3 个待审核条目（含候选名、证位档案标识 PROOF_RESULT_*_01 / 1.0、位置档案版本 1.0、正式文档路径），§四 已完成独立位置文档 48→51，§五 果道路行新增本批次注，§六 批次说明更新为 42 个待审核条目与 9 个已审核条目，顶部登记本批次「⚠️ 已修改/未审核」注；全部修改标记「⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash」，未预填审核方结论；check-review-text：OK（753 files checked）；check-pending-whitespace：OK（4 files checked）；git diff --cached --check：通过；工作树清洁；candidate c855fc7 为 baseCommit 3855e93 直接后继，仅含 CandidatePaths 4 个文件，无无关改动
+- 未验证：Codex 独立复审未执行（DeepSeek 不得自审）；三份文档内容与具体位置候选名（报成镜/定谳门/收缘庭）均待 Codex 复审，通过前不进入正式显示事实；check-data-chain 未运行：本轮无 CSV/asset 变化，任务卡仅要求涉及 CSV 或 asset 变化时运行；BattleSim 未运行：本轮为纯文档内容生产，不涉及数值强度，任务卡明确无需运行；位置媒介与设施名称（报成镜台、结果卡册、承引案、写入时点印；门枢、判词牌、承引簿、落地闸；庭台、缘簿、承引碑、落地令）为本批次新增叙述性名称，未经审核；效果正式名称依赖 DS-JINDAN-NAMES-20260718-01，文档仅引用 effect_id 与矩阵功能性临时代号
+- 残留风险：三份位置文档与索引条目为「待审核」状态：Codex 复审不通过时需按普通返工同步修改名称、路径与引用（不设独立重命名阶段），positionId 一经正式引用不得因改名而变化；索引中 42 个待审核条目与 9 个已审核条目的数量口径依赖后续各批次审核结论同步；本批次新增的媒介/设施叙述性名称与三面（判/移/先）、三弱规则（弱改写/弱转移/弱果先因后）表述未经用户与 Codex 确认；正式效果名称与显示字段仍待 DS-JINDAN-NAMES-20260718-01 定稿。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-GZ-UI-TEXT-01-bd2c64d9 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-UI-TEXT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-GZ-UI-TEXT-01
+- 候选提交：ffa5a007ddfb5d209410c8798ee695d7f0d57cad
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/任务归档/验证记录/关中正式薄切片UI文本验证记录.txt、src/Assets/Scripts/Game/BattleUIManager.cs、src/Assets/Scripts/Settlement/SettlementSceneView.cs、src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs、src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs
+- 已验证：dotnet build src/TianZhang.EditModeTests.csproj：0 错误，2 个既有 CS0649 警告；EditMode：434 执行 / 432 通过 / 2 失败，2 项失败与 baseCommit 基线逐项一致，返工新增 2 用例全过；PlayMode：5 执行 / 5 通过 / 0 失败，含完整薄切片 runner；check-data-chain.ps1：OK（language keys=544）；check-review-text.ps1：OK（377 文件）；check-pending-whitespace.ps1：OK（5 个返工候选路径）；git diff --cached --check：OK；automation-finalize-commit.ps1 生成唯一 candidate 提交，worktree 干净，为 base 251968c 直接后继，changed paths 全部在 expectedPaths 内
+- 未验证：Codex 独立复核（pending_review，按外部交付边界转 codex_review/codex/ready）；未通过审核清单.txt 的返工状态行由共享入口在正式提交时投影，candidate 未改动
+- 残留风险：战斗日志按原样呈现，含 Language 键子串的机器原因/档案键在日志文本中原样可见（稳定原因保留在日志属本卡设计边界，由 Codex 复核确认）；术法/神通按钮标签中文显示依赖 ExplorationController 源端既有 UiText.Resolve 保持；AdventureSourceText 遭遇错误文本仍使用 ResolveEmbedded（已证明显示字段，内容为机器原因，非用户文本）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

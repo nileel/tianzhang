@@ -17,7 +17,7 @@
     "src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/JindanStaticStates.fixture.csv.meta",
     "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs",
-    "开发管理/金丹静态样例验证记录.txt",
+    "开发管理/任务归档/验证记录/金丹静态样例验证记录.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-JD-SAMPLE-01.txt",

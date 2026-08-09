@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-30：已完成正式内容目录导入与只读查询；四领域 CSV 经整表与跨表预验证后生成 GUID 保持的资产及 ContentCatalogData，未接入任何消费者。验证记录见 开发管理/正式内容目录数据链验证记录.txt。",
+  "stateReason": "2026-07-30：已完成正式内容目录导入与只读查询；四领域 CSV 经整表与跨表预验证后生成 GUID 保持的资产及 ContentCatalogData，未接入任何消费者。验证记录见 开发管理/任务归档/验证记录/正式内容目录数据链验证记录.txt。",
   "expectedPaths": [
     "src/Assets/DataConfig/README.txt",
     "src/Assets/DataConfig/Settlements.csv",
@@ -48,7 +48,7 @@
     "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
     "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs.meta",
     "tools/check-data-chain.ps1",
-    "开发管理/正式内容目录数据链验证记录.txt",
+    "开发管理/任务归档/验证记录/正式内容目录数据链验证记录.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/自动工作流状态.txt",

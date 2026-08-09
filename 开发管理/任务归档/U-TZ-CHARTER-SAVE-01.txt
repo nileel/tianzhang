@@ -28,7 +28,7 @@
     "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
     "src/Assets/DataConfig/README.txt",
-    "开发管理/册界状态持久化验证记录.txt",
+    "开发管理/任务归档/验证记录/册界状态持久化验证记录.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/任务列表/场景与Unity任务.txt",

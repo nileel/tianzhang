@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：水府地纪已作为唯一生产条目导入并生成 asset；有效样例与逐项失败关闭断言已验证，详情见 开发管理/册界纵向样例数据验证记录.txt。规则事务、存档和 Unity 交互仍未接入。",
+  "stateReason": "2026-07-31：水府地纪已作为唯一生产条目导入并生成 asset；有效样例与逐项失败关闭断言已验证，详情见 开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt。规则事务、存档和 Unity 交互仍未接入。",
   "expectedPaths": [
     "src/Assets/DataConfig/CharterRuleDefinitions.csv",
     "src/Assets/DataConfig/Language.csv",
@@ -20,7 +20,7 @@
     "src/Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_charter_entry_suifu_diji.asset.meta",
     "src/Assets/Scripts/Editor/DataConfigImporter.cs",
     "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
-    "开发管理/册界纵向样例数据验证记录.txt",
+    "开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-TZ-CHARTER-SAMPLE-01.txt",
@@ -61,7 +61,7 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：册界新增测试通过；全套仅保留既有炼神预留术法日志断言失败，详见验证记录。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/tests/check-data-chain-tests.ps1`：通过。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过。
-- 完整结果与稳定拒绝码见 `开发管理/册界纵向样例数据验证记录.txt`。
+- 完整结果与稳定拒绝码见 `开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt`。
 
 ## 完成条件
 

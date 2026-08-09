@@ -23,7 +23,7 @@
     "src/Assets/Tests/EditMode/BountyRuntimeTests.cs.meta",
     "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
-    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-BOUNTY-01A.txt",
@@ -46,7 +46,7 @@
 - `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md` 的“四、状态、计数与原子领奖契约”“五、整表、跨表与运行时失败关闭”“六、fixture 规格”“七、后续顺序与非目标”。
 - `src/Assets/Scripts/Content/BountyData.cs::BountyData`、`src/Assets/Scripts/Content/ContentCatalogData.cs::TryGetBounty`、`src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset` 与 `src/Assets/DataConfig/Bounties.csv` 的首批生产悬赏事实。
 - `src/Assets/Scripts/Game/GameSession.cs::GameSession`、`src/Assets/Scripts/Game/InventoryGrantService.cs::InventoryGrantService.Grant`、`src/Assets/Scripts/Adventure/AdventureSceneController.cs::ConsumeFormalEncounterResult`、`src/Assets/Scripts/Adventure/FormalEncounterResult.cs::FormalEncounterResult.TryCreate`，以及 `src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs` 和 `src/Assets/Tests/EditMode/TacticalGridModelTests.cs` 的直接测试所有者。
-- `开发管理/关中正式敌人遭遇验证记录.txt`、`开发管理/关中物品原子授予验证记录.txt`、`开发管理/关中首批掉落与悬赏奖励参数验证记录.txt`。
+- `开发管理/任务归档/验证记录/关中正式敌人遭遇验证记录.txt`、`开发管理/任务归档/验证记录/关中物品原子授予验证记录.txt`、`开发管理/任务归档/验证记录/关中首批掉落与悬赏奖励参数验证记录.txt`。
 
 ## 实施范围
 

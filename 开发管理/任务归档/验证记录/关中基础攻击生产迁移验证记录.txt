@@ -47,7 +47,7 @@ CharacterCreationRules.BuildCharacterData -> unarmedBasicAttackProfileId = basic
   - `ContentCatalogDataTests`：石甲兽模板经 `Enemies.csv -> BuildEnemyTemplate` 显式绑定同一 ID，运行时复制正确。
   - `SceneArchitectureEditorTests`：正式场景与重建场景序列化同一 `basic_unarmed` asset GUID（场景重建不丢失引用）。
   - `TacticalGridModelTests`：正式新建玩家与石甲兽在同一生产档案上建立会话并双方完成基础攻击；两槽歧义与无装备槽引用 main_equipment 种类档案在会话建立前稳定失败（`basic_attack_binding_missing_or_ambiguous` / `basic_attack_profile_binding_kind_invalid`）。
-  - 2 项失败为已登记、与本卡路径无交集的既有基线（见 `开发管理/册界单据点交互与UI验证记录.txt`、`开发管理/AI合作沟通.txt`）：
+  - 2 项失败为已登记、与本卡路径无交集的既有基线（见 `开发管理/任务归档/验证记录/册界单据点交互与UI验证记录.txt`、`开发管理/AI合作沟通.txt`）：
     1. `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`：纯内存逻辑断言 `PULSE_ADVANTAGE` 得到 `PULSE_NEUTRAL`，由共享冲突契约所有者（Codex）裁决；
     2. `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`：旧日志断言（`Excluded non-player spell ... scope=reserved`）与现行攻击档案加载器不一致。
 - `tools/run-unity-playmode-tests.ps1`：**4 执行 / 4 通过 / 0 失败**。新增 `GuanzhongBasicAttackPlayModeTests.FormalGuanzhongWildEncounterConsumesTheBasicUnarmedProfileOnBothSides`：正式 `guanzhong_wild` 入口 → 新建玩家与石甲兽运行时绑定与场景引用断言 → 沿既有寻路接近石甲兽 → 建立会话（双方成员 `BasicAttackProfile` 为同一生产 asset，不再返回三类装配错误）→ 玩家在相邻格沿已声明有向边完成基础攻击（Success）→ 敌方侧从同一档案解析并执行基础攻击，其结果受冻结环境边样本约束而非绑定错误。

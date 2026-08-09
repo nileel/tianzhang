@@ -435,7 +435,7 @@ Use this header for `N-SLOT-01`:
     "simulations/BattleSim/Program.cs",
     "docs/角色养成/术法槽位设计.txt",
     "docs/基础设定/角色数值设计.txt",
-    "开发管理/金丹槽位与丹枢加成数值验证记录.txt",
+    "开发管理/任务归档/验证记录/金丹槽位与丹枢加成数值验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-SLOT-01.txt"

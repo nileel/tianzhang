@@ -18,7 +18,7 @@
     "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
     "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs",
     "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs.meta",
-    "开发管理/册界纵向样例数据验证记录.txt",
+    "开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-TZ-CHARTER-MODEL-01.txt",
@@ -40,7 +40,7 @@
 
 - `docs/superpowers/specs/2026-07-22-tianzhang-charter-data-contract.md#所有权与分层`、`#动态状态边界`。
 - `docs/superpowers/specs/2026-07-31-tianzhang-charter-cross-runtime-conflict-contract-design.md#唯一所有者与依赖方向`、`#契约 v1`、`#直接测试矩阵`。
-- `开发管理/任务列表/场景与Unity任务.txt#《天章》册界体系后续 Unity 任务卡`、`开发管理/册界纵向样例数据验证记录.txt`。
+- `开发管理/任务列表/场景与Unity任务.txt#《天章》册界体系后续 Unity 任务卡`、`开发管理/任务归档/验证记录/册界纵向样例数据验证记录.txt`。
 - `src/Assets/Scripts/Content/CharterRuleDefinitionData.cs::CharterRuleDefinitionData|CharterRuleReferenceCatalog`、`src/Assets/Scripts/World/CharterRuntimeStateData.cs::CharterRuntimeStateData.TryValidate`、`src/Assets/Scripts/World/CharterConflictRules.cs::CrossTierChallengeArchive|RuleConflictInstance.Decide`。
 - `src/Assets/Tests/EditMode/CharterRuleDataTests.cs`、`src/Assets/Tests/EditMode/CharterConflictRulesTests.cs`、`simulations/BattleSim/BattleSim.csproj` 的 shared-source 编译引用。
 

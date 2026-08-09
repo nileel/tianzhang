@@ -22,7 +22,7 @@
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
     "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
     "src/Assets/Tests/EditMode/BountyBoardViewTests.cs.meta",
-    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-BOUNTY-01C.txt",
@@ -44,7 +44,7 @@
 
 - `docs/superpowers/specs/2026-07-28-guanzhong-formal-content-framework-design.md#6.2 城市场景`、`#6.4 悬赏运行时`、`#6.5 背包原子提交`、`#9.2 运行阶段`、`#十、验证矩阵`。
 - `docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md#五、整表、跨表与运行时失败关闭`、`#六、fixture 规格`、`#七、后续顺序与非目标`、`#八、验证口径`。
-- `开发管理/任务列表/场景与Unity任务.txt#任务`、`开发管理/关中悬赏状态机与计数验证记录.txt#U-BOUNTY-01B`、`开发管理/任务归档/U-BOUNTY-01B.txt`。
+- `开发管理/任务列表/场景与Unity任务.txt#任务`、`开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt#U-BOUNTY-01B`、`开发管理/任务归档/U-BOUNTY-01B.txt`。
 - `src/Assets/Scripts/Settlement/SettlementSceneController.cs::Start|RefreshSettlementUi|DispatchFeature`、`src/Assets/Scripts/Settlement/SettlementSceneView.cs::BindFeature|ShowFeatureResult`、`src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs::RegisterInitialFeatureHandlers|TryDispatch`。
 - `src/Assets/Scripts/Game/GameSession.cs::AcceptBounty|ClaimBounty|GetBountyState`、`src/Assets/Scripts/Game/BountyRuntime.cs::Accept|Claim|GetState`、`src/Assets/Scripts/Content/ContentCatalogData.cs::GetBountiesByIssuer`。
 - `src/Assets/Scripts/Editor/SceneBuilder.cs::BuildSettlementScene`、`src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs::SettlementFeatureDispatcherFailsClosedUntilBountyHandlerIsRegistered|SettlementSceneBuilderSerializesFormalCatalogAndPresentationReferences`、`src/Assets/Tests/EditMode/BountyRuntimeTests.cs`。

@@ -8,7 +8,7 @@
 
 - 异常 run 为 `125605c2-8c75-4f82-905c-ca77f33f7a2a`，owner 为 `deepseek`，当前状态为 `attention_required`。
 - candidate 使用了 `DEC-20260806-DSPROD01-SCOPE`；`set-task-automation-state.ps1` 只接受 `^DEC-[0-9]{8}-[A-Z0-9]+$`。
-- candidate 提交 `0d5f8f72a309fec0a419214720dc399c3ee8f301` 只修改 `开发管理/关中基础攻击生产迁移验证记录.txt`，没有业务变化进入 `master`。
+- candidate 提交 `0d5f8f72a309fec0a419214720dc399c3ee8f301` 只修改 `开发管理/任务归档/验证记录/关中基础攻击生产迁移验证记录.txt`，没有业务变化进入 `master`。
 - 用户选择原决策方案 A：授权本卡修改环境边输入，由 DeepSeek 在新 run 中继续返工。
 - 不修改飞书通知策略，不恢复旧模型会话，不强行重放非法决策合同。
 

@@ -19,7 +19,7 @@
     "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
     "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
-    "开发管理/筑基紫府持久化验证记录.txt",
+    "开发管理/任务归档/验证记录/筑基紫府持久化验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-FPD-SAVE-01.txt",
@@ -75,4 +75,4 @@
 
 - `FoundationPurpleMansionRuntimeState` 现在以可序列化快照保留镇府神通、强化节点、行动、停修原因、已提交周期与结丹形成快照；`Character` 与 `GameSession` 提供显式捕获／应用边界。
 - `GameSessionSnapshot` 升至 schema 2；schema 0／1 不伪造道基紫府状态，schema 2 在替换会话前完整验证，并拒绝形成金丹后的容量或五府篡改。
-- 验证：项目 EditMode 编译通过；三个直接相关 Unity EditMode 测试通过。全量 EditMode 仍受无关 CSV fixture 的 Windows 映射文件锁影响，详见 `开发管理/筑基紫府持久化验证记录.txt`。
+- 验证：项目 EditMode 编译通过；三个直接相关 Unity EditMode 测试通过。全量 EditMode 仍受无关 CSV fixture 的 Windows 映射文件锁影响，详见 `开发管理/任务归档/验证记录/筑基紫府持久化验证记录.txt`。

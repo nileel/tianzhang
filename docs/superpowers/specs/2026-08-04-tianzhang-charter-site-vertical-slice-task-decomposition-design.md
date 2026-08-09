@@ -162,7 +162,7 @@ D-TZ-CHARTER-SITE-01
 - `src/Assets/Tests/EditMode/CharterSiteDataTests.cs` 及 `.meta`
 - `tools/check-data-chain.ps1`
 - `tools/tests/check-data-chain-tests.ps1`
-- `开发管理/册界单据点站点数据验证记录.txt`
+- `开发管理/任务归档/验证记录/册界单据点站点数据验证记录.txt`
 - 对应任务卡、归档、backlog 与队列路径
 
 完成条件：生产目录可精确取得唯一旧水驿站点；合法行完整投影；grant、请求与左右候选能经同一 shared 决定稳定得到册界侧未获胜；每类非法引用在任何 asset 写入前失败关闭；没有测试 fixture、场景硬编码、候选默认值或默认站点。
@@ -179,7 +179,7 @@ D-TZ-CHARTER-SITE-01
 - `src/Assets/Scripts/Game/GameSession.cs`
 - `src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs` 及 `.meta`
 - `src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs`
-- `开发管理/册界单据点运行时交互验证记录.txt`
+- `开发管理/任务归档/验证记录/册界单据点运行时交互验证记录.txt`
 - 对应任务卡、归档、backlog 与队列路径
 
 完成条件：从 `GameSession.CharterRuntimeState == null` 的未接入状态开始，合法动作能构造字段完整且通过现有校验的 candidate；candidate 的 recognized／connected／registered 字段逐项由真实动作证明映射，长期结果字段在调用前为空；越序与失败不推进；金丹未获胜和元婴受锚不提交；正常调用只提交一次且首次提交同时把 `CharterDefinitionCatalogVersion` 置为当前生产目录版本；已有长期状态不能重新自举 registered 候选绕过重复供给拒绝；schema 4 保存读取保持长期结果。
@@ -202,7 +202,7 @@ D-TZ-CHARTER-SITE-01
 - `src/Assets/Scenes/SettlementScene.unity`
 - `src/Assets/Tests/EditMode/CharterSiteViewTests.cs` 及 `.meta`
 - `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
-- `开发管理/册界单据点交互与UI验证记录.txt`
+- `开发管理/任务归档/验证记录/册界单据点交互与UI验证记录.txt`
 - 对应任务卡、归档、backlog 与队列路径
 
 完成条件：当前正式据点可打开唯一站点；按钮按顺序提交并显示真实结果；非法／未知站点不打开；重新生成场景后所有序列化引用完整；没有第二 Canvas 或规则复制。
@@ -219,7 +219,7 @@ D-TZ-CHARTER-SITE-01
 - `src/Assets/Scripts/Adventure/AdventureSceneController.cs`
 - `src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs` 及 `.meta`
 - `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`
-- `开发管理/册界单据点环境引用验证记录.txt`
+- `开发管理/任务归档/验证记录/册界单据点环境引用验证记录.txt`
 - 对应任务卡、归档、backlog 与队列路径
 
 完成条件：只有当前地区已生效的水府地纪能解析为定义声明的 `env_guanzhong_wild`；缺失、重复、越界或 asset ID 不匹配时失败关闭；环境消费者不反写册界状态。
@@ -237,7 +237,7 @@ D-TZ-CHARTER-SITE-01
 - `src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs` 及 `.meta`
 - `tools/run-unity-playmode-tests.ps1`
 - `tools/test-run-unity-playmode-tests.ps1`
-- `开发管理/册界单据点端到端验证记录.txt`
+- `开发管理/任务归档/验证记录/册界单据点端到端验证记录.txt`
 - `开发管理/设计-当前状态.txt`
 - `开发管理/任务列表/场景与Unity任务.txt`
 - 对应任务卡、归档与队列路径

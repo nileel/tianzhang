@@ -15,8 +15,8 @@
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Battlefield.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
-    "开发管理/BattleSim范围朝向可空迁移验证记录.txt",
-    "开发管理/攻击档案跨端fixture验证记录.txt",
+    "开发管理/任务归档/验证记录/BattleSim范围朝向可空迁移验证记录.txt",
+    "开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-02.txt",
@@ -46,7 +46,7 @@
 - `simulations/BattleSim/GameData.cs::AreaShapeConfig`。
 - `simulations/BattleSim/Battlefield.cs::ValidateAreaTargetingConfig|IsWithinAreaShape`。
 - `simulations/BattleSim/BattleSimSelfTests.cs` 中全部 `AreaShapeConfig` 构造与范围形状直接测试。
-- `开发管理/攻击档案跨端fixture验证记录.txt#已确认的阻断事实`、`#未授权边界与所需决定`。
+- `开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt#已确认的阻断事实`、`#未授权边界与所需决定`。
 
 ## 实施范围
 

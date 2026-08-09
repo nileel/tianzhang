@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：正式 Adventure 已按稳定 ID 消费 EnemyData，显式解析 ai_melee，生成结构化遭遇结果并通过唯一库存入口原子授予；验证记录见 开发管理/关中正式敌人遭遇验证记录.txt。",
+  "stateReason": "2026-07-31：正式 Adventure 已按稳定 ID 消费 EnemyData，显式解析 ai_melee，生成结构化遭遇结果并通过唯一库存入口原子授予；验证记录见 开发管理/任务归档/验证记录/关中正式敌人遭遇验证记录.txt。",
   "expectedPaths": [
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
@@ -22,7 +22,7 @@
     "src/Assets/Scenes/AdventureScene.unity",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
-    "开发管理/关中正式敌人遭遇验证记录.txt",
+    "开发管理/任务归档/验证记录/关中正式敌人遭遇验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ENEMY-01.txt",

@@ -22,7 +22,7 @@
     "src/Assets/Tests/EditMode/NpcCultivationActionCoordinatorTests.cs.meta",
     "src/Assets/Tests/EditMode/NpcCultivationActionWeightProfileDataTests.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
-    "开发管理/NPC自主修炼Unity验证记录.txt",
+    "开发管理/任务归档/验证记录/NPC自主修炼Unity验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-FPD-AI-01.txt",

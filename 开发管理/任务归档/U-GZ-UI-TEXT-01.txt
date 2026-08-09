@@ -40,7 +40,7 @@
     "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta",
     "tools/check-data-chain.ps1",
-    "开发管理/关中正式薄切片UI文本验证记录.txt",
+    "开发管理/任务归档/验证记录/关中正式薄切片UI文本验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-UI-TEXT-01.txt",

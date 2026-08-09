@@ -38,7 +38,7 @@
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "tools/check-data-chain.ps1",
-    "开发管理/关中基础攻击生产迁移验证记录.txt",
+    "开发管理/任务归档/验证记录/关中基础攻击生产迁移验证记录.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-COMBAT-PROD-01.txt",

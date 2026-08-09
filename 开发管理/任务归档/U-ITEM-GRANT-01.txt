@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-07-31：已完成结构化物品原子授予；GameSession 仍是唯一库存所有者，批次在全量校验后一次性替换库存。验证记录见 开发管理/关中物品原子授予验证记录.txt。",
+  "stateReason": "2026-07-31：已完成结构化物品原子授予；GameSession 仍是唯一库存所有者，批次在全量校验后一次性替换库存。验证记录见 开发管理/任务归档/验证记录/关中物品原子授予验证记录.txt。",
   "expectedPaths": [
     "src/Assets/Scripts/Game/InventoryGrantService.cs",
     "src/Assets/Scripts/Game/InventoryGrantService.cs.meta",
@@ -18,7 +18,7 @@
     "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
     "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs",
     "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs.meta",
-    "开发管理/关中物品原子授予验证记录.txt",
+    "开发管理/任务归档/验证记录/关中物品原子授予验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ITEM-GRANT-01.txt",

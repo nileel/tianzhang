@@ -20,7 +20,7 @@
     "src/Assets/Scripts/Editor/SceneBuilder.cs",
     "src/Assets/Scenes/SettlementScene.unity",
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
-    "开发管理/关中据点功能分发验证记录.txt",
+    "开发管理/任务归档/验证记录/关中据点功能分发验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-SETTLEMENT-01.txt",

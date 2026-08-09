@@ -74,7 +74,7 @@
 - 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`（worktree 内 `src` 项目，首轮重建 Library）。Unity 进程退出码 2（其零失败门禁行为），完整 EditMode：333 项，331 通过、2 失败；失败仍为与本卡路径无关的既有基线：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（World 册界域期望 `PULSE_ADVANTAGE` 实际 `PULSE_NEUTRAL`）与 `DataConfigImporterContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（缺少预期攻击档案排除日志）。
 - 本卡直接用例：`SessionStateSnapshotTests` 16/16（新增 `RestoreRejectsBountyStateProgressCombinationsTheRuntimeCannotProduce`、`RestoreAcceptsAcceptedProgressBeforeTargetAndRejectsItAtTarget` 均通过；既有 `BountyInstancesRoundTripInCurrentSchemaAndLegacyVersionsRestoreEmpty`、`RestoreRejectsUnresolvableDuplicateOrIllegalBountyStateAtomically` 未回归）；`BountyRuntimeTests` 17/17、`AdventureSceneControllerTests` 14/14、`TacticalGridModelTests` 4/4 等既有用例未回归。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`：通过，检查 258 个文件。
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'src/Assets/Scripts/Game/GameSession.cs|src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs|开发管理/关中悬赏状态机与计数验证记录.txt'`：通过，检查 3 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'src/Assets/Scripts/Game/GameSession.cs|src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs|开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt'`：通过，检查 3 个文件；`git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 在提交前执行。
 
 ## U-BOUNTY-01B1 · Codex 独立复审与完成（2026-08-04）
 

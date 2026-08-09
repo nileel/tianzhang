@@ -44,7 +44,7 @@ BattleSim 现有 `SeatCompetitionScore`、`待争席` 与按样本汇总的字�
 
 ## 精确修改路径与自测矩阵
 
-N-SEAT-01B 的代码范围保持任务卡所列六个 BattleSim 文件：`GameData.cs` 放置位格记录、候选、协调器、绑定请求／结果和注册表；`Cultivation.cs` 与 `Character.cs` 去除单角色占据宣告；`SeatCompetitionSampleStats.cs` 与 `Program.cs` 改为输出协调结果；`BattleSimSelfTests.cs` 添加专用回归入口。验证记录写入 `开发管理/金丹确定性争位与原子占据验证记录.txt`。
+N-SEAT-01B 的代码范围保持任务卡所列六个 BattleSim 文件：`GameData.cs` 放置位格记录、候选、协调器、绑定请求／结果和注册表；`Cultivation.cs` 与 `Character.cs` 去除单角色占据宣告；`SeatCompetitionSampleStats.cs` 与 `Program.cs` 改为输出协调结果；`BattleSimSelfTests.cs` 添加专用回归入口。验证记录写入 `开发管理/任务归档/验证记录/金丹确定性争位与原子占据验证记录.txt`。
 
 最小自测矩阵必须覆盖：
 

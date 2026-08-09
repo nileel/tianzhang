@@ -37,7 +37,7 @@
 ## 必查范围
 
 - `docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md`：根对象、状态、行动、结丹锁及 fixture 边界。
-- `开发管理/四阶段成长与道基核心曲线数值验证记录.txt`、`开发管理/五府府体预算数值验证记录.txt` 与 `开发管理/养基与筑府周期参数数值验证记录.txt`。
+- `开发管理/任务归档/验证记录/四阶段成长与道基核心曲线数值验证记录.txt`、`开发管理/任务归档/验证记录/五府府体预算数值验证记录.txt` 与 `开发管理/任务归档/验证记录/养基与筑府周期参数数值验证记录.txt`。
 - `src/Assets/Scripts/Entity/Character.cs::FromData`、`RecalculateSlots`、`CalculateSlotLimits`，以及 `CharacterData.cs`、`FoundationPurpleMansionStateData.cs` 的直接状态所有者。
 - `src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs` 与 `src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs` 的结丹协调与 fixture 模式。
 

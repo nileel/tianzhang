@@ -92,7 +92,7 @@ src/Assets/Tests/EditMode/CharterRuleDataTests.cs
 src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs
 src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs
 src/Assets/DataConfig/README.txt
-开发管理/册界状态持久化验证记录.txt
+开发管理/任务归档/验证记录/册界状态持久化验证记录.txt
 ```
 
 直接 EditMode 用例至少覆盖：生产静态目录只解析已导入定义与批准目录、运行时无 Editor／fixture 回退、schema 4 往返深复制、schema 0～3 的明确未接入状态、目录版本不符、未知／重复条目、未知节点／授权／覆盖、占用或供给重复、缺失任一正负提交、当前地区条目不合法、非法档对完整旧会话的原子拒绝、已分配供给／占用／提交在重复读取中不重新结算。现有 `CharterRuleRuntimeTests` 必须改为从同一静态目录取得生产输入，不能继续调用 Editor factory。

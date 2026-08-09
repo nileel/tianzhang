@@ -17,7 +17,7 @@
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/Program.cs",
-    "开发管理/金丹冲突与QTE一致性验证记录.txt",
+    "开发管理/任务归档/验证记录/金丹冲突与QTE一致性验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-JD-RULE-01B.txt",
@@ -77,4 +77,4 @@
 
 - 2026-07-28：新增 `GoldenCoreConflictCandidates` 与 `GoldenCoreConflictResolver`。候选必须匹配既有稳定实位、冻结兼容档案、主承载实例、所属 `GoldenCoreRuntimeLedger` 以及成对冲突储备／成本档案；非法输入在比较前以稳定拒绝码返回。
 - 五项比较严格按变量权限与目标合法性、源／化／界位别、现实支点、已付代价、当前持续承载执行；前项决定后不合计权重。完全相等时只以显式整数脉冲成本计算可完成脉冲数，双方从各自 `abilityInstanceId` 的 `conflictReserve` 扣除并启动既有冷却状态。
-- `Combat.ResolveGoldenCoreConflict` 将 QTE 与跳过汇入同一候选准备和结算器；`golden-core-conflict-n-jd-rule-01b` 已覆盖初始失败、非法候选过滤、重复输入、QTE／跳过一致性与账本独立性。Release 构建和完整 BattleSim 均通过；详情见 `开发管理/金丹冲突与QTE一致性验证记录.txt`。
+- `Combat.ResolveGoldenCoreConflict` 将 QTE 与跳过汇入同一候选准备和结算器；`golden-core-conflict-n-jd-rule-01b` 已覆盖初始失败、非法候选过滤、重复输入、QTE／跳过一致性与账本独立性。Release 构建和完整 BattleSim 均通过；详情见 `开发管理/任务归档/验证记录/金丹冲突与QTE一致性验证记录.txt`。

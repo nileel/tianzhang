@@ -15,7 +15,7 @@
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "src/Assets/Tests/EditMode/Fixtures.meta",
-    "开发管理/攻击档案跨端fixture验证记录.txt",
+    "开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
@@ -82,7 +82,7 @@
 ## 已实施与验证（2026-08-02，DeepSeek V4 Flash，⚠️ 已修改/未审核）
 
 - 已在 owner worktree `d-combat-02-deepseek-recovery` 完成首次实施与验证，并形成首次业务提交和交接登记；随后 Codex 独立复审发现目录 `.meta` 遗漏。
-- 证据与覆盖矩阵：`开发管理/攻击档案跨端fixture验证记录.txt`。
+- 证据与覆盖矩阵：`开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt`。
 - 原交付提交范围为非生产 fixture（CSV + meta）、Unity 最窄投影入口（`DataConfigImporter.TryBuildAttackProfileProjection` / `TryValidateAttackProfileAssetIdProjection`）、Unity EditMode 用例、BattleSim `attack-profile-d-combat-02` self-test、验证记录、任务卡/队列/backlog 转换。
 - 未创建或填写生产 `src/Assets/DataConfig/AttackProfiles.csv`，未生成生产 AttackProfileData asset，未切换任何运行时消费者，未指定武器/术法/神通内容参数。
 - 具体生产内容切换仍必须另开迁移切片（契约「迁移顺序、fixture 与差异检查」第 6 条）。
@@ -97,5 +97,5 @@
 
 - 已确认 `Fixtures.meta` 纳入正式修复提交，Unity 目录身份遗漏消除，相关输入与此前通过的 Unity 攻击档案验证一致。
 - 复审追加发现并修复 BattleSim 精确 34 列表头校验、Art 公共投影断言和 Divine 公共投影断言缺口；经负责人明确授权，为 `DivineConfig` 增加默认值为 `0` 的末尾可选 `MPCost`，不改变既有静态配置或 Character 消费行为。
-- 自动化合同测试、BattleSim 定向 self-test、Release 完整运行、数据链和管理文本检查均通过；详细证据见 `开发管理/攻击档案跨端fixture验证记录.txt`。
+- 自动化合同测试、BattleSim 定向 self-test、Release 完整运行、数据链和管理文本检查均通过；详细证据见 `开发管理/任务归档/验证记录/攻击档案跨端fixture验证记录.txt`。
 - 本卡只完成非生产 fixture 与差异检查；生产 CSV／asset 和实际消费者切换仍属于独立迁移切片。

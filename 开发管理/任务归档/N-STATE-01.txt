@@ -17,7 +17,7 @@
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/Program.cs",
-    "开发管理/战斗状态回溯与因果债务验证记录.txt",
+    "开发管理/任务归档/验证记录/战斗状态回溯与因果债务验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-STATE-01.txt",
@@ -72,4 +72,4 @@
 - 2026-07-28：`CombatStateRuntime` 成为角色单一临时状态、检查点、自动响应容量和因果债务所有者；`Combat.Simulate` 在每场对局初始化该状态，并在正常主动行动边界记录局部快照、同步局部字段和恢复响应容量。
 - 状态档案仅接受 `BUFF`、`DEBUFF`、`MIXED`，按唯一实例 ID 持有，并稳定拒绝错误载体、缺失字段、目标所有者不一致、重复实例和状态 ID 极性翻转。
 - 回溯仅恢复角色局部字段与原状态实例，按事件顺序重放外部提交和受保护成本；因果债务不进入检查点。债务转移后没有第二份实例，重复转移／偿还不重复付款。
-- Release 构建、`state-rewind-causal-n-state-01` 独立自测和完整 BattleSim 审计均通过；详细输入与结果见 `开发管理/战斗状态回溯与因果债务验证记录.txt`。
+- Release 构建、`state-rewind-causal-n-state-01` 独立自测和完整 BattleSim 审计均通过；详细输入与结果见 `开发管理/任务归档/验证记录/战斗状态回溯与因果债务验证记录.txt`。

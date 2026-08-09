@@ -27,7 +27,7 @@
     "src/Assets/Tests/EditMode/CharterSiteDataTests.cs.meta",
     "tools/check-data-chain.ps1",
     "tools/tests/check-data-chain-tests.ps1",
-    "开发管理/册界单据点站点数据验证记录.txt",
+    "开发管理/任务归档/验证记录/册界单据点站点数据验证记录.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/任务列表/数据链路任务.txt",
@@ -80,7 +80,7 @@
 - 冻结并实现明确的 `CharterSites.csv` 表头；完整投影唯一 `charter_site_old_water_station` 行、语言键、`CharterSiteData`、相邻 `.meta`、生产 asset 和 `ContentCatalogData` 引用。
 - 扩展导入器，在写入任何 asset 前完成整表、跨表、唯一生产站点、门禁、管理、条目、遗物、授权、节点、覆盖、供给、提交、冲突 grant、世界变量、环境档案和显示键校验。
 - 导入验证用同一 shared 决定消费完整 grant 与左右候选，证明册界候选稳定未获胜；字段变化使该结论不再稳定时拒绝整行。
-- 新增直接正反 EditMode 用例，并把实际命令、结果、稳定拒绝原因和生成 asset／目录证据写入 `开发管理/册界单据点站点数据验证记录.txt`；按完成事件同步本卡、backlog、队列和直接后继卡。
+- 新增直接正反 EditMode 用例，并把实际命令、结果、稳定拒绝原因和生成 asset／目录证据写入 `开发管理/任务归档/验证记录/册界单据点站点数据验证记录.txt`；按完成事件同步本卡、backlog、队列和直接后继卡。
 
 ## 禁止项
 

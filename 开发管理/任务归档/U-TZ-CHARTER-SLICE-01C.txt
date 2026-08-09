@@ -18,7 +18,7 @@
     "src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs",
     "src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs.meta",
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
-    "开发管理/册界单据点环境引用验证记录.txt",
+    "开发管理/任务归档/验证记录/册界单据点环境引用验证记录.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -69,7 +69,7 @@
 - 新增无状态 `CharterEnvironmentProjection`，从当前地区已生效条目解析唯一定义、事件输出和 `environmentProfileId`，并与 Adventure 已序列化 asset 的 `profileId` 精确匹配。
 - `AdventureSceneController` 只调用投影、显示条目事件／档案 ID／稳定错误，并把匹配成功的既有 asset 交给现有环境链；不创建或修改 `EnvironmentProfileData`。
 - 直接测试覆盖当前地区水府地纪成功、非当前地区／未生效条目不输出、未知／重复定义、缺失／重复环境 ID、asset ID 错配和长期状态不变；扩展场景架构断言保护现有序列化引用。
-- 将实际命令、结果、稳定拒绝原因和不反写证据写入 `开发管理/册界单据点环境引用验证记录.txt`。
+- 将实际命令、结果、稳定拒绝原因和不反写证据写入 `开发管理/任务归档/验证记录/册界单据点环境引用验证记录.txt`。
 
 ## 禁止项
 

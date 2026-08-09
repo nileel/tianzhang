@@ -14,7 +14,7 @@
   "expectedPaths": [
     "src/Assets/Scripts/Game/GameSession.cs",
     "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
-    "开发管理/关中悬赏状态机与计数验证记录.txt",
+    "开发管理/任务归档/验证记录/关中悬赏状态机与计数验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-BOUNTY-01B1.txt",

@@ -17,7 +17,7 @@
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/Program.cs",
-    "开发管理/金丹三实位装配与账本验证记录.txt",
+    "开发管理/任务归档/验证记录/金丹三实位装配与账本验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-JD-RULE-01A.txt",
@@ -76,4 +76,4 @@
 
 - 2026-07-27：新增 `GoldenCoreAssembly`，仅接受源、化、界三种实位，并校验唯一 `JindanCoreBinding`、唯一丹相、不同主承载、完整紫府神通的逐实例账本与可变账本引用唯一性。五府有效样例保留五项能力账本，但只产生三项稳定实位。
 - `Character` 可把装配内的既有实例显式绑定到角色既有术法／神通槽；`Combat.Simulate` 在绑定存在时按该实例读取与更新资源、冷却。`GoldenCoreRuntimeLedger` 按 `abilityInstanceId` 唯一返回资源、冷却和 `conflictReserve` 状态；辅助与丹相重复引用同一实例不复制状态。
-- `golden-core-assembly-n-jd-rule-01a` 覆盖三组有效 fixture、第四实位、第二核心、第二丹相、共享账本反例与同一实例多处引用；先稳定失败为缺少模型，后通过。Release 构建和完整 BattleSim 通过；详情见 `开发管理/金丹三实位装配与账本验证记录.txt`。
+- `golden-core-assembly-n-jd-rule-01a` 覆盖三组有效 fixture、第四实位、第二核心、第二丹相、共享账本反例与同一实例多处引用；先稳定失败为缺少模型，后通过。Release 构建和完整 BattleSim 通过；详情见 `开发管理/任务归档/验证记录/金丹三实位装配与账本验证记录.txt`。

@@ -17,7 +17,7 @@
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/Program.cs",
-    "开发管理/金丹跨阶挑战与实位死亡验证记录.txt",
+    "开发管理/任务归档/验证记录/金丹跨阶挑战与实位死亡验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-FPD-DANXIANG-01.txt",
@@ -74,4 +74,4 @@
 
 - 2026-07-28：`CrossTierChallengeArchive` 以 grant ID、定义版本、目标变量、挑战者、许可来源、有效期和撤销状态重验资格；未知、版本不符、过期、撤销与目标不符均返回稳定拒绝码，重复同一挑战事件不写入资源或胜负。
 - `Character.ResolveGoldenCoreCarrierDeath` 对源、化、界任一静态主承载执行一次原子失位：释放该主承载的唯一运行账本，保留其余实例账本快照，写入受保护死亡记录并禁止后续换绑；同一死亡事件返回同一结算结果。
-- `golden-core-challenge-death-n-jd-rule-01c`、Release 构建及完整 BattleSim 均通过；详情见 `开发管理/金丹跨阶挑战与实位死亡验证记录.txt`。
+- `golden-core-challenge-death-n-jd-rule-01c`、Release 构建及完整 BattleSim 均通过；详情见 `开发管理/任务归档/验证记录/金丹跨阶挑战与实位死亡验证记录.txt`。

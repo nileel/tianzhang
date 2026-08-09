@@ -19,7 +19,7 @@
     "src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs.meta",
     "tools/run-unity-playmode-tests.ps1",
     "tools/test-run-unity-playmode-tests.ps1",
-    "开发管理/册界单据点端到端验证记录.txt",
+    "开发管理/任务归档/验证记录/册界单据点端到端验证记录.txt",
     "开发管理/设计-当前状态.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",

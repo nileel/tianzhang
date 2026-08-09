@@ -20,7 +20,7 @@
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
     "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
-    "开发管理/Unity环境规则运行时消费验证记录.txt",
+    "开发管理/任务归档/验证记录/Unity环境规则运行时消费验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ENV-RULE-01A.txt",
@@ -75,5 +75,5 @@
 ## 完成记录
 
 - 2026-07-28：`EnvironmentProfileRuntime` 完整复制并验证生产档案的地表、六通道、配对、五行引用、边和查询上限；`TacticalGridModel` 只保留成功投影，非法重配清空旧状态；`SpatialQueryBoardFactory` 仅消费该投影建立共享空间查询。缺失或未登记输入返回稳定原因，没有默认地表、现象或基础步数 fallback。
-- 验证：`dotnet build src/TianZhang.EditModeTests.csproj` 0 error（2 条既有 obsolete 警告）；Unity EditMode 215/215 通过。详情见 `开发管理/Unity环境规则运行时消费验证记录.txt`。
+- 验证：`dotnet build src/TianZhang.EditModeTests.csproj` 0 error（2 条既有 obsolete 警告）；Unity EditMode 215/215 通过。详情见 `开发管理/任务归档/验证记录/Unity环境规则运行时消费验证记录.txt`。
 - 未修改生产环境参数、BattleSim、伤害、场景美术或 UI；`U-ENV-RULE-01B` 已转为 ready。

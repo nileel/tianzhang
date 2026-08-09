@@ -97,7 +97,7 @@
 - 测试：`SceneArchitectureEditorTests`、`BountyBoardViewTests`、`CharterSiteViewTests`、`CharterVerticalSlicePlayModeTests` 更新断言；
   新增 `GuanzhongFormalUiTextTests`（EditMode）、`GuanzhongFormalUiTextPlayModeTests`（PlayMode，含 .meta）。
 - `tools/check-data-chain.ps1`：新增 UI 文本投影校验（键集存在性 + 场景 languageTable 引用）。
-- `开发管理/关中正式薄切片UI文本验证记录.txt`：本记录。
+- `开发管理/任务归档/验证记录/关中正式薄切片UI文本验证记录.txt`：本记录。
 
 ## 三、实际命令与结果
 
