@@ -3,7 +3,10 @@ using NUnit.Framework;
 using TianZhang.Core;
 using TianZhang.Spatial;
 using TianZhang.Tactical;
+using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using UnityEngine;
+using EnvironmentProfileData = TianZhang.Infrastructure.UnityContent.EnvironmentProfileAsset;
 
 using TianZhang.Spatial;
 

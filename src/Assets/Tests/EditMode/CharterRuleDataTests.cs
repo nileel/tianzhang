@@ -29,7 +29,7 @@ namespace TianZhang.Tests
         [Test]
         public void ParseCharterRuleDefinitionsProjectsEveryOneOfTheEighteenContractFields()
         {
-            var definitions = DataConfigImporter.ParseCharterRuleDefinitions(
+            var definitions = ContentImportCoordinator.ParseCharterRuleDefinitions(
                 new[] { Header, ValidRow },
                 "CharterRuleDefinitions.csv",
                 BuildCatalog());
@@ -148,7 +148,7 @@ namespace TianZhang.Tests
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
             CharterRuleStaticCatalogData staticCatalog = LoadProductionStaticCatalog();
             Assert.That(staticCatalog.TryValidateDefinitions(out string staticReason), Is.True, staticReason);
-            var definitions = DataConfigImporter.ParseCharterRuleDefinitions(
+            var definitions = ContentImportCoordinator.ParseCharterRuleDefinitions(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 staticCatalog.ReferenceCatalog);
@@ -178,7 +178,7 @@ namespace TianZhang.Tests
                 DestroyAll(definitions);
             }
 
-            DataConfigImporter.ImportCharterRuleDefinitions();
+            ContentImportCoordinator.ImportCharterRuleDefinitions();
             AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
             var asset = AssetDatabase.LoadAssetAtPath<CharterRuleDefinitionData>(importedAssetPath);
             Assert.IsNotNull(asset);
@@ -603,7 +603,7 @@ namespace TianZhang.Tests
             CharterRuleReferenceCatalog catalog,
             string expectedReason)
         {
-            var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseCharterRuleDefinitions(
+            var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseCharterRuleDefinitions(
                 new[] { Header, row },
                 "CharterRuleDefinitions.csv",
                 catalog));

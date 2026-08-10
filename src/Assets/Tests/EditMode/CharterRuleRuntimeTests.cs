@@ -49,7 +49,7 @@ namespace TianZhang.Tests
             Assert.That(staticCatalog.TryValidateDefinitions(out string catalogReason), Is.True, catalogReason);
             catalog = staticCatalog.ReferenceCatalog;
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
-            definition = DataConfigImporter.ParseCharterRuleDefinitions(
+            definition = ContentImportCoordinator.ParseCharterRuleDefinitions(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 catalog).Single();

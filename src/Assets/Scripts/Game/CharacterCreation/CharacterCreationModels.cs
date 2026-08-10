@@ -47,7 +47,8 @@ namespace TianZhang.Game.CharacterCreation
 
         public int Total => RootBone + Soul + DivineSense + Aptitude + Fortune;
 
-        public int PurchaseCost => CharacterCreationPointBuyConfig.LoadDefault().CalculateCost(this);
+        public int PurchaseCost => CharacterCreationPointBuyConfig.LoadDefault().CalculateCost(
+            RootBone, Soul, DivineSense, Aptitude, Fortune);
 
         public static InnateAttributeSet Balanced()
         {

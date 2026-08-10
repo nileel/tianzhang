@@ -1,6 +1,5 @@
 using System;
 using TianZhang.Cultivation;
-using TianZhang.Entity;
 using UnityEngine;
 
 namespace TianZhang.Combat
@@ -87,7 +86,7 @@ namespace TianZhang.Combat
 
     /// <summary>
     /// AttackProfiles.csv 中单一 attackProfileId 行的 Unity 只读投影。
-    /// 此 asset 只由 DataConfigImporter 生成或更新，运行时不得从遗留术法/神通字段回填。
+    /// 此 asset 只由 ContentImportCoordinator 生成或更新，运行时不得从遗留术法/神通字段回填。
     /// </summary>
     [CreateAssetMenu(fileName = "AttackProfile_", menuName = "天章/攻击档案数据")]
     public sealed class AttackProfileData : ScriptableObject
@@ -137,16 +136,6 @@ namespace TianZhang.Combat
         public bool isDomain;
         public bool isBloodline;
         public string specialEffectTextKey;
-
-        public bool IsAvailableTo(Character character)
-        {
-            return profileKind is AttackProfileKind.Art or AttackProfileKind.Divine
-                && ContentScopePolicy.IsPlayerAvailable(contentScope)
-                && AbilityRequirementPolicy.IsSatisfied(
-                    character,
-                    realmRequirementId,
-                    elementRequirementId);
-        }
 
         public bool TryValidate(out string reason)
         {

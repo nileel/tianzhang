@@ -15,7 +15,7 @@ namespace TianZhang.Tests
         [Test]
         public void RuntimeGateAllowsAndRejectsRealmAndElementRequirements()
         {
-            var policyType = typeof(SpellData).Assembly.GetType("TianZhang.Combat.AbilityRequirementPolicy");
+            var policyType = typeof(CombatResolver).Assembly.GetType("TianZhang.Combat.AbilityRequirementPolicy");
             Assert.IsNotNull(policyType, "TQ-059 requires a runtime ability requirement policy.");
 
             var method = policyType.GetMethod(

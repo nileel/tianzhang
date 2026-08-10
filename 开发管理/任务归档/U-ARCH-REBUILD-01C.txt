@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "01B 已完成归档；2026-08-10 已实时冻结 01C 的迁移路径、输入输出资产与最小验证范围",
+  "stateReason": "2026-08-10：Content schema、领域导入器与 EnvironmentProfile Unity Content 适配已完成；验证通过并归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -700,3 +700,9 @@
 - 阶段 3 的批准依赖图允许阶段 4 接管前的过渡边 `TianZhang.Domain -> TianZhang.Content`，并允许 `SpatialQueryBoardFactory` 转换适配所在的 `TianZhang.Infrastructure.UnityContent -> TianZhang.Spatial`；`AssemblyBoundaryEditorTests` 只同步这两条批准边，不放宽 Feature 兄弟引用、Editor 进入 Player 或 `TianZhang.Spatial` 反向依赖 Unity Content 等禁止项。
 - 实时扫描已冻结全部现有 `Assets/DataConfig` CSV、由导入器写入的 `Assets/Data`／`Assets/Resources/Data` asset、关联 `.meta`、直接数据消费者、EditMode／PlayMode 测试、程序集定义和边界检查器；新导入器类名严格使用架构设计 §5.6 已批准的名称。
 - 执行时先读取每个目标逻辑单元及其直接调用者；若扫描发现未列路径、需要跨领域半提交、静默默认 ID、旧新资产双写或未批准内容／数值创作，立即停止并回报，不扩大本卡。
+
+## 完成记录（2026-08-10）
+
+- 不可变内容定义已集中到 `Modules/Content`；EnvironmentProfile 的纯定义与运行时校验进入 Content，Unity `ScriptableObject` 适配及 `SpatialQueryBoardFactory` 转换进入 `Infrastructure.UnityContent`，Spatial 仍只接收显式格位、边与查询限制。
+- 旧 `DataConfigImporter` 单体路径已删除，建立 `ContentImportCoordinator`、五个批准的领域入口及共享 CSV 读取、诊断、资产提交基础设施；现有 CSV、asset ID、序列化 GUID 与内容数值未改变。
+- 验证：程序集边界检查、数据链、asmdef 解析、脚本 GUID 唯一性与 `dotnet build src/TianZhang.EditModeTests.csproj` 通过；Unity 6000.3.18f1 EditMode 编译并执行 442 项，440 项通过，本阶段两项程序集断言均通过。仅保留任务开始前已登记且输入未变化的两项无关基线失败：`AuthorizedGrantBindsEveryConflictIdentityField` 与 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。

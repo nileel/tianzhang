@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Core;
+using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Spatial;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,16 +17,16 @@ namespace TianZhang.Tactical
     {
         [SerializeField] private HybridTacticalRenderer hybridRenderer;
         [SerializeField] private Camera presentationCamera;
-        [SerializeField] private EnvironmentProfileData environmentProfile;
+        [SerializeField] private EnvironmentProfileAsset environmentProfile;
         [SerializeField, Range(5, 7)] private int prototypeRadius = 5;
 
         public TacticalGridModel Model { get; private set; }
         public SpatialQuerySnapshot SpatialQuery { get; private set; }
         public HexCoord SelectedHex { get; private set; }
         public int PrototypeRadius => prototypeRadius;
-        public EnvironmentProfileData EnvironmentProfile => environmentProfile;
+        public EnvironmentProfileAsset EnvironmentProfile => environmentProfile;
 
-        public void SetEnvironmentProfile(EnvironmentProfileData profile)
+        public void SetEnvironmentProfile(EnvironmentProfileAsset profile)
         {
             environmentProfile = profile;
         }
@@ -41,7 +43,7 @@ namespace TianZhang.Tactical
             prototypeRadius = Mathf.Clamp(radius, 5, 7);
         }
 
-        public bool Initialize(TacticalGridModel model, EnvironmentProfileData profile, out string reason)
+        public bool Initialize(TacticalGridModel model, EnvironmentProfileAsset profile, out string reason)
         {
             hybridRenderer = hybridRenderer != null ? hybridRenderer : GetComponent<HybridTacticalRenderer>();
             if (hybridRenderer == null)

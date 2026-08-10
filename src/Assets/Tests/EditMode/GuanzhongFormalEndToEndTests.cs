@@ -10,6 +10,7 @@ using TianZhang.Game;
 using TianZhang.Map;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
+using TianZhang.Infrastructure.UnityContent;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -512,9 +513,9 @@ namespace TianZhang.Tests
             return catalog;
         }
 
-        private static EnvironmentProfileData LoadProductionEnvironmentProfile()
+        private static EnvironmentProfileAsset LoadProductionEnvironmentProfile()
         {
-            EnvironmentProfileData profile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+            EnvironmentProfileAsset profile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             Assert.IsNotNull(profile, "The formal env_guanzhong_wild environment profile is missing.");
             return profile;

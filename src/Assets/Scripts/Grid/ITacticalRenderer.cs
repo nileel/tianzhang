@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using TianZhang.Spatial;
+using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using UnityEngine;
 
 namespace TianZhang.Tactical

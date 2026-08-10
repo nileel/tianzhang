@@ -1,10 +1,11 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Cultivation;
 using TianZhang.Editor;
 using TianZhang.Game;
@@ -16,6 +17,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using EnvironmentProfileData = TianZhang.Infrastructure.UnityContent.EnvironmentProfileAsset;
 
 using TianZhang.Spatial;
 
@@ -930,7 +932,7 @@ namespace TianZhang.Tests
             var environmentProperty = serializedController.FindProperty("guanzhongWildEnvironmentProfile");
             Assert.IsNotNull(environmentProperty);
 
-            var environment = environmentProperty.objectReferenceValue as TianZhang.Tactical.EnvironmentProfileData;
+            var environment = environmentProperty.objectReferenceValue as TianZhang.Infrastructure.UnityContent.EnvironmentProfileAsset;
             Assert.IsNotNull(environment);
             Assert.AreEqual("env_guanzhong_wild", environment.profileId);
 
@@ -1048,7 +1050,7 @@ namespace TianZhang.Tests
         }
     }
 
-    public class DataConfigImporterContentScopeTests
+    public class ContentImportCoordinatorContentScopeTests
     {
         [Test]
         public void RuntimeDataObjectsKeepPlayerContentScopeDefault()
@@ -1075,7 +1077,7 @@ namespace TianZhang.Tests
         {
             Assert.AreEqual(
                 "reserved",
-                DataConfigImporter.GetColumnValueOrDefault(
+                ContentImportCoordinator.GetColumnValueOrDefault(
                     new[] { "name", "contentScope" },
                     new[] { "spell_test", "reserved" },
                     "contentScope",
@@ -1083,7 +1085,7 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(
                 "reserved",
-                DataConfigImporter.GetColumnValueOrDefault(
+                ContentImportCoordinator.GetColumnValueOrDefault(
                     new[] { "contentScope", "name" },
                     new[] { "reserved", "spell_test" },
                     "contentScope",
@@ -1091,7 +1093,7 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(
                 "player",
-                DataConfigImporter.GetColumnValueOrDefault(
+                ContentImportCoordinator.GetColumnValueOrDefault(
                     new[] { "name", "contentScope" },
                     new[] { "spell_test", "" },
                     "contentScope",
@@ -1099,7 +1101,7 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(
                 "player",
-                DataConfigImporter.GetColumnValueOrDefault(
+                ContentImportCoordinator.GetColumnValueOrDefault(
                     new[] { "name" },
                     new[] { "spell_test" },
                     "contentScope",
@@ -1109,7 +1111,7 @@ namespace TianZhang.Tests
         [Test]
         public void ContentScopeImportRejectsMissingAndUnknownValues()
         {
-            var getRequiredContentScope = typeof(DataConfigImporter).GetMethod(
+            var getRequiredContentScope = typeof(ContentImportCoordinator).GetMethod(
                 "GetRequiredContentScope",
                 System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
 
@@ -1254,7 +1256,7 @@ namespace TianZhang.Tests
         {
             Assert.AreEqual(
                 "water",
-                DataConfigImporter.GetRequiredColumnValue(
+                ContentImportCoordinator.GetRequiredColumnValue(
                     new[] { "name", "elementReq", "element" },
                     new[] { "spell_test", "fire_req", "water" },
                     "element",
@@ -1262,14 +1264,14 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(
                 "water",
-                DataConfigImporter.GetRequiredColumnValue(
+                ContentImportCoordinator.GetRequiredColumnValue(
                     new[] { "name", "element", "elementReq" },
                     new[] { "spell_test", "water", "fire_req" },
                     "element",
                     "Spells.csv"));
 
             Assert.Throws<InvalidDataException>(() =>
-                DataConfigImporter.GetRequiredColumnValue(
+                ContentImportCoordinator.GetRequiredColumnValue(
                     new[] { "name", "elementReq" },
                     new[] { "spell_test", "fire_req" },
                     "element",
@@ -1285,17 +1287,17 @@ namespace TianZhang.Tests
             var cols = new[] { "3", "spell_test", "1" };
 
             Assert.AreEqual("spell_test",
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "name", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "name", "Spells.csv"));
             Assert.AreEqual("1",
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "type", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "type", "Spells.csv"));
             Assert.AreEqual("3",
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
         }
 
         [Test]
         public void FindHeaderDiscoversReorderedRealHeaderWithoutNameInFirstColumn()
         {
-            var findHeader = typeof(DataConfigImporter).GetMethod(
+            var findHeader = typeof(ContentImportCoordinator).GetMethod(
                 "FindHeader",
                 System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
             var lines = new[]
@@ -1306,7 +1308,7 @@ namespace TianZhang.Tests
             };
 
             var headers = (string[])findHeader.Invoke(null, new object[] { lines });
-            var findHeaderIndex = typeof(DataConfigImporter).GetMethod(
+            var findHeaderIndex = typeof(ContentImportCoordinator).GetMethod(
                 "FindHeaderIndex",
                 System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
 
@@ -1333,7 +1335,7 @@ namespace TianZhang.Tests
                     "1.5,tq043_reordered,10,10,16,14,12,14,5,0,13,0,0,5,15,3,gongfa_baoyuanshouyi,,,\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
-                var importCharacters = typeof(DataConfigImporter).GetMethod(
+                var importCharacters = typeof(ContentImportCoordinator).GetMethod(
                     "ImportCharacters",
                     System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
                 importCharacters.Invoke(null, null);
@@ -1361,11 +1363,11 @@ namespace TianZhang.Tests
             var cols = new[] { "spell_test", "1", "3", "extra_value" };
 
             Assert.AreEqual("spell_test",
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "name", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "name", "Spells.csv"));
             Assert.AreEqual("1",
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "type", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "type", "Spells.csv"));
             Assert.AreEqual("3",
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
         }
 
         [Test]
@@ -1375,7 +1377,7 @@ namespace TianZhang.Tests
             var cols = new[] { "spell_test", "1" };
 
             Assert.Throws<InvalidDataException>(() =>
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
         }
 
         [Test]
@@ -1385,7 +1387,7 @@ namespace TianZhang.Tests
             var cols = new[] { "spell_test", "1" }; // row too short
 
             Assert.Throws<InvalidDataException>(() =>
-                DataConfigImporter.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
+                ContentImportCoordinator.GetRequiredColumnValue(headers, cols, "minRange", "Spells.csv"));
         }
 
         [Test]
@@ -1395,13 +1397,13 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(
                 "player",
-                DataConfigImporter.GetColumnValueOrDefault(
+                ContentImportCoordinator.GetColumnValueOrDefault(
                     headers,
                     new[] { "spell_test" },
                     "contentScope",
                     "player"));
 
-            var requireColumns = typeof(DataConfigImporter).GetMethod(
+            var requireColumns = typeof(ContentImportCoordinator).GetMethod(
                 "RequireColumns",
                 System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
             var exception = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
@@ -1415,19 +1417,19 @@ namespace TianZhang.Tests
         }
     }
 
-    public static class DataConfigImporterBatchRunner
+    public static class ContentImportCoordinatorBatchRunner
     {
         public static void RunReorderedHeaderRegression()
         {
             try
             {
-                new DataConfigImporterContentScopeTests()
+                new ContentImportCoordinatorContentScopeTests()
                     .ImportCharactersReadsReorderedHeaderAndKeepsEmptyEquipment();
-                new DataConfigImporterContentScopeTests()
+                new ContentImportCoordinatorContentScopeTests()
                     .FindHeaderDiscoversReorderedRealHeaderWithoutNameInFirstColumn();
-                new DataConfigImporterContentScopeTests()
+                new ContentImportCoordinatorContentScopeTests()
                     .OptionalColumnsDefaultWhileRequiredColumnsRejectMissingHeaders();
-                Debug.Log("DataConfigImporterBatchRunner.RunReorderedHeaderRegression passed.");
+                Debug.Log("ContentImportCoordinatorBatchRunner.RunReorderedHeaderRegression passed.");
                 EditorApplication.Exit(0);
             }
             catch (System.Exception ex)

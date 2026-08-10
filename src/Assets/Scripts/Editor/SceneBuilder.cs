@@ -15,6 +15,7 @@ using TianZhang.World;
 using TianZhang.Settlement;
 using TianZhang.Adventure;
 using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Tactical;
 using UnityEngine.InputSystem.UI;
 
@@ -273,11 +274,11 @@ namespace TianZhang.Editor
             var controller = UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
-            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             Require(controller != null, "Adventure scene is missing AdventureSceneController.");
             Require(catalog != null, "Adventure scene is missing the formal ContentCatalogData asset.");
-            Require(environment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileData.");
+            Require(environment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileAsset.");
 
             var serializedController = new SerializedObject(controller);
             Require(
@@ -286,7 +287,7 @@ namespace TianZhang.Editor
             Require(
                 serializedController.FindProperty("guanzhongWildEnvironmentProfile").objectReferenceValue ==
                 environment,
-                "Adventure scene does not serialize env_guanzhong_wild EnvironmentProfileData.");
+                "Adventure scene does not serialize env_guanzhong_wild EnvironmentProfileAsset.");
         }
         /// <summary>
 
@@ -770,11 +771,11 @@ namespace TianZhang.Editor
             var adventureController = UnityEngine.Object.FindFirstObjectByType<AdventureSceneController>();
             var contentCatalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
-            var guanzhongWildEnvironment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+            var guanzhongWildEnvironment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             Require(adventureController != null, "Adventure scene is missing AdventureSceneController.");
             Require(contentCatalog != null, "Adventure scene is missing the formal ContentCatalogData.");
-            Require(guanzhongWildEnvironment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileData.");
+            Require(guanzhongWildEnvironment != null, "Adventure scene is missing env_guanzhong_wild EnvironmentProfileAsset.");
             SetSerializedComponentName(adventureController, "AdventureSceneController");
             adventureController.SetContentCatalog(contentCatalog);
             adventureController.SetGuanzhongWildEnvironmentProfile(guanzhongWildEnvironment);
@@ -849,9 +850,9 @@ namespace TianZhang.Editor
             camera.transform.position = new Vector3(0f, 10f, -10f);
             camera.transform.rotation = Quaternion.LookRotation(new Vector3(0f, -1f, 1f), Vector3.up);
 
-            var environmentProfile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
+            var environmentProfile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
-            Require(environmentProfile != null, "Hybrid tactical prototype requires env_guanzhong_wild EnvironmentProfileData.");
+            Require(environmentProfile != null, "Hybrid tactical prototype requires env_guanzhong_wild EnvironmentProfileAsset.");
 
             var root = new GameObject("HybridTacticalPrototypeRoot");
             var renderer = root.AddComponent<HybridTacticalRenderer>();

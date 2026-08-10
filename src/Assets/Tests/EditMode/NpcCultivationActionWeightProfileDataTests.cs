@@ -18,7 +18,7 @@ namespace TianZhang.Tests
         [Test]
         public void ProductionProfileParsesToOneValidatedRuntimeProjection()
         {
-            var profiles = DataConfigImporter.ParseNpcCultivationActionWeightProfiles(
+            var profiles = ContentImportCoordinator.ParseNpcCultivationActionWeightProfiles(
                 File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig/NpcCultivationActionWeightProfiles.csv")),
                 CsvRelativePath);
             try
@@ -91,12 +91,12 @@ namespace TianZhang.Tests
         [Test]
         public void ImportProducesAnAssetWithTheSameSourceHash()
         {
-            DataConfigImporter.ImportNpcCultivationActionWeightProfiles();
+            ContentImportCoordinator.ImportNpcCultivationActionWeightProfiles();
             AssetDatabase.SaveAssets();
             var asset = AssetDatabase.LoadAssetAtPath<NpcCultivationActionWeightProfileData>(AssetPath);
             Assert.That(asset, Is.Not.Null);
 
-            var parsed = DataConfigImporter.ParseNpcCultivationActionWeightProfiles(
+            var parsed = ContentImportCoordinator.ParseNpcCultivationActionWeightProfiles(
                 File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig/NpcCultivationActionWeightProfiles.csv")),
                 CsvRelativePath);
             try
@@ -118,13 +118,13 @@ namespace TianZhang.Tests
             var lines = File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig/NpcCultivationActionWeightProfiles.csv"));
             lines[1] = lines[1].Replace("8f9e1e7c6154d6b1bcbae301cf8e0fd219fd258565d43a1a55ec84cd8d9ec1b9", new string('0', 64));
             var exception = Assert.Throws<InvalidDataException>(() =>
-                DataConfigImporter.ParseNpcCultivationActionWeightProfiles(lines, "NpcCultivationActionWeightProfiles.invalid.csv"));
+                ContentImportCoordinator.ParseNpcCultivationActionWeightProfiles(lines, "NpcCultivationActionWeightProfiles.invalid.csv"));
             StringAssert.StartsWith("NPC_WEIGHT_DOUBLE_AUTHORITY:", exception.Message);
         }
 
         private static NpcCultivationActionWeightProfileRuntime LoadRuntime()
         {
-            var profiles = DataConfigImporter.ParseNpcCultivationActionWeightProfiles(
+            var profiles = ContentImportCoordinator.ParseNpcCultivationActionWeightProfiles(
                 File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig/NpcCultivationActionWeightProfiles.csv")),
                 CsvRelativePath);
             Assert.That(profiles, Has.Length.EqualTo(1));

@@ -39,16 +39,13 @@ namespace TianZhang.Game.CharacterCreation
             return config;
         }
 
-        public int CalculateCost(InnateAttributeSet innate)
+        public int CalculateCost(int rootBone, int soul, int divineSense, int aptitude, int fortune)
         {
-            if (innate == null)
-                return 0;
-
-            return CalculateCost(innate.RootBone)
-                + CalculateCost(innate.Soul)
-                + CalculateCost(innate.DivineSense)
-                + CalculateCost(innate.Aptitude)
-                + CalculateCost(innate.Fortune);
+            return CalculateCost(rootBone)
+                + CalculateCost(soul)
+                + CalculateCost(divineSense)
+                + CalculateCost(aptitude)
+                + CalculateCost(fortune);
         }
 
         public int CalculateCost(int value)

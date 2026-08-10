@@ -139,7 +139,7 @@ namespace TianZhang.Tests
         [Test]
         public void ParseCharterSitesProjectsEveryContractField()
         {
-            var sites = DataConfigImporter.ParseCharterSites(
+            var sites = ContentImportCoordinator.ParseCharterSites(
                 new[] { Header, ValidRow },
                 "CharterSites.csv",
                 BuildLanguage(),
@@ -310,7 +310,7 @@ namespace TianZhang.Tests
         [Test]
         public void ParseCharterSitesRequiresExactlyOneProductionSiteRow()
         {
-            var duplicate = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseCharterSites(
+            var duplicate = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseCharterSites(
                 new[] { Header, ValidRow, ValidRow },
                 "CharterSites.csv",
                 BuildLanguage(),
@@ -329,7 +329,7 @@ namespace TianZhang.Tests
             var values = ValidRow.Split(',');
             values[1] = "display_key_missing";
 
-            var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseCharterSites(
+            var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseCharterSites(
                 new[] { Header, string.Join(",", values) },
                 "CharterSites.csv",
                 BuildLanguage(),
@@ -349,7 +349,7 @@ namespace TianZhang.Tests
             {
                 { "charter_site_old_water_station", "旧水驿" },
             };
-            var sites = DataConfigImporter.ParseCharterSites(
+            var sites = ContentImportCoordinator.ParseCharterSites(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 language,
@@ -378,7 +378,7 @@ namespace TianZhang.Tests
                 DestroyAll(sites);
             }
 
-            DataConfigImporter.ImportCharterSites();
+            ContentImportCoordinator.ImportCharterSites();
             AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
             var asset = AssetDatabase.LoadAssetAtPath<CharterSiteData>(SiteAssetPath);
             Assert.IsNotNull(asset);
@@ -396,7 +396,7 @@ namespace TianZhang.Tests
         {
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterSites.csv");
             CharterRuleStaticCatalogData staticCatalog = LoadProductionStaticCatalog();
-            var sites = DataConfigImporter.ParseCharterSites(
+            var sites = ContentImportCoordinator.ParseCharterSites(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 BuildLanguage(),
@@ -469,7 +469,7 @@ namespace TianZhang.Tests
         [Test]
         public void YuanyingSampleCarriesOnlyAnchoringIdentityWithoutJindanCandidatesOrGrant()
         {
-            var sites = DataConfigImporter.ParseCharterSites(
+            var sites = ContentImportCoordinator.ParseCharterSites(
                 new[] { Header, ValidRow },
                 "CharterSites.csv",
                 BuildLanguage(),
@@ -548,7 +548,7 @@ namespace TianZhang.Tests
 
         private static void AssertParseFails(string row, string expectedReason)
         {
-            var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseCharterSites(
+            var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseCharterSites(
                 new[] { Header, row },
                 "CharterSites.csv",
                 BuildLanguage(),

@@ -424,10 +424,16 @@ namespace TianZhang.Game
                 foreach (var profileId in charData.equippedSpells)
                 {
                     var asset = LoadAttackProfile(profileId);
-                    if (asset != null && asset.profileKind == Combat.AttackProfileKind.Art && asset.IsAvailableTo(player))
+                    if (asset != null && asset.profileKind == Combat.AttackProfileKind.Art &&
+                        TianZhang.Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope) &&
+                        Combat.AbilityRequirementPolicy.IsSatisfied(player, asset.realmRequirementId, asset.elementRequirementId))
                     {
                         spellList.Add(asset);
                         AddKnownProfile(knownProfiles, asset);
+                    }
+                    else if (asset != null && !TianZhang.Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
+                    {
+                        Debug.LogWarning($"[SectSelection] Excluded non-player spell: {profileId} scope={asset.contentScope}");
                     }
                     else if (asset != null)
                     {
@@ -448,10 +454,16 @@ namespace TianZhang.Game
                 foreach (var profileId in charData.equippedSkills)
                 {
                     var asset = LoadAttackProfile(profileId);
-                    if (asset != null && asset.profileKind == Combat.AttackProfileKind.Divine && asset.IsAvailableTo(player))
+                    if (asset != null && asset.profileKind == Combat.AttackProfileKind.Divine &&
+                        TianZhang.Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope) &&
+                        Combat.AbilityRequirementPolicy.IsSatisfied(player, asset.realmRequirementId, asset.elementRequirementId))
                     {
                         skillList.Add(asset);
                         AddKnownProfile(knownProfiles, asset);
+                    }
+                    else if (asset != null && !TianZhang.Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope))
+                    {
+                        Debug.LogWarning($"[SectSelection] Excluded non-player skill: {profileId} scope={asset.contentScope}");
                     }
                     else if (asset != null)
                     {

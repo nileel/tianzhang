@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TianZhang.Core;
 using TianZhang.HexTile;
+using TianZhang.Content;
 using UnityEngine;
 
 using TianZhang.Spatial;

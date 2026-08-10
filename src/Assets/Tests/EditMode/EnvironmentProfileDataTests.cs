@@ -2,7 +2,8 @@ using System;
 using System.IO;
 using NUnit.Framework;
 using TianZhang.Editor;
-using TianZhang.Tactical;
+using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace TianZhang.Tests
         [Test]
         public void ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow()
         {
-            var profiles = DataConfigImporter.ParseEnvironmentProfiles(
+            var profiles = ContentImportCoordinator.ParseEnvironmentProfiles(
                 new[] { Header, ValidRow },
                 "EnvironmentProfiles.csv");
 
@@ -53,7 +54,7 @@ namespace TianZhang.Tests
         [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
         public void ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(string row)
         {
-            Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseEnvironmentProfiles(
+            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseEnvironmentProfiles(
                 new[] { Header, row },
                 "EnvironmentProfiles.csv"));
         }
@@ -64,7 +65,7 @@ namespace TianZhang.Tests
             const string missingElementRelations =
                 "fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze";
 
-            Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseEnvironmentProfiles(
+            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseEnvironmentProfiles(
                 new[] { Header, missingElementRelations },
                 "EnvironmentProfiles.csv"));
         }
@@ -76,35 +77,25 @@ namespace TianZhang.Tests
         public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
         {
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/EnvironmentProfiles.csv");
-            var expectedProfiles = DataConfigImporter.ParseEnvironmentProfiles(
+            var expectedProfiles = ContentImportCoordinator.ParseEnvironmentProfiles(
                 new[] { Header, GuanzhongWildRow },
                 "EnvironmentProfiles.csv");
-            var actualProfiles = DataConfigImporter.ParseEnvironmentProfiles(
+            var actualProfiles = ContentImportCoordinator.ParseEnvironmentProfiles(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath);
 
-            try
-            {
-                Assert.AreEqual(1, expectedProfiles.Length);
-                Assert.AreEqual(1, actualProfiles.Length);
-                AssertEnvironmentProfileEquals(expectedProfiles[0], actualProfiles[0]);
+            Assert.AreEqual(1, expectedProfiles.Length);
+            Assert.AreEqual(1, actualProfiles.Length);
+            AssertEnvironmentProfileEquals(expectedProfiles[0], actualProfiles[0]);
 
-                const string assetPath =
-                    "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset";
-                var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(assetPath);
-                Assert.IsNotNull(asset, $"Missing generated environment asset at {assetPath}.");
-                AssertEnvironmentProfileEquals(expectedProfiles[0], asset);
-            }
-            finally
-            {
-                foreach (var profile in expectedProfiles)
-                    UnityEngine.Object.DestroyImmediate(profile);
-                foreach (var profile in actualProfiles)
-                    UnityEngine.Object.DestroyImmediate(profile);
-            }
+            const string assetPath =
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(assetPath);
+            Assert.IsNotNull(asset, $"Missing generated environment asset at {assetPath}.");
+            AssertEnvironmentProfileEquals(expectedProfiles[0], asset);
         }
 
-        private static void AssertEnvironmentProfileEquals(EnvironmentProfileData expected, EnvironmentProfileData actual)
+        private static void AssertEnvironmentProfileEquals(EnvironmentProfileDefinition expected, EnvironmentProfileDefinition actual)
         {
             Assert.AreEqual(expected.profileId, actual.profileId);
             Assert.AreEqual(expected.unitsPerRange, actual.unitsPerRange);
@@ -145,6 +136,12 @@ namespace TianZhang.Tests
             CollectionAssert.AreEqual(expected.elementRelationRefs, actual.elementRelationRefs);
         }
 
+        private static void AssertEnvironmentProfileEquals(EnvironmentProfileDefinition expected, EnvironmentProfileAsset actual)
+        {
+            Assert.IsTrue(actual.TryCreateDefinition(out var definition, out var reason), reason);
+            AssertEnvironmentProfileEquals(expected, definition);
+        }
+
         [Test]
         public void ImportEnvironmentProfilesRejectsInvalidRowsBeforeCreatingAssets()
         {
@@ -162,8 +159,8 @@ namespace TianZhang.Tests
                     "fixture_invalid,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
-                Assert.Throws<InvalidDataException>(() => DataConfigImporter.ImportEnvironmentProfiles());
-                Assert.IsNull(AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(importedAssetPath));
+                Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ImportEnvironmentProfiles());
+                Assert.IsNull(AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(importedAssetPath));
             }
             finally
             {

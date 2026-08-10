@@ -11,15 +11,17 @@ namespace TianZhang.Tests
         public void ProjectAssembliesFollowTheRuntimeDependencyDirection()
         {
             AssertAssembly("Assets/Scripts/Core/TianZhang.Foundation.asmdef", "TianZhang.Foundation");
-            AssertAssembly("Assets/Scripts/Entity/TianZhang.Domain.asmdef", "TianZhang.Domain", "TianZhang.Foundation", "TianZhang.Spatial");
-            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Spatial");
+            AssertAssembly("Assets/Scripts/Entity/TianZhang.Domain.asmdef", "TianZhang.Domain", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Spatial");
+            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Content", "TianZhang.Spatial");
             AssertAssembly(
                 "Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
                 "TianZhang.Gameplay",
                 "TianZhang.Foundation",
                 "TianZhang.Domain",
+                "TianZhang.Content",
                 "TianZhang.Combat",
                 "TianZhang.Spatial",
+                "TianZhang.Infrastructure.UnityContent",
                 "Unity.InputSystem",
                 "Unity.InputSystem.ForUI",
                 "UnityEngine.UI");
@@ -69,7 +71,7 @@ namespace TianZhang.Tests
                 "TianZhang.Infrastructure.Persistence", "TianZhang.Foundation", "TianZhang.Content",
                 "TianZhang.Character", "TianZhang.Cultivation", "TianZhang.World", "TianZhang.Gameplay.Contracts");
             AssertAssembly("Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef",
-                "TianZhang.Infrastructure.UnityContent", "TianZhang.Foundation", "TianZhang.Content");
+                "TianZhang.Infrastructure.UnityContent", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Spatial");
             AssertAssembly("Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef",
                 "TianZhang.Bootstrap", "TianZhang.Gameplay.Contracts",
                 "TianZhang.Features.CharacterCreation", "TianZhang.Features.WorldMap",

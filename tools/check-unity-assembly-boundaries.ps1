@@ -152,7 +152,7 @@ if (-not $SkipRequiredAssemblies) {
     'TianZhang.Features.Adventure' = @('src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.World', 'TianZhang.Combat', 'TianZhang.Gameplay.Contracts'))
     'TianZhang.Features.CombatPresentation' = @('src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef', @('TianZhang.Foundation', 'TianZhang.Combat', 'TianZhang.Gameplay.Contracts'))
     'TianZhang.Infrastructure.Persistence' = @('src/Assets/Scripts/Modules/Infrastructure/Persistence/TianZhang.Infrastructure.Persistence.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.Cultivation', 'TianZhang.World', 'TianZhang.Gameplay.Contracts'))
-    'TianZhang.Infrastructure.UnityContent' = @('src/Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef', @('TianZhang.Foundation', 'TianZhang.Content'))
+    'TianZhang.Infrastructure.UnityContent' = @('src/Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Spatial'))
     'TianZhang.Bootstrap' = @('src/Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef', @('TianZhang.Gameplay.Contracts', 'TianZhang.Features.CharacterCreation', 'TianZhang.Features.WorldMap', 'TianZhang.Features.Settlement', 'TianZhang.Features.Adventure', 'TianZhang.Features.CombatPresentation', 'TianZhang.Infrastructure.Persistence', 'TianZhang.Infrastructure.UnityContent'))
   }
 

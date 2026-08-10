@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using TianZhang.Core;
+using TianZhang.Content;
 using TianZhang.Tactical;
 
 using TianZhang.Spatial;

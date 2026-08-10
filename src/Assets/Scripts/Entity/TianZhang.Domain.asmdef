@@ -2,6 +2,7 @@
     "name": "TianZhang.Domain",
     "references": [
         "TianZhang.Foundation",
+        "TianZhang.Content",
         "TianZhang.Spatial"
     ]
 }

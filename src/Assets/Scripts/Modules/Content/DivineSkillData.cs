@@ -50,10 +50,5 @@ namespace TianZhang.Combat
         [Header("境界适配")]
         public float realmScaleBase = 1f;
 
-        public bool IsAvailableTo(TianZhang.Entity.Character character) =>
-            AbilityRequirementPolicy.IsSatisfied(
-                character,
-                realmRequirement,
-                "element_none");
     }
 }

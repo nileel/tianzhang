@@ -576,7 +576,7 @@ namespace TianZhang.Entity
             return TryCommitCurrentCycle(cycleId);
         }
 
-        internal FoundationPurpleMansionOperationResult TryFormJindanLock()
+        public FoundationPurpleMansionOperationResult TryFormJindanLock()
         {
             if (IsJindanFormed || Phase != FoundationPhase.Phase4 ||
                 !mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete) ||

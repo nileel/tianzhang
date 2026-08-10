@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6fbc9db4c96d48dbac58b94fc9ba9e93, type: 3}
+  m_Script: {fileID: 11500000, guid: f3b0d21f8a7544ad9c0c8832bc5f8714, type: 3}
   m_Name: EnvironmentProfile_env_guanzhong_wild
   m_EditorClassIdentifier:
   profileId: env_guanzhong_wild

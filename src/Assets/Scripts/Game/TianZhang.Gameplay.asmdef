@@ -3,8 +3,10 @@
     "references": [
         "TianZhang.Foundation",
         "TianZhang.Domain",
+        "TianZhang.Content",
         "TianZhang.Combat",
         "TianZhang.Spatial",
+        "TianZhang.Infrastructure.UnityContent",
         "Unity.InputSystem",
         "Unity.InputSystem.ForUI",
         "UnityEngine.UI"

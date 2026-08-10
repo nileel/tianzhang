@@ -32,7 +32,7 @@ namespace TianZhang.Tests
         {
             var foundation = ParseFoundationFixture(fixtureId);
             var catalog = BuildCatalog(foundation, stablePositions);
-            var states = DataConfigImporter.ParseJindanStaticStates(
+            var states = ContentImportCoordinator.ParseJindanStaticStates(
                 LoadFixtureLines(JindanFixtureFileName, fixtureId),
                 JindanFixtureFileName,
                 catalog);
@@ -82,7 +82,7 @@ namespace TianZhang.Tests
                 if (fixtureId == "jd.invalid.legacy-or-display-string")
                     lines[0] = lines[0].Replace("fixtureOnlyNumericProfile", "displayName");
 
-                var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseJindanStaticStates(
+                var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseJindanStaticStates(
                     lines,
                     JindanFixtureFileName,
                     BuildCatalog(foundation, catalogPositionCount)));
@@ -113,7 +113,7 @@ namespace TianZhang.Tests
                 File.WriteAllText(sourceFilePath, FixtureHeader + "\n" + BuildRow(invalidProductionRow) + "\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
-                var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ImportJindanStaticStates());
+                var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ImportJindanStaticStates());
                 StringAssert.StartsWith("JD_UNKNOWN_STATIC_REFERENCE:", exception.Message);
                 Assert.IsNull(AssetDatabase.LoadAssetAtPath<JindanStaticStateData>(importedAssetPath));
             }
@@ -129,7 +129,7 @@ namespace TianZhang.Tests
         public void ProductionJindanStaticCsvHasNoFixtureRows()
         {
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/JindanStaticStates.csv");
-            var states = DataConfigImporter.ParseJindanStaticStates(
+            var states = ContentImportCoordinator.ParseJindanStaticStates(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 new JindanStaticReferenceCatalog(),
@@ -151,7 +151,7 @@ namespace TianZhang.Tests
 
         private static FoundationPurpleMansionStateData ParseFoundationFixture(string fixtureId)
         {
-            return DataConfigImporter.ParseFoundationPurpleMansionStates(
+            return ContentImportCoordinator.ParseFoundationPurpleMansionStates(
                 LoadFixtureLines(FoundationFixtureFileName, fixtureId),
                 FoundationFixtureFileName).Single();
         }

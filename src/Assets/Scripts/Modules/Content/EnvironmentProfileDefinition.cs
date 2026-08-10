@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using UnityEngine;
 
-namespace TianZhang.Tactical
+namespace TianZhang.Content
 {
+    public interface IEnvironmentProfileDefinitionSource
+    {
+        bool TryCreateDefinition(out EnvironmentProfileDefinition definition, out string reason);
+    }
+
     public enum EnvironmentPhenomenonChannel
     {
         Airflow,
@@ -160,7 +164,7 @@ namespace TianZhang.Tactical
         }
 
         public static bool TryCreate(
-            EnvironmentProfileData profile,
+            EnvironmentProfileDefinition profile,
             out EnvironmentProfileRuntime runtime,
             out string reason)
         {
@@ -213,6 +217,21 @@ namespace TianZhang.Tactical
                 profile.maxQueryRange);
             reason = EnvironmentRuntimeReasons.Ok;
             return true;
+        }
+
+        public static bool TryCreate(
+            IEnvironmentProfileDefinitionSource source,
+            out EnvironmentProfileRuntime runtime,
+            out string reason)
+        {
+            runtime = null;
+            reason = null;
+            if (source == null || !source.TryCreateDefinition(out var definition, out reason))
+            {
+                reason ??= EnvironmentRuntimeReasons.ProfileNotConfigured;
+                return false;
+            }
+            return TryCreate(definition, out runtime, out reason);
         }
 
         private static bool TryCreatePhenomenonTypes(
@@ -356,8 +375,9 @@ namespace TianZhang.Tactical
         }
     }
 
-    [CreateAssetMenu(fileName = "EnvironmentProfile_", menuName = "天章/环境档案数据")]
-    public class EnvironmentProfileData : ScriptableObject
+    /// <summary>Immutable environment definition. Unity serialization lives in Infrastructure.UnityContent.</summary>
+    [Serializable]
+    public sealed class EnvironmentProfileDefinition
     {
         public string profileId;
         public int unitsPerRange;

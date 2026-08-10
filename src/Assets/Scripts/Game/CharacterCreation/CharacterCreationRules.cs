@@ -147,7 +147,12 @@ namespace TianZhang.Game.CharacterCreation
             ValidateInnateValue("资质", innate.Aptitude, pointBuyConfig, result);
             ValidateInnateValue("气运", innate.Fortune, pointBuyConfig, result);
 
-            result.InnatePurchasePointsUsed = pointBuyConfig.CalculateCost(innate);
+            result.InnatePurchasePointsUsed = pointBuyConfig.CalculateCost(
+                innate.RootBone,
+                innate.Soul,
+                innate.DivineSense,
+                innate.Aptitude,
+                innate.Fortune);
             result.InnatePurchasePointsRemaining = pointBuyConfig.purchasePointLimit - result.InnatePurchasePointsUsed;
             if (result.InnatePurchasePointsUsed > pointBuyConfig.purchasePointLimit)
                 result.Errors.Add($"先天属性购买点数不能超过{pointBuyConfig.purchasePointLimit}。");

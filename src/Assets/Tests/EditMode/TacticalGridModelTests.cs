@@ -15,7 +15,9 @@ using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Tactical;
+using TianZhang.Infrastructure.UnityContent;
 using UnityEditor.SceneManagement;
+using EnvironmentProfileData = TianZhang.Infrastructure.UnityContent.EnvironmentProfileAsset;
 
 using TianZhang.Spatial;
 
@@ -174,9 +176,9 @@ namespace TianZhang.Tests
             }
         }
 
-        private static EnvironmentProfileData CreateEnvironmentProfile()
+        private static EnvironmentProfileAsset CreateEnvironmentProfile()
         {
-            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            var profile = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();
             profile.profileId = "runtime_fixture";
             profile.unitsPerRange = 2;
             profile.maxQueryRange = 16;

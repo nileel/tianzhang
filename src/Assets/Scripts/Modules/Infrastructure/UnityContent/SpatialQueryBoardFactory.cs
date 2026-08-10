@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using TianZhang.Content;
 using TianZhang.Spatial;
 
-namespace TianZhang.Tactical
+namespace TianZhang.Infrastructure.UnityContent
 {
     public static class SpatialQuerySnapshotReasons
     {
@@ -50,7 +51,7 @@ namespace TianZhang.Tactical
     {
         public static bool TryCreate(
             TacticalGridModel grid,
-            EnvironmentProfileData profile,
+            EnvironmentProfileAsset profile,
             out SpatialQuerySnapshot snapshot,
             out string reason)
         {
@@ -58,7 +59,10 @@ namespace TianZhang.Tactical
             if (grid == null)
                 return Fail(SpatialQuerySnapshotReasons.GridNotConfigured, out reason);
 
-            if (!EnvironmentProfileRuntime.TryCreate(profile, out var environment, out reason))
+            if (profile == null)
+                return Fail(SpatialQuerySnapshotReasons.EnvironmentProfileNotConfigured, out reason);
+            if (!profile.TryCreateDefinition(out var definition, out reason) ||
+                !EnvironmentProfileRuntime.TryCreate(definition, out var environment, out reason))
                 return false;
 
             return TryCreate(grid, environment, out snapshot, out reason);

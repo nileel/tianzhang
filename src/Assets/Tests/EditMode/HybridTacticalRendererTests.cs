@@ -5,6 +5,8 @@ using TianZhang.Core;
 using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Tactical;
+using TianZhang.Content;
+using TianZhang.Infrastructure.UnityContent;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -199,9 +201,9 @@ namespace TianZhang.Tests.EditMode
             return model;
         }
 
-        private static EnvironmentProfileData CreateProfile()
+        private static EnvironmentProfileAsset CreateProfile()
         {
-            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            var profile = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();
             profile.profileId = "hybrid_renderer_test";
             profile.unitsPerRange = 2;
             profile.maxQueryRange = 16;

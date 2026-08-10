@@ -29,7 +29,7 @@ namespace TianZhang.Tests
         [TestCase("pausedEmbryo")]
         public void ParseFoundationPurpleMansionStatesAcceptsEverySpecifiedValidFixture(string fixture)
         {
-            var states = DataConfigImporter.ParseFoundationPurpleMansionStates(
+            var states = ContentImportCoordinator.ParseFoundationPurpleMansionStates(
                 new[] { Header, BuildFixture(fixture) },
                 "FoundationPurpleMansionStates.fixture.csv");
 
@@ -83,7 +83,7 @@ namespace TianZhang.Tests
             string fixture,
             int expectedCompleteMansions)
         {
-            var states = DataConfigImporter.ParseFoundationPurpleMansionStates(
+            var states = ContentImportCoordinator.ParseFoundationPurpleMansionStates(
                 new[] { Header, BuildFixture(fixture) },
                 "FoundationPurpleMansionStates.fixture.csv");
 
@@ -117,7 +117,7 @@ namespace TianZhang.Tests
                 ? Header.Replace("fixtureOnlyNumericProfile", "developedMansions")
                 : Header;
 
-            var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseFoundationPurpleMansionStates(
+            var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseFoundationPurpleMansionStates(
                 new[] { header, BuildFixture(fixture) },
                 "FoundationPurpleMansionStates.fixture.csv"));
 
@@ -144,7 +144,7 @@ namespace TianZhang.Tests
                 File.WriteAllText(sourceFilePath, Header + "\n" + BuildRow(invalidProductionRow) + "\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
-                var exception = Assert.Throws<InvalidDataException>(() => DataConfigImporter.ImportFoundationPurpleMansionStates());
+                var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ImportFoundationPurpleMansionStates());
                 StringAssert.StartsWith("FPM_CAPACITY_OVERFLOW:", exception.Message);
                 Assert.IsNull(AssetDatabase.LoadAssetAtPath<FoundationPurpleMansionStateData>(importedAssetPath));
             }
@@ -160,7 +160,7 @@ namespace TianZhang.Tests
         public void ProductionFoundationPurpleMansionCsvHasNoFixtureRows()
         {
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/FoundationPurpleMansionStates.csv");
-            var states = DataConfigImporter.ParseFoundationPurpleMansionStates(
+            var states = ContentImportCoordinator.ParseFoundationPurpleMansionStates(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 allowFixtures: false);

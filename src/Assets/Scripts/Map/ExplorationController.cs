@@ -11,6 +11,7 @@ using TianZhang.Combat;
 using TianZhang.HexTile;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
+using TianZhang.Infrastructure.UnityContent;
 
 using TianZhang.Spatial;
 
@@ -50,7 +51,7 @@ namespace TianZhang.Map
         private TacticalCombatController tacticalCombatController;
         private CombatLogAdapter combatLogAdapter;
         private AdventureSceneController adventureSceneController;
-        private EnvironmentProfileData environmentProfile;
+        private EnvironmentProfileAsset environmentProfile;
         private EnemyData formalEncounterEnemy;
         private IAIController formalEncounterAiController;
         private SpatialQuerySnapshot spatialQuerySnapshot;
@@ -101,7 +102,7 @@ namespace TianZhang.Map
             StartCoroutine(InitExploration());
         }
 
-        public void ConfigureEnvironmentProfile(EnvironmentProfileData profile)
+        public void ConfigureEnvironmentProfile(EnvironmentProfileAsset profile)
         {
             environmentProfile = profile;
         }

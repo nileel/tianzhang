@@ -12,6 +12,7 @@ using TianZhang.Content;
 using TianZhang.Combat;
 using TianZhang.Cultivation;
 using TianZhang.Game.CharacterCreation;
+using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Tactical;
 using TianZhang.World;
 
@@ -24,7 +25,7 @@ namespace TianZhang.Editor
     /// 生成 ScriptableObject .asset 文件
     /// v3 变更：所有导入器不再依赖硬编码列序，改为按表头列名读取；Characters/Enemies 同步升级。
     /// </summary>
-    public class DataConfigImporter : EditorWindow
+    public class ContentImportCoordinator : EditorWindow
     {
         private static Dictionary<string, string> _lang;
 
@@ -68,7 +69,7 @@ namespace TianZhang.Editor
             ImportEnvironmentProfiles();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[DataConfigImporter] 全部配置导入完成");
+            Debug.Log("[ContentImportCoordinator] 全部配置导入完成");
         }
 
         private static readonly string[] ContentSettlementColumns =
@@ -219,7 +220,7 @@ namespace TianZhang.Editor
             {
                 ValidateContentAssetLocations(preview);
                 CommitContentCatalog(preview);
-                Debug.Log("[DataConfigImporter] 正式内容目录导入完成");
+                Debug.Log("[ContentImportCoordinator] 正式内容目录导入完成");
             }
             finally
             {
@@ -1540,34 +1541,26 @@ namespace TianZhang.Editor
                 throw new FileNotFoundException($"Environment profile CSV was not found: {path}", path);
 
             var profiles = ParseEnvironmentProfiles(File.ReadAllLines(path), path);
-            try
+            foreach (var profile in profiles)
             {
-                foreach (var profile in profiles)
+                string assetPath = $"Assets/Data/EnvironmentProfiles/EnvironmentProfile_{SanitizeName(profile.profileId)}.asset";
+                var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(assetPath);
+                bool isNew = asset == null;
+                if (isNew)
                 {
-                    string assetPath = $"Assets/Data/EnvironmentProfiles/EnvironmentProfile_{SanitizeName(profile.profileId)}.asset";
-                    var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(assetPath);
-                    bool isNew = asset == null;
-                    if (isNew)
-                    {
-                        asset = ScriptableObject.CreateInstance<EnvironmentProfileData>();
-                        EnsureDirectory(assetPath);
-                    }
-
-                    CopyEnvironmentProfile(profile, asset);
-                    if (isNew)
-                        AssetDatabase.CreateAsset(asset, assetPath);
-                    else
-                        EditorUtility.SetDirty(asset);
+                    asset = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();
+                    EnsureDirectory(assetPath);
                 }
-            }
-            finally
-            {
-                foreach (var profile in profiles)
-                    UnityEngine.Object.DestroyImmediate(profile);
+
+                asset.Apply(profile);
+                if (isNew)
+                    AssetDatabase.CreateAsset(asset, assetPath);
+                else
+                    EditorUtility.SetDirty(asset);
             }
         }
 
-        public static EnvironmentProfileData[] ParseEnvironmentProfiles(string[] lines, string sourceName)
+        public static EnvironmentProfileDefinition[] ParseEnvironmentProfiles(string[] lines, string sourceName)
         {
             if (lines == null)
                 throw new InvalidDataException($"{sourceName} has no rows.");
@@ -1578,7 +1571,7 @@ namespace TianZhang.Editor
 
             var headers = FindHeader(lines);
             RequireExactColumns(headers, sourceName, EnvironmentProfileColumns);
-            var profiles = new List<EnvironmentProfileData>();
+            var profiles = new List<EnvironmentProfileDefinition>();
             var profileIds = new HashSet<string>(StringComparer.Ordinal);
             try
             {
@@ -1598,7 +1591,6 @@ namespace TianZhang.Editor
                     var profile = ParseEnvironmentProfileRow(headers, cols, $"{sourceName} row {index + 1}");
                     if (!profileIds.Add(profile.profileId))
                     {
-                        UnityEngine.Object.DestroyImmediate(profile);
                         throw new InvalidDataException($"{sourceName} has duplicate profileId '{profile.profileId}'.");
                     }
 
@@ -1609,13 +1601,11 @@ namespace TianZhang.Editor
             }
             catch
             {
-                foreach (var profile in profiles)
-                    UnityEngine.Object.DestroyImmediate(profile);
                 throw;
             }
         }
 
-        private static EnvironmentProfileData ParseEnvironmentProfileRow(
+        private static EnvironmentProfileDefinition ParseEnvironmentProfileRow(
             string[] headers,
             string[] cols,
             string sourceName)
@@ -1645,7 +1635,7 @@ namespace TianZhang.Editor
                 GetRequiredColumnValue(headers, cols, "elementRelationRefs", sourceName),
                 sourceName);
 
-            var profile = ScriptableObject.CreateInstance<EnvironmentProfileData>();
+            var profile = new EnvironmentProfileDefinition();
             profile.profileId = profileId;
             profile.unitsPerRange = unitsPerRange;
             profile.maxQueryRange = maxQueryRange;
@@ -1914,18 +1904,6 @@ namespace TianZhang.Editor
             }
         }
 
-        private static void CopyEnvironmentProfile(EnvironmentProfileData source, EnvironmentProfileData destination)
-        {
-            destination.profileId = source.profileId;
-            destination.unitsPerRange = source.unitsPerRange;
-            destination.maxQueryRange = source.maxQueryRange;
-            destination.directedEdges = source.directedEdges;
-            destination.surfacePrototypeRefs = source.surfacePrototypeRefs;
-            destination.phenomenonChannels = source.phenomenonChannels;
-            destination.phenomenonPairs = source.phenomenonPairs;
-            destination.elementRelationRefs = source.elementRelationRefs;
-        }
-
         [MenuItem("天章/导入册界规则定义配置")]
         public static void ImportCharterRuleDefinitions()
         {
@@ -1997,7 +1975,7 @@ namespace TianZhang.Editor
         /// <summary>
         /// Parses and validates the complete definition table before import can write an asset.
         /// The caller supplies every external authority explicitly; this importer never infers one
-        /// from display text, paths, enum defaults, EnvironmentProfileData, or test fixtures.
+        /// from display text, paths, enum defaults, EnvironmentProfileDefinition, or test fixtures.
         /// </summary>
         public static CharterRuleDefinitionData[] ParseCharterRuleDefinitions(
             string[] lines,
@@ -4875,7 +4853,7 @@ namespace TianZhang.Editor
         }
 
         [MenuItem("天章/导入角色创建点购配置")]
-        static void ImportCharacterCreationPointBuy()
+        public static void ImportCharacterCreationPointBuy()
         {
             string path = "Assets/DataConfig/CharacterCreationPointBuy.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
@@ -4897,7 +4875,7 @@ namespace TianZhang.Editor
 
             if (rows.Length == 0)
             {
-                Debug.LogError("[DataConfigImporter] CharacterCreationPointBuy.csv missing default config rows.");
+                Debug.LogError("[ContentImportCoordinator] CharacterCreationPointBuy.csv missing default config rows.");
                 return;
             }
 
@@ -4930,7 +4908,7 @@ namespace TianZhang.Editor
         }
 
         [MenuItem("天章/导入功法配置")]
-        static void ImportGongFa()
+        public static void ImportGongFa()
         {
             _lang = null;
             string path = "Assets/DataConfig/GongFa.csv";
@@ -5875,7 +5853,12 @@ namespace TianZhang.Editor
         }
 
         [MenuItem("天章/导入角色配置")]
-        static void ImportCharacters()
+        public static void ImportCharacterDefinitions()
+        {
+            ImportCharacters();
+        }
+
+        private static void ImportCharacters()
         {
             _lang = null;
             string path = "Assets/DataConfig/Characters.csv";

@@ -3,6 +3,8 @@
     "references": [
         "TianZhang.Foundation",
         "TianZhang.Domain",
+        "TianZhang.Content",
+        "TianZhang.Infrastructure.UnityContent",
         "TianZhang.Combat",
         "TianZhang.Gameplay",
         "TianZhang.Spatial",

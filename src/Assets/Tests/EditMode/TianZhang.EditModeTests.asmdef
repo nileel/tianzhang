@@ -5,11 +5,13 @@
         "UnityEditor.TestRunner",
         "TianZhang.Foundation",
         "TianZhang.Domain",
+        "TianZhang.Content",
         "TianZhang.Combat",
         "TianZhang.Gameplay",
         "TianZhang.Editor",
         "TianZhang.Bootstrap",
-        "TianZhang.Spatial"
+        "TianZhang.Spatial",
+        "TianZhang.Infrastructure.UnityContent"
     ],
     "includePlatforms": [
         "Editor"

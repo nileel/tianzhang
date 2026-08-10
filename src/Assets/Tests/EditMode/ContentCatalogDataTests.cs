@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -90,7 +90,7 @@ namespace TianZhang.Tests
             var bounties = ReadDataFile(BountiesPath);
             var enemies = ReadDataFile(EnemiesPath);
 
-            Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseContentCatalog(
+            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseContentCatalog(
                 language.Where(line => !line.StartsWith("bounty_guanzhong_shijiahou_title,", StringComparison.Ordinal)).ToArray(),
                 settlements, items, bounties, enemies));
 
@@ -98,19 +98,19 @@ namespace TianZhang.Tests
             {
                 "item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_production,basic_resource,99"
             }).ToArray();
-            Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseContentCatalog(
+            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseContentCatalog(
                 language, settlements, duplicateItems, bounties, enemies));
 
             var invalidEnemyParameters = enemies
                 .Select(line => line.Replace("item_lingshi_low@50@1", "item_lingshi_low@101@1"))
                 .ToArray();
-            Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseContentCatalog(
+            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseContentCatalog(
                 language, settlements, items, bounties, invalidEnemyParameters));
 
             var invalidBountyReward = bounties
                 .Select(line => line.Replace("item_lingshi_low@3", "item_shijia_piece@3"))
                 .ToArray();
-            Assert.Throws<InvalidDataException>(() => DataConfigImporter.ParseContentCatalog(
+            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseContentCatalog(
                 language, settlements, items, invalidBountyReward, enemies));
         }
 
@@ -122,7 +122,7 @@ namespace TianZhang.Tests
             string characterGuid = AssetDatabase.AssetPathToGUID(characterPath);
             Assert.IsFalse(string.IsNullOrEmpty(characterGuid));
 
-            DataConfigImporter.ImportContentCatalog();
+            ContentImportCoordinator.ImportContentCatalog();
             Assert.AreEqual(characterGuid, AssetDatabase.AssetPathToGUID(characterPath));
 
             var bountyBefore = AssetDatabase.LoadAssetAtPath<BountyData>(bountyAssetPath);
@@ -137,7 +137,7 @@ namespace TianZhang.Tests
                         .Select(line => line.Replace("item_lingshi_low@3", "item_lingshi_low@0"))));
                 AssetDatabase.ImportAsset(BountiesPath, ImportAssetOptions.ForceSynchronousImport);
 
-                Assert.Throws<InvalidDataException>(() => DataConfigImporter.ImportContentCatalog());
+                Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ImportContentCatalog());
                 var bountyAfterFailure = AssetDatabase.LoadAssetAtPath<BountyData>(bountyAssetPath);
                 Assert.AreEqual(descriptionKeyBefore, bountyAfterFailure.descriptionKey);
                 Assert.AreEqual(3, bountyAfterFailure.rewardEntries[0].quantity);
@@ -170,9 +170,9 @@ namespace TianZhang.Tests
             Assert.IsFalse(catalog.TryGetItem("item_unknown", out _));
         }
 
-        private static DataConfigImporter.ContentCatalogImportPreview ParseProductionPreview()
+        private static ContentImportCoordinator.ContentCatalogImportPreview ParseProductionPreview()
         {
-            return DataConfigImporter.ParseContentCatalog(
+            return ContentImportCoordinator.ParseContentCatalog(
                 ReadDataFile(LanguagePath),
                 ReadDataFile(SettlementsPath),
                 ReadDataFile(ItemsPath),
@@ -190,7 +190,7 @@ namespace TianZhang.Tests
             return Path.Combine(Application.dataPath, "DataConfig", Path.GetFileName(relativePath));
         }
 
-        private static void DestroyPreview(DataConfigImporter.ContentCatalogImportPreview preview)
+        private static void DestroyPreview(ContentImportCoordinator.ContentCatalogImportPreview preview)
         {
             foreach (var settlement in preview.settlements)
                 UnityEngine.Object.DestroyImmediate(settlement);

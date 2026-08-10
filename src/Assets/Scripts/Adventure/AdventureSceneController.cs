@@ -6,6 +6,7 @@ using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Map;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
@@ -24,7 +25,7 @@ namespace TianZhang.Adventure
     public class AdventureSceneController : MonoBehaviour
     {
         [SerializeField] private ContentCatalogData contentCatalog;
-        [SerializeField] private EnvironmentProfileData guanzhongWildEnvironmentProfile;
+        [SerializeField] private EnvironmentProfileAsset guanzhongWildEnvironmentProfile;
         [SerializeField] private TextAsset languageTable = null;
 
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
@@ -144,7 +145,7 @@ namespace TianZhang.Adventure
             contentCatalog = catalog;
         }
 
-        public void SetGuanzhongWildEnvironmentProfile(EnvironmentProfileData environmentProfile)
+        public void SetGuanzhongWildEnvironmentProfile(EnvironmentProfileAsset environmentProfile)
         {
             guanzhongWildEnvironmentProfile = environmentProfile;
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -59,13 +59,13 @@ namespace TianZhang.Tests
             valid[20] = "single";
 
             Assert.IsTrue(
-                DataConfigImporter.TryValidateAttackProfileCsv(
+                ContentImportCoordinator.TryValidateAttackProfileCsv(
                     new[] { header, string.Join(",", valid) },
                     new HashSet<string> { "name_test" },
                     out var validReason),
                 validReason);
             Assert.IsFalse(
-                DataConfigImporter.TryValidateAttackProfileCsv(
+                ContentImportCoordinator.TryValidateAttackProfileCsv(
                     new[] { header, "basic_test,name_test,basic" },
                     new HashSet<string> { "name_test" },
                     out var invalidReason));
@@ -78,7 +78,7 @@ namespace TianZhang.Tests
             var lines = File.ReadAllLines(FixtureAbsolutePath());
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             Assert.IsTrue(
-                DataConfigImporter.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
+                ContentImportCoordinator.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
                 reason);
             try
             {
@@ -201,7 +201,7 @@ namespace TianZhang.Tests
                     !line.TrimStart().StartsWith('#')).ToArray();
                 var combined = new[] { header }.Concat(mutatedLines).Concat(new[] { string.Join(",", mutated) }).ToArray();
                 Assert.IsFalse(
-                    DataConfigImporter.TryBuildAttackProfileProjection(combined, languageKeys, out var rejected, out var reason),
+                    ContentImportCoordinator.TryBuildAttackProfileProjection(combined, languageKeys, out var rejected, out var reason),
                     $"mutated row must fail: {expectedPrefix}");
                 StringAssert.StartsWith(expectedPrefix, reason);
                 Assert.IsEmpty(rejected);
@@ -279,7 +279,7 @@ namespace TianZhang.Tests
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             var duplicateLines = lines.Concat(new[] { lines.First(line => line.StartsWith("art_fixture_single,", System.StringComparison.Ordinal)) }).ToArray();
             Assert.IsFalse(
-                DataConfigImporter.TryBuildAttackProfileProjection(duplicateLines, languageKeys, out var rejected, out _));
+                ContentImportCoordinator.TryBuildAttackProfileProjection(duplicateLines, languageKeys, out var rejected, out _));
             Assert.IsEmpty(rejected);
 
             var singleRow = new[]
@@ -288,7 +288,7 @@ namespace TianZhang.Tests
                 lines.First(line => line.StartsWith("art_fixture_single,", System.StringComparison.Ordinal)),
             };
             Assert.IsTrue(
-                DataConfigImporter.TryBuildAttackProfileProjection(singleRow, languageKeys, out var single, out var reason),
+                ContentImportCoordinator.TryBuildAttackProfileProjection(singleRow, languageKeys, out var single, out var reason),
                 reason);
             try
             {
@@ -327,7 +327,7 @@ namespace TianZhang.Tests
             var lines = File.ReadAllLines(ProductionAbsolutePath());
             var languageKeys = new HashSet<string>(ProductionLanguageKeys(), StringComparer.Ordinal);
             Assert.IsTrue(
-                DataConfigImporter.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
+                ContentImportCoordinator.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
                 reason);
             try
             {
@@ -384,7 +384,7 @@ namespace TianZhang.Tests
             void AssertRejects(string mutated, string expectedPrefix)
             {
                 Assert.IsFalse(
-                    DataConfigImporter.TryValidateAttackProfileCsv(new[] { header, mutated }, languageKeys, out var reason),
+                    ContentImportCoordinator.TryValidateAttackProfileCsv(new[] { header, mutated }, languageKeys, out var reason),
                     $"mutated production row must fail: {expectedPrefix}");
                 StringAssert.StartsWith(expectedPrefix, reason);
             }
@@ -405,7 +405,7 @@ namespace TianZhang.Tests
             AssertRejects(Mutate("areaCenterKind", "caster"), "attack_profile_areaCenterKind_must_be_empty");
 
             Assert.IsFalse(
-                DataConfigImporter.TryValidateAttackProfileCsv(
+                ContentImportCoordinator.TryValidateAttackProfileCsv(
                     new[] { header, row, row }, languageKeys, out var duplicateReason),
                 "duplicated production row must fail");
             StringAssert.StartsWith("attack_profile_id_duplicate", duplicateReason);
@@ -415,7 +415,7 @@ namespace TianZhang.Tests
         public void ProductionImportWritesCanonicalBasicUnarmedAssetAndValidatesBindings()
         {
             // 真实导入：整表、语言键、asset ID 与绑定种类全部合法时生成/更新规范路径 asset。
-            DataConfigImporter.ImportAttackProfiles();
+            ContentImportCoordinator.ImportAttackProfiles();
 
             const string assetPath = "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset";
             var asset = AssetDatabase.LoadAssetAtPath<AttackProfileData>(assetPath);
@@ -435,7 +435,7 @@ namespace TianZhang.Tests
             Assert.AreEqual(AttackTargetingMode.Single, asset.targetingMode);
             Assert.IsTrue(asset.TryValidate(out var validationReason), validationReason);
             Assert.IsTrue(
-                DataConfigImporter.TryValidateAttackProfileAssetIdProjection(
+                ContentImportCoordinator.TryValidateAttackProfileAssetIdProjection(
                     new[] { "basic_unarmed" }, out var idReason),
                 idReason);
 
@@ -483,12 +483,12 @@ namespace TianZhang.Tests
             var lines = File.ReadAllLines(FixtureAbsolutePath());
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             Assert.IsTrue(
-                DataConfigImporter.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
+                ContentImportCoordinator.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
                 reason);
             foreach (var profile in projected)
                 UnityEngine.Object.DestroyImmediate(profile);
             Assert.IsTrue(
-                DataConfigImporter.TryValidateAttackProfileAssetIdProjection(
+                ContentImportCoordinator.TryValidateAttackProfileAssetIdProjection(
                     new[] { "basic_fixture_main" }, out var cleanReason),
                 cleanReason);
 
@@ -509,7 +509,7 @@ namespace TianZhang.Tests
             {
                 AssetDatabase.CreateAsset(stray, strayAssetPath);
                 Assert.IsFalse(
-                    DataConfigImporter.TryValidateAttackProfileAssetIdProjection(
+                    ContentImportCoordinator.TryValidateAttackProfileAssetIdProjection(
                         new[] { "basic_fixture_main" }, out var conflictReason),
                     "same attackProfileId on a non-canonical path must fail the projection check");
                 StringAssert.AreEqualIgnoringCase("attack_profile_asset_id_duplicate", conflictReason);
