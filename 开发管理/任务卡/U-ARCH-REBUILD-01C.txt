@@ -540,6 +540,8 @@
     "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta",
     "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
     "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs.meta",
     "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
@@ -695,5 +697,6 @@
 ## 2026-08-10 解阻塞准备证据
 
 - 已核对 `U-ARCH-REBUILD-01B` 的 completed 归档及其 01C 延后项；01C 只接收 EnvironmentProfile schema／runtime 与 `SpatialQueryBoardFactory` 的 Unity Content 转换，不提前迁移 CTB 或改变 Spatial 的纯输入边界。
+- 阶段 3 的批准依赖图允许阶段 4 接管前的过渡边 `TianZhang.Domain -> TianZhang.Content`，并允许 `SpatialQueryBoardFactory` 转换适配所在的 `TianZhang.Infrastructure.UnityContent -> TianZhang.Spatial`；`AssemblyBoundaryEditorTests` 只同步这两条批准边，不放宽 Feature 兄弟引用、Editor 进入 Player 或 `TianZhang.Spatial` 反向依赖 Unity Content 等禁止项。
 - 实时扫描已冻结全部现有 `Assets/DataConfig` CSV、由导入器写入的 `Assets/Data`／`Assets/Resources/Data` asset、关联 `.meta`、直接数据消费者、EditMode／PlayMode 测试、程序集定义和边界检查器；新导入器类名严格使用架构设计 §5.6 已批准的名称。
 - 执行时先读取每个目标逻辑单元及其直接调用者；若扫描发现未列路径、需要跨领域半提交、静默默认 ID、旧新资产双写或未批准内容／数值创作，立即停止并回报，不扩大本卡。
