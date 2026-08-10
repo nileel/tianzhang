@@ -87,6 +87,19 @@ namespace TianZhang.Tests
             Assert.That(bootstrapDefinitions, Has.Length.EqualTo(1));
         }
 
+        [Test]
+        public void StageFourStateOwnersHaveFocusedModuleFiles()
+        {
+            string scriptsRoot = Path.Combine(Application.dataPath, "Scripts", "Modules");
+            CollectionAssert.IsSubsetOf(new[]
+            {
+                "Character/CharacterRuntimeProfile.cs", "Character/CharacterStateSnapshot.cs",
+                "Cultivation/CultivationState.cs", "Cultivation/FoundationState.cs",
+                "World/WorldClockService.cs", "World/CharterCommitService.cs"
+            }, Directory.GetFiles(scriptsRoot, "*.cs", SearchOption.AllDirectories)
+                .Select(path => path.Substring(scriptsRoot.Length + 1).Replace('\\', '/')).ToArray());
+        }
+
         private static void AssertAssembly(string relativePath, string expectedName, params string[] expectedReferences)
         {
             string fullPath = Path.Combine(Application.dataPath, "..", relativePath);

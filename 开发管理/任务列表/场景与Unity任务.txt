@@ -5,7 +5,7 @@
 ## 当前事实
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
-- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已通过独立架构复审并归档。2026-08-10 01B 已完成唯一坐标、纯格位与 Spatial 查询迁移；CTB 继续延至 01E，EnvironmentProfile 转换适配已由 01C 完成并通过独立架构复审，01D 已完成解阻塞准备并进入 ready。
+- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已通过独立架构复审并归档。2026-08-10 01B 已完成唯一坐标、纯格位与 Spatial 查询迁移；EnvironmentProfile 转换适配已由 01C 完成并通过独立架构复审。2026-08-11 01D 已归档独立 Character、Cultivation、World 状态和册界唯一提交入口；CTB 与战术运行时继续按 01E 推进。
 - 架构重建完成前，URP 与正式美术 Unity 链保持 blocked；Blender、项目骨架和平台评估只有在路径与责任方独立时才可并行，且不得接入 Unity 正式路径。
 
 ## 任务
@@ -14,7 +14,6 @@
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01C、U-ARCH-REBUILD-01D、U-ARCH-REBUILD-01E、U-ARCH-REBUILD-01F、U-ARCH-REBUILD-01G、U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
-| U-ARCH-REBUILD-01D | P1 | codex | 已排队 | — | Character、Cultivation 与 World | 开发管理/任务卡/U-ARCH-REBUILD-01D.txt |
 | U-ARCH-REBUILD-01E | P1 | codex | 阻塞 | U-ARCH-REBUILD-01D | Combat、CTB 与战术运行时 | 开发管理/任务卡/U-ARCH-REBUILD-01E.txt |
 | U-ARCH-REBUILD-01F | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E | GameRuntime、保存与应用用例 | 开发管理/任务卡/U-ARCH-REBUILD-01F.txt |
 | U-ARCH-REBUILD-01G | P1 | codex | 阻塞 | U-ARCH-REBUILD-01F | Feature、Bootstrap、正式场景与最小 UI | 开发管理/任务卡/U-ARCH-REBUILD-01G.txt |

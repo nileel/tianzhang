@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-10：01C 已完成并通过独立架构复审；阶段 4 的源码、测试与路径边界已实时冻结，可由 Codex 执行。",
+  "stateReason": "2026-08-11：阶段 4 的独立 Character、Cultivation、World 状态所有者、快照与册界唯一提交入口已完成并归档；后续 GameRuntime 接线仍由 01F 负责。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -222,3 +222,11 @@
 - 已核对 `U-ARCH-REBUILD-01C`：活跃任务卡不存在、`开发管理/任务归档/U-ARCH-REBUILD-01C.txt` 的 `dispatchState=completed` 且完成记录确认独立架构复审通过；不存在同 ID 活跃卡／归档冲突。
 - 实时源码扫描确认阶段 4 的旧职责入口、模块骨架、asmdef 方向和直接 EditMode 覆盖均为 expectedPaths 所列字面量路径。`Character` 仍混合战斗期状态、CTB、冷却与修炼状态；`FoundationPurpleMansionStateData` 仍混合静态资产与运行时；World 的 Bounty／Inventory／Charter 与会话快照仍在旧路径，正是本阶段要拆离的已批准范围。
 - 字面量冻结：`Modules/Character` 只承载六个已批准角色分件和只读快照；`Modules/Cultivation` 只承载六个状态分件、聚合状态与既有金丹证明重组；`Modules/World` 只承载六个状态所有者和八个已批准册界分件。01F 之前不得以 `GameRuntime`、保存 schema 1 或 Feature 改造替代本阶段。
+
+## 完成记录（2026-08-11）
+
+- `TianZhang.Character` 已提供身份、属性、资源、装载、成长引用、运行时组合与只读快照；其中不引入格位、CTB、冷却、场景、UI 或 Cultivation 可写引用。
+- `TianZhang.Cultivation` 已提供道基、紫府、镇府能力、修炼行动、闭关、金丹锁和聚合快照；其状态所有者不依赖 `TianZhang.Domain` 的 `Character` 实现。既有金丹证明的 Definitions／Attempt／Coordinator／Ledger／Snapshot 已保持既有纯规则和直接回归覆盖。
+- `TianZhang.World` 已提供世界时钟、任务、背包、NPC、悬赏和册界子域状态。`CharterCommitService` 是册界长期提交的唯一公开入口，拒绝未知定义、未授权、非法原子提交及冲突提交。
+- 旧 `GameSession`、schema 4、Combat／CTB 与 Feature 不在本阶段接线；它们按架构设计保留至 01E／01F／01G，未新增平行会话或保存兼容层。
+- 验证：`tools/check-unity-assembly-boundaries.ps1` 通过；Unity 6000.3.18f1 EditMode 执行 447 项，445 项通过；本轮新增 5 项阶段 4 测试均通过。两项已登记基线失败保持不变：`AuthorizedGrantBindsEveryConflictIdentityField`、`LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。当前 worktree 未生成 `src/TianZhang.EditModeTests.csproj`，故 .NET 快速构建入口无法运行。

@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-ARCH-REBUILD-01D | codex_execute | codex | P1 | unity | migration | Character、Cultivation 与 World | 开发管理/任务卡/U-ARCH-REBUILD-01D.txt |
