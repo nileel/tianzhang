@@ -18,12 +18,14 @@ $approvedState = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\auto
 $stateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId"
 $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
 $failureStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-failure"
+$pathMismatchStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-path-mismatch"
 $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
 $originalTrace = $env:TZG_FAKE_CODEX_TRACE
 $originalMismatch = $env:TZG_FAKE_CODEX_MISMATCH
 $originalDirtyFailure = $env:TZG_FAKE_CODEX_DIRTY_FAILURE
+$originalRenameCompressed = $env:TZG_FAKE_CODEX_RENAME_COMPRESSED
 $taskId = 'TASK-CODEX-CANDIDATE'
 
 try {
@@ -36,10 +38,11 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot 'AGENTS.md') -Text '# Codex candidate fixture'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流规则.txt') -Text '# workflow rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI协作规则.txt') -Text '# collaboration rules'
+  Write-Utf8 -Path (Join-Path $mainRoot 'fixture/rename-source.txt') -Text 'rename fixture'
   $metadata = [ordered]@{
     schemaVersion = 1; id = $taskId; title = 'Codex candidate fixture'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'
     domain = 'automation'; stage = 'implementation'; dispatchState = 'ready'; blockedBy = @(); stateReason = 'fixture'
-    expectedPaths = @('开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt', "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt")
+    expectedPaths = @('fixture/rename-source.txt', 'fixture/rename-target.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt', "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt")
     sourceBacklog = '开发管理/任务列表/自动化任务.txt'
   }
   $card = @(
@@ -117,6 +120,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   }
 } else {
   $taskId = 'TASK-CODEX-CANDIDATE'
+  & git mv -- 'fixture/rename-source.txt' 'fixture/rename-target.txt'
+  if ($LASTEXITCODE -ne 0) { throw 'fake Codex rename failed' }
   $cardPath = Join-Path ([Environment]::CurrentDirectory) "开发管理/任务卡/$taskId.txt"
   $card = [IO.File]::ReadAllText($cardPath)
   $card = $card.Replace('"dispatchState": "ready"', '"dispatchState": "blocked"').Replace('"stateReason": "fixture"', '"stateReason": "fixture blocker confirmed"')
@@ -131,14 +136,18 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   $impactText = '影响=验证 Codex 候选入口；边界=不修改真实任务'
   $verifyText = '验证=任务投影检查通过；后续=等待固定入口集成'
   $plainText = '发生=测试任务被标记为暂不可执行；影响=只验证自动流程；需要=无需处理'
-  $paths = "开发管理/任务列表/自动化任务.txt|开发管理/当前任务队列.txt|开发管理/任务卡/$taskId.txt"
+  $paths = "fixture/rename-source.txt|fixture/rename-target.txt|开发管理/任务列表/自动化任务.txt|开发管理/当前任务队列.txt|开发管理/任务卡/$taskId.txt"
   $commit = [string](& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
     -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths $paths `
     -CommitMessage 'test: close Codex candidate fixture' -RequireAutomationMetadata `
     -AutomationTask $taskId -AutomationState 'completed' -AutomationResult $resultText `
     -AutomationImpact $impactText -AutomationVerify $verifyText -AutomationPlain $plainText | Select-Object -Last 1)
   if ($LASTEXITCODE -ne 0) { throw 'fake Codex commit failed' }
-  $changedPaths = @(& git -c core.quotepath=false diff --name-only --no-renames "$commit^..$commit")
+  $changedPaths = if ($env:TZG_FAKE_CODEX_RENAME_COMPRESSED -eq '1') {
+    @(& git -c core.quotepath=false show --format= --name-only $commit | Where-Object { $_ } | Sort-Object -Unique)
+  } else {
+    @(& git -c core.quotepath=false diff --name-only --no-renames "$commit^..$commit" | Where-Object { $_ } | Sort-Object -Unique)
+  }
   $terminal = [ordered]@{
     status = 'completed'; identity = 'Codex'; model = $model; candidateCommit = [string]$commit
     expectedTransition = 'blocked'; changedPaths = $changedPaths; verified = @('task-card checker passed')
@@ -165,6 +174,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal ([string]$candidate.status) 'completed' "Codex candidate failed: $($candidate | ConvertTo-Json -Compress -Depth 20); repository=$($candidateRepositoryEvidence | ConvertTo-Json -Compress)"
   Assert-True ([string]$candidate.sessionId -ne '') 'Codex candidate sessionId is missing'
   Assert-Equal ([string]$candidate.candidateResult.expectedTransition) 'blocked' 'Codex candidate transition mismatch'
+  Assert-True (@($candidate.candidateResult.changedPaths) -ccontains 'fixture/rename-source.txt') "Codex candidate lost rename source path: $(@($candidate.candidateResult.changedPaths) -join '|')"
+  Assert-True (@($candidate.candidateResult.changedPaths) -ccontains 'fixture/rename-target.txt') "Codex candidate lost rename target path: $(@($candidate.candidateResult.changedPaths) -join '|')"
   Assert-True (@($candidate.candidateResult.changedPaths) -ccontains "开发管理/任务卡/$taskId.txt") "Codex candidate lost task-card path: $(@($candidate.candidateResult.changedPaths) -join '|')"
   $trace = [IO.File]::ReadAllText($tracePath)
   Assert-True ($trace -match '\[TZG_CODEX_CANDIDATE\]') 'Codex candidate prompt marker is missing'
@@ -181,8 +192,24 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($trace -notmatch '四值必须逐字满足以下格式[^\r\n]*result=问题=') 'Codex candidate prompt retained the ambiguous prefixed metadata grammar'
   Assert-True ($trace -match '技术失败同样先恢复工作树到本轮初始状态') 'Codex candidate prompt omitted the clean technical-failure boundary'
   Assert-True ($trace -match '必须与该提交的四个元数据值逐字一致') 'Codex candidate prompt omitted terminal/commit value synchronization'
+  Assert-True ($trace -match "BaseCommit: $base") 'Codex candidate prompt omitted the exact base commit'
+  Assert-True ($trace -match 'diff --name-only --no-renames') 'Codex candidate prompt omitted the canonical changed-path command'
+  Assert-True ($trace -match '不得使用 git show --name-only') 'Codex candidate prompt did not forbid rename-compressed path output'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex candidate did not create exactly one commit'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex candidate worktree is dirty'
+
+  $pathMismatchClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $pathMismatchStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
+  $pathMismatchRun = ($pathMismatchClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$pathMismatchRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$pathMismatchRun.candidateBranch, [string]$pathMismatchRun.worktree, $base) | Out-Null
+  $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = '1'
+  $pathMismatchOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$pathMismatchRun.worktree) -TaskId $taskId -RunId ([string]$pathMismatchRun.runId) -Model 'test-codex-model' -StateRoot $pathMismatchStateRoot -ResponsibilityTimeoutSeconds 30)
+  $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $null
+  $pathMismatch = $pathMismatchOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$pathMismatch.status) 'failed' 'Codex candidate accepted rename-compressed terminal paths'
+  Assert-Equal ([string]$pathMismatch.detailCode) 'codex_candidate_path_mismatch' 'Codex rename-compressed failure code is unstable'
+  $pathMismatchRuntime = (@(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action Show -StateRoot $pathMismatchStateRoot)[0] | ConvertFrom-Json -Depth 30).state.runs.codex
+  Assert-Equal ([string]$pathMismatchRuntime.state) 'developing' 'Codex path mismatch advanced the runtime state'
 
   $failureClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $failureStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
   $failureRun = ($failureClaimOutput[0] | ConvertFrom-Json).run
@@ -248,7 +275,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
 
   Write-Output 'test-invoke-codex-candidate: OK'
 } finally {
-  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure
+  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure; $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $originalRenameCompressed
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     if (-not $resolved.StartsWith($tempBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-codex-candidate-test-$testId") { throw "Unsafe Codex candidate test cleanup: $resolved" }
@@ -268,5 +295,10 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedFailureState = [IO.Path]::GetFullPath($failureStateRoot)
     if (-not $resolvedFailureState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedFailureState) -cne "tzg-codex-candidate-test-$testId-failure") { throw "Unsafe Codex failure state cleanup: $resolvedFailureState" }
     Remove-Item -LiteralPath $resolvedFailureState -Recurse -Force
+  }
+  if (Test-Path -LiteralPath $pathMismatchStateRoot) {
+    $resolvedPathMismatchState = [IO.Path]::GetFullPath($pathMismatchStateRoot)
+    if (-not $resolvedPathMismatchState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedPathMismatchState) -cne "tzg-codex-candidate-test-$testId-path-mismatch") { throw "Unsafe Codex path-mismatch state cleanup: $resolvedPathMismatchState" }
+    Remove-Item -LiteralPath $resolvedPathMismatchState -Recurse -Force
   }
 }

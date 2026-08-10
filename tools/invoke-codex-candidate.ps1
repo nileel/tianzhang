@@ -147,11 +147,14 @@ function New-Prompt {
   @(
     '[TZG_CODEX_CANDIDATE]'
     "模型核验证明：外层已核验并传入 $Model；返回 model 必须精确等于该值。"
-    "TaskId: $TaskId"; "RunId: $RunId"; "Route: $Route"; "RepositoryRoot: $script:root"; "CandidateBranch: $($Run.candidateBranch)"
+    "TaskId: $TaskId"; "RunId: $RunId"; "Route: $Route"; "RepositoryRoot: $script:root"; "CandidateBranch: $($Run.candidateBranch)"; "BaseCommit: $($Run.baseCommit)"
     $routeInstruction; $resumeInstruction
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
     "CandidatePaths: $pathText"
+    '提交完成后，必须原样执行以下 PowerShell 命令生成最终 changedPaths：'
+    "`$changedPaths = @(git -c core.quotepath=false diff --name-only --no-renames '$($Run.baseCommit)..HEAD' | Where-Object { `$_ } | Sort-Object -Unique)"
+    '该命令按删除/新增表示移动，因此移动源路径、移动目标路径、普通删除路径和普通新增路径都必须出现。最终 JSON 的 changedPaths 必须直接使用该数组。不得使用 git show --name-only、--find-renames 或任何会把移动压缩为单条目标路径的输出替代。'
     '正常完成时，先确定四个 PowerShell 参数的原始单行值；值中不得含单引号或控制字符。-AutomationResult 的值精确为 问题=<问题>；完成=<完成>，-AutomationImpact 的值精确为 影响=<影响>；边界=<边界>，-AutomationVerify 的值精确为 验证=<验证>；后续=<后续>，-AutomationPlain 的值精确为 发生=<发生>；影响=<影响>；需要=<需要>。result、impact、verify、plain 仅是最终 JSON 字段名，不是参数值的一部分；不得把 result=、impact=、verify=、plain= 写入对应参数值。然后把下面命令中的四个占位符替换为上述原始值并原样执行一次：'
     $finalizerCommand
     '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
