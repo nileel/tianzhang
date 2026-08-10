@@ -8,14 +8,171 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01C"],
-  "stateReason": "等待 01C 完成并通过独立架构复审",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-10：01C 已完成并通过独立架构复审；阶段 4 的源码、测试与路径边界已实时冻结，可由 Codex 执行。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01D.txt",
-    "开发管理/任务归档/U-ARCH-REBUILD-01D.txt"
+    "开发管理/任务归档/U-ARCH-REBUILD-01D.txt",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Scripts/Entity/CombatantPanelState.cs",
+    "src/Assets/Scripts/Entity/CombatantPanelState.cs.meta",
+    "src/Assets/Scripts/Cultivation/CultivationEngine.cs",
+    "src/Assets/Scripts/Cultivation/CultivationEngine.cs.meta",
+    "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs",
+    "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/DaoProofLedger.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/DaoProofLedger.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanPositionRegistry.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanPositionRegistry.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofAttempt.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofAttempt.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofDefinitions.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofDefinitions.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofKnowledge.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofKnowledge.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofSnapshot.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofSnapshot.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/NpcJindanProofPolicy.cs",
+    "src/Assets/Scripts/Cultivation/JindanProof/NpcJindanProofPolicy.cs.meta",
+    "src/Assets/Scripts/Game/BountyRuntime.cs",
+    "src/Assets/Scripts/Game/BountyRuntime.cs.meta",
+    "src/Assets/Scripts/Game/BountyStateStore.cs",
+    "src/Assets/Scripts/Game/BountyStateStore.cs.meta",
+    "src/Assets/Scripts/Game/InventoryGrantService.cs",
+    "src/Assets/Scripts/Game/InventoryGrantService.cs.meta",
+    "src/Assets/Scripts/Game/GameSession.cs",
+    "src/Assets/Scripts/Game/GameSession.cs.meta",
+    "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
+    "src/Assets/Scripts/Game/SessionStateSnapshots.cs.meta",
+    "src/Assets/Scripts/World/CharterConflictRules.cs",
+    "src/Assets/Scripts/World/CharterConflictRules.cs.meta",
+    "src/Assets/Scripts/World/CharterRuleRuntime.cs",
+    "src/Assets/Scripts/World/CharterRuleRuntime.cs.meta",
+    "src/Assets/Scripts/World/CharterRuntimeStateData.cs",
+    "src/Assets/Scripts/World/CharterRuntimeStateData.cs.meta",
+    "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs",
+    "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta",
+    "src/Assets/Scripts/Modules/Content/FoundationPurpleMansionStateData.cs",
+    "src/Assets/Scripts/Modules/Content/FoundationPurpleMansionStateData.cs.meta",
+    "src/Assets/Scripts/Modules/Content/JindanStaticStateData.cs",
+    "src/Assets/Scripts/Modules/Content/JindanStaticStateData.cs.meta",
+    "src/Assets/Scripts/Modules/Character/README.md",
+    "src/Assets/Scripts/Modules/Character/README.md.meta",
+    "src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef",
+    "src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterIdentity.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterIdentity.cs.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterResources.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterResources.cs.meta",
+    "src/Assets/Scripts/Modules/Character/AbilityLoadout.cs",
+    "src/Assets/Scripts/Modules/Character/AbilityLoadout.cs.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/README.md",
+    "src/Assets/Scripts/Modules/Cultivation/README.md.meta",
+    "src/Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef",
+    "src/Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef.meta",
+    "src/Assets/Scripts/Modules/Cultivation/FoundationState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/FoundationState.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/MansionState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/MansionState.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/GuardianAbilityState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/GuardianAbilityState.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/CultivationActionState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/CultivationActionState.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/ClosedRetreatState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/ClosedRetreatState.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/JindanLockState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/JindanLockState.cs.meta",
+    "src/Assets/Scripts/Modules/Cultivation/CultivationState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/CultivationState.cs.meta",
+    "src/Assets/Scripts/Modules/World/README.md",
+    "src/Assets/Scripts/Modules/World/README.md.meta",
+    "src/Assets/Scripts/Modules/World/TianZhang.World.asmdef",
+    "src/Assets/Scripts/Modules/World/TianZhang.World.asmdef.meta",
+    "src/Assets/Scripts/Modules/World/WorldClockService.cs",
+    "src/Assets/Scripts/Modules/World/WorldClockService.cs.meta",
+    "src/Assets/Scripts/Modules/World/QuestStore.cs",
+    "src/Assets/Scripts/Modules/World/QuestStore.cs.meta",
+    "src/Assets/Scripts/Modules/World/InventoryStore.cs",
+    "src/Assets/Scripts/Modules/World/InventoryStore.cs.meta",
+    "src/Assets/Scripts/Modules/World/NpcStore.cs",
+    "src/Assets/Scripts/Modules/World/NpcStore.cs.meta",
+    "src/Assets/Scripts/Modules/World/BountyStore.cs",
+    "src/Assets/Scripts/Modules/World/BountyStore.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterStore.cs",
+    "src/Assets/Scripts/Modules/World/CharterStore.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterDefinitions.cs",
+    "src/Assets/Scripts/Modules/World/CharterDefinitions.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterState.cs",
+    "src/Assets/Scripts/Modules/World/CharterState.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterAuthorization.cs",
+    "src/Assets/Scripts/Modules/World/CharterAuthorization.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterConflictResolver.cs",
+    "src/Assets/Scripts/Modules/World/CharterConflictResolver.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterInvocationEvaluator.cs",
+    "src/Assets/Scripts/Modules/World/CharterInvocationEvaluator.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterCandidateBuilder.cs",
+    "src/Assets/Scripts/Modules/World/CharterCandidateBuilder.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterCommitService.cs",
+    "src/Assets/Scripts/Modules/World/CharterCommitService.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterResult.cs",
+    "src/Assets/Scripts/Modules/World/CharterResult.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs.meta",
+    "src/Assets/Tests/EditMode/DaoProofLedgerTests.cs",
+    "src/Assets/Tests/EditMode/DaoProofLedgerTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanPositionRegistryTests.cs",
+    "src/Assets/Tests/EditMode/JindanPositionRegistryTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanProofAcceptanceTests.cs",
+    "src/Assets/Tests/EditMode/JindanProofAcceptanceTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanProofAttemptTests.cs",
+    "src/Assets/Tests/EditMode/JindanProofAttemptTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanProofCoordinatorTests.cs",
+    "src/Assets/Tests/EditMode/JindanProofCoordinatorTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanProofDefinitionTests.cs",
+    "src/Assets/Tests/EditMode/JindanProofDefinitionTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanProofKnowledgeTests.cs",
+    "src/Assets/Tests/EditMode/JindanProofKnowledgeTests.cs.meta",
+    "src/Assets/Tests/EditMode/JindanProofSnapshotTests.cs",
+    "src/Assets/Tests/EditMode/JindanProofSnapshotTests.cs.meta",
+    "src/Assets/Tests/EditMode/NpcCultivationActionCoordinatorTests.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationActionCoordinatorTests.cs.meta",
+    "src/Assets/Tests/EditMode/NpcJindanProofPolicyTests.cs",
+    "src/Assets/Tests/EditMode/NpcJindanProofPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/BountyRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/BountyRuntimeTests.cs.meta",
+    "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs",
+    "src/Assets/Tests/EditMode/InventoryGrantServiceTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs.meta",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/CultivationStateTests.cs",
+    "src/Assets/Tests/EditMode/CultivationStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/WorldStateStoreTests.cs",
+    "src/Assets/Tests/EditMode/WorldStateStoreTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharterCommitServiceTests.cs",
+    "src/Assets/Tests/EditMode/CharterCommitServiceTests.cs.meta",
+    "tools/check-unity-assembly-boundaries.ps1"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -28,11 +185,16 @@
 
 ## 必查范围
 
-- 01C 架构证据；架构设计 §5.2、§5.4、阶段 4；Character、Cultivation、GameSession 中相关状态与直接调用者／测试。
+- `开发管理/任务归档/U-ARCH-REBUILD-01C.txt` 完成记录；`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md` §5.2、§5.4、阶段 4、阶段 6 与 §8.2。
+- `src/Assets/Scripts/Entity/Character.cs`、`src/Assets/Scripts/Entity/CombatantPanelState.cs`；`src/Assets/Scripts/Cultivation/CultivationEngine.cs`、`NpcCultivationActionCoordinator.cs` 与 `JindanProof/` 八个逻辑单元；`src/Assets/Scripts/Modules/Content/FoundationPurpleMansionStateData.cs`、`JindanStaticStateData.cs`。
+- `src/Assets/Scripts/Game/BountyRuntime.cs`、`BountyStateStore.cs`、`InventoryGrantService.cs`、`GameSession.cs`、`SessionStateSnapshots.cs`；`src/Assets/Scripts/World/CharterConflictRules.cs`、`CharterRuleRuntime.cs`、`CharterRuntimeStateData.cs`、`CharterSiteInteractionRuntime.cs`。
+- 全部写入目标模块的 asmdef、README、直接调用者和 expectedPaths 所列 EditMode 测试；任何实际改动前逐一读取完整方法／类型与直接调用者。
 
 ## 实施范围
 
-- 拆分角色身份、属性、资源与装载；建立独立 Cultivation 状态；拆分 Quest、Inventory、NPC、Bounty、Charter、WorldClock 所有者并为每个状态建立快照测试。
+- 拆分角色身份、属性、资源、装载、成长引用和只读快照；将道基、紫府、金丹、修炼行动、闭关和永久锁拆为独立 Cultivation 状态，并将金丹证明整理为 Definitions／State／Attempt／Resolution／Ledger。
+- 在 World 模块建立 WorldClock、Quest、Inventory、NPC、Bounty 与 Charter 的单一状态所有者；册界按定义、状态、授权、冲突、候选、评估、提交和结果拆分，长期写入只能经 CharterCommitService。
+- 保留当前 schema 4 与 GameSession 的存档／生命周期替换到 01F；本阶段只提供可独立测试的状态和快照，不新建平行会话、保存格式或兼容层。为维持编译而调整的既有调用者只能改为显式输入／快照，不改变 Combat、CTB、Feature、场景或 UI 的职责。
 
 ## 禁止项
 
@@ -40,7 +202,12 @@
 
 ## 验证
 
-- 每个状态 Capture／Restore 或等价快照、册界唯一提交、纯规则无场景测试、程序集与直接回归。解阻塞前展开完整源码、测试与 `.meta` 路径。
+- 每个状态 Capture／Restore 或等价快照；册界唯一提交、未知引用／非法原子提交拒绝和纯规则无场景测试；原有金丹、悬赏、背包与册界直接回归。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`
+- `dotnet build src/TianZhang.EditModeTests.csproj`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1`、`git diff --check`；运行前后分别核对当前基线中已登记的无关失败。
 
 ## 完成条件
 
@@ -48,4 +215,10 @@
 
 ## 停止条件
 
-- 为拆循环需要承载大量无关接口的万能契约或必须提前改 Combat／Feature 时停止。
+- 为拆循环需要承载大量无关接口的万能契约、必须提前改 Combat／Feature 的职责、需要第二套保存／会话或兼容读取层，或发现已有阶段 3 完成事实与源码冲突时停止。
+
+## 2026-08-10 解阻塞准备证据
+
+- 已核对 `U-ARCH-REBUILD-01C`：活跃任务卡不存在、`开发管理/任务归档/U-ARCH-REBUILD-01C.txt` 的 `dispatchState=completed` 且完成记录确认独立架构复审通过；不存在同 ID 活跃卡／归档冲突。
+- 实时源码扫描确认阶段 4 的旧职责入口、模块骨架、asmdef 方向和直接 EditMode 覆盖均为 expectedPaths 所列字面量路径。`Character` 仍混合战斗期状态、CTB、冷却与修炼状态；`FoundationPurpleMansionStateData` 仍混合静态资产与运行时；World 的 Bounty／Inventory／Charter 与会话快照仍在旧路径，正是本阶段要拆离的已批准范围。
+- 字面量冻结：`Modules/Character` 只承载六个已批准角色分件和只读快照；`Modules/Cultivation` 只承载六个状态分件、聚合状态与既有金丹证明重组；`Modules/World` 只承载六个状态所有者和八个已批准册界分件。01F 之前不得以 `GameRuntime`、保存 schema 1 或 Feature 改造替代本阶段。
