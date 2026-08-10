@@ -8,14 +8,72 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01D"],
-  "stateReason": "等待 01D 完成并通过独立架构复审",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-11：01D 已完成并通过独立架构复审归档；阶段 5 的实时路径扫描与字面量路径冻结已完成，等待按固定顺序执行。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
-    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt"
+    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs.meta",
+    "src/Assets/Scripts/Combat/CombatantRegistry.cs",
+    "src/Assets/Scripts/Combat/CombatantRegistry.cs.meta",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs.meta",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs.meta",
+    "src/Assets/Scripts/Combat/CombatResolver.cs",
+    "src/Assets/Scripts/Combat/CombatResolver.cs.meta",
+    "src/Assets/Scripts/Combat/CombatResultBuilder.cs",
+    "src/Assets/Scripts/Combat/CombatResultBuilder.cs.meta",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs.meta",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs.meta",
+    "src/Assets/Scripts/Combat/DamageCalculator.cs",
+    "src/Assets/Scripts/Combat/DamageCalculator.cs.meta",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs.meta",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Scripts/Combat/README.md.meta",
+    "src/Assets/Scripts/Combat/SpellData.cs",
+    "src/Assets/Scripts/Combat/SpellData.cs.meta",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs.meta",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef.meta",
+    "src/Assets/Scripts/Combat/Turns.meta",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef",
+    "src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef.meta",
+    "src/Assets/Scripts/Core/CTBEngine.cs",
+    "src/Assets/Scripts/Core/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Scripts/Game/BattleUIManager.cs",
+    "src/Assets/Scripts/Game/BattleUIManager.cs.meta",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
+    "tools/check-unity-assembly-boundaries.ps1"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -49,3 +107,10 @@
 ## 停止条件
 
 - 迁移改变数值语义、需要场景/UI 才能运行，或必须提前重写 Feature 时停止。
+
+## 2026-08-11 解阻塞准备证据
+
+- 已核对 `U-ARCH-REBUILD-01D`：活跃任务卡不存在，`开发管理/任务归档/U-ARCH-REBUILD-01D.txt` 的 `dispatchState=completed`，且完成记录确认独立架构复审通过；不存在同 ID 活跃卡／归档冲突。
+- 实时扫描确认当前 Combat 根为 `CombatResolver`、`DamageCalculator`、`EnemyAI`、`SpellData` 与 `TacticalCombatController`，CTB 仍在 `Core/CTBEngine.cs`；直接运行时消费者为 `Character`、`ExplorationController`、`BattleUIManager` 与 `FormalEncounterResult`，直接测试与程序集边界检查均已逐一定位。所有可能修改、删除或新建的源码、测试、asmdef、检查器及 Unity `.meta` 已冻结为本卡 `expectedPaths`。
+- 字面量冻结：仅将 `CTBEngine` 从 Core 移入新增的 `TianZhang.Combat.Turns`；以 `CombatantSnapshot` 为唯一输入，拆出 `CombatSession`、`CombatTurnScheduler`、`CombatCommandService`、`CombatActionResolver`、`CombatantRegistry` 与 `CombatResultBuilder`，并删除 `TacticalCombatController` 的 Hub 职责。日志与按钮命令只经 `GameplayContracts`／现有调用方输出；Combat 不获得场景、UI、Character 实现或 Feature 依赖。
+- 01D 是本卡唯一完成型前置；其余条件均为当前仓库和已批准架构设计即可实施的准备工作，现已完成，本卡满足 runnable 合同。
