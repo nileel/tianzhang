@@ -236,10 +236,15 @@ function Get-FormalPaths {
 }
 
 function Invoke-Finalizer {
-  param([string]$Worktree, [string[]]$Arguments)
-  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $finalizerPath -RepositoryRoot $Worktree @Arguments 2>&1)
+  param([string]$Worktree, [hashtable]$Parameters)
+  try {
+    $output = @(& $finalizerPath -RepositoryRoot $Worktree @Parameters 2>&1)
+    $invocationSucceeded = $?
+  } catch {
+    Stop-Hourly 'hourly_formal_commit_failed'
+  }
   $commit = if ($output.Count) { [string]$output[-1] } else { $null }
-  if ($LASTEXITCODE -ne 0 -or $commit -cnotmatch '^[0-9a-f]{40,64}$') { Stop-Hourly 'hourly_formal_commit_failed' }
+  if (-not $invocationSucceeded -or $commit -cnotmatch '^[0-9a-f]{40,64}$') { Stop-Hourly 'hourly_formal_commit_failed' }
   $commit
 }
 
@@ -341,12 +346,12 @@ function Build-And-IntegrateCandidate {
       if ([string]$transition.status -cne 'updated') { Stop-Hourly 'hourly_pending_review_failed' }
       Write-Handoff -Run $Run -CandidateCommit ([string]$Run.candidateCommit)
     }
-    $formalHead = Invoke-Finalizer $worktree @(
-      '-ExpectedPaths', ($formalPaths -join '|'), '-CommitMessage', [string]$formalContract.subject,
-      '-RequireAutomationMetadata', '-AutomationTask', [string]$Run.taskId, '-AutomationState', [string]$formalContract.state,
-      '-AutomationResult', [string]$Run.candidateResult.result, '-AutomationImpact', [string]$Run.candidateResult.impact,
-      '-AutomationVerify', [string]$Run.candidateResult.verify, '-AutomationPlain', [string]$Run.candidateResult.plain
-    )
+    $formalHead = Invoke-Finalizer $worktree @{
+      ExpectedPaths = $formalPaths -join '|'; CommitMessage = [string]$formalContract.subject
+      RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = [string]$formalContract.state
+      AutomationResult = [string]$Run.candidateResult.result; AutomationImpact = [string]$Run.candidateResult.impact
+      AutomationVerify = [string]$Run.candidateResult.verify; AutomationPlain = [string]$Run.candidateResult.plain
+    }
     if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
       $reviewEntry = Get-ReviewEntryEvidence -Root $worktree -TaskId ([string]$Run.taskId) -ExpectedReviewedCommit $reviewedCommit
       if ([string]$reviewEntry.ReviewedCommit -cne [string]$reviewedCommit) { Stop-Hourly 'review_rework_reviewed_commit_changed' }
@@ -479,14 +484,14 @@ function Integrate-StateTransition {
     if ([string]$projection.status -cne 'updated') { Stop-Hourly 'hourly_state_projection_failed' }
     $paths = @($projection.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
     $stateText = if ($Mode -ceq 'PauseDecision') { 'pending_decision' } elseif ($Mode -ceq 'ResumeReady') { 'ready' } else { 'blocked' }
-    $formalHead = Invoke-Finalizer $worktree @(
-      '-ExpectedPaths', ($paths -join '|'), '-CommitMessage', "chore($($Run.taskId)): set automation state $stateText",
-      '-RequireAutomationMetadata', '-AutomationTask', [string]$Run.taskId, '-AutomationState', 'completed',
-      '-AutomationResult', "问题=任务需要确定终态；完成=任务已机械转换为 $stateText",
-      '-AutomationImpact', '影响=任务调度投影已同步；边界=未合并未核验业务修改',
-      '-AutomationVerify', '验证=任务卡投影检查通过；后续=按当前状态继续处理',
-      '-AutomationPlain', "发生=任务状态已经变为 $stateText；影响=业务修改尚未作为完成结果进入主分支；需要=按通知说明处理"
-    )
+    $formalHead = Invoke-Finalizer $worktree @{
+      ExpectedPaths = $paths -join '|'; CommitMessage = "chore($($Run.taskId)): set automation state $stateText"
+      RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = 'completed'
+      AutomationResult = "问题=任务需要确定终态；完成=任务已机械转换为 $stateText"
+      AutomationImpact = '影响=任务调度投影已同步；边界=未合并未核验业务修改'
+      AutomationVerify = '验证=任务卡投影检查通过；后续=按当前状态继续处理'
+      AutomationPlain = "发生=任务状态已经变为 $stateText；影响=业务修改尚未作为完成结果进入主分支；需要=按通知说明处理"
+    }
     if ($Mode -cne 'ResumeReady') {
       $null = Invoke-Runtime -RuntimeAction UpdateRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; RunState = 'canonical_ready'; CanonicalBranch = $branch; CanonicalBase = $latest; CanonicalHead = $formalHead }
     }
@@ -745,14 +750,14 @@ function Apply-AnsweredReviewRework {
       try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $whitespacePath -ExpectedPaths ($changedPaths -join '|') 2>&1) } finally { Pop-Location }
       if ($LASTEXITCODE -ne 0) { Stop-Hourly 'review_rework_whitespace_failed' }
       $targetLabel = if ([string]$reply.optionKey -ceq 'A') { 'DeepSeek' } else { 'Codex' }
-      $formalHead = Invoke-Finalizer $worktree @(
-        '-ExpectedPaths', ($changedPaths -join '|'), '-CommitMessage', "chore($($record.taskId)): requeue review rework",
-        '-RequireAutomationMetadata', '-AutomationTask', [string]$record.taskId, '-AutomationState', 'completed',
-        '-AutomationResult', "问题=Codex 复审未通过；完成=负责人选择 $targetLabel 按同一卡返工并重新排队",
-        '-AutomationImpact', '影响=任务恢复为可领取状态；边界=没有恢复旧 run、旧会话或旧 worktree',
-        '-AutomationVerify', '验证=任务卡、队列与 backlog 投影检查通过；后续=由对应 owner 的新轮次领取',
-        '-AutomationPlain', "发生=负责人已选择 $targetLabel 返工；影响=任务已重新排队但尚未开始新 run；需要=无需再次手动确认"
-      )
+      $formalHead = Invoke-Finalizer $worktree @{
+        ExpectedPaths = $changedPaths -join '|'; CommitMessage = "chore($($record.taskId)): requeue review rework"
+        RequireAutomationMetadata = $true; AutomationTask = [string]$record.taskId; AutomationState = 'completed'
+        AutomationResult = "问题=Codex 复审未通过；完成=负责人选择 $targetLabel 按同一卡返工并重新排队"
+        AutomationImpact = '影响=任务恢复为可领取状态；边界=没有恢复旧 run、旧会话或旧 worktree'
+        AutomationVerify = '验证=任务卡、队列与 backlog 投影检查通过；后续=由对应 owner 的新轮次领取'
+        AutomationPlain = "发生=负责人已选择 $targetLabel 返工；影响=任务已重新排队但尚未开始新 run；需要=无需再次手动确认"
+      }
       if ((@(Get-ChangedPaths $worktree "$latest..$formalHead") -join "`0") -cne ($changedPaths -join "`0")) { Stop-Hourly 'review_rework_formal_paths_invalid' }
       $null = Invoke-GitText $worktree @('diff', '--check', "$latest..$formalHead") 'review_rework_diff_check_failed'
       $postcondition = if ([string]$reply.optionKey -ceq 'A') { @('-Postcondition', 'ExternalDispatchReady', '-ExpectedOwner', 'deepseek') } else { @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', 'codex_execute') }
