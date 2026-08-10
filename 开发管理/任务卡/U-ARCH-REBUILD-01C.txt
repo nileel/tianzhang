@@ -24,15 +24,15 @@
 
 ## 来源与当前边界
 
-- 对应架构设计阶段 3，只重建不可变定义、Unity asset 适配和领域导入链。
+- 对应架构设计阶段 3，重建不可变定义、Unity asset 适配和领域导入链，并接收 01B 明确延后的 EnvironmentProfile／Spatial Unity Content 转换适配。
 
 ## 必查范围
 
-- 01B 架构证据；架构设计 §5.6、阶段 3；现行 Content、DataConfigImporter、CSV／asset 链、检查器和直接导入测试。
+- 01B 架构证据；架构设计 §5.1、§5.6、阶段 3；现行 Content、EnvironmentProfileData／Runtime、SpatialQueryBoardFactory、DataConfigImporter、CSV／asset 链、检查器和直接导入测试。
 
 ## 实施范围
 
-- 建立共享读取、诊断、原子提交基础设施和 Character、Combat、Cultivation、World、Settlement 领域导入器；各领域独立完成读取、校验、投影、提交。
+- 建立共享读取、诊断、原子提交基础设施和 Character、Combat、Cultivation、World、Settlement 领域导入器；迁移 EnvironmentProfile schema／runtime，并把依赖它们的 Spatial 转换适配落到 Infrastructure.UnityContent；各领域独立完成读取、校验、投影、提交。
 
 ## 禁止项
 
@@ -44,7 +44,7 @@
 
 ## 完成条件
 
-- 任一领域可独立导入且失败不写其他领域资产；共享工具不知道领域字段；旧 `DataConfigImporter` 单体删除。
+- 任一领域可独立导入且失败不写其他领域资产；共享工具不知道领域字段；Spatial 不依赖 EnvironmentProfile 或 Unity Content；旧 `DataConfigImporter` 单体删除。
 
 ## 停止条件
 

@@ -8,14 +8,116 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-10 实时扫描命中本卡停止条件：CTB 迁移必须改 Character 持有的 CTBUnit，Spatial/Factory 迁移必须跨入 EnvironmentProfile Content 边界；阶段 2 边界重新明确前不得冻结猜测路径或设为 ready",
+  "stateReason": "2026-08-10 已按批准修订解除阶段顺序冲突：01B 只迁移唯一坐标、纯格位和 Spatial 查询；CTB 延至 01E，EnvironmentProfile 转换适配延至 01C；直接调用者只允许机械更新",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01B.txt",
-    "开发管理/任务归档/U-ARCH-REBUILD-01B.txt"
+    "开发管理/任务归档/U-ARCH-REBUILD-01B.txt",
+    "src/Assets/Scripts/Combat/CombatResolver.cs",
+    "src/Assets/Scripts/Combat/CombatResolver.cs.meta",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs.meta",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef.meta",
+    "src/Assets/Scripts/Core/HexCoord.cs",
+    "src/Assets/Scripts/Core/HexCoord.cs.meta",
+    "src/Assets/Scripts/Core/HexGrid.cs",
+    "src/Assets/Scripts/Core/HexGrid.cs.meta",
+    "src/Assets/Scripts/Core/SpatialRules.meta",
+    "src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs",
+    "src/Assets/Scripts/Core/SpatialRules/SpatialHexCoord.cs.meta",
+    "src/Assets/Scripts/Core/SpatialRules/SpatialQueryBoard.cs",
+    "src/Assets/Scripts/Core/SpatialRules/SpatialQueryBoard.cs.meta",
+    "src/Assets/Scripts/Core/SpatialRules/SpatialQueryTypes.cs",
+    "src/Assets/Scripts/Core/SpatialRules/SpatialQueryTypes.cs.meta",
+    "src/Assets/Scripts/Core/TianZhang.Foundation.asmdef",
+    "src/Assets/Scripts/Core/TianZhang.Foundation.asmdef.meta",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs",
+    "src/Assets/Scripts/Editor/DataConfigImporter.cs.meta",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/TianZhang.Editor.asmdef",
+    "src/Assets/Scripts/Editor/TianZhang.Editor.asmdef.meta",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs.meta",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Scripts/Entity/TianZhang.Domain.asmdef",
+    "src/Assets/Scripts/Entity/TianZhang.Domain.asmdef.meta",
+    "src/Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
+    "src/Assets/Scripts/Game/TianZhang.Gameplay.asmdef.meta",
+    "src/Assets/Scripts/Grid/HybridTacticalPrototypeController.cs",
+    "src/Assets/Scripts/Grid/HybridTacticalPrototypeController.cs.meta",
+    "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs.meta",
+    "src/Assets/Scripts/Grid/ITacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/ITacticalRenderer.cs.meta",
+    "src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs",
+    "src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs.meta",
+    "src/Assets/Scripts/Grid/TacticalGridModel.cs",
+    "src/Assets/Scripts/Grid/TacticalGridModel.cs.meta",
+    "src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs.meta",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs.meta",
+    "src/Assets/Scripts/Modules/Character/README.md",
+    "src/Assets/Scripts/Modules/Character/README.md.meta",
+    "src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef",
+    "src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef.meta",
+    "src/Assets/Scripts/Modules/Spatial/HexCoord.cs",
+    "src/Assets/Scripts/Modules/Spatial/HexCoord.cs.meta",
+    "src/Assets/Scripts/Modules/Spatial/HexGrid.cs",
+    "src/Assets/Scripts/Modules/Spatial/HexGrid.cs.meta",
+    "src/Assets/Scripts/Modules/Spatial/README.md",
+    "src/Assets/Scripts/Modules/Spatial/README.md.meta",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs.meta",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs.meta",
+    "src/Assets/Scripts/Modules/Spatial/TacticalGridModel.cs",
+    "src/Assets/Scripts/Modules/Spatial/TacticalGridModel.cs.meta",
+    "src/Assets/Scripts/Modules/Spatial/TianZhang.Spatial.asmdef",
+    "src/Assets/Scripts/Modules/Spatial/TianZhang.Spatial.asmdef.meta",
+    "src/Assets/Scripts/Tilemap/HexTilemapManager.cs",
+    "src/Assets/Scripts/Tilemap/HexTilemapManager.cs.meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs.meta",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/HexCoordTests.cs",
+    "src/Assets/Tests/EditMode/HexCoordTests.cs.meta",
+    "src/Assets/Tests/EditMode/HexGridTests.cs",
+    "src/Assets/Tests/EditMode/HexGridTests.cs.meta",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs.meta",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs.meta",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs.meta",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
+    "src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef",
+    "src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef.meta",
+    "tools/check-unity-assembly-boundaries.ps1"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -24,23 +126,25 @@
 
 ## 来源与当前边界
 
-- 对应架构设计阶段 2，只迁移 Foundation、六角坐标、空间查询与 CTB 归属边界。
+- 对应架构设计阶段 2，只迁移 Foundation 中的六角坐标、纯格位和空间查询；CTB 归属与 EnvironmentProfile 转换已分别明确留给 01E 与 01C。
 
 ## 必查范围
 
-- 01A 架构证据；架构设计 §5.1、阶段 2；当前 Core、SpatialRules、Grid 纯逻辑和直接测试的完整逻辑单元。
+- 01A 架构证据；架构设计 §4.2、§5.1、阶段 2；当前 HexCoord、HexGrid、SpatialRules、TacticalGridModel 的完整逻辑单元，全部直接调用者、相关 asmdef、EditMode／PlayMode 测试和 `.meta`。
 
 ## 实施范围
 
-- 冻结唯一六角坐标语义，迁移格位、邻接、范围、视线、路径和可达格纯查询；CTB 从 Foundation 移至 Combat；删除重复转换和旧 namespace。
+- 选定唯一六角坐标语义，迁移格位、邻接、范围、视线、路径和可达格纯查询，删除重复坐标、重复转换和旧 Spatial namespace；从 TacticalGridModel 中移除 EnvironmentProfile 持有，使 Spatial 只接收显式格位、边和查询限制输入。
+- 可机械更新 Character、Combat、Gameplay、Editor、Renderer 和测试中的坐标／namespace 直接引用，以及为编译所需的精确 asmdef 引用；这些更新不得改变调用者状态所有权、规则结果或表现职责。
+- `SpatialQueryBoardFactory` 本阶段只调整纯 Spatial 类型与显式输入；其 EnvironmentProfile schema／runtime 转换和向 `Infrastructure.UnityContent` 的实际迁移留给 01C。
 
 ## 禁止项
 
-- 不改 Combat 数值、Feature、场景、Renderer、URP 或内容；不以隐式转换掩盖两套坐标差异。
+- 不移动或重写 CTB，不改 Combat 数值、Character／Content 状态所有权、Feature／场景／Renderer 职责、URP 或内容；不以隐式转换、旧类型别名或兼容壳掩盖两套坐标差异。
 
 ## 验证
 
-- 坐标、邻接、范围、阻挡、方向、可达格及既有 1v1／2v2 空间结果；程序集边界、.NET、Unity EditMode 与文本／差异检查。解阻塞前必须把实时扫描得到的源码、测试和 `.meta` 字面量路径写入本卡。
+- 坐标、邻接、范围、阻挡、方向、可达格及既有 1v1／2v2 空间结果；程序集边界、.NET、Unity EditMode、相关 PlayMode 与文本／差异检查。所有允许路径已由 2026-08-10 实时扫描冻结在 `expectedPaths`。
 
 ## 完成条件
 
@@ -48,12 +152,13 @@
 
 ## 停止条件
 
-- 两套坐标存在未记录语义差异，或验证必须跨越 Content／Character 下游时停止。
+- 两套坐标存在未记录语义差异，或机械坐标／namespace 调用更新之外仍必须提前改变 Content、Character 或 Combat 的业务所有权时停止。
 
-## 2026-08-10 实时扫描停止证据
+## 2026-08-10 实时扫描与解阻塞证据
 
 - 扫描命令：用 `git ls-files` 枚举当前源码、测试、asmdef 与 `.meta`；再用 `rg -l` 按 `HexCoord`、`HexGrid`、`CTBEngine`、`SpatialHexCoord`、`SpatialQueryBoard`、`TacticalGridModel` 与 `SpatialQueryBoardFactory` 定位直接定义、调用者和测试。所有命中的现有 `.cs` 均存在对应 `.meta`。
 - 坐标差异已有记录：`Core/HexCoord.cs` 含 Unity `Vector2Int`／`Vector3`／`Mathf` 转换和可写 `q/r/s`，`Core/SpatialRules/SpatialHexCoord.cs` 是纯 `Q/R` 值类型；方向与拓扑距离语义一致，但纯 Spatial 类型不能直接保留 Unity 转换。该差异已写入 `开发管理/2.5D共享空间查询契约对齐方案.txt`，不属于新的未记录坐标冲突。
-- Character 边界命中：`src/Assets/Scripts/Entity/Character.cs` 直接保存 `HexCoord Position` 与 `CTBEngine.CTBUnit`。把 CTB 从 Foundation 移入 Combat 会令 Domain 反向依赖 Combat，除非同步重写 Character 的战斗期状态所有权；这已经越过阶段 2 的 CTB 路径迁移。
-- Content 边界命中：`src/Assets/Scripts/Grid/TacticalGridModel.cs` 直接保存并创建 `EnvironmentProfileRuntime`，`src/Assets/Scripts/Grid/SpatialQueryBoardFactory.cs` 直接消费 `EnvironmentProfileData`。该 ScriptableObject 还被 `AdventureSceneController`、`ExplorationController`、`DataConfigImporter` 和多项 EditMode／PlayMode 测试直接使用；把 Factory 移入 `Infrastructure` 而不同时重划 Content 会形成反向程序集依赖。
-- 结论：本轮不猜测 `Modules/Spatial`、`Infrastructure/UnityContent` 或 `Combat/Turns` 的新增文件名，不把广泛下游路径写入 `expectedPaths`，也不建立兼容层。须先在已批准架构设计中明确“阶段 2 如何解除 Character 的 CTB 持有”和“EnvironmentProfile 归属在阶段 2 还是阶段 3”，随后才重新扫描并冻结字面量路径。
+- 原 Character 冲突已通过阶段修订解除：`Character.cs` 的 HexCoord 引用只做机械 namespace／程序集更新；它持有的 `CTBUnit` 本阶段不动，CTB 在 01E 与 Combat 战术运行时一起迁移。
+- 原 Content 冲突已通过阶段修订解除：TacticalGridModel 的纯格位状态进入 Spatial，EnvironmentProfile 持有与 Factory 的 Unity Content 转换留给 01C；本阶段不移动 EnvironmentProfileData／Runtime，也不改变其调用者语义。
+- asmdef 扫描确认旧 Domain、Combat、Gameplay、Editor 和两套测试程序集需要增加对 `TianZhang.Spatial` 的直接引用；目标 `TianZhang.Character` 也按批准依赖方向补齐 Spatial 引用，并同步唯一程序集边界检查器、README 与直接测试。上述都属于编译边界更新，不改变业务所有权。
+- `expectedPaths` 已列出全部当前符号命中源码及其 `.meta`、现有／目标 Spatial 文件、直接 asmdef 和坐标／网格新增直接测试。执行中发现任何未列路径或需语义改写时立即停止，不扩大路径。

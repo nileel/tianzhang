@@ -5,7 +5,7 @@
 ## 实时入口与事实源
 
 - `codex-hourly-worker` 每小时 `:15` 前台调用 `tools/invoke-hourly-owner.ps1 -Owner codex -Action RunOnce -Model <实际 model>`；`deepseek-hourly-trigger` 每小时 `:45` 前台调用同一脚本并传入 `-Owner deepseek -Action RunOnce`。两个定时器继续独立运行，可分别开发不同 taskId。
-- automation 对话只等待同一前台调用；项目业务输出仍是单个结构化终态 JSON，Desktop 展示层在其后追加恰好一个简短 `::inbox-item`。触发层不读队列、任务卡或模型正文，不管理自身或另一 automation；automation memory 只记录本轮时间与脚本终态摘要，不参与项目事实、选题、runtime 或恢复判断。
+- automation 对话只等待同一前台调用；项目业务输出仍是单个结构化终态 JSON，Desktop 展示层在其后追加恰好一个简短 `::inbox-item`。触发层不读队列、任务卡或模型正文；除 Codex 命中下述完整空队列终态后暂停自身外，不管理自身或另一 automation。automation memory 只记录本轮时间与脚本终态摘要，不参与项目事实、选题、runtime 或恢复判断。
 - 实时 prompt、schedule、folder、model、notification policy 和 enabled 状态以 automation 配置为准，只通过 Codex automation 管理能力变更，不编辑 TOML。
 - 任务唯一活跃事实是 `开发管理/当前任务队列.txt` 的有序行及同 ID `开发管理/任务卡/<ID>.txt`；交接、摘要和 runtime 只提供证据或诊断信息。
 
@@ -46,6 +46,7 @@
 
 - 普通 TaskOutcome 使用飞书 REST API 直接出站，不依赖长连接桥健康；投递失败只返回脱敏状态，不回滚业务、不恢复 run、不创建重试队列。长连接桥仅负责入站回复。
 - QueueMaintenance 只属于 Codex，按 `开发管理/状态与建议维护规则.txt` 维护队列，不执行本轮新业务。它只对“本轮移除最后一个具名前置”的直接下游卡继续收口，不重新分类其他原本 `blockedBy=[]` 的活跃卡。产生事实变化时返回 `maintenance_completed`，不伪装成业务 `completed`、不发送普通 TaskOutcome；无变化时返回 `no_candidate`，不得机械重写准确说明来制造维护提交。
+- Codex Desktop 薄触发器只有在共享入口返回 `status=no_candidate`、`owner=codex`、`taskId=QUEUE-MAINTENANCE`、`detailCode=no_runnable_candidate`、`cleanup=cleaned` 的同一结构化终态时，才通过 automation 管理能力把 `codex-hourly-worker` 自身设为 `PAUSED`。它必须保留其余配置，不管理 DeepSeek 或其他 automation，也不直接编辑 TOML。普通失败、活动 run、路径冲突、临时跳过或未清理现场不得触发自暂停。
 
 ## Canary、暂停与停止
 

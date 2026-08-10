@@ -163,11 +163,11 @@ Infrastructure / Bootstrap / Editor
 | `Core/HexCoord.cs`、`Core/HexGrid.cs` | 与 Spatial 类型统一 | `TianZhang.Spatial` |
 | `Core/SpatialRules/SpatialHexCoord.cs` | 与 `HexCoord` 选定唯一语义，另一套删除 | `TianZhang.Spatial` |
 | `SpatialQueryBoard*` | 保留纯查询，拆开 board、query 与 result | `TianZhang.Spatial` |
-| `Grid/TacticalGridModel.cs` | 保留格位状态，去除 Renderer 依赖 | `TianZhang.Spatial` |
-| `Grid/SpatialQueryBoardFactory.cs` | 改为显式 Unity 转换适配 | `Infrastructure` |
-| `Core/CTBEngine.cs` | 从 Core 移出 | `TianZhang.Combat.Turns` |
+| `Grid/TacticalGridModel.cs` | 阶段 2 只迁移格位状态，EnvironmentProfile 持有移交阶段 3 适配 | `TianZhang.Spatial` |
+| `Grid/SpatialQueryBoardFactory.cs` | 阶段 2 只跟随纯 Spatial 类型做机械调用更新，EnvironmentProfile 转换与实际迁移留在阶段 3 | `Infrastructure.UnityContent` |
+| `Core/CTBEngine.cs` | 阶段 5 与 Combat 战术运行时一起移出 Core；阶段 2 不提前建立 Combat 所有权 | `TianZhang.Combat.Turns` |
 
-Foundation 不再容纳六角格、CTB 或业务枚举。
+阶段 2 完成后 Foundation 不再容纳六角格；CTB 在阶段 5 完成前保留现有所有权，不新增兼容壳。最终架构中 Foundation 不容纳六角格、CTB 或业务枚举。
 
 ### 5.2 Character 与 Cultivation
 
@@ -372,17 +372,20 @@ SceneArchitectureValidator
 
 - 选定唯一六角坐标类型。
 - 迁移格位、范围、视线和空间查询。
-- 将 CTB 从 Core 移入 Combat。
+- 允许为坐标与 namespace 统一机械更新 Character、Combat、Gameplay、Editor 和测试直接调用者，但不得改变这些调用者的业务状态所有权或规则语义。
+- 从 `TacticalGridModel` 分离纯格位状态；EnvironmentProfile 数据、运行时和 Unity Content 转换仍由阶段 3 迁移。
+- CTB 保留现有所有权，阶段 5 与 Combat 战术运行时一起从 Core 移出。
 - 删除重复转换和旧 namespace。
 - 建立坐标、邻接、范围、阻挡、方向和可达格纯测试。
 
 验收：仓库只剩一套权威六角坐标语义；Spatial 不引用场景、Renderer、Character 或 Combat；既有 1v1／2v2 空间结果保持一致。
 
-停止条件：两种坐标存在未记录语义差异时，先建立对照测试，不使用隐式转换掩盖。
+停止条件：两种坐标存在未记录语义差异时，先建立对照测试，不使用隐式转换掩盖；若机械调用更新之外仍必须提前改变 Character、Content 或 Combat 的业务所有权，则停止阶段 2。
 
 ### 阶段 3：Content 与导入链
 
 - 分离不可变定义、Unity asset 适配和运行时状态。
+- 迁移 EnvironmentProfile schema／runtime，并把依赖它们的 `SpatialQueryBoardFactory` 转换适配落到 `Infrastructure.UnityContent`；Spatial 只接收显式格位、边与查询限制输入。
 - 建立领域导入器及共享读取、诊断和原子提交基础设施。
 - 依次迁移 Character、Combat、Cultivation、World 和 Settlement 内容。
 - 每个领域验证 CSV 到投影、asset、稳定 ID 和引用集合。
@@ -406,6 +409,7 @@ SceneArchitectureValidator
 
 ### 阶段 5：Combat 与战术运行时
 
+- 将 CTB 从 Core 移入 `TianZhang.Combat.Turns`，并在 Character 已完成阶段 4 拆分后建立战斗快照输入，不保留 Character 对 CTB 运行时状态的所有权。
 - 将战斗输入固定为 CombatantSnapshot 和攻击档案投影。
 - 拆分会话、调度、命令、结算、单位集合和结果。
 - EnemyAI 只消费合法行动集合。

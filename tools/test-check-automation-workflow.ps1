@@ -28,6 +28,7 @@ try {
     'tzg-weekly-project-summary' = [IO.File]::ReadAllText((Join-Path $repositoryRoot '开发管理/每周项目总结提示词.txt'))
   }
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.mcp__node_repl__js' -and $prompts['codex-hourly-worker'] -match 'codex_model_metadata_invalid') 'Canonical Codex prompt is missing the request metadata channel'
+  Assert-True ($prompts['codex-hourly-worker'] -match 'shouldSelfPause' -and $prompts['codex-hourly-worker'] -match 'tools\.codex_app__automation_update' -and $prompts['codex-hourly-worker'] -match "terminal\.cleanup === 'cleaned'") 'Canonical Codex prompt is missing the exact empty-queue self-pause contract'
   foreach ($entry in $prompts.GetEnumerator()) { Write-Automation -Id $entry.Key -Status 'PAUSED' -Prompt $entry.Value }
   $paused = Invoke-Checker
   Assert-True ($paused.ExitCode -eq 0 -and $paused.Text -match 'check-automation-workflow: OK') "Paused contract failed: $($paused.Text)"
