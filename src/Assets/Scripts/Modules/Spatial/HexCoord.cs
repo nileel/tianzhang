@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 
-namespace TianZhang.Core
+namespace TianZhang.Spatial
 {
     /// <summary>
     /// 立方坐标六角格（Flat-Top）
     /// q + r + s = 0
     /// </summary>
     [System.Serializable]
-    public struct HexCoord
+    public struct HexCoord : System.IEquatable<HexCoord>
     {
         public int q, r, s;
 
@@ -20,10 +20,15 @@ namespace TianZhang.Core
 
         public HexCoord(int q, int r, int s)
         {
+            if ((long)q + r + s != 0)
+                throw new System.ArgumentException("Hex cube coordinates must satisfy q + r + s = 0.", nameof(s));
             this.q = q;
             this.r = r;
             this.s = s;
         }
+
+        public int Q => q;
+        public int R => r;
 
         // ---- 六个方向 ----
         public static readonly HexCoord[] Directions = new HexCoord[]
@@ -65,6 +70,35 @@ namespace TianZhang.Core
             for (int i = 0; i < 6; i++)
                 neighbors[i] = Neighbor(i);
             return neighbors;
+        }
+
+        public int TopologicalDistanceTo(HexCoord other)
+        {
+            long deltaQ = other.q - (long)q;
+            long deltaR = other.r - (long)r;
+            long distance = (System.Math.Abs(deltaQ) + System.Math.Abs(deltaR) + System.Math.Abs(deltaQ + deltaR)) / 2;
+            if (distance > int.MaxValue)
+                throw new System.OverflowException("Hex distance exceeds Int32 range.");
+            return (int)distance;
+        }
+
+        public System.Collections.Generic.IEnumerable<HexCoord> Neighbors()
+        {
+            for (int index = 0; index < Directions.Length; index++)
+                yield return Neighbor(index);
+        }
+
+        public HexCoord Step(int direction)
+        {
+            if (direction < 0 || direction >= Directions.Length)
+                throw new System.ArgumentOutOfRangeException(nameof(direction));
+            return Neighbor(direction);
+        }
+
+        public bool TryGetDirectionTo(HexCoord neighbor, out int direction)
+        {
+            direction = DirectionTo(neighbor);
+            return direction >= 0;
         }
 
         /// <summary>六角格方向 → 0-5 索引</summary>
@@ -136,6 +170,8 @@ namespace TianZhang.Core
             return new HexCoord(rq, rr, -rq - rr);
         }
 
+        public bool Equals(HexCoord other) => this == other;
+
         public override bool Equals(object obj) =>
             obj is HexCoord other && this == other;
 
@@ -143,5 +179,23 @@ namespace TianZhang.Core
             q.GetHashCode() ^ (r.GetHashCode() << 16);
 
         public override string ToString() => $"({q}, {r}, {s})";
+    }
+
+    public readonly struct SpatialDirectedEdge : System.IEquatable<SpatialDirectedEdge>
+    {
+        public SpatialDirectedEdge(HexCoord from, HexCoord to)
+        {
+            if (!from.TryGetDirectionTo(to, out _))
+                throw new System.ArgumentException("Directed spatial edges must connect topological neighbors.", nameof(to));
+            From = from;
+            To = to;
+        }
+
+        public HexCoord From { get; }
+        public HexCoord To { get; }
+
+        public bool Equals(SpatialDirectedEdge other) => From == other.From && To == other.To;
+        public override bool Equals(object obj) => obj is SpatialDirectedEdge other && Equals(other);
+        public override int GetHashCode() => unchecked((From.GetHashCode() * 397) ^ To.GetHashCode());
     }
 }

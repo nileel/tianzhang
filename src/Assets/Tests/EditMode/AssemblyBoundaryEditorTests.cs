@@ -11,14 +11,15 @@ namespace TianZhang.Tests
         public void ProjectAssembliesFollowTheRuntimeDependencyDirection()
         {
             AssertAssembly("Assets/Scripts/Core/TianZhang.Foundation.asmdef", "TianZhang.Foundation");
-            AssertAssembly("Assets/Scripts/Entity/TianZhang.Domain.asmdef", "TianZhang.Domain", "TianZhang.Foundation");
-            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Domain");
+            AssertAssembly("Assets/Scripts/Entity/TianZhang.Domain.asmdef", "TianZhang.Domain", "TianZhang.Foundation", "TianZhang.Spatial");
+            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Spatial");
             AssertAssembly(
                 "Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
                 "TianZhang.Gameplay",
                 "TianZhang.Foundation",
                 "TianZhang.Domain",
                 "TianZhang.Combat",
+                "TianZhang.Spatial",
                 "Unity.InputSystem",
                 "Unity.InputSystem.ForUI",
                 "UnityEngine.UI");
@@ -40,7 +41,7 @@ namespace TianZhang.Tests
             AssertAssembly("Assets/Scripts/Modules/Content/TianZhang.Content.asmdef",
                 "TianZhang.Content", "TianZhang.Foundation");
             AssertAssembly("Assets/Scripts/Modules/Character/TianZhang.Character.asmdef",
-                "TianZhang.Character", "TianZhang.Foundation", "TianZhang.Content");
+                "TianZhang.Character", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Spatial");
             AssertAssembly("Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef",
                 "TianZhang.Cultivation", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Character");
             AssertAssembly("Assets/Scripts/Modules/World/TianZhang.World.asmdef",

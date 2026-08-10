@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace TianZhang.Core
+namespace TianZhang.Spatial
 {
     /// <summary>
     /// 六角格网格管理器：寻路、范围查询、阻挡检测

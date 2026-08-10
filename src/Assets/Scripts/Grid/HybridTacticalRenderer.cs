@@ -1,8 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Core;
 using UnityEngine;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tactical
 {
@@ -50,16 +52,17 @@ namespace TianZhang.Tactical
             foreach (var tile in model.Tiles.Where(value => value.IsOccupied))
                 PlaceUnitMarker(tile.Coord, new Color(0.92f, 0.82f, 0.35f), "Unit_" + tile.OccupiedUnitId);
 
-            PresentEnvironment(model);
         }
 
-        public EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model)
+        public EnvironmentPresentationSnapshot PresentEnvironment(
+            TacticalGridModel model,
+            EnvironmentProfileRuntime environment)
         {
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
             Model = model;
-            EnvironmentPresentation = EnvironmentPresentationSnapshot.Create(model);
+            EnvironmentPresentation = EnvironmentPresentationSnapshot.Create(model, environment);
             return EnvironmentPresentation;
         }
 

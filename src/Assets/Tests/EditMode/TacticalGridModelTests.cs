@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -9,7 +9,7 @@ using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Entity;
 using TianZhang.Game;
@@ -17,20 +17,22 @@ using TianZhang.Game.CharacterCreation;
 using TianZhang.Tactical;
 using UnityEditor.SceneManagement;
 
+using TianZhang.Spatial;
+
 namespace TianZhang.Tests
 {
     internal static class SpatialQueryTestFixture
     {
         public static SpatialQueryBoard CreateOpenBoard(int radius = 6)
         {
-            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>();
+            var cells = new Dictionary<HexCoord, SpatialCellRules>();
             for (int q = -radius; q <= radius; q++)
             {
                 int minimumR = System.Math.Max(-radius, -q - radius);
                 int maximumR = System.Math.Min(radius, -q + radius);
                 for (int r = minimumR; r <= maximumR; r++)
                 {
-                    var coord = new SpatialHexCoord(q, r);
+                    var coord = new HexCoord(q, r);
                     cells.Add(coord, new SpatialCellRules(0, false, false, false, 0));
                 }
             }
@@ -49,10 +51,10 @@ namespace TianZhang.Tests
 
         public static SpatialQueryBoard CreateCompressedLineBoard()
         {
-            var origin = new SpatialHexCoord(0, 0);
-            var east = new SpatialHexCoord(1, 0);
-            var eastTwo = new SpatialHexCoord(2, 0);
-            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>
+            var origin = new HexCoord(0, 0);
+            var east = new HexCoord(1, 0);
+            var eastTwo = new HexCoord(2, 0);
+            var cells = new Dictionary<HexCoord, SpatialCellRules>
             {
                 [origin] = new SpatialCellRules(0, false, false, false, 0),
                 [east] = new SpatialCellRules(0, false, false, false, 0),
@@ -119,17 +121,16 @@ namespace TianZhang.Tests
         [Test]
         public void EnvironmentProfileProjectionProvidesOnlyConfiguredRuntimeInputs()
         {
-            var model = new TacticalGridModel();
             var profile = CreateEnvironmentProfile();
             try
             {
-                Assert.IsTrue(model.TryConfigureEnvironmentProfile(profile, out var reason), reason);
-                Assert.AreEqual("runtime_fixture", model.EnvironmentRules.ProfileId);
-                Assert.IsTrue(model.EnvironmentRules.IsSurfacePrototypeConfigured("surface_grassland", out var surfaceReason));
+                Assert.IsTrue(EnvironmentProfileRuntime.TryCreate(profile, out var environment, out var reason), reason);
+                Assert.AreEqual("runtime_fixture", environment.ProfileId);
+                Assert.IsTrue(environment.IsSurfacePrototypeConfigured("surface_grassland", out var surfaceReason));
                 Assert.AreEqual(EnvironmentRuntimeReasons.Ok, surfaceReason);
-                Assert.IsFalse(model.EnvironmentRules.IsSurfacePrototypeConfigured("surface_default", out surfaceReason));
+                Assert.IsFalse(environment.IsSurfacePrototypeConfigured("surface_default", out surfaceReason));
                 Assert.AreEqual(EnvironmentRuntimeReasons.SurfacePrototypeNotConfigured, surfaceReason);
-                Assert.IsTrue(model.EnvironmentRules.TryResolvePhenomenonPair(
+                Assert.IsTrue(environment.TryResolvePhenomenonPair(
                     EnvironmentPhenomenonChannel.Airflow,
                     "gust",
                     "wind",
@@ -137,14 +138,14 @@ namespace TianZhang.Tests
                     out var pairingReason));
                 Assert.AreEqual("gust", pairingResult);
                 Assert.AreEqual(EnvironmentRuntimeReasons.Ok, pairingReason);
-                Assert.IsFalse(model.EnvironmentRules.TryResolvePhenomenonPair(
+                Assert.IsFalse(environment.TryResolvePhenomenonPair(
                     EnvironmentPhenomenonChannel.Airflow,
                     "gust",
                     "breeze",
                     out _,
                     out pairingReason));
                 Assert.AreEqual(EnvironmentRuntimeReasons.PhenomenonPairNotConfigured, pairingReason);
-                Assert.IsTrue(model.EnvironmentRules.IsElementRelationConfigured("element_wood", out var elementReason));
+                Assert.IsTrue(environment.IsElementRelationConfigured("element_wood", out var elementReason));
                 Assert.AreEqual(EnvironmentRuntimeReasons.Ok, elementReason);
             }
             finally
@@ -154,19 +155,17 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void InvalidEnvironmentProfileClearsPreviouslyBoundRuntimeRules()
+        public void InvalidEnvironmentProfileFailsWithoutBindingGridState()
         {
-            var model = new TacticalGridModel();
             var valid = CreateEnvironmentProfile();
             var invalid = CreateEnvironmentProfile();
             try
             {
-                Assert.IsTrue(model.TryConfigureEnvironmentProfile(valid, out var validReason), validReason);
+                Assert.IsTrue(EnvironmentProfileRuntime.TryCreate(valid, out _, out var validReason), validReason);
                 invalid.surfacePrototypeRefs = new[] { "surface_grassland", "surface_grassland" };
 
-                Assert.IsFalse(model.TryConfigureEnvironmentProfile(invalid, out var invalidReason));
+                Assert.IsFalse(EnvironmentProfileRuntime.TryCreate(invalid, out _, out var invalidReason));
                 Assert.AreEqual(EnvironmentRuntimeReasons.SurfacePrototypesNotConfigured, invalidReason);
-                Assert.IsNull(model.EnvironmentRules);
             }
             finally
             {
@@ -966,10 +965,10 @@ namespace TianZhang.Tests
             var profiles = new List<AttackProfileData> { CreateBasicAttack() };
             if (additionalProfiles != null)
                 profiles.AddRange(additionalProfiles);
-            var anchors = new Dictionary<int, SpatialHexCoord>
+            var anchors = new Dictionary<int, HexCoord>
             {
-                [player.CTBUnit.Id] = new SpatialHexCoord(player.Position.q, player.Position.r),
-                [enemy.CTBUnit.Id] = new SpatialHexCoord(enemy.Position.q, enemy.Position.r),
+                [player.CTBUnit.Id] = new HexCoord(player.Position.q, player.Position.r),
+                [enemy.CTBUnit.Id] = new HexCoord(enemy.Position.q, enemy.Position.r),
             };
             var setup = new TacticalCombatSetup(
                 new[] { player },
@@ -1051,10 +1050,10 @@ namespace TianZhang.Tests
             enemy.CTBUnit.Id = 2;
             grid.SetOccupied(player.Position, player.CTBUnit.Id);
             grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var anchors = new Dictionary<int, SpatialHexCoord>
+            var anchors = new Dictionary<int, HexCoord>
             {
-                [player.CTBUnit.Id] = new SpatialHexCoord(player.Position.q, player.Position.r),
-                [enemy.CTBUnit.Id] = new SpatialHexCoord(enemy.Position.q, enemy.Position.r),
+                [player.CTBUnit.Id] = new HexCoord(player.Position.q, player.Position.r),
+                [enemy.CTBUnit.Id] = new HexCoord(enemy.Position.q, enemy.Position.r),
             };
 
             var setup = new TacticalCombatSetup(
@@ -1119,10 +1118,10 @@ namespace TianZhang.Tests
             enemy.CTBUnit.Id = 2;
             grid.SetOccupied(player.Position, player.CTBUnit.Id);
             grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var anchors = new Dictionary<int, SpatialHexCoord>
+            var anchors = new Dictionary<int, HexCoord>
             {
-                [player.CTBUnit.Id] = new SpatialHexCoord(player.Position.q, player.Position.r),
-                [enemy.CTBUnit.Id] = new SpatialHexCoord(enemy.Position.q, enemy.Position.r),
+                [player.CTBUnit.Id] = new HexCoord(player.Position.q, player.Position.r),
+                [enemy.CTBUnit.Id] = new HexCoord(enemy.Position.q, enemy.Position.r),
             };
 
             var setup = new TacticalCombatSetup(

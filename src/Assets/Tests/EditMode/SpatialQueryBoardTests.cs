@@ -1,17 +1,19 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NUnit.Framework;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using TianZhang.Tactical;
 using UnityEngine;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests.EditMode
 {
     public class SpatialQueryBoardTests
     {
-        private static readonly SpatialHexCoord Origin = new SpatialHexCoord(0, 0);
-        private static readonly SpatialHexCoord East = new SpatialHexCoord(1, 0);
-        private static readonly SpatialHexCoord EastTwo = new SpatialHexCoord(2, 0);
+        private static readonly HexCoord Origin = new HexCoord(0, 0);
+        private static readonly HexCoord East = new HexCoord(1, 0);
+        private static readonly HexCoord EastTwo = new HexCoord(2, 0);
 
         [Test]
         public void DirectedWeightedEdgesAreTheOnlyDistanceSource()
@@ -242,22 +244,22 @@ namespace TianZhang.Tests.EditMode
         }
 
         private static SpatialQueryBoard CreateBoard(
-            IEnumerable<SpatialHexCoord> coords,
+            IEnumerable<HexCoord> coords,
             IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges)
         {
             return new SpatialQueryBoard(CreateCells(coords), edges, new SpatialQueryLimits(2, 16));
         }
 
-        private static Dictionary<SpatialHexCoord, SpatialCellRules> CreateCells(
-            params SpatialHexCoord[] coords)
+        private static Dictionary<HexCoord, SpatialCellRules> CreateCells(
+            params HexCoord[] coords)
         {
-            return CreateCells((IEnumerable<SpatialHexCoord>)coords);
+            return CreateCells((IEnumerable<HexCoord>)coords);
         }
 
-        private static Dictionary<SpatialHexCoord, SpatialCellRules> CreateCells(
-            IEnumerable<SpatialHexCoord> coords)
+        private static Dictionary<HexCoord, SpatialCellRules> CreateCells(
+            IEnumerable<HexCoord> coords)
         {
-            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>();
+            var cells = new Dictionary<HexCoord, SpatialCellRules>();
             foreach (var coord in coords)
                 cells.Add(coord, new SpatialCellRules(0, false, false, false, 0));
             return cells;

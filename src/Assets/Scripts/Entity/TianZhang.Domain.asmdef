@@ -1,6 +1,7 @@
 {
     "name": "TianZhang.Domain",
     "references": [
-        "TianZhang.Foundation"
+        "TianZhang.Foundation",
+        "TianZhang.Spatial"
     ]
 }

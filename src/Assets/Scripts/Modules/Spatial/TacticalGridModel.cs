@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using TianZhang.Core;
-
-namespace TianZhang.Tactical
+namespace TianZhang.Spatial
 {
     public enum TacticalTerrainType
     {
@@ -53,22 +51,10 @@ namespace TianZhang.Tactical
 
         public int Count => tiles.Count;
         public IEnumerable<TacticalTileData> Tiles => tiles.Values;
-        public EnvironmentProfileRuntime EnvironmentRules { get; private set; }
 
         public void Clear()
         {
             tiles.Clear();
-            EnvironmentRules = null;
-        }
-
-        public bool TryConfigureEnvironmentProfile(EnvironmentProfileData profile, out string reason)
-        {
-            EnvironmentRules = null;
-            if (!EnvironmentProfileRuntime.TryCreate(profile, out var rules, out reason))
-                return false;
-
-            EnvironmentRules = rules;
-            return true;
         }
 
         public void SetTile(TacticalTileData tile)

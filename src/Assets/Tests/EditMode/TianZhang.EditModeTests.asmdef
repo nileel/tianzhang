@@ -8,7 +8,8 @@
         "TianZhang.Combat",
         "TianZhang.Gameplay",
         "TianZhang.Editor",
-        "TianZhang.Bootstrap"
+        "TianZhang.Bootstrap",
+        "TianZhang.Spatial"
     ],
     "includePlatforms": [
         "Editor"

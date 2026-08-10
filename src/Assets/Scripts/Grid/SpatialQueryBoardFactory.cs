@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 
 namespace TianZhang.Tactical
 {
@@ -23,7 +23,7 @@ namespace TianZhang.Tactical
         internal SpatialQuerySnapshot(
             SpatialQueryBoard board,
             EnvironmentProfileRuntime environment,
-            IReadOnlyDictionary<int, SpatialHexCoord> unitAnchors)
+            IReadOnlyDictionary<int, HexCoord> unitAnchors)
         {
             Board = board ?? throw new ArgumentNullException(nameof(board));
             Environment = environment ?? throw new ArgumentNullException(nameof(environment));
@@ -32,13 +32,13 @@ namespace TianZhang.Tactical
 
         public SpatialQueryBoard Board { get; }
         public EnvironmentProfileRuntime Environment { get; }
-        public IReadOnlyDictionary<int, SpatialHexCoord> UnitAnchors { get; }
+        public IReadOnlyDictionary<int, HexCoord> UnitAnchors { get; }
 
-        public IReadOnlyCollection<SpatialHexCoord> Occupied
+        public IReadOnlyCollection<HexCoord> Occupied
         {
             get
             {
-                var occupied = new List<SpatialHexCoord>(UnitAnchors.Count);
+                var occupied = new List<HexCoord>(UnitAnchors.Count);
                 foreach (var coord in UnitAnchors.Values)
                     occupied.Add(coord);
                 return occupied;
@@ -58,35 +58,34 @@ namespace TianZhang.Tactical
             if (grid == null)
                 return Fail(SpatialQuerySnapshotReasons.GridNotConfigured, out reason);
 
-            if (!grid.TryConfigureEnvironmentProfile(profile, out reason))
+            if (!EnvironmentProfileRuntime.TryCreate(profile, out var environment, out reason))
                 return false;
 
-            return TryCreate(grid, out snapshot, out reason);
+            return TryCreate(grid, environment, out snapshot, out reason);
         }
 
         public static bool TryCreate(
             TacticalGridModel grid,
+            EnvironmentProfileRuntime environment,
             out SpatialQuerySnapshot snapshot,
             out string reason)
         {
             snapshot = null;
             if (grid == null)
                 return Fail(SpatialQuerySnapshotReasons.GridNotConfigured, out reason);
-            if (grid.EnvironmentRules == null)
+            if (environment == null)
                 return Fail(SpatialQuerySnapshotReasons.EnvironmentProfileNotConfigured, out reason);
             if (grid.Count == 0)
                 return Fail(SpatialQuerySnapshotReasons.CellsNotConfigured, out reason);
 
-            var environment = grid.EnvironmentRules;
-
-            var cells = new Dictionary<SpatialHexCoord, SpatialCellRules>();
-            var unitAnchors = new Dictionary<int, SpatialHexCoord>();
+            var cells = new Dictionary<HexCoord, SpatialCellRules>();
+            var unitAnchors = new Dictionary<int, HexCoord>();
             foreach (var tile in grid.Tiles)
             {
                 if (tile.IsEntityObstacle && string.IsNullOrWhiteSpace(tile.EntityObstacleSourceId))
                     return Fail(SpatialQuerySnapshotReasons.EntityObstacleSourceNotConfigured, out reason);
 
-                var coord = ToSpatial(tile.Coord);
+                var coord = tile.Coord;
                 cells.Add(coord, new SpatialCellRules(
                     tile.HeightLevel,
                     tile.BlocksGroundMove,
@@ -103,8 +102,8 @@ namespace TianZhang.Tactical
             var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>();
             foreach (var configured in environment.DirectedEdges)
             {
-                var from = new SpatialHexCoord(configured.fromQ, configured.fromR);
-                var to = new SpatialHexCoord(configured.toQ, configured.toR);
+                var from = new HexCoord(configured.fromQ, configured.fromR);
+                var to = new HexCoord(configured.toQ, configured.toR);
                 if (!cells.ContainsKey(from) || !cells.ContainsKey(to))
                     return Fail(SpatialQuerySnapshotReasons.DirectedEdgeCellNotConfigured, out reason);
 
@@ -138,9 +137,6 @@ namespace TianZhang.Tactical
             reason = SpatialQueryReasons.Ok;
             return true;
         }
-
-        private static SpatialHexCoord ToSpatial(TianZhang.Core.HexCoord coord) =>
-            new SpatialHexCoord(coord.q, coord.r);
 
         private static bool Fail(string failureReason, out string reason)
         {

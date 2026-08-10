@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-ARCH-REBUILD-01B | codex_execute | codex | P1 | unity | migration | Foundation、唯一坐标与 Spatial | 开发管理/任务卡/U-ARCH-REBUILD-01B.txt |

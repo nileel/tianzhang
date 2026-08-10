@@ -5,7 +5,8 @@
         "TianZhang.Foundation",
         "TianZhang.Domain",
         "TianZhang.Combat",
-        "TianZhang.Gameplay"
+        "TianZhang.Gameplay",
+        "TianZhang.Spatial"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

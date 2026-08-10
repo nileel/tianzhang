@@ -4,6 +4,7 @@
         "TianZhang.Foundation",
         "TianZhang.Domain",
         "TianZhang.Combat",
+        "TianZhang.Spatial",
         "Unity.InputSystem",
         "Unity.InputSystem.ForUI",
         "UnityEngine.UI"

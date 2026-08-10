@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-10 已按批准修订解除阶段顺序冲突：01B 只迁移唯一坐标、纯格位和 Spatial 查询；CTB 延至 01E，EnvironmentProfile 转换适配延至 01C；直接调用者只允许机械更新",
+  "stateReason": "2026-08-10 已完成：唯一 HexCoord、纯格位和 Spatial 查询已迁入 TianZhang.Spatial；CTB 与 EnvironmentProfile 转换仍分别保留给 01E 与 01C",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -162,3 +162,10 @@
 - 原 Content 冲突已通过阶段修订解除：TacticalGridModel 的纯格位状态进入 Spatial，EnvironmentProfile 持有与 Factory 的 Unity Content 转换留给 01C；本阶段不移动 EnvironmentProfileData／Runtime，也不改变其调用者语义。
 - asmdef 扫描确认旧 Domain、Combat、Gameplay、Editor 和两套测试程序集需要增加对 `TianZhang.Spatial` 的直接引用；目标 `TianZhang.Character` 也按批准依赖方向补齐 Spatial 引用，并同步唯一程序集边界检查器、README 与直接测试。上述都属于编译边界更新，不改变业务所有权。
 - `expectedPaths` 已列出全部当前符号命中源码及其 `.meta`、现有／目标 Spatial 文件、直接 asmdef 和坐标／网格新增直接测试。执行中发现任何未列路径或需语义改写时立即停止，不扩大路径。
+
+## 完成记录（2026-08-10）
+
+- 旧 `TianZhang.Core.HexCoord`、`HexGrid` 与 `Core/SpatialRules` 已删除；`TianZhang.Spatial` 现在只保留统一 `HexCoord`、格位模型、边、范围、视线、路径及可达格查询。旧 `SpatialHexCoord` 和各调用者的显式坐标转换已删除。
+- `TacticalGridModel` 不再持有或创建 `EnvironmentProfileRuntime`；保留在现有 Tactical adapter 的 EnvironmentProfile 转换只以显式运行时输入创建 Spatial 快照，实际 Infrastructure.UnityContent 迁移仍由 01C 负责。CTB 未移动。
+- Domain、Combat、Gameplay、Editor、两类测试程序集及目标 Character 骨架已添加对 `TianZhang.Spatial` 的直接依赖；所有直接调用者只更新坐标和命名空间引用。
+- 验证：程序集边界检查通过；Unity EditMode 编译并运行 442 项，其中本阶段空间迁移相关用例通过。全量仅保留既有两项无关失败：`AuthorizedGrantBindsEveryConflictIdentityField` 与 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。

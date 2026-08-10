@@ -1,10 +1,12 @@
-using System;
+﻿using System;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Combat;
 using TianZhang.Core;
 using TianZhang.Entity;
 using UnityEngine;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests
 {

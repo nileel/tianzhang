@@ -142,7 +142,7 @@ if (-not $SkipRequiredAssemblies) {
   $required = [ordered]@{
     'TianZhang.Spatial' = @('src/Assets/Scripts/Modules/Spatial/TianZhang.Spatial.asmdef', @('TianZhang.Foundation'))
     'TianZhang.Content' = @('src/Assets/Scripts/Modules/Content/TianZhang.Content.asmdef', @('TianZhang.Foundation'))
-    'TianZhang.Character' = @('src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef', @('TianZhang.Foundation', 'TianZhang.Content'))
+    'TianZhang.Character' = @('src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Spatial'))
     'TianZhang.Cultivation' = @('src/Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character'))
     'TianZhang.World' = @('src/Assets/Scripts/Modules/World/TianZhang.World.asmdef', @('TianZhang.Foundation', 'TianZhang.Content'))
     'TianZhang.Gameplay.Contracts' = @('src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef', @('TianZhang.Foundation'))

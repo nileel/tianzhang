@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace TianZhang.Core.SpatialRules
+namespace TianZhang.Spatial
 {
     public sealed class SpatialQueryBoard
     {
-        private readonly Dictionary<SpatialHexCoord, SpatialCellRules> cells;
+        private readonly Dictionary<HexCoord, SpatialCellRules> cells;
         private readonly Dictionary<SpatialDirectedEdge, SpatialEdgeRules> edges;
         private readonly SpatialQueryLimits limits;
 
         public SpatialQueryBoard(
-            IReadOnlyDictionary<SpatialHexCoord, SpatialCellRules> cells,
+            IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
             IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges,
             SpatialQueryLimits limits)
         {
@@ -18,18 +18,18 @@ namespace TianZhang.Core.SpatialRules
                 throw new ArgumentNullException(nameof(cells));
             if (edges == null)
                 throw new ArgumentNullException(nameof(edges));
-            this.cells = new Dictionary<SpatialHexCoord, SpatialCellRules>(cells);
+            this.cells = new Dictionary<HexCoord, SpatialCellRules>(cells);
             this.edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>(edges);
             this.limits = limits;
         }
 
         public int UnitsPerRange => limits.UnitsPerRange;
         public int MaxQueryRange => limits.MaxQueryRange;
-        public IEnumerable<SpatialHexCoord> Cells => cells.Keys;
+        public IEnumerable<HexCoord> Cells => cells.Keys;
 
         public SpatialEdgeInspection InspectEdge(
-            SpatialHexCoord from,
-            SpatialHexCoord to,
+            HexCoord from,
+            HexCoord to,
             SpatialQueryKind kind,
             ulong activeEffectBlockers = ulong.MaxValue)
         {
@@ -64,12 +64,12 @@ namespace TianZhang.Core.SpatialRules
         }
 
         public SpatialMetricDistanceResult QueryMetricDistance(
-            SpatialHexCoord start,
-            SpatialHexCoord target,
+            HexCoord start,
+            HexCoord target,
             SpatialQueryKind kind,
             int? maxRange = null,
             ulong activeEffectBlockers = ulong.MaxValue,
-            Func<SpatialHexCoord, bool> canTraverse = null)
+            Func<HexCoord, bool> canTraverse = null)
         {
             int rangeLimit = maxRange ?? limits.MaxQueryRange;
             if (rangeLimit < 0 || rangeLimit > limits.MaxQueryRange)
@@ -91,7 +91,7 @@ namespace TianZhang.Core.SpatialRules
         }
 
         public SpatialRangeResult QueryRange(
-            SpatialHexCoord center,
+            HexCoord center,
             int minRange,
             int maxRange,
             SpatialQueryKind kind,
@@ -103,7 +103,7 @@ namespace TianZhang.Core.SpatialRules
 
             int minimumUnits = checked(minRange * limits.UnitsPerRange);
             int maximumUnits = checked(maxRange * limits.UnitsPerRange);
-            var entries = new Dictionary<SpatialHexCoord, SpatialRangeEntry>();
+            var entries = new Dictionary<HexCoord, SpatialRangeEntry>();
             foreach (var coord in cells.Keys)
                 entries[coord] = QueryRangeEntryUnits(
                     center,
@@ -117,8 +117,8 @@ namespace TianZhang.Core.SpatialRules
         }
 
         public SpatialRangeEntry QueryRangeEntry(
-            SpatialHexCoord center,
-            SpatialHexCoord target,
+            HexCoord center,
+            HexCoord target,
             int minRange,
             int maxRange,
             SpatialQueryKind kind,
@@ -138,8 +138,8 @@ namespace TianZhang.Core.SpatialRules
         }
 
         private SpatialRangeEntry QueryRangeEntryUnits(
-            SpatialHexCoord center,
-            SpatialHexCoord target,
+            HexCoord center,
+            HexCoord target,
             int minimumUnits,
             int maximumUnits,
             SpatialQueryKind kind,
@@ -172,14 +172,14 @@ namespace TianZhang.Core.SpatialRules
                 sight.Reason);
         }
 
-        public IReadOnlyDictionary<SpatialHexCoord, int> FindReachable(
-            SpatialHexCoord start,
+        public IReadOnlyDictionary<HexCoord, int> FindReachable(
+            HexCoord start,
             int movementBudget,
-            IReadOnlyCollection<SpatialHexCoord> occupied = null)
+            IReadOnlyCollection<HexCoord> occupied = null)
         {
             if (movementBudget < 0)
                 throw new ArgumentOutOfRangeException(nameof(movementBudget));
-            var blocked = occupied == null ? null : new HashSet<SpatialHexCoord>(occupied);
+            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
             blocked?.Remove(start);
             return Traverse(
                 start,
@@ -191,15 +191,15 @@ namespace TianZhang.Core.SpatialRules
                 null).Costs;
         }
 
-        public IReadOnlyList<SpatialHexCoord> FindPath(
-            SpatialHexCoord start,
-            SpatialHexCoord target,
+        public IReadOnlyList<HexCoord> FindPath(
+            HexCoord start,
+            HexCoord target,
             int movementBudget,
-            IReadOnlyCollection<SpatialHexCoord> occupied = null)
+            IReadOnlyCollection<HexCoord> occupied = null)
         {
             if (movementBudget < 0)
                 throw new ArgumentOutOfRangeException(nameof(movementBudget));
-            var blocked = occupied == null ? null : new HashSet<SpatialHexCoord>(occupied);
+            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
             blocked?.Remove(start);
             var traversal = Traverse(
                 start,
@@ -210,9 +210,9 @@ namespace TianZhang.Core.SpatialRules
                 target,
                 null);
             if (!traversal.Costs.ContainsKey(target))
-                return Array.Empty<SpatialHexCoord>();
+                return Array.Empty<HexCoord>();
 
-            var path = new List<SpatialHexCoord>();
+            var path = new List<HexCoord>();
             var current = target;
             while (current != start)
             {
@@ -224,8 +224,8 @@ namespace TianZhang.Core.SpatialRules
         }
 
         public SpatialLineOfSightResult QueryLineOfSight(
-            SpatialHexCoord source,
-            SpatialHexCoord target,
+            HexCoord source,
+            HexCoord target,
             ulong activeEffectBlockers = ulong.MaxValue)
         {
             var metric = QueryMetricDistance(
@@ -255,14 +255,14 @@ namespace TianZhang.Core.SpatialRules
         }
 
         public SpatialForcedMovementResult ResolveForcedMovement(
-            SpatialHexCoord start,
+            HexCoord start,
             int direction,
             int distanceBudget,
-            IReadOnlyCollection<SpatialHexCoord> occupied = null)
+            IReadOnlyCollection<HexCoord> occupied = null)
         {
             if (distanceBudget < 0)
                 throw new ArgumentOutOfRangeException(nameof(distanceBudget));
-            var blocked = occupied == null ? null : new HashSet<SpatialHexCoord>(occupied);
+            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
             blocked?.Remove(start);
             int budgetUnits = checked(distanceBudget * limits.UnitsPerRange);
             int consumedUnits = 0;
@@ -284,16 +284,16 @@ namespace TianZhang.Core.SpatialRules
         }
 
         private TraversalResult Traverse(
-            SpatialHexCoord start,
+            HexCoord start,
             SpatialQueryKind kind,
             int budgetUnits,
-            HashSet<SpatialHexCoord> blocked,
+            HashSet<HexCoord> blocked,
             ulong activeEffectBlockers,
-            SpatialHexCoord? stopAt,
-            Func<SpatialHexCoord, bool> canTraverse)
+            HexCoord? stopAt,
+            Func<HexCoord, bool> canTraverse)
         {
-            var costs = new Dictionary<SpatialHexCoord, int>();
-            var previous = new Dictionary<SpatialHexCoord, SpatialHexCoord>();
+            var costs = new Dictionary<HexCoord, int>();
+            var previous = new Dictionary<HexCoord, HexCoord>();
             if (!cells.ContainsKey(start) || blocked?.Contains(start) == true || canTraverse?.Invoke(start) == false)
                 return new TraversalResult(costs, previous, SpatialQueryReasons.MissingCell);
 
@@ -350,10 +350,10 @@ namespace TianZhang.Core.SpatialRules
             return result;
         }
 
-        private static IReadOnlyList<SpatialHexCoord> TraceLine(SpatialHexCoord source, SpatialHexCoord target)
+        private static IReadOnlyList<HexCoord> TraceLine(HexCoord source, HexCoord target)
         {
             int distance = source.TopologicalDistanceTo(target);
-            var line = new List<SpatialHexCoord>(distance + 1);
+            var line = new List<HexCoord>(distance + 1);
             if (distance == 0)
             {
                 line.Add(source);
@@ -372,7 +372,7 @@ namespace TianZhang.Core.SpatialRules
 
         private static double Lerp(int start, int end, double amount) => start + (end - start) * amount;
 
-        private static SpatialHexCoord RoundCube(double x, double y, double z)
+        private static HexCoord RoundCube(double x, double y, double z)
         {
             int roundedX = (int)Math.Round(x, MidpointRounding.AwayFromZero);
             int roundedY = (int)Math.Round(y, MidpointRounding.AwayFromZero);
@@ -386,18 +386,18 @@ namespace TianZhang.Core.SpatialRules
                 roundedY = -roundedX - roundedZ;
             else
                 roundedZ = -roundedX - roundedY;
-            return new SpatialHexCoord(roundedX, roundedZ);
+            return new HexCoord(roundedX, roundedZ);
         }
 
         private readonly struct FrontierEntry : IComparable<FrontierEntry>
         {
-            public FrontierEntry(SpatialHexCoord coord, int cost)
+            public FrontierEntry(HexCoord coord, int cost)
             {
                 Coord = coord;
                 Cost = cost;
             }
 
-            public SpatialHexCoord Coord { get; }
+            public HexCoord Coord { get; }
             public int Cost { get; }
 
             public int CompareTo(FrontierEntry other)
@@ -412,8 +412,8 @@ namespace TianZhang.Core.SpatialRules
         private sealed class TraversalResult
         {
             public TraversalResult(
-                Dictionary<SpatialHexCoord, int> costs,
-                Dictionary<SpatialHexCoord, SpatialHexCoord> previous,
+                Dictionary<HexCoord, int> costs,
+                Dictionary<HexCoord, HexCoord> previous,
                 string firstRejection)
             {
                 Costs = costs;
@@ -421,8 +421,8 @@ namespace TianZhang.Core.SpatialRules
                 FirstRejection = firstRejection;
             }
 
-            public Dictionary<SpatialHexCoord, int> Costs { get; }
-            public Dictionary<SpatialHexCoord, SpatialHexCoord> Previous { get; }
+            public Dictionary<HexCoord, int> Costs { get; }
+            public Dictionary<HexCoord, HexCoord> Previous { get; }
             public string FirstRejection { get; }
         }
     }

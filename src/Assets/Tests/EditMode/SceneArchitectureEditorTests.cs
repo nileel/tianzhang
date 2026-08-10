@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -16,6 +16,8 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests
 {
@@ -789,13 +791,13 @@ namespace TianZhang.Tests
                 var model = new TacticalGridModel();
                 foreach (var edge in profile.directedEdges)
                 {
-                    model.SetTile(new TacticalTileData(new TianZhang.Core.HexCoord(edge.fromQ, edge.fromR)));
-                    model.SetTile(new TacticalTileData(new TianZhang.Core.HexCoord(edge.toQ, edge.toR)));
+                    model.SetTile(new TacticalTileData(new TianZhang.Spatial.HexCoord(edge.fromQ, edge.fromR)));
+                    model.SetTile(new TacticalTileData(new TianZhang.Spatial.HexCoord(edge.toQ, edge.toR)));
                 }
-                Assert.IsTrue(model.TryConfigureEnvironmentProfile(profile, out var reason), reason);
+                Assert.IsTrue(EnvironmentProfileRuntime.TryCreate(profile, out var environment, out var reason), reason);
 
                 var controller = controllerGo.AddComponent<AdventureSceneController>();
-                controller.SetEnvironmentPresentation(EnvironmentPresentationSnapshot.Create(model));
+                controller.SetEnvironmentPresentation(EnvironmentPresentationSnapshot.Create(model, environment));
                 TianZhang.Settlement.UiText.Load(
                     AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataConfig/Language.csv"));
                 InvokeStart(controller);

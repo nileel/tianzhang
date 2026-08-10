@@ -2,8 +2,9 @@
 using System.Linq;
 using UnityEngine;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using TianZhang.Entity;
+
 
 namespace TianZhang.Combat
 {
@@ -95,17 +96,16 @@ namespace TianZhang.Combat
 
             var occupied = Grid.GetOccupiedCoords()
                 .Where(coord => coord != mover.Position)
-                .Select(ToSpatial)
                 .ToArray();
             var legalPath = SpatialBoard.FindPath(
-                ToSpatial(mover.Position),
-                ToSpatial(path[path.Count - 1]),
+                mover.Position,
+                path[path.Count - 1],
                 mover.MovePoints,
                 occupied);
             if (legalPath.Count == 0)
                 return new ActionResult { Success = false, Message = "无移动路径" };
 
-            HexCoord finalPos = FromSpatial(legalPath[legalPath.Count - 1]);
+            HexCoord finalPos = legalPath[legalPath.Count - 1];
 
             if (Grid.IsOccupied(finalPos))
                 return new ActionResult { Success = false, Message = "目标格被占据" };
@@ -162,11 +162,11 @@ namespace TianZhang.Combat
                 return new AreaTargetingResult(null, null, "target_cell_invalid_or_out_of_bounds");
             }
 
-            var spatialCenter = ToSpatial(center);
+            var spatialCenter = center;
             if (!SpatialBoard.Cells.Contains(spatialCenter))
                 return new AreaTargetingResult(null, null, "target_cell_invalid_or_out_of_bounds");
 
-            var source = ToSpatial(caster.Position);
+            var source = caster.Position;
             var castDistance = SpatialBoard.QueryRangeEntry(
                 source,
                 spatialCenter,
@@ -200,10 +200,10 @@ namespace TianZhang.Combat
 
                 var propagation = SpatialBoard.QueryMetricDistance(
                     spatialCenter,
-                    ToSpatial(candidate.Position),
+                    candidate.Position,
                     SpatialQueryKind.Area,
                     activeEffectBlockers: (ulong)profile.areaEffectBlockers,
-                    canTraverse: coord => IsWithinAreaEnvelope(center, FromSpatial(coord), profile));
+                    canTraverse: coord => IsWithinAreaEnvelope(center, coord, profile));
                 if (!propagation.IsReachable)
                 {
                     propagationBlocked = true;
@@ -486,8 +486,8 @@ namespace TianZhang.Combat
             }
 
             var result = SpatialBoard.QueryRangeEntry(
-                ToSpatial(source),
-                ToSpatial(target),
+                source,
+                target,
                 minRange,
                 maxRange,
                 SpatialQueryKind.Attack,
@@ -503,11 +503,10 @@ namespace TianZhang.Combat
             if (SpatialBoard == null)
                 return new List<HexCoord>();
 
-            var start = ToSpatial(mover.Position);
-            var targetCoord = ToSpatial(target.Position);
+            var start = mover.Position;
+            var targetCoord = target.Position;
             var occupied = Grid.GetOccupiedCoords()
                 .Where(coord => coord != mover.Position)
-                .Select(ToSpatial)
                 .ToArray();
             var destination = SpatialBoard
                 .FindReachable(start, mover.MovePoints, occupied)
@@ -540,12 +539,8 @@ namespace TianZhang.Combat
 
             return SpatialBoard
                 .FindPath(start, destination.Coord, mover.MovePoints, occupied)
-                .Select(FromSpatial)
                 .ToList();
         }
-
-        private static SpatialHexCoord ToSpatial(HexCoord coord) => new SpatialHexCoord(coord.q, coord.r);
-        private static HexCoord FromSpatial(SpatialHexCoord coord) => new HexCoord(coord.Q, coord.R);
 
         public void ClearLog() => BattleLog.Clear();
     }

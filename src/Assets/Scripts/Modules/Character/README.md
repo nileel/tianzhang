@@ -2,7 +2,7 @@
 
 - 职责：角色身份、基础属性、资源、装载和只读快照。
 - 公开入口：当前为空；迁移后公开角色状态所有者和只读快照。
-- 允许依赖：`TianZhang.Foundation`、`TianZhang.Content`。
+- 允许依赖：`TianZhang.Foundation`、`TianZhang.Content`、`TianZhang.Spatial`。
 - 禁止依赖：Cultivation 流程、Combat 实现、Feature、Bootstrap、Editor、UI。
 - 运行时所有者：迁移后的角色状态所有者；当前骨架不写状态。
 - 数据／配置来源：显式角色定义与用例输入。

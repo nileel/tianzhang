@@ -4,6 +4,8 @@ using UnityEngine.Tilemaps;
 using TianZhang.Core;
 using TianZhang.Tactical;
 
+using TianZhang.Spatial;
+
 namespace TianZhang.HexTile
 {
     public class HexTilemapManager : MonoBehaviour
@@ -87,14 +89,16 @@ namespace TianZhang.HexTile
             return TacticalGrid;
         }
 
-        public EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model)
+        public EnvironmentPresentationSnapshot PresentEnvironment(
+            TacticalGridModel model,
+            EnvironmentProfileRuntime environment)
         {
             if (model == null)
                 throw new System.ArgumentNullException(nameof(model));
 
             EnsureTacticalRenderer();
             TacticalGrid = model;
-            return TacticalRenderer.PresentEnvironment(model);
+            return TacticalRenderer.PresentEnvironment(model, environment);
         }
 
         /// <summary>屏幕坐标 → 最近的六角格（精确匹配）</summary>

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
@@ -17,6 +17,8 @@ using TianZhang.Adventure;
 using TianZhang.Content;
 using TianZhang.Tactical;
 using UnityEngine.InputSystem.UI;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Editor
 {

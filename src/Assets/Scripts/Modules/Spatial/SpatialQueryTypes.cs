@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace TianZhang.Core.SpatialRules
+namespace TianZhang.Spatial
 {
     public enum SpatialQueryKind
     {
@@ -138,7 +138,7 @@ namespace TianZhang.Core.SpatialRules
     public readonly struct SpatialRangeEntry
     {
         public SpatialRangeEntry(
-            SpatialHexCoord coord,
+            HexCoord coord,
             bool isInRange,
             int distanceUnits,
             bool hasLineOfSight,
@@ -151,7 +151,7 @@ namespace TianZhang.Core.SpatialRules
             Reason = reason ?? SpatialQueryReasons.Ok;
         }
 
-        public SpatialHexCoord Coord { get; }
+        public HexCoord Coord { get; }
         public bool IsInRange { get; }
         public int DistanceUnits { get; }
         public bool HasLineOfSight { get; }
@@ -160,27 +160,27 @@ namespace TianZhang.Core.SpatialRules
 
     public sealed class SpatialRangeResult
     {
-        internal SpatialRangeResult(IReadOnlyDictionary<SpatialHexCoord, SpatialRangeEntry> entries)
+        internal SpatialRangeResult(IReadOnlyDictionary<HexCoord, SpatialRangeEntry> entries)
         {
             Entries = entries ?? throw new ArgumentNullException(nameof(entries));
         }
 
-        public IReadOnlyDictionary<SpatialHexCoord, SpatialRangeEntry> Entries { get; }
+        public IReadOnlyDictionary<HexCoord, SpatialRangeEntry> Entries { get; }
 
-        public bool TryGet(SpatialHexCoord coord, out SpatialRangeEntry entry) =>
+        public bool TryGet(HexCoord coord, out SpatialRangeEntry entry) =>
             Entries.TryGetValue(coord, out entry);
     }
 
     public readonly struct SpatialForcedMovementResult
     {
-        public SpatialForcedMovementResult(SpatialHexCoord position, int consumedDistanceUnits, string reason)
+        public SpatialForcedMovementResult(HexCoord position, int consumedDistanceUnits, string reason)
         {
             Position = position;
             ConsumedDistanceUnits = consumedDistanceUnits;
             Reason = reason ?? SpatialQueryReasons.Ok;
         }
 
-        public SpatialHexCoord Position { get; }
+        public HexCoord Position { get; }
         public int ConsumedDistanceUnits { get; }
         public string Reason { get; }
     }

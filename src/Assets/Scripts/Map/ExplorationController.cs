@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,6 +11,8 @@ using TianZhang.Combat;
 using TianZhang.HexTile;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Map
 {
@@ -201,7 +203,9 @@ namespace TianZhang.Map
             }
             resolver.SpatialBoard = spatialQuerySnapshot.Board;
 
-            var environmentPresentation = tilemapManager.PresentEnvironment(tacticalGrid);
+            var environmentPresentation = tilemapManager.PresentEnvironment(
+                tacticalGrid,
+                spatialQuerySnapshot.Environment);
             if (!environmentPresentation.IsConfigured)
             {
                 adventureSceneController?.ReportEncounterConfigurationFailure(

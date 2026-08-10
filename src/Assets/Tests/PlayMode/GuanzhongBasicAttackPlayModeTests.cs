@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
@@ -12,6 +12,8 @@ using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
 using UnityEngine;
 using UnityEngine.TestTools;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests
 {

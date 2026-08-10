@@ -2,6 +2,7 @@
     "name": "TianZhang.Character",
     "references": [
         "TianZhang.Foundation",
-        "TianZhang.Content"
+        "TianZhang.Content",
+        "TianZhang.Spatial"
     ]
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -10,6 +10,8 @@ using TianZhang.Game;
 using TianZhang.World;
 using UnityEditor;
 using UnityEngine;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests
 {

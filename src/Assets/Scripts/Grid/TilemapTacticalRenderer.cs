@@ -1,8 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using TianZhang.Core;
 using TianZhang.HexTile;
 using UnityEngine;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tactical
 {
@@ -39,17 +41,18 @@ namespace TianZhang.Tactical
                 manager.groundTilemap.SetTile(cell, manager.groundTile);
             }
 
-            PresentEnvironment(model);
         }
 
-        public EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model)
+        public EnvironmentPresentationSnapshot PresentEnvironment(
+            TacticalGridModel model,
+            EnvironmentProfileRuntime environment)
         {
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
             var manager = RequireManager();
             Model = model;
-            EnvironmentPresentation = EnvironmentPresentationSnapshot.Create(model);
+            EnvironmentPresentation = EnvironmentPresentationSnapshot.Create(model, environment);
 
             if (manager.groundTilemap == null)
                 return EnvironmentPresentation;

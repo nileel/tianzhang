@@ -1,8 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using UnityEngine;
 
 namespace TianZhang.Tactical
@@ -63,16 +62,17 @@ namespace TianZhang.Tactical
         public string FailureReason { get; }
         public bool IsConfigured => string.IsNullOrEmpty(FailureReason);
 
-        public static EnvironmentPresentationSnapshot Create(TacticalGridModel model)
+        public static EnvironmentPresentationSnapshot Create(
+            TacticalGridModel model,
+            EnvironmentProfileRuntime environment)
         {
             if (model == null)
                 return Failure(SpatialQuerySnapshotReasons.GridNotConfigured);
-            if (model.EnvironmentRules == null)
+            if (environment == null)
                 return Failure(SpatialQuerySnapshotReasons.EnvironmentProfileNotConfigured);
-            if (!SpatialQueryBoardFactory.TryCreate(model, out var spatialSnapshot, out var reason))
+            if (!SpatialQueryBoardFactory.TryCreate(model, environment, out var spatialSnapshot, out var reason))
                 return Failure(reason);
 
-            var environment = spatialSnapshot.Environment;
             var channels = new List<EnvironmentPhenomenonChannel>();
             foreach (EnvironmentPhenomenonChannel channel in Enum.GetValues(typeof(EnvironmentPhenomenonChannel)))
                 channels.Add(channel);
@@ -80,8 +80,8 @@ namespace TianZhang.Tactical
             var edges = new List<EnvironmentEdgePresentation>();
             foreach (var edge in environment.DirectedEdges)
             {
-                var from = new SpatialHexCoord(edge.fromQ, edge.fromR);
-                var to = new SpatialHexCoord(edge.toQ, edge.toR);
+                var from = new HexCoord(edge.fromQ, edge.fromR);
+                var to = new HexCoord(edge.toQ, edge.toR);
                 var movement = spatialSnapshot.Board.InspectEdge(from, to, SpatialQueryKind.Movement);
                 var interaction = spatialSnapshot.Board.InspectEdge(from, to, SpatialQueryKind.Attack);
                 edges.Add(new EnvironmentEdgePresentation(
@@ -118,7 +118,9 @@ namespace TianZhang.Tactical
         EnvironmentPresentationSnapshot EnvironmentPresentation { get; }
 
         void RenderGrid(TacticalGridModel model);
-        EnvironmentPresentationSnapshot PresentEnvironment(TacticalGridModel model);
+        EnvironmentPresentationSnapshot PresentEnvironment(
+            TacticalGridModel model,
+            EnvironmentProfileRuntime environment);
         HexCoord ScreenToHex(Vector3 screenPosition);
         Vector3 HexToWorld(HexCoord coord);
         void HighlightMoveRange(IEnumerable<HexCoord> tiles);

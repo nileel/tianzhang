@@ -1,14 +1,16 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Tactical;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests.EditMode
 {
@@ -118,12 +120,14 @@ namespace TianZhang.Tests.EditMode
                 profile.directedEdges[0].allowsMovement = false;
                 profile.directedEdges[0].allowsEffects = false;
                 var model = CreateModel();
-                Assert.IsTrue(model.TryConfigureEnvironmentProfile(profile, out var reason), reason);
+                Assert.IsTrue(EnvironmentProfileRuntime.TryCreate(profile, out var environment, out var reason), reason);
 
                 var hybridRenderer = hybridRoot.AddComponent<HybridTacticalRenderer>();
                 var tilemapRenderer = CreateTilemapRenderer(tilemapRoot, tile);
                 hybridRenderer.RenderGrid(model);
                 tilemapRenderer.RenderGrid(model);
+                hybridRenderer.PresentEnvironment(model, environment);
+                tilemapRenderer.PresentEnvironment(model, environment);
 
                 AssertEnvironmentPresentation(hybridRenderer.EnvironmentPresentation);
                 AssertEnvironmentPresentation(tilemapRenderer.EnvironmentPresentation);
@@ -158,7 +162,7 @@ namespace TianZhang.Tests.EditMode
                 Assert.AreSame(model, controller.Model);
                 Assert.IsNotNull(controller.SpatialQuery);
                 Assert.AreEqual(2, controller.SpatialQuery.Board
-                    .QueryMetricDistance(new SpatialHexCoord(0, 0), new SpatialHexCoord(1, 0), SpatialQueryKind.Attack)
+                    .QueryMetricDistance(new HexCoord(0, 0), new HexCoord(1, 0), SpatialQueryKind.Attack)
                     .DistanceUnits);
             }
             finally
@@ -316,8 +320,8 @@ namespace TianZhang.Tests.EditMode
         private static string CaptureRuleOutput(SpatialQuerySnapshot snapshot)
         {
             var board = snapshot.Board;
-            var origin = new SpatialHexCoord(0, 0);
-            var east = new SpatialHexCoord(1, 0);
+            var origin = new HexCoord(0, 0);
+            var east = new HexCoord(1, 0);
             var metric = board.QueryMetricDistance(origin, east, SpatialQueryKind.Attack);
             var range = board.QueryRangeEntry(origin, east, 1, 1, SpatialQueryKind.Attack, true);
             var sight = board.QueryLineOfSight(origin, east);

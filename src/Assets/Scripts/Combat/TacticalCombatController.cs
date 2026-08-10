@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using TianZhang.Entity;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
@@ -65,7 +67,7 @@ namespace TianZhang.Combat
             IReadOnlyList<Character> playerMembers,
             IReadOnlyList<Character> enemyMembers,
             SpatialQueryBoard spatialBoard,
-            IReadOnlyDictionary<int, SpatialHexCoord> unitAnchors,
+            IReadOnlyDictionary<int, HexCoord> unitAnchors,
             IReadOnlyList<AttackProfileData> attackProfiles)
         {
             PlayerMembers = playerMembers;
@@ -78,7 +80,7 @@ namespace TianZhang.Combat
         public IReadOnlyList<Character> PlayerMembers { get; }
         public IReadOnlyList<Character> EnemyMembers { get; }
         public SpatialQueryBoard SpatialBoard { get; }
-        public IReadOnlyDictionary<int, SpatialHexCoord> UnitAnchors { get; }
+        public IReadOnlyDictionary<int, HexCoord> UnitAnchors { get; }
         public IReadOnlyList<AttackProfileData> AttackProfiles { get; }
     }
 
@@ -112,7 +114,7 @@ namespace TianZhang.Combat
         internal TacticalCombatSession(
             IEnumerable<TacticalCombatMember> members,
             SpatialQueryBoard spatialBoard,
-            IReadOnlyDictionary<int, SpatialHexCoord> unitAnchors)
+            IReadOnlyDictionary<int, HexCoord> unitAnchors)
         {
             this.members = members.ToList();
             SpatialBoard = spatialBoard;
@@ -120,7 +122,7 @@ namespace TianZhang.Combat
         }
 
         public SpatialQueryBoard SpatialBoard { get; }
-        public IReadOnlyDictionary<int, SpatialHexCoord> UnitAnchors { get; }
+        public IReadOnlyDictionary<int, HexCoord> UnitAnchors { get; }
         public IReadOnlyList<TacticalCombatMember> Members => members;
 
         public List<CTBEngine.CTBUnit> CreateActiveUnitList()
@@ -532,7 +534,7 @@ namespace TianZhang.Combat
             IReadOnlyList<Character> source,
             TacticalCombatTeam team,
             int startOrder,
-            IReadOnlyDictionary<int, SpatialHexCoord> unitAnchors,
+            IReadOnlyDictionary<int, HexCoord> unitAnchors,
             HexGrid grid,
             IReadOnlyDictionary<string, AttackProfileData> profileById,
             ISet<Character> seenCharacters,

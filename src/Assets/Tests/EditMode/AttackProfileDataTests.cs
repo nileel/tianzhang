@@ -1,15 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Combat;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Entity;
 using UnityEditor;
 using UnityEngine;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tests
 {
@@ -529,11 +531,11 @@ namespace TianZhang.Tests
             var enemyOne = CreateCombatant("敌人一", new HexCoord(1, 0), engine);
             var enemyTwo = CreateCombatant("敌人二", new HexCoord(1, 1), engine);
             var grid = new HexGrid();
-            var anchors = new Dictionary<int, SpatialHexCoord>();
+            var anchors = new Dictionary<int, HexCoord>();
             foreach (var character in new[] { playerOne, playerTwo, enemyOne, enemyTwo })
             {
                 grid.SetOccupied(character.Position, character.CTBUnit.Id);
-                anchors.Add(character.CTBUnit.Id, new SpatialHexCoord(character.Position.q, character.Position.r));
+                anchors.Add(character.CTBUnit.Id, new HexCoord(character.Position.q, character.Position.r));
             }
 
             var basic = CreateBasicProfile();
@@ -572,10 +574,10 @@ namespace TianZhang.Tests
             enemy.BasicAttackProfileId = "basic_missing";
             grid.SetOccupied(player.Position, player.CTBUnit.Id);
             grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var anchors = new Dictionary<int, SpatialHexCoord>
+            var anchors = new Dictionary<int, HexCoord>
             {
-                [player.CTBUnit.Id] = new SpatialHexCoord(0, 0),
-                [enemy.CTBUnit.Id] = new SpatialHexCoord(1, 0),
+                [player.CTBUnit.Id] = new HexCoord(0, 0),
+                [enemy.CTBUnit.Id] = new HexCoord(1, 0),
             };
 
             var setup = new TacticalCombatSetup(
@@ -604,10 +606,10 @@ namespace TianZhang.Tests
             player.SpellCooldowns = System.Array.Empty<int>();
             grid.SetOccupied(player.Position, player.CTBUnit.Id);
             grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var anchors = new Dictionary<int, SpatialHexCoord>
+            var anchors = new Dictionary<int, HexCoord>
             {
-                [player.CTBUnit.Id] = new SpatialHexCoord(0, 0),
-                [enemy.CTBUnit.Id] = new SpatialHexCoord(1, 0),
+                [player.CTBUnit.Id] = new HexCoord(0, 0),
+                [enemy.CTBUnit.Id] = new HexCoord(1, 0),
             };
             var setup = new TacticalCombatSetup(
                 new[] { player },
@@ -633,11 +635,11 @@ namespace TianZhang.Tests
             var enemyTwo = CreateCombatant("敌人二", new HexCoord(1, 1), engine);
             var ally = CreateCombatant("同伴", new HexCoord(0, 1), engine);
             var grid = new HexGrid();
-            var anchors = new Dictionary<int, SpatialHexCoord>();
+            var anchors = new Dictionary<int, HexCoord>();
             foreach (var character in new[] { player, ally, enemyOne, enemyTwo })
             {
                 grid.SetOccupied(character.Position, character.CTBUnit.Id);
-                anchors.Add(character.CTBUnit.Id, new SpatialHexCoord(character.Position.q, character.Position.r));
+                anchors.Add(character.CTBUnit.Id, new HexCoord(character.Position.q, character.Position.r));
             }
 
             var basic = CreateBasicProfile();

@@ -1,6 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using TianZhang.Core;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Entity
 {

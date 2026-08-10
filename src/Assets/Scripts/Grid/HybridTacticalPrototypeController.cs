@@ -1,9 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Core;
-using TianZhang.Core.SpatialRules;
+using TianZhang.Spatial;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+using TianZhang.Spatial;
 
 namespace TianZhang.Tactical
 {
@@ -58,6 +60,7 @@ namespace TianZhang.Tactical
             SpatialQuery = snapshot;
             environmentProfile = profile;
             hybridRenderer.RenderGrid(model);
+            hybridRenderer.PresentEnvironment(model, snapshot.Environment);
             SelectedHex = FindSelectionAnchor(model);
             RefreshPresentation();
             return true;
@@ -101,11 +104,10 @@ namespace TianZhang.Tactical
                 return;
 
             var anchor = FindSelectionAnchor(Model);
-            var spatialAnchor = ToSpatial(anchor);
+            var spatialAnchor = anchor;
             var occupied = SpatialQuery.Occupied;
             var movement = SpatialQuery.Board.FindReachable(spatialAnchor, 1, occupied)
                 .Keys
-                .Select(ToHex)
                 .ToArray();
             var attack = SpatialQuery.Board.Cells
                 .Where(coord => SpatialQuery.Board.QueryRangeEntry(
@@ -115,7 +117,6 @@ namespace TianZhang.Tactical
                     1,
                     SpatialQueryKind.Attack,
                     true).IsInRange)
-                .Select(ToHex)
                 .ToArray();
 
             hybridRenderer.ClearOverlay();
@@ -164,7 +165,5 @@ namespace TianZhang.Tactical
             return new HexCoord(0, 0);
         }
 
-        private static SpatialHexCoord ToSpatial(HexCoord coord) => new SpatialHexCoord(coord.q, coord.r);
-        private static HexCoord ToHex(SpatialHexCoord coord) => new HexCoord(coord.Q, coord.R);
     }
 }
