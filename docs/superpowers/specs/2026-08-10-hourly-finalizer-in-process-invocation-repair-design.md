@@ -142,3 +142,13 @@
 6. 预期路径检查、pending whitespace 与 staged diff 门禁通过，并形成仅含本次路径的提交。
 7. 提交已通过正式集成入口 fast-forward 到 `master`；主工作区无关用户改动未被提交。
 8. `codex-hourly-worker` 全程和最终均保持 `PAUSED`；默认 50 分钟超时未修改。
+
+## 九、首次启用后的输出流回归修订
+
+原修复合并后，用户另行明确要求恢复 `codex-hourly-worker`。首次正式运行已经完成业务提交并把 `master` 推进到 `830669ebebb6a27c1bfaa3176aceb6008f3bb0ed`，但入口最终报告 `codex_terminal_json_invalid`。这证明 formalizer、路径校验、提交和 fast-forward 已成功，失败发生在共享入口返回值的 JSON 解析边界。
+
+根因是进程内调用只使用 `2>&1` 捕获 error stream。`automation-finalize-commit.ps1` 调用的 `check-pending-whitespace.ps1` 通过 `Write-Host` 写 information/host stream；嵌套 `pwsh` 被移除后，该 stream 不再由子进程 stdout 边界隔离，因而先于最终 JSON 泄漏给触发器，使原本严格的单 JSON 输出无法解析。
+
+本修订采用唯一最小方案：把 `Invoke-Finalizer` 的捕获从 `2>&1` 改为 `*>&1`。所有 finalizer stream 都只进入函数内部的 `$output`，最后一项 SHA、紧随调用保存的 `$?`、异常映射和 `hourly_formal_commit_failed` 语义保持不变。未采用修改 whitespace checker 输出、放宽入口 JSON 解析或增加兼容分支，因为这些方案都会把修复移离实际泄漏边界或削弱现有输出合同。
+
+回归测试让 648 路径成功夹具先执行 `Write-Host`，再制造内部 native exit code `1` 并输出合法 SHA；从 `Invoke-Finalizer` 外层捕获全部 stream，要求可见结果严格只有一个 SHA。原有超长参数、生产 finalizer 无 `exit`、显式非零退出、throw 和非法输出测试继续保留。worker 在本修订期间及完成后保持用户当前要求的 `ACTIVE`，调度和默认 50 分钟超时均不修改。

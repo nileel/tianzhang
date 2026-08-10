@@ -238,7 +238,7 @@ function Get-FormalPaths {
 function Invoke-Finalizer {
   param([string]$Worktree, [hashtable]$Parameters)
   try {
-    $output = @(& $finalizerPath -RepositoryRoot $Worktree @Parameters 2>&1)
+    $output = @(& $finalizerPath -RepositoryRoot $Worktree @Parameters *>&1)
     $invocationSucceeded = $?
   } catch {
     Stop-Hourly 'hourly_formal_commit_failed'

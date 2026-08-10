@@ -64,6 +64,7 @@ $directCalls = @($commands | Where-Object {
   $_.CommandElements[0].VariablePath.UserPath -ceq 'finalizerPath'
 })
 Assert-Equal $directCalls.Count 1 'Invoke-Finalizer does not directly invoke finalizerPath exactly once'
+Assert-True $finalizerDefinition.Extent.Text.Contains('*>&1') 'Invoke-Finalizer does not contain all finalizer output streams'
 
 $productionFinalizerAst = Get-ParsedAst $productionFinalizerPath
 $exitStatements = @($productionFinalizerAst.FindAll({ param($node) $node -is [Management.Automation.Language.ExitStatementAst] }, $true))
@@ -87,6 +88,7 @@ param([string]$RepositoryRoot, [string]$ExpectedPaths, [string]$CommitMessage)
 $PSNativeCommandUseErrorActionPreference = $false
 $paths = @($ExpectedPaths.Split('|'))
 if ($paths.Count -ne 648 -or $ExpectedPaths.Length -le 32767) { throw 'large expected paths were truncated' }
+Write-Host 'check-pending-whitespace: OK (648 files checked; fix=False)'
 & cmd /c exit 1
 (('a' * 40) -join '')
 '@
@@ -114,7 +116,9 @@ param([string]$RepositoryRoot, [string]$ExpectedPaths, [string]$CommitMessage)
 
   $script:finalizerPath = $successFixture
   $LASTEXITCODE = 0
-  $commit = Invoke-Finalizer -Worktree $script:sandbox -Parameters @{ ExpectedPaths = $largeExpectedPaths; CommitMessage = 'test: large in-process finalizer' }
+  $visibleOutput = @(Invoke-Finalizer -Worktree $script:sandbox -Parameters @{ ExpectedPaths = $largeExpectedPaths; CommitMessage = 'test: large in-process finalizer' } *>&1)
+  Assert-Equal $visibleOutput.Count 1 'In-process finalizer leaked non-result output to the owner caller'
+  $commit = [string]$visibleOutput[0]
   Assert-Equal $commit ('a' * 40) 'In-process finalizer rejected a valid SHA after an internal native exit code 1'
   Assert-Equal $LASTEXITCODE 1 'Fixture did not reproduce LASTEXITCODE contamination from inside the finalizer'
 
