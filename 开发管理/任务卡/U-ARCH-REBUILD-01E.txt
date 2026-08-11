@@ -2,115 +2,54 @@
 {
   "schemaVersion": 1,
   "id": "U-ARCH-REBUILD-01E",
-  "title": "Combat、CTB 与战术运行时",
+  "title": "Combat、CTB 与战术运行时父项",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-08-11：01D 已完成并通过独立架构复审归档；阶段 5 的实时路径扫描与字面量路径冻结已完成，等待按固定顺序执行。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-ARCH-REBUILD-01E1",
+    "U-ARCH-REBUILD-01E2",
+    "U-ARCH-REBUILD-01E3"
+  ],
+  "stateReason": "2026-08-11：原单卡自动候选在未命中停止条件时因完整调用方与测试迁移尚未完成而失败；现场已精确关闭。阶段 5 现按批准设计拆为 01E1 纯内核、01E2 正式切换和 01E3 遗留删除／总验收，父项不直接执行。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
-    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt",
-    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
-    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
-    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
-    "src/Assets/Scripts/Combat/CombatActionResolver.cs.meta",
-    "src/Assets/Scripts/Combat/CombatantRegistry.cs",
-    "src/Assets/Scripts/Combat/CombatantRegistry.cs.meta",
-    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
-    "src/Assets/Scripts/Combat/CombatantSnapshot.cs.meta",
-    "src/Assets/Scripts/Combat/CombatCommandService.cs",
-    "src/Assets/Scripts/Combat/CombatCommandService.cs.meta",
-    "src/Assets/Scripts/Combat/CombatResolver.cs",
-    "src/Assets/Scripts/Combat/CombatResolver.cs.meta",
-    "src/Assets/Scripts/Combat/CombatResultBuilder.cs",
-    "src/Assets/Scripts/Combat/CombatResultBuilder.cs.meta",
-    "src/Assets/Scripts/Combat/CombatSession.cs",
-    "src/Assets/Scripts/Combat/CombatSession.cs.meta",
-    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
-    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs.meta",
-    "src/Assets/Scripts/Combat/DamageCalculator.cs",
-    "src/Assets/Scripts/Combat/DamageCalculator.cs.meta",
-    "src/Assets/Scripts/Combat/EnemyAI.cs",
-    "src/Assets/Scripts/Combat/EnemyAI.cs.meta",
-    "src/Assets/Scripts/Combat/README.md",
-    "src/Assets/Scripts/Combat/README.md.meta",
-    "src/Assets/Scripts/Combat/SpellData.cs",
-    "src/Assets/Scripts/Combat/SpellData.cs.meta",
-    "src/Assets/Scripts/Combat/TacticalCombatController.cs",
-    "src/Assets/Scripts/Combat/TacticalCombatController.cs.meta",
-    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef",
-    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef.meta",
-    "src/Assets/Scripts/Combat/Turns.meta",
-    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
-    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs.meta",
-    "src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef",
-    "src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef.meta",
-    "src/Assets/Scripts/Core/CTBEngine.cs",
-    "src/Assets/Scripts/Core/CTBEngine.cs.meta",
-    "src/Assets/Scripts/Entity/Character.cs",
-    "src/Assets/Scripts/Entity/Character.cs.meta",
-    "src/Assets/Scripts/Game/BattleUIManager.cs",
-    "src/Assets/Scripts/Game/BattleUIManager.cs.meta",
-    "src/Assets/Scripts/Map/ExplorationController.cs",
-    "src/Assets/Scripts/Map/ExplorationController.cs.meta",
-    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
-    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
-    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
-    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
-    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
-    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
-    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
-    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs.meta",
-    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
-    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
-    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
-    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
-    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
-    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
-    "tools/check-unity-assembly-boundaries.ps1"
+    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# U-ARCH-REBUILD-01E · Combat、CTB 与战术运行时
+# U-ARCH-REBUILD-01E · Combat、CTB 与战术运行时父项
 
 ## 来源与当前边界
 
-- 对应架构设计阶段 5，只迁移战斗输入、会话、调度、命令、结算和结果所有权。
+- 对应架构设计阶段 5；任务重划以 `docs/superpowers/specs/2026-08-11-combat-architecture-stage-5-task-rescoping-design.md` 为批准事实。父项只汇总 `01E1 -> 01E2 -> 01E3`，不直接修改源码。
 
 ## 必查范围
 
-- 01D 架构证据；架构设计 §5.3、阶段 5；CTB、CombatResolver、EnemyAI、TacticalCombatController、直接调用者和测试完整逻辑单元。
+- 三张子卡的完成归档、验证结果与架构证据；原架构设计 §5.3、阶段 5 和任务重划设计。
 
 ## 实施范围
 
-- 固定 `CombatantSnapshot` 与攻击档案投影输入；拆分会话、回合调度、命令、行动解析、单位集合和结果；Renderer、按钮、日志与动画移出 Combat。
+- 01E1 建立只由测试访问的纯 Combat 内核；01E2 原子切换正式调用链；01E3 删除旧运行时并完成阶段 5 总验收。01E3 通过时在同一管理提交中归档本父项。
 
 ## 禁止项
 
-- Combat 不引用 Character 或 Feature 实现，不改变 BattleSim 数值语义，不用临时公式或旧控制器 adapter 保持编译。
+- 父项不代替子任务实施，不建立新旧生产双运行、旧控制器 adapter、runtime feature flag、临时公式或自动重试／恢复层。
 
 ## 验证
 
-- 无 Scene／MonoBehaviour／UI 的确定性 CTB、伤害、范围、拒绝原因及 1v1／2v2 规则；程序集、.NET、Unity EditMode。解阻塞前展开完整源码、测试与 `.meta` 路径；数值语义变化必须运行 BattleSim 并停止本阶段。
+- 逐项核对 01E1～01E3 的归档、Unity／程序集验证、旧引用清零和数值语义未变化证据；运行父项与 backlog／队列投影检查。
 
 ## 完成条件
 
-- Combat 成为纯战术运行时，EnemyAI 只消费合法行动集合，旧 `TacticalCombatController` Hub 职责删除。
+- 三个子任务全部完成；新 Combat 内核是唯一生产可达战术运行时；旧 `TacticalCombatController`、Core CTB、Character CTB 所有权及全部引用已删除；阶段 5 验收通过。
 
 ## 停止条件
 
-- 迁移改变数值语义、需要场景/UI 才能运行，或必须提前重写 Feature 时停止。
-
-## 2026-08-11 解阻塞准备证据
-
-- 已核对 `U-ARCH-REBUILD-01D`：活跃任务卡不存在，`开发管理/任务归档/U-ARCH-REBUILD-01D.txt` 的 `dispatchState=completed`，且完成记录确认独立架构复审通过；不存在同 ID 活跃卡／归档冲突。
-- 实时扫描确认当前 Combat 根为 `CombatResolver`、`DamageCalculator`、`EnemyAI`、`SpellData` 与 `TacticalCombatController`，CTB 仍在 `Core/CTBEngine.cs`；直接运行时消费者为 `Character`、`ExplorationController`、`BattleUIManager` 与 `FormalEncounterResult`，直接测试与程序集边界检查均已逐一定位。所有可能修改、删除或新建的源码、测试、asmdef、检查器及 Unity `.meta` 已冻结为本卡 `expectedPaths`。
-- 字面量冻结：仅将 `CTBEngine` 从 Core 移入新增的 `TianZhang.Combat.Turns`；以 `CombatantSnapshot` 为唯一输入，拆出 `CombatSession`、`CombatTurnScheduler`、`CombatCommandService`、`CombatActionResolver`、`CombatantRegistry` 与 `CombatResultBuilder`，并删除 `TacticalCombatController` 的 Hub 职责。日志与按钮命令只经 `GameplayContracts`／现有调用方输出；Combat 不获得场景、UI、Character 实现或 Feature 依赖。
-- 01D 是本卡唯一完成型前置；其余条件均为当前仓库和已批准架构设计即可实施的准备工作，现已完成，本卡满足 runnable 合同。
+- 任一子任务未完成、验证新增失败、需要旧 adapter／双运行／临时公式，或发现 BattleSim 数值语义变化时停止关闭父项。

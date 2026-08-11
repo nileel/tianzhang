@@ -1,0 +1,93 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E1",
+  "title": "纯 Combat 内核与确定性测试",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-11：01D 已完成；原 01E 空失败现场已精确关闭，任务重划设计获批准。实时扫描已冻结纯内核、新 CTB、程序集、README、直接测试与 .meta 路径；本卡不切换生产调用链。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E1.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E1.txt",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs.meta",
+    "src/Assets/Scripts/Combat/CombatActionResult.cs",
+    "src/Assets/Scripts/Combat/CombatActionResult.cs.meta",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs.meta",
+    "src/Assets/Scripts/Combat/CombatantRegistry.cs",
+    "src/Assets/Scripts/Combat/CombatantRegistry.cs.meta",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs.meta",
+    "src/Assets/Scripts/Combat/CombatCommand.cs",
+    "src/Assets/Scripts/Combat/CombatCommand.cs.meta",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs.meta",
+    "src/Assets/Scripts/Combat/CombatResultBuilder.cs",
+    "src/Assets/Scripts/Combat/CombatResultBuilder.cs.meta",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs.meta",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs.meta",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Scripts/Combat/README.md.meta",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef.meta",
+    "src/Assets/Scripts/Combat/Turns.meta",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef",
+    "src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs.meta",
+    "tools/check-unity-assembly-boundaries.ps1"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E1 · 纯 Combat 内核与确定性测试
+
+## 来源与当前边界
+
+- 对应阶段 5 的纯运行时准备切片；批准边界读取 `docs/superpowers/specs/2026-08-11-combat-architecture-stage-5-task-rescoping-design.md` §3.1。
+
+## 必查范围
+
+- `开发管理/任务归档/U-ARCH-REBUILD-01D.txt` 的架构证据；原架构设计 §5.3、阶段 5；现有 `CombatResolver`、`DamageCalculator`、`EnemyAI`、`SpellData`、`TacticalCombatController`、`Core/CTBEngine` 的完整规则逻辑，以及现有 1v1／2v2、伤害、范围、拒绝原因与 CTB 测试。修改前读取每个目标类型和直接被调用逻辑单元。
+
+## 实施范围
+
+- 固定 `CombatantSnapshot`、攻击档案投影、命令、拒绝原因和结果契约；建立 `CombatSession`、`CombatTurnScheduler`、`CombatCommandService`、`CombatActionResolver`、`CombatantRegistry` 与 `CombatResultBuilder`；在 `TianZhang.Combat.Turns` 建立纯 CTB。
+- 新内核只接受稳定 ID、快照、空间查询和攻击档案投影。以现有已验证规则和固定夹具证明 CTB、伤害、范围、拒绝原因及 1v1／2v2 语义，不加载 Scene、MonoBehaviour 或 UI。
+
+## 禁止项
+
+- 不修改 `Character`、`ExplorationController`、Adventure、Battle UI 或正式场景调用链；不删除旧 Controller／Core CTB／`Character.CTBUnit`。旧路径在本卡后仍是唯一生产可达运行时，新内核仅允许直接测试访问。
+- 不增加生产双运行、shadow compare、runtime feature flag、旧控制器 adapter、生产 fallback、临时公式或 BattleSim 数值变化。
+
+## 验证
+
+- 定向运行 `CombatRuntimeKernelTests` 和受影响的既有纯规则测试；运行 `tools/check-unity-assembly-boundaries.ps1`、Unity EditMode、审核文本、pending whitespace 与 staged diff 检查。
+- 隔离 worktree 存在实时 Unity `.csproj` 投影时运行 `.NET` 快速构建；缺失时明确记录 `MISSING_PROJECT`，不得把被忽略的生成文件缺失当作 blocker。
+
+## 完成条件
+
+- 新 Combat 内核可无场景确定性运行；新类型不引用 Character、Feature、Scene、MonoBehaviour、UI、Renderer、日志或动画；新旧固定夹具的 CTB、伤害、范围、拒绝原因和 1v1／2v2 结果一致；生产调用链未变化。
+
+## 停止条件
+
+- 必须修改正式调用方才能编译、需要复制未验证规则或临时公式、无法用固定夹具证明语义一致，或发现既有数值语义需要改变时停止。
+
+## 2026-08-11 runnable 证据
+
+- 实时扫描确认新内核可作为测试可达、生产不可达的独立程序集切片；所有新增 C#、asmdef、测试、README、目录及 `.meta` 已冻结为 expectedPaths。
+- 原 01E 漏列的 `AdventureSceneController` 与 `CharacterStateTests` 属于后续正式切换边界，本卡不修改；不存在未列出的直接生产写入。

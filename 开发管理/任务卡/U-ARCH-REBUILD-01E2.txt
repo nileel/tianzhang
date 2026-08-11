@@ -1,0 +1,88 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E2",
+  "title": "正式调用链原子切换",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01E1"],
+  "stateReason": "等待 01E1 完成并提供已验证的纯 Combat 内核；本卡随后一次性切换全部生产调用方，不建立兼容 adapter 或双运行。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E2.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E2.txt",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs.meta",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs.meta",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Scripts/Combat/README.md.meta",
+    "src/Assets/Scripts/Combat/SpellData.cs",
+    "src/Assets/Scripts/Combat/SpellData.cs.meta",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Scripts/Game/BattleUIManager.cs",
+    "src/Assets/Scripts/Game/BattleUIManager.cs.meta",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E2 · 正式调用链原子切换
+
+## 来源与当前边界
+
+- 对应阶段 5 的生产切换切片；批准边界读取任务重划设计 §3.2。只有 01E1 归档并核验新内核后才可解阻塞。
+
+## 必查范围
+
+- 01E1 完成归档与新内核完整公开契约；`Character`、`ExplorationController`、`BattleUIManager`、`AdventureSceneController`、`FormalEncounterResult`、`EnemyAI`、`SpellData` 的完整相关逻辑；所有 `TacticalCombatController`、`CTBEngine`、`CTBUnit`、`CombatResolver.ActionResult` 和 `TacticalCombatEndOutcome` 直接引用及对应测试。
+
+## 实施范围
+
+- `Character` 移除 CTB 运行时所有权；Adventure 只投影参战快照并消费战斗结果；Exploration、Battle UI 与正式结果链改用新会话、命令和结果契约。
+- `EnemyAI` 只消费合法行动集合；按钮和日志只经 GameplayContracts／现有调用方输出，不进入 Combat。全部生产调用方和直接 EditMode／PlayMode 测试在同一提交中切换。
+
+## 禁止项
+
+- 不保留新旧生产双写、shadow compare、运行时选择开关、旧控制器 adapter 或 fallback；不提前删除尚用于编译的旧类型，不进入 GameRuntime、Feature 重写或场景壳职责。
+
+## 验证
+
+- 运行受影响的 EditMode、`GuanzhongBasicAttackPlayModeTests` 或实时冻结的等价 PlayMode、程序集边界、生产旧入口引用扫描、审核文本、pending whitespace 与 staged diff 检查。
+- 证明正式路径只调用新 Combat 内核且固定战斗结果未变；缺失被忽略的 `.csproj` 只记录，不替代 Unity 编译和测试。
+
+## 完成条件
+
+- 新 Combat 内核成为唯一生产可达战术运行时；Character、Adventure、Exploration、Battle UI 与 EnemyAI 均不再调用旧 Controller、Core CTB 或 Character CTB 状态；所有直接测试改用新入口。
+
+## 停止条件
+
+- 必须双运行或增加兼容 adapter、需要提前改 GameRuntime／Feature／场景壳、出现新增 Unity 回归失败，或固定数值语义发生变化时停止。
+
+## 2026-08-11 路径冻结证据
+
+- 全仓旧运行时引用扫描确认生产切换涉及 Character、Exploration 与 Adventure 结果链；原 01E 漏列的 `AdventureSceneController.cs` 和 `CharacterStateTests.cs` 已补入本卡及对应 `.meta`。
+- `TacticalCombatController`、旧 `CombatResolver`、旧 `DamageCalculator` 与 Core CTB 在本卡后只允许成为不可达遗留，统一由 01E3 删除；本卡不通过修改它们建立兼容入口。

@@ -12,6 +12,7 @@
 
 ## 当前人工阻塞与恢复所有权
 
+- 2026-08-11：Codex run `3413d1a5-da10-4965-a49c-7e9e0a4381da` 在 `U-ARCH-REBUILD-01E` 返回 `failed/combat_architecture_migration_incomplete` 后进入 `attention_required`；后续六个小时轮次只是重复报告同一 run。人工核验确认任务卡标准化摘要、base `e4fe28215a0c2c56ffc0bf4d6600e638c60b4eac`、candidate branch／HEAD、worktree 注册与清洁状态全部一致，无 candidate／canonical 提交、活动进程或集成锁；已按 empty-attention 合同精确 `CompleteRun`，再核验并删除该空 worktree 与临时 branch。关闭后 schema 5 两个 owner 均为空、集成锁空闲。根因是原 01E 把纯内核、生产切换、遗留删除和总验收压入同一自动候选，且 expectedPaths 漏列 `AdventureSceneController` 与 `CharacterStateTests`；现按批准设计重划为 `01E1 -> 01E2 -> 01E3`，不修改 runtime、失败停止、通知或恢复机制。
 - 2026-08-02：负责人确认独立 Codex／DeepSeek 小时入口方案；固定 Windows 入口 canary 已核验 `pwshMajor=7`、Git、`local_deepseek_gateway`、`deepseek-v4-flash`、私有状态隔离和 project-owned canary worktree 清理，主工作区 HEAD 与状态未被 canary 改变。
 - 2026-08-04：独立入口实现保持活动架构；实时 `codex-hourly-worker` 与 `deepseek-hourly-trigger` 的启用状态只以 automation 配置为准。本次受控恢复与 canary 完成前两者保持暂停；schema 5 runtime 已核验为两个 owner 均为空、`activeTaskIds` 为空、进程持有型集成锁空闲。
 - 2026-08-04：旧 QueueMaintenance run `3355f006-0335-4413-9404-99a745d4c611` 的候选树只含负责人批准保留的两行 backlog 事实修正；仅修正 Automation 提交元数据后形成 `306212c96f1638059ef3a15bb1532c7ffdaa3b75`，已通过共享集成锁 fast-forward、精确关闭 runtime 并清理该 run 现场。

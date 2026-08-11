@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-ARCH-REBUILD-01E | codex_execute | codex | P1 | unity | migration | Combat、CTB 与战术运行时 | 开发管理/任务卡/U-ARCH-REBUILD-01E.txt |
+| U-ARCH-REBUILD-01E1 | codex_execute | codex | P1 | unity | migration | 纯 Combat 内核与确定性测试 | 开发管理/任务卡/U-ARCH-REBUILD-01E1.txt |
