@@ -558,8 +558,10 @@ function Invoke-Canary {
           if ([string]$consume.Result[$key] -notmatch $script:HexPattern) { throw 'Canary reply evidence is invalid' }
         }
         $consumedAgain = Invoke-NodeJson $consumeHelper $consumeRequestPath
-        if ($consumedAgain.Code -ne 0 -or $consumedAgain.Result.result -cne 'NO_REPLY') {
-          throw 'Canary reply was not consumed exactly once'
+        $firstEvidence = $consume.Result | ConvertTo-Json -Compress -Depth 20
+        $replayedEvidence = $consumedAgain.Result | ConvertTo-Json -Compress -Depth 20
+        if ($consumedAgain.Code -ne 0 -or $replayedEvidence -cne $firstEvidence) {
+          throw 'Canary reply idempotency validation failed'
         }
         if ($Mode -ceq 'text_custom') { Write-TextReplyHealth $config 'TEXT_REPLY_READY' }
         $sanitized = [ordered]@{
