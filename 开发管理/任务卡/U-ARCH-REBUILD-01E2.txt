@@ -8,14 +8,15 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：是否授权把 src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs 加入候选路径，以将其从直接修改 Character 改为驱动 CombatSession 命令？",
+  "stateReason": "2026-08-12：负责人批准 A 方案及边界修正设计；保留 checkpoint 与已通过的正式 UI PlayMode 迁移，补齐 Content 元素事实、Editor／Gameplay 调用方和全部旧测试引用后再验收，不得提前归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01E2.txt",
     "开发管理/任务归档/U-ARCH-REBUILD-01E2.txt",
+    "docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md",
     "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
     "src/Assets/Scripts/Adventure/AdventureSceneController.cs.meta",
     "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
@@ -26,13 +27,19 @@
     "src/Assets/Scripts/Combat/README.md.meta",
     "src/Assets/Scripts/Combat/SpellData.cs",
     "src/Assets/Scripts/Combat/SpellData.cs.meta",
+    "src/Assets/Scripts/Editor/ContentImportCoordinator.cs",
+    "src/Assets/Scripts/Editor/ContentImportCoordinator.cs.meta",
     "src/Assets/Scripts/Entity/Character.cs",
     "src/Assets/Scripts/Entity/Character.cs.meta",
     "src/Assets/Scripts/Game/BattleUIManager.cs",
     "src/Assets/Scripts/Game/BattleUIManager.cs.meta",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs.meta",
     "src/Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
     "src/Assets/Scripts/Map/ExplorationController.cs",
     "src/Assets/Scripts/Map/ExplorationController.cs.meta",
+    "src/Assets/Scripts/Modules/Content/CombatElementFacts.cs",
+    "src/Assets/Scripts/Modules/Content/CombatElementFacts.cs.meta",
     "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
     "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
     "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
@@ -42,12 +49,16 @@
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
     "src/Assets/Tests/EditMode/CharacterStateTests.cs",
     "src/Assets/Tests/EditMode/CharacterStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs.meta",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
-    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta"
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "automationCheckpoint": {
@@ -154,3 +165,10 @@
 - 全仓旧运行时引用扫描确认生产切换涉及 Character、Exploration 与 Adventure 结果链；原 01E 漏列的 `AdventureSceneController.cs` 和 `CharacterStateTests.cs` 已补入本卡及对应 `.meta`。
 - 01E1A 修订取证确认生产切换还必须修改 `TianZhang.Gameplay.asmdef` 并由 `AssemblyBoundaryEditorTests.cs` 验证程序集依赖；两条路径已补入本卡，现有边界脚本只作为验证命令运行。
 - `TacticalCombatController`、旧 `CombatResolver`、旧 `DamageCalculator` 与 Core CTB 在本卡后只允许成为不可达遗留，统一由 01E3 删除；本卡不通过修改它们建立兼容入口。
+
+## 2026-08-12 checkpoint 与续作证据
+
+- 负责人已选择 A 并批准 `docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md`；实施必须按该设计先完成本卡，再进入 01E3。
+- checkpoint `f381ffa07b72748d642e292279d52c427ff09657` 已证明大部分正式链可切到 `CombatSession`；负责人授权的 `GuanzhongFormalUiTextPlayModeTests` 迁移在隔离候选中通过公开 `RequestBasicAttack` 完成击败与结算，PlayMode 5/5 通过。
+- 后续独立扫描发现新正式组合根、Editor 导入器和直接测试仍引用旧 `DamageCalculator`、旧 Controller／Resolver 或 Core CTB；这些漏项未闭合前，本卡保持 `ready`，既有 457/459 EditMode 结果只作为基线，不作为完成证明。
+- `Combat/Turns/CTBEngine.cs` 是 01E1／01E1A 已验收的新纯 CTB，必须保留；本卡只迁移 `TianZhang.Core.CTBEngine` 的直接测试调用，不修改新 Combat 内核。

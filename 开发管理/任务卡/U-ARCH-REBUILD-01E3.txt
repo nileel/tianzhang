@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": ["U-ARCH-REBUILD-01E2"],
-  "stateReason": "阶段 5 已增加 01E1A 纯内核切换就绪前置；本卡继续直接等待 01E2 完成正式调用链原子切换，随后删除旧运行时、完成总验收并与 01E 父项同批归档。",
+  "stateReason": "2026-08-12：按负责人批准的边界修正设计继续直接等待 01E2；其完成后删除旧源码、Character CTB 字段与旧 AI 编译残件，收紧 Combat 依赖并完成阶段 5 总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -18,10 +18,13 @@
     "开发管理/任务归档/U-ARCH-REBUILD-01E.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01E3.txt",
     "开发管理/任务归档/U-ARCH-REBUILD-01E3.txt",
+    "docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md",
     "src/Assets/Scripts/Combat/CombatResolver.cs",
     "src/Assets/Scripts/Combat/CombatResolver.cs.meta",
     "src/Assets/Scripts/Combat/DamageCalculator.cs",
     "src/Assets/Scripts/Combat/DamageCalculator.cs.meta",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs.meta",
     "src/Assets/Scripts/Combat/README.md",
     "src/Assets/Scripts/Combat/README.md.meta",
     "src/Assets/Scripts/Combat/TacticalCombatController.cs",
@@ -30,6 +33,8 @@
     "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef.meta",
     "src/Assets/Scripts/Core/CTBEngine.cs",
     "src/Assets/Scripts/Core/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
     "tools/check-unity-assembly-boundaries.ps1"
@@ -49,7 +54,8 @@
 
 ## 实施范围
 
-- 删除已不可达的旧 Hub、旧 Resolver／DamageCalculator、Core CTB、对应 `.meta` 和仅服务旧入口的程序集引用；更新 Combat README、程序集边界和阶段 5 架构证据。
+- 删除已不可达的旧 Hub、旧 Resolver／DamageCalculator、`TianZhang.Core.CTBEngine`、对应 `.meta`、`Character.CTBUnit` 与 `EnemyAI.cs` 中仅供旧控制器编译的 `IAIController`／`SimpleAI`／旧 `TryResolve`；保留 `ICombatActionPolicy`／`LegalActionAI`／`TryResolveCombatActionPolicy` 和 `TianZhang.Combat.Turns.CTBEngine`。
+- 从 `TianZhang.Combat.asmdef` 移除旧实现带来的 Domain 与 Content 引用；更新 Combat README、程序集边界和阶段 5 架构证据。
 - 完成阶段 5 总验收后，同一管理提交归档本卡与 `U-ARCH-REBUILD-01E` 父项；不另建父项空执行轮次，且不提前解阻塞 01F。
 
 ## 禁止项
@@ -58,12 +64,12 @@
 
 ## 验证
 
-- 全仓扫描旧类型名和 GUID 为零；运行完整 Unity EditMode、相关 PlayMode、`tools/check-unity-assembly-boundaries.ps1`、审核文本、pending whitespace 与 staged diff 检查。
+- 以完整路径、命名空间和 GUID 区分新旧 CTB；全仓扫描旧类型和 GUID 为零，同时证明 `TianZhang.Combat.Turns.CTBEngine` 保留。运行完整 Unity EditMode、相关 PlayMode、`tools/check-unity-assembly-boundaries.ps1`、审核文本、pending whitespace 与 staged diff 检查。
 - 现有已登记基线失败必须原样报告，任何新增失败阻止完成；发现数值语义变化时命中停止条件并单独运行 BattleSim 处置，不在本卡补公式。
 
 ## 完成条件
 
-- 旧 Controller、Resolver、DamageCalculator、Core CTB、Character CTB 所有权及所有引用清零；Combat 不引用 Character 或 Feature；阶段 5 验收通过；01E3 与父项 01E 同批归档。
+- 旧 Controller、Resolver、DamageCalculator、Core CTB、Character CTB 所有权、旧 AI 编译残件及所有引用清零；Combat 不引用 Domain、Content、Character 或 Feature；阶段 5 验收通过；01E3 与父项 01E 同批归档。
 
 ## 停止条件
 
@@ -73,3 +79,4 @@
 
 - 01E2 将承担全部生产与测试切换；本卡只删除冻结的旧源码／`.meta`、收紧 Combat asmdef、更新 README 和程序集边界验证。
 - 父项任务卡／归档、队列与 backlog 已列入 expectedPaths，保证最后一个 blocker 完成时父项直接闭环而不产生新的空 ready 卡。
+- `Combat/Turns/CTBEngine.cs`（`TianZhang.Combat.Turns`，GUID `e9b8528db6e24899ac644e67e408a112`）是 01E1／01E1A 已验收的新内核；本卡只删除 `Core/CTBEngine.cs`（`TianZhang.Core`，GUID `3564ab48a0a06ef4e9110b900398eb49`）。
