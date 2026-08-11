@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01E1"],
-  "stateReason": "等待 01E1 完成并提供已验证的纯 Combat 内核；本卡随后一次性切换全部生产调用方，不建立兼容 adapter 或双运行。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-11：01E1 已完成并提供已验证的纯 Combat 内核；既有路径冻结、完整任务边界与验证条件足以执行本卡的一次性生产调用链切换。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

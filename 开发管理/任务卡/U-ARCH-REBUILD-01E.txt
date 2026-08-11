@@ -10,11 +10,10 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-ARCH-REBUILD-01E1",
     "U-ARCH-REBUILD-01E2",
     "U-ARCH-REBUILD-01E3"
   ],
-  "stateReason": "2026-08-11：原单卡自动候选在未命中停止条件时因完整调用方与测试迁移尚未完成而失败；现场已精确关闭。阶段 5 现按批准设计拆为 01E1 纯内核、01E2 正式切换和 01E3 遗留删除／总验收，父项不直接执行。",
+  "stateReason": "2026-08-11：01E1 纯 Combat 内核已完成并归档；阶段 5 仍等待 01E2 正式切换与 01E3 遗留删除／总验收，父项不直接执行。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
