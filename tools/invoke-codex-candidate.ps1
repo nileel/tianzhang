@@ -336,8 +336,19 @@ try {
         $result = [ordered]@{ status = 'no_candidate'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; detailCode = 'no_runnable_candidate' }
       }
       'needs_decision' {
-        $decision = Assert-Decision -Terminal $terminal -AllowedPaths $expectedPaths -BaseCommit ([string]$run.baseCommit)
-        $result = [ordered]@{ status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = [string]$decision.checkpointCommit; candidateResult = $decision }
+        $reportedPaths = @($terminal.changedPaths | ForEach-Object { [string]$_ })
+        if (
+          $head -ceq [string]$run.baseCommit -and
+          [string]::IsNullOrWhiteSpace($status) -and
+          [string]::IsNullOrWhiteSpace([string]$terminal.candidateCommit) -and
+          $reportedPaths.Count -eq 0 -and
+          -not [string]::IsNullOrWhiteSpace([string]$terminal.detailCode)
+        ) {
+          $result = [ordered]@{ status = 'blocked'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; detailCode = [string]$terminal.detailCode }
+        } else {
+          $decision = Assert-Decision -Terminal $terminal -AllowedPaths $expectedPaths -BaseCommit ([string]$run.baseCommit)
+          $result = [ordered]@{ status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = [string]$decision.checkpointCommit; candidateResult = $decision }
+        }
       }
       { $_ -cin @('blocked', 'failed') } {
         if ($head -cne [string]$run.baseCommit) { Stop-Candidate 'codex_failed_head_changed' }

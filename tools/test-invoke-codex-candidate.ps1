@@ -26,7 +26,27 @@ $originalTrace = $env:TZG_FAKE_CODEX_TRACE
 $originalMismatch = $env:TZG_FAKE_CODEX_MISMATCH
 $originalDirtyFailure = $env:TZG_FAKE_CODEX_DIRTY_FAILURE
 $originalRenameCompressed = $env:TZG_FAKE_CODEX_RENAME_COMPRESSED
+$originalTerminalMode = $env:TZG_FAKE_CODEX_TERMINAL_MODE
 $taskId = 'TASK-CODEX-CANDIDATE'
+$scenarioStateRoots = [Collections.Generic.List[string]]::new()
+
+function Invoke-TerminalScenario {
+  param([string]$Mode)
+  $scenarioStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-$Mode"
+  $scenarioStateRoots.Add($scenarioStateRoot)
+  $claimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $scenarioStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
+  $scenarioRun = ($claimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$scenarioRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$scenarioRun.candidateBranch, [string]$scenarioRun.worktree, $base) | Out-Null
+  $env:TZG_FAKE_CODEX_TERMINAL_MODE = $Mode
+  try {
+    $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -ResponsibilityTimeoutSeconds 30)
+  } finally {
+    $env:TZG_FAKE_CODEX_TERMINAL_MODE = $null
+  }
+  Assert-Equal $scenarioOutput.Count 1 "Codex terminal scenario output count mismatch: $Mode"
+  [pscustomobject]@{ Terminal = ($scenarioOutput[0] | ConvertFrom-Json -Depth 50); Run = $scenarioRun }
+}
 
 try {
   [IO.Directory]::CreateDirectory((Join-Path $mainRoot 'tools')) | Out-Null
@@ -102,6 +122,47 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     status = 'verified'; identity = 'Codex'; model = $model; candidateCommit = [string]$commit
     result = $(if ($env:TZG_FAKE_CODEX_MISMATCH -eq '1') { '问题=终态故意不一致；完成=验证拒绝路径' } else { $resultText })
     impact = $impactText; verify = $verifyText; plain = $plainText
+  }
+} elseif (-not [string]::IsNullOrWhiteSpace($env:TZG_FAKE_CODEX_TERMINAL_MODE)) {
+  $mode = $env:TZG_FAKE_CODEX_TERMINAL_MODE
+  $candidateCommit = ''
+  $changedPaths = @()
+  $options = @(
+    [ordered]@{ key = 'A'; label = 'option A' },
+    [ordered]@{ key = 'B'; label = 'option B' },
+    [ordered]@{ key = 'C'; label = 'option C' }
+  )
+  if ($mode -ceq 'blocked-restored') {
+    $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
+    $originalQueue = [IO.File]::ReadAllBytes($queuePath)
+    [IO.File]::WriteAllText($queuePath, ([IO.File]::ReadAllText($queuePath) + "`n<!-- restored blocker fixture -->"), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllBytes($queuePath, $originalQueue)
+  } elseif ($mode -ceq 'blocked-dirty') {
+    [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixture/dirty.txt'), 'dirty blocker fixture', [Text.UTF8Encoding]::new($false))
+  } elseif ($mode -cin @('checkpoint-valid', 'checkpoint-head-changed', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
+    $sourcePath = Join-Path ([Environment]::CurrentDirectory) 'fixture/rename-source.txt'
+    [IO.File]::WriteAllText($sourcePath, 'checkpoint fixture', [Text.UTF8Encoding]::new($false))
+    & git add -- 'fixture/rename-source.txt'
+    & git commit -m 'test: create decision checkpoint'
+    if ($LASTEXITCODE -ne 0) { throw 'fake decision checkpoint failed' }
+    $actualCommit = [string](& git rev-parse HEAD)
+    $candidateCommit = if ($mode -ceq 'checkpoint-head-changed') { '' } else { $actualCommit }
+    $changedPaths = if ($mode -ceq 'checkpoint-wrong-path') { @('fixture/wrong-path.txt') } else { @('fixture/rename-source.txt') }
+    if ($mode -ceq 'checkpoint-incomplete-abc') { $options = @($options[0], $options[1]) }
+  } elseif ($mode -ceq 'checkpoint-fake-sha') {
+    $candidateCommit = '0' * 40
+    $changedPaths = @('fixture/rename-source.txt')
+  } elseif ($mode -cne 'blocked-clean') {
+    throw "unknown fake terminal mode: $mode"
+  }
+  $terminal = [ordered]@{
+    status = 'needs_decision'; identity = 'Codex'; model = $model; candidateCommit = $candidateCommit; expectedTransition = ''
+    changedPaths = $changedPaths; verified = @('fixture evidence'); unverified = @('owner decision')
+    residualRisk = 'fixture only'; result = ''; impact = ''; verify = ''; plain = ''
+    decisionId = 'DEC-20260811-CANDIDATEFIXTURE'; question = 'Choose the fixture outcome.'; options = $options
+    recommendedOption = 'A'; impactSummary = 'fixture impact'
+    plainSummary = [ordered]@{ situation = 'fixture situation'; impact = 'fixture impact'; action = 'choose A' }
+    detailCode = 'combat_core_switch_contract_incomplete'
   }
 } elseif ($env:TZG_FAKE_CODEX_DIRTY_FAILURE -eq '1') {
   $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
@@ -198,6 +259,31 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex candidate did not create exactly one commit'
   Assert-Equal (Invoke-Git -Root ([string]$run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex candidate worktree is dirty'
 
+  $cleanBlocker = Invoke-TerminalScenario -Mode 'blocked-clean'
+  Assert-Equal ([string]$cleanBlocker.Terminal.status) 'blocked' 'Codex clean empty decision was not classified as blocked'
+  Assert-Equal ([string]$cleanBlocker.Terminal.detailCode) 'combat_core_switch_contract_incomplete' 'Codex clean blocker lost its business detail code'
+  Assert-True ($cleanBlocker.Terminal.PSObject.Properties.Name -cnotcontains 'candidateCommit') 'Codex classified blocker retained a candidateCommit'
+  Assert-True ($cleanBlocker.Terminal.PSObject.Properties.Name -cnotcontains 'candidateResult') 'Codex classified blocker retained a decision candidateResult'
+  Assert-Equal (Invoke-Git -Root ([string]$cleanBlocker.Run.worktree) -Arguments @('rev-parse', 'HEAD')) $base 'Codex clean blocker changed HEAD'
+  Assert-Equal (Invoke-Git -Root ([string]$cleanBlocker.Run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex clean blocker left worktree changes'
+
+  $restoredBlocker = Invoke-TerminalScenario -Mode 'blocked-restored'
+  Assert-Equal ([string]$restoredBlocker.Terminal.status) 'blocked' 'Codex restored empty decision was not classified as blocked'
+  Assert-Equal ([string]$restoredBlocker.Terminal.detailCode) 'combat_core_switch_contract_incomplete' 'Codex restored blocker lost its business detail code'
+  Assert-Equal (Invoke-Git -Root ([string]$restoredBlocker.Run.worktree) -Arguments @('rev-parse', 'HEAD')) $base 'Codex restored blocker changed HEAD'
+  Assert-Equal (Invoke-Git -Root ([string]$restoredBlocker.Run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex restored blocker did not return to a clean base'
+
+  $validCheckpoint = Invoke-TerminalScenario -Mode 'checkpoint-valid'
+  Assert-Equal ([string]$validCheckpoint.Terminal.status) 'needs_decision' 'Codex valid direct checkpoint no longer pauses for decision'
+  Assert-Equal ([string]$validCheckpoint.Terminal.candidateResult.category) 'decision_checkpoint' 'Codex valid checkpoint category changed'
+  Assert-Equal (Invoke-Git -Root ([string]$validCheckpoint.Run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex valid checkpoint is not the unique direct successor'
+  Assert-Equal (Invoke-Git -Root ([string]$validCheckpoint.Run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex valid checkpoint worktree is dirty'
+
+  foreach ($invalidMode in @('checkpoint-head-changed', 'blocked-dirty', 'checkpoint-fake-sha', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
+    $invalidCheckpoint = Invoke-TerminalScenario -Mode $invalidMode
+    Assert-Equal ([string]$invalidCheckpoint.Terminal.status) 'failed' "Codex accepted invalid decision evidence: $invalidMode"
+  }
+
   $pathMismatchClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $pathMismatchStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
   $pathMismatchRun = ($pathMismatchClaimOutput[0] | ConvertFrom-Json).run
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$pathMismatchRun.worktree))) | Out-Null
@@ -275,7 +361,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
 
   Write-Output 'test-invoke-codex-candidate: OK'
 } finally {
-  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure; $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $originalRenameCompressed
+  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure; $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $originalRenameCompressed; $env:TZG_FAKE_CODEX_TERMINAL_MODE = $originalTerminalMode
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     if (-not $resolved.StartsWith($tempBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-codex-candidate-test-$testId") { throw "Unsafe Codex candidate test cleanup: $resolved" }
@@ -300,5 +386,12 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedPathMismatchState = [IO.Path]::GetFullPath($pathMismatchStateRoot)
     if (-not $resolvedPathMismatchState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedPathMismatchState) -cne "tzg-codex-candidate-test-$testId-path-mismatch") { throw "Unsafe Codex path-mismatch state cleanup: $resolvedPathMismatchState" }
     Remove-Item -LiteralPath $resolvedPathMismatchState -Recurse -Force
+  }
+  foreach ($scenarioStateRoot in $scenarioStateRoots) {
+    if (Test-Path -LiteralPath $scenarioStateRoot) {
+      $resolvedScenarioState = [IO.Path]::GetFullPath($scenarioStateRoot)
+      if (-not $resolvedScenarioState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedScenarioState) -cnotlike "tzg-codex-candidate-test-$testId-*") { throw "Unsafe Codex terminal-scenario state cleanup: $resolvedScenarioState" }
+      Remove-Item -LiteralPath $resolvedScenarioState -Recurse -Force
+    }
   }
 }

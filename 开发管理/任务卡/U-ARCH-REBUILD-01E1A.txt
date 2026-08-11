@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E1A",
+  "title": "纯 Combat 切换就绪契约",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-11：01E1 已完成；生产切换取证确认仍需在纯 Combat 内核补齐移动、换法与七类合法行动契约，冻结路径和 legacy 对照事实已完整，可独立执行。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E1A.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E1A.txt",
+    "src/Assets/Scripts/Combat/CombatCommand.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatActionResult.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+    "src/Assets/Scripts/Combat/CombatLegalActionService.cs.meta",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E1A · 纯 Combat 切换就绪契约
+
+## 来源与当前边界
+
+- 01E1 已归档，但 01E2 生产切换取证确认纯 Combat 内核尚缺移动、换法和统一合法行动集合。批准边界读取 `docs/superpowers/specs/2026-08-11-hourly-codex-blocker-classification-and-combat-e1a-repair-design.md` §三；本卡只补齐切换就绪契约，不重新打开 01E1，也不修改生产调用链。
+
+## 必查范围
+
+- 完整读取旧 `TacticalCombatController.ExecuteSwapSpell`、`Character.SwapSpellInCombat`／`MaxCombatSwaps`、`CombatResolver.Move`／`FindPathTowardTarget`、`EnemyAI.SimpleAI.ExecuteTurn`、`ExplorationController` 的敌方行动 CTB 消费逻辑、`SpatialQueryBoard.FindPath`／`FindReachable`，以及现有 `CombatCommand`、`CombatantSnapshot`、`CombatActionResult`、`CombatActionResolver`、`CombatCommandService`、`CombatSession`、攻击档案和 `CombatRuntimeKernelTests` 的完整相关逻辑。
+- 以上旧实现和 legacy 测试夹具是移动、换法、CTB 消费与合法行动语义的直接事实源；不得从设计文字推导不同规则。
+
+## 实施范围
+
+- `CombatCommand` 增加移动与换法命令，只使用稳定 combatant／profile ID 与 `HexCoord`。`CombatantSnapshot` 保留 `Position`，只补移动点数、按槽位装备的术法档案 ID、可换入档案 ID、战内换法次数与上限。
+- 移动沿用旧可达路径、移动点数与目的格占用语义；合法成功时由 `CombatCommandService` 恰好消费一次 CTB，拒绝不消费。换法沿用合法槽位／候选、不得换入同一术法、每场最多 2 次、成功后新术法固定 60 tick 冷却与恰好一次 CTB 消费；移动与换法 CTB 冷却惩罚均为 0，60 tick 不得误作行动阈值惩罚。
+- `CombatSession`、`CombatCommandService` 与 `CombatActionResolver` 使用同一验证入口，失败不得产生部分位置、装备、资源、冷却或 CTB 变化；`CombatActionResult` 返回稳定成功结果与拒绝原因。
+- 扩展只读 `ICombatSpatialQuery`，以来源格、目的格、移动点数与当前 session 占用查询规范路径和移动代价。Spatial 继续拥有格位／路径事实；Combat 只在成功提交时更新快照位置，不写 Unity Grid、Tilemap、`SpatialQueryBoard` 或场景对象。
+- 新建 `CombatLegalActionService`，从当前 session、攻击档案与只读 Spatial 查询生成基础攻击、术法、神通、防御、等待、移动、换法七类可执行命令，并与命令服务共享验证入口。玩家与 AI 看到同一合法集合；AI 选择与生产适配仍由 01E2 负责。
+
+## 禁止项
+
+- 不修改 Character、Game、Feature、UI、Scene、Prefab、旧 `TacticalCombatController` 生产调用链或 `TianZhang.Spatial`；不引入 Character、GameObject、MonoBehaviour、EnemyAI、Feature 或 UI 依赖。
+- 不建立生产双运行、旧 adapter、runtime feature flag、fallback、临时公式或新恢复层；不修改伤害倍率、既有范围语义或 BattleSim 数据。
+- 不扩大到 expectedPaths 之外的 Combat 或依赖文件。实时完整逻辑若证明还必须修改任何未冻结路径，包括 Spatial，立即停止并修正任务边界。
+
+## 验证
+
+- 在 `CombatRuntimeKernelTests` 覆盖合法／非法移动，目的格／占用／路径拒绝，合法换法、无候选、重复装备、次数用尽、非法档案，玩家／AI 七类合法行动一致，以及所有失败零状态变化、所有成功恰好一次 CTB 消费。
+- 用固定 legacy 夹具逐项对照旧移动路径、移动点、占用与生产链统一 CTB 消费；逐项对照旧换法槽位替换、每场最多 2 次、固定 60 tick 冷却与单次 CTB 消费。既有 1v1／2v2、伤害、范围、拒绝原因与结果夹具不得回归。
+- 运行定向 Unity EditMode 与 `tools/check-unity-assembly-boundaries.ps1`；再运行任务卡、审核文本、pending whitespace 与 staged diff 检查。若本轮未改变数值输入，不重复 BattleSim。
+
+## 完成条件
+
+- 移动、换法和七类合法行动契约全部就绪，legacy 对照与既有夹具通过；01E2 的每个生产命令入口都有无需修改纯 Combat 内核的目标命令，且新内核仍只由测试访问。
+
+## 停止条件
+
+- 需要 Character／Feature／生产调用方或未冻结依赖、需要修改 Spatial 所有权、双运行／旧 adapter／临时公式、出现新增 Unity 回归失败，或发现 BattleSim 数值语义变化时停止，不在本卡叠补。

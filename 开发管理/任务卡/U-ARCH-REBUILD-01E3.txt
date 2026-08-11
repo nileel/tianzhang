@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": ["U-ARCH-REBUILD-01E2"],
-  "stateReason": "等待 01E2 完成正式调用链原子切换；本卡随后删除已不可达旧运行时、完成阶段 5 总验收，并与 01E 父项同批归档。",
+  "stateReason": "阶段 5 已增加 01E1A 纯内核切换就绪前置；本卡继续直接等待 01E2 完成正式调用链原子切换，随后删除旧运行时、完成总验收并与 01E 父项同批归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -41,11 +41,11 @@
 
 ## 来源与当前边界
 
-- 对应阶段 5 的遗留删除和总验收切片；批准边界读取任务重划设计 §3.3。只有 01E2 证明新内核是唯一生产路径后才可解阻塞。
+- 对应阶段 5 的遗留删除和总验收切片；批准边界读取任务重划设计当前修订 §3.4。完整前置链为 `01E1（已完成） -> 01E1A -> 01E2 -> 01E3`，本卡仍只直接阻塞于 01E2。
 
 ## 必查范围
 
-- 01E1、01E2 完成归档及验证；旧 `TacticalCombatController`、`CombatResolver`、`DamageCalculator`、Core CTB 的完整逻辑；全仓 C#、Scene、Prefab、资源、GUID、asmdef、测试与检查器中的旧引用。
+- 01E1、01E1A、01E2 完成归档及验证；旧 `TacticalCombatController`、`CombatResolver`、`DamageCalculator`、Core CTB 的完整逻辑；全仓 C#、Scene、Prefab、资源、GUID、asmdef、测试与检查器中的旧引用。
 
 ## 实施范围
 

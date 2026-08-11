@@ -8,27 +8,35 @@
 
 本次根因属于任务切片过大和切换顺序不适合自动调度，不修改 schema 5 runtime、失败停止语义、集成锁或通知机制，也不以自动重试、兼容 adapter、双运行 feature flag 或新恢复状态掩盖问题。
 
+### 2026-08-11 当前修订
+
+`U-ARCH-REBUILD-01E1` 完成后，`U-ARCH-REBUILD-01E2` 的生产切换取证进一步确认：纯 Combat 内核尚缺移动、换法和七类合法行动集合，01E2 的冻结路径还漏列 `TianZhang.Gameplay.asmdef` 与 `AssemblyBoundaryEditorTests.cs`。这些是生产切换前必须完成的纯内核契约，不能在 01E2 内跨边界叠补。
+
+因此保留已归档的 01E1，插入窄前置 `U-ARCH-REBUILD-01E1A`。01E1A 只补齐纯 Combat 切换就绪契约与 legacy 对照测试；01E2 继续只做生产调用链原子切换。详细合同与候选终态修复读取 `docs/superpowers/specs/2026-08-11-hourly-codex-blocker-classification-and-combat-e1a-repair-design.md`。
+
 ## 二、设计决定
 
-将 `U-ARCH-REBUILD-01E` 从单个可执行卡改为阶段 5 汇总父项，并建立三个严格顺序、各自可编译和可验证的 Codex 子任务：
+将 `U-ARCH-REBUILD-01E` 从单个可执行卡改为阶段 5 汇总父项。当前共有四个严格顺序、各自可编译和可验证的 Codex 子任务：
 
-1. `U-ARCH-REBUILD-01E1`：纯 Combat 内核与确定性测试。
-2. `U-ARCH-REBUILD-01E2`：正式调用链原子切换。
-3. `U-ARCH-REBUILD-01E3`：旧运行时删除与阶段 5 总验收。
+1. `U-ARCH-REBUILD-01E1`：纯 Combat 内核与确定性测试，已完成。
+2. `U-ARCH-REBUILD-01E1A`：纯 Combat 切换就绪契约。
+3. `U-ARCH-REBUILD-01E2`：正式调用链原子切换。
+4. `U-ARCH-REBUILD-01E3`：旧运行时删除与阶段 5 总验收。
 
-原 `U-ARCH-REBUILD-01E` 转为 `blocked`，`blockedBy` 固定为上述三个子任务；不再进入 ready 队列。`U-ARCH-REBUILD-01F` 继续只依赖父项 `U-ARCH-REBUILD-01E`，因此只有三个子任务全部完成、父项归档后才可解阻塞。父项 `U-ARCH-REBUILD-01` 的既有依赖表达不变。
+原 `U-ARCH-REBUILD-01E` 转为 `blocked`，当前 `blockedBy` 固定为 01E1A、01E2、01E3；不再进入 ready 队列。`U-ARCH-REBUILD-01F` 继续只依赖父项 `U-ARCH-REBUILD-01E`，因此只有四个子任务全部完成、父项归档后才可解阻塞。父项 `U-ARCH-REBUILD-01` 的既有依赖表达不变。
 
 子任务固定依赖为：
 
 ```text
-U-ARCH-REBUILD-01E1
-  -> U-ARCH-REBUILD-01E2
-    -> U-ARCH-REBUILD-01E3
-      -> U-ARCH-REBUILD-01E completed
-        -> U-ARCH-REBUILD-01F
+U-ARCH-REBUILD-01E1（已完成）
+  -> U-ARCH-REBUILD-01E1A
+    -> U-ARCH-REBUILD-01E2
+      -> U-ARCH-REBUILD-01E3
+        -> U-ARCH-REBUILD-01E completed
+          -> U-ARCH-REBUILD-01F
 ```
 
-队列调整后只允许 `01E1` 为 `codex_execute/codex/ready`；`01E2`、`01E3` 与父项保持 active blocked，不提前进入队列。
+当前队列只允许 `01E1A` 为 `codex_execute/codex/ready`；`01E2`、`01E3` 与父项保持 active blocked，不提前进入队列。
 
 `01E3` 是父项的最终闭环切片。其 expectedPaths 必须包含父项任务卡、父项归档、backlog 与队列投影；`01E3` 验收通过时在同一管理提交中归档 `01E3` 和父项 `01E`，避免父项在最后一个 blocker 消失后成为新的空执行卡。`01F` 仍由后续正常队列维护根据已完成的 `01E` 归档解除前置，本提交不提前把 `01F` 放入 ready 队列。
 
@@ -47,19 +55,32 @@ U-ARCH-REBUILD-01E1
 
 `01E1` 不删除 `TacticalCombatController`、旧 `Core/CTBEngine.cs` 或 `Character.CTBUnit`，不修改正式场景行为，不迁移 Battle UI。其 exact expectedPaths 在制卡前按实时源码和新增测试重新冻结，包含所有新文件及 `.meta`。
 
-### 3.2 `U-ARCH-REBUILD-01E2` · 正式调用链原子切换
+### 3.2 `U-ARCH-REBUILD-01E1A` · 纯 Combat 切换就绪契约
 
-目标是在一个独立提交中把所有生产调用方切到 `01E1` 已验证的新内核：
+目标是在不接触生产调用链的前提下，补齐 01E2 所需的纯内核合同：
+
+- `CombatCommand` 与 `CombatantSnapshot` 表达移动、换法及其战内纯值状态。
+- 移动沿用旧路径、移动点数、目的格占用和成功后单次 CTB 消费；换法沿用合法槽位／候选、每场最多 2 次、固定 60 tick 新术法冷却和成功后单次 CTB 消费。
+- 扩展只读 `ICombatSpatialQuery`；Combat 不持有或写入 Grid、Tilemap、`SpatialQueryBoard` 或场景对象。
+- `CombatLegalActionService` 与命令服务共享验证入口，统一生成基础攻击、术法、神通、防御、等待、移动、换法七类合法行动。
+- `CombatRuntimeKernelTests` 用旧 `CombatResolver`、`Character.SwapSpellInCombat`、`TacticalCombatController.ExecuteSwapSpell` 与生产 CTB 消费行为形成固定 legacy 对照。
+
+01E1A 只修改任务卡冻结的纯 Combat 文件和直接测试，不修改 Character、Game、Feature、UI、Scene、Prefab、Spatial 实现或旧生产入口。若完成生产映射仍需任何未冻结的内核或依赖修改，必须停止重划，不在 01E2 中补写。
+
+### 3.3 `U-ARCH-REBUILD-01E2` · 正式调用链原子切换
+
+目标是在一个独立提交中把所有生产调用方切到 `01E1A` 已验证为切换就绪的新内核：
 
 - `Character` 不再持有 CTB 运行时状态；Adventure 只投影参战快照并消费战斗结果。
 - `ExplorationController`、`FormalEncounterResult`、`BattleUIManager` 和直接生产调用方改用新会话、命令与结果契约。
 - `EnemyAI` 只消费合法行动集合，不直接读取 Character 或场景实现。
-- 按钮、日志与表现只经现有 Feature／GameplayContracts 边界调用，不进入 Combat。
+- 在 GameplayContracts 新建实现无关的 `ICombatCommandHandler`，七个入口只使用稳定 ID、槽位／档案 ID 和坐标整数等稳定原语；Gameplay 组合层负责转换为纯 Combat 命令，Combat 与 GameplayContracts 不互相依赖。
+- 按钮、日志与表现只经现有 Feature／GameplayContracts 边界调用，不进入 Combat；`TianZhang.Gameplay.asmdef` 与 `AssemblyBoundaryEditorTests.cs` 纳入冻结路径。
 - 与正式调用链绑定的 EditMode／PlayMode 测试同步改用新入口。
 
-切换必须是单向且原子的：不得保留新旧运行时双写、shadow compare、运行时选择开关或旧控制器 adapter。`01E2` 完成后新 Combat 内核是唯一生产可达战术运行时；旧类型可以暂留在仓库供 `01E3` 精确删除，但不得再被生产代码、场景、Prefab 或测试调用。
+切换必须是单向且原子的：不得保留新旧运行时双写、shadow compare、运行时选择开关或旧控制器 adapter。01E2 不得修改 01E1／01E1A 冻结的纯内核；若仍需补内核能力，立即返回 01E1A。`01E2` 完成后新 Combat 内核是唯一生产可达战术运行时；旧类型可以暂留在仓库供 `01E3` 精确删除，但不得再被生产代码、场景、Prefab 或测试调用。
 
-### 3.3 `U-ARCH-REBUILD-01E3` · 旧运行时删除与阶段 5 总验收
+### 3.4 `U-ARCH-REBUILD-01E3` · 旧运行时删除与阶段 5 总验收
 
 目标是删除已不可达的旧所有权并完成阶段 5 的完整闭环：
 
@@ -76,6 +97,7 @@ U-ARCH-REBUILD-01E1
 验证按子任务影响面分层，相关输入未变化时不重复同范围检查：
 
 - `01E1`：新纯运行时的定向 EditMode 测试、`tools/check-unity-assembly-boundaries.ps1`、路径与差异检查。
+- `01E1A`：移动、换法与七类合法行动的定向 EditMode／legacy 对照、`tools/check-unity-assembly-boundaries.ps1`、路径与差异检查。
 - `01E2`：受影响正式调用链的 EditMode、`GuanzhongBasicAttackPlayModeTests` 或实时冻结的等价 PlayMode 入口、程序集边界和旧生产引用扫描。
 - `01E3`：完整 Unity EditMode、相关 PlayMode、全仓旧类型／GUID 引用扫描、程序集边界、审核文本、空白和 staged diff 检查。
 
@@ -92,29 +114,29 @@ Unity 生成的 `.csproj`／`.sln` 不是仓库事实。隔离 worktree 中存�
 3. runtime 关闭后再次核对 worktree 注册、路径、branch、HEAD 和清洁度，再精确删除该空 worktree 与临时 branch；不使用泛化清理、stash、reset、checkout 或 `git clean`。
 4. 不重复发送首次失败通知，不把该空 run 记录为业务成果。
 
-随后在独立手动 worktree 中完成父卡、三个子卡、场景与 Unity backlog 投影及有序队列的同一管理切片，运行 `tools/check-task-cards.ps1`、`tools/check-review-text.ps1`、pending whitespace 和 cached diff 检查，并在重新核对 schema 5 runtime、集成锁、master 与主工作区路径冲突后通过 `tools/invoke-project-integration.ps1` 集成。
+随后在独立手动 worktree 中完成父卡、当前四个子卡、场景与 Unity backlog 投影及有序队列的同一管理切片，运行 `tools/check-task-cards.ps1`、`tools/check-review-text.ps1`、pending whitespace 和 cached diff 检查，并在重新核对 schema 5 runtime、集成锁、master 与主工作区路径冲突后通过 `tools/invoke-project-integration.ps1` 集成。
 
 ## 六、自动化配置边界
 
-本设计不修改 `invoke-hourly-owner.ps1`、候选 terminal schema、runtime schema、失败关闭合同、通知策略或自动化 TOML。`codex-hourly-worker` 和 `deepseek-hourly-trigger` 在任务卡重划与管理验证完成前保持当前暂停状态。
+本设计当前修订只允许在候选适配器中把“干净 base、空 checkpoint／paths、显式 detailCode”的非法 `needs_decision` 机械归类为既有 `blocked`；不修改 terminal schema、runtime schema、失败关闭合同、通知策略或自动化 TOML。`codex-hourly-worker` 在任务卡重划、适配器验证与 canary 完成前保持暂停；DeepSeek 自动化状态不因本修订改变。
 
-该故障只属于 Codex 任务切片；不得借本次处置改变 DeepSeek route、主责或恢复逻辑。任务卡重划集成后，是否恢复小时入口只通过 Codex automation 管理能力执行；不得直接编辑 TOML。恢复前必须确认 runtime 两个 owner 均为空、集成锁空闲、`01E1` 是唯一新增 ready 子卡、主工作区相关路径无冲突。若只恢复 Codex 入口即可验证新切片，则不同时改变 DeepSeek 状态。
+该故障只属于 Codex 任务切片；不得借本次处置改变 DeepSeek route、主责或恢复逻辑。任务卡重划集成后，是否恢复小时入口只通过 Codex automation 管理能力执行；不得直接编辑 TOML。恢复前必须确认 runtime 两个 owner 均为空、集成锁空闲、`01E1A` 是唯一新增 ready 子卡、主工作区相关路径无冲突。若只恢复 Codex 入口即可验证新切片，则不同时改变 DeepSeek 状态。
 
 ## 七、完成条件与停止条件
 
 本次任务重划完成必须同时满足：
 
 - 旧空 run 已按精确证据关闭并安全清理。
-- `01E` 已成为 blocked 汇总父项，`01E1`／`01E2`／`01E3` 的依赖、任务卡、backlog 和队列投影一致。
-- 只有 `01E1` 为 ready；`01F` 与架构父项依赖语义未提前解锁。
-- 三个子任务均具有完整必查范围、expectedPaths、验证、完成条件和停止条件。
+- `01E` 已成为 blocked 汇总父项，`01E1`／`01E1A`／`01E2`／`01E3` 的依赖、任务卡、backlog 和队列投影一致。
+- 只有 `01E1A` 为 ready；`01F` 与架构父项依赖语义未提前解锁。
+- 四个子任务均具有完整必查范围、expectedPaths、验证、完成条件和停止条件。
 - 任务卡、审核文本、空白和 staged diff 检查通过，且集成没有覆盖用户现有改动。
 - 自动化 runtime、失败语义和通知机制未被扩张。
 
 出现以下任一情况立即停止，不继续叠加补丁：
 
-- 不能在不引入生产双运行、兼容 adapter 或临时公式的前提下形成上述三个可验证边界。
-- 实时扫描发现 `01E1` 必须修改正式调用链才能编译，或 `01E2` 必须提前进入 GameRuntime／Feature 重写范围。
+- 不能在不引入生产双运行、兼容 adapter 或临时公式的前提下形成上述四个可验证边界。
+- 实时扫描发现 `01E1A` 必须修改正式调用链或未冻结依赖才能编译，或 `01E2` 必须补纯内核、提前进入 GameRuntime／Feature 重写范围。
 - 当前 run、worktree、branch、进程或 recoveryReason 与本设计记录不一致。
 - 任务管理路径与主工作区现有 staged、unstaged 或 untracked 改动冲突。
 - 调整依赖会提前解锁 `01F`、改变 BattleSim 数值语义或突破阶段 5 既定职责。
