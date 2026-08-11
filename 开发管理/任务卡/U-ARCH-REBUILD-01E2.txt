@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01E1A"],
-  "stateReason": "2026-08-11：等待 01E1A 补齐移动、换法与七类合法行动的纯 Combat 切换就绪契约；完成前不得执行生产调用链切换。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-11：01E1A 已归档并证明纯 Combat 内核已覆盖全部七类生产命令契约；正式调用链原子切换已具备执行条件。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
