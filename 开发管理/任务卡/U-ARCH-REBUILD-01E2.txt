@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-12：负责人批准 A 方案及边界修正设计；保留 checkpoint 与已通过的正式 UI PlayMode 迁移，补齐 Content 元素事实、Editor／Gameplay 调用方和全部旧测试引用后再验收，不得提前归档。",
+  "stateReason": "2026-08-12：迁移旧数值测试时确认新纯 Combat 内核未表达玄感心力、含弘／载物防御及按境界变化的守一／符胆／雷劫上限与倍率；继续切换会改变生产数值语义并命中本卡停止条件，等待负责人决定是否先建立纯内核等价修复切片。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -170,5 +170,12 @@
 
 - 负责人已选择 A 并批准 `docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md`；实施必须按该设计先完成本卡，再进入 01E3。
 - checkpoint `f381ffa07b72748d642e292279d52c427ff09657` 已证明大部分正式链可切到 `CombatSession`；负责人授权的 `GuanzhongFormalUiTextPlayModeTests` 迁移在隔离候选中通过公开 `RequestBasicAttack` 完成击败与结算，PlayMode 5/5 通过。
-- 后续独立扫描发现新正式组合根、Editor 导入器和直接测试仍引用旧 `DamageCalculator`、旧 Controller／Resolver 或 Core CTB；这些漏项未闭合前，本卡保持 `ready`，既有 457/459 EditMode 结果只作为基线，不作为完成证明。
+- 后续独立扫描发现新正式组合根、Editor 导入器和直接测试仍引用旧 `DamageCalculator`、旧 Controller／Resolver 或 Core CTB；既有 457/459 EditMode 结果只作为基线，不作为完成证明；随后迁移测试发现的更深层数值等价缺口见下节。
 - `Combat/Turns/CTBEngine.cs` 是 01E1／01E1A 已验收的新纯 CTB，必须保留；本卡只迁移 `TianZhang.Core.CTBEngine` 的直接测试调用，不修改新 Combat 内核。
+
+## 2026-08-12 新内核等价性停止证据
+
+- 迁移 `TacticalGridModelTests.CombatMechanismTests` 时确认旧正式实现会调用 `Character.XuanganMindStrengthBonus`、`HanhongDefenseMultiplier`、`MaxShouyi`、`MaxFudan`、`MaxLeijie` 与 `LeijieDamageBonusPerStack`；这些规则仍由旧测试直接保护，不能作为旧控制器生命周期测试删除。
+- 当前 `CombatantSnapshot` 未投影玄感心力、含弘／载物有效防御或按境界变化的印记上限；`CombatActionResolver` 把守一／符胆／雷劫满层阈值固定为 2、雷劫每层倍率固定为 5%，且 `CombatantSnapshot.ReceiveDamage` 不增加雷劫层数。正式切换后会与现行 `Character`／`DamageCalculator`／`CombatResolver` 产生可观测数值差异。
+- 本卡明确禁止修改纯 Combat 内核，并规定“仍需补任一纯 Combat 内核能力或固定数值语义发生变化”时停止；候选中的 Content 文件迁移试改已撤回，checkpoint 代码与已通过的 A 方案 PlayMode 迁移原样保留，未提交不完整补丁。
+- 待决定 `DEC-20260812-E2KERNELPARITY`：A（建议）先建立独立纯内核等价修复切片，逐项投影并迁移旧数值测试，再恢复 01E2；B 明确接受删减上述现行战斗语义并另走数值／设计变更；C 放弃 checkpoint，继续保留旧正式战斗运行时。
