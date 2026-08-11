@@ -15,7 +15,6 @@
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E、U-ARCH-REBUILD-01F、U-ARCH-REBUILD-01G、U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
 | U-ARCH-REBUILD-01E | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E1、U-ARCH-REBUILD-01E2、U-ARCH-REBUILD-01E3 | Combat、CTB 与战术运行时父项 | 开发管理/任务卡/U-ARCH-REBUILD-01E.txt |
-| U-ARCH-REBUILD-01E1 | P1 | codex | 已排队 | — | 纯 Combat 内核与确定性测试 | 开发管理/任务卡/U-ARCH-REBUILD-01E1.txt |
 | U-ARCH-REBUILD-01E2 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E1 | 正式调用链原子切换 | 开发管理/任务卡/U-ARCH-REBUILD-01E2.txt |
 | U-ARCH-REBUILD-01E3 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E2 | 旧运行时删除与阶段 5 总验收 | 开发管理/任务卡/U-ARCH-REBUILD-01E3.txt |
 | U-ARCH-REBUILD-01F | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E | GameRuntime、保存与应用用例 | 开发管理/任务卡/U-ARCH-REBUILD-01F.txt |

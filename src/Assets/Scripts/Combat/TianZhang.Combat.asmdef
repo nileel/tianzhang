@@ -4,6 +4,7 @@
         "TianZhang.Foundation",
         "TianZhang.Domain",
         "TianZhang.Content",
-        "TianZhang.Spatial"
+        "TianZhang.Spatial",
+        "TianZhang.Combat.Turns"
     ]
 }

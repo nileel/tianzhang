@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-11：01D 已完成；原 01E 空失败现场已精确关闭，任务重划设计获批准。实时扫描已冻结纯内核、新 CTB、程序集、README、直接测试与 .meta 路径；本卡不切换生产调用链。",
+  "stateReason": "2026-08-11：纯 Combat 内核、稳定 ID CTB、程序集边界与直接确定性测试已完成；旧 TacticalCombatController、Core/CTBEngine 与正式场景调用链未变，仍是唯一生产可达路径。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -76,8 +76,9 @@
 
 ## 验证
 
-- 定向运行 `CombatRuntimeKernelTests` 和受影响的既有纯规则测试；运行 `tools/check-unity-assembly-boundaries.ps1`、Unity EditMode、审核文本、pending whitespace 与 staged diff 检查。
-- 隔离 worktree 存在实时 Unity `.csproj` 投影时运行 `.NET` 快速构建；缺失时明确记录 `MISSING_PROJECT`，不得把被忽略的生成文件缺失当作 blocker。
+- `CombatRuntimeKernelTests` 5/5 通过，覆盖 1v1／2v2、CTB、伤害、范围、拒绝原因、结果投影与纯度；`tools/check-unity-assembly-boundaries.ps1` 通过。
+- Unity 6000.3.18f1 EditMode 完整执行 452 项，450 通过；仅保留已登记且路径无交集的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（`PULSE_NEUTRAL` 对旧 `PULSE_ADVANTAGE` 断言）与 `ContentImportCoordinatorContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`（旧日志断言）2 项失败。
+- `src/TianZhang.EditModeTests.csproj` 在隔离 worktree 不存在，记录为 `MISSING_PROJECT`；Unity EditMode 已编译全部相关 asmdef。审核文本、pending whitespace 与 staged diff 检查通过。
 
 ## 完成条件
 

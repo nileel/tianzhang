@@ -12,7 +12,8 @@ namespace TianZhang.Tests
         {
             AssertAssembly("Assets/Scripts/Core/TianZhang.Foundation.asmdef", "TianZhang.Foundation");
             AssertAssembly("Assets/Scripts/Entity/TianZhang.Domain.asmdef", "TianZhang.Domain", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Spatial");
-            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Content", "TianZhang.Spatial");
+            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Content", "TianZhang.Spatial", "TianZhang.Combat.Turns");
+            AssertAssembly("Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef", "TianZhang.Combat.Turns");
             AssertAssembly(
                 "Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
                 "TianZhang.Gameplay",
