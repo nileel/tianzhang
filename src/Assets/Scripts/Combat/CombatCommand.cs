@@ -1,4 +1,5 @@
 using System;
+using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
@@ -9,6 +10,8 @@ namespace TianZhang.Combat
         Divine,
         Guard,
         Wait,
+        Move,
+        SwapSpell,
     }
 
     /// <summary>Fixed roll values make a command replayable without a runtime random source.</summary>
@@ -35,7 +38,9 @@ namespace TianZhang.Combat
             string actorId,
             string targetId = null,
             string profileId = null,
-            CombatResolutionRolls rolls = default)
+            CombatResolutionRolls rolls = default,
+            HexCoord? destination = null,
+            int slotIndex = -1)
         {
             if (string.IsNullOrWhiteSpace(actorId))
                 throw new ArgumentException("Actor ID is required.", nameof(actorId));
@@ -44,6 +49,8 @@ namespace TianZhang.Combat
             TargetId = targetId ?? string.Empty;
             ProfileId = profileId ?? string.Empty;
             Rolls = rolls;
+            Destination = destination;
+            SlotIndex = slotIndex;
         }
 
         public CombatCommandKind Kind { get; }
@@ -51,5 +58,7 @@ namespace TianZhang.Combat
         public string TargetId { get; }
         public string ProfileId { get; }
         public CombatResolutionRolls Rolls { get; }
+        public HexCoord? Destination { get; }
+        public int SlotIndex { get; }
     }
 }

@@ -13,9 +13,19 @@ namespace TianZhang.Combat
         {
             if (session == null || command == null)
                 throw new ArgumentNullException(session == null ? nameof(session) : nameof(command));
-            if (!session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor) || !actor.IsAlive)
-                return CombatActionResult.Rejected("combat_session_actor_invalid");
+            CombatActionResult validation = session.ValidateCommand(command);
+            return !validation.Succeeded
+                ? validation
+                : ResolveValidated(session, command, validation);
+        }
 
+        internal CombatActionResult ResolveValidated(
+            CombatSession session,
+            CombatCommand command,
+            CombatActionResult validation)
+        {
+            if (!session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor))
+                return CombatActionResult.Rejected("combat_session_actor_invalid");
             return command.Kind switch
             {
                 CombatCommandKind.Guard => ResolveGuard(actor),
@@ -23,6 +33,8 @@ namespace TianZhang.Combat
                 CombatCommandKind.BasicAttack => ResolveAttack(session, command, actor, CombatAttackKind.Basic),
                 CombatCommandKind.Art => ResolveAttack(session, command, actor, CombatAttackKind.Art),
                 CombatCommandKind.Divine => ResolveAttack(session, command, actor, CombatAttackKind.Divine),
+                CombatCommandKind.Move => ResolveMove(actor, command, validation),
+                CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
         }
@@ -33,25 +45,32 @@ namespace TianZhang.Combat
             return CombatActionResult.Success();
         }
 
+        private static CombatActionResult ResolveMove(
+            CombatantSnapshot actor,
+            CombatCommand command,
+            CombatActionResult validation)
+        {
+            actor.SetPosition(command.Destination.Value);
+            return CombatActionResult.MovementSuccess(validation.MovementPath, validation.MovementCost);
+        }
+
+        private static CombatActionResult ResolveSwapSpell(CombatantSnapshot actor, CombatCommand command)
+        {
+            actor.SwapEquippedArt(command.SlotIndex, command.ProfileId);
+            actor.SetCooldown(command.ProfileId, 60);
+            return CombatActionResult.Success();
+        }
+
         private static CombatActionResult ResolveAttack(
             CombatSession session,
             CombatCommand command,
             CombatantSnapshot actor,
             CombatAttackKind expectedKind)
         {
-            if (!session.Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive || target.Team == actor.Team)
-                return CombatActionResult.Rejected("combat_session_target_invalid");
-            if (!session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
-                return CombatActionResult.Rejected("attack_profile_unresolved");
-            if (actor.GetCooldown(profile.Id) > 0)
-                return CombatActionResult.Rejected("attack_profile_cooldown_active");
-            if (profile.SpiritCost > 0 && actor.CurrentSpirit < profile.SpiritCost)
-                return CombatActionResult.Rejected("spirit_insufficient");
-
-            CombatRangeQueryResult range = session.SpatialQuery.QueryRange(
-                actor.Position, target.Position, profile.MinimumRange, profile.MaximumRange);
-            if (!range.IsInRange)
-                return CombatActionResult.Rejected(string.IsNullOrEmpty(range.Reason) ? "target_out_of_range" : range.Reason);
+            if (!session.Combatants.TryGet(command.TargetId, out CombatantSnapshot target) ||
+                !session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile) ||
+                profile.Kind != expectedKind)
+                return CombatActionResult.Rejected("combat_command_validation_changed");
 
             CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls);
             if (profile.SpiritCost > 0)

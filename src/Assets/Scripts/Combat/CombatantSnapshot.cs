@@ -17,6 +17,8 @@ namespace TianZhang.Combat
     public sealed class CombatantSnapshot
     {
         private readonly Dictionary<string, int> cooldowns = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly List<string> equippedArtProfileIds;
+        private readonly List<string> availableArtProfileIds;
 
         public CombatantSnapshot(
             string id,
@@ -29,12 +31,19 @@ namespace TianZhang.Combat
             int soulAttack,
             int physicalDefense,
             int soulDefense,
-            float realmMultiplier = 1f)
+            float realmMultiplier = 1f,
+            int movePoints = 0,
+            IEnumerable<string> equippedArtProfileIds = null,
+            IEnumerable<string> availableArtProfileIds = null,
+            int maxCombatSwaps = 2,
+            int combatSwapsUsed = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
             if (maximumHealth <= 0 || currentHealth < 0 || currentHealth > maximumHealth)
                 throw new ArgumentOutOfRangeException(nameof(currentHealth));
+            if (movePoints < 0 || maxCombatSwaps < 0 || combatSwapsUsed < 0 || combatSwapsUsed > maxCombatSwaps)
+                throw new ArgumentOutOfRangeException(nameof(movePoints));
 
             Id = id;
             Team = team;
@@ -47,6 +56,11 @@ namespace TianZhang.Combat
             PhysicalDefense = physicalDefense;
             SoulDefense = soulDefense;
             RealmMultiplier = Math.Max(1f, realmMultiplier);
+            MovePoints = movePoints;
+            this.equippedArtProfileIds = CreateProfileIdList(equippedArtProfileIds, allowEmpty: true);
+            this.availableArtProfileIds = CreateProfileIdList(availableArtProfileIds, allowEmpty: false);
+            MaxCombatSwaps = maxCombatSwaps;
+            CombatSwapsUsed = combatSwapsUsed;
         }
 
         public string Id { get; }
@@ -62,6 +76,11 @@ namespace TianZhang.Combat
         public int PhysicalDefense { get; }
         public int SoulDefense { get; }
         public float RealmMultiplier { get; }
+        public int MovePoints { get; }
+        public IReadOnlyList<string> EquippedArtProfileIds => equippedArtProfileIds.AsReadOnly();
+        public IReadOnlyList<string> AvailableArtProfileIds => availableArtProfileIds.AsReadOnly();
+        public int CombatSwapsUsed { get; private set; }
+        public int MaxCombatSwaps { get; }
         public float BlockRate { get; set; }
         public float BlockReduction { get; set; }
         public float SoulShieldRate { get; set; }
@@ -84,6 +103,17 @@ namespace TianZhang.Combat
         public void SetPosition(HexCoord position)
         {
             Position = position;
+        }
+
+        public void SwapEquippedArt(int slotIndex, string profileId)
+        {
+            if (slotIndex < 0 || slotIndex >= EquippedArtProfileIds.Count)
+                throw new ArgumentOutOfRangeException(nameof(slotIndex));
+            if (string.IsNullOrWhiteSpace(profileId))
+                throw new ArgumentException("Profile ID is required.", nameof(profileId));
+
+            equippedArtProfileIds[slotIndex] = profileId;
+            CombatSwapsUsed++;
         }
 
         public void SetSpirit(int maximumSpirit, int currentSpirit)
@@ -140,6 +170,25 @@ namespace TianZhang.Combat
             if (amount < 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
             CurrentHealth = Math.Min(MaximumHealth, CurrentHealth + amount);
+        }
+
+        private static List<string> CreateProfileIdList(IEnumerable<string> profileIds, bool allowEmpty)
+        {
+            var result = new List<string>();
+            if (profileIds == null)
+                return result;
+
+            foreach (string profileId in profileIds)
+            {
+                if (string.IsNullOrWhiteSpace(profileId))
+                {
+                    if (allowEmpty)
+                        result.Add(string.Empty);
+                    continue;
+                }
+                result.Add(profileId);
+            }
+            return result;
         }
     }
 }

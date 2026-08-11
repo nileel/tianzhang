@@ -16,10 +16,11 @@ namespace TianZhang.Combat
         {
             if (session == null || command == null)
                 throw new ArgumentNullException(session == null ? nameof(session) : nameof(command));
-            if (!session.TurnScheduler.IsReady(command.ActorId))
-                return CombatActionResult.Rejected("combat_turn_not_ready");
+            CombatActionResult validation = Validate(session, command);
+            if (!validation.Succeeded)
+                return validation;
 
-            CombatActionResult result = resolver.Resolve(session, command);
+            CombatActionResult result = resolver.ResolveValidated(session, command, validation);
             if (!result.Succeeded)
                 return result;
 
@@ -30,10 +31,19 @@ namespace TianZhang.Combat
             }
 
             int cooldownPenalty = 0;
-            if (!string.IsNullOrEmpty(command.ProfileId) && session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
+            if ((command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine) &&
+                !string.IsNullOrEmpty(command.ProfileId) &&
+                session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
                 cooldownPenalty = profile.CooldownTicks;
             session.TurnScheduler.ConsumeAction(command.ActorId, cooldownPenalty);
             return result;
+        }
+
+        public CombatActionResult Validate(CombatSession session, CombatCommand command)
+        {
+            if (session == null || command == null)
+                throw new ArgumentNullException(session == null ? nameof(session) : nameof(command));
+            return session.ValidateCommand(command);
         }
 
         public CombatTurnAdvance AdvanceUntilAction(CombatSession session)

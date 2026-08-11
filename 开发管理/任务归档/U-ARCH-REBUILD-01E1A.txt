@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-11：01E1 已完成；生产切换取证确认仍需在纯 Combat 内核补齐移动、换法与七类合法行动契约，冻结路径和 legacy 对照事实已完整，可独立执行。",
+  "stateReason": "2026-08-11：纯 Combat 内核已补齐移动、换法和七类共享合法行动契约；定向 CombatRuntimeKernelTests 11/11 通过，程序集边界检查通过，生产调用链未修改。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -64,6 +64,11 @@
 ## 完成条件
 
 - 移动、换法和七类合法行动契约全部就绪，legacy 对照与既有夹具通过；01E2 的每个生产命令入口都有无需修改纯 Combat 内核的目标命令，且新内核仍只由测试访问。
+
+## 完成记录
+
+- 2026-08-11：`CombatSession.ValidateCommand` 成为无副作用的共享验证入口；移动只以 `ICombatSpatialQuery` 的规范路径和代价更新快照位置，换法遵循候选、槽位、重复装备与每场 2 次限制，换入档案冷却固定 60 tick。
+- 定向 Unity EditMode `CombatRuntimeKernelTests` 11/11 通过；`tools/check-unity-assembly-boundaries.ps1` 通过。全量 EditMode 编译通过但保留两项无交集既有失败：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `ContentImportCoordinatorContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
 
 ## 停止条件
 
