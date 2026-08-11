@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-11：01E1A 已归档并证明纯 Combat 内核已覆盖全部七类生产命令契约；正式调用链原子切换已具备执行条件。",
+  "stateReason": "等待负责人决定：是否授权把 src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs 加入候选路径，以将其从直接修改 Character 改为驱动 CombatSession 命令？",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -49,7 +49,70 @@
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "U-ARCH-REBUILD-01E2",
+    "sourceRunId": "0559b351-cb20-4ebd-bcb0-ca25c9b6ac27",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260811-E2PLAYMODE",
+    "question": "是否授权把 src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs 加入候选路径，以将其从直接修改 Character 改为驱动 CombatSession 命令？",
+    "options": [
+      {
+        "key": "A",
+        "label": "扩展测试路径并迁移正式UI文本测试"
+      },
+      {
+        "key": "B",
+        "label": "保留该失败并限定当前验证结论"
+      },
+      {
+        "key": "C",
+        "label": "将该测试迁移延后至01E3"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 可完成01E2直接相关的 PlayMode 迁移并恢复正式UI文本流程验证；B或C都会保留该失败。",
+    "plainSummary": {
+      "action": "建议选择A，授权扩展该测试路径并按新命令入口更新。",
+      "impact": "测试不能结束战斗并使正式UI文本 PlayMode 验证失败。",
+      "situation": "生产战斗改为CombatSession后，一个直接相关PlayMode测试仍修改旧Character。"
+    },
+    "checkpointCommit": "f381ffa07b72748d642e292279d52c427ff09657",
+    "baseCommit": "be71cbff637195cd892ac852b63cfcffaf4af0d6",
+    "branch": "codex/automation/codex/0559b351-cb20-4ebd-bcb0-ca25c9b6ac27/candidate",
+    "changedPaths": [
+      "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+      "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
+      "src/Assets/Scripts/Combat/EnemyAI.cs",
+      "src/Assets/Scripts/Combat/README.md",
+      "src/Assets/Scripts/Entity/Character.cs",
+      "src/Assets/Scripts/Game/BattleUIManager.cs",
+      "src/Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
+      "src/Assets/Scripts/Map/ExplorationController.cs",
+      "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
+      "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
+      "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+      "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+      "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
+    ],
+    "verified": [
+      "tools/check-unity-assembly-boundaries.ps1 通过：assemblies=21，asmrefs=8",
+      "Unity EditMode 迁移相关测试通过；仅保留两项既有基线失败",
+      "关中基础攻击 PlayMode 迁移测试通过",
+      "check-pending-whitespace、git diff --cached --check、check-review-text 通过",
+      "checkpoint 为基准提交的唯一直接后继，工作树干净"
+    ],
+    "unverified": [
+      "GuanzhongFormalUiTextPlayModeTests.FormalSliceShowsChineseTextFromCharacterCreationToBountyClaim 仍失败：测试直接调用 Character.TakeDamage，未更新 CombatSession。"
+    ],
+    "residualRisk": "未获准扩展候选路径前，正式UI文本 PlayMode 无法按新会话结束战斗，01E2不能闭环。",
+    "taskContextDigest": "834b6cc16f64f551d3b5c29a4d87fa420fce4bd36fa6edb7bd0406fd810342aa",
+    "createdAt": "2026-08-11T20:47:54.4460577+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # U-ARCH-REBUILD-01E2 · 正式调用链原子切换
