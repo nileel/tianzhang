@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-08-12：U-ARCH-REBUILD-01E2 已完成正式调用链原子切换与旧入口零引用证明；恢复遗留删除与阶段 5 总验收。",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01E2A"],
+  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS 已签名选择 B（source=feishu_card；evidenceHash=3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6）；先等待独立前置 U-ARCH-REBUILD-01E2A 清理 4 个未冻结文件中的失效 Core using，再恢复本卡。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -80,3 +80,8 @@
 - 01E2 将承担全部生产与测试切换；本卡只删除冻结的旧源码／`.meta`、收紧 Combat asmdef、更新 README 和程序集边界验证。
 - 父项任务卡／归档、队列与 backlog 已列入 expectedPaths，保证最后一个 blocker 完成时父项直接闭环而不产生新的空 ready 卡。
 - `Combat/Turns/CTBEngine.cs`（`TianZhang.Combat.Turns`，GUID `e9b8528db6e24899ac644e67e408a112`）是 01E1／01E1A 已验收的新内核；本卡只删除 `Core/CTBEngine.cs`（`TianZhang.Core`，GUID `3564ab48a0a06ef4e9110b900398eb49`）。
+
+## 2026-08-12 前置清理决策
+
+- 飞书决策 `DEC-20260812-E3COREIMPORTS` 的签名回复选择 B“另建前置清理任务”；回复来源为 `feishu_card`，证据哈希为 `3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6`。
+- 4 个 Grid／Tilemap 源码路径不加入本卡 `expectedPaths`；它们只由 `U-ARCH-REBUILD-01E2A` 清理并独立提交。本卡在该前置归档后恢复原范围与删除检查点。

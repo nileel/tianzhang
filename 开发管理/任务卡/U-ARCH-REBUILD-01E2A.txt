@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E2A",
+  "title": "旧 Core using 独立清理",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS 已签名选择 B（source=feishu_card；evidenceHash=3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6），先以独立前置切片清理 4 个失效 Core using，再恢复 01E3。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E2A.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E2A.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E3.txt",
+    "src/Assets/Scripts/Grid/HybridTacticalPrototypeController.cs",
+    "src/Assets/Scripts/Grid/HybridTacticalRenderer.cs",
+    "src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs",
+    "src/Assets/Scripts/Tilemap/HexTilemapManager.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E2A · 旧 Core using 独立清理
+
+## 来源与当前边界
+
+- 01E3 删除 `src/Assets/Scripts/Core/CTBEngine.cs` 后，Unity 编译证明 4 个未冻结文件仍有失效的 `using TianZhang.Core;`；这 4 行是旧 Core 命名空间的最后一组编译引用。
+- 负责人在飞书决策 `DEC-20260812-E3COREIMPORTS` 选择 B“另建前置清理任务”；签名回复来源为 `feishu_card`，证据哈希为 `3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6`。
+
+## 必查范围
+
+- 上述 4 个文件的完整 using 区域及 `TianZhang.Core` 符号使用；01E3 任务卡、删除检查点 `bec4d6a2a239213189bdbda0f1ecb172698bb1f1` 和当前 Combat／Core asmdef 边界。
+
+## 实施范围
+
+- 只从以下 4 个现有 `.cs` 文件删除精确的无效行 `using TianZhang.Core;`：
+  - `src/Assets/Scripts/Grid/HybridTacticalPrototypeController.cs`
+  - `src/Assets/Scripts/Grid/HybridTacticalRenderer.cs`
+  - `src/Assets/Scripts/Grid/TilemapTacticalRenderer.cs`
+  - `src/Assets/Scripts/Tilemap/HexTilemapManager.cs`
+- 验证通过后独立归档本卡，并恢复 `U-ARCH-REBUILD-01E3` 为原 `codex_execute/codex/ready`；不得把 4 个源码路径加入 01E3。
+
+## 禁止项
+
+- 不修改这 4 个文件中的任何其他逻辑、格式、命名空间或序列化字段；不修改 `.meta`、Scene、Prefab、asset、CSV、Combat 公式、CTB 数值或 BattleSim 数据。
+- 不删除 Core 类型，不吸收 01E3 删除检查点，不增加兼容层、空 Core 命名空间、fallback 或重试。
+
+## 验证
+
+- 证明业务 diff 只有 4 行 `using TianZhang.Core;` 删除；运行 Unity 编译／完整 EditMode，并只接受已登记的两项基线失败原样存在。
+- 运行 `tools/check-unity-assembly-boundaries.ps1`、任务卡、审核文本、pending whitespace、`git diff --check` 与 staged diff 检查。
+
+## 完成条件
+
+- 4 个文件不再引用 `TianZhang.Core`，没有其他源码变化或新增 Unity 失败；本卡独立提交并归档，01E3 恢复 ready 后再从最新 master 重放原删除检查点。
+
+## 停止条件
+
+- 任一文件仍实际使用 Core 类型、修复需要触及其他逻辑或路径、出现新增 Unity 失败、发现数值语义变化，或无法保持独立提交时停止。
