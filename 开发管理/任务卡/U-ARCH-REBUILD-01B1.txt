@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01B1",
+  "title": "BattleSim 与 Spatial 共享链接补漏",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：负责人在飞书决策 DEC-20260812-E1BSPATIAL 选择 A（OPTION_ACCEPTED，evidenceHash 498afb72b02b8db896f9e68f339de15c8bf9303849dc1de759f6cd2c580e9f34）；先独立修复 01B 漏掉的 BattleSim linked compile 与唯一 Spatial 类型链接，再恢复 01E1B 数值核验。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01B1.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01B1.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E1B.txt",
+    "src/Assets/Scripts/Modules/Spatial/HexCoord.cs",
+    "src/Assets/Scripts/Modules/Spatial/HexCoord.Unity.cs",
+    "src/Assets/Scripts/Modules/Spatial/HexCoord.Unity.cs.meta",
+    "src/Assets/Scripts/Modules/Spatial/README.md",
+    "simulations/BattleSim/BattleSim.csproj",
+    "simulations/BattleSim/Battlefield.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01B1 · BattleSim 与 Spatial 共享链接补漏
+
+## 来源与当前边界
+
+- 01B 已把旧 `Core/SpatialRules` 删除并将唯一 Unity Spatial 类型迁入 `TianZhang.Spatial`，但漏改 `BattleSim.csproj` 与 `Battlefield.cs` 的 linked compile／适配类型；因此 BattleSim 当前在业务代码编译前即因旧文件不存在而失败。
+- 负责人已在飞书决策 `DEC-20260812-E1BSPATIAL` 选择 A：本卡作为独立 01B 补漏切片先完成共享链接修复，不把 Spatial 与 BattleSim 改动叠入 01E1B Combat 检查点。
+
+## 必查范围
+
+- 完整读取 `Modules/Spatial/HexCoord.cs`、`SpatialQueryTypes.cs`、`SpatialQueryBoard.cs` 与 `README.md`；核对 `TianZhang.Spatial.asmdef` 和 `HexCoordTests`／`SpatialQueryBoardTests` 的直接契约。
+- 完整读取 `BattleSim.csproj`；读取 `Battlefield.cs` 中 `HexBattlefield` 对共享 Spatial 的全部调用、`BuildSpatialBoard`、坐标映射和稳定原因映射；扫描 BattleSim 内部 `HexCoord` 的调用面，确认本卡只改共享查询适配，不改模拟输入模型或数值算法。
+- 读取 `开发管理/2.5D共享空间查询契约对齐方案.txt` 中共享纯源、BattleSim linked compile 与显式坐标映射边界，以及归档 01B 的唯一 Spatial 完成事实。
+
+## 实施范围
+
+- 保留 `HexCoord.cs.meta` 的既有 GUID，把 `HexCoord` 改为 partial：纯坐标、邻接、距离、方向与 `SpatialDirectedEdge` 留在不引用 `UnityEngine` 的原文件；`Vector2Int`／`Vector3`／`Mathf` 转换原样移动到新增 `HexCoord.Unity.cs`，保持 Unity 侧公开 API 和计算语义不变。
+- `BattleSim.csproj` linked compile 改为直接消费 `Modules/Spatial` 下的纯 `HexCoord.cs`、`SpatialQueryTypes.cs`、`SpatialQueryBoard.cs`；不得复制共享源码或引用 Unity DLL／asmdef。
+- `Battlefield.cs` 的共享别名和映射从已删除的 `TianZhang.Core.SpatialRules.SpatialHexCoord` 机械迁到 `TianZhang.Spatial.HexCoord`；保留 `BattleSim.HexCoord` 作为既有模拟输入坐标，并继续只在共享查询边界显式映射。
+- README 明确纯共享文件与 Unity 转换 partial 的边界。
+
+## 禁止项
+
+- 不修改 Combat、Character、CTB、Gameplay、场景、Prefab、asset、CSV、数值公式、BattleSim fixture／测试期望或共享查询算法。
+- 不重新建立 `Core/SpatialRules`、`SpatialHexCoord`、兼容 namespace、复制实现、条件编译或 Unity DLL 依赖；不把 BattleSim 内部坐标全面迁移成新的跨项目重构。
+
+## 验证
+
+- 运行 `dotnet build -c Release --no-restore simulations/BattleSim`，再运行 `environment-rules-n-env-01`、`distance-model-tq055` 两项 self-test 与完整 `dotnet run --no-build -c Release --project simulations/BattleSim`。
+- 运行 `tools/check-unity-assembly-boundaries.ps1`；Unity EditMode 至少覆盖 `HexCoordTests`、`SpatialQueryBoardTests`，并运行完整 EditMode，失败集合不得超过已登记的两项基线。
+- 零引用扫描确认 BattleSim 不再引用 `Core/SpatialRules`／`SpatialHexCoord`；运行任务卡、审核文本、pending whitespace 与 staged diff 检查。
+
+## 完成条件
+
+- BattleSim 从当前仓库可构建并运行，linked compile 只消费 `Modules/Spatial` 的同一份纯查询源码；Unity 的坐标转换 API 与空间查询结果不变；01E1B 可恢复并执行其 BattleSim 数值核验。
+
+## 停止条件
+
+- 纯／Unity 拆分必须改变现有公开 API 或计算结果，BattleSim 需要修改 fixture／数值算法，发现新的 expectedPaths 外直接链接遗漏，或 Unity／BattleSim 出现新增回归时停止并报告，不继续扩大范围。

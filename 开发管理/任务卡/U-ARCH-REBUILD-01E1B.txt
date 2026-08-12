@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-08-12：纯 Combat 实现已保存为隔离分支检查点 b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab，Unity EditMode 464/462/2 且仅保留两项既有失败；BattleSim build 暴露 01B 遗留的 Core/SpatialRules 已删而 csproj/适配器仍引用旧类型，等待负责人通过 DEC-20260812-E1BSPATIAL 决定独立修复边界。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-ARCH-REBUILD-01B1"
+  ],
+  "stateReason": "2026-08-12：负责人已在飞书决策 DEC-20260812-E1BSPATIAL 选择 A；纯 Combat 检查点 b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab 保持不动，等待独立前置 U-ARCH-REBUILD-01B1 修复 BattleSim 与 Spatial 共享链接后再恢复数值核验。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
