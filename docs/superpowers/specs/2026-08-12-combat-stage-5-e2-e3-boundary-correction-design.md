@@ -241,3 +241,11 @@ Files explicitly not touched: 新 Combat 内核、Combat/Turns、Scene、Prefab�
 3. 01E2 完成后再执行 01E3 删除与阶段 5 总验收。
 
 01E1B 完成表示纯 Combat 内核已逐项覆盖现行功法战斗数值语义，且 01E2 不再需要修改纯内核。原文关于 01E2／01E3 不修改公式、BattleSim 数据或新内核的限制从此点继续生效；最终三项业务提交均不得包含 Scene／Prefab／asset／CSV／BattleSim 数据变化。
+
+## 十二、2026-08-12 阶段 5 完成证据
+
+- 两轮冻结外无效 import 已按负责人决策独立处理：`DEC-20260812-E3COREIMPORTS` 选择 B，形成并归档 01E2A；`DEC-20260812-E3COREIMPORTS2` 选择 A，形成并归档 01E2B。两个切片都只删除 `using TianZhang.Core;`，未扩大 01E3 `expectedPaths`。
+- 01E3 删除检查点重放为 `92a63e515786d91ba9c8b01a7561efe8a0716f76`：旧 `TacticalCombatController`、`CombatResolver`、`DamageCalculator`、Core `CTBEngine` 及 `.meta` 删除；`Character.CTBUnit` 与旧 AI 编译残件清零；Combat asmdef 只保留 Foundation、Spatial、Combat.Turns。
+- 全仓 `src/` 旧类型、`TianZhang.Core` 完整命名空间、`Character.CTBUnit`、4 个旧 GUID、Unity Scene／Prefab／asset／controller／anim、Resources／registry 引用均为零。`Combat/Turns/CTBEngine.cs` 与 GUID `e9b8528db6e24899ac644e67e408a112` 保留。
+- 完整 Unity EditMode 为 448 项：446 通过，失败精确保持两项登记基线；完整 PlayMode 5/5 通过。程序集边界检查通过，结果为 21 个 asmdef、8 个 asmref。
+- 本阶段没有修改 Scene、Prefab、asset、CSV、BattleSim、战斗公式、CTB 数值或新 Combat 内核；01E3 与父项 01E 同批归档，01F 不在本批修改或解阻塞范围。

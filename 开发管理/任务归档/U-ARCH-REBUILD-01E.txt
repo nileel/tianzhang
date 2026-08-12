@@ -1,0 +1,57 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E",
+  "title": "Combat、CTB 与战术运行时父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：01E1、01E1A、01E1B、01E2、01E2A、01E2B 与 01E3 全部完成；新 Combat 内核成为唯一生产可达战术运行时，阶段 5 完整验收通过。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E · Combat、CTB 与战术运行时父项
+
+## 来源与当前边界
+
+- 对应架构设计阶段 5；父项汇总 01E1、01E1A、01E1B、01E2、01E2A、01E2B 与 01E3，不直接修改源码。
+
+## 必查范围
+
+- 全部子卡归档、验证结果与架构证据；任务重划设计、两轮负责人 Core import 决策和阶段 5 完成证据。
+
+## 实施范围
+
+- 纯 Combat 内核、切换就绪契约、数值等价、正式调用链、两批无效 Core import 清理、旧运行时删除与总验收全部由对应子卡独立完成。
+
+## 禁止项
+
+- 未建立新旧生产双运行、旧控制器 adapter、runtime feature flag、临时公式、fallback 或自动重试／恢复层。
+
+## 验证
+
+- 逐项核对全部子卡完成归档、Unity／程序集验证、旧引用清零、数值语义与 BattleSim 边界，并运行父项、backlog 与队列投影检查。
+
+## 完成条件
+
+- 全部子任务完成；新 Combat 内核是唯一生产可达战术运行时；旧 Hub、Core CTB、Character CTB 所有权及全部引用删除；阶段 5 验收通过。
+
+## 停止条件
+
+- 子任务未完成、新增验证失败、兼容层／双运行／临时公式需求或 BattleSim 数值语义变化；关闭时均未触发。
+
+## 完成证据
+
+- 01E1、01E1A、01E1B、01E2、01E2A、01E2B、01E3 均存在 `completed` 归档；01E3 完整 EditMode 仅保留两项登记基线失败，PlayMode 5/5，程序集边界与全仓旧引用清零通过。
+- Combat asmdef 只依赖 Foundation、Spatial、Combat.Turns；新 Turns CTB 与稳定 GUID 保留，旧运行时路径与 GUID 清零。
+- 本父项与 01E3 同批归档；01F 未在本批修改或解阻塞。

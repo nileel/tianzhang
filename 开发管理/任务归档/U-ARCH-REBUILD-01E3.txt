@@ -1,0 +1,80 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E3",
+  "title": "旧运行时删除与阶段 5 总验收",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：旧战术 Hub、Resolver、DamageCalculator、Core CTB、Character CTB 所有权与旧 AI 残件已删除；完整 EditMode 446/448 仅保留两项登记基线失败，PlayMode 5/5、程序集边界与全仓旧引用清零验收通过。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E3.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E3.txt",
+    "docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md",
+    "src/Assets/Scripts/Combat/CombatResolver.cs",
+    "src/Assets/Scripts/Combat/CombatResolver.cs.meta",
+    "src/Assets/Scripts/Combat/DamageCalculator.cs",
+    "src/Assets/Scripts/Combat/DamageCalculator.cs.meta",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs.meta",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Scripts/Combat/README.md.meta",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs",
+    "src/Assets/Scripts/Combat/TacticalCombatController.cs.meta",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef",
+    "src/Assets/Scripts/Combat/TianZhang.Combat.asmdef.meta",
+    "src/Assets/Scripts/Core/CTBEngine.cs",
+    "src/Assets/Scripts/Core/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "tools/check-unity-assembly-boundaries.ps1"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E3 · 旧运行时删除与阶段 5 总验收
+
+## 来源与当前边界
+
+- 对应阶段 5 遗留删除与总验收；冻结外无效 Core import 已由 01E2A、01E2B 按飞书决策独立清理，未加入本卡 `expectedPaths`。
+
+## 必查范围
+
+- 旧 Hub、Resolver、DamageCalculator、Core CTB、Character CTB、旧 AI、程序集依赖，以及全仓 C#、Scene、Prefab、资源、GUID、测试和检查器引用。
+
+## 实施范围
+
+- 删除旧 `TacticalCombatController`、`CombatResolver`、`DamageCalculator`、Core `CTBEngine` 及 `.meta`；删除 `Character.CTBUnit`、`IAIController`、`SimpleAI` 和旧 `TryResolve`；收紧 Combat asmdef 并更新 README、程序集测试、检查器和阶段证据。
+
+## 禁止项
+
+- 未修改伤害倍率、CTB 数值、范围规则、BattleSim、Scene、Prefab、asset 或 CSV；未增加兼容 adapter、双运行、空 Core 命名空间、fallback 或临时公式。
+
+## 验证
+
+- 完整 Unity EditMode、完整 PlayMode、程序集边界、旧类型／命名空间／GUID／序列化与资源注册扫描、任务卡、审核文本、pending whitespace、`git diff --check` 与 staged diff。
+
+## 完成条件
+
+- 旧运行时和全部引用清零；新 Combat 内核为唯一生产可达路径；Combat 不引用 Domain、Content、Character 或 Feature；阶段 5 验收通过并与父项 01E 同批归档。
+
+## 停止条件
+
+- 生产或序列化旧入口、新增测试失败、兼容层需求、数值语义变化或范围越界；最终验收均未触发。
+
+## 完成证据
+
+- 删除检查点：`92a63e515786d91ba9c8b01a7561efe8a0716f76`；14 个变更路径全部在冻结 `expectedPaths` 内。
+- `src/` 旧类型、`TianZhang.Core`、`Character.CTBUnit`、4 个旧 GUID、Scene／Prefab／asset／controller／anim、Resources／registry 引用均为零；旧源码和 `.meta` 路径不存在。
+- `TianZhang.Combat.Turns.CTBEngine` 与 GUID `e9b8528db6e24899ac644e67e408a112` 保留；Combat asmdef 依赖精确为 Foundation、Spatial、Combat.Turns。
+- Unity EditMode：448 总计、446 通过，仅两项登记基线失败；PlayMode：5/5；程序集边界：21 asmdef、8 asmref。
