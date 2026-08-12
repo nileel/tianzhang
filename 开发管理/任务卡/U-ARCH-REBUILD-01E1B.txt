@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-12：负责人已在飞书决策 DEC-20260812-E2KERNELPARITY 选择 A；先补齐纯 Combat 内核对现行功法战斗数值语义的等价表达并迁移直接数值测试，再恢复 01E2 正式切换。",
+  "stateReason": "2026-08-12：纯 Combat 实现已保存为隔离分支检查点 b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab，Unity EditMode 464/462/2 且仅保留两项既有失败；BattleSim build 暴露 01B 遗留的 Core/SpatialRules 已删而 csproj/适配器仍引用旧类型，等待负责人通过 DEC-20260812-E1BSPATIAL 决定独立修复边界。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -63,3 +63,9 @@
 ## 停止条件
 
 - 发现新的未冻结生产数值语义、需要修改 expectedPaths 外文件、BattleSim 当前结论与旧 Unity 事实冲突、必须改变现行公式／倍率，或出现新增 Unity 回归失败时停止并形成新的单一决策，不在本卡叠补。
+
+## 2026-08-12 BattleSim 验证阻塞
+
+- 纯 Combat 改动已保存为隔离分支 `codex/u-arch-rebuild-01e1b` 的干净检查点 `b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab`；定向 `CombatRuntimeKernelTests` 23/23，通过完整 EditMode 464 项中的 462 项，失败仍仅为已登记的两项基线；程序集边界检查通过。
+- BattleSim 在任何本卡代码进入构建前即因 `BattleSim.csproj` 仍编译已由 01B 删除的 `Core/SpatialRules/SpatialHexCoord.cs`、`SpatialQueryTypes.cs`、`SpatialQueryBoard.cs` 而失败。`Battlefield.cs` 同时仍引用旧 namespace／`SpatialHexCoord`；新的唯一 `TianZhang.Spatial.HexCoord` 又包含 UnityEngine 转换，无法靠单改 csproj 机械接入纯 .NET。
+- 修复至少需要跨 `simulations/BattleSim/BattleSim.csproj`、`Battlefield.cs` 与 `Modules/Spatial/HexCoord.cs` 的纯核／Unity 转换边界，均在本卡禁止项或 expectedPaths 之外。依据停止条件，本卡转为 `pending_decision`，不把该修复叠进现有 Combat 检查点。
