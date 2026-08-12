@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "completed",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-13：五个 Feature、唯一持久 Bootstrap、四个逐场景 Installer、拆分 Builder、角色新建／旧档入口、可扩展 Adventure 与 CombatPresentation 已完成；增量验收全过，全量 PlayMode 5/5，通过数据链、资产版本与程序集边界检查。全量 EditMode 403/404，唯一失败为迁移前已存在且本轮源码未变的 CharterConflictRules 基线。",
+  "stateReason": "2026-08-13：正式提交 02b036dec93807d010d08dc71e57e1fbbd8b703d 独立架构复审不通过；Adventure 正式结算丢失一次性消费闸门，且原正式薄切片 EditMode／PlayMode 端到端闸门被局部契约测试替代。任务保持 blocked，等待负责人选择返工责任方。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -353,3 +353,11 @@
 
 - `ContentImportCoordinator.cs` 仍是既有 6064 行数据导入协调器，本轮只接入 Adventure 目录调用且未继续加入场景／Feature 职责；领域导入已由独立 `AdventureContentImporter` 持有。
 - 移动后的 `CharterRuleRuntime.cs`（579 行）与 `CharterSiteInteractionRuntime.cs`（783 行）保持既有纯册界状态机／确定性交互逻辑，未新增无关职责；拆分会增加状态传递边，因此本阶段只迁移所有者。
+
+## 独立架构复审结论（2026-08-13）
+
+- 审核对象：正式提交 `02b036dec93807d010d08dc71e57e1fbbd8b703d`；结论：不通过。
+- 阻断问题 1：`AdventureController.ResolveEncounter` 未保留旧正式入口的 `formalEncounterConsumed`／`FormalEncounterRules.AlreadyConsumedReason` 一次性消费闸门；同一结算被再次调用时会再次执行掉落授予，不满足“悬赏／掉落结果只消费一次”。
+- 阻断问题 2：原 `GuanzhongFormalEndToEndTests` 与三个正式 PlayMode 文件的大型生产链用例被替换为节点注册、缺失输入和 HUD 所有者等局部测试；当前 5/5 PlayMode 不覆盖新建／读档、世界、据点、接悬赏、Adventure、战斗命令、结算、返回、领奖和保存读取的正式薄切片。
+- 返工边界：只恢复新架构下的一次性正式结算闸门和直接端到端验证；不得恢复 `GameManager`、`SceneFlowManager`、`ExplorationController`、`BattleUIManager` 或旧新双轨。
+- 本轮验证：Unity 刷新后 `dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 error）；程序集边界、严格数据链、审核文本检查通过；Unity EditMode 403/404，唯一失败仍为已登记的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 基线；PlayMode 5/5 通过但不含上述正式薄切片。

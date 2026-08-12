@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-13：U-ARCH-REBUILD-01G 已完成并归档；仍等待对正式提交的独立架构复审。复审通过后须实时扫描并展开完整删除／新增／.meta／验证 expectedPaths，才可转 ready。",
+  "blockedBy": ["U-ARCH-REBUILD-01G"],
+  "stateReason": "2026-08-13：U-ARCH-REBUILD-01G 正式提交独立架构复审不通过，须先恢复正式结算一次性消费闸门与新架构正式薄切片端到端验证并通过复审；01H 继续 blocked，不展开执行路径。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -52,5 +52,5 @@
 
 ## 2026-08-13 解阻塞状态
 
-- 命名前置 `U-ARCH-REBUILD-01G` 已完成归档，因此从 `blockedBy` 移除。
-- 当前仍等待对 01G 正式提交的独立架构复审；本卡现有四个管理路径不构成可执行合同。复审通过后须基于实时仓库展开全部删除、新增、`.meta`、结构文档与验证路径，再判断是否可转 ready。
+- `U-ARCH-REBUILD-01G` 正式提交独立架构复审不通过，已恢复为 blocked 活跃卡并重新加入 `blockedBy`。
+- 本卡现有四个管理路径不构成可执行合同；只有 01G 返工并再次通过独立架构复审后，才基于实时仓库展开全部删除、新增、`.meta`、结构文档与验证路径并重新判断是否可转 ready。
