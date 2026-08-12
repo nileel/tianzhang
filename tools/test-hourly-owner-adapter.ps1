@@ -15,7 +15,7 @@ Assert-True (-not (Test-HourlyOwnerModelVerified -Owner codex -Model '')) 'Empty
 Assert-True (Test-HourlyOwnerModelVerified -Owner deepseek -Model 'unknown') 'DeepSeek was incorrectly routed through the Codex model guard'
 Assert-Equal $codex.model 'gpt-test' 'Codex model was not preserved'
 Assert-Equal ($codex.allowedRoutes -join ',') 'codex_execute,codex_review,queue_maintenance' 'Codex routes are invalid'
-Assert-Equal $deepseek.model 'deepseek-v4-flash' 'DeepSeek model is invalid'
+Assert-Equal $deepseek.model 'deepseek-v4-pro' 'DeepSeek model is invalid'
 Assert-Equal ($deepseek.allowedRoutes -join ',') 'external_execute' 'DeepSeek route is invalid'
 Assert-True ($deepseek.formalMode -eq 'external_pending_review') 'DeepSeek formal mode is invalid'
 

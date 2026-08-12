@@ -20,7 +20,7 @@ Set-StrictMode -Version Latest
 
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $capturedSessionId = $null
-$modelName = 'deepseek-v4-flash'
+$modelName = 'deepseek-v4-pro'
 $script:stage = 'initialize'
 . (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 
@@ -149,7 +149,7 @@ function New-CandidatePrompt {
     "TaskId: $TaskId"
     "RunId: $RunId"
     'Owner: deepseek'
-    'Identity: DeepSeek V4 Flash'
+    'Identity: DeepSeek V4 Pro 0813'
     "Model: $modelName"
     "RepositoryRoot: $script:resolvedRepositoryRoot"
     "CandidatePaths: $pathText"
@@ -178,7 +178,7 @@ function New-CanaryPrompt {
     'Read AGENTS.md and CLAUDE.md from the current repository.'
     'Do not read the task queue, claim work, modify files, create commits, or invoke another agent.'
     'Run exactly this harmless PowerShell probe: pwsh -NoProfile -ExecutionPolicy Bypass -Command "Write-Output TZG_DEEPSEEK_PWSH_CANARY"'
-    'Return only the supplied structured object with status=verified, identity=DeepSeek V4 Flash, model=deepseek-v4-flash, and pwshProbe=TZG_DEEPSEEK_PWSH_CANARY.'
+    'Return only the supplied structured object with status=verified, identity=DeepSeek V4 Pro 0813, model=deepseek-v4-pro, and pwshProbe=TZG_DEEPSEEK_PWSH_CANARY.'
   ) -join "`n"
 }
 
@@ -323,7 +323,7 @@ function Assert-CandidateEvidence {
   foreach ($field in @('identity', 'model', 'candidateCommit', 'expectedTransition', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'result', 'impact', 'verify', 'plain')) {
     if ($Terminal.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_invalid_terminal' }
   }
-  if ([string]$Terminal.identity -cne 'DeepSeek V4 Flash' -or [string]$Terminal.model -cne $modelName) { Stop-DeepSeek 'deepseek_identity_mismatch' }
+  if ([string]$Terminal.identity -cne 'DeepSeek V4 Pro 0813' -or [string]$Terminal.model -cne $modelName) { Stop-DeepSeek 'deepseek_identity_mismatch' }
   if ([string]$Terminal.expectedTransition -cne 'codex_review/codex/ready') { Stop-DeepSeek 'deepseek_transition_invalid' }
   $candidateCommit = [string]$Terminal.candidateCommit
   if ($candidateCommit -cnotmatch '^[0-9a-f]{40,64}$') { Stop-DeepSeek 'deepseek_candidate_invalid' }
@@ -369,7 +369,7 @@ function Assert-DecisionCheckpoint {
     )) {
     if ($Terminal.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_invalid_terminal' }
   }
-  if ([string]$Terminal.identity -cne 'DeepSeek V4 Flash' -or [string]$Terminal.model -cne $modelName) { Stop-DeepSeek 'deepseek_identity_mismatch' }
+  if ([string]$Terminal.identity -cne 'DeepSeek V4 Pro 0813' -or [string]$Terminal.model -cne $modelName) { Stop-DeepSeek 'deepseek_identity_mismatch' }
   if ([string]$Terminal.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { Stop-DeepSeek 'deepseek_decision_invalid' }
   $commit = [string]$Terminal.candidateCommit
   if (
@@ -425,7 +425,7 @@ try {
     $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CanaryPrompt)
     if (
       [string]$terminal.status -cne 'verified' -or
-      [string]$terminal.identity -cne 'DeepSeek V4 Flash' -or
+      [string]$terminal.identity -cne 'DeepSeek V4 Pro 0813' -or
       [string]$terminal.model -cne $modelName -or
       [string]$terminal.pwshProbe -cne 'TZG_DEEPSEEK_PWSH_CANARY'
     ) { Stop-DeepSeek 'deepseek_canary_identity_mismatch' }
@@ -433,7 +433,7 @@ try {
       Stop-DeepSeek 'deepseek_canary_modified_repository'
     }
     $result = [ordered]@{
-      status = 'verified'; identity = 'DeepSeek V4 Flash'; model = $modelName
+      status = 'verified'; identity = 'DeepSeek V4 Pro 0813'; model = $modelName
       providerEndpointCategory = 'local_deepseek_gateway'; sessionId = $capturedSessionId
       pwshMajor = $PSVersionTable.PSVersion.Major; pwshProbe = 'TZG_DEEPSEEK_PWSH_CANARY'; git = 'available'
     }
@@ -476,7 +476,7 @@ try {
       'completed' {
         $candidateResult = Assert-CandidateEvidence -Terminal $terminal -CandidatePaths $candidatePaths -BaseCommit ([string]$run.baseCommit) -CandidateBranch ([string]$run.candidateBranch)
         $result = [ordered]@{
-          status = 'completed'; taskId = $TaskId; runId = $RunId; identity = 'DeepSeek V4 Flash'
+          status = 'completed'; taskId = $TaskId; runId = $RunId; identity = 'DeepSeek V4 Pro 0813'
           model = $modelName; sessionId = $capturedSessionId; candidateCommit = [string]$terminal.candidateCommit
           candidateResult = $candidateResult
         }

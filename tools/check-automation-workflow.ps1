@@ -78,7 +78,7 @@ Assert-Contract ([regex]::Matches($combinedValidation, [regex]::Escape('Push-Loc
 Assert-Contains $combinedValidation 'combined validation' @('$dataChainExitCode = $LASTEXITCODE', "Stop-Hourly 'hourly_data_chain_failed'")
 $taskState = Read-Utf8 (Join-Path $root 'tools/set-task-automation-state.ps1')
 Assert-Contains $taskState 'task state transition' @('RequeueReview', 'review_rework', 'ExternalDispatchReady', 'CodexDispatchReady')
-Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-flash', 'Test-HourlyOwnerModelVerified')
+Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-pro', 'Test-HourlyOwnerModelVerified')
 Assert-DoesNotContain $adapter 'owner adapter' @('git ', 'hourly-automation-lease.ps1', 'Enter-TzgIntegrationLock', 'CompleteRun')
 
 $rules = Read-Utf8 (Join-Path $root '开发管理/自动工作流规则.txt')

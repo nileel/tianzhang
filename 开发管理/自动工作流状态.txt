@@ -9,6 +9,7 @@
 - 旧 controller v2、schema 3 长业务租约、通用 external wrapper 生产入口、机器任务注册表、manifest 和中央状态机均退出活动路径。
 - 两个 owner 各自在 `.worktrees/automation/<runId>/<owner>` 形成 candidate／canonical；共享进程持有型排他锁只保护一次核验与 fast-forward，不再把短时集成租约写入 runtime。
 - DeepSeek 正式结果仍是连续的 `businessCommit` 与仅含交接登记的 `handoffCommit`，后者不重复统计；审核前不解锁依赖。
+- 2026-08-13：已确认 `codex-hourly-worker`、DeepSeek 薄触发器、日报和周报的 automation 配置模型均为 `gpt-5.6-terra`；DeepSeek candidate adapter 已由 `deepseek-v4-flash` 切换为 `deepseek-v4-pro`。真实 canary 返回 `DeepSeek V4 Pro 0813`，并核验私有 runtime 隔离、主工作区 HEAD 不变、两个 owner run 为空且集成锁空闲。写入 automation 当前仍按实时配置保持暂停。
 
 ## 当前人工阻塞与恢复所有权
 

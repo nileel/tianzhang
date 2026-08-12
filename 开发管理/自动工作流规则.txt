@@ -23,7 +23,7 @@
 - `tools/hourly-owner-adapter.ps1` 只定义 owner 的 route、candidate 启动脚本、模型／身份和正式结果合同。adapter 不读写 runtime，不含 Git 集成、通知或清理逻辑。
 - Codex candidate 通过 `tools/invoke-codex-candidate.ps1` 和 `tools/codex-cli-session.ps1` 启动；必须使用 `codex exec --output-schema` 与 `--output-last-message` 的私有结构化终态，不从自然语言正文猜测状态。
 - Codex candidate 正常完成提交后，最终 `changedPaths` 只按 run 的 `baseCommit..HEAD` 执行 `git -c core.quotepath=false diff --name-only --no-renames` 生成并排序去重；文件移动必须同时报告源路径和目标路径，不得用 `git show --name-only`、rename detection 或其他压缩表示替代。共享入口继续按同一口径计算真实集合并要求终态精确相等。
-- DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway 和 `deepseek-v4-flash`，身份或模型不符立即停止。
+- DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway 和 `deepseek-v4-pro`（当前 API 版本 `DeepSeek-V4-Pro-0813`），身份或模型不符立即停止。
 - 每个 run 的项目拥有 worktree 固定为 `.worktrees/automation/<runId>/<owner>`。责任方只能在该 worktree 的 candidate branch 实施、验证并形成一个与 run、base、changed paths 和 candidateResult 精确绑定的提交。
 
 ## 最新 master 重放、验证与正式提交

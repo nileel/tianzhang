@@ -1,6 +1,6 @@
 ﻿# AI协作规则
 
-当本项目同时使用 Codex / ChatGPT5.5 与 DeepSeek V4 Flash 时，按本文件分工。用户当次明确指令优先，但不得违反 `AGENTS.md`。
+当本项目同时使用 Codex（小时自动化实际模型为 GPT-5.6 Terra）与 DeepSeek V4 Pro 0813 时，按本文件分工。用户当次明确指令优先，但不得违反 `AGENTS.md`。
 
 ## 总原则
 
@@ -14,35 +14,35 @@
 
 ## 主责
 
-### Codex / ChatGPT5.5
+### Codex / GPT-5.6 Terra
 
-- 未决需求、跨文档系统语义、核心架构、公共接口和数据所有者的定稿。
-- 任务拆分、优先级、风险边界、验收条件，以及 BattleSim→Unity 同步策略。
-- BattleSim 数值目标与最终结论、存档／安全／自动化控制面的方案和恢复决策。
-- DeepSeek 交付的独立复审、冲突裁决和高风险结果签收。
+- 未决需求、跨事实源产品语义、公共接口和数据所有者的最终裁决；仍有不可逆歧义时交负责人决定，不由模型猜测。
+- 任务拆分、优先级、授权路径、风险与回滚边界、验收条件，以及 BattleSim→Unity 同步策略。
+- 需要图像输入、场景／UI／美术判断、运行时可见证据或非自动化体验验收的工作。
+- DeepSeek 技术候选的独立复审、集成控制、冲突裁决和高风险结果签收。
 
-### DeepSeek V4 Flash
+### DeepSeek V4 Pro 0813
 
 - 按规范批量生产内容；每项完成品单独成文件。
 - 文档清洗、CSV / Language / asset 对齐、机械一致性检查。
-- 事实源、设计和验收条件已锁定的 Unity / BattleSim / 工具实现、bug fix、重构与迁移；不再按规模或跨文件数量限制，直接 build / test 必须闭合。
-- 跨文件、跨模块 Code Agent 根因诊断与实施、全链回归、边界用例、批量迁移和素材规模扩展。
+- 输出以文本、代码或数据为主且可由 diff、build、test、BattleSim 或确定性检查闭环的 Unity / BattleSim / 工具实现、bug fix、重构与迁移；不按规模、跨文件数量或表面难度限制。
+- 跨文件、跨模块 Code Agent 根因诊断与实施、技术方案候选、全链回归、边界用例、批量迁移和素材规模扩展。
 - 在 Codex 已冻结 schema、回滚边界和验收矩阵后，执行存档、安全或自动化控制面中的明确实现切片；完成后必须交 Codex 独立复审。
 
 ### 能力校准后的分派边界
 
-- 官方 2026-07-31 更新将 API 实际版本升级为 `DeepSeek-V4-Flash-0731`，模型名仍为 `deepseek-v4-flash`；官方给出的 Agent 成绩包括 Terminal Bench 2.1 82.7、NL2Repo 54.2、DeepSWE 54.4、Toolathlon verified 70.3、Automation Bench 25.1，并明确说明远超 V4-Pro-Preview。公开 Code Agent 基准使用 DeepSeek Harness 极简模式、`max`、`top_p=0.95`、`temperature=1.0`；本项目 Claude CLI 调用保持 `max`，其余两项只视为该基准口径，不作为 Anthropic 兼容调用的必需路由参数。
-- 依据 2026-07-31 `DeepSeek-V4-Flash-0731` 正式版的 Agent 能力校准：只要任务卡已冻结事实源、目标语义、授权路径、停止条件和可运行验收，就默认 `external_execute / deepseek`；适用于小型到大型、单模块到跨模块的代码与数据工作。
-- Codex 默认不再保留已锁定规格下的实现主责，只保留未决架构／语义／所有者选择、任务拆分、数值目标与结论、高风险恢复决策及最终复审。存档、安全和自动化控制面可由 DeepSeek 执行，但必须先由 Codex 锁定方案、回滚与验收，且不得由 DeepSeek 自审。
-- 任务实施中若发现必须改变已锁定语义、扩大授权路径或重新选择所有者，DeepSeek 立即停止并交回 Codex，不叠加兼容分支或自行重构工作流。
+- 截至 2026-08-13，小时 Codex automation 的实际模型为 `gpt-5.6-terra`；官方定位是兼顾智能与成本、约等于旧 GPT-5 家族 mini 档，支持 1.05M 上下文、图像输入和完整工具链。DeepSeek API 的 `deepseek-v4-pro` 已映射到 `DeepSeek-V4-Pro-0813`，支持 1M 上下文、384K 最大输出、思考模式、工具调用和 Anthropic API。公开首发 Agent 数据显示其代码代理能力显著强于旧 Flash，但在独立复现完成前只作为路由依据，不替代本项目 canary 与任务验收。
+- 输出主要是文本、代码或数据，且预期路径、停止条件和可运行验收可以冻结时，默认 `external_execute / deepseek`；即使需要复杂根因诊断、跨模块改动或较长上下文，也不因“难”而自动改派 Terra。
+- 验收依赖视觉／体验判断、运行时可见证据、跨事实源产品语义裁决、任务编排、正式集成或独立复审时，默认 `codex_execute / codex` 或 `codex_review / codex`。Terra 不因任务规模而接管可机器验收的实现，DeepSeek 也不以代码能力替代产品裁决和独立复审。
+- 核心架构、公共接口、存档、安全和自动化控制面可由 DeepSeek 先做根因分析、技术候选和明确切片实现；Codex 冻结所有者、schema、回滚与验收并独立签收。若技术实施要求改变已锁定语义、扩大授权路径或重新选择所有者，DeepSeek 立即停止交回，不叠加兼容分支或自行重构工作流。
 
 ### Claude CLI / WF3-CLAUDE-ONE
 
 WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI 仅有 DeepSeek / Claude 执行范围，不是 Codex 主责角色：
 
-1. 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Flash`，不得自称 Codex 或 Claude。
+1. 先读取当前进程的 `ANTHROPIC_BASE_URL`；为空时只补读 `~/.claude/settings.json` 的同名字段。`http://127.0.0.1:15721` 同源地址（含 `/claude-desktop` 路径）的实际身份与修改方统一为 `DeepSeek V4 Pro 0813`，不得自称 Codex 或 Claude。
 2. 其他 Claude CLI 环境的实际身份与修改方为 Claude Code。
-3. 普通选题只消费 `route=external_execute`、`dispatchState=ready` 且 owner 与执行器一致的有序队列卡；映射固定为 `owner=deepseek -> DeepSeek V4 Flash`、`owner=claude -> native Claude Code`。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
+3. 普通选题只消费 `route=external_execute`、`dispatchState=ready` 且 owner 与执行器一致的有序队列卡；映射固定为 `owner=deepseek -> DeepSeek V4 Pro 0813`、`owner=claude -> native Claude Code`。原生 Claude Code 读取 `开发管理/DeepSeek工作提示词.txt` 时，只继承任务路由、边界和交接格式。
 4. `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 行为。
 5. 手动选题前在输出与 automation memory 记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；无合格候选则记录 `skipped_cleanly` 后退出，不改项目文件或创建替代任务。
 
@@ -73,11 +73,11 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ## 快捷工作流：`1` / `2`
 
-当用户消息去除首尾空白后严格等于 `1` 时，按有序队列推进一个当前 AI 可执行的执行型任务，不做复审。当消息严格等于 `2` 时，Codex / ChatGPT5.5 按有序队列推进一个复审任务；DeepSeek 只可补齐交接材料，不得自审。其他消息按用户明确要求执行。
+当用户消息去除首尾空白后严格等于 `1` 时，按有序队列推进一个当前 AI 可执行的执行型任务，不做复审。当消息严格等于 `2` 时，Codex / GPT-5.6 Terra 按有序队列推进一个复审任务；DeepSeek 只可补齐交接材料，不得自审。其他消息按用户明确要求执行。
 
 ### 通用步骤
 
-1. 先确认身份：Codex / ChatGPT5.5 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；每小时共享入口经 `tools/codex-cli-session.ps1` 启动的 Codex 责任方使用 adapter 以 `-Model` 和首条 stdin 输入传递的核验结果，不因 `codex exec` 不继承 request metadata 而重复阻塞；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
+1. 先确认身份：Codex 通过 Node REPL 读取 `nodeRepl.requestMeta['x-codex-turn-metadata'].model`；每小时共享入口经 `tools/codex-cli-session.ps1` 启动的 Codex 责任方使用 adapter 以 `-Model` 和首条 stdin 输入传递的核验结果，不因 `codex exec` 不继承 request metadata 而重复阻塞；DeepSeek 按 `开发管理/DeepSeek工作提示词.txt` 的身份锚定；WF3-CLAUDE-ONE 还执行本文件的身份与授权自检。
 2. 纯 `1` / `2` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`；选中行后读取同一 ID 的 `开发管理/任务卡/<ID>.txt`。纯 `2` 再按审核入口加载该项需要的未通过条目、交接证据和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
 4. 纯 `1` 从队首向后选择当前 AI 可执行的第一项 `codex_execute` 或 `external_execute`；不消费 `codex_review`。
@@ -91,8 +91,8 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 
 ### 角色例外
 
-- Codex / ChatGPT5.5 的 `1` 按队列顺序处理其主责执行型任务，不消费 `codex_review`；其自产工作完成必要验证后可闭环。
-- Codex / ChatGPT5.5 的 `2` 按队列顺序处理第一项 `codex_review`；通过后按审核规则关闭，未通过则更新未通过清单。
+- Codex / GPT-5.6 Terra 的 `1` 按队列顺序处理其主责执行型任务，不消费 `codex_review`；其自产工作完成必要验证后可闭环。
+- Codex / GPT-5.6 Terra 的 `2` 按队列顺序处理第一项 `codex_review`；通过后按审核规则关闭，未通过则更新未通过清单。
 - DeepSeek 的 `1` 只做其主责执行型任务；所有修改标为未审核，按外部两提交边界完成业务提交与交接提交。
 - DeepSeek 的 `2` 不得复审自己；仅补齐交接材料、验证输出和请求复审范围。
 

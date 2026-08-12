@@ -110,7 +110,7 @@ $sessionIndex = [Array]::IndexOf($CliArguments, '--session-id')
 $sessionId = $CliArguments[$sessionIndex + 1]
 [IO.File]::WriteAllText($env:TZG_FAKE_CLAUDE_RECORD, ([ordered]@{ arguments = $CliArguments; prompt = $prompt; cwd = [Environment]::CurrentDirectory } | ConvertTo-Json -Depth 10), [Text.UTF8Encoding]::new($false))
 if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
-  $terminal = [ordered]@{ status = 'verified'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; pwshProbe = 'TZG_DEEPSEEK_PWSH_CANARY' }
+  $terminal = [ordered]@{ status = 'verified'; identity = 'DeepSeek V4 Pro 0813'; model = 'deepseek-v4-pro'; pwshProbe = 'TZG_DEEPSEEK_PWSH_CANARY' }
 } elseif ($env:TZG_FAKE_CLAUDE_MODE -ceq 'invalid-decision') {
   [IO.Directory]::CreateDirectory((Join-Path ([Environment]::CurrentDirectory) 'fixtures')) | Out-Null
   [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixtures/business.txt'), 'checkpoint', [Text.UTF8Encoding]::new($false))
@@ -119,7 +119,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   if ($LASTEXITCODE -ne 0) { throw 'fake decision checkpoint commit failed' }
   $commit = [string](& git rev-parse HEAD)
   $terminal = [ordered]@{
-    status = 'needs_decision'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = $commit
+    status = 'needs_decision'; identity = 'DeepSeek V4 Pro 0813'; model = 'deepseek-v4-pro'; candidateCommit = $commit
     changedPaths = @('fixtures/business.txt'); verified = @('git diff --check passed'); unverified = @('none'); residualRisk = 'fixture only'
     decisionId = 'DEC-20260806-INVALID-SCOPE'; question = 'Choose a fixture option.'
     options = @(@{ key = 'A'; label = 'Option A' }, @{ key = 'B'; label = 'Option B' }, @{ key = 'C'; label = 'Option C' })
@@ -134,7 +134,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   if ($LASTEXITCODE -ne 0) { throw 'fake candidate commit failed' }
   $commit = [string](& git rev-parse HEAD)
   $terminal = [ordered]@{
-    status = 'completed'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = $commit
+    status = 'completed'; identity = 'DeepSeek V4 Pro 0813'; model = 'deepseek-v4-pro'; candidateCommit = $commit
     expectedTransition = 'codex_review/codex/ready'; changedPaths = @('fixtures/business.txt'); verified = @('git diff --check passed')
     unverified = @('none'); residualRisk = 'fixture only'; result = '问题=缺少候选；完成=创建候选'
     impact = '影响=验证候选合同；边界=不修改生产任务'; verify = '验证=Git 检查通过；后续=等待固定入口集成'
@@ -151,16 +151,16 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $candidate = Invoke-Wrapper -Action Candidate -Root ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId)
   Assert-Equal $candidate.ExitCode 0 "Candidate wrapper process failed: $($candidate.Stderr)"
   Assert-Equal ([string]$candidate.Json.status) 'completed' "Candidate wrapper status mismatch: $($candidate.Json | ConvertTo-Json -Compress -Depth 20); stderr=$($candidate.Stderr)"
-  Assert-Equal ([string]$candidate.Json.identity) 'DeepSeek V4 Flash' 'Candidate identity mismatch'
-  Assert-Equal ([string]$candidate.Json.model) 'deepseek-v4-flash' 'Candidate model mismatch'
+  Assert-Equal ([string]$candidate.Json.identity) 'DeepSeek V4 Pro 0813' 'Candidate identity mismatch'
+  Assert-Equal ([string]$candidate.Json.model) 'deepseek-v4-pro' 'Candidate model mismatch'
   Assert-True ([string]$candidate.Json.candidateCommit -cmatch '^[0-9a-f]{40}$') 'Candidate SHA is invalid'
   Assert-Equal ([string]$candidate.Json.candidateResult.changedPaths[0]) 'fixtures/business.txt' 'Candidate changed paths mismatch'
   $record = Get-Content -Raw -LiteralPath $recordPath | ConvertFrom-Json -Depth 20
   $arguments = @($record.arguments | ForEach-Object { [string]$_ })
-  Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--model') + 1]) 'deepseek-v4-flash' 'Wrapper did not pin the model'
+  Assert-Equal ([string]$arguments[[Array]::IndexOf($arguments, '--model') + 1]) 'deepseek-v4-pro' 'Wrapper did not pin the model'
   $terminalSchema = [string]$arguments[[Array]::IndexOf($arguments, '--json-schema') + 1] | ConvertFrom-Json -Depth 50
   $completedTerminal = [ordered]@{
-    status = 'completed'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = 'a' * 40
+    status = 'completed'; identity = 'DeepSeek V4 Pro 0813'; model = 'deepseek-v4-pro'; candidateCommit = 'a' * 40
     expectedTransition = 'codex_review/codex/ready'; changedPaths = @('fixtures/business.txt'); verified = @('passed')
     unverified = @('none'); residualRisk = 'fixture'; result = 'fixture'; impact = 'fixture'; verify = 'fixture'; plain = 'fixture'
   }
@@ -169,7 +169,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $completedWithoutPaths.Remove('changedPaths')
   Assert-True (-not (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $completedWithoutPaths)) 'Complete terminal schema accepted missing changedPaths'
   $decisionTerminal = [ordered]@{
-    status = 'needs_decision'; identity = 'DeepSeek V4 Flash'; model = 'deepseek-v4-flash'; candidateCommit = 'b' * 40
+    status = 'needs_decision'; identity = 'DeepSeek V4 Pro 0813'; model = 'deepseek-v4-pro'; candidateCommit = 'b' * 40
     changedPaths = @('fixtures/business.txt'); verified = @('passed'); unverified = @('none'); residualRisk = 'fixture'
     decisionId = 'DEC-20260809-FIXTURE'; question = 'Choose.'; options = @(); recommendedOption = 'A'
     impactSummary = 'fixture'; plainSummary = [ordered]@{ situation = 'fixture'; impact = 'fixture'; action = 'fixture' }

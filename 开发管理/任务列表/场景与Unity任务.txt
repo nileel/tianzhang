@@ -29,14 +29,14 @@
 | U-CHAR-3D-FORMAL-01 | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-STYLE-01 | 正式 Adventure 3D 替换 | 开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt |
 | U-CHAR-CREATION-VISUAL-01 | P1 | codex | 阻塞 | U-CHAR-3D-FORMAL-01 | 完整首版创角外观批次 | 开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
-| U-MECH-02B / TQ-028 | P2 | DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
+| U-MECH-02B / TQ-028 | P2 | DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-UI-01A、U-FPD-UI-01B） | — | 筑基、紫府与唯一丹相界面父任务；不直接执行。 | — |
-| U-FPD-UI-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
-| U-FPD-UI-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-FPD-UI-01A） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
+| U-FPD-UI-01A | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
+| U-FPD-UI-01B | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（U-FPD-UI-01A） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
 | U-JD-RULE-01 | P2 | Codex | 阻塞（U-JD-RULE-01A、U-JD-RULE-01B、U-JD-RULE-01C） | — | 金丹 Unity 规则父任务；不直接执行。 | — |
-| U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
-| U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
-| U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
+| U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
+| U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（U-JD-RULE-01A） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
+| U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（U-JD-RULE-01B） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
 
 ## 执行边界
 
