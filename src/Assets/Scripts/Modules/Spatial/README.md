@@ -8,3 +8,4 @@
 - 数据／配置来源：显式坐标、格位和阻挡输入。
 - 直接测试：`HexCoordTests`、`HexGridTests`、`SpatialQueryBoardTests`、`TacticalGridModelTests` 与 `AssemblyBoundaryEditorTests`。
 - 常见修改路由：通用空间算法进入本模块，场景渲染进入对应 Feature。
+- 跨运行时共享：`HexCoord.cs`、`SpatialQueryTypes.cs` 与 `SpatialQueryBoard.cs` 是不引用 `UnityEngine` 的纯 C# 源，BattleSim 通过 linked compile 消费同一份实现；`HexCoord.Unity.cs` 只补充 Unity 坐标转换 API。

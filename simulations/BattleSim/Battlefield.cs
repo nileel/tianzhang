@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SharedSpatial = TianZhang.Core.SpatialRules;
+using SharedSpatial = TianZhang.Spatial;
 
 namespace BattleSim;
 
@@ -821,7 +821,7 @@ sealed class HexBattlefield
             configuredCoords.Add(edge.To);
         }
 
-        var spatialCells = new Dictionary<SharedSpatial.SpatialHexCoord, SharedSpatial.SpatialCellRules>();
+        var spatialCells = new Dictionary<SharedSpatial.HexCoord, SharedSpatial.SpatialCellRules>();
         foreach (var coord in configuredCoords)
         {
             var rules = cells.TryGetValue(coord, out var configured) ? configured : OpenCell;
@@ -886,10 +886,10 @@ sealed class HexBattlefield
         return result;
     }
 
-    static SharedSpatial.SpatialHexCoord ToSpatial(HexCoord coord) =>
+    static SharedSpatial.HexCoord ToSpatial(HexCoord coord) =>
         new(coord.Q, coord.R);
 
-    static HexCoord FromSpatial(SharedSpatial.SpatialHexCoord coord) =>
+    static HexCoord FromSpatial(SharedSpatial.HexCoord coord) =>
         new(coord.Q, coord.R);
 
     static SharedSpatial.SpatialQueryKind ToSpatial(SpatialQueryKind kind) => kind switch

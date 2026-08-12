@@ -7,8 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\src\Assets\Scripts\World\CharterConflictRules.cs" Link="World\CharterConflictRules.cs" />
-    <Compile Include="..\..\src\Assets\Scripts\Core\SpatialRules\SpatialHexCoord.cs" Link="SpatialRules\SpatialHexCoord.cs" />
-    <Compile Include="..\..\src\Assets\Scripts\Core\SpatialRules\SpatialQueryTypes.cs" Link="SpatialRules\SpatialQueryTypes.cs" />
-    <Compile Include="..\..\src\Assets\Scripts\Core\SpatialRules\SpatialQueryBoard.cs" Link="SpatialRules\SpatialQueryBoard.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\HexCoord.cs" Link="Spatial\HexCoord.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryTypes.cs" Link="Spatial\SpatialQueryTypes.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryBoard.cs" Link="Spatial\SpatialQueryBoard.cs" />
   </ItemGroup>
 </Project>

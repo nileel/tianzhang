@@ -1,5 +1,3 @@
-﻿using UnityEngine;
-
 namespace TianZhang.Spatial
 {
     /// <summary>
@@ -7,7 +5,7 @@ namespace TianZhang.Spatial
     /// q + r + s = 0
     /// </summary>
     [System.Serializable]
-    public struct HexCoord : System.IEquatable<HexCoord>
+    public partial struct HexCoord : System.IEquatable<HexCoord>
     {
         public int q, r, s;
 
@@ -56,7 +54,8 @@ namespace TianZhang.Spatial
         // ---- 常用方法 ----
         public int Distance(HexCoord other)
         {
-            return (Mathf.Abs(q - other.q) + Mathf.Abs(r - other.r) + Mathf.Abs(s - other.s)) / 2;
+            return (System.Math.Abs(q - other.q) + System.Math.Abs(r - other.r) +
+                System.Math.Abs(s - other.s)) / 2;
         }
 
         public HexCoord Neighbor(int direction)
@@ -114,60 +113,9 @@ namespace TianZhang.Spatial
         /// <summary>两个相邻格方向之差（用于判断朝向：正面/侧面/背面）</summary>
         public static int DirectionDiff(int dirA, int dirB)
         {
-            int diff = Mathf.Abs(dirA - dirB);
+            int diff = System.Math.Abs(dirA - dirB);
             if (diff > 3) diff = 6 - diff;
             return diff;
-        }
-
-        // ---- Unity Tilemap 转换（Flat-Top, odd-r offset）----
-        public Vector2Int ToOffset()
-        {
-            int col = q + (r - (r & 1)) / 2;
-            int row = r;
-            return new Vector2Int(col, row);
-        }
-
-        public static HexCoord FromOffset(Vector2Int offset)
-        {
-            int col = offset.x;
-            int row = offset.y;
-            int q = col - (row - (row & 1)) / 2;
-            int r = row;
-            return new HexCoord(q, r);
-        }
-
-        // ---- 世界坐标（Flat-Top hex）----
-        public Vector3 ToWorld(float size = 1f)
-        {
-            float x = size * (1.5f * q);
-            float y = size * (Mathf.Sqrt(3f) / 2f * q + Mathf.Sqrt(3f) * r);
-            return new Vector3(x, y, 0);
-        }
-
-        public static HexCoord FromWorld(Vector3 world, float size = 1f)
-        {
-            float q = (2f / 3f * world.x) / size;
-            float r = (-1f / 3f * world.x + Mathf.Sqrt(3f) / 3f * world.y) / size;
-            return Round(q, r);
-        }
-
-        private static HexCoord Round(float q, float r)
-        {
-            float s = -q - r;
-            int rq = Mathf.RoundToInt(q);
-            int rr = Mathf.RoundToInt(r);
-            int rs = Mathf.RoundToInt(s);
-
-            float dq = Mathf.Abs(rq - q);
-            float dr = Mathf.Abs(rr - r);
-            float ds = Mathf.Abs(rs - s);
-
-            if (dq > dr && dq > ds)
-                rq = -rr - rs;
-            else if (dr > ds)
-                rr = -rq - rs;
-
-            return new HexCoord(rq, rr, -rq - rr);
         }
 
         public bool Equals(HexCoord other) => this == other;
