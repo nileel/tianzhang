@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-12：负责人在飞书决策 DEC-20260812-E1BSPATIAL 选择 A（OPTION_ACCEPTED，evidenceHash 498afb72b02b8db896f9e68f339de15c8bf9303849dc1de759f6cd2c580e9f34）；先独立修复 01B 漏掉的 BattleSim linked compile 与唯一 Spatial 类型链接，再恢复 01E1B 数值核验。",
+  "stateReason": "2026-08-12 已完成：BattleSim linked compile 已改为消费 Modules/Spatial 同一份纯 C# 源，Unity 坐标转换拆入 partial 文件且 API 不变；BattleSim build/self-test/完整运行、Unity 定向与全量 EditMode、程序集边界均通过既定门禁。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -65,3 +65,9 @@
 ## 停止条件
 
 - 纯／Unity 拆分必须改变现有公开 API 或计算结果，BattleSim 需要修改 fixture／数值算法，发现新的 expectedPaths 外直接链接遗漏，或 Unity／BattleSim 出现新增回归时停止并报告，不继续扩大范围。
+
+## 完成记录（2026-08-12）
+
+- `HexCoord.cs` 保留既有 GUID 与纯坐标／邻接／距离／方向职责，并改为不引用 `UnityEngine` 的 partial；原 `Vector2Int`、`Vector3` 与 `Mathf` 转换逐字迁入 `HexCoord.Unity.cs`，Unity 公开 API 未改。
+- `BattleSim.csproj` 只 linked compile `Modules/Spatial` 的 `HexCoord.cs`、`SpatialQueryTypes.cs`、`SpatialQueryBoard.cs`；`Battlefield.cs` 只机械更新共享 namespace 和映射类型，未修改模拟输入坐标、fixture 或数值算法。
+- 验证：BattleSim Release build 0 警告/0 错误；`environment-rules-n-env-01`、`distance-model-tq055` 均 PASS；完整默认运行 exit 0、553 行；程序集边界通过；Unity 空间定向 EditMode 9/9；全量 EditMode 458/456/2，失败仅为已登记两项基线；旧 `Core/SpatialRules`／`SpatialHexCoord` 引用归零。

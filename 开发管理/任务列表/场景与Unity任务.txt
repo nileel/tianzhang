@@ -5,7 +5,7 @@
 ## 当前事实
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
-- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已通过独立架构复审并归档。2026-08-10 01B 已完成唯一坐标、纯格位与 Spatial 查询迁移，但遗漏 BattleSim linked compile；2026-08-12 负责人在飞书决策 `DEC-20260812-E1BSPATIAL` 选择 A，先以 01B1 独立补齐该链接。EnvironmentProfile 转换适配已由 01C 完成并通过独立架构复审，01D、01E1 与 01E1A 已完成；01B1 完成后恢复 01E1B，再执行 01E2 与 01E3。
+- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；`U-ARCH-REBUILD-01A` 已通过独立架构复审并归档。2026-08-10 01B 已完成唯一坐标、纯格位与 Spatial 查询迁移，2026-08-12 经负责人飞书决策批准的 01B1 已补齐 BattleSim linked compile。EnvironmentProfile 转换适配已由 01C 完成并通过独立架构复审，01D、01E1 与 01E1A 已完成；当前恢复 01E1B，随后执行 01E2 与 01E3。
 - 架构重建完成前，URP 与正式美术 Unity 链保持 blocked；Blender、项目骨架和平台评估只有在路径与责任方独立时才可并行，且不得接入 Unity 正式路径。
 
 ## 任务
@@ -15,8 +15,7 @@
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E、U-ARCH-REBUILD-01F、U-ARCH-REBUILD-01G、U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
 | U-ARCH-REBUILD-01E | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E2、U-ARCH-REBUILD-01E3 | Combat、CTB 与战术运行时父项 | 开发管理/任务卡/U-ARCH-REBUILD-01E.txt |
-| U-ARCH-REBUILD-01B1 | P1 | codex | 已排队 | — | BattleSim 与 Spatial 共享链接补漏 | 开发管理/任务卡/U-ARCH-REBUILD-01B1.txt |
-| U-ARCH-REBUILD-01E1B | P1 | codex | 阻塞 | U-ARCH-REBUILD-01B1 | 纯 Combat 战斗数值等价修复 | 开发管理/任务卡/U-ARCH-REBUILD-01E1B.txt |
+| U-ARCH-REBUILD-01E1B | P1 | codex | 已排队 | — | 纯 Combat 战斗数值等价修复 | 开发管理/任务卡/U-ARCH-REBUILD-01E1B.txt |
 | U-ARCH-REBUILD-01E2 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E1B | 正式调用链原子切换 | 开发管理/任务卡/U-ARCH-REBUILD-01E2.txt |
 | U-ARCH-REBUILD-01E3 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E2 | 旧运行时删除与阶段 5 总验收 | 开发管理/任务卡/U-ARCH-REBUILD-01E3.txt |
 | U-ARCH-REBUILD-01F | P1 | codex | 阻塞 | U-ARCH-REBUILD-01E | GameRuntime、保存与应用用例 | 开发管理/任务卡/U-ARCH-REBUILD-01F.txt |
@@ -56,7 +55,7 @@
 
 共同事实源：`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`、`docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md`、`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`。架构重建是最高顺序的 Unity 前置；架构期间冻结 Runtime、正式场景、CSV、导入器和相关 asset 功能开发，只恢复功能完整、视觉简陋的正式薄切片。
 
-- 架构主链固定为 `U-ARCH-REBUILD-01A -> 01B -> 01B1 -> 01C -> 01D -> 01E -> 01F -> 01G -> 01H`；01B1 是负责人通过 `DEC-20260812-E1BSPATIAL` 批准的独立补漏切片。阶段 5 的 01E 内部固定为 `01E1（已完成） -> 01E1A（已完成） -> 01E1B（阻塞于 01B1） -> 01E2 -> 01E3`，边界修正读取 `docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md`，01E3 验收通过时与 01E 父项同批关闭。架构父项不直接执行，只有八个主阶段全部完成才关闭。每阶段独立提交、验证和架构复审，未通过时不提前修改下游。
+- 架构主链固定为 `U-ARCH-REBUILD-01A -> 01B -> 01B1（已完成） -> 01C -> 01D -> 01E -> 01F -> 01G -> 01H`；01B1 是负责人通过 `DEC-20260812-E1BSPATIAL` 批准并已完成的独立补漏切片。阶段 5 的 01E 内部固定为 `01E1（已完成） -> 01E1A（已完成） -> 01E1B（ready） -> 01E2 -> 01E3`，边界修正读取 `docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md`，01E3 验收通过时与 01E 父项同批关闭。架构父项不直接执行，只有八个主阶段全部完成才关闭。每阶段独立提交、验证和架构复审，未通过时不提前修改下游。
 - 美术工具链固定为 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01 -> A-CHAR-AI-PLATFORM-EVAL-01`。它可以在路径与责任方独立时推进，但不得向 Unity 正式路径接入资产；平台路线失败时才建立条件回退 `A-CHAR-BLENDER-TEMPLATE-01`，不同时维持两条生产路线。
 - Unity 视觉链固定为 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01`。预检只扫描重构后正式路径；迁移不兼容已删除的 Built-in 临时视觉；视觉基础不生产正式角色或关中最终装修。
 - 真实角色链在 `U-CHAR-3D-PROTO-01` 与平台／模板资源前置汇合，随后执行玩家基础人形、石甲兽、外观数据、风格样张、正式 Adventure 替换和完整创角批次。石甲兽技术样例不拥有角色级音效或战斗 VFX；它们由 `A-GZ-PRESENT-01` 独立负责。

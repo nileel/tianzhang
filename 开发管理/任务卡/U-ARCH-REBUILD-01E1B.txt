@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-ARCH-REBUILD-01B1"
-  ],
-  "stateReason": "2026-08-12：负责人已在飞书决策 DEC-20260812-E1BSPATIAL 选择 A；纯 Combat 检查点 b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab 保持不动，等待独立前置 U-ARCH-REBUILD-01B1 修复 BattleSim 与 Spatial 共享链接后再恢复数值核验。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：U-ARCH-REBUILD-01B1 已修复 BattleSim 与唯一 Spatial 的共享链接并通过完整验证；恢复纯 Combat 检查点 b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab，继续完成 01E1B 数值核验。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
