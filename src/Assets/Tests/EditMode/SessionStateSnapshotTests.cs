@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Content;
-using TianZhang.Core;
 using TianZhang.Cultivation.JindanProof;
 using TianZhang.Entity;
 using TianZhang.Game;

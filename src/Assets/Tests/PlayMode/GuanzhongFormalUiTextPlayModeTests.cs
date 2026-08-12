@@ -3,7 +3,6 @@ using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Adventure;
 using TianZhang.Combat;
-using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Game.CharacterCreation;

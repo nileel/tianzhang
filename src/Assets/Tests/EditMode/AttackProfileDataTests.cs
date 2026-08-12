@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Combat;
-using TianZhang.Core;
 using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Entity;

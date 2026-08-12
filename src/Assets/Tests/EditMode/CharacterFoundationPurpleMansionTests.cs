@@ -1,6 +1,5 @@
 ﻿using System;
 using NUnit.Framework;
-using TianZhang.Core;
 using TianZhang.Cultivation.JindanProof;
 using TianZhang.Entity;
 using UnityEngine;

@@ -4,7 +4,6 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using System;
 using System.Linq;
-using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Combat;
 using TianZhang.HexTile;

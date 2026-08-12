@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
-using TianZhang.Core;
 using TianZhang.Spatial;
 using TianZhang.Tactical;
 using TianZhang.Content;

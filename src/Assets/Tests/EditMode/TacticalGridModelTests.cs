@@ -8,7 +8,6 @@ using UnityEngine.UI;
 using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Content;
-using TianZhang.Core;
 using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Entity;
