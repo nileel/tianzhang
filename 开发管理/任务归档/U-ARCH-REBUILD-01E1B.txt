@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-12：U-ARCH-REBUILD-01B1 已修复 BattleSim 与唯一 Spatial 的共享链接并通过完整验证；恢复纯 Combat 检查点 b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab，继续完成 01E1B 数值核验。",
+  "stateReason": "2026-08-12 已完成：纯 Combat 内核已等价投影玄感、含弘／载物、守一、符胆与雷劫现行数值语义，直接数值测试已迁离旧 Controller／Resolver／DamageCalculator；组合后 Unity 与 BattleSim 验证通过既定门禁。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -69,3 +69,9 @@
 - 纯 Combat 改动已保存为隔离分支 `codex/u-arch-rebuild-01e1b` 的干净检查点 `b8bd858ca2e59620eb4bbd6ea2cdedfb40846dab`；定向 `CombatRuntimeKernelTests` 23/23，通过完整 EditMode 464 项中的 462 项，失败仍仅为已登记的两项基线；程序集边界检查通过。
 - BattleSim 在任何本卡代码进入构建前即因 `BattleSim.csproj` 仍编译已由 01B 删除的 `Core/SpatialRules/SpatialHexCoord.cs`、`SpatialQueryTypes.cs`、`SpatialQueryBoard.cs` 而失败。`Battlefield.cs` 同时仍引用旧 namespace／`SpatialHexCoord`；新的唯一 `TianZhang.Spatial.HexCoord` 又包含 UnityEngine 转换，无法靠单改 csproj 机械接入纯 .NET。
 - 修复至少需要跨 `simulations/BattleSim/BattleSim.csproj`、`Battlefield.cs` 与 `Modules/Spatial/HexCoord.cs` 的纯核／Unity 转换边界，均在本卡禁止项或 expectedPaths 之外。依据停止条件，本卡转为 `pending_decision`，不把该修复叠进现有 Combat 检查点。
+
+## 完成记录（2026-08-12）
+
+- `CombatantSnapshot` 现按境界提供守一／符胆／雷劫上限、雷劫每层倍率、玄感心力和含弘／载物动态防御；正伤害按现行语义增加雷劫层数。`CombatActionResolver` 使用这些投影兑现物理／神魂／混合伤害、满层穿透与印记消费，混合伤害仍先计算双线再写入生命，保持旧正式顺序。
+- 只保护上述数值的旧 `TacticalGridModelTests` 用例已迁入 `CombatRuntimeKernelTests`；旧控制器生命周期测试仍保留。Combat 未新增 Character／Domain／表现依赖，未修改生产调用方。
+- 验证：`CombatRuntimeKernelTests` 23/23；组合后全量 Unity EditMode 464/462/2，失败仅为已登记两项基线；程序集边界通过。BattleSim 输入未被本卡五个 Combat／测试文件链接或修改，复用紧邻 01B1 的 Release build 0 警告/0 错误、两项空间 self-test PASS 与完整默认运行 exit 0／553 行结果。
