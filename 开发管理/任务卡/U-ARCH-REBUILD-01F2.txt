@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01F2",
+  "title": "schema 1 本地存档槽适配器",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：阶段 7 的 Feature／场景合同已冻结；开始菜单已有角色入口仍缺少本地 schema 1 槽位枚举、原子写入和稳定失败结果。路径、所有者、失败边界与验证已由批准设计唯一冻结，可以独立实施。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01F2.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01F2.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01G.txt",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/README.md",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01F2 · schema 1 本地存档槽适配器
+
+## 来源与当前边界
+
+- 来源为已批准并经书面复核修订的 `docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md#三、前置切片 U-ARCH-REBUILD-01F2`。
+- 本卡只补阶段 7 已有角色入口所需的本地 schema 1 槽位适配器，不实现开始菜单、Feature、Bootstrap 接线、场景导航或 `01G` 的任何 UI／运行时迁移。
+
+## 必查范围
+
+- 上述批准设计的 §二、§三、§五.三、§十二与停止条件。
+- `src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs::GameSaveSerializer.Serialize/Deserialize`、`GameSaveEnvelope.cs::GameSaveEnvelope` 与 `CharacterRecord`；修改前读取完整目标类型和直接测试。
+- `src/Assets/Scripts/Modules/Infrastructure/Persistence/README.md` 与 `TianZhang.Infrastructure.Persistence.asmdef`；`src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`。
+- `src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs` 只作为既有 schema 1 行为与测试风格事实源，不预设修改。
+
+## 实施范围
+
+- 新增 `GameSaveSlotStore`，构造时显式接收存档目录；按稳定槽位 ID 列出摘要、写入和读取 `GameSaveEnvelope`。
+- 槽位 ID 只接受 ASCII 字母、数字、`_`、`-`，长度 1～64；拒绝路径分隔符、相对路径和任何越界路径。
+- 摘要包含槽位 ID、角色 ID、角色显示名、最后写入时间、是否可读和稳定失败原因；枚举按槽位 ID ordinal 排序。损坏槽位保留在列表中且不妨碍其他合法槽位。
+- 写入使用同目录临时文件并原子替换；首次写入采用同目录原子移动。覆盖失败时原槽位逐字节不变，并尽力清理本次临时文件。
+- 读取只调用现有 `GameSaveSerializer.Deserialize`；非 schema 1、损坏 JSON、缺少玩家 payload 或 IO 失败返回稳定失败结果，不调用或修改 `GameRuntime`。
+- 与 Store 同生命周期的小型摘要、读写结果和失败原因可留在同一文件；不建立第二保存所有者或独立状态服务。
+
+## 禁止项
+
+- 不读取、迁移或兼容旧 schema；不做云存档、多账号、删除／回收站、缩略图、自动备份、冲突合并、加密、`PlayerPrefs` 或内存假槽位。
+- 不修改 `GameSaveEnvelope`、`GameSaveSerializer`、`GameRuntime`、Gameplay.Contracts、Feature、Scene、Prefab、asset、CSV、Combat、规则、数值或 UI。
+- 不增加静默 fallback、后台重试、第二目录规则或项目内正式存档文件；测试只使用独立临时目录。
+
+## 验证
+
+- 新槽位写入／读取往返保持 envelope JSON；同槽位覆盖成功后只读到新内容。
+- 通过可注入的最小文件替换边界或等价确定性夹具模拟覆盖失败，证明原文件逐字节不变；不得为测试引入通用文件系统框架。
+- 非法槽位 ID 与路径穿越全部拒绝；损坏 JSON、错误 schema、缺少玩家 payload 显示为不可读，并继续枚举其他合法槽位。
+- `GameSaveSlotStoreTests` 使用唯一临时目录并在结束时清理。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `dotnet build src/TianZhang.EditModeTests.csproj`；Unity EditMode 运行新增目标测试或完整集合，以实际可用入口为准。
+- 运行任务卡、审核文本、预期路径 whitespace 与暂存后 `git diff --cached --check`；本卡不改 docs／CSV／Unity 数据资产，不运行数据链检查。
+
+## 完成条件
+
+- 本地 schema 1 槽位的列举、原子写入、读取和稳定失败结果可由 Infrastructure.Persistence 独立测试；任何失败均不破坏既有槽位或运行时状态。
+- 业务源码、测试与 README 只位于冻结路径；新 Unity 脚本及测试均有对应 `.meta`，程序集边界不新增依赖。
+- 验证闭合后归档本卡并从队列／backlog 移除；实时复核 `01G` 设计字面量与仓库，无新冲突时移除其 blocker、展开完整 `expectedPaths` 并按 P1 固定顺序入队。本卡不得代替 `01G` 实施。
+
+## 停止条件
+
+- 需要改变 schema 1、`GameSaveEnvelope` 或 `GameRuntime` 语义，新增 Feature／Bootstrap／UI 接线，建立第二保存格式／状态所有者，触及冻结源码／测试路径之外的业务实现，或无法用同目录操作保证失败不破坏原槽位时停止并回到根因。

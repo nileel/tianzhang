@@ -9,8 +9,10 @@
   "domain": "unity",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-12：01F1 已完成；实时扫描确认五个 Feature asmdef 为空、现行控制器直依赖 Bootstrap／SceneFlow、正式场景仍由 GameManager + SceneFlowManager 组合，且 SceneBuilder 混合正式场景、旧 Adventure、原型与资源生成。注入契约、逐场景组合根和拆分字面量路径尚未唯一冻结，保持 blocked。",
+  "blockedBy": [
+    "U-ARCH-REBUILD-01F2"
+  ],
+  "stateReason": "2026-08-13：Feature 注入合同、逐场景组合根、SceneBuilder 拆分和全部实施边界已由批准设计冻结；已有角色入口仍缺本地 schema 1 槽位适配器，等待 U-ARCH-REBUILD-01F2 完成后再做实时路径复核并转 ready。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -57,3 +59,9 @@
 - 当前组合根：四个正式场景仍序列化 `GameManager + SceneFlowManager`；`GameBootstrap` 由运行时查找／动态创建，不是逐场景唯一组合根。
 - 当前 builder：`SceneBuilder.cs` 同时生成／验证正式场景、旧 Exploration／BattleUI、Hybrid 原型、Tile／Prefab 和 UI，无法在不先冻结提取边界的情况下给出完整新增／移动／删除路径。
 - 剩余准备：先冻结 Feature 注入契约、五个 Feature 的旧 owner → 新文件映射、四个逐场景组合根、SceneBuilder 拆分文件与对应测试／scene／asset／`.meta` 字面量路径；在这些事实唯一前不得改为 ready。
+
+## 2026-08-13 设计冻结与新前置
+
+- `docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md` 已冻结五个 Feature、四个 SceneInstaller、角色新建／读取、Adventure 节点扩展、SceneBuilder 拆分、GUID 与测试验收边界，原“设计未唯一”的 blocker 已消除。
+- 实时保存能力只有 schema 1 信封与内存原子恢复，没有本地槽位枚举、原子文件替换和损坏槽位摘要；已有角色入口无法实施。该独立缺口登记为 `U-ARCH-REBUILD-01F2`，本卡在其完成前保持 blocked。
+- `01F2` 完成后必须重新读取本卡、队列、批准设计和实时仓库；无新冲突时再移除 blocker、写入本文冻结的完整字面量 `expectedPaths` 并入队，不提前修改阶段 7 源码。
