@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E1B",
+  "title": "纯 Combat 战斗数值等价修复",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：负责人已在飞书决策 DEC-20260812-E2KERNELPARITY 选择 A；先补齐纯 Combat 内核对现行功法战斗数值语义的等价表达并迁移直接数值测试，再恢复 01E2 正式切换。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E1B.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E1B.txt",
+    "docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Combat/README.md",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E1B · 纯 Combat 战斗数值等价修复
+
+## 来源与当前边界
+
+- 01E2 迁移旧数值测试时确认新纯 Combat 内核未完整表达现行生产战斗语义；继续切换会改变可观测结果并命中 01E2 停止条件。负责人已在飞书决策 `DEC-20260812-E2KERNELPARITY` 选择 A，本卡作为 01E2 的独立前置，只修复纯内核等价性。
+- 批准边界读取 `docs/superpowers/specs/2026-08-12-combat-stage-5-e2-e3-boundary-correction-design.md` §11；不重新打开已归档的 01E1／01E1A，不修改生产调用链。
+
+## 必查范围
+
+- 完整读取 `Character.TakeDamage`、`MaxShouyi`、`MaxFudan`、`MaxLeijie`、`LeijieDamageBonusPerStack`、`XuanganMindStrengthBonus`、`HanhongDefenseMultiplier` 及其私有含弘／载物计算；旧 `DamageCalculator.CalcPhysical`／`CalcMagic`／公共减伤、旧 `CombatResolver.AdvanceGongFaActionState`／符胆与雷劫消费逻辑。
+- 完整读取现有 `CombatantSnapshot`、`CombatActionResolver` 以及 `CombatRuntimeKernelTests`、`TacticalGridModelTests.CombatMechanismTests` 的对应数值用例。旧实现与直接测试是现行语义事实源；不得凭设计文字发明不同公式。
+
+## 实施范围
+
+- 只向纯 `CombatantSnapshot` 投影足以重算现行行为的稳定数值原语；不得持有 `Character`、境界字符串、MonoBehaviour、ScriptableObject 或场景对象。含弘／载物必须随快照当前生命变化重算，不能冻结成开战时一次性有效防御值。
+- `CombatActionResolver` 原样兑现玄感神魂攻击加值、含弘物防倍率、载物缺血全防倍率、守一／符胆／雷劫按境界上限、雷劫受伤叠层及按境界每层伤害倍率；满层判定必须使用投影上限，不保留固定 2 层或固定 5% 语义。
+- 把 `TacticalGridModelTests.CombatMechanismTests` 中只保护上述数值语义的用例迁到 `CombatRuntimeKernelTests`，使用明确输入和固定期望验证新内核；旧控制器生命周期、日志和场景行为不进入本卡。
+- 保持 01E1A 已验收的命令、移动、换法、CTB 消费、范围、元素、拒绝原因和结果契约不变。
+
+## 禁止项
+
+- 不修改 `Character`、旧 `DamageCalculator`、旧 `CombatResolver`、`TacticalCombatController`、生产调用方、Gameplay／Feature、Spatial、Combat/Turns、Scene、Prefab、asset、CSV 或 BattleSim 数据。
+- 不增加双运行、兼容 adapter、runtime 开关、fallback、新恢复层或用于掩盖差异的临时公式；不扩大到 expectedPaths 之外的 Combat 文件。
+
+## 验证
+
+- 定向 Unity EditMode 必须覆盖：玄感各境界神魂加值；含弘各境界物防；载物按缺血十分位、上限及物理／神魂双防；守一／符胆／雷劫上限；雷劫受伤叠层、满层魂防削减、各境界每层物伤加成与消费；符胆满层穿透／消费；既有纯内核用例不得回归。
+- 运行完整 Unity EditMode并保持已登记基线失败集合不扩大；运行 `tools/check-unity-assembly-boundaries.ps1`。数值语义取证按项目规则运行 BattleSim build／run，确认未改变其输入或当前结论。
+- 运行任务卡、审核文本、pending whitespace 与 staged diff 检查；本卡不需要 PlayMode，因为没有生产调用方变化。
+
+## 完成条件
+
+- 新纯 Combat 内核对上述现行生产数值语义逐项等价，测试不再依赖旧 Controller／Resolver／DamageCalculator 来证明这些数值；Combat 仍不持有 Character／Domain 或表现对象；01E2 可在不再修改纯内核的前提下恢复。
+
+## 停止条件
+
+- 发现新的未冻结生产数值语义、需要修改 expectedPaths 外文件、BattleSim 当前结论与旧 Unity 事实冲突、必须改变现行公式／倍率，或出现新增 Unity 回归失败时停止并形成新的单一决策，不在本卡叠补。

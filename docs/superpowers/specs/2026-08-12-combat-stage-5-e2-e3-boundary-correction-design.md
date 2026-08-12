@@ -1,7 +1,7 @@
 # Combat 阶段 5：01E2／01E3 边界修正设计
 
 日期：2026-08-12
-状态：负责人已审核并批准实施；按本文先集成任务边界管理切片，再依次执行 01E2 与 01E3。
+状态：负责人已审核并批准实施；2026-08-12 飞书决策 A 的最新增补见 §11，当前顺序为 01E1B、01E2、01E3。
 
 ## 一、背景与根因
 
@@ -218,3 +218,26 @@ Files explicitly not touched: 新 Combat 内核、Combat/Turns、Scene、Prefab�
 - 01E2：正式 Gameplay、Adventure、UI、AI、Editor 和直接测试均只消费新 Combat／Content 契约；旧战术运行时只剩待删源码内部互引。
 - 01E3：旧 Controller、Resolver、DamageCalculator、Core CTB、`Character.CTBUnit`、旧 AI 接口和全部引用清零；Combat 程序集依赖收紧；完整 Unity 验收通过；01E3 与 01E 父项归档。
 - 两个提交均没有 Scene／Prefab／asset／CSV／BattleSim 或新 Combat 内核改动，也没有覆盖用户或其他运行中的工作。
+
+## 十一、2026-08-12 纯内核等价决策增补
+
+### 11.1 决策与根因
+
+迁移 `TacticalGridModelTests.CombatMechanismTests` 时确认，现行生产战斗仍通过 `Character`、旧 `DamageCalculator` 与旧 `CombatResolver` 使用玄感神魂攻击加值、含弘／载物防御、守一／符胆／雷劫按境界上限、雷劫受伤叠层及按境界每层倍率。新 `CombatantSnapshot` 未投影这些完整原语，`CombatActionResolver` 仍保留固定 2 层和固定 5% 等非等价实现。
+
+负责人已在飞书决策 `DEC-20260812-E2KERNELPARITY` 选择 A：新增独立前置 `U-ARCH-REBUILD-01E1B`，先修复纯 Combat 数值等价性，再恢复 01E2／01E3。本增补优先于本文 §§2.2、3、4.3、5—10 中“新 Combat 内核不修改”和原实施顺序的冲突表述；其余边界继续有效。
+
+### 11.2 `U-ARCH-REBUILD-01E1B` 边界
+
+- 只修改 `CombatantSnapshot`、`CombatActionResolver`、Combat README、`CombatRuntimeKernelTests` 与 `TacticalGridModelTests` 中对应数值用例；旧 `Character`、`DamageCalculator`、`CombatResolver` 只读不改。
+- 快照只投影稳定数值原语，不持有 Character／Domain／表现对象；解析器必须按快照当前生命重算载物防御，并使用投影上限与倍率兑现玄感、含弘、守一、符胆和雷劫现行语义。
+- 将只保护上述数值的 legacy 用例迁到纯内核固定夹具；不处理旧控制器生命周期、生产组合、Content／Editor、UI 或删除工作。
+- 运行定向与完整 Unity EditMode、程序集边界、BattleSim 当前结果核验及管理／文本／Git 检查；不修改 BattleSim 输入。
+
+### 11.3 调整后的顺序与完成定义
+
+1. 先执行并独立提交、验证、归档 01E1B。
+2. 由队列维护解除 01E2 的具名前置；从最新 `master` 恢复已保留的生产切换 checkpoint 与已批准 PlayMode 迁移，完成 Content／Editor／直接测试旧引用清理。
+3. 01E2 完成后再执行 01E3 删除与阶段 5 总验收。
+
+01E1B 完成表示纯 Combat 内核已逐项覆盖现行功法战斗数值语义，且 01E2 不再需要修改纯内核。原文关于 01E2／01E3 不修改公式、BattleSim 数据或新内核的限制从此点继续生效；最终三项业务提交均不得包含 Scene／Prefab／asset／CSV／BattleSim 数据变化。

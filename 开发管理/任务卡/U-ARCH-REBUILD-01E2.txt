@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-08-12：迁移旧数值测试时确认新纯 Combat 内核未表达玄感心力、含弘／载物防御及按境界变化的守一／符胆／雷劫上限与倍率；继续切换会改变生产数值语义并命中本卡停止条件，等待负责人决定是否先建立纯内核等价修复切片。",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01E1B"],
+  "stateReason": "2026-08-12：负责人已在飞书决策 DEC-20260812-E2KERNELPARITY 选择 A；本卡停止并等待 U-ARCH-REBUILD-01E1B 补齐纯 Combat 战斗数值等价性，完成后再恢复正式切换。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -60,77 +60,14 @@
     "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "U-ARCH-REBUILD-01E2",
-    "sourceRunId": "0559b351-cb20-4ebd-bcb0-ca25c9b6ac27",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260811-E2PLAYMODE",
-    "question": "是否授权把 src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs 加入候选路径，以将其从直接修改 Character 改为驱动 CombatSession 命令？",
-    "options": [
-      {
-        "key": "A",
-        "label": "扩展测试路径并迁移正式UI文本测试"
-      },
-      {
-        "key": "B",
-        "label": "保留该失败并限定当前验证结论"
-      },
-      {
-        "key": "C",
-        "label": "将该测试迁移延后至01E3"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 可完成01E2直接相关的 PlayMode 迁移并恢复正式UI文本流程验证；B或C都会保留该失败。",
-    "plainSummary": {
-      "action": "建议选择A，授权扩展该测试路径并按新命令入口更新。",
-      "impact": "测试不能结束战斗并使正式UI文本 PlayMode 验证失败。",
-      "situation": "生产战斗改为CombatSession后，一个直接相关PlayMode测试仍修改旧Character。"
-    },
-    "checkpointCommit": "f381ffa07b72748d642e292279d52c427ff09657",
-    "baseCommit": "be71cbff637195cd892ac852b63cfcffaf4af0d6",
-    "branch": "codex/automation/codex/0559b351-cb20-4ebd-bcb0-ca25c9b6ac27/candidate",
-    "changedPaths": [
-      "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
-      "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
-      "src/Assets/Scripts/Combat/EnemyAI.cs",
-      "src/Assets/Scripts/Combat/README.md",
-      "src/Assets/Scripts/Entity/Character.cs",
-      "src/Assets/Scripts/Game/BattleUIManager.cs",
-      "src/Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
-      "src/Assets/Scripts/Map/ExplorationController.cs",
-      "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
-      "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
-      "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
-      "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
-      "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
-      "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
-    ],
-    "verified": [
-      "tools/check-unity-assembly-boundaries.ps1 通过：assemblies=21，asmrefs=8",
-      "Unity EditMode 迁移相关测试通过；仅保留两项既有基线失败",
-      "关中基础攻击 PlayMode 迁移测试通过",
-      "check-pending-whitespace、git diff --cached --check、check-review-text 通过",
-      "checkpoint 为基准提交的唯一直接后继，工作树干净"
-    ],
-    "unverified": [
-      "GuanzhongFormalUiTextPlayModeTests.FormalSliceShowsChineseTextFromCharacterCreationToBountyClaim 仍失败：测试直接调用 Character.TakeDamage，未更新 CombatSession。"
-    ],
-    "residualRisk": "未获准扩展候选路径前，正式UI文本 PlayMode 无法按新会话结束战斗，01E2不能闭环。",
-    "taskContextDigest": "834b6cc16f64f551d3b5c29a4d87fa420fce4bd36fa6edb7bd0406fd810342aa",
-    "createdAt": "2026-08-11T20:47:54.4460577+08:00",
-    "queueIndex": 0
-  }
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
 # U-ARCH-REBUILD-01E2 · 正式调用链原子切换
 
 ## 来源与当前边界
 
-- 对应阶段 5 的生产切换切片；批准边界读取任务重划设计当前修订 §3.3。只有 01E1A 归档并证明纯内核已覆盖全部生产命令入口后才可解阻塞。
+- 对应阶段 5 的生产切换切片；批准边界读取任务重划设计当前修订 §11。只有 01E1B 归档并证明纯内核已覆盖现行生产数值语义后才可解阻塞。
 
 ## 必查范围
 
@@ -178,4 +115,4 @@
 - 迁移 `TacticalGridModelTests.CombatMechanismTests` 时确认旧正式实现会调用 `Character.XuanganMindStrengthBonus`、`HanhongDefenseMultiplier`、`MaxShouyi`、`MaxFudan`、`MaxLeijie` 与 `LeijieDamageBonusPerStack`；这些规则仍由旧测试直接保护，不能作为旧控制器生命周期测试删除。
 - 当前 `CombatantSnapshot` 未投影玄感心力、含弘／载物有效防御或按境界变化的印记上限；`CombatActionResolver` 把守一／符胆／雷劫满层阈值固定为 2、雷劫每层倍率固定为 5%，且 `CombatantSnapshot.ReceiveDamage` 不增加雷劫层数。正式切换后会与现行 `Character`／`DamageCalculator`／`CombatResolver` 产生可观测数值差异。
 - 本卡明确禁止修改纯 Combat 内核，并规定“仍需补任一纯 Combat 内核能力或固定数值语义发生变化”时停止；候选中的 Content 文件迁移试改已撤回，checkpoint 代码与已通过的 A 方案 PlayMode 迁移原样保留，未提交不完整补丁。
-- 待决定 `DEC-20260812-E2KERNELPARITY`：A（建议）先建立独立纯内核等价修复切片，逐项投影并迁移旧数值测试，再恢复 01E2；B 明确接受删减上述现行战斗语义并另走数值／设计变更；C 放弃 checkpoint，继续保留旧正式战斗运行时。
+- 飞书决策 `DEC-20260812-E2KERNELPARITY` 已接受 A：建立 `U-ARCH-REBUILD-01E1B`，逐项投影并迁移上述数值测试；本卡改为阻塞于 01E1B，既有 checkpoint 与已通过的 PlayMode 迁移继续保留为后续恢复输入。
