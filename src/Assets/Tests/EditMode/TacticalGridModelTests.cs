@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -251,586 +251,6 @@ namespace TianZhang.Tests
         }
     }
 
-    public class CombatMechanismTests
-    {
-        private static AttackProfileData CreateBasicProfile(AttackEffectType effectType)
-        {
-            var profile = ScriptableObject.CreateInstance<AttackProfileData>();
-            profile.hideFlags = HideFlags.HideAndDontSave;
-            profile.attackProfileId = effectType == AttackEffectType.Magic
-                ? "test_basic_magic"
-                : "test_basic_physical";
-            profile.displayNameKey = effectType == AttackEffectType.Magic ? "神魂攻击" : "物理攻击";
-            profile.profileKind = AttackProfileKind.Basic;
-            profile.basicBindingKind = BasicAttackBindingKind.MainEquipment;
-            profile.effectType = effectType;
-            profile.damageElementId = "element_none";
-            profile.physicalDamageMultiplier = effectType is AttackEffectType.Physical or AttackEffectType.Hybrid ? 1f : 0f;
-            profile.soulDamageMultiplier = effectType is AttackEffectType.Magic or AttackEffectType.Hybrid ? 1f : 0f;
-            profile.resourceKind = AttackResourceKind.None;
-            profile.minCastRange = 1;
-            profile.maxCastRange = 3;
-            profile.targetingMode = AttackTargetingMode.Single;
-            profile.areaFacing = -1;
-            return profile;
-        }
-
-        [Test]
-        public void CritDamageUsesBaseOnePointFivePlusPercentagePointBonuses()
-        {
-            Assert.AreEqual(1.50f, DamageCalculator.GetCritMultiplier(0f), 0.0001f);
-            Assert.AreEqual(1.65f, DamageCalculator.GetCritMultiplier(15f), 0.0001f);
-            Assert.AreEqual(1.75f, DamageCalculator.GetCritMultiplier(15f, 10f), 0.0001f);
-        }
-
-        [Test]
-        public void CombatResolverFailsClosedWithoutSpatialQueryConfiguration()
-        {
-            var engine = new CTBEngine();
-            var attacker = CreateLeijieCombatant(engine, "未配置攻击者", new HexCoord(0, 0));
-            var target = CreateTarget(engine, "未配置目标");
-
-            var result = new CombatResolver { Engine = engine }.BasicAttack(
-                attacker,
-                target,
-                CreateBasicProfile(AttackEffectType.Physical));
-
-            Assert.IsFalse(result.Success);
-            Assert.AreEqual("目标不在射程范围", result.Message);
-        }
-
-        [Test]
-        public void CombatResolverUsesWeightedRangeInsteadOfHexDistance()
-        {
-            var engine = new CTBEngine();
-            var resolver = new CombatResolver
-            {
-                Engine = engine,
-                SpatialBoard = SpatialQueryTestFixture.CreateCompressedLineBoard(),
-            };
-            var attacker = CreateLeijieCombatant(engine, "压缩边攻击者", new HexCoord(0, 0));
-            var target = CreateTarget(engine, "压缩边目标");
-            target.Position = new HexCoord(2, 0);
-            LogAssert.Expect(LogType.Log, new Regex("压缩边攻击者 攻击 物理攻击.*压缩边目标"));
-
-            var result = resolver.BasicAttack(attacker, target, CreateBasicProfile(AttackEffectType.Physical));
-
-            Assert.IsTrue(result.Success);
-        }
-
-        private static Character CreateLeijieCombatant(CTBEngine engine, string name, HexCoord position)
-        {
-            var character = new Character
-            {
-                Name = name,
-                GongFaName = "九霄雷劫录",
-                MaxHP = 1000,
-                CurrentHP = 1000,
-                MaxMP = 100,
-                CurrentMP = 100,
-                PhysAtk = 200,
-                MagAtk = 50,
-                PhysDef = 100,
-                MagDef = 200,
-                Reaction = 100,
-                HitRateBonus = 100f,
-                CritRate = 0f,
-                CritDamage = 0f,
-                BlockRate = 0f,
-                SoulShieldRate = 0f,
-                DodgeRate = 0f,
-                Position = position,
-            };
-            character.SetRealm("金丹");
-            character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
-            return character;
-        }
-
-        private static Character CreateTarget(CTBEngine engine, string name, string gongFaName = "含弘光大典")
-        {
-            var character = new Character
-            {
-                Name = name,
-                GongFaName = gongFaName,
-                MaxHP = 1000,
-                CurrentHP = 1000,
-                MaxMP = 100,
-                CurrentMP = 100,
-                PhysAtk = 50,
-                MagAtk = 50,
-                PhysDef = 100,
-                MagDef = 100,
-                Reaction = 100,
-                SoulShieldRate = 0f,
-                DodgeRate = 0f,
-                CritRate = 0f,
-                Position = new HexCoord(1, 0),
-            };
-            character.SetRealm("金丹");
-            character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
-            return character;
-        }
-    }
-
-    public class TacticalCombatControllerTests
-    {
-        private readonly List<AttackProfileData> temporaryProfiles = new List<AttackProfileData>();
-
-        [TearDown]
-        public void DestroyTemporaryProfiles()
-        {
-            foreach (var profile in temporaryProfiles)
-                Object.DestroyImmediate(profile);
-            temporaryProfiles.Clear();
-        }
-
-        [Test]
-        public void BeginCombatResetsCtbLinksGridFacesTargetsAndInitializesGongFaStacks()
-        {
-            var grid = new HexGrid();
-            var engine = new CTBEngine();
-            var resolver = new CombatResolver();
-            var controller = new TacticalCombatController(engine, resolver);
-
-            var player = CreateCombatant("太一修士", "云篆度人经", new HexCoord(0, 0), engine);
-            var enemy = CreateCombatant("守一敌", "抱元守一经", new HexCoord(1, 0), engine);
-            player.CTBUnit.CT = 250f;
-            player.CTBUnit.PendingCooldownPenalty = 30;
-            player.CTBUnit.NextActionThreshold = 130f;
-            enemy.CTBUnit.CT = 150f;
-
-            var session = Begin(controller, grid, player, enemy);
-
-            Assert.AreSame(player, session.Members[0].Character);
-            Assert.AreSame(enemy, session.Members[1].Character);
-            Assert.AreSame(grid, controller.Resolver.Grid);
-            Assert.AreEqual(0f, player.CTBUnit.CT);
-            Assert.AreEqual(0, player.CTBUnit.PendingCooldownPenalty);
-            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.NextActionThreshold);
-            Assert.AreEqual(0f, enemy.CTBUnit.CT);
-            Assert.AreEqual(0, player.Facing);
-            Assert.AreEqual(3, enemy.Facing);
-            Assert.AreEqual(2, player.FudanStacks);
-            Assert.AreEqual(2, enemy.ShouyiStacks);
-        }
-
-        [Test]
-        public void AdvanceUntilActionReturnsNextActorAndAdvancesCooldowns()
-        {
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var fast = CreateCombatant("快修", "抱元守一经", new HexCoord(0, 0), controller.Engine);
-            var slow = CreateCombatant("慢修", "含弘光大典", new HexCoord(1, 0), controller.Engine);
-            fast.Reaction = 100;
-            fast.CTBUnit.Speed = 100;
-            fast.CTBUnit.CtPerTick = 100f;
-            slow.Reaction = 10;
-            slow.CTBUnit.Speed = 10;
-            slow.CTBUnit.CtPerTick = 10f;
-            fast.SpellCooldowns[0] = 5;
-            slow.SpellCooldowns[0] = 5;
-
-            Begin(controller, grid, fast, slow);
-            var next = controller.AdvanceUntilAction();
-            controller.AdvanceCooldowns(next.TicksElapsed);
-
-            Assert.AreSame(fast, next.Actor);
-            Assert.AreEqual(1, next.TicksElapsed);
-            Assert.AreEqual(4, fast.SpellCooldowns[0]);
-            Assert.AreEqual(4, slow.SpellCooldowns[0]);
-        }
-
-        [Test]
-        public void PlayerBasicAttackConsumesActionOnlyWhenAttackSucceeds()
-        {
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
-            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
-
-            Begin(controller, grid, player, enemy);
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-
-            var hit = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
-
-            Assert.IsTrue(hit.Success);
-            Assert.AreEqual(0f, player.CTBUnit.CT);
-            Assert.Less(enemy.CurrentHP, enemy.MaxHP);
-
-            enemy.Position = new HexCoord(3, 0);
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-
-            var outOfRange = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
-
-            Assert.IsFalse(outOfRange.Success);
-            Assert.AreEqual("目标不在射程范围", outOfRange.Message);
-            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
-        }
-
-        [Test]
-        public void PlayerSpellPreservesPrecheckFailuresAndConsumesActionOnSuccess()
-        {
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
-            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(3, 0), controller.Engine);
-            var art = CreateArt("art_test");
-            player.EquippedSpellIds = new[] { art.attackProfileId };
-
-            Begin(controller, grid, player, enemy, art);
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-            int mpBefore = player.CurrentMP;
-
-            var outOfRange = controller.ExecuteArt(
-                player.CTBUnit.Id, enemy.CTBUnit.Id, 0, new[] { art });
-
-            Assert.IsFalse(outOfRange.Success);
-            Assert.AreEqual("目标不在射程范围", outOfRange.Message);
-            Assert.AreEqual(mpBefore, player.CurrentMP);
-            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
-
-            enemy.Position = new HexCoord(1, 0);
-
-            var cast = controller.ExecuteArt(
-                player.CTBUnit.Id, enemy.CTBUnit.Id, 0, new[] { art });
-
-            Assert.IsTrue(cast.Success);
-            Assert.AreEqual(0f, player.CTBUnit.CT);
-            Assert.AreEqual(20, player.SpellCooldowns[0]);
-            Assert.Less(player.CurrentMP, mpBefore);
-        }
-
-        [Test]
-        public void PlayerGuardConsumesFullActionAndWaitRetainsHalfCt()
-        {
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
-            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
-
-            Begin(controller, grid, player, enemy);
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-
-            var guard = controller.ExecuteGuard(player.CTBUnit.Id);
-
-            Assert.IsTrue(guard.Success);
-            Assert.IsTrue(player.IsGuarding);
-            Assert.AreEqual(0f, player.CTBUnit.CT);
-
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-
-            var wait = controller.ExecuteWait(player.CTBUnit.Id);
-
-            Assert.IsTrue(wait.Success);
-            Assert.IsFalse(player.IsGuarding);
-            Assert.AreEqual(CTBEngine.ActionThreshold * CTBEngine.CtRetentionOnWait, player.CTBUnit.CT);
-        }
-
-        [Test]
-        public void PlayerSwapSpellConsumesActionOnSuccessAndPreservesFailure()
-        {
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
-            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
-            player.EquippedSpellIds = new[] { "old-spell" };
-            player.AvailableSpells = new[] { "old-spell", "new-spell", "backup-spell" };
-
-            Begin(controller, grid, player, enemy);
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-
-            var swapped = controller.ExecuteSwapSpell(player.CTBUnit.Id, 0, "new-spell");
-
-            Assert.IsTrue(swapped.Success);
-            Assert.AreEqual("临阵换法: old-spell → new-spell (CD×2, 剩余1次)", swapped.Message);
-            Assert.AreEqual("new-spell", player.EquippedSpellIds[0]);
-            Assert.AreEqual(60, player.SpellCooldowns[0]);
-            Assert.AreEqual(1, player.CombatSwapsUsed);
-            Assert.AreEqual(0f, player.CTBUnit.CT);
-
-            player.CombatSwapsUsed = Character.MaxCombatSwaps;
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-
-            var exhausted = controller.ExecuteSwapSpell(player.CTBUnit.Id, 0, "backup-spell");
-
-            Assert.IsFalse(exhausted.Success);
-            Assert.AreEqual("本场战斗换法次数已用完", exhausted.Message);
-            Assert.AreEqual("new-spell", player.EquippedSpellIds[0]);
-            Assert.AreEqual(CTBEngine.ActionThreshold, player.CTBUnit.CT);
-        }
-
-        [Test]
-        public void MeleeAiProfileResolvesToExistingSimpleAiAndUnknownProfileFails()
-        {
-            Assert.IsTrue(
-                EnemyAIProfileResolver.TryResolve(
-                    EnemyAIProfileResolver.MeleeProfileId,
-                    out var aiController,
-                    out var reason),
-                reason);
-            Assert.IsInstanceOf<SimpleAI>(aiController);
-
-            Assert.IsFalse(
-                EnemyAIProfileResolver.TryResolve("ai_unknown", out var unknown, out reason));
-            Assert.IsNull(unknown);
-            Assert.AreEqual(EnemyAIProfileResolver.UnknownProfileReason, reason);
-
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var player = CreateCombatant(
-                "玩家",
-                "含弘光大典",
-                new HexCoord(0, 0),
-                controller.Engine);
-            var enemy = CreateCombatant(
-                "石甲兽",
-                "含弘光大典",
-                new HexCoord(1, 0),
-                controller.Engine);
-            Begin(controller, grid, player, enemy);
-            int playerHpBefore = player.CurrentHP;
-
-            string action = controller.ExecuteEnemyTurn(
-                enemy.CTBUnit.Id,
-                player.CTBUnit.Id,
-                null,
-                null,
-                aiController,
-                grid);
-
-            StringAssert.Contains("物理伤害", action);
-            Assert.Less(player.CurrentHP, playerHpBefore);
-        }
-
-        [Test]
-        public void ResolveBattleEndClearsDefeatedEnemyOccupancyAndReportsIdentityOnly()
-        {
-            var grid = new HexGrid();
-            var controller = new TacticalCombatController();
-            var player = CreateCombatant("玩家", "含弘光大典", new HexCoord(0, 0), controller.Engine);
-            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), controller.Engine);
-            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            Begin(controller, grid, player, enemy);
-            enemy.TakeDamage(enemy.CurrentHP);
-
-            var result = controller.ResolveBattleEnd(grid);
-
-            Assert.AreEqual(TacticalCombatEndOutcome.Victory, result.Outcome);
-            Assert.AreEqual("击败了 敌人！", result.Message);
-            CollectionAssert.AreEqual(
-                new[] { enemy.CTBUnit.Id },
-                result.DefeatedEnemyUnitIds);
-            Assert.IsFalse(grid.IsOccupied(enemy.Position));
-        }
-
-        private static Character CreateCombatant(string name, string gongFa, HexCoord position, CTBEngine engine)
-        {
-            var character = new Character
-            {
-                Name = name,
-                GongFaName = gongFa,
-                Position = position,
-                Reaction = 30,
-                MaxHP = 100,
-                CurrentHP = 100,
-                MaxMP = 100,
-                CurrentMP = 100,
-                PhysAtk = 20,
-                MagAtk = 20,
-                PhysDef = 5,
-                MagDef = 5,
-                HitRateBonus = 100f,
-                SpellCooldowns = new int[1],
-                SkillCooldowns = new int[1],
-            };
-            character.CTBUnit = engine.RegisterUnit(character.Reaction, character);
-            character.MainEquipmentBasicAttackProfileId = "basic_main";
-            character.BasicAttackProfileId = "basic_main";
-            character.BasicAttackBindingKind = "main_equipment";
-            return character;
-        }
-
-        private TacticalCombatSession Begin(
-            TacticalCombatController controller,
-            HexGrid grid,
-            Character player,
-            Character enemy,
-            params AttackProfileData[] additionalProfiles)
-        {
-            grid.SetOccupied(player.Position, player.CTBUnit.Id);
-            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var profiles = new List<AttackProfileData> { CreateBasicAttack() };
-            if (additionalProfiles != null)
-                profiles.AddRange(additionalProfiles);
-            var anchors = new Dictionary<int, HexCoord>
-            {
-                [player.CTBUnit.Id] = new HexCoord(player.Position.q, player.Position.r),
-                [enemy.CTBUnit.Id] = new HexCoord(enemy.Position.q, enemy.Position.r),
-            };
-            var setup = new TacticalCombatSetup(
-                new[] { player },
-                new[] { enemy },
-                SpatialQueryTestFixture.CreateOpenBoard(),
-                anchors,
-                profiles);
-            Assert.IsTrue(controller.TryBeginCombat(setup, grid, out var session, out var reason), reason);
-            return session;
-        }
-
-        private AttackProfileData CreateBasicAttack()
-        {
-            var profile = ScriptableObject.CreateInstance<AttackProfileData>();
-            temporaryProfiles.Add(profile);
-            profile.attackProfileId = "basic_main";
-            profile.displayNameKey = "basic_main_name";
-            profile.profileKind = AttackProfileKind.Basic;
-            profile.basicBindingKind = BasicAttackBindingKind.MainEquipment;
-            profile.effectType = AttackEffectType.Physical;
-            profile.damageElementId = "element_none";
-            profile.physicalDamageMultiplier = 1f;
-            profile.resourceKind = AttackResourceKind.None;
-            profile.minCastRange = 1;
-            profile.maxCastRange = 1;
-            profile.targetingMode = AttackTargetingMode.Single;
-            profile.areaFacing = -1;
-            return profile;
-        }
-
-        private AttackProfileData CreateArt(string id)
-        {
-            var profile = ScriptableObject.CreateInstance<AttackProfileData>();
-            temporaryProfiles.Add(profile);
-            profile.attackProfileId = id;
-            profile.displayNameKey = id + "_name";
-            profile.profileKind = AttackProfileKind.Art;
-            profile.contentScope = "player";
-            profile.sourceAffiliation = "test";
-            profile.realmRequirementId = "realm_fanren";
-            profile.elementRequirementId = "element_none";
-            profile.effectType = AttackEffectType.Magic;
-            profile.damageElementId = "element_none";
-            profile.soulDamageMultiplier = 1f;
-            profile.resourceKind = AttackResourceKind.Mp;
-            profile.resourceCost = 10;
-            profile.cooldownTicks = 20;
-            profile.minCastRange = 1;
-            profile.maxCastRange = 1;
-            profile.targetingMode = AttackTargetingMode.Single;
-            profile.areaFacing = -1;
-            return profile;
-        }
-
-        [Test]
-        public void FormalNewPlayerAndShijiahouResolveTheSameProductionBasicUnarmedProfile()
-        {
-            var engine = new CTBEngine();
-            var controller = new TacticalCombatController(engine, new CombatResolver());
-            var grid = new HexGrid();
-
-            var playerData = CharacterCreationRules.BuildCharacterData(
-                CharacterCreationCatalog.CreateDefaultDraft());
-            var player = Character.FromData(playerData, new HexCoord(0, 0));
-            Object.DestroyImmediate(playerData);
-
-            var shijiahou = AssetDatabase.LoadAssetAtPath<CharacterData>(
-                "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
-            Assert.IsNotNull(shijiahou, "formal shijiahou template asset must exist");
-            var enemy = Character.FromData(shijiahou, new HexCoord(1, 0));
-
-            var basicUnarmed = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
-                "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
-            Assert.IsNotNull(basicUnarmed, "production basic_unarmed asset must exist");
-
-            player.CTBUnit = engine.RegisterUnit(player.Reaction, player);
-            enemy.CTBUnit = engine.RegisterUnit(enemy.Reaction, enemy);
-            player.CTBUnit.Id = 1;
-            enemy.CTBUnit.Id = 2;
-            grid.SetOccupied(player.Position, player.CTBUnit.Id);
-            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var anchors = new Dictionary<int, HexCoord>
-            {
-                [player.CTBUnit.Id] = new HexCoord(player.Position.q, player.Position.r),
-                [enemy.CTBUnit.Id] = new HexCoord(enemy.Position.q, enemy.Position.r),
-            };
-
-            var setup = new TacticalCombatSetup(
-                new[] { player },
-                new[] { enemy },
-                SpatialQueryTestFixture.CreateOpenBoard(),
-                anchors,
-                new[] { basicUnarmed });
-
-            Assert.IsTrue(controller.TryBeginCombat(setup, grid, out var session, out var reason), reason);
-            Assert.AreSame(basicUnarmed, session.Members[0].BasicAttackProfile);
-            Assert.AreSame(basicUnarmed, session.Members[1].BasicAttackProfile);
-
-            player.CTBUnit.CT = CTBEngine.ActionThreshold;
-            enemy.CTBUnit.CT = CTBEngine.ActionThreshold;
-            var playerAttack = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
-            Assert.IsTrue(playerAttack.Success, playerAttack.Message);
-            var enemyAttack = controller.ExecuteBasicAttack(enemy.CTBUnit.Id, player.CTBUnit.Id);
-            Assert.IsTrue(enemyAttack.Success, enemyAttack.Message);
-        }
-
-        [Test]
-        public void ProductionChainRejectsAmbiguousAndKindMismatchedBindingsAtSessionEntry()
-        {
-            var engine = new CTBEngine();
-            var controller = new TacticalCombatController(engine, new CombatResolver());
-            var grid = new HexGrid();
-            var mainEquipment = CreateBasicAttack();
-            var basicUnarmed = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
-                "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
-            Assert.IsNotNull(basicUnarmed);
-
-            // 两槽同时非空 → 歧义；任何会话建立前稳定失败。
-            var ambiguousData = ScriptableObject.CreateInstance<CharacterData>();
-            ambiguousData.mainEquipmentBasicAttackProfileId = mainEquipment.attackProfileId;
-            ambiguousData.unarmedBasicAttackProfileId = basicUnarmed.attackProfileId;
-            var ambiguous = Character.FromData(ambiguousData, new HexCoord(0, 0));
-            Object.DestroyImmediate(ambiguousData);
-            Assert.IsTrue(RejectsSetup(controller, grid, ambiguous, basicUnarmed, out var ambiguousReason));
-            Assert.AreEqual("basic_attack_binding_missing_or_ambiguous", ambiguousReason);
-
-            // 无装备槽引用 main_equipment 种类档案 → 绑定种类不符。
-            var mismatchedData = ScriptableObject.CreateInstance<CharacterData>();
-            mismatchedData.unarmedBasicAttackProfileId = mainEquipment.attackProfileId;
-            var mismatched = Character.FromData(mismatchedData, new HexCoord(0, 0));
-            Object.DestroyImmediate(mismatchedData);
-            Assert.IsTrue(RejectsSetup(controller, grid, mismatched, basicUnarmed, out var kindReason));
-            Assert.AreEqual("basic_attack_profile_binding_kind_invalid", kindReason);
-        }
-
-        private bool RejectsSetup(
-            TacticalCombatController controller,
-            HexGrid grid,
-            Character player,
-            AttackProfileData basicUnarmed,
-            out string reason)
-        {
-            var engine = controller.Engine;
-            var enemy = CreateCombatant("敌人", "含弘光大典", new HexCoord(1, 0), engine);
-            player.CTBUnit = engine.RegisterUnit(player.Reaction, player);
-            player.CTBUnit.Id = 1;
-            enemy.CTBUnit.Id = 2;
-            grid.SetOccupied(player.Position, player.CTBUnit.Id);
-            grid.SetOccupied(enemy.Position, enemy.CTBUnit.Id);
-            var anchors = new Dictionary<int, HexCoord>
-            {
-                [player.CTBUnit.Id] = new HexCoord(player.Position.q, player.Position.r),
-                [enemy.CTBUnit.Id] = new HexCoord(enemy.Position.q, enemy.Position.r),
-            };
-
-            var setup = new TacticalCombatSetup(
-                new[] { player },
-                new[] { enemy },
-                SpatialQueryTestFixture.CreateOpenBoard(),
-                anchors,
-                new[] { basicUnarmed, CreateBasicAttack() });
-            return !controller.TryBeginCombat(setup, grid, out _, out reason);
-        }
-    }
-
     public class FormalEncounterResultTests
     {
         private readonly List<Object> temporaryObjects = new List<Object>();
@@ -1066,50 +486,6 @@ namespace TianZhang.Tests
             public int NextPercent()
             {
                 return values.Dequeue();
-            }
-        }
-    }
-
-    public class CombatLogAdapterTests
-    {
-        [Test]
-        public void AdapterFormatsBattleStartActionResultAndDrops()
-        {
-            var logs = new System.Collections.Generic.List<string>();
-            string status = null;
-            var adapter = new CombatLogAdapter(logs.Add, value => status = value);
-
-            adapter.AnnounceBattleStart("玩家", "石甲兽");
-            adapter.AppendActionResult(new CombatResolver.ActionResult { Success = true, Message = "玩家 物理攻击 石甲兽" });
-            adapter.AppendActionResult(new CombatResolver.ActionResult { Success = false, Message = "" });
-            adapter.AppendDropItems(new[] { "灵石×5", "下品丹药×1" });
-
-            CollectionAssert.AreEqual(
-                new[]
-                {
-                    "=== 战斗开始！玩家 VS 石甲兽 ===",
-                    "玩家 物理攻击 石甲兽",
-                    "掉落: 灵石×5, 下品丹药×1",
-                },
-                logs);
-            Assert.AreEqual("⚔ 石甲兽", status);
-        }
-    }
-
-    public static class CombatLogAdapterBatchRunner
-    {
-        public static void RunCombatLogAdapter()
-        {
-            try
-            {
-                new CombatLogAdapterTests().AdapterFormatsBattleStartActionResultAndDrops();
-                Debug.Log("CombatLogAdapterBatchRunner.RunCombatLogAdapter passed.");
-                EditorApplication.Exit(0);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogException(ex);
-                EditorApplication.Exit(1);
             }
         }
     }
@@ -1706,7 +1082,7 @@ namespace TianZhang.Tests
     public class BattleUIManagerTests
     {
         [Test]
-        public void ActionBarButtonsIgnoreUnboundClicksAfterContextInitialization()
+        public void ActionBarButtonsRouteStableCombatContextToTheCommandHandler()
         {
             var host = new GameObject("BattleUIManagerCommandTest");
             try
@@ -1715,15 +1091,42 @@ namespace TianZhang.Tests
                 typeof(BattleUIManager)
                     .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                     .Invoke(ui, null);
-                Assert.DoesNotThrow(() =>
-                {
-                    FindButton("BtnAttack").onClick.Invoke();
-                    FindButton("BtnGuard").onClick.Invoke();
-                    FindButton("BtnWait").onClick.Invoke();
-                    FindButton("BtnSwap").onClick.Invoke();
-                    FindButton("BtnSpell2").onClick.Invoke();
-                    FindButton("BtnSkill1").onClick.Invoke();
-                });
+                var handlerType = System.Reflection.Assembly.Load("TianZhang.Gameplay.Contracts")
+                    .GetType("TianZhang.Gameplay.Contracts.ICombatCommandHandler", true);
+                var createProxy = System.Array.Find(
+                    typeof(System.Reflection.DispatchProxy).GetMethods(),
+                    method => method.Name == "Create" && method.IsGenericMethodDefinition);
+                object handler = createProxy
+                    .MakeGenericMethod(handlerType, typeof(RecordingCombatCommandProxy))
+                    .Invoke(null, null);
+                typeof(BattleUIManager)
+                    .GetMethod("SetCombatCommandHandler")
+                    .Invoke(ui, new[] { handler });
+                ui.SetCombatCommandContext(
+                    "player",
+                    "enemy",
+                    new[] { "art-0", "art-1", "art-2" },
+                    new[] { "divine-0", "divine-1" },
+                    "art-swap");
+
+                FindButton("BtnAttack").onClick.Invoke();
+                FindButton("BtnGuard").onClick.Invoke();
+                FindButton("BtnWait").onClick.Invoke();
+                FindButton("BtnSwap").onClick.Invoke();
+                FindButton("BtnSpell2").onClick.Invoke();
+                FindButton("BtnSkill1").onClick.Invoke();
+
+                CollectionAssert.AreEqual(
+                    new[]
+                    {
+                        "basic:player:enemy",
+                        "guard:player",
+                        "wait:player",
+                        "swap:player:0:art-swap",
+                        "art:player:enemy:art-2",
+                        "divine:player:enemy:divine-1",
+                    },
+                    ((RecordingCombatCommandProxy)handler).Calls);
             }
             finally
             {
@@ -1774,6 +1177,28 @@ namespace TianZhang.Tests
 
             Assert.Fail(name);
             return null;
+        }
+
+        public class RecordingCombatCommandProxy : System.Reflection.DispatchProxy
+        {
+            public List<string> Calls { get; } = new List<string>();
+
+            protected override object Invoke(System.Reflection.MethodInfo targetMethod, object[] args)
+            {
+                string call = targetMethod.Name switch
+                {
+                    "RequestBasicAttack" => $"basic:{args[0]}:{args[1]}",
+                    "RequestArt" => $"art:{args[0]}:{args[1]}:{args[2]}",
+                    "RequestDivine" => $"divine:{args[0]}:{args[1]}:{args[2]}",
+                    "RequestGuard" => $"guard:{args[0]}",
+                    "RequestWait" => $"wait:{args[0]}",
+                    "RequestMove" => $"move:{args[0]}:{args[1]}:{args[2]}",
+                    "RequestSwapSpell" => $"swap:{args[0]}:{args[1]}:{args[2]}",
+                    _ => targetMethod.Name,
+                };
+                Calls.Add(call);
+                return null;
+            }
         }
 
     }

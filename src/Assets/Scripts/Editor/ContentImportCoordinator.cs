@@ -5057,7 +5057,7 @@ namespace TianZhang.Editor
                 asset.penetratingShield = GetRequiredColumnValue(headers, cols, "penetratingShield", path) == "1";
                 asset.stunChance = float.Parse(GetRequiredColumnValue(headers, cols, "stunChance", path));
                 // 五行属性（从独立 element 列解析）
-                asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(
+                asset.element = CombatElementFacts.ResolveElement(
                     GetRequiredColumnValue(headers, cols, "element", path));
 
                 EditorUtility.SetDirty(asset);
@@ -5839,7 +5839,7 @@ namespace TianZhang.Editor
                 asset.penetratingShield = GetRequiredColumnValue(headers, cols, "penetratingShield", path) == "1";
                 asset.stunChance = float.Parse(GetRequiredColumnValue(headers, cols, "stunChance", path));
                 // 五行属性（从独立 element 列解析）
-                asset.element = TianZhang.Combat.DamageCalculator.ResolveElement(
+                asset.element = CombatElementFacts.ResolveElement(
                     GetRequiredColumnValue(headers, cols, "element", path));
                 asset.isDomain = GetRequiredColumnValue(headers, cols, "isDomain", path) == "1";
                 asset.isBloodline = GetRequiredColumnValue(headers, cols, "isBloodline", path) == "1";

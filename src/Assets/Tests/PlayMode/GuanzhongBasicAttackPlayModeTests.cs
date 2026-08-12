@@ -102,7 +102,7 @@ namespace TianZhang.Tests
             Assert.IsTrue(session.TryGetProfile(BasicUnarmedProfileId, out var basicProfile));
             Assert.AreEqual(CombatAttackKind.Basic, basicProfile.Kind);
 
-            // 玩家侧只通过正式 Gameplay 请求入口执行；不得回落到 TacticalCombatController。
+            // 玩家侧只通过正式 Gameplay 请求入口执行，不回落到遗留控制器。
             var service = (CombatCommandService)ReadField(exploration, "combatCommandService");
             for (int step = 0; step < 5 && !session.TurnScheduler.IsReady("player"); step++)
                 service.AdvanceUntilAction(session);

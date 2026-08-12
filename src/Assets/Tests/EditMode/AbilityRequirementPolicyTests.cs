@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Combat;
-using TianZhang.Core;
+using TianZhang.Content;
 using TianZhang.Entity;
 using UnityEngine;
 
@@ -15,31 +14,17 @@ namespace TianZhang.Tests
         [Test]
         public void RuntimeGateAllowsAndRejectsRealmAndElementRequirements()
         {
-            var policyType = typeof(CombatResolver).Assembly.GetType("TianZhang.Combat.AbilityRequirementPolicy");
-            Assert.IsNotNull(policyType, "TQ-059 requires a runtime ability requirement policy.");
-
-            var method = policyType.GetMethod(
-                "IsSatisfied",
-                BindingFlags.Public | BindingFlags.Static,
-                null,
-                new[] { typeof(Character), typeof(string), typeof(string) },
-                null);
-            Assert.IsNotNull(method, "The runtime policy must accept character, realmReq, and elementReq.");
-
-            var visibleRootElement = typeof(Character).GetField("VisibleRootElement");
-            Assert.IsNotNull(visibleRootElement, "Character must project the existing visible-root element at runtime.");
-
             var character = new Character();
             character.SetRealm("凡人");
             character.RealmMultiplier = 6f;
-            visibleRootElement.SetValue(character, "水");
+            character.VisibleRootElement = "水";
 
-            Assert.IsTrue(InvokePolicy(method, character, "realm_zhuji", "element_water_root"));
-            Assert.IsTrue(InvokePolicy(method, character, "realm_jindan", "element_water_or_wind"));
-            Assert.IsFalse(InvokePolicy(method, character, "realm_yuanying", "element_water_root"));
-            Assert.IsFalse(InvokePolicy(method, character, "realm_zhuji", "element_fire_root"));
-            Assert.IsFalse(InvokePolicy(method, character, "realm_unknown", "element_water_root"));
-            Assert.IsFalse(InvokePolicy(method, character, "realm_zhuji", "element_unknown_root"));
+            Assert.IsTrue(IsSatisfied(character, "realm_zhuji", "element_water_root"));
+            Assert.IsTrue(IsSatisfied(character, "realm_jindan", "element_water_or_wind"));
+            Assert.IsFalse(IsSatisfied(character, "realm_yuanying", "element_water_root"));
+            Assert.IsFalse(IsSatisfied(character, "realm_zhuji", "element_fire_root"));
+            Assert.IsFalse(IsSatisfied(character, "realm_unknown", "element_water_root"));
+            Assert.IsFalse(IsSatisfied(character, "realm_zhuji", "element_unknown_root"));
         }
 
         [Test]
@@ -76,9 +61,24 @@ namespace TianZhang.Tests
             Assert.IsNull(typeof(DivineSkillData).GetField("affiliation"));
         }
 
-        private static bool InvokePolicy(MethodInfo method, Character character, string realmReq, string elementReq)
+        private static bool IsSatisfied(Character character, string realmRequirement, string elementRequirement)
         {
-            return (bool)method.Invoke(null, new object[] { character, realmReq, elementReq });
+            return AbilityRequirementPolicy.IsSatisfied(
+                character.RealmMultiplier,
+                character.VisibleRootElement,
+                realmRequirement,
+                elementRequirement);
+        }
+
+        [Test]
+        public void ElementFactsPreserveStableIdsNamesAndUnknownFallbacks()
+        {
+            Assert.AreEqual("雷", CombatElementFacts.ResolveGongFaElement("gongfa_jiuxiaoleijie"));
+            Assert.AreEqual("土", CombatElementFacts.ResolveGongFaElement("含弘光大典"));
+            Assert.AreEqual("水", CombatElementFacts.ResolveElement("element_water_root"));
+            Assert.AreEqual("毒", CombatElementFacts.ResolveElement("element_toxin"));
+            Assert.AreEqual(string.Empty, CombatElementFacts.ResolveGongFaElement("gongfa_unknown"));
+            Assert.AreEqual(string.Empty, CombatElementFacts.ResolveElement("element_unknown"));
         }
     }
 }

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Entity;
+using TianZhang.Content;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
 
@@ -426,7 +427,11 @@ namespace TianZhang.Game
                     var asset = LoadAttackProfile(profileId);
                     if (asset != null && asset.profileKind == Combat.AttackProfileKind.Art &&
                         TianZhang.Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope) &&
-                        Combat.AbilityRequirementPolicy.IsSatisfied(player, asset.realmRequirementId, asset.elementRequirementId))
+                        AbilityRequirementPolicy.IsSatisfied(
+                            player.RealmMultiplier,
+                            player.VisibleRootElement,
+                            asset.realmRequirementId,
+                            asset.elementRequirementId))
                     {
                         spellList.Add(asset);
                         AddKnownProfile(knownProfiles, asset);
@@ -456,7 +461,11 @@ namespace TianZhang.Game
                     var asset = LoadAttackProfile(profileId);
                     if (asset != null && asset.profileKind == Combat.AttackProfileKind.Divine &&
                         TianZhang.Cultivation.ContentScopePolicy.IsPlayerAvailable(asset.contentScope) &&
-                        Combat.AbilityRequirementPolicy.IsSatisfied(player, asset.realmRequirementId, asset.elementRequirementId))
+                        AbilityRequirementPolicy.IsSatisfied(
+                            player.RealmMultiplier,
+                            player.VisibleRootElement,
+                            asset.realmRequirementId,
+                            asset.elementRequirementId))
                     {
                         skillList.Add(asset);
                         AddKnownProfile(knownProfiles, asset);

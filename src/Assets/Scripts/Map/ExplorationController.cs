@@ -798,14 +798,14 @@ namespace TianZhang.Map
                 player.CurrentMP,
                 playerSpells != null ? System.Array.ConvertAll(playerSpells, s => s?.resourceCost ?? 0) : new int[0],
                 player.MaxSpellSlots,
-                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => TianZhang.Combat.DamageCalculator.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
+                playerSpells != null ? System.Array.ConvertAll(playerSpells, s => CombatElementFacts.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
             uiManager.RefreshSkillButtons(
                 playerSkills != null ? System.Array.ConvertAll(playerSkills, s => UiText.Resolve(s?.displayNameKey ?? "?")) : new string[0],
                 player.SkillCooldowns,
                 player.CurrentMP,
                 playerSkills != null ? System.Array.ConvertAll(playerSkills, s => s?.resourceCost ?? 0) : new int[0],
                 -1,
-                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => TianZhang.Combat.DamageCalculator.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
+                playerSkills != null ? System.Array.ConvertAll(playerSkills, s => CombatElementFacts.ResolveElement(s?.damageElementId ?? "")) : new string[0]);
             uiManager.SetActionButtonsInteractable(interactable);
         }
 
@@ -1129,7 +1129,7 @@ namespace TianZhang.Map
                 Facing = character.Facing,
                 IsGuarding = character.IsGuarding,
                 GongFaId = character.GongFaName,
-                GongFaElement = DamageCalculator.GetGongFaElement(character.GongFaName),
+                GongFaElement = CombatElementFacts.ResolveGongFaElement(character.GongFaName),
                 ShouyiStacks = character.ShouyiStacks,
                 FudanStacks = character.FudanStacks,
                 LeijieStacks = character.LeijieStacks,
@@ -1276,7 +1276,7 @@ namespace TianZhang.Map
             else if (state == GameState.Combat) status = "战斗中";
             uiManager.UpdatePlayerInfo(player.BuildCombatantPanelState(
                 ct,
-                TianZhang.Combat.DamageCalculator.GetGongFaElement(player.GongFaName),
+                CombatElementFacts.ResolveGongFaElement(player.GongFaName),
                 status));
 
             if (currentCombatTarget != null && currentCombatTarget.IsAlive)
@@ -1285,7 +1285,7 @@ namespace TianZhang.Map
                 float ect = combatSession != null && combatSession.TurnScheduler.IsReady(enemyId) ? 1f : 0f;
                 uiManager.UpdateEnemyInfo(currentCombatTarget.BuildCombatantPanelState(
                     ect,
-                    TianZhang.Combat.DamageCalculator.GetGongFaElement(currentCombatTarget.GongFaName),
+                    CombatElementFacts.ResolveGongFaElement(currentCombatTarget.GongFaName),
                     string.Empty));
             }
             else
