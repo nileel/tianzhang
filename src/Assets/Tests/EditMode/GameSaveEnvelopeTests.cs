@@ -44,6 +44,18 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void SchemaOneDefaultNavigationRoundTripRemainsCanonical()
+        {
+            var source = new GameRuntime();
+            string first = source.CaptureSaveJson();
+            var restored = new GameRuntime();
+
+            restored.RestoreSaveJson(first, null);
+
+            Assert.That(restored.CaptureSaveJson(), Is.EqualTo(first));
+        }
+
+        [Test]
         public void FailedRestoreDoesNotReplaceAnyLiveOwner()
         {
             GameRuntime runtime = CreateRuntimeWithInventory();
@@ -56,12 +68,79 @@ namespace TianZhang.Tests
             Assert.That(runtime.CaptureSaveJson(), Is.EqualTo(baseline));
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SinglePlayerOrCultivationPayloadFailsClosedWithoutReplacingAnyLiveOwner(bool includePlayerPayload)
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope donor = runtime.CaptureSave();
+            GameSaveEnvelope invalid = new GameRuntime().CaptureSave();
+            invalid.hasPlayer = false;
+            invalid.player = includePlayerPayload ? donor.player : null;
+            invalid.cultivation = includePlayerPayload ? null : donor.cultivation;
+            if (!includePlayerPayload)
+                invalid.cultivation.foundationPhase = 1;
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
+        [TestCase(false, true, 0)]
+        [TestCase(true, false, 1)]
+        [TestCase(false, false, 1)]
+        [TestCase(true, true, 0)]
+        public void InvalidCharterPresenceFailsClosedWithoutReplacingAnyLiveOwner(
+            bool hasRuntimeState,
+            bool includeRuntimeState,
+            int definitionCatalogVersion)
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope invalid = runtime.CaptureSave();
+            invalid.charter.hasRuntimeState = hasRuntimeState;
+            invalid.charter.runtimeState = includeRuntimeState
+                ? new CharterRuntimeStateData { stateId = "unexpected_state" }
+                : null;
+            invalid.charter.definitionCatalogVersion = definitionCatalogVersion;
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
+        [TestCase(GameplaySceneNames.World, null, null)]
+        [TestCase(GameplaySceneNames.World, "guanzhong_hub", "guanzhong_city")]
+        [TestCase(GameplaySceneNames.Settlement, null, null)]
+        [TestCase(GameplaySceneNames.Settlement, "guanzhong_hub", "guanzhong_city")]
+        [TestCase("UnknownScene", "guanzhong_hub", null)]
+        [TestCase("", "guanzhong_hub", null)]
+        public void InvalidNavigationReturnTargetFailsClosedWithoutReplacingAnyLiveOwner(
+            string returnSceneName,
+            string returnWorldNodeId,
+            string returnSettlementId)
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope invalid = runtime.CaptureSave();
+            invalid.navigation.returnSceneName = returnSceneName;
+            invalid.navigation.returnWorldNodeId = returnWorldNodeId;
+            invalid.navigation.returnSettlementId = returnSettlementId;
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
         [TestCase("{\"schemaVersion\":4}")]
         [TestCase("{\"schemaVersion\":99}")]
         [TestCase("not-json")]
         public void LegacyUnknownAndInvalidJsonFailClosed(string json)
         {
             Assert.Throws<InvalidDataException>(() => GameSaveSerializer.Deserialize(json));
+        }
+
+        private void AssertRestoreFailsWithoutChangingRuntime(
+            GameRuntime runtime,
+            GameSaveEnvelope invalid)
+        {
+            string baseline = runtime.CaptureSaveJson();
+
+            Assert.Throws<System.ArgumentException>(() => runtime.RestoreSave(invalid, catalog));
+
+            Assert.That(runtime.CaptureSaveJson(), Is.EqualTo(baseline));
         }
 
         private GameRuntime CreateRuntimeWithInventory()

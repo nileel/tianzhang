@@ -6,15 +6,6 @@
 
 ## 当前未通过/待复核项
 
-### U-ARCH-REBUILD-01F · GameRuntime、保存与应用用例
-
-- 审核对象：正式提交 `4aa505fe54997f3395f4fa48c36fb1a009672881`；结论：部分通过，仍需返工。
-- 已通过：提交实际路径均在任务卡 `expectedPaths` 内；旧会话 owner 的序列化 GUID 无 Scene／Prefab／asset 残留；程序集边界为 21 asmdef／8 asmref；同步 Unity 工程投影后 `dotnet build src/TianZhang.EditModeTests.csproj` 为 0 error、7 个既有 warning；完整 EditMode 为 394/396 且只保留两项登记基线失败；PlayMode 为 5/5。
-- 问题：`GameSaveEnvelope.Restore` 的玩家／修炼 presence 校验只检查“两者同时存在”，会接受 `hasPlayer=false` 时仅一个 payload 存在并静默丢弃；`CharterRecord.Restore` 会接受 `hasRuntimeState=false` 但携带非空动态状态并静默丢弃，违反成对 presence 与错误组合失败关闭。
-- 问题：`GameRuntime.EnterAdventure` 与 `NavigationRecord.Restore` 只校验返回场景名，没有要求 World 目标具备唯一 `worldNodeId`、Settlement 目标具备唯一 `settlementId` 且排除另一分支字段，非法返回上下文可进入运行时或从存档恢复。
-- 定向返工：只修正 schema 1 的双向 presence 校验、World／Settlement 返回目标形状校验及直接 EditMode 反例；不得恢复旧 schema 4、增加兼容读取层、修改场景／Feature／Content／规则／数值，或提前展开 01G。返工后重新运行程序集边界、构建、完整 EditMode 与 PlayMode，并由独立架构复审确认后再冻结 01G 路径。
-- 执行投影：`U-ARCH-REBUILD-01F1` 已于 2026-08-12 建立为 `codex_execute/codex/ready` 独立返工卡；完成前 01G 显式阻塞于该 ID。
-
 ### C-HS-YY-JD-01A · 金丹位格·木道路三位置内容生产
 
 - 审核对象：正式提交 `1c4eaeb6a1f952e183bbcd18557c4742e030d450`；结论：不通过。

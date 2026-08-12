@@ -60,5 +60,31 @@ namespace TianZhang.Tests
             Assert.That(runtime.Navigation.SettlementId, Is.EqualTo("guanzhong_city"));
             Assert.That(runtime.Navigation.AdventureId, Is.Null);
         }
+
+        [TestCase(GameplaySceneNames.World, null, null)]
+        [TestCase(GameplaySceneNames.World, "guanzhong_hub", "guanzhong_city")]
+        [TestCase(GameplaySceneNames.Settlement, null, null)]
+        [TestCase(GameplaySceneNames.Settlement, "guanzhong_hub", "guanzhong_city")]
+        [TestCase("UnknownScene", "guanzhong_hub", null)]
+        [TestCase("", "guanzhong_hub", null)]
+        public void AdventureEntryRejectsInvalidReturnTargetWithoutChangingNavigation(
+            string sceneName,
+            string worldNodeId,
+            string settlementId)
+        {
+            var runtime = new GameRuntime();
+            runtime.EnterSettlement("guanzhong_city");
+            NavigationStateSnapshot baseline = runtime.Navigation;
+            var invalid = new SceneReturnTarget
+            {
+                SceneName = sceneName,
+                WorldNodeId = worldNodeId,
+                SettlementId = settlementId,
+            };
+
+            Assert.Throws<System.ArgumentException>(() => runtime.EnterAdventure("guanzhong_wild", invalid));
+
+            Assert.That(runtime.Navigation, Is.SameAs(baseline));
+        }
     }
 }

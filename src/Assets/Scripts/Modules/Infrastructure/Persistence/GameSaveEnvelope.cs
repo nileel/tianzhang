@@ -68,8 +68,15 @@ namespace TianZhang.Infrastructure.Persistence
             {
                 throw new ArgumentException("Save envelope is incomplete.");
             }
-            if (hasPlayer != (player != null && cultivation != null))
+            if (hasPlayer)
+            {
+                if (player == null || cultivation == null)
+                    throw new ArgumentException("Player state presence is inconsistent.");
+            }
+            else if (HasCharacterPayload(player) || HasCultivationPayload(cultivation))
+            {
                 throw new ArgumentException("Player state presence is inconsistent.");
+            }
 
             CharacterRuntimeProfile restoredPlayer = hasPlayer
                 ? CharacterRuntimeProfile.FromSnapshot(player.Restore())
@@ -104,6 +111,42 @@ namespace TianZhang.Infrastructure.Persistence
                 restoredBounties,
                 restoredCharter,
                 restoredNavigation);
+        }
+
+        private static bool HasCharacterPayload(CharacterRecord record)
+        {
+            return record != null &&
+                (!string.IsNullOrEmpty(record.characterId) ||
+                 !string.IsNullOrEmpty(record.displayName) ||
+                 record.rootBone != 0 || record.physique != 0 || record.spirit != 0 ||
+                 record.mind != 0 || record.reaction != 0 || record.talent != 0 ||
+                 record.fortune != 0 || record.maximumHealth != 0 || record.currentHealth != 0 ||
+                 record.maximumSpirit != 0 || record.currentSpirit != 0 ||
+                 HasItems(record.knownSpells) || HasItems(record.knownSkills) ||
+                 HasItems(record.equippedSpells) || HasItems(record.equippedSkills) ||
+                 record.spellSlots != 0 || record.skillSlots != 0 ||
+                 !string.IsNullOrEmpty(record.mainEquipmentBasicAttackProfileId) ||
+                 !string.IsNullOrEmpty(record.unarmedBasicAttackProfileId) ||
+                 !string.IsNullOrEmpty(record.gongFaId) ||
+                 !string.IsNullOrEmpty(record.realmStage) ||
+                 record.realmMultiplier != 0f);
+        }
+
+        private static bool HasCultivationPayload(CultivationRecord record)
+        {
+            return record != null &&
+                (record.foundationPhase != 0 || record.foundationProgress != 0f ||
+                 record.totalMansionCapacity != 0 || HasItems(record.mansions) ||
+                 HasItems(record.guardians) || !string.IsNullOrEmpty(record.actionStateId) ||
+                 record.actionStatus != 0 || HasItems(record.committedCycleIds) ||
+                 !string.IsNullOrEmpty(record.retreatId) || record.retreatActive ||
+                 !string.IsNullOrEmpty(record.retreatStopReason) || record.jindanFormed ||
+                 !string.IsNullOrEmpty(record.jindanFormedBy));
+        }
+
+        private static bool HasItems<T>(T[] values)
+        {
+            return values != null && values.Length > 0;
         }
 
         private static QuestRecord[] CaptureQuests(QuestStoreSnapshot snapshot)
@@ -452,18 +495,48 @@ namespace TianZhang.Infrastructure.Persistence
         public CharterStateSnapshot Restore()
         {
             if (entries == null) throw new ArgumentException("Charter entries are missing.");
+            if (hasRuntimeState)
+            {
+                if (runtimeState == null || definitionCatalogVersion <= 0)
+                    throw new ArgumentException("Charter runtime state presence is inconsistent.");
+            }
+            else if (HasRuntimePayload(runtimeState) || definitionCatalogVersion != 0)
+            {
+                throw new ArgumentException("Charter runtime state presence is inconsistent.");
+            }
             var states = new List<CharterStateEntry>();
             foreach (CharterEntryRecord entry in entries)
             {
                 if (entry == null) throw new ArgumentException("Charter entry is missing.");
                 states.Add(new CharterStateEntry(entry.definitionId, entry.operationId, entry.conflictKey));
             }
-            if (hasRuntimeState && runtimeState == null)
-                throw new ArgumentException("Charter runtime state is missing.");
             return new CharterStateSnapshot(
                 states.ToArray(),
                 definitionCatalogVersion,
                 hasRuntimeState ? runtimeState : null);
+        }
+
+        private static bool HasRuntimePayload(CharterRuntimeStateData state)
+        {
+            return state != null &&
+                (!string.IsNullOrEmpty(state.stateId) ||
+                 HasItems(state.registeredRuleEntryIds) ||
+                 !string.IsNullOrEmpty(state.charterRelicState) ||
+                 !string.IsNullOrEmpty(state.worldSealState) ||
+                 HasItems(state.nodeStates) ||
+                 HasItems(state.organizationAuthorizationVersions) ||
+                 HasItems(state.currentCoverageSet) ||
+                 HasItems(state.ruleEntryOccupancies) ||
+                 HasItems(state.nodeOccupancies) ||
+                 HasItems(state.realitySupplyStates) ||
+                 HasItems(state.positiveCommitResults) ||
+                 HasItems(state.negativeCommitResults) ||
+                 HasItems(state.currentRegionRuleEntryIds));
+        }
+
+        private static bool HasItems<T>(T[] values)
+        {
+            return values != null && values.Length > 0;
         }
     }
 
@@ -495,10 +568,22 @@ namespace TianZhang.Infrastructure.Persistence
         public NavigationStateSnapshot Restore()
         {
             if (string.IsNullOrWhiteSpace(worldNodeId)) throw new ArgumentException("World node ID is missing.");
-            if (!string.IsNullOrEmpty(returnSceneName) &&
-                returnSceneName != GameplaySceneNames.World && returnSceneName != GameplaySceneNames.Settlement)
+            bool hasDefaultReturnTarget =
+                string.IsNullOrEmpty(returnSceneName) &&
+                string.IsNullOrEmpty(returnWorldNodeId) &&
+                string.IsNullOrEmpty(returnSettlementId);
+            bool returnsToWorld =
+                returnSceneName == GameplaySceneNames.World &&
+                !string.IsNullOrWhiteSpace(returnWorldNodeId) &&
+                string.IsNullOrEmpty(returnSettlementId);
+            bool returnsToSettlement =
+                returnSceneName == GameplaySceneNames.Settlement &&
+                !string.IsNullOrWhiteSpace(returnSettlementId) &&
+                string.IsNullOrEmpty(returnWorldNodeId);
+            if ((!hasDefaultReturnTarget && !returnsToWorld && !returnsToSettlement) ||
+                (!string.IsNullOrWhiteSpace(adventureId) && hasDefaultReturnTarget))
             {
-                throw new ArgumentException("Return scene is invalid.");
+                throw new ArgumentException("Return target is invalid.");
             }
             return new NavigationStateSnapshot(
                 worldNodeId,

@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01F1"],
-  "stateReason": "2026-08-12：01F 独立架构复审部分通过；已建立 ready 返工卡 U-ARCH-REBUILD-01F1，待其修复保存 presence 与导航返回目标失败关闭并通过验证后，再实时冻结阶段 7 路径。",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：01F1 已完成；实时扫描确认五个 Feature asmdef 为空、现行控制器直依赖 Bootstrap／SceneFlow、正式场景仍由 GameManager + SceneFlowManager 组合，且 SceneBuilder 混合正式场景、旧 Adventure、原型与资源生成。注入契约、逐场景组合根和拆分字面量路径尚未唯一冻结，保持 blocked。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -49,3 +49,11 @@
 ## 停止条件
 
 - 必须恢复旧 UI／Built-in 表现、建立兄弟 Feature 依赖或改变规则／数值时停止。
+
+## 2026-08-12 实时准备扫描
+
+- 前置状态：`U-ARCH-REBUILD-01F1` 已完成，命名前置已从 `blockedBy` 移除。
+- 当前 owner：`WorldSceneController`、`SettlementSceneController`、`AdventureSceneController`、`ExplorationController`、`BattleUIManager` 及 StartMenu 的 `GameManager`／`SectSelectionManager` 仍位于旧 `TianZhang.Gameplay` 路径；五个目标 Feature asmdef 只有骨架和 README。
+- 当前组合根：四个正式场景仍序列化 `GameManager + SceneFlowManager`；`GameBootstrap` 由运行时查找／动态创建，不是逐场景唯一组合根。
+- 当前 builder：`SceneBuilder.cs` 同时生成／验证正式场景、旧 Exploration／BattleUI、Hybrid 原型、Tile／Prefab 和 UI，无法在不先冻结提取边界的情况下给出完整新增／移动／删除路径。
+- 剩余准备：先冻结 Feature 注入契约、五个 Feature 的旧 owner → 新文件映射、四个逐场景组合根、SceneBuilder 拆分文件与对应测试／scene／asset／`.meta` 字面量路径；在这些事实唯一前不得改为 ready。

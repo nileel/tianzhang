@@ -144,8 +144,15 @@ namespace TianZhang.Bootstrap
         {
             if (string.IsNullOrWhiteSpace(adventureId))
                 throw new ArgumentException("Adventure ID is required.", nameof(adventureId));
-            if (returnTarget.SceneName != GameplaySceneNames.World &&
-                returnTarget.SceneName != GameplaySceneNames.Settlement)
+            bool returnsToWorld =
+                returnTarget.SceneName == GameplaySceneNames.World &&
+                !string.IsNullOrWhiteSpace(returnTarget.WorldNodeId) &&
+                string.IsNullOrEmpty(returnTarget.SettlementId);
+            bool returnsToSettlement =
+                returnTarget.SceneName == GameplaySceneNames.Settlement &&
+                !string.IsNullOrWhiteSpace(returnTarget.SettlementId) &&
+                string.IsNullOrEmpty(returnTarget.WorldNodeId);
+            if (!returnsToWorld && !returnsToSettlement)
             {
                 throw new ArgumentException("Adventure return target is invalid.", nameof(returnTarget));
             }
