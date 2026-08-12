@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01E2"],
-  "stateReason": "2026-08-12：按负责人批准的边界修正设计继续直接等待 01E2；其完成后删除旧源码、Character CTB 字段与旧 AI 编译残件，收紧 Combat 依赖并完成阶段 5 总验收。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：U-ARCH-REBUILD-01E2 已完成正式调用链原子切换与旧入口零引用证明；恢复遗留删除与阶段 5 总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
