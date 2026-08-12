@@ -437,6 +437,8 @@ StartMenu 的状态步骤分别验证，不合并成一个布尔值：
 - `src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef`
 - `src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs`
 - `src/Assets/Tests/EditMode/ArchitectureBaselineEditorTests.cs`
+- `tools/check-unity-assembly-boundaries.ps1`（同步 01G 已落地的 Feature UI／Spatial 引用，并只对运行时程序集保留“仅 Bootstrap 可组合多个 Feature”的闸门；Editor 场景构建程序集可引用多个 Feature，但不得进入 Player）
+- `UNITY_STRUCTURE.md`（同步正式 Feature、逐场景 Installer、拆分后的场景构建与验证入口）
 
 新建并包含 `.meta`：
 

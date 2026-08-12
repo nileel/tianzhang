@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using TianZhang.Entity;
+using TianZhang.Features.CharacterCreation;
 using TianZhang.Game.CharacterCreation;
 using UnityEngine;
 
@@ -217,6 +218,17 @@ namespace TianZhang.Tests
                 CharacterCreationCatalog.BasicUnarmedAttackProfileId,
                 character.BasicAttackProfileId);
             Assert.AreEqual("unarmed_fallback", character.BasicAttackBindingKind);
+        }
+
+        [Test]
+        public void NewPlayerHasNoCreationTimeSectOrCultivationLoadout()
+        {
+            CharacterData profile = CharacterCreationRules.BuildCharacterData(
+                CharacterCreationCatalog.CreateDefaultDraft());
+
+            Assert.IsTrue(string.IsNullOrEmpty(profile.gongFaName));
+            CollectionAssert.IsEmpty(profile.equippedSpells);
+            CollectionAssert.IsEmpty(profile.availableSpells);
         }
 
         [Test]

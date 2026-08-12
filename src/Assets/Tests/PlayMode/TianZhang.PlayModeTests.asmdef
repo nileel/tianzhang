@@ -15,6 +15,11 @@
         "TianZhang.Infrastructure.Persistence",
         "TianZhang.Spatial",
         "TianZhang.Infrastructure.UnityContent"
+        ,"TianZhang.Features.CharacterCreation"
+        ,"TianZhang.Features.WorldMap"
+        ,"TianZhang.Features.Settlement"
+        ,"TianZhang.Features.Adventure"
+        ,"TianZhang.Features.CombatPresentation"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

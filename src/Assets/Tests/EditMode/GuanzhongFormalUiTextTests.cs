@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using TianZhang.Bootstrap;
 using TianZhang.Editor;
-using TianZhang.Game;
-using TianZhang.Settlement;
+using TianZhang.Features.CombatPresentation;
+using TianZhang.Features.Settlement;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -93,94 +93,56 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void BattleLogPreservesCustomNamesAndTechnicalLogsVerbatim()
+        public void CombatLogPreservesCustomNamesAndTechnicalLogsVerbatim()
         {
             UiText.Load(LoadLanguageTable());
-
-            // 整条日志不做全局键替换（复审返工项）：玩家自定义名称或技术日志只要含有 Language 键
-            // 子串（如 attack_profile_basic_unarmed）就必须原样保留，不得被改写为"徒手"。
-            var host = new GameObject("BattleLogVerbatimHost");
+            var host = new GameObject("CombatLogVerbatimHost");
+            var textHost = new GameObject("CombatLogText", typeof(RectTransform), typeof(Text));
             try
             {
-                var ui = host.AddComponent<BattleUIManager>();
-                typeof(BattleUIManager)
-                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(ui, null);
+                var logView = host.AddComponent<CombatLogView>();
+                var logText = textHost.GetComponent<Text>();
+                typeof(CombatLogView).GetField(
+                        "logText",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .SetValue(logView, logText);
 
-                var logText = GameObject.Find("LogText").GetComponent<Text>();
-                Assert.IsNotNull(logText, "the battle log text must be built by Awake.");
-
-                ui.AddLog("我的角色 attack_profile_basic_unarmed 的存档已保存");
-                ui.AddLog("技术日志: settlement_guanzhong_city 已加载 attack_profile_basic_unarmed");
+                logView.Append("我的角色 attack_profile_basic_unarmed 的存档已保存");
+                logView.Append("技术日志: settlement_guanzhong_city 已加载 attack_profile_basic_unarmed");
 
                 Assert.AreEqual(
                     "我的角色 attack_profile_basic_unarmed 的存档已保存\n" +
-                    "技术日志: settlement_guanzhong_city 已加载 attack_profile_basic_unarmed\n",
+                    "技术日志: settlement_guanzhong_city 已加载 attack_profile_basic_unarmed",
                     logText.text);
             }
             finally
             {
-                var canvas = GameObject.Find("UICanvas");
-                if (canvas != null)
-                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(textHost);
                 Object.DestroyImmediate(host);
             }
         }
 
         [Test]
-        public void BattleUiDoesNotResolveProfileKeysAtButtonOrLogFields()
+        public void CombatLogIgnoresBlankMessagesWithoutFabricatingText()
         {
-            UiText.Load(LoadLanguageTable());
-
-            // 已证明的战斗档案显示字段（术法/神通按钮标签）由 ExplorationController 源端
-            // `UiText.Resolve` 解析为中文后传入；BattleUIManager 本身是透传层，原始档案键
-            // 传入时保持原样，不得在 UI 层再做整串替换。
-            var host = new GameObject("BattleUiRawFieldHost");
+            var host = new GameObject("CombatLogBlankHost");
+            var textHost = new GameObject("CombatLogBlankText", typeof(RectTransform), typeof(Text));
             try
             {
-                var ui = host.AddComponent<BattleUIManager>();
-                typeof(BattleUIManager)
-                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(ui, null);
-
-                ui.RefreshSpellButtons(
-                    new[] { "attack_profile_basic_unarmed" },
-                    new[] { 0 },
-                    10,
-                    new[] { 0 },
-                    1);
-                Assert.AreEqual("attack_profile_basic_unarmed", ButtonLabel("BtnSpell0"));
-
-                var logText = GameObject.Find("LogText").GetComponent<Text>();
-                ui.AddLog("未知原因 attack_profile_basic_unarmed 保持原样");
-                StringAssert.Contains("attack_profile_basic_unarmed", logText.text);
-
-                // 对照：同一键的玩家显示映射仍由源端 UiText.Resolve 提供（显示字段专用）。
-                Assert.AreEqual("徒手", UiText.Resolve("attack_profile_basic_unarmed"));
+                var logView = host.AddComponent<CombatLogView>();
+                var logText = textHost.GetComponent<Text>();
+                typeof(CombatLogView).GetField(
+                        "logText",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .SetValue(logView, logText);
+                logView.Append(" ");
+                Assert.AreEqual(string.Empty, logText.text);
             }
             finally
             {
-                var canvas = GameObject.Find("UICanvas");
-                if (canvas != null)
-                    Object.DestroyImmediate(canvas);
+                Object.DestroyImmediate(textHost);
                 Object.DestroyImmediate(host);
             }
-        }
-
-        private static string ButtonLabel(string buttonName)
-        {
-            // 动作栏默认隐藏（BuildUI 关闭 ActionBar），需用 FindObjectsOfTypeAll 查找非激活控件。
-            foreach (var button in Resources.FindObjectsOfTypeAll<Button>())
-            {
-                if (button.name != buttonName)
-                    continue;
-                var label = button.GetComponentInChildren<Text>();
-                Assert.IsNotNull(label, buttonName + " must carry a label text.");
-                return label.text;
-            }
-
-            Assert.Fail(buttonName + " must exist after building the battle UI.");
-            return null;
         }
 
         [Test]
@@ -207,19 +169,19 @@ namespace TianZhang.Tests
         {
             // 场景重建后正式控件仍呈现中文：SceneBuilder 把 Language.csv 序列化为语言表引用，
             // 视图显示不再恢复内部字段 / 稳定 ID。
-            SceneBuilder.BuildSettlementScene();
+            SettlementSceneBuilder.Build();
             EditorSceneManager.OpenScene(
                 "Assets/Scenes/SettlementScene.unity",
                 OpenSceneMode.Single);
             try
             {
+                new GameObject("GameBootstrapTest").AddComponent<GameBootstrap>();
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.EnterWorld("guanzhong_hub");
                 runtime.EnterSettlement("guanzhong_city");
-                var controller = Object.FindFirstObjectByType<SettlementSceneController>();
-                controller.GetType()
-                    .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(controller, null);
+                InvokePrivate(Object.FindFirstObjectByType<SettlementSceneInstaller>(), "Awake");
+                var controller = Object.FindFirstObjectByType<SettlementController>();
+                InvokePrivate(controller, "Start");
 
                 Assert.AreEqual("关中城", GameObject.Find("SettlementNameText").GetComponent<Text>().text);
                 StringAssert.Contains("据点: 关中城", GameObject.Find("SettlementDetailText").GetComponent<Text>().text);
@@ -233,14 +195,22 @@ namespace TianZhang.Tests
                 GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
                 if (bootstrap != null)
                     Object.DestroyImmediate(bootstrap.gameObject);
-                if (SceneFlowManager.Instance != null)
-                    Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
                 // 恢复套件既有的"最后打开 AdventureScene"状态，避免后续顺序相关用例（如
                 // AdventurePanelDoesNotOverlapPlayerHud）受本用例遗留的据点场景影响。
                 EditorSceneManager.OpenScene(
                     "Assets/Scenes/AdventureScene.unity",
                     OpenSceneMode.Single);
             }
+        }
+
+        private static void InvokePrivate(MonoBehaviour target, string methodName)
+        {
+            Assert.IsNotNull(target, methodName + " target must exist in the built scene.");
+            var method = target.GetType().GetMethod(
+                methodName,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(target, null);
         }
     }
 }

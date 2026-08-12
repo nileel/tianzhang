@@ -6,6 +6,7 @@ using TianZhang.Editor;
 using TianZhang.Tactical;
 using TianZhang.Content;
 using TianZhang.Infrastructure.UnityContent;
+using TianZhang.Features.Adventure;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -176,7 +177,7 @@ namespace TianZhang.Tests.EditMode
         [Test]
         public void PrototypeSceneIsIsolatedFromFormalBuildSettingsAndAdventureOwners()
         {
-            SceneBuilder.BuildHybridTacticalPrototypeScene();
+            HybridTacticalPrototypeBuilder.Build();
             var scene = EditorSceneManager.OpenScene(PrototypeScenePath, OpenSceneMode.Single);
 
             Assert.IsTrue(scene.IsValid());
@@ -185,7 +186,7 @@ namespace TianZhang.Tests.EditMode
             var camera = Object.FindFirstObjectByType<Camera>();
             Assert.IsNotNull(camera);
             Assert.IsTrue(camera.orthographic);
-            Assert.IsNull(Object.FindFirstObjectByType<TianZhang.Adventure.AdventureSceneController>());
+            Assert.IsNull(Object.FindFirstObjectByType<AdventureController>());
             CollectionAssert.DoesNotContain(
                 EditorBuildSettings.scenes.Where(sceneEntry => sceneEntry.enabled).Select(sceneEntry => sceneEntry.path),
                 PrototypeScenePath);

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
-using TianZhang.Adventure;
+using TianZhang.Features.Adventure;
 using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.World;

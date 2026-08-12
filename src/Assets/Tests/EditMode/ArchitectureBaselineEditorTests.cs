@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Bootstrap;
+using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
 
 namespace TianZhang.Tests
@@ -58,14 +59,24 @@ namespace TianZhang.Tests
             FieldInfo[] fields = type.GetFields(
                 BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
                 BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-            Assert.That(fields, Has.Length.EqualTo(2));
+            Assert.That(fields, Has.Length.EqualTo(4));
             Assert.That(Array.Exists(fields, field => field.FieldType == typeof(GameBootstrap)), Is.True);
             Assert.That(Array.Exists(fields, field => field.FieldType == typeof(GameRuntime)), Is.True);
+            Assert.That(Array.Exists(fields, field => field.FieldType == typeof(GameSaveSlotStore)), Is.True);
+            Assert.That(Array.Exists(fields, field => field.FieldType == typeof(string)), Is.True);
+        }
 
-            foreach (FieldInfo field in fields)
-            {
-                Assert.That(field.IsStatic, Is.True, field.Name);
-            }
+        [Test]
+        public void MissingBootstrapFailsWithoutCreatingASecondCompositionRoot()
+        {
+            GameBootstrap existing = UnityEngine.Object.FindFirstObjectByType<GameBootstrap>();
+            if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
+
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => GameBootstrap.RequireRuntime());
+
+            Assert.AreEqual("game_bootstrap_missing", exception.Message);
+            Assert.IsNull(UnityEngine.Object.FindFirstObjectByType<GameBootstrap>());
         }
 
         [Test]

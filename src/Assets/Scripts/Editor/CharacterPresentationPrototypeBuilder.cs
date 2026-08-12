@@ -88,10 +88,10 @@ namespace TianZhang.Editor
                 !EditorBuildSettings.scenes.Any(entry => entry.enabled && entry.path == ScenePath),
                 "Character presentation prototype must remain outside formal Build Settings.");
             Require(
-                UnityEngine.Object.FindFirstObjectByType<TianZhang.Adventure.AdventureSceneController>() == null,
+                UnityEngine.Object.FindFirstObjectByType<TianZhang.Features.Adventure.AdventureController>() == null,
                 "Character presentation prototype must not own Adventure runtime behavior.");
             Require(
-                UnityEngine.Object.FindFirstObjectByType<TianZhang.Game.BattleUIManager>() == null,
+                UnityEngine.Object.FindFirstObjectByType<TianZhang.Features.CombatPresentation.CombatHudPresenter>() == null,
                 "Character presentation prototype must not own battle UI behavior.");
         }
 

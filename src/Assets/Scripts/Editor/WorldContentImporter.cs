@@ -10,6 +10,7 @@ namespace TianZhang.Editor
         {
             ContentImportCoordinator.ImportEnvironmentProfiles();
             ContentImportCoordinator.ImportCharterRuleDefinitions();
+            AdventureContentImporter.Import();
         }
     }
 }

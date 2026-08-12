@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-ARCH-REBUILD-01G",
     "U-ARCH-REBUILD-01H"
   ],
-  "stateReason": "2026-08-12：01F1 定向返工已完成并闭合验证；01G 的实时扫描尚不能唯一冻结 Feature 注入契约、逐场景组合根与 SceneBuilder 拆分路径，父项继续等待 01G 与 01H。",
+  "stateReason": "2026-08-13：01A～01G 已完成归档；父项仍等待 01G 正式提交的独立架构复审，以及 01H 的遗留删除、结构文档、总验收与 URP 交接。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

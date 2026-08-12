@@ -99,11 +99,11 @@ foreach ($definition in $definitions) {
   if ($domainAssemblies -ccontains $definition.Name) {
     Assert-Boundary ($featureReferences.Count -eq 0) "Domain-to-Feature reference is forbidden: $($definition.Name) -> $($featureReferences -join ',')"
   }
-  if ($definition.Name -cne 'TianZhang.Bootstrap') {
+  $isEditorAssembly = $definition.IncludePlatforms -ccontains 'Editor'
+  if ($definition.Name -cne 'TianZhang.Bootstrap' -and -not $isEditorAssembly) {
     Assert-Boundary ($featureReferences.Count -le 1) "only Bootstrap may reference multiple Feature implementations: $($definition.Name)"
   }
 
-  $isEditorAssembly = $definition.IncludePlatforms -ccontains 'Editor'
   if (-not $isEditorAssembly) {
     foreach ($reference in $definition.References) {
       if ($byName.ContainsKey($reference)) {
@@ -149,14 +149,14 @@ if (-not $SkipRequiredAssemblies) {
     'TianZhang.Combat' = @('src/Assets/Scripts/Combat/TianZhang.Combat.asmdef', @('TianZhang.Foundation', 'TianZhang.Spatial', 'TianZhang.Combat.Turns'))
     'TianZhang.Combat.Turns' = @('src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef', @())
     'TianZhang.Gameplay.Contracts' = @('src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef', @('TianZhang.Foundation'))
-    'TianZhang.Features.CharacterCreation' = @('src/Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.Cultivation', 'TianZhang.Gameplay.Contracts'))
-    'TianZhang.Features.WorldMap' = @('src/Assets/Scripts/Modules/Features/WorldMap/TianZhang.Features.WorldMap.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.World', 'TianZhang.Gameplay.Contracts'))
-    'TianZhang.Features.Settlement' = @('src/Assets/Scripts/Modules/Features/Settlement/TianZhang.Features.Settlement.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.World', 'TianZhang.Gameplay.Contracts'))
-    'TianZhang.Features.Adventure' = @('src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.World', 'TianZhang.Combat', 'TianZhang.Gameplay.Contracts'))
-    'TianZhang.Features.CombatPresentation' = @('src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef', @('TianZhang.Foundation', 'TianZhang.Combat', 'TianZhang.Gameplay.Contracts'))
+    'TianZhang.Features.CharacterCreation' = @('src/Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef', @('TianZhang.Foundation', 'TianZhang.Domain', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.Cultivation', 'TianZhang.Gameplay.Contracts', 'UnityEngine.UI'))
+    'TianZhang.Features.WorldMap' = @('src/Assets/Scripts/Modules/Features/WorldMap/TianZhang.Features.WorldMap.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.World', 'TianZhang.Gameplay.Contracts', 'UnityEngine.UI'))
+    'TianZhang.Features.Settlement' = @('src/Assets/Scripts/Modules/Features/Settlement/TianZhang.Features.Settlement.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.World', 'TianZhang.Gameplay.Contracts', 'UnityEngine.UI'))
+    'TianZhang.Features.Adventure' = @('src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef', @('TianZhang.Foundation', 'TianZhang.Domain', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.World', 'TianZhang.Combat', 'TianZhang.Gameplay.Contracts', 'TianZhang.Spatial', 'TianZhang.Infrastructure.UnityContent', 'UnityEngine.UI'))
+    'TianZhang.Features.CombatPresentation' = @('src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef', @('TianZhang.Foundation', 'TianZhang.Combat', 'TianZhang.Gameplay.Contracts', 'UnityEngine.UI'))
     'TianZhang.Infrastructure.Persistence' = @('src/Assets/Scripts/Modules/Infrastructure/Persistence/TianZhang.Infrastructure.Persistence.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.Cultivation', 'TianZhang.World', 'TianZhang.Gameplay.Contracts'))
     'TianZhang.Infrastructure.UnityContent' = @('src/Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Spatial'))
-    'TianZhang.Bootstrap' = @('src/Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef', @('TianZhang.Character', 'TianZhang.Content', 'TianZhang.Cultivation', 'TianZhang.World', 'TianZhang.Gameplay.Contracts', 'TianZhang.Features.CharacterCreation', 'TianZhang.Features.WorldMap', 'TianZhang.Features.Settlement', 'TianZhang.Features.Adventure', 'TianZhang.Features.CombatPresentation', 'TianZhang.Infrastructure.Persistence', 'TianZhang.Infrastructure.UnityContent'))
+    'TianZhang.Bootstrap' = @('src/Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef', @('TianZhang.Domain', 'TianZhang.Character', 'TianZhang.Content', 'TianZhang.Combat', 'TianZhang.Cultivation', 'TianZhang.World', 'TianZhang.Gameplay.Contracts', 'TianZhang.Features.CharacterCreation', 'TianZhang.Features.WorldMap', 'TianZhang.Features.Settlement', 'TianZhang.Features.Adventure', 'TianZhang.Features.CombatPresentation', 'TianZhang.Infrastructure.Persistence', 'TianZhang.Infrastructure.UnityContent'))
   }
 
   foreach ($entry in $required.GetEnumerator()) {

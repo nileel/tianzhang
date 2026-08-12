@@ -13,6 +13,7 @@ namespace TianZhang.Content
         [SerializeField] private BountyData[] bounties = Array.Empty<BountyData>();
         [SerializeField] private CharterRuleStaticCatalogData charterRuleStaticCatalog;
         [SerializeField] private CharterSiteData[] charterSites = Array.Empty<CharterSiteData>();
+        [SerializeField] private AdventureMapData[] adventureMaps = Array.Empty<AdventureMapData>();
 
         public CharterRuleStaticCatalogData CharterRuleStaticCatalog => charterRuleStaticCatalog;
 
@@ -64,6 +65,16 @@ namespace TianZhang.Content
         public bool TryGetSettlement(string settlementId, out SettlementData settlement)
         {
             return TryFind(settlements, settlementId, value => value.settlementId, out settlement);
+        }
+
+        public bool TryGetAdventureMap(string adventureId, out AdventureMapData adventureMap)
+        {
+            return TryFind(adventureMaps, adventureId, value => value.adventureId, out adventureMap);
+        }
+
+        public void SetAdventureMaps(AdventureMapData[] maps)
+        {
+            adventureMaps = maps == null ? Array.Empty<AdventureMapData>() : (AdventureMapData[])maps.Clone();
         }
 
         public bool TryGetEnemy(string enemyId, out EnemyData enemy)

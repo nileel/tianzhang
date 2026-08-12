@@ -1,8 +1,10 @@
 {
     "name": "TianZhang.Bootstrap",
     "references": [
+        "TianZhang.Domain",
         "TianZhang.Character",
         "TianZhang.Content",
+        "TianZhang.Combat",
         "TianZhang.Cultivation",
         "TianZhang.World",
         "TianZhang.Gameplay.Contracts",

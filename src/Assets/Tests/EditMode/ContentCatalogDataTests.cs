@@ -167,6 +167,8 @@ namespace TianZhang.Tests
             Assert.IsTrue(catalog.TryGetBounty("bounty_guanzhong_shijiahou", out var bounty));
             Assert.AreEqual("one_time", bounty.repeatPolicy);
             Assert.AreEqual(1, catalog.GetBountiesByIssuer("guanzhong_city").Count);
+            Assert.IsTrue(catalog.TryGetAdventureMap("guanzhong_wild", out var adventure));
+            Assert.AreEqual("adventure_node_start", adventure.nodes[0].nodeTypeId);
             Assert.IsFalse(catalog.TryGetEnemy("enemy_fengsun", out _));
             Assert.IsFalse(catalog.TryGetItem("item_unknown", out _));
         }

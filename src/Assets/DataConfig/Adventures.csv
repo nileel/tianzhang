@@ -1,0 +1,4 @@
+adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId
+guanzhong_wild,adventure_guanzhong_wild,content_scope_production,start,adventure_node_start,0,0,
+guanzhong_wild,adventure_guanzhong_wild,content_scope_production,shijiahou_encounter,adventure_node_encounter,1,0,enemy_shijiahou
+guanzhong_wild,adventure_guanzhong_wild,content_scope_production,return,adventure_node_return,0,2,

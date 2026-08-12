@@ -24,3 +24,5 @@ MonoBehaviour:
   charterRuleStaticCatalog: {fileID: 11400000, guid: c3594c99fad348dfaccbdc026e3920d4, type: 2}
   charterSites:
   - {fileID: 11400000, guid: d22b5344c9094d70a4755bec21554c95, type: 2}
+  adventureMaps:
+  - {fileID: 11400000, guid: a85ad96d32238ad4e8672be239348a44, type: 2}

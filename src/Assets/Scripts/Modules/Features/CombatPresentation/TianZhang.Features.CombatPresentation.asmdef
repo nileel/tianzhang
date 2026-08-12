@@ -3,6 +3,7 @@
     "references": [
         "TianZhang.Foundation",
         "TianZhang.Combat",
-        "TianZhang.Gameplay.Contracts"
+        "TianZhang.Gameplay.Contracts",
+        "UnityEngine.UI"
     ]
 }

@@ -5,6 +5,7 @@
         "TianZhang.Content",
         "TianZhang.Character",
         "TianZhang.World",
-        "TianZhang.Gameplay.Contracts"
+        "TianZhang.Gameplay.Contracts",
+        "UnityEngine.UI"
     ]
 }

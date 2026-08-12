@@ -6,7 +6,7 @@ using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Editor;
 using TianZhang.Game;
-using TianZhang.Settlement;
+using TianZhang.Features.Settlement;
 using TianZhang.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -122,7 +122,7 @@ namespace TianZhang.Tests
         public void IllegalNonProductionAndWrongSettlementRequestsDoNotFabricateDisplayOrState()
         {
             DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildSettlementScene();
+            SettlementSceneBuilder.Build();
             EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
             GameRuntime runtime = CreateRuntime();
             BountyBoardView board = FindBoardFromBuiltScene();
@@ -163,8 +163,8 @@ namespace TianZhang.Tests
             OpenBuiltSettlementScene(out BountyBoardView board, out _);
             try
             {
-                var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
-                var dispatchFeature = typeof(SettlementSceneController).GetMethod(
+                var controller = UnityEngine.Object.FindFirstObjectByType<SettlementController>();
+                var dispatchFeature = typeof(SettlementController).GetMethod(
                     "DispatchFeature",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
@@ -231,17 +231,17 @@ namespace TianZhang.Tests
             out ContentCatalogData catalog)
         {
             DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildSettlementScene();
+            SettlementSceneBuilder.Build();
             EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
 
+            new GameObject("GameBootstrapTest").AddComponent<GameBootstrap>();
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             runtime.EnterWorld("guanzhong_hub");
             runtime.EnterSettlement(SettlementId);
 
-            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
-            controller.GetType()
-                .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                .Invoke(controller, null);
+            InvokePrivate(UnityEngine.Object.FindFirstObjectByType<SettlementSceneInstaller>(), "Awake");
+            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementController>();
+            InvokePrivate(controller, "Start");
 
             board = FindBoardFromBuiltScene();
             catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
@@ -256,9 +256,21 @@ namespace TianZhang.Tests
 
         private static GameRuntime CreateRuntime()
         {
+            if (UnityEngine.Object.FindFirstObjectByType<GameBootstrap>() == null)
+                new GameObject("GameBootstrapTest").AddComponent<GameBootstrap>();
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             runtime.EnterSettlement(SettlementId);
             return runtime;
+        }
+
+        private static void InvokePrivate(MonoBehaviour target, string methodName)
+        {
+            Assert.IsNotNull(target, methodName + " target must exist in the built scene.");
+            var method = target.GetType().GetMethod(
+                methodName,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(target, null);
         }
 
         private ContentCatalogData CreateCatalogWithOutOfScopeBounties()
@@ -341,8 +353,6 @@ namespace TianZhang.Tests
 
         private static void DestroyExistingSceneFlowAndSession()
         {
-            if (SceneFlowManager.Instance != null)
-                UnityEngine.Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
             GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<GameBootstrap>();
             if (bootstrap != null)
                 UnityEngine.Object.DestroyImmediate(bootstrap.gameObject);

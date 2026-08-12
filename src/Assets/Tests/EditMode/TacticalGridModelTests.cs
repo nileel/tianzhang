@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
-using TianZhang.Adventure;
+using TianZhang.Features.Adventure;
 using TianZhang.Bootstrap;
 using TianZhang.Character;
 using TianZhang.Combat;
@@ -14,7 +14,7 @@ using TianZhang.Spatial;
 using TianZhang.Editor;
 using TianZhang.Entity;
 using TianZhang.Game;
-using TianZhang.Game.CharacterCreation;
+using TianZhang.Features.CharacterCreation;
 using TianZhang.Cultivation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
@@ -496,120 +496,4 @@ namespace TianZhang.Tests
         }
     }
 
-    public class AdventureSceneControllerTests
-    {
-        [TearDown]
-        public void TearDown()
-        {
-            if (SceneFlowManager.Instance != null)
-                Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
-            if (bootstrap != null)
-                Object.DestroyImmediate(bootstrap.gameObject);
-        }
-
-        [Test]
-        public void FormalVictoryGrantsStructuredDropsOnlyOnce()
-        {
-            var controllerGo = new GameObject("FormalAdventureControllerTest");
-            var explorationGo = new GameObject("FormalExplorationControllerTest");
-            try
-            {
-                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
-                GameRuntime runtime = GameBootstrap.RequireRuntime();
-                runtime.EnterWorld("guanzhong_hub");
-                runtime.EnterSettlement("guanzhong_city");
-                runtime.EnterAdventure(
-                    FormalEncounterRules.GuanzhongWildAdventureId,
-                    SceneReturnTarget.Settlement("guanzhong_city"));
-                AdventureSceneController controller = controllerGo.AddComponent<AdventureSceneController>();
-                ContentCatalogData catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
-                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.That(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out EnemyData enemy), Is.True);
-                controller.SetContentCatalog(catalog);
-                controller.SetGuanzhongWildEnvironmentProfile(
-                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
-                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
-                controller.SetEncounterRandomSource(
-                    new FormalEncounterResultTests.SequenceRandomSource(99, 49));
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-
-                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
-                int firstPiece = InventoryQuantity(runtime, "item_shijia_piece");
-                int firstSpiritStone = InventoryQuantity(runtime, "item_lingshi_low");
-                LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
-                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
-
-                Assert.That(firstPiece, Is.EqualTo(1));
-                Assert.That(firstSpiritStone, Is.EqualTo(1));
-                Assert.That(InventoryQuantity(runtime, "item_shijia_piece"), Is.EqualTo(firstPiece));
-                Assert.That(InventoryQuantity(runtime, "item_lingshi_low"), Is.EqualTo(firstSpiritStone));
-            }
-            finally
-            {
-                Object.DestroyImmediate(explorationGo);
-                Object.DestroyImmediate(controllerGo);
-            }
-        }
-
-        [Test]
-        public void ExplorationPlayerUsesGameRuntimeProfile()
-        {
-            var controllerGo = new GameObject("ExplorationControllerTest");
-            var profile = ScriptableObject.CreateInstance<CharacterData>();
-            try
-            {
-                profile.charName = "玉清崖";
-                profile.gongFaName = "苦行剑典";
-                profile.rootBone = 16;
-                profile.physique = 14;
-                profile.spirit = 8;
-                profile.mind = 14;
-                profile.reaction = 20;
-                profile.talent = 10;
-                profile.realmMultiplier = 1.5f;
-                profile.equippedSpells = new[] { "引雷诀", "苦行剑式" };
-                profile.availableSpells = new[] { "引雷诀", "苦行剑式", "剑罡护体" };
-                GameBootstrap.RequireRuntime().BeginNewGame(
-                    CharacterRuntimeProfile.FromDefinition("player", profile),
-                    CultivationState.CreateEmpty(),
-                    "jiangzuo_hub");
-
-                var controller = controllerGo.AddComponent<TianZhang.Map.ExplorationController>();
-                var method = typeof(TianZhang.Map.ExplorationController).GetMethod(
-                    "CreatePlayer",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                var player = (EntityCharacter)method.Invoke(controller, new object[] { new HexCoord(0, 0) });
-
-                Assert.That(player.Name, Is.EqualTo("玉清崖"));
-                Assert.That(player.GongFaName, Is.EqualTo("苦行剑典"));
-                Assert.That(player.RootBone, Is.EqualTo(16));
-                Assert.That(player.Reaction, Is.EqualTo(20));
-            }
-            finally
-            {
-                Object.DestroyImmediate(profile);
-                Object.DestroyImmediate(controllerGo);
-            }
-        }
-
-        private static int InventoryQuantity(GameRuntime runtime, string itemId)
-        {
-            foreach (InventoryRecord record in runtime.CaptureSave().inventory)
-            {
-                if (record.itemId == itemId)
-                    return record.quantity;
-            }
-            return 0;
-        }
-
-        private static void InvokePrivate(MonoBehaviour target, string methodName)
-        {
-            var method = target.GetType().GetMethod(
-                methodName,
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            Assert.IsNotNull(method);
-            method.Invoke(target, null);
-        }
-    }
 }

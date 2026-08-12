@@ -11,6 +11,7 @@ using TianZhang.Entity;
 using TianZhang.Content;
 using TianZhang.Combat;
 using TianZhang.Cultivation;
+using TianZhang.Features.CharacterCreation;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Tactical;
@@ -67,6 +68,7 @@ namespace TianZhang.Editor
             ImportContentCatalog();
             ImportCharacterCreationPointBuy();
             ImportEnvironmentProfiles();
+            AdventureContentImporter.Import();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[ContentImportCoordinator] 全部配置导入完成");

@@ -1,0 +1,355 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01G",
+  "title": "Feature、Bootstrap、正式场景与最小 UI",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：五个 Feature、唯一持久 Bootstrap、四个逐场景 Installer、拆分 Builder、角色新建／旧档入口、可扩展 Adventure 与 CombatPresentation 已完成；增量验收全过，全量 PlayMode 5/5，通过数据链、资产版本与程序集边界检查。全量 EditMode 403/404，唯一失败为迁移前已存在且本轮源码未变的 CharterConflictRules 基线。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01G.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01G.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01H.txt",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationCatalog.cs",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationCatalog.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationCatalog.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationCatalog.cs.meta",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationManager.cs",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationManager.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationManager.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationManager.cs.meta",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationModels.cs",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationModels.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationModels.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationModels.cs.meta",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Game/CharacterCreation/CharacterCreationRules.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs.meta",
+    "src/Assets/Scripts/Game/CharacterCreation.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuController.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuView.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs.meta",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs.meta",
+    "src/Assets/Scripts/Editor/SectSelectionSetup.cs",
+    "src/Assets/Scripts/Editor/SectSelectionSetup.cs.meta",
+    "src/Assets/Scripts/World/WorldSceneController.cs",
+    "src/Assets/Scripts/World/WorldSceneController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapController.cs",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapController.cs.meta",
+    "src/Assets/Scripts/World/WorldNodeDefinition.cs",
+    "src/Assets/Scripts/World/WorldNodeDefinition.cs.meta",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldNodeDefinition.cs",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldNodeDefinition.cs.meta",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs.meta",
+    "src/Assets/Scripts/Settlement/SettlementSceneController.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementController.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementController.cs.meta",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs",
+    "src/Assets/Scripts/Settlement/SettlementSceneView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs.meta",
+    "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs",
+    "src/Assets/Scripts/Settlement/SettlementFeatureDispatcher.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementFeatureDispatcher.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementFeatureDispatcher.cs.meta",
+    "src/Assets/Scripts/Settlement/BountyBoardView.cs",
+    "src/Assets/Scripts/Settlement/BountyBoardView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs.meta",
+    "src/Assets/Scripts/Settlement/CharterSiteController.cs",
+    "src/Assets/Scripts/Settlement/CharterSiteController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/CharterSiteController.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/CharterSiteController.cs.meta",
+    "src/Assets/Scripts/Settlement/CharterSiteView.cs",
+    "src/Assets/Scripts/Settlement/CharterSiteView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/CharterSiteView.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/CharterSiteView.cs.meta",
+    "src/Assets/Scripts/World/CharterConflictRules.cs",
+    "src/Assets/Scripts/World/CharterConflictRules.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterConflictRules.cs",
+    "src/Assets/Scripts/Modules/World/CharterConflictRules.cs.meta",
+    "src/Assets/Scripts/World/CharterRuleRuntime.cs",
+    "src/Assets/Scripts/World/CharterRuleRuntime.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterRuleRuntime.cs",
+    "src/Assets/Scripts/Modules/World/CharterRuleRuntime.cs.meta",
+    "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs",
+    "src/Assets/Scripts/World/CharterSiteInteractionRuntime.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterSiteInteractionRuntime.cs",
+    "src/Assets/Scripts/Modules/World/CharterSiteInteractionRuntime.cs.meta",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
+    "src/Assets/Scripts/Adventure/AdventureSceneController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs.meta",
+    "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs",
+    "src/Assets/Scripts/Adventure/CharterEnvironmentProjection.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/CharterEnvironmentProjection.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CharterEnvironmentProjection.cs.meta",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureSession.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureSession.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureMapLoader.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureMapLoader.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureNodeDispatcher.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureNodeDispatcher.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/IAdventureNodeHandler.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/IAdventureNodeHandler.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterNodeHandler.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterNodeHandler.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/ReturnNodeHandler.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/ReturnNodeHandler.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs.meta",
+    "src/Assets/Scripts/Map/ExplorationController.cs",
+    "src/Assets/Scripts/Map/ExplorationController.cs.meta",
+    "src/Assets/Scripts/Map/TianZhang.Gameplay.asmref",
+    "src/Assets/Scripts/Map/TianZhang.Gameplay.asmref.meta",
+    "src/Assets/Scripts/Map.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatLogView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatLogView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs.meta",
+    "src/Assets/Scripts/Game/BattleUIManager.cs",
+    "src/Assets/Scripts/Game/BattleUIManager.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/README.md",
+    "src/Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/WorldSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/WorldSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/SettlementSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/SettlementSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Game/GameManager.cs",
+    "src/Assets/Scripts/Game/GameManager.cs.meta",
+    "src/Assets/Scripts/Game/SceneFlowManager.cs",
+    "src/Assets/Scripts/Game/SceneFlowManager.cs.meta",
+    "src/Assets/Scripts/Modules/Content/AdventureMapData.cs",
+    "src/Assets/Scripts/Modules/Content/AdventureMapData.cs.meta",
+    "src/Assets/DataConfig/Adventures.csv",
+    "src/Assets/DataConfig/Adventures.csv.meta",
+    "src/Assets/Data/Adventures.meta",
+    "src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset",
+    "src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset.meta",
+    "src/Assets/Scripts/Editor/AdventureContentImporter.cs",
+    "src/Assets/Scripts/Editor/AdventureContentImporter.cs.meta",
+    "src/Assets/Tests/EditMode/AdventureContentImporterTests.cs",
+    "src/Assets/Tests/EditMode/AdventureContentImporterTests.cs.meta",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs.meta",
+    "src/Assets/Scripts/Modules/Content/ContentCatalogData.cs",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs",
+    "src/Assets/Scripts/Editor/ContentImportCoordinator.cs",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/SceneBuildSupport.cs",
+    "src/Assets/Scripts/Editor/SceneBuildSupport.cs.meta",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/WorldSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/WorldSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/BuildSettingsRegistrar.cs",
+    "src/Assets/Scripts/Editor/BuildSettingsRegistrar.cs.meta",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs.meta",
+    "src/Assets/Scripts/Editor/HybridTacticalPrototypeBuilder.cs",
+    "src/Assets/Scripts/Editor/HybridTacticalPrototypeBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/CharacterPresentationPrototypeBuilder.cs",
+    "src/Assets/Scripts/Editor/TianZhang.Editor.asmdef",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Scenes/StartMenuScene.unity.meta",
+    "src/Assets/Scenes/WorldScene.unity",
+    "src/Assets/Scenes/WorldScene.unity.meta",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Scenes/SettlementScene.unity.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Scenes/ExplorationScene.unity",
+    "src/Assets/Scenes/ExplorationScene.unity.meta",
+    "src/ProjectSettings/EditorBuildSettings.asset",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef",
+    "src/Assets/Scripts/Modules/Features/WorldMap/TianZhang.Features.WorldMap.asmdef",
+    "src/Assets/Scripts/Modules/Features/Settlement/TianZhang.Features.Settlement.asmdef",
+    "src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef",
+    "src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef",
+    "src/Assets/Scripts/Modules/GameplayContracts/README.md",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs.meta",
+    "src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/ArchitectureBaselineEditorTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
+    "src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteViewTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/CharacterPresentationViewTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
+    "src/Assets/Tests/EditMode/NavigationContractsTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs"
+    ,"tools/check-unity-assembly-boundaries.ps1",
+    "UNITY_STRUCTURE.md"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01G · Feature、Bootstrap、正式场景与最小 UI
+
+## 来源与当前边界
+
+- 对应架构设计阶段 7；实施合同与字面量路径以已批准的 `docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md` 为准。
+- `U-ARCH-REBUILD-01F2` 已完成本地 schema 1 槽位；本卡重写五个 Feature、唯一 Bootstrap、四个正式场景壳与最小可操作 UI，不再建立第二保存所有者。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md` 的 §5.5、阶段 7、§8.2 与停止条件；上述 2026-08-13 阶段 7 批准设计全文。
+- `开发管理/任务归档/U-ARCH-REBUILD-01F2.txt` 的完成证据；`GameSaveSlotStore` 只作为 StartMenu Installer 的已完成存档适配器读取，不修改其 schema／文件语义。
+- `expectedPaths` 所列现行角色创建、World、Settlement、Adventure、Combat Presentation、SceneBuilder、Build Settings、程序集、场景和直接 PlayMode／EditMode 测试；修改前读取目标完整类型／方法和真实序列化 GUID 引用。
+
+## 实施范围
+
+- 通过用例和 Gameplay.Contracts 组合五个 Feature；每场景唯一组合根；Adventure 调用新 Combat API 并消费结果；重建最小功能 UI，不恢复旧视觉。
+
+## 禁止项
+
+- Feature 不引用兄弟实现，不复制场景或 Bootstrap，不恢复旧 Built-in 样式，不让 Hybrid Prototype 成为正式依赖。
+
+## 验证
+
+- 新建角色→世界→据点→悬赏→Adventure→战斗→结算→返回→保存读取端到端；已有角色槽位→原子恢复→保存导航目标；Build Settings 唯一正式入口、场景组合根与程序集边界。
+- 按批准设计运行数据导入、Adventure handler 扩展、GUID 残留、场景幂等、程序集、构建、EditMode、PlayMode、数据链、任务卡和差异检查；本卡 `expectedPaths` 已展开全部预计修改路径。
+
+## 完成条件
+
+- 四个正式场景以最小 UI 完整可操作，功能结果与基线一致，旧 ExplorationController、BattleUIManager 和旧场景入口不再作为运行时所有者。
+
+## 停止条件
+
+- 必须恢复旧 UI／Built-in 表现、建立兄弟 Feature 依赖或改变规则／数值时停止。
+
+## 2026-08-12 实时准备扫描
+
+- 前置状态：`U-ARCH-REBUILD-01F1` 已完成，命名前置已从 `blockedBy` 移除。
+- 当前 owner：`WorldSceneController`、`SettlementSceneController`、`AdventureSceneController`、`ExplorationController`、`BattleUIManager` 及 StartMenu 的 `GameManager`／`SectSelectionManager` 仍位于旧 `TianZhang.Gameplay` 路径；五个目标 Feature asmdef 只有骨架和 README。
+- 当前组合根：四个正式场景仍序列化 `GameManager + SceneFlowManager`；`GameBootstrap` 由运行时查找／动态创建，不是逐场景唯一组合根。
+- 当前 builder：`SceneBuilder.cs` 同时生成／验证正式场景、旧 Exploration／BattleUI、Hybrid 原型、Tile／Prefab 和 UI，无法在不先冻结提取边界的情况下给出完整新增／移动／删除路径。
+- 剩余准备：先冻结 Feature 注入契约、五个 Feature 的旧 owner → 新文件映射、四个逐场景组合根、SceneBuilder 拆分文件与对应测试／scene／asset／`.meta` 字面量路径；在这些事实唯一前不得改为 ready。
+
+## 2026-08-13 设计冻结与新前置
+
+- `docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md` 已冻结五个 Feature、四个 SceneInstaller、角色新建／读取、Adventure 节点扩展、SceneBuilder 拆分、GUID 与测试验收边界，原“设计未唯一”的 blocker 已消除。
+- 实时保存能力只有 schema 1 信封与内存原子恢复，没有本地槽位枚举、原子文件替换和损坏槽位摘要；已有角色入口无法实施。该独立缺口登记为 `U-ARCH-REBUILD-01F2`，本卡在其完成前保持 blocked。
+- `01F2` 已完成；重新读取本卡、队列、批准设计和实时仓库后未发现职责冲突。完整预计修改路径已经展开，本卡移除 blocker 并按 P1 固定顺序入队；实施中仍遵守设计的新增路径与停止条件审查。
+
+## 完成证据（2026-08-13）
+
+### 旧职责与所有者
+
+- 角色创建由 `GameManager`、`SectSelectionManager` 与 `Game/CharacterCreation` 共同持有，并把门派选择错误地放在创建期。
+- World、Settlement、Adventure 分别由旧 `WorldSceneController`、`SettlementSceneController`、`AdventureSceneController` 持有；`ExplorationController` 同时承担地图、生成、输入、遭遇、战斗接入和 HUD；`BattleUIManager` 持有战斗表现。
+- `GameManager + SceneFlowManager` 是四个场景的旧入口，`GameBootstrap.RequireRuntime` 允许缺失时动态创建第二个组合根；单一 `SceneBuilder` 同时生成正式场景、原型和验证入口。
+
+### 新职责与所有者
+
+- `Features/CharacterCreation` 只负责新角色参数、创建视图、开始菜单与 `IPlayerEntryHost`；创建期不再选择门派，已有槽位经同一注入契约恢复。
+- `Features/WorldMap`、`Features/Settlement`、`Features/Adventure`、`Features/CombatPresentation` 分别持有主世界、据点、可扩展冒险节点／遭遇协调和战斗 HUD；Adventure 的地图加载、单位生成、输入、节点分派、战斗接入与地图 HUD 已分离。
+- `GameBootstrap` 是唯一跨场景生命周期根并记录活动槽位；四个 `*SceneInstaller` 只组合依赖，缺 Bootstrap、内容或序列化引用时关闭交互并报告稳定原因，不动态补建。
+- 四个正式场景由独立 Builder 生成，Build Settings 固定为 StartMenu、World、Settlement、Adventure；结构验证器只读验证，不改场景。
+
+### 迁移前依赖
+
+- 多个场景和 Feature 通过 `TianZhang.Gameplay` 大程序集、静态 GameManager／SceneFlowManager 和场景对象查找互相耦合。
+- Adventure 直接依赖巨型 Exploration 与 BattleUI；Settlement 与旧 World 路径共享册界运行时；场景 Builder 同时掌握运行时、原型、资源创建和验证。
+
+### 迁移后依赖
+
+- Feature 只依赖 Content、Character、World、Combat、Spatial、Persistence 等中性模块和 `Gameplay.Contracts`；Feature 之间无实现引用。
+- Bootstrap 单向引用五个 Feature 并完成接线；Feature 不反向引用 Bootstrap。Adventure 只通过 `ICombatCommandHandler`／表现 DTO 与 CombatPresentation 交互。
+- Adventure 单位由节点 `contentId` 与 `ContentCatalogData` 精确解析；新资源点、事件节点、门派／城市／副本入口通过 `IAdventureNodeHandler` 注册扩展，不修改 Loader 或输入主流程。
+
+### 删除与新增的依赖边
+
+- 删除 `GameManager -> 场景业务`、`SceneFlowManager -> 四场景`、`ExplorationController -> 地图／输入／遭遇／战斗／HUD`、`BattleUIManager -> Combat` 和旧 Feature -> `TianZhang.Gameplay` 的汇聚边。
+- 删除缺失 Bootstrap 时的运行时创建边、创建期门派选择边、正式 Build Settings 中旧 Exploration 入口与 Adventure 固定地图边。
+- 新增 `SceneInstaller -> Feature.Configure`、`StartMenu -> IPlayerEntryHost`、`Adventure dispatcher -> IAdventureNodeHandler`、`EncounterCoordinator -> ICombatCommandHandler/ICombatPresentationSink`、`GameBootstrap -> GameSaveSlotStore` 的单向边。
+
+### 公开契约
+
+- 角色入口：`IPlayerEntryHost`、`PlayerSlotSummary`、`PlayerEntryResult`。
+- 场景导航：既有 `INavigationUseCase`、`NavigationStateSnapshot`、`SceneReturnTarget`；已有档在切场景前验证目标内容 ID。
+- 战斗表现：`ICombatCommandHandler`、`ICombatPresentationSink`、`CombatHudSnapshot`、`CombatantHudSnapshot`、`CombatResultSnapshot`。
+- Adventure 扩展：`IAdventureNodeHandler` 与稳定 `nodeTypeId/contentId` 数据合同。
+
+### 验证结果
+
+- Unity 编译与 `dotnet build src/TianZhang.EditModeTests.csproj`：通过，0 error。
+- `check-unity-assembly-boundaries.ps1`：通过（21 assemblies、7 asmrefs）；Feature 无 Bootstrap 或兄弟 Feature 引用。
+- 01G 关键增量 EditMode：13/13 通过；旧测试夹具回归：22/22 通过；覆盖唯一 Bootstrap、保存后清空并读取、无效旧档导航留在菜单、唯一 start、handler 扩展和正式相邻基本攻击。
+- 全量 EditMode：403/404 通过；唯一失败 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 为本轮前已存在基线，迁移后的 `CharterConflictRules.cs` 与 HEAD 源文件 blob 一致，直接测试未改规则／数值。
+- 全量 PlayMode：5/5 通过；正式场景结构 batch 验证通过且验证前后四场景 SHA-256 不变。
+- `check-data-chain.ps1 -FailOnMissingAssets`、`check-asset-versioning.ps1`、程序集边界、Build Settings 四入口、旧 GUID 残留和 Adventure 导入验证均通过。
+
+### 未迁移范围
+
+- `HybridTacticalPrototype` 只保留为非正式只读原型，不在正式 Build Settings，也不是 Feature 或场景运行时依赖。
+- 01H 仍负责最终遗留扫描／删除、聚焦结构文档、总验收、一次性上下文演练和 URP 交接；01G 正式提交后仍须独立架构复审，本归档不代替该复审。
+- 本轮不修改册界规则／数值，不处理上述既有 CharterConflictRules 基线失败，也不引入 URP 或正式美术。
+
+### 大型单文件例外理由
+
+- `ContentImportCoordinator.cs` 仍是既有 6064 行数据导入协调器，本轮只接入 Adventure 目录调用且未继续加入场景／Feature 职责；领域导入已由独立 `AdventureContentImporter` 持有。
+- 移动后的 `CharterRuleRuntime.cs`（579 行）与 `CharterSiteInteractionRuntime.cs`（783 行）保持既有纯册界状态机／确定性交互逻辑，未新增无关职责；拆分会增加状态传递边，因此本阶段只迁移所有者。

@@ -36,7 +36,6 @@ namespace TianZhang.Tests
             AssertAssemblyReference("Assets/Scripts/Adventure/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
             AssertAssemblyReference("Assets/Scripts/World/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
             AssertAssemblyReference("Assets/Scripts/Settlement/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
-            AssertAssemblyReference("Assets/Scripts/Map/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
             AssertAssemblyReference("Assets/Scripts/Grid/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
             AssertAssemblyReference("Assets/Scripts/Tilemap/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
         }
@@ -58,20 +57,21 @@ namespace TianZhang.Tests
                 "TianZhang.Gameplay.Contracts", "TianZhang.Foundation");
 
             AssertAssembly("Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef",
-                "TianZhang.Features.CharacterCreation", "TianZhang.Foundation", "TianZhang.Content",
-                "TianZhang.Character", "TianZhang.Cultivation", "TianZhang.Gameplay.Contracts");
+                "TianZhang.Features.CharacterCreation", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Content",
+                "TianZhang.Character", "TianZhang.Cultivation", "TianZhang.Gameplay.Contracts", "UnityEngine.UI");
             AssertAssembly("Assets/Scripts/Modules/Features/WorldMap/TianZhang.Features.WorldMap.asmdef",
                 "TianZhang.Features.WorldMap", "TianZhang.Foundation", "TianZhang.Content",
-                "TianZhang.World", "TianZhang.Gameplay.Contracts");
+                "TianZhang.World", "TianZhang.Gameplay.Contracts", "UnityEngine.UI");
             AssertAssembly("Assets/Scripts/Modules/Features/Settlement/TianZhang.Features.Settlement.asmdef",
                 "TianZhang.Features.Settlement", "TianZhang.Foundation", "TianZhang.Content",
-                "TianZhang.Character", "TianZhang.World", "TianZhang.Gameplay.Contracts");
+                "TianZhang.Character", "TianZhang.World", "TianZhang.Gameplay.Contracts", "UnityEngine.UI");
             AssertAssembly("Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef",
-                "TianZhang.Features.Adventure", "TianZhang.Foundation", "TianZhang.Content",
-                "TianZhang.Character", "TianZhang.World", "TianZhang.Combat", "TianZhang.Gameplay.Contracts");
+                "TianZhang.Features.Adventure", "TianZhang.Foundation", "TianZhang.Domain", "TianZhang.Content",
+                "TianZhang.Character", "TianZhang.World", "TianZhang.Combat", "TianZhang.Gameplay.Contracts",
+                "TianZhang.Spatial", "TianZhang.Infrastructure.UnityContent", "UnityEngine.UI");
             AssertAssembly("Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef",
                 "TianZhang.Features.CombatPresentation", "TianZhang.Foundation", "TianZhang.Combat",
-                "TianZhang.Gameplay.Contracts");
+                "TianZhang.Gameplay.Contracts", "UnityEngine.UI");
 
             AssertAssembly("Assets/Scripts/Modules/Infrastructure/Persistence/TianZhang.Infrastructure.Persistence.asmdef",
                 "TianZhang.Infrastructure.Persistence", "TianZhang.Foundation", "TianZhang.Content",
@@ -79,7 +79,7 @@ namespace TianZhang.Tests
             AssertAssembly("Assets/Scripts/Modules/Infrastructure/UnityContent/TianZhang.Infrastructure.UnityContent.asmdef",
                 "TianZhang.Infrastructure.UnityContent", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Spatial");
             AssertAssembly("Assets/Scripts/Modules/Bootstrap/TianZhang.Bootstrap.asmdef",
-                "TianZhang.Bootstrap", "TianZhang.Character", "TianZhang.Content", "TianZhang.Cultivation",
+                "TianZhang.Bootstrap", "TianZhang.Domain", "TianZhang.Character", "TianZhang.Content", "TianZhang.Combat", "TianZhang.Cultivation",
                 "TianZhang.World", "TianZhang.Gameplay.Contracts",
                 "TianZhang.Features.CharacterCreation", "TianZhang.Features.WorldMap",
                 "TianZhang.Features.Settlement", "TianZhang.Features.Adventure",

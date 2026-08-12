@@ -4,7 +4,7 @@ using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Editor;
 using TianZhang.Game;
-using TianZhang.Settlement;
+using TianZhang.Features.Settlement;
 using TianZhang.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -57,14 +57,14 @@ namespace TianZhang.Tests
             try
             {
                 Assert.IsFalse(panel.IsOpen);
-                var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
+                var controller = UnityEngine.Object.FindFirstObjectByType<SettlementController>();
 
                 GameObject.Find("SettlementCharterSiteEntry").GetComponent<Button>().onClick.Invoke();
 
                 Assert.IsTrue(panel.IsOpen);
                 // 稳定原因与站点 ID 保留在控制器字段；玩家面板只显示中文名与可理解状态。
                 Assert.AreEqual(
-                    SettlementSceneController.CharterSiteEntryOpenedReason + ":" + SiteId,
+                    SettlementController.CharterSiteEntryOpenedReason + ":" + SiteId,
                     controller.LastCharterSiteReason);
                 StringAssert.Contains("旧水驿", PanelText(panel, "siteText").text);
                 StringAssert.Contains("关中城", PanelText(panel, "siteText").text);
@@ -243,20 +243,20 @@ namespace TianZhang.Tests
         public void UnknownSiteOrWrongSettlementOrMissingCatalogDoesNotOpenPanel()
         {
             OpenBuiltSettlementScene(out CharterSiteView panel, out ContentCatalogData catalog);
-            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
-            var view = UnityEngine.Object.FindFirstObjectByType<SettlementSceneView>();
+            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementController>();
+            var view = UnityEngine.Object.FindFirstObjectByType<SettlementView>();
             var dispatcher = UnityEngine.Object.FindFirstObjectByType<SettlementFeatureDispatcher>();
             try
             {
                 // 目录存在但没有任何册界站点：按站点 ID 精确查询失败，稳定原因且不打开面板。
                 ContentCatalogData noSiteCatalog = CreateCatalog(SettlementId, null, null);
-                controller.Configure(noSiteCatalog, view, dispatcher, SiteId);
+                ConfigureController(controller, noSiteCatalog, view, dispatcher);
                 InvokeStart(controller);
                 Assert.AreEqual(SettlementId, controller.CurrentSettlement.settlementId);
                 ClickEntryButton();
                 Assert.IsFalse(panel.IsOpen);
                 Assert.AreEqual(
-                    SettlementSceneController.CharterSiteMissingReason + ":" + SiteId,
+                    SettlementController.CharterSiteMissingReason + ":" + SiteId,
                     controller.LastCharterSiteReason);
                 // 玩家入口文本只显示可理解失败；稳定原因保留在控制器字段。
                 StringAssert.Contains(
@@ -265,22 +265,22 @@ namespace TianZhang.Tests
 
                 // 站点存在但不属于当前据点：拒绝打开。
                 ContentCatalogData wrongSettlementCatalog = CreateCatalog(SettlementId, SiteId, "other_city");
-                controller.Configure(wrongSettlementCatalog, view, dispatcher, SiteId);
+                ConfigureController(controller, wrongSettlementCatalog, view, dispatcher);
                 InvokeStart(controller);
                 ClickEntryButton();
                 Assert.IsFalse(panel.IsOpen);
                 Assert.AreEqual(
-                    SettlementSceneController.CharterSiteNotCurrentReason + ":other_city",
+                    SettlementController.CharterSiteNotCurrentReason + ":other_city",
                     controller.LastCharterSiteReason);
 
                 // 站点与据点合法但静态目录缺失：拒绝打开。
                 ContentCatalogData noStaticCatalog = CreateCatalog(SettlementId, SiteId, SettlementId);
-                controller.Configure(noStaticCatalog, view, dispatcher, SiteId);
+                ConfigureController(controller, noStaticCatalog, view, dispatcher);
                 InvokeStart(controller);
                 ClickEntryButton();
                 Assert.IsFalse(panel.IsOpen);
                 StringAssert.Contains(
-                    SettlementSceneController.CharterSiteStaticCatalogReason,
+                    SettlementController.CharterSiteStaticCatalogReason,
                     controller.LastCharterSiteReason);
             }
             finally
@@ -322,14 +322,16 @@ namespace TianZhang.Tests
         private void OpenBuiltSettlementScene(out CharterSiteView panel, out ContentCatalogData catalog)
         {
             DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildSettlementScene();
+            SettlementSceneBuilder.Build();
             EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
 
+            new GameObject("GameBootstrapTest").AddComponent<GameBootstrap>();
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             runtime.EnterWorld("guanzhong_hub");
             runtime.EnterSettlement(SettlementId);
 
-            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
+            InvokePrivate(UnityEngine.Object.FindFirstObjectByType<SettlementSceneInstaller>(), "Awake");
+            var controller = UnityEngine.Object.FindFirstObjectByType<SettlementController>();
             InvokeStart(controller);
 
             panel = UnityEngine.Object.FindFirstObjectByType<CharterSiteView>(FindObjectsInactive.Include);
@@ -352,7 +354,7 @@ namespace TianZhang.Tests
             ContentCatalogData catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
             var settlement = Track(ScriptableObject.CreateInstance<SettlementData>());
             settlement.settlementId = settlementId;
-            settlement.contentScope = SettlementSceneController.ProductionContentScope;
+            settlement.contentScope = SettlementController.ProductionContentScope;
             catalog.ReplaceEntries(new[] { settlement }, null, null, null);
             if (siteId != null)
             {
@@ -367,6 +369,37 @@ namespace TianZhang.Tests
         private void ClickEntryButton()
         {
             GameObject.Find("SettlementCharterSiteEntry").GetComponent<Button>().onClick.Invoke();
+        }
+
+        private static void ConfigureController(
+            SettlementController controller,
+            ContentCatalogData catalog,
+            SettlementView view,
+            SettlementFeatureDispatcher dispatcher)
+        {
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            controller.Configure(
+                catalog,
+                view,
+                dispatcher,
+                SiteId,
+                runtime,
+                runtime.Bounties,
+                runtime.Charters,
+                SettlementId,
+                "guanzhong_hub",
+                _ => { },
+                () => null);
+        }
+
+        private static void InvokePrivate(MonoBehaviour target, string methodName)
+        {
+            Assert.IsNotNull(target, methodName + " target must exist in the built scene.");
+            var method = target.GetType().GetMethod(
+                methodName,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(target, null);
         }
 
         private static void ClickPanelButton(CharterSiteView panel, string propertyName)
@@ -406,8 +439,6 @@ namespace TianZhang.Tests
 
         private static void DestroyExistingSceneFlowAndSession()
         {
-            if (SceneFlowManager.Instance != null)
-                UnityEngine.Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
             GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<GameBootstrap>();
             if (bootstrap != null)
                 UnityEngine.Object.DestroyImmediate(bootstrap.gameObject);

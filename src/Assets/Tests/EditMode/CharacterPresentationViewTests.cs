@@ -1,6 +1,8 @@
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Editor;
+using TianZhang.Features.Adventure;
+using TianZhang.Features.CombatPresentation;
 using TianZhang.Game.CharacterPresentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -86,8 +88,8 @@ namespace TianZhang.Tests
                 Object.FindFirstObjectByType<CharacterPresentationPrototypeBootstrap>();
             Assert.IsNotNull(bootstrap);
             Assert.AreSame(LoadDefinition(), bootstrap.definition);
-            Assert.IsNull(Object.FindFirstObjectByType<TianZhang.Adventure.AdventureSceneController>());
-            Assert.IsNull(Object.FindFirstObjectByType<TianZhang.Game.BattleUIManager>());
+            Assert.IsNull(Object.FindFirstObjectByType<AdventureController>());
+            Assert.IsNull(Object.FindFirstObjectByType<CombatHudPresenter>());
             CollectionAssert.DoesNotContain(
                 EditorBuildSettings.scenes.Where(entry => entry.enabled).Select(entry => entry.path),
                 CharacterPresentationPrototypeBuilder.ScenePath);
