@@ -38,6 +38,7 @@ namespace TianZhang.Features.Adventure
         private Action<string> loadScene;
         private IFormalEncounterRandomSource randomSource = new SystemFormalEncounterRandomSource();
         private AdventureSession session;
+        private bool formalEncounterConsumed;
 
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
         public CombatSessionOutcome LastEncounterOutcome { get; private set; } = CombatSessionOutcome.Ongoing;
@@ -151,6 +152,13 @@ namespace TianZhang.Features.Adventure
 
         public void ResolveEncounter(CombatSessionOutcome outcome, EnemyData enemy)
         {
+            if (formalEncounterConsumed)
+            {
+                Fail(FormalEncounterRules.AlreadyConsumedReason);
+                return;
+            }
+
+            formalEncounterConsumed = true;
             LastEncounterOutcome = outcome;
             if (!FormalEncounterResult.TryCreate(
                     catalog,

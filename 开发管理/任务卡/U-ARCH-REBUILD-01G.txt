@@ -4,17 +4,18 @@
   "id": "U-ARCH-REBUILD-01G",
   "title": "Feature、Bootstrap、正式场景与最小 UI",
   "priority": "P1",
-  "route": "codex_execute",
+  "route": "codex_review",
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-13：正式提交 02b036dec93807d010d08dc71e57e1fbbd8b703d 独立架构复审不通过；Adventure 正式结算丢失一次性消费闸门，且原正式薄切片 EditMode／PlayMode 端到端闸门被局部契约测试替代。任务保持 blocked，等待负责人选择返工责任方。",
+  "stateReason": "2026-08-13：定向返工已在新 Feature／Bootstrap／Gameplay.Contracts 架构内恢复正式遭遇一次性消费闸门，并恢复真实正式入口 EditMode／PlayMode 薄切片验证；任务转为 codex_review/ready，等待独立架构复审，不解锁 01H。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
+    "开发管理/未通过审核清单.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01G.txt",
     "开发管理/任务归档/U-ARCH-REBUILD-01G.txt",
@@ -361,3 +362,12 @@
 - 阻断问题 2：原 `GuanzhongFormalEndToEndTests` 与三个正式 PlayMode 文件的大型生产链用例被替换为节点注册、缺失输入和 HUD 所有者等局部测试；当前 5/5 PlayMode 不覆盖新建／读档、世界、据点、接悬赏、Adventure、战斗命令、结算、返回、领奖和保存读取的正式薄切片。
 - 返工边界：只恢复新架构下的一次性正式结算闸门和直接端到端验证；不得恢复 `GameManager`、`SceneFlowManager`、`ExplorationController`、`BattleUIManager` 或旧新双轨。
 - 本轮验证：Unity 刷新后 `dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 error）；程序集边界、严格数据链、审核文本检查通过；Unity EditMode 403/404，唯一失败仍为已登记的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 基线；PlayMode 5/5 通过但不含上述正式薄切片。
+
+## 定向返工证据（2026-08-13）
+
+- 根因红灯：新增 `FormalFeatureChainConsumesVictoryOnlyOnceBeforeClaimAndRestore` 后，在修复前定向运行 1 项，稳定失败为期望 `formal_encounter_already_consumed`、实际 `null`；代码检索同时证明 `FormalEncounterRules.AlreadyConsumedReason` 在被拒绝提交中只有定义、没有消费者。
+- 最小修复：`AdventureController` 恢复单一 `formalEncounterConsumed` 闸门；`ResolveEncounter` 在解析结果、记录悬赏和授予掉落前先占闸，重复调用经既有 `Fail` 路径返回 `FormalEncounterRules.AlreadyConsumedReason`，不再次加载来源场景、不增加悬赏进度、不授予掉落。没有兼容层、重试层、第二状态所有者或公共接口扩张。
+- EditMode 正式链：使用生产 `ContentCatalogData`、`guanzhong_wild`、石甲兽、悬赏与新 `AdventureController`／`BountyBoardView`／`GameRuntime` 所有者，证明 World→Settlement→接取→胜利结算→重复结算拒绝→领奖→序列化恢复；两个 `GuanzhongFormalEndToEndTests` 均通过。
+- PlayMode 正式链：`FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads` 从 StartMenu 新建临时槽位，经 `WorldMapController`、`SettlementController`、正式悬赏、数据节点 `shijiahou_encounter` 和 `ICombatCommandHandler` 基本攻击完成正式战斗，返回来源据点、领奖、保存、回到 StartMenu 再读槽位，并逐项比较悬赏、库存与导航状态；全量 PlayMode 6/6 通过。
+- 验证结果：`dotnet build src/TianZhang.EditModeTests.csproj` 0 error；程序集边界 21 assemblies／7 asmrefs 通过；严格数据链通过；全量 EditMode 404/405，唯一失败仍为既有 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`，对应 `CharterConflictRules.cs` 在审核基线与本 worktree 的 blob 均为 `21469c3d79f12d705cdcbe410f3a6201001b2432`。
+- 状态边界：本卡只转为 `codex_review/codex/ready` 等待独立架构复审，不自判通过；`U-ARCH-REBUILD-01H` 继续 blocked，本轮未修改战斗数值、掉落参数、册界规则、URP、美术或 01H 实施范围。
