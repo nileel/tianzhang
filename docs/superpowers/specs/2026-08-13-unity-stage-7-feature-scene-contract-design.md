@@ -1,6 +1,6 @@
 # Unity 阶段 7 Feature、正式场景与角色入口冻结设计
 
-> 状态：设计内容已批准，书面文档待用户复核（2026-08-13）
+> 状态：设计内容与书面修订已批准（2026-08-13）
 > 适用任务：`U-ARCH-REBUILD-01F2`、`U-ARCH-REBUILD-01G`
 > 上位设计：`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`
 
@@ -432,6 +432,7 @@ StartMenu 的状态步骤分别验证，不合并成一个布尔值：
 - `src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef`
 - `src/Assets/Scripts/Modules/GameplayContracts/README.md`
 - `src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs`（只有合同注释／签名确需同步时）
+- `src/Assets/Scripts/Editor/TianZhang.Editor.asmdef`
 - `src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef`
 - `src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef`
 - `src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs`
@@ -458,6 +459,7 @@ StartMenu 的状态步骤分别验证，不合并成一个布尔值：
 - `src/Assets/Tests/EditMode/BountyBoardViewTests.cs`
 - `src/Assets/Tests/EditMode/CharterEnvironmentProjectionTests.cs`
 - `src/Assets/Tests/EditMode/CharterSiteViewTests.cs`
+- `src/Assets/Tests/EditMode/CharacterCreationTests.cs`
 - `src/Assets/Tests/EditMode/CharacterPresentationViewTests.cs`
 - `src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs`
 - `src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs`

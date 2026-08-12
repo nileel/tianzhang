@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-13：阶段 7 的 Feature／场景合同已冻结；开始菜单已有角色入口仍缺少本地 schema 1 槽位枚举、原子写入和稳定失败结果。路径、所有者、失败边界与验证已由批准设计唯一冻结，可以独立实施。",
+  "stateReason": "2026-08-13：本地 schema 1 槽位的稳定 ID、枚举、读取和同目录原子写入已完成；新增 12 项 EditMode 全部通过，完整 EditMode 仅保留两项登记基线失败，构建与程序集边界通过。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -75,3 +75,11 @@
 ## 停止条件
 
 - 需要改变 schema 1、`GameSaveEnvelope` 或 `GameRuntime` 语义，新增 Feature／Bootstrap／UI 接线，建立第二保存格式／状态所有者，触及冻结源码／测试路径之外的业务实现，或无法用同目录操作保证失败不破坏原槽位时停止并回到根因。
+
+## 完成证据（2026-08-13）
+
+- `GameSaveSlotStore` 只依赖显式目录、稳定槽位 ID 与现有 `GameSaveSerializer`；不引用 Bootstrap、Feature、UI、`PlayerPrefs`、Resources 或第二保存格式。新文件 396 行，未触发 500 行 Hub 门禁。
+- 槽位 ID 仅接受 1～64 位 ASCII 字母、数字、`_`、`-`；路径穿越和 Unicode ID 在创建目录前拒绝。列表按 ordinal 排序，损坏 JSON、错误 schema、缺少玩家 payload 与目录 IO 失败均返回稳定枚举原因。
+- 首次写入使用同目录临时文件原子移动，覆盖使用 `File.Replace`；锁定目标模拟替换失败时原文件逐字节不变，临时文件被尽力清理。
+- `GameSaveSlotStoreTests` 新增 12 项并全部通过；完整 Unity EditMode 为 425/427，失败仅为已登记的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `ContentImportCoordinatorContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`。
+- `dotnet build src/TianZhang.EditModeTests.csproj` 为 0 error、7 个既有 warning；程序集边界为 21 asmdef／8 asmref，通过。未修改 schema、GameRuntime、场景、asset、CSV 或数值。
