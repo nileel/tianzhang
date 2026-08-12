@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01E1B"],
-  "stateReason": "2026-08-12：负责人已在飞书决策 DEC-20260812-E2KERNELPARITY 选择 A；本卡停止并等待 U-ARCH-REBUILD-01E1B 补齐纯 Combat 战斗数值等价性，完成后再恢复正式切换。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：U-ARCH-REBUILD-01E1B 已完成并证明纯 Combat 内核覆盖现行生产数值语义；恢复既有正式调用链切换检查点，继续完成剩余旧引用迁移。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
