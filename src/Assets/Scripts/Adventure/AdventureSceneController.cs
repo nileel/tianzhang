@@ -29,7 +29,7 @@ namespace TianZhang.Adventure
         [SerializeField] private TextAsset languageTable = null;
 
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
-        public TacticalCombatEndOutcome LastEncounterOutcome { get; private set; } = TacticalCombatEndOutcome.Ongoing;
+        public CombatSessionOutcome LastEncounterOutcome { get; private set; } = CombatSessionOutcome.Ongoing;
         public FormalEncounterResult LastFormalEncounterResult { get; private set; }
         public string EncounterResolutionFailureReason { get; private set; }
         public string CurrentAdventureId => GameSession.Instance?.CurrentAdventureId ?? "prototype_adventure";
@@ -83,16 +83,16 @@ namespace TianZhang.Adventure
                 CurrentState = AdventureSceneState.Exploration;
         }
 
-        public void ResolveEncounterAndReturn(TacticalCombatEndOutcome outcome)
+        public void ResolveEncounterAndReturn(CombatSessionOutcome outcome)
         {
             ResolveEncounterAndReturn(outcome, null);
         }
 
         public void ResolveEncounterAndReturn(
-            TacticalCombatEndOutcome outcome,
+            CombatSessionOutcome outcome,
             EnemyData defeatedEnemy)
         {
-            if (outcome != TacticalCombatEndOutcome.Victory && outcome != TacticalCombatEndOutcome.Defeat)
+            if (outcome != CombatSessionOutcome.Victory && outcome != CombatSessionOutcome.Defeat)
                 throw new System.ArgumentOutOfRangeException(nameof(outcome), outcome, "Only completed encounter outcomes may return to the source scene.");
 
             LastEncounterOutcome = outcome;
@@ -176,7 +176,7 @@ namespace TianZhang.Adventure
             if (!FormalEncounterRules.TryResolveGuanzhongEnemy(
                     contentCatalog,
                     out EnemyData enemy,
-                    out IAIController aiController,
+                    out ICombatActionPolicy aiPolicy,
                     out string enemyReason))
             {
                 BlockGuanzhongWildEncounter(
@@ -201,7 +201,7 @@ namespace TianZhang.Adventure
                 out CharterEnvironmentProjectionResult environmentProjection);
             charterEnvironmentProjection = environmentProjection;
 
-            explorationController.ConfigureFormalEncounter(enemy, aiController);
+            explorationController.ConfigureFormalEncounter(enemy, aiPolicy);
             explorationController.ConfigureEnvironmentProfile(guanzhongWildEnvironmentProfile);
             explorationController.enabled = true;
             explorationController.enemyCount = 1;
@@ -223,7 +223,7 @@ namespace TianZhang.Adventure
         }
 
         private void ConsumeFormalEncounterResult(
-            TacticalCombatEndOutcome outcome,
+            CombatSessionOutcome outcome,
             EnemyData defeatedEnemy)
         {
             if (formalEncounterConsumed)
@@ -247,7 +247,7 @@ namespace TianZhang.Adventure
             }
 
             LastFormalEncounterResult = result;
-            if (outcome != TacticalCombatEndOutcome.Victory)
+            if (outcome != CombatSessionOutcome.Victory)
                 return;
 
             var session = GameSession.Instance;

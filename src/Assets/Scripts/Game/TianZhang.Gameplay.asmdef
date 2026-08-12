@@ -5,6 +5,7 @@
         "TianZhang.Domain",
         "TianZhang.Content",
         "TianZhang.Combat",
+        "TianZhang.Gameplay.Contracts",
         "TianZhang.Spatial",
         "TianZhang.Infrastructure.UnityContent",
         "Unity.InputSystem",

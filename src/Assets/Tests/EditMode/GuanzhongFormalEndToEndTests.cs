@@ -130,9 +130,9 @@ namespace TianZhang.Tests
                 //    InvalidOperationException，会话事实已在加载尝试前提交）。
                 Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out EnemyData enemy));
                 Assert.Throws<InvalidOperationException>(
-                    () => controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy));
+                    () => controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy));
 
-                Assert.AreEqual(TacticalCombatEndOutcome.Victory, controller.LastEncounterOutcome);
+                Assert.AreEqual(CombatSessionOutcome.Victory, controller.LastEncounterOutcome);
                 Assert.IsNotNull(controller.LastFormalEncounterResult);
                 Assert.AreEqual(EnemyId, controller.LastFormalEncounterResult.EnemyId);
                 Assert.AreEqual(AdventureId, controller.LastFormalEncounterResult.AdventureId);
@@ -153,7 +153,7 @@ namespace TianZhang.Tests
                         SceneReturnTarget.Settlement(SettlementId)));
                 LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
                 Assert.Throws<InvalidOperationException>(
-                    () => controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy));
+                    () => controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy));
                 Assert.AreEqual(
                     FormalEncounterRules.AlreadyConsumedReason,
                     controller.EncounterResolutionFailureReason);
@@ -251,7 +251,7 @@ namespace TianZhang.Tests
                             FormalEncounterRules.ShijiahouEnemyId, out EnemyData productionEnemy));
                         LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.CatalogMissingReason));
                         missingCatalog.ResolveEncounterAndReturn(
-                            TacticalCombatEndOutcome.Victory, productionEnemy);
+                            CombatSessionOutcome.Victory, productionEnemy);
                         Assert.AreEqual(
                             FormalEncounterRules.CatalogMissingReason,
                             missingCatalog.EncounterResolutionFailureReason);
@@ -294,7 +294,7 @@ namespace TianZhang.Tests
                         draftEnemy.contentScope = "content_scope_draft";
 
                         LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.EnemyIdentityMismatchReason));
-                        mismatch.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, draftEnemy);
+                        mismatch.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, draftEnemy);
                         Assert.AreEqual(
                             FormalEncounterRules.EnemyIdentityMismatchReason,
                             mismatch.EncounterResolutionFailureReason);

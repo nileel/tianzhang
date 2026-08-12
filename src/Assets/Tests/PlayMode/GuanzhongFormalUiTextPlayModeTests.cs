@@ -132,7 +132,8 @@ namespace TianZhang.Tests
             yield return WaitUntilSpawned(exploration);
             var enemyUnit = GetSpawnedEnemyUnit(exploration);
             var enemy = (Character)ReadField(enemyUnit, "character");
-            yield return MovePlayerToNeighbor(exploration, enemy);
+            RepositionEnemy(exploration, enemy, new HexCoord(1, -1));
+            yield return MovePlayerTo(exploration, new HexCoord(1, 0));
 
             InvokeStartBattle(exploration, enemyUnit);
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
@@ -146,8 +147,9 @@ namespace TianZhang.Tests
             Assert.IsNotNull(logText, "the battle UI manager must have built its log text.");
             StringAssert.Contains("=== 战斗开始！", logText.text);
 
-            // 7. 结算胜利：击败石甲兽后由既有 CombatLoop 走正式结算并返回关中城。
-            enemy.TakeDamage(9999);
+            // 7. 结算胜利：只通过正式 Gameplay 命令入口击败石甲兽，再由既有
+            // CombatLoop 走正式结算并返回关中城；不直接改写 Character 生命值。
+            yield return DefeatEnemyThroughCombatCommand(exploration, enemyUnit);
             yield return WaitForSettlementReturn();
 
             var returnedController = Object.FindFirstObjectByType<SettlementSceneController>();
@@ -190,6 +192,33 @@ namespace TianZhang.Tests
             Assert.Fail("the formal victory must return to the source settlement scene.");
         }
 
+        private static IEnumerator DefeatEnemyThroughCombatCommand(
+            ExplorationController exploration,
+            object enemyUnit)
+        {
+            string enemyCombatantId = (string)ReadField(enemyUnit, "combatantId");
+            bool playerCanAct = false;
+            for (int frame = 0; frame < 600; frame++)
+            {
+                if ((bool)ReadField(exploration, "waitingForPlayerCombatAction"))
+                {
+                    playerCanAct = true;
+                    break;
+                }
+                yield return null;
+            }
+
+            Assert.IsTrue(playerCanAct, "the formal combat loop must reach a player command window.");
+            var session = (CombatSession)ReadField(exploration, "combatSession");
+            Assert.IsTrue(session.Combatants.TryGet(enemyCombatantId, out var enemySnapshot));
+            enemySnapshot.ReceiveDamage(enemySnapshot.CurrentHealth - 1);
+
+            exploration.RequestBasicAttack("player", enemyCombatantId);
+            Assert.IsTrue(session.Combatants.TryGet(enemyCombatantId, out enemySnapshot));
+            Assert.AreEqual(0, enemySnapshot.CurrentHealth, "the production combat command must defeat the fixture.");
+            yield return null;
+        }
+
         private static IEnumerator WaitUntilSpawned(ExplorationController exploration)
         {
             for (int frame = 0; frame < 120; frame++)
@@ -203,12 +232,15 @@ namespace TianZhang.Tests
             Assert.Fail("formal guanzhong_wild must spawn the shijiahou enemy.");
         }
 
-        private static IEnumerator MovePlayerToNeighbor(ExplorationController exploration, Character enemy)
+        private static void RepositionEnemy(
+            ExplorationController exploration,
+            Character enemy,
+            HexCoord coord)
         {
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
-            var target = FirstFreeNeighbor(grid, enemy.Position);
-            Assert.IsNotNull(target, "the enemy must have a free adjacent cell for the player.");
-            yield return MovePlayerTo(exploration, target.Value);
+            grid.ClearOccupied(enemy.Position);
+            enemy.Position = coord;
+            grid.SetOccupied(coord, (int)ReadField(GetSpawnedEnemyUnit(exploration), "gridUnitId"));
         }
 
         private static IEnumerator MovePlayerTo(ExplorationController exploration, HexCoord target)
@@ -252,17 +284,6 @@ namespace TianZhang.Tests
             var path = grid.FindPath(from, best.Value, 2);
             Assert.IsNotNull(path, "the single-step path must be found.");
             return path;
-        }
-
-        private static HexCoord? FirstFreeNeighbor(HexGrid grid, HexCoord position)
-        {
-            foreach (var neighbor in position.AllNeighbors())
-            {
-                if (!grid.IsBlocked(neighbor) && !grid.IsOccupied(neighbor))
-                    return neighbor;
-            }
-
-            return null;
         }
 
         private static object GetSpawnedEnemyUnit(ExplorationController exploration)

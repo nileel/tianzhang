@@ -48,13 +48,13 @@ namespace TianZhang.Adventure
         public string EnemyId { get; }
         public string AdventureId { get; }
         public IReadOnlyList<FormalDropGrant> DropGrants { get; }
-        public TacticalCombatEndOutcome Outcome { get; }
+        public CombatSessionOutcome Outcome { get; }
 
         private FormalEncounterResult(
             string enemyId,
             string adventureId,
             IReadOnlyList<FormalDropGrant> dropGrants,
-            TacticalCombatEndOutcome outcome)
+            CombatSessionOutcome outcome)
         {
             EnemyId = enemyId;
             AdventureId = adventureId;
@@ -66,7 +66,7 @@ namespace TianZhang.Adventure
             ContentCatalogData catalog,
             EnemyData defeatedEnemy,
             string adventureId,
-            TacticalCombatEndOutcome outcome,
+            CombatSessionOutcome outcome,
             IFormalEncounterRandomSource randomSource,
             out FormalEncounterResult result,
             out string reason)
@@ -96,15 +96,15 @@ namespace TianZhang.Adventure
                 return false;
             }
 
-            if (outcome != TacticalCombatEndOutcome.Victory &&
-                outcome != TacticalCombatEndOutcome.Defeat)
+            if (outcome != CombatSessionOutcome.Victory &&
+                outcome != CombatSessionOutcome.Defeat)
             {
                 reason = FormalEncounterRules.OutcomeInvalidReason;
                 return false;
             }
 
             var grants = new List<FormalDropGrant>();
-            if (outcome == TacticalCombatEndOutcome.Victory)
+            if (outcome == CombatSessionOutcome.Victory)
             {
                 if (randomSource == null)
                 {
@@ -162,7 +162,7 @@ namespace TianZhang.Adventure
         public static bool TryResolveGuanzhongEnemy(
             ContentCatalogData catalog,
             out EnemyData enemy,
-            out IAIController aiController,
+            out ICombatActionPolicy aiController,
             out string reason)
         {
             enemy = null;
@@ -191,7 +191,7 @@ namespace TianZhang.Adventure
                 return false;
             }
 
-            if (!EnemyAIProfileResolver.TryResolve(
+            if (!EnemyAIProfileResolver.TryResolveCombatActionPolicy(
                     enemy.aiProfileId,
                     out aiController,
                     out reason))

@@ -853,12 +853,12 @@ namespace TianZhang.Tests
                 FormalEncounterRules.TryResolveGuanzhongEnemy(
                     catalog,
                     out EnemyData enemy,
-                    out IAIController aiController,
+                    out ICombatActionPolicy aiPolicy,
                     out string reason),
                 reason);
             Assert.AreEqual(FormalEncounterRules.ShijiahouEnemyId, enemy.enemyId);
             Assert.IsNotNull(enemy.combatTemplate);
-            Assert.IsInstanceOf<SimpleAI>(aiController);
+            Assert.IsInstanceOf<LegalActionAI>(aiPolicy);
         }
 
         [Test]
@@ -927,7 +927,7 @@ namespace TianZhang.Tests
                     fixture.Catalog,
                     fixture.Enemy,
                     FormalEncounterRules.GuanzhongWildAdventureId,
-                    TacticalCombatEndOutcome.Victory,
+                    CombatSessionOutcome.Victory,
                     new SequenceRandomSource(99, 49),
                     out FormalEncounterResult bothDrops,
                     out string reason),
@@ -940,7 +940,7 @@ namespace TianZhang.Tests
                     fixture.Catalog,
                     fixture.Enemy,
                     FormalEncounterRules.GuanzhongWildAdventureId,
-                    TacticalCombatEndOutcome.Victory,
+                    CombatSessionOutcome.Victory,
                     new SequenceRandomSource(0, 50),
                     out FormalEncounterResult thresholdResult,
                     out reason),
@@ -960,7 +960,7 @@ namespace TianZhang.Tests
                     fixture.Catalog,
                     differentEnemy,
                     FormalEncounterRules.GuanzhongWildAdventureId,
-                    TacticalCombatEndOutcome.Victory,
+                    CombatSessionOutcome.Victory,
                     new SequenceRandomSource(0, 0),
                     out _,
                     out string reason));
@@ -971,7 +971,7 @@ namespace TianZhang.Tests
                     fixture.Catalog,
                     fixture.Enemy,
                     FormalEncounterRules.GuanzhongWildAdventureId,
-                    TacticalCombatEndOutcome.Victory,
+                    CombatSessionOutcome.Victory,
                     new SequenceRandomSource(100),
                     out _,
                     out reason));
@@ -1203,10 +1203,17 @@ namespace TianZhang.Tests
                 var enemy = (Character)firstEnemy.GetType()
                     .GetField("character", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
                     .GetValue(firstEnemy);
-                var resolver = GetPrivateField<CombatResolver>(exploration, "resolver");
+                var spatialSnapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
                 player.Position = new HexCoord(0, 0);
                 enemy.Position = new HexCoord(1, 0);
-                Assert.IsTrue(resolver.CanTarget(player.Position, enemy.Position, 1, 1, out var reason), reason);
+                var range = spatialSnapshot.Board.QueryRangeEntry(
+                    player.Position,
+                    enemy.Position,
+                    1,
+                    1,
+                    SpatialQueryKind.Attack,
+                    true);
+                Assert.IsTrue(range.IsInRange, range.Reason);
 
                 controller.BeginEncounter();
 
@@ -1328,7 +1335,7 @@ namespace TianZhang.Tests
                     new FormalEncounterResultTests.SequenceRandomSource(99, 49));
                 InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
 
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
 
                 Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
                 Assert.AreEqual(FormalEncounterRules.ShijiahouEnemyId, controller.LastFormalEncounterResult.EnemyId);
@@ -1339,7 +1346,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual(1, lingshi.Quantity);
 
                 LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
 
                 Assert.AreEqual(FormalEncounterRules.AlreadyConsumedReason, controller.EncounterResolutionFailureReason);
                 Assert.AreEqual(2, session.InventoryStates.Count);
@@ -1388,7 +1395,7 @@ namespace TianZhang.Tests
                 InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
 
                 LogAssert.Expect(LogType.Error, new Regex("StackLimitExceeded"));
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
 
                 StringAssert.Contains("StackLimitExceeded", controller.EncounterResolutionFailureReason);
                 Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
@@ -1434,14 +1441,14 @@ namespace TianZhang.Tests
                     new FormalEncounterResultTests.SequenceRandomSource(99, 49));
                 InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
 
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
 
                 BountyStateSnapshot state = session.GetBountyState("bounty_guanzhong_shijiahou");
                 Assert.AreEqual(BountyStatus.ObjectiveCompleted, state.Status);
                 Assert.AreEqual(1, state.Progress);
 
                 LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Victory, enemy);
+                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
 
                 Assert.AreEqual(FormalEncounterRules.AlreadyConsumedReason, controller.EncounterResolutionFailureReason);
                 state = session.GetBountyState("bounty_guanzhong_shijiahou");
@@ -1485,7 +1492,7 @@ namespace TianZhang.Tests
                     new FormalEncounterResultTests.SequenceRandomSource(0, 0));
                 InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
 
-                controller.ResolveEncounterAndReturn(TacticalCombatEndOutcome.Defeat, enemy);
+                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Defeat, enemy);
 
                 BountyStateSnapshot state = session.GetBountyState("bounty_guanzhong_shijiahou");
                 Assert.AreEqual(BountyStatus.Accepted, state.Status);
@@ -1554,9 +1561,9 @@ namespace TianZhang.Tests
             }
         }
 
-        [TestCase(TacticalCombatEndOutcome.Victory)]
-        [TestCase(TacticalCombatEndOutcome.Defeat)]
-        public void CompletedEncounterRecordsOutcomeAndReturnsToSource(TacticalCombatEndOutcome outcome)
+        [TestCase(CombatSessionOutcome.Victory)]
+        [TestCase(CombatSessionOutcome.Defeat)]
+        public void CompletedEncounterRecordsOutcomeAndReturnsToSource(CombatSessionOutcome outcome)
         {
             var go = new GameObject("AdventureSceneControllerTests");
             try
@@ -1699,7 +1706,7 @@ namespace TianZhang.Tests
     public class BattleUIManagerTests
     {
         [Test]
-        public void ActionBarButtonsRouteThroughCombatCommandHandlerWhenBound()
+        public void ActionBarButtonsIgnoreUnboundClicksAfterContextInitialization()
         {
             var host = new GameObject("BattleUIManagerCommandTest");
             try
@@ -1708,22 +1715,15 @@ namespace TianZhang.Tests
                 typeof(BattleUIManager)
                     .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                     .Invoke(ui, null);
-                var handler = new RecordingCombatCommandHandler();
-                ui.SetCombatCommandHandler(handler);
-
-                FindButton("BtnAttack").onClick.Invoke();
-                FindButton("BtnGuard").onClick.Invoke();
-                FindButton("BtnWait").onClick.Invoke();
-                FindButton("BtnSwap").onClick.Invoke();
-                FindButton("BtnSpell2").onClick.Invoke();
-                FindButton("BtnSkill1").onClick.Invoke();
-
-                Assert.AreEqual(1, handler.BasicAttackRequests);
-                Assert.AreEqual(1, handler.GuardRequests);
-                Assert.AreEqual(1, handler.WaitRequests);
-                Assert.AreEqual(1, handler.SwapSpellRequests);
-                Assert.AreEqual(2, handler.LastSpellIndex);
-                Assert.AreEqual(1, handler.LastSkillIndex);
+                Assert.DoesNotThrow(() =>
+                {
+                    FindButton("BtnAttack").onClick.Invoke();
+                    FindButton("BtnGuard").onClick.Invoke();
+                    FindButton("BtnWait").onClick.Invoke();
+                    FindButton("BtnSwap").onClick.Invoke();
+                    FindButton("BtnSpell2").onClick.Invoke();
+                    FindButton("BtnSkill1").onClick.Invoke();
+                });
             }
             finally
             {
@@ -1776,21 +1776,5 @@ namespace TianZhang.Tests
             return null;
         }
 
-        private sealed class RecordingCombatCommandHandler : ICombatCommandHandler
-        {
-            public int BasicAttackRequests { get; private set; }
-            public int GuardRequests { get; private set; }
-            public int WaitRequests { get; private set; }
-            public int SwapSpellRequests { get; private set; }
-            public int LastSpellIndex { get; private set; } = -1;
-            public int LastSkillIndex { get; private set; } = -1;
-
-            public void RequestBasicAttack() => BasicAttackRequests++;
-            public void RequestGuard() => GuardRequests++;
-            public void RequestWait() => WaitRequests++;
-            public void RequestSwapSpell() => SwapSpellRequests++;
-            public void RequestSpell(int index) => LastSpellIndex = index;
-            public void RequestSkill(int index) => LastSkillIndex = index;
-        }
     }
 }

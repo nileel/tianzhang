@@ -48,7 +48,8 @@ namespace TianZhang.Entity
         public bool IsGuarding;      // 防御姿态
         public bool IsAlive = true;
 
-        // ---- CTB 引用 ----
+        // ---- 遗留 CTB 兼容字段 ----
+        // 01E2 的正式链不再写入或读取此字段；它仅保留到 01E3 删除仍需编译的遗留控制器。
         public CTBEngine.CTBUnit CTBUnit;
 
         // ---- 术法/神通冷却 ----

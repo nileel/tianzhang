@@ -5,7 +5,6 @@ using NUnit.Framework;
 using TianZhang.Adventure;
 using TianZhang.Combat;
 using TianZhang.Content;
-using TianZhang.Core;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Game.CharacterCreation;
@@ -97,23 +96,24 @@ namespace TianZhang.Tests
             InvokeStartBattle(exploration, enemyUnit);
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
 
-            var controller = (TacticalCombatController)ReadField(exploration, "tacticalCombatController");
-            Assert.IsNotNull(controller.CurrentSession, "The formal encounter must establish a combat session.");
-            Assert.AreEqual(2, controller.CurrentSession.Members.Count);
-            Assert.AreSame(exploration.attackProfiles[0], controller.CurrentSession.Members[0].BasicAttackProfile);
-            Assert.AreSame(exploration.attackProfiles[0], controller.CurrentSession.Members[1].BasicAttackProfile);
+            var session = (CombatSession)ReadField(exploration, "combatSession");
+            Assert.IsNotNull(session, "The formal encounter must establish a CombatSession.");
+            Assert.AreEqual(2, session.Combatants.All.Count);
+            Assert.IsTrue(session.TryGetProfile(BasicUnarmedProfileId, out var basicProfile));
+            Assert.AreEqual(CombatAttackKind.Basic, basicProfile.Kind);
 
-            // 玩家侧：相邻格沿已声明边 (1,0)→(1,-1) 完成基础攻击。
-            var playerResult = controller.ExecuteBasicAttack(player.CTBUnit.Id, enemy.CTBUnit.Id);
-            Assert.IsTrue(playerResult.Success, "player basic attack: " + playerResult.Message);
-
-            // 敌方侧：同一档案解析并执行；反向边 (1,-1)→(1,0) 已随返工授权声明，
-            // 双方在相邻格均完成基础攻击，且绝不返回三类基础攻击装配错误。
-            var enemyResult = controller.ExecuteBasicAttack(enemy.CTBUnit.Id, player.CTBUnit.Id);
-            Assert.IsTrue(enemyResult.Success, "enemy basic attack: " + enemyResult.Message);
-            Assert.AreNotEqual("basic_attack_binding_missing_or_ambiguous", enemyResult.Message);
-            Assert.AreNotEqual("basic_attack_profile_not_found", enemyResult.Message);
-            Assert.AreNotEqual("basic_attack_profile_binding_kind_invalid", enemyResult.Message);
+            // 玩家侧只通过正式 Gameplay 请求入口执行；不得回落到 TacticalCombatController。
+            var service = (CombatCommandService)ReadField(exploration, "combatCommandService");
+            for (int step = 0; step < 5 && !session.TurnScheduler.IsReady("player"); step++)
+                service.AdvanceUntilAction(session);
+            Assert.IsTrue(session.TurnScheduler.IsReady("player"));
+            SetField(exploration, "waitingForPlayerCombatAction", true);
+            string enemyId = (string)ReadField(enemyUnit, "combatantId");
+            int enemyHealthBefore = session.Combatants.TryGet(enemyId, out var enemySnapshot)
+                ? enemySnapshot.CurrentHealth
+                : -1;
+            exploration.RequestBasicAttack("player", enemyId);
+            Assert.Less(session.Combatants.TryGet(enemyId, out enemySnapshot) ? enemySnapshot.CurrentHealth : int.MaxValue, enemyHealthBefore);
         }
 
         private static IEnumerator WaitUntilSpawned(ExplorationController exploration)
@@ -134,7 +134,7 @@ namespace TianZhang.Tests
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
             grid.ClearOccupied(enemy.Position);
             enemy.Position = coord;
-            grid.SetOccupied(coord, enemy.CTBUnit.Id);
+            grid.SetOccupied(coord, (int)ReadField(GetSpawnedEnemyUnit(exploration), "gridUnitId"));
         }
 
         private static IEnumerator MovePlayerToNeighbor(ExplorationController exploration, Character enemy)
@@ -232,6 +232,15 @@ namespace TianZhang.Tests
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             Assert.IsNotNull(field, "field " + fieldName + " must exist on " + target.GetType().Name);
             return field.GetValue(target);
+        }
+
+        private static void SetField(object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(
+                fieldName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, "field " + fieldName + " must exist on " + target.GetType().Name);
+            field.SetValue(target, value);
         }
 
         private static object ReadMember(object target, string memberName)

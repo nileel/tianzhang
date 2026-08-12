@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TianZhang.Adventure;
-using TianZhang.Core;
 using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Combat;
@@ -12,6 +11,7 @@ using TianZhang.HexTile;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
 using TianZhang.Infrastructure.UnityContent;
+using GameplayCombatCommandHandler = TianZhang.Gameplay.Contracts.ICombatCommandHandler;
 
 using TianZhang.Spatial;
 
@@ -22,7 +22,7 @@ namespace TianZhang.Map
     /// 职责：生成可探索地图 + 敌人生成 + 探索→战斗循环
     /// 操作：鼠标点击移动，接近敌人触发战斗
     /// </summary>
-    public class ExplorationController : MonoBehaviour, ICombatCommandHandler
+    public class ExplorationController : MonoBehaviour, GameplayCombatCommandHandler
     {
         [Header("引用")]
         public HexTilemapManager tilemapManager;
@@ -46,17 +46,19 @@ namespace TianZhang.Map
         public int playerSightRange = 8;       // 玩家视野范围(格)
 
         // ---- 核心系统 ----
-        private CTBEngine ctbEngine;
-        private CombatResolver resolver;
-        private TacticalCombatController tacticalCombatController;
-        private CombatLogAdapter combatLogAdapter;
+        private CombatCommandService combatCommandService;
+        private CombatLegalActionService combatLegalActionService;
+        private CombatResultBuilder combatResultBuilder;
+        private CombatSession combatSession;
         private AdventureSceneController adventureSceneController;
         private EnvironmentProfileAsset environmentProfile;
         private EnemyData formalEncounterEnemy;
-        private IAIController formalEncounterAiController;
+        private ICombatActionPolicy formalEncounterAiPolicy;
         private SpatialQuerySnapshot spatialQuerySnapshot;
         private Character player;
         private List<EnemyUnit> enemies = new List<EnemyUnit>();
+        private readonly Dictionary<string, Character> combatantsById = new Dictionary<string, Character>();
+        private int playerGridUnitId;
 
         // ---- 视觉标记 ----
         private GameObject playerMarker;
@@ -80,6 +82,7 @@ namespace TianZhang.Map
 
         // ---- 阵营标记 ----
         private int nextUnitId = 0;
+        private const string PlayerCombatantId = "player";
 
         // ---- 地形标记（HexGrid blocked）----
         private HashSet<HexCoord> blockedTiles = new HashSet<HexCoord>();
@@ -90,11 +93,13 @@ namespace TianZhang.Map
             public Character character;
             public CharacterData data;
             public EnemyData enemyData;
-            public IAIController aiController;
+            public ICombatActionPolicy aiPolicy;
             public AttackProfileData[] spells;
             public AttackProfileData[] skills;
             public GameObject marker;
             public bool defeated;
+            public int gridUnitId;
+            public string combatantId;
         }
 
         private void Start()
@@ -109,16 +114,16 @@ namespace TianZhang.Map
 
         public void ConfigureFormalEncounter(
             EnemyData enemy,
-            IAIController aiController)
+            ICombatActionPolicy aiPolicy)
         {
             formalEncounterEnemy = enemy;
-            formalEncounterAiController = aiController;
+            formalEncounterAiPolicy = aiPolicy;
         }
 
         public void ClearFormalEncounter()
         {
             formalEncounterEnemy = null;
-            formalEncounterAiController = null;
+            formalEncounterAiPolicy = null;
         }
 
         private void Update()
@@ -143,7 +148,7 @@ namespace TianZhang.Map
             adventureSceneController = FindFirstObjectByType<AdventureSceneController>();
             if (adventureSceneController != null &&
                 adventureSceneController.RequiresFormalEncounter &&
-                (formalEncounterEnemy == null || formalEncounterAiController == null))
+                (formalEncounterEnemy == null || formalEncounterAiPolicy == null))
             {
                 adventureSceneController.ReportEncounterConfigurationFailure(
                     "formal_encounter_enemy_not_configured");
@@ -159,10 +164,9 @@ namespace TianZhang.Map
                 yield break;
             }
 
-            ctbEngine = new CTBEngine();
-            resolver = new CombatResolver { Engine = ctbEngine };
-            tacticalCombatController = new TacticalCombatController(ctbEngine, resolver);
-            combatLogAdapter = new CombatLogAdapter(AddLog, SetStatus);
+            combatCommandService = new CombatCommandService();
+            combatLegalActionService = new CombatLegalActionService(combatCommandService);
+            combatResultBuilder = new CombatResultBuilder();
 
             // 创建障碍格素材（深灰色）
             blockedTile = CreateColoredTile("BlockedTile", new Color(0.25f, 0.22f, 0.2f, 1f));
@@ -174,9 +178,8 @@ namespace TianZhang.Map
             // 创建玩家
             var playerStart = new HexCoord(0, 0);
             player = CreatePlayer(playerStart);
-            player.CTBUnit = ctbEngine.RegisterUnit(player.Reaction, player);
-            player.CTBUnit.Id = nextUnitId++;
-            tilemapManager.Grid.SetOccupied(playerStart, player.CTBUnit.Id);
+            playerGridUnitId = nextUnitId++;
+            tilemapManager.Grid.SetOccupied(playerStart, playerGridUnitId);
 
             playerMarker = tilemapManager.PlaceUnitMarker(playerStart, Color.cyan, "玩家");
 
@@ -202,8 +205,6 @@ namespace TianZhang.Map
                 enabled = false;
                 yield break;
             }
-            resolver.SpatialBoard = spatialQuerySnapshot.Board;
-
             var environmentPresentation = tilemapManager.PresentEnvironment(
                 tacticalGrid,
                 spatialQuerySnapshot.Environment);
@@ -345,7 +346,7 @@ namespace TianZhang.Map
             bool isFormalEncounter = formalEncounterEnemy != null;
             if (isFormalEncounter &&
                 (formalEncounterEnemy.combatTemplate == null ||
-                 formalEncounterAiController == null ||
+                 formalEncounterAiPolicy == null ||
                  enemyCount != 1))
             {
                 reason = "formal_encounter_spawn_configuration_invalid";
@@ -373,12 +374,12 @@ namespace TianZhang.Map
                 // 选择一个敌人模板
                 CharacterData template = null;
                 EnemyData enemyData = null;
-                IAIController aiController = tacticalCombatController.AIController;
+                ICombatActionPolicy aiPolicy = new LegalActionAI();
                 if (isFormalEncounter)
                 {
                     enemyData = formalEncounterEnemy;
                     template = formalEncounterEnemy.combatTemplate;
-                    aiController = formalEncounterAiController;
+                    aiPolicy = formalEncounterAiPolicy;
                 }
                 else if (enemyTemplates != null && enemyTemplates.Length > 0)
                     template = enemyTemplates[spawned % enemyTemplates.Length];
@@ -387,9 +388,8 @@ namespace TianZhang.Map
 
                 var enemy = Character.FromData(template, coord);
                 enemy.EnsureCooldownArraySize();
-                enemy.CTBUnit = ctbEngine.RegisterUnit(enemy.Reaction, enemy);
-                enemy.CTBUnit.Id = nextUnitId++;
-                tilemapManager.Grid.SetOccupied(coord, enemy.CTBUnit.Id);
+                int gridUnitId = nextUnitId++;
+                tilemapManager.Grid.SetOccupied(coord, gridUnitId);
 
                 var spells = ResolveAttackProfiles(template.equippedSpells, AttackProfileKind.Art);
                 var skills = ResolveAttackProfiles(template.equippedSkills, AttackProfileKind.Divine);
@@ -402,11 +402,13 @@ namespace TianZhang.Map
                     character = enemy,
                     data = template,
                     enemyData = enemyData,
-                    aiController = aiController,
+                    aiPolicy = aiPolicy,
                     spells = spells,
                     skills = skills,
                     marker = marker,
                     defeated = false,
+                    gridUnitId = gridUnitId,
+                    combatantId = "enemy_" + spawned,
                 });
 
                 spawned++;
@@ -487,7 +489,6 @@ namespace TianZhang.Map
                 return false;
             }
 
-            resolver.SpatialBoard = spatialQuerySnapshot.Board;
             return true;
         }
 
@@ -540,7 +541,7 @@ namespace TianZhang.Map
                 if (eu.character.Position == coord)
                 {
                     // 检查玩家是否在相邻格
-                    if (resolver.CanTarget(player.Position, coord, 1, 1, out _))
+                    if (IsInCombatRange(player.Position, coord, 1, 1))
                     {
                         StartBattle(eu);
                         return;
@@ -584,7 +585,7 @@ namespace TianZhang.Map
             // 只更新起点和终点，不污染中间格子
             tilemapManager.Grid.ClearOccupied(player.Position);
             player.Position = path[path.Count - 1];
-            tilemapManager.Grid.SetOccupied(player.Position, player.CTBUnit.Id);
+            tilemapManager.Grid.SetOccupied(player.Position, playerGridUnitId);
 
             // 更新标记位置
             if (playerMarker != null)
@@ -664,7 +665,7 @@ namespace TianZhang.Map
             if (adventureSceneController != null &&
                 adventureSceneController.RequiresFormalEncounter &&
                 (!ReferenceEquals(enemy.enemyData, formalEncounterEnemy) ||
-                 enemy.aiController == null))
+                 enemy.aiPolicy == null))
             {
                 adventureSceneController.ReportEncounterConfigurationFailure(
                     "formal_encounter_runtime_identity_invalid");
@@ -682,17 +683,7 @@ namespace TianZhang.Map
                 return;
             }
 
-            var setup = new TacticalCombatSetup(
-                new[] { player },
-                new[] { enemy.character },
-                spatialQuerySnapshot.Board,
-                spatialQuerySnapshot.UnitAnchors,
-                GetKnownAttackProfiles());
-            if (!tacticalCombatController.TryBeginCombat(
-                    setup,
-                    tilemapManager.Grid,
-                    out _,
-                    out string setupReason))
+            if (!TryCreateCombatSession(enemy, out string setupReason))
             {
                 AddLog("遭遇配置被拒绝: " + setupReason);
                 adventureSceneController?.ReportEncounterConfigurationFailure(setupReason);
@@ -702,7 +693,8 @@ namespace TianZhang.Map
 
             adventureSceneController?.BeginEncounter();
 
-            GetCombatLogAdapter().AnnounceBattleStart(player.Name, enemy.character.Name);
+            AddLog($"=== 战斗开始！{player.Name} VS {enemy.character.Name} ===");
+            SetStatus($"⚔ {enemy.character.Name}");
 
             // 显示战斗UI
             if (uiManager != null)
@@ -710,11 +702,6 @@ namespace TianZhang.Map
                 uiManager.ShowEnemyPanel(true);
                 uiManager.SetActionBarVisible(true);
             }
-
-            // 重置冷却（防止跨战斗残留，使用槽位数确保长度一致）
-            player.EnsureCooldownArraySize();
-            System.Array.Clear(player.SpellCooldowns, 0, player.SpellCooldowns.Length);
-            System.Array.Clear(player.SkillCooldowns, 0, player.SkillCooldowns.Length);
 
             if (uiManager != null)
             {
@@ -732,13 +719,13 @@ namespace TianZhang.Map
 
             while (state == GameState.Combat && player.IsAlive && enemyUnit.character.IsAlive)
             {
-                var nextAction = tacticalCombatController.AdvanceUntilAction();
-                var nextUnit = nextAction.Unit;
+                CombatTurnAdvance nextAction = combatCommandService.AdvanceUntilAction(combatSession);
                 int ticksElapsed = nextAction.TicksElapsed;
-                tacticalCombatController.AdvanceCooldowns(ticksElapsed);
+                SyncCombatantProjections();
                 RefreshUI();
 
-                if (nextUnit == null)
+                if (!nextAction.HasActor ||
+                    !combatantsById.TryGetValue(nextAction.ActorId, out Character actor))
                 {
                     AddLog("CTB推进超时，战斗中止");
                     SetStatus("战斗异常");
@@ -746,7 +733,6 @@ namespace TianZhang.Map
                     break;
                 }
 
-                var actor = nextAction.Actor;
                 if (actor == player)
                 {
                     hasMovedThisTurn = false;
@@ -777,8 +763,7 @@ namespace TianZhang.Map
 
                     yield return new WaitForSeconds(0.5f);
 
-                    ExecuteEnemyAI(enemyUnit, enemyUnit.character);
-                    tacticalCombatController.ConsumeAction(enemyUnit.character);
+                    ExecuteEnemyAI(enemyUnit);
 
                     RefreshUI();
                     yield return new WaitForSeconds(0.3f);
@@ -793,6 +778,19 @@ namespace TianZhang.Map
         private void RefreshCombatButtons(bool interactable)
         {
             if (uiManager == null) return;
+
+            string nextSwapProfileId = string.Empty;
+            if (combatSession != null && combatSession.Combatants.TryGet(PlayerCombatantId, out CombatantSnapshot playerSnapshot))
+            {
+                nextSwapProfileId = playerSnapshot.AvailableArtProfileIds.FirstOrDefault(
+                    candidate => !playerSnapshot.EquippedArtProfileIds.Contains(candidate)) ?? string.Empty;
+            }
+            uiManager.SetCombatCommandContext(
+                PlayerCombatantId,
+                GetCombatantId(currentCombatTarget),
+                playerSpells == null ? System.Array.Empty<string>() : System.Array.ConvertAll(playerSpells, profile => profile?.attackProfileId ?? string.Empty),
+                playerSkills == null ? System.Array.Empty<string>() : System.Array.ConvertAll(playerSkills, profile => profile?.attackProfileId ?? string.Empty),
+                nextSwapProfileId);
 
             uiManager.RefreshSpellButtons(
                 playerSpells != null ? System.Array.ConvertAll(playerSpells, s => UiText.Resolve(s?.displayNameKey ?? "?")) : new string[0],
@@ -811,17 +809,18 @@ namespace TianZhang.Map
             uiManager.SetActionButtonsInteractable(interactable);
         }
 
-        private void ExecuteEnemyAI(EnemyUnit enemyUnit, Character ch)
+        private void ExecuteEnemyAI(EnemyUnit enemyUnit)
         {
-            var result = tacticalCombatController.ExecuteEnemyTurn(
-                enemyUnit.character.CTBUnit.Id,
-                player.CTBUnit.Id,
-                enemyUnit.spells.Length > 0 ? enemyUnit.spells : null,
-                enemyUnit.skills.Length > 0 ? enemyUnit.skills : null,
-                enemyUnit.aiController,
-                tilemapManager.Grid);
+            var legalActions = combatLegalActionService.GetLegalActions(combatSession, enemyUnit.combatantId);
+            CombatCommand command = enemyUnit.aiPolicy?.ChooseAction(legalActions);
+            if (command == null)
+            {
+                AddLog($"{enemyUnit.character.Name}: 无合法行动");
+                return;
+            }
 
-            AddLog($"{enemyUnit.character.Name}: {result}");
+            CombatActionResult result = ExecuteCombatCommand(command);
+            AddLog($"{enemyUnit.character.Name}: {BuildActionMessage(command, result)}");
             hasMovedThisTurn = true;
         }
 
@@ -847,82 +846,38 @@ namespace TianZhang.Map
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            if (player.CombatSwapsUsed >= Character.MaxCombatSwaps)
-            {
-                AddLog("本场战斗换法次数已用完");
+            if (!combatSession.Combatants.TryGet(PlayerCombatantId, out CombatantSnapshot snapshot))
                 return;
-            }
-
-            var swappable = player.GetSwappableSpells();
-            if (swappable.Length == 0)
+            string newSpell = snapshot.AvailableArtProfileIds.FirstOrDefault(
+                candidate => !snapshot.EquippedArtProfileIds.Contains(candidate));
+            if (string.IsNullOrEmpty(newSpell))
             {
                 AddLog("无可换入的术法");
                 return;
             }
 
-            // 换入第一个可用术法到槽位0
-            string newSpell = swappable[0];
-            var result = tacticalCombatController.ExecuteSwapSpell(player.CTBUnit.Id, 0, newSpell);
-            AddActionLog(result);
-            if (result.Success)
-            {
-                hasMovedThisTurn = true;
-                RefreshUI();
-            }
+            RequestSwapSpell(PlayerCombatantId, 0, newSpell);
         }
-
-        public void RequestBasicAttack() => PlayerBasicAttack();
-        public void RequestGuard() => PlayerGuard();
-        public void RequestWait() => PlayerCombatWait();
-        public void RequestSwapSpell() => PlayerSwapSpell();
-        public void RequestSpell(int index) => PlayerCastSpell(index);
-        public void RequestSkill(int index) => PlayerUseSkill(index);
 
         public void PlayerBasicAttack()
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            var result = tacticalCombatController.ExecuteBasicAttack(
-                player.CTBUnit.Id,
-                currentCombatTarget.CTBUnit.Id);
-            AddActionLog(result);
-            if (!result.Success)
-            {
-                RefreshUI();
-                return;
-            }
-            hasMovedThisTurn = true;
-            RefreshUI();
+            RequestBasicAttack(PlayerCombatantId, GetCombatantId(currentCombatTarget));
         }
 
         public void PlayerGuard()
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = tacticalCombatController.ExecuteGuard(player.CTBUnit.Id);
-            AddActionLog(result);
-            if (!result.Success)
-            {
-                RefreshUI();
-                return;
-            }
-            hasMovedThisTurn = true;
-            RefreshUI();
+            RequestGuard(PlayerCombatantId);
         }
 
         public void PlayerCombatWait()
         {
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
-            var result = tacticalCombatController.ExecuteWait(player.CTBUnit.Id);
-            AddActionLog(result);
-            if (!result.Success)
-            {
-                RefreshUI();
-                return;
-            }
-            hasMovedThisTurn = true;
-            RefreshUI();
+            RequestWait(PlayerCombatantId);
         }
 
         public void PlayerCastSpell(int index)
@@ -930,63 +885,40 @@ namespace TianZhang.Map
             if (!waitingForPlayerCombatAction) return;
             if (!player.IsAlive) return;
             if (currentCombatTarget == null) return;
-            var result = tacticalCombatController.ExecuteArt(
-                player.CTBUnit.Id,
-                currentCombatTarget.CTBUnit.Id,
-                index,
-                playerSpells);
-            AddActionLog(result);
-            if (!result.Success)
-            {
-                RefreshUI();
-                return;
-            }
-            hasMovedThisTurn = true;
-            RefreshUI();
+            if (index >= 0 && playerSpells != null && index < playerSpells.Length)
+                RequestArt(PlayerCombatantId, GetCombatantId(currentCombatTarget), playerSpells[index]?.attackProfileId);
         }
 
         public void PlayerUseSkill(int index)
         {
             if (!waitingForPlayerCombatAction) return;
             if (currentCombatTarget == null || !player.IsAlive) return;
-            var result = tacticalCombatController.ExecuteDivine(
-                player.CTBUnit.Id,
-                currentCombatTarget.CTBUnit.Id,
-                index,
-                playerSkills);
-            AddActionLog(result);
-            if (!result.Success)
-            {
-                RefreshUI();
-                return;
-            }
-            hasMovedThisTurn = true;
-            RefreshUI();
+            if (index >= 0 && playerSkills != null && index < playerSkills.Length)
+                RequestDivine(PlayerCombatantId, GetCombatantId(currentCombatTarget), playerSkills[index]?.attackProfileId);
         }
 
         private void EndBattle(EnemyUnit enemyUnit)
         {
-            var endResult = tacticalCombatController.ResolveBattleEnd(tilemapManager.Grid);
-            if (endResult.Outcome == TacticalCombatEndOutcome.Defeat)
+            CombatSessionResult endResult = combatResultBuilder.Build(combatSession);
+            if (endResult.Outcome == CombatSessionOutcome.Defeat)
             {
-                AddLog(endResult.Message);
+                AddLog("玩家被击败！游戏结束");
                 SetStatus("败北");
                 state = GameState.Ended;
                 adventureSceneController?.ResolveEncounterAndReturn(
                     endResult.Outcome,
                     enemyUnit.enemyData);
             }
-            else if (endResult.Outcome == TacticalCombatEndOutcome.Victory)
+            else if (endResult.Outcome == CombatSessionOutcome.Victory)
             {
-                AddLog(endResult.Message);
+                AddLog($"击败了 {enemyUnit.character.Name}！");
                 SetStatus("胜利");
                 enemyUnit.defeated = true;
                 enemyUnit.marker?.SetActive(false);
 
                 if (adventureSceneController != null &&
                     adventureSceneController.RequiresFormalEncounter &&
-                    !endResult.DefeatedEnemyUnitIds.Contains(
-                        enemyUnit.character.CTBUnit.Id))
+                    !endResult.DefeatedCombatantIds.Contains(enemyUnit.combatantId))
                 {
                     adventureSceneController.ReportEncounterConfigurationFailure(
                         "formal_encounter_defeated_member_mismatch");
@@ -1013,13 +945,331 @@ namespace TianZhang.Map
             }
         }
 
+        void GameplayCombatCommandHandler.RequestBasicAttack(string actorId, string targetId) => RequestBasicAttack(actorId, targetId);
+        void GameplayCombatCommandHandler.RequestArt(string actorId, string targetId, string profileId) => RequestArt(actorId, targetId, profileId);
+        void GameplayCombatCommandHandler.RequestDivine(string actorId, string targetId, string profileId) => RequestDivine(actorId, targetId, profileId);
+        void GameplayCombatCommandHandler.RequestGuard(string actorId) => RequestGuard(actorId);
+        void GameplayCombatCommandHandler.RequestWait(string actorId) => RequestWait(actorId);
+        void GameplayCombatCommandHandler.RequestMove(string actorId, int destinationQ, int destinationR) => RequestMove(actorId, destinationQ, destinationR);
+        void GameplayCombatCommandHandler.RequestSwapSpell(string actorId, int slotIndex, string profileId) => RequestSwapSpell(actorId, slotIndex, profileId);
+
+        public void RequestBasicAttack(string actorId, string targetId)
+        {
+            string profileId = ResolveBasicProfileId(actorId);
+            ExecutePlayerCommand(new CombatCommand(CombatCommandKind.BasicAttack, actorId, targetId, profileId));
+        }
+
+        public void RequestArt(string actorId, string targetId, string profileId)
+        {
+            ExecutePlayerCommand(new CombatCommand(CombatCommandKind.Art, actorId, targetId, profileId));
+        }
+
+        public void RequestDivine(string actorId, string targetId, string profileId)
+        {
+            ExecutePlayerCommand(new CombatCommand(CombatCommandKind.Divine, actorId, targetId, profileId));
+        }
+
+        public void RequestGuard(string actorId)
+        {
+            ExecutePlayerCommand(new CombatCommand(CombatCommandKind.Guard, actorId));
+        }
+
+        public void RequestWait(string actorId)
+        {
+            ExecutePlayerCommand(new CombatCommand(CombatCommandKind.Wait, actorId));
+        }
+
+        public void RequestMove(string actorId, int destinationQ, int destinationR)
+        {
+            ExecutePlayerCommand(new CombatCommand(
+                CombatCommandKind.Move,
+                actorId,
+                destination: new HexCoord(destinationQ, destinationR)));
+        }
+
+        public void RequestSwapSpell(string actorId, int slotIndex, string profileId)
+        {
+            ExecutePlayerCommand(new CombatCommand(
+                CombatCommandKind.SwapSpell,
+                actorId,
+                profileId: profileId,
+                slotIndex: slotIndex));
+        }
+
+        private void ExecutePlayerCommand(CombatCommand command)
+        {
+            if (!waitingForPlayerCombatAction || command == null ||
+                !string.Equals(command.ActorId, PlayerCombatantId, System.StringComparison.Ordinal))
+                return;
+
+            CombatActionResult result = ExecuteCombatCommand(command);
+            AddLog(BuildActionMessage(command, result));
+            if (result.Succeeded)
+                hasMovedThisTurn = true;
+            RefreshUI();
+        }
+
+        private CombatActionResult ExecuteCombatCommand(CombatCommand command)
+        {
+            CombatActionResult result = combatCommandService.Execute(combatSession, command);
+            if (result.Succeeded)
+                SyncCombatantProjections();
+            return result;
+        }
+
+        private bool TryCreateCombatSession(EnemyUnit enemy, out string reason)
+        {
+            if (!TryCreateCombatProfiles(out IReadOnlyList<CombatAttackProfile> profiles, out reason))
+                return false;
+
+            CombatantSnapshot playerSnapshot = CreateSnapshot(PlayerCombatantId, CombatTeam.Player, player);
+            CombatantSnapshot enemySnapshot = CreateSnapshot(enemy.combatantId, CombatTeam.Enemy, enemy.character);
+            try
+            {
+                combatSession = new CombatSession(
+                    new[] { playerSnapshot, enemySnapshot },
+                    profiles,
+                    new SpatialCombatQuery(spatialQuerySnapshot.Board));
+            }
+            catch (System.ArgumentException exception)
+            {
+                reason = "combat_session_setup_invalid:" + exception.Message;
+                combatSession = null;
+                return false;
+            }
+
+            combatantsById.Clear();
+            combatantsById.Add(PlayerCombatantId, player);
+            combatantsById.Add(enemy.combatantId, enemy.character);
+            reason = string.Empty;
+            return true;
+        }
+
+        private bool TryCreateCombatProfiles(out IReadOnlyList<CombatAttackProfile> profiles, out string reason)
+        {
+            var result = new List<CombatAttackProfile>();
+            foreach (AttackProfileData profile in GetKnownAttackProfiles())
+            {
+                if (profile == null || !profile.TryValidate(out _) ||
+                    profile.targetingMode != AttackTargetingMode.Single)
+                    continue;
+
+                CombatAttackEffect effect = profile.effectType switch
+                {
+                    AttackEffectType.Physical => CombatAttackEffect.Physical,
+                    AttackEffectType.Magic => CombatAttackEffect.Soul,
+                    AttackEffectType.Hybrid => CombatAttackEffect.Hybrid,
+                    AttackEffectType.Heal => CombatAttackEffect.Heal,
+                    _ => (CombatAttackEffect)(-1),
+                };
+                if ((int)effect < 0)
+                    continue;
+
+                result.Add(new CombatAttackProfile(
+                    profile.attackProfileId,
+                    profile.profileKind switch
+                    {
+                        AttackProfileKind.Basic => CombatAttackKind.Basic,
+                        AttackProfileKind.Art => CombatAttackKind.Art,
+                        AttackProfileKind.Divine => CombatAttackKind.Divine,
+                        _ => throw new System.ArgumentOutOfRangeException(),
+                    },
+                    effect,
+                    profile.minCastRange,
+                    profile.maxCastRange,
+                    profile.physicalDamageMultiplier,
+                    profile.soulDamageMultiplier,
+                    profile.healAmount,
+                    profile.resourceCost,
+                    profile.cooldownTicks,
+                    profile.damageElementId,
+                    profile.defensePenetration));
+            }
+
+            if (result.Count == 0 || result.Select(profile => profile.Id).Distinct().Count() != result.Count)
+            {
+                profiles = null;
+                reason = "combat_session_attack_profile_invalid";
+                return false;
+            }
+
+            profiles = result;
+            reason = string.Empty;
+            return true;
+        }
+
+        private static CombatantSnapshot CreateSnapshot(string id, CombatTeam team, Character character)
+        {
+            var snapshot = new CombatantSnapshot(
+                id,
+                team,
+                character.Position,
+                character.Reaction,
+                character.MaxHP,
+                character.CurrentHP,
+                character.PhysAtk,
+                character.MagAtk,
+                character.PhysDef,
+                character.MagDef,
+                character.RealmMultiplier,
+                character.MovePoints,
+                character.EquippedSpellIds,
+                character.AvailableSpells,
+                Character.MaxCombatSwaps,
+                0)
+            {
+                BlockRate = character.BlockRate,
+                BlockReduction = character.BlockReduction,
+                SoulShieldRate = character.SoulShieldRate,
+                SoulShieldReduction = character.SoulShieldReduction,
+                DodgeRate = character.DodgeRate,
+                CriticalRate = character.CritRate,
+                CriticalDamage = character.CritDamage,
+                HitRateBonus = character.HitRateBonus,
+                Facing = character.Facing,
+                IsGuarding = character.IsGuarding,
+                GongFaId = character.GongFaName,
+                GongFaElement = DamageCalculator.GetGongFaElement(character.GongFaName),
+                ShouyiStacks = character.ShouyiStacks,
+                FudanStacks = character.FudanStacks,
+                LeijieStacks = character.LeijieStacks,
+            };
+            snapshot.SetSpirit(character.MaxMP, character.CurrentMP);
+            return snapshot;
+        }
+
+        private void SyncCombatantProjections()
+        {
+            if (combatSession == null)
+                return;
+
+            foreach (CombatantSnapshot snapshot in combatSession.Combatants.All)
+            {
+                if (!combatantsById.TryGetValue(snapshot.Id, out Character character))
+                    continue;
+
+                HexCoord priorPosition = character.Position;
+                character.CurrentHP = snapshot.CurrentHealth;
+                character.CurrentMP = snapshot.CurrentSpirit;
+                character.IsAlive = snapshot.IsAlive;
+                character.IsGuarding = snapshot.IsGuarding;
+                character.Facing = snapshot.Facing;
+                character.ShouyiStacks = snapshot.ShouyiStacks;
+                character.FudanStacks = snapshot.FudanStacks;
+                character.LeijieStacks = snapshot.LeijieStacks;
+                character.EquippedSpellIds = snapshot.EquippedArtProfileIds.ToArray();
+                character.CombatSwapsUsed = snapshot.CombatSwapsUsed;
+                CopyCooldowns(character.SpellCooldowns, character.EquippedSpellIds, snapshot);
+                CopyCooldowns(character.SkillCooldowns, character.EquippedSkillIds, snapshot);
+                if (priorPosition != snapshot.Position)
+                    MoveProjectedCharacter(character, priorPosition, snapshot.Position);
+            }
+        }
+
+        private void MoveProjectedCharacter(Character character, HexCoord previous, HexCoord destination)
+        {
+            tilemapManager.Grid.ClearOccupied(previous);
+            character.Position = destination;
+            int gridUnitId = ReferenceEquals(character, player)
+                ? playerGridUnitId
+                : enemies.First(enemy => ReferenceEquals(enemy.character, character)).gridUnitId;
+            tilemapManager.Grid.SetOccupied(destination, gridUnitId);
+            GameObject marker = ReferenceEquals(character, player)
+                ? playerMarker
+                : enemies.First(enemy => ReferenceEquals(enemy.character, character)).marker;
+            if (marker != null)
+                marker.transform.position = tilemapManager.HexToWorld(destination);
+        }
+
+        private static void CopyCooldowns(int[] destination, string[] profileIds, CombatantSnapshot snapshot)
+        {
+            if (destination == null || profileIds == null)
+                return;
+            for (int index = 0; index < destination.Length; index++)
+                destination[index] = index < profileIds.Length ? snapshot.GetCooldown(profileIds[index]) : 0;
+        }
+
+        private string ResolveBasicProfileId(string actorId)
+        {
+            return combatantsById.TryGetValue(actorId, out Character character)
+                ? character.BasicAttackProfileId ?? string.Empty
+                : string.Empty;
+        }
+
+        private string GetCombatantId(Character character)
+        {
+            foreach (KeyValuePair<string, Character> entry in combatantsById)
+            {
+                if (ReferenceEquals(entry.Value, character))
+                    return entry.Key;
+            }
+            return string.Empty;
+        }
+
+        private bool IsInCombatRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
+        {
+            if (spatialQuerySnapshot?.Board == null)
+                return false;
+            return spatialQuerySnapshot.Board.QueryRangeEntry(
+                source, target, minimumRange, maximumRange, SpatialQueryKind.Attack, true).IsInRange;
+        }
+
+        private static string BuildActionMessage(CombatCommand command, CombatActionResult result)
+        {
+            if (!result.Succeeded)
+                return string.IsNullOrEmpty(result.RejectionReason) ? "行动失败" : result.RejectionReason;
+            if (result.Damage.Count > 0)
+                return command.Kind + " 命中，伤害 " + result.Damage.Sum(entry => entry.FinalDamage);
+            if (command.Kind == CombatCommandKind.Move)
+                return "移动到 (" + command.Destination.Value.Q + "," + command.Destination.Value.R + ")";
+            return command.Kind.ToString();
+        }
+
+        private sealed class SpatialCombatQuery : ICombatSpatialQuery
+        {
+            private readonly SpatialQueryBoard board;
+
+            public SpatialCombatQuery(SpatialQueryBoard board)
+            {
+                this.board = board ?? throw new System.ArgumentNullException(nameof(board));
+            }
+
+            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
+            {
+                SpatialRangeEntry result = board.QueryRangeEntry(
+                    source, target, minimumRange, maximumRange, SpatialQueryKind.Attack, true);
+                return new CombatRangeQueryResult(result.IsInRange, result.Reason);
+            }
+
+            public CombatMovementQueryResult QueryMovement(
+                HexCoord source,
+                HexCoord destination,
+                int movementPoints,
+                IReadOnlyCollection<HexCoord> occupied)
+            {
+                IReadOnlyDictionary<HexCoord, int> reachable = board.FindReachable(source, movementPoints, occupied);
+                if (!reachable.TryGetValue(destination, out int cost))
+                    return new CombatMovementQueryResult(false, SpatialQueryReasons.NoLegalPath, null, 0);
+                IReadOnlyList<HexCoord> path = board.FindPath(source, destination, movementPoints, occupied);
+                int movementCost = (cost + board.UnitsPerRange - 1) / board.UnitsPerRange;
+                return new CombatMovementQueryResult(path.Count > 0, SpatialQueryReasons.Ok, path, movementCost);
+            }
+
+            public IReadOnlyDictionary<HexCoord, int> FindReachable(
+                HexCoord source,
+                int movementPoints,
+                IReadOnlyCollection<HexCoord> occupied)
+            {
+                return board.FindReachable(source, movementPoints, occupied);
+            }
+        }
+
         // ==================== UI工具 ====================
 
         private void RefreshUI()
         {
             if (uiManager == null) return;
-            float playerThreshold = player.CTBUnit != null ? Mathf.Max(CTBEngine.ActionThreshold, player.CTBUnit.NextActionThreshold) : CTBEngine.ActionThreshold;
-            float ct = player.CTBUnit != null ? player.CTBUnit.CT / playerThreshold : 0;
+            float ct = combatSession != null && combatSession.TurnScheduler.IsReady(PlayerCombatantId) ? 1f : 0f;
             string status = "";
             if (!player.IsAlive) status = "阵亡";
             else if (state == GameState.Exploration) status = "探索中";
@@ -1031,9 +1281,8 @@ namespace TianZhang.Map
 
             if (currentCombatTarget != null && currentCombatTarget.IsAlive)
             {
-                float enemyThreshold = currentCombatTarget.CTBUnit != null ? Mathf.Max(CTBEngine.ActionThreshold, currentCombatTarget.CTBUnit.NextActionThreshold) : CTBEngine.ActionThreshold;
-                float ect = currentCombatTarget.CTBUnit != null
-                    ? currentCombatTarget.CTBUnit.CT / enemyThreshold : 0;
+                string enemyId = GetCombatantId(currentCombatTarget);
+                float ect = combatSession != null && combatSession.TurnScheduler.IsReady(enemyId) ? 1f : 0f;
                 uiManager.UpdateEnemyInfo(currentCombatTarget.BuildCombatantPanelState(
                     ect,
                     TianZhang.Combat.DamageCalculator.GetGongFaElement(currentCombatTarget.GongFaName),
@@ -1055,18 +1304,6 @@ namespace TianZhang.Map
         {
             if (uiManager != null)
                 uiManager.AddLog(message);
-        }
-
-        private void AddActionLog(CombatResolver.ActionResult result)
-        {
-            GetCombatLogAdapter().AppendActionResult(result);
-        }
-
-        private CombatLogAdapter GetCombatLogAdapter()
-        {
-            if (combatLogAdapter == null)
-                combatLogAdapter = new CombatLogAdapter(AddLog, SetStatus);
-            return combatLogAdapter;
         }
 
         // ==================== 公共查询 ====================

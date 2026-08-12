@@ -21,6 +21,7 @@ namespace TianZhang.Tests
                 "TianZhang.Domain",
                 "TianZhang.Content",
                 "TianZhang.Combat",
+                "TianZhang.Gameplay.Contracts",
                 "TianZhang.Spatial",
                 "TianZhang.Infrastructure.UnityContent",
                 "Unity.InputSystem",
@@ -99,6 +100,35 @@ namespace TianZhang.Tests
                 "World/WorldClockService.cs", "World/CharterCommitService.cs"
             }, Directory.GetFiles(scriptsRoot, "*.cs", SearchOption.AllDirectories)
                 .Select(path => path.Substring(scriptsRoot.Length + 1).Replace('\\', '/')).ToArray());
+        }
+
+        [Test]
+        public void CombatCommandContractUsesOnlyStableIdsSlotsAndCoordinates()
+        {
+            string path = Path.Combine(
+                Application.dataPath,
+                "Scripts",
+                "Modules",
+                "GameplayContracts",
+                "ICombatCommandHandler.cs");
+            string source = File.ReadAllText(path);
+
+            foreach (string member in new[]
+            {
+                "RequestBasicAttack", "RequestArt", "RequestDivine", "RequestGuard",
+                "RequestWait", "RequestMove", "RequestSwapSpell"
+            })
+            {
+                StringAssert.Contains(member, source);
+            }
+
+            foreach (string forbidden in new[]
+            {
+                "TianZhang.Combat", "TianZhang.Spatial", "Character", "GameObject", "MonoBehaviour"
+            })
+            {
+                StringAssert.DoesNotContain(forbidden, source);
+            }
         }
 
         private static void AssertAssembly(string relativePath, string expectedName, params string[] expectedReferences)

@@ -7,13 +7,19 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TianZhang.Combat;
 using TianZhang.Entity;
+using GameplayCombatCommandHandler = TianZhang.Gameplay.Contracts.ICombatCommandHandler;
 
 namespace TianZhang.Game
 {
     public class BattleUIManager : MonoBehaviour
     {
         [Header("引用")]
-        private ICombatCommandHandler combatCommandHandler;
+        private GameplayCombatCommandHandler combatCommandHandler;
+        private string playerCombatantId = string.Empty;
+        private string targetCombatantId = string.Empty;
+        private string[] spellProfileIds = System.Array.Empty<string>();
+        private string[] skillProfileIds = System.Array.Empty<string>();
+        private string swapProfileId = string.Empty;
 
         [Header("Canvas 设置")]
         public float panelMargin = 16f;
@@ -70,9 +76,23 @@ namespace TianZhang.Game
         private GameObject helpPanel;
         private bool helpVisible;
 
-        public void SetCombatCommandHandler(ICombatCommandHandler handler)
+        public void SetCombatCommandHandler(GameplayCombatCommandHandler handler)
         {
             combatCommandHandler = handler;
+        }
+
+        public void SetCombatCommandContext(
+            string playerId,
+            string targetId,
+            string[] spellIds,
+            string[] skillIds,
+            string nextSwapProfileId)
+        {
+            playerCombatantId = playerId ?? string.Empty;
+            targetCombatantId = targetId ?? string.Empty;
+            spellProfileIds = spellIds ?? System.Array.Empty<string>();
+            skillProfileIds = skillIds ?? System.Array.Empty<string>();
+            swapProfileId = nextSwapProfileId ?? string.Empty;
         }
 
         private void Awake()
@@ -354,32 +374,34 @@ namespace TianZhang.Game
 
         private void RequestBasicAttack()
         {
-            combatCommandHandler?.RequestBasicAttack();
+            combatCommandHandler?.RequestBasicAttack(playerCombatantId, targetCombatantId);
         }
 
         private void RequestGuard()
         {
-            combatCommandHandler?.RequestGuard();
+            combatCommandHandler?.RequestGuard(playerCombatantId);
         }
 
         private void RequestWait()
         {
-            combatCommandHandler?.RequestWait();
+            combatCommandHandler?.RequestWait(playerCombatantId);
         }
 
         private void RequestSwapSpell()
         {
-            combatCommandHandler?.RequestSwapSpell();
+            combatCommandHandler?.RequestSwapSpell(playerCombatantId, 0, swapProfileId);
         }
 
         private void RequestSpell(int index)
         {
-            combatCommandHandler?.RequestSpell(index);
+            if (index >= 0 && index < spellProfileIds.Length)
+                combatCommandHandler?.RequestArt(playerCombatantId, targetCombatantId, spellProfileIds[index]);
         }
 
         private void RequestSkill(int index)
         {
-            combatCommandHandler?.RequestSkill(index);
+            if (index >= 0 && index < skillProfileIds.Length)
+                combatCommandHandler?.RequestDivine(playerCombatantId, targetCombatantId, skillProfileIds[index]);
         }
 
         // ---- 战斗日志（右侧）----
