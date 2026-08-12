@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01E2B",
+  "title": "剩余旧 Core using 独立清理",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：9 个 Editor／Test 文件已各删除唯一失效的 using TianZhang.Core；源码提交 1c569d4a826457396b2cff4b5285205db48c3754。完整 Unity EditMode 446/448，仅保留两项登记基线失败；程序集边界与管理／Git 检查通过，恢复 01E3 ready。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E2B.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01E2B.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01E3.txt",
+    "src/Assets/Scripts/Editor/SceneBuilder.cs",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/HybridTacticalRendererTests.cs",
+    "src/Assets/Tests/EditMode/SessionStateSnapshotTests.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01E2B · 剩余旧 Core using 独立清理
+
+## 来源与当前边界
+
+- 飞书决策 `DEC-20260812-E3COREIMPORTS2` 签名选择 A“另建 01E2B 清理 9 行”；来源 `feishu_card`，证据哈希 `85914e09d688a82dd6944a929867232a8697e5f9e2985d33219306417740b72f`。
+
+## 必查范围
+
+- 9 个目标文件的完整 using 区域与 Core 符号使用；01E3 任务卡、删除检查点及现行程序集边界。
+
+## 实施范围
+
+- 仅从 `expectedPaths` 中 9 个 `.cs` 文件删除 `using TianZhang.Core;`；01E3 保持原冻结路径。
+
+## 禁止项
+
+- 没有修改其他逻辑、`.meta`、Scene、Prefab、asset、CSV、Combat 公式、CTB 数值或 BattleSim 数据，也没有增加兼容层、空 Core 命名空间或 fallback。
+
+## 验证
+
+- 完整 Unity EditMode、程序集边界、任务卡、审核文本、pending whitespace 和 Git staged diff。
+
+## 完成条件
+
+- 9 个目标 import 清零、无新增 Unity 失败、本卡归档并恢复 01E3 ready。
+
+## 停止条件
+
+- 实际 Core 类型使用、范围越界、新增 Unity 失败、数值语义变化或无法保持独立提交时停止；均未触发。
+
+## 完成证据
+
+- 源码提交：`1c569d4a826457396b2cff4b5285205db48c3754`；9 个目标文件的 `git diff --numstat` 均为 `0 1`。
+- Unity EditMode：`448` 总计、`446` 通过、`2` 失败；失败精确为 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `ContentImportCoordinatorContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`，没有新增失败。
+- `tools/check-unity-assembly-boundaries.ps1` 通过：`assemblies=21`、`asmrefs=8`；任务卡、审核文本、whitespace 与 Git 检查通过。
+
+## 完成结论
+
+- 9 个文件不再引用 `TianZhang.Core`；剩余 4 个 Core import 只存在于 01E3 将删除或收缩的遗留源码。01E3 恢复原范围与删除检查点。

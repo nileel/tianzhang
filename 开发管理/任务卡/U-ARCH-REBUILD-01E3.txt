@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01E2B"],
-  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS2 已签名选择 A（source=feishu_card；evidenceHash=85914e09d688a82dd6944a929867232a8697e5f9e2985d33219306417740b72f）；先等待独立前置 01E2B 清理 9 个 Editor／Test 文件中的失效 Core using，再恢复本卡。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS2 选择 A 后，独立前置 01E2B 已归档；9 个 Editor／Test 文件中的失效 Core using 已在独立源码提交 1c569d4a826457396b2cff4b5285205db48c3754 清理，恢复本卡原删除范围与阶段 5 总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -97,3 +97,7 @@
 
 - `DEC-20260812-E3COREIMPORTS2` 的签名回复选择 A；来源为 `feishu_card`，证据哈希为 `85914e09d688a82dd6944a929867232a8697e5f9e2985d33219306417740b72f`。
 - 9 个 Editor／Test 路径不加入本卡 `expectedPaths`；它们只由 `U-ARCH-REBUILD-01E2B` 独立清理。本卡在该前置归档后恢复原删除范围与检查点。
+
+## 2026-08-12 第二轮前置完成
+
+- 9 个 Editor／Test 路径没有加入本卡 `expectedPaths`；它们已由 `U-ARCH-REBUILD-01E2B` 独立清理并以提交 `1c569d4a826457396b2cff4b5285205db48c3754` 保存。本卡只恢复原范围与删除检查点。
