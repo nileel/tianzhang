@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "2026-08-12：01E2A 已独立清理首批 4 行；删除检查点 rebase 为 73000928195531751c862a39905adcb8fb4b6c6d 后，Unity 编译又在 9 个未冻结 Editor／Test 文件发现失效 Core using。已发送飞书决策 DEC-20260812-E3COREIMPORTS2，等待负责人选择独立前置、扩大本卡或暂停。",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-ARCH-REBUILD-01E2B"],
+  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS2 已签名选择 A（source=feishu_card；evidenceHash=85914e09d688a82dd6944a929867232a8697e5f9e2985d33219306417740b72f）；先等待独立前置 01E2B 清理 9 个 Editor／Test 文件中的失效 Core using，再恢复本卡。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -92,3 +92,8 @@
 - Unity EditMode 在执行测试前以 CS0234 停止，直接报出 `SceneBuilder.cs`、`TQ013CRealmAndSlotVerification.cs` 与 `GuanzhongFormalUiTextPlayModeTests.cs` 的 `using TianZhang.Core;`；结果 XML 未生成。
 - 全仓 C# 静态扫描确认同类失效 import 共 9 个文件，除上述 3 个外还有 `AttackProfileDataTests.cs`、`CharacterFoundationPurpleMansionTests.cs`、`HybridTacticalRendererTests.cs`、`SessionStateSnapshotTests.cs`、`SpatialQueryBoardTests.cs` 与 `TacticalGridModelTests.cs`。删除 Core CTB 后仓库已无任何 `namespace TianZhang.Core` 声明；9 个文件都不在本卡 `expectedPaths`，不得自行修改。
 - 飞书决策 `DEC-20260812-E3COREIMPORTS2` 已投递成功，provider message hash 为 `730934de907a39e7baeb2017869b8bc6f9ffd17d261c2f627bc79ca386be1020`。签名回复到达前不继续删除、验收或归档。
+
+## 2026-08-12 第二轮决策结果
+
+- `DEC-20260812-E3COREIMPORTS2` 的签名回复选择 A；来源为 `feishu_card`，证据哈希为 `85914e09d688a82dd6944a929867232a8697e5f9e2985d33219306417740b72f`。
+- 9 个 Editor／Test 路径不加入本卡 `expectedPaths`；它们只由 `U-ARCH-REBUILD-01E2B` 独立清理。本卡在该前置归档后恢复原删除范围与检查点。

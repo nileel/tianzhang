@@ -10,9 +10,10 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
+    "U-ARCH-REBUILD-01E2B",
     "U-ARCH-REBUILD-01E3"
   ],
-  "stateReason": "2026-08-12：01E1、01E1A、01E1B、01E2 与 01E2A 已归档；阶段 5 只等待 01E3 遗留删除／总验收，父项不直接执行。",
+  "stateReason": "2026-08-12：01E1、01E1A、01E1B、01E2 与 01E2A 已归档；飞书决策 DEC-20260812-E3COREIMPORTS2 选择 A，阶段 5 现依次等待 01E2B 剩余 Core using 独立清理与 01E3 遗留删除／总验收，父项不直接执行。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -26,7 +27,7 @@
 
 ## 来源与当前边界
 
-- 对应架构设计阶段 5；任务重划以 `docs/superpowers/specs/2026-08-11-combat-architecture-stage-5-task-rescoping-design.md` 及后续负责人决策为批准事实。父项只汇总 `01E1（已完成） -> 01E1A（已完成） -> 01E1B（已完成） -> 01E2（已完成） -> 01E2A（已完成） -> 01E3`，不直接修改源码。
+- 对应架构设计阶段 5；任务重划以 `docs/superpowers/specs/2026-08-11-combat-architecture-stage-5-task-rescoping-design.md` 及后续负责人决策为批准事实。父项只汇总 `01E1（已完成） -> 01E1A（已完成） -> 01E1B（已完成） -> 01E2（已完成） -> 01E2A（已完成） -> 01E2B -> 01E3`，不直接修改源码。
 
 ## 必查范围
 
@@ -34,7 +35,7 @@
 
 ## 实施范围
 
-- 01E1 建立只由测试访问的纯 Combat 内核；01E1A 补齐移动、换法与七类合法行动的切换就绪契约；01E1B 补齐纯 Combat 数值等价；01E2 原子切换正式调用链；01E2A 独立清理 4 个失效 Core using；01E3 删除旧运行时并完成阶段 5 总验收。01E3 通过时在同一管理提交中归档本父项。
+- 01E1 建立只由测试访问的纯 Combat 内核；01E1A 补齐移动、换法与七类合法行动的切换就绪契约；01E1B 补齐纯 Combat 数值等价；01E2 原子切换正式调用链；01E2A／01E2B 分别独立清理两批失效 Core using；01E3 删除旧运行时并完成阶段 5 总验收。01E3 通过时在同一管理提交中归档本父项。
 
 ## 禁止项
 
