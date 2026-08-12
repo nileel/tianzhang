@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Combat;
-using TianZhang.Core;
-using TianZhang.Entity;
 using TianZhang.Spatial;
 
 namespace TianZhang.Tests.EditMode
@@ -19,14 +17,10 @@ namespace TianZhang.Tests.EditMode
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 25, 100, 20, 20);
             CombatSession session = CreateSession(new[] { player, enemy }, new FixedRangeQuery(true));
             var service = new CombatCommandService();
-            var legacyEngine = new CTBEngine();
-            legacyEngine.RegisterUnit(50);
-            legacyEngine.RegisterUnit(25);
 
             CombatTurnAdvance advance = service.AdvanceUntilAction(session);
             Assert.That(advance.ActorId, Is.EqualTo("player"));
             Assert.That(advance.TicksElapsed, Is.EqualTo(2));
-            Assert.That(legacyEngine.AdvanceUntilAction().ticksElapsed, Is.EqualTo(advance.TicksElapsed));
 
             CombatActionResult result = service.Execute(session, new CombatCommand(
                 CombatCommandKind.BasicAttack,
@@ -37,24 +31,8 @@ namespace TianZhang.Tests.EditMode
 
             Assert.That(result.Succeeded, Is.True, result.RejectionReason);
             Assert.That(result.Damage.Count, Is.EqualTo(1));
-            var legacyAttacker = new Character
-            {
-                PhysAtk = 40,
-                RealmMultiplier = 1f,
-                Position = new HexCoord(0, 0),
-            };
-            var legacyDefender = new Character
-            {
-                PhysDef = 20,
-                RealmMultiplier = 1f,
-                Position = new HexCoord(1, 0),
-                Facing = 0,
-            };
-            DamageCalculator.DamageResult legacyDamage = DamageCalculator.CalcPhysical(
-                legacyAttacker.PhysAtk, 1f, legacyAttacker, legacyDefender);
-            Assert.That(result.Damage[0].FinalDamage, Is.EqualTo(legacyDamage.FinalDamage));
             Assert.That(result.Damage[0].FinalDamage, Is.EqualTo(35));
-            Assert.That(enemy.CurrentHealth, Is.EqualTo(100 - legacyDamage.FinalDamage));
+            Assert.That(enemy.CurrentHealth, Is.EqualTo(65));
             Assert.That(session.TurnScheduler.IsReady("player"), Is.False);
         }
 
@@ -292,6 +270,179 @@ namespace TianZhang.Tests.EditMode
             CollectionAssert.AreEquivalent(expected, enemyKinds);
         }
 
+        [TestCase(1f, 3, 5, 3, 0.15f, 3, 1f)]
+        [TestCase(1.5f, 3, 5, 3, 0.15f, 3, 1.10f)]
+        [TestCase(3f, 4, 3, 3, 0.15f, 5, 1.15f)]
+        [TestCase(6f, 5, 5, 5, 0.18f, 8, 1.20f)]
+        [TestCase(12f, 5, 5, 5, 0.22f, 12, 1.25f)]
+        [TestCase(24f, 5, 5, 5, 0.30f, 12, 1.30f)]
+        public void ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(
+            float realmMultiplier,
+            int maximumShouyi,
+            int maximumFudan,
+            int maximumLeijie,
+            float leijieBonus,
+            int mindStrengthBonus,
+            float hanhongPhysicalDefenseMultiplier)
+        {
+            CombatantSnapshot combatant = CreateCombatant(
+                "rules", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10,
+                realmMultiplier: realmMultiplier);
+
+            Assert.That(combatant.MaximumShouyiStacks, Is.EqualTo(maximumShouyi));
+            Assert.That(combatant.MaximumFudanStacks, Is.EqualTo(maximumFudan));
+            Assert.That(combatant.MaximumLeijieStacks, Is.EqualTo(maximumLeijie));
+            Assert.That(combatant.LeijieDamageBonusPerStack, Is.EqualTo(leijieBonus).Within(0.0001f));
+
+            combatant.GongFaId = "南华玄感录";
+            Assert.That(combatant.MindStrengthBonus, Is.EqualTo(mindStrengthBonus));
+            combatant.GongFaId = "含弘光大典";
+            Assert.That(combatant.DefenseMultiplier(physical: true),
+                Is.EqualTo(hanhongPhysicalDefenseMultiplier).Within(0.0001f));
+            Assert.That(combatant.DefenseMultiplier(physical: false), Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void XuanganMindStrengthChangesOnlyTheSoulDamageLine()
+        {
+            CombatantSnapshot normal = CreateCombatant(
+                "normal", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 300, 50, realmMultiplier: 6f);
+            CombatantSnapshot xuangan = CreateCombatant(
+                "xuangan", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 300, 50, realmMultiplier: 6f);
+            xuangan.GongFaId = "南华玄感录";
+            var soul = new CombatAttackProfile(
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+            var physical = new CombatAttackProfile(
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+
+            int normalSoul = ResolveAttack(normal, CreateNeutralTarget("normal_soul"), soul).FinalDamage;
+            int xuanganSoul = ResolveAttack(xuangan, CreateNeutralTarget("xuangan_soul"), soul).FinalDamage;
+            int normalPhysical = ResolveAttack(normal, CreateNeutralTarget("normal_physical"), physical).FinalDamage;
+            int xuanganPhysical = ResolveAttack(xuangan, CreateNeutralTarget("xuangan_physical"), physical).FinalDamage;
+
+            Assert.That(normalSoul, Is.EqualTo(225));
+            Assert.That(xuanganSoul, Is.EqualTo(233));
+            Assert.That(normalPhysical, Is.EqualTo(225));
+            Assert.That(xuanganPhysical, Is.EqualTo(normalPhysical));
+        }
+
+        [Test]
+        public void HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth()
+        {
+            var physical = new CombatAttackProfile(
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+            var soul = new CombatAttackProfile(
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+            CombatantSnapshot physicalActor = CreateCombatant(
+                "physical_actor", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            CombatantSnapshot soulActor = CreateCombatant(
+                "soul_actor", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            CombatantSnapshot fullPhysicalTarget = CreateHanhongTarget("full_physical", 100);
+            CombatantSnapshot lowPhysicalTarget = CreateHanhongTarget("low_physical", 50);
+            CombatantSnapshot fullSoulTarget = CreateHanhongTarget("full_soul", 100);
+            CombatantSnapshot lowSoulTarget = CreateHanhongTarget("low_soul", 50);
+
+            Assert.That(fullPhysicalTarget.DefenseMultiplier(physical: true), Is.EqualTo(1.20f).Within(0.0001f));
+            Assert.That(lowPhysicalTarget.DefenseMultiplier(physical: true), Is.EqualTo(1.32f).Within(0.0001f));
+            Assert.That(fullSoulTarget.DefenseMultiplier(physical: false), Is.EqualTo(1f));
+            Assert.That(lowSoulTarget.DefenseMultiplier(physical: false), Is.EqualTo(1.10f).Within(0.0001f));
+            Assert.That(ResolveAttack(physicalActor, fullPhysicalTarget, physical).FinalDamage, Is.EqualTo(125));
+            Assert.That(ResolveAttack(physicalActor, lowPhysicalTarget, physical).FinalDamage, Is.EqualTo(120));
+            Assert.That(ResolveAttack(soulActor, fullSoulTarget, soul).FinalDamage, Is.EqualTo(133));
+            Assert.That(ResolveAttack(soulActor, lowSoulTarget, soul).FinalDamage, Is.EqualTo(129));
+        }
+
+        [Test]
+        public void LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes()
+        {
+            var physical = new CombatAttackProfile(
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+            CombatantSnapshot baseActor = CreateCombatant(
+                "base", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            baseActor.GongFaId = "九霄雷劫录";
+            CombatantSnapshot chargedActor = CreateCombatant(
+                "charged", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            chargedActor.GongFaId = "九霄雷劫录";
+            for (int i = 0; i < 6; i++)
+                chargedActor.ReceiveDamage(1);
+
+            Assert.That(chargedActor.LeijieStacks, Is.EqualTo(5));
+            Assert.That(chargedActor.LeijieDamageBonusPerStack, Is.EqualTo(0.18f).Within(0.0001f));
+            Assert.That(ResolveAttack(baseActor, CreateNeutralTarget("base_target"), physical).FinalDamage, Is.EqualTo(133));
+            Assert.That(ResolveAttack(chargedActor, CreateNeutralTarget("charged_target"), physical).FinalDamage, Is.EqualTo(253));
+            Assert.That(chargedActor.LeijieStacks, Is.Zero);
+        }
+
+        [Test]
+        public void FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap()
+        {
+            var soul = new CombatAttackProfile(
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+            CombatantSnapshot actor = CreateCombatant(
+                "actor", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            CombatantSnapshot partialShouyi = CreateNeutralTarget("partial_shouyi", realmMultiplier: 6f);
+            partialShouyi.GongFaId = "抱元守一经";
+            partialShouyi.ShouyiStacks = 2;
+            CombatantSnapshot fullShouyi = CreateNeutralTarget("full_shouyi", realmMultiplier: 6f);
+            fullShouyi.GongFaId = "抱元守一经";
+            fullShouyi.ShouyiStacks = 5;
+            CombatantSnapshot partialLeijie = CreateNeutralTarget("partial_leijie", realmMultiplier: 6f);
+            partialLeijie.GongFaId = "九霄雷劫录";
+            partialLeijie.LeijieStacks = 2;
+            CombatantSnapshot fullLeijie = CreateNeutralTarget("full_leijie", realmMultiplier: 6f);
+            fullLeijie.GongFaId = "九霄雷劫录";
+            fullLeijie.LeijieStacks = 5;
+
+            Assert.That(ResolveAttack(actor, partialShouyi, soul).FinalDamage, Is.EqualTo(107));
+            Assert.That(ResolveAttack(actor, fullShouyi, soul).FinalDamage, Is.EqualTo(91));
+            Assert.That(ResolveAttack(actor, partialLeijie, soul).FinalDamage, Is.EqualTo(133));
+            Assert.That(ResolveAttack(actor, fullLeijie, soul).FinalDamage, Is.EqualTo(143));
+        }
+
+        [Test]
+        public void FullFudanUsesItsProjectedCapForPenetrationAndPostActionState()
+        {
+            var soul = new CombatAttackProfile(
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+            CombatantSnapshot partial = CreateCombatant(
+                "partial", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            partial.GongFaId = "云篆度人经";
+            partial.FudanStacks = 4;
+            CombatantSnapshot full = CreateCombatant(
+                "full", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+            full.GongFaId = "云篆度人经";
+            full.FudanStacks = 5;
+
+            Assert.That(ResolveAttack(partial, CreateNeutralTarget("partial_target", defense: 200), soul).FinalDamage,
+                Is.EqualTo(160));
+            Assert.That(ResolveAttack(full, CreateNeutralTarget("full_target", defense: 200), soul).FinalDamage,
+                Is.EqualTo(206));
+            Assert.That(partial.FudanStacks, Is.EqualTo(1));
+            Assert.That(full.FudanStacks, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ActionStateAdvancesToProjectedShouyiAndFudanCaps()
+        {
+            var physical = new CombatAttackProfile(
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+            CombatantSnapshot shouyi = CreateCombatant(
+                "shouyi", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10, realmMultiplier: 3f);
+            shouyi.GongFaId = "抱元守一经";
+            CombatantSnapshot fudan = CreateCombatant(
+                "fudan", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10, realmMultiplier: 3f);
+            fudan.GongFaId = "云篆度人经";
+
+            for (int i = 0; i < 6; i++)
+            {
+                ResolveAttack(shouyi, CreateNeutralTarget("shouyi_target_" + i), physical);
+                ResolveAttack(fudan, CreateNeutralTarget("fudan_target_" + i), physical);
+            }
+
+            Assert.That(shouyi.ShouyiStacks, Is.EqualTo(4));
+            Assert.That(fudan.FudanStacks, Is.EqualTo(3));
+        }
+
         [Test]
         public void TwoVsTwoAndResultProjectionRemainSessionLocal()
         {
@@ -361,7 +512,8 @@ namespace TianZhang.Tests.EditMode
             int movePoints = 0,
             IEnumerable<string> equippedArtProfileIds = null,
             IEnumerable<string> availableArtProfileIds = null,
-            int combatSwapsUsed = 0)
+            int combatSwapsUsed = 0,
+            float realmMultiplier = 1f)
         {
             return new CombatantSnapshot(
                 id,
@@ -374,6 +526,7 @@ namespace TianZhang.Tests.EditMode
                 attack,
                 defense,
                 defense,
+                realmMultiplier: realmMultiplier,
                 movePoints: movePoints,
                 equippedArtProfileIds: equippedArtProfileIds,
                 availableArtProfileIds: availableArtProfileIds,
@@ -381,6 +534,56 @@ namespace TianZhang.Tests.EditMode
             {
                 Facing = 0,
             };
+        }
+
+        private static CombatantSnapshot CreateNeutralTarget(
+            string id,
+            int health = 100,
+            int defense = 100,
+            float realmMultiplier = 6f)
+        {
+            return CreateCombatant(
+                id, CombatTeam.Enemy, new HexCoord(1, 0), 10, health, 20, defense,
+                realmMultiplier: realmMultiplier);
+        }
+
+        private static CombatantSnapshot CreateHanhongTarget(string id, int currentHealth)
+        {
+            CombatantSnapshot target = CreateNeutralTarget(id, realmMultiplier: 6f);
+            target.GongFaId = "含弘光大典";
+            if (currentHealth < target.MaximumHealth)
+                target.ReceiveDamage(target.MaximumHealth - currentHealth);
+            return target;
+        }
+
+        private static CombatDamageResult ResolveAttack(
+            CombatantSnapshot actor,
+            CombatantSnapshot target,
+            CombatAttackProfile profile)
+        {
+            target.Facing = target.Position.DirectionTo(actor.Position);
+            CombatSession session = CreateSession(
+                new[] { actor, target }, new FixedRangeQuery(true), new[] { profile });
+            CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);
+            Assert.That(advance.ActorId, Is.EqualTo(actor.Id));
+            CombatCommandKind commandKind = profile.Kind switch
+            {
+                CombatAttackKind.Basic => CombatCommandKind.BasicAttack,
+                CombatAttackKind.Art => CombatCommandKind.Art,
+                CombatAttackKind.Divine => CombatCommandKind.Divine,
+                _ => throw new ArgumentOutOfRangeException(nameof(profile)),
+            };
+            CombatActionResult result = new CombatActionResolver().Resolve(
+                session,
+                new CombatCommand(
+                    commandKind,
+                    actor.Id,
+                    target.Id,
+                    profile.Id,
+                    new CombatResolutionRolls(0f, 100f, 100f, 100f)));
+            Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+            Assert.That(result.Damage.Count, Is.EqualTo(1));
+            return result.Damage[0];
         }
 
         private static IReadOnlyList<CombatAttackProfile> CreateProfiles(params string[] artProfileIds)

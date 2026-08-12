@@ -97,6 +97,12 @@ namespace TianZhang.Combat
         public int FudanStacks { get; set; }
         public int LeijieStacks { get; set; }
 
+        public int MaximumShouyiStacks => CombatGongFaRules.MaximumShouyiStacks(RealmMultiplier);
+        public int MaximumFudanStacks => CombatGongFaRules.MaximumFudanStacks(RealmMultiplier);
+        public int MaximumLeijieStacks => CombatGongFaRules.MaximumLeijieStacks(RealmMultiplier);
+        public float LeijieDamageBonusPerStack => CombatGongFaRules.LeijieDamageBonusPerStack(RealmMultiplier);
+        public int MindStrengthBonus => CombatGongFaRules.MindStrengthBonus(GongFaId, RealmMultiplier);
+
         public bool IsAlive => CurrentHealth > 0;
         public IReadOnlyDictionary<string, int> Cooldowns => cooldowns;
 
@@ -162,7 +168,14 @@ namespace TianZhang.Combat
         {
             if (damage < 0)
                 throw new ArgumentOutOfRangeException(nameof(damage));
+            if (damage > 0 && GongFaId == CombatGongFaRules.LeijieGongFaId)
+                LeijieStacks = Math.Min(LeijieStacks + 1, MaximumLeijieStacks);
             CurrentHealth = Math.Max(0, CurrentHealth - damage);
+        }
+
+        public float DefenseMultiplier(bool physical)
+        {
+            return CombatGongFaRules.DefenseMultiplier(this, physical);
         }
 
         public void RestoreHealth(int amount)
@@ -189,6 +202,98 @@ namespace TianZhang.Combat
                 result.Add(profileId);
             }
             return result;
+        }
+    }
+
+    internal static class CombatGongFaRules
+    {
+        internal const string ShouyiGongFaId = "抱元守一经";
+        internal const string FudanGongFaId = "云篆度人经";
+        internal const string LeijieGongFaId = "九霄雷劫录";
+        internal const string XuanganGongFaId = "南华玄感录";
+        internal const string HanhongGongFaId = "含弘光大典";
+
+        internal static int MaximumShouyiStacks(float realmMultiplier)
+        {
+            int realm = RoundedRealm(realmMultiplier);
+            return realm >= 6 ? 5 : realm >= 3 ? 4 : 3;
+        }
+
+        internal static int MaximumFudanStacks(float realmMultiplier)
+        {
+            int realm = RoundedRealm(realmMultiplier);
+            return realm >= 6 ? 5 : realm >= 3 ? 3 : 5;
+        }
+
+        internal static int MaximumLeijieStacks(float realmMultiplier)
+        {
+            int realm = RoundedRealm(realmMultiplier);
+            return realm >= 6 ? 5 : 3;
+        }
+
+        internal static float LeijieDamageBonusPerStack(float realmMultiplier)
+        {
+            int realm = RoundedRealm(realmMultiplier);
+            return realm >= 24 ? 0.30f :
+                realm >= 12 ? 0.22f :
+                realm >= 6 ? 0.18f :
+                0.15f;
+        }
+
+        internal static int MindStrengthBonus(string gongFaId, float realmMultiplier)
+        {
+            if (gongFaId != XuanganGongFaId)
+                return 0;
+
+            int realm = RoundedRealm(realmMultiplier);
+            return realm >= 12 ? 12 :
+                realm >= 6 ? 8 :
+                realm >= 3 ? 5 :
+                3;
+        }
+
+        internal static float DefenseMultiplier(CombatantSnapshot combatant, bool physical)
+        {
+            if (combatant.GongFaId != HanhongGongFaId)
+                return 1f;
+
+            float multiplier = 1f + ZaiwuAllDefenseBonus(combatant);
+            if (physical)
+                multiplier *= 1f + HanhongPhysicalDefenseBonus(combatant.RealmMultiplier);
+            return multiplier;
+        }
+
+        private static float HanhongPhysicalDefenseBonus(float realmMultiplier)
+        {
+            return realmMultiplier >= 24f ? 0.30f :
+                realmMultiplier >= 12f ? 0.25f :
+                realmMultiplier >= 6f ? 0.20f :
+                realmMultiplier >= 3f ? 0.15f :
+                realmMultiplier >= 1.5f ? 0.10f :
+                0f;
+        }
+
+        private static float ZaiwuAllDefenseBonus(CombatantSnapshot combatant)
+        {
+            if (combatant.MaximumHealth <= 0 || combatant.CurrentHealth >= combatant.MaximumHealth)
+                return 0f;
+
+            float cap = combatant.RealmMultiplier >= 24f ? 0.40f :
+                combatant.RealmMultiplier >= 6f ? 0.30f :
+                combatant.RealmMultiplier >= 3f ? 0.20f :
+                0f;
+            if (cap <= 0f)
+                return 0f;
+
+            float missingHealthRate = (combatant.MaximumHealth - combatant.CurrentHealth) /
+                (float)combatant.MaximumHealth;
+            float bonus = (float)Math.Floor(Math.Min(1f, Math.Max(0f, missingHealthRate)) * 10f) * 0.02f;
+            return Math.Min(bonus, cap);
+        }
+
+        private static int RoundedRealm(float realmMultiplier)
+        {
+            return (int)Math.Round(Math.Max(1f, realmMultiplier), MidpointRounding.ToEven);
         }
     }
 }

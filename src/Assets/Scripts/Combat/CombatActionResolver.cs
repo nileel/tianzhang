@@ -92,12 +92,16 @@ namespace TianZhang.Combat
                     target.RestoreHealth(profile.HealAmount);
                     return new CombatDamageResult(0, true, false, false, false);
                 case CombatAttackEffect.Physical:
-                    return ResolvePhysical(actor, target, profile, rolls, true);
+                    return ResolvePhysical(actor, target, profile, rolls, true, true);
                 case CombatAttackEffect.Soul:
-                    return ResolveSoul(actor, target, profile, rolls, true);
+                    return ResolveSoul(actor, target, profile, rolls, true, true);
                 case CombatAttackEffect.Hybrid:
-                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false);
-                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false);
+                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false);
+                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false);
+                    if (physical.IsHit)
+                        target.ReceiveDamage(physical.FinalDamage);
+                    if (soul.IsHit)
+                        target.ReceiveDamage(soul.FinalDamage);
                     AdvanceActionState(actor);
                     return new CombatDamageResult(
                         physical.FinalDamage + soul.FinalDamage,
@@ -115,7 +119,8 @@ namespace TianZhang.Combat
             CombatantSnapshot target,
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
-            bool advanceAction)
+            bool advanceAction,
+            bool applyDamage)
         {
             if (!RollHit(actor, target, rolls.HitPercent))
                 return new CombatDamageResult(0, false, false, false, false);
@@ -124,7 +129,8 @@ namespace TianZhang.Combat
             bool critical = rolls.CriticalPercent < actor.CriticalRate + element.CriticalRateBonus;
             float multiplier = profile.PhysicalMultiplier * ConsumeLeijieForPhysicalAction(actor) *
                 (critical ? BaseCriticalMultiplier + (actor.CriticalDamage + element.CriticalDamageBonus) / 100f : 1f);
-            float damage = CalculateLineDamage(actor.PhysicalAttack, target.PhysicalDefense, 0f, multiplier,
+            int effectiveDefense = (int)Math.Round(target.PhysicalDefense * target.DefenseMultiplier(physical: true));
+            float damage = CalculateLineDamage(actor.PhysicalAttack, effectiveDefense, 0f, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
             damage *= FacingDamageModifier(target, actor);
 
@@ -135,7 +141,8 @@ namespace TianZhang.Combat
             damage = ApplyCommonReductions(damage, target);
 
             int finalDamage = Math.Max(1, (int)Math.Round(damage, MidpointRounding.AwayFromZero));
-            target.ReceiveDamage(finalDamage);
+            if (applyDamage)
+                target.ReceiveDamage(finalDamage);
             if (advanceAction)
                 AdvanceActionState(actor);
             return new CombatDamageResult(finalDamage, true, critical, blocked, false);
@@ -146,7 +153,8 @@ namespace TianZhang.Combat
             CombatantSnapshot target,
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
-            bool advanceAction)
+            bool advanceAction,
+            bool applyDamage)
         {
             if (!RollHit(actor, target, rolls.HitPercent))
                 return new CombatDamageResult(0, false, false, false, false);
@@ -157,12 +165,15 @@ namespace TianZhang.Combat
             float shouyiMultiplier = actor.GongFaId == "抱元守一经" ? 1f + actor.ShouyiStacks * 0.05f : 1f;
             float multiplier = profile.SoulMultiplier * shouyiMultiplier * fudan.DamageMultiplier *
                 (critical ? BaseCriticalMultiplier + (actor.CriticalDamage + element.CriticalDamageBonus) / 100f : 1f);
-            float soulResist = target.GongFaId == "抱元守一经" && target.ShouyiStacks >= 2 ? 15f : 0f;
-            float effectiveDefense = target.SoulDefense;
-            if (target.GongFaId == "九霄雷劫录" && target.LeijieStacks >= 2)
+            float soulResist = target.GongFaId == CombatGongFaRules.ShouyiGongFaId &&
+                target.ShouyiStacks == target.MaximumShouyiStacks ? 15f : 0f;
+            float effectiveDefense = target.SoulDefense * target.DefenseMultiplier(physical: false);
+            if (target.GongFaId == CombatGongFaRules.LeijieGongFaId &&
+                target.LeijieStacks == target.MaximumLeijieStacks)
                 effectiveDefense *= 0.8f;
             effectiveDefense *= 1f - Clamp(profile.SoulDefensePenetration + fudan.SoulDefensePenetration, 0f, 100f) / 100f;
-            float damage = CalculateLineDamage(actor.SoulAttack, (int)Math.Round(effectiveDefense), soulResist, multiplier,
+            float damage = CalculateLineDamage(actor.SoulAttack + actor.MindStrengthBonus,
+                (int)Math.Round(effectiveDefense), soulResist, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
 
             bool backAttack = IsBackAttack(target, actor);
@@ -172,7 +183,8 @@ namespace TianZhang.Combat
             damage = ApplyCommonReductions(damage, target);
 
             int finalDamage = Math.Max(1, (int)Math.Round(damage, MidpointRounding.AwayFromZero));
-            target.ReceiveDamage(finalDamage);
+            if (applyDamage)
+                target.ReceiveDamage(finalDamage);
             if (advanceAction)
                 AdvanceActionState(actor);
             return new CombatDamageResult(finalDamage, true, critical, false, soulShielded);
@@ -216,26 +228,26 @@ namespace TianZhang.Combat
 
         private static void AdvanceActionState(CombatantSnapshot actor)
         {
-            if (actor.GongFaId == "抱元守一经")
-                actor.ShouyiStacks = Math.Min(actor.ShouyiStacks + 1, 2);
-            if (actor.GongFaId == "云篆度人经")
-                actor.FudanStacks = Math.Min(actor.FudanStacks + 1, 2);
+            if (actor.GongFaId == CombatGongFaRules.ShouyiGongFaId)
+                actor.ShouyiStacks = Math.Min(actor.ShouyiStacks + 1, actor.MaximumShouyiStacks);
+            if (actor.GongFaId == CombatGongFaRules.FudanGongFaId)
+                actor.FudanStacks = Math.Min(actor.FudanStacks + 1, actor.MaximumFudanStacks);
         }
 
         private static float ConsumeLeijieForPhysicalAction(CombatantSnapshot actor)
         {
-            if (actor.GongFaId != "九霄雷劫录" || actor.LeijieStacks <= 0)
+            if (actor.GongFaId != CombatGongFaRules.LeijieGongFaId || actor.LeijieStacks <= 0)
                 return 1f;
-            float multiplier = 1f + actor.LeijieStacks * 0.05f;
+            float multiplier = 1f + actor.LeijieStacks * actor.LeijieDamageBonusPerStack;
             actor.LeijieStacks = 0;
             return multiplier;
         }
 
         private static FudanBonus ConsumeFudanForSoulAction(CombatantSnapshot actor)
         {
-            if (actor.GongFaId != "云篆度人经" || actor.FudanStacks <= 0)
+            if (actor.GongFaId != CombatGongFaRules.FudanGongFaId || actor.FudanStacks <= 0)
                 return new FudanBonus(1f, 0f);
-            bool wasFull = actor.FudanStacks >= 2;
+            bool wasFull = actor.FudanStacks == actor.MaximumFudanStacks;
             float rate = actor.RealmMultiplier >= 24f ? 0.22f :
                 actor.RealmMultiplier >= 12f ? 0.18f :
                 actor.RealmMultiplier >= 6f ? 0.15f :
