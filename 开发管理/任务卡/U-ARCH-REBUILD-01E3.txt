@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01E2A"],
-  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS 已签名选择 B（source=feishu_card；evidenceHash=3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6）；先等待独立前置 U-ARCH-REBUILD-01E2A 清理 4 个未冻结文件中的失效 Core using，再恢复本卡。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS 选择 B 后，独立前置 U-ARCH-REBUILD-01E2A 已归档；4 个未冻结文件中的失效 Core using 已在独立源码提交 25974f65f51dd2694b5b06b084be326d9fd08a15 清理，恢复本卡原删除范围与阶段 5 总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -84,4 +84,4 @@
 ## 2026-08-12 前置清理决策
 
 - 飞书决策 `DEC-20260812-E3COREIMPORTS` 的签名回复选择 B“另建前置清理任务”；回复来源为 `feishu_card`，证据哈希为 `3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6`。
-- 4 个 Grid／Tilemap 源码路径不加入本卡 `expectedPaths`；它们只由 `U-ARCH-REBUILD-01E2A` 清理并独立提交。本卡在该前置归档后恢复原范围与删除检查点。
+- 4 个 Grid／Tilemap 源码路径没有加入本卡 `expectedPaths`；它们已由 `U-ARCH-REBUILD-01E2A` 独立清理并以提交 `25974f65f51dd2694b5b06b084be326d9fd08a15` 保存。本卡只恢复原范围与删除检查点。

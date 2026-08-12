@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-ARCH-REBUILD-01E2A | codex_execute | codex | P1 | unity | implementation | 旧 Core using 独立清理 | 开发管理/任务卡/U-ARCH-REBUILD-01E2A.txt |
+| U-ARCH-REBUILD-01E3 | codex_execute | codex | P1 | unity | verification | 旧运行时删除与阶段 5 总验收 | 开发管理/任务卡/U-ARCH-REBUILD-01E3.txt |

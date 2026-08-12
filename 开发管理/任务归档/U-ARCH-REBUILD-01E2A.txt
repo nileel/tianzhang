@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-12：飞书决策 DEC-20260812-E3COREIMPORTS 已签名选择 B（source=feishu_card；evidenceHash=3ef65eaf1801e45bcd0d0201dc83f246b677af3716662d8c47d217cd71d9b1b6），先以独立前置切片清理 4 个失效 Core using，再恢复 01E3。",
+  "stateReason": "2026-08-12：4 个未冻结 Grid／Tilemap 文件已各删除唯一失效的 using TianZhang.Core；源码提交 25974f65f51dd2694b5b06b084be326d9fd08a15。完整 Unity EditMode 446/448，仅保留两项登记基线失败；程序集边界与管理／Git 检查通过，恢复 01E3 ready。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -63,3 +63,9 @@
 ## 停止条件
 
 - 任一文件仍实际使用 Core 类型、修复需要触及其他逻辑或路径、出现新增 Unity 失败、发现数值语义变化，或无法保持独立提交时停止。
+
+## 完成证据
+
+- 源码提交：`25974f65f51dd2694b5b06b084be326d9fd08a15`；`git diff --numstat` 对 4 个目标文件均为 `0 1`。
+- Unity EditMode：`448` 总计、`446` 通过、`2` 失败；失败精确为 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `ContentImportCoordinatorContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`，没有新增失败。
+- `tools/check-unity-assembly-boundaries.ps1` 通过：`assemblies=21`、`asmrefs=8`。
