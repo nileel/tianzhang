@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-12：01F 正式提交 4aa505fe54997f3395f4fa48c36fb1a009672881 独立架构复审部分通过；保存 presence 与导航目标失败关闭仍需在 01F 阶段定向返工并重新复审，未通过前不得展开阶段 7 路径或进入队列。",
+  "blockedBy": ["U-ARCH-REBUILD-01F1"],
+  "stateReason": "2026-08-12：01F 独立架构复审部分通过；已建立 ready 返工卡 U-ARCH-REBUILD-01F1，待其修复保存 presence 与导航返回目标失败关闭并通过验证后，再实时冻结阶段 7 路径。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

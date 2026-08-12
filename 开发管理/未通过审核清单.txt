@@ -13,6 +13,7 @@
 - 问题：`GameSaveEnvelope.Restore` 的玩家／修炼 presence 校验只检查“两者同时存在”，会接受 `hasPlayer=false` 时仅一个 payload 存在并静默丢弃；`CharterRecord.Restore` 会接受 `hasRuntimeState=false` 但携带非空动态状态并静默丢弃，违反成对 presence 与错误组合失败关闭。
 - 问题：`GameRuntime.EnterAdventure` 与 `NavigationRecord.Restore` 只校验返回场景名，没有要求 World 目标具备唯一 `worldNodeId`、Settlement 目标具备唯一 `settlementId` 且排除另一分支字段，非法返回上下文可进入运行时或从存档恢复。
 - 定向返工：只修正 schema 1 的双向 presence 校验、World／Settlement 返回目标形状校验及直接 EditMode 反例；不得恢复旧 schema 4、增加兼容读取层、修改场景／Feature／Content／规则／数值，或提前展开 01G。返工后重新运行程序集边界、构建、完整 EditMode 与 PlayMode，并由独立架构复审确认后再冻结 01G 路径。
+- 执行投影：`U-ARCH-REBUILD-01F1` 已于 2026-08-12 建立为 `codex_execute/codex/ready` 独立返工卡；完成前 01G 显式阻塞于该 ID。
 
 ### C-HS-YY-JD-01A · 金丹位格·木道路三位置内容生产
 

@@ -1,0 +1,79 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01F1",
+  "title": "schema 1 presence 与导航返回目标失败关闭返工",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-12：用户授权建立独立返工任务；01F 复审发现的保存 presence 与导航返回目标失败关闭语义、路径和反例均已冻结，可在新对话直接执行。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01F1.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01G.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01F1.txt",
+    "开发管理/未通过审核清单.txt",
+    "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01F1 · schema 1 presence 与导航返回目标失败关闭返工
+
+## 来源与当前边界
+
+- 来源为 `U-ARCH-REBUILD-01F` 正式提交 `4aa505fe54997f3395f4fa48c36fb1a009672881` 的独立架构复审；审核对象、已通过范围和两项残留问题以 `开发管理/未通过审核清单.txt#U-ARCH-REBUILD-01F` 为准。
+- 本卡只返工阶段 6 已有 schema 1 保存恢复与 Adventure 返回目标校验，不新增功能、不改变公开内容语义，也不提前实施阶段 7。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md#5.4 World 与 GameRuntime`、`#阶段 6：GameRuntime、保存与应用用例`、`#8.2 主责与架构证据`。
+- `开发管理/任务归档/U-ARCH-REBUILD-01F.txt#独立架构复审（2026-08-12）`；`开发管理/未通过审核清单.txt#U-ARCH-REBUILD-01F`。
+- `src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::GameRuntime.EnterAdventure`、`GameRuntime.ReturnToPreviousScene`；直接调用者 `src/Assets/Scripts/Game/SceneFlowManager.cs::PrepareAdventureEntry`。
+- `src/Assets/Scripts/Modules/GameplayContracts/NavigationContracts.cs::SceneReturnTarget`、`NavigationStateSnapshot`；只读其现有契约，不修改公共 DTO 或接口。
+- `src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs::GameSaveEnvelope.Restore`、`CharterRecord.Restore`、`NavigationRecord.Restore`，以及四个 `expectedPaths` 源码／测试文件的完整目标类型和方法。
+- `src/Assets/Scripts/Modules/Bootstrap/README.md`、`src/Assets/Scripts/Modules/Infrastructure/Persistence/README.md`、`src/Assets/Scripts/Modules/GameplayContracts/README.md`；`UNITY_STRUCTURE.md` 的 Bootstrap 与验证入口。
+
+## 实施范围
+
+- 在 `GameSaveEnvelope.Restore` 对玩家 presence 做双向失败关闭：`hasPlayer=true` 时 `player` 与 `cultivation` 必须同时存在；`hasPlayer=false` 时两者必须同时为空。任何单边或多余 payload 均在构造候选 owner 前拒绝。
+- 在 `CharterRecord.Restore` 对册界 presence 做双向失败关闭：`hasRuntimeState=true` 时动态状态必须存在且定义目录版本为正；`hasRuntimeState=false` 时动态状态必须为空且版本必须为 `0`。不得静默丢弃错误 payload 或推断默认版本。
+- 在 `GameRuntime.EnterAdventure` 与 `NavigationRecord.Restore` 校验返回目标形状：World 目标只允许非空 `worldNodeId`，Settlement 目标只允许非空 `settlementId`；两类目标都拒绝缺失自身 ID、携带另一分支 ID、未知／空场景名。非 Adventure 的默认返回目标仍按现有合法状态保存，不新增 fallback。
+- 在 `GameRuntimeTests` 增加直接运行时反例，证明非法返回目标在写入导航状态前被拒绝且原导航状态不变；在 `GameSaveEnvelopeTests` 增加玩家／修炼单边 payload、册界错误 presence、四类非法返回目标及原子恢复不变反例。
+- `GameSaveEnvelope.cs` 虽超过 500 行，本卡只收紧已有确定性 DTO 投影与校验，不增加新职责、不拆文件、不迁移类型。
+
+## 禁止项
+
+- 不读取、迁移或兼容旧 schema 4；不增加第二保存格式、默认值推断、兼容层、fallback、重试或局部恢复。
+- 不修改 `NavigationContracts.cs` 的公共 DTO／接口，不修改 Feature、Scene、Prefab、asset、CSV、Content、Combat、规则、数值、UI、URP 或美术路径。
+- 不改变合法 schema 1 JSON 的规范化结果，不改变合法 World／Settlement 往返和当前 5 项正式 PlayMode 行为。
+- 不展开或实施 `U-ARCH-REBUILD-01G` 的业务路径；只有本卡验证闭合后，才按状态事件进行 01G 的实时只读路径扫描与任务准备。
+
+## 验证
+
+- 直接反例覆盖：玩家／修炼两种单边 payload；册界 `false + 非空 payload`、`true + 空 payload`、presence 与版本不匹配；World／Settlement 各自缺失 ID 或混入另一分支 ID；每项失败均保持恢复前保存 JSON 或导航快照不变。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `dotnet build src/TianZhang.EditModeTests.csproj`；若 Unity 工程投影过期，先通过 Unity 测试入口重新同步，不手工修改 `.csproj`、`.sln`、`Library/` 或 `Temp/`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；完整结果只允许两项已登记基线失败原样存在：`CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 与 `ContentImportCoordinatorContentScopeTests.LianShenReservedAbilitiesRemainExcludedAtPlayerLoad`，不得新增失败。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，要求 5/5 通过。
+- 运行审核文本、任务卡、预期路径 whitespace 与暂存后 `git diff --cached --check`；本卡不改 docs／CSV／Unity 数据资产，不重复运行数据链检查。
+
+## 完成条件
+
+- 四类错误组合均失败关闭；合法 schema 1 往返仍幂等；所有拒绝都发生在 `GameRuntime` 替换 owner 或导航写入前，没有半状态。
+- 业务 diff 只位于四个冻结源码／测试文件，无公共契约、程序集依赖、Scene、asset 或数值变化；程序集边界、构建、完整 EditMode 基线和 PlayMode 均满足上述要求。
+- 验证闭合后消费 `未通过审核清单` 的 01F 条目、归档本卡并从队列移除；随后按状态维护规则实时扫描并冻结 01G 字面量路径，只有路径、owner 与验证均可冻结时才解除其 `U-ARCH-REBUILD-01F1` 前置并入队，本卡不得代替 01G 实施。
+
+## 停止条件
+
+- 修复需要修改公共导航契约、恢复旧 schema、改变合法存档格式或调用行为、触及四个业务 expectedPaths 之外的源码／测试，或出现新增 Unity 失败时停止，不叠加补丁。
+- 01G 路径、owner、场景组合根或验收无法在返工完成后的实时工程中唯一冻结时，保持 01G blocked 并报告；不得用本卡扩大阶段 7 范围。
