@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using TianZhang.Core;
-
 using TianZhang.Spatial;
 
 namespace TianZhang.Entity
@@ -47,10 +45,6 @@ namespace TianZhang.Entity
         public int MovePoints = 3;   // 每回合可移动格数（从反应推算）
         public bool IsGuarding;      // 防御姿态
         public bool IsAlive = true;
-
-        // ---- 遗留 CTB 兼容字段 ----
-        // 01E2 的正式链不再写入或读取此字段；它仅保留到 01E3 删除仍需编译的遗留控制器。
-        public CTBEngine.CTBUnit CTBUnit;
 
         // ---- 术法/神通冷却 ----
         public int[] SpellCooldowns;   // 剩余冷却刻数

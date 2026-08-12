@@ -146,7 +146,7 @@ if (-not $SkipRequiredAssemblies) {
     'TianZhang.Character' = @('src/Assets/Scripts/Modules/Character/TianZhang.Character.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Spatial'))
     'TianZhang.Cultivation' = @('src/Assets/Scripts/Modules/Cultivation/TianZhang.Cultivation.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character'))
     'TianZhang.World' = @('src/Assets/Scripts/Modules/World/TianZhang.World.asmdef', @('TianZhang.Foundation', 'TianZhang.Content'))
-    'TianZhang.Combat' = @('src/Assets/Scripts/Combat/TianZhang.Combat.asmdef', @('TianZhang.Foundation', 'TianZhang.Domain', 'TianZhang.Content', 'TianZhang.Spatial', 'TianZhang.Combat.Turns'))
+    'TianZhang.Combat' = @('src/Assets/Scripts/Combat/TianZhang.Combat.asmdef', @('TianZhang.Foundation', 'TianZhang.Spatial', 'TianZhang.Combat.Turns'))
     'TianZhang.Combat.Turns' = @('src/Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef', @())
     'TianZhang.Gameplay.Contracts' = @('src/Assets/Scripts/Modules/GameplayContracts/TianZhang.Gameplay.Contracts.asmdef', @('TianZhang.Foundation'))
     'TianZhang.Features.CharacterCreation' = @('src/Assets/Scripts/Modules/Features/CharacterCreation/TianZhang.Features.CharacterCreation.asmdef', @('TianZhang.Foundation', 'TianZhang.Content', 'TianZhang.Character', 'TianZhang.Cultivation', 'TianZhang.Gameplay.Contracts'))

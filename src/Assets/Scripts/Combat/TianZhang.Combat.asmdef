@@ -2,8 +2,6 @@
     "name": "TianZhang.Combat",
     "references": [
         "TianZhang.Foundation",
-        "TianZhang.Domain",
-        "TianZhang.Content",
         "TianZhang.Spatial",
         "TianZhang.Combat.Turns"
     ]
