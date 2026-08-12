@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-12：U-ARCH-REBUILD-01E1B 已完成并证明纯 Combat 内核覆盖现行生产数值语义；恢复既有正式调用链切换检查点，继续完成剩余旧引用迁移。",
+  "stateReason": "2026-08-12：正式 Gameplay、Adventure、UI、AI、Editor 与直接测试已切到新 Combat／Content 契约；完整 EditMode 仅保留两项登记基线失败，PlayMode 5/5，通过程序集、数据链、GUID 与旧引用扫描。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -116,3 +116,10 @@
 - 当前 `CombatantSnapshot` 未投影玄感心力、含弘／载物有效防御或按境界变化的印记上限；`CombatActionResolver` 把守一／符胆／雷劫满层阈值固定为 2、雷劫每层倍率固定为 5%，且 `CombatantSnapshot.ReceiveDamage` 不增加雷劫层数。正式切换后会与现行 `Character`／`DamageCalculator`／`CombatResolver` 产生可观测数值差异。
 - 本卡明确禁止修改纯 Combat 内核，并规定“仍需补任一纯 Combat 内核能力或固定数值语义发生变化”时停止；候选中的 Content 文件迁移试改已撤回，checkpoint 代码与已通过的 A 方案 PlayMode 迁移原样保留，未提交不完整补丁。
 - 飞书决策 `DEC-20260812-E2KERNELPARITY` 已接受 A：建立 `U-ARCH-REBUILD-01E1B`，逐项投影并迁移上述数值测试；本卡改为阻塞于 01E1B，既有 checkpoint 与已通过的 PlayMode 迁移继续保留为后续恢复输入。
+
+## 2026-08-12 完成证据
+
+- 正式组合链已重放 checkpoint 并完成 Content／Editor 漏项：`CombatElementFacts` 与纯原语 `AbilityRequirementPolicy` 归属 `TianZhang.Content`；Gameplay、Sect 门禁与 Editor 导入器不再调用旧 `DamageCalculator`。
+- `AttackProfileDataTests` 与 `TacticalGridModelTests` 中旧 Controller／Resolver／Core CTB 直接测试已退出；范围、行动、AI、结果和固定数值语义由 `CombatRuntimeKernelTests` 覆盖，Battle UI 另以真实按钮点击证明稳定上下文路由。
+- 完整 EditMode 448 项：446 通过，仅保留任务卡登记的两项既有基线失败；完整 PlayMode 5/5 通过。程序集边界、Content 数据链、审核文本、pending whitespace 与 staged diff 检查通过。
+- 测试与 Editor 的旧类型直接引用为零；排除 01E3 明确保留的遗留源码、`Character.CTBUnit` 编译残件与旧 AI 残件后，生产旧入口引用为零。旧源码 GUID 与迁移门禁 GUID 在 Scene、Prefab、asset、controller、anim 中均为零引用。
