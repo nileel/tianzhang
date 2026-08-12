@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using TianZhang.Core;
 using TianZhang.Content;
 using TianZhang.Tactical;
 
