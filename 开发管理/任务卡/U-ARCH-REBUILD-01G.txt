@@ -10,7 +10,7 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-12：01F 已完成归档；等待对其正式提交做独立架构复审，并在复审通过后展开阶段 7 的全部 Scene、Feature、测试、asset 与 .meta 字面量路径。",
+  "stateReason": "2026-08-12：01F 正式提交 4aa505fe54997f3395f4fa48c36fb1a009672881 独立架构复审部分通过；保存 presence 与导航目标失败关闭仍需在 01F 阶段定向返工并重新复审，未通过前不得展开阶段 7 路径或进入队列。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

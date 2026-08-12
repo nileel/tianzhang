@@ -251,3 +251,8 @@
 - `Gameplay.Contracts` 建立导航 DTO／接口；`Infrastructure.Persistence` 建立 schema 1 信封与序列化；World 与 Cultivation 分别建立悬赏、册界和 NPC 修炼应用用例。现行场景调用者只改接用例与契约，Scene、Prefab、CSV、asset 及数值语义均未修改。
 - 保存恢复先完整构造并校验候选 owner，再一次性替换 `GameRuntime`；失败恢复保持当前运行时不变。基础攻击装载稳定 ID 与册界长期状态存在性均显式进入 schema 1，Unity JSON 不再把空册界对象误判为已提交状态。
 - 验证：程序集边界通过（21 asmdef／8 asmref）；`dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 为 0 error、7 个既有 warning；完整 Unity EditMode 为 394/396，仅保留已登记的 `AuthorizedGrantBindsEveryConflictIdentityField` 与 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 两项基线失败；PlayMode 为 5/5；schema 1 直接用例为 5/5。未修改 docs、CSV 或 Unity 数据资产，因此不重复运行数据链检查。
+
+## 独立架构复审（2026-08-12）
+
+- 对正式提交 `4aa505fe54997f3395f4fa48c36fb1a009672881` 的独立复审结论为部分通过，实施归档不构成阶段 6 架构批准；当前返工事实读取 `开发管理/未通过审核清单.txt` 的同 ID 条目。
+- 已确认模块边界、旧 owner 序列化引用清理、构建、既有失败基线和正式 PlayMode 满足本阶段；保存 DTO 的双向 presence 与导航返回目标形状仍未完整失败关闭。01F 同阶段返工重新复审通过前，不得展开 01G 字面量路径或执行阶段 7。
