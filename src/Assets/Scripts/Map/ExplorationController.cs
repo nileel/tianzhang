@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using TianZhang.Bootstrap;
 using UnityEngine.InputSystem;
 using TianZhang.Adventure;
 using TianZhang.Content;
@@ -11,6 +12,7 @@ using TianZhang.HexTile;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
 using TianZhang.Infrastructure.UnityContent;
+using EntityCharacter = TianZhang.Entity.Character;
 using GameplayCombatCommandHandler = TianZhang.Gameplay.Contracts.ICombatCommandHandler;
 
 using TianZhang.Spatial;
@@ -55,9 +57,9 @@ namespace TianZhang.Map
         private EnemyData formalEncounterEnemy;
         private ICombatActionPolicy formalEncounterAiPolicy;
         private SpatialQuerySnapshot spatialQuerySnapshot;
-        private Character player;
+        private EntityCharacter player;
         private List<EnemyUnit> enemies = new List<EnemyUnit>();
-        private readonly Dictionary<string, Character> combatantsById = new Dictionary<string, Character>();
+        private readonly Dictionary<string, EntityCharacter> combatantsById = new Dictionary<string, EntityCharacter>();
         private int playerGridUnitId;
 
         // ---- 视觉标记 ----
@@ -67,7 +69,7 @@ namespace TianZhang.Map
         // ---- 状态机 ----
         public enum GameState { Loading, Exploration, BattlePrep, Combat, Ended }
         private GameState state = GameState.Loading;
-        private Character currentCombatTarget;
+        private EntityCharacter currentCombatTarget;
 
         // ---- 玩家移动 ----
         private bool waitingForMoveInput;
@@ -90,7 +92,7 @@ namespace TianZhang.Map
 
         private class EnemyUnit
         {
-            public Character character;
+            public EntityCharacter character;
             public CharacterData data;
             public EnemyData enemyData;
             public ICombatActionPolicy aiPolicy;
@@ -309,16 +311,46 @@ namespace TianZhang.Map
 
         // ==================== 玩家创建 ====================
 
-        private Character CreatePlayer(HexCoord startPos)
+        private EntityCharacter CreatePlayer(HexCoord startPos)
         {
-            var cd = Game.GameSession.Instance != null && Game.GameSession.Instance.PlayerProfile != null
-                ? Game.GameSession.Instance.PlayerProfile
-                : CreateDefaultPlayerData();
+            CharacterData cd = Game.GameManager.Instance == null
+                ? null
+                : Game.GameManager.Instance.PlayerCharData;
+            if (cd == null && GameBootstrap.RequireRuntime().Player != null)
+                cd = CreateRuntimePlayerData(GameBootstrap.RequireRuntime().Player.Capture());
+            if (cd == null)
+                cd = CreateDefaultPlayerData();
 
-            var c = Character.FromData(cd, startPos);
+            var c = EntityCharacter.FromData(cd, startPos);
             c.CombatSwapsUsed = 0;
             c.EnsureCooldownArraySize();
             return c;
+        }
+
+        private static CharacterData CreateRuntimePlayerData(
+            TianZhang.Character.CharacterStateSnapshot snapshot)
+        {
+            var cd = ScriptableObject.CreateInstance<CharacterData>();
+            cd.charName = snapshot.Identity.DisplayName;
+            cd.rootBone = snapshot.Attributes.RootBone;
+            cd.physique = snapshot.Attributes.Physique;
+            cd.spirit = snapshot.Attributes.Spirit;
+            cd.mind = snapshot.Attributes.Mind;
+            cd.reaction = snapshot.Attributes.Reaction;
+            cd.talent = snapshot.Attributes.Talent;
+            cd.fortune = snapshot.Attributes.Fortune;
+            cd.gongFaName = snapshot.Progression.GongFaId;
+            cd.realmStage = snapshot.Progression.RealmStage;
+            cd.realmMultiplier = snapshot.Progression.RealmMultiplier;
+            cd.availableSpells = (string[])snapshot.AbilityLoadout.KnownSpells.Clone();
+            cd.availableSkills = (string[])snapshot.AbilityLoadout.KnownSkills.Clone();
+            cd.equippedSpells = (string[])snapshot.AbilityLoadout.EquippedSpells.Clone();
+            cd.equippedSkills = (string[])snapshot.AbilityLoadout.EquippedSkills.Clone();
+            cd.maxSpellSlots = snapshot.AbilityLoadout.SpellSlots;
+            cd.maxSkillSlots = snapshot.AbilityLoadout.SkillSlots;
+            cd.mainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
+            cd.unarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId;
+            return cd;
         }
 
         private CharacterData CreateDefaultPlayerData()
@@ -386,7 +418,7 @@ namespace TianZhang.Map
                 else
                     template = CreateFallbackEnemy(spawned);
 
-                var enemy = Character.FromData(template, coord);
+                var enemy = EntityCharacter.FromData(template, coord);
                 enemy.EnsureCooldownArraySize();
                 int gridUnitId = nextUnitId++;
                 tilemapManager.Grid.SetOccupied(coord, gridUnitId);
@@ -725,7 +757,7 @@ namespace TianZhang.Map
                 RefreshUI();
 
                 if (!nextAction.HasActor ||
-                    !combatantsById.TryGetValue(nextAction.ActorId, out Character actor))
+                    !combatantsById.TryGetValue(nextAction.ActorId, out EntityCharacter actor))
                 {
                     AddLog("CTB推进超时，战斗中止");
                     SetStatus("战斗异常");
@@ -1098,7 +1130,7 @@ namespace TianZhang.Map
             return true;
         }
 
-        private static CombatantSnapshot CreateSnapshot(string id, CombatTeam team, Character character)
+        private static CombatantSnapshot CreateSnapshot(string id, CombatTeam team, EntityCharacter character)
         {
             var snapshot = new CombatantSnapshot(
                 id,
@@ -1115,7 +1147,7 @@ namespace TianZhang.Map
                 character.MovePoints,
                 character.EquippedSpellIds,
                 character.AvailableSpells,
-                Character.MaxCombatSwaps,
+                EntityCharacter.MaxCombatSwaps,
                 0)
             {
                 BlockRate = character.BlockRate,
@@ -1145,7 +1177,7 @@ namespace TianZhang.Map
 
             foreach (CombatantSnapshot snapshot in combatSession.Combatants.All)
             {
-                if (!combatantsById.TryGetValue(snapshot.Id, out Character character))
+                if (!combatantsById.TryGetValue(snapshot.Id, out EntityCharacter character))
                     continue;
 
                 HexCoord priorPosition = character.Position;
@@ -1166,7 +1198,7 @@ namespace TianZhang.Map
             }
         }
 
-        private void MoveProjectedCharacter(Character character, HexCoord previous, HexCoord destination)
+        private void MoveProjectedCharacter(EntityCharacter character, HexCoord previous, HexCoord destination)
         {
             tilemapManager.Grid.ClearOccupied(previous);
             character.Position = destination;
@@ -1191,14 +1223,14 @@ namespace TianZhang.Map
 
         private string ResolveBasicProfileId(string actorId)
         {
-            return combatantsById.TryGetValue(actorId, out Character character)
+            return combatantsById.TryGetValue(actorId, out EntityCharacter character)
                 ? character.BasicAttackProfileId ?? string.Empty
                 : string.Empty;
         }
 
-        private string GetCombatantId(Character character)
+        private string GetCombatantId(EntityCharacter character)
         {
-            foreach (KeyValuePair<string, Character> entry in combatantsById)
+            foreach (KeyValuePair<string, EntityCharacter> entry in combatantsById)
             {
                 if (ReferenceEquals(entry.Value, character))
                     return entry.Key;
@@ -1308,7 +1340,7 @@ namespace TianZhang.Map
 
         // ==================== 公共查询 ====================
 
-        public Character GetPlayer() => player;
+        public EntityCharacter GetPlayer() => player;
         public GameState GetState() => state;
         public HexGrid GetGrid() => tilemapManager?.Grid;
     }

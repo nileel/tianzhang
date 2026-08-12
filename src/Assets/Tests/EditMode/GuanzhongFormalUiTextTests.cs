@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using TianZhang.Bootstrap;
 using TianZhang.Editor;
 using TianZhang.Game;
 using TianZhang.Settlement;
@@ -210,12 +211,11 @@ namespace TianZhang.Tests
             EditorSceneManager.OpenScene(
                 "Assets/Scenes/SettlementScene.unity",
                 OpenSceneMode.Single);
-            var sessionGo = new GameObject("UiTextSceneSession");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetWorldNode("guanzhong_hub");
-                session.SetSettlementId("guanzhong_city");
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement("guanzhong_city");
                 var controller = Object.FindFirstObjectByType<SettlementSceneController>();
                 controller.GetType()
                     .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -230,9 +230,9 @@ namespace TianZhang.Tests
             }
             finally
             {
-                Object.DestroyImmediate(sessionGo);
-                if (GameSession.Instance != null)
-                    Object.DestroyImmediate(GameSession.Instance.gameObject);
+                GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+                if (bootstrap != null)
+                    Object.DestroyImmediate(bootstrap.gameObject);
                 if (SceneFlowManager.Instance != null)
                     Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
                 // 恢复套件既有的"最后打开 AdventureScene"状态，避免后续顺序相关用例（如

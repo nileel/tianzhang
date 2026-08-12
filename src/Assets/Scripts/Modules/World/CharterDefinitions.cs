@@ -13,4 +13,40 @@ namespace TianZhang.World
         public string DefinitionId { get; } public string AuthorizationId { get; } public string ConflictKey { get; } public string[] AtomicOperationIds { get; }
         public bool ContainsAtomicOperation(string operationId) { foreach (string known in AtomicOperationIds) if (known == operationId) return true; return false; }
     }
+
+    public sealed class CharterStateEntry
+    {
+        public CharterStateEntry(string definitionId, string operationId, string conflictKey)
+        {
+            DefinitionId = definitionId ?? string.Empty;
+            OperationId = operationId ?? string.Empty;
+            ConflictKey = conflictKey ?? string.Empty;
+        }
+
+        public string DefinitionId { get; }
+        public string OperationId { get; }
+        public string ConflictKey { get; }
+    }
+
+    public sealed class CharterStateSnapshot
+    {
+        public CharterStateSnapshot(CharterStateEntry[] entries)
+            : this(entries, 0, null)
+        {
+        }
+
+        public CharterStateSnapshot(
+            CharterStateEntry[] entries,
+            int definitionCatalogVersion,
+            CharterRuntimeStateData runtimeState)
+        {
+            Entries = entries ?? new CharterStateEntry[0];
+            DefinitionCatalogVersion = definitionCatalogVersion;
+            RuntimeState = runtimeState == null ? null : runtimeState.CreateCopy();
+        }
+
+        public CharterStateEntry[] Entries { get; }
+        public int DefinitionCatalogVersion { get; }
+        public CharterRuntimeStateData RuntimeState { get; }
+    }
 }

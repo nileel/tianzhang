@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using TianZhang.Entity;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -8,7 +9,7 @@ namespace TianZhang.Tests
         [Test]
         public void CharacterBuildsPanelStateWithoutExposingUiComponents()
         {
-            var character = new Character
+            var character = new EntityCharacter
             {
                 Name = "试炼修士",
                 GongFaName = "九霄雷劫录",

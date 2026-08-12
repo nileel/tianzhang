@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
 using TianZhang.Content;
-using TianZhang.Game;
 using TianZhang.World;
 using UnityEditor;
 using UnityEngine;
@@ -36,16 +36,9 @@ namespace TianZhang.Tests
         private const string SupplyLand = "supply_suifu_wetland_land_capacity";
 
         private readonly List<UnityEngine.Object> temporaryAssets = new List<UnityEngine.Object>();
-        private GameObject sessionGo;
-
         [TearDown]
         public void TearDown()
         {
-            if (sessionGo != null)
-                UnityEngine.Object.DestroyImmediate(sessionGo);
-            sessionGo = null;
-            if (GameSession.Instance != null)
-                UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
             foreach (UnityEngine.Object asset in temporaryAssets)
                 UnityEngine.Object.DestroyImmediate(asset);
         }
@@ -53,11 +46,11 @@ namespace TianZhang.Tests
         [Test]
         public void CurrentRegionEntryResolvesToDeclaredEnvironmentProfileAndMatchesSerializedAsset()
         {
-            GameSession session = CreateCommittedSession(out ContentCatalogData catalog);
-            string[] entriesBefore = CaptureCurrentRegionEntries(session.CharterRuntimeState);
+            GameRuntime runtimeOwner = CreateCommittedRuntime(out ContentCatalogData catalog);
+            string[] entriesBefore = CaptureCurrentRegionEntries(runtimeOwner.Charters.CurrentState);
 
             Assert.That(CharterEnvironmentProjection.TryResolve(
-                session.CharterRuntimeState,
+                runtimeOwner.Charters.CurrentState,
                 catalog,
                 "env_guanzhong_wild",
                 out CharterEnvironmentProjectionResult result), Is.True, result.Reason);
@@ -69,7 +62,7 @@ namespace TianZhang.Tests
                 new[] { "event_suifu_water_redistribution", "event_suifu_downstream_supply_delay" },
                 result.EventIds);
             Assert.AreEqual("env_guanzhong_wild", result.EnvironmentProfileId);
-            AssertStateUntouched(entriesBefore, session.CharterRuntimeState);
+            AssertStateUntouched(entriesBefore, runtimeOwner.Charters.CurrentState);
         }
 
         [Test]
@@ -245,8 +238,8 @@ namespace TianZhang.Tests
         [Test]
         public void AssetProfileMismatchFailsClosedWithoutFallback()
         {
-            GameSession session = CreateCommittedSession(out ContentCatalogData catalog);
-            CharterRuntimeStateData state = session.CharterRuntimeState;
+            GameRuntime runtimeOwner = CreateCommittedRuntime(out ContentCatalogData catalog);
+            CharterRuntimeStateData state = runtimeOwner.Charters.CurrentState;
 
             Assert.That(CharterEnvironmentProjection.TryResolve(
                 state, catalog, "env_other", out CharterEnvironmentProjectionResult result), Is.False);
@@ -259,27 +252,25 @@ namespace TianZhang.Tests
             Assert.That(CharterEnvironmentProjection.TryResolve(
                 state, catalog, string.Empty, out result), Is.False);
             Assert.AreEqual(CharterEnvironmentProjectionReasons.AssetProfileMismatch, result.Reason);
-            AssertStateUntouched(new[] { RuleEntryId }, session.CharterRuntimeState);
+            AssertStateUntouched(new[] { RuleEntryId }, runtimeOwner.Charters.CurrentState);
         }
 
         [Test]
         public void FailedOutcomesLeaveTheLongTermStateUntouched()
         {
-            GameSession session = CreateCommittedSession(out ContentCatalogData catalog);
-            string[] entriesBefore = CaptureCurrentRegionEntries(session.CharterRuntimeState);
+            GameRuntime runtimeOwner = CreateCommittedRuntime(out ContentCatalogData catalog);
+            string[] entriesBefore = CaptureCurrentRegionEntries(runtimeOwner.Charters.CurrentState);
 
             Assert.That(CharterEnvironmentProjection.TryResolve(
-                session.CharterRuntimeState, catalog, "env_other", out _), Is.False);
-            AssertStateUntouched(entriesBefore, session.CharterRuntimeState);
-            Assert.IsNotNull(session.CharterRuntimeState);
+                runtimeOwner.Charters.CurrentState, catalog, "env_other", out _), Is.False);
+            AssertStateUntouched(entriesBefore, runtimeOwner.Charters.CurrentState);
+            Assert.IsNotNull(runtimeOwner.Charters.CurrentState);
         }
 
-        private GameSession CreateCommittedSession(out ContentCatalogData catalog)
+        private GameRuntime CreateCommittedRuntime(out ContentCatalogData catalog)
         {
-            sessionGo = new GameObject("CharterEnvironmentProjectionSession");
-            GameSession session = sessionGo.AddComponent<GameSession>();
-            session.BeginNewGame(null, "jiangzuo_hub");
-            Assert.IsNull(session.CharterRuntimeState);
+            var runtimeOwner = new GameRuntime();
+            Assert.IsNull(runtimeOwner.Charters.CurrentState);
 
             CharterSiteData site = LoadProductionSite();
             CharterRuleStaticCatalogData staticCatalog = LoadProductionStaticCatalog();
@@ -295,13 +286,13 @@ namespace TianZhang.Tests
             Assert.IsTrue(result.Succeeded, result.Reason);
 
             catalog = CreateCatalogWith(staticCatalog);
-            CharterInvocationCommitResult commit = session.CommitCharterFormalResult(
-                catalog, result, preparation.CatalogVersion);
+            CharterUseCaseResult commit = runtimeOwner.Charters.CommitEvaluatedState(
+                catalog, result.NextState, preparation.CatalogVersion);
             Assert.IsTrue(commit.Succeeded, commit.Reason);
-            Assert.IsNotNull(session.CharterRuntimeState);
-            Assert.AreEqual(1, session.CharterRuntimeState.currentRegionRuleEntryIds.Length);
-            Assert.AreEqual(RuleEntryId, session.CharterRuntimeState.currentRegionRuleEntryIds[0]);
-            return session;
+            Assert.IsNotNull(runtimeOwner.Charters.CurrentState);
+            Assert.AreEqual(1, runtimeOwner.Charters.CurrentState.currentRegionRuleEntryIds.Length);
+            Assert.AreEqual(RuleEntryId, runtimeOwner.Charters.CurrentState.currentRegionRuleEntryIds[0]);
+            return runtimeOwner;
         }
 
         private void CompleteAllSteps(CharterSiteInteractionRuntime runtime)

@@ -1,4 +1,7 @@
 using UnityEngine;
+using TianZhang.Bootstrap;
+using TianZhang.Character;
+using TianZhang.Cultivation;
 using TianZhang.Entity;
 using UnityEngine.InputSystem;
 
@@ -25,6 +28,7 @@ namespace TianZhang.Game
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            GameBootstrap.RequireRuntime();
 
             if (showDebugLog)
                 Debug.Log("天章 — 六角格CTB战棋原型启动");
@@ -40,8 +44,11 @@ namespace TianZhang.Game
             var flow = SceneFlowManager.Instance;
             if (flow != null)
                 flow.StartNewGame(charData);
-            else if (GameSession.Instance != null)
-                GameSession.Instance.BeginNewGame(charData, SceneFlowManager.ResolveStartNodeId(charData));
+            else
+                GameBootstrap.RequireRuntime().BeginNewGame(
+                    CharacterRuntimeProfile.FromDefinition("player", charData),
+                    CultivationState.FromDefinition(charData.foundationPurpleMansionState),
+                    SceneFlowManager.ResolveStartNodeId(charData));
 
             // SectSelectionManager handles player reconfiguration after scene loads
         }

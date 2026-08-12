@@ -2,8 +2,11 @@ using System.Collections;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Game;
+using TianZhang.Gameplay.Contracts;
+using TianZhang.Infrastructure.Persistence;
 using TianZhang.Settlement;
 using TianZhang.World;
 using UnityEngine;
@@ -15,9 +18,9 @@ namespace TianZhang.Tests
     /// <summary>
     /// 单据点端到端闸门（U-TZ-CHARTER-SLICE-01D）：只在正式 SettlementScene／AdventureScene 与
     /// 公开生产入口上驱动批准的十步流程，断言各层真实结果。用例从空
-    /// <see cref="GameSession.CharterRuntimeState"/> 开始，逐步完成五类临时证明、完整 candidate、
+    /// <see cref="CharterUseCase.CurrentState"/> 开始，逐步完成五类临时证明、完整 candidate、
     /// 三份独立请求（同一 preparation 派生）、金丹未获胜、元婴受锚、首次正式原子提交、正式
-    /// Adventure 的 `env_guanzhong_wild` 反馈、schema 4 保存／读取与重复消费失败。测试不复制
+    /// Adventure 的 `env_guanzhong_wild` 反馈、schema 1 保存／读取与重复消费失败。测试不复制
     /// candidate、请求、冲突、环境解析或存档实现，不调用旧 BuildValidState、不手工赋值会话长期
     /// 状态、不伪造站点／环境，也不创建第二场景、Canvas、会话或存档所有者。
     /// </summary>
@@ -40,8 +43,9 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(flowGo);
             if (SceneFlowManager.Instance != null)
                 Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                Object.DestroyImmediate(bootstrap.gameObject);
             flowGo = null;
         }
 
@@ -49,7 +53,7 @@ namespace TianZhang.Tests
         /// 正式场景完整纵向流程：通行、管理、节点、登记、供给五类临时证明；越序失败节点；
         /// 金丹未获胜与元婴受锚（无 NextState／事件输出、不写会话）；首次正式调用原子提交；
         /// 同一面板重复消费稳定失败；正式 Adventure 显示条目事件与 `env_guanzhong_wild` 档案；
-        /// schema 4 保存／读取后长期状态与目录版本一致、环境引用仍生效；读档后再次正式调用
+        /// schema 1 保存／读取后长期状态与目录版本一致、环境引用仍生效；读档后再次正式调用
         /// 稳定失败且状态不变。
         /// </summary>
         [UnityTest]
@@ -57,9 +61,9 @@ namespace TianZhang.Tests
         {
             flowGo = new GameObject("CharterVerticalSliceE2EFlow");
             var flow = flowGo.AddComponent<SceneFlowManager>();
-            Assert.IsNotNull(GameSession.Instance, "SceneFlowManager must ensure the single session.");
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState, "The E2E must start from an empty charter long-term state.");
-            Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+            Assert.IsNotNull(GameBootstrap.Runtime, "SceneFlowManager must ensure the single session.");
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState, "The E2E must start from an empty charter long-term state.");
+            Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
 
             // 1. 进入正式 SettlementScene（生产入口：持久化据点 ID 后加载场景）。
             flow.EnterSettlement(SettlementId);
@@ -67,7 +71,7 @@ namespace TianZhang.Tests
 
             var settlementController = Object.FindFirstObjectByType<SettlementSceneController>();
             Assert.IsNotNull(settlementController, "The formal SettlementScene must bind its settlement controller.");
-            Assert.AreEqual(SettlementId, GameSession.Instance.CurrentSettlementId);
+            Assert.AreEqual(SettlementId, GameBootstrap.RequireRuntime().Navigation.SettlementId);
 
             // 2. 打开旧水驿入口：生产 UI 按钮只经正式控制器打开唯一站点面板。
             ClickByName("SettlementCharterSiteEntry");
@@ -85,7 +89,7 @@ namespace TianZhang.Tests
             ClickByName("CharterSiteYuanyingButton");
             Assert.AreEqual(CharterSiteInteractionReasons.PreparationIncomplete, charterController.LastReason);
             StringAssert.Contains("通行确认", PanelText("CharterSiteStepText").text);
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
 
             // 4. 五类临时证明按固定顺序推进，每步只推进临时 progress。
             ClickByName("CharterSiteManagementButton");
@@ -112,8 +116,8 @@ namespace TianZhang.Tests
             Assert.AreEqual(3, charterController.Progress.RegisteredRealitySupplyIds.Length);
             Assert.IsTrue(charterController.Progress.IsComplete);
             StringAssert.Contains("评估推演", PanelText("CharterSiteStepText").text);
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
 
             // 5. 金丹评估：同一 preparation 派生独立请求，稳定返回册界侧未获胜；
             //    不产生 NextState／事件输出，长期状态与目录版本保持不变。
@@ -122,8 +126,8 @@ namespace TianZhang.Tests
             Assert.IsNotNull(jindan);
             Assert.AreEqual(CharterRuleRuntimeReasons.ConflictNotWon, jindan.Reason);
             AssertNoNextStateOrEvents(jindan);
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
 
             // 6. 元婴评估：稳定返回受锚，不降格金丹冲突；不产生 NextState／事件输出。
             ClickByName("CharterSiteYuanyingButton");
@@ -131,19 +135,19 @@ namespace TianZhang.Tests
             Assert.IsNotNull(yuanying);
             Assert.AreEqual(YuanyingAnchoredReason, yuanying.Reason);
             AssertNoNextStateOrEvents(yuanying);
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
 
-            // 7. 首次正式调用：candidate 经 GameSession 唯一提交入口原子写入，
+            // 7. 首次正式调用：candidate 经 GameRuntime 唯一提交入口原子写入，
             //    目录版本随长期状态一次替换；面板从长期状态重建显示环境引用。
             int catalogVersion = charterController.CatalogVersion;
             Assert.Greater(catalogVersion, 0, "The single static catalog must declare its production version.");
             ClickByName("CharterSiteFormalButton");
             Assert.AreEqual(CharterSiteController.FormalCommittedReason, charterController.LastReason);
-            Assert.IsNotNull(GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
-            CollectionAssert.Contains(GameSession.Instance.CharterRuntimeState.registeredRuleEntryIds, RuleEntryId);
-            CollectionAssert.Contains(GameSession.Instance.CharterRuntimeState.currentRegionRuleEntryIds, RuleEntryId);
+            Assert.IsNotNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(catalogVersion, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
+            CollectionAssert.Contains(GameBootstrap.RequireRuntime().Charters.CurrentState.registeredRuleEntryIds, RuleEntryId);
+            CollectionAssert.Contains(GameBootstrap.RequireRuntime().Charters.CurrentState.currentRegionRuleEntryIds, RuleEntryId);
             Assert.AreEqual(CharterSiteController.FormalCommittedReason, charterController.LastReason);
             StringAssert.Contains("已正式提交", PanelText("CharterSiteStepText").text);
             StringAssert.Contains("已生效", PanelText("CharterSiteEnvironmentText").text);
@@ -151,12 +155,12 @@ namespace TianZhang.Tests
 
             // 8. 重复消费失败节点：同一面板再次正式调用稳定失败，长期状态保留独立前态副本并
             //    逐项比较完整内容不变（不只看同一引用或数组长度）。
-            CharterRuntimeStateData committedState = GameSession.Instance.CharterRuntimeState;
+            CharterRuntimeStateData committedState = GameBootstrap.RequireRuntime().Charters.CurrentState;
             CharterRuntimeStateData committedStateBeforeRepeat = committedState.CreateCopy();
             ClickByName("CharterSiteFormalButton");
             Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, charterController.LastReason);
-            AssertCharterStateEquivalent(committedStateBeforeRepeat, GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
+            AssertCharterStateEquivalent(committedStateBeforeRepeat, GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(catalogVersion, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
 
             // 9. 进入正式 AdventureScene：生产入口持久化 adventureId；环境投影从已提交长期状态
             //    解析条目事件并精确匹配已序列化 env_guanzhong_wild 档案，遭遇启动不被投影阻断。
@@ -178,14 +182,14 @@ namespace TianZhang.Tests
             CollectionAssert.Contains(projection.EventIds, WaterRedistributionEventId);
             Assert.AreEqual(EnvironmentProfileId, projection.EnvironmentProfileId);
 
-            // 10. schema 4 保存／读取：长期状态与目录版本原子恢复，水府地纪仍登记且生效，
+            // 10. schema 1 保存／读取：长期状态与目录版本原子恢复，水府地纪仍登记且生效，
             //     同一生产目录与序列化档案 ID 仍可解析。
-            GameSessionSaveData saveData = GameSession.Instance.CaptureSaveData();
-            GameSession.Instance.RestoreSaveData(saveData, catalog);
-            AssertCharterStateEquivalent(committedState, GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
+            GameSaveEnvelope saveData = GameBootstrap.Runtime.CaptureSave();
+            GameBootstrap.Runtime.RestoreSave(saveData, catalog);
+            AssertCharterStateEquivalent(committedState, GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(catalogVersion, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
             Assert.IsTrue(CharterEnvironmentProjection.TryResolve(
-                    GameSession.Instance.CharterRuntimeState,
+                    GameBootstrap.RequireRuntime().Charters.CurrentState,
                     catalog,
                     EnvironmentProfileId,
                     out CharterEnvironmentProjectionResult restoredProjection),
@@ -221,11 +225,11 @@ namespace TianZhang.Tests
             Assert.IsTrue(restoredController.Progress.IsComplete);
 
             CharterRuntimeStateData restoredStateBeforeRepeat =
-                GameSession.Instance.CharterRuntimeState.CreateCopy();
+                GameBootstrap.RequireRuntime().Charters.CurrentState.CreateCopy();
             ClickByName("CharterSiteFormalButton");
             Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, restoredController.LastReason);
-            AssertCharterStateEquivalent(restoredStateBeforeRepeat, GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(catalogVersion, GameSession.Instance.CharterDefinitionCatalogVersion);
+            AssertCharterStateEquivalent(restoredStateBeforeRepeat, GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(catalogVersion, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
         }
 
         /// <summary>
@@ -237,7 +241,7 @@ namespace TianZhang.Tests
         {
             flowGo = new GameObject("CharterVerticalSliceNoStateFlow");
             var flow = flowGo.AddComponent<SceneFlowManager>();
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
 
             flow.EnterAdventure(AdventureId, SceneReturnTarget.Settlement(SettlementId));
             yield return null;
@@ -253,8 +257,8 @@ namespace TianZhang.Tests
             Assert.AreEqual(
                 CharterEnvironmentProjectionReasons.NoLongTermState,
                 ReadProjection(adventure).Reason);
-            Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-            Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+            Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+            Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
         }
 
         /// <summary>读取 Adventure 控制器的只读投影对象（显示边界；原始条目/事件/档案 ID 仍保留）。</summary>

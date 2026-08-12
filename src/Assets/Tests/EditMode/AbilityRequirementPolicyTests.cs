@@ -6,6 +6,7 @@ using TianZhang.Entity;
 using UnityEngine;
 
 using TianZhang.Spatial;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -14,7 +15,7 @@ namespace TianZhang.Tests
         [Test]
         public void RuntimeGateAllowsAndRejectsRealmAndElementRequirements()
         {
-            var character = new Character();
+            var character = new EntityCharacter();
             character.SetRealm("凡人");
             character.RealmMultiplier = 6f;
             character.VisibleRootElement = "水";
@@ -30,7 +31,7 @@ namespace TianZhang.Tests
         [Test]
         public void CharacterFromDataCarriesExistingVisibleRootElement()
         {
-            var visibleRootElement = typeof(Character).GetField("VisibleRootElement");
+            var visibleRootElement = typeof(EntityCharacter).GetField("VisibleRootElement");
             Assert.IsNotNull(visibleRootElement);
 
             var data = ScriptableObject.CreateInstance<CharacterData>();
@@ -38,7 +39,7 @@ namespace TianZhang.Tests
             {
                 data.visibleRootElement = "雷";
                 data.realmStage = "筑基初期";
-                var character = Character.FromData(data, new HexCoord(0, 0));
+                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
 
                 Assert.AreEqual("雷", visibleRootElement.GetValue(character));
             }
@@ -61,7 +62,7 @@ namespace TianZhang.Tests
             Assert.IsNull(typeof(DivineSkillData).GetField("affiliation"));
         }
 
-        private static bool IsSatisfied(Character character, string realmRequirement, string elementRequirement)
+        private static bool IsSatisfied(EntityCharacter character, string realmRequirement, string elementRequirement)
         {
             return AbilityRequirementPolicy.IsSatisfied(
                 character.RealmMultiplier,

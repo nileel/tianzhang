@@ -3,12 +3,14 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
 using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Cultivation;
 using TianZhang.Editor;
 using TianZhang.Game;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
 using TianZhang.World;
@@ -144,10 +146,10 @@ namespace TianZhang.Tests
             SceneBuilder.BuildAdventureScene();
             EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
 
-            var sessionGo = new GameObject("CharterEnvironmentSceneSession");
+            var runtimeGo = new GameObject("CharterEnvironmentSceneSession");
             try
             {
-                CreateCommittedCharterSession(sessionGo);
+                CreateCommittedCharterRuntime(runtimeGo);
 
                 var controller = Object.FindFirstObjectByType<AdventureSceneController>();
                 Assert.IsNotNull(controller);
@@ -169,7 +171,7 @@ namespace TianZhang.Tests
                 var canvas = GameObject.Find("UICanvas");
                 if (canvas != null)
                     Object.DestroyImmediate(canvas);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -181,12 +183,14 @@ namespace TianZhang.Tests
             SceneBuilder.BuildAdventureScene();
             EditorSceneManager.OpenScene(ScenePaths[3], OpenSceneMode.Single);
 
-            var sessionGo = new GameObject("CharterEnvironmentSceneSession");
+            var runtimeGo = new GameObject("CharterEnvironmentSceneSession");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.BeginNewGame(null, "jiangzuo_hub");
-                session.SetAdventureId("guanzhong_wild");
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterAdventure(
+                    "guanzhong_wild",
+                    SceneReturnTarget.World("jiangzuo_hub"));
 
                 var controller = Object.FindFirstObjectByType<AdventureSceneController>();
                 Assert.IsNotNull(controller);
@@ -206,7 +210,7 @@ namespace TianZhang.Tests
                 var canvas = GameObject.Find("UICanvas");
                 if (canvas != null)
                     Object.DestroyImmediate(canvas);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -249,12 +253,13 @@ namespace TianZhang.Tests
         public void WorldSceneControllerExposesPrototypeNodesAndSelectsCurrentNode()
         {
             DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             var controllerGo = new GameObject("WorldSceneControllerTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetWorldNode("jiangzuo_hub");
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterWorld("jiangzuo_hub");
                 var controller = controllerGo.AddComponent<WorldSceneController>();
 
                 Assert.AreEqual(4, controller.Nodes.Count);
@@ -267,12 +272,12 @@ namespace TianZhang.Tests
                 Assert.IsTrue(controller.SelectNode("longxi_hub"));
 
                 Assert.AreEqual("longxi_hub", controller.SelectedNodeId);
-                Assert.AreEqual("longxi_hub", session.CurrentWorldNodeId);
+                Assert.AreEqual("longxi_hub", runtime.Navigation.WorldNodeId);
             }
             finally
             {
                 Object.DestroyImmediate(controllerGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -281,11 +286,11 @@ namespace TianZhang.Tests
         public void WorldSceneControllerBuildsNodeButtonsOnStart()
         {
             DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             var controllerGo = new GameObject("WorldSceneControllerTest");
             try
             {
-                sessionGo.AddComponent<GameSession>();
+                runtimeGo.AddComponent<GameBootstrap>();
                 var controller = controllerGo.AddComponent<WorldSceneController>();
                 TianZhang.Settlement.UiText.Load(
                     AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataConfig/Language.csv"));
@@ -315,7 +320,7 @@ namespace TianZhang.Tests
                 if (canvas != null)
                     Object.DestroyImmediate(canvas);
                 Object.DestroyImmediate(controllerGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -326,12 +331,13 @@ namespace TianZhang.Tests
             DestroyExistingSceneFlowAndSession();
             SceneBuilder.BuildSettlementScene();
             EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetWorldNode("guanzhong_hub");
-                session.SetSettlementId("guanzhong_city");
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement("guanzhong_city");
                 var controller = Object.FindFirstObjectByType<SettlementSceneController>();
 
                 InvokeStart(controller);
@@ -356,7 +362,7 @@ namespace TianZhang.Tests
             }
             finally
             {
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -367,12 +373,13 @@ namespace TianZhang.Tests
             DestroyExistingSceneFlowAndSession();
             SceneBuilder.BuildSettlementScene();
             EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetWorldNode("guanzhong_hub");
-                session.SetSettlementId("missing_settlement");
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement("missing_settlement");
                 var controller = Object.FindFirstObjectByType<SettlementSceneController>();
 
                 InvokeStart(controller);
@@ -387,7 +394,7 @@ namespace TianZhang.Tests
             }
             finally
             {
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -397,87 +404,86 @@ namespace TianZhang.Tests
         {
             DestroyExistingSceneFlowAndSession();
             var flowGo = new GameObject("SceneFlowManagerTest");
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
                 var flow = flowGo.AddComponent<SceneFlowManager>();
-                session.SetWorldNode("longxi_hub");
+                runtime.EnterWorld("longxi_hub");
 
                 Assert.AreEqual(
                     "AdventureScene",
                     flow.PrepareAdventureEntry("longxi_trial", SceneReturnTarget.World("longxi_hub")));
-                Assert.AreEqual("longxi_trial", session.CurrentAdventureId);
-                Assert.AreEqual("WorldScene", session.LastReturnTarget.SceneName);
-                Assert.AreEqual("longxi_hub", session.LastReturnTarget.WorldNodeId);
+                Assert.AreEqual("longxi_trial", runtime.Navigation.AdventureId);
+                Assert.AreEqual("WorldScene", runtime.Navigation.ReturnTarget.SceneName);
+                Assert.AreEqual("longxi_hub", runtime.Navigation.ReturnTarget.WorldNodeId);
 
                 Assert.AreEqual("WorldScene", flow.PrepareReturnToPreviousScene());
-                Assert.AreEqual("longxi_hub", session.CurrentWorldNodeId);
-                Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsNull(session.LastReturnTarget.SceneName);
+                Assert.AreEqual("longxi_hub", runtime.Navigation.WorldNodeId);
+                Assert.IsNull(runtime.Navigation.AdventureId);
+                Assert.IsNull(runtime.Navigation.ReturnTarget.SceneName);
 
-                session.SetSettlementId("taiyi_sect");
+                runtime.EnterSettlement("taiyi_sect");
                 Assert.AreEqual(
                     "AdventureScene",
                     flow.PrepareAdventureEntry("taiyi_trial", SceneReturnTarget.Settlement("taiyi_sect")));
-                Assert.AreEqual("taiyi_trial", session.CurrentAdventureId);
-                Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
-                Assert.AreEqual("taiyi_sect", session.LastReturnTarget.SettlementId);
+                Assert.AreEqual("taiyi_trial", runtime.Navigation.AdventureId);
+                Assert.AreEqual("SettlementScene", runtime.Navigation.ReturnTarget.SceneName);
+                Assert.AreEqual("taiyi_sect", runtime.Navigation.ReturnTarget.SettlementId);
 
                 Assert.AreEqual("SettlementScene", flow.PrepareReturnToPreviousScene());
-                Assert.AreEqual("taiyi_sect", session.CurrentSettlementId);
-                Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsNull(session.LastReturnTarget.SceneName);
+                Assert.AreEqual("taiyi_sect", runtime.Navigation.SettlementId);
+                Assert.IsNull(runtime.Navigation.AdventureId);
+                Assert.IsNull(runtime.Navigation.ReturnTarget.SceneName);
 
-                session.SetAdventureId("old_trial");
-                session.SetReturnTarget(SceneReturnTarget.Settlement("taiyi_sect"));
-                session.BeginNewGame(null, "jiangzuo_hub");
-                Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsNull(session.LastReturnTarget.SceneName);
+                runtime.EnterAdventure("old_trial", SceneReturnTarget.Settlement("taiyi_sect"));
+                runtime.EnterWorld("jiangzuo_hub");
+                Assert.IsNull(runtime.Navigation.AdventureId);
+                Assert.IsNull(runtime.Navigation.ReturnTarget.SceneName);
             }
             finally
             {
                 Object.DestroyImmediate(flowGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
 
         [Test]
-        public void GameSessionOwnsWorldTimeAcrossNewGameSceneChangesAndBattleReturn()
+        public void GameRuntimeOwnsWorldTimeAcrossNewGameSceneChangesAndBattleReturn()
         {
             DestroyExistingSceneFlowAndSession();
             var flowGo = new GameObject("SceneFlowManagerTest");
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
                 var flow = flowGo.AddComponent<SceneFlowManager>();
 
-                flow.PrepareNewGame(null);
+                Assert.AreEqual(387, runtime.WorldClock.Year);
+                Assert.AreEqual("autumn", runtime.WorldClock.SeasonId);
+                Assert.AreEqual(1, runtime.WorldClock.Day);
+                Assert.AreEqual("dawn", runtime.WorldClock.TimeOfDayId);
 
-                Assert.AreEqual(387, session.WorldYear);
-                Assert.AreEqual("autumn", session.WorldSeasonId);
-                Assert.AreEqual(1, session.WorldDay);
-                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
-
-                session.AdvanceWorldDay();
-                Assert.AreEqual(2, session.WorldDay);
-                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+                runtime.AdvanceWorldDay();
+                Assert.AreEqual(2, runtime.WorldClock.Day);
+                Assert.AreEqual("dawn", runtime.WorldClock.TimeOfDayId);
 
                 Assert.AreEqual("AdventureScene", flow.PrepareAdventureEntry(
                     "time_test_adventure", SceneReturnTarget.World("jiangzuo_hub")));
-                Assert.AreEqual(2, session.WorldDay);
-                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+                Assert.AreEqual(2, runtime.WorldClock.Day);
+                Assert.AreEqual("dawn", runtime.WorldClock.TimeOfDayId);
 
                 Assert.AreEqual("WorldScene", flow.PrepareReturnToPreviousScene());
-                Assert.AreEqual(2, session.WorldDay);
-                Assert.AreEqual("dawn", session.WorldTimeOfDayId);
+                Assert.AreEqual(2, runtime.WorldClock.Day);
+                Assert.AreEqual("dawn", runtime.WorldClock.TimeOfDayId);
             }
             finally
             {
                 Object.DestroyImmediate(flowGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -487,27 +493,28 @@ namespace TianZhang.Tests
         {
             DestroyExistingSceneFlowAndSession();
             var flowGo = new GameObject("SceneFlowManagerTest");
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             var looseProfile = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
             var clanProfile = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
             var legacyProfile = ScriptableObject.CreateInstance<TianZhang.Entity.CharacterData>();
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
                 var flow = flowGo.AddComponent<SceneFlowManager>();
                 looseProfile.originId = "origin_loose";
                 clanProfile.originId = "origin_minor_clan";
                 legacyProfile.originId = "legacy_removed_origin";
 
                 Assert.AreEqual("WorldScene", flow.PrepareNewGame(looseProfile));
-                Assert.AreEqual("jiangzuo_hub", session.CurrentWorldNodeId);
+                Assert.AreEqual("jiangzuo_hub", runtime.Navigation.WorldNodeId);
 
                 Assert.AreEqual("WorldScene", flow.PrepareNewGame(clanProfile));
-                Assert.AreEqual("guanzhong_hub", session.CurrentWorldNodeId);
+                Assert.AreEqual("guanzhong_hub", runtime.Navigation.WorldNodeId);
 
                 LogAssert.Expect(LogType.Warning, "[SceneFlow] Unknown or legacy origin 'legacy_removed_origin'; using fallback start node 'jiangzuo_hub' without changing the profile.");
                 Assert.AreEqual("WorldScene", flow.PrepareNewGame(legacyProfile));
-                Assert.AreEqual("jiangzuo_hub", session.CurrentWorldNodeId);
+                Assert.AreEqual("jiangzuo_hub", runtime.Navigation.WorldNodeId);
                 Assert.AreEqual("legacy_removed_origin", legacyProfile.originId);
             }
             finally
@@ -516,7 +523,7 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(clanProfile);
                 Object.DestroyImmediate(legacyProfile);
                 Object.DestroyImmediate(flowGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -526,40 +533,41 @@ namespace TianZhang.Tests
         {
             DestroyExistingSceneFlowAndSession();
             var flowGo = new GameObject("SceneFlowManagerTest");
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
                 var flow = flowGo.AddComponent<SceneFlowManager>();
                 var draft = TianZhang.Game.CharacterCreation.CharacterCreationCatalog.CreateDefaultDraft();
                 draft.OriginId = "origin_minor_clan";
 
-                var profile = TianZhang.Game.CharacterCreation.CharacterCreationManager.BeginNewGame(draft, session);
-                Assert.AreSame(profile, session.PlayerProfile);
-                Assert.AreEqual("origin_minor_clan", session.PlayerProfile.originId);
-                Assert.AreEqual("guanzhong_hub", session.CurrentWorldNodeId);
-                Assert.AreEqual("WorldScene", flow.PrepareWorldEntry(session.CurrentWorldNodeId));
+                var profile = TianZhang.Game.CharacterCreation.CharacterCreationManager.BeginNewGame(draft, runtime);
+                Assert.AreEqual(profile.charName, runtime.Player.Identity.DisplayName);
+                Assert.AreEqual("origin_minor_clan", profile.originId);
+                Assert.AreEqual("guanzhong_hub", runtime.Navigation.WorldNodeId);
+                Assert.AreEqual("WorldScene", flow.PrepareWorldEntry(runtime.Navigation.WorldNodeId));
 
                 Assert.AreEqual("SettlementScene", flow.PrepareSettlementEntry("guanzhong_city"));
-                Assert.AreEqual("guanzhong_city", session.CurrentSettlementId);
-                Assert.AreEqual("guanzhong_hub", session.LastReturnTarget.WorldNodeId);
+                Assert.AreEqual("guanzhong_city", runtime.Navigation.SettlementId);
+                Assert.AreEqual("guanzhong_hub", runtime.Navigation.ReturnTarget.WorldNodeId);
 
                 Assert.AreEqual(
                     "AdventureScene",
                     flow.PrepareAdventureEntry("guanzhong_wild", SceneReturnTarget.Settlement("guanzhong_city")));
-                Assert.AreEqual("guanzhong_wild", session.CurrentAdventureId);
-                Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
-                Assert.AreEqual("guanzhong_city", session.LastReturnTarget.SettlementId);
+                Assert.AreEqual("guanzhong_wild", runtime.Navigation.AdventureId);
+                Assert.AreEqual("SettlementScene", runtime.Navigation.ReturnTarget.SceneName);
+                Assert.AreEqual("guanzhong_city", runtime.Navigation.ReturnTarget.SettlementId);
 
                 Assert.AreEqual("SettlementScene", flow.PrepareReturnToPreviousScene());
-                Assert.AreEqual("guanzhong_city", session.CurrentSettlementId);
-                Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsNull(session.LastReturnTarget.SceneName);
+                Assert.AreEqual("guanzhong_city", runtime.Navigation.SettlementId);
+                Assert.IsNull(runtime.Navigation.AdventureId);
+                Assert.IsNull(runtime.Navigation.ReturnTarget.SceneName);
             }
             finally
             {
                 Object.DestroyImmediate(flowGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -570,11 +578,12 @@ namespace TianZhang.Tests
             DestroyExistingSceneFlowAndSession();
             SceneBuilder.BuildSettlementScene();
             EditorSceneManager.OpenScene(ScenePaths[2], OpenSceneMode.Single);
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetSettlementId("guanzhong_city");
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterSettlement("guanzhong_city");
                 var controller = Object.FindFirstObjectByType<SettlementSceneController>();
 
                 InvokeStart(controller);
@@ -592,7 +601,7 @@ namespace TianZhang.Tests
             }
             finally
             {
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -753,13 +762,13 @@ namespace TianZhang.Tests
         public void AdventureSceneControllerDisplaysCurrentAdventureAndSource()
         {
             DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("GameSessionTest");
+            var runtimeGo = new GameObject("GameRuntimeTest");
             var controllerGo = new GameObject("AdventureSceneControllerTest");
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId("taiyi_trial");
-                session.SetReturnTarget(SceneReturnTarget.Settlement("taiyi_sect"));
+                runtimeGo.AddComponent<GameBootstrap>();
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterAdventure("taiyi_trial", SceneReturnTarget.Settlement("taiyi_sect"));
                 var controller = controllerGo.AddComponent<AdventureSceneController>();
 
                 InvokeStart(controller);
@@ -774,7 +783,7 @@ namespace TianZhang.Tests
             {
                 DestroyAdventureUi();
                 Object.DestroyImmediate(controllerGo);
-                Object.DestroyImmediate(sessionGo);
+                Object.DestroyImmediate(runtimeGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -947,8 +956,9 @@ namespace TianZhang.Tests
         {
             if (SceneFlowManager.Instance != null)
                 Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                Object.DestroyImmediate(bootstrap.gameObject);
         }
 
         private static void InvokeStart(MonoBehaviour controller)
@@ -965,11 +975,11 @@ namespace TianZhang.Tests
                 .Invoke(controller, null);
         }
 
-        private static GameSession CreateCommittedCharterSession(GameObject sessionGo)
+        private static GameRuntime CreateCommittedCharterRuntime(GameObject runtimeGo)
         {
-            GameSession session = sessionGo.AddComponent<GameSession>();
-            session.BeginNewGame(null, "jiangzuo_hub");
-            session.SetAdventureId("guanzhong_wild");
+            runtimeGo.AddComponent<GameBootstrap>();
+            GameRuntime runtimeOwner = GameBootstrap.RequireRuntime();
+            runtimeOwner.EnterAdventure("guanzhong_wild", SceneReturnTarget.World("jiangzuo_hub"));
 
             var staticCatalog = AssetDatabase.LoadAssetAtPath<CharterRuleStaticCatalogData>(
                 "Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset");
@@ -978,42 +988,42 @@ namespace TianZhang.Tests
             Assert.IsNotNull(staticCatalog, "The single approved charter static catalog asset is missing.");
             Assert.IsNotNull(site, "The single approved charter site asset is missing.");
             Assert.That(CharterSiteInteractionRuntime.TryCreate(
-                site, staticCatalog, CharterSettlementId, out CharterSiteInteractionRuntime runtime, out string createReason),
+                site, staticCatalog, CharterSettlementId, out CharterSiteInteractionRuntime interaction, out string createReason),
                 Is.True, createReason);
 
-            AssertCharterOk(runtime.VerifyPassage(CharterCapabilityId, CharterOperatorId, CharterTargetId));
-            AssertCharterOk(runtime.VerifyManagement(CharterManagerId, CharterBeneficiaryId));
-            AssertCharterOk(runtime.ConnectNodes(new[]
+            AssertCharterOk(interaction.VerifyPassage(CharterCapabilityId, CharterOperatorId, CharterTargetId));
+            AssertCharterOk(interaction.VerifyManagement(CharterManagerId, CharterBeneficiaryId));
+            AssertCharterOk(interaction.ConnectNodes(new[]
             {
                 "node_old_water_station_charter",
                 "node_old_water_station_waterworks",
                 "node_old_water_station_river_wetland",
             }));
-            AssertCharterOk(runtime.VerifyRuleEntryRegistration(
+            AssertCharterOk(interaction.VerifyRuleEntryRegistration(
                 CharterRuleEntryId,
                 CharterRelicId,
                 new[] { "authorization_suifu_water_basin_v1", "authorization_taixuan_seal_old_water_station_management_v1" }));
-            AssertCharterOk(runtime.PrepareRealitySupplies(new[]
+            AssertCharterOk(interaction.PrepareRealitySupplies(new[]
             {
                 "supply_suifu_registered_seasonal_rain",
                 "supply_suifu_connected_water_balance",
                 "supply_suifu_wetland_land_capacity",
             }));
 
-            Assert.That(runtime.TryCreatePreparation(out CharterInvocationPreparation preparation, out string prepReason),
-                Is.True, prepReason);
-            CharterRuleInvocationResult result = runtime.EvaluateFormal(
+            Assert.That(interaction.TryCreatePreparation(
+                out CharterInvocationPreparation preparation, out string prepReason), Is.True, prepReason);
+            CharterRuleInvocationResult result = interaction.EvaluateFormal(
                 preparation, null, 100, "applied", "applied");
             Assert.IsTrue(result.Succeeded, result.Reason);
 
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
             Assert.IsNotNull(catalog, "The formal ContentCatalogData asset is missing.");
-            CharterInvocationCommitResult commit = session.CommitCharterFormalResult(
-                catalog, result, preparation.CatalogVersion);
+            CharterUseCaseResult commit = runtimeOwner.Charters.CommitEvaluatedState(
+                catalog, result.NextState, preparation.CatalogVersion);
             Assert.IsTrue(commit.Succeeded, commit.Reason);
-            Assert.IsNotNull(session.CharterRuntimeState);
-            return session;
+            Assert.IsNotNull(runtimeOwner.Charters.CurrentState);
+            return runtimeOwner;
         }
 
         private static void AssertCharterOk(CharterInteractionActionResult result)

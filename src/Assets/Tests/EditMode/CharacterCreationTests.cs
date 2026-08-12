@@ -4,6 +4,7 @@ using TianZhang.Game.CharacterCreation;
 using UnityEngine;
 
 using TianZhang.Spatial;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -182,7 +183,7 @@ namespace TianZhang.Tests
             draft.CraftSkills.Add(new CraftSkillAllocation("craft_talisman", 1));
 
             var profile = CharacterCreationRules.BuildCharacterData(draft);
-            var character = Character.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
+            var character = EntityCharacter.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
 
             Assert.AreEqual("试炼修士", profile.charName);
             Assert.AreEqual(25, profile.innatePurchasePointsUsed);
@@ -211,7 +212,7 @@ namespace TianZhang.Tests
                 profile.unarmedBasicAttackProfileId);
             Assert.IsTrue(string.IsNullOrEmpty(profile.mainEquipmentBasicAttackProfileId));
 
-            var character = Character.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
+            var character = EntityCharacter.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
             Assert.AreEqual(
                 CharacterCreationCatalog.BasicUnarmedAttackProfileId,
                 character.BasicAttackProfileId);
@@ -227,10 +228,10 @@ namespace TianZhang.Tests
             hiddenDraft.CharacterName = "基线修士";
             hiddenDraft.HiddenRootSeedId = "hidden_variant_seed";
 
-            var baseline = Character.FromData(
+            var baseline = EntityCharacter.FromData(
                 CharacterCreationRules.BuildCharacterData(baselineDraft),
                 new TianZhang.Spatial.HexCoord(0, 0));
-            var withDormantHiddenRoot = Character.FromData(
+            var withDormantHiddenRoot = EntityCharacter.FromData(
                 CharacterCreationRules.BuildCharacterData(hiddenDraft),
                 new TianZhang.Spatial.HexCoord(0, 0));
 

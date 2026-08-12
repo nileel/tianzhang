@@ -7,6 +7,12 @@
         "TianZhang.Content",
         "TianZhang.Combat",
         "TianZhang.Gameplay",
+        "TianZhang.Bootstrap",
+        "TianZhang.Character",
+        "TianZhang.Cultivation",
+        "TianZhang.World",
+        "TianZhang.Gameplay.Contracts",
+        "TianZhang.Infrastructure.Persistence",
         "TianZhang.Spatial",
         "TianZhang.Infrastructure.UnityContent"
     ],

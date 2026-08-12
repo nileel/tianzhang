@@ -1,6 +1,5 @@
 using System.Text;
 using TianZhang.Content;
-using TianZhang.Game;
 using TianZhang.World;
 using UnityEngine;
 using UnityEngine.Events;
@@ -84,7 +83,8 @@ namespace TianZhang.Settlement
             CharterSiteData site,
             CharterRuleStaticCatalogData staticCatalog,
             ContentCatalogData catalog,
-            GameSession session,
+            CharterUseCase useCase,
+            string currentSettlementId,
             out string reason)
         {
             if (controller == null)
@@ -93,7 +93,7 @@ namespace TianZhang.Settlement
                 reason = CharterSiteController.PanelControllerMissingReason;
                 return false;
             }
-            if (!controller.TryOpen(site, staticCatalog, catalog, session, out reason))
+            if (!controller.TryOpen(site, staticCatalog, catalog, useCase, currentSettlementId, out reason))
             {
                 gameObject.SetActive(false);
                 return false;

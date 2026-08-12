@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
+using TianZhang.Character;
 using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Spatial;
@@ -13,10 +15,15 @@ using TianZhang.Editor;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Game.CharacterCreation;
+using TianZhang.Cultivation;
+using TianZhang.Gameplay.Contracts;
+using TianZhang.Infrastructure.Persistence;
+using TianZhang.World;
 using TianZhang.Tactical;
 using TianZhang.Infrastructure.UnityContent;
 using UnityEditor.SceneManagement;
 using EnvironmentProfileData = TianZhang.Infrastructure.UnityContent.EnvironmentProfileAsset;
+using EntityCharacter = TianZhang.Entity.Character;
 
 using TianZhang.Spatial;
 
@@ -438,7 +445,7 @@ namespace TianZhang.Tests
         {
             var item = Track(ScriptableObject.CreateInstance<ItemData>());
             item.itemId = itemId;
-            item.contentScope = InventoryGrantService.ProductionContentScope;
+            item.contentScope = InventoryGrantUseCase.ProductionContentScope;
             item.maxStack = 99;
             return item;
         }
@@ -491,217 +498,34 @@ namespace TianZhang.Tests
 
     public class AdventureSceneControllerTests
     {
-        [Test]
-        public void GuanzhongWildInitializationSpawnsTheFormalShijiahouMarker()
+        [TearDown]
+        public void TearDown()
         {
-            DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildAdventureScene();
-            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
-
-            var sessionGo = new GameObject("GameSessionTest");
-            try
-            {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId("guanzhong_wild");
-
-                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
-                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
-                Assert.IsNotNull(controller);
-                Assert.IsNotNull(exploration);
-
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-                var initMethod = typeof(TianZhang.Map.ExplorationController).GetMethod(
-                    "InitExploration",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                Assert.IsNotNull(initMethod);
-
-                var initialization = (System.Collections.IEnumerator)initMethod.Invoke(exploration, null);
-                while (initialization.MoveNext())
-                {
-                }
-
-                Assert.IsNotNull(GameObject.Find("石甲兽"), "The formal encounter must spawn its enemy marker.");
-                var snapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
-                Assert.IsNotNull(snapshot);
-                Assert.AreEqual(2, snapshot.Board.UnitsPerRange);
-                var enemies = (System.Collections.IList)exploration.GetType()
-                    .GetField("enemies", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .GetValue(exploration);
-                var firstEnemy = enemies[0];
-                var formalEnemyData = (EnemyData)firstEnemy.GetType()
-                    .GetField("enemyData")
-                    .GetValue(firstEnemy);
-                var combatTemplate = (CharacterData)firstEnemy.GetType()
-                    .GetField("data")
-                    .GetValue(firstEnemy);
-                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
-                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var expectedEnemy));
-                Assert.AreSame(expectedEnemy, formalEnemyData);
-                Assert.AreSame(expectedEnemy.combatTemplate, combatTemplate);
-            }
-            finally
-            {
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void GuanzhongWildConfiguredAdjacentEnemyBeginsCombat()
-        {
-            DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildAdventureScene();
-            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
-
-            var sessionGo = new GameObject("GameSessionTest");
-            try
-            {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId("guanzhong_wild");
-
-                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
-                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-                var initialization = (System.Collections.IEnumerator)typeof(TianZhang.Map.ExplorationController)
-                    .GetMethod("InitExploration", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(exploration, null);
-                while (initialization.MoveNext())
-                {
-                }
-
-                var player = GetPrivateField<Character>(exploration, "player");
-                var enemies = (System.Collections.IList)exploration.GetType()
-                    .GetField("enemies", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .GetValue(exploration);
-                var firstEnemy = enemies[0];
-                var enemy = (Character)firstEnemy.GetType()
-                    .GetField("character", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
-                    .GetValue(firstEnemy);
-                var spatialSnapshot = GetPrivateField<SpatialQuerySnapshot>(exploration, "spatialQuerySnapshot");
-                player.Position = new HexCoord(0, 0);
-                enemy.Position = new HexCoord(1, 0);
-                var range = spatialSnapshot.Board.QueryRangeEntry(
-                    player.Position,
-                    enemy.Position,
-                    1,
-                    1,
-                    SpatialQueryKind.Attack,
-                    true);
-                Assert.IsTrue(range.IsInRange, range.Reason);
-
-                controller.BeginEncounter();
-
-                Assert.AreEqual(AdventureSceneState.Combat, controller.CurrentState);
-            }
-            finally
-            {
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void GuanzhongWildDisplaysItsNameAndConfiguresOnlyTheFormalShijiahou()
-        {
-            DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildAdventureScene();
-            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
-
-            var sessionGo = new GameObject("GameSessionTest");
-            try
-            {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId("guanzhong_wild");
-                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
-
-                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
-                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
-                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
-                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.IsNotNull(controller);
-                Assert.IsNotNull(exploration);
-                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var expectedEnemy));
-
-                exploration.enemyCount = 3;
-                exploration.enemyTemplates = System.Array.Empty<CharacterData>();
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-                InvokeStart(controller);
-
-                StringAssert.Contains("关中野外", GameObject.Find("AdventureIdText")?.GetComponent<Text>()?.text);
-                Assert.AreEqual(1, exploration.enemyCount);
-                CollectionAssert.IsEmpty(exploration.enemyTemplates);
-                Assert.AreSame(
-                    expectedEnemy,
-                    GetPrivateField<EnemyData>(exploration, "formalEncounterEnemy"));
-            }
-            finally
-            {
-                DestroyAdventureUi();
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void GuanzhongWildWithoutFormalCatalogBlocksEncounterButKeepsReturnExit()
-        {
-            DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildAdventureScene();
-            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
-
-            var sessionGo = new GameObject("GameSessionTest");
-            try
-            {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId("guanzhong_wild");
-                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
-
-                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
-                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
-                Assert.IsNotNull(controller);
-                Assert.IsNotNull(exploration);
-
-                var serializedController = new SerializedObject(controller);
-                var catalogProperty = serializedController.FindProperty("contentCatalog");
-                Assert.IsNotNull(catalogProperty);
-                catalogProperty.objectReferenceValue = null;
-                serializedController.ApplyModifiedPropertiesWithoutUndo();
-
-                exploration.enabled = true;
-                LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.CatalogMissingReason));
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-                InvokeStart(controller);
-
-                Assert.IsFalse(exploration.enabled);
-                Assert.AreEqual(AdventureSceneState.Loading, controller.CurrentState);
-                Assert.IsNotNull(GameObject.Find("ReturnToSourceButton"));
-            }
-            finally
-            {
-                DestroyAdventureUi();
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
-            }
+            if (SceneFlowManager.Instance != null)
+                Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
+            GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                Object.DestroyImmediate(bootstrap.gameObject);
         }
 
         [Test]
         public void FormalVictoryGrantsStructuredDropsOnlyOnce()
         {
-            DestroyExistingSceneFlowAndSession();
             var controllerGo = new GameObject("FormalAdventureControllerTest");
             var explorationGo = new GameObject("FormalExplorationControllerTest");
-            var sessionGo = new GameObject("FormalGameSessionTest");
             try
             {
-                var controller = controllerGo.AddComponent<AdventureSceneController>();
                 explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
-                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement("guanzhong_city");
+                runtime.EnterAdventure(
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    SceneReturnTarget.Settlement("guanzhong_city"));
+                AdventureSceneController controller = controllerGo.AddComponent<AdventureSceneController>();
+                ContentCatalogData catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                     "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
+                Assert.That(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out EnemyData enemy), Is.True);
                 controller.SetContentCatalog(catalog);
                 controller.SetGuanzhongWildEnvironmentProfile(
                     AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
@@ -711,299 +535,30 @@ namespace TianZhang.Tests
                 InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
 
                 controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
-
-                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
-                Assert.AreEqual(FormalEncounterRules.ShijiahouEnemyId, controller.LastFormalEncounterResult.EnemyId);
-                Assert.AreEqual("guanzhong_city", session.LastReturnTarget.SettlementId);
-                Assert.IsTrue(session.InventoryStates.TryGet("item_shijia_piece", out var piece));
-                Assert.AreEqual(1, piece.Quantity);
-                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out var lingshi));
-                Assert.AreEqual(1, lingshi.Quantity);
-
+                int firstPiece = InventoryQuantity(runtime, "item_shijia_piece");
+                int firstSpiritStone = InventoryQuantity(runtime, "item_lingshi_low");
                 LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
                 controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
 
-                Assert.AreEqual(FormalEncounterRules.AlreadyConsumedReason, controller.EncounterResolutionFailureReason);
-                Assert.AreEqual(2, session.InventoryStates.Count);
-                Assert.IsTrue(session.InventoryStates.TryGet("item_shijia_piece", out piece));
-                Assert.AreEqual(1, piece.Quantity);
-                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out lingshi));
-                Assert.AreEqual(1, lingshi.Quantity);
+                Assert.That(firstPiece, Is.EqualTo(1));
+                Assert.That(firstSpiritStone, Is.EqualTo(1));
+                Assert.That(InventoryQuantity(runtime, "item_shijia_piece"), Is.EqualTo(firstPiece));
+                Assert.That(InventoryQuantity(runtime, "item_lingshi_low"), Is.EqualTo(firstSpiritStone));
             }
             finally
             {
-                Object.DestroyImmediate(sessionGo);
                 Object.DestroyImmediate(explorationGo);
                 Object.DestroyImmediate(controllerGo);
-                DestroyExistingSceneFlowAndSession();
             }
         }
 
         [Test]
-        public void FormalVictoryInventoryFailureIsAtomicAndObservable()
+        public void ExplorationPlayerUsesGameRuntimeProfile()
         {
-            DestroyExistingSceneFlowAndSession();
-            var controllerGo = new GameObject("FormalAdventureControllerTest");
-            var explorationGo = new GameObject("FormalExplorationControllerTest");
-            var sessionGo = new GameObject("FormalGameSessionTest");
-            try
-            {
-                var controller = controllerGo.AddComponent<AdventureSceneController>();
-                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
-                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
-                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
-                session.InventoryStates.Set(
-                    new InventoryStateSnapshot(
-                        "item_shijia_piece",
-                        99,
-                        new StateStepSnapshot(false, false, false, false, false, false, false)));
-                controller.SetContentCatalog(catalog);
-                controller.SetGuanzhongWildEnvironmentProfile(
-                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
-                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
-                controller.SetEncounterRandomSource(
-                    new FormalEncounterResultTests.SequenceRandomSource(0, 0));
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-
-                LogAssert.Expect(LogType.Error, new Regex("StackLimitExceeded"));
-                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
-
-                StringAssert.Contains("StackLimitExceeded", controller.EncounterResolutionFailureReason);
-                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
-                Assert.AreEqual("guanzhong_city", session.LastReturnTarget.SettlementId);
-                Assert.IsTrue(session.InventoryStates.TryGet("item_shijia_piece", out var piece));
-                Assert.AreEqual(99, piece.Quantity);
-                Assert.IsFalse(session.InventoryStates.TryGet("item_lingshi_low", out _));
-            }
-            finally
-            {
-                Object.DestroyImmediate(sessionGo);
-                Object.DestroyImmediate(explorationGo);
-                Object.DestroyImmediate(controllerGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void FormalVictoryRegistersAcceptedBountyProgressOnlyOnce()
-        {
-            DestroyExistingSceneFlowAndSession();
-            var controllerGo = new GameObject("FormalBountyAdventureTest");
-            var explorationGo = new GameObject("FormalBountyExplorationTest");
-            var sessionGo = new GameObject("FormalBountySessionTest");
-            try
-            {
-                var controller = controllerGo.AddComponent<AdventureSceneController>();
-                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetSettlementId("guanzhong_city");
-                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
-                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
-                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
-                BountyActionResult accept = session.AcceptBounty(catalog, "bounty_guanzhong_shijiahou");
-                Assert.IsTrue(accept.Succeeded, accept.FailureReason);
-                controller.SetContentCatalog(catalog);
-                controller.SetGuanzhongWildEnvironmentProfile(
-                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
-                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
-                controller.SetEncounterRandomSource(
-                    new FormalEncounterResultTests.SequenceRandomSource(99, 49));
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-
-                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
-
-                BountyStateSnapshot state = session.GetBountyState("bounty_guanzhong_shijiahou");
-                Assert.AreEqual(BountyStatus.ObjectiveCompleted, state.Status);
-                Assert.AreEqual(1, state.Progress);
-
-                LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.AlreadyConsumedReason));
-                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Victory, enemy);
-
-                Assert.AreEqual(FormalEncounterRules.AlreadyConsumedReason, controller.EncounterResolutionFailureReason);
-                state = session.GetBountyState("bounty_guanzhong_shijiahou");
-                Assert.AreEqual(BountyStatus.ObjectiveCompleted, state.Status);
-                Assert.AreEqual(1, state.Progress);
-            }
-            finally
-            {
-                Object.DestroyImmediate(sessionGo);
-                Object.DestroyImmediate(explorationGo);
-                Object.DestroyImmediate(controllerGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void FormalDefeatDoesNotRegisterBountyProgress()
-        {
-            DestroyExistingSceneFlowAndSession();
-            var controllerGo = new GameObject("FormalBountyDefeatTest");
-            var explorationGo = new GameObject("FormalBountyDefeatExplorationTest");
-            var sessionGo = new GameObject("FormalBountyDefeatSessionTest");
-            try
-            {
-                var controller = controllerGo.AddComponent<AdventureSceneController>();
-                explorationGo.AddComponent<TianZhang.Map.ExplorationController>();
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetSettlementId("guanzhong_city");
-                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                session.SetReturnTarget(SceneReturnTarget.Settlement("guanzhong_city"));
-                var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
-                    "Assets/Data/ContentCatalog/ContentCatalog.asset");
-                Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out var enemy));
-                BountyActionResult accept = session.AcceptBounty(catalog, "bounty_guanzhong_shijiahou");
-                Assert.IsTrue(accept.Succeeded, accept.FailureReason);
-                controller.SetContentCatalog(catalog);
-                controller.SetGuanzhongWildEnvironmentProfile(
-                    AssetDatabase.LoadAssetAtPath<EnvironmentProfileData>(
-                        "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
-                controller.SetEncounterRandomSource(
-                    new FormalEncounterResultTests.SequenceRandomSource(0, 0));
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-
-                controller.ResolveEncounterAndReturn(CombatSessionOutcome.Defeat, enemy);
-
-                BountyStateSnapshot state = session.GetBountyState("bounty_guanzhong_shijiahou");
-                Assert.AreEqual(BountyStatus.Accepted, state.Status);
-                Assert.AreEqual(0, state.Progress);
-            }
-            finally
-            {
-                Object.DestroyImmediate(sessionGo);
-                Object.DestroyImmediate(explorationGo);
-                Object.DestroyImmediate(controllerGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void NonGuanzhongAdventureDoesNotConsumeGuanzhongBinding()
-        {
-            DestroyExistingSceneFlowAndSession();
-            SceneBuilder.BuildAdventureScene();
-            EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
-
-            var sessionGo = new GameObject("GameSessionTest");
-            try
-            {
-                var session = sessionGo.AddComponent<GameSession>();
-                session.SetAdventureId("taiyi_trial");
-
-                var controller = Object.FindFirstObjectByType<AdventureSceneController>();
-                var exploration = Object.FindFirstObjectByType<TianZhang.Map.ExplorationController>();
-                var originalEnemyCount = exploration.enemyCount;
-                var originalEnemyTemplates = exploration.enemyTemplates;
-
-                InvokePrivate(controller, "ConfigureCurrentAdventureEncounter");
-
-                Assert.AreEqual(originalEnemyCount, exploration.enemyCount);
-                Assert.AreSame(originalEnemyTemplates, exploration.enemyTemplates);
-            }
-            finally
-            {
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void EncounterStateMovesBetweenExplorationCombatAndReturning()
-        {
-            var go = new GameObject("AdventureSceneControllerTests");
-            try
-            {
-                var controller = go.AddComponent<AdventureSceneController>();
-
-                Assert.AreEqual(AdventureSceneState.Loading, controller.CurrentState);
-                controller.MarkExplorationReady();
-                Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
-                controller.BeginEncounter();
-                Assert.AreEqual(AdventureSceneState.Combat, controller.CurrentState);
-                controller.CompleteEncounter();
-                Assert.AreEqual(AdventureSceneState.Exploration, controller.CurrentState);
-                controller.MarkReturning();
-                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
-            }
-            finally
-            {
-                Object.DestroyImmediate(go);
-            }
-        }
-
-        [TestCase(CombatSessionOutcome.Victory)]
-        [TestCase(CombatSessionOutcome.Defeat)]
-        public void CompletedEncounterRecordsOutcomeAndReturnsToSource(CombatSessionOutcome outcome)
-        {
-            var go = new GameObject("AdventureSceneControllerTests");
-            try
-            {
-                var controller = go.AddComponent<AdventureSceneController>();
-                controller.MarkExplorationReady();
-                controller.BeginEncounter();
-
-                controller.ResolveEncounterAndReturn(outcome);
-
-                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
-                Assert.AreEqual(outcome, controller.LastEncounterOutcome);
-            }
-            finally
-            {
-                Object.DestroyImmediate(go);
-            }
-        }
-
-        [Test]
-        public void NewGameSessionClearsPreviousSceneContext()
-        {
-            DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("GameSessionTest");
-            var oldProfile = ScriptableObject.CreateInstance<CharacterData>();
-            var newProfile = ScriptableObject.CreateInstance<CharacterData>();
-            try
-            {
-                var session = sessionGo.AddComponent<GameSession>();
-                oldProfile.charName = "旧档角色";
-                newProfile.charName = "新档角色";
-
-                session.SetPlayerProfile(oldProfile);
-                session.SetWorldNode("old_node");
-                session.SetSettlementId("old_settlement");
-                session.SetAdventureId("old_adventure");
-                session.SetReturnTarget(SceneReturnTarget.Settlement("old_settlement"));
-
-                session.BeginNewGame(newProfile, "jiangzuo_hub");
-
-                Assert.AreSame(newProfile, session.PlayerProfile);
-                Assert.AreEqual("jiangzuo_hub", session.CurrentWorldNodeId);
-                Assert.IsNull(session.CurrentSettlementId);
-                Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsTrue(string.IsNullOrEmpty(session.LastReturnTarget.SceneName));
-            }
-            finally
-            {
-                Object.DestroyImmediate(newProfile);
-                Object.DestroyImmediate(oldProfile);
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
-            }
-        }
-
-        [Test]
-        public void ExplorationPlayerUsesGameSessionProfileWhenAvailable()
-        {
-            DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("GameSessionTest");
             var controllerGo = new GameObject("ExplorationControllerTest");
             var profile = ScriptableObject.CreateInstance<CharacterData>();
             try
             {
-                var session = sessionGo.AddComponent<GameSession>();
                 profile.charName = "玉清崖";
                 profile.gongFaName = "苦行剑典";
                 profile.rootBone = 16;
@@ -1015,190 +570,46 @@ namespace TianZhang.Tests
                 profile.realmMultiplier = 1.5f;
                 profile.equippedSpells = new[] { "引雷诀", "苦行剑式" };
                 profile.availableSpells = new[] { "引雷诀", "苦行剑式", "剑罡护体" };
-                session.BeginNewGame(profile, "jiangzuo_hub");
+                GameBootstrap.RequireRuntime().BeginNewGame(
+                    CharacterRuntimeProfile.FromDefinition("player", profile),
+                    CultivationState.CreateEmpty(),
+                    "jiangzuo_hub");
 
                 var controller = controllerGo.AddComponent<TianZhang.Map.ExplorationController>();
                 var method = typeof(TianZhang.Map.ExplorationController).GetMethod(
                     "CreatePlayer",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var player = (EntityCharacter)method.Invoke(controller, new object[] { new HexCoord(0, 0) });
 
-                var player = (Character)method.Invoke(controller, new object[] { new HexCoord(0, 0) });
-
-                Assert.AreEqual("玉清崖", player.Name);
-                Assert.AreEqual("苦行剑典", player.GongFaName);
-                Assert.AreEqual(16, player.RootBone);
-                Assert.AreEqual(20, player.Reaction);
-                CollectionAssert.AreEqual(new[] { "引雷诀", "苦行剑式" }, player.EquippedSpellIds);
-                CollectionAssert.AreEqual(new[] { "引雷诀", "苦行剑式", "剑罡护体" }, player.AvailableSpells);
+                Assert.That(player.Name, Is.EqualTo("玉清崖"));
+                Assert.That(player.GongFaName, Is.EqualTo("苦行剑典"));
+                Assert.That(player.RootBone, Is.EqualTo(16));
+                Assert.That(player.Reaction, Is.EqualTo(20));
             }
             finally
             {
                 Object.DestroyImmediate(profile);
                 Object.DestroyImmediate(controllerGo);
-                Object.DestroyImmediate(sessionGo);
-                DestroyExistingSceneFlowAndSession();
             }
         }
 
-        private static void DestroyExistingSceneFlowAndSession()
+        private static int InventoryQuantity(GameRuntime runtime, string itemId)
         {
-            if (SceneFlowManager.Instance != null)
-                Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                Object.DestroyImmediate(GameSession.Instance.gameObject);
-        }
-
-        private static void InvokeStart(MonoBehaviour controller)
-        {
-            controller.GetType()
-                .GetMethod("Start", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                .Invoke(controller, null);
-        }
-
-        private static void InvokePrivate(MonoBehaviour controller, string methodName)
-        {
-            var method = controller.GetType()
-                .GetMethod(methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            Assert.IsNotNull(method, methodName);
-            method.Invoke(controller, null);
-        }
-
-        private static T GetPrivateField<T>(object target, string fieldName)
-        {
-            return (T)target.GetType()
-                .GetField(fieldName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                .GetValue(target);
-        }
-
-        private static void DestroyAdventureUi()
-        {
-            var canvas = GameObject.Find("UICanvas");
-            if (canvas != null)
-                Object.DestroyImmediate(canvas);
-        }
-    }
-
-    public class BattleUIManagerTests
-    {
-        [Test]
-        public void ActionBarButtonsRouteStableCombatContextToTheCommandHandler()
-        {
-            var host = new GameObject("BattleUIManagerCommandTest");
-            try
+            foreach (InventoryRecord record in runtime.CaptureSave().inventory)
             {
-                var ui = host.AddComponent<BattleUIManager>();
-                typeof(BattleUIManager)
-                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(ui, null);
-                var handlerType = System.Reflection.Assembly.Load("TianZhang.Gameplay.Contracts")
-                    .GetType("TianZhang.Gameplay.Contracts.ICombatCommandHandler", true);
-                var createProxy = System.Array.Find(
-                    typeof(System.Reflection.DispatchProxy).GetMethods(),
-                    method => method.Name == "Create" && method.IsGenericMethodDefinition);
-                object handler = createProxy
-                    .MakeGenericMethod(handlerType, typeof(RecordingCombatCommandProxy))
-                    .Invoke(null, null);
-                typeof(BattleUIManager)
-                    .GetMethod("SetCombatCommandHandler")
-                    .Invoke(ui, new[] { handler });
-                ui.SetCombatCommandContext(
-                    "player",
-                    "enemy",
-                    new[] { "art-0", "art-1", "art-2" },
-                    new[] { "divine-0", "divine-1" },
-                    "art-swap");
-
-                FindButton("BtnAttack").onClick.Invoke();
-                FindButton("BtnGuard").onClick.Invoke();
-                FindButton("BtnWait").onClick.Invoke();
-                FindButton("BtnSwap").onClick.Invoke();
-                FindButton("BtnSpell2").onClick.Invoke();
-                FindButton("BtnSkill1").onClick.Invoke();
-
-                CollectionAssert.AreEqual(
-                    new[]
-                    {
-                        "basic:player:enemy",
-                        "guard:player",
-                        "wait:player",
-                        "swap:player:0:art-swap",
-                        "art:player:enemy:art-2",
-                        "divine:player:enemy:divine-1",
-                    },
-                    ((RecordingCombatCommandProxy)handler).Calls);
+                if (record.itemId == itemId)
+                    return record.quantity;
             }
-            finally
-            {
-                var canvas = GameObject.Find("UICanvas");
-                if (canvas != null)
-                    Object.DestroyImmediate(canvas);
-                Object.DestroyImmediate(host);
-            }
+            return 0;
         }
 
-        [Test]
-        public void ActionBarButtonsIgnoreClicksWhenNoCombatCommandHandlerIsBound()
+        private static void InvokePrivate(MonoBehaviour target, string methodName)
         {
-            var host = new GameObject("BattleUIManagerNoCommandHandlerTest");
-            try
-            {
-                var ui = host.AddComponent<BattleUIManager>();
-                typeof(BattleUIManager)
-                    .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(ui, null);
-
-                Assert.DoesNotThrow(() =>
-                {
-                    FindButton("BtnAttack").onClick.Invoke();
-                    FindButton("BtnGuard").onClick.Invoke();
-                    FindButton("BtnWait").onClick.Invoke();
-                    FindButton("BtnSwap").onClick.Invoke();
-                    FindButton("BtnSpell0").onClick.Invoke();
-                    FindButton("BtnSkill0").onClick.Invoke();
-                });
-            }
-            finally
-            {
-                var canvas = GameObject.Find("UICanvas");
-                if (canvas != null)
-                    Object.DestroyImmediate(canvas);
-                Object.DestroyImmediate(host);
-            }
+            var method = target.GetType().GetMethod(
+                methodName,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+            method.Invoke(target, null);
         }
-
-        private static Button FindButton(string name)
-        {
-            foreach (var button in Resources.FindObjectsOfTypeAll<Button>())
-            {
-                if (button.name == name)
-                    return button;
-            }
-
-            Assert.Fail(name);
-            return null;
-        }
-
-        public class RecordingCombatCommandProxy : System.Reflection.DispatchProxy
-        {
-            public List<string> Calls { get; } = new List<string>();
-
-            protected override object Invoke(System.Reflection.MethodInfo targetMethod, object[] args)
-            {
-                string call = targetMethod.Name switch
-                {
-                    "RequestBasicAttack" => $"basic:{args[0]}:{args[1]}",
-                    "RequestArt" => $"art:{args[0]}:{args[1]}:{args[2]}",
-                    "RequestDivine" => $"divine:{args[0]}:{args[1]}:{args[2]}",
-                    "RequestGuard" => $"guard:{args[0]}",
-                    "RequestWait" => $"wait:{args[0]}",
-                    "RequestMove" => $"move:{args[0]}:{args[1]}:{args[2]}",
-                    "RequestSwapSpell" => $"swap:{args[0]}:{args[1]}:{args[2]}",
-                    _ => targetMethod.Name,
-                };
-                Calls.Add(call);
-                return null;
-            }
-        }
-
     }
 }

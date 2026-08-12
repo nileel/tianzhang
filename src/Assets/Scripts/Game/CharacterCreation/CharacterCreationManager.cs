@@ -1,3 +1,6 @@
+using TianZhang.Bootstrap;
+using TianZhang.Character;
+using TianZhang.Cultivation;
 using TianZhang.Entity;
 
 namespace TianZhang.Game.CharacterCreation
@@ -9,16 +12,17 @@ namespace TianZhang.Game.CharacterCreation
             return CharacterCreationRules.BuildCharacterData(draft);
         }
 
-        public static CharacterData BeginNewGame(CharacterCreationDraft draft, GameSession session = null)
+        public static CharacterData BeginNewGame(CharacterCreationDraft draft, GameRuntime runtime = null)
         {
             var profile = CreateProfile(draft);
             var origin = CharacterCreationCatalog.FindOrigin(draft.OriginId);
             var startNodeId = origin != null ? origin.StartNodeId : "jiangzuo_hub";
 
-            if (session != null)
-                session.BeginNewGame(profile, startNodeId);
-            else if (GameSession.Instance != null)
-                GameSession.Instance.BeginNewGame(profile, startNodeId);
+            GameRuntime target = runtime ?? GameBootstrap.RequireRuntime();
+            target.BeginNewGame(
+                CharacterRuntimeProfile.FromDefinition("player", profile),
+                CultivationState.FromDefinition(profile.foundationPurpleMansionState),
+                startNodeId);
 
             return profile;
         }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Editor;
 using TianZhang.Game;
@@ -41,14 +42,9 @@ namespace TianZhang.Tests
         private const string SupplyLand = "supply_suifu_wetland_land_capacity";
 
         private readonly List<UnityEngine.Object> temporaryAssets = new List<UnityEngine.Object>();
-        private GameObject sessionGo;
-
         [TearDown]
         public void TearDown()
         {
-            if (sessionGo != null)
-                UnityEngine.Object.DestroyImmediate(sessionGo);
-            sessionGo = null;
             DestroyExistingSceneFlowAndSession();
             foreach (UnityEngine.Object asset in temporaryAssets)
                 UnityEngine.Object.DestroyImmediate(asset);
@@ -86,7 +82,7 @@ namespace TianZhang.Tests
                 StringAssert.DoesNotContain(AuthorityRelicId, PanelText(panel, "identityText").text);
                 StringAssert.DoesNotContain(CharterNode, PanelText(panel, "nodeText").text);
                 StringAssert.DoesNotContain(SupplyRain, PanelText(panel, "supplyText").text);
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
             }
             finally
             {
@@ -133,8 +129,8 @@ namespace TianZhang.Tests
                 StringAssert.Contains("评估推演", PanelText(panel, "stepText").text);
                 StringAssert.Contains("已准备: 3 项", PanelText(panel, "supplyText").text);
 
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-                Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+                Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
             }
             finally
             {
@@ -158,14 +154,14 @@ namespace TianZhang.Tests
                 StringAssert.Contains("册界候选未获胜", PanelText(panel, "resultText").text);
                 StringAssert.Contains("左侧候选获胜", PanelText(panel, "resultText").text);
                 StringAssert.DoesNotContain("jindan_left", PanelText(panel, "resultText").text);
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
 
                 ClickPanelButton(panel, "yuanyingButton");
                 Assert.AreEqual(YuanyingAnchoredReason, controller.LastReason);
                 StringAssert.Contains("元婴受锚成功", PanelText(panel, "resultText").text);
                 StringAssert.Contains("已受锚", PanelText(panel, "resultText").text);
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
-                Assert.AreEqual(0, GameSession.Instance.CharterDefinitionCatalogVersion);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
+                Assert.AreEqual(0, GameBootstrap.RequireRuntime().Charters.DefinitionCatalogVersion);
             }
             finally
             {
@@ -180,13 +176,13 @@ namespace TianZhang.Tests
             try
             {
                 OpenPanelAndCompleteSteps(panel);
-                GameSession session = GameSession.Instance;
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
                 var controller = UnityEngine.Object.FindFirstObjectByType<CharterSiteController>(
                     FindObjectsInactive.Include);
 
                 ClickPanelButton(panel, "formalButton");
-                Assert.IsNotNull(session.CharterRuntimeState);
-                Assert.AreEqual(1, session.CharterDefinitionCatalogVersion);
+                Assert.IsNotNull(runtime.Charters.CurrentState);
+                Assert.AreEqual(1, runtime.Charters.DefinitionCatalogVersion);
                 Assert.AreEqual(CharterSiteController.FormalCommittedReason, controller.LastReason);
                 StringAssert.Contains("正式提交成功", PanelText(panel, "resultText").text);
                 StringAssert.Contains("已正式提交", PanelText(panel, "stepText").text);
@@ -195,11 +191,14 @@ namespace TianZhang.Tests
                 StringAssert.Contains("已生效", PanelText(panel, "environmentText").text);
                 StringAssert.DoesNotContain(EnvironmentProfileId, PanelText(panel, "environmentText").text);
                 StringAssert.Contains("长期状态", PanelText(panel, "resultText").text);
-                CollectionAssert.Contains(session.CharterRuntimeState.registeredRuleEntryIds, RuleEntryId);
+                CollectionAssert.Contains(runtime.Charters.CurrentState.registeredRuleEntryIds, RuleEntryId);
 
-                CharterRuntimeStateData committedState = session.CharterRuntimeState;
+                CharterRuntimeStateData committedState = runtime.Charters.CurrentState;
                 ClickPanelButton(panel, "formalButton");
-                Assert.AreSame(committedState, session.CharterRuntimeState, "已有长期状态必须保持原实例内容不变。");
+                CollectionAssert.AreEqual(
+                    committedState.registeredRuleEntryIds,
+                    runtime.Charters.CurrentState.registeredRuleEntryIds,
+                    "已有长期状态必须保持内容不变。");
                 Assert.AreEqual(CharterRuleRuntimeReasons.RealitySupplyUnavailable, controller.LastReason);
                 StringAssert.Contains("现实供给不可用", PanelText(panel, "resultText").text);
             }
@@ -225,12 +224,12 @@ namespace TianZhang.Tests
                 StringAssert.Contains("步骤顺序不正确", PanelText(panel, "resultText").text);
 
                 ClickPanelButton(panel, "jindanButton");
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
                 Assert.AreEqual(CharterSiteInteractionReasons.PreparationIncomplete, controller.LastReason);
                 StringAssert.Contains("前置步骤尚未完成", PanelText(panel, "resultText").text);
 
                 ClickPanelButton(panel, "formalButton");
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
                 Assert.AreEqual(CharterSiteInteractionReasons.PreparationIncomplete, controller.LastReason);
                 StringAssert.Contains("前置步骤尚未完成", PanelText(panel, "resultText").text);
             }
@@ -305,7 +304,7 @@ namespace TianZhang.Tests
 
                 ClickPanelButton(panel, "closeButton");
                 Assert.IsFalse(panel.IsOpen);
-                Assert.IsNull(GameSession.Instance.CharterRuntimeState);
+                Assert.IsNull(GameBootstrap.RequireRuntime().Charters.CurrentState);
 
                 GameObject.Find("SettlementCharterSiteEntry").GetComponent<Button>().onClick.Invoke();
                 var reopened = UnityEngine.Object.FindFirstObjectByType<CharterSiteController>(
@@ -326,10 +325,9 @@ namespace TianZhang.Tests
             SceneBuilder.BuildSettlementScene();
             EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
 
-            sessionGo = new GameObject("CharterSiteViewSession");
-            GameSession session = sessionGo.AddComponent<GameSession>();
-            session.SetWorldNode("guanzhong_hub");
-            session.SetSettlementId(SettlementId);
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            runtime.EnterWorld("guanzhong_hub");
+            runtime.EnterSettlement(SettlementId);
 
             var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
             InvokeStart(controller);
@@ -403,9 +401,6 @@ namespace TianZhang.Tests
 
         private void DestroyImmediateSceneFlowAndSession()
         {
-            if (sessionGo != null)
-                UnityEngine.Object.DestroyImmediate(sessionGo);
-            sessionGo = null;
             DestroyExistingSceneFlowAndSession();
         }
 
@@ -413,8 +408,9 @@ namespace TianZhang.Tests
         {
             if (SceneFlowManager.Instance != null)
                 UnityEngine.Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                UnityEngine.Object.DestroyImmediate(bootstrap.gameObject);
         }
     }
 }

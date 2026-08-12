@@ -3,14 +3,20 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
+using TianZhang.Character;
 using TianZhang.Combat;
 using TianZhang.Content;
+using TianZhang.Cultivation;
 using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.Gameplay.Contracts;
+using TianZhang.Infrastructure.Persistence;
 using TianZhang.Map;
 using TianZhang.Settlement;
 using TianZhang.Tactical;
 using TianZhang.Infrastructure.UnityContent;
+using TianZhang.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,7 +25,7 @@ using UnityEngine.TestTools;
 namespace TianZhang.Tests
 {
     /// <summary>
-    /// 关中正式接取至存档端到端闸门：同一 GameSession 经正式入口完成唯一生产链
+    /// 关中正式接取至存档端到端闸门：同一 GameRuntime 经正式入口完成唯一生产链
     /// （guanzhong_city 接取 -> guanzhong_wild 击败石甲兽 -> 普通掉落 -> 据点返回 ->
     /// 领取悬赏 -> 保存并读取）。正向链路经既有场景流与悬赏面板所有者驱动：
     /// <see cref="SceneFlowManager.PrepareSettlementEntry"/>、
@@ -54,42 +60,43 @@ namespace TianZhang.Tests
             DestroyExistingSceneFlowAndSession();
             // 唯一生产 Adventure 场景：控制器序列化绑定生产目录与 env_guanzhong_wild 环境档案。
             EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
-            GameObject sessionGo = null;
             GameObject flowGo = null;
             GameObject boardGo = null;
             var profile = ScriptableObject.CreateInstance<CharacterData>();
             try
             {
                 profile.charName = "端到端闸门";
-                sessionGo = new GameObject("FormalE2ESession");
-                GameSession session = sessionGo.AddComponent<GameSession>();
-                session.BeginNewGame(profile, "guanzhong_hub");
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.BeginNewGame(
+                    CharacterRuntimeProfile.FromDefinition("player", profile),
+                    CultivationState.CreateEmpty(),
+                    "guanzhong_hub");
                 ContentCatalogData catalog = LoadProductionCatalog();
 
                 // 1. 进入关中城：由 SceneFlowManager.PrepareSettlementEntry 持久化据点与返回上下文。
                 flowGo = new GameObject("FormalE2ESceneFlow");
                 SceneFlowManager flow = flowGo.AddComponent<SceneFlowManager>();
                 Assert.AreEqual("SettlementScene", flow.PrepareSettlementEntry(SettlementId));
-                Assert.AreEqual(SettlementId, session.CurrentSettlementId);
-                Assert.AreEqual("WorldScene", session.LastReturnTarget.SceneName);
-                Assert.AreEqual("guanzhong_hub", session.LastReturnTarget.WorldNodeId);
+                Assert.AreEqual(SettlementId, runtime.Navigation.SettlementId);
+                Assert.AreEqual(GameplaySceneNames.World, runtime.Navigation.ReturnTarget.SceneName);
+                Assert.AreEqual("guanzhong_hub", runtime.Navigation.ReturnTarget.WorldNodeId);
 
                 // 2. 接取：BountyBoardView.Show 打开正式据点悬赏，SubmitAccept 提交唯一生产悬赏。
                 boardGo = new GameObject("FormalE2EBountyBoard");
                 BountyBoardView board = boardGo.AddComponent<BountyBoardView>();
-                board.Show(catalog, SettlementId, session);
+                board.Show(catalog, SettlementId, runtime.Bounties);
                 Assert.AreEqual(1, board.ListedBountyCount);
                 Assert.AreEqual(BountyId, board.CurrentBountyId);
-                Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(BountyId).Status);
                 board.SubmitAccept(BountyId);
-                BountyStateSnapshot accepted = session.GetBountyState(BountyId);
+                BountyState accepted = runtime.Bounties.GetState(BountyId);
                 Assert.AreEqual(BountyStatus.Accepted, accepted.Status);
                 Assert.AreEqual(0, accepted.Progress);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 // 重复接取失败关闭，不改变状态。
                 board.SubmitAccept(BountyId);
-                Assert.AreEqual(BountyRuntimeRules.RepeatedAcceptReason, board.LastResultReason);
-                Assert.AreEqual(BountyStatus.Accepted, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyUseCaseReasons.RepeatedAccept, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
 
                 // 3. 进入正式冒险：由 SceneFlowManager.PrepareAdventureEntry 持久化副本与据点返回上下文。
                 Assert.AreEqual(
@@ -97,9 +104,9 @@ namespace TianZhang.Tests
                     flow.PrepareAdventureEntry(
                         FormalEncounterRules.GuanzhongWildAdventureId,
                         SceneReturnTarget.Settlement(SettlementId)));
-                Assert.AreEqual(AdventureId, session.CurrentAdventureId);
-                Assert.AreEqual("SettlementScene", session.LastReturnTarget.SceneName);
-                Assert.AreEqual(SettlementId, session.LastReturnTarget.SettlementId);
+                Assert.AreEqual(AdventureId, runtime.Navigation.AdventureId);
+                Assert.AreEqual(GameplaySceneNames.Settlement, runtime.Navigation.ReturnTarget.SceneName);
+                Assert.AreEqual(SettlementId, runtime.Navigation.ReturnTarget.SettlementId);
 
                 // 4. 正式遭遇配置：唯一生产场景的控制器经生产 Awake 链路绑定正式石甲兽；
                 //    序列化绑定必须是生产目录与 env_guanzhong_wild，不依赖测试注入。
@@ -136,14 +143,14 @@ namespace TianZhang.Tests
                 Assert.IsNotNull(controller.LastFormalEncounterResult);
                 Assert.AreEqual(EnemyId, controller.LastFormalEncounterResult.EnemyId);
                 Assert.AreEqual(AdventureId, controller.LastFormalEncounterResult.AdventureId);
-                BountyStateSnapshot completed = session.GetBountyState(BountyId);
+                BountyState completed = runtime.Bounties.GetState(BountyId);
                 Assert.AreEqual(BountyStatus.ObjectiveCompleted, completed.Status);
                 Assert.AreEqual(1, completed.Progress);
-                Assert.AreEqual(1, InventoryQuantity(session, "item_shijia_piece"));
-                Assert.AreEqual(1, InventoryQuantity(session, "item_lingshi_low"));
-                Assert.AreEqual(SettlementId, session.CurrentSettlementId);
-                Assert.IsNull(session.CurrentAdventureId);
-                Assert.IsTrue(string.IsNullOrEmpty(session.LastReturnTarget.SceneName));
+                Assert.AreEqual(1, InventoryQuantity(runtime, "item_shijia_piece"));
+                Assert.AreEqual(1, InventoryQuantity(runtime, "item_lingshi_low"));
+                Assert.AreEqual(SettlementId, runtime.Navigation.SettlementId);
+                Assert.IsNull(runtime.Navigation.AdventureId);
+                Assert.IsTrue(string.IsNullOrEmpty(runtime.Navigation.ReturnTarget.SceneName));
 
                 // 6. 重复结算失败关闭：同一控制器经流重新进入后二次消费仍稳定拒绝，不重复掉落或进度。
                 Assert.AreEqual(
@@ -157,50 +164,45 @@ namespace TianZhang.Tests
                 Assert.AreEqual(
                     FormalEncounterRules.AlreadyConsumedReason,
                     controller.EncounterResolutionFailureReason);
-                Assert.AreEqual(1, InventoryQuantity(session, "item_shijia_piece"));
-                Assert.AreEqual(1, InventoryQuantity(session, "item_lingshi_low"));
-                Assert.AreEqual(BountyStatus.ObjectiveCompleted, session.GetBountyState(BountyId).Status);
-                Assert.AreEqual(SettlementId, session.CurrentSettlementId);
-                Assert.IsNull(session.CurrentAdventureId);
+                Assert.AreEqual(1, InventoryQuantity(runtime, "item_shijia_piece"));
+                Assert.AreEqual(1, InventoryQuantity(runtime, "item_lingshi_low"));
+                Assert.AreEqual(BountyStatus.ObjectiveCompleted, runtime.Bounties.GetState(BountyId).Status);
+                Assert.AreEqual(SettlementId, runtime.Navigation.SettlementId);
+                Assert.IsNull(runtime.Navigation.AdventureId);
 
                 // 7. 回到关中城后经悬赏面板领奖：普通掉落与悬赏奖励各只授予一次。
-                board.Show(catalog, SettlementId, session);
+                board.Show(catalog, SettlementId, runtime.Bounties);
                 board.SubmitClaim(BountyId);
-                BountyStateSnapshot claimed = session.GetBountyState(BountyId);
+                BountyState claimed = runtime.Bounties.GetState(BountyId);
                 Assert.AreEqual(BountyStatus.Claimed, claimed.Status);
                 Assert.AreEqual(1, claimed.Progress);
-                Assert.AreEqual(1, InventoryQuantity(session, "item_shijia_piece"));
-                Assert.AreEqual(4, InventoryQuantity(session, "item_lingshi_low"));
+                Assert.AreEqual(1, InventoryQuantity(runtime, "item_shijia_piece"));
+                Assert.AreEqual(4, InventoryQuantity(runtime, "item_lingshi_low"));
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 // 重复领奖失败关闭。
                 board.SubmitClaim(BountyId);
-                Assert.AreEqual(BountyRuntimeRules.RepeatedClaimReason, board.LastResultReason);
-                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyUseCaseReasons.RepeatedClaim, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Claimed, runtime.Bounties.GetState(BountyId).Status);
 
                 // 8. 保存并以全新会话读取：Claimed、库存与据点／返回事实无损保留。
-                GameSessionSaveData saved = session.CaptureSaveData();
-                Assert.AreEqual(GameSessionSnapshot.CurrentSchemaVersion, saved.schemaVersion);
-                string savedJson = JsonUtility.ToJson(saved);
-                UnityEngine.Object.DestroyImmediate(sessionGo);
-                sessionGo = null;
-                sessionGo = new GameObject("FormalE2ELoadedSession");
-                GameSession loaded = sessionGo.AddComponent<GameSession>();
-                loaded.RestoreSaveData(JsonUtility.FromJson<GameSessionSaveData>(savedJson), catalog);
+                GameSaveEnvelope saved = runtime.CaptureSave();
+                Assert.AreEqual(GameSaveSerializer.SchemaVersion, saved.schemaVersion);
+                string savedJson = runtime.CaptureSaveJson();
+                var loaded = new GameRuntime();
+                loaded.RestoreSaveJson(savedJson, catalog);
 
-                BountyStateSnapshot restored = loaded.GetBountyState(BountyId);
+                BountyState restored = loaded.Bounties.GetState(BountyId);
                 Assert.AreEqual(BountyStatus.Claimed, restored.Status);
                 Assert.AreEqual(1, restored.Progress);
                 Assert.AreEqual(1, InventoryQuantity(loaded, "item_shijia_piece"));
                 Assert.AreEqual(4, InventoryQuantity(loaded, "item_lingshi_low"));
-                Assert.AreEqual("guanzhong_hub", loaded.CurrentWorldNodeId);
-                Assert.AreEqual(SettlementId, loaded.CurrentSettlementId);
-                Assert.IsNull(loaded.CurrentAdventureId);
-                Assert.IsTrue(string.IsNullOrEmpty(loaded.LastReturnTarget.SceneName));
+                Assert.AreEqual("guanzhong_hub", loaded.Navigation.WorldNodeId);
+                Assert.AreEqual(SettlementId, loaded.Navigation.SettlementId);
+                Assert.IsNull(loaded.Navigation.AdventureId);
+                Assert.IsTrue(string.IsNullOrEmpty(loaded.Navigation.ReturnTarget.SceneName));
             }
             finally
             {
-                if (sessionGo != null)
-                    UnityEngine.Object.DestroyImmediate(sessionGo);
                 if (flowGo != null)
                     UnityEngine.Object.DestroyImmediate(flowGo);
                 if (boardGo != null)
@@ -216,14 +218,13 @@ namespace TianZhang.Tests
         public void FormalGuanzhongChainFailsClosedOnNonProductionMissingOrIllegalInputs()
         {
             DestroyExistingSceneFlowAndSession();
-            var sessionGo = new GameObject("FormalE2EFailureClosedSession");
             try
             {
-                GameSession session = sessionGo.AddComponent<GameSession>();
-                session.BeginNewGame(null, "guanzhong_hub");
-                session.SetSettlementId(SettlementId);
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement(SettlementId);
                 ContentCatalogData catalog = LoadProductionCatalog();
-                AssertSucceeded(session.AcceptBounty(catalog, BountyId));
+                AssertSucceeded(runtime.Bounties.Accept(catalog, BountyId, SettlementId));
 
                 // 1. 缺失目录：遭遇配置被阻止，胜利结算也不伪造掉落或进度。
                 var missingCatalogExplorationGo = new GameObject("FormalE2EFailureClosedExploration");
@@ -237,8 +238,9 @@ namespace TianZhang.Tests
                     missingCatalog.SetGuanzhongWildEnvironmentProfile(LoadProductionEnvironmentProfile());
                     missingCatalog.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
 
-                    session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                    session.SetReturnTarget(SceneReturnTarget.Settlement(SettlementId));
+                    runtime.EnterAdventure(
+                        FormalEncounterRules.GuanzhongWildAdventureId,
+                        SceneReturnTarget.Settlement(SettlementId));
                     try
                     {
                         LogAssert.Expect(LogType.Error, new Regex(FormalEncounterRules.CatalogMissingReason));
@@ -255,15 +257,15 @@ namespace TianZhang.Tests
                         Assert.AreEqual(
                             FormalEncounterRules.CatalogMissingReason,
                             missingCatalog.EncounterResolutionFailureReason);
-                        Assert.AreEqual(0, session.InventoryStates.Count);
-                        BountyStateSnapshot state = session.GetBountyState(BountyId);
+                        Assert.AreEqual(0, runtime.CaptureSave().inventory.Length);
+                        BountyState state = runtime.Bounties.GetState(BountyId);
                         Assert.AreEqual(BountyStatus.Accepted, state.Status);
                         Assert.AreEqual(0, state.Progress);
                     }
                     finally
                     {
-                        session.SetAdventureId(null);
-                        session.SetReturnTarget(default);
+                        if (runtime.Navigation.AdventureId != null)
+                            runtime.ReturnToPreviousScene();
                     }
                 }
                 finally
@@ -284,8 +286,9 @@ namespace TianZhang.Tests
                     mismatch.SetGuanzhongWildEnvironmentProfile(LoadProductionEnvironmentProfile());
                     mismatch.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
 
-                    session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                    session.SetReturnTarget(SceneReturnTarget.Settlement(SettlementId));
+                    runtime.EnterAdventure(
+                        FormalEncounterRules.GuanzhongWildAdventureId,
+                        SceneReturnTarget.Settlement(SettlementId));
                     try
                     {
                         InvokePrivate(mismatch, "ConfigureCurrentAdventureEncounter");
@@ -298,15 +301,15 @@ namespace TianZhang.Tests
                         Assert.AreEqual(
                             FormalEncounterRules.EnemyIdentityMismatchReason,
                             mismatch.EncounterResolutionFailureReason);
-                        Assert.AreEqual(0, session.InventoryStates.Count);
-                        BountyStateSnapshot state = session.GetBountyState(BountyId);
+                        Assert.AreEqual(0, runtime.CaptureSave().inventory.Length);
+                        BountyState state = runtime.Bounties.GetState(BountyId);
                         Assert.AreEqual(BountyStatus.Accepted, state.Status);
                         Assert.AreEqual(0, state.Progress);
                     }
                     finally
                     {
-                        session.SetAdventureId(null);
-                        session.SetReturnTarget(default);
+                        if (runtime.Navigation.AdventureId != null)
+                            runtime.ReturnToPreviousScene();
                     }
                 }
                 finally
@@ -317,19 +320,19 @@ namespace TianZhang.Tests
 
                 // 3. 缺失敌人：目录无法解析正式石甲兽时遭遇被阻止。
                 AssertEncounterBlocked(
-                    session,
+                    runtime,
                     CreateEmptyCatalog(),
                     FormalEncounterRules.EnemyMissingReason);
 
                 // 4. 非生产范围敌人：目录中的草稿范围敌人不进入正式遭遇。
                 AssertEncounterBlocked(
-                    session,
+                    runtime,
                     CreateDraftScopeEnemyCatalog(),
                     FormalEncounterRules.EnemyScopeInvalidReason);
 
                 // 5. 缺失掉落：正式敌人没有掉落条目时遭遇被阻止。
                 AssertEncounterBlocked(
-                    session,
+                    runtime,
                     CreateDroplessEnemyCatalog(),
                     FormalEncounterRules.DropsMissingReason);
 
@@ -337,49 +340,48 @@ namespace TianZhang.Tests
                 ContentCatalogData fixtureCatalog = CreateBountyReferenceCatalog();
                 ContentCatalogData emptyCatalog = CreateEmptyCatalog();
                 Assert.AreEqual(
-                    BountyRuntimeRules.BountyNotProductionReason,
-                    session.AcceptBounty(fixtureCatalog, DraftBountyId).FailureReason);
-                Assert.IsFalse(session.BountyStates.TryGet(DraftBountyId, out _));
+                    BountyUseCaseReasons.BountyNotProduction,
+                    runtime.Bounties.Accept(fixtureCatalog, DraftBountyId, SettlementId).FailureReason);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(DraftBountyId).Status);
                 Assert.AreEqual(
-                    BountyRuntimeRules.WrongSettlementReason,
-                    session.AcceptBounty(fixtureCatalog, OtherSettlementBountyId).FailureReason);
-                Assert.IsFalse(session.BountyStates.TryGet(OtherSettlementBountyId, out _));
+                    BountyUseCaseReasons.WrongSettlement,
+                    runtime.Bounties.Accept(fixtureCatalog, OtherSettlementBountyId, SettlementId).FailureReason);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(OtherSettlementBountyId).Status);
                 Assert.AreEqual(
-                    BountyRuntimeRules.BountyMissingReason,
-                    session.AcceptBounty(fixtureCatalog, "bounty_unknown").FailureReason);
-                Assert.IsFalse(session.BountyStates.TryGet("bounty_unknown", out _));
+                    BountyUseCaseReasons.BountyMissing,
+                    runtime.Bounties.Accept(fixtureCatalog, "bounty_unknown", SettlementId).FailureReason);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState("bounty_unknown").Status);
                 Assert.AreEqual(
-                    BountyRuntimeRules.NotCompletedReason,
-                    session.ClaimBounty(fixtureCatalog, "bounty_unknown").FailureReason);
-                Assert.AreEqual(0, session.InventoryStates.Count);
+                    BountyUseCaseReasons.NotCompleted,
+                    runtime.Bounties.Claim(fixtureCatalog, "bounty_unknown").FailureReason);
+                Assert.AreEqual(0, runtime.CaptureSave().inventory.Length);
 
-                AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
-                BountyStateSnapshot completed = session.GetBountyState(BountyId);
+                AssertSucceeded(runtime.Bounties.RecordDefeat(catalog, AdventureId, EnemyId));
+                BountyState completed = runtime.Bounties.GetState(BountyId);
                 Assert.AreEqual(BountyStatus.ObjectiveCompleted, completed.Status);
                 Assert.AreEqual(1, completed.Progress);
                 // 领取时目录缺少该悬赏引用：拒绝且库存不变。
                 Assert.AreEqual(
-                    BountyRuntimeRules.BountyMissingReason,
-                    session.ClaimBounty(emptyCatalog, BountyId).FailureReason);
-                Assert.AreEqual(0, session.InventoryStates.Count);
-                Assert.AreEqual(BountyStatus.ObjectiveCompleted, session.GetBountyState(BountyId).Status);
+                    BountyUseCaseReasons.BountyMissing,
+                    runtime.Bounties.Claim(emptyCatalog, BountyId).FailureReason);
+                Assert.AreEqual(0, runtime.CaptureSave().inventory.Length);
+                Assert.AreEqual(BountyStatus.ObjectiveCompleted, runtime.Bounties.GetState(BountyId).Status);
 
                 // 7. 非法保存输入：Claimed 进度与目标不符、未知悬赏引用均原子拒绝，会话不变。
-                string baselineJson = JsonUtility.ToJson(session.CaptureSaveData());
-                GameSessionSaveData tampered = JsonUtility.FromJson<GameSessionSaveData>(baselineJson);
-                tampered.bounties[0].status = BountyStatus.Claimed;
+                string baselineJson = runtime.CaptureSaveJson();
+                GameSaveEnvelope tampered = GameSaveSerializer.Deserialize(baselineJson);
+                tampered.bounties[0].status = (int)BountyStatus.Claimed;
                 tampered.bounties[0].progress = 0;
-                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(tampered, catalog));
-                Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+                Assert.Throws<ArgumentException>(() => runtime.RestoreSave(tampered, catalog));
+                Assert.AreEqual(baselineJson, runtime.CaptureSaveJson());
 
-                tampered = JsonUtility.FromJson<GameSessionSaveData>(baselineJson);
+                tampered = GameSaveSerializer.Deserialize(baselineJson);
                 tampered.bounties[0].bountyId = "bounty_unknown";
-                Assert.Throws<ArgumentException>(() => session.RestoreSaveData(tampered, catalog));
-                Assert.AreEqual(baselineJson, JsonUtility.ToJson(session.CaptureSaveData()));
+                Assert.Throws<ArgumentException>(() => runtime.RestoreSave(tampered, catalog));
+                Assert.AreEqual(baselineJson, runtime.CaptureSaveJson());
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(sessionGo);
                 DestroyExistingSceneFlowAndSession();
             }
         }
@@ -389,7 +391,7 @@ namespace TianZhang.Tests
         /// 且日志出现稳定失败原因。
         /// </summary>
         private static void AssertEncounterBlocked(
-            GameSession session,
+            GameRuntime runtime,
             ContentCatalogData catalog,
             string expectedBlockReason)
         {
@@ -404,8 +406,9 @@ namespace TianZhang.Tests
                 controller.SetGuanzhongWildEnvironmentProfile(LoadProductionEnvironmentProfile());
                 controller.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
 
-                session.SetAdventureId(FormalEncounterRules.GuanzhongWildAdventureId);
-                session.SetReturnTarget(SceneReturnTarget.Settlement(SettlementId));
+                runtime.EnterAdventure(
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    SceneReturnTarget.Settlement(SettlementId));
                 try
                 {
                     LogAssert.Expect(LogType.Error, new Regex(expectedBlockReason));
@@ -417,8 +420,8 @@ namespace TianZhang.Tests
                 }
                 finally
                 {
-                    session.SetAdventureId(null);
-                    session.SetReturnTarget(default);
+                    if (runtime.Navigation.AdventureId != null)
+                        runtime.ReturnToPreviousScene();
                 }
             }
             finally
@@ -463,13 +466,13 @@ namespace TianZhang.Tests
             settlement.settlementId = SettlementId;
             var reward = Track(ScriptableObject.CreateInstance<ItemData>());
             reward.itemId = "item_lingshi_low";
-            reward.contentScope = InventoryGrantService.ProductionContentScope;
+            reward.contentScope = InventoryGrantUseCase.ProductionContentScope;
             reward.maxStack = 99;
 
             BountyData draft = Track(CreateBounty(DraftBountyId, "content_scope_draft", SettlementId));
             BountyData otherSettlement = Track(CreateBounty(
                 OtherSettlementBountyId,
-                InventoryGrantService.ProductionContentScope,
+                InventoryGrantUseCase.ProductionContentScope,
                 "other_city"));
 
             catalog.ReplaceEntries(
@@ -521,11 +524,14 @@ namespace TianZhang.Tests
             return profile;
         }
 
-        private static int InventoryQuantity(GameSession session, string itemId)
+        private static int InventoryQuantity(GameRuntime runtime, string itemId)
         {
-            return session.InventoryStates.TryGet(itemId, out InventoryStateSnapshot snapshot)
-                ? snapshot.Quantity
-                : 0;
+            foreach (InventoryRecord record in runtime.CaptureSave().inventory)
+            {
+                if (record.itemId == itemId)
+                    return record.quantity;
+            }
+            return 0;
         }
 
         private static void AssertSucceeded(BountyActionResult result)
@@ -564,8 +570,9 @@ namespace TianZhang.Tests
         {
             if (SceneFlowManager.Instance != null)
                 UnityEngine.Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                UnityEngine.Object.DestroyImmediate(bootstrap.gameObject);
         }
 
         private sealed class SequenceRandomSource : IFormalEncounterRandomSource

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using TianZhang.Content;
-using TianZhang.Game;
 using TianZhang.World;
 using UnityEngine;
 
@@ -9,7 +8,7 @@ namespace TianZhang.Settlement
 {
     /// <summary>
     /// 册界单据点控制器：只把面板按钮翻译为 01A 交互桥的固定顺序动作与三次评估，正式结果只经
-    /// <see cref="GameSession.CommitCharterFormalResult"/> 唯一提交入口写入会话。不复制 01A 规则、
+    /// <see cref="CharterUseCase.CommitEvaluatedState"/> 唯一提交入口写入长期状态。不复制 01A 规则、
     /// 不拥有候选或长期状态，candidate 永不赋值给会话；关闭面板即丢弃本次交互的临时 progress。
     /// 显示所需的只读数据（站点声明、目录声明集合、01A progress、评估结果与会话长期状态）全部
     /// 来自真实事实源，不以按钮可用性或本地布尔代替实际结果。
@@ -28,7 +27,7 @@ namespace TianZhang.Settlement
         private CharterSiteData site;
         private CharterRuleStaticCatalogData staticCatalog;
         private ContentCatalogData catalog;
-        private GameSession session;
+        private CharterUseCase charterUseCase;
         private CharterSiteInteractionRuntime interaction;
         private CharterInvocationPreparation preparation;
         private CharterRuleInvocationResult lastEvaluation;
@@ -37,11 +36,11 @@ namespace TianZhang.Settlement
         public bool IsOpen => gameObject.activeSelf;
         public string LastReason => lastReason;
         public CharterSiteData Site => site;
-        public GameSession Session => session;
+        public CharterUseCase UseCase => charterUseCase;
         public CharterRuleStaticCatalogData StaticCatalog => staticCatalog;
         public CharterSiteInteractionProgress Progress => interaction == null ? null : interaction.Progress;
         public CharterRuleInvocationResult LastEvaluation => lastEvaluation;
-        public CharterRuntimeStateData LongTermState => session == null ? null : session.CharterRuntimeState;
+        public CharterRuntimeStateData LongTermState => charterUseCase == null ? null : charterUseCase.CurrentState;
         public int CatalogVersion => staticCatalog == null ? 0 : staticCatalog.DefinitionCatalogVersion;
 
         public void Configure(CharterSiteView nextView)
@@ -57,10 +56,11 @@ namespace TianZhang.Settlement
             CharterSiteData nextSite,
             CharterRuleStaticCatalogData nextStaticCatalog,
             ContentCatalogData nextCatalog,
-            GameSession nextSession,
+            CharterUseCase nextUseCase,
+            string nextSettlementId,
             out string reason)
         {
-            if (nextSite == null || nextStaticCatalog == null || nextCatalog == null || nextSession == null)
+            if (nextSite == null || nextStaticCatalog == null || nextCatalog == null || nextUseCase == null)
             {
                 ResetInteraction();
                 lastReason = CharterSiteInteractionReasons.SiteUnavailable;
@@ -72,7 +72,7 @@ namespace TianZhang.Settlement
             if (!CharterSiteInteractionRuntime.TryCreate(
                     nextSite,
                     nextStaticCatalog,
-                    nextSession.CurrentSettlementId,
+                    nextSettlementId,
                     out CharterSiteInteractionRuntime nextInteraction,
                     out reason))
             {
@@ -85,7 +85,7 @@ namespace TianZhang.Settlement
             site = nextSite;
             staticCatalog = nextStaticCatalog;
             catalog = nextCatalog;
-            session = nextSession;
+            charterUseCase = nextUseCase;
             interaction = nextInteraction;
             preparation = null;
             lastEvaluation = null;
@@ -162,10 +162,10 @@ namespace TianZhang.Settlement
 
         /// <summary>
         /// 正式调用：求值绑定会话当前长期状态（未接入时以 candidate 自举一次），成功结果只经
-        /// <see cref="GameSession.CommitCharterFormalResult"/> 唯一提交入口写入；candidate 永不直接
+        /// <see cref="CharterUseCase.CommitEvaluatedState"/> 唯一提交入口写入；candidate 永不直接
         /// 赋值给会话。求值结果保留给面板显示环境引用，提交拒绝仍显示稳定原因。
         /// </summary>
-        public CharterInvocationCommitResult SubmitFormal()
+        public CharterUseCaseResult SubmitFormal()
         {
             if (!TryEnsurePreparation(out string reason))
             {
@@ -174,7 +174,7 @@ namespace TianZhang.Settlement
             }
             CharterRuleInvocationResult result = interaction.EvaluateFormal(
                 preparation,
-                session.CharterRuntimeState,
+                charterUseCase.CurrentState,
                 EvaluationWorldTick,
                 PositiveCommitResultState,
                 NegativeCommitResultState);
@@ -184,8 +184,8 @@ namespace TianZhang.Settlement
                 return null;
             }
 
-            CharterInvocationCommitResult commit = session.CommitCharterFormalResult(
-                catalog, result, preparation.CatalogVersion);
+            CharterUseCaseResult commit = charterUseCase.CommitEvaluatedState(
+                catalog, result.NextState, preparation.CatalogVersion);
             lastEvaluation = result;
             lastReason = commit.Succeeded ? FormalCommittedReason : commit.Reason;
             RefreshView();
@@ -358,7 +358,7 @@ namespace TianZhang.Settlement
             site = null;
             staticCatalog = null;
             catalog = null;
-            session = null;
+            charterUseCase = null;
             interaction = null;
             preparation = null;
             lastEvaluation = null;

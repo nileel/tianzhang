@@ -1,19 +1,23 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
 using TianZhang.Combat;
 using TianZhang.Entity;
 using TianZhang.Game;
 using TianZhang.Game.CharacterCreation;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Map;
 using TianZhang.Settlement;
+using TianZhang.Infrastructure.Persistence;
 using TianZhang.World;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 using TianZhang.Spatial;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -39,8 +43,9 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(flowGo);
             if (SceneFlowManager.Instance != null)
                 Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                Object.DestroyImmediate(bootstrap.gameObject);
             flowGo = null;
         }
 
@@ -49,7 +54,7 @@ namespace TianZhang.Tests
         {
             flowGo = new GameObject("GuanzhongFormalUiTextFlow");
             var flow = flowGo.AddComponent<SceneFlowManager>();
-            Assert.IsNotNull(GameSession.Instance, "SceneFlowManager must ensure the single session.");
+            Assert.IsNotNull(GameBootstrap.Runtime, "SceneFlowManager must ensure the single runtime.");
 
             // 1. 新建角色（关中小族出身）→ 主世界：节点与描述只显示中文，不显示 regionId / 枚举。
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
@@ -59,7 +64,7 @@ namespace TianZhang.Tests
 
             var world = Object.FindFirstObjectByType<WorldSceneController>();
             Assert.IsNotNull(world, "The formal WorldScene must bind its world controller.");
-            Assert.AreEqual("guanzhong_hub", GameSession.Instance.CurrentWorldNodeId);
+            Assert.AreEqual("guanzhong_hub", GameBootstrap.RequireRuntime().Navigation.WorldNodeId);
             var selectedNodeText = GameObject.Find("SelectedWorldNodeText")?.GetComponent<Text>();
             var descriptionText = GameObject.Find("SelectedWorldNodeDescription")?.GetComponent<Text>();
             Assert.IsNotNull(selectedNodeText);
@@ -93,7 +98,7 @@ namespace TianZhang.Tests
 
             GameObject.Find("BountyBoardAcceptButton").GetComponent<Button>().onClick.Invoke();
             StringAssert.Contains("已接取", entries.text);
-            Assert.AreEqual(BountyStatus.Accepted, GameSession.Instance.GetBountyState(BountyId).Status);
+            Assert.AreEqual(BountyStatus.Accepted, GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status);
             GameObject.Find("BountyBoardCloseButton").GetComponent<Button>().onClick.Invoke();
             Assert.IsFalse(board.IsOpen);
 
@@ -130,7 +135,7 @@ namespace TianZhang.Tests
             Assert.IsNotNull(exploration);
             yield return WaitUntilSpawned(exploration);
             var enemyUnit = GetSpawnedEnemyUnit(exploration);
-            var enemy = (Character)ReadField(enemyUnit, "character");
+            var enemy = (EntityCharacter)ReadField(enemyUnit, "character");
             RepositionEnemy(exploration, enemy, new HexCoord(1, -1));
             yield return MovePlayerTo(exploration, new HexCoord(1, 0));
 
@@ -153,26 +158,33 @@ namespace TianZhang.Tests
 
             var returnedController = Object.FindFirstObjectByType<SettlementSceneController>();
             Assert.IsNotNull(returnedController, "The formal victory must return to the source settlement.");
-            Assert.AreEqual(SettlementId, GameSession.Instance.CurrentSettlementId);
+            Assert.AreEqual(SettlementId, GameBootstrap.RequireRuntime().Navigation.SettlementId);
             Assert.AreEqual("关中城", GameObject.Find("SettlementNameText").GetComponent<Text>().text);
 
             // 8. 领取悬赏：进度完成，领奖后状态为已领取且奖励进入背包。
             Assert.AreEqual(
                 BountyStatus.ObjectiveCompleted,
-                GameSession.Instance.GetBountyState(BountyId).Status);
+                GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status);
             GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
             entries = GameObject.Find("BountyBoardEntriesText").GetComponent<Text>();
             StringAssert.Contains("目标已完成", entries.text);
             StringAssert.DoesNotContain("ObjectiveCompleted", entries.text);
 
             GameObject.Find("BountyBoardClaimButton").GetComponent<Button>().onClick.Invoke();
-            Assert.AreEqual(BountyStatus.Claimed, GameSession.Instance.GetBountyState(BountyId).Status);
+            Assert.AreEqual(BountyStatus.Claimed, GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status);
             StringAssert.Contains("已领取", entries.text);
-            Assert.IsTrue(
-                GameSession.Instance.InventoryStates.TryGet("item_lingshi_low", out var granted),
-                "The claimed bounty reward must be granted to the inventory.");
             // 胜利结算的确定性普通掉落（1 劣质灵石）+ 悬赏领奖（3）＝ 4；与既有 E2E 闸门同值。
-            Assert.AreEqual(4, granted.Quantity);
+            Assert.AreEqual(4, InventoryQuantity(GameBootstrap.RequireRuntime(), "item_lingshi_low"));
+        }
+
+        private static int InventoryQuantity(GameRuntime runtime, string itemId)
+        {
+            foreach (InventoryRecord record in runtime.CaptureSave().inventory)
+            {
+                if (record.itemId == itemId)
+                    return record.quantity;
+            }
+            return 0;
         }
 
         private static IEnumerator WaitForSettlementReturn()
@@ -180,8 +192,8 @@ namespace TianZhang.Tests
             for (int frame = 0; frame < 180; frame++)
             {
                 var controller = Object.FindFirstObjectByType<SettlementSceneController>();
-                if (controller != null && GameSession.Instance != null &&
-                    GameSession.Instance.CurrentSettlementId == SettlementId)
+                if (controller != null && GameBootstrap.Runtime != null &&
+                    GameBootstrap.RequireRuntime().Navigation.SettlementId == SettlementId)
                 {
                     yield break;
                 }
@@ -233,7 +245,7 @@ namespace TianZhang.Tests
 
         private static void RepositionEnemy(
             ExplorationController exploration,
-            Character enemy,
+            EntityCharacter enemy,
             HexCoord coord)
         {
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
@@ -244,7 +256,7 @@ namespace TianZhang.Tests
 
         private static IEnumerator MovePlayerTo(ExplorationController exploration, HexCoord target)
         {
-            var player = (Character)ReadField(exploration, "player");
+            var player = (EntityCharacter)ReadField(exploration, "player");
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
 
             for (int step = 0; step < 8 && player.Position != target; step++)

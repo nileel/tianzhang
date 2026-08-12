@@ -11,7 +11,12 @@ namespace TianZhang.Tests
         {
             Type inventoryType = Load("TianZhang.World", "TianZhang.World.InventoryStore");
             object inventory = Activator.CreateInstance(inventoryType);
-            Assert.That(Invoke(inventory, "TryGrant", "item_lingshi", 3), Is.EqualTo(true));
+            Type entryType = Load("TianZhang.World", "TianZhang.World.InventoryEntry");
+            Type snapshotType = Load("TianZhang.World", "TianZhang.World.InventoryStoreSnapshot");
+            Array entries = Array.CreateInstance(entryType, 1);
+            entries.SetValue(Activator.CreateInstance(entryType, "item_lingshi", 3), 0);
+            object seededSnapshot = Activator.CreateInstance(snapshotType, entries);
+            Invoke(inventory, "Restore", seededSnapshot);
             object inventorySnapshot = Invoke(inventory, "Capture");
             object restoredInventory = Activator.CreateInstance(inventoryType);
             Invoke(restoredInventory, "Restore", inventorySnapshot);

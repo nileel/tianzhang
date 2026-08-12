@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using TianZhang.Combat;
 using TianZhang.Content;
-using TianZhang.Game;
+using TianZhang.World;
 
 namespace TianZhang.Adventure
 {
@@ -252,7 +252,7 @@ namespace TianZhang.Adventure
 
                 if (!string.Equals(
                         item.contentScope,
-                        InventoryGrantService.ProductionContentScope,
+                        InventoryGrantUseCase.ProductionContentScope,
                         StringComparison.Ordinal))
                 {
                     reason = DropItemNotProductionReason + ":" + drop.itemId;

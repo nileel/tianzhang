@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TianZhang.Bootstrap;
 using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Map;
 using TianZhang.Settlement;
@@ -32,7 +34,8 @@ namespace TianZhang.Adventure
         public CombatSessionOutcome LastEncounterOutcome { get; private set; } = CombatSessionOutcome.Ongoing;
         public FormalEncounterResult LastFormalEncounterResult { get; private set; }
         public string EncounterResolutionFailureReason { get; private set; }
-        public string CurrentAdventureId => GameSession.Instance?.CurrentAdventureId ?? "prototype_adventure";
+        public string CurrentAdventureId =>
+            GameBootstrap.RequireRuntime().Navigation.AdventureId ?? "prototype_adventure";
         public bool RequiresFormalEncounter =>
             CurrentAdventureId == FormalEncounterRules.GuanzhongWildAdventureId;
 
@@ -121,18 +124,18 @@ namespace TianZhang.Adventure
             MarkReturning();
             if (SceneFlowManager.Instance != null)
                 SceneFlowManager.Instance.EnterWorld(
-                    GameSession.Instance?.CurrentWorldNodeId ?? "jiangzuo_hub");
+                    GameBootstrap.RequireRuntime().Navigation.WorldNodeId);
         }
 
         public string BuildSourceDescription()
         {
-            var target = GameSession.Instance?.LastReturnTarget ?? default;
-            if (target.SceneName == "SettlementScene")
+            SceneReturnTarget target = GameBootstrap.RequireRuntime().Navigation.ReturnTarget;
+            if (target.SceneName == GameplaySceneNames.Settlement)
                 return "来源据点: " + (string.IsNullOrEmpty(target.SettlementId)
                     ? "未记录"
                     : UiText.ResolveId("settlement_", target.SettlementId));
 
-            if (target.SceneName == "WorldScene")
+            if (target.SceneName == GameplaySceneNames.World)
                 return "来源主世界: " + (string.IsNullOrEmpty(target.WorldNodeId)
                     ? "未记录"
                     : WorldSceneController.NodeDisplayName(target.WorldNodeId));
@@ -195,7 +198,7 @@ namespace TianZhang.Adventure
             // 投影结果无论成功或失败都只用于显示：成功显示条目事件／档案 ID，失败显示稳定原因；
             // 环境链仍由上方既有绑定门禁与 U-ENV-RULE-01B 表现链唯一消费，投影不阻断遭遇启动。
             CharterEnvironmentProjection.TryResolve(
-                GameSession.Instance == null ? null : GameSession.Instance.CharterRuntimeState,
+                GameBootstrap.RequireRuntime().Charters.CurrentState,
                 contentCatalog,
                 guanzhongWildEnvironmentProfile.profileId,
                 out CharterEnvironmentProjectionResult environmentProjection);
@@ -250,24 +253,18 @@ namespace TianZhang.Adventure
             if (outcome != CombatSessionOutcome.Victory)
                 return;
 
-            var session = GameSession.Instance;
-            if (session != null)
-                session.RecordBountyDefeat(contentCatalog, result.AdventureId, result.EnemyId);
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            runtime.Bounties.RecordDefeat(contentCatalog, result.AdventureId, result.EnemyId);
 
             if (result.DropGrants.Count == 0)
                 return;
 
-            if (session == null)
-            {
-                RecordEncounterResolutionFailure(FormalEncounterRules.SessionMissingReason);
-                return;
-            }
-
-            var requests = new List<InventoryGrantRequest>(result.DropGrants.Count);
+            var requests = new List<TianZhang.World.InventoryGrantRequest>(result.DropGrants.Count);
             foreach (FormalDropGrant grant in result.DropGrants)
-                requests.Add(new InventoryGrantRequest(grant.ItemId, grant.Quantity));
+                requests.Add(new TianZhang.World.InventoryGrantRequest(grant.ItemId, grant.Quantity));
 
-            InventoryGrantResult grantResult = session.GrantItems(contentCatalog, requests);
+            TianZhang.World.InventoryGrantResult grantResult =
+                runtime.InventoryGrants.Grant(contentCatalog, requests);
             if (!grantResult.Applied)
             {
                 RecordEncounterResolutionFailure(

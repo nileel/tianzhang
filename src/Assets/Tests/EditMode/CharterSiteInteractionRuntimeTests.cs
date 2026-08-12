@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Content;
-using TianZhang.Game;
 using TianZhang.World;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +11,7 @@ namespace TianZhang.Tests
 {
     /// <summary>
     /// Direct EditMode coverage of the scene-independent charter site interaction bridge on the
-    /// approved old water station: bootstrap from an unaccessed <c>GameSession.CharterRuntimeState</c>,
+    /// approved old water station: bootstrap from an unaccessed Charter use-case state,
     /// the five proofs in fixed order, every out-of-order, static-identity mismatch and duplicate-ID
     /// rejection, the complete candidate mapping with empty long-term result fields, the three request
     /// shapes derived without shared mutable instances, the stable jindan loss and yuanying anchor, and
@@ -50,20 +49,16 @@ namespace TianZhang.Tests
         [TearDown]
         public void TearDown()
         {
-            if (GameSession.Instance != null)
-                UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
             foreach (UnityEngine.Object asset in temporaryAssets)
                 UnityEngine.Object.DestroyImmediate(asset);
         }
 
         [Test]
-        public void BootstrapFromEmptyGameSessionStateBuildsCompleteValidCandidate()
+        public void BootstrapFromEmptyCharterStateBuildsCompleteValidCandidate()
         {
-            var sessionObject = new GameObject("GameSessionTest");
-            var session = sessionObject.AddComponent<GameSession>();
-            session.BeginNewGame(null, "jiangzuo_hub");
-            Assert.IsNull(session.CharterRuntimeState);
-            Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+            var useCase = new CharterUseCase(new CharterStore());
+            Assert.IsNull(useCase.CurrentState);
+            Assert.AreEqual(0, useCase.DefinitionCatalogVersion);
 
             CharterSiteData site = LoadProductionSite();
             CharterRuleStaticCatalogData staticCatalog = LoadProductionStaticCatalog();
@@ -111,8 +106,8 @@ namespace TianZhang.Tests
                 Is.True, stateReason);
 
             // candidate 不是第二套长期状态：会话仍保持未接入。
-            Assert.IsNull(session.CharterRuntimeState);
-            Assert.AreEqual(0, session.CharterDefinitionCatalogVersion);
+            Assert.IsNull(useCase.CurrentState);
+            Assert.AreEqual(0, useCase.DefinitionCatalogVersion);
         }
 
         [Test]

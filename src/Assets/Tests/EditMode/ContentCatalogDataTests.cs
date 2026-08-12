@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 
 using TianZhang.Spatial;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -71,7 +72,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual("basic_unarmed", template.unarmedBasicAttackProfileId);
                 Assert.IsTrue(string.IsNullOrEmpty(template.mainEquipmentBasicAttackProfileId));
 
-                var runtimeEnemy = Character.FromData(template, new TianZhang.Spatial.HexCoord(1, 0));
+                var runtimeEnemy = EntityCharacter.FromData(template, new TianZhang.Spatial.HexCoord(1, 0));
                 Assert.AreEqual("basic_unarmed", runtimeEnemy.BasicAttackProfileId);
                 Assert.AreEqual("unarmed_fallback", runtimeEnemy.BasicAttackBindingKind);
             }

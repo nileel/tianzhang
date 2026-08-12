@@ -10,12 +10,10 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-ARCH-REBUILD-01E",
-    "U-ARCH-REBUILD-01F",
     "U-ARCH-REBUILD-01G",
     "U-ARCH-REBUILD-01H"
   ],
-  "stateReason": "01A 至 01D 已完成归档；父项不直接执行，等待 01E 至 01H 全部完成",
+  "stateReason": "2026-08-12：01A 至 01F 已完成归档；父项不直接执行，等待 01G 与 01H 完成",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

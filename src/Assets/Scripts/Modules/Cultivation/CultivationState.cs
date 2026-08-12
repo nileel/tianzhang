@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TianZhang.Entity;
 
 namespace TianZhang.Cultivation
 {
@@ -27,10 +28,73 @@ namespace TianZhang.Cultivation
             guardians.Add(state.MansionId, state); return true;
         }
         public bool TryGetMansion(string id, out MansionState state) { return mansions.TryGetValue(id, out state); }
+        public static CultivationState CreateEmpty()
+        {
+            return new CultivationState(
+                new FoundationState(0, 0f, 0),
+                new CultivationActionState(string.Empty, 0),
+                new ClosedRetreatState(string.Empty, false, string.Empty),
+                new JindanLockState(false, string.Empty));
+        }
+
+        public static CultivationState FromDefinition(FoundationPurpleMansionStateData definition)
+        {
+            if (definition == null) return CreateEmpty();
+            FoundationStateRecord foundation = definition.foundationState;
+            CultivationActionStateRecord action = definition.cultivationActionState;
+            ClosedRetreatPlanRecord retreat = definition.closedRetreatPlan;
+            JindanLockRecord jindan = definition.jindanLock;
+            var state = new CultivationState(
+                new FoundationState(
+                    foundation == null ? 0 : (int)foundation.phase,
+                    foundation == null ? 0f : foundation.continuousProgress,
+                    foundation == null ? 0 : foundation.totalMansionCapacity),
+                new CultivationActionState(
+                    action == null ? string.Empty : action.actionStateId,
+                    action == null ? 0 : (int)action.status),
+                new ClosedRetreatState(
+                    retreat == null ? string.Empty : retreat.actionStateId,
+                    false,
+                    string.Empty),
+                new JindanLockState(
+                    jindan != null && jindan.status == JindanLockStatus.Formed,
+                    jindan != null && jindan.formationSnapshot != null
+                        ? jindan.formationSnapshot.foundationInstanceId
+                        : string.Empty));
+            if (action != null)
+            {
+                foreach (string cycleId in action.committedCycleIds ?? new string[0])
+                    state.Action.TryCommitCycle(cycleId);
+            }
+            foreach (PurpleMansionStateRecord mansion in definition.mansionStates ?? new PurpleMansionStateRecord[0])
+            {
+                if (mansion != null)
+                    state.TryAddMansion(new MansionState(mansion.mansionKind.ToString(), (int)mansion.state, 0));
+            }
+            foreach (GuardianAbilityRecord guardian in definition.guardianAbilities ?? new GuardianAbilityRecord[0])
+            {
+                if (guardian != null)
+                    state.TryAddGuardian(new GuardianAbilityState(
+                        guardian.mansionInstanceId,
+                        guardian.abilityInstanceId,
+                        guardian.form.ToString()));
+            }
+            return state;
+        }
+
+        public static CultivationState FromSnapshot(CultivationStateSnapshot snapshot)
+        {
+            if (snapshot == null) throw new System.ArgumentNullException(nameof(snapshot));
+            var state = CreateEmpty();
+            state.Restore(snapshot);
+            return state;
+        }
         public CultivationStateSnapshot Capture()
         {
             var mansionSnapshots = new List<MansionStateSnapshot>(); foreach (MansionState state in mansions.Values) mansionSnapshots.Add(state.Capture());
+            mansionSnapshots.Sort((left, right) => string.CompareOrdinal(left.MansionId, right.MansionId));
             var guardianSnapshots = new List<GuardianAbilityStateSnapshot>(); foreach (GuardianAbilityState state in guardians.Values) guardianSnapshots.Add(state.Capture());
+            guardianSnapshots.Sort((left, right) => string.CompareOrdinal(left.MansionId, right.MansionId));
             return new CultivationStateSnapshot(Foundation.Capture(), mansionSnapshots, guardianSnapshots, Action.Capture(), Retreat.Capture(), JindanLock.Capture());
         }
         public void Restore(CultivationStateSnapshot snapshot)

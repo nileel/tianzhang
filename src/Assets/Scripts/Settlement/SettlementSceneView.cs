@@ -206,7 +206,8 @@ namespace TianZhang.Settlement
             CharterSiteData site,
             CharterRuleStaticCatalogData staticCatalog,
             ContentCatalogData catalog,
-            GameSession session,
+            CharterUseCase useCase,
+            string currentSettlementId,
             out string reason)
         {
             if (charterSiteView == null)
@@ -215,7 +216,7 @@ namespace TianZhang.Settlement
                 return false;
             }
 
-            return charterSiteView.Show(site, staticCatalog, catalog, session, out reason);
+            return charterSiteView.Show(site, staticCatalog, catalog, useCase, currentSettlementId, out reason);
         }
 
         public void SetReturnToWorldAction(Action action)
@@ -295,10 +296,10 @@ namespace TianZhang.Settlement
             SetStatus(UiText.ReasonDisplay(reason, "副本不可用"));
         }
 
-        public void OpenBountyBoard(ContentCatalogData catalog, string settlementId, GameSession session)
+        public void OpenBountyBoard(ContentCatalogData catalog, string settlementId, BountyUseCase useCase)
         {
             if (bountyBoardView != null)
-                bountyBoardView.Show(catalog, settlementId, session);
+                bountyBoardView.Show(catalog, settlementId, useCase);
         }
 
         private void SetStatus(string value)

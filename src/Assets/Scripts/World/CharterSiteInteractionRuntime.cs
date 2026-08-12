@@ -107,7 +107,7 @@ namespace TianZhang.World
     /// candidate dynamic state, the site static reference, the temporary cross-tier challenge
     /// archive and the static catalog version, and never carries a single mutable invocation
     /// request. It is not a second long-term state: it is never saved and never assigned to
-    /// <c>GameSession.CharterRuntimeState</c>.
+    /// Charter 应用用例的长期状态。
     /// </summary>
     public sealed class CharterInvocationPreparation
     {

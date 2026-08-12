@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using TianZhang.Content;
-using TianZhang.Game;
+using TianZhang.World;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,8 +9,8 @@ namespace TianZhang.Settlement
 {
     /// <summary>
     /// 悬赏面板视图：只枚举当前正式据点由 <see cref="ContentCatalogData.GetBountiesByIssuer"/>
-    /// 返回的悬赏，把接取／领奖请求原样交给当前 <see cref="GameSession"/>，并在每次请求后从
-    /// <see cref="GameSession.GetBountyState"/> 刷新显示。不判断悬赏规则、不拥有实例状态，
+    /// 返回的悬赏，把接取／领奖请求原样交给当前 <see cref="BountyUseCase"/>，并在每次请求后从
+    /// <see cref="BountyUseCase.GetState"/> 刷新显示。不判断悬赏规则、不拥有实例状态，
     /// 不伪造目标、奖励、成功日志、状态转换或默认条目。
     /// </summary>
     public sealed class BountyBoardView : MonoBehaviour
@@ -27,7 +27,7 @@ namespace TianZhang.Settlement
         [SerializeField] private Button closeButton;
 
         private ContentCatalogData catalog;
-        private GameSession session;
+        private BountyUseCase useCase;
         private string settlementId;
         private string currentBountyId;
         private string lastResultReason;
@@ -54,11 +54,11 @@ namespace TianZhang.Settlement
             closeButton = close;
         }
 
-        public void Show(ContentCatalogData nextCatalog, string nextSettlementId, GameSession nextSession)
+        public void Show(ContentCatalogData nextCatalog, string nextSettlementId, BountyUseCase nextUseCase)
         {
             catalog = nextCatalog;
             settlementId = nextSettlementId;
-            session = nextSession;
+            useCase = nextUseCase;
             lastResultReason = null;
             BindButtonListeners();
             gameObject.SetActive(true);
@@ -103,27 +103,27 @@ namespace TianZhang.Settlement
 
         public void SubmitAccept(string bountyId)
         {
-            if (session == null)
+            if (useCase == null)
             {
                 SetResult(BoardSessionMissingReason);
                 return;
             }
 
-            BountyActionResult result = session.AcceptBounty(catalog, bountyId);
-            // 成功不写入任何结果字面量：成功显示只反映 Refresh 后同一 GameSession.GetBountyState 的实际状态。
+            BountyActionResult result = useCase.Accept(catalog, bountyId, settlementId);
+            // 成功不写入任何结果字面量：成功显示只反映 Refresh 后同一用例状态的实际状态。
             SetResult(result.Succeeded ? null : result.FailureReason);
             Refresh();
         }
 
         public void SubmitClaim(string bountyId)
         {
-            if (session == null)
+            if (useCase == null)
             {
                 SetResult(BoardSessionMissingReason);
                 return;
             }
 
-            BountyActionResult result = session.ClaimBounty(catalog, bountyId);
+            BountyActionResult result = useCase.Claim(catalog, bountyId);
             SetResult(result.Succeeded ? null : result.FailureReason);
             Refresh();
         }
@@ -139,7 +139,7 @@ namespace TianZhang.Settlement
                 return;
             }
 
-            if (session == null)
+            if (useCase == null)
             {
                 currentBountyId = null;
                 SetResult(BoardSessionMissingReason);
@@ -154,7 +154,7 @@ namespace TianZhang.Settlement
                     continue;
 
                 listedBounties.Add(bounty);
-                BountyStateSnapshot state = session.GetBountyState(bounty.bountyId);
+                BountyState state = useCase.GetState(bounty.bountyId);
                 if (rows.Length > 0)
                     rows.Append('\n');
                 // 标题优先解析已批准 titleKey；缺键（非正式实体）回退稳定 ID，不伪造占位文本。

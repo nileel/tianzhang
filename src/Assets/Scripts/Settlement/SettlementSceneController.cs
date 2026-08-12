@@ -1,6 +1,9 @@
 using System;
+using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Game;
+using TianZhang.Gameplay.Contracts;
+using TianZhang.World;
 using UnityEngine;
 
 namespace TianZhang.Settlement
@@ -57,7 +60,7 @@ namespace TianZhang.Settlement
             }
 
             featureDispatcher.RegisterInitialFeatureHandlers();
-            SelectSettlement(GameSession.Instance == null ? null : GameSession.Instance.CurrentSettlementId);
+            SelectSettlement(GameBootstrap.RequireRuntime().Navigation.SettlementId);
         }
 
         public bool TryGetSettlement(string settlementId, out SettlementData settlement)
@@ -75,8 +78,7 @@ namespace TianZhang.Settlement
 
             CurrentSettlement = settlement;
             LastFailureReason = null;
-            if (GameSession.Instance != null)
-                GameSession.Instance.SetSettlementId(settlement.settlementId);
+            GameBootstrap.RequireRuntime().EnterSettlement(settlement.settlementId);
 
             RefreshSettlementUi();
             return true;
@@ -121,13 +123,13 @@ namespace TianZhang.Settlement
                 ShowCharterSiteEntryFailure(CharterSiteStaticCatalogReason + ":" + catalogReason);
                 return;
             }
-            if (GameSession.Instance == null)
-            {
-                ShowCharterSiteEntryFailure(CharterSiteSessionMissingReason);
-                return;
-            }
             if (!sceneView.OpenCharterSite(
-                    site, staticCatalog, contentCatalog, GameSession.Instance, out string openReason))
+                    site,
+                    staticCatalog,
+                    contentCatalog,
+                    GameBootstrap.RequireRuntime().Charters,
+                    CurrentSettlementId,
+                    out string openReason))
             {
                 ShowCharterSiteEntryFailure(openReason);
                 return;
@@ -165,7 +167,7 @@ namespace TianZhang.Settlement
 
         public string ResolveReturnWorldNodeId()
         {
-            return GameSession.Instance == null ? "jiangzuo_hub" : GameSession.Instance.CurrentWorldNodeId;
+            return GameBootstrap.RequireRuntime().Navigation.WorldNodeId;
         }
 
         private bool TryGetFormalSettlement(string settlementId, out SettlementData settlement, out string reason)
@@ -248,7 +250,10 @@ namespace TianZhang.Settlement
                     SettlementFeatureDispatcher.BountyBoardEntryOpenedReason,
                     StringComparison.Ordinal))
             {
-                sceneView?.OpenBountyBoard(contentCatalog, CurrentSettlementId, GameSession.Instance);
+                sceneView?.OpenBountyBoard(
+                    contentCatalog,
+                    CurrentSettlementId,
+                    GameBootstrap.RequireRuntime().Bounties);
             }
         }
 

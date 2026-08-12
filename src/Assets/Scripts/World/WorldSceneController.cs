@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TianZhang.Bootstrap;
 using TianZhang.Game;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Settlement;
 
 namespace TianZhang.World
@@ -41,7 +43,7 @@ namespace TianZhang.World
         {
             UiText.Load(languageTable);
             BuildWorldNodeUi();
-            if (!SelectNode(GameSession.Instance?.CurrentWorldNodeId ?? SelectedNodeId))
+            if (!SelectNode(GameBootstrap.RequireRuntime().Navigation.WorldNodeId ?? SelectedNodeId))
                 SelectNode("jiangzuo_hub");
 
             Debug.Log("[WorldScene] nodes=" + PrototypeNodes.Length);
@@ -72,8 +74,7 @@ namespace TianZhang.World
 
             SelectedNode = node;
             SelectedNodeId = node.id;
-            if (GameSession.Instance != null)
-                GameSession.Instance.SetWorldNode(node.id);
+            GameBootstrap.RequireRuntime().EnterWorld(node.id);
 
             RefreshSelectedNodeUi();
             return true;
@@ -81,7 +82,7 @@ namespace TianZhang.World
 
         public void EnterSelectedLocation()
         {
-            if (SelectedNode == null && !SelectNode(GameSession.Instance?.CurrentWorldNodeId ?? "jiangzuo_hub"))
+            if (SelectedNode == null && !SelectNode(GameBootstrap.RequireRuntime().Navigation.WorldNodeId ?? "jiangzuo_hub"))
                 return;
 
             if (!string.IsNullOrEmpty(SelectedNode.settlementId))
@@ -95,7 +96,7 @@ namespace TianZhang.World
         }
 
         /// <summary>
-        /// settlementId 经 SceneFlowManager 持久化到 GameSession.CurrentSettlementId。
+        /// settlementId 经 SceneFlowManager 持久化到 GameRuntime 导航状态。
         /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 更新注释反映 fb7f7ed 已持久化
         /// </summary>
         public void EnterSettlement(string settlementId)
@@ -105,7 +106,7 @@ namespace TianZhang.World
         }
 
         /// <summary>
-        /// adventureId 经 SceneFlowManager 持久化到 GameSession.CurrentAdventureId。
+        /// adventureId 经 SceneFlowManager 持久化到 GameRuntime 导航状态。
         /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 更新注释反映 fb7f7ed 已持久化
         /// </summary>
         public void EnterAdventure(string adventureId)
@@ -118,7 +119,7 @@ namespace TianZhang.World
 
         public SceneReturnTarget BuildAdventureReturnTarget()
         {
-            return SceneReturnTarget.World(GameSession.Instance?.CurrentWorldNodeId ?? SelectedNodeId);
+            return SceneReturnTarget.World(GameBootstrap.RequireRuntime().Navigation.WorldNodeId ?? SelectedNodeId);
         }
 
         private void BuildWorldNodeUi()

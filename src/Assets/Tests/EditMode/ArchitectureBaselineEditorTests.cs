@@ -49,14 +49,23 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void TargetBootstrapIsAnEmptyCompositionShell()
+        public void TargetBootstrapIsAThinRuntimeCompositionRoot()
         {
             Type type = typeof(GameBootstrap);
             Assert.That(type.IsSealed, Is.True);
-            Assert.That(type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
-                                       BindingFlags.NonPublic | BindingFlags.DeclaredOnly), Is.Empty);
-            Assert.That(type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
-                                        BindingFlags.NonPublic | BindingFlags.DeclaredOnly), Is.Empty);
+            Assert.That(typeof(MonoBehaviour).IsAssignableFrom(type), Is.True);
+
+            FieldInfo[] fields = type.GetFields(
+                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
+                BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            Assert.That(fields, Has.Length.EqualTo(2));
+            Assert.That(Array.Exists(fields, field => field.FieldType == typeof(GameBootstrap)), Is.True);
+            Assert.That(Array.Exists(fields, field => field.FieldType == typeof(GameRuntime)), Is.True);
+
+            foreach (FieldInfo field in fields)
+            {
+                Assert.That(field.IsStatic, Is.True, field.Name);
+            }
         }
 
         [Test]

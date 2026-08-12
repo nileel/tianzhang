@@ -1,6 +1,10 @@
 {
     "name": "TianZhang.Bootstrap",
     "references": [
+        "TianZhang.Character",
+        "TianZhang.Content",
+        "TianZhang.Cultivation",
+        "TianZhang.World",
         "TianZhang.Gameplay.Contracts",
         "TianZhang.Features.CharacterCreation",
         "TianZhang.Features.WorldMap",

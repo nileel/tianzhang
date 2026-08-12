@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Editor;
 using TianZhang.Game;
 using TianZhang.Settlement;
+using TianZhang.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -24,13 +26,9 @@ namespace TianZhang.Tests
         private const string EnemyId = "enemy_shijiahou";
 
         private readonly List<UnityEngine.Object> temporaryAssets = new List<UnityEngine.Object>();
-        private GameObject sessionGo;
-
         [TearDown]
         public void TearDown()
         {
-            if (sessionGo != null)
-                UnityEngine.Object.DestroyImmediate(sessionGo);
             DestroyExistingSceneFlowAndSession();
             foreach (UnityEngine.Object asset in temporaryAssets)
                 UnityEngine.Object.DestroyImmediate(asset);
@@ -39,7 +37,7 @@ namespace TianZhang.Tests
         [Test]
         public void ProductionGuanzhongBountyOpensBoardAndAcceptsFromBoard()
         {
-            GameSession session = OpenBuiltSettlementScene(out BountyBoardView board, out _);
+            GameRuntime runtime = OpenBuiltSettlementScene(out BountyBoardView board, out _);
             try
             {
                 Assert.IsFalse(board.IsOpen);
@@ -53,11 +51,11 @@ namespace TianZhang.Tests
                 // 玩家显示只呈现已批准悬赏标题与中文状态；稳定 ID 保留在 board 与会话对象中。
                 StringAssert.Contains("悬赏板已打开", BoardStatusText().text);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
-                Assert.AreEqual(BountyStatus.Available, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(BountyId).Status);
 
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
 
-                Assert.AreEqual(BountyStatus.Accepted, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
 
@@ -73,23 +71,22 @@ namespace TianZhang.Tests
         [Test]
         public void ObjectiveCompletedBountyCanBeClaimedFromBoard()
         {
-            GameSession session = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
+            GameRuntime runtime = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
             try
             {
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
-                AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
+                AssertSucceeded(runtime.Bounties.RecordDefeat(catalog, AdventureId, EnemyId));
 
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 目标已完成 | 进度 1/1", BoardEntriesText(board).text);
 
                 GetBoardButton(board, "claimButton").onClick.Invoke();
 
-                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyStatus.Claimed, runtime.Bounties.GetState(BountyId).Status);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已领取 | 进度 1/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
-                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out InventoryStateSnapshot granted));
-                Assert.AreEqual(3, granted.Quantity);
+                Assert.AreEqual(3, runtime.CaptureSave().inventory[0].quantity);
             }
             finally
             {
@@ -100,21 +97,20 @@ namespace TianZhang.Tests
         [Test]
         public void ClaimedBountyCannotBeClaimedAgainFromBoard()
         {
-            GameSession session = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
+            GameRuntime runtime = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
             try
             {
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
-                AssertSucceeded(session.RecordBountyDefeat(catalog, AdventureId, EnemyId));
+                AssertSucceeded(runtime.Bounties.RecordDefeat(catalog, AdventureId, EnemyId));
                 GetBoardButton(board, "claimButton").onClick.Invoke();
-                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
+                Assert.AreEqual(BountyStatus.Claimed, runtime.Bounties.GetState(BountyId).Status);
 
                 GetBoardButton(board, "claimButton").onClick.Invoke();
 
-                Assert.AreEqual(BountyRuntimeRules.RepeatedClaimReason, board.LastResultReason);
-                Assert.AreEqual(BountyStatus.Claimed, session.GetBountyState(BountyId).Status);
-                Assert.IsTrue(session.InventoryStates.TryGet("item_lingshi_low", out InventoryStateSnapshot granted));
-                Assert.AreEqual(3, granted.Quantity);
+                Assert.AreEqual(BountyUseCaseReasons.RepeatedClaim, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Claimed, runtime.Bounties.GetState(BountyId).Status);
+                Assert.AreEqual(3, runtime.CaptureSave().inventory[0].quantity);
             }
             finally
             {
@@ -128,12 +124,12 @@ namespace TianZhang.Tests
             DestroyExistingSceneFlowAndSession();
             SceneBuilder.BuildSettlementScene();
             EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
-            GameSession session = CreateSession();
+            GameRuntime runtime = CreateRuntime();
             BountyBoardView board = FindBoardFromBuiltScene();
             ContentCatalogData catalog = CreateCatalogWithOutOfScopeBounties();
             try
             {
-                board.Show(catalog, SettlementId, session);
+                board.Show(catalog, SettlementId, runtime.Bounties);
 
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
                 // 非正式（无批准标题）悬赏：显示回退为稳定 ID 本身，不伪造占位文本。
@@ -141,16 +137,16 @@ namespace TianZhang.Tests
                 Assert.IsFalse(BoardEntriesText(board).text.Contains(OtherSettlementBountyId));
 
                 board.SubmitAccept(DraftBountyId);
-                Assert.AreEqual(BountyRuntimeRules.BountyNotProductionReason, board.LastResultReason);
-                Assert.IsFalse(session.BountyStates.TryGet(DraftBountyId, out _));
+                Assert.AreEqual(BountyUseCaseReasons.BountyNotProduction, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(DraftBountyId).Status);
 
                 board.SubmitAccept(OtherSettlementBountyId);
-                Assert.AreEqual(BountyRuntimeRules.WrongSettlementReason, board.LastResultReason);
-                Assert.IsFalse(session.BountyStates.TryGet(OtherSettlementBountyId, out _));
+                Assert.AreEqual(BountyUseCaseReasons.WrongSettlement, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(OtherSettlementBountyId).Status);
 
                 board.SubmitAccept("bounty_unknown");
-                Assert.AreEqual(BountyRuntimeRules.BountyMissingReason, board.LastResultReason);
-                Assert.IsFalse(session.BountyStates.TryGet("bounty_unknown", out _));
+                Assert.AreEqual(BountyUseCaseReasons.BountyMissing, board.LastResultReason);
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState("bounty_unknown").Status);
 
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
                 StringAssert.Contains(DraftBountyId + " | 可接取 | 进度 0/1", BoardEntriesText(board).text);
@@ -230,7 +226,7 @@ namespace TianZhang.Tests
             }
         }
 
-        private GameSession OpenBuiltSettlementScene(
+        private GameRuntime OpenBuiltSettlementScene(
             out BountyBoardView board,
             out ContentCatalogData catalog)
         {
@@ -238,10 +234,9 @@ namespace TianZhang.Tests
             SceneBuilder.BuildSettlementScene();
             EditorSceneManager.OpenScene("Assets/Scenes/SettlementScene.unity", OpenSceneMode.Single);
 
-            sessionGo = new GameObject("BountyBoardSession");
-            GameSession session = sessionGo.AddComponent<GameSession>();
-            session.SetWorldNode("guanzhong_hub");
-            session.SetSettlementId(SettlementId);
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            runtime.EnterWorld("guanzhong_hub");
+            runtime.EnterSettlement(SettlementId);
 
             var controller = UnityEngine.Object.FindFirstObjectByType<SettlementSceneController>();
             controller.GetType()
@@ -251,7 +246,7 @@ namespace TianZhang.Tests
             board = FindBoardFromBuiltScene();
             catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
-            return session;
+            return runtime;
         }
 
         private static BountyBoardView FindBoardFromBuiltScene()
@@ -259,12 +254,11 @@ namespace TianZhang.Tests
             return UnityEngine.Object.FindFirstObjectByType<BountyBoardView>(FindObjectsInactive.Include);
         }
 
-        private GameSession CreateSession()
+        private static GameRuntime CreateRuntime()
         {
-            sessionGo = new GameObject("BountyBoardSession");
-            GameSession session = sessionGo.AddComponent<GameSession>();
-            session.SetSettlementId(SettlementId);
-            return session;
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            runtime.EnterSettlement(SettlementId);
+            return runtime;
         }
 
         private ContentCatalogData CreateCatalogWithOutOfScopeBounties()
@@ -276,12 +270,12 @@ namespace TianZhang.Tests
             enemy.enemyId = EnemyId;
             var reward = Track(ScriptableObject.CreateInstance<ItemData>());
             reward.itemId = "item_lingshi_low";
-            reward.contentScope = InventoryGrantService.ProductionContentScope;
+            reward.contentScope = InventoryGrantUseCase.ProductionContentScope;
             reward.maxStack = 99;
 
-            BountyData production = Track(CreateBounty(BountyId, scope: InventoryGrantService.ProductionContentScope));
+            BountyData production = Track(CreateBounty(BountyId, scope: InventoryGrantUseCase.ProductionContentScope));
             BountyData draft = Track(CreateBounty(DraftBountyId, scope: "content_scope_draft"));
-            BountyData otherSettlement = Track(CreateBounty(OtherSettlementBountyId, scope: InventoryGrantService.ProductionContentScope));
+            BountyData otherSettlement = Track(CreateBounty(OtherSettlementBountyId, scope: InventoryGrantUseCase.ProductionContentScope));
             otherSettlement.issuerSettlementId = "other_city";
 
             catalog.ReplaceEntries(
@@ -342,9 +336,6 @@ namespace TianZhang.Tests
 
         private void DestroyImmediateSceneFlowAndSession()
         {
-            if (sessionGo != null)
-                UnityEngine.Object.DestroyImmediate(sessionGo);
-            sessionGo = null;
             DestroyExistingSceneFlowAndSession();
         }
 
@@ -352,8 +343,9 @@ namespace TianZhang.Tests
         {
             if (SceneFlowManager.Instance != null)
                 UnityEngine.Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                UnityEngine.Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                UnityEngine.Object.DestroyImmediate(bootstrap.gameObject);
         }
     }
 }

@@ -8,20 +8,26 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-12：01E 已完成归档且阶段 5 总验收通过；阶段 6 旧所有者、目标模块、新文件、直接调用者与测试的字面量路径已冻结，程序集、.NET、完整 Unity EditMode 和数据链前置证据均已核对，现可执行。",
+  "stateReason": "2026-08-12：薄 GameRuntime、schema 1 原子保存、导航契约和悬赏／册界／NPC 修炼用例已完成；.NET、程序集边界、完整 EditMode 与 PlayMode 验证达到批准基线。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01.txt",
     "开发管理/任务卡/U-ARCH-REBUILD-01F.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01G.txt",
     "开发管理/任务归档/U-ARCH-REBUILD-01F.txt",
     "src/Assets/Scripts/Adventure/AdventureSceneController.cs",
     "src/Assets/Scripts/Adventure/AdventureSceneController.cs.meta",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Adventure/FormalEncounterResult.cs.meta",
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs",
     "src/Assets/Scripts/Cultivation/NpcCultivationActionCoordinator.cs.meta",
     "src/Assets/Scripts/Entity/Character.cs",
     "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs.meta",
     "src/Assets/Scripts/Game/BountyRuntime.cs",
     "src/Assets/Scripts/Game/BountyRuntime.cs.meta",
     "src/Assets/Scripts/Game/BountyStateStore.cs",
@@ -36,6 +42,8 @@
     "src/Assets/Scripts/Game/InventoryGrantService.cs.meta",
     "src/Assets/Scripts/Game/SceneFlowManager.cs",
     "src/Assets/Scripts/Game/SceneFlowManager.cs.meta",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs",
+    "src/Assets/Scripts/Game/SectSelectionManager.cs.meta",
     "src/Assets/Scripts/Game/SceneReturnTarget.cs",
     "src/Assets/Scripts/Game/SceneReturnTarget.cs.meta",
     "src/Assets/Scripts/Game/SessionStateSnapshots.cs",
@@ -82,6 +90,10 @@
     "src/Assets/Scripts/Modules/World/BountyStore.cs.meta",
     "src/Assets/Scripts/Modules/World/BountyUseCase.cs",
     "src/Assets/Scripts/Modules/World/BountyUseCase.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterDefinitions.cs",
+    "src/Assets/Scripts/Modules/World/CharterDefinitions.cs.meta",
+    "src/Assets/Scripts/Modules/World/CharterState.cs",
+    "src/Assets/Scripts/Modules/World/CharterState.cs.meta",
     "src/Assets/Scripts/Modules/World/CharterCommitService.cs",
     "src/Assets/Scripts/Modules/World/CharterCommitService.cs.meta",
     "src/Assets/Scripts/Modules/World/CharterStore.cs",
@@ -122,6 +134,10 @@
     "src/Assets/Scripts/World/WorldSceneController.cs.meta",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/ArchitectureBaselineEditorTests.cs",
+    "src/Assets/Tests/EditMode/ArchitectureBaselineEditorTests.cs.meta",
     "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
     "src/Assets/Tests/EditMode/BountyBoardViewTests.cs.meta",
     "src/Assets/Tests/EditMode/BountyRuntimeTests.cs",
@@ -136,6 +152,12 @@
     "src/Assets/Tests/EditMode/CharterSiteInteractionRuntimeTests.cs.meta",
     "src/Assets/Tests/EditMode/CharterSiteViewTests.cs",
     "src/Assets/Tests/EditMode/CharterSiteViewTests.cs.meta",
+    "src/Assets/Tests/EditMode/CombatantPanelStateTests.cs",
+    "src/Assets/Tests/EditMode/CombatantPanelStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs.meta",
     "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
     "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs.meta",
     "src/Assets/Tests/EditMode/CharacterStateTests.cs",
@@ -222,3 +244,10 @@
 - `U-ARCH-REBUILD-01E` 只存在 `dispatchState=completed` 归档，不存在同 ID 活跃卡；阶段 5 完整 EditMode 为 446/448，仅保留两项登记基线失败，PlayMode 5/5，程序集边界为 21 asmdef／8 asmref，旧运行时与引用清零。
 - 实时扫描确认旧 owner、目标模块、全部 `GameSession` 直接 C# 调用者和相关 EditMode／PlayMode 测试均已展开为本卡字面量 `expectedPaths`；所有新 Unity 文件均成对列出 `.meta`。Scene、Prefab、asset、CSV、BattleSim 与 01G Feature 重写不在授权范围。
 - Unity 6000.3.18f1 已重新同步生成工程投影；`dotnet build src/TianZhang.EditModeTests.csproj` 为 0 error、7 个既有 warning。完整 Unity EditMode、程序集边界和数据链沿用同一源码／数据输入的 01E3 最终通过证据，不重复运行未变化范围。
+
+## 完成记录（2026-08-12）
+
+- `GameSession` 已由 Bootstrap 中的薄 `GameRuntime` 和唯一 `GameBootstrap` 取代；新档、清空、导航、保存与恢复共用独立 Character、Cultivation、World 状态所有者，不保留旧 schema 4 读取或兼容入口。
+- `Gameplay.Contracts` 建立导航 DTO／接口；`Infrastructure.Persistence` 建立 schema 1 信封与序列化；World 与 Cultivation 分别建立悬赏、册界和 NPC 修炼应用用例。现行场景调用者只改接用例与契约，Scene、Prefab、CSV、asset 及数值语义均未修改。
+- 保存恢复先完整构造并校验候选 owner，再一次性替换 `GameRuntime`；失败恢复保持当前运行时不变。基础攻击装载稳定 ID 与册界长期状态存在性均显式进入 schema 1，Unity JSON 不再把空册界对象误判为已提交状态。
+- 验证：程序集边界通过（21 asmdef／8 asmref）；`dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 为 0 error、7 个既有 warning；完整 Unity EditMode 为 394/396，仅保留已登记的 `AuthorizedGrantBindsEveryConflictIdentityField` 与 `LianShenReservedAbilitiesRemainExcludedAtPlayerLoad` 两项基线失败；PlayMode 为 5/5；schema 1 直接用例为 5/5。未修改 docs、CSV 或 Unity 数据资产，因此不重复运行数据链检查。

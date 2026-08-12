@@ -6,6 +6,7 @@ using TianZhang.Entity;
 using TianZhang.Content;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Game
 {
@@ -411,7 +412,7 @@ namespace TianZhang.Game
                 selectionPanel.SetActive(false);
         }
 
-        private void UpdateExplorationAbilities(ExplorationController ctrl, CharacterData charData, Character player)
+        private void UpdateExplorationAbilities(ExplorationController ctrl, CharacterData charData, EntityCharacter player)
         {
             if (ctrl == null) return;
 

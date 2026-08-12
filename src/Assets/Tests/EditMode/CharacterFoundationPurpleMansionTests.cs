@@ -5,6 +5,7 @@ using TianZhang.Entity;
 using UnityEngine;
 
 using TianZhang.Spatial;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -17,7 +18,7 @@ namespace TianZhang.Tests
             CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = Character.FromData(data, new HexCoord(0, 0));
+                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
 
                 Assert.IsTrue(character.HasFoundationPurpleMansionState);
                 Assert.AreEqual(FoundationPhase.Phase4, character.FoundationPurpleMansionState.Phase);
@@ -70,7 +71,7 @@ namespace TianZhang.Tests
             CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = Character.FromData(data, new HexCoord(0, 0));
+                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
 
                 FoundationPurpleMansionOperationResult stopped =
                     character.TryRepeatClosedRetreatCycle("unused", false);
@@ -91,7 +92,7 @@ namespace TianZhang.Tests
                 CharacterData openingData = CreateCharacterData(state);
                 try
                 {
-                    var openingCharacter = Character.FromData(openingData, new HexCoord(0, 0));
+                    var openingCharacter = EntityCharacter.FromData(openingData, new HexCoord(0, 0));
                     FoundationPurpleMansionOperationResult failed =
                         openingCharacter.TryFailMansionOpeningTrial(PurpleMansionKind.Hun);
                     Assert.IsTrue(failed.Succeeded);
@@ -131,7 +132,7 @@ namespace TianZhang.Tests
             CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = Character.FromData(data, new HexCoord(0, 0));
+                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
                 Assert.IsTrue(character.TryRepeatClosedRetreatCycle("unused", false).Succeeded);
 
                 FoundationPurpleMansionSaveData pausedSave =
@@ -166,7 +167,7 @@ namespace TianZhang.Tests
             CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = Character.FromData(data, new HexCoord(0, 0));
+                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
                 var coordinator = new JindanProofCoordinator();
 
                 FoundationPurpleMansionOperationResult formed =

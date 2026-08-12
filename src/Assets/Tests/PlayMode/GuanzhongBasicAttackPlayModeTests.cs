@@ -1,18 +1,23 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Adventure;
+using TianZhang.Bootstrap;
+using TianZhang.Character;
 using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Game;
+using TianZhang.Cultivation;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Map;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 using TianZhang.Spatial;
+using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -41,8 +46,9 @@ namespace TianZhang.Tests
                 Object.DestroyImmediate(flowGo);
             if (SceneFlowManager.Instance != null)
                 Object.DestroyImmediate(SceneFlowManager.Instance.gameObject);
-            if (GameSession.Instance != null)
-                Object.DestroyImmediate(GameSession.Instance.gameObject);
+            GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+            if (bootstrap != null)
+                Object.DestroyImmediate(bootstrap.gameObject);
             flowGo = null;
         }
 
@@ -51,11 +57,14 @@ namespace TianZhang.Tests
         {
             flowGo = new GameObject("GuanzhongBasicAttackFlow");
             var flow = flowGo.AddComponent<SceneFlowManager>();
-            Assert.IsNotNull(GameSession.Instance, "SceneFlowManager must ensure the single session.");
+            Assert.IsNotNull(GameBootstrap.Runtime, "SceneFlowManager must ensure the single runtime.");
 
             var playerProfile = CharacterCreationRules.BuildCharacterData(
                 CharacterCreationCatalog.CreateDefaultDraft());
-            GameSession.Instance.BeginNewGame(playerProfile, "jiangzuo_hub");
+            GameBootstrap.RequireRuntime().BeginNewGame(
+                CharacterRuntimeProfile.FromDefinition("player", playerProfile),
+                CultivationState.FromDefinition(playerProfile.foundationPurpleMansionState),
+                "jiangzuo_hub");
 
             flow.EnterAdventure(AdventureId, SceneReturnTarget.Settlement(SettlementId));
             yield return null;
@@ -75,12 +84,12 @@ namespace TianZhang.Tests
             // 等待探索初始化完成（玩家与石甲兽都已生成）。
             yield return WaitUntilSpawned(exploration);
 
-            var player = (Character)ReadField(exploration, "player");
+            var player = (EntityCharacter)ReadField(exploration, "player");
             Assert.AreEqual(BasicUnarmedProfileId, player.BasicAttackProfileId);
             Assert.AreEqual("unarmed_fallback", player.BasicAttackBindingKind);
 
             var enemyUnit = GetSpawnedEnemyUnit(exploration);
-            var enemy = (Character)ReadField(enemyUnit, "character");
+            var enemy = (EntityCharacter)ReadField(enemyUnit, "character");
             Assert.AreEqual("enemy_shijiahou", ((EnemyData)ReadField(enemyUnit, "enemyData")).enemyId);
             Assert.AreEqual(BasicUnarmedProfileId, enemy.BasicAttackProfileId);
             Assert.AreEqual("unarmed_fallback", enemy.BasicAttackBindingKind);
@@ -129,7 +138,7 @@ namespace TianZhang.Tests
             Assert.Fail("formal guanzhong_wild must spawn the shijiahou enemy.");
         }
 
-        private static void RepositionEnemy(ExplorationController exploration, Character enemy, HexCoord coord)
+        private static void RepositionEnemy(ExplorationController exploration, EntityCharacter enemy, HexCoord coord)
         {
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
             grid.ClearOccupied(enemy.Position);
@@ -137,7 +146,7 @@ namespace TianZhang.Tests
             grid.SetOccupied(coord, (int)ReadField(GetSpawnedEnemyUnit(exploration), "gridUnitId"));
         }
 
-        private static IEnumerator MovePlayerToNeighbor(ExplorationController exploration, Character enemy)
+        private static IEnumerator MovePlayerToNeighbor(ExplorationController exploration, EntityCharacter enemy)
         {
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
             var target = FirstFreeNeighbor(grid, enemy.Position);
@@ -147,7 +156,7 @@ namespace TianZhang.Tests
 
         private static IEnumerator MovePlayerTo(ExplorationController exploration, HexCoord target)
         {
-            var player = (Character)ReadField(exploration, "player");
+            var player = (EntityCharacter)ReadField(exploration, "player");
             var grid = (HexGrid)ReadMember(ReadField(exploration, "tilemapManager"), "Grid");
 
             for (int step = 0; step < 8 && player.Position != target; step++)

@@ -1,7 +1,11 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TianZhang.Bootstrap;
+using TianZhang.Character;
+using TianZhang.Cultivation;
 using TianZhang.Entity;
 using TianZhang.Game.CharacterCreation;
+using TianZhang.Gameplay.Contracts;
 
 namespace TianZhang.Game
 {
@@ -37,7 +41,7 @@ namespace TianZhang.Game
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            EnsureSession();
+            GameBootstrap.RequireRuntime();
         }
 
         public void StartNewGame(CharacterData profile)
@@ -48,8 +52,11 @@ namespace TianZhang.Game
         public string PrepareNewGame(CharacterData profile)
         {
             var startNodeId = ResolveStartNodeId(profile);
-            EnsureSession().BeginNewGame(profile, startNodeId);
-            return PrepareWorldEntry(startNodeId);
+            GameBootstrap.RequireRuntime().BeginNewGame(
+                CharacterRuntimeProfile.FromDefinition("player", profile),
+                CultivationState.FromDefinition(profile == null ? null : profile.foundationPurpleMansionState),
+                startNodeId);
+            return GameBootstrap.RequireRuntime().EnterWorld(startNodeId);
         }
 
         public static string ResolveStartNodeId(CharacterData profile)
@@ -71,7 +78,7 @@ namespace TianZhang.Game
         }
 
         /// <summary>
-        /// 进入据点场景（持久化 settlementId 到 GameSession）。
+        /// 进入据点场景（持久化 settlementId 到 GameRuntime 导航状态）。
         /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 补 ID 持久化
         /// </summary>
         public void EnterSettlement(string settlementId)
@@ -80,7 +87,7 @@ namespace TianZhang.Game
         }
 
         /// <summary>
-        /// 进入副本/战斗场景（持久化 adventureId 到 GameSession）。
+        /// 进入副本/战斗场景（持久化 adventureId 到 GameRuntime 导航状态）。
         /// ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro；变更范围：TQ-014-DS-05 返工 — 补 ID 持久化
         /// </summary>
         public void EnterAdventure(string adventureId, SceneReturnTarget returnTarget)
@@ -95,58 +102,28 @@ namespace TianZhang.Game
 
         public string PrepareWorldEntry(string nodeId)
         {
-            EnsureSession().SetWorldNode(nodeId);
-            return "WorldScene";
+            return GameBootstrap.RequireRuntime().EnterWorld(nodeId);
         }
 
         public string PrepareSettlementEntry(string settlementId)
         {
-            var session = EnsureSession();
-            session.SetSettlementId(settlementId);
-            session.SetReturnTarget(SceneReturnTarget.World(session.CurrentWorldNodeId));
-            return "SettlementScene";
+            return GameBootstrap.RequireRuntime().EnterSettlement(settlementId);
         }
 
         public string PrepareAdventureEntry(string adventureId, SceneReturnTarget returnTarget)
         {
-            var session = EnsureSession();
-            session.SetAdventureId(adventureId);
-            session.SetReturnTarget(returnTarget);
-            return "AdventureScene";
+            return GameBootstrap.RequireRuntime().EnterAdventure(adventureId, returnTarget);
         }
 
         public string PrepareReturnToPreviousScene()
         {
-            var target = EnsureSession().LastReturnTarget;
-            if (target.SceneName == "SettlementScene")
-            {
-                var session = EnsureSession();
-                session.SetSettlementId(target.SettlementId);
-                session.SetAdventureId(null);
-                session.SetReturnTarget(default);
-                return "SettlementScene";
-            }
-
-            var returnSession = EnsureSession();
-            returnSession.SetWorldNode(target.WorldNodeId);
-            returnSession.SetAdventureId(null);
-            returnSession.SetReturnTarget(default);
-            return "WorldScene";
+            return GameBootstrap.RequireRuntime().ReturnToPreviousScene();
         }
 
         public void ReturnToMainMenu()
         {
-            EnsureSession().ClearSession();
-            SceneManager.LoadScene("StartMenuScene");
-        }
-
-        private static GameSession EnsureSession()
-        {
-            if (GameSession.Instance != null)
-                return GameSession.Instance;
-
-            var go = new GameObject("GameSession");
-            return go.AddComponent<GameSession>();
+            GameBootstrap.RequireRuntime().Clear();
+            SceneManager.LoadScene(GameplaySceneNames.StartMenu);
         }
 
         private void OnDestroy()
