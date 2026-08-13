@@ -14,7 +14,6 @@ using TianZhang.Cultivation;
 using TianZhang.Features.CharacterCreation;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Infrastructure.UnityContent;
-using TianZhang.Tactical;
 using TianZhang.World;
 
 namespace TianZhang.Editor

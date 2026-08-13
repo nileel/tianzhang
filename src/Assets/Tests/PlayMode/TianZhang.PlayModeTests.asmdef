@@ -6,7 +6,6 @@
         "TianZhang.Domain",
         "TianZhang.Content",
         "TianZhang.Combat",
-        "TianZhang.Gameplay",
         "TianZhang.Bootstrap",
         "TianZhang.Character",
         "TianZhang.Cultivation",

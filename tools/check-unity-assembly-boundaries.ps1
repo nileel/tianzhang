@@ -68,6 +68,10 @@ foreach ($definition in $definitions) {
   $byName[$definition.Name] = $definition
 }
 
+foreach ($forbiddenAssembly in @('TianZhang.Runtime', 'TianZhang.Gameplay')) {
+  Assert-Boundary (-not $byName.ContainsKey($forbiddenAssembly)) "legacy broad assembly is forbidden: $forbiddenAssembly"
+}
+
 foreach ($definition in $definitions) {
   foreach ($reference in $definition.References) {
     if ($reference.StartsWith('TianZhang.', [StringComparison]::Ordinal)) {
@@ -175,6 +179,7 @@ foreach ($asmref in $asmrefs) {
   try { $referenceJson = Get-Content -LiteralPath $asmref.FullName -Raw | ConvertFrom-Json -Depth 10 }
   catch { throw "invalid asmref JSON: $($asmref.FullName): $($_.Exception.Message)" }
   $referenceName = [string]$referenceJson.reference
+  Assert-Boundary ($referenceName -cne 'TianZhang.Gameplay') "legacy Gameplay asmref is forbidden: $($asmref.FullName)"
   Assert-Boundary ($byName.ContainsKey($referenceName)) "asmref targets an unknown assembly: $($asmref.FullName) -> $referenceName"
 }
 

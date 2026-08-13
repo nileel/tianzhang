@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-ARCH-REBUILD-01H"
-  ],
-  "stateReason": "2026-08-13：01A～01G 已完成归档并通过独立架构复审；父项只等待已解锁的 01H 完成遗留删除、结构文档、总验收和 URP 交接。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：01A～01H 全部完成；十三项父项完成条件均有直接结构、编译、Unity、数据链、旧引用、上下文演练和 URP 交接证据，父项关闭。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -51,3 +49,12 @@
 ## 停止条件
 
 - 任一子任务未完成、复审未通过或需要下游补丁才能证明当前阶段时停止关闭父项。
+
+## 2026-08-13 父项关闭证据
+
+- 01A～01H 均已完成归档；01G 正式薄切片经独立架构复审通过，01H 独立总验收为 19 assemblies／2 asmrefs、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链、旧引用与文本检查全部通过。
+- §10.2 条件 1～6：宽泛 Gameplay、Hub 与旧 Character 已退出；程序集单向且无兄弟 Feature 引用；领域状态／保存／场景／UI／资源所有者唯一；Coordinator 只编排；Combat 只消费纯快照；Bootstrap 是唯一跨场景组合根。
+- 条件 7～9：schema 1 原子槽位保存／恢复、新建角色到战斗结算返回的正式薄切片，以及悬赏、册界、状态直接验收全部通过。
+- 条件 10～12：旧场景、asmref、类、资源引用和临时兼容层清除；根索引、四份聚焦图和模块 README 与实时项目一致；四个代表任务的一次性上下文演练完成。
+- 条件 13：`U-URP-PREFLIGHT-01` 已取得四个正式场景、19 个程序集、2 个 asmref、保留 Resources／相机／UI／Tilemap／Sprite 与验证入口的稳定扫描基线并进入 ready。
+- 架构父项不恢复旧 Built-in 视觉；URP、3D 角色与正式美术仍由后续独立链负责。

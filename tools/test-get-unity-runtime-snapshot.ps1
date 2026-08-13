@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $clientPath = Join-Path $PSScriptRoot 'get-unity-runtime-snapshot.ps1'
-$probeSourcePath = Join-Path $PSScriptRoot '..\src\Assets\Scripts\Editor\UnityRuntimeProbe.cs'
+$probeSourcePath = Join-Path $PSScriptRoot '..\src\Assets\Scripts\Editor\Diagnostics\UnityRuntimeProbe.cs'
 if (-not (Test-Path -LiteralPath $clientPath -PathType Leaf)) { throw "Missing client: $clientPath" }
 if (-not (Test-Path -LiteralPath $probeSourcePath -PathType Leaf)) { throw "Missing probe source: $probeSourcePath" }
 . $clientPath

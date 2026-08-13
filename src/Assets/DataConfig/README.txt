@@ -2,7 +2,7 @@
 
 ## 设计理念
 
-所有游戏数据以 CSV 表格为唯一数据源。**显示文本统一通过 Language.csv 管理**，其他 CSV 表中仅引用文本 ID。Excel 编辑 → 导出 CSV → Unity 菜单 `天章/导入全部配置` → 生成 .asset
+生产配置以 CSV 表格为主要数据源；批准的静态目录资产仍是其字段引用的外部权威。**显示文本统一通过 Language.csv 管理**，其他 CSV 表中仅引用文本 ID。Excel 编辑 → 导出 CSV → Unity 菜单 `天章/导入全部配置` → 领域 importer 验证并生成 `.asset`。`ContentImportCoordinator` 只负责确定性顺序，不拥有领域字段、投影或提交。
 
 ## 文本 ID 系统
 
@@ -23,9 +23,14 @@
 | `Settlements.csv` | 正式据点投影 | `Data/Settlements/Settlement_*.asset` |
 | `Items.csv` | 正式物品投影 | `Data/Items/Item_*.asset` |
 | `Bounties.csv` | 正式悬赏投影 | `Data/Bounties/Bounty_*.asset` |
+| `Adventures.csv` | 正式 Adventure 地图 | `Data/Adventures/AdventureMap_*.asset` |
+| `AttackProfiles.csv` | 正式攻击档案 | `Data/AttackProfiles/AttackProfile_*.asset` |
+| `CharacterCreationPointBuy.csv` | 角色创建点购配置 | `Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset` |
 | `EnvironmentProfiles.csv` | 环境档案纯数据契约 | `Data/EnvironmentProfiles/EnvironmentProfile_*.asset` |
+| `NpcCultivationActionWeightProfiles.csv` | NPC 修炼行动权重 | `Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_*.asset` |
 | `FoundationPurpleMansionStates.csv` | 道基、紫府与修炼根状态（当前仅 schema） | `Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_*.asset` |
 | `JindanStaticStates.csv` | 金丹静态根（当前仅 schema） | `Data/JindanStaticStates/JindanStaticState_*.asset` |
+| `CharterRuleDefinitions.csv` | 册界规则定义 | `Data/CharterRuleDefinitions/CharterRuleDefinition_*.asset` |
 | `CharterSites.csv` | 册界单据点站点契约 | `Data/CharterSites/CharterSite_*.asset` |
 
 ## CSV 格式规则
@@ -182,5 +187,5 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 
 1. 在对应 CSV 中编辑数据（文本字段用 ID）
 2. 如需新增文本，先在 Language.csv 中添加 ID→中文映射
-3. Unity 菜单 → `天章/导入全部配置`
+3. Unity 菜单 → `天章/导入全部配置`（Coordinator 依次调用领域 importer）
 4. 生成的 .asset 中显示为已解析的中文

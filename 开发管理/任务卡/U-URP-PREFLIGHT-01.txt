@@ -8,14 +8,15 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "discovery",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-ARCH-REBUILD-01H"],
-  "stateReason": "等待架构重建总验收与 URP 交接完成",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：架构 01A～01H 与父项已完成；预检获得四个正式场景、19 个程序集、2 个 asmref、保留 Resources 和新 Adventure／Combat／Presentation／Content／Bootstrap 所有者基线，可只读冻结 URP 版本与迁移路径。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-URP-PREFLIGHT-01.txt",
-    "开发管理/任务归档/U-URP-PREFLIGHT-01.txt"
+    "开发管理/任务归档/U-URP-PREFLIGHT-01.txt",
+    "开发管理/任务卡/U-URP-MIGRATE-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -49,3 +50,9 @@
 ## 停止条件
 
 - 兼容版本、精确路径、材质清单、回滚或正式场景回归无法冻结时停止。
+
+## 2026-08-13 架构交接基线
+
+- 正式场景固定为 StartMenu、World、Settlement、Adventure；正式运行时固定为 19 个命名程序集与 2 个 asmref，不存在 `TianZhang.Runtime`、宽泛 `TianZhang.Gameplay` 或旧原型入口。
+- 扫描只覆盖现行 Packages、Graphics／Quality、四个正式场景、保留相机、UI／TMP、Tilemap、Sprite、材质、Shader、高亮、选格和直接测试；`Resources` 下保留资产由场景序列化引用，Player C# 不按字符串加载。
+- 预检只读检查上述基线并把准确包版本、资产清单、迁移／回滚路径和验证写入 `U-URP-MIGRATE-01`；本卡不安装包、不改 Unity 行为。

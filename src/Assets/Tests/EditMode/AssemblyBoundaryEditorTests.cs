@@ -8,36 +8,22 @@ namespace TianZhang.Tests
     public class AssemblyBoundaryEditorTests
     {
         [Test]
-        public void ProjectAssembliesFollowTheRuntimeDependencyDirection()
+        public void LegacyBroadRuntimeAssembliesAreAbsent()
         {
-            AssertAssembly("Assets/Scripts/Core/TianZhang.Foundation.asmdef", "TianZhang.Foundation");
-            AssertAssembly("Assets/Scripts/Entity/TianZhang.Domain.asmdef", "TianZhang.Domain", "TianZhang.Foundation", "TianZhang.Content", "TianZhang.Spatial");
-            AssertAssembly("Assets/Scripts/Combat/TianZhang.Combat.asmdef", "TianZhang.Combat", "TianZhang.Foundation", "TianZhang.Spatial", "TianZhang.Combat.Turns");
-            AssertAssembly("Assets/Scripts/Combat/Turns/TianZhang.Combat.Turns.asmdef", "TianZhang.Combat.Turns");
-            AssertAssembly(
-                "Assets/Scripts/Game/TianZhang.Gameplay.asmdef",
-                "TianZhang.Gameplay",
-                "TianZhang.Foundation",
-                "TianZhang.Domain",
-                "TianZhang.Content",
-                "TianZhang.Combat",
-                "TianZhang.Character",
-                "TianZhang.Cultivation",
-                "TianZhang.World",
-                "TianZhang.Bootstrap",
-                "TianZhang.Gameplay.Contracts",
-                "TianZhang.Spatial",
-                "TianZhang.Infrastructure.UnityContent",
-                "Unity.InputSystem",
-                "Unity.InputSystem.ForUI",
-                "UnityEngine.UI");
-
+            Assert.That(File.Exists("Assets/Scripts/TianZhang.Runtime.asmdef"), Is.False);
+            Assert.That(File.Exists("Assets/Scripts/Game/TianZhang.Gameplay.asmdef"), Is.False);
             AssertAssemblyReference("Assets/Scripts/Cultivation/TianZhang.Domain.asmref", "TianZhang.Domain");
-            AssertAssemblyReference("Assets/Scripts/Adventure/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
-            AssertAssemblyReference("Assets/Scripts/World/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
-            AssertAssemblyReference("Assets/Scripts/Settlement/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
-            AssertAssemblyReference("Assets/Scripts/Grid/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
-            AssertAssemblyReference("Assets/Scripts/Tilemap/TianZhang.Gameplay.asmref", "TianZhang.Gameplay");
+            foreach (string relativePath in new[]
+            {
+                "Assets/Scripts/Adventure/TianZhang.Gameplay.asmref",
+                "Assets/Scripts/World/TianZhang.Gameplay.asmref",
+                "Assets/Scripts/Settlement/TianZhang.Gameplay.asmref",
+                "Assets/Scripts/Grid/TianZhang.Gameplay.asmref",
+                "Assets/Scripts/Tilemap/TianZhang.Gameplay.asmref",
+            })
+            {
+                Assert.That(File.Exists(relativePath), Is.False, relativePath);
+            }
         }
 
         [Test]

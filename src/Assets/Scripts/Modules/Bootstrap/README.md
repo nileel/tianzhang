@@ -1,10 +1,10 @@
 # TianZhang.Bootstrap
 
-- 职责：唯一应用组合根，只创建并连接模块。
-- 公开入口：`GameRuntime` 与唯一 Unity 组合根 `GameBootstrap`。
-- 允许依赖：Domain、Character、Content、Combat、Cultivation、World、Gameplay.Contracts、五个 Feature 和两项 Infrastructure。
+- 职责：唯一应用组合根、场景接线、应用生命周期与跨场景运行时组合。
+- 公开入口：`GameBootstrap`、`GameRuntime` 与四个 `*SceneInstaller`。
+- 允许依赖：Domain、Character、Content、Combat、Cultivation、World、Gameplay.Contracts、五个 Feature 与两项 Infrastructure。
 - 禁止依赖：业务规则、状态机、UI 格式化、资源 fallback 和第二组合根。
-- 运行时所有者：`GameRuntime` 只组合模块 store、生命周期、保存与导航；算法留在模块用例。
-- 数据／配置来源：场景 Installer 的显式序列化引用；存档槽位由 Persistence 提供。
-- 直接测试：`GameRuntimeTests`、`ArchitectureBaselineEditorTests`、`AssemblyBoundaryEditorTests`、`FeatureCompositionEditorTests`。
-- 常见修改路由：只增加创建与连接；任何业务行为回到对应模块。
+- 运行时所有者：`GameBootstrap` 是唯一 Unity 生命周期根；`GameRuntime` 组合领域 store、应用用例、导航与保存快照。
+- 数据／配置来源：四个正式场景 Installer 的显式序列化引用；本地槽位由 Persistence 提供。
+- 直接测试：`GameRuntimeTests`、`GameSaveEnvelopeTests`、`SceneArchitectureEditorTests`、`FeatureCompositionEditorTests`。
+- 常见修改路由：只修改创建、连接、导航和应用级组合；领域行为回到领域模块，显示回到 Feature。

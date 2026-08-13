@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-13：01C-R1、01C-R2 与 01D-R1 均已由 Codex 完成归档；返工前置全部关闭，本卡恢复为 codex_execute/codex/ready，下一轮独立执行整体架构总验收。",
+  "stateReason": "2026-08-13：遗留运行时与原型已删除，结构图和模块路由已刷新；19 个程序集、2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链与旧引用扫描全部通过，完成 URP 预检交接。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -33,6 +33,11 @@
     "src/Assets/Scripts/Entity/README.md",
     "src/Assets/Scripts/Entity/README.md.meta",
     "src/Assets/Scripts/Editor/README.md",
+    "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs",
     "src/Assets/Scripts/Modules/Bootstrap/README.md",
     "src/Assets/Scripts/Modules/Character/README.md",
     "src/Assets/Scripts/Modules/Content/README.md",
@@ -108,7 +113,9 @@
     "src/Assets/Tests/EditMode/TianZhang.EditModeTests.asmdef",
     "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/CharterConflictRulesTests.cs",
     "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/EditMode/CharacterPresentationViewTests.cs",
     "src/Assets/Tests/EditMode/CharacterPresentationViewTests.cs.meta",
@@ -183,3 +190,31 @@
 
 - `U-ARCH-REBUILD-01C-R1`、`U-ARCH-REBUILD-01C-R2` 与 `U-ARCH-REBUILD-01D-R1` 均已完成归档；领域导入器、点购配置所有权与旧 `Entity.Character` Hub 三个总验收缺口已经各自在冻结边界内修复。
 - 本卡没有剩余命名前置，恢复为 `codex_execute/codex/ready`；下一轮须独立重做遗留引用、结构文档、完整程序集与正式薄切片总验收，不复用返工卡的局部通过结论直接关闭父项或解锁 URP。
+
+## 2026-08-13 完成证据
+
+### 遗留删除与实时所有者
+
+- 删除空 `TianZhang.Runtime`、宽泛 `TianZhang.Gameplay`、五个 Gameplay asmref、旧 Character Presentation／Hybrid Tactical／Tilemap 运行时、两个原型场景、对应 Builder／资产／专属测试和无引用 `SettlementDefinition`；通用 `UnityRuntimeProbe` 保持原 GUID 移入 `Editor/Diagnostics`，同步机械测试路径。
+- Build Settings 仍只有 StartMenu、World、Settlement、Adventure 四个正式入口；`GameBootstrap -> GameRuntime -> 四个 SceneInstaller -> 五个 Feature` 是唯一正式所有者链。保留 Resources 资产均由正式场景序列化引用，Player C# 无 `Resources.Load`。
+- 32 个删除 `.meta` GUID 对 184 个保留 `.unity/.prefab/.asset/.controller/.anim` 扫描零命中；旧类名／namespace、非空持久 UnityEvent 和 Animator 资产均零命中。新增 EditMode 与 PowerShell 边界闸门防止宽泛程序集、旧 asmref、旧类型和删除 GUID 回流。
+
+### 结构文档与一次性上下文演练
+
+- 根 `UNITY_STRUCTURE.md` 只保留入口；新增 assemblies、runtime、content、ui 四份聚焦图，并把各程序集旁 README 统一为职责、公开入口、允许／禁止依赖、运行时所有者、数据源、直接测试和常见修改路由。
+- Combat 规则演练：根索引 -> assemblies 图 -> `Combat/README.md` -> `CombatActionResolver`／`CombatSession` -> `CombatRuntimeKernelTests`。
+- Cultivation 状态演练：根索引 -> assemblies 图 -> `Modules/Cultivation/README.md` -> `CultivationState` -> `CultivationStateTests`；无需读取 Bootstrap、场景或 CombatPresentation。
+- Settlement 交互演练：根索引 -> runtime／ui 图 -> Settlement README -> `SettlementFeatureDispatcher`／`CharterSiteController` -> `CharterSiteViewTests` 与站点运行时测试。
+- Adventure 节点演练：根索引 -> runtime 图 -> Adventure README -> `IAdventureNodeHandler`／`ReturnNodeHandler`／`AdventureController` -> `AdventureNodeDispatchTests`、`GuanzhongFormalEndToEndTests` 与正式 PlayMode。
+
+### 验证与根因修正
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`：0 error；既有序列化字段警告不属于本卡功能失败。
+- `check-unity-assembly-boundaries.ps1`：19 assemblies／2 asmrefs；`check-data-chain.ps1`、`check-review-text.ps1` 与诊断探针 10 项机械测试均通过。
+- Unity EditMode 首轮 406/407；唯一失败的 `AuthorizedGrantBindsEveryConflictIdentityField` 把左右候选都留在默认 6，却断言批准的 6/4 输入才会产生的 `PULSE_ADVANTAGE`。经用户当次明确授权，只把该测试右侧储备显式设为 4；生产 `CharterConflictRules` 未改。复跑 407/407，通过全部硬条件。
+- Unity PlayMode 5/5；`SceneArchitectureValidator.ValidateForBatchMode` 退出码 0，四个正式场景验证前后 SHA-256 不变。旧引用、Build Settings、文本、数据链和差异检查均通过。
+
+### URP 交接
+
+- `U-URP-PREFLIGHT-01` 只扫描上述四个正式场景、19 个现行程序集、保留相机／UI／TMP／Tilemap／Sprite／材质／Shader／高亮／选格与直接测试；不扫描或兼容本卡已删除的 Built-in 原型。
+- 本卡不安装 URP、不引入 3D 角色或正式美术、不修改 CTB、空间、伤害、AI、存档、场景流转或生产册界规则。

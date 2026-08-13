@@ -7,7 +7,6 @@
         "TianZhang.Domain",
         "TianZhang.Content",
         "TianZhang.Combat",
-        "TianZhang.Gameplay",
         "TianZhang.Editor",
         "TianZhang.Bootstrap",
         "TianZhang.Character",

@@ -92,7 +92,10 @@ namespace TianZhang.Tests
         {
             var archive = new CrossTierChallengeArchive(new[] { CreateGrant() });
             CrossTierChallengeRequest request = CreateRequest();
-            Assert.AreEqual("PULSE_ADVANTAGE", CreateJindan(crossTierChallengeRequest: request).Decide(archive).Reason);
+            RuleConflictInstance authorized = CreateJindan(
+                crossTierChallengeRequest: request,
+                right: CreateCandidate("right", conflictReserve: 4));
+            Assert.AreEqual("PULSE_ADVANTAGE", authorized.Decide(archive).Reason);
             AssertBinding(archive, CreateJindan(allowedOperationId: "other-operation", crossTierChallengeRequest: request), "TZ_CHARTER_CONFLICT_GRANT_OPERATION_MISMATCH");
             AssertBinding(archive, CreateJindan(targetId: "other-target", crossTierChallengeRequest: request), "TZ_CHARTER_CONFLICT_GRANT_TARGET_MISMATCH");
             AssertBinding(archive, CreateJindan(scopeId: "other-scope", crossTierChallengeRequest: request), "TZ_CHARTER_CONFLICT_GRANT_SCOPE_MISMATCH");
