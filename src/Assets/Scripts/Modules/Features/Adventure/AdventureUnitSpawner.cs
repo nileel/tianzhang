@@ -5,7 +5,6 @@ using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Spatial;
 using UnityEngine;
-using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Features.Adventure
 {
@@ -79,8 +78,7 @@ namespace TianZhang.Features.Adventure
             var playerPosition = new HexCoord(startNode.q, startNode.r);
             var enemyPosition = new HexCoord(encounterNode.q, encounterNode.r);
             CombatantSnapshot playerSnapshot = CreatePlayer(player, playerPosition);
-            EntityCharacter enemyCharacter = EntityCharacter.FromData(enemyData.combatTemplate, enemyPosition);
-            CombatantSnapshot enemySnapshot = CreateEnemy(enemyCharacter);
+            CombatantSnapshot enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition);
             GameObject playerMarker = InstantiateMarker(unitMarkerPrefab, playerPosition, "PlayerMarker", Color.cyan);
             GameObject enemyMarker = InstantiateMarker(unitMarkerPrefab, enemyPosition, "EnemyMarker", Color.red);
             string playerBasic = !string.IsNullOrWhiteSpace(player.MainEquipmentBasicAttackProfileId)
@@ -129,9 +127,7 @@ namespace TianZhang.Features.Adventure
                 source.Progression.RealmMultiplier,
                 Mathf.Clamp(Mathf.RoundToInt(source.Attributes.Reaction / 20f), 2, 8),
                 source.AbilityLoadout.EquippedSpells,
-                source.AbilityLoadout.KnownSpells,
-                EntityCharacter.MaxCombatSwaps,
-                0)
+                source.AbilityLoadout.KnownSpells)
             {
                 GongFaId = source.Progression.GongFaId,
             };
@@ -139,38 +135,89 @@ namespace TianZhang.Features.Adventure
             return snapshot;
         }
 
-        private static CombatantSnapshot CreateEnemy(EntityCharacter source)
+        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position)
         {
+            CharacterAttributes attributes = CharacterAttributes.FromDefinition(source);
+            float realmMultiplier = source.realmMultiplier > 0f ? source.realmMultiplier : 1f;
+            CharacterDerivedAttributes derived = attributes.Derive(
+                realmMultiplier,
+                new CharacterAttributeBonuses
+                {
+                    Health = Mathf.RoundToInt(source.hpBonus),
+                    SpiritResource = Mathf.RoundToInt(source.mpBonus),
+                    PhysicalAttack = Mathf.RoundToInt(source.physAtkBonus),
+                    MagicAttack = Mathf.RoundToInt(source.magAtkBonus),
+                    PhysicalDefense = Mathf.RoundToInt(source.physDefBonus),
+                    MagicDefense = Mathf.RoundToInt(source.magDefBonus),
+                });
             var snapshot = new CombatantSnapshot(
                 "enemy",
                 CombatTeam.Enemy,
-                source.Position,
-                source.Reaction,
-                source.MaxHP,
-                source.CurrentHP,
-                source.PhysAtk,
-                source.MagAtk,
-                source.PhysDef,
-                source.MagDef,
-                source.RealmMultiplier,
-                source.MovePoints,
-                source.EquippedSpellIds,
-                source.AvailableSpells,
-                EntityCharacter.MaxCombatSwaps,
-                0)
+                position,
+                attributes.Reaction,
+                derived.MaxHealth,
+                derived.MaxHealth,
+                derived.PhysicalAttack,
+                derived.MagicAttack,
+                derived.PhysicalDefense,
+                derived.MagicDefense,
+                realmMultiplier,
+                Mathf.Clamp(Mathf.RoundToInt(attributes.Reaction / 20f), 2, 8),
+                ProjectEquippedSpells(source, realmMultiplier),
+                source.availableSpells)
             {
-                BlockRate = source.BlockRate,
-                BlockReduction = source.BlockReduction,
-                SoulShieldRate = source.SoulShieldRate,
-                SoulShieldReduction = source.SoulShieldReduction,
-                DodgeRate = source.DodgeRate,
-                CriticalRate = source.CritRate,
-                CriticalDamage = source.CritDamage,
-                HitRateBonus = source.HitRateBonus,
-                GongFaId = source.GongFaName,
+                BlockRate = source.blockRate,
+                BlockReduction = source.blockReduction,
+                SoulShieldRate = source.soulShieldRate,
+                SoulShieldReduction = source.soulShieldReduction,
+                DodgeRate = source.dodgeRate,
+                CriticalRate = source.critRate,
+                CriticalDamage = source.critDamage,
+                HitRateBonus = source.hitRateBonus,
+                GongFaId = source.gongFaName,
             };
-            snapshot.SetSpirit(source.MaxMP, source.CurrentMP);
+            snapshot.SetSpirit(derived.MaxSpirit, derived.MaxSpirit);
             return snapshot;
+        }
+
+        private static string[] ProjectEquippedSpells(CharacterData source, float realmMultiplier)
+        {
+            string[] equipped = source.equippedSpells ?? Array.Empty<string>();
+            int slotLimit = source.maxSpellSlots > 0
+                ? source.maxSpellSlots
+                : DefaultSpellSlots(realmMultiplier) + MansionSpellSlotBonus(source);
+            if (slotLimit <= 0)
+                return Array.Empty<string>();
+            if (equipped.Length <= slotLimit)
+                return (string[])equipped.Clone();
+
+            var result = new string[slotLimit];
+            Array.Copy(equipped, result, slotLimit);
+            return result;
+        }
+
+        private static int DefaultSpellSlots(float realmMultiplier)
+        {
+            if (realmMultiplier >= 3f) return 5;
+            if (realmMultiplier >= 1.5f) return 4;
+            return 0;
+        }
+
+        private static int MansionSpellSlotBonus(CharacterData source)
+        {
+            if (source.foundationPurpleMansionState != null || source.developedMansions == null)
+                return 0;
+
+            var seen = new System.Collections.Generic.HashSet<string>();
+            int bonus = 0;
+            foreach (string mansion in source.developedMansions)
+            {
+                if (string.IsNullOrWhiteSpace(mansion) || !seen.Add(mansion))
+                    continue;
+                if ((mansion == "命府" || mansion == "魂府" || mansion == "气府") && bonus < 3)
+                    bonus++;
+            }
+            return bonus;
         }
 
         private static GameObject InstantiateMarker(

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-ARCH-REBUILD-01D-R1"
-  ],
-  "stateReason": "2026-08-13：01C-R1 与 01C-R2 已由 Codex 完成归档；01H 继续等待 01D-R1 完成归档，再作为独立收尾任务执行整体架构总验收。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：01C-R1、01C-R2 与 01D-R1 均已由 Codex 完成归档；返工前置全部关闭，本卡恢复为 codex_execute/codex/ready，下一轮独立执行整体架构总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -180,3 +178,8 @@
 
 - DeepSeek 对 `U-ARCH-REBUILD-01C-R1` 的首次实跑在 3000 秒上限超时，未形成 candidate 或正式提交；用户已明确放弃对应半成品。
 - `U-ARCH-REBUILD-01C-R1`、`U-ARCH-REBUILD-01C-R2`、`U-ARCH-REBUILD-01D-R1` 统一调整为 `codex_execute / codex`；三卡完成归档后由本卡继续独立总验收。
+
+## 2026-08-13 返工前置关闭
+
+- `U-ARCH-REBUILD-01C-R1`、`U-ARCH-REBUILD-01C-R2` 与 `U-ARCH-REBUILD-01D-R1` 均已完成归档；领域导入器、点购配置所有权与旧 `Entity.Character` Hub 三个总验收缺口已经各自在冻结边界内修复。
+- 本卡没有剩余命名前置，恢复为 `codex_execute/codex/ready`；下一轮须独立重做遗留引用、结构文档、完整程序集与正式薄切片总验收，不复用返工卡的局部通过结论直接关闭父项或解锁 URP。

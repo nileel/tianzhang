@@ -23,9 +23,6 @@ using TianZhang.Tactical;
 using TianZhang.Infrastructure.UnityContent;
 using UnityEditor.SceneManagement;
 using EnvironmentProfileData = TianZhang.Infrastructure.UnityContent.EnvironmentProfileAsset;
-using EntityCharacter = TianZhang.Entity.Character;
-
-using TianZhang.Spatial;
 
 namespace TianZhang.Tests
 {

@@ -1,11 +1,9 @@
 ﻿using NUnit.Framework;
+using TianZhang.Character;
 using TianZhang.Entity;
 using TianZhang.Features.CharacterCreation;
 using TianZhang.Game.CharacterCreation;
 using UnityEngine;
-
-using TianZhang.Spatial;
-using EntityCharacter = TianZhang.Entity.Character;
 
 namespace TianZhang.Tests
 {
@@ -185,7 +183,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void CharacterDataAndRuntimeCharacterPreserveCreationMetadataWithoutDormantRootCombatEffect()
+        public void CharacterDataAndRuntimeProfilePreserveCreationAttributesWithoutTakingRootOwnership()
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.CharacterName = "试炼修士";
@@ -197,7 +195,7 @@ namespace TianZhang.Tests
             draft.CraftSkills.Add(new CraftSkillAllocation("craft_talisman", 1));
 
             var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
-            var character = EntityCharacter.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
+            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
 
             Assert.AreEqual("试炼修士", profile.charName);
             Assert.AreEqual(25, profile.innatePurchasePointsUsed);
@@ -209,9 +207,7 @@ namespace TianZhang.Tests
             CollectionAssert.AreEqual(new[] { "craft_alchemy", "craft_talisman" }, profile.craftSkillIds);
             CollectionAssert.AreEqual(new[] { 2, 1 }, profile.craftSkillLevels);
             Assert.AreEqual(profile.visibleRootCultivationMultiplier, CharacterCreationRules.ResolveEffectiveCultivationMultiplier(profile));
-            Assert.AreEqual(profile.fortune, character.Fortune);
-            Assert.AreEqual(profile.visibleRootId, character.VisibleRootId);
-            Assert.AreEqual("Dormant", character.HiddenRootState);
+            Assert.AreEqual(profile.fortune, runtime.Attributes.Fortune);
         }
 
         [Test]
@@ -226,11 +222,32 @@ namespace TianZhang.Tests
                 profile.unarmedBasicAttackProfileId);
             Assert.IsTrue(string.IsNullOrEmpty(profile.mainEquipmentBasicAttackProfileId));
 
-            var character = EntityCharacter.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
+            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
             Assert.AreEqual(
                 CharacterCreationCatalog.BasicUnarmedAttackProfileId,
-                character.BasicAttackProfileId);
-            Assert.AreEqual("unarmed_fallback", character.BasicAttackBindingKind);
+                runtime.UnarmedBasicAttackProfileId);
+            Assert.IsTrue(string.IsNullOrEmpty(runtime.MainEquipmentBasicAttackProfileId));
+        }
+
+        [Test]
+        public void RuntimeProfileUsesExplicitCharacterDefinitionSlotLimits()
+        {
+            CharacterData profile = CharacterCreationRules.BuildCharacterData(
+                CharacterCreationCatalog.CreateDefaultDraft(),
+                pointBuyConfig);
+            profile.maxSpellSlots = 5;
+            profile.maxSkillSlots = 2;
+            profile.availableSpells = new[] { "spell_fixture" };
+            profile.availableSkills = new[] { "skill_fixture" };
+            profile.equippedSpells = new[] { "spell_fixture" };
+            profile.equippedSkills = new[] { "skill_fixture" };
+
+            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
+
+            Assert.AreEqual(5, runtime.AbilityLoadout.SpellSlots);
+            Assert.AreEqual(2, runtime.AbilityLoadout.SkillSlots);
+            CollectionAssert.AreEqual(new[] { "spell_fixture" }, runtime.AbilityLoadout.EquippedSpells);
+            CollectionAssert.AreEqual(new[] { "skill_fixture" }, runtime.AbilityLoadout.EquippedSkills);
         }
 
         [Test]
@@ -254,23 +271,27 @@ namespace TianZhang.Tests
             hiddenDraft.CharacterName = "基线修士";
             hiddenDraft.HiddenRootSeedId = "hidden_variant_seed";
 
-            var baseline = EntityCharacter.FromData(
-                CharacterCreationRules.BuildCharacterData(baselineDraft, pointBuyConfig),
-                new TianZhang.Spatial.HexCoord(0, 0));
-            var withDormantHiddenRoot = EntityCharacter.FromData(
-                CharacterCreationRules.BuildCharacterData(hiddenDraft, pointBuyConfig),
-                new TianZhang.Spatial.HexCoord(0, 0));
+            CharacterData baselineData = CharacterCreationRules.BuildCharacterData(baselineDraft, pointBuyConfig);
+            CharacterData hiddenData = CharacterCreationRules.BuildCharacterData(hiddenDraft, pointBuyConfig);
+            CharacterRuntimeProfile baseline = CharacterRuntimeProfile.FromDefinition("baseline", baselineData);
+            CharacterRuntimeProfile withDormantHiddenRoot = CharacterRuntimeProfile.FromDefinition("hidden", hiddenData);
+            CharacterDerivedAttributes baselineDerived = baseline.Attributes.Derive(
+                baseline.Progression.RealmMultiplier,
+                CharacterAttributeBonuses.Empty);
+            CharacterDerivedAttributes hiddenDerived = withDormantHiddenRoot.Attributes.Derive(
+                withDormantHiddenRoot.Progression.RealmMultiplier,
+                CharacterAttributeBonuses.Empty);
 
-            Assert.AreEqual(baseline.MaxHP, withDormantHiddenRoot.MaxHP);
-            Assert.AreEqual(baseline.MaxMP, withDormantHiddenRoot.MaxMP);
-            Assert.AreEqual(baseline.PhysAtk, withDormantHiddenRoot.PhysAtk);
-            Assert.AreEqual(baseline.MagAtk, withDormantHiddenRoot.MagAtk);
-            Assert.AreEqual(baseline.PhysDef, withDormantHiddenRoot.PhysDef);
-            Assert.AreEqual(baseline.MagDef, withDormantHiddenRoot.MagDef);
-            Assert.AreEqual(baseline.MovePoints, withDormantHiddenRoot.MovePoints);
-            Assert.AreEqual(baseline.MaxSpellSlots, withDormantHiddenRoot.MaxSpellSlots);
-            Assert.AreEqual(baseline.MaxSkillSlots, withDormantHiddenRoot.MaxSkillSlots);
-            Assert.AreEqual("Dormant", withDormantHiddenRoot.HiddenRootState);
+            Assert.AreEqual(baselineDerived.MaxHealth, hiddenDerived.MaxHealth);
+            Assert.AreEqual(baselineDerived.MaxSpirit, hiddenDerived.MaxSpirit);
+            Assert.AreEqual(baselineDerived.PhysicalAttack, hiddenDerived.PhysicalAttack);
+            Assert.AreEqual(baselineDerived.MagicAttack, hiddenDerived.MagicAttack);
+            Assert.AreEqual(baselineDerived.PhysicalDefense, hiddenDerived.PhysicalDefense);
+            Assert.AreEqual(baselineDerived.MagicDefense, hiddenDerived.MagicDefense);
+            Assert.AreEqual(baseline.Attributes.Reaction, withDormantHiddenRoot.Attributes.Reaction);
+            Assert.AreEqual(baseline.AbilityLoadout.SpellSlots, withDormantHiddenRoot.AbilityLoadout.SpellSlots);
+            Assert.AreEqual(baseline.AbilityLoadout.SkillSlots, withDormantHiddenRoot.AbilityLoadout.SkillSlots);
+            Assert.AreEqual("Dormant", hiddenData.hiddenRootState);
         }
 
         [Test]

@@ -180,12 +180,12 @@ namespace TianZhang.Cultivation.JindanProof
         /// 结丹协调边界是道基／紫府不可逆快照的唯一运行时写入入口。
         /// </summary>
         public FoundationPurpleMansionOperationResult TryFormFoundationPurpleMansionLock(
-            Character character)
+            FoundationPurpleMansionRuntimeState cultivationState)
         {
-            if (character == null)
-                throw new ArgumentNullException(nameof(character));
+            if (cultivationState == null)
+                throw new ArgumentNullException(nameof(cultivationState));
 
-            return character.TryFormJindanLock();
+            return cultivationState.TryFormJindanLock();
         }
 
         internal void CaptureState(

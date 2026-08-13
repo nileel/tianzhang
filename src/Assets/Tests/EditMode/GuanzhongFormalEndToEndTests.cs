@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TianZhang.Bootstrap;
@@ -14,6 +15,7 @@ using TianZhang.Game.CharacterCreation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using TianZhang.Infrastructure.UnityContent;
+using TianZhang.Spatial;
 using TianZhang.World;
 using UnityEditor;
 using UnityEngine;
@@ -141,6 +143,92 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual("guanzhong_hub", restored.Navigation.WorldNodeId);
             Assert.AreEqual(SettlementId, restored.Navigation.SettlementId);
             Assert.IsNull(restored.Navigation.AdventureId);
+        }
+
+        [Test]
+        public void FormalAdventureSpawnerPreservesPlayerAndStoneArmorBeastCombatSnapshots()
+        {
+            ContentCatalogData catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            CharacterCreationPointBuyConfig pointBuyConfig =
+                AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(
+                    "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset");
+            Assert.IsNotNull(catalog);
+            Assert.IsNotNull(pointBuyConfig);
+            Assert.IsTrue(catalog.TryGetAdventureMap(
+                FormalEncounterRules.GuanzhongWildAdventureId,
+                out AdventureMapData map));
+
+            AdventureNodeData start = map.nodes.Single(node =>
+                node.nodeTypeId == AdventureNodeDispatcher.StartNodeHandler.StableNodeTypeId);
+            AdventureNodeData encounter = map.nodes.Single(node =>
+                node.contentId == FormalEncounterRules.ShijiahouEnemyId);
+            CharacterData profile = Track(CharacterCreationManager.CreateProfile(
+                CharacterCreationCatalog.CreateDefaultDraft(),
+                pointBuyConfig));
+            CharacterStateSnapshot player = CharacterRuntimeProfile
+                .FromDefinition("player", profile)
+                .Capture();
+            AdventureUnitSpawner spawner = Track(new GameObject("FormalSnapshotSpawner"))
+                .AddComponent<AdventureUnitSpawner>();
+            GameObject markerPrefab = Track(new GameObject("FormalSnapshotMarkerPrefab"));
+
+            Assert.IsTrue(spawner.TrySpawn(
+                player,
+                catalog,
+                start,
+                encounter,
+                markerPrefab,
+                out AdventureSpawnSet spawned,
+                out string reason), reason);
+            Track(spawned.PlayerMarker);
+            Track(spawned.EnemyMarker);
+
+            Assert.AreEqual(new HexCoord(start.q, start.r), spawned.Player.Position);
+            Assert.AreEqual(player.Attributes.Reaction, spawned.Player.Speed);
+            Assert.AreEqual(player.Resources.MaximumHealth, spawned.Player.MaximumHealth);
+            Assert.AreEqual(player.Resources.CurrentHealth, spawned.Player.CurrentHealth);
+            Assert.AreEqual(player.Resources.MaximumSpirit, spawned.Player.MaximumSpirit);
+            Assert.AreEqual(player.Resources.CurrentSpirit, spawned.Player.CurrentSpirit);
+            Assert.AreEqual(player.Progression.RealmMultiplier, spawned.Player.RealmMultiplier);
+            Assert.AreEqual(
+                Mathf.Clamp(Mathf.RoundToInt(player.Attributes.Reaction / 20f), 2, 8),
+                spawned.Player.MovePoints);
+            CollectionAssert.AreEqual(
+                player.AbilityLoadout.EquippedSpells,
+                spawned.Player.EquippedArtProfileIds);
+            CollectionAssert.AreEqual(
+                player.AbilityLoadout.KnownSpells,
+                spawned.Player.AvailableArtProfileIds);
+            Assert.AreEqual(2, spawned.Player.MaxCombatSwaps);
+            Assert.AreEqual(0, spawned.Player.CombatSwapsUsed);
+            Assert.AreEqual(CharacterCreationCatalog.BasicUnarmedAttackProfileId, spawned.PlayerBasicProfileId);
+
+            Assert.AreEqual(new HexCoord(encounter.q, encounter.r), spawned.Enemy.Position);
+            Assert.AreEqual(6, spawned.Enemy.Speed);
+            Assert.AreEqual(839, spawned.Enemy.MaximumHealth);
+            Assert.AreEqual(839, spawned.Enemy.CurrentHealth);
+            Assert.AreEqual(108, spawned.Enemy.MaximumSpirit);
+            Assert.AreEqual(108, spawned.Enemy.CurrentSpirit);
+            Assert.AreEqual(108, spawned.Enemy.PhysicalAttack);
+            Assert.AreEqual(36, spawned.Enemy.SoulAttack);
+            Assert.AreEqual(67, spawned.Enemy.PhysicalDefense);
+            Assert.AreEqual(25, spawned.Enemy.SoulDefense);
+            Assert.AreEqual(1.2f, spawned.Enemy.RealmMultiplier);
+            Assert.AreEqual(2, spawned.Enemy.MovePoints);
+            CollectionAssert.IsEmpty(spawned.Enemy.EquippedArtProfileIds);
+            CollectionAssert.IsEmpty(spawned.Enemy.AvailableArtProfileIds);
+            Assert.AreEqual(2, spawned.Enemy.MaxCombatSwaps);
+            Assert.AreEqual(0, spawned.Enemy.CombatSwapsUsed);
+            Assert.AreEqual(15f, spawned.Enemy.BlockRate);
+            Assert.AreEqual(25f, spawned.Enemy.BlockReduction);
+            Assert.AreEqual(0f, spawned.Enemy.SoulShieldRate);
+            Assert.AreEqual(0f, spawned.Enemy.SoulShieldReduction);
+            Assert.AreEqual(0f, spawned.Enemy.DodgeRate);
+            Assert.AreEqual(5f, spawned.Enemy.CriticalRate);
+            Assert.AreEqual(10f, spawned.Enemy.CriticalDamage);
+            Assert.AreEqual(0f, spawned.Enemy.HitRateBonus);
+            Assert.AreEqual("basic_unarmed", spawned.EnemyBasicProfileId);
         }
 
         [Test]

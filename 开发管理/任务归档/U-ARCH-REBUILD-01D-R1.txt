@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-13：01C-R1 与 01C-R2 均已由 Codex 完成归档；本卡所有前置已完成，范围、expectedPaths、验证与停止条件保持冻结，转为 codex_execute/codex/ready。",
+  "stateReason": "2026-08-13：Codex 已完成旧 Entity.Character Hub 退出、Adventure 直接战斗快照投影与结丹锁所有权迁移；正式结果、编译、程序集边界和 PlayMode 通过，完成归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -86,3 +86,10 @@
 
 - 数值或正式薄切片结果无法保持，旧 TQ 有效断言找不到现行所有者，或删除旧 Hub 需要改变产品／存档语义时停止。
 - 需要新建第二角色／修炼／战斗运行时、兼容层或跨 expectedPaths 的未冻结所有权时停止并交回 Codex。
+
+## 2026-08-13 完成记录
+
+- 正式 Adventure 已从 `CharacterData`、`CharacterAttributes`、显式 bonus 和位置直接构造 `CombatantSnapshot`，并移除对 `TianZhang.Domain` 的实现依赖；石甲兽正式快照逐项保持 HP 839、MP 108、物攻 108、法攻 36、物防 67、法防 25、移动力 2、格挡 15%、减伤 25%、暴击 5%、暴伤 10%、基础攻击 `basic_unarmed`、换法上限 2，正式 PlayMode 6/6 通过。
+- `JindanProofCoordinator` 已直接消费 `FoundationPurpleMansionRuntimeState` 并提交原子结丹锁；旧 `TianZhang.Entity.Character`、无生产调用的 `CultivationEngine`、`CombatantPanelState`、一次性 `TQ013CRealmAndSlotVerification` 及专属测试均已删除，生产、测试、Unity 序列化资产和生成项目无旧符号或 GUID 引用。
+- TQ 中仍有效的境界／元素门槛、显式槽位上限、筑基紫府与结丹锁、正式战斗投影断言已分别迁入 `AbilityRequirementPolicyTests`、`CharacterCreationTests`、`CharacterFoundationPurpleMansionTests` 与 `GuanzhongFormalEndToEndTests`。旧 `CultivationEngine` 的阶段模拟与 `CombatantPanelState` 展示 DTO 断言没有生产调用或现行正式契约，按本卡已批准删除边界失效，不保留第二套运行时或展示模型。
+- `dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 error）；程序集边界检查通过（21 assemblies、7 asmrefs）；任务直接相关 EditMode 37/37、PlayMode 6/6 通过。Unity EditMode 全量 415 项中 414 通过，唯一失败仍为未触碰的既有 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`（期望 `PULSE_ADVANTAGE`、实际 `PULSE_NEUTRAL`）。本卡没有数值输入或 BattleSim 结果变化，按任务卡不重复运行 BattleSim。

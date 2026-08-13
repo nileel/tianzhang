@@ -4,36 +4,29 @@ using TianZhang.Cultivation.JindanProof;
 using TianZhang.Entity;
 using UnityEngine;
 
-using TianZhang.Spatial;
-using EntityCharacter = TianZhang.Entity.Character;
-
 namespace TianZhang.Tests
 {
     public sealed class CharacterFoundationPurpleMansionTests
     {
         [Test]
-        public void CharacterFromDataUsesFoundationRootWithoutLegacyMansionSlotFallback()
+        public void FoundationRuntimeStateUsesFoundationRootWithoutCharacterAggregation()
         {
             FoundationPurpleMansionStateData state = CreateCompleteState();
-            CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
+                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
 
-                Assert.IsTrue(character.HasFoundationPurpleMansionState);
-                Assert.AreEqual(FoundationPhase.Phase4, character.FoundationPurpleMansionState.Phase);
-                Assert.AreEqual(400f, character.FoundationPurpleMansionState.ContinuousProgress);
-                Assert.AreEqual(1, character.FoundationPurpleMansionState.TotalMansionCapacity);
+                Assert.AreEqual(FoundationPhase.Phase4, runtimeState.Phase);
+                Assert.AreEqual(400f, runtimeState.ContinuousProgress);
+                Assert.AreEqual(1, runtimeState.TotalMansionCapacity);
                 Assert.AreEqual(PurpleMansionBuildState.Complete,
-                    character.FoundationPurpleMansionState.GetMansionBuildState(PurpleMansionKind.Ming));
+                    runtimeState.GetMansionBuildState(PurpleMansionKind.Ming));
                 Assert.AreEqual("guardian_ming",
-                    character.FoundationPurpleMansionState.GetGuardianAbilityInstanceId(PurpleMansionKind.Ming));
-                Assert.AreEqual(5, character.MaxSpellSlots);
-                Assert.AreEqual(2, character.MaxSkillSlots);
+                    runtimeState.GetGuardianAbilityInstanceId(PurpleMansionKind.Ming));
             }
             finally
             {
-                Destroy(data, state);
+                Destroy(state);
             }
         }
 
@@ -68,49 +61,39 @@ namespace TianZhang.Tests
         public void ClosedRetreatRepeatsOnlyItsCurrentActionAndOpeningFailureKeepsEmbryo()
         {
             FoundationPurpleMansionStateData state = CreatePausedEmbryoState();
-            CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
+                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
 
                 FoundationPurpleMansionOperationResult stopped =
-                    character.TryRepeatClosedRetreatCycle("unused", false);
+                    runtimeState.TryRepeatClosedRetreatCycle("unused", false);
                 Assert.IsTrue(stopped.Succeeded);
                 Assert.AreEqual("INSUFFICIENT_NEXT_CYCLE_RESOURCES",
-                    character.FoundationPurpleMansionState.LastClosedRetreatStopReason);
+                    runtimeState.LastClosedRetreatStopReason);
 
                 FoundationPurpleMansionOperationResult committed =
-                    character.TryRepeatClosedRetreatCycle("cycle_hun_1", true);
+                    runtimeState.TryRepeatClosedRetreatCycle("cycle_hun_1", true);
                 Assert.IsTrue(committed.Succeeded);
                 Assert.AreEqual(CultivationActionStatus.Active,
-                    character.FoundationPurpleMansionState.GetCultivationActionState().status);
+                    runtimeState.GetCultivationActionState().status);
                 Assert.AreEqual(1,
-                    character.FoundationPurpleMansionState.GetCultivationActionState().committedCycleIds.Length);
-                Assert.IsFalse(character.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
+                    runtimeState.GetCultivationActionState().committedCycleIds.Length);
+                Assert.IsFalse(runtimeState.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
 
                 state.cultivationActionState.actionKind = CultivationActionKind.MansionOpeningTrial;
-                CharacterData openingData = CreateCharacterData(state);
-                try
-                {
-                    var openingCharacter = EntityCharacter.FromData(openingData, new HexCoord(0, 0));
-                    FoundationPurpleMansionOperationResult failed =
-                        openingCharacter.TryFailMansionOpeningTrial(PurpleMansionKind.Hun);
-                    Assert.IsTrue(failed.Succeeded);
-                    Assert.AreEqual(PurpleMansionBuildState.Embryo,
-                        openingCharacter.FoundationPurpleMansionState.GetMansionBuildState(PurpleMansionKind.Hun));
-                    Assert.IsNull(openingCharacter.FoundationPurpleMansionState
-                        .GetGuardianAbilityInstanceId(PurpleMansionKind.Hun));
-                    Assert.AreEqual(CultivationActionStatus.Failed,
-                        openingCharacter.FoundationPurpleMansionState.GetCultivationActionState().status);
-                }
-                finally
-                {
-                    Destroy(openingData);
-                }
+                FoundationPurpleMansionRuntimeState openingState = CreateRuntimeState(state);
+                FoundationPurpleMansionOperationResult failed =
+                    openingState.TryFailMansionOpeningTrial(PurpleMansionKind.Hun);
+                Assert.IsTrue(failed.Succeeded);
+                Assert.AreEqual(PurpleMansionBuildState.Embryo,
+                    openingState.GetMansionBuildState(PurpleMansionKind.Hun));
+                Assert.IsNull(openingState.GetGuardianAbilityInstanceId(PurpleMansionKind.Hun));
+                Assert.AreEqual(CultivationActionStatus.Failed,
+                    openingState.GetCultivationActionState().status);
             }
             finally
             {
-                Destroy(data, state);
+                Destroy(state);
             }
         }
 
@@ -129,14 +112,13 @@ namespace TianZhang.Tests
                     effectBindingIds = Array.Empty<string>(),
                 },
             };
-            CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
-                Assert.IsTrue(character.TryRepeatClosedRetreatCycle("unused", false).Succeeded);
+                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
+                Assert.IsTrue(runtimeState.TryRepeatClosedRetreatCycle("unused", false).Succeeded);
 
                 FoundationPurpleMansionSaveData pausedSave =
-                    character.CaptureFoundationPurpleMansionSaveData();
+                    runtimeState.CaptureSaveData();
                 Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryRestore(
                     pausedSave,
                     out FoundationPurpleMansionRuntimeState pausedState,
@@ -156,7 +138,7 @@ namespace TianZhang.Tests
             }
             finally
             {
-                Destroy(data, state);
+                Destroy(state);
             }
         }
 
@@ -164,24 +146,23 @@ namespace TianZhang.Tests
         public void JindanCoordinatorLocksFoundationNurtureExpansionAndMansionOpening()
         {
             FoundationPurpleMansionStateData state = CreateCompleteState();
-            CharacterData data = CreateCharacterData(state);
             try
             {
-                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
+                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
                 var coordinator = new JindanProofCoordinator();
 
                 FoundationPurpleMansionOperationResult formed =
-                    coordinator.TryFormFoundationPurpleMansionLock(character);
+                    coordinator.TryFormFoundationPurpleMansionLock(runtimeState);
                 Assert.IsTrue(formed.Succeeded);
-                Assert.IsTrue(character.FoundationPurpleMansionState.IsJindanFormed);
+                Assert.IsTrue(runtimeState.IsJindanFormed);
 
-                AssertLocked(character.TryNurtureFoundationCycle("cycle_foundation"));
-                AssertLocked(character.CanExpandMansionCapacity());
-                AssertLocked(character.TryOpenMansionCycle(PurpleMansionKind.Ming, "cycle_opening"));
+                AssertLocked(runtimeState.TryNurtureFoundationCycle("cycle_foundation"));
+                AssertLocked(runtimeState.CanExpandMansionCapacity());
+                AssertLocked(runtimeState.TryOpenMansionCycle(PurpleMansionKind.Ming, "cycle_opening"));
             }
             finally
             {
-                Destroy(data, state);
+                Destroy(state);
             }
         }
 
@@ -191,15 +172,14 @@ namespace TianZhang.Tests
             Assert.AreEqual(FoundationPurpleMansionRuntimeState.JindanLockMutation, result.FailureReason);
         }
 
-        private static CharacterData CreateCharacterData(FoundationPurpleMansionStateData state)
+        private static FoundationPurpleMansionRuntimeState CreateRuntimeState(
+            FoundationPurpleMansionStateData state)
         {
-            var data = ScriptableObject.CreateInstance<CharacterData>();
-            data.charName = "runtime_fixture";
-            data.realmMultiplier = 3f;
-            data.foundationPurpleMansionState = state;
-            data.developedMansions = new[] { "命府", "气府" };
-            data.mansionBindings = new[] { "命府" };
-            return data;
+            Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryCreate(
+                state,
+                out FoundationPurpleMansionRuntimeState runtimeState,
+                out string failureReason), failureReason);
+            return runtimeState;
         }
 
         private static FoundationPurpleMansionStateData CreateCompleteState()

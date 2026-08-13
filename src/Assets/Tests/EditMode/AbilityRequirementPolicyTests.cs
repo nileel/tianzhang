@@ -5,43 +5,35 @@ using TianZhang.Content;
 using TianZhang.Entity;
 using UnityEngine;
 
-using TianZhang.Spatial;
-using EntityCharacter = TianZhang.Entity.Character;
-
 namespace TianZhang.Tests
 {
     public class AbilityRequirementPolicyTests
     {
         [Test]
-        public void RuntimeGateAllowsAndRejectsRealmAndElementRequirements()
+        public void RequirementPolicyAllowsAndRejectsExplicitRealmAndElementInputs()
         {
-            var character = new EntityCharacter();
-            character.SetRealm("凡人");
-            character.RealmMultiplier = 6f;
-            character.VisibleRootElement = "水";
-
-            Assert.IsTrue(IsSatisfied(character, "realm_zhuji", "element_water_root"));
-            Assert.IsTrue(IsSatisfied(character, "realm_jindan", "element_water_or_wind"));
-            Assert.IsFalse(IsSatisfied(character, "realm_yuanying", "element_water_root"));
-            Assert.IsFalse(IsSatisfied(character, "realm_zhuji", "element_fire_root"));
-            Assert.IsFalse(IsSatisfied(character, "realm_unknown", "element_water_root"));
-            Assert.IsFalse(IsSatisfied(character, "realm_zhuji", "element_unknown_root"));
+            Assert.IsTrue(IsSatisfied(6f, "水", "realm_zhuji", "element_water_root"));
+            Assert.IsTrue(IsSatisfied(6f, "水", "realm_jindan", "element_water_or_wind"));
+            Assert.IsFalse(IsSatisfied(6f, "水", "realm_yuanying", "element_water_root"));
+            Assert.IsFalse(IsSatisfied(6f, "水", "realm_zhuji", "element_fire_root"));
+            Assert.IsFalse(IsSatisfied(6f, "水", "realm_unknown", "element_water_root"));
+            Assert.IsFalse(IsSatisfied(6f, "水", "realm_zhuji", "element_unknown_root"));
         }
 
         [Test]
-        public void CharacterFromDataCarriesExistingVisibleRootElement()
+        public void CharacterDefinitionFeedsVisibleRootElementToRequirementPolicy()
         {
-            var visibleRootElement = typeof(EntityCharacter).GetField("VisibleRootElement");
-            Assert.IsNotNull(visibleRootElement);
-
             var data = ScriptableObject.CreateInstance<CharacterData>();
             try
             {
                 data.visibleRootElement = "雷";
-                data.realmStage = "筑基初期";
-                var character = EntityCharacter.FromData(data, new HexCoord(0, 0));
+                data.realmMultiplier = 3f;
 
-                Assert.AreEqual("雷", visibleRootElement.GetValue(character));
+                Assert.IsTrue(IsSatisfied(
+                    data.realmMultiplier,
+                    data.visibleRootElement,
+                    "realm_zhuji",
+                    "element_thunder_root"));
             }
             finally
             {
@@ -62,11 +54,15 @@ namespace TianZhang.Tests
             Assert.IsNull(typeof(DivineSkillData).GetField("affiliation"));
         }
 
-        private static bool IsSatisfied(EntityCharacter character, string realmRequirement, string elementRequirement)
+        private static bool IsSatisfied(
+            float realmMultiplier,
+            string visibleRootElement,
+            string realmRequirement,
+            string elementRequirement)
         {
             return AbilityRequirementPolicy.IsSatisfied(
-                character.RealmMultiplier,
-                character.VisibleRootElement,
+                realmMultiplier,
+                visibleRootElement,
                 realmRequirement,
                 elementRequirement);
         }
