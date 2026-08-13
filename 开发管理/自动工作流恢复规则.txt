@@ -15,7 +15,7 @@
 - `candidate_ready`：核对 candidate SHA、唯一父链、branch、changed paths、candidateResult 和工作树。不得自动重放；由普通管理上下文决定人工完成、关闭或保留。
 - `canonical_ready`：核对 canonical base/head、正式路径、任务投影和验证证据。需要集成时必须通过 `tools/invoke-project-integration.ps1` 取得与自动入口相同的进程持有型锁；任何路径冲突或 HEAD 变化都停止。
 - `integrated`：先证明 `master` 已包含记录的 formal SHA、任务后置状态正确且没有重复通知／清理风险，再精确调用 `CompleteRun`；不得重复 fast-forward 或业务执行。
-- `attention_required`：只报告并等待普通管理上下文核验。runtime 原因不能代替任务卡 blocker；若已构成任务级阻塞，按任务维护规则提交任务卡和队列投影。
+- `attention_required`：只报告并等待普通管理上下文核验。runtime 原因不能代替任务卡 blocker；若已构成任务级阻塞，按任务维护规则提交任务卡和队列投影。原因是 `task_requires_decomposition` 时，先确认没有 candidate、正式提交或集成；由普通 Codex 规划上下文只针对当前父项一次性建立全部已知子任务卡、依赖图、首批 ready 叶子和父项关闭条件，使父项退出执行队列并仅保留汇总状态。若 worktree 已有业务差异，先保留并判断其证据用途，不把半成品自动分配给子卡；完成规划事实集成且满足精确关闭合同后才关闭原 run。
 
 ## 唯一自动继续例外：decision checkpoint
 

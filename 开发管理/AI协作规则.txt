@@ -12,12 +12,30 @@
 - 普通定时调度先读 `开发管理/自动工作流规则.txt`。`codex-hourly-worker` 与 `deepseek-hourly-trigger` 是两个独立 automation，互不启动、暂停、恢复或管理对方。
 - 固定入口 `Show` 返回本 owner run 时只按 run state 读取 `开发管理/自动工作流恢复规则.txt`；无本 owner run 时才按共享队列选择新任务。
 
+## 任务原子性与子智能体
+
+### 临近执行时检查，确认过大后一次拆完
+
+- 不对整个 backlog 做前置分析。只有当前任务即将从 backlog 提升为 ready，或已被选中且尚未开始业务写入时，才读取该卡与直接依赖、预期路径、停止条件和验收入口，做最小原子性检查。
+- 一张执行卡必须只有一个可独立判断的结果，所有者、允许路径、事实源、停止条件和验证已经冻结，并能由一个主智能体统一复核全部差异、最终验证和单一 candidate。跨文件数量和表面难度不是单独拆分依据。
+- 当前父项一旦确认无法原子闭环，Codex 规划责任方在一次独立规划中读取完成拆分所需的直接事实，一次性建立全部已知子任务卡、依赖图、首批 ready 叶子和父项关闭条件；其余子项保持 blocked。父项随后只保留汇总状态，不再作为执行卡被领取，也不得在后续轮次逐张补拆。
+- 完整拆分只处理当前父项，不顺带分析其他 backlog 项。若边界未知，有限只读调查属于同一次拆分过程；只有缺少用户或外部系统的不可推导决策时才建立 decision checkpoint。
+- 固定小时 worker 不动态修改任务拓扑。写入前发现已领取任务不原子时，不实施、不生成 candidate，使用现有 `attention_required` 并记录 `task_requires_decomposition`；由普通 Codex 规划上下文一次性完成拆分。写入后才发现时立即停止，不提交、不集成，保留 owner worktree、最小失败证据和已验证事实供人工处置。
+- 手动 DeepSeek / Claude 发现当前任务不原子时只报告 `task_requires_decomposition` 并请求 Codex 规划，不修改任务卡、backlog 或队列。手动 Codex 执行完整拆分时只修改当前父项及其子卡、直接依赖和 ready 投影；任何管理写入仍遵守 worktree、路径冲突与排他集成规则。
+
+### 同一任务内的辅助委派
+
+- 主智能体可在执行环境实际暴露能力时，把互不依赖的调查、验证、只读审查或互不重叠的机械修改交给子智能体；小任务、强耦合修改、共享可变状态、频繁同步或重叠逻辑单元由主智能体直接完成。
+- 主智能体先读取任务卡并冻结事实源、范围、停止条件和验收口径，再派发具体、有界、可独立返回的子任务。子智能体默认只读；允许写入时必须分配互不重叠的字面量路径，同一路径只能有一个写入所有者。
+- 子智能体不得另领 taskId、改变 route / owner / dispatchState、修改任务卡和队列、提交、合并、推送、操作 runtime 或集成锁，也不得继续派生子智能体。子智能体结果只是证据或候选差异，不替代主智能体对事实源、完整 diff、最终验证和残留风险的复核。
+- 无论使用多少子智能体，手动或自动执行对外仍只有一个主责、一个任务 worktree、一个最终提交；自动执行仍只有一个 owner run 和一个 candidate。没有子智能体能力时，原子任务由单智能体正常执行，不伪造并行，也不因此扩大任务范围。
+
 ## 主责
 
 ### Codex / GPT-5.6 Terra
 
 - 未决需求、跨事实源产品语义、公共接口和数据所有者的最终裁决；仍有不可逆歧义时交负责人决定，不由模型猜测。
-- 任务拆分、优先级、授权路径、风险与回滚边界、验收条件，以及 BattleSim→Unity 同步策略。
+- 当前任务的原子性判断与一次性完整拆分、优先级、授权路径、风险与回滚边界、验收条件，以及 BattleSim→Unity 同步策略。
 - 需要图像输入、场景／UI／美术判断、运行时可见证据或非自动化体验验收的工作。
 - DeepSeek 技术候选的独立复审、集成控制、冲突裁决和高风险结果签收。
 
@@ -53,6 +71,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 - DeepSeek 只接收已经领取的 taskId、runId、baseCommit、candidate branch 和 worktree。它只在 owner worktree 实施、直接验证并创建一个 candidate，不修改共享任务投影或 handoff，不集成、不自审、不管理 runtime 或 automation。
 - 共享入口核验 DeepSeek candidate 后，在最新 `master` 上形成一个原子正式提交，同时包含业务变化、`codex_review/codex/ready` 的 pending review 投影和 `AI合作沟通.txt` 交接证据；审核前不解锁依赖。
 - Codex 与 DeepSeek 可以并行开发不同 taskId；自动与手动正式集成统一由进程持有型排他锁串行化。任务事实、最新 `master`、相关人工改动或证据变化阻止集成，不自动解冲突或叠加重试。
+- owner 模型可按本文件在同一已领取任务内部使用子智能体，但子智能体对 schema 5、共享入口和候选合同透明；所有工作必须收敛到同一 owner worktree、同一主智能体最终验证和单一 candidate。
 - run 的 `developing`、`candidate_ready`、`canonical_ready`、`integrated` 与 `attention_required` 只保留诊断阶段；本 owner run 非空时新的小时轮次只报告，不自动恢复、重放、关闭或领取新任务。只有精确绑定且已有有效回复的 decision checkpoint 可由新 run、新 worktree 和新模型会话受控继续。
 
 ## 验证成本控制（适用于所有工作）
@@ -81,7 +100,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 2. 纯 `1` / `2` 先读取 `AGENTS.md` 与 `开发管理/当前任务队列.txt`；选中行后读取同一 ID 的 `开发管理/任务卡/<ID>.txt`。纯 `2` 再按审核入口加载该项需要的未通过条目、交接证据和目标 diff；DeepSeek 还读其工作提示词。
 3. 检查 `git status --short`；存在无关改动时只处理本轮相关文件，绝不 stage 无关改动。
 4. 纯 `1` 从队首向后选择当前 AI 可执行的第一项 `codex_execute` 或 `external_execute`；不消费 `codex_review`。
-5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后、任何项目写入前，必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 5 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、集成锁空闲、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才通过 `tools/invoke-project-integration.ps1` 持有同一锁执行 fast-forward。固定小时入口只在 `.worktrees/automation/<runId>/<owner>` 实施，并由共享脚本持有同一锁重放、验证和集成。
+5. 手动 Codex / DeepSeek / Claude 纯 `1` 选中 ready 任务后，先按“任务原子性与子智能体”做只读最小检查。不原子时不得开始业务实施：DeepSeek / Claude 停止并请求 Codex 规划；Codex 若在本次独立规划中完整拆分，必须先创建专用 `.worktrees/` 任务分支，只提交当前父项、全部子卡、直接依赖和 ready 投影。确认原子后、任何项目写入前，同样必须在 `.worktrees/` 创建任务分支 worktree，并只在该 worktree 内实施、验证和创建角色要求的路径限定提交。合并前从主工作区重新调用 schema 5 `Show` 并重读同一任务卡与队列；只有两个活动 run 都不占用同一 taskId、集成锁空闲、任务仍为原 route / owner / `dispatchState=ready`、队列投影未改变，且待合并路径不与主工作区 staged、unstaged、untracked 改动冲突时，才通过 `tools/invoke-project-integration.ps1` 持有同一锁执行 fast-forward。固定小时入口只在 `.worktrees/automation/<runId>/<owner>` 实施，并由共享脚本持有同一锁重放、验证和集成。
 6. 纯 `2` 从队首向后选择第一项 `codex_review`；DeepSeek / Claude 不得自审。
 7. 路径冲突或执行器暂不可用时可在本轮继续检查下一行，但不修改顺序；明确逻辑阻塞必须先转状态并移出队列。
 8. 队列为空时才读取分线 backlog 进行一次维护，本轮不执行新任务。

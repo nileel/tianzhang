@@ -16,7 +16,7 @@
 - 普通选题只消费有序队列中 `route=external_execute`、`dispatchState=ready` 且 owner 与实际执行器一致的任务卡；映射固定为 `owner=deepseek -> DeepSeek V4 Pro 0813`、`owner=claude -> native Claude Code`。
 - 自动 DeepSeek 责任方只接受固定 Windows 入口已经 claim 的 `external_execute/deepseek` 同一任务；不得重新扫描候选、另行 claim 或改派 owner。原生 Claude Code 不属于生产小时入口。
 - `owner=codex`、`route=codex_review`、非 ready 或未明确授权的任务不可执行。用户当次明确指派原生 Claude Code 的具体手动任务仍可执行，但该例外不得改变自动 wrapper 的 owner 映射和已选卡边界。
-- 不得自审、预填审核方结论、扩大授权路径、另行并行派发或推送远端。
+- 不得自审、预填审核方结论、扩大授权路径、另领或并行派发顶层任务、推送远端。同一已领取任务内可在工具实际可用时按 `AGENTS.md` 与 `开发管理/AI协作规则.txt` 使用普通子智能体；不启用实验性 agent team，也不从模型名称推断子智能体能力。
 - 手动选题时记录实际身份、修改方及候选任务 ID / route / owner / dispatchState；没有合法候选时记录 `skipped_cleanly` 后退出，不修改项目文件。
 - 手动纯 `1` 选中合法 `external_execute` ready 卡后，写入与合并隔离执行 `开发管理/AI协作规则.txt` 的通用步骤 5；自动 DeepSeek 只写固定入口创建的 `.worktrees/automation/<runId>/deepseek`。
 
@@ -30,4 +30,4 @@
 ## 外部责任方边界
 
 - `deepseek-hourly-trigger` 只调用 `tools/invoke-hourly-owner.ps1 -Owner deepseek`；共享入口负责 `Show`、确定性选题、claim、owner worktree、候选核验、最新 `master` 重放与排他集成。薄触发器和 DeepSeek 模型都不得管理 automation。
-- DeepSeek 只在给定 owner worktree 创建单一 candidate；共享入口机械形成一个同时包含业务变化、pending review 投影和交接证据的正式提交。完整 candidate、复审、恢复和禁止操作规则以 `开发管理/自动工作流规则.txt`、`开发管理/AI协作规则.txt` 与 `开发管理/DeepSeek工作提示词.txt` 为准。
+- DeepSeek 主智能体只在给定 owner worktree 创建单一 candidate；任务内子智能体不得领取其他 taskId、修改任务投影或创建提交。共享入口机械形成一个同时包含业务变化、pending review 投影和交接证据的正式提交。完整 candidate、复审、恢复、任务拆分和子智能体边界以 `开发管理/自动工作流规则.txt`、`开发管理/AI协作规则.txt` 与 `开发管理/DeepSeek工作提示词.txt` 为准。

@@ -26,6 +26,14 @@
 - DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway 和 `deepseek-v4-pro`（当前 API 版本 `DeepSeek-V4-Pro-0813`），身份或模型不符立即停止。
 - 每个 run 的项目拥有 worktree 固定为 `.worktrees/automation/<runId>/<owner>`。责任方只能在该 worktree 的 candidate branch 实施、验证并形成一个与 run、base、changed paths 和 candidateResult 精确绑定的提交。
 
+## 原子任务与任务内子智能体
+
+- ready 任务应已满足 `开发管理/AI协作规则.txt` 的原子任务条件；共享入口和 PowerShell 脚本不根据文件数、行数、预计时长或模型判断任务大小，也不动态创建、拆分或重排任务卡。
+- owner 模型读取已领取任务的直接事实后，在业务写入前做最小原子性检查。确认任务无法原子闭环时，不实施、不生成 candidate，以现有失败终态返回稳定 `detailCode=task_requires_decomposition`；共享入口据此把同一 run 更新为 `attention_required`，后续只按 `开发管理/自动工作流恢复规则.txt` 人工处置。
+- 实施中才暴露不可拆合的职责冲突时，owner 模型立即停止叠加补丁，不提交、不集成，保留 owner worktree、最小失败证据和已验证事实后进入 `attention_required`。worker 不边实施边创建零散子卡，也不把半成品机械拆成多个 candidate。
+- owner 模型可在执行环境实际暴露能力时，按 `开发管理/AI协作规则.txt` 在同一任务内使用子智能体；子智能体对 schema 5 和共享入口透明，不拥有 run、branch、candidate、任务投影或恢复状态。项目不依赖实验性 agent team。
+- 任务内委派仍只能写同一 owner worktree 中互不重叠的授权路径；主智能体统一复核事实源与完整 diff、执行最终验证并创建唯一 candidate。没有子智能体能力时，原子任务由主智能体正常完成。
+
 ## 最新 master 重放、验证与正式提交
 
 - candidate 完整核验后，共享入口取得 `tools/hourly-integration-lock.ps1` 的进程持有型排他锁，再读取当时最新 `master`、任务卡、队列、依赖和主工作区相关路径；正式结果只在 owner worktree 中基于该 HEAD 重放并在持锁阶段完成组合验证。
