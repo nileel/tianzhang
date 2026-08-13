@@ -5,7 +5,7 @@
 ## 当前事实
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
-- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；01A～01G 已归档并通过独立架构复审。01H 已完成实时遗留路径扫描，当前进入遗留删除、结构文档、总验收与 URP 交接。
+- 2026-08-09 批准的 Unity 模块化架构重建是最高顺序 P1 Unity 前置；01A～01G 已归档，但 01H 总验收确认 01C 的领域导入职责迁移仍是单体改名且缺少独立架构复审证据。01H 已命中停止条件并保持 blocked，架构父项不得关闭。
 - 架构重建完成前，URP 与正式美术 Unity 链保持 blocked；Blender、项目骨架和平台评估只有在路径与责任方独立时才可并行，且不得接入 Unity 正式路径。
 
 ## 任务
@@ -14,7 +14,7 @@
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | U-ARCH-REBUILD-01 | P1 | codex | 阻塞 | U-ARCH-REBUILD-01H | Unity 模块化架构重建父项 | 开发管理/任务卡/U-ARCH-REBUILD-01.txt |
-| U-ARCH-REBUILD-01H | P1 | codex | 已排队 | — | 遗留删除、结构文档、总验收与 URP 交接 | 开发管理/任务卡/U-ARCH-REBUILD-01H.txt |
+| U-ARCH-REBUILD-01H | P1 | codex | 阻塞 | — | 遗留删除、结构文档、总验收与 URP 交接 | 开发管理/任务卡/U-ARCH-REBUILD-01H.txt |
 | A-CHAR-BLENDER-SETUP-01 | P1 | codex | 阻塞 | — | Blender 工作站环境 | 开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt |
 | A-CHAR-HUMANOID-RIG-01 | P1 | codex | 阻塞 | A-CHAR-BLENDER-SETUP-01 | 项目统一评估骨架与三条动作 | 开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt |
 | A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-HUMANOID-RIG-01 | Meshy／Tripo 3D 一次性选型 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
@@ -49,7 +49,7 @@
 
 共同事实源：`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`、`docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md`、`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`。架构重建是最高顺序的 Unity 前置；架构期间冻结 Runtime、正式场景、CSV、导入器和相关 asset 功能开发，只恢复功能完整、视觉简陋的正式薄切片。
 
-- 架构主链固定为 `U-ARCH-REBUILD-01A -> 01B -> 01B1（已完成） -> 01C -> 01D -> 01E -> 01F -> 01F1（已完成） -> 01F2（已完成） -> 01G（已完成） -> 01H（已排队）`；01G 定向返工已通过独立架构复审，01H 的遗留删除、结构文档、总验收与 URP 交接路径已按实时仓库冻结。架构父项不直接执行，只有八个主阶段及登记返工／前置全部完成才关闭。每阶段独立提交、验证和架构复审，未通过时不提前修改下游。
+- 架构主链固定为 `U-ARCH-REBUILD-01A -> 01B -> 01B1（已完成） -> 01C -> 01D -> 01E -> 01F -> 01F1（已完成） -> 01F2（已完成） -> 01G（已完成） -> 01H（阻塞）`；01G 定向返工已通过独立架构复审，但 01H 总验收确认 01C 的领域导入职责迁移仍是单体改名且缺少独立复审证据。01C 定向返工及独立复审范围重新建立前，不实施 01H 的删除与文档收尾，不关闭父项，不解锁 URP。
 - 美术工具链固定为 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01 -> A-CHAR-AI-PLATFORM-EVAL-01`。它可以在路径与责任方独立时推进，但不得向 Unity 正式路径接入资产；平台路线失败时才建立条件回退 `A-CHAR-BLENDER-TEMPLATE-01`，不同时维持两条生产路线。
 - Unity 视觉链固定为 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01`。预检只扫描重构后正式路径；迁移不兼容已删除的 Built-in 临时视觉；视觉基础不生产正式角色或关中最终装修。
 - 真实角色链在 `U-CHAR-3D-PROTO-01` 与平台／模板资源前置汇合，随后执行玩家基础人形、石甲兽、外观数据、风格样张、正式 Adventure 替换和完整创角批次。石甲兽技术样例不拥有角色级音效或战斗 VFX；它们由 `A-GZ-PRESENT-01` 独立负责。
