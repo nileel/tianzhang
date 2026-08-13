@@ -4,13 +4,13 @@
   "id": "U-ARCH-REBUILD-01C-R1",
   "title": "领域导入器职责下沉定向返工",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-13：01H 总验收确认旧 DataConfigImporter 仅改名为 6064 行 ContentImportCoordinator，五个领域 importer 仍是薄调用入口；领域边界、回滚边界、精确路径与机器验收已冻结，本卡可由 DeepSeek 实施并交 Codex 独立复审。",
+  "stateReason": "2026-08-13：DeepSeek 首次实跑在 3000 秒上限超时，未形成 candidate；用户已明确放弃半成品并改派 Codex。领域边界、回滚边界、精确路径与机器验收保持不变，本卡由 Codex 实施。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -83,7 +83,7 @@
 
 - Coordinator 只编排；五个领域 importer 各自拥有完整管线；共享工具不知道领域字段；现有 CSV、asset、稳定 ID、GUID 与数值结果不变。
 - 直接测试不再通过 Coordinator 调用领域解析／校验／投影 API，独立失败隔离和全量确定性均有可重复证据。
-- 业务提交完成后同一卡转为 `codex_review/codex/ready`，由 Codex 独立架构复审；复审通过后才移除 01H 与 01D-R1 的同名 blocker。
+- Codex 完成本卡全部实施与验证后归档；归档后才移除 01H 与 01D-R1 的同名 blocker，后续仍由独立的 01H 总验收复核整体架构。
 
 ## 停止条件
 

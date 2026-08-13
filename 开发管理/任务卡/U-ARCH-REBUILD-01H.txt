@@ -14,7 +14,7 @@
     "U-ARCH-REBUILD-01C-R2",
     "U-ARCH-REBUILD-01D-R1"
   ],
-  "stateReason": "2026-08-13：总验收发现的领域导入器单体、点购配置加载／fallback 和旧 Entity.Character Hub 已分别建立 01C-R1、01C-R2、01D-R1 定向返工卡；01H 等待三卡均通过 Codex 独立架构复审。",
+  "stateReason": "2026-08-13：三张定向返工卡已按用户要求统一改派 Codex；01H 等待三卡完成归档后，作为独立收尾任务继续整体架构总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -175,5 +175,10 @@
 
 - `U-ARCH-REBUILD-01C-R1`：领域导入器职责下沉，Coordinator 只保留编排。
 - `U-ARCH-REBUILD-01C-R2`：点购配置改为正式场景显式注入并失败关闭。
-- `U-ARCH-REBUILD-01D-R1`：等待两张 01C 返工复审通过后，完整退出旧 `Entity.Character` Hub 及其遗留依赖。
-- 三卡都必须经过 Codex 独立架构复审；只有全部完成归档后，01H 才重新进入 ready 队列继续遗留删除、结构文档和总验收。
+- `U-ARCH-REBUILD-01D-R1`：等待两张 01C 返工完成归档后，完整退出旧 `Entity.Character` Hub 及其遗留依赖。
+- 三卡都必须由 Codex 完成本卡实施与验证并归档；只有全部完成后，01H 才重新进入 ready 队列，独立执行遗留删除、结构文档和整体架构总验收。
+
+## 2026-08-13 主责调整
+
+- DeepSeek 对 `U-ARCH-REBUILD-01C-R1` 的首次实跑在 3000 秒上限超时，未形成 candidate 或正式提交；用户已明确放弃对应半成品。
+- `U-ARCH-REBUILD-01C-R1`、`U-ARCH-REBUILD-01C-R2`、`U-ARCH-REBUILD-01D-R1` 统一调整为 `codex_execute / codex`；三卡完成归档后由本卡继续独立总验收。

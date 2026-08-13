@@ -4,8 +4,8 @@
   "id": "U-ARCH-REBUILD-01D-R1",
   "title": "旧 Entity.Character Hub 退出定向返工",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
@@ -13,7 +13,7 @@
     "U-ARCH-REBUILD-01C-R1",
     "U-ARCH-REBUILD-01C-R2"
   ],
-  "stateReason": "2026-08-13：01H 总验收确认 653 行 TianZhang.Entity.Character 仍是多职责 Hub 且被正式 Adventure 敌人投影消费；返工范围已冻结，但按原阶段顺序等待两张 01C 返工均通过 Codex 独立复审。",
+  "stateReason": "2026-08-13：用户在 DeepSeek 首张返工卡实跑超时后，将全部三张返工卡改派 Codex；本卡范围保持冻结，并按原阶段顺序等待两张 01C 返工均由 Codex 完成归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -83,7 +83,7 @@
 
 - `TianZhang.Entity.Character`、`CultivationEngine`、`CombatantPanelState` 与一次性 TQ 脚本不再存在；生产和测试 C#、场景、Prefab、asset、UnityEvent、Animator、Resources／Addressables 均无引用。
 - 正式 Adventure 不引用 Domain 实现，敌人和玩家 Combat 快照与返工前基线一致；Jindan lock 由明确修炼状态所有者提交。
-- 业务提交完成后同一卡转为 `codex_review/codex/ready`，由 Codex 独立架构复审；复审通过后才移除 01H 的同名 blocker。
+- Codex 完成本卡全部实施与验证后归档；归档后才移除 01H 的同名 blocker，后续仍由独立的 01H 总验收复核整体架构。
 
 ## 停止条件
 

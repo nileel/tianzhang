@@ -4,13 +4,13 @@
   "id": "U-ARCH-REBUILD-01C-R2",
   "title": "点购配置加载所有权与失败关闭返工",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-13：01H 总验收确认 TianZhang.Content 直接 Resources.Load 点购配置且 Feature 静默创建 fallback；显式场景注入、失败原因、精确路径与回滚边界已冻结，本卡可由 DeepSeek 实施并交 Codex 独立复审。",
+  "stateReason": "2026-08-13：用户在 DeepSeek 首张返工卡实跑超时后，将全部三张返工卡改派 Codex；显式场景注入、失败原因、精确路径与回滚边界保持不变，本卡由 Codex 实施。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -69,7 +69,7 @@
 
 - Content／Feature Player 代码不再调用 `Resources.Load` 或创建点购 fallback；正式场景只使用唯一序列化配置引用。
 - 配置存在时点购和角色创建结果与当前基线一致；配置缺失时不创建角色、不写存档、不加载世界场景，并返回稳定失败原因。
-- 业务提交完成后同一卡转为 `codex_review/codex/ready`，由 Codex 独立架构复审；复审通过后才移除 01H 与 01D-R1 的同名 blocker。
+- Codex 完成本卡全部实施与验证后归档；归档后才移除 01H 与 01D-R1 的同名 blocker，后续仍由独立的 01H 总验收复核整体架构。
 
 ## 停止条件
 
