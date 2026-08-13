@@ -8,14 +8,33 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-URP-PREFLIGHT-01"],
-  "stateReason": "等待 URP 预检冻结版本、路径、迁移和回滚范围",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-14：预检已冻结 Unity 6000.3.18f1 对应的内置 URP 17.3.0、唯一 2D Renderer、四个正式场景、保留资产、回滚边界和回归入口；本卡可在字面量路径内一次迁移。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-URP-MIGRATE-01.txt",
-    "开发管理/任务归档/U-URP-MIGRATE-01.txt"
+    "开发管理/任务归档/U-URP-MIGRATE-01.txt",
+    "src/Packages/manifest.json",
+    "src/Packages/packages-lock.json",
+    "src/ProjectSettings/GraphicsSettings.asset",
+    "src/ProjectSettings/QualitySettings.asset",
+    "src/Assets/Settings.meta",
+    "src/Assets/Settings/Rendering.meta",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline.asset",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline.asset.meta",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_Renderer.asset",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_Renderer.asset.meta",
+    "src/Assets/UniversalRenderPipelineGlobalSettings.asset",
+    "src/Assets/UniversalRenderPipelineGlobalSettings.asset.meta",
+    "src/Assets/DefaultVolumeProfile.asset",
+    "src/Assets/DefaultVolumeProfile.asset.meta",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Scenes/WorldScene.unity",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Resources/UnitMarker.prefab"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -24,15 +43,24 @@
 
 ## 来源与当前边界
 
-- 按预检一次完成包安装、Pipeline Asset／Quality 绑定、保留资产迁移和正式场景回归。
+- 按 `开发管理/任务归档/U-URP-PREFLIGHT-01.txt` 的冻结结果一次完成包安装、Pipeline Asset／Quality 绑定、保留资产迁移和正式场景回归；不重新扫描已删除原型或旧视觉。
+- 项目为 Unity `6000.3.18f1`，本机该 Editor 内置 `com.unity.render-pipelines.universal` 为 `17.3.0`（依赖 `com.unity.render-pipelines.core`、`com.unity.shadergraph` 均为 `17.3.0`，以及 `com.unity.render-pipelines.universal-config` `17.0.3`）。只安装此精确版本，不嵌入包源。
+- 正式表现是 2D：四个正式场景各有 1 个正交 Main Camera 和 1 个 ScreenSpaceOverlay Canvas；Adventure 另有 1 个 SpriteRenderer，正式场景没有 Tilemap 或 TMP 组件。唯一正式运行时 Sprite Prefab 为 `src/Assets/Resources/UnitMarker.prefab`，Adventure Builder 只把四个 `Adventure*.asset` TileBase 与对应 Sprite 作为只读存在性闸门。
 
 ## 必查范围
 
-- 已完成预检卡与其精确路径；架构重建后正式场景、保留材质／Shader、相机、UI／TMP、Tilemap、Sprite、高亮、选格和直接测试。
+- `开发管理/任务归档/U-URP-PREFLIGHT-01.txt` 的版本、资产、回滚和验证冻结；`src/ProjectSettings/ProjectVersion.txt`、`src/Packages/manifest.json`、`src/Packages/packages-lock.json`、`src/ProjectSettings/GraphicsSettings.asset`、`src/ProjectSettings/QualitySettings.asset` 与 `src/ProjectSettings/EditorBuildSettings.asset`。
+- `src/Assets/Scenes/StartMenuScene.unity`、`WorldScene.unity`、`SettlementScene.unity`、`AdventureScene.unity`；`src/Assets/Scripts/Editor/SceneBuildSupport.cs`、`AdventureSceneBuilder.cs`、`SceneArchitectureValidator.cs`；`src/Assets/Resources/UnitMarker.prefab` 与 `src/Assets/Resources/Tiles/AdventureGround.asset`、`AdventureMoveHighlight.asset`、`AdventureAttackHighlight.asset`、`AdventureSelected.asset`。
+- `src/Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Drop Shadow.mat`、`LiberationSans SDF - Outline.mat` 和 `src/Assets/TextMesh Pro/Shaders/`：它们是仓库内仅有的材质／Shader 文件，但正式场景没有 TMP 组件或其序列化引用，保持不转换；正式 UI 继续由 `SceneBuildSupport.CreateText` 的 UGUI `Text` 与 `LegacyRuntime.ttf` 生成。
+- `src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs`、`GuanzhongFormalEndToEndTests.cs`、`src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs`、`tools/run-unity-editmode-tests.ps1`、`tools/run-unity-playmode-tests.ps1`。
+- Unity 6.3 官方 URP requirements、Built-In-to-URP upgrade、Render Pipeline Converter 与 active render pipeline 文档；官方说明每个 Unity patch 的 installer 含当前包版本，转换不可逆且转换前必须备份。
 
 ## 实施范围
 
-- 安装批准版本，建立并绑定唯一 URP 配置，迁移保留表现，使重构后的最小功能壳继续可见。
+- 在 `manifest.json` 安装 `com.unity.render-pipelines.universal` `17.3.0`，让 Unity 更新锁文件；创建唯一 `TianZhangUniversalRenderPipeline.asset` 与同目录 `TianZhangUniversalRenderPipeline_Renderer.asset`，使用 **2D Renderer**，并把它绑定为 Graphics 默认和所有 Quality level 的唯一 Render Pipeline Asset。
+- 接受 Unity 17.3 自动生成并登记在 GraphicsSettings 的 `Assets/UniversalRenderPipelineGlobalSettings.asset` 与 `Assets/DefaultVolumeProfile.asset`；这两个路径由 URP 17.3 `Ensure` 的默认路径固定，不能另造平行全局设置或 Volume Profile。
+- 只审计正式场景和 `UnitMarker.prefab` 的 Built-in 默认 Sprite／UI material reference；先查看 Converter 初始化的精确清单，再只转换清单中的这些已冻结路径。没有项目自定义 Material／Shader，也没有正式 TMP 序列化引用，故不得运行会改写 `Assets/TextMesh Pro/`、旧 `GroundTile`／`MoveHighlight`／`AttackHighlight`／`Selected` 或其他非正式资产的转换器。
+- 保持 4 个 Build Settings 场景的顺序、正交相机、ScreenSpaceOverlay UI、Adventure ground、UnitMarker、四项 Adventure TileBase、移动／攻击／选中高亮、正式场景 owner 与所有业务行为不变。
 
 ## 禁止项
 
@@ -40,12 +68,24 @@
 
 ## 验证
 
-- 正式场景入口、相机、最小 UI、Tilemap、Sprite、TMP、透明排序、高亮、选格、EditMode／PlayMode 和人工视觉检查。
+- 安装后确认 Package Manager／`manifest.json`／`packages-lock.json` 均锁定 URP `17.3.0`；Graphics 默认、全部 Quality level 和 URP Global Settings 都指向同一 2D Pipeline；不保留 Built-in 管线绑定。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 与 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，并以 `SceneArchitectureValidator.ValidateForBatchMode` 复核四个正式场景与 Build Settings 顺序。
+- 人工逐场景检查 StartMenu、World、Settlement、Adventure：正交相机背景、ScreenSpaceOverlay UI、文本／按钮可见性与透明顺序；Adventure 额外检查 ground、UnitMarker、移动／攻击／选中高亮及一次正式节点选择和基础攻击到返回据点。记录 Converter 的绿色／黄色／红色逐项结果；黄色或红色均不得视为完成。
+- 迁移前取得干净 Git 工作树和可恢复提交边界；转换后只允许 `expectedPaths` 中的差异，先检查 Converter 清单再执行，失败即停止并从该迁移提交回滚整个范围，不回退单个材质或重新启用 Built-in。
 
 ## 完成条件
 
-- 项目只使用已批准 URP，所有保留正式入口与功能回归成立，没有半迁移状态。
+- 项目只使用 URP `17.3.0` 的唯一 2D Pipeline，Global Settings／Default Volume Profile、Graphics 和 Quality 指向完整，且 Converter 对冻结资产无警告或失败。
+- 四个正式场景、保留 Sprite／TileBase／高亮、UGUI 文本与正式 Adventure→Combat→返回流程均通过自动与人工回归；不存在 Built-in 与 URP 双轨、未登记材质、未登记 shader、未登记资产改写或半迁移状态。
 
 ## 停止条件
 
-- 迁移需要修改 CTB、六角空间、伤害、AI、存档或场景流转规则时停止并回查根因。
+- Converter 清单包含 `expectedPaths` 外的资产、`Assets/TextMesh Pro/`、旧四个非正式 Tile asset，或需要自定义 Material／Shader upgrader 时停止；不得以静默材质 fallback、嵌入包源或第二 Renderer 规避。
+- 迁移需要修改 CTB、六角空间、伤害、AI、存档或场景流转规则，或任一四个正式场景／正式 PlayMode／人工视觉检查失败时停止并从迁移提交整体回滚，再回查根因。
+
+## 2026-08-14 预检冻结证据
+
+- `ProjectVersion.txt` 为 `6000.3.18f1 (5ebeb53e4c07)`；该 Editor 的内置 URP `package.json` 明确为 `17.3.0` 且 `unity` 为 `6000.3`。当前 manifest／lock 不含 URP、Core、ShaderGraph 或 Post Processing v2；Graphics `m_CustomRenderPipeline` 和六个 Quality `customRenderPipeline` 均为空，因此当前唯一状态是 Built-in，而不是半迁移。
+- Build Settings 精确为 StartMenu、World、Settlement、Adventure；场景扫描确认各 1 Camera／1 Canvas，Adventure 另有 1 SpriteRenderer，Tilemap 组件为 0。`SceneBuildSupport.BeginScene` 固定正交相机，`CreateCanvas` 固定 ScreenSpaceOverlay；`SceneArchitectureValidator` 与 `SceneArchitectureEditorTests` 直接锁定四场景与 owner。
+- `AdventureSceneBuilder.ValidateReadOnlyVisualAssets` 只读取 AdventureGround、AdventureMoveHighlight、AdventureAttackHighlight、AdventureSelected 与 UnitMarker；`AdventureUnitSpawner` 只给 UnitMarker 的 SpriteRenderer 染色。没有 `Shader.Find`、`new Material`、自定义 shadergraph/shader 或正式 TMP consumer。仓库仅有两份 TMP Material 和 TMP package shader，保持不改。
+- Unity 6.3 官方 requirements 说明当前 Editor installer 含该 patch 的核心包；官方 active-pipeline 文档确认 Graphics 和 Quality 都决定活动管线；官方 Built-in-to-URP 和 Converter 文档要求使用 Converter 审计、对不可逆转换先备份，并在 2D 项目用 Built-In 2D to URP 的 Material and Material Reference Upgrade。

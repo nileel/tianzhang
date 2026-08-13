@@ -6,7 +6,7 @@
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
-- `U-URP-PREFLIGHT-01` 已取得重构后的正式场景、模块、保留资产与验证入口基线并进入 ready；Blender、项目骨架和平台评估仍不得提前向 Unity 正式路径接入资产。
+- `U-URP-PREFLIGHT-01` 已于 2026-08-14 完成只读预检：Unity 6000.3.18f1 对应内置 URP 17.3.0，四个正式场景、保留 2D 资产、回滚边界和回归入口均已冻结；`U-URP-MIGRATE-01` 已进入 ready。Blender、项目骨架和平台评估仍不得提前向 Unity 正式路径接入资产。
 
 ## 任务
 
@@ -16,8 +16,7 @@
 | A-CHAR-BLENDER-SETUP-01 | P1 | codex | 阻塞 | — | Blender 工作站环境 | 开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt |
 | A-CHAR-HUMANOID-RIG-01 | P1 | codex | 阻塞 | A-CHAR-BLENDER-SETUP-01 | 项目统一评估骨架与三条动作 | 开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt |
 | A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-HUMANOID-RIG-01 | Meshy／Tripo 3D 一次性选型 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
-| U-URP-PREFLIGHT-01 | P1 | codex | 已排队 | — | URP 迁移预检 | 开发管理/任务卡/U-URP-PREFLIGHT-01.txt |
-| U-URP-MIGRATE-01 | P1 | codex | 阻塞 | U-URP-PREFLIGHT-01 | URP 安装、绑定与完整迁移 | 开发管理/任务卡/U-URP-MIGRATE-01.txt |
+| U-URP-MIGRATE-01 | P1 | codex | 已排队 | — | URP 安装、绑定与完整迁移 | 开发管理/任务卡/U-URP-MIGRATE-01.txt |
 | U-URP-VISUAL-BASELINE-01 | P1 | codex | 阻塞 | U-URP-MIGRATE-01 | URP 正式薄切片视觉基础重建 | 开发管理/任务卡/U-URP-VISUAL-BASELINE-01.txt |
 | U-CHAR-3D-PROTO-01 | P1 | codex | 阻塞 | U-URP-VISUAL-BASELINE-01 | 2.5D 几何占位测试台 | 开发管理/任务卡/U-CHAR-3D-PROTO-01.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-3D-PROTO-01、A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
@@ -49,7 +48,7 @@
 
 - 架构主链 01A～01H 与父项均已完成归档；现行所有者、结构图和保留资产扫描基线已经交给 `U-URP-PREFLIGHT-01`，后续不恢复旧 Gameplay／Exploration／BattleUI 或 Built-in 原型。
 - 美术工具链固定为 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01 -> A-CHAR-AI-PLATFORM-EVAL-01`。它可以在路径与责任方独立时推进，但不得向 Unity 正式路径接入资产；平台路线失败时才建立条件回退 `A-CHAR-BLENDER-TEMPLATE-01`，不同时维持两条生产路线。
-- Unity 视觉链固定为 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01`。预检只扫描重构后正式路径；迁移不兼容已删除的 Built-in 临时视觉；视觉基础不生产正式角色或关中最终装修。
+- Unity 视觉链固定为 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01`。预检已完成，迁移只接收冻结的 URP 17.3.0、唯一 2D Renderer、四个正式场景和保留资产范围；不兼容已删除的 Built-in 临时视觉；视觉基础不生产正式角色或关中最终装修。
 - 真实角色链在 `U-CHAR-3D-PROTO-01` 与平台／模板资源前置汇合，随后执行玩家基础人形、石甲兽、外观数据、风格样张、正式 Adventure 替换和完整创角批次。石甲兽技术样例不拥有角色级音效或战斗 VFX；它们由 `A-GZ-PRESENT-01` 独立负责。
 - `U-CHAR-3D-FORMAL-01` 只消费 01H 确认的新 Adventure、Combat 与 CombatPresentation 契约，不继续锁定旧 `ExplorationController`、`TacticalCombatController` 或 BattleUIManager。
 - 首批真实资源产生时触发 `AVM-03 / TQ-074`；原始工程与生成记录进入 `assets/source/characters/`，通过闸门的 Unity 资源才进入 `src/Assets/Art/Characters/`。

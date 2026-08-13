@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-URP-PREFLIGHT-01 | codex_execute | codex | P1 | unity | discovery | URP 迁移预检 | 开发管理/任务卡/U-URP-PREFLIGHT-01.txt |
+| U-URP-MIGRATE-01 | codex_execute | codex | P1 | unity | migration | URP 安装、绑定与完整迁移 | 开发管理/任务卡/U-URP-MIGRATE-01.txt |

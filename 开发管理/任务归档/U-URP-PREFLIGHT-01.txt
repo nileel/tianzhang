@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-URP-PREFLIGHT-01",
+  "title": "URP 迁移预检",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "discovery",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-14：已以实时项目设置、正式场景、保留资产、直接回归入口、Unity 6000.3 官方文档和本机 6000.3.18f1 内置包核验冻结 URP 17.3.0、唯一 2D Renderer、迁移与整体回滚范围；U-URP-MIGRATE-01 已转为 ready。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-URP-PREFLIGHT-01.txt",
+    "开发管理/任务归档/U-URP-PREFLIGHT-01.txt",
+    "开发管理/任务卡/U-URP-MIGRATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-URP-PREFLIGHT-01 · URP 迁移预检
+
+## 来源与当前边界
+
+- 只扫描 01H 交接后的正式路径并冻结迁移范围；本任务不安装 URP、不改变渲染行为。
+
+## 必查范围
+
+- 实际 Unity 版本、当前官方 URP 兼容信息、Packages、Graphics／Quality、Build Settings、保留材质／Shader、相机、Tilemap、Sprite、UI／TMP、高亮、选格和直接测试。
+
+## 实施范围
+
+- 形成 `U-URP-MIGRATE-01` 的精确 expectedPaths、包版本、材质清单、回滚边界、人工视觉检查和 EditMode／PlayMode 回归。
+
+## 禁止项
+
+- 不扫描架构阶段已删除的旧场景／视觉，不猜包版本，不安装包，不修改 CTB、空间、伤害、AI、存档或场景流转。
+
+## 验证
+
+- 实时文件／设置扫描、官方版本依据、正式场景与回归入口交叉检查；解阻塞时把迁移卡更新为完整字面量路径。
+
+## 完成条件
+
+- URP 版本、保留资产、迁移／回滚范围和最小充分验证无待决策，迁移任务可合法进入 ready。
+
+## 停止条件
+
+- 兼容版本、精确路径、材质清单、回滚或正式场景回归无法冻结时停止。
+
+## 2026-08-13 架构交接基线
+
+- 正式场景固定为 StartMenu、World、Settlement、Adventure；正式运行时固定为 19 个命名程序集与 2 个 asmref，不存在 `TianZhang.Runtime`、宽泛 `TianZhang.Gameplay` 或旧原型入口。
+- 扫描只覆盖现行 Packages、Graphics／Quality、四个正式场景、保留相机、UI／TMP、Tilemap、Sprite、材质、Shader、高亮、选格和直接测试；`Resources` 下保留资产由场景序列化引用，Player C# 不按字符串加载。
+- 预检只读检查上述基线并把准确包版本、资产清单、迁移／回滚路径和验证写入 `U-URP-MIGRATE-01`；本卡不安装包、不改 Unity 行为。
+
+## 2026-08-14 完成证据
+
+- `src/ProjectSettings/ProjectVersion.txt` 确认 Unity `6000.3.18f1`；同机 Editor 的内置 `com.unity.render-pipelines.universal/package.json` 确认包为 `17.3.0`、`unity: 6000.3`，依赖 Core／ShaderGraph `17.3.0` 和 URP Config `17.0.3`。这与 Unity 6.3 官方 requirements 的“每个 patch installer 含当前核心包”一致，故不猜测或选择网络上其他包版本。
+- `src/Packages/manifest.json` 和 `packages-lock.json` 未含 URP／Core／ShaderGraph／Post Processing v2；Graphics 的 `m_CustomRenderPipeline` 与 Quality 六个 `customRenderPipeline` 全为空。结合 Unity 官方 active-pipeline 规则，项目当前是单一 Built-in 状态，没有既有 SRP 或双轨。
+- `EditorBuildSettings.asset` 只列 StartMenu、World、Settlement、Adventure 四场景。场景扫描确认每场 1 个正交 Main Camera 和 1 个 ScreenSpaceOverlay Canvas；Adventure 另有 1 个 SpriteRenderer；四场景均无 Tilemap 与 TMP 组件。`SceneBuildSupport`、`SceneArchitectureValidator` 和 `SceneArchitectureEditorTests` 保持这组正式入口与 owner。
+- 直接表现资产精确为 `UnitMarker.prefab`、AdventureGround／AdventureMoveHighlight／AdventureAttackHighlight／AdventureSelected 四个 TileBase 和对应 Sprite；`AdventureSceneBuilder.ValidateReadOnlyVisualAssets` 只读取它们，`AdventureUnitSpawner` 只染色 UnitMarker SpriteRenderer。旧 GroundTile／MoveHighlight／AttackHighlight／Selected 没有现行正式 consumer，不进入迁移。
+- 仓库只有 TMP 的两份 Material 和 TMP package shader；正式场景没有 TMP 组件或其序列化引用，且当前源码没有 `Shader.Find`、`new Material` 或项目自定义 shader。迁移只审计 Built-in 默认 Sprite／UI material reference，不改 TMP 或未使用旧 asset。
+- 官方 Built-in-to-URP / Render Pipeline Converter 文档确认应先备份并检查不可逆 Converter 清单；2D 项目使用 Built-In Render Pipeline 2D to URP 的 Material and Material Reference Upgrade。迁移卡已冻结唯一 2D Renderer、Unity 自动生成的 Global Settings／Default Volume Profile 路径、完整回滚边界与自动／人工回归。
