@@ -6,14 +6,6 @@
 
 ## 当前未通过/待复核项
 
-### U-ARCH-REBUILD-01G · Feature、Bootstrap、正式场景与最小 UI
-
-- 审核对象：正式提交 `02b036dec93807d010d08dc71e57e1fbbd8b703d`；结论：不通过。
-- 问题：`AdventureController.ResolveEncounter` 丢失旧正式入口的一次性消费闸门，重复调用会再次授予掉落；`FormalEncounterRules.AlreadyConsumedReason` 已无消费者，对应重复结算测试也被删除。
-- 验证缺口：原正式关中端到端 EditMode／PlayMode 链被局部节点、缺失输入和 HUD 测试替代；当前 PlayMode 5/5 不覆盖新建／读档、世界、据点、接悬赏、Adventure、战斗、结算、返回、领奖与保存读取，不能证明 01G 完成条件。
-- 返工状态：2026-08-13 定向返工已在新 Feature／Bootstrap／Gameplay.Contracts 边界内恢复一次性正式结算闸门，并建立真实驱动新正式入口的 EditMode／PlayMode 端到端验证；任务现为 `codex_review/codex/ready`，等待独立架构复审，01H 继续 blocked。
-- 返工验证：定向红灯在修复前稳定复现 `AlreadyConsumedReason` 无消费者；修复后相关 EditMode 2/2、PlayMode 全量 6/6、`dotnet build`、程序集边界与严格数据链通过。EditMode 全量 404/405，唯一失败仍为已登记的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`，对应源码 blob 未变化。
-
 ### C-HS-YY-JD-01A · 金丹位格·木道路三位置内容生产
 
 - 审核对象：正式提交 `1c4eaeb6a1f952e183bbcd18557c4742e030d450`；结论：不通过。

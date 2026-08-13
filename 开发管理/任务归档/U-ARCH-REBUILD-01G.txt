@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-13：定向返工已在新 Feature／Bootstrap／Gameplay.Contracts 架构内恢复正式遭遇一次性消费闸门，并恢复真实正式入口 EditMode／PlayMode 薄切片验证；任务转为 codex_review/ready，等待独立架构复审，不解锁 01H。",
+  "stateReason": "2026-08-13：返工正式提交 7ed3c67accb3cbd19bdc321a91af515dd0abf395 经 Codex 独立架构复审通过；一次性正式结算闸门与新架构正式薄切片均已直接验证，01G 完成归档。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-13-unity-stage-7-feature-scene-contract-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -371,3 +371,11 @@
 - PlayMode 正式链：`FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads` 从 StartMenu 新建临时槽位，经 `WorldMapController`、`SettlementController`、正式悬赏、数据节点 `shijiahou_encounter` 和 `ICombatCommandHandler` 基本攻击完成正式战斗，返回来源据点、领奖、保存、回到 StartMenu 再读槽位，并逐项比较悬赏、库存与导航状态；全量 PlayMode 6/6 通过。
 - 验证结果：`dotnet build src/TianZhang.EditModeTests.csproj` 0 error；程序集边界 21 assemblies／7 asmrefs 通过；严格数据链通过；全量 EditMode 404/405，唯一失败仍为既有 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`，对应 `CharterConflictRules.cs` 在审核基线与本 worktree 的 blob 均为 `21469c3d79f12d705cdcbe410f3a6201001b2432`。
 - 状态边界：本卡只转为 `codex_review/codex/ready` 等待独立架构复审，不自判通过；`U-ARCH-REBUILD-01H` 继续 blocked，本轮未修改战斗数值、掉落参数、册界规则、URP、美术或 01H 实施范围。
+
+## 定向返工独立架构复审通过（2026-08-13）
+
+- 审核对象：正式提交 `7ed3c67accb3cbd19bdc321a91af515dd0abf395`；结论：通过。
+- 一次性结算：`AdventureController.ResolveEncounter` 已在解析、悬赏记录和掉落授予前恢复唯一消费闸门；重复结算稳定返回 `formal_encounter_already_consumed`，不再次切场景、不增加悬赏进度、不重复授予掉落。闸门时序与迁移前已验证的正式入口一致，未恢复旧 Hub、第二状态所有者或兼容层。
+- 正式薄切片：新增 EditMode 用例直接覆盖接悬赏、胜利结算、重复拒绝、领奖与序列化恢复；新增 PlayMode 用例从正式 StartMenu 新建槽位，依次驱动 World、Settlement、Adventure、`ICombatCommandHandler` 基本攻击、结算返回、领奖、保存、回菜单和再次读取。
+- 独立验证：`dotnet build src/TianZhang.EditModeTests.csproj` 为 0 error；程序集边界为 21 assemblies／7 asmrefs；PlayMode 6/6 全部通过；EditMode 404/405，新增两项正式链均通过，唯一失败仍为既有 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField`，且目标源码在拒绝提交、返工基线和当前 HEAD 的 blob 均为 `21469c3d79f12d705cdcbe410f3a6201001b2432`；返工提交范围 `git diff --check` 通过。
+- 未重复运行严格数据链与场景幂等验证：返工只改一份 Adventure 代码、两份测试和管理投影，CSV、asset、场景、Builder、Build Settings 与序列化 GUID 输入均未变化；首次正式提交的同范围通过证据仍有效。
