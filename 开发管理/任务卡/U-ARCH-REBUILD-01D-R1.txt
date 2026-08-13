@@ -1,0 +1,91 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01D-R1",
+  "title": "旧 Entity.Character Hub 退出定向返工",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-ARCH-REBUILD-01C-R1",
+    "U-ARCH-REBUILD-01C-R2"
+  ],
+  "stateReason": "2026-08-13：01H 总验收确认 653 行 TianZhang.Entity.Character 仍是多职责 Hub 且被正式 Adventure 敌人投影消费；返工范围已冻结，但按原阶段顺序等待两张 01C 返工均通过 Codex 独立复审。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01D-R1.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01D-R1.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01H.txt",
+    "src/Assets/Scripts/Entity/Character.cs",
+    "src/Assets/Scripts/Entity/Character.cs.meta",
+    "src/Assets/Scripts/Entity/CombatantPanelState.cs",
+    "src/Assets/Scripts/Entity/CombatantPanelState.cs.meta",
+    "src/Assets/Scripts/Cultivation/CultivationEngine.cs",
+    "src/Assets/Scripts/Cultivation/CultivationEngine.cs.meta",
+    "src/Assets/Scripts/Cultivation/JindanProof/JindanProofCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs",
+    "src/Assets/Scripts/Editor/TQ013CRealmAndSlotVerification.cs.meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/CombatantPanelStateTests.cs",
+    "src/Assets/Tests/EditMode/CombatantPanelStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "tools/check-unity-assembly-boundaries.ps1"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01D-R1 · 旧 Entity.Character Hub 退出定向返工
+
+## 来源与当前边界
+
+- 01H 总验收发现 `TianZhang.Entity.Character` 仍为 653 行多职责 Hub，混合属性、资源、战斗状态、冷却、装载、境界和修炼状态；正式 `AdventureUnitSpawner.TrySpawn` 仍通过 `Character.FromData` 构造敌人。
+- 本卡只使旧 Hub 完整退出并删除，保持现行 Character／Cultivation／Combat 模块的所有权和正式薄切片结果，不新增第二角色运行时。
+
+## 必查范围
+
+- 架构设计 §5.2、§5.4、阶段 4、阶段 5、§7.4、§7.5 与 §10.2 条件 4；01D、01E、01G 归档中的唯一所有者和正式链证据。
+- 旧 `Character`、仅依赖它的 `CultivationEngine`／`CombatantPanelState`／TQ 探针、Jindan lock 调用、Adventure 敌人投影及 `expectedPaths` 中全部直接测试。
+
+## 实施范围
+
+- `AdventureUnitSpawner` 从 `CharacterData`、`CharacterAttributes` 和明确 bonus／位置输入直接构造 `CombatantSnapshot`，保持当前 HP／MP／攻防、概率、移动力、术法集合、基础攻击绑定与换法上限结果；Adventure asmdef 删除对 `TianZhang.Domain` 的实现依赖。
+- `JindanProofCoordinator` 的结丹锁入口改为消费明确的修炼状态所有者，不再接收旧 Character；现有原子锁语义和失败结果不变。
+- 把仍有价值的 TQ 境界／槽位／修炼断言迁入当前模块直接测试；删除一次性 TQ 脚本、旧 `Character`、无生产调用的 `CultivationEngine` 和 `CombatantPanelState` 及其专属测试。
+- 其余测试改为直接验证 Content、Character、Cultivation、Combat 或 Adventure 的真实所有者，不通过测试夹具继续保活旧 Hub。
+
+## 禁止项
+
+- 不把旧 Character 改名、拆 partial 或包进 adapter 后继续使用；不复制第二套角色状态、修炼引擎、战斗实体或展示 DTO。
+- 不改变战斗数值、CTB、掉落、AI、角色创建、修炼规则、存档 schema、场景或 UI 结果。
+- 不因删除旧 Hub 而放宽 asmdef 方向、恢复 Gameplay 或把领域逻辑塞入 Bootstrap／Feature。
+
+## 验证
+
+- 删除前后逐项对比正式敌人 `CombatantSnapshot` 的 HP／MP／攻防、概率、移动力、术法、基础攻击与换法上限；运行正式薄切片 EditMode／PlayMode。
+- `dotnet build src/TianZhang.EditModeTests.csproj`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- 旧类型／namespace／程序集依赖与序列化 GUID 全仓扫描；TQ 每条仍有效断言必须指向现行直接测试，失效项须以已批准事实说明，不得静默删除覆盖。
+- 数据输入未变化时不重复 BattleSim；若数值投影结果变化则停止，先运行 BattleSim 并交 Codex 裁决。
+- 审核文本、pending whitespace、staged diff 和任务投影检查。
+
+## 完成条件
+
+- `TianZhang.Entity.Character`、`CultivationEngine`、`CombatantPanelState` 与一次性 TQ 脚本不再存在；生产和测试 C#、场景、Prefab、asset、UnityEvent、Animator、Resources／Addressables 均无引用。
+- 正式 Adventure 不引用 Domain 实现，敌人和玩家 Combat 快照与返工前基线一致；Jindan lock 由明确修炼状态所有者提交。
+- 业务提交完成后同一卡转为 `codex_review/codex/ready`，由 Codex 独立架构复审；复审通过后才移除 01H 的同名 blocker。
+
+## 停止条件
+
+- 数值或正式薄切片结果无法保持，旧 TQ 有效断言找不到现行所有者，或删除旧 Hub 需要改变产品／存档语义时停止。
+- 需要新建第二角色／修炼／战斗运行时、兼容层或跨 expectedPaths 的未冻结所有权时停止并交回 Codex。

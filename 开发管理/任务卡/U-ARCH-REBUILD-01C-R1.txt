@@ -1,0 +1,91 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01C-R1",
+  "title": "领域导入器职责下沉定向返工",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：01H 总验收确认旧 DataConfigImporter 仅改名为 6064 行 ContentImportCoordinator，五个领域 importer 仍是薄调用入口；领域边界、回滚边界、精确路径与机器验收已冻结，本卡可由 DeepSeek 实施并交 Codex 独立复审。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01C-R1.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01C-R1.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01H.txt",
+    "src/Assets/DataConfig/README.txt",
+    "src/Assets/Scripts/Editor/README.md",
+    "src/Assets/Scripts/Editor/ContentImportCoordinator.cs",
+    "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Scripts/Editor/AdventureContentImporter.cs",
+    "src/Assets/Scripts/Editor/CsvTableReader.cs",
+    "src/Assets/Scripts/Editor/ImportDiagnostics.cs",
+    "src/Assets/Scripts/Editor/AssetCommitter.cs",
+    "src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs",
+    "src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs.meta",
+    "src/Assets/Tests/EditMode/AdventureContentImporterTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/CharterRuleDataTests.cs",
+    "src/Assets/Tests/EditMode/CharterRuleRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/CharterSiteDataTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
+    "src/Assets/Tests/EditMode/JindanStaticStateDataTests.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationActionWeightProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01C-R1 · 领域导入器职责下沉定向返工
+
+## 来源与当前边界
+
+- 01H 总验收发现 `ContentImportCoordinator.cs` 仍为 6064 行多领域单体；01C 正式提交实质上把 `DataConfigImporter.cs` 重命名为 Coordinator，而五个领域 importer 只调用单体公开方法。
+- 本卡只返工架构设计 §5.6、阶段 3 与父项 §10.2 条件 5；不改变 CSV schema、内容、数值、asset 路径、稳定 ID 或序列化 GUID。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md` §5.6、阶段 3、§7.5、§10.2 条件 5。
+- `开发管理/任务归档/U-ARCH-REBUILD-01C.txt` 的实施范围与完成记录；实时 `ContentImportCoordinator`、五个领域 importer、共享读取／诊断／提交工具及 `expectedPaths` 中的直接测试。
+
+## 实施范围
+
+- `ContentImportCoordinator` 只保留“导入全部”的确定性顺序、各领域入口调用和最终刷新，不再拥有领域列名、稳定 ID、解析、引用校验、投影或资产提交。
+- `CharacterContentImporter`、`CombatContentImporter`、`CultivationContentImporter`、`WorldContentImporter`、`SettlementContentImporter` 分别完整拥有本领域的“读取 → 校验 → 投影 → 提交”；既有独立 `AdventureContentImporter` 保持 World/Adventure 内容边界，不把实现搬回 Coordinator。
+- `CsvTableReader`、`ImportDiagnostics`、`AssetCommitter` 只承载无领域字段语义的共享机制；测试调用改为直接命中真实领域 importer。
+- 新增架构测试，机械证明 Coordinator 不再声明领域 schema／解析／投影／提交方法，且各领域入口可独立验证与提交。
+
+## 禁止项
+
+- 不通过 partial class、转发门面、反射或第二 Coordinator 保留原单体；不新增新旧双入口、双写、静默默认或失败后补写。
+- 不修改 CSV 表头、生产行、asset 内容、GUID、导入输出路径、数值或运行时消费者。
+- 不顺带处理点购配置的运行时加载，也不修改 Character／Cultivation／Combat／场景职责。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`。
+- 运行全部导入器直接正反测试；至少证明每个领域独立失败时不写本领域部分资产，也不触发其他领域写入；全量导入保持确定性。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`、审核文本、pending whitespace 与 staged diff 检查。
+
+## 完成条件
+
+- Coordinator 只编排；五个领域 importer 各自拥有完整管线；共享工具不知道领域字段；现有 CSV、asset、稳定 ID、GUID 与数值结果不变。
+- 直接测试不再通过 Coordinator 调用领域解析／校验／投影 API，独立失败隔离和全量确定性均有可重复证据。
+- 业务提交完成后同一卡转为 `codex_review/codex/ready`，由 Codex 独立架构复审；复审通过后才移除 01H 与 01D-R1 的同名 blocker。
+
+## 停止条件
+
+- 需要改变 CSV／asset schema、内容数值、运行时读取语义、输出路径或 GUID 时停止。
+- 领域边界无法在现有五个 importer 与 Adventure importer 内闭合，或必须新增共享业务字段容器／兼容层才能编译时停止并交回 Codex。

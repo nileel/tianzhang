@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-ARCH-REBUILD-01C-R2",
+  "title": "点购配置加载所有权与失败关闭返工",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：01H 总验收确认 TianZhang.Content 直接 Resources.Load 点购配置且 Feature 静默创建 fallback；显式场景注入、失败原因、精确路径与回滚边界已冻结，本卡可由 DeepSeek 实施并交 Codex 独立复审。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01C-R2.txt",
+    "开发管理/任务归档/U-ARCH-REBUILD-01C-R2.txt",
+    "开发管理/任务卡/U-ARCH-REBUILD-01H.txt",
+    "src/Assets/Scripts/Modules/Content/CharacterCreationPointBuyConfig.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationModels.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationManager.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-ARCH-REBUILD-01C-R2 · 点购配置加载所有权与失败关闭返工
+
+## 来源与当前边界
+
+- 01H 总验收发现 `CharacterCreationPointBuyConfig.LoadDefault` 在 Content 程序集内直接 `Resources.Load`，缺失时又由 Content／Feature 静默 `CreateFallback`。
+- 本卡只修复点购配置的运行时所有权与失败语义；现有正式配置 asset、CSV 导入路径、点数和费用阶梯保持不变。
+
+## 必查范围
+
+- 架构设计 §4.2、§5.3、§5.6、阶段 3、阶段 7 与 §7.5；`CharacterCreationPointBuyConfig`、Rules／Models／Manager／Controller、`StartMenuSceneInstaller`、Builder、正式场景和直接测试的完整逻辑单元。
+
+## 实施范围
+
+- `CharacterCreationPointBuyConfig` 只保留数据 schema 和纯费用计算，不执行 `Resources.Load`，不提供运行时 fallback 工厂。
+- `StartMenuSceneInstaller` 通过序列化字段接收唯一正式点购配置；`StartMenuSceneBuilder` 将现有 `Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset` 明确绑定到正式场景。
+- Controller／Manager／Rules／Models 显式传递同一配置；移除无配置重载、隐式加载和缺失时默认化。配置缺失时 Installer 以稳定原因 `character_creation_point_buy_config_missing` 关闭角色创建入口。
+- 测试所需配置显式创建并传入，不把测试 factory 暴露为生产 fallback。
+
+## 禁止项
+
+- 不新增第二配置 asset、第二加载器、Service Locator、全局静态缓存、兼容重载或静默默认；不把加载移到 Feature／Content 的另一个方法。
+- 不修改点购上限、属性范围、费用阶梯、角色创建预算、CSV 内容、asset GUID 或存档语义。
+- 不顺带重构其他 StartMenu、UI、保存或导航职责。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- 正式 StartMenu 场景结构／Builder 幂等、角色创建正反测试及 `GuanzhongBasicAttackPlayModeTests` 正式薄切片通过；缺失配置必须稳定失败关闭。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、程序集边界、审核文本、pending whitespace 与 staged diff 检查。
+
+## 完成条件
+
+- Content／Feature Player 代码不再调用 `Resources.Load` 或创建点购 fallback；正式场景只使用唯一序列化配置引用。
+- 配置存在时点购和角色创建结果与当前基线一致；配置缺失时不创建角色、不写存档、不加载世界场景，并返回稳定失败原因。
+- 业务提交完成后同一卡转为 `codex_review/codex/ready`，由 Codex 独立架构复审；复审通过后才移除 01H 与 01D-R1 的同名 blocker。
+
+## 停止条件
+
+- 需要改变点购数值、CSV／asset schema、存档或角色创建产品规则时停止。
+- 无法通过现有 StartMenu 唯一 Installer 和序列化配置完成接线，必须增加第二运行时所有者或兼容路径时停止并交回 Codex。

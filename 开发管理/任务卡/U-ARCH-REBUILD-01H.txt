@@ -9,8 +9,12 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-13：01H 总验收发现 01C 的领域导入职责迁移未实质完成且无独立架构复审证据；ContentImportCoordinator 仍是 6064 行多领域单体，五个领域 importer 仅为薄调用入口。命中本卡“总验收失败”停止条件，01H 保持 blocked，等待 01C 定向返工范围与独立复审重新建立。",
+  "blockedBy": [
+    "U-ARCH-REBUILD-01C-R1",
+    "U-ARCH-REBUILD-01C-R2",
+    "U-ARCH-REBUILD-01D-R1"
+  ],
+  "stateReason": "2026-08-13：总验收发现的领域导入器单体、点购配置加载／fallback 和旧 Entity.Character Hub 已分别建立 01C-R1、01C-R2、01D-R1 定向返工卡；01H 等待三卡均通过 Codex 独立架构复审。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -166,3 +170,10 @@
 - `src/Assets/Scripts/Entity/Character.cs` 仍是 653 行多职责类型，正式 `AdventureUnitSpawner.TrySpawn` 仍通过 `Character.FromData` 构造敌人并投影战斗快照；父项 §10.2 条件 4 不能宣称通过。
 - `CharacterCreationPointBuyConfig.LoadDefault` 仍在 `TianZhang.Content` 内直接 `Resources.Load`，并在缺失时静默 `CreateFallback`；这与设计冻结的 UnityContent 所有权和失败关闭边界冲突。
 - 这些缺口不属于 01H 的遗留删除、结构文档或交接范围；修复至少跨 01C 与 01D／01G 的既定边界。在 01H 内临时大拆会突破本卡冻结范围。按本卡停止条件，本轮未修改 Unity 源码、场景、资源、程序集或结构文档，未关闭父项，也未解除 `U-URP-PREFLIGHT-01`。
+
+## 2026-08-13 返工任务建立
+
+- `U-ARCH-REBUILD-01C-R1`：领域导入器职责下沉，Coordinator 只保留编排。
+- `U-ARCH-REBUILD-01C-R2`：点购配置改为正式场景显式注入并失败关闭。
+- `U-ARCH-REBUILD-01D-R1`：等待两张 01C 返工复审通过后，完整退出旧 `Entity.Character` Hub 及其遗留依赖。
+- 三卡都必须经过 Codex 独立架构复审；只有全部完成归档后，01H 才重新进入 ready 队列继续遗留删除、结构文档和总验收。
