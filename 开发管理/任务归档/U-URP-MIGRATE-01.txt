@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-14：预检已冻结 Unity 6000.3.18f1 对应的内置 URP 17.3.0、唯一 2D Renderer、四个正式场景、保留资产、回滚边界和回归入口；本卡可在字面量路径内一次迁移。",
+  "stateReason": "2026-08-14：已安装 Unity 6000.3.18f1 对应的 URP 17.3.0，创建并绑定唯一 2D Pipeline、URP Global Settings 与 Default Volume Profile；Converter 只审计并绿色转换 AdventureScene 和 UnitMarker，自动回归通过，逐场景 Game View 人工视觉复核留待共享入口重放后执行。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -89,3 +89,10 @@
 - Build Settings 精确为 StartMenu、World、Settlement、Adventure；场景扫描确认各 1 Camera／1 Canvas，Adventure 另有 1 SpriteRenderer，Tilemap 组件为 0。`SceneBuildSupport.BeginScene` 固定正交相机，`CreateCanvas` 固定 ScreenSpaceOverlay；`SceneArchitectureValidator` 与 `SceneArchitectureEditorTests` 直接锁定四场景与 owner。
 - `AdventureSceneBuilder.ValidateReadOnlyVisualAssets` 只读取 AdventureGround、AdventureMoveHighlight、AdventureAttackHighlight、AdventureSelected 与 UnitMarker；`AdventureUnitSpawner` 只给 UnitMarker 的 SpriteRenderer 染色。没有 `Shader.Find`、`new Material`、自定义 shadergraph/shader 或正式 TMP consumer。仓库仅有两份 TMP Material 和 TMP package shader，保持不改。
 - Unity 6.3 官方 requirements 说明当前 Editor installer 含该 patch 的核心包；官方 active-pipeline 文档确认 Graphics 和 Quality 都决定活动管线；官方 Built-in-to-URP 和 Converter 文档要求使用 Converter 审计、对不可逆转换先备份，并在 2D 项目用 Built-In 2D to URP 的 Material and Material Reference Upgrade。
+
+## 2026-08-14 完成证据
+
+- `manifest.json` 与 Unity 写入的 `packages-lock.json` 已锁定 `com.unity.render-pipelines.universal`、Core 与 ShaderGraph `17.3.0`，以及 URP Config `17.0.3`；未嵌入包源。
+- Unity 创建唯一 `TianZhangUniversalRenderPipeline.asset` 和 `TianZhangUniversalRenderPipeline_Renderer.asset`，其 Renderer 是 `Renderer2DData`；Graphics 默认和六个 Quality level 都指向同一 Pipeline，Global Settings 与 Default Volume Profile 使用 URP 17.3 固定路径。
+- Built-In 2D to URP Material and Material Reference Upgrade 的审计清单精确为 `AdventureScene` 与 `UnitMarker`；两项均绿色转换，黄色和红色均为 0。`AdventureScene` 和 `UnitMarker` 的 Sprite material 均改为 URP Sprite-Lit Default；TMP、旧 Tile asset、其他场景和业务代码均未改写。
+- `tools/run-unity-editmode-tests.ps1`、`tools/run-unity-playmode-tests.ps1` 与 `SceneArchitectureValidator.ValidateForBatchMode` 均通过；后者重新打开并验证 StartMenu、World、Settlement、Adventure 及 Build Settings 顺序。逐场景 Game View 人工视觉检查未在 headless candidate 内执行，须由共享入口重放后复核。

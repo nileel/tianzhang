@@ -6,7 +6,7 @@
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
-- `U-URP-PREFLIGHT-01` 已于 2026-08-14 完成只读预检：Unity 6000.3.18f1 对应内置 URP 17.3.0，四个正式场景、保留 2D 资产、回滚边界和回归入口均已冻结；`U-URP-MIGRATE-01` 已进入 ready。Blender、项目骨架和平台评估仍不得提前向 Unity 正式路径接入资产。
+- `U-URP-PREFLIGHT-01` 与 `U-URP-MIGRATE-01` 已于 2026-08-14 完成：项目固定为 Unity 6000.3.18f1 对应的 URP 17.3.0、唯一 2D Pipeline，四个正式场景、保留 2D 资产和回归入口保持冻结；自动回归与 Converter 审计已通过，逐场景 Game View 人工视觉复核留待共享入口重放后执行。Blender、项目骨架和平台评估仍不得提前向 Unity 正式路径接入资产。
 
 ## 任务
 
@@ -16,7 +16,6 @@
 | A-CHAR-BLENDER-SETUP-01 | P1 | codex | 阻塞 | — | Blender 工作站环境 | 开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt |
 | A-CHAR-HUMANOID-RIG-01 | P1 | codex | 阻塞 | A-CHAR-BLENDER-SETUP-01 | 项目统一评估骨架与三条动作 | 开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt |
 | A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-HUMANOID-RIG-01 | Meshy／Tripo 3D 一次性选型 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
-| U-URP-MIGRATE-01 | P1 | codex | 已排队 | — | URP 安装、绑定与完整迁移 | 开发管理/任务卡/U-URP-MIGRATE-01.txt |
 | U-URP-VISUAL-BASELINE-01 | P1 | codex | 阻塞 | U-URP-MIGRATE-01 | URP 正式薄切片视觉基础重建 | 开发管理/任务卡/U-URP-VISUAL-BASELINE-01.txt |
 | U-CHAR-3D-PROTO-01 | P1 | codex | 阻塞 | U-URP-VISUAL-BASELINE-01 | 2.5D 几何占位测试台 | 开发管理/任务卡/U-CHAR-3D-PROTO-01.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-3D-PROTO-01、A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
