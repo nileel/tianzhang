@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["U-URP-MIGRATE-01"],
-  "stateReason": "等待 URP 安装、绑定与完整迁移通过",
+  "blockedBy": [],
+  "stateReason": "URP 迁移已归档；当前唯一 Renderer2D 无法承载批准的 3D Mesh、标准 3D 灯光与阴影技术基线，需负责人明确允许改用 Universal Renderer，或批准仅使用 2D Renderer 可渲染的替代表现后才可冻结路径。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
