@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-ARCH-REBUILD-01C-R1",
     "U-ARCH-REBUILD-01C-R2"
   ],
-  "stateReason": "2026-08-13：用户在 DeepSeek 首张返工卡实跑超时后，将全部三张返工卡改派 Codex；本卡范围保持冻结，并按原阶段顺序等待两张 01C 返工均由 Codex 完成归档。",
+  "stateReason": "2026-08-13：01C-R1 已由 Codex 完成并归档；本卡范围保持冻结，当前只等待 01C-R2 完成归档后按原阶段顺序进入 ready。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

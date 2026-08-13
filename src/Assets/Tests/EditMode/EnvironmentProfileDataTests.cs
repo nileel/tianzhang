@@ -20,7 +20,7 @@ namespace TianZhang.Tests
         [Test]
         public void ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow()
         {
-            var profiles = ContentImportCoordinator.ParseEnvironmentProfiles(
+            var profiles = WorldContentImporter.ParseEnvironmentProfiles(
                 new[] { Header, ValidRow },
                 "EnvironmentProfiles.csv");
 
@@ -54,7 +54,7 @@ namespace TianZhang.Tests
         [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
         public void ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(string row)
         {
-            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseEnvironmentProfiles(
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
                 new[] { Header, row },
                 "EnvironmentProfiles.csv"));
         }
@@ -65,7 +65,7 @@ namespace TianZhang.Tests
             const string missingElementRelations =
                 "fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze";
 
-            Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseEnvironmentProfiles(
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
                 new[] { Header, missingElementRelations },
                 "EnvironmentProfiles.csv"));
         }
@@ -77,10 +77,10 @@ namespace TianZhang.Tests
         public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
         {
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/EnvironmentProfiles.csv");
-            var expectedProfiles = ContentImportCoordinator.ParseEnvironmentProfiles(
+            var expectedProfiles = WorldContentImporter.ParseEnvironmentProfiles(
                 new[] { Header, GuanzhongWildRow },
                 "EnvironmentProfiles.csv");
-            var actualProfiles = ContentImportCoordinator.ParseEnvironmentProfiles(
+            var actualProfiles = WorldContentImporter.ParseEnvironmentProfiles(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath);
 
@@ -159,7 +159,7 @@ namespace TianZhang.Tests
                     "fixture_invalid,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
-                Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ImportEnvironmentProfiles());
+                Assert.Throws<InvalidDataException>(() => WorldContentImporter.ImportEnvironmentProfiles());
                 Assert.IsNull(AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(importedAssetPath));
             }
             finally

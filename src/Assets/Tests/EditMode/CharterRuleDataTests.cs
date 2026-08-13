@@ -29,7 +29,7 @@ namespace TianZhang.Tests
         [Test]
         public void ParseCharterRuleDefinitionsProjectsEveryOneOfTheEighteenContractFields()
         {
-            var definitions = ContentImportCoordinator.ParseCharterRuleDefinitions(
+            var definitions = WorldContentImporter.ParseCharterRuleDefinitions(
                 new[] { Header, ValidRow },
                 "CharterRuleDefinitions.csv",
                 BuildCatalog());
@@ -148,7 +148,7 @@ namespace TianZhang.Tests
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/CharterRuleDefinitions.csv");
             CharterRuleStaticCatalogData staticCatalog = LoadProductionStaticCatalog();
             Assert.That(staticCatalog.TryValidateDefinitions(out string staticReason), Is.True, staticReason);
-            var definitions = ContentImportCoordinator.ParseCharterRuleDefinitions(
+            var definitions = WorldContentImporter.ParseCharterRuleDefinitions(
                 File.ReadAllLines(sourceFilePath),
                 sourceFilePath,
                 staticCatalog.ReferenceCatalog);
@@ -178,7 +178,7 @@ namespace TianZhang.Tests
                 DestroyAll(definitions);
             }
 
-            ContentImportCoordinator.ImportCharterRuleDefinitions();
+            WorldContentImporter.ImportCharterRuleDefinitions();
             AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
             var asset = AssetDatabase.LoadAssetAtPath<CharterRuleDefinitionData>(importedAssetPath);
             Assert.IsNotNull(asset);
@@ -603,7 +603,7 @@ namespace TianZhang.Tests
             CharterRuleReferenceCatalog catalog,
             string expectedReason)
         {
-            var exception = Assert.Throws<InvalidDataException>(() => ContentImportCoordinator.ParseCharterRuleDefinitions(
+            var exception = Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseCharterRuleDefinitions(
                 new[] { Header, row },
                 "CharterRuleDefinitions.csv",
                 catalog));

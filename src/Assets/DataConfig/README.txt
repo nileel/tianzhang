@@ -175,7 +175,7 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 ## 添加多语言
 
 1. 在 Language.csv 中追加列：`id, zh_CN, en_US, ja_JP`
-2. 修改 DataConfigImporter 的 `T()` 方法，按当前语言选择对应列
+2. 修改 Character／Combat／Cultivation 领域 importer 的文本解析策略，按当前语言选择对应列
 3. 重新导入即可
 
 ## 工作流

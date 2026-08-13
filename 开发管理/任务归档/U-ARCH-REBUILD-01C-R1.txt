@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-13：DeepSeek 首次实跑在 3000 秒上限超时，未形成 candidate；用户已明确放弃半成品并改派 Codex。领域边界、回滚边界、精确路径与机器验收保持不变，本卡由 Codex 实施。",
+  "stateReason": "2026-08-13：Codex 已将领域管线完整下沉至五个真实 importer；Coordinator 仅保留确定性总编排，直接测试、全量幂等、数据链与程序集边界验证均满足本卡要求，任务完成归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -89,3 +89,11 @@
 
 - 需要改变 CSV／asset schema、内容数值、运行时读取语义、输出路径或 GUID 时停止。
 - 领域边界无法在现有五个 importer 与 Adventure importer 内闭合，或必须新增共享业务字段容器／兼容层才能编译时停止并交回 Codex。
+
+## 完成记录（2026-08-13）
+
+- `ContentImportCoordinator` 已缩减为唯一 `ImportAll` 总入口，只按原顺序调用 Character、Combat、Cultivation、World、Settlement 与既有 Adventure importer，并在末尾统一保存、刷新。
+- 五个领域 importer 现各自直接拥有本领域的读取、全表校验、投影与提交；直接测试已改为调用真实领域入口，不再经 Coordinator 转发。共享 `CsvTableReader`、`ImportDiagnostics`、`AssetCommitter` 只保留无领域字段语义的机制。
+- Character 全表先校验后提交，失败时销毁临时投影且不写任何资产；已有 Character 与 GongFa 资产采用原位复制更新，重复全量导入保持路径、GUID 与字节一致。现有 `Characters.csv` 与资产共同表明 `gongFaName` 可为空，本次仅修正导入校验语义，未修改 CSV、asset、稳定 ID、GUID、路径或数值。
+- 新增 `ContentImporterArchitectureTests`，机械验证 Coordinator 职责、领域入口所有权、共享工具字段隔离、Character 失败隔离，以及连续两次全量导入的资产集合、GUID 与字节确定性。
+- 验证结果：`dotnet build src/TianZhang.EditModeTests.csproj` 通过（0 error）；程序集边界检查通过（21 assemblies、7 asmrefs）；`check-data-chain.ps1 -FailOnMissingAssets` 通过（GongFa 29/29、Spells 83/83、Skills 31/31、Language 544 keys）。Unity EditMode 全量 411 项中 410 通过；唯一失败仍为任务前已记录、与本卡输入无关的 `CharterConflictRulesTests.AuthorizedGrantBindsEveryConflictIdentityField` 基线差异。新增 6 项架构测试及 Adventure、Combat、Cultivation、World、Settlement 各直接导入测试全部通过。
