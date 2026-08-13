@@ -10,10 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-ARCH-REBUILD-01C-R2",
     "U-ARCH-REBUILD-01D-R1"
   ],
-  "stateReason": "2026-08-13：01C-R1 已由 Codex 完成并归档；01H 继续等待 01C-R2 与 01D-R1 完成归档，再作为独立收尾任务执行整体架构总验收。",
+  "stateReason": "2026-08-13：01C-R1 与 01C-R2 已由 Codex 完成归档；01H 继续等待 01D-R1 完成归档，再作为独立收尾任务执行整体架构总验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

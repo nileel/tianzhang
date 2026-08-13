@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-ARCH-REBUILD-01C-R2 | codex_execute | codex | P1 | unity | implementation | 点购配置加载所有权与失败关闭返工 | 开发管理/任务卡/U-ARCH-REBUILD-01C-R2.txt |
+| U-ARCH-REBUILD-01D-R1 | codex_execute | codex | P1 | unity | implementation | 旧 Entity.Character Hub 退出定向返工 | 开发管理/任务卡/U-ARCH-REBUILD-01D-R1.txt |

@@ -883,6 +883,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: TianZhang.Bootstrap::TianZhang.Bootstrap.StartMenuSceneInstaller
   contentCatalog: {fileID: 11400000, guid: 0ac725d32d7afec44aecaee423eb7649, type: 2}
+  pointBuyConfig: {fileID: 11400000, guid: da2a458f00eb427e8b9947e03dfe654b, type: 2}
   startMenuController: {fileID: 454157659}
   startMenuView: {fileID: 454157658}
   characterCreationController: {fileID: 454157657}

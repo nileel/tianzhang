@@ -1,5 +1,6 @@
 using System;
 using TianZhang.Entity;
+using TianZhang.Game.CharacterCreation;
 using UnityEngine;
 
 namespace TianZhang.Features.CharacterCreation
@@ -8,15 +9,19 @@ namespace TianZhang.Features.CharacterCreation
     {
         [SerializeField] private CharacterCreationView view;
         private CharacterCreationDraft draft;
+        private CharacterCreationPointBuyConfig pointBuyConfig;
         private Action<string, CharacterData, string> completed;
 
         public CharacterCreationDraft Draft => draft;
 
         public void Configure(
             CharacterCreationView characterCreationView,
+            CharacterCreationPointBuyConfig characterCreationPointBuyConfig,
             Action<string, CharacterData, string> onCompleted)
         {
             view = characterCreationView;
+            pointBuyConfig = characterCreationPointBuyConfig ??
+                throw new ArgumentNullException(nameof(characterCreationPointBuyConfig));
             completed = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             draft = CharacterCreationCatalog.CreateDefaultDraft();
             view?.Configure(Submit);
@@ -32,14 +37,14 @@ namespace TianZhang.Features.CharacterCreation
         {
             if (draft == null) draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.CharacterName = characterName;
-            CharacterCreationValidationResult validation = CharacterCreationRules.Validate(draft);
+            CharacterCreationValidationResult validation = CharacterCreationRules.Validate(draft, pointBuyConfig);
             if (!validation.IsValid)
             {
                 view?.ShowFailure(string.Join("\n", validation.Errors));
                 return;
             }
 
-            CharacterData profile = CharacterCreationManager.CreateProfile(draft);
+            CharacterData profile = CharacterCreationManager.CreateProfile(draft, pointBuyConfig);
             OriginOption origin = CharacterCreationCatalog.FindOrigin(draft.OriginId);
             completed(slotId, profile, origin == null ? "jiangzuo_hub" : origin.StartNodeId);
         }

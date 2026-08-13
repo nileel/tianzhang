@@ -5,6 +5,7 @@ using TianZhang.Content;
 using TianZhang.Cultivation;
 using TianZhang.Entity;
 using TianZhang.Features.CharacterCreation;
+using TianZhang.Game.CharacterCreation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
@@ -14,7 +15,10 @@ namespace TianZhang.Bootstrap
 {
     public sealed class StartMenuSceneInstaller : MonoBehaviour, IPlayerEntryHost
     {
+        public const string PointBuyConfigMissingReason = "character_creation_point_buy_config_missing";
+
         [SerializeField] private ContentCatalogData contentCatalog;
+        [SerializeField] private CharacterCreationPointBuyConfig pointBuyConfig;
         [SerializeField] private StartMenuController startMenuController;
         [SerializeField] private StartMenuView startMenuView;
         [SerializeField] private CharacterCreationController characterCreationController;
@@ -22,11 +26,15 @@ namespace TianZhang.Bootstrap
 
         private GameBootstrap bootstrap;
 
+        public string FailureReason { get; private set; }
+
         private void Awake()
         {
+            FailureReason = null;
             try
             {
                 RequireReference(contentCatalog, "start_menu_content_catalog_missing");
+                RequireReference(pointBuyConfig, PointBuyConfigMissingReason);
                 RequireReference(startMenuController, "start_menu_controller_missing");
                 RequireReference(startMenuView, "start_menu_view_missing");
                 RequireReference(characterCreationController, "character_creation_controller_missing");
@@ -36,11 +44,13 @@ namespace TianZhang.Bootstrap
                 runtime.Clear();
                 characterCreationController.Configure(
                     characterCreationView,
+                    pointBuyConfig,
                     startMenuController.CompleteNewPlayer);
                 startMenuController.Configure(this, startMenuView, characterCreationController);
             }
             catch (InvalidOperationException exception)
             {
+                FailureReason = exception.Message;
                 Disable(startMenuController);
                 Disable(characterCreationController);
                 Debug.LogError("[StartMenuInstaller] " + exception.Message);

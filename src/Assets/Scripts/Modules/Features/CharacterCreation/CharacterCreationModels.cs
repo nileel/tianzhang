@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Game.CharacterCreation;
@@ -21,11 +22,6 @@ namespace TianZhang.Features.CharacterCreation
 
     public sealed class InnateAttributeSet
     {
-        public const int BaseValue = 3;
-        public const int PurchasePointLimit = 25;
-        public const int MinValue = 3;
-        public const int MaxValue = 15;
-
         public int RootBone;
         public int Soul;
         public int DivineSense;
@@ -48,17 +44,23 @@ namespace TianZhang.Features.CharacterCreation
 
         public int Total => RootBone + Soul + DivineSense + Aptitude + Fortune;
 
-        public int PurchaseCost => CharacterCreationPointBuyConfig.LoadDefault().CalculateCost(
-            RootBone, Soul, DivineSense, Aptitude, Fortune);
-
         public static InnateAttributeSet Balanced()
         {
             return new InnateAttributeSet(8, 8, 8, 8, 8);
         }
 
-        public static int CalculateAttributeCost(int value)
+        public int CalculatePurchaseCost(CharacterCreationPointBuyConfig pointBuyConfig)
         {
-            return CharacterCreationPointBuyConfig.LoadDefault().CalculateCost(value);
+            if (pointBuyConfig == null) throw new ArgumentNullException(nameof(pointBuyConfig));
+            return pointBuyConfig.CalculateCost(RootBone, Soul, DivineSense, Aptitude, Fortune);
+        }
+
+        public static int CalculateAttributeCost(
+            int value,
+            CharacterCreationPointBuyConfig pointBuyConfig)
+        {
+            if (pointBuyConfig == null) throw new ArgumentNullException(nameof(pointBuyConfig));
+            return pointBuyConfig.CalculateCost(value);
         }
     }
 

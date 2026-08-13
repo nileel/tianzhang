@@ -12,6 +12,8 @@ using TianZhang.Features.CharacterCreation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 
 namespace TianZhang.Tests
 {
@@ -167,6 +169,52 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void MissingPointBuyConfigClosesCharacterCreationBeforeRuntimeOrSceneEntry()
+        {
+            var installerObject = new GameObject("StartMenuInstallerMissingPointBuyConfigTest");
+            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            try
+            {
+                installerObject.SetActive(false);
+                var startMenuController = installerObject.AddComponent<StartMenuController>();
+                var startMenuView = installerObject.AddComponent<StartMenuView>();
+                var creationController = installerObject.AddComponent<CharacterCreationController>();
+                var creationView = installerObject.AddComponent<CharacterCreationView>();
+                var installer = installerObject.AddComponent<StartMenuSceneInstaller>();
+                SetPrivateField(installer, "contentCatalog", catalog);
+                SetPrivateField(installer, "startMenuController", startMenuController);
+                SetPrivateField(installer, "startMenuView", startMenuView);
+                SetPrivateField(installer, "characterCreationController", creationController);
+                SetPrivateField(installer, "characterCreationView", creationView);
+                string activeScenePath = SceneManager.GetActiveScene().path;
+                int bootstrapCount = UnityEngine.Object.FindObjectsByType<GameBootstrap>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None).Length;
+
+                LogAssert.Expect(
+                    LogType.Error,
+                    "[StartMenuInstaller] " + StartMenuSceneInstaller.PointBuyConfigMissingReason);
+                InvokePrivateMethod(installer, "Awake");
+
+                Assert.AreEqual(StartMenuSceneInstaller.PointBuyConfigMissingReason, installer.FailureReason);
+                Assert.IsFalse(startMenuController.enabled);
+                Assert.IsFalse(creationController.enabled);
+                Assert.IsNull(creationController.Draft);
+                Assert.AreEqual(activeScenePath, SceneManager.GetActiveScene().path);
+                Assert.AreEqual(
+                    bootstrapCount,
+                    UnityEngine.Object.FindObjectsByType<GameBootstrap>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None).Length);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(catalog);
+                UnityEngine.Object.DestroyImmediate(installerObject);
+            }
+        }
+
         private static string CreateTemporaryDirectoryPath()
         {
             return Path.Combine(
@@ -187,6 +235,15 @@ namespace TianZhang.Tests
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field, fieldName);
             field.SetValue(target, value);
+        }
+
+        private static void InvokePrivateMethod(object target, string methodName)
+        {
+            MethodInfo method = target.GetType().GetMethod(
+                methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(target, null);
         }
 
         private sealed class RecordingEntryHost : IPlayerEntryHost

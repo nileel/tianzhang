@@ -9,19 +9,15 @@ namespace TianZhang.Features.CharacterCreation
 {
     public static class CharacterCreationRules
     {
-        public static CharacterCreationValidationResult Validate(CharacterCreationDraft draft)
-        {
-            return Validate(draft, CharacterCreationPointBuyConfig.LoadDefault());
-        }
-
         public static CharacterCreationValidationResult Validate(
             CharacterCreationDraft draft,
             CharacterCreationPointBuyConfig pointBuyConfig)
         {
+            if (pointBuyConfig == null) throw new ArgumentNullException(nameof(pointBuyConfig));
             var result = new CharacterCreationValidationResult
             {
                 BudgetLimit = CharacterCreationCatalog.CreationBudget,
-                InnatePurchasePointLimit = GetPointBuyConfig(pointBuyConfig).purchasePointLimit,
+                InnatePurchasePointLimit = pointBuyConfig.purchasePointLimit,
             };
 
             if (draft == null)
@@ -31,16 +27,11 @@ namespace TianZhang.Features.CharacterCreation
                 return result;
             }
 
-            ValidateInnate(draft.Innate, GetPointBuyConfig(pointBuyConfig), result);
+            ValidateInnate(draft.Innate, pointBuyConfig, result);
             ValidateCreationBudget(draft, result);
             ValidateCraftSkills(draft, result);
 
             return result;
-        }
-
-        public static CharacterData BuildCharacterData(CharacterCreationDraft draft)
-        {
-            return BuildCharacterData(draft, CharacterCreationPointBuyConfig.LoadDefault());
         }
 
         public static CharacterData BuildCharacterData(
@@ -121,11 +112,6 @@ namespace TianZhang.Features.CharacterCreation
                 AddDistinct(tags, profile.hiddenRootLearnTags);
 
             return tags.ToArray();
-        }
-
-        private static CharacterCreationPointBuyConfig GetPointBuyConfig(CharacterCreationPointBuyConfig config)
-        {
-            return config != null ? config : CharacterCreationPointBuyConfig.CreateFallback();
         }
 
         private static void ValidateInnate(

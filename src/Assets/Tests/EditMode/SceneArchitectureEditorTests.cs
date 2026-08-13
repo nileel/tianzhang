@@ -6,6 +6,7 @@ using TianZhang.Features.Adventure;
 using TianZhang.Features.CharacterCreation;
 using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
+using TianZhang.Game.CharacterCreation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -44,6 +45,31 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(
                 expectsBootstrap ? 1 : 0,
                 Object.FindObjectsByType<GameBootstrap>(FindObjectsSortMode.None).Length);
+        }
+
+        [Test]
+        public void PointBuyBindingIsIdempotentAndUsesOnlyProductionAsset()
+        {
+            StartMenuSceneBuilder.BindPointBuyConfig();
+            StartMenuSceneBuilder.BindPointBuyConfig();
+            StartMenuSceneInstaller installer = Object.FindFirstObjectByType<StartMenuSceneInstaller>();
+            var serializedInstaller = new SerializedObject(installer);
+            SerializedProperty configProperty = serializedInstaller.FindProperty("pointBuyConfig");
+            CharacterCreationPointBuyConfig expected =
+                AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(
+                    "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset");
+
+            Assert.IsNotNull(expected);
+            Assert.IsNotNull(configProperty);
+            Assert.AreSame(expected, configProperty.objectReferenceValue);
+            Assert.AreEqual(
+                1,
+                Object.FindObjectsByType<StartMenuSceneInstaller>(FindObjectsSortMode.None).Length);
+            Assert.AreEqual(
+                1,
+                AssetDatabase.FindAssets(
+                    "t:CharacterCreationPointBuyConfig",
+                    new[] { "Assets/Resources/Data/CharacterCreation" }).Length);
         }
 
         [Test]

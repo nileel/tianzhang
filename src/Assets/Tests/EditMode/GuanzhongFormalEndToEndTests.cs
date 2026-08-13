@@ -10,6 +10,7 @@ using TianZhang.Entity;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CharacterCreation;
 using TianZhang.Features.Settlement;
+using TianZhang.Game.CharacterCreation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using TianZhang.Infrastructure.UnityContent;
@@ -41,8 +42,12 @@ namespace TianZhang.Tests.EditMode
                 "Assets/Data/ContentCatalog/ContentCatalog.asset");
             EnvironmentProfileAsset environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            CharacterCreationPointBuyConfig pointBuyConfig =
+                AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(
+                    "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset");
             Assert.IsNotNull(catalog);
             Assert.IsNotNull(environment);
+            Assert.IsNotNull(pointBuyConfig);
             Assert.IsTrue(catalog.TryGetAdventureMap(
                 FormalEncounterRules.GuanzhongWildAdventureId, out AdventureMapData map));
             Assert.IsTrue(catalog.TryGetEnemy(
@@ -51,7 +56,7 @@ namespace TianZhang.Tests.EditMode
             CharacterCreationDraft draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.CharacterName = "01G 定向返工";
             draft.OriginId = "origin_minor_clan";
-            CharacterData profile = Track(CharacterCreationManager.CreateProfile(draft));
+            CharacterData profile = Track(CharacterCreationManager.CreateProfile(draft, pointBuyConfig));
             var runtime = new GameRuntime();
             runtime.BeginNewGame(
                 CharacterRuntimeProfile.FromDefinition("player", profile),

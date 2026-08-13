@@ -1,14 +1,20 @@
 using TianZhang.Bootstrap;
 using TianZhang.Content;
 using TianZhang.Features.CharacterCreation;
+using TianZhang.Game.CharacterCreation;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TianZhang.Editor
 {
     public static class StartMenuSceneBuilder
     {
+        private const string PointBuyConfigAssetPath =
+            "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
+
         [MenuItem("天章/场景/重建开始菜单")]
         public static void Build()
         {
@@ -57,11 +63,34 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(controller, "characterCreation", creationController);
             SceneBuildSupport.SetObject(creationController, "view", creationView);
             SceneBuildSupport.SetObject(installer, "contentCatalog", SceneBuildSupport.RequireAsset<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
+            SceneBuildSupport.SetObject(
+                installer,
+                "pointBuyConfig",
+                SceneBuildSupport.RequireAsset<CharacterCreationPointBuyConfig>(PointBuyConfigAssetPath));
             SceneBuildSupport.SetObject(installer, "startMenuController", controller);
             SceneBuildSupport.SetObject(installer, "startMenuView", menuView);
             SceneBuildSupport.SetObject(installer, "characterCreationController", creationController);
             SceneBuildSupport.SetObject(installer, "characterCreationView", creationView);
             SceneBuildSupport.Save(SceneBuildSupport.StartMenuScenePath);
+        }
+
+        public static void BindPointBuyConfig()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                SceneBuildSupport.StartMenuScenePath,
+                OpenSceneMode.Single);
+            StartMenuSceneInstaller installer =
+                Object.FindFirstObjectByType<StartMenuSceneInstaller>();
+            if (installer == null)
+                throw new System.InvalidOperationException("start_menu_installer_missing");
+
+            SceneBuildSupport.SetObject(
+                installer,
+                "pointBuyConfig",
+                SceneBuildSupport.RequireAsset<CharacterCreationPointBuyConfig>(PointBuyConfigAssetPath));
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene))
+                throw new System.InvalidOperationException("start_menu_scene_save_failed");
         }
     }
 }

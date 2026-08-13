@@ -6,13 +6,11 @@ namespace TianZhang.Game.CharacterCreation
     [CreateAssetMenu(fileName = "CharacterCreationPointBuyConfig", menuName = "天章/角色创建/点购配置")]
     public class CharacterCreationPointBuyConfig : ScriptableObject
     {
-        public const string ResourcesPath = "Data/CharacterCreation/CharacterCreationPointBuyConfig";
-
-        public int purchasePointLimit = 25;
-        public int minValue = 3;
-        public int baseValue = 3;
-        public int maxValue = 15;
-        public CostRange[] costRanges = CreateDefaultRanges();
+        public int purchasePointLimit;
+        public int minValue;
+        public int baseValue;
+        public int maxValue;
+        public CostRange[] costRanges = new CostRange[0];
 
         [Serializable]
         public struct CostRange
@@ -20,23 +18,6 @@ namespace TianZhang.Game.CharacterCreation
             public int fromValue;
             public int toValue;
             public int costPerLevel;
-        }
-
-        public static CharacterCreationPointBuyConfig LoadDefault()
-        {
-            var config = Resources.Load<CharacterCreationPointBuyConfig>(ResourcesPath);
-            return config != null ? config : CreateFallback();
-        }
-
-        public static CharacterCreationPointBuyConfig CreateFallback()
-        {
-            var config = CreateInstance<CharacterCreationPointBuyConfig>();
-            config.purchasePointLimit = 25;
-            config.minValue = 3;
-            config.baseValue = 3;
-            config.maxValue = 15;
-            config.costRanges = CreateDefaultRanges();
-            return config;
         }
 
         public int CalculateCost(int rootBone, int soul, int divineSense, int aptitude, int fortune)
@@ -61,28 +42,14 @@ namespace TianZhang.Game.CharacterCreation
 
         public int CostForLevel(int value)
         {
-            var ranges = costRanges != null && costRanges.Length > 0
-                ? costRanges
-                : CreateDefaultRanges();
-
-            for (int i = 0; i < ranges.Length; i++)
+            for (int i = 0; costRanges != null && i < costRanges.Length; i++)
             {
-                var range = ranges[i];
+                var range = costRanges[i];
                 if (value >= range.fromValue && value <= range.toValue)
                     return Math.Max(0, range.costPerLevel);
             }
 
             return 0;
-        }
-
-        public static CostRange[] CreateDefaultRanges()
-        {
-            return new[]
-            {
-                new CostRange { fromValue = 4, toValue = 8, costPerLevel = 1 },
-                new CostRange { fromValue = 9, toValue = 12, costPerLevel = 2 },
-                new CostRange { fromValue = 13, toValue = 15, costPerLevel = 3 },
-            };
         }
     }
 }

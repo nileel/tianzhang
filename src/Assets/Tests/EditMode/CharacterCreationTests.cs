@@ -11,17 +11,31 @@ namespace TianZhang.Tests
 {
     public class CharacterCreationRuleTests
     {
+        private CharacterCreationPointBuyConfig pointBuyConfig;
+
+        [SetUp]
+        public void SetUp()
+        {
+            pointBuyConfig = CreatePointBuyConfig();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(pointBuyConfig);
+        }
+
         [Test]
         public void BalancedInnateAttributesSpendAllPurchasePoints()
         {
             var innate = new InnateAttributeSet(8, 8, 8, 8, 8);
 
-            Assert.AreEqual(25, innate.PurchaseCost);
+            Assert.AreEqual(25, innate.CalculatePurchaseCost(pointBuyConfig));
 
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.Innate = innate;
 
-            var result = CharacterCreationRules.Validate(draft);
+            var result = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsTrue(result.IsValid, string.Join("|", result.Errors));
             Assert.AreEqual(25, result.InnatePurchasePointsUsed);
@@ -34,12 +48,12 @@ namespace TianZhang.Tests
             var innate = new InnateAttributeSet(15, 6, 3, 3, 3);
 
             Assert.AreEqual(30, innate.Total);
-            Assert.AreEqual(25, innate.PurchaseCost);
+            Assert.AreEqual(25, innate.CalculatePurchaseCost(pointBuyConfig));
 
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.Innate = innate;
 
-            var result = CharacterCreationRules.Validate(draft);
+            var result = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsTrue(result.IsValid, string.Join("|", result.Errors));
             Assert.AreEqual(25, result.InnatePurchasePointsUsed);
@@ -51,7 +65,7 @@ namespace TianZhang.Tests
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.Innate = new InnateAttributeSet(16, 6, 3, 3, 3);
 
-            var result = CharacterCreationRules.Validate(draft);
+            var result = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsFalse(result.IsValid);
             CollectionAssert.Contains(result.Errors, "根骨必须在3到15之间。");
@@ -63,7 +77,7 @@ namespace TianZhang.Tests
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.Innate = new InnateAttributeSet(15, 7, 3, 3, 3);
 
-            var result = CharacterCreationRules.Validate(draft);
+            var result = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsFalse(result.IsValid);
             CollectionAssert.Contains(result.Errors, "先天属性购买点数不能超过25。");
@@ -72,12 +86,11 @@ namespace TianZhang.Tests
         [Test]
         public void InnateValidationUsesProvidedPointBuyConfig()
         {
-            var config = CharacterCreationPointBuyConfig.CreateFallback();
-            config.purchasePointLimit = 30;
+            pointBuyConfig.purchasePointLimit = 30;
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.Innate = new InnateAttributeSet(15, 8, 3, 3, 3);
 
-            var result = CharacterCreationRules.Validate(draft, config);
+            var result = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsTrue(result.IsValid, string.Join("|", result.Errors));
             Assert.AreEqual(27, result.InnatePurchasePointsUsed);
@@ -87,16 +100,16 @@ namespace TianZhang.Tests
         [Test]
         public void PointBuyConfigCanChangeTierCosts()
         {
-            var config = CharacterCreationPointBuyConfig.CreateFallback();
-            config.costRanges = new[]
+            int defaultCost = pointBuyConfig.CalculateCost(15);
+            pointBuyConfig.costRanges = new[]
             {
                 new CharacterCreationPointBuyConfig.CostRange { fromValue = 4, toValue = 8, costPerLevel = 1 },
                 new CharacterCreationPointBuyConfig.CostRange { fromValue = 9, toValue = 12, costPerLevel = 2 },
                 new CharacterCreationPointBuyConfig.CostRange { fromValue = 13, toValue = 15, costPerLevel = 4 },
             };
 
-            Assert.AreEqual(22, CharacterCreationPointBuyConfig.CreateFallback().CalculateCost(15));
-            Assert.AreEqual(25, config.CalculateCost(15));
+            Assert.AreEqual(22, defaultCost);
+            Assert.AreEqual(25, pointBuyConfig.CalculateCost(15));
         }
 
         [Test]
@@ -104,14 +117,14 @@ namespace TianZhang.Tests
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
 
-            var defaultResult = CharacterCreationRules.Validate(draft);
+            var defaultResult = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsTrue(defaultResult.IsValid, string.Join("|", defaultResult.Errors));
             Assert.AreEqual(0, defaultResult.VisibleRootBudgetCost);
 
             draft.VisibleSpiritRootId = "root_thunder_high";
 
-            var highVariantResult = CharacterCreationRules.Validate(draft);
+            var highVariantResult = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsTrue(highVariantResult.IsValid, string.Join("|", highVariantResult.Errors));
             Assert.AreEqual(5, highVariantResult.VisibleRootBudgetCost);
@@ -124,7 +137,7 @@ namespace TianZhang.Tests
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.HiddenRootSeedId = "hidden_variant_seed";
 
-            var profile = CharacterCreationRules.BuildCharacterData(draft);
+            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
 
             Assert.AreEqual("Dormant", profile.hiddenRootState);
             Assert.AreEqual("hidden_variant_seed", profile.hiddenRootSeedId);
@@ -142,7 +155,7 @@ namespace TianZhang.Tests
             draft.VisibleSpiritRootId = "root_thunder_high";
             draft.HiddenRootSeedId = "hidden_ordinary_seed";
 
-            var result = CharacterCreationRules.Validate(draft);
+            var result = CharacterCreationRules.Validate(draft, pointBuyConfig);
 
             Assert.IsFalse(result.IsValid);
             CollectionAssert.Contains(result.Errors, "隐灵根种子最高只支持中品显性灵根。");
@@ -183,7 +196,7 @@ namespace TianZhang.Tests
             draft.CraftSkills.Add(new CraftSkillAllocation("craft_alchemy", 2));
             draft.CraftSkills.Add(new CraftSkillAllocation("craft_talisman", 1));
 
-            var profile = CharacterCreationRules.BuildCharacterData(draft);
+            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
             var character = EntityCharacter.FromData(profile, new TianZhang.Spatial.HexCoord(0, 0));
 
             Assert.AreEqual("试炼修士", profile.charName);
@@ -206,7 +219,7 @@ namespace TianZhang.Tests
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
 
-            var profile = CharacterCreationRules.BuildCharacterData(draft);
+            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
 
             Assert.AreEqual(
                 CharacterCreationCatalog.BasicUnarmedAttackProfileId,
@@ -224,7 +237,8 @@ namespace TianZhang.Tests
         public void NewPlayerHasNoCreationTimeSectOrCultivationLoadout()
         {
             CharacterData profile = CharacterCreationRules.BuildCharacterData(
-                CharacterCreationCatalog.CreateDefaultDraft());
+                CharacterCreationCatalog.CreateDefaultDraft(),
+                pointBuyConfig);
 
             Assert.IsTrue(string.IsNullOrEmpty(profile.gongFaName));
             CollectionAssert.IsEmpty(profile.equippedSpells);
@@ -241,10 +255,10 @@ namespace TianZhang.Tests
             hiddenDraft.HiddenRootSeedId = "hidden_variant_seed";
 
             var baseline = EntityCharacter.FromData(
-                CharacterCreationRules.BuildCharacterData(baselineDraft),
+                CharacterCreationRules.BuildCharacterData(baselineDraft, pointBuyConfig),
                 new TianZhang.Spatial.HexCoord(0, 0));
             var withDormantHiddenRoot = EntityCharacter.FromData(
-                CharacterCreationRules.BuildCharacterData(hiddenDraft),
+                CharacterCreationRules.BuildCharacterData(hiddenDraft, pointBuyConfig),
                 new TianZhang.Spatial.HexCoord(0, 0));
 
             Assert.AreEqual(baseline.MaxHP, withDormantHiddenRoot.MaxHP);
@@ -257,6 +271,32 @@ namespace TianZhang.Tests
             Assert.AreEqual(baseline.MaxSpellSlots, withDormantHiddenRoot.MaxSpellSlots);
             Assert.AreEqual(baseline.MaxSkillSlots, withDormantHiddenRoot.MaxSkillSlots);
             Assert.AreEqual("Dormant", withDormantHiddenRoot.HiddenRootState);
+        }
+
+        [Test]
+        public void MissingPointBuyConfigDoesNotDefault()
+        {
+            Assert.Throws<System.ArgumentNullException>(() =>
+                CharacterCreationRules.Validate(CharacterCreationCatalog.CreateDefaultDraft(), null));
+        }
+
+        private static CharacterCreationPointBuyConfig CreatePointBuyConfig()
+        {
+            var config = ScriptableObject.CreateInstance<CharacterCreationPointBuyConfig>();
+            config.purchasePointLimit = 25;
+            config.minValue = 3;
+            config.baseValue = 3;
+            config.maxValue = 15;
+            config.costRanges = new[]
+            {
+                new CharacterCreationPointBuyConfig.CostRange
+                    { fromValue = 4, toValue = 8, costPerLevel = 1 },
+                new CharacterCreationPointBuyConfig.CostRange
+                    { fromValue = 9, toValue = 12, costPerLevel = 2 },
+                new CharacterCreationPointBuyConfig.CostRange
+                    { fromValue = 13, toValue = 15, costPerLevel = 3 },
+            };
+            return config;
         }
     }
 }

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-ARCH-REBUILD-01C-R2"
-  ],
-  "stateReason": "2026-08-13：01C-R1 已由 Codex 完成并归档；本卡范围保持冻结，当前只等待 01C-R2 完成归档后按原阶段顺序进入 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-13：01C-R1 与 01C-R2 均已由 Codex 完成归档；本卡所有前置已完成，范围、expectedPaths、验证与停止条件保持冻结，转为 codex_execute/codex/ready。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
