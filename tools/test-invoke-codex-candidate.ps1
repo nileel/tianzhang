@@ -102,6 +102,13 @@ $prompt = [Console]::In.ReadToEnd()
 $outputIndex = [Array]::IndexOf($CliArguments, '--output-last-message')
 if ($outputIndex -lt 0) { throw 'fake Codex output path missing' }
 $outputPath = $CliArguments[$outputIndex + 1]
+$schemaIndex = [Array]::IndexOf($CliArguments, '--output-schema')
+if ($schemaIndex -lt 0) { throw 'fake Codex schema path missing' }
+$schema = [IO.File]::ReadAllText($CliArguments[$schemaIndex + 1], [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50
+$optionsProperty = $schema.properties.PSObject.Properties['options']
+if ($null -ne $optionsProperty -and @($optionsProperty.Value.items.required) -cnotcontains 'targetState') {
+  throw 'candidate output schema does not require targetState'
+}
 $modelIndex = [Array]::IndexOf($CliArguments, '-m')
 $model = $CliArguments[$modelIndex + 1]
 if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
@@ -128,9 +135,9 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   $candidateCommit = ''
   $changedPaths = @()
   $options = @(
-    [ordered]@{ key = 'A'; label = 'option A' },
-    [ordered]@{ key = 'B'; label = 'option B' },
-    [ordered]@{ key = 'C'; label = 'option C' }
+    [ordered]@{ key = 'A'; label = 'option A'; targetState = 'ready' },
+    [ordered]@{ key = 'B'; label = 'option B'; targetState = 'ready' },
+    [ordered]@{ key = 'C'; label = 'option C'; targetState = 'blocked' }
   )
   if ($mode -ceq 'blocked-restored') {
     $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'

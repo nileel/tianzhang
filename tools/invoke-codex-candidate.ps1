@@ -108,7 +108,7 @@ function New-TerminalSchema {
       decisionId = @{ type = 'string'; pattern = '^(?:|DEC-[0-9]{8}-[A-Z0-9]+)$' }
       decisionTaskId = @{ type = 'string' }
       question = @{ type = 'string' }
-      options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') } }; required = @('key', 'label'); additionalProperties = $false } }
+      options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') } }; required = @('key', 'label', 'targetState'); additionalProperties = $false } }
       recommendedOption = @{ type = 'string' }
       impactSummary = @{ type = 'string' }
       plainSummary = @{ type = 'object'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
