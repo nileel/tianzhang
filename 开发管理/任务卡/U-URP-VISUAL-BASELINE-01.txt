@@ -15,7 +15,51 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-URP-VISUAL-BASELINE-01.txt",
-    "开发管理/任务归档/U-URP-VISUAL-BASELINE-01.txt"
+    "开发管理/任务归档/U-URP-VISUAL-BASELINE-01.txt",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline.asset",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_Renderer.asset",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_Renderer.asset.meta",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_UniversalRenderer.asset",
+    "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_UniversalRenderer.asset.meta",
+    "src/Assets/Art/VisualBaseline.meta",
+    "src/Assets/Art/VisualBaseline/Materials.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Backdrop.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Backdrop.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_GroundTop.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_GroundTop.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_GroundSide.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_GroundSide.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Surface.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Surface.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Reachable.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Reachable.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Selected.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Selected.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Attack.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Attack.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Occluder.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Occluder.mat.meta",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Unit.mat",
+    "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Unit.mat.meta",
+    "src/Assets/Art/VisualBaseline/Meshes.meta",
+    "src/Assets/Art/VisualBaseline/Meshes/VisualBaseline_HexColumn.asset",
+    "src/Assets/Art/VisualBaseline/Meshes/VisualBaseline_HexColumn.asset.meta",
+    "src/Assets/Art/VisualBaseline/Meshes/VisualBaseline_HexOverlay.asset",
+    "src/Assets/Art/VisualBaseline/Meshes/VisualBaseline_HexOverlay.asset.meta",
+    "src/Assets/Resources/UnitMarker.prefab",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Scenes/WorldScene.unity",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/SceneBuildSupport.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "automationDecision": {
@@ -64,29 +108,53 @@
 ## 来源与当前边界
 
 - 在完成 URP 迁移后主动重建统一技术视觉，不把兼容迁移当成视觉基线。
+- 负责人已通过维护型决策 `DEC-20260814-QM57A9A575FD7E` 选择 A：改用 Universal Renderer，以低模 3D Mesh、标准 3D 灯光与阴影建立技术基线；本卡仍由共享入口机械完成 `pending_decision -> ready` 投影，本次准备不入队、不执行下述业务内容。
+- 实时项目为 Unity `6000.3.18f1`、URP `17.3.0`。`TianZhangUniversalRenderPipeline.asset` 当前只引用 `TianZhangUniversalRenderPipeline_Renderer.asset` 这一项 `Renderer2DData`；Graphics 与六个 Quality 等级都已绑定同一 Pipeline Asset，A 路线只替换其唯一 Renderer Data，不建立双 Renderer 或第二 Pipeline。
+- 四个正式场景固定为 StartMenu、World、Settlement、Adventure。它们的相机、Canvas、Panel、Text 与 Button 由 `SceneBuildSupport` 和四个现行 Scene Builder 生成；`SceneBuildSupport` 的业务调用面正好覆盖这四个场景。Adventure 的 `UnitMarker.prefab` 只经 `AdventureSceneInstaller -> AdventureController -> EncounterCoordinator -> AdventureUnitSpawner` 实例化，`AdventureUnitSpawner.InstantiateMarker` 是唯一运行时颜色与位置写入者。
 
 ## 必查范围
 
 - 架构交接后的四个正式场景、URP 配置、Sprite／Tilemap／透明物／占位 3D／TMP／按钮、六角表现和各 HUD 所有者。
 - `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` 第 4.4 节的 2.5D 六角地面资产方向，以及 `docs/基础设定/战场空间与环境规则.txt` 的高度、地表、场景物、占位与规则事实边界。
+- 以 `UNITY_STRUCTURE.md`、`UNITY_STRUCTURE.runtime.md`、`UNITY_STRUCTURE.ui.md` 和 `UNITY_STRUCTURE.assemblies.md` 为实时结构入口；完整读取 `SceneBuildSupport.BeginScene/CreateCanvas/CreatePanel/CreateText/CreateButton`、`AdventureSceneBuilder.Build/ValidateReadOnlyVisualAssets`、`SceneArchitectureValidator.Validate/ValidateScene`、`AdventureUnitSpawner.InstantiateMarker/ToWorld` 及其直接 EditMode／PlayMode 测试后再改。
+- 核对 `TianZhangUniversalRenderPipeline.asset` 的 Renderer Data 唯一引用、旧 Renderer2D 资产 GUID 的全部序列化引用，以及四场景的 Main Camera、ScreenSpaceOverlay `UICanvas`、Adventure ground／HUD／UnitMarker 引用；不得从旧原型名、已删除 Hybrid／Tilemap 实现或静态截图推断当前 owner。
 
 ## 实施范围
 
-- 重建相机、灯光、背景、构图、材质规范、六角地块、可达／选中／高亮／遮挡／单位占位，以及 World／Settlement／Adventure／Combat HUD 基础视觉。
+- 用 Unity Editor API 删除唯一旧 `Renderer2DData` 资产并在已冻结的新字面量路径创建唯一 `UniversalRendererData`，更新现有 Pipeline Asset 的单项 Renderer Data 引用；保持 URP 17.3.0、Global Settings、Default Volume Profile、Graphics／Quality 对现有 Pipeline Asset 的绑定不变。Renderer 创建或替换必须由 `VisualBaselineBuilder` 完成，不手写 `.asset`／`.meta` YAML。
+- `VisualBaselineBuilder` 是本任务唯一资产与场景重建入口：确定性创建一份可复用六角柱 Mesh（顶面与侧壁／裙边子网格）、一份独立 Overlay Mesh、九份已列明的 URP 技术材质、3D `UnitMarker.prefab`，再调用现行四个 Scene Builder 重建四场景；重复执行不得新增 GUID、平行资产、场景或 Renderer。
+- `SceneBuildSupport` 只承载四场景共享的固定正交斜俯视相机、单一 Directional Light／实时阴影、背景构图和现有 UGUI Panel／Text／Button 技术配色；不改变 Canvas 数量、对象稳定名称、序列化引用或运行时 Feature owner。该共享调用面之外没有允许受影响的场景或表面。
+- Adventure 以标准化低模六角柱和独立 Overlay Mesh 建立有界技术矩阵，分别证明基础地形、规则 `heightLevel` 的表现映射、一个独立地表层、可达／选中／攻击反馈层、遮挡物与阴影；这些对象只消费或展示已提供的坐标／状态，不由 Transform、Renderer、Collider、颜色或材质反推通行、射程、视线、占位与结算。
+- `UnitMarker.prefab` 改为正面明确的 3D 几何占位体并开启标准 3D 投影／受影；`AdventureUnitSpawner` 继续从同一 `HexCoord` 快照定位，只通过通用 `Renderer` 的 `MaterialPropertyBlock` 写入玩家／敌方技术色，不复制材质、不增加角色或战斗状态。六向、正式角色外观与动作仍属于后续 `U-CHAR-3D-PROTO-01` 及角色样例，不在本卡实现。
+- `SceneArchitectureValidator` 与新增 `VisualBaselineEditorTests` 锁定唯一 Universal Renderer、固定场景相机／灯光／Canvas、资产类型、六角顶面／侧壁／Overlay 分层、透明材质和 3D UnitMarker；现有正式 PlayMode 流程增加 Marker Renderer／投影证据，同时继续证明 Adventure→Combat→Settlement→保存读取结果不变。
 - 六角地面使用标准化、模块化的低模 3D 顶面与侧壁／裙边占位网格，按规则高度表现高低差，以技术材质／贴花验证地貌，并保持场景物、地表状态和战棋反馈为独立层；不生产逐格独立模型，不把纯平面伪 3D Tilemap 定为正式路线。
 
 ## 禁止项
 
 - 不生产正式角色、模块化外观、石甲兽、关中最终装修、音效、批量资源、玩法或数值。
+- 不新增自定义 Toon Shader、ShaderGraph、正式纹理、第二场景、第二 Canvas、第二 Bootstrap、第二 Renderer／Pipeline、运行时视觉状态服务或材质静默回退；不修改 URP 包版本、Global Settings、Default Volume Profile、GraphicsSettings、QualitySettings、程序集边界或生成的 `.csproj/.sln`。
+- 不删除或改写现有 Adventure／旧 TileBase 与 PNG、TMP package 资源、Language／Content 数据；它们不再是正式 3D 基线 owner 时保持原样，本卡不顺手清理。
+- 不修改 CTB、攻击、伤害、AI、寻路、六角拓扑、`HexCoord`、空间距离、高度／地表／场景物规则、遭遇内容、导航、存档或 HUD 业务文案；不得让视觉对象成为任何规则事实源。
 
 ## 验证
 
-- 四场景人工视觉矩阵、UI 状态、透明排序、占位 3D、六角反馈与功能回归；解阻塞前展开完整场景、asset、脚本、测试和 `.meta` 路径。
+- 先在 Unity `6000.3.18f1` 中执行 `TianZhang.Editor.VisualBaselineBuilder.RebuildForBatchMode`，确认第二次执行没有新增／重命名资产且差异仍严格落在 `expectedPaths`；再执行 `TianZhang.Editor.SceneArchitectureValidator.ValidateForBatchMode`。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`、`dotnet build src/TianZhang.EditModeTests.csproj --no-restore`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 与 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`；PlayMode 必须覆盖正式节点选择、3D 玩家／敌方 Marker、基础攻击、返回据点与保存读取。
+- 在同一 Game View 分辨率逐场景完成人工矩阵：StartMenu 的菜单／创角切换，World 的节点未选／已选，Settlement 的主面板／悬赏／册界开关，Adventure 的探索／Combat HUD；每行检查正交斜俯视构图、Directional Light 阴影、UI 可读性与点击、ScreenSpaceOverlay 在最前、透明层无 Z-fighting／错误遮挡，Adventure 额外检查高低六角、地表层、可达／选中／攻击层、遮挡物和两类 3D Marker。
+- 对比接入前后的 `HexCoord`、占位、可达、射程、拒绝原因、战斗结果、导航与保存 JSON；视觉检查只证明表现，不替代规则／PlayMode 断言。本卡不形成数值平衡结论，因此不运行 BattleSim。
+- 最后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`、预期路径空白检查、`git diff --check` 与暂存后的 `git diff --cached --check`。
 
 ## 完成条件
 
-- 后续 Toon、正式场景资源和 3D 角色拥有统一、稳定且可测试的 URP 技术底座。
+- 现有 Pipeline Asset 只引用一个 `UniversalRendererData`；旧 Renderer2D 资产已删除，Graphics／全部 Quality 等级仍指向同一 Pipeline Asset，仓库不存在第二 Renderer、第二 Pipeline 或静默回退。
+- 四个正式场景均由现行 Builder 确定性重建并各自保留一个 Main Camera、一个 ScreenSpaceOverlay Canvas、原 Installer／Controller／View 与稳定对象引用；共享相机、灯光、背景和 UGUI 技术配色通过 Validator、EditMode 与人工矩阵。
+- Adventure 的可复用六角柱、独立地表／反馈 Overlay、遮挡与阴影、3D UnitMarker 在固定正交斜俯视下可辨认且透明排序稳定；Marker 继续使用现有规则坐标和正式遭遇链，所有玩法、空间、导航、战斗与保存回归不变。
+- 所有新 Mesh、Material、Renderer Data、脚本与测试都有已冻结的字面量路径和 Unity 生成的 `.meta`；重建幂等、所有自动检查通过、人工矩阵无红黄项，最终差异仅包含 `expectedPaths`。
+- 后续 Toon、正式场景资源和 3D 角色因此拥有统一、稳定且可测试的 URP 技术底座；本卡不声称已经完成正式 Shader、角色、地貌、场景物或批量装修。
 
 ## 停止条件
 
-- 必须混入正式资源、规则变化、第二视觉管线或静默回退才能成立时停止。
+- Universal Renderer 替换要求保留 Renderer2D、第二 Pipeline、修改 URP 包／Global Settings／Graphics／Quality、使用静默材质 fallback，或 Unity 自动产生 `expectedPaths` 外持久差异时停止并回到 Renderer 根因，不叠加兼容分支。
+- 任一正式 Sprite／UGUI／透明层／场景入口／PlayMode 行为无法在单一 Universal Renderer 下保持，或必须修改 CTB、空间、攻击、AI、导航、保存、内容／数值才能通过时停止；不得以视觉通过掩盖功能回归失败。
+- 六角、地表、遮挡、单位或高亮必须从 Transform／Collider／Renderer／颜色反推规则，必须新增运行时状态 owner，或需要正式资源、自定义 Toon Shader、批量纹理／模型才能成立时停止并返回对应后续任务。
+- 实时 owner 与上述路径冻结不一致、必须扩大到新的程序集／场景／数据所有者，或本任务暴露为多个不能由同一候选统一验证的独立结果时停止，保留证据并请求重新规划，不连续扩大 `expectedPaths`。
