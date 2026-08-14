@@ -21,6 +21,7 @@
     "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_Renderer.asset.meta",
     "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_UniversalRenderer.asset",
     "src/Assets/Settings/Rendering/TianZhangUniversalRenderPipeline_UniversalRenderer.asset.meta",
+    "src/ProjectSettings/ShaderGraphSettings.asset",
     "src/Assets/Art/VisualBaseline.meta",
     "src/Assets/Art/VisualBaseline/Materials.meta",
     "src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Backdrop.mat",
@@ -127,6 +128,7 @@
 ## 实施范围
 
 - 用 Unity Editor API 删除唯一旧 `Renderer2DData` 资产并在已冻结的新字面量路径创建唯一 `UniversalRendererData`，更新现有 Pipeline Asset 的单项 Renderer Data 引用；保持 URP 17.3.0、Global Settings、Default Volume Profile、Graphics／Quality 对现有 Pipeline Asset 的绑定不变。Renderer 创建或替换必须由 `VisualBaselineBuilder` 完成，不手写 `.asset`／`.meta` YAML。
+- Unity Editor 在本任务重建中持久化的 `src/ProjectSettings/ShaderGraphSettings.asset` 作为 URP 17.3.0 所带 Shader Graph 包的项目级默认设置纳入结果；只接受 Unity 自动生成并在重复重建后保持稳定的默认内容，不手写 YAML，也不因此授权新增 ShaderGraph 资源或自定义 Shader。
 - `VisualBaselineBuilder` 是本任务唯一资产与场景重建入口：确定性创建一份可复用六角柱 Mesh（顶面与侧壁／裙边子网格）、一份独立 Overlay Mesh、九份已列明的 URP 技术材质、3D `UnitMarker.prefab`，再调用现行四个 Scene Builder 重建四场景；重复执行不得新增 GUID、平行资产、场景或 Renderer。
 - `SceneBuildSupport` 只承载四场景共享的固定正交斜俯视相机、单一 Directional Light／实时阴影、背景构图和现有 UGUI Panel／Text／Button 技术配色；不改变 Canvas 数量、对象稳定名称、序列化引用或运行时 Feature owner。该共享调用面之外没有允许受影响的场景或表面。
 - Adventure 以标准化低模六角柱和独立 Overlay Mesh 建立有界技术矩阵，分别证明基础地形、规则 `heightLevel` 的表现映射、一个独立地表层、可达／选中／攻击反馈层、遮挡物与阴影；这些对象只消费或展示已提供的坐标／状态，不由 Transform、Renderer、Collider、颜色或材质反推通行、射程、视线、占位与结算。
