@@ -1,6 +1,6 @@
 # 天章游戏开发 — 核心系统设计总览
 
-> 自动生成时间: 2026-08-07 09:00
+> 自动生成时间: 2026-08-14 09:00
 > 下次更新: 下周五
 > 文档根目录: docs/
 
@@ -13,7 +13,7 @@
 | 道具 | 18 | 23,996 |
 | 地图与区域 | 9 | 149,714 |
 | 怪物 | 1 | 608 |
-| 基础设定 | 46 | 528,933 |
+| 基础设定 | 76 | 1,147,440 |
 | 角色养成 | 155 | 320,188 |
 | 剧情 | 41 | 191,650 |
 | 门派与势力 | 33 | 24,458 |
@@ -106,35 +106,37 @@
 ## 最近变更
 
 ### 本周变更
-  [修改] 剧情\主线\世界主线-后续拆分工作清单.txt (2026-08-03 10:24)
-  [新增] 剧情\主线\第二章-坤舆残篇.txt (2026-08-03 10:32)
-  [修改] 基础设定\修行境界.txt (2026-08-05 18:17)
-  [修改] 基础设定\元婴锚点与金丹位格矩阵.txt (2026-08-05 18:17)
-  [修改] 基础设定\元婴锚点与金丹位格设定.txt (2026-08-05 18:01)
-  [修改] 基础设定\境界特性.txt (2026-08-05 18:17)
-  [修改] 基础设定\金丹位格批量生产模板.txt (2026-08-05 18:08)
-  [修改] 基础设定\金丹位格证位与争位规则.txt (2026-08-05 18:17)
-  [修改] 基础设定\金丹基础效果装配与冲突规则.txt (2026-08-05 18:17)
-  [新增] 基础设定\金丹位格\金丹位格索引.txt (2026-08-07 08:57)
-  [新增] 基础设定\金丹位格\金丹位格设计规范.txt (2026-08-05 18:20)
-  [新增] 基础设定\金丹位格\化位\JD_FiveElements_Earth_TRANSFORM01_载岳回廊.txt (2026-08-07 04:59)
-  [新增] 基础设定\金丹位格\化位\JD_FiveElements_Fire_TRANSFORM01_燃犀渡.txt (2026-08-07 03:54)
-  [新增] 基础设定\金丹位格\化位\JD_FiveElements_Metal_TRANSFORM01_从革渡.txt (2026-08-07 05:54)
-  [新增] 基础设定\金丹位格\化位\JD_FiveElements_Water_TRANSFORM01_潮衡渡.txt (2026-08-07 06:54)
-  [新增] 基础设定\金丹位格\化位\JD_FiveElements_Wood_TRANSFORM01_荣枯关.txt (2026-08-07 02:58)
-  [新增] 基础设定\金丹位格\化位\JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt (2026-08-07 08:57)
-  [新增] 基础设定\金丹位格\化位\JD_SixConsciousness_Sight_TRANSFORM01_镜门.txt (2026-08-07 07:55)
-  [新增] 基础设定\金丹位格\源位\JD_FiveElements_Earth_SOURCE_坤舆地髓.txt (2026-08-07 04:59)
-  [新增] 基础设定\金丹位格\源位\JD_FiveElements_Fire_SOURCE_赫曦炉心.txt (2026-08-07 03:54)
-  [新增] 基础设定\金丹位格\源位\JD_FiveElements_Metal_SOURCE_白帝砧.txt (2026-08-07 05:54)
-  [新增] 基础设定\金丹位格\源位\JD_FiveElements_Water_SOURCE_玄冥泉眼.txt (2026-08-07 06:54)
-  [新增] 基础设定\金丹位格\源位\JD_FiveElements_Wood_SOURCE_青帝祖庭.txt (2026-08-07 02:58)
-  [新增] 基础设定\金丹位格\源位\JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt (2026-08-07 08:57)
-  [新增] 基础设定\金丹位格\源位\JD_SixConsciousness_Sight_SOURCE_观照真瞳.txt (2026-08-07 07:55)
-  [新增] 基础设定\金丹位格\界位\JD_FiveElements_Earth_DOMAIN01_厚境垣.txt (2026-08-07 04:59)
-  [新增] 基础设定\金丹位格\界位\JD_FiveElements_Fire_DOMAIN01_长明赤野.txt (2026-08-07 03:54)
-  [新增] 基础设定\金丹位格\界位\JD_FiveElements_Metal_DOMAIN01_肃刃原.txt (2026-08-07 05:54)
-  [新增] 基础设定\金丹位格\界位\JD_FiveElements_Water_DOMAIN01_沧溟泽国.txt (2026-08-07 06:54)
-  [新增] 基础设定\金丹位格\界位\JD_FiveElements_Wood_DOMAIN01_扶疏天.txt (2026-08-07 02:58)
-  [新增] 基础设定\金丹位格\界位\JD_SixConsciousness_Hearing_DOMAIN01_万籁场.txt (2026-08-07 08:57)
-  [新增] 基础设定\金丹位格\界位\JD_SixConsciousness_Sight_DOMAIN01_无翳庭.txt (2026-08-07 07:55)
+  [修改] 基础设定\境界特性.txt (2026-08-09 13:23)
+  [修改] 基础设定\寿元与时间尺度设定.txt (2026-08-09 13:23)
+  [修改] 基础设定\角色数值设计.txt (2026-08-09 13:23)
+  [修改] 基础设定\金丹位格\金丹位格索引.txt (2026-08-09 21:27)
+  [新增] 基础设定\金丹位格\化位\JD_CauseEffect_Cause_TRANSFORM01_移契门.txt (2026-08-08 20:55)
+  [新增] 基础设定\金丹位格\化位\JD_CauseEffect_Result_TRANSFORM01_定谳门.txt (2026-08-09 05:54)
+  [新增] 基础设定\金丹位格\化位\JD_Cosmos_Space_TRANSFORM01_折尺门.txt (2026-08-08 17:25)
+  [新增] 基础设定\金丹位格\化位\JD_Cosmos_Time_TRANSFORM01_刻漏关.txt (2026-08-08 19:53)
+  [新增] 基础设定\金丹位格\化位\JD_SixConsciousness_Action_TRANSFORM01_行止门.txt (2026-08-09 21:27)
+  [新增] 基础设定\金丹位格\化位\JD_SixConsciousness_Body_TRANSFORM01_易骨关.txt (2026-08-08 12:01)
+  [新增] 基础设定\金丹位格\化位\JD_SixConsciousness_Breath_TRANSFORM01_驭机渡.txt (2026-08-07 09:56)
+  [新增] 基础设定\金丹位格\化位\JD_SixConsciousness_Ingest_TRANSFORM01_化津炉.txt (2026-08-07 10:52)
+  [新增] 基础设定\金丹位格\化位\JD_YinYang_Yang_TRANSFORM01_曜行关.txt (2026-08-08 16:27)
+  [新增] 基础设定\金丹位格\化位\JD_YinYang_Yin_TRANSFORM01_潜曜关.txt (2026-08-09 05:25)
+  [新增] 基础设定\金丹位格\源位\JD_CauseEffect_Cause_SOURCE_缘起枢.txt (2026-08-08 20:55)
+  [新增] 基础设定\金丹位格\源位\JD_CauseEffect_Result_SOURCE_报成镜.txt (2026-08-09 05:54)
+  [新增] 基础设定\金丹位格\源位\JD_Cosmos_Space_SOURCE_六合枢.txt (2026-08-08 17:25)
+  [新增] 基础设定\金丹位格\源位\JD_Cosmos_Time_SOURCE_岁序轮.txt (2026-08-08 19:53)
+  [新增] 基础设定\金丹位格\源位\JD_SixConsciousness_Action_SOURCE_发念枢.txt (2026-08-09 21:27)
+  [新增] 基础设定\金丹位格\源位\JD_SixConsciousness_Body_SOURCE_形骸祖窍.txt (2026-08-08 12:01)
+  [新增] 基础设定\金丹位格\源位\JD_SixConsciousness_Breath_SOURCE_万灵枢.txt (2026-08-07 09:56)
+  [新增] 基础设定\金丹位格\源位\JD_SixConsciousness_Ingest_SOURCE_百味玄关.txt (2026-08-07 10:52)
+  [新增] 基础设定\金丹位格\源位\JD_YinYang_Yang_SOURCE_扶桑天门.txt (2026-08-08 16:27)
+  [新增] 基础设定\金丹位格\源位\JD_YinYang_Yin_SOURCE_玄牝之门.txt (2026-08-09 05:25)
+  [新增] 基础设定\金丹位格\界位\JD_CauseEffect_Cause_DOMAIN01_万应场.txt (2026-08-08 20:55)
+  [新增] 基础设定\金丹位格\界位\JD_CauseEffect_Result_DOMAIN01_收缘庭.txt (2026-08-09 05:54)
+  [新增] 基础设定\金丹位格\界位\JD_Cosmos_Space_DOMAIN01_咫尺天.txt (2026-08-08 17:25)
+  [新增] 基础设定\金丹位格\界位\JD_Cosmos_Time_DOMAIN01_迟速庭.txt (2026-08-08 19:53)
+  [新增] 基础设定\金丹位格\界位\JD_SixConsciousness_Action_DOMAIN01_万机局.txt (2026-08-09 21:27)
+  [新增] 基础设定\金丹位格\界位\JD_SixConsciousness_Body_DOMAIN01_法身庭.txt (2026-08-08 12:01)
+  [新增] 基础设定\金丹位格\界位\JD_SixConsciousness_Breath_DOMAIN01_启寂坛.txt (2026-08-07 09:56)
+  [新增] 基础设定\金丹位格\界位\JD_SixConsciousness_Ingest_DOMAIN01_谷神场.txt (2026-08-07 10:52)
+  [新增] 基础设定\金丹位格\界位\JD_YinYang_Yang_DOMAIN01_长昼庭.txt (2026-08-08 16:27)
+  [新增] 基础设定\金丹位格\界位\JD_YinYang_Yin_DOMAIN01_朔夜庭.txt (2026-08-09 05:25)
