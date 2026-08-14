@@ -342,6 +342,40 @@ test('processed evidence from an earlier decision does not compete with the curr
   ].sort());
 });
 
+test('valid evidence for another decision remains in inbox until its decision is queried', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'tzg-consume-other-decision-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const otherDecisionId = 'DEC-20260716-OTHER001';
+  const otherMessageHash = sha256('om_fake_other_message');
+  const otherNonceHash = sha256('other-card-nonce');
+  const eventId = 'evt_other_decision_waiting';
+  const payloadOverrides = {
+    decisionId: otherDecisionId,
+    providerMessageIdHash: otherMessageHash,
+    cardNonceHash: otherNonceHash,
+  };
+  const item = await put(root, eventId, payloadOverrides);
+
+  assert.equal(await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending(),
+    now: NOW,
+  }), null);
+  assert.deepEqual(await readdir(join(root, 'inbox')), [`${item.eventIdHash}.json`]);
+  assert.deepEqual(await readdir(join(root, 'quarantine')), []);
+
+  const result = await consumeCurrentReply({
+    stateRoot: root,
+    config: makeConfig(root),
+    pendingDecision: makePending(payloadOverrides),
+    now: NOW,
+  });
+  assert.deepEqual(result, expectedAccepted(makePayload(eventId, payloadOverrides), item.envelope));
+  assert.deepEqual(await readdir(join(root, 'inbox')), []);
+  assert.deepEqual(await readdir(join(root, 'processed')), [`${item.eventIdHash}.json`]);
+});
+
 test('first valid reply wins across option/custom races and equal custom replays are idempotent', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'tzg-consume-mixed-race-'));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -401,9 +435,8 @@ test('first valid reply wins across option/custom races and equal custom replays
   assert.equal(tieResult.providerEventIdHash, tieWinner.eventIdHash);
 });
 
-test('tampered, malformed, filename-mismatched, stale, and identity-mismatched evidence is quarantined', async (t) => {
+test('tampered, malformed, filename-mismatched, and current-decision identity mismatches are quarantined', async (t) => {
   const cases = [
-    ['stale decision', { decisionId: 'DEC-20260716-STALE001' }],
     ['wrong option', { optionKey: 'D' }],
     ['wrong nonce', { cardNonceHash: '1'.repeat(64) }],
     ['wrong message', { providerMessageIdHash: '2'.repeat(64) }],

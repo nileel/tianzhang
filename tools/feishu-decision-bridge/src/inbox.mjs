@@ -591,8 +591,15 @@ export async function consumeCurrentReply({ stateRoot, config, pendingDecision, 
           || envelopeSnapshot.directory !== 'inbox'
           || payloadSnapshot === null
           || `${payloadSnapshot.providerEventIdHash}.json` !== name
-          || !isCurrentPayload(payloadSnapshot, pending, parsedConfig, now.getTime())
           || !consumed.healthy
+        ) {
+          throw new Error();
+        }
+        if (payloadSnapshot.decisionId !== pending.decisionId) {
+          continue;
+        }
+        if (
+          !isCurrentPayload(payloadSnapshot, pending, parsedConfig, now.getTime())
           || ((payloadSnapshot.kind === 'decision_reply'
             || payloadSnapshot.source === 'feishu_card_input')
             && consumed.nonces.has(payloadSnapshot.cardNonceHash))
