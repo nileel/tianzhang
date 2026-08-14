@@ -29,6 +29,16 @@ try {
   }
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.mcp__node_repl__js' -and $prompts['codex-hourly-worker'] -match 'codex_model_metadata_invalid') 'Canonical Codex prompt is missing the request metadata channel'
   Assert-True ($prompts['codex-hourly-worker'] -match 'shouldSelfPause' -and $prompts['codex-hourly-worker'] -match 'tools\.codex_app__automation_update' -and $prompts['codex-hourly-worker'] -match "terminal\.cleanup === 'cleaned'") 'Canonical Codex prompt is missing the exact empty-queue self-pause contract'
+  $codexCodeBlocks = @([regex]::Matches($prompts['codex-hourly-worker'], '(?s)```js\r?\n(?<body>.*?)\r?\n\s*```'))
+  Assert-True ($codexCodeBlocks.Count -eq 2) 'Canonical Codex prompt must contain exactly one long entry cell and one short self-pause cell'
+  $longEntryCell = $codexCodeBlocks[0].Groups['body'].Value
+  $shortPauseCell = $codexCodeBlocks[1].Groups['body'].Value
+  Assert-True ($longEntryCell -match 'invoke-hourly-owner\.ps1' -and $longEntryCell -match 'shouldSelfPause') 'Long Codex entry cell is missing its fixed shared-entry contract'
+  Assert-True ($longEntryCell -notmatch 'codex_app__automation_update|automation\.toml') 'Long Codex entry cell still embeds automation management'
+  Assert-True ($shortPauseCell -match 'tools\.codex_app__automation_update' -and $shortPauseCell -match "status: 'PAUSED'" -and $shortPauseCell -match 'promptLength' -and $shortPauseCell -match 'promptSha256' -and $shortPauseCell -match 'const updated = parseSnapshot') 'Short Codex self-pause cell is missing deterministic update, readback, or prompt-integrity proof'
+  Assert-True ($shortPauseCell -match 'codex_automation_config_invalid' -and $shortPauseCell -match 'codex_self_pause_failed' -and $shortPauseCell -match 'codex_self_pause_config_mismatch') 'Short Codex self-pause cell is missing stable failure codes'
+  Assert-True ($shortPauseCell -notmatch "current\.status\s*!==\s*'PAUSED'") 'Short Codex self-pause cell skips the real management call while already paused'
+  Assert-True ($shortPauseCell -notmatch 'invoke-hourly-owner\.ps1') 'Short Codex self-pause cell must not invoke the shared entry'
   foreach ($entry in $prompts.GetEnumerator()) { Write-Automation -Id $entry.Key -Status 'PAUSED' -Prompt $entry.Value }
   $paused = Invoke-Checker
   Assert-True ($paused.ExitCode -eq 0 -and $paused.Text -match 'check-automation-workflow: OK') "Paused contract failed: $($paused.Text)"
