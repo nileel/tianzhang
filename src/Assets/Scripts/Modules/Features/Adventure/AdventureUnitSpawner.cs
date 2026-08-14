@@ -42,6 +42,8 @@ namespace TianZhang.Features.Adventure
 
     public sealed class AdventureUnitSpawner : MonoBehaviour
     {
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+
         public bool TrySpawn(
             CharacterStateSnapshot player,
             ContentCatalogData catalog,
@@ -228,14 +230,19 @@ namespace TianZhang.Features.Adventure
         {
             GameObject marker = Instantiate(prefab, ToWorld(coord), Quaternion.identity);
             marker.name = objectName;
-            SpriteRenderer renderer = marker.GetComponentInChildren<SpriteRenderer>();
-            if (renderer != null) renderer.color = color;
+            var properties = new MaterialPropertyBlock();
+            foreach (Renderer renderer in marker.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.GetPropertyBlock(properties);
+                properties.SetColor(BaseColorId, color);
+                renderer.SetPropertyBlock(properties);
+            }
             return marker;
         }
 
         private static Vector3 ToWorld(HexCoord coord)
         {
-            return new Vector3(coord.Q + coord.R * 0.5f, coord.R * 0.8660254f, 0f);
+            return new Vector3(coord.Q + coord.R * 0.5f, 0.38f, coord.R * 0.8660254f + 1f);
         }
     }
 }

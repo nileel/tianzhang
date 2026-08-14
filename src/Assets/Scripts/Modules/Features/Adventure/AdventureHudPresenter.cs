@@ -27,10 +27,13 @@ namespace TianZhang.Features.Adventure
                     typeof(LayoutElement));
                 go.transform.SetParent(nodeContainer, false);
                 go.GetComponent<LayoutElement>().preferredHeight = 44f;
+                go.GetComponent<Image>().color = new Color(0.2f, 0.34f, 0.3f, 1f);
                 var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
                 labelGo.transform.SetParent(go.transform, false);
                 Text label = labelGo.GetComponent<Text>();
                 label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                label.fontSize = 18;
+                label.color = new Color(0.91f, 0.88f, 0.77f, 1f);
                 label.alignment = TextAnchor.MiddleCenter;
                 label.text = node.nodeId + " (" + node.q + "," + node.r + ")";
                 RectTransform rect = labelGo.GetComponent<RectTransform>();

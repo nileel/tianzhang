@@ -4,6 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -23,9 +24,33 @@ namespace TianZhang.Editor
             camera.tag = "MainCamera";
             Camera component = camera.GetComponent<Camera>();
             component.orthographic = true;
-            component.orthographicSize = 7f;
+            component.orthographicSize = 6.2f;
             component.backgroundColor = background;
-            camera.transform.position = new Vector3(0f, 0f, -10f);
+            component.clearFlags = CameraClearFlags.SolidColor;
+            component.nearClipPlane = 0.1f;
+            component.farClipPlane = 60f;
+            camera.transform.position = new Vector3(0f, 8f, -10f);
+            camera.transform.rotation = Quaternion.Euler(38f, 0f, 0f);
+
+            var lightObject = new GameObject("Directional Light", typeof(Light));
+            Light light = lightObject.GetComponent<Light>();
+            light.type = LightType.Directional;
+            light.color = new Color(1f, 0.93f, 0.82f);
+            light.intensity = 1.1f;
+            light.shadows = LightShadows.Hard;
+            light.lightmapBakeType = LightmapBakeType.Realtime;
+            lightObject.transform.rotation = Quaternion.Euler(48f, -32f, 0f);
+
+            GameObject backdrop = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            backdrop.name = "VisualBackdrop";
+            backdrop.transform.position = new Vector3(0f, -0.04f, 1f);
+            backdrop.transform.localScale = new Vector3(2.8f, 1f, 2.1f);
+            Collider backdropCollider = backdrop.GetComponent<Collider>();
+            if (backdropCollider != null) UnityEngine.Object.DestroyImmediate(backdropCollider);
+            MeshRenderer backdropRenderer = backdrop.GetComponent<MeshRenderer>();
+            backdropRenderer.sharedMaterial = RequireAsset<Material>(VisualBaselineBuilder.BackdropMaterialPath);
+            backdropRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            backdropRenderer.receiveShadows = true;
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             return new GameObject(rootName);
         }
@@ -50,7 +75,7 @@ namespace TianZhang.Editor
             rect.anchorMax = max;
             rect.offsetMin = new Vector2(20f, 20f);
             rect.offsetMax = new Vector2(-20f, -20f);
-            go.GetComponent<Image>().color = new Color(0.04f, 0.055f, 0.07f, 0.92f);
+            go.GetComponent<Image>().color = new Color(0.055f, 0.07f, 0.075f, 0.94f);
             return go;
         }
 
@@ -61,7 +86,7 @@ namespace TianZhang.Editor
             Text text = go.GetComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.fontSize = size;
-            text.color = Color.white;
+            text.color = new Color(0.91f, 0.88f, 0.77f, 1f);
             text.alignment = TextAnchor.MiddleCenter;
             text.text = value;
             RectTransform rect = go.GetComponent<RectTransform>();
@@ -73,7 +98,7 @@ namespace TianZhang.Editor
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
             go.transform.SetParent(parent, false);
-            go.GetComponent<Image>().color = new Color(0.18f, 0.3f, 0.28f, 1f);
+            go.GetComponent<Image>().color = new Color(0.2f, 0.34f, 0.3f, 1f);
             go.GetComponent<LayoutElement>().preferredHeight = 48f;
             label = CreateText("Label", go.transform, labelValue, 18);
             RectTransform labelRect = label.rectTransform;
@@ -112,6 +137,7 @@ namespace TianZhang.Editor
             VerticalLayoutGroup layout = target.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(20, 20, 20, 20);
             layout.spacing = spacing;
+            layout.childControlHeight = true;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
             return layout;

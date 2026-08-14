@@ -8,7 +8,7 @@ using TianZhang.Features.CombatPresentation;
 using TianZhang.Infrastructure.UnityContent;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Tilemaps;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace TianZhang.Editor
@@ -32,10 +32,7 @@ namespace TianZhang.Editor
             CombatLogView logView = root.AddComponent<CombatLogView>();
 
             ValidateReadOnlyVisualAssets();
-            Sprite ground = SceneBuildSupport.RequireAsset<Sprite>("Assets/Resources/Tiles/AdventureGround.png");
-            var groundObject = new GameObject("AdventureGroundReference", typeof(SpriteRenderer));
-            groundObject.GetComponent<SpriteRenderer>().sprite = ground;
-            groundObject.transform.localScale = Vector3.one * 12f;
+            BuildVisualBaselineMatrix();
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
             GameObject adventurePanel = SceneBuildSupport.CreatePanel("AdventurePanel", canvas.transform, new Vector2(0.02f, 0.45f), new Vector2(0.28f, 0.96f));
@@ -119,15 +116,99 @@ namespace TianZhang.Editor
 
         private static void ValidateReadOnlyVisualAssets()
         {
-            string[] tilePaths =
-            {
-                "Assets/Resources/Tiles/AdventureGround.asset",
-                "Assets/Resources/Tiles/AdventureMoveHighlight.asset",
-                "Assets/Resources/Tiles/AdventureAttackHighlight.asset",
-                "Assets/Resources/Tiles/AdventureSelected.asset",
-            };
-            foreach (string path in tilePaths) SceneBuildSupport.RequireAsset<TileBase>(path);
-            SceneBuildSupport.RequireAsset<Sprite>("Assets/Resources/UnitMarker.png");
+            SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexColumnMeshPath);
+            SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexOverlayMeshPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundTopMaterialPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundSideMaterialPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SurfaceMaterialPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.ReachableMaterialPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.AttackMaterialPath);
+            SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
         }
+
+        private static void BuildVisualBaselineMatrix()
+        {
+            var board = new GameObject("VisualBaselineBoard");
+            Mesh columnMesh = SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexColumnMeshPath);
+            Mesh overlayMesh = SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexOverlayMeshPath);
+            Material top = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundTopMaterialPath);
+            Material side = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundSideMaterialPath);
+
+            int[,] cells =
+            {
+                { -2, 0, 0 }, { -1, 0, 1 }, { 0, 0, 2 }, { 1, 0, 1 }, { 2, 0, 0 },
+                { -1, 1, 0 }, { 0, 1, 1 }, { 1, 1, 0 }, { 0, -1, 0 },
+            };
+            for (int index = 0; index < cells.GetLength(0); index++)
+            {
+                int q = cells[index, 0];
+                int r = cells[index, 1];
+                int heightLevel = cells[index, 2];
+                float visualHeight = HeightForLevel(heightLevel);
+                var cell = new GameObject(
+                    "VisualHex_" + q + "_" + r + "_Height_" + heightLevel,
+                    typeof(MeshFilter),
+                    typeof(MeshRenderer));
+                cell.transform.SetParent(board.transform, false);
+                cell.transform.localPosition = HexToWorld(q, r, 0f);
+                cell.transform.localScale = new Vector3(1f, visualHeight, 1f);
+                cell.GetComponent<MeshFilter>().sharedMesh = columnMesh;
+                MeshRenderer renderer = cell.GetComponent<MeshRenderer>();
+                renderer.sharedMaterials = new[] { top, side };
+                renderer.shadowCastingMode = ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
+
+            CreateOverlay(board.transform, overlayMesh, -2, 0, 0, "SurfaceOverlay",
+                VisualBaselineBuilder.SurfaceMaterialPath, 10, 0.012f);
+            CreateOverlay(board.transform, overlayMesh, -1, 0, 1, "ReachableOverlay",
+                VisualBaselineBuilder.ReachableMaterialPath, 20, 0.024f);
+            CreateOverlay(board.transform, overlayMesh, 0, 0, 2, "SelectedOverlay",
+                VisualBaselineBuilder.SelectedMaterialPath, 30, 0.036f);
+            CreateOverlay(board.transform, overlayMesh, 1, 0, 1, "AttackOverlay",
+                VisualBaselineBuilder.AttackMaterialPath, 40, 0.048f);
+
+            GameObject occluder = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            occluder.name = "VisualBaselineOccluder";
+            occluder.transform.SetParent(board.transform, false);
+            float occluderBase = HeightForLevel(0);
+            occluder.transform.localPosition = HexToWorld(2, 0, occluderBase + 0.58f);
+            occluder.transform.localScale = new Vector3(0.38f, 1.15f, 0.38f);
+            Collider collider = occluder.GetComponent<Collider>();
+            if (collider != null) UnityEngine.Object.DestroyImmediate(collider);
+            MeshRenderer occluderRenderer = occluder.GetComponent<MeshRenderer>();
+            occluderRenderer.sharedMaterial =
+                SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
+            occluderRenderer.shadowCastingMode = ShadowCastingMode.On;
+            occluderRenderer.receiveShadows = true;
+        }
+
+        private static void CreateOverlay(
+            Transform parent,
+            Mesh mesh,
+            int q,
+            int r,
+            int heightLevel,
+            string name,
+            string materialPath,
+            int sortingOrder,
+            float offset)
+        {
+            var overlay = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
+            overlay.transform.SetParent(parent, false);
+            overlay.transform.localPosition = HexToWorld(q, r, HeightForLevel(heightLevel) + offset);
+            overlay.GetComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer renderer = overlay.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = SceneBuildSupport.RequireAsset<Material>(materialPath);
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.sortingOrder = sortingOrder;
+        }
+
+        private static float HeightForLevel(int heightLevel) => 0.34f + heightLevel * 0.28f;
+
+        private static Vector3 HexToWorld(int q, int r, float y) =>
+            new Vector3(q + r * 0.5f, y, r * 0.8660254f + 1f);
     }
 }

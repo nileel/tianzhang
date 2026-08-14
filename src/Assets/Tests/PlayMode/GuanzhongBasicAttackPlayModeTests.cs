@@ -14,8 +14,10 @@ using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using TianZhang.World;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace TianZhang.Tests.PlayMode
@@ -93,9 +95,12 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(adventureInput);
             Assert.IsNotNull(encounter);
             yield return WaitForAdventureReady(adventure);
+            AssertAdventureNodeButtonReadable("shijiahou_encounter");
             adventure.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
             Assert.IsTrue(adventureInput.SelectNode("shijiahou_encounter"));
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
+            AssertTechnicalMarker("PlayerMarker", Color.cyan);
+            AssertTechnicalMarker("EnemyMarker", Color.red);
 
             Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
             ICombatCommandHandler combatCommands = encounter;
@@ -246,6 +251,43 @@ namespace TianZhang.Tests.PlayMode
             foreach (InventoryRecord record in runtime.CaptureSave().inventory)
                 if (record.itemId == itemId) return record.quantity;
             return 0;
+        }
+
+        private static void AssertAdventureNodeButtonReadable(string nodeId)
+        {
+            GameObject buttonObject = GameObject.Find("AdventureNode_" + nodeId);
+            Assert.IsNotNull(buttonObject, "Adventure HUD did not create the expected runtime node button.");
+            Image image = buttonObject.GetComponent<Image>();
+            Text label = buttonObject.GetComponentInChildren<Text>(true);
+            Assert.IsNotNull(image);
+            Assert.IsNotNull(label);
+            Assert.AreEqual(new Color(0.2f, 0.34f, 0.3f, 1f), image.color);
+            Assert.AreEqual(new Color(0.91f, 0.88f, 0.77f, 1f), label.color);
+            Assert.AreNotEqual(image.color, label.color, "Adventure node labels must contrast with their button background.");
+        }
+
+        private static void AssertTechnicalMarker(string objectName, Color expectedColor)
+        {
+            GameObject marker = GameObject.Find(objectName);
+            Assert.IsNotNull(marker, "Adventure combat did not create " + objectName + ".");
+            Assert.Greater(marker.transform.position.y, 0f, objectName + " must use the 3D ground plane.");
+            Assert.Zero(marker.GetComponentsInChildren<SpriteRenderer>(true).Length,
+                objectName + " must not use the legacy SpriteRenderer.");
+            MeshRenderer[] renderers = marker.GetComponentsInChildren<MeshRenderer>(true);
+            Assert.GreaterOrEqual(renderers.Length, 2, objectName + " must expose body and facing meshes.");
+            int baseColorId = Shader.PropertyToID("_BaseColor");
+            foreach (MeshRenderer renderer in renderers)
+            {
+                Assert.AreEqual(ShadowCastingMode.On, renderer.shadowCastingMode);
+                Assert.IsTrue(renderer.receiveShadows);
+                var properties = new MaterialPropertyBlock();
+                renderer.GetPropertyBlock(properties);
+                Color actual = properties.GetColor(baseColorId);
+                Assert.That(actual.r, Is.EqualTo(expectedColor.r).Within(0.001f));
+                Assert.That(actual.g, Is.EqualTo(expectedColor.g).Within(0.001f));
+                Assert.That(actual.b, Is.EqualTo(expectedColor.b).Within(0.001f));
+                Assert.That(actual.a, Is.EqualTo(expectedColor.a).Within(0.001f));
+            }
         }
 
         private sealed class SequenceRandomSource : IFormalEncounterRandomSource
