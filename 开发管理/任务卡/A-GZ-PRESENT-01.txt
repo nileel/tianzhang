@@ -9,8 +9,8 @@
   "domain": "content",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["U-URP-VISUAL-BASELINE-01", "U-SHIJIAHOU-3D-PROTO-01"],
-  "stateReason": "等待 URP 技术视觉基础与石甲兽技术样例通过",
+  "blockedBy": ["U-SHIJIAHOU-3D-PROTO-01"],
+  "stateReason": "等待石甲兽技术样例通过",
   "expectedPaths": [
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
