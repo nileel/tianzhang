@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：U-URP-VISUAL-BASELINE-01 应采用哪条渲染路线？",
+  "stateReason": "负责人已通过 DEC-20260814-QM57A9A575FD7E 选择 A：改用 Universal Renderer，采用 3D Mesh、标准 3D 灯光与阴影基线",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -65,7 +65,7 @@
   "automationDecision": {
     "schemaVersion": 1,
     "kind": "queue_maintenance",
-    "status": "awaiting_reply",
+    "status": "resolved",
     "decisionId": "DEC-20260814-QM57A9A575FD7E",
     "taskId": "U-URP-VISUAL-BASELINE-01",
     "sourceRunId": "migration-20260814-u-urp-visual",
@@ -99,7 +99,12 @@
     "sourceTaskDigest": "370641627686cfe7a6806ce2f2178bf09a194684c0609a45f30d70be17327a76",
     "taskContextDigest": "233bb04a1338914ad2be03dd30afacfc9033b38d2576969926f6a48b11086893",
     "queueIndex": 0,
-    "createdAt": "2026-08-14T12:24:05.3733344+08:00"
+    "createdAt": "2026-08-14T12:24:05.3733344+08:00",
+    "resolvedAt": "2026-08-14T16:10:06.5308701+08:00",
+    "replySource": "feishu_card",
+    "optionKey": "A",
+    "replyEvidenceHash": "98e5b05cd4993abec9d314c1310cd5f83243c8bc265abf30dd8cd8e750ba1fa1",
+    "targetState": "ready"
   }
 }
 ---TASK-BODY---
