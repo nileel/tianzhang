@@ -78,11 +78,13 @@ try {
   Assert-Equal $paused.dispatchState 'pending_decision' 'PauseMaintenanceDecision did not pause'
   $pausedMeta = Read-Meta $readyRoot
   Assert-Equal $pausedMeta.automationDecision.status 'awaiting_reply' 'Public decision status mismatch'
+  Assert-Equal $pausedMeta.automationDecision.createdAt $pause.createdAt 'Pause timestamp lost its round-trip representation'
   Assert-True (-not ($pausedMeta.PSObject.Properties.Name -contains 'automationCheckpoint')) 'Maintenance decision forged a checkpoint'
   $resolved = Invoke-State $readyRoot 'ResolveMaintenanceDecision' ([ordered]@{ schemaVersion = 1; kind = 'queue_maintenance'; taskId = 'T-MAINT-01'; decisionId = $pause.decisionId; optionKey = 'A'; source = 'feishu_card'; evidenceHash = ('b' * 64); resolvedAt = '2026-08-14T01:00:00.0000000+00:00'; preparedTaskDigest = Get-Digest (Join-Path $readyRoot '开发管理/任务卡/T-MAINT-01.txt') })
   Assert-Equal $resolved.dispatchState 'ready' 'Option A did not restore ready'
   $resolvedMeta = Read-Meta $readyRoot
   Assert-Equal $resolvedMeta.automationDecision.targetState 'ready' 'Resolved target was not recorded'
+  Assert-Equal $resolvedMeta.automationDecision.resolvedAt '2026-08-14T01:00:00.0000000+00:00' 'Resolution timestamp lost its round-trip representation'
   Assert-True ([IO.File]::ReadAllText((Join-Path $readyRoot '开发管理/当前任务队列.txt')).Contains('T-MAINT-01', [StringComparison]::Ordinal)) 'Resolved ready task was not queued'
 
   $blockedRoot = Join-Path $tempRoot 'blocked'
@@ -99,6 +101,7 @@ try {
   $expired = Invoke-State $expiredRoot 'ExpireMaintenanceDecision' ([ordered]@{ schemaVersion = 1; kind = 'queue_maintenance'; taskId = 'T-MAINT-01'; decisionId = $expiredPause.decisionId; detailCode = 'maintenance_decision_expired'; terminatedAt = '2026-08-21T00:00:01.0000000+00:00' })
   Assert-Equal $expired.dispatchState 'blocked' 'Expired decision did not return blocked'
   Assert-Equal (Read-Meta $expiredRoot).automationDecision.status 'expired' 'Expired public status mismatch'
+  Assert-Equal (Read-Meta $expiredRoot).automationDecision.terminatedAt '2026-08-21T00:00:01.0000000+00:00' 'Expiry timestamp lost its round-trip representation'
 
   $invalidRoot = Join-Path $tempRoot 'invalid'
   $invalidMeta = New-Fixture $invalidRoot

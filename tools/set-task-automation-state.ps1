@@ -86,7 +86,7 @@ try {
   $root = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $RepositoryRoot).Path).TrimEnd('\', '/')
   if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) { throw 'Repository root is invalid' }
   if (-not [IO.Path]::IsPathFullyQualified($ContextPath) -or -not (Test-Path -LiteralPath $ContextPath -PathType Leaf)) { throw 'Context is invalid' }
-  $context = Read-Utf8 $ContextPath | ConvertFrom-Json -Depth 100
+  $context = Read-Utf8 $ContextPath | ConvertFrom-Json -Depth 100 -DateKind String
   if ([int]$context.schemaVersion -ne 1 -or [string]$context.taskId -cne $TaskId) { throw 'Context is invalid' }
   $cardPath = Join-Path $root "开发管理\任务卡\$TaskId.txt"
   $card = Read-Card $cardPath
