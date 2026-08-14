@@ -8,14 +8,18 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-URP-VISUAL-BASELINE-01"],
-  "stateReason": "等待 URP 正式薄切片视觉基础通过",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-15：U-URP-VISUAL-BASELINE-01 已以 completed 归档；实时扫描确认旧 Hybrid 原型已由 U-ARCH-REBUILD-01H 删除，现行 AdventureScene 的 VisualBaselineBoard、UnitMarker 与固定正交相机可作为唯一有界测试台，路径和验证已冻结。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-CHAR-3D-PROTO-01.txt",
-    "开发管理/任务归档/U-CHAR-3D-PROTO-01.txt"
+    "开发管理/任务归档/U-CHAR-3D-PROTO-01.txt",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -24,28 +28,42 @@
 
 ## 来源与当前边界
 
-- 只用正面明确的几何占位体证明固定正交斜俯视下的 2.5D 技术参数。
+- `U-URP-VISUAL-BASELINE-01` 已完成并归档：唯一 Universal Renderer、固定正交斜俯视相机、九格 `VisualBaselineBoard` 与带本地 `+Z` 正面几何的 `UnitMarker` 已由 `VisualBaselineBuilder` 确定性建立。
+- `U-ARCH-REBUILD-01H` 已删除 `HybridTacticalPrototype.unity`、其 Builder 与旧运行时；不得恢复旧原型或增加第二场景。现行 `AdventureScene` 的有界技术矩阵是本卡唯一测试台，且不成为玩法、空间或战斗状态所有者。
+- 本卡只用正面明确的几何占位体证明固定正交斜俯视下的 2.5D 技术参数；不把该静态矩阵接入正式遭遇、CTB 或单位运行时。
 
 ## 必查范围
 
-- 重构后 `HybridTacticalPrototype.unity` 或 01H 确认的等价测试夹具、唯一 `Character.Facing`／Spatial 方向语义、相机和 URP 技术视觉基线。
+- `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` §4.1.1、§4.4、§12.2；`docs/基础设定/战场空间与环境规则.txt` 的高度、地表、场景物与表现边界。
+- `UNITY_STRUCTURE.runtime.md`、`UNITY_STRUCTURE.assemblies.md`；`开发管理/任务归档/U-ARCH-REBUILD-01H.txt` 的遗留删除与正式 Adventure 所有者证据，以及 `开发管理/任务归档/U-URP-VISUAL-BASELINE-01.txt` 的已完成视觉基线。
+- 完整读取 `src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::Build/BuildVisualBaselineMatrix`、`src/Assets/Scripts/Editor/SceneArchitectureValidator.cs::ValidateAdventureVisualMatrix`、`src/Assets/Scripts/Editor/VisualBaselineBuilder.cs::BuildUnitMarkerPrefab`、`src/Assets/Scripts/Modules/Spatial/HexCoord.cs::Directions/DirectionTo` 和 `src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs` 后再改。
+- 方向事实固定为 `HexCoord.Directions` 的 0～5 与 3D `+Z` 模型正面：Y 旋转依次为 90、150、210、270、330、30 度；`AdventureSceneBuilder.HexToWorld` 是本测试台唯一位置投影。不得读取或改写 Combat、Character、Spatial 的状态。
 
 ## 实施范围
 
-- 验证模型缩放、六向旋转、地块高度、阴影、选中反馈和相机裁切；六个 Facing 索引与规则邻格中心方向逐项对齐。
+- 只在 `AdventureSceneBuilder.BuildVisualBaselineMatrix` 的既有 `VisualBaselineBoard` 内建立 `FacingProbe_0`～`FacingProbe_5` 六个静态技术占位体；每个只实例化已批准的 `UnitMarker`，放在中心格的对应 `HexCoord.Directions` 邻格中心、按该格既有 `heightLevel` 抬升，并分别使用 90、150、210、270、330、30 度 Y 旋转。
+- 保持有界九格矩阵：将现有非方向邻格调整为缺失的 `(q=1,r=-1)` 技术格，使中心格与六个规则邻格均有已知地面；不新增场景、Prefab、模型、材质、程序集或运行时组件。
+- 在 `SceneArchitectureValidator` 与 `VisualBaselineEditorTests` 同时断言六个唯一 Probe、其规则邻格中心、固定 Y 旋转、本地 `+Z` 正面向量、3D 阴影和既有九格／透明反馈层。生成的 `AdventureScene.unity` 只能由既有 Editor Builder 写入。
 
 ## 禁止项
 
-- 不接入 CTB、AI、伤害或正式遭遇，不成为第二战斗所有者，不生产正式角色资源。
+- 不接入 CTB、AI、伤害、正式遭遇、`AdventureUnitSpawner`、CombatPresentation 或保存；不读取、写入或镜像 `CombatantSnapshot.Facing`，不成为第二战斗、空间或状态所有者。
+- 不恢复 Hybrid／Tilemap／Billboard 原型，不新增第二场景、Builder、Canvas、Bootstrap、模型、Prefab、材质、Shader、Animator、程序集或 `.meta`；不生产正式角色资源。
+- 不改写 `HexCoord`、战场高度／地表／场景物规则、相机、URP、攻击、空间查询或现有九格之外的视觉所有者。若六向证明需要任一上述边界，停止并重新规划。
 
 ## 验证
 
-- 六向逐项对照、高低地块、阴影、选中和裁切矩阵；解阻塞前展开场景、脚本、asset、测试和 `.meta` 精确路径。
+- 在 Unity `6000.3.18f1` 运行 `TianZhang.Editor.VisualBaselineBuilder.RebuildForBatchMode` 与 `TianZhang.Editor.SceneArchitectureValidator.ValidateForBatchMode`；重复重建不得扩展 `expectedPaths`。
+- 运行 `dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 与 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；新增断言逐项核对六个 Facing Probe 的位置、旋转、正面向量、阴影、九格高度与独立反馈层。
+- 在固定 1920×1080 Game View 人工核对六个几何占位体的正面、缩放、六向旋转、对应邻格中心、高低地块、阴影、选中反馈和相机裁切；仅记录表现结果，不替代规则断言。
+- 最后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,src/Assets/Scripts,src/Assets/Tests`、预期路径空白检查和暂存后的 `git diff --cached --check`。
 
 ## 完成条件
 
-- 固定镜头与六向技术参数可直接被玩家人形和四足样例消费，规则结果未改变。
+- 固定镜头下六个技术占位体的本地 `+Z` 正面均与对应规则邻格中心向量一致，Y 旋转严格为 90、150、210、270、330、30 度；高低地块、阴影、选中反馈和相机裁切在有界矩阵中可复核。
+- `AdventureScene` 仍只有现行 Installer／Controller／Canvas 与既有技术矩阵；所有规则结果、正式遭遇和运行时单位链路未改变。该结果只为人形与四足样例提供可消费的视觉朝向契约，不声称已经接入正式角色。
 
 ## 停止条件
 
-- 需要复制战斗运行时、修改 Spatial／Facing 规则或提前导入正式模型时停止。
+- 需要复制战斗运行时、修改 Spatial／Facing 规则、恢复旧原型、建立第二场景／状态所有者、提前导入正式模型，或为任一角色／场景增加私有朝向偏移时停止。
+- 必须扩大到未列 `expectedPaths` 的程序集、Feature、数据、Prefab、模型、材质、相机、URP 或规则所有者时停止；不得用兼容分支或静态默认值掩盖方向不一致。
