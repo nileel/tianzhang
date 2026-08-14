@@ -49,13 +49,18 @@
 - 共享入口把任务机械转换为 `pending_decision` 或 `waiting_reply` 并正式提交，但不合并 checkpoint 业务变化；关闭当前 run 后发送决策卡。长连接桥只负责接收入站回复。
 - 有效回复由 decisionId、taskId、当前任务摘要和操作者身份验证。下一次对应 owner 调用先把原任务恢复为原 route／owner／`ready`，再从最新 `master` 创建新 run、新 worktree和新模型会话，以 `cherry-pick --no-commit` 吸收 checkpoint；不恢复旧模型会话。普通失败不能冒充 decision checkpoint。
 - Codex 自动复审不通过或部分通过且需返工时，任务仍按审核合同转为 `blocked` 并移出队列，但不发送普通阻塞结果卡；共享入口改发一次性返工决策卡。A 交回 DeepSeek、B 改由 Codex、C 保持阻塞。该决策只绑定 taskId、被复审提交、复审提交、任务摘要和未通过条目摘要，不含 checkpoint；A/B 在核验回复、任务未被 run 占用且取得同一集成锁后把同一卡重新设为对应 execute route／owner／`ready`，下一轮创建全新 run。C 不改仓库事实。无回复、投递失败或证据变化均不得自动返工、重试或走 checkpoint 恢复。
+- QueueMaintenance 本轮移除直接下游卡的最后一个具名前置后，若唯一剩余条件是负责人在两条能够确定性形成完整 ready 卡的路线间选择，必须建立独立维护型 `automationDecision`：选项恰为 A／B／C，A／B 的目标状态为 `ready`，C 为 `blocked`，并关闭自定义回复。它与 `automationCheckpoint` 严格互斥，不含 checkpoint 提交，也不得走 `ResumeReady`。
+- 首次维护型决策 run 只形成 `pending_decision` 正式投影，调用 `CompleteRun` 后发送一次飞书决策卡并返回 `decision_requested`；同一 run 不读取、等待或轮询回复。投递未获 provider 接受时保留公开待决策事实，私有记录转 `attention_required`，不得静默进入正常等待或自动重发。
+- 后续 Codex RunOnce 仅在 `readyCount=0` 时、普通选择与 claim 前，对最早的维护型决策读取一次回复快照。未回复返回 `waiting_decision`，不 claim、不创建 worktree、不写 Git、不重发；A／B 合法回复才领取新的 `QUEUE-MAINTENANCE` run 并只完成任务卡准备与 `ResolveMaintenanceDecision`，C 在新的维护 run 中机械保持 blocked。实际业务始终由后续 execute run 领取。
+- 维护型决策沿用飞书桥的 7 天 TTL。到期、非法回复或精确事实变化不得继续等待：事实仍匹配时通过独立状态 worktree 转为 blocked/expired 或 blocked/attention_required；事实已变化时只终止私有记录。终止结果只报告一次，旧决策不再消费或重发。
 - 正常成功在 fast-forward 后写入 `integrated` 并调用 `CompleteRun`。只有 worktree 路径、runId、owner、branch、HEAD、正式 SHA、主分支可达性和工作树清洁全部精确匹配时，才删除该 run 的 worktree 与临时 branch；任一证据异常都不清理。
 
 ## 通知与 QueueMaintenance
 
 - 普通 TaskOutcome 使用飞书 REST API 直接出站，不依赖长连接桥健康；投递失败只返回脱敏状态，不回滚业务、不恢复 run、不创建重试队列。长连接桥仅负责入站回复。
-- QueueMaintenance 只属于 Codex，按 `开发管理/状态与建议维护规则.txt` 维护队列，不执行本轮新业务。它只对“本轮移除最后一个具名前置”的直接下游卡继续收口，不重新分类其他原本 `blockedBy=[]` 的活跃卡。产生事实变化时返回 `maintenance_completed`，不伪装成业务 `completed`、不发送普通 TaskOutcome；无变化时返回 `no_candidate`，不得机械重写准确说明来制造维护提交。
+- QueueMaintenance 只属于 Codex，按 `开发管理/状态与建议维护规则.txt` 维护队列，不执行本轮新业务。它只对“本轮移除最后一个具名前置”的直接下游卡继续收口，不重新分类其他原本 `blockedBy=[]` 的活跃卡。普通事实变化或回复应用返回 `maintenance_completed`；首次维护型决策返回 `decision_requested`；未回复返回 `waiting_decision`；三者都不伪装成业务 `completed`、不发送普通 TaskOutcome。无变化时返回 `no_candidate`，不得机械重写准确说明来制造维护提交。
 - Codex Desktop 薄触发器只有在共享入口返回 `status=no_candidate`、`owner=codex`、`taskId=QUEUE-MAINTENANCE`、`detailCode=no_runnable_candidate`、`cleanup=cleaned` 的同一结构化终态时，才通过 automation 管理能力把 `codex-hourly-worker` 自身设为 `PAUSED`。automation 管理调用不得嵌套在长时间共享入口 cell 中；必须在其后的独立短 cell 内由确定性代码完成完整配置只读快照、幂等 status 更新和逐字段读回校验，prompt 还须比对长度与 SHA-256。短 cell 即使配置已为 `PAUSED` 也执行一次幂等更新，以使受控暂停态验证覆盖真实管理调用。它必须保留其余配置，不管理 DeepSeek 或其他 automation，也不直接编辑 TOML。读取或解析失败以 `codex_automation_config_invalid` 停止，更新失败以 `codex_self_pause_failed` 停止，读回不一致以 `codex_self_pause_config_mismatch` 停止；失败由 `failed_runs_only` 呈现，不重试、不恢复项目 run。普通失败、活动 run、路径冲突、临时跳过或未清理现场不得触发自暂停。
+- 薄触发器对共享入口的单个 JSON 终态只做语法解析与原样透传，不设置 status 白名单；`decision_requested`、`waiting_decision`、带决策字段的 `maintenance_completed` 和维护型 `attention_required` 均是合法终态，且 `shouldSelfPause=false`。
 
 ## Canary、暂停与停止
 

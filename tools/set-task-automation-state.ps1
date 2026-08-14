@@ -2,7 +2,7 @@
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $true)][ValidateSet('PauseDecision', 'ResumeReady', 'Block', 'RequeueReview')][string]$Action,
+  [Parameter(Mandatory = $true)][ValidateSet('PauseDecision', 'ResumeReady', 'Block', 'RequeueReview', 'PauseMaintenanceDecision', 'ResolveMaintenanceDecision', 'ExpireMaintenanceDecision')][string]$Action,
   [Parameter(Mandatory = $true)][string]$RepositoryRoot,
   [Parameter(Mandatory = $true)][string]$TaskId,
   [Parameter(Mandatory = $true)][string]$ContextPath
@@ -168,13 +168,102 @@ try {
       $backlog.Rows[$backlogIndex][2] = [string]$meta.owner
       $backlog.Rows[$backlogIndex][3] = '已排队'
     }
+    'PauseMaintenanceDecision' {
+      if (
+        [string]$context.kind -cne 'queue_maintenance' -or
+        [string]$meta.dispatchState -cne 'blocked' -or
+        $queueIndex -ge 0 -or
+        @($meta.blockedBy).Count -ne 0 -or
+        $meta.PSObject.Properties.Name -contains 'automationCheckpoint' -or
+        $meta.PSObject.Properties.Name -contains 'automationDecision' -or
+        [string]$context.sourceTaskDigest -cne (Get-NormalizedTextDigest $cardPath) -or
+        [string]$context.taskContextDigest -cne (Get-TaskContextDigest $meta)
+      ) { throw 'Maintenance decision pause precondition failed' }
+      foreach ($name in @('sourceRunId', 'decisionId', 'question', 'recommendedOption', 'impactSummary', 'sourceCommit', 'sourceTaskDigest', 'taskContextDigest', 'createdAt')) {
+        if ([string]::IsNullOrWhiteSpace([string]$context.$name)) { throw 'Maintenance decision context is incomplete' }
+      }
+      if ([string]$context.decisionId -cnotmatch '^DEC-[0-9]{8}-QM[0-9A-F]{12}$' -or [string]$context.sourceCommit -cnotmatch '^[0-9a-f]{40,64}$' -or [string]$context.sourceTaskDigest -cnotmatch '^[0-9a-f]{64}$' -or [string]$context.taskContextDigest -cnotmatch '^[0-9a-f]{64}$') { throw 'Maintenance decision identity is invalid' }
+      $options = @($context.options)
+      if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC' -or (@($options | ForEach-Object { [string]$_.targetState }) -join ',') -cne 'ready,ready,blocked' -or [bool]$context.allowCustomReply) { throw 'Maintenance decision options are invalid' }
+      $decision = [ordered]@{
+        schemaVersion = 1; kind = 'queue_maintenance'; status = 'awaiting_reply'; decisionId = [string]$context.decisionId; taskId = $TaskId
+        sourceRunId = [string]$context.sourceRunId; question = [string]$context.question; options = @($options); recommendedOption = [string]$context.recommendedOption
+        impactSummary = [string]$context.impactSummary; plainSummary = $context.plainSummary; allowCustomReply = $false
+        sourceCommit = [string]$context.sourceCommit; sourceTaskDigest = [string]$context.sourceTaskDigest; taskContextDigest = [string]$context.taskContextDigest
+        queueIndex = 0; createdAt = [string]$context.createdAt
+      }
+      $meta.dispatchState = 'pending_decision'
+      $meta.stateReason = "等待负责人决定：$([string]$context.question)"
+      $meta | Add-Member -NotePropertyName automationDecision -NotePropertyValue $decision -Force
+      if ($meta.PSObject.Properties.Name -contains 'automationReply') { $meta.PSObject.Properties.Remove('automationReply') }
+      $backlog.Rows[$backlogIndex][2] = [string]$meta.owner
+      $backlog.Rows[$backlogIndex][3] = '待决定'
+    }
+    'ResolveMaintenanceDecision' {
+      if (
+        [string]$context.kind -cne 'queue_maintenance' -or
+        [string]$meta.dispatchState -cne 'pending_decision' -or
+        $queueIndex -ge 0 -or
+        $meta.PSObject.Properties.Name -cnotcontains 'automationDecision' -or
+        $meta.PSObject.Properties.Name -contains 'automationCheckpoint' -or
+        [string]$context.preparedTaskDigest -cne (Get-NormalizedTextDigest $cardPath)
+      ) { throw 'Maintenance decision resolve precondition failed' }
+      $decision = $meta.automationDecision
+      if ([string]$decision.kind -cne 'queue_maintenance' -or [string]$decision.status -cne 'awaiting_reply' -or [string]$decision.decisionId -cne [string]$context.decisionId) { throw 'Maintenance decision binding is invalid' }
+      foreach ($name in @('optionKey', 'source', 'evidenceHash', 'resolvedAt', 'preparedTaskDigest')) { if ([string]::IsNullOrWhiteSpace([string]$context.$name)) { throw 'Maintenance decision reply evidence is incomplete' } }
+      if ([string]$context.optionKey -cnotin @('A', 'B', 'C') -or [string]$context.source -cne 'feishu_card' -or [string]$context.evidenceHash -cnotmatch '^[0-9a-f]{64}$') { throw 'Maintenance decision reply evidence is invalid' }
+      $selected = @($decision.options | Where-Object { [string]$_.key -ceq [string]$context.optionKey })
+      if ($selected.Count -ne 1) { throw 'Maintenance decision option is invalid' }
+      $targetState = [string]$selected[0].targetState
+      $decision.status = 'resolved'
+      foreach ($entry in @{
+          optionKey = [string]$context.optionKey; targetState = $targetState; replySource = [string]$context.source
+          replyEvidenceHash = [string]$context.evidenceHash; resolvedAt = [string]$context.resolvedAt
+        }.GetEnumerator()) { $decision | Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value -Force }
+      $meta.dispatchState = $targetState
+      $meta.stateReason = "负责人已通过 $([string]$decision.decisionId) 选择 $([string]$context.optionKey)：$([string]$selected[0].label)"
+      if ($targetState -ceq 'ready') {
+        $row = @([string]$meta.id, [string]$meta.route, [string]$meta.owner, [string]$meta.priority, [string]$meta.domain, [string]$meta.stage, [string]$meta.title, "开发管理/任务卡/$TaskId.txt")
+        $queue.Rows.Insert(0, $row)
+        $backlog.Rows[$backlogIndex][3] = '已排队'
+      } else {
+        $backlog.Rows[$backlogIndex][3] = '阻塞'
+      }
+      $backlog.Rows[$backlogIndex][2] = [string]$meta.owner
+    }
+    'ExpireMaintenanceDecision' {
+      if (
+        [string]$context.kind -cne 'queue_maintenance' -or
+        [string]$meta.dispatchState -cne 'pending_decision' -or
+        $queueIndex -ge 0 -or
+        $meta.PSObject.Properties.Name -cnotcontains 'automationDecision' -or
+        [string]$meta.automationDecision.status -cne 'awaiting_reply' -or
+        [string]$meta.automationDecision.decisionId -cne [string]$context.decisionId -or
+        [string]$context.detailCode -notin @('maintenance_decision_expired', 'maintenance_decision_reply_invalid') -or
+        [string]::IsNullOrWhiteSpace([string]$context.terminatedAt)
+      ) { throw 'Maintenance decision expiry precondition failed' }
+      $decision = $meta.automationDecision
+      $decision.status = if ([string]$context.detailCode -ceq 'maintenance_decision_expired') { 'expired' } else { 'attention_required' }
+      $decision | Add-Member -NotePropertyName detailCode -NotePropertyValue ([string]$context.detailCode) -Force
+      $decision | Add-Member -NotePropertyName terminatedAt -NotePropertyValue ([string]$context.terminatedAt) -Force
+      $meta.dispatchState = 'blocked'
+      $meta.stateReason = "维护型决策已停止：$([string]$context.detailCode)"
+      $backlog.Rows[$backlogIndex][2] = [string]$meta.owner
+      $backlog.Rows[$backlogIndex][3] = '阻塞'
+    }
   }
 
   Write-Card -Path $cardPath -Metadata $meta -Body $card.Body
   Write-Table $queue
   Write-Table $backlog
   $checkArgs = @('-RepositoryRoot', $root, '-TaskId', $TaskId)
-  if ($Action -notin @('ResumeReady', 'RequeueReview')) {
+  if ($Action -ceq 'PauseMaintenanceDecision') {
+    $checkArgs += @('-Postcondition', 'MaintenancePendingDecision')
+  } elseif ($Action -ceq 'ResolveMaintenanceDecision') {
+    $checkArgs += @('-Postcondition', $(if ([string]$meta.dispatchState -ceq 'ready') { 'MaintenanceResolvedReady' } else { 'MaintenanceResolvedBlocked' }))
+  } elseif ($Action -ceq 'ExpireMaintenanceDecision') {
+    $checkArgs += $(if ([string]$context.detailCode -ceq 'maintenance_decision_expired') { @('-Postcondition', 'MaintenanceExpiredBlocked') } else { @('-Postcondition', 'CodexClosedOrNonReady') })
+  } elseif ($Action -notin @('ResumeReady', 'RequeueReview')) {
     $checkArgs += @('-Postcondition', 'CodexClosedOrNonReady')
   } elseif ([string]$meta.owner -ceq 'codex') {
     $checkArgs += @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', [string]$meta.route)

@@ -7,7 +7,7 @@ param(
   [string]$QueuePath = '开发管理/当前任务队列.txt',
   [string]$BacklogRoot = '开发管理/任务列表',
   [string]$TaskId,
-  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview')]
+  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview', 'MaintenancePendingDecision', 'MaintenanceResolvedReady', 'MaintenanceResolvedBlocked', 'MaintenanceExpiredBlocked')]
   [string]$Postcondition,
   [ValidateSet('codex_execute', 'codex_review')]
   [string]$ExpectedRoute,
@@ -56,6 +56,71 @@ function Assert-RepositoryFilePath {
   param([string]$Value, [string]$Label)
   Assert-RepositoryRelativePath $Value $Label
   Assert-Contract (-not [string]::IsNullOrEmpty([IO.Path]::GetExtension($Value))) "invalid repository-relative path in ${Label}: $Value"
+}
+
+function Test-ObjectField {
+  param([object]$Value, [string]$Name)
+  $null -ne $Value -and $Value.PSObject.Properties.Name -ccontains $Name
+}
+
+function Assert-AutomationDecision {
+  param([object]$Metadata, [string]$Path)
+  $decision = $Metadata.automationDecision
+  foreach ($field in @('schemaVersion', 'kind', 'status', 'decisionId', 'taskId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary', 'allowCustomReply', 'sourceCommit', 'sourceTaskDigest', 'taskContextDigest', 'queueIndex', 'createdAt')) {
+    Assert-Contract (Test-ObjectField $decision $field) "missing automationDecision field '$field': $Path"
+  }
+  Assert-Contract ([int]$decision.schemaVersion -eq 1 -and [string]$decision.kind -ceq 'queue_maintenance') "invalid automationDecision kind: $Path"
+  Assert-Contract ([string]$decision.decisionId -cmatch '^DEC-[0-9]{8}-QM[0-9A-F]{12}$') "invalid automationDecision decisionId: $Path"
+  Assert-Contract ([string]$decision.taskId -ceq [string]$Metadata.id) "automationDecision task mismatch: $Path"
+  Assert-Contract ([string]$decision.sourceCommit -cmatch '^[0-9a-f]{40,64}$') "invalid automationDecision sourceCommit: $Path"
+  foreach ($field in @('sourceTaskDigest', 'taskContextDigest')) {
+    Assert-Contract ([string]$decision.$field -cmatch '^[0-9a-f]{64}$') "invalid automationDecision ${field}: $Path"
+  }
+  Assert-Contract ([int]$decision.queueIndex -eq 0) "invalid automationDecision queueIndex: $Path"
+  Assert-Contract ($decision.allowCustomReply -is [bool] -and $decision.allowCustomReply -eq $false) "automationDecision custom reply must be disabled: $Path"
+  $options = @($decision.options)
+  Assert-Contract ($options.Count -eq 3) "automationDecision requires exactly three options: $Path"
+  $expectedKeys = @('A', 'B', 'C')
+  $expectedTargets = @('ready', 'ready', 'blocked')
+  for ($index = 0; $index -lt 3; $index++) {
+    foreach ($field in @('key', 'label', 'targetState')) { Assert-Contract (Test-ObjectField $options[$index] $field) "missing automationDecision option field '$field': $Path" }
+    Assert-Contract ([string]$options[$index].key -ceq $expectedKeys[$index] -and [string]$options[$index].targetState -ceq $expectedTargets[$index] -and -not [string]::IsNullOrWhiteSpace([string]$options[$index].label)) "invalid automationDecision option: $Path"
+  }
+  Assert-Contract ([string]$decision.recommendedOption -cin @('A', 'B')) "invalid automationDecision recommendation: $Path"
+  foreach ($value in @([string]$decision.question, [string]$decision.impactSummary, [string]$decision.plainSummary.situation, [string]$decision.plainSummary.impact, [string]$decision.plainSummary.action, [string]$decision.createdAt)) {
+    Assert-Contract (-not [string]::IsNullOrWhiteSpace($value)) "incomplete automationDecision summary: $Path"
+  }
+  switch ([string]$decision.status) {
+    'awaiting_reply' {
+      Assert-Contract ([string]$Metadata.dispatchState -ceq 'pending_decision') "awaiting maintenance decision must be pending_decision: $Path"
+    }
+    'resolved' {
+      foreach ($field in @('optionKey', 'targetState', 'replySource', 'replyEvidenceHash', 'resolvedAt')) { Assert-Contract (Test-ObjectField $decision $field) "missing resolved automationDecision field '$field': $Path" }
+      Assert-Contract ([string]$decision.optionKey -cin @('A', 'B', 'C')) "invalid resolved automationDecision option: $Path"
+      $selected = @($options | Where-Object { [string]$_.key -ceq [string]$decision.optionKey })
+      Assert-Contract ($selected.Count -eq 1 -and [string]$selected[0].targetState -ceq [string]$decision.targetState -and [string]$Metadata.dispatchState -ceq [string]$decision.targetState) "resolved automationDecision target mismatch: $Path"
+      Assert-Contract ([string]$decision.replySource -ceq 'feishu_card' -and [string]$decision.replyEvidenceHash -cmatch '^[0-9a-f]{64}$' -and -not [string]::IsNullOrWhiteSpace([string]$decision.resolvedAt)) "invalid resolved automationDecision evidence: $Path"
+    }
+    { $_ -cin @('expired', 'attention_required') } {
+      foreach ($field in @('detailCode', 'terminatedAt')) { Assert-Contract (Test-ObjectField $decision $field) "missing terminated automationDecision field '$field': $Path" }
+      Assert-Contract ([string]$Metadata.dispatchState -ceq 'blocked' -and -not [string]::IsNullOrWhiteSpace([string]$decision.detailCode) -and -not [string]::IsNullOrWhiteSpace([string]$decision.terminatedAt)) "invalid terminated automationDecision: $Path"
+    }
+    default { throw "invalid automationDecision status: $Path" }
+  }
+}
+
+function Assert-AutomationCheckpoint {
+  param([object]$Metadata, [string]$Path)
+  $checkpoint = $Metadata.automationCheckpoint
+  foreach ($field in @('schemaVersion', 'taskId', 'sourceRunId', 'owner', 'route', 'decisionId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary', 'checkpointCommit', 'baseCommit', 'branch', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'taskContextDigest', 'createdAt', 'queueIndex')) {
+    Assert-Contract (Test-ObjectField $checkpoint $field) "missing automationCheckpoint field '$field': $Path"
+  }
+  Assert-Contract ([int]$checkpoint.schemaVersion -eq 1 -and [string]$checkpoint.taskId -ceq [string]$Metadata.id -and [string]$checkpoint.owner -ceq [string]$Metadata.owner -and [string]$checkpoint.route -ceq [string]$Metadata.route) "invalid automationCheckpoint binding: $Path"
+  Assert-Contract ([string]$checkpoint.decisionId -cmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') "invalid automationCheckpoint decisionId: $Path"
+  Assert-Contract ([string]$checkpoint.checkpointCommit -cmatch '^[0-9a-f]{40,64}$' -and [string]$checkpoint.baseCommit -cmatch '^[0-9a-f]{40,64}$' -and [string]$checkpoint.taskContextDigest -cmatch '^[0-9a-f]{64}$') "invalid automationCheckpoint evidence: $Path"
+  $options = @($checkpoint.options)
+  Assert-Contract ($options.Count -eq 3 -and (@($options | ForEach-Object { [string]$_.key }) -join '') -ceq 'ABC') "invalid automationCheckpoint options: $Path"
+  Assert-Contract ([int]$checkpoint.queueIndex -ge 0) "invalid automationCheckpoint queueIndex: $Path"
 }
 
 function Get-TableRows {
@@ -128,6 +193,14 @@ function Get-Card {
   Assert-RepositoryFilePath ([string]$metadata.sourceBacklog) 'sourceBacklog'
   Assert-Contract ((($metadata.route -in @('codex_execute', 'codex_review')) -and $metadata.owner -ceq 'codex') -or ($metadata.route -ceq 'external_execute' -and $metadata.owner -in @('deepseek', 'claude'))) "route/owner mismatch: $Path"
   Assert-Contract (($null -eq $metadata.blockedBy) -or (($metadata.blockedBy -is [System.Collections.IEnumerable]) -and -not ($metadata.blockedBy -is [string]))) "invalid blockedBy: $Path"
+  $hasCheckpoint = Test-ObjectField $metadata 'automationCheckpoint'
+  $hasDecision = Test-ObjectField $metadata 'automationDecision'
+  Assert-Contract (-not ($hasCheckpoint -and $hasDecision)) "automationCheckpoint and automationDecision are mutually exclusive: $Path"
+  if ([string]$metadata.dispatchState -cin @('pending_decision', 'waiting_reply')) {
+    Assert-Contract ($hasCheckpoint -xor $hasDecision) "decision state requires exactly one automation projection: $Path"
+  }
+  if ($hasCheckpoint) { Assert-AutomationCheckpoint -Metadata $metadata -Path $Path }
+  if ($hasDecision) { Assert-AutomationDecision -Metadata $metadata -Path $Path }
   if (-not $AllowCompleted) {
     Assert-Contract ($metadata.dispatchState -cne 'completed') "completed card in active task-card directory: $Path"
   }
@@ -344,6 +417,20 @@ try {
       }
     }
     Assert-Contract $postconditionSatisfied "ExternalPendingReview requires route=codex_review owner=codex dispatchState=ready: $TaskId"
+  }
+  if ($Postcondition -clike 'Maintenance*') {
+    Assert-Contract ($cardById.ContainsKey($TaskId)) "$Postcondition requires an active task card: $TaskId"
+    $metadata = $cardById[$TaskId].Metadata
+    Assert-Contract (Test-ObjectField $metadata 'automationDecision') "$Postcondition requires automationDecision: $TaskId"
+    $decision = $metadata.automationDecision
+    $expected = switch ($Postcondition) {
+      'MaintenancePendingDecision' { @('pending_decision', 'awaiting_reply') }
+      'MaintenanceResolvedReady' { @('ready', 'resolved') }
+      'MaintenanceResolvedBlocked' { @('blocked', 'resolved') }
+      'MaintenanceExpiredBlocked' { @('blocked', 'expired') }
+    }
+    Assert-Contract ([string]$metadata.dispatchState -ceq $expected[0] -and [string]$decision.status -ceq $expected[1]) "$Postcondition mismatch: $TaskId"
+    $taskState = [string]$metadata.dispatchState
   }
 
   if ($OutputJson) {

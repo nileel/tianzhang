@@ -181,12 +181,29 @@ function Read-CandidateResult {
   if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw [ArgumentException]::new('CandidateResultPath is unavailable') }
   Assert-PrivatePathAcl -Path $Path
   try { $result = [IO.File]::ReadAllText($Path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50 } catch { throw [IO.InvalidDataException]::new('Candidate result is invalid') }
-  Assert-PropertySet -Value $result -Expected @('category', 'expectedTransition', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'result', 'impact', 'verify', 'plain') -Context 'candidate result'
-  if ([string]$result.category -cne 'completed') { throw [IO.InvalidDataException]::new('Candidate result category is invalid') }
+  $baseProperties = @('category', 'expectedTransition', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'result', 'impact', 'verify', 'plain')
+  $expectedProperties = switch ([string]$result.category) {
+    'completed' { if ($result.PSObject.Properties.Name -contains 'maintenanceResolution') { $baseProperties + 'maintenanceResolution' } else { $baseProperties } }
+    'maintenance_decision' { $baseProperties + @('decisionTaskId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary') }
+    default { throw [IO.InvalidDataException]::new('Candidate result category is invalid') }
+  }
+  Assert-PropertySet -Value $result -Expected $expectedProperties -Context 'candidate result'
   foreach ($name in @('expectedTransition', 'residualRisk', 'result', 'impact', 'verify', 'plain')) { Assert-StableText -Value ([string]$result.$name) -Name "candidateResult.$name" -MaximumLength 2000 }
   foreach ($name in @('changedPaths', 'verified', 'unverified')) {
     if ($result.$name -is [string] -or $result.$name -isnot [Collections.IEnumerable]) { throw [IO.InvalidDataException]::new("candidateResult.$name is invalid") }
     foreach ($item in @($result.$name)) { Assert-StableText -Value ([string]$item) -Name "candidateResult.$name" -MaximumLength 2000 }
+  }
+  if ([string]$result.category -ceq 'maintenance_decision') {
+    foreach ($name in @('decisionTaskId', 'question', 'recommendedOption', 'impactSummary')) { Assert-StableText -Value ([string]$result.$name) -Name "candidateResult.$name" -MaximumLength 2000 }
+    $options = @($result.options)
+    if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC' -or (@($options | ForEach-Object { [string]$_.targetState }) -join ',') -cne 'ready,ready,blocked') { throw [IO.InvalidDataException]::new('Maintenance decision options are invalid') }
+  }
+  if ($result.PSObject.Properties.Name -contains 'maintenanceResolution') {
+    $resume = $result.maintenanceResolution
+    Assert-PropertySet -Value $resume -Expected @('schemaVersion', 'kind', 'taskId', 'decisionTaskId', 'decisionId', 'replyKind', 'replyValue', 'source', 'evidenceHash', 'pendingTaskDigest') -Context 'maintenance resolution'
+    if ([int]$resume.schemaVersion -ne 1 -or [string]$resume.kind -cne 'queue_maintenance' -or [string]$resume.taskId -cne 'QUEUE-MAINTENANCE' -or [string]$resume.replyValue -cnotin @('A', 'B') -or [string]$resume.source -cne 'feishu_card') { throw [IO.InvalidDataException]::new('Maintenance resolution is invalid') }
+    Assert-Sha256 -Value ([string]$resume.evidenceHash) -Name 'maintenanceResolution.evidenceHash'
+    Assert-Sha256 -Value ([string]$resume.pendingTaskDigest) -Name 'maintenanceResolution.pendingTaskDigest'
   }
   $result
 }
@@ -207,7 +224,13 @@ function Assert-Run {
   Assert-Sha256 -Value ([string]$Run.taskCardDigest) -Name 'run.taskCardDigest'
   foreach ($name in @('candidateCommit', 'canonicalBase', 'canonicalHead')) { Assert-GitSha -Value ([string]$Run.$name) -Name "run.$name" -AllowNull }
   if ($null -ne $Run.candidateResult) {
-    Assert-PropertySet -Value $Run.candidateResult -Expected @('category', 'expectedTransition', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'result', 'impact', 'verify', 'plain') -Context 'run.candidateResult'
+    $baseProperties = @('category', 'expectedTransition', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'result', 'impact', 'verify', 'plain')
+    $expectedProperties = switch ([string]$Run.candidateResult.category) {
+      'completed' { if ($Run.candidateResult.PSObject.Properties.Name -contains 'maintenanceResolution') { $baseProperties + 'maintenanceResolution' } else { $baseProperties } }
+      'maintenance_decision' { $baseProperties + @('decisionTaskId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary') }
+      default { throw [IO.InvalidDataException]::new('Run candidate result category is invalid') }
+    }
+    Assert-PropertySet -Value $Run.candidateResult -Expected $expectedProperties -Context 'run.candidateResult'
   }
 }
 

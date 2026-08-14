@@ -61,7 +61,8 @@ function Get-NormalizedTextDigest {
 }
 
 function Read-TaskMetadata {
-  $path = Join-Path $script:root "开发管理/任务卡/$TaskId.txt"
+  param([string]$RequestedTaskId = $TaskId)
+  $path = Join-Path $script:root "开发管理/任务卡/$RequestedTaskId.txt"
   $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($path)).TrimStart([char]0xFEFF)
   $match = [regex]::Match($text, '(?ms)^---TASK-META---\r?\n(?<json>.*?)\r?\n---TASK-BODY---')
   if (-not $match.Success) { Stop-Candidate 'codex_task_invalid' }
@@ -96,7 +97,7 @@ function New-TerminalSchema {
   $schema = [ordered]@{
     type = 'object'
     properties = [ordered]@{
-      status = @{ type = 'string'; enum = @('completed', 'no_candidate', 'needs_decision', 'blocked', 'failed') }
+      status = @{ type = 'string'; enum = @('completed', 'no_candidate', 'needs_decision', 'maintenance_decision', 'blocked', 'failed') }
       identity = @{ type = 'string' }; model = @{ type = 'string' }
       candidateCommit = @{ type = 'string' }
       expectedTransition = @{ type = 'string' }
@@ -104,9 +105,10 @@ function New-TerminalSchema {
       verified = @{ type = 'array'; items = @{ type = 'string' } }
       unverified = @{ type = 'array'; items = @{ type = 'string' } }
       residualRisk = @{ type = 'string' }; result = @{ type = 'string' }; impact = @{ type = 'string' }; verify = @{ type = 'string' }; plain = @{ type = 'string' }
-      decisionId = @{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }
+      decisionId = @{ type = 'string'; pattern = '^(?:|DEC-[0-9]{8}-[A-Z0-9]+)$' }
+      decisionTaskId = @{ type = 'string' }
       question = @{ type = 'string' }
-      options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' } }; required = @('key', 'label'); additionalProperties = $false } }
+      options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') } }; required = @('key', 'label'); additionalProperties = $false } }
       recommendedOption = @{ type = 'string' }
       impactSummary = @{ type = 'string' }
       plainSummary = @{ type = 'object'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
@@ -127,6 +129,9 @@ function Read-ResumeContext {
   Assert-PrivatePathAcl -Path $path
   try { $context = [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 30 } catch { Stop-Candidate 'codex_resume_context_invalid' }
   if ([string]$context.taskId -cne $TaskId -or [string]::IsNullOrWhiteSpace([string]$context.decisionId) -or [string]::IsNullOrWhiteSpace([string]$context.replyValue)) { Stop-Candidate 'codex_resume_context_invalid' }
+  if ([string]$context.kind -ceq 'queue_maintenance') {
+    if ($Route -cne 'QueueMaintenance' -or [string]::IsNullOrWhiteSpace([string]$context.decisionTaskId) -or [string]$context.replyValue -cnotin @('A', 'B')) { Stop-Candidate 'codex_resume_context_invalid' }
+  }
   $context
 }
 
@@ -135,10 +140,12 @@ function New-Prompt {
   $routeInstruction = switch ($Route) {
     'Execution' { '按指定 codex_execute 任务实施。' }
     'Review' { "按审核入口复审指定 codex_review 任务。结论为不通过或部分通过且需返工时，必须在开发管理/未通过审核清单.txt 使用三级标题 '### $TaskId · <标题>'，并以 '- 审核对象：正式提交 ``<完整 SHA>``；结论：不通过。' 或 '- 审核对象：正式提交 ``<完整 SHA>``；结论：部分通过，仍需返工。' 记录本轮被复审提交；完整 SHA 必须在修改任务卡前通过 git log -1 --format=%H -- 开发管理/任务卡/$TaskId.txt 取得。不得使用短 SHA、二级任务标题或「复审对象」等替代表述。" }
-    'QueueMaintenance' { '只做空队列维护，本轮不执行新增业务任务。先扫描各分线 backlog 中所有明确标为阻塞的任务；对阻塞描述中明确出现的稳定任务 ID，依次核对 开发管理/任务卡/<ID>.txt 与 开发管理/任务归档/<ID>.txt。backlog 中“阻塞”字样本身不能证明前置仍未完成：命名 blocker 在活跃任务卡和完成归档中都不存在时保持阻塞，不猜测完成状态；同一 ID 同时存在活跃任务卡与完成归档时保持阻塞，不提升下游任务。当本轮确认某个具名前置已完成并从直接下游卡移除该 ID，且本轮移除使该卡的 blockedBy 从非空变为空时，必须继续读取同一卡完整正文并收口这次状态事件：剩余动作若只是当前仓库与已批准事实即可完成的任务卡准备，例如实时路径扫描或字面量路径冻结，就在本轮完成准备并重新判断 runnable；剩余条件若是负责人决定、内容冻结、外部工作面、项目闸门、事实冲突或停止条件，则保持阻塞。不得顺带扫描其他原本就是 blockedBy=[] 的活跃卡，不得因准确的 stateReason 未变化而机械重写或制造维护提交。命名前置已完成但仍有其他真实条件时只在原说明失真时改写为实际剩余 blocker；全部前置已完成且现有事实足以形成完整任务卡时，同步 backlog、建立完整任务卡并按既有排序规则入队。完成全部阻塞项核对及上述直接受影响卡的收口后仍没有合法候选，才允许返回 no_candidate。' }
+    'QueueMaintenance' { '只做空队列维护，本轮不执行新增业务任务。先扫描各分线 backlog 中所有明确标为阻塞的任务；对阻塞描述中明确出现的稳定任务 ID，依次核对 开发管理/任务卡/<ID>.txt 与 开发管理/任务归档/<ID>.txt。backlog 中“阻塞”字样本身不能证明前置仍未完成：命名 blocker 在活跃任务卡和完成归档中都不存在时保持阻塞，不猜测完成状态；同一 ID 同时存在活跃任务卡与完成归档时保持阻塞，不提升下游任务。当本轮确认某个具名前置已完成并从直接下游卡移除该 ID，且本轮移除使该卡的 blockedBy 从非空变为空时，必须继续读取同一卡完整正文并收口这次状态事件：剩余动作若只是当前仓库与已批准事实即可完成的任务卡准备，例如实时路径扫描或字面量路径冻结，就在本轮完成准备并重新判断 runnable；唯一剩余条件若是负责人在两条可确定性形成完整 ready 卡的路线间选择，则按维护型决策终态处理；其他内容冻结、外部工作面、项目闸门、事实冲突或停止条件保持阻塞。不得顺带扫描其他原本就是 blockedBy=[] 的活跃卡，不得因准确的 stateReason 未变化而机械重写或制造维护提交。命名前置已完成但仍有其他真实条件时只在原说明失真时改写为实际剩余 blocker；全部前置已完成且现有事实足以形成完整任务卡时，同步 backlog、建立完整任务卡并按既有排序规则入队。完成全部阻塞项核对及上述直接受影响卡的收口后仍没有合法候选，才允许返回 no_candidate。' }
   }
   $resumeInstruction = if ($null -eq $ResumeContext) {
     '本轮没有 checkpoint 回复上下文。'
+  } elseif ([string]$ResumeContext.kind -ceq 'queue_maintenance') {
+    "已机械核验维护型决策回复：$($ResumeContext | ConvertTo-Json -Compress -Depth 10)。本轮只准备 decisionTaskId 对应任务卡，使所选 A/B 路线具备完整 expectedPaths、验证、完成条件和停止条件；保留 automationDecision 与 pending_decision，不入队、不执行业务内容。最终返回 completed，共享入口会在最新 master 上调用 ResolveMaintenanceDecision。"
   } else {
     "已机械核验并重放 checkpoint。负责人回复上下文：$($ResumeContext | ConvertTo-Json -Compress -Depth 10)。只把它用于对应 decisionId，不恢复旧模型会话。"
   }
@@ -159,6 +166,7 @@ function New-Prompt {
     $finalizerCommand
     '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
+    'QueueMaintenance 仅在本轮移除直接下游卡的最后一个具名前置、完整读卡后确认唯一剩余条件是负责人在两条可确定性形成 ready 卡的路线间选择时，返回 maintenance_decision。该候选提交只完成前置移除与准确阻塞事实，不写 automationDecision、不改 pending_decision、不入队；decisionTaskId 指向该下游卡，options 必须恰为 A/B/C 且 targetState 依次为 ready/ready/blocked，allowCustomReply 由共享入口固定为 false。decisionId 返回空字符串，由共享入口按事实摘要生成。'
     '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及完整三选一决策卡字段。checkpoint 不得改变任务生命周期。'
     '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
     '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组，plainSummary 填三个空字符串；固定 wrapper 只按实际 status 核验必需字段。'
@@ -247,6 +255,47 @@ function Assert-Decision {
   }
 }
 
+function Assert-MaintenanceDecision {
+  param([object]$Terminal, [object]$Run)
+  if ($Route -cne 'QueueMaintenance' -or [string]::IsNullOrWhiteSpace([string]$Terminal.decisionTaskId)) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  $commit = [string]$Terminal.candidateCommit
+  if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne $commit -or (Invoke-GitText @('rev-list', '--count', "$($Run.baseCommit)..$commit")) -cne '1' -or (Invoke-GitText @('rev-parse', "$commit^")) -cne [string]$Run.baseCommit) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  if (-not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  $changed = @(Get-ChangedPaths -Range "$($Run.baseCommit)..$commit")
+  $reported = @($Terminal.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+  if ($changed.Count -eq 0 -or ($changed -join "`0") -cne ($reported -join "`0")) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  foreach ($path in $changed) { if (-not (Test-QueueMaintenancePath $path)) { Stop-Candidate 'codex_candidate_path_violation' } }
+  $options = @($Terminal.options)
+  if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC' -or (@($options | ForEach-Object { [string]$_.targetState }) -join ',') -cne 'ready,ready,blocked') { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  foreach ($value in @([string]$Terminal.question, [string]$Terminal.recommendedOption, [string]$Terminal.impactSummary, [string]$Terminal.plainSummary.situation, [string]$Terminal.plainSummary.impact, [string]$Terminal.plainSummary.action)) { if ([string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_maintenance_decision_invalid' } }
+  if ([string]$Terminal.recommendedOption -cnotin @('A', 'B')) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  $taskPath = Join-Path $script:root "开发管理\任务卡\$([string]$Terminal.decisionTaskId).txt"
+  if (-not (Test-Path -LiteralPath $taskPath -PathType Leaf)) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  $task = Read-TaskMetadata -RequestedTaskId ([string]$Terminal.decisionTaskId)
+  if ([string]$task.Metadata.dispatchState -cne 'blocked' -or @($task.Metadata.blockedBy).Count -ne 0 -or $task.Metadata.PSObject.Properties.Name -contains 'automationDecision' -or $task.Metadata.PSObject.Properties.Name -contains 'automationCheckpoint') { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  try {
+    $beforeText = Invoke-GitText @('show', "$($Run.baseCommit):开发管理/任务卡/$([string]$Terminal.decisionTaskId).txt")
+    $beforeMatch = [regex]::Match($beforeText, '(?ms)^---TASK-META---\r?\n(?<json>.*?)\r?\n---TASK-BODY---')
+    $beforeMeta = $beforeMatch.Groups['json'].Value.Trim() | ConvertFrom-Json -Depth 100
+  } catch { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  if (-not $beforeMatch.Success -or [string]$beforeMeta.dispatchState -cne 'blocked' -or @($beforeMeta.blockedBy).Count -eq 0) { Stop-Candidate 'codex_maintenance_decision_invalid' }
+  try {
+    $commitMessage = Invoke-GitText @('show', '-s', '--format=%B', $commit)
+    $metadataContract = ConvertFrom-TzgAutomationCommitMessage -Message $commitMessage -ExpectedTask $TaskId -ExpectedState 'completed'
+  } catch { Stop-Candidate 'codex_candidate_metadata_invalid' }
+  foreach ($pair in @(@([string]$metadataContract.ResultText, [string]$Terminal.result), @([string]$metadataContract.ImpactText, [string]$Terminal.impact), @([string]$metadataContract.VerifyText, [string]$Terminal.verify), @([string]$metadataContract.PlainText, [string]$Terminal.plain))) {
+    if ($pair[0] -cne $pair[1]) { Stop-Candidate 'codex_candidate_metadata_fields_invalid' }
+  }
+  [ordered]@{
+    category = 'maintenance_decision'; expectedTransition = 'maintenance_pending_decision'; changedPaths = $changed
+    verified = @([string]$metadataContract.Verification); unverified = @([string]$metadataContract.Next); residualRisk = [string]$metadataContract.Next
+    result = [string]$metadataContract.ResultText; impact = [string]$metadataContract.ImpactText; verify = [string]$metadataContract.VerifyText; plain = [string]$metadataContract.PlainText
+    decisionTaskId = [string]$Terminal.decisionTaskId; question = [string]$Terminal.question
+    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label; targetState = [string]$_.targetState } })
+    recommendedOption = [string]$Terminal.recommendedOption; impactSummary = [string]$Terminal.impactSummary; plainSummary = $Terminal.plainSummary
+  }
+}
+
 $result = $null
 try {
   $script:root = Normalize-FullPath (Resolve-Path -LiteralPath $RepositoryRoot).Path
@@ -286,9 +335,11 @@ try {
     $resume = Read-ResumeContext
     $initialPaths = @(Get-ChangedPaths -Worktree)
     if ($null -eq $resume -and $initialPaths.Count -ne 0) { Stop-Candidate 'codex_worktree_dirty' }
-    if ($null -ne $resume) {
+    if ($null -ne $resume -and [string]$resume.kind -cne 'queue_maintenance') {
       $expectedInitial = @($resume.checkpointChangedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
       if (($initialPaths -join "`0") -cne ($expectedInitial -join "`0")) { Stop-Candidate 'codex_resume_context_invalid' }
+    } elseif ($null -ne $resume -and $initialPaths.Count -ne 0) {
+      Stop-Candidate 'codex_resume_context_invalid'
     }
     $expectedPaths = @()
     if ($Route -cne 'QueueMaintenance') {
@@ -327,8 +378,9 @@ try {
             @([string]$metadataContract.PlainText, [string]$terminal.plain)
           )) { if ($pair[0] -cne $pair[1]) { Stop-Candidate 'codex_candidate_metadata_fields_invalid' } }
         if ($Route -ceq 'QueueMaintenance') { foreach ($path in $changed) { if (-not (Test-QueueMaintenancePath $path)) { Stop-Candidate 'codex_candidate_path_violation' } } } else { foreach ($path in $changed) { if ($expectedPaths -cnotcontains $path) { Stop-Candidate 'codex_candidate_path_violation' } } }
-        $transition = if ($Route -ceq 'QueueMaintenance') { $e = Invoke-JsonTool -Path $checkerPath -Arguments @('-RepositoryRoot', $script:root, '-OutputJson') -DetailCode 'codex_candidate_postcondition_failed'; "queue_ready_count=$([int]$e.readyCount)" } else { $e = Invoke-JsonTool -Path $checkerPath -Arguments @('-RepositoryRoot', $script:root, '-TaskId', $TaskId, '-Postcondition', 'CodexClosedOrNonReady', '-OutputJson') -DetailCode 'codex_candidate_postcondition_failed'; [string]$e.taskState }
+        $transition = if ($null -ne $resume -and [string]$resume.kind -ceq 'queue_maintenance') { 'maintenance_resolution' } elseif ($Route -ceq 'QueueMaintenance') { $e = Invoke-JsonTool -Path $checkerPath -Arguments @('-RepositoryRoot', $script:root, '-OutputJson') -DetailCode 'codex_candidate_postcondition_failed'; "queue_ready_count=$([int]$e.readyCount)" } else { $e = Invoke-JsonTool -Path $checkerPath -Arguments @('-RepositoryRoot', $script:root, '-TaskId', $TaskId, '-Postcondition', 'CodexClosedOrNonReady', '-OutputJson') -DetailCode 'codex_candidate_postcondition_failed'; [string]$e.taskState }
         $candidateResult = [ordered]@{ category = 'completed'; expectedTransition = $transition; changedPaths = $changed; verified = @([string]$metadataContract.Verification); unverified = @([string]$metadataContract.Next); residualRisk = [string]$metadataContract.Next; result = [string]$metadataContract.ResultText; impact = [string]$metadataContract.ImpactText; verify = [string]$metadataContract.VerifyText; plain = [string]$metadataContract.PlainText }
+        if ($null -ne $resume -and [string]$resume.kind -ceq 'queue_maintenance') { $candidateResult['maintenanceResolution'] = $resume }
         $result = [ordered]@{ status = 'completed'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = $head; candidateResult = $candidateResult }
       }
       'no_candidate' {
@@ -349,6 +401,10 @@ try {
           $decision = Assert-Decision -Terminal $terminal -AllowedPaths $expectedPaths -BaseCommit ([string]$run.baseCommit)
           $result = [ordered]@{ status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = [string]$decision.checkpointCommit; candidateResult = $decision }
         }
+      }
+      'maintenance_decision' {
+        $decision = Assert-MaintenanceDecision -Terminal $terminal -Run $run
+        $result = [ordered]@{ status = 'maintenance_decision'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = $head; candidateResult = $decision }
       }
       { $_ -cin @('blocked', 'failed') } {
         if ($head -cne [string]$run.baseCommit) { Stop-Candidate 'codex_failed_head_changed' }

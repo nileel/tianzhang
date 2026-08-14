@@ -100,6 +100,13 @@ function Get-TaskContextDigest {
   [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($json))).ToLowerInvariant()
 }
 
+function Get-MaintenanceDecisionId {
+  param([string]$TaskId, [string]$BaseCommit, [string]$TaskContextDigest)
+  $inputText = "$TaskId$([char]0)$BaseCommit$([char]0)$TaskContextDigest"
+  $hex = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($inputText)))
+  "DEC-$([DateTimeOffset]::Now.ToString('yyyyMMdd'))-QM$($hex.Substring(0, 12))"
+}
+
 function Get-QueueTaskIndex {
   param([string]$Root, [string]$TaskId)
   $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes((Join-Path $Root '开发管理\当前任务队列.txt'))).TrimStart([char]0xFEFF)
@@ -213,7 +220,7 @@ function Set-Attention {
 function Assert-CandidateEvidence {
   param([object]$Run, [object]$Candidate)
   $worktree = Assert-WorktreePath $Run
-  if ([string]$Candidate.status -cne 'completed' -or [string]$Candidate.candidateCommit -cnotmatch '^[0-9a-f]{40,64}$' -or
+  if ([string]$Candidate.status -cnotin @('completed', 'maintenance_decision') -or [string]$Candidate.candidateCommit -cnotmatch '^[0-9a-f]{40,64}$' -or
     (Invoke-GitText $worktree @('branch', '--show-current')) -cne [string]$Run.candidateBranch -or
     (Invoke-GitText $worktree @('rev-parse', 'HEAD')) -cne [string]$Candidate.candidateCommit -or
     (Invoke-GitText $worktree @('rev-list', '--count', "$($Run.baseCommit)..$($Candidate.candidateCommit)")) -cne '1' -or
@@ -228,8 +235,12 @@ function Assert-CandidateEvidence {
 }
 
 function Get-FormalPaths {
-  param([object]$Run, [object]$Task)
-  if ([string]$Run.route -ceq 'queue_maintenance') { return @($Run.candidateResult.changedPaths | ForEach-Object { [string]$_ }) }
+  param([object]$Run, [object]$Task, [AllowNull()][object]$MaintenanceTask)
+  if ([string]$Run.route -ceq 'queue_maintenance') {
+    $paths = @($Run.candidateResult.changedPaths | ForEach-Object { [string]$_ })
+    if ($null -ne $MaintenanceTask) { $paths += @("开发管理/任务卡/$($MaintenanceTask.Metadata.id).txt", '开发管理/当前任务队列.txt', [string]$MaintenanceTask.Metadata.sourceBacklog) }
+    return @($paths | Sort-Object -Unique)
+  }
   $paths = @($Task.Metadata.expectedPaths | ForEach-Object { [string]$_ })
   if ($Owner -ceq 'deepseek' -and $paths -cnotcontains '开发管理/AI合作沟通.txt') { $paths += '开发管理/AI合作沟通.txt' }
   @($paths | Sort-Object -Unique)
@@ -268,7 +279,14 @@ function Write-Handoff {
 
 function Assert-Postcondition {
   param([object]$Run, [string]$Worktree)
-  if ([string]$Run.route -ceq 'queue_maintenance') {
+  if ([string]$Run.candidateResult.expectedTransition -ceq 'maintenance_pending_decision') {
+    $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-TaskId', [string]$Run.candidateResult.decisionTaskId, '-Postcondition', 'MaintenancePendingDecision', '-OutputJson') 'hourly_postcondition_failed'
+    if ([string]$evidence.taskState -cne 'pending_decision') { Stop-Hourly 'hourly_postcondition_failed' }
+  } elseif ([string]$Run.candidateResult.expectedTransition -ceq 'maintenance_resolution') {
+    $postcondition = if ([string]$Run.candidateResult.resolutionState -ceq 'ready') { 'MaintenanceResolvedReady' } else { 'MaintenanceResolvedBlocked' }
+    $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-TaskId', [string]$Run.candidateResult.decisionTaskId, '-Postcondition', $postcondition, '-OutputJson') 'hourly_postcondition_failed'
+    if ([string]$evidence.taskState -cne [string]$Run.candidateResult.resolutionState) { Stop-Hourly 'hourly_postcondition_failed' }
+  } elseif ([string]$Run.route -ceq 'queue_maintenance') {
     $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-OutputJson') 'hourly_postcondition_failed'
     if ([string]$Run.candidateResult.expectedTransition -cne "queue_ready_count=$([int]$evidence.readyCount)") { Stop-Hourly 'hourly_postcondition_failed' }
   } elseif ($Owner -ceq 'deepseek') {
@@ -316,6 +334,7 @@ function Build-And-IntegrateCandidate {
   $lock = Enter-TzgIntegrationLock -RepositoryRoot $script:root -TimeoutSeconds $IntegrationLockTimeoutSeconds
   if ($null -eq $lock) { Set-Attention $Run 'integration lock wait timed out'; return [ordered]@{ status = 'attention_required'; taskId = $Run.taskId; runId = $Run.runId; detailCode = 'integration_lock_timeout' } }
   $formalHead = $null
+  $sourceHead = $null
   $reviewedCommit = $null
   $reviewQueueIndex = -1
   try {
@@ -330,7 +349,15 @@ function Build-And-IntegrateCandidate {
       if ($reviewedCommit -cnotmatch '^[0-9a-f]{40,64}$' -or $reviewQueueIndex -lt 0) { Stop-Hourly 'review_rework_source_invalid' }
     }
     $latest = Invoke-GitText $script:root @('rev-parse', 'master')
-    $formalPaths = Get-FormalPaths -Run $Run -Task $task
+    $maintenanceTaskId = if ([string]$Run.candidateResult.category -ceq 'maintenance_decision') { [string]$Run.candidateResult.decisionTaskId } elseif ($Run.candidateResult.PSObject.Properties.Name -contains 'maintenanceResolution') { [string]$Run.candidateResult.maintenanceResolution.decisionTaskId } else { $null }
+    $maintenanceTask = if ([string]::IsNullOrWhiteSpace($maintenanceTaskId)) { $null } else { Read-TaskMetadata $script:root $maintenanceTaskId }
+    if ([string]$Run.candidateResult.category -ceq 'maintenance_decision') {
+      if ([string]$maintenanceTask.Metadata.dispatchState -cne 'blocked' -or @($maintenanceTask.Metadata.blockedBy).Count -eq 0 -or $maintenanceTask.Metadata.PSObject.Properties.Name -contains 'automationDecision') { Stop-Hourly 'maintenance_decision_source_invalid' }
+    } elseif ($null -ne $maintenanceTask) {
+      $resume = $Run.candidateResult.maintenanceResolution
+      if ([string]$maintenanceTask.Digest -cne [string]$resume.pendingTaskDigest -or [string]$maintenanceTask.Metadata.dispatchState -cne 'pending_decision' -or [string]$maintenanceTask.Metadata.automationDecision.decisionId -cne [string]$resume.decisionId -or [string]$maintenanceTask.Metadata.automationDecision.status -cne 'awaiting_reply') { Stop-Hourly 'maintenance_decision_task_context_changed' }
+    }
+    $formalPaths = Get-FormalPaths -Run $Run -Task $task -MaintenanceTask $maintenanceTask
     if ($latest -cne [string]$Run.baseCommit) {
       foreach ($mainPath in Get-ChangedPaths $script:root "$($Run.baseCommit)..$latest") { foreach ($formal in $formalPaths) { if (Test-PathOverlap $mainPath $formal) { Stop-Hourly 'hourly_revalidation_required' } } }
     }
@@ -346,11 +373,62 @@ function Build-And-IntegrateCandidate {
       if ([string]$transition.status -cne 'updated') { Stop-Hourly 'hourly_pending_review_failed' }
       Write-Handoff -Run $Run -CandidateCommit ([string]$Run.candidateCommit)
     }
-    $formalHead = Invoke-Finalizer $worktree @{
+    $sourceHead = Invoke-Finalizer $worktree @{
       ExpectedPaths = $formalPaths -join '|'; CommitMessage = [string]$formalContract.subject
       RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = [string]$formalContract.state
       AutomationResult = [string]$Run.candidateResult.result; AutomationImpact = [string]$Run.candidateResult.impact
       AutomationVerify = [string]$Run.candidateResult.verify; AutomationPlain = [string]$Run.candidateResult.plain
+    }
+    $formalHead = $sourceHead
+    if ([string]$Run.candidateResult.category -ceq 'maintenance_decision') {
+      $preparedTask = Read-TaskMetadata $worktree $maintenanceTaskId
+      if ([string]$preparedTask.Metadata.dispatchState -cne 'blocked' -or @($preparedTask.Metadata.blockedBy).Count -ne 0) { Stop-Hourly 'maintenance_decision_source_invalid' }
+      $beforeContextDigest = Get-TaskContextDigest $maintenanceTask.Metadata
+      $decisionId = Get-MaintenanceDecisionId -TaskId $maintenanceTaskId -BaseCommit $latest -TaskContextDigest $beforeContextDigest
+      $context = [ordered]@{
+        schemaVersion = 1; kind = 'queue_maintenance'; taskId = $maintenanceTaskId; sourceRunId = [string]$Run.runId; decisionId = $decisionId
+        question = [string]$Run.candidateResult.question; options = @($Run.candidateResult.options); recommendedOption = [string]$Run.candidateResult.recommendedOption
+        impactSummary = [string]$Run.candidateResult.impactSummary; plainSummary = $Run.candidateResult.plainSummary; allowCustomReply = $false
+        sourceCommit = $sourceHead; sourceTaskDigest = [string]$preparedTask.Digest; taskContextDigest = Get-TaskContextDigest $preparedTask.Metadata
+        createdAt = [DateTimeOffset]::Now.ToString('o')
+      }
+      $contextPath = Write-PrivateJson 'state-transitions' "$($Run.runId)-PauseMaintenanceDecision.json" $context
+      $projection = Invoke-JsonTool $taskStatePath @('-Action', 'PauseMaintenanceDecision', '-RepositoryRoot', $worktree, '-TaskId', $maintenanceTaskId, '-ContextPath', $contextPath) 'maintenance_decision_projection_failed'
+      if ([string]$projection.status -cne 'updated') { Stop-Hourly 'maintenance_decision_projection_failed' }
+      $formalHead = Invoke-Finalizer $worktree @{
+        ExpectedPaths = (@($projection.changedPaths | ForEach-Object { [string]$_ }) -join '|'); CommitMessage = "chore($maintenanceTaskId): request maintenance decision"
+        RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = 'completed'
+        AutomationResult = '问题=空队列维护暴露负责人路线选择；完成=目标任务已转为维护型待决策'
+        AutomationImpact = '影响=任务不会被自动领取；边界=本轮未等待或消费回复'
+        AutomationVerify = '验证=维护型 pending_decision 投影通过；后续=发送唯一飞书决策卡'
+        AutomationPlain = '发生=任务需要你选择路线；影响=选择前不会继续开发；需要=在飞书决策卡选择 A、B 或 C'
+      }
+      $Run.candidateResult | Add-Member -NotePropertyName expectedTransition -NotePropertyValue 'maintenance_pending_decision' -Force
+      $Run.candidateResult | Add-Member -NotePropertyName decisionTaskId -NotePropertyValue $maintenanceTaskId -Force
+      $Run.candidateResult | Add-Member -NotePropertyName decisionId -NotePropertyValue $decisionId -Force
+    } elseif ($null -ne $maintenanceTask) {
+      $resume = $Run.candidateResult.maintenanceResolution
+      $preparedTask = Read-TaskMetadata $worktree $maintenanceTaskId
+      $resolveContext = [ordered]@{
+        schemaVersion = 1; kind = 'queue_maintenance'; taskId = $maintenanceTaskId; decisionId = [string]$resume.decisionId
+        optionKey = [string]$resume.replyValue; source = [string]$resume.source; evidenceHash = [string]$resume.evidenceHash; resolvedAt = [DateTimeOffset]::Now.ToString('o'); preparedTaskDigest = [string]$preparedTask.Digest
+      }
+      $contextPath = Write-PrivateJson 'state-transitions' "$($Run.runId)-ResolveMaintenanceDecision.json" $resolveContext
+      $projection = Invoke-JsonTool $taskStatePath @('-Action', 'ResolveMaintenanceDecision', '-RepositoryRoot', $worktree, '-TaskId', $maintenanceTaskId, '-ContextPath', $contextPath) 'maintenance_decision_projection_failed'
+      if ([string]$projection.status -cne 'updated') { Stop-Hourly 'maintenance_decision_projection_failed' }
+      $formalHead = Invoke-Finalizer $worktree @{
+        ExpectedPaths = (@($projection.changedPaths | ForEach-Object { [string]$_ }) -join '|'); CommitMessage = "chore($maintenanceTaskId): apply maintenance decision"
+        RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = 'completed'
+        AutomationResult = "问题=维护型决策等待回复；完成=已按选项 $([string]$resume.replyValue) 形成确定状态"
+        AutomationImpact = '影响=任务调度投影已同步；边界=未执行任务业务内容'
+        AutomationVerify = '验证=维护型决策回复与任务投影通过；后续=ready 任务由新 run 领取'
+        AutomationPlain = '发生=负责人路线选择已应用；影响=任务已进入对应调度状态；需要=无需重复回复'
+      }
+      $resolvedTask = Read-TaskMetadata $worktree $maintenanceTaskId
+      $Run.candidateResult | Add-Member -NotePropertyName expectedTransition -NotePropertyValue 'maintenance_resolution' -Force
+      $Run.candidateResult | Add-Member -NotePropertyName decisionTaskId -NotePropertyValue $maintenanceTaskId -Force
+      $Run.candidateResult | Add-Member -NotePropertyName decisionId -NotePropertyValue ([string]$resume.decisionId) -Force
+      $Run.candidateResult | Add-Member -NotePropertyName resolutionState -NotePropertyValue ([string]$resolvedTask.Metadata.dispatchState) -Force
     }
     if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
       $reviewEntry = Get-ReviewEntryEvidence -Root $worktree -TaskId ([string]$Run.taskId) -ExpectedReviewedCommit $reviewedCommit
@@ -358,14 +436,19 @@ function Build-And-IntegrateCandidate {
     }
     Invoke-CombinedValidation -Run $Run -Worktree $worktree -Base $latest -Head $formalHead -Paths $formalPaths
     $updated = Invoke-Runtime -RuntimeAction UpdateRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; RunState = 'canonical_ready'; CanonicalBranch = $canonicalBranch; CanonicalBase = $latest; CanonicalHead = $formalHead }
-    $Run = $updated.run
+    $Run.canonicalBranch = [string]$updated.run.canonicalBranch; $Run.canonicalBase = [string]$updated.run.canonicalBase; $Run.canonicalHead = [string]$updated.run.canonicalHead; $Run.state = [string]$updated.run.state
     if ((Invoke-GitText $script:root @('branch', '--show-current')) -cne 'master' -or (Invoke-GitText $script:root @('rev-parse', 'HEAD')) -cne $latest -or (Test-MainPathConflict $formalPaths)) { Stop-Hourly 'hourly_integration_precondition_changed' }
     $null = Invoke-GitText $script:root @('merge', '--ff-only', $formalHead) 'hourly_fast_forward_failed'
     if ((Invoke-GitText $script:root @('rev-parse', 'HEAD')) -cne $formalHead) { Stop-Hourly 'hourly_fast_forward_verification_failed' }
     Assert-Postcondition -Run $Run -Worktree $script:root
     $null = Invoke-Runtime -RuntimeAction UpdateRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; RunState = 'integrated'; CanonicalHead = $formalHead }
     $closed = Invoke-Runtime -RuntimeAction CompleteRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; CompletionCategory = 'success'; DetailCode = "commit_$($formalHead.Substring(0, 12))" }
-    $result = [ordered]@{ status = if ([string]$Run.route -ceq 'queue_maintenance') { 'maintenance_completed' } else { 'completed' }; category = 'success'; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; canonicalBranch = $canonicalBranch; detailCode = $closed.detailCode }
+    $resultStatus = if ([string]$Run.candidateResult.expectedTransition -ceq 'maintenance_pending_decision') { 'decision_requested' } elseif ([string]$Run.route -ceq 'queue_maintenance') { 'maintenance_completed' } else { 'completed' }
+    $result = [ordered]@{ status = $resultStatus; category = 'success'; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; canonicalBranch = $canonicalBranch; detailCode = if ($resultStatus -ceq 'decision_requested') { 'maintenance_decision_requested' } else { $closed.detailCode } }
+    if ($resultStatus -cin @('decision_requested', 'maintenance_completed') -and -not [string]::IsNullOrWhiteSpace([string]$Run.candidateResult.decisionId)) {
+      $result.decisionTaskId = [string]$Run.candidateResult.decisionTaskId; $result.decisionId = [string]$Run.candidateResult.decisionId
+      if ($Run.candidateResult.PSObject.Properties.Name -contains 'resolutionState') { $result.resolutionState = [string]$Run.candidateResult.resolutionState }
+    }
     if ($Owner -ceq 'codex' -and [string]$Run.route -ceq 'codex_review' -and [string]$Run.candidateResult.expectedTransition -ceq 'blocked') {
       $result.reviewedCommit = $reviewedCommit
       $result.reviewQueueIndex = $reviewQueueIndex
@@ -431,7 +514,11 @@ function Remove-ExactSuccessfulWorktree {
     $shown = Invoke-Runtime -RuntimeAction Show -Parameters @{ RepositoryRoot = $script:root }
     foreach ($active in @($shown.state.runs.codex, $shown.state.runs.deepseek)) { if ($null -ne $active -and (Normalize-FullPath ([string]$active.worktree)) -ceq (Normalize-FullPath ([string]$Run.worktree))) { return 'retained_runtime_reference' } }
     $worktree = Assert-WorktreePath $Run
-    if (-not (Test-Path -LiteralPath $worktree) -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText $worktree @('status', '--porcelain=v1', '--untracked-files=all'))) -or (Invoke-GitText $worktree @('rev-parse', 'HEAD')) -cne $FormalHead) { return 'retained_evidence_mismatch' }
+    if (-not (Test-Path -LiteralPath $worktree) -or (Invoke-GitText $worktree @('rev-parse', 'HEAD')) -cne $FormalHead) { return 'retained_evidence_mismatch' }
+    & git -C $worktree diff --quiet --ignore-submodules -- 2>$null
+    if ($LASTEXITCODE -ne 0) { return 'retained_evidence_mismatch' }
+    & git -C $worktree diff --cached --quiet --ignore-submodules -- 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText $worktree @('ls-files', '--others', '--exclude-standard')))) { return 'retained_evidence_mismatch' }
     & git -C $script:root merge-base --is-ancestor $FormalHead master 2>$null
     if ($LASTEXITCODE -ne 0) { return 'retained_unintegrated' }
     $currentBranch = Invoke-GitText $worktree @('branch', '--show-current')
@@ -466,7 +553,7 @@ function New-StateTransitionContext {
 }
 
 function Integrate-StateTransition {
-  param([object]$Run, [ValidateSet('Block', 'PauseDecision', 'ResumeReady')][string]$Mode, [object]$Context, [AllowNull()][string]$ExistingWorktree)
+  param([object]$Run, [ValidateSet('Block', 'PauseDecision', 'ResumeReady', 'ResolveMaintenanceDecision')][string]$Mode, [object]$Context, [AllowNull()][string]$ExistingWorktree)
   $lock = Enter-TzgIntegrationLock -RepositoryRoot $script:root -TimeoutSeconds $IntegrationLockTimeoutSeconds
   if ($null -eq $lock) { Stop-Hourly 'integration_lock_timeout' }
   $formalHead = $null
@@ -479,11 +566,12 @@ function Integrate-StateTransition {
     if ($LASTEXITCODE -eq 0) { Stop-Hourly 'hourly_state_branch_exists' }
     $null = Invoke-GitText $worktree @('switch', '-c', $branch, $latest) 'hourly_state_branch_failed'
     $contextPath = Write-PrivateJson 'state-transitions' "$($Run.runId)-$Mode.json" $Context
-    $actionName = if ($Mode -ceq 'PauseDecision') { 'PauseDecision' } elseif ($Mode -ceq 'ResumeReady') { 'ResumeReady' } else { 'Block' }
-    $projection = Invoke-JsonTool $taskStatePath @('-Action', $actionName, '-RepositoryRoot', $worktree, '-TaskId', [string]$Run.taskId, '-ContextPath', $contextPath) 'hourly_state_projection_failed'
+    $actionName = if ($Mode -ceq 'PauseDecision') { 'PauseDecision' } elseif ($Mode -ceq 'ResumeReady') { 'ResumeReady' } elseif ($Mode -ceq 'ResolveMaintenanceDecision') { 'ResolveMaintenanceDecision' } else { 'Block' }
+    $projectionTaskId = if ($Mode -ceq 'ResolveMaintenanceDecision') { [string]$Context.taskId } else { [string]$Run.taskId }
+    $projection = Invoke-JsonTool $taskStatePath @('-Action', $actionName, '-RepositoryRoot', $worktree, '-TaskId', $projectionTaskId, '-ContextPath', $contextPath) 'hourly_state_projection_failed'
     if ([string]$projection.status -cne 'updated') { Stop-Hourly 'hourly_state_projection_failed' }
     $paths = @($projection.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-    $stateText = if ($Mode -ceq 'PauseDecision') { 'pending_decision' } elseif ($Mode -ceq 'ResumeReady') { 'ready' } else { 'blocked' }
+    $stateText = if ($Mode -ceq 'PauseDecision') { 'pending_decision' } elseif ($Mode -ceq 'ResumeReady') { 'ready' } elseif ($Mode -ceq 'ResolveMaintenanceDecision') { [string]$projection.dispatchState } else { 'blocked' }
     $formalHead = Invoke-Finalizer $worktree @{
       ExpectedPaths = $paths -join '|'; CommitMessage = "chore($($Run.taskId)): set automation state $stateText"
       RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = 'completed'
@@ -502,7 +590,11 @@ function Integrate-StateTransition {
       $category = if ($Mode -ceq 'PauseDecision') { 'paused' } else { 'success' }
       $null = Invoke-Runtime -RuntimeAction CompleteRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; CompletionCategory = $category; DetailCode = "state_$stateText" }
     }
-    [ordered]@{ status = $stateText; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; stateBranch = $branch; worktree = $worktree }
+    if ($Mode -ceq 'ResolveMaintenanceDecision') {
+      [ordered]@{ status = 'maintenance_completed'; taskId = $Run.taskId; decisionTaskId = $projectionTaskId; decisionId = [string]$Context.decisionId; resolutionState = $stateText; runId = $Run.runId; formalHead = $formalHead; stateBranch = $branch; worktree = $worktree; detailCode = "maintenance_decision_resolved_$stateText" }
+    } else {
+      [ordered]@{ status = $stateText; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; stateBranch = $branch; worktree = $worktree }
+    }
   } catch {
     if ($Mode -cne 'ResumeReady') {
       $detail = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'hourly_state_transition_failed' }
@@ -524,6 +616,200 @@ function Send-DecisionCheckpoint {
     if ($output.Count -eq 1) { return [string]$output[0] }
   } catch {}
   '{"result":"CHANNEL_UNAVAILABLE"}'
+}
+
+function Set-MaintenanceDecisionRecordField {
+  param([object]$Record, [string]$Name, [object]$Value)
+  if ($Record -is [Collections.IDictionary]) { $Record[$Name] = $Value }
+  else { $Record | Add-Member -NotePropertyName $Name -NotePropertyValue $Value -Force }
+}
+
+function Write-MaintenanceDecisionRecord {
+  param([object]$Record)
+  if ([string]$Record.decisionId -cnotmatch '^DEC-[0-9]{8}-QM[0-9A-F]{12}$') { Stop-Hourly 'maintenance_decision_context_invalid' }
+  Write-PrivateJson 'maintenance-decisions' "$($Record.decisionId).json" $Record
+}
+
+function Send-MaintenanceDecision {
+  param([object]$Outcome)
+  $task = Read-TaskMetadata $script:root ([string]$Outcome.decisionTaskId)
+  $decision = $task.Metadata.automationDecision
+  if ([string]$task.Metadata.dispatchState -cne 'pending_decision' -or [string]$decision.status -cne 'awaiting_reply' -or [string]$decision.decisionId -cne [string]$Outcome.decisionId) { Stop-Hourly 'maintenance_decision_context_invalid' }
+  $recordPath = Join-Path $script:effectiveStateRoot "maintenance-decisions\$($decision.decisionId).json"
+  if (Test-Path -LiteralPath $recordPath -PathType Leaf) {
+    $existing = Read-MaintenanceDecisionRecord $recordPath
+    $same = [string]$existing.taskId -ceq [string]$task.Metadata.id -and [string]$existing.formalHead -ceq [string]$Outcome.formalHead
+    return [ordered]@{ wire = '{"result":"ALREADY_REGISTERED"}'; accepted = ($same -and [string]$existing.status -cin @('awaiting_reply', 'answered', 'applied')); record = $existing }
+  }
+  $record = [ordered]@{
+    schemaVersion = 1; kind = 'queue_maintenance'; status = 'awaiting_reply'; decisionId = [string]$decision.decisionId; taskId = [string]$task.Metadata.id
+    sourceRunId = [string]$Outcome.runId; formalHead = [string]$Outcome.formalHead; pendingTaskDigest = [string]$task.Digest
+    taskContextDigest = Get-TaskContextDigest $task.Metadata; createdAt = [string]$decision.createdAt; sendResult = $null
+  }
+  $null = Write-MaintenanceDecisionRecord $record
+  $request = [ordered]@{
+    decision = [ordered]@{
+      decisionId = [string]$decision.decisionId; taskId = [string]$task.Metadata.id; question = [string]$decision.question
+      options = @($decision.options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } })
+      recommendedOption = [string]$decision.recommendedOption; impactSummary = [string]$decision.impactSummary; plainSummary = $decision.plainSummary; allowCustomReply = $false
+    }
+    attemptNumber = 1
+  }
+  $requestPath = Write-PrivateJson 'decision-requests' "$($decision.decisionId).json" $request
+  $wire = '{"result":"CHANNEL_UNAVAILABLE"}'
+  try {
+    $output = @(& node $decisionSenderPath --request-file $requestPath 2>$null)
+    if ($output.Count -eq 1) { $wire = [string]$output[0] }
+  } catch {}
+  try { $sendResult = $wire | ConvertFrom-Json -Depth 30 } catch { $sendResult = [pscustomobject]@{ result = 'INVALID_INPUT' } }
+  Set-MaintenanceDecisionRecordField $record 'sendResult' $sendResult
+  $accepted = [string]$sendResult.result -ceq 'PROVIDER_ACCEPTED'
+  if ($accepted) {
+    try {
+      $snapshot = [IO.File]::ReadAllText($requestPath, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 30
+      if ($null -eq $snapshot.pendingDecision -or [string]::IsNullOrWhiteSpace([string]$snapshot.pendingDecision.createdAt) -or [string]::IsNullOrWhiteSpace([string]$snapshot.pendingDecision.expiresAt)) { throw 'missing binding' }
+      Set-MaintenanceDecisionRecordField $record 'issuedAt' ([string]$snapshot.pendingDecision.createdAt)
+      Set-MaintenanceDecisionRecordField $record 'expiresAt' ([string]$snapshot.pendingDecision.expiresAt)
+    } catch {
+      $accepted = $false
+      Set-MaintenanceDecisionRecordField $record 'status' 'attention_required'
+      Set-MaintenanceDecisionRecordField $record 'detailCode' 'maintenance_decision_binding_missing'
+    }
+  } else {
+    Set-MaintenanceDecisionRecordField $record 'status' 'attention_required'
+    Set-MaintenanceDecisionRecordField $record 'detailCode' 'maintenance_decision_delivery_failed'
+  }
+  $null = Write-MaintenanceDecisionRecord $record
+  [ordered]@{ wire = $wire; accepted = $accepted; record = $record }
+}
+
+function Read-MaintenanceDecisionRecord {
+  param([string]$Path)
+  Assert-PrivatePathAcl -Path $Path
+  try { [IO.File]::ReadAllText($Path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50 } catch { Stop-Hourly 'maintenance_decision_context_invalid' }
+}
+
+function Find-AnsweredMaintenanceDecision {
+  $directory = Join-Path $script:effectiveStateRoot 'maintenance-decisions'
+  if (-not (Test-Path -LiteralPath $directory -PathType Container)) { return [ordered]@{ status = 'none' } }
+  $records = @()
+  foreach ($file in Get-ChildItem -LiteralPath $directory -Filter 'DEC-*.json' -File) {
+    $record = Read-MaintenanceDecisionRecord $file.FullName
+    if ([int]$record.schemaVersion -eq 1 -and [string]$record.kind -ceq 'queue_maintenance' -and [string]$record.status -cin @('awaiting_reply', 'answered')) { $records += [pscustomobject]@{ Path = $file.FullName; Record = $record } }
+  }
+  foreach ($item in @($records | Sort-Object { [string]$_.Record.createdAt }, { [string]$_.Record.taskId })) {
+    $record = $item.Record
+    $task = Read-TaskMetadata $script:root ([string]$record.taskId)
+    if ([string]$task.Digest -cne [string]$record.pendingTaskDigest -or [string]$task.Metadata.dispatchState -cne 'pending_decision' -or [string]$task.Metadata.automationDecision.decisionId -cne [string]$record.decisionId -or [string]$task.Metadata.automationDecision.status -cne 'awaiting_reply') {
+      return [ordered]@{ status = 'context_changed'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_task_context_changed'; context = $record; contextPath = $item.Path }
+    }
+    $acceptedPath = Join-Path $script:effectiveStateRoot "accepted-maintenance-replies\$($record.decisionId).json"
+    if ([string]$record.status -ceq 'answered') {
+      if (-not (Test-Path -LiteralPath $acceptedPath -PathType Leaf)) { return [ordered]@{ status = 'context_changed'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_reply_missing'; context = $record; contextPath = $item.Path } }
+      $replyContext = Read-MaintenanceDecisionRecord $acceptedPath
+      return [ordered]@{ status = 'answered'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; context = $record; contextPath = $item.Path; acceptedPath = $acceptedPath; replyContext = $replyContext }
+    }
+    $expiresAt = [DateTimeOffset]::MinValue
+    if (-not [DateTimeOffset]::TryParse([string]$record.expiresAt, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$expiresAt)) { return [ordered]@{ status = 'context_changed'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_context_invalid'; context = $record; contextPath = $item.Path } }
+    if ([DateTimeOffset]::Now -gt $expiresAt) { return [ordered]@{ status = 'expired'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_expired'; context = $record; contextPath = $item.Path } }
+    $requestPath = Join-Path $script:effectiveStateRoot "decision-requests\$($record.decisionId).json"
+    if (-not (Test-Path -LiteralPath $requestPath -PathType Leaf)) { return [ordered]@{ status = 'context_changed'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_request_missing'; context = $record; contextPath = $item.Path } }
+    $output = @(& node $decisionConsumerPath --request-file $requestPath 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $output.Count -ne 1) { return [ordered]@{ status = 'invalid_reply'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_reply_invalid'; context = $record; contextPath = $item.Path } }
+    try { $reply = $output[0] | ConvertFrom-Json -Depth 30 } catch { return [ordered]@{ status = 'invalid_reply'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_reply_invalid'; context = $record; contextPath = $item.Path } }
+    if ([string]$reply.result -ceq 'NO_REPLY') { return [ordered]@{ status = 'waiting'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId } }
+    if ([string]$reply.result -cne 'OPTION_ACCEPTED' -or [string]$reply.optionKey -cnotin @('A', 'B', 'C') -or [string]$reply.source -cne 'feishu_card' -or [string]$reply.evidenceHash -cnotmatch '^[0-9a-f]{64}$') { return [ordered]@{ status = 'invalid_reply'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'maintenance_decision_reply_invalid'; context = $record; contextPath = $item.Path } }
+    $replyContext = [ordered]@{
+      schemaVersion = 1; kind = 'queue_maintenance'; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$record.taskId; decisionId = [string]$record.decisionId
+      replyKind = 'option'; replyValue = [string]$reply.optionKey; source = [string]$reply.source; evidenceHash = [string]$reply.evidenceHash; pendingTaskDigest = [string]$record.pendingTaskDigest
+    }
+    $acceptedPath = Write-PrivateJson 'accepted-maintenance-replies' "$($record.decisionId).json" $replyContext
+    Set-MaintenanceDecisionRecordField $record 'status' 'answered'
+    Set-MaintenanceDecisionRecordField $record 'answeredAt' ([DateTimeOffset]::Now.ToString('o'))
+    Set-MaintenanceDecisionRecordField $record 'optionKey' ([string]$reply.optionKey)
+    Set-MaintenanceDecisionRecordField $record 'replyEvidenceHash' ([string]$reply.evidenceHash)
+    $null = Write-MaintenanceDecisionRecord $record
+    return [ordered]@{ status = 'answered'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId; context = $record; contextPath = $item.Path; acceptedPath = $acceptedPath; replyContext = $replyContext }
+  }
+  [ordered]@{ status = 'none' }
+}
+
+function Apply-TerminatedMaintenanceDecision {
+  param([object]$Found)
+  $record = $Found.context
+  if ([string]$Found.status -ceq 'context_changed') {
+    Set-MaintenanceDecisionRecordField $record 'status' 'attention_required'
+    Set-MaintenanceDecisionRecordField $record 'detailCode' ([string]$Found.detailCode)
+    Set-MaintenanceDecisionRecordField $record 'terminatedAt' ([DateTimeOffset]::Now.ToString('o'))
+    $null = Write-MaintenanceDecisionRecord $record
+    return [ordered]@{ status = 'attention_required'; owner = $Owner; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = [string]$Found.detailCode; cleanup = 'none' }
+  }
+  $lock = Enter-TzgIntegrationLock -RepositoryRoot $script:root -TimeoutSeconds $IntegrationLockTimeoutSeconds
+  if ($null -eq $lock) { return [ordered]@{ status = 'attention_required'; owner = $Owner; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = 'integration_lock_timeout'; cleanup = 'none' } }
+  $worktree = $null; $branch = $null; $formalHead = $null
+  try {
+    $record = Read-MaintenanceDecisionRecord ([string]$Found.contextPath)
+    if ([string]$record.status -cnotin @('awaiting_reply', 'answered')) { Stop-Hourly 'maintenance_decision_already_consumed' }
+    $task = Read-TaskMetadata $script:root ([string]$record.taskId)
+    if ([string]$task.Digest -cne [string]$record.pendingTaskDigest -or [string]$task.Metadata.dispatchState -cne 'pending_decision' -or [string]$task.Metadata.automationDecision.decisionId -cne [string]$record.decisionId) { Stop-Hourly 'maintenance_decision_task_context_changed' }
+    $latest = Invoke-GitText $script:root @('rev-parse', 'master')
+    $paths = @("开发管理/任务卡/$($record.taskId).txt", '开发管理/当前任务队列.txt', [string]$task.Metadata.sourceBacklog)
+    if (Test-MainPathConflict $paths) { Stop-Hourly 'maintenance_decision_main_path_conflict' }
+    $decisionKey = ([string]$record.decisionId).ToLowerInvariant()
+    $worktree = Normalize-FullPath (Join-Path $script:root ".worktrees\automation\decisions\$decisionKey-maintenance")
+    $branch = "codex/automation/decision/$decisionKey/terminate-$($latest.Substring(0, 12))"
+    if (Test-Path -LiteralPath $worktree) { Stop-Hourly 'maintenance_decision_worktree_exists' }
+    & git -C $script:root show-ref --verify --quiet "refs/heads/$branch" 2>$null
+    if ($LASTEXITCODE -eq 0) { Stop-Hourly 'maintenance_decision_branch_exists' }
+    [IO.Directory]::CreateDirectory((Split-Path -Parent $worktree)) | Out-Null
+    $null = Invoke-GitText $script:root @('worktree', 'add', '-b', $branch, $worktree, $latest) 'maintenance_decision_worktree_failed'
+    $transition = [ordered]@{
+      schemaVersion = 1; kind = 'queue_maintenance'; taskId = [string]$record.taskId; decisionId = [string]$record.decisionId
+      detailCode = [string]$Found.detailCode; terminatedAt = [DateTimeOffset]::Now.ToString('o')
+    }
+    $transitionPath = Write-PrivateJson 'state-transitions' "$($record.decisionId)-ExpireMaintenanceDecision.json" $transition
+    $projection = Invoke-JsonTool $taskStatePath @('-Action', 'ExpireMaintenanceDecision', '-RepositoryRoot', $worktree, '-TaskId', [string]$record.taskId, '-ContextPath', $transitionPath) 'maintenance_decision_projection_failed'
+    if ([string]$projection.status -cne 'updated') { Stop-Hourly 'maintenance_decision_projection_failed' }
+    $changedPaths = @($projection.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+    $formalHead = Invoke-Finalizer $worktree @{
+      ExpectedPaths = $changedPaths -join '|'; CommitMessage = "chore($($record.taskId)): terminate maintenance decision"
+      RequireAutomationMetadata = $true; AutomationTask = 'QUEUE-MAINTENANCE'; AutomationState = 'completed'
+      AutomationResult = "问题=维护型决策无法继续自动等待；完成=任务已转回 blocked 并记录 $([string]$Found.detailCode)"
+      AutomationImpact = '影响=旧决策不再被自动消费；边界=未覆盖其他任务事实'
+      AutomationVerify = '验证=终止投影与任务卡检查通过；后续=需要人工按当前事实重新发起'
+      AutomationPlain = '发生=旧决策已停止；影响=任务保持阻塞；需要=如仍需继续请重新发起决策'
+    }
+    $null = Invoke-GitText $worktree @('diff', '--check', "$latest..$formalHead") 'maintenance_decision_diff_check_failed'
+    $postcondition = if ([string]$Found.status -ceq 'expired') { @('-TaskId', [string]$record.taskId, '-Postcondition', 'MaintenanceExpiredBlocked') } else { @('-TaskId', [string]$record.taskId, '-Postcondition', 'CodexClosedOrNonReady') }
+    $evidence = Invoke-JsonTool $checkerPath (@('-RepositoryRoot', $worktree) + $postcondition + '-OutputJson') 'maintenance_decision_postcondition_failed'
+    if ([string]$evidence.status -cne 'ok') { Stop-Hourly 'maintenance_decision_postcondition_failed' }
+    if ((Invoke-GitText $script:root @('rev-parse', 'HEAD')) -cne $latest -or (Test-MainPathConflict $paths)) { Stop-Hourly 'maintenance_decision_integration_precondition_changed' }
+    $null = Invoke-GitText $script:root @('merge', '--ff-only', $formalHead) 'maintenance_decision_fast_forward_failed'
+    Set-MaintenanceDecisionRecordField $record 'status' $(if ([string]$Found.status -ceq 'expired') { 'expired' } else { 'attention_required' })
+    Set-MaintenanceDecisionRecordField $record 'detailCode' ([string]$Found.detailCode)
+    Set-MaintenanceDecisionRecordField $record 'terminatedAt' ([DateTimeOffset]::Now.ToString('o'))
+    Set-MaintenanceDecisionRecordField $record 'formalHead' $formalHead
+    $null = Write-MaintenanceDecisionRecord $record
+    $cleanup = Remove-ReviewReworkWorktree -Worktree $worktree -Branch $branch -FormalHead $formalHead
+    [ordered]@{ status = 'attention_required'; owner = $Owner; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = [string]$Found.detailCode; formalHead = $formalHead; cleanup = $cleanup }
+  } catch {
+    $detail = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'maintenance_decision_termination_failed' }
+    Set-MaintenanceDecisionRecordField $record 'status' 'attention_required'; Set-MaintenanceDecisionRecordField $record 'detailCode' $detail
+    try { $null = Write-MaintenanceDecisionRecord $record } catch {}
+    [ordered]@{ status = 'attention_required'; owner = $Owner; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$record.taskId; decisionId = [string]$record.decisionId; detailCode = $detail; cleanup = 'retained' }
+  } finally { Exit-TzgIntegrationLock -Handle $lock }
+}
+
+function Complete-MaintenanceDecisionRecord {
+  param([object]$Answered, [object]$Outcome)
+  if ($null -eq $Answered -or [string]$Outcome.status -cne 'maintenance_completed') { return }
+  $record = Read-MaintenanceDecisionRecord ([string]$Answered.contextPath)
+  if ([string]$record.status -cne 'answered' -or [string]$record.decisionId -cne [string]$Outcome.decisionId) { Stop-Hourly 'maintenance_decision_record_changed' }
+  Set-MaintenanceDecisionRecordField $record 'status' 'applied'
+  Set-MaintenanceDecisionRecordField $record 'formalHead' ([string]$Outcome.formalHead)
+  Set-MaintenanceDecisionRecordField $record 'resolutionState' ([string]$Outcome.resolutionState)
+  Set-MaintenanceDecisionRecordField $record 'appliedAt' ([DateTimeOffset]::Now.ToString('o'))
+  $null = Write-MaintenanceDecisionRecord $record
 }
 
 function Set-ReviewReworkRecordField {
@@ -905,6 +1191,7 @@ function Invoke-Canary {
 
 $final = $null
 $run = $null
+$maintenanceAnswered = $null
 $script:stage = 'initialize'
 $invocationMutex = $null
 $invocationHeld = $false
@@ -951,12 +1238,27 @@ try {
       $restored = $null
       if ([string]$answered.status -ceq 'answered') { $restored = Restore-AnsweredCheckpoint $answered }
       elseif ([string]$answered.status -ceq 'attention_required') { $final = $answered }
+      if ($null -eq $final -and $Owner -ceq 'codex') {
+        $queueEvidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $script:root, '-OutputJson') 'hourly_task_projection_failed'
+        if ([int]$queueEvidence.readyCount -eq 0) {
+          $maintenance = Find-AnsweredMaintenanceDecision
+          switch ([string]$maintenance.status) {
+            'waiting' { $final = [ordered]@{ status = 'waiting_decision'; owner = $Owner; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$maintenance.taskId; decisionId = [string]$maintenance.decisionId; detailCode = 'maintenance_decision_no_reply'; cleanup = 'none' } }
+            'answered' { $maintenanceAnswered = $maintenance }
+            { $_ -cin @('expired', 'invalid_reply', 'context_changed') } { $final = Apply-TerminatedMaintenanceDecision $maintenance }
+          }
+        }
+      }
       if ($null -eq $final) {
         $script:stage = 'selection'
-        $selection = Invoke-JsonTool $selectorPath @('-RepositoryRoot', $script:root, '-Owner', $Owner) 'hourly_selection_failed'
-        if ([string]$selection.status -ceq 'selected') { $taskId = [string]$selection.taskId; $route = [string]$selection.route; $digest = [string]$selection.taskCardDigest }
-        elseif ($Owner -ceq 'codex' -and [string]$selection.status -ceq 'no_candidate' -and [int]$selection.queueCount -eq 0 -and $null -eq $shown.state.runs.deepseek) { $taskId = 'QUEUE-MAINTENANCE'; $route = 'queue_maintenance'; $digest = Get-NormalizedTextDigest (Join-Path $script:root '开发管理\当前任务队列.txt') }
-        else { $final = [ordered]@{ status = 'no_candidate'; owner = $Owner; detailCode = 'no_runnable_candidate' } }
+        if ($null -ne $maintenanceAnswered) {
+          $taskId = 'QUEUE-MAINTENANCE'; $route = 'queue_maintenance'; $digest = Get-NormalizedTextDigest (Join-Path $script:root '开发管理\当前任务队列.txt')
+        } else {
+          $selection = Invoke-JsonTool $selectorPath @('-RepositoryRoot', $script:root, '-Owner', $Owner) 'hourly_selection_failed'
+          if ([string]$selection.status -ceq 'selected') { $taskId = [string]$selection.taskId; $route = [string]$selection.route; $digest = [string]$selection.taskCardDigest }
+          elseif ($Owner -ceq 'codex' -and [string]$selection.status -ceq 'no_candidate' -and [int]$selection.queueCount -eq 0 -and $null -eq $shown.state.runs.deepseek) { $taskId = 'QUEUE-MAINTENANCE'; $route = 'queue_maintenance'; $digest = Get-NormalizedTextDigest (Join-Path $script:root '开发管理\当前任务队列.txt') }
+          else { $final = [ordered]@{ status = 'no_candidate'; owner = $Owner; detailCode = 'no_runnable_candidate' } }
+        }
       }
       if ($null -eq $final) {
         $script:stage = 'claim'
@@ -966,12 +1268,25 @@ try {
       if ($null -eq $final) {
         $script:stage = 'candidate_worktree'
         $null = New-CandidateWorktree $run
-        $resumeContext = Apply-CheckpointToNewRun -Run $run -Restored $restored
+        if ($null -ne $maintenanceAnswered -and [string]$maintenanceAnswered.replyContext.replyValue -ceq 'C') {
+          $directContext = [ordered]@{
+            schemaVersion = 1; kind = 'queue_maintenance'; taskId = [string]$maintenanceAnswered.taskId; decisionId = [string]$maintenanceAnswered.decisionId
+            optionKey = 'C'; source = [string]$maintenanceAnswered.replyContext.source; evidenceHash = [string]$maintenanceAnswered.replyContext.evidenceHash; resolvedAt = [DateTimeOffset]::Now.ToString('o'); preparedTaskDigest = [string]$maintenanceAnswered.replyContext.pendingTaskDigest
+          }
+          $outcome = Integrate-StateTransition -Run $run -Mode ResolveMaintenanceDecision -Context $directContext
+          $outcome.notification = 'skipped'
+          $outcome.cleanup = Remove-ExactSuccessfulWorktree -Run ([pscustomobject]@{ runId=$run.runId; worktree=$outcome.worktree; candidateBranch=$run.candidateBranch; canonicalBranch=$outcome.stateBranch }) -FormalHead ([string]$outcome.formalHead)
+          Complete-MaintenanceDecisionRecord -Answered $maintenanceAnswered -Outcome $outcome
+          $final = $outcome
+        }
+        $resumeContext = if ($null -ne $maintenanceAnswered) { [string]$maintenanceAnswered.acceptedPath } else { Apply-CheckpointToNewRun -Run $run -Restored $restored }
+      }
+      if ($null -eq $final) {
         $candidateArgs = Get-HourlyCandidateArguments -Adapter $script:adapter -Run $run -StateRoot $script:effectiveStateRoot -TimeoutSeconds $ResponsibilityTimeoutSeconds -ResumeContextPath $resumeContext
         $script:stage = 'candidate'
         $candidate = Invoke-JsonTool $script:adapter.candidateScript $candidateArgs 'hourly_candidate_failed'
         switch ([string]$candidate.status) {
-          'completed' {
+          { $_ -cin @('completed', 'maintenance_decision') } {
             $script:stage = 'candidate_evidence'
             Assert-CandidateEvidence -Run $run -Candidate $candidate
             $resultPath = Write-PrivateJson 'candidate-results' "$($run.runId).json" $candidate.candidateResult
@@ -979,12 +1294,21 @@ try {
             $run = $updated.run
             $script:stage = 'formal_integration'
             $outcome = Build-And-IntegrateCandidate $run
-            if ([string]$outcome.status -cin @('completed', 'maintenance_completed')) {
+            if ([string]$outcome.status -cin @('completed', 'maintenance_completed', 'decision_requested')) {
               $run.canonicalBranch = [string]$outcome.canonicalBranch
               $run.canonicalHead = [string]$outcome.formalHead
-              $outcome.notification = Invoke-BestEffortNotification -Run $run -Outcome $outcome
+              if ([string]$outcome.status -ceq 'decision_requested') {
+                $sent = Send-MaintenanceDecision $outcome
+                $outcome.notification = [string]$sent.wire
+                if (-not [bool]$sent.accepted) {
+                  $outcome.status = 'attention_required'; $outcome.detailCode = if ($null -ne $sent.record -and $sent.record.PSObject.Properties.Name -contains 'detailCode') { [string]$sent.record.detailCode } else { 'maintenance_decision_delivery_failed' }
+                }
+              } else {
+                $outcome.notification = Invoke-BestEffortNotification -Run $run -Outcome $outcome
+              }
               $outcome.cleanup = Remove-ExactSuccessfulWorktree -Run $run -FormalHead ([string]$outcome.formalHead)
               $outcome.checkpointCleanup = Remove-ConsumedCheckpointWorktree $restored
+              if ([string]$outcome.status -ceq 'maintenance_completed' -and $null -ne $maintenanceAnswered) { Complete-MaintenanceDecisionRecord -Answered $maintenanceAnswered -Outcome $outcome }
             }
             $final = $outcome
           }
@@ -1021,6 +1345,14 @@ try {
   $detail = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { "hourly_owner_$($script:stage)" }
   if ($null -ne $run) {
     try { Set-Attention $run "$($script:adapter.identity) responsibility ended with failed/$detail" } catch {}
+  }
+  if ($null -ne $maintenanceAnswered -and $maintenanceAnswered.PSObject.Properties.Name -contains 'contextPath') {
+    try {
+      $maintenanceRecord = Read-MaintenanceDecisionRecord ([string]$maintenanceAnswered.contextPath)
+      Set-MaintenanceDecisionRecordField $maintenanceRecord 'status' 'attention_required'
+      Set-MaintenanceDecisionRecordField $maintenanceRecord 'detailCode' $detail
+      $null = Write-MaintenanceDecisionRecord $maintenanceRecord
+    } catch {}
   }
   $final = [ordered]@{ status = 'failed'; owner = $Owner; detailCode = $detail }
 } finally {

@@ -435,6 +435,15 @@ try {
     $nonReadyFixture = New-Fixture $nonReadyRoot
     $nonReadyCard = Copy-Metadata $nonReadyFixture.Blocked
     $nonReadyCard.dispatchState = $nonReadyState
+    if ($nonReadyState -cin @('pending_decision', 'waiting_reply')) {
+      $nonReadyCard['automationCheckpoint'] = [ordered]@{
+        schemaVersion = 1; taskId = 'T-BLOCKED-01'; sourceRunId = 'run-fixture'; owner = 'codex'; route = 'codex_execute'
+        decisionId = 'DEC-20260814-FIXTURE'; question = 'fixture?'; options = @(@{ key = 'A'; label = 'A' }, @{ key = 'B'; label = 'B' }, @{ key = 'C'; label = 'C' })
+        recommendedOption = 'A'; impactSummary = 'fixture'; plainSummary = @{ situation = 'fixture'; impact = 'fixture'; action = 'fixture' }
+        checkpointCommit = ('a' * 40); baseCommit = ('b' * 40); branch = 'codex/automation/fixture'; changedPaths = @('fixture.txt')
+        verified = @('fixture'); unverified = @(); residualRisk = 'fixture'; taskContextDigest = ('c' * 64); createdAt = '2026-08-14T00:00:00Z'; queueIndex = 0
+      }
+    }
     Set-Card $nonReadyRoot $nonReadyCard
     Set-Backlog $nonReadyRoot @($nonReadyFixture.Ready, $nonReadyCard)
     $nonReadyPostcondition = Invoke-Checker $nonReadyRoot @(
