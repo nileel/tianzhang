@@ -1,7 +1,9 @@
 # Codex 小时自动化自暂停解耦设计
 
 > 日期：2026-08-14
-> 状态：方案 A 已获负责人批准，等待书面设计复核。
+> 状态：已退役。
+>
+> 退役说明：2026-08-15 起 Codex 小时触发器不再管理自身 automation 状态，本设计描述的独立短 cell 自暂停合同整体失效，由 `2026-08-15-codex-hourly-thin-trigger-and-queue-maintenance-result-fix-design.md` 取代；旧实现细节仅由 Git 历史留档。
 
 ## 一、问题与证据
 

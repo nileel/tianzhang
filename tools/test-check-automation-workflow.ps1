@@ -27,18 +27,19 @@ try {
     'tzg-daily-automation-briefing' = [IO.File]::ReadAllText((Join-Path $repositoryRoot '开发管理/自动化简报提示词.txt'))
     'tzg-weekly-project-summary' = [IO.File]::ReadAllText((Join-Path $repositoryRoot '开发管理/每周项目总结提示词.txt'))
   }
+  $rules = [IO.File]::ReadAllText((Join-Path $repositoryRoot '开发管理/自动工作流规则.txt'))
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.mcp__node_repl__js' -and $prompts['codex-hourly-worker'] -match 'codex_model_metadata_invalid') 'Canonical Codex prompt is missing the request metadata channel'
-  Assert-True ($prompts['codex-hourly-worker'] -match 'shouldSelfPause' -and $prompts['codex-hourly-worker'] -match 'tools\.codex_app__automation_update' -and $prompts['codex-hourly-worker'] -match "terminal\.cleanup === 'cleaned'") 'Canonical Codex prompt is missing the exact empty-queue self-pause contract'
+  Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.exec_command' -and $prompts['codex-hourly-worker'] -match 'tools\.write_stdin' -and $prompts['codex-hourly-worker'] -match 'yield_time_ms: 60000') 'Canonical Codex prompt is missing the exec_command/write_stdin polling contract'
+  Assert-True ($prompts['codex-hourly-worker'] -match 'Script running with cell ID' -and $prompts['codex-hourly-worker'] -match '同一 cell 调用 `wait`') 'Canonical Codex prompt is missing the outer functions.exec wait contract'
+  Assert-True ($prompts['codex-hourly-worker'] -match '不读取队列或任务卡' -and $prompts['codex-hourly-worker'] -match 'Desktop automation memory' -and $prompts['codex-hourly-worker'] -match '恰好一个简短 `::inbox-item`' -and $prompts['codex-hourly-worker'] -match 'memory 不得改变固定命令') 'Canonical Codex prompt is missing the thin-trigger soft contract'
   $codexCodeBlocks = @([regex]::Matches($prompts['codex-hourly-worker'], '(?s)```js\r?\n(?<body>.*?)\r?\n\s*```'))
-  Assert-True ($codexCodeBlocks.Count -eq 2) 'Canonical Codex prompt must contain exactly one long entry cell and one short self-pause cell'
+  Assert-True ($codexCodeBlocks.Count -eq 1) 'Canonical Codex prompt must contain exactly one shared-entry cell'
   $longEntryCell = $codexCodeBlocks[0].Groups['body'].Value
-  $shortPauseCell = $codexCodeBlocks[1].Groups['body'].Value
-  Assert-True ($longEntryCell -match 'invoke-hourly-owner\.ps1' -and $longEntryCell -match 'shouldSelfPause') 'Long Codex entry cell is missing its fixed shared-entry contract'
-  Assert-True ($longEntryCell -notmatch 'codex_app__automation_update|automation\.toml') 'Long Codex entry cell still embeds automation management'
-  Assert-True ($shortPauseCell -match 'tools\.codex_app__automation_update' -and $shortPauseCell -match "status: 'PAUSED'" -and $shortPauseCell -match 'promptLength' -and $shortPauseCell -match 'promptSha256' -and $shortPauseCell -match 'const updated = parseSnapshot') 'Short Codex self-pause cell is missing deterministic update, readback, or prompt-integrity proof'
-  Assert-True ($shortPauseCell -match 'codex_automation_config_invalid' -and $shortPauseCell -match 'codex_self_pause_failed' -and $shortPauseCell -match 'codex_self_pause_config_mismatch') 'Short Codex self-pause cell is missing stable failure codes'
-  Assert-True ($shortPauseCell -notmatch "current\.status\s*!==\s*'PAUSED'") 'Short Codex self-pause cell skips the real management call while already paused'
-  Assert-True ($shortPauseCell -notmatch 'invoke-hourly-owner\.ps1') 'Short Codex self-pause cell must not invoke the shared entry'
+  Assert-True ($longEntryCell -match 'invoke-hourly-owner\.ps1' -and $longEntryCell -match 'tools\.exec_command' -and $longEntryCell -match 'tools\.write_stdin') 'Long Codex entry cell is missing its fixed shared-entry contract'
+  Assert-True ($rules -notmatch '短命配置 cell|自暂停') 'Workflow rules still authorize Codex trigger self-pause'
+  foreach ($retiredToken in @('shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', "terminal.status === 'no_candidate'", "terminal.owner === 'codex'", "terminal.taskId === 'QUEUE-MAINTENANCE'", "terminal.detailCode === 'no_runnable_candidate'", "terminal.cleanup === 'cleaned'", 'tools.codex_app__automation_update', "status: 'PAUSED'", 'automation.toml')) {
+    Assert-True (-not $prompts['codex-hourly-worker'].Contains($retiredToken)) "Canonical Codex prompt still contains retired token: $retiredToken"
+  }
   foreach ($entry in $prompts.GetEnumerator()) { Write-Automation -Id $entry.Key -Status 'PAUSED' -Prompt $entry.Value }
   $paused = Invoke-Checker
   Assert-True ($paused.ExitCode -eq 0 -and $paused.Text -match 'check-automation-workflow: OK') "Paused contract failed: $($paused.Text)"

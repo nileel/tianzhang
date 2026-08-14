@@ -4,6 +4,8 @@
 状态：负责人已确认设计方向，已按 DeepSeek 复审修订，待书面复核
 范围：Codex QueueMaintenance、任务状态投影、飞书决策桥与空队列自暂停边界
 
+2026-08-15 联动说明：第 8 节原有的 Codex 空队列自暂停合同已退役；本设计的维护型决策创建、等待、TTL、回复、并发与终态合同继续有效。
+
 ## 1. 背景与根因
 
 `U-URP-VISUAL-BASELINE-01` 在前置 `U-URP-MIGRATE-01` 完成后，由 QueueMaintenance 移除了最后一个具名前置。维护轮次随后确认唯一剩余条件是负责人在 Universal Renderer 与 2D Renderer 替代表现之间作出选择，但任务仍被记录为普通 `blocked`。
@@ -188,15 +190,14 @@ A／B 回复只负责解除决策 blocker。实际业务由后续新建的 `code
 - 如果任务卡摘要或生命周期已经变化，禁止自动覆盖公开事实；只把私有记录标为 `attention_required` 并返回一次 `maintenance_decision_task_context_changed`，后续轮次跳过该非 awaiting 记录，交由人工依据新事实处置。
 - 任何 attention／expired 记录均不再自动检查、不重复报告、不重新发送旧卡；不得自动改写选项或创建兼容回复路径。
 
-## 8. 选择、自暂停与并发边界
+## 8. 选择、触发层退役说明与并发边界
 
 - QueueMaintenance 仍只属于 Codex；DeepSeek 不读取、发送或消费维护型决策。
 - ready 队列非空时按既有固定队列正常选题，RunOnce 前置层跳过维护型回复检查，不抢占 ready 业务任务。
 - ready 队列为空时，RunOnce 前置层先检查维护型决策：无回复直接返回 waiting_decision；有合法回复才强制后续选择／claim QueueMaintenance；不存在 awaiting 决策时才进入普通选择器。
-- `decision_requested`、`waiting_decision` 和维护型 `attention_required` 均不得触发空队列自暂停。
-- 只有不存在 ready 任务、不存在待处理维护型决策、没有活动 owner run，且 QueueMaintenance 返回既有精确 `no_candidate/no_runnable_candidate/cleaned` 终态时，Codex 才能自暂停。
+- `decision_requested`、`waiting_decision`、维护型 `attention_required` 与普通 `no_candidate` 均是合法共享入口终态，Codex 薄触发器只做语法解析和原样透传。
+- 2026-08-15 起薄触发器不再根据任何空队列终态读取或修改自身 automation 配置；原自暂停条件与短 cell 合同只保留在 Git 历史中。
 - 每次状态写入继续使用 schema 5 owner run、owner worktree、最新 `master` 重放、同一进程持有型集成锁和精确清理合同。
-- 姊妹设计 `docs/superpowers/specs/2026-08-14-codex-hourly-self-pause-decoupling-design.md` 第 4.1 节的主 `functions.exec` 必须把 `decision_requested`、`waiting_decision`、带决策字段的 `maintenance_completed` 和维护型 `attention_required` 当作可解析的共享入口 JSON 原样透传；它们的 `shouldSelfPause` 必须为 false。只有 JSON 语法／shell 输出解析失败才走解析失败停止，不得用 status allowlist 拒绝这些新终态。
 
 ## 9. 幂等与失败边界
 

@@ -445,7 +445,9 @@ function Build-And-IntegrateCandidate {
     $closed = Invoke-Runtime -RuntimeAction CompleteRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; CompletionCategory = 'success'; DetailCode = "commit_$($formalHead.Substring(0, 12))" }
     $resultStatus = if ([string]$Run.candidateResult.expectedTransition -ceq 'maintenance_pending_decision') { 'decision_requested' } elseif ([string]$Run.route -ceq 'queue_maintenance') { 'maintenance_completed' } else { 'completed' }
     $result = [ordered]@{ status = $resultStatus; category = 'success'; taskId = $Run.taskId; runId = $Run.runId; formalHead = $formalHead; canonicalBranch = $canonicalBranch; detailCode = if ($resultStatus -ceq 'decision_requested') { 'maintenance_decision_requested' } else { $closed.detailCode } }
-    if ($resultStatus -cin @('decision_requested', 'maintenance_completed') -and -not [string]::IsNullOrWhiteSpace([string]$Run.candidateResult.decisionId)) {
+    if ($resultStatus -cin @('decision_requested', 'maintenance_completed') -and
+      $Run.candidateResult.PSObject.Properties.Name -contains 'decisionId' -and
+      -not [string]::IsNullOrWhiteSpace([string]$Run.candidateResult.decisionId)) {
       $result.decisionTaskId = [string]$Run.candidateResult.decisionTaskId; $result.decisionId = [string]$Run.candidateResult.decisionId
       if ($Run.candidateResult.PSObject.Properties.Name -contains 'resolutionState') { $result.resolutionState = [string]$Run.candidateResult.resolutionState }
     }
