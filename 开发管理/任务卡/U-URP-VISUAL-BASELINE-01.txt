@@ -8,16 +8,55 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "URP 迁移已归档；当前唯一 Renderer2D 无法承载批准的 3D Mesh、标准 3D 灯光与阴影技术基线，需负责人明确允许改用 Universal Renderer，或批准仅使用 2D Renderer 可渲染的替代表现后才可冻结路径。",
+  "stateReason": "等待负责人决定：U-URP-VISUAL-BASELINE-01 应采用哪条渲染路线？",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-URP-VISUAL-BASELINE-01.txt",
     "开发管理/任务归档/U-URP-VISUAL-BASELINE-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationDecision": {
+    "schemaVersion": 1,
+    "kind": "queue_maintenance",
+    "status": "awaiting_reply",
+    "decisionId": "DEC-20260814-QM57A9A575FD7E",
+    "taskId": "U-URP-VISUAL-BASELINE-01",
+    "sourceRunId": "migration-20260814-u-urp-visual",
+    "question": "U-URP-VISUAL-BASELINE-01 应采用哪条渲染路线？",
+    "options": [
+      {
+        "key": "A",
+        "label": "改用 Universal Renderer，采用 3D Mesh、标准 3D 灯光与阴影基线",
+        "targetState": "ready"
+      },
+      {
+        "key": "B",
+        "label": "保持 Renderer2D，仅采用 2D Renderer 可渲染的替代表现",
+        "targetState": "ready"
+      },
+      {
+        "key": "C",
+        "label": "暂不批准任一路线，保持阻塞",
+        "targetState": "blocked"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 与已批准的低模 3D 六角、标准 3D 灯光和阴影技术基线一致；B 会把表现限制为 Renderer2D 可渲染替代方案；C 保持阻塞。",
+    "plainSummary": {
+      "situation": "当前项目只绑定了 Renderer2D，但已批准的视觉基线需要标准 3D 灯光与阴影。",
+      "impact": "选择 A 或 B 后会把任务准备为 ready，C 则继续阻塞。",
+      "action": "请在飞书卡片选择 A、B 或 C。"
+    },
+    "allowCustomReply": false,
+    "sourceCommit": "324ae48a12ac44873b11a2238a433b930c1bb05b",
+    "sourceTaskDigest": "370641627686cfe7a6806ce2f2178bf09a194684c0609a45f30d70be17327a76",
+    "taskContextDigest": "233bb04a1338914ad2be03dd30afacfc9033b38d2576969926f6a48b11086893",
+    "queueIndex": 0,
+    "createdAt": "2026-08-14T12:24:05.3733344+08:00"
+  }
 }
 ---TASK-BODY---
 # U-URP-VISUAL-BASELINE-01 · URP 正式薄切片视觉基础重建
