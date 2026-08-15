@@ -7,7 +7,7 @@
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
-- `A-CHAR-BLENDER-SETUP-01` 已于 2026-08-15 完成并归档：Blender 5.2.0 LTS 的官方便携包、factory startup、Python API 和 FBX 往返已验证。其直接下游 `A-CHAR-HUMANOID-RIG-01` 已移除该具名前置并补齐资产与验收路径，但全部业务产物位于 Git 忽略的 `assets/source/`，现行 linked-worktree 成功清理会删除未集成原始资产；在原始资产持久化与编辑所有权边界获批前保持阻塞，仍不得向 Unity 正式路径接入评估资产。
+- `A-CHAR-BLENDER-SETUP-01` 已于 2026-08-15 完成并归档。用户随后批准当前手动 `A-CHAR-HUMANOID-RIG-01` 直接拥有主工作区 `assets/source/characters/humanoid-evaluation/`，原始资产持久化边界已解决；39 骨骨架、两套校准体、三条动作、四个 FBX、Blender／Unity 证据与固定帧接触表均已完成并通过。当前只等待用户确认把已校验的 8 文件备份包上传到既有百度网盘 `天章相关资源备份` 目录，确认前保持阻塞；未向 Unity 正式路径接入评估资产。
 
 ## 任务
 

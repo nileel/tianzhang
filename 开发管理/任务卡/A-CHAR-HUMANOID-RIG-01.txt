@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-15：A-CHAR-BLENDER-SETUP-01 已完成归档，资产与验收路径已展开；但全部业务产物位于 Git 忽略的 assets/source/，当前自动与纯 1 执行必须在成功后清理的 linked worktree 内完成，尚无获批的原始资产持久化与编辑所有权边界。为避免只合入管理提交却删除源资产，保持 blocked。",
+  "stateReason": "2026-08-15：用户已批准当前手动任务直接拥有并写入主工作区 assets/source/characters/humanoid-evaluation/，原始资产持久化边界已解决；Blender 源检查、四个 FBX 回读、Unity Humanoid 与固定帧视觉检查均已通过。本地备份包已生成并校验，当前只等待用户确认把该项目文件上传到既有百度网盘“天章相关资源备份”目录，确认前保持 blocked。",
   "expectedPaths": [
     "assets/source/characters/humanoid-evaluation/TZ_HumanoidEval_v001.blend",
     "assets/source/characters/humanoid-evaluation/exports/TZ_HumanoidEval_Rig_v001.fbx",
@@ -35,7 +35,10 @@
 - 来自已批准的美术生产主线和统一 Humanoid 评估骨架设计；为 Meshy／Tripo 公平 A/B 提供唯一项目骨架基线，不生产玩家完整人形。
 - `A-CHAR-BLENDER-SETUP-01` 已于 2026-08-15 完成：固定使用 `D:\Tools\Blender\5.2.0\blender.exe`，factory startup、Python API、源工程保存和 FBX 往返均已验证，本卡不重复安装或切换 Blender。
 - 该结果只服务一次性平台评估；不是正式角色骨架、Avatar、Animator、动作风格或模块化角色资源。
-- 当前 remaining blocker 不是 Blender 或内容设计，而是写入所有权：业务产物固定在被 Git 忽略的 `assets/source/`，自动与纯 `1` 路线又只能写 run／任务 linked worktree。成功清理 worktree 前必须先有获批方式把本地原始工程稳定保留在项目主 `assets/source/`，且不得靠强制加入 Git、提前导入 `src/Assets/` 或把异地备份当作工作副本来绕过。
+- 2026-08-15 用户明确要求解决原始资产保存边界；本轮是非纯 `1` 的手动任务，在两个活动 run 与集成锁均为空时，由当前对话直接拥有主工作区 `assets/source/characters/humanoid-evaluation/`。该本地原始工程不是 linked-worktree 临时产物，不强制加入 Git，也未进入 `src/Assets/`。
+- 39 骨 Armature、两套校准体、三条 Action、Rig FBX 与三个独立动作 FBX 已完成；Blender 5.2.0 LTS 源检查和四个 FBX factory-startup 回读均为 PASS。
+- Unity 6000.3.18f1 一次性临时项目已证明 Avatar 有效且为 Humanoid、22 项项目映射、16 根 `Sec_` Transform、同一 Avatar、三条 Human Motion、身高／原点／本地 `+Z` 正面和男女共根；接触表对男女的 Idle／Move／Attack 几何变化分别设阈值并全部通过。证据复制回源目录后，临时 Unity 项目、日志和临时 Blender 构建脚本已删除，正式 `src/` 零写入。
+- 本地备份包 `D:\Temp\TianZhang-Backups\2026-08-15_working_A-CHAR-HUMANOID-RIG-01.zip` 含 8 个最小交付文件，大小 `817157` 字节，SHA-256 `58975315895fe0b3f2df5804c01f488a8256f48fe1a83275a92b73e4dd4d0c0d`。Chrome 已登录并定位到既有百度网盘 `天章相关资源备份` 目录；上传属于向第三方传输本地项目文件，当前只等待用户在动作发生前确认。
 
 ## 必查范围
 
