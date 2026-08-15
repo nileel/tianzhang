@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BLENDER-SETUP-01",
+  "title": "Blender 工作站环境",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-15：Blender 5.2.0 LTS 官方 Windows x64 便携包已按冻结 SHA-256 校验并安装到 D:\\Tools\\Blender\\5.2.0；factory startup、Python API、源工程保存、FBX 导出／回导、材质槽与三角面统计均通过，未触碰 Unity 正式路径。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt",
+    "开发管理/任务归档/A-CHAR-BLENDER-SETUP-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BLENDER-SETUP-01 · Blender 工作站环境
+
+## 来源与当前边界
+
+- 来自已批准美术主线；只建立最小本机 Blender 环境，不生产角色资源。
+- 固定使用 Blender 5.2.0 LTS Windows x64 官方便携正式版，不使用管理员权限、系统 MSI、第三方镜像或插件。
+- 安装与验证均位于批准的仓库外路径；未创建 `assets/source/characters/`，未修改 `src/Assets/`。
+
+## 必查范围
+
+- 美术主线设计 §3.1、AI 3D 平台评估设计的工具要求、`assets/generated-character-art/README.md` 与本机现有软件事实。
+
+## 实施范围
+
+- 选择并安装兼容正式版本，记录版本与可执行路径；验证启动、源工程保存、FBX 导入／导出、材质槽查看和三角面统计。
+
+## 禁止项
+
+- 不预装自动修模、平台桥接、批处理或第三方重拓扑插件；不建立骨架、不消费正式生成槽位、不接入 Unity。
+
+## 完成结果（2026-08-15）
+
+- 来源：`https://download.blender.org/release/Blender5.2/blender-5.2.0-windows-x64.zip`。
+- 下载包 SHA-256：`2d184b626c001692c362291911293b6a297179d618d95e9e9192c3a80318adc4`，与 Ready 输入冻结值一致。
+- 版本：`Blender 5.2.0 LTS`，build hash `fbe6228777e7`。
+- 可执行文件：`D:\Tools\Blender\5.2.0\blender.exe`；随包许可说明位于 `D:\Tools\Blender\5.2.0\copyright.txt`。
+- 临时验证目录：`D:\Temp\TianZhang-Blender\A-CHAR-BLENDER-SETUP-01`，只含下载包和可清理的验证产物。
+
+## 验证
+
+1. `blender.exe --background --factory-startup --version`：通过，返回 Blender 5.2.0 LTS。
+2. factory-startup Python API 探针：`bpy.app.version_string=5.2.0 LTS`，FBX 导出与导入操作标识分别为 `EXPORT_SCENE_OT_fbx`、`IMPORT_SCENE_OT_fbx`。
+3. 在临时目录新建带一个材质槽的立方体，保存 `roundtrip-source.blend`，导出 `roundtrip-cube.fbx`，删除场景对象后重新导入并保存 `roundtrip-reimport.blend`：全部成功。
+4. 源模型与回导模型均统计为 12 个三角面；回导模型保留 1 个材质槽，材质为 `RoundTripMaterial.001`。
+5. 验证产物 SHA-256：源 `.blend` 为 `f0bdc170467e9e15433dce2a7d1d92ccc8b4950339f96631728d96559f01f5a5`，FBX 为 `59814eafd110e4c4f75cc3f5bb264201f50744200c464da871c240f000247d77`，回导 `.blend` 为 `ff85257e80985cbe4a7b7005628ae95718a29fa7e569acb9335b9397ed338aba`。
+
+## 完成条件
+
+- Blender 可按批准流程稳定启动、保存、导入、导出和检查模型，版本与路径可复现；本次验证已满足。
+
+## 停止条件
+
+- 需要未批准插件、额外自动修补层、无法确认授权或必须修改 Unity 正式路径时停止；本次未命中。
+
+## 未实施内容
+
+- 未安装自动修模、平台桥接、批处理、Rigify 或第三方重拓扑插件。
+- 未建立骨架、未生成角色、未消费平台正式生成槽位、未接入 Unity。
