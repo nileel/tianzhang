@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-15：U-URP-VISUAL-BASELINE-01 已以 completed 归档；实时扫描确认旧 Hybrid 原型已由 U-ARCH-REBUILD-01H 删除，现行 AdventureScene 的 VisualBaselineBoard、UnitMarker 与固定正交相机可作为唯一有界测试台，路径和验证已冻结。",
+  "stateReason": "2026-08-15：Codex 已在现行 AdventureScene 的有界 VisualBaselineBoard 建立六向几何占位测试台；Builder、场景验证、413/413 EditMode 与程序集边界检查通过，未改运行时战斗、空间或角色状态。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -67,3 +67,9 @@
 
 - 需要复制战斗运行时、修改 Spatial／Facing 规则、恢复旧原型、建立第二场景／状态所有者、提前导入正式模型，或为任一角色／场景增加私有朝向偏移时停止。
 - 必须扩大到未列 `expectedPaths` 的程序集、Feature、数据、Prefab、模型、材质、相机、URP 或规则所有者时停止；不得用兼容分支或静态默认值掩盖方向不一致。
+
+## 完成记录
+
+- 2026-08-15：`VisualBaselineBoard` 现有九格矩阵的非方向格调整为 `(q=1,r=-1)`，中心格及 `HexCoord.Directions` 的六个规则邻格均有已知地面。`FacingProbe_0` 至 `FacingProbe_5` 只实例化既有 `UnitMarker`，按对应地块高度定位，Y 旋转固定为 `90/150/210/270/330/30` 度。
+- `SceneArchitectureValidator` 与 `VisualBaselineEditorTests` 同时锁定九格高度、六个唯一 Probe、邻格中心、本地 `+Z` 正面、3D 阴影和独立透明反馈层。Unity Builder 重建与场景验证退出码为 0；`dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 为 0 errors；Unity EditMode 为 `413/413`；程序集边界检查通过。
+- 本自动化候选未执行负责人固定 `1920x1080` Game View 人工复核；该复核只补充表现观察，不替代已通过的规则与场景断言。

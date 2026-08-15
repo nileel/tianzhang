@@ -16,6 +16,18 @@ namespace TianZhang.Editor
 {
     public static class SceneArchitectureValidator
     {
+        private static readonly int[,] VisualBaselineCells =
+        {
+            { -2, 0, 0 }, { -1, 0, 1 }, { 0, 0, 2 }, { 1, 0, 1 }, { 2, 0, 0 },
+            { -1, 1, 0 }, { 0, 1, 1 }, { 1, -1, 0 }, { 0, -1, 0 },
+        };
+
+        private static readonly int[,] FacingProbeExpectations =
+        {
+            { 1, 0, 1, 90 }, { 1, -1, 0, 150 }, { 0, -1, 0, 210 },
+            { -1, 0, 1, 270 }, { -1, 1, 0, 330 }, { 0, 1, 1, 30 },
+        };
+
         [MenuItem("天章/场景/验证正式场景")]
         public static void Validate()
         {
@@ -173,10 +185,53 @@ namespace TianZhang.Editor
             Require(board.GetComponentsInChildren<MeshRenderer>(true)
                         .Count(item => item.name.StartsWith("VisualHex_", StringComparison.Ordinal)) == 9,
                 "AdventureScene must contain the bounded nine-cell technical matrix.");
+            for (int index = 0; index < VisualBaselineCells.GetLength(0); index++)
+                ValidateVisualBaselineCell(board.transform, VisualBaselineCells[index, 0], VisualBaselineCells[index, 1],
+                    VisualBaselineCells[index, 2]);
+            for (int index = 0; index < FacingProbeExpectations.GetLength(0); index++)
+                ValidateFacingProbe(board.transform, index, FacingProbeExpectations[index, 0],
+                    FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
+                    FacingProbeExpectations[index, 3]);
             foreach (string name in new[]
                      { "SurfaceOverlay", "ReachableOverlay", "SelectedOverlay", "AttackOverlay", "VisualBaselineOccluder" })
                 Require(FindNamed(scene, name) != null, "AdventureScene is missing visual layer: " + name);
         }
+
+        private static void ValidateVisualBaselineCell(Transform board, int q, int r, int heightLevel)
+        {
+            Transform cell = board.Find("VisualHex_" + q + "_" + r + "_Height_" + heightLevel);
+            Require(cell != null,
+                "AdventureScene is missing visual baseline cell: (" + q + "," + r + ") height " + heightLevel + ".");
+            Require(Vector3.Distance(cell.localPosition, HexToVisualPosition(q, r, 0f)) < 0.001f,
+                "Visual baseline cell is not at its frozen hex center.");
+            Require(Mathf.Abs(cell.localScale.y - HeightForLevel(heightLevel)) < 0.001f,
+                "Visual baseline cell does not reflect its height level.");
+        }
+
+        private static void ValidateFacingProbe(Transform board, int direction, int q, int r, int heightLevel, int yaw)
+        {
+            Transform probe = board.Find("FacingProbe_" + direction);
+            Require(probe != null,
+                "AdventureScene is missing facing probe for direction " + direction + ".");
+            Vector3 expectedPosition = HexToVisualPosition(q, r, HeightForLevel(heightLevel));
+            Require(Vector3.Distance(probe.localPosition, expectedPosition) < 0.001f,
+                "Facing probe is not centered on its rule neighbor.");
+            Require(Quaternion.Angle(probe.localRotation, Quaternion.Euler(0f, yaw, 0f)) < 0.01f,
+                "Facing probe does not use the frozen facing yaw.");
+            Vector3 expectedForward = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f).normalized;
+            Require(Vector3.Angle(probe.localRotation * Vector3.forward, expectedForward) < 0.01f,
+                "Facing probe local +Z does not point at its rule neighbor.");
+            MeshRenderer[] renderers = probe.GetComponentsInChildren<MeshRenderer>(true);
+            Require(renderers.Length >= 2, "Facing probe must instantiate the 3D UnitMarker.");
+            foreach (MeshRenderer renderer in renderers)
+                Require(renderer.shadowCastingMode == ShadowCastingMode.On && renderer.receiveShadows,
+                    "Facing probe meshes must cast and receive 3D shadows.");
+        }
+
+        private static float HeightForLevel(int heightLevel) => 0.34f + heightLevel * 0.28f;
+
+        private static Vector3 HexToVisualPosition(int q, int r, float y) =>
+            new Vector3(q + r * 0.5f, y, r * 0.8660254f + 1f);
 
         private static T[] FindComponents<T>(Scene scene) where T : Component =>
             scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<T>(true)).ToArray();

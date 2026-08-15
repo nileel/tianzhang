@@ -6,6 +6,7 @@ using TianZhang.Content;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CombatPresentation;
 using TianZhang.Infrastructure.UnityContent;
+using TianZhang.Spatial;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -15,6 +16,8 @@ namespace TianZhang.Editor
 {
     public static class AdventureSceneBuilder
     {
+        private static readonly float[] FacingProbeYaws = { 90f, 150f, 210f, 270f, 330f, 30f };
+
         [MenuItem("天章/场景/重建冒险")]
         public static void Build()
         {
@@ -138,7 +141,7 @@ namespace TianZhang.Editor
             int[,] cells =
             {
                 { -2, 0, 0 }, { -1, 0, 1 }, { 0, 0, 2 }, { 1, 0, 1 }, { 2, 0, 0 },
-                { -1, 1, 0 }, { 0, 1, 1 }, { 1, 1, 0 }, { 0, -1, 0 },
+                { -1, 1, 0 }, { 0, 1, 1 }, { 1, -1, 0 }, { 0, -1, 0 },
             };
             for (int index = 0; index < cells.GetLength(0); index++)
             {
@@ -159,6 +162,8 @@ namespace TianZhang.Editor
                 renderer.shadowCastingMode = ShadowCastingMode.On;
                 renderer.receiveShadows = true;
             }
+
+            CreateFacingProbes(board.transform, cells);
 
             CreateOverlay(board.transform, overlayMesh, -2, 0, 0, "SurfaceOverlay",
                 VisualBaselineBuilder.SurfaceMaterialPath, 10, 0.012f);
@@ -182,6 +187,29 @@ namespace TianZhang.Editor
                 SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
             occluderRenderer.shadowCastingMode = ShadowCastingMode.On;
             occluderRenderer.receiveShadows = true;
+        }
+
+        private static void CreateFacingProbes(Transform parent, int[,] cells)
+        {
+            GameObject markerPrefab = SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.UnitMarkerPrefabPath);
+            for (int direction = 0; direction < FacingProbeYaws.Length; direction++)
+            {
+                HexCoord neighbor = HexCoord.Directions[direction];
+                int heightLevel = FindCellHeight(cells, neighbor.q, neighbor.r);
+                GameObject probe = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab);
+                probe.name = "FacingProbe_" + direction;
+                probe.transform.SetParent(parent, false);
+                probe.transform.localPosition = HexToWorld(neighbor.q, neighbor.r, HeightForLevel(heightLevel));
+                probe.transform.localRotation = Quaternion.Euler(0f, FacingProbeYaws[direction], 0f);
+            }
+        }
+
+        private static int FindCellHeight(int[,] cells, int q, int r)
+        {
+            for (int index = 0; index < cells.GetLength(0); index++)
+                if (cells[index, 0] == q && cells[index, 1] == r)
+                    return cells[index, 2];
+            throw new InvalidOperationException("Facing probe is missing a visual baseline cell.");
         }
 
         private static void CreateOverlay(
