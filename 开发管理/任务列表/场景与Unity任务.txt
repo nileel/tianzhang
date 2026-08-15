@@ -13,7 +13,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
-| A-CHAR-BLENDER-SETUP-01 | P1 | codex | 阻塞 | — | Blender 工作站环境 | 开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt |
+| A-CHAR-BLENDER-SETUP-01 | P1 | codex | 已排队 | — | Blender 工作站环境 | 开发管理/任务卡/A-CHAR-BLENDER-SETUP-01.txt |
 | A-CHAR-HUMANOID-RIG-01 | P1 | codex | 阻塞 | A-CHAR-BLENDER-SETUP-01 | 项目统一评估骨架与三条动作 | 开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt |
 | A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-HUMANOID-RIG-01 | Meshy／Tripo 3D 一次性选型 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
