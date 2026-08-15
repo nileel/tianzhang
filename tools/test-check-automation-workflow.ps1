@@ -40,6 +40,17 @@ try {
   foreach ($retiredToken in @('shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', "terminal.status === 'no_candidate'", "terminal.owner === 'codex'", "terminal.taskId === 'QUEUE-MAINTENANCE'", "terminal.detailCode === 'no_runnable_candidate'", "terminal.cleanup === 'cleaned'", 'tools.codex_app__automation_update', "status: 'PAUSED'", 'automation.toml')) {
     Assert-True (-not $prompts['codex-hourly-worker'].Contains($retiredToken)) "Canonical Codex prompt still contains retired token: $retiredToken"
   }
+  Assert-True ($prompts['deepseek-hourly-trigger'] -match 'tools\.exec_command' -and $prompts['deepseek-hourly-trigger'] -match 'tools\.write_stdin' -and $prompts['deepseek-hourly-trigger'] -match 'yield_time_ms: 60000') 'Canonical DeepSeek prompt is missing the exec_command/write_stdin polling contract'
+  Assert-True ($prompts['deepseek-hourly-trigger'] -match 'Script running with cell ID' -and $prompts['deepseek-hourly-trigger'] -match '同一 cell 调用 `wait`') 'Canonical DeepSeek prompt is missing the outer functions.exec wait contract'
+  Assert-True ($prompts['deepseek-hourly-trigger'] -match 'deepseek_exec_session_invalid' -and $prompts['deepseek-hourly-trigger'] -match 'deepseek_shared_entrypoint_failed' -and $prompts['deepseek-hourly-trigger'] -match 'deepseek_terminal_json_invalid') 'Canonical DeepSeek prompt is missing stable trigger errors'
+  Assert-True ($prompts['deepseek-hourly-trigger'] -match '不读取队列、任务卡或业务事实' -and $prompts['deepseek-hourly-trigger'] -match 'Desktop automation memory' -and $prompts['deepseek-hourly-trigger'] -match '恰好一个简短 `::inbox-item`' -and $prompts['deepseek-hourly-trigger'] -match 'memory 不得改变固定命令') 'Canonical DeepSeek prompt is missing the thin-trigger soft contract'
+  $deepseekCodeBlocks = @([regex]::Matches($prompts['deepseek-hourly-trigger'], '(?s)```js\r?\n(?<body>.*?)\r?\n\s*```'))
+  Assert-True ($deepseekCodeBlocks.Count -eq 1) 'Canonical DeepSeek prompt must contain exactly one shared-entry cell'
+  $deepseekEntryCell = $deepseekCodeBlocks[0].Groups['body'].Value
+  Assert-True ($deepseekEntryCell -match 'invoke-hourly-owner\.ps1' -and $deepseekEntryCell -match 'tools\.exec_command' -and $deepseekEntryCell -match 'tools\.write_stdin' -and $deepseekEntryCell -match 'JSON\.parse\(terminalText\)') 'DeepSeek entry cell is missing its fixed shared-entry contract'
+  foreach ($retiredToken in @('shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', 'tools.codex_app__automation_update', 'automation.toml')) {
+    Assert-True (-not $prompts['deepseek-hourly-trigger'].Contains($retiredToken)) "Canonical DeepSeek prompt still contains retired token: $retiredToken"
+  }
   foreach ($entry in $prompts.GetEnumerator()) { Write-Automation -Id $entry.Key -Status 'PAUSED' -Prompt $entry.Value }
   $paused = Invoke-Checker
   Assert-True ($paused.ExitCode -eq 0 -and $paused.Text -match 'check-automation-workflow: OK') "Paused contract failed: $($paused.Text)"

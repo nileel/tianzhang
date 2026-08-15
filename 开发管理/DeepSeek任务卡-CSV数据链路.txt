@@ -1,34 +1,5 @@
-# DeepSeek任务卡：CSV数据链路（✅ 已审核）
+# DeepSeek 任务模板：CSV 数据链路（已退役）
 
-> 2026-06-17 Codex / ChatGPT5.5 复审通过：由 `DeepSeek工作提示词.txt` 拆分。依据：40d5887。
+本文件不再是活动执行规则。历史引用仍可定位本页，但不得从本页推导必读范围、字段、验证、主责或提交合同。
 
-## 适用范围
-
-CSV、Language 文本 ID、docs→CSV→Unity asset 对齐清单、机械统计和导入前检查。
-
-## 必读
-
-- `AGENTS.md`
-- `开发管理/审核入口.txt`
-- `开发管理/docs-csv-asset-alignment.txt`
-- `src/Assets/DataConfig/README.txt`
-- 相关 CSV 文件
-- 若任务来自未通过审核清单，读取 `开发管理/未通过审核清单.txt` 对应编号
-
-## 必查项
-
-1. docs 内容文件数，排除模板文件。
-2. CSV 非注释数据行数。
-3. CSV ID 唯一性。
-4. `Language.csv` 缺失 key。
-5. `Language.csv` 重复 key。
-6. CSV → Unity asset 覆盖率；必须按 CSV ID 推导期望 asset 文件名，区分有效覆盖与旧版/额外 asset。
-7. 多余/旧版 asset。
-
-## 执行要求
-
-1. 不要只统计 `DataConfig` 目录；Unity `.asset` 生成目标在 `src/Assets/Data/` 下。
-2. CSV 修改必须保持字段列数、ID 命名规则、`Language.csv` 同步。
-3. 不要随意重命名 ID；若 ID 已被代码或 asset 引用，先列影响范围。
-4. 完成后输出一张对齐表：docs / CSV / asset / 缺失 / 多余 / 风险。
-5. 修改内容标为「⚠️ 已修改/未审核」，等待后续审核。
+当前执行入口依次为 `AGENTS.md`、`开发管理/DeepSeek工作提示词.txt`、有序队列选中的同 ID 任务卡及该卡路由的领域事实源。

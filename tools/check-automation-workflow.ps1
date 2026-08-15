@@ -85,14 +85,31 @@ $rules = Read-Utf8 (Join-Path $root '开发管理/自动工作流规则.txt')
 $recovery = Read-Utf8 (Join-Path $root '开发管理/自动工作流恢复规则.txt')
 $codexPrompt = Read-Utf8 (Join-Path $root '开发管理/自动工作流控制器提示词.txt')
 $deepseekPrompt = Read-Utf8 (Join-Path $root '开发管理/DeepSeek小时触发提示词.txt')
+$collaborationRules = Read-Utf8 (Join-Path $root '开发管理/AI协作规则.txt')
+$workflowState = Read-Utf8 (Join-Path $root '开发管理/自动工作流状态.txt')
+$deepseekWorkPrompt = Read-Utf8 (Join-Path $root '开发管理/DeepSeek工作提示词.txt')
+$deepseekTemplatePaths = @(
+  '开发管理/DeepSeek任务卡-局部代码实现.txt',
+  '开发管理/DeepSeek任务卡-批量设计内容.txt',
+  '开发管理/DeepSeek任务卡-文档清洗.txt',
+  '开发管理/DeepSeek任务卡-CSV数据链路.txt'
+)
 Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourly-trigger', 'invoke-hourly-owner.ps1', 'runs.codex', 'runs.deepseek', 'schemaVersion=5', '.worktrees/automation/<runId>/<owner>', 'candidate_ready', 'canonical_ready', 'CompleteRun', 'maintenance_completed', '一次性返工决策卡', '不含 checkpoint', 'automationDecision', 'decision_requested', 'waiting_decision', '7 天 TTL', 'status 白名单')
 Assert-DoesNotContain $rules 'workflow rules' @('integrationLease', 'invoke-codex-hourly.ps1', 'invoke-deepseek-hourly.ps1')
 Assert-DoesNotContain $rules 'workflow rules' @('invoke-codex-responsibility.ps1', 'invoke-external-responsibility.ps1', 'RecordResult -Category success', 'pauseRequested=true', '短命配置 cell', '自暂停')
 Assert-Contains $recovery 'recovery rules' @('developing', 'candidate_ready', 'canonical_ready', 'integrated', 'attention_required', '只报告', 'decision checkpoint')
 Assert-Contains $codexPrompt 'Codex worker prompt' @('tools.mcp__node_repl__js', 'nodeRepl.requestMeta', 'codex_model_metadata_invalid', 'modelTexts.length !== 1', 'invoke-hourly-owner.ps1', '-Owner codex', 'tools.exec_command', 'tools.write_stdin', 'yield_time_ms: 60000', 'Script running with cell ID', '不读取队列或任务卡', 'Desktop automation memory', '恰好一个简短 `::inbox-item`', 'memory 不得改变固定命令')
-Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', '不读取队列、任务卡或业务事实', 'Desktop automation memory', '恰好一个简短 `::inbox-item`', 'memory 不得改变固定命令')
+Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', 'tools.exec_command', 'tools.write_stdin', 'yield_time_ms: 60000', 'Script running with cell ID', 'deepseek_exec_session_invalid', 'deepseek_shared_entrypoint_failed', 'deepseek_terminal_json_invalid', '不读取队列、任务卡或业务事实', 'Desktop automation memory', '恰好一个简短 `::inbox-item`', 'memory 不得改变固定命令')
 Assert-DoesNotContain $codexPrompt 'Codex worker prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文', 'shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', "terminal.status === 'no_candidate'", "terminal.owner === 'codex'", "terminal.taskId === 'QUEUE-MAINTENANCE'", "terminal.detailCode === 'no_runnable_candidate'", "terminal.cleanup === 'cleaned'", 'tools.codex_app__automation_update', "status: 'PAUSED'", 'automation.toml')
-Assert-DoesNotContain $deepseekPrompt 'DeepSeek trigger prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文')
+Assert-DoesNotContain $deepseekPrompt 'DeepSeek trigger prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文', 'shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', 'tools.codex_app__automation_update', 'automation.toml')
+Assert-DoesNotContain $collaborationRules 'collaboration rules' @('外部两提交边界', '业务提交与交接提交')
+Assert-DoesNotContain $workflowState 'workflow state' @('正式结果仍是连续的 `businessCommit`', '仅含交接登记的 `handoffCommit`')
+Assert-DoesNotContain $deepseekWorkPrompt 'DeepSeek work prompt' $deepseekTemplatePaths
+foreach ($relative in $deepseekTemplatePaths) {
+  $template = Read-Utf8 (Join-Path $root $relative)
+  Assert-Contains $template "retired DeepSeek template $relative" @('已退役', '不再是活动执行规则', 'AGENTS.md', '开发管理/DeepSeek工作提示词.txt')
+  Assert-DoesNotContain $template "retired DeepSeek template $relative" @('## 必读', '## 执行要求')
+}
 
 if ($RequireLegacyRetired) {
   foreach ($relative in @(
