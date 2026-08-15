@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-15：用户已批准当前手动任务直接拥有并写入主工作区 assets/source/characters/humanoid-evaluation/，原始资产持久化边界已解决；Blender 源检查、四个 FBX 回读、Unity Humanoid 与固定帧视觉检查均已通过。本地备份包已生成并校验，当前只等待用户确认把该项目文件上传到既有百度网盘“天章相关资源备份”目录，确认前保持 blocked。",
+  "stateReason": "2026-08-15：39 骨统一评估骨架、两套校准体、三条动作及四个 FBX 已完成；Blender 源检查、四个 FBX 回读、Unity Humanoid 与固定帧视觉检查均通过。百度网盘已按项目 assets/source 目录直接镜像全部 8 个固定交付文件，备份边界闭合；正式 src/ 零写入，任务完成归档。",
   "expectedPaths": [
     "assets/source/characters/humanoid-evaluation/TZ_HumanoidEval_v001.blend",
     "assets/source/characters/humanoid-evaluation/exports/TZ_HumanoidEval_Rig_v001.fbx",
@@ -22,6 +22,7 @@
     "assets/source/characters/humanoid-evaluation/evidence/calibration-contact-sheet.png",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
     "开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt",
     "开发管理/任务归档/A-CHAR-HUMANOID-RIG-01.txt"
   ],
@@ -38,7 +39,7 @@
 - 2026-08-15 用户明确要求解决原始资产保存边界；本轮是非纯 `1` 的手动任务，在两个活动 run 与集成锁均为空时，由当前对话直接拥有主工作区 `assets/source/characters/humanoid-evaluation/`。该本地原始工程不是 linked-worktree 临时产物，不强制加入 Git，也未进入 `src/Assets/`。
 - 39 骨 Armature、两套校准体、三条 Action、Rig FBX 与三个独立动作 FBX 已完成；Blender 5.2.0 LTS 源检查和四个 FBX factory-startup 回读均为 PASS。
 - Unity 6000.3.18f1 一次性临时项目已证明 Avatar 有效且为 Humanoid、22 项项目映射、16 根 `Sec_` Transform、同一 Avatar、三条 Human Motion、身高／原点／本地 `+Z` 正面和男女共根；接触表对男女的 Idle／Move／Attack 几何变化分别设阈值并全部通过。证据复制回源目录后，临时 Unity 项目、日志和临时 Blender 构建脚本已删除，正式 `src/` 零写入。
-- 本地备份包 `D:\Temp\TianZhang-Backups\2026-08-15_working_A-CHAR-HUMANOID-RIG-01.zip` 含 8 个最小交付文件，大小 `817157` 字节，SHA-256 `58975315895fe0b3f2df5804c01f488a8256f48fe1a83275a92b73e4dd4d0c0d`。Chrome 已登录并定位到既有百度网盘 `天章相关资源备份` 目录；上传属于向第三方传输本地项目文件，当前只等待用户在动作发生前确认。
+- 百度网盘 `来自：本地电脑/source/characters/humanoid-evaluation/` 已直接镜像源目录：根目录 `.blend`、`exports/` 四个 FBX 与 `evidence/` 三份证据共 8 个固定文件名全部存在，云端可见取整大小与本地对应项一致，修改时间为 2026-08-15 14:15。该项目源目录是规范备份对象，不需要切换到 `D:\Temp`；确认镜像后，重复的临时 ZIP 已删除。
 
 ## 必查范围
 
@@ -71,6 +72,15 @@
 
 - 同一 39 骨 Armature、两种校准体型与三条动作通过 Blender 源检查、四个 FBX 回读、Unity Humanoid 映射和固定帧视觉检查；输出哈希与备份证据可复核，可作为两平台候选唯一换绑和动作输入。
 - 完成只解除 `A-CHAR-AI-PLATFORM-EVAL-01` 的骨架前置，不自动开始平台槽位、固定胜出平台或接入 Unity 正式路径。
+
+## 完成记录
+
+- `TZ_HumanoidEval_v001.blend`：196792 字节，SHA-256 `af1a522bad00a77549be41f10fdc18a0fd3053672784bae8509fc3dbee9d66c3`。
+- `TZ_HumanoidEval_Rig_v001.fbx`：255692 字节，SHA-256 `5766becaeeb04c8233b71b1d3bbe34c4acbc91f3d0c63c4a77e869a09ca1276c`。
+- `TZ_Eval_Idle_v001.fbx`：398380 字节，SHA-256 `0ab118f46d6bd3e1b1c0dfc636ef83d302626e8f701f132c445a8f2220e9367f`；`TZ_Eval_Move_v001.fbx`：350220 字节，SHA-256 `9cccab21fe49a1fdbe63e3ed40ee0820a0c2246cb15d90570187bbfa33541bf5`；`TZ_Eval_Attack_v001.fbx`：368636 字节，SHA-256 `fd555b209fbb4c68b2f2913e0967dbd7a95a32d5dd37d6519b15bfda115a6de4`。
+- `blender-validation.txt`：4307 字节，SHA-256 `81faf3055b58d4bd3706087cdeb612d3328d06763abeb41bd1e04a0d84df08d2`；`unity-humanoid-validation.txt`：2003 字节，SHA-256 `02cbb862610f7ca28edb6c9ecf72eed87b94299879be009cbcfe32df1db7e607`；`calibration-contact-sheet.png`：315715 字节，SHA-256 `6821aff31e7bcf73699877f78e347f384e3da5b25c1c709cb039ded3c745b98b`。
+- Blender 5.2.0 LTS 源检查与四个 FBX factory-startup 回读通过；Unity 6000.3.18f1 验证 Avatar 有效且为 Humanoid、22 项映射、16 根 `Sec_` 骨、同 Avatar 三条 Human Motion 与男女固定帧几何变化通过。正式 `src/` 零写入。
+- 百度网盘项目源镜像已核对；本地项目目录与云端镜像共同保留完整源和证据。任务只解除 `A-CHAR-AI-PLATFORM-EVAL-01` 的具名前置。
 
 ## 停止条件
 

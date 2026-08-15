@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-HUMANOID-RIG-01"],
-  "stateReason": "等待项目统一评估骨架与三条动作完成",
+  "blockedBy": [],
+  "stateReason": "2026-08-15：统一评估骨架与三条动作已完成并归档，具名前置已解除；但尚无 Meshy／Tripo 当次实际付费私有生成授权、可用订阅／credits 与六个正式槽位预算证明。按停止条件保持 blocked，不开始平台槽位。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -25,6 +25,7 @@
 ## 来源与当前边界
 
 - 完整执行 `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md`，只做固定人形平台一次性选型。
+- `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成；统一 `.blend`、Rig FBX、三条动作 FBX 与 Blender／Unity 证据位于 `assets/source/characters/humanoid-evaluation/`，并已核对百度网盘项目源镜像。
 
 ## 必查范围
 
