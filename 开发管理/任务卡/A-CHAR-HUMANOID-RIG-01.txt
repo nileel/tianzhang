@@ -9,9 +9,17 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-BLENDER-SETUP-01"],
-  "stateReason": "等待 Blender 工作站环境完成",
+  "blockedBy": [],
+  "stateReason": "2026-08-15：A-CHAR-BLENDER-SETUP-01 已完成归档，资产与验收路径已展开；但全部业务产物位于 Git 忽略的 assets/source/，当前自动与纯 1 执行必须在成功后清理的 linked worktree 内完成，尚无获批的原始资产持久化与编辑所有权边界。为避免只合入管理提交却删除源资产，保持 blocked。",
   "expectedPaths": [
+    "assets/source/characters/humanoid-evaluation/TZ_HumanoidEval_v001.blend",
+    "assets/source/characters/humanoid-evaluation/exports/TZ_HumanoidEval_Rig_v001.fbx",
+    "assets/source/characters/humanoid-evaluation/exports/TZ_Eval_Idle_v001.fbx",
+    "assets/source/characters/humanoid-evaluation/exports/TZ_Eval_Move_v001.fbx",
+    "assets/source/characters/humanoid-evaluation/exports/TZ_Eval_Attack_v001.fbx",
+    "assets/source/characters/humanoid-evaluation/evidence/blender-validation.txt",
+    "assets/source/characters/humanoid-evaluation/evidence/unity-humanoid-validation.txt",
+    "assets/source/characters/humanoid-evaluation/evidence/calibration-contact-sheet.png",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-HUMANOID-RIG-01.txt",
@@ -24,28 +32,45 @@
 
 ## 来源与当前边界
 
-- 为 Meshy／Tripo 公平 A/B 提供唯一项目骨架基线，不生产玩家完整人形。
+- 来自已批准的美术生产主线和统一 Humanoid 评估骨架设计；为 Meshy／Tripo 公平 A/B 提供唯一项目骨架基线，不生产玩家完整人形。
+- `A-CHAR-BLENDER-SETUP-01` 已于 2026-08-15 完成：固定使用 `D:\Tools\Blender\5.2.0\blender.exe`，factory startup、Python API、源工程保存和 FBX 往返均已验证，本卡不重复安装或切换 Blender。
+- 该结果只服务一次性平台评估；不是正式角色骨架、Avatar、Animator、动作风格或模块化角色资源。
+- 当前 remaining blocker 不是 Blender 或内容设计，而是写入所有权：业务产物固定在被 Git 忽略的 `assets/source/`，自动与纯 `1` 路线又只能写 run／任务 linked worktree。成功清理 worktree 前必须先有获批方式把本地原始工程稳定保留在项目主 `assets/source/`，且不得靠强制加入 Git、提前导入 `src/Assets/` 或把异地备份当作工作副本来绕过。
 
 ## 必查范围
 
-- 美术主线设计 §3.1、AI 平台评估设计的换绑口径、角色美术设计的朝向／单位／原点要求和美术资源版本规范。
+- `docs/superpowers/specs/2026-08-08-humanoid-evaluation-rig-design.md` §四至§十五：完整骨层级、空间合同、两种校准体型、三条动作、固定输出、Blender／FBX／临时 Unity 验收和停止条件。
+- `docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md` §3.1、`docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.3、§六至§八，以及 `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` 的朝向、单位、原点与技术样例边界。
+- `docs/资源管理/美术资源版本管理规范.md` 的 `assets/source/` 边界与异地备份要求；`开发管理/任务归档/A-CHAR-BLENDER-SETUP-01.txt` 的已验证 Blender 版本和路径。
 
 ## 实施范围
 
-- 冻结 Humanoid 骨骼名、绑定姿势、本地 `+Z` 正面、单位、底部中心原点与 Avatar 映射；制作待机、移动、攻击三条动作及统一换绑／权重转移方法。
+- 在唯一源文件 `TZ_HumanoidEval_v001.blend` 中建立设计冻结的 39 骨 `TZ_HumanoidEval`、T Pose、Blender `-Y` 正面、`1 unit = 1 m`、双脚底部中心原点，以及共用该 Armature 的 `CAL_Male`／`CAL_Female` 简化校准体型；内嵌 `TZ_Validate` 重复检查骨架、体型、权重、单位和动作合同。
+- 制作 30 FPS 的 `TZ_Eval_Idle_v001`、`TZ_Eval_Move_v001`、`TZ_Eval_Attack_v001` 三条非正式 FK 评估动作；Root 固定，无 Root Motion、IK、控制约束、缩放曲线或正式 Animator。
+- 按冻结的单一 FBX 预设导出一个 Rig FBX 与三个独立动作 FBX，逐个回读验证骨名、层级、动作范围、单位、原点和正面；不得试探第二套导出流程。
+- 使用 Unity `6000.3.18f1` 的一次性临时项目验证唯一 Avatar、22 项映射、16 根 `Sec_` Transform、三条 Human Motion、两种体型共用骨架与本地 `+Z` 正面；证据成功复制回源目录后删除已核对的临时项目。
+- 输出 Blender／Unity 文本证据和校准接触表，记录 `.blend` 与四个 FBX 的 SHA-256、工具版本、映射、动作时长、视觉检查和残留风险，并按资源规范核对 `assets/source/` 异地备份。
 
 ## 禁止项
 
-- 不生产完整身体、脸型、发型、服装、武器或正式 Animator；不使用平台自动骨架替代项目骨架。
+- 不生产完整身体、脸型、UV、贴图、正式发型／服装／武器或正式 Animator；校准体型只做骨架与蒙皮压力证明。
+- 不使用 Rigify、Mixamo、平台自动骨架、第三方绑定服务、第二套权重算法或兼容层替代项目骨架；不增加角色专用骨、控制骨、武器骨、物理骨或平台兼容骨。
+- 不写入 `src/Assets/`，不创建正式 Unity Avatar、AnimatorController、Prefab、材质、场景或运行时代码；不开始 Meshy／Tripo 正式生成槽位。
 
 ## 验证
 
-- Blender 源文件、三条动作、骨骼／权重检查和 FBX 往返；进入 ready 前展开源工程、导出、记录和登记的精确路径。
+- 使用 `D:\Tools\Blender\5.2.0\blender.exe --background <绝对 .blend 路径> --python-expr "import bpy; exec(bpy.data.texts['TZ_Validate'].as_string())"` 执行内嵌检查；源文件和每个 FBX 均以 factory startup 回读，结果写入 `blender-validation.txt`。
+- 在一次性 Unity `6000.3.18f1` 临时项目中批处理验证 `Avatar.isValid`、`Avatar.isHuman`、项目映射、`Sec_` Transform、三条 `AnimationClip.isHumanMotion`、动作时长、共用 Avatar、身高、原点和本地 `+Z` 正面；固定帧视觉结果写入 `calibration-contact-sheet.png`，结构化结果写入 `unity-humanoid-validation.txt`。
+- 核对 `.blend`、四个 FBX 和证据文件非空及 SHA-256 一致；核对源资产备份批次、文件大小或 SHA-256。输入未变化的 Blender／Unity 检查不重复运行。
+- 完成管理投影时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,docs/superpowers/specs,docs/资源管理`、预期路径空白检查与暂存后的 `git diff --cached --check`。
 
 ## 完成条件
 
-- 同一骨架与三条动作可用于两平台候选的可重复换绑和 Unity Humanoid 映射评估。
+- 同一 39 骨 Armature、两种校准体型与三条动作通过 Blender 源检查、四个 FBX 回读、Unity Humanoid 映射和固定帧视觉检查；输出哈希与备份证据可复核，可作为两平台候选唯一换绑和动作输入。
+- 完成只解除 `A-CHAR-AI-PLATFORM-EVAL-01` 的骨架前置，不自动开始平台槽位、固定胜出平台或接入 Unity 正式路径。
 
 ## 停止条件
 
-- 需要第二项目骨架、平台专用骨名、未批准动作或无法稳定换绑时停止。
+- 原始 `.blend`、FBX 与证据只能留在将被清理的 linked worktree，或必须越过现行 worktree 写入隔离才能保留时停止；先冻结可持久化的本地原始资产编辑所有权，再重新判断 ready。
+- FBX 不能保持单位、原点、正面、层级或 rest pose，Unity Avatar 无效／非 Humanoid／缺映射，附加骨破坏映射，或男女体型需要不同骨长、rest pose、Action、Avatar 或 AnimatorController 时停止。
+- 需要第二项目骨架、平台专用骨名、正式 Animator、Root Motion、IK、角色专用骨、完整手绘全身权重、正式 Unity 路径或未批准动作时停止，不叠加替代流程。
