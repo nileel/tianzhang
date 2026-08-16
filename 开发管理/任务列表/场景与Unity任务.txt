@@ -7,14 +7,14 @@
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
-- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。39 骨骨架、两套校准体、三条动作、四个 FBX、Blender／Unity 证据与固定帧接触表均已通过，百度网盘已按项目 `assets/source/characters/humanoid-evaluation/` 直接镜像全部 8 个固定交付文件；未向 Unity 正式路径接入评估资产。下游骨架前置已解除，但平台评估仍等待 Meshy／Tripo 当次付费私有生成授权、可用订阅／credits 与六个正式槽位预算证明。
+- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊 Tripo `slot-01` 已使用不带动画版本完成统一项目骨架换绑、三动作直放与 Blender factory-startup 回读，未写入 Unity 正式路径。平台任务仍等待同一冻结输入的 `slot-02`／`slot-03`，单槽成功不视为生产路线完成。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
-| A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | — | Meshy／Tripo 3D 一次性选型 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
+| A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | — | Tripo 3D 固定人形三槽生产验证 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
 | U-SHIJIAHOU-3D-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-HUMANOID-PROTO-01 | 石甲兽重型四足技术样例 | 开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt |
 | A-CHAR-PORTRAIT-STYLE-01 | P1 | codex | 阻塞 | D-CHAR-APPEARANCE-01 | Toon 与模块化立绘风格样张 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt |

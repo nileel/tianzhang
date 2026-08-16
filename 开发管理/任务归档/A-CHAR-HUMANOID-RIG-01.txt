@@ -40,6 +40,7 @@
 - 39 骨 Armature、两套校准体、三条 Action、Rig FBX 与三个独立动作 FBX 已完成；Blender 5.2.0 LTS 源检查和四个 FBX factory-startup 回读均为 PASS。
 - Unity 6000.3.18f1 一次性临时项目已证明 Avatar 有效且为 Humanoid、22 项项目映射、16 根 `Sec_` Transform、同一 Avatar、三条 Human Motion、身高／原点／本地 `+Z` 正面和男女共根；接触表对男女的 Idle／Move／Attack 几何变化分别设阈值并全部通过。证据复制回源目录后，临时 Unity 项目、日志和临时 Blender 构建脚本已删除，正式 `src/` 零写入。
 - 百度网盘 `来自：本地电脑/source/characters/humanoid-evaluation/` 已直接镜像源目录：根目录 `.blend`、`exports/` 四个 FBX 与 `evidence/` 三份证据共 8 个固定文件名全部存在，云端可见取整大小与本地对应项一致，修改时间为 2026-08-15 14:15。该项目源目录是规范备份对象，不需要切换到 `D:\Temp`；确认镜像后，重复的临时 ZIP 已删除。
+- 2026-08-16 在苻渊 `slot-01` 换绑验证中发现源 `.blend` 重新打开后只持久保留 Idle。已使用原动作生成逻辑恢复 Move／Attack，并为三条 Action 设置持久保留；39 骨、两套校准体、四个既有 FBX 及其哈希均未改变，内嵌检查重新通过。当前 `.blend` 与 Blender 证据的新版本已留在本地项目源目录；百度网盘既有镜像仍保留 2026-08-15 版本，本次已触发备份但按用户要求停止界面控制，未把新版本标为云端已核验。
 
 ## 必查范围
 
@@ -75,12 +76,12 @@
 
 ## 完成记录
 
-- `TZ_HumanoidEval_v001.blend`：196792 字节，SHA-256 `af1a522bad00a77549be41f10fdc18a0fd3053672784bae8509fc3dbee9d66c3`。
+- `TZ_HumanoidEval_v001.blend`：202096 字节，SHA-256 `c45b6a10c511733dd9e7b5678dd71885583e9f18a6328a94d788aa772e23cebe`；2026-08-16 版本仅补齐三条 Action 的持久保留，骨架、校准体与导出 FBX 不变。
 - `TZ_HumanoidEval_Rig_v001.fbx`：255692 字节，SHA-256 `5766becaeeb04c8233b71b1d3bbe34c4acbc91f3d0c63c4a77e869a09ca1276c`。
 - `TZ_Eval_Idle_v001.fbx`：398380 字节，SHA-256 `0ab118f46d6bd3e1b1c0dfc636ef83d302626e8f701f132c445a8f2220e9367f`；`TZ_Eval_Move_v001.fbx`：350220 字节，SHA-256 `9cccab21fe49a1fdbe63e3ed40ee0820a0c2246cb15d90570187bbfa33541bf5`；`TZ_Eval_Attack_v001.fbx`：368636 字节，SHA-256 `fd555b209fbb4c68b2f2913e0967dbd7a95a32d5dd37d6519b15bfda115a6de4`。
-- `blender-validation.txt`：4307 字节，SHA-256 `81faf3055b58d4bd3706087cdeb612d3328d06763abeb41bd1e04a0d84df08d2`；`unity-humanoid-validation.txt`：2003 字节，SHA-256 `02cbb862610f7ca28edb6c9ecf72eed87b94299879be009cbcfe32df1db7e607`；`calibration-contact-sheet.png`：315715 字节，SHA-256 `6821aff31e7bcf73699877f78e347f384e3da5b25c1c709cb039ded3c745b98b`。
+- `blender-validation.txt`：4306 字节，SHA-256 `fe6aef12a21eb6f4d3e8c970464261e04d26e95f661e86160a3a46f188d87481`；`unity-humanoid-validation.txt`：2003 字节，SHA-256 `02cbb862610f7ca28edb6c9ecf72eed87b94299879be009cbcfe32df1db7e607`；`calibration-contact-sheet.png`：315715 字节，SHA-256 `6821aff31e7bcf73699877f78e347f384e3da5b25c1c709cb039ded3c745b98b`。
 - Blender 5.2.0 LTS 源检查与四个 FBX factory-startup 回读通过；Unity 6000.3.18f1 验证 Avatar 有效且为 Humanoid、22 项映射、16 根 `Sec_` 骨、同 Avatar 三条 Human Motion 与男女固定帧几何变化通过。正式 `src/` 零写入。
-- 百度网盘项目源镜像已核对；本地项目目录与云端镜像共同保留完整源和证据。任务只解除 `A-CHAR-AI-PLATFORM-EVAL-01` 的具名前置。
+- 百度网盘项目源镜像已核对 2026-08-15 的固定交付批次；2026-08-16 Action 持久保留修订已在本地验证，本次云端是否覆盖到新修订仍待后续核对。任务只解除 `A-CHAR-AI-PLATFORM-EVAL-01` 的具名前置。
 
 ## 停止条件
 

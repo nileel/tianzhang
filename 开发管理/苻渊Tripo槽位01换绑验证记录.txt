@@ -1,0 +1,49 @@
+# 苻渊 Tripo 槽位 01 换绑验证记录
+
+日期：2026-08-16
+任务：`A-CHAR-AI-PLATFORM-EVAL-01`
+
+## 路线决定与范围
+
+- 用户确认 Tripo 会员已开通，并明确终止 Meshy 路线；本任务后续只验证 Tripo 三个独立槽位，不恢复双平台 A/B。
+- 本记录只覆盖苻渊 Tripo `slot-01` 的安全导入、归类、固定换绑、有限权重修整和 Blender 验证；不把单槽成功外推为 Tripo 生产路线已经完成。
+- 未向 `src/Assets/` 写入任何内容，未创建 Unity Avatar、Prefab、材质、场景或运行时代码。
+
+## 原始输入锁定
+
+- 源目录：`assets/source/characters/platform-evaluation/tripo/slot-01/raw/`。
+- 正式换绑输入：`fu_yuan_tripo_v1/tripo_convert_ba6389cd-38ca-4ad6-bff5-8e8ddfe73b78.fbx`，不带动画。
+- 诊断参考：`fu_yuan_walk_tripo_v1/tripo_convert_505fef5a-3f45-4239-b1ee-4066b7f380ad.fbx`，Tripo 行走 Action 为 1～57 帧；未用于正式换绑。
+- 两套完整导出包及各自 `.fbm` 目录均原位保留；12 个原始文件的最终 SHA-256 与基线一致。两套包中的五张贴图内容相同，但没有去重、移动、重命名或修改。
+
+## 工作文件与对象归类
+
+- 统一骨架源：`assets/source/characters/humanoid-evaluation/TZ_HumanoidEval_v001.blend`，202096 字节，SHA-256 `c45b6a10c511733dd9e7b5678dd71885583e9f18a6328a94d788aa772e23cebe`。
+- 工作文件：`assets/source/characters/platform-evaluation/tripo/slot-01/working/rebind.blend`，1156620 字节，SHA-256 `6305836773680fc0892b44651048e104151bc91feccf9b7972cc08a459e8c09f`。
+- 项目正式评估骨架对象为 `TZ_HumanoidEval`，39 骨，其中 16 根 `Sec_`；Tripo 的 41 骨 `Armature` 只留在隐藏且排除导出的 `PLATFORM_DIAGNOSTIC` 集合。
+- 换绑后角色对象为 `FU_Yuan_Working`；导入附带的 `Cube`、`Camera`、`Light` 已清理。`CAL_Male` 与 `CAL_Female` 只作为项目骨架校准参考保留。
+
+## 网格、权重、材质与贴图
+
+- 网格：5672 顶点、17022 边、11348 三角面；边界边 0，非流形边 0。
+- 权重：38 个顶点组，单顶点最多 4 个影响；未加权顶点 0，负权重 0，`Sec_` 总权重上限 0.7。
+- T Pose 使用 Edit Mode 旋转与连接比例编辑完成；肩、肘、腕六处关节表面距离均有记录，最大为右肘 0.076653 米。
+- 材质槽 1 个，材质 `tripo_mat_ba6389cd`。Base Color、Normal、Roughness、Metallic 四张 4096 贴图均从原 `.fbm` 正常解析；`rm` 贴图保留但当前材质未使用；缺失贴图 0、打包贴图 0。
+
+## 动作与 factory-startup 验证
+
+- Blender：`D:\Tools\Blender\5.2.0\blender.exe`，5.2.0 LTS。
+- factory startup 重新打开 `rebind.blend`：通过；内嵌 `TZ_Validate`：通过。
+- 项目骨架直接播放 `TZ_Eval_Idle_v001` 1～61 帧、`TZ_Eval_Move_v001` 1～31 帧、`TZ_Eval_Attack_v001` 1～46 帧：全部通过。
+- 三张固定帧预览已保存到源证据目录：Idle 第 31 帧、Move 第 16 帧、Attack 第 30 帧。
+- 从开始固定换绑到验证完成共 21.49345 分钟，未超过 60 分钟停止条件。
+
+## 证据、备份与剩余风险
+
+- 结构化证据：`assets/source/characters/platform-evaluation/tripo/slot-01/evidence/blender-validation.txt`，2962 字节，SHA-256 `06e2d4df1821f324ce31fae5971a2bb4a001afb718dd7b47d8c1805aaadab6d6`。
+- 原始文件哈希清单：`assets/source/characters/platform-evaluation/tripo/slot-01/evidence/raw-sha256.txt`，2099 字节，SHA-256 `2145460010e83b1f86bb18112a3fa847393ab34af52a1a1a43976411f2712fe6`。
+- 百度网盘既有 `source` 自动备份任务已触发“立即备份”。用户随后要求停止界面控制，因此没有继续打开目录核对本批次的云端文件和大小；备份状态保持“待云端核验”，不作为本次 PASS 的已完成证据。
+- 当前 PASS 只覆盖 Blender 单槽换绑可行性。仍需同一冻结输入的 `slot-02`、`slot-03`，并分别执行相同计时与硬门槛，才能判断 Tripo 是否具有可复现生产稳定性。
+- `PLATFORM_DIAGNOSTIC` 中仍保留 Tripo 骨架和原始诊断网格，必须在任何候选导出前继续保持隐藏且排除导出；当前尚未产生面向 Unity 的候选 FBX。
+
+结论：`slot-01` Blender 固定换绑与动作验证通过；Tripo 三槽生产验证任务仍为 blocked，等待 `slot-02`／`slot-03` 输入。

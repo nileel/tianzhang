@@ -2,7 +2,7 @@
 {
   "schemaVersion": 1,
   "id": "A-CHAR-AI-PLATFORM-EVAL-01",
-  "title": "Meshy／Tripo 3D 一次性选型",
+  "title": "Tripo 3D 固定人形三槽生产验证",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
@@ -10,43 +10,51 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-15：统一评估骨架与三条动作已完成并归档，具名前置已解除；但尚无 Meshy／Tripo 当次实际付费私有生成授权、可用订阅／credits 与六个正式槽位预算证明。按停止条件保持 blocked，不开始平台槽位。",
+  "stateReason": "2026-08-16：用户确认 Tripo 会员已开通并终止 Meshy 路线；苻渊 Tripo slot-01 已完成统一项目骨架换绑、三动作直放与 factory-startup 回读。尚缺同一冻结输入的 slot-02／slot-03 平台输出，任务保持 blocked，不把单槽成功外推为生产路线完成。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
-    "开发管理/任务归档/A-CHAR-AI-PLATFORM-EVAL-01.txt"
+    "开发管理/任务归档/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/苻渊Tripo槽位01换绑验证记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/slot-01/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/slot-01/evidence/blender-validation.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# A-CHAR-AI-PLATFORM-EVAL-01 · Meshy／Tripo 3D 一次性选型
+# A-CHAR-AI-PLATFORM-EVAL-01 · Tripo 3D 固定人形三槽生产验证
 
 ## 来源与当前边界
 
-- 完整执行 `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md`，只做固定人形平台一次性选型。
+- 用户于 2026-08-16 确认 Tripo 会员已开通并明确放弃 Meshy；后续只验证 Tripo 固定人形生产路线，不再执行两平台 A/B，也不引入第三平台。
+- 继续执行 `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` 的统一输入、三槽独立性、固定换绑、计时、硬门槛与失败关闭要求；平台比较轴由用户决定终止，但质量门槛不降低。
 - `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成；统一 `.blend`、Rig FBX、三条动作 FBX 与 Blender／Unity 证据位于 `assets/source/characters/humanoid-evaluation/`，并已核对百度网盘项目源镜像。
+- 苻渊 Tripo `slot-01` 已完成：正式换绑输入只使用不带动画的 `fu_yuan_tripo_v1`；带行走动画的 `fu_yuan_walk_tripo_v1` 只保留为平台诊断参考；两套 `raw/` 原始包未修改。
 
 ## 必查范围
 
-- 评估设计全文、苻渊四视图直接事实、统一骨架／动作、美术资源版本规范和两平台当时实际授权／付费隐私条件。
+- 评估设计全文、苻渊四视图直接事实、统一骨架／动作、人形骨架设计 §10.2 固定换绑流程、美术资源版本规范，以及 Tripo 当时实际授权／付费隐私条件。
 
 ## 实施范围
 
-- 两平台各使用三个正式槽位与同一预算；统一移除／停用平台骨架、换绑项目骨架、转移权重并记录有限修整时间；最终只选一个默认平台或判定通用平台路线不成立。
+- Tripo 使用三个正式独立槽位与同一冻结输入、预算和导出条件；统一移除／停用平台骨架、换绑项目骨架、转移权重并记录有限修整时间。
+- `slot-01` 只证明该候选在当前单槽通过结构、材质、权重、动作与计时门槛；必须补齐 `slot-02`、`slot-03` 后才能判断 Tripo 是否可作为可复现主生产平台。
 
 ## 禁止项
 
-- 不长期维护双平台，不引入第三平台，不降低门槛，不让候选直接进入 Unity 正式资源目录。
+- 不恢复 Meshy 双平台比较，不引入第三平台，不降低门槛，不让候选直接进入 Unity 正式资源目录。
+- 不把 Tripo 骨架当作项目正式骨架，不把带 Tripo 行走动画的版本作为换绑源，不使用 Mixamo 作为正式角色骨架。
 
 ## 验证
 
-- 按批准评分表、槽位证据、Blender 修整计时、统一骨架三动作与来源登记复核；进入 ready 前展开全部参考、原始工程、导出、证据和登记路径。
+- 按批准评分表、三个槽位证据、Blender 修整计时、统一骨架三动作与来源登记复核；进入 ready 前展开剩余参考、原始工程、导出、证据和登记路径。
+- `slot-01` 的本地结构化证据位于 `assets/source/characters/platform-evaluation/tripo/slot-01/evidence/`，Git 跟踪摘要位于 `开发管理/苻渊Tripo槽位01换绑验证记录.txt`。
 
 ## 完成条件
 
-- 选出一个可复现的固定人形主平台；若失败，则同一状态事件建立 `A-CHAR-BLENDER-TEMPLATE-01` 并把下游 blocker 切换为单一路线。
+- 三个 Tripo 独立槽位均完成并证明固定人形结果可按同一流程换绑、播放项目三动作且满足时间与质量硬门槛；若失败，则同一状态事件建立 `A-CHAR-BLENDER-TEMPLATE-01` 并把下游 blocker 切换为单一路线。
 
 ## 停止条件
 
-- 缺四视图、骨架、三动作、付费私有生成授权，或结果只能靠双平台／额外自动修补成立时停止。
+- 缺四视图、骨架、三动作、Tripo 付费私有生成授权或剩余独立槽位，或结果只能靠恢复双平台／额外自动修补成立时停止。
