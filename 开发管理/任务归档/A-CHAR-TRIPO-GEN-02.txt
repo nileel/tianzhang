@@ -1,36 +1,35 @@
 ---TASK-META---
 {
   "schemaVersion": 1,
-  "id": "A-CHAR-TRIPO-GEN-03",
-  "title": "苻渊 Tripo slot-03 独立模型生成",
+  "id": "A-CHAR-TRIPO-GEN-02",
+  "title": "苻渊 Tripo slot-02 独立模型生成",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-BASELINE-DEC-01"
-  ],
-  "stateReason": "2026-08-16：slot-01 历史已恢复为单张正面输入，与设计四视图合同冲突；等待 A-CHAR-TRIPO-BASELINE-DEC-01 决定严格重跑三件、批准单图例外补两件或暂停。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：负责人选择严格四视图并重跑三个正式槽位；本卡对应的旧单图延续路线未执行即关闭，由 A-CHAR-TRIPO-STRICT-GEN-01～03 取代。没有生成或修改 slot-02 原始包。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
-    "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt",
-    "开发管理/任务归档/A-CHAR-TRIPO-GEN-03.txt",
-    "开发管理/任务卡/A-CHAR-TRIPO-SLOT-03.txt",
-    "开发管理/苻渊Tripo槽位03生成记录.txt",
-    "assets/source/characters/platform-evaluation/tripo/slot-03/evidence/raw-sha256.txt"
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-SLOT-02.txt",
+    "开发管理/苻渊Tripo槽位02生成记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/slot-02/evidence/raw-sha256.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# A-CHAR-TRIPO-GEN-03 · 苻渊 Tripo slot-03 独立模型生成
+# A-CHAR-TRIPO-GEN-02 · 苻渊 Tripo slot-02 独立模型生成
 
 ## 来源与当前边界
 
-- 本卡是 `A-CHAR-TRIPO-SLOT-03` 的唯一生成前置，只负责 Tripo 第三次独立模型生成、平台诊断导出和原始下载留存；不操作 Blender，不评价项目骨架换绑，也不拥有父项最终结论。
+- 本卡于 2026-08-16 因严格四视图路线取代而未执行关闭；以下正文仅保留被取代路线的审计边界。
+- 本卡是 `A-CHAR-TRIPO-SLOT-02` 的唯一生成前置，只负责 Tripo 第二次独立模型生成、平台诊断导出和原始下载留存；不操作 Blender，不评价项目骨架换绑，也不拥有父项最终结论。
 - 必须消费与 `slot-01` 完全相同且已冻结的苻渊视觉输入、Tripo 模型版本、生产设置、约 12000 三角面目标和付费私有授权，只允许平台随机差异。
 - 当前仓库中的 `fu-yuan-public-exploration-v1.png` 与 `fu-yuan-paper-doll-public-exploration-v1.png` 都只是单张正面探索图，造型也不完全相同；不得把其中任一张或附近立绘猜作 `slot-01` 的四视图输入。
 - 唯一历史输入事实已记录在 `开发管理/苻渊Tripo三槽原始输入合同.txt`；本卡不得自行选择严格重跑或单图例外，也不得恢复、替换或补画输入。
@@ -43,16 +42,16 @@
 
 ## 实施范围
 
-- 通过 Tripo 付费私有生成执行一次正式 `slot-03` 模型请求，记录平台任务 ID、模型版本、日期、输入文件哈希、关键设置、目标预算和实际 credits。
+- 通过 Tripo 付费私有生成执行一次正式 `slot-02` 模型请求，记录平台任务 ID、模型版本、日期、输入文件哈希、关键设置、目标预算和实际 credits。
 - 平台服务错误只允许原参数补跑一次；补跑仍失败则记录为该槽位的平台稳定性失败，不增加第三次请求。
 - 在平台查看器核对正、侧、背主体、后发和袍服背面是否完整；明显缺失时直接记录质量失败，不用额外请求寻找偶然最佳结果。
-- 对同一生成模型执行平台自动绑定和一条行走诊断；它只形成诊断参考，不是新的正式生成槽位，也不能替代项目骨架验证。
-- 把基础无动画 FBX、对应外部贴图目录和诊断动画包完整下载到 `assets/source/characters/platform-evaluation/tripo/slot-03/raw/`；保持平台原始文件名和 `.fbm` 关联，不重命名、移动、去重或修改。
-- 记录完整原始文件清单和 SHA-256，并在 `开发管理/苻渊Tripo槽位03生成记录.txt` 保存可 Git 追踪的平台任务、输入、参数、授权、下载文件名和通过／失败结论。
+- 对同一生成模型执行平台自动绑定和一条行走诊断；它只形成诊断参考，不是第二个正式模型，也不能替代项目骨架验证。
+- 把基础无动画 FBX、对应外部贴图目录和诊断动画包完整下载到 `assets/source/characters/platform-evaluation/tripo/slot-02/raw/`；保持平台原始文件名和 `.fbm` 关联，不重命名、移动、去重或修改。
+- 记录完整原始文件清单和 SHA-256，并在 `开发管理/苻渊Tripo槽位02生成记录.txt` 保存可 Git 追踪的平台任务、输入、参数、授权、下载文件名和通过／失败结论。
 
 ## 禁止项
 
-- 不复用 `slot-01`／`slot-02` 的模型、平台任务 ID 或原始下载，不为本槽位更换参考图、模型版本、生产设置或目标预算。
+- 不复用 `slot-01`／`slot-03` 的模型、平台任务 ID 或原始下载，不为本槽位更换参考图、模型版本、生产设置或目标预算。
 - 不生成新的参考图、不编辑或上传未经冻结的项目图片，不暴露账号凭据、令牌、支付信息或网盘登录信息。
 - 不创建 `working/rebind.blend`，不运行 Blender，不修改项目骨架，不向 `src/Assets/` 写入任何内容。
 - 不使用 Meshy、Mixamo 或第三平台替代 Tripo，不叠加自动重试、API 批处理或兼容层。
@@ -66,8 +65,8 @@
 
 ## 完成条件
 
-- 形成唯一结论：生成成功并完整保存第三个独立原始模型包及生成记录，或按服务错误／查看器主体缺失规则形成该槽位生成失败记录。
-- 成功时同一状态事件解除 `A-CHAR-TRIPO-SLOT-03` 的具名前置并展开其真实 raw 字面量路径；失败时不得伪造 Blender 候选，按父项规则记录稳定性或质量失败。
+- 形成唯一结论：生成成功并完整保存第二个独立原始模型包及生成记录，或按服务错误／查看器主体缺失规则形成该槽位生成失败记录。
+- 成功时同一状态事件解除 `A-CHAR-TRIPO-SLOT-02` 的具名前置并展开其真实 raw 字面量路径；失败时不得伪造 Blender 候选，按父项规则记录稳定性或质量失败。
 
 ## 停止条件
 

@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01 | codex_execute | codex | P1 | unity | discovery | Tripo 严格四图同次输入入口预检 | 开发管理/任务卡/A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01.txt |

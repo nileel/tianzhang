@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01",
+  "title": "Tripo 严格四图同次输入入口预检",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "discovery",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：负责人已选择严格四视图路线；当前最前端只需在已登录 Tripo 中只读确认 v3.1 高精度模型是否支持同一次提交四张输入及其限制，不上传、不生成、不扣 credits。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-01.txt",
+    "开发管理/苻渊Tripo多视图入口预检记录.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01 · Tripo 严格四图同次输入入口预检
+
+## 来源与当前边界
+
+- 负责人于 2026-08-16 选择严格执行设计 §5.1；现有单图 `slot-01` 只保留为技术样本，不计入正式三槽。
+- 本卡是严格轮的第一张可执行叶子，只确认 Tripo 当前入口能力。四视图尚未生成，不访问 Blender，不创建正式槽位目录。
+- 预检使用当前已登录的 Tripo 页面进行只读检查；不得把外部搜索、帮助文档旧截图或旧 `slot-01` 页面状态替代当前入口事实。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1～§5.3、§六步骤 1～3、§八、§十。
+- `开发管理/苻渊Tripo三槽原始输入合同.txt` 的旧单图历史事实与严格路线边界。
+- 当前 Tripo 高精度模型创建入口的输入数量、视图角色、模型版本、生产设置、隐私字面量和生成按钮显示成本。
+
+## 实施范围
+
+- 打开当前 Tripo 新建高精度模型工作流，确认 `v3.1 – 最高质量` 或当前等效推荐游戏资产模式能否在一次正式请求中同时接收四张图片。
+- 记录四图是否能分别表达正面 A／T Pose、正侧面、背面、前三分之四面；记录文件数量、格式、分辨率、大小和排序限制，以及平台是否会把它们合并为同一模型输入。
+- 记录约 12000 三角面目标的可用控制、分部件、贴图分辨率、私有性字面量、基础生成按钮显示 credits；只记录当前可见值，不推断历史扣费或隐藏参数。
+- 把页面位置、检查日期、可复核字面量和“支持／不支持”唯一结论写入 `开发管理/苻渊Tripo多视图入口预检记录.txt`。
+
+## 禁止项
+
+- 不选择本地图片、不上传、不拖放、不提交生成、不扣 credits，不创建、删除、重跑、公开或修改任何 Tripo 任务。
+- 不用四图拼成一张图规避平台数量限制，不批准单图、三视图或从旧模型补渲染的例外。
+- 不生成四视图，不操作 Blender，不修改任何 `raw/`，不向 `src/Assets/` 写入内容。
+
+## 验证
+
+- 记录中的每个结论可对应当前页面字面量或控件；敏感账号、支付与令牌信息不进入仓库。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson` 和 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 形成唯一结论。支持时归档本卡，并在同一状态事件解除 `A-CHAR-TRIPO-FOURVIEW-01` 的具名前置；不支持时归档本卡，同时把严格四视图及全部下游任务标记为不可执行，不降低合同或擅自改成拼图／单图路线。
+
+## 停止条件
+
+- 当前会话未登录、页面必须上传或提交后才能确认、界面同时存在两个无法排除的入口、平台显示将触发扣费，或需要改变账号隐私／项目状态才能继续时停止，只记录已证明部分。

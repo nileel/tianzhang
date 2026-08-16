@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-SLOT-01",
+  "title": "苻渊 Tripo 严格轮 slot-01 换绑验证",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-GEN-01"
+  ],
+  "stateReason": "2026-08-16：等待严格轮第一次独立生成及完整原始包；前置完成前不得预建工作文件、复用旧 slot-01 或虚构平台输出。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-SLOT-01.txt",
+    "开发管理/苻渊Tripo严格轮槽位01换绑验证记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/slot-01/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/slot-01/evidence/blender-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/slot-01/evidence/raw-sha256.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-SLOT-01 · 苻渊 Tripo 严格轮 slot-01 换绑验证
+
+## 来源与当前边界
+
+- 本卡只处理 `A-CHAR-TRIPO-STRICT-GEN-01` 产生的第一个严格轮独立候选；不读取或复制旧单图样本及严格轮其他槽位的模型、权重或工作文件。
+- Tripo 生成、credits、平台任务和下载归生成前置；本卡只消费被冻结的完整原始包与生成记录。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1～§5.3、§六～§八、§十～§十一。
+- `docs/superpowers/specs/2026-08-08-humanoid-evaluation-rig-design.md` §9.1～§9.2、§10.2～§10.3、§12.1、§14.1、§十五。
+- `开发管理/苻渊Tripo槽位01换绑验证记录.txt` 只作固定流程和证据字段基线，不作候选资产、权重或质量答案。
+- `assets/source/characters/humanoid-evaluation/TZ_HumanoidEval_v001.blend` 及同目录证据，作为只读项目统一骨架和 Idle／Move／Attack Action 来源。
+
+## 实施范围
+
+- 先记录 `strict-round-01/slot-01/raw/` 全部文件 SHA-256；保持 FBX 与同名 `.fbm` 外部贴图目录原名和关联，不重命名、移动、去重或修改。
+- 只把无平台动画的基础 FBX 作为换绑源；带 Tripo 动画导出只作平台诊断参考。
+- 从统一骨架 `.blend` Save As 建立本卡字面量 `working/rebind.blend`；平台原骨架和原网格归入隐藏且排除导出的 `PLATFORM_DIAGNOSTIC`，清理导入附带的 `Cube`、`Camera`、`Light`。
+- 严格执行 §10.2：工作网格移除平台 Armature／父级／旧顶点组，按固定 T Pose 校准，使用同一自动权重，处理 `Sec_` 渐变，每顶点最多四骨且无未加权或负权重，直接播放项目 Idle／Move／Attack。
+- 60 分钟完整计时包含导入检查、T Pose、换绑、权重转移和有限修整；只允许设计 §10.3 的操作，命中停止条件立即形成失败证据。
+
+## 禁止项
+
+- 不修改项目统一骨架的骨长、rest pose、名称、层级或 Avatar 合同；不以 Tripo／Mixamo／其他骨架作为正式骨架。
+- 不使用第二种权重算法、额外绑定服务、平台专用映射、完整重拓扑、完整手绘全身权重、纠正骨或形态键。
+- 不向 `src/Assets/` 写入内容，不创建正式 Unity FBX、Avatar、Prefab、材质、Animator 或场景。
+
+## 验证
+
+- 完成后复算 raw SHA-256，证明原始包未变化。
+- 用 Blender 5.2.0 factory startup 重新打开 `working/rebind.blend`，运行 `TZ_Validate`，记录对象、集合、材质、贴图、网格统计、项目骨架、平台诊断骨架、权重、Action、计时和残留风险。
+- 在项目骨架上核对 Idle 1～61、Move 1～31、Attack 1～46，并输出固定帧本地证据；工具连通不替代业务验证。
+- 运行任务卡、文本、空白和 Git 暂存差异检查；无 Unity 文件变化，不运行 Unity 编译或测试。
+
+## 完成条件
+
+- 形成唯一可复核结论：技术通过，或命中明确硬门槛／60 分钟停止条件而失败；保留完整原始包、计时、哈希、factory-startup 和三动作证据。同一状态事件更新父项和 backlog。
+
+## 停止条件
+
+- 生成前置失败或原始包缺完整 FBX／外部贴图关联；正侧背主体缺失、实际三角面超出约 8000～15000、贴图无法解析、60 分钟超时、固定 T Pose／自动权重失败或三动作不能由项目骨架直接播放时记录失败并停止。
+- 需要修改统一骨架、使用平台骨架烘焙姿态、完整重雕／重拓扑／重画贴图、第二绑定流程或写入 Unity 正式路径才能继续时停止。

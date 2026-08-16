@@ -7,19 +7,23 @@
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
-- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊 Tripo `slot-01` 已使用不带动画版本完成统一项目骨架换绑、三动作直放与 Blender factory-startup 回读，未写入 Unity 正式路径。历史恢复进一步证明 `slot-01` 实际输入是仓库现有的单张 1024×1536 正面图，而不是设计 §5.1 四视图；最前端现等待负责人决定严格重建四视图后重跑三件、批准单图例外只补两件，或暂停。
+- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊旧 Tripo `slot-01` 已完成统一项目骨架换绑和 factory-startup 回读，但历史证明它实际只消费单张正面图。负责人已选择严格四视图路线：旧件只作技术样本，另以两张批准苻渊身份源制作同造型四视图并生成三个新正式槽位；当前首个 ready 叶子只读预检 Tripo 是否支持同次四图输入。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
-| A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-SLOT-02、A-CHAR-TRIPO-SLOT-03 | Tripo 3D 固定人形三槽生产验证 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
-| A-CHAR-TRIPO-BASELINE-DEC-01 | P1 | codex | 待决定 | — | 苻渊 Tripo 三槽输入基线处置决定 | 开发管理/任务卡/A-CHAR-TRIPO-BASELINE-DEC-01.txt |
-| A-CHAR-TRIPO-GEN-02 | P1 | codex | 阻塞 | A-CHAR-TRIPO-BASELINE-DEC-01 | 苻渊 Tripo slot-02 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt |
-| A-CHAR-TRIPO-SLOT-02 | P1 | codex | 阻塞 | A-CHAR-TRIPO-GEN-02 | 苻渊 Tripo slot-02 独立候选换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-SLOT-02.txt |
-| A-CHAR-TRIPO-GEN-03 | P1 | codex | 阻塞 | A-CHAR-TRIPO-BASELINE-DEC-01 | 苻渊 Tripo slot-03 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt |
-| A-CHAR-TRIPO-SLOT-03 | P1 | codex | 阻塞 | A-CHAR-TRIPO-GEN-03 | 苻渊 Tripo slot-03 独立候选换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-SLOT-03.txt |
+| A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-SLOT-01、A-CHAR-TRIPO-STRICT-SLOT-02、A-CHAR-TRIPO-STRICT-SLOT-03 | Tripo 3D 固定人形三槽生产验证 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
+| A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01 | P1 | codex | 已排队 | — | Tripo 严格四图同次输入入口预检 | 开发管理/任务卡/A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01.txt |
+| A-CHAR-TRIPO-FOURVIEW-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01 | 苻渊 Tripo 严格轮同造型四视图制作 | 开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-01.txt |
+| A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-01 | 苻渊 Tripo 严格轮四视图批准 | 开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-APPROVAL-01.txt |
+| A-CHAR-TRIPO-STRICT-GEN-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | 苻渊 Tripo 严格轮 slot-01 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt |
+| A-CHAR-TRIPO-STRICT-SLOT-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-GEN-01 | 苻渊 Tripo 严格轮 slot-01 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-01.txt |
+| A-CHAR-TRIPO-STRICT-GEN-02 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | 苻渊 Tripo 严格轮 slot-02 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt |
+| A-CHAR-TRIPO-STRICT-SLOT-02 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-GEN-02 | 苻渊 Tripo 严格轮 slot-02 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-02.txt |
+| A-CHAR-TRIPO-STRICT-GEN-03 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | 苻渊 Tripo 严格轮 slot-03 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt |
+| A-CHAR-TRIPO-STRICT-SLOT-03 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-GEN-03 | 苻渊 Tripo 严格轮 slot-03 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-03.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
 | U-SHIJIAHOU-3D-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-HUMANOID-PROTO-01 | 石甲兽重型四足技术样例 | 开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt |
 | A-CHAR-PORTRAIT-STYLE-01 | P1 | codex | 阻塞 | D-CHAR-APPEARANCE-01 | Toon 与模块化立绘风格样张 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt |

@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-GEN-02",
+  "title": "苻渊 Tripo 严格轮 slot-02 独立模型生成",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-FOURVIEW-APPROVAL-01"
+  ],
+  "stateReason": "2026-08-16：等待负责人按四张字面量文件和 SHA-256 批准严格轮共同输入；批准前不上传、不生成、不扣 credits。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-02.txt",
+    "开发管理/苻渊Tripo严格轮槽位02生成记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/slot-02/evidence/raw-sha256.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-GEN-02 · 苻渊 Tripo 严格轮 slot-02 独立模型生成
+
+## 来源与当前边界
+
+- 本卡只负责严格轮第二次独立 Tripo 生成、平台自动绑定／行走诊断和完整原始下载；不操作 Blender，不拥有父项最终结论。
+- 旧单图技术样本和严格轮其他槽位的项目 ID、模型、raw、Blender 权重都不得复用。
+- 三张严格生成卡必须消费同一组已批准四图、同一 Tripo 模型版本、相同生产设置、约 12000 三角面目标和付费私有授权，只允许平台正常随机差异。
+
+## 必查范围
+
+- `开发管理/苻渊Tripo多视图入口预检记录.txt` 的当前四图入口、模型版本、限制、隐私和可见成本。
+- `开发管理/苻渊Tripo严格轮四视图生成记录.txt` 的负责人批准状态、四张字面量路径与 SHA-256。
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1～§5.3、§六步骤 1～3、§7.1、§八、§十。
+
+## 实施范围
+
+- 生成前重新核对四张输入哈希、当前模型版本、四图排序、约 12000 三角面控制、8K 贴图关闭、关键设置、付费私有状态和按钮显示 credits；任一变化先停止。
+- 用四张批准输入发起一次正式 `strict-round-01/slot-02` 模型请求，记录平台项目／任务 ID、日期、模型版本、设置、输入哈希、按钮显示与实际 credits。
+- 平台服务错误只允许原输入原参数补跑一次；补跑仍失败即记录稳定性失败，不发起第三次请求。查看器正、侧、背主体、后发或袍服背面明显缺失时直接记录质量失败。
+- 对同一模型执行平台自动绑定和一条行走诊断；平台骨架与动作只作诊断参考，不能代替项目统一骨架。
+- 把基础无动画 FBX、对应 `.fbm` 外部贴图目录和诊断动画包完整保存到 `assets/source/characters/platform-evaluation/tripo/strict-round-01/slot-02/raw/`；保持平台原始名称与关联，不重命名、移动、去重或修改。
+- 记录完整原始文件清单和 SHA-256，并写入 Git 跟踪的生成记录与 `evidence/raw-sha256.txt`。
+
+## 禁止项
+
+- 不读取、复制或修改严格轮 slot-01／03 的模型、项目／任务 ID、下载包或随机结果，不更换参考图、模型版本、生产设置或预算。
+- 不把分开的四图拼成一张，不上传未批准输入，不暴露账号、支付、令牌或网盘信息。
+- 不运行 Blender、不创建 `working/rebind.blend`、不使用 Meshy／Mixamo／第三平台，不向 `src/Assets/` 写入内容。
+
+## 验证
+
+- 四张输入路径与批准哈希完全一致；平台任务唯一；基础模型与诊断动画来自同一模型；下载包非空且 FBX／`.fbm` 关联完整。
+- 对 `raw/` 全部文件记录 SHA-256；本卡不以 Blender 可打开或项目动作播放作为完成证据。
+- 运行任务卡、文本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成唯一结论：成功并完整保存第二个严格轮独立原始包，或按服务错误／查看器主体缺失规则记录生成失败。成功时解除 `A-CHAR-TRIPO-STRICT-SLOT-02` 前置并展开实际 raw 字面量；失败时不伪造 Blender 候选。
+
+## 停止条件
+
+- 四图未批准或哈希变化、平台不再支持同次四图、模型版本／关键设置／付费私有状态不符，当前可见扣费超出预检记录，或需改变输入、公开产物、第三次请求、切换模型版本才能继续时停止。

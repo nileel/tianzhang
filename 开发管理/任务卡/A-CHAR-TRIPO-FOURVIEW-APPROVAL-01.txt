@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-FOURVIEW-APPROVAL-01",
+  "title": "苻渊 Tripo 严格轮四视图批准",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-FOURVIEW-01"
+  ],
+  "stateReason": "2026-08-16：等待四张严格视图实际形成并完成客观一致性检查；届时只由负责人决定批准或停止，未批准不上传 Tripo。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-APPROVAL-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-FOURVIEW-APPROVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt",
+    "开发管理/苻渊Tripo严格轮四视图生成记录.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 · 苻渊 Tripo 严格轮四视图批准
+
+## 来源与当前边界
+
+- 本卡是三个付费 Tripo 生成任务共同的唯一主观美术批准闸门；四图形成前保持 blocked，形成后转 `pending_decision`。
+- 客观检查由 `A-CHAR-TRIPO-FOURVIEW-01` 完成；负责人只需判断四个视图是否确实是可接受的同一版苻渊造型。
+
+## 必查范围
+
+- `开发管理/苻渊Tripo严格轮四视图生成记录.txt` 的最终提示词、参考图哈希、四图哈希和一致性风险。
+- 本卡 `expectedPaths` 中四张严格轮输入图的可视对照。
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1 的四视图合同。
+
+## 实施范围
+
+- 向负责人同时展示正面 A／T Pose、正侧面、背面和前三分之四面，明确指出任何由生成补全的背面结构风险。
+- 负责人选择批准时，记录批准日期与四张 SHA-256，归档本卡，并在同一状态事件解除三个严格生成卡的共同前置。
+- 负责人选择不批准时，记录具体原因并停止本严格轮；不自动生成更多变体。若负责人另行明确要求修正，届时只为指定问题建立一张有界修正卡。
+
+## 禁止项
+
+- 不因总体“像”而忽略前后服装、自相矛盾的袖袍、发型或比例；不把 Codex 客观检查当成负责人批准。
+- 未批准前不上传 Tripo、不生成模型、不扣 credits、不操作 Blender 或修改 `raw/`／`src/Assets/`。
+
+## 验证
+
+- 批准必须唯一对应四张字面量路径和 SHA-256；图片变化即使文件名不变也使批准失效。
+- 运行任务卡、文本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 负责人明确批准该四图集合并记录哈希，或明确不批准并停止；不接受把“以后再看”解释为批准。
+
+## 停止条件
+
+- 图片无法同时展示、哈希与生成记录不一致、负责人要求替换身份源、或回复不能唯一判断批准／不批准时保持待决定，不发起任何付费生成。

@@ -1,38 +1,37 @@
 ---TASK-META---
 {
   "schemaVersion": 1,
-  "id": "A-CHAR-TRIPO-SLOT-03",
-  "title": "苻渊 Tripo slot-03 独立候选换绑验证",
+  "id": "A-CHAR-TRIPO-SLOT-02",
+  "title": "苻渊 Tripo slot-02 独立候选换绑验证",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-GEN-03"
-  ],
-  "stateReason": "2026-08-16：等待具名前置 A-CHAR-TRIPO-GEN-03 生成并保存第三个独立 Tripo 原始模型包；前置完成前不得预建工作文件、复用 slot-01／slot-02 或虚构平台输出。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：负责人选择严格四视图并重跑三个正式槽位；旧 slot-02 换绑卡随被取代的生成路线未执行关闭，由 A-CHAR-TRIPO-STRICT-SLOT-01～03 取代。没有创建 slot-02 工作文件。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
-    "开发管理/任务卡/A-CHAR-TRIPO-SLOT-03.txt",
-    "开发管理/任务归档/A-CHAR-TRIPO-SLOT-03.txt",
-    "开发管理/苻渊Tripo槽位03换绑验证记录.txt",
-    "assets/source/characters/platform-evaluation/tripo/slot-03/working/rebind.blend",
-    "assets/source/characters/platform-evaluation/tripo/slot-03/evidence/blender-validation.txt",
-    "assets/source/characters/platform-evaluation/tripo/slot-03/evidence/raw-sha256.txt"
+    "开发管理/任务卡/A-CHAR-TRIPO-SLOT-02.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-SLOT-02.txt",
+    "开发管理/苻渊Tripo槽位02换绑验证记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/slot-02/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/slot-02/evidence/blender-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/slot-02/evidence/raw-sha256.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# A-CHAR-TRIPO-SLOT-03 · 苻渊 Tripo slot-03 独立候选换绑验证
+# A-CHAR-TRIPO-SLOT-02 · 苻渊 Tripo slot-02 独立候选换绑验证
 
 ## 来源与当前边界
 
-- 本卡是 `A-CHAR-AI-PLATFORM-EVAL-01` 的换绑叶子，只处理 `A-CHAR-TRIPO-GEN-03` 产出的第三个独立候选；不依赖 `slot-02`，也不拥有父项最终平台结论。
-- 生成、Tripo 平台界面、输入上传、credits 和原始下载只归 `A-CHAR-TRIPO-GEN-03`；本卡只消费该前置冻结的完整原始包和生成记录。
+- 本卡于 2026-08-16 因严格四视图路线取代而未执行关闭；以下正文仅保留被取代路线的审计边界。
+- 本卡是 `A-CHAR-AI-PLATFORM-EVAL-01` 的换绑叶子，只处理 `A-CHAR-TRIPO-GEN-02` 产出的第二个独立候选；不依赖 `slot-03`，也不拥有父项最终平台结论。
+- 生成、Tripo 平台界面、输入上传、credits 和原始下载只归 `A-CHAR-TRIPO-GEN-02`；本卡只消费该前置冻结的完整原始包和生成记录。
 
 ## 必查范围
 
@@ -43,15 +42,15 @@
 
 ## 实施范围
 
-- 原始下载完整保存在 `assets/source/characters/platform-evaluation/tripo/slot-03/raw/`；先记录全部文件 SHA-256。若 FBX 使用同名 `.fbm` 外部贴图目录，整包原名保留，不单独重命名、移动、去重或修改。
+- 原始下载完整保存在 `assets/source/characters/platform-evaluation/tripo/slot-02/raw/`；先记录全部文件 SHA-256。若 FBX 使用同名 `.fbm` 外部贴图目录，整包原名保留，不单独重命名、移动、去重或修改。
 - 只把无平台动画的基础 FBX 作为换绑源；带 Tripo 动画的导出若存在，只能进入平台自动绑定诊断，不得作为项目换绑输入。
-- 从统一骨架 `.blend` Save As 建立 `slot-03/working/rebind.blend`；平台原骨架和原网格归入隐藏且排除导出的 `PLATFORM_DIAGNOSTIC`，清理导入附带的 `Cube`、`Camera`、`Light`。
+- 从统一骨架 `.blend` Save As 建立 `slot-02/working/rebind.blend`；平台原骨架和原网格归入隐藏且排除导出的 `PLATFORM_DIAGNOSTIC`，清理导入附带的 `Cube`、`Camera`、`Light`。
 - 严格执行设计 §10.2：工作网格移除平台 Armature／父级／旧顶点组，按固定 T Pose 校准、同一自动权重、`Sec_` 渐变、每顶点最多四骨、无未加权或负权重，并直接播放项目 Idle／Move／Attack。
 - 60 分钟完整计时包含导入检查、T Pose、换绑、权重转移与有限修整；只允许设计 §10.3 的操作，命中停止条件立即形成失败证据，不叠加第二套流程。
 
 ## 禁止项
 
-- 不读取、复制或修改 `slot-01`／`slot-02` 的模型、权重或工作文件；不复用其随机候选结果。
+- 不读取、复制或修改 `slot-01`／`slot-03` 的模型、权重或工作文件；不复用其随机候选结果。
 - 不修改项目统一骨架的骨长、rest pose、名称、层级或 Avatar 合同；不使用 Tripo、Mixamo 或其他平台骨架作为正式骨架。
 - 不使用额外绑定服务、第二种权重算法、平台专用映射、完整重拓扑、完整手绘全身权重、纠正骨或形态键。
 - 不向 `src/Assets/` 写入任何内容，不创建正式 Unity FBX、Avatar、Prefab、材质、Animator 或场景。
@@ -66,10 +65,10 @@
 ## 完成条件
 
 - 形成唯一可复核结论：技术通过，或命中明确硬门槛／60 分钟停止条件而技术失败；两种结果都必须保留完整原始包、计时、哈希、Blender factory-startup 和三动作证据。
-- 同一状态事件更新父任务与 backlog；本卡完成只提供 `slot-03` 结论，不自动关闭父项或宣布 Tripo 生产路线成立。
+- 同一状态事件更新父任务与 backlog；本卡完成只提供 `slot-02` 结论，不自动关闭父项或宣布 Tripo 生产路线成立。
 
 ## 停止条件
 
-- `A-CHAR-TRIPO-GEN-03` 未完成、结论为生成失败，或其原始包缺完整 FBX／外部贴图关联、平台任务与付费授权记录时停止且不创建工作文件。
+- `A-CHAR-TRIPO-GEN-02` 未完成、结论为生成失败，或其原始包缺完整 FBX／外部贴图关联、平台任务与付费授权记录时停止且不创建工作文件。
 - 正侧背主体缺失、实际三角面超出约 8000～15000、既有贴图无法解析、60 分钟超时、固定 T Pose 或自动权重失败、三动作不能由项目骨架直接播放时记录失败并停止。
 - 需要修改统一骨架、使用平台骨架烘焙姿态、完整重雕／重拓扑／重画贴图、第二绑定流程或写入 Unity 正式路径才能继续时停止，不加兼容补丁。
