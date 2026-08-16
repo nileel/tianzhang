@@ -9,13 +9,20 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-16：用户确认 Tripo 会员已开通并终止 Meshy 路线；苻渊 Tripo slot-01 已完成统一项目骨架换绑、三动作直放与 factory-startup 回读。尚缺同一冻结输入的 slot-02／slot-03 平台输出，任务保持 blocked，不把单槽成功外推为生产路线完成。",
+  "blockedBy": [
+    "A-CHAR-TRIPO-SLOT-02",
+    "A-CHAR-TRIPO-SLOT-03"
+  ],
+  "stateReason": "2026-08-16：父项已拆为两个互不依赖的槽位任务；slot-01 已完成 Blender 技术验证，A-CHAR-TRIPO-SLOT-02 与 A-CHAR-TRIPO-SLOT-03 分别等待各自独立的 Tripo 原始导出包。父项只汇总三槽证据，在两个子任务均形成结论前保持 blocked。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
     "开发管理/任务归档/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-SLOT-02.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-SLOT-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-SLOT-03.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-SLOT-03.txt",
     "开发管理/苻渊Tripo槽位01换绑验证记录.txt",
     "assets/source/characters/platform-evaluation/tripo/slot-01/working/rebind.blend",
     "assets/source/characters/platform-evaluation/tripo/slot-01/evidence/blender-validation.txt"
@@ -32,14 +39,21 @@
 - `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成；统一 `.blend`、Rig FBX、三条动作 FBX 与 Blender／Unity 证据位于 `assets/source/characters/humanoid-evaluation/`，并已核对百度网盘项目源镜像。
 - 苻渊 Tripo `slot-01` 已完成：正式换绑输入只使用不带动画的 `fu_yuan_tripo_v1`；带行走动画的 `fu_yuan_walk_tripo_v1` 只保留为平台诊断参考；两套 `raw/` 原始包未修改。
 
+## 子任务与依赖
+
+- `A-CHAR-TRIPO-SLOT-02`：只拥有 `slot-02` 的原始包锁定、工作文件、技术换绑、三动作与 factory-startup 证据。
+- `A-CHAR-TRIPO-SLOT-03`：只拥有 `slot-03` 的原始包锁定、工作文件、技术换绑、三动作与 factory-startup 证据。
+- 两个子任务互不依赖、不得读取或复制对方候选结果；共享的统一骨架和三条 Action 只读。当前两个槽位目录均不存在，因此没有 ready 叶子，也不预建空目录。
+- 父项不再执行单槽 Blender 修改，只在两个子任务均完成后汇总 `slot-01`～`slot-03` 的硬门槛、修整时间与稳定性结论。
+
 ## 必查范围
 
 - 评估设计全文、苻渊四视图直接事实、统一骨架／动作、人形骨架设计 §10.2 固定换绑流程、美术资源版本规范，以及 Tripo 当时实际授权／付费隐私条件。
 
 ## 实施范围
 
-- Tripo 使用三个正式独立槽位与同一冻结输入、预算和导出条件；统一移除／停用平台骨架、换绑项目骨架、转移权重并记录有限修整时间。
-- `slot-01` 只证明该候选在当前单槽通过结构、材质、权重、动作与计时门槛；必须补齐 `slot-02`、`slot-03` 后才能判断 Tripo 是否可作为可复现主生产平台。
+- 父项只汇总三个正式独立槽位的同输入、预算、导出条件、修整时间、技术证据与失败原因，不直接修改任何槽位 `.blend`。
+- `slot-01` 只证明该候选在当前单槽通过结构、材质、权重、动作与计时门槛；必须由两个子任务补齐 `slot-02`、`slot-03` 后才能判断 Tripo 是否可作为可复现主生产平台。
 
 ## 禁止项
 
@@ -53,8 +67,9 @@
 
 ## 完成条件
 
-- 三个 Tripo 独立槽位均完成并证明固定人形结果可按同一流程换绑、播放项目三动作且满足时间与质量硬门槛；若失败，则同一状态事件建立 `A-CHAR-BLENDER-TEMPLATE-01` 并把下游 blocker 切换为单一路线。
+- `A-CHAR-TRIPO-SLOT-02` 与 `A-CHAR-TRIPO-SLOT-03` 均完成并留下可复核的通过或失败证据；父项随后把三槽结果汇总为唯一生产结论。
+- 若三槽至少两件通过单件硬门槛，记录 Tripo 固定人形生产基线；若不足两件通过，则同一状态事件建立 `A-CHAR-BLENDER-TEMPLATE-01` 并把下游 blocker 切换为单一路线。
 
 ## 停止条件
 
-- 缺四视图、骨架、三动作、Tripo 付费私有生成授权或剩余独立槽位，或结果只能靠恢复双平台／额外自动修补成立时停止。
+- 任一子任务缺独立原始包或未形成稳定结论，或结果只能靠恢复双平台／额外自动修补成立时，父项停止汇总并保持 blocked。
