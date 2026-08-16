@@ -10,9 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-TRIPO-INPUT-LOCK-01"
+    "A-CHAR-TRIPO-BASELINE-DEC-01"
   ],
-  "stateReason": "2026-08-16：等待 A-CHAR-TRIPO-INPUT-LOCK-01 恢复并冻结 slot-01 实际视觉输入、Tripo 模型版本、关键设置与付费私有证据；输入合同成功后才可转 ready。",
+  "stateReason": "2026-08-16：slot-01 历史已恢复为单张正面输入，与设计四视图合同冲突；等待 A-CHAR-TRIPO-BASELINE-DEC-01 决定严格重跑三件、批准单图例外补两件或暂停。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -33,7 +33,7 @@
 - 本卡是 `A-CHAR-TRIPO-SLOT-02` 的唯一生成前置，只负责 Tripo 第二次独立模型生成、平台诊断导出和原始下载留存；不操作 Blender，不评价项目骨架换绑，也不拥有父项最终结论。
 - 必须消费与 `slot-01` 完全相同且已冻结的苻渊视觉输入、Tripo 模型版本、生产设置、约 12000 三角面目标和付费私有授权，只允许平台随机差异。
 - 当前仓库中的 `fu-yuan-public-exploration-v1.png` 与 `fu-yuan-paper-doll-public-exploration-v1.png` 都只是单张正面探索图，造型也不完全相同；不得把其中任一张或附近立绘猜作 `slot-01` 的四视图输入。
-- 唯一输入事实由 `A-CHAR-TRIPO-INPUT-LOCK-01` 形成；本卡不得自行恢复、替换或补画输入。
+- 唯一历史输入事实已记录在 `开发管理/苻渊Tripo三槽原始输入合同.txt`；本卡不得自行选择严格重跑或单图例外，也不得恢复、替换或补画输入。
 
 ## 必查范围
 

@@ -13,7 +13,7 @@
     "A-CHAR-TRIPO-SLOT-02",
     "A-CHAR-TRIPO-SLOT-03"
   ],
-  "stateReason": "2026-08-16：完整前置链为 A-CHAR-TRIPO-INPUT-DEC-01 → A-CHAR-TRIPO-INPUT-LOCK-01 → 两条 GEN／SLOT 分支。最前端已收口为负责人选择历史只读恢复或人工交付；slot-01 已完成 Blender 技术验证，父项在两个换绑子任务均形成结论前保持 blocked。",
+  "stateReason": "2026-08-16：历史恢复证明 slot-01 实际只使用一张正面图，与设计 §5.1 四视图合同冲突。最前端现为 A-CHAR-TRIPO-BASELINE-DEC-01，等待严格重跑三件、批准单图例外补两件或暂停；父项在对应正式槽位形成结论前保持 blocked。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -23,6 +23,8 @@
     "开发管理/任务归档/A-CHAR-TRIPO-INPUT-DEC-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-BASELINE-DEC-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-BASELINE-DEC-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-GEN-02.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt",
@@ -32,6 +34,7 @@
     "开发管理/任务卡/A-CHAR-TRIPO-SLOT-03.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-SLOT-03.txt",
     "开发管理/苻渊Tripo槽位01换绑验证记录.txt",
+    "开发管理/苻渊Tripo三槽原始输入合同.txt",
     "assets/source/characters/platform-evaluation/tripo/slot-01/working/rebind.blend",
     "assets/source/characters/platform-evaluation/tripo/slot-01/evidence/blender-validation.txt"
   ],
@@ -49,10 +52,11 @@
 
 ## 子任务与依赖
 
-- 共同前端：`A-CHAR-TRIPO-INPUT-DEC-01 → A-CHAR-TRIPO-INPUT-LOCK-01`。决定卡只确认历史只读恢复或负责人手动交付；锁定卡只恢复并冻结 `slot-01` 实际输入合同。
+- 已完成的事实恢复：`A-CHAR-TRIPO-INPUT-DEC-01 → A-CHAR-TRIPO-INPUT-LOCK-01` 已证明 `slot-01` 实际输入是单张正面图，不满足四视图合同；两卡完成归档。
+- 当前共同前端：`A-CHAR-TRIPO-BASELINE-DEC-01` 决定严格重建四视图并重跑三件，或批准单图例外后只补两件；决定前不发起生成。
 - 第一条链：`A-CHAR-TRIPO-GEN-02 → A-CHAR-TRIPO-SLOT-02`。生成卡只负责 Tripo 第二个独立模型及完整原始下载；换绑卡只消费该生成结果并负责 Blender 技术验证。
 - 第二条链：`A-CHAR-TRIPO-GEN-03 → A-CHAR-TRIPO-SLOT-03`。生成卡只负责 Tripo 第三个独立模型及完整原始下载；换绑卡只消费该生成结果并负责 Blender 技术验证。
-- 输入锁定成功后两条分支并行且互不依赖，不得读取或复制对方候选结果；共享的冻结输入、统一骨架和三条 Action 只读。当前最前端只等待负责人 A／B 选择，不预建空目录。
+- 基线决定完成后，合法的生成分支并行且互不依赖，不得读取或复制对方候选结果；共享的批准输入、统一骨架和三条 Action 只读，不预建空目录。
 - 父项不再执行单槽 Blender 修改，只在两个子任务均完成后汇总 `slot-01`～`slot-03` 的硬门槛、修整时间与稳定性结论。
 
 ## 必查范围

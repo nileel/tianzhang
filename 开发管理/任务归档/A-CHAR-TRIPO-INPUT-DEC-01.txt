@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "pending_decision",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-16：等待负责人选择 A（授权 Codex 只读检查当前 Tripo 历史并下载原始输入副本）或 B（负责人手动提供原始输入与参数证据）。此前用户已停止界面控制，因此没有新的明确选择前不访问 Tripo 账号。",
+  "stateReason": "2026-08-16：负责人在当前 Codex 对话明确选择 A，授权只读检查既有 Tripo 历史并下载原始输入副本；历史恢复已执行，决定完成归档。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -21,51 +21,14 @@
     "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationDecision": {
-    "schemaVersion": 1,
-    "kind": "queue_maintenance",
-    "status": "awaiting_reply",
-    "decisionId": "DEC-20260816-QM7A31C02F9D4E",
-    "taskId": "A-CHAR-TRIPO-INPUT-DEC-01",
-    "question": "slot-01 原始输入与 Tripo 参数应由 Codex 检查既有平台历史恢复，还是由负责人手动提供？",
-    "options": [
-      {
-        "key": "A",
-        "label": "授权只读检查并下载既有原始输入",
-        "targetState": "ready"
-      },
-      {
-        "key": "B",
-        "label": "负责人手动提供原始输入与参数证据",
-        "targetState": "ready"
-      },
-      {
-        "key": "C",
-        "label": "暂停当前三槽正式评估",
-        "targetState": "blocked"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 只恢复既有历史且最可能保留 slot-01 的正式样本资格；B 不控制平台但需要负责人交付完整证据；C 不再推进两个新槽位。",
-    "plainSummary": {
-      "situation": "slot-01 模型与 Blender 证据存在，但当时实际上传的四视图、模型版本和关键参数没有落盘。",
-      "impact": "没有这些事实，slot-02 和 slot-03 无法证明与 slot-01 同输入，三槽稳定性结论不成立。",
-      "action": "请回复 A、B 或 C；A 不会新建、重跑、删除或公开任何 Tripo 任务。"
-    },
-    "allowCustomReply": false,
-    "sourceCommit": "52fd3d393deb54c3021f45986097a816310101a0",
-    "sourceTaskDigest": "24ce3102bc9d0ca83d417c6b3dd413710a043d018ec92d89d3bd9fe16e9edfaf",
-    "taskContextDigest": "f3b1c1438af9692be187d3f00165aa31d12c2b14511d04100efe7dd86b4d8930",
-    "queueIndex": 0,
-    "createdAt": "2026-08-16T15:22:34.5240073+08:00"
-  }
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
 # A-CHAR-TRIPO-INPUT-DEC-01 · 苻渊 Tripo slot-01 原始输入恢复方式决定
 
 ## 来源与当前边界
 
+- 负责人于 2026-08-16 在当前 Codex 对话明确回复 A；授权范围与本卡 A 完全一致。
 - 设计要求三个正式 Tripo 槽位使用同一组苻渊正面 A／T Pose、侧面、背面和前三分之四面，并保持相同模型版本与生产设置。
 - `slot-01` 原始 FBX、外部贴图、换绑工作文件和技术证据都已安全保存，但现有记录没有平台任务 ID、实际上传图片、Tripo 模型版本和关键生成设置。
 - 仓库只找到两张造型不同的正面探索图；动态立绘和三视角效果演示按设计不能代替缺失的原始四视图，也不能据外观相似度倒推当时输入。
@@ -104,7 +67,7 @@
 
 ## 完成条件
 
-- 负责人明确选择 A、B 或 C；A／B 的对应账号读取／下载授权或人工交付边界已同步到输入锁定卡，C 的暂停边界已同步到两个生成任务、backlog 和队列投影。
+- 负责人已选择 A；既有 Tripo 历史已按授权只读检查，输入恢复结论转入 `开发管理/苻渊Tripo三槽原始输入合同.txt`。
 
 ## 停止条件
 

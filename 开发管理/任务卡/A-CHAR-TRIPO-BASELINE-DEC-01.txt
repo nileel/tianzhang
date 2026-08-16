@@ -1,0 +1,103 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-BASELINE-DEC-01",
+  "title": "苻渊 Tripo 三槽输入基线处置决定",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "pending_decision",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：历史已证明 slot-01 实际只使用一张正面图，与设计 §5.1 四视图合同冲突。等待负责人选择 A（严格重建四视图并重跑三个正式槽位）、B（批准单图例外并只补 slot-02／03）或 C（暂停）。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-BASELINE-DEC-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-BASELINE-DEC-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt",
+    "开发管理/苻渊Tripo三槽原始输入合同.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationDecision": {
+    "schemaVersion": 1,
+    "kind": "queue_maintenance",
+    "status": "awaiting_reply",
+    "decisionId": "DEC-20260816-QM9F2A6C71B4D8",
+    "taskId": "A-CHAR-TRIPO-BASELINE-DEC-01",
+    "question": "slot-01 实际只有单张正面输入；三槽评估应严格重建四视图后重跑三件，还是批准单图例外并只补两件？",
+    "options": [
+      {
+        "key": "A",
+        "label": "严格四视图并重跑三件",
+        "targetState": "ready"
+      },
+      {
+        "key": "B",
+        "label": "批准单图例外并补两件",
+        "targetState": "ready"
+      },
+      {
+        "key": "C",
+        "label": "暂停三槽正式评估",
+        "targetState": "blocked"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 保持原设计的四视图硬合同，但现有 slot-01 只作技术样本并需三次新生成；B 复用已恢复的单图和 v3.1 配置，只生成两件，但明确偏离 §5.1；C 不再推进。",
+    "plainSummary": {
+      "situation": "slot-01 的真实输入已恢复为仓库现有的一张 1024×1536 正面图，不存在历史四视图。",
+      "impact": "继续前必须在严格设计可比性与少两次生成成本之间作出明确选择。",
+      "action": "请回复 A、B 或 C；决定前不会发起任何新生成。"
+    },
+    "allowCustomReply": false,
+    "sourceCommit": "b985945c51aac39ced361d3c2a83b7d2fa63b14d",
+    "sourceTaskDigest": "c75c994b46724a605fedd6934559886039f3ca7e5a74fdf34e7f875ea7611d47",
+    "taskContextDigest": "fcf10a5d6ab4c93035d54959604bd6e038cfd733c372c167cd7d45b6275dcba1",
+    "queueIndex": 0,
+    "createdAt": "2026-08-16T15:41:45.7616924+08:00"
+  }
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-BASELINE-DEC-01 · 苻渊 Tripo 三槽输入基线处置决定
+
+## 来源与当前边界
+
+- 路线 A 的历史恢复已找到唯一实际输入，并以 SHA-256 证明它就是仓库现有的 `fu-yuan-paper-doll-public-exploration-v1.png`。
+- Tripo 页面只显示这一张正面全身图；不存在 `slot-01` 曾使用侧面、背面和前三分之四面的证据，因此不能继续把缺失解释为“尚未找到”。
+- `slot-01` 的 11348 三角面模型与 Blender 换绑 PASS 仍是有效技术证据，但不自动满足设计 §5.1 的正式四视图输入条件。
+
+## 必查范围
+
+- `开发管理/苻渊Tripo三槽原始输入合同.txt` 的平台恢复事实与结论。
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1～§5.3、§六、§八、§十。
+- `开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt` 与两张生成任务卡的当前依赖图。
+
+## 实施范围
+
+- **A（推荐，严格合同）**：现有 `slot-01` 保留为技术可行性样本；先建立并批准同造型四视图，再以同一输入和设置新生成三个正式 Tripo 槽位。按检查时页面基础生成价，三件基础模型当前最低显示成本为 120 credits，未计绑定／动画；实际扣费仍须在生成前确认。
+- **B（节省两次生成）**：负责人明确批准对设计 §5.1 的单图例外；把已恢复的正面图 SHA-256、`v3.1 – 最高质量`、高精度模式和可证明的页面设置作为三槽共同基线，保留现有 `slot-01` 为第一正式样本，只生成 `slot-02`、`slot-03`。按当前页面基础生成价最低显示成本为 80 credits，未计绑定／动画。
+- **C（暂停）**：保留全部现有证据和原始文件，不发起新生成，不推进下游正式角色资源。
+
+## 禁止项
+
+- 不把现有单图描述成四视图，不从 `slot-01` 模型补渲染后伪装为原始输入。
+- 未决定前不上传图片、不生成模型、不消耗 credits、不修改 `raw/`、Blender 或 `src/Assets/`。
+- 选择 A 后不得覆盖现有 `slot-01`；新正式三槽必须使用新的字面量路径。选择 B 后不得为 `slot-02`／`slot-03` 换图、换版本或改设置。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 负责人明确选择 A、B 或 C；对应任务图、输入合同例外、生成次数、路径和 credits 边界已同步后，本卡归档。
+
+## 停止条件
+
+- 回复不能唯一映射 A／B／C、要求覆盖现有 raw、要求把单图冒充四视图，或实际生成前平台显示的版本、设置、隐私或扣费与已决定基线不一致时停止。
