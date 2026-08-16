@@ -1,0 +1,14 @@
+interface:
+  display_name: "《天章》Blender 流程"
+  short_description: "按《天章》项目规则安全操作 Blender 并验证 FBX 资产"
+  default_prompt: "Use $tianzhang-blender-pipeline to inspect or validate this Blender/FBX task under the TianZhang project rules."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "blender_lab"
+      description: "Official Blender Lab MCP for the active Blender session"
+    - type: "mcp"
+      value: "blender_headless_qa"
+      description: "Headless Blender FBX reimport verification"
+policy:
+  allow_implicit_invocation: true
