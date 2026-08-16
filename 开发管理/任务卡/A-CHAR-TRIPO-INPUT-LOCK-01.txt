@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-INPUT-LOCK-01",
+  "title": "苻渊 Tripo 三槽原始输入合同锁定",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "discovery",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-INPUT-DEC-01"
+  ],
+  "stateReason": "2026-08-16：等待 A-CHAR-TRIPO-INPUT-DEC-01 明确选择历史只读恢复或负责人手动交付；决定完成并展开实际输入文件字面量路径后可转 ready。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-INPUT-DEC-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt",
+    "开发管理/苻渊Tripo三槽原始输入合同.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-INPUT-LOCK-01 · 苻渊 Tripo 三槽原始输入合同锁定
+
+## 来源与当前边界
+
+- 本卡只形成一个可复核结果：恢复并冻结 `slot-01` 当时实际使用的视觉输入、Tripo 模型版本、关键生产设置、任务 ID、日期与付费私有状态，供 `slot-02`、`slot-03` 原样消费。
+- 执行通道由 `A-CHAR-TRIPO-INPUT-DEC-01` 的负责人选择决定；A 只读检查既有 Tripo 历史，B 只处理负责人手动提供的本地文件与证据。
+- 转为 ready 前必须把历史或人工交付实际揭示的输入文件目标路径逐项加入 `expectedPaths`；不得只授权一个目录、通配符或未知文件名。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1～§5.3、§六步骤 1～3、§八、§十。
+- `开发管理/任务卡/A-CHAR-TRIPO-INPUT-DEC-01.txt` 的已确认选择与授权边界。
+- `开发管理/苻渊Tripo槽位01换绑验证记录.txt`、`slot-01/evidence/raw-sha256.txt` 和两个原始 FBX UUID，只用于匹配既有平台历史，不据模型外观推断输入。
+
+## 实施范围
+
+- 路线 A：在当前已登录 Tripo 历史中只读检索与两个既有 FBX UUID／任务时间相符的基础模型、自动绑定和行走记录；下载历史中原样保存的输入副本，记录平台显示的模型版本、关键设置、任务 ID、日期和付费私有状态。
+- 路线 B：核对负责人交付的原始输入文件及平台证据，记录交付来源与时间。
+- 两条路线都计算输入文件 SHA-256，逐项确认正面 A／T Pose、侧面、背面、前三分之四面属于同一造型；在 `开发管理/苻渊Tripo三槽原始输入合同.txt` 固定绝对项目相对路径、哈希、平台字段和证据边界。
+- 成功时同一状态事件解除 `A-CHAR-TRIPO-GEN-02` 与 `A-CHAR-TRIPO-GEN-03` 的具名前置，并把已冻结输入的精确路径与哈希写进两张生成卡。
+
+## 禁止项
+
+- 不生成、编辑、补画或拼接参考图；不以当前正面探索图、动态立绘、三视角效果演示或 `slot-01` 模型渲染反推原输入。
+- 不创建、重跑、删除或公开 Tripo 任务，不消耗 credits，不上传新资产，不修改任何 `slot-01/raw/` 文件。
+- 不操作 Blender，不创建 `slot-02`／`slot-03` 空目录，不向 `src/Assets/` 写入任何内容。
+
+## 验证
+
+- 四个要求视图或平台实际等价输入均有受控路径、SHA-256 和来源证据；模型版本、关键设置、任务 ID、日期和付费私有状态无空项。
+- 输入证据能与现有 `slot-01` 平台历史唯一对应；不能唯一对应时形成“原始合同不可恢复”的明确失败结论，不解锁两个生成任务。
+- 运行任务卡、文本、空白与 Git 暂存差异检查。
+
+## 完成条件
+
+- 成功：形成唯一、可复核且能由三个正式槽位原样消费的输入合同，并把两个生成任务转为可判断 ready 的状态。
+- 失败：留下查过的历史范围或负责人交付缺口，明确现有 `slot-01` 只能作为技术样本；不伪造同输入稳定性证据。
+
+## 停止条件
+
+- 历史记录不存在、账号权限不足、实际输入无法下载、人工交付缺视图／参数，或证据不能唯一对应 `slot-01` 时停止并记录失败。
+- 继续需要新造四视图、重跑正式 `slot-01`、新增 credits、改变 Tripo 模型版本／设置或恢复 Meshy 时停止并请求新的范围决定。

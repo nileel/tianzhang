@@ -1,0 +1,112 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-INPUT-DEC-01",
+  "title": "苻渊 Tripo slot-01 原始输入恢复方式决定",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "pending_decision",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：等待负责人选择 A（授权 Codex 只读检查当前 Tripo 历史并下载原始输入副本）或 B（负责人手动提供原始输入与参数证据）。此前用户已停止界面控制，因此没有新的明确选择前不访问 Tripo 账号。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-INPUT-DEC-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-INPUT-DEC-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationDecision": {
+    "schemaVersion": 1,
+    "kind": "queue_maintenance",
+    "status": "awaiting_reply",
+    "decisionId": "DEC-20260816-QM7A31C02F9D4E",
+    "taskId": "A-CHAR-TRIPO-INPUT-DEC-01",
+    "question": "slot-01 原始输入与 Tripo 参数应由 Codex 检查既有平台历史恢复，还是由负责人手动提供？",
+    "options": [
+      {
+        "key": "A",
+        "label": "授权只读检查并下载既有原始输入",
+        "targetState": "ready"
+      },
+      {
+        "key": "B",
+        "label": "负责人手动提供原始输入与参数证据",
+        "targetState": "ready"
+      },
+      {
+        "key": "C",
+        "label": "暂停当前三槽正式评估",
+        "targetState": "blocked"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 只恢复既有历史且最可能保留 slot-01 的正式样本资格；B 不控制平台但需要负责人交付完整证据；C 不再推进两个新槽位。",
+    "plainSummary": {
+      "situation": "slot-01 模型与 Blender 证据存在，但当时实际上传的四视图、模型版本和关键参数没有落盘。",
+      "impact": "没有这些事实，slot-02 和 slot-03 无法证明与 slot-01 同输入，三槽稳定性结论不成立。",
+      "action": "请回复 A、B 或 C；A 不会新建、重跑、删除或公开任何 Tripo 任务。"
+    },
+    "allowCustomReply": false,
+    "sourceCommit": "52fd3d393deb54c3021f45986097a816310101a0",
+    "sourceTaskDigest": "24ce3102bc9d0ca83d417c6b3dd413710a043d018ec92d89d3bd9fe16e9edfaf",
+    "taskContextDigest": "f3b1c1438af9692be187d3f00165aa31d12c2b14511d04100efe7dd86b4d8930",
+    "queueIndex": 0,
+    "createdAt": "2026-08-16T15:22:34.5240073+08:00"
+  }
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-INPUT-DEC-01 · 苻渊 Tripo slot-01 原始输入恢复方式决定
+
+## 来源与当前边界
+
+- 设计要求三个正式 Tripo 槽位使用同一组苻渊正面 A／T Pose、侧面、背面和前三分之四面，并保持相同模型版本与生产设置。
+- `slot-01` 原始 FBX、外部贴图、换绑工作文件和技术证据都已安全保存，但现有记录没有平台任务 ID、实际上传图片、Tripo 模型版本和关键生成设置。
+- 仓库只找到两张造型不同的正面探索图；动态立绘和三视角效果演示按设计不能代替缺失的原始四视图，也不能据外观相似度倒推当时输入。
+- 本卡只决定如何恢复事实，不生成图片、不发起 Tripo 模型任务、不操作 Blender，也不修改任何 `raw/` 文件。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1～§5.3、§六步骤 1～3、§八、§十。
+- `开发管理/苻渊Tripo槽位01换绑验证记录.txt`、`slot-01/evidence/raw-sha256.txt` 与当前两张生成任务卡的输入停止条件。
+- 用户此前停止界面控制的边界；只有本卡明确选择 A 才重新授权限定的 Tripo 历史读取和既有输入下载。
+
+## 实施范围
+
+- **A（推荐）**：授权 Codex 只读检查当前已登录的 Tripo 任务历史，定位 `slot-01` 的模型任务与对应自动绑定／行走任务；允许把历史中实际上传的原始输入副本下载到随后冻结的项目源路径，并记录模型版本、关键设置、任务 ID、日期和付费私有状态。不得新建、重跑、删除或公开任何平台任务。
+- **B**：不授权 Codex 控制 Tripo；由负责人手动提供 `slot-01` 当时实际上传的全部输入文件，以及能证明模型版本、关键设置、任务 ID、日期和付费私有状态的截图或文字值。Codex 只在本地核验并冻结。
+- **C**：暂停当前三槽正式评估；保留 `slot-01` 技术样本和既有原始文件，不执行 `slot-02`、`slot-03`。
+- 若 A 的历史记录已不存在，或 B 无法提供上述证据，当前 `slot-01` 只能保留为技术可行性样本；是否另建新四视图并重新执行三个正式槽位属于会新增生成次数和 credits 的范围变化，届时必须另行决定，不能把现有正面图直接补作原输入。
+
+## 决定后的状态事件
+
+- 选择 A 或 B 后，本卡进入可处理状态；记录选择后归档，并在同一状态事件把 `A-CHAR-TRIPO-INPUT-LOCK-01` 的执行通道写清、解除本卡前置。
+- 选择 A 时，后续只允许恢复与下载既有历史输入；选择 B 时，后续只消费负责人明确提供的文件和参数，不打开第三方平台。
+- 选择 C 时，本卡记录暂停决定并归档，输入锁定卡与两个生成任务保持 blocked。
+- 未选择、选择内容含糊或要求以相近图片替代时保持 `pending_decision`，不进入生成。
+
+## 禁止项
+
+- 不把相近正面图、动态立绘、模型效果演示或现有 `slot-01` 渲染猜作原始输入。
+- 不在决定阶段访问账号、下载文件、发起生成、消耗 credits、操作 Blender 或修改 `raw/`／`src/Assets/`。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理`。
+- 提交前运行 `tools/check-pending-whitespace.ps1`；暂存后运行 `git diff --cached --check`。
+
+## 完成条件
+
+- 负责人明确选择 A、B 或 C；A／B 的对应账号读取／下载授权或人工交付边界已同步到输入锁定卡，C 的暂停边界已同步到两个生成任务、backlog 和队列投影。
+
+## 停止条件
+
+- 未得到明确选择前不访问 Tripo 账号、不下载平台历史文件、不上传项目图片、不发起生成。
+- 任何路线要求猜测原始输入、改变 `slot-01/raw/`、暴露凭据或用新图伪装旧输入时停止。

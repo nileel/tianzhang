@@ -13,12 +13,16 @@
     "A-CHAR-TRIPO-SLOT-02",
     "A-CHAR-TRIPO-SLOT-03"
   ],
-  "stateReason": "2026-08-16：父项已完整拆为两条独立链：A-CHAR-TRIPO-GEN-02 → A-CHAR-TRIPO-SLOT-02 与 A-CHAR-TRIPO-GEN-03 → A-CHAR-TRIPO-SLOT-03。slot-01 已完成 Blender 技术验证；两个生成前置因尚未冻结 slot-01 的真实生成输入和参数而阻塞，父项在两个换绑子任务均形成结论前保持 blocked。",
+  "stateReason": "2026-08-16：完整前置链为 A-CHAR-TRIPO-INPUT-DEC-01 → A-CHAR-TRIPO-INPUT-LOCK-01 → 两条 GEN／SLOT 分支。最前端已收口为负责人选择历史只读恢复或人工交付；slot-01 已完成 Blender 技术验证，父项在两个换绑子任务均形成结论前保持 blocked。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
     "开发管理/任务归档/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-INPUT-DEC-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-INPUT-DEC-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-INPUT-LOCK-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-GEN-02.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-GEN-02.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-GEN-03.txt",
@@ -45,9 +49,10 @@
 
 ## 子任务与依赖
 
+- 共同前端：`A-CHAR-TRIPO-INPUT-DEC-01 → A-CHAR-TRIPO-INPUT-LOCK-01`。决定卡只确认历史只读恢复或负责人手动交付；锁定卡只恢复并冻结 `slot-01` 实际输入合同。
 - 第一条链：`A-CHAR-TRIPO-GEN-02 → A-CHAR-TRIPO-SLOT-02`。生成卡只负责 Tripo 第二个独立模型及完整原始下载；换绑卡只消费该生成结果并负责 Blender 技术验证。
 - 第二条链：`A-CHAR-TRIPO-GEN-03 → A-CHAR-TRIPO-SLOT-03`。生成卡只负责 Tripo 第三个独立模型及完整原始下载；换绑卡只消费该生成结果并负责 Blender 技术验证。
-- 两条链互不依赖、不得读取或复制对方候选结果；共享的冻结输入、统一骨架和三条 Action 只读。当前生成输入合同尚未闭合，因此没有 ready 叶子，也不预建空目录。
+- 输入锁定成功后两条分支并行且互不依赖，不得读取或复制对方候选结果；共享的冻结输入、统一骨架和三条 Action 只读。当前最前端只等待负责人 A／B 选择，不预建空目录。
 - 父项不再执行单槽 Blender 修改，只在两个子任务均完成后汇总 `slot-01`～`slot-03` 的硬门槛、修整时间与稳定性结论。
 
 ## 必查范围

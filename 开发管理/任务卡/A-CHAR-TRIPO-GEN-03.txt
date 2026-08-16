@@ -9,8 +9,10 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-16：仓库只找到 public-exploration 下两张互不相同的正面探索图，未找到设计要求的同造型四视图，也没有可证明 slot-01 实际输入、Tripo 模型版本与关键设置的生成记录。按 Source Asset Lock 不选择邻近立绘代替；冻结精确输入与执行授权后再判断 ready。",
+  "blockedBy": [
+    "A-CHAR-TRIPO-INPUT-LOCK-01"
+  ],
+  "stateReason": "2026-08-16：等待 A-CHAR-TRIPO-INPUT-LOCK-01 恢复并冻结 slot-01 实际视觉输入、Tripo 模型版本、关键设置与付费私有证据；输入合同成功后才可转 ready。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -31,6 +33,7 @@
 - 本卡是 `A-CHAR-TRIPO-SLOT-03` 的唯一生成前置，只负责 Tripo 第三次独立模型生成、平台诊断导出和原始下载留存；不操作 Blender，不评价项目骨架换绑，也不拥有父项最终结论。
 - 必须消费与 `slot-01` 完全相同且已冻结的苻渊视觉输入、Tripo 模型版本、生产设置、约 12000 三角面目标和付费私有授权，只允许平台随机差异。
 - 当前仓库中的 `fu-yuan-public-exploration-v1.png` 与 `fu-yuan-paper-doll-public-exploration-v1.png` 都只是单张正面探索图，造型也不完全相同；不得把其中任一张或附近立绘猜作 `slot-01` 的四视图输入。
+- 唯一输入事实由 `A-CHAR-TRIPO-INPUT-LOCK-01` 形成；本卡不得自行恢复、替换或补画输入。
 
 ## 必查范围
 
