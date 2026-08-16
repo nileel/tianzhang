@@ -7,4 +7,4 @@
 |----|------|------|--------|------|------|------|--------|
 | A-CODEX-BROWSER-BRIDGE-DNS-01 | codex_execute | codex | P0 | automation | implementation | Codex 浏览器桥 DNS/遥测超时长期治理 | 开发管理/任务卡/A-CODEX-BROWSER-BRIDGE-DNS-01.txt |
 | A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01 | codex_execute | codex | P1 | automation | implementation | 通用角色立绘到 Tripo 静态模型固定工作流实施 | 开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt |
-| A-CHAR-FUYUAN-TRIPO-RAW-01 | codex_execute | codex | P1 | unity | implementation | 苻渊获批 Tripo 模型绑定诊断与原始包保存 | 开发管理/任务卡/A-CHAR-FUYUAN-TRIPO-RAW-01.txt |
+| A-CHAR-TRIPO-STRICT-R2-RAW-01 | codex_execute | codex | P1 | unity | implementation | 苻渊 strict-round-02 平台绑定诊断与原始包保存 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-RAW-01.txt |

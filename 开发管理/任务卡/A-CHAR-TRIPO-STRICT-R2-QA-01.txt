@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-QA-01",
+  "title": "苻渊 strict-round-02 资源候选 QA",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-BLENDER-01"
+  ],
+  "stateReason": "等待 strict-round-02 Blender 换绑、权重、三动作和 factory-startup 验证通过；输出文件名与贴图拓扑必须在前置完成后按真实结果展开。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "开发管理/苻渊Tripo严格轮二资源候选QA记录.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-QA-01 · 苻渊 strict-round-02 资源候选 QA
+
+## 来源与当前边界
+
+- 本卡只消费通过的 `working/rebind.blend`、项目骨架三动作和原始贴图；不重新绑定、不修权重、不改变角色造型。
+- 唯一结果是形成一个坐标、网格、骨架、材质、贴图与导出关联均可供 Unity 技术导入的源资产候选，或以明确证据失败。
+- 当前保持 blocked；Blender 前置完成后必须先读取真实对象、材质槽、贴图与导出文件名，再把全部源导出、贴图和证据字面量路径补入 `expectedPaths`，之后才可转 ready。
+
+## 必查范围
+
+- `A-CHAR-TRIPO-STRICT-R2-BLENDER-01` 的 factory-startup、三动作、计时、对象、权重和残留风险结论。
+- `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` 的单位、朝向、原点、三角面、材质、正式目录和资源 QA 规则。
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 及实际无界面 FBX 验证所需的单一工具通道说明。
+
+## 实施范围
+
+- 冻结候选网格、项目骨架、骨骼影响、材质槽、贴图文件、单位、原点、正面轴、三角面和 FBX 导出设置。
+- 从已通过工作文件导出一个源资产候选；保持贴图引用可解析，不静默改名、丢弃或用默认材质替换。
+- 使用无界面 FBX 回读验证对象、骨架、动作、材质、贴图关联和变换；生成固定视角 QA 合图与文本记录。
+- 视觉疑点只在本卡判定通过／失败；需要重新绑定、改权重或改造型时退回 Blender／更上游，不在 QA 卡叠加修复。
+- 成功时归档本卡并在展开全部 Unity 目标及 `.meta` 路径后解锁 Unity 子卡。
+
+## 禁止项
+
+- 不修改获批身份、比例、服装、头发或饰件，不重拓扑，不重新绑定，不新增骨骼或动作。
+- 不把缺贴图、默认材质、错误轴向、应用缩放或骨架丢失当作 Unity 导入后再修的问题。
+- 不写入 `src/Assets/`，不创建 Unity 材质、Avatar、Prefab、Animator 或正式场景引用。
+
+## 验证
+
+- 无界面回读证明 FBX、项目骨架、三动作、材质槽、贴图路径、单位、原点和轴向完整；源文件哈希与 QA 记录齐全。
+- 固定视角检查头发、手脚、袍摆、饰件、接缝、穿插和动作极值，不用工具调用成功替代业务验收。
+- 运行任务卡、审核文本、资产版本边界、空白和 Git 暂存差异检查；无 Unity 文件变化时不运行 Unity 测试。
+
+## 完成条件
+
+- 形成唯一可导入 Unity 的 strict-round-02 源资产候选或明确失败；通过时全部源导出、贴图、回读和视觉证据齐全，并准确解锁 Unity 子卡。
+
+## 停止条件
+
+- 实际输出路径无法冻结，FBX 丢失骨架／动作／材质／贴图，单位、原点或轴向不符，视觉问题需要重新绑定／改权重／改造型，或必须写入 Unity 才能判断源资产成立时停止。

@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-01",
+  "title": "苻渊 Tripo strict-round-02 后续资源父任务",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-RAW-01",
+    "A-CHAR-TRIPO-STRICT-R2-BLENDER-01",
+    "A-CHAR-TRIPO-STRICT-R2-QA-01",
+    "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
+  ],
+  "stateReason": "2026-08-17：strict-round-02 四视图与静态模型任务 44eac025-f0a1-4479-a21c-2edfc48ce7ed 已通过；负责人批准把剩余资源生产拆为 RAW、Blender、资源 QA、Unity 四个原子子任务，父卡只汇总关闭。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-RAW-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-01 · 苻渊 Tripo strict-round-02 后续资源父任务
+
+## 来源与当前边界
+
+- `strict-round-02` 是修正四视图后的独立生产批次，不是旧 `strict-round-01` 三槽评估中的 `slot-02`。
+- 上游已完成事实由 `开发管理/苻渊Tripo严格轮二四视图修订记录.txt` 承载：四张输入已冻结，唯一私有 Tripo 任务 `44eac025-f0a1-4479-a21c-2edfc48ce7ed` 已消耗 40 credits 并通过静态模型外观复核。
+- 本父卡不直接操作平台、FBX、Blender 或 Unity，只汇总四个后续子任务的通过／失败事实并防止跨阶段顺带修改。
+
+## 子任务与依赖
+
+1. `A-CHAR-TRIPO-STRICT-R2-RAW-01`：平台绑定诊断与原始包保存；当前唯一 ready 叶子。
+2. `A-CHAR-TRIPO-STRICT-R2-BLENDER-01`：只消费 RAW 结果，完成项目骨架换绑、权重和三动作验证。
+3. `A-CHAR-TRIPO-STRICT-R2-QA-01`：只消费 Blender 通过结果，完成材质、贴图、导出候选和资源证据 QA。
+4. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费 QA 通过候选，完成隔离 Unity 技术导入与视觉验收。
+
+旧 `A-CHAR-TRIPO-STRICT-GEN-02 → A-CHAR-TRIPO-STRICT-SLOT-02` 仍属于 `strict-round-01` 三槽平台评估，不接收本批次模型、raw、权重或证据，也不因本父项推进而解冻。
+
+## 必查范围
+
+- `开发管理/苻渊Tripo严格轮二四视图修订记录.txt` 的输入哈希、唯一平台任务、设置、扣费、模型统计和静态模型通过结论。
+- 四张 strict-round-02 子卡及其完成归档；只读取当前要汇总的直接证据，不以父卡摘要替代子卡事实。
+- `docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md` 的原始工程、评估候选和 Unity 正式目录边界。
+
+## 实施范围
+
+- 子任务完成时只核对同一任务 ID、输入批次、原始哈希、上游结论和下游解锁条件。
+- 任一子任务失败时保留其明确失败证据，父卡保持 blocked；不得跳过失败阶段直接解锁更下游任务。
+- 四项均完成且证据一致时，父卡只形成本批次资源链汇总结论并归档，不替代正式 Adventure 接入或通用平台选型结论。
+
+## 禁止项
+
+- 不把旧 `slot-02`、旧单图 `slot-01` 或失败 `strict-round-01` 资产混入本批次。
+- 不在父卡内生成、绑定、下载、修模、换绑、导出、导入或补做任一子任务。
+- 不因某一阶段“看起来可用”跳过哈希、factory-startup、资源 QA 或 Unity 技术验收。
+
+## 验证
+
+- 四个子任务 ID、依赖、状态和项目路径一致；同一时刻只有依赖已完成的最前叶子可进入队列。
+- 汇总任务 ID、输入哈希、raw 哈希、Blender 验证、资源候选和 Unity 导入证据，不以摘要替代各子卡事实源。
+- 运行任务卡、审核文本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- RAW、Blender、资源 QA、Unity 四张子卡全部完成并归档，证据属于同一 `strict-round-02` 任务，父卡形成唯一汇总结论后归档。
+
+## 停止条件
+
+- 任一子项需要复用旧轮次资产、再次付费生成、改变获批四视图／模型、跳过直接验收或扩大到正式 Adventure 运行时接入时停止并请求负责人裁决。

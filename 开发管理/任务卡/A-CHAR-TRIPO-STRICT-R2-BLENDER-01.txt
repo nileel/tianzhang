@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-BLENDER-01",
+  "title": "苻渊 strict-round-02 Blender 换绑验证",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-RAW-01"
+  ],
+  "stateReason": "等待 strict-round-02 平台基础包、行走诊断包及 raw SHA-256 完整保存；前置完成前不得创建换绑工作文件。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
+    "开发管理/苻渊Tripo严格轮二换绑验证记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/raw-sha256.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/project-idle.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/project-move.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/project-attack.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-BLENDER-01 · 苻渊 strict-round-02 Blender 换绑验证
+
+## 来源与当前边界
+
+- 本卡只消费 `A-CHAR-TRIPO-STRICT-R2-RAW-01` 保存的同一任务原始包与 SHA-256；不操作 Tripo，不读取旧轮次模型或权重。
+- 唯一结果是项目统一评估骨架上的换绑、权重和 Idle／Move／Attack 三动作技术通过或明确失败。
+- 本卡不生产 Unity 正式资源，不拥有最终材质／贴图／导出候选验收。
+
+## 必查范围
+
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 及其为实际操作路由的完整工具说明；一次只使用一条 Blender 工具通道。
+- `docs/superpowers/specs/2026-08-08-humanoid-evaluation-rig-design.md` 的固定坐标、骨架、二级骨、换绑、60 分钟和验证合同。
+- `assets/source/characters/humanoid-evaluation/TZ_HumanoidEval_v001.blend` 与同目录三条 Action／验证证据，只作项目统一骨架和动作事实源。
+
+## 实施范围
+
+- 解压前核对原始包 SHA-256；保持平台 FBX 与贴图原名和关联，原始包只读。
+- 从统一骨架源 Save As 建立 `working/rebind.blend`，把平台原骨架与网格保留为隐藏诊断对象，清理导入附带的非资产对象。
+- 按固定 T Pose、单位、原点和轴向换绑项目骨架；移除旧权重后只使用批准的自动权重与有限修整，每顶点最多四骨，无未加权或负权重。
+- 在项目骨架上直接播放 Idle／Move／Attack，记录完整计时、对象、材质、贴图、网格、权重与残留风险。
+- 成功时归档本卡并把资源 QA 子卡解除为 ready；失败时保留工作文件与证据，不解锁下游。
+
+## 禁止项
+
+- 不修改统一骨架骨长、rest pose、名称、层级或 Avatar 合同，不把平台骨架作为正式骨架。
+- 不使用第二种权重算法、额外绑定服务、完整重拓扑、完整手绘全身权重、纠正骨或形态键。
+- 不导出 Unity 正式 FBX，不写入 `src/Assets/`，不在本卡修正最终 Shader、材质风格或运行时表现。
+
+## 验证
+
+- factory-startup 重新打开 `working/rebind.blend`，运行项目验证并复算 raw SHA-256，证明原始包未变化。
+- 核对项目骨架、权重、Idle／Move／Attack 固定帧、面数、单位、原点、轴向和 60 分钟限制。
+- 运行任务卡、审核文本、空白和 Git 暂存差异检查；无 Unity 文件变化时不运行 Unity 测试。
+
+## 完成条件
+
+- 形成唯一可复核的 Blender 技术通过或失败结论；通过时工作文件、factory-startup、三动作、计时和哈希证据齐全，并准确解锁资源 QA 子卡。
+
+## 停止条件
+
+- 原始包不完整或哈希变化，正侧背主体缺失，三角面超出约 8000～15000，贴图无法解析，60 分钟超时，固定 T Pose／自动权重失败，三动作不能直接播放，或必须修改统一骨架／完整重雕重拓扑才能继续时停止。
