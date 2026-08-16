@@ -2,7 +2,7 @@
 
 日期：2026-08-17
 设计：`docs/superpowers/specs/2026-08-17-tripo-face-direction-side-view-correction-design.md`
-状态：四图候选已形成，等待负责人整体批准；尚未上传 Tripo
+状态：四图已提交 Tripo；生成结果未通过侧向腰饰一致性门，后续保持冻结
 
 ## 方向修订
 
@@ -46,8 +46,19 @@ Hard invariants: Preserve Image 1's exact canvas and portrait framing; strict 90
 Constraints: exactly one complete character; opaque connected clothing; no text, logo, watermark, extra limb, weapon, magic, new accessory, or background change.
 ```
 
+## Tripo 生成结果
+
+- 平台任务：`44eac025-f0a1-4479-a21c-2edfc48ce7ed`。
+- 页面：`https://studio.tripo3d.ai/workspace/generate/44eac025-f0a1-4479-a21c-2edfc48ce7ed`。
+- 输入槽位按“前／左侧（脸朝左）／右侧（脸朝右）／后”上传上述 `strict-round-02` 四图。
+- 设置：高精度模型、v3.1 最高质量、私有、4K 贴图、PBR、Triangle、目标约 12000 面；分部件生成、8K 贴图和超高几何精度关闭。
+- 本次实际消耗 40 credits；余额由 3060 变为 3020。
+- 输出网格为 11316 个三角面、7562 个顶点。
+- 客观检查：正面仅一套腰饰，背面无腰饰；但脸朝右的严格侧面仍能看到圆形腰扣，脸朝左的严格侧面反而看不到腰饰，未满足本轮“脸朝右不可见、脸朝左可见”的冻结要求。
+- 判定：未通过。未点击免费重试，未发起第二次付费生成，未绑定、导出、下载、运行 Blender 或写入 Unity 正式路径。
+
 ## 审批与停止边界
 
-- 本轮没有点击、上传或提交 Tripo，没有扣除 credits，没有使用免费重试，没有绑定、下载、运行 Blender 或写入 Unity 正式路径。
-- 四张图必须按“前／左侧（脸朝左）／右侧（脸朝右）／后”同时展示并由负责人重新批准；任何图片或槽位映射变化都会使批准失效。
-- 批准前保持现有严格生成任务冻结，不自动发起新的 40 credits 请求。
+- 本轮已经按负责人授权完成一次 40 credits 生成；结果未通过后立即停止。
+- 当前结果仅保留用于失败复核，不视为可绑定、导出或进入 Blender／Unity 的候选。
+- 保持现有严格生成任务冻结；未获得负责人新的明确授权前，不使用免费重试，也不发起新的付费生成。
