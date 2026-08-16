@@ -238,15 +238,15 @@ Change only one thing: shorten the cohesive white-gray back-hair mass so it is t
 - 负责人否决第二组，指出参考图有明显纸偶感而候选仍像柔软织物插画；随后又否决把纸偶字面化为厚卡纸／折纸拼装的中间候选。两类被否决候选均没有上传 Tripo。
 - 本地 Codex 会话 `rollout-2026-08-15T13-04-08-01a003ce-5140-78d2-b3c2-2c43f4cb7f98.jsonl` 第 1662 行恢复出 `fu-yuan-paper-doll-public-exploration-v1.png` 的原始 `imagegen` 调用。其决定性源图是三联低模示意图 `fu-yuan-hanhong-zhenjun-low-poly-model-demo-v1.png`；关键风格字面量是 `ink-wash paper-doll / board-game pawn`、`planar faceted geometry`、`hand-painted ink-wash texture`、`restrained dark contour`、`matte materials`。
 - 第三组正面沿用该原始提示词结构，只取消旧调用的青蓝改色要求并保持三联源图中的当前黑金造型。负责人看图后明确回复“嗯对，差不多就是这个”，该回复只批准正面风格基准，不等于整体四图批准。
-- 角色左与背面初稿的后发落到上背／肩胛区；Codex 一度按任务卡旧文字“肩长”误判并收短。负责人对照立绘后指出初稿发型才正确。复核黑金立绘与三联低模源确认负责人判断正确：后发应越过肩线并落到上背／肩胛区，但远离腰线。当前角色左恢复初稿，背面恢复负责人点名的 `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png`，角色右只定点延长后发，其他内容锁定。
+- 画面左向侧面与背面初稿的后发落到上背／肩胛区；Codex 一度按任务卡旧文字“肩长”误判并收短。负责人对照立绘后指出初稿发型才正确。复核黑金立绘与三联低模源确认负责人判断正确：后发应越过肩线并落到上背／肩胛区，但远离腰线。当前角色右恢复画面左向初稿，背面恢复负责人点名的 `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png`，角色左只定点延长后发，其他内容锁定。任务合同按摄像机看到角色自身哪一侧命名，因此角色左鼻尖朝画面右、角色右鼻尖朝画面左。
 
 ### 当前四图与哈希
 
 | 槽位 | 内置最终产物 | 项目最终路径 | 尺寸 | 字节数 | SHA-256 | 客观结果 |
 |------|--------------|--------------|------|--------|---------|----------|
 | 前 | `exec-678e6965-f63c-429f-9be0-86572fb6c146.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-tpose-strict-r1-v1.png` | 1024×1536 | 2084009 | `50ef1e88c149b89a536631ea925110051caccd23bf37e87284293899efde88a2` | 严格正面、紧凑 A Pose、原始水墨低模棋偶风格；负责人已确认该正面风格 |
-| 角色左 | `exec-4107734b-0497-47e3-bc7d-8cdf64438a25.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png` | 1024×1536 | 1971909 | `5ca958cb5d9ea47ebe60738375a438e5c06af742f2186d46d62bf462848e3778` | 严格左向侧面，后发落到上背；采用未剪短初稿 |
-| 角色右 | `exec-2b656299-8993-427b-abf4-a5f1cf0d58e6.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png` | 1024×1536 | 1942176 | `81ffa6c1407c1f990b1a4dd7e98f06498c2021af00216e0326f55f20647a08e5` | 严格右向侧面；一次定点修正只把后发延长到与左／背一致 |
+| 角色左 | `exec-2b656299-8993-427b-abf4-a5f1cf0d58e6.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png` | 1024×1536 | 1942176 | `81ffa6c1407c1f990b1a4dd7e98f06498c2021af00216e0326f55f20647a08e5` | 角色自身左侧靠近镜头、鼻尖朝画面右；一次定点修正只把后发延长到与角色右／背一致 |
+| 角色右 | `exec-4107734b-0497-47e3-bc7d-8cdf64438a25.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png` | 1024×1536 | 1971909 | `5ca958cb5d9ea47ebe60738375a438e5c06af742f2186d46d62bf462848e3778` | 角色自身右侧靠近镜头、鼻尖朝画面左，后发落到上背；采用未剪短初稿 |
 | 后 | `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png` | 1024×1536 | 2083555 | `b5b818b9bbe6b2da74138922cdf98870d11be9ef0eedc874c2c358baf92c6e5c` | 严格背面、无面部，扇形后发落到上背；负责人明确指出该发型正确 |
 
 ### 第三组正面提示词（完整字面量）
@@ -277,10 +277,10 @@ Output:
 
 ### 第三组侧背提示词边界
 
-- 角色左：Image 1 为第三组正面，Image 2 为三联低模源；只把视角改成鼻尖朝画面左的近正交 90° 全身侧面，保留同一黑金造型、紧凑比例和水墨低模材质。最终采用未剪短初稿 `exec-4107734b-0497-47e3-bc7d-8cdf64438a25.png`。
-- 角色右：第三组正面、当前角色左与三联低模源共同约束；只把视角改成鼻尖朝画面右的近正交 90° 全身侧面。初稿风格与结构通过，但受错误“肩长”约束导致后发偏短；唯一定向修正只把后发延长为与角色左和背面一致的连贯扇形上背发片，得到 `exec-2b656299-8993-427b-abf4-a5f1cf0d58e6.png`。
+- 角色左：第三组正面、另一侧候选与三联低模源共同约束；只把视角改成角色自身左侧靠近镜头、鼻尖朝画面右的近正交 90° 全身侧面。初稿风格与结构通过，但受错误“肩长”约束导致后发偏短；唯一定向修正只把后发延长为与角色右和背面一致的连贯扇形上背发片，得到 `exec-2b656299-8993-427b-abf4-a5f1cf0d58e6.png`。
+- 角色右：Image 1 为第三组正面，Image 2 为三联低模源；只把视角改成角色自身右侧靠近镜头、鼻尖朝画面左的近正交 90° 全身侧面，保留同一黑金造型、紧凑比例和水墨低模材质。最终采用未剪短初稿 `exec-4107734b-0497-47e3-bc7d-8cdf64438a25.png`。
 - 背面：第三组正面、左右侧与三联低模源共同约束；只把视角改成严格居中的近正交 180° 背面，不显示脸、前领、腰扣或坠饰。最终采用负责人确认发型正确的初稿 `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png`，不采用错误剪短版。
-- 角色右唯一定向修正的变更字面量为：`Change ONLY the white-gray rear hair length and silhouette ... side-view tips reach the upper back / shoulder-blade area, clearly below the shoulder line but far above the waist`；其余视角、脸、胡须、顶髻、比例、姿势、服装、纹样、饰物、鞋、材质、背景、裁切、光照和阴影全部锁定。
+- 角色左唯一定向修正的变更字面量为：`Change ONLY the white-gray rear hair length and silhouette ... side-view tips reach the upper back / shoulder-blade area, clearly below the shoulder line but far above the waist`；其余视角、脸、胡须、顶髻、比例、姿势、服装、纹样、饰物、鞋、材质、背景、裁切、光照和阴影全部锁定。
 
 ### 第三组客观检查
 
