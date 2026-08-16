@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-FUYUAN-TRIPO-RAW-01",
+  "title": "苻渊获批 Tripo 模型绑定诊断与原始包保存",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：Tripo 任务 44eac025-f0a1-4479-a21c-2edfc48ce7ed 已通过静态模型侧向腰饰一致性复核；负责人要求以苻渊剩余美术资源继续推进后续工作流，本卡只承接下一道平台绑定诊断与原始包保存关卡。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-FUYUAN-TRIPO-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-FUYUAN-TRIPO-RAW-01.txt",
+    "开发管理/苻渊获批Tripo模型原始包记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/raw/tripo-task-44eac025-f0a1-4479-a21c-2edfc48ce7ed-base-original.zip",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/raw/tripo-task-44eac025-f0a1-4479-a21c-2edfc48ce7ed-walk-original.zip",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/raw-sha256.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/platform-rig-front.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/platform-rig-side.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/platform-rig-back.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/platform-walk.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-FUYUAN-TRIPO-RAW-01 · 苻渊获批 Tripo 模型绑定诊断与原始包保存
+
+## 来源与当前边界
+
+- 唯一输入模型是 Tripo 任务 `44eac025-f0a1-4479-a21c-2edfc48ce7ed`；其输入、设置、40 credits、11316 三角面／7562 顶点和侧向腰饰通过结论读取 `开发管理/苻渊Tripo严格轮二四视图修订记录.txt`。
+- 本卡只把该获批静态模型推进到“平台绑定诊断完成、基础包与一条行走诊断包原样保存”的下一道关卡；不拥有 Blender 换绑、权重修整、统一项目骨架动作验证、正式资源导出或 Unity 接入。
+- 旧单图 `slot-01`、失败的 `strict-round-01` 和冻结的 slot-02／03 独立生成均不得作为本卡输入或回退来源。
+
+## 必查范围
+
+- `开发管理/苻渊Tripo严格轮二四视图修订记录.txt` 的原始任务 ID、页面、输入、参数、扣费与最终通过证据。
+- Tripo 当前任务页面的只读模型状态、私密性、绑定入口、显示价格／免费标识、下载类型和原始包拓扑。
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 及实际选择 3D 工具通道时由其路由的工具说明；本卡只执行平台与原始包检查，不启动 Blender。
+
+## 实施范围
+
+- 在现有浏览器登录会话中重新打开并核对唯一任务 ID、私密性、模型统计和静态外观；不重新生成模型，不消费免费重试。
+- 仅在页面明确显示无需新增 credits 时执行平台自动绑定，并用一条行走动作作诊断；采集前／侧／后绑定证据和行走证据，记录明显穿插、断裂、手脚或袍摆异常。
+- 下载基础无动画原始包和对应行走诊断原始包；外层以任务 ID 和用途使用本卡冻结的文件名，包内平台原始文件名、目录、FBX 与贴图关联保持不变。
+- 对两个原始包记录字节数和 SHA-256，写入独立原始包记录及 `evidence/raw-sha256.txt`；不解压、重命名包内文件、修改 FBX、贴图或骨架。
+- 完成后只形成“原始包可进入独立 Blender 检查任务”或“平台绑定／下载失败”的单一结论，不自动启动下游任务。
+
+## 禁止项
+
+- 不发起新的付费生成，不点击免费重试，不切换模型版本、输入、贴图规格、私密性或平台提供商。
+- 不复用、复制或覆盖旧 `slot-01`／`strict-round-01` 的 FBX、贴图、动画、任务 ID、截图或 Blender 文件。
+- 不运行 Blender，不创建或修改 `.blend`，不重定向骨架，不修权重，不导出新 FBX，不写入 `src/Assets/`。
+- 不把平台绑定成功等同于项目统一骨架通过；绑定和行走只提供下一关的诊断证据。
+
+## 验证
+
+- 页面任务 ID 精确匹配，私密性保持私有，平台绑定和行走诊断没有产生 credits；任何余额变化均失败关闭。
+- 两个原始包非空、SHA-256 已记录且彼此用途明确；包内文件保持平台原样，不与旧轮次路径或哈希混用。
+- 四张证据图能识别当前模型、绑定后正侧背与行走表现；视觉疑点写入记录，不在本卡内修模。
+- 运行任务卡、审核文本、资产版本边界、空白和 Git 暂存差异检查；不运行无关 Unity、Blender 或 BattleSim 验证。
+
+## 完成条件
+
+- 获批 Tripo 模型的基础原始包与一条行走诊断原始包均已原样、私有、可追溯地保存，SHA-256 与平台证据齐全，并形成是否允许进入独立 Blender 检查任务的明确结论。
+
+## 停止条件
+
+- 页面任务 ID 或静态模型事实不符，绑定／下载要求任何新增 credits，平台会改变私密性或覆盖原模型，下载不是可追溯原始包，实际包拓扑无法落入冻结路径，或必须运行 Blender／修改 FBX 才能判断时停止并请求负责人裁决。
