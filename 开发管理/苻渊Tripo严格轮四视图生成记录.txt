@@ -2,18 +2,19 @@
 
 日期：2026-08-16
 任务：`A-CHAR-TRIPO-FOURVIEW-01`
-状态：负责人授权重做后已形成项目最终四图；等待负责人主观批准
+状态：负责人确认新正面风格后已形成第三组四图；等待负责人整体主观批准
 
 ## 工具与输入
 
 - 工具模式：Codex 内置 `imagegen`；未切换 CLI／API，未使用 `OPENAI_API_KEY`。
 - 用途：Tripo 同一次多视图请求的前／角色左／角色右／后四个输入槽位；本轮没有上传 Tripo、生成 3D、扣 credits、操作 Blender 或写入 `src/Assets/`。
-- 内置工具原始产物保留在 `$CODEX_HOME/generated_images/01a00a3e-ea69-7123-818d-26cbe1f7fa18/`；首次失败候选未落项目路径，负责人随后授权的重做结果已复制到四个字面量最终输入路径。
+- 内置工具原始产物保留在 `$CODEX_HOME/generated_images/01a00a3e-ea69-7123-818d-26cbe1f7fa18/`；首次失败候选未落项目路径，第二组候选在负责人否决后已由第三组替换，当前四个字面量输入路径只对应下文第三组哈希。
 
 | 角色 | 项目路径 | 字节数 | SHA-256 | 用途 |
 |------|----------|--------|---------|------|
 | 决定性身份与服装参考 | `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png` | 1514901 | `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65` | 决定脸、发型、服装、轮廓、配色和饰物 |
 | 脸型与材质辅助参考 | `assets/generated-character-art/profile-wide/fu-yuan-hanhong-zhenjun/fu-yuan-profile-preview-16x9-v1.png` | 4361843 | `afd4a4f22a83b569a22b75200f44bec1d0327fec90d67efaad3484fdd95b358c` | 只补充脸型与材质，不继承背景、题字、印章、构图或姿势 |
+| 原始低模模型与风格源 | `assets/generated-character-art/model-preview/fu-yuan-hanhong-zhenjun-low-poly-model-demo-v1.png` | 2113297 | `6c85859ffdbdb949951dd43a590928e27809b2f46f6225cc44351a8709abe12f` | 第三组的决定性模型源；提供同一黑金苻渊的三联低模棋偶造型、侧背结构与水墨手绘材质 |
 
 ## 首次候选与停止结果（历史）
 
@@ -130,7 +131,7 @@ Change only one thing: shorten the cohesive white-gray back-hair mass so it is t
 - 第一次重做调用把第三张参考误指向 linked worktree 中不存在的本地源资产路径，工具在读图阶段直接失败，没有进入生成，也没有消耗生成／修正次数；随后改用已核验的主工作区绝对路径，提示词内容不变。
 - 正面重做一次通过；角色左、角色右与背面初稿的唯一明确偏差是后发延伸到肩胛以下，因此三张各使用一次定向修正，只收短后发，不再追加生成。
 
-## 重做后的最终四图
+## 第二组四图（历史，后被负责人否决）
 
 | 槽位 | 项目最终路径 | 尺寸 | 字节数 | SHA-256 | 客观结果 |
 |------|--------------|------|--------|---------|----------|
@@ -139,7 +140,7 @@ Change only one thing: shorten the cohesive white-gray back-hair mass so it is t
 | 角色右 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png` | 1024×1536 | 1962895 | `43997badb1df4cbe111f338fdae3ece28c907b2eb56bde088029facdb419271a` | 角色右侧靠近镜头、鼻尖朝画面左、全身完整；一次修正只收短后发 |
 | 后 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png` | 1024×1536 | 2114437 | `9ef93d689fc9951498effd5cbcd042247873575c74a2150b828b94a22e46d2fb` | 严格背面、无面部、全身完整；一次修正只收短后发 |
 
-### 重做结果客观检查
+### 第二组结果客观检查（历史）
 
 - 四张均使用与负责人指定正确示例一致的紧凑低模纸偶体块、近似正交镜头和 A Pose，头部、肩宽、手脚与袍体比例一致，不再沿用首次尝试的修长立绘体型。
 - 四张均为相同 1024×1536 PNG，完整包含顶髻、头部、手、袍摆与鞋，背景为简单暖中性灰，照明均匀，没有六角地块、武器、法术、题字、印章、UI 或水印。
@@ -230,8 +231,66 @@ Input images:
 Change only one thing: shorten the cohesive white-gray back-hair mass so it is truly shoulder-length, ending at the shoulder line or the very top of the shoulder blades, matching the CURRENT approved identity and regenerated front baseline. It must not extend down the middle back. Preserve the single simple topknot and keep the hair as one clean connected low-poly mass, with no detached strands. Do not alter any other detail. No new elements, no text, no watermark.
 ```
 
+## 第三组：恢复原始提示词后的当前候选
+
+### 根因与负责人反馈
+
+- 负责人否决第二组，指出参考图有明显纸偶感而候选仍像柔软织物插画；随后又否决把纸偶字面化为厚卡纸／折纸拼装的中间候选。两类被否决候选均没有上传 Tripo。
+- 本地 Codex 会话 `rollout-2026-08-15T13-04-08-01a003ce-5140-78d2-b3c2-2c43f4cb7f98.jsonl` 第 1662 行恢复出 `fu-yuan-paper-doll-public-exploration-v1.png` 的原始 `imagegen` 调用。其决定性源图是三联低模示意图 `fu-yuan-hanhong-zhenjun-low-poly-model-demo-v1.png`；关键风格字面量是 `ink-wash paper-doll / board-game pawn`、`planar faceted geometry`、`hand-painted ink-wash texture`、`restrained dark contour`、`matte materials`。
+- 第三组正面沿用该原始提示词结构，只取消旧调用的青蓝改色要求并保持三联源图中的当前黑金造型。负责人看图后明确回复“嗯对，差不多就是这个”，该回复只批准正面风格基准，不等于整体四图批准。
+- 角色左与背面初稿的后发落到上背／肩胛区；Codex 一度按任务卡旧文字“肩长”误判并收短。负责人对照立绘后指出初稿发型才正确。复核黑金立绘与三联低模源确认负责人判断正确：后发应越过肩线并落到上背／肩胛区，但远离腰线。当前角色左恢复初稿，背面恢复负责人点名的 `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png`，角色右只定点延长后发，其他内容锁定。
+
+### 当前四图与哈希
+
+| 槽位 | 内置最终产物 | 项目最终路径 | 尺寸 | 字节数 | SHA-256 | 客观结果 |
+|------|--------------|--------------|------|--------|---------|----------|
+| 前 | `exec-678e6965-f63c-429f-9be0-86572fb6c146.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-tpose-strict-r1-v1.png` | 1024×1536 | 2084009 | `50ef1e88c149b89a536631ea925110051caccd23bf37e87284293899efde88a2` | 严格正面、紧凑 A Pose、原始水墨低模棋偶风格；负责人已确认该正面风格 |
+| 角色左 | `exec-4107734b-0497-47e3-bc7d-8cdf64438a25.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png` | 1024×1536 | 1971909 | `5ca958cb5d9ea47ebe60738375a438e5c06af742f2186d46d62bf462848e3778` | 严格左向侧面，后发落到上背；采用未剪短初稿 |
+| 角色右 | `exec-2b656299-8993-427b-abf4-a5f1cf0d58e6.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png` | 1024×1536 | 1942176 | `81ffa6c1407c1f990b1a4dd7e98f06498c2021af00216e0326f55f20647a08e5` | 严格右向侧面；一次定点修正只把后发延长到与左／背一致 |
+| 后 | `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png` | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png` | 1024×1536 | 2083555 | `b5b818b9bbe6b2da74138922cdf98870d11be9ef0eedc874c2c358baf92c6e5c` | 严格背面、无面部，扇形后发落到上背；负责人明确指出该发型正确 |
+
+### 第三组正面提示词（完整字面量）
+
+```text
+Use case: precise asset edit and single-image-to-3D test input.
+
+Image 1 is the decisive source reference: the same Fu Yuan "ink-wash paper-doll / board-game pawn" low-poly 3D model shown in three panels. Extract that exact character into one new single full-body character render.
+
+Preserve:
+- the same elderly Chinese male identity, stern face, white-gray topknot, shoulder-length faceted hair, short pointed white beard, broad sturdy shoulders, compact 4.5–5-head paper-doll proportions
+- the unmistakable stylized low-poly 3D game-model look: planar faceted geometry, hand-painted ink-wash texture, restrained dark contour, matte materials
+- the same charcoal-black layered Daoist robes, gray-white inner lining, sparse broken gold seam motifs, circular waist fastener, pale-jade bead pendant, shoes, colors, and complete costume design from Image 1
+
+Modify:
+- show exactly one character only, straight front near-orthographic view
+- neutral symmetrical A-pose, arms slightly separated from torso, both hands and all fingers visible
+- simplify wide sleeves and hanging cloth into clean connected geometry suitable for reconstruction
+- remove the three-panel layout, separators, hex tile, stones, and all scene props
+
+Output:
+- portrait 2:3 canvas, full figure including topknot and both shoes with generous margin
+- flat neutral warm-gray background
+- even soft frontal studio lighting and a very light contact shadow only
+- no text, label, calligraphy, seal, UI, logo, watermark, weapon, throne, magic effect, extra character, extra limb, cropped body, torn robe, transparent hole, or modern element
+- exactly two arms, two hands, two legs, and two feet; coherent opaque silhouette.
+```
+
+### 第三组侧背提示词边界
+
+- 角色左：Image 1 为第三组正面，Image 2 为三联低模源；只把视角改成鼻尖朝画面左的近正交 90° 全身侧面，保留同一黑金造型、紧凑比例和水墨低模材质。最终采用未剪短初稿 `exec-4107734b-0497-47e3-bc7d-8cdf64438a25.png`。
+- 角色右：第三组正面、当前角色左与三联低模源共同约束；只把视角改成鼻尖朝画面右的近正交 90° 全身侧面。初稿风格与结构通过，但受错误“肩长”约束导致后发偏短；唯一定向修正只把后发延长为与角色左和背面一致的连贯扇形上背发片，得到 `exec-2b656299-8993-427b-abf4-a5f1cf0d58e6.png`。
+- 背面：第三组正面、左右侧与三联低模源共同约束；只把视角改成严格居中的近正交 180° 背面，不显示脸、前领、腰扣或坠饰。最终采用负责人确认发型正确的初稿 `exec-89f1bdfa-f696-41ad-b4f2-276238d1a94b.png`，不采用错误剪短版。
+- 角色右唯一定向修正的变更字面量为：`Change ONLY the white-gray rear hair length and silhouette ... side-view tips reach the upper back / shoulder-blade area, clearly below the shoulder line but far above the waist`；其余视角、脸、胡须、顶髻、比例、姿势、服装、纹样、饰物、鞋、材质、背景、裁切、光照和阴影全部锁定。
+
+### 第三组客观检查
+
+- 四张均为 1024×1536 PNG，完整包含顶髻、身体、手、袍摆与鞋；正／左向侧／右向侧／背方向明确，背景、照明、裁切、比例与水墨低模棋偶材质一致。
+- 四张保持同一老人脸、白灰顶髻、短尖白须、炭黑层叠道袍、灰白内衬、圆形腰扣、淡玉坠与古金断契纹；背面不显示面部或前置饰物。
+- 当前发型事实以黑金立绘、三联低模源和负责人本轮明确判断为准：连贯后发落到上背／肩胛区，远离腰线。旧任务文字“肩长”和据此生成的剪短版均已纠正，不再作为当前候选。
+- 背面袍片与断契纹仍包含生成补全；左右侧纹样并非简单镜像。负责人尚未对四张整体做最终批准，本客观检查不替代批准。
+
 ## 当前结论与后续边界
 
-- `A-CHAR-TRIPO-FOURVIEW-01` 已满足四张字面量 PNG、生成记录和客观检查完成条件，归档。
-- `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 已解除具名前置，但保持未入队等待负责人按四张文件和 SHA-256 明确批准或停止；客观检查不构成批准。
+- `A-CHAR-TRIPO-FOURVIEW-01` 的四个字面量项目路径现已替换为第三组，并与上表尺寸、字节数和 SHA-256 一致；制作卡保持归档。
+- `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 保持未入队，等待负责人按当前四张文件和 SHA-256 整体批准或停止；正面风格确认与背面发型确认不自动扩大为整体批准。
 - 三个付费 Tripo 生成任务继续由批准卡阻塞；本轮没有选择、上传或提交 Tripo 图片，没有生成 3D、扣 credits、操作 Blender 或写入 `src/Assets/`。
