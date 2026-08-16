@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-TRIPO-FOURVIEW-01 | codex_execute | codex | P1 | content | implementation | 苻渊 Tripo 严格轮同造型四视图制作 | 开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-01.txt |

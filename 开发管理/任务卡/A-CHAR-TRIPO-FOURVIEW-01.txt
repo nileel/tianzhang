@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-16：预检已证明 Tripo 高精度多视图入口在同一次请求中提供前／左／右／后四个固定槽位，与负责人批准修订后的全局四视图合同逐槽一致；本卡已解除具名前置并作为唯一队首 ready 叶子。",
+  "stateReason": "2026-08-16：内置 imagegen 已形成前／角色左／角色右／后四张候选，并对三张侧／背图过长后发各执行一次定向修正；视角与身份标志物通过，但四图仍明显高于锁定的 4.5～5 头身。三张已耗尽本卡允许的一次修正，按停止条件不继续生成、不落项目最终输入，保留生成记录等待有界后续裁决。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
