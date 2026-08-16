@@ -2,22 +2,22 @@
 
 日期：2026-08-16
 任务：`A-CHAR-TRIPO-FOURVIEW-01`
-状态：停止；未形成项目最终四图，未进入负责人批准
+状态：负责人授权重做后已形成项目最终四图；等待负责人主观批准
 
 ## 工具与输入
 
 - 工具模式：Codex 内置 `imagegen`；未切换 CLI／API，未使用 `OPENAI_API_KEY`。
 - 用途：Tripo 同一次多视图请求的前／角色左／角色右／后四个输入槽位；本轮没有上传 Tripo、生成 3D、扣 credits、操作 Blender 或写入 `src/Assets/`。
-- 内置工具原始产物保留在 `$CODEX_HOME/generated_images/01a00a3e-ea69-7123-818d-26cbe1f7fa18/`；因触发停止条件，未复制到本卡四个项目最终输入路径。
+- 内置工具原始产物保留在 `$CODEX_HOME/generated_images/01a00a3e-ea69-7123-818d-26cbe1f7fa18/`；首次失败候选未落项目路径，负责人随后授权的重做结果已复制到四个字面量最终输入路径。
 
 | 角色 | 项目路径 | 字节数 | SHA-256 | 用途 |
 |------|----------|--------|---------|------|
 | 决定性身份与服装参考 | `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png` | 1514901 | `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65` | 决定脸、发型、服装、轮廓、配色和饰物 |
 | 脸型与材质辅助参考 | `assets/generated-character-art/profile-wide/fu-yuan-hanhong-zhenjun/fu-yuan-profile-preview-16x9-v1.png` | 4361843 | `afd4a4f22a83b569a22b75200f44bec1d0327fec90d67efaad3484fdd95b358c` | 只补充脸型与材质，不继承背景、题字、印章、构图或姿势 |
 
-## 最后候选与停止结果
+## 首次候选与停止结果（历史）
 
-下表哈希对应本轮最后可见候选。它们不是获批输入，也没有落到“预定项目路径”。
+下表哈希对应首次尝试的最后可见候选。它们不是获批输入，也没有落到“预定项目路径”。
 
 | 槽位 | 内置产物文件 | 预定项目路径 | 尺寸 | 字节数 | SHA-256 | 客观结果 |
 |------|--------------|--------------|------|--------|---------|----------|
@@ -35,7 +35,7 @@
 - 角色左、角色右和背面已经各使用本卡允许的唯一一次定向修正，修正目标仅为“把延伸到肩胛以下的后发收短到肩长”。修正后比例仍未满足合同，因此不得继续生成变体寻找偶然结果。
 - 背面袍服分片、中央缝合逻辑和断契纹位置属于从正面身份源最小推断的生成内容，尚未获得负责人主观批准；左右纹样也存在生成级非对称，不得当作既有背面事实。
 
-## 初始生成提示词
+## 首次初始生成提示词（历史）
 
 ### 正面（完整字面量）
 
@@ -95,7 +95,7 @@ Primary request: Create one new clean full-body strict CHARACTER-RIGHT SIDE turn
 Primary request: Create one new clean full-body strict BACK turnaround image of the same Fu Yuan for the BACK slot. The camera is directly behind him at eye level in a true near-orthographic 180-degree rear view: no face and no three-quarter rotation. Quiet symmetrical relaxed A-pose, feet parallel, arms slightly separated from the broad sleeves so the back torso and robe side contours remain readable. All of the topknot, cohesive shoulder-length back-hair mass, back of the sleeves, complete intact robe hem, hands, and shoes must be fully visible with generous margin. Infer only the minimum necessary rear construction from the decisive front reference: cohesive shoulder-length hair mass, broad continuous layered back robe panels, restrained central overlap/seam logic, sparse antique-gold broken-covenant seams, no new emblem, ornament, clasp, cape, armor, or detached element.
 ```
 
-## 唯一定向修正提示词
+## 首次唯一定向修正提示词（历史）
 
 角色左、角色右与背面各调用一次。每次 Image 1 是对应初始候选，Image 2／3 仍是上述两张批准参考；选出的最后候选即本记录表中的三个修正版。
 
@@ -111,8 +111,127 @@ Input images:
 Change only one thing: shorten the cohesive white-gray back-hair mass so it is truly shoulder-length, ending at the shoulder line or the very top of the shoulder blades, matching the approved identity. It must not extend down the middle back. Preserve the single simple topknot and keep the hair as one clean connected mass, with no detached strands. Do not alter anything else. No new elements, no text, no watermark.
 ```
 
-## 结论与后续边界
+## 首次结论与后续边界（历史）
 
-- 本轮不满足 `A-CHAR-TRIPO-FOURVIEW-01` 完成条件，任务卡保持活跃但转为 `blocked`，并从 ready 队列移除；不得归档。
-- `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 仍由本卡阻塞，三个付费 Tripo 生成任务不解锁。
-- 若负责人要求继续，只能先建立或明确授权一个有界后续裁决，决定是否接受比例、是否以新版本路径重做整组，或是否停止严格轮；本记录不得被解释为批准，也不得直接上传这里的候选。
+- 首次尝试不满足 `A-CHAR-TRIPO-FOURVIEW-01` 完成条件，任务卡当时转为 `blocked` 并从 ready 队列移除，没有归档。
+- `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 当时继续由本卡阻塞，三个付费 Tripo 生成任务没有解锁。
+- 负责人随后明确要求重新生成，并指定 `fu-yuan-paper-doll-public-exploration-v1.png` 为正确比例示例；下文记录这次授权后的独立重做，首次候选仍不得上传或解释为批准。
+
+## 负责人授权重做
+
+负责人于 2026-08-16 明确要求重新生成，并指出已有正确示例 `fu-yuan-paper-doll-public-exploration-v1.png`。本轮按以下唯一分工使用三类参考：
+
+| 角色 | 项目路径 | 尺寸 | 字节数 | SHA-256 | 用途边界 |
+|------|----------|------|--------|---------|----------|
+| 决定性身份与服装参考 | `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png` | — | 1514901 | `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65` | 决定当前脸、发型、黑金服装、轮廓、配色和饰物 |
+| 脸型与材质辅助参考 | `assets/generated-character-art/profile-wide/fu-yuan-hanhong-zhenjun/fu-yuan-profile-preview-16x9-v1.png` | — | 4361843 | `afd4a4f22a83b569a22b75200f44bec1d0327fec90d67efaad3484fdd95b358c` | 只补充当前脸型与材质 |
+| 正确比例与低模纸偶示例 | `assets/source/characters/platform-evaluation/public-exploration/inputs/fu-yuan-paper-doll-public-exploration-v1.png` | 1024×1536 | 2118113 | `ee32d668b90c214f32c74b22c2b392a5f44a17c4d2482e0925180e33451f4078` | 只决定紧凑 4.5～5 头身、正交 A Pose 与低模体块；不继承旧脸、青蓝服装、纹样、腰带、坠饰或侧背结构 |
+
+- 第一次重做调用把第三张参考误指向 linked worktree 中不存在的本地源资产路径，工具在读图阶段直接失败，没有进入生成，也没有消耗生成／修正次数；随后改用已核验的主工作区绝对路径，提示词内容不变。
+- 正面重做一次通过；角色左、角色右与背面初稿的唯一明确偏差是后发延伸到肩胛以下，因此三张各使用一次定向修正，只收短后发，不再追加生成。
+
+## 重做后的最终四图
+
+| 槽位 | 项目最终路径 | 尺寸 | 字节数 | SHA-256 | 客观结果 |
+|------|--------------|------|--------|---------|----------|
+| 前 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-tpose-strict-r1-v1.png` | 1024×1536 | 1841171 | `bf6b940b24241cb28b299721c0ec4b8a1b34fd67b3b1a97966a20f4e7b18ca72` | 严格正面、紧凑低模纸偶 A Pose、全身完整、黑金新版身份与标志物一致；未使用修正 |
+| 角色左 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png` | 1024×1536 | 1941486 | `c61570f67a5dc981ebe99eb645063fcd398b60e507fd65ffc0670f935a7d3f55` | 角色左侧靠近镜头、鼻尖朝画面右、全身完整；一次修正只收短后发 |
+| 角色右 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png` | 1024×1536 | 1962895 | `43997badb1df4cbe111f338fdae3ece28c907b2eb56bde088029facdb419271a` | 角色右侧靠近镜头、鼻尖朝画面左、全身完整；一次修正只收短后发 |
+| 后 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png` | 1024×1536 | 2114437 | `9ef93d689fc9951498effd5cbcd042247873575c74a2150b828b94a22e46d2fb` | 严格背面、无面部、全身完整；一次修正只收短后发 |
+
+### 重做结果客观检查
+
+- 四张均使用与负责人指定正确示例一致的紧凑低模纸偶体块、近似正交镜头和 A Pose，头部、肩宽、手脚与袍体比例一致，不再沿用首次尝试的修长立绘体型。
+- 四张均为相同 1024×1536 PNG，完整包含顶髻、头部、手、袍摆与鞋，背景为简单暖中性灰，照明均匀，没有六角地块、武器、法术、题字、印章、UI 或水印。
+- 老人脸、白灰单顶髻、肩长连贯后发、短尖白须、炭黑层叠道袍、灰白内衬、古铜圆形腰扣、淡玉坠和稀疏古金断契纹均保持当前黑金造型；没有继承旧示例的青蓝服装。
+- 左右侧不是简单镜像：角色左鼻尖朝画面右、角色右鼻尖朝画面左，两张分别保持自身可见纹样和袍片；背面没有面部或三分之四旋转。
+- 背面发型、袍服分片、中央缝合逻辑和断契纹位置仍是从当前正面身份源最小推断的生成结构，必须由负责人主观批准；本客观检查不替代批准。
+
+## 重做正面生成提示词
+
+```text
+Use case: identity-preserve
+Asset type: project-bound Tripo image-to-3D multiview input, regenerated FRONT slot
+
+Input images:
+- Image 1 is the decisive approved reference for the CURRENT Fu Yuan identity, elderly face, white-gray hair, complete layered charcoal-black robe construction, silhouette, palette, and accessories. Preserve this current redesigned character.
+- Image 2 is supporting reference for the same CURRENT Fu Yuan's face shape and materials only. Ignore its background, calligraphy, seal, layout, and pose.
+- Image 3 is ONLY the approved example for compact body proportion, neutral A-pose, near-orthographic camera, and readable low-poly paper-doll geometry. Match its head-to-body ratio and compact breadth. Do NOT inherit Image 3's old face, teal clothing, hairstyle details, robe seams, belt, pendant, palette, or costume design.
+
+Primary request: Create one new clean full-body strict FRONT turnaround of the CURRENT black-gold Fu Yuan. He faces the camera squarely in the same compact neutral A-pose and near-orthographic paper-doll construction demonstrated by Image 3. Feet parallel and apart; arms angle slightly away from the torso; hands and broad sleeve openings fully readable. All of the topknot, cohesive shoulder-length back hair, robe hem, hands, and shoes are fully visible with generous margin.
+
+NON-NEGOTIABLE PROPORTION: exactly 4.5–5 heads tall from top of the topknot to soles, matching Image 3. The head including topknot should occupy about one fifth of total visible character height. Use a large readable head, broad short torso, sturdy compact limbs, large readable hands and shoes. Never use tall, slim, elegant fashion-illustration proportions; never exceed 5 heads tall.
+
+Current identity and clothing invariants from Images 1 and 2: stern elderly angular Chinese male face; broad sturdy shoulders; white-gray single simple topknot with one cohesive shoulder-length back-hair mass; short pointed white beard and moustache; complete intact charcoal-black layered old Daoist robes with broad controlled sleeves; pale gray-white inner collar and sleeve lining; old-bronze circular waist fastener; one tiny pale-jade pendant; sparse simplified antique-gold broken-covenant seams. Preserve the current black-gold outfit, not Image 3's teal old outfit. Keep clothing closed and production-feasible; simplify tiny woven ornament into low-frequency surface detail.
+
+Style/medium: true low-poly 3D paper-doll character turnaround with deliberate faceted planes and hand-painted matte texture, using Image 3 only for geometry readability and proportion. Current Fu Yuan identity remains from Images 1 and 2. No painterly tall portrait, no photoreal skin, no glossy mobile-game rendering.
+Scene/backdrop: plain uniform warm neutral gray, no floor line and no cast shadow.
+Lighting: flat even neutral studio light, no rim light or dramatic shadow.
+Constraints: exactly one character, strict front, same current identity and black-gold outfit. No hex tile, scenery, weapon, staff, sword, magic, smoke, particles, text, calligraphy, seal, logo, UI, watermark, crown, imperial regalia, armor, exposed skin, extra limbs, cropped body, detached hair strands, ragged or torn robe, holes, transparent cloth, busy embroidery, or three-quarter angle.
+```
+
+## 重做侧背共用提示词
+
+三个初始调用均使用以下共用文本，再分别追加方向尾段。
+
+```text
+Use case: identity-preserve
+Asset type: project-bound Tripo image-to-3D multiview input, regenerated strict view
+
+Input images:
+- Image 1 is the decisive approved reference for the CURRENT Fu Yuan identity, elderly face, white-gray hair, complete layered charcoal-black robe construction, silhouette, palette, and accessories.
+- Image 2 is supporting reference for the same CURRENT Fu Yuan's face shape and materials only. Ignore its background, calligraphy, seal, layout, and pose.
+- Image 3 is the newly generated CURRENT black-gold compact FRONT baseline. Preserve its exact current character identity, compact body proportions, broad silhouette, low-poly paper-doll geometry, black-gold robe design, gray-white lining, circular bronze waist fastener, pale-jade pendant, surface simplification, lighting, and background.
+- Image 4 is ONLY the older approved example for compact 4.5–5-head proportion, neutral A-pose, near-orthographic camera, and readable low-poly paper-doll geometry. Do NOT inherit Image 4's old face, teal clothing, hairstyle details, robe seams, belt, pendant, palette, or costume design. Image 4 provides no side or back costume facts.
+
+NON-NEGOTIABLE PROPORTION: exactly the same compact 4.5–5-head body ratio as Images 3 and 4. Head including topknot occupies about one fifth of visible character height. Use a large readable head, broad short torso, sturdy compact limbs, large readable hands and shoes. Never use tall, slim fashion-illustration proportions and never exceed 5 heads tall.
+
+Current identity and clothing invariants: stern elderly angular Chinese male face; broad sturdy shoulders; white-gray single simple topknot with one cohesive shoulder-length back-hair mass; short pointed white beard and moustache; complete intact charcoal-black layered old Daoist robes with broad controlled sleeves; pale gray-white inner collar and sleeve lining; old-bronze circular waist fastener; one tiny pale-jade pendant; sparse simplified antique-gold broken-covenant seams. Preserve the current black-gold outfit, never the teal old outfit. Keep clothing closed and production-feasible; use low-frequency surface detail.
+
+Style/medium: true low-poly 3D paper-doll character turnaround with deliberate faceted planes and hand-painted matte texture, matching Image 3. No painterly tall portrait, no photoreal skin, no glossy mobile-game rendering.
+Scene/backdrop: exactly the same plain uniform warm neutral gray as Image 3, no floor line and no cast shadow.
+Lighting: exactly the same flat even neutral studio light as Image 3.
+Constraints: exactly one character, full body, same current identity, same compact proportions and same black-gold outfit. No hex tile, scenery, weapon, staff, sword, magic, smoke, particles, text, calligraphy, seal, logo, UI, watermark, crown, imperial regalia, armor, exposed skin, extra limbs, cropped body, detached hair strands, ragged or torn robe, holes, transparent cloth, busy embroidery, or three-quarter angle.
+```
+
+角色左尾段：
+
+```text
+Primary request: Create one clean full-body strict CHARACTER-LEFT SIDE turnaround of the same CURRENT compact black-gold Fu Yuan for the LEFT slot. The camera looks squarely at the character's own left side: his left ear, left shoulder, left hip, left hand, and left shoe are nearest the camera; his nose points horizontally toward image-right. Use a true near-orthographic 90-degree profile, not a three-quarter view; only the left facial profile is readable. Keep the same compact neutral A-pose as Image 3, feet aligned in side profile, arms slightly away from the torso so sleeve depth and robe side contour remain readable. All topknot, shoulder-length connected back hair, robe hem, hands and shoes are fully visible. Preserve authentic one-sided details; do not make this by mirroring the right side.
+```
+
+角色右尾段：
+
+```text
+Primary request: Create one clean full-body strict CHARACTER-RIGHT SIDE turnaround of the same CURRENT compact black-gold Fu Yuan for the RIGHT slot. The camera looks squarely at the character's own right side: his right ear, right shoulder, right hip, right hand, and right shoe are nearest the camera; his nose points horizontally toward image-left. Use a true near-orthographic 90-degree profile, not a three-quarter view; only the right facial profile is readable. Keep the same compact neutral A-pose as Image 3, feet aligned in side profile, arms slightly away from the torso so sleeve depth and robe side contour remain readable. All topknot, shoulder-length connected back hair, robe hem, hands and shoes are fully visible. Preserve authentic one-sided details; do not make this by mirroring the left side.
+```
+
+背面尾段：
+
+```text
+Primary request: Create one clean full-body strict BACK turnaround of the same CURRENT compact black-gold Fu Yuan for the BACK slot. The camera is directly behind him at eye level in a true near-orthographic 180-degree rear view: no face and no three-quarter rotation. Keep the same compact neutral A-pose as Image 3, feet parallel, arms slightly away from the torso so the back torso and robe side contours remain readable. All topknot, cohesive shoulder-length back-hair mass, back sleeves, complete intact robe hem, hands and shoes are fully visible. Infer only the minimum necessary rear construction from Images 1 and 3: shoulder-length connected hair, broad continuous layered rear robe panels, restrained central overlap/seam logic, sparse antique-gold broken-covenant seams. Add no new emblem, ornament, clasp, cape, armor or detached element.
+```
+
+## 重做唯一定向修正提示词
+
+角色左、角色右和背面各使用一次；Image 1 分别是对应初稿，Image 2／3 是当前批准身份源，Image 4 是重做正面基准，Image 5 只提供旧示例的比例与纸偶体块。
+
+```text
+Use case: precise-object-edit
+Asset type: one targeted correction to a project-bound Tripo multiview input
+
+Input images:
+- Image 1 is the edit target. Preserve its exact canvas, strict view direction, compact 4.5–5-head proportions, low-poly paper-doll geometry, framing, pose, face or rear orientation, topknot, beard, hands, shoes, complete black-gold robe geometry, robe seams, colors, lighting, and neutral background.
+- Image 2 is the decisive approved CURRENT Fu Yuan identity and black-gold clothing reference.
+- Image 3 is supporting CURRENT Fu Yuan face and material reference only.
+- Image 4 is the regenerated compact CURRENT black-gold front baseline.
+- Image 5 is ONLY the older approved compact proportion and low-poly paper-doll example; never inherit its teal outfit or old identity.
+
+Change only one thing: shorten the cohesive white-gray back-hair mass so it is truly shoulder-length, ending at the shoulder line or the very top of the shoulder blades, matching the CURRENT approved identity and regenerated front baseline. It must not extend down the middle back. Preserve the single simple topknot and keep the hair as one clean connected low-poly mass, with no detached strands. Do not alter any other detail. No new elements, no text, no watermark.
+```
+
+## 当前结论与后续边界
+
+- `A-CHAR-TRIPO-FOURVIEW-01` 已满足四张字面量 PNG、生成记录和客观检查完成条件，归档。
+- `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 已解除具名前置，但保持未入队等待负责人按四张文件和 SHA-256 明确批准或停止；客观检查不构成批准。
+- 三个付费 Tripo 生成任务继续由批准卡阻塞；本轮没有选择、上传或提交 Tripo 图片，没有生成 3D、扣 credits、操作 Blender 或写入 `src/Assets/`。

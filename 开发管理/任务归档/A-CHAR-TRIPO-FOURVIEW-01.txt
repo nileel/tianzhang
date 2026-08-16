@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-16：内置 imagegen 已形成前／角色左／角色右／后四张候选，并对三张侧／背图过长后发各执行一次定向修正；视角与身份标志物通过，但四图仍明显高于锁定的 4.5～5 头身。三张已耗尽本卡允许的一次修正，按停止条件不继续生成、不落项目最终输入，保留生成记录等待有界后续裁决。",
+  "stateReason": "2026-08-16：负责人明确要求以旧 `fu-yuan-paper-doll-public-exploration-v1.png` 只作正确紧凑比例与低模体块参考重新生成；四张 1024×1536 前／角色左／角色右／后 PNG 已保持新版黑金身份和同一纸偶造型，通过客观检查并记录哈希。本卡归档，未上传 Tripo，后续只等待负责人主观批准。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -35,6 +35,7 @@
 - `A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01` 已证明当前 Tripo 能按修订后设计在同一次请求中消费前／左／右／后四图，本卡现为严格轮第一张可执行制作卡。
 - 四视图是 Tripo 几何输入，不是动态立绘、宣传图、三视角模型效果演示或 Unity 正式资源。
 - 身份源锁定为两张已批准项目资产：透明全身立绘决定脸、发型、服装、轮廓、配色和饰物；16:9 人物介绍预览只补充脸型与材质，不替代全身结构。
+- 负责人于 2026-08-16 明确要求重新生成，并指定旧 `fu-yuan-paper-doll-public-exploration-v1.png` 是正确生成示例；本轮只继承其紧凑头身、正交 A Pose 与低模纸偶体块，不继承旧脸、青蓝服装、纹样、腰带、坠饰或任何侧背结构。
 
 ## 必查范围
 
