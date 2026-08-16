@@ -14,7 +14,7 @@
     "A-CHAR-TRIPO-STRICT-SLOT-02",
     "A-CHAR-TRIPO-STRICT-SLOT-03"
   ],
-  "stateReason": "2026-08-16：负责人已把全局四视图合同修订为前／角色左／角色右／后，预检确认 Tripo 同次四槽逐一支持；当前首个 ready 叶子为 A-CHAR-TRIPO-FOURVIEW-01，父项继续等待三个新严格槽位形成结论。",
+  "stateReason": "2026-08-16：严格轮 slot-01 唯一 Tripo 任务因背面错误生成两套腰扣与玉坠而质量失败；负责人明确要求没过关就不继续。slot-01 换绑与 slot-02／03 生成已冻结，父项保持阻塞，未追加生成或自动启用回退路线。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "2026-08-16：负责人已批准四张字面量输入及其 SHA-256；共同前置解除，本卡在固定队列中位于 slot-01 生成之后，不与其并行。",
+  "stateReason": "2026-08-16：slot-01 查看器严格背面出现两套错误腰扣与玉坠，负责人明确要求没过关就不继续生成；本卡在发起任何平台请求前冻结，等待负责人另行决定，不产生 credits。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

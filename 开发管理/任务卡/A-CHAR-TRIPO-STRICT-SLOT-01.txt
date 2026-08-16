@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-GEN-01"
-  ],
-  "stateReason": "2026-08-16：等待严格轮第一次独立生成及完整原始包；前置完成前不得预建工作文件、复用旧 slot-01 或虚构平台输出。",
+  "dispatchState": "frozen",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：生成前置已以背面错误腰扣／玉坠的质量失败完成，没有合格 raw 包；负责人要求不过关就停止，本卡未创建 Blender 工作文件并冻结，等待另行决定。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

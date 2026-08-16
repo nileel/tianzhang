@@ -1,0 +1,44 @@
+# 苻渊 Tripo 严格轮槽位 01 生成记录
+
+日期：2026-08-16
+任务：`A-CHAR-TRIPO-STRICT-GEN-01`
+结论：质量失败；停止本严格轮，不重试、不绑定、不下载、不生成 slot-02／03
+
+## 唯一平台任务
+
+- 平台：Tripo Studio 网页端。
+- 项目／任务 ID：`722ae061-c21b-4acf-b6fa-e6d5ca4aa45e`。
+- 页面：`https://studio.tripo3d.ai/workspace/generate/722ae061-c21b-4acf-b6fa-e6d5ca4aa45e`。
+- 页面资产标题：`traditional robe character 3d model`。
+- 页面完成时间：2026-08-16 23:35。
+- 本槽位只提交一次；页面显示的 `免费重试 (×3)` 未使用。
+
+## 输入与设置核对
+
+四个固定槽位按前／角色左／角色右／后提交，输入与负责人整体批准记录一致：
+
+| 槽位 | 文件 | SHA-256 |
+|------|------|---------|
+| 前 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-tpose-strict-r1-v1.png` | `50ef1e88c149b89a536631ea925110051caccd23bf37e87284293899efde88a2` |
+| 角色左 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png` | `81ffa6c1407c1f990b1a4dd7e98f06498c2021af00216e0326f55f20647a08e5` |
+| 角色右 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png` | `5ca958cb5d9ea47ebe60738375a438e5c06af742f2186d46d62bf462848e3778` |
+| 后 | `assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png` | `b5b818b9bbe6b2da74138922cdf98870d11be9ef0eedc874c2c358baf92c6e5c` |
+
+- 创建模式：高精度模型；AI 模型：`v3.1 – 最高质量`。
+- 超清几何精度：off；纹理生成：on；纹理质量：4K；PBR：on。
+- 拓扑：三角面；目标面数：12000；分部件生成：off；外层 8K 贴图：off。
+- 模型私密性：负责人指出必须私有后，提交前已从页面原状态改为明确字面量 `私有`；生成后页面仍显示 `私有`。
+- 按钮显示成本：40 credits；提交前余额 3140，提交后余额 3100，实际扣除 40 credits。
+
+## 查看器结果与质量门
+
+- 页面统计为 11451／11451 三角面、8233／8233 顶点，位于约 12000 三角面的目标附近。
+- 正、侧、背旋转检查中主体、手臂、手、鞋、头发和袍服背面均可见；后发落到上背／肩胛区，未出现此前担心的错误短发。
+- 硬失败：严格背面错误生成了两套圆形腰扣／扣饰和两串玉坠／流苏。批准的背面输入明确“不显示面部或前置饰物”，且只允许最小推断后袍结构，因此这些重复后置饰物是明显的服装结构幻觉，不是可接受的随机纹样差异。
+- 负责人此前明确要求“没过关就不往下继续生成”。本次检查命中该质量门后立即停止：未点击免费重试，未执行平台自动绑定或行走诊断，未导出或下载任何 raw 包，未创建 `raw-sha256.txt`，未提交 slot-02／03，也未写入 Blender 或 Unity 正式路径。
+
+## 状态结论
+
+- `A-CHAR-TRIPO-STRICT-GEN-01` 以质量失败完成，不伪造原始包或 Blender 候选。
+- `A-CHAR-TRIPO-STRICT-SLOT-01` 因无合格 raw 包冻结；slot-02／03 的生成卡按负责人停止指令一并冻结。
+- 是否修正四视图、改变平台路线或启用条件回退，均需负责人另行明确决定；本记录不自行追加生成次数或建立新路线。
