@@ -1,0 +1,53 @@
+# 苻渊 Tripo 严格轮二四视图修订记录
+
+日期：2026-08-17
+设计：`docs/superpowers/specs/2026-08-17-tripo-face-direction-side-view-correction-design.md`
+状态：四图候选已形成，等待负责人整体批准；尚未上传 Tripo
+
+## 方向修订
+
+- Tripo `左侧`：人脸与鼻尖朝画面左；对应原 `fu-yuan-character-right-side-strict-r1-v1.png`。
+- Tripo `右侧`：人脸与鼻尖朝画面右；对应原 `fu-yuan-character-left-side-strict-r1-v1.png`。
+- 不再用角色自身左右解释平台槽位。
+- 正面图的唯一腰扣与玉坠位于角色左前腰，因此脸朝左的侧图可见，脸朝右的侧图必须完全不可见；背面同样不可见。
+
+## 工具与唯一修改
+
+- 使用 Codex 内置 `imagegen` 的 `precise-object-edit` 模式；未使用 CLI、API 或 `OPENAI_API_KEY`。
+- 唯一编辑目标：原鼻尖朝画面右侧图，SHA-256 `81ffa6c1407c1f990b1a4dd7e98f06498c2021af00216e0326f55f20647a08e5`。
+- 支持参考：批准正面图与批准背面图，只用于确认腰饰位于另一侧前腰及无饰物的腰带／后袍结构。
+- 生成产物：`C:\Users\WINDOWS\.codex\generated_images\01a00a3e-ea69-7123-818d-26cbe1f7fa18\exec-16f0bbaa-bdde-443a-9f8b-2e5d9c74fae9.png`。
+- 结果：一次生成即通过客观门，未使用第二次修正。圆形腰扣、挂绳、玉珠、垂饰和流苏均已移除；腰部补成连续黑色束带和封闭袍片；脸仍朝画面右，后发、比例、A Pose、服装轮廓、纹样、纸偶材质、背景与光照未见明显漂移。
+
+## strict-round-02 四图候选
+
+| Tripo 槽位 | 项目路径 | 尺寸 | 字节数 | SHA-256 | 来源与结果 |
+|------------|----------|------|--------|---------|------------|
+| 前 | `assets/source/characters/platform-evaluation/tripo/strict-round-02/input/fu-yuan-front-strict-r2-v1.png` | 1024×1536 | 2084009 | `50ef1e88c149b89a536631ea925110051caccd23bf37e87284293899efde88a2` | 原批准正面逐字节复制；唯一一套腰扣与玉坠 |
+| 左侧（脸朝左） | `assets/source/characters/platform-evaluation/tripo/strict-round-02/input/fu-yuan-face-left-side-strict-r2-v1.png` | 1024×1536 | 1971909 | `5ca958cb5d9ea47ebe60738375a438e5c06af742f2186d46d62bf462848e3778` | 原鼻尖朝左侧图逐字节复制；保留唯一腰饰 |
+| 右侧（脸朝右） | `assets/source/characters/platform-evaluation/tripo/strict-round-02/input/fu-yuan-face-right-side-strict-r2-v1.png` | 1024×1536 | 2051211 | `7c12a333632d9ffb93ac7bf39b864e5101cf5530d4d9ec6d1ba42a60bd38b15f` | 本轮唯一新图；无任何腰扣、玉珠、挂绳或流苏 |
+| 后 | `assets/source/characters/platform-evaluation/tripo/strict-round-02/input/fu-yuan-back-strict-r2-v1.png` | 1024×1536 | 2083555 | `b5b818b9bbe6b2da74138922cdf98870d11be9ef0eedc874c2c358baf92c6e5c` | 原批准背面逐字节复制；无前置饰物 |
+
+## 最终编辑提示词
+
+```text
+Use case: precise-object-edit
+Asset type: project-bound Tripo strict multiview input, RIGHT SIDE slot defined by face direction
+
+Input images:
+- Image 1 is the ONLY edit target: Fu Yuan in a strict 90-degree full-body side profile with his face and nose pointing toward image-right.
+- Image 2 is the approved front reference. It proves the single bronze clasp and jade pendant assembly belongs on the opposite front-left waist and must not be visible from Image 1's face-right side.
+- Image 3 is the approved back reference. It confirms a plain continuous black waist band and robe construction with no clasp, beads, cord, pendant, or tassel.
+
+Primary request: Edit Image 1 and change ONLY its waist accessory visibility. Completely remove the entire visible waist ornament assembly from Image 1: remove the round old-bronze clasp, every hanging cord, every jade or metal bead, all dangling pieces, and the terminal pale tassel. Reconstruct the removed area as a clean continuous unornamented charcoal-black waist band, closed robe side panels, and natural existing cloth folds. There must be no circular ornament outline, no bead-string residue, no pendant, no tassel, no bow-like accessory, and no new waist object anywhere.
+
+Hard invariants: Preserve Image 1's exact canvas and portrait framing; strict 90-degree side orientation with nose pointing image-right; full-body compact 4.5–5-head paper-doll proportions; neutral A-pose; exact elderly face, topknot, pointed beard, hands, feet and shoes; the same cohesive faceted white-gray back hair reaching the upper back / shoulder-blade area; identical sleeve and robe silhouette; identical charcoal-black and antique-gold broken-seam pattern; identical planar low-poly ink-wash paper-doll material; identical warm-gray background, lighting and faint contact shadow. Do not mirror, rotate, crop, zoom, restyle, redesign, change hair length, change body proportions, move limbs, or alter any area outside the waist accessory removal.
+
+Constraints: exactly one complete character; opaque connected clothing; no text, logo, watermark, extra limb, weapon, magic, new accessory, or background change.
+```
+
+## 审批与停止边界
+
+- 本轮没有点击、上传或提交 Tripo，没有扣除 credits，没有使用免费重试，没有绑定、下载、运行 Blender 或写入 Unity 正式路径。
+- 四张图必须按“前／左侧（脸朝左）／右侧（脸朝右）／后”同时展示并由负责人重新批准；任何图片或槽位映射变化都会使批准失效。
+- 批准前保持现有严格生成任务冻结，不自动发起新的 40 credits 请求。
