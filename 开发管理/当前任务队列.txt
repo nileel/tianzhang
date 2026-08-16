@@ -5,6 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| A-CODEX-BROWSER-BRIDGE-DNS-01 | codex_execute | codex | P0 | automation | implementation | Codex 浏览器桥 DNS/遥测超时长期治理 | 开发管理/任务卡/A-CODEX-BROWSER-BRIDGE-DNS-01.txt |
 | A-CHAR-TRIPO-STRICT-GEN-01 | codex_execute | codex | P1 | unity | implementation | 苻渊 Tripo 严格轮 slot-01 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt |
 | A-CHAR-TRIPO-STRICT-GEN-02 | codex_execute | codex | P1 | unity | implementation | 苻渊 Tripo 严格轮 slot-02 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt |
 | A-CHAR-TRIPO-STRICT-GEN-03 | codex_execute | codex | P1 | unity | implementation | 苻渊 Tripo 严格轮 slot-03 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt |

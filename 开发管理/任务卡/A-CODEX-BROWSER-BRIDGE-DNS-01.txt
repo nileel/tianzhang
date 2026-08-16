@@ -1,0 +1,66 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CODEX-BROWSER-BRIDGE-DNS-01",
+  "title": "Codex 浏览器桥 DNS/遥测超时长期治理",
+  "priority": "P0",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：负责人明确要求建立最高优先级长期修复；本机证据确认普通 DNS 污染使 Codex 浏览器桥的两个 Statsig POST 各超时 10 秒。本卡以 P0 ready 入队，负责建立可回退的长期解析路径、验证并清理临时 hosts。",
+  "expectedPaths": [
+    "开发管理/任务列表/审核与交接任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CODEX-BROWSER-BRIDGE-DNS-01.txt",
+    "开发管理/任务归档/A-CODEX-BROWSER-BRIDGE-DNS-01.txt",
+    "开发管理/Codex浏览器桥DNS诊断与治理记录.txt",
+    "tools/check-codex-browser-network.ps1"
+  ],
+  "sourceBacklog": "开发管理/任务列表/审核与交接任务.txt"
+}
+---TASK-BODY---
+# A-CODEX-BROWSER-BRIDGE-DNS-01 · Codex 浏览器桥 DNS/遥测超时长期治理
+
+## 来源与当前边界
+
+- 2026-08-16 的 Tripo 网页操作中，浏览器桥每次读取稳定增加约 20 秒；两个发往 `ab.chatgpt.com` 的 Statsig POST 分别在 10 秒超时。
+- 普通系统 DNS 与传统 UDP DNS 返回异常地址，DoH 返回 Cloudflare 正常地址；指定正常地址后连接恢复到亚秒级，因此当前根因为 DNS 路径污染／拦截，不是 Tripo 页面渲染，也没有证据表明游戏算力竞争是主因。
+- 本卡只负责 Codex 浏览器桥网络解析路径、只读诊断和临时绕过清理；不修改 Tripo 生成流程，不补丁化第三方／捆绑浏览器插件。
+
+## 必查范围
+
+- `开发管理/Codex浏览器桥DNS诊断与治理记录.txt` 的实测地址、时延、临时绕过与回退信息。
+- Windows 当前 DNS、DoH、系统代理、现有 VPN／TUN／游戏加速器路由；只读取与 `ab.chatgpt.com` 解析和 HTTPS 可达性直接相关的状态。
+- Codex 浏览器桥实际 Node 进程使用的解析与代理路径；不得以系统浏览器可访问替代进程级验证。
+
+## 实施范围
+
+- 增加 `tools/check-codex-browser-network.ps1` 只读诊断脚本，输出系统解析、DoH 对照、443 可达性和分段耗时；不得输出令牌、Cookie、完整遥测查询串或其他账号信息。
+- 在现有 Windows DoH、系统代理或已存在的可信 VPN／TUN 中选择影响面最小、可回退且对 Node 进程生效的长期解析路径；实施前记录原状态和精确回退步骤。
+- 用冷启动后的浏览器桥连续读取至少 3 次，确认不再出现两个固定 10 秒 Statsig 超时；同时验证 Tripo 页面仍可访问。
+- 长期路径通过后删除带项目标记的临时 `ab.chatgpt.com` hosts 条目，再重复解析、浏览器桥和 Tripo 访问验证。
+- 把根因、选型、前后时延、配置位置、回退步骤和 hosts 清理证据更新到治理记录；完成时归档本卡并维护队列与 backlog。
+
+## 禁止项
+
+- 不把固定 CDN IP 作为长期方案，不长期保留 hosts 绕过，不禁用 TLS 校验，不修改遥测客户端代码或依赖包。
+- 不新增重试层、超时吞噬、页面等待兜底或 Tripo 自动化分支来掩盖网络根因。
+- 未获负责人确认，不切换整机 VPN／代理供应商，不改公司／路由器级 DNS，不改游戏加速器的全局模式或影响其他应用的路由。
+
+## 验证
+
+- 系统与浏览器桥进程的解析结果能到达和 DoH 权威对照一致的当前服务端点；不以永久匹配某个固定 IP 为通过条件。
+- 冷启动浏览器桥后至少 3 次读取均无 10 秒 Statsig 网络超时，且不再有固定约 20 秒额外耗时；记录每次实测。
+- Tripo 网页可正常访问，临时 hosts 标记和条目均已清除，回退步骤可执行。
+- 运行任务卡、审核文本、脚本语法、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成一个可回退、非固定 IP、对 Codex 浏览器桥 Node 进程生效的长期解析路径；诊断脚本与前后证据齐全，临时 hosts 绕过已清理。
+
+## 停止条件
+
+- 需要账号凭据、管理员无法确认的托管网络策略、改变整机广域代理／VPN／游戏加速器行为、补丁化供应商捆绑代码，或无法在清理 hosts 后保持验证结果时停止并请求负责人裁决。
