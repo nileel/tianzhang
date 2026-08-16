@@ -17,14 +17,15 @@
 
 ## 与设计输入合同的核对
 
-- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1 要求同一造型的正面 A／T Pose、侧面、背面、前三分之四面四图。
+- 本记录恢复历史输入时，`docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1 原要求同一造型的正面 A／T Pose、单侧严格正侧面、背面、前三分之四面四图。
+- 负责人随后根据当前 Tripo 固定的前／左／右／后四槽批准全局合同修订；现行 §5.1 要求正面 A／T Pose、角色左侧严格正侧面、角色右侧严格正侧面和背面。
 - 历史页面只显示并下载出一张正面图；没有第二、第三、第四色输入，也没有证据表明它们曾用于 `slot-01`。
-- 因此，`slot-01` 的实际生成事实已经恢复，但它不满足既定四视图合同。本文件不能作为“已通过的三槽原始输入合同”，也不能据现有模型反推缺失视图。
+- 因此，`slot-01` 的实际生成事实已经恢复，但它既不满足原合同，也不满足修订后的四视图合同。本文件不能作为“已通过的三槽原始输入合同”，也不能据现有模型反推缺失视图。
 
 ## 结论与后续边界
 
 - `slot-01` 的 Blender 技术换绑 PASS 仍然有效；失效的是把它直接视为符合四视图设计的正式稳定性样本这一前提。
-- 负责人已于 2026-08-16 在当前 Codex 对话选择 A：严格按原设计另建四视图并重新执行三个正式槽位；不批准 §5.1 单图例外。
+- 负责人已于 2026-08-16 在当前 Codex 对话选择 A：另建严格四视图并重新执行三个正式槽位，不批准 §5.1 单图例外；同日又确认把全局四视图定义修订为前／角色左／角色右／后。
 - 旧 `tripo/slot-01` 原始包、模型和换绑证据保持不变，只作技术样本；旧单图延续路线的 GEN-02／03 与 SLOT-02／03 未执行关闭。
 - 新正式轮字面量根路径为 `assets/source/characters/platform-evaluation/tripo/strict-round-01/`，不得覆盖或挪用旧 `slot-01`。
 
@@ -33,5 +34,5 @@
 - 决定性身份与服装源：`assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png`，SHA-256 `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65`。
 - 脸型与材质辅助源：`assets/generated-character-art/profile-wide/fu-yuan-hanhong-zhenjun/fu-yuan-profile-preview-16x9-v1.png`，SHA-256 `afd4a4f22a83b569a22b75200f44bec1d0327fec90d67efaad3484fdd95b358c`。
 - 旧 `fu-yuan-paper-doll-public-exploration-v1.png` 不再作为新严格轮身份源，也不能补作侧面或背面。
-- 先由 `A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01` 只读证明 Tripo 当前能在同一次请求中消费四图；支持后才执行 `A-CHAR-TRIPO-FOURVIEW-01` 生成正面 A／T Pose、正侧面、背面和前三分之四面。
+- `A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01` 已只读证明 Tripo 当前能在同一次请求中消费固定角色的前／左／右／后四图；修订后合同与入口逐槽一致。下一步由 `A-CHAR-TRIPO-FOURVIEW-01` 生成正面 A／T Pose、角色左侧严格正侧面、角色右侧严格正侧面和背面。
 - 四张最终 PNG 的字面量路径与 SHA-256 必须由 `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 经负责人明确批准后，才能成为三个新正式槽位的共同输入。未批准前不上传、不生成、不扣 credits。

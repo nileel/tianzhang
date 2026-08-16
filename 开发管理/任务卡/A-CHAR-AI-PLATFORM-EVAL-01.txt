@@ -14,13 +14,14 @@
     "A-CHAR-TRIPO-STRICT-SLOT-02",
     "A-CHAR-TRIPO-STRICT-SLOT-03"
   ],
-  "stateReason": "2026-08-16：负责人选择严格四视图路线；旧单图 slot-01 只保留为技术样本。完整子图已建立，当前首个 ready 叶子为 A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01；父项等待三个新严格槽位形成结论。",
+  "stateReason": "2026-08-16：负责人已把全局四视图合同修订为前／角色左／角色右／后，预检确认 Tripo 同次四槽逐一支持；当前首个 ready 叶子为 A-CHAR-TRIPO-FOURVIEW-01，父项继续等待三个新严格槽位形成结论。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
     "开发管理/任务归档/A-CHAR-AI-PLATFORM-EVAL-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-APPROVAL-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt",
@@ -31,7 +32,9 @@
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-03.txt",
     "开发管理/苻渊Tripo多视图入口预检记录.txt",
     "开发管理/苻渊Tripo严格轮四视图生成记录.txt",
-    "开发管理/苻渊Tripo三槽原始输入合同.txt"
+    "开发管理/苻渊Tripo三槽原始输入合同.txt",
+    "docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md",
+    "docs/superpowers/specs/2026-08-16-tripo-four-view-input-contract-revision-design.md"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -41,14 +44,14 @@
 ## 来源与当前边界
 
 - 用户已确认 Tripo 会员开通并终止 Meshy 路线；本项只验证 Tripo 固定人形生产，不恢复两平台 A/B，也不引入第三平台。
-- 负责人于 2026-08-16 明确选择严格执行设计 §5.1：现有单图 `tripo/slot-01` 的 11348 三角面模型与统一骨架换绑 PASS 继续作为技术可行性证据，但不计入正式三槽。
+- 负责人于 2026-08-16 明确选择严格四视图路线，并把设计 §5.1 修订为前／角色左／角色右／后；入口预检证明 Tripo 多视图固定角色与该合同逐槽一致。现有单图 `tripo/slot-01` 的 11348 三角面模型与统一骨架换绑 PASS 继续作为技术可行性证据，但不计入正式三槽。
 - `A-CHAR-HUMANOID-RIG-01` 已完成；统一 `.blend`、Rig FBX、三条动作 FBX 和 Blender／Unity 证据位于 `assets/source/characters/humanoid-evaluation/`。
 - 本父项只汇总三个新严格槽位，不直接生成图片／模型，不操作单槽 Blender，不向 Unity 正式路径接入资产。
 
 ## 子任务与依赖
 
 - 已关闭的事实链：`A-CHAR-TRIPO-INPUT-DEC-01 → A-CHAR-TRIPO-INPUT-LOCK-01 → A-CHAR-TRIPO-BASELINE-DEC-01`。结论是旧 slot-01 实际仅一张正面图，负责人选择严格重建。
-- 共同前端：`A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01 → A-CHAR-TRIPO-FOURVIEW-01 → A-CHAR-TRIPO-FOURVIEW-APPROVAL-01`。依次证明 Tripo 同次四图入口、生成同造型四视图、取得负责人按哈希批准。
+- 共同前端：`A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01` 已以“支持修订后的严格四视图合同”归档；当前执行 `A-CHAR-TRIPO-FOURVIEW-01 → A-CHAR-TRIPO-FOURVIEW-APPROVAL-01`，随后才可解除三个正式生成卡的共同前置。
 - 正式槽位 1：`A-CHAR-TRIPO-STRICT-GEN-01 → A-CHAR-TRIPO-STRICT-SLOT-01`。
 - 正式槽位 2：`A-CHAR-TRIPO-STRICT-GEN-02 → A-CHAR-TRIPO-STRICT-SLOT-02`。
 - 正式槽位 3：`A-CHAR-TRIPO-STRICT-GEN-03 → A-CHAR-TRIPO-STRICT-SLOT-03`。

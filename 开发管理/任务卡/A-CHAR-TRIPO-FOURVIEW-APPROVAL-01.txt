@@ -21,7 +21,11 @@
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt",
-    "开发管理/苻渊Tripo严格轮四视图生成记录.txt"
+    "开发管理/苻渊Tripo严格轮四视图生成记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-tpose-strict-r1-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -41,7 +45,7 @@
 
 ## 实施范围
 
-- 向负责人同时展示正面 A／T Pose、正侧面、背面和前三分之四面，明确指出任何由生成补全的背面结构风险。
+- 向负责人同时展示正面 A／T Pose、角色左侧严格正侧面、角色右侧严格正侧面和背面，明确指出任何由生成补全的背面结构或左右非对称风险。
 - 负责人选择批准时，记录批准日期与四张 SHA-256，归档本卡，并在同一状态事件解除三个严格生成卡的共同前置。
 - 负责人选择不批准时，记录具体原因并停止本严格轮；不自动生成更多变体。若负责人另行明确要求修正，届时只为指定问题建立一张有界修正卡。
 
@@ -52,7 +56,7 @@
 
 ## 验证
 
-- 批准必须唯一对应四张字面量路径和 SHA-256；图片变化即使文件名不变也使批准失效。
+- 批准必须唯一对应前／角色左／角色右／后四张字面量路径和 SHA-256；方向映射或图片内容变化即使文件名不变也使批准失效。
 - 运行任务卡、文本、空白和 Git 暂存差异检查。
 
 ## 完成条件

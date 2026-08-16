@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01"
-  ],
-  "stateReason": "2026-08-16：等待只读预检证明 Tripo 当前支持同一次四图输入；证明前不生成图片，避免形成无法按设计消费的项目资产。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-16：预检已证明 Tripo 高精度多视图入口在同一次请求中提供前／左／右／后四个固定槽位，与负责人批准修订后的全局四视图合同逐槽一致；本卡已解除具名前置并作为唯一队首 ready 叶子。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -20,10 +18,12 @@
     "开发管理/任务归档/A-CHAR-TRIPO-FOURVIEW-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-APPROVAL-01.txt",
     "开发管理/苻渊Tripo严格轮四视图生成记录.txt",
+    "docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md",
+    "docs/superpowers/specs/2026-08-16-tripo-four-view-input-contract-revision-design.md",
     "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-tpose-strict-r1-v1.png",
-    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-side-strict-r1-v1.png",
-    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png",
-    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-front-three-quarter-strict-r1-v1.png"
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-left-side-strict-r1-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-character-right-side-strict-r1-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-01/input/fu-yuan-back-strict-r1-v1.png"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -32,7 +32,7 @@
 
 ## 来源与当前边界
 
-- 本卡只在 `A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01` 证明当前 Tripo 能按设计消费同一次四图输入后执行。
+- `A-CHAR-TRIPO-MULTIVIEW-PREFLIGHT-01` 已证明当前 Tripo 能按修订后设计在同一次请求中消费前／左／右／后四图，本卡现为严格轮第一张可执行制作卡。
 - 四视图是 Tripo 几何输入，不是动态立绘、宣传图、三视角模型效果演示或 Unity 正式资源。
 - 身份源锁定为两张已批准项目资产：透明全身立绘决定脸、发型、服装、轮廓、配色和饰物；16:9 人物介绍预览只补充脸型与材质，不替代全身结构。
 
@@ -41,12 +41,14 @@
 - `assets/generated-character-art/README.md` 的角色图生成与验收边界。
 - `assets/generated-character-art/model-preview/prompts.md` 的苻渊身份、服装、比例、低模结构与禁止项。
 - `docs/剧情/重要NPC/苻渊.txt` 的人物身份和表现限制。
+- `docs/superpowers/specs/2026-08-08-ai-3d-character-asset-platform-evaluation-design.md` §5.1 的现行四视图合同。
+- `docs/superpowers/specs/2026-08-16-tripo-four-view-input-contract-revision-design.md` 的角色方向、输入／输出分离和实施边界。
 - `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png`，SHA-256 `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65`，作为决定性身份与服装参考。
 - `assets/generated-character-art/profile-wide/fu-yuan-hanhong-zhenjun/fu-yuan-profile-preview-16x9-v1.png`，SHA-256 `afd4a4f22a83b569a22b75200f44bec1d0327fec90d67efaad3484fdd95b358c`，作为脸型与材质辅助参考。
 
 ## 实施范围
 
-- 使用内置 imagegen，按四个独立资产分别生成：正面 A／T Pose、同一侧的严格正侧面、背面、前三分之四面；每次调用都显式标注两张输入图的参考角色并复述相同身份不变量。
+- 使用内置 imagegen，按四个独立资产分别生成：正面 A／T Pose、角色左侧严格正侧面、角色右侧严格正侧面、背面；每次调用都显式标注两张输入图的参考角色并复述相同身份不变量。
 - 四图保持同一老人脸型、4.5～5 头身比例、白灰单顶髻与连贯肩长后发、短尖白须、完整炭黑层叠道袍、灰白内衬、古铜圆形腰扣、微小淡玉坠和稀疏古金断契纹。
 - 使用近似正交观察、均匀中性光、简单同色背景、全身完整入镜、安静 A／T Pose；不加入六角地块、武器、法术、文字、印章、UI、水印或遮挡结构。
 - 每张只允许在检查发现单一明确偏差时做一次针对性修正；修正后仍无法保持同造型、同比例、同发型或前后服装结构一致则停止，不连续生成变体找偶然结果。
@@ -61,7 +63,7 @@
 
 ## 验证
 
-- 四图逐张核对全身完整、视角正确、左右一致、头身比例、发髻／后发、胡须、袖袍／背片、腰扣／玉坠和断契纹；并排确认是同一造型而非四个近似人物。
+- 四图逐张核对全身完整、视角正确、角色左／右方向、头身比例、发髻／后发、胡须、袖袍／背片、腰扣／玉坠和断契纹；存在非对称结构时不得用简单镜像另一侧代替，并排确认是同一造型而非四个近似人物。
 - 复算两张参考图和四张输出的 SHA-256；项目引用资产不得只留在 `$CODEX_HOME/generated_images/`。
 - 运行任务卡、文本、空白和 Git 暂存差异检查；不运行 Unity 或 Blender 验证。
 
@@ -71,4 +73,4 @@
 
 ## 停止条件
 
-- Tripo 预检不支持同一次四图输入、任一锁定参考缺失或哈希变化、imagegen 不可用、四图在一次定向修正后仍身份／比例／发型／服装结构不一致，或需要手绘补造未批准背面设计时停止并保留已证明风险。
+- 当前 Tripo 不再支持前／左／右／后同次四图输入、任一锁定参考缺失或哈希变化、imagegen 不可用、四图在一次定向修正后仍身份／比例／发型／服装结构不一致，或需要手绘补造未批准背面设计时停止并保留已证明风险。
