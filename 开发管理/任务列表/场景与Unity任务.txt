@@ -7,7 +7,7 @@
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
-- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊旧 Tripo `slot-01` 已完成统一项目骨架换绑和 factory-startup 回读，但历史证明它实际只消费单张正面图。负责人已把全局四视图合同修订为前／角色左／角色右／后，入口预检确认 Tripo 同次四槽逐一支持；随后又明确指定旧纸偶图只作正确紧凑比例与低模体块参考重做，新版黑金四视图已通过客观检查并归档制作卡，当前等待负责人主观批准，未上传 Tripo。
+- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊旧 Tripo `slot-01` 已完成统一项目骨架换绑和 factory-startup 回读，但历史证明它实际只消费单张正面图。负责人已把全局四视图合同修订为前／角色左／角色右／后，入口预检确认 Tripo 同次四槽逐一支持；随后又指定旧纸偶图只作正确紧凑比例与低模体块参考重做，并已批准新版黑金四视图。三个严格生成卡现按 slot-01→02→03 固定顺序 ready，尚未上传 Tripo。
 
 ## 任务
 
@@ -15,12 +15,11 @@
 |----|--------|------|----------|--------|------|--------|
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-SLOT-01、A-CHAR-TRIPO-STRICT-SLOT-02、A-CHAR-TRIPO-STRICT-SLOT-03 | Tripo 3D 固定人形三槽生产验证 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
-| A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | P1 | codex | 阻塞 | — | 苻渊 Tripo 严格轮四视图批准 | 开发管理/任务卡/A-CHAR-TRIPO-FOURVIEW-APPROVAL-01.txt |
-| A-CHAR-TRIPO-STRICT-GEN-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | 苻渊 Tripo 严格轮 slot-01 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt |
+| A-CHAR-TRIPO-STRICT-GEN-01 | P1 | codex | 已排队 | — | 苻渊 Tripo 严格轮 slot-01 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-01.txt |
 | A-CHAR-TRIPO-STRICT-SLOT-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-GEN-01 | 苻渊 Tripo 严格轮 slot-01 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-01.txt |
-| A-CHAR-TRIPO-STRICT-GEN-02 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | 苻渊 Tripo 严格轮 slot-02 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt |
+| A-CHAR-TRIPO-STRICT-GEN-02 | P1 | codex | 已排队 | — | 苻渊 Tripo 严格轮 slot-02 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt |
 | A-CHAR-TRIPO-STRICT-SLOT-02 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-GEN-02 | 苻渊 Tripo 严格轮 slot-02 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-02.txt |
-| A-CHAR-TRIPO-STRICT-GEN-03 | P1 | codex | 阻塞 | A-CHAR-TRIPO-FOURVIEW-APPROVAL-01 | 苻渊 Tripo 严格轮 slot-03 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt |
+| A-CHAR-TRIPO-STRICT-GEN-03 | P1 | codex | 已排队 | — | 苻渊 Tripo 严格轮 slot-03 独立模型生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt |
 | A-CHAR-TRIPO-STRICT-SLOT-03 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-GEN-03 | 苻渊 Tripo 严格轮 slot-03 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-03.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
 | U-SHIJIAHOU-3D-PROTO-01 | P1 | codex | 阻塞 | U-CHAR-HUMANOID-PROTO-01 | 石甲兽重型四足技术样例 | 开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt |
@@ -50,7 +49,7 @@
 共同事实源：`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`、`docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md`、`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`。架构重建是最高顺序的 Unity 前置；架构期间冻结 Runtime、正式场景、CSV、导入器和相关 asset 功能开发，只恢复功能完整、视觉简陋的正式薄切片。
 
 - 架构主链 01A～01H 与父项均已完成归档；现行所有者、结构图和保留资产扫描基线已经交给 `U-URP-PREFLIGHT-01`，后续不恢复旧 Gameplay／Exploration／BattleUI 或 Built-in 原型。
-- 美术工具链中的 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01` 已完成，当前从 `A-CHAR-AI-PLATFORM-EVAL-01` 继续；修订后的前／角色左／角色右／后合同已通过 Tripo 入口预检，`A-CHAR-TRIPO-FOURVIEW-01` 按负责人指定的正确纸偶比例示例重做后已完成，当前只等待 `A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 的主观批准，三个付费生成卡继续保持阻塞。不得向 Unity 正式路径接入资产；平台路线失败时才建立条件回退 `A-CHAR-BLENDER-TEMPLATE-01`，不同时维持两条生产路线。
+- 美术工具链中的 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01` 已完成，当前从 `A-CHAR-AI-PLATFORM-EVAL-01` 继续；修订后的前／角色左／角色右／后合同已通过 Tripo 入口预检，`A-CHAR-TRIPO-FOURVIEW-01` 按负责人指定的正确纸偶比例示例重做后完成，`A-CHAR-TRIPO-FOURVIEW-APPROVAL-01` 也已在 2026-08-16 取得整体批准并归档。三个付费生成卡现按 01→02→03 固定顺序 ready，不并行执行。不得向 Unity 正式路径接入资产；平台路线失败时才建立条件回退 `A-CHAR-BLENDER-TEMPLATE-01`，不同时维持两条生产路线。
 - Unity 视觉链 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01` 已全部完成；当前冻结结果是 URP 17.3.0、唯一 Universal Renderer、四个正式场景、低模 3D 技术视觉与六向几何占位测试台，不包含正式角色或关中最终装修。
 - 真实角色链当前从 `A-CHAR-AI-PLATFORM-EVAL-01` 继续，随后执行玩家基础人形、石甲兽、外观数据、风格样张、正式 Adventure 替换和完整创角批次。统一评估骨架已经完成，但不属于正式角色资源；石甲兽技术样例不拥有角色级音效或战斗 VFX，它们由 `A-GZ-PRESENT-01` 独立负责。
 - `U-CHAR-3D-FORMAL-01` 只消费 01H 确认的新 Adventure、Combat 与 CombatPresentation 契约，不继续锁定旧 `ExplorationController`、`TacticalCombatController` 或 BattleUIManager。

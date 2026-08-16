@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "decision",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-16：负责人已明确确认第三组正面风格“差不多就是这个”；同风格的角色左／角色右／后输入随后逐张形成并通过客观检查。当前保持未入队，等待负责人按四张新文件与 SHA-256 整体批准或停止，未批准不上传 Tripo。",
+  "stateReason": "2026-08-16：负责人在带标签复核四张正式输入后明确回复“OK，继续吧”，批准前／角色左／角色右／后四图整体进入 Tripo 严格轮；批准对应的 SHA-256 已记录，三个严格生成卡的共同前置在同一状态事件解除。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -60,6 +60,16 @@
 ## 完成条件
 
 - 负责人明确批准该四图集合并记录哈希，或明确不批准并停止；不接受把“以后再看”解释为批准。
+
+## 批准结果
+
+- 批准日期：2026-08-16。
+- 批准语境：负责人先看到带有“正面／角色左（鼻尖朝画面右）／角色右（鼻尖朝画面左）／背面”标签的四张正式文件复核，随后明确回复“OK，继续吧”；该回复唯一对应下列四张输入。
+- 正面 `fu-yuan-front-tpose-strict-r1-v1.png`：`50ef1e88c149b89a536631ea925110051caccd23bf37e87284293899efde88a2`。
+- 角色左 `fu-yuan-character-left-side-strict-r1-v1.png`：`81ffa6c1407c1f990b1a4dd7e98f06498c2021af00216e0326f55f20647a08e5`。
+- 角色右 `fu-yuan-character-right-side-strict-r1-v1.png`：`5ca958cb5d9ea47ebe60738375a438e5c06af742f2186d46d62bf462848e3778`。
+- 背面 `fu-yuan-back-strict-r1-v1.png`：`b5b818b9bbe6b2da74138922cdf98870d11be9ef0eedc874c2c358baf92c6e5c`。
+- 本批准事件只归档批准并解锁生成卡；尚未上传 Tripo、生成 3D 或扣除 credits。
 
 ## 停止条件
 
