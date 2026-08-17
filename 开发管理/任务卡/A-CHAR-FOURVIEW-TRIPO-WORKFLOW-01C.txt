@@ -3,14 +3,16 @@
   "schemaVersion": 1,
   "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C",
   "title": "非 Blender FBX 解析能力冻结",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "automation",
   "stage": "discovery",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-08-17：批准规格要求在启动 Blender 前读取 FBX 动画、骨架、网格和材质元数据，但仓库当前没有 FBX 解析依赖；本卡用既有两份 strict-round-02 原包形成唯一能力结论，作为首批 ready 叶子。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
+  ],
+  "stateReason": "2026-08-17：负责人要求先验证美术资产管线；本卡降为 P2，并阻塞于 A-CHAR-TRIPO-STRICT-R2-UNITY-01。该 Unity 技术与视觉验收完成前不得实施或进入队列。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -28,6 +30,7 @@
 ## 来源与当前边界
 
 - 设计事实源为批准规格 §十三、§17.6。
+- 共同前置 `A-CHAR-TRIPO-STRICT-R2-UNITY-01` 必须先以通过结论完成；当前美术资产管线尚未通过时，本卡没有实施意义。
 - 本卡唯一结果是对一个无需启动 Blender 的 FBX 解析方案形成可重复的通过或阻塞结论，并冻结 01E 可用的依赖、接口和字面量路径。
 - 测试输入使用本机既有 `strict-round-02/raw/` 基础包与行走包；不修改、重命名或重新导出历史 RAW。
 

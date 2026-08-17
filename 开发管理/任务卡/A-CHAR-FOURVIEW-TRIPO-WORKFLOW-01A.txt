@@ -3,14 +3,16 @@
   "schemaVersion": 1,
   "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
   "title": "飞书视觉证据与受限回复合同实施",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-08-17：批准规格、现有飞书桥所有者与允许路径已冻结；本卡只扩展视觉证据和两种受限自定义回复，不依赖其他子卡，作为首批 ready 叶子。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
+  ],
+  "stateReason": "2026-08-17：负责人要求先验证美术资产管线；本卡降为 P2，并阻塞于 A-CHAR-TRIPO-STRICT-R2-UNITY-01。该 Unity 技术与视觉验收完成前不得实施或进入队列。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -39,6 +41,7 @@
 ## 来源与当前边界
 
 - 设计事实源为批准规格 §六、§十、§15.1～§15.2、§17.2。
+- 共同前置 `A-CHAR-TRIPO-STRICT-R2-UNITY-01` 必须先以通过结论完成；当前美术资产管线尚未通过时，本卡没有实施意义。
 - 本卡唯一结果是现有飞书决策桥能够安全发送带可放大图片的决定卡，并验证 `PRICE_RANGE=<min>-<max>` 与 `SELECT_TASK=<exact-platform-task-id>` 两种受限回复。
 - 本卡不理解 Tripo 页面、不消费授权、不选择候选、不创建工作流状态机。
 

@@ -3,20 +3,21 @@
   "schemaVersion": 1,
   "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01",
   "title": "通用角色立绘到 Tripo 绑定及人工导出交接工作流父任务",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-UNITY-01",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E"
   ],
-  "stateReason": "2026-08-17：负责人批准经 DeepSeek V4 Pro 0813 复审通过的扩展规格。旧执行卡同时跨越飞书桥、Tripo 原子账本、平台绑定／人工导出交接与 Blender 原包接收门，无法由一个主智能体形成单一可判断结果；现已一次性拆为五张子卡，父项只保留汇总状态。",
+  "stateReason": "2026-08-17：负责人明确本组自动化只有在现有美术资产管线通过资源 QA 与 Unity 技术验收后才有意义；父项及五张子卡统一降为 P2，并以 A-CHAR-TRIPO-STRICT-R2-UNITY-01 为共同闸门。父项只保留汇总状态，不进入队列。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-17-character-portrait-fourview-tripo-static-model-workflow-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -47,13 +48,15 @@
 
 ## 子任务与依赖
 
-1. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A`：飞书视觉证据与受限回复合同；无前置，首批 ready。
-2. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B`：Tripo 操作原子账本；无前置，首批 ready。
-3. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C`：非 Blender FBX 解析能力冻结；无前置，首批 ready。
-4. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D`：Tripo 绑定及人工导出准备工作流；阻塞于 01A、01B。
-5. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E`：Blender 工作流原包接收门；阻塞于 01C、01D。
+共同前置闸门是 `A-CHAR-TRIPO-STRICT-R2-UNITY-01` 完成通过；它证明现有美术资产管线已经先通过资源 QA 与 Unity 技术／视觉验收。闸门未通过时以下子卡全部不得调度：
 
-依赖图固定为 `01A + 01B → 01D`、`01C + 01D → 01E`。后续不得再把父项放回 ready 队列，也不得逐轮补建已知子卡。
+1. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A`：飞书视觉证据与受限回复合同；闸门通过后首批 ready。
+2. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B`：Tripo 操作原子账本；闸门通过后首批 ready。
+3. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C`：非 Blender FBX 解析能力冻结；闸门通过后首批 ready。
+4. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D`：Tripo 绑定及人工导出准备工作流；阻塞于共同闸门、01A、01B。
+5. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E`：Blender 工作流原包接收门；阻塞于共同闸门、01C、01D。
+
+依赖图固定为 `STRICT-R2-UNITY-01 → 01A / 01B / 01C`、`01A + 01B → 01D`、`01C + 01D → 01E`。后续不得再把父项放回 ready 队列，也不得逐轮补建已知子卡。
 
 ## 必查范围
 
@@ -75,7 +78,7 @@
 
 ## 验证
 
-- 五张子卡、依赖、状态、`blockedBy` 和项目路径一致；首批只有 01A、01B、01C 在队列。
+- 五张子卡、共同管线闸门、依赖、状态、`blockedBy` 和项目路径一致；闸门未通过时本父项及全部子卡都不在队列。
 - 01D 产出的 `export-handoff.json` 合同被 01E 的接收门夹具直接消费，没有第三份中间工作流。
 - 运行任务卡、审核文本、空白和 Git 暂存差异检查。
 

@@ -3,17 +3,18 @@
   "schemaVersion": 1,
   "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E",
   "title": "Blender 工作流原包接收门实施",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-UNITY-01",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D"
   ],
-  "stateReason": "2026-08-17：原包接收门必须消费 01D 冻结的 export-handoff 合同，并依赖 01C 证明可用的非 Blender FBX 解析能力；两个前置未完成前保持 blocked。",
+  "stateReason": "2026-08-17：本卡降为 P2；必须先由 A-CHAR-TRIPO-STRICT-R2-UNITY-01 证明美术资产管线通过，再消费 01C 的解析能力与 01D 的 export-handoff 合同。全部前置完成前保持 blocked。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -38,6 +39,7 @@
 ## 来源与当前边界
 
 - 设计事实源为批准规格 §十二至§十四、§16、§17.6；本卡消费 01D 的 `export-handoff.json` 与 01C 冻结的单一解析方案。
+- 共同前置 `A-CHAR-TRIPO-STRICT-R2-UNITY-01` 必须先以通过结论完成；当前美术资产管线尚未通过时，本卡没有实施意义。
 - 本卡唯一结果是下一个 Blender 工作流的开头门禁：识别两份人工下载包、验证并冻结 RAW；门禁通过前绝不启动 Blender。
 - 本卡不是独立通用 RAW 工作流，不拥有后续换绑、资源 QA 或 Unity 结论。
 
