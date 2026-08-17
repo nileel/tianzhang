@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01",
     "A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01"
   ],
-  "stateReason": "2026-08-17：等待两张只读诊断卡完成；之后只提交一次 H3.1 私有四边面多视图生成，新增 Tripo 消费必须低于 100 credits。",
+  "stateReason": "2026-08-17：源结构只读诊断已完成；当前只等待袖骨贡献只读消融。之后只提交一次 H3.1 私有四边面多视图生成，新增 Tripo 消费必须低于 100 credits。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

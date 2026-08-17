@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01",
     "A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01"
   ],
-  "stateReason": "2026-08-17：等待两张只读诊断卡完成；之后只在 599 面／483 点冻结范围内建立一个局部四边面候选并过静态结构门。",
+  "stateReason": "2026-08-17：源结构只读诊断已完成并固化 316/599 面、483 点、1087 边和 357/377 固定边界；当前只等待袖骨贡献只读消融，之后仅在冻结范围内建立一个局部四边面候选并过静态结构门。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

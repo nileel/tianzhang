@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01 | codex_execute | codex | P1 | unity | verification | 苻渊 strict-round-02 袖面源结构只读诊断 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt |
+| A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01 | codex_execute | codex | P1 | unity | verification | 苻渊 strict-round-02 袖骨贡献只读消融诊断 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt |

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01"
-  ],
-  "stateReason": "2026-08-17：等待源结构只读诊断固化同一 1197 点观察区；之后只比较标准袖骨动作与四根 Sec_Sleeve 附加旋转归零，不保存模型。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：源结构只读诊断已完成归档，同一 1197 点观察区、冻结观察边、316/599 面结构集合和指纹已固化；本卡成为下一张 ready 叶子，只比较标准袖骨动作与四根 Sec_Sleeve 附加旋转归零，不保存模型。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
