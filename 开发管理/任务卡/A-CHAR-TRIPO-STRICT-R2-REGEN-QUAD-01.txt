@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01",
+  "title": "苻渊 strict-round-02 Tripo 四边面重新生成",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01",
+    "A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01"
+  ],
+  "stateReason": "2026-08-17：等待两张只读诊断卡完成；之后只提交一次 H3.1 私有四边面多视图生成，新增 Tripo 消费必须低于 100 credits。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt",
+    "开发管理/苻渊Tripo严格轮二四边面重生成记录.txt",
+    "docs/superpowers/specs/2026-08-17-fu-yuan-tripo-strict-r2-dual-structure-evaluation-design.md",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/input/fu-yuan-front-strict-r2-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/input/fu-yuan-face-left-side-strict-r2-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/input/fu-yuan-face-right-side-strict-r2-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/input/fu-yuan-back-strict-r2-v1.png",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/platform-static-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 · 苻渊 strict-round-02 Tripo 四边面重新生成
+
+## 来源与当前边界
+
+- 新批次固定为 `strict-round-02-quad-eval-01`，四张输入必须是现有 strict-round-02 批准图的逐字节副本。
+- 本卡只拥有平台付费生成和平台查看器静态外观门；不下载、不启动 Blender、不绑定。
+
+## 必查范围
+
+- 双路线设计第五章的输入哈希、生成参数、价格和停止条件。
+- 严格轮二四视图修订记录的槽位方向与腰饰可见性合同。
+- 当前 Tripo 页面实际模型、隐私、参数和显示价格。
+
+## 实施范围
+
+- 提交 H3.1 私有多视图、4K、PBR、Quad、目标 30000 面；关闭 Smart Low Poly、分部件、8K 和 Ultra 几何。
+- 提交前复算四图哈希并核对前／脸朝左／脸朝右／后；只允许一次付费提交。
+- 记录任务 ID、查看页、参数、提交前后余额、显示与实际扣费、实际面数和平台固定视角外观。
+
+## 禁止项
+
+- 累计新增 Tripo 消费达到或超过 100 credits 时不得提交；不使用免费或付费重试。
+- 不绑定、不导出、不下载、不启动 Blender，不覆盖现有 strict-round-02。
+
+## 验证
+
+- 实际输出为 24000–36000 面四边面模型；身份、比例、黑金服装、纹样与腰饰合同通过平台静态检查。
+- 任务 ID与余额差唯一闭合；输入复制件与批准图哈希一致。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成唯一可进入原包取得卡的平台四边面候选，或以参数／价格／外观失败明确停止。
+
+## 停止条件
+
+- 页面参数、价格、扣费、任务状态或输入映射不明，实际面数超范围，或身份／服装／腰饰明显漂移时停止，不重试。

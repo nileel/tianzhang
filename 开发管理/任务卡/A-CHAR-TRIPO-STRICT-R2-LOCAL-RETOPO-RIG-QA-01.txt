@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01",
+  "title": "苻渊 strict-round-02 局部重拓扑候选动作 QA",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01"
+  ],
+  "stateReason": "2026-08-17：等待局部重拓扑静态门；静态失败时本卡只记录按门未执行，静态通过时才转移局部权重并执行九视角。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/苻渊Tripo严格轮二局部重拓扑候选动作QA记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind-local-retopo-v001.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind-local-retopo-rigged-v001.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-local-retopo-rig-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/local-retopo-rig-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01 · 苻渊 strict-round-02 局部重拓扑候选动作 QA
+
+## 来源与当前边界
+
+- 只消费局部静态通过候选；范围外既有骨架、动作、权重和材质必须逐项保持。
+- 静态上游失败时不启动 Blender 修改，只形成按门未执行结论供比较卡消费。
+
+## 必查范围
+
+- 局部重拓扑归档的候选哈希、固定边界、局部新拓扑和 UV 结果。
+- 袖骨消融归档及 FIX-01～03 的权重失败证据；后者只作禁止重复路线的事实。
+- 统一骨架设计的四骨、归一化、Sec 上限和三动作合同。
+
+## 实施范围
+
+- 只为新增或重建顶点从固定边界和同侧局部表面转移权重，保持范围外完整权重指纹。
+- 验证未加权、负权重、四骨、归一化、Sec 上限、左右串权和固定边界连续性。
+- 对 Idle 31、Move 16、Attack 30 输出正／侧／背九视角和 >5× 拉伸统计；保存独立 rigged 候选。
+
+## 禁止项
+
+- 不扩大到 599 面外权重，不恢复 UpperLeg／Shoulder 跨区补丁，不改骨架、rest pose、Action、材质、贴图或对象变换。
+- 不二次改拓扑或造型，不导出项目 v002 FBX，不写 Unity。
+
+## 验证
+
+- 三动作目标观察边 >5× 数量为 0，九视角无硬架、刀片、硬板、长尖折或主体穿插。
+- 范围外拓扑、UV、材质、骨架、Action 和权重指纹不变；factory-startup 重开结论一致。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成路线 B 动作 PASS／FAIL，或因静态上游失败形成明确未执行结论，并解除比较卡对应依赖。
+
+## 停止条件
+
+- 权重转移需扩大范围、重新修改拓扑、改变骨架／动作，或拉伸／九视角任一失败时停止，不叠加第二补丁。

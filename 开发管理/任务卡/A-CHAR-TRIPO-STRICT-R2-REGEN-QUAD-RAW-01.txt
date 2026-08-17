@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01",
+  "title": "苻渊 strict-round-02 四边面原包取得与冻结",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01"
+  ],
+  "stateReason": "2026-08-17：等待唯一四边面平台任务通过；之后只取得该任务的未绑定 FBX 原包并冻结哈希，不启动 Blender。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt",
+    "开发管理/苻渊Tripo严格轮二四边面原包接收记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/export-handoff.json",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/raw/tripo-quad-eval-original.zip",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/raw-sha256.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 · 苻渊 strict-round-02 四边面原包取得与冻结
+
+## 来源与当前边界
+
+- 只消费通过平台门的唯一任务 ID；原包必须是同一任务的未绑定四边面 FBX，不含平台骨架或动画。
+- 本卡唯一结果是完整原包、用途和哈希冻结；不检查 Blender 拓扑质量。
+
+## 必查范围
+
+- 上游归档的任务 ID、参数、实际面数和查看页。
+- 通用 Tripo 工作流设计中的人工导出手势、下载前快照和原包接收边界。
+- 新批次目录及当前 Downloads 快照。
+
+## 实施范围
+
+- 冻结一份 FBX／Blender 目标、当前纹理配置、无骨骼、无动画的导出 handoff；需要可信用户手势时转 `waiting_reply`。
+- 只接收人工窗口后新增或内容变化的完整 ZIP，核对包内唯一 FBX、贴图集合和同一任务身份。
+- 按固定文件名复制原包，记录字节数、SHA-256、包内清单并保留 Downloads 原件。
+
+## 禁止项
+
+- 不点击平台绑定，不取得行走包，不启动 Blender，不解压后修改文件，不按浏览器后缀猜用途。
+- 不接受旧任务、部分下载、损坏 ZIP 或任务身份不明的包。
+
+## 验证
+
+- ZIP 完整、非零，包内恰有一个未绑定 FBX；任务、网格／材质身份与上游一致。
+- 下载源与冻结副本字节数和 SHA-256 一致，handoff、接收记录和 raw-sha256 闭合。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 唯一未绑定四边面原包冻结完成并解除 Blender 静态结构 QA 的依赖。
+
+## 停止条件
+
+- 人工下载未完成、ZIP 损坏、包内有骨架／动画、任务身份不唯一或必须启动 Blender 才能区分下载文件时停止。

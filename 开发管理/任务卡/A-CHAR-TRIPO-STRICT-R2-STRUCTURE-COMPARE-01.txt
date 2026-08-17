@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01",
+  "title": "苻渊 strict-round-02 双路线结构候选比较",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01",
+    "A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01"
+  ],
+  "stateReason": "2026-08-17：等待两条路线各自形成动作通过、失败或按静态门未执行结论；本卡只比较，不实施修补。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
+    "开发管理/苻渊Tripo严格轮二双路线结构比较记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/dual-route-comparison-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01 · 苻渊 strict-round-02 双路线结构候选比较
+
+## 来源与当前边界
+
+- 只消费袖骨诊断、两条静态结构卡和两条动作 QA 的完成结论；不打开平台、不修改 Blender 候选。
+- 唯一结果是指定一个可交给 v002 独立 QA 的胜出工作文件，或明确两者均失败／需要独立袖骨设计裁决。
+
+## 必查范围
+
+- 双路线设计第三、四、七、八章的门禁、漂移优先级和停止条件。
+- 路线 A、B 的候选哈希、结构统计、九视角、拉伸统计、面数及未执行原因。
+- 当前基线首次 QA 和 FIX-03 的失败证据。
+
+## 实施范围
+
+- 形成当前基线／路线 A／路线 B 的同方向并排图和结构、动作、外观对照表。
+- 先淘汰结构或标准动作失败者；两者都通过时先选身份／服装漂移更小者，漂移相近时选拓扑更干净、面数更低者。
+- 把唯一胜出工作文件、哈希和来源批次写入比较记录，并更新 QA-RERUN 的上游事实。
+
+## 禁止项
+
+- 不生成第三个模型，不增加面数，不改拓扑、权重、骨架、动作、材质或贴图，不导出 v002，不写 Unity。
+- 只在袖骨归零时通过而标准动作失败的候选不得胜出。
+
+## 验证
+
+- 比较表所有统计和图片可追溯到完成归档，候选哈希与工作文件一致；没有混用基线、路线 A、路线 B。
+- 胜出规则按设计顺序唯一收敛；无法收敛时明确失败或独立设计裁决，不主观折中。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 指定唯一胜出候选并解除 `QA-RERUN-01` 依赖，或明确两者均失败／袖骨动作冲突并保持下游阻塞。
+
+## 停止条件
+
+- 任一上游证据缺失、候选哈希不一致、标准与归零动作结论冲突，或必须实施新修改才能比较时停止。

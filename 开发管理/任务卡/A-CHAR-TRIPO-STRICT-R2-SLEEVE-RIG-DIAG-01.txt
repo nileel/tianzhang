@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01",
+  "title": "苻渊 strict-round-02 袖骨贡献只读消融诊断",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01"
+  ],
+  "stateReason": "2026-08-17：等待源结构只读诊断固化同一 1197 点观察区；之后只比较标准袖骨动作与四根 Sec_Sleeve 附加旋转归零，不保存模型。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
+    "开发管理/苻渊Tripo严格轮二袖骨消融诊断记录.txt",
+    "docs/superpowers/specs/2026-08-17-fu-yuan-tripo-strict-r2-dual-structure-evaluation-design.md",
+    "docs/superpowers/specs/2026-08-08-humanoid-evaluation-rig-design.md",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-sleeve-rig-ablation-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/sleeve-rig-ablation-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01 · 苻渊 strict-round-02 袖骨贡献只读消融诊断
+
+## 来源与当前边界
+
+- 只消费源结构诊断归档和同一未修改 `rebind.blend`；四根目标骨固定为 `Sec_Sleeve_L/R_01/02`。
+- 唯一结果是主要／次要／无实质骨骼贡献结论，不实施骨架或动作修复。
+
+## 必查范围
+
+- 双路线设计第四章的袖骨事实、归零方法、贡献阈值和停止边界。
+- 统一骨架设计的骨层级、Sec 延迟摆动和三动作固定帧。
+- 源结构诊断归档的 1197 点并集及冻结观察边。
+
+## 实施范围
+
+- 枚举三个 Action 中四根袖骨的 F-Curve、关键帧和固定帧局部旋转。
+- 先按标准动作取得九视角与拉伸统计，再仅在内存把四根袖骨相对 rest pose 的附加局部旋转归零，保留父骨继承并复算同一证据。
+- 按设计阈值形成贡献分级，重开隔离基线丢弃内存姿势。
+
+## 禁止项
+
+- 不保存 `.blend`，不改权重、骨名、层级、rest pose、Action、拓扑、材质或对象变换。
+- 不增加骨骼、物理、约束或角色专用动作；不切换到 headless 任意脚本通道。
+
+## 验证
+
+- 两组证据使用完全相同的模型、观察边、帧和相机；只允许四根袖骨附加局部旋转不同。
+- 主源大小、SHA-256 和完整指纹不变；贡献分级同时引用数值与固定视角。
+- 运行任务卡、审核文本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成唯一贡献分级并解除 Tripo 重生成和局部重拓扑两条实施叶子的依赖。
+
+## 停止条件
+
+- Blender MCP Bridge 不可连接、F-Curve 无法唯一枚举、归零会影响其他骨或两组证据不能保持单变量时停止。

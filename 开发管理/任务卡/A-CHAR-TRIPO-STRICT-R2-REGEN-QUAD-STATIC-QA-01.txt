@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01",
+  "title": "苻渊 strict-round-02 四边面候选静态结构 QA",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01"
+  ],
+  "stateReason": "2026-08-17：等待同一平台任务的未绑定四边面原包冻结；之后只用 Blender 检查静态拓扑与三视角，不绑定。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt",
+    "开发管理/苻渊Tripo严格轮二四边面静态结构QA记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/raw/tripo-quad-eval-original.zip",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/blender-static-structure-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/static-structure-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 · 苻渊 strict-round-02 四边面候选静态结构 QA
+
+## 来源与当前边界
+
+- 只消费冻结四边面原包；使用 `blender_lab` 当前场景通道做静态检查，不绑定、不保存候选 `.blend`。
+- 本卡判断新生成是否拥有可进入统一换绑的干净源结构，不与当前权重混合。
+
+## 必查范围
+
+- 双路线设计第三、五、七章的静态结构门和统一失败门。
+- 上游原包清单、哈希、任务 ID、实际面数和材质身份。
+- 源结构诊断的同类指标与正面 `-Y`、侧面 `+X`、背面 `+Y` 口径。
+
+## 实施范围
+
+- 在任务临时目录解压并导入唯一 FBX，统一到当前基线角色高度后检查袖根、腋下和背侧连通。
+- 统计精确重叠反向面、自交、对侧错误连接、长边、高纵横比面和局部边流；输出三个固定方向证据。
+- 对比脸、发、比例、袖袍轮廓、腰饰和纹样漂移，但不做绑定或造型修正。
+
+## 禁止项
+
+- 不保存源模型、不改拓扑、UV、材质或造型，不自动修复、不绑定、不导出项目 FBX、不写 Unity。
+- 不把平台查看器外观通过等同于 Blender 结构通过。
+
+## 验证
+
+- 目标区重叠反向面、自交和对侧错误连接均为 0；不存在纵横比 >50 且最长边 >0.1m 的连接面。
+- 三固定方向没有跨背硬板、重叠薄片或长尖折；原包哈希不变。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成静态 PASS 并解锁统一换绑动作 QA，或以精确结构／外观证据完成失败停止。
+
+## 停止条件
+
+- Blender MCP Bridge 不可连接、FBX 不能唯一导入、尺度或方向无法统一、结构门任一项失败时停止，不修改或重生成。

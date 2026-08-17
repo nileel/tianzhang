@@ -10,10 +10,11 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01",
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01",
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
   ],
-  "stateReason": "2026-08-17：FIX-03 已清除冻结袖面内全部 UpperLeg／Shoulder 跨区权重，但仍有 10／10／17 条大于五倍拉伸边，背／侧九视角仍为交叉硬架、多层刀片和大跨度硬板；候选已回滚，主源未保存。新 QA 没有可消费候选，Unity 继续阻塞；权重路线停止，等待源模型结构阶段另行冻结和授权。",
+  "stateReason": "2026-08-17：负责人已通过双结构路线与袖骨消融设计，九张原子卡已建立；SOURCE-STRUCTURE-DIAG-01 是唯一 ready 叶子，其余按依赖 blocked。尚未操作 Tripo、修改模型或写 Unity；父卡等待结构比较、独立 QA 与 Unity 技术验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -31,10 +32,29 @@
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
-    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt"
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "docs/superpowers/specs/2026-08-17-fu-yuan-tripo-strict-r2-dual-structure-evaluation-design.md"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -45,7 +65,7 @@
 
 - `strict-round-02` 是修正四视图后的独立生产批次，不是旧 `strict-round-01` 三槽评估中的 `slot-02`。
 - 上游已完成事实由 `开发管理/苻渊Tripo严格轮二四视图修订记录.txt` 承载：四张输入已冻结，唯一私有 Tripo 任务 `44eac025-f0a1-4479-a21c-2edfc48ce7ed` 已消耗 40 credits 并通过静态模型外观复核。
-- 本父卡不直接操作平台、FBX、Blender 或 Unity，只汇总四个后续子任务的通过／失败事实并防止跨阶段顺带修改。
+- 本父卡不直接操作平台、FBX、Blender 或 Unity，只汇总十七张子卡的通过／失败事实并防止跨阶段顺带修改。
 
 ## 子任务与依赖
 
@@ -55,22 +75,31 @@
 4. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01`：允许范围内候选已实施并回滚；已按停止条件完成归档。
 5. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02`：扩大到 `Sec_Sleeve` 与 `Sec_Hem`／躯干连接带后仍未通过视觉门；已按停止条件完成归档且未保存候选。
 6. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03`：清除冻结袖面跨区权重后数值与九视角仍失败；已按停止条件完成归档、回滚且未保存候选。
-7. `A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01`：没有可消费的冻结工作文件；当前继续 blocked，等待源模型结构阶段另行冻结和授权。
-8. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费新 QA 通过候选；当前继续 blocked，未解锁 Unity 技术导入。
+7. `A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01`：未修改主源的袖根、腋下和背侧结构只读诊断；当前唯一 ready 叶子。
+8. `A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01`：只读比较标准动作与内存中归零既有 `Sec_Sleeve_L/R_01/02` 局部附加旋转；依赖源结构诊断。
+9. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01`：使用冻结四视图，单次生成 H3.1 私有 30k 四边面候选；总新增 Tripo 消耗严格小于 100 credits，不得重试。
+10. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01`：只取得第 9 卡唯一任务的原始下载包并冻结哈希。
+11. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01`：在 Blender 隔离副本中检查重生成候选的静态外形、拓扑和 24k～36k 实际面数。
+12. `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01`：只在固定 599 面／483 点／1087 边及 357 点／377 边边界内局部重拓扑。
+13. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01`：对静态通过的重生成候选完成项目骨架换绑和固定三动作九视角验证。
+14. `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01`：对局部重拓扑候选完成固定三动作九视角验证。
+15. `A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01`：独立比较两条结构路线，只形成一个胜者或明确双败。
+16. `A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01`：只消费结构比较选出的唯一冻结工作文件；当前 blocked。
+17. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费新 QA 通过候选；当前 blocked，未解锁 Unity 技术导入。
 
 旧 `A-CHAR-TRIPO-STRICT-GEN-02 → A-CHAR-TRIPO-STRICT-SLOT-02` 仍属于 `strict-round-01` 三槽平台评估，不接收本批次模型、raw、权重或证据，也不因本父项推进而解冻。
 
 ## 必查范围
 
 - `开发管理/苻渊Tripo严格轮二四视图修订记录.txt` 的输入哈希、唯一平台任务、设置、扣费、模型统计和静态模型通过结论。
-- 四张 strict-round-02 子卡及其完成归档；只读取当前要汇总的直接证据，不以父卡摘要替代子卡事实。
+- 十七张 strict-round-02 子卡、直接设计与完成归档；只读取当前要汇总的直接证据，不以父卡摘要替代子卡事实。
 - `docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md` 的原始工程、评估候选和 Unity 正式目录边界。
 
 ## 实施范围
 
 - 子任务完成时只核对同一任务 ID、输入批次、原始哈希、上游结论和下游解锁条件。
 - 任一子任务失败时保留其明确失败证据，父卡保持 blocked；不得跳过失败阶段直接解锁更下游任务。
-- 八项均完成且证据一致时，父卡只形成本批次资源链汇总结论并归档，不替代正式 Adventure 接入或通用平台选型结论。
+- 十七项均完成且证据一致时，父卡只形成本批次资源链汇总结论并归档，不替代正式 Adventure 接入或通用平台选型结论。
 
 ## 禁止项
 
@@ -80,14 +109,14 @@
 
 ## 验证
 
-- 八个子任务 ID、依赖、状态和项目路径一致；同一时刻只有依赖已完成的最前叶子可进入队列。
+- 十七个子任务 ID、依赖、状态和项目路径一致；同一时刻只有依赖已完成的最前叶子可进入队列。
 - 汇总任务 ID、输入哈希、raw 哈希、Blender 验证、资源候选和 Unity 导入证据，不以摘要替代各子卡事实源。
 - 运行任务卡、审核文本、空白和 Git 暂存差异检查。
 
 ## 完成条件
 
-- RAW、Blender、首次资源 QA、首轮停止返修、袖袍连接带返修、袖面跨区返修、新资源 QA、Unity 八张子卡全部完成并归档，证据属于同一 `strict-round-02` 任务，父卡形成唯一汇总结论后归档。
+- 原六张完成子卡、九张结构诊断／双路线评估子卡、新资源 QA 与 Unity 共十七张子卡全部完成并归档，证据属于同一 `strict-round-02` 批次，父卡形成唯一汇总结论后归档。
 
 ## 停止条件
 
-- 任一子项需要复用旧轮次资产、再次付费生成、改变获批四视图／模型、跳过直接验收或扩大到正式 Adventure 运行时接入时停止并请求负责人裁决。
+- 任一子项需要复用旧轮次资产、改变获批四视图、发起第二次生成／重试、使本轮新增 Tripo 消耗达到或超过 100 credits、突破固定局部边界、跳过直接验收或扩大到正式 Adventure 运行时接入时停止并请求负责人裁决。

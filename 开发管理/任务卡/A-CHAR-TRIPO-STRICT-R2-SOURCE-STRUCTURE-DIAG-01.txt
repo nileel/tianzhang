@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01",
+  "title": "苻渊 strict-round-02 袖面源结构只读诊断",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：负责人已通过双路线结构评估设计；本卡作为首个 ready 叶子，只把未修改主源的袖根、腋下和背侧结构诊断复算为项目事实，不修改模型。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
+    "开发管理/苻渊Tripo严格轮二源结构只读诊断记录.txt",
+    "docs/superpowers/specs/2026-08-17-fu-yuan-tripo-strict-r2-dual-structure-evaluation-design.md",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-source-structure-diagnostic.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01 · 苻渊 strict-round-02 袖面源结构只读诊断
+
+## 来源与当前边界
+
+- 唯一模型输入是 `working/rebind.blend`，6119802 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`。
+- 本卡只复算并固化源结构事实；不保存 `.blend`，不操作 Tripo、FBX 或 Unity。
+
+## 必查范围
+
+- 已批准双路线设计的第二、三、六、七章。
+- FIX-03 归档与袖面跨区权重返修记录中的 1197 点观察区、固定动作和停止事实。
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 及当前场景只读工具通道。
+
+## 实施范围
+
+- 独立检查左右袖根、腋下、背部连接面的连通关系、精确重叠反向面、自交、超长／高纵横比面、错误跨背连接和边环密度。
+- 复算 316 核心坏面、599 面一环、483 顶点、1087 边、357/377 固定边界及 19 局部组件，写出精确索引集合和集合哈希。
+- 分别说明这些面在正面 `-Y`、侧面 `+X`、背面 `+Y` 及 Idle 31、Move 16、Attack 30 下形成硬板的结构机制。
+
+## 禁止项
+
+- 不修改拓扑、造型、UV、材质、骨架、rest pose、Action、绑定或权重；不导出 FBX，不写 Unity。
+- 不扩大权重补丁，不把旧候选或临时预览当作输入。
+
+## 验证
+
+- 主源大小和 SHA-256 在检查前后不变；网格、对象、骨架、动作和材质指纹不变。
+- 数量、精确索引和集合哈希可由证据文件复算；三个固定方向分别给出结论。
+- 运行任务卡、审核文本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成明确根因、精确顶点／边／面范围、局部可修性和最小固定边界，并解除袖骨只读消融卡的依赖。
+
+## 停止条件
+
+- Blender MCP Bridge 不可连接、当前场景不是哈希匹配的隔离副本、诊断集合无法唯一复算或任何操作要求保存模型时停止。

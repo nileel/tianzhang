@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01",
+  "title": "苻渊 strict-round-02 四边面候选统一换绑动作 QA",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01"
+  ],
+  "stateReason": "2026-08-17：等待四边面候选静态结构门；静态失败时本卡只记录按门未执行，静态通过时才统一换绑和九视角。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/苻渊Tripo严格轮二四边面候选换绑动作QA记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/blender-rig-action-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/rig-action-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01 · 苻渊 strict-round-02 四边面候选统一换绑动作 QA
+
+## 来源与当前边界
+
+- 只消费静态通过的四边面原包和统一项目骨架；不用 Tripo 自动骨架或平台动作。
+- 静态上游失败时不启动 Blender 改模，只形成按门未执行结论供比较卡消费。
+
+## 必查范围
+
+- 静态结构 QA 归档、袖骨消融归档及统一骨架设计的换绑、Sec 权重和动作合同。
+- strict-round-02 原换绑记录的 T Pose、单位、原点、正面、材质和 factory-startup 验证口径。
+
+## 实施范围
+
+- 在独立 worktree 从统一项目骨架源开始，导入静态候选、校准 T Pose、执行一次 ARMATURE_AUTO 和有限 Sec 梯度处理。
+- 验证未加权、负权重、四骨、归一化、Sec 上限和左右串权。
+- 对 Idle 31、Move 16、Attack 30 输出正／侧／背九视角及 >5× 拉伸统计；保存唯一通过或失败工作文件证据。
+
+## 禁止项
+
+- 不修改统一骨架名称、层级、rest pose 或公共 Action，不使用第二绑定算法，不增加骨骼、物理或平台骨架。
+- 不在本卡修拓扑、材质或身份漂移；不导出项目 v002 FBX，不写 Unity。
+
+## 验证
+
+- 三动作目标观察边 >5× 数量为 0，九视角无硬架、刀片、硬板、长尖折或主体穿插。
+- factory-startup 重开后对象、骨架、动作、权重、材质、贴图和候选哈希可复核。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成路线 A 动作 PASS／FAIL，或因静态上游失败形成明确未执行结论，并解除比较卡对应依赖。
+
+## 停止条件
+
+- 静态候选失败、统一换绑需第二算法或修改骨架／动作、九视角或拉伸门失败时停止，不叠加修补。

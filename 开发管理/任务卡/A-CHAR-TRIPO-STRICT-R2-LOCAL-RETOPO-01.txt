@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01",
+  "title": "苻渊 strict-round-02 袖面局部结构重拓扑",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01",
+    "A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01"
+  ],
+  "stateReason": "2026-08-17：等待两张只读诊断卡完成；之后只在 599 面／483 点冻结范围内建立一个局部四边面候选并过静态结构门。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
+    "开发管理/苻渊Tripo严格轮二袖面局部结构重拓扑记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind-local-retopo-v001.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-local-retopo-static-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/local-retopo-static-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01 · 苻渊 strict-round-02 袖面局部结构重拓扑
+
+## 来源与当前边界
+
+- 从哈希匹配的 `rebind.blend` 在任务 worktree 中 Save As；主源禁止覆盖。
+- 唯一候选只替换 599 个允许面内部结构，并先形成静态通过／失败结论，不在本卡完成动作权重。
+
+## 必查范围
+
+- 双路线设计第六、七章的集合哈希、固定边界和失败门。
+- 源结构诊断归档的 316 核心坏面、599 面一环、483 点／1087 边及 357/377 固定边界。
+- 袖骨消融归档只用于解释动作风险，不扩大拓扑范围。
+
+## 实施范围
+
+- 删除允许区内错误薄片和长跨接面，重建四边面为主的袖根、腋下和背侧边流。
+- 固定边界坐标和连接不变；局部重投影现有 UV、保持原材质槽和外观轮廓。
+- 输出静态结构统计与正面 `-Y`、侧面 `+X`、背面 `+Y` 证据；静态通过才保存唯一候选。
+
+## 禁止项
+
+- 不修改第 600 个面及范围外造型、UV、材质、贴图、骨架、rest pose、Action、对象变换或全局权重。
+- 不运行全局 Tris to Quads、QuadriFlow、Voxel Remesh 或整件衣服重拓扑；不导出 FBX，不写 Unity。
+
+## 验证
+
+- 固定边界顶点／边和范围外完整指纹不变；目标区闭合、无自交、无重叠反向面或错误对侧连接。
+- 不存在纵横比 >50 且最长边 >0.1m 的连接面；三个固定方向无硬板、薄片和长尖折。
+- 运行任务卡、审核文本、资产版本、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 保存唯一静态通过候选并解锁局部权重／动作 QA，或证明固定边界内不可修并停止。
+
+## 停止条件
+
+- 需要扩大范围、移动固定边界、改骨架／动作／全局权重、连续叠加修补或无法在固定边界内闭合时停止且不保存候选。

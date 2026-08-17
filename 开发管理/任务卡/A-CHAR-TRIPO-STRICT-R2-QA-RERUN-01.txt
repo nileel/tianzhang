@@ -9,16 +9,23 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-17：A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03 已清除冻结袖面内全部 UpperLeg／Shoulder 跨区权重，但仍有 10／10／17 条大于五倍拉伸边，固定背／侧仍为交叉硬架、多层刀片和大跨度硬板；候选已回滚，主源未保存。本卡没有可消费候选，继续 blocked，等待源模型结构阶段另行冻结和授权。",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01"
+  ],
+  "stateReason": "2026-08-17：负责人已通过双结构路线设计；本卡只消费 STRUCTURE-COMPARE-01 指定的唯一胜出工作文件。两条路线尚未实施和比较，当前没有可消费候选，继续 blocked。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "开发管理/苻渊Tripo严格轮二双路线结构比较记录.txt",
     "开发管理/苻渊Tripo严格轮二返修候选QA记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind-local-retopo-rigged-v001.blend",
     "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v002.fbx",
     "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/candidate-v002-sha256.txt",
     "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/fbx-v002-reimport-validation.txt",
@@ -31,13 +38,13 @@
 
 ## 来源与当前边界
 
-- 只消费通过返修卡的冻结 `working/rebind.blend`、项目骨架三动作和原始贴图；不重新绑定、不修权重、不改变角色造型。
+- 只消费 `STRUCTURE-COMPARE-01` 指定的唯一胜出工作文件、项目骨架三动作和对应原始贴图；不重新绑定、不修权重、不改变角色造型。
 - 唯一结果是独立形成可供 Unity 技术导入的 v002 源资产候选，或以固定证据明确失败。
-- 当前 blocked；FIX-03 已以数值和视觉失败完成归档且没有冻结候选，在源模型结构阶段形成新的通过工作文件前不得执行。
+- 当前 blocked；两条结构路线尚未形成独立比较结论，在比较卡指定唯一通过候选前不得执行。
 
 ## 必查范围
 
-- `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03` 的未保存停止证据、固定九视角和回滚结论；FIX-01／FIX-02 归档只作为上游根因证据。
+- `A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01` 的唯一胜者路径、哈希、来源批次和固定比较证据；FIX-01～03 归档只作为旧权重路线失败事实。
 - `A-CHAR-TRIPO-STRICT-R2-QA-01` 的首次失败视角、判定口径和未执行候选边界。
 - `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` 的单位、朝向、原点、材质、正式目录和资源 QA 规则。
 - `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 与实际 FBX 回读所需的单一工具通道。
