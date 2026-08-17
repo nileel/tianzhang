@@ -1,0 +1,36 @@
+# 苻渊 Tripo strict-round-02 资源候选 QA 记录
+
+日期：2026-08-17
+任务：`A-CHAR-TRIPO-STRICT-R2-QA-01`
+状态：完成；资源 QA 明确失败，未形成 Unity 源资产候选
+
+## 冻结输入与现场
+
+- 工作文件：`assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend`，6119802 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`；本轮结束后哈希与上游记录一致，Git 无该文件差异。
+- 当前场景为 `TZ_HumanoidEvaluation`，冻结对象为 `FUYUAN_R2_Mesh`，父骨架为 `TZ_HumanoidEval`；5654 顶点／11316 三角面，39 骨，对象位置／旋转为 0、缩放为 1，场景为 Metric、单位缩放 1、30 FPS。
+- 材质槽仍为单一 `tripo_mat_e556570d`；Base Color／Normal／Roughness／Metallic 四图保持打包，未改材质、贴图、绑定、权重、骨架、动作或角色造型。
+
+## 固定视角证据
+
+- 合图：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/qa-contact-sheet.png`，1920×2562，SHA-256 `CAC40BB9B5F03EB547E96AF4AF460F9FC77BCA94BFDB4C67C668524F4B952834`。
+- 九格使用同一正交相机尺度与照明：Idle 帧 31、Move 帧 16、Attack 帧 30，各取正面 `-Y`、侧面 `+X`、背面 `+Y`。渲染只使用任务专用临时对象，结束后恢复原动作、帧、相机、世界与渲染设置，源 `.blend` 未保存且保持未脏。
+- 低照度复核 Move 帧 16 侧面后，平行折片、长尖刺和折框轮廓不变，排除高曝光把普通明暗误判为硬折面的可能。
+
+## 独立视觉判定
+
+- Idle：正面两侧袖后已突出对称三角硬板；侧面袖体读成近乎竖直平片；背面两袖横跨上背形成交叉硬架，不是自然垂落的宽袖轮廓。
+- Move 极值：正面双袖被拉成水平大板；侧面可见多层平行刀片状折片和向下长尖刺；背面两袖呈折扇／纸片堆叠，外轮廓出现锐角断裂。
+- Attack 极值：正面肘部形成粗硬折管；侧面与背面袖体折成近矩形空框，并伴随细长悬空三角片，动作意图被破损袖形抢占。
+- 这些现象跨正／侧／背且在两个动作极值稳定出现，属于蒙皮／权重或源造型层面的大片硬折面，不是低模角色允许的克制大块面。固定 2.5D 尺度下仍会把宽袖读成折板、尖刺或破损几何，判定 **FAIL**。
+
+## 停止与未执行项
+
+- 命中任务卡“视觉问题需要重新绑定／改权重／改造型时停止”。本 QA 不实施修复，也不建立第二套权重、绑定或造型路线。
+- 因视觉门先失败，未导出 `candidate/TZ_Fuyuan_StrictR2_v001.fbx`，未复制五张候选贴图，未生成候选哈希或 FBX 无界面回读记录；不存在可解锁 Unity 的源资产候选。
+- 未写入 `src/Assets/`，未创建 Unity 材质、Avatar、Prefab、Animator 或场景引用。
+- 初始 `blender_lab` 连接因 MCP 服务未启动而失败；确认现有 Blender 5.2.0 与正确 `rebind.blend` 窗口后只恢复服务，再由 `blender_lab` 完成场景核对与固定视角渲染。`blender_headless_qa` 仅定位本机 Blender 可执行文件；由于候选未导出，没有运行 FBX 回读，也不把定位成功冒充资产业务验收。
+
+## 下游状态
+
+- QA 卡以明确失败结论归档；`A-CHAR-TRIPO-STRICT-R2-UNITY-01` 保持 blocked，不展开 Unity 正式目标与 `.meta` 路径。
+- 父卡 `A-CHAR-TRIPO-STRICT-R2-01` 保持 blocked。后续若要继续，必须另行授权上游绑定／权重／造型修正或新候选生产，不能在本 QA 卡内叠加修复。
