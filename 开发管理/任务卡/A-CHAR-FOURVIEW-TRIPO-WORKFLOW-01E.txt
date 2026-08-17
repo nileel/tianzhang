@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E",
+  "title": "Blender 工作流原包接收门实施",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C",
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D"
+  ],
+  "stateReason": "2026-08-17：原包接收门必须消费 01D 冻结的 export-handoff 合同，并依赖 01C 证明可用的非 Blender FBX 解析能力；两个前置未完成前保持 blocked。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt",
+    "开发管理/通用角色Tripo原包接收门实施记录.txt",
+    "tools/tripo-raw-intake/package.json",
+    "tools/tripo-raw-intake/package-lock.json",
+    "tools/tripo-raw-intake/fbx-metadata.mjs",
+    "tools/tripo-raw-intake/intake-core.mjs",
+    "tools/tripo-raw-intake/run-intake.mjs",
+    "tools/tripo-raw-intake/test/fbx-metadata.test.mjs",
+    "tools/tripo-raw-intake/test/intake-core.test.mjs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E · Blender 工作流原包接收门实施
+
+## 来源与当前边界
+
+- 设计事实源为批准规格 §十二至§十四、§16、§17.6；本卡消费 01D 的 `export-handoff.json` 与 01C 冻结的单一解析方案。
+- 本卡唯一结果是下一个 Blender 工作流的开头门禁：识别两份人工下载包、验证并冻结 RAW；门禁通过前绝不启动 Blender。
+- 本卡不是独立通用 RAW 工作流，不拥有后续换绑、资源 QA 或 Unity 结论。
+
+## 必查范围
+
+- 批准规格 §十二至§十四、§16、§17.6。
+- 01C 完成归档中的解析器版本、许可证、接口与字段能力；01D 完成归档中的 `export-handoff.json` schema 和夹具。
+- `assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/raw-sha256.txt` 及两份历史原包只作读取夹具，不作未来路径模板。
+
+## 实施范围
+
+- 只在当前交接收到一次明确“下载了”后比较 Downloads 前快照；忽略旧文件、部分下载和仅靠名称／顺序的猜测。
+- 在临时目录验证 ZIP 完整性并用 01C 方案读取 FBX 动画、骨架、网格与材质元数据；基础包与行走包必须唯一分类且资产一致。
+- 验证五张贴图集合与内容哈希；通过后按交接目标名复制原包、写 `raw-sha256.txt` 与批次记录并复算哈希。
+- 保留 Downloads 原件与包内层级；只有全部冻结事实成立后才向后续 Blender 换绑开放入口。
+
+## 禁止项
+
+- 不启动 Blender 完成分类，不按下载顺序、通用文件名或 `(1)` 后缀猜用途。
+- 不修改历史 `A-CHAR-TRIPO-STRICT-R2-RAW-01`，不建立第三份 RAW 任务或自动请求负责人重新导出。
+- 不在门禁内修模、换绑、导入 Unity 或伪造后续完成记录。
+
+## 验证
+
+- 夹具覆盖顺序颠倒、旧 ZIP、部分下载、损坏中央目录、两包都有／都无动画、动画用途不明和跨包资产不一致。
+- 正常夹具证明下载源与冻结副本字节数、SHA-256 一致，`raw-sha256.txt` 可复算且原件保留。
+- 所有失败夹具证明没有启动 Blender、没有创建 `.blend`、没有解锁后续入口或写伪 RAW 成功事实。
+
+## 完成条件
+
+- 01D 交接夹具能被唯一消费；正常两包形成可追溯 RAW，任何损坏、错包或解析不明都在 Blender 启动前失败关闭。
+
+## 停止条件
+
+- 01C 未冻结单一解析能力、必须启动 Blender 或人工打开文件才能判断、交接合同与 01D 不一致、需要修改包内文件或扩大到换绑／QA／Unity 时停止。

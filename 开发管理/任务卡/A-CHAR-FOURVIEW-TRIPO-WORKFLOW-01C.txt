@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C",
+  "title": "非 Blender FBX 解析能力冻结",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "discovery",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：批准规格要求在启动 Blender 前读取 FBX 动画、骨架、网格和材质元数据，但仓库当前没有 FBX 解析依赖；本卡用既有两份 strict-round-02 原包形成唯一能力结论，作为首批 ready 叶子。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt",
+    "开发管理/Tripo原包无Blender解析能力验证.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C · 非 Blender FBX 解析能力冻结
+
+## 来源与当前边界
+
+- 设计事实源为批准规格 §十三、§17.6。
+- 本卡唯一结果是对一个无需启动 Blender 的 FBX 解析方案形成可重复的通过或阻塞结论，并冻结 01E 可用的依赖、接口和字面量路径。
+- 测试输入使用本机既有 `strict-round-02/raw/` 基础包与行走包；不修改、重命名或重新导出历史 RAW。
+
+## 必查范围
+
+- 两份 strict-round-02 原包及 `evidence/raw-sha256.txt` 的哈希事实。
+- 候选解析器的官方文档、固定版本、许可证、Windows 可复现安装方式和离线运行边界。
+- 01E 当前预期的动画栈／层／曲线、take／clip、骨层级、网格统计、对象名、材质槽和贴图集合字段。
+
+## 实施范围
+
+- 在临时目录解压副本并验证候选解析能力，不启动 Blender、不写入项目 RAW。
+- 记录每个必需字段能否稳定读取、基础包与行走包能否唯一分类、两包一致性事实能否比较。
+- 只冻结一个满足需求的最小方案；若没有方案，形成明确阻塞证据，不叠加多个解析后端或文件名兜底。
+- 通过时在同一状态事件把选定依赖与精确实现路径补入 01E，并只在其全部前置满足后转 ready。
+
+## 禁止项
+
+- 不启动 Blender、Unity 或人工打开文件代替解析，不按 ZIP 名称猜动画用途。
+- 不安装全局常驻工具，不提交原始 ZIP、解压副本或第三方二进制缓存。
+
+## 验证
+
+- 复算两份原包 SHA-256 与历史记录一致。
+- 同一解析命令重复运行得到稳定元数据；基础包无动画、行走包存在匹配行走的动画结构。
+- 记录骨名称／层级、网格与材质字段的可得性；任一规格必需字段不可稳定读取即结论为阻塞。
+
+## 完成条件
+
+- 形成一份可复核能力记录：要么冻结单一非 Blender 解析方案、版本、许可证、接口和 01E 路径，要么以具体缺失字段阻塞 01E。
+
+## 停止条件
+
+- 需要启动 Blender、修改历史原包、使用未经许可的闭源工具、引入多个后端兜底或无法证明字段稳定性时停止并保持 01E blocked。

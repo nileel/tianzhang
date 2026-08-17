@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B",
+  "title": "Tripo 操作原子账本实施",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：账本状态、稳定键、隐私边界与失败语义已由批准规格冻结；实现不依赖飞书图片或 FBX 解析，作为首批 ready 叶子。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "tools/tripo-static-model-workflow/operation-ledger.mjs",
+    "tools/tripo-static-model-workflow/test/operation-ledger.test.mjs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B · Tripo 操作原子账本实施
+
+## 来源与当前边界
+
+- 设计事实源为批准规格 §7.2～§7.3、§9.3、§11.1、§15.3、§16、§17.3～§17.5。
+- 本卡唯一结果是一个用户级私有 Tripo 操作账本；它只保证 `PAID_GENERATION`、`FREE_RETRY`、`HUMAN_RIG` 的 claim、计数和对账事实不重复。
+- 本卡不操作浏览器、不解释飞书回复、不判断图片或模型质量。
+
+## 必查范围
+
+- 批准规格 §7.2～§7.3、§9.3、§11.1、§15.3 的稳定键、状态与持久化边界。
+- `tools/feishu-decision-bridge/src/send-intent-store.mjs::createSendIntentStore` 的原子 claim 范式；只借鉴锁与写入方式，不复用其业务记录。
+- 01D 预期调用的付费生成、免费重试与人形绑定账本接口。
+
+## 实施范围
+
+- 实现 `PREPARED / IN_FLIGHT / ACCEPTED / ACCEPTED_ANOMALY / OUTCOME_UNKNOWN`，只允许合法原子转换。
+- 稳定键包含批次、决定 ID 与操作类型；付费生成和绑定各自最多点击一次，免费重试共享固定两次计数并分配唯一序号。
+- 私有账本只保存平台任务 ID 哈希、输入／参数哈希、精确价格和余额对账，不保存原始任务 ID、URL、凭证或收件目标。
+- 崩溃、并发、重复回执、页面结果不明和异常扣费都失败关闭，不回退 claim 或自动重放。
+
+## 禁止项
+
+- 不复用飞书发送意图文件，不建立通用浏览器状态机或凭证存储。
+- 不把 `OUTCOME_UNKNOWN` 重置为 `PREPARED`，不自动补交付费或免费重试。
+
+## 验证
+
+- `node --test tools/tripo-static-model-workflow/test/operation-ledger.test.mjs` 通过。
+- 覆盖并发 claim、崩溃窗口、哈希恢复、三种操作互不复用、两次免费计数、异常扣费和非法状态转换。
+- 测试使用隔离临时状态根，不读取或修改真实 Tripo 登录与余额。
+
+## 完成条件
+
+- 固定输入和并发场景下，每项授权最多形成一次可证明操作；异常保持可审计且不能被重放。
+
+## 停止条件
+
+- 需要持久化凭证、依赖页面重试掩盖原子性缺口、修改飞书发送账本或新增规格外状态时停止。

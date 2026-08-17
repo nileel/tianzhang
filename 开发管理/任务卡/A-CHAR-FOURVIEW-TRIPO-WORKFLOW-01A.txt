@@ -1,0 +1,76 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
+  "title": "飞书视觉证据与受限回复合同实施",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：批准规格、现有飞书桥所有者与允许路径已冻结；本卡只扩展视觉证据和两种受限自定义回复，不依赖其他子卡，作为首批 ready 叶子。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "tools/feishu-decision-bridge/src/card.mjs",
+    "tools/feishu-decision-bridge/src/custom-reply.mjs",
+    "tools/feishu-decision-bridge/src/image-upload.mjs",
+    "tools/feishu-decision-bridge/src/send-core.mjs",
+    "tools/feishu-decision-bridge/src/send-decision.mjs",
+    "tools/feishu-decision-bridge/src/send-image-canary.mjs",
+    "tools/feishu-decision-bridge/src/send-intent-store.mjs",
+    "tools/feishu-decision-bridge/src/send-runtime.mjs",
+    "tools/feishu-decision-bridge/test/core.test.mjs",
+    "tools/feishu-decision-bridge/test/custom-reply.test.mjs",
+    "tools/feishu-decision-bridge/test/image-upload.test.mjs",
+    "tools/feishu-decision-bridge/test/send.test.mjs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A · 飞书视觉证据与受限回复合同实施
+
+## 来源与当前边界
+
+- 设计事实源为批准规格 §六、§十、§15.1～§15.2、§17.2。
+- 本卡唯一结果是现有飞书决策桥能够安全发送带可放大图片的决定卡，并验证 `PRICE_RANGE=<min>-<max>` 与 `SELECT_TASK=<exact-platform-task-id>` 两种受限回复。
+- 本卡不理解 Tripo 页面、不消费授权、不选择候选、不创建工作流状态机。
+
+## 必查范围
+
+- `tools/feishu-decision-bridge/src/card.mjs::buildDecisionCard`。
+- `tools/feishu-decision-bridge/src/send-core.mjs::sendDecision`、`send-runtime.mjs::createLarkTransport`、`send-intent-store.mjs::createSendIntentStore` 及直接测试。
+- `tools/feishu-decision-bridge/src/custom-reply.mjs` 的完整命令解析逻辑和直接调用者。
+
+## 实施范围
+
+- 增加受大小、格式、尺寸、路径与 SHA-256 约束的图片上传；卡片按输入顺序引用 `image_key`。
+- 私有发送意图保存原始 key 与“内容哈希 → key 哈希”净化映射；项目决定证据只保存内容摘要与 key 哈希，批准事件引用同一内容哈希。
+- 区分上传失败、卡片投递失败、安全重投、key 过期重传和孤儿 key；任何失败都不产生批准事实。
+- 保持现有配对、签名、旧卡失效、首次有效回复获胜和自定义回复身份边界。
+
+## 禁止项
+
+- 不建立第二个机器人、通用文件库、通用聊天入口或 Tripo 执行器。
+- 不保存图片二进制、凭证、原始收件目标或操作者标识到项目。
+- 不在金丝雀中关联业务批准、付费操作或默认选项。
+
+## 验证
+
+- `npm test --prefix tools/feishu-decision-bridge` 全部通过。
+- 覆盖错误图片、哈希错配、上传成功但投递失败、安全重投、过期 key、旧卡和两种严格回复格式。
+- 在当前负责人会话完成一次不关联业务决定的可放大图片金丝雀；失败时不降级为文字审批。
+
+## 完成条件
+
+- 现有决策桥能以可审计内容哈希发送视觉卡；重投与回复保持幂等，图片或投递异常不会形成批准事实。
+
+## 停止条件
+
+- 需要改变现有配对／签名所有权、保存第三方凭证、引入第二套控制面或让飞书桥直接执行 Tripo 时停止。

@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D",
+  "title": "Tripo 绑定及人工导出准备工作流实施",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B"
+  ],
+  "stateReason": "2026-08-17：工作流边界已由批准规格冻结，但必须先具备飞书视觉决定与 Tripo 原子账本；当前保持 blocked，不直接在旧卡上叠加实现。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt",
+    "开发管理/通用角色立绘到Tripo绑定及人工导出交接工作流实施记录.txt",
+    "tools/tripo-static-model-workflow/batch-contract.mjs",
+    "tools/tripo-static-model-workflow/workflow-core.mjs",
+    "tools/tripo-static-model-workflow/run-workflow.mjs",
+    "tools/tripo-static-model-workflow/test/batch-contract.test.mjs",
+    "tools/tripo-static-model-workflow/test/workflow-core.test.mjs",
+    "tools/tripo-static-model-workflow/test/run-workflow.test.mjs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D · Tripo 绑定及人工导出准备工作流实施
+
+## 来源与当前边界
+
+- 完整实施事实源是批准规格；本卡消费 01A 的视觉决定合同与 01B 的操作账本。
+- 本卡唯一结果是可复用工作流从冻结立绘进入四视图、两次视觉验收、一次付费生成、固定两次免费重试预算、一次人形绑定、骨骼／行走预检，最终生成 `export-handoff.json` 并停在 `waiting_reply`。
+- 负责人在同一人工窗口自行导出两包；工作流不点击最终导出，不在两次下载之间恢复。
+
+## 必查范围
+
+- 批准规格完整正文，特别是 §四至§十二、§十五至§十八。
+- 01A 完成归档中的视觉卡输入／输出合同与 01B 完成归档中的账本公开接口。
+- `assets/generated-character-art/README.md` 中角色立绘事实、提示词和产物边界；只读取任务相关章节。
+
+## 实施范围
+
+- 实现批次、提示词、四图 manifest、角度、价格区间、候选任务和批准失效的确定性合同。
+- 通过 01A 发送两张视觉卡，通过 01B claim 付费生成、免费重试和精确价格绑定；所有异常按规格失败关闭。
+- 生成包含绑定对账、骨骼／行走证据、两组导出配置、目标文件名和 Downloads 前快照的 `export-handoff.json`。
+- 人工窗口中断时保持同一交接的 `waiting_reply`；只有一次明确“下载了”允许 01E 开始，回复本身不证明 ZIP 正确。
+
+## 禁止项
+
+- 不保存浏览器凭证，不自动充值或消费没有 A 回执的 credits，不自动点击最终导出。
+- 不读取、复制或重命名 Downloads 中的 ZIP，不启动 Blender，不建立 RAW 工作流或备用下载路线。
+- 不以工具调用成功替代四视图、静态模型、骨骼或动画视觉通过。
+
+## 验证
+
+- 运行 `tools/tripo-static-model-workflow/test/` 下全部 Node 测试。
+- 覆盖批准失效、价格 TOCTOU、候选改选、免费重试共享计数、绑定价格变化、预检三结论、交接字段和人工中断。
+- 使用假平台适配器证明测试不消费 credits、不点击最终导出、不读取 Downloads 或启动 Blender。
+
+## 完成条件
+
+- 固定输入能形成可审计的两次视觉决定与一次人工导出交接；异常不会重复消费，正常路径只停在一次 `waiting_reply`。
+
+## 停止条件
+
+- 需要修改 01A／01B 所有权、自动最终导出、扩大到 Downloads／Blender、增加第三张正常人工卡或放宽价格与视觉门时停止。

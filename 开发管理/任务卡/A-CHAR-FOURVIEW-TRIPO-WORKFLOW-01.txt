@@ -2,80 +2,87 @@
 {
   "schemaVersion": 1,
   "id": "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01",
-  "title": "通用角色立绘到 Tripo 静态模型固定工作流实施",
+  "title": "通用角色立绘到 Tripo 绑定及人工导出交接工作流父任务",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-08-17：负责人已批准并要求提交通用角色立绘到 Tripo 静态模型工作流书面规格；本卡承接该规格的最小完整实施，按负责人指定顺序排在现有 P0 任务之后。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B",
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C",
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D",
+    "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E"
+  ],
+  "stateReason": "2026-08-17：负责人批准经 DeepSeek V4 Pro 0813 复审通过的扩展规格。旧执行卡同时跨越飞书桥、Tripo 原子账本、平台绑定／人工导出交接与 Blender 原包接收门，无法由一个主智能体形成单一可判断结果；现已一次性拆为五张子卡，父项只保留汇总状态。",
   "expectedPaths": [
+    "docs/superpowers/specs/2026-08-17-character-portrait-fourview-tripo-static-model-workflow-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
     "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
-    "开发管理/通用角色立绘到Tripo静态模型工作流实施记录.txt",
-    "tools/feishu-decision-bridge/src/card.mjs",
-    "tools/feishu-decision-bridge/src/custom-reply.mjs",
-    "tools/feishu-decision-bridge/src/send-core.mjs",
-    "tools/feishu-decision-bridge/src/send-decision.mjs",
-    "tools/feishu-decision-bridge/src/send-intent-store.mjs",
-    "tools/feishu-decision-bridge/test/core.test.mjs",
-    "tools/feishu-decision-bridge/test/custom-reply.test.mjs",
-    "tools/feishu-decision-bridge/test/send.test.mjs",
-    "tools/tripo-static-model-workflow/operation-ledger.mjs",
-    "tools/tripo-static-model-workflow/workflow-core.mjs",
-    "tools/tripo-static-model-workflow/run-workflow.mjs",
-    "tools/tripo-static-model-workflow/test/operation-ledger.test.mjs",
-    "tools/tripo-static-model-workflow/test/workflow-core.test.mjs"
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt",
+    "开发管理/任务归档/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01 · 通用角色立绘到 Tripo 静态模型固定工作流实施
+# A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01 · 通用角色立绘到 Tripo 绑定及人工导出交接工作流父任务
 
 ## 来源与当前边界
 
-- 唯一设计事实源是 `docs/superpowers/specs/2026-08-17-character-portrait-fourview-tripo-static-model-workflow-design.md`；两轮 DeepSeek V4 Pro 0813 只读审核意见已经收口到该规格，实施不得重新采用审核前语义。
-- 本卡交付一个可复用的“已批准立绘 → 四视图 → 飞书批准 → Tripo 静态模型 → 飞书批准”闭环，正常人工卡点固定为两个。
-- 工作流止于静态模型外观批准，不拥有平台绑定、动画、下载、Blender、Unity 或某个角色的后续资源生产。
+- 唯一设计事实源是 `docs/superpowers/specs/2026-08-17-character-portrait-fourview-tripo-static-model-workflow-design.md`；负责人已批准，DeepSeek V4 Pro 0813 修订后复审为 `PASS`。
+- 本父项不直接修改飞书桥、Tripo 工作流、下载文件或 Blender 工具，只汇总五张子卡并维护依赖状态。
+- 生产边界固定为两段：上一段准备到 `waiting_reply`，负责人在同一人工窗口自行导出两包；下一段在收到一次“下载了”后先通过原包接收门，再允许进入 Blender。
+
+## 子任务与依赖
+
+1. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A`：飞书视觉证据与受限回复合同；无前置，首批 ready。
+2. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B`：Tripo 操作原子账本；无前置，首批 ready。
+3. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C`：非 Blender FBX 解析能力冻结；无前置，首批 ready。
+4. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D`：Tripo 绑定及人工导出准备工作流；阻塞于 01A、01B。
+5. `A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E`：Blender 工作流原包接收门；阻塞于 01C、01D。
+
+依赖图固定为 `01A + 01B → 01D`、`01C + 01D → 01E`。后续不得再把父项放回 ready 队列，也不得逐轮补建已知子卡。
 
 ## 必查范围
 
-- 上述设计规格的完整正文，特别是批次、提示词追溯、飞书图片、一次付费账本、价格区间、免费重试、任务候选绑定和失败语义。
-- `tools/feishu-decision-bridge/src/` 中现有卡片构建、发送意图、自定义回复、签名与幂等逻辑，以及对应直接测试。
-- `开发管理/AI协作规则.txt` 的自动化控制面、视觉主责、写入隔离和独立复审边界。
-- `assets/generated-character-art/README.md` 中角色立绘事实源、提示词与生成产物规则。
+- 已批准设计规格完整正文，特别是 §六至§十三、§十五至§十八。
+- 五张子卡及其完成归档；只读取当前状态事件的直接证据，不用父项摘要替代子卡事实。
+- `开发管理/AI协作规则.txt#任务原子性与子智能体` 与 `开发管理/状态与建议维护规则.txt#状态与队列`。
 
 ## 实施范围
 
-- 为现有飞书决策桥增加受限图片上传与卡片图片组件，保留现有配对、签名、首次有效回复和旧卡失效语义；实现图片金丝雀、上传失败与投递失败分离、私有 `image_key` 生命周期。
-- 实现批次、四视图 manifest、提示词版本、角度名称和两种固定自定义回复 `PRICE_RANGE=<min>-<max>`、`SELECT_TASK=<exact-platform-task-id>` 的确定性合同。
-- 实现独立最小 Tripo 操作账本，覆盖一次付费原子 claim、任务 ID 哈希、显示价格与余额对账、两次共享免费重试计数，以及 `OUTCOME_UNKNOWN`／`ACCEPTED_ANOMALY` 失败关闭。
-- 复用浏览器已有 Tripo 登录会话；实现只读预检与操作指令的冻结证据，不建立 Tripo API 充值路线，不保存 cookie、token、飞书收件目标或操作者原始标识。
-- 建立确定性单元／协议测试和一次飞书图片金丝雀；实施记录写明实际路径、测试、尚未执行的付费动作和回退边界。
+- 子项完成时核对其任务 ID、允许路径、验证结果和直接下游解锁条件。
+- 只有直接前置全部完成时才在同一状态事件将下游卡转为 ready 并按固定顺序入队。
+- 五张子卡全部完成后，父项只形成“两个工作流接口已经实现并由固定夹具闭合”的汇总结论后归档。
 
 ## 禁止项
 
-- 不建立第二个飞书机器人、第二套决策桥、通用浏览器状态机、通用文件库或新的调度器。
-- 不用重试层、超时吞噬、默认批准、固定 Tripo 价格或固定任务 ID 掩盖页面事实与账本不一致。
-- 不在实现验证中发起付费 Tripo 生成；任何实际 credits 消费仍必须来自规格定义的负责人 A 回执。
-- 不把 Codex 视觉判断改写成确定性脚本或 DeepSeek 结论，不把工作流扩展到下游 3D 资源接入。
+- 不在父卡内补做任何子项代码、平台操作、人工导出或 Blender 检查。
+- 不自动点击最终导出，不在负责人两次下载之间恢复自动化，不建立独立通用 RAW 工作流。
+- 不回写或复活历史 `A-CHAR-TRIPO-STRICT-R2-RAW-01`，不扩展到资源 QA 或 Unity。
 
 ## 验证
 
-- 运行飞书决策桥现有全套 Node 测试，并覆盖图片上传／重投／过期、价格区间回复、候选任务改选和旧卡失效。
-- 运行新账本与工作流核心测试，覆盖并发 claim、崩溃恢复、价格 TOCTOU、免费重试共享计数、非零重试扣费和新批次边界。
-- 飞书图片金丝雀必须在当前负责人会话显示可放大的正确图片；失败时不得降级为纯文字视觉批准。
-- 运行任务卡、审核文本、空白和 Git 暂存差异检查；若修改共享自动化入口，再运行其直接协议测试，不扩大到无关 Unity／BattleSim 回归。
+- 五张子卡、依赖、状态、`blockedBy` 和项目路径一致；首批只有 01A、01B、01C 在队列。
+- 01D 产出的 `export-handoff.json` 合同被 01E 的接收门夹具直接消费，没有第三份中间工作流。
+- 运行任务卡、审核文本、空白和 Git 暂存差异检查。
 
 ## 完成条件
 
-- 现有飞书控制面能够按批准规格承载两次视觉验收；批次、提示词、图片、价格、付费授权、免费重试和唯一模型候选均可审计并在异常时失败关闭。
-- 实施记录、确定性测试和飞书图片金丝雀齐全；没有付费生成、凭证入库、第二套机器人或下游资源接入。
+- 01A～01E 全部完成归档；飞书视觉决策、Tripo 原子消费、导出前交接与非 Blender 原包接收门均有可重复验证，父项形成唯一汇总结论后归档。
 
 ## 停止条件
 
-- 需要改变现有飞书配对／签名所有权、保存第三方凭证、购买 Tripo API credits、降低视觉验收门、扩大到绑定／Blender／Unity，或发现预期路径不足以保持一个主智能体统一复核时停止；最后一种情况按 `task_requires_decomposition` 交回 Codex 一次性完整拆分，不叠加临时路径或兼容分支。
+- 任一子项需要保存第三方凭证、购买或消费 credits、自动点击最终导出、降低人工视觉门、启动 Blender 才能完成接收分类、建立第二套飞书控制面或扩大到资源 QA／Unity 时停止并请求负责人裁决。
