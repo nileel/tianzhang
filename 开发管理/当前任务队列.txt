@@ -5,5 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-TRIPO-STRICT-R2-BLENDER-01 | codex_execute | codex | P1 | unity | verification | 苻渊 strict-round-02 Blender 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-01.txt |
+| A-CHAR-TRIPO-STRICT-R2-QA-01 | codex_execute | codex | P1 | unity | verification | 苻渊 strict-round-02 资源候选 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-01.txt |
 | A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01 | codex_execute | codex | P1 | automation | implementation | 通用角色立绘到 Tripo 静态模型固定工作流实施 | 开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt |

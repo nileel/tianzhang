@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-17：A-CHAR-TRIPO-STRICT-R2-RAW-01 已完成归档；同一 Tripo 任务的基础无动画包、原地行走诊断包、raw SHA-256 和平台证据均已保存，本卡已解除为 ready。",
+  "stateReason": "2026-08-17：同一 Tripo 任务的 raw 哈希复算一致；5654 顶点／11316 三角面候选已换绑 39 骨项目骨架，4 权重上限、16 个 Sec 组、30 FPS 与三动作固定帧均通过，16.604 分钟内完成 factory-startup 双校验；宽袖硬折面风险已明确交给资源 QA。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -50,6 +50,16 @@
 - 按固定 T Pose、单位、原点和轴向换绑项目骨架；移除旧权重后只使用批准的自动权重与有限修整，每顶点最多四骨，无未加权或负权重。
 - 在项目骨架上直接播放 Idle／Move／Attack，记录完整计时、对象、材质、贴图、网格、权重与残留风险。
 - 成功时归档本卡并把资源 QA 子卡解除为 ready；失败时保留工作文件与证据，不解锁下游。
+
+## 2026-08-17 验证结果
+
+- 从统一骨架源 Save As 建立 `working/rebind.blend`；平台 41 骨 `Armature` 与原网格只保留在隐藏、禁止渲染的 `PLATFORM_DIAGNOSTIC` 集合，正式候选为 `FUYUAN_R2_Mesh` + 39 骨 `TZ_HumanoidEval`。
+- 实际候选为 5654 顶点／11316 三角面，脚底 z≈0、顶高≈1.70m、正面 `-Y`，对象变换归一；原 A Pose 仅以 Edit Mode 对称几何调整到项目 T Pose，未改项目骨架、未重拓扑或建立形态键。
+- 只运行一次项目骨架自动权重；Normalize／Limit Total=4 和有限 Sec 梯度修整后，未加权、负权重、超四骨和归一化误差均为 0，最大 Sec 总权重 0.6545757651，16 个 Sec 组均有非零顶点。
+- `TZ_Eval_Idle_v001` 帧 31、`TZ_Eval_Move_v001` 帧 16、`TZ_Eval_Attack_v001` 帧 30 均可直接播放，无 NaN、飞点、整片撕裂或爆炸；导入造成的 24 FPS 已恢复为项目 30 FPS。
+- 16.604 分钟内完成；factory-startup 空文件后重开工作文件，原 `TZ_Validate` 与内嵌 `TZ_Validate_R2` 均通过，两个 raw ZIP SHA-256 与解压前一致。
+- 三帧证据显示头、手、脚、躯干和袍摆完整；宽袖在 Idle 收臂与 Attack 极值形成较硬大片折面，作为后续资源 QA 的重点视觉风险，不在本卡叠加第二种权重或重建网格。
+- 完整对象、权重、动作、计时、哈希和 factory-startup 证据见 `开发管理/苻渊Tripo严格轮二换绑验证记录.txt` 与 `assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-validation.txt`。
 
 ## 禁止项
 

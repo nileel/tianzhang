@@ -1,0 +1,53 @@
+# 苻渊 Tripo strict-round-02 换绑验证记录
+
+日期：2026-08-17
+任务：`A-CHAR-TRIPO-STRICT-R2-BLENDER-01`
+状态：完成；Blender 技术门通过，资源 QA 已解除为 ready
+
+## 冻结对象与输入
+
+- Tripo 任务：`44eac025-f0a1-4479-a21c-2edfc48ce7ed`
+- 上游归档：`开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-RAW-01.txt`
+- 基础无动画包：6107005 字节，SHA-256 `A829B63B137FADDDF688CFEAD9B022C84DBCF8D7816E90A115CE34A7CF90732E`
+- 原地行走诊断包：6200137 字节，SHA-256 `8A81DC75AEE0EA337F1303CD81750108E80A3BE401C6D1952F1033B962A52D71`
+- 解压前与 factory-startup 验证后复算结果一致；raw ZIP 只读且未改名、未覆盖。
+
+## Blender 结果
+
+- 单一 Blender 通道：`blender_lab` 当前会话；Blender 5.2.0 LTS。
+- 工作文件：`assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend`，6119802 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`。
+- 从 `TZ_HumanoidEval_v001.blend` Save As；项目正式评估骨架保持 `TZ_HumanoidEval` 39 骨不变。平台 `Armature` 41 骨和原网格只保留在隐藏、禁止渲染的 `PLATFORM_DIAGNOSTIC` 集合。
+- 实际候选对象 `FUYUAN_R2_Mesh`：5654 顶点、11316 三角面、脚底 z≈0、顶高≈1.70m、正面 `-Y`、位置／旋转为 0、缩放为 1；无形态键。
+- 平台输出是 A Pose；只在 Edit Mode 对称调整几何到项目 T Pose，未应用平台骨架姿势、未改项目骨长／rest pose／名称／层级，也未重拓扑。
+- 材质槽 1 个，材质 `tripo_mat_e556570d`；实际使用 Base Color、Normal、Roughness、Metallic 四张图并打包进 blend。原始 `rm` 图未被导入材质使用，但仍原样保留在 raw ZIP。
+
+## 绑定、权重与动作
+
+- 只运行一次批准的项目骨架 `ARMATURE_AUTO`；随后只做 Normalize All、Limit Total=4、Normalize All 与一次有限 Sec 几何梯度修整。
+- 未加权顶点 0、负权重 0、超四骨顶点 0、归一化误差 0；最大影响数 4，最大 Sec 总权重 0.6545757651；16 个 Sec 组全部有非零顶点。
+- `TZ_Eval_Idle_v001` 帧 31、`TZ_Eval_Move_v001` 帧 16、`TZ_Eval_Attack_v001` 帧 30 均可由项目骨架直接播放；三帧数值有限，无 NaN、飞点、整片撕裂或爆炸。Idle 1/61 与 Move 1/31 循环端点几何差为 0。
+- 导入把场景帧率改成 24 FPS；恢复统一骨架事实源规定的 30 FPS 后，原项目验证通过。该修正只恢复项目场景设置，不修改动作或骨架。
+
+## Factory-startup 与计时
+
+- 开始：2026-08-17T11:53:45.3114889+08:00。
+- 完成：2026-08-17T12:10:21.5625263+08:00。
+- 耗时：16.604 分钟，未超过 60 分钟硬门。
+- 保存工作文件后在同一 Blender 通道加载 factory startup 空文件，确认 0 对象、0 Text、默认 24 FPS，再重开 `rebind.blend`。
+- 重开后恢复 30 FPS、39 骨、Idle 帧 31；内嵌原 `TZ_Validate` 与任务专用 `TZ_Validate_R2` 均通过。后者同时验证对象、三角面、变换、项目骨架、权重、Sec、材质贴图、诊断集合和三动作范围。
+
+## 可视证据与残留风险
+
+- Idle：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/project-idle.png`
+- Move：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/project-move.png`
+- Attack：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/project-attack.png`
+- 三图均为 2100×1266；哈希与完整数值见同目录 `blender-validation.txt`。
+- 头、手、脚、躯干和袍摆在固定帧保持完整；Move/Attack 没有网格爆炸。宽袖在 Idle 收臂与 Attack 极值会形成较硬的大片折面，这是后续资源 QA 的首要视觉风险。
+- 本卡依据技术门判定 PASS，不以继续改权重、改造型、重雕或第二绑定算法掩盖该观感风险；资源 QA 必须从正、侧、背和动作极值独立判定可接受或失败。
+
+## 下游冻结
+
+- `A-CHAR-TRIPO-STRICT-R2-QA-01` 已解除为 ready。
+- 真实对象冻结为 `FUYUAN_R2_Mesh`，材质冻结为 `tripo_mat_e556570d`；候选导出名冻结为 `TZ_Fuyuan_StrictR2_v001.fbx`。
+- 五张平台原名贴图将进入 `candidate/TZ_Fuyuan_StrictR2_v001.fbm/`；候选哈希、FBX 无界面回读与固定视角合图路径已逐项写入 QA 卡 `expectedPaths`。
+- 本卡未导出正式 FBX、未写入 `src/Assets/`、未修改最终材质／Shader 或 Unity 运行时。

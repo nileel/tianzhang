@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-BLENDER-01"
-  ],
-  "stateReason": "等待 strict-round-02 Blender 换绑、权重、三动作和 factory-startup 验证通过；输出文件名与贴图拓扑必须在前置完成后按真实结果展开。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：Blender 前置已完成归档；真实候选对象为 FUYUAN_R2_Mesh、材质为 tripo_mat_e556570d，使用 Base Color／Normal／Roughness／Metallic 四图，原始 rm 图保留。源 FBX、五张原名贴图、回读文本、哈希和 QA 合图路径已冻结，本卡解除为 ready；宽袖硬折面是本卡首要视觉判定项。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -20,7 +18,16 @@
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
-    "开发管理/苻渊Tripo严格轮二资源候选QA记录.txt"
+    "开发管理/苻渊Tripo严格轮二资源候选QA记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v001.fbx",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v001.fbm/ancient_robe_character_3d_model_basecolor.JPEG",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v001.fbm/ancient_robe_character_3d_model_rm.JPEG",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v001.fbm/ancient_robe_character_3d_model_roughness.JPEG",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v001.fbm/ancient_robe_character_3d_model_metallic.JPEG",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v001.fbm/ancient_robe_character_3d_model_normal.JPEG",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/candidate-sha256.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/fbx-reimport-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/qa-contact-sheet.png"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -31,7 +38,13 @@
 
 - 本卡只消费通过的 `working/rebind.blend`、项目骨架三动作和原始贴图；不重新绑定、不修权重、不改变角色造型。
 - 唯一结果是形成一个坐标、网格、骨架、材质、贴图与导出关联均可供 Unity 技术导入的源资产候选，或以明确证据失败。
-- 当前保持 blocked；Blender 前置完成后必须先读取真实对象、材质槽、贴图与导出文件名，再把全部源导出、贴图和证据字面量路径补入 `expectedPaths`，之后才可转 ready。
+- Blender 前置已完成；本卡当前为 ready。冻结候选对象为 `FUYUAN_R2_Mesh`，材质槽为 `tripo_mat_e556570d`，源导出为 `candidate/TZ_Fuyuan_StrictR2_v001.fbx`，五张平台原名贴图进入同名 `.fbm` 目录，回读、哈希和 QA 合图路径已全部展开到 `expectedPaths`。
+
+## 2026-08-17 输入冻结
+
+- 上游工作文件 `working/rebind.blend` 已通过 factory-startup 重开、原 `TZ_Validate` 与 `TZ_Validate_R2`；项目骨架 39 骨、候选 5654 顶点／11316 三角面、对象变换归一，最大四骨影响、Sec 总权重不超过 0.7。
+- 实际材质只引用 `ancient_robe_character_3d_model_basecolor.JPEG`、`normal.JPEG`、`roughness.JPEG`、`metallic.JPEG`；平台原包另含 `rm.JPEG`。候选阶段保留全部五张原名贴图，不静默丢弃未使用图。
+- Idle／Move／Attack 三固定帧无网格爆炸；宽袖在 Idle 收臂与 Attack 极值形成较硬大片折面。本卡必须从正、侧、背和动作极值给出通过或失败，不得以数值有限替代视觉验收，也不得在 QA 内改权重。
 
 ## 必查范围
 
