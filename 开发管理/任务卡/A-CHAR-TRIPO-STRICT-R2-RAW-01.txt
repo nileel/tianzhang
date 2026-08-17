@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-17：strict-round-02 静态模型任务 44eac025-f0a1-4479-a21c-2edfc48ce7ed 已通过；本卡是该父批次当前唯一 ready 叶子，只负责平台绑定诊断与原始包保存。",
+  "stateReason": "2026-08-17：目标任务页、私密性、11316 三角面／7562 顶点和 3020 credits 余额均与冻结事实一致，但平台自动绑定按钮明确标价 20 credits，不满足本卡零新增 credits 边界；未点击绑定、免费重试、行走或导出，原始包未下载，下游保持阻塞。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -51,6 +51,13 @@
 - 下载基础无动画原始包和行走诊断原始包；外层使用任务 ID 与用途的冻结文件名，包内平台原始文件名、目录、FBX 与贴图关联保持不变。
 - 记录两个包的字节数和 SHA-256；不解压、重命名包内文件、修改 FBX、贴图或骨架。
 - 成功时归档本卡并把 Blender 子卡解除为 ready；失败时不解锁下游。
+
+## 2026-08-17 平台诊断结果
+
+- 已在现有登录会话打开精确任务页 `https://studio.tripo3d.ai/workspace/rigging/44eac025-f0a1-4479-a21c-2edfc48ce7ed`；页面模型统计为 11316 三角面／7562 顶点，余额为 3020 credits，静态模型页面显示私有。
+- 平台“自动绑定”按钮明确显示 20 credits，不是免费标识，命中本卡“绑定要求新增 credits”停止条件。
+- 未点击自动绑定、免费重试、任何动作或导出；余额未变化，未生成或下载基础／行走原始包，也未写入任何 Blender 或 Unity 资产。
+- 直接证据与后续所需授权记录于 `开发管理/苻渊Tripo严格轮二原始包记录.txt`；在负责人明确改变零新增 credits 边界前，本卡保持 blocked，Blender 子卡不得解锁。
 
 ## 禁止项
 
