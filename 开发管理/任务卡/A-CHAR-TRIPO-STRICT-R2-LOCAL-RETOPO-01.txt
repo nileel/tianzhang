@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01"
-  ],
-  "stateReason": "2026-08-17：源结构只读诊断已完成并固化 316/599 面、483 点、1087 边和 357/377 固定边界；当前只等待袖骨贡献只读消融，之后仅在冻结范围内建立一个局部四边面候选并过静态结构门。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：源结构与袖骨消融两张前置诊断均已完成；袖骨判定无实质贡献，本卡已解锁。只允许在已固化的 316/599 面、483 点、1087 边和 357/377 固定边界内建立一个局部四边面候选并过静态结构门。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

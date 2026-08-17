@@ -1,0 +1,45 @@
+# 苻渊 Tripo strict-round-02 袖骨贡献只读消融诊断记录
+
+## 结论
+
+- `A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01` 已完成，唯一分级是：**无实质骨骼贡献**。
+- 标准动作三固定帧合计 81 条 `>5×` 拉伸边；仅在内存归零四根既有 `Sec_Sleeve_L/R_01/02` 相对 rest pose 的附加局部旋转后为 66 条，减少 15 条（18.518519%），未达到 50% 数值门。
+- 九个固定视角没有任何一个消除原有交叉硬架、多层刀片、大跨度硬板或长尖折这一整类问题，未达到视觉门。
+- 袖骨会放大 Attack 30 的部分异常，但不是主因。不得因此新增角色专用骨、物理、约束，修改 rest pose／公共 Action，或恢复扩大权重补丁。
+
+## 输入与单变量证明
+
+- 主源 `assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend` 前后均为 `6119802` 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`。
+- 实际读取 `D:\Temp\TianZhang-Blender\A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01\rebind-source-readonly.blend`，它是主源逐字节等值且设为只读的副本。
+- 两组证据复用同一 1197 点观察区、3736 条观察边、三个固定帧和同一组正面 `-Y`／侧面 `+X`／背面 `+Y` 相机。
+- 归零只触及四根目标骨的内存局部旋转；实际有变化的只有带曲线的左右 `01`。父骨继承保留，所有非目标姿势通道不变。
+- 结束时重新打开只读基线，场景 `is_dirty=false`；六类指纹与诊断前一致。未保存模型、未导出 FBX、未写 Unity。
+
+## 动作事实
+
+- 左右 `01` 分别是 `LeftUpperArm`／`RightUpperArm` 的子骨，左右 `02` 是对应 `01` 的子骨；四根骨无约束。
+- 三个 Action 只有左右 `01` 有 XYZ Euler 曲线，X/Y 恒为 0；左右 `02` 无曲线。
+- 固定帧 Z 旋转：Idle 31 为左右 `±0.02 rad`，Move 16 为左右 `∓0.08 rad`，Attack 30 为左右 `±0.35 rad`；符合公共合同的轻微延迟摆动上限。
+
+| 固定帧 | 标准动作 `>5×` | 袖骨附加旋转归零 `>5×` | 结论 |
+|---|---:|---:|---|
+| Idle 31 | 19 | 19 | 无变化 |
+| Move 16 | 20 | 20 | 无变化 |
+| Attack 30 | 42 | 27 | 减少 15 条，但最坏边仍为 16447，倍率略升 |
+| 合计 | 81 | 66 | 减少 18.518519%，低于 50% |
+
+## 三方向视觉结论
+
+- 正面 `-Y`：两组轮廓仅有轻微方向差，未消除问题类别。
+- 侧面 `+X`：Move 多层刀片与尖折保持；Attack 巨大矩形硬架、大跨度硬板和长尖折保持。
+- 背面 `+Y`：Idle 跨背交叉硬架保持；Move／Attack 层叠硬板、尖刺和框架保持。
+- 固定视角对照表：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/sleeve-rig-ablation-contact-sheet.png`，SHA-256 `252B0810B93DA0C61F28CD6205BAB21F2CFC9DF9086BF5B954C08AECDC8A6BC8`。
+- 完整曲线、精确边号、父骨继承坐标和指纹：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-sleeve-rig-ablation-validation.txt`。
+
+## 根因与下游
+
+- 源结构诊断固化的错误连通、反向重叠薄片、自交、超长高纵横比三角面和跨背连接继续作为根因；现有袖骨只会在特定动作中放大这些缺陷。
+- `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01` 与 `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01` 均解除本卡依赖并进入 ready。两条路线相互独立，不共享候选。
+- 重生成卡仍只允许一次 H3.1 私有四图 4K PBR Quad 目标 30000 面提交，总新增 Tripo 消耗严格低于 100 credits，不重试。
+- 局部卡仍冻结为 316 核心坏面的一环 599 面／483 点／1087 边和 357 点／377 边外边界；需要扩大范围、不能闭合、仍有结构或三方向失败、需要改骨架／动作／范围外权重或叠加补丁时停止。
+- 本轮只归档诊断，没有操作 Tripo、修改模型、导出 FBX 或写 Unity。Blender 与 MCP Bridge 按负责人要求保持打开，场景已恢复为未修改只读基线。

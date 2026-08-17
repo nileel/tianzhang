@@ -8,13 +8,15 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-17：源结构只读诊断已完成归档，同一 1197 点观察区、冻结观察边、316/599 面结构集合和指纹已固化；本卡成为下一张 ready 叶子，只比较标准袖骨动作与四根 Sec_Sleeve 附加旋转归零，不保存模型。",
+  "stateReason": "2026-08-17：标准动作三固定帧 81 条 >5× 边，袖骨附加旋转归零后 66 条，只减少 18.518519%；九视角 0/9 消除问题类别，唯一分级为无实质骨骼贡献。主源和完整指纹未变，未保存模型、导出 FBX 或写 Unity；REGEN-QUAD-01 与 LOCAL-RETOPO-01 已解除依赖。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01.txt",
@@ -47,6 +49,17 @@
 - 先按标准动作取得九视角与拉伸统计，再仅在内存把四根袖骨相对 rest pose 的附加局部旋转归零，保留父骨继承并复算同一证据。
 - 按设计阈值形成贡献分级，重开隔离基线丢弃内存姿势。
 
+## 本轮实施结果
+
+- 读取主源逐字节等值、设为只读的临时副本；主源和副本前后均为 6119802 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`。
+- 四根目标骨层级、约束和三个 Action 的 F-Curve 已唯一枚举；固定帧只有左右 `01` 有 Z 旋转，Idle／Move／Attack 分别为 `±0.02 / ∓0.08 / ±0.35 rad`，左右 `02` 无曲线。
+- 复用同一 1197 点、3736 条观察边、三固定帧和九相机，仅在内存归零目标骨附加局部旋转；父骨继承保留，全部非目标姿势通道不变。
+- `>5×` 边由 Idle／Move／Attack 的 `19/20/42` 变为 `19/20/27`，合计 `81 → 66`，减少 18.518519%，未达 50%。
+- 九视角中 `0/9` 消除原有问题类别：Idle 背面交叉硬架、Move 侧／背多层刀片与硬板、Attack 侧／背大跨度硬板和长尖折均保持。
+- 两项贡献条件均失败，唯一分级为**无实质骨骼贡献**。不授权加骨、物理、约束、rest pose／Action 修改或扩大权重补丁。
+- 结束时重开隔离基线，六类场景指纹与开始一致，`is_dirty=false`；未保存 `.blend`、未导出 FBX、未写 Unity。
+- 两条结构实施叶子均解除本卡依赖。Blender 与 MCP Bridge 按负责人要求保持打开，场景停留在未修改只读基线。
+
 ## 禁止项
 
 - 不保存 `.blend`，不改权重、骨名、层级、rest pose、Action、拓扑、材质或对象变换。
@@ -60,8 +73,8 @@
 
 ## 完成条件
 
-- 形成唯一贡献分级并解除 Tripo 重生成和局部重拓扑两条实施叶子的依赖。
+- 形成唯一贡献分级并解除 Tripo 重生成和局部重拓扑两条实施叶子的依赖。本轮已完成。
 
 ## 停止条件
 
-- Blender MCP Bridge 不可连接、F-Curve 无法唯一枚举、归零会影响其他骨或两组证据不能保持单变量时停止。
+- Blender MCP Bridge 不可连接、F-Curve 无法唯一枚举、归零会影响其他骨或两组证据不能保持单变量时停止。本轮未命中。
