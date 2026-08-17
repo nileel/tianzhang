@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-17：已在隔离副本实施并回滚唯一允许影响内的权重连续化候选。Hand／Sec_Sleeve 跳变造成的 Attack 极端边已消除，但 Idle／Move／Attack 仍分别保留 5／4／7 条大于 5 倍的袖面拉伸边，全部位于 Sec_Sleeve 与禁止修改的 Sec_Hem 袍摆权重连接带；正／侧／背预览中的矩形折框仍存在。命中停止条件，源文件未保存，等待负责人决定是否扩大到 Sec_Hem／躯干权重或源模型结构返修。",
+  "stateReason": "2026-08-17：已在隔离副本实施并回滚唯一允许影响内的权重连续化候选。Hand／Sec_Sleeve 跳变造成的 Attack 极端边已消除，但 Idle／Move／Attack 仍分别保留 5／4／7 条大于 5 倍的袖面拉伸边，全部位于 Sec_Sleeve 与当时禁止修改的 Sec_Hem 袍摆权重连接带；正／侧／背预览中的矩形折框仍存在。本卡已按停止条件形成完整无保存结论；负责人随后确认扩大边界，由独立 A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02 承接，不在本卡叠加补丁。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01"
-  ],
-  "stateReason": "2026-08-17：A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01 已实施允许范围内的局部候选，但袖面与 Sec_Hem 袍摆权重连接带仍保留 5～11 倍拉伸及矩形折框，命中上游停止条件且未保存返修文件。本卡没有可消费的冻结候选，继续 blocked。",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02 的连接带候选虽消除大于五倍拉伸，但固定正／侧／背仍保留交叉硬架、多层刀片折板和大三角硬面；候选已回滚，主源未保存。本卡没有可消费候选，继续 blocked，等待负责人决定是否扩大到 UpperLeg／Shoulder 跨区权重或源模型结构阶段。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -35,11 +33,11 @@
 
 - 只消费通过返修卡的冻结 `working/rebind.blend`、项目骨架三动作和原始贴图；不重新绑定、不修权重、不改变角色造型。
 - 唯一结果是独立形成可供 Unity 技术导入的 v002 源资产候选，或以固定证据明确失败。
-- 当前 blocked；返修卡命中停止条件且未冻结新文件，在负责人批准新的上游修复边界前不得执行。
+- 当前 blocked；FIX-02 已以视觉失败完成归档且没有冻结候选，在新的上游返修获批并通过前不得执行。
 
 ## 必查范围
 
-- `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01` 冻结的工作文件哈希、权重约束、三固定帧和残留风险结论。
+- `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02` 冻结的工作文件哈希、权重约束、三固定帧和残留风险结论；首轮 FIX-01 归档只作为根因证据。
 - `A-CHAR-TRIPO-STRICT-R2-QA-01` 的首次失败视角、判定口径和未执行候选边界。
 - `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` 的单位、朝向、原点、材质、正式目录和资源 QA 规则。
 - `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 与实际 FBX 回读所需的单一工具通道。

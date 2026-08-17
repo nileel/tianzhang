@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01"
   ],
-  "stateReason": "2026-08-17：允许范围内的 Blender 局部权重候选未能消除袖面与 Sec_Hem 连接带上的主要矩形折框，已按停止条件回滚且没有新源资产候选。只有新的上游修复获批、通过并由 A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 形成唯一候选后，本卡才可解锁；当前不展开 Unity 路径。",
+  "stateReason": "2026-08-17：FIX-02 连接带候选未通过固定正／侧／背视觉门，已回滚且没有冻结文件；A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 仍无唯一候选。本卡继续 blocked，不展开 Unity 路径。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -33,7 +33,7 @@
 
 - 本卡只消费通过资源 QA 的唯一 FBX 与贴图候选，完成隔离 Unity 技术导入和固定镜头视觉验收。
 - 它证明候选在当前 Unity／URP、项目骨架、Avatar、材质和动作夹具中可用，不把苻渊接入正式 Adventure、战斗、存档、外观目录或角色创建系统。
-- 当前保持 blocked；首次资源 QA 已以视觉失败归档且未形成候选。只有局部权重返修完成并由新 QA 形成通过候选后，才扫描 `src/` 当前所有者和测试夹具、展开实际 FBX、贴图、材质、Avatar、Prefab、测试及对应 `.meta` 字面量路径。
+- 当前保持 blocked；首次资源 QA 与 FIX-02 均已以视觉失败完成归档且未形成候选。只有新的上游返修获批、完成并由新 QA 形成通过候选后，才扫描 `src/` 当前所有者和测试夹具、展开实际 FBX、贴图、材质、Avatar、Prefab、测试及对应 `.meta` 字面量路径。
 
 ## 必查范围
 

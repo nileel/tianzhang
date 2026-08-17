@@ -1,0 +1,43 @@
+# 苻渊 Tripo strict-round-02 袖袍连接带权重返修记录
+
+## 结论
+
+- 任务：`A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02`。
+- 结论：**STOP／未形成候选**。扩大到 `Sec_Sleeve ↔ Sec_Hem／躯干` 连接带后，边长极端拉伸可以消除，但固定正／侧／背视觉仍出现交叉硬架、多层刀片折板和大三角硬面；不得解锁独立 QA 或 Unity。
+- 主源 `assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend` 未保存、未覆盖：6119802 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`。
+
+## 输入与允许边界
+
+- 输入沿用首次失败 QA 和 `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01` 的无保存停止证据；Blender 5.2.0 LTS 中先把主源另存为任务 worktree 副本后再操作。
+- 允许修改仅为左右袖袍连接带中的同侧手臂、`Sec_Sleeve_*`、`Sec_Hem_*` 及已冻结躯干组权重；禁止修改骨架、rest pose、Action、顶点／边／面、材质、贴图、对象变换和角色造型。
+- 固定动作／帧为 Idle 31、Move 16、Attack 30；视觉视角为正面 `-Y`、侧面 `+X`、背面 `+Y`。
+
+## 根因定位
+
+- 原文件 5654 顶点、16974 边、11316 三角面；无未加权、负权重、超四骨、归一化错误或 Sec 总权重超过 0.7。
+- 42 个背侧袖面顶点同时由同侧手臂骨和 `Sec_Hem_BL/BR` 驱动；其局部坐标覆盖 `z=0.5091～0.8017`，并沿袖根至下垂袖面形成连续带。代表边 `15664` 两端分别为 `RightUpperArm/RightLowerArm/Sec_Sleeve_R_01` 与 `RightUpperArm/RightLowerArm/Sec_Hem_BR_01/02`。
+- 原始袖面观察集 3649 边的 `>5×` 拉伸为 Idle 19、Move 20、Attack 42，最大比分别为 17.500、14.877、23.746。
+
+## 单一候选
+
+- 把上述 42 点的 `Sec_Hem_BL/BR_01/02` 一一映射到同侧 `Sec_Sleeve_L/R_01/02`；随后把全部袖链权重保持原空间梯度形状缩至 10%，移除量按各顶点原有比例回填同侧 `UpperArm/LowerArm/Hand`。
+- 共触及 1197 个既有袖面顶点，其中 42 个完成 Hem→Sleeve 映射；未改骨架、动作、拓扑、材质或造型。
+- 候选硬约束通过：未加权 0、负权重 0、超四骨 0、归一化错误 0、Sec 超限 0。映射后扩大观察集为 3736 边，Idle／Move／Attack 的 `>5×` 均为 0，最大比分别为 2.642、2.976、3.656。
+
+## 独立视觉判定
+
+- Idle 31：正面袖面较平顺，但背面两袖仍横向交叉成厚硬架；**FAIL**。
+- Move 16：正面轮廓可读，侧面袖面仍分成约五层平行刀片，背面左右袖口仍是多层折板；**FAIL**。
+- Attack 30：正面大轮廓可读，侧面仍出现大三角硬板和细长层叠面，背面袖口仍保留多层平行硬折；**FAIL**。
+- 九张临时技术预览位于 `D:\Temp\TianZhang-Blender\A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02\`。这些预览只作本轮停止证据，不是候选资产。
+
+## 新暴露的越界影响与停止理由
+
+- 候选袖面仍有 113 个顶点受本卡未授权组影响：`LeftUpperLeg` 54 点、`RightUpperLeg` 8 点、`LeftShoulder` 45 点、`RightShoulder` 49 点；组计数可重叠。
+- 腿骨单点权重最高 0.703，肩骨最高 0.182。它们使大片袖面在动作中整体刚性错转，因此局部边长统计可以收敛，但硬折板仍稳定存在。
+- 继续处理必须再次扩大到腿／肩跨区权重，或回到源模型结构／拓扑／造型阶段；均超出本卡。按停止条件不叠加第二个补丁。
+
+## 回滚与下游
+
+- 已重开任务 worktree 副本，代表顶点 `3554` 恢复为 `RightUpperArm 0.355594 / RightLowerArm 0.305113 / Sec_Hem_BR_01 0.294854 / Sec_Hem_BR_02 0.044440`，证明内存候选已丢弃。
+- 未保存返修 blend、未导出 FBX、未复制贴图、未写入 `src/Assets/`。`A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01` 与 `A-CHAR-TRIPO-STRICT-R2-UNITY-01` 继续 blocked。
