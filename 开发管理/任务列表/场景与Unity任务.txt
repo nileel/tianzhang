@@ -7,15 +7,17 @@
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
-- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊旧 Tripo `slot-01` 已完成统一项目骨架换绑和 factory-startup 回读，但历史证明它实际只消费单张正面图。首轮严格四视图因腰饰重复失败，旧换绑与 slot-02／03 独立生成继续冻结。2026-08-17，按前／脸朝左／脸朝右／后的修订输入生成唯一私有任务 `44eac025-f0a1-4479-a21c-2edfc48ce7ed`，消耗 40 credits，输出 11316 三角面／7562 顶点并通过负责人侧向腰饰复核；该结果属于独立 `strict-round-02` 父批次，不是旧三槽评估的 `slot-02`。负责人随后明确授权 20 credits 完成一次人形自动绑定；RAW 子卡已保存基础无动画包与原地行走诊断包并核对哈希。Blender 子卡归档后，资源 QA 又以固定正／侧／背九格独立复核 Idle 31、Move 16、Attack 30：宽袖在 Move／Attack 形成多层平行硬折片、长尖刺和近矩形折框，低照度复核结论不变，故 QA 明确失败且未导出源资产候选；Unity 子卡继续阻塞。
+- `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊旧 Tripo `slot-01` 已完成统一项目骨架换绑和 factory-startup 回读，但历史证明它实际只消费单张正面图。首轮严格四视图因腰饰重复失败，旧换绑与 slot-02／03 独立生成继续冻结。2026-08-17，按前／脸朝左／脸朝右／后的修订输入生成唯一私有任务 `44eac025-f0a1-4479-a21c-2edfc48ce7ed`，消耗 40 credits，输出 11316 三角面／7562 顶点并通过负责人侧向腰饰复核；该结果属于独立 `strict-round-02` 父批次，不是旧三槽评估的 `slot-02`。负责人随后明确授权 20 credits 完成一次人形自动绑定；RAW 子卡已保存基础无动画包与原地行走诊断包并核对哈希。Blender 子卡归档后，资源 QA 以固定正／侧／背九格判定宽袖在 Move／Attack 形成硬折片、尖刺和矩形折框。后续实施证明 Hand／Sec_Sleeve 跳变可以在允许范围内消除，但主要折框继续来自袖面与 `Sec_Hem_*` 袍摆权重的连续表面连接带；触及该带已超出本次授权，候选已回滚，源文件未保存。返修、新 QA、Unity 均保持阻塞，等待负责人决定是否扩大上游权重或源模型返修边界。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01 | P1 | codex | 阻塞 | — | 苻渊 strict-round-02 宽袖局部权重返修 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01.txt |
+| A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01 | 苻渊 strict-round-02 返修候选独立 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt |
 | A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01 | P1 | codex | 已排队 | — | 通用角色立绘到 Tripo 静态模型固定工作流实施 | 开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt |
-| A-CHAR-TRIPO-STRICT-R2-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-R2-QA-01、A-CHAR-TRIPO-STRICT-R2-UNITY-01 | 苻渊 Tripo strict-round-02 后续资源父任务 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt |
-| A-CHAR-TRIPO-STRICT-R2-UNITY-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-R2-QA-01 | 苻渊 strict-round-02 Unity 技术导入验收 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt |
+| A-CHAR-TRIPO-STRICT-R2-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01、A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01、A-CHAR-TRIPO-STRICT-R2-UNITY-01 | 苻渊 Tripo strict-round-02 后续资源父任务 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt |
+| A-CHAR-TRIPO-STRICT-R2-UNITY-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 | 苻渊 strict-round-02 Unity 技术导入验收 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-AI-PLATFORM-EVAL-01 | P1 | codex | 阻塞 | A-CHAR-TRIPO-STRICT-SLOT-01、A-CHAR-TRIPO-STRICT-SLOT-02、A-CHAR-TRIPO-STRICT-SLOT-03 | Tripo 3D 固定人形三槽生产验证 | 开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt |
 | A-CHAR-TRIPO-STRICT-SLOT-01 | P1 | codex | 冻结 | — | 苻渊 Tripo 严格轮 slot-01 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-01.txt |

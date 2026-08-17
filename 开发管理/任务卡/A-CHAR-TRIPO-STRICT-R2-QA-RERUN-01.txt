@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01",
+  "title": "苻渊 strict-round-02 返修候选独立 QA",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01"
+  ],
+  "stateReason": "2026-08-17：A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01 已实施允许范围内的局部候选，但袖面与 Sec_Hem 袍摆权重连接带仍保留 5～11 倍拉伸及矩形折框，命中上游停止条件且未保存返修文件。本卡没有可消费的冻结候选，继续 blocked。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "开发管理/苻渊Tripo严格轮二返修候选QA记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/candidate/TZ_Fuyuan_StrictR2_v002.fbx",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/candidate-v002-sha256.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/fbx-v002-reimport-validation.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/qa-rerun-contact-sheet.png"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 · 苻渊 strict-round-02 返修候选独立 QA
+
+## 来源与当前边界
+
+- 只消费通过返修卡的冻结 `working/rebind.blend`、项目骨架三动作和原始贴图；不重新绑定、不修权重、不改变角色造型。
+- 唯一结果是独立形成可供 Unity 技术导入的 v002 源资产候选，或以固定证据明确失败。
+- 当前 blocked；返修卡命中停止条件且未冻结新文件，在负责人批准新的上游修复边界前不得执行。
+
+## 必查范围
+
+- `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01` 冻结的工作文件哈希、权重约束、三固定帧和残留风险结论。
+- `A-CHAR-TRIPO-STRICT-R2-QA-01` 的首次失败视角、判定口径和未执行候选边界。
+- `docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md` 的单位、朝向、原点、材质、正式目录和资源 QA 规则。
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 与实际 FBX 回读所需的单一工具通道。
+
+## 实施范围
+
+- 冻结候选网格、项目骨架、权重、材质槽、贴图、单位、原点、正面轴、三角面和导出设置。
+- 对 Idle 31、Move 16、Attack 30 分别从正面 `-Y`、侧面 `+X`、背面 `+Y` 独立检查宽袖硬折面，同时检查头发、手脚、袍摆、饰件、接缝和穿插。
+- 视觉通过后才导出唯一 v002 FBX、回读验证并解锁 Unity；视觉失败则停止，不在 QA 内修改。
+
+## 禁止项
+
+- 不修改绑定、权重、骨架、动作、角色造型、拓扑、材质风格或贴图内容。
+- 不写入 `src/Assets/`，不在 Unity 内补救源资产问题。
+
+## 验证
+
+- 固定九格证据与负责人独立视觉结论齐全；不以数值有限或工具调用成功替代视觉验收。
+- 通过时完成 FBX 无界面回读、候选哈希、贴图关联、单位、轴向、骨架和动作验证。
+- 运行任务卡、审核文本、资产版本边界、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 形成唯一可导入 Unity 的 v002 源资产候选或固定视角明确失败；只有通过候选可解锁 Unity 子卡。
+
+## 停止条件
+
+- 宽袖在正／侧／背或动作极值仍读成折板、尖刺、折框或破损几何，需要修改绑定、权重、骨架、拓扑或造型时立即停止。

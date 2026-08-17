@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01",
+  "title": "苻渊 strict-round-02 宽袖局部权重返修",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：已在隔离副本实施并回滚唯一允许影响内的权重连续化候选。Hand／Sec_Sleeve 跳变造成的 Attack 极端边已消除，但 Idle／Move／Attack 仍分别保留 5／4／7 条大于 5 倍的袖面拉伸边，全部位于 Sec_Sleeve 与禁止修改的 Sec_Hem 袍摆权重连接带；正／侧／背预览中的矩形折框仍存在。命中停止条件，源文件未保存，等待负责人决定是否扩大到 Sec_Hem／躯干权重或源模型结构返修。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "开发管理/苻渊Tripo严格轮二宽袖权重返修记录.txt",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend",
+    "assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/blender-sleeve-fix-validation.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01 · 苻渊 strict-round-02 宽袖局部权重返修
+
+## 来源与当前边界
+
+- 只消费首次 QA 失败证据和同一批次 `working/rebind.blend`；不操作 Tripo，不读取或混入旧轮次模型与权重。
+- 唯一结果是修正左右宽袖连续表面上的局部权重突变，并证明三动作固定帧不再出现由该突变造成的极端拉伸／硬折，或以明确证据停止。
+- 本卡不形成 FBX 候选，不拥有独立资源 QA 或 Unity 导入结论。
+
+## 必查范围
+
+- `开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-01.txt`、`开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-01.txt` 与失败 QA 记录中的冻结输入、三固定帧和视觉停止证据。
+- `docs/superpowers/specs/2026-08-08-humanoid-evaluation-rig-design.md` 第十章的宽袖线性 Sec 梯度、有限局部修正、Sec 总权重、归一化和四骨上限。
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 与单一 `blender_lab` 当前场景写入通道。
+
+## 实施范围
+
+- 在隔离 worktree 的工作副本上只调整左右宽袖局部顶点组权重；保持项目骨架、rest pose、Action、网格顶点／边／面、材质、贴图、对象变换和角色外形不变。
+- 以现有 `Left/RightUpperArm`、`Left/RightLowerArm`、`Left/RightHand` 与 `Sec_Sleeve_*_01/02` 为唯一允许影响，消除同一袖面相邻顶点从 Hand 到 Sec_Sleeve 的交错突变，恢复根部到袖口的连续梯度。
+- 全部权重保持归一化、每顶点最多四骨、单顶点全部 Sec 权重合计不超过 0.7；左右权重不得串侧。
+- 在 Idle 31、Move 16、Attack 30 检查宽袖边长变化、相邻折角和固定正／侧／背轮廓；本卡的视觉检查只证明返修未明显失败，不替代下一张独立 QA。
+
+## 本轮实施结果
+
+- 在隔离副本中仅对允许的 `UpperArm`、`LowerArm`、`Hand`、`Sec_Sleeve_*_01/02` 做单一局部候选；候选把袖骨贡献缩至原值的 10%，移除量按原比例回填同侧三条核心手臂骨，未修改其他顶点组、骨架、动作、拓扑、材质或造型。
+- 候选把 Attack 中由 Hand／Sec_Sleeve 跳变造成的大于 5 倍边拉伸从 15 条降为 0 条，但剩余 Idle 5 条、Move 4 条、Attack 7 条极端边全部横跨 `Sec_Sleeve` 与 `Sec_Hem_*` 权重连接带；最大边长比分别仍为 8.733、9.157、11.688。
+- 固定 Attack 30 正／侧／背技术预览中，腕口附近破碎有所收敛，但侧面和背面的长尖片与近矩形折框仍完整存在。继续消除它们必须修改本卡禁止的 `Sec_Hem_*`／躯干权重，或回到源模型结构、拓扑／造型阶段。
+- 已重开隔离工作文件丢弃候选；主工作区 `rebind.blend` 保持 6119802 字节、SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`，没有形成返修文件或候选 FBX。独立 QA 复验与 Unity 均不得解锁。
+
+## 禁止项
+
+- 不新增、删除、重命名或移动骨骼，不修改骨长、层级、roll、rest matrix、动作或 Avatar 合同。
+- 不重新自动绑定，不使用第二种权重算法，不重拓扑、不雕刻、不改角色造型、不创建纠正骨、形态键或模拟系统。
+- 不导出候选 FBX，不复制候选贴图，不写入 `src/Assets/`，不解锁 Unity。
+
+## 验证
+
+- 返修前后核对网格拓扑、骨架 rest matrix、Action、材质／贴图、对象变换和文件路径均未越界变化。
+- 验证无未加权、负权重、超四骨、归一化误差、Sec 总权重超限或左右串权；记录宽袖相邻权重突变与三固定帧极端变形边的前后统计。
+- factory-startup 重开工作文件并重复最小验证；运行任务卡、审核文本、资产版本边界、空白和 Git 暂存差异检查。
+
+## 完成条件
+
+- 左右宽袖局部权重连续化完成，硬约束全部通过，三动作固定帧不再出现本次已诊断的 5～11 倍边拉伸和近 180°突折；返修记录齐全并解锁独立 QA 复验卡。
+
+## 停止条件
+
+- 局部权重连续化仍不能消除主要硬折，必须修改项目骨架、rest pose、网格拓扑、角色造型或使用新绑定／模拟方案时停止；不得继续叠加补丁。
