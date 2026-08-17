@@ -13,7 +13,7 @@
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01",
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
   ],
-  "stateReason": "2026-08-17：FIX-02 扩大到 Sec_Sleeve 与 Sec_Hem／躯干连接带后，极端边长已归零但正／侧／背硬折板仍失败；袖面另有 113 点受 UpperLeg／Shoulder 跨区权重影响，候选已回滚且主源未保存。新 QA 没有可消费候选，Unity 继续阻塞，等待负责人决定再次扩大局部权重边界或回源模型结构阶段。",
+  "stateReason": "2026-08-17：FIX-03 已清除冻结袖面内全部 UpperLeg／Shoulder 跨区权重，但仍有 10／10／17 条大于五倍拉伸边，背／侧九视角仍为交叉硬架、多层刀片和大跨度硬板；候选已回滚，主源未保存。新 QA 没有可消费候选，Unity 继续阻塞；权重路线停止，等待源模型结构阶段另行冻结和授权。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -29,6 +29,8 @@
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03.txt",
+    "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
     "开发管理/任务归档/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
     "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
@@ -52,8 +54,9 @@
 3. `A-CHAR-TRIPO-STRICT-R2-QA-01`：已完成归档；固定正／侧／背与动作极值视觉 QA 失败，未形成候选。
 4. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-01`：允许范围内候选已实施并回滚；已按停止条件完成归档。
 5. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-02`：扩大到 `Sec_Sleeve` 与 `Sec_Hem`／躯干连接带后仍未通过视觉门；已按停止条件完成归档且未保存候选。
-6. `A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01`：没有可消费的冻结工作文件；当前继续 blocked，等待新的上游决定。
-7. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费新 QA 通过候选；当前继续 blocked，未解锁 Unity 技术导入。
+6. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03`：清除冻结袖面跨区权重后数值与九视角仍失败；已按停止条件完成归档、回滚且未保存候选。
+7. `A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01`：没有可消费的冻结工作文件；当前继续 blocked，等待源模型结构阶段另行冻结和授权。
+8. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费新 QA 通过候选；当前继续 blocked，未解锁 Unity 技术导入。
 
 旧 `A-CHAR-TRIPO-STRICT-GEN-02 → A-CHAR-TRIPO-STRICT-SLOT-02` 仍属于 `strict-round-01` 三槽平台评估，不接收本批次模型、raw、权重或证据，也不因本父项推进而解冻。
 
@@ -67,7 +70,7 @@
 
 - 子任务完成时只核对同一任务 ID、输入批次、原始哈希、上游结论和下游解锁条件。
 - 任一子任务失败时保留其明确失败证据，父卡保持 blocked；不得跳过失败阶段直接解锁更下游任务。
-- 七项均完成且证据一致时，父卡只形成本批次资源链汇总结论并归档，不替代正式 Adventure 接入或通用平台选型结论。
+- 八项均完成且证据一致时，父卡只形成本批次资源链汇总结论并归档，不替代正式 Adventure 接入或通用平台选型结论。
 
 ## 禁止项
 
@@ -77,13 +80,13 @@
 
 ## 验证
 
-- 七个子任务 ID、依赖、状态和项目路径一致；同一时刻只有依赖已完成的最前叶子可进入队列。
+- 八个子任务 ID、依赖、状态和项目路径一致；同一时刻只有依赖已完成的最前叶子可进入队列。
 - 汇总任务 ID、输入哈希、raw 哈希、Blender 验证、资源候选和 Unity 导入证据，不以摘要替代各子卡事实源。
 - 运行任务卡、审核文本、空白和 Git 暂存差异检查。
 
 ## 完成条件
 
-- RAW、Blender、首次资源 QA、首轮停止返修、袖袍连接带返修、新资源 QA、Unity 七张子卡全部完成并归档，证据属于同一 `strict-round-02` 任务，父卡形成唯一汇总结论后归档。
+- RAW、Blender、首次资源 QA、首轮停止返修、袖袍连接带返修、袖面跨区返修、新资源 QA、Unity 八张子卡全部完成并归档，证据属于同一 `strict-round-02` 任务，父卡形成唯一汇总结论后归档。
 
 ## 停止条件
 

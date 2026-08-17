@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01"
   ],
-  "stateReason": "2026-08-17：FIX-02 连接带候选未通过固定正／侧／背视觉门，已回滚且没有冻结文件；A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 仍无唯一候选。本卡继续 blocked，不展开 Unity 路径。",
+  "stateReason": "2026-08-17：FIX-03 袖面跨区权重候选仍未通过数值与固定九视角，已回滚且没有冻结文件；A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 仍无唯一候选。本卡继续 blocked，不展开 Unity 路径，等待源模型结构阶段另行冻结和授权。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

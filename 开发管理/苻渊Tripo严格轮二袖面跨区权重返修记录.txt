@@ -1,0 +1,32 @@
+# 苻渊 Tripo strict-round-02 袖面跨区权重返修记录
+
+## 结论
+
+- 任务：`A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03`。
+- 结论：**STOP／未形成候选**。单一候选已清除冻结袖面内全部 `UpperLeg／Shoulder` 跨区权重，但三动作仍有 10／10／17 条大于五倍拉伸边，固定背面／侧面仍出现交叉硬架、多层刀片和大跨度硬板；权重路线到此停止，下一步只能回到源模型结构阶段。
+- 主源 `assets/source/characters/platform-evaluation/tripo/strict-round-02/working/rebind.blend` 未保存、未覆盖：6119802 字节，SHA-256 `228A5849E453F486279240602DB2C5ECD5B9E05C01FFCC042C72223CEE37D522`。
+
+## 输入与冻结边界
+
+- 从未修改主源经 Blender Save As 得到任务 worktree 基线后操作；没有把 FIX-01／FIX-02 已回滚的内存候选作为输入。
+- 袖链原始非零点 1155 个，背侧 Hem 连接点 42 个，冻结袖面并集 1197 点；只允许修改这些点上的同侧 `UpperLeg`、`Shoulder`、`UpperArm`、`LowerArm`、`Hand`、`Sec_Sleeve_*` 及 42 点既有 `Sec_Hem_BL/BR_*`。
+- 新鲜扫描在这 1197 点内找到 114 个跨区污染点：`LeftUpperLeg` 55、`RightUpperLeg` 8、`LeftShoulder` 45、`RightShoulder` 49，计数可重叠。FIX-02 记录少计 1 个左腿点；本轮以未修改源文件的实际扫描为准，授权区域没有扩大。
+
+## 单一候选与数值结果
+
+- 一次性从原始权重执行：42 点 Hem 01／02 映射到同侧 Sleeve 01／02；全部 Sleeve 权重保持原空间梯度缩至 10%；移除同侧 UpperLeg／Shoulder；全部移除量按顶点已有 `UpperArm／LowerArm／Hand` 比例回填，不新增核心影响组。
+- 共触及 1197 点，清除跨区权重总量 20.162870。硬约束通过：未加权 0、负权重 0、超四骨 0、归一化错误 0、Sec 超限 0、左右串权 0、残留 UpperLeg／Shoulder 0；冻结区域外权重、拓扑、骨架 rest、Action、材质、贴图和对象变换指纹均未变化。
+- 但冻结观察边未收敛：原 Idle 31／Move 16／Attack 30 的 `>5×` 为 19／20／42，候选仍为 10／10／17；最大比值仍为 10.798／10.840／16.345，已经单独命中失败门。
+
+## 固定九视角独立判定
+
+- Idle 31：正面与侧面基本可读；背面两袖仍横向交叉成厚硬架，**FAIL**。
+- Move 16：正面大轮廓可读；侧面后袖仍展开为多层平行长刀片，背面左右袖端仍有层叠硬板和锐角折面，**FAIL**。
+- Attack 30：正面大轮廓可读；侧面抬袖与后袖形成大跨度平板和长尖折，背面两侧仍为层叠板片，**FAIL**。
+- 九张临时技术预览位于 `D:\Temp\TianZhang-Blender\A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03\`；它们只证明本轮停止，不是候选资产。
+
+## 回滚与下游
+
+- 已重开 worktree 基线丢弃内存候选；完整权重指纹恢复为 `7388944745c30306c79b02e1dc1f661fa9cb091dbbe8d8bd032018a561d02dfe`。代表点 `317`、`3303`、`3554` 的原始腿／肩／Sleeve／Hem 权重均恢复。
+- 未保存返修 blend、未导出 FBX、未复制贴图、未写入 `src/Assets/`。`A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01` 与 `A-CHAR-TRIPO-STRICT-R2-UNITY-01` 继续 blocked。
+- 按负责人确认的停止条件，不再扩大或叠加权重补丁。若要继续该资产，只能另行冻结并授权源模型结构／拓扑／造型处理范围。
