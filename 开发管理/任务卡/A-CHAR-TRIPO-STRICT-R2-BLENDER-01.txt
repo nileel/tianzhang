@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-RAW-01"
-  ],
-  "stateReason": "等待 strict-round-02 平台基础包、行走诊断包及 raw SHA-256 完整保存；前置完成前不得创建换绑工作文件。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-17：A-CHAR-TRIPO-STRICT-R2-RAW-01 已完成归档；同一 Tripo 任务的基础无动画包、原地行走诊断包、raw SHA-256 和平台证据均已保存，本卡已解除为 ready。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

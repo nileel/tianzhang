@@ -2,7 +2,7 @@
 
 日期：2026-08-17
 任务：`A-CHAR-TRIPO-STRICT-R2-RAW-01`
-状态：平台绑定价格命中停止条件；未绑定、未下载、未扣费
+状态：完成；平台绑定诊断与基础／行走原始包均已保存
 
 ## 冻结对象
 
@@ -11,19 +11,39 @@
 - 绑定页：`https://studio.tripo3d.ai/workspace/rigging/44eac025-f0a1-4479-a21c-2edfc48ce7ed`
 - 上游事实：`开发管理/苻渊Tripo严格轮二四视图修订记录.txt`
 
-## 只读核对
+## 授权与平台诊断
 
-- 现有登录会话能够打开精确任务页；资产条目、URL 和任务 ID 一致。
-- 静态模型页面显示模型私密性为私有。
-- 页面模型统计为 11316 三角面、7562 顶点，与上游冻结记录一致。
-- 操作前余额为 3020 credits；诊断结束时仍为 3020 credits。
-- 绑定页“自动绑定”按钮明确显示 20 credits；页面没有显示本次绑定免费或零 credits。
-- 动作列表在未绑定状态下均显示“请先绑定骨骼”；“行走”不能在零新增 credits 边界内形成诊断包。
+- 页面模型统计保持 11316 三角面、7562 顶点，任务 ID 与上游冻结记录一致；未重新生成模型、改变输入、贴图规格、私密性或平台提供商。
+- 初始边界只允许零新增 credits；2026-08-17 负责人在当前对话中明确授权消费页面显示的 20 credits，取代该单项停止边界。
+- 自动绑定前余额为 3020 credits；选择平台人形绑定模型 `v1.0 - 适用于类人角色` 并执行一次自动绑定后余额为 3000 credits，变化精确为 20 credits。
+- 未点击“重试 20”、免费重试或再次绑定；页面后续显示模型类型为“人形”。
+- 静态绑定姿态下，脊柱、肩臂、髋腿主骨链贴合模型。行走正面、侧面和背面多帧未见肢体反折、骨骼脱体或网格爆炸。
+- 视觉疑点：长袍下摆在跨步时有压缩和局部穿插风险；侧视骨骼叠加可见较长的腿部末端显示线。RAW 阶段只记录，真实骨骼层级与权重留给 Blender 子任务核验。
 
-## 停止结论
+## 原始包
 
-- 任务卡只授权页面明确显示无需新增 credits 时执行平台绑定；当前 20 credits 标价命中停止条件。
-- 未点击自动绑定、免费重试、行走动作或导出；未改变私密性、模型版本、输入、贴图规格或平台提供商。
-- 未生成、下载、解压、重命名或修改基础原始包与行走诊断原始包；冻结目标路径仍不存在，SHA-256 因无产物而未生成。
-- 未运行 Blender，未创建 `.blend`，未修改 FBX、贴图、骨架或权重，未写入 `src/Assets/`。
-- `A-CHAR-TRIPO-STRICT-R2-BLENDER-01` 不解锁。若负责人希望继续，必须先明确授权将本卡的零新增 credits 边界改为允许本任务消耗 20 credits；获得该新授权前不得点击绑定。
+### 基础无动画包
+
+- 冻结路径：`assets/source/characters/platform-evaluation/tripo/strict-round-02/raw/tripo-task-44eac025-f0a1-4479-a21c-2edfc48ce7ed-base-original.zip`
+- 字节数：6107005
+- SHA-256：`A829B63B137FADDDF688CFEAD9B022C84DBCF8D7816E90A115CE34A7CF90732E`
+- 导出设置：FBX、Blender、4k 当前、导出骨骼开启、动画数量 0。
+- 包内：一个平台原名 FBX `tripo_convert_e556570d-da1a-48cb-bba9-dbb42e921380.fbx` 和其 `.fbm` 下五张 JPEG 贴图；未解压或改名。
+- FBX 只读字符串核对：Skeleton 41、Deformer 85、LimbNode 82；AnimationStack／AnimationLayer／AnimationCurve 均为 0。
+
+### 行走诊断包
+
+- 冻结路径：`assets/source/characters/platform-evaluation/tripo/strict-round-02/raw/tripo-task-44eac025-f0a1-4479-a21c-2edfc48ce7ed-walk-original.zip`
+- 字节数：6200137
+- SHA-256：`8A81DC75AEE0EA337F1303CD81750108E80A3BE401C6D1952F1033B962A52D71`
+- 导出设置：FBX、Blender、4k 当前、导出骨骼开启、动画数量 1（行走）、原地播放动画开启。
+- 包内：一个平台原名 FBX `tripo_convert_8bd7d18d-2f4a-4298-bf75-3993925c44d4.fbx` 和其 `.fbm` 下五张 JPEG 贴图；未解压或改名。
+- FBX 只读字符串核对：Skeleton 41、Deformer 85、LimbNode 82；AnimationStack 3、AnimationLayer 3、AnimationCurve 1010，并命中 8 个小写 `walk` 标记。
+
+## 证据与边界
+
+- 哈希清单：`assets/source/characters/platform-evaluation/tripo/strict-round-02/evidence/raw-sha256.txt`。
+- 平台证据：同目录 `platform-rig-front.png`、`platform-rig-side.png`、`platform-rig-back.png`、`platform-walk.png`。
+- 两个 ZIP 保留平台原始目录、FBX 名称和贴图关联；下载目录中的原件未删除。
+- 本任务未运行 Blender、未创建 `.blend`、未修改 FBX、贴图、骨架或权重，未写入 `src/Assets/`。
+- RAW 完成条件已满足；`A-CHAR-TRIPO-STRICT-R2-BLENDER-01` 可解除为 ready，后续必须先复算本记录中的两个 ZIP 哈希。

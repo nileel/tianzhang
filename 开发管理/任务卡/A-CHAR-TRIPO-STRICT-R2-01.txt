@@ -10,12 +10,11 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-RAW-01",
     "A-CHAR-TRIPO-STRICT-R2-BLENDER-01",
     "A-CHAR-TRIPO-STRICT-R2-QA-01",
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
   ],
-  "stateReason": "2026-08-17：strict-round-02 四视图与静态模型任务 44eac025-f0a1-4479-a21c-2edfc48ce7ed 已通过；负责人批准把剩余资源生产拆为 RAW、Blender、资源 QA、Unity 四个原子子任务，父卡只汇总关闭。",
+  "stateReason": "2026-08-17：RAW 子卡已完成平台绑定诊断、基础／行走原始包保存与哈希核对；当前等待 Blender、资源 QA、Unity 三个后续子卡，父卡仍只汇总关闭。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -43,8 +42,8 @@
 
 ## 子任务与依赖
 
-1. `A-CHAR-TRIPO-STRICT-R2-RAW-01`：平台绑定诊断与原始包保存；当前唯一 ready 叶子。
-2. `A-CHAR-TRIPO-STRICT-R2-BLENDER-01`：只消费 RAW 结果，完成项目骨架换绑、权重和三动作验证。
+1. `A-CHAR-TRIPO-STRICT-R2-RAW-01`：平台绑定诊断与原始包保存；已完成归档。
+2. `A-CHAR-TRIPO-STRICT-R2-BLENDER-01`：只消费 RAW 结果，完成项目骨架换绑、权重和三动作验证；当前 ready 叶子。
 3. `A-CHAR-TRIPO-STRICT-R2-QA-01`：只消费 Blender 通过结果，完成材质、贴图、导出候选和资源证据 QA。
 4. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费 QA 通过候选，完成隔离 Unity 技术导入与视觉验收。
 
