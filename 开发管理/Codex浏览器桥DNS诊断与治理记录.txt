@@ -27,3 +27,31 @@
 
 - P0 任务：`A-CODEX-BROWSER-BRIDGE-DNS-01`。
 - 目标：建立对浏览器桥 Node 进程生效、可回退且不依赖固定 CDN IP 的安全解析路径，增加只读诊断脚本，并清理临时 hosts 绕过。
+
+## 2026-08-17 · 长期治理完成
+
+### 选型与配置证据
+
+- 负责人批准只在当前活动 Clash Verge 远程配置 `RM25qerIbC9b` 绑定的 merge 层为精确域名 `ab.chatgpt.com` 增加 DoH `nameserver-policy`；未修改 `chatgpt.com`／`openai.com` 的既有 `AIs` 路由组规则，也未增加其他域名、固定 CDN IP、UDP 回退或浏览器桥供应商补丁。
+- merge 文件：`C:\Users\WINDOWS\AppData\Roaming\io.github.clash-verge-rev.clash-verge-rev\profiles\msxf5cF3rTIN.yaml`。写入前 SHA-256 为 `85CD3B85D6BBCDC3C66A5715EF1273C2077BB638169B9671F701418035F4CD97`；备份为同目录 `msxf5cF3rTIN.yaml.codex-a-codex-browser-bridge-dns-01.bak`，SHA-256 与写入前一致。
+- merge 写入后 SHA-256 为 `83014A38F89216FB258E834FB2F4E5943040C5306012EF5232D52BD51CEDF8A8`；唯一新增配置是 `dns.nameserver-policy['ab.chatgpt.com']`，上游依次为 `https://1.1.1.1/dns-query` 与 `https://8.8.8.8/dns-query`。
+- 通过 Clash Verge 的“重新激活订阅”刷新当前配置后，生成文件 `C:\Users\WINDOWS\AppData\Roaming\io.github.clash-verge-rev.clash-verge-rev\clash-verge.yaml` 于 `2026-08-17T11:53:26.1997378+08:00` 更新，SHA-256 为 `929AA3B40E9A2E4803E7F3156027FF48F05F170A9A04293D77DB7D1B9999171E`，并精确包含上述 policy。
+- 刷新前后保持 `mode: rule`、`enable_tun_mode: true`、`enable_system_proxy: true`、`auto-route: true` 与 `dns-hijack: any:53`；未切换节点、系统代理、TUN、网卡 DNS、全局出站或游戏加速器设置。
+
+### hosts 清理与诊断结果
+
+- 清理前 hosts SHA-256 为 `CF41982ADE01AEA680AB1564F36E8562954A2234E1911E9DD5B758F5AF3DCC06`。提升后的最小脚本先核对该哈希与唯一连续四行标记块，再删除该块；备份为 `C:\WINDOWS\System32\drivers\etc\hosts.codex-a-codex-browser-bridge-dns-01.bak`，SHA-256 与清理前一致。
+- 清理后 hosts SHA-256 恢复为 `DF21AFD6FADFA147E2E7C3A0AFFCBB1D01B8F1F146503A82FC8E379CCCEA968A`，与 2026-08-16 记录的绕过前原文件一致；`ab.chatgpt.com`、起止标记与两行固定 IP 的匹配数均为 0。随后执行 `Clear-DnsClientCache`。
+- 新增只读脚本 `tools/check-codex-browser-network.ps1`。临时 hosts 尚在时的基线中，系统／传统解析及两家 DoH 都得到 `104.18.32.47`、`172.64.155.209`，HTTPS 总耗时约 `589.86 ms`；该基线只证明短期固定 IP 绕过仍在生效。
+- 清理 hosts 后于 `2026-08-17T11:55:42.6464935+08:00` 复测：系统与传统解析均得到 Clash fake-IP `198.18.0.4`，Cloudflare 与 Google DoH 均得到当时的权威对照 `104.18.32.47`、`172.64.155.209`；TCP 443 为 `8 ms`，HTTPS 状态 `403` 但 DNS／TCP／TLS 全链路成功，总耗时 `898.8 ms`。fake-IP 是当前 TUN 的预期内部地址，不作为固定业务端点；真实上游由精确域名 DoH policy 解析。
+
+### 浏览器桥与 Tripo 验证
+
+- 清理 hosts 后新建浏览器桥标签并只读打开 `https://studio.tripo3d.ai/workspace/generate/44eac025-f0a1-4479-a21c-2edfc48ce7ed`；冷启动从建标签到 DOMContentLoaded 为 `2013 ms`，页面标题、主机名和精确任务路径均正确。
+- 同一冷启动后连续三次 `evaluate` 读取分别为 `15 ms`、`11 ms`、`10 ms`；随后两个独立工具调用的 DOM／evaluate 读取分别为 `41 ms` 与 `13 ms`。均未出现对 `ab.chatgpt.com` 的固定 10000 ms Statsig 超时，也未再叠加约 20 秒等待。
+- Tripo 页面保持可读且任务路径精确；本任务没有选择或上传文件、提交生成、修改平台任务、下载资产或消耗 credits。
+
+### 回退
+
+- 若该单域名 policy 后续需要回退，先把 `msxf5cF3rTIN.yaml.codex-a-codex-browser-bridge-dns-01.bak` 恢复为 `msxf5cF3rTIN.yaml`，或精确删除本任务增加的 `dns.nameserver-policy['ab.chatgpt.com']` 子树，再对当前订阅执行一次“重新激活订阅”；随后确认生成配置不再含该子树并重跑只读诊断。
+- 回退不自动恢复固定 CDN IP hosts 条目。hosts 备份仅保留为本次精确清理的可审计证据；不得把它作为新的长期解析方案。

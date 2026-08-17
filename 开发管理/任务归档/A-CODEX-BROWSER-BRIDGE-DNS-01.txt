@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-16：负责人明确要求建立最高优先级长期修复；本机证据确认普通 DNS 污染使 Codex 浏览器桥的两个 Statsig POST 各超时 10 秒。本卡以 P0 ready 入队，负责建立可回退的长期解析路径、验证并清理临时 hosts。",
+  "stateReason": "2026-08-17：已在当前 Clash Verge merge 层为精确域名 ab.chatgpt.com 建立双 DoH policy，清理临时 hosts 并刷新 DNS；冷启动 Tripo 后连续三次浏览器桥读取为 15/11/10 ms，独立复测为 41/13 ms，无固定 10 秒 Statsig 超时，任务完成归档。",
   "expectedPaths": [
     "开发管理/任务列表/审核与交接任务.txt",
     "开发管理/当前任务队列.txt",
@@ -36,6 +36,15 @@
 - Windows 当前 DNS、DoH、系统代理、现有 VPN／TUN／游戏加速器路由；只读取与 `ab.chatgpt.com` 解析和 HTTPS 可达性直接相关的状态。
 - Codex 浏览器桥实际 Node 进程使用的解析与代理路径；不得以系统浏览器可访问替代进程级验证。
 
+## 2026-08-17 · 负责人批准的最小影响设计
+
+- 选定在当前活动 Clash Verge 配置的 merge 层，仅为精确域名 `ab.chatgpt.com` 增加 DoH `nameserver-policy`，上游固定为 `https://1.1.1.1/dns-query` 与 `https://8.8.8.8/dns-query`；这里固定的是解析服务而非 CDN 业务 IP，不允许回退到传统 UDP。不得新增或改写其他域名规则，不改变现有 `AIs` 路由组选择，不切换系统代理、TUN 模式、网卡 DNS 或全局出站。
+- 进程级配置优先级已经调查：当前捆绑浏览器客户端把 Statsig 网络请求交给特权运行时 `fetch`，没有发现公开且受支持的浏览器桥专属代理／DNS 开关；因此本卡不再尝试进程级注入，也不得修改供应商捆绑脚本。
+- 外部配置位置是当前活动远程配置绑定的 merge 文件；写入前记录该文件路径、SHA-256 和备份，写入只包含一个 `dns.nameserver-policy` 子树。重载只允许刷新当前配置／内核，不允许开关全局代理或 TUN 模式。
+- 回退只删除本任务增加的 `ab.chatgpt.com` policy 并重载当前配置；若重载、有效配置核验、DoH 解析或 HTTPS 探测任一失败，先回退，不叠加第二条网络机制。
+- 验证顺序固定为：只读诊断基线 → 单域名 policy 写入与有效配置核验 → 删除临时 hosts 标记块 → 清理 DNS 缓存 → 系统解析与 DoH 对照 → 冷启动浏览器桥连续读取至少 3 次 → Tripo 只读访问。不得提交生成或消耗 Tripo credits。
+- 当前会话没有管理员权限；hosts 清理若需要 UAC，只允许负责人确认一次精确的标记块删除。不得借机执行其他管理员网络改动；负责人未确认或标记块不精确时停止。
+
 ## 实施范围
 
 - 增加 `tools/check-codex-browser-network.ps1` 只读诊断脚本，输出系统解析、DoH 对照、443 可达性和分段耗时；不得输出令牌、Cookie、完整遥测查询串或其他账号信息。
@@ -56,6 +65,14 @@
 - 冷启动浏览器桥后至少 3 次读取均无 10 秒 Statsig 网络超时，且不再有固定约 20 秒额外耗时；记录每次实测。
 - Tripo 网页可正常访问，临时 hosts 标记和条目均已清除，回退步骤可执行。
 - 运行任务卡、审核文本、脚本语法、空白和 Git 暂存差异检查。
+
+## 2026-08-17 · 实施结果
+
+- 当前活动 Clash Verge merge 文件仅增加 `dns.nameserver-policy['ab.chatgpt.com']`，上游为 Cloudflare 与 Google HTTPS DoH；写入前配置、备份、有效生成配置、哈希和回退步骤已记录在 `开发管理/Codex浏览器桥DNS诊断与治理记录.txt`。
+- 配置刷新保持规则模式、系统代理、TUN、自动路由、DNS 劫持和既有节点选择不变；没有修改浏览器桥供应商代码、网卡 DNS、游戏加速器或其他域名路由。
+- 临时 hosts 四行标记块已在哈希与唯一性校验后精确删除，hosts 恢复到绕过前 SHA-256；清理备份保留，DNS 缓存已刷新。
+- `tools/check-codex-browser-network.ps1` 在无 hosts 绕过状态下通过：双 DoH 权威结果一致，TCP 443 与 HTTPS 成功；系统侧返回当前 TUN 的 fake-IP，真实上游由单域名 policy 解析。
+- Tripo 精确任务页冷启动为 `2013 ms`；连续三次浏览器桥读取为 `15 ms`、`11 ms`、`10 ms`，后续独立 DOM／evaluate 复测为 `41 ms`、`13 ms`，无两个固定 10000 ms Statsig 超时。全程只读，未上传、提交、修改平台任务或消耗 credits。
 
 ## 完成条件
 
