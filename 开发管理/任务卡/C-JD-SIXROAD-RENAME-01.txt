@@ -1,0 +1,109 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-JD-SIXROAD-RENAME-01",
+  "title": "六识道路更名与重定位（闻识保留）",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "migration",
+  "dispatchState": "frozen",
+  "blockedBy": [],
+  "stateReason": "2026-08-19 用户拍板六识更名方案：意识不变；身识→形识、息识→灵识、食识→魂识、见识→观识；闻识保留原名；化神根系统一为六识。当前内容冻结（薄内容切片外），待用户解除冻结后由 Codex 执行。⚠️ 已修改/未审核",
+  "expectedPaths": [
+    "docs/基础设定/元婴锚点与金丹位格设定.txt",
+    "docs/基础设定/元婴锚点与金丹位格矩阵.txt",
+    "docs/基础设定/修行境界.txt",
+    "docs/基础设定/境界特性.txt",
+    "docs/基础设定/册界天章与地区规则交互规则.txt",
+    "docs/基础设定/战场空间与环境规则.txt",
+    "docs/基础设定/五行显化与环境交互规则.txt",
+    "docs/基础设定/金丹基础效果装配与冲突规则.txt",
+    "docs/基础设定/金丹位格/金丹位格索引.txt",
+    "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Observe_SOURCE_观照真瞳.txt",
+    "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Form_SOURCE_形骸祖窍.txt",
+    "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Spirit_SOURCE_万灵枢.txt",
+    "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Soul_SOURCE_泥丸玄宫.txt",
+    "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Observe_TRANSFORM01_镜门.txt",
+    "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Form_TRANSFORM01_易骨关.txt",
+    "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Spirit_TRANSFORM01_驭机渡.txt",
+    "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Soul_TRANSFORM01_渡魂津.txt",
+    "docs/基础设定/金丹位格/界位/JD_SixConsciousness_Observe_DOMAIN01_无翳庭.txt",
+    "docs/基础设定/金丹位格/界位/JD_SixConsciousness_Form_DOMAIN01_法身庭.txt",
+    "docs/基础设定/金丹位格/界位/JD_SixConsciousness_Spirit_DOMAIN01_启寂坛.txt",
+    "docs/基础设定/金丹位格/界位/JD_SixConsciousness_Soul_DOMAIN01_幽明原.txt",
+    "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt",
+    "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt",
+    "docs/基础设定/金丹位格/界位/JD_SixConsciousness_Hearing_DOMAIN01_万籁场.txt",
+    "开发管理/C-LORE-01-旧口径迁移映射表.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01F.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01G.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01H.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01I.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01J.txt",
+    "开发管理/任务卡/C-JD-SIXROAD-RENAME-01.txt",
+    "开发管理/任务归档/C-JD-SIXROAD-RENAME-01.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-JD-SIXROAD-RENAME-01 · 六识道路更名与重定位（闻识保留）
+
+## 来源与当前边界
+
+- 用户 2026-08-19 拍板六识更名方案：意识不变；身识→形识；息识→灵识；食识→魂识；见识→观识；**闻识保留原名**（只微调定位描述，不改名、不改 effect id）；化神根系口径统一为"六识"（修掉现行"认识/五蕴"混用）。
+- 时间窗口：六识席位生产子卡 `C-HS-YY-JD-01F`～`01J` 当前阻塞未执行，本卡必须**先于**它们执行，避免按旧名生产后再返工。
+- 本卡不含剧情/养成文件的逐处语义扫描（另立后续卡）；superpowers 历史文档不动。
+
+## 必查范围
+
+- `docs/基础设定/元婴锚点与金丹位格设定.txt` §二十七条道路表、§三源位化位界位
+- `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 六识十八行效果
+- `docs/基础设定/金丹位格/金丹位格索引.txt` 六识登记行
+- 15 个席位文件（修改前读取目标完整逻辑单元；席位目标见 expectedPaths）
+- `docs/基础设定/册界天章与地区规则交互规则.txt` §八走查"息识灵气调御"行
+- `docs/基础设定/战场空间与环境规则.txt`、`docs/基础设定/五行显化与环境交互规则.txt`、`docs/基础设定/金丹基础效果装配与冲突规则.txt` 中 effect_id 引用行
+- `开发管理/任务卡/C-HS-YY-JD-01F`～`01J` 与父卡 `C-HS-YY-JD-01` 正文
+- `开发管理/C-LORE-01-旧口径迁移映射表.txt` 映射格式
+
+## 实施范围
+
+1. 四份框架文件（元婴锚点与金丹位格设定、矩阵、修行境界、境界特性）：更新道路表（道路名、road_id、效果 id）；化神根系统一为"六识"。
+2. 效果重定义：
+   - 魂识（旧食识）：三项全新效果——SOUL_SENSE 感应魂魄与亡者残响、SOUL_BIND 魂魄标记与缚魂、SOUL_GUIDE 引渡与安魂；写清与阴道路（YIN_*）、因果道路（CAUSE_*）、意识道路（ACTION_*）的边界差异。
+   - 观识（旧见识）：OBSERVE_TRUE 照见真实（破幻）、OBSERVE_LOCK 凝视锁定、OBSERVE_IMAGE 留影成像。
+   - 灵识（旧息识）：SPIRIT_SENSE 感应灵气、SPIRIT_CONTROL 调御气机、SPIRIT_AWAKEN 唤醒灵机。
+   - 形识（旧身识）：FORM_SIZE 形质变化、FORM_MORPH 形体变化、FORM_INTERFACE 形骸接口。
+   - 闻识：road_id 与效果 id 不变，仅把定位描述调整为"音律、律令、共鸣的声闻之道"。
+   - 意识（ROAD_ACTION）：完全不动。
+3. 席位层：12 个席位文件改名（Sight→Observe、Body→Form、Breath→Spirit、Ingest→Soul 各源/化/界三段）并同步内容；魂识三个席位采用新名（泥丸玄宫/渡魂津/幽明原）并重写理念与白名单；闻识三个席位仅微调定位描述；意识三个席位不动；`金丹位格索引.txt` 同步。
+4. 规则引用：`册界天章与地区规则交互规则.txt` 中"息识灵气调御"改为"灵识灵气调御"；战场空间/五行显化/装配冲突中 effect_id 引用逐处更新。
+5. 管理文件：`C-HS-YY-JD-01F`～`01J` 五张子卡与父卡 `C-HS-YY-JD-01` 的目标席位名、文件名与摘要同步更新；backlog 投影同步。
+6. 映射记录：旧→新（道路名、road_id、effect_id、positionId、席位名）追加到 `开发管理/C-LORE-01-旧口径迁移映射表.txt`，标注用户决策日期 2026-08-19。
+7. 全部修改标记「⚠️ 已修改/未审核」。
+
+## 禁止项
+
+- 不改十七道路总数、位格类型数量、源位唯一性、证位规则、装配/冲突规则、数值与运行时。
+- 不改意识道路（ROAD_ACTION）任何内容；不新增位置或效果槽。
+- 不改剧情/养成文件中"六识/眼耳鼻舌身意"的教义用语与普通词（后续卡处理）；不改 superpowers 历史文档。
+- 旧名只允许出现在历史说明与迁移映射中，不得作为现行口径使用。
+
+## 验证
+
+- 全文扫描无现行口径引用旧名残留：道路名（见识/息识/食识/身识）、road_id（ROAD_SIGHT/ROAD_BREATH/ROAD_INGEST/ROAD_BODY）、effect id（SIGHT_*/BREATH_*/INGEST_*/BODY_*）、席位名（百味玄关/化津炉/谷神场）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`（管理卡更新后）
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
+- `git diff --check`；暂存前运行 `tools/check-pending-whitespace.ps1`。
+
+## 完成条件
+
+- 六识新口径在框架、席位、索引、规则引用与管理卡五层一致；映射记录完整；标记「⚠️ 已修改/未审核」待 Codex 独立复审。
+
+## 停止条件
+
+- 魂识三项效果与阴/因果/意识道路出现无法裁决的边界重叠时停止，登记问题交回用户。
