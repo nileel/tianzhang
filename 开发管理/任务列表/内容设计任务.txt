@@ -15,6 +15,7 @@
 - 2026-08-09 已批准把未完成金丹、筑基／紫府、世界主线和册界内容调整为 P2；现有成果与复审任务保留，`C-HS-YY-JD-01K` 已通过 Codex 独立复审并归档。`A-GZ-PRESENT-01` 提升为 P1，但阻塞于 URP 视觉基线与石甲兽技术样例。
 - 2026-08-19 用户确认：金丹位格现行口径允许同一道路存在多个化位／界位（51 为初始集，源位不可增）；玄荒新路天才即孝文帝拓跋宏结构对应者（王族改革者；玩家不干扰或支持则自辟元婴成功，阻止则走失败线）。用户指示先建立任务卡：新增 `C-STORY-WM-05B`、`C-STORY-WM-NORTH-01`、`C-STORY-WM-FUYUAN-01`、`C-JD-NPC-MECH-01` 四张冻结卡，待解冻后按主责执行。
 - 2026-08-19 用户拍板六识更名：意识不变；身识→形识、息识→灵识、食识→魂识、见识→观识；闻识保留原名；化神根系统一为"六识"。新增冻结卡 `C-JD-SIXROAD-RENAME-01`，须先于 `C-HS-YY-JD-01F`～`01J` 执行；剧情/养成文件的逐处语义扫描另立后续卡。
+- 2026-08-19 用户确认建立项目级资料库速查层（L0 入口/L1 速查卡/L2 事实源/L3 归档），分域速查卡独立建卡（剧情/基础设定/角色养成/道具/怪物；资源经济待 C-ECON-01 落地后建；美术资产沿用登记册）。新增冻结卡：`C-KB-ARCH-01`（架构与维护规则）、`C-KB-IDX-STORY-01`、`C-KB-IDX-BASE-01`、`C-KB-IDX-CULTIVATE-01`、`C-KB-IDX-ITEM-01`、`C-KB-IDX-MONSTER-01`、`C-ITEM-LIANXU-CLEAN-01`（道具域炼虚残留清理；养成域炼虚引用归 `C-HIGH-01`）。
 
 ## 任务
 
@@ -94,6 +95,13 @@
 | C-STORY-WM-FUYUAN-01 | P2 | codex | 冻结 | — | 苻渊线收束节拍规划 | 开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt |
 | C-JD-NPC-MECH-01 | P2 | codex | 冻结 | — | 人物志与门派文件金丹位格机制对齐 | 开发管理/任务卡/C-JD-NPC-MECH-01.txt |
 | C-JD-SIXROAD-RENAME-01 | P2 | codex | 冻结 | — | 六识道路更名与重定位（闻识保留） | 开发管理/任务卡/C-JD-SIXROAD-RENAME-01.txt |
+| C-KB-ARCH-01 | P2 | codex | 冻结 | — | 资料库速查层架构与维护规则 | 开发管理/任务卡/C-KB-ARCH-01.txt |
+| C-ITEM-LIANXU-CLEAN-01 | P2 | codex | 冻结 | — | 炼虚道具文件清理 | 开发管理/任务卡/C-ITEM-LIANXU-CLEAN-01.txt |
+| C-KB-IDX-STORY-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
+| C-KB-IDX-BASE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-JD-SIXROAD-RENAME-01 | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
+| C-KB-IDX-CULTIVATE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
+| C-KB-IDX-ITEM-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-ITEM-LIANXU-CLEAN-01 | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
+| C-KB-IDX-MONSTER-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 
 ## 世界主线拆分
 

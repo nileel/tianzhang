@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-ITEM-LIANXU-CLEAN-01",
+  "title": "炼虚道具文件清理",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "migration",
+  "dispatchState": "frozen",
+  "blockedBy": [],
+  "stateReason": "2026-08-19 资料库建设过程中发现道具域存在炼虚（已删除境界）残留文件；用户确认一并建卡。当前冻结。⚠️ 已修改/未审核",
+  "expectedPaths": [
+    "docs/道具/丹药/炼虚.txt",
+    "docs/道具/天材地宝/炼虚.txt",
+    "docs/道具/丹药/化神.txt",
+    "docs/道具/天材地宝/化神.txt",
+    "docs/道具/道具设计规范.txt",
+    "开发管理/任务卡/C-ITEM-LIANXU-CLEAN-01.txt",
+    "开发管理/任务归档/C-ITEM-LIANXU-CLEAN-01.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-ITEM-LIANXU-CLEAN-01 · 炼虚道具文件清理
+
+## 来源与当前边界
+
+- 2026-08-19 资料库建设扫描发现：炼虚已从境界体系删除（`docs/基础设定/修行境界.txt`），但道具域仍有 `docs/道具/丹药/炼虚.txt`、`docs/道具/天材地宝/炼虚.txt` 两个整文件残留，`丹药/化神.txt`、`天材地宝/化神.txt` 与 `道具设计规范.txt` 也含炼虚引用。
+- 角色养成域（功法/术法/神通）大量炼虚引用不在本卡范围，归既有 backlog 项 `C-HIGH-01`（高阶内容分类收口）；本卡只处理道具域。
+
+## 必查范围
+
+- `docs/基础设定/修行境界.txt` 总览与附录（炼虚已删除口径）
+- `docs/道具/丹药/炼虚.txt`、`docs/道具/天材地宝/炼虚.txt` 完整文件
+- `docs/道具/丹药/化神.txt`、`docs/道具/天材地宝/化神.txt` 炼虚引用行
+- `docs/道具/道具设计规范.txt` 炼虚引用行
+- `开发管理/高阶内容现行引用分类与决策输入.txt` 相关行
+- `开发管理/任务列表/内容设计任务.txt` C-HIGH-01 行
+
+## 实施范围
+
+1. 判定两个炼虚整文件的处置：删除，或按"旧口径只允许出现在历史说明/禁止条款"精神降级为历史说明文件并显式标注"非现行内容"；处置结论写入归档与 `高阶内容现行引用分类与决策输入.txt`。
+2. 化神文件与道具设计规范中的炼虚引用同步修正或标注。
+3. 记录处置结论供 C-KB-IDX-ITEM-01 分布行引用。
+
+## 禁止项
+
+- 不保留炼虚作为现行可用口径；不动其他境界（练气/筑基/金丹/元婴/化神）的文件内容。
+- 不扩展到功法/术法/神通文件的炼虚引用（归 C-HIGH-01）。
+
+## 验证
+
+- `rg "炼虚" docs/道具` 无现行口径残留（历史说明标注除外）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
+- `git diff --check`；暂存前运行 `tools/check-pending-whitespace.ps1`。
+
+## 完成条件
+
+- 两个炼虚文件与化神文件、设计规范的炼虚引用处置完成，结论已记录。
+
+## 停止条件
+
+- 发现炼虚道具被现行代码、CSV 或运行时引用时停止，登记问题交回用户。

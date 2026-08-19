@@ -1,0 +1,63 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-KB-IDX-ITEM-01",
+  "title": "道具事实速查卡",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "frozen",
+  "blockedBy": ["C-KB-ARCH-01", "C-ITEM-LIANXU-CLEAN-01"],
+  "stateReason": "2026-08-19 用户确认建立道具域速查卡（含武器预留行）；须待炼虚道具清理落地后按清理结果执行。当前冻结。⚠️ 已修改/未审核",
+  "expectedPaths": [
+    "docs/道具/道具事实速查.txt",
+    "开发管理/任务卡/C-KB-IDX-ITEM-01.txt",
+    "开发管理/任务归档/C-KB-IDX-ITEM-01.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/AI合作沟通.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-KB-IDX-ITEM-01 · 道具事实速查卡
+
+## 来源与当前边界
+
+- 用户 2026-08-19 确认建立 `docs/道具/道具事实速查.txt`：丹药、天材地宝、基础资源、剧情遗物、妖兽材料的线索层，武器为预留行（当前全仓库无武器内容）。
+- 前置：C-ITEM-LIANXU-CLEAN-01 已落地（炼虚道具处置结果作为分布行依据）。
+
+## 必查范围
+
+- `docs/道具/道具设计规范.txt` 入口行与分类定义
+- `docs/道具/丹药/**`、`天材地宝/**`、`基础资源/**`、`剧情遗物/**`、`妖兽材料/**` 目录分布（文件名统计）
+- `docs/道具/剧情遗物/册界天章.txt`、`太玄界印.txt` 定位行
+- `docs/基础设定/册界天章与地区规则交互规则.txt` §一（三项遗产职责）
+
+## 实施范围
+
+1. 板块：分类分布行（五类+册界天章条目）、设计规范指针、剧情遗物行（三项遗产一句话+职责边界指针）、武器预留行（标注"当前无内容，待设计任务建立"）。
+2. 每行含 `路径#章节` 指针；头部写线索层声明、来源路径与版本标记；目标行数 ≤ 80 行。
+3. 全部标记「⚠️ 已修改/未审核」。
+
+## 禁止项
+
+- 不复制道具效果、数值或价格；不预写未设计道具；不把武器预留行写成已存在内容。
+- 炼虚相关分布按 C-ITEM-LIANXU-CLEAN-01 结论写，不自行判定。
+
+## 验证
+
+- 分布统计与目录实际文件一致；每行指针可解析。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
+- `git diff --check`；暂存前运行 `tools/check-pending-whitespace.ps1`。
+- 完成后在 `开发管理/AI合作沟通.txt` 写交接。
+
+## 完成条件
+
+- 板块齐全、分布统计准确、指针全部可解析、标记「⚠️ 已修改/未审核」并交 Codex 独立复审。
+
+## 停止条件
+
+- C-ITEM-LIANXU-CLEAN-01 尚未完成，或某行需要引入事实源外的新结论时停止。

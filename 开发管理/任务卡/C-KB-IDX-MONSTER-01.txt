@@ -1,0 +1,62 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "C-KB-IDX-MONSTER-01",
+  "title": "怪物事实速查卡",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "frozen",
+  "blockedBy": ["C-KB-ARCH-01"],
+  "stateReason": "2026-08-19 用户确认建立怪物域速查卡（当前仅石甲兽，为后续怪物批量生产预留行结构）。当前冻结。⚠️ 已修改/未审核",
+  "expectedPaths": [
+    "docs/怪物/怪物事实速查.txt",
+    "开发管理/任务卡/C-KB-IDX-MONSTER-01.txt",
+    "开发管理/任务归档/C-KB-IDX-MONSTER-01.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/AI合作沟通.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-KB-IDX-MONSTER-01 · 怪物事实速查卡
+
+## 来源与当前边界
+
+- 用户 2026-08-19 确认建立 `docs/怪物/怪物事实速查.txt`；当前怪物内容极少，但用户明确后续会大量增长，独立成卡并预留行结构。
+- 格式以 C-KB-ARCH-01 为准；只作线索层。
+
+## 必查范围
+
+- `docs/怪物/关陇玄域/石甲兽.txt` 定位与能力类别行
+- `docs/剧情/副本叙事/adventure_guanzhong_wild.txt` 敌人与 Boss 叙事定位行
+- `docs/基础设定/战场空间与环境规则.txt` 战场环境引用行（出战场景指针用）
+- `docs/地图/关陇玄域.txt` 怪物出没相关行
+
+## 实施范围
+
+1. 板块：现有怪物行（名字/地区/定位一句话/出战场景指针）、批量生产行结构预留（一行格式模板，供后续新增怪物登记）、生产规则指针（若现行无怪物设计规范，标注"规范待建"缺口，不新建设计规范）。
+2. 每行含 `路径#章节` 指针；头部写线索层声明、来源路径与版本标记；目标行数 ≤ 60 行。
+3. 全部标记「⚠️ 已修改/未审核」。
+
+## 禁止项
+
+- 不新建设计规范或生产规则；不写怪物数值、掉落概率；不把"规范待建"写成已存在事实。
+
+## 验证
+
+- 怪物行与现有文件一致；每行指针可解析。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`
+- `git diff --check`；暂存前运行 `tools/check-pending-whitespace.ps1`。
+- 完成后在 `开发管理/AI合作沟通.txt` 写交接。
+
+## 完成条件
+
+- 现有怪物行齐全、行结构模板可用、指针全部可解析、标记「⚠️ 已修改/未审核」并交 Codex 独立复审。
+
+## 停止条件
+
+- 需要先行建立怪物设计规范才能形成行结构时停止，登记缺口另立任务。
