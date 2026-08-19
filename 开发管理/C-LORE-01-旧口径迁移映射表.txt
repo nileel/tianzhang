@@ -1,6 +1,7 @@
 # C-LORE-01 旧口径迁移映射表
 
 ✅ 已审核（2026-07-06 Codex / gpt-5.5 自产；用途：解除 C-LORE-01 前置规划阻塞）
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：六识道路更名（C-JD-SIXROAD-RENAME-01）——追加 §八 六识更名迁移映射（2026-08-19 用户拍板）；待 Codex 复审。
 
 > 历史状态说明：本表的“一源、多化、多界”与旧矩阵假设已被现行金丹口径超越，仅保留作迁移历史证据。当前迁移以 `docs/基础设定/元婴锚点与金丹位格设定.txt`、`docs/基础设定/元婴锚点与金丹位格矩阵.txt`、`docs/基础设定/金丹基础效果装配与冲突规则.txt`、`docs/基础设定/自辟元婴方向设定.txt` 及 `C-JD-LORE-MIGRATE-01` 为准，不得继续执行本表的旧矩阵机械映射。
 
@@ -104,3 +105,38 @@ git diff --check
 - `昊天历三百七十二年`。
 - 已明确标注为旧草案、历史说明、禁止项或迁移清单的元引用。
 - 本文件自身作为迁移映射表的旧词引用。
+
+## 八、六识道路更名映射（2026-08-19 用户拍板）
+
+用户决策：意识不变；身识→形识、息识→灵识、食识→魂识、见识→观识；闻识保留原名（只微调定位描述为「音律、律令、共鸣的声闻之道」）；化神根系统一为「六识」（修掉现行「认识/五蕴」混用）。执行卡：`C-JD-SIXROAD-RENAME-01`。
+
+### 道路与效果
+
+| 旧口径 | 处理策略 | 新口径/写法 | 说明 |
+|---|---|---|---|
+| 见识道路 / `ROAD_SIGHT` | 道路改名＋效果重定义 | 观识道路 / `ROAD_OBSERVE` | `SIGHT_LOCK`→`OBSERVE_LOCK` 凝视锁定（后继）；`SIGHT_IMAGE`→`OBSERVE_IMAGE` 留影成像（后继，范围收窄为影像留取／投射／抹改）；`SIGHT_BLIND` 视觉剥夺退役；新增 `OBSERVE_TRUE` 照见真实（破幻）。 |
+| 息识道路 / `ROAD_BREATH` | 道路改名＋效果重组 | 灵识道路 / `ROAD_SPIRIT` | `BREATH_CONTROL` 灵性控制＋`BREATH_QI` 灵气调御并入 `SPIRIT_CONTROL` 调御气机；`BREATH_AWAKEN` 灵性启寂→`SPIRIT_AWAKEN` 唤醒灵机（后继）；新增 `SPIRIT_SENSE` 感应灵气（读取／感应前置独立为效果）。 |
+| 食识道路 / `ROAD_INGEST` | 道路改名＋效果全换 | 魂识道路 / `ROAD_SOUL` | `INGEST_INVERT`／`INGEST_SCALE`／`INGEST_BLOCK` 全部退役（吸收语义退出基础效果库）；新增 `SOUL_SENSE` 感应魂魄、`SOUL_BIND` 魂魄缚记、`SOUL_GUIDE` 引渡安魂。 |
+| 身识道路 / `ROAD_BODY` | 道路改名 | 形识道路 / `ROAD_FORM` | `BODY_SIZE`→`FORM_SIZE` 形质变化；`BODY_MORPH`→`FORM_MORPH` 形体变化；`BODY_INTERFACE`→`FORM_INTERFACE` 形骸接口（均后继）。 |
+| 化神根系「认识／五蕴」 | 统一口径 | 六识 | `修行境界.txt`、`境界特性.txt`、`元婴锚点与金丹位格设定.txt` 已同步。 |
+| 闻识道路 / `ROAD_HEARING` | 保留 | 闻识道路 / `ROAD_HEARING` | road_id、效果 id、席位名均不变，仅定位描述改为「音律、律令、共鸣的声闻之道」。 |
+| 意识道路 / `ROAD_ACTION` | 完全不动 | 意识道路 / `ROAD_ACTION` | 道路与席位内容零修改。 |
+
+### 席位 positionId 与席位名
+
+| 旧 positionId | 新 positionId | 旧席位名 | 新席位名 | 位格类型 |
+|---|---|---|---|---|
+| `JD_SixConsciousness_Sight_SOURCE` | `JD_SixConsciousness_Observe_SOURCE` | 观照真瞳 | 观照真瞳（不变） | 源位 |
+| `JD_SixConsciousness_Sight_TRANSFORM01` | `JD_SixConsciousness_Observe_TRANSFORM01` | 镜门 | 镜门（不变） | 化位 |
+| `JD_SixConsciousness_Sight_DOMAIN01` | `JD_SixConsciousness_Observe_DOMAIN01` | 无翳庭 | 无翳庭（不变） | 界位 |
+| `JD_SixConsciousness_Breath_SOURCE` | `JD_SixConsciousness_Spirit_SOURCE` | 万灵枢 | 万灵枢（不变） | 源位 |
+| `JD_SixConsciousness_Breath_TRANSFORM01` | `JD_SixConsciousness_Spirit_TRANSFORM01` | 驭机渡 | 驭机渡（不变） | 化位 |
+| `JD_SixConsciousness_Breath_DOMAIN01` | `JD_SixConsciousness_Spirit_DOMAIN01` | 启寂坛 | 启寂坛（不变） | 界位 |
+| `JD_SixConsciousness_Ingest_SOURCE` | `JD_SixConsciousness_Soul_SOURCE` | 百味玄关 | 泥丸玄宫 | 源位 |
+| `JD_SixConsciousness_Ingest_TRANSFORM01` | `JD_SixConsciousness_Soul_TRANSFORM01` | 化津炉 | 渡魂津 | 化位 |
+| `JD_SixConsciousness_Ingest_DOMAIN01` | `JD_SixConsciousness_Soul_DOMAIN01` | 谷神场 | 幽明原 | 界位 |
+| `JD_SixConsciousness_Body_SOURCE` | `JD_SixConsciousness_Form_SOURCE` | 形骸祖窍 | 形骸祖窍（不变） | 源位 |
+| `JD_SixConsciousness_Body_TRANSFORM01` | `JD_SixConsciousness_Form_TRANSFORM01` | 易骨关 | 易骨关（不变） | 化位 |
+| `JD_SixConsciousness_Body_DOMAIN01` | `JD_SixConsciousness_Form_DOMAIN01` | 法身庭 | 法身庭（不变） | 界位 |
+
+证位档案标识同步迁移：`PROOF_SIGHT_*`→`PROOF_OBSERVE_*`、`PROOF_BREATH_*`→`PROOF_SPIRIT_*`、`PROOF_INGEST_*`→`PROOF_SOUL_*`、`PROOF_BODY_*`→`PROOF_FORM_*`（档案版本 1.0 不变）。12 个受影响席位的位置档案版本 1.0→1.1；闻识 3 席位定位描述微调后同为 1.1。存档与引用按 `金丹位格索引.txt` §三.5 处理：旧 `positionId` 一经正式引用不得静默复用，迁移记录以本表为准。

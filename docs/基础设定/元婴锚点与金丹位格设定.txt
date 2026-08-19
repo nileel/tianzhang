@@ -1,6 +1,7 @@
 # 元婴锚点与金丹位格设定
 
 ✅ 已审核（2026-08-05 用户确认；Codex 同步具体位置、可扩展化界位与单文档架构）
+⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：六识道路更名与效果重定义（C-JD-SIXROAD-RENAME-01）——道路表与化神根系口径；待 Codex 复审。
 
 > 本文是金丹结构、生命周期与元婴道路锚点的唯一规则摘要。十七道路变量与五十一个基础效果以 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 为准；效果装配、兼容与冲突以 `docs/基础设定/金丹基础效果装配与冲突规则.txt` 为准。真实位格的证位条件、知识显示、空位、争位与取得流程以 `docs/基础设定/金丹位格证位与争位规则.txt` 为准。具体位置的内容生产与登记分别以 `docs/基础设定/金丹位格/金丹位格设计规范.txt`、`docs/基础设定/金丹位格/金丹位格索引.txt` 为准。自辟方向以 `docs/基础设定/自辟元婴方向设定.txt` 为准。
 
@@ -8,7 +9,7 @@
 
 1. 化神是太玄界当前最高境界；炼虚已删除，不再作为境界、NPC 身份、道具门槛、功法篇章或世界背景使用。
 2. 玩家当前完整成长链止于金丹。元婴与化神用于世界背景、顶层 NPC、远期系统及金丹结构倒推，不表示当前玩家线已经实现。
-3. 化神根系仍为五行、阴阳、宇宙、认识、因果五类高位方向；本文的十七道路是元婴道路锚点及金丹结构的现行细分。
+3. 化神根系仍为五行、阴阳、宇宙、六识、因果五类高位方向；本文的十七道路是元婴道路锚点及金丹结构的现行细分。
 4. 元婴没有常规模板或低配版本。每一个元婴都是唯一高位位格；任一具体元婴道路锚点同一时期只能有一个真实持有者。
 5. 金丹必须有真实位格，不设计低配或无位格金丹。夺取、继承、敕封、暂寄与独立应位只表示证位起点、权利来源或过渡状态；它们不跳过个人完整证位。自辟元婴仍走独立晋升事务，不是第四种位格。
 6. 本轮只锁定结构和边界，不锁定倍率、目标数、持续、CT、资源或概率，不宣称 BattleSim 已验证新规则。
@@ -25,11 +26,11 @@
 | 五行 | 土道路 | `ROAD_EARTH` | `EARTH_MANIFEST`、`EARTH_FIELD`、`EARTH_GRAVITY` |
 | 五行 | 金道路 | `ROAD_METAL` | `METAL_MANIFEST`、`METAL_FIELD`、`METAL_MAGNETISM` |
 | 五行 | 水道路 | `ROAD_WATER` | `WATER_MANIFEST`、`WATER_FIELD`、`WATER_TIDE` |
-| 六识 | 见识道路 | `ROAD_SIGHT` | `SIGHT_LOCK`、`SIGHT_BLIND`、`SIGHT_IMAGE` |
+| 六识 | 观识道路 | `ROAD_OBSERVE` | `OBSERVE_TRUE`、`OBSERVE_LOCK`、`OBSERVE_IMAGE` |
 | 六识 | 闻识道路 | `ROAD_HEARING` | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` |
-| 六识 | 息识道路 | `ROAD_BREATH` | `BREATH_CONTROL`、`BREATH_QI`、`BREATH_AWAKEN` |
-| 六识 | 食识道路 | `ROAD_INGEST` | `INGEST_INVERT`、`INGEST_SCALE`、`INGEST_BLOCK` |
-| 六识 | 身识道路 | `ROAD_BODY` | `BODY_SIZE`、`BODY_MORPH`、`BODY_INTERFACE` |
+| 六识 | 灵识道路 | `ROAD_SPIRIT` | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` |
+| 六识 | 魂识道路 | `ROAD_SOUL` | `SOUL_SENSE`、`SOUL_BIND`、`SOUL_GUIDE` |
+| 六识 | 形识道路 | `ROAD_FORM` | `FORM_SIZE`、`FORM_MORPH`、`FORM_INTERFACE` |
 | 六识 | 意识道路 | `ROAD_ACTION` | `ACTION_OPTION_EDIT`、`ACTION_TARGET_EDIT`、`ACTION_INTENT_LOCK` |
 | 阴阳 | 阴道路 | `ROAD_YIN` | `YIN_CONCEAL`、`YIN_COLD`、`YIN_BUFF_LOCK` |
 | 阴阳 | 阳道路 | `ROAD_YANG` | `YANG_RADIANCE`、`YANG_SURGE`、`YANG_DEBUFF_LOCK` |

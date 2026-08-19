@@ -7,3 +7,4 @@
 |----|------|------|--------|------|------|------|--------|
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | codex_execute | codex | P1 | unity | implementation | 苻渊 strict-round-02 Tripo 四边面重新生成 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01 | codex_execute | codex | P1 | unity | implementation | 苻渊 strict-round-02 袖面局部结构重拓扑 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01.txt |
+| C-JD-SIXROAD-RENAME-01 | codex_review | codex | P2 | content | migration | 六识道路更名与重定位（闻识保留） | 开发管理/任务卡/C-JD-SIXROAD-RENAME-01.txt |
