@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "2026-08-16：slot-01 查看器严格背面出现两套错误腰扣与玉坠，负责人明确要求没过关就不继续生成；本卡在发起任何平台请求前冻结，等待负责人另行决定，不产生 credits。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；本卡继续冻结，不得发起平台请求或产生 credits。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

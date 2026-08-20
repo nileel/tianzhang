@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01"
   ],
-  "stateReason": "2026-08-17：双结构路线与袖骨只读消融设计已通过，但尚未实施和比较；A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01 仍无唯一通过候选。本卡继续 blocked，不展开或写入 Unity 路径。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；strict-round-02 没有 Unity 候选，本卡不得展开或写入 Unity。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

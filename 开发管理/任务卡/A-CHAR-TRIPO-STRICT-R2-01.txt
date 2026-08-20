@@ -8,13 +8,13 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01",
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01",
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
   ],
-  "stateReason": "2026-08-20：LOCAL-RETOPO-01 因冻结外边界 20 个度数为 4 的固定分叉点无法形成流形补片而停止；REGEN-QUAD-01 的唯一 Quad 输出又因脸部身份明显漂移及衣料手／头发纹理污染在平台静态门失败。双结构路线均未形成候选，未下载、未绑定；父卡继续阻塞，结构比较、独立 QA 与 Unity 不得解锁。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线并改为静态 3D 棋子／2D 战术精灵并行评估；本父卡及未完成 strict-round-02 子卡不得再调度。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

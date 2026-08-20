@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01"
   ],
-  "stateReason": "2026-08-17：等待局部重拓扑静态门；静态失败时本卡只记录按门未执行，静态通过时才转移局部权重并执行九视角。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；局部重拓扑动作 QA 不再调度，不得恢复袖面／蒙皮修补。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": ["U-CHAR-HUMANOID-PROTO-01"],
-  "stateReason": "等待玩家基础人形证明角色资源管线",
+  "stateReason": "2026-08-21：用户批准冻结旧骨骼动画角色链；本四足骨架动画样例暂不实施，待战场角色方向确定后另行规划怪物表现。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

@@ -1,0 +1,52 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-2D-TACTICAL-PROTO-01",
+  "title": "2D 六向战术角色 Unity 样例",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["A-CHAR-2D-FUYUAN-SPRITE-01"],
+  "stateReason": "等待唯一六向 2D 精灵样张通过；只允许在既有六向技术测试台建立表现样例。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt",
+    "开发管理/任务归档/U-CHAR-2D-TACTICAL-PROTO-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-2D-TACTICAL-PROTO-01 · 2D 六向战术角色 Unity 样例
+
+## 来源与当前边界
+
+- 在既有六向几何测试台用唯一六向精灵证明 2D 战场表现，不接入正式 Adventure。
+
+## 必查范围
+
+- 2D 战术合同、六向精灵与证据、六向测试台、Character／CombatPresentation 契约和直接测试。
+
+## 实施范围
+
+- 实现六向选择、地面锚定、深度／遮挡和待机、移动、攻击、受击、施法、死亡表现；触发时点与静态 3D 路线一致。
+
+## 禁止项
+
+- 不修改规则、占格、方向判定、伤害、AI、存档或正式场景，不用 UI 立绘替代战术精灵。
+
+## 验证
+
+- 固定 1920×1080 六向及六种表现证据；接入前后相同规则输入产生相同位置、目标、伤害和结算结果。
+
+## 完成条件
+
+- 形成可由比较卡直接消费的完整 2D 证据矩阵。
+
+## 停止条件
+
+- 必须减少六向、修改规则所有者、进入正式场景或用特殊镜头隐藏问题时停止。

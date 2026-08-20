@@ -8,12 +8,12 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01",
     "A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01"
   ],
-  "stateReason": "2026-08-17：等待两条路线各自形成动作通过、失败或按静态门未执行结论；本卡只比较，不实施修补。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；原双结构路线均无候选，本比较卡不再调度。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

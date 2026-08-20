@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": ["A-CHAR-AI-PLATFORM-EVAL-01"],
-  "stateReason": "等待 A-CHAR-AI-PLATFORM-EVAL-01 完成固定人形平台选型。",
+  "stateReason": "2026-08-21：用户批准冻结统一骨架动画玩家样例；新方向改由静态 3D 棋子／2D 战术精灵双路线比较，本卡不得恢复实施。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

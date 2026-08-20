@@ -1,0 +1,55 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01",
+  "title": "苻渊静态棋子 Blender 候选验证",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": ["A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01"],
+  "stateReason": "等待同一静态 Tripo 原包通过平台门并冻结；不得消费旧换绑或换头现场。",
+  "expectedPaths": [
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/working/fuyuan_static_chess_candidate.blend",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx",
+    "开发管理/苻渊静态棋子Blender候选验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt",
+    "开发管理/任务归档/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt",
+    "开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 · 苻渊静态棋子 Blender 候选验证
+
+## 来源与当前边界
+
+- 只对静态棋子原包做静态结构、材质、朝向、尺度和最小清理；不运行骨骼或动作工作流。
+
+## 必查范围
+
+- Blender 管线技能、静态 3D 合同、原包哈希、平台证据、六向测试台坐标和资源版本规则。
+
+## 实施范围
+
+- 在独立临时候选中检查连通性、非流形、法线、UV、贴图、轮廓、地面锚点、朝向、尺度与独立底座接口；只清理已定位的小碎片和静态瑕疵。
+
+## 禁止项
+
+- 不换头、不蒙皮、不绑定、不修袖根动作结构、不重新生成、不覆盖历史 `.blend` 或写 Unity。
+
+## 验证
+
+- 正／左右侧／背静态证据、网格统计、非流形位置、UV／贴图、法线、尺度／朝向和输入输出哈希。
+
+## 完成条件
+
+- 形成唯一静态候选及完整证据，或按停止条件失败；只有通过时解锁 Unity 样例。
+
+## 停止条件
+
+- 修复需要越过局部静态瑕疵、恢复换头／蒙皮路线、连续叠补丁或修改身体大范围结构时停止。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": ["U-CHAR-3D-FORMAL-01"],
-  "stateReason": "等待正式 Adventure 3D 替换通过全部技术、风格、数据与存档闸门",
+  "stateReason": "2026-08-21：用户批准冻结基于旧动画 3D 的完整创角外观批次；待双路线选择完成后按胜出资产形状重新规划。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

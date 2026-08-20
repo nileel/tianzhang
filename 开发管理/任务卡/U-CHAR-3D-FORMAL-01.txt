@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": ["A-CHAR-PORTRAIT-STYLE-01"],
-  "stateReason": "等待技术、数据、存档与风格闸门全部通过",
+  "stateReason": "2026-08-21：用户批准冻结旧动画 3D 正式替换路线；在静态 3D／2D 比较和新的正式方向批准前不得接入 Adventure。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

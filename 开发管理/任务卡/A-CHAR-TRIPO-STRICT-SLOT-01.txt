@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "2026-08-16：生成前置已以背面错误腰扣／玉坠的质量失败完成，没有合格 raw 包；负责人要求不过关就停止，本卡未创建 Blender 工作文件并冻结，等待另行决定。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；本卡继续冻结，不得创建 Blender 工作文件或恢复换绑。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

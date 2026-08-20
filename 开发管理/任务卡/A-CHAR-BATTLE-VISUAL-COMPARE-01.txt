@@ -1,0 +1,54 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-VISUAL-COMPARE-01",
+  "title": "静态 3D 棋子／2D 战术精灵固定比较",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-CHAR-STATIC-CHESS-PROTO-01", "U-CHAR-2D-TACTICAL-PROTO-01"],
+  "stateReason": "等待两条路线在同一测试台形成完整、对称的六向与表现证据；本卡只比较，不实施修补。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-VISUAL-COMPARE-01 · 静态 3D 棋子／2D 战术精灵固定比较
+
+## 来源与当前边界
+
+- 只比较两条完成的 Unity 技术样例并形成唯一方向结论，不修改任何候选。
+
+## 必查范围
+
+- 双路线设计、两份生产合同、两条资产证据、两个 Unity 样例的固定矩阵和规则一致性结果。
+
+## 实施范围
+
+- 按身份保持、六向辨识、动作可读、遮挡占格、资产稳定性、单件与批量成本、外观扩展、Unity 复杂度和维护风险评分。
+- 输出静态 3D 胜出、2D 胜出或双失败之一。
+
+## 禁止项
+
+- 不修图、不修模型、不改 Unity、不降低共同门、不追加 Tripo 生成、不提出第三套混合方案。
+
+## 验证
+
+- 两条路线使用同一苻渊、镜头、地块、分辨率、六向和动作时点；每项结论可回指对应证据。
+
+## 完成条件
+
+- 形成唯一、可审计的路线结论并解锁父项汇总。
+
+## 停止条件
+
+- 证据条件不对称、任一路线缺固定矩阵或产品结论仍需用户在多个未冻结选项间选择时停止。

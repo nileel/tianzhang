@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-GEN-03"
   ],
-  "stateReason": "2026-08-16：等待严格轮第三次独立生成及完整原始包；前置完成前不得预建工作文件或复用其他槽位。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；本卡不得生成、接收原包或创建 Blender 工作文件。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

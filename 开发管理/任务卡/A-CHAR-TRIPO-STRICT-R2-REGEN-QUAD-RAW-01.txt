@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01"
   ],
-  "stateReason": "2026-08-17：等待唯一四边面平台任务通过；之后只取得该任务的未绑定 FBX 原包并冻结哈希，不启动 Blender。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；失败的 Quad 输出不再下载或进入原包接收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

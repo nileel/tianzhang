@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-VISUAL-DIRECTION-01",
+  "title": "战场角色静态 3D／2D 双路线选择父任务",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": ["A-CHAR-BATTLE-VISUAL-COMPARE-01"],
+  "stateReason": "2026-08-21 用户批准建立静态 3D 棋子与 2D 战术精灵两条对称试制线；父项只汇总比较结论，不进入队列。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt",
+    "开发管理/任务卡/D-CHAR-STATIC-CHESS-CONTRACT-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt",
+    "开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt",
+    "开发管理/任务卡/D-CHAR-2D-TACTICAL-CONTRACT-01.txt",
+    "开发管理/任务卡/A-CHAR-2D-FUYUAN-SPRITE-01.txt",
+    "开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-VISUAL-DIRECTION-01 · 战场角色静态 3D／2D 双路线选择父任务
+
+## 来源与当前边界
+
+- 唯一设计事实源是 `docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md`。
+- 本父项只汇总两条路线和固定比较，不生成美术、不操作 Tripo／Blender、不修改 Unity。
+
+## 子任务与依赖
+
+- 静态 3D：`D-CHAR-STATIC-CHESS-CONTRACT-01 → A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 → A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 → A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 → U-CHAR-STATIC-CHESS-PROTO-01`。
+- 2D：`D-CHAR-2D-TACTICAL-CONTRACT-01 → A-CHAR-2D-FUYUAN-SPRITE-01 → U-CHAR-2D-TACTICAL-PROTO-01`。
+- 汇合：两个 Unity 样例完成后执行 `A-CHAR-BATTLE-VISUAL-COMPARE-01`。
+
+## 必查范围
+
+- 已批准双路线设计全文、九张子卡及其完成归档、固定六向测试台和当前角色美术设计的用途边界。
+
+## 实施范围
+
+- 核对比较卡给出的唯一结论，并据此记录正式角色生产方向及旧链最终处置。
+- 胜出路线确定后，另行展开正式资产、怪物表现、外观数据和 Adventure 接入卡；本父卡不代做这些工作。
+
+## 禁止项
+
+- 不在父卡内补做任何子项，不自动建立第三路线，不把旧立绘当战场素材。
+
+## 验证
+
+- 子卡依赖、状态、固定证据矩阵和比较结论一致；父项从不进入 ready 队列。
+
+## 完成条件
+
+- 比较卡形成静态 3D、2D 或双失败之一；父项记录唯一结论，并同步正式角色设计与直接下游依赖后归档。
+
+## 停止条件
+
+- 比较证据不对称、需要新的产品决策或必须先建立第三路线时保持 blocked 并请求用户裁决。

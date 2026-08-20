@@ -8,13 +8,13 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-SLOT-01",
     "A-CHAR-TRIPO-STRICT-SLOT-02",
     "A-CHAR-TRIPO-STRICT-SLOT-03"
   ],
-  "stateReason": "2026-08-16：严格轮 slot-01 唯一 Tripo 任务因背面错误生成两套腰扣与玉坠而质量失败；负责人明确要求没过关就不继续。slot-01 换绑与 slot-02／03 生成已冻结，父项保持阻塞，未追加生成或自动启用回退路线。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 固定人形三槽与统一骨架动画路线；本父项和全部未完成槽位不得再调度或追加生成。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

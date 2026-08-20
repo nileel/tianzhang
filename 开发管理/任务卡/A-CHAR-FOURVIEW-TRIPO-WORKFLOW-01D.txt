@@ -8,13 +8,13 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B"
   ],
-  "stateReason": "2026-08-17：本卡降为 P2；必须先由 A-CHAR-TRIPO-STRICT-R2-UNITY-01 证明美术资产管线通过，再完成飞书视觉决定与 Tripo 原子账本。全部前置完成前保持 blocked。",
+  "stateReason": "2026-08-21：用户批准冻结旧四视图到 Tripo 绑定动画工作流；本卡不得恢复平台准备或人工导出交接。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

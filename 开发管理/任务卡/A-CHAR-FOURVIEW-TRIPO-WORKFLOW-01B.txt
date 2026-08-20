@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
   ],
-  "stateReason": "2026-08-17：负责人要求先验证美术资产管线；本卡降为 P2，并阻塞于 A-CHAR-TRIPO-STRICT-R2-UNITY-01。该 Unity 技术与视觉验收完成前不得实施或进入队列。",
+  "stateReason": "2026-08-21：用户批准冻结旧四视图到 Tripo 绑定动画工作流；本卡不得实施或进入队列。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

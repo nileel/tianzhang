@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01"
   ],
-  "stateReason": "2026-08-17：等待同一平台任务的未绑定四边面原包冻结；之后只用 Blender 检查静态拓扑与三视角，不绑定。",
+  "stateReason": "2026-08-21：用户批准冻结旧 strict-round-02 Quad 路线；失败输出不再下载，本卡不得启动 Blender。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

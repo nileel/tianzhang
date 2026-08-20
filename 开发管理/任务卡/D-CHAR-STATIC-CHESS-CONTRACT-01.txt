@@ -1,0 +1,54 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-STATIC-CHESS-CONTRACT-01",
+  "title": "静态 3D 棋子角色生产合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-21 用户批准双路线评估；本卡是静态 3D 线首个原子叶子，只冻结新战斗定姿与无骨骼运行时生产合同。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-STATIC-CHESS-CONTRACT-01.txt",
+    "开发管理/任务归档/D-CHAR-STATIC-CHESS-CONTRACT-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-STATIC-CHESS-CONTRACT-01 · 静态 3D 棋子角色生产合同
+
+## 来源与当前边界
+
+- 只把获批双路线设计展开为可生产、可验证的静态 3D 角色合同，不生成图片或模型。
+
+## 必查范围
+
+- 双路线设计全文；现有角色美术设计的六向、尺度、Toon 与身份合同；苻渊直接角色事实；strict-round-02 失败证据；六向几何测试台。
+
+## 实施范围
+
+- 冻结自然战斗定姿、四视图一致性、宽袖与持物轮廓、六向可读、尺度、朝向、材质、修炼底座接口、根节点表现语义和静态 QA 矩阵。
+- 明确旧立绘只作身份／服饰参考，必须生产新的战斗姿态四视图。
+
+## 禁止项
+
+- 不恢复 A/T Pose、运行时骨骼动画、统一换绑、Quad 硬门、换头或旧袖面修补；不消费 Tripo credits。
+
+## 验证
+
+- 合同逐项映射双路线共同门、四视图任务、Tripo 原包、Blender 候选与 Unity 样例，且没有把规则职责交给视觉资产。
+
+## 完成条件
+
+- 合同能够唯一约束下一张苻渊战斗姿态四视图任务，并在同一状态事件解锁该卡。
+
+## 停止条件
+
+- 关键姿态、视角、尺度、底座接口或表现语义仍需要猜测，或合同只有恢复骨骼动画才能成立时停止。

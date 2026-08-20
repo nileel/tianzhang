@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01"
   ],
-  "stateReason": "2026-08-17：负责人已通过双结构路线设计；本卡只消费 STRUCTURE-COMPARE-01 指定的唯一胜出工作文件。两条路线尚未实施和比较，当前没有可消费候选，继续 blocked。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；双结构返修候选不存在，本卡不再调度或接受新补丁。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

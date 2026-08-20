@@ -1,0 +1,54 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01",
+  "title": "苻渊静态 3D 棋子新战斗姿态四视图",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["D-CHAR-STATIC-CHESS-CONTRACT-01"],
+  "stateReason": "等待静态 3D 生产合同冻结自然战斗定姿和四视图硬门；不得复用现有立绘姿势。",
+  "expectedPaths": [
+    "assets/generated-character-art/README.md",
+    "assets/generated-character-art/fuyuan-static-chess-battle-pose/fuyuan_static_chess_fourview.png",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt",
+    "开发管理/任务归档/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 · 苻渊静态 3D 棋子新战斗姿态四视图
+
+## 来源与当前边界
+
+- 为静态 3D 路线重新生产同一自然战斗定姿的前／左／右／后输入；现有立绘只提供身份、服饰和配色参考。
+
+## 必查范围
+
+- 静态 3D 合同、角色立绘 README、苻渊直接事实、批准身份参考与历史四图一致性失败证据。
+
+## 实施范围
+
+- 生成并人工检查同一战斗定姿四图；固定脸部身份、发型、服饰结构、宽袖收束、持物、腰饰数量和背面结构。
+
+## 禁止项
+
+- 不复用旧立绘姿势，不生成 A/T Pose，不操作 Tripo，不用修图掩盖四图结构矛盾。
+
+## 验证
+
+- 四图角色、姿势、服饰、持物、腰饰和背面结构逐项一致；固定镜头下六向轮廓可读。
+
+## 完成条件
+
+- 形成唯一批准的四图输入集与哈希；只记录下游 Tripo 卡仍需新的 credits 授权，不自动解冻或消费。
+
+## 停止条件
+
+- 脸部或服饰身份漂移、四图姿势／结构不一致，或只有逐图结构重画才能勉强对齐时停止。

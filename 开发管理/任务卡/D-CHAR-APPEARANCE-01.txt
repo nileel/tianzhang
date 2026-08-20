@@ -9,8 +9,8 @@
   "domain": "data",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["U-SHIJIAHOU-3D-PROTO-01"],
-  "stateReason": "等待玩家与石甲兽技术样例通过，避免数据契约锁定未经验证的资源形状",
+  "blockedBy": ["A-CHAR-BATTLE-VISUAL-DIRECTION-01"],
+  "stateReason": "2026-08-21：保留稳定外观 ID、目录与存档职责；等待静态 3D／2D 战场角色方向确定，避免提前锁定资源形状。",
   "expectedPaths": [
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
@@ -24,7 +24,8 @@
 
 ## 来源与当前边界
 
-- 为已验证角色资源建立最小外观目录、组装、立绘合成与保存闭环，不生产完整创角内容。
+- 为已验证角色资源建立最小外观目录、组装、UI 立绘合成与保存闭环，不生产完整创角内容。
+- 战场角色素材由新双路线各自重新生产；现有 UI 立绘及其姿势不得直接充当战场角色。
 
 ## 必查范围
 

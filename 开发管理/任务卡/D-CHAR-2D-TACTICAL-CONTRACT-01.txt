@@ -1,0 +1,54 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-2D-TACTICAL-CONTRACT-01",
+  "title": "2D 六向战术角色生产合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-21 用户批准双路线评估；本卡是 2D 线首个原子叶子，只冻结新战斗姿态六向精灵合同。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-21-2d-tactical-character-production-contract.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-2D-TACTICAL-CONTRACT-01.txt",
+    "开发管理/任务归档/D-CHAR-2D-TACTICAL-CONTRACT-01.txt",
+    "开发管理/任务卡/A-CHAR-2D-FUYUAN-SPRITE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-2D-TACTICAL-CONTRACT-01 · 2D 六向战术角色生产合同
+
+## 来源与当前边界
+
+- 只把获批双路线设计展开为可生产、可验证的 2D 战术精灵合同，不生成图片或修改 Unity。
+
+## 必查范围
+
+- 双路线设计全文；现有角色身份与配色事实；六向、固定镜头、世界尺度和测试台；现有 UI 立绘的用途边界。
+
+## 实施范围
+
+- 冻结新战斗姿态、斜俯视透视、六向、画布与像素密度、脚底锚点、遮挡、宽袖／持物轮廓、色彩、有限帧边界和 Unity 取证矩阵。
+- 明确现有立绘不得缩小或裁切为战术精灵。
+
+## 禁止项
+
+- 不生产完整角色批次，不修改 UI 立绘，不减少方向，不把不同角色的逐图例外写成合同。
+
+## 验证
+
+- 合同逐项映射六向样张、Unity 样例和共同比较矩阵，并与战斗规则所有权隔离。
+
+## 完成条件
+
+- 合同能够唯一约束下一张苻渊六向战术精灵任务，并在同一状态事件解锁该卡。
+
+## 停止条件
+
+- 关键透视、锚点、方向、输出规格或表现语义仍需猜测，或只有复用旧姿势才能成立时停止。

@@ -1,0 +1,54 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-2D-FUYUAN-SPRITE-01",
+  "title": "苻渊新战斗姿态六向 2D 精灵样张",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["D-CHAR-2D-TACTICAL-CONTRACT-01"],
+  "stateReason": "等待 2D 战术合同冻结斜俯视姿态、六向、锚点和输出规格；不得复用现有立绘姿势。",
+  "expectedPaths": [
+    "assets/generated-character-art/README.md",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_six_direction.png",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-2D-FUYUAN-SPRITE-01.txt",
+    "开发管理/任务归档/A-CHAR-2D-FUYUAN-SPRITE-01.txt",
+    "开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-2D-FUYUAN-SPRITE-01 · 苻渊新战斗姿态六向 2D 精灵样张
+
+## 来源与当前边界
+
+- 重新绘制一个适配固定斜俯视战场的苻渊六向战术样张；现有立绘只提供身份、服饰和配色参考。
+
+## 必查范围
+
+- 2D 战术合同、角色立绘 README、苻渊直接事实、批准身份参考和六向测试台。
+
+## 实施范围
+
+- 生成并统一清理六向图；固定姿态、透视、比例、脚底锚点、宽袖、持物、腰饰、边缘和透明背景。
+
+## 禁止项
+
+- 不缩放／裁切现有立绘，不减少六向，不生产完整角色或动作批次，不写 Unity。
+
+## 验证
+
+- 六向身份、服饰、姿态、光向、比例、锚点和轮廓一致；固定战术尺寸下脸部身份与主要装备仍可辨。
+
+## 完成条件
+
+- 形成唯一六向精灵样张、源文件、输出文件和固定对比图，解锁 Unity 样例。
+
+## 停止条件
+
+- 六向身份／服饰漂移、透视不统一、锚点无法稳定，或必须逐方向重画结构才能成立时停止。

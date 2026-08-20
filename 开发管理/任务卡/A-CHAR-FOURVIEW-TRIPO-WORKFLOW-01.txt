@@ -8,7 +8,7 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A",
@@ -17,7 +17,7 @@
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D",
     "A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E"
   ],
-  "stateReason": "2026-08-17：负责人明确本组自动化只有在现有美术资产管线通过资源 QA 与 Unity 技术验收后才有意义；父项及五张子卡统一降为 P2，并以 A-CHAR-TRIPO-STRICT-R2-UNITY-01 为共同闸门。父项只保留汇总状态，不进入队列。",
+  "stateReason": "2026-08-21：用户批准冻结旧四视图到 Tripo 绑定动画工作流；父项与 01A～01E 均不得调度、消费 credits 或恢复自动化。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-17-character-portrait-fourview-tripo-static-model-workflow-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",

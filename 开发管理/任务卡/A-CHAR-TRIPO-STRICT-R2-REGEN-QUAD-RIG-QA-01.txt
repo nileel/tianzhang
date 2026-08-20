@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01"
   ],
-  "stateReason": "2026-08-17：等待四边面候选静态结构门；静态失败时本卡只记录按门未执行，静态通过时才统一换绑和九视角。",
+  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；四边面统一换绑与九视角动作 QA 不再调度。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

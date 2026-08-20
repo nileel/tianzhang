@@ -1,0 +1,54 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01",
+  "title": "苻渊静态棋子 Tripo 原包生成",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "frozen",
+  "blockedBy": ["A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01"],
+  "stateReason": "2026-08-21 已建立但冻结；四视图通过后仍须用户对唯一一次 Tripo credits 消费另行明确授权，未授权不得发起任务。",
+  "expectedPaths": [
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx",
+    "开发管理/苻渊静态棋子Tripo生成记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt",
+    "开发管理/任务归档/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 · 苻渊静态棋子 Tripo 原包生成
+
+## 来源与当前边界
+
+- 只使用批准的新战斗姿态四视图生成一个无绑定静态模型原包；本卡不启动 Blender。
+
+## 必查范围
+
+- 静态 3D 合同、批准四图及哈希、用户当次 credits 授权、Tripo 实际设置与输出包。
+
+## 实施范围
+
+- 发起唯一平台任务，记录任务 ID、实际设置、credits、原始下载包和 SHA-256；在平台静态门检查身份、姿势、结构和可见贴图污染。
+
+## 禁止项
+
+- 未授权不得消费；不自动绑定、不购买额外服务、不追加生成、不启动 Blender、不覆盖历史 strict-round 资产。
+
+## 验证
+
+- 唯一任务、输入哈希、设置、credits、原包、哈希和平台静态证据完整。
+
+## 完成条件
+
+- 唯一原包通过平台静态门并冻结，或按固定门失败关闭；只有通过时解锁 Blender 卡。
+
+## 停止条件
+
+- 缺授权、身份／服饰／姿态漂移、明显手发烘焙污染、输出损坏或需要第二次生成时立即停止。
