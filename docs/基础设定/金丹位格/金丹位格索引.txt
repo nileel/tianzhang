@@ -104,7 +104,7 @@
 > 注（2026-08-07 本批次）：灵识道路 3 个初始具体位置（`JD_SixConsciousness_Spirit_SOURCE`、`JD_SixConsciousness_Spirit_TRANSFORM01`、`JD_SixConsciousness_Spirit_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-07 本批次）：魂识道路 3 个初始具体位置（`JD_SixConsciousness_Soul_SOURCE`、`JD_SixConsciousness_Soul_TRANSFORM01`、`JD_SixConsciousness_Soul_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：形识道路 3 个初始具体位置（`JD_SixConsciousness_Form_SOURCE`、`JD_SixConsciousness_Form_TRANSFORM01`、`JD_SixConsciousness_Form_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
-> 注（2026-08-19 六识更名迁移）：见识→观识（`ROAD_SIGHT`→`ROAD_OBSERVE`）、息识→灵识（`ROAD_BREATH`→`ROAD_SPIRIT`）、食识→魂识（`ROAD_INGEST`→`ROAD_SOUL`，席位改名：百味玄关→泥丸玄宫、化津炉→渡魂津、谷神场→幽明原）、身识→形识（`ROAD_BODY`→`ROAD_FORM`）；12 个席位的旧 `positionId`、旧席位名与旧 `effect_id` 记录于 `开发管理/C-LORE-01-旧口径迁移映射表.txt`，存档与引用按 §三.5 处理。
+> 注（2026-08-19 六识更名迁移）：见识→观识（`ROAD_SIGHT`→`ROAD_OBSERVE`）、息识→灵识（`ROAD_BREATH`→`ROAD_SPIRIT`）、食识→魂识（`ROAD_INGEST`→`ROAD_SOUL`，席位改名：百味玄关→泥丸玄宫、化津炉→渡魂津、谷神场→幽明原）、身识→形识（`ROAD_BODY`→`ROAD_FORM`）；12 个席位的旧 `positionId`、旧席位名与旧 `effect_id` 记录于 `开发管理/C-LORE-01-旧口径迁移映射表.txt`，存档与引用按该表 §八「十二个改名 positionId 确定性迁移策略」与「退役、合并与重定义效果读档策略」处理。
 > 注（2026-08-09 返工后）：意识道路 3 个初始具体位置（`JD_SixConsciousness_Action_SOURCE`、`JD_SixConsciousness_Action_TRANSFORM01`、`JD_SixConsciousness_Action_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-09 返工后）：阴道路 3 个初始具体位置（`JD_YinYang_Yin_SOURCE`、`JD_YinYang_Yin_TRANSFORM01`、`JD_YinYang_Yin_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：阳道路 3 个初始具体位置（`JD_YinYang_Yang_SOURCE`、`JD_YinYang_Yang_TRANSFORM01`、`JD_YinYang_Yang_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
