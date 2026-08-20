@@ -9,6 +9,7 @@
 - `dialogue-transparent/`：无题字、无背景的透明 PNG 对话立绘与提示词。
 - `profile-wide/`：PC 16:9 人物介绍分层资产、统一风格提示词与静态合成预览。
 - `model-preview/`：依据批准立绘生成的运行时 3D 模型效果演示；只用于美术方向评审，不作为 Unity 正式模型资源。
+- `fuyuan-static-chess-battle-pose/`：苻渊静态 3D 棋子路线的同定姿前／左／右／后输入与无文字联系表；只供下一阶段在获单独 credits 授权后使用，不是 Unity 资源或旧绑定路线输入。
 
 ## 生成流程
 

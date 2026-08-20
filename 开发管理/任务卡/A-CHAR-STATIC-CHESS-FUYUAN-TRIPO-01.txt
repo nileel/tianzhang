@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "frozen",
-  "blockedBy": ["A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01"],
-  "stateReason": "2026-08-21 已建立但冻结；四视图通过后仍须用户对唯一一次 Tripo credits 消费另行明确授权，未授权不得发起任务。",
+  "blockedBy": [],
+  "stateReason": "2026-08-21：A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 已完成并归档，批准的四视图及哈希已固定；仍须负责人对唯一一次 Tripo credits 消费另行明确授权，未授权不得发起任务、解冻或入队。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx",
     "开发管理/苻渊静态棋子Tripo生成记录.txt",
