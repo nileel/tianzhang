@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-21 用户批准双路线评估；本卡是 2D 线首个原子叶子，只冻结新战斗姿态六向精灵合同。",
+  "stateReason": "2026-08-21：已冻结苻渊 2D 战术精灵的新斜俯视战斗姿态、六向映射、画布与像素密度、脚底锚点、遮挡、宽袖／空手轮廓、色彩、有限帧边界和 Unity 取证矩阵；同一状态事件解锁 A-CHAR-2D-FUYUAN-SPRITE-01。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-21-2d-tactical-character-production-contract.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -52,3 +52,9 @@
 ## 停止条件
 
 - 关键透视、锚点、方向、输出规格或表现语义仍需猜测，或只有复用旧姿势才能成立时停止。
+
+## 完成记录
+
+- `docs/superpowers/specs/2026-08-21-2d-tactical-character-production-contract.md` 已将苻渊试制线的身份、新斜俯视姿态、六向映射、文件与像素合同、脚底锚点、透明遮挡、有限帧边界、规则隔离和 QA 失败关闭冻结为单一合同。
+- 该合同要求同一 3×2 源图无损分出六个 768×768 RGBA 方向图，并以固定联系表、提示词、分槽坐标和 SHA-256 留存可复核来源；UI 立绘不得作为素材或姿态来源。
+- `A-CHAR-2D-FUYUAN-SPRITE-01` 已同步转为 ready 并插入队列；`U-CHAR-2D-TACTICAL-PROTO-01` 仍保持 blocked，只能消费通过该样张 QA 的唯一输入。

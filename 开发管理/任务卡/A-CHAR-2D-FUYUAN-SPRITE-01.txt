@@ -8,12 +8,20 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["D-CHAR-2D-TACTICAL-CONTRACT-01"],
-  "stateReason": "等待 2D 战术合同冻结斜俯视姿态、六向、锚点和输出规格；不得复用现有立绘姿势。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-21：2D 战术合同已冻结新斜俯视姿态、六向、画布、锚点、遮挡和有限帧边界；本卡只生产该合同规定的唯一苻渊六向样张，不得复用 UI 立绘姿势。",
   "expectedPaths": [
     "assets/generated-character-art/README.md",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_six_direction_source.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_0.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_1.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_2.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_3.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_4.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_5.png",
     "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_six_direction.png",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/prompts.md",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-2D-FUYUAN-SPRITE-01.txt",
@@ -27,7 +35,7 @@
 
 ## 来源与当前边界
 
-- 重新绘制一个适配固定斜俯视战场的苻渊六向战术样张；现有立绘只提供身份、服饰和配色参考。
+- 重新绘制一个适配固定斜俯视战场的苻渊六向战术样张；`docs/superpowers/specs/2026-08-21-2d-tactical-character-production-contract.md` 是姿态、方向、文件、画布、脚底锚点、遮挡与有限帧边界的唯一合同。现有立绘只提供身份、服饰和配色参考。
 
 ## 必查范围
 
@@ -35,20 +43,21 @@
 
 ## 实施范围
 
-- 生成并统一清理六向图；固定姿态、透视、比例、脚底锚点、宽袖、持物、腰饰、边缘和透明背景。
+- 只生成合同 §3.1 指定的一张 3×2 来源图、六张 768×768 RGBA 输出图、固定联系表和 `prompts.md`；固定新斜俯视姿态、比例、脚底锚点、宽袖、空手轮廓、腰饰、边缘和透明背景。
+- 六槽只可从同一来源图无损分出并统一抠图；在 `prompts.md` 记录实际完整提示词、批准身份参考与 SHA-256、分槽坐标、方向映射及全部输出 SHA-256。
 
 ## 禁止项
 
-- 不缩放／裁切现有立绘，不减少六向，不生产完整角色或动作批次，不写 Unity。
+- 不缩放／裁切现有立绘，不减少六向，不生产完整角色或动作批次，不写 Unity；不翻转、镜像、逐方向修图或以私有缩放／偏移掩盖锚点问题。
 
 ## 验证
 
-- 六向身份、服饰、姿态、光向、比例、锚点和轮廓一致；固定战术尺寸下脸部身份与主要装备仍可辨。
+- 按合同 §3、§4、§5 检查六向身份、服饰、新姿态、固定俯视、比例、512 PPU、脚底锚点、透明 alpha、宽袖／空手轮廓和同一来源；固定战术尺寸下脸部身份与主要服饰仍可辨。Unity 六向、遮挡和事件证据属于下游样例，不在本卡伪报。
 
 ## 完成条件
 
-- 形成唯一六向精灵样张、源文件、输出文件和固定对比图，解锁 Unity 样例。
+- 形成唯一合同规格的六向精灵源图、六张输出图、固定联系表和提示词／哈希记录，解锁 Unity 样例。
 
 ## 停止条件
 
-- 六向身份／服饰漂移、透视不统一、锚点无法稳定，或必须逐方向重画结构才能成立时停止。
+- 六向身份／服饰漂移、固定俯视不统一、锚点无法稳定、透明遮挡边缘不干净，或必须逐方向重画结构才能成立时停止。
