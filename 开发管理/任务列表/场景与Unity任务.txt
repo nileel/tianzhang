@@ -19,7 +19,7 @@
 | A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | P1 | codex | 冻结 | — | 苻渊静态棋子 Tripo 原包生成 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt |
 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | P1 | codex | 阻塞 | A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | 苻渊静态棋子 Blender 候选验证 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt |
 | U-CHAR-STATIC-CHESS-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | 静态 3D 棋子 Unity 战术样例 | 开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt |
-| U-CHAR-2D-TACTICAL-PROTO-01 | P1 | codex | 已排队 | — | 2D 六向战术角色 Unity 样例 | 开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt |
+| U-CHAR-2D-TACTICAL-PROTO-01 | P1 | codex | 阻塞 | — | 2D 六向战术角色 Unity 样例 | 开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt |
 | A-CHAR-BATTLE-VISUAL-COMPARE-01 | P1 | codex | 阻塞 | U-CHAR-STATIC-CHESS-PROTO-01、U-CHAR-2D-TACTICAL-PROTO-01 | 静态 3D 棋子／2D 战术精灵固定比较 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
