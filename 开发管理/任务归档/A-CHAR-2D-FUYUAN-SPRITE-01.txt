@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-21：2D 战术合同已冻结新斜俯视姿态、六向、画布、锚点、遮挡和有限帧边界；本卡只生产该合同规定的唯一苻渊六向样张，不得复用 UI 立绘姿势。",
+  "stateReason": "2026-08-21：已交付合同规定的唯一苻渊六向 2D 战术样张、绿幕来源图、六张 RGBA 分槽、固定联系表与提示词／哈希；同一状态事件解除 U-CHAR-2D-TACTICAL-PROTO-01 的唯一前置。",
   "expectedPaths": [
     "assets/generated-character-art/README.md",
     "assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_six_direction_source.png",
@@ -61,3 +61,10 @@
 ## 停止条件
 
 - 六向身份／服饰漂移、固定俯视不统一、锚点无法稳定、透明遮挡边缘不干净，或必须逐方向重画结构才能成立时停止。
+
+## 完成记录
+
+- 已以批准的苻渊身份参考和直接角色事实生成唯一无文字 3×2 战术来源图，并固定为 `2304×1536` 纯绿幕来源；六个输出按合同槽位从同一来源分出，均为 `768×768` RGBA。
+- `prompts.md` 记录实际完整提示词、两张批准身份参考与 SHA-256、来源／六槽／联系表 SHA-256、槽位坐标、方向映射、512 PPU／pivot 合同与人工 QA。
+- 六槽四角透明，非透明可见范围固定为 `y=96..623`，即 `528 px` 高；样张没有复用或裁切 UI 立绘、镜像、逐方向重画、额外动作帧或 Unity 写入。
+- `U-CHAR-2D-TACTICAL-PROTO-01` 已在同一状态事件移除本卡的唯一具名前置并转为 ready；其 Unity 六向、遮挡和事件取证仍由下游卡独立完成。

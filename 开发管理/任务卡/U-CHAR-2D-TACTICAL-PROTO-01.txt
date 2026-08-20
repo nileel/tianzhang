@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-2D-FUYUAN-SPRITE-01"],
-  "stateReason": "等待唯一六向 2D 精灵样张通过；只允许在既有六向技术测试台建立表现样例。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-21：唯一苻渊六向 2D 战术精灵样张已完成并提供同一来源的六张 RGBA 输入；可只在既有六向技术测试台建立表现样例。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
