@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-17：源结构与袖骨消融两张前置诊断均已完成；袖骨判定无实质贡献，本卡已解锁。只提交一次 H3.1 私有四边面多视图生成，新增 Tripo 消费必须低于 100 credits。",
+  "stateReason": "2026-08-20：唯一 H3.1 私有四边面多视图任务 7184736a-1bc8-493f-be84-8ea6597e4b51 已消耗 45 credits，输出 Quad 28584 面／28625 顶点；平台静态门因脸部身份明显漂移及衣料出现手和头发纹理污染失败，已按停止条件完成且未形成候选，不重试、不下载、不绑定。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -65,3 +65,12 @@
 ## 停止条件
 
 - 页面参数、价格、扣费、任务状态或输入映射不明，实际面数超范围，或身份／服装／腰饰明显漂移时停止，不重试。
+
+## 完成结果
+
+- 2026-08-20 只提交一次私有 H3.1 多视图任务 `7184736a-1bc8-493f-be84-8ea6597e4b51`；页面为 `https://studio.tripo3d.ai/workspace/generate/7184736a-1bc8-493f-be84-8ea6597e4b51`。
+- 余额由 `3000` 变为 `2955`，余额差与页面显示价格均为 `45 credits`；累计新增消费低于 `100 credits`。
+- 输出为 `Quad`、`28584` 面、`28625` 顶点，面数门通过；输入复制件哈希与批准图一致，槽位按前／脸朝左／脸朝右／后提交。
+- 平台四视图静态门失败：生成脸由批准图的窄长、锐利、对称纸偶脸漂移为宽圆、下垂、写实化老年脸，眉眼、面中部、口角与下颌身份均明显变化；衣服纹理还错误烘焙／投射出手和头发印迹，黑金服装与纹样合同失败。
+- 未使用免费或付费重试，未下载、绑定、导出、启动 Blender 或写入 Unity；本卡没有形成可进入原包取得卡的平台候选，下游不得解锁。
+- 记录见 `开发管理/苻渊Tripo严格轮二四边面重生成记录.txt`；平台四视图证据见 `assets/source/characters/platform-evaluation/tripo/strict-round-02-quad-eval-01/evidence/platform-static-contact-sheet.png`。
