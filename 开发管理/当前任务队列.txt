@@ -8,5 +8,5 @@
 | D-CHAR-STATIC-CHESS-CONTRACT-01 | codex_execute | codex | P1 | content | design | 静态 3D 棋子角色生产合同 | 开发管理/任务卡/D-CHAR-STATIC-CHESS-CONTRACT-01.txt |
 | D-CHAR-2D-TACTICAL-CONTRACT-01 | codex_execute | codex | P1 | content | design | 2D 六向战术角色生产合同 | 开发管理/任务卡/D-CHAR-2D-TACTICAL-CONTRACT-01.txt |
 | C-JD-SIXROAD-RENAME-01 | codex_review | codex | P2 | content | migration | 六识道路更名与重定位（闻识保留） | 开发管理/任务卡/C-JD-SIXROAD-RENAME-01.txt |
-| C-STORY-WM-05B | external_execute | deepseek | P2 | content | design | 玄荒新路天才人物志扩写与孝文帝历史锚点修订 | 开发管理/任务卡/C-STORY-WM-05B.txt |
+| C-STORY-WM-05B | codex_review | codex | P2 | content | design | 玄荒新路天才人物志扩写与孝文帝历史锚点修订 | 开发管理/任务卡/C-STORY-WM-05B.txt |
 | C-SECT-ALIGN-01C | external_execute | deepseek | P2 | content | migration | 江左陇西两宗与小桩扫描对齐（太一道庭、玉清崖及全部小桩） | 开发管理/任务卡/C-SECT-ALIGN-01C.txt |

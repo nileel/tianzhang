@@ -4,20 +4,21 @@
   "id": "C-STORY-WM-05B",
   "title": "玄荒新路天才人物志扩写与孝文帝历史锚点修订",
   "priority": "P2",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "content",
   "stage": "design",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-21 用户明确解除冻结并授权 DeepSeek 开始执行；本卡无具名前置，业务路径与战场角色静态 3D／2D 双路线独立，完成后仍须 Codex 独立复审。⚠️ 已修改/未审核",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "docs/剧情/重要NPC/玄荒新路天才.txt",
     "开发管理/任务卡/C-STORY-WM-05B.txt",
     "开发管理/任务归档/C-STORY-WM-05B.txt",
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
-    "开发管理/AI合作沟通.txt"
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
 }
