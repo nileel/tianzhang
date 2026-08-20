@@ -15,8 +15,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-DIRECTION-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-COMPARE-01 | 战场角色静态 3D／2D 双路线选择父任务 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt |
-| D-CHAR-STATIC-CHESS-CONTRACT-01 | P1 | codex | 已排队 | — | 静态 3D 棋子角色生产合同 | 开发管理/任务卡/D-CHAR-STATIC-CHESS-CONTRACT-01.txt |
-| A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 | P1 | codex | 阻塞 | D-CHAR-STATIC-CHESS-CONTRACT-01 | 苻渊静态 3D 棋子新战斗姿态四视图 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt |
+| A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 | P1 | codex | 已排队 | — | 苻渊静态 3D 棋子新战斗姿态四视图 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt |
 | A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | P1 | codex | 冻结 | A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 | 苻渊静态棋子 Tripo 原包生成 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt |
 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | P1 | codex | 阻塞 | A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | 苻渊静态棋子 Blender 候选验证 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt |
 | U-CHAR-STATIC-CHESS-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | 静态 3D 棋子 Unity 战术样例 | 开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt |

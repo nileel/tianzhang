@@ -8,12 +8,17 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["D-CHAR-STATIC-CHESS-CONTRACT-01"],
-  "stateReason": "等待静态 3D 生产合同冻结自然战斗定姿和四视图硬门；不得复用现有立绘姿势。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-21：D-CHAR-STATIC-CHESS-CONTRACT-01 已完成并冻结自然战斗定姿、四槽命名、静态尺度、底座接口和根节点语义；现可只生产新的苻渊战斗姿态四视图，Tripo credits 仍未授权。",
   "expectedPaths": [
     "assets/generated-character-art/README.md",
+    "assets/generated-character-art/fuyuan-static-chess-battle-pose/fuyuan_static_chess_front.png",
+    "assets/generated-character-art/fuyuan-static-chess-battle-pose/fuyuan_static_chess_face-left-side.png",
+    "assets/generated-character-art/fuyuan-static-chess-battle-pose/fuyuan_static_chess_face-right-side.png",
+    "assets/generated-character-art/fuyuan-static-chess-battle-pose/fuyuan_static_chess_back.png",
     "assets/generated-character-art/fuyuan-static-chess-battle-pose/fuyuan_static_chess_fourview.png",
+    "assets/generated-character-art/fuyuan-static-chess-battle-pose/prompts.md",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01.txt",
@@ -27,7 +32,7 @@
 
 ## 来源与当前边界
 
-- 为静态 3D 路线重新生产同一自然战斗定姿的前／左／右／后输入；现有立绘只提供身份、服饰和配色参考。
+- 为静态 3D 路线重新生产同一自然战斗定姿的前／左／右／后输入；现有立绘只提供身份、服饰和配色参考。所有姿态、槽位、尺度、底座和根节点约束以 `docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md` 为唯一生产合同。
 
 ## 必查范围
 
@@ -35,7 +40,7 @@
 
 ## 实施范围
 
-- 生成并人工检查同一战斗定姿四图；固定脸部身份、发型、服饰结构、宽袖收束、持物、腰饰数量和背面结构。
+- 生成并人工检查合同 §3.1 指定的四张槽位图、联系表与 `prompts.md`；固定苻渊的战斗定姿、脸部身份、发型、服饰结构、宽袖收束、空手轮廓、腰饰数量和背面结构。
 
 ## 禁止项
 
@@ -43,11 +48,11 @@
 
 ## 验证
 
-- 四图角色、姿势、服饰、持物、腰饰和背面结构逐项一致；固定镜头下六向轮廓可读。
+- 按合同 §3.2 与 §7 的四视图行逐项确认角色、姿势、服饰、空手轮廓、腰饰和背面结构一致；记录四槽与联系表 SHA-256，并在固定镜头下核对六向轮廓可读。
 
 ## 完成条件
 
-- 形成唯一批准的四图输入集与哈希；只记录下游 Tripo 卡仍需新的 credits 授权，不自动解冻或消费。
+- 形成唯一批准的四槽 PNG、联系表、提示词来源与哈希；只记录下游 Tripo 卡仍需新的 credits 授权，不自动解冻或消费。
 
 ## 停止条件
 

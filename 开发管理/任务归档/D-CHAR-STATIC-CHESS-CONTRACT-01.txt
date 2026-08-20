@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-21 用户批准双路线评估；本卡是静态 3D 线首个原子叶子，只冻结新战斗定姿与无骨骼运行时生产合同。",
+  "stateReason": "2026-08-21：已冻结苻渊静态 3D 棋子的自然战斗定姿、四视图硬门、尺度、独立修炼底座接口、六向朝向、材质边界、根节点表现语义和分阶段 QA 矩阵；同一状态事件解锁 A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -52,3 +52,9 @@
 ## 停止条件
 
 - 关键姿态、视角、尺度、底座接口或表现语义仍需要猜测，或合同只有恢复骨骼动画才能成立时停止。
+
+## 完成记录
+
+- `docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md` 已将静态试制线的身份、定姿、四槽、尺度、底座、材质、六向、根节点表现和 QA 失败关闭冻结为单一合同。
+- 四槽输出改为独立 `front / face-left-side / face-right-side / back` PNG，并要求联系表和提示词／哈希记录；这使下游 Tripo 输入可复核，但没有解除其 credits 冻结。
+- `A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01` 已同步转为 ready 并插入队列；其后续 Tripo 卡仍保持 frozen。
