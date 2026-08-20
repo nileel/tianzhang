@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-19 用户拍板六识更名方案并解除本卡冻结，明确指派 DeepSeek V4 Pro 0813 直接执行（不改变原 owner=codex 归属与独立复审流程）。2026-08-20 执行完成：道路名/road_id/effect_id 五层一致，12 席位改名迁移与 3 闻识席位微调完成，映射记录已追加 C-LORE-01。全部修改标「⚠️ 已修改/未审核」，转入待复审，等待 Codex 独立复审。⚠️ 已修改/未审核",
+  "stateReason": "2026-08-20 Codex 独立复审正式提交 c49c590739ca44fbe26ff27ab8a8b204864942d4：结论为部分通过，仍需返工。道路、效果、席位、索引与规则引用的主体迁移一致；但 C-HS-YY-JD-01G～01J 仍有空白或旧口径，且 12 个 positionId 的存档与进行中实例迁移没有确定策略。任务已转 blocked 并移出队列，等待负责人选择返工执行方；详细证据见未通过审核清单。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/基础设定/元婴锚点与金丹位格设定.txt",
     "docs/基础设定/元婴锚点与金丹位格矩阵.txt",
