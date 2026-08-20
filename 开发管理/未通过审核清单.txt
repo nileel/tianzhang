@@ -92,4 +92,4 @@
 - 管理卡返工：`C-HS-YY-JD-01G` 的闻识根本权限和源位直接操作为空；`C-HS-YY-JD-01I` 仍保留食识的吸收／代谢边界、源位理念和临时代号；`C-HS-YY-JD-01H`、`01J` 仍有旧息识／身识措辞。五张下游卡须以现行矩阵逐项同步，避免返工时重新产出旧口径。
 - 迁移返工：12 个改名 `positionId` 必须分别给出既有占据、候选证位进度、当前装配、持续战棋实例、主场景工程与山河实例的确定处理；不得继续以“按索引规则处理”或“重验或冻结”互相回指。尤其须明确 `SIGHT_BLIND`、`INGEST_*` 等退役效果，以及合并或重定义效果的读档、关闭或迁移策略。
 - 验证：`tools/check-task-cards.ps1`、`tools/check-review-text.ps1 -Paths docs,开发管理` 与提交级 `git diff-tree --check` 通过；未运行 BattleSim、Unity 与 `check-data-chain`，因为本次提交不涉及数值、运行时、CSV 或资产。
-- 状态：任务已设为 `blocked` 并移出 ready 队列，等待负责人选择 DeepSeek 或 Codex 按同一卡返工。
+- 状态：2026-08-20 用户选择 DeepSeek 返工；同一卡已切换为 `external_execute/deepseek/ready` 并重新进入有序队列，返工后仍须由 Codex 独立复审。
