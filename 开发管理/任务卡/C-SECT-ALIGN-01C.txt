@@ -4,13 +4,13 @@
   "id": "C-SECT-ALIGN-01C",
   "title": "江左陇西两宗与小桩扫描对齐（太一道庭、玉清崖及全部小桩）",
   "priority": "P2",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "content",
   "stage": "migration",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-21 用户明确解除冻结并授权 DeepSeek 开始执行；现有事实只要求 01A／01B 等待六识更名，01C 无具名前置且与战场角色双路线业务路径独立。⚠️ 已修改/未审核",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "docs/门派/江左天域/太一道庭.txt",
     "docs/门派/陇西雷域/玉清崖.txt",
@@ -42,7 +42,8 @@
     "开发管理/任务归档/C-SECT-ALIGN-01C.txt",
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
-    "开发管理/AI合作沟通.txt"
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
 }
