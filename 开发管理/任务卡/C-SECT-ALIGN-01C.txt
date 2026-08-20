@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "frozen",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-19 用户确认建立门派对齐卡。当前冻结。⚠️ 已修改/未审核",
+  "stateReason": "2026-08-21 用户明确解除冻结并授权 DeepSeek 开始执行；现有事实只要求 01A／01B 等待六识更名，01C 无具名前置且与战场角色双路线业务路径独立。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/门派/江左天域/太一道庭.txt",
     "docs/门派/陇西雷域/玉清崖.txt",
