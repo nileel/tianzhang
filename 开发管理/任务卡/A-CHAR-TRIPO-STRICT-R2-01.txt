@@ -14,7 +14,7 @@
     "A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01",
     "A-CHAR-TRIPO-STRICT-R2-UNITY-01"
   ],
-  "stateReason": "2026-08-17：源结构与袖骨消融两张只读诊断均已归档；袖骨判定无实质贡献。REGEN-QUAD-01 与 LOCAL-RETOPO-01 现为两张 ready 实施叶子，尚未操作 Tripo、修改模型或写 Unity；父卡等待结构比较、独立 QA 与 Unity 技术验收。",
+  "stateReason": "2026-08-20：LOCAL-RETOPO-01 已证明冻结外边界含 20 个度数为 4 的固定分叉点，无法在不拆点、改固定边或扩大 599 面范围的前提下形成流形补片，已按停止条件完成且未保存候选。REGEN-QUAD-01 仍为独立 ready 路线；父卡继续等待结构比较、独立 QA 与 Unity 技术验收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -77,12 +77,12 @@
 6. `A-CHAR-TRIPO-STRICT-R2-BLENDER-FIX-03`：清除冻结袖面跨区权重后数值与九视角仍失败；已按停止条件完成归档、回滚且未保存候选。
 7. `A-CHAR-TRIPO-STRICT-R2-SOURCE-STRUCTURE-DIAG-01`：未修改主源的袖根、腋下和背侧结构只读诊断；已完成归档，固定 316 核心坏面、599 面一环及 357/377 外边界。
 8. `A-CHAR-TRIPO-STRICT-R2-SLEEVE-RIG-DIAG-01`：只读比较标准动作与内存中归零既有 `Sec_Sleeve_L/R_01/02` 局部附加旋转；已完成归档，判定无实质骨骼贡献。
-9. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01`：使用冻结四视图，单次生成 H3.1 私有 30k 四边面候选；总新增 Tripo 消耗严格小于 100 credits，不得重试；现为 ready 实施叶子。
+9. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01`：使用冻结四视图，单次生成 H3.1 私有 30k 四边面候选；总新增 Tripo 消耗严格小于 100 credits，不得重试；仍为独立 ready 实施叶子。
 10. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01`：只取得第 9 卡唯一任务的原始下载包并冻结哈希。
 11. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01`：在 Blender 隔离副本中检查重生成候选的静态外形、拓扑和 24k～36k 实际面数。
-12. `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01`：只在固定 599 面／483 点／1087 边及 357 点／377 边边界内局部重拓扑；现为 ready 实施叶子。
+12. `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-01`：已完成归档；冻结的 357 点／377 边外边界含 20 个度数为 4 的固定分叉点，必须拆点、改固定边或扩大范围才能闭合，故按停止条件未保存候选。
 13. `A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01`：对静态通过的重生成候选完成项目骨架换绑和固定三动作九视角验证。
-14. `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01`：对局部重拓扑候选完成固定三动作九视角验证。
+14. `A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01`：局部路线没有静态候选；后续只按卡合同形成“静态上游失败、动作 QA 未执行”结论，不得再改拓扑。
 15. `A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01`：独立比较两条结构路线，只形成一个胜者或明确双败。
 16. `A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01`：只消费结构比较选出的唯一冻结工作文件；当前 blocked。
 17. `A-CHAR-TRIPO-STRICT-R2-UNITY-01`：只消费新 QA 通过候选；当前 blocked，未解锁 Unity 技术导入。
