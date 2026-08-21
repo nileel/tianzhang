@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立审核部分通过，天狼部改称与所属玄冥宫当前妖血口径不一致；待同一卡定向返工后复审，详见未通过审核清单。",
   "expectedPaths": [
     "docs/门派/江左天域/太一道庭.txt",
     "docs/门派/陇西雷域/玉清崖.txt",
