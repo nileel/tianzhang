@@ -21,9 +21,9 @@
 | `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_rm.JPEG` | 889,793 | `2E6372057A3863D1DA9C27D54019D3F9F0683C052EF690F473692053B2CB9E06` |
 | `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_roughness.JPEG` | 1,695,352 | `CC48493A8293C775B5F423CA042C8B70F0A228597CD0D3C1B7721A6904A38736` |
 
-## 当前门与状态
+## 2026-08-22 负责人最终确认
 
-- 已证明：负责人报告生成完成；原始 ZIP 非空且可解压；FBX／外部贴图拓扑完整；原包与解压文件哈希已冻结。
-- 尚未证明：Tripo 平台任务 ID、实际模型版本和生成设置、实际 credits、输入四图哈希与平台任务的对应关系，以及负责人按合同检查的正／左右侧／背身份、姿势、袖袍、腰饰和贴图污染静态门。
-- 本轮没有运行 Blender、没有修改 FBX／贴图内容、没有绑定或购买附加服务，也没有写入 `src/Assets/`。
-- 结论：`A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01` 从等待消费授权的 `frozen` 转为等待平台事实和静态门证据的 `blocked`；`A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01` 保持 `blocked`。
+- 负责人明确确认本次静态模型已按批准流程正确生成，并要求不再补充 Tripo 任务 ID、实际模型版本／生成设置、credits 或平台正／左右侧／背截图，直接按通过处理。
+- 该负责人确认作为本卡最终平台静态门结论；已有原始 ZIP、FBX／外部贴图拓扑和 SHA-256 继续作为可复核原包事实，不把未提供的平台字段虚构为已记录。
+- 本卡没有运行 Blender、没有修改 FBX／贴图内容、没有绑定或购买附加服务，也没有写入 `src/Assets/`。
+- 结论：`A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01` 完成归档；`A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01` 解除唯一前置并进入 `ready`。

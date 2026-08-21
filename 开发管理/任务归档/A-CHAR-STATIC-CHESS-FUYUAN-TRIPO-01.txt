@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-21：负责人确认静态模型已生成并交付原始 ZIP；包已按任务路径解压，ZIP SHA-256 为 DB92AD504BFF18CB6CBB5B8866ED1C4B7B5DFDD14EB3FCB8334FE91980708E0，包含 1 个 FBX 与 5 张贴图。当前仍缺 Tripo 任务 ID、实际设置／credits 和平台正／左右侧／背静态门证据，故转为 blocked 且不得启动 Blender。",
+  "stateReason": "2026-08-22：负责人明确确认本次静态模型已按批准流程正确生成，并要求无需补充任务 ID、设置／credits 或平台四向截图，直接按通过处理；原始 ZIP、1 个无绑定 FBX、5 张贴图及 SHA-256 已冻结，本卡完成归档并解锁 Blender 候选任务。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx",
     "开发管理/苻渊静态棋子Tripo生成记录.txt",
@@ -52,3 +52,9 @@
 ## 停止条件
 
 - 缺授权、身份／服饰／姿态漂移、明显手发烘焙污染、输出损坏或需要第二次生成时立即停止。
+
+## 实际完成
+
+- 2026-08-21 已收到并解压原始 ZIP；包内为 1 个无绑定 FBX 与 5 张 JPEG 贴图，ZIP 与各文件 SHA-256 已记录在 `开发管理/苻渊静态棋子Tripo生成记录.txt`。
+- 2026-08-22 负责人明确确认本次模型按批准流程正确生成，并要求不再补充平台任务 ID、参数／credits 或四向截图，直接把该确认作为平台静态门通过结论。
+- 本卡未运行 Blender、未修改 FBX／贴图内容、未绑定、未追加生成，也未写入 `src/Assets/`；下游只消费已冻结的同一原包。
