@@ -93,3 +93,7 @@
 - 迁移返工：12 个改名 `positionId` 必须分别给出既有占据、候选证位进度、当前装配、持续战棋实例、主场景工程与山河实例的确定处理；不得继续以“按索引规则处理”或“重验或冻结”互相回指。尤其须明确 `SIGHT_BLIND`、`INGEST_*` 等退役效果，以及合并或重定义效果的读档、关闭或迁移策略。
 - 验证：`tools/check-task-cards.ps1`、`tools/check-review-text.ps1 -Paths docs,开发管理` 与提交级 `git diff-tree --check` 通过；未运行 BattleSim、Unity 与 `check-data-chain`，因为本次提交不涉及数值、运行时、CSV 或资产。
 - 状态：2026-08-20 DeepSeek V4 Pro 0813 返工完成：五张下游卡与现行矩阵逐项同步；`C-LORE-01-旧口径迁移映射表.txt` §八 新增十二个改名 positionId 六类存档对象确定性迁移策略与退役/合并/重定义效果读档策略。同一卡已切换为 `codex_review/codex/ready` 并重新进入有序队列，待 Codex 独立复审。
+
+- 审核对象：正式提交 `afd7eb68d6d4a101436843121f019d0698df5499`；结论：部分通过，仍需返工。
+- 已解决：`C-HS-YY-JD-01G` 的闻识根本权限和源位直接操作、`C-HS-YY-JD-01H`／`01I`／`01J` 的旧口径已按现行矩阵同步；十二个改名 `positionId` 的六类存档对象与退役、合并、重定义效果已有逐格读档策略，索引注记不再互相回指。
+- 仍需返工：`C-HS-YY-JD-01F` 虽声称无需改动，但其实施范围中 `JD_SixConsciousness_Observe_SOURCE` 的直接规则操作仍只写“观察者能看见、指认和辨识什么”，省略现行 `ROAD_OBSERVE` 矩阵根本权限中的“照见真实与留存影像”。须将该处与现行矩阵完整同步后再复审。
