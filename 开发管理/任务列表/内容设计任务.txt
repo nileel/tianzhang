@@ -91,7 +91,7 @@
 | C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 据点通用称谓、寒暄和任务入口文案表。 | — |
 | C-ECON-01 | P3 | Codex 规划 | 冻结（薄内容切片外） | — | 灵石、丹药、天材地宝、掉落表经济基线。 | — |
 | C-HIGH-01 | P3 | Codex | 冻结（薄内容切片外） | — | 高阶内容按 NPC/资料片/历史说明分类收口。 | — |
-| C-STORY-WM-05B | P2 | codex | 已排队 | — | 玄荒新路天才人物志扩写与孝文帝历史锚点修订 | 开发管理/任务卡/C-STORY-WM-05B.txt |
+| C-STORY-WM-05B | P2 | codex | 阻塞 | — | 玄荒新路天才人物志扩写与孝文帝历史锚点修订 | 开发管理/任务卡/C-STORY-WM-05B.txt |
 | C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | C-STORY-WM-05B | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
 | C-STORY-WM-FUYUAN-01 | P2 | codex | 冻结 | — | 苻渊线收束节拍规划 | 开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt |
 | C-JD-NPC-MECH-01 | P2 | codex | 冻结 | — | 人物志与门派文件金丹位格机制对齐 | 开发管理/任务卡/C-JD-NPC-MECH-01.txt |

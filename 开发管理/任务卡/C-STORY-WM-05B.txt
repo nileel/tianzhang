@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立审核部分通过，仍需统一放任路线的成功承诺并补足叙事层级行动时限；详见未通过审核清单",
   "expectedPaths": [
     "docs/剧情/重要NPC/玄荒新路天才.txt",
     "开发管理/任务卡/C-STORY-WM-05B.txt",

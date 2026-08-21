@@ -5,19 +5,6 @@
 
 ## 当前交接队列
 
-### DSH-C-STORY-WM-05B-0ee459f9 · DeepSeek 自动交接（⚠️ 未审核）
-
-- 方向：任务 C-STORY-WM-05B 的原子正式结果等待 Codex 独立复审。
-- 任务：C-STORY-WM-05B
-- 候选提交：76e5fffb22e89f3aa1ab08bbe79d4cec05adf46f
-- 正式提交：与本交接、pending_review 投影处于同一原子提交。
-- 修改文件：docs/剧情/重要NPC/玄荒新路天才.txt
-- 已验证：check-pending-whitespace.ps1 通过（1 文件无行尾空白）；check-review-text.ps1 -Paths docs,开发管理 通过（905 文件无控制字符）；git diff --check 通过（无空白错误）；commit 脚本内嵌 whitespace 复检与 git diff --cached --check 通过；changedPaths 精确等于 docs/剧情/重要NPC/玄荒新路天才.txt，提交后工作树干净；七项实施范围逐项落档：历史锚点、出身锁定、条件式自辟、主线功能升格、待扩写字段、章节接口三路线、关系限制三条
-- 未验证：未运行 check-data-chain.ps1（本卡仅人物志文本，无 CSV/Unity/数据链路变化）；未运行 BattleSim（无数值/战斗平衡结论）；正式姓名与道号候选未定稿（待 Codex 复核）；具体金丹席位未锁定（须另开 Codex 判断任务）
-- 残留风险：本文仅人物志骨架，姓名/道号、金丹席位、第四章 L1 节拍与三路线状态变量仍待后续任务定稿；谢观微 ch1 预警接线为作者层风险钩，已标注人物自身不可知龙脊封禁真相，但不含可运行验收，最终须由 Codex 独立复审把关。
-- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
-- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
-
 ### DSH-C-SECT-ALIGN-01C-262577de · DeepSeek 自动交接（⚠️ 未审核）
 
 - 方向：任务 C-SECT-ALIGN-01C 的原子正式结果等待 Codex 独立复审。
