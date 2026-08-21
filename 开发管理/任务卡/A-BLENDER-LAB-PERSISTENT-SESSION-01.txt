@@ -1,0 +1,78 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-BLENDER-LAB-PERSISTENT-SESSION-01",
+  "title": "Blender Lab 专用常驻会话",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-22：定时 Codex 子会话已证明 blender_lab MCP 配置、工具枚举与本机扩展安装正常，实际失败点固定为 Blender 未运行、localhost:9876 无插件桥监听。负责人批准使用当前 Windows 用户登录后启动的最小化专用 Blender 5.2 常驻会话；本卡边界与验收已冻结并进入 ready。",
+  "expectedPaths": [
+    "tools/start-blender-lab-persistent-session.ps1",
+    "tools/check-blender-lab-persistent-session.ps1",
+    "开发管理/BlenderLab专用常驻会话验证记录.txt",
+    "开发管理/任务列表/审核与交接任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-BLENDER-LAB-PERSISTENT-SESSION-01.txt",
+    "开发管理/任务归档/A-BLENDER-LAB-PERSISTENT-SESSION-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/审核与交接任务.txt"
+}
+---TASK-BODY---
+# A-BLENDER-LAB-PERSISTENT-SESSION-01 · Blender Lab 专用常驻会话
+
+## 来源与当前边界
+
+- 2026-08-22 的 `A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01` 定时执行中，Codex 子会话能够枚举 `blender_lab` 工具，但对 `get_blendfile_summary_datablocks` 的只读调用无法连接 `localhost:9876`；当时没有 Blender 进程，失败码为 `blender_lab_unavailable`。
+- 本机 `D:\Tools\Blender\5.2.0\blender.exe`、Codex `blender_lab` MCP 配置和 Blender 5.2 用户扩展均已存在；扩展支持非 background Blender 启动后自动开启插件桥。本卡只建立当前 Windows 用户的专用常驻会话，不重新安装 Blender、不修改供应商扩展。
+- 本卡不读取、复制、修改或验证苻渊原包，不创建业务候选，不处理 `assets/source/` 未进入 linked worktree 的独立问题，也不写 Unity。
+
+## 必查范围
+
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 与 `.agents/skills/tianzhang-blender-pipeline/references/tool-routing.md` 的单通道、临时目录和业务验收边界。
+- `开发管理/自动工作流规则.txt` 的 schema 5 隔离、失败停止和禁止自动重试规则；`tools/codex-cli-session.ps1` 的真实定时 Codex 子会话入口。
+- 当前用户 Codex 配置中的 `mcp_servers.blender_lab` 精确段、Blender 5.2 MCP 扩展的启用／自动启动状态，以及 `localhost:9876` 的实时监听者；不得输出配置中的无关值。
+- 当前用户登录启动项、现有 Blender 进程、精确可执行路径和 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\` 临时状态；不得以主工作区路径或窗口标题单独判断进程所有权。
+
+## 负责人批准设计（2026-08-22）
+
+- 使用当前 Windows 用户的计划任务 `TianZhang-BlenderLab-Persistent` 在登录时调用启动脚本，最小化启动 Blender 5.2 专用窗口；固定加载 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\blender-lab-persistent.blend`，由现有 MCP 扩展自动监听 `localhost:9876`。
+- 专用会话把进程 ID、启动时间、可执行路径和专用文件路径记录到 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\service-state.json`；启动与健康检查必须交叉核验这些字段，不得复用、保存、关闭或修改用户手动打开的 Blender。
+- 登录启动项只负责一次启动，不配置失败重启、周期重试或第二实例。专用窗口被关闭、端口被未知进程占用或插件桥未就绪时，后续自动化明确失败并保留原状态。
+- 回退只删除本卡建立的当前用户登录启动项，并在完整身份匹配后关闭本卡拥有的专用进程；不卸载 Blender、MCP 配置或扩展，不删除用户工程。
+
+## 实施范围
+
+- 新增一个 PowerShell 7 启动脚本：只在没有有效专用实例时，以固定 Blender 5.2 路径、固定专用 `.blend`、专用状态文件和最小化窗口启动会话；未知 Blender 或端口占用一律失败关闭。
+- 新增一个只读健康检查脚本：核对专用进程身份、单一 `localhost:9876` 监听所有者、专用 `.blend` 路径和插件桥可连接性；输出不得包含用户工程内容、令牌或无关进程命令行。
+- 建立当前用户计划任务 `TianZhang-BlenderLab-Persistent`，登录触发器的动作只调用上述启动脚本；不使用最高权限、不设置失败重启，记录建立前状态、最终定义和精确回退命令。
+- 用真实 `codex exec` 子会话完成一次 `blender_lab` 场景只读查询，再由 `execute_blender_code` 仅在本卡专用 `D:\Temp\TianZhang-Blender\` 目录写入烟测标记；不得把 MCP 调用成功冒充任何角色资产业务验收。
+- 把进程、端口、登录启动项、子会话工具调用、临时写入和回退证据写入验证记录；完成时归档本卡并维护 backlog 与队列。
+
+## 禁止项
+
+- 不修改 `src/Assets/`、`assets/source/`、现有角色 `.blend`／FBX／贴图或任何用户 Blender 工程。
+- 不改用 `blender_headless_qa`、`blender_run_script`、第三方插件或第二条任意代码执行路线；不补丁化 Codex 或 Blender 供应商文件。
+- 不安装系统服务，不使用管理员权限，不建立机器级启动项，不配置自动重试、崩溃拉起或多个监听端口。
+- 不因发现已有 Blender 进程就关闭、接管或保存它；不能完整证明进程所有权时立即停止。
+
+## 验证
+
+- PowerShell 7 脚本语法、启动前无服务基线、登录启动项定义、一次冷启动和重复调用不产生第二实例。
+- 专用进程的路径、PID、启动时间和专用 `.blend` 一致；`localhost:9876` 只有该进程的插件桥监听，健康检查返回稳定通过。
+- 真实 Codex 子会话能枚举并调用 `blender_lab` 场景只读工具；临时写入烟测只落在 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\`，随后清理烟测标记。
+- 建立前已存在的用户 Blender 进程、窗口和文件在任务前后保持不变；没有用户 Blender 时记录空基线。
+- 运行任务卡、审核文本、待暂存空白、脚本语法与 Git 暂存差异检查；不因本卡运行 Unity、BattleSim 或数据链检查。
+
+## 完成条件
+
+- 当前用户登录后能得到唯一、最小化、可识别且不接管用户工程的 Blender Lab 专用常驻会话；真实定时 Codex 子会话的只读场景查询与限定临时目录写入烟测均通过，登录启动项和回退证据完整。
+
+## 停止条件
+
+- 需要管理员权限、机器级服务、修改供应商插件、接管用户 Blender、headless 替代通道、自动重试层或第二监听实例时停止。
+- 无法唯一绑定端口监听者与专用进程，最小化会话不能完成真实 Codex 子会话烟测，或回退可能关闭／删除用户状态时停止并保留只读证据。
