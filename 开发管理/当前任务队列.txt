@@ -5,5 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| C-SECT-ALIGN-01C | external_execute | deepseek | P2 | content | migration | 江左陇西两宗与小桩扫描对齐（太一道庭、玉清崖及全部小桩） | 开发管理/任务卡/C-SECT-ALIGN-01C.txt |
 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | codex_execute | codex | P1 | unity | verification | 苻渊静态棋子 Blender 候选验证 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt |
 | C-JD-SIXROAD-RENAME-01 | external_execute | deepseek | P2 | content | migration | 六识道路更名与重定位（闻识保留） | 开发管理/任务卡/C-JD-SIXROAD-RENAME-01.txt |
