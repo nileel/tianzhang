@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "frozen",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-21：A-CHAR-STATIC-CHESS-FUYUAN-FOURVIEW-01 已完成并归档，批准的四视图及哈希已固定；仍须负责人对唯一一次 Tripo credits 消费另行明确授权，未授权不得发起任务、解冻或入队。",
+  "stateReason": "2026-08-21：负责人确认静态模型已生成并交付原始 ZIP；包已按任务路径解压，ZIP SHA-256 为 DB92AD504BFF18CB6CBB5B8866ED1C4B7B5DFDD14EB3FCB8334FE91980708E0，包含 1 个 FBX 与 5 张贴图。当前仍缺 Tripo 任务 ID、实际设置／credits 和平台正／左右侧／背静态门证据，故转为 blocked 且不得启动 Blender。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx",
     "开发管理/苻渊静态棋子Tripo生成记录.txt",

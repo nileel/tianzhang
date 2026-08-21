@@ -8,7 +8,7 @@
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
 - `A-CHAR-BLENDER-SETUP-01` 与 `A-CHAR-HUMANOID-RIG-01` 已于 2026-08-15 完成并归档。用户于 2026-08-16 确认 Tripo 会员已开通并终止 Meshy 路线；苻渊旧 Tripo `slot-01` 已完成统一项目骨架换绑和 factory-startup 回读，但历史证明它实际只消费单张正面图。首轮严格四视图因腰饰重复失败，旧换绑与 slot-02／03 独立生成继续冻结。2026-08-17，按前／脸朝左／脸朝右／后的修订输入生成唯一私有任务 `44eac025-f0a1-4479-a21c-2edfc48ce7ed`，消耗 40 credits，输出 11316 三角面／7562 顶点并通过负责人侧向腰饰复核；该结果属于独立 `strict-round-02` 父批次，不是旧三槽评估的 `slot-02`。负责人随后明确授权 20 credits 完成一次人形自动绑定；RAW 子卡已保存基础无动画包与原地行走诊断包并核对哈希。Blender 子卡归档后，资源 QA 以固定正／侧／背九格判定宽袖在 Move／Attack 形成硬折片、尖刺和矩形折框。首轮返修证明 Hand／Sec_Sleeve 跳变可以消除；FIX-02 扩大到袖面与 `Sec_Hem_*`／躯干连接带后仍未通过九视角；FIX-03 再清除冻结袖面内全部 UpperLeg／Shoulder 跨区权重后，仍有 10／10／17 条大于五倍拉伸边，背／侧仍为交叉硬架、多层刀片和大跨度硬板。所有候选均已回滚，主源未保存，权重路线停止。负责人批准的“双结构路线 + 袖骨消融”设计随后完成：源结构诊断固定 316 核心坏面、599 面一环、483 点／1087 边及 357/377 外边界；袖骨消融只减少 18.518519% 阈值边且九视角 0/9 消除问题类别；固定局部重拓扑又因外边界 20 个度数为 4 的分叉点无法在冻结范围内形成流形补片而停止。2026-08-20 唯一 H3.1 私有四图任务 `7184736a-1bc8-493f-be84-8ea6597e4b51` 消耗 45 credits，输出 Quad 28584 面／28625 顶点，但平台静态门因脸部身份明显漂移及衣料出现手／头发纹理污染失败；未重试、未下载、未绑定，双结构路线均未形成候选，下游原包、静态 QA、动作 QA、比较与 Unity 继续阻塞。
-- 2026-08-21 用户批准冻结全部未完成的 Tripo 绑定动画角色链，建立静态 3D 棋子与 2D 六向战术精灵两条对称试制线。两线都必须重新生产适配固定战术镜头的苻渊战斗姿态美术，现有立绘只作身份、服饰和配色参考；静态 3D 的 Tripo 消费卡继续冻结，任何 credits 消费须另行明确授权。
+- 2026-08-21 用户批准冻结全部未完成的 Tripo 绑定动画角色链，建立静态 3D 棋子与 2D 六向战术精灵两条对称试制线。两线都必须重新生产适配固定战术镜头的苻渊战斗姿态美术，现有立绘只作身份、服饰和配色参考。用户随后确认静态棋子模型已生成并交付原始 ZIP；原包已解压并核对 ZIP 哈希与 1 个 FBX／5 张贴图拓扑，但尚缺 Tripo 任务 ID、实际设置／credits 和平台正／左右侧／背静态门证据，因此 Tripo 卡转为阻塞，Blender 卡仍未解锁。
 - 2026-08-21：`D-CHAR-2D-TACTICAL-CONTRACT-01` 已完成，冻结苻渊 2D 新斜俯视战斗姿态、六向映射、文件与像素规格、脚底锚点、透明遮挡、有限帧边界和 Unity 取证矩阵；现有 UI 立绘不得转用为精灵。`A-CHAR-2D-FUYUAN-SPRITE-01` 已完成唯一 3×2 来源图、六张 RGBA 分槽、固定联系表和提示词／哈希；`U-CHAR-2D-TACTICAL-PROTO-01` 已移除其唯一前置并进入队列。
 
 ## 任务
@@ -16,7 +16,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-DIRECTION-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-COMPARE-01 | 战场角色静态 3D／2D 双路线选择父任务 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt |
-| A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | P1 | codex | 冻结 | — | 苻渊静态棋子 Tripo 原包生成 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt |
+| A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | P1 | codex | 阻塞 | — | 苻渊静态棋子 Tripo 原包生成 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01.txt |
 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | P1 | codex | 阻塞 | A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01 | 苻渊静态棋子 Blender 候选验证 | 开发管理/任务卡/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt |
 | U-CHAR-STATIC-CHESS-PROTO-01 | P1 | codex | 阻塞 | A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 | 静态 3D 棋子 Unity 战术样例 | 开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt |
 | U-CHAR-2D-TACTICAL-PROTO-01 | P1 | codex | 阻塞 | — | 2D 六向战术角色 Unity 样例 | 开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt |

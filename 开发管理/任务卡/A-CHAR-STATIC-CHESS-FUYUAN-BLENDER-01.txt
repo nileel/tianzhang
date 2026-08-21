@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": ["A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01"],
-  "stateReason": "等待同一静态 Tripo 原包通过平台门并冻结；不得消费旧换绑或换头现场。",
+  "stateReason": "2026-08-21：同一静态 Tripo 原包已收到并解压，但上游仍缺任务 ID、实际设置／credits 和平台正／左右侧／背静态门证据，尚未完成；本卡继续 blocked，不得提前启动 Blender，也不得消费旧换绑或换头现场。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/working/fuyuan_static_chess_candidate.blend",
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx",

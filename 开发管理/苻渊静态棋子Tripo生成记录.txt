@@ -1,0 +1,29 @@
+# 苻渊静态棋子 Tripo 生成记录
+
+任务：`A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01`
+
+## 2026-08-21 原包接收
+
+- 负责人确认静态棋子模型已生成，并把原始 ZIP 放入 `assets/source/characters/platform-evaluation/tripo/fuyuan_static_chess/fuyuan_static_chess.zip`。
+- 原始 ZIP：6,676,173 字节；SHA-256 `DB92AD504BFF18CB6CBB5B8866ED1C4B7B5DFDD14EB3FCB8334FE91980708E0F`。
+- ZIP 可正常展开，包内只有 1 个顶层 FBX 与同名 `.fbm` 目录中的 5 张 JPEG 贴图；没有第二个 FBX、动画包或独立骨架文件。
+- 已把 FBX 按任务冻结路径规范为 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx`，并原样保留 `.fbm` 贴图目录及文件名。
+- 规范化 FBX：566,364 字节；SHA-256 `72F2534AE72A537A01B64E5542BBBCAA75B6F4F2541EC7303CECC65C443D7C55`。
+
+### 解压文件
+
+| 相对 `raw/` 路径 | 字节数 | SHA-256 |
+|---|---:|---|
+| `fuyuan_static_chess_raw.fbx` | 566,364 | `72F2534AE72A537A01B64E5542BBBCAA75B6F4F2541EC7303CECC65C443D7C55` |
+| `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_basecolor.JPEG` | 1,381,322 | `F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611` |
+| `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_metallic.JPEG` | 1,802,903 | `812D21B425CFD2DA9E4D695E03C1FE39094BF708F8FE5E5B9D7A2EAB23A659A0` |
+| `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_normal.JPEG` | 553,517 | `E4938FDE1EAF4F611033F74458B070DBBA97CC8724AFEA1F44B2450716DDDF15` |
+| `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_rm.JPEG` | 889,793 | `2E6372057A3863D1DA9C27D54019D3F9F0683C052EF690F473692053B2CB9E06` |
+| `tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_roughness.JPEG` | 1,695,352 | `CC48493A8293C775B5F423CA042C8B70F0A228597CD0D3C1B7721A6904A38736` |
+
+## 当前门与状态
+
+- 已证明：负责人报告生成完成；原始 ZIP 非空且可解压；FBX／外部贴图拓扑完整；原包与解压文件哈希已冻结。
+- 尚未证明：Tripo 平台任务 ID、实际模型版本和生成设置、实际 credits、输入四图哈希与平台任务的对应关系，以及负责人按合同检查的正／左右侧／背身份、姿势、袖袍、腰饰和贴图污染静态门。
+- 本轮没有运行 Blender、没有修改 FBX／贴图内容、没有绑定或购买附加服务，也没有写入 `src/Assets/`。
+- 结论：`A-CHAR-STATIC-CHESS-FUYUAN-TRIPO-01` 从等待消费授权的 `frozen` 转为等待平台事实和静态门证据的 `blocked`；`A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01` 保持 `blocked`。
