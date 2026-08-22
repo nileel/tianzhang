@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-SECT-ALIGN-01A | codex_review | codex | P2 | content | migration | 北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿） | 开发管理/任务卡/C-SECT-ALIGN-01A.txt |
 | C-SECT-ALIGN-01B | codex_review | codex | P2 | content | migration | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |

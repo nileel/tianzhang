@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立审核部分通过：玄冥宫仍以半妖化、妖化度和人妖边界作为宗门自称语系，未完成真灵血脉／返祖口径替换；详见未通过审核清单。",
   "expectedPaths": [
     "docs/门派/太行火域/赤霄谷.txt",
     "docs/门派/辽海寒域/玄冥宫.txt",
