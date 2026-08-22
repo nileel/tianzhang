@@ -4,13 +4,13 @@
   "id": "C-SECT-ALIGN-01A",
   "title": "北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿）",
   "priority": "P2",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "content",
   "stage": "migration",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-22：用户明确解冻；六识改名已通过 Codex 独立复审并归档，任务范围、事实源、验证与停止条件均已冻结，可由 DeepSeek 领取。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "docs/门派/太行火域/赤霄谷.txt",
     "docs/门派/辽海寒域/玄冥宫.txt",
@@ -19,7 +19,8 @@
     "开发管理/任务归档/C-SECT-ALIGN-01A.txt",
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
-    "开发管理/AI合作沟通.txt"
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
 }
