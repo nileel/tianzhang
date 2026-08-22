@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "frozen",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-22：六识改名已通过 Codex 独立复审并归档；本卡前置已满足，但保持内容冻结，待用户明确解冻。⚠️ 已修改/未审核",
+  "stateReason": "2026-08-22：用户明确解冻；六识改名已通过 Codex 独立复审并归档，任务范围、事实源、验证与停止条件均已冻结，可由 DeepSeek 领取。",
   "expectedPaths": [
     "docs/门派/关陇玄域/太虚观.txt",
     "docs/门派/关陇玄域/混元山.txt",

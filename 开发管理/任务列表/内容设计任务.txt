@@ -16,7 +16,7 @@
 - 2026-08-19 用户确认：金丹位格现行口径允许同一道路存在多个化位／界位（51 为初始集，源位不可增）；玄荒新路天才即孝文帝拓跋宏结构对应者（王族改革者；玩家不干扰或支持则自辟元婴成功，阻止则走失败线）。用户指示先建立任务卡：新增 `C-STORY-WM-05B`、`C-STORY-WM-NORTH-01`、`C-STORY-WM-FUYUAN-01`、`C-JD-NPC-MECH-01` 四张冻结卡，待解冻后按主责执行。
 - 2026-08-19 用户拍板六识更名：意识不变；身识→形识、息识→灵识、食识→魂识、见识→观识；闻识保留原名；化神根系统一为"六识"。新增冻结卡 `C-JD-SIXROAD-RENAME-01`，须先于 `C-HS-YY-JD-01F`～`01J` 执行；剧情/养成文件的逐处语义扫描另立后续卡。
 - 2026-08-19 用户确认建立项目级资料库速查层（L0 入口/L1 速查卡/L2 事实源/L3 归档），分域速查卡独立建卡（剧情/基础设定/角色养成/道具/怪物；资源经济待 C-ECON-01 落地后建；美术资产沿用登记册）。新增冻结卡：`C-KB-ARCH-01`（架构与维护规则）、`C-KB-IDX-STORY-01`、`C-KB-IDX-BASE-01`、`C-KB-IDX-CULTIVATE-01`、`C-KB-IDX-ITEM-01`、`C-KB-IDX-MONSTER-01`、`C-ITEM-LIANXU-CLEAN-01`（道具域炼虚残留清理；养成域炼虚引用归 `C-HIGH-01`）。
-- 2026-08-19 用户指示建立门派对齐卡（贬称自称修订+金丹元婴框架对齐+位格口径段补充，原则：无人自称邪恶一方）：`C-SECT-ALIGN-01A`（赤霄谷、玄冥宫、玄荒殿）、`C-SECT-ALIGN-01B`（太虚观、混元山、天机楼、地藏寺）、`C-SECT-ALIGN-01C`（太一道庭、玉清崖及全部小桩）。01A/01B 待六识改名落地后执行。
+- 2026-08-19 用户指示建立门派对齐卡（贬称自称修订+金丹元婴框架对齐+位格口径段补充，原则：无人自称邪恶一方）：`C-SECT-ALIGN-01A`（赤霄谷、玄冥宫、玄荒殿）、`C-SECT-ALIGN-01B`（太虚观、混元山、天机楼、地藏寺）、`C-SECT-ALIGN-01C`（太一道庭、玉清崖及全部小桩）。2026-08-22 六识改名已通过复审，用户明确解冻 01A/01B，现按固定顺序进入 DeepSeek 队列。
 
 ## 任务
 
@@ -102,8 +102,8 @@
 | C-KB-IDX-CULTIVATE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
 | C-KB-IDX-ITEM-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-ITEM-LIANXU-CLEAN-01 | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
 | C-KB-IDX-MONSTER-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
-| C-SECT-ALIGN-01A | P2 | deepseek | 冻结 | — | 北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿） | 开发管理/任务卡/C-SECT-ALIGN-01A.txt |
-| C-SECT-ALIGN-01B | P2 | deepseek | 冻结 | — | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |
+| C-SECT-ALIGN-01A | P2 | deepseek | 已排队 | — | 北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿） | 开发管理/任务卡/C-SECT-ALIGN-01A.txt |
+| C-SECT-ALIGN-01B | P2 | deepseek | 已排队 | — | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |
 
 ## 世界主线拆分
 
