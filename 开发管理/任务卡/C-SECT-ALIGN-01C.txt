@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-22 Codex 独立复审正式提交 0c62503a7666118c494dbbc16ad995f2511f1b5e：结论部分通过，仍需返工。太一道庭仍将本命符箓、本命法坛作为位格主承载的实际类别；现行规则只允许本命神通作为 UI 或叙事旧称，真实主承载必须是独立兼容的镇府神通实例。任务保持 blocked，待负责人选择返工执行方。⚠️ 待复核",
   "expectedPaths": [
     "docs/门派/江左天域/太一道庭.txt",
     "docs/门派/陇西雷域/玉清崖.txt",
