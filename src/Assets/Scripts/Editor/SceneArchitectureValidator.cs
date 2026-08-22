@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TianZhang.Bootstrap;
@@ -106,6 +107,7 @@ namespace TianZhang.Editor
             ValidateTransparentMaterial(VisualBaselineBuilder.AttackMaterialPath);
             ValidateUnitMarkerPrefab();
             ValidateStaticChessPrefab();
+            ValidateTacticalSpritePrefab();
 
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
             Require(!string.IsNullOrWhiteSpace(projectRoot) &&
@@ -187,6 +189,54 @@ namespace TianZhang.Editor
             }
         }
 
+        private static void ValidateTacticalSpritePrefab()
+        {
+            for (int direction = 0; direction < VisualBaselineBuilder.TacticalSpriteDirectionCount; direction++)
+            {
+                string path = VisualBaselineBuilder.TacticalSpriteTexturePath(direction);
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                Require(importer != null && importer.textureType == TextureImporterType.Sprite &&
+                        importer.spriteImportMode == SpriteImportMode.Single &&
+                        Mathf.Abs(importer.spritePixelsPerUnit - 512f) < 0.001f &&
+                        Vector2.Distance(importer.spritePivot, new Vector2(0.5f, 0.125f)) < 0.001f &&
+                        importer.alphaIsTransparency,
+                    "The tactical sprite texture must keep its frozen Sprite/512 PPU/pivot/alpha import contract: " + path);
+            }
+
+            GameObject root = PrefabUtility.LoadPrefabContents(VisualBaselineBuilder.TacticalSpritePrefabPath);
+            try
+            {
+                Require(root.name == "FuYuan_TacticalSprite" && root.transform.localPosition == Vector3.zero &&
+                        root.transform.localScale == Vector3.one,
+                    "The tactical sprite root must retain its unit ground anchor and scale.");
+                Require(root.GetComponentsInChildren<SpriteRenderer>(true).Length == 1,
+                    "The tactical sprite prefab must contain exactly one SpriteRenderer.");
+                Require(root.GetComponentsInChildren<Animator>(true).Length == 0 &&
+                        root.GetComponentsInChildren<Animation>(true).Length == 0 &&
+                        root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length == 0,
+                    "The tactical sprite prefab must not import a runtime animation or rig.");
+                Require(root.GetComponents<TacticalSpritePresentationController>().Length == 1,
+                    "The tactical sprite root must own exactly one presentation controller.");
+
+                TacticalSpritePresentationController controller = root.GetComponent<TacticalSpritePresentationController>();
+                var serialized = new SerializedObject(controller);
+                SerializedProperty spritesProperty = serialized.FindProperty("directionSprites");
+                Require(spritesProperty != null && spritesProperty.arraySize == VisualBaselineBuilder.TacticalSpriteDirectionCount,
+                    "The tactical sprite controller must own exactly six frozen direction sprites.");
+                var seen = new HashSet<Sprite>();
+                for (int direction = 0; direction < VisualBaselineBuilder.TacticalSpriteDirectionCount; direction++)
+                {
+                    Sprite sprite = spritesProperty.GetArrayElementAtIndex(direction).objectReferenceValue as Sprite;
+                    Require(sprite != null && seen.Add(sprite),
+                        "The tactical sprite controller must reference six distinct direction sprites.");
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
         private static void ValidateScene<TInstaller, TController>(string path, bool expectsBootstrap)
             where TInstaller : Component
             where TController : Component
@@ -237,6 +287,12 @@ namespace TianZhang.Editor
                 ValidateFacingProbe(board.transform, index, FacingProbeExpectations[index, 0],
                     FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
                     FacingProbeExpectations[index, 3]);
+            Transform tacticalGroup = board.transform.Find("TacticalSpriteProbeGroup");
+            Require(tacticalGroup != null, "AdventureScene is missing the tactical sprite probe group.");
+            for (int index = 0; index < FacingProbeExpectations.GetLength(0); index++)
+                ValidateTacticalSpriteProbe(tacticalGroup, index, FacingProbeExpectations[index, 0],
+                    FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
+                    FacingProbeExpectations[index, 3]);
             foreach (string name in new[]
                      { "SurfaceOverlay", "ReachableOverlay", "SelectedOverlay", "AttackOverlay", "VisualBaselineOccluder" })
                 Require(FindNamed(scene, name) != null, "AdventureScene is missing visual layer: " + name);
@@ -273,6 +329,36 @@ namespace TianZhang.Editor
             foreach (MeshRenderer renderer in renderers)
                 Require(renderer.shadowCastingMode == ShadowCastingMode.On && renderer.receiveShadows,
                     "Facing probe meshes must cast and receive 3D shadows.");
+        }
+
+        private static void ValidateTacticalSpriteProbe(Transform group, int direction, int q, int r, int heightLevel, int yaw)
+        {
+            Transform probe = group.Find("TacticalSpriteProbe_" + direction);
+            Require(probe != null,
+                "AdventureScene is missing the tactical sprite probe for direction " + direction + ".");
+            Vector3 expectedPosition = HexToVisualPosition(q, r, HeightForLevel(heightLevel));
+            Require(Vector3.Distance(probe.localPosition, expectedPosition) < 0.001f,
+                "Tactical sprite probe is not centered on its rule neighbor.");
+            Require(Quaternion.Angle(probe.localRotation, Quaternion.Euler(0f, yaw, 0f)) < 0.01f,
+                "Tactical sprite probe does not use the frozen facing yaw.");
+            Vector3 expectedForward = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f).normalized;
+            Require(Vector3.Angle(probe.localRotation * Vector3.forward, expectedForward) < 0.01f,
+                "Tactical sprite probe local +Z does not point at its rule neighbor.");
+            TacticalSpritePresentationController controller = probe.GetComponent<TacticalSpritePresentationController>();
+            Require(controller != null,
+                "Tactical sprite probe must instantiate the tactical sprite presentation root.");
+            var serialized = new SerializedObject(controller);
+            SerializedProperty directionProperty = serialized.FindProperty("activeDirection");
+            Require(directionProperty != null && directionProperty.intValue == direction,
+                "Tactical sprite probe must select its frozen direction sprite.");
+            SpriteRenderer renderer = probe.GetComponentInChildren<SpriteRenderer>(true);
+            Require(renderer != null && renderer.sprite != null &&
+                    renderer.sprite.name == "FuYuan_TacticalDirection_" + direction,
+                "Tactical sprite probe must render its frozen direction sprite.");
+            Require(probe.GetComponentsInChildren<Animator>(true).Length == 0 &&
+                    probe.GetComponentsInChildren<Animation>(true).Length == 0 &&
+                    probe.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length == 0,
+                "Tactical sprite probe must not import a runtime animation or rig.");
         }
 
         private static float HeightForLevel(int heightLevel) => 0.34f + heightLevel * 0.28f;

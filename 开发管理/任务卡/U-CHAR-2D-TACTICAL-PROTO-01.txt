@@ -4,13 +4,13 @@
   "id": "U-CHAR-2D-TACTICAL-PROTO-01",
   "title": "2D 六向战术角色 Unity 样例",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-23：已查明上轮阻塞根因为任务卡漏列 Unity 实施路径；现已冻结六张唯一输入、运行时所有者、隔离表面、精确输出路径和验证，按负责人要求改由 DeepSeek V4 Pro 0813 实施，Codex 独立复审视觉、遮挡与证据。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -42,7 +42,8 @@
     "src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs.meta",
     "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
     "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs",
-    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs.meta"
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs.meta",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }

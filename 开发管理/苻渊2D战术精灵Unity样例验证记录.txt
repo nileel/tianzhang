@@ -1,0 +1,30 @@
+# 苻渊 2D 六向战术精灵 Unity 样例验证记录
+
+任务：`U-CHAR-2D-TACTICAL-PROTO-01`
+日期：2026-08-23
+状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：仅 `AdventureScene/VisualBaselineBoard` 的隔离 2D 六向技术矩阵与对应 Editor 生成资产。
+
+范围：只在 `AdventureScene/VisualBaselineBoard` 下新增独立 `TacticalSpriteProbeGroup` 证明 2D 六向战场表现；未接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位、规则或存档。既有静态 3D `FacingProbe_0..5`、`VisualBaselineOccluder`、地块、光照与镜头均未改变。
+
+## 输入与资产
+
+- 六张唯一输入已逐字节复制：`assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_<n>.png` → `src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_<n>.png`（n=0..5）。两端 SHA-256 逐张与 `prompts.md` 冻结值一致，未重画、重编码、镜像、翻转、重排或覆盖。
+- Unity 副本由 `VisualBaselineBuilder` 确定性固定 `Sprite (2D and UI)`、单 Sprite、512 PPU、custom pivot `(0.5,0.125)`、透明 alpha，`platformSettings` 均为 `overridden: 0`（无平台私有缩放）。六张均为 768×768 RGBA。
+- 确定性生成唯一 `FuYuan_TacticalSprite.prefab`：根节点单位缩放，只含一个相机平面一致、默认深度测试排序（未设 always-on-top）的 `SpriteRenderer` 可见主体 `SpriteBody` 和一个 `TacticalSpritePresentationController`；无 Animator／Animation／SkinnedMeshRenderer。六张 Sprite 按固定索引保存在 `directionSprites`，缺项、重复、越界即失败关闭。
+
+## 表现与六向矩阵
+
+- `AdventureSceneBuilder.CreateTacticalSpriteProbes` 在 `VisualBaselineBoard` 下新增 `TacticalSpriteProbeGroup` 与 `TacticalSpriteProbe_0..5`；六个根节点复用 `HexCoord.Directions`、对应格位中心与 Y 旋转 `90/150/210/270/330/30`，逐一选择同编号 Sprite。组默认不覆盖、不删除现有 `FacingProbe_0..5`。
+- 方向映射固定：`0→(1,0)/90°`、`1→(1,-1)/150°`、`2→(0,-1)/210°`、`3→(-1,0)/270°`、`4→(-1,1)/330°`、`5→(0,1)/30°`，本地 `+Z` 指向对应邻格中心。
+- `TacticalSpritePresentationController` 只消费既有 `StaticChessPresentationEvent`：待机静止；移动、攻击、受击、施法和死亡只写同一角色根节点并在结束后复位；施法最多暴露一次既有语义的一次性 `CastEffectRequested`。子 Sprite 只做统一相机平面对齐，所有方向共用同一渲染平面、锚点和尺度，无方向私有偏移、缩放、镜像或旋转补偿。
+
+## 验证结果
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：417/417 通过（含逐张 SHA-256／768×768 RGBA／单 Sprite／512 PPU／pivot／六向索引／Prefab 单一 SpriteRenderer／隔离组格位与根 Y 角／场景持久化）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：7/7 通过；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`：通过。
+
+## 残留风险与证据边界
+
+- 无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵；脚底锚定、共同尺度与前景遮挡的最终人工可读性判定仍需 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 在同一固定镜头下完成。遮挡依赖默认深度测试 Sprite 排序（未使用 always-on-top、每向裁切或私有 Y/Z 偏移）。
+- 本样例不授权接入正式单位链；任务完成只应转换为同卡 `codex_review/codex/ready`，待 Codex 独立复审。

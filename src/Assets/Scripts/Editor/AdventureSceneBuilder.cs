@@ -34,7 +34,7 @@ namespace TianZhang.Editor
             CombatActionBarView actionBar = root.AddComponent<CombatActionBarView>();
             CombatLogView logView = root.AddComponent<CombatLogView>();
 
-            VisualBaselineBuilder.BuildStaticChessAssets();
+            VisualBaselineBuilder.BuildTacticalSpriteAssets();
             ValidateReadOnlyVisualAssets();
             BuildVisualBaselineMatrix();
 
@@ -130,6 +130,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.AttackMaterialPath);
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.StaticChessPrefabPath);
+            SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.TacticalSpritePrefabPath);
         }
 
         private static void BuildVisualBaselineMatrix()
@@ -166,6 +167,7 @@ namespace TianZhang.Editor
             }
 
             CreateFacingProbes(board.transform, cells);
+            CreateTacticalSpriteProbes(board.transform, cells);
 
             CreateOverlay(board.transform, overlayMesh, -2, 0, 0, "SurfaceOverlay",
                 VisualBaselineBuilder.SurfaceMaterialPath, 10, 0.012f);
@@ -204,6 +206,39 @@ namespace TianZhang.Editor
                 probe.transform.localPosition = HexToWorld(neighbor.q, neighbor.r, HeightForLevel(heightLevel));
                 probe.transform.localRotation = Quaternion.Euler(0f, FacingProbeYaws[direction], 0f);
                 probe.GetComponent<StaticChessPresentationController>().CaptureRestPose();
+            }
+        }
+
+        private static void CreateTacticalSpriteProbes(Transform parent, int[,] cells)
+        {
+            GameObject group = new GameObject("TacticalSpriteProbeGroup");
+            group.transform.SetParent(parent, false);
+            group.transform.localPosition = Vector3.zero;
+            group.transform.localRotation = Quaternion.identity;
+            group.transform.localScale = Vector3.one;
+
+            GameObject spritePrefab = SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.TacticalSpritePrefabPath);
+            for (int direction = 0; direction < FacingProbeYaws.Length; direction++)
+            {
+                HexCoord neighbor = HexCoord.Directions[direction];
+                int heightLevel = FindCellHeight(cells, neighbor.q, neighbor.r);
+                GameObject probe = (GameObject)PrefabUtility.InstantiatePrefab(spritePrefab);
+                probe.name = "TacticalSpriteProbe_" + direction;
+                probe.transform.SetParent(group.transform, false);
+                probe.transform.localPosition = HexToWorld(neighbor.q, neighbor.r, HeightForLevel(heightLevel));
+                probe.transform.localRotation = Quaternion.Euler(0f, FacingProbeYaws[direction], 0f);
+
+                TacticalSpritePresentationController controller = probe.GetComponent<TacticalSpritePresentationController>();
+                if (controller == null) throw new InvalidOperationException("Tactical sprite probe is missing its presentation controller.");
+                SpriteRenderer body = probe.GetComponentInChildren<SpriteRenderer>(true);
+                if (body == null) throw new InvalidOperationException("Tactical sprite probe is missing its SpriteRenderer.");
+                body.sprite = SceneBuildSupport.RequireAsset<Sprite>(VisualBaselineBuilder.TacticalSpriteTexturePath(direction));
+
+                var serialized = new SerializedObject(controller);
+                SerializedProperty directionProperty = serialized.FindProperty("activeDirection") ??
+                    throw new InvalidOperationException("Tactical sprite controller is missing the active direction field.");
+                directionProperty.intValue = direction;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
             }
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using TianZhang.Features.CombatPresentation;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -44,6 +45,16 @@ namespace TianZhang.Editor
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.mat";
         public const string StaticChessPrefabPath =
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab";
+        public const string TacticalSpriteFolderPath =
+            "Assets/Art/Characters/TacticalSprites";
+        public const string TacticalSpriteFuYuanFolderPath =
+            "Assets/Art/Characters/TacticalSprites/FuYuan";
+        public const string TacticalSpritePrefabPath =
+            "Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab";
+        public const int TacticalSpriteDirectionCount = 6;
+
+        public static string TacticalSpriteTexturePath(int direction) =>
+            "Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_" + direction + ".png";
 
         [MenuItem("天章/视觉/重建 URP 技术基线")]
         public static void Rebuild()
@@ -55,6 +66,7 @@ namespace TianZhang.Editor
             BuildMaterials();
             BuildUnitMarkerPrefab();
             BuildStaticChessAssets();
+            BuildTacticalSpriteAssets();
             AssetDatabase.SaveAssets();
 
             StartMenuSceneBuilder.Build();
@@ -385,6 +397,83 @@ namespace TianZhang.Editor
                 UnityEngine.Object.DestroyImmediate(root);
             }
             AssetDatabase.SaveAssets();
+        }
+
+        public static void BuildTacticalSpriteAssets()
+        {
+            EnsureTacticalSpriteFolders();
+            ConfigureTacticalSpriteImporters();
+            BuildTacticalSpritePrefab();
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void EnsureTacticalSpriteFolders()
+        {
+            EnsureFolder("Assets/Art/Characters", "TacticalSprites");
+            EnsureFolder("Assets/Art/Characters/TacticalSprites", "FuYuan");
+        }
+
+        private static void ConfigureTacticalSpriteImporters()
+        {
+            for (int direction = 0; direction < TacticalSpriteDirectionCount; direction++)
+            {
+                string path = TacticalSpriteTexturePath(direction);
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer == null) throw new InvalidOperationException("Tactical sprite texture importer is unavailable: " + path);
+                if (importer.textureType != TextureImporterType.Sprite ||
+                    importer.spriteImportMode != SpriteImportMode.Single ||
+                    Mathf.Abs(importer.spritePixelsPerUnit - 512f) > 0.001f ||
+                    Vector2.Distance(importer.spritePivot, new Vector2(0.5f, 0.125f)) > 0.001f ||
+                    !importer.alphaIsTransparency)
+                {
+                    importer.textureType = TextureImporterType.Sprite;
+                    importer.spriteImportMode = SpriteImportMode.Single;
+                    importer.spritePixelsPerUnit = 512f;
+                    importer.spritePivot = new Vector2(0.5f, 0.125f);
+                    importer.alphaIsTransparency = true;
+                    importer.mipmapEnabled = false;
+                    importer.SaveAndReimport();
+                }
+            }
+        }
+
+        private static void BuildTacticalSpritePrefab()
+        {
+            var root = new GameObject("FuYuan_TacticalSprite");
+            try
+            {
+                GameObject body = new GameObject("SpriteBody", typeof(SpriteRenderer));
+                body.transform.SetParent(root.transform, false);
+                body.transform.localPosition = Vector3.zero;
+                body.transform.localRotation = Quaternion.identity;
+                body.transform.localScale = Vector3.one;
+                SpriteRenderer renderer = body.GetComponent<SpriteRenderer>();
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+
+                TacticalSpritePresentationController controller = root.AddComponent<TacticalSpritePresentationController>();
+                Sprite[] sprites = new Sprite[TacticalSpriteDirectionCount];
+                for (int direction = 0; direction < TacticalSpriteDirectionCount; direction++)
+                    sprites[direction] = RequireAsset<Sprite>(TacticalSpriteTexturePath(direction));
+
+                var serialized = new SerializedObject(controller);
+                SerializedProperty spritesProperty = serialized.FindProperty("directionSprites") ??
+                    throw new InvalidOperationException("Tactical sprite controller is missing the direction sprites field.");
+                spritesProperty.arraySize = sprites.Length;
+                for (int direction = 0; direction < sprites.Length; direction++)
+                    spritesProperty.GetArrayElementAtIndex(direction).objectReferenceValue = sprites[direction];
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                renderer.sprite = sprites[0];
+
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, TacticalSpritePrefabPath);
+                if (saved == null) throw new InvalidOperationException("Could not save the tactical sprite prefab.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
         }
 
         private static Material GetOrCreateStaticChessMaterial(GameObject model)
