@@ -1,0 +1,36 @@
+# Blender Lab 专用常驻会话验证记录
+
+## 范围与事实源
+
+- 任务：`A-BLENDER-LAB-PERSISTENT-SESSION-01`；通道固定为 `blender_lab` 当前交互会话，不使用 `blender_headless_qa` 或其他 Blender 代码通道。
+- 按 `tools/codex-cli-session.ps1` 启动真实 Codex 子会话；当前用户 Codex 配置仅核验 `mcp_servers.blender_lab` 已启用、30 秒启动超时、120 秒工具超时以及本卡所需只读／`execute_blender_code` 工具集合，未记录无关配置值。
+- 专用外部路径：`D:\Temp\TianZhang-Blender\blender-lab-persistent-session\blender-lab-persistent.blend`、`service-state.json`；固定 Blender：`D:\Tools\Blender\5.2.0\blender.exe`。
+
+## 启动前基线
+
+- 2026-08-22 检查时没有 `blender.exe` 进程、没有 `localhost:9876` 监听者、没有 `TianZhang-BlenderLab-Persistent` 当前用户计划任务，专用临时目录也不存在；因此没有用户 Blender 窗口、文件或进程需要接管。
+- Blender 5.2 用户扩展目录已有 `user_default/mcp`。专用会话内实际核验扩展键 `bl_ext.user_default.mcp` 已启用、非 background、online access 已开启，监听地址为 `localhost:9876`。
+
+## 实施与登录启动项
+
+- 新增 `tools/start-blender-lab-persistent-session.ps1`：只在 state JSON、PID、UTC 启动时间、可执行路径及命令行中的专用 `.blend` 同时匹配时复用实例；任何未知／额外 Blender、未知端口占用、身份不唯一或已记录实例退出都会失败，不接管、关闭或自动重新拉起用户进程。
+- 首次启动在专用目录创建空白 `.blend`，随后以最小化窗口启动；状态文件只保存 schema、PID、启动时间、固定 executable 与固定 `.blend` 路径。
+- 创建当前用户登录计划任务 `TianZhang-BlenderLab-Persistent`。最终定义为一个 `MSFT_TaskLogonTrigger`、一个 PowerShell 7 action，action 只调用集成后稳定路径 `D:\天章游戏开发\tools\start-blender-lab-persistent-session.ps1`；principal 为 Interactive／Limited，`RestartCount=0`、`MultipleInstances=IgnoreNew`，没有最高权限、机器级服务、周期触发器或失败重启。
+- 实测扩展原 `use_autostart=false`；仅将现有 MCP 扩展首选项改为 `true` 并保存用户首选项，没有修改扩展供应商文件。随后用脚本完整回退、确认旧 PID 已停止且端口／计划任务均为空，再重新登记并冷启动，验证自动启动配置在新会话中仍为 `true`。
+
+## 运行与健康证据
+
+- 最终冷启动实例：PID `44784`，UTC 启动时间 `2026-08-22T00:30:46.5329991Z`；state、进程可执行路径和专用 `.blend` 一致。窗口拥有有效句柄且 `IsIconic=true`；全机只有这一个 Blender 进程。
+- `localhost:9876` 仅有一个 `127.0.0.1` 监听者，OwningProcess 为 `44784`。`tools/check-blender-lab-persistent-session.ps1` 已成功核对身份、文件、单一监听者并完成 TCP connect；重复调用启动脚本返回同一实例，未建立第二进程。
+- 真实子会话：`tools/codex-cli-session.ps1` 成功返回 `sessionId=01a026de-58ed-71f1-8b31-aefc5fa048cd`，模型 `gpt-5.6-terra`；在 Blender Lab 中调用 `get_blendfile_summary_datablocks`，再以 `execute_blender_code` 仅写入、确认并删除 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\mcp-smoke-marker.txt`。子会话结构化结果为 completed，烟测标记已确认不存在。
+- 这些证据只证明专用 Blender Lab 桥、受限临时目录写入和会话健康；不构成角色资产、FBX、骨骼、美术质量或 Unity 行为验收。
+
+## 回退
+
+在集成后的仓库根执行：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File 'D:\天章游戏开发\tools\start-blender-lab-persistent-session.ps1' -Action Rollback
+```
+
+该操作先核对计划任务 action 仍精确指向本脚本，再删除任务；只在 state、PID、启动时间、可执行路径、专用 `.blend` 命令行和端口所有者全部匹配时关闭本卡拥有的 Blender。它不卸载 Blender／MCP 配置／扩展，也不删除用户工程或专用状态文件。

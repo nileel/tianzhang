@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-当前无 `2` 流程审核或交接待办。2026-08-22 已把苻渊自动化阻塞拆成两个独立基础设施任务：`A-BLENDER-LAB-PERSISTENT-SESSION-01` 只建立专用 Blender Lab 会话；`A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01` 只把哈希冻结的 FBX 与五张贴图安全准备到 run worktree。两卡按此顺序进入队列，苻渊 Blender 业务卡等待输入准备完成。
+当前无 `2` 流程审核或交接待办。2026-08-22，`A-BLENDER-LAB-PERSISTENT-SESSION-01` 已完成并归档：当前用户登录后可得到唯一、最小化的 Blender Lab 专用会话，真实 Codex 子会话烟测已通过。`A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01` 继续负责把哈希冻结的 FBX 与五张贴图安全准备到 run worktree；苻渊 Blender 业务卡仍等待该输入准备完成。
 
 2026-08-09，负责人选择 `M-MGMT-01B` 的 C：不批准；`M-MGMT-01` 已关闭并移出未来治理任务，现有管理目录保持不变。决定证据保留在 `开发管理/管理目录唯一旧新路径映射与批准输入.txt`。
 
@@ -12,7 +12,6 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| A-BLENDER-LAB-PERSISTENT-SESSION-01 | P1 | codex | 已排队 | — | Blender Lab 专用常驻会话 | 开发管理/任务卡/A-BLENDER-LAB-PERSISTENT-SESSION-01.txt |
 | A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01 | P1 | codex | 已排队 | — | 苻渊冻结素材自动化工作区准备 | 开发管理/任务卡/A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01.txt |
 
 ## 未来治理任务

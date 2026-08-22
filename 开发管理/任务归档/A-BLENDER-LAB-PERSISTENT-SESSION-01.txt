@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-22：定时 Codex 子会话已证明 blender_lab MCP 配置、工具枚举与本机扩展安装正常，实际失败点固定为 Blender 未运行、localhost:9876 无插件桥监听。负责人批准使用当前 Windows 用户登录后启动的最小化专用 Blender 5.2 常驻会话；本卡边界与验收已冻结并进入 ready。",
+  "stateReason": "2026-08-22：当前用户登录计划任务、唯一最小化 Blender 5.2 专用会话、localhost:9876 身份健康检查与真实 Codex 子会话的受限临时目录烟测均已通过；回退命令和证据已记录，任务完成归档。",
   "expectedPaths": [
     "tools/start-blender-lab-persistent-session.ps1",
     "tools/check-blender-lab-persistent-session.ps1",
@@ -67,6 +67,12 @@
 - 真实 Codex 子会话能枚举并调用 `blender_lab` 场景只读工具；临时写入烟测只落在 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\`，随后清理烟测标记。
 - 建立前已存在的用户 Blender 进程、窗口和文件在任务前后保持不变；没有用户 Blender 时记录空基线。
 - 运行任务卡、审核文本、待暂存空白、脚本语法与 Git 暂存差异检查；不因本卡运行 Unity、BattleSim 或数据链检查。
+
+## 2026-08-22 · 实施结果
+
+- 已建立当前用户的单一登录启动项和专用 Blender 5.2 常驻会话；state、进程、端口与专用 `.blend` 身份交叉核验通过，重复启动不会创建第二实例，已记录实例退出时也不会自动重新拉起。
+- Blender MCP 扩展已启用并把现有 `use_autostart` 首选项由 false 改为 true；完整关闭本卡会话后重新登记／冷启动，自动监听仍可用。未修改供应商扩展、用户工程、角色资产、FBX、贴图或 Unity。
+- 真实 `tools/codex-cli-session.ps1` 子会话已用 `blender_lab` 成功读取专用场景，并在唯一允许的临时路径完成写入后清理烟测标记；细节、计划任务定义和精确回退命令见 `开发管理/BlenderLab专用常驻会话验证记录.txt`。
 
 ## 完成条件
 
