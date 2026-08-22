@@ -103,7 +103,7 @@
 | C-KB-IDX-ITEM-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-ITEM-LIANXU-CLEAN-01 | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
 | C-KB-IDX-MONSTER-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 | C-SECT-ALIGN-01A | P2 | codex | 已排队 | — | 北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿） | 开发管理/任务卡/C-SECT-ALIGN-01A.txt |
-| C-SECT-ALIGN-01B | P2 | deepseek | 已排队 | — | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |
+| C-SECT-ALIGN-01B | P2 | codex | 已排队 | — | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |
 
 ## 世界主线拆分
 
