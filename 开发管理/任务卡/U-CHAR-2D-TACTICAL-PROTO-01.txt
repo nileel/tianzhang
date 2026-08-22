@@ -4,19 +4,45 @@
   "id": "U-CHAR-2D-TACTICAL-PROTO-01",
   "title": "2D 六向战术角色 Unity 样例",
   "priority": "P1",
-  "route": "codex_execute",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：candidate_paths_exclude_required_unity_implementation",
+  "stateReason": "2026-08-23：已查明上轮阻塞根因为任务卡漏列 Unity 实施路径；现已冻结六张唯一输入、运行时所有者、隔离表面、精确输出路径和验证，按负责人要求改由 DeepSeek V4 Pro 0813 实施，Codex 独立复审视觉、遮挡与证据。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt",
     "开发管理/任务归档/U-CHAR-2D-TACTICAL-PROTO-01.txt",
-    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt"
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt",
+    "开发管理/苻渊2D战术精灵Unity样例验证记录.txt",
+    "src/Assets/Art/Characters/TacticalSprites.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_1.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_1.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_2.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_2.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_3.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_3.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_4.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_4.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_5.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_5.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs.meta",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -25,28 +51,40 @@
 
 ## 来源与当前边界
 
-- 在既有六向几何测试台用唯一六向精灵证明 2D 战场表现，不接入正式 Adventure。
+- `D-CHAR-2D-TACTICAL-CONTRACT-01` 与 `A-CHAR-2D-FUYUAN-SPRITE-01` 已完成；唯一输入是 `assets/generated-character-art/fuyuan-2d-tactical-sprite/` 中经 `prompts.md` 固定 SHA-256 的六张 `fuyuan_tactical_direction_0.png`～`5.png`。来源目录只读，不得重画、重编码、镜像、翻转、重排或覆盖。
+- 只在现行 `AdventureScene/VisualBaselineBoard` 的隔离技术矩阵证明 2D 六向战场表现；不接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位或存档链。
+- 上轮自动责任方以 `candidate_paths_exclude_required_unity_implementation` 停止，根因是旧卡只列管理文件。现已补齐全部已知输出路径；发现必须修改字面量白名单外路径时立即停止，不叠加兼容分支。
 
 ## 必查范围
 
-- 2D 战术合同、六向精灵与证据、六向测试台、Character／CombatPresentation 契约和直接测试。
+- `docs/superpowers/specs/2026-08-21-2d-tactical-character-production-contract.md` §一、§三～§五；`assets/generated-character-art/fuyuan-2d-tactical-sprite/prompts.md` 的方向映射、pivot、PPU、透明包围盒与 SHA-256；`docs/资源管理/美术资源版本管理规范.md`。
+- 完整读取 `src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::Build/ValidateReadOnlyVisualAssets/BuildVisualBaselineMatrix/CreateFacingProbes`、`src/Assets/Scripts/Editor/VisualBaselineBuilder.cs::Rebuild/EnsureFolder/BuildStaticChessAssets`、`src/Assets/Scripts/Editor/SceneArchitectureValidator.cs::Validate/ValidateAdventureVisualMatrix/ValidateFacingProbe`、`src/Assets/Scripts/Modules/Spatial/HexCoord.cs::HexCoord.Directions`、`src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::StaticChessPresentationEvent`、`src/Assets/Scripts/Modules/Features/CombatPresentation/StaticChessPresentationController.cs` 与直接 EditMode／PlayMode 测试。
+- 运行时所有者固定为 `TianZhang.Features.CombatPresentation`；Editor 只负责确定性导入、Prefab 和隔离场景生成。现有静态 3D Prefab／控制器／六向探针是并行对照，不得删除、替换或改变其行为。
 
 ## 实施范围
 
-- 实现六向选择、地面锚定、深度／遮挡和待机、移动、攻击、受击、施法、死亡表现；触发时点与静态 3D 路线一致。
+- 把六张唯一 PNG 按方向 `0..5` 逐字节复制到 `src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_<n>.png`；由 `VisualBaselineBuilder` 确定性固定 `Sprite (2D and UI)`、单 Sprite、512 PPU、custom pivot `(0.5,0.125)`、透明 alpha 和无平台私有缩放。Unity 路径受现行 LFS 规则管理，源图 SHA-256 与 Unity 副本必须逐张相同。
+- 确定性生成唯一 `FuYuan_TacticalSprite.prefab`：根节点单位缩放，只含一个相机平面一致的 `SpriteRenderer` 可见主体和一个 `TacticalSpritePresentationController`；六张 Sprite 按固定索引保存，缺项、重复、越界或映射变化失败关闭。所有方向共用同一渲染平面、锚点和尺度，不按方向写私有偏移、缩放、镜像或旋转补偿。
+- 在 `VisualBaselineBoard` 下建立独立 `TacticalSpriteProbeGroup` 与 `TacticalSpriteProbe_0..5`；六个根节点复用 `HexCoord.Directions`、对应格位中心和 `90/150/210/270/330/30` 方向语义，逐一选择同编号 Sprite。组默认不覆盖或删除现有 `FacingProbe_0..5` 静态 3D 对照；测试可显式切换两组，不能改变镜头、地块、光照或遮挡物。
+- `TacticalSpritePresentationController` 只消费既有 `StaticChessPresentationEvent`：待机静止；移动、攻击、受击、施法和死亡只写同一角色根节点，施法最多暴露一次既有语义的一次性效果信号；结束后恢复根节点。不得持有或写回方向、格位、路径、射程、伤害、状态、死亡结算或存档事实。
+- 在现有 `VisualBaselineOccluder` 下证明 Sprite 的脚底锚定、共同尺度和深度遮挡；不得以 sorting always-on-top、每向裁切、私有 Y/Z 偏移或特殊镜头掩盖问题。验证记录必须逐项登记六向映射、导入值、活动 Sprite 名、fallback（固定为失败关闭）、表现矩阵和无图形 batch 的证据边界。
 
 ## 禁止项
 
-- 不修改规则、占格、方向判定、伤害、AI、存档或正式场景，不用 UI 立绘替代战术精灵。
+- 不修改规则、占格、方向判定、伤害、AI、存档或正式单位链；不使用 UI 立绘、来源联系表或绿幕源图替代六张批准 RGBA Sprite。
+- 不修改 `CombatPresentationContracts.cs`、`StaticChessPresentationController.cs`、`AdventureUnitSpawner.cs`、asmdef、正式运行时 Prefab 或其他场景；不新增全局工厂、Resources 查找、第三条视觉路线、动画帧、底座、地面、阴影或特效资产。
+- 不手写 `.unity` YAML；场景变化只由现有 Editor builder 确定性生成。新 `.meta` 必须由 Unity 合法生成并保持可解析多行 YAML。
 
 ## 验证
 
-- 固定 1920×1080 六向及六种表现证据；接入前后相同规则输入产生相同位置、目标、伤害和结算结果。
+- EditMode：逐张校验 Unity 副本与批准源 SHA-256、768×768 RGBA、Sprite 单图、512 PPU、pivot `(0.5,0.125)`、六向索引、Prefab 单一 `SpriteRenderer`、无 Animator／Animation／SkinnedMeshRenderer，以及隔离组的格位、根 Y 角和场景持久化。
+- PlayMode：`Screen.SetResolution(1920,1080,false)` 后显式启用 2D 组，遍历六向与待机／移动／攻击／受击／施法／死亡；证明活动 Sprite 名固定、根节点最终复位、非 Cast 无一次性信号、子 Sprite 的局部位置／旋转／缩放不变，并保持现有静态 3D 与正式 Adventure→Combat→Settlement→保存读取回归通过。
+- 命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`。
 
 ## 完成条件
 
-- 形成可由比较卡直接消费的完整 2D 证据矩阵。
+- 形成可由 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 直接消费的完整 2D 六向、接地／遮挡、六类表现和规则隔离证据矩阵；DeepSeek candidate 成功后只转换为同卡 `codex_review/codex/ready`，不得自审、归档或直接解除比较卡。
 
 ## 停止条件
 
-- 必须减少六向、修改规则所有者、进入正式场景或用特殊镜头隐藏问题时停止。
+- 任一批准源缺失／哈希变化、Importer 无法同时满足 PPU/pivot/alpha、六向必须镜像／重排／私有补偿、遮挡只能靠 always-on-top、必须修改白名单外路径、既有静态 3D 或正式回归改变、必须进入正式单位链，或固定 1920×1080 矩阵不能形成时停止并返回精确证据。
