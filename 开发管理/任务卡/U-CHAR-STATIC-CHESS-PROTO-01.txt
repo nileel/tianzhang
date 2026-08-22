@@ -8,15 +8,34 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01"],
-  "stateReason": "等待唯一静态 Blender 候选通过；只允许在既有六向技术测试台建立根节点表现样例。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-22：唯一静态 Blender 候选已通过封闭流形、四向轮廓、Y=0／1.03 m／单位缩放、+Z／+Y 导出、内嵌贴图与 factory-empty FBX 回读；现行 AdventureScene VisualBaselineBoard、资源路径、表现所有者和直接测试已冻结，本卡可在隔离测试台实施。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt",
     "开发管理/任务归档/U-CHAR-STATIC-CHESS-PROTO-01.txt",
-    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt"
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt",
+    "开发管理/苻渊静态棋子Unity战术样例验证记录.txt",
+    "src/Assets/Art/Characters/StaticChess.meta",
+    "src/Assets/Art/Characters/StaticChess/FuYuan.meta",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx.meta",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.mat",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.mat.meta",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/StaticChessPresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/StaticChessPresentationController.cs.meta",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/PlayMode/StaticChessPresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/StaticChessPresentationPlayModeTests.cs.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
@@ -25,19 +44,23 @@
 
 ## 来源与当前边界
 
-- 在既有六向几何测试台用唯一静态候选证明无骨骼战场表现，不接入正式 Adventure。
+- `A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01` 已完成：唯一输入为 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx`，输出与回读证据见 `开发管理/苻渊静态棋子Blender候选验证记录.txt`。
+- 在现行 `AdventureScene` 的有界 `VisualBaselineBoard` 用唯一静态候选证明无骨骼战场表现；只扩展隔离技术矩阵，不接入 `AdventureUnitSpawner`、正式遭遇或常规可战斗单位。
 
 ## 必查范围
 
-- 静态 3D 合同、Blender 候选与证据、六向测试台、Character／CombatPresentation 契约和直接测试。
+- `docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md` §4～§7；`开发管理/苻渊静态棋子Blender候选验证记录.txt`；`docs/资源管理/美术资源版本管理规范.md`。
+- 完整读取 `src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::Build/BuildVisualBaselineMatrix/CreateFacingProbes`、`src/Assets/Scripts/Editor/VisualBaselineBuilder.cs::BuildUnitMarkerPrefab`、`src/Assets/Scripts/Editor/SceneArchitectureValidator.cs::ValidateAdventureVisualMatrix/ValidateUnitMarkerPrefab`、`src/Assets/Scripts/Modules/Spatial/HexCoord.cs::Directions`、`src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs`、`src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs` 和直接 EditMode／PlayMode 测试。
 
 ## 实施范围
 
-- 以根节点完成六向、待机、抬起—移动—落下、攻击倾斜／短促位移、受击震动、施法特效接口和死亡倒伏；加入独立底座占位接口。
+- 把候选 FBX 原样复制到冻结的 `src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx`，由现有 Editor 资产路径确定性形成 URP 材质和独立人物 Prefab；不得回写或重导出 Blender 候选。
+- 只在 `VisualBaselineBoard` 建立静态棋子根节点样例：六向继续复用 `90/150/210/270/330/30`，待机保持静止；移动只抬起—沿批准位置—落下；攻击只前倾／短促位移；受击只震动；施法只暴露一次性特效接口；死亡只倾倒／降低。每项结束恢复根节点，不改变网格。
+- 人物 Prefab 与独立底座占位保持同一地面锚点、单位缩放和本地 `+Z` 正面；底座不合并进人物、地块或规则状态。
 
 ## 禁止项
 
-- 不导入或运行骨骼动画，不修改规则、占格、方向判定、伤害、AI、存档或正式场景。
+- 不导入或运行骨骼动画，不修改规则、占格、方向判定、伤害、AI 或存档；不得把隔离 `VisualBaselineBoard` 样例接入 `AdventureUnitSpawner`、正式遭遇或常规单位链。
 
 ## 验证
 
@@ -49,4 +72,4 @@
 
 ## 停止条件
 
-- 必须恢复骨骼动画、修改规则所有者、进入正式场景或用特殊镜头隐藏问题时停止。
+- 必须恢复骨骼动画、修改规则所有者、越过 `VisualBaselineBoard` 进入正式运行链或用特殊镜头隐藏问题时停止。

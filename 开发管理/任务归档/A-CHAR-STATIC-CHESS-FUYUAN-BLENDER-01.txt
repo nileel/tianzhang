@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-22：A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01 已完成。run 在 candidate 前仅按本卡 automationInputs 的精确路径、字节数和 SHA-256 物化冻结的 1 个 FBX 与 5 张贴图；来源和副本复核失败会关闭，不解禁或提交 assets/source/。",
+  "stateReason": "2026-08-22：Codex 已用 Blender 5.2.0 LTS 完成唯一静态候选；输入六文件合同、封闭流形结构、四向轮廓、Y=0／1.03 m／单位缩放、+Z／+Y 导出、内嵌贴图和 factory-empty FBX 回读均通过，U-CHAR-STATIC-CHESS-PROTO-01 已解除唯一前置并转为 ready。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/working/fuyuan_static_chess_candidate.blend",
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx",
@@ -86,3 +86,10 @@
 ## 停止条件
 
 - 修复需要越过局部静态瑕疵、恢复换头／蒙皮路线、连续叠补丁或修改身体大范围结构时停止。
+
+## 完成记录
+
+- 2026-08-22：任务卡六项 automationInputs 的实际字节数和 SHA-256 全部匹配；原包为单一封闭流形网格，9,311 顶点、28,023 边、18,682 三角面，非流形边／边界边／游离顶点／零面积面均为 0，无 Armature 或 Action。
+- 未修改拓扑或材质画面；只冻结两足间地面锚点、`1.03 m` 高度、单位变换、独立根节点、导出本地 `+Z` 正面／`+Y` 上方，并把四张实际使用贴图内嵌进 `.blend` 和 FBX。
+- `.blend` SHA-256 为 `BF7DFDE3DD820A4C69F769BA77AEB01BBEA85338153D723880E76A2D65A22B63`；FBX SHA-256 为 `AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A`。同通道 factory-empty 回读与正／左右侧／背四向渲染通过；完整证据见 `开发管理/苻渊静态棋子Blender候选验证记录.txt`。
+- `U-CHAR-STATIC-CHESS-PROTO-01` 已在同一状态事件移除本卡的唯一具名前置、补齐现行测试台与实现路径并转为 ready；Unity 导入、URP、六向、表现事件和规则不变证据仍由下游卡独立完成。
