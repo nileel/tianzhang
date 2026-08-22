@@ -9,8 +9,8 @@
   "domain": "content",
   "stage": "migration",
   "dispatchState": "frozen",
-  "blockedBy": ["C-JD-SIXROAD-RENAME-01"],
-  "stateReason": "2026-08-19 用户确认建立门派对齐卡。当前冻结；待六识改名落地后执行（地藏寺/太虚观口径段引用魂识）。⚠️ 已修改/未审核",
+  "blockedBy": [],
+  "stateReason": "2026-08-22：六识改名已通过 Codex 独立复审并归档；本卡前置已满足，但保持内容冻结，待用户明确解冻。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/门派/关陇玄域/太虚观.txt",
     "docs/门派/关陇玄域/混元山.txt",

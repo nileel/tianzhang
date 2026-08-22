@@ -4,16 +4,3 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
-
-### DSH-C-JD-SIXROAD-RENAME-01-3497b904 · DeepSeek 自动交接（⚠️ 未审核）
-
-- 方向：任务 C-JD-SIXROAD-RENAME-01 的原子正式结果等待 Codex 独立复审。
-- 任务：C-JD-SIXROAD-RENAME-01
-- 候选提交：1e4ab4ddfd7d4d19d7ace3b98e1b9c416b5e9908
-- 正式提交：与本交接、pending_review 投影处于同一原子提交。
-- 修改文件：开发管理/任务卡/C-HS-YY-JD-01F.txt
-- 已验证：全文扫描：仅开发管理/任务卡/C-HS-YY-JD-01F.txt:49 一处漏写「照见真实与留存影像」，其余矩阵/索引/席位文档均已为现行完整口径；tools/check-pending-whitespace.ps1：OK（1 文件）；tools/check-review-text.ps1 -Paths docs,开发管理：OK（911 文件）；tools/check-task-cards.ps1：OK（63 卡 ready=3）；git diff --check 与 git diff --cached --check：通过；提交为 baseCommit 5962598e 直接后继，工作树干净，changed paths 精确等于单文件
-- 未验证：BattleSim：未运行（本次无数值/平衡改动）；Unity build/test：未运行（本次无代码改动）；tools/check-data-chain.ps1：未运行（本次无 CSV/asset 改动）
-- 残留风险：单文件任务卡措辞同步，无规则、数值或运行时影响；残留风险限于 Codex 复审可能提出进一步措辞口径，但当前已与矩阵 §二 ROAD_OBSERVE 逐字一致。
-- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
-- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

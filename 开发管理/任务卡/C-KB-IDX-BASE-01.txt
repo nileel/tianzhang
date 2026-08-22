@@ -9,8 +9,8 @@
   "domain": "content",
   "stage": "design",
   "dispatchState": "frozen",
-  "blockedBy": ["C-KB-ARCH-01", "C-JD-SIXROAD-RENAME-01"],
-  "stateReason": "2026-08-19 用户确认建立基础设定域速查卡；须待六识改名卡落地后按新道路名执行。当前冻结。⚠️ 已修改/未审核",
+  "blockedBy": ["C-KB-ARCH-01"],
+  "stateReason": "2026-08-22：六识改名已通过 Codex 独立复审并归档；本卡仍待 C-KB-ARCH-01，且保持内容冻结。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/基础设定/设定事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-BASE-01.txt",

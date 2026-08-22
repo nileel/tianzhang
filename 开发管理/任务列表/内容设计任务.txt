@@ -95,16 +95,15 @@
 | C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | C-STORY-WM-05B | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
 | C-STORY-WM-FUYUAN-01 | P2 | codex | 冻结 | — | 苻渊线收束节拍规划 | 开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt |
 | C-JD-NPC-MECH-01 | P2 | codex | 冻结 | — | 人物志与门派文件金丹位格机制对齐 | 开发管理/任务卡/C-JD-NPC-MECH-01.txt |
-| C-JD-SIXROAD-RENAME-01 | P2 | codex | 已排队 | — | 六识道路更名与重定位（闻识保留） | 开发管理/任务卡/C-JD-SIXROAD-RENAME-01.txt |
 | C-KB-ARCH-01 | P2 | codex | 冻结 | — | 资料库速查层架构与维护规则 | 开发管理/任务卡/C-KB-ARCH-01.txt |
 | C-ITEM-LIANXU-CLEAN-01 | P2 | codex | 冻结 | — | 炼虚道具文件清理 | 开发管理/任务卡/C-ITEM-LIANXU-CLEAN-01.txt |
 | C-KB-IDX-STORY-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
-| C-KB-IDX-BASE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-JD-SIXROAD-RENAME-01 | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
+| C-KB-IDX-BASE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
 | C-KB-IDX-CULTIVATE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
 | C-KB-IDX-ITEM-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-ITEM-LIANXU-CLEAN-01 | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
 | C-KB-IDX-MONSTER-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
-| C-SECT-ALIGN-01A | P2 | deepseek | 冻结 | C-JD-SIXROAD-RENAME-01 | 北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿） | 开发管理/任务卡/C-SECT-ALIGN-01A.txt |
-| C-SECT-ALIGN-01B | P2 | deepseek | 冻结 | C-JD-SIXROAD-RENAME-01 | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |
+| C-SECT-ALIGN-01A | P2 | deepseek | 冻结 | — | 北地三宗设定对齐（赤霄谷、玄冥宫、玄荒殿） | 开发管理/任务卡/C-SECT-ALIGN-01A.txt |
+| C-SECT-ALIGN-01B | P2 | deepseek | 冻结 | — | 关陇河西蜀川四宗设定对齐（太虚观、混元山、天机楼、地藏寺） | 开发管理/任务卡/C-SECT-ALIGN-01B.txt |
 
 ## 世界主线拆分
 

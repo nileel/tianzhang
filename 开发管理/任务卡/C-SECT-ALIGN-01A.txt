@@ -9,8 +9,8 @@
   "domain": "content",
   "stage": "migration",
   "dispatchState": "frozen",
-  "blockedBy": ["C-JD-SIXROAD-RENAME-01"],
-  "stateReason": "2026-08-19 用户确认建立门派对齐卡（贬称自称修订+金丹元婴框架对齐+位格口径段补充）。当前冻结；待六识改名落地后执行。⚠️ 已修改/未审核",
+  "blockedBy": [],
+  "stateReason": "2026-08-22：六识改名已通过 Codex 独立复审并归档；本卡前置已满足，但保持内容冻结，待用户明确解冻。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/门派/太行火域/赤霄谷.txt",
     "docs/门派/辽海寒域/玄冥宫.txt",

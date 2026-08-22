@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-22：Codex 已独立复审正式提交 95b0e302524666fa7cf7a828aaa7b14d974b4200；两轮返工项均已解决，ROAD_OBSERVE 根本权限已与矩阵完整同步，六识更名与确定性迁移策略通过审核，任务完成归档。",
   "expectedPaths": [
     "docs/基础设定/元婴锚点与金丹位格设定.txt",
     "docs/基础设定/元婴锚点与金丹位格矩阵.txt",
