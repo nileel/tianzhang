@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-23：Codex 独立复审正式提交 3c3fd64755e50f144615541bdc73baa87043a39e 通过；北地三宗的贬称、自称、位格口径、三段式神通迁移与数值草稿标注均符合任务卡和直接事实源。",
   "expectedPaths": [
     "docs/门派/太行火域/赤霄谷.txt",
     "docs/门派/辽海寒域/玄冥宫.txt",
@@ -69,3 +69,7 @@
 ## 停止条件
 
 - 某处旧表述承载了尚未裁决的机制语义（如血契接口是否对应真实位置）时停止，登记问题交回用户。
+
+## 完成记录
+
+- 2026-08-23：Codex 独立复审正式提交 `3c3fd64755e50f144615541bdc73baa87043a39e`，结论通过。三文件的贬义称呼均只保留在显式标注的敌对视角；玄冥宫的返祖／真灵血脉自称语系已消除上一轮列出的残留。三宗的位格口径、五行母属性、三段式神通迁移和数值草稿标注符合任务卡及直接事实源。`rg` 定向检查、`tools/check-review-text.ps1 -Paths docs,开发管理`、`tools/check-pending-whitespace.ps1` 与 `git diff --check` 通过；未运行 BattleSim，因为本轮未修改数值参数、模拟器或产生新的平衡结论。
