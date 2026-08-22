@@ -5,19 +5,6 @@
 
 ## 当前交接队列
 
-### DSH-C-SECT-ALIGN-01C-44f113fe · DeepSeek 自动交接（⚠️ 未审核）
-
-- 方向：任务 C-SECT-ALIGN-01C 的原子正式结果等待 Codex 独立复审。
-- 任务：C-SECT-ALIGN-01C
-- 候选提交：9fc8410ce8a152cce9358ac9a36cdc7dd19cb54a
-- 正式提交：与本交接、pending_review 投影处于同一原子提交。
-- 修改文件：开发管理/未通过审核清单.txt、docs/门派/江左天域/太一道庭.txt
-- 已验证：rg "魔修|炼虚" 26 个目标文件零命中；rg "本命符箓|本命法坛" docs/门派 零命中；pwsh tools/check-review-text.ps1 -Paths docs,开发管理：911 文件通过；pwsh tools/check-pending-whitespace.ps1（2 文件）：通过；git diff --check：通过；candidate 仅含 2 个授权路径；工作树干净
-- 未验证：BattleSim（仅文档字面迁移，无数值/平衡变化）；Unity build/test（无 src/Unity 变化）；check-data-chain.ps1（无 CSV/资产/数据链路变化）
-- 残留风险：玉清崖仍以“本命神通方向”作小标题沿用允许的旧称（历史轮次已通过、本次不在返工范围），若 Codex 认为需统一标注可另行处理；未运行 BattleSim/Unity/check-data-chain，因本次仅文档字面迁移不涉及数值、运行时或数据链路。
-- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
-- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
-
 ### DSH-C-JD-SIXROAD-RENAME-01-3497b904 · DeepSeek 自动交接（⚠️ 未审核）
 
 - 方向：任务 C-JD-SIXROAD-RENAME-01 的原子正式结果等待 Codex 独立复审。

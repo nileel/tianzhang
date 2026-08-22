@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-22：Codex 已独立复审正式提交 5962598eaa0e752a4b8f6f0bb09d24c6b13f5e0c；太一道庭本命类别名已迁为镇府神通表述，玉清崖位格段与全部小桩扫描均符合本卡边界，任务完成归档。",
   "expectedPaths": [
     "docs/门派/江左天域/太一道庭.txt",
     "docs/门派/陇西雷域/玉清崖.txt",
