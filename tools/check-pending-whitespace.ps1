@@ -13,8 +13,10 @@ $hasErrors = $false
 $checkedCount = 0
 $pathsToCheck = @()
 $textExtensions = @(
-    '.asmdef', '.asmref', '.asset', '.cginc', '.cs', '.csv', '.hlsl', '.json',
-    '.md', '.meta', '.prefab', '.ps1', '.shader', '.txt', '.unity', '.xml', '.yaml', '.yml'
+    '.asmdef', '.asmref', '.asset', '.cginc', '.config', '.cs', '.csproj', '.csv',
+    '.gitattributes', '.gitignore', '.hlsl', '.js', '.json', '.mat', '.md', '.meta',
+    '.mjs', '.prefab', '.ps1', '.py', '.shader', '.txt', '.unity', '.vbs', '.xml',
+    '.yaml', '.yml'
 )
 
 function Test-SemanticMetaEmptyValue {
@@ -55,9 +57,12 @@ foreach ($path in $pathsToCheck) {
 
     $checkedCount++
     $isTextFile = $textExtensions -contains [IO.Path]::GetExtension($resolvedPath.Path).ToLowerInvariant()
+    if (-not $isTextFile) {
+        continue
+    }
     $lines = [IO.File]::ReadAllLines($resolvedPath.Path)
 
-    if ($Fix -and $isTextFile) {
+    if ($Fix) {
         $rawBytes = [IO.File]::ReadAllBytes($resolvedPath.Path)
         $hadUtf8Bom = $rawBytes.Length -ge 3 -and
             $rawBytes[0] -eq 0xEF -and $rawBytes[1] -eq 0xBB -and $rawBytes[2] -eq 0xBF
@@ -88,11 +93,6 @@ foreach ($path in $pathsToCheck) {
     foreach ($line in $lines) {
         $lineNumber++
         if ($line -match '[ \t]+$' -and -not (Test-SemanticMetaEmptyValue -Path $resolvedPath.Path -Line $line)) {
-            if ($Fix -and -not $isTextFile) {
-                Write-Output "$($resolvedPath.Path):${lineNumber}: trailing whitespace in a non-text file; not modified."
-                $hasErrors = $true
-                continue
-            }
             Write-Output "$($resolvedPath.Path):${lineNumber}: trailing whitespace."
             $hasErrors = $true
         }

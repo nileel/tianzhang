@@ -43,6 +43,76 @@ try {
     }
     Write-Host 'PASS fixes ordinary trailing whitespace'
 
+    $mjsFile = Join-Path $fixtureRoot 'tracked-text-extension.mjs'
+    $mjsContent = "export const value = 1; `n"
+    [IO.File]::WriteAllText($mjsFile, $mjsContent, [Text.UTF8Encoding]::new($false))
+
+    $mjsOutput = & $checker -Paths @($mjsFile) 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        throw 'Expected an .mjs file with trailing whitespace to fail.'
+    }
+    if (($mjsOutput -join "`n") -notmatch 'tracked-text-extension\.mjs:1') {
+        throw "Expected an .mjs file and line diagnostic. Actual: $($mjsOutput -join "`n")"
+    }
+    if ([IO.File]::ReadAllText($mjsFile) -cne $mjsContent) {
+        throw 'Expected a read-only .mjs check to preserve file content.'
+    }
+
+    & $checker -Paths @($mjsFile) -Fix
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Expected -Fix to repair trailing whitespace in an .mjs file.'
+    }
+    if ([IO.File]::ReadAllLines($mjsFile) | Where-Object { $_ -match '[ \t]+$' }) {
+        throw 'Expected -Fix to remove trailing whitespace from an .mjs file.'
+    }
+    Write-Host 'PASS checks and fixes a tracked .mjs text extension'
+
+    $binaryCases = @(
+        @{
+            Name = 'binary-whitespace.blend'
+            Bytes = [byte[]](0x42, 0x4C, 0x45, 0x4E, 0x44, 0x45, 0x52, 0x20, 0x09, 0x0D, 0x0A, 0x00, 0x44, 0x41, 0x54, 0x41, 0x20, 0x0A, 0xFF)
+        },
+        @{
+            Name = 'binary-whitespace.fbx'
+            Bytes = [byte[]](0x4B, 0x61, 0x79, 0x64, 0x61, 0x72, 0x61, 0x20, 0x46, 0x42, 0x58, 0x09, 0x0A, 0x00, 0x20, 0x0D, 0x0A, 0xFE)
+        }
+    )
+    $binaryPaths = @()
+    $binaryHashes = @{}
+    foreach ($case in $binaryCases) {
+        $casePath = Join-Path $fixtureRoot $case.Name
+        [IO.File]::WriteAllBytes($casePath, $case.Bytes)
+        $binaryPaths += $casePath
+        $binaryHashes[$casePath] = (Get-FileHash -LiteralPath $casePath -Algorithm SHA256).Hash
+    }
+
+    $binaryOutput = & $checker -Paths $binaryPaths *>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Expected binary .blend and .fbx files to be skipped. Actual: $($binaryOutput -join "`n")"
+    }
+    if (($binaryOutput -join "`n") -notmatch 'check-pending-whitespace: OK \(2 files checked; fix=False\)') {
+        throw "Expected skipped binaries to retain the input-file count. Actual: $($binaryOutput -join "`n")"
+    }
+    foreach ($casePath in $binaryPaths) {
+        if ((Get-FileHash -LiteralPath $casePath -Algorithm SHA256).Hash -cne $binaryHashes[$casePath]) {
+            throw "Expected a read-only binary check to preserve bytes: $casePath"
+        }
+    }
+
+    $binaryFixOutput = & $checker -Paths $binaryPaths -Fix *>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Expected binary .blend and .fbx files to be skipped with -Fix. Actual: $($binaryFixOutput -join "`n")"
+    }
+    if (($binaryFixOutput -join "`n") -notmatch 'check-pending-whitespace: OK \(2 files checked; fix=True\)') {
+        throw "Expected skipped binaries to retain the input-file count with -Fix. Actual: $($binaryFixOutput -join "`n")"
+    }
+    foreach ($casePath in $binaryPaths) {
+        if ((Get-FileHash -LiteralPath $casePath -Algorithm SHA256).Hash -cne $binaryHashes[$casePath]) {
+            throw "Expected -Fix to preserve binary bytes: $casePath"
+        }
+    }
+    Write-Host 'PASS skips binary .blend and .fbx bytes without changing count or content'
+
     $semanticMetaFile = Join-Path $fixtureRoot 'semantic-meta-empty-values.meta'
     $semanticMetaContent = "  userData: `n  assetBundleName: `n  assetBundleVariant: `n"
     [IO.File]::WriteAllText($semanticMetaFile, $semanticMetaContent, [Text.UTF8Encoding]::new($false))
