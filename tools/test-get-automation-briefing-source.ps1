@@ -24,7 +24,8 @@ function New-FixtureCommit {
     [string]$Content,
     [string]$Message,
     [string]$Timestamp,
-    [hashtable]$AdditionalFiles = @{}
+    [hashtable]$AdditionalFiles = @{},
+    [string[]]$RemovedFiles = @()
   )
 
   [IO.File]::WriteAllText((Join-Path $repositoryRoot $FileName), $Content, [Text.UTF8Encoding]::new($false))
@@ -33,7 +34,14 @@ function New-FixtureCommit {
     [IO.Directory]::CreateDirectory((Split-Path -Parent $path)) | Out-Null
     [IO.File]::WriteAllText($path, [string]$entry.Value, [Text.UTF8Encoding]::new($false))
   }
-  & git -C $repositoryRoot add -- $FileName @($AdditionalFiles.Keys)
+  foreach ($removedFile in $RemovedFiles) {
+    $removedPath = Join-Path $repositoryRoot $removedFile
+    if (Test-Path -LiteralPath $removedPath -PathType Leaf) {
+      Remove-Item -LiteralPath $removedPath -Force
+    }
+  }
+  $pathsToStage = @($FileName) + @($AdditionalFiles.Keys) + @($RemovedFiles)
+  & git -C $repositoryRoot add -- @pathsToStage
   if ($LASTEXITCODE -ne 0) { throw 'git add failed' }
   $oldAuthorDate = $env:GIT_AUTHOR_DATE
   $oldCommitterDate = $env:GIT_COMMITTER_DATE
@@ -50,18 +58,36 @@ function New-FixtureCommit {
 }
 
 function New-TaskCardText {
-  param([string]$Task, [string]$State)
+  param(
+    [string]$Task,
+    [string]$State,
+    [string]$Route = 'external_execute',
+    [string]$Owner = 'deepseek'
+  )
 
   @(
     '---TASK-META---',
     ([ordered]@{
       schemaVersion = 1
       id = $Task
+      route = $Route
+      owner = $Owner
       dispatchState = $State
     } | ConvertTo-Json -Compress),
     '---TASK-BODY---',
     "# $Task"
   ) -join "`n"
+}
+
+function New-QueueText {
+  param([string[]]$Rows = @())
+
+  (@(
+      '# 当前任务队列',
+      '',
+      '| ID | 路由 | 主责 |',
+      '|----|------|------|'
+    ) + @($Rows)) -join "`n"
 }
 
 function New-AutomationMessage {
@@ -97,9 +123,45 @@ try {
   $external = New-FixtureCommit -FileName 'external.txt' -Content 'external' -Message (New-AutomationMessage -Subject 'feat: external' -Task 'TASK-EXTERNAL' -State 'pending_review' -Result 'external result' -Impact 'pending review impact' -Verify 'external test') -Timestamp '2026-07-22T03:00:00+08:00'
   New-FixtureCommit -FileName 'handoff.txt' -Content $external -Message "chore: handoff`n`nBusiness-Commit: $external" -Timestamp '2026-07-22T03:10:00+08:00' | Out-Null
   $queue = New-FixtureCommit -FileName 'queue.txt' -Content 'queue' -Message (New-AutomationMessage -Subject 'chore: refill queue' -Task 'QUEUE-MAINTENANCE' -State 'completed' -Result 'queue result' -Impact 'queue impact' -Verify 'queue test') -Timestamp '2026-07-22T04:00:00+08:00'
+  $readyExternal = New-FixtureCommit -FileName 'ready-external.txt' -Content 'ready external' -Message (New-AutomationMessage -Subject 'chore: ready external' -Task 'TASK-READY-EXTERNAL' -State 'completed' -Result 'ready result' -Impact 'ready impact' -Verify 'ready test') -Timestamp '2026-07-22T04:10:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-READY-EXTERNAL.txt' = New-TaskCardText -Task 'TASK-READY-EXTERNAL' -State 'ready'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-READY-EXTERNAL | external_execute | deepseek |')
+  }
+  $readyBeforeComplete = New-FixtureCommit -FileName 'ready-before-complete.txt' -Content 'ready before complete' -Message (New-AutomationMessage -Subject 'chore: ready before complete' -Task 'TASK-READY-COMPLETE' -State 'completed' -Result 'ready result' -Impact 'ready impact' -Verify 'ready test') -Timestamp '2026-07-22T04:20:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-READY-COMPLETE.txt' = New-TaskCardText -Task 'TASK-READY-COMPLETE' -State 'ready'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-READY-COMPLETE | external_execute | deepseek |')
+  }
+  $completedAfterReady = New-FixtureCommit -FileName 'completed-after-ready.txt' -Content 'completed after ready' -Message (New-AutomationMessage -Subject 'review: completed after ready' -Task 'TASK-READY-COMPLETE' -State 'completed' -Result 'completed result' -Impact 'completed impact' -Verify 'completed test') -Timestamp '2026-07-22T04:30:00+08:00' -AdditionalFiles @{
+    '开发管理/任务归档/TASK-READY-COMPLETE.txt' = New-TaskCardText -Task 'TASK-READY-COMPLETE' -State 'completed' -Route 'codex_review' -Owner 'codex'
+    '开发管理/当前任务队列.txt' = New-QueueText
+  } -RemovedFiles @('开发管理/任务卡/TASK-READY-COMPLETE.txt')
+  $readyReview = New-FixtureCommit -FileName 'ready-review.txt' -Content 'ready review' -Message (New-AutomationMessage -Subject 'chore: ready review' -Task 'TASK-READY-REVIEW' -State 'completed' -Result 'ready review result' -Impact 'ready review impact' -Verify 'ready review test') -Timestamp '2026-07-22T04:40:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-READY-REVIEW.txt' = New-TaskCardText -Task 'TASK-READY-REVIEW' -State 'ready' -Route 'codex_review' -Owner 'codex'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-READY-REVIEW | codex_review | codex |')
+  }
+  $readyMissingRow = New-FixtureCommit -FileName 'ready-missing-row.txt' -Content 'ready missing row' -Message (New-AutomationMessage -Subject 'chore: ready missing row' -Task 'TASK-READY-NO-ROW' -State 'completed' -Result 'ready result' -Impact 'ready impact' -Verify 'ready test') -Timestamp '2026-07-22T04:50:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-READY-NO-ROW.txt' = New-TaskCardText -Task 'TASK-READY-NO-ROW' -State 'ready'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-OTHER | external_execute | deepseek |')
+  }
+  $readyMissingQueue = New-FixtureCommit -FileName 'ready-missing-queue.txt' -Content 'ready missing queue' -Message (New-AutomationMessage -Subject 'chore: ready missing queue' -Task 'TASK-READY-NO-QUEUE' -State 'completed' -Result 'ready result' -Impact 'ready impact' -Verify 'ready test') -Timestamp '2026-07-22T05:00:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-READY-NO-QUEUE.txt' = New-TaskCardText -Task 'TASK-READY-NO-QUEUE' -State 'ready'
+  } -RemovedFiles @('开发管理/当前任务队列.txt')
+  $readyDuplicateRow = New-FixtureCommit -FileName 'ready-duplicate-row.txt' -Content 'ready duplicate row' -Message (New-AutomationMessage -Subject 'chore: ready duplicate row' -Task 'TASK-READY-DUPLICATE' -State 'completed' -Result 'ready result' -Impact 'ready impact' -Verify 'ready test') -Timestamp '2026-07-22T05:10:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-READY-DUPLICATE.txt' = New-TaskCardText -Task 'TASK-READY-DUPLICATE' -State 'ready'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-READY-DUPLICATE | external_execute | deepseek |', '| TASK-READY-DUPLICATE | external_execute | deepseek |')
+  }
+  $activeAndArchive = New-FixtureCommit -FileName 'active-and-archive.txt' -Content 'active and archive' -Message (New-AutomationMessage -Subject 'fix: active and archive' -Task 'TASK-ACTIVE-ARCHIVE' -State 'completed' -Result 'conflict result' -Impact 'conflict impact' -Verify 'conflict test') -Timestamp '2026-07-22T05:20:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-ACTIVE-ARCHIVE.txt' = New-TaskCardText -Task 'TASK-ACTIVE-ARCHIVE' -State 'ready'
+    '开发管理/任务归档/TASK-ACTIVE-ARCHIVE.txt' = New-TaskCardText -Task 'TASK-ACTIVE-ARCHIVE' -State 'completed'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-ACTIVE-ARCHIVE | external_execute | deepseek |')
+  }
+  $mismatchedCard = New-FixtureCommit -FileName 'mismatched-card.txt' -Content 'mismatched card' -Message (New-AutomationMessage -Subject 'fix: mismatched card' -Task 'TASK-MISMATCH' -State 'completed' -Result 'mismatch result' -Impact 'mismatch impact' -Verify 'mismatch test') -Timestamp '2026-07-22T05:30:00+08:00' -AdditionalFiles @{
+    '开发管理/任务卡/TASK-MISMATCH.txt' = New-TaskCardText -Task 'TASK-OTHER-ID' -State 'ready'
+    '开发管理/当前任务队列.txt' = New-QueueText -Rows @('| TASK-MISMATCH | external_execute | deepseek |')
+  }
   $malformedMessage = "fix: malformed`n`nAutomation: tzg-hourly-controller`nTask: TASK-BAD`nState: completed`nResult: bad`nImpact: bad"
-  $malformed = New-FixtureCommit -FileName 'bad.txt' -Content 'bad' -Message $malformedMessage -Timestamp '2026-07-22T05:00:00+08:00'
-  $unverifiable = New-FixtureCommit -FileName 'unverifiable.txt' -Content 'unverifiable' -Message (New-AutomationMessage -Subject 'fix: unverifiable' -Task 'TASK-NO-FACT' -State 'completed' -Result 'claims completed' -Impact 'unknown' -Verify 'fixture') -Timestamp '2026-07-22T05:30:00+08:00'
+  $malformed = New-FixtureCommit -FileName 'bad.txt' -Content 'bad' -Message $malformedMessage -Timestamp '2026-07-22T05:40:00+08:00'
+  $unverifiable = New-FixtureCommit -FileName 'unverifiable.txt' -Content 'unverifiable' -Message (New-AutomationMessage -Subject 'fix: unverifiable' -Task 'TASK-NO-FACT' -State 'completed' -Result 'claims completed' -Impact 'unknown' -Verify 'fixture') -Timestamp '2026-07-22T05:50:00+08:00'
   New-FixtureCommit -FileName 'human.txt' -Content 'human' -Message 'docs: human commit' -Timestamp '2026-07-22T06:00:00+08:00' | Out-Null
 
   $output = & pwsh -NoProfile -ExecutionPolicy Bypass -File $sourcePath `
@@ -111,7 +173,7 @@ try {
   Assert-Equal -Actual $lines.Count -Expected 1 -Message 'Briefing source must emit one JSON line'
   $result = $lines[0] | ConvertFrom-Json -Depth 100
 
-  Assert-Equal -Actual @($result.groups).Count -Expected 4 -Message 'Briefing group count mismatch'
+  Assert-Equal -Actual @($result.groups).Count -Expected 7 -Message 'Briefing group count mismatch'
   $taskOne = @($result.groups | Where-Object task -eq 'TASK-ONE')
   Assert-Equal -Actual $taskOne.Count -Expected 1 -Message 'TASK-ONE group missing'
   Assert-Equal -Actual @($taskOne[0].commits).Count -Expected 2 -Message 'Same-task commits were not grouped'
@@ -128,16 +190,31 @@ try {
   $queueGroup = @($result.groups | Where-Object task -eq 'QUEUE-MAINTENANCE')
   Assert-Equal -Actual $queueGroup[0].category -Expected 'queue_maintenance' -Message 'Queue category mismatch'
   Assert-Equal -Actual $queueGroup[0].commits[0].sha -Expected $queue -Message 'Queue commit mismatch'
+  $readyExternalGroup = @($result.groups | Where-Object task -eq 'TASK-READY-EXTERNAL')
+  Assert-Equal -Actual $readyExternalGroup[0].category -Expected 'ready' -Message 'External ready category mismatch'
+  Assert-Equal -Actual $readyExternalGroup[0].commits[0].sha -Expected $readyExternal -Message 'External ready commit mismatch'
+  $readyCompleteGroup = @($result.groups | Where-Object task -eq 'TASK-READY-COMPLETE')
+  Assert-Equal -Actual $readyCompleteGroup[0].category -Expected 'completed' -Message 'Ready-to-completed category mismatch'
+  Assert-Equal -Actual @($readyCompleteGroup[0].commits).Count -Expected 2 -Message 'Ready-to-completed commits were not grouped'
+  Assert-Equal -Actual $readyCompleteGroup[0].commits[0].sha -Expected $readyBeforeComplete -Message 'Ready-to-completed first commit mismatch'
+  Assert-Equal -Actual $readyCompleteGroup[0].commits[1].sha -Expected $completedAfterReady -Message 'Ready-to-completed final commit mismatch'
+  $readyReviewGroup = @($result.groups | Where-Object task -eq 'TASK-READY-REVIEW')
+  Assert-Equal -Actual $readyReviewGroup[0].category -Expected 'ready' -Message 'Review ready category mismatch'
+  Assert-Equal -Actual $readyReviewGroup[0].commits[0].sha -Expected $readyReview -Message 'Review ready commit mismatch'
 
-  Assert-Equal -Actual @($result.errors).Count -Expected 2 -Message 'Briefing error count mismatch'
+  Assert-Equal -Actual @($result.errors).Count -Expected 7 -Message 'Briefing error count mismatch'
   $malformedError = @($result.errors | Where-Object sha -eq $malformed)
   Assert-Equal -Actual $malformedError[0].reason -Expected 'invalid_metadata' -Message 'Malformed reason mismatch'
   $unverifiableError = @($result.errors | Where-Object sha -eq $unverifiable)
   Assert-Equal -Actual $unverifiableError[0].reason -Expected 'outcome_unverifiable' -Message 'Unverifiable outcome reason mismatch'
+  foreach ($expectedError in @($readyMissingRow, $readyMissingQueue, $readyDuplicateRow, $activeAndArchive, $mismatchedCard)) {
+    $matchingError = @($result.errors | Where-Object sha -eq $expectedError)
+    Assert-Equal -Actual $matchingError[0].reason -Expected 'outcome_unverifiable' -Message "Fail-closed outcome reason mismatch for $expectedError"
+  }
 
   $allCandidateShas = @($result.groups.commits.sha)
   Assert-True -Condition ($external -in $allCandidateShas) -Message 'External business commit missing'
-  Assert-True -Condition ($allCandidateShas.Count -eq 5) -Message 'Handoff, human, invalid, or outside-window commit leaked into candidates'
+  Assert-True -Condition ($allCandidateShas.Count -eq 9) -Message 'Handoff, human, invalid, fail-closed, or outside-window commit leaked into candidates'
 
   Write-Output 'test-get-automation-briefing-source: OK'
 } finally {

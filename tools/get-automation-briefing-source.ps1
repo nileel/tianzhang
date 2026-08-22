@@ -92,6 +92,16 @@ function Get-TaskStateFromCard {
   [string]$metadata.dispatchState
 }
 
+function Test-CommittedReadyQueueEntry {
+  param([string]$CommitSha, [string]$Task)
+
+  $queueText = Read-CommitFile -CommitSha $CommitSha -Path '开发管理/当前任务队列.txt'
+  if ($null -eq $queueText) { return $false }
+  $taskPattern = [regex]::Escape($Task)
+  $matches = [regex]::Matches($queueText, "(?m)^\|\s*$taskPattern\s*\|")
+  $matches.Count -eq 1
+}
+
 function Get-CommittedTaskState {
   param([string]$CommitSha, [string]$Task)
 
@@ -107,6 +117,12 @@ function Get-CommittedTaskState {
   }
   $activeState = Get-TaskStateFromCard -Text $activeText -Task $Task
   if ($activeState -cin @('blocked', 'frozen', 'pending_decision', 'waiting_reply')) {
+    return $activeState
+  }
+  if (
+    $activeState -ceq 'ready' -and
+    (Test-CommittedReadyQueueEntry -CommitSha $CommitSha -Task $Task)
+  ) {
     return $activeState
   }
   $null
