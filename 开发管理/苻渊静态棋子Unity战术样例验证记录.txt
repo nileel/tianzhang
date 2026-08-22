@@ -1,0 +1,26 @@
+# 苻渊静态棋子 Unity 战术样例验证记录
+
+任务：`U-CHAR-STATIC-CHESS-PROTO-01`
+日期：2026-08-22
+范围：只在 `AdventureScene/VisualBaselineBoard` 的隔离六向技术矩阵中消费唯一静态候选；未接入 `AdventureUnitSpawner`、正式遭遇、常规单位、规则或存档。
+
+## 输入与资产
+
+- 唯一输入已原样复制：`assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx` → `src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx`。
+- 两端 SHA-256 均为 `AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A`；Unity 资源路径由 `VisualBaselineBuilder` 确定性生成 `FuYuan_StaticChess.mat` 和 `FuYuan_StaticChess.prefab`。
+- FBX Importer 固定 `importAnimation=0`、`animationType=None`，无 AnimationClip、Animator、Animation 或 SkinnedMeshRenderer；人物根、模型和底座均不持有规则状态。
+- Prefab 根为 `FuYuan_StaticChess`，单位缩放、局部 `+Z` 正面、人物脚底 `Y=0`；独立 `StaticChessBase` 位于同一根锚点的 `Y=-0.04`，顶面与人物接地面重合，未合并入人物或地块。人物网格使用冻结 URP Lit 材质，底座仍用技术基线材质。
+
+## 表现与六向矩阵
+
+- `AdventureSceneBuilder.CreateFacingProbes` 仅替换 `VisualBaselineBoard` 的六个 `FacingProbe_0..5` 为静态棋子 Prefab；根节点保持既有 `HexCoord.Directions` 对应中心与 Y 旋转 `90/150/210/270/330/30`，本地 `+Z` 指向对应邻格。
+- `StaticChessPresentationController` 只写根节点：待机静止；移动按批准位置抬起—移动—落下；攻击短促前倾／位移；受击震动；施法只发出一次 `CastEffectRequested`；死亡倾倒／降低。每项结束恢复根节点，模型与独立底座的局部变换不变。
+- PlayMode 矩阵以 `Screen.SetResolution(1920,1080,false)` 遍历六向与六种表现事件，断言根复位、施法单次接口和所有子网格／底座变换保持不变。无图形 batch 环境只执行此可重复的 1920×1080 逻辑矩阵；最终路线比较仍须在同一固定镜头下作人工可读性结论。
+
+## 验证结果
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：414/414 通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：6/6 通过；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过。
+
+结论：静态 3D 路线已形成可供 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 消费的六向、根节点表现和规则隔离证据。剩余风险仅为路线比较所需的固定镜头人工视觉判定；它不授权将本样例接入正式单位链。

@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 namespace TianZhang.Gameplay.Contracts
 {
+    public enum StaticChessPresentationEvent
+    {
+        Idle,
+        Move,
+        Attack,
+        Hit,
+        Cast,
+        Death,
+    }
+
     [Serializable]
     public sealed class CombatantHudSnapshot
     {

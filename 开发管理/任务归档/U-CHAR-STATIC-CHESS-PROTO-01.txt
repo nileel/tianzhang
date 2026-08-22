@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-22：唯一静态 Blender 候选已通过封闭流形、四向轮廓、Y=0／1.03 m／单位缩放、+Z／+Y 导出、内嵌贴图与 factory-empty FBX 回读；现行 AdventureScene VisualBaselineBoard、资源路径、表现所有者和直接测试已冻结，本卡可在隔离测试台实施。",
+  "stateReason": "2026-08-22：Codex 已把唯一静态 Blender 候选原样导入 AdventureScene 的隔离 VisualBaselineBoard；无动画 URP Prefab、独立底座、冻结六向根节点和六类表现矩阵均通过 414/414 EditMode、6/6 PlayMode、资产版本、数据链与程序集边界验证，正式 AdventureUnitSpawner、规则与存档链未修改。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -73,3 +73,10 @@
 ## 停止条件
 
 - 必须恢复骨骼动画、修改规则所有者、越过 `VisualBaselineBoard` 进入正式运行链或用特殊镜头隐藏问题时停止。
+
+## 完成记录
+
+- 2026-08-22：唯一候选 FBX SHA-256 原样复制并作为 LFS Unity 资源导入；Importer 显式关闭动画，Prefab 仅含静态 MeshRenderer、URP Lit 人物材质、独立 `StaticChessBase` 和根节点表现控制器。
+- 六个冻结 `FacingProbe` 继续按 `HexCoord.Directions` 的 `90/150/210/270/330/30` 根节点朝向布置；六种表现均只写根节点并在结束时复位，施法只保留一次性特效事件，子网格和底座无变换写入。
+- `run-unity-editmode-tests.ps1` 通过 414/414，`run-unity-playmode-tests.ps1` 通过 6/6；资产版本、数据链和程序集边界检查通过。固定 1920×1080 PlayMode 矩阵与完整结论见 `开发管理/苻渊静态棋子Unity战术样例验证记录.txt`。
+- 已移除 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 的本卡前置；比较卡仍只等待 `U-CHAR-2D-TACTICAL-PROTO-01` 的对称证据。

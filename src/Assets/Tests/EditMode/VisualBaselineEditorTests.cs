@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Editor;
+using TianZhang.Features.CombatPresentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -81,6 +82,13 @@ namespace TianZhang.Tests.EditMode
                 Vector3 expectedForward = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f).normalized;
                 Assert.Less(Vector3.Angle(probe.localRotation * Vector3.forward, expectedForward), 0.01f,
                     "UnitMarker local +Z must face the matching rule neighbor center.");
+                Assert.IsNotNull(probe.GetComponent<StaticChessPresentationController>());
+                Assert.AreEqual(
+                    VisualBaselineBuilder.StaticChessPrefabPath,
+                    PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(probe.gameObject));
+                Assert.Zero(probe.GetComponentsInChildren<Animator>(true).Length);
+                Assert.Zero(probe.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length);
+                Assert.IsNotNull(probe.Find("StaticChessBase"));
                 MeshRenderer[] renderers = probe.GetComponentsInChildren<MeshRenderer>(true);
                 Assert.GreaterOrEqual(renderers.Length, 2);
                 foreach (MeshRenderer renderer in renderers)
@@ -121,6 +129,44 @@ namespace TianZhang.Tests.EditMode
                         VisualBaselineBuilder.UnitMaterialPath,
                         AssetDatabase.GetAssetPath(renderer.sharedMaterial));
                 }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        [Test]
+        public void StaticChessAssetsKeepTheFigureAndBaseIndependent()
+        {
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(VisualBaselineBuilder.StaticChessMaterialPath);
+            Assert.IsNotNull(material);
+            Assert.AreEqual("Universal Render Pipeline/Lit", material.shader.name);
+            ModelImporter importer = AssetImporter.GetAtPath(VisualBaselineBuilder.StaticChessModelPath) as ModelImporter;
+            Assert.IsNotNull(importer);
+            Assert.IsFalse(importer.importAnimation);
+            Assert.AreEqual(ModelImporterAnimationType.None, importer.animationType);
+            GameObject root = PrefabUtility.LoadPrefabContents(VisualBaselineBuilder.StaticChessPrefabPath);
+            try
+            {
+                Assert.AreEqual("FuYuan_StaticChess", root.name);
+                Assert.AreEqual(Vector3.zero, root.transform.localPosition);
+                Assert.AreEqual(Vector3.one, root.transform.localScale);
+                Assert.IsNotNull(root.GetComponent<StaticChessPresentationController>());
+                Assert.Zero(root.GetComponentsInChildren<Animation>(true).Length);
+                Assert.Zero(root.GetComponentsInChildren<Animator>(true).Length);
+                Assert.Zero(root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length);
+                Transform basePlaceholder = root.transform.Find("StaticChessBase");
+                Assert.IsNotNull(basePlaceholder);
+                Assert.Less(Mathf.Abs(basePlaceholder.localPosition.y + 0.04f), 0.001f);
+                Assert.AreEqual(
+                    VisualBaselineBuilder.UnitMaterialPath,
+                    AssetDatabase.GetAssetPath(basePlaceholder.GetComponent<MeshRenderer>().sharedMaterial));
+                foreach (MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true)
+                             .Where(item => item.transform != basePlaceholder))
+                    Assert.AreEqual(
+                        VisualBaselineBuilder.StaticChessMaterialPath,
+                        AssetDatabase.GetAssetPath(renderer.sharedMaterial));
             }
             finally
             {

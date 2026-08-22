@@ -34,6 +34,7 @@ namespace TianZhang.Editor
             CombatActionBarView actionBar = root.AddComponent<CombatActionBarView>();
             CombatLogView logView = root.AddComponent<CombatLogView>();
 
+            VisualBaselineBuilder.BuildStaticChessAssets();
             ValidateReadOnlyVisualAssets();
             BuildVisualBaselineMatrix();
 
@@ -128,6 +129,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath);
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.AttackMaterialPath);
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
+            SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.StaticChessPrefabPath);
         }
 
         private static void BuildVisualBaselineMatrix()
@@ -191,16 +193,17 @@ namespace TianZhang.Editor
 
         private static void CreateFacingProbes(Transform parent, int[,] cells)
         {
-            GameObject markerPrefab = SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.UnitMarkerPrefabPath);
+            GameObject chessPrefab = SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.StaticChessPrefabPath);
             for (int direction = 0; direction < FacingProbeYaws.Length; direction++)
             {
                 HexCoord neighbor = HexCoord.Directions[direction];
                 int heightLevel = FindCellHeight(cells, neighbor.q, neighbor.r);
-                GameObject probe = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab);
+                GameObject probe = (GameObject)PrefabUtility.InstantiatePrefab(chessPrefab);
                 probe.name = "FacingProbe_" + direction;
                 probe.transform.SetParent(parent, false);
                 probe.transform.localPosition = HexToWorld(neighbor.q, neighbor.r, HeightForLevel(heightLevel));
                 probe.transform.localRotation = Quaternion.Euler(0f, FacingProbeYaws[direction], 0f);
+                probe.GetComponent<StaticChessPresentationController>().CaptureRestPose();
             }
         }
 

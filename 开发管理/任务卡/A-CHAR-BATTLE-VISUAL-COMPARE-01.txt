@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "decision",
   "dispatchState": "blocked",
-  "blockedBy": ["U-CHAR-STATIC-CHESS-PROTO-01", "U-CHAR-2D-TACTICAL-PROTO-01"],
-  "stateReason": "等待两条路线在同一测试台形成完整、对称的六向与表现证据；本卡只比较，不实施修补。",
+  "blockedBy": ["U-CHAR-2D-TACTICAL-PROTO-01"],
+  "stateReason": "静态 3D 已在同一测试台形成完整六向与表现证据；仍等待 2D 路线的对称矩阵，本卡只比较，不实施修补。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",

@@ -4,6 +4,7 @@ using System.Linq;
 using TianZhang.Bootstrap;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CharacterCreation;
+using TianZhang.Features.CombatPresentation;
 using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
 using UnityEditor;
@@ -104,6 +105,7 @@ namespace TianZhang.Editor
             ValidateTransparentMaterial(VisualBaselineBuilder.SelectedMaterialPath);
             ValidateTransparentMaterial(VisualBaselineBuilder.AttackMaterialPath);
             ValidateUnitMarkerPrefab();
+            ValidateStaticChessPrefab();
 
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
             Require(!string.IsNullOrWhiteSpace(projectRoot) &&
@@ -135,6 +137,49 @@ namespace TianZhang.Editor
                 foreach (MeshRenderer renderer in renderers)
                     Require(renderer.shadowCastingMode == ShadowCastingMode.On && renderer.receiveShadows,
                         "Every UnitMarker mesh must cast and receive 3D shadows.");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void ValidateStaticChessPrefab()
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(VisualBaselineBuilder.StaticChessModelPath) as ModelImporter;
+            Require(importer != null && !importer.importAnimation &&
+                    importer.animationType == ModelImporterAnimationType.None,
+                "The static chess FBX importer must keep animation disabled.");
+            GameObject root = PrefabUtility.LoadPrefabContents(VisualBaselineBuilder.StaticChessPrefabPath);
+            try
+            {
+                Require(root.name == "FuYuan_StaticChess" && root.transform.localPosition == Vector3.zero &&
+                        root.transform.localScale == Vector3.one,
+                    "The static chess root must retain its unit ground anchor and scale.");
+                Require(root.GetComponentsInChildren<Animator>(true).Length == 0 &&
+                        root.GetComponentsInChildren<Animation>(true).Length == 0 &&
+                        root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length == 0,
+                    "The static chess prefab must not import a runtime animation or rig.");
+                Require(root.GetComponents<StaticChessPresentationController>().Length == 1,
+                    "The static chess root must own exactly one presentation controller.");
+                Transform basePlaceholder = root.transform.Find("StaticChessBase");
+                Require(basePlaceholder != null && Mathf.Abs(basePlaceholder.localPosition.y + 0.04f) < 0.001f,
+                    "The independent static chess base must share the root ground anchor.");
+                MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
+                Require(renderers.Length >= 2, "The static chess prefab must contain figure and base renderers.");
+                foreach (MeshRenderer renderer in renderers)
+                    Require(renderer.shadowCastingMode == ShadowCastingMode.On && renderer.receiveShadows,
+                        "Every static chess mesh must cast and receive shadows.");
+                Require(AssetDatabase.GetAssetPath(basePlaceholder.GetComponent<MeshRenderer>().sharedMaterial) ==
+                        VisualBaselineBuilder.UnitMaterialPath,
+                    "The independent base must remain separate from the character material.");
+                foreach (MeshRenderer renderer in renderers.Where(item => item.transform != basePlaceholder))
+                    Require(AssetDatabase.GetAssetPath(renderer.sharedMaterial) ==
+                            VisualBaselineBuilder.StaticChessMaterialPath,
+                        "The imported static chess figure must use the frozen URP material.");
+                Require(!AssetDatabase.LoadAllAssetsAtPath(VisualBaselineBuilder.StaticChessModelPath)
+                            .OfType<AnimationClip>().Any(),
+                    "The static chess FBX must not expose imported animation clips.");
             }
             finally
             {
@@ -221,8 +266,10 @@ namespace TianZhang.Editor
             Vector3 expectedForward = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f).normalized;
             Require(Vector3.Angle(probe.localRotation * Vector3.forward, expectedForward) < 0.01f,
                 "Facing probe local +Z does not point at its rule neighbor.");
+            Require(probe.GetComponent<StaticChessPresentationController>() != null,
+                "Facing probe must instantiate the static chess presentation root.");
             MeshRenderer[] renderers = probe.GetComponentsInChildren<MeshRenderer>(true);
-            Require(renderers.Length >= 2, "Facing probe must instantiate the 3D UnitMarker.");
+            Require(renderers.Length >= 2, "Facing probe must instantiate the figure and independent base.");
             foreach (MeshRenderer renderer in renderers)
                 Require(renderer.shadowCastingMode == ShadowCastingMode.On && renderer.receiveShadows,
                     "Facing probe meshes must cast and receive 3D shadows.");

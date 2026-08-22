@@ -38,6 +38,12 @@ namespace TianZhang.Editor
         public const string UnitMaterialPath =
             "Assets/Art/VisualBaseline/Materials/VisualBaseline_Unit.mat";
         public const string UnitMarkerPrefabPath = "Assets/Resources/UnitMarker.prefab";
+        public const string StaticChessModelPath =
+            "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx";
+        public const string StaticChessMaterialPath =
+            "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.mat";
+        public const string StaticChessPrefabPath =
+            "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab";
 
         [MenuItem("天章/视觉/重建 URP 技术基线")]
         public static void Rebuild()
@@ -48,6 +54,7 @@ namespace TianZhang.Editor
             BuildHexOverlayMesh();
             BuildMaterials();
             BuildUnitMarkerPrefab();
+            BuildStaticChessAssets();
             AssetDatabase.SaveAssets();
 
             StartMenuSceneBuilder.Build();
@@ -65,6 +72,13 @@ namespace TianZhang.Editor
             EnsureFolder("Assets/Art", "VisualBaseline");
             EnsureFolder("Assets/Art/VisualBaseline", "Materials");
             EnsureFolder("Assets/Art/VisualBaseline", "Meshes");
+        }
+
+        private static void EnsureStaticChessFolders()
+        {
+            EnsureFolder("Assets/Art", "Characters");
+            EnsureFolder("Assets/Art/Characters", "StaticChess");
+            EnsureFolder("Assets/Art/Characters/StaticChess", "FuYuan");
         }
 
         private static void EnsureFolder(string parent, string name)
@@ -323,6 +337,85 @@ namespace TianZhang.Editor
             {
                 UnityEngine.Object.DestroyImmediate(root);
             }
+        }
+
+        public static void BuildStaticChessAssets()
+        {
+            EnsureStaticChessFolders();
+            AssetDatabase.ImportAsset(StaticChessModelPath, ImportAssetOptions.ForceSynchronousImport);
+            ModelImporter importer = AssetImporter.GetAtPath(StaticChessModelPath) as ModelImporter;
+            if (importer == null) throw new InvalidOperationException("Static chess FBX importer is unavailable.");
+            if (importer.importAnimation || importer.animationType != ModelImporterAnimationType.None)
+            {
+                importer.importAnimation = false;
+                importer.animationType = ModelImporterAnimationType.None;
+                importer.SaveAndReimport();
+            }
+            GameObject model = RequireAsset<GameObject>(StaticChessModelPath);
+            Material material = GetOrCreateStaticChessMaterial(model);
+            var root = new GameObject("FuYuan_StaticChess");
+            try
+            {
+                GameObject figure = (GameObject)PrefabUtility.InstantiatePrefab(model);
+                figure.name = "FuYuan_Model";
+                figure.transform.SetParent(root.transform, false);
+                figure.transform.localPosition = Vector3.zero;
+                figure.transform.localRotation = Quaternion.identity;
+                figure.transform.localScale = Vector3.one;
+                foreach (MeshRenderer renderer in figure.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    renderer.sharedMaterial = material;
+                    renderer.shadowCastingMode = ShadowCastingMode.On;
+                    renderer.receiveShadows = true;
+                }
+
+                GameObject basePlaceholder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                basePlaceholder.name = "StaticChessBase";
+                basePlaceholder.transform.SetParent(root.transform, false);
+                basePlaceholder.transform.localPosition = new Vector3(0f, -0.04f, 0f);
+                basePlaceholder.transform.localScale = new Vector3(0.66f, 0.04f, 0.66f);
+                ConfigurePrimitive(basePlaceholder, RequireAsset<Material>(UnitMaterialPath));
+
+                root.AddComponent<TianZhang.Features.CombatPresentation.StaticChessPresentationController>();
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, StaticChessPrefabPath);
+                if (saved == null) throw new InvalidOperationException("Could not save the static chess prefab.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        private static Material GetOrCreateStaticChessMaterial(GameObject model)
+        {
+            MeshRenderer sourceRenderer = model.GetComponentInChildren<MeshRenderer>(true);
+            if (sourceRenderer == null || sourceRenderer.sharedMaterial == null)
+                throw new InvalidOperationException("Static chess FBX is missing its imported mesh material.");
+            Material source = sourceRenderer.sharedMaterial;
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(StaticChessMaterialPath);
+            if (material == null)
+            {
+                RequireUnusedPath(StaticChessMaterialPath);
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (shader == null) throw new InvalidOperationException("Required URP Lit shader is unavailable.");
+                material = new Material(shader);
+                AssetDatabase.CreateAsset(material, StaticChessMaterialPath);
+            }
+
+            Texture baseMap = source.HasProperty("_BaseMap") ? source.GetTexture("_BaseMap") : null;
+            if (baseMap == null && source.HasProperty("_MainTex")) baseMap = source.GetTexture("_MainTex");
+            Color baseColor = source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") :
+                source.HasProperty("_Color") ? source.GetColor("_Color") : Color.white;
+            material.name = "FuYuan_StaticChess";
+            material.shader = Shader.Find("Universal Render Pipeline/Lit");
+            material.SetColor("_BaseColor", baseColor);
+            if (baseMap != null) material.SetTexture("_BaseMap", baseMap);
+            material.SetFloat("_Smoothness", 0.1f);
+            material.SetFloat("_Metallic", 0f);
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static void ConfigurePrimitive(GameObject target, Material material)
