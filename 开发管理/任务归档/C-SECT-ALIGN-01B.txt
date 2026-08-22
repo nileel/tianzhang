@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-22：Codex 已独立复审正式提交 38028d6210fb56514d82c0a4af78deaa7b4c2fdc；四宗炼虚残留、双道基、位格口径、贬义自称、神通旧口径与数值草稿标注均符合任务边界，任务完成归档。",
   "expectedPaths": [
     "docs/门派/关陇玄域/太虚观.txt",
     "docs/门派/关陇玄域/混元山.txt",
