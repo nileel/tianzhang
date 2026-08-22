@@ -17,6 +17,13 @@
 - `integrated`：先证明 `master` 已包含记录的 formal SHA、任务后置状态正确且没有重复通知／清理风险，再精确调用 `CompleteRun`；不得重复 fast-forward 或业务执行。
 - `attention_required`：只报告并等待普通管理上下文核验。runtime 原因不能代替任务卡 blocker；若已构成任务级阻塞，按任务维护规则提交任务卡和队列投影。原因是 `task_requires_decomposition` 时，先确认没有 candidate、正式提交或集成；由普通 Codex 规划上下文只针对当前父项一次性建立全部已知子任务卡、依赖图、首批 ready 叶子和父项关闭条件，使父项退出执行队列并仅保留汇总状态。若 worktree 已有业务差异，先保留并判断其证据用途，不把半成品自动分配给子卡；完成规划事实集成且满足精确关闭合同后才关闭原 run。
 
+## 人工恢复成功通知
+
+- 人工恢复只有在正式提交已经进入 `master`、任务后置状态正确且原 run 已通过 schema 5 `CompleteRun` 精确关闭后，才发送一次普通飞书 `TaskOutcome`；任一条件未满足时不得发送成功通知。
+- 通知直接调用现有 `tools/send-feishu-notification.ps1`，使用被关闭 run 的原始 taskId／runId 和已进入 `master` 的 formal SHA。Codex 正式完成传 `-Status completed`；DeepSeek 正式交付独立复审传 `-Status pending_review`。
+- 返回 `PROVIDER_ACCEPTED` 时记录已投递；其他脱敏结果只报告，不回滚 Git、任务投影或 runtime，不重试。现有 `taskId + status + commitSha` 幂等键继续防止同一正式结果产生第二条实际消息。
+- 只关闭空 run、保留失败证据、清理现场或尚未完成精确收口的人工处置不发送成功通知；`blocked`、`failed`、`waiting_decision` 和 `waiting_reply` 继续使用既有对应路径。
+
 ## 唯一自动继续例外：decision checkpoint
 
 - decision checkpoint 不是普通失败恢复。它必须具有干净 checkpoint 提交和结构化决策合同，精确绑定 taskId、decisionId、baseCommit、branch、SHA、授权路径、验证证据与任务摘要。
