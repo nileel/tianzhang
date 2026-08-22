@@ -72,6 +72,9 @@ $sharedEntry = Read-Utf8 (Join-Path $root 'tools/invoke-hourly-owner.ps1')
 $adapter = Read-Utf8 (Join-Path $root 'tools/hourly-owner-adapter.ps1')
 Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree', 'review_rework', 'Apply-AnsweredReviewRework', 'allowCustomReply = $false', 'hourly_codex_model_unverified', 'Add-AttentionNotification', 'Get-HourlyFormalCommitContract -Adapter $adapter -Run $Run', "@('cherry-pick', '--no-commit', [string]`$Run.candidateCommit)", '& $finalizerPath -RepositoryRoot $Worktree @Parameters', 'AutomationState = [string]$formalContract.state')
 Assert-Contains $sharedEntry 'task input materialization' @('Get-TaskAutomationInputs', 'Materialize-TaskAutomationInputs', 'Assert-MaterializedAutomationInputs', 'Read-RunTaskMetadata', 'Read-TaskMetadataAtCommit', 'hourly_task_input_validation_failed', 'hourly_task_changed_after_claim')
+$sharedDigestMatch = [regex]::Match($sharedEntry, '(?s)function Get-TaskContextDigest\s*\{(?<body>.*?)\r?\n\}')
+Assert-Contract $sharedDigestMatch.Success 'shared owner entry is missing Get-TaskContextDigest'
+Assert-Contains $sharedDigestMatch.Groups['body'].Value 'shared task context digest' @('automationInputs = @(', 'path =', 'bytes =', 'sha256 =', 'sourceBacklog =')
 $taskCards = Read-Utf8 (Join-Path $root 'tools/check-task-cards.ps1')
 Assert-Contains $taskCards 'task-card automation inputs' @('Assert-AutomationInputs', 'automationInputs requires route=codex_execute owner=codex', 'automationInputs path must be under assets/source/')
 $combinedValidationMatch = [regex]::Match($sharedEntry, '(?s)function Invoke-CombinedValidation\s*\{(?<body>.*?)\r?\n\}\r?\n\r?\nfunction Test-MainPathConflict')
@@ -81,6 +84,9 @@ Assert-Contract ([regex]::Matches($combinedValidation, [regex]::Escape('Push-Loc
 Assert-Contains $combinedValidation 'combined validation' @('$dataChainExitCode = $LASTEXITCODE', "Stop-Hourly 'hourly_data_chain_failed'")
 $taskState = Read-Utf8 (Join-Path $root 'tools/set-task-automation-state.ps1')
 Assert-Contains $taskState 'task state transition' @('RequeueReview', 'review_rework', 'ExternalDispatchReady', 'CodexDispatchReady')
+$taskStateDigestMatch = [regex]::Match($taskState, '(?s)function Get-TaskContextDigest\s*\{(?<body>.*?)\r?\n\}')
+Assert-Contract $taskStateDigestMatch.Success 'task state transition is missing Get-TaskContextDigest'
+Assert-Contains $taskStateDigestMatch.Groups['body'].Value 'task state context digest' @('automationInputs =', 'path =', 'bytes =', 'sha256 =', 'sourceBacklog =')
 Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-pro', 'Test-HourlyOwnerModelVerified')
 Assert-DoesNotContain $adapter 'owner adapter' @('git ', 'hourly-automation-lease.ps1', 'Enter-TzgIntegrationLock', 'CompleteRun')
 

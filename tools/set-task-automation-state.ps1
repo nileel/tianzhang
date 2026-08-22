@@ -23,10 +23,22 @@ function Get-NormalizedTextDigest {
 
 function Get-TaskContextDigest {
   param([object]$Metadata)
+  $automationInputs = @(
+    if ($Metadata.PSObject.Properties.Name -contains 'automationInputs') {
+      foreach ($input in @($Metadata.automationInputs)) {
+        [ordered]@{
+          path = [string]$input.path
+          bytes = [Convert]::ToInt64($input.bytes)
+          sha256 = ([string]$input.sha256).ToUpperInvariant()
+        }
+      }
+    }
+  )
   $context = [ordered]@{
     id = [string]$Metadata.id; title = [string]$Metadata.title; priority = [string]$Metadata.priority
     route = [string]$Metadata.route; owner = [string]$Metadata.owner; domain = [string]$Metadata.domain; stage = [string]$Metadata.stage
     blockedBy = @($Metadata.blockedBy | ForEach-Object { [string]$_ }); expectedPaths = @($Metadata.expectedPaths | ForEach-Object { [string]$_ })
+    automationInputs = $automationInputs
     sourceBacklog = [string]$Metadata.sourceBacklog
   }
   $json = $context | ConvertTo-Json -Compress -Depth 20
