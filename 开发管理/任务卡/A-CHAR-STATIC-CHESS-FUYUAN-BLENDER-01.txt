@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-08-22：负责人明确确认同一静态 Tripo 原包按批准流程正确生成并直接按平台门通过处理；上游已完成归档，原包与哈希已冻结。本卡解除唯一前置并进入 ready，只允许静态结构、材质、朝向、尺度和最小清理。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01"
+  ],
+  "stateReason": "2026-08-22：负责人确认的静态 Tripo 原包与哈希仍冻结且实际文件一致；但 assets/source/ 被 Git 忽略，schema 5 linked worktree 当前不含规范化 FBX 与五张贴图。已建立独立前置 A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01；完成显式哈希校验物化前，本卡保持阻塞且不由自动化领取。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/working/fuyuan_static_chess_candidate.blend",
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx",
@@ -29,6 +31,7 @@
 ## 来源与当前边界
 
 - 只对静态棋子原包做静态结构、材质、朝向、尺度和最小清理；不运行骨骼或动作工作流。
+- 原包与哈希仍有效；当前唯一逻辑前置是自动化 linked worktree 的六文件输入准备合同，不以复制整个 `assets/source/`、解禁 Git 忽略或改用其他 Blender 通道绕过。
 
 ## 必查范围
 
