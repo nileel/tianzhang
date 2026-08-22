@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-22：主工作区中的苻渊规范化 FBX 与五张贴图均存在且逐项 SHA-256／字节数与冻结记录一致，但 assets/source/ 被 Git 忽略，schema 5 linked worktree 不含这些输入。负责人要求立即建立独立任务；方案冻结为任务卡显式声明、共享入口在 candidate 前按同相对路径逐文件哈希校验并物化，不解禁或提交原始素材。",
+  "stateReason": "2026-08-22：已建立并验证 schema 1 automationInputs 合同；共享入口先核对 claim 时冻结的任务卡摘要，再于 candidate 前按精确路径逐文件复核、物化并设为只读，candidate 返回后再次复核，成功清理前按冻结 base 证明副本一致。苻渊 Blender 卡已携带六文件合同并恢复 ready；原始素材仍被 Git 忽略且未提交。",
   "expectedPaths": [
     "tools/invoke-hourly-owner.ps1",
     "tools/check-task-cards.ps1",

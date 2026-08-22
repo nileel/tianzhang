@@ -76,6 +76,15 @@ function Copy-Metadata {
   $copy
 }
 
+function Get-AutomationInput {
+  param(
+    [string]$Path = 'assets/source/fixture/input.fbx',
+    [object]$Bytes = 17,
+    [string]$Sha256 = ('A' * 64)
+  )
+  [ordered]@{ path = $Path; bytes = $Bytes; sha256 = $Sha256 }
+}
+
 function Set-Card {
   param([string]$Root, [hashtable]$Metadata, [string]$FileName = "$($Metadata.id).txt", [string[]]$Headings)
   $args = @{ Metadata = $Metadata }
@@ -163,6 +172,42 @@ try {
   Assert-True ($null -eq $globalJson.taskId) 'global JSON invented taskId'
   Assert-True ($null -eq $globalJson.taskState) 'global JSON invented taskState'
   Assert-True ($null -eq $globalJson.postcondition) 'global JSON invented postcondition'
+
+  $inputReady = Copy-Metadata $fixture.Ready
+  $inputReady.automationInputs = @((Get-AutomationInput))
+  Set-Card $tempRoot $inputReady
+  Set-Queue $tempRoot @($inputReady)
+  Set-Backlog $tempRoot @($inputReady, $fixture.Blocked)
+  Assert-Success 'valid automationInputs' $tempRoot
+
+  $automationInputCases = @(
+    @{ Name = 'rooted automation input'; Expected = 'invalid repository-relative path'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Path 'C:/outside.fbx')) } },
+    @{ Name = 'backslash automation input'; Expected = 'invalid repository-relative path'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Path 'assets/source\\bad.fbx')) } },
+    @{ Name = 'wildcard automation input'; Expected = 'invalid repository-relative path'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Path 'assets/source/*.fbx')) } },
+    @{ Name = 'parent automation input'; Expected = 'invalid repository-relative path'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Path 'assets/source/../bad.fbx')) } },
+    @{ Name = 'directory automation input'; Expected = 'invalid repository-relative path'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Path 'assets/source/directory/')) } },
+    @{ Name = 'outside source automation input'; Expected = 'automationInputs path must be under assets/source/'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Path 'assets/generated/input.fbx')) } },
+    @{ Name = 'duplicate automation input'; Expected = 'duplicate automationInputs path'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput), (Get-AutomationInput)) } },
+    @{ Name = 'nonpositive automation input bytes'; Expected = 'invalid automationInputs bytes'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Bytes 0)) } },
+    @{ Name = 'fractional automation input bytes'; Expected = 'invalid automationInputs bytes'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Bytes 1.5)) } },
+    @{ Name = 'invalid automation input hash'; Expected = 'invalid automationInputs sha256'; Change = { param($m) $m.automationInputs = @((Get-AutomationInput -Sha256 ('B' * 63))) } },
+    @{ Name = 'extra automation input field'; Expected = 'invalid automationInputs'; Change = { param($m) $m.automationInputs = @([ordered]@{ path = 'assets/source/fixture/input.fbx'; bytes = 17; sha256 = ('A' * 64); extra = 'bad' }) } },
+    @{ Name = 'external card automation input'; Expected = 'automationInputs requires route=codex_execute owner=codex'; Change = { param($m) $m.route = 'external_execute'; $m.owner = 'deepseek'; $m.automationInputs = @((Get-AutomationInput)) } }
+  )
+  foreach ($case in $automationInputCases) {
+    $caseRoot = Join-Path $tempRoot ('automation-input-' + [guid]::NewGuid().ToString('N'))
+    $caseFixture = New-Fixture $caseRoot
+    $caseCard = Copy-Metadata $caseFixture.Ready
+    & $case.Change $caseCard
+    Set-Card $caseRoot $caseCard
+    Set-Queue $caseRoot @($caseCard)
+    Set-Backlog $caseRoot @($caseCard, $caseFixture.Blocked)
+    Assert-Failure $case.Name $caseRoot $case.Expected
+  }
+
+  Set-Card $tempRoot $fixture.Ready
+  Set-Queue $tempRoot @($fixture.Ready)
+  Set-Backlog $tempRoot @($fixture.Ready, $fixture.Blocked)
 
   $executionDispatch = Invoke-Checker $tempRoot @(
     '-TaskId', 'T-READY-01',

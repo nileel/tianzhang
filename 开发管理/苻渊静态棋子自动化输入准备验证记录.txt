@@ -1,0 +1,25 @@
+# 苻渊静态棋子自动化输入准备验证记录
+
+任务：`A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01`
+
+## 冻结合同
+
+`A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01` 的 `automationInputs` 固定为下列六个 Git 忽略文件；合同只允许 `codex_execute/codex` 卡声明，路径、字节数与 SHA-256 来自 `开发管理/苻渊静态棋子Tripo生成记录.txt`。
+
+| 路径 | 字节数 | SHA-256 |
+| --- | ---: | --- |
+| `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx` | 566364 | `72F2534AE72A537A01B64E5542BBBCAA75B6F4F2541EC7303CECC65C443D7C55` |
+| `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_basecolor.JPEG` | 1381322 | `F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611` |
+| `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_metallic.JPEG` | 1802903 | `812D21B425CFD2DA9E4D695E03C1FE39094BF708F8FE5E5B9D7A2EAB23A659A0` |
+| `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_normal.JPEG` | 553517 | `E4938FDE1EAF4F611033F74458B070DBBA97CC8724AFEA1F44B2450716DDDF15` |
+| `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_rm.JPEG` | 889793 | `2E6372057A3863D1DA9C27D54019D3F9F0683C052EF690F473692053B2CB9E06` |
+| `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_roughness.JPEG` | 1695352 | `CC48493A8293C775B5F423CA042C8B70F0A228597CD0D3C1B7721A6904A38736` |
+
+## 实现与验证
+
+- `check-task-cards.ps1` 拒绝输入合同的路径越界、目录、重复、非法字节数／哈希和 route／owner 越界，并将合同纳入任务上下文摘要。
+- `invoke-hourly-owner.ps1` 在访问任何声明源文件前，以同一次任务卡读取结果核对 claim 时冻结的 `taskCardDigest`、route、owner 与 ready 状态；一致后才从主工作区逐项验证并复制。它拒绝 reparse point、缺失、大小／哈希不符和目标预存，以稳定原因失败关闭。副本设为只读，candidate 返回后与成功清理前均会复核来源和副本。
+- `tools/test-check-task-cards.ps1` 覆盖合法合同及全部静态拒绝分支；`tools/test-hourly-task-input-materialization.ps1` 在独立临时 Git 仓库／linked worktree 覆盖六文件成功物化、claim 后任务卡合同变化先于复制被拒绝、源缺失、大小不符、哈希不符、junction、目标预存、candidate 后主源或副本篡改拒绝，以及带忽略副本的成功清理。
+- 测试 fixture 显式比较物化前后的主工作区源证据、`git status` 与 `git ls-files`；真实六文件也已在验证前后重算字节数与 SHA-256，未被复制、移动、覆盖、暂存或提交。
+
+结论：苻渊 Blender 卡解除唯一逻辑前置并恢复 `ready`；原始 ZIP 和六个冻结素材仍由 `.gitignore` 排除。

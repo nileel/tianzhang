@@ -53,7 +53,7 @@ $requiredScripts = @(
   'tools/invoke-hourly-owner.ps1', 'tools/invoke-project-integration.ps1', 'tools/select-hourly-task.ps1',
   'tools/invoke-codex-candidate.ps1', 'tools/codex-cli-session.ps1',
   'tools/invoke-deepseek-responsibility.ps1', 'tools/set-task-pending-review.ps1', 'tools/set-task-automation-state.ps1',
-  'tools/automation-finalize-commit.ps1', 'tools/send-feishu-notification.ps1'
+  'tools/automation-finalize-commit.ps1', 'tools/send-feishu-notification.ps1', 'tools/test-hourly-task-input-materialization.ps1'
 )
 foreach ($relative in $requiredScripts) {
   $path = Join-Path $root $relative
@@ -71,6 +71,9 @@ Assert-DoesNotContain $runtime 'schema 5 runtime' @("'AcquireIntegration'", "'Re
 $sharedEntry = Read-Utf8 (Join-Path $root 'tools/invoke-hourly-owner.ps1')
 $adapter = Read-Utf8 (Join-Path $root 'tools/hourly-owner-adapter.ps1')
 Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree', 'review_rework', 'Apply-AnsweredReviewRework', 'allowCustomReply = $false', 'hourly_codex_model_unverified', 'Add-AttentionNotification', 'Get-HourlyFormalCommitContract -Adapter $adapter -Run $Run', "@('cherry-pick', '--no-commit', [string]`$Run.candidateCommit)", '& $finalizerPath -RepositoryRoot $Worktree @Parameters', 'AutomationState = [string]$formalContract.state')
+Assert-Contains $sharedEntry 'task input materialization' @('Get-TaskAutomationInputs', 'Materialize-TaskAutomationInputs', 'Assert-MaterializedAutomationInputs', 'Read-RunTaskMetadata', 'Read-TaskMetadataAtCommit', 'hourly_task_input_validation_failed', 'hourly_task_changed_after_claim')
+$taskCards = Read-Utf8 (Join-Path $root 'tools/check-task-cards.ps1')
+Assert-Contains $taskCards 'task-card automation inputs' @('Assert-AutomationInputs', 'automationInputs requires route=codex_execute owner=codex', 'automationInputs path must be under assets/source/')
 $combinedValidationMatch = [regex]::Match($sharedEntry, '(?s)function Invoke-CombinedValidation\s*\{(?<body>.*?)\r?\n\}\r?\n\r?\nfunction Test-MainPathConflict')
 Assert-Contract $combinedValidationMatch.Success 'shared owner entry is missing combined validation'
 $combinedValidation = $combinedValidationMatch.Groups['body'].Value
@@ -94,7 +97,7 @@ $deepseekTemplatePaths = @(
   '开发管理/DeepSeek任务卡-文档清洗.txt',
   '开发管理/DeepSeek任务卡-CSV数据链路.txt'
 )
-Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourly-trigger', 'invoke-hourly-owner.ps1', 'runs.codex', 'runs.deepseek', 'schemaVersion=5', '.worktrees/automation/<runId>/<owner>', 'candidate_ready', 'canonical_ready', 'CompleteRun', 'maintenance_completed', '一次性返工决策卡', '不含 checkpoint', 'automationDecision', 'decision_requested', 'waiting_decision', '7 天 TTL', 'status 白名单')
+Assert-Contains $rules 'workflow rules' @('codex-hourly-worker', 'deepseek-hourly-trigger', 'invoke-hourly-owner.ps1', 'runs.codex', 'runs.deepseek', 'schemaVersion=5', '.worktrees/automation/<runId>/<owner>', 'candidate_ready', 'canonical_ready', 'CompleteRun', 'maintenance_completed', '一次性返工决策卡', '不含 checkpoint', 'automationDecision', 'decision_requested', 'waiting_decision', '7 天 TTL', 'status 白名单', 'automationInputs', 'hourly_task_input_validation_failed')
 Assert-DoesNotContain $rules 'workflow rules' @('integrationLease', 'invoke-codex-hourly.ps1', 'invoke-deepseek-hourly.ps1')
 Assert-DoesNotContain $rules 'workflow rules' @('invoke-codex-responsibility.ps1', 'invoke-external-responsibility.ps1', 'RecordResult -Category success', 'pauseRequested=true', '短命配置 cell', '自暂停')
 Assert-Contains $recovery 'recovery rules' @('developing', 'candidate_ready', 'canonical_ready', 'integrated', 'attention_required', '只报告', 'decision checkpoint')

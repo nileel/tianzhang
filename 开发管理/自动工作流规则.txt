@@ -26,6 +26,13 @@
 - DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway 和 `deepseek-v4-pro`（当前 API 版本 `DeepSeek-V4-Pro-0813`），身份或模型不符立即停止。
 - 每个 run 的项目拥有 worktree 固定为 `.worktrees/automation/<runId>/<owner>`。责任方只能在该 worktree 的 candidate branch 实施、验证并形成一个与 run、base、changed paths 和 candidateResult 精确绑定的提交。
 
+## 冻结自动化输入物化
+
+- schema 1 任务卡可选 `automationInputs`；仅 `codex_execute/codex` 卡可声明。每项只含唯一的 `assets/source/` 仓库相对文件路径、正字节数和 64 位 SHA-256，不接受绝对／反斜杠／通配／`.`／`..`／目录、重复路径或其他字段。
+- 已 claim 的 run 创建 linked worktree 后、启动 candidate 前，先用同一次任务卡读取结果核对 claim 时冻结的 `taskCardDigest`、route、owner 与 ready 状态；一致后才从主工作区同路径逐文件核验并复制声明项。源、路径链和目标均不得是 reparse point；源缺失、字节／哈希不符或目标预存统一以 `hourly_task_input_validation_failed` 进入现有 `attention_required`，不启动 candidate、不接受证据、不重试、不切换来源也不递归复制目录。
+- 副本完成后重新核验并设为只读。candidate 返回后、接受其证据前，源和 worktree 副本必须再次逐项通过路径、字节和 SHA-256 核验；任务上下文 digest 也包含输入合同。
+- 成功清理前按 run 的冻结 base 重新读取输入合同并证明忽略副本仍完全一致，随后才按既有精确身份规则移除 worktree 与临时分支。失败现场继续保留给恢复规则处理；原始素材始终不进入 Git。
+
 ## 原子任务与任务内子智能体
 
 - ready 任务应已满足 `开发管理/AI协作规则.txt` 的原子任务条件；共享入口和 PowerShell 脚本不根据文件数、行数、预计时长或模型判断任务大小，也不动态创建、拆分或重排任务卡。

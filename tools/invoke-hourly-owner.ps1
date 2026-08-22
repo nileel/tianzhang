@@ -72,10 +72,135 @@ function Invoke-Runtime {
   Invoke-JsonTool -Path $runtimePath -Arguments $arguments -DetailCode 'hourly_runtime_failed' -AllowedExitCodes $AllowedExitCodes
 }
 
+function Get-NormalizedTextDigestFromText {
+  param([string]$Text)
+  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($Text.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+}
+
 function Get-NormalizedTextDigest {
   param([string]$Path)
   $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF)
-  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($text.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+  Get-NormalizedTextDigestFromText $text
+}
+
+function Assert-AutomationInputPath {
+  param([string]$Path)
+  $invalid = [string]::IsNullOrWhiteSpace($Path) -or
+    $Path -cne $Path.Trim() -or
+    [IO.Path]::IsPathRooted($Path) -or
+    $Path.Contains('\') -or
+    $Path -match '[*?\[\]]' -or
+    $Path.EndsWith('/') -or
+    (@(($Path -split '/') | Where-Object { $_ -cin @('.', '..') }).Count -gt 0) -or
+    [string]::IsNullOrEmpty([IO.Path]::GetExtension($Path)) -or
+    -not $Path.StartsWith('assets/source/', [StringComparison]::Ordinal)
+  if ($invalid) { Stop-Hourly 'hourly_task_input_validation_failed' }
+}
+
+function Get-TaskAutomationInputs {
+  param([object]$Metadata)
+  if ($Metadata.PSObject.Properties.Name -cnotcontains 'automationInputs') { return @() }
+  if ([string]$Metadata.route -cne 'codex_execute' -or [string]$Metadata.owner -cne 'codex' -or
+    -not (($Metadata.automationInputs -is [System.Collections.IEnumerable]) -and -not ($Metadata.automationInputs -is [string]))) {
+    Stop-Hourly 'hourly_task_input_validation_failed'
+  }
+  $inputs = @($Metadata.automationInputs)
+  if ($inputs.Count -eq 0) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  $validated = @()
+  foreach ($input in $inputs) {
+    $names = if ($null -eq $input) { @() } else { @($input.PSObject.Properties.Name) }
+    if ($null -eq $input -or $names.Count -ne 3 -or
+      @($names | Where-Object { $_ -cnotin @('path', 'bytes', 'sha256') }).Count -ne 0 -or
+      @(@('path', 'bytes', 'sha256') | Where-Object { $names -cnotcontains $_ }).Count -ne 0) {
+      Stop-Hourly 'hourly_task_input_validation_failed'
+    }
+    $path = [string]$input.path
+    Assert-AutomationInputPath $path
+    if (-not $paths.Add($path)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+    $rawBytes = $input.bytes
+    $isIntegral = $rawBytes -is [byte] -or $rawBytes -is [sbyte] -or $rawBytes -is [int16] -or $rawBytes -is [uint16] -or
+      $rawBytes -is [int32] -or $rawBytes -is [uint32] -or $rawBytes -is [int64] -or $rawBytes -is [uint64]
+    if (-not $isIntegral) { Stop-Hourly 'hourly_task_input_validation_failed' }
+    try { $bytes = [Convert]::ToInt64($rawBytes) } catch { Stop-Hourly 'hourly_task_input_validation_failed' }
+    $hash = [string]$input.sha256
+    if ($bytes -le 0 -or $hash -cnotmatch '^[0-9A-Fa-f]{64}$') { Stop-Hourly 'hourly_task_input_validation_failed' }
+    $validated += [pscustomobject]@{ Path = $path; Bytes = $bytes; Sha256 = $hash.ToUpperInvariant() }
+  }
+  @($validated)
+}
+
+function Get-AutomationInputFileEvidence {
+  param([string]$Root, [pscustomobject]$ContractInput)
+  $rootPath = Normalize-FullPath $Root
+  $relative = $ContractInput.Path.Replace('/', [IO.Path]::DirectorySeparatorChar)
+  $path = [IO.Path]::GetFullPath((Join-Path $rootPath $relative))
+  if (-not $path.StartsWith($rootPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  $current = $rootPath
+  $rootItem = Get-Item -LiteralPath $current -Force -ErrorAction SilentlyContinue
+  if ($null -eq $rootItem -or (($rootItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  foreach ($part in @($relative -split [regex]::Escape([string][IO.Path]::DirectorySeparatorChar))) {
+    $current = Join-Path $current $part
+    $item = Get-Item -LiteralPath $current -Force -ErrorAction SilentlyContinue
+    if ($null -eq $item -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  }
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  $file = Get-Item -LiteralPath $path -Force
+  if ($file.Length -ne $ContractInput.Bytes -or ([string](Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash).ToUpperInvariant() -cne $ContractInput.Sha256) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  [pscustomobject]@{ Path = $path; Length = [int64]$file.Length }
+}
+
+function New-AutomationInputDestination {
+  param([string]$Worktree, [pscustomobject]$ContractInput)
+  $rootPath = Normalize-FullPath $Worktree
+  $relative = $ContractInput.Path.Replace('/', [IO.Path]::DirectorySeparatorChar)
+  $path = [IO.Path]::GetFullPath((Join-Path $rootPath $relative))
+  if (-not $path.StartsWith($rootPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  $current = $rootPath
+  $rootItem = Get-Item -LiteralPath $current -Force -ErrorAction SilentlyContinue
+  if ($null -eq $rootItem -or (($rootItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  $parts = @($relative -split [regex]::Escape([string][IO.Path]::DirectorySeparatorChar))
+  for ($index = 0; $index -lt $parts.Count - 1; $index++) {
+    $current = Join-Path $current $parts[$index]
+    $item = Get-Item -LiteralPath $current -Force -ErrorAction SilentlyContinue
+    if ($null -ne $item) {
+      if (-not $item.PSIsContainer -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+    } else {
+      [IO.Directory]::CreateDirectory($current) | Out-Null
+    }
+  }
+  if ($null -ne (Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue)) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  $path
+}
+
+function Assert-MaterializedAutomationInputs {
+  param([string]$Worktree, [object]$Metadata)
+  foreach ($contractInput in @(Get-TaskAutomationInputs $Metadata)) {
+    $null = Get-AutomationInputFileEvidence -Root $script:root -ContractInput $contractInput
+    $copy = Get-AutomationInputFileEvidence -Root $Worktree -ContractInput $contractInput
+    $item = Get-Item -LiteralPath $copy.Path -Force
+    if (($item.Attributes -band [IO.FileAttributes]::ReadOnly) -eq 0) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  }
+}
+
+function Materialize-TaskAutomationInputs {
+  param([object]$Run, [string]$Worktree)
+  if ([string]$Run.route -ceq 'queue_maintenance') { return }
+  $task = Read-RunTaskMetadata $Run
+  $inputs = @(Get-TaskAutomationInputs $task.Metadata)
+  foreach ($contractInput in $inputs) { $null = Get-AutomationInputFileEvidence -Root $script:root -ContractInput $contractInput }
+  foreach ($contractInput in $inputs) {
+    $source = Get-AutomationInputFileEvidence -Root $script:root -ContractInput $contractInput
+    $destination = New-AutomationInputDestination -Worktree $Worktree -ContractInput $contractInput
+    try {
+      [IO.File]::Copy($source.Path, $destination, $false)
+      $target = Get-Item -LiteralPath $destination -Force
+      $target.Attributes = $target.Attributes -bor [IO.FileAttributes]::ReadOnly
+    } catch { Stop-Hourly 'hourly_task_input_validation_failed' }
+    $null = Get-AutomationInputFileEvidence -Root $Worktree -ContractInput $contractInput
+    $null = Get-AutomationInputFileEvidence -Root $script:root -ContractInput $contractInput
+  }
+  Assert-MaterializedAutomationInputs -Worktree $Worktree -Metadata $task.Metadata
 }
 
 function Read-TaskMetadata {
@@ -85,7 +210,29 @@ function Read-TaskMetadata {
   $match = [regex]::Match($text, '(?ms)^---TASK-META---\r?\n(?<json>.*?)\r?\n---TASK-BODY---')
   if (-not $match.Success) { Stop-Hourly 'hourly_task_invalid' }
   try { $metadata = $match.Groups['json'].Value.Trim() | ConvertFrom-Json -Depth 100 } catch { Stop-Hourly 'hourly_task_invalid' }
-  [pscustomobject]@{ Path = $path; Metadata = $metadata; Digest = Get-NormalizedTextDigest $path }
+  [pscustomobject]@{ Path = $path; Metadata = $metadata; Digest = Get-NormalizedTextDigestFromText $text }
+}
+
+function Read-RunTaskMetadata {
+  param([object]$Run)
+  $task = Read-TaskMetadata $script:root ([string]$Run.taskId)
+  if ([string]$task.Digest -cne [string]$Run.taskCardDigest -or
+    [string]$task.Metadata.route -cne [string]$Run.route -or
+    [string]$task.Metadata.owner -cne $Owner -or
+    [string]$task.Metadata.dispatchState -cne 'ready') {
+    Stop-Hourly 'hourly_task_changed_after_claim'
+  }
+  $task
+}
+
+function Read-TaskMetadataAtCommit {
+  param([string]$Root, [string]$Commit, [string]$TaskId)
+  $path = "开发管理/任务卡/$TaskId.txt"
+  $text = Invoke-GitText $Root @('show', "$Commit`:$path") 'hourly_task_input_validation_failed'
+  $match = [regex]::Match($text, '(?ms)^---TASK-META---\r?\n(?<json>.*?)\r?\n---TASK-BODY---')
+  if (-not $match.Success) { Stop-Hourly 'hourly_task_input_validation_failed' }
+  try { $metadata = $match.Groups['json'].Value.Trim() | ConvertFrom-Json -Depth 100 } catch { Stop-Hourly 'hourly_task_input_validation_failed' }
+  [pscustomobject]@{ Metadata = $metadata }
 }
 
 function Get-TaskContextDigest {
@@ -94,6 +241,7 @@ function Get-TaskContextDigest {
     id = [string]$Metadata.id; title = [string]$Metadata.title; priority = [string]$Metadata.priority
     route = [string]$Metadata.route; owner = [string]$Metadata.owner; domain = [string]$Metadata.domain; stage = [string]$Metadata.stage
     blockedBy = @($Metadata.blockedBy | ForEach-Object { [string]$_ }); expectedPaths = @($Metadata.expectedPaths | ForEach-Object { [string]$_ })
+    automationInputs = @(Get-TaskAutomationInputs $Metadata | ForEach-Object { [ordered]@{ path = $_.Path; bytes = $_.Bytes; sha256 = $_.Sha256 } })
     sourceBacklog = [string]$Metadata.sourceBacklog
   }
   $json = $context | ConvertTo-Json -Compress -Depth 20
@@ -203,12 +351,13 @@ function New-CandidateWorktree {
   $worktree = Assert-WorktreePath $Run
   if (Test-Path -LiteralPath $worktree) {
     if ((Invoke-GitText $worktree @('branch', '--show-current')) -cne [string]$Run.candidateBranch -or (Invoke-GitText $worktree @('rev-parse', 'HEAD')) -cne [string]$Run.baseCommit) { Stop-Hourly 'hourly_worktree_invalid' }
-    return $worktree
+  } else {
+    [IO.Directory]::CreateDirectory((Split-Path -Parent $worktree)) | Out-Null
+    & git -C $script:root show-ref --verify --quiet "refs/heads/$($Run.candidateBranch)" 2>$null
+    if ($LASTEXITCODE -eq 0) { Stop-Hourly 'hourly_candidate_branch_exists' }
+    $null = Invoke-GitText $script:root @('worktree', 'add', '-b', [string]$Run.candidateBranch, $worktree, [string]$Run.baseCommit) 'hourly_worktree_create_failed'
   }
-  [IO.Directory]::CreateDirectory((Split-Path -Parent $worktree)) | Out-Null
-  & git -C $script:root show-ref --verify --quiet "refs/heads/$($Run.candidateBranch)" 2>$null
-  if ($LASTEXITCODE -eq 0) { Stop-Hourly 'hourly_candidate_branch_exists' }
-  $null = Invoke-GitText $script:root @('worktree', 'add', '-b', [string]$Run.candidateBranch, $worktree, [string]$Run.baseCommit) 'hourly_worktree_create_failed'
+  Materialize-TaskAutomationInputs -Run $Run -Worktree $worktree
   $worktree
 }
 
@@ -229,9 +378,10 @@ function Assert-CandidateEvidence {
   $actual = @(Get-ChangedPaths $worktree "$($Run.baseCommit)..$($Candidate.candidateCommit)")
   $reported = @($Candidate.candidateResult.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
   if ($actual.Count -eq 0 -or ($actual -join "`0") -cne ($reported -join "`0")) { Stop-Hourly 'hourly_candidate_evidence_invalid' }
-  $task = if ([string]$Run.route -ceq 'queue_maintenance') { $null } else { Read-TaskMetadata $script:root ([string]$Run.taskId) }
+  $task = if ([string]$Run.route -ceq 'queue_maintenance') { $null } else { Read-RunTaskMetadata $Run }
   $allowed = if ($null -eq $task) { $actual } else { @($task.Metadata.expectedPaths | ForEach-Object { [string]$_ }) }
   foreach ($path in $actual) { if ($allowed -cnotcontains $path) { Stop-Hourly 'hourly_candidate_path_violation' } }
+  if ($null -ne $task) { Assert-MaterializedAutomationInputs -Worktree $worktree -Metadata $task.Metadata }
 }
 
 function Get-FormalPaths {
@@ -521,6 +671,10 @@ function Remove-ExactSuccessfulWorktree {
     if ($LASTEXITCODE -ne 0) { return 'retained_evidence_mismatch' }
     & git -C $worktree diff --cached --quiet --ignore-submodules -- 2>$null
     if ($LASTEXITCODE -ne 0 -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText $worktree @('ls-files', '--others', '--exclude-standard')))) { return 'retained_evidence_mismatch' }
+    if ([string]$Run.taskId -cne 'QUEUE-MAINTENANCE') {
+      $task = Read-TaskMetadataAtCommit -Root $script:root -Commit ([string]$Run.baseCommit) -TaskId ([string]$Run.taskId)
+      Assert-MaterializedAutomationInputs -Worktree $worktree -Metadata $task.Metadata
+    }
     & git -C $script:root merge-base --is-ancestor $FormalHead master 2>$null
     if ($LASTEXITCODE -ne 0) { return 'retained_unintegrated' }
     $currentBranch = Invoke-GitText $worktree @('branch', '--show-current')

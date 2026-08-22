@@ -58,6 +58,33 @@ function Assert-RepositoryFilePath {
   Assert-Contract (-not [string]::IsNullOrEmpty([IO.Path]::GetExtension($Value))) "invalid repository-relative path in ${Label}: $Value"
 }
 
+function Assert-AutomationInputs {
+  param([object]$Metadata, [string]$Path)
+  if ($Metadata.PSObject.Properties.Name -cnotcontains 'automationInputs') { return }
+  $inputs = $Metadata.automationInputs
+  Assert-Contract ([string]$Metadata.route -ceq 'codex_execute' -and [string]$Metadata.owner -ceq 'codex') "automationInputs requires route=codex_execute owner=codex: $Path"
+  Assert-Contract (($inputs -is [System.Collections.IEnumerable]) -and -not ($inputs -is [string])) "invalid automationInputs: $Path"
+  $items = @($inputs)
+  Assert-Contract ($items.Count -gt 0) "invalid automationInputs: $Path"
+  $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  foreach ($input in $items) {
+    Assert-Contract ($null -ne $input) "invalid automationInputs: $Path"
+    $names = @($input.PSObject.Properties.Name)
+    Assert-Contract ($names.Count -eq 3 -and @($names | Where-Object { $_ -cnotin @('path', 'bytes', 'sha256') }).Count -eq 0 -and @(@('path', 'bytes', 'sha256') | Where-Object { $names -cnotcontains $_ }).Count -eq 0) "invalid automationInputs: $Path"
+    $inputPath = [string]$input.path
+    Assert-RepositoryFilePath $inputPath 'automationInputs.path'
+    Assert-Contract ($inputPath.StartsWith('assets/source/', [StringComparison]::Ordinal)) "automationInputs path must be under assets/source/: $Path"
+    Assert-Contract ($paths.Add($inputPath)) "duplicate automationInputs path: $Path"
+    $rawBytes = $input.bytes
+    $isIntegral = $rawBytes -is [byte] -or $rawBytes -is [sbyte] -or $rawBytes -is [int16] -or $rawBytes -is [uint16] -or
+      $rawBytes -is [int32] -or $rawBytes -is [uint32] -or $rawBytes -is [int64] -or $rawBytes -is [uint64]
+    Assert-Contract $isIntegral "invalid automationInputs bytes: $Path"
+    try { $bytes = [Convert]::ToInt64($rawBytes) } catch { throw "invalid automationInputs bytes: $Path" }
+    Assert-Contract ($bytes -gt 0) "invalid automationInputs bytes: $Path"
+    Assert-Contract ([string]$input.sha256 -cmatch '^[0-9A-Fa-f]{64}$') "invalid automationInputs sha256: $Path"
+  }
+}
+
 function Test-ObjectField {
   param([object]$Value, [string]$Name)
   $null -ne $Value -and $Value.PSObject.Properties.Name -ccontains $Name
@@ -193,6 +220,7 @@ function Get-Card {
   Assert-RepositoryFilePath ([string]$metadata.sourceBacklog) 'sourceBacklog'
   Assert-Contract ((($metadata.route -in @('codex_execute', 'codex_review')) -and $metadata.owner -ceq 'codex') -or ($metadata.route -ceq 'external_execute' -and $metadata.owner -in @('deepseek', 'claude'))) "route/owner mismatch: $Path"
   Assert-Contract (($null -eq $metadata.blockedBy) -or (($metadata.blockedBy -is [System.Collections.IEnumerable]) -and -not ($metadata.blockedBy -is [string]))) "invalid blockedBy: $Path"
+  Assert-AutomationInputs -Metadata $metadata -Path $Path
   $hasCheckpoint = Test-ObjectField $metadata 'automationCheckpoint'
   $hasDecision = Test-ObjectField $metadata 'automationDecision'
   Assert-Contract (-not ($hasCheckpoint -and $hasDecision)) "automationCheckpoint and automationDecision are mutually exclusive: $Path"

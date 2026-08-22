@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01"
-  ],
-  "stateReason": "2026-08-22：负责人确认的静态 Tripo 原包与哈希仍冻结且实际文件一致；但 assets/source/ 被 Git 忽略，schema 5 linked worktree 当前不含规范化 FBX 与五张贴图。已建立独立前置 A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01；完成显式哈希校验物化前，本卡保持阻塞且不由自动化领取。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-22：A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01 已完成。run 在 candidate 前仅按本卡 automationInputs 的精确路径、字节数和 SHA-256 物化冻结的 1 个 FBX 与 5 张贴图；来源和副本复核失败会关闭，不解禁或提交 assets/source/。",
   "expectedPaths": [
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/working/fuyuan_static_chess_candidate.blend",
     "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx",
@@ -23,7 +21,39 @@
     "开发管理/任务归档/A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01.txt",
     "开发管理/任务卡/U-CHAR-STATIC-CHESS-PROTO-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/fuyuan_static_chess_raw.fbx",
+      "bytes": 566364,
+      "sha256": "72F2534AE72A537A01B64E5542BBBCAA75B6F4F2541EC7303CECC65C443D7C55"
+    },
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_basecolor.JPEG",
+      "bytes": 1381322,
+      "sha256": "F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611"
+    },
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_metallic.JPEG",
+      "bytes": 1802903,
+      "sha256": "812D21B425CFD2DA9E4D695E03C1FE39094BF708F8FE5E5B9D7A2EAB23A659A0"
+    },
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_normal.JPEG",
+      "bytes": 553517,
+      "sha256": "E4938FDE1EAF4F611033F74458B070DBBA97CC8724AFEA1F44B2450716DDDF15"
+    },
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_rm.JPEG",
+      "bytes": 889793,
+      "sha256": "2E6372057A3863D1DA9C27D54019D3F9F0683C052EF690F473692053B2CB9E06"
+    },
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_roughness.JPEG",
+      "bytes": 1695352,
+      "sha256": "CC48493A8293C775B5F423CA042C8B70F0A228597CD0D3C1B7721A6904A38736"
+    }
+  ]
 }
 ---TASK-BODY---
 # A-CHAR-STATIC-CHESS-FUYUAN-BLENDER-01 · 苻渊静态棋子 Blender 候选验证
@@ -31,7 +61,7 @@
 ## 来源与当前边界
 
 - 只对静态棋子原包做静态结构、材质、朝向、尺度和最小清理；不运行骨骼或动作工作流。
-- 原包与哈希仍有效；当前唯一逻辑前置是自动化 linked worktree 的六文件输入准备合同，不以复制整个 `assets/source/`、解禁 Git 忽略或改用其他 Blender 通道绕过。
+- 原包与哈希仍有效；自动化已在 candidate 前按本卡六文件输入合同物化副本，不以复制整个 `assets/source/`、解禁 Git 忽略或改用其他 Blender 通道绕过。
 
 ## 必查范围
 
