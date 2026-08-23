@@ -2,15 +2,18 @@
 
 任务：`U-CHAR-2D-TACTICAL-PROTO-01`
 日期：2026-08-23
-状态：⛔ 停止。真实帧表现驱动、2D/3D 互斥切换与遮挡几何/深度断言已通过；固定 1920×1080、1× Game 视图实机取证确认六向主体过小，遮挡探针被现有遮挡柱完全遮没，未形成可读的下半身前景遮挡。任务命中停止条件并保持 blocked；已通过的确定性资产、Importer、Prefab 六向序列化保持不变。
+状态：⚠️ 返工候选已完成，等待 Codex 独立复审。负责人批准的资产级变换修正已固化：2D 六张 Sprite 统一使用 Custom pivot `(0.5,0.18)`；3D `FuYuan_Model` 统一使用本地 Rotation `(-90,0,0)`，`StaticChessBase` 本地 Position 归零。固定相机 1920×1080 图像、运行时数值和全量 Unity 测试均已形成，复审通过前不解除比较卡。
 
 范围：只在 `AdventureScene/VisualBaselineBoard` 下新增独立 `TacticalSpriteProbeGroup` 证明 2D 六向战场表现；未接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位、规则或存档。既有静态 3D `FacingProbe_0..5`、`VisualBaselineOccluder`、地块、光照与镜头均未改变。
+
+上一轮失败证据保留为根因对照：旧导入合同使用 `(0.5,0.125)` 且没有确定性固定 `SpriteAlignment.Custom`，固定视图中遮挡探针被现有遮挡柱完全遮没；旧静态 3D Prefab 又把导入模型子节点强制为 identity，导致可见模型横躺。负责人随后在 Unity Inspector／运行时分别确认 2D Pivot Y=`0.18`、3D 子节点 `-90° X` 和底座零位置，本轮只把这三个共同资产级值固化到确定性生成链。
 
 ## 输入与资产
 
 - 六张唯一输入已逐字节复制：`assets/generated-character-art/fuyuan-2d-tactical-sprite/fuyuan_tactical_direction_<n>.png` → `src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_<n>.png`（n=0..5）。两端 SHA-256 逐张与 `prompts.md` 冻结值一致，未重画、重编码、镜像、翻转、重排或覆盖。
-- Unity 副本由 `VisualBaselineBuilder` 确定性固定 `Sprite (2D and UI)`、单 Sprite、512 PPU、custom pivot `(0.5,0.125)`、透明 alpha，`platformSettings` 均为 `overridden: 0`（无平台私有缩放）。六张均为 768×768 RGBA。
+- Unity 副本由 `VisualBaselineBuilder` 确定性固定 `Sprite (2D and UI)`、单 Sprite、512 PPU、Custom pivot `(0.5,0.18)`、透明 alpha，`platformSettings` 均为 `overridden: 0`（无平台私有缩放）。六张均为 768×768 RGBA；实际 `Sprite.pivot=(384,138.24)`，距 bottom-origin 非透明包围盒最低点 `y=144` 为 `5.76 px`，不再使用把 top-origin 坐标误当 bottom-origin 所得到的旧值。
 - 确定性生成唯一 `FuYuan_TacticalSprite.prefab`：根节点单位缩放，只含一个相机平面一致、默认深度测试排序（未设 always-on-top）的 `SpriteRenderer` 可见主体 `SpriteBody` 和一个 `TacticalSpritePresentationController`；无 Animator／Animation／SkinnedMeshRenderer。六张 Sprite 按固定索引保存在 `directionSprites`，缺项、重复、越界即失败关闭。
+- 静态 3D 对照没有改写 FBX／Blender 源：唯一 `FuYuan_StaticChess.prefab` 的 `FuYuan_Model` 固定本地 Position `(0,0,0)`、Rotation `(-90,0,0)`、Scale `(1,1,1)`；`StaticChessBase` 固定本地 Position／Rotation 为零、Scale `(0.66,0.04,0.66)`。六个 `FacingProbe` 只继承同一 Prefab，方向仍由各根节点 Y 旋转持有。
 
 ## 表现与六向矩阵
 
@@ -23,13 +26,15 @@
 
 ## 验证结果
 
-- `开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-2D-only.png`：Unity 6000.3.18f1，`AdventureScene`，Game 视图固定 `Full HD (1920×1080)`、Scale `1×`；只启用 `TacticalSpriteProbeGroup` 并关闭 `FacingProbe_0..5` 后取证。画面内六向主体相对战场格过小；位于 `(2,0)` 的 `TacticalSpriteOcclusionProbe` 被既有 `VisualBaselineOccluder` 完全遮没，截图不能证明“只遮住下半身”。
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：418/418 通过（含逐张 SHA-256／768×768 RGBA／单 Sprite／512 PPU／pivot／六向索引／Prefab 单一 SpriteRenderer／隔离组格位与根 Y 角／场景持久化／遮挡探针格位、深度与不透明遮挡物证据）。
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：9/9 通过；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。新增真实帧表现测试证明五种非待机事件在真实帧中的中间根节点变化、最终复位与施法单次信号，待机静止；互斥切换测试断言默认只启用 3D、切换后非目标 3D 路线不参与渲染。
+- `开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-3D-only.png`：Unity 6000.3.18f1，`AdventureScene` 固定相机直接渲染 1920×1080；只启用默认 `FacingProbe_0..5`。六个模型均直立并落在各自底座上，底座与格位中心一致。
+- `开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-2D-only.png`：同一场景、镜头与 1920×1080 输出，只启用 `TacticalSpriteProbeGroup`。六向主体脚底落格；位于 `(2,0)` 的 `TacticalSpriteOcclusionProbe` 上半身仍可见，既有遮挡柱只覆盖其局部。
+- 隔离项目 Unity EditMode：418/418 通过（13.6044169 s），含逐张 SHA-256／768×768 RGBA／单 Sprite／512 PPU／Custom pivot 与实际 `Sprite.pivot`、六向索引、静态 3D Prefab／六实例局部变换、隔离组格位与场景持久化。
+- 隔离项目 Unity PlayMode：10/10 通过（11.5838396 s）；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。新增 `ApprovedVisualTransformsPersistWithRuntimeNumericProof` 以 viewport 坐标投影到固定 1920×1080，逐项登记六个 3D 模型／底座 world bounds 与 screen rect、六张活动 Sprite／pivot／world bounds／screen rect，并证明 2D／3D 路线互斥。
+- 遮挡数值（1920×1080）：目标 Sprite screen rect `(1105.16,572.15)-(1279.36,719.69)`，遮挡物 rect `(1170.19,594.27)-(1214.32,693.57)`，交集 `(1170.19,594.27)-(1214.32,693.57)`；交集面积大于零、小于 Sprite 总面积，且交集上沿低于 Sprite 上沿，证明不是完全遮没。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`：通过。
 
 ## 残留风险与证据边界
 
-- 确定性几何／深度断言只能证明探针在遮挡物之后，不能证明最终像素形成“下半身遮挡”。实际固定视图已证明当前资产／冻结参数组合失败；任务卡同时冻结 512 PPU、根节点单位缩放、镜头、格位中心与遮挡物，并禁止方向私有补偿，因此本轮没有卡内合法修复面。
-- 后续必须先取得新的合法资产／合同决策，明确允许改变透明包围盒、统一尺度、PPU 或遮挡样例合同中的至少一项，再重新进入 ready；不得把当前失败证据推迟给 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 代替。
-- 本样例不授权接入正式单位链；任务完成只应转换为同卡 `codex_review/codex/ready`，待 Codex 独立复审。
+- 图像证据由隔离 Unity 项目中同一 `AdventureScene` 主相机直接渲染到 1920×1080 RenderTexture，避免覆盖主编辑器中负责人未保存的 `StartMenuScene`；它证明固定相机最终像素，但不宣称保存或改写该未保存场景。
+- 本轮只修正统一资产级 pivot、模型轴适配与底座位置；没有修改 PNG／FBX／Blender、512 PPU、根节点尺度、镜头、格位、遮挡物、规则或正式单位链，也没有场景实例私有 override。
+- 当前结论仍是返工候选而非复审通过；独立 Codex 必须复核完整 diff、两张图像和数值日志后才能归档本卡并解除 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 的直接依赖。

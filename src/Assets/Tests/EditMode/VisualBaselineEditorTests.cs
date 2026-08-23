@@ -92,7 +92,17 @@ namespace TianZhang.Tests.EditMode
                     PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(probe.gameObject));
                 Assert.Zero(probe.GetComponentsInChildren<Animator>(true).Length);
                 Assert.Zero(probe.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length);
-                Assert.IsNotNull(probe.Find("StaticChessBase"));
+                Transform figure = probe.Find("FuYuan_Model");
+                Assert.IsNotNull(figure);
+                Assert.AreEqual(Vector3.zero, figure.localPosition);
+                Assert.Less(Quaternion.Angle(figure.localRotation,
+                    Quaternion.Euler(VisualBaselineBuilder.StaticChessFigureEuler)), 0.01f);
+                Assert.AreEqual(Vector3.one, figure.localScale);
+                Transform basePlaceholder = probe.Find("StaticChessBase");
+                Assert.IsNotNull(basePlaceholder);
+                Assert.AreEqual(Vector3.zero, basePlaceholder.localPosition);
+                Assert.AreEqual(Quaternion.identity, basePlaceholder.localRotation);
+                Assert.AreEqual(VisualBaselineBuilder.StaticChessBaseScale, basePlaceholder.localScale);
                 MeshRenderer[] renderers = probe.GetComponentsInChildren<MeshRenderer>(true);
                 Assert.GreaterOrEqual(renderers.Length, 2);
                 foreach (MeshRenderer renderer in renderers)
@@ -160,9 +170,17 @@ namespace TianZhang.Tests.EditMode
                 Assert.Zero(root.GetComponentsInChildren<Animation>(true).Length);
                 Assert.Zero(root.GetComponentsInChildren<Animator>(true).Length);
                 Assert.Zero(root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length);
+                Transform figure = root.transform.Find("FuYuan_Model");
+                Assert.IsNotNull(figure);
+                Assert.AreEqual(Vector3.zero, figure.localPosition);
+                Assert.Less(Quaternion.Angle(figure.localRotation,
+                    Quaternion.Euler(VisualBaselineBuilder.StaticChessFigureEuler)), 0.01f);
+                Assert.AreEqual(Vector3.one, figure.localScale);
                 Transform basePlaceholder = root.transform.Find("StaticChessBase");
                 Assert.IsNotNull(basePlaceholder);
-                Assert.Less(Mathf.Abs(basePlaceholder.localPosition.y + 0.04f), 0.001f);
+                Assert.AreEqual(Vector3.zero, basePlaceholder.localPosition);
+                Assert.AreEqual(Quaternion.identity, basePlaceholder.localRotation);
+                Assert.AreEqual(VisualBaselineBuilder.StaticChessBaseScale, basePlaceholder.localScale);
                 Assert.AreEqual(
                     VisualBaselineBuilder.UnitMaterialPath,
                     AssetDatabase.GetAssetPath(basePlaceholder.GetComponent<MeshRenderer>().sharedMaterial));
@@ -193,16 +211,26 @@ namespace TianZhang.Tests.EditMode
 
                 TextureImporter importer = AssetImporter.GetAtPath(VisualBaselineBuilder.TacticalSpriteTexturePath(direction)) as TextureImporter;
                 Assert.IsNotNull(importer);
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
                 Assert.AreEqual(TextureImporterType.Sprite, importer.textureType);
                 Assert.AreEqual(SpriteImportMode.Single, importer.spriteImportMode);
-                Assert.AreEqual(512f, importer.spritePixelsPerUnit, 0.001f);
-                Assert.Less(Vector2.Distance(importer.spritePivot, new Vector2(0.5f, 0.125f)), 0.001f);
+                Assert.AreEqual((int)SpriteAlignment.Custom, settings.spriteAlignment);
+                Assert.AreEqual(VisualBaselineBuilder.TacticalSpritePixelsPerUnit,
+                    importer.spritePixelsPerUnit, 0.001f);
+                Assert.Less(Vector2.Distance(settings.spritePivot,
+                    VisualBaselineBuilder.TacticalSpritePivot), 0.001f);
                 Assert.IsTrue(importer.alphaIsTransparency);
 
                 Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(VisualBaselineBuilder.TacticalSpriteTexturePath(direction));
                 Assert.IsNotNull(texture);
                 Assert.AreEqual(768, texture.width);
                 Assert.AreEqual(768, texture.height);
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(VisualBaselineBuilder.TacticalSpriteTexturePath(direction));
+                Assert.IsNotNull(sprite);
+                Vector2 expectedPivot = Vector2.Scale(VisualBaselineBuilder.TacticalSpritePivot, sprite.rect.size);
+                Assert.Less(Vector2.Distance(sprite.pivot, expectedPivot), 0.01f,
+                    "The imported Sprite must use the approved custom pivot in pixel space.");
             }
         }
 

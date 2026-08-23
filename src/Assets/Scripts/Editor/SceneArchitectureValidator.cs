@@ -164,9 +164,17 @@ namespace TianZhang.Editor
                     "The static chess prefab must not import a runtime animation or rig.");
                 Require(root.GetComponents<StaticChessPresentationController>().Length == 1,
                     "The static chess root must own exactly one presentation controller.");
+                Transform figure = root.transform.Find("FuYuan_Model");
+                Require(figure != null && figure.localPosition == Vector3.zero &&
+                        Quaternion.Angle(figure.localRotation,
+                            Quaternion.Euler(VisualBaselineBuilder.StaticChessFigureEuler)) < 0.01f &&
+                        figure.localScale == Vector3.one,
+                    "The static chess figure must keep its approved Unity axis adaptation and unit transform.");
                 Transform basePlaceholder = root.transform.Find("StaticChessBase");
-                Require(basePlaceholder != null && Mathf.Abs(basePlaceholder.localPosition.y + 0.04f) < 0.001f,
-                    "The independent static chess base must share the root ground anchor.");
+                Require(basePlaceholder != null && basePlaceholder.localPosition == Vector3.zero &&
+                        basePlaceholder.localRotation == Quaternion.identity &&
+                        basePlaceholder.localScale == VisualBaselineBuilder.StaticChessBaseScale,
+                    "The independent static chess base must keep its approved zero anchor and scale.");
                 MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
                 Require(renderers.Length >= 2, "The static chess prefab must contain figure and base renderers.");
                 foreach (MeshRenderer renderer in renderers)
@@ -195,12 +203,20 @@ namespace TianZhang.Editor
             {
                 string path = VisualBaselineBuilder.TacticalSpriteTexturePath(direction);
                 TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                var settings = new TextureImporterSettings();
+                if (importer != null) importer.ReadTextureSettings(settings);
                 Require(importer != null && importer.textureType == TextureImporterType.Sprite &&
-                        importer.spriteImportMode == SpriteImportMode.Single &&
-                        Mathf.Abs(importer.spritePixelsPerUnit - 512f) < 0.001f &&
-                        Vector2.Distance(importer.spritePivot, new Vector2(0.5f, 0.125f)) < 0.001f &&
-                        importer.alphaIsTransparency,
+                         importer.spriteImportMode == SpriteImportMode.Single &&
+                         Mathf.Abs(importer.spritePixelsPerUnit - VisualBaselineBuilder.TacticalSpritePixelsPerUnit) < 0.001f &&
+                         settings.spriteAlignment == (int)SpriteAlignment.Custom &&
+                         Vector2.Distance(settings.spritePivot, VisualBaselineBuilder.TacticalSpritePivot) < 0.001f &&
+                         importer.alphaIsTransparency,
                     "The tactical sprite texture must keep its frozen Sprite/512 PPU/pivot/alpha import contract: " + path);
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                Require(sprite != null, "The tactical sprite texture must import a Sprite: " + path);
+                Vector2 expectedPivot = Vector2.Scale(VisualBaselineBuilder.TacticalSpritePivot, sprite.rect.size);
+                Require(Vector2.Distance(sprite.pivot, expectedPivot) < 0.01f,
+                    "The imported tactical Sprite must persist the approved custom pivot: " + path);
             }
 
             GameObject root = PrefabUtility.LoadPrefabContents(VisualBaselineBuilder.TacticalSpritePrefabPath);
@@ -359,6 +375,17 @@ namespace TianZhang.Editor
                 "Facing probe local +Z does not point at its rule neighbor.");
             Require(probe.GetComponent<StaticChessPresentationController>() != null,
                 "Facing probe must instantiate the static chess presentation root.");
+            Transform figure = probe.Find("FuYuan_Model");
+            Require(figure != null && figure.localPosition == Vector3.zero &&
+                    Quaternion.Angle(figure.localRotation,
+                        Quaternion.Euler(VisualBaselineBuilder.StaticChessFigureEuler)) < 0.01f &&
+                    figure.localScale == Vector3.one,
+                "Facing probe figure must inherit the approved prefab axis adaptation without an instance override.");
+            Transform basePlaceholder = probe.Find("StaticChessBase");
+            Require(basePlaceholder != null && basePlaceholder.localPosition == Vector3.zero &&
+                    basePlaceholder.localRotation == Quaternion.identity &&
+                    basePlaceholder.localScale == VisualBaselineBuilder.StaticChessBaseScale,
+                "Facing probe base must inherit the approved prefab transform without an instance override.");
             MeshRenderer[] renderers = probe.GetComponentsInChildren<MeshRenderer>(true);
             Require(renderers.Length >= 2, "Facing probe must instantiate the figure and independent base.");
             foreach (MeshRenderer renderer in renderers)

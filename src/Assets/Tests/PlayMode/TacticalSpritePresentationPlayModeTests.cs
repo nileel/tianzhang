@@ -53,6 +53,103 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ApprovedVisualTransformsPersistWithRuntimeNumericProof()
+        {
+            Screen.SetResolution(1920, 1080, false);
+            LogAssert.Expect(LogType.Error, "[AdventureInstaller] game_bootstrap_missing");
+            SceneManager.LoadScene("AdventureScene");
+            yield return null;
+
+            Camera camera = Camera.main;
+            Assert.IsNotNull(camera, "AdventureScene must expose the frozen visual baseline camera.");
+            GameObject board = GameObject.Find(TacticalSpriteProbeMatrix.BoardName);
+            Assert.IsNotNull(board, "AdventureScene must persist the visual baseline board.");
+
+            for (int direction = 0; direction < TacticalSpriteProbeMatrix.DirectionCount; direction++)
+            {
+                Transform probe = board.transform.Find(TacticalSpriteProbeMatrix.FacingProbePrefix + direction);
+                Assert.IsNotNull(probe, "Missing static 3D facing probe " + direction + ".");
+                Transform figure = probe.Find("FuYuan_Model");
+                Transform basePlaceholder = probe.Find("StaticChessBase");
+                Assert.IsNotNull(figure);
+                Assert.IsNotNull(basePlaceholder);
+                Assert.AreEqual(Vector3.zero, figure.localPosition);
+                Assert.Less(Quaternion.Angle(figure.localRotation, Quaternion.Euler(-90f, 0f, 0f)), 0.01f);
+                Assert.AreEqual(Vector3.one, figure.localScale);
+                Assert.AreEqual(Vector3.zero, basePlaceholder.localPosition);
+                Assert.Less(Quaternion.Angle(basePlaceholder.localRotation, Quaternion.identity), 0.01f);
+                Assert.AreEqual(new Vector3(0.66f, 0.04f, 0.66f), basePlaceholder.localScale);
+
+                Bounds figureBounds = CombinedRendererBounds(figure);
+                Bounds baseBounds = CombinedRendererBounds(basePlaceholder);
+                Rect figureScreenRect = ScreenRectFromBounds(camera, figureBounds);
+                Rect baseScreenRect = ScreenRectFromBounds(camera, baseBounds);
+                Debug.Log("[VisualTransformProof] route=3D direction=" + direction +
+                          " model=FuYuan_Model localEuler=(-90,0,0)" +
+                          " figureWorldMin=" + figureBounds.min.ToString("F4") +
+                          " figureWorldMax=" + figureBounds.max.ToString("F4") +
+                          " figureScreenRect=" + RectText(figureScreenRect) +
+                          " baseLocalPosition=(0,0,0)" +
+                          " baseWorldMin=" + baseBounds.min.ToString("F4") +
+                          " baseWorldMax=" + baseBounds.max.ToString("F4") +
+                          " baseScreenRect=" + RectText(baseScreenRect));
+            }
+
+            TacticalSpriteProbeMatrix.SetActiveRoute(true);
+            yield return null;
+
+            Transform group = board.transform.Find(TacticalSpriteProbeMatrix.GroupName);
+            Assert.IsNotNull(group);
+            for (int direction = 0; direction < TacticalSpriteProbeMatrix.DirectionCount; direction++)
+            {
+                Transform probe = group.Find("TacticalSpriteProbe_" + direction);
+                Assert.IsNotNull(probe, "Missing tactical sprite probe " + direction + ".");
+                TacticalSpritePresentationController controller = probe.GetComponent<TacticalSpritePresentationController>();
+                SpriteRenderer renderer = probe.GetComponentInChildren<SpriteRenderer>(true);
+                Assert.IsNotNull(controller);
+                Assert.IsNotNull(renderer);
+                Assert.IsNotNull(renderer.sprite);
+                Assert.AreEqual("FuYuan_TacticalDirection_" + direction, controller.ActiveSpriteName);
+                Vector2 normalizedPivot = new Vector2(
+                    renderer.sprite.pivot.x / renderer.sprite.rect.width,
+                    renderer.sprite.pivot.y / renderer.sprite.rect.height);
+                Assert.Less(Vector2.Distance(normalizedPivot, new Vector2(0.5f, 0.18f)), 0.001f);
+                Rect spriteScreenRect = ScreenRectFromBounds(camera, renderer.bounds);
+                Debug.Log("[VisualTransformProof] route=2D direction=" + direction +
+                          " sprite=" + controller.ActiveSpriteName +
+                          " fallback=fail_closed" +
+                          " normalizedPivot=" + normalizedPivot.ToString("F4") +
+                          " worldMin=" + renderer.bounds.min.ToString("F4") +
+                          " worldMax=" + renderer.bounds.max.ToString("F4") +
+                          " screenRect=" + RectText(spriteScreenRect));
+            }
+
+            Transform occlusionProbe = group.Find("TacticalSpriteOcclusionProbe");
+            Transform occluder = board.transform.Find("VisualBaselineOccluder");
+            Assert.IsNotNull(occlusionProbe);
+            Assert.IsNotNull(occluder);
+            SpriteRenderer occlusionSprite = occlusionProbe.GetComponentInChildren<SpriteRenderer>(true);
+            Renderer occluderRenderer = occluder.GetComponent<Renderer>();
+            Assert.IsNotNull(occlusionSprite);
+            Assert.IsNotNull(occluderRenderer);
+            Rect occlusionSpriteRect = ScreenRectFromBounds(camera, occlusionSprite.bounds);
+            Rect occluderRect = ScreenRectFromBounds(camera, occluderRenderer.bounds);
+            Rect overlap = RectIntersection(occlusionSpriteRect, occluderRect);
+            Debug.Log("[VisualTransformProof] route=2D target=TacticalSpriteOcclusionProbe" +
+                      " sprite=" + occlusionSprite.sprite.name +
+                      " spriteScreenRect=" + RectText(occlusionSpriteRect) +
+                      " occluderScreenRect=" + RectText(occluderRect) +
+                      " overlapScreenRect=" + RectText(overlap));
+            Assert.Greater(overlap.width * overlap.height, 0f,
+                "The existing occluder must overlap the tactical sprite in the frozen camera.");
+            Assert.Less(overlap.width * overlap.height,
+                occlusionSpriteRect.width * occlusionSpriteRect.height,
+                "The existing occluder must not cover the entire tactical sprite bounds.");
+            Assert.Less(overlap.yMax, occlusionSpriteRect.yMax,
+                "The existing occluder must leave the upper tactical sprite visible.");
+        }
+
+        [UnityTest]
         public IEnumerator TacticalSpriteRootAdvancesAndResetsAcrossRealFrames()
         {
             Screen.SetResolution(1920, 1080, false);
@@ -183,6 +280,51 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(pair.Value.LocalScale, pair.Key.localScale);
             }
         }
+
+        private static Bounds CombinedRendererBounds(Transform root)
+        {
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            Assert.Greater(renderers.Length, 0, root.name + " must contain a visible renderer.");
+            Bounds bounds = renderers[0].bounds;
+            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
+            return bounds;
+        }
+
+        private static Rect ScreenRectFromBounds(Camera camera, Bounds bounds)
+        {
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            Vector2 screenMin = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 screenMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            for (int x = 0; x < 2; x++)
+            for (int y = 0; y < 2; y++)
+            for (int z = 0; z < 2; z++)
+            {
+                Vector3 point = camera.WorldToViewportPoint(new Vector3(
+                    x == 0 ? min.x : max.x,
+                    y == 0 ? min.y : max.y,
+                    z == 0 ? min.z : max.z));
+                Vector2 proofPoint = new Vector2(point.x * 1920f, point.y * 1080f);
+                screenMin = Vector2.Min(screenMin, proofPoint);
+                screenMax = Vector2.Max(screenMax, proofPoint);
+            }
+            return Rect.MinMaxRect(screenMin.x, screenMin.y, screenMax.x, screenMax.y);
+        }
+
+        private static Rect RectIntersection(Rect first, Rect second)
+        {
+            float xMin = Mathf.Max(first.xMin, second.xMin);
+            float yMin = Mathf.Max(first.yMin, second.yMin);
+            float xMax = Mathf.Min(first.xMax, second.xMax);
+            float yMax = Mathf.Min(first.yMax, second.yMax);
+            return xMax > xMin && yMax > yMin
+                ? Rect.MinMaxRect(xMin, yMin, xMax, yMax)
+                : Rect.zero;
+        }
+
+        private static string RectText(Rect rect) =>
+            "(" + rect.xMin.ToString("F2") + "," + rect.yMin.ToString("F2") + ")-(" +
+            rect.xMax.ToString("F2") + "," + rect.yMax.ToString("F2") + ")";
 
         private readonly struct TransformState
         {

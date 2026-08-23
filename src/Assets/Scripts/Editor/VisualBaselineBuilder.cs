@@ -52,6 +52,10 @@ namespace TianZhang.Editor
         public const string TacticalSpritePrefabPath =
             "Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab";
         public const int TacticalSpriteDirectionCount = 6;
+        public const float TacticalSpritePixelsPerUnit = 512f;
+        public static readonly Vector2 TacticalSpritePivot = new Vector2(0.5f, 0.18f);
+        public static readonly Vector3 StaticChessFigureEuler = new Vector3(-90f, 0f, 0f);
+        public static readonly Vector3 StaticChessBaseScale = new Vector3(0.66f, 0.04f, 0.66f);
 
         public static string TacticalSpriteTexturePath(int direction) =>
             "Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_" + direction + ".png";
@@ -372,7 +376,7 @@ namespace TianZhang.Editor
                 figure.name = "FuYuan_Model";
                 figure.transform.SetParent(root.transform, false);
                 figure.transform.localPosition = Vector3.zero;
-                figure.transform.localRotation = Quaternion.identity;
+                figure.transform.localRotation = Quaternion.Euler(StaticChessFigureEuler);
                 figure.transform.localScale = Vector3.one;
                 foreach (MeshRenderer renderer in figure.GetComponentsInChildren<MeshRenderer>(true))
                 {
@@ -384,8 +388,8 @@ namespace TianZhang.Editor
                 GameObject basePlaceholder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 basePlaceholder.name = "StaticChessBase";
                 basePlaceholder.transform.SetParent(root.transform, false);
-                basePlaceholder.transform.localPosition = new Vector3(0f, -0.04f, 0f);
-                basePlaceholder.transform.localScale = new Vector3(0.66f, 0.04f, 0.66f);
+                basePlaceholder.transform.localPosition = Vector3.zero;
+                basePlaceholder.transform.localScale = StaticChessBaseScale;
                 ConfigurePrimitive(basePlaceholder, RequireAsset<Material>(UnitMaterialPath));
 
                 root.AddComponent<TianZhang.Features.CombatPresentation.StaticChessPresentationController>();
@@ -421,16 +425,21 @@ namespace TianZhang.Editor
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
                 TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer == null) throw new InvalidOperationException("Tactical sprite texture importer is unavailable: " + path);
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
                 if (importer.textureType != TextureImporterType.Sprite ||
                     importer.spriteImportMode != SpriteImportMode.Single ||
-                    Mathf.Abs(importer.spritePixelsPerUnit - 512f) > 0.001f ||
-                    Vector2.Distance(importer.spritePivot, new Vector2(0.5f, 0.125f)) > 0.001f ||
+                    Mathf.Abs(importer.spritePixelsPerUnit - TacticalSpritePixelsPerUnit) > 0.001f ||
+                    settings.spriteAlignment != (int)SpriteAlignment.Custom ||
+                    Vector2.Distance(settings.spritePivot, TacticalSpritePivot) > 0.001f ||
                     !importer.alphaIsTransparency)
                 {
+                    settings.spriteAlignment = (int)SpriteAlignment.Custom;
+                    settings.spritePivot = TacticalSpritePivot;
+                    importer.SetTextureSettings(settings);
                     importer.textureType = TextureImporterType.Sprite;
                     importer.spriteImportMode = SpriteImportMode.Single;
-                    importer.spritePixelsPerUnit = 512f;
-                    importer.spritePivot = new Vector2(0.5f, 0.125f);
+                    importer.spritePixelsPerUnit = TacticalSpritePixelsPerUnit;
                     importer.alphaIsTransparency = true;
                     importer.mipmapEnabled = false;
                     importer.SaveAndReimport();
