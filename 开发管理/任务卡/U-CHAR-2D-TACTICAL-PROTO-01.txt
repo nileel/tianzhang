@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：fixed_1920x1080_occlusion_matrix_unformable",
+  "stateReason": "固定 1920×1080、1× Game 视图已实机取证：六向主体过小，遮挡探针被现有遮挡柱完全遮没，未形成可读的下半身前景遮挡；命中本卡停止条件，禁止以改镜头、私有缩放或私有坐标补偿绕过",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -18,6 +18,7 @@
     "开发管理/任务归档/U-CHAR-2D-TACTICAL-PROTO-01.txt",
     "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt",
     "开发管理/苻渊2D战术精灵Unity样例验证记录.txt",
+    "开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-2D-only.png",
     "src/Assets/Art/Characters/TacticalSprites.meta",
     "src/Assets/Art/Characters/TacticalSprites/FuYuan.meta",
     "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png",

@@ -2,7 +2,7 @@
 
 任务：`U-CHAR-2D-TACTICAL-PROTO-01`
 日期：2026-08-23
-状态：⚠️ 待复核；Codex 独立复审部分通过。真实帧表现驱动、2D/3D 互斥切换与遮挡几何/深度断言已通过；固定 1920×1080 Game 视图人工可读性和像素级前景遮挡截图仍缺，任务保持 blocked；已通过的确定性资产、Importer、Prefab 六向序列化保持不变。
+状态：⛔ 停止。真实帧表现驱动、2D/3D 互斥切换与遮挡几何/深度断言已通过；固定 1920×1080、1× Game 视图实机取证确认六向主体过小，遮挡探针被现有遮挡柱完全遮没，未形成可读的下半身前景遮挡。任务命中停止条件并保持 blocked；已通过的确定性资产、Importer、Prefab 六向序列化保持不变。
 
 范围：只在 `AdventureScene/VisualBaselineBoard` 下新增独立 `TacticalSpriteProbeGroup` 证明 2D 六向战场表现；未接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位、规则或存档。既有静态 3D `FacingProbe_0..5`、`VisualBaselineOccluder`、地块、光照与镜头均未改变。
 
@@ -23,11 +23,13 @@
 
 ## 验证结果
 
+- `开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-2D-only.png`：Unity 6000.3.18f1，`AdventureScene`，Game 视图固定 `Full HD (1920×1080)`、Scale `1×`；只启用 `TacticalSpriteProbeGroup` 并关闭 `FacingProbe_0..5` 后取证。画面内六向主体相对战场格过小；位于 `(2,0)` 的 `TacticalSpriteOcclusionProbe` 被既有 `VisualBaselineOccluder` 完全遮没，截图不能证明“只遮住下半身”。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：418/418 通过（含逐张 SHA-256／768×768 RGBA／单 Sprite／512 PPU／pivot／六向索引／Prefab 单一 SpriteRenderer／隔离组格位与根 Y 角／场景持久化／遮挡探针格位、深度与不透明遮挡物证据）。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：9/9 通过；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。新增真实帧表现测试证明五种非待机事件在真实帧中的中间根节点变化、最终复位与施法单次信号，待机静止；互斥切换测试断言默认只启用 3D、切换后非目标 3D 路线不参与渲染。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`：通过。
 
 ## 残留风险与证据边界
 
-- 无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵；遮挡证据已由确定性几何／深度断言（探针位于遮挡物后方、遮挡物不透明、精灵未用 always-on-top）落到可重复测试，但固定 1920×1080 Game 视图的人工可读性和像素级前景遮挡截图仍是本卡未闭环证据，不能推迟给 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 代替。
+- 确定性几何／深度断言只能证明探针在遮挡物之后，不能证明最终像素形成“下半身遮挡”。实际固定视图已证明当前资产／冻结参数组合失败；任务卡同时冻结 512 PPU、根节点单位缩放、镜头、格位中心与遮挡物，并禁止方向私有补偿，因此本轮没有卡内合法修复面。
+- 后续必须先取得新的合法资产／合同决策，明确允许改变透明包围盒、统一尺度、PPU 或遮挡样例合同中的至少一项，再重新进入 ready；不得把当前失败证据推迟给 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 代替。
 - 本样例不授权接入正式单位链；任务完成只应转换为同卡 `codex_review/codex/ready`，待 Codex 独立复审。
