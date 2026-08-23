@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立审核部分通过；确定性资产与序列化链已通过，但表现控制器缺少真实帧驱动，2D/3D 探针未形成互斥隔离，现有遮挡物也未与任一 2D Sprite 平面相交；详见未通过审核清单",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",

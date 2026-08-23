@@ -4,16 +4,3 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
-
-### DSH-U-CHAR-2D-TACTICAL-PROTO-01-33933f6f · DeepSeek 自动交接（⚠️ 未审核）
-
-- 方向：任务 U-CHAR-2D-TACTICAL-PROTO-01 的原子正式结果等待 Codex 独立复审。
-- 任务：U-CHAR-2D-TACTICAL-PROTO-01
-- 候选提交：d63515c7877fb60e6fa877732890441d4ba7400c
-- 正式提交：与本交接、pending_review 投影处于同一原子提交。
-- 修改文件：开发管理/苻渊2D战术精灵Unity样例验证记录.txt、src/Assets/Art/Characters/TacticalSprites.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_1.png、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_1.png.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_2.png、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_2.png.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_3.png、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_3.png.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_4.png、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_4.png.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_5.png、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_5.png.meta、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab、src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab.meta、src/Assets/Scenes/AdventureScene.unity、src/Assets/Scripts/Editor/AdventureSceneBuilder.cs、src/Assets/Scripts/Editor/SceneArchitectureValidator.cs、src/Assets/Scripts/Editor/VisualBaselineBuilder.cs、src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs、src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs.meta、src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs、src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs、src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs.meta
-- 已验证：tools/run-unity-editmode-tests.ps1: 417/417 通过（含SHA-256/768×768 RGBA/导入值/六向索引/隔离组格位与根Y角/场景持久化）；tools/run-unity-playmode-tests.ps1: 7/7 通过（六向×六事件矩阵，正式 Adventure→Combat→Settlement→保存读取回归仍通过）；tools/check-asset-versioning.ps1: 通过；tools/check-data-chain.ps1 -FailOnMissingAssets: 通过；tools/check-unity-assembly-boundaries.ps1: 通过；tools/check-review-text.ps1 -Paths docs,开发管理: 通过；六张批准源与Unity副本逐张SHA-256一致（byte-for-byte）
-- 未验证：固定1920×1080镜头下的脚底锚定、共同尺度与前景遮挡的人工视觉判定（无图形batch环境，留待 A-CHAR-BATTLE-VISUAL-COMPARE-01/Codex 独立复审）
-- 残留风险：遮挡与六向可读性依赖默认深度测试 Sprite 排序（未用 always-on-top、每向裁切或私有偏移），最终视觉判定需 Codex 在同一固定镜头复核；本样例未接入正式单位链，任务只转 codex_review，不自审、不解锁比较卡。
-- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
-- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

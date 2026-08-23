@@ -2,7 +2,7 @@
 
 任务：`U-CHAR-2D-TACTICAL-PROTO-01`
 日期：2026-08-23
-状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：仅 `AdventureScene/VisualBaselineBoard` 的隔离 2D 六向技术矩阵与对应 Editor 生成资产。
+状态：⚠️ 待复核；Codex 独立审核部分通过，待按 `开发管理/未通过审核清单.txt` 定向返工后复审。已通过范围为确定性资产、Importer、Prefab、六向场景序列化与现有 Unity 回归。
 
 范围：只在 `AdventureScene/VisualBaselineBoard` 下新增独立 `TacticalSpriteProbeGroup` 证明 2D 六向战场表现；未接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位、规则或存档。既有静态 3D `FacingProbe_0..5`、`VisualBaselineOccluder`、地块、光照与镜头均未改变。
 
