@@ -8,8 +8,10 @@ using TianZhang.Features.CombatPresentation;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Spatial;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TianZhang.Editor
@@ -17,6 +19,12 @@ namespace TianZhang.Editor
     public static class AdventureSceneBuilder
     {
         private static readonly float[] FacingProbeYaws = { 90f, 150f, 210f, 270f, 330f, 30f };
+
+        private static readonly int[,] VisualBaselineCells =
+        {
+            { -2, 0, 0 }, { -1, 0, 1 }, { 0, 0, 2 }, { 1, 0, 1 }, { 2, 0, 0 },
+            { -1, 1, 0 }, { 0, 1, 1 }, { 1, -1, 0 }, { 0, -1, 0 },
+        };
 
         [MenuItem("天章/场景/重建冒险")]
         public static void Build()
@@ -104,6 +112,40 @@ namespace TianZhang.Editor
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
+        [MenuItem("天章/场景/重建战术精灵隔离矩阵")]
+        public static void RebuildTacticalSpriteIsolationMatrix()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject board = FindVisualBaselineBoard(scene);
+            if (board == null) throw new InvalidOperationException("AdventureScene is missing the visual baseline board.");
+
+            Transform group = board.transform.Find("TacticalSpriteProbeGroup");
+            if (group == null) throw new InvalidOperationException("AdventureScene is missing the tactical sprite probe group.");
+            group.gameObject.SetActive(false);
+
+            Transform existingOcclusion = group.Find("TacticalSpriteOcclusionProbe");
+            if (existingOcclusion != null) UnityEngine.Object.DestroyImmediate(existingOcclusion.gameObject);
+
+            GameObject spritePrefab = SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.TacticalSpritePrefabPath);
+            CreateTacticalSpriteOcclusionProbe(group, VisualBaselineCells, spritePrefab);
+
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the regenerated AdventureScene.");
+            AssetDatabase.SaveAssets();
+        }
+
+        private static GameObject FindVisualBaselineBoard(Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+                if (root.name == "VisualBaselineBoard") return root;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                Transform board = root.transform.Find("VisualBaselineBoard");
+                if (board != null) return board.gameObject;
+            }
+            return null;
+        }
+
         private static UnityEngine.Object[] LoadAttackProfiles()
         {
             string[] guids = AssetDatabase.FindAssets("t:AttackProfileData", new[] { "Assets/Data/AttackProfiles" });
@@ -141,11 +183,7 @@ namespace TianZhang.Editor
             Material top = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundTopMaterialPath);
             Material side = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundSideMaterialPath);
 
-            int[,] cells =
-            {
-                { -2, 0, 0 }, { -1, 0, 1 }, { 0, 0, 2 }, { 1, 0, 1 }, { 2, 0, 0 },
-                { -1, 1, 0 }, { 0, 1, 1 }, { 1, -1, 0 }, { 0, -1, 0 },
-            };
+            int[,] cells = VisualBaselineCells;
             for (int index = 0; index < cells.GetLength(0); index++)
             {
                 int q = cells[index, 0];
@@ -240,6 +278,34 @@ namespace TianZhang.Editor
                 directionProperty.intValue = direction;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
             }
+
+            CreateTacticalSpriteOcclusionProbe(group.transform, cells, spritePrefab);
+
+            // 2D 组默认关闭，仅启用既有静态 3D 路线，形成互斥隔离矩阵；
+            // 测试通过 TacticalSpriteProbeMatrix.SetActiveRoute(true) 显式切换到 2D。
+            group.SetActive(false);
+        }
+
+        private static void CreateTacticalSpriteOcclusionProbe(Transform group, int[,] cells, GameObject spritePrefab)
+        {
+            int heightLevel = FindCellHeight(cells, 2, 0);
+            GameObject probe = (GameObject)PrefabUtility.InstantiatePrefab(spritePrefab);
+            probe.name = "TacticalSpriteOcclusionProbe";
+            probe.transform.SetParent(group, false);
+            probe.transform.localPosition = HexToWorld(2, 0, HeightForLevel(heightLevel));
+            probe.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+
+            TacticalSpritePresentationController controller = probe.GetComponent<TacticalSpritePresentationController>();
+            if (controller == null) throw new InvalidOperationException("Tactical sprite occlusion probe is missing its presentation controller.");
+            SpriteRenderer body = probe.GetComponentInChildren<SpriteRenderer>(true);
+            if (body == null) throw new InvalidOperationException("Tactical sprite occlusion probe is missing its SpriteRenderer.");
+            body.sprite = SceneBuildSupport.RequireAsset<Sprite>(VisualBaselineBuilder.TacticalSpriteTexturePath(0));
+
+            var serialized = new SerializedObject(controller);
+            SerializedProperty directionProperty = serialized.FindProperty("activeDirection") ??
+                throw new InvalidOperationException("Tactical sprite controller is missing the active direction field.");
+            directionProperty.intValue = 0;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static int FindCellHeight(int[,] cells, int q, int r)

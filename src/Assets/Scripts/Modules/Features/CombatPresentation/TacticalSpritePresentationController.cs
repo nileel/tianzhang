@@ -44,6 +44,11 @@ namespace TianZhang.Features.CombatPresentation
             ApplyDirection(activeDirection);
         }
 
+        private void Update()
+        {
+            if (isPresenting) Tick(Time.deltaTime);
+        }
+
         private void LateUpdate()
         {
             AlignBodyToCameraPlane();
@@ -129,6 +134,33 @@ namespace TianZhang.Features.CombatPresentation
             Camera camera = Camera.main;
             if (camera == null) return;
             body.transform.rotation = camera.transform.rotation;
+        }
+    }
+
+    /// <summary>
+    /// 2D／3D 隔离矩阵的显式路线切换。2D 战术精灵组与六个 3D 静态棋子探针占用同一组格位，
+    /// 必须互斥：true 只启用 2D 并关闭 3D，false 反之。切换后非目标路线不参与渲染。
+    /// </summary>
+    public static class TacticalSpriteProbeMatrix
+    {
+        public const string BoardName = "VisualBaselineBoard";
+        public const string GroupName = "TacticalSpriteProbeGroup";
+        public const string FacingProbePrefix = "FacingProbe_";
+        public const int DirectionCount = 6;
+
+        public static void SetActiveRoute(bool tactical2D)
+        {
+            GameObject board = GameObject.Find(BoardName);
+            if (board == null) return;
+
+            Transform group = board.transform.Find(GroupName);
+            if (group != null) group.gameObject.SetActive(tactical2D);
+
+            for (int direction = 0; direction < DirectionCount; direction++)
+            {
+                Transform facing = board.transform.Find(FacingProbePrefix + direction);
+                if (facing != null) facing.gameObject.SetActive(!tactical2D);
+            }
         }
     }
 }

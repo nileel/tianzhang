@@ -4,3 +4,16 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
+
+### DSH-U-CHAR-2D-TACTICAL-PROTO-01-94643343 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-CHAR-2D-TACTICAL-PROTO-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-CHAR-2D-TACTICAL-PROTO-01
+- 候选提交：05e7f0b7ee736336ce48c22578d9ba7cd7012c0d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/苻渊2D战术精灵Unity样例验证记录.txt、src/Assets/Scenes/AdventureScene.unity、src/Assets/Scripts/Editor/AdventureSceneBuilder.cs、src/Assets/Scripts/Editor/SceneArchitectureValidator.cs、src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs、src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs、src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs
+- 已验证：Unity EditMode 418/418 通过（含六向、遮挡探针格位/深度/不透明遮挡物、互斥默认断言）；Unity PlayMode 9/9 通过（真实帧表现中间变化/复位/施法单次信号、待机静止、互斥切换非目标路线不渲染）；check-asset-versioning.ps1 通过（Git LFS fsck OK）；check-data-chain.ps1 -FailOnMissingAssets 通过；check-unity-assembly-boundaries.ps1 通过（19 assemblies）；check-review-text.ps1 -Paths docs,开发管理 通过（920 文件）；check-pending-whitespace.ps1 通过（7 文件，含场景 CRLF 后处理）；场景由 AdventureSceneBuilder.RebuildTacticalSpriteIsolationMatrix 确定性重建，diff 仅含组 inactive 与新增遮挡探针
+- 未验证：固定 1920×1080 Game 视图的人工可读性判定（-nographics 无图形 batch，留待 A-CHAR-BATTLE-VISUAL-COMPARE-01）；实际像素级前景遮挡渲染截图（仅确定性几何/深度断言，未截图像素比对）
+- 残留风险：无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵与确定性几何/深度断言，脚底锚定、共同尺度与前景遮挡的最终人工可读性仍需 A-CHAR-BATTLE-VISUAL-COMPARE-01 在同一固定镜头与 1920×1080 Game 视图下判定；2D 组默认关闭，运行时由 TacticalSpriteProbeMatrix.SetActiveRoute 显式切换并断言非目标 3D 路线不参与渲染，本样例不授权接入正式单位链。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

@@ -2,7 +2,7 @@
 
 任务：`U-CHAR-2D-TACTICAL-PROTO-01`
 日期：2026-08-23
-状态：⚠️ 待复核；Codex 独立审核部分通过，待按 `开发管理/未通过审核清单.txt` 定向返工后复审。已通过范围为确定性资产、Importer、Prefab、六向场景序列化与现有 Unity 回归。
+状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：按 `开发管理/未通过审核清单.txt` 对本卡的三项返工定向补齐（真实帧表现驱动、2D/3D 互斥切换、既有遮挡物实际相交取证）。待 Codex 独立复审；已通过的确定性资产、Importer、Prefab 六向序列化保持不变。
 
 范围：只在 `AdventureScene/VisualBaselineBoard` 下新增独立 `TacticalSpriteProbeGroup` 证明 2D 六向战场表现；未接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位、规则或存档。既有静态 3D `FacingProbe_0..5`、`VisualBaselineOccluder`、地块、光照与镜头均未改变。
 
@@ -15,16 +15,19 @@
 ## 表现与六向矩阵
 
 - `AdventureSceneBuilder.CreateTacticalSpriteProbes` 在 `VisualBaselineBoard` 下新增 `TacticalSpriteProbeGroup` 与 `TacticalSpriteProbe_0..5`；六个根节点复用 `HexCoord.Directions`、对应格位中心与 Y 旋转 `90/150/210/270/330/30`，逐一选择同编号 Sprite。组默认不覆盖、不删除现有 `FacingProbe_0..5`。
+- 返工二（互斥矩阵）：`TacticalSpriteProbeGroup` 在场景中默认 `active=false`，只启用既有 3D 静态棋子路线；运行时由 `TacticalSpriteProbeMatrix.SetActiveRoute(bool)` 显式切换，切换 2D 时关闭六个 3D `FacingProbe` 并断言非目标路线不参与渲染，二者不再同时激活。
+- 返工一（真实帧表现）：`TacticalSpritePresentationController` 在 `Update` 中按 `Tick(Time.deltaTime)` 自行推进，不再依赖测试手动调用 `Tick`；`LateUpdate` 仅做相机平面对齐。
+- 返工三（遮挡取证）：在 `TacticalSpriteProbeGroup` 下新增 `TacticalSpriteOcclusionProbe`，脚底锚定于既有 `VisualBaselineOccluder` 所在格位 `(2,0)` 中心，位于遮挡物后方。遮挡物保持不透明几何材质（renderQueue 在 Transparent 之前），精灵保持默认排序层且未用 always-on-top，由深度测试真实遮挡精灵下半身；深度关系 `dot(probe−occluder, cameraForward) > 0` 可重复断言。
 - 方向映射固定：`0→(1,0)/90°`、`1→(1,-1)/150°`、`2→(0,-1)/210°`、`3→(-1,0)/270°`、`4→(-1,1)/330°`、`5→(0,1)/30°`，本地 `+Z` 指向对应邻格中心。
 - `TacticalSpritePresentationController` 只消费既有 `StaticChessPresentationEvent`：待机静止；移动、攻击、受击、施法和死亡只写同一角色根节点并在结束后复位；施法最多暴露一次既有语义的一次性 `CastEffectRequested`。子 Sprite 只做统一相机平面对齐，所有方向共用同一渲染平面、锚点和尺度，无方向私有偏移、缩放、镜像或旋转补偿。
 
 ## 验证结果
 
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：417/417 通过（含逐张 SHA-256／768×768 RGBA／单 Sprite／512 PPU／pivot／六向索引／Prefab 单一 SpriteRenderer／隔离组格位与根 Y 角／场景持久化）。
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：7/7 通过；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：418/418 通过（含逐张 SHA-256／768×768 RGBA／单 Sprite／512 PPU／pivot／六向索引／Prefab 单一 SpriteRenderer／隔离组格位与根 Y 角／场景持久化／遮挡探针格位、深度与不透明遮挡物证据）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：9/9 通过；现行正式 Adventure→Combat→Settlement→保存读取回归仍通过。新增真实帧表现测试证明五种非待机事件在真实帧中的中间根节点变化、最终复位与施法单次信号，待机静止；互斥切换测试断言默认只启用 3D、切换后非目标 3D 路线不参与渲染。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`：通过。
 
 ## 残留风险与证据边界
 
-- 无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵；脚底锚定、共同尺度与前景遮挡的最终人工可读性判定仍需 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 在同一固定镜头下完成。遮挡依赖默认深度测试 Sprite 排序（未使用 always-on-top、每向裁切或私有 Y/Z 偏移）。
+- 无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵；遮挡证据已由确定性几何／深度断言（探针位于遮挡物后方、遮挡物不透明、精灵未用 always-on-top）落到可重复测试，但最终人工可读性判定仍需 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 在同一固定镜头与 1920×1080 Game 视图下完成。
 - 本样例不授权接入正式单位链；任务完成只应转换为同卡 `codex_review/codex/ready`，待 Codex 独立复审。

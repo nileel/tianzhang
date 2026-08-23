@@ -255,6 +255,8 @@ namespace TianZhang.Tests.EditMode
                 .ToArray();
             Transform board = transforms.Single(item => item.name == "VisualBaselineBoard");
             Transform group = transforms.Single(item => item.parent == board && item.name == "TacticalSpriteProbeGroup");
+            Assert.IsFalse(group.gameObject.activeSelf,
+                "The 2D tactical sprite group must stay inactive by default so the 2D and 3D routes are mutually exclusive.");
             for (int direction = 0; direction < expectations.GetLength(0); direction++)
             {
                 int q = expectations[direction, 0];
@@ -281,6 +283,41 @@ namespace TianZhang.Tests.EditMode
             for (int direction = 0; direction < 6; direction++)
                 Assert.AreEqual(1, transforms.Count(item => item.parent == board && item.name == "FacingProbe_" + direction),
                     "The static 3D facing probes must remain untouched beside the new 2D group.");
+        }
+
+        [Test]
+        public void TacticalSpriteOcclusionProbeIsDepthOccludedByTheExistingOccluder()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            Transform[] transforms = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                .ToArray();
+            Transform board = transforms.Single(item => item.name == "VisualBaselineBoard");
+            Transform group = board.Find("TacticalSpriteProbeGroup");
+            Assert.IsNotNull(group, "AdventureScene must persist the tactical sprite probe group.");
+            Transform probe = group.Find("TacticalSpriteOcclusionProbe");
+            Assert.IsNotNull(probe, "AdventureScene must persist the tactical sprite occlusion probe.");
+            Assert.Less(Vector3.Distance(probe.localPosition, HexToVisualPosition(2, 0, HeightForLevel(0))), 0.001f,
+                "The occlusion probe must anchor at the occluder's own cell center.");
+
+            SpriteRenderer renderer = probe.GetComponentInChildren<SpriteRenderer>(true);
+            Assert.IsNotNull(renderer);
+            Assert.IsNotNull(renderer.sprite);
+            Assert.AreEqual("FuYuan_TacticalDirection_0", renderer.sprite.name,
+                "The occlusion probe must render the direction-0 sprite.");
+            Assert.AreEqual(0, renderer.sortingOrder, "The occlusion probe must not use always-on-top sorting.");
+            Assert.AreEqual(0, renderer.sortingLayerID, "The occlusion probe must keep the default sorting layer.");
+
+            Material occluderMaterial = AssetDatabase.LoadAssetAtPath<Material>(VisualBaselineBuilder.OccluderMaterialPath);
+            Assert.IsNotNull(occluderMaterial);
+            Assert.Less(occluderMaterial.renderQueue, (int)RenderQueue.Transparent,
+                "The occluder must stay opaque so depth occlusion is real.");
+
+            Vector3 cameraForward = Quaternion.Euler(38f, 0f, 0f) * Vector3.forward;
+            Vector3 occluderPosition = HexToVisualPosition(2, 0, HeightForLevel(0) + 0.58f);
+            Vector3 probePosition = HexToVisualPosition(2, 0, HeightForLevel(0));
+            Assert.Greater(Vector3.Dot(probePosition - occluderPosition, cameraForward), 0f,
+                "The occlusion probe must sit behind the occluder along the frozen camera forward.");
         }
 
         private static readonly string[] FrozenTacticalSpriteSha256 =

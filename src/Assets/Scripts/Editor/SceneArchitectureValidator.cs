@@ -289,13 +289,48 @@ namespace TianZhang.Editor
                     FacingProbeExpectations[index, 3]);
             Transform tacticalGroup = board.transform.Find("TacticalSpriteProbeGroup");
             Require(tacticalGroup != null, "AdventureScene is missing the tactical sprite probe group.");
+            Require(!tacticalGroup.gameObject.activeSelf,
+                "The tactical sprite group must stay inactive by default so the 2D and 3D routes are mutually exclusive.");
             for (int index = 0; index < FacingProbeExpectations.GetLength(0); index++)
                 ValidateTacticalSpriteProbe(tacticalGroup, index, FacingProbeExpectations[index, 0],
                     FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
                     FacingProbeExpectations[index, 3]);
+            ValidateTacticalSpriteOcclusionProbe(tacticalGroup);
             foreach (string name in new[]
                      { "SurfaceOverlay", "ReachableOverlay", "SelectedOverlay", "AttackOverlay", "VisualBaselineOccluder" })
                 Require(FindNamed(scene, name) != null, "AdventureScene is missing visual layer: " + name);
+        }
+
+        private static void ValidateTacticalSpriteOcclusionProbe(Transform group)
+        {
+            Transform probe = group.Find("TacticalSpriteOcclusionProbe");
+            Require(probe != null, "AdventureScene is missing the tactical sprite occlusion probe.");
+            Vector3 expectedPosition = HexToVisualPosition(2, 0, HeightForLevel(0));
+            Require(Vector3.Distance(probe.localPosition, expectedPosition) < 0.001f,
+                "Tactical sprite occlusion probe must anchor at the occluder's own cell center.");
+            Require(Quaternion.Angle(probe.localRotation, Quaternion.Euler(0f, 90f, 0f)) < 0.01f,
+                "Tactical sprite occlusion probe must reuse the frozen direction-0 yaw.");
+            TacticalSpritePresentationController controller = probe.GetComponent<TacticalSpritePresentationController>();
+            Require(controller != null,
+                "Tactical sprite occlusion probe must instantiate the tactical sprite presentation root.");
+            SpriteRenderer renderer = probe.GetComponentInChildren<SpriteRenderer>(true);
+            Require(renderer != null && renderer.sprite != null &&
+                    renderer.sprite.name == "FuYuan_TacticalDirection_0",
+                "Tactical sprite occlusion probe must render the direction-0 sprite.");
+            Require(probe.GetComponentsInChildren<Animator>(true).Length == 0 &&
+                    probe.GetComponentsInChildren<Animation>(true).Length == 0 &&
+                    probe.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length == 0,
+                "Tactical sprite occlusion probe must not import a runtime animation or rig.");
+
+            Material occluderMaterial = AssetDatabase.LoadAssetAtPath<Material>(VisualBaselineBuilder.OccluderMaterialPath);
+            Require(occluderMaterial != null && occluderMaterial.renderQueue < (int)RenderQueue.Transparent,
+                "The visual baseline occluder must stay an opaque geometry material for real depth occlusion.");
+            Require(renderer.sortingOrder == 0 && renderer.sortingLayerID == 0,
+                "The tactical sprite must not use always-on-top sorting to fake occlusion.");
+            Vector3 cameraForward = Quaternion.Euler(38f, 0f, 0f) * Vector3.forward;
+            Vector3 occluderPosition = HexToVisualPosition(2, 0, HeightForLevel(0) + 0.58f);
+            Require(Vector3.Dot(HexToVisualPosition(2, 0, HeightForLevel(0)) - occluderPosition, cameraForward) > 0f,
+                "Tactical sprite occlusion probe must sit behind the occluder along the frozen camera forward.");
         }
 
         private static void ValidateVisualBaselineCell(Transform board, int q, int r, int heightLevel)
