@@ -16,7 +16,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-DIRECTION-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-COMPARE-01 | 战场角色静态 3D／2D 双路线选择父任务 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt |
-| U-CHAR-2D-TACTICAL-PROTO-01 | P1 | codex | 阻塞 | — | 2D 六向战术角色 Unity 样例 | 开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt |
+| U-CHAR-2D-TACTICAL-PROTO-01 | P1 | deepseek | 已排队 | — | 2D 六向战术角色 Unity 样例 | 开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt |
 | A-CHAR-BATTLE-VISUAL-COMPARE-01 | P1 | codex | 阻塞 | U-CHAR-2D-TACTICAL-PROTO-01 | 静态 3D 棋子／2D 战术精灵固定比较 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
