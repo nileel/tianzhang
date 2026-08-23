@@ -9,10 +9,8 @@
   "domain": "content",
   "stage": "design",
   "dispatchState": "frozen",
-  "blockedBy": [
-    "D-CHAR-STATIC3D-MOTION-REFERENCE-01"
-  ],
-  "stateReason": "2026-08-24：必须先完成静态3D参考调研并由用户明确允许进入详细方案；前置清空后仍保持frozen，禁止自动ready。",
+  "blockedBy": [],
+  "stateReason": "2026-08-24：静态3D参考调研已完成；仍必须由用户复核调研并明确允许进入详细方案，保持frozen，禁止因前置清空自动ready。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
@@ -31,7 +29,7 @@
 
 ## 来源与当前边界
 
-- 本卡只在静态 3D reference 完成且用户复核后明确回复“进入详细方案”时解冻。
+- 静态 3D reference 已完成；本卡仍只在用户复核调研后明确回复“进入详细方案”时解冻。
 - 调研完成或 blocker 清空本身不构成授权；维护轮不得自动把本卡转 ready。
 - 本卡不预设 Pose 换模，不消费 credits，不制作模型或修改 Unity。
 

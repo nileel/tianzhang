@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "discovery",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-24：重新评估规格已获用户批准；本卡是首批ready叶子，先验证静态3D动态表现是否有可信参考，不预设Pose换模。",
+  "stateReason": "2026-08-24：已完成静态3D战斗动态表现参考调研并归档；未找到多套独立静态Pose模型换模的可信等价先例，已明确自研风险，未决定《天章》技术路线。直接后继pipeline的具名前置已移除，但仍保持frozen等待用户明确允许进入详细方案。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
@@ -66,3 +66,9 @@
 
 - 找不到等价案例却准备把相邻参考写成成熟 Pose 换模流程。
 - 调研需要消费 credits、修改资产或替用户批准自研风险。
+
+## 完成记录（2026-08-24）
+
+- 已形成 `docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md`，覆盖多套独立静态 Pose 换模、单模型骨骼／蒙皮、表现根节点、材质／一次性特效、定格式关键 Pose 与保持角色静态的微缩模型表达，并逐项标注证据等级、适用范围、迁移边界与未解决问题。
+- 未找到“多套独立、无骨骼的静态 3D Pose 模型替换覆盖战斗动态语义”的可信等价生产先例；Wartile 的动态微缩棋子和 Moonbreaker 的静态微缩模型取舍均只作为相邻参考，未被写成 Pose 换模证明。
+- 已从 `D-CHAR-STATIC3D-MOTION-PIPELINE-01` 移除本卡 blocker；该卡仍为 `frozen`，本次完成不授权详细方案、资产生产、credits 消费或 Unity 修改。
