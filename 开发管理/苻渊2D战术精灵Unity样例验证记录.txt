@@ -2,7 +2,7 @@
 
 任务：`U-CHAR-2D-TACTICAL-PROTO-01`
 日期：2026-08-23
-状态：⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：按 `开发管理/未通过审核清单.txt` 对本卡的三项返工定向补齐（真实帧表现驱动、2D/3D 互斥切换、既有遮挡物实际相交取证）。待 Codex 独立复审；已通过的确定性资产、Importer、Prefab 六向序列化保持不变。
+状态：⚠️ 待复核；Codex 独立复审部分通过。真实帧表现驱动、2D/3D 互斥切换与遮挡几何/深度断言已通过；固定 1920×1080 Game 视图人工可读性和像素级前景遮挡截图仍缺，任务保持 blocked；已通过的确定性资产、Importer、Prefab 六向序列化保持不变。
 
 范围：只在 `AdventureScene/VisualBaselineBoard` 下新增独立 `TacticalSpriteProbeGroup` 证明 2D 六向战场表现；未接入 `AdventureUnitSpawner`、正式遭遇、常规可战斗单位、规则或存档。既有静态 3D `FacingProbe_0..5`、`VisualBaselineOccluder`、地块、光照与镜头均未改变。
 
@@ -29,5 +29,5 @@
 
 ## 残留风险与证据边界
 
-- 无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵；遮挡证据已由确定性几何／深度断言（探针位于遮挡物后方、遮挡物不透明、精灵未用 always-on-top）落到可重复测试，但最终人工可读性判定仍需 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 在同一固定镜头与 1920×1080 Game 视图下完成。
+- 无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵；遮挡证据已由确定性几何／深度断言（探针位于遮挡物后方、遮挡物不透明、精灵未用 always-on-top）落到可重复测试，但固定 1920×1080 Game 视图的人工可读性和像素级前景遮挡截图仍是本卡未闭环证据，不能推迟给 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 代替。
 - 本样例不授权接入正式单位链；任务完成只应转换为同卡 `codex_review/codex/ready`，待 Codex 独立复审。

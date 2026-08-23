@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 复审部分通过：真实帧表现、2D/3D 互斥与几何/深度断言已通过；固定 1920×1080 Game 视图人工可读性及像素级前景遮挡取证尚缺，不能形成可由比较卡消费的完整矩阵",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
