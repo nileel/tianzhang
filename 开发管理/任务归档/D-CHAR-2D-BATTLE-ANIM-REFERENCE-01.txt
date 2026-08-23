@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "discovery",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-24：重新评估规格已获用户批准；本卡是首批ready叶子，只调研2D战斗动画参考，不制定《天章》方案。",
+  "stateReason": "2026-08-24：已完成2D战斗动画参考调研并归档；来源矩阵明确区分一手、具名作者和社区证据，未决定《天章》技术路线。直接后继 pipeline 的具名前置已移除，但仍保持 frozen 等待用户明确允许进入详细方案。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
@@ -67,3 +67,9 @@
 
 - 关键生产断言找不到可核实来源，或必须通过猜测团队规模、资产结构、工时或工具链才能成立。
 - 调研开始生产资产、锁帧数或修改游戏行为。
+
+## 完成记录（2026-08-24）
+
+- 已形成 `docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md`，覆盖六类战斗语义、逐帧／剪纸与骨骼／3D 预渲染／有限帧与棋子化表达，以及换装、武器、批量、动作扩展和反馈成本的可证边界。
+- 资料不足的受击与死亡生产断言已明确列为未解决问题，没有用画面观察或社区帖子替代一手成本证据。
+- 已从 `D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 移除本卡 blocker；该卡仍为 `frozen`，本次完成不授权详细方案、资产生产或 Unity 修改。
