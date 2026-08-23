@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-BATTLE-VISUAL-COMPARE-01"],
-  "stateReason": "2026-08-21 用户批准建立静态 3D 棋子与 2D 战术精灵两条对称试制线；父项只汇总比较结论，不进入队列。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-23：固定比较已确认 2D 战术精灵胜出；父项现只汇总结论、正式生产方向与既有链路处置，不实施资产生产。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",

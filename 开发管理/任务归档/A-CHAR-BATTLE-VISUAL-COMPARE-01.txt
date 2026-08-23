@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "decision",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "静态 3D 与 2D 六向路线均已在同一测试台形成独立复审通过的固定矩阵；本卡可只做比较并形成唯一方向结论，不实施修补。",
+  "stateReason": "2026-08-23：两条路线在同一测试台的共同硬门均通过；十项等权固定比较以 42/50 对 30/50 确认 2D 战术精灵胜出，并解除父项唯一前置。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -52,3 +52,9 @@
 ## 停止条件
 
 - 证据条件不对称、任一路线缺固定矩阵或产品结论仍需用户在多个未冻结选项间选择时停止。
+
+## 完成记录
+
+- 两条路线的共同硬门、固定六向、六类根节点表现、1920×1080 输出条件和规则隔离均已核对。静态 3D 证据见 `开发管理/苻渊静态棋子Unity战术样例验证记录.txt`；2D 证据及独立复审结论见 `开发管理/苻渊2D战术精灵Unity样例验证记录.txt` 与 `U-CHAR-2D-TACTICAL-PROTO-01` 归档卡。
+- 十项等权分为静态 3D `30/50`、2D `42/50`。2D 在固定镜头的身份、六向、动作可读、生产扩展、Unity 复杂度和维护风险上胜出；静态 3D 仅在外观扩展承载上占优。完整证据映射与逐项评分见双路线设计 §6。
+- 唯一结论为 **2D 战术精灵胜出**。没有修改任一候选、规则、正式单位或存档，也没有重开 Tripo、Blender、骨骼或第三路线；`A-CHAR-BATTLE-VISUAL-DIRECTION-01` 已移除本卡前置并转为 ready，只负责后续汇总。
