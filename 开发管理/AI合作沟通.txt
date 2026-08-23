@@ -4,3 +4,16 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
+
+### DSH-C-KB-IDX-MONSTER-01-61297184 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-KB-IDX-MONSTER-01 的原子正式结果等待 Codex 独立复审。
+- 任务：C-KB-IDX-MONSTER-01
+- 候选提交：b98427a320d3f2ecb31f4f82d39c6fd5bcdadba1
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/怪物/怪物事实速查.txt
+- 已验证：任务卡 C-KB-IDX-MONSTER-01 为 external_execute/deepseek/ready，owner 与执行器一致；现有怪物行与 docs/怪物/关陇玄域/石甲兽.txt、docs/剧情/副本叙事/adventure_guanzhong_wild.txt、docs/地图/关陇玄域.txt#八、怪物与敌人 一致；全部路径#章节指针可解析（5 个指针文件存在、章节锚点命中）；check-review-text.ps1 -Paths docs/怪物/怪物事实速查.txt → OK（1 文件）；check-pending-whitespace.ps1 通过（提交前与 finalize 内各一次）；git diff --cached --check 通过（finalize 内）；candidate 提交 b98427a320d3f2ecb31f4f82d39c6fd5bcdadba1，changed paths 精确等于 docs/怪物/怪物事实速查.txt，工作树干净
+- 未验证：未运行 check-data-chain.ps1（本轮仅新增 docs 线索卡，未触及 CSV/Unity 数据链路）；未运行 check-task-cards.ps1（candidate 不修改任务卡）；未写入 开发管理/AI合作沟通.txt 交接（由共享入口在正式提交时收敛）；未运行 BattleSim/Unity build（纯文本线索卡，无代码或数值变更）；未执行 Codex 独立复审（待 Codex）
+- 残留风险：怪物设计规范确为「规范待建」，速查卡仅登记缺口未新建规范，后续新增怪物需先建规范再回填指针；docs/superpowers/specs 数据契约指针为现有生产链边界而非设计规范，可能随实现进展过期，需巡检卡兜底；地图侧出没登记条目（晶化土鼍等）尚无正式档案与稳定 enemyId，出战场景未绑定。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
