@@ -1,0 +1,99 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-2D-TACTICAL-PROTO-01",
+  "title": "2D 六向战术角色 Unity 样例",
+  "priority": "P1",
+  "route": "codex_review",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-23，负责人批准的资产级变换修正在正式提交 0bbf763775d9cefddd74e0e9c8b95ab562708682 中实现；Codex 独立复审通过，Unity EditMode、PlayMode、资产版本、数据链、程序集边界与审核文本检查均通过，固定 1920×1080 证据确认 2D 接地／遮挡和 3D 直立／底座。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-23-tactical-character-transform-correction-design.md",
+    "docs/superpowers/specs/2026-08-21-2d-tactical-character-production-contract.md",
+    "docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md",
+    "assets/generated-character-art/fuyuan-2d-tactical-sprite/prompts.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt",
+    "开发管理/任务归档/U-CHAR-2D-TACTICAL-PROTO-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt",
+    "开发管理/苻渊2D战术精灵Unity样例验证记录.txt",
+    "开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-2D-only.png",
+    "开发管理/验证截图/U-CHAR-2D-TACTICAL-PROTO-01-1920x1080-3D-only.png",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab",
+    "src/Assets/Art/Characters/TacticalSprites.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_0.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_1.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_1.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_2.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_2.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_3.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_3.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_4.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_4.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_5.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalDirection_5.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs.meta",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs.meta",
+    "开发管理/未通过审核清单.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-2D-TACTICAL-PROTO-01 · 2D 六向战术角色 Unity 样例
+
+## 审核结论
+
+- 通过。独立复审正式提交 `0bbf763775d9cefddd74e0e9c8b95ab562708682`：六张 Unity Sprite 均为 512 PPU、Custom pivot `(0.5,0.18)` 且与批准来源逐字节一致；唯一静态 3D Prefab 固定 `FuYuan_Model` 本地 Rotation `(-90,0,0)` 与 `StaticChessBase` 本地 Position `(0,0,0)`。
+- 本轮复跑 Unity EditMode、PlayMode、资产版本、数据链、程序集边界和审核文本检查均通过；固定 1920×1080 图像与 PlayMode 数值证明确认 2D 角色接地、局部遮挡与 3D 角色直立、底座位置。未接入正式单位、规则或存档链。
+- 已移除未通过审核清单中的历史返工条目，并解除 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 的唯一具名前置；下游卡已转为 `codex_execute/codex/ready`。
+
+## 来源与当前边界
+
+- 唯一输入仍是 `assets/generated-character-art/fuyuan-2d-tactical-sprite/` 中六张经 `prompts.md` 固定 SHA-256 的方向图；来源 PNG、FBX 与 Blender 文件未改写。
+- `VisualBaselineBuilder` 确定性固定六张 Sprite 为单 Sprite、512 PPU、Custom pivot `(0.5,0.18)` 与透明 alpha；`FuYuan_StaticChess.prefab` 固定模型子节点 `(-90,0,0)` 轴适配和零位置独立底座。
+- `AdventureScene/VisualBaselineBoard` 仅保存隔离的 2D／3D 互斥技术矩阵。`TacticalSpritePresentationController` 只消费既有表现事件，移动、攻击、受击、施法和死亡只改变角色根节点并在结束后复位；未接入正式单位、规则、路径、伤害、状态、死亡结算或存档。
+
+## 必查范围
+
+- 已核对批准的变换修正设计、2D／静态 3D 生产合同、六向来源与 SHA-256、`AdventureSceneBuilder`、`VisualBaselineBuilder`、`SceneArchitectureValidator`、两份表现控制器及直接 EditMode／PlayMode 测试。
+
+## 实施范围
+
+- 交付只覆盖隔离 Unity 技术矩阵的六张 Sprite 导入、唯一 3D Prefab 轴适配／底座位置、场景探针、表现控制器和验证证据；正式单位、规则、存档及来源资产不在范围内。
+
+## 禁止项
+
+- 未修改批准 PNG／FBX／Blender、镜头、地块、遮挡物、方向规则、伤害、AI、正式单位链、存档、asmdef 或其他场景；没有新增第三条视觉路线、全局工厂、Resources 查找或动画帧。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`：通过。
+
+## 完成条件
+
+- 已形成可由 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 直接消费的完整 2D 六向、接地／遮挡、六类表现和规则隔离证据矩阵。
+
+## 停止条件
+
+- 未触发：批准源、Importer、六向映射、资产级变换、深度遮挡与正式回归均保持任务卡规定的边界。
