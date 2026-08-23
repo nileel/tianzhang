@@ -95,11 +95,11 @@
 | C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | C-STORY-WM-05B | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
 | C-JD-NPC-MECH-01 | P2 | codex | 冻结 | — | 人物志与门派文件金丹位格机制对齐 | 开发管理/任务卡/C-JD-NPC-MECH-01.txt |
 | C-ITEM-LIANXU-CLEAN-01 | P2 | codex | 冻结 | — | 炼虚道具文件清理 | 开发管理/任务卡/C-ITEM-LIANXU-CLEAN-01.txt |
-| C-KB-IDX-STORY-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
-| C-KB-IDX-BASE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
-| C-KB-IDX-CULTIVATE-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
+| C-KB-IDX-STORY-01 | P2 | deepseek | 已排队 | — | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
+| C-KB-IDX-BASE-01 | P2 | deepseek | 已排队 | — | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
+| C-KB-IDX-CULTIVATE-01 | P2 | deepseek | 已排队 | — | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
 | C-KB-IDX-ITEM-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01、C-ITEM-LIANXU-CLEAN-01 | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
-| C-KB-IDX-MONSTER-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
+| C-KB-IDX-MONSTER-01 | P2 | deepseek | 已排队 | — | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 
 ## 世界主线拆分
 

@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "frozen",
-  "blockedBy": ["C-KB-ARCH-01"],
-  "stateReason": "2026-08-19 用户确认建立剧情域速查卡以压缩剧情任务必读量。当前冻结，待 C-KB-ARCH-01 与用户解冻后由 DeepSeek V4 Pro 0813 执行、Codex 复审。⚠️ 已修改/未审核",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-23：C-KB-ARCH-01 已完成归档，用户本轮明确授权解除内容冻结；门派对齐与六识改名也已完成，卡面路径、验证、完成条件与停止条件完整，现由 DeepSeek 执行。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/剧情/剧情事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-STORY-01.txt",
