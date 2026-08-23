@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-23 用户确认解除本卡冻结；由 Codex 产出苻渊线收束节拍规划稿",
+  "stateReason": "2026-08-23 Codex 已产出苻渊线收束节拍规划稿并归档；规划固定第五至第六章之交的收束位置、五类终局接线和总纲修订输入，未修改已审核 L0/L1 事实源。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-19-fuyuan-line-resolution-plan.md",
     "开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt",
@@ -63,3 +63,7 @@
 ## 停止条件
 
 - 收束需要推翻总纲已锁定的揭露边界、新增世界机制或改苻渊知识边界时停止。
+
+## 完成记录
+
+- 2026-08-23：新建 `docs/superpowers/specs/2026-08-19-fuyuan-line-resolution-plan.md`，以第五至第六章之交为建议位置，完成出关、二次尝试资格审查、传承或放弃与终局回响的五节拍规划；列出五种终局方案接线、王玄略／谢观微镜像收口及未来总纲修订输入。未修改任何已审核 L0/L1 事实源，未生产 L2/L3、对白、战斗或数值。

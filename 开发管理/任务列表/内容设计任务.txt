@@ -93,7 +93,6 @@
 | C-HIGH-01 | P3 | Codex | 冻结（薄内容切片外） | — | 高阶内容按 NPC/资料片/历史说明分类收口。 | — |
 | C-STORY-WM-05B | P2 | deepseek | 已排队 | — | 玄荒新路天才人物志扩写与孝文帝历史锚点修订 | 开发管理/任务卡/C-STORY-WM-05B.txt |
 | C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | C-STORY-WM-05B | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
-| C-STORY-WM-FUYUAN-01 | P2 | codex | 已排队 | — | 苻渊线收束节拍规划 | 开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt |
 | C-JD-NPC-MECH-01 | P2 | codex | 冻结 | — | 人物志与门派文件金丹位格机制对齐 | 开发管理/任务卡/C-JD-NPC-MECH-01.txt |
 | C-ITEM-LIANXU-CLEAN-01 | P2 | codex | 冻结 | — | 炼虚道具文件清理 | 开发管理/任务卡/C-ITEM-LIANXU-CLEAN-01.txt |
 | C-KB-IDX-STORY-01 | P2 | deepseek | 冻结 | C-KB-ARCH-01 | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
