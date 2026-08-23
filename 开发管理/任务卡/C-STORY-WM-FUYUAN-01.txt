@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "frozen",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-19 用户指示建立任务卡（剧情再推导结论：苻渊线在七章表、悬念表与终局章均无收束落点）。内容冻结（薄内容切片外），待用户解除冻结。⚠️ 已修改/未审核",
+  "stateReason": "2026-08-23 用户确认解除本卡冻结；由 Codex 产出苻渊线收束节拍规划稿",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-19-fuyuan-line-resolution-plan.md",
     "开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt",

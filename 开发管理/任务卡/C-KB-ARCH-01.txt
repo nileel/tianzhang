@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "design",
-  "dispatchState": "frozen",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-19 用户确认建立项目级资料库速查层（四层架构：入口/速查卡/事实源/归档），并指示建卡。当前冻结，待用户解除后由 Codex 执行。⚠️ 已修改/未审核",
+  "stateReason": "2026-08-23 用户确认解除冻结；由 Codex 落定资料库速查层架构与维护规则",
   "expectedPaths": [
     "AGENTS.md",
     "开发管理/状态与建议维护规则.txt",
