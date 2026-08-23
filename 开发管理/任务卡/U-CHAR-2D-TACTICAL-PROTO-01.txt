@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20260823-REV09D29A5D36F5 选择 DeepSeek 按未通过审核清单返工",
+  "stateReason": "自动责任方确认阻塞：fixed_1920x1080_occlusion_matrix_unformable",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
