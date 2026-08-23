@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-24 Codex 独立复审正式提交 a90567004f0ff1d63d969273dfc07a419e7447e4 部分通过；悬念表逐条指针/状态、头部跨域来源路径与典型剧情任务实际必读量仍需返工，详见未通过审核清单。",
   "expectedPaths": [
     "docs/剧情/剧情事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-STORY-01.txt",

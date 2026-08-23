@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-24 Codex 独立复审正式提交 ce5b189e004388809c6ac1911493558bc3196e07 通过；43 条索引行均具备状态标记，路径#章节指针与道路名口径可解析；典型必读量为 L1 速查卡 68 行、10 份 L2 目标章节片段与 7 份规则入口行。",
   "expectedPaths": [
     "docs/基础设定/设定事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-BASE-01.txt",

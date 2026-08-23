@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-24 Codex 独立复审正式提交 d9755631c556ec4521bd3429b4bf9ac9ce0d94e1 部分通过；规范入口的摘要指针、目录统计条目的路径#章节与典型任务实际必读量仍需返工，详见未通过审核清单。",
   "expectedPaths": [
     "docs/角色养成/养成事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt",
