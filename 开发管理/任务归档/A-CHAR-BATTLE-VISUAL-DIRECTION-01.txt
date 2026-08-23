@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-23：固定比较已确认 2D 战术精灵胜出；父项现只汇总结论、正式生产方向与既有链路处置，不实施资产生产。",
+  "stateReason": "2026-08-24：固定比较的 2D 42/50 对静态 3D 30/50 已汇总；新生产的六向 2D 战术精灵固定为正式战场角色方向，静态 3D 保留为历史比较证据，父项完成归档。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-21-character-battle-visual-direction-parallel-evaluation-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -63,6 +63,12 @@
 ## 完成条件
 
 - 比较卡形成静态 3D、2D 或双失败之一；父项记录唯一结论，并同步正式角色设计与直接下游依赖后归档。
+
+## 完成记录
+
+- 已核对全部九张子卡、其完成归档及两个 Unity 样例的同条件固定矩阵。共同硬门均通过，`A-CHAR-BATTLE-VISUAL-COMPARE-01` 的十项等权结果为静态 3D `30/50`、2D 战术精灵 `42/50`，唯一结论为 **2D 战术精灵胜出**。
+- 正式战场角色生产方向固定为新生产的六向 2D 战术精灵。苻渊样张仍只证明方向可行，不接入第一章、正式遭遇、常规单位或正式 Adventure 链；正式资产、怪物表现、外观数据和 Adventure 接入须以各自独立任务卡冻结资产形状、路径和验证。
+- 静态 3D 棋子、Tripo 原包、Blender 候选和 Unity 隔离矩阵保留为历史比较证据，不接入正式单位；不因本结论重开 Tripo、Blender、骨骼、换头、宽袖蒙皮或第三路线。既有 UI 立绘继续只作身份、服饰和配色参考，姿态成品不得作为战场素材。
 
 ## 停止条件
 
