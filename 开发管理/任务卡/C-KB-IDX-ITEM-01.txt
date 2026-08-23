@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "frozen",
-  "blockedBy": ["C-KB-ARCH-01", "C-ITEM-LIANXU-CLEAN-01"],
-  "stateReason": "2026-08-19 用户确认建立道具域速查卡（含武器预留行）；须待炼虚道具清理落地后按清理结果执行。当前冻结。⚠️ 已修改/未审核",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-23：C-KB-ARCH-01 已完成归档；C-ITEM-LIANXU-CLEAN-01 已删除两个炼虚整文件与化神文件内仅服务于突破炼虚的条目，用户本轮已授权解除内容冻结。卡面合同完整，现由 DeepSeek 按该结论执行。⚠️ 已修改/未审核",
   "expectedPaths": [
     "docs/道具/道具事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-ITEM-01.txt",

@@ -10,3 +10,4 @@
 | C-KB-IDX-STORY-01 | external_execute | deepseek | P2 | content | design | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
 | C-KB-IDX-CULTIVATE-01 | external_execute | deepseek | P2 | content | design | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
 | C-KB-IDX-MONSTER-01 | external_execute | deepseek | P2 | content | design | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
+| C-KB-IDX-ITEM-01 | external_execute | deepseek | P2 | content | design | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
