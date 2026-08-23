@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-STATIC3D-MOTION-PILOT-01",
+  "title": "苻渊静态3D战斗动态表现样例生产",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-CHAR-STATIC3D-MOTION-PIPELINE-01",
+    "U-CHAR-STATIC3D-MATERIAL-CORRECT-01"
+  ],
+  "stateReason": "2026-08-24：等待用户批准的静态3D详细方案和BaseColor修正；业务资产路径、表现机制与验证由pipeline卡写回后才可ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
+    "开发管理/苻渊静态3D战斗动态表现样例生产记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
+    "开发管理/任务归档/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
+    "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-STATIC3D-MOTION-PILOT-01 · 苻渊静态3D战斗动态表现样例生产
+
+## 来源与当前边界
+
+- 本卡只消费用户批准的静态 3D pipeline 和已通过的 BaseColor 修正；当前表现机制、业务资产路径和动作／方向范围尚未冻结。
+- 苻渊是公平比较的固定单角色样例，不是正式 3D 角色批次。
+- 任何平台 credits 消费都需要当次单独授权，pipeline 批准不能替代 credits 授权。
+
+## 必查范围
+
+- 完成并获用户批准的静态 3D pipeline 规格完整正文。
+- `tianzhang-blender-pipeline` 要求的目标角色事实、来源包、Blender／FBX 路径和 QA 规则。
+- material correction 验证记录及 pipeline 写回的精确业务 expectedPaths、表现机制、质量门和生产记录格式。
+
+## 实施范围
+
+- 只按批准流程生产苻渊静态 3D 战斗动态表现样例所需资产和可审计来源／版本／修订／成本日志。
+- 保持苻渊身份、服饰和黑／灰／金主色，满足固定斜俯视战斗镜头可读性。
+- 完成后解除静态 3D Unity integration blocker，不直接接入 Unity 或正式单位。
+
+## 禁止项
+
+- 不在 pipeline A 批准和 material correction 完成前生产，不自行决定 Pose、骨骼、动作、方向或工具链。
+- 不消费未单独授权 credits，不恢复冻结旧换头／蒙皮／统一骨架路线。
+- 不修改 Unity、战斗规则、正式单位或其他角色资产。
+
+## 验证
+
+- 运行 pipeline 与 Blender 专项规格冻结的模型、材质、方向／动作、身份和来源验证。
+- 核对实际生产日志足以供成本证据卡使用，失败生成与返工未遗漏。
+- 状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 形成 pipeline 规定的唯一可用苻渊静态 3D 动态表现样例资产和完整生产记录，未接入正式游戏。
+- 下游 integration 只剩本卡已完成这一已移除 blocker，并按完整合同进入 ready。
+
+## 停止条件
+
+- pipeline 规格未批准、BaseColor 未修复、业务 expectedPaths 未写回、身份／主色失败或需要扩大动作与方向范围。
+- 需要未授权 credits、恢复冻结旧链、修改 Unity 或正式内容。

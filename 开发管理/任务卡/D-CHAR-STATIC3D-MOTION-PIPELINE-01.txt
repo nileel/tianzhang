@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-STATIC3D-MOTION-PIPELINE-01",
+  "title": "静态3D战斗动态表现详细方案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "frozen",
+  "blockedBy": [
+    "D-CHAR-STATIC3D-MOTION-REFERENCE-01"
+  ],
+  "stateReason": "2026-08-24：必须先完成静态3D参考调研并由用户明确允许进入详细方案；前置清空后仍保持frozen，禁止自动ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
+    "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt",
+    "开发管理/任务归档/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
+    "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-STATIC3D-MOTION-PIPELINE-01 · 静态3D战斗动态表现详细方案
+
+## 来源与当前边界
+
+- 本卡只在静态 3D reference 完成且用户复核后明确回复“进入详细方案”时解冻。
+- 调研完成或 blocker 清空本身不构成授权；维护轮不得自动把本卡转 ready。
+- 本卡不预设 Pose 换模，不消费 credits，不制作模型或修改 Unity。
+
+## 必查范围
+
+- 批准规格 §二、§四.1、§五.4、§八。
+- 完成后的静态 3D reference 调研全文与用户对进入方案阶段的回复。
+- 既有静态棋子生产合同、Blender 候选记录、Unity 所有者链和 material correction 事实，只读取与新动态表现边界直接相关的部分。
+
+## 实施范围
+
+- 选择并论证动态表现机制；没有等价先例时明确自研假设、最小验证和淘汰条件。
+- 冻结模型／Pose／动画／材质／特效资产单位、身份一致性和生产／Blender／导出／Unity 流程。
+- 定义方向、宽袖、武器、换装、批量角色、新增动作，以及工时、credits、失败生成、返工和 QA 的计量方法。
+- 冻结静态 3D pilot 与 Unity integration 卡的确切 expectedPaths、允许路径、验证、完成条件和停止条件。
+- 写完并自审后建立 `automationCheckpoint` 转 `waiting_reply`：A 批准并解锁 pilot，B 仅修订方案后再次等待，C 冻结路线。
+
+## 禁止项
+
+- 不把相邻参考冒充成熟 Pose 换模先例，不恢复旧换头、蒙皮或统一骨架路线。
+- 不生成、下载、编辑模型，不启动 Blender／Unity，不消费未单独授权 credits。
+- 不用未验证平台成功率折扣成本或隐藏失败生成。
+
+## 验证
+
+- 规格自审覆盖占位符、内部一致性、范围、歧义、自研风险和下游卡原子性。
+- 下游两张卡的业务 expectedPaths、验证与停止条件已冻结到可执行程度。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`。
+- 状态变更和下游卡更新后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 用户在 checkpoint 选择 A；批准规格已落盘，下游卡合同完整，pilot 只在 material correction 也完成时解除全部 blocker。
+- B 只产生修订并再次等待，不完成；C 冻结本卡和下游路线。
+
+## 停止条件
+
+- reference 未完成、用户未允许进入方案阶段、书面方案未获 A 批准或下游路径仍不完整。
+- 方案需要未授权 credits、修改战斗规则／存档、恢复冻结旧链或建立第三条视觉路线。

@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01",
+  "title": "战场角色2D与静态3D制作成本证据",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01",
+    "U-CHAR-STATIC3D-MOTION-INTEGRATION-01"
+  ],
+  "stateReason": "2026-08-24：等待两条路线形成完整样例生产与Unity接入日志；本卡只整理同口径成本证据，不评判视觉胜负。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
+    "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
+    "开发管理/战场角色2D与静态3D制作成本证据.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt",
+    "开发管理/任务归档/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 · 战场角色2D与静态3D制作成本证据
+
+## 来源与当前边界
+
+- 后续战斗制作成本是仅次于实机表现效果的第二判定标准。
+- 本卡只消费两条批准 pipeline、pilot 和 integration 的实际记录，不复用旧主观 2D:静态 3D = 4:2 分数。
+- 剧情演出使用立绘，其成本排除；其他玩法复用只作低权重附注。
+
+## 必查范围
+
+- 批准规格 §二.2、§八、§九。
+- 两条 pipeline 规格、pilot 生产记录、integration 接入记录及其实际工时、工具／credits、失败与返工证据。
+- 只读取任务相关的资产版本、Unity QA 和外部生成记录，不预分析其他角色 backlog。
+
+## 实施范围
+
+- 同口径整理一次性管线建立成本、苻渊实际人工时间、工具／credits、制作次数、返工和失败原因。
+- 估算新战斗角色、新增动作、方向扩展、武器／服饰变化、批量角色及 Unity／Blender／2D 工具维护成本。
+- 区分真实记录、可复用部分、逐角色重做部分和带假设的范围估算，不制造虚假精度。
+- 完成后解除 user decision 的本卡 blocker。
+
+## 禁止项
+
+- 不评判画面胜负，不使用等权总分，不替用户排序视觉效果。
+- 不计入剧情立绘生产，不以其他玩法潜在复用压过战斗成本。
+- 不补写缺失工时、credits、成功率或批量折扣；缺失时明确标记证据不足。
+
+## 验证
+
+- 每项实际成本可回指生产／接入记录，每项估算列出规模、单位、假设和不确定性。
+- 两条路线使用同一动作／方向范围和成本分类，缺项不以零成本处理。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`。
+- 状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 形成用户可读、同口径、可追溯的成本证据，不含自动胜者或旧主观分数。
+- user decision 已移除本 blocker，并按 playable compare 剩余状态保持 blocked 或进入 ready。
+
+## 停止条件
+
+- 任一路线的实际生产／接入记录缺失，动作范围不一致或必须猜测关键成本才能比较。
+- 分析开始修改生产流程、资产、Unity 或决定视觉方向。

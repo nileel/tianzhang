@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01",
+  "title": "苻渊2D战斗动画样例Unity接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-2D-BATTLE-ANIM-PILOT-01"
+  ],
+  "stateReason": "2026-08-24：等待按批准pipeline生产的2D样例；Unity业务路径和运行验证由pipeline卡写回后才可ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
+    "开发管理/苻渊2D战斗动画Unity接入验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt",
+    "开发管理/任务归档/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt",
+    "开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01 · 苻渊2D战斗动画样例Unity接入
+
+## 来源与当前边界
+
+- 本卡只消费完成的 2D pilot 及用户批准的 pipeline，不生产或修订源美术。
+- 运行时只接入隔离比较入口，不能接入正式 `AdventureUnitSpawner` 或改变规则结果。
+- 当前业务路径由 pipeline 卡在方案批准时冻结；未写回前不能进入 ready。
+
+## 必查范围
+
+- 批准的 2D pipeline 规格、pilot 生产记录与精确资产清单。
+- pipeline 指定的 Unity Prefab／controller／builder 所有者、直接调用者、测试和 runtime fallback。
+- 现有 `TacticalSpritePresentationController`、`TacticalSpriteProbeMatrix` 与 `AdventureScene/VisualBaselineBoard` 只在规格确认仍是所有者时使用。
+
+## 实施范围
+
+- 接入批准样例，表达 pipeline 冻结的同一组方向、动作和状态。
+- 只写表现层；事件时点结束后复位，不写回战斗规则、位置事实或存档。
+- 记录运行时活动资产、方向、动作触发、复位和实际接入成本。
+- 完成后分别解除 playable compare 与 cost evidence 中的本卡 blocker。
+
+## 禁止项
+
+- 不手修源图，不新增正式单位，不修改战斗、方向、占格、装备、AI、结算或存档。
+- 不通过镜头、光照、尺度、地块或私有事件时序优化本路线。
+- 不在业务 expectedPaths 未冻结时实施。
+
+## 验证
+
+- 运行 pipeline 规格冻结的 EditMode／PlayMode、资产版本、数据链和程序集边界检查。
+- 运行时证明全部批准方向／动作触发、复位且规则快照不变。
+- 状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 2D 样例在隔离比较入口可重复运行，活动资产和事件证据完整，没有正式接入或规则变化。
+- 下游两卡已移除本 blocker，并按各自剩余依赖保持正确状态。
+
+## 停止条件
+
+- pilot 未完成、运行时所有者不唯一、所需资产缺失或必须新增规则／fallback 才能显示。
+- 接入条件与静态 3D 共同合同不再对称。

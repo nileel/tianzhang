@@ -1,0 +1,84 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-STATIC3D-MATERIAL-CORRECT-01",
+  "title": "苻渊静态3D BaseColor确定性修正",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-24：Unity现存材质BaseMap为空且测试静默放行；本卡作为独立首批ready叶子修复确定性贴图消费，不依赖视觉方向选择。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG.meta",
+    "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.mat",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "开发管理/苻渊静态棋子Unity材质修正验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-STATIC3D-MATERIAL-CORRECT-01.txt",
+    "开发管理/任务归档/U-CHAR-STATIC3D-MATERIAL-CORRECT-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_basecolor.JPEG",
+      "bytes": 1381322,
+      "sha256": "F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611"
+    }
+  ]
+}
+---TASK-BODY---
+# U-CHAR-STATIC3D-MATERIAL-CORRECT-01 · 苻渊静态3D BaseColor确定性修正
+
+## 来源与当前边界
+
+- `FuYuan_StaticChess.mat` 的 `_BaseMap` 与 `_MainTex` 都是空引用，来源包却存在已冻结 BaseColor；旧比较因此违反同身份、服饰和主色合同。
+- `VisualBaselineBuilder.GetOrCreateStaticChessMaterial` 当前在 baseMap 为 null 时静默跳过，`VisualBaselineEditorTests` 只验证 URP Lit shader。
+- `FuYuan_StaticChess.fbx.meta` 使用内嵌材质且 `externalObjects={}`，目标 Unity 目录没有 Texture 资产；本卡修复 Texture 消费，不改变方向选择。
+
+## 必查范围
+
+- 批准规格 §一、§六.1、§十。
+- `src/Assets/Scripts/Editor/VisualBaselineBuilder.cs::VisualBaselineBuilder.BuildStaticChessAssets/GetOrCreateStaticChessMaterial` 完整逻辑单元及直接调用者。
+- `src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs::StaticChessAssetsKeepTheFigureAndBaseIndependent` 及相关静态棋子测试。
+- 目标 FBX `.meta`、现有材质、Prefab 引用，以及 `开发管理/苻渊静态棋子Blender候选验证记录.txt` 中来源哈希。
+
+## 实施范围
+
+- 将唯一 `automationInputs` JPEG 按字节复制为 `FuYuan_StaticChess_BaseColor.JPEG`，不重新压缩或换源。
+- 在 Builder 中固定 Unity Texture 路径；Texture 缺失、导入失败或加载为空时失败关闭。
+- Builder 确定性把该 Texture 设置为 `FuYuan_StaticChess.mat` 的 `_BaseMap`，重建后引用不丢失。
+- 测试断言路径存在、材质引用精确等于目标 Texture，并覆盖重建后引用保持。
+- 完成后从静态 3D pilot 移除本卡 blocker；若 pipeline 尚未完成，pilot 继续 blocked。
+
+## 禁止项
+
+- 不修改来源 JPEG、FBX、FBX `.meta`、Prefab、场景、模型、Pose、相机、灯光或战斗规则。
+- 不使用 `ModelImporter.externalObjects`，不导入其他四张 PBR 贴图，不重做完整材质规格。
+- 不手写 Unity `.meta` GUID 或场景／Prefab YAML；目标 Texture `.meta` 由 Unity 导入产生。
+
+## 验证
+
+- 来源与 Unity 目标 JPEG 字节数和 SHA-256 完全一致。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+
+## 完成条件
+
+- 确定性重建后 URP 材质引用唯一批准 BaseColor，空引用会失败关闭，固定镜头可辨认苻渊黑、灰、金服饰主色。
+- FBX、Prefab、场景和其他 PBR 来源保持不变，静态 3D pilot 只剩真实 pipeline blocker。
+
+## 停止条件
+
+- 来源字节或哈希不匹配，必须改 importer 重映射、修改 FBX／模型，或修正开始扩大到完整 PBR 材质设计。
+- Unity 目标 Texture 无法稳定导入或 Builder 重建仍清空引用；停止定位导入根因，不添加 fallback。

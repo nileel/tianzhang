@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-VISUAL-REEVALUATE-02",
+  "title": "战场角色2D与静态3D方向重新评估父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-VISUAL-USER-DECISION-02"
+  ],
+  "stateReason": "2026-08-24：旧2D:静态3D=42:30结论因BaseColor证据不对称和完整战斗生产成本缺失而暂停现行效力；本父项只等待用户实机决定，不直接执行调研、资产或Unity工作。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-VISUAL-REEVALUATE-02 · 战场角色2D与静态3D方向重新评估父项
+
+## 来源与当前边界
+
+- 唯一批准规格是 `docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md`。
+- `-02` 表示 2026-08-23 视觉方向比较的第二轮，不表示存在同名 `-01` 前置。
+- 旧 `A-CHAR-BATTLE-VISUAL-COMPARE-01` 与 `A-CHAR-BATTLE-VISUAL-DIRECTION-01` 保留为历史；旧 2D 胜出结论在本父项关闭前不作为新生产任务的方向依据。
+- 本卡只汇总全部已知子项和用户最终决定，不进入 ready 队列执行业务工作。
+
+## 必查范围
+
+- 批准规格完整正文，特别是任务图、五个人工门、现行事实中和、用户决定与父项关闭。
+- `开发管理/任务列表/场景与Unity任务.txt#当前事实` 与 `#Unity 架构、URP 与角色美术主线`。
+- `开发管理/任务归档/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt` 的完成结论与停止条件。
+- 全部直接子卡的完成或非 ready 状态。
+
+## 实施范围
+
+- 只在 `A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 选择 2D 或静态 3D 并完成后，汇总新方向事实、关闭父项并允许后续独立生产规划。
+- 用户选择“两者均不接受”时，按批准规格建立合法维护型 A／B／C 决策；A／B 只允许一次管理规划切片，C 保持 blocked。
+- 保留旧归档，不删除历史证据。
+
+## 禁止项
+
+- 不生产参考调研、详细方案、角色资产、动画、模型、Unity 比较入口或第三条路线。
+- 不以旧等权总分、截图、Codex 技术复核或成本表代替用户实机决定。
+- 不在子项未完成时恢复旧 2D 方向或解锁正式 3D 替换。
+
+## 验证
+
+- 核对全部子卡状态、用户决定记录、现行 backlog 与队列投影一致。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+
+## 完成条件
+
+- 用户选择 2D 或静态 3D，新方向及旧结论失效原因写入现行事实，父项归档且没有越权解锁其他业务任务。
+- 用户选择“两者均不接受”不满足本卡完成条件，父项保持非 ready 并进入批准规格规定的后继决定。
+
+## 停止条件
+
+- 用户决定卡未完成、共同技术条件未通过、成本证据缺失或用户尚未实机运行。
+- 关闭父项需要新增第三路线、修改战斗规则或猜测用户偏好。

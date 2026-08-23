@@ -1,0 +1,82 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02",
+  "title": "战场角色2D与静态3D可玩比较入口",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01",
+    "U-CHAR-STATIC3D-MOTION-INTEGRATION-01"
+  ],
+  "stateReason": "2026-08-24：等待两条样例Unity接入完成；本卡只建立同条件可玩入口并由Codex验证技术对称性，不决定视觉胜者。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleVisualComparisonController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleVisualComparisonController.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/PlayMode/BattleVisualComparisonPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/BattleVisualComparisonPlayModeTests.cs.meta",
+    "开发管理/战场角色视觉方向可玩比较操作说明.txt",
+    "开发管理/战场角色2D与静态3D可玩比较验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02 · 战场角色2D与静态3D可玩比较入口
+
+## 来源与当前边界
+
+- `-02` 表示第二轮视觉比较，不表示存在同名 `-01` blocker。
+- 本卡只消费两条已完成 Unity integration，在 `AdventureScene/VisualBaselineBoard` 建立用户可直接运行的同条件比较入口。
+- Codex 负责技术对称性；用户是唯一视觉方向决策者。
+
+## 必查范围
+
+- 批准规格 §二、§七、§九与两条 pipeline／integration 完成证据。
+- `TacticalSpriteProbeMatrix.SetActiveRoute`、两个 presentation controller、`AdventureSceneBuilder`、场景实例和相关 EditMode／PlayMode 测试完整逻辑单元。
+- 两边实际资产、方向／动作集合、相机、光照、尺度、地块、接地、占格和事件时点。
+
+## 实施范围
+
+- 提供同场景 2D／静态 3D 切换、全部共同方向／动作／状态的重复触发和复位。
+- 使用单独 `BattleVisualComparisonController` 承担比较输入与展示编排，不把新职责塞入战斗规则或现有 route selector。
+- 提供可运行入口和简短操作说明；自动测试验证路线互斥、输入对称、动作触发、复位和规则不变。
+- Codex 运行同一入口完成技术复核；最小截图／短录屏只可证明条件与触发，不评分。
+- 完成后解除 user decision 的本卡 blocker。
+
+## 禁止项
+
+- 不修改战斗规则、方向、占格、装备、AI、结算、存档或正式单位接入。
+- 不用不同镜头、灯光、尺度、地块、事件时点或动作集合优化任一路线。
+- 不输出自动胜者，不用截图包、录屏或联系表代替用户实机运行。
+
+## 验证
+
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- Codex 实际运行入口，核对材质引用、活动对象、共同参数、方向／动作覆盖、触发与复位。
+
+## 完成条件
+
+- 用户可按说明直接运行并切换两条路线，全部共同战斗语义可重复触发，自动验证和 Codex 技术复核通过。
+- user decision 只剩成本证据 blocker 或已进入可运行状态；没有视觉胜者被预填。
+
+## 停止条件
+
+- 任一边缺资产、方向、动作、正确材质或共同条件，入口无法直接运行，或需要用扣分代替补齐证据。
+- 需要扩大到正式单位、规则、第三路线或让 Codex 替用户判断视觉胜负。

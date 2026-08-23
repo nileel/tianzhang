@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-2D-BATTLE-ANIM-PILOT-01",
+  "title": "苻渊2D战斗动画样例生产",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-CHAR-2D-BATTLE-ANIM-PIPELINE-01"
+  ],
+  "stateReason": "2026-08-24：等待用户批准的2D详细生产方案；业务资产路径、动作边界与验证必须由pipeline卡写回后才可ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
+    "开发管理/苻渊2D战斗动画样例生产记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
+    "开发管理/任务归档/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
+    "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-2D-BATTLE-ANIM-PILOT-01 · 苻渊2D战斗动画样例生产
+
+## 来源与当前边界
+
+- 本卡只消费用户批准的 2D 生产流程规格；当前业务资产路径、动作／方向范围和工具链尚未冻结，不能进入 ready。
+- 苻渊是公平比较的固定单角色样例，不是正式角色批次。
+- 剧情立绘继续只承担 UI／剧情用途，不能缩小或变形冒充战斗动画资产。
+
+## 必查范围
+
+- 完成并获用户批准的 2D pipeline 规格完整正文。
+- `assets/generated-character-art/README.md`、苻渊直接角色事实和 pipeline 指定的目标用途提示词。
+- pipeline 写回本卡的精确业务 expectedPaths、动作／方向边界、质量门和生产记录格式。
+
+## 实施范围
+
+- 只按批准流程生产苻渊 2D 战斗动画样例及其可审计来源、提示词、版本、修订和成本日志。
+- 保持苻渊身份、服饰和黑／灰／金主色，满足固定斜俯视战斗镜头可读性。
+- 完成后解除 2D Unity integration blocker，不直接接入 Unity 或正式单位。
+
+## 禁止项
+
+- 不在 pipeline A 批准前生产，不自行决定帧数、方向、动作或工具链。
+- 不修改 Unity、战斗规则、剧情立绘职责、正式单位或其他角色资产。
+- 不隐藏失败生成、人工修订、工具费用或制作时间。
+
+## 验证
+
+- 运行 pipeline 规格冻结的资产、像素／方向／动作、身份一致性和来源验证。
+- 核对实际生产日志足以供成本证据卡使用。
+- 状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 形成 pipeline 规定的唯一可用苻渊 2D 样例资产和完整生产记录，未接入正式游戏。
+- 下游 integration 只剩本卡已完成这一已移除 blocker，并按完整合同进入 ready。
+
+## 停止条件
+
+- pipeline 规格未批准、业务 expectedPaths 未写回、角色身份／主色失败或需要扩大动作与方向范围。
+- 生产需要修改 Unity、正式内容或用旧立绘替代。

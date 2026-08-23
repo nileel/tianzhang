@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-2D-BATTLE-ANIM-REFERENCE-01",
+  "title": "2D战斗动画参考游戏调研",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "discovery",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-24：重新评估规格已获用户批准；本卡是首批ready叶子，只调研2D战斗动画参考，不制定《天章》方案。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-REFERENCE-01.txt",
+    "开发管理/任务归档/D-CHAR-2D-BATTLE-ANIM-REFERENCE-01.txt",
+    "开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-2D-BATTLE-ANIM-REFERENCE-01 · 2D战斗动画参考游戏调研
+
+## 来源与当前边界
+
+- 批准规格要求先研究参考游戏，再由独立 pipeline 卡制定《天章》2D 动画生产方案。
+- 初步候选包括 Battle Brothers、Card Hunter 与 Into the Breach 制作案例；它们只是起点，不预设最终技术。
+- 剧情演出继续使用立绘；本卡只研究战斗角色表现，其他玩法复用只作低权重附注。
+
+## 必查范围
+
+- 批准规格 §二、§三、§五.1、§八。
+- 候选游戏的开发者／发行方官方制作资料、可确认作者的复盘或演讲；社区案例必须单独标注作者与证据等级。
+- 《天章》固定斜俯视六角战斗镜头、苻渊身份与现有 2D 样例只用于判断可迁移性，不作为生产方案事实。
+
+## 实施范围
+
+- 调研方向、移动、攻击、受击、技能、死亡的 2D 表达方式。
+- 区分逐帧、骨骼／网格、3D 预渲染转 Sprite、有限帧配合根节点／特效等方法的适用画面目标。
+- 记录换装、武器、角色批量、动作扩展和修改反馈对成本的影响，以及资料证据等级。
+- 输出来源链接、作者／发布方、发布时间、可迁移点、不可迁移点和未解决问题。
+- 完成后从 pipeline 卡移除本卡 blocker，但 pipeline 保持 `dispatchState=frozen`，等待用户明确允许进入详细方案。
+
+## 禁止项
+
+- 不决定《天章》使用哪种 2D 动画技术，不预设方向数、帧数或动作帧表。
+- 不生成或编辑苻渊图片，不修改 Unity、任务拓扑或旧归档结论。
+- 不把攻略、百科、宣传画面或无法确认作者的帖子当作生产成本一手证据。
+
+## 验证
+
+- 每项生产结论可回指明确来源，并标注官方一手、可确认作者案例或仅画面观察。
+- 调研正文覆盖批准规格列出的六类战斗语义、成本因素和迁移边界。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`。
+- 完成状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 形成可供用户复核的 2D 参考矩阵，能够支持下一张 pipeline 卡提出方案，但本卡自身不提出《天章》方案。
+- pipeline 卡 blocker 已移除且仍为 frozen，未进入队列。
+
+## 停止条件
+
+- 关键生产断言找不到可核实来源，或必须通过猜测团队规模、资产结构、工时或工具链才能成立。
+- 调研开始生产资产、锁帧数或修改游戏行为。

@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-2D-BATTLE-ANIM-PIPELINE-01",
+  "title": "2D战斗动画生产流程详细方案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "frozen",
+  "blockedBy": [
+    "D-CHAR-2D-BATTLE-ANIM-REFERENCE-01"
+  ],
+  "stateReason": "2026-08-24：必须先完成2D参考调研并由用户明确允许进入详细方案；前置清空后仍保持frozen，禁止自动ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
+    "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt",
+    "开发管理/任务归档/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt",
+    "开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
+    "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 · 2D战斗动画生产流程详细方案
+
+## 来源与当前边界
+
+- 本卡只在 2D reference 完成且用户复核后明确回复“进入详细方案”时解冻。
+- 调研完成或 blocker 清空本身不构成授权；维护轮不得自动把本卡转 ready。
+- 本卡制定流程，不生产苻渊动画或修改 Unity。
+
+## 必查范围
+
+- 批准规格 §二、§四.1、§五.2、§八。
+- 完成后的 2D reference 调研全文与用户对进入方案阶段的回复。
+- 既有 2D 战术精灵合同、苻渊源图用途与 Unity 消费所有者，只读取与新战斗动画资产边界直接相关的部分。
+
+## 实施范围
+
+- 冻结画面质量、战斗可读性、动作／方向／状态内容边界及理由。
+- 冻结资产单位、源文件、导出物、Unity 消费形状和完整生产／修订／导入／验证流程。
+- 定义换装、武器、批量角色、新增动作及人工时间、工具成本、返工和 QA 的计量方法。
+- 冻结 2D pilot 与 Unity integration 卡的确切 expectedPaths、允许路径、验证、完成条件和停止条件。
+- 写完并自审后建立 `automationCheckpoint` 转 `waiting_reply`：A 批准并解锁 pilot，B 仅修订方案后再次等待，C 冻结路线。
+
+## 禁止项
+
+- 不在调研或用户进入许可前启动，不把初步参考直接写成项目既定流程。
+- 不生成图片、Sprite Sheet 或动画，不修改 Unity、正式单位、战斗规则或旧立绘用途。
+- 不用猜测性自动化折扣批量成本，也不隐藏人工返工。
+
+## 验证
+
+- 规格自审覆盖占位符、内部一致性、范围、歧义和下游卡原子性。
+- 下游两张卡的业务 expectedPaths、验证与停止条件已冻结到可执行程度。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`。
+- 状态变更和下游卡更新后运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 用户在 checkpoint 选择 A；批准规格已落盘，下游卡合同完整，pilot blocker 被移除并按当时剩余条件决定是否 ready。
+- B 只产生修订并再次等待，不完成；C 冻结本卡和下游路线。
+
+## 停止条件
+
+- reference 未完成、用户未允许进入方案阶段、书面方案未获 A 批准或下游路径仍不完整。
+- 方案必须修改战斗规则、剧情立绘职责、正式存档或建立第三条视觉路线。
