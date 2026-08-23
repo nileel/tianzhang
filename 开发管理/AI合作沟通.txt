@@ -17,3 +17,16 @@
 - 残留风险：无图形 batch 环境只执行可重复的 1920×1080 逻辑矩阵与确定性几何/深度断言，脚底锚定、共同尺度与前景遮挡的最终人工可读性仍需 A-CHAR-BATTLE-VISUAL-COMPARE-01 在同一固定镜头与 1920×1080 Game 视图下判定；2D 组默认关闭，运行时由 TacticalSpriteProbeMatrix.SetActiveRoute 显式切换并断言非目标 3D 路线不参与渲染，本样例不授权接入正式单位链。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-STORY-WM-05B-0e0bd20c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-STORY-WM-05B 的原子正式结果等待 Codex 独立复审。
+- 任务：C-STORY-WM-05B
+- 候选提交：dc44ecadff5b8f0832a3695bac26c0624793239a
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/剧情/重要NPC/玄荒新路天才.txt
+- 已验证：按任务卡完成定向返工：放任路线自辟结果由「成功线（依赖其自身边界记录是否足够）」改为「成功线（无条件成功）」；叙事层级补齐行动时限（自辟窗口时限与窗口关闭条件）；仅修改两个 CandidatePaths，diff 无越界改动；未改元婴方向命名、金丹位格、Codex 已锁定判断与已通过范围；pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK（918 文件）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths 两路径 → OK（2 文件）；git diff --check → 通过（无输出）；candidate 提交 SHA 与精确 changed paths 经 git rev-parse / diff --name-only --no-renames 复核一致，工作树干净
+- 未验证：未运行 tools/check-data-chain.ps1：本次仅改纯文本人物志与管理清单状态行，不涉及 CSV/Unity 数据链路；未运行 BattleSim / Unity build / test：无代码或数值变更；未使用 RequireAutomationMetadata：candidate 合同不要求，正式元数据由共享入口生成；Codex 独立复审结论：DeepSeek 不得自审，本结果标为已修改/未审核
+- 残留风险：行动时限采用相对章节口径（第四章末开放、中后期元婴门槛前为推进期），未锁定具体纪年数值，最终是否满足「具体时限或窗口关闭条件」由 Codex 独立复审裁量；「返工已实施」与状态行为 DeepSeek 自述证据，非审核结论。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
