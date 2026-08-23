@@ -6,7 +6,7 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | A-CHAR-BATTLE-VISUAL-COMPARE-01 | codex_execute | codex | P1 | unity | decision | 静态 3D 棋子／2D 战术精灵固定比较 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-COMPARE-01.txt |
-| C-KB-IDX-BASE-01 | external_execute | deepseek | P2 | content | design | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
+| C-KB-IDX-BASE-01 | codex_review | codex | P2 | content | design | 基础设定事实速查卡 | 开发管理/任务卡/C-KB-IDX-BASE-01.txt |
 | C-KB-IDX-STORY-01 | external_execute | deepseek | P2 | content | design | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
 | C-KB-IDX-CULTIVATE-01 | external_execute | deepseek | P2 | content | design | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
 | C-KB-IDX-MONSTER-01 | external_execute | deepseek | P2 | content | design | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
