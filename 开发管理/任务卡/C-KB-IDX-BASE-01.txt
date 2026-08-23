@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立审核部分通过；43 条路径#章节指针与道路名口径均通过，但 43 条索引行均缺少规定的状态标记，交接亦未记录典型基础设定任务实际必读量；详见未通过审核清单",
   "expectedPaths": [
     "docs/基础设定/设定事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-BASE-01.txt",
