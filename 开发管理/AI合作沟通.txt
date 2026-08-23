@@ -30,3 +30,16 @@
 - 残留风险：返工一（43 条逐条状态标记）与返工二（交接实际必读量，经 verified 字段注入自动交接）已随本候选落实；指针解析与道路名经本轮脚本复核，最终仍需 Codex 按审核入口独立复审后闭环。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-KB-IDX-STORY-01-ffaab369 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-KB-IDX-STORY-01 的原子正式结果等待 Codex 独立复审。
+- 任务：C-KB-IDX-STORY-01
+- 候选提交：ca78e849c9aae59b6a541e8d2e79d846c497eac4
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：docs/剧情/剧情事实速查.txt
+- 已验证：每行 `路径#章节` 指针均可解析到事实源存在的章节（禁止项规范锚点、14 名重要 NPC、九域、大九家与小桩文件锚点全部命中）；行数 84 ≤ 120 行，满足目标行数上限；pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK（921 文件）；pwsh tools/check-pending-whitespace.ps1 -Paths docs/剧情/剧情事实速查.txt → OK（1 文件）；git diff --check → 无错误；candidate 变更路径仅 docs/剧情/剧情事实速查.txt（expectedPaths 子集），工作树清洁
+- 未验证：未运行 BattleSim（本卡为线索层文本，不涉及数值平衡）；未运行 check-data-chain（非 CSV/Unity 数据链路变化）；内容语义与事实源一致性待 Codex 独立复审（DeepSeek 不自审）
+- 残留风险：本卡为线索层，个别术语在 L2 事实源间存在未完全对齐（如辽海寒域地图用「妖血」而门派文件用「真灵血脉」并存），本卡按各来源文件现行口径分别表述、未自行裁决；最终一致性由 Codex 复审确认。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
