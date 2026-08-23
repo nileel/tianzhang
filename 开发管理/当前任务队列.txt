@@ -6,6 +6,5 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | U-CHAR-2D-TACTICAL-PROTO-01 | external_execute | deepseek | P1 | unity | implementation | 2D 六向战术角色 Unity 样例 | 开发管理/任务卡/U-CHAR-2D-TACTICAL-PROTO-01.txt |
-| C-KB-ARCH-01 | codex_execute | codex | P2 | management | design | 资料库速查层架构与维护规则 | 开发管理/任务卡/C-KB-ARCH-01.txt |
 | C-STORY-WM-05B | external_execute | deepseek | P2 | content | design | 玄荒新路天才人物志扩写与孝文帝历史锚点修订 | 开发管理/任务卡/C-STORY-WM-05B.txt |
 | C-STORY-WM-FUYUAN-01 | codex_execute | codex | P2 | content | design | 苻渊线收束节拍规划 | 开发管理/任务卡/C-STORY-WM-FUYUAN-01.txt |
