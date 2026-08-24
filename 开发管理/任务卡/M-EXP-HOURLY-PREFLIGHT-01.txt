@@ -9,8 +9,8 @@
   "domain": "automation",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-TASK-SCHEMA2-01", "M-EXP-L0-CONTRACT-01"],
-  "stateReason": "等待 schema 支持和 L0 合同；在共享入口唯一接入一次预检结果，adapter/wrapper 只验证并传递，不迁移任务卡。",
+  "blockedBy": ["M-EXP-L0-CONTRACT-01"],
+  "stateReason": "等待已包含 schema 前置的 L0 合同；在共享入口唯一接入一次预检结果，adapter/wrapper 只验证并传递，不迁移任务卡。",
   "expectedPaths": [
     "tools/invoke-hourly-owner.ps1",
     "tools/hourly-owner-adapter.ps1",
@@ -37,7 +37,7 @@
 ## 来源与当前边界
 
 - 单一结果：在共享小时入口对 Codex／DeepSeek 使用同一确定性预检，并把一次绑定结果通过 adapter 传入两个 wrapper 的首条责任提示。
-- 自动化 control plane 已由批准规格和 L0 卡冻结，技术实现主责 DeepSeek，完成后必须 Codex 独立复审。
+- 自动化 control plane 已由修订规格和 L0 卡冻结；schema 支持是 L0 的具名前置，不在本卡重复建立旁路依赖。技术实现主责 DeepSeek，完成后必须 Codex 独立复审。
 - 本卡不迁移任务卡、不修改 schema 5 runtime 字段、不改变 queue maintenance 行为。
 
 ## 必查范围
@@ -70,7 +70,7 @@
 ## 完成条件
 
 - 两个 owner 都只消费共享入口验证的一份结果；失败前模型未启动，queue maintenance 不传结果，私有文件和 digest 绑定测试全部通过。
-- Codex 独立复审通过后归档本卡，只解锁激活迁移卡。
+- Codex 独立复审通过后归档本卡，只移除激活迁移卡中的本前置；每日收集器未完成时激活仍保持 blocked。
 
 ## 停止条件
 

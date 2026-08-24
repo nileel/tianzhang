@@ -6,22 +6,25 @@
 
 唯一规格：`docs/superpowers/specs/2026-08-24-preventive-experience-memory-system-design.md`
 
-批准提交：`ccb1127bcd78d6bb192b4527a449acda41cfc782`
+批准基线提交：`ccb1127bcd78d6bb192b4527a449acda41cfc782`
 
-规划状态：任务图已落库；本轮未实施风险索引、匹配器、经验卡、schema 2、自动化接入或门禁
+每日候选采集修订提交：`4bfc261d18fc609422c398dce1202948350d7e58`
+
+规划状态：每日候选修订与 25 张原子子卡的完整任务图已落库；当前基础实现因 Codex 复审返工保持 blocked，本轮未执行任何叶子，也未实施候选合同、每日收集器、schema 2 强制、门禁或扩域
 
 ## 1. 规划结论
 
-`M-EXP-PREFLIGHT-01` 是不可调度汇总父项，不进入 ready 队列。唯一关闭入口是 `M-EXP-PREFLIGHT-CLOSE-01`；关闭卡在全部已知阶段出口满足后，同一管理提交归档父项和自身。系统实施由 24 张原子子卡组成，严格按以下顺序推进：
+`M-EXP-PREFLIGHT-01` 是不可调度汇总父项，不进入 ready 队列。唯一关闭入口是 `M-EXP-PREFLIGHT-CLOSE-01`；关闭卡在全部已知阶段出口满足后，同一管理提交归档父项和自身。系统实施由 25 张原子子卡组成，严格按以下依赖推进：
 
 ```text
-M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
+M-EXP-PREFLIGHT-01A 基础工具（基础阶段唯一叶子；当前审核返工 blocked）
   └─ 10 张独立种子晋级卡
        └─ M-EXP-PREFLIGHT-TRIAL-01 冻结样本只读试运行
             └─ M-EXP-TASK-SCHEMA2-01 schema 1/2 兼容检查
                  └─ M-EXP-L0-CONTRACT-01 L0/runnable/强制合同
-                      └─ M-EXP-HOURLY-PREFLIGHT-01 小时双 owner 接入
-                           └─ M-EXP-READY-SCHEMA2-ACTIVATE-01 原子激活
+                      ├─ M-EXP-HOURLY-PREFLIGHT-01 小时双 owner 接入
+                      └─ M-EXP-DAILY-COLLECTOR-01 每日确定性候选收集器
+                           └─（两者同时完成）M-EXP-READY-SCHEMA2-ACTIVATE-01 原子激活
                                 └─ M-EXP-OBSERVE-20-01 20 任务观察
                                      ├─ 3 张独立门禁卡
                                      └─ 3 张非技术域开放决策卡
@@ -29,7 +32,7 @@ M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
                                                └─ 关闭 M-EXP-PREFLIGHT-01
 ```
 
-不存在覆盖全系统的执行卡。小时 worker 不拆卡；后续纯 `1` 只领取队列中的原子叶子。
+不存在覆盖全系统的执行卡。小时 worker 不拆卡；每日收集器只机械建立“一候选一整理卡”，不做语义拆分。当前 M-EXP 图没有 ready 叶子，现有 ready 队列中的其他任务保持原相对顺序；本轮不领取任何一项。
 
 ## 2. 完整任务清单与依赖
 
@@ -48,10 +51,11 @@ M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
 | `M-EXP-SEED-MGMT-WORKTREE-01` | 晋级 `EXP-MGMT-001` | `codex_execute / codex` | P1 | management / implementation | 01A |
 | `M-EXP-PREFLIGHT-TRIAL-01` | 10 个冻结样本的命中、误报、字符与 token 代理报告 | `codex_execute / codex` | P1 | management / verification | 10 张种子卡 |
 | `M-EXP-TASK-SCHEMA2-01` | 检查器接受 schema 1/2 并校验 schema 2 投影，仍允许 schema 1 ready | `external_execute / deepseek` | P1 | management / implementation | TRIAL |
-| `M-EXP-L0-CONTRACT-01` | 更新 AGENTS、状态规则、自动规则的稳定合同 | `codex_execute / codex` | P1 | management / design | SCHEMA2 |
-| `M-EXP-HOURLY-PREFLIGHT-01` | 共享入口产生一次预检并传给 Codex/DeepSeek wrapper | `external_execute / deepseek` | P1 | automation / implementation | SCHEMA2、L0 |
-| `M-EXP-READY-SCHEMA2-ACTIVATE-01` | 同一提交迁移全部当时 ready 卡并拒绝 schema 1 ready | `external_execute / deepseek` | P1 | management / migration | HOURLY |
-| `M-EXP-OBSERVE-20-01` | 激活后前 20 个相关任务的 continue/stop 报告 | `codex_execute / codex` | P2 | management / verification | ACTIVATE |
+| `M-EXP-L0-CONTRACT-01` | 更新 AGENTS、状态规则、自动规则的写前预检与收尾候选稳定合同 | `codex_execute / codex` | P1 | management / design | SCHEMA2 |
+| `M-EXP-HOURLY-PREFLIGHT-01` | 共享入口产生一次预检并传给 Codex/DeepSeek wrapper | `external_execute / deepseek` | P1 | automation / implementation | L0 |
+| `M-EXP-DAILY-COLLECTOR-01` | 每日确定性收集 pending、逐候选机械制卡、同提交回链与 00:10 薄触发 | `codex_execute / codex` | P1 | automation / implementation | L0 |
+| `M-EXP-READY-SCHEMA2-ACTIVATE-01` | 同一提交迁移全部当时 ready 卡并拒绝 schema 1 ready | `external_execute / deepseek` | P1 | management / migration | HOURLY、DAILY-COLLECTOR |
+| `M-EXP-OBSERVE-20-01` | 激活后前 20 个相关任务及候选收集／整理成本的 continue/stop 报告 | `codex_execute / codex` | P2 | management / verification | ACTIVATE |
 | `M-EXP-GATE-PWSH7-01` | `EXP-AUTO-001` 绑定现有 PowerShell 7 gate | `external_execute / deepseek` | P2 | automation / implementation | OBSERVE |
 | `M-EXP-GATE-BS-TIMEOUT-01` | `EXP-BS-005` 绑定 BattleSim 顺序超时 self-test gate | `external_execute / deepseek` | P2 | battlesim / implementation | OBSERVE |
 | `M-EXP-GATE-UNITY-ASMDEF-01` | 为程序集检查器补正反 fixture 并升级 `EXP-UNITY-002` | `external_execute / deepseek` | P2 | unity / implementation | OBSERVE |
@@ -60,7 +64,7 @@ M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
 | `M-EXP-EXT-NUMERIC-01` | 数值经验域 open/hold/stop 决策 | `codex_execute / codex` | P2 | battlesim / decision | OBSERVE |
 | `M-EXP-PREFLIGHT-CLOSE-01` | 验证全部出口并归档自身与父项 | `codex_execute / codex` | P2 | management / verification | 3 gate + 3 extension |
 
-每张卡的完整 `expectedPaths`、直接事实源、精确必查范围、实施范围、禁止项、验证、完成条件与停止条件以 `开发管理/任务卡/<ID>.txt` 为唯一事实。DeepSeek 卡均是已冻结、可机器验收的实现切片，正式结果必须转同 ID 的 `codex_review/codex/ready` 并由 Codex 独立复审；没有因任务困难改派主责。
+每张卡的完整 `expectedPaths`、直接事实源、精确必查范围、实施范围、禁止项、验证、完成条件与停止条件以 `开发管理/任务卡/<ID>.txt` 为唯一事实。DeepSeek 卡均是已冻结、可机器验收的实现切片，正式结果必须转同 ID 的 `codex_review/codex/ready` 并由 Codex 独立复审；没有因任务困难改派主责。每日 collector 同时需要 Codex app automation 的创建与 view 签收、共享集成控制和外部配置写入，因此按现行职责固定 `codex_execute/codex`；它不是按实现难度改派，也不得被拆成新的 runtime 或小时 owner 分支。
 
 ## 3. 种子选择与证据边界
 
@@ -113,7 +117,7 @@ M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
 
 ### 阶段 A：基础工具
 
-- 入口：批准规格与当前 schema/owner 无冲突；01A 是唯一 ready 叶子。
+- 入口：修订规格与当前 schema/owner 无冲突；01A 是基础阶段唯一执行叶子。当前事实为审核返工 blocked，只有按既有复审返工边界合法恢复后才可重新 ready。
 - 出口：空索引、模板、只读 matcher、10 类 fixture 测试通过；没有真实经验。
 - 失败：保持 01A 非完成，不解锁种子。
 
@@ -138,25 +142,26 @@ M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
 ### 阶段 E：L0 规则
 
 - 入口：schema 支持经复审。
-- 出口：AGENTS、状态规则、自动规则对手动、runnable、共享 owner 和失败关闭无矛盾。
-- 失败：不修改小时脚本。
+- 出口：AGENTS、状态规则、自动规则对手动、runnable、共享 owner、DeepSeek provisional、Codex 复审／自产 pending、失败关闭和无额外模型调用无矛盾。
+- 失败：不修改小时脚本，不建立每日 collector 或薄触发。
 
-### 阶段 F：小时自动化接入
+### 阶段 F：小时接入与每日收集两个独立切片
 
-- 入口：schema 支持和 L0 均完成。
-- 出口：共享入口在 owner worktree 中只运行一次预检；Codex/DeepSeek 首条提示收到同一绑定结果；queue maintenance 不接入；失败不启动模型。
-- 失败：沿用 attention_required，不新增 runtime/重试。
+- 共同入口：L0 完成；schema 支持已由 L0 的具名前置保证，不为两个下游重复建立旁路依赖。
+- 小时出口：共享入口在 owner worktree 中只运行一次预检；Codex/DeepSeek 首条提示收到同一绑定结果；queue maintenance 不接入；失败不启动模型。
+- 每日出口：香港时间 `00:10` 的唯一薄触发只调用确定性收集入口；pending 逐条生成独立整理卡并在同提交 collected／回链；零候选无写入，任一失败整批无提交且下一日自然补收。
+- 失败：小时侧沿用 attention_required；每日侧保持来源 pending。两侧均不新增 schema 5 状态、第二 runtime／索引、重试层或 owner 专属分支。
 
 ### 阶段 G：ready 激活迁移
 
-- 入口：小时双 owner 集成经 Codex 复审。
+- 入口：小时双 owner 集成经 Codex 复审，且每日收集器、测试和唯一薄触发均已完成验证。
 - 出口：同一提交升级全部当时 ready 卡并开始拒绝 schema 1 ready。
 - 特殊入口检查：执行时任何 ready 卡路径不在激活卡冻结的完整当前已知路径上界中，立即停止并重新冻结授权；不得使用通配。
 
 ### 阶段 H：20 任务观察
 
 - 入口：激活归档后，按完成提交时间收集前 20 个符合卡内固定规则的相关任务。
-- 出口：`continue` 需要保持试运行阈值、无持续 matcher 阻断，并至少有一个可观察预防价值案例；否则 `stop`。
+- 出口：`continue` 需要保持原试运行阈值、无持续 matcher 阻断、无持续重复制卡／收集失败、整理维护成本不高于避免的返工，并至少有一个可观察预防价值案例；否则 `stop`。
 - stop 行为：六张门禁/扩域卡以“观察未授权实施”归档，直接进入关闭，不实施它们。
 
 ### 阶段 I：独立门禁与扩域
@@ -170,7 +175,9 @@ M-EXP-PREFLIGHT-01A 基础工具（唯一首批 ready）
 - 入口：三 gate + 三 domain 出口完成，或 OBSERVE=`stop` 已真实归档六项未授权实施。
 - 出口：关闭卡验证最新系统行为，同一提交归档自身与父项。
 
-## 6. 确定性结果传递合同
+## 6. 候选生命周期与自动化所有权
+
+### 6.1 小时预检结果流
 
 小时接入只允许一条数据流：
 
@@ -185,6 +192,44 @@ owner worktree + taskId
 
 adapter/wrapper 不决定是否预检、不重新匹配、不读取完整索引。任何 `experience_preflight_*` 失败在模型启动前进入现有 `attention_required`；不伪造零命中、不重试、不加 runtime 字段。
 
+### 6.2 任务收尾候选生命周期
+
+```text
+DeepSeek 执行完成
+  -> 同一任务卡 provisional
+  -> Codex 复审删除／修正／保留
+  -> 保留者在完成归档中 pending
+
+Codex 自有任务完成
+  -> 同一任务卡直接 pending
+
+每日确定性收集
+  -> 每条 pending 建立一张独立整理卡
+  -> 同一提交将来源改为 collected 并回填 promotionTaskId
+  -> 整理卡唯一裁决 promoted / duplicate / rejected
+```
+
+原任务的候选检查只使用本轮已经掌握的事实、diff 与验证，不增加模型调用；没有候选时不写空章节。原任务不查重、不分配正式经验 ID、不建整理卡、不改风险索引。候选状态与整理任务回链是唯一防重事实，不建立每日候选正文或第二候选索引。
+
+候选 `经验领域` 保留原值；为遵守现行任务卡 domain 与经验 ID 枚举，机械投影为 `design -> management/MGMT`、`numeric -> battlesim/BS`，其他领域按规格既有映射。`design/content/numeric` 候选可以收集，但整理卡分别 blockedBy 对应域开放决策，开放前不入队、不语义整理。
+
+### 6.3 每日收集与薄触发所有权
+
+```text
+Codex app 唯一 cron（香港时间 00:10）
+  -> 前台调用 invoke-daily-experience-candidate-collector.ps1
+  -> 最新 master 的独立 worktree 只读扫描 pending
+  -> 字段/digest/ID/路径/投影确定性校验
+  -> 逐候选机械制卡 + 来源 collected 回链
+  -> 一个路径限定提交
+  -> 现有进程持有型集成锁 + fast-forward
+  -> 单一结构化终态
+```
+
+薄触发不读候选正文、不写 Git、不判断价值，只等待并原样报告。collector 不占用 `runs.codex/deepseek`、不调用小时 owner／candidate wrapper、不增加恢复状态或重试；零候选不建 worktree 提交，任一批内失败不产生正式提交，来源保持 pending 供下一日补收。整理卡是唯一语义裁决点，一候选一任务。
+
+`M-EXP-DAILY-COLLECTOR-01` 固定 `codex_execute/codex`，因为其单一结果包含 Codex app automation 的外部配置创建／view 签收和共享集成控制；DeepSeek 不具备 automation 管理授权。小时预检实现仍保持 `external_execute/deepseek`，两者都由 L0 解锁，互不调用或复制 runtime。
+
 ## 7. 回滚边界
 
 | 切片 | 最小回滚单元 | 不允许的部分回滚 |
@@ -193,13 +238,14 @@ adapter/wrapper 不决定是否预检、不重新匹配、不读取完整索引�
 | 单条种子 | 该 seed 的索引项+经验卡+状态提交 | 只删经验卡而留 active 索引，或反之 |
 | 试运行 | 报告与任务状态 | 用改索引代替回滚报告结论 |
 | schema 兼容 | checker+tests | 只保留 schema 2 解析但无投影校验 |
-| L0 | 三份规则同一合同提交 | 只更新 AGENTS 或只更新自动规则 |
+| L0 | 三份规则中的写前预检＋收尾候选同一合同提交 | 只更新 AGENTS、只更新自动规则，或保留预检而回退 provisional/pending 责任 |
 | 小时接入 | owner+adapter+双 wrapper+全部测试 | 只接 Codex/DeepSeek 一侧；保留私有结果但移除验证 |
+| 每日收集器 | 确定性入口+测试+唯一薄触发配置；项目提交和外部配置均回到未启用状态 | 只停触发而保留无所有者入口、只留触发而回退脚本、保留部分 collected 回链、引入补偿重试 |
 | 激活 | checker 强制+当时全部 ready 卡的同一提交 | 只回退 checker 或只回退卡，产生混合状态 |
 | 单个 gate | gate registry+经验 gateRefs+该 gate 测试 | 只留 gateRefs 或无正反 fixture |
 | 域决策 | 单份 assessment+任务状态 | 决策文档 open 但在本卡顺带实现经验 |
 
-任何回滚都不得删除已影响任务行为的稳定经验 ID；已发布经验按 `review_required/retired/supersededBy` 合同处理。
+任何回滚都不得删除已影响任务行为的稳定经验 ID；已发布经验按 `review_required/retired/supersededBy` 合同处理。已正式 collected 的来源与整理卡必须保持成对回链；不得把部分批次改回 pending 或靠第二索引补偿。collector 集成前失败没有正式提交，天然以原 pending 重跑，不存在补偿事务。
 
 ## 8. 验证矩阵
 
@@ -208,14 +254,17 @@ adapter/wrapper 不决定是否预检、不重新匹配、不读取完整索引�
 | matcher schema/匹配 | 状态、枚举、三 triggerMode、路径归一化、限量、缺指针、只读 | `tools/test-get-experience-risk-preflight.ps1` |
 | 任务卡投影 | schema 1/2、零命中、显式、旧投影、激活后 schema 1 ready 拒绝 | `tools/test-check-task-cards.ps1` |
 | 试运行 | 10 个冻结 digest、误报、字符、token 代理、无工作树写入 | TRIAL report + Git blob/diff |
-| L0 合同 | 三份规则调用时点、权威、失败、范围变化一致 | `tools/check-review-text.ps1` + 人工逐条对照 |
+| L0 合同 | 三份规则调用时点、权威、失败、范围变化、DeepSeek provisional、Codex 复审／自产 pending、无额外模型调用一致 | `tools/check-review-text.ps1` + 人工逐条对照 |
 | 小时 owner | worktree 后/args 前、一次结果、ACL/digest、失败不启动模型 | `tools/test-hourly-experience-preflight.ps1` |
 | adapter/wrappers | queue maintenance 例外、双 owner 参数/提示、越界/失配拒绝 | owner adapter + 两 wrapper tests |
+| 每日 collector | 零／一／多 pending、旧 pending 补收、provisional/collected 跳过、字段/digest/ID 冲突、逐卡生成、同提交回链、重复运行、防主工作区冲突／锁占用、失败整批无提交 | `tools/test-daily-experience-candidate-collector.ps1` |
+| 每日薄触发 | 唯一项目 automation、本地前台、香港时间每日一次 00:10、只调用确定性入口、失败才通知、集成前 PAUSED／完成后 ACTIVE | Codex app automation view + 零候选 dry run |
+| 整理卡投影 | 一候选一张 `codex_execute/codex/P2`；技术域按 runnable 入队，design/content/numeric 保持对应域 blocked；既有 ready 相对顺序不变 | collector fixtures + `tools/check-task-cards.ps1` |
 | 激活 | 同一 ready 集合全部 schema 2、非 ready 未迁移、立即拒绝 schema 1 ready | checker JSON + per-card matcher |
 | PowerShell gate | canonical allow / noncanonical reject | `tools/test-check-pwsh-runtime.ps1` |
 | BattleSim gate | build、equal/asymmetric/swapped timeout | Release build + `--no-build` run |
 | Unity asmdef gate | allow topology / illegal reverse or missing target | new fixture test + production checker |
-| 管理投影 | 父项不入队、依赖无环、backlog/queue 精确 | `tools/check-task-cards.ps1` |
+| 管理投影 | 父项不入队、新 collector 非 ready、激活同时依赖 hourly/collector、依赖无环、backlog/queue 精确 | `tools/check-task-cards.ps1` |
 | 文本与提交 | UTF-8、审核文本、路径隔离、空白和 staged diff | whitespace、review-text、`git diff --cached --check` |
 
 相关输入未变化时不重复同范围检查；DeepSeek 正式结果的 Codex 独立复审属于外部交接硬边界，不因已有 candidate 测试省略。
@@ -227,21 +276,24 @@ adapter/wrapper 不决定是否预检、不重新匹配、不读取完整索引�
 1. 父项从未进入 ready，全部实施都由原子子卡完成。
 2. 基础 matcher 能对冻结路径/符号返回确定性、少量、可追溯结果，且不修改工作树/runtime。
 3. 8～12 条 active 技术/工作流种子均有根因、适用、排除、失效和证据；证据不足者未为凑数 active。
-4. 试运行和 20 任务观察都有可重算指标；continue/stop 行为与阈值一致。
-5. ready 卡已在一个提交中激活 schema 2，当前不存在 schema 1 ready；历史 completed 和非 ready 迁移边界保持。
-6. 手动 Codex/DeepSeek/Claude 与小时 Codex/DeepSeek 在写前不能绕过同一预检；queue maintenance 例外明确。
-7. 零命中正常继续；非法索引、缺正文/门禁、过宽、冲突、范围扩大和 matcher 失败均按规格失败关闭。
-8. 没有向量库、外部服务、第二索引、长期 feature flag、新 runtime 状态、重试层或 owner 专属匹配分支。
-9. OBSERVE=`continue` 时三个 gate 与三个域决策全部独立完成；OBSERVE=`stop` 时六项明确未授权实施并归档，不伪造门禁/扩域已完成。
-10. 父卡与关闭卡同一提交归档，backlog/queue 无残留；任何后续域 open 进入新的独立 initiative。
+4. L0 收尾合同已经生效：DeepSeek 只能写 provisional，Codex 复审保留时转 pending，Codex 自有完成任务直接 pending；候选只使用本轮已有事实，不增加模型调用，原任务不查重、不建正式经验／整理卡、不改风险索引。
+5. 每日确定性收集器和香港时间 `00:10` 唯一薄触发已经实现并验证；pending 可逐条生成独立整理卡并在同一提交 collected／回链，零候选无写入，任一失败整批无提交且下一日自然补收。
+6. 每条未来整理卡仍是独立语义任务；design/content/numeric 在对应域开放前保持 blocked，没有提前入队或形成正式经验。
+7. 试运行和 20 任务观察都有可重算指标；观察同时覆盖候选产生量、pending→collected 延迟、重复制卡、收集失败与整理维护成本，原 continue/stop 阈值保持。
+8. ready 卡已在一个提交中激活 schema 2，当前不存在 schema 1 ready；激活同时以小时接入和每日收集器完成为前置，历史 completed 和非 ready 迁移边界保持。
+9. 手动 Codex/DeepSeek/Claude 与小时 Codex/DeepSeek 在写前不能绕过同一预检；queue maintenance 例外明确。
+10. 零命中正常继续；非法索引、缺正文/门禁、过宽、冲突、范围扩大、matcher 失败和候选收集失败均按规格失败关闭。
+11. 没有向量库、外部服务、第二索引／候选正文、长期 feature flag、新 schema 5 runtime 状态、重试层、小时 owner 分支或 owner 专属匹配分支。
+12. OBSERVE=`continue` 时三个 gate 与三个域决策全部独立完成；OBSERVE=`stop` 时六项明确未授权实施并归档，不伪造门禁/扩域已完成。父卡与关闭卡同一提交归档，backlog/queue 无残留；任何后续域 open 进入新的独立 initiative。
 
 ## 10. 本轮明确未实施
 
-- 未创建 `开发管理/经验库/风险索引.json`、经验卡模板、matcher 或任何测试脚本。
+- 基础候选实现已由提交 `0869451e` 进入 Git，但 Codex 复审确认 `preflight_overbroad` 漏门禁指针并使 `M-EXP-PREFLIGHT-01A` 保持 blocked；本轮不修复、不归档、不解锁种子，也不把该状态恢复为旧 ready／完成。
 - 未创建 `开发管理/经验库/经验卡/EXP-*.txt`，未晋级任何种子。
 - 未运行冻结试验，未产生试运行/20 任务报告。
-- 未修改 `AGENTS.md`、任务 schema、自动工作流规则或小时脚本。
+- 未修改 `AGENTS.md`、任务 schema、自动工作流规则或小时脚本；任务收尾 provisional／pending 合同尚未生效。
+- 未实现或运行 `M-EXP-DAILY-COLLECTOR-01`，未创建／启用每日候选 automation，未制任何整理卡、回链任何来源候选或修改风险索引。
 - 未迁移任何现有 ready 卡到 schema 2，未启用强制预检。
 - 未创建或激活任何 gate，未开放设计、内容或数值经验域。
 
-后续新对话从有序队列领取 `M-EXP-PREFLIGHT-01A`；完成任务图和规划提交后不得在同一轮执行它。
+后续只能按 `M-EXP-PREFLIGHT-01A` 当前审核返工事实和现行返工决策边界恢复基础叶子；当前队列没有 M-EXP ready 项。完成本次规格／规划／任务图提交后不得在同一轮执行任何叶子。

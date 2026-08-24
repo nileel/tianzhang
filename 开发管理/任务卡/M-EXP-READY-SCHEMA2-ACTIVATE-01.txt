@@ -9,8 +9,8 @@
   "domain": "management",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-HOURLY-PREFLIGHT-01"],
-  "stateReason": "等待 schema、L0 与小时入口全部通过；本卡在一个原子提交中升级当时全部 ready 卡并立即拒绝 schema 1 ready，不保留 feature flag。",
+  "blockedBy": ["M-EXP-HOURLY-PREFLIGHT-01", "M-EXP-DAILY-COLLECTOR-01"],
+  "stateReason": "等待 schema、L0、小时入口与每日候选收集器全部通过；本卡在一个原子提交中升级当时全部 ready 卡并立即拒绝 schema 1 ready，不保留 feature flag。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",
@@ -89,6 +89,7 @@
     "开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt",
     "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt",
     "开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt",
+    "开发管理/任务卡/M-EXP-DAILY-COLLECTOR-01.txt",
     "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt",
     "开发管理/任务归档/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt",
     "开发管理/任务卡/M-EXP-OBSERVE-20-01.txt",
@@ -108,7 +109,7 @@
 ## 来源与当前边界
 
 - 单一结果：在同一原子提交中重算当时全部 ready 卡、升级为 schema 2，并让检查器从该提交开始拒绝 schema 1 ready 卡。
-- 直接事实源是批准规格“任务卡投影/迁移口径”、通过的 schema/L0/小时入口归档和执行瞬间的有序队列。
+- 直接事实源是修订规格“任务卡投影/迁移口径”、通过的 schema/L0/小时入口／每日收集器归档和执行瞬间的有序队列。
 - 本卡是一次迁移，不保留长期 feature flag；技术实施主责 DeepSeek，完成后必须 Codex 独立复审。
 
 ## 必查范围
@@ -116,6 +117,7 @@
 - `tools/check-task-cards.ps1` 的 schema 1/2 兼容逻辑与 `test-check-task-cards.ps1` 全部投影测试。
 - `开发管理/当前任务队列.txt` 的完整 ready ID 集合和每张对应活动卡全文。
 - `tools/get-experience-risk-preflight.ps1` 的实时 matched/gates 结果；当前风险索引只读。
+- `M-EXP-DAILY-COLLECTOR-01` 归档及其测试证据，确认激活后新整理卡能机械生成 schema 2 实时投影，且非技术卡仍 blocked。
 - 本卡 `expectedPaths` 中冻结的全部当前已知 active 卡路径；它们是迁移允许上界，不表示非 ready 卡应改写。
 
 ## 实施范围
@@ -146,7 +148,7 @@
 
 ## 停止条件
 
-- ready 集合含未授权路径、实时预检失败／过宽／缺指针、L0 或小时入口未通过、无法单提交回滚，或需要长期开关、兼容分支与第二迁移模式。
+- ready 集合含未授权路径、实时预检失败／过宽／缺指针、L0／小时入口／每日收集器任一未通过、无法单提交回滚，或需要长期开关、兼容分支与第二迁移模式。
 
 ## 回滚边界
 

@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-DAILY-COLLECTOR-01",
+  "title": "每日确定性经验候选收集器与薄触发",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "M-EXP-L0-CONTRACT-01"
+  ],
+  "stateReason": "等待 L0 收尾候选合同；实现香港时间 00:10 的确定性收集、逐候选机械制卡、同提交回链和正反测试，不调用模型判断候选价值。",
+  "expectedPaths": [
+    "tools/invoke-daily-experience-candidate-collector.ps1",
+    "tools/test-daily-experience-candidate-collector.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-DAILY-COLLECTOR-01.txt",
+    "开发管理/任务归档/M-EXP-DAILY-COLLECTOR-01.txt",
+    "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-DAILY-COLLECTOR-01 · 每日确定性经验候选收集器与薄触发
+
+## 来源与当前边界
+
+- 单一结果：实现每日确定性候选收集入口、候选字段校验、逐候选机械制卡、来源回链、原子提交／集成、香港时间 `00:10` 薄触发和完整正反测试。
+- 直接事实源是修订规格“新经验采集与晋级／每日候选收集／独立整理任务”“验证设计”“实施原子性与依赖”，以及 `M-EXP-L0-CONTRACT-01` 完成归档中的收尾责任合同。
+- route／owner 固定为 `codex_execute / codex`：本卡单一结果包含 Codex app automation 的唯一实例创建与最终 view 核验、共享集成控制和外部配置签收；DeepSeek 不能管理 automation。该分派基于现行主责边界，不基于任务难度。
+- 本卡只实现收集基础设施，不运行真实候选的语义整理，不创建正式经验、不修改风险索引、不激活门禁。
+
+## 必查范围
+
+- `开发管理/任务归档/<ID>.txt` 的 TASK-META／TASK-BODY 结构、`dispatchState=completed` 归档合同，以及候选固定标题、字段、状态与回链合同。
+- `tools/check-task-cards.ps1::Get-Card/全局 queue-backlog 投影/依赖环检查/CodexClosedOrNonReady`，用于生成后整体验证；不得复制为第二检查器。
+- `tools/invoke-codex-candidate.ps1::Test-QueueMaintenancePath/New-Prompt` 的现有机械制卡边界，仅作任务卡形状和稳定排序参考；每日收集器不调用 QueueMaintenance 或小时 owner。
+- `tools/get-automation-briefing-source.ps1::Get-TaskStateFromCard/Get-CommittedTaskState` 的完成归档读取方式；`tools/automation-finalize-commit.ps1`、`tools/invoke-project-integration.ps1`、`tools/hourly-integration-lock.ps1` 的路径限定提交、主工作区冲突和同一进程持有型锁合同。
+- 当前 `开发管理/状态与建议维护规则.txt` 的 task card 枚举、runnable、队列稳定顺序和归档规则；当前 `开发管理/自动工作流规则.txt` 的 automation 配置权威、薄触发、失败停止与禁止重试合同。
+
+## 实施范围
+
+- 新建 `tools/invoke-daily-experience-candidate-collector.ps1`。它只解析完成归档中固定 `## 经验候选`／三级候选标题及精确字段；主窗口为前一香港自然日，同时补收全部更早 `collectionState=pending`。`provisional`、`collected`、非法字段、非 completed 来源或已有 `promotionTaskId` 均不制卡。
+- 每轮以来源任务 ID、候选 ID、来源候选正文 digest、任务状态和目标路径重核事实。整理任务 ID 固定为 `M-EXP-PROMOTE-` 加 `SHA-256(sourceTaskId + LF + candidateId)` 的前 12 位大写十六进制；任何 task ID 碰撞但绑定不一致均整批失败。
+- 预留经验 ID 只按风险索引现有 ID 与全部活动／归档整理卡 `expectedPaths` 中已预留路径机械取同域最小未用三位序号，不把候选写入索引。候选领域到任务卡 domain／经验 ID 代码固定为：`design -> management/MGMT`、`numeric -> battlesim/BS`，其余按规格既有映射；候选正文保留原领域。预留 ID／路径碰撞整批失败。
+- 每条合法 pending 候选建立一张独立 `codex_execute / codex / P2 / implementation` 整理卡。卡片 expectedPaths 精确包含来源归档、`开发管理/经验库/风险索引.json`、预留经验卡路径、自身活动／归档路径、管理与自动化 backlog 和当前队列；不得合并多个候选。`design/content/numeric` 分别 blockedBy `M-EXP-EXT-DESIGN-01`、`M-EXP-EXT-CONTENT-01`、`M-EXP-EXT-NUMERIC-01` 且不入队，其他首期领域仅在现行 runnable 条件满足时按稳定插入规则入队；任何插入都不得改变既有 ready 行相对顺序。
+- 生成全部整理卡和投影后，在同一提交把每个来源候选改为 `collected` 并回填对应 `promotionTaskId`。整批使用最新 master 的独立 worktree、精确 changed paths、来源／目标 digest、规定文本与任务卡检查、现有进程持有型集成锁和 fast-forward；任一候选、路径、锁、主工作区冲突、验证、提交或集成失败时不产生部分正式提交，来源仍为 pending，下一日自然补收。
+- 零 pending 时在不修改文件、不创建提交的前提下返回结构化 `no_candidate`。防重只认来源候选 `collectionState` 与 `promotionTaskId` 回链，不建立每日候选正文、候选索引、恢复记录或重试队列。
+- 通过 Codex app automation 管理能力创建唯一 `tzg-daily-experience-candidate-collector` cron：本项目、本地执行、香港时间每日 `00:10`、`gpt-5.6-terra/low`、失败才通知；prompt 仅以前台进程调用确定性入口、等待并原样报告单一 JSON 终态。创建前按 ID／名称 view 查重，脚本与测试正式集成前保持 PAUSED，集成后再置 ACTIVE 并再次 view；不编辑 TOML。
+- 完成后归档本卡，并只移除激活迁移卡中的本前置。
+
+## 禁止项
+
+- 不调用模型判断候选价值、去重或晋级，不让薄触发读取候选正文、写 Git、选择任务或管理 schema 5 owner run。
+- 不修改 `风险索引.json`、创建正式经验卡、合并候选、激活门禁、开放非技术领域或执行任何整理卡。
+- 不新增 schema 5 状态、第二 runtime、小时 owner 分支、后台守护、恢复状态、重试层、第二候选索引、每日候选正文、自动冲突解决或空提交。
+- 不调用 `invoke-hourly-owner.ps1`、QueueMaintenance 或 Codex／DeepSeek candidate wrapper，不复制小时工作流为新的 owner pipeline。
+- 不使用通配 expectedPaths、未绑定的动态路径或模型生成卡片；不因收集失败把 pending 改为 collected。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-daily-experience-candidate-collector.ps1`，在临时仓库覆盖：零／一／多 pending、同源多候选、前一日主窗口和更早补收、provisional／collected 跳过、非法字段／非 completed／digest 变化、task ID 与预留经验 ID 冲突、重复运行不重复制卡、非技术 blocked、既有 ready 相对顺序、来源回链与制卡同提交。
+- 同一测试覆盖主工作区目标路径冲突、集成锁占用、验证／提交／集成失败整批无正式提交、下一轮自然补收，以及收集器从不修改风险索引、创建正式经验卡、写 schema 5 runtime 或调用小时 owner／模型。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`；测试兼容激活前 schema 1 ready 和激活后新整理卡 schema 2 实时投影。
+- 通过 automation 管理能力 view 唯一薄触发，确认 project/destination/model/reasoning/notification 与任务合同一致、香港时间每日仅一次 `00:10`、状态 ACTIVE；以结构化零候选 dry run 证明不写文件／不提交。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1`、`tools/check-review-text.ps1 -Paths 开发管理,tools`、`tools/check-pending-whitespace.ps1` 和 `git diff --cached --check`。
+
+## 完成条件
+
+- 合法 pending 可逐条确定性生成独立整理卡，并与来源 `collected/promotionTaskId` 在一个正式提交中原子回链；重复运行不重复制卡，更早 pending 可自然补收。
+- 任一失败整批不提交，来源保持 pending；零候选不写文件、不制造空提交；既有 ready 相对顺序不变。
+- 非技术候选可以收集但整理卡保持 blocked；没有风险索引写入、正式经验、门禁、第二索引、新 runtime、重试层或小时 owner 分支。
+- 唯一每日薄触发在脚本／测试／集成通过后为 ACTIVE，完整配置经 view 核验；本卡归档且激活卡只移除本 ID。
+
+## 停止条件
+
+- 候选字段或现行任务卡 schema 无法确定性映射，必须由模型查重／判断价值，或无法在单一正式提交中同时制卡与回链。
+- 实现需要新增 schema 5 状态、第二索引／runtime、小时 owner、重试／恢复层、后台守护、通配路径、自动冲突解决，或需要修改风险索引／正式经验才能防重。
+- Codex app 不能建立并 view 唯一 `00:10` 薄触发，或自动化配置会在脚本正式集成前执行写入。

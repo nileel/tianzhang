@@ -10,7 +10,7 @@
   "stage": "design",
   "dispatchState": "blocked",
   "blockedBy": ["M-EXP-TASK-SCHEMA2-01"],
-  "stateReason": "等待 schema 1/2 兼容检查通过；本卡只冻结手动、runnable 和小时自动化强制合同，不修改脚本或 ready 卡。",
+  "stateReason": "等待 schema 1/2 兼容检查通过；本卡冻结写前预检与任务收尾候选自标记的手动、复审和自动责任，不修改脚本或 ready 卡。",
   "expectedPaths": [
     "AGENTS.md",
     "开发管理/状态与建议维护规则.txt",
@@ -19,7 +19,8 @@
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt",
     "开发管理/任务归档/M-EXP-L0-CONTRACT-01.txt",
-    "开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt"
+    "开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt",
+    "开发管理/任务卡/M-EXP-DAILY-COLLECTOR-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
 }
@@ -28,40 +29,45 @@
 
 ## 来源与当前边界
 
-- 单一结果：把批准规格中的 L0 路由、runnable／ready 投影、范围变化重算和小时失败行为写入三个稳定规则事实源。
+- 单一结果：把批准规格中的 L0 路由、runnable／ready 投影、范围变化重算、任务收尾候选自标记和小时失败行为写入三个稳定规则事实源。
 - 本卡是跨 owner／手动与自动职责合同，主责固定 Codex；不修改任何 PowerShell 或任务卡 schema。
+- 候选检查只复用原任务本轮已有的事实、diff 和验证，不增加模型调用；没有候选时不写空章节。
 
 ## 必查范围
 
-- 批准规格“开工前运行流程”“手动与小时自动化强制点”“范围变化”“错误处理”。
+- 批准规格“开工前运行流程”“手动与小时自动化强制点”“新经验采集与晋级”“范围变化”“错误处理”。
 - `AGENTS.md#修改与验证` 的 worktree/写前边界。
 - `开发管理/状态与建议维护规则.txt#自动工作流分层/#状态与队列` 的 runnable、ready 和 schema 合同。
-- `开发管理/自动工作流规则.txt#共享内核与 owner adapter/#失败与清理` 的确定性所有者与失败关闭。
+- `开发管理/自动工作流规则.txt#共享内核与 owner adapter/#最新 master 重放、验证与正式提交/#失败与清理` 的确定性所有者、Codex／DeepSeek 完成转换与失败关闭。
 
 ## 实施范围
 
 - `AGENTS.md` 固定：选中 ready 并建立规定 worktree 后、任何项目写入前运行同一预检，消费返回正文，核对 schema 2 投影；范围变化暂停并重跑。
 - 状态规则固定：建立／重新 ready／expectedPaths 变化时重算 schema 2 投影；强制激活前 schema 1 ready 仍合法，激活后拒绝。
-- 自动规则固定：共享入口是唯一预检所有者，queue maintenance 例外、私有结果绑定、失败 detailCode 和不新增 runtime／重试／owner 分支。
-- 只解锁小时接入卡，不迁移任务卡。
+- 三份规则共同固定任务收尾候选合同：原任务只记录现象、已证实根因、证据、可能复用范围和门禁可能；DeepSeek 只能在转复审前写 `provisional`，Codex 复审保留／修正时改为 `pending`、不成立时删除，Codex 自有完成任务在归档前直接写 `pending`。原任务不得查重、分配正式经验 ID、建立整理任务或修改风险索引。
+- 候选领域到现行任务卡／经验 ID 枚举的机械投影固定为：`design -> management/MGMT`、`numeric -> battlesim/BS`，其余按规格既有一一映射；候选正文仍保留原 `经验领域`。非技术候选只允许被后续收集为 blocked 整理卡，不因此开放领域。
+- 自动规则固定：共享入口是唯一预检所有者，queue maintenance 例外、私有结果绑定、收尾候选责任、失败 detailCode 和不新增 runtime／重试／owner 分支；候选语义不复制到 Codex／DeepSeek owner 专属 prompt、adapter 或新 runtime。
+- 同时解锁小时接入卡与每日候选收集器卡，不迁移任务卡。
 
 ## 禁止项
 
-- 不复制匹配算法或经验正文到 L0，不修改脚本、索引、经验卡或现有 ready 卡。
+- 不复制匹配算法、候选语义或经验正文到 owner prompt，不修改脚本、索引、经验卡或现有 ready 卡。
 - 不添加 feature flag、兼容继续路径、第二 runtime、新状态或模型自行决定是否预检。
+- 不要求任务执行者查重、创建正式经验／整理卡／门禁或修改风险索引，不为没有候选的任务制造空结论。
 
 ## 验证
 
-- 三份规则逐项对照规格，确认调用时机、权威顺序、零命中、失败、范围扩大和 queue maintenance 行为无矛盾。
+- 三份规则逐项对照规格，确认调用时机、权威顺序、零命中、失败、范围扩大、DeepSeek provisional、Codex 复审、Codex 自有 pending 和 queue maintenance 行为无矛盾。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 - `git diff --check`。
 
 ## 完成条件
 
-- 手动、runnable 和小时强制合同完整且不复制算法；当前兼容阶段和未来激活提交的边界明确。
-- 本卡归档，小时接入卡只移除本 ID。
+- 手动、runnable、小时强制和收尾候选合同完整且不复制算法／候选语义；当前兼容阶段和未来激活提交的边界明确。
+- 能证明候选检查不新增模型调用，原任务不做语义查重或全局写入；非技术候选只形成未来 blocked 整理卡。
+- 本卡归档，小时接入卡与每日收集器卡分别只移除本 ID。
 
 ## 停止条件
 
-- 三份规则对 shared owner、schema 激活时点或失败行为存在冲突，或需要先修改脚本／任务卡才能表达稳定合同；停止并报告精确条款。
+- 三份规则对 shared owner、schema 激活时点、provisional／pending 责任、候选领域投影或失败行为存在冲突，或需要先修改脚本／任务卡才能表达稳定合同；停止并报告精确条款。
