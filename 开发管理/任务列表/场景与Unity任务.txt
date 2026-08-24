@@ -12,15 +12,15 @@
 - 2026-08-21：`D-CHAR-2D-TACTICAL-CONTRACT-01` 已完成，冻结苻渊 2D 新斜俯视战斗姿态、六向映射、文件与像素规格、脚底锚点、透明遮挡、有限帧边界和 Unity 取证矩阵；现有 UI 立绘不得转用为精灵。`A-CHAR-2D-FUYUAN-SPRITE-01` 已完成唯一 3×2 来源图、六张 RGBA 分槽、固定联系表和提示词／哈希。2026-08-23，负责人批准统一资产级纠正：六张 Sprite Custom pivot `(0.5,0.18)`、静态 3D `FuYuan_Model` 本地 Rotation `(-90,0,0)`、`StaticChessBase` 本地 Position `(0,0,0)`。`U-CHAR-2D-TACTICAL-PROTO-01` 的返工候选经独立复审通过：本轮 Unity EditMode、PlayMode、资产版本、数据链、程序集边界与审核文本检查均通过，固定相机 1920×1080 图像确认 3D 模型直立落座、2D 脚底落格且遮挡探针未被完全遮没；正式 `AdventureUnitSpawner`、规则与存档链仍未接入。
 - 2026-08-23 固定比较曾以 2D `42/50` 对静态 3D `30/50` 确认 2D 战术精灵胜出，`A-CHAR-BATTLE-VISUAL-DIRECTION-01` 随后归档；2026-08-24 核查发现静态 3D Unity BaseColor 缺失且完整战斗生产成本尚未建立，旧比较违反其证据对称停止条件。旧归档保留为历史，但 2D 胜出在 `A-CHAR-BATTLE-VISUAL-REEVALUATE-02` 完成前暂停作为新增任务的方向依据；不得据此生产正式 2D 批次或恢复正式 3D 替换。
 - 2026-08-24：2D 与静态 3D 战斗表现参考调研均已完成；负责人随后明确批准两个方向进入详细方案。2D 方向以《龙胤立志传》的实战表现为可接受下限；静态 3D 方向聚焦炉石传说、游戏王、万智牌式的单一静态角色载体整体动效与特效，不采用角色模型内部动画或多套独立 Pose 换模。两张 pipeline 卡已转 `ready`；本次仍不授权资产生产、credits 消费或 Unity 修改。
+- 2026-08-25：负责人对 2D pipeline 书面方案选择 A。`D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 已完成归档，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 已按冻结合同转 `ready`；当前只授权苻渊隔离样例的选型与生产记录，未生产资产、未消费外部 credits、未修改 Unity 或正式角色链。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-REEVALUATE-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | 战场角色2D与静态3D方向重新评估父项 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt |
-| D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 | P1 | codex | 已排队 | — | 2D战斗动画生产流程详细方案 | 开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt |
 | D-CHAR-STATIC3D-MOTION-PIPELINE-01 | P1 | codex | 已排队 | — | 静态3D战斗动态表现详细方案 | 开发管理/任务卡/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt |
-| A-CHAR-2D-BATTLE-ANIM-PILOT-01 | P1 | codex | 阻塞 | D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 | 苻渊2D战斗动画样例生产 | 开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt |
+| A-CHAR-2D-BATTLE-ANIM-PILOT-01 | P1 | codex | 已排队 | — | 苻渊2D战斗动画样例生产 | 开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt |
 | U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01 | P1 | codex | 阻塞 | A-CHAR-2D-BATTLE-ANIM-PILOT-01 | 苻渊2D战斗动画样例Unity接入 | 开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt |
 | A-CHAR-STATIC3D-MOTION-PILOT-01 | P1 | codex | 阻塞 | D-CHAR-STATIC3D-MOTION-PIPELINE-01 | 苻渊静态3D战斗动态表现样例生产 | 开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt |
 | U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | P1 | codex | 阻塞 | A-CHAR-STATIC3D-MOTION-PILOT-01 | 苻渊静态3D战斗动态表现Unity接入 | 开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt |

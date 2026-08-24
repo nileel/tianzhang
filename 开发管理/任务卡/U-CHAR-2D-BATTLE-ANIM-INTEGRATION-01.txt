@@ -12,10 +12,35 @@
   "blockedBy": [
     "A-CHAR-2D-BATTLE-ANIM-PILOT-01"
   ],
-  "stateReason": "2026-08-24：等待按批准pipeline生产的2D样例；Unity业务路径和运行验证由pipeline卡写回后才可ready。",
+  "stateReason": "2026-08-25：详细方案已写回精确 Unity 资产、所有者、验证与停止合同；2D pipeline 已批准且 pilot 已 ready，仍等待 A-CHAR-2D-BATTLE-ANIM-PILOT-01 形成通过选择门的六状态 source atlas。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Idle.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Idle.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Move.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Move.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Attack.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Attack.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Hit.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Hit.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Cast.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Cast.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Death.png",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_Death.png.meta",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_BattleAnimationSprite.prefab",
+    "src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_BattleAnimationSprite.prefab.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpritePresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpritePresentationController.cs.meta",
+    "src/Assets/Scripts/Editor/VisualBaselineBuilder.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/BattleAnimationSpritePresentationEditorTests.cs",
+    "src/Assets/Tests/EditMode/BattleAnimationSpritePresentationEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/BattleAnimationSpritePresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/BattleAnimationSpritePresentationPlayModeTests.cs.meta",
     "开发管理/苻渊2D战斗动画Unity接入验证记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -31,41 +56,41 @@
 
 ## 来源与当前边界
 
-- 本卡只消费完成的 2D pilot 及用户批准的 pipeline，不生产或修订源美术。
-- 运行时只接入隔离比较入口，不能接入正式 `AdventureUnitSpawner` 或改变规则结果。
-- 当前业务路径由 pipeline 卡在方案批准时冻结；未写回前不能进入 ready。
+- 本卡只消费完成的 2D pilot、其 manifest 与用户批准的 pipeline，不生产、重画、重选技术或修订 source atlas。
+- 运行时只接入隔离比较入口，不能接入正式 `AdventureUnitSpawner` 或改变规则结果。旧 `TacticalSpritePresentationController`／`TacticalSpriteProbeGroup` 是静态样张所有者，保持不变，不能作为动态动画 fallback。
+- 动态资产唯一使用 `FuYuanBattle` 文件夹、`BattleAnimationSpritePresentationController` 和 `BattleAnimationSpriteProbeGroup`；pilot 未完成、文件／manifest 不完整或运行时所有者不唯一时不能进入 ready。
 
 ## 必查范围
 
-- 批准的 2D pipeline 规格、pilot 生产记录与精确资产清单。
-- pipeline 指定的 Unity Prefab／controller／builder 所有者、直接调用者、测试和 runtime fallback。
-- 现有 `TacticalSpritePresentationController`、`TacticalSpriteProbeMatrix` 与 `AdventureScene/VisualBaselineBoard` 只在规格确认仍是所有者时使用。
+- 批准的 2D pipeline 规格完整正文、pilot 的 manifest／source-selection／生产记录／六个 source atlas，以及 `开发管理/苻渊2D战斗动画样例生产记录.txt`。
+- `src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::StaticChessPresentationEvent`、`src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs`、`src/Assets/Scripts/Editor/VisualBaselineBuilder.cs::BuildTacticalSpriteAssets`、`src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildVisualBaselineMatrix/CreateTacticalSpriteProbes`、`src/Assets/Scripts/Editor/SceneArchitectureValidator.cs::ValidateAdventureVisualMatrix` 及其直接测试。
+- `src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs`、`src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs`、`src/Assets/Scripts/Modules/Spatial/HexCoord.cs::Directions` 与 `src/Assets/Scenes/AdventureScene.unity` 的直接引用；先确认新 controller 是唯一必要扩展，再改动允许路径。
 
 ## 实施范围
 
-- 接入批准样例，表达 pipeline 冻结的同一组方向、动作和状态。
-- 只写表现层；事件时点结束后复位，不写回战斗规则、位置事实或存档。
-- 记录运行时活动资产、方向、动作触发、复位和实际接入成本。
-- 完成后分别解除 playable compare 与 cost evidence 中的本卡 blocker。
+- 将六个 source atlas 原样复制到冻结 `FuYuanBattle` 路径，配置 multi-sprite grid、`512 PPU`、Custom pivot `(0.5,0.18)`，由 pilot manifest 验证格网、帧、事件索引与 SHA-256；不导入 source 母文件。
+- 新建受限 `BattleAnimationSpritePresentationController` 和单个动态 Prefab，只消费既有 `StaticChessPresentationEvent`，为同一状态选择六向帧并在结束复位；施法最多一次既有特效信号，不能拥有规则或提供静态／缺失资源 fallback。
+- 仅在 `VisualBaselineBoard` 建立默认关闭、显式切换的 `BattleAnimationSpriteProbeGroup`。保持静态 3D probes、旧静态 2D 样张、相机、地块和正式单位不变；活动动态组与非目标路线互斥。
+- 记录运行时活动 atlas、方向、状态、事件帧、复位、规则快照与实际接入分钟。完成后才分别解除 playable compare 与 cost evidence 的本卡 blocker。
 
 ## 禁止项
 
-- 不手修源图，不新增正式单位，不修改战斗、方向、占格、装备、AI、结算或存档。
-- 不通过镜头、光照、尺度、地块或私有事件时序优化本路线。
-- 不在业务 expectedPaths 未冻结时实施。
+- 不手修 source atlas、不新增正式单位，不修改战斗、方向、占格、装备、AI、结算或存档；不把 Source 方法运行时化为骨骼、SkinnedMeshRenderer、Animator 或 Animation。
+- 不通过镜头、光照、尺度、地块、方向私有 pivot／缩放／位移、镜像、默认启用新组或私有事件时序优化本路线；不改旧静态样张控制器作兼容分支。
+- 不在 pilot／manifest／业务 expectedPaths 未冻结时实施；缺状态、方向、帧、资产、事件索引或唯一所有者即停止，不新增 fallback。
 
 ## 验证
 
-- 运行 pipeline 规格冻结的 EditMode／PlayMode、资产版本、数据链和程序集边界检查。
-- 运行时证明全部批准方向／动作触发、复位且规则快照不变。
-- 状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- 运行 pipeline 冻结的 manifest／atlas SHA、multi-sprite grid、六状态／六方向、`512 PPU`、pivot、事件索引、Prefab 单一 renderer／controller、隔离路线和无 Animator／SkinnedMeshRenderer 的 EditMode 检查。
+- 运行 PlayMode 在固定 `1920×1080` 矩阵证明六方向的每个状态、攻击／受击／死亡事件时点、施法单次信号、根节点复位、真实遮挡、活动 atlas 与规则快照不变；人工矩阵另行判定冲击力、身份、宽袖／武器和多单位可读性。
+- 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与状态变更后的 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 
 ## 完成条件
 
-- 2D 样例在隔离比较入口可重复运行，活动资产和事件证据完整，没有正式接入或规则变化。
-- 下游两卡已移除本 blocker，并按各自剩余依赖保持正确状态。
+- 2D 动态样例在隔离比较入口可重复运行：活动 atlas、六方向、六状态、事件索引、施法信号、根节点复位、真实遮挡与规则快照证据完整，且没有正式接入或规则变化。
+- 下游两卡移除本 blocker，并按各自剩余依赖保持正确状态；Unity 接入时间进入成本证据记录，不把未试批量扩展写成结论。
 
 ## 停止条件
 
-- pilot 未完成、运行时所有者不唯一、所需资产缺失或必须新增规则／fallback 才能显示。
-- 接入条件与静态 3D 共同合同不再对称。
+- pilot 未完成、manifest／atlas 不完整、运行时所有者不唯一、所需资产缺失或必须新增规则／fallback 才能显示。
+- 接入条件与静态 3D 共同合同不再对称，或只能通过镜头、资产手修、旧样张、规则改动或正式接入取得视觉通过。

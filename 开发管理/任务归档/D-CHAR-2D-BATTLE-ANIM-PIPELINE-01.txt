@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260825-D2DANIM01",
+  "stateReason": "2026-08-25：负责人对 DEC-20260825-D2DANIM01 选择 A；书面方案与下游合同完成，A-CHAR-2D-BATTLE-ANIM-PILOT-01 已解除唯一具名前置并转 ready。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
@@ -23,61 +23,6 @@
     "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "D-CHAR-2D-BATTLE-ANIM-PIPELINE-01",
-    "sourceRunId": "550b438c-6408-4baf-9c74-bbe61cbf53f2",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260825-D2DANIM01",
-    "question": "书面方案与下游合同已完成自审。是否批准方案并解锁苻渊 2D 战斗动画 pilot？",
-    "options": [
-      {
-        "key": "A",
-        "label": "批准方案并解锁 pilot"
-      },
-      {
-        "key": "B",
-        "label": "仅修订方案后再次等待"
-      },
-      {
-        "key": "C",
-        "label": "冻结 2D 路线"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 将解锁以攻击、受击、死亡六向试片选择制作方法的 pilot；B 不生产资产；C 不解锁下游。",
-    "plainSummary": {
-      "situation": "详细生产方案与两张下游原子卡已完成，尚未选择制作方法。",
-      "action": "请选择 A 批准并解锁 pilot、B 仅修订方案，或 C 冻结路线。",
-      "impact": "未经 A 不会生产资产、消费 credits 或修改 Unity。"
-    },
-    "checkpointCommit": "d86378995d8e2d13185ad8851e356c2b49b5a92e",
-    "baseCommit": "75da427b2ed44ac7a9b60cf797eef961ac76a578",
-    "branch": "codex/automation/codex/550b438c-6408-4baf-9c74-bbe61cbf53f2/candidate",
-    "changedPaths": [
-      "开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
-      "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt",
-      "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
-      "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
-      "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md"
-    ],
-    "verified": [
-      "模型元数据核验为 gpt-5.6-terra",
-      "任务卡检查通过",
-      "审核文本检查通过",
-      "数据链检查通过",
-      "待提交空白检查通过"
-    ],
-    "unverified": [
-      "负责人尚未选择 A/B/C",
-      "未生产动画资产、未消费 credits、未修改 Unity"
-    ],
-    "residualRisk": "A 批准后仍须以真实六向攻击、受击、死亡试片选择制作方法并记录实际成本。",
-    "taskContextDigest": "5a5fa4400cc8cea29cee837af4f23e89c5b8eeb21a9e3c158194c2b328956b95",
-    "createdAt": "2026-08-25T02:28:45.857869+08:00",
-    "queueIndex": 1
-  },
   "automationReply": {
     "decisionId": "DEC-20260825-D2DANIM01",
     "result": "OPTION_ACCEPTED",
@@ -141,3 +86,9 @@
 
 - 书面方案未获 A 批准或下游路径仍不完整；方案写完后必须按 checkpoint 停止等待，不得越过批准门启动 pilot。
 - 方案必须修改战斗规则、剧情立绘职责、正式存档或建立第三条视觉路线。
+
+## 完成记录
+
+- 负责人已对 `DEC-20260825-D2DANIM01` 选择 A。书面方案、E3 画面下限边界、四种待选技术方法、六状态 atlas 合同、自动检查与人工视觉矩阵分工均已冻结在 `docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md`。
+- `A-CHAR-2D-BATTLE-ANIM-PILOT-01` 已获得完整、可执行的 expectedPaths、验证、完成与停止条件，解除本卡的唯一具名前置并转为 `ready`；`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 仍只等待 pilot。
+- 本卡未生产动画资产、未消费外部 credits、未修改 Unity、正式单位、战斗规则、存档或剧情立绘职责。

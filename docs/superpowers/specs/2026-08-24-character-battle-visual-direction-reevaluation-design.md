@@ -152,6 +152,9 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 
 方案必须单独交给用户批准。批准前不得进入 2D 样例生产。
 
+`2026-08-25` 的书面方案固定为
+`docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md`。它把负责人指定的《龙胤立志传》实战完成度只拆为固定镜头下的可见验收下限；该来源是 E3 产品画面，不承担技术、方向数、帧数、工时或成本结论。方案必须把逐帧、剪纸／骨骼、3D 预渲染和有限帧／棋子化列为待由 pilot 记录选定的制作方法，不能把任一方法或“静态载体＋有限帧”写成既获批准的事实。
+
 ### 5.3 静态 3D 参考调研
 
 `D-CHAR-STATIC3D-MOTION-REFERENCE-01` 只回答以下问题：
@@ -290,4 +293,5 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 - 2026-08-24，`D-CHAR-STATIC3D-MOTION-REFERENCE-01` 已完成并产出[静态 3D 战斗动态表现参考游戏调研](2026-08-24-static-3d-battle-motion-reference-research.md)。用户复核后把 3D 方向收敛为炉石传说、游戏王、万智牌式的单一静态角色载体整体动效与特效，不采用角色模型内部动画或多套独立 Pose 换模，并明确批准两个方向进入详细方案；`D-CHAR-STATIC3D-MOTION-PIPELINE-01` 已转 `ready`，但仍只授权书面方案。
 - 两张 reference 卡的调研和用户授权门均已满足；两张 pipeline 卡按既有固定顺序进入 ready 队列。本次状态变化不授权图片、Sprite Sheet、模型、credits 或 Unity 修改。
 - 两张 pipeline 卡写出并自审方案后分别停在 `waiting_reply`；用户批准书面方案后才完成该卡并解锁对应 pilot。
+- 2026-08-25，负责人已对 `D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 选择 A。该卡的书面方案完成归档，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 依冻结合同转为 `ready`；这仍只授权隔离苻渊样例的生产选择门，不授权正式角色、战斗规则、存档或 Unity 接入。
 - 最终 user decision 卡必须让用户运行游戏后回复；本文、参考调研、pipeline 方案或 Codex 技术复核均不能代替该决定。
