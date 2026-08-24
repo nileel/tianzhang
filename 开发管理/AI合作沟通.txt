@@ -30,3 +30,16 @@
 - 残留风险：本卡为 L1 线索层，不复制 L2 效果/数值/价格；「三项遗产」一句话为压缩表述，最终语义以册界天章.txt、太玄界印.txt、开阖九章.txt 原文为准；武器预留行无 L2 可指，后续武器设计任务建立后需回填指针。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-PREFLIGHT-01A-ec2d51e5 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：be768985c5ebb2deaac788b33d8f9fd9951d09bd
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/经验库/风险索引.json、开发管理/经验库/经验卡模板.txt、tools/get-experience-risk-preflight.ps1、tools/test-get-experience-risk-preflight.ps1
+- 已验证：空索引顶层精确为 schemaVersion/experiences/gates 且均为空；匹配器 10 类正反例全部通过 tools/test-get-experience-risk-preflight.ps1；合法零命中 fixture：stdout 仅一个 JSON 对象且工作树无变化；tools/check-task-cards.ps1 OK (cards=82 ready=4)；tools/check-review-text.ps1 -Paths 开发管理,tools OK (533 files)；tools/check-pending-whitespace.ps1 OK (4 files)；git diff --check 通过；candidate 仅含 4 个授权路径，十张种子卡未改动
+- 未验证：Codex 独立复审尚未进行（待 Codex 签收）；真实种子经验在真实索引下的命中质量/误报率/读取量（属后续种子卡与 TRIAL 阶段）；600 字符边界与 3 条 must_read 限额仅以 fixture 证明，未在真实经验上验证
+- 残留风险：生产索引与门禁表均为空，尚无真实经验，匹配器行为仅在临时 fixture 上证明；schema 2 任务卡投影与小时入口接入属后续任务，本卡未实现。真实种子晋级并 active 后才会出现窄命中行为，仍需 Codex 独立复审签收，未解除任何种子卡前置。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

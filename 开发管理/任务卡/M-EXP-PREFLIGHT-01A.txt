@@ -4,13 +4,13 @@
   "id": "M-EXP-PREFLIGHT-01A",
   "title": "风险索引、经验卡模板与只读匹配器基础",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-25：批准规格、schema 与 fixture 范围均已冻结；这是唯一首批 ready 叶子，只实现空索引、模板、只读匹配器和测试，不裁决真实种子。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡模板.txt",
@@ -29,7 +29,8 @@
     "开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt",
     "开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt",
     "开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt",
-    "开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt"
+    "开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
 }
