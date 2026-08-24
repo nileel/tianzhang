@@ -1,0 +1,47 @@
+# 苻渊静态棋子 Unity 材质修正验证记录
+
+任务：`U-CHAR-STATIC3D-MATERIAL-CORRECT-01`
+
+日期：2026-08-24
+
+状态：完成
+
+## 根因与边界
+
+- `FuYuan_StaticChess.fbx.meta` 保持内嵌材质和 `externalObjects={}`；它没有可供独立材质消费的 Unity Texture。
+- 既有 `FuYuan_StaticChess.mat` 的 `_BaseMap` 与 `_MainTex` 都为空，旧 Builder 仅在 FBX 导入材质偶然暴露贴图时才设置 `_BaseMap`，导致空引用静默通过。
+- 本轮只消费批准的 BaseColor；未改动来源 JPEG、FBX、FBX meta、Prefab、场景、模型、Pose、相机、灯光、战斗规则或其余 PBR 贴图。
+
+## 冻结输入与 Unity 导入
+
+| 项目 | 路径或值 |
+|---|---|
+| 批准来源 | `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/raw/tripo_convert_c00fa18b-823d-45bf-bebb-7f2c6dc5463b.fbm/traditional_robes_3d_model_basecolor.JPEG` |
+| Unity 目标 | `src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG` |
+| 字节数 | `1,381,322` |
+| SHA-256 | `F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611` |
+| Unity 生成 meta GUID | `decc7267e4a84054c825ca8523a1b11d` |
+
+来源与 Unity 目标的字节数和 SHA-256 均逐项相同。直接检查批准 BaseColor 可见黑、灰衣料与金色缝饰；没有用相近贴图、重新压缩或 FBX 提取替代。
+
+## 实现结果
+
+- `VisualBaselineBuilder` 在重建静态棋子前同步导入固定 Texture 路径，并以 `RequireAsset<Texture2D>` 获取它；缺失、导入后无法加载或零尺寸纹理会立即抛出异常。
+- Builder 每次重建都将该 Texture 写入 `FuYuan_StaticChess.mat` 的 `_BaseMap`。材质实际序列化为 GUID `decc7267e4a84054c825ca8523a1b11d`，不使用 `ModelImporter.externalObjects`。
+- EditMode 测试断言固定路径存在、材质 `_BaseMap` 精确引用目标 Texture，并在重建后重新加载 Texture 和材质以断言引用保持。
+
+## 验证
+
+- SHA-256 与字节数比较：通过。
+- Unity 批处理 `VisualBaselineBuilder.BuildStaticChessAssets`：通过；Texture 已由 Unity 导入并写入材质。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：通过，418/418。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过，Git LFS fsck OK。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过。
+- `dotnet restore src/TianZhang.EditModeTests.csproj --ignore-failed-sources`：通过；仅生成 `.gitignore` 已覆盖的 `src/Temp/obj` 中间产物。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：通过，0 error；59 条既有序列化字段和重复 `using` 警告不属于本轮改动。
+- Unity Game 视图固定为 Full HD（1920×1080）检查 `AdventureScene/VisualBaselineBoard`：通过；六个静态棋子探针均显示批准 BaseColor 的黑灰衣料与金色缝饰，未保存场景改动。
+
+## 后续边界
+
+`A-CHAR-STATIC3D-MOTION-PILOT-01` 已移除本卡 blocker，但仍受 `D-CHAR-STATIC3D-MOTION-PIPELINE-01` 阻塞；本记录不授权静态 3D 动态样例、其他 PBR 材质规格或任何战斗接入。

@@ -208,6 +208,8 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 
 完成硬门是：重建后 URP 材质实际引用上述 Unity BaseColor，固定镜头内可辨认苻渊的黑、灰、金服饰主色，确定性 Builder 再次运行不会丢失贴图，空引用会由测试失败关闭。
 
+2026-08-24 已完成 `U-CHAR-STATIC3D-MATERIAL-CORRECT-01`：唯一批准 JPEG 已按字节导入，Builder 只加载其固定 Unity 路径并在缺失或空贴图时失败关闭；URP 材质 `_BaseMap` 的实际引用和重建保持由 EditMode 测试覆盖。来源哈希、导入结果与验证边界见 `开发管理/苻渊静态棋子Unity材质修正验证记录.txt`。
+
 ### 6.2 两条样例路线
 
 - `A-CHAR-2D-BATTLE-ANIM-PILOT-01` 只按已批准 2D 方案生产苻渊战斗动画样例资产。

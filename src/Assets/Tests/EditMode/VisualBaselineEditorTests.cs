@@ -156,6 +156,18 @@ namespace TianZhang.Tests.EditMode
             Material material = AssetDatabase.LoadAssetAtPath<Material>(VisualBaselineBuilder.StaticChessMaterialPath);
             Assert.IsNotNull(material);
             Assert.AreEqual("Universal Render Pipeline/Lit", material.shader.name);
+            Texture2D baseColor = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                VisualBaselineBuilder.StaticChessBaseColorTexturePath);
+            Assert.IsNotNull(baseColor, "The approved BaseColor must be imported at its fixed Unity path.");
+            Assert.AreEqual(VisualBaselineBuilder.StaticChessBaseColorTexturePath, AssetDatabase.GetAssetPath(baseColor));
+            Assert.AreSame(baseColor, material.GetTexture("_BaseMap"));
+            VisualBaselineBuilder.BuildStaticChessAssets();
+            Texture2D rebuiltBaseColor = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                VisualBaselineBuilder.StaticChessBaseColorTexturePath);
+            Assert.IsNotNull(rebuiltBaseColor, "Rebuilding must retain the approved BaseColor import.");
+            material = AssetDatabase.LoadAssetAtPath<Material>(VisualBaselineBuilder.StaticChessMaterialPath);
+            Assert.AreSame(rebuiltBaseColor, material.GetTexture("_BaseMap"),
+                "Rebuilding static chess assets must retain the approved BaseColor reference.");
             ModelImporter importer = AssetImporter.GetAtPath(VisualBaselineBuilder.StaticChessModelPath) as ModelImporter;
             Assert.IsNotNull(importer);
             Assert.IsFalse(importer.importAnimation);

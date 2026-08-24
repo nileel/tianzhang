@@ -43,6 +43,8 @@ namespace TianZhang.Editor
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx";
         public const string StaticChessMaterialPath =
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.mat";
+        public const string StaticChessBaseColorTexturePath =
+            "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG";
         public const string StaticChessPrefabPath =
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab";
         public const string TacticalSpriteFolderPath =
@@ -358,6 +360,7 @@ namespace TianZhang.Editor
         public static void BuildStaticChessAssets()
         {
             EnsureStaticChessFolders();
+            AssetDatabase.ImportAsset(StaticChessBaseColorTexturePath, ImportAssetOptions.ForceSynchronousImport);
             AssetDatabase.ImportAsset(StaticChessModelPath, ImportAssetOptions.ForceSynchronousImport);
             ModelImporter importer = AssetImporter.GetAtPath(StaticChessModelPath) as ModelImporter;
             if (importer == null) throw new InvalidOperationException("Static chess FBX importer is unavailable.");
@@ -501,14 +504,15 @@ namespace TianZhang.Editor
                 AssetDatabase.CreateAsset(material, StaticChessMaterialPath);
             }
 
-            Texture baseMap = source.HasProperty("_BaseMap") ? source.GetTexture("_BaseMap") : null;
-            if (baseMap == null && source.HasProperty("_MainTex")) baseMap = source.GetTexture("_MainTex");
+            Texture2D baseMap = RequireAsset<Texture2D>(StaticChessBaseColorTexturePath);
+            if (baseMap.width <= 0 || baseMap.height <= 0)
+                throw new InvalidOperationException("Static chess BaseColor texture has no pixels: " + StaticChessBaseColorTexturePath);
             Color baseColor = source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") :
                 source.HasProperty("_Color") ? source.GetColor("_Color") : Color.white;
             material.name = "FuYuan_StaticChess";
             material.shader = Shader.Find("Universal Render Pipeline/Lit");
             material.SetColor("_BaseColor", baseColor);
-            if (baseMap != null) material.SetTexture("_BaseMap", baseMap);
+            material.SetTexture("_BaseMap", baseMap);
             material.SetFloat("_Smoothness", 0.1f);
             material.SetFloat("_Metallic", 0f);
             material.enableInstancing = true;

@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "D-CHAR-STATIC3D-MOTION-PIPELINE-01",
-    "U-CHAR-STATIC3D-MATERIAL-CORRECT-01"
+    "D-CHAR-STATIC3D-MOTION-PIPELINE-01"
   ],
-  "stateReason": "2026-08-24：等待用户批准的静态3D详细方案和BaseColor修正；业务资产路径、表现机制与验证由pipeline卡写回后才可ready。",
+  "stateReason": "2026-08-24：BaseColor修正已完成；仍等待用户批准的静态3D详细方案，业务资产路径、表现机制与验证由pipeline卡写回后才可ready。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
@@ -31,7 +30,7 @@
 
 ## 来源与当前边界
 
-- 本卡只消费用户批准的静态 3D pipeline 和已通过的 BaseColor 修正；当前表现机制、业务资产路径和动作／方向范围尚未冻结。
+- 本卡只消费用户批准的静态 3D pipeline 和已完成的 BaseColor 修正；当前表现机制、业务资产路径和动作／方向范围尚未冻结。
 - 苻渊是公平比较的固定单角色样例，不是正式 3D 角色批次。
 - 任何平台 credits 消费都需要当次单独授权，pipeline 批准不能替代 credits 授权。
 

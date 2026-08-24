@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-24：Unity现存材质BaseMap为空且测试静默放行；本卡作为独立首批ready叶子修复确定性贴图消费，不依赖视觉方向选择。",
+  "stateReason": "2026-08-24：已将唯一批准BaseColor按字节导入，确定性绑定至URP材质并以重建测试覆盖；静态3D pilot只保留pipeline blocker。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG",
@@ -42,6 +42,7 @@
 - `FuYuan_StaticChess.mat` 的 `_BaseMap` 与 `_MainTex` 都是空引用，来源包却存在已冻结 BaseColor；旧比较因此违反同身份、服饰和主色合同。
 - `VisualBaselineBuilder.GetOrCreateStaticChessMaterial` 当前在 baseMap 为 null 时静默跳过，`VisualBaselineEditorTests` 只验证 URP Lit shader。
 - `FuYuan_StaticChess.fbx.meta` 使用内嵌材质且 `externalObjects={}`，目标 Unity 目录没有 Texture 资产；本卡修复 Texture 消费，不改变方向选择。
+- 2026-08-24 已完成：Unity目标 Texture 由 Unity 导入生成 meta，材质 `_BaseMap` 已精确引用该 Texture；完整证据见 `开发管理/苻渊静态棋子Unity材质修正验证记录.txt`。
 
 ## 必查范围
 
