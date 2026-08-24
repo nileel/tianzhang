@@ -168,6 +168,20 @@ function Invoke-Error {
   $json
 }
 
+function Get-FileTreeHash {
+  param([string]$Root)
+  $prefix = $Root.TrimEnd('\', '/')
+  $entries = [Collections.Generic.List[string]]::new()
+  foreach ($file in [IO.Directory]::EnumerateFiles($prefix, '*', [IO.SearchOption]::AllDirectories)) {
+    $rel = $file.Substring($prefix.Length).Replace('\', '/')
+    $bytes = [IO.File]::ReadAllBytes($file)
+    $entries.Add($rel + '=' + [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)))
+  }
+  $entries.Sort([StringComparer]::OrdinalIgnoreCase)
+  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+    [Text.UTF8Encoding]::new($false).GetBytes(($entries -join ';')))).ToLowerInvariant()
+}
+
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ('exp-preflight-test-' + [guid]::NewGuid().ToString('N'))
 try {
   [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
@@ -325,14 +339,16 @@ try {
   Assert-True (@($overCharsJson.gatePointers).Count -eq 1 -and [string]$overCharsJson.gatePointers[0].id -ceq 'g1') 'case9: chars overbroad gate pointers preserved'
 
   # ---- 10. 匹配器只读 + 合法零命中 fixture ----
-  $repo = Split-Path -Parent $PSScriptRoot
-  $before = & git -C $repo status --porcelain | Out-String
-  $zero = Invoke-Ok $repo @('-TaskId', 'M-EXP-PREFLIGHT-01A')
+  $caseRoot = Join-Path $tempRoot 'case10'
+  Set-Index $caseRoot (New-Index)
+  Set-Card $caseRoot (New-TaskCard -Id 'T-ZERO-01' -Domain 'automation' -ExpectedPaths @('tools/foo.ps1')) 'T-ZERO-01'
+  $treeBefore = Get-FileTreeHash $caseRoot
+  $zero = Invoke-Ok $caseRoot @('-TaskId', 'T-ZERO-01')
   Assert-True ($zero.Json.status -ceq 'ok') 'case10: zero-hit ok status'
   Assert-True ($zero.Json.matched.Count -eq 0) 'case10: zero-hit matched empty'
   Assert-True (-not [string]::IsNullOrWhiteSpace($zero.Json.taskCardDigest) -and -not [string]::IsNullOrWhiteSpace($zero.Json.indexDigest)) 'case10: digests bound'
-  $after = & git -C $repo status --porcelain | Out-String
-  Assert-True ($before -ceq $after) 'case10: matcher must not modify the worktree'
+  $treeAfter = Get-FileTreeHash $caseRoot
+  Assert-True ($treeBefore -ceq $treeAfter) 'case10: matcher must not modify the worktree'
 
   Write-Output 'test-get-experience-risk-preflight: PASS'
 } finally {

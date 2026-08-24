@@ -56,3 +56,16 @@
 - 残留风险：门禁指针构建块被上移到过宽判断之前，使两种过宽路径现在也会解析并校验 gate 的 instructionRef 与 entryPaths 文件存在性；若未来真实种子经验的 gate 入口缺失，过宽结果会改为返回稳定 missing_gate_entry 错误而非 preflight_overbroad。这与规格「门禁入口缺失停止写入」一致，但属行为面扩大，当前生产索引为空不受影响，需 Codex 复审确认优先级。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-PREFLIGHT-01A-5f6f2e97 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：1f7c35675b0589f886b1417cb284b67710a02b0d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/test-get-experience-risk-preflight.ps1
+- 已验证：tools/test-get-experience-risk-preflight.ps1 → PASS（含改后的 case10 只读+零命中 fixture）；tools/check-task-cards.ps1 → OK (cards=82 ready=5)；tools/check-review-text.ps1 -Paths 开发管理,tools → OK (534 files)；tools/check-pending-whitespace.ps1 -Paths tools/test-get-experience-risk-preflight.ps1 → OK；git diff --check → 通过；实机零命中 fixture 调用匹配器：stdout 单一 JSON(status=ok/matched=[]) 且 git status 前后一致（只读证明）；提交仅含 tools/test-get-experience-risk-preflight.ps1，为 CandidatePaths 子集
+- 未验证：未在真实归档态（移除 M-EXP-PREFLIGHT-01A 卡后）实跑；稳健性由测试不再引用该卡保证；未运行 BattleSim / Unity 构建（本卡不涉及数值或 C#）；未运行 check-data-chain.ps1（本卡不涉及 docs/CSV/Unity 数据链路）
+- 残留风险：只读证明由真实 git 工作树快照改为临时 fixture 文件树哈希，匹配器逻辑未改，风险低；归档态稳健性依赖测试不再引用任何真实任务卡。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
