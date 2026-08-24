@@ -6,6 +6,12 @@
 
 ## 当前未通过/待复核项
 
+### M-EXP-PREFLIGHT-01A · 风险索引、经验卡模板与只读匹配器基础
+
+- 审核对象：正式提交 `0869451eb30696149e11a236cdf7a704cddaf1ab`；结论：部分通过，仍需返工。
+- 已通过：空风险索引、经验卡模板、只读匹配器及十类 fixture 覆盖均已落地；`test-get-experience-risk-preflight.ps1`、任务卡与审核文本检查均通过。
+- 返工一：当命中超过三条 `must_read` 或正文超过 600 Unicode 字符时，`get-experience-risk-preflight.ps1` 返回的 `preflight_overbroad` JSON 只包含计数和摘要，遗漏已汇总的 `gates` 与 `gatePointers`。批准规格要求所有命中的 `gateRefs` 在阅读限量时仍完整返回；为两种过宽结果保留去重后的门禁 ID 与指针，并补充覆盖该合同的 fixture 断言。
+
 ### C-KB-IDX-STORY-01 · 剧情事实速查卡
 
 - 审核对象：正式提交 `a90567004f0ff1d63d969273dfc07a419e7447e4`；结论：部分通过，仍需返工。
