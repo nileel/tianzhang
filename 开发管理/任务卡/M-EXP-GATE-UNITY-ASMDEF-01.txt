@@ -1,0 +1,63 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-GATE-UNITY-ASMDEF-01",
+  "title": "Unity asmdef 边界经验独立门禁晋级",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-OBSERVE-20-01"],
+  "stateReason": "等待 20 任务 continue 结论；为现有程序集边界检查器补独立 fixture 测试后再升级 EXP-UNITY-002。",
+  "expectedPaths": [
+    "tools/check-unity-assembly-boundaries.ps1",
+    "tools/test-check-unity-assembly-boundaries.ps1",
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-UNITY-002.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-GATE-UNITY-ASMDEF-01.txt",
+    "开发管理/任务归档/M-EXP-GATE-UNITY-ASMDEF-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-GATE-UNITY-ASMDEF-01 · Unity asmdef 边界经验独立门禁晋级
+
+## 来源与当前边界
+
+- 单一结果：为现有 `check-unity-assembly-boundaries.ps1` 补稳定正反 fixture，随后把 `EXP-UNITY-002` 独立升级为 gate。
+- 不改变当前程序集所有者或依赖语义；技术实现由 DeepSeek 完成、Codex 独立复审。
+
+## 必查范围
+
+- `EXP-UNITY-002`、20 任务观察和批准规格门禁资格。
+- `tools/check-unity-assembly-boundaries.ps1` 完整解析、required target、引用方向和诊断逻辑。
+- 当前 asmdef／asmref 的允许拓扑与 `AssemblyBoundaryEditorTests.cs` 的运行时补充证据。
+
+## 实施范围
+
+- 新建单一测试脚本，临时 fixture 至少覆盖一个当前允许拓扑和一个非法反向引用／缺 target 拒绝；必要时只为可测试性最小调整现有检查器参数，不改规则语义。
+- gate ID 固定 `unity-assembly-boundaries`，instructionRef 指向精确 asmdef 经验，entryPaths 指向检查器和程序集定义入口。
+- 只在测试通过后更新索引／经验卡；Codex 复审通过后只移除关闭卡中的本前置。
+
+## 禁止项
+
+- 不重构检查器、不修改生产 asmdef/asmref、不新增第二程序集检查器、不把 dotnet build 单独冒充边界 gate。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-unity-assembly-boundaries.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `dotnet build src/TianZhang.EditModeTests.csproj`；matcher gate 正反 fixture；`tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 正反 fixture、稳定诊断、当前生产拓扑与 gate registry 全部通过，EXP-UNITY-002 指针一致，Codex 复审通过。
+
+## 停止条件
+
+- 观察不是 continue、检查器无法用最小参数化测试、生产拓扑本身失败，或需要重构程序集／第二检查器才能形成门禁；保持 blocked。

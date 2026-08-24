@@ -1,0 +1,66 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-TASK-SCHEMA2-01",
+  "title": "任务卡 schema 1／2 与 riskPreflight 投影支持",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "management",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-PREFLIGHT-TRIAL-01"],
+  "stateReason": "只读试运行通过后实现兼容检查；本卡同时接受 schema 1/2 并校验 schema 2 投影，但绝不拒绝既有 schema 1 ready 卡。",
+  "expectedPaths": [
+    "tools/check-task-cards.ps1",
+    "tools/test-check-task-cards.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt",
+    "开发管理/任务归档/M-EXP-TASK-SCHEMA2-01.txt",
+    "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-TASK-SCHEMA2-01 · 任务卡 schema 1／2 与 riskPreflight 投影支持
+
+## 来源与当前边界
+
+- 单一结果：让任务卡检查器同时接受 schema 1/2，并对 schema 2 的字段精确性和实时匹配投影做确定性校验；schema 1 ready 仍合法。
+- 直接事实源是批准规格“任务卡投影”、通过的试运行报告和当前检查器／测试完整逻辑。
+- 本卡不修改任何真实任务卡、不更新 L0／自动工作流规则、不接入小时入口。
+
+## 必查范围
+
+- `tools/check-task-cards.ps1::Get-Card`、全局 active/queue/backlog 投影、postcondition 和 OutputJson 完整逻辑单元。
+- `tools/test-check-task-cards.ps1` 全部 fixture helper、schema/queue/backlog/postcondition 案例。
+- `tools/get-experience-risk-preflight.ps1` 输出的 matched/gates/digest 与稳定错误合同。
+
+## 实施范围
+
+- schema 1 必须拒绝 `riskPreflight`；schema 2 必须且只能包含 `explicitRefs/matched/gates` 三个数组，字段集合精确。
+- 对活动 schema 2 ready 卡重新计算高置信匹配并验证投影一致；历史 completed 仍接受 1/2，不批量迁移。
+- 测试覆盖零命中、正常命中、显式经验、索引变化导致失配、非法字段和两种 schema ready 均被当前兼容阶段接受。
+- Codex 复审通过后只解锁 L0 合同卡。
+
+## 禁止项
+
+- 不拒绝 schema 1 ready、不迁移真实卡、不修改规则／小时脚本、不增加开关、第二模式或长期 feature flag。
+- 不复制匹配算法；检查器必须消费同一只读入口或同一确定性结果合同。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-task-cards.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`，确认当前 schema 1 ready 数量仍通过。
+- `git diff --check`。
+
+## 完成条件
+
+- schema 1/2 兼容和 schema 2 投影一致性全部有正反例；当前所有真实 schema 1 卡继续通过，无真实卡被改写。
+- Codex 独立复审通过并归档本卡，L0 卡只移除本 ID。
+
+## 停止条件
+
+- 校验必须复制第二套匹配逻辑、需要改动真实 ready 卡才能测试、或兼容阶段无法在不提前强制的情况下闭环；停止且不加入兼容分支。

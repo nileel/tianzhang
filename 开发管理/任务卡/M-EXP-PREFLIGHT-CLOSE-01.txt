@@ -1,0 +1,70 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-PREFLIGHT-CLOSE-01",
+  "title": "验证出口并关闭汇总父项",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "M-EXP-GATE-PWSH7-01",
+    "M-EXP-GATE-BS-TIMEOUT-01",
+    "M-EXP-GATE-UNITY-ASMDEF-01",
+    "M-EXP-EXT-DESIGN-01",
+    "M-EXP-EXT-CONTENT-01",
+    "M-EXP-EXT-NUMERIC-01"
+  ],
+  "stateReason": "等待观察后的六个独立出口；观察 stop 时这些出口可由观察卡以未授权实施归档，continue 时必须各自完成。",
+  "expectedPaths": [
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt",
+    "开发管理/任务归档/M-EXP-PREFLIGHT-CLOSE-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-01.txt",
+    "开发管理/任务归档/M-EXP-PREFLIGHT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-PREFLIGHT-CLOSE-01 · 验证出口并关闭汇总父项
+
+## 来源与当前边界
+
+- 单一结果：验证批准规格完成口径和全部阶段出口，并在同一管理切片归档本卡与不可调度父项。
+- 本卡不修复任何叶子、不修改索引、经验、matcher、schema、规则、自动化、门禁或扩域报告。
+
+## 必查范围
+
+- 批准规格全文的完成口径和停止条件；实施规划的父项关闭条件、回滚边界与验证矩阵。
+- 基础至观察的全部完成归档；观察结论为 continue 时读取三门禁和三扩域归档，stop 时读取观察卡对六卡的未授权实施归档证据。
+- 当前风险预检、schema 2 ready 检查、手动 L0 与小时双 owner 绑定结果的最新确定性验证。
+
+## 实施范围
+
+- 核对一个冻结路径／符号任务能在写前得到少量、可追溯结果；零命中、过期／冲突、范围扩大和 matcher 失败行为都有证据。
+- 核对普通任务未加载完整索引／经验库，试运行和 20 任务报告支持继续或停止决定。
+- 全部满足后，把父卡和本卡移动到精确归档、从 backlog/queue 移除；保留所有历史和后续域决策。
+
+## 禁止项
+
+- 不因接近关闭补测试、补经验、补门禁或改规则，不把未完成／blocked 解释为完成。
+- 不要求非技术域必须 open；只要求其独立决策真实完成，或观察 stop 已明确关闭扩展。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-task-cards.ps1` 与 `tools/check-task-cards.ps1 -OutputJson`。
+- 小时预检集成测试、自动化工作流检查、三项已实施 gate 的固定测试（观察 stop 时不执行未实施 gate）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`；`git diff --check`。
+
+## 完成条件
+
+- 基础、8～12 active 种子、试运行、schema/L0/小时/激活、20 任务观察与六个出口均有可追溯终态；所有继续路径通过最新测试，停止路径没有残余强制或伪造完成。
+- 父项从未进入 ready；父卡与关闭卡同一提交归档，backlog/queue 无残留。
+
+## 停止条件
+
+- 任一归档／报告／digest 缺失、当前 ready 仍有 schema 1、手动或任一 owner 可绕过预检、错误不能失败关闭、回滚边界不完整，或存在第二索引、feature flag、新 runtime 状态与兼容绕过。

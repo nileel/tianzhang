@@ -1,0 +1,60 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-EXT-DESIGN-01",
+  "title": "设计经验域开放决策",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-OBSERVE-20-01"],
+  "stateReason": "等待 20 任务 continue；本卡只决定设计经验域是否值得建立独立后续 initiative，不创建设计经验或修改首期索引。",
+  "expectedPaths": [
+    "docs/superpowers/plans/preventive-experience-memory-design-domain-assessment.md",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-EXT-DESIGN-01.txt",
+    "开发管理/任务归档/M-EXP-EXT-DESIGN-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-EXT-DESIGN-01 · 设计经验域开放决策
+
+## 来源与当前边界
+
+- 单一结果：基于首期 20 任务证据，形成设计经验域 `open/hold/stop` 决策和独立后续边界；不在本卡创建任何经验、索引项或门禁。
+- 设计语义由 Codex 裁决，默认从 `explicit_only` 或 `notice` 起步，不能自动成为硬门禁。
+
+## 必查范围
+
+- 20 任务观察报告和只读试运行报告的命中质量、成本、预防价值与维护成本。
+- 批准规格“首期只启用技术与工作流”“第三阶段”“非目标”。
+- 仅在形成候选维度时定位相关设计规范的事实源路由，不扫描内容归档。
+
+## 实施范围
+
+- 报告定义可接受的直接证据、首批样本、误报阈值、默认 triggerMode/level、试运行和停止条件。
+- open 只批准建立一个新的独立设计域 initiative；hold/stop 说明精确缺口。当前父项不承载其实现。
+- 完成后只移除关闭卡中的本前置。
+
+## 禁止项
+
+- 不创建设计经验卡、不修改风险索引／L0／matcher、不把趣味、体验或审美变成 gate。
+- 不以技术首期已投入为由默认 open。
+
+## 验证
+
+- 决策逐项回指 20 任务证据，包含样本、阈值、回滚和失败关闭；无未决占位或兼容绕过。
+- `tools/check-review-text.ps1 -Paths docs,开发管理`；`tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- open/hold/stop 之一有明确证据；open 时后续 initiative 的事实源、样本、停止条件与禁止项完整但未落执行卡；本卡归档并解除关闭前置。
+
+## 停止条件
+
+- 20 任务结论不是 continue、没有可复用证据、设计判断无法与当前 docs 权威分离，或需要模型相似度／硬门禁才能成立；不得 open。

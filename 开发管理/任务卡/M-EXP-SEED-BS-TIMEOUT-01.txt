@@ -1,0 +1,63 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-SEED-BS-TIMEOUT-01",
+  "title": "晋级 BattleSim 超时结算顺序无偏经验",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
+  "stateReason": "等待基础匹配器；候选 EXP-BS-005 由 DuelTurnLimit、顺序交换超时自测和现行结算独立核验。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-BS-005.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt",
+    "开发管理/任务归档/M-EXP-SEED-BS-TIMEOUT-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-SEED-BS-TIMEOUT-01 · 晋级 BattleSim 超时结算顺序无偏经验
+
+## 来源与当前边界
+
+- 单一结果：核验并晋级 `EXP-BS-005`，防止回合上限后默认左侧／A 方胜利造成矩阵偏差。
+- 直接事实源是 `开发管理/开发-技术经验.txt#模拟器`、`Combat.cs` 超时结算和 `BattleSimSelfTests.cs` 的等值／交换顺序案例。
+- 本卡不修改超时规则或数值。
+
+## 必查范围
+
+- `simulations/BattleSim/Combat.cs::DuelTurnLimit/Simulate` 的超时出口和胜场累计。
+- `BattleSimSelfTests.cs` 中 equal timeout、asymmetric timeout 与 swapped timeout 的完整测试逻辑单元。
+- 当前程序输出中正反顺序矩阵的消费入口。
+
+## 实施范围
+
+- 建立 `EXP-BS-005.txt` 与唯一索引项；只有超时／回合上限／胜负结算相关路径与符号组合才匹配。
+- 记录若结算改为显式平局对象或不再使用左右胜场后的失效条件。
+- 完成后只移除试运行卡中的本前置。
+
+## 禁止项
+
+- 不改超时阈值、不选择新平衡规则、不以“战斗”“胜利”宽词触发、不提前升级门禁。
+
+## 验证
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`。
+- 匹配器 fixture 覆盖 DuelTurnLimit/timeout 精确命中与普通战斗改动零命中。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 当前自测可证明顺序无偏合同，经验边界与失效条件完整；`EXP-BS-005` active 且试运行卡只移除本 ID。
+
+## 停止条件
+
+- 正反顺序自测失败、超时所有者已改变、或经验只能依赖旧输出而非当前运行；保持 blocked，不写 active。

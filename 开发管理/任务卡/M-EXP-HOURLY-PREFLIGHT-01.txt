@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-HOURLY-PREFLIGHT-01",
+  "title": "小时入口与双 candidate 预检结果传递",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-TASK-SCHEMA2-01", "M-EXP-L0-CONTRACT-01"],
+  "stateReason": "等待 schema 支持和 L0 合同；在共享入口唯一接入一次预检结果，adapter/wrapper 只验证并传递，不迁移任务卡。",
+  "expectedPaths": [
+    "tools/invoke-hourly-owner.ps1",
+    "tools/hourly-owner-adapter.ps1",
+    "tools/invoke-codex-candidate.ps1",
+    "tools/invoke-deepseek-responsibility.ps1",
+    "tools/check-automation-workflow.ps1",
+    "tools/test-check-automation-workflow.ps1",
+    "tools/test-hourly-owner-adapter.ps1",
+    "tools/test-hourly-task-input-materialization.ps1",
+    "tools/test-invoke-codex-candidate.ps1",
+    "tools/test-invoke-deepseek-responsibility.ps1",
+    "tools/test-hourly-experience-preflight.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt",
+    "开发管理/任务归档/M-EXP-HOURLY-PREFLIGHT-01.txt",
+    "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-HOURLY-PREFLIGHT-01 · 小时入口与双 candidate 预检结果传递
+
+## 来源与当前边界
+
+- 单一结果：在共享小时入口对 Codex／DeepSeek 使用同一确定性预检，并把一次绑定结果通过 adapter 传入两个 wrapper 的首条责任提示。
+- 自动化 control plane 已由批准规格和 L0 卡冻结，技术实现主责 DeepSeek，完成后必须 Codex 独立复审。
+- 本卡不迁移任务卡、不修改 schema 5 runtime 字段、不改变 queue maintenance 行为。
+
+## 必查范围
+
+- `tools/invoke-hourly-owner.ps1` 的依赖检查、`New-CandidateWorktree`、输入物化、`Get-HourlyCandidateArguments`、candidate 调用与 attention_required 完整相关逻辑。
+- `hourly-owner-adapter.ps1::Get-HourlyCandidateArguments`。
+- 两个 wrapper 的参数、StateRoot 私有路径校验、任务 digest 核验、`New-Prompt/New-CandidatePrompt` 和 canary 例外。
+- `private-path-acl.ps1` 现有 helper 只读复用；相关五个现有测试和自动化静态检查。
+
+## 实施范围
+
+- 把 matcher 加入共享入口依赖；非 queue maintenance 在 worktree/输入物化成功后、形成 candidate 参数前运行 owner worktree 内预检。
+- 通过现有 ACL helper 写 `StateRoot/preflight-results/<runId>.json`，内容绑定 runId、taskId、任务卡 digest、索引 digest、命中正文与门禁指针；不进 Git/runtime。
+- adapter 对非 queue maintenance 增加必填结果路径；两个 wrapper 只接受批准 StateRoot、精确文件名和内容绑定，并把短结果直接放入首条提示。
+- 失败不启动模型，沿用 `attention_required` 与稳定 `experience_preflight_*` detailCode；不重试、不伪造零命中。
+- 新集成测试覆盖 Codex/DeepSeek 成功、queue maintenance 无参数、路径越界、runId/taskId/digest 失配、过宽/缺指针和 matcher 失败。
+
+## 禁止项
+
+- 不让 adapter／wrapper 自行决定是否运行预检，不重复运行两次，不增加 runtime state、feature flag、owner 专属分支、第二索引或重试。
+- 不修改任务选择、claim、candidate 提交或正式集成合同，不把完整索引放入 prompt。
+
+## 验证
+
+- 依次运行 `tools/test-hourly-experience-preflight.ps1`、`test-hourly-owner-adapter.ps1`、`test-hourly-task-input-materialization.ps1`、`test-invoke-codex-candidate.ps1`、`test-invoke-deepseek-responsibility.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-automation-workflow.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1` 与 `git diff --check`。
+
+## 完成条件
+
+- 两个 owner 都只消费共享入口验证的一份结果；失败前模型未启动，queue maintenance 不传结果，私有文件和 digest 绑定测试全部通过。
+- Codex 独立复审通过后归档本卡，只解锁激活迁移卡。
+
+## 停止条件
+
+- 必须修改 runtime schema、复制匹配算法、增加重试／feature flag、破坏输入物化顺序或 owner 共用性，或任一 wrapper 无法在启动模型前确定性验证结果。

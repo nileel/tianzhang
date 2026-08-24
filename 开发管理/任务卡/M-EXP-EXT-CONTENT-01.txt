@@ -1,0 +1,58 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-EXT-CONTENT-01",
+  "title": "内容经验域开放决策",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-OBSERVE-20-01"],
+  "stateReason": "等待 20 任务 continue；本卡只决定剧情/NPC/功法术法神通等内容经验是否建立独立后续 initiative。",
+  "expectedPaths": [
+    "docs/superpowers/plans/preventive-experience-memory-content-domain-assessment.md",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-EXT-CONTENT-01.txt",
+    "开发管理/任务归档/M-EXP-EXT-CONTENT-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-EXT-CONTENT-01 · 内容经验域开放决策
+
+## 来源与当前边界
+
+- 单一结果：基于首期证据，形成内容经验域 `open/hold/stop` 决策和独立后续边界；不创建内容经验或修改首期系统。
+- 内容域包括剧情/NPC/信息边界及功法、术法、神通生产规则；事实仍以当前 docs 原文为唯一权威。
+
+## 必查范围
+
+- 20 任务观察和试运行报告。
+- 批准规格第三阶段、`explicit_only/notice` 默认、经验不裁决业务事实的权威顺序。
+- 仅按 AGENTS 领域入口定位一项候选的直接规范章节，用于证明能否收窄；不扫描全部内容或归档。
+
+## 实施范围
+
+- 报告定义候选证据门槛、信息边界、显式触发、冻结样本、误报与成本阈值、试运行和停止条件。
+- open 只批准新的独立内容域 initiative；hold/stop 记录缺口。本卡完成后只解除关闭前置。
+
+## 禁止项
+
+- 不创建经验卡／索引项／门禁，不把人物自然度、剧情体验或内容趣味自动化，不复制 docs 业务规则进经验层。
+
+## 验证
+
+- 决策可追溯，明确 L2 权威、explicit_only/notice、样本和失败关闭；无大规模归档扫描。
+- `tools/check-review-text.ps1 -Paths docs,开发管理`；`tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- open/hold/stop 之一有直接证据；open 时新 initiative 边界完整但本卡不落执行内容；归档并解除关闭前置。
+
+## 停止条件
+
+- 首期不是 continue、内容语义不能确定性收窄、与当前 docs 冲突，或必须用向量／模型排序／硬 gate 才可用；不得 open。

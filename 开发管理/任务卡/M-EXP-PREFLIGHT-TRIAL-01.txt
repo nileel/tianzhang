@@ -1,0 +1,76 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-PREFLIGHT-TRIAL-01",
+  "title": "冻结样本只读试运行与成本报告",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "M-EXP-SEED-PWSH7-01",
+    "M-EXP-SEED-BS-BUILD-RUN-01",
+    "M-EXP-SEED-BS-SYMMETRY-01",
+    "M-EXP-SEED-BS-RESIST-KEYS-01",
+    "M-EXP-SEED-BS-TIMEOUT-01",
+    "M-EXP-SEED-UNITY-SCENE-BUILD-01",
+    "M-EXP-SEED-UNITY-ASMDEF-01",
+    "M-EXP-SEED-UNITY-META-01",
+    "M-EXP-SEED-UNITY-NAMESPACE-01",
+    "M-EXP-SEED-MGMT-WORKTREE-01"
+  ],
+  "stateReason": "等待 10 张独立种子卡完成；只有索引中有 8～12 条已证实 active 种子才运行冻结样本，未过阈值不得解锁 schema。",
+  "expectedPaths": [
+    "docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt",
+    "开发管理/任务归档/M-EXP-PREFLIGHT-TRIAL-01.txt",
+    "开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-PREFLIGHT-TRIAL-01 · 冻结样本只读试运行与成本报告
+
+## 来源与当前边界
+
+- 单一结果：用冻结任务卡输入只读回放当前索引，产出命中、误报、字符数和 token 代理成本报告，并只在全部阈值通过时解锁 schema 支持。
+- 样本统一冻结在提交 `ccb1127bcd78d6bb192b4527a449acda41cfc782`，不读取或改写之后的归档事实。
+- 本卡不修改索引、经验卡、任务卡 schema、规则或自动化入口。
+
+## 必查范围
+
+- 批准规格“验证设计”“分阶段落地/第一、二阶段”“效果指标与停止条件”。
+- `tools/get-experience-risk-preflight.ps1` 的正式输出合同与当前 `风险索引.json`。
+- 以下 10 个冻结对象在批准提交中的完整任务卡：`A-AUTOMATION-FUYUAN-INPUT-MATERIALIZATION-01`、`U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-ARCH-REBUILD-01D-R1`、`U-CHAR-2D-TACTICAL-PROTO-01`、`N-SUPPRESS-01A`、`N-SEAT-01A`、`N-GROUP-02C`、`C-KB-IDX-BASE-01`、`D-CHAR-STATIC3D-MOTION-REFERENCE-01`；路径均为 `开发管理/任务归档/<ID>.txt`。
+
+## 实施范围
+
+- 以 `git show ccb1127b:<任务卡路径>` 取得冻结文本和 digest，在项目外临时目录物化后调用只读匹配器；不修改归档。
+- 每样本记录 `must_read`、`notice`、gates、必读字符数、短 JSON UTF-8 字节数、`ceil(字节数/4)` token 代理值，以及每个高置信命中的相关／无关判定与理由。
+- 报告汇总 active 种子数、命中分布、无关高置信命中率、平均 token 代理、最大必读字符数和匹配器失败数。
+- 只有报告全部通过才归档本卡并移除 schema 卡中的本前置；失败则本卡保持 blocked，schema 卡不变。
+
+## 禁止项
+
+- 不批量扫描其他归档、不重写历史卡、不修改索引来迁就样本、不提高 3 条／600 字符上限。
+- 不把 token 代理当模型精确 tokenizer，不伪造零命中或把匹配器失败排除出分母。
+
+## 验证
+
+- 试运行前后 `git status --short` 证明除报告和任务状态授权路径外无变化，十个源归档 blob digest 不变。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理`。
+
+## 完成条件
+
+- active 种子为 8～12 条；每个普通原子样本 `must_read<=3` 且必读正文 `<=600` Unicode 字符；高置信误报率 `<15%`；平均 token 代理 `<=1000`；10 次回放无未解释匹配器失败。
+- 报告逐样本可追溯到冻结提交、路径和 digest，并明确继续／收窄／停止结论；全部通过时才解锁 `M-EXP-TASK-SCHEMA2-01`。
+
+## 停止条件
+
+- active 种子少于 8、任一硬边界超限、误报率达到或超过 15%、平均 token 代理超过 1000、发生匹配器失败，或为通过需要加关键词权重、兼容分支、第二索引与样本改写。

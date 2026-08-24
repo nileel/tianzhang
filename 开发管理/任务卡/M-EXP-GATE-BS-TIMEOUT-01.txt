@@ -1,0 +1,61 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-GATE-BS-TIMEOUT-01",
+  "title": "BattleSim 超时顺序经验独立门禁晋级",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-OBSERVE-20-01"],
+  "stateReason": "等待 20 任务 continue 结论；只把 EXP-BS-005 绑定到已有 Release build/self-test 入口和顺序交换案例。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-BS-005.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-GATE-BS-TIMEOUT-01.txt",
+    "开发管理/任务归档/M-EXP-GATE-BS-TIMEOUT-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-GATE-BS-TIMEOUT-01 · BattleSim 超时顺序经验独立门禁晋级
+
+## 来源与当前边界
+
+- 单一结果：把 `EXP-BS-005` 独立升级为 gate，登记现有 BattleSim Release build＋self-test 入口；不修改模拟器。
+- 门禁只证明超时对左右顺序无偏，不保存或裁决数值平衡结论。
+
+## 必查范围
+
+- `EXP-BS-005`、当前索引项和 20 任务观察中与该经验相关的命中／预防价值。
+- `BattleSimSelfTests.cs` 的 equal/asymmetric/swapped timeout 完整正反例与当前 `Combat` 出口。
+- `AGENTS.md#数值与 BattleSim` 的 build→run 固定入口。
+
+## 实施范围
+
+- gate ID 固定 `battlesim-timeout-order-selftests`，instructionRef 指向精确 BattleSim 经验章节，entryPaths 指向 csproj/self-tests。
+- 只更新索引和经验卡 gateRefs；预检返回指针但不执行命令。
+- Codex 复审通过后归档本卡并只移除关闭卡中的本前置。
+
+## 禁止项
+
+- 不修改超时规则、测试、轮数或输出，不新增专用脚本，不把历史数值当 gate 期望。
+
+## 验证
+
+- `dotnet build -c Release --no-restore "D:\天章游戏开发\simulations\BattleSim"`。
+- `dotnet run --no-build -c Release --project "D:\天章游戏开发\simulations\BattleSim"`，确认等值与交换顺序案例通过。
+- matcher gate 指针正反 fixture；`tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 当前正反例稳定、失败输出可定位、成本低于回归；gate 唯一且 EXP-BS-005 指针一致，Codex 复审通过。
+
+## 停止条件
+
+- 观察不是 continue、顺序自测失败、测试不能形成明确拒绝例、或必须调整战斗数值才能通过；保持 blocked。

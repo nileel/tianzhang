@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-L0-CONTRACT-01",
+  "title": "L0、runnable 与强制点规则合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-TASK-SCHEMA2-01"],
+  "stateReason": "等待 schema 1/2 兼容检查通过；本卡只冻结手动、runnable 和小时自动化强制合同，不修改脚本或 ready 卡。",
+  "expectedPaths": [
+    "AGENTS.md",
+    "开发管理/状态与建议维护规则.txt",
+    "开发管理/自动工作流规则.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt",
+    "开发管理/任务归档/M-EXP-L0-CONTRACT-01.txt",
+    "开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-L0-CONTRACT-01 · L0、runnable 与强制点规则合同
+
+## 来源与当前边界
+
+- 单一结果：把批准规格中的 L0 路由、runnable／ready 投影、范围变化重算和小时失败行为写入三个稳定规则事实源。
+- 本卡是跨 owner／手动与自动职责合同，主责固定 Codex；不修改任何 PowerShell 或任务卡 schema。
+
+## 必查范围
+
+- 批准规格“开工前运行流程”“手动与小时自动化强制点”“范围变化”“错误处理”。
+- `AGENTS.md#修改与验证` 的 worktree/写前边界。
+- `开发管理/状态与建议维护规则.txt#自动工作流分层/#状态与队列` 的 runnable、ready 和 schema 合同。
+- `开发管理/自动工作流规则.txt#共享内核与 owner adapter/#失败与清理` 的确定性所有者与失败关闭。
+
+## 实施范围
+
+- `AGENTS.md` 固定：选中 ready 并建立规定 worktree 后、任何项目写入前运行同一预检，消费返回正文，核对 schema 2 投影；范围变化暂停并重跑。
+- 状态规则固定：建立／重新 ready／expectedPaths 变化时重算 schema 2 投影；强制激活前 schema 1 ready 仍合法，激活后拒绝。
+- 自动规则固定：共享入口是唯一预检所有者，queue maintenance 例外、私有结果绑定、失败 detailCode 和不新增 runtime／重试／owner 分支。
+- 只解锁小时接入卡，不迁移任务卡。
+
+## 禁止项
+
+- 不复制匹配算法或经验正文到 L0，不修改脚本、索引、经验卡或现有 ready 卡。
+- 不添加 feature flag、兼容继续路径、第二 runtime、新状态或模型自行决定是否预检。
+
+## 验证
+
+- 三份规则逐项对照规格，确认调用时机、权威顺序、零命中、失败、范围扩大和 queue maintenance 行为无矛盾。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `git diff --check`。
+
+## 完成条件
+
+- 手动、runnable 和小时强制合同完整且不复制算法；当前兼容阶段和未来激活提交的边界明确。
+- 本卡归档，小时接入卡只移除本 ID。
+
+## 停止条件
+
+- 三份规则对 shared owner、schema 激活时点或失败行为存在冲突，或需要先修改脚本／任务卡才能表达稳定合同；停止并报告精确条款。

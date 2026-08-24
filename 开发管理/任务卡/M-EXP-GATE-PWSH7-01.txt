@@ -1,0 +1,61 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-GATE-PWSH7-01",
+  "title": "PowerShell 7 经验独立门禁晋级",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-OBSERVE-20-01"],
+  "stateReason": "等待 20 任务 continue 结论；只把 EXP-AUTO-001 绑定到已有稳定 PowerShell 7 检查器，不新建第二检查器。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-AUTO-001.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-GATE-PWSH7-01.txt",
+    "开发管理/任务归档/M-EXP-GATE-PWSH7-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-GATE-PWSH7-01 · PowerShell 7 经验独立门禁晋级
+
+## 来源与当前边界
+
+- 单一结果：把 `EXP-AUTO-001` 独立升级为 gate，并在同一索引 gates 表登记现有 `tools/check-pwsh-runtime.ps1`；不创建新检查器。
+- 前置是 20 任务观察 continue；技术实现由 DeepSeek 完成、Codex 独立复审。
+
+## 必查范围
+
+- `EXP-AUTO-001` 全文和当前索引项。
+- `tools/check-pwsh-runtime.ps1` 完整入口合同；`tools/test-check-pwsh-runtime.ps1` 的 canonical allow 与多类 noncanonical reject fixture。
+- 批准规格“自动门禁”的六项资格和 gate registry 字段。
+
+## 实施范围
+
+- 只更新同一索引和经验卡状态／门禁指针，gate ID 固定 `powershell-7-canonical-entry`，instructionRef 指向已审核 PowerShell 章节，entryPaths 指向现有检查器。
+- 验证风险预检只返回指针，不执行检查器；实际任务验证仍显式运行 gate。
+- Codex 复审通过后归档本卡并只移除关闭卡中的本前置。
+
+## 禁止项
+
+- 不修改检查器或测试、不新增 gate 脚本、不把 gate 命令写入 JSON、不扩大检查器扫描范围。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-pwsh-runtime.ps1`。
+- matcher fixture 证明命中返回 gate、零命中不返回、缺 gate 指针稳定失败且不执行命令。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 现有允许／拒绝 fixture、低误报和可操作失败信息满足门禁资格；gate registry 唯一，EXP-AUTO-001 指针一致，Codex 复审通过。
+
+## 停止条件
+
+- 20 任务结论不是 continue、现有检查器或正反例失效、误报不满足资格，或需要修改检查器才能注册；保持 blocked，不降级绕过。

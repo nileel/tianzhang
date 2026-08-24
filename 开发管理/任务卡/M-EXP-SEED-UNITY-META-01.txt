@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-SEED-UNITY-META-01",
+  "title": "晋级 Unity meta 多行 YAML 经验",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
+  "stateReason": "等待基础匹配器；候选 EXP-UNITY-003 的现有章节标为未审核，必须以提交 ab4f882 和当前 importer 事实独立证明，证据不足不得 active。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-UNITY-003.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt",
+    "开发管理/任务归档/M-EXP-SEED-UNITY-META-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-SEED-UNITY-META-01 · 晋级 Unity meta 多行 YAML 经验
+
+## 来源与当前边界
+
+- 单一结果：独立核验后决定是否晋级 `EXP-UNITY-003`，防止脚本 `.meta` 被写成单行而无法被 Unity 导入。
+- `开发管理/开发-技术经验.txt#DeepSeek 工作经验/.meta 文件绝不可写成单行` 目前明确标为未审核，只是线索；直接证据必须来自提交 `ab4f882` 的相关 diff、当前合法 `.meta` 和可重复解析／导入证据。
+- 本卡不为凑足种子数量预设 active，不修改任何生产 `.meta`。
+
+## 必查范围
+
+- 上述未审核章节的现象、根因、模板与失效条件候选。
+- `git show --no-renames ab4f882 --` 中与单行 `.meta` 故障和修复直接相关的路径；不读取无关归档。
+- 当前脚本 `.meta` 的合法结构，以及 `tools/check-data-chain.ps1`／资产版本检查中实际覆盖的 `.meta` 边界。
+
+## 实施范围
+
+- 只有根因、适用边界和失效条件均能由直接证据证明时，建立 `EXP-UNITY-003.txt` 与 active 索引项；否则保留卡片 blocked 并写精确缺口，不创建正式经验卡。
+- 触发限定创建／修改 Unity `.meta` 或明确 importer/GUID 语义，排除只读资产任务。
+- active 时才移除试运行卡中的本前置；证据不足不解除。
+
+## 禁止项
+
+- 不修改生产 `.meta`、不创建门禁、不把未审核文字直接提升为事实、不批量扫描任务归档。
+- 不把所有 Unity 资产任务仅凭 `.meta` 出现在 expectedPaths 就强制命中。
+
+## 验证
+
+- 在临时目录建立合法多行和非法单行 fixture，用现有可重复解析／检查入口证明区分；不写项目树 fixture。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- active 时验证精确修改语义命中、只读资产任务零命中。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 根因、边界、失效条件和正反例均被直接证据证明，`EXP-UNITY-003` active，且试运行卡只移除本 ID。
+
+## 停止条件
+
+- `ab4f882` 不能提供直接故障证据、当前 Unity 导入行为不支持该根因、尾随空格／换行结论冲突，或触发范围无法收窄；本卡保持 blocked，不创建正式卡、不解除试运行。

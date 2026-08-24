@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-PREFLIGHT-01",
+  "title": "预防型错误经验记忆系统汇总父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "M-EXP-PREFLIGHT-CLOSE-01"
+  ],
+  "stateReason": "2026-08-25：本卡是不可调度汇总父项，只由 M-EXP-PREFLIGHT-CLOSE-01 在全部阶段出口满足后同轮归档；不得进入 ready 或承载任何叶子实施。",
+  "expectedPaths": [
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-01.txt",
+    "开发管理/任务归档/M-EXP-PREFLIGHT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-PREFLIGHT-01 · 预防型错误经验记忆系统汇总父项
+
+## 来源与当前边界
+
+- 唯一规格是 `docs/superpowers/specs/2026-08-24-preventive-experience-memory-system-design.md`，批准提交 `ccb1127bcd78d6bb192b4527a449acda41cfc782`。
+- 实施图与阶段出口读取 `docs/superpowers/plans/2026-08-25-preventive-experience-memory-system-implementation.md`。
+- 本卡只汇总子任务状态，不执行基础工具、种子、试运行、schema、规则、自动化、迁移、门禁或扩域工作。
+
+## 必查范围
+
+- 批准规格全文，特别是“实施原子性与依赖”“分阶段落地”“效果指标与停止条件”“完成口径”。
+- 实施规划全文的任务图、验证矩阵、回滚边界、父项关闭条件。
+- `M-EXP-PREFLIGHT-CLOSE-01` 的完成证据及全部直接出口卡的完成归档。
+
+## 实施范围
+
+- 仅由关闭卡在全部阶段出口满足后，把本卡移动到精确归档路径并从 backlog 移除。
+- 保留批准规格、实施规划、报告、索引、经验卡和门禁的独立历史，不把其正文复制到父卡。
+
+## 禁止项
+
+- 不进入 ready 队列，不被小时自动化领取，不建立覆盖全部系统的 candidate。
+- 不在父卡中补写叶子实现、不绕过试运行阈值、不动态拆分或逐张补建子卡。
+- 不因某个域决定暂缓而伪造已开放；只记录该域独立决策卡的真实结论。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+- 核对父卡从未出现在 ready 队列，且关闭提交只包含关闭卡授权路径。
+
+## 完成条件
+
+- `M-EXP-PREFLIGHT-CLOSE-01` 已证明基础、种子、试运行、schema、L0、小时入口、激活、20 任务观察、三项门禁和三个非技术域决策全部满足各自完成口径。
+- 父卡与关闭卡同一管理切片归档，backlog 与队列无残留投影。
+
+## 停止条件
+
+- 任一直接出口缺少完成归档、试运行或观察指标未达阈值、强制路径不能失败关闭，或出现第二索引、feature flag、新 runtime 状态和临时绕过。
+- 关闭需要执行任何叶子业务修改或改写批准规格。

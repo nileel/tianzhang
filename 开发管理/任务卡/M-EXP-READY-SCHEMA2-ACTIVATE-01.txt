@@ -1,0 +1,153 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-READY-SCHEMA2-ACTIVATE-01",
+  "title": "ready 卡 schema 2 激活迁移",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "management",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-HOURLY-PREFLIGHT-01"],
+  "stateReason": "等待 schema、L0 与小时入口全部通过；本卡在一个原子提交中升级当时全部 ready 卡并立即拒绝 schema 1 ready，不保留 feature flag。",
+  "expectedPaths": [
+    "tools/check-task-cards.ps1",
+    "tools/test-check-task-cards.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
+    "开发管理/任务卡/A-CHAR-AI-PLATFORM-EVAL-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01A.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01B.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01C.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01D.txt",
+    "开发管理/任务卡/A-CHAR-FOURVIEW-TRIPO-WORKFLOW-01E.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt",
+    "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-GEN-03.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-LOCAL-RETOPO-RIG-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-QA-RERUN-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-STRUCTURE-COMPARE-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-UNITY-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-01.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-02.txt",
+    "开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-03.txt",
+    "开发管理/任务卡/A-GZ-PRESENT-01.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01A.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01B.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01C.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01D.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01E.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01F.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01G.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01H.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01I.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01J.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01O.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01P.txt",
+    "开发管理/任务卡/C-HS-YY-JD-01Q.txt",
+    "开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt",
+    "开发管理/任务卡/C-KB-IDX-ITEM-01.txt",
+    "开发管理/任务卡/C-KB-IDX-MONSTER-01.txt",
+    "开发管理/任务卡/C-KB-IDX-STORY-01.txt",
+    "开发管理/任务卡/C-STORY-WM-NORTH-01.txt",
+    "开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt",
+    "开发管理/任务卡/D-CHAR-APPEARANCE-01.txt",
+    "开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt",
+    "开发管理/任务卡/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt",
+    "开发管理/任务卡/N-SUPPRESS-01B.txt",
+    "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt",
+    "开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt",
+    "开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt",
+    "开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt",
+    "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt",
+    "开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt",
+    "开发管理/任务卡/M-EXP-SEED-PWSH7-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-BS-BUILD-RUN-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-BS-SYMMETRY-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-BS-RESIST-KEYS-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-UNITY-SCENE-BUILD-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt",
+    "开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt",
+    "开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt",
+    "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt",
+    "开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt",
+    "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt",
+    "开发管理/任务归档/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt",
+    "开发管理/任务卡/M-EXP-OBSERVE-20-01.txt",
+    "开发管理/任务卡/M-EXP-GATE-PWSH7-01.txt",
+    "开发管理/任务卡/M-EXP-GATE-BS-TIMEOUT-01.txt",
+    "开发管理/任务卡/M-EXP-GATE-UNITY-ASMDEF-01.txt",
+    "开发管理/任务卡/M-EXP-EXT-DESIGN-01.txt",
+    "开发管理/任务卡/M-EXP-EXT-CONTENT-01.txt",
+    "开发管理/任务卡/M-EXP-EXT-NUMERIC-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-READY-SCHEMA2-ACTIVATE-01 · ready 卡 schema 2 激活迁移
+
+## 来源与当前边界
+
+- 单一结果：在同一原子提交中重算当时全部 ready 卡、升级为 schema 2，并让检查器从该提交开始拒绝 schema 1 ready 卡。
+- 直接事实源是批准规格“任务卡投影/迁移口径”、通过的 schema/L0/小时入口归档和执行瞬间的有序队列。
+- 本卡是一次迁移，不保留长期 feature flag；技术实施主责 DeepSeek，完成后必须 Codex 独立复审。
+
+## 必查范围
+
+- `tools/check-task-cards.ps1` 的 schema 1/2 兼容逻辑与 `test-check-task-cards.ps1` 全部投影测试。
+- `开发管理/当前任务队列.txt` 的完整 ready ID 集合和每张对应活动卡全文。
+- `tools/get-experience-risk-preflight.ps1` 的实时 matched/gates 结果；当前风险索引只读。
+- 本卡 `expectedPaths` 中冻结的全部当前已知 active 卡路径；它们是迁移允许上界，不表示非 ready 卡应改写。
+
+## 实施范围
+
+- 取得同一 Git 基线上的 ready 快照；若任一 ready 卡路径不在本卡 `expectedPaths`，立即停止并请求重新冻结路径，不扩大授权。
+- 对每张 ready 卡重算 `explicitRefs/matched/gates`，升级 schema 2；零命中也写三个空数组。非 ready schema 1 卡保持原样。
+- 本卡自身从 external_execute 转 `codex_review/codex/ready` 时也必须是 schema 2。
+- 同一提交把检查器从“兼容 schema 1 ready”切换为“拒绝 schema 1 ready”，补正反例；没有开关、旧模式或过渡提交。
+- Codex 复审通过后归档本卡并只解锁 20 任务观察卡。
+
+## 禁止项
+
+- 不迁移 completed 归档、不改 blocked/frozen/pending_decision/waiting_reply schema 1 卡、不修改索引或经验正文。
+- 不使用通配授权、feature flag、时间判断、第二检查器或“预检失败继续”。
+- 不触及执行时不在 ready 集合的业务卡，即使路径已授权。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-task-cards.ps1`，覆盖 schema 1 非 ready/归档仍合法、schema 1 ready 拒绝、schema 2 ready 零命中/正常/显式/旧投影失配。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`，证明 `readyCount` 与队列相等且不存在 schema 1 ready。
+- 对每张迁移卡独立运行预检并核对投影，记录 ready ID、任务卡 digest 与索引 digest。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools` 与 `git diff --check`。
+
+## 完成条件
+
+- 同一提交中所有且仅当时 ready 卡为 schema 2、投影实时一致，检查器立即拒绝 schema 1 ready；非 ready 和历史归档未批量迁移。
+- Codex 独立复审通过后归档本卡，观察卡只移除本 ID。
+
+## 停止条件
+
+- ready 集合含未授权路径、实时预检失败／过宽／缺指针、L0 或小时入口未通过、无法单提交回滚，或需要长期开关、兼容分支与第二迁移模式。
+
+## 回滚边界
+
+- 激活提交是唯一回滚单元；回滚必须同时恢复检查器强制和该提交迁移的 ready 卡，不允许只回退一侧或保留混合强制状态。

@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-SEED-PWSH7-01",
+  "title": "晋级 PowerShell 7 唯一运行时经验",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
+  "stateReason": "等待基础匹配器；候选 EXP-AUTO-001 只依据已审核 PowerShell 7 合同和现有确定性检查器独立核验，不预设 active。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-AUTO-001.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-SEED-PWSH7-01.txt",
+    "开发管理/任务归档/M-EXP-SEED-PWSH7-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-SEED-PWSH7-01 · 晋级 PowerShell 7 唯一运行时经验
+
+## 来源与当前边界
+
+- 单一结果：核验并晋级 `EXP-AUTO-001`，描述项目 PowerShell 脚本只能由 `pwsh -NoProfile -ExecutionPolicy Bypass -File` 启动的风险。
+- 直接事实源是 `开发管理/开发-技术经验.txt#编码与文件`、`AGENTS.md#修改与验证`、现行检查器与测试；不读取历史归档。
+- 本卡只建立 `must_read` 经验，门禁晋级留给 `M-EXP-GATE-PWSH7-01`。
+
+## 必查范围
+
+- `开发管理/开发-技术经验.txt#编码与文件` 的 PowerShell 7 条目。
+- `tools/check-pwsh-runtime.ps1` 的入口、诊断类别和扫描边界；`tools/test-check-pwsh-runtime.ps1` 的允许／拒绝 fixture。
+- `AGENTS.md#修改与验证` 的唯一运行时命令合同。
+
+## 实施范围
+
+- 独立判断根因、适用／排除／失效条件、触发路径与精确文本；建立 `EXP-AUTO-001.txt` 和唯一索引项。
+- `level=must_read`、`gateRefs=[]`；不因已有检查器而在本卡提前升级 `gate`。
+- 完成后只移除试运行卡中的本前置。
+
+## 禁止项
+
+- 不修改 PowerShell 检查器、项目脚本、L0 规则或小时入口，不扫描归档。
+- 不把任意出现“PowerShell”的任务都命中；路径和文本必须能定位脚本执行或脚本合同修改。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-pwsh-runtime.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- 用一张脚本入口 fixture 命中，用一张无脚本内容卡零命中；核对正文总字符数。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 根因、边界、失效条件和正反例均可由当前事实源复核；索引只产生窄命中且经验卡 `## 开工前` 为 120～200 字符。
+- `EXP-AUTO-001` active 后本卡归档，试运行卡仅移除本 ID。
+
+## 停止条件
+
+- 当前检查器与规则合同冲突、正反例不能稳定区分，或必须靠宽泛关键词、兼容分支与历史猜测才能命中；本卡保持 blocked，不写 active。

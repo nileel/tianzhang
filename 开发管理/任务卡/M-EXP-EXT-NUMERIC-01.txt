@@ -1,0 +1,58 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-EXT-NUMERIC-01",
+  "title": "数值经验域开放决策",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-OBSERVE-20-01"],
+  "stateReason": "等待 20 任务 continue；本卡只决定数值经验域是否建立独立后续 initiative，任何结论必须绑定 BattleSim 当前运行。",
+  "expectedPaths": [
+    "docs/superpowers/plans/preventive-experience-memory-numeric-domain-assessment.md",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-EXT-NUMERIC-01.txt",
+    "开发管理/任务归档/M-EXP-EXT-NUMERIC-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-EXT-NUMERIC-01 · 数值经验域开放决策
+
+## 来源与当前边界
+
+- 单一结果：基于首期证据，形成数值经验域 `open/hold/stop` 决策和独立后续边界；不创建数值经验或修改 BattleSim。
+- 数值经验只能保存开工方法、检查顺序和失效条件，当前数值结论仍以 BattleSim 实际运行为准。
+
+## 必查范围
+
+- 20 任务观察、只读试运行报告和批准规格第三阶段的数值边界。
+- `AGENTS.md#数值与 BattleSim` 与 `开发管理/开发-技术经验.txt#模拟器` 的当前运行合同。
+- 只定位一个候选数值工作流的当前 BattleSim 入口和正反样本，不读取历史输出总表。
+
+## 实施范围
+
+- 报告定义 BattleSim 绑定、不得固化历史结果、候选证据、冻结样本、误报／成本阈值、试运行和停止条件。
+- open 只批准新的独立数值域 initiative；hold/stop 记录缺口。本卡只解除关闭前置。
+
+## 禁止项
+
+- 不修改模拟器、数值 docs、索引或经验卡，不把未运行的平衡判断、历史矩阵或角色强弱写为长期经验。
+
+## 验证
+
+- 仅为评估入口有效性运行当前 BattleSim build→run，不下新平衡结论。
+- 决策明确事实源、失效条件和回滚；`tools/check-review-text.ps1 -Paths docs,开发管理`、`tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- open/hold/stop 之一有直接运行与首期证据；open 时新 initiative 边界完整但未实施；本卡归档并解除关闭前置。
+
+## 停止条件
+
+- 首期不是 continue、当前运行不能支持候选、必须固化历史数值或凭文本／直觉判断平衡；不得 open。

@@ -1,0 +1,47 @@
+# 管理与自动化任务列表（✅ 已审核）
+
+> 本文件保存管理 schema、共享自动化控制面和预防型经验系统的未完成任务。当前可执行切片仍只以 `开发管理/当前任务队列.txt` 为准；汇总父项不得进入队列。
+
+## 当前事实
+
+- 唯一批准规格为 `docs/superpowers/specs/2026-08-24-preventive-experience-memory-system-design.md`，批准提交为 `ccb1127bcd78d6bb192b4527a449acda41cfc782`。
+- `M-EXP-PREFLIGHT-01` 是不可调度汇总父项，只由 `M-EXP-PREFLIGHT-CLOSE-01` 在全部出口满足后关闭；不得创建覆盖整套系统的执行卡。
+- 依赖顺序固定为基础工具 → 10 条独立种子经验 → 只读试运行 → schema 1／2 支持 → L0 规则 → 小时自动化接入 → ready schema 2 激活 → 20 个相关任务观察 → 独立门禁／非技术域决策 → 父项关闭。
+- 本轮只建立任务图和规划；风险索引、匹配器、正式经验卡、门禁与 schema 2 强制均尚未实施。
+
+## 任务
+
+| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
+|----|--------|------|----------|--------|------|--------|
+| M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
+| M-EXP-PREFLIGHT-01A | P1 | deepseek | 已排队 | — | 风险索引、经验卡模板与只读匹配器基础 | 开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt |
+| M-EXP-SEED-PWSH7-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 PowerShell 7 唯一运行时经验 | 开发管理/任务卡/M-EXP-SEED-PWSH7-01.txt |
+| M-EXP-SEED-BS-BUILD-RUN-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 BattleSim 先构建后运行经验 | 开发管理/任务卡/M-EXP-SEED-BS-BUILD-RUN-01.txt |
+| M-EXP-SEED-BS-SYMMETRY-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 BattleSim 双侧分支对称接入经验 | 开发管理/任务卡/M-EXP-SEED-BS-SYMMETRY-01.txt |
+| M-EXP-SEED-BS-RESIST-KEYS-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 BattleSim 1v1／2v2 抗性键统一经验 | 开发管理/任务卡/M-EXP-SEED-BS-RESIST-KEYS-01.txt |
+| M-EXP-SEED-BS-TIMEOUT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 BattleSim 超时结算顺序无偏经验 | 开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt |
+| M-EXP-SEED-UNITY-SCENE-BUILD-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 Unity 场景程序化生成经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-SCENE-BUILD-01.txt |
+| M-EXP-SEED-UNITY-ASMDEF-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 Unity asmdef 投影排查经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt |
+| M-EXP-SEED-UNITY-META-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 Unity meta 多行 YAML 经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt |
+| M-EXP-SEED-UNITY-NAMESPACE-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 Unity 命名空间避开引擎类型名经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt |
+| M-EXP-SEED-MGMT-WORKTREE-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级共享 worktree 与集成锁经验 | 开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt |
+| M-EXP-PREFLIGHT-TRIAL-01 | P1 | codex | 阻塞 | M-EXP-SEED-PWSH7-01、M-EXP-SEED-BS-BUILD-RUN-01、M-EXP-SEED-BS-SYMMETRY-01、M-EXP-SEED-BS-RESIST-KEYS-01、M-EXP-SEED-BS-TIMEOUT-01、M-EXP-SEED-UNITY-SCENE-BUILD-01、M-EXP-SEED-UNITY-ASMDEF-01、M-EXP-SEED-UNITY-META-01、M-EXP-SEED-UNITY-NAMESPACE-01、M-EXP-SEED-MGMT-WORKTREE-01 | 冻结样本只读试运行与成本报告 | 开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt |
+| M-EXP-TASK-SCHEMA2-01 | P1 | deepseek | 阻塞 | M-EXP-PREFLIGHT-TRIAL-01 | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
+| M-EXP-L0-CONTRACT-01 | P1 | codex | 阻塞 | M-EXP-TASK-SCHEMA2-01 | L0、runnable 与强制点规则合同 | 开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt |
+| M-EXP-HOURLY-PREFLIGHT-01 | P1 | deepseek | 阻塞 | M-EXP-TASK-SCHEMA2-01、M-EXP-L0-CONTRACT-01 | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |
+| M-EXP-READY-SCHEMA2-ACTIVATE-01 | P1 | deepseek | 阻塞 | M-EXP-HOURLY-PREFLIGHT-01 | ready 卡 schema 2 激活迁移 | 开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt |
+| M-EXP-OBSERVE-20-01 | P2 | codex | 阻塞 | M-EXP-READY-SCHEMA2-ACTIVATE-01 | 技术与工作流 20 任务观察报告 | 开发管理/任务卡/M-EXP-OBSERVE-20-01.txt |
+| M-EXP-GATE-PWSH7-01 | P2 | deepseek | 阻塞 | M-EXP-OBSERVE-20-01 | PowerShell 7 经验独立门禁晋级 | 开发管理/任务卡/M-EXP-GATE-PWSH7-01.txt |
+| M-EXP-GATE-BS-TIMEOUT-01 | P2 | deepseek | 阻塞 | M-EXP-OBSERVE-20-01 | BattleSim 超时顺序经验独立门禁晋级 | 开发管理/任务卡/M-EXP-GATE-BS-TIMEOUT-01.txt |
+| M-EXP-GATE-UNITY-ASMDEF-01 | P2 | deepseek | 阻塞 | M-EXP-OBSERVE-20-01 | Unity asmdef 边界经验独立门禁晋级 | 开发管理/任务卡/M-EXP-GATE-UNITY-ASMDEF-01.txt |
+| M-EXP-EXT-DESIGN-01 | P2 | codex | 阻塞 | M-EXP-OBSERVE-20-01 | 设计经验域开放决策 | 开发管理/任务卡/M-EXP-EXT-DESIGN-01.txt |
+| M-EXP-EXT-CONTENT-01 | P2 | codex | 阻塞 | M-EXP-OBSERVE-20-01 | 内容经验域开放决策 | 开发管理/任务卡/M-EXP-EXT-CONTENT-01.txt |
+| M-EXP-EXT-NUMERIC-01 | P2 | codex | 阻塞 | M-EXP-OBSERVE-20-01 | 数值经验域开放决策 | 开发管理/任务卡/M-EXP-EXT-NUMERIC-01.txt |
+| M-EXP-PREFLIGHT-CLOSE-01 | P2 | codex | 阻塞 | M-EXP-GATE-PWSH7-01、M-EXP-GATE-BS-TIMEOUT-01、M-EXP-GATE-UNITY-ASMDEF-01、M-EXP-EXT-DESIGN-01、M-EXP-EXT-CONTENT-01、M-EXP-EXT-NUMERIC-01 | 验证出口并关闭汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt |
+
+## 执行边界
+
+- 只有 `M-EXP-PREFLIGHT-01A` 是首批 ready 叶子；任何后继不得绕过其具名前置或只读试运行门槛提前 ready。
+- 种子卡逐条判断根因、适用条件、排除条件与失效条件；证据不足时同卡保持 blocked，不得为了凑足数量写入 active 索引。
+- `M-EXP-PREFLIGHT-TRIAL-01` 未满足批准阈值时保持 blocked，schema、L0、小时入口和激活卡均不得解除前置。
+- 父项、观察后的门禁和扩域均不得被基础阶段顺带实施；新增门禁或域开放若超出本图，另建独立 initiative，不扩大当前卡。
