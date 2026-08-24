@@ -284,8 +284,8 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 
 - 本文已由用户明确批准；批准范围只包括重新评估的任务拆分、现行事实中和和比较合同，不等于批准 2D 或静态 3D 的具体动画制作方案。
 - 2026-08-24 独立规划已在专用 worktree 中一次创建父项、全部已知子项和依赖图，修改现行 backlog 三处方向事实，并只把两张 reference 与独立 material correction 共三张叶子设为 ready；本轮没有顺带调研、生产资产或修改 Unity 业务文件。
-- 2026-08-24，`D-CHAR-2D-BATTLE-ANIM-REFERENCE-01` 已完成并产出[2D 战斗动画参考游戏调研](2026-08-24-2d-battle-animation-reference-research.md)。它只记录已分级的来源、可迁移约束和未解决问题，不推荐《天章》技术路线；`D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 的具名前置已清空，但仍保持 `frozen` 等待用户复核并明确允许进入详细方案。
-- 2026-08-24，`D-CHAR-STATIC3D-MOTION-REFERENCE-01` 已完成并产出[静态 3D 战斗动态表现参考游戏调研](2026-08-24-static-3d-battle-motion-reference-research.md)。调研没有找到多套独立静态 Pose 模型换模覆盖战斗动态表现的可信等价先例，已将其明确标为后续只能由用户决定是否验证的自研风险；`D-CHAR-STATIC3D-MOTION-PIPELINE-01` 的具名前置已清空，但仍保持 `frozen` 等待用户复核并明确允许进入详细方案。
-- 两张 reference 卡可以独立调研；对应 pipeline 卡在 reference 完成后先保持 `frozen`，只有用户复核调研结果并明确允许进入详细方案才转 ready。
+- 2026-08-24，`D-CHAR-2D-BATTLE-ANIM-REFERENCE-01` 已完成并产出[2D 战斗动画参考游戏调研](2026-08-24-2d-battle-animation-reference-research.md)。用户复核后指定《龙胤立志传》的实战表现为 2D 方向可接受下限，并明确批准两个方向进入详细方案；`D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 已转 `ready`，但仍只授权书面方案。
+- 2026-08-24，`D-CHAR-STATIC3D-MOTION-REFERENCE-01` 已完成并产出[静态 3D 战斗动态表现参考游戏调研](2026-08-24-static-3d-battle-motion-reference-research.md)。用户复核后把 3D 方向收敛为炉石传说、游戏王、万智牌式的单一静态角色载体整体动效与特效，不采用角色模型内部动画或多套独立 Pose 换模，并明确批准两个方向进入详细方案；`D-CHAR-STATIC3D-MOTION-PIPELINE-01` 已转 `ready`，但仍只授权书面方案。
+- 两张 reference 卡的调研和用户授权门均已满足；两张 pipeline 卡按既有固定顺序进入 ready 队列。本次状态变化不授权图片、Sprite Sheet、模型、credits 或 Unity 修改。
 - 两张 pipeline 卡写出并自审方案后分别停在 `waiting_reply`；用户批准书面方案后才完成该卡并解锁对应 pilot。
 - 最终 user decision 卡必须让用户运行游戏后回复；本文、参考调研、pipeline 方案或 Codex 技术复核均不能代替该决定。

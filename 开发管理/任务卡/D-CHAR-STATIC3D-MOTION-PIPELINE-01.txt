@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "frozen",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-24：静态3D参考调研已完成；仍必须由用户复核调研并明确允许进入详细方案，保持frozen，禁止因前置清空自动ready。",
+  "stateReason": "2026-08-24：用户已复核调研并明确批准两个方向进入详细方案；3D方向聚焦单一静态角色载体的整体位移动画与特效，不采用角色模型内部动画或多Pose换模，本卡转ready，但不授权资产、credits或Unity修改。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
@@ -29,19 +29,19 @@
 
 ## 来源与当前边界
 
-- 静态 3D reference 已完成；本卡仍只在用户复核调研后明确回复“进入详细方案”时解冻。
-- 调研完成或 blocker 清空本身不构成授权；维护轮不得自动把本卡转 ready。
-- 本卡不预设 Pose 换模，不消费 credits，不制作模型或修改 Unity。
+- 静态 3D reference 已完成；用户已于 2026-08-24 明确回复“两个方向都进入详细方案”，本卡授权门已满足。
+- 用户指定参考炉石传说、游戏王与万智牌等数字卡牌／棋子载体：角色载体内部不播放模型动画，战斗反馈主要由整个载体的位移、旋转、缩放、材质、特效、音效与必要镜头反馈承担。
+- 本卡据此聚焦单一静态 3D 角色载体，不采用多套独立 Pose 换模，不消费 credits，不制作模型或修改 Unity。
 
 ## 必查范围
 
 - 批准规格 §二、§四.1、§五.4、§八。
-- 完成后的静态 3D reference 调研全文与用户对进入方案阶段的回复。
+- 完成后的静态 3D reference 调研全文，以及用户 2026-08-24 对炉石传说／游戏王／万智牌式整体载体动效和两个方向进入详细方案的明确回复。
 - 既有静态棋子生产合同、Blender 候选记录、Unity 所有者链和 material correction 事实，只读取与新动态表现边界直接相关的部分。
 
 ## 实施范围
 
-- 选择并论证动态表现机制；没有等价先例时明确自研假设、最小验证和淘汰条件。
+- 在用户选定的“单一静态载体整体动效＋特效”边界内冻结动态表现机制；逐项定义方向、移动、攻击、受击、施法和死亡的载体运动、事件时点、特效／音效分工、复位、最小验证和淘汰条件。
 - 冻结模型／Pose／动画／材质／特效资产单位、身份一致性和生产／Blender／导出／Unity 流程。
 - 定义方向、宽袖、武器、换装、批量角色、新增动作，以及工时、credits、失败生成、返工和 QA 的计量方法。
 - 冻结静态 3D pilot 与 Unity integration 卡的确切 expectedPaths、允许路径、验证、完成条件和停止条件。
@@ -67,5 +67,5 @@
 
 ## 停止条件
 
-- reference 未完成、用户未允许进入方案阶段、书面方案未获 A 批准或下游路径仍不完整。
+- 书面方案未获 A 批准或下游路径仍不完整；方案写完后必须按 checkpoint 停止等待，不得越过批准门启动 pilot。
 - 方案需要未授权 credits、修改战斗规则／存档、恢复冻结旧链或建立第三条视觉路线。
