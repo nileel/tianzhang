@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-24：用户已复核调研并明确批准两个方向进入详细方案；2D方向以《龙胤立志传》的实战表现为可接受下限，本卡转ready，但不授权资产生产或Unity修改。",
+  "stateReason": "等待负责人决定：书面方案与下游合同已完成自审。是否批准方案并解锁苻渊 2D 战斗动画 pilot？",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
@@ -22,7 +22,62 @@
     "开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
     "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-CHAR-2D-BATTLE-ANIM-PIPELINE-01",
+    "sourceRunId": "550b438c-6408-4baf-9c74-bbe61cbf53f2",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260825-D2DANIM01",
+    "question": "书面方案与下游合同已完成自审。是否批准方案并解锁苻渊 2D 战斗动画 pilot？",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准方案并解锁 pilot"
+      },
+      {
+        "key": "B",
+        "label": "仅修订方案后再次等待"
+      },
+      {
+        "key": "C",
+        "label": "冻结 2D 路线"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 将解锁以攻击、受击、死亡六向试片选择制作方法的 pilot；B 不生产资产；C 不解锁下游。",
+    "plainSummary": {
+      "situation": "详细生产方案与两张下游原子卡已完成，尚未选择制作方法。",
+      "action": "请选择 A 批准并解锁 pilot、B 仅修订方案，或 C 冻结路线。",
+      "impact": "未经 A 不会生产资产、消费 credits 或修改 Unity。"
+    },
+    "checkpointCommit": "d86378995d8e2d13185ad8851e356c2b49b5a92e",
+    "baseCommit": "75da427b2ed44ac7a9b60cf797eef961ac76a578",
+    "branch": "codex/automation/codex/550b438c-6408-4baf-9c74-bbe61cbf53f2/candidate",
+    "changedPaths": [
+      "开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt",
+      "开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt",
+      "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
+      "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
+      "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md"
+    ],
+    "verified": [
+      "模型元数据核验为 gpt-5.6-terra",
+      "任务卡检查通过",
+      "审核文本检查通过",
+      "数据链检查通过",
+      "待提交空白检查通过"
+    ],
+    "unverified": [
+      "负责人尚未选择 A/B/C",
+      "未生产动画资产、未消费 credits、未修改 Unity"
+    ],
+    "residualRisk": "A 批准后仍须以真实六向攻击、受击、死亡试片选择制作方法并记录实际成本。",
+    "taskContextDigest": "5a5fa4400cc8cea29cee837af4f23e89c5b8eeb21a9e3c158194c2b328956b95",
+    "createdAt": "2026-08-25T02:28:45.8578690+08:00",
+    "queueIndex": 1
+  }
 }
 ---TASK-BODY---
 # D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 · 2D战斗动画生产流程详细方案
