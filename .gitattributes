@@ -1,3 +1,5 @@
+src/** text=auto eol=lf
+
 src/Assets/Art/**/*.psd filter=lfs diff=lfs merge=lfs -text
 src/Assets/Art/**/*.psb filter=lfs diff=lfs merge=lfs -text
 src/Assets/Art/**/*.png filter=lfs diff=lfs merge=lfs -text
