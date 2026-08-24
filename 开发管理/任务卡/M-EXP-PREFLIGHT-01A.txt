@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "审核返工：测试用例仍以活跃任务卡 M-EXP-PREFLIGHT-01A 作为零命中输入；按审核规则归档该卡后，测试会稳定报 task_card_not_found，无法同时满足归档与匹配器测试通过。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡模板.txt",
