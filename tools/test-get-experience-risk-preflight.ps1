@@ -289,30 +289,40 @@ try {
 
   # ---- 9. 超过 3 条 must_read 与 600 字符边界返回 preflight_overbroad ----
   $caseRoot = Join-Path $tempRoot 'case9'
+  Write-Utf8 (Join-Path $caseRoot '开发管理/开发-技术经验.txt') "# 开发-技术经验`n`n## 模拟器`n模拟器经验正文。"
+  Write-Utf8 (Join-Path $caseRoot 'tools/fake-gate.ps1') "# fixture gate"
   $expList = @()
   for ($index = 1; $index -le 4; $index++) {
     $eid = 'EXP-BS-' + $index.ToString('D3')
     Set-ExpCard $caseRoot $eid (New-ExpCard -Id $eid -Title '风险' -BodyLines @('- 开工前正文。'))
-    $expList += (New-Exp -Id $eid -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef "开发管理/经验库/经验卡/$eid.txt#开工前")
+    $gr = if ($index -eq 3) { @('g2') } else { @('g1') }
+    $expList += (New-Exp -Id $eid -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef "开发管理/经验库/经验卡/$eid.txt#开工前" -GateRefs $gr)
   }
-  Set-Index $caseRoot (New-Index $expList)
+  Set-Index $caseRoot (New-Index $expList -Gates @(
+    (New-Gate -Id 'g1' -EntryPaths @('tools/fake-gate.ps1'))
+    (New-Gate -Id 'g2' -EntryPaths @('tools/fake-gate.ps1'))
+  ))
   Set-Card $caseRoot (New-TaskCard -Id 'T-OVER-01' -Domain 'battlesim' -ExpectedPaths @('simulations/BattleSim/Combat.cs')) 'T-OVER-01'
   $over = Invoke-Matcher $caseRoot @('-TaskId', 'T-OVER-01')
   Assert-True ($over.ExitCode -eq 0) 'case9: overbroad is a terminal result, not a crash'
   $overJson = $over.Stdout | ConvertFrom-Json
   Assert-True ($overJson.status -ceq 'preflight_overbroad') 'case9: overbroad status'
   Assert-True ($overJson.reason -ceq 'must_read_count_exceeds_3') 'case9: overbroad reason'
+  Assert-True (@($overJson.gates).Count -eq 2 -and @($overJson.gates) -ccontains 'g1' -and @($overJson.gates) -ccontains 'g2') 'case9: overbroad gates preserved and deduped'
+  Assert-True (@($overJson.gatePointers).Count -eq 2 -and @($overJson.gatePointers | ForEach-Object { [string]$_.instructionRef }) -ccontains '开发管理/开发-技术经验.txt#模拟器') 'case9: overbroad gate pointers preserved'
 
   $longBody = '甲' * 301
   Set-ExpCard $caseRoot 'EXP-BS-101' (New-ExpCard -Id 'EXP-BS-101' -Title '长正文甲' -BodyLines @($longBody))
   Set-ExpCard $caseRoot 'EXP-BS-102' (New-ExpCard -Id 'EXP-BS-102' -Title '长正文乙' -BodyLines @($longBody))
   Set-Index $caseRoot (New-Index @(
-    (New-Exp -Id 'EXP-BS-101' -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef '开发管理/经验库/经验卡/EXP-BS-101.txt#开工前')
-    (New-Exp -Id 'EXP-BS-102' -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef '开发管理/经验库/经验卡/EXP-BS-102.txt#开工前')
-  ))
+    (New-Exp -Id 'EXP-BS-101' -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef '开发管理/经验库/经验卡/EXP-BS-101.txt#开工前' -GateRefs @('g1'))
+    (New-Exp -Id 'EXP-BS-102' -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef '开发管理/经验库/经验卡/EXP-BS-102.txt#开工前' -GateRefs @('g1'))
+  ) -Gates @((New-Gate -Id 'g1' -EntryPaths @('tools/fake-gate.ps1'))))
   $overChars = Invoke-Matcher $caseRoot @('-TaskId', 'T-OVER-01')
   $overCharsJson = $overChars.Stdout | ConvertFrom-Json
   Assert-True ($overCharsJson.status -ceq 'preflight_overbroad' -and $overCharsJson.reason -ceq 'must_read_chars_exceeds_600') 'case9: 600 char boundary'
+  Assert-True (@($overCharsJson.gates).Count -eq 1 -and @($overCharsJson.gates)[0] -ceq 'g1') 'case9: chars overbroad gates preserved and deduped'
+  Assert-True (@($overCharsJson.gatePointers).Count -eq 1 -and [string]$overCharsJson.gatePointers[0].id -ceq 'g1') 'case9: chars overbroad gate pointers preserved'
 
   # ---- 10. 匹配器只读 + 合法零命中 fixture ----
   $repo = Split-Path -Parent $PSScriptRoot

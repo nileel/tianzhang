@@ -314,36 +314,6 @@ try {
     }
   }
 
-  $mustReadCount = $mustReads.Count
-  $totalChars = 0
-  foreach ($m in $mustReads) { $totalChars += [int]$m.chars }
-  if ($mustReadCount -gt 3) {
-    Write-ResultJson ([ordered]@{
-      status = 'preflight_overbroad'
-      reason = 'must_read_count_exceeds_3'
-      taskId = $taskIdValue
-      taskCardDigest = $cardDigest
-      indexDigest = $indexDigest
-      matched = @($matchedIds)
-      mustReadCount = $mustReadCount
-      mustReadChars = $totalChars
-    })
-    exit 0
-  }
-  if ($totalChars -gt 600) {
-    Write-ResultJson ([ordered]@{
-      status = 'preflight_overbroad'
-      reason = 'must_read_chars_exceeds_600'
-      taskId = $taskIdValue
-      taskCardDigest = $cardDigest
-      indexDigest = $indexDigest
-      matched = @($matchedIds)
-      mustReadCount = $mustReadCount
-      mustReadChars = $totalChars
-    })
-    exit 0
-  }
-
   $gatePointers = [Collections.Generic.List[object]]::new()
   foreach ($gr in $gateRefs) {
     $gate = $gateEntries[$gr]
@@ -360,6 +330,40 @@ try {
       if (-not (Test-Path -LiteralPath $epFull -PathType Leaf)) { throw "[missing_gate_entry] gate entryPath not found: $gr -> $epNorm" }
     }
     $gatePointers.Add([ordered]@{ id = $gr; instructionRef = $instRef })
+  }
+
+  $mustReadCount = $mustReads.Count
+  $totalChars = 0
+  foreach ($m in $mustReads) { $totalChars += [int]$m.chars }
+  if ($mustReadCount -gt 3) {
+    Write-ResultJson ([ordered]@{
+      status = 'preflight_overbroad'
+      reason = 'must_read_count_exceeds_3'
+      taskId = $taskIdValue
+      taskCardDigest = $cardDigest
+      indexDigest = $indexDigest
+      matched = @($matchedIds)
+      mustReadCount = $mustReadCount
+      mustReadChars = $totalChars
+      gates = @($gatePointers | ForEach-Object { [string]$_.id })
+      gatePointers = @($gatePointers)
+    })
+    exit 0
+  }
+  if ($totalChars -gt 600) {
+    Write-ResultJson ([ordered]@{
+      status = 'preflight_overbroad'
+      reason = 'must_read_chars_exceeds_600'
+      taskId = $taskIdValue
+      taskCardDigest = $cardDigest
+      indexDigest = $indexDigest
+      matched = @($matchedIds)
+      mustReadCount = $mustReadCount
+      mustReadChars = $totalChars
+      gates = @($gatePointers | ForEach-Object { [string]$_.id })
+      gatePointers = @($gatePointers)
+    })
+    exit 0
   }
 
   Write-ResultJson ([ordered]@{

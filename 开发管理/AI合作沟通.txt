@@ -43,3 +43,16 @@
 - 残留风险：生产索引与门禁表均为空，尚无真实经验，匹配器行为仅在临时 fixture 上证明；schema 2 任务卡投影与小时入口接入属后续任务，本卡未实现。真实种子晋级并 active 后才会出现窄命中行为，仍需 Codex 独立复审签收，未解除任何种子卡前置。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-PREFLIGHT-01A-9bd06607 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：33f96e29160d60f4d8bfa12fc7fce1c49c7b2e35
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/get-experience-risk-preflight.ps1、tools/test-get-experience-risk-preflight.ps1
+- 已验证：tools/test-get-experience-risk-preflight.ps1 全部通过（含 case9 两种过宽结果新增的 gates/gatePointers 去重断言）；tools/check-task-cards.ps1 -> OK (cards=83 ready=5)；tools/check-review-text.ps1 -Paths 开发管理,tools -> OK (534 files)；git diff --check 无输出；tools/check-pending-whitespace.ps1 对两个改动文件 -> OK (2 files)；零命中 -TaskId M-EXP-PREFLIGHT-01A 输出单一 JSON 对象，且调用前后 git status 均只有两个待提交文件、无新增改动（只读证明）
+- 未验证：未运行 tools/check-data-chain.ps1（本轮未改 CSV/asset/Unity 数据链路路径）；未运行 BattleSim（本轮不改数值或模拟器代码）；schema 2 强制投影与 ready 迁移不在本卡范围，未做该部分验证；Codex 独立复审尚未执行（DeepSeek 不得自审）
+- 残留风险：门禁指针构建块被上移到过宽判断之前，使两种过宽路径现在也会解析并校验 gate 的 instructionRef 与 entryPaths 文件存在性；若未来真实种子经验的 gate 入口缺失，过宽结果会改为返回稳定 missing_gate_entry 错误而非 preflight_overbroad。这与规格「门禁入口缺失停止写入」一致，但属行为面扩大，当前生产索引为空不受影响，需 Codex 复审确认优先级。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

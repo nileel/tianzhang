@@ -15,7 +15,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-PREFLIGHT-01A | P1 | deepseek | 已排队 | — | 风险索引、经验卡模板与只读匹配器基础 | 开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt |
+| M-EXP-PREFLIGHT-01A | P1 | codex | 已排队 | — | 风险索引、经验卡模板与只读匹配器基础 | 开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt |
 | M-EXP-SEED-PWSH7-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 PowerShell 7 唯一运行时经验 | 开发管理/任务卡/M-EXP-SEED-PWSH7-01.txt |
 | M-EXP-SEED-BS-BUILD-RUN-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 BattleSim 先构建后运行经验 | 开发管理/任务卡/M-EXP-SEED-BS-BUILD-RUN-01.txt |
 | M-EXP-SEED-BS-SYMMETRY-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-01A | 晋级 BattleSim 双侧分支对称接入经验 | 开发管理/任务卡/M-EXP-SEED-BS-SYMMETRY-01.txt |
