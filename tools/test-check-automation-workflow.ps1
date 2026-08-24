@@ -8,7 +8,8 @@ function Write-Utf8 { param([string]$Path, [string]$Text) [IO.Directory]::Create
 function Write-Automation {
   param([string]$Id, [string]$Status, [string]$Prompt)
   $encoded = $Prompt | ConvertTo-Json -Compress
-  Write-Utf8 (Join-Path $automationRoot "$Id/automation.toml") "version = 1`nid = `"$Id`"`nprompt = $encoded`nstatus = `"$Status`"`n"
+  $name = if ($Id -ceq 'tzg-daily-automation-briefing') { 'TZG Daily Project Summary' } else { $Id }
+  Write-Utf8 (Join-Path $automationRoot "$Id/automation.toml") "version = 1`nid = `"$Id`"`nname = `"$name`"`nprompt = $encoded`nstatus = `"$Status`"`n"
 }
 function Invoke-Checker { param([switch]$Active) $args = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $checker, '-RepositoryRoot', $repositoryRoot, '-AutomationRoot', $automationRoot, '-RequireLegacyRetired'); if ($Active) { $args += '-RequireActive' }; $output = @(& pwsh @args 2>&1); [pscustomobject]@{ ExitCode = $LASTEXITCODE; Text = @($output) -join "`n" } }
 
@@ -28,6 +29,9 @@ try {
     'tzg-weekly-project-summary' = [IO.File]::ReadAllText((Join-Path $repositoryRoot '开发管理/每周项目总结提示词.txt'))
   }
   $rules = [IO.File]::ReadAllText((Join-Path $repositoryRoot '开发管理/自动工作流规则.txt'))
+  Assert-True ($prompts['tzg-daily-automation-briefing'] -match 'tools/get-project-summary-source\.ps1' -and $prompts['tzg-daily-automation-briefing'] -match '人工与 Automation' -and $prompts['tzg-daily-automation-briefing'] -match 'sourceArtActivity' -and $prompts['tzg-daily-automation-briefing'] -match 'lastSuccessfulUntil') 'Canonical daily project summary prompt is incomplete'
+  Assert-True ($prompts['tzg-daily-automation-briefing'] -notmatch 'get-automation-briefing-source\.ps1|没有带有效 Automation 元数据') 'Canonical daily project summary prompt retains the Automation-only contract'
+  Assert-True ($prompts['tzg-weekly-project-summary'] -match 'tools/get-project-summary-source\.ps1' -and $prompts['tzg-weekly-project-summary'] -match '人工与 Automation' -and $prompts['tzg-weekly-project-summary'] -match 'sourceArtActivity' -and $prompts['tzg-weekly-project-summary'] -match '只对拟写入正文的提交读取必要 diff') 'Canonical weekly project summary prompt is incomplete'
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.mcp__node_repl__js' -and $prompts['codex-hourly-worker'] -match 'codex_model_metadata_invalid') 'Canonical Codex prompt is missing the request metadata channel'
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.exec_command' -and $prompts['codex-hourly-worker'] -match 'tools\.write_stdin' -and $prompts['codex-hourly-worker'] -match 'yield_time_ms: 60000') 'Canonical Codex prompt is missing the exec_command/write_stdin polling contract'
   Assert-True ($prompts['codex-hourly-worker'] -match 'Script running with cell ID' -and $prompts['codex-hourly-worker'] -match '同一 cell 调用 `wait`') 'Canonical Codex prompt is missing the outer functions.exec wait contract'

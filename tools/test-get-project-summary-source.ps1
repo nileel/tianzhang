@@ -12,10 +12,10 @@ function Assert-Equal {
   if ($Actual -ne $Expected) { throw "$Message (expected=$Expected actual=$Actual)" }
 }
 
-$sourcePath = Join-Path $PSScriptRoot 'get-automation-briefing-source.ps1'
+$sourcePath = Join-Path $PSScriptRoot 'get-project-summary-source.ps1'
 $testId = [Guid]::NewGuid().ToString('N')
 $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
-$testRoot = Join-Path $temporaryRoot "tzg-briefing-source-test-$testId"
+$testRoot = Join-Path $temporaryRoot "tzg-project-summary-source-test-$testId"
 $repositoryRoot = Join-Path $testRoot 'repo'
 
 function New-FixtureCommit {
@@ -41,7 +41,7 @@ function New-FixtureCommit {
     }
   }
   $pathsToStage = @($FileName) + @($AdditionalFiles.Keys) + @($RemovedFiles)
-  & git -C $repositoryRoot add -- @pathsToStage
+  & git -C $repositoryRoot add -f -- @pathsToStage
   if ($LASTEXITCODE -ne 0) { throw 'git add failed' }
   $oldAuthorDate = $env:GIT_AUTHOR_DATE
   $oldCommitterDate = $env:GIT_COMMITTER_DATE
@@ -103,14 +103,35 @@ function New-AutomationMessage {
   ) -join "`n"
 }
 
+function New-ArtActivityFile {
+  param(
+    [string]$RelativePath,
+    [string]$Content,
+    [string]$CreationTime,
+    [string]$ModifiedTime
+  )
+
+  $path = Join-Path $repositoryRoot $RelativePath
+  [IO.Directory]::CreateDirectory((Split-Path -Parent $path)) | Out-Null
+  [IO.File]::WriteAllText($path, $Content, [Text.UTF8Encoding]::new($false))
+  [IO.File]::SetCreationTimeUtc($path, ([DateTimeOffset]::Parse($CreationTime)).UtcDateTime)
+  [IO.File]::SetLastWriteTimeUtc($path, ([DateTimeOffset]::Parse($ModifiedTime)).UtcDateTime)
+  $path
+}
+
 try {
   Assert-True -Condition (Test-Path -LiteralPath $sourcePath -PathType Leaf) -Message "Expected implementation is missing: $sourcePath"
   [IO.Directory]::CreateDirectory($repositoryRoot) | Out-Null
-  & git -C $repositoryRoot init -q
-  & git -C $repositoryRoot config user.name 'Briefing Test'
-  & git -C $repositoryRoot config user.email 'briefing-test@example.invalid'
+  & git -C $repositoryRoot init -q -b master
+  & git -C $repositoryRoot config user.name 'Project Summary Test'
+  & git -C $repositoryRoot config user.email 'project-summary-test@example.invalid'
 
+  New-FixtureCommit -FileName 'baseline.txt' -Content 'baseline' -Message 'test: establish tracked source art' -Timestamp '2026-07-20T08:00:00+08:00' -AdditionalFiles @{
+    'assets/source/characters/tracked-source.blend' = 'tracked source v1'
+  } | Out-Null
+  New-FixtureCommit -FileName '.gitignore' -Content "assets/source/`n" -Message 'test: ignore new source art' -Timestamp '2026-07-20T09:00:00+08:00' | Out-Null
   New-FixtureCommit -FileName 'outside.txt' -Content 'outside' -Message (New-AutomationMessage -Subject 'test: outside' -Task 'TASK-OUTSIDE' -State 'completed' -Result 'outside' -Impact 'none' -Verify 'fixture') -Timestamp '2026-07-20T10:00:00+08:00' | Out-Null
+  $sinceBoundary = New-FixtureCommit -FileName 'since-boundary.txt' -Content 'since boundary' -Message 'test: since boundary' -Timestamp '2026-07-22T00:00:00+08:00'
   $taskOneFirst = New-FixtureCommit -FileName 'task-one-a.txt' -Content 'a' -Message (New-AutomationMessage -Subject 'feat: task one a' -Task 'TASK-ONE' -State 'completed' -Result 'blocked: first result' -Impact 'first impact' -Verify 'test a') -Timestamp '2026-07-22T01:00:00+08:00' -AdditionalFiles @{
     '开发管理/任务卡/TASK-ONE.txt' = New-TaskCardText -Task 'TASK-ONE' -State 'blocked'
   }
@@ -162,43 +183,77 @@ try {
   $malformedMessage = "fix: malformed`n`nAutomation: tzg-hourly-controller`nTask: TASK-BAD`nState: completed`nResult: bad`nImpact: bad"
   $malformed = New-FixtureCommit -FileName 'bad.txt' -Content 'bad' -Message $malformedMessage -Timestamp '2026-07-22T05:40:00+08:00'
   $unverifiable = New-FixtureCommit -FileName 'unverifiable.txt' -Content 'unverifiable' -Message (New-AutomationMessage -Subject 'fix: unverifiable' -Task 'TASK-NO-FACT' -State 'completed' -Result 'claims completed' -Impact 'unknown' -Verify 'fixture') -Timestamp '2026-07-22T05:50:00+08:00'
-  New-FixtureCommit -FileName 'human.txt' -Content 'human' -Message 'docs: human commit' -Timestamp '2026-07-22T06:00:00+08:00' | Out-Null
+  $human = New-FixtureCommit -FileName 'human.txt' -Content 'human' -Message 'docs: human commit' -Timestamp '2026-07-22T06:00:00+08:00' -AdditionalFiles @{
+    'assets/source/characters/tracked-source.blend' = 'tracked source v2'
+  }
+  $untilBoundary = New-FixtureCommit -FileName 'until-boundary.txt' -Content 'until boundary' -Message 'test: until boundary' -Timestamp '2026-07-23T00:00:00+08:00'
+
+  $trackedArtPath = Join-Path $repositoryRoot 'assets/source/characters/tracked-source.blend'
+  [IO.File]::SetCreationTimeUtc($trackedArtPath, ([DateTimeOffset]::Parse('2026-07-22T06:10:00Z')).UtcDateTime)
+  [IO.File]::SetLastWriteTimeUtc($trackedArtPath, ([DateTimeOffset]::Parse('2026-07-22T06:20:00Z')).UtcDateTime)
+  New-ArtActivityFile -RelativePath 'assets/source/characters/new/untracked-model.fbx' -Content 'untracked model' -CreationTime '2026-07-22T07:00:00Z' -ModifiedTime '2026-07-22T07:10:00Z' | Out-Null
+  New-ArtActivityFile -RelativePath 'assets/source/参考图片/new-reference.png' -Content 'untracked reference' -CreationTime '2026-07-22T08:00:00Z' -ModifiedTime '2026-07-22T07:50:00Z' | Out-Null
+  New-ArtActivityFile -RelativePath 'assets/source/characters/old/outside-window.blend' -Content 'old' -CreationTime '2026-07-21T07:00:00Z' -ModifiedTime '2026-07-21T07:10:00Z' | Out-Null
+  foreach ($excludedName in @('.DS_Store', '.DS_Storex', '._scratch', 'ehthumbs.db', 'Thumbs.db', 'desktop.ini', 'job.log', 'job.tmp', 'job.temp', 'job.bak', 'job.swp', '~$draft.blend')) {
+    New-ArtActivityFile -RelativePath "assets/source/$excludedName" -Content 'excluded' -CreationTime '2026-07-22T09:00:00Z' -ModifiedTime '2026-07-22T09:10:00Z' | Out-Null
+  }
+  New-ArtActivityFile -RelativePath 'assets/source/.Spotlight-V100/cache.bin' -Content 'excluded directory' -CreationTime '2026-07-22T09:00:00Z' -ModifiedTime '2026-07-22T09:10:00Z' | Out-Null
+  New-ArtActivityFile -RelativePath 'assets/source/.Trashes/trash.bin' -Content 'excluded directory' -CreationTime '2026-07-22T09:00:00Z' -ModifiedTime '2026-07-22T09:10:00Z' | Out-Null
 
   $output = & pwsh -NoProfile -ExecutionPolicy Bypass -File $sourcePath `
     -RepositoryRoot $repositoryRoot `
     -Since '2026-07-22T00:00:00+08:00' `
     -Until '2026-07-23T00:00:00+08:00'
-  Assert-Equal -Actual $LASTEXITCODE -Expected 0 -Message 'Briefing source failed'
+  Assert-Equal -Actual $LASTEXITCODE -Expected 0 -Message 'Project summary source failed'
   $lines = @($output | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
-  Assert-Equal -Actual $lines.Count -Expected 1 -Message 'Briefing source must emit one JSON line'
+  Assert-Equal -Actual $lines.Count -Expected 1 -Message 'Project summary source must emit one JSON line'
   $result = $lines[0] | ConvertFrom-Json -Depth 100
 
-  Assert-Equal -Actual @($result.groups).Count -Expected 7 -Message 'Briefing group count mismatch'
-  $taskOne = @($result.groups | Where-Object task -eq 'TASK-ONE')
+  Assert-Equal -Actual $result.status -Expected 'ok' -Message 'Project summary source status mismatch'
+  Assert-Equal -Actual @($result.commits).Count -Expected 19 -Message 'All-commit candidate count mismatch'
+  $commitShas = @($result.commits.sha)
+  Assert-True -Condition ($human -in $commitShas) -Message 'Human commit missing from all-commit candidates'
+  Assert-True -Condition ($untilBoundary -in $commitShas) -Message 'Until-boundary commit missing from candidates'
+  Assert-True -Condition ($sinceBoundary -notin $commitShas) -Message 'Since-boundary commit leaked into candidates'
+  $humanSummary = @($result.commits | Where-Object sha -eq $human)
+  Assert-Equal -Actual $humanSummary.Count -Expected 1 -Message 'Human commit summary missing'
+  Assert-True -Condition ($null -eq $humanSummary[0].automationMetadata) -Message 'Human commit received Automation metadata'
+  Assert-True -Condition ('human.txt' -in @($humanSummary[0].changedPaths)) -Message 'Human commit path summary is incomplete'
+  Assert-True -Condition ('assets/source/characters/tracked-source.blend' -in @($humanSummary[0].changedPaths)) -Message 'Tracked source-art commit path is missing'
+
+  Assert-Equal -Actual @($result.sourceArtActivity).Count -Expected 2 -Message 'Source-art activity count mismatch'
+  $artPaths = @($result.sourceArtActivity.path)
+  Assert-True -Condition ('assets/source/characters/new/untracked-model.fbx' -in $artPaths) -Message 'Untracked model activity is missing'
+  Assert-True -Condition ('assets/source/参考图片/new-reference.png' -in $artPaths) -Message 'Untracked reference activity is missing'
+  Assert-True -Condition ('assets/source/characters/tracked-source.blend' -notin $artPaths) -Message 'Tracked source art leaked into local activity'
+  Assert-True -Condition (-not ($artPaths | Where-Object { $_ -match 'Desktop|desktop|\.tmp|\.Spotlight|\.Trashes' })) -Message 'Excluded source-art path leaked into activity'
+
+  Assert-Equal -Actual @($result.automationGroups).Count -Expected 7 -Message 'Automation group count mismatch'
+  $taskOne = @($result.automationGroups | Where-Object task -eq 'TASK-ONE')
   Assert-Equal -Actual $taskOne.Count -Expected 1 -Message 'TASK-ONE group missing'
   Assert-Equal -Actual @($taskOne[0].commits).Count -Expected 2 -Message 'Same-task commits were not grouped'
   Assert-Equal -Actual $taskOne[0].category -Expected 'pending_decision' -Message 'TASK-ONE category mismatch'
   Assert-Equal -Actual $taskOne[0].commits[0].sha -Expected $taskOneFirst -Message 'First task commit mismatch'
   Assert-Equal -Actual $taskOne[0].commits[1].sha -Expected $taskOneSecond -Message 'Second task commit mismatch'
 
-  $completedGroup = @($result.groups | Where-Object task -eq 'TASK-COMPLETE')
+  $completedGroup = @($result.automationGroups | Where-Object task -eq 'TASK-COMPLETE')
   Assert-Equal -Actual $completedGroup[0].category -Expected 'completed' -Message 'Completed archive category mismatch'
   Assert-Equal -Actual $completedGroup[0].commits[0].sha -Expected $completed -Message 'Completed archive commit mismatch'
-  $externalGroup = @($result.groups | Where-Object task -eq 'TASK-EXTERNAL')
+  $externalGroup = @($result.automationGroups | Where-Object task -eq 'TASK-EXTERNAL')
   Assert-Equal -Actual $externalGroup[0].category -Expected 'pending_review' -Message 'External category mismatch'
   Assert-Equal -Actual $externalGroup[0].commits[0].sha -Expected $external -Message 'External commit mismatch'
-  $queueGroup = @($result.groups | Where-Object task -eq 'QUEUE-MAINTENANCE')
+  $queueGroup = @($result.automationGroups | Where-Object task -eq 'QUEUE-MAINTENANCE')
   Assert-Equal -Actual $queueGroup[0].category -Expected 'queue_maintenance' -Message 'Queue category mismatch'
   Assert-Equal -Actual $queueGroup[0].commits[0].sha -Expected $queue -Message 'Queue commit mismatch'
-  $readyExternalGroup = @($result.groups | Where-Object task -eq 'TASK-READY-EXTERNAL')
+  $readyExternalGroup = @($result.automationGroups | Where-Object task -eq 'TASK-READY-EXTERNAL')
   Assert-Equal -Actual $readyExternalGroup[0].category -Expected 'ready' -Message 'External ready category mismatch'
   Assert-Equal -Actual $readyExternalGroup[0].commits[0].sha -Expected $readyExternal -Message 'External ready commit mismatch'
-  $readyCompleteGroup = @($result.groups | Where-Object task -eq 'TASK-READY-COMPLETE')
+  $readyCompleteGroup = @($result.automationGroups | Where-Object task -eq 'TASK-READY-COMPLETE')
   Assert-Equal -Actual $readyCompleteGroup[0].category -Expected 'completed' -Message 'Ready-to-completed category mismatch'
   Assert-Equal -Actual @($readyCompleteGroup[0].commits).Count -Expected 2 -Message 'Ready-to-completed commits were not grouped'
   Assert-Equal -Actual $readyCompleteGroup[0].commits[0].sha -Expected $readyBeforeComplete -Message 'Ready-to-completed first commit mismatch'
   Assert-Equal -Actual $readyCompleteGroup[0].commits[1].sha -Expected $completedAfterReady -Message 'Ready-to-completed final commit mismatch'
-  $readyReviewGroup = @($result.groups | Where-Object task -eq 'TASK-READY-REVIEW')
+  $readyReviewGroup = @($result.automationGroups | Where-Object task -eq 'TASK-READY-REVIEW')
   Assert-Equal -Actual $readyReviewGroup[0].category -Expected 'ready' -Message 'Review ready category mismatch'
   Assert-Equal -Actual $readyReviewGroup[0].commits[0].sha -Expected $readyReview -Message 'Review ready commit mismatch'
 
@@ -212,17 +267,51 @@ try {
     Assert-Equal -Actual $matchingError[0].reason -Expected 'outcome_unverifiable' -Message "Fail-closed outcome reason mismatch for $expectedError"
   }
 
-  $allCandidateShas = @($result.groups.commits.sha)
+  $allCandidateShas = @($result.automationGroups.commits.sha)
   Assert-True -Condition ($external -in $allCandidateShas) -Message 'External business commit missing'
-  Assert-True -Condition ($allCandidateShas.Count -eq 9) -Message 'Handoff, human, invalid, fail-closed, or outside-window commit leaked into candidates'
+  Assert-True -Condition ($allCandidateShas.Count -eq 9) -Message 'Handoff, human, invalid, fail-closed, or outside-window commit leaked into Automation groups'
 
-  Write-Output 'test-get-automation-briefing-source: OK'
+  $repeatOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $sourcePath `
+      -RepositoryRoot $repositoryRoot `
+      -Since '2026-07-22T00:00:00+08:00' `
+      -Until '2026-07-23T00:00:00+08:00')
+  Assert-Equal -Actual $LASTEXITCODE -Expected 0 -Message 'Repeat project summary source run failed'
+  Assert-Equal -Actual (@($repeatOutput) -join "`n") -Expected (@($output) -join "`n") -Message 'Project summary source output is not stable'
+
+  $reparseTarget = Join-Path $testRoot 'reparse-target'
+  $reparsePath = Join-Path $repositoryRoot 'assets/source/reparse-link'
+  [IO.Directory]::CreateDirectory($reparseTarget) | Out-Null
+  [IO.File]::WriteAllText((Join-Path $reparseTarget 'outside.bin'), 'outside', [Text.UTF8Encoding]::new($false))
+  New-Item -ItemType Junction -Path $reparsePath -Target $reparseTarget | Out-Null
+  try {
+    $reparseOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $sourcePath `
+        -RepositoryRoot $repositoryRoot `
+        -Since '2026-07-22T00:00:00+08:00' `
+        -Until '2026-07-23T00:00:00+08:00')
+    Assert-Equal -Actual $LASTEXITCODE -Expected 1 -Message 'Reparse-point source scan unexpectedly succeeded'
+    $reparseResult = (@($reparseOutput) -join "`n") | ConvertFrom-Json -Depth 20
+    Assert-Equal -Actual $reparseResult.error -Expected 'art_source_error' -Message 'Reparse-point failure category mismatch'
+  } finally {
+    if (Test-Path -LiteralPath $reparsePath) { Remove-Item -LiteralPath $reparsePath -Force }
+  }
+
+  $notGitRoot = Join-Path $testRoot 'not-git'
+  [IO.Directory]::CreateDirectory((Join-Path $notGitRoot 'assets/source')) | Out-Null
+  $gitFailureOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $sourcePath `
+      -RepositoryRoot $notGitRoot `
+      -Since '2026-07-22T00:00:00+08:00' `
+      -Until '2026-07-23T00:00:00+08:00')
+  Assert-Equal -Actual $LASTEXITCODE -Expected 1 -Message 'Non-Git source unexpectedly succeeded'
+  $gitFailureResult = (@($gitFailureOutput) -join "`n") | ConvertFrom-Json -Depth 20
+  Assert-Equal -Actual $gitFailureResult.error -Expected 'source_error' -Message 'Git failure category mismatch'
+
+  Write-Output 'test-get-project-summary-source: OK'
 } finally {
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     $prefix = $temporaryRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
-    if (-not $resolved.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -ne "tzg-briefing-source-test-$testId") {
-      throw "Refusing unsafe briefing-test cleanup: $resolved"
+    if (-not $resolved.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -ne "tzg-project-summary-source-test-$testId") {
+      throw "Refusing unsafe project-summary-test cleanup: $resolved"
     }
     Remove-Item -LiteralPath $resolved -Recurse -Force
   }

@@ -12,6 +12,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $result = $null
 $resultExitCode = 1
+$script:failureCode = 'source_error'
 
 function Invoke-GitRaw {
   param([string[]]$Arguments)
@@ -41,6 +42,121 @@ function Invoke-GitRaw {
     $stdout.Dispose()
     $process.Dispose()
   }
+}
+
+function Get-CommitPaths {
+  param([string]$CommitSha)
+
+  $pathText = Invoke-GitRaw -Arguments @(
+    '-c', 'core.quotepath=false', 'diff-tree', '--root', '--no-commit-id',
+    '--name-only', '-r', '--no-renames', '-z', $CommitSha
+  )
+  @([regex]::Split($pathText, [string][char]0) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Get-CommitSummary {
+  param([string]$CommitSha)
+
+  $body = Invoke-GitRaw -Arguments @('show', '-s', '--format=%B', $CommitSha)
+  $automationMatches = @([regex]::Matches($body, '(?m)^Automation:\s*(?<value>[^\r\n]*\S)\s*$'))
+  $automationMetadata = $null
+  if ($automationMatches.Count -gt 0) {
+    $metadata = [ordered]@{}
+    foreach ($field in @('Automation', 'Task', 'State', 'Result', 'Impact', 'Verify')) {
+      $metadata[$field] = Get-SingleMetadataValue -Body $body -Name $field
+    }
+    $automationMetadata = [pscustomobject]$metadata
+  }
+
+  [pscustomobject][ordered]@{
+    sha = $CommitSha
+    shortSha = $CommitSha.Substring(0, 8)
+    subject = Invoke-GitRaw -Arguments @('show', '-s', '--format=%s', $CommitSha)
+    committedAt = Invoke-GitRaw -Arguments @('show', '-s', '--format=%cI', $CommitSha)
+    changedPaths = @(Get-CommitPaths -CommitSha $CommitSha)
+    automationMetadata = $automationMetadata
+  }
+}
+
+function Test-ExcludedArtFileName {
+  param([string]$Name)
+
+  foreach ($pattern in @(
+      '.DS_Store', '.DS_Store?', '._*', 'ehthumbs.db', 'Thumbs.db', 'Desktop.ini',
+      '*.log', '*.tmp', '*.temp', '*.bak', '*.swp', '~$*'
+    )) {
+    if ($Name -ilike $pattern) { return $true }
+  }
+  $false
+}
+
+function Get-SourceArtActivity {
+  param(
+    [Collections.Generic.HashSet[string]]$TrackedPaths,
+    [DateTimeOffset]$SinceValue,
+    [DateTimeOffset]$UntilValue
+  )
+
+  $artRoot = Join-Path $script:resolvedRepositoryRoot 'assets/source'
+  if (-not (Test-Path -LiteralPath $artRoot -PathType Container)) {
+    throw 'Art source root does not exist'
+  }
+  $resolvedArtRoot = [IO.Path]::GetFullPath($artRoot).TrimEnd('\', '/')
+  $artPrefix = $resolvedArtRoot + [IO.Path]::DirectorySeparatorChar
+  $excludedDirectories = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  [void]$excludedDirectories.Add('.Spotlight-V100')
+  [void]$excludedDirectories.Add('.Trashes')
+  $pending = [Collections.Generic.Stack[IO.DirectoryInfo]]::new()
+  $pending.Push([IO.DirectoryInfo]::new($resolvedArtRoot))
+  $records = [Collections.Generic.List[object]]::new()
+
+  while ($pending.Count -gt 0) {
+    $directory = $pending.Pop()
+    try {
+      $entries = @($directory.EnumerateFileSystemInfos())
+    } catch {
+      throw 'Unable to enumerate art source directory'
+    }
+    foreach ($entry in @($entries | Sort-Object Name)) {
+      if (($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw 'Art source contains a reparse point'
+      }
+      if (($entry.Attributes -band [IO.FileAttributes]::Directory) -ne 0) {
+        if (-not $excludedDirectories.Contains($entry.Name)) {
+          $pending.Push([IO.DirectoryInfo]$entry)
+        }
+        continue
+      }
+      if (Test-ExcludedArtFileName -Name $entry.Name) { continue }
+
+      $fullPath = [IO.Path]::GetFullPath($entry.FullName)
+      if (-not $fullPath.StartsWith($artPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Art source path escaped the approved root'
+      }
+      $relativePath = [IO.Path]::GetRelativePath($script:resolvedRepositoryRoot, $fullPath).Replace('\', '/')
+      if ($TrackedPaths.Contains($relativePath)) { continue }
+
+      try {
+        $file = [IO.FileInfo]$entry
+        $creationAt = [DateTimeOffset]$file.CreationTimeUtc
+        $modifiedAt = [DateTimeOffset]$file.LastWriteTimeUtc
+        $activityAt = if ($creationAt -ge $modifiedAt) { $creationAt } else { $modifiedAt }
+        $bytes = $file.Length
+      } catch {
+        throw 'Unable to read art source file metadata'
+      }
+      if ($activityAt -le $SinceValue -or $activityAt -gt $UntilValue) { continue }
+      $records.Add([pscustomobject][ordered]@{
+        path = $relativePath
+        bytes = $bytes
+        creationAt = $creationAt.ToString('o')
+        modifiedAt = $modifiedAt.ToString('o')
+        activityAt = $activityAt.ToString('o')
+      })
+    }
+  }
+
+  @($records | Sort-Object path)
 }
 
 function Get-SingleMetadataValue {
@@ -128,7 +244,7 @@ function Get-CommittedTaskState {
   $null
 }
 
-function Get-CommitRecord {
+function Get-AutomationCommitRecord {
   param([string]$CommitSha)
 
   $body = Invoke-GitRaw -Arguments @('show', '-s', '--format=%B', $CommitSha)
@@ -213,13 +329,27 @@ try {
   $sinceIso = $sinceValue.ToString('o')
   $untilIso = $untilValue.ToString('o')
 
-  $commitText = Invoke-GitRaw -Arguments @('rev-list', '--reverse', "--since=$sinceIso", "--until=$untilIso", 'HEAD')
+  $commitText = Invoke-GitRaw -Arguments @('rev-list', '--reverse', "--since=$sinceIso", "--until=$untilIso", 'refs/heads/master')
   $commitShas = @($commitText -split '\r?\n' | Where-Object { $_ -match '^[0-9a-f]{40}$' })
   $groupMap = [Collections.Specialized.OrderedDictionary]::new([StringComparer]::Ordinal)
+  $commits = [Collections.Generic.List[object]]::new()
   $errors = [Collections.Generic.List[object]]::new()
 
   foreach ($commitSha in $commitShas) {
-    $record = Get-CommitRecord -CommitSha $commitSha
+    $summary = Get-CommitSummary -CommitSha $commitSha
+    $committedValue = [DateTimeOffset]::MinValue
+    if (-not [DateTimeOffset]::TryParse(
+        [string]$summary.committedAt,
+        [Globalization.CultureInfo]::InvariantCulture,
+        [Globalization.DateTimeStyles]::RoundtripKind,
+        [ref]$committedValue
+      )) {
+      throw 'Commit timestamp is invalid'
+    }
+    if ($committedValue -le $sinceValue -or $committedValue -gt $untilValue) { continue }
+    $commits.Add($summary)
+
+    $record = Get-AutomationCommitRecord -CommitSha $commitSha
     if ($record.Kind -ceq 'ignored') { continue }
     if ($record.Kind -ceq 'error') {
       $errors.Add([pscustomobject]$record.Value)
@@ -239,28 +369,43 @@ try {
     $group.category = [string]$candidate.category
   }
 
-  $groups = [Collections.Generic.List[object]]::new()
+  $automationGroups = [Collections.Generic.List[object]]::new()
   foreach ($task in $groupMap.Keys) {
     $group = $groupMap[$task]
-    $groups.Add([pscustomobject][ordered]@{
+    $automationGroups.Add([pscustomobject][ordered]@{
       task = $group.task
       category = $group.category
       commits = @($group.commits)
     })
   }
+
+  $trackedPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  $trackedText = Invoke-GitRaw -Arguments @('-c', 'core.quotepath=false', 'ls-files', '--cached', '-z', '--', 'assets/source')
+  foreach ($trackedPath in @([regex]::Split($trackedText, [string][char]0))) {
+    if ([string]::IsNullOrWhiteSpace($trackedPath)) { continue }
+    [void]$trackedPaths.Add($trackedPath.Replace('\', '/'))
+  }
+  $script:failureCode = 'art_source_error'
+  $sourceArtActivity = @(Get-SourceArtActivity -TrackedPaths $trackedPaths -SinceValue $sinceValue -UntilValue $untilValue)
+  $script:failureCode = 'source_error'
+
   $result = [ordered]@{
     status = 'ok'
     since = $sinceIso
     until = $untilIso
-    groups = @($groups)
+    commits = @($commits)
+    automationGroups = @($automationGroups)
+    sourceArtActivity = @($sourceArtActivity)
     errors = @($errors)
   }
   $resultExitCode = 0
 } catch {
   $result = [ordered]@{
     status = 'failed'
-    error = 'source_error'
-    groups = @()
+    error = $script:failureCode
+    commits = @()
+    automationGroups = @()
+    sourceArtActivity = @()
     errors = @()
   }
   $resultExitCode = 1

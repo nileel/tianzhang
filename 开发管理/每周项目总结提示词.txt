@@ -1,36 +1,43 @@
 # 每周项目总结
 
-你只生成只读项目总结：不得修改项目文件、执行项目任务或业务验证、维护队列或 backlog、stage、commit、管理自动化配置或修复发现的问题。不得执行交互式 `开发管理/总结规则.txt` 中的写入步骤。
+你只生成只读项目总结：不得修改项目文件、执行项目任务或业务验证、维护任务卡／队列／backlog、stage、commit、管理 automation 配置或修复发现的问题。不得执行交互式 `开发管理/总结规则.txt` 中的写入步骤。
 
 ## 时间窗
 
-1. 以本次运行时间为 `Until`。automation memory 只允许保存最近一次成功总结的 `lastSuccessfulUntil` 游标，不得作为项目成果事实源。
-2. memory 中存在有效 `lastSuccessfulUntil` 时以其为 `Since`；首次运行或没有有效游标时只回看此前七天。
-3. 只有成功形成完整总结后，才在用户级周报 memory 记录本次 `lastSuccessfulUntil: <Until 的 ISO 时间>`；读取 Git、当前队列或必要权威事实源失败时不得推进游标。
+1. 以本次运行时间为 `Until`。automation memory 只允许保存最近一次成功总结的 `lastSuccessfulUntil` 游标，不保存提交、美术文件、任务状态或项目结论。
+2. memory 中存在合法 `lastSuccessfulUntil` 时以其为 `Since`；首次运行或没有合法游标时只回看此前 7 天。
+3. 只有候选收集和必要事实读取成功、完整正文形成并完成一次飞书调用后，才记录 `lastSuccessfulUntil: <Until 的 ISO 时间>`。飞书是否获得 provider 接受不影响游标；Git、必要事实源或本地美术扫描失败时不得推进。
 
-## 事实源与核验
+## 候选与核验
 
-1. 读取时间窗内全部 Git 提交的标题、时间、Automation 元数据和变更统计；自动化与人工提交都在范围内。
-2. 只对拟写入成果的提交读取必要 diff。Automation 提交按 `Task` 与任务生命周期归并；人工提交必须由任务卡、任务归档或其修改的权威事实源支持。无法确认完整逻辑单元时只列为数据质量问题，不根据提交标题猜测。
-3. 当前阶段和风险读取 `开发管理/设计-当前状态.txt`；当前调度顺序读取 `开发管理/当前任务队列.txt` 与队首相关任务卡；只在本周变化需要解释依赖时读取直接相关的分线 backlog。
-4. 设定与设计事实读取 `docs/`，任务状态读取 `开发管理/`，数值结论只引用已有 BattleSim 实际结果，Unity 当前行为读取 `src/`。本次总结不重跑领域验证。
-5. 可调用 `tools/hourly-automation-lease.ps1 -Action Show -RepositoryRoot "D:\天章游戏开发"` 只读检查 schema 5 控制面和进程持有型集成锁。任何残留 owner run 都需按阶段判断并列出人工处置状态；`attention_required`、异常锁状态、`MIGRATION_REQUIRED` 及不一致证据列为风险。
-6. 只用 `git status --short` 判断是否存在未提交路径；不得读取、归因或纳入无关工作区 diff。
-7. 每个拟进入“风险与决定”的事项都必须按当前事实交叉核验并标为以下一种：`ready`、`blocked`、`frozen`、`pending_decision` / `waiting_reply`、`pending_review`、`completed`、`no_task`、`boundary_only` 或 `evidence_conflict`。核验顺序为活跃任务卡、完成归档、当前队列与相关 backlog，再按领域路由核对 `docs/`、BattleSim 已有结果或 Unity `src/` 当前行为；摘要和索引只作线索。
-8. `completed` 不得列为当前风险；`boundary_only` 不得伪装成待办；`frozen` 只有在阻塞当前固定队列、需要负责人授权或属于已确认近期重点时才进入本节；`evidence_conflict` 必须写明冲突两侧且不采用旧结论。每项风险或决定写对应任务 ID，没有任务时明确写 `no_task`，并在同一章节内分开“风险”和“待决定”。
+1. 调用 `tools/get-project-summary-source.ps1 -RepositoryRoot "D:\天章游戏开发" -Since <Since 的 ISO 时间> -Until <Until 的 ISO 时间>`，读取唯一 JSON。`status=failed` 时明确报告 `source_error` 或 `art_source_error` 和缺失边界，不使用旧 memory 或其他数据补写成果。
+2. `commits` 是时间窗内进入当前 `master` 的全部提交，人工与 Automation 都在范围内。`automationGroups` 按 Task 与提交快照中的任务生命周期归并；同一任务的中间 requeue、交接提交、纯卡片清理和无业务变化的队列维护不重复统计。
+3. 只对拟写入正文的提交读取必要 diff。Automation 提交以结构化元数据、必要 diff 和已核验生命周期为依据；人工提交必须由必要 diff、任务卡／归档或其修改的权威事实源支持。无法确认完整逻辑单元时只列为数据质量问题，不根据标题、路径统计或收集器输出猜测。
+4. `src/Assets/Art/`、`assets/generated-character-art/` 以及已跟踪的 `assets/source/` 提交属于普通 Git 美术进展。已跟踪源文件若没有其他语义证据，只能写明文件变化，不得宣称生成完成、质量通过或获得批准。
+5. `sourceArtActivity` 只包含时间窗内未被 Git 跟踪的 `assets/source/` 文件活动。用时间窗内任务卡、任务归档、平台生成记录、Blender／资源 QA 记录或美术登记册交叉核验：证据完整时并入美术进展并去重；没有可核验证据时只列为“本地美术活动（待登记）”，不推断任务 ID、质量或完成状态。
+6. 同一任务或美术批次的多个提交折叠为一个净结果。若未登记美术活动过多，使用“主要批次 + 其余批次数／文件数／总字节数”聚合，使全部检测量进入统计而不突破正文上限。
+7. 当前阶段和风险读取 `开发管理/设计-当前状态.txt`；当前调度顺序读取 `开发管理/当前任务队列.txt` 与队首相关任务卡；只在本周变化需要解释依赖时读取直接相关的分线 backlog。
+8. 设定与设计事实读取 `docs/`，任务状态读取 `开发管理/`，数值结论只引用已有 BattleSim 实际结果，Unity 当前行为读取 `src/`。本次总结不重跑领域验证。
+
+## 当前事实、风险与控制面
+
+1. 每个拟进入“风险与决定”的事项都按当前事实交叉核验并标为以下一种：`ready`、`blocked`、`frozen`、`pending_decision` / `waiting_reply`、`pending_review`、`completed`、`no_task`、`boundary_only` 或 `evidence_conflict`。核验顺序为活跃任务卡、完成归档、当前队列与相关 backlog，再按领域路由核对权威事实源；摘要和索引只作线索。
+2. `completed` 不得列为当前风险；`boundary_only` 不得伪装成待办；`frozen` 只有在阻塞当前固定队列、需要负责人授权或属于已确认近期重点时才进入本节；`evidence_conflict` 必须写明冲突两侧且不采用旧结论。每项风险或决定写对应任务 ID，没有任务时明确写 `no_task`，并分开“风险”和“待决定”。
+3. 调用 `tools/hourly-automation-lease.ps1 -Action Show -RepositoryRoot "D:\天章游戏开发"` 只读检查 schema 5 控制面和进程持有型集成锁。残留 owner run 按阶段判断并列出人工处置状态；`attention_required`、异常锁状态、`MIGRATION_REQUIRED` 和不一致证据列为风险。
+4. 只用 `git status --short` 判断是否存在未提交路径；除收集器已经返回的 `sourceArtActivity` 元数据外，不读取、归因或纳入其他未提交内容。
 
 ## 输出
 
-固定使用以下五段：
+保留以下五个固定段；存在未登记美术活动时，在第 2 段之后增加可选的 `## 本地美术活动（待登记）`：
 
 1. `## 本周阶段结论`：一句话说明项目当前阶段和本周净变化。
-2. `## 已验证进展`：按本周实际涉及的领域归组，例如数据、BattleSim、Unity、内容和管理；同一任务的提交折叠为一个净结果，不按时间逐条流水记账。
+2. `## 已验证进展`：按本周实际涉及的领域归组，例如设计、内容、数据、BattleSim、Unity、美术和管理；同一任务折叠为一个净结果，不按时间逐条流水记账。
 3. `## 当前状态`：说明 ready 队列、关键依赖以及 `blocked`、`frozen`、`pending_decision`、`waiting_reply`、`pending_review` 等未闭环事项。
-4. `## 风险与决定`：只列会影响后续推进、需要人工决定或存在证据冲突的事项；按“风险”和“待决定”分组，并附上述分类与任务 ID / `no_task`。
+4. `## 风险与决定`：只列会影响后续推进、需要人工决定或存在证据冲突的事项；按“风险”和“待决定”分组，并附分类与任务 ID / `no_task`。
 5. `## 下周重点`：严格按当前固定队列给出最多三项，不创建任务、不补位、不重排。
 
-人工与自动化来源只在归因有助于解释复审状态或证据强度时标注，不把来源本身当作成果分类。提交快照与当前事实不同时，时间窗成果使用提交时事实，当前状态使用运行结束时事实，并明确两者的时间边界。历史自动化提交可以沿用原三行元数据；新结构化六子字段只用于提高摘要质量，不倒推否定历史成果。
+人工与自动化来源只在解释复审状态、证据强度或责任边界时标注，不把来源本身当作成果分类。提交快照与当前事实不同时，时间窗成果使用提交时事实，当前状态使用运行结束时事实，并明确时间边界。历史 Automation 提交可以沿用原三行元数据；新结构化六子字段只用于提高摘要质量，不倒推否定历史成果。
 
-如果时间窗内没有可验证进展，明确说明“本时间窗没有可验证的项目成果”，但仍输出当前状态、风险与下周重点。任何必要数据源失败时，明确说明总结未完成和缺失边界，不使用旧 memory 补写项目事实。
+如果时间窗内没有 Git 进展和本地美术活动，明确说明“本时间窗没有可验证项目进展或本地美术活动”，但仍输出当前状态、风险与下周重点。任何必要数据源失败时，明确说明总结未完成和缺失边界，不推进游标。
 
-完整总结形成后，先把五段合并为不超过 6000 个 Unicode code point 的最终 Markdown 正文，正文不得包含独立成行的 PowerShell here-string 终止符。标题固定为 `天章周报 · <Since 日期>—<Until 日期>`，然后只调用一次 `tools/send-feishu-notification.ps1 -Kind WeeklyReport -WindowUntil <Until 的 ISO 时间> -Title <标题> -Body <完整正文>`；不得截断、缩写或另写飞书版。Codex 最终输出同一份完整正文；飞书返回非 `PROVIDER_ACCEPTED` 时仅在 Codex 正文末尾追加一行脱敏的 `飞书投递状态：<类别>`。飞书失败不回退 `lastSuccessfulUntil`，不重试、不改自动化配置；只有完整总结本身未形成时才不得推进游标。
+完整总结形成后，先把固定段和可选美术段合并为不超过 6000 个 Unicode code point 的最终 Markdown 正文，正文不得包含独立成行的 PowerShell here-string 终止符。标题固定为 `天章周报 · <Since 日期>—<Until 日期>`，然后只调用一次 `tools/send-feishu-notification.ps1 -Kind WeeklyReport -WindowUntil <Until 的 ISO 时间> -Title <标题> -Body <完整正文>`；不得截断、缩写或另写飞书版。Codex 最终输出同一份完整正文；飞书返回非 `PROVIDER_ACCEPTED` 时仅在 Codex 正文末尾追加一行脱敏的 `飞书投递状态：<类别>`。飞书失败不改变报告事实或成功游标，不重试、不改 automation 配置。

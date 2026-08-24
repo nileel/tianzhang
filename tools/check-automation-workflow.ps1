@@ -36,11 +36,12 @@ function Read-Automation {
   param([string]$Directory)
   $path = Join-Path $Directory 'automation.toml'; $text = Read-Utf8 $path
   $id = [regex]::Match($text, '(?m)^id\s*=\s*"(?<v>[^"]+)"\s*$')
+  $name = [regex]::Match($text, '(?m)^name\s*=\s*"(?<v>[^"]+)"\s*$')
   $status = [regex]::Match($text, '(?m)^status\s*=\s*"(?<v>ACTIVE|PAUSED)"\s*$')
   $prompt = [regex]::Match($text, '(?m)^prompt\s*=\s*(?<v>"(?:[^"\\]|\\.)*")\s*$')
-  Assert-Contract ($id.Success -and $status.Success -and $prompt.Success) "automation contract is invalid: $path"
+  Assert-Contract ($id.Success -and $name.Success -and $status.Success -and $prompt.Success) "automation contract is invalid: $path"
   try { $decodedPrompt = $prompt.Groups['v'].Value | ConvertFrom-Json } catch { throw "automation prompt cannot be decoded: $path" }
-  [pscustomobject]@{ Id = $id.Groups['v'].Value; Status = $status.Groups['v'].Value; Prompt = [string]$decodedPrompt }
+  [pscustomobject]@{ Id = $id.Groups['v'].Value; Name = $name.Groups['v'].Value; Status = $status.Groups['v'].Value; Prompt = [string]$decodedPrompt }
 }
 
 $root = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\', '/')
@@ -53,12 +54,16 @@ $requiredScripts = @(
   'tools/invoke-hourly-owner.ps1', 'tools/invoke-project-integration.ps1', 'tools/select-hourly-task.ps1',
   'tools/invoke-codex-candidate.ps1', 'tools/codex-cli-session.ps1',
   'tools/invoke-deepseek-responsibility.ps1', 'tools/set-task-pending-review.ps1', 'tools/set-task-automation-state.ps1',
-  'tools/automation-finalize-commit.ps1', 'tools/send-feishu-notification.ps1', 'tools/test-hourly-task-input-materialization.ps1'
+  'tools/automation-finalize-commit.ps1', 'tools/send-feishu-notification.ps1', 'tools/test-hourly-task-input-materialization.ps1',
+  'tools/get-project-summary-source.ps1', 'tools/test-get-project-summary-source.ps1'
 )
 foreach ($relative in $requiredScripts) {
   $path = Join-Path $root $relative
   Assert-Contract (Test-Path -LiteralPath $path -PathType Leaf) "missing workflow component: $relative"
   Assert-PowerShellParses $path
+}
+foreach ($retiredSummaryPath in @('tools/get-automation-briefing-source.ps1', 'tools/test-get-automation-briefing-source.ps1')) {
+  Assert-Contract (-not (Test-Path -LiteralPath (Join-Path $root $retiredSummaryPath))) "retired summary source still exists: $retiredSummaryPath"
 }
 
 $runtime = Read-Utf8 (Join-Path $root 'tools/hourly-automation-lease.ps1')
@@ -97,6 +102,9 @@ $deepseekPrompt = Read-Utf8 (Join-Path $root '开发管理/DeepSeek小时触发�
 $collaborationRules = Read-Utf8 (Join-Path $root '开发管理/AI协作规则.txt')
 $workflowState = Read-Utf8 (Join-Path $root '开发管理/自动工作流状态.txt')
 $deepseekWorkPrompt = Read-Utf8 (Join-Path $root '开发管理/DeepSeek工作提示词.txt')
+$dailySummaryPrompt = Read-Utf8 (Join-Path $root '开发管理/自动化简报提示词.txt')
+$weeklySummaryPrompt = Read-Utf8 (Join-Path $root '开发管理/每周项目总结提示词.txt')
+$projectSummarySource = Read-Utf8 (Join-Path $root 'tools/get-project-summary-source.ps1')
 $deepseekTemplatePaths = @(
   '开发管理/DeepSeek任务卡-局部代码实现.txt',
   '开发管理/DeepSeek任务卡-批量设计内容.txt',
@@ -111,6 +119,11 @@ Assert-Contains $codexPrompt 'Codex worker prompt' @('tools.mcp__node_repl__js',
 Assert-Contains $deepseekPrompt 'DeepSeek trigger prompt' @('invoke-hourly-owner.ps1', '-Owner deepseek', '-Action RunOnce', 'tools.exec_command', 'tools.write_stdin', 'yield_time_ms: 60000', 'Script running with cell ID', 'deepseek_exec_session_invalid', 'deepseek_shared_entrypoint_failed', 'deepseek_terminal_json_invalid', '不读取队列、任务卡或业务事实', 'Desktop automation memory', '恰好一个简短 `::inbox-item`', 'memory 不得改变固定命令')
 Assert-DoesNotContain $codexPrompt 'Codex worker prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文', 'shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', "terminal.status === 'no_candidate'", "terminal.owner === 'codex'", "terminal.taskId === 'QUEUE-MAINTENANCE'", "terminal.detailCode === 'no_runnable_candidate'", "terminal.cleanup === 'cleaned'", 'tools.codex_app__automation_update', "status: 'PAUSED'", 'automation.toml')
 Assert-DoesNotContain $deepseekPrompt 'DeepSeek trigger prompt' @('不得添加解释、其他 commentary、automation memory、`::inbox-item`', '最终回复只能是脚本返回的单个结构化终态 JSON 原文', 'shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', 'tools.codex_app__automation_update', 'automation.toml')
+Assert-Contains $dailySummaryPrompt 'daily project summary prompt' @('tools/get-project-summary-source.ps1', '`commits`', '`automationGroups`', '`sourceArtActivity`', '人工与 Automation', '只对拟写入正文的提交读取必要 diff', '`lastSuccessfulUntil`', '旧日报', '本地美术活动（待登记）')
+Assert-DoesNotContain $dailySummaryPrompt 'daily project summary prompt' @('本时间窗没有带有效 Automation 元数据的业务提交', 'tools/get-automation-briefing-source.ps1')
+Assert-Contains $weeklySummaryPrompt 'weekly project summary prompt' @('tools/get-project-summary-source.ps1', '`commits`', '`automationGroups`', '`sourceArtActivity`', '人工与 Automation', '只对拟写入正文的提交读取必要 diff', '`lastSuccessfulUntil`', '本地美术活动（待登记）')
+Assert-DoesNotContain $weeklySummaryPrompt 'weekly project summary prompt' @('tools/get-automation-briefing-source.ps1')
+Assert-Contains $projectSummarySource 'project summary source' @('refs/heads/master', "'ls-files', '--cached'", 'automationGroups', 'sourceArtActivity', 'ReparsePoint', 'Desktop.ini', 'art_source_error')
 Assert-DoesNotContain $collaborationRules 'collaboration rules' @('外部两提交边界', '业务提交与交接提交')
 Assert-DoesNotContain $workflowState 'workflow state' @('正式结果仍是连续的 `businessCommit`', '仅含交接登记的 `handoffCommit`')
 Assert-DoesNotContain $deepseekWorkPrompt 'DeepSeek work prompt' $deepseekTemplatePaths
@@ -134,13 +147,16 @@ $automations = @(Get-ChildItem -LiteralPath $automationDirectory -Directory | Fo
 $expected = [ordered]@{
   'codex-hourly-worker' = $codexPrompt
   'deepseek-hourly-trigger' = $deepseekPrompt
-  'tzg-daily-automation-briefing' = Read-Utf8 (Join-Path $root '开发管理/自动化简报提示词.txt')
-  'tzg-weekly-project-summary' = Read-Utf8 (Join-Path $root '开发管理/每周项目总结提示词.txt')
+  'tzg-daily-automation-briefing' = $dailySummaryPrompt
+  'tzg-weekly-project-summary' = $weeklySummaryPrompt
 }
 foreach ($entry in $expected.GetEnumerator()) {
   $matches = @($automations | Where-Object { $_.Id -ceq $entry.Key })
   Assert-Contract ($matches.Count -eq 1) "automation configuration is missing or duplicated: $($entry.Key)"
   Assert-Contract ((Normalize-Text $matches[0].Prompt) -ceq (Normalize-Text ([string]$entry.Value))) "automation prompt does not match canonical prompt: $($entry.Key)"
+  if ($entry.Key -ceq 'tzg-daily-automation-briefing') {
+    Assert-Contract ($matches[0].Name -ceq 'TZG Daily Project Summary') 'daily project summary automation name is incorrect'
+  }
   if ($RequireActive) { Assert-Contract ($matches[0].Status -ceq 'ACTIVE') "automation is not ACTIVE: $($entry.Key)" }
 }
 if ($RequireLegacyRetired) {
