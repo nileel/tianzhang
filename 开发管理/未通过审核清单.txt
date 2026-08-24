@@ -8,9 +8,9 @@
 
 ### M-EXP-PREFLIGHT-01A · 风险索引、经验卡模板与只读匹配器基础
 
-- 审核对象：正式提交 `8a96186af197c1498bfe945b3cc53f57cc25299b`；结论：部分通过，仍需返工。
-- 已通过：两种 `preflight_overbroad` 结果均保留去重后的门禁 ID 与指针；独立测试、合法零命中调用、任务卡检查与审核文本检查均通过。
-- 返工一：`tools/test-get-experience-risk-preflight.ps1` 的 case10 仍以活跃路径 `开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt` 调用匹配器。按审核通过规则将同一卡归档后，该调用稳定返回 `task_card_not_found`，使归档后的匹配器测试失败。将零命中与只读证明改为临时 fixture 或不依赖活跃任务卡的输入，随后在归档状态重新运行完整测试。
+- 审核对象：正式提交 `d042f113abe744bf26622d38b3b83517b9dce63a`；结论：部分通过，仍需返工。
+- 已通过：case10 已改为自包含临时 fixture，归档后不再依赖活跃任务卡；两种 `preflight_overbroad` 结果保留去重后的门禁 ID 与指针；独立测试和合法零命中调用均通过。
+- 返工一：`tools/get-experience-risk-preflight.ps1` 会把 `must_read` 的 `detailRef` 片段直接作为待提取章节；例如 `detail.txt#正确处理` 会返回 `## 正确处理` 正文。批准规格要求匹配器只返回命中的 L2 `## 开工前` 精确正文。限制 `detailRef` 为精确 `路径#开工前`，对缺失或其他章节返回稳定 `missing_body_pointer`，并补充相应 fixture 负例后重新复审。
 
 ### C-KB-IDX-STORY-01 · 剧情事实速查卡
 
