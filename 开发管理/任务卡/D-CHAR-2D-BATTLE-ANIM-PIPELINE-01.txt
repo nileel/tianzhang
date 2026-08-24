@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：书面方案与下游合同已完成自审。是否批准方案并解锁苻渊 2D 战斗动画 pilot？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260825-D2DANIM01",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-reference-research.md",
@@ -75,8 +75,16 @@
     ],
     "residualRisk": "A 批准后仍须以真实六向攻击、受击、死亡试片选择制作方法并记录实际成本。",
     "taskContextDigest": "5a5fa4400cc8cea29cee837af4f23e89c5b8eeb21a9e3c158194c2b328956b95",
-    "createdAt": "2026-08-25T02:28:45.8578690+08:00",
+    "createdAt": "2026-08-25T02:28:45.857869+08:00",
     "queueIndex": 1
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260825-D2DANIM01",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "44830e4223d892b1ad53e0ff7f085ecf9674de69169e17f874e1735d4315e74a"
   }
 }
 ---TASK-BODY---

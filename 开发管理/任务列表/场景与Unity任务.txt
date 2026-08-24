@@ -18,7 +18,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-REEVALUATE-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | 战场角色2D与静态3D方向重新评估父项 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt |
-| D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 | P1 | codex | 待决定 | — | 2D战斗动画生产流程详细方案 | 开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt |
+| D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 | P1 | codex | 已排队 | — | 2D战斗动画生产流程详细方案 | 开发管理/任务卡/D-CHAR-2D-BATTLE-ANIM-PIPELINE-01.txt |
 | D-CHAR-STATIC3D-MOTION-PIPELINE-01 | P1 | codex | 已排队 | — | 静态3D战斗动态表现详细方案 | 开发管理/任务卡/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt |
 | A-CHAR-2D-BATTLE-ANIM-PILOT-01 | P1 | codex | 阻塞 | D-CHAR-2D-BATTLE-ANIM-PIPELINE-01 | 苻渊2D战斗动画样例生产 | 开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt |
 | U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01 | P1 | codex | 阻塞 | A-CHAR-2D-BATTLE-ANIM-PILOT-01 | 苻渊2D战斗动画样例Unity接入 | 开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt |
