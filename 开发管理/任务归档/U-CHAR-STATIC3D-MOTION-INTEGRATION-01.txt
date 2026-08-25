@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-25：pilot 已冻结唯一静态模型／BaseColor 输入哈希、manifest、五条项目原创本地 cue WAV、六方向与先高风险 source QA；本卡的 Unity expectedPaths、验证、完成条件和停止条件完整，可在隔离入口接入。",
+  "stateReason": "2026-08-25：静态 3D 动态样例已在隔离 VisualBaselineBoard 完成六方向六事件、逐事件时点、根节点复位、唯一效果与五条冻结 cue 接入；未接入正式单位或改变战斗规则，直接下游已解除本卡 blocker。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",

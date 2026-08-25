@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4393006735538109788}
+  - component: {fileID: 7507508995043085786}
   - component: {fileID: 1953786515754216501}
   m_Layer: 0
   m_Name: FuYuan_StaticChess
@@ -34,6 +35,103 @@ Transform:
   - {fileID: 1540404866490486627}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &7507508995043085786
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4277828254982873857}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 8
+  Pan2D: 0
+  rolloffMode: 1
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &1953786515754216501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46,6 +144,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2d93d284274f2a49ac063c19c64bfac, type: 3}
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.StaticChessPresentationController
+  motionEffectPrefab: {fileID: 8012065686340894292, guid: f1e5e0c86bf10ea47906c32407b78ba7, type: 3}
+  cueSource: {fileID: 7507508995043085786}
+  moveCue: {fileID: 8300000, guid: 1cbae4a233105e64a8f6198312fd4b7a, type: 3}
+  attackCue: {fileID: 8300000, guid: 27cb4a8a4c92b2a45a516bfc62aa787e, type: 3}
+  hitCue: {fileID: 8300000, guid: d9f502e7add579647bdb0b9cc56f00f4, type: 3}
+  castCue: {fileID: 8300000, guid: be1c528b483d3e941a1e326a892d6752, type: 3}
+  deathCue: {fileID: 8300000, guid: 2ddad40f4e1122c45bab778b29803fc3, type: 3}
 --- !u!1 &7512597916667093365
 GameObject:
   m_ObjectHideFlags: 0

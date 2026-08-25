@@ -164,6 +164,12 @@ namespace TianZhang.Editor
                     "The static chess prefab must not import a runtime animation or rig.");
                 Require(root.GetComponents<StaticChessPresentationController>().Length == 1,
                     "The static chess root must own exactly one presentation controller.");
+                StaticChessPresentationController controller = root.GetComponent<StaticChessPresentationController>();
+                AudioSource[] cueSources = root.GetComponents<AudioSource>();
+                Require(cueSources.Length == 1 && !cueSources[0].playOnAwake &&
+                        Mathf.Abs(cueSources[0].spatialBlend - 1f) < 0.001f,
+                    "The static chess root must own exactly one spatial cue source.");
+                ValidateStaticChessMotionConfiguration(controller, cueSources[0]);
                 Transform figure = root.transform.Find("FuYuan_Model");
                 Require(figure != null && figure.localPosition == Vector3.zero &&
                         Quaternion.Angle(figure.localRotation,
@@ -195,6 +201,56 @@ namespace TianZhang.Editor
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+        }
+
+        private static void ValidateStaticChessMotionConfiguration(
+            StaticChessPresentationController controller,
+            AudioSource cueSource)
+        {
+            var serialized = new SerializedObject(controller);
+            SerializedProperty effectProperty = serialized.FindProperty("motionEffectPrefab");
+            GameObject effectPrefab = effectProperty != null ? effectProperty.objectReferenceValue as GameObject : null;
+            Require(effectPrefab != null &&
+                    AssetDatabase.GetAssetPath(effectPrefab) == VisualBaselineBuilder.StaticChessMotionEffectPrefabPath,
+                "The static chess controller must reference the frozen one-shot motion effect prefab.");
+            Require(serialized.FindProperty("cueSource")?.objectReferenceValue == cueSource,
+                "The static chess controller must own its serialized cue source.");
+            ValidateStaticChessMotionCue(serialized, "moveCue", VisualBaselineBuilder.StaticChessMotionMoveCuePath);
+            ValidateStaticChessMotionCue(serialized, "attackCue", VisualBaselineBuilder.StaticChessMotionAttackCuePath);
+            ValidateStaticChessMotionCue(serialized, "hitCue", VisualBaselineBuilder.StaticChessMotionHitCuePath);
+            ValidateStaticChessMotionCue(serialized, "castCue", VisualBaselineBuilder.StaticChessMotionCastCuePath);
+            ValidateStaticChessMotionCue(serialized, "deathCue", VisualBaselineBuilder.StaticChessMotionDeathCuePath);
+
+            GameObject effectRoot = PrefabUtility.LoadPrefabContents(VisualBaselineBuilder.StaticChessMotionEffectPrefabPath);
+            try
+            {
+                ParticleSystem[] particles = effectRoot.GetComponentsInChildren<ParticleSystem>(true);
+                Require(effectRoot.name == "FuYuan_StaticChessMotionFx" && particles.Length == 1 &&
+                        !particles[0].main.loop && !particles[0].main.playOnAwake &&
+                        particles[0].main.stopAction == ParticleSystemStopAction.Destroy,
+                    "The static chess motion effect must be a one-shot built-in particle prefab.");
+                Require(effectRoot.GetComponentsInChildren<Animator>(true).Length == 0 &&
+                        effectRoot.GetComponentsInChildren<Animation>(true).Length == 0 &&
+                        effectRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length == 0,
+                    "The static chess motion effect must not introduce a rig or animation clip.");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(effectRoot);
+            }
+        }
+
+        private static void ValidateStaticChessMotionCue(SerializedObject serialized, string fieldName, string path)
+        {
+            SerializedProperty property = serialized.FindProperty(fieldName);
+            AudioClip clip = property != null ? property.objectReferenceValue as AudioClip : null;
+            Require(clip != null && AssetDatabase.GetAssetPath(clip) == path,
+                "The static chess controller is missing its frozen " + fieldName + ".");
+            AudioImporter importer = AssetImporter.GetAtPath(path) as AudioImporter;
+            Require(importer != null && importer.forceToMono && !importer.loadInBackground &&
+                    importer.defaultSampleSettings.loadType == AudioClipLoadType.DecompressOnLoad &&
+                    importer.defaultSampleSettings.compressionFormat == AudioCompressionFormat.PCM,
+                "The static chess cue must keep its deterministic PCM import settings: " + path);
         }
 
         private static void ValidateTacticalSpritePrefab()

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CHAR-STATIC3D-MOTION-INTEGRATION-01"
-  ],
-  "stateReason": "2026-08-25：苻渊 2D 动态样例 Unity 接入、活动 atlas、六方向六状态、事件帧、根节点复位和隔离矩阵验证已完成；本卡仍等待静态 3D 动态样例接入，之后才建立同条件可玩入口，不决定视觉胜者。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-25：苻渊 2D 动态与静态 3D 动态样例 Unity 接入、六方向事件、根节点复位和隔离矩阵验证均已完成；本卡可建立同条件可玩入口，仍不决定视觉胜者。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleVisualComparisonController.cs",

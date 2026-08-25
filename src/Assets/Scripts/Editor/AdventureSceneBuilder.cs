@@ -42,6 +42,7 @@ namespace TianZhang.Editor
             CombatActionBarView actionBar = root.AddComponent<CombatActionBarView>();
             CombatLogView logView = root.AddComponent<CombatLogView>();
 
+            VisualBaselineBuilder.BuildStaticChessAssets();
             VisualBaselineBuilder.BuildTacticalSpriteAssets();
             VisualBaselineBuilder.BuildBattleAnimationSpriteAssets();
             ValidateReadOnlyVisualAssets();
@@ -190,6 +191,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.AttackMaterialPath);
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.StaticChessPrefabPath);
+            SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.StaticChessMotionEffectPrefabPath);
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.TacticalSpritePrefabPath);
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.BattleAnimationSpritePrefabPath);
         }

@@ -49,6 +49,20 @@ namespace TianZhang.Editor
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG";
         public const string StaticChessPrefabPath =
             "Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.prefab";
+        public const string StaticChessMotionFolderPath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion";
+        public const string StaticChessMotionEffectPrefabPath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion/FuYuan_StaticChessMotionFx.prefab";
+        public const string StaticChessMotionMoveCuePath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion/FuYuan_StaticChessMotion_Move.wav";
+        public const string StaticChessMotionAttackCuePath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion/FuYuan_StaticChessMotion_Attack.wav";
+        public const string StaticChessMotionHitCuePath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion/FuYuan_StaticChessMotion_Hit.wav";
+        public const string StaticChessMotionCastCuePath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion/FuYuan_StaticChessMotion_Cast.wav";
+        public const string StaticChessMotionDeathCuePath =
+            "Assets/Art/Characters/StaticChess/FuYuan/Motion/FuYuan_StaticChessMotion_Death.wav";
         public const string TacticalSpriteFolderPath =
             "Assets/Art/Characters/TacticalSprites";
         public const string TacticalSpriteFuYuanFolderPath =
@@ -106,6 +120,7 @@ namespace TianZhang.Editor
             EnsureFolder("Assets/Art", "Characters");
             EnsureFolder("Assets/Art/Characters", "StaticChess");
             EnsureFolder("Assets/Art/Characters/StaticChess", "FuYuan");
+            EnsureFolder("Assets/Art/Characters/StaticChess/FuYuan", "Motion");
         }
 
         private static void EnsureFolder(string parent, string name)
@@ -369,6 +384,7 @@ namespace TianZhang.Editor
         public static void BuildStaticChessAssets()
         {
             EnsureStaticChessFolders();
+            BuildStaticChessMotionAssets();
             AssetDatabase.ImportAsset(StaticChessBaseColorTexturePath, ImportAssetOptions.ForceSynchronousImport);
             AssetDatabase.ImportAsset(StaticChessModelPath, ImportAssetOptions.ForceSynchronousImport);
             ModelImporter importer = AssetImporter.GetAtPath(StaticChessModelPath) as ModelImporter;
@@ -404,7 +420,15 @@ namespace TianZhang.Editor
                 basePlaceholder.transform.localScale = StaticChessBaseScale;
                 ConfigurePrimitive(basePlaceholder, RequireAsset<Material>(UnitMaterialPath));
 
-                root.AddComponent<TianZhang.Features.CombatPresentation.StaticChessPresentationController>();
+                AudioSource cueSource = root.AddComponent<AudioSource>();
+                cueSource.playOnAwake = false;
+                cueSource.spatialBlend = 1f;
+                cueSource.rolloffMode = AudioRolloffMode.Linear;
+                cueSource.maxDistance = 8f;
+
+                StaticChessPresentationController controller =
+                    root.AddComponent<StaticChessPresentationController>();
+                ConfigureStaticChessMotionController(controller, cueSource);
                 GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, StaticChessPrefabPath);
                 if (saved == null) throw new InvalidOperationException("Could not save the static chess prefab.");
             }
@@ -413,6 +437,84 @@ namespace TianZhang.Editor
                 UnityEngine.Object.DestroyImmediate(root);
             }
             AssetDatabase.SaveAssets();
+        }
+
+        private static void BuildStaticChessMotionAssets()
+        {
+            foreach (string cuePath in StaticChessMotionCuePaths())
+            {
+                AssetDatabase.ImportAsset(cuePath, ImportAssetOptions.ForceSynchronousImport);
+                ConfigureStaticChessMotionCueImporter(cuePath);
+                RequireAsset<AudioClip>(cuePath);
+            }
+
+            var root = new GameObject("FuYuan_StaticChessMotionFx");
+            try
+            {
+                ParticleSystem particles = root.AddComponent<ParticleSystem>();
+                ParticleSystem.MainModule main = particles.main;
+                main.loop = false;
+                main.playOnAwake = false;
+                main.duration = 0.18f;
+                main.startLifetime = 0.16f;
+                main.startSpeed = 0.32f;
+                main.startSize = 0.14f;
+                main.simulationSpace = ParticleSystemSimulationSpace.World;
+                main.stopAction = ParticleSystemStopAction.Destroy;
+
+                ParticleSystem.EmissionModule emission = particles.emission;
+                emission.rateOverTime = 0f;
+                emission.SetBursts(Array.Empty<ParticleSystem.Burst>());
+                ParticleSystem.ShapeModule shape = particles.shape;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.16f;
+
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, StaticChessMotionEffectPrefabPath);
+                if (saved == null) throw new InvalidOperationException("Could not save the static chess motion effect prefab.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static string[] StaticChessMotionCuePaths() => new[]
+        {
+            StaticChessMotionMoveCuePath,
+            StaticChessMotionAttackCuePath,
+            StaticChessMotionHitCuePath,
+            StaticChessMotionCastCuePath,
+            StaticChessMotionDeathCuePath,
+        };
+
+        private static void ConfigureStaticChessMotionCueImporter(string path)
+        {
+            AudioImporter importer = AssetImporter.GetAtPath(path) as AudioImporter;
+            if (importer == null) throw new InvalidOperationException("Static chess motion cue importer is unavailable: " + path);
+            importer.forceToMono = true;
+            importer.loadInBackground = false;
+            AudioImporterSampleSettings settings = importer.defaultSampleSettings;
+            settings.loadType = AudioClipLoadType.DecompressOnLoad;
+            settings.compressionFormat = AudioCompressionFormat.PCM;
+            settings.quality = 1f;
+            importer.defaultSampleSettings = settings;
+            importer.SaveAndReimport();
+        }
+
+        private static void ConfigureStaticChessMotionController(
+            StaticChessPresentationController controller,
+            AudioSource cueSource)
+        {
+            var serialized = new SerializedObject(controller);
+            serialized.FindProperty("motionEffectPrefab").objectReferenceValue =
+                RequireAsset<GameObject>(StaticChessMotionEffectPrefabPath);
+            serialized.FindProperty("cueSource").objectReferenceValue = cueSource;
+            serialized.FindProperty("moveCue").objectReferenceValue = RequireAsset<AudioClip>(StaticChessMotionMoveCuePath);
+            serialized.FindProperty("attackCue").objectReferenceValue = RequireAsset<AudioClip>(StaticChessMotionAttackCuePath);
+            serialized.FindProperty("hitCue").objectReferenceValue = RequireAsset<AudioClip>(StaticChessMotionHitCuePath);
+            serialized.FindProperty("castCue").objectReferenceValue = RequireAsset<AudioClip>(StaticChessMotionCastCuePath);
+            serialized.FindProperty("deathCue").objectReferenceValue = RequireAsset<AudioClip>(StaticChessMotionDeathCuePath);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         public static void BuildTacticalSpriteAssets()

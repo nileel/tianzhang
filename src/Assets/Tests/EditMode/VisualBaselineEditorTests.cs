@@ -209,6 +209,66 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void StaticChessMotionAssetsMatchTheFrozenPilotInputAndPrefabContract()
+        {
+            const string modelSha256 = "AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A";
+            const string baseColorSha256 = "F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611";
+            string manifestPath = Path.Combine(ProjectRootPath(), "assets", "source", "characters", "platform-evaluation",
+                "tripo", "static-chess-fuyuan", "motion-pilot", "fuyuan_static_3d_motion_manifest.json");
+            Assert.AreEqual(modelSha256, ComputeSha256Hex(AssetFilePath(VisualBaselineBuilder.StaticChessModelPath)));
+            Assert.AreEqual(baseColorSha256, ComputeSha256Hex(AssetFilePath(VisualBaselineBuilder.StaticChessBaseColorTexturePath)));
+            Assert.IsTrue(File.Exists(manifestPath));
+            string manifest = File.ReadAllText(manifestPath);
+            Assert.That(manifest, Does.Contain(modelSha256));
+            Assert.That(manifest, Does.Contain(baseColorSha256));
+
+            AssertStaticChessMotionCue("move", "7D99D0D18A08E0070E621AD1018C54E8D7D06EA2A0BE2A6D528F56E8BBE50B40",
+                17324, 0.18f, VisualBaselineBuilder.StaticChessMotionMoveCuePath);
+            AssertStaticChessMotionCue("attack", "0A0F6148D4898AD98DA7C3975C9E7E94FE47BBC84BF43FBF41152FD469DD4ACD",
+                23084, 0.24f, VisualBaselineBuilder.StaticChessMotionAttackCuePath);
+            AssertStaticChessMotionCue("hit", "7682BA66F29123155173E722E18AF7178C8D8EE0BD27C60F5EDDAB22F5633CB1",
+                19244, 0.20f, VisualBaselineBuilder.StaticChessMotionHitCuePath);
+            AssertStaticChessMotionCue("cast", "1F9C4B53DAE007A96BFB181582AD2B08CFAEF36C370D0BBAC5D8AECDA59A8121",
+                28844, 0.30f, VisualBaselineBuilder.StaticChessMotionCastCuePath);
+            AssertStaticChessMotionCue("death", "620292E40108069F751C99B066CD51F825EBD0CE86D0F975E6C8FE91771B4CD6",
+                40364, 0.42f, VisualBaselineBuilder.StaticChessMotionDeathCuePath);
+
+            VisualBaselineBuilder.BuildStaticChessAssets();
+            Assert.IsTrue(AssetDatabase.IsValidFolder(VisualBaselineBuilder.StaticChessMotionFolderPath));
+            GameObject effect = AssetDatabase.LoadAssetAtPath<GameObject>(VisualBaselineBuilder.StaticChessMotionEffectPrefabPath);
+            Assert.IsNotNull(effect);
+            Assert.AreEqual("FuYuan_StaticChessMotionFx", effect.name);
+            Assert.AreEqual(1, effect.GetComponentsInChildren<ParticleSystem>(true).Length);
+            Assert.Zero(effect.GetComponentsInChildren<Animator>(true).Length);
+            Assert.Zero(effect.GetComponentsInChildren<Animation>(true).Length);
+            Assert.Zero(effect.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length);
+
+            GameObject root = PrefabUtility.LoadPrefabContents(VisualBaselineBuilder.StaticChessPrefabPath);
+            try
+            {
+                StaticChessPresentationController controller = root.GetComponent<StaticChessPresentationController>();
+                AudioSource cueSource = root.GetComponent<AudioSource>();
+                Assert.IsNotNull(controller);
+                Assert.IsNotNull(cueSource);
+                Assert.IsFalse(cueSource.playOnAwake);
+                Assert.AreEqual(1f, cueSource.spatialBlend, 0.001f);
+
+                var serialized = new SerializedObject(controller);
+                Assert.AreSame(effect, serialized.FindProperty("motionEffectPrefab").objectReferenceValue);
+                Assert.AreSame(cueSource, serialized.FindProperty("cueSource").objectReferenceValue);
+                AssertCueReference(serialized, "moveCue", VisualBaselineBuilder.StaticChessMotionMoveCuePath);
+                AssertCueReference(serialized, "attackCue", VisualBaselineBuilder.StaticChessMotionAttackCuePath);
+                AssertCueReference(serialized, "hitCue", VisualBaselineBuilder.StaticChessMotionHitCuePath);
+                AssertCueReference(serialized, "castCue", VisualBaselineBuilder.StaticChessMotionCastCuePath);
+                AssertCueReference(serialized, "deathCue", VisualBaselineBuilder.StaticChessMotionDeathCuePath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        [Test]
         public void TacticalSpriteTexturesMatchTheFrozenSixDirectionContract()
         {
             for (int direction = 0; direction < 6; direction++)
@@ -390,6 +450,47 @@ namespace TianZhang.Tests.EditMode
             Path.Combine(Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..")),
                 "assets", "generated-character-art", "fuyuan-2d-tactical-sprite",
                 "fuyuan_tactical_direction_" + direction + ".png");
+
+        private static void AssertStaticChessMotionCue(
+            string eventName,
+            string expectedSha256,
+            long expectedBytes,
+            float expectedDuration,
+            string unityAssetPath)
+        {
+            string sourcePath = Path.Combine(ProjectRootPath(), "assets", "source", "characters", "platform-evaluation",
+                "tripo", "static-chess-fuyuan", "motion-pilot", "fuyuan_static_3d_motion_" + eventName + ".wav");
+            string unityCopyPath = AssetFilePath(unityAssetPath);
+            Assert.AreEqual(expectedBytes, new FileInfo(sourcePath).Length);
+            Assert.AreEqual(expectedBytes, new FileInfo(unityCopyPath).Length);
+            Assert.AreEqual(expectedSha256, ComputeSha256Hex(sourcePath));
+            Assert.AreEqual(expectedSha256, ComputeSha256Hex(unityCopyPath));
+            Assert.That(File.ReadAllText(Path.Combine(ProjectRootPath(), "assets", "source", "characters", "platform-evaluation",
+                "tripo", "static-chess-fuyuan", "motion-pilot", "fuyuan_static_3d_motion_manifest.json")),
+                Does.Contain(expectedSha256));
+
+            AudioImporter importer = AssetImporter.GetAtPath(unityAssetPath) as AudioImporter;
+            Assert.IsNotNull(importer);
+            Assert.IsTrue(importer.forceToMono);
+            Assert.IsFalse(importer.loadInBackground);
+            Assert.AreEqual(AudioClipLoadType.DecompressOnLoad, importer.defaultSampleSettings.loadType);
+            Assert.AreEqual(AudioCompressionFormat.PCM, importer.defaultSampleSettings.compressionFormat);
+            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(unityAssetPath);
+            Assert.IsNotNull(clip);
+            Assert.AreEqual(expectedDuration, clip.length, 0.005f);
+        }
+
+        private static void AssertCueReference(SerializedObject serialized, string fieldName, string assetPath)
+        {
+            AudioClip clip = serialized.FindProperty(fieldName).objectReferenceValue as AudioClip;
+            Assert.IsNotNull(clip);
+            Assert.AreEqual(assetPath, AssetDatabase.GetAssetPath(clip));
+        }
+
+        private static string ProjectRootPath() => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
+
+        private static string AssetFilePath(string assetPath) =>
+            Path.Combine(Application.dataPath, assetPath.Substring("Assets/".Length));
 
         private static void AssertPngHeader(string path, int expectedWidth, int expectedHeight)
         {

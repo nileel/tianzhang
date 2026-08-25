@@ -97,3 +97,10 @@ pilot 在 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyua
 
 - 2026-08-25，`A-CHAR-STATIC3D-MOTION-PILOT-01` 已锁定唯一静态 FBX 与已修正 BaseColor 的 SHA-256，产出 manifest 和五条项目原创、本地确定性 PCM cue WAV。实际 cue 生产为 1 分钟、0 元／0 credits、5 次合成、0 次失败／返工；未下载或使用第三方声音，未启动 Blender，也没有向 `src/` 复制或修改任何 Unity 资产。
 - source QA 先覆盖攻击、受击、死亡，再覆盖 idle、move、cast，逐项冻结六方向、根节点时点、一次性内置 VFX 配方、cue、复位与禁止项。它只证明 source 合同完整，不替代 `U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 在固定 `VisualBaselineBoard` 完成真实 `1920×1080`、背向、宽袖／腿部、接地、遮挡、VFX／cue 可读性和规则隔离矩阵。
+
+## 十、已实施 Unity 接入事实
+
+- 2026-08-25，`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 将 manifest 指定的五条 WAV 原样复制至 `Assets/Art/Characters/StaticChess/FuYuan/Motion`，并生成唯一的 `FuYuan_StaticChessMotionFx.prefab`。静态棋子 Prefab 仍只消费同一 FBX 和已修正 BaseColor；新增根节点 `AudioSource`、一次性内置粒子效果与五条 cue 均由既有 `StaticChessPresentationController` 单一拥有。
+- 六个事件维持 manifest 合同：idle 静止，move／attack／hit／cast 为 `0.32 s`，death 为 `0.45 s`；关键归一化时点分别为 move `0.85`、attack `0.55`、hit `0.10`、cast `0.20`、death `0.70`。根节点事件结束恢复捕获姿态，模型与底座子节点、材质、Facing、占格、规则和存档均未写入；没有 Animator、Animation、AnimationClip、SkinnedMeshRenderer、骨骼或新 Pose。
+- 固定 `1920×1080` 的 `AdventureScene/VisualBaselineBoard/FacingProbe_0..5` 运行时矩阵按攻击、受击、死亡优先，随后 idle、move、cast，记录六方向各事件的开始／关键／结束共 108 个核心观察点。`StaticChessPresentationPlayModeTests.Fixed1920By1080MatrixSamplesFrozenEventTimesAndRestoresOnlyTheRoot` 另取更密的中间样本，验证 cue／效果仅一次、cast 仅一次信号、根复位、子节点不变和规则隔离；详细逐点记录见 `开发管理/苻渊静态3D战斗动态表现Unity接入验证记录.txt`。
+- 本卡完成后，`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 与 `D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 的本卡 blocker 已移除；它们仍分别负责用户可运行比较入口与同口径成本证据，未产生视觉胜者或正式角色接入结论。
