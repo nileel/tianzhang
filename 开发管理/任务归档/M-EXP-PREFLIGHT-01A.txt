@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-26：Codex 独立复审正式提交 bbae65133a1ff791a86b31f37e99a111d4679110 通过；风险索引、经验卡模板与只读匹配器均符合任务卡和批准规格，十张种子卡前置已解除。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡模板.txt",

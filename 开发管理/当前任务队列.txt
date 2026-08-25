@@ -5,6 +5,15 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-PREFLIGHT-01A | codex_review | codex | P1 | automation | implementation | 风险索引、经验卡模板与只读匹配器基础 | 开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt |
+| M-EXP-SEED-PWSH7-01 | codex_execute | codex | P1 | automation | implementation | 晋级 PowerShell 7 唯一运行时经验 | 开发管理/任务卡/M-EXP-SEED-PWSH7-01.txt |
+| M-EXP-SEED-BS-BUILD-RUN-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 先构建后运行经验 | 开发管理/任务卡/M-EXP-SEED-BS-BUILD-RUN-01.txt |
+| M-EXP-SEED-BS-SYMMETRY-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 双侧分支对称接入经验 | 开发管理/任务卡/M-EXP-SEED-BS-SYMMETRY-01.txt |
+| M-EXP-SEED-BS-RESIST-KEYS-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 1v1／2v2 抗性键统一经验 | 开发管理/任务卡/M-EXP-SEED-BS-RESIST-KEYS-01.txt |
+| M-EXP-SEED-BS-TIMEOUT-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 超时结算顺序无偏经验 | 开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt |
+| M-EXP-SEED-UNITY-SCENE-BUILD-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity 场景程序化生成经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-SCENE-BUILD-01.txt |
+| M-EXP-SEED-UNITY-ASMDEF-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity asmdef 投影排查经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt |
+| M-EXP-SEED-UNITY-META-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity meta 多行 YAML 经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt |
+| M-EXP-SEED-UNITY-NAMESPACE-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity 命名空间避开引擎类型名经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt |
+| M-EXP-SEED-MGMT-WORKTREE-01 | codex_execute | codex | P1 | management | implementation | 晋级共享 worktree 与集成锁经验 | 开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt |
 | C-KB-IDX-MONSTER-01 | codex_review | codex | P2 | content | design | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 | C-KB-IDX-ITEM-01 | codex_review | codex | P2 | content | design | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
-  "stateReason": "等待基础匹配器；候选 EXP-UNITY-001 由现行 SceneBuilder/EditorSceneManager 所有者和场景测试独立核验。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-UNITY-001。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-UNITY-001.txt",

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
-  "stateReason": "等待基础匹配器；候选 EXP-BS-001 依据已审核 BattleSim build→run 合同和当前项目入口独立核验。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-BS-001。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-BS-001.txt",

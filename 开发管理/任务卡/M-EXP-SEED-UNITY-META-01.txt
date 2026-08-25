@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
-  "stateReason": "等待基础匹配器；候选 EXP-UNITY-003 的现有章节标为未审核，必须以提交 ab4f882 和当前 importer 事实独立证明，证据不足不得 active。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-UNITY-003。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-UNITY-003.txt",

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
-  "stateReason": "等待基础匹配器；候选 EXP-MGMT-001 由现行手动/自动 worktree、路径冲突和共享集成锁合同独立核验，默认 explicit_only。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-MGMT-001。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-MGMT-001.txt",

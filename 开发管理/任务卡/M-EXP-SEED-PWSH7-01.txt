@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-01A"],
-  "stateReason": "等待基础匹配器；候选 EXP-AUTO-001 只依据已审核 PowerShell 7 合同和现有确定性检查器独立核验，不预设 active。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-AUTO-001。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-AUTO-001.txt",
