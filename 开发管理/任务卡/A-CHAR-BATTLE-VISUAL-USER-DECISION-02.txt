@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-26：可玩入口的 Codex 技术复核和同口径成本证据均已完成；现只等待用户实际运行后的 A/B/C 决定，不得自动选方向。",
+  "stateReason": "等待负责人决定：请在实际运行 AdventureScene 的战场角色表现比较入口后，选择最终战场角色表现方向。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "开发管理/战场角色视觉方向可玩比较操作说明.txt",
@@ -25,7 +25,56 @@
     "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt",
     "开发管理/任务归档/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "A-CHAR-BATTLE-VISUAL-USER-DECISION-02",
+    "sourceRunId": "7eb4b7dd-08f1-446b-a1c9-16224098c880",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260826-CHARVISUAL02",
+    "question": "请在实际运行 AdventureScene 的战场角色表现比较入口后，选择最终战场角色表现方向。",
+    "options": [
+      {
+        "key": "A",
+        "label": "2D"
+      },
+      {
+        "key": "B",
+        "label": "静态 3D"
+      },
+      {
+        "key": "C",
+        "label": "两者均不接受"
+      }
+    ],
+    "recommendedOption": "C",
+    "impactSummary": "共同技术条件与同口径成本证据均已具备，但不产生视觉或成本胜者；只有用户实机选择才能更新方向事实。",
+    "plainSummary": {
+      "situation": "两条隔离样例已满足共同技术与成本证据条件。",
+      "action": "请先运行比较入口，再回复 A、B 或 C。",
+      "impact": "旧2D结论继续暂停，父项在用户选择前保持阻塞。"
+    },
+    "checkpointCommit": "9913355912aaef22a77953e6c658bb2c4eafc16c",
+    "baseCommit": "0b65d2a4e284fbade7f755714092c4079dfd786b",
+    "branch": "codex/automation/codex/7eb4b7dd-08f1-446b-a1c9-16224098c880/candidate",
+    "changedPaths": [
+      "开发管理/战场角色视觉方向重新评估用户决定记录.txt"
+    ],
+    "verified": [
+      "check-task-cards: OK (cards=75 ready=4)",
+      "check-review-text: OK (470 files checked)",
+      "check-pending-whitespace: OK (1 files checked; fix=False)",
+      "git diff --check and git diff --cached --check passed"
+    ],
+    "unverified": [
+      "用户尚未实际运行 AdventureScene 比较入口并作出 A/B/C 视觉判断"
+    ],
+    "residualRisk": "未收到用户实机选择前，不能确定方向、关闭父项或恢复旧2D结论。",
+    "taskContextDigest": "bbfa1c5cf80c0f6613316446c74ee3b8a3e67a72e29085e281de57ccafbfad2f",
+    "createdAt": "2026-08-26T01:20:34.9893392+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-VISUAL-USER-DECISION-02 · 战场角色视觉方向用户实机决定

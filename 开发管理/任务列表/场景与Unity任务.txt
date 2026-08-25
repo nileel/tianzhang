@@ -21,7 +21,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-REEVALUATE-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | 战场角色2D与静态3D方向重新评估父项 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt |
-| A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | P1 | codex | 已排队 | — | 战场角色视觉方向用户实机决定 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt |
+| A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | P1 | codex | 待决定 | — | 战场角色视觉方向用户实机决定 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | 苻渊 strict-round-02 四边面候选静态结构 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt |
