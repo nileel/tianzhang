@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "assetId": "fuyuan-static-3d-motion-pilot",
+  "status": "frozen-source-cues-and-contract",
+  "character": "苻渊／含弘真君",
+  "scope": "单一静态棋子输入的隔离表现 source；不含 Unity 导入、Prefab、场景、模型、材质、Pose、骨骼或正式单位。",
+  "weapon": "none",
+  "frozenInputs": {
+    "staticModel": {
+      "sourcePath": "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx",
+      "sourceSha256": "AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A",
+      "unityConsumerPath": "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx",
+      "unityConsumerSha256": "AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A",
+      "contract": "唯一静态网格；无 Armature、Action、Animator、AnimationClip、SkinnedMeshRenderer 或额外模型。"
+    },
+    "baseColor": {
+      "path": "src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG",
+      "sha256": "F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611",
+      "contract": "已修正的黑／灰／金主色唯一 BaseColor；不重压缩、不替换、不以其他 PBR 图补偿。"
+    },
+    "staticEvidence": {
+      "blenderRecord": "开发管理/苻渊静态棋子Blender候选验证记录.txt",
+      "materialRecord": "开发管理/苻渊静态棋子Unity材质修正验证记录.txt",
+      "rootAndImport": "人物 Y=0 接地、1.03 m 高、单位缩放、导出本地 +Z 正面／+Y 上方；Unity 只保留 FuYuan_Model 的 -90° X 资产级适配。"
+    }
+  },
+  "directionContract": [
+    { "index": 0, "rootYawDegrees": 90 },
+    { "index": 1, "rootYawDegrees": 150 },
+    { "index": 2, "rootYawDegrees": 210 },
+    { "index": 3, "rootYawDegrees": 270 },
+    { "index": 4, "rootYawDegrees": 330 },
+    { "index": 5, "rootYawDegrees": 30 }
+  ],
+  "eventContract": {
+    "idle": {
+      "durationSeconds": 0,
+      "timing": { "start": 0, "key": 0, "end": 0 },
+      "rootMotion": "静止；只消费既有 Facing。",
+      "vfx": { "source": "none", "license": "not-applicable" },
+      "cue": { "source": "none", "license": "not-applicable" },
+      "reset": "保持捕获的根姿态。"
+    },
+    "move": {
+      "durationSeconds": 0.32,
+      "timing": { "liftEnd": 0.15, "translationEnd": 0.85, "key": 0.85, "end": 1 },
+      "rootMotion": "0.00–0.15 抬起；0.15–0.85 沿既有 approved world destination 平移；0.85–1.00 落下。",
+      "vfx": { "recipe": "在脚下／独立底座锚点的一次性短促接触环", "source": "Unity 内置粒子或简单几何", "license": "Unity project built-in only; no external asset" },
+      "cue": { "path": "fuyuan_static_3d_motion_move.wav", "sha256": "7D99D0D18A08E0070E621AD1018C54E8D7D06EA2A0BE2A6D528F56E8BBE50B40" },
+      "reset": "事件结束恢复捕获的根位置与旋转；人物和底座子节点不写入。"
+    },
+    "attack": {
+      "durationSeconds": 0.32,
+      "timing": { "prepareEnd": 0.2, "key": 0.55, "end": 1 },
+      "rootMotion": "0.20–0.55 沿本地前方短促前探并前倾，随后回收；不假定武器。",
+      "vfx": { "recipe": "载体前方的一次性命中火花／切线效果", "source": "Unity 内置粒子或简单几何", "license": "Unity project built-in only; no external asset" },
+      "cue": { "path": "fuyuan_static_3d_motion_attack.wav", "sha256": "0A0F6148D4898AD98DA7C3975C9E7E94FE47BBC84BF43FBF41152FD469DD4ACD" },
+      "reset": "事件结束恢复捕获的根位置与旋转；不挥臂、不变形。"
+    },
+    "hit": {
+      "durationSeconds": 0.32,
+      "timing": { "impactHoldEnd": 0.1, "key": 0.1, "reactionEnd": 0.55, "end": 1 },
+      "rootMotion": "0.00–0.10 命中顿帧；0.10–0.55 小幅横向震动／后仰；不猜测攻击来向。",
+      "vfx": { "recipe": "载体中心的一次性短促受击火花", "source": "Unity 内置粒子或简单几何", "license": "Unity project built-in only; no external asset" },
+      "cue": { "path": "fuyuan_static_3d_motion_hit.wav", "sha256": "7682BA66F29123155173E722E18AF7178C8D8EE0BD27C60F5EDDAB22F5633CB1" },
+      "reset": "事件结束恢复捕获的根位置与旋转；不写入击退、伤害或 Facing。"
+    },
+    "cast": {
+      "durationSeconds": 0.32,
+      "timing": { "liftEnd": 0.2, "key": 0.2, "holdEnd": 0.7, "end": 1 },
+      "rootMotion": "0.00–0.20 轻抬；0.20–0.70 保持；随后落回。",
+      "vfx": { "recipe": "脚下以外根锚点的一次性小范围施法环", "source": "Unity 内置粒子或简单几何", "license": "Unity project built-in only; no external asset", "oneShot": true },
+      "cue": { "path": "fuyuan_static_3d_motion_cast.wav", "sha256": "1F9C4B53DAE007A96BFB181582AD2B08CFAEF36C370D0BBAC5D8AECDA59A8121" },
+      "reset": "事件结束恢复捕获的根位置与旋转；无常驻光环、手臂或袖袍动画。"
+    },
+    "death": {
+      "durationSeconds": 0.45,
+      "timing": { "lowerEnd": 0.25, "fallHoldEnd": 0.7, "key": 0.7, "end": 1 },
+      "rootMotion": "0.00–0.25 降低；0.25–0.70 向固定本地侧方倾倒并短暂停住；0.70–1.00 回收供隔离矩阵重复触发。",
+      "vfx": { "recipe": "接地锚点的一次性消散／落点效果", "source": "Unity 内置粒子或简单几何", "license": "Unity project built-in only; no external asset" },
+      "cue": { "path": "fuyuan_static_3d_motion_death.wav", "sha256": "620292E40108069F751C99B066CD51F825EBD0CE86D0F975E6C8FE91771B4CD6" },
+      "reset": "事件结束恢复捕获的根位置与旋转；不透明化、隐藏或替换模型，不改变死亡结算、阻挡或占格。"
+    }
+  },
+  "cueAuthoring": {
+    "format": { "container": "RIFF/WAVE", "encoding": "PCM signed 16-bit little-endian", "channels": 1, "sampleRateHz": 48000 },
+    "sourceAndLicense": "本 candidate 以 PowerShell 7.6.4 与 .NET 的本地确定性 PCM 合成写入五条原创短促 cue；未下载、采样、调用外部 API／账户、使用第三方音频、音乐、语音、付费工具或 credits。输出为项目可编辑的原始 PCM；项目拥有本次原创 cue。",
+    "generatorRevision": "FuyuanMotionCueWriter-v1；move=155→120 Hz 双正弦脚步脉冲，attack=230→620 Hz 正弦加确定性噪声，hit=126/252 Hz 双正弦冲击，cast=190→950 Hz 上行双正弦，death=290→110 Hz 下行低频双正弦；均有固定淡入淡出包络。",
+    "files": [
+      { "event": "move", "path": "fuyuan_static_3d_motion_move.wav", "durationSeconds": 0.18, "bytes": 17324, "sha256": "7D99D0D18A08E0070E621AD1018C54E8D7D06EA2A0BE2A6D528F56E8BBE50B40" },
+      { "event": "attack", "path": "fuyuan_static_3d_motion_attack.wav", "durationSeconds": 0.24, "bytes": 23084, "sha256": "0A0F6148D4898AD98DA7C3975C9E7E94FE47BBC84BF43FBF41152FD469DD4ACD" },
+      { "event": "hit", "path": "fuyuan_static_3d_motion_hit.wav", "durationSeconds": 0.2, "bytes": 19244, "sha256": "7682BA66F29123155173E722E18AF7178C8D8EE0BD27C60F5EDDAB22F5633CB1" },
+      { "event": "cast", "path": "fuyuan_static_3d_motion_cast.wav", "durationSeconds": 0.3, "bytes": 28844, "sha256": "1F9C4B53DAE007A96BFB181582AD2B08CFAEF36C370D0BBAC5D8AECDA59A8121" },
+      { "event": "death", "path": "fuyuan_static_3d_motion_death.wav", "durationSeconds": 0.42, "bytes": 40364, "sha256": "620292E40108069F751C99B066CD51F825EBD0CE86D0F975E6C8FE91771B4CD6" }
+    ]
+  },
+  "sourceQaMatrix": {
+    "type": "six-direction source-contract manual review",
+    "reviewConditions": "确认唯一模型／BaseColor 输入、六向 yaw、根节点外不写入、每事件开始／关键／结束合同、VFX 配方与 cue 文件。它不冒充 Unity 运行时视觉证据。",
+    "runtimeEvidenceBoundary": "AdventureScene/VisualBaselineBoard 的同相机、光照、地块、1920×1080、背向镜头、宽袖／腿部／接地／遮挡与 cue 可读性矩阵必须由 U-CHAR-STATIC3D-MOTION-INTEGRATION-01 在 source 原样导入后独立执行。",
+    "directions": [
+      { "index": 0, "yaw": 90, "idle": ["pass", "pass", "pass"], "move": ["pass", "pass", "pass"], "attack": ["pass", "pass", "pass"], "hit": ["pass", "pass", "pass"], "cast": ["pass", "pass", "pass"], "death": ["pass", "pass", "pass"] },
+      { "index": 1, "yaw": 150, "idle": ["pass", "pass", "pass"], "move": ["pass", "pass", "pass"], "attack": ["pass", "pass", "pass"], "hit": ["pass", "pass", "pass"], "cast": ["pass", "pass", "pass"], "death": ["pass", "pass", "pass"] },
+      { "index": 2, "yaw": 210, "idle": ["pass", "pass", "pass"], "move": ["pass", "pass", "pass"], "attack": ["pass", "pass", "pass"], "hit": ["pass", "pass", "pass"], "cast": ["pass", "pass", "pass"], "death": ["pass", "pass", "pass"] },
+      { "index": 3, "yaw": 270, "idle": ["pass", "pass", "pass"], "move": ["pass", "pass", "pass"], "attack": ["pass", "pass", "pass"], "hit": ["pass", "pass", "pass"], "cast": ["pass", "pass", "pass"], "death": ["pass", "pass", "pass"] },
+      { "index": 4, "yaw": 330, "idle": ["pass", "pass", "pass"], "move": ["pass", "pass", "pass"], "attack": ["pass", "pass", "pass"], "hit": ["pass", "pass", "pass"], "cast": ["pass", "pass", "pass"], "death": ["pass", "pass", "pass"] },
+      { "index": 5, "yaw": 30, "idle": ["pass", "pass", "pass"], "move": ["pass", "pass", "pass"], "attack": ["pass", "pass", "pass"], "hit": ["pass", "pass", "pass"], "cast": ["pass", "pass", "pass"], "death": ["pass", "pass", "pass"] }
+    ],
+    "observationOrder": ["start", "key", "end"],
+    "highRiskFirst": ["attack", "hit", "death"],
+    "result": "pass for source contract; no runtime acceptance claimed"
+  },
+  "production": {
+    "date": "2026-08-25",
+    "operator": "Codex isolated worktree",
+    "activeProductionWindow": "20:20–20:21 Asia/Hong_Kong",
+    "actualManualMinutes": 1,
+    "externalCostCny": 0,
+    "externalCredits": 0,
+    "cueSynthesisCount": 5,
+    "vfxAssetAuthoring": "not occurred; recipes only",
+    "blenderEditing": "not occurred",
+    "unityImportOrIntegration": "not occurred",
+    "failedAttempts": 0,
+    "reworkCount": 0
+  }
+}

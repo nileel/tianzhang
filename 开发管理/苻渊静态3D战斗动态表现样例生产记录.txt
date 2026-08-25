@@ -1,0 +1,52 @@
+# 苻渊静态 3D 战斗动态表现样例生产记录
+
+任务：`A-CHAR-STATIC3D-MOTION-PILOT-01`
+
+日期：2026-08-25
+
+范围：隔离 source pilot。只新增 manifest 和五条 cue WAV；未改模型、Blender 候选、BaseColor、材质、Prefab、场景、Unity、正式单位、战斗规则或存档。
+
+## 输入复核
+
+| 输入 | 路径 | SHA-256 | 结果 |
+|---|---|---|---|
+| 唯一静态模型 source | `assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/exports/fuyuan_static_chess_candidate.fbx` | `AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A` | 通过；与 Unity 消费的 `FuYuan_StaticChess.fbx` 字节哈希一致。 |
+| Unity 消费模型（只读核对） | `src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess.fbx` | `AC313F15D563560C4C7431F539616FE3EC3A253D57F24654A05B4DA72FC2BF6A` | 通过；本卡未写入。 |
+| 已修正 BaseColor（只读核对） | `src/Assets/Art/Characters/StaticChess/FuYuan/FuYuan_StaticChess_BaseColor.JPEG` | `F40FA051F3450103DD261DC6738C4A987113945D90FFB025EDAFBD0A1D109611` | 通过；与材质修正记录的批准输入一致，本卡未写入。 |
+
+静态结构、接地、尺寸、导出坐标、无 Armature／Action 与 BaseColor 的既有证据分别保持在 `开发管理/苻渊静态棋子Blender候选验证记录.txt` 和 `开发管理/苻渊静态棋子Unity材质修正验证记录.txt`。本轮未启动 Blender，也没有重新导出 FBX。
+
+## 实际生产、来源与成本
+
+| 项目 | 实际值 | 证据边界 |
+|---|---|---|
+| 活跃 cue 生产窗口 | 20:20–20:21（Asia/Hong_Kong），1 分钟 | 只含本地 deterministic PCM 合成与输出核验；不含未来 Unity 接入或批量外推。 |
+| 工具／版本 | PowerShell 7.6.4、.NET `System.IO`／`System.Math` | `FuyuanMotionCueWriter-v1` 以本地确定性公式写 RIFF/WAVE PCM。 |
+| 声音来源／许可 | 项目原创本地合成；项目拥有本次 cue | 未下载、采样或使用第三方声音、音乐、语音、账户、API、付费工具或 credits。 |
+| 外部费用／credits | 0 元／0 credits | 本轮没有外部消费；不外推为未来工具或批量角色成本。 |
+| 制作次数 | cue 合成 5 次 | 对应 move／attack／hit／cast／death 各一条。 |
+| 失败／返工 | 0／0 | 未发生；没有以免费素材、重试、备用链或额外资产补洞。 |
+| Blender、VFX 资产、Unity 导入／接入 | 未发生／未发生／未发生 | 本卡只定义 Unity 内置粒子／简单几何配方，实际 Prefab 与运行时所有者属于下游。 |
+
+五条输出均为单声道、48 kHz、16-bit little-endian PCM RIFF/WAVE；字节数、时长和 SHA-256 已冻结在 `fuyuan_static_3d_motion_manifest.json`。`weapon=none`：这只记录本样例没有武器，不向未来武器覆盖外推。
+
+## 高风险优先与六向 source QA 矩阵
+
+先按攻击、受击、死亡，后按 idle、move、cast 审核 source 合同。每个格依次为开始／关键／结束；“通过”只表示 manifest 的根节点时点、VFX 配方、cue、复位和禁止项在六向 source 合同内完整一致，不把未接入的 Unity 画面冒充为运行时视觉证据。
+
+| 方向索引／根 Y | attack | hit | death | idle | move | cast |
+|---|---|---|---|---|---|---|
+| 0／90° | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 |
+| 1／150° | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 |
+| 2／210° | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 |
+| 3／270° | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 |
+| 4／330° | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 |
+| 5／30° | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 | 通过／通过／通过 |
+
+- 该矩阵锁定 `90/150/210/270/330/30`，没有方向私有旋转、镜像、模型／底座子变换、共享材质写入、骨骼、Clip、额外模型或常驻效果。
+- 静态身份与 BaseColor 的黑／灰／金主色、宽袖、腿部、接地和现有无武器事实仍由已通过的静态 Blender／Unity 材质记录约束；source contract 不以声音替代攻击、受击或死亡的载体语义。
+- 固定 `AdventureScene/VisualBaselineBoard` 的同相机、光照、地块、世界尺度与 `1920×1080` 运行时矩阵，特别是两个背向镜头、宽袖／腿部／接地线／前后遮挡、真实 VFX／cue 可读性和根节点复位，尚未在本卡执行。它们是 `U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 的独立业务验证，不能由本 source QA 取代。
+
+## 下游边界
+
+`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 可原样消费 manifest 和五条 WAV，创建唯一内置 VFX Prefab 并扩展既有 `StaticChessPresentationController`。它仍须核对 SHA、准确时点、六向运行时矩阵、材质／模型／底座不变、根姿态复位与规则快照；不得接入 `AdventureUnitSpawner`、正式单位、战斗规则或存档。

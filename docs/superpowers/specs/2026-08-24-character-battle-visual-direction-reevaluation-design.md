@@ -299,4 +299,5 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 - 2026-08-25，负责人已对 `D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 选择 A。该卡的书面方案完成归档，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 依冻结合同转为 `ready`；这仍只授权隔离苻渊样例的生产选择门，不授权正式角色、战斗规则、存档或 Unity 接入。
 - 2026-08-25，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 已完成隔离苻渊 2D 样例：有限帧／棋子化通过高风险三动作的六向选择门，冻结唯一可编辑时间线母源、六状态三帧六向 atlas、真实分钟／费用／次数／返工和 source QA 记录。`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 已将该冻结输入原样接入默认关闭的 `BattleAnimationSpriteProbeGroup`：活动 atlas、六方向六状态、manifest 事件帧、施法单次信号、根节点复位、真实遮挡和规则隔离由 EditMode／PlayMode 验证，未接入正式单位或改变规则。可玩比较与成本证据各只剩静态 3D 动态接入 blocker。
 - 2026-08-25，负责人已对 `D-CHAR-STATIC3D-MOTION-PIPELINE-01` 选择 A。该卡的单一静态载体整体动效方案完成归档，`A-CHAR-STATIC3D-MOTION-PILOT-01` 在 material correction 已完成的前提下转为 `ready`；这仍只授权隔离苻渊样例的生产选择门，不授权正式角色、战斗规则、存档或 Unity 接入。
+- 2026-08-25，`A-CHAR-STATIC3D-MOTION-PILOT-01` 已完成隔离 source：唯一静态模型／BaseColor 哈希、六方向／六事件／根节点时点、内置 VFX 配方、五条原创本地 PCM cue WAV、成本记录与 source QA 矩阵均已冻结。没有改动 Blender、模型、材质、Prefab、场景、Unity、正式单位或规则；`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 只解除本卡 blocker，仍独立承担真实运行时矩阵与接入边界。
 - 最终 user decision 卡必须让用户运行游戏后回复；本文、参考调研、pipeline 方案或 Codex 技术复核均不能代替该决定。

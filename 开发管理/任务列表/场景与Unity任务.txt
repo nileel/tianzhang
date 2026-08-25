@@ -13,14 +13,14 @@
 - 2026-08-23 固定比较曾以 2D `42/50` 对静态 3D `30/50` 确认 2D 战术精灵胜出，`A-CHAR-BATTLE-VISUAL-DIRECTION-01` 随后归档；2026-08-24 核查发现静态 3D Unity BaseColor 缺失且完整战斗生产成本尚未建立，旧比较违反其证据对称停止条件。旧归档保留为历史，但 2D 胜出在 `A-CHAR-BATTLE-VISUAL-REEVALUATE-02` 完成前暂停作为新增任务的方向依据；不得据此生产正式 2D 批次或恢复正式 3D 替换。
 - 2026-08-24：2D 与静态 3D 战斗表现参考调研均已完成；负责人随后明确批准两个方向进入详细方案。2D 方向以《龙胤立志传》的实战表现为可接受下限；静态 3D 方向聚焦炉石传说、游戏王、万智牌式的单一静态角色载体整体动效与特效，不采用角色模型内部动画或多套独立 Pose 换模。两张 pipeline 卡已转 `ready`；本次仍不授权资产生产、credits 消费或 Unity 修改。
 - 2026-08-25：负责人对 2D pipeline 书面方案选择 A。`D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 已完成归档；随后 `A-CHAR-2D-BATTLE-ANIM-PILOT-01` 以有限帧／棋子化完成苻渊隔离样例，冻结唯一 `.spine` 母源、六状态三帧六方向 RGBA atlas、完整哈希和真实 18 分钟／0 元／0 credits／7 次生成（含 1 次失败返工）记录。`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 随后将六份 atlas 原样导入独立 `FuYuanBattle`，建立默认关闭的 `BattleAnimationSpriteProbeGroup`、受限 controller／Prefab 和六方向六状态运行验证；EditMode、PlayMode、资产版本、数据链和程序集边界均通过。两轮均未接入正式角色、`AdventureUnitSpawner`、战斗规则或存档；可玩比较与成本证据仅剩静态 3D 动态路线接入 blocker。
+- 2026-08-25：`A-CHAR-STATIC3D-MOTION-PILOT-01` 已完成隔离 source：锁定唯一静态模型与已修正 BaseColor 哈希，产出 manifest、五条项目原创本地 48 kHz PCM cue、实际 1 分钟／0 元／0 credits／5 次合成／0 次失败返工记录和六方向 source QA 矩阵。未编辑 Blender、模型、材质、Prefab、场景、Unity、正式角色、规则或存档；`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 已解除本卡 blocker，但仍须独立执行真实运行时矩阵与规则隔离验证。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-REEVALUATE-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | 战场角色2D与静态3D方向重新评估父项 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt |
-| A-CHAR-STATIC3D-MOTION-PILOT-01 | P1 | codex | 已排队 | — | 苻渊静态3D战斗动态表现样例生产 | 开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt |
-| U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | P1 | codex | 阻塞 | A-CHAR-STATIC3D-MOTION-PILOT-01 | 苻渊静态3D战斗动态表现Unity接入 | 开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt |
+| U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | P1 | codex | 已排队 | — | 苻渊静态3D战斗动态表现Unity接入 | 开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt |
 | U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02 | P1 | codex | 阻塞 | U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | 战场角色2D与静态3D可玩比较入口 | 开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt |
 | D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | P1 | codex | 阻塞 | U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | 战场角色2D与静态3D制作成本证据 | 开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt |
 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | P1 | codex | 阻塞 | U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02、D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | 战场角色视觉方向用户实机决定 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt |

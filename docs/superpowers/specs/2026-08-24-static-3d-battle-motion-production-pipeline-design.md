@@ -92,3 +92,8 @@ pilot 在 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyua
 - 2026-08-25，负责人已选择 A“批准方案并解锁 pilot”。`A-CHAR-STATIC3D-MOTION-PILOT-01` 现可按本方案开始其隔离样例生产；该批准不替代 pilot 对 credits 或第三方声音素材的当次授权门，也不授权 Unity integration。
 
 下一步由 `A-CHAR-STATIC3D-MOTION-PILOT-01` 在本方案的资产、验证与停止合同内执行；未满足其独立授权门时不得生产或接入。
+
+## 九、已实施 pilot source 事实
+
+- 2026-08-25，`A-CHAR-STATIC3D-MOTION-PILOT-01` 已锁定唯一静态 FBX 与已修正 BaseColor 的 SHA-256，产出 manifest 和五条项目原创、本地确定性 PCM cue WAV。实际 cue 生产为 1 分钟、0 元／0 credits、5 次合成、0 次失败／返工；未下载或使用第三方声音，未启动 Blender，也没有向 `src/` 复制或修改任何 Unity 资产。
+- source QA 先覆盖攻击、受击、死亡，再覆盖 idle、move、cast，逐项冻结六方向、根节点时点、一次性内置 VFX 配方、cue、复位与禁止项。它只证明 source 合同完整，不替代 `U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 在固定 `VisualBaselineBoard` 完成真实 `1920×1080`、背向、宽袖／腿部、接地、遮挡、VFX／cue 可读性和规则隔离矩阵。

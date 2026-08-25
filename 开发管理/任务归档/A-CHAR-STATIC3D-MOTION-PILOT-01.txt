@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-25：负责人对 DEC-20260825-S3DMOTION02 选择 A，详细方案与 material correction 均已完成；本卡获得完整生产合同并转 ready，仍须在当次 credits 或第三方声音素材门未满足时停止。",
+  "stateReason": "2026-08-25：唯一静态模型／BaseColor 哈希、manifest、五条项目原创本地 PCM cue、实际成本记录和先高风险的六向 source QA 矩阵均已冻结；未改 Blender、Unity、正式单位或规则。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
@@ -71,3 +71,9 @@
 
 - pipeline 未获 A 批准、BaseColor／唯一输入不匹配、cue 来源／许可／hash 不完整、任一高风险语义／身份／主色／六向／接地／遮挡／复位失败，或需要扩大动作、方向或资产路径。
 - 需要未授权 credits、第三方声音素材、恢复冻结旧链、修改 Unity／正式内容／规则，或以新模型、骨骼、Pose、私有视觉条件或 fallback 取得通过。
+
+## 完成记录
+
+- 交付 `fuyuan_static_3d_motion_manifest.json` 和 move／attack／hit／cast／death 五条 48 kHz、16-bit PCM WAV；所有输入与输出 SHA-256、来源／许可、六方向、六事件、根节点时点、VFX 配方、复位和 `weapon=none` 已冻结。
+- cue 是本 candidate 的项目原创本地确定性合成，实际 1 分钟、0 元／0 credits、5 次合成、0 次失败／返工；未下载或使用第三方声音，未启动 Blender，未写入 `src/`。
+- 先攻击／受击／死亡、后 idle／move／cast 的六向 source QA 已完整记录；它不替代下游在固定 `AdventureScene/VisualBaselineBoard` 完成真实的 1920×1080、背向、宽袖／腿部、接地、遮挡、VFX／cue 和规则快照验证。
