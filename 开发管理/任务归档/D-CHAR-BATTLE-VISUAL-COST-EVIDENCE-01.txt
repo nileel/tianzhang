@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-25：2D 与静态 3D 动态样例的生产记录和 Unity 接入日志已齐备；本卡可整理同口径成本证据，不评判视觉胜负。",
+  "stateReason": "2026-08-26：已按两条 pipeline、pilot 和 Unity 接入的实际记录形成同口径成本证据；不评判视觉胜负，直接下游现只等待用户实机 A/B/C 决定。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
@@ -68,3 +68,9 @@
 
 - 任一路线的实际生产／接入记录缺失，动作范围不一致或必须猜测关键成本才能比较。
 - 分析开始修改生产流程、资产、Unity 或决定视觉方向。
+
+## 完成记录
+
+- 已创建 `开发管理/战场角色2D与静态3D制作成本证据.txt`，将两条路线按同一单角色、六方向、六事件的 source pilot 与 Unity 接入口径列出；未把不同资产形状、剧情立绘、既有静态棋子模型或正式链混入比较。
+- 2D 实际 source 为 18 分钟、0 元／0 credits、7 次生成、1 次失败／返工；静态 3D cue source 为 1 分钟、0 元／0 credits、5 次合成、0 次失败／返工。2D Unity 只记录约 3 分钟，静态 3D Unity 接入分钟等未记录项明确标为未知，未补成零或合计路线总价。
+- 单个新角色、新动作、方向扩展、武器／服饰变化、批量角色和工具维护均只列可复用部分、逐角色重做部分、单位、假设与未知项；没有批量折扣、成本胜者或视觉方向结论。已移除 `A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 的本卡 blocker。

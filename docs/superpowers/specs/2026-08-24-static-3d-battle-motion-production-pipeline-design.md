@@ -104,3 +104,7 @@ pilot 在 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyua
 - 六个事件维持 manifest 合同：idle 静止，move／attack／hit／cast 为 `0.32 s`，death 为 `0.45 s`；关键归一化时点分别为 move `0.85`、attack `0.55`、hit `0.10`、cast `0.20`、death `0.70`。根节点事件结束恢复捕获姿态，模型与底座子节点、材质、Facing、占格、规则和存档均未写入；没有 Animator、Animation、AnimationClip、SkinnedMeshRenderer、骨骼或新 Pose。
 - 固定 `1920×1080` 的 `AdventureScene/VisualBaselineBoard/FacingProbe_0..5` 运行时矩阵按攻击、受击、死亡优先，随后 idle、move、cast，记录六方向各事件的开始／关键／结束共 108 个核心观察点。`StaticChessPresentationPlayModeTests.Fixed1920By1080MatrixSamplesFrozenEventTimesAndRestoresOnlyTheRoot` 另取更密的中间样本，验证 cue／效果仅一次、cast 仅一次信号、根复位、子节点不变和规则隔离；详细逐点记录见 `开发管理/苻渊静态3D战斗动态表现Unity接入验证记录.txt`。
 - 本卡完成后，`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 与 `D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 的本卡 blocker 已移除；它们仍分别负责用户可运行比较入口与同口径成本证据，未产生视觉胜者或正式角色接入结论。
+
+## 十一、后续成本证据事实
+
+- 2026-08-26，`D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 将本路线的 cue source pilot 1 分钟、0 元／0 credits、5 次合成和 0 次失败／返工单列为实际记录。Unity integration 已有五条 cue、唯一内置 VFX、六方向六事件 108 点矩阵和规则隔离的完成证据，但没有记录其实际人工分钟、外部费用／credits、失败或返工；成本证据明确写为未知，不把它补成零或与 source pilot 合计。新角色、动作、方向、武器、服饰、批量和工具维护继续遵循第六节逐项计量，未形成价格、折扣或视觉方向结论。

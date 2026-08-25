@@ -1,0 +1,54 @@
+# 战场角色 2D 与静态 3D 制作成本证据
+
+任务：`D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01`
+
+日期：2026-08-26
+
+## 口径、范围与证据限制
+
+本记录只比较苻渊的隔离战斗 pilot 和其 Unity 接入。两边均覆盖同一单角色、六方向和 `idle/move/attack/hit/cast/death` 六个事件；比较入口还固定同一相机、光照、地块、世界尺度、规则隔离和复位条件。2D 的资产单位是六份、每份六行三帧的 RGBA atlas；静态 3D 的资产单位是同一静态模型的根节点表现、五条 cue 和一次性内置 VFX。两种资产形状不同，资产数量不能直接换算为工时或价格。
+
+以下仅整理已记录的实际值。`未知`表示来源没有记录该项，绝不等同于零；`未发生`只表示该记录所属阶段没有执行该项。没有把剧情／UI 立绘、旧静态 2D 样张、既有静态棋子建模、正式单位、战斗规则或存档计入本表。既有静态棋子模型和已修正 BaseColor 是静态 3D pilot 的只读冻结输入，不是本次动态 pilot 的新建模型成本；它只作为后续新角色仍需重新计量模型／材质的低权重提醒。
+
+## 可追溯的实际记录
+
+| 成本分类 | 2D 有限帧／棋子化 | 静态 3D 整体载体动态 | 证据与解释 |
+|---|---|---|---|
+| 一次性流程建立 | 书面方案已完成；建立该方案的分钟、费用、credits、失败和返工未记录，均为未知。 | 书面方案已完成；建立该方案的分钟、费用、credits、失败和返工未记录，均为未知。 | 两份 pipeline 规格定义计量合同，但没有把方案撰写工时伪装成 pilot 成本。 |
+| 苻渊 source pilot 活跃人工时间 | 18 分钟（09:21–09:39）。 | 1 分钟（20:20–20:21），只含五条本地 PCM cue 的确定性合成与输出核验。 | 两者都是各自 source 阶段的实际窗口，不能包含下游 Unity 或模型原始生产。 |
+| source 工具／来源 | 内置 ImageGen、项目 `remove_chroma_key.py`、Windows `System.Drawing`、PowerShell 哈希核验。 | PowerShell 7.6.4、.NET `System.IO`／`System.Math`、`FuyuanMotionCueWriter-v1`；cue 为项目原创本地 PCM。 | 2D 没有调用 CLI、外部 API、付费 3D／骨骼工具；静态 3D 没有下载、采样或使用第三方声音。 |
+| source 外部费用／credits | 0 元／0 credits。 | 0 元／0 credits。 | 这两个零值只覆盖本次 source pilot，不外推到工具订阅、模型、批量角色或其他制作方法。 |
+| source 制作次数 | 7 次 ImageGen（其中 1 次失败、6 次选定状态表）、6 次统一抠图、6 次 atlas 导出。 | 5 次 cue 合成，对应 move／attack／hit／cast／death。 | 2D 每个状态为六向三帧 atlas；静态 3D 仍使用同一模型，不含新 Pose、骨骼或 Clip。 |
+| source 失败／返工 | 1 次／1 次：首次攻击稿只有五行，完整六行重生成；未镜像、补画或裁切修复。 | 0 次／0 次。 | 只记录日志明确写出的尝试；不把未记录项补成零。 |
+| Blender／角色模型／VFX 资产 authoring | pilot 未使用付费 3D 或骨骼工具。 | Blender、角色模型编辑和 VFX 资产 authoring 均未发生；source 仅冻结内置 VFX 配方。 | 静态 3D 的 VFX Prefab 属于 Unity integration，不可把既有模型输入成本归入此行。 |
+| Unity 导入、运行时接入与自动验证窗口 | 约 3 分钟；来源只将其限定为本样例导入／场景生成／自动验证命令窗口。 | 已导入五条 cue、创建唯一内置 VFX Prefab，并完成 108 点运行时矩阵；实际人工分钟、外部费用／credits、失败和返工没有记录，均为未知。 | 2D 的“约 3 分钟”保留来源的近似表达，不与 18 分钟合并为总价。静态 3D 的来源证明接入结果和测试，不足以补写时间或成本。 |
+| Unity 技术维护事实 | 受限 `BattleAnimationSpritePresentationController`、六个 `6×3` importer grid、默认关闭 probe group、EditMode／PlayMode／数据链／程序集检查通过。 | 既有 `StaticChessPresentationController`、唯一内置 VFX、五条 cue、六方向六事件的 108 点矩阵、根节点复位与规则隔离通过。 | 这些是已交付维护面，不是人工分钟；两边都仍未接入正式单位、`AdventureUnitSpawner`、战斗规则或存档。 |
+
+本轮不提供两条路线的总分钟、总金额、平均成本或成本胜者：静态 3D Unity 接入的人工时间等关键实测项缺失，而流程建立、自动检查和人工 QA 的分钟也没有对称记录。把 2D 的 18 分钟加上约 3 分钟、再与静态 3D 的 1 分钟相比，会漏掉静态 3D 已发生但未计时的接入工作，属于虚假精度。
+
+## 后续制作的计量范围（不是价格估算）
+
+下表的“范围”是未来每次应记录的工作单位，不是分钟、金额、credits、成功率或批量折扣。共同假设仅为继续采用本次的六方向、六事件、同一比较条件和规则隔离；任一范围变化都应重新记录，不能继承本样例的零费用或失败率。
+
+| 后续变化 | 2D：可复用与必须重做 | 静态 3D：可复用与必须重做 | 规模、单位、假设与不确定性 |
+|---|---|---|---|
+| 一个新战斗角色 | 可复用 atlas 消费形状、importer、controller、测试框架；必须重做角色身份输入、可编辑母源、六状态 atlas、全部六向帧、锚点、导出、导入和实际 QA。 | 可复用根节点事件语义、六向映射、VFX／cue 类型、controller 与测试框架；必须重做模型、材质、身份、服饰、宽袖／腿部、接地、遮挡、效果／音效适配、六向矩阵和实际 QA。 | 单位为一名角色 × 六方向 × 六事件；本样例只有苻渊，分钟、费用、credits、返工和模型来源均未知。 |
+| 一个新增动作 | 必须新增一个状态 atlas、六向帧、事件索引、导入／运行时验证和 QA；既有母源可否复用须在实际记录中证明。 | 必须新增事件配方、六向关键时点、cue／VFX、根节点复位、规则快照和人工 QA；同一静态载体边界可复用。 | 假设动作仍在既有表现边界；没有实际新增动作记录，全部成本未知。 |
+| 方向扩展 | 每增加一向，在本 pilot 的形状下会新增六个状态行、每行三帧，即 18 个 atlas cell；仍要重新核对锚点、事件和遮挡。 | 每增加一向，需要六事件的开始／关键／结束运行时观察，即 18 个观察点，并核对根节点、接地、遮挡、cue／VFX 与复位。 | 18 是本 pilot 的内容／观察单位，不是分钟或价格；假设仍为六事件、2D 三帧和三观察点。 |
+| 武器或服饰变化 | 必须重做改变剪影的帧，并覆盖六向攻击／施法、宽袖／武器、前后遮挡、锚点和 QA。 | 必须重做网格／材质、轮廓、武器来源／许可、攻击／施法、人物与武器遮挡、接地、命中点和 QA。 | 苻渊 pilot 均为无武器；不能把该事实扩展为有武器角色的成本。 |
+| 批量角色 | 可复用导入和隔离验证基础设施；每个角色的母源、atlas、六向、返工和 QA 仍逐角色计量。 | 可复用代码／测试和事件框架；每个角色的模型、材质、效果／音效适配、六向可读性、返工和 QA 仍逐角色计量。 | 没有第二个角色、批量规模或折扣实证；不估算平均价、学习曲线或折扣。 |
+| 工具与 Unity／Blender／2D 维护 | 需持续记录 ImageGen／抠图／atlas 导出工具、Sprite importer、controller、场景生成和测试的版本升级与故障处理。 | 需持续记录模型／材质输入、Blender（如实际使用）、本地 cue 生成、内置 VFX、controller、场景生成和测试的版本升级与故障处理。 | 本轮没有版本升级或维护工时；未来维护分钟、费用、失败和返工均未知。 |
+
+## 可复核来源
+
+- `docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md` §二.2、§八、§九：共同动作／方向条件、成本合同与用户决定边界。
+- `docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md` §四～§六、§八：2D 资产单位、计量口径和接入边界。
+- `docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md` §二～§六、§九～§十：静态 3D 资产单位、计量口径和接入边界。
+- `开发管理/苻渊2D战斗动画样例生产记录.txt`、`assets/generated-character-art/fuyuan-2d-battle-animation-pilot/production-log.md`：2D 的 18 分钟、费用、次数、失败和返工。
+- `开发管理/苻渊2D战斗动画Unity接入验证记录.txt`：2D 约 3 分钟的接入／验证窗口和技术范围。
+- `开发管理/苻渊静态3D战斗动态表现样例生产记录.txt`、`assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_manifest.json`：静态 3D 的 1 分钟、费用、次数、来源和未发生项。
+- `开发管理/苻渊静态3D战斗动态表现Unity接入验证记录.txt`：静态 3D Unity 接入对象、108 点矩阵和已知的人工时间缺口。
+
+## 供用户决定使用的边界
+
+本证据只解除 `A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 的成本 blocker。用户仍须在同条件可玩入口实际运行后，在 A“2D”、B“静态 3D”或 C“两者均不接受”中选择；不得按本表自动相加、按最低可见分钟或按旧 `2D:静态 3D = 4:2`／`42:30` 分数替用户决定方向。

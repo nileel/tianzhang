@@ -95,3 +95,7 @@ Unity 只消费 pilot 已冻结的六个 atlas，把它们原样复制为 `src/A
 - 2026-08-25，`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 已只消费上述冻结 atlas，原样复制为 `FuYuanBattle/FuYuan_Battle_<State>.png`，并以 manifest SHA-256、`6×3` grid、`512 PPU`、Custom pivot `(0.5,0.18)` 和事件帧验证导入。
 - 新 `BattleAnimationSpritePresentationController` 与 `FuYuan_BattleAnimationSprite` Prefab 只消费 `StaticChessPresentationEvent`；它选择同一状态的六方向三帧 atlas、仅在 cast release frame 发出一次效果信号并在结束复位根节点，不拥有方向、格位、伤害、状态、结算、装备或存档。
 - `AdventureScene/VisualBaselineBoard` 已建立默认关闭的 `BattleAnimationSpriteProbeGroup`。其显式 route 关闭旧静态 2D 与静态 3D probe；旧静态样张、相机、光照、地块和 `AdventureUnitSpawner` 不变。EditMode、PlayMode、资产版本、数据链和程序集边界通过；人工矩阵仍由后续用户可玩比较而非自动分数判定。
+
+### 后续成本证据事实
+
+- 2026-08-26，`D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 将本路线的 18 分钟、0 元／0 credits、7 次生成和 1 次失败返工，以及 Unity 接入来源记录的约 3 分钟单列为实际记录；约 3 分钟不与 source pilot 合计为路线总价。新角色、动作、方向、武器、服饰、批量和工具维护仍以本方案“生产、修订与成本记录流程”的计量口径记录，未试项目均为未知；该整理不决定视觉方向。
