@@ -1,0 +1,31 @@
+# EXP-AUTO-001 · PowerShell 7 唯一受支持运行时
+
+## 状态
+
+active
+
+## 开工前
+
+项目脚本只能以 `pwsh -NoProfile -ExecutionPolicy Bypass -File <脚本>` 启动；Windows PowerShell 5.1 会违反唯一运行时合同。仅当任务路径涉及 `.ps1` 脚本入口，且必查或实施范围明确该规范命令或脚本执行合同才命中；纯概念说明、禁止示例及无脚本路径不触发。若项目废弃此合同或检查器不再要求标准参数，本经验失效并须复核。
+
+## 根因
+
+项目保留 Windows PowerShell 5.1，但项目脚本仅支持 PowerShell 7；混用宿主或省略标准参数会偏离已审核的运行时合同。
+
+## 适用与排除
+
+- 适用：修改 `tools/*.ps1`，并在任务卡的必查范围或实施范围写明标准 `pwsh` 启动命令或该脚本执行合同。
+- 排除：仅提到“PowerShell”、只写禁止命令、或没有 `.ps1` 脚本路径的任务。
+
+## 正反例
+
+- 正例：`tools/check-pwsh-runtime.ps1` 的启动约定改为或核验为 `pwsh -NoProfile -ExecutionPolicy Bypass -File ...`。
+- 反例：只在设计说明中解释 PowerShell 7，且不改动脚本入口。
+
+## 失效条件
+
+项目明确废弃 PowerShell 7 唯一运行时合同，或 `tools/check-pwsh-runtime.ps1` 不再要求上述标准参数时，停止引用并重新核验。
+
+## 正确处理
+
+使用 PowerShell 7 的标准命令启动独立项目脚本；先运行运行时检查器及其测试，再改动相关合同文本或脚本入口。

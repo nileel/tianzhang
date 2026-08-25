@@ -1,5 +1,25 @@
 {
   "schemaVersion": 1,
-  "experiences": [],
+  "experiences": [
+    {
+      "id": "EXP-AUTO-001",
+      "title": "PowerShell 7 唯一受支持运行时",
+      "preflightSummary": "PowerShell 脚本执行与合同修改须保持 PowerShell 7 的标准启动命令。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [],
+      "stages": [],
+      "pathPatterns": [
+        "tools/*.ps1"
+      ],
+      "textPatterns": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-AUTO-001.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-26"
+    }
+  ],
   "gates": []
 }
