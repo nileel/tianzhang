@@ -8,6 +8,7 @@ using TianZhang.Features.CombatPresentation;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Spatial;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -46,7 +47,7 @@ namespace TianZhang.Editor
             VisualBaselineBuilder.BuildTacticalSpriteAssets();
             VisualBaselineBuilder.BuildBattleAnimationSpriteAssets();
             ValidateReadOnlyVisualAssets();
-            BuildVisualBaselineMatrix();
+            GameObject visualBaselineBoard = BuildVisualBaselineMatrix();
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
             GameObject adventurePanel = SceneBuildSupport.CreatePanel("AdventurePanel", canvas.transform, new Vector2(0.02f, 0.45f), new Vector2(0.28f, 0.96f));
@@ -76,6 +77,8 @@ namespace TianZhang.Editor
             Button guard = SceneBuildSupport.CreateButton("GuardButton", actionRoot.transform, "防御", out _);
             Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out _);
             combatPanel.SetActive(false);
+
+            BuildBattleVisualComparisonPanel(canvas, visualBaselineBoard);
 
             SceneBuildSupport.SetObject(combatView, "root", combatPanel);
             SceneBuildSupport.SetObject(combatView, "playerText", player);
@@ -153,6 +156,26 @@ namespace TianZhang.Editor
             AssetDatabase.SaveAssets();
         }
 
+        [MenuItem("天章/场景/重建战场角色可玩比较入口")]
+        public static void RebuildBattleVisualComparisonEntry()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject board = FindVisualBaselineBoard(scene);
+            if (board == null) throw new InvalidOperationException("AdventureScene is missing the visual baseline board.");
+            Canvas canvas = Array.Find(scene.GetRootGameObjects(), root => root.name == "UICanvas")?.GetComponent<Canvas>();
+            if (canvas == null) throw new InvalidOperationException("AdventureScene is missing the comparison UI canvas.");
+
+            Transform previousPanel = canvas.transform.Find("BattleVisualComparisonPanel");
+            if (previousPanel != null) UnityEngine.Object.DestroyImmediate(previousPanel.gameObject);
+            BattleVisualComparisonController previousController = board.GetComponent<BattleVisualComparisonController>();
+            if (previousController != null) UnityEngine.Object.DestroyImmediate(previousController);
+            BuildBattleVisualComparisonPanel(canvas, board);
+
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the regenerated battle visual comparison entry.");
+            AssetDatabase.SaveAssets();
+        }
+
         private static GameObject FindVisualBaselineBoard(Scene scene)
         {
             foreach (GameObject root in scene.GetRootGameObjects())
@@ -196,7 +219,60 @@ namespace TianZhang.Editor
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.BattleAnimationSpritePrefabPath);
         }
 
-        private static void BuildVisualBaselineMatrix()
+        private static void BuildBattleVisualComparisonPanel(Canvas canvas, GameObject board)
+        {
+            GameObject panel = SceneBuildSupport.CreatePanel("BattleVisualComparisonPanel", canvas.transform,
+                new Vector2(0.02f, 0.03f), new Vector2(0.38f, 0.42f));
+            SceneBuildSupport.AddVerticalLayout(panel, 6);
+            SceneBuildSupport.CreateText("BattleVisualComparisonTitle", panel.transform, "战场角色表现比较", 22);
+            Text status = SceneBuildSupport.CreateText("BattleVisualComparisonStatus", panel.transform, string.Empty, 13);
+
+            Transform routeButtons = CreateComparisonGrid("ComparisonRouteButtons", panel.transform, 2, 1);
+            Button dynamic2DRoute = SceneBuildSupport.CreateButton("Comparison2DRouteButton", routeButtons, "2D 动态", out _);
+            Button static3DRoute = SceneBuildSupport.CreateButton("ComparisonStatic3DRouteButton", routeButtons, "静态 3D", out _);
+
+            Transform directionButtons = CreateComparisonGrid("ComparisonDirectionButtons", panel.transform, 3, 2);
+            var directions = new Button[BattleVisualComparisonController.DirectionCount];
+            for (int direction = 0; direction < directions.Length; direction++)
+                directions[direction] = SceneBuildSupport.CreateButton(
+                    "ComparisonDirectionButton_" + direction, directionButtons, "方向 " + direction, out _);
+
+            Transform eventButtons = CreateComparisonGrid("ComparisonEventButtons", panel.transform, 3, 2);
+            string[] eventLabels = { "待机", "移动", "攻击", "受击", "施法", "死亡" };
+            var presentationEvents = new Button[eventLabels.Length];
+            for (int index = 0; index < eventLabels.Length; index++)
+                presentationEvents[index] = SceneBuildSupport.CreateButton(
+                    "ComparisonEventButton_" + index, eventButtons, eventLabels[index], out _);
+            Button reset = SceneBuildSupport.CreateButton("ComparisonResetButton", panel.transform, "复位当前比较", out _);
+
+            BattleVisualComparisonController comparison = board.GetComponent<BattleVisualComparisonController>();
+            if (comparison == null) comparison = board.AddComponent<BattleVisualComparisonController>();
+            comparison.Configure(status);
+            UnityEventTools.AddPersistentListener(dynamic2DRoute.onClick, comparison.SelectBattleAnimation2DRoute);
+            UnityEventTools.AddPersistentListener(static3DRoute.onClick, comparison.SelectStatic3DRoute);
+            for (int direction = 0; direction < directions.Length; direction++)
+                UnityEventTools.AddIntPersistentListener(directions[direction].onClick, comparison.SelectDirection, direction);
+            for (int presentationEvent = 0; presentationEvent < presentationEvents.Length; presentationEvent++)
+                UnityEventTools.AddIntPersistentListener(presentationEvents[presentationEvent].onClick,
+                    comparison.TriggerPresentationByIndex, presentationEvent);
+            UnityEventTools.AddPersistentListener(reset.onClick, comparison.ResetPresentations);
+        }
+
+        private static Transform CreateComparisonGrid(string name, Transform parent, int columns, int rows)
+        {
+            var gridObject = new GameObject(name, typeof(RectTransform), typeof(GridLayoutGroup), typeof(LayoutElement));
+            gridObject.transform.SetParent(parent, false);
+            GridLayoutGroup grid = gridObject.GetComponent<GridLayoutGroup>();
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = columns;
+            grid.cellSize = new Vector2(112f, 40f);
+            grid.spacing = new Vector2(6f, 5f);
+            LayoutElement layout = gridObject.GetComponent<LayoutElement>();
+            layout.preferredHeight = rows * 40f + (rows - 1) * 5f;
+            return gridObject.transform;
+        }
+
+        private static GameObject BuildVisualBaselineMatrix()
         {
             var board = new GameObject("VisualBaselineBoard");
             Mesh columnMesh = SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexColumnMeshPath);
@@ -251,6 +327,7 @@ namespace TianZhang.Editor
                 SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
             occluderRenderer.shadowCastingMode = ShadowCastingMode.On;
             occluderRenderer.receiveShadows = true;
+            return board;
         }
 
         private static void CreateFacingProbes(Transform parent, int[,] cells)

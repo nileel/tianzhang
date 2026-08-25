@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-25：苻渊 2D 动态与静态 3D 动态样例 Unity 接入、六方向事件、根节点复位和隔离矩阵验证均已完成；本卡可建立同条件可玩入口，仍不决定视觉胜者。",
+  "stateReason": "2026-08-25：同条件可玩入口、方向与事件对称输入、路线互斥、根节点复位和隔离验证均已完成；未决定视觉胜者。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleVisualComparisonController.cs",
@@ -77,3 +77,9 @@
 
 - 任一边缺资产、方向、动作、正确材质或共同条件，入口无法直接运行，或需要用扣分代替补齐证据。
 - 需要扩大到正式单位、规则、第三路线或让 Codex 替用户判断视觉胜负。
+
+## 完成记录
+
+- 在同一 `AdventureScene/VisualBaselineBoard` 增加独立 `BattleVisualComparisonController` 和入口面板；两条路线共用六方向、待机／移动／攻击／受击／施法／死亡以及复位输入。
+- Unity EditMode 423/423、PlayMode 13/13、数据链与程序集边界检查通过；`--no-restore` .NET 构建因 Unity 生成项目缺少 `project.assets.json` 未通过，未执行 restore。
+- 已解除 `A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 的本卡 blocker；该卡仍等待成本证据，且本卡未写入视觉胜者。

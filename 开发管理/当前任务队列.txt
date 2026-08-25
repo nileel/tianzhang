@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02 | codex_execute | codex | P1 | unity | verification | 战场角色2D与静态3D可玩比较入口 | 开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt |
 | D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | codex_execute | codex | P1 | management | verification | 战场角色2D与静态3D制作成本证据 | 开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt |
 | M-EXP-PREFLIGHT-01A | codex_review | codex | P1 | automation | implementation | 风险索引、经验卡模板与只读匹配器基础 | 开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt |
 | C-KB-IDX-MONSTER-01 | codex_review | codex | P2 | content | design | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |

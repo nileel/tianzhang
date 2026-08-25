@@ -51,6 +51,43 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void AdventureScenePersistsTheSymmetricBattleVisualComparisonEntry()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            Transform[] transforms = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                .ToArray();
+            Transform board = transforms.Single(item => item.name == "VisualBaselineBoard");
+            BattleVisualComparisonController comparison = board.GetComponent<BattleVisualComparisonController>();
+            Assert.IsNotNull(comparison, "VisualBaselineBoard must own the isolated comparison input controller.");
+
+            SerializedObject serialized = new SerializedObject(comparison);
+
+            Transform panel = transforms.Single(item => item.name == "BattleVisualComparisonPanel");
+            Assert.AreEqual("BattleVisualComparisonStatus", serialized.FindProperty("statusText").objectReferenceValue.name);
+            Assert.IsNotNull(panel.Find("ComparisonRouteButtons"));
+            Assert.IsNotNull(panel.Find("ComparisonDirectionButtons"));
+            Assert.IsNotNull(panel.Find("ComparisonEventButtons"));
+            AssertComparisonButton(panel, comparison, "Comparison2DRouteButton", "SelectBattleAnimation2DRoute");
+            AssertComparisonButton(panel, comparison, "ComparisonStatic3DRouteButton", "SelectStatic3DRoute");
+            AssertComparisonButton(panel, comparison, "ComparisonResetButton", "ResetPresentations");
+            for (int direction = 0; direction < BattleVisualComparisonController.DirectionCount; direction++)
+                AssertComparisonButton(panel, comparison, "ComparisonDirectionButton_" + direction, "SelectDirection");
+            for (int presentationEvent = 0; presentationEvent < 6; presentationEvent++)
+                AssertComparisonButton(panel, comparison, "ComparisonEventButton_" + presentationEvent, "TriggerPresentationByIndex");
+            Assert.IsFalse(board.Find(BattleAnimationSpriteProbeMatrix.GroupName).gameObject.activeSelf);
+            Assert.IsFalse(board.Find(TacticalSpriteProbeMatrix.GroupName).gameObject.activeSelf);
+            for (int direction = 0; direction < BattleVisualComparisonController.DirectionCount; direction++)
+                Assert.IsTrue(board.Find(TacticalSpriteProbeMatrix.FacingProbePrefix + direction).gameObject.activeSelf,
+                    "Static 3D must remain the frozen default route until the user explicitly switches.");
+
+            Material staticMaterial = AssetDatabase.LoadAssetAtPath<Material>(VisualBaselineBuilder.StaticChessMaterialPath);
+            Texture2D baseColor = AssetDatabase.LoadAssetAtPath<Texture2D>(VisualBaselineBuilder.StaticChessBaseColorTexturePath);
+            Assert.AreSame(baseColor, staticMaterial.GetTexture("_BaseMap"),
+                "The comparison must use the corrected static-3D BaseColor rather than an unbound material.");
+        }
+
+        [Test]
         public void AdventureSceneFacingProbesMatchTheFrozenSixDirectionContract()
         {
             int[,] expectations =
@@ -485,6 +522,17 @@ namespace TianZhang.Tests.EditMode
             AudioClip clip = serialized.FindProperty(fieldName).objectReferenceValue as AudioClip;
             Assert.IsNotNull(clip);
             Assert.AreEqual(assetPath, AssetDatabase.GetAssetPath(clip));
+        }
+
+        private static void AssertComparisonButton(Transform panel, BattleVisualComparisonController comparison,
+            string name, string expectedMethod)
+        {
+            Button button = panel.GetComponentsInChildren<Button>(true).Single(item => item.name == name);
+            SerializedProperty calls = new SerializedObject(button).FindProperty("m_OnClick.m_PersistentCalls.m_Calls");
+            Assert.AreEqual(1, calls.arraySize, name + " must invoke only the comparison controller.");
+            SerializedProperty call = calls.GetArrayElementAtIndex(0);
+            Assert.AreSame(comparison, call.FindPropertyRelative("m_Target").objectReferenceValue);
+            Assert.AreEqual(expectedMethod, call.FindPropertyRelative("m_MethodName").stringValue);
         }
 
         private static string ProjectRootPath() => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));

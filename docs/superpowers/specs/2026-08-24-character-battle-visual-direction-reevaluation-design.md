@@ -302,3 +302,4 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 - 2026-08-25，`A-CHAR-STATIC3D-MOTION-PILOT-01` 已完成隔离 source：唯一静态模型／BaseColor 哈希、六方向／六事件／根节点时点、内置 VFX 配方、五条原创本地 PCM cue WAV、成本记录与 source QA 矩阵均已冻结。没有改动 Blender、模型、材质、Prefab、场景、Unity、正式单位或规则；`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 只解除本卡 blocker，仍独立承担真实运行时矩阵与接入边界。
 - 2026-08-25，`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 已在同一隔离 `VisualBaselineBoard` 接入静态 3D 的根节点动态、唯一内置 VFX 与五条冻结 cue。固定 `1920×1080` 的六方向六事件开始／关键／结束矩阵、manifest 时点、单次效果／cue、cast 单次信号、根节点复位、模型／底座不变和规则隔离均已由 Unity EditMode／PlayMode 覆盖；未接入 `AdventureUnitSpawner`、正式单位、战斗规则或存档。可玩比较与成本证据已各自转为 ready，仍不产生视觉方向结论。
 - 最终 user decision 卡必须让用户运行游戏后回复；本文、参考调研、pipeline 方案或 Codex 技术复核均不能代替该决定。
+- 2026-08-25，`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 在同一 `AdventureScene/VisualBaselineBoard` 完成可运行入口：用户可切换冻结的 2D 动态战斗与静态 3D 动态路线，重复选择六方向和六个共同事件并复位。入口只编排既有隔离表现控制器，未接入正式单位、战斗规则或存档；技术复核确认 BaseColor、路线互斥、共同输入、事件与复位，未产生视觉胜者。用户决定仍等待同口径成本证据。

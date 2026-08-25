@@ -1,0 +1,19 @@
+# 战场角色 2D 与静态 3D 可玩比较验证记录
+
+## 技术复核结论
+
+2026-08-25，Codex 在 `AdventureScene/VisualBaselineBoard` 运行同一比较入口。入口的 `BattleVisualComparisonController` 只编排既有隔离表现控制器：2D 路线为 `BattleAnimationSpriteProbeGroup`，静态 3D 路线为六个 `FacingProbe_*`。切换时两条路线互斥，旧 `TacticalSpriteProbeGroup` 始终关闭。
+
+两条路线共用场景、相机、光照、地块、尺度、接地、占格和六个 `StaticChessPresentationEvent` 语义。EditMode 复核静态 3D 材质 `_BaseMap` 仍引用已修正的实际 BaseColor；2D 保持既有战斗 atlas。新输入不触碰正式单位、战斗规则、方向、AI、结算或存档所有者。
+
+## 实际运行与自动验证
+
+- Unity PlayMode：`ComparisonButtonsSwitchSymmetricRoutesAndReplayEverySharedEvent` 在真实 `AdventureScene` 中依次调用两条路线、六方向、六事件和复位；路线互斥、当前事件、根节点复位与全部探针待机均通过。完整 PlayMode：13/13 通过。
+- Unity EditMode：场景持久化入口、按钮持久事件、默认静态 3D 路线及 BaseColor 引用均通过。完整 EditMode：423/423 通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过（19 assemblies、2 asmrefs）。
+- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：未通过；Unity 生成的项目缺少 `src/Temp/obj/TianZhang.EditModeTests/project.assets.json`，命令按禁止 restore 的约束未补建。该环境缺件不改变已由 Unity Test Runner 完成的编译与运行结果。
+
+## 非结论与剩余条件
+
+上述记录只证明共同技术条件与可运行性，不是视觉评分，也不宣布 2D 或静态 3D 胜出。用户决定卡仍等待 `D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 提供同口径成本证据，之后必须由用户实机选择 A／B／C。

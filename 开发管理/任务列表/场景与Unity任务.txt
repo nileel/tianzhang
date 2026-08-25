@@ -14,15 +14,15 @@
 - 2026-08-24：2D 与静态 3D 战斗表现参考调研均已完成；负责人随后明确批准两个方向进入详细方案。2D 方向以《龙胤立志传》的实战表现为可接受下限；静态 3D 方向聚焦炉石传说、游戏王、万智牌式的单一静态角色载体整体动效与特效，不采用角色模型内部动画或多套独立 Pose 换模。两张 pipeline 卡已转 `ready`；本次仍不授权资产生产、credits 消费或 Unity 修改。
 - 2026-08-25：负责人对 2D pipeline 书面方案选择 A。`D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 已完成归档；随后 `A-CHAR-2D-BATTLE-ANIM-PILOT-01` 以有限帧／棋子化完成苻渊隔离样例，冻结唯一 `.spine` 母源、六状态三帧六方向 RGBA atlas、完整哈希和真实 18 分钟／0 元／0 credits／7 次生成（含 1 次失败返工）记录。`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 随后将六份 atlas 原样导入独立 `FuYuanBattle`，建立默认关闭的 `BattleAnimationSpriteProbeGroup`、受限 controller／Prefab 和六方向六状态运行验证；EditMode、PlayMode、资产版本、数据链和程序集边界均通过。两轮均未接入正式角色、`AdventureUnitSpawner`、战斗规则或存档；可玩比较与成本证据仅剩静态 3D 动态路线接入 blocker。
 - 2026-08-25：`A-CHAR-STATIC3D-MOTION-PILOT-01` 已完成隔离 source：锁定唯一静态模型与已修正 BaseColor 哈希，产出 manifest、五条项目原创本地 48 kHz PCM cue、实际 1 分钟／0 元／0 credits／5 次合成／0 次失败返工记录和六方向 source QA 矩阵。`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 随后原样导入 cue、建立唯一内置 VFX／根节点表现所有者，并在固定 1920×1080、六方向六事件开始／关键／结束矩阵验证时点、单次 cue／效果、cast 信号、复位、模型／底座不变和规则隔离；未编辑 Blender、模型、材质、正式角色、规则或存档。可玩比较与成本证据已解除本卡 blocker。
+- 2026-08-25：`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 已归档。`AdventureScene/VisualBaselineBoard` 的独立入口在相同相机、光照、地块、尺度和规则条件下切换 2D 动态战斗与静态 3D 动态样例，并覆盖六方向、六事件与复位；技术复核通过，不产生视觉胜者。`A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 只剩 `D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 的同口径成本证据 blocker。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-REEVALUATE-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | 战场角色2D与静态3D方向重新评估父项 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt |
-| U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02 | P1 | codex | 已排队 | — | 战场角色2D与静态3D可玩比较入口 | 开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt |
 | D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | P1 | codex | 已排队 | — | 战场角色2D与静态3D制作成本证据 | 开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt |
-| A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | P1 | codex | 阻塞 | U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02、D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | 战场角色视觉方向用户实机决定 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt |
+| A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | P1 | codex | 阻塞 | D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | 战场角色视觉方向用户实机决定 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-USER-DECISION-02.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | 苻渊 strict-round-02 四边面候选静态结构 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt |

@@ -10,10 +10,9 @@
   "stage": "decision",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02",
     "D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01"
   ],
-  "stateReason": "2026-08-24：等待通过Codex技术复核的可玩入口和同口径成本证据；完成后必须停在用户实机A/B/C决定，不得自动选方向。",
+  "stateReason": "2026-08-25：可玩入口已通过 Codex 技术复核；仍等待同口径成本证据。完成后必须停在用户实机 A/B/C 决定，不得自动选方向。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "开发管理/战场角色视觉方向可玩比较操作说明.txt",
