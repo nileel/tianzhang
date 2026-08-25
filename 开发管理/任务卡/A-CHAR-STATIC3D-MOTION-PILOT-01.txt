@@ -8,14 +8,18 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-CHAR-STATIC3D-MOTION-PIPELINE-01"
-  ],
-  "stateReason": "2026-08-24：BaseColor修正已完成；仍等待用户批准的静态3D详细方案，业务资产路径、表现机制与验证由pipeline卡写回后才可ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-25：负责人对 DEC-20260825-S3DMOTION02 选择 A，详细方案与 material correction 均已完成；本卡获得完整生产合同并转 ready，仍须在当次 credits 或第三方声音素材门未满足时停止。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_manifest.json",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_move.wav",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_attack.wav",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_hit.wav",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_cast.wav",
+    "assets/source/characters/platform-evaluation/tripo/static-chess-fuyuan/motion-pilot/fuyuan_static_3d_motion_death.wav",
     "开发管理/苻渊静态3D战斗动态表现样例生产记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -30,40 +34,40 @@
 
 ## 来源与当前边界
 
-- 本卡只消费用户批准的静态 3D pipeline 和已完成的 BaseColor 修正；当前表现机制、业务资产路径和动作／方向范围尚未冻结。
-- 苻渊是公平比较的固定单角色样例，不是正式 3D 角色批次。
-- 任何平台 credits 消费都需要当次单独授权，pipeline 批准不能替代 credits 授权。
+- 只消费负责人 A 批准的 `docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md`、已完成的 BaseColor 修正和唯一静态棋子输入；单一苻渊静态模型保持惰性棋子，不建立 Pose、模型内部动画、蒙皮或统一骨架。
+- 苻渊是公平比较的固定单角色样例，不是正式 3D 角色批次。当前没有武器，记录必须写明 `weapon=none`；这不替未来武器覆盖背书。
+- 本卡只生产 manifest、五条短促 cue WAV、生产／成本记录和六向人工矩阵；它不编辑角色模型、Blender 候选、BaseColor、材质、Prefab、场景或 Unity。任何平台 credits 或第三方声音素材仍须当次单独授权。
 
 ## 必查范围
 
-- 完成并获用户批准的静态 3D pipeline 规格完整正文。
-- `tianzhang-blender-pipeline` 要求的目标角色事实、来源包、Blender／FBX 路径和 QA 规则。
-- material correction 验证记录及 pipeline 写回的精确业务 expectedPaths、表现机制、质量门和生产记录格式。
+- 完成并获 A 批准的静态 3D pipeline 规格完整正文、静态 3D reference 的“用户收敛方向的受控使用”，以及 `docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md` §四～§七。
+- `tianzhang-blender-pipeline` 的目标角色事实、来源包、Blender／FBX 路径和 QA 规则；`开发管理/苻渊静态棋子Blender候选验证记录.txt` 与 `开发管理/苻渊静态棋子Unity材质修正验证记录.txt`。
+- 本卡 `expectedPaths` 的 manifest、五条 cue WAV 与 `开发管理/苻渊静态3D战斗动态表现样例生产记录.txt`；先核对唯一静态输入、BaseColor 与 hash，再生产任何输出。
 
 ## 实施范围
 
-- 只按批准流程生产苻渊静态 3D 战斗动态表现样例所需资产和可审计来源／版本／修订／成本日志。
-- 保持苻渊身份、服饰和黑／灰／金主色，满足固定斜俯视战斗镜头可读性。
-- 完成后解除静态 3D Unity integration blocker，不直接接入 Unity 或正式单位。
+- 先以攻击、受击、死亡的六向开始／关键／结束矩阵验证整体载体时点、效果、cue、复位、背向镜头、宽袖／腿部／接地线与遮挡；三者均通过后才补全 idle、move、cast。静态角色材质保持正确 BaseColor，根节点之外的模型和底座不变。
+- manifest 锁定唯一静态输入、六方向、事件时点、内置 VFX 配方、cue 来源／许可、输入输出 SHA-256 和人工结果；逐次记录人工分钟、工具／版本、实际费用／credits、制作次数、失败、返工和 QA。未尝试／未发生／未知如实记录，不推导成本。
+- 形成完整 source 后只解除 Unity integration 的本卡 blocker；不复制到 `src/`、不建效果 Prefab、不接入 Unity 或正式单位。
 
 ## 禁止项
 
-- 不在 pipeline A 批准和 material correction 完成前生产，不自行决定 Pose、骨骼、动作、方向或工具链。
-- 不消费未单独授权 credits，不恢复冻结旧换头／蒙皮／统一骨架路线。
-- 不修改 Unity、战斗规则、正式单位或其他角色资产。
+- 不在 pipeline A 批准和 material correction 完成前生产；不自行改变单一静态模型、Pose、骨骼、动作集合、方向或静态材质边界。
+- 不消费未单独授权 credits，不下载／使用未授权第三方声音素材，不恢复冻结旧换头／蒙皮／统一骨架路线；不以新模型、额外 Pose、常驻光环或材质补偿掩盖失败。
+- 不修改 Unity、战斗规则、正式单位或其他角色资产；不得以镜头、地块、私有缩放／朝向、规则改动或 fallback 让样例通过。
 
 ## 验证
 
-- 运行 pipeline 与 Blender 专项规格冻结的模型、材质、方向／动作、身份和来源验证。
-- 核对实际生产日志足以供成本证据卡使用，失败生成与返工未遗漏。
-- 状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- 检查 manifest 的唯一模型／BaseColor hash、六向 `90/150/210/270/330/30`、六事件、时点、VFX／cue 来源与输出 hash；无骨骼／Clip／额外模型、无角色／底座变换写入、无共享材质修改，缺项即失败关闭。
+- 固定 `AdventureScene/VisualBaselineBoard`、同一相机／光照／地块、世界尺度和 `1920×1080` 人工矩阵逐项确认六方向（特别背向两向）、身份／黑灰金主色、宽袖、腿部、当前无武器事实、接地线、遮挡、攻击／受击／死亡可读性和复位；机器检查不得替代此结论。
+- 核对生产记录足以供成本证据卡读取实际分钟、费用／credits、次数、返工、失败和来源许可；状态变更时运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 
 ## 完成条件
 
-- 形成 pipeline 规定的唯一可用苻渊静态 3D 动态表现样例资产和完整生产记录，未接入正式游戏。
-- 下游 integration 只剩本卡已完成这一已移除 blocker，并按完整合同进入 ready。
+- 形成唯一静态模型输入的 manifest、五条通过来源／hash 合同的 cue WAV、六向六事件矩阵和完整生产记录；攻击、受击、死亡先通过，未接入正式游戏。
+- Unity integration 的完整业务 expectedPaths、验证与停止条件不需再猜测；本卡 blocker 被移除后，下游只按自身其余条件进入 ready。
 
 ## 停止条件
 
-- pipeline 规格未批准、BaseColor 未修复、业务 expectedPaths 未写回、身份／主色失败或需要扩大动作与方向范围。
-- 需要未授权 credits、恢复冻结旧链、修改 Unity 或正式内容。
+- pipeline 未获 A 批准、BaseColor／唯一输入不匹配、cue 来源／许可／hash 不完整、任一高风险语义／身份／主色／六向／接地／遮挡／复位失败，或需要扩大动作、方向或资产路径。
+- 需要未授权 credits、第三方声音素材、恢复冻结旧链、修改 Unity／正式内容／规则，或以新模型、骨骼、Pose、私有视觉条件或 fallback 取得通过。

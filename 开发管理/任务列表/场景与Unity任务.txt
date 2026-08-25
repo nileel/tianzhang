@@ -19,8 +19,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-CHAR-BATTLE-VISUAL-REEVALUATE-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-USER-DECISION-02 | 战场角色2D与静态3D方向重新评估父项 | 开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt |
-| D-CHAR-STATIC3D-MOTION-PIPELINE-01 | P1 | codex | 已排队 | — | 静态3D战斗动态表现详细方案 | 开发管理/任务卡/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt |
-| A-CHAR-STATIC3D-MOTION-PILOT-01 | P1 | codex | 阻塞 | D-CHAR-STATIC3D-MOTION-PIPELINE-01 | 苻渊静态3D战斗动态表现样例生产 | 开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt |
+| A-CHAR-STATIC3D-MOTION-PILOT-01 | P1 | codex | 已排队 | — | 苻渊静态3D战斗动态表现样例生产 | 开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt |
 | U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | P1 | codex | 阻塞 | A-CHAR-STATIC3D-MOTION-PILOT-01 | 苻渊静态3D战斗动态表现Unity接入 | 开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt |
 | U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02 | P1 | codex | 阻塞 | U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | 战场角色2D与静态3D可玩比较入口 | 开发管理/任务卡/U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02.txt |
 | D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01 | P1 | codex | 阻塞 | U-CHAR-STATIC3D-MOTION-INTEGRATION-01 | 战场角色2D与静态3D制作成本证据 | 开发管理/任务卡/D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01.txt |

@@ -179,6 +179,9 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 
 方案必须单独交给用户批准。批准前不得进入静态 3D 样例生产；任何会消费平台 credits 的操作仍需当次单独授权。
 
+`2026-08-25` 的书面方案固定为
+`docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md`。它把炉石传说、游戏王与万智牌式数字载体严格限于 E3 画面语法，冻结苻渊单一静态模型的整体根节点、一次性特效与短促音效分工；不采用多 Pose 换模、模型内部动画、蒙皮或统一骨架。攻击、受击和死亡必须先在项目 pilot 的六向矩阵中证明，P1 既有根节点样例不承担视觉质量、批量生产或成本结论。
+
 ## 六、样例生产与技术修正边界
 
 ### 6.1 静态 3D 材质修正
@@ -295,4 +298,5 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 - 两张 pipeline 卡写出并自审方案后分别停在 `waiting_reply`；用户批准书面方案后才完成该卡并解锁对应 pilot。
 - 2026-08-25，负责人已对 `D-CHAR-2D-BATTLE-ANIM-PIPELINE-01` 选择 A。该卡的书面方案完成归档，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 依冻结合同转为 `ready`；这仍只授权隔离苻渊样例的生产选择门，不授权正式角色、战斗规则、存档或 Unity 接入。
 - 2026-08-25，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 已完成隔离苻渊 2D 样例：有限帧／棋子化通过高风险三动作的六向选择门，冻结唯一可编辑时间线母源、六状态三帧六向 atlas、真实分钟／费用／次数／返工和 source QA 记录。`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 已将该冻结输入原样接入默认关闭的 `BattleAnimationSpriteProbeGroup`：活动 atlas、六方向六状态、manifest 事件帧、施法单次信号、根节点复位、真实遮挡和规则隔离由 EditMode／PlayMode 验证，未接入正式单位或改变规则。可玩比较与成本证据各只剩静态 3D 动态接入 blocker。
+- 2026-08-25，负责人已对 `D-CHAR-STATIC3D-MOTION-PIPELINE-01` 选择 A。该卡的单一静态载体整体动效方案完成归档，`A-CHAR-STATIC3D-MOTION-PILOT-01` 在 material correction 已完成的前提下转为 `ready`；这仍只授权隔离苻渊样例的生产选择门，不授权正式角色、战斗规则、存档或 Unity 接入。
 - 最终 user decision 卡必须让用户运行游戏后回复；本文、参考调研、pipeline 方案或 Codex 技术复核均不能代替该决定。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260825-S3DMOTION02",
+  "stateReason": "2026-08-25：负责人对 DEC-20260825-S3DMOTION02 选择 A；书面方案与下游合同完成，A-CHAR-STATIC3D-MOTION-PILOT-01 已解除唯一具名前置并转 ready。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
@@ -23,62 +23,6 @@
     "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "D-CHAR-STATIC3D-MOTION-PIPELINE-01",
-    "sourceRunId": "9a0fb700-3de8-4b6e-a069-9646999e4168",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260825-S3DMOTION02",
-    "question": "书面方案与下游合同已完成自审。是否批准静态3D单一载体动态表现方案并解锁苻渊 pilot？",
-    "options": [
-      {
-        "key": "A",
-        "label": "批准方案并解锁 pilot"
-      },
-      {
-        "key": "B",
-        "label": "仅修订方案后再次等待"
-      },
-      {
-        "key": "C",
-        "label": "冻结静态3D路线"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 将解锁单一静态苻渊载体的六向高风险 pilot；B 只修订书面方案；C 不生产或接入下游。",
-    "plainSummary": {
-      "action": "请选择 A、B 或 C。",
-      "situation": "详细方案与两张下游原子卡已完成，仍未生产任何资产。",
-      "impact": "未经 A 不会生产资产、消费 credits 或修改 Unity。"
-    },
-    "checkpointCommit": "81c38103781ae37e9bc944ae210206a2886a4001",
-    "baseCommit": "7963a021ef050552364baf073aa8ebb76798f315",
-    "branch": "codex/automation/codex/9a0fb700-3de8-4b6e-a069-9646999e4168/candidate",
-    "changedPaths": [
-      "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
-      "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt",
-      "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
-      "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
-      "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md"
-    ],
-    "verified": [
-      "check-review-text: OK (979 files checked)",
-      "check-task-cards: OK (cards=80 ready=4)",
-      "check-data-chain: OK",
-      "check-pending-whitespace: OK (5 files checked; fix=False)",
-      "git diff --cached --check: OK",
-      "automation-finalize-commit: OK"
-    ],
-    "unverified": [
-      "负责人尚未对重新发送的决策卡选择 A/B/C",
-      "未生产资产、未消费 credits、未修改 Unity"
-    ],
-    "residualRisk": "A 批准后仍须以真实六向攻击、受击、死亡 pilot 验证载体动态、特效音效、接地、遮挡与实际成本。",
-    "taskContextDigest": "8c30a77369ae6ebb4fe03698f8617d50c8d0c9fdebedff0e678a2a9b9b179f2a",
-    "createdAt": "2026-08-25T18:22:23.0170333+08:00",
-    "queueIndex": 0
-  },
   "automationReply": {
     "decisionId": "DEC-20260825-S3DMOTION02",
     "result": "OPTION_ACCEPTED",
@@ -143,3 +87,9 @@
 
 - 书面方案未获 A 批准或下游路径仍不完整；方案写完后必须按 checkpoint 停止等待，不得越过批准门启动 pilot。
 - 方案需要未授权 credits、修改战斗规则／存档、恢复冻结旧链或建立第三条视觉路线。
+
+## 完成记录
+
+- 负责人已对 `DEC-20260825-S3DMOTION02` 选择 A。书面方案、单一静态载体整体动效、五条 cue、六向高风险矩阵、自动检查与人工视觉矩阵分工均已冻结在 `docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md`。
+- `A-CHAR-STATIC3D-MOTION-PILOT-01` 已获得完整、可执行的 expectedPaths、验证、完成与停止条件，且 material correction 已完成，故解除本卡的唯一具名前置并转为 `ready`；`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 仍只等待 pilot。
+- 本卡未生产动态资产、未消费 external credits、未下载第三方声音素材、未修改 Blender、Unity、正式单位、战斗规则或存档。
