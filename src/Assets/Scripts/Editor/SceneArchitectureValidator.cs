@@ -312,6 +312,7 @@ namespace TianZhang.Editor
                     FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
                     FacingProbeExpectations[index, 3]);
             ValidateTacticalSpriteOcclusionProbe(tacticalGroup);
+            ValidateBattleAnimationSpriteProbes(board.transform);
             foreach (string name in new[]
                      { "SurfaceOverlay", "ReachableOverlay", "SelectedOverlay", "AttackOverlay", "VisualBaselineOccluder" })
                 Require(FindNamed(scene, name) != null, "AdventureScene is missing visual layer: " + name);
@@ -347,6 +348,62 @@ namespace TianZhang.Editor
             Vector3 occluderPosition = HexToVisualPosition(2, 0, HeightForLevel(0) + 0.58f);
             Require(Vector3.Dot(HexToVisualPosition(2, 0, HeightForLevel(0)) - occluderPosition, cameraForward) > 0f,
                 "Tactical sprite occlusion probe must sit behind the occluder along the frozen camera forward.");
+        }
+
+        private static void ValidateBattleAnimationSpriteProbes(Transform board)
+        {
+            Transform group = board.Find(BattleAnimationSpriteProbeMatrix.GroupName);
+            Require(group != null, "AdventureScene is missing the battle animation sprite probe group.");
+            Require(!group.gameObject.activeSelf,
+                "The battle animation sprite group must stay inactive by default so all visual routes are mutually exclusive.");
+            for (int index = 0; index < FacingProbeExpectations.GetLength(0); index++)
+                ValidateBattleAnimationSpriteProbe(group, index, FacingProbeExpectations[index, 0],
+                    FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
+                    FacingProbeExpectations[index, 3]);
+
+            Transform occlusionProbe = group.Find("BattleAnimationSpriteOcclusionProbe");
+            Require(occlusionProbe != null, "AdventureScene is missing the battle animation sprite occlusion probe.");
+            Require(Vector3.Distance(occlusionProbe.localPosition,
+                        HexToVisualPosition(2, 0, HeightForLevel(0))) < 0.001f &&
+                    Quaternion.Angle(occlusionProbe.localRotation, Quaternion.Euler(0f, 90f, 0f)) < 0.01f,
+                "Battle animation sprite occlusion probe must use the frozen direction-0 cell and yaw.");
+            ValidateBattleAnimationSpriteRenderer(occlusionProbe, 0,
+                "Battle animation sprite occlusion probe must render the idle direction-0 first frame.");
+        }
+
+        private static void ValidateBattleAnimationSpriteProbe(Transform group, int direction, int q, int r, int heightLevel, int yaw)
+        {
+            Transform probe = group.Find(BattleAnimationSpriteProbeMatrix.ProbePrefix + direction);
+            Require(probe != null, "AdventureScene is missing the battle animation sprite probe for direction " + direction + ".");
+            Vector3 expectedPosition = HexToVisualPosition(q, r, HeightForLevel(heightLevel));
+            Require(Vector3.Distance(probe.localPosition, expectedPosition) < 0.001f,
+                "Battle animation sprite probe is not centered on its rule neighbor.");
+            Require(Quaternion.Angle(probe.localRotation, Quaternion.Euler(0f, yaw, 0f)) < 0.01f,
+                "Battle animation sprite probe does not use the frozen facing yaw.");
+            Vector3 expectedForward = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f).normalized;
+            Require(Vector3.Angle(probe.localRotation * Vector3.forward, expectedForward) < 0.01f,
+                "Battle animation sprite probe local +Z does not point at its rule neighbor.");
+            ValidateBattleAnimationSpriteRenderer(probe, direction,
+                "Battle animation sprite probe must render the matching idle direction first frame.");
+        }
+
+        private static void ValidateBattleAnimationSpriteRenderer(Transform probe, int direction, string message)
+        {
+            BattleAnimationSpritePresentationController controller = probe.GetComponent<BattleAnimationSpritePresentationController>();
+            Require(controller != null, "Battle animation sprite probe must instantiate its presentation root.");
+            var serialized = new SerializedObject(controller);
+            SerializedProperty directionProperty = serialized.FindProperty("activeDirection");
+            Require(directionProperty != null && directionProperty.intValue == direction,
+                "Battle animation sprite probe must serialize its fixed direction.");
+            SpriteRenderer[] renderers = probe.GetComponentsInChildren<SpriteRenderer>(true);
+            Require(renderers.Length == 1 && renderers[0].sprite != null &&
+                    renderers[0].sprite.name == VisualBaselineBuilder.BattleAnimationSpriteName(0, direction, 0), message);
+            Require(probe.GetComponentsInChildren<Animator>(true).Length == 0 &&
+                    probe.GetComponentsInChildren<Animation>(true).Length == 0 &&
+                    probe.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length == 0,
+                "Battle animation sprite probe must not import a runtime animation or rig.");
+            Require(renderers[0].sortingOrder == 0 && renderers[0].sortingLayerID == 0,
+                "Battle animation sprite probe must not use always-on-top sorting.");
         }
 
         private static void ValidateVisualBaselineCell(Transform board, int q, int r, int heightLevel)

@@ -43,6 +43,7 @@ namespace TianZhang.Editor
             CombatLogView logView = root.AddComponent<CombatLogView>();
 
             VisualBaselineBuilder.BuildTacticalSpriteAssets();
+            VisualBaselineBuilder.BuildBattleAnimationSpriteAssets();
             ValidateReadOnlyVisualAssets();
             BuildVisualBaselineMatrix();
 
@@ -134,6 +135,23 @@ namespace TianZhang.Editor
             AssetDatabase.SaveAssets();
         }
 
+        [MenuItem("天章/场景/重建战斗动画精灵隔离矩阵")]
+        public static void RebuildBattleAnimationSpriteIsolationMatrix()
+        {
+            VisualBaselineBuilder.BuildBattleAnimationSpriteAssets();
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject board = FindVisualBaselineBoard(scene);
+            if (board == null) throw new InvalidOperationException("AdventureScene is missing the visual baseline board.");
+
+            Transform existingGroup = board.transform.Find(BattleAnimationSpriteProbeMatrix.GroupName);
+            if (existingGroup != null) UnityEngine.Object.DestroyImmediate(existingGroup.gameObject);
+            CreateBattleAnimationSpriteProbes(board.transform, VisualBaselineCells);
+
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the regenerated battle animation isolation matrix.");
+            AssetDatabase.SaveAssets();
+        }
+
         private static GameObject FindVisualBaselineBoard(Scene scene)
         {
             foreach (GameObject root in scene.GetRootGameObjects())
@@ -173,6 +191,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.OccluderMaterialPath);
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.StaticChessPrefabPath);
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.TacticalSpritePrefabPath);
+            SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.BattleAnimationSpritePrefabPath);
         }
 
         private static void BuildVisualBaselineMatrix()
@@ -206,6 +225,7 @@ namespace TianZhang.Editor
 
             CreateFacingProbes(board.transform, cells);
             CreateTacticalSpriteProbes(board.transform, cells);
+            CreateBattleAnimationSpriteProbes(board.transform, cells);
 
             CreateOverlay(board.transform, overlayMesh, -2, 0, 0, "SurfaceOverlay",
                 VisualBaselineBuilder.SurfaceMaterialPath, 10, 0.012f);
@@ -306,6 +326,67 @@ namespace TianZhang.Editor
                 throw new InvalidOperationException("Tactical sprite controller is missing the active direction field.");
             directionProperty.intValue = 0;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void CreateBattleAnimationSpriteProbes(Transform parent, int[,] cells)
+        {
+            GameObject group = new GameObject(BattleAnimationSpriteProbeMatrix.GroupName);
+            group.transform.SetParent(parent, false);
+            group.transform.localPosition = Vector3.zero;
+            group.transform.localRotation = Quaternion.identity;
+            group.transform.localScale = Vector3.one;
+
+            GameObject spritePrefab = SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.BattleAnimationSpritePrefabPath);
+            for (int direction = 0; direction < FacingProbeYaws.Length; direction++)
+            {
+                HexCoord neighbor = HexCoord.Directions[direction];
+                int heightLevel = FindCellHeight(cells, neighbor.q, neighbor.r);
+                GameObject probe = (GameObject)PrefabUtility.InstantiatePrefab(spritePrefab);
+                probe.name = BattleAnimationSpriteProbeMatrix.ProbePrefix + direction;
+                probe.transform.SetParent(group.transform, false);
+                probe.transform.localPosition = HexToWorld(neighbor.q, neighbor.r, HeightForLevel(heightLevel));
+                probe.transform.localRotation = Quaternion.Euler(0f, FacingProbeYaws[direction], 0f);
+                ConfigureBattleAnimationProbe(probe, direction);
+            }
+
+            int occlusionHeightLevel = FindCellHeight(cells, 2, 0);
+            GameObject occlusionProbe = (GameObject)PrefabUtility.InstantiatePrefab(spritePrefab);
+            occlusionProbe.name = "BattleAnimationSpriteOcclusionProbe";
+            occlusionProbe.transform.SetParent(group.transform, false);
+            occlusionProbe.transform.localPosition = HexToWorld(2, 0, HeightForLevel(occlusionHeightLevel));
+            occlusionProbe.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+            ConfigureBattleAnimationProbe(occlusionProbe, 0);
+
+            // 动态 2D 样例必须显式切换，不能与旧静态 2D 或静态 3D 探针共同渲染。
+            group.SetActive(false);
+        }
+
+        private static void ConfigureBattleAnimationProbe(GameObject probe, int direction)
+        {
+            BattleAnimationSpritePresentationController controller =
+                probe.GetComponent<BattleAnimationSpritePresentationController>();
+            if (controller == null) throw new InvalidOperationException("Battle animation sprite probe is missing its presentation controller.");
+            SpriteRenderer body = probe.GetComponentInChildren<SpriteRenderer>(true);
+            if (body == null) throw new InvalidOperationException("Battle animation sprite probe is missing its SpriteRenderer.");
+            body.sprite = RequireBattleAnimationSprite(0, direction, 0);
+
+            var serialized = new SerializedObject(controller);
+            SerializedProperty directionProperty = serialized.FindProperty("activeDirection") ??
+                throw new InvalidOperationException("Battle animation controller is missing the active direction field.");
+            directionProperty.intValue = direction;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static Sprite RequireBattleAnimationSprite(int state, int direction, int frame)
+        {
+            string path = VisualBaselineBuilder.BattleAnimationSpriteTexturePath(state);
+            string expectedName = VisualBaselineBuilder.BattleAnimationSpriteName(state, direction, frame);
+            foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                Sprite sprite = asset as Sprite;
+                if (sprite != null && sprite.name == expectedName) return sprite;
+            }
+            throw new InvalidOperationException("Battle animation atlas is missing imported sprite: " + expectedName);
         }
 
         private static int FindCellHeight(int[,] cells, int q, int r)

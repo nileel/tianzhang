@@ -10,10 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01",
     "U-CHAR-STATIC3D-MOTION-INTEGRATION-01"
   ],
-  "stateReason": "2026-08-24：等待两条路线形成完整样例生产与Unity接入日志；本卡只整理同口径成本证据，不评判视觉胜负。",
+  "stateReason": "2026-08-25：2D 动态样例的生产记录和 Unity 接入日志已齐备；本卡仍等待静态 3D 动态样例的同口径生产与接入记录，只整理成本证据，不评判视觉胜负。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 using TianZhang.Features.CombatPresentation;
 using UnityEditor;
 using UnityEngine;
@@ -53,7 +55,13 @@ namespace TianZhang.Editor
             "Assets/Art/Characters/TacticalSprites/FuYuan";
         public const string TacticalSpritePrefabPath =
             "Assets/Art/Characters/TacticalSprites/FuYuan/FuYuan_TacticalSprite.prefab";
+        public const string BattleAnimationSpriteFuYuanFolderPath =
+            "Assets/Art/Characters/TacticalSprites/FuYuanBattle";
+        public const string BattleAnimationSpritePrefabPath =
+            "Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_BattleAnimationSprite.prefab";
         public const int TacticalSpriteDirectionCount = 6;
+        public const int BattleAnimationStateCount = 6;
+        public const int BattleAnimationFramesPerDirection = 3;
         public const float TacticalSpritePixelsPerUnit = 512f;
         public static readonly Vector2 TacticalSpritePivot = new Vector2(0.5f, 0.18f);
         public static readonly Vector3 StaticChessFigureEuler = new Vector3(-90f, 0f, 0f);
@@ -73,6 +81,7 @@ namespace TianZhang.Editor
             BuildUnitMarkerPrefab();
             BuildStaticChessAssets();
             BuildTacticalSpriteAssets();
+            BuildBattleAnimationSpriteAssets();
             AssetDatabase.SaveAssets();
 
             StartMenuSceneBuilder.Build();
@@ -412,6 +421,286 @@ namespace TianZhang.Editor
             ConfigureTacticalSpriteImporters();
             BuildTacticalSpritePrefab();
             AssetDatabase.SaveAssets();
+        }
+
+        public static void BuildBattleAnimationSpriteAssets()
+        {
+            BattleAnimationManifest manifest = ReadBattleAnimationManifest();
+            EnsureFolder("Assets/Art/Characters/TacticalSprites", "FuYuanBattle");
+            for (int state = 0; state < BattleAnimationStateCount; state++)
+            {
+                BattleAnimationState sourceState = BattleAnimationStateAt(manifest.states, state);
+                string sourcePath = Path.Combine(BattleAnimationPilotDirectory(), sourceState.file);
+                string destinationPath = BattleAnimationSpriteTexturePath(state);
+                VerifyAtlas(sourcePath, sourceState.sha256, BattleAnimationStateName(state));
+                if (!File.Exists(destinationPath) || !string.Equals(ComputeSha256(destinationPath), sourceState.sha256,
+                        System.StringComparison.OrdinalIgnoreCase))
+                    File.Copy(sourcePath, destinationPath, true);
+                AssetDatabase.ImportAsset(destinationPath, ImportAssetOptions.ForceSynchronousImport);
+                ConfigureBattleAnimationImporter(destinationPath, state);
+            }
+            BuildBattleAnimationSpritePrefab();
+            AssetDatabase.SaveAssets();
+        }
+
+        public static string BattleAnimationSpriteTexturePath(int state) =>
+            BattleAnimationSpriteFuYuanFolderPath + "/FuYuan_Battle_" + BattleAnimationStateName(state) + ".png";
+
+        public static string BattleAnimationSpriteName(int state, int direction, int frame) =>
+            "FuYuan_Battle_" + BattleAnimationStateName(state) + "_Direction_" + direction + "_Frame_" + frame;
+
+        public static string BattleAnimationStateName(int state)
+        {
+            switch (state)
+            {
+                case 0: return "Idle";
+                case 1: return "Move";
+                case 2: return "Attack";
+                case 3: return "Hit";
+                case 4: return "Cast";
+                case 5: return "Death";
+                default: throw new ArgumentOutOfRangeException(nameof(state));
+            }
+        }
+
+        private static string BattleAnimationPilotDirectory() => Path.GetFullPath(Path.Combine(
+            Application.dataPath, "..", "..", "assets", "generated-character-art", "fuyuan-2d-battle-animation-pilot"));
+
+        private static BattleAnimationManifest ReadBattleAnimationManifest()
+        {
+            string manifestPath = Path.Combine(BattleAnimationPilotDirectory(), "manifest.json");
+            if (!File.Exists(manifestPath))
+                throw new InvalidOperationException("Frozen battle animation manifest is missing: " + manifestPath);
+            BattleAnimationManifest manifest = JsonUtility.FromJson<BattleAnimationManifest>(File.ReadAllText(manifestPath));
+            if (manifest == null || manifest.atlasContract == null || manifest.atlasContract.cell == null ||
+                manifest.atlasContract.atlas == null || manifest.atlasContract.pivot == null || manifest.states == null ||
+                manifest.atlasContract.columns != BattleAnimationFramesPerDirection || manifest.atlasContract.rows != 6 ||
+                manifest.atlasContract.cell.width != 768 || manifest.atlasContract.cell.height != 768 ||
+                manifest.atlasContract.atlas.width != 2304 || manifest.atlasContract.atlas.height != 4608 ||
+                Mathf.Abs(manifest.atlasContract.pivot.normalized[0] - TacticalSpritePivot.x) > 0.001f ||
+                Mathf.Abs(manifest.atlasContract.pivot.normalized[1] - TacticalSpritePivot.y) > 0.001f)
+                throw new InvalidOperationException("Frozen battle animation manifest does not match the approved 6x3 atlas contract.");
+            for (int state = 0; state < BattleAnimationStateCount; state++)
+            {
+                BattleAnimationState sourceState = BattleAnimationStateAt(manifest.states, state);
+                if (sourceState == null || sourceState.framesPerDirection != BattleAnimationFramesPerDirection ||
+                    string.IsNullOrWhiteSpace(sourceState.file) || string.IsNullOrWhiteSpace(sourceState.sha256) ||
+                    sourceState.events == null || !HasApprovedEventIndices(state, sourceState.events))
+                    throw new InvalidOperationException("Frozen battle animation manifest is incomplete for " + BattleAnimationStateName(state) + ".");
+            }
+            return manifest;
+        }
+
+        private static bool HasApprovedEventIndices(int state, BattleAnimationEvents events)
+        {
+            switch (state)
+            {
+                case 0: return events.start == 0 && events.end == 2;
+                case 1: return events.start == 0 && events.step == 1 && events.end == 2;
+                case 2:
+                case 3: return events.start == 0 && events.impact == 1 && events.end == 2;
+                case 4: return events.start == 0 && events.release == 1 && events.end == 2;
+                case 5: return events.start == 0 && events.terminal == 2;
+                default: return false;
+            }
+        }
+
+        private static BattleAnimationState BattleAnimationStateAt(BattleAnimationStates states, int state)
+        {
+            switch (state)
+            {
+                case 0: return states.idle;
+                case 1: return states.move;
+                case 2: return states.attack;
+                case 3: return states.hit;
+                case 4: return states.cast;
+                case 5: return states.death;
+                default: throw new ArgumentOutOfRangeException(nameof(state));
+            }
+        }
+
+        private static void VerifyAtlas(string path, string expectedSha256, string stateName)
+        {
+            if (!File.Exists(path)) throw new InvalidOperationException("Frozen battle animation atlas is missing: " + path);
+            if (!string.Equals(ComputeSha256(path), expectedSha256, System.StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Frozen battle animation atlas SHA-256 mismatch: " + stateName);
+            byte[] bytes = File.ReadAllBytes(path);
+            if (bytes.Length < 26 || bytes[24] != 8 || bytes[25] != 6 ||
+                ReadBigEndianInt32(bytes, 16) != 2304 || ReadBigEndianInt32(bytes, 20) != 4608)
+                throw new InvalidOperationException("Frozen battle animation atlas is not the approved 2304x4608 RGBA PNG: " + stateName);
+        }
+
+        private static void ConfigureBattleAnimationImporter(string path, int state)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) throw new InvalidOperationException("Battle animation texture importer is unavailable: " + path);
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.spriteAlignment = (int)SpriteAlignment.Custom;
+            settings.spritePivot = TacticalSpritePivot;
+            importer.SetTextureSettings(settings);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Multiple;
+            importer.spritePixelsPerUnit = TacticalSpritePixelsPerUnit;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.spritesheet = BuildBattleAnimationSpriteSheet(state);
+            importer.SaveAndReimport();
+        }
+
+        private static SpriteMetaData[] BuildBattleAnimationSpriteSheet(int state)
+        {
+            var sprites = new SpriteMetaData[6 * BattleAnimationFramesPerDirection];
+            int index = 0;
+            for (int direction = 0; direction < 6; direction++)
+            for (int frame = 0; frame < BattleAnimationFramesPerDirection; frame++)
+            {
+                sprites[index++] = new SpriteMetaData
+                {
+                    name = BattleAnimationSpriteName(state, direction, frame),
+                    rect = new Rect(frame * 768, direction * 768, 768, 768),
+                    alignment = (int)SpriteAlignment.Custom,
+                    pivot = TacticalSpritePivot,
+                };
+            }
+            return sprites;
+        }
+
+        private static void BuildBattleAnimationSpritePrefab()
+        {
+            var root = new GameObject("FuYuan_BattleAnimationSprite");
+            try
+            {
+                GameObject body = new GameObject("SpriteBody", typeof(SpriteRenderer));
+                body.transform.SetParent(root.transform, false);
+                body.transform.localPosition = Vector3.zero;
+                body.transform.localRotation = Quaternion.identity;
+                body.transform.localScale = Vector3.one;
+                SpriteRenderer renderer = body.GetComponent<SpriteRenderer>();
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+
+                BattleAnimationSpritePresentationController controller = root.AddComponent<BattleAnimationSpritePresentationController>();
+                var serialized = new SerializedObject(controller);
+                for (int state = 0; state < BattleAnimationStateCount; state++)
+                {
+                    SerializedProperty frames = serialized.FindProperty(BattleAnimationFrameFieldName(state)) ??
+                        throw new InvalidOperationException("Battle animation controller is missing a state frame field.");
+                    frames.arraySize = 6 * BattleAnimationFramesPerDirection;
+                    for (int direction = 0; direction < 6; direction++)
+                    for (int frame = 0; frame < BattleAnimationFramesPerDirection; frame++)
+                    {
+                        frames.GetArrayElementAtIndex(direction * BattleAnimationFramesPerDirection + frame).objectReferenceValue =
+                            RequireBattleAnimationSprite(state, direction, frame);
+                    }
+                }
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                renderer.sprite = RequireBattleAnimationSprite(0, 0, 0);
+
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, BattleAnimationSpritePrefabPath);
+                if (saved == null) throw new InvalidOperationException("Could not save the battle animation sprite prefab.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static string BattleAnimationFrameFieldName(int state)
+        {
+            switch (state)
+            {
+                case 0: return "idleFrames";
+                case 1: return "moveFrames";
+                case 2: return "attackFrames";
+                case 3: return "hitFrames";
+                case 4: return "castFrames";
+                case 5: return "deathFrames";
+                default: throw new ArgumentOutOfRangeException(nameof(state));
+            }
+        }
+
+        private static Sprite RequireBattleAnimationSprite(int state, int direction, int frame)
+        {
+            string path = BattleAnimationSpriteTexturePath(state);
+            string name = BattleAnimationSpriteName(state, direction, frame);
+            foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                Sprite sprite = asset as Sprite;
+                if (sprite != null && sprite.name == name) return sprite;
+            }
+            throw new InvalidOperationException("Battle animation sprite is missing from imported atlas: " + name);
+        }
+
+        private static string ComputeSha256(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var sha = SHA256.Create())
+                return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", string.Empty);
+        }
+
+        private static int ReadBigEndianInt32(byte[] bytes, int offset) =>
+            (bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
+
+        [System.Serializable]
+        private sealed class BattleAnimationManifest
+        {
+            public BattleAnimationAtlasContract atlasContract;
+            public BattleAnimationStates states;
+        }
+
+        [System.Serializable]
+        private sealed class BattleAnimationAtlasContract
+        {
+            public int columns;
+            public int rows;
+            public BattleAnimationDimensions cell;
+            public BattleAnimationDimensions atlas;
+            public BattleAnimationPivot pivot;
+        }
+
+        [System.Serializable]
+        private sealed class BattleAnimationDimensions
+        {
+            public int width;
+            public int height;
+        }
+
+        [System.Serializable]
+        private sealed class BattleAnimationPivot
+        {
+            public float[] normalized;
+        }
+
+        [System.Serializable]
+        private sealed class BattleAnimationStates
+        {
+            public BattleAnimationState idle;
+            public BattleAnimationState move;
+            public BattleAnimationState attack;
+            public BattleAnimationState hit;
+            public BattleAnimationState cast;
+            public BattleAnimationState death;
+        }
+
+        [System.Serializable]
+        private sealed class BattleAnimationState
+        {
+            public string file;
+            public int framesPerDirection;
+            public string sha256;
+            public BattleAnimationEvents events;
+        }
+
+        [System.Serializable]
+        private sealed class BattleAnimationEvents
+        {
+            public int start;
+            public int step;
+            public int impact;
+            public int release;
+            public int terminal;
+            public int end;
         }
 
         private static void EnsureTacticalSpriteFolders()

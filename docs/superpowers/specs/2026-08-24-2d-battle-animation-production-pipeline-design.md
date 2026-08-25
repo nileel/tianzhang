@@ -89,3 +89,9 @@ Unity 只消费 pilot 已冻结的六个 atlas，把它们原样复制为 `src/A
 
 - 2026-08-25，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 按本合同完成隔离苻渊样例：有限帧／棋子化通过攻击、受击、死亡六向三帧选择门，留下唯一 `.spine` 时间线母源和六份三帧、六方向 `768×768` cell RGBA atlas。实际 18 分钟、0 元／0 credits、7 次生成（含五行攻击失败稿 1 次）和全部哈希记录在 pilot 的 source-selection、manifest 与生产记录；没有导入 `src/`。
 - 该事实不替代下游 Unity 的真实 `VisualBaselineBoard` 遮挡、多单位、事件、活动 atlas、根节点复位或规则快照验证；这些仍属于 `U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01`。
+
+### 已完成 Unity 接入事实
+
+- 2026-08-25，`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 已只消费上述冻结 atlas，原样复制为 `FuYuanBattle/FuYuan_Battle_<State>.png`，并以 manifest SHA-256、`6×3` grid、`512 PPU`、Custom pivot `(0.5,0.18)` 和事件帧验证导入。
+- 新 `BattleAnimationSpritePresentationController` 与 `FuYuan_BattleAnimationSprite` Prefab 只消费 `StaticChessPresentationEvent`；它选择同一状态的六方向三帧 atlas、仅在 cast release frame 发出一次效果信号并在结束复位根节点，不拥有方向、格位、伤害、状态、结算、装备或存档。
+- `AdventureScene/VisualBaselineBoard` 已建立默认关闭的 `BattleAnimationSpriteProbeGroup`。其显式 route 关闭旧静态 2D 与静态 3D probe；旧静态样张、相机、光照、地块和 `AdventureUnitSpawner` 不变。EditMode、PlayMode、资产版本、数据链和程序集边界通过；人工矩阵仍由后续用户可玩比较而非自动分数判定。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-25：A-CHAR-2D-BATTLE-ANIM-PILOT-01 已冻结唯一可编辑母源、六状态三帧六方向 source atlas、manifest、真实成本和返工记录；本卡的完整 Unity 资产、所有者、验证与停止合同已就绪，可只消费该冻结输入进入隔离接入。",
+  "stateReason": "2026-08-25：已将冻结的六状态三帧六方向 atlas 原样导入 FuYuanBattle，建立默认关闭的 BattleAnimationSpriteProbeGroup 与受限 controller／Prefab；EditMode、PlayMode、资产版本、数据链和程序集边界均通过，未触及正式单位或规则。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
@@ -87,6 +87,13 @@
 
 - 2D 动态样例在隔离比较入口可重复运行：活动 atlas、六方向、六状态、事件索引、施法信号、根节点复位、真实遮挡与规则快照证据完整，且没有正式接入或规则变化。
 - 下游两卡移除本 blocker，并按各自剩余依赖保持正确状态；Unity 接入时间进入成本证据记录，不把未试批量扩展写成结论。
+
+## 完成记录
+
+- 六份冻结 atlas 已逐字节复制到 `src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/`；导入为 `512 PPU`、Custom pivot `(0.5,0.18)` 的六个 `6×3` multi-sprite grid，并由 manifest 的 SHA-256、格网和事件索引失败关闭验证。
+- `BattleAnimationSpritePresentationController` 只消费 `StaticChessPresentationEvent`，以 six-direction／three-frame state atlas 播放 idle、move、attack、hit、cast、death；施法只在 release frame 发出一次效果信号，动作结束恢复根节点，未写规则快照。
+- `AdventureScene/VisualBaselineBoard` 已增加默认关闭的 `BattleAnimationSpriteProbeGroup`，其显式切换会关闭旧静态 2D 与静态 3D probe；现有旧组、正式 `AdventureUnitSpawner`、相机、光照、地块和规则所有者保持不变。
+- 运行证据、命令和约三分钟可测 Unity 接入／验证窗口记录在 `开发管理/苻渊2D战斗动画Unity接入验证记录.txt`；下游两卡仅移除此 blocker，仍等待静态 3D 动态路线接入。
 
 ## 停止条件
 

@@ -1,0 +1,34 @@
+# 苻渊 2D 战斗动画 Unity 接入验证记录
+
+任务：`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01`
+日期：2026-08-25
+范围：隔离 `AdventureScene/VisualBaselineBoard`；不接入正式单位、战斗规则、方向、占格、装备、AI、结算或存档。
+
+## 冻结输入与导入
+
+- 输入唯一来自 `assets/generated-character-art/fuyuan-2d-battle-animation-pilot/manifest.json` 和六份冻结 atlas；没有读取或导入 `.spine` 母源。
+- 目标为 `src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_<State>.png`。六份目标文件与 manifest SHA-256 一致：idle `DB5757F17C8F3474372B0C017FB04B3396E3AF17FC0734BB47F8D715151B67EC`、move `E1266201079379DA348674ACC6A63E08DE2B50DDB7B94E908B5005DA68B13562`、attack `53397BA3A011FE9C08F8FEB8B380CB88DAF1FB6DED529D38B64A68369CBA9046`、hit `AAEA9067512BDD903B92FD4520EB98273524A4DDD2B58D489DB015364ED11028`、cast `7428EF9489073A55DCCFB80D7928116AFD326248F35BAF93AF01969B77C9BB28`、death `8D7840EAB32B22A02E09E893043C83DEB35AF8F067C6E7BEF0101904D0890541`。
+- 每 atlas 是 `2304×4608` RGBA PNG；Unity importer 为 Sprite Multiple、六行三列、每 cell `768×768`、`512 PPU`、Custom pivot `(0.5,0.18)`、alpha transparency，无方向镜像／私有位移／私有缩放。
+
+## 运行时所有者与隔离
+
+- 可见对象链：`AdventureScene/VisualBaselineBoard/BattleAnimationSpriteProbeGroup/BattleAnimationSpriteProbe_<0..5>` → `FuYuan_BattleAnimationSprite.prefab` → `BattleAnimationSpritePresentationController` → `SpriteRenderer` 的活动 state／direction／frame sprite。
+- controller 只消费既有 `StaticChessPresentationEvent`。idle、move、attack、hit、cast、death 均为六方向三帧；start／step-or-impact-or-release／end（death terminal）与 manifest 索引一致。cast 只在 release frame 发出一次 `CastEffectRequested`；每个非 idle 动作结束恢复根节点及 idle frame。
+- 新组默认关闭；`BattleAnimationSpriteProbeMatrix.SetActiveRoute(true)` 只启用新动态 2D 组，同时关闭旧 `TacticalSpriteProbeGroup` 和六个静态 3D `FacingProbe_*`。旧静态样张控制器、相机、光照、地块与 `AdventureUnitSpawner` 未修改；Prefab 和 probes 均无 Animator、Animation 或 SkinnedMeshRenderer。
+- 遮挡 probe 位于既有 `VisualBaselineOccluder` 的同一格位后方，保持默认 sorting layer/order，未以 always-on-top 伪造遮挡。
+
+## 自动验证
+
+| 命令／检查 | 结果 |
+|---|---|
+| `dotnet build src/TianZhang.EditModeTests.csproj` | 通过（0 error；现有序列化字段 warning 未扩大为错误） |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` | 通过；含 manifest／SHA、importer、Prefab 和场景隔离测试 |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1` | 通过；固定 `1920×1080`，覆盖六方向六状态、事件帧、cast 单次信号、根节点复位与 route 互斥 |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1` | 通过 |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` | 通过 |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1` | 通过（19 assemblies、2 asmrefs） |
+
+## 成本与未外推项
+
+- 本卡可测 Unity 导入／场景生成／自动验证命令窗口约 3 分钟；该值只用于后续成本证据的本样例 Unity 接入项，不与 pilot 的 18 分钟混算，也不外推到新增角色、换装、武器、额外动作或批量角色。
+- 自动验证证明数据和隔离条件，不替代用户对固定镜头下身份、冲击力、宽袖／武器和多单位可读性的实机视觉判断。静态 3D 动态接入完成后，`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 才可建立同条件可玩入口。
