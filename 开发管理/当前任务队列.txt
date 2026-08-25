@@ -5,6 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| D-CHAR-STATIC3D-MOTION-PIPELINE-01 | codex_execute | codex | P1 | content | design | 静态3D战斗动态表现详细方案 | 开发管理/任务卡/D-CHAR-STATIC3D-MOTION-PIPELINE-01.txt |
 | M-EXP-PREFLIGHT-01A | codex_review | codex | P1 | automation | implementation | 风险索引、经验卡模板与只读匹配器基础 | 开发管理/任务卡/M-EXP-PREFLIGHT-01A.txt |
 | C-KB-IDX-MONSTER-01 | codex_review | codex | P2 | content | design | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 | C-KB-IDX-ITEM-01 | codex_review | codex | P2 | content | design | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |
