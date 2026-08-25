@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260825-S3DMOTION01",
+  "stateReason": "等待负责人决定：书面方案与下游合同已完成自审。是否批准静态3D单一载体动态表现方案并解锁苻渊 pilot？",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
@@ -26,10 +26,10 @@
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "D-CHAR-STATIC3D-MOTION-PIPELINE-01",
-    "sourceRunId": "aaac6188-6446-4cf8-b095-0d4b539a6b21",
+    "sourceRunId": "9a0fb700-3de8-4b6e-a069-9646999e4168",
     "owner": "codex",
     "route": "codex_execute",
-    "decisionId": "DEC-20260825-S3DMOTION01",
+    "decisionId": "DEC-20260825-S3DMOTION02",
     "question": "书面方案与下游合同已完成自审。是否批准静态3D单一载体动态表现方案并解锁苻渊 pilot？",
     "options": [
       {
@@ -52,9 +52,9 @@
       "situation": "详细方案与两张下游原子卡已完成，仍未生产任何资产。",
       "impact": "未经 A 不会生产资产、消费 credits 或修改 Unity。"
     },
-    "checkpointCommit": "ef6adeb6372c9d4b34db0f0f551e173dea4fcdf5",
-    "baseCommit": "67a81fdb4cd6fee4c325e9682528864362360267",
-    "branch": "codex/automation/codex/aaac6188-6446-4cf8-b095-0d4b539a6b21/candidate",
+    "checkpointCommit": "81c38103781ae37e9bc944ae210206a2886a4001",
+    "baseCommit": "7963a021ef050552364baf073aa8ebb76798f315",
+    "branch": "codex/automation/codex/9a0fb700-3de8-4b6e-a069-9646999e4168/candidate",
     "changedPaths": [
       "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
       "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt",
@@ -63,28 +63,21 @@
       "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md"
     ],
     "verified": [
-      "check-review-text: OK",
-      "check-task-cards: OK (82 cards)",
+      "check-review-text: OK (979 files checked)",
+      "check-task-cards: OK (cards=80 ready=4)",
       "check-data-chain: OK",
-      "check-pending-whitespace: OK",
-      "git diff --cached --check: OK"
+      "check-pending-whitespace: OK (5 files checked; fix=False)",
+      "git diff --cached --check: OK",
+      "automation-finalize-commit: OK"
     ],
     "unverified": [
-      "负责人尚未选择 A/B/C",
+      "负责人尚未对重新发送的决策卡选择 A/B/C",
       "未生产资产、未消费 credits、未修改 Unity"
     ],
     "residualRisk": "A 批准后仍须以真实六向攻击、受击、死亡 pilot 验证载体动态、特效音效、接地、遮挡与实际成本。",
     "taskContextDigest": "8c30a77369ae6ebb4fe03698f8617d50c8d0c9fdebedff0e678a2a9b9b179f2a",
-    "createdAt": "2026-08-25T08:27:14.7776672+08:00",
+    "createdAt": "2026-08-25T18:22:23.0170333+08:00",
     "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20260825-S3DMOTION01",
-    "result": "CUSTOM_ACCEPTED",
-    "replyKind": "custom",
-    "replyValue": "详细方案通过邮件发给我看一下，并再补发一个决策卡给我做决定",
-    "source": "feishu_card_input",
-    "evidenceHash": "8979261ceb67cdd82cf6ad184fd2d2f2ff7f559b4b4342f778e28afb0662b9dc"
   }
 }
 ---TASK-BODY---
