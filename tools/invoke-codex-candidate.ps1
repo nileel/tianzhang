@@ -128,9 +128,33 @@ function Read-ResumeContext {
   if (-not $path.StartsWith($state + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-Candidate 'codex_resume_context_invalid' }
   Assert-PrivatePathAcl -Path $path
   try { $context = [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 30 } catch { Stop-Candidate 'codex_resume_context_invalid' }
-  if ([string]$context.taskId -cne $TaskId -or [string]::IsNullOrWhiteSpace([string]$context.decisionId) -or [string]::IsNullOrWhiteSpace([string]$context.replyValue)) { Stop-Candidate 'codex_resume_context_invalid' }
-  if ([string]$context.kind -ceq 'queue_maintenance') {
-    if ($Route -cne 'QueueMaintenance' -or [string]::IsNullOrWhiteSpace([string]$context.decisionTaskId) -or [string]$context.replyValue -cnotin @('A', 'B')) { Stop-Candidate 'codex_resume_context_invalid' }
+  $properties = @($context.PSObject.Properties.Name)
+  foreach ($field in @('schemaVersion', 'kind', 'taskId', 'decisionId', 'replyKind', 'replyValue', 'source', 'evidenceHash')) {
+    if ($properties -cnotcontains $field) { Stop-Candidate 'codex_resume_context_invalid' }
+  }
+  $kind = [string]$context.kind
+  if (
+    [string]$context.schemaVersion -cne '1' -or
+    $kind -cnotin @('decision_checkpoint', 'queue_maintenance') -or
+    [string]$context.taskId -cne $TaskId -or
+    [string]::IsNullOrWhiteSpace([string]$context.decisionId) -or
+    [string]::IsNullOrWhiteSpace([string]$context.replyKind) -or
+    [string]::IsNullOrWhiteSpace([string]$context.replyValue) -or
+    [string]::IsNullOrWhiteSpace([string]$context.source) -or
+    [string]$context.evidenceHash -cnotmatch '^[0-9a-f]{64}$'
+  ) { Stop-Candidate 'codex_resume_context_invalid' }
+  if ($kind -ceq 'decision_checkpoint') {
+    if ($Route -ceq 'QueueMaintenance' -or $properties -cnotcontains 'checkpointCommit' -or $properties -cnotcontains 'checkpointChangedPaths') { Stop-Candidate 'codex_resume_context_invalid' }
+    $checkpointPaths = $context.checkpointChangedPaths
+    if (
+      [string]$context.checkpointCommit -cnotmatch '^[0-9a-f]{40,64}$' -or
+      $checkpointPaths -is [string] -or
+      $checkpointPaths -isnot [Collections.IEnumerable] -or
+      @($checkpointPaths).Count -eq 0 -or
+      @($checkpointPaths | Where-Object { [string]::IsNullOrWhiteSpace([string]$_) }).Count -ne 0
+    ) { Stop-Candidate 'codex_resume_context_invalid' }
+  } else {
+    if ($Route -cne 'QueueMaintenance' -or $properties -cnotcontains 'decisionTaskId' -or [string]::IsNullOrWhiteSpace([string]$context.decisionTaskId) -or [string]$context.replyValue -cnotin @('A', 'B')) { Stop-Candidate 'codex_resume_context_invalid' }
   }
   $context
 }
@@ -335,7 +359,7 @@ try {
     $resume = Read-ResumeContext
     $initialPaths = @(Get-ChangedPaths -Worktree)
     if ($null -eq $resume -and $initialPaths.Count -ne 0) { Stop-Candidate 'codex_worktree_dirty' }
-    if ($null -ne $resume -and [string]$resume.kind -cne 'queue_maintenance') {
+    if ($null -ne $resume -and [string]$resume.kind -ceq 'decision_checkpoint') {
       $expectedInitial = @($resume.checkpointChangedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
       if (($initialPaths -join "`0") -cne ($expectedInitial -join "`0")) { Stop-Candidate 'codex_resume_context_invalid' }
     } elseif ($null -ne $resume -and $initialPaths.Count -ne 0) {

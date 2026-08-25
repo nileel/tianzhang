@@ -1300,7 +1300,7 @@ function Apply-CheckpointToNewRun {
   $worktree = Assert-WorktreePath $Run
   try { $null = Invoke-GitText $worktree @('cherry-pick', '--no-commit', $branchSha) 'checkpoint_replay_conflict' } catch { Set-Attention $Run 'checkpoint replay conflicts with latest master'; throw }
   $context = [ordered]@{
-    schemaVersion = 1; taskId = [string]$Run.taskId; decisionId = [string]$checkpoint.decisionId
+    schemaVersion = 1; kind = 'decision_checkpoint'; taskId = [string]$Run.taskId; decisionId = [string]$checkpoint.decisionId
     replyKind = [string]$Restored.reply.replyKind; replyValue = [string]$Restored.reply.replyValue; source = [string]$Restored.reply.source
     evidenceHash = [string]$Restored.reply.evidenceHash; checkpointCommit = $branchSha; checkpointChangedPaths = $actual
   }

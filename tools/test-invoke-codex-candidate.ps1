@@ -29,6 +29,11 @@ $originalRenameCompressed = $env:TZG_FAKE_CODEX_RENAME_COMPRESSED
 $originalTerminalMode = $env:TZG_FAKE_CODEX_TERMINAL_MODE
 $taskId = 'TASK-CODEX-CANDIDATE'
 $scenarioStateRoots = [Collections.Generic.List[string]]::new()
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
+
+$ownerSource = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'invoke-hourly-owner.ps1'))
+$applyCheckpoint = [regex]::Match($ownerSource, '(?ms)function Apply-CheckpointToNewRun \{.*?(?=\r?\nfunction Remove-ConsumedCheckpointWorktree)')
+Assert-True ($applyCheckpoint.Success -and $applyCheckpoint.Value -cmatch "schemaVersion = 1; kind = 'decision_checkpoint'") 'Normal checkpoint resume context lost its explicit kind'
 
 function Invoke-TerminalScenario {
   param([string]$Mode)
@@ -46,6 +51,41 @@ function Invoke-TerminalScenario {
   }
   Assert-Equal $scenarioOutput.Count 1 "Codex terminal scenario output count mismatch: $Mode"
   [pscustomobject]@{ Terminal = ($scenarioOutput[0] | ConvertFrom-Json -Depth 50); Run = $scenarioRun }
+}
+
+function Invoke-ResumeContextScenario {
+  param([ValidateSet('valid', 'missing', 'unknown')][string]$Mode)
+  $scenarioStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-resume-$Mode"
+  $scenarioStateRoots.Add($scenarioStateRoot)
+  $claimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $scenarioStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
+  $scenarioRun = ($claimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$scenarioRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$scenarioRun.candidateBranch, [string]$scenarioRun.worktree, $base) | Out-Null
+  Write-Utf8 -Path (Join-Path ([string]$scenarioRun.worktree) 'fixture/rename-source.txt') -Text 'checkpoint replay fixture'
+  Invoke-Git -Root ([string]$scenarioRun.worktree) -Arguments @('add', '--', 'fixture/rename-source.txt') | Out-Null
+
+  $context = [ordered]@{
+    schemaVersion = 1; taskId = $taskId; decisionId = 'DEC-20260825-RESUMEFIXTURE'
+    replyKind = 'option'; replyValue = 'A'; source = 'feishu_card'; evidenceHash = ('a' * 64)
+    checkpointCommit = $base; checkpointChangedPaths = @('fixture/rename-source.txt')
+  }
+  if ($Mode -ceq 'valid') { $context['kind'] = 'decision_checkpoint' }
+  elseif ($Mode -ceq 'unknown') { $context['kind'] = 'unknown_checkpoint' }
+  $resumeDirectory = Join-Path $scenarioStateRoot 'resume-contexts'
+  [IO.Directory]::CreateDirectory($resumeDirectory) | Out-Null
+  Set-PrivatePathAcl -Path $resumeDirectory -Directory
+  $resumePath = Join-Path $resumeDirectory "$($scenarioRun.runId).json"
+  Write-Utf8 -Path $resumePath -Text ($context | ConvertTo-Json -Compress -Depth 20)
+  Set-PrivatePathAcl -Path $resumePath
+  Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
+  $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -ResumeContextPath $resumePath -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal $scenarioOutput.Count 1 "Codex resume context output count mismatch: $Mode"
+  [pscustomobject]@{
+    Terminal = ($scenarioOutput[0] | ConvertFrom-Json -Depth 50)
+    Run = $scenarioRun
+    RunnerStarted = Test-Path -LiteralPath $tracePath
+    Trace = if (Test-Path -LiteralPath $tracePath) { [IO.File]::ReadAllText($tracePath) } else { '' }
+  }
 }
 
 try {
@@ -289,6 +329,17 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   foreach ($invalidMode in @('checkpoint-head-changed', 'blocked-dirty', 'checkpoint-fake-sha', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
     $invalidCheckpoint = Invoke-TerminalScenario -Mode $invalidMode
     Assert-Equal ([string]$invalidCheckpoint.Terminal.status) 'failed' "Codex accepted invalid decision evidence: $invalidMode"
+  }
+
+  $validResume = Invoke-ResumeContextScenario -Mode 'valid'
+  Assert-Equal ([string]$validResume.Terminal.status) 'completed' "Codex rejected a valid normal checkpoint resume context: $($validResume.Terminal | ConvertTo-Json -Compress -Depth 20)"
+  Assert-True $validResume.RunnerStarted 'Codex valid normal checkpoint resume did not reach the runner'
+  Assert-True ($validResume.Trace -match '"kind":"decision_checkpoint"') 'Codex resume prompt lost the validated normal checkpoint kind'
+  foreach ($invalidResumeMode in @('missing', 'unknown')) {
+    $invalidResume = Invoke-ResumeContextScenario -Mode $invalidResumeMode
+    Assert-Equal ([string]$invalidResume.Terminal.status) 'failed' "Codex accepted invalid resume context kind: $invalidResumeMode"
+    Assert-Equal ([string]$invalidResume.Terminal.detailCode) 'codex_resume_context_invalid' "Codex resume kind failure code changed: $invalidResumeMode"
+    Assert-True (-not $invalidResume.RunnerStarted) "Codex invalid resume context reached the runner: $invalidResumeMode"
   }
 
   $pathMismatchClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $pathMismatchStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
