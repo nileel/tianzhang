@@ -63,8 +63,8 @@
 ## 实施范围
 
 - 将五条 cue WAV 原样复制到冻结的 `FuYuan/Motion` 路径并核对 manifest SHA-256；由 `VisualBaselineBuilder` 创建唯一内置粒子／简单几何 `FuYuan_StaticChessMotionFx.prefab`，并把效果与 cue 引用写入既有静态棋子 Prefab。BaseColor、角色材质、模型、底座与其输入路径不改。
-- 只扩展 `StaticChessPresentationController` 的现有六个 `StaticChessPresentationEvent`：按 pipeline 的根节点时点播放整体位移／旋转、一次性效果与 cue，事件结束复位；`cast` 效果信号只在冻结时点一次。不得写回战斗规则、位置事实、Facing 或存档。
-- 仅在 `VisualBaselineBoard` 的既有 `FacingProbe_0..5` 复用六向矩阵。保持 2D 探针、相机、光照、九格地块、`AdventureUnitSpawner`、规则和正式单位不变；不通过默认启用新组、镜头、缩放、地块或私有事件时序优化路线。
+- 只扩展 `StaticChessPresentationController` 的现有六个 `StaticChessPresentationEvent`：当前统一 `0.32 s` 正弦弧只是接入前基线，必须按 manifest 的逐事件持续时间和归一化关键时点播放整体位移／旋转、一次性效果与 cue，事件结束复位；`cast` 效果信号只在冻结时点一次。不得写回战斗规则、位置事实、Facing 或存档。
+- 本卡独占 108 点运行时人工矩阵的执行与通过结论，仅在 `VisualBaselineBoard` 的既有 `FacingProbe_0..5` 复用六向入口。固定 `1920×1080`，先完整检查攻击、受击、死亡，再检查 idle、move、cast；pilot 的 source QA 不得替代任何运行时观察点。保持 2D 探针、相机、光照、九格地块、`AdventureUnitSpawner`、规则和正式单位不变；不通过默认启用新组、镜头、缩放、地块或私有事件时序优化路线。
 - 记录活动模型／BaseColor／cue／效果、方向、事件关键时点、复位、规则快照和实际接入分钟。完成后才分别解除 playable compare 与 cost evidence 中的本卡 blocker。
 
 ## 禁止项
@@ -76,12 +76,12 @@
 ## 验证
 
 - 运行 pipeline 冻结的 manifest／cue SHA、单一静态模型／正确 BaseColor、六方向、六事件／时点、效果 Prefab、Prefab 单一 controller、无 Animator／SkinnedMeshRenderer／共享材质写入的 EditMode 检查。
-- 运行 PlayMode 在固定 `1920×1080` 矩阵证明六方向的全部事件、攻击／受击／死亡关键时点、`cast` 单次信号、cue／效果单次播放、根节点复位、模型／底座不变、接地线和规则快照不变；人工矩阵另行判定身份、宽袖／腿部／武器（如有）、遮挡、冲击力和声音可读性。
+- 运行 PlayMode 按 manifest 逐项取样并断言每个事件的持续时间和归一化关键时点，包括 `move/attack/hit/cast = 0.32 s`、`death = 0.45 s`、攻击／受击／死亡关键时点、`cast` 单次信号、cue／效果单次播放、根节点复位、模型／底座不变、接地线和规则快照不变；不得只取样中点和结束点。固定 `1920×1080` 的 108 点人工矩阵另行判定六方向的身份、宽袖／腿部／武器（如有）、遮挡、冲击力和声音可读性。
 - 运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` 与状态变更后的 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 
 ## 完成条件
 
-- 静态 3D 样例在隔离比较入口可重复运行：活动模型／BaseColor、cue、效果、六方向、六事件、关键时点、`cast` 信号、根节点复位、接地线与规则快照证据完整，且没有正式接入或规则变化。
+- 静态 3D 样例在隔离比较入口可重复运行：活动模型／BaseColor、cue、效果、六方向、六事件、逐事件持续时间、关键时点、`cast` 信号、根节点复位、接地线与规则快照证据完整，108 点运行时人工矩阵有逐点结果，且没有正式接入或规则变化。
 - 下游两卡移除本 blocker，并按各自剩余依赖保持正确状态；Unity 接入时间进入成本证据记录，不把未试批量扩展写成结论。
 
 ## 停止条件

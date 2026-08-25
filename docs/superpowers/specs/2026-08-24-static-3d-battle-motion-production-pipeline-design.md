@@ -46,14 +46,14 @@ pilot 在 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyua
 1. 读取批准方案、静态棋子生产合同、Blender 候选记录、材质修正记录和既有 Unity 样例记录；在 manifest 锁定唯一模型、BaseColor、材质、Prefab 与六向输入的路径和 SHA-256。模型或材质输入不匹配立即停止。
 2. 建立 manifest 与生产记录，先制作／登记 `attack`、`hit`、`death` 的六向表现表，再登记 `idle`、`move`、`cast`。每次声音／效果 authoring 都记录开始结束时间、操作者、工具版本、实际费用／credits、许可、结果和返工原因。
 3. VFX 只以 manifest 中的内置粒子／简单几何配方定义；不启动 Blender 去编辑角色 `.blend` 或 FBX。若选择制作任何非角色 VFX 源，必须先有本卡列出的允许路径、独立来源／许可和不影响角色模型的验证；否则停止而不是另开制作链。
-4. pilot 不导出或修改角色 FBX、BaseColor、材质、Prefab、场景或 C#。它把 manifest、cue WAV 和人工矩阵交给 Unity integration；integration 才把 cue 原样导入既有角色目录、由 Builder 创建唯一效果 Prefab，并把引用写到既有表现 controller。
+4. pilot 不导出或修改角色 FBX、BaseColor、材质、Prefab、场景或 C#。它把 manifest、cue WAV 和 source QA 矩阵交给 Unity integration；source QA 只核对六方向、事件、时点、来源和禁止项的合同完整性，不声称画面已经通过。integration 才把 cue 原样导入既有角色目录、由 Builder 创建唯一效果 Prefab，并把引用写到既有表现 controller。
 5. Unity 只允许扩展现有 `StaticChessPresentationController`、`VisualBaselineBuilder`、`AdventureSceneBuilder`、`SceneArchitectureValidator` 和它们的直接 EditMode／PlayMode 测试。`CombatPresentationContracts.StaticChessPresentationEvent`、`AdventureUnitSpawner`、相机、光照、九格地块、原静态模型／BaseColor／材质和 2D 样张保持原所有者与行为；不新建第二套表现 controller 或 fallback。
 
 ## 五、六向质量、接地与人工验收
 
 自动检查只证明结构：无 Animator／AnimationClip／SkinnedMeshRenderer，所有效果和 cue 只在事件时点播放一次，根节点在每个事件后复位，人物／底座子变换与材质引用未变，六向仍为 `90/150/210/270/330/30`，规则快照不变。它不能判断动作冲击力、身份、遮挡、声音或画面可读性。
 
-人工检查必须在 `AdventureScene/VisualBaselineBoard` 的同一相机、光照、地块、世界尺度、占格和 `1920×1080` 输出下，遍历六个方向和每一事件的开始／关键时点／结束，共 108 个观察点。每点记录“通过／失败、证据位置、判定者”；特别逐项核对：
+108 点运行时人工矩阵只由 `U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 在 Unity 接入后负责；`A-CHAR-STATIC3D-MOTION-PILOT-01` 不拥有该矩阵，也不得用 source QA 宣称运行时视觉通过。人工检查必须在 `AdventureScene/VisualBaselineBoard` 的同一相机、光照、地块、世界尺度、占格和 `1920×1080` 输出下，遍历六个方向和每一事件的开始／关键时点／结束，共 108 个观察点。先完整检查攻击、受击、死亡三个高风险事件，再检查 idle、move、cast；每点记录“通过／失败、证据位置、判定者”，并特别逐项核对：
 
 - 背向镜头的两个方向与其余四向一样可辨，不因方向私有旋转、镜像或镜头偏移得到通过；
 - 脸、顶髻／后发、短须、炭黑／灰白／金主色、宽袖、袍摆、双足与当前无武器事实保持一致；如未来有武器，另按第三节重跑；
@@ -79,9 +79,9 @@ pilot 在 `assets/source/characters/platform-evaluation/tripo/static-chess-fuyua
 
 ## 七、下游卡冻结
 
-`A-CHAR-STATIC3D-MOTION-PILOT-01` 只创建 manifest、五条已授权 cue WAV、生产记录和六向人工矩阵；它不编辑角色模型、Blender 候选、BaseColor、材质、Prefab、场景或 Unity。它只有在攻击、受击、死亡先通过、全部输入／输出哈希和实际成本完整时，才解除 Unity integration blocker。
+`A-CHAR-STATIC3D-MOTION-PILOT-01` 只创建 manifest、五条已授权 cue WAV、生产记录和六向 source QA 矩阵；它不编辑角色模型、Blender 候选、BaseColor、材质、Prefab、场景或 Unity。它只有在攻击、受击、死亡的方向／事件／时点合同先登记完整，全部输入／输出哈希和实际成本完整，且记录明确不声称运行时视觉通过时，才解除 Unity integration blocker。
 
-`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 只消费完成 pilot 的 source，使用既有 `StaticChessPresentationController` 和隔离 `VisualBaselineBoard` 建立根节点、VFX、cue 和测试证据。它不改 source WAV、模型或事件枚举，不接入 `AdventureUnitSpawner`、正式单位、战斗规则或存档。两张卡的精确允许路径、验证、完成条件和停止条件已写回对应任务卡。
+`U-CHAR-STATIC3D-MOTION-INTEGRATION-01` 只消费完成 pilot 的 source，使用既有 `StaticChessPresentationController` 和隔离 `VisualBaselineBoard` 建立根节点、VFX、cue 和测试证据，并独占 108 点运行时人工矩阵的执行与通过结论。它不改 source WAV、模型或事件枚举，不接入 `AdventureUnitSpawner`、正式单位、战斗规则或存档。两张卡的精确允许路径、验证、完成条件和停止条件已写回对应任务卡。
 
 ## 八、自审
 
