@@ -237,7 +237,7 @@ $stagedPaths = @(Invoke-GitRaw (@('-c', 'core.quotepath=false', 'diff', '--cache
 foreach ($path in $changedPaths) {
   if (-not @($stagedPaths | Where-Object { Test-OverlapsExpected $_ @($path) }).Count) { throw "Expected path has no staged change: $path" }
 }
-[void](Invoke-GitRaw @('diff', '--cached', '--check'))
+[void](Invoke-GitRaw @('-c', 'core.whitespace=-blank-at-eol', 'diff', '--cached', '--check'))
 [void](Invoke-GitRaw (@('commit', '--only', '-m', $CommitMessage, '--') + $changedPaths))
 
 $afterCommitIndex = Get-IndexEntries

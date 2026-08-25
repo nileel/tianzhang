@@ -15,6 +15,13 @@ function Invoke-Git {
   $output
 }
 
+function Get-CoreWhitespaceConfig {
+  $output = @(& git -C $repo config --show-origin --get-all core.whitespace 2>&1)
+  $code = $LASTEXITCODE
+  if ($code -ne 0 -and $code -ne 1) { throw "git config core.whitespace failed: $($output -join "`n")" }
+  @($output | ForEach-Object { [string]$_ })
+}
+
 function Invoke-Helper {
   param(
     [string]$ExpectedPaths,
@@ -186,6 +193,53 @@ try {
   $legacyCommitted = @(Invoke-Git show --format= --name-only HEAD | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   if ($legacyCommitted.Count -ne 1 -or $legacyCommitted[0] -ne $expected) {
     throw "unexpected legacy-console commit paths: $($legacyCommitted -join ', ')"
+  }
+
+  $coreWhitespaceBefore = @(Get-CoreWhitespaceConfig)
+  $semanticMeta = 'src/Assets/Fixture/SemanticEmptyValues.meta'
+  $semanticMetaContent = @(
+    'fileFormatVersion: 2',
+    'guid: 0123456789abcdef0123456789abcdef',
+    'DefaultImporter:',
+    '  externalObjects: {}',
+    '  userData: ',
+    '  assetBundleName: ',
+    '  assetBundleVariant: '
+  ) -join "`n"
+  $semanticMetaContent += "`n"
+  Write-Utf8 (Join-Path $repo $semanticMeta) $semanticMetaContent
+  $semanticHashBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $semanticMeta)).Hash
+  $semanticResult = Invoke-Helper $semanticMeta 'test: preserve semantic Unity meta empty values'
+  if ($semanticResult.Code -ne 0) { throw "semantic Unity .meta empty values were rejected: $($semanticResult.Output)" }
+  $semanticCommittedBlob = (Invoke-Git rev-parse "HEAD:$semanticMeta") -join ''
+  $semanticWorkingBlob = (Invoke-Git hash-object -- $semanticMeta) -join ''
+  if ($semanticCommittedBlob -cne $semanticWorkingBlob) { throw 'semantic Unity .meta bytes changed while committing' }
+  if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo $semanticMeta)).Hash -ne $semanticHashBefore) {
+    throw 'semantic Unity .meta working-tree bytes changed while committing'
+  }
+  $coreWhitespaceAfter = @(Get-CoreWhitespaceConfig)
+  if (($coreWhitespaceAfter -join "`n") -cne ($coreWhitespaceBefore -join "`n")) {
+    throw 'finalizer persisted a core.whitespace configuration change'
+  }
+
+  $invalidWhitespaceFixtures = @(
+    [pscustomobject]@{ Name = 'ordinary text'; Path = 'fixtures/ordinary-trailing.txt'; Content = "ordinary trailing  `n" },
+    [pscustomobject]@{ Name = 'wrong extension'; Path = 'fixtures/semantic-shape.txt'; Content = "  userData: `n  assetBundleName: `n  assetBundleVariant: `n" },
+    [pscustomobject]@{ Name = 'wrong indentation'; Path = 'fixtures/wrong-indent.meta'; Content = " userData: `n" },
+    [pscustomobject]@{ Name = 'extra trailing space'; Path = 'fixtures/extra-space.meta'; Content = "  userData:  `n" },
+    [pscustomobject]@{ Name = 'non-allowed key'; Path = 'fixtures/non-allowed-key.meta'; Content = "  labels: `n" }
+  )
+  foreach ($fixture in $invalidWhitespaceFixtures) {
+    Write-Utf8 (Join-Path $repo $fixture.Path) $fixture.Content
+    $headBeforeInvalidWhitespace = (Invoke-Git rev-parse HEAD) -join ''
+    $invalidWhitespaceResult = Invoke-Helper $fixture.Path "test: reject $($fixture.Name) whitespace"
+    if ($invalidWhitespaceResult.Code -eq 0) { throw "finalizer accepted invalid whitespace fixture: $($fixture.Name)" }
+    if (((Invoke-Git rev-parse HEAD) -join '') -ne $headBeforeInvalidWhitespace) {
+      throw "invalid whitespace fixture created a commit: $($fixture.Name)"
+    }
+    & git -C $repo diff --cached --quiet -- $fixture.Path
+    if ($LASTEXITCODE -ne 0) { throw "invalid whitespace fixture changed the index: $($fixture.Name)" }
+    Remove-Item -LiteralPath (Join-Path $repo $fixture.Path) -Force
   }
 
   Write-Utf8 (Join-Path $repo $expected) "expected automation metadata change`n"
