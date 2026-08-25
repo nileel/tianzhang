@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-08-24：用户已复核调研并明确批准两个方向进入详细方案；3D方向聚焦单一静态角色载体的整体位移动画与特效，不采用角色模型内部动画或多Pose换模，本卡转ready，但不授权资产、credits或Unity修改。",
+  "stateReason": "等待负责人决定：书面方案与下游合同已完成自审。是否批准静态3D单一载体动态表现方案并解锁苻渊 pilot？",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md",
@@ -22,7 +22,62 @@
     "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
     "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-CHAR-STATIC3D-MOTION-PIPELINE-01",
+    "sourceRunId": "aaac6188-6446-4cf8-b095-0d4b539a6b21",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260825-S3DMOTION01",
+    "question": "书面方案与下游合同已完成自审。是否批准静态3D单一载体动态表现方案并解锁苻渊 pilot？",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准方案并解锁 pilot"
+      },
+      {
+        "key": "B",
+        "label": "仅修订方案后再次等待"
+      },
+      {
+        "key": "C",
+        "label": "冻结静态3D路线"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 将解锁单一静态苻渊载体的六向高风险 pilot；B 只修订书面方案；C 不生产或接入下游。",
+    "plainSummary": {
+      "action": "请选择 A、B 或 C。",
+      "situation": "详细方案与两张下游原子卡已完成，仍未生产任何资产。",
+      "impact": "未经 A 不会生产资产、消费 credits 或修改 Unity。"
+    },
+    "checkpointCommit": "ef6adeb6372c9d4b34db0f0f551e173dea4fcdf5",
+    "baseCommit": "67a81fdb4cd6fee4c325e9682528864362360267",
+    "branch": "codex/automation/codex/aaac6188-6446-4cf8-b095-0d4b539a6b21/candidate",
+    "changedPaths": [
+      "开发管理/任务卡/A-CHAR-STATIC3D-MOTION-PILOT-01.txt",
+      "开发管理/任务卡/U-CHAR-STATIC3D-MOTION-INTEGRATION-01.txt",
+      "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+      "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-production-pipeline-design.md",
+      "docs/superpowers/specs/2026-08-24-static-3d-battle-motion-reference-research.md"
+    ],
+    "verified": [
+      "check-review-text: OK",
+      "check-task-cards: OK (82 cards)",
+      "check-data-chain: OK",
+      "check-pending-whitespace: OK",
+      "git diff --cached --check: OK"
+    ],
+    "unverified": [
+      "负责人尚未选择 A/B/C",
+      "未生产资产、未消费 credits、未修改 Unity"
+    ],
+    "residualRisk": "A 批准后仍须以真实六向攻击、受击、死亡 pilot 验证载体动态、特效音效、接地、遮挡与实际成本。",
+    "taskContextDigest": "8c30a77369ae6ebb4fe03698f8617d50c8d0c9fdebedff0e678a2a9b9b179f2a",
+    "createdAt": "2026-08-25T08:27:14.7776672+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # D-CHAR-STATIC3D-MOTION-PIPELINE-01 · 静态3D战斗动态表现详细方案
