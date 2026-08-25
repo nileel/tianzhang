@@ -1,0 +1,53 @@
+{
+  "skeleton": {
+    "hash": "TZG-FY-2D-BATTLE-PILOT-01",
+    "spine": "4.2.0",
+    "x": 0,
+    "y": 0,
+    "width": 2304,
+    "height": 4608,
+    "images": ".."
+  },
+  "bones": [
+    { "name": "root" }
+  ],
+  "slots": [
+    { "name": "body", "bone": "root", "attachment": "idle" }
+  ],
+  "skins": [
+    {
+      "name": "default",
+      "attachments": {
+        "body": {
+          "idle": { "type": "region", "path": "../fuyuan_battle_idle.png", "width": 2304, "height": 4608 },
+          "move": { "type": "region", "path": "../fuyuan_battle_move.png", "width": 2304, "height": 4608 },
+          "attack": { "type": "region", "path": "../fuyuan_battle_attack.png", "width": 2304, "height": 4608 },
+          "hit": { "type": "region", "path": "../fuyuan_battle_hit.png", "width": 2304, "height": 4608 },
+          "cast": { "type": "region", "path": "../fuyuan_battle_cast.png", "width": 2304, "height": 4608 },
+          "death": { "type": "region", "path": "../fuyuan_battle_death.png", "width": 2304, "height": 4608 }
+        }
+      }
+    }
+  ],
+  "animations": {
+    "idle": { "slots": { "body": { "attachment": [ { "time": 0.0, "name": "idle" }, { "time": 0.17, "name": "idle" }, { "time": 0.34, "name": "idle" } ] } } },
+    "move": { "slots": { "body": { "attachment": [ { "time": 0.0, "name": "move" }, { "time": 0.12, "name": "move" }, { "time": 0.24, "name": "move" } ] } } },
+    "attack": { "slots": { "body": { "attachment": [ { "time": 0.0, "name": "attack" }, { "time": 0.12, "name": "attack" }, { "time": 0.24, "name": "attack" } ] } } },
+    "hit": { "slots": { "body": { "attachment": [ { "time": 0.0, "name": "hit" }, { "time": 0.10, "name": "hit" }, { "time": 0.20, "name": "hit" } ] } } },
+    "cast": { "slots": { "body": { "attachment": [ { "time": 0.0, "name": "cast" }, { "time": 0.15, "name": "cast" }, { "time": 0.30, "name": "cast" } ] } } },
+    "death": { "slots": { "body": { "attachment": [ { "time": 0.0, "name": "death" }, { "time": 0.20, "name": "death" }, { "time": 0.40, "name": "death" } ] } } }
+  },
+  "tianzhangAtlas": {
+    "grid": { "columns": 3, "rows": 6, "cellWidth": 768, "cellHeight": 768, "rowOrder": [ 0, 1, 2, 3, 4, 5 ] },
+    "pivot": [ 0.5, 0.18 ],
+    "sourceMethod": "limited-frame-pawn",
+    "states": {
+      "idle": { "frames": 3, "events": { "start": 0, "end": 2 } },
+      "move": { "frames": 3, "events": { "start": 0, "step": 1, "end": 2 } },
+      "attack": { "frames": 3, "events": { "start": 0, "impact": 1, "end": 2 } },
+      "hit": { "frames": 3, "events": { "start": 0, "impact": 1, "end": 2 } },
+      "cast": { "frames": 3, "events": { "start": 0, "release": 1, "end": 2 } },
+      "death": { "frames": 3, "events": { "start": 0, "terminal": 2 } }
+    }
+  }
+}

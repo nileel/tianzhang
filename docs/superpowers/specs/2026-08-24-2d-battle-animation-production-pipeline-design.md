@@ -84,3 +84,8 @@ Unity 只消费 pilot 已冻结的六个 atlas，把它们原样复制为 `src/A
 - 范围：只覆盖苻渊 2D pilot 与其隔离接入，不生产资产、不改 Unity，也不触及剧情立绘、正式单位、规则或存档。
 - 歧义：自动检查与人工视觉矩阵分别列出；攻击、受击、死亡是先行高风险语义；技术选择和批量成本均以真实记录为准。
 - 2026-08-25，负责人已选择 A“批准方案并解锁 pilot”。`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 现可按本方案开始其隔离样例生产；该批准不替代 pilot 对工具／credits 的实际授权门，也不授权 Unity integration。
+
+### 已实施 pilot 事实
+
+- 2026-08-25，`A-CHAR-2D-BATTLE-ANIM-PILOT-01` 按本合同完成隔离苻渊样例：有限帧／棋子化通过攻击、受击、死亡六向三帧选择门，留下唯一 `.spine` 时间线母源和六份三帧、六方向 `768×768` cell RGBA atlas。实际 18 分钟、0 元／0 credits、7 次生成（含五行攻击失败稿 1 次）和全部哈希记录在 pilot 的 source-selection、manifest 与生产记录；没有导入 `src/`。
+- 该事实不替代下游 Unity 的真实 `VisualBaselineBoard` 遮挡、多单位、事件、活动 atlas、根节点复位或规则快照验证；这些仍属于 `U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01`。

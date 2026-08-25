@@ -5,6 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-2D-BATTLE-ANIM-PILOT-01 | codex_execute | codex | P1 | content | implementation | 苻渊2D战斗动画样例生产 | 开发管理/任务卡/A-CHAR-2D-BATTLE-ANIM-PILOT-01.txt |
+| U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01 | codex_execute | codex | P1 | unity | implementation | 苻渊2D战斗动画样例Unity接入 | 开发管理/任务卡/U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01.txt |
 | C-KB-IDX-MONSTER-01 | codex_review | codex | P2 | content | design | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 | C-KB-IDX-ITEM-01 | codex_review | codex | P2 | content | design | 道具事实速查卡 | 开发管理/任务卡/C-KB-IDX-ITEM-01.txt |

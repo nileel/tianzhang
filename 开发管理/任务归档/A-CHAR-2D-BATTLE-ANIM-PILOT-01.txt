@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-25：负责人已批准 2D 详细方案，资产、选型、验证与停止合同完整；本卡现可开始隔离 pilot，但任何工具／费用／credits 仍须按方案记录实际授权。",
+  "stateReason": "2026-08-25：有限帧／棋子化通过攻击、受击、死亡六向选择门，唯一可编辑母源、六状态 source atlas、manifest、实际成本／返工记录与自动源图检查均已冻结；未导入 Unity 或正式游戏。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
@@ -78,3 +78,10 @@
 
 - pipeline 未获 A 批准、选定方法没有工具／费用授权、没有可编辑母源、任一高风险语义／身份／主色／六向／锚点失败，或需要扩大到未列状态、方向与资产路径。
 - 生产需要修改 Unity、正式内容、战斗规则，或用旧静态精灵／剧情立绘替代；没有候选通过选择门时只留下真实日志并停止。
+
+## 完成记录
+
+- 选定方法为有限帧／棋子化。攻击、受击、死亡以六方向、每方向三帧通过选择门；首个攻击生成只有五行，作为真实失败和一次返工保留记录，未通过裁切、镜像、补画或 fallback 修复。
+- 冻结唯一 `source/fuyuan_battle_animation.spine`，并交付 `idle`、`move`、`attack`、`hit`、`cast`、`death` 六份 RGBA atlas；每份为六行、每行三帧、`768×768` cell，完整栅格、事件、锚点、输入／输出 SHA-256 见 manifest。
+- 实际活跃制作窗口为 18 分钟，外部费用／credits 为 0 元／0 credits，7 次生成（含失败 1 次）、6 次统一抠图、6 次 atlas 导出；未把该数据外推为批量成本。
+- 本卡只完成源资产和 source QA。没有向 `src/` 复制或接入 Unity；下游 `U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 继续独立负责固定 `VisualBaselineBoard` 的运行时遮挡、多单位、事件、根节点复位、活动 atlas 与规则快照证据。

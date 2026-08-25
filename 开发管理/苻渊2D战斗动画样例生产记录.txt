@@ -1,0 +1,27 @@
+# 苻渊 2D 战斗动画样例生产记录
+
+任务：`A-CHAR-2D-BATTLE-ANIM-PILOT-01`
+日期：2026-08-25
+范围：隔离苻渊样例；未复制到 `src/`，未接入 Unity、正式单位、战斗规则或存档。
+
+## 实际成本与次数
+
+| 项目 | 实际值 | 证据边界 |
+|------|--------|----------|
+| 活跃制作时间 | 18 分钟（09:21–09:39，Asia/Hong_Kong） | 只含本样例的生成、抠图、栅格导出、源图审看和可编辑时间线记录。 |
+| 工具／版本 | 内置 ImageGen；项目 `remove_chroma_key.py`；Windows `System.Drawing` | 未使用 CLI、外部 API、付费 3D 或骨骼工具。 |
+| 外部费用／credits | 0 元／0 credits | 内置工具本轮没有报价或消费；不能外推为批量或其他工具零成本。 |
+| 生成／制作次数 | 7 次生成：1 次失败、6 次选定状态接触表；6 次统一抠图；6 次 atlas 导出 | 失败攻击稿未导入项目，SHA-256 已记录在 production log。 |
+| 返工 | 1 次 | 第一次攻击稿只有五行方向；没有镜像、补画、私有锚点或裁切修复，完整六行重生成后才通过。 |
+
+## 选择与输出
+
+- 选定方法：有限帧／棋子化。攻击、受击、死亡均为六方向三帧源图试片；攻击为蓄势—命中—回收，受击为预冲击—冲击—恢复，死亡为开始—下沉—终态。
+- 唯一可编辑母源：`assets/generated-character-art/fuyuan-2d-battle-animation-pilot/source/fuyuan_battle_animation.spine`，SHA-256 `FB9D619F84A7D21C8B3F7F3B0641AABE201485911C809116F94ADC8764FC68D0`。
+- 输出：`idle`、`move`、`attack`、`hit`、`cast`、`death` 六份 `2304×4608` RGBA atlas；每份有方向 `0..5` 六行、每方向三帧、每格 `768×768`，统一 pivot `(0.5,0.18)`。
+- 质量：源图检查确认苻渊身份、黑／灰／金主色、宽袖／双手和三项高风险动作语义；自动检查确认六状态、六向、等帧、RGBA、透明角、事件索引、锚点覆盖和 manifest 哈希。
+
+## 未外推／下游
+
+- 本记录不把苻渊 pilot 的 18 分钟、0 元／0 credits 或三帧结果推导为新增角色、换装、武器、额外动作、批量生产或 Unity 接入成本。
+- `U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 现在可以消费已冻结 source atlas；它仍须独立验证 `AdventureScene/VisualBaselineBoard` 的真实遮挡、多单位、运行时活动 atlas、事件、根节点复位和规则快照。源图审看不替代这些 Unity 证据。

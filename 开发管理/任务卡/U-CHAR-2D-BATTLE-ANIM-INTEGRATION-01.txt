@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-2D-BATTLE-ANIM-PILOT-01"
-  ],
-  "stateReason": "2026-08-25：详细方案已写回精确 Unity 资产、所有者、验证与停止合同；2D pipeline 已批准且 pilot 已 ready，仍等待 A-CHAR-2D-BATTLE-ANIM-PILOT-01 形成通过选择门的六状态 source atlas。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-25：A-CHAR-2D-BATTLE-ANIM-PILOT-01 已冻结唯一可编辑母源、六状态三帧六方向 source atlas、manifest、真实成本和返工记录；本卡的完整 Unity 资产、所有者、验证与停止合同已就绪，可只消费该冻结输入进入隔离接入。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
     "docs/superpowers/specs/2026-08-24-2d-battle-animation-production-pipeline-design.md",
@@ -56,7 +54,7 @@
 
 ## 来源与当前边界
 
-- 本卡只消费完成的 2D pilot、其 manifest 与用户批准的 pipeline，不生产、重画、重选技术或修订 source atlas。
+- 本卡只消费完成的 2D pilot、其 manifest 与用户批准的 pipeline，不生产、重画、重选技术或修订 source atlas。2026-08-25 上游已冻结唯一 `.spine` 母源和六份三帧六方向 RGBA atlas；本卡无需再猜测 source 方法、帧数、哈希或生产成本。
 - 运行时只接入隔离比较入口，不能接入正式 `AdventureUnitSpawner` 或改变规则结果。旧 `TacticalSpritePresentationController`／`TacticalSpriteProbeGroup` 是静态样张所有者，保持不变，不能作为动态动画 fallback。
 - 动态资产唯一使用 `FuYuanBattle` 文件夹、`BattleAnimationSpritePresentationController` 和 `BattleAnimationSpriteProbeGroup`；pilot 未完成、文件／manifest 不完整或运行时所有者不唯一时不能进入 ready。
 
