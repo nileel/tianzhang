@@ -290,19 +290,16 @@ try {
     } elseif ($level -ceq 'must_read') {
       $ref = [string]$exp.detailRef
       if ([string]::IsNullOrWhiteSpace($ref)) { throw "[missing_body_pointer] must_read has empty detailRef: $id" }
-      $filePart = $ref
-      $sectionName = '开工前'
       $hashIndex = $ref.IndexOf('#')
-      if ($hashIndex -ge 0) {
-        $filePart = $ref.Substring(0, $hashIndex)
-        $fragment = $ref.Substring($hashIndex + 1)
-        if (-not [string]::IsNullOrWhiteSpace($fragment)) { $sectionName = $fragment }
-      }
+      if ($hashIndex -lt 0) { throw "[missing_body_pointer] detailRef must be 路径#开工前: $id" }
+      $filePart = $ref.Substring(0, $hashIndex)
+      $fragment = $ref.Substring($hashIndex + 1)
+      if ($fragment -cne '开工前') { throw "[missing_body_pointer] detailRef section must be 开工前: $id" }
       if ([string]::IsNullOrWhiteSpace($filePart)) { throw "[missing_body_pointer] empty detailRef path: $id" }
       $detailFull = Resolve-RepoPath $filePart
       if (-not (Test-Path -LiteralPath $detailFull -PathType Leaf)) { throw "[missing_body_pointer] detailRef file not found: $ref" }
       $detailText = Read-Utf8Text $detailFull
-      $sectionBody = Get-SectionBody $detailText $sectionName
+      $sectionBody = Get-SectionBody $detailText '开工前'
       if ($null -eq $sectionBody) { throw "[missing_body_pointer] section not found: $ref" }
       $mustReads.Add([ordered]@{
         id = $id

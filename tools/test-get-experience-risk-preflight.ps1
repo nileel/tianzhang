@@ -273,6 +273,12 @@ try {
   Set-Card $caseRoot (New-TaskCard -Id 'T-ERR-02' -Domain 'battlesim' -ExpectedPaths @('simulations/BattleSim/Combat.cs')) 'T-ERR-02'
   Invoke-Error $caseRoot 'missing_body_pointer' @('-TaskId', 'T-ERR-02') | Out-Null
 
+  Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-BS-001' -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef '开发管理/经验库/经验卡/EXP-BS-019.txt#正确处理')))
+  Invoke-Error $caseRoot 'missing_body_pointer' @('-TaskId', 'T-ERR-02') | Out-Null
+
+  Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-BS-001' -Level 'must_read' -Paths @('simulations/BattleSim/Combat.cs') -DetailRef '开发管理/经验库/经验卡/EXP-BS-019.txt')))
+  Invoke-Error $caseRoot 'missing_body_pointer' @('-TaskId', 'T-ERR-02') | Out-Null
+
   Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-BS-001' -Level 'gate' -Paths @('simulations/BattleSim/Combat.cs') -GateRefs @())))
   Invoke-Error $caseRoot 'missing_gate' @('-TaskId', 'T-ERR-02') | Out-Null
 
