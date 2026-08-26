@@ -1,0 +1,34 @@
+# EXP-BS-004 · BattleSim 1v1／2v2 抗性键统一
+
+## 状态
+
+active；最近核验：2026-08-26；事实源：`Character.cs` Secondary 初始化与 `Combat.Simulate`／`Simulate2v2Detailed` 消费路径。
+
+## 开工前
+
+仅在变更 BattleSim 的 `Character.cs` 或 `Combat.cs`，且任务正文出现 `物抗率`、`魂抗率`、`物理抗性`或`神魂抗性`等明确键名时适用。先核对 Secondary 初始化和 1v1、2v2 的精确取键；禁止只凭“属性”或“抗性”宽词触发，也不要记录当前键值或平衡结论。
+
+## 正确处理
+
+1. 定位 `Character` 的 `Secondary["物抗率"]` 与 `Secondary["魂抗率"]` 初始化。
+2. 完整核对 `Combat.Simulate` 的 A、B 伤害分支，以及 `Simulate2v2Detailed` 的群战伤害分支，均按攻击类型读取同一对键。
+3. 若改动键、生产者或任一消费者，同轮确认另一模式仍读取完全相同的键，再运行 BattleSim Release build 和 `--no-build` 自测。
+
+## 根因与弯路
+
+`Secondary` 是字符串字典，`GetValueOrDefault` 在错拼、旧名或同义键未初始化时静默返回 0。1v1 的 A／B 分支各自读取抗性，2v2 另有群战读取；只改其中一处或混用 `物抗率/魂抗率` 与其他名称，会让受影响攻击的抗性无声失效，而另一模式仍可能正常。
+
+## 适用与排除
+
+- 适用：改动 `Character.cs`／`Combat.cs`，并直接涉及上述明确抗性键的任务；涉及键迁移时仍须检查 `Secondary`、`Simulate` 与 `Simulate2v2Detailed`。
+- 排除：不触及这两个 BattleSim 路径的任务，以及只含“属性”“抗性”等宽词、当前键值或平衡输出的任务。
+
+## 证据
+
+- `Character.cs` 在 Secondary 初始化中写入 `物抗率`、`魂抗率`；`Combat.Simulate` 的双方伤害分支和 `Simulate2v2Detailed` 的群战伤害分支均以该对键读取。
+- `BattleSimSelfTests.RunDuelBounds` 直接运行 1v1 伤害／结算；`RunGroupPositioningNGroup01` 直接运行 `Simulate2v2Detailed` 的顺序和 `Simulate2v2` 的确定性结算。
+- 来源任务：`M-EXP-SEED-BS-RESIST-KEYS-01`，2026-08-26。
+
+## 失效条件
+
+`Secondary` 字典被强类型抗性属性或统一 helper 取代，且 1v1 与 2v2 均通过同一受测入口读取时，本卡不再适用；届时停止引用并重新核验新的唯一合同。

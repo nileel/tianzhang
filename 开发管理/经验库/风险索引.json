@@ -70,6 +70,31 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-BS-003.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-26"
+    },
+    {
+      "id": "EXP-BS-004",
+      "title": "BattleSim 1v1／2v2 抗性键统一",
+      "preflightSummary": "改动 BattleSim Secondary 抗性键或两种模拟入口时，核对物抗率／魂抗率在初始化、1v1 与 2v2 读取中一致。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "battlesim"
+      ],
+      "stages": [],
+      "pathPatterns": [
+        "simulations/BattleSim/Character.cs",
+        "simulations/BattleSim/Combat.cs"
+      ],
+      "textPatterns": [
+        "物抗率",
+        "魂抗率",
+        "物理抗性",
+        "神魂抗性"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-BS-004.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-26"
     }
   ],
   "gates": []

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-BS-004。",
+  "stateReason": "已核验 Character.Secondary 初始化与 Combat 的 1v1／2v2 消费路径共享物抗率／魂抗率键合同；EXP-BS-004 已晋级 active。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-BS-004.txt",
