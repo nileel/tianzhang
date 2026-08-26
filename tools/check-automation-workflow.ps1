@@ -76,6 +76,12 @@ Assert-DoesNotContain $runtime 'schema 5 runtime' @("'AcquireIntegration'", "'Re
 $sharedEntry = Read-Utf8 (Join-Path $root 'tools/invoke-hourly-owner.ps1')
 $adapter = Read-Utf8 (Join-Path $root 'tools/hourly-owner-adapter.ps1')
 Assert-Contains $sharedEntry 'shared owner entry' @("[ValidateSet('codex', 'deepseek')]", 'Enter-TzgIntegrationLock', 'maintenance_completed', 'existing_run', 'Remove-ExactSuccessfulWorktree', 'review_rework', 'Apply-AnsweredReviewRework', 'allowCustomReply = $false', 'hourly_codex_model_unverified', 'Add-AttentionNotification', 'Get-HourlyFormalCommitContract -Adapter $adapter -Run $Run', "@('cherry-pick', '--no-commit', [string]`$Run.candidateCommit)", '& $finalizerPath -RepositoryRoot $Worktree @Parameters', 'AutomationState = [string]$formalContract.state')
+Assert-Contains $sharedEntry 'successful cleanup run evidence' @(
+  '$run.canonicalBranch = [string]$outcome.stateBranch', '$run.canonicalHead = [string]$outcome.formalHead', '$outcome.cleanup = Remove-ExactSuccessfulWorktree -Run $run',
+  '$run.canonicalBranch = [string]$run.candidateBranch', '$run.canonicalHead = [string]$run.baseCommit', 'Remove-ExactSuccessfulWorktree -Run $run -FormalHead ([string]$run.baseCommit)',
+  '$run.canonicalBranch = [string]$transition.stateBranch', '$run.canonicalHead = [string]$transition.formalHead', '$transition.cleanup = Remove-ExactSuccessfulWorktree -Run $run'
+)
+Assert-DoesNotContain $sharedEntry 'successful cleanup run evidence' @('Remove-ExactSuccessfulWorktree -Run ([pscustomobject]', '$emptyRun = [pscustomobject]@{')
 Assert-Contains $sharedEntry 'task input materialization' @('Get-TaskAutomationInputs', 'Materialize-TaskAutomationInputs', 'Assert-MaterializedAutomationInputs', 'Read-RunTaskMetadata', 'Read-TaskMetadataAtCommit', 'hourly_task_input_validation_failed', 'hourly_task_changed_after_claim')
 $sharedDigestMatch = [regex]::Match($sharedEntry, '(?s)function Get-TaskContextDigest\s*\{(?<body>.*?)\r?\n\}')
 Assert-Contract $sharedDigestMatch.Success 'shared owner entry is missing Get-TaskContextDigest'

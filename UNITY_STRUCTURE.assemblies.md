@@ -53,12 +53,14 @@ Unity UI/InputSystem 外部引用只出现在需要的 Feature、Editor 或测�
 ## 验证提示
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`
-- `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`
+- 权威编译与测试：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
+- 仅当前 worktree 已有生成投影时快速编译：`dotnet build src/TianZhang.EditModeTests.csproj`
 - `AssemblyBoundaryEditorTests`
 
 ## 禁止修改
 
 - 不手改 Unity 生成的 `.csproj`／`.sln`。
+- 不把 clean linked worktree 中缺失生成 csproj 视为程序集阻塞，也不跨 worktree 复制投影。
 - 不向领域程序集添加 Feature、Bootstrap 或 Editor 引用。
 - 不恢复宽泛 Gameplay 聚合、兄弟 Feature 直连或第二组合根。
 

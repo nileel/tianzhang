@@ -1431,7 +1431,9 @@ try {
           }
           $outcome = Integrate-StateTransition -Run $run -Mode ResolveMaintenanceDecision -Context $directContext
           $outcome.notification = 'skipped'
-          $outcome.cleanup = Remove-ExactSuccessfulWorktree -Run ([pscustomobject]@{ runId=$run.runId; worktree=$outcome.worktree; candidateBranch=$run.candidateBranch; canonicalBranch=$outcome.stateBranch }) -FormalHead ([string]$outcome.formalHead)
+          $run.canonicalBranch = [string]$outcome.stateBranch
+          $run.canonicalHead = [string]$outcome.formalHead
+          $outcome.cleanup = Remove-ExactSuccessfulWorktree -Run $run -FormalHead ([string]$outcome.formalHead)
           Complete-MaintenanceDecisionRecord -Answered $maintenanceAnswered -Outcome $outcome
           $final = $outcome
         }
@@ -1471,8 +1473,9 @@ try {
           'no_candidate' {
             if ([string]$run.route -cne 'queue_maintenance') { Stop-Hourly 'hourly_no_candidate_invalid' }
             $null = Invoke-Runtime -RuntimeAction CompleteRun -Parameters @{ Owner = $Owner; RunId = [string]$run.runId; CompletionCategory = 'no_candidate'; DetailCode = 'no_runnable_candidate' }
-            $emptyRun = [pscustomobject]@{ runId = $run.runId; worktree = $run.worktree; candidateBranch = $run.candidateBranch; canonicalBranch = $run.candidateBranch }
-            $final = [ordered]@{ status = 'no_candidate'; owner = $Owner; taskId = $run.taskId; runId = $run.runId; detailCode = 'no_runnable_candidate'; cleanup = Remove-ExactSuccessfulWorktree -Run $emptyRun -FormalHead ([string]$run.baseCommit) }
+            $run.canonicalBranch = [string]$run.candidateBranch
+            $run.canonicalHead = [string]$run.baseCommit
+            $final = [ordered]@{ status = 'no_candidate'; owner = $Owner; taskId = $run.taskId; runId = $run.runId; detailCode = 'no_runnable_candidate'; cleanup = Remove-ExactSuccessfulWorktree -Run $run -FormalHead ([string]$run.baseCommit) }
           }
           'needs_decision' {
             $context = New-StateTransitionContext -Run $run -Mode PauseDecision -Candidate $candidate
@@ -1484,8 +1487,10 @@ try {
           'blocked' {
             $context = New-StateTransitionContext -Run $run -Mode Block -Candidate $candidate
             $transition = Integrate-StateTransition -Run $run -Mode Block -Context $context
+            $run.canonicalBranch = [string]$transition.stateBranch
+            $run.canonicalHead = [string]$transition.formalHead
             try { $notification = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $notificationPath -Kind TaskOutcome -RepositoryRoot $script:root -TaskId ([string]$run.taskId) -Status blocked -RunId ([string]$run.runId) -DetailCode ([string]$candidate.detailCode) 2>$null); $transition.notification = if ($notification.Count -eq 1) { [string]$notification[0] } else { 'failed' } } catch { $transition.notification = 'failed' }
-            $transition.cleanup = Remove-ExactSuccessfulWorktree -Run ([pscustomobject]@{ runId=$run.runId; worktree=$transition.worktree; candidateBranch=$run.candidateBranch; canonicalBranch=$transition.stateBranch }) -FormalHead ([string]$transition.formalHead)
+            $transition.cleanup = Remove-ExactSuccessfulWorktree -Run $run -FormalHead ([string]$transition.formalHead)
             $final = $transition
           }
           default {

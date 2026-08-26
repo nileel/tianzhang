@@ -29,8 +29,8 @@
 ## 验证入口
 
 - 程序集边界：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`
-- 快速编译：`dotnet build src/TianZhang.EditModeTests.csproj --no-restore`
-- Unity EditMode：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
+- 条件快速编译（仅当前 worktree 已有生成投影时）：`dotnet build src/TianZhang.EditModeTests.csproj`
+- 权威 Unity EditMode：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`
 - Unity PlayMode：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`
 - 正式场景：`TianZhang.Editor.SceneArchitectureValidator.ValidateForBatchMode`
 
@@ -42,4 +42,4 @@
 
 ## 最后核验日期
 
-2026-08-13
+2026-08-27

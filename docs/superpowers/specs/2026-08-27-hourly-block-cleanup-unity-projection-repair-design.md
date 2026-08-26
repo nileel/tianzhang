@@ -3,7 +3,7 @@
 ## 状态
 
 - 日期：2026-08-27
-- 状态：用户已批准设计，待书面规格复核后实施
+- 状态：用户已批准；实施与验证完成，待正式集成
 - 事故线程：`01a03edb-a0a8-7f60-a0b6-9265985f8dbc`
 - 事故任务：`M-EXP-SEED-UNITY-ASMDEF-01`
 - 事故 run：`de7ed3d3-3e93-4082-8e51-dd932a4f03db`
@@ -59,7 +59,7 @@
 
 1. `*.csproj`／`*.sln` 是 Unity 生成的非源文件，不得手改或提交。
 2. 权威验证是 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
-3. 只有生成投影已经存在时，才执行 `dotnet build src/TianZhang.EditModeTests.csproj --no-restore` 作为快速检查；缺失时直接走权威 Unity 验证，不从其他工作区借用投影。
+3. 只有生成投影已经存在时，才执行 `dotnet build src/TianZhang.EditModeTests.csproj` 作为快速检查，并允许 dotnet 在当前 worktree 的已忽略 `Temp/obj` 中恢复自己的生成资产；缺失时直接走权威 Unity 验证，不从其他工作区借用投影。
 4. `namespace does not exist`、`ProjectReference` 或程序集边界问题仍先以 asmdef／asmref 和边界检查器定位；普通无程序集语义的 C# 错误不得泛化命中该经验。
 
 ### 二、任务重新 ready

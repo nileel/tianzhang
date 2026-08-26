@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：unity_generated_projection_missing",
+  "stateReason": "生成 csproj 属于可缺失的 Unity 非源投影；权威 EditMode 验证合同已冻结，任务恢复可执行。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-UNITY-002.txt",
@@ -35,7 +35,7 @@
 
 - `src/Assets/Scripts/**.asmdef` 与两个现行 `.asmref` 的直接依赖；只读取与检查器要求的目标集合。
 - `tools/check-unity-assembly-boundaries.ps1` 的 required target、引用方向和拒绝条件。
-- `src/TianZhang.EditModeTests.csproj` 的生成投影用途及 `run-unity-editmode-tests.ps1` 入口。
+- `src/TianZhang.EditModeTests.csproj` 的生成投影用途、clean linked worktree 可缺失边界及 `run-unity-editmode-tests.ps1` 权威入口。
 
 ## 实施范围
 
@@ -51,7 +51,8 @@
 ## 验证
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
-- `dotnet build src/TianZhang.EditModeTests.csproj`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- 若当前 worktree 已有 `src/TianZhang.EditModeTests.csproj`，执行 `dotnet build src/TianZhang.EditModeTests.csproj`；缺失时记录生成投影缺失并以 Unity EditMode 结果作为权威验证，不复制或手改投影。
 - 匹配器 fixture 覆盖 asmdef+精确诊断命中和普通 C# 文件零命中。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 
@@ -61,4 +62,4 @@
 
 ## 停止条件
 
-- 当前生成投影与经验描述冲突、Assembly-CSharp 恢复为活动所有者、或没有稳定排除例；保持 blocked，不写 active。
+- 权威 Unity EditMode 编译或测试失败、当前程序集所有者与经验描述冲突、Assembly-CSharp 恢复为活动所有者、或没有稳定排除例；保持 blocked，不写 active。
