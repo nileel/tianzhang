@@ -8,14 +8,37 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-BATTLE-VISUAL-DIRECTION-01"],
-  "stateReason": "2026-08-21：保留稳定外观 ID、目录与存档职责；等待静态 3D／2D 战场角色方向确定，避免提前锁定资源形状。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-27：A-CHAR-BATTLE-VISUAL-DIRECTION-01 已完成归档并固定 2D 战术精灵为正式战场角色方向；本卡已冻结仅含合法 none 档案的外观数据、存档迁移、目录与解析边界，非 none 正式资源仍须由后续独立资源卡提供。",
   "expectedPaths": [
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/D-CHAR-APPEARANCE-01.txt",
-    "开发管理/任务归档/D-CHAR-APPEARANCE-01.txt"
+    "开发管理/任务归档/D-CHAR-APPEARANCE-01.txt",
+    "src/Assets/DataConfig/AppearanceProfiles.csv",
+    "src/Assets/DataConfig/AppearanceProfiles.csv.meta",
+    "src/Assets/Data/AppearanceProfiles.meta",
+    "src/Assets/Data/AppearanceProfiles/AppearanceProfile_none.asset",
+    "src/Assets/Data/AppearanceProfiles/AppearanceProfile_none.asset.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Scripts/Modules/Content/AppearanceProfileData.cs",
+    "src/Assets/Scripts/Modules/Content/AppearanceProfileData.cs.meta",
+    "src/Assets/Scripts/Modules/Content/ContentCatalogData.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/CharacterVisualAssembler.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/CharacterVisualAssembler.cs.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/PortraitComposer.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/PortraitComposer.cs.meta",
+    "src/Assets/Tests/EditMode/AppearanceProfileTests.cs",
+    "src/Assets/Tests/EditMode/AppearanceProfileTests.cs.meta",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
 }
@@ -25,15 +48,21 @@
 ## 来源与当前边界
 
 - 为已验证角色资源建立最小外观目录、组装、UI 立绘合成与保存闭环，不生产完整创角内容。
-- 战场角色素材由新双路线各自重新生产；现有 UI 立绘及其姿势不得直接充当战场角色。
+- `A-CHAR-BATTLE-VISUAL-DIRECTION-01` 已固定 2D 战术精灵为正式战场角色方向，但现有苻渊六向样张和 UI 立绘仍只证明方向或身份参考；本卡只建立合法 `none` 档案及其数据／存档闭环，不把样张或立绘接入正式单位。
 
 ## 必查范围
 
-- 角色美术设计、玩家／石甲兽样例、重构后 Character、GameRuntime、保存、装备可见投影、Content 导入和直接测试。
+- `开发管理/任务归档/A-CHAR-BATTLE-VISUAL-DIRECTION-01.txt#完成记录`、`assets/generated-character-art/README.md#目录`、`docs/剧情/重要NPC/苻渊.txt#战斗与演出表达`、`docs/怪物/关陇玄域/石甲兽.txt#使用范围`。
+- `src/Assets/Scripts/Modules/Content/CharacterData.cs::CharacterData`、`src/Assets/Scripts/Modules/Content/ContentCatalogData.cs::ContentCatalogData`、`src/Assets/Scripts/Editor/CharacterContentImporter.cs::CharacterContentImporter`、`src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportContentCatalog`。
+- `src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs::CharacterRuntimeProfile`、`src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs::CharacterStateSnapshot`、`src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs::GameSaveEnvelope.Capture/Restore`、`src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs::GameSaveSerializer`。
+- `src/Assets/Tests/EditMode/ContentCatalogDataTests.cs`、`src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs`、`UNITY_STRUCTURE.content.md`、`UNITY_STRUCTURE.runtime.md`、`UNITY_STRUCTURE.assemblies.md`。
 
 ## 实施范围
 
-- 建立 `AppearanceProfile`、`AppearanceCatalog`、`CharacterVisualAssembler`、`PortraitComposer`，冻结稳定 ID、合法 `none`、版本迁移、保存读取和缓存重建。
+- 新建 `AppearanceProfileData` 与 `AppearanceProfiles.csv`，只导入稳定 `none` 档案；由既有角色导入器创建 `AppearanceProfile_none.asset`，由内容目录导入器把它写入唯一 `ContentCatalogData`，重复 ID、未知 ID 和非目录来源一律失败关闭。
+- 扩展 `CharacterRuntimeProfile`、`CharacterStateSnapshot`、`GameSaveEnvelope` 与 `GameSaveSerializer`：持久化外观档案 ID，旧 schema 1 存档迁移为 `none`，新 schema 仅接受目录中存在的 ID，保存／读取不得新增第二存档或静默改写非 none ID。
+- 建立 `CharacterVisualAssembler` 与 `PortraitComposer`，二者只消费同一稳定外观 ID 和目录结果；`none` 清空或返回无表现，不加载样张、UI 立绘、Prefab、资源路径或回退资源，也不接入场景。
+- 以 EditMode 测试覆盖目录唯一性、合法 `none`、未知 ID 失败关闭、schema 1 迁移、schema 2 往返和两条消费路径同一 ID；不改创角、装备、战斗、场景或实际美术资源。
 
 ## 禁止项
 
@@ -41,12 +70,16 @@
 
 ## 验证
 
-- 正反目录引用、合法 none、版本迁移、保存读取幂等、跨场景一致和缓存重建；解阻塞前展开 schema、CSV／asset、导入器、运行时、测试和 `.meta` 路径。
+- EditMode 覆盖正反目录引用、合法 `none`、未知外观 ID 拒绝、schema 1→2 迁移、保存读取幂等和两条消费者同一稳定 ID。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-CHAR-APPEARANCE-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理` 和 `git diff --check`。
 
 ## 完成条件
 
-- 外观 ID 可原子保存恢复，非法引用失败关闭，组装与立绘消费同一稳定身份结果。
+- `none` 外观 ID 可原子保存恢复，非法或未目录化 ID 失败关闭；`CharacterVisualAssembler` 与 `PortraitComposer` 消费同一稳定身份结果；旧 schema 1 存档迁移后可确定性重存为 schema 2。
 
 ## 停止条件
 
-- 需要第二存档、装备库存、规则状态所有者、静默默认资源或未验证资源类型时停止。
+- 需要第二存档、装备库存、规则状态所有者、静默默认资源，或需要把现有苻渊样张／UI 立绘／石甲兽技术资源当作正式非 none 资源时停止；非 none 正式资源必须另由资源卡冻结来源、用途、字面量路径、场景所有者和验证。

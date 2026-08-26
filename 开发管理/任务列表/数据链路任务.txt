@@ -21,7 +21,7 @@
 | D-FPD-MIGRATE-01C | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（C-FPD-SHENTONG-01、C-FPD-EXPAND-01） | — | 神通与扩府道具 docs／CSV／asset 迁移。 | — |
 | D-FPD-MIGRATE-01D | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（C-FPD-NAME-01） | — | 道基／紫府角色状态与旧字段迁移。 | — |
 | D-FPD-MIGRATE-01E | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01A～01D） | — | 旧字段清除、跨源对齐和全链审计。 | — |
-| D-CHAR-APPEARANCE-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-VISUAL-DIRECTION-01 | 外观数据与存档 | 开发管理/任务卡/D-CHAR-APPEARANCE-01.txt |
+| D-CHAR-APPEARANCE-01 | P1 | codex | 已排队 | — | 外观数据与存档 | 开发管理/任务卡/D-CHAR-APPEARANCE-01.txt |
 
 ## G3 任务执行边界
 
