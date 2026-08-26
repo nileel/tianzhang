@@ -120,6 +120,34 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-BS-005.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-26"
+    },
+    {
+      "id": "EXP-UNITY-001",
+      "title": "Unity 正式场景由 Editor builder 重建",
+      "preflightSummary": "修改四个正式 Unity 场景时，先核对 Editor builder 的重建与保存链，不手写 YAML。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [],
+      "pathPatterns": [
+        "src/Assets/Scenes/StartMenuScene.unity",
+        "src/Assets/Scenes/WorldScene.unity",
+        "src/Assets/Scenes/SettlementScene.unity",
+        "src/Assets/Scenes/AdventureScene.unity"
+      ],
+      "textPatterns": [
+        "builder",
+        "Builder",
+        "EditorSceneManager.SaveScene",
+        "场景重建",
+        "重建场景"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-001.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-26"
     }
   ],
   "gates": []

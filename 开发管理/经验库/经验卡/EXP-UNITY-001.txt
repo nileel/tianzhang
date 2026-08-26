@@ -1,0 +1,31 @@
+# EXP-UNITY-001 · Unity 正式场景由 Editor builder 重建
+
+## 状态
+
+active
+
+## 开工前
+
+任务同时涉及四个正式 `.unity` 场景之一和 Editor builder、`EditorSceneManager.SaveScene` 或明确场景重建时，先通过对应 `SceneBuilder.Build` 核验 `BeginScene`、序列化绑定及 `Save` 保存链，不手写 YAML。截图、只读场景检查和不写 `.unity` 的运行时任务不触发；四个正式场景不再由现有 builder 与 `SceneBuildSupport` 保存，或场景架构测试不再证明该链时，停止引用并重新核验。
+
+## 根因
+
+`SceneBuildSupport.BeginScene` 以 `EditorSceneManager.NewScene` 建立空场景，四个菜单 `Build` 入口负责对象与引用绑定，`Save` 再以 `EditorSceneManager.SaveScene` 写入正式 `.unity`；手写 YAML 会绕过这条已验证的结构生成链。
+
+## 适用与排除
+
+- 适用：修改 `src/Assets/Scenes/StartMenuScene.unity`、`WorldScene.unity`、`SettlementScene.unity` 或 `AdventureScene.unity`，且任务标题、必查范围或实施范围出现 builder、`EditorSceneManager.SaveScene`、场景重建语义。
+- 排除：截图、只读场景检查、仅运行时脚本改动，或只因 `.unity` 路径而未说明 builder／保存／重建关系的任务。
+
+## 正反例
+
+- 正例：为 `AdventureScene.unity` 的结构变更调用 `AdventureSceneBuilder.Build`，确认其经 `SceneBuildSupport.BeginScene` 建立、绑定后由 `SceneBuildSupport.Save` 写入。
+- 反例：打开 `SettlementScene.unity` 截图或只读核对控件，不修改场景结构，也不以 `.unity` 路径单独触发经验。
+
+## 失效条件
+
+四个正式场景不再分别由 `StartMenuSceneBuilder`、`WorldSceneBuilder`、`SettlementSceneBuilder`、`AdventureSceneBuilder` 的菜单 `Build` 方法生成并经 `SceneBuildSupport.Save` 保存，或 `SceneArchitectureEditorTests` 不再验证四场景与其 installer／controller 架构时，停止引用并重新核验。
+
+## 正确处理
+
+改动正式场景结构时使用对应 Editor builder 重建并运行 EditMode 场景测试；builder 所有者、保存链或正式场景集合变更后，先更新本经验的适用路径和失效条件，再继续引用。
