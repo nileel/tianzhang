@@ -21,6 +21,21 @@
       "lastVerified": "2026-08-26"
     },
     {
+      "id": "EXP-MGMT-001",
+      "title": "共享 worktree 写入与正式集成隔离",
+      "preflightSummary": "显式涉及共享工作区写入或正式集成时，隔离于任务 worktree，并在集成锁内复核路径冲突与 fast-forward 条件。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "explicit_only",
+      "domains": [],
+      "stages": [],
+      "pathPatterns": [],
+      "textPatterns": [],
+      "detailRef": "开发管理/经验库/经验卡/EXP-MGMT-001.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-27"
+    },
+    {
       "id": "EXP-BS-001",
       "title": "BattleSim 修改先构建后运行",
       "preflightSummary": "BattleSim 源码或项目入口改动须先通过 Release build，再以 --no-build 运行。",

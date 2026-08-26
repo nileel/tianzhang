@@ -1,0 +1,31 @@
+# EXP-MGMT-001 · 共享 worktree 写入与正式集成隔离
+
+## 状态
+
+active
+
+## 开工前
+
+只有任务卡在 `riskPreflight.explicitRefs` 精确列出 `EXP-MGMT-001` 时才命中；不得从 domain、worktree 字样或路径推断。涉及共享主工作区的写入责任链时，业务改动只在所属任务 worktree 的 candidate branch 完成；正式集成前重新核对任务／队列事实、同 taskId 占用、主工作区路径冲突与 fast-forward 条件，并仅经 `tools/invoke-project-integration.ps1` 使用 `tools/hourly-integration-lock.ps1` 的同一进程锁。独立只读对话且没有任何项目写入时排除。本经验的只读匹配不创建 worktree，也不执行 Git 或锁操作。
+
+## 根因
+
+共享主工作区可能已有用户 staged、unstaged、untracked 改动，且不同责任链可并行开发。若直接在共享工作区写入或未在正式集成时复核最新事实，candidate 可能覆盖人工状态、与同 taskId 冲突，或不再能安全 fast-forward。
+
+## 适用与排除
+
+- 适用：任务显式要求处理共享工作区写入隔离、candidate worktree、主工作区路径冲突检查，或持锁正式集成。
+- 排除：独立只读对话、没有任何项目写入的调查，及仅出现 worktree／Git 字样但未显式引用本经验的任务。
+
+## 正反例
+
+- 正例：候选提交完成后，集成方在持锁状态下重新核对主工作区冲突、任务事实与 fast-forward 条件，再调用正式集成脚本。
+- 反例：只读查看任务卡或 Git 历史，或因为任务文本提到 worktree 就自动命中并创建工作区。
+
+## 失效条件
+
+任务 worktree／candidate branch、主工作区冲突复核、正式集成入口或 `hourly-integration-lock.ps1` 的锁合同发生架构变化时，停止引用并重新核验；不得沿用旧流程描述。
+
+## 正确处理
+
+先在隔离 worktree 实施并验证 candidate；由正式集成方在同一锁内复核最新主工作区和授权路径后 fast-forward。预检匹配始终只输出风险信息，不执行 Git、锁或 worktree 操作。
