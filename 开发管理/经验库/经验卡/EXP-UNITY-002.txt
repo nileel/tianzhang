@@ -1,0 +1,31 @@
+# EXP-UNITY-002 · Unity asmdef 与生成投影依赖排查
+
+## 状态
+
+active
+
+## 开工前
+
+预期路径含 `src/Assets/Scripts/` 下的 `.asmdef`／`.asmref` 或 `src/TianZhang.EditModeTests.csproj`，且任务标题、必查范围或实施范围出现 `namespace does not exist`、`ProjectReference`、程序集边界、`asmdef` 或 `asmref` 时，先运行 `tools/check-unity-assembly-boundaries.ps1` 并核对脚本所属程序集的直接引用。`namespace does not exist` 先沿 `.asmdef`／`.asmref` 的归属和依赖方向排查；仅在当前 worktree 已有 `TianZhang.EditModeTests.csproj` 时，才以其 `Compile`／`ProjectReference` 作快速投影核对。不得恢复 `Assembly-CSharp`、手改生成 `.csproj`／`.sln`，或从其他 worktree 复制生成投影。
+
+## 根因
+
+当前 Player 源码由 19 个命名 `.asmdef` 分层，另有两个 `TianZhang.Domain.asmref` 分别将 `Assets/Scripts/Content` 与 `Assets/Scripts/Cultivation` 归入 Domain；不存在活动的 `Assembly-CSharp`。`check-unity-assembly-boundaries.ps1` 固定所需程序集的路径和直接引用，并拒绝宽泛 `TianZhang.Runtime`／`TianZhang.Gameplay`、未解析引用、Feature 兄弟直连、Domain→Feature、Player→Editor 与依赖环。故 namespace 编译诊断首先是程序集归属或引用方向问题；生成 csproj 只是 Unity 产出的当前投影。
+
+## 适用与排除
+
+- 适用：改动 `.asmdef`／`.asmref`，或以 `namespace does not exist`、`ProjectReference`、明确程序集边界语义排查命名程序集依赖，且预期路径同时落在本经验限定的程序集定义或 EditMode 投影路径。
+- 排除：普通 `.cs` 编译错误、仅有 namespace 文字但不涉及上述路径，或没有对应诊断／引用语义的 Unity 任务。
+
+## 正反例
+
+- 正例：`TianZhang.Features.Adventure.asmdef` 引用错误并报 `namespace does not exist` 时，先核对其直接引用、边界检查器和（存在时）EditMode csproj 的 `ProjectReference`。
+- 反例：普通 `src/Assets/Scripts/Modules/Adventure/Foo.cs` 的 C# 语法错误，即使说明中出现 namespace，也不因本经验自动命中。
+
+## 失效条件
+
+命名程序集的当前所有者、两个 Domain asmref、`tools/check-unity-assembly-boundaries.ps1` 的 required target／拒绝方向，或 `tools/run-unity-editmode-tests.ps1` 作为权威 Unity 编译测试入口发生变化时，停止引用并重新核验；若 Unity 不再将 `TianZhang.EditModeTests.csproj` 作为可缺失生成投影，也须先更新本经验的投影边界。
+
+## 正确处理
+
+先用程序集边界检查确认实际 owner 和直接依赖，再运行 Unity EditMode 作为权威验证。生成投影存在时可额外 `dotnet build src/TianZhang.EditModeTests.csproj`；clean linked worktree 缺失该文件时记录边界并只用 Unity EditMode 结果，不复制或维护投影。

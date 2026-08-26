@@ -148,6 +148,33 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-001.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-26"
+    },
+    {
+      "id": "EXP-UNITY-002",
+      "title": "Unity asmdef 与生成投影依赖排查",
+      "preflightSummary": "涉及 asmdef／asmref 或 EditMode 生成投影的 namespace 缺失与引用问题，先核对程序集边界，不手改 csproj。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [],
+      "pathPatterns": [
+        "src/Assets/Scripts/*.asmdef",
+        "src/Assets/Scripts/*.asmref",
+        "src/TianZhang.EditModeTests.csproj"
+      ],
+      "textPatterns": [
+        "namespace does not exist",
+        "ProjectReference",
+        "程序集边界",
+        "asmdef",
+        "asmref"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-002.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-27"
     }
   ],
   "gates": []

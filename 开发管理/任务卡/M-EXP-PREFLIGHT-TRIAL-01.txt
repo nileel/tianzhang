@@ -10,12 +10,11 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "M-EXP-SEED-UNITY-ASMDEF-01",
     "M-EXP-SEED-UNITY-META-01",
     "M-EXP-SEED-UNITY-NAMESPACE-01",
     "M-EXP-SEED-MGMT-WORKTREE-01"
   ],
-  "stateReason": "已完成 Unity 场景 builder 种子卡；等待其余 4 张独立种子卡完成，索引当前有 6 条已证实 active 种子；达到 8～12 条前不得运行冻结样本或解锁 schema。",
+  "stateReason": "已完成 Unity 场景 builder 与 asmdef 投影种子卡；等待其余 3 张独立种子卡完成，索引当前有 7 条已证实 active 种子；达到 8～12 条前不得运行冻结样本或解锁 schema。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md",
     "开发管理/任务列表/管理与自动化任务.txt",
