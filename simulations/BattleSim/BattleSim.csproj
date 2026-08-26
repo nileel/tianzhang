@@ -6,7 +6,7 @@
     <RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\src\Assets\Scripts\World\CharterConflictRules.cs" Link="World\CharterConflictRules.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\World\CharterConflictRules.cs" Link="World\CharterConflictRules.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\HexCoord.cs" Link="Spatial\HexCoord.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryTypes.cs" Link="Spatial\SpatialQueryTypes.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryBoard.cs" Link="Spatial\SpatialQueryBoard.cs" />

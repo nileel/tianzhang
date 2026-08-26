@@ -182,6 +182,7 @@ function New-Prompt {
     $routeInstruction; $resumeInstruction
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
+    '当前 worktree 的验证若要求 dotnet build --no-restore 且对应项目缺少 obj/project.assets.json，先在同一 worktree 对该项目执行一次 dotnet restore 作为环境准备，再执行任务卡规定的 --no-restore build；不得改用主工作区、其他 worktree 或其 obj/bin 缓存。'
     "CandidatePaths: $pathText"
     '提交完成后，必须原样执行以下 PowerShell 命令生成最终 changedPaths：'
     "`$changedPaths = @(git -c core.quotepath=false diff --name-only --no-renames '$($Run.baseCommit)..HEAD' | Where-Object { `$_ } | Sort-Object -Unique)"

@@ -299,6 +299,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($trace -match '不得把 result=、impact=、verify=、plain= 写入对应参数值') 'Codex candidate prompt did not reject JSON field prefixes inside metadata parameter values'
   Assert-True ($trace -notmatch '四值必须逐字满足以下格式[^\r\n]*result=问题=') 'Codex candidate prompt retained the ambiguous prefixed metadata grammar'
   Assert-True ($trace -match '技术失败同样先恢复工作树到本轮初始状态') 'Codex candidate prompt omitted the clean technical-failure boundary'
+  Assert-True ($trace -match '缺少 obj/project\.assets\.json' -and $trace -match '先在同一 worktree 对该项目执行一次 dotnet restore' -and $trace -match '不得改用主工作区、其他 worktree 或其 obj/bin 缓存') 'Codex candidate prompt omitted the fresh-worktree restore boundary'
   Assert-True ($trace -match '必须与该提交的四个元数据值逐字一致') 'Codex candidate prompt omitted terminal/commit value synchronization'
   Assert-True ($trace -match "BaseCommit: $base") 'Codex candidate prompt omitted the exact base commit'
   Assert-True ($trace -match 'diff --name-only --no-renames') 'Codex candidate prompt omitted the canonical changed-path command'
