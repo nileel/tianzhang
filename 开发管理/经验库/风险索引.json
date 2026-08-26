@@ -95,6 +95,31 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-BS-004.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-26"
+    },
+    {
+      "id": "EXP-BS-005",
+      "title": "BattleSim 1v1 超时结算顺序无偏",
+      "preflightSummary": "修改 1v1 DuelTurnLimit 超时或胜场累计时，核对 HP 比例结算、平局半胜与正反顺序矩阵聚合。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "battlesim"
+      ],
+      "stages": [],
+      "pathPatterns": [
+        "simulations/BattleSim/Combat.cs"
+      ],
+      "textPatterns": [
+        "DuelTurnLimit",
+        "timeout",
+        "超时结算",
+        "回合上限",
+        "胜场累计"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-BS-005.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-26"
     }
   ],
   "gates": []

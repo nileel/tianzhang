@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-SEED-BS-TIMEOUT-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 超时结算顺序无偏经验 | 开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt |
 | M-EXP-SEED-UNITY-SCENE-BUILD-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity 场景程序化生成经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-SCENE-BUILD-01.txt |
 | M-EXP-SEED-UNITY-ASMDEF-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity asmdef 投影排查经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt |
 | M-EXP-SEED-UNITY-META-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity meta 多行 YAML 经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt |
