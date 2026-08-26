@@ -15,7 +15,6 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-SEED-BS-BUILD-RUN-01 | P1 | codex | 已排队 | — | 晋级 BattleSim 先构建后运行经验 | 开发管理/任务卡/M-EXP-SEED-BS-BUILD-RUN-01.txt |
 | M-EXP-SEED-BS-SYMMETRY-01 | P1 | codex | 已排队 | — | 晋级 BattleSim 双侧分支对称接入经验 | 开发管理/任务卡/M-EXP-SEED-BS-SYMMETRY-01.txt |
 | M-EXP-SEED-BS-RESIST-KEYS-01 | P1 | codex | 已排队 | — | 晋级 BattleSim 1v1／2v2 抗性键统一经验 | 开发管理/任务卡/M-EXP-SEED-BS-RESIST-KEYS-01.txt |
 | M-EXP-SEED-BS-TIMEOUT-01 | P1 | codex | 已排队 | — | 晋级 BattleSim 超时结算顺序无偏经验 | 开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt |
@@ -24,7 +23,7 @@
 | M-EXP-SEED-UNITY-META-01 | P1 | codex | 已排队 | — | 晋级 Unity meta 多行 YAML 经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt |
 | M-EXP-SEED-UNITY-NAMESPACE-01 | P1 | codex | 已排队 | — | 晋级 Unity 命名空间避开引擎类型名经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt |
 | M-EXP-SEED-MGMT-WORKTREE-01 | P1 | codex | 已排队 | — | 晋级共享 worktree 与集成锁经验 | 开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt |
-| M-EXP-PREFLIGHT-TRIAL-01 | P1 | codex | 阻塞 | M-EXP-SEED-BS-BUILD-RUN-01、M-EXP-SEED-BS-SYMMETRY-01、M-EXP-SEED-BS-RESIST-KEYS-01、M-EXP-SEED-BS-TIMEOUT-01、M-EXP-SEED-UNITY-SCENE-BUILD-01、M-EXP-SEED-UNITY-ASMDEF-01、M-EXP-SEED-UNITY-META-01、M-EXP-SEED-UNITY-NAMESPACE-01、M-EXP-SEED-MGMT-WORKTREE-01 | 冻结样本只读试运行与成本报告 | 开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt |
+| M-EXP-PREFLIGHT-TRIAL-01 | P1 | codex | 阻塞 | M-EXP-SEED-BS-SYMMETRY-01、M-EXP-SEED-BS-RESIST-KEYS-01、M-EXP-SEED-BS-TIMEOUT-01、M-EXP-SEED-UNITY-SCENE-BUILD-01、M-EXP-SEED-UNITY-ASMDEF-01、M-EXP-SEED-UNITY-META-01、M-EXP-SEED-UNITY-NAMESPACE-01、M-EXP-SEED-MGMT-WORKTREE-01 | 冻结样本只读试运行与成本报告 | 开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt |
 | M-EXP-TASK-SCHEMA2-01 | P1 | deepseek | 阻塞 | M-EXP-PREFLIGHT-TRIAL-01 | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
 | M-EXP-L0-CONTRACT-01 | P1 | codex | 阻塞 | M-EXP-TASK-SCHEMA2-01 | L0、runnable 与强制点规则合同 | 开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt |
 | M-EXP-HOURLY-PREFLIGHT-01 | P1 | deepseek | 阻塞 | M-EXP-L0-CONTRACT-01 | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |

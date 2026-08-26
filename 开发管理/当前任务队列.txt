@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-SEED-BS-BUILD-RUN-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 先构建后运行经验 | 开发管理/任务卡/M-EXP-SEED-BS-BUILD-RUN-01.txt |
 | M-EXP-SEED-BS-SYMMETRY-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 双侧分支对称接入经验 | 开发管理/任务卡/M-EXP-SEED-BS-SYMMETRY-01.txt |
 | M-EXP-SEED-BS-RESIST-KEYS-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 1v1／2v2 抗性键统一经验 | 开发管理/任务卡/M-EXP-SEED-BS-RESIST-KEYS-01.txt |
 | M-EXP-SEED-BS-TIMEOUT-01 | codex_execute | codex | P1 | battlesim | implementation | 晋级 BattleSim 超时结算顺序无偏经验 | 开发管理/任务卡/M-EXP-SEED-BS-TIMEOUT-01.txt |

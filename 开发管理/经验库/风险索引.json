@@ -19,6 +19,30 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-AUTO-001.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-26"
+    },
+    {
+      "id": "EXP-BS-001",
+      "title": "BattleSim 修改先构建后运行",
+      "preflightSummary": "BattleSim 源码或项目入口改动须先通过 Release build，再以 --no-build 运行。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "battlesim"
+      ],
+      "stages": [],
+      "pathPatterns": [
+        "simulations/BattleSim/*.cs",
+        "simulations/BattleSim/BattleSim.csproj"
+      ],
+      "textPatterns": [
+        "BattleSim",
+        "dotnet build -c Release --no-restore",
+        "dotnet run --no-build"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-BS-001.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-26"
     }
   ],
   "gates": []

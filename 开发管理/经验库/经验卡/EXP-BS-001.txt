@@ -1,0 +1,31 @@
+# EXP-BS-001 · BattleSim 修改先构建后运行
+
+## 状态
+
+active
+
+## 开工前
+
+修改 BattleSim 源码或项目入口，且任务明确要求 Release `dotnet build -c Release --no-restore` 或 `dotnet run --no-build` 时，先 build 成功再 run。只读既有输出、输入未变的数值讨论、无源码路径的文档编辑不触发；当前项目、`Program.Main` 参数入口或既有命令失效时停止引用并重新核验。
+
+## 根因
+
+`Program.Main` 是默认矩阵、审计与自测参数的唯一入口；源码变化若直接运行，可能把编译失败或旧二进制误作当前数值结果。
+
+## 适用与排除
+
+- 适用：任务修改 `simulations/BattleSim/*.cs` 或 `BattleSim.csproj`，且必查范围或实施范围明确上述 build／run 验证命令。
+- 排除：只读既有结果且输入未变化的数值讨论、无 BattleSim 源码路径的文档编辑，或只写禁止示例的任务。
+
+## 正反例
+
+- 正例：修改 `Program.cs`、`Battlefield.cs` 或 `BattleSim.csproj` 后，先执行 Release build，再以 `--no-build` 运行默认入口。
+- 反例：复述已通过的矩阵结论，或仅修订数值说明文档且未改变模拟器输入。
+
+## 失效条件
+
+BattleSim 项目入口、Release build／`--no-build` 运行合同，或 `Program.Main` 的默认入口关系被明确替换时，停止引用并重新核验。
+
+## 正确处理
+
+沿用 `AGENTS.md#数值与 BattleSim` 的固定 Release build 与 `--no-build` run 命令；当相关输入未变化且只讨论既有结果时，不重复运行。
