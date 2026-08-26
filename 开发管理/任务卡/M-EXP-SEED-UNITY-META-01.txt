@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "基础匹配器已完成 Codex 独立复审；M-EXP-PREFLIGHT-01A 前置已解除，按既定顺序入队，仍须独立核验 EXP-UNITY-003。",
+  "stateReason": "提交 ab4f882 的实际 diff 未包含任何 .meta 路径或单行故障／修复，现有检查只验证三个具名资源 .meta 的 guid，无法证明 Unity 对单行脚本 .meta 的导入结论；EXP-UNITY-003 不晋级，M-EXP-PREFLIGHT-TRIAL-01 继续保留本前置。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-UNITY-003.txt",
