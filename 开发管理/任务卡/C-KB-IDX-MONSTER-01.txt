@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-27 Codex 独立复审正式提交 4a9e842f96aa6f90b0c0ce6b26334f4df6971396 部分通过；速查卡、行结构、来源和现有指针均可核对，但缺少 C-KB-ARCH-01 要求的“该域典型任务实际必读量（速查卡+片段）”记录，详见未通过审核清单。",
   "expectedPaths": [
     "docs/怪物/怪物事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-MONSTER-01.txt",
