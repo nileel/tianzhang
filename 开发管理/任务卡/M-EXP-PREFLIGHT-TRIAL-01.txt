@@ -10,7 +10,6 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "M-EXP-SEED-BS-SYMMETRY-01",
     "M-EXP-SEED-BS-RESIST-KEYS-01",
     "M-EXP-SEED-BS-TIMEOUT-01",
     "M-EXP-SEED-UNITY-SCENE-BUILD-01",

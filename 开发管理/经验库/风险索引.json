@@ -43,6 +43,33 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-BS-001.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-26"
+    },
+    {
+      "id": "EXP-BS-003",
+      "title": "BattleSim 双侧分支对称接入",
+      "preflightSummary": "修改 Combat.Simulate 双侧分支时，逐机制同时核对 A/B 的初始化、攻击、受击状态与结算。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "battlesim"
+      ],
+      "stages": [],
+      "pathPatterns": [
+        "simulations/BattleSim/Combat.cs"
+      ],
+      "textPatterns": [
+        "Simulate",
+        "Simulate2v2",
+        "符胆",
+        "雷劫",
+        "受击减防",
+        "物抗率",
+        "魂抗率"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-BS-003.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-08-26"
     }
   ],
   "gates": []
