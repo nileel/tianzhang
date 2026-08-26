@@ -15,7 +15,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-SEED-UNITY-ASMDEF-01 | P1 | codex | 已排队 | — | 晋级 Unity asmdef 投影排查经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt |
+| M-EXP-SEED-UNITY-ASMDEF-01 | P1 | codex | 阻塞 | — | 晋级 Unity asmdef 投影排查经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt |
 | M-EXP-SEED-UNITY-META-01 | P1 | codex | 已排队 | — | 晋级 Unity meta 多行 YAML 经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt |
 | M-EXP-SEED-UNITY-NAMESPACE-01 | P1 | codex | 已排队 | — | 晋级 Unity 命名空间避开引擎类型名经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt |
 | M-EXP-SEED-MGMT-WORKTREE-01 | P1 | codex | 已排队 | — | 晋级共享 worktree 与集成锁经验 | 开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt |

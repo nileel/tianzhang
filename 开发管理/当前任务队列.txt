@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-SEED-UNITY-ASMDEF-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity asmdef 投影排查经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-ASMDEF-01.txt |
 | M-EXP-SEED-UNITY-META-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity meta 多行 YAML 经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-META-01.txt |
 | M-EXP-SEED-UNITY-NAMESPACE-01 | codex_execute | codex | P1 | unity | implementation | 晋级 Unity 命名空间避开引擎类型名经验 | 开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt |
 | M-EXP-SEED-MGMT-WORKTREE-01 | codex_execute | codex | P1 | management | implementation | 晋级共享 worktree 与集成锁经验 | 开发管理/任务卡/M-EXP-SEED-MGMT-WORKTREE-01.txt |
