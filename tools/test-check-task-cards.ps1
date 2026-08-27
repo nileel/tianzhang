@@ -76,6 +76,68 @@ function Copy-Metadata {
   $copy
 }
 
+function New-Experience {
+  param(
+    [string]$Id,
+    [string]$Trigger = 'path',
+    [string[]]$Paths = @()
+  )
+  [ordered]@{
+    id = $Id
+    title = 'fixture experience'
+    preflightSummary = 'fixture summary'
+    status = 'active'
+    level = 'notice'
+    triggerMode = $Trigger
+    domains = @()
+    stages = @()
+    pathPatterns = @($Paths)
+    textPatterns = @()
+    detailRef = ''
+    gateRefs = @()
+    lastVerified = '2026-08-28'
+  }
+}
+
+function Set-RiskIndex {
+  param([string]$Root, [object[]]$Experiences = @())
+  $index = [ordered]@{ schemaVersion = 1; experiences = @($Experiences); gates = @() }
+  Write-Utf8 (Join-Path $Root '开发管理/经验库/风险索引.json') ($index | ConvertTo-Json -Depth 20 -Compress)
+}
+
+function Get-Schema2Metadata {
+  param(
+    [string]$Id = 'T-S2-READY-01',
+    [string]$Title = '合法 schema 2 ready 卡',
+    [string]$DispatchState = 'ready',
+    [string[]]$ExpectedPaths = @('simulations/BattleSim/Combat.cs'),
+    [string[]]$ExplicitRefs = @(),
+    [string[]]$Matched = @(),
+    [string[]]$Gates = @(),
+    [string]$Route = 'codex_execute',
+    [string]$Owner = 'codex',
+    [string]$StateReason = $null
+  )
+  $expectedPaths = @($ExpectedPaths) + "开发管理/任务卡/$Id.txt" + "开发管理/任务归档/$Id.txt"
+  if ($Route -ceq 'codex_review') { $expectedPaths += '开发管理/未通过审核清单.txt' }
+  [ordered]@{
+    schemaVersion = 2
+    id = $Id
+    title = $Title
+    priority = 'P2'
+    route = $Route
+    owner = $Owner
+    domain = 'battlesim'
+    stage = 'implementation'
+    dispatchState = $DispatchState
+    blockedBy = @()
+    stateReason = $StateReason
+    expectedPaths = $expectedPaths
+    sourceBacklog = '开发管理/任务列表/数值与战斗任务.txt'
+    riskPreflight = [ordered]@{ explicitRefs = @($ExplicitRefs); matched = @($Matched); gates = @($Gates) }
+  }
+}
+
 function Get-AutomationInput {
   param(
     [string]$Path = 'assets/source/fixture/input.fbx',
@@ -352,7 +414,7 @@ try {
     @{ Name = 'filename ID mismatch'; Expected = 'filename/id mismatch'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.id = 'T-OTHER-01'; Set-Card $root $m -FileName 'T-READY-01.txt' } },
     @{ Name = 'duplicate ID'; Expected = 'duplicate card ID'; Change = { param($root, $f) $m = Copy-Metadata $f.Blocked; $m.id = 'T-READY-01'; Set-Card $root $m -FileName 'T-BLOCKED-01.txt' } },
     @{ Name = 'illegal enums'; Expected = 'invalid route'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.route = 'bad'; Set-Card $root $m } },
-    @{ Name = 'illegal schema version'; Expected = 'illegal schemaVersion'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.schemaVersion = 2; Set-Card $root $m } },
+    @{ Name = 'illegal schema version'; Expected = 'illegal schemaVersion'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.schemaVersion = 3; Set-Card $root $m } },
     @{ Name = 'illegal priority'; Expected = 'invalid priority'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.priority = 'P4'; Set-Card $root $m } },
     @{ Name = 'illegal owner'; Expected = 'invalid owner'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.owner = 'bad'; Set-Card $root $m } },
     @{ Name = 'illegal domain'; Expected = 'invalid domain'; Change = { param($root, $f) $m = Copy-Metadata $f.Ready; $m.domain = 'bad'; Set-Card $root $m } },
@@ -529,6 +591,128 @@ try {
   )
   Assert-True ($staleArchivePostcondition.ExitCode -ne 0) 'stale backlog row after archive should fail CodexClosedOrNonReady'
   Assert-True ($staleArchivePostcondition.Output -match 'archived TaskId remains in backlog') "stale archive missing backlog diagnostic: $($staleArchivePostcondition.Output)"
+
+  # ---- schema 2 compatibility: structural field contract ----
+  $schema1RiskRoot = Join-Path $tempRoot 'schema1-risk-preflight'
+  $schema1RiskFixture = New-Fixture $schema1RiskRoot
+  $schema1RiskCard = Copy-Metadata $schema1RiskFixture.Ready
+  $schema1RiskCard['riskPreflight'] = [ordered]@{ explicitRefs = @(); matched = @(); gates = @() }
+  Set-Card $schema1RiskRoot $schema1RiskCard
+  Set-Queue $schema1RiskRoot @($schema1RiskCard)
+  Set-Backlog $schema1RiskRoot @($schema1RiskCard, $schema1RiskFixture.Blocked)
+  Assert-Failure 'schema 1 must not include riskPreflight' $schema1RiskRoot 'schema 1 must not include riskPreflight'
+
+  $schema2MissingRiskRoot = Join-Path $tempRoot 'schema2-missing-risk'
+  $schema2MissingRiskFixture = New-Fixture $schema2MissingRiskRoot
+  $schema2MissingRiskCard = Copy-Metadata $schema2MissingRiskFixture.Ready
+  $schema2MissingRiskCard.schemaVersion = 2
+  Set-Card $schema2MissingRiskRoot $schema2MissingRiskCard
+  Set-Queue $schema2MissingRiskRoot @($schema2MissingRiskCard)
+  Set-Backlog $schema2MissingRiskRoot @($schema2MissingRiskCard, $schema2MissingRiskFixture.Blocked)
+  Assert-Failure 'schema 2 requires riskPreflight' $schema2MissingRiskRoot 'schema 2 requires riskPreflight'
+
+  foreach ($illegalField in @(
+      @{ Name = 'schema 2 riskPreflight extra field'; Risk = [ordered]@{ explicitRefs = @(); matched = @(); gates = @(); extra = @() }; Expected = 'field set must be exactly' },
+      @{ Name = 'schema 2 riskPreflight missing field'; Risk = [ordered]@{ explicitRefs = @(); matched = @() }; Expected = 'field set must be exactly' },
+      @{ Name = 'schema 2 riskPreflight non-array field'; Risk = [ordered]@{ explicitRefs = @(); matched = 'bad'; gates = @() }; Expected = 'must be an array' }
+    )) {
+    $illegalRoot = Join-Path $tempRoot ([guid]::NewGuid().ToString('N'))
+    $illegalFixture = New-Fixture $illegalRoot
+    $illegalCard = Copy-Metadata $illegalFixture.Ready
+    $illegalCard.schemaVersion = 2
+    $illegalCard['riskPreflight'] = $illegalField.Risk
+    Set-Card $illegalRoot $illegalCard
+    Set-Queue $illegalRoot @($illegalCard)
+    Set-Backlog $illegalRoot @($illegalCard, $illegalFixture.Blocked)
+    Assert-Failure $illegalField.Name $illegalRoot $illegalField.Expected
+  }
+
+  # ---- schema 2 ready projection recompute: zero-hit / normal-hit / explicit ----
+  $schema2ZeroRoot = Join-Path $tempRoot 'schema2-zero-hit'
+  Set-RiskIndex $schema2ZeroRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/other.ps1')))
+  $schema2ZeroCard = Get-Schema2Metadata -Id 'T-S2-ZERO-01'
+  Set-Card $schema2ZeroRoot $schema2ZeroCard
+  Set-Queue $schema2ZeroRoot @($schema2ZeroCard)
+  Set-Backlog $schema2ZeroRoot @($schema2ZeroCard)
+  $schema2Zero = Invoke-Checker $schema2ZeroRoot
+  Assert-True ($schema2Zero.ExitCode -eq 0) "schema 2 zero-hit ready should pass: $($schema2Zero.Output)"
+
+  $schema2HitRoot = Join-Path $tempRoot 'schema2-normal-hit'
+  Set-RiskIndex $schema2HitRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2HitCard = Get-Schema2Metadata -Id 'T-S2-HIT-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001')
+  Set-Card $schema2HitRoot $schema2HitCard
+  Set-Queue $schema2HitRoot @($schema2HitCard)
+  Set-Backlog $schema2HitRoot @($schema2HitCard)
+  $schema2Hit = Invoke-Checker $schema2HitRoot
+  Assert-True ($schema2Hit.ExitCode -eq 0) "schema 2 normal-hit ready should pass: $($schema2Hit.Output)"
+
+  $schema2ExplicitRoot = Join-Path $tempRoot 'schema2-explicit'
+  Set-RiskIndex $schema2ExplicitRoot @((New-Experience -Id 'EXP-MGMT-001' -Trigger 'explicit_only'))
+  $schema2ExplicitCard = Get-Schema2Metadata -Id 'T-S2-EXP-01' -ExplicitRefs @('EXP-MGMT-001') -Matched @('EXP-MGMT-001')
+  Set-Card $schema2ExplicitRoot $schema2ExplicitCard
+  Set-Queue $schema2ExplicitRoot @($schema2ExplicitCard)
+  Set-Backlog $schema2ExplicitRoot @($schema2ExplicitCard)
+  $schema2Explicit = Invoke-Checker $schema2ExplicitRoot
+  Assert-True ($schema2Explicit.ExitCode -eq 0) "schema 2 explicit ready should pass: $($schema2Explicit.Output)"
+
+  # ---- schema 2 ready projection recompute: stale / gates / explicit gap fail ----
+  $schema2StaleRoot = Join-Path $tempRoot 'schema2-stale'
+  Set-RiskIndex $schema2StaleRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2StaleCard = Get-Schema2Metadata -Id 'T-S2-STALE-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001', 'EXP-BS-003')
+  Set-Card $schema2StaleRoot $schema2StaleCard
+  Set-Queue $schema2StaleRoot @($schema2StaleCard)
+  Set-Backlog $schema2StaleRoot @($schema2StaleCard)
+  Assert-Failure 'schema 2 stale matched projection' $schema2StaleRoot 'riskPreflight matched projection mismatch'
+
+  $schema2GatesRoot = Join-Path $tempRoot 'schema2-gates'
+  Set-RiskIndex $schema2GatesRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2GatesCard = Get-Schema2Metadata -Id 'T-S2-GATES-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001') -Gates @('missing-gate')
+  Set-Card $schema2GatesRoot $schema2GatesCard
+  Set-Queue $schema2GatesRoot @($schema2GatesCard)
+  Set-Backlog $schema2GatesRoot @($schema2GatesCard)
+  Assert-Failure 'schema 2 gates projection mismatch' $schema2GatesRoot 'riskPreflight gates projection mismatch'
+
+  $schema2ExplicitGapRoot = Join-Path $tempRoot 'schema2-explicit-gap'
+  Set-RiskIndex $schema2ExplicitGapRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2ExplicitGapCard = Get-Schema2Metadata -Id 'T-S2-EXPGAP-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001') -ExplicitRefs @('EXP-MGMT-001')
+  Set-Card $schema2ExplicitGapRoot $schema2ExplicitGapCard
+  Set-Queue $schema2ExplicitGapRoot @($schema2ExplicitGapCard)
+  Set-Backlog $schema2ExplicitGapRoot @($schema2ExplicitGapCard)
+  Assert-Failure 'schema 2 explicitRef outside matched' $schema2ExplicitGapRoot 'riskPreflight explicitRef not in matched'
+
+  # ---- both schema ready accepted in the current compatibility stage ----
+  $schema2BothRoot = Join-Path $tempRoot 'schema2-both-ready'
+  Set-RiskIndex $schema2BothRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2BothS1 = Get-Metadata -Id 'T-S1-READY-01'
+  $schema2BothS2 = Get-Schema2Metadata -Id 'T-S2-READY-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001')
+  Set-Card $schema2BothRoot $schema2BothS1
+  Set-Card $schema2BothRoot $schema2BothS2
+  Set-Queue $schema2BothRoot @($schema2BothS1, $schema2BothS2)
+  Set-Backlog $schema2BothRoot @($schema2BothS1, $schema2BothS2)
+  $schema2Both = Invoke-Checker $schema2BothRoot
+  Assert-True ($schema2Both.ExitCode -eq 0) "schema 1 and schema 2 ready should both pass: $($schema2Both.Output)"
+
+  # ---- schema 2 non-ready keeps stale projection without recompute ----
+  $schema2NonReadyRoot = Join-Path $tempRoot 'schema2-non-ready-stale'
+  Set-RiskIndex $schema2NonReadyRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2NonReadyCard = Get-Schema2Metadata -Id 'T-S2-BLOCKED-01' -DispatchState 'blocked' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001', 'EXP-BS-003') -StateReason '等待外部输入'
+  Set-Card $schema2NonReadyRoot $schema2NonReadyCard
+  Set-Queue $schema2NonReadyRoot @()
+  Set-Backlog $schema2NonReadyRoot @($schema2NonReadyCard)
+  $schema2NonReady = Invoke-Checker $schema2NonReadyRoot
+  Assert-True ($schema2NonReady.ExitCode -eq 0) "schema 2 non-ready stale projection should pass: $($schema2NonReady.Output)"
+
+  # ---- schema 2 completed archive is accepted without recompute (no batch migration) ----
+  $schema2ArchiveRoot = Join-Path $tempRoot 'schema2-completed-archive'
+  $schema2ArchiveFixture = New-Fixture $schema2ArchiveRoot
+  Set-RiskIndex $schema2ArchiveRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2Completed = Get-Schema2Metadata -Id 'T-READY-01' -DispatchState 'completed' -Matched @('EXP-AUTO-001', 'EXP-BS-003')
+  Set-Archive $schema2ArchiveRoot $schema2Completed
+  Remove-Item -LiteralPath (Join-Path $schema2ArchiveRoot '开发管理/任务卡/T-READY-01.txt') -Force
+  Set-Queue $schema2ArchiveRoot @()
+  Set-Backlog $schema2ArchiveRoot @($schema2ArchiveFixture.Blocked)
+  $schema2Archive = Invoke-Checker $schema2ArchiveRoot @('-TaskId', 'T-READY-01', '-Postcondition', 'CodexClosedOrNonReady', '-OutputJson')
+  Assert-True ($schema2Archive.ExitCode -eq 0) "schema 2 completed archive should pass without recompute: $($schema2Archive.Output)"
 
   Write-Output 'test-check-task-cards: PASS'
 } finally {

@@ -90,6 +90,55 @@ function Test-ObjectField {
   $null -ne $Value -and $Value.PSObject.Properties.Name -ccontains $Name
 }
 
+function Test-ArrayEquals {
+  param([object[]]$Left, [object[]]$Right)
+  if ($Left.Count -ne $Right.Count) { return $false }
+  for ($index = 0; $index -lt $Left.Count; $index++) {
+    if ([string]$Left[$index] -cne [string]$Right[$index]) { return $false }
+  }
+  return $true
+}
+
+function Assert-RiskPreflight {
+  param([object]$Metadata, [string]$Path)
+  $schemaVersion = [int]$Metadata.schemaVersion
+  $hasRisk = Test-ObjectField $Metadata 'riskPreflight'
+  if ($schemaVersion -eq 1) {
+    Assert-Contract (-not $hasRisk) "schema 1 must not include riskPreflight: $Path"
+    return
+  }
+  Assert-Contract $hasRisk "schema 2 requires riskPreflight: $Path"
+  $risk = $Metadata.riskPreflight
+  Assert-Contract ($risk -is [System.Management.Automation.PSCustomObject]) "schema 2 riskPreflight must be an object: $Path"
+  $riskNames = @($risk.PSObject.Properties.Name)
+  Assert-Contract (
+    (@($riskNames | Where-Object { $_ -cnotin @('explicitRefs', 'matched', 'gates') }).Count -eq 0) -and
+    (@(@('explicitRefs', 'matched', 'gates') | Where-Object { $riskNames -cnotcontains $_ }).Count -eq 0)
+  ) "schema 2 riskPreflight field set must be exactly explicitRefs/matched/gates: $Path"
+  foreach ($field in @('explicitRefs', 'matched', 'gates')) {
+    Assert-Contract ($risk.$field -is [System.Array]) "schema 2 riskPreflight '$field' must be an array: $Path"
+  }
+}
+
+function Assert-Schema2Projection {
+  param([string]$RepositoryRoot, [string]$MatcherScript, [object]$Metadata, [string]$Path)
+  $id = [string]$Metadata.id
+  $output = (& pwsh -NoProfile -ExecutionPolicy Bypass -File $MatcherScript -RepositoryRoot $RepositoryRoot -TaskId $id 2>&1 | Out-String)
+  if ($LASTEXITCODE -ne 0) { throw "risk preflight failed for $id" }
+  try { $result = $output | ConvertFrom-Json } catch { throw "risk preflight output invalid for $id" }
+  Assert-Contract ($null -ne $result -and [string]$result.status -ceq 'ok') "risk preflight status must be ok for $id"
+  $projection = $Metadata.riskPreflight
+  $recomputedMatched = @($result.matched | ForEach-Object { [string]$_ })
+  $recomputedGates = @($result.gates | ForEach-Object { [string]$_ })
+  $projectedMatched = @($projection.matched | ForEach-Object { [string]$_ })
+  $projectedGates = @($projection.gates | ForEach-Object { [string]$_ })
+  Assert-Contract (Test-ArrayEquals $recomputedMatched $projectedMatched) "riskPreflight matched projection mismatch: $id"
+  Assert-Contract (Test-ArrayEquals $recomputedGates $projectedGates) "riskPreflight gates projection mismatch: $id"
+  foreach ($ref in @($projection.explicitRefs | ForEach-Object { [string]$_ })) {
+    Assert-Contract ($projectedMatched -ccontains $ref) "riskPreflight explicitRef not in matched: $id"
+  }
+}
+
 function Assert-AutomationDecision {
   param([object]$Metadata, [string]$Path)
   $decision = $Metadata.automationDecision
@@ -203,7 +252,8 @@ function Get-Card {
     Assert-Contract ($metadata.PSObject.Properties.Name -contains $field) "missing metadata field '$field': $Path"
   }
 
-  Assert-Contract ($metadata.schemaVersion -eq 1) "illegal schemaVersion: $Path"
+  Assert-Contract ([int]$metadata.schemaVersion -in @(1, 2)) "illegal schemaVersion: $Path"
+  Assert-RiskPreflight -Metadata $metadata -Path $Path
   $routes = @('codex_execute', 'external_execute', 'codex_review')
   $owners = @('codex', 'deepseek', 'claude')
   $domains = @('unity', 'battlesim', 'data', 'content', 'management', 'automation')
@@ -341,6 +391,13 @@ try {
     $blockedBy = @($metadata.blockedBy | ForEach-Object { [string]$_ })
     $expectedBlockers = if ($blockedBy.Count) { $blockedBy -join '、' } else { '—' }
     Assert-Contract ($row[4] -ceq $expectedBlockers) "backlog blocker mismatch: $($metadata.id)"
+  }
+
+  $matcherScript = Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1'
+  Assert-Contract (Test-Path -LiteralPath $matcherScript -PathType Leaf) 'missing risk preflight matcher'
+  foreach ($card in $cards) {
+    if ([int]$card.Metadata.schemaVersion -ne 2 -or [string]$card.Metadata.dispatchState -cne 'ready') { continue }
+    Assert-Schema2Projection -RepositoryRoot $repositoryPath -MatcherScript $matcherScript -Metadata $card.Metadata -Path $card.Path
   }
 
   $visitState = [Collections.Generic.Dictionary[string, int]]::new([StringComparer]::Ordinal)

@@ -4,13 +4,13 @@
   "id": "M-EXP-TASK-SCHEMA2-01",
   "title": "任务卡 schema 1／2 与 riskPreflight 投影支持",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "management",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-28：M-EXP-PREFLIGHT-TRIAL-01 收窄后复跑同十张冻结卡全部通过，高置信误报率 0.0%；本卡按原 external_execute/deepseek 路由解锁 ready，只实现 schema 1/2 兼容检查。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",
@@ -18,7 +18,8 @@
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt",
     "开发管理/任务归档/M-EXP-TASK-SCHEMA2-01.txt",
-    "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt"
+    "开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt",
+    "开发管理/未通过审核清单.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
 }

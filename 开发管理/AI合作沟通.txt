@@ -69,3 +69,16 @@
 - 残留风险：三份文档与索引的内容一致性由本主智能体复核，尚未经独立审核方验证；正式效果名称仍待 DS-JINDAN-NAMES-20260718-01；具体位置名称为本批次候选名，复审通过前不进入正式显示事实。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-TASK-SCHEMA2-01-5c940621 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-TASK-SCHEMA2-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-TASK-SCHEMA2-01
+- 候选提交：185c4e2a7916b57205a920fae31972a3fdef4951
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/check-task-cards.ps1、tools/test-check-task-cards.ps1
+- 已验证：tools/test-check-task-cards.ps1 → PASS（新增 schema 2 零命中/正常命中/显式经验/索引变化失配/非法字段/双 schema ready/schema 2 非 ready 与 completed 归档正反例）；tools/test-get-experience-risk-preflight.ps1 → PASS；tools/check-task-cards.ps1 -OutputJson → {"status":"ok","cardCount":63,"readyCount":17}（当前全部真实 schema 1 卡继续通过）；git diff --check → 无空白错误；tools/check-pending-whitespace.ps1 -ExpectedPaths tools/check-task-cards.ps1|tools/test-check-task-cards.ps1 → OK (2 files)
+- 未验证：真实 schema 2 ready 卡端到端：当前仓库尚无 schema 2 卡，投影重算路径仅由测试 fixture 覆盖；matcher 错误/过宽状态（索引缺失或 preflight_overbroad）的专用拒绝路径未单独端到端测试；Codex 独立复审未执行（本卡为 external_execute，须由 Codex 复审）
+- 残留风险：检查器通过子进程调用 get-experience-risk-preflight.ps1 重算投影；后续激活任务对真实 ready 卡升级 schema 2 时仍需按同一只读入口端到端复核 matched/gates，避免 fixture 与真实索引差异。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
