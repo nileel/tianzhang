@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-27 Codex 独立复审正式提交 3be9ba0705a794a61f8d9d91cb241d199a91e300 通过；三项遗产分工行三处路径#章节指针可解析，典型道具任务实际必读量、分布统计和 L1 线索层边界均符合任务卡。",
   "expectedPaths": [
     "docs/道具/道具事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-ITEM-01.txt",
