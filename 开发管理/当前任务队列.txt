@@ -11,7 +11,7 @@
 | U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01 | codex_execute | codex | P2 | unity | implementation | 非BuildSettings战斗棋子2D实验适配器 | 开发管理/任务卡/U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01.txt |
 | C-HS-YY-JD-01A | codex_review | codex | P2 | content | design | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
 | C-HS-YY-JD-01B | codex_review | codex | P2 | content | design | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
-| C-HS-YY-JD-01C | external_execute | deepseek | P2 | content | design | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
+| C-HS-YY-JD-01C | codex_review | codex | P2 | content | design | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
 | C-HS-YY-JD-01D | external_execute | deepseek | P2 | content | design | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
 | C-HS-YY-JD-01E | external_execute | deepseek | P2 | content | design | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
 | C-HS-YY-JD-01F | external_execute | deepseek | P2 | content | design | 金丹位格·观识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
