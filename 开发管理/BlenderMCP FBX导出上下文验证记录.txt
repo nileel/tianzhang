@@ -1,0 +1,38 @@
+# Blender MCP FBX 导出上下文验证记录
+
+任务：`A-BLENDER-MCP-FBX-CONTEXT-01`
+执行日期：2026-08-28
+工具通道：`blender_lab/execute_blender_code` 生产唯一任务临时 FBX；`blender_headless_qa/blender_verify_fbx_reimport` 对同一文件 factory-empty 回读。
+
+## 结论与调用合同
+
+通过。历史 02 卡的唯一 `use_selection=true` 导出在读取 `context.selected_objects` 时失败；本卡没有重放该失败调用。真实 Blender 5.2 MCP 烟测把活动场景和 View Layer 严格限定为一个 Empty root 与一个静态 Mesh 后，以 `use_selection=false` 成功完成唯一一次导出，并通过 factory-empty 结构回读。
+
+当前 Blender 5.2 `io_scene_fbx/export_fbx_bin.py` 的直接分支为：`use_selection=true` 读取 `context.selected_objects`；`use_selection=false` 读取 `context.view_layer.objects`。因此旧“false 分支读取 `context.scene.objects`”的推测不是当前版本事实；可复用的前置条件是活动 View Layer 只能含已验证的导出对象，且不依赖选择集字段。
+
+固定调用参数：`use_selection=false`、`global_scale=1`、`apply_unit_scale=true`、`apply_scale_options=FBX_SCALE_NONE`、`axis_forward=Z`、`axis_up=Y`、`use_space_transform=false`、`bake_space_transform=false`、`object_types={EMPTY,MESH}`、`use_triangles=true`、`bake_anim=false`、`path_mode=COPY`、`embed_textures=true`。任何需要 `use_selection=true`、Context override、第二次导出、第二工具路线或供应商修改的情况均停止，不重试。
+
+## 临时场景与 Context 证据
+
+- 写入前目录不存在：`D:\Temp\TianZhang-Blender\blender-mcp-fbx-context-01\`。
+- 任务专用临时场景：`FBXContextSmokeScene`；保存后的临时 `.blend`：`D:\Temp\TianZhang-Blender\blender-mcp-fbx-context-01\blender_mcp_fbx_context_01_smoke.blend`。
+- 导出前对象精确为 `FBXContextSmoke_Root`（Empty）与 `FBXContextSmoke_Mesh`（Mesh）；Mesh 唯一父级为 root，child collection=0。保存的 `.blend` 复读同样只含这一 Scene、这两个对象、一个 Mesh、一个材质，且 Armature、Action、Text 均为空。Armature=0、Action=0、Shape Key=0、可达 Text/script=0、Image=0，唯一材质为本地不透明 `FBXContextSmoke_OpaqueMat`；未读取、复制或写入任何仓库角色资产。
+- 任务临时 Scene／View Layer 在保存前、保存后和导出后均可访问 `scene`、`view_layer`、`selected_objects`（空 list）、`active_object`（None）与 `window`；`area`、`region`、`space_data` 均为 None。原常驻场景 `FormalPlayer_Static3D_Source` 只被暂时切换窗口场景并在代码 finally 中恢复，未保存或改写。
+- Blender：`D:\Tools\Blender\5.2.0\blender.exe`，`5.2.0 LTS`。临时 `.blend` 为 177845 bytes，SHA-256 `4D665182B24F5652028F0FA188B4F882FA5559B4D6F00A1BEF42262C29F81599`。
+
+## 唯一 FBX 与 factory-empty 回读
+
+| 项目 | 结果 |
+|---|---|
+| FBX | `D:\Temp\TianZhang-Blender\blender-mcp-fbx-context-01\blender_mcp_fbx_context_01_smoke.fbx` |
+| 导出 | `FINISHED`，无选择集异常；15756 bytes；SHA-256 `EE10FCA4878046B4A3A05941881A8216339C5CF25295D5F5EA773A89159DC4EB` |
+| 回读程序 | `D:\Tools\Blender\5.2.0\blender.exe`，factory-empty，exitCode=0，733 ms，未超时 |
+| 结构 | `mesh_count=1`、`empty_count=1`、`material_count=1`，材质 `FBXContextSmoke_OpaqueMat` |
+| 命名与安全 | `missing_prefixes=[]`，`script_free=true` |
+| 回读结果文件 | `blender_mcp_fbx_context_01_reimport.json`，298 bytes，SHA-256 `2A04A6EBC403ED1EB24880579FB73BB29311AA28E90DC459FDD8719544F58AF6` |
+
+此回读仅证明指定 Blender 可导入该 FBX，且返回的对象／名称／材质数量和脚本自由检查通过；它不证明美术质量、精确材质嵌入、骨骼语义或 Unity 运行表现。临时 `.blend`、FBX 和 JSON 均保留在任务专用临时目录，未进入 Git、`assets/source/` 或 `src/Assets/`。
+
+## 下游边界
+
+`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 已只移除本卡这一机制 blocker 并转为 ready。它仍须在独立 worktree 从冻结合同原生生产一次新的正式资产，并在唯一正式 FBX 导出前逐项重现上述前置条件；本记录不批准、替代或验收该正式资产，也不解除 Profile 总门。

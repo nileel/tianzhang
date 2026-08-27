@@ -43,6 +43,7 @@
 ## 流程管理
 
 - **下一步建议清理时机**：条目完成并推送远端后，从相应下一步建议文件移除该条→重编号剩余条目。不要在提交前删除（万一回退会丢记录）。
+- **Blender MCP FBX 导出上下文（2026-08-28，A-BLENDER-MCP-FBX-CONTEXT-01）**：Blender 5.2 `io_scene_fbx/export_fbx_bin.py` 的 `use_selection=true` 分支会读取 `context.selected_objects`，不能用于该 MCP 导出上下文；已知失败不得重试。当前 5.2 false 分支实际读取 `context.view_layer.objects`（不是旧说明中的 `context.scene.objects`）。唯一导出前必须把当前活动场景／View Layer 精确限制为一个 Empty root 和一个静态 Mesh，确认无 Armature、Action、Shape Key、脚本或额外对象，再固定 `use_selection=false`、`global_scale=1`、`apply_unit_scale=true`、`FBX_SCALE_NONE`、`axis_forward=Z`、`axis_up=Y`、`use_space_transform=false`、`bake_space_transform=false`、三角化、`bake_anim=false`、`path_mode=COPY`、`embed_textures=true`。该合同只证明一份任务专用临时 FBX 可由 Blender 5.2 factory-empty 回读；不证明美术质量、贴图精确嵌入或 Unity 表现，正式资产仍须独立一次性生产与 QA。
 - **角色立绘生成工作流**：生成或整理角色立绘时，先读 `assets/generated-character-art/README.md`；PC 人物介绍与角色资料的当前统一入口是 `assets/generated-character-art/profile-wide/prompts.md`，无字概念原版在 `no-title/prompts.md`，透明全身母版在 `dialogue-transparent/prompts.md`，静态合成预览在 `titled/prompts.md`。16:9 只约束人物介绍 UI、背景、FX 和静态预览，不横向拉伸透明人物母版；人物介绍、对话半身和头像默认裁切同一 RGBA 全身图。透明版先用 image2 生成纯绿幕源图，再本地抠图并验四角 alpha；姓名、道号与印章必须独立分层并逐字验收，复杂汉字优先从已验字样张提取或使用已确认授权的正确字体，不依赖 AI 重写。
 
 ## Unity 开发经验

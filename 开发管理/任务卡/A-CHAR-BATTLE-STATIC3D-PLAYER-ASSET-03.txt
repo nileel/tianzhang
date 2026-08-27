@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-BLENDER-MCP-FBX-CONTEXT-01"
-  ],
-  "stateReason": "2026-08-28：负责人要求把 MCP 导出上下文修复与正式资产生产拆成两张任务；本卡只在 A-BLENDER-MCP-FBX-CONTEXT-01 真实烟测通过后，授权一次新的 Blender 原生生产和一次 FBX 导出，01／02 卡失败资产与脚本不得作为输入。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：A-BLENDER-MCP-FBX-CONTEXT-01 已归档，真实 Blender 5.2 MCP 临时烟测以 use_selection=false 完成唯一导出并通过 factory-empty 回读；本卡现获一次新的 Blender 原生生产和一次 FBX 导出授权，01／02 卡失败资产与脚本不得作为输入。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.fbx",

@@ -17,7 +17,7 @@
 - 2026-08-25：`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 已归档。`AdventureScene/VisualBaselineBoard` 的独立入口在相同相机、光照、地块、尺度和规则条件下切换 2D 动态战斗与静态 3D 动态样例，并覆盖六方向、六事件与复位；技术复核通过，不产生视觉胜者。2026-08-26，`D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 已归档并形成同口径实际成本证据：2D source pilot 18 分钟、0 元／0 credits、7 次生成和 1 次失败返工；静态 3D cue source pilot 1 分钟、0 元／0 credits、5 次合成和 0 次失败返工；2D Unity 接入只记录约 3 分钟，静态 3D Unity 接入分钟明确未知。两条路线没有成本胜者或批量价格。
 - 2026-08-27：负责人最终选择“方案 B：静态 3D”。正式游戏战斗棋子优先采用静态 3D，2D 保留为独立、非阻塞实验；2D／3D 只在开发阶段替换，正式游戏不提供玩家切换入口；规则功能与视觉表现必须通过载体中立的只读合同完全解耦。`A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 与 `A-CHAR-BATTLE-VISUAL-REEVALUATE-02` 已完成归档，修订版模块化设计获批。新父项 `U-CHAR-BATTLE-PRESENTATION-MODULAR-01` 已一次性拆成合同、双正式资产与 Profile、正式 provider／Marker 所有权解耦、后续内容扩展及非 BuildSettings 2D 实验五个切片；`D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01` 已归档并冻结正式 `player`／`enemy_shijiahou` 双资产的路径、profile、坐标、单一 Blender 路线和双输入总门；`FuYuan_StaticChess` 仍仅是隔离样例，旧动画 3D 路线 `U-CHAR-3D-FORMAL-01` 继续冻结且不得复用。
 - 2026-08-28：双正式资产合同与载体中立表现合同的直接下游已完成解阻塞；正式玩家资产、石甲兽资产和非 BuildSettings 2D 实验适配器进入 ready，后续 Profile 总门仍等待两张正式资产卡同时完成。
-- 2026-08-28：`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02` 的 schema 5 run 在联系表硬门停止，人工诊断又确认 MCP FBX 导出上下文缺少 `selected_objects`，唯一导出未创建文件。负责人要求拆成独立机制修复卡与机制通过后的新资产卡；02 永久阻塞，正式玩家输入改由 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 承担，Profile 总门继续等待 03 与石甲兽。
+- 2026-08-28：`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02` 的 schema 5 run 在联系表硬门停止，人工诊断又确认 MCP FBX 导出上下文缺少 `selected_objects`，唯一导出未创建文件。负责人要求拆成独立机制修复卡与机制通过后的新资产卡；02 永久阻塞。`A-BLENDER-MCP-FBX-CONTEXT-01` 已用无业务语义临时场景证明 `use_selection=false` 的唯一导出和 factory-empty 回读，正式玩家输入改由已排队的 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 承担；Profile 总门继续等待 03 与石甲兽。
 
 ## 任务
 
@@ -26,7 +26,7 @@
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03 | P1 | codex | 阻塞 | A-BLENDER-MCP-FBX-CONTEXT-01 | 正式玩家静态3D战斗棋子机制修复后独立生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03.txt |
+| A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03 | P1 | codex | 已排队 | — | 正式玩家静态3D战斗棋子机制修复后独立生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03.txt |
 | A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 | P1 | codex | 已排队 | — | 石甲兽静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01.txt |
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03、A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-PRESENTATION-CONTRACT-01、U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |

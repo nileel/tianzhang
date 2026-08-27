@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：负责人要求另建独立任务先处理 Blender 5.2 FBX 导出器在 MCP 执行上下文缺少 context.selected_objects 的问题；本卡只在任务专用临时目录验证并冻结兼容调用，不导出或修改正式业务资产。",
+  "stateReason": "2026-08-28：真实 Blender 5.2 MCP 临时烟测以 use_selection=false 完成唯一 FBX 导出并通过 factory-empty 回读；调用前置条件、哈希、能力边界与失败停止规则已记录，任务完成归档。",
   "expectedPaths": [
     "开发管理/BlenderMCP FBX导出上下文验证记录.txt",
     "开发管理/开发-技术经验.txt",
@@ -65,6 +65,13 @@
 
 - 真实 MCP 烟测证明：当场景已被精确限制为 root 与 mesh 时，`use_selection=false` 可以在当前 Blender 5.2 MCP Context 中唯一导出并通过 factory-empty 结构回读；调用合同、能力边界、哈希和失败停止规则均已进入项目事实源。
 - `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 只在上述证据完整后移除本卡 blocker 并进入 ready；不得在同一 run 顺带执行正式资产生产。
+
+## 2026-08-28 · 实施结果
+
+- `blender_lab/execute_blender_code` 在任务专用临时目录生成一个无业务语义的 Empty root／静态 Mesh／本地不透明材质场景；导出前已断言活动 Scene 与 View Layer 精确只含该 root 和 Mesh，且 Armature、Action、Shape Key、脚本／Text 与 Image 均为零。
+- Blender 5.2 当前导出器源码确认 `use_selection=true` 读取 `context.selected_objects`，而 `use_selection=false` 实际读取 `context.view_layer.objects`。未重放历史失败调用；固定 false 分支参数的唯一临时 FBX 导出返回 `FINISHED`。
+- `blender_headless_qa` 以 `D:\Tools\Blender\5.2.0\blender.exe` 对同一临时 FBX factory-empty 回读，得到一个 Mesh、一个 Empty、一个材质、命名前缀完整且 `script_free=true`。文件字节、SHA-256、Context 字段与能力边界见 `开发管理/BlenderMCP FBX导出上下文验证记录.txt`。
+- 未修改 `assets/source/`、`src/Assets/`、现有业务 `.blend`／FBX／贴图、Blender 安装／扩展或供应商代码；临时产物未进入 Git。已只解除 03 卡的机制 blocker，未解除 Profile 总门。
 
 ## 停止条件
 
