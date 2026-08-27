@@ -17,6 +17,7 @@
 - 2026-08-19 用户拍板六识更名：意识不变；身识→形识、息识→灵识、食识→魂识、见识→观识；闻识保留原名；化神根系统一为"六识"。新增冻结卡 `C-JD-SIXROAD-RENAME-01`，须先于 `C-HS-YY-JD-01F`～`01J` 执行；剧情/养成文件的逐处语义扫描另立后续卡。
 - 2026-08-19 用户确认建立项目级资料库速查层（L0 入口/L1 速查卡/L2 事实源/L3 归档），分域速查卡独立建卡（剧情/基础设定/角色养成/道具/怪物；资源经济待 C-ECON-01 落地后建；美术资产沿用登记册）。新增冻结卡：`C-KB-ARCH-01`（架构与维护规则）、`C-KB-IDX-STORY-01`、`C-KB-IDX-BASE-01`、`C-KB-IDX-CULTIVATE-01`、`C-KB-IDX-ITEM-01`、`C-KB-IDX-MONSTER-01`、`C-ITEM-LIANXU-CLEAN-01`（道具域炼虚残留清理；养成域炼虚引用归 `C-HIGH-01`）。
 - 2026-08-19 用户指示建立门派对齐卡（贬称自称修订+金丹元婴框架对齐+位格口径段补充，原则：无人自称邪恶一方）：`C-SECT-ALIGN-01A`（赤霄谷、玄冥宫、玄荒殿）、`C-SECT-ALIGN-01B`（太虚观、混元山、天机楼、地藏寺）、`C-SECT-ALIGN-01C`（太一道庭、玉清崖及全部小桩）。2026-08-22 六识改名已通过复审，用户明确解冻 01A/01B，现按固定顺序进入 DeepSeek 队列。
+- 2026-08-28 用户指定 `C-HS-YY-JD-01A～01Q` 全部交由 DeepSeek V4 Pro 0813 定向返工；统一取消“绑定前先使用本位格效果／山河实例”的循环要求，改以合法非位格行为完成位置专属成就，实际效果装配与山河实例验证移到原子绑定之后。13 张子卡进入 ready，完成后仍由 Codex 独立复审。
 
 ## 任务
 
@@ -24,19 +25,19 @@
 |----|--------|------|----------|--------|------|--------|
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | U-SHIJIAHOU-3D-PROTO-01 | 关中正式场景与角色级表现资源 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
 | C-HS-YY-JD-01 | P2 | codex | 阻塞 | C-HS-YY-JD-01A、C-HS-YY-JD-01B、C-HS-YY-JD-01C、C-HS-YY-JD-01D、C-HS-YY-JD-01E、C-HS-YY-JD-01F、C-HS-YY-JD-01G、C-HS-YY-JD-01H、C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q | 金丹位格内容生产父任务 | 开发管理/任务卡/C-HS-YY-JD-01.txt |
-| C-HS-YY-JD-01A | P2 | codex | 阻塞 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
-| C-HS-YY-JD-01B | P2 | codex | 阻塞 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
-| C-HS-YY-JD-01C | P2 | codex | 阻塞 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
-| C-HS-YY-JD-01D | P2 | codex | 阻塞 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
-| C-HS-YY-JD-01E | P2 | codex | 阻塞 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
-| C-HS-YY-JD-01F | P2 | codex | 阻塞 | — | 金丹位格·观识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
-| C-HS-YY-JD-01G | P2 | codex | 阻塞 | — | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
-| C-HS-YY-JD-01H | P2 | codex | 阻塞 | — | 金丹位格·灵识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
-| C-HS-YY-JD-01I | P2 | codex | 阻塞 | — | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
-| C-HS-YY-JD-01J | P2 | codex | 阻塞 | — | 金丹位格·形识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
-| C-HS-YY-JD-01O | P2 | codex | 阻塞 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
-| C-HS-YY-JD-01P | P2 | codex | 阻塞 | — | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
-| C-HS-YY-JD-01Q | P2 | codex | 阻塞 | — | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
+| C-HS-YY-JD-01A | P2 | deepseek | 已排队 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
+| C-HS-YY-JD-01B | P2 | deepseek | 已排队 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
+| C-HS-YY-JD-01C | P2 | deepseek | 已排队 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
+| C-HS-YY-JD-01D | P2 | deepseek | 已排队 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
+| C-HS-YY-JD-01E | P2 | deepseek | 已排队 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
+| C-HS-YY-JD-01F | P2 | deepseek | 已排队 | — | 金丹位格·观识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
+| C-HS-YY-JD-01G | P2 | deepseek | 已排队 | — | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
+| C-HS-YY-JD-01H | P2 | deepseek | 已排队 | — | 金丹位格·灵识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
+| C-HS-YY-JD-01I | P2 | deepseek | 已排队 | — | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
+| C-HS-YY-JD-01J | P2 | deepseek | 已排队 | — | 金丹位格·形识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
+| C-HS-YY-JD-01O | P2 | deepseek | 已排队 | — | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
+| C-HS-YY-JD-01P | P2 | deepseek | 已排队 | — | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
+| C-HS-YY-JD-01Q | P2 | deepseek | 已排队 | — | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
 | C-FPD-NAME-01 | P2 | DeepSeek V4 Pro 0813 执行；Codex 复审；用户确认 | 冻结（薄内容切片外） | — | 为道基四阶段起草正式名称候选；只命名，不修改阶段机制、数量或数值。 | — |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
 | C-FPD-GONGFA-01 | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CHAR-BATTLE-PRESENTATION-CONTRACT-01"
-  ],
-  "stateReason": "切片5只依赖载体中立合同；在非BuildSettings测试场景中适配既有2D pilot，不阻塞正式静态3D链。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：载体中立表现合同已完成归档；切片 5 在非 BuildSettings 测试场景中适配既有 2D pilot，不阻塞正式静态 3D 链。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpriteCombatUnitPresentationAdapter.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpriteCombatUnitPresentationAdapter.cs.meta",

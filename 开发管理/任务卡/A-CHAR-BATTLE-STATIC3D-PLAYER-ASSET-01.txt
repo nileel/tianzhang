@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01"
-  ],
-  "stateReason": "等待用户批准正式双资产合同；本卡只生产正式player源资产和Blender／FBX QA，不导入Unity或接线。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：正式双资产合同已完成归档；本卡按冻结的本地 Blender 原生单一路线生产正式 player 源资产和 Blender／FBX QA，不导入 Unity 或接线。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.fbx",

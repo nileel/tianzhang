@@ -4,13 +4,13 @@
   "id": "C-HS-YY-JD-01F",
   "title": "金丹位格·观识道路三位置内容生产",
   "priority": "P2",
-  "route": "codex_review",
-  "owner": "codex",
+  "route": "external_execute",
+  "owner": "deepseek",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-08-08：Codex 一次性独立复审不通过；完整证位流程、主场景／山河循环与版本策略不满足 13 节合同，且源版／化版凝视锁定扩大了精确信息资格，待选择返工负责人后定向返工。",
+  "stateReason": "2026-08-28：用户指定 DeepSeek V4 Pro 0813 按现有未通过清单定向返工；位置专属成就改为绑定前的合法非位格行为证明，正式效果装配与 MountainRiverRuleInstance 只在原子绑定后验证；不修改总规则、效果矩阵、数值或运行时。",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Observe_SOURCE_观照真瞳.txt",
     "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Observe_TRANSFORM01_镜门.txt",
@@ -33,7 +33,7 @@
 - 生产规范为 `docs/基础设定/金丹位格/金丹位格设计规范.txt`（§三–§十二单文档 13 大节合同）；登记为同目录 `金丹位格索引.txt`；道路与效果以 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 为准。
 - 命名遵循 `docs/基础设定/金丹位格/金丹位格设计规范.txt` §二.2：最终文件名 = `[positionId]_[具体位置名称].txt`。本任务的 3 个候选具体位置名称与完整文件路径已固定在 `expectedPaths`，DeepSeek 首轮即按 `positionId_候选名.txt` 生产，不先创建 `positionId.txt`，也不等待额外用户确认后再重命名；`positionId` 一经正式引用不得因改名而变化。
 - 具体位置名称不以道路名、位格类型名（源位/化位/界位）或 `effect_id` 效果名拼接，不随装配效果变化；本批次文件名、文档标题、`seatNameKey` 和索引条目统一使用 `expectedPaths` 中的候选名，并标记「⚠️ 已修改/未审核」。Codex 复审不通过时按普通返工同步修改名称、路径与引用，不设置独立重命名阶段；复审通过前不进入正式显示事实。
-- 本子卡只生产观识道路的 3 份文档；由 DeepSeek V4 Flash 生产并标「⚠️ 已修改/未审核」，Codex 独立复审。
+- 本子卡只生产观识道路的 3 份文档；由 DeepSeek V4 Pro 0813 返工并标「⚠️ 已修改/未审核」，Codex 独立复审。
 
 ## 必查范围
 
@@ -76,6 +76,11 @@
 
 - 任一位置文档需要新增未确认的道路权限、效果、组合配方、位格类型或数值预算时停止并回到根因。
 - 位置理念无法在 `ROAD_OBSERVE` 三项既有 `effect_id` 白名单内自洽，或需要第二套命名/登记体系时停止并交回 Codex。
+
+## 返工决议（2026-08-28）
+
+- 用户指定 DeepSeek V4 Pro 0813 执行返工，完成后仍由 Codex 独立复审。
+- 绑定前的位置专属成就只使用候选人已有的合法非位格行为、现实对象与环境条件证明位置理念；不得要求尚未取得的正式效果槽、白名单内位格效果或 `MountainRiverRuleInstance`。实际效果装配、山河实例建立与首次验证移到原子稳定绑定之后；不修改总规则、效果矩阵、数值或运行时。
 
 ## Codex 审核反馈（2026-08-08）
 
