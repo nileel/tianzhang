@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": ["D-CHAR-APPEARANCE-01"],
-  "stateReason": "2026-08-21：保留为头像／剧情 UI 立绘风格样张，等待外观数据边界稳定；不承担静态 3D 或 2D 战场角色素材生产。",
+  "blockedBy": [],
+  "stateReason": "2026-08-27：D-CHAR-APPEARANCE-01 已归档；当前目录仅有 none 档案，尚无经批准的玩家脸型、发型、服装稳定 ID 及与 3D 模块配对的 2D 样张来源。未能冻结八组合的源图、导出、Unity、证据和登记字面量路径前保持阻塞。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
