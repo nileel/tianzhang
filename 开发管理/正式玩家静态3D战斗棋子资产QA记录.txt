@@ -1,0 +1,64 @@
+# 正式玩家静态 3D 战斗棋子资产 QA 记录
+
+任务：`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01`
+
+结论：**FAIL／阻塞**。首次冻结 FBX 导出发生 BaseColor 路径重映射与嵌入失败；联系表同时未通过材质和方向呈现硬门。未请求负责人视觉批准，禁止在本卡第二次导出或自动重试。
+
+## 事实源与执行边界
+
+- 冻结合同：`docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md`，原始 SHA-256 `1839acaa3eb31f18a08a8adf62127808a514a9516cf5ba1021828f262f4fa80c`。
+- 执行任务卡原始 SHA-256：`ca729f070a949651b38999cce25d2d2f4deaf66de8842e9ad9b04af9d898430d`。
+- 工具路线：本地 Blender 原生单一路线；`blender_lab` 负责当前场景生产与只读缺失文件检查，`blender_headless_qa` 只作同一 FBX 的 factory-empty 结构回读。
+- Blender：`D:\Tools\Blender\5.2.0\blender.exe`，版本 `5.2.0 LTS`。未使用外部来源、上传、credits、生成式资产、旧角色、第二工具路线或 Unity。
+- 失败现场：`D:\天章游戏开发\.worktrees\manual\A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01`。本记录只收口失败事实，不把现场产物声明为正式资产。
+
+## 源场景硬门
+
+首次导出前的 Blender 内部检查结果：
+
+- 层级：`FormalPlayer_Static3D_Root`（Empty）下唯一 `FormalPlayer_Static3D_Mesh`（Mesh）。
+- 网格：682 顶点、1328 边、688 面；唯一材质数据块和材质槽均为 `FormalPlayer_Static3D_Mat`。
+- 无 Armature、Action、Shape Key、运行时脚本或动画。
+- Root 与 Mesh 的 Position／Rotation 均 `(0,0,0)`，Scale 均 `(1,1,1)`。
+- 本地包络：X `-0.22265169..0.25503302 m`，Y `0..1.02999997 m`，Z `-0.16325..0.18920916 m`；源场景的高度、水平包络和 `Y=0` 接地数值门通过。
+- 使用一个 512×512、不透明、非发光 BaseColor；`creditsUsed=0`、`externalSourceUsed=false`、`generationAttempts=0`。
+
+## 首次 FBX 导出失败层
+
+- 首次且唯一一次导出设置：`globalScale=1`、`applyUnitScale=true`、`FBX_SCALE_NONE`、`axisForward=Z`、`axisUp=Y`、`useSpaceTransform=false`、`bakeSpaceTransform=false`、三角化、`bakeAnimation=false`、`embedTextures=true`。
+- Blender 导出器返回 `FINISHED`，但同时明确警告：BaseColor 被解析到旧持久会话目录 `D:\Temp\TianZhang-Blender\blender-lab-persistent-session\formal_player_static3d_v1_basecolor.png`，该文件不存在，嵌入失败。
+- 当前源 `.blend` 的 `get_blendfile_summary_missing_files` 命中同一个缺失 Image 路径；因此 `.blend` 与 FBX 的材质硬门均失败，不能以结构回读成功覆盖。
+- 合同规定 FBX 只在冻结源通过后导出一次，材质硬门失败时停止；本卡没有进行第二次导出、路径补丁后重试或替代路线。
+
+## factory-empty 回读能力边界
+
+`blender_headless_qa` 使用同一 Blender 5.2.0 LTS 对失败 FBX 做 factory-empty 回读，返回：
+
+- `mesh_count=1`、`empty_count=1`、`material_count=1`；材质名 `FormalPlayer_Static3D_Mat`。
+- `missing_prefixes=[]`、`script_free=true`，进程退出码 0。
+- 该检查只证明 FBX 结构可以回导，不验证贴图嵌入、美术质量、精确轴转换或 Unity 表现；因已知材质失败，不能判为业务通过。
+
+## 联系表视觉硬门
+
+- 联系表 2100×1120，按正、左、右、背及 yaw `90/150/210/270/330/30` 共 10 格生成。
+- 实际画面统一呈缺贴图粉色，且拼表后的全部面板上下翻转；身份、材质、接地和六向可读性无法进入负责人批准。
+- 负责人视觉批准状态：`not_requested`。自动硬门已失败，不要求负责人对失败画面作正式通过／拒绝签署。
+
+## 文件证据
+
+| 文件 | 字节 | SHA-256 | 结论 |
+|---|---:|---|---|
+| `formal_player_static3d_v1.blend` | 108464 | `5ad181be81d86efac3c34e1ff225b58f2492a29403c15faddc4fee603e569ac1` | 失败证据；BaseColor 路径缺失 |
+| `formal_player_static3d_v1.fbx` | 50796 | `dade13e81ba026295e2cd8ec4148f3dc9be8f26550ce1fb61bdb8031c50e8a5a` | 失败证据；纹理嵌入失败 |
+| `formal_player_static3d_v1_basecolor.png` | 6296 | `4756cda22697d969d0937c284464ce4d24718e61d4e372bb935040066d94602e` | 文件存在，但未被 `.blend`／FBX 正确引用 |
+| `formal_player_static3d_v1_contact-sheet.png` | 1792504 | `279aeb56e485a5992b198601ab3fafcbd0f780294fef75fc21852ce610d6c489` | 失败证据；粉色且上下翻转 |
+
+失败 manifest 位于同一任务 worktree 的冻结 source 目录，记录上述输入、输出、导出设置和验证结论。正式 Unity 目录、provider、场景、存档和后续 Profile 均未修改。
+
+- 失败 manifest：3792 字节，SHA-256 `430870d9014682e9b712137a65b881af95ae2c2f0298c21204dd3939e20a1030`。
+
+## 后续边界
+
+- 本卡保持 `blocked` 并移出 ready 队列；失败现场保留，不提交为正式资产。
+- 若负责人仍要继续该方向，应另立新任务并明确授权一次新的 Blender 原生生产；新卡必须在任何导出前先固定 BaseColor 相对路径并验证联系表拼接方向，不能在本卡重试。
+- `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 继续由本卡和石甲兽卡共同阻塞，不得提前导入 Unity 或建立 profile 映射。

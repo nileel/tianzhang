@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-28：正式双资产合同已完成归档；本卡按冻结的本地 Blender 原生单一路线生产正式 player 源资产和 Blender／FBX QA，不导入 Unity 或接线。",
+  "stateReason": "2026-08-28：首次冻结 FBX 导出时，BaseColor 相对路径被 Blender 重映射到旧持久会话目录，纹理嵌入失败；同批联系表呈缺贴图粉色且上下翻转。合同禁止第二次导出或自动重试，本卡保留失败现场并阻塞，等待负责人决定是否另立新卡和重新授权一次生产。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.fbx",
@@ -68,3 +68,10 @@
 
 - 需要未授权 credits、第二次生成／重试、复用苻渊／旧动画路线、扩大资产文件集或修改 Unity 才能通过。
 - 身份、材质、接地、局部轴、单位缩放、六向或哈希任一硬门失败。
+
+## 2026-08-28 执行结果
+
+- Blender 5.2.0 LTS 原生候选的源场景尺寸、接地、静态层级和唯一材质槽检查通过；首次且唯一一次 FBX 导出已发生。
+- 导出器明确报告 BaseColor 嵌入失败；随后源 `.blend` 缺失文件检查命中同一错误路径。factory-empty 仅证明 FBX 可回导为 1 个 Empty、1 个 Mesh、1 个材质且无脚本，不能抵消材质硬门失败。
+- 10 格联系表呈缺贴图粉色并上下翻转，未进入负责人视觉批准。失败文件留在任务专用 worktree，未导入 Unity、未形成正式资产提交。
+- 完整证据见 `开发管理/正式玩家静态3D战斗棋子资产QA记录.txt`。未经负责人建立新任务并明确重新授权一次生产，不得再次导出、重试或改走第二工具路线。
