@@ -222,7 +222,7 @@ namespace TianZhang.Editor
         private static void BuildBattleVisualComparisonPanel(Canvas canvas, GameObject board)
         {
             GameObject panel = SceneBuildSupport.CreatePanel("BattleVisualComparisonPanel", canvas.transform,
-                new Vector2(0.02f, 0.03f), new Vector2(0.38f, 0.42f));
+                new Vector2(0.02f, 0.03f), new Vector2(0.38f, 0.48f));
             SceneBuildSupport.AddVerticalLayout(panel, 6);
             SceneBuildSupport.CreateText("BattleVisualComparisonTitle", panel.transform, "战场角色表现比较", 22);
             Text status = SceneBuildSupport.CreateText("BattleVisualComparisonStatus", panel.transform, string.Empty, 13);
@@ -230,6 +230,12 @@ namespace TianZhang.Editor
             Transform routeButtons = CreateComparisonGrid("ComparisonRouteButtons", panel.transform, 2, 1);
             Button dynamic2DRoute = SceneBuildSupport.CreateButton("Comparison2DRouteButton", routeButtons, "2D 动态", out _);
             Button static3DRoute = SceneBuildSupport.CreateButton("ComparisonStatic3DRouteButton", routeButtons, "静态 3D", out _);
+
+            Transform motionButtons = CreateComparisonGrid("Comparison2DMotionButtons", panel.transform, 2, 1);
+            Button pureFrames = SceneBuildSupport.CreateButton(
+                "Comparison2DPureFramesButton", motionButtons, "纯帧动画", out _);
+            Button overallMotion = SceneBuildSupport.CreateButton(
+                "Comparison2DOverallMotionButton", motionButtons, "整体动效", out _);
 
             Transform directionButtons = CreateComparisonGrid("ComparisonDirectionButtons", panel.transform, 3, 2);
             var directions = new Button[BattleVisualComparisonController.DirectionCount];
@@ -250,6 +256,8 @@ namespace TianZhang.Editor
             comparison.Configure(status);
             UnityEventTools.AddPersistentListener(dynamic2DRoute.onClick, comparison.SelectBattleAnimation2DRoute);
             UnityEventTools.AddPersistentListener(static3DRoute.onClick, comparison.SelectStatic3DRoute);
+            UnityEventTools.AddPersistentListener(pureFrames.onClick, comparison.SelectPureFrame2DMode);
+            UnityEventTools.AddPersistentListener(overallMotion.onClick, comparison.SelectOverall2DMotionMode);
             for (int direction = 0; direction < directions.Length; direction++)
                 UnityEventTools.AddIntPersistentListener(directions[direction].onClick, comparison.SelectDirection, direction);
             for (int presentationEvent = 0; presentationEvent < presentationEvents.Length; presentationEvent++)

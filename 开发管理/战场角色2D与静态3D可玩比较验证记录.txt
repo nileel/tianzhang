@@ -8,8 +8,8 @@
 
 ## 实际运行与自动验证
 
-- Unity PlayMode：`ComparisonButtonsSwitchSymmetricRoutesAndReplayEverySharedEvent` 在真实 `AdventureScene` 中依次调用两条路线、六方向、六事件和复位；路线互斥、当前事件、根节点复位与全部探针待机均通过。完整 PlayMode：13/13 通过。
-- Unity EditMode：场景持久化入口、按钮持久事件、默认静态 3D 路线及 BaseColor 引用均通过。完整 EditMode：423/423 通过。
+- Unity PlayMode：`ComparisonButtonsSwitchSymmetricRoutesAndReplayEverySharedEvent` 在真实 `AdventureScene` 中依次调用两条路线、六方向、六事件和复位；路线互斥、当前事件、根节点复位与全部探针待机均通过。新增 `TwoDimensionalMotionModeDefaultsToPureFramesAndSwitchesWithoutRootResidue` 数值验证默认纯帧模式的根节点位置／旋转误差小于 `0.0001`，整体动效在同一采样点的根节点位移大于 `0.001`，动作中切换模式精确复位，并验证 2D 模式跨路线切换保留。完整 PlayMode：14/14 通过。
+- Unity EditMode：场景持久化入口、两枚模式按钮的可见文字与唯一持久事件、面板边界、默认静态 3D 路线及 BaseColor 引用均通过。当前完整 EditMode XML：428/428 通过。项目包装脚本在测试结束后的工作区恢复阶段遇到 Windows 映射文件占用并返回非零，测试产生的 145 个自动重序列化噪声已按测试前清单全部清除；2026-08-27 本轮以 `-ValidateResultOnly` 对同一 XML 再次验证通过。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过（19 assemblies、2 asmrefs）。
 - `dotnet build src/TianZhang.EditModeTests.csproj --no-restore`：未通过；Unity 生成的项目缺少 `src/Temp/obj/TianZhang.EditModeTests/project.assets.json`，命令按禁止 restore 的约束未补建。该环境缺件不改变已由 Unity Test Runner 完成的编译与运行结果。

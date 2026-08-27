@@ -65,11 +65,17 @@ namespace TianZhang.Tests.EditMode
 
             Transform panel = transforms.Single(item => item.name == "BattleVisualComparisonPanel");
             Assert.AreEqual("BattleVisualComparisonStatus", serialized.FindProperty("statusText").objectReferenceValue.name);
+            Assert.AreEqual(new Vector2(0.38f, 0.48f), ((RectTransform)panel).anchorMax);
             Assert.IsNotNull(panel.Find("ComparisonRouteButtons"));
+            Assert.IsNotNull(panel.Find("Comparison2DMotionButtons"));
             Assert.IsNotNull(panel.Find("ComparisonDirectionButtons"));
             Assert.IsNotNull(panel.Find("ComparisonEventButtons"));
             AssertComparisonButton(panel, comparison, "Comparison2DRouteButton", "SelectBattleAnimation2DRoute");
             AssertComparisonButton(panel, comparison, "ComparisonStatic3DRouteButton", "SelectStatic3DRoute");
+            AssertComparisonButton(panel, comparison, "Comparison2DPureFramesButton", "SelectPureFrame2DMode");
+            AssertComparisonButtonLabel(panel, "Comparison2DPureFramesButton", "纯帧动画");
+            AssertComparisonButton(panel, comparison, "Comparison2DOverallMotionButton", "SelectOverall2DMotionMode");
+            AssertComparisonButtonLabel(panel, "Comparison2DOverallMotionButton", "整体动效");
             AssertComparisonButton(panel, comparison, "ComparisonResetButton", "ResetPresentations");
             for (int direction = 0; direction < BattleVisualComparisonController.DirectionCount; direction++)
                 AssertComparisonButton(panel, comparison, "ComparisonDirectionButton_" + direction, "SelectDirection");
@@ -533,6 +539,12 @@ namespace TianZhang.Tests.EditMode
             SerializedProperty call = calls.GetArrayElementAtIndex(0);
             Assert.AreSame(comparison, call.FindPropertyRelative("m_Target").objectReferenceValue);
             Assert.AreEqual(expectedMethod, call.FindPropertyRelative("m_MethodName").stringValue);
+        }
+
+        private static void AssertComparisonButtonLabel(Transform panel, string name, string expectedLabel)
+        {
+            Button button = panel.GetComponentsInChildren<Button>(true).Single(item => item.name == name);
+            Assert.AreEqual(expectedLabel, button.GetComponentInChildren<Text>(true).text);
         }
 
         private static string ProjectRootPath() => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));

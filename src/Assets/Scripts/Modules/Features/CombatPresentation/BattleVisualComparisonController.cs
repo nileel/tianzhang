@@ -25,8 +25,11 @@ namespace TianZhang.Features.CombatPresentation
         private ComparisonRoute activeRoute = ComparisonRoute.Static3D;
         private int selectedDirection;
         private StaticChessPresentationEvent lastPresentationEvent = StaticChessPresentationEvent.Idle;
+        private bool is2DOverallMotionEnabled;
 
         public bool IsBattleAnimation2DRouteActive => activeRoute == ComparisonRoute.BattleAnimation2D;
+
+        public bool Is2DOverallMotionEnabled => is2DOverallMotionEnabled;
 
         public int SelectedDirection => selectedDirection;
 
@@ -40,6 +43,7 @@ namespace TianZhang.Features.CombatPresentation
         private void Awake()
         {
             ValidateConfiguration();
+            Apply2DMotionMode(false);
             SelectStatic3DRoute();
         }
 
@@ -51,6 +55,16 @@ namespace TianZhang.Features.CombatPresentation
         public void SelectStatic3DRoute()
         {
             SelectRoute(ComparisonRoute.Static3D);
+        }
+
+        public void SelectPureFrame2DMode()
+        {
+            Select2DMotionMode(false);
+        }
+
+        public void SelectOverall2DMotionMode()
+        {
+            Select2DMotionMode(true);
         }
 
         public void SelectDirection(int direction)
@@ -113,6 +127,20 @@ namespace TianZhang.Features.CombatPresentation
             UpdateStatus();
         }
 
+        private void Select2DMotionMode(bool overallMotionEnabled)
+        {
+            ResetPresentations();
+            Apply2DMotionMode(overallMotionEnabled);
+            UpdateStatus();
+        }
+
+        private void Apply2DMotionMode(bool overallMotionEnabled)
+        {
+            is2DOverallMotionEnabled = overallMotionEnabled;
+            for (int direction = 0; direction < DirectionCount; direction++)
+                BattleAnimation2DProbe(direction).SetRootPresentationEnabled(overallMotionEnabled);
+        }
+
         private void ValidateConfiguration()
         {
             if (statusText == null)
@@ -169,6 +197,7 @@ namespace TianZhang.Features.CombatPresentation
             if (statusText == null) return;
             statusText.text = "路线：" +
                 (activeRoute == ComparisonRoute.BattleAnimation2D ? "2D 动态战斗样例" : "静态 3D 动态样例") +
+                "\n2D 模式：" + (is2DOverallMotionEnabled ? "整体动效" : "纯帧动画") +
                 "\n方向：" + selectedDirection + "　事件：" + EventLabel(lastPresentationEvent) +
                 "\n同一相机、光照、地块与规则；仅供用户实机比较。";
         }

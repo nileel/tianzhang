@@ -32,10 +32,13 @@ namespace TianZhang.Features.CombatPresentation
         private int activeFrameIndex;
         private bool isPresenting;
         private bool castEffectRaised;
+        private bool rootPresentationEnabled;
 
         public event Action CastEffectRequested;
 
         public bool IsPresenting => isPresenting;
+
+        public bool RootPresentationEnabled => rootPresentationEnabled;
 
         public int ActiveDirection => activeDirection;
 
@@ -90,6 +93,11 @@ namespace TianZhang.Features.CombatPresentation
             SetFrame(activeEvent, activeDirection, activeFrameIndex);
         }
 
+        public void SetRootPresentationEnabled(bool enabled)
+        {
+            rootPresentationEnabled = enabled;
+        }
+
         public void StartPresentation(StaticChessPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
         {
             ValidateFrames();
@@ -120,7 +128,7 @@ namespace TianZhang.Features.CombatPresentation
             }
 
             float progress = Mathf.Clamp01(elapsed / (FrameDuration * FramesPerDirection));
-            ApplyRootPresentation(progress);
+            if (rootPresentationEnabled) ApplyRootPresentation(progress);
             if (progress >= 1f) RestoreRoot();
         }
 
