@@ -8,14 +8,14 @@
 - `M-EXP-PREFLIGHT-01` 是不可调度汇总父项，只由 `M-EXP-PREFLIGHT-CLOSE-01` 在全部出口满足后关闭；不得创建覆盖整套系统的执行卡。
 - 依赖顺序固定为基础工具 → 10 条独立种子经验 → 首次只读试运行 → Unity 触发收窄 → BattleSim 触发收窄 → 原冻结样本复跑 → schema 1／2 支持 → L0 规则 →（小时自动化接入、每日候选收集器并行）→ ready schema 2 激活 → 20 个相关任务观察 → 独立门禁／非技术域决策 → 父项关闭。
 - `M-EXP-PREFLIGHT-01A` 的返工正式提交 `bbae65133a1ff791a86b31f37e99a111d4679110` 已经 Codex 独立复审通过；基础工具归档，10 张预定种子核验卡均已达到真实终态，其中 8 条经验 active，Unity meta 与 namespace 两项因批准事实源穷尽而完成为不晋级。
-- `EXP-UNITY-001` 与 `EXP-BS-003` 收窄后，原十张冻结样本复跑为 3 个高置信命中、0 个无关，误报率 0.0%；active、读取边界、成本和匹配器可靠性全部通过。试运行卡已归档，`M-EXP-TASK-SCHEMA2-01` 现已 ready。
+- `EXP-UNITY-001` 与 `EXP-BS-003` 收窄后，原十张冻结样本复跑为 3 个高置信命中、0 个无关，误报率 0.0%；active、读取边界、成本和匹配器可靠性全部通过。试运行卡已归档；`M-EXP-TASK-SCHEMA2-01` 的基础兼容和投影重算已通过复审，但 `explicitRefs` 的 `explicit_only` 约束仍需返工。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-TASK-SCHEMA2-01 | P1 | codex | 已排队 | — | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
+| M-EXP-TASK-SCHEMA2-01 | P1 | codex | 阻塞 | — | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
 | M-EXP-L0-CONTRACT-01 | P1 | codex | 阻塞 | M-EXP-TASK-SCHEMA2-01 | L0、runnable 与强制点规则合同 | 开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt |
 | M-EXP-HOURLY-PREFLIGHT-01 | P1 | deepseek | 阻塞 | M-EXP-L0-CONTRACT-01 | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |
 | M-EXP-DAILY-COLLECTOR-01 | P1 | codex | 阻塞 | M-EXP-L0-CONTRACT-01 | 每日确定性经验候选收集器与薄触发 | 开发管理/任务卡/M-EXP-DAILY-COLLECTOR-01.txt |

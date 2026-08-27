@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "审核返工：检查器未拒绝 explicitRefs 中非 explicit_only 经验，违反任务卡投影合同",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",
