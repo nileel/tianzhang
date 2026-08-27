@@ -82,3 +82,16 @@
 - 残留风险：检查器通过子进程调用 get-experience-risk-preflight.ps1 重算投影；后续激活任务对真实 ready 卡升级 schema 2 时仍需按同一只读入口端到端复核 matched/gates，避免 fixture 与真实索引差异。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01B-d5a3f72c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01B 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01B
+- 候选提交：91052f3921c12711dbfa33943cfb1ff239282a5e
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_FiveElements_Fire_TRANSFORM01_燃犀渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Fire_DOMAIN01_长明赤野.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Fire_SOURCE_赫曦炉心.txt
+- 已验证：三份位置文档均按 §十一 13 大节合同完整重写，各含 13 个一级大节；三份文档均补齐 §4.4 完整证位阶段（启动绑定目标/现实支点与主承载/材料供能维护/关键事件与时间推进/致命中断/失败结算/最终原子重验）与 §4.5 并行争位、临界争位及失败者处理；绑定前位置专属成就只用候选人已有合法非位格行为、现实对象与证位地点环境条件，不再要求本位置效果槽、白名单位别效果或 MountainRiverRuleInstance，实际效果装配与山河实例建立及首次验证移后至原子稳定绑定；燃犀渡理念重写为固定渡口筛选转化结构，可与 FIRE_MANIFEST／FIRE_FIELD／FIRE_ESCALATE 三项白名单效果逐项求交；长明赤野改为一次只装配白名单中的一项，三项效果不并列常驻，并移除战棋对山河层 MountainRiverCycleProfile 的依赖；主场景维护、NPC 响应与失败已写成实际规则；山河周期结算按三项效果分别写明地区结果与事件；存档与版本策略按证位/战棋/主场景/山河四类实例分别写明冻结、重验、迁移或失败关闭；索引 §六 火道路三行与文档一致（证位档案/位置档案版本升 1.1、理念摘要、审核记录同步 2026-08-28 返工）；未通过审核清单 01B 条目补记返工状态；验证已运行：tools/check-review-text.ps1 -Paths docs,开发管理 通过（1010 文件）；tools/check-pending-whitespace.ps1 通过（5 文件）；git diff --check 无空白错误；changed paths 精确等于 CandidatePaths 五项，worktree 干净，candidate 提交为 baseCommit f3b5b1b4 的直接后继
+- 未验证：未运行 BattleSim（任务不涉及数值强度，任务卡明确无需运行）；未运行 tools/check-data-chain.ps1（本轮不涉及 CSV/asset 变化）；未做 Codex 独立复审（按规则 DeepSeek 不自审，待 Codex 复审）
+- 残留风险：燃犀渡理念重写与长明赤野一槽一效改写的语义边界是否越界，以及未通过审核清单/索引的返工状态标记，均需 Codex 独立复审确认后闭环；本轮未触碰总规则、效果矩阵、数值或运行时。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

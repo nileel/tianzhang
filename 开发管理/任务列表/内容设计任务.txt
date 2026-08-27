@@ -26,7 +26,7 @@
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | U-SHIJIAHOU-3D-PROTO-01 | 关中正式场景与角色级表现资源 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
 | C-HS-YY-JD-01 | P2 | codex | 阻塞 | C-HS-YY-JD-01A、C-HS-YY-JD-01B、C-HS-YY-JD-01C、C-HS-YY-JD-01D、C-HS-YY-JD-01E、C-HS-YY-JD-01F、C-HS-YY-JD-01G、C-HS-YY-JD-01H、C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q | 金丹位格内容生产父任务 | 开发管理/任务卡/C-HS-YY-JD-01.txt |
 | C-HS-YY-JD-01A | P2 | codex | 已排队 | — | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
-| C-HS-YY-JD-01B | P2 | deepseek | 已排队 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
+| C-HS-YY-JD-01B | P2 | codex | 已排队 | — | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
 | C-HS-YY-JD-01C | P2 | deepseek | 已排队 | — | 金丹位格·土道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01C.txt |
 | C-HS-YY-JD-01D | P2 | deepseek | 已排队 | — | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
 | C-HS-YY-JD-01E | P2 | deepseek | 已排队 | — | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
