@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-KB-IDX-CULTIVATE-01 | codex_execute | codex | P2 | content | design | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
