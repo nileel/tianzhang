@@ -6,7 +6,7 @@ active
 
 ## 开工前
 
-仅当任务同时命中 `simulations/BattleSim/Combat.cs`，且正文出现 `Simulate`、`Simulate2v2` 或具体机制符号时适用。逐机制对照 A/B 的初始化、出手、受击状态和超时结算；不要只因 battlesim 域或泛称战斗机制触发。
+仅当任务同时命中 `simulations/BattleSim/Combat.cs`，且正文出现精确 1v1 符号 `Combat.Simulate`，或符胆、雷劫、受击减防、物抗率、魂抗率等具名双侧状态机制时适用。逐机制对照 A/B 的初始化、出手、受击状态和超时结算；纯 `Simulate2v2`／`Simulate2v2Detailed` 候选、走位、占格或团队 AI 工作不触发。不能由精确术语表达、但确实修改 1v1 双侧分支的任务必须显式引用本经验，不扩宽自动匹配。
 
 ## 根因
 
@@ -14,8 +14,8 @@ active
 
 ## 适用与排除
 
-- 适用：修改 `Combat.Simulate`／`Simulate2v2`，或直接修改符胆、雷劫、受击减防、抗性键等双方状态机制。
-- 排除：仅改数值、文档、调用方或其他 BattleSim 文件；只有路径或只有关键词也不自动匹配。
+- 适用：修改 1v1 `Combat.Simulate` A/B 手写分支，或直接修改符胆、雷劫、受击减防、物抗率、魂抗率等双方状态机制。
+- 排除：只修改 `Simulate2v2`／`Simulate2v2Detailed` 的候选、走位、占格或团队 AI；仅改数值、文档、调用方或其他 BattleSim 文件；只有路径或只有关键词也不自动匹配。
 
 ## 正反例
 

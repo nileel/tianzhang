@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-NARROW-BS-01"],
-  "stateReason": "2026-08-28：首次冻结十样本回放误报率 40.0%；用户已批准先串行完成 EXP-UNITY-001 与 EXP-BS-003 的独立触发收窄。本卡阻塞于 M-EXP-PREFLIGHT-NARROW-BS-01，完成后复跑同一冻结输入；此前不解锁 M-EXP-TASK-SCHEMA2-01。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：M-EXP-PREFLIGHT-NARROW-UNITY-01 与 M-EXP-PREFLIGHT-NARROW-BS-01 均已完成归档；本卡恢复 ready，复跑提交 ccb1127b 的同十张冻结卡并重新判断全部阈值。通过前不解锁 M-EXP-TASK-SCHEMA2-01。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md",
     "开发管理/任务列表/管理与自动化任务.txt",
@@ -29,7 +29,7 @@
 - 单一结果：用冻结任务卡输入只读回放当前索引，产出命中、误报、字符数和 token 代理成本报告，并只在全部阈值通过时解锁 schema 支持。
 - 样本统一冻结在提交 `ccb1127bcd78d6bb192b4527a449acda41cfc782`，不读取或改写之后的归档事实。
 - 本卡不修改索引、经验卡、任务卡 schema、规则或自动化入口。
-- 本轮复跑前置固定为 `M-EXP-PREFLIGHT-NARROW-BS-01`；该卡又依赖 Unity 收窄卡，两个收窄结果均归档后才恢复本卡 ready。
+- `M-EXP-PREFLIGHT-NARROW-UNITY-01` 与 `M-EXP-PREFLIGHT-NARROW-BS-01` 已完成归档；本轮只消费收窄后的当前索引并复跑原冻结输入。
 
 ## 必查范围
 

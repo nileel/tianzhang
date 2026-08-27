@@ -74,8 +74,7 @@
         "simulations/BattleSim/Combat.cs"
       ],
       "textPatterns": [
-        "Simulate",
-        "Simulate2v2",
+        "Combat.Simulate",
         "符胆",
         "雷劫",
         "受击减防",
@@ -84,7 +83,7 @@
       ],
       "detailRef": "开发管理/经验库/经验卡/EXP-BS-003.txt#开工前",
       "gateRefs": [],
-      "lastVerified": "2026-08-26"
+      "lastVerified": "2026-08-28"
     },
     {
       "id": "EXP-BS-004",

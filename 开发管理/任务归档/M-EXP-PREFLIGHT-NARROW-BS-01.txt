@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：M-EXP-PREFLIGHT-NARROW-UNITY-01 已完成归档；EXP-BS-003 的精确 1v1 收窄边界、正反样本、允许路径和停止条件均已冻结，现已 ready。",
+  "stateReason": "2026-08-28：已把 EXP-BS-003 自动触发限定为精确 1v1 Combat.Simulate／具名双侧机制；冻结 N-GROUP-02C 只保留 EXP-BS-001，匹配器测试通过。本卡完成归档并恢复原试运行卡 ready。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-BS-003.txt",
@@ -61,6 +61,11 @@
 
 - `Simulate2v2Detailed` 误报消失，精确 1v1 正例命中；索引和经验卡语义一致，匹配器与 schema 无变化。
 - 本卡完成归档；原试运行卡移除本 ID、转为 ready 并按固定顺序入队。
+
+## 完成证据
+
+- `tools/test-get-experience-risk-preflight.ps1` 通过；冻结 `N-GROUP-02C` 只命中相关的 `EXP-BS-001`，不再命中 `EXP-BS-003`，digest 与首次报告一致。
+- `EXP-BS-003` 的精确 `Combat.Simulate` 正例通过；匹配器脚本、冻结卡、首次试运行报告、BattleSim 代码和 schema 均未修改。
 
 ## 停止条件
 

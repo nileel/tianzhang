@@ -227,6 +227,16 @@ try {
   Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-UNITY-VISUAL-BUILD-01')).Json.matched[0] -ceq 'EXP-UNITY-001') 'case2a: exact VisualBaselineBuilder symbol should hit'
   Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-UNITY-SAVE-01')).Json.matched[0] -ceq 'EXP-UNITY-001') 'case2a: exact Build/SaveScene symbols should hit'
 
+  # ---- 2b. BattleSim 1v1 精确符号命中，2v2 方法名子串不命中 ----
+  $caseRoot = Join-Path $tempRoot 'case2b-battlesim-symmetry'
+  $combatPath = 'simulations/BattleSim/Combat.cs'
+  $symmetrySymbols = @('Combat.Simulate', '符胆', '雷劫', '受击减防', '物抗率', '魂抗率')
+  Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-BS-003' -Level 'notice' -Trigger 'path_and_text' -Domains @('battlesim') -Paths @($combatPath) -Texts $symmetrySymbols)))
+  Set-Card $caseRoot (New-TaskCard -Id 'T-BS-2V2-01' -Domain 'battlesim' -ExpectedPaths @($combatPath) -Bichan 'Combat.cs::GroupTargetCandidate,SelectGroupTarget,Simulate2v2Detailed。') 'T-BS-2V2-01'
+  Set-Card $caseRoot (New-TaskCard -Id 'T-BS-1V1-01' -Domain 'battlesim' -ExpectedPaths @($combatPath) -Shishi '修改 1v1 Combat.Simulate 的 A/B 双侧状态分支。') 'T-BS-1V1-01'
+  Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-BS-2V2-01')).Json.matched.Count -eq 0) 'case2b: Simulate2v2Detailed substring should miss'
+  Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-BS-1V1-01')).Json.matched[0] -ceq 'EXP-BS-003') 'case2b: exact Combat.Simulate symbol should hit'
+
   # ---- 3. explicit_only 不自动触发，显式引用后生效 ----
   $caseRoot = Join-Path $tempRoot 'case3'
   Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-MGMT-001' -Level 'notice' -Trigger 'explicit_only')))
