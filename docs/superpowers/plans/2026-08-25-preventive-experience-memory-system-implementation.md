@@ -10,15 +10,15 @@
 
 每日候选采集修订提交：`4bfc261d18fc609422c398dce1202948350d7e58`
 
-规划状态：每日候选修订与 25 张原子子卡的完整任务图已落库；当前基础实现因 Codex 复审返工保持 blocked，本轮未执行任何叶子，也未实施候选合同、每日收集器、schema 2 强制、门禁或扩域
+规划状态：每日候选修订与 25 张原子子卡的完整任务图已落库；基础工具已于 2026-08-26 经 Codex 复审通过并归档，10 张种子核验卡均已达到真实终态，其中 8 张晋级 active、两张因证据不足完成为不晋级；只读试运行已解锁为 ready，其后续尚未实施
 
 ## 1. 规划结论
 
 `M-EXP-PREFLIGHT-01` 是不可调度汇总父项，不进入 ready 队列。唯一关闭入口是 `M-EXP-PREFLIGHT-CLOSE-01`；关闭卡在全部已知阶段出口满足后，同一管理提交归档父项和自身。系统实施由 25 张原子子卡组成，严格按以下依赖推进：
 
 ```text
-M-EXP-PREFLIGHT-01A 基础工具（基础阶段唯一叶子；当前审核返工 blocked）
-  └─ 10 张独立种子晋级卡
+M-EXP-PREFLIGHT-01A 基础工具（基础阶段唯一叶子；已完成并归档）
+  └─ 10 张独立种子核验卡
        └─ M-EXP-PREFLIGHT-TRIAL-01 冻结样本只读试运行
             └─ M-EXP-TASK-SCHEMA2-01 schema 1/2 兼容检查
                  └─ M-EXP-L0-CONTRACT-01 L0/runnable/强制合同
@@ -46,10 +46,10 @@ M-EXP-PREFLIGHT-01A 基础工具（基础阶段唯一叶子；当前审核返工
 | `M-EXP-SEED-BS-TIMEOUT-01` | 晋级 `EXP-BS-005` | `codex_execute / codex` | P1 | battlesim / implementation | 01A |
 | `M-EXP-SEED-UNITY-SCENE-BUILD-01` | 晋级 `EXP-UNITY-001` | `codex_execute / codex` | P1 | unity / implementation | 01A |
 | `M-EXP-SEED-UNITY-ASMDEF-01` | 晋级 `EXP-UNITY-002` | `codex_execute / codex` | P1 | unity / implementation | 01A |
-| `M-EXP-SEED-UNITY-META-01` | 独立证明后晋级 `EXP-UNITY-003` | `codex_execute / codex` | P1 | unity / implementation | 01A |
-| `M-EXP-SEED-UNITY-NAMESPACE-01` | 晋级 `EXP-UNITY-004` | `codex_execute / codex` | P1 | unity / implementation | 01A |
+| `M-EXP-SEED-UNITY-META-01` | 独立核验是否晋级 `EXP-UNITY-003` | `codex_execute / codex` | P1 | unity / implementation | 01A |
+| `M-EXP-SEED-UNITY-NAMESPACE-01` | 独立核验是否晋级 `EXP-UNITY-004` | `codex_execute / codex` | P1 | unity / implementation | 01A |
 | `M-EXP-SEED-MGMT-WORKTREE-01` | 晋级 `EXP-MGMT-001` | `codex_execute / codex` | P1 | management / implementation | 01A |
-| `M-EXP-PREFLIGHT-TRIAL-01` | 10 个冻结样本的命中、误报、字符与 token 代理报告 | `codex_execute / codex` | P1 | management / verification | 10 张种子卡 |
+| `M-EXP-PREFLIGHT-TRIAL-01` | 10 个冻结样本的命中、误报、字符与 token 代理报告 | `codex_execute / codex` | P1 | management / verification | 10 张种子核验卡达到真实终态且 active 为 8～12 |
 | `M-EXP-TASK-SCHEMA2-01` | 检查器接受 schema 1/2 并校验 schema 2 投影，仍允许 schema 1 ready | `external_execute / deepseek` | P1 | management / implementation | TRIAL |
 | `M-EXP-L0-CONTRACT-01` | 更新 AGENTS、状态规则、自动规则的写前预检与收尾候选稳定合同 | `codex_execute / codex` | P1 | management / design | SCHEMA2 |
 | `M-EXP-HOURLY-PREFLIGHT-01` | 共享入口产生一次预检并传给 Codex/DeepSeek wrapper | `external_execute / deepseek` | P1 | automation / implementation | L0 |
@@ -83,7 +83,7 @@ M-EXP-PREFLIGHT-01A 基础工具（基础阶段唯一叶子；当前审核返工
 | `EXP-UNITY-004` | namespace 与引擎类型同名 | CS0118 条目、`git log -S` 直接提交、当前 Spatial 所有者 | must_read | 找不到直接因果提交 |
 | `EXP-MGMT-001` | 共享工作区/无锁集成覆盖人工改动 | AGENTS、AI 协作、自动规则、集成锁脚本/测试 | must_read + explicit_only | 规则与脚本冲突 |
 
-`EXP-UNITY-003` 不享有数量豁免：若直接证据不足，该种子卡保持 blocked，不写正式卡、不解除试运行。试运行只有在 active 种子仍为 8～12 条时才可开始。
+`EXP-UNITY-003` 与 `EXP-UNITY-004` 不享有数量豁免，也不因证据不足伪造 active。若任务卡批准的直接事实源已经穷尽，核验卡以“已核验、不晋级”完成归档，不写正式卡或索引项，并在同一状态切片移除试运行卡中的该前置；仍有具名、可取得且尚未核验的来源时才保持 blocked，且 `stateReason` 必须点名来源。不晋级理由记录在任务卡正文／`stateReason` 与完成归档，不增加 schema 字段。全部 10 张种子核验卡达到真实终态且 active 仍为 8～12 条时才可开始试运行。
 
 ## 4. 冻结试运行样本与阈值
 
@@ -117,15 +117,15 @@ M-EXP-PREFLIGHT-01A 基础工具（基础阶段唯一叶子；当前审核返工
 
 ### 阶段 A：基础工具
 
-- 入口：修订规格与当前 schema/owner 无冲突；01A 是基础阶段唯一执行叶子。当前事实为审核返工 blocked，只有按既有复审返工边界合法恢复后才可重新 ready。
+- 入口：修订规格与当前 schema/owner 无冲突；01A 是基础阶段唯一执行叶子。
 - 出口：空索引、模板、只读 matcher、10 类 fixture 测试通过；没有真实经验。
-- 失败：保持 01A 非完成，不解锁种子。
+- 当前事实：正式提交 `bbae65133a1ff791a86b31f37e99a111d4679110` 已经 Codex 独立复审通过并归档；基础阶段出口满足。
 
 ### 阶段 B：种子经验
 
 - 入口：01A 经 Codex 复审归档。
-- 出口：每条独立卡分别证明根因、边界、失效条件并 active；证据不足的卡保持 blocked。
-- 失败：active 少于 8 条时 TRIAL 不开始。
+- 出口：每条独立卡分别形成“证据充分并 active”或“批准事实源已穷尽、已核验但不晋级”的真实终态；后一种结果完成归档但不创建经验卡或索引项。只有仍有具名可取得来源时保持 blocked。
+- 失败：全部种子达到真实终态后 active 少于 8 条时，TRIAL 转 `pending_decision`，由用户选择建立有界补充种子规划或终止首期 initiative；不得长期 blocked，也不得把已完成核验的卡退回 blocked。
 
 ### 阶段 C：只读试运行
 
@@ -286,14 +286,12 @@ Codex app 唯一 cron（香港时间 00:10）
 11. 没有向量库、外部服务、第二索引／候选正文、长期 feature flag、新 schema 5 runtime 状态、重试层、小时 owner 分支或 owner 专属匹配分支。
 12. OBSERVE=`continue` 时三个 gate 与三个域决策全部独立完成；OBSERVE=`stop` 时六项明确未授权实施并归档，不伪造门禁/扩域已完成。父卡与关闭卡同一提交归档，backlog/queue 无残留；任何后续域 open 进入新的独立 initiative。
 
-## 10. 本轮明确未实施
+## 10. 当前实施边界
 
-- 基础候选实现已由提交 `0869451e` 进入 Git，但 Codex 复审确认 `preflight_overbroad` 漏门禁指针并使 `M-EXP-PREFLIGHT-01A` 保持 blocked；本轮不修复、不归档、不解锁种子，也不把该状态恢复为旧 ready／完成。
-- 未创建 `开发管理/经验库/经验卡/EXP-*.txt`，未晋级任何种子。
-- 未运行冻结试验，未产生试运行/20 任务报告。
-- 未修改 `AGENTS.md`、任务 schema、自动工作流规则或小时脚本；任务收尾 provisional／pending 合同尚未生效。
-- 未实现或运行 `M-EXP-DAILY-COLLECTOR-01`，未创建／启用每日候选 automation，未制任何整理卡、回链任何来源候选或修改风险索引。
-- 未迁移任何现有 ready 卡到 schema 2，未启用强制预检。
-- 未创建或激活任何 gate，未开放设计、内容或数值经验域。
+- 基础工具已由正式提交 `bbae65133a1ff791a86b31f37e99a111d4679110` 完成 Codex 独立复审并归档。
+- 10 张种子核验卡均已完成：8 张形成 8 条 active 经验；`M-EXP-SEED-UNITY-META-01` 与 `M-EXP-SEED-UNITY-NAMESPACE-01` 因批准的直接事实源穷尽而完成为不晋级，未创建经验卡或索引项。
+- 尚未运行冻结试验或产生试运行／20 任务报告；尚未修改 `AGENTS.md`、任务 schema、自动工作流规则或小时脚本，任务收尾 provisional／pending 合同尚未生效。
+- 尚未实现或运行 `M-EXP-DAILY-COLLECTOR-01`，未创建／启用每日候选 automation，未制任何整理卡或回链任何来源候选。
+- 尚未迁移现有 ready 卡到 schema 2，未启用强制预检；尚未创建或激活 gate，也未开放设计、内容或数值经验域。
 
-后续只能按 `M-EXP-PREFLIGHT-01A` 当前审核返工事实和现行返工决策边界恢复基础叶子；当前队列没有 M-EXP ready 项。完成本次规格／规划／任务图提交后不得在同一轮执行任何叶子。
+本管理切片已经实施修订过渡：规格与规划同步，两张“不晋级”种子卡归档，试运行卡的两个前置已移除并按 runnable 规则转为 ready，backlog 与队列同步完成。本切片没有运行试运行叶子；后续由独立 `M-EXP-PREFLIGHT-TRIAL-01` 执行切片处理冻结回放。

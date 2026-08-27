@@ -8,12 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "M-EXP-SEED-UNITY-META-01",
-    "M-EXP-SEED-UNITY-NAMESPACE-01"
-  ],
-  "stateReason": "已完成 Unity 场景 builder、asmdef 投影与共享 worktree 种子卡；等待其余 2 张独立种子卡完成，索引当前有 8 条已证实 active 种子；达到 8～12 条前不得运行冻结样本或解锁 schema。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：10 张预定种子核验卡均已达到真实终态，其中 8 条经验已证实 active，Unity meta 与 namespace 两项因批准事实源穷尽而完成为不晋级；当前满足 8～12 条阈值，本卡已 ready。本次状态迁移未运行冻结样本。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md",
     "开发管理/任务列表/管理与自动化任务.txt",

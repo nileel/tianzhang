@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "提交 ab4f882 的实际 diff 未包含任何 .meta 路径或单行故障／修复，现有检查只验证三个具名资源 .meta 的 guid，无法证明 Unity 对单行脚本 .meta 的导入结论；EXP-UNITY-003 不晋级，M-EXP-PREFLIGHT-TRIAL-01 继续保留本前置。",
+  "stateReason": "2026-08-28：已核验、不晋级。提交 ab4f882 的实际 diff 不含任何 .meta 路径或单行故障／修复，现有检查只验证三个具名资源 .meta 的 guid；批准的直接事实源已穷尽，未创建 EXP-UNITY-003、未修改风险索引，并已从 M-EXP-PREFLIGHT-TRIAL-01 移除本前置。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-UNITY-003.txt",
@@ -39,9 +39,9 @@
 
 ## 实施范围
 
-- 只有根因、适用边界和失效条件均能由直接证据证明时，建立 `EXP-UNITY-003.txt` 与 active 索引项；否则保留卡片 blocked 并写精确缺口，不创建正式经验卡。
+- 只有根因、适用边界和失效条件均能由直接证据证明时，建立 `EXP-UNITY-003.txt` 与 active 索引项；批准的直接事实源已经穷尽但仍不能证明时，以“已核验、不晋级”完成归档，不创建正式经验卡或索引项。
 - 触发限定创建／修改 Unity `.meta` 或明确 importer/GUID 语义，排除只读资产任务。
-- active 时才移除试运行卡中的本前置；证据不足不解除。
+- 达到 active 或“已核验、不晋级”真实终态时，移除试运行卡中的本前置；仍有具名可取得且尚未核验的直接来源时才保持 blocked。
 
 ## 禁止项
 
@@ -50,15 +50,21 @@
 
 ## 验证
 
-- 在临时目录建立合法多行和非法单行 fixture，用现有可重复解析／检查入口证明区分；不写项目树 fixture。
+- active 路径才在临时目录建立合法多行和非法单行 fixture，并验证精确修改语义命中、只读资产任务零命中；不写项目树 fixture。
+- 不晋级路径核对 `git show --no-renames ab4f882 --` 没有 `.meta` 差异，并证明 `EXP-UNITY-003.txt` 与对应索引项均未创建。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
-- active 时验证精确修改语义命中、只读资产任务零命中。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
 
 ## 完成条件
 
-- 根因、边界、失效条件和正反例均被直接证据证明，`EXP-UNITY-003` active，且试运行卡只移除本 ID。
+- 根因、边界、失效条件和正反例均被直接证据证明并使 `EXP-UNITY-003` active；或批准的直接事实源已穷尽，精确记录“不晋级”结论且不创建经验卡／索引项。任一真实终态都只从试运行卡移除本 ID。
 
 ## 停止条件
 
-- `ab4f882` 不能提供直接故障证据、当前 Unity 导入行为不支持该根因、尾随空格／换行结论冲突，或触发范围无法收窄；本卡保持 blocked，不创建正式卡、不解除试运行。
+- 仍存在具名、可取得且尚未核验的直接故障证据，当前 Unity 导入行为与候选根因冲突，或触发范围无法收窄；保持 blocked 并点名剩余来源，不创建正式卡。
+
+## 完成结果
+
+- `git show --no-renames ab4f882 --` 的实际提交树没有任何 `.meta` 路径，也没有单行故障或修复差异；提交说明不能替代直接 diff。
+- 当前检查仅能证明三个具名资源 `.meta` 的 GUID 合同，不能重建候选经验所称的 Unity 导入故障因果链。
+- 批准的直接事实源已经穷尽，本卡按修订规格完成为“已核验、不晋级”；`EXP-UNITY-003` 不存在，风险索引保持原有 8 条 active 经验。

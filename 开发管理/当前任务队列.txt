@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| M-EXP-PREFLIGHT-TRIAL-01 | codex_execute | codex | P1 | management | verification | 冻结样本只读试运行与成本报告 | 开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt |

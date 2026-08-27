@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-SEED-UNITY-NAMESPACE-01",
+  "title": "晋级 Unity 命名空间避开引擎类型名经验",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：已核验、不晋级。可达历史、stash、reflog 与不可达提交均未找到 namespace TianZhang.Tilemap 的直接引入／修复提交；批准的直接事实源已穷尽，未创建 EXP-UNITY-004、未修改风险索引，并已从 M-EXP-PREFLIGHT-TRIAL-01 移除本前置。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-UNITY-004.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-SEED-UNITY-NAMESPACE-01.txt",
+    "开发管理/任务归档/M-EXP-SEED-UNITY-NAMESPACE-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-SEED-UNITY-NAMESPACE-01 · 晋级 Unity 命名空间避开引擎类型名经验
+
+## 来源与当前边界
+
+- 单一结果：核验并晋级 `EXP-UNITY-004`，防止项目命名空间与 `UnityEngine` 常用类型同名造成 CS0118。
+- 直接事实源是 `开发管理/开发-技术经验.txt#Unity 开发经验` 的明确 `TianZhang.Tilemap` 案例、对应 Git 历史定位和当前 `TianZhang.Spatial` 结构。
+- 本卡不重命名 namespace 或源码。
+
+## 必查范围
+
+- 技术经验中的“命名空间不与 Unity 类型冲突”完整条目。
+- 通过 `git log -S "namespace TianZhang.Tilemap" -- src/Assets` 定位的直接引入／修复提交及相关文件，不扩展读取其他归档。
+- 当前 `src/Assets/Scripts/Modules/Spatial/TianZhang.Spatial.asmdef` 和直接使用者，确认旧冲突已退出。
+
+## 实施范围
+
+- 只有历史根因、当前排除状态和触发边界均能由直接证据证明时，建立 `EXP-UNITY-004.txt` 与唯一索引项；批准的直接事实源已经穷尽但仍不能证明时，以“已核验、不晋级”完成归档。
+- 记录旧 namespace 不存在时经验仍作为命名防错适用、以及语言／程序集解析规则变化后的失效条件。
+- 达到 active 或“已核验、不晋级”真实终态后，只移除试运行卡中的本前置；仍有具名可取得且尚未核验的直接来源时才保持 blocked。
+
+## 禁止项
+
+- 不以普通 C# 路径或“类型”宽词触发，不修改程序集或 namespace，不把找不到直接提交的摘要当事实。
+
+## 验证
+
+- active 路径才运行 `dotnet build src/TianZhang.EditModeTests.csproj`，并以匹配器 fixture 覆盖 namespace+引擎类型命中、普通类型新增零命中和大小写归一化。
+- 不晋级路径核对可达历史、stash、reflog 与不可达提交均没有候选 namespace 的直接引入／修复证据，并证明 `EXP-UNITY-004.txt` 与对应索引项均未创建。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+
+## 完成条件
+
+- 历史根因与当前排除状态都能由 Git／源码证明并使 `EXP-UNITY-004` active；或批准的直接事实源已穷尽，精确记录“不晋级”结论且不创建经验卡／索引项。任一真实终态都只从试运行卡移除本 ID。
+
+## 停止条件
+
+- 仍存在具名、可取得且尚未核验的直接根因提交，CS0118 与同名 namespace 的候选因果出现冲突，或匹配只能依赖宽泛词；保持 blocked 并点名剩余来源，不写 active。
+
+## 完成结果
+
+- `git log -S "namespace TianZhang.Tilemap" -- src/Assets` 与全引用历史均未找到候选 namespace 的直接引入或修复提交；现有 `TianZhang.Spatial` 只能证明当前结构，不证明旧案例因果。
+- stash、reflog 和不可达提交复核同样没有恢复该直接历史证据；技术经验中的摘要仍只作为线索，不能替代根因提交。
+- 批准的直接事实源已经穷尽，本卡按修订规格完成为“已核验、不晋级”；`EXP-UNITY-004` 不存在，风险索引保持原有 8 条 active 经验。
