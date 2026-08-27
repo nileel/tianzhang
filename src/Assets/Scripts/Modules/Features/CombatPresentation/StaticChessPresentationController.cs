@@ -24,7 +24,7 @@ namespace TianZhang.Features.CombatPresentation
         private Vector3 restPosition;
         private Quaternion restRotation;
         private Vector3 approvedPosition;
-        private StaticChessPresentationEvent activeEvent;
+        private CombatUnitPresentationEvent activeEvent;
         private float elapsed;
         private bool isPresenting;
         private bool keySignalRaised;
@@ -32,11 +32,11 @@ namespace TianZhang.Features.CombatPresentation
 
         public event Action CastEffectRequested;
 
-        public event Action<StaticChessPresentationEvent> MotionEffectRequested;
+        public event Action<CombatUnitPresentationEvent> MotionEffectRequested;
 
         public bool IsPresenting => isPresenting;
 
-        public StaticChessPresentationEvent ActiveEvent => activeEvent;
+        public CombatUnitPresentationEvent ActiveEvent => activeEvent;
 
         public float ActiveDuration => DurationFor(activeEvent);
 
@@ -76,7 +76,7 @@ namespace TianZhang.Features.CombatPresentation
             keySignalRaised = false;
         }
 
-        public void StartPresentation(StaticChessPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
+        public void StartPresentation(CombatUnitPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
         {
             ValidateConfiguration();
             ClearActiveEffect();
@@ -88,7 +88,7 @@ namespace TianZhang.Features.CombatPresentation
             EffectPlayCount = 0;
             CuePlayCount = 0;
             LastPlayedCue = null;
-            isPresenting = presentationEvent != StaticChessPresentationEvent.Idle;
+            isPresenting = presentationEvent != CombatUnitPresentationEvent.Idle;
             if (!isPresenting) RestoreRoot();
         }
 
@@ -112,31 +112,31 @@ namespace TianZhang.Features.CombatPresentation
             if (progress >= 1f) RestoreRoot();
         }
 
-        public static float DurationFor(StaticChessPresentationEvent presentationEvent)
+        public static float DurationFor(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Idle: return 0f;
-                case StaticChessPresentationEvent.Death: return DeathEventDuration;
-                case StaticChessPresentationEvent.Move:
-                case StaticChessPresentationEvent.Attack:
-                case StaticChessPresentationEvent.Hit:
-                case StaticChessPresentationEvent.Cast:
+                case CombatUnitPresentationEvent.Idle: return 0f;
+                case CombatUnitPresentationEvent.Death: return DeathEventDuration;
+                case CombatUnitPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Cast:
                     return StandardEventDuration;
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }
 
-        public static float KeyProgressFor(StaticChessPresentationEvent presentationEvent)
+        public static float KeyProgressFor(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Idle: return 0f;
-                case StaticChessPresentationEvent.Move: return 0.85f;
-                case StaticChessPresentationEvent.Attack: return 0.55f;
-                case StaticChessPresentationEvent.Hit: return 0.10f;
-                case StaticChessPresentationEvent.Cast: return 0.20f;
-                case StaticChessPresentationEvent.Death: return 0.70f;
+                case CombatUnitPresentationEvent.Idle: return 0f;
+                case CombatUnitPresentationEvent.Move: return 0.85f;
+                case CombatUnitPresentationEvent.Attack: return 0.55f;
+                case CombatUnitPresentationEvent.Hit: return 0.10f;
+                case CombatUnitPresentationEvent.Cast: return 0.20f;
+                case CombatUnitPresentationEvent.Death: return 0.70f;
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }
@@ -145,19 +145,19 @@ namespace TianZhang.Features.CombatPresentation
         {
             switch (activeEvent)
             {
-                case StaticChessPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Move:
                     ApplyMove(progress);
                     break;
-                case StaticChessPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Attack:
                     ApplyAttack(progress);
                     break;
-                case StaticChessPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Hit:
                     ApplyHit(progress);
                     break;
-                case StaticChessPresentationEvent.Cast:
+                case CombatUnitPresentationEvent.Cast:
                     ApplyCast(progress);
                     break;
-                case StaticChessPresentationEvent.Death:
+                case CombatUnitPresentationEvent.Death:
                     ApplyDeath(progress);
                     break;
             }
@@ -221,23 +221,23 @@ namespace TianZhang.Features.CombatPresentation
             Color effectColor;
             switch (activeEvent)
             {
-                case StaticChessPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Move:
                     effectPosition = transform.position - Vector3.up * 0.12f;
                     effectColor = new Color(0.92f, 0.72f, 0.30f, 1f);
                     break;
-                case StaticChessPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Attack:
                     effectPosition = transform.position + transform.rotation * Vector3.forward * 0.24f + Vector3.up * 0.42f;
                     effectColor = new Color(1f, 0.58f, 0.24f, 1f);
                     break;
-                case StaticChessPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Hit:
                     effectPosition = transform.position + Vector3.up * 0.48f;
                     effectColor = new Color(1f, 0.38f, 0.20f, 1f);
                     break;
-                case StaticChessPresentationEvent.Cast:
+                case CombatUnitPresentationEvent.Cast:
                     effectPosition = transform.position + Vector3.up * 0.32f;
                     effectColor = new Color(0.46f, 0.78f, 1f, 1f);
                     break;
-                case StaticChessPresentationEvent.Death:
+                case CombatUnitPresentationEvent.Death:
                     effectPosition = transform.position - Vector3.up * 0.16f;
                     effectColor = new Color(0.62f, 0.66f, 0.72f, 1f);
                     break;
@@ -258,19 +258,19 @@ namespace TianZhang.Features.CombatPresentation
             cueSource.PlayOneShot(cue);
             CuePlayCount++;
             LastPlayedCue = cue;
-            if (activeEvent == StaticChessPresentationEvent.Cast) CastEffectRequested?.Invoke();
+            if (activeEvent == CombatUnitPresentationEvent.Cast) CastEffectRequested?.Invoke();
         }
 
-        private AudioClip CueFor(StaticChessPresentationEvent presentationEvent)
+        private AudioClip CueFor(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Move: return moveCue;
-                case StaticChessPresentationEvent.Attack: return attackCue;
-                case StaticChessPresentationEvent.Hit: return hitCue;
-                case StaticChessPresentationEvent.Cast: return castCue;
-                case StaticChessPresentationEvent.Death: return deathCue;
-                case StaticChessPresentationEvent.Idle: return null;
+                case CombatUnitPresentationEvent.Move: return moveCue;
+                case CombatUnitPresentationEvent.Attack: return attackCue;
+                case CombatUnitPresentationEvent.Hit: return hitCue;
+                case CombatUnitPresentationEvent.Cast: return castCue;
+                case CombatUnitPresentationEvent.Death: return deathCue;
+                case CombatUnitPresentationEvent.Idle: return null;
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }
@@ -281,7 +281,7 @@ namespace TianZhang.Features.CombatPresentation
             transform.rotation = restRotation;
             elapsed = 0f;
             isPresenting = false;
-            activeEvent = StaticChessPresentationEvent.Idle;
+            activeEvent = CombatUnitPresentationEvent.Idle;
         }
 
         private void ClearActiveEffect()

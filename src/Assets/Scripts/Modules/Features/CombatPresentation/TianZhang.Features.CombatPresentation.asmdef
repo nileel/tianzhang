@@ -2,7 +2,6 @@
     "name": "TianZhang.Features.CombatPresentation",
     "references": [
         "TianZhang.Foundation",
-        "TianZhang.Combat",
         "TianZhang.Gameplay.Contracts",
         "UnityEngine.UI"
     ]

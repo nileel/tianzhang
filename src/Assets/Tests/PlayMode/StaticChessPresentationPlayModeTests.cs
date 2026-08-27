@@ -20,8 +20,8 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
-            foreach (StaticChessPresentationEvent presentationEvent in
-                     (StaticChessPresentationEvent[])Enum.GetValues(typeof(StaticChessPresentationEvent)))
+            foreach (CombatUnitPresentationEvent presentationEvent in
+                     (CombatUnitPresentationEvent[])Enum.GetValues(typeof(CombatUnitPresentationEvent)))
             for (int direction = 0; direction < 6; direction++)
             {
                 GameObject probe = GameObject.Find("FacingProbe_" + direction);
@@ -39,7 +39,7 @@ namespace TianZhang.Tests.PlayMode
                 int castSignals = 0;
                 int effectSignals = 0;
                 Action onCast = () => castSignals++;
-                Action<StaticChessPresentationEvent> onEffect = eventType =>
+                Action<CombatUnitPresentationEvent> onEffect = eventType =>
                 {
                     Assert.AreEqual(presentationEvent, eventType);
                     effectSignals++;
@@ -51,7 +51,7 @@ namespace TianZhang.Tests.PlayMode
                     controller.StartPresentation(presentationEvent, approvedPosition);
                     AssertAtStart(presentationEvent, controller, probe.transform, restPosition, restRotation);
 
-                    if (presentationEvent == StaticChessPresentationEvent.Idle)
+                    if (presentationEvent == CombatUnitPresentationEvent.Idle)
                     {
                         Assert.IsFalse(controller.IsPresenting);
                         Assert.AreEqual(0, controller.EffectPlayCount);
@@ -62,7 +62,7 @@ namespace TianZhang.Tests.PlayMode
                     }
 
                     float duration = StaticChessPresentationController.DurationFor(presentationEvent);
-                    Assert.AreEqual(presentationEvent == StaticChessPresentationEvent.Death
+                    Assert.AreEqual(presentationEvent == CombatUnitPresentationEvent.Death
                         ? StaticChessPresentationController.DeathEventDuration
                         : StaticChessPresentationController.StandardEventDuration, duration, 0.0001f);
                     float elapsedProgress = 0f;
@@ -79,7 +79,7 @@ namespace TianZhang.Tests.PlayMode
                         Assert.AreEqual(atOrPastKey ? 1 : 0, controller.EffectPlayCount);
                         Assert.AreEqual(atOrPastKey ? 1 : 0, controller.CuePlayCount);
                         Assert.AreEqual(atOrPastKey ? 1 : 0, effectSignals);
-                        Assert.AreEqual(presentationEvent == StaticChessPresentationEvent.Cast && atOrPastKey ? 1 : 0,
+                        Assert.AreEqual(presentationEvent == CombatUnitPresentationEvent.Cast && atOrPastKey ? 1 : 0,
                             castSignals, "Only cast may emit one signal at its frozen key time.");
                         if (atOrPastKey)
                         {
@@ -91,13 +91,13 @@ namespace TianZhang.Tests.PlayMode
 
                     controller.Tick((1f - elapsedProgress) * duration + 0.001f);
                     Assert.IsFalse(controller.IsPresenting);
-                    Assert.AreEqual(StaticChessPresentationEvent.Idle, controller.ActiveEvent);
+                    Assert.AreEqual(CombatUnitPresentationEvent.Idle, controller.ActiveEvent);
                     Assert.Less(Vector3.Distance(restPosition, probe.transform.position), 0.0001f);
                     Assert.Less(Quaternion.Angle(restRotation, probe.transform.rotation), 0.001f);
                     Assert.AreEqual(1, controller.EffectPlayCount);
                     Assert.AreEqual(1, controller.CuePlayCount);
                     Assert.AreEqual(1, effectSignals);
-                    Assert.AreEqual(presentationEvent == StaticChessPresentationEvent.Cast ? 1 : 0, castSignals);
+                    Assert.AreEqual(presentationEvent == CombatUnitPresentationEvent.Cast ? 1 : 0, castSignals);
                     AssertChildStatesUnchanged(childStates);
                 }
                 finally
@@ -108,21 +108,21 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
-        private static float[] FrozenSampleProgresses(StaticChessPresentationEvent presentationEvent)
+        private static float[] FrozenSampleProgresses(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Move: return new[] { 0.15f, 0.85f, 0.95f };
-                case StaticChessPresentationEvent.Attack: return new[] { 0.20f, 0.55f, 0.75f };
-                case StaticChessPresentationEvent.Hit: return new[] { 0.10f, 0.325f, 0.55f, 0.80f };
-                case StaticChessPresentationEvent.Cast: return new[] { 0.20f, 0.70f, 0.85f };
-                case StaticChessPresentationEvent.Death: return new[] { 0.25f, 0.70f, 0.85f };
+                case CombatUnitPresentationEvent.Move: return new[] { 0.15f, 0.85f, 0.95f };
+                case CombatUnitPresentationEvent.Attack: return new[] { 0.20f, 0.55f, 0.75f };
+                case CombatUnitPresentationEvent.Hit: return new[] { 0.10f, 0.325f, 0.55f, 0.80f };
+                case CombatUnitPresentationEvent.Cast: return new[] { 0.20f, 0.70f, 0.85f };
+                case CombatUnitPresentationEvent.Death: return new[] { 0.25f, 0.70f, 0.85f };
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }
 
         private static void AssertAtStart(
-            StaticChessPresentationEvent presentationEvent,
+            CombatUnitPresentationEvent presentationEvent,
             StaticChessPresentationController controller,
             Transform root,
             Vector3 restPosition,
@@ -136,7 +136,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         private static void AssertAtFrozenSample(
-            StaticChessPresentationEvent presentationEvent,
+            CombatUnitPresentationEvent presentationEvent,
             float progress,
             Transform root,
             Vector3 restPosition,
@@ -145,7 +145,7 @@ namespace TianZhang.Tests.PlayMode
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Move:
                     if (Mathf.Abs(progress - 0.15f) < 0.001f)
                     {
                         Assert.Greater(root.position.y, restPosition.y + 0.10f);
@@ -159,7 +159,7 @@ namespace TianZhang.Tests.PlayMode
                             new Vector3(approvedPosition.x, 0f, approvedPosition.z)), 0.001f);
                     }
                     break;
-                case StaticChessPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Attack:
                     if (Mathf.Abs(progress - 0.20f) < 0.001f)
                         Assert.Less(Vector3.Distance(restPosition, root.position), 0.001f);
                     if (Mathf.Abs(progress - 0.55f) < 0.001f)
@@ -168,7 +168,7 @@ namespace TianZhang.Tests.PlayMode
                         Assert.Greater(Quaternion.Angle(restRotation, root.rotation), 8f);
                     }
                     break;
-                case StaticChessPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Hit:
                     if (Mathf.Abs(progress - 0.10f) < 0.001f)
                         Assert.Less(Vector3.Distance(restPosition, root.position), 0.001f);
                     if (Mathf.Abs(progress - 0.325f) < 0.001f)
@@ -177,11 +177,11 @@ namespace TianZhang.Tests.PlayMode
                         Assert.Greater(Quaternion.Angle(restRotation, root.rotation), 3f);
                     }
                     break;
-                case StaticChessPresentationEvent.Cast:
+                case CombatUnitPresentationEvent.Cast:
                     if (Mathf.Abs(progress - 0.20f) < 0.001f || Mathf.Abs(progress - 0.70f) < 0.001f)
                         Assert.Greater(root.position.y, restPosition.y + 0.04f);
                     break;
-                case StaticChessPresentationEvent.Death:
+                case CombatUnitPresentationEvent.Death:
                     if (Mathf.Abs(progress - 0.25f) < 0.001f)
                         Assert.Less(root.position.y, restPosition.y - 0.16f);
                     if (Mathf.Abs(progress - 0.70f) < 0.001f)
@@ -190,15 +190,15 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
-        private static string ExpectedCueName(StaticChessPresentationEvent presentationEvent)
+        private static string ExpectedCueName(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Move: return "FuYuan_StaticChessMotion_Move";
-                case StaticChessPresentationEvent.Attack: return "FuYuan_StaticChessMotion_Attack";
-                case StaticChessPresentationEvent.Hit: return "FuYuan_StaticChessMotion_Hit";
-                case StaticChessPresentationEvent.Cast: return "FuYuan_StaticChessMotion_Cast";
-                case StaticChessPresentationEvent.Death: return "FuYuan_StaticChessMotion_Death";
+                case CombatUnitPresentationEvent.Move: return "FuYuan_StaticChessMotion_Move";
+                case CombatUnitPresentationEvent.Attack: return "FuYuan_StaticChessMotion_Attack";
+                case CombatUnitPresentationEvent.Hit: return "FuYuan_StaticChessMotion_Hit";
+                case CombatUnitPresentationEvent.Cast: return "FuYuan_StaticChessMotion_Cast";
+                case CombatUnitPresentationEvent.Death: return "FuYuan_StaticChessMotion_Death";
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }

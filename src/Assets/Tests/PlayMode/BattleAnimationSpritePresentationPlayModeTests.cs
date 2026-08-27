@@ -47,8 +47,8 @@ namespace TianZhang.Tests.PlayMode
             BattleAnimationSpriteProbeMatrix.SetActiveRoute(true);
             yield return null;
 
-            foreach (StaticChessPresentationEvent presentationEvent in
-                     (StaticChessPresentationEvent[])Enum.GetValues(typeof(StaticChessPresentationEvent)))
+            foreach (CombatUnitPresentationEvent presentationEvent in
+                     (CombatUnitPresentationEvent[])Enum.GetValues(typeof(CombatUnitPresentationEvent)))
             for (int direction = 0; direction < 6; direction++)
             {
                 GameObject probe = GameObject.Find(BattleAnimationSpriteProbeMatrix.ProbePrefix + direction);
@@ -74,7 +74,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.AreEqual(SpriteName(
                         StateIndex(presentationEvent), direction, 0), controller.ActiveSpriteName);
 
-                    if (presentationEvent == StaticChessPresentationEvent.Idle)
+                    if (presentationEvent == CombatUnitPresentationEvent.Idle)
                     {
                         Assert.IsFalse(controller.IsPresenting);
                         Assert.AreEqual(0, castSignals);
@@ -85,22 +85,22 @@ namespace TianZhang.Tests.PlayMode
                     Assert.AreEqual(1, controller.ActiveFrameIndex);
                     Assert.AreEqual(SpriteName(
                         StateIndex(presentationEvent), direction, 1), controller.ActiveSpriteName);
-                    Assert.AreEqual(presentationEvent == StaticChessPresentationEvent.Cast ? 1 : 0, castSignals);
+                    Assert.AreEqual(presentationEvent == CombatUnitPresentationEvent.Cast ? 1 : 0, castSignals);
 
                     controller.Tick(BattleAnimationSpritePresentationController.FrameDuration + 0.01f);
                     Assert.AreEqual(2, controller.ActiveFrameIndex);
                     Assert.AreEqual(SpriteName(
                         StateIndex(presentationEvent), direction, 2), controller.ActiveSpriteName);
-                    Assert.AreEqual(presentationEvent == StaticChessPresentationEvent.Cast ? 1 : 0, castSignals);
+                    Assert.AreEqual(presentationEvent == CombatUnitPresentationEvent.Cast ? 1 : 0, castSignals);
 
                     controller.Tick(BattleAnimationSpritePresentationController.FrameDuration + 0.01f);
                     Assert.IsFalse(controller.IsPresenting);
-                    Assert.AreEqual(StaticChessPresentationEvent.Idle, controller.ActiveEvent);
+                    Assert.AreEqual(CombatUnitPresentationEvent.Idle, controller.ActiveEvent);
                     Assert.AreEqual(0, controller.ActiveFrameIndex);
                     Assert.AreEqual(SpriteName(0, direction, 0), controller.ActiveSpriteName);
                     Assert.Less(Vector3.Distance(restPosition, probe.transform.position), 0.0001f);
                     Assert.Less(Quaternion.Angle(restRotation, probe.transform.rotation), 0.001f);
-                    Assert.AreEqual(presentationEvent == StaticChessPresentationEvent.Cast ? 1 : 0, castSignals);
+                    Assert.AreEqual(presentationEvent == CombatUnitPresentationEvent.Cast ? 1 : 0, castSignals);
                 }
                 finally
                 {
@@ -109,23 +109,23 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
-        private static int StateIndex(StaticChessPresentationEvent presentationEvent)
+        private static int StateIndex(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Idle: return 0;
-                case StaticChessPresentationEvent.Move: return 1;
-                case StaticChessPresentationEvent.Attack: return 2;
-                case StaticChessPresentationEvent.Hit: return 3;
-                case StaticChessPresentationEvent.Cast: return 4;
-                case StaticChessPresentationEvent.Death: return 5;
+                case CombatUnitPresentationEvent.Idle: return 0;
+                case CombatUnitPresentationEvent.Move: return 1;
+                case CombatUnitPresentationEvent.Attack: return 2;
+                case CombatUnitPresentationEvent.Hit: return 3;
+                case CombatUnitPresentationEvent.Cast: return 4;
+                case CombatUnitPresentationEvent.Death: return 5;
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }
 
-        private static int ManifestEventFrame(StaticChessPresentationEvent presentationEvent) =>
-            presentationEvent == StaticChessPresentationEvent.Death ? 2 :
-            presentationEvent == StaticChessPresentationEvent.Idle ? 0 : 1;
+        private static int ManifestEventFrame(CombatUnitPresentationEvent presentationEvent) =>
+            presentationEvent == CombatUnitPresentationEvent.Death ? 2 :
+            presentationEvent == CombatUnitPresentationEvent.Idle ? 0 : 1;
 
         private static string SpriteName(int state, int direction, int frame)
         {

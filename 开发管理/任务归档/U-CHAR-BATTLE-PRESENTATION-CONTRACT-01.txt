@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-27：用户已批准合同边界；实时 rg 确认旧枚举当前恰有定义、4个控制器和4个PlayMode测试共9个C#消费者，可作为首张原子叶子实施。",
+  "stateReason": "2026-08-27：已建立载体中立只读棋子合同，完成九文件枚举原子改名并移除 CombatPresentation 到 Combat 的悬空程序集引用；直接 EditMode 与 PlayMode 验证通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/GameplayContracts/README.md",

@@ -8,7 +8,7 @@ namespace TianZhang.Features.CombatPresentation
     /// <summary>
     /// 只为 VisualBaselineBoard 编排苻渊 2D 动态与静态 3D 样例的同条件比较输入。
     /// 它不拥有战斗规则、朝向、格位或资产选择；按钮只切换已冻结的隔离路线，并把同一
-    /// StaticChessPresentationEvent 交给当前路线中选定方向的既有表现控制器。
+    /// CombatUnitPresentationEvent 交给当前路线中选定方向的既有表现控制器。
     /// </summary>
     public sealed class BattleVisualComparisonController : MonoBehaviour
     {
@@ -24,7 +24,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private ComparisonRoute activeRoute = ComparisonRoute.Static3D;
         private int selectedDirection;
-        private StaticChessPresentationEvent lastPresentationEvent = StaticChessPresentationEvent.Idle;
+        private CombatUnitPresentationEvent lastPresentationEvent = CombatUnitPresentationEvent.Idle;
         private bool is2DOverallMotionEnabled;
 
         public bool IsBattleAnimation2DRouteActive => activeRoute == ComparisonRoute.BattleAnimation2D;
@@ -33,7 +33,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public int SelectedDirection => selectedDirection;
 
-        public StaticChessPresentationEvent LastPresentationEvent => lastPresentationEvent;
+        public CombatUnitPresentationEvent LastPresentationEvent => lastPresentationEvent;
 
         public void Configure(Text status)
         {
@@ -75,11 +75,11 @@ namespace TianZhang.Features.CombatPresentation
             UpdateStatus();
         }
 
-        public void TriggerPresentation(StaticChessPresentationEvent presentationEvent)
+        public void TriggerPresentation(CombatUnitPresentationEvent presentationEvent)
         {
             ResetPresentations();
             lastPresentationEvent = presentationEvent;
-            if (presentationEvent != StaticChessPresentationEvent.Idle)
+            if (presentationEvent != CombatUnitPresentationEvent.Idle)
             {
                 if (activeRoute == ComparisonRoute.BattleAnimation2D)
                 {
@@ -97,10 +97,10 @@ namespace TianZhang.Features.CombatPresentation
 
         public void TriggerPresentationByIndex(int presentationEvent)
         {
-            if (presentationEvent < (int)StaticChessPresentationEvent.Idle ||
-                presentationEvent > (int)StaticChessPresentationEvent.Death)
+            if (presentationEvent < (int)CombatUnitPresentationEvent.Idle ||
+                presentationEvent > (int)CombatUnitPresentationEvent.Death)
                 throw new ArgumentOutOfRangeException(nameof(presentationEvent));
-            TriggerPresentation((StaticChessPresentationEvent)presentationEvent);
+            TriggerPresentation((CombatUnitPresentationEvent)presentationEvent);
         }
 
         public void ResetPresentations()
@@ -108,11 +108,11 @@ namespace TianZhang.Features.CombatPresentation
             for (int direction = 0; direction < DirectionCount; direction++)
             {
                 StaticChessPresentationController staticController = Static3DProbe(direction);
-                staticController.StartPresentation(StaticChessPresentationEvent.Idle, staticController.transform.position);
+                staticController.StartPresentation(CombatUnitPresentationEvent.Idle, staticController.transform.position);
                 BattleAnimationSpritePresentationController dynamicController = BattleAnimation2DProbe(direction);
-                dynamicController.StartPresentation(StaticChessPresentationEvent.Idle, dynamicController.transform.position);
+                dynamicController.StartPresentation(CombatUnitPresentationEvent.Idle, dynamicController.transform.position);
             }
-            lastPresentationEvent = StaticChessPresentationEvent.Idle;
+            lastPresentationEvent = CombatUnitPresentationEvent.Idle;
             UpdateStatus();
         }
 
@@ -202,16 +202,16 @@ namespace TianZhang.Features.CombatPresentation
                 "\n同一相机、光照、地块与规则；仅供用户实机比较。";
         }
 
-        private static string EventLabel(StaticChessPresentationEvent presentationEvent)
+        private static string EventLabel(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Idle: return "待机";
-                case StaticChessPresentationEvent.Move: return "移动";
-                case StaticChessPresentationEvent.Attack: return "攻击";
-                case StaticChessPresentationEvent.Hit: return "受击";
-                case StaticChessPresentationEvent.Cast: return "施法";
-                case StaticChessPresentationEvent.Death: return "死亡";
+                case CombatUnitPresentationEvent.Idle: return "待机";
+                case CombatUnitPresentationEvent.Move: return "移动";
+                case CombatUnitPresentationEvent.Attack: return "攻击";
+                case CombatUnitPresentationEvent.Hit: return "受击";
+                case CombatUnitPresentationEvent.Cast: return "施法";
+                case CombatUnitPresentationEvent.Death: return "死亡";
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }

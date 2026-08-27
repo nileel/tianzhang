@@ -29,7 +29,7 @@
 | `TianZhang.Features.WorldMap` | Foundation、Content、World、Gameplay.Contracts |
 | `TianZhang.Features.Settlement` | Foundation、Content、Character、World、Gameplay.Contracts |
 | `TianZhang.Features.Adventure` | Foundation、Content、Character、World、Combat、Gameplay.Contracts、Spatial、Infrastructure.UnityContent |
-| `TianZhang.Features.CombatPresentation` | Foundation、Combat、Gameplay.Contracts |
+| `TianZhang.Features.CombatPresentation` | Foundation、Gameplay.Contracts |
 | `TianZhang.Infrastructure.Persistence` | Foundation、Content、Character、Cultivation、World、Gameplay.Contracts |
 | `TianZhang.Infrastructure.UnityContent` | Foundation、Content、Spatial |
 | `TianZhang.Bootstrap` | Domain、Character、Content、Combat、Cultivation、World、Gameplay.Contracts、五个 Feature、两项 Infrastructure |
@@ -45,7 +45,7 @@ Unity UI/InputSystem 外部引用只出现在需要的 Feature、Editor 或测�
 
 ## 跨模块路线
 
-- Feature 之间不直接引用实现；导航、战斗命令与表现 DTO 经 `TianZhang.Gameplay.Contracts`。
+- Feature 之间不直接引用实现；导航、战斗命令、HUD 与棋子表现 DTO 经 `TianZhang.Gameplay.Contracts`。CombatPresentation 不引用 Combat，棋子载体只消费只读合同。
 - Combat 只消费纯快照和 `ICombatSpatialQuery`；Character／Spatial／UI 实现不进入 Combat。
 - `TianZhang.Bootstrap` 是唯一同时引用多个 Feature 的 Player 程序集。
 - `TianZhang.Editor` 可编排导入和场景构建，但不进入 Player。

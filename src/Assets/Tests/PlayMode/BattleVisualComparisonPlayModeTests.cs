@@ -53,13 +53,13 @@ namespace TianZhang.Tests.PlayMode
 
                     for (int eventIndex = 0; eventIndex < eventButtons.Length; eventIndex++)
                     {
-                        StaticChessPresentationEvent presentationEvent = (StaticChessPresentationEvent)eventIndex;
+                        CombatUnitPresentationEvent presentationEvent = (CombatUnitPresentationEvent)eventIndex;
                         eventButtons[eventIndex].onClick.Invoke();
                         Assert.AreEqual(presentationEvent, comparison.LastPresentationEvent);
                         AssertActiveEvent(board, route == 0, direction, presentationEvent);
 
                         reset.onClick.Invoke();
-                        Assert.AreEqual(StaticChessPresentationEvent.Idle, comparison.LastPresentationEvent);
+                        Assert.AreEqual(CombatUnitPresentationEvent.Idle, comparison.LastPresentationEvent);
                         AssertAllProbesReset(board);
                     }
                 }
@@ -150,7 +150,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         private static void AssertActiveEvent(GameObject board, bool battleAnimation2D, int direction,
-            StaticChessPresentationEvent presentationEvent)
+            CombatUnitPresentationEvent presentationEvent)
         {
             if (battleAnimation2D)
             {
@@ -158,7 +158,7 @@ namespace TianZhang.Tests.PlayMode
                         BattleAnimationSpriteProbeMatrix.GroupName + "/" + BattleAnimationSpriteProbeMatrix.ProbePrefix + direction)
                     .GetComponent<BattleAnimationSpritePresentationController>();
                 Assert.AreEqual(presentationEvent, controller.ActiveEvent);
-                Assert.AreEqual(presentationEvent != StaticChessPresentationEvent.Idle, controller.IsPresenting);
+                Assert.AreEqual(presentationEvent != CombatUnitPresentationEvent.Idle, controller.IsPresenting);
                 return;
             }
 
@@ -166,7 +166,7 @@ namespace TianZhang.Tests.PlayMode
                 .Find(TacticalSpriteProbeMatrix.FacingProbePrefix + direction)
                 .GetComponent<StaticChessPresentationController>();
             Assert.AreEqual(presentationEvent, staticController.ActiveEvent);
-            Assert.AreEqual(presentationEvent != StaticChessPresentationEvent.Idle, staticController.IsPresenting);
+            Assert.AreEqual(presentationEvent != CombatUnitPresentationEvent.Idle, staticController.IsPresenting);
         }
 
         private static void AssertAllProbesReset(GameObject board)
@@ -180,9 +180,9 @@ namespace TianZhang.Tests.PlayMode
                         BattleAnimationSpriteProbeMatrix.GroupName + "/" + BattleAnimationSpriteProbeMatrix.ProbePrefix + direction)
                     .GetComponent<BattleAnimationSpritePresentationController>();
                 Assert.IsFalse(staticController.IsPresenting);
-                Assert.AreEqual(StaticChessPresentationEvent.Idle, staticController.ActiveEvent);
+                Assert.AreEqual(CombatUnitPresentationEvent.Idle, staticController.ActiveEvent);
                 Assert.IsFalse(dynamicController.IsPresenting);
-                Assert.AreEqual(StaticChessPresentationEvent.Idle, dynamicController.ActiveEvent);
+                Assert.AreEqual(CombatUnitPresentationEvent.Idle, dynamicController.ActiveEvent);
             }
         }
     }

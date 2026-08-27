@@ -5,7 +5,7 @@ using UnityEngine;
 namespace TianZhang.Features.CombatPresentation
 {
     /// <summary>
-    /// 2D 六向战术精灵表现控制器。只消费既有 <see cref="StaticChessPresentationEvent"/>；
+    /// 2D 六向战术精灵表现控制器。只消费既有 <see cref="CombatUnitPresentationEvent"/>；
     /// 六张方向 Sprite 按固定索引保存（缺项、越界即失败关闭）；待机静止，移动、攻击、受击、
     /// 施法和死亡只写同一角色根节点并在结束后复位，施法最多暴露一次既有语义的一次性效果信号。
     /// 子 SpriteRenderer 仅做统一相机平面对齐，不写方向私有偏移、缩放、镜像或旋转补偿。
@@ -21,7 +21,7 @@ namespace TianZhang.Features.CombatPresentation
         private Vector3 restPosition;
         private Quaternion restRotation;
         private Vector3 approvedPosition;
-        private StaticChessPresentationEvent activeEvent;
+        private CombatUnitPresentationEvent activeEvent;
         private float elapsed;
         private bool isPresenting;
 
@@ -74,14 +74,14 @@ namespace TianZhang.Features.CombatPresentation
             if (body != null) body.sprite = directionSprites[direction];
         }
 
-        public void StartPresentation(StaticChessPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
+        public void StartPresentation(CombatUnitPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
         {
             if (!isPresenting) CaptureRestPose();
             activeEvent = presentationEvent;
             approvedPosition = approvedWorldPosition;
             elapsed = 0f;
-            isPresenting = presentationEvent != StaticChessPresentationEvent.Idle;
-            if (presentationEvent == StaticChessPresentationEvent.Cast) CastEffectRequested?.Invoke();
+            isPresenting = presentationEvent != CombatUnitPresentationEvent.Idle;
+            if (presentationEvent == CombatUnitPresentationEvent.Cast) CastEffectRequested?.Invoke();
             if (!isPresenting) RestoreRoot();
         }
 
@@ -93,20 +93,20 @@ namespace TianZhang.Features.CombatPresentation
             float arc = Mathf.Sin(progress * Mathf.PI);
             switch (activeEvent)
             {
-                case StaticChessPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Move:
                     transform.position = Vector3.Lerp(restPosition, approvedPosition, progress) + Vector3.up * (0.12f * arc);
                     break;
-                case StaticChessPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Attack:
                     transform.position = restPosition + restRotation * Vector3.forward * (0.1f * arc);
                     transform.rotation = restRotation * Quaternion.Euler(10f * arc, 0f, 0f);
                     break;
-                case StaticChessPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Hit:
                     transform.position = restPosition + restRotation * Vector3.right * (0.05f * Mathf.Sin(progress * Mathf.PI * 4f));
                     break;
-                case StaticChessPresentationEvent.Cast:
+                case CombatUnitPresentationEvent.Cast:
                     transform.position = restPosition + Vector3.up * (0.05f * arc);
                     break;
-                case StaticChessPresentationEvent.Death:
+                case CombatUnitPresentationEvent.Death:
                     transform.position = restPosition + Vector3.down * (0.18f * arc);
                     transform.rotation = restRotation * Quaternion.Euler(0f, 0f, 55f * arc);
                     break;

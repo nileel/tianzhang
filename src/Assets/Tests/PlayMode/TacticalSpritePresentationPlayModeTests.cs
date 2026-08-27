@@ -12,13 +12,13 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class TacticalSpritePresentationPlayModeTests
     {
-        private static readonly StaticChessPresentationEvent[] NonIdleEvents =
+        private static readonly CombatUnitPresentationEvent[] NonIdleEvents =
         {
-            StaticChessPresentationEvent.Move,
-            StaticChessPresentationEvent.Attack,
-            StaticChessPresentationEvent.Hit,
-            StaticChessPresentationEvent.Cast,
-            StaticChessPresentationEvent.Death,
+            CombatUnitPresentationEvent.Move,
+            CombatUnitPresentationEvent.Attack,
+            CombatUnitPresentationEvent.Hit,
+            CombatUnitPresentationEvent.Cast,
+            CombatUnitPresentationEvent.Death,
         };
 
         [UnityTest]
@@ -160,7 +160,7 @@ namespace TianZhang.Tests.PlayMode
             TacticalSpriteProbeMatrix.SetActiveRoute(true);
             yield return null;
 
-            foreach (StaticChessPresentationEvent presentationEvent in NonIdleEvents)
+            foreach (CombatUnitPresentationEvent presentationEvent in NonIdleEvents)
             for (int direction = 0; direction < 6; direction++)
             {
                 GameObject probe = GameObject.Find("TacticalSpriteProbe_" + direction);
@@ -219,7 +219,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.Less(Quaternion.Angle(restRotation, probe.transform.rotation), 0.001f,
                     "The root must return to its rest rotation.");
                 Assert.AreEqual(
-                    presentationEvent == StaticChessPresentationEvent.Cast ? 1 : 0,
+                    presentationEvent == CombatUnitPresentationEvent.Cast ? 1 : 0,
                     castSignals,
                     "Only cast may expose one one-shot visual-effect signal.");
                 AssertChildStatesUnchanged(childStates);
@@ -248,7 +248,7 @@ namespace TianZhang.Tests.PlayMode
             controller.CastEffectRequested += onCast;
             try
             {
-                controller.StartPresentation(StaticChessPresentationEvent.Idle, restPosition);
+                controller.StartPresentation(CombatUnitPresentationEvent.Idle, restPosition);
                 Assert.IsFalse(controller.IsPresenting, "Idle must not start a presentation.");
             }
             finally

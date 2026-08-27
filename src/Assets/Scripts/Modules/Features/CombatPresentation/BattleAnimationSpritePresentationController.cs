@@ -27,7 +27,7 @@ namespace TianZhang.Features.CombatPresentation
         private Vector3 restPosition;
         private Quaternion restRotation;
         private Vector3 approvedPosition;
-        private StaticChessPresentationEvent activeEvent;
+        private CombatUnitPresentationEvent activeEvent;
         private float elapsed;
         private int activeFrameIndex;
         private bool isPresenting;
@@ -44,7 +44,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public int ActiveFrameIndex => activeFrameIndex;
 
-        public StaticChessPresentationEvent ActiveEvent => activeEvent;
+        public CombatUnitPresentationEvent ActiveEvent => activeEvent;
 
         public string ActiveSpriteName => body != null && body.sprite != null ? body.sprite.name : null;
 
@@ -60,7 +60,7 @@ namespace TianZhang.Features.CombatPresentation
             body = renderers[0];
             ValidateFrames();
             CaptureRestPose();
-            SetFrame(StaticChessPresentationEvent.Idle, activeDirection, 0);
+            SetFrame(CombatUnitPresentationEvent.Idle, activeDirection, 0);
         }
 
         private void Update()
@@ -98,7 +98,7 @@ namespace TianZhang.Features.CombatPresentation
             rootPresentationEnabled = enabled;
         }
 
-        public void StartPresentation(StaticChessPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
+        public void StartPresentation(CombatUnitPresentationEvent presentationEvent, Vector3 approvedWorldPosition)
         {
             ValidateFrames();
             if (!isPresenting) CaptureRestPose();
@@ -107,7 +107,7 @@ namespace TianZhang.Features.CombatPresentation
             elapsed = 0f;
             activeFrameIndex = 0;
             castEffectRaised = false;
-            isPresenting = presentationEvent != StaticChessPresentationEvent.Idle;
+            isPresenting = presentationEvent != CombatUnitPresentationEvent.Idle;
             SetFrame(activeEvent, activeDirection, activeFrameIndex);
             if (!isPresenting) RestoreRoot();
         }
@@ -120,7 +120,7 @@ namespace TianZhang.Features.CombatPresentation
             int frame = Mathf.Min(FramesPerDirection - 1, Mathf.FloorToInt(elapsed / FrameDuration));
             if (frame != activeFrameIndex) SetFrame(activeEvent, activeDirection, frame);
 
-            if (activeEvent == StaticChessPresentationEvent.Cast &&
+            if (activeEvent == CombatUnitPresentationEvent.Cast &&
                 !castEffectRaised && activeFrameIndex >= EventFrameIndex)
             {
                 castEffectRaised = true;
@@ -132,17 +132,17 @@ namespace TianZhang.Features.CombatPresentation
             if (progress >= 1f) RestoreRoot();
         }
 
-        public static int EventFrameIndexFor(StaticChessPresentationEvent presentationEvent)
+        public static int EventFrameIndexFor(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Idle:
-                case StaticChessPresentationEvent.Move:
-                case StaticChessPresentationEvent.Attack:
-                case StaticChessPresentationEvent.Hit:
-                case StaticChessPresentationEvent.Cast:
-                    return presentationEvent == StaticChessPresentationEvent.Idle ? 0 : 1;
-                case StaticChessPresentationEvent.Death:
+                case CombatUnitPresentationEvent.Idle:
+                case CombatUnitPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Cast:
+                    return presentationEvent == CombatUnitPresentationEvent.Idle ? 0 : 1;
+                case CombatUnitPresentationEvent.Death:
                     return 2;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(presentationEvent));
@@ -154,20 +154,20 @@ namespace TianZhang.Features.CombatPresentation
             float arc = Mathf.Sin(progress * Mathf.PI);
             switch (activeEvent)
             {
-                case StaticChessPresentationEvent.Move:
+                case CombatUnitPresentationEvent.Move:
                     transform.position = Vector3.Lerp(restPosition, approvedPosition, progress) + Vector3.up * (0.12f * arc);
                     break;
-                case StaticChessPresentationEvent.Attack:
+                case CombatUnitPresentationEvent.Attack:
                     transform.position = restPosition + restRotation * Vector3.forward * (0.1f * arc);
                     transform.rotation = restRotation * Quaternion.Euler(10f * arc, 0f, 0f);
                     break;
-                case StaticChessPresentationEvent.Hit:
+                case CombatUnitPresentationEvent.Hit:
                     transform.position = restPosition + restRotation * Vector3.right * (0.05f * Mathf.Sin(progress * Mathf.PI * 4f));
                     break;
-                case StaticChessPresentationEvent.Cast:
+                case CombatUnitPresentationEvent.Cast:
                     transform.position = restPosition + Vector3.up * (0.05f * arc);
                     break;
-                case StaticChessPresentationEvent.Death:
+                case CombatUnitPresentationEvent.Death:
                     transform.position = restPosition + Vector3.down * (0.18f * arc);
                     transform.rotation = restRotation * Quaternion.Euler(0f, 0f, 55f * arc);
                     break;
@@ -180,11 +180,11 @@ namespace TianZhang.Features.CombatPresentation
             transform.rotation = restRotation;
             elapsed = 0f;
             isPresenting = false;
-            activeEvent = StaticChessPresentationEvent.Idle;
+            activeEvent = CombatUnitPresentationEvent.Idle;
             SetFrame(activeEvent, activeDirection, 0);
         }
 
-        private void SetFrame(StaticChessPresentationEvent presentationEvent, int direction, int frame)
+        private void SetFrame(CombatUnitPresentationEvent presentationEvent, int direction, int frame)
         {
             if (direction < 0 || direction >= DirectionCount || frame < 0 || frame >= FramesPerDirection)
                 throw new ArgumentOutOfRangeException();
@@ -197,24 +197,24 @@ namespace TianZhang.Features.CombatPresentation
             if (body != null) body.sprite = sprite;
         }
 
-        private Sprite[] FramesFor(StaticChessPresentationEvent presentationEvent)
+        private Sprite[] FramesFor(CombatUnitPresentationEvent presentationEvent)
         {
             switch (presentationEvent)
             {
-                case StaticChessPresentationEvent.Idle: return idleFrames;
-                case StaticChessPresentationEvent.Move: return moveFrames;
-                case StaticChessPresentationEvent.Attack: return attackFrames;
-                case StaticChessPresentationEvent.Hit: return hitFrames;
-                case StaticChessPresentationEvent.Cast: return castFrames;
-                case StaticChessPresentationEvent.Death: return deathFrames;
+                case CombatUnitPresentationEvent.Idle: return idleFrames;
+                case CombatUnitPresentationEvent.Move: return moveFrames;
+                case CombatUnitPresentationEvent.Attack: return attackFrames;
+                case CombatUnitPresentationEvent.Hit: return hitFrames;
+                case CombatUnitPresentationEvent.Cast: return castFrames;
+                case CombatUnitPresentationEvent.Death: return deathFrames;
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
         }
 
         private void ValidateFrames()
         {
-            foreach (StaticChessPresentationEvent presentationEvent in
-                     (StaticChessPresentationEvent[])Enum.GetValues(typeof(StaticChessPresentationEvent)))
+            foreach (CombatUnitPresentationEvent presentationEvent in
+                     (CombatUnitPresentationEvent[])Enum.GetValues(typeof(CombatUnitPresentationEvent)))
             {
                 Sprite[] frames = FramesFor(presentationEvent);
                 if (frames == null || frames.Length != DirectionCount * FramesPerDirection)
