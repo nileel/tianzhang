@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-28：10 张预定种子核验卡均已达到真实终态，其中 8 条经验已证实 active，Unity meta 与 namespace 两项因批准事实源穷尽而完成为不晋级；当前满足 8～12 条阈值，本卡已 ready。本次状态迁移未运行冻结样本。",
+  "stateReason": "2026-08-28：冻结十样本只读回放发现 5 个高置信命中中有 2 个无关，误报率 40.0% 达到停止条件；成本、硬边界和十次匹配器运行均通过。详见 docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md；未解锁 M-EXP-TASK-SCHEMA2-01。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md",
     "开发管理/任务列表/管理与自动化任务.txt",
