@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-28：负责人已明确授权另立新任务，并允许一次新的 Blender 原生生产与一次 FBX 导出；旧失败卡及其资产只作失败证据，不作为本卡模型、材质、贴图、脚本或 manifest 输入。",
+  "stateReason": "2026-08-28：schema 5 正式 run 在联系表方向硬门失败且无 candidate；同轮人工诊断修正联系表后，唯一一次 FBX 导出又因 MCP Context 缺少 selected_objects 在写文件前异常退出。负责人要求另建机制修复卡与机制通过后的独立资产卡，本卡永久阻塞且不得再生产或导出。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.fbx",
@@ -75,3 +75,9 @@
 - 新 worktree 目标目录预存任何旧候选，或需要复用旧失败资产／脚本才能继续。
 - 需要第二次 FBX 导出、第二次生产、外部 credits、第二工具路线、扩大资产文件集或修改 Unity 才能通过。
 - BaseColor 绝对解析、缺失文件、联系表方向／材质、身份、接地、局部轴、单位缩放、factory-empty 或哈希任一硬门失败。
+
+## 2026-08-28 执行收口
+
+- schema 5 run `c7d1c5a5-9307-4ff8-bb75-46a357d13210` 以 `contact_sheet_orientation_hard_gate_failed` 进入 `attention_required`，没有 candidate、正式提交或集成；人工核验后该 run 已精确清除。
+- 独立人工诊断证明新源场景、BaseColor 绝对解析和修正联系表可以通过导出前门，但本卡唯一一次 `bpy.ops.export_scene.fbx` 在 Blender 5.2 导出器读取 `context.selected_objects` 时抛出 `AttributeError`，未创建 FBX，也没有 factory-empty 回读输入。
+- 负责人随后明确要求把机制问题和正式资产生产拆成 `A-BLENDER-MCP-FBX-CONTEXT-01` 与 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03`。本卡只保留失败证据，不向任一新卡提供模型、材质、贴图、脚本或 manifest 输入。

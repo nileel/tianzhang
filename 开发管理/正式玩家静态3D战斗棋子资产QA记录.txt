@@ -62,3 +62,25 @@
 - 本卡保持 `blocked` 并移出 ready 队列；失败现场保留，不提交为正式资产。
 - 若负责人仍要继续该方向，应另立新任务并明确授权一次新的 Blender 原生生产；新卡必须在任何导出前先固定 BaseColor 相对路径并验证联系表拼接方向，不能在本卡重试。
 - `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 继续由本卡和石甲兽卡共同阻塞，不得提前导入 Unity 或建立 profile 映射。
+
+---
+
+## `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02` 执行收口
+
+结论：**FAIL／阻塞**。schema 5 正式 run 在联系表方向／取景硬门停止且未形成 candidate；独立人工诊断修正联系表后，唯一一次 FBX 导出又在写文件前因 MCP Context 缺少 `selected_objects` 异常退出。本卡不得再生产或导出。
+
+### schema 5 正式 run
+
+- runId：`c7d1c5a5-9307-4ff8-bb75-46a357d13210`；终止原因：`contact_sheet_orientation_hard_gate_failed`。
+- run 没有 candidate、canonical 或正式提交；人工核验后已精确清除 runtime，失败 worktree 不作为新任务资产输入。
+
+### 独立导出上下文诊断
+
+- 新源场景、BaseColor 绝对解析、缺失文件和修正后的十视图可以通过导出前硬门；诊断源只有 `FormalPlayer_Static3D_Root` 与 `FormalPlayer_Static3D_Mesh`，无 Armature、Action 或 Shape Key。
+- 本卡唯一一次 `bpy.ops.export_scene.fbx(use_selection=true, ...)` 进入 Blender 5.2 `io_scene_fbx/export_fbx_bin.py` 后，在读取 `context.selected_objects` 时抛出 `AttributeError: 'Context' object has no attribute 'selected_objects'`。
+- 异常发生在导出器取选择集阶段，没有创建 FBX，因此没有 factory-empty 回读输入；未执行第二次导出、自动重试、CLI／headless 替代或供应商补丁。
+
+### 后续边界
+
+- 负责人于 2026-08-28 要求拆成两张任务：`A-BLENDER-MCP-FBX-CONTEXT-01` 只在 `D:\Temp\TianZhang-Blender\` 修复并烟测上下文合同；`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 只在机制卡完成后执行一次新的独立生产与一次正式 FBX 导出。
+- 03 卡不得复制、链接、append、导入或改写 01／02 卡的失败模型、材质、贴图、脚本、manifest 或 worktree 现场；Profile 总门改由 03 与石甲兽共同阻塞。

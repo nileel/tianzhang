@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-BLENDER-MCP-FBX-CONTEXT-01",
+  "title": "Blender MCP FBX导出上下文修复与烟测",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：负责人要求另建独立任务先处理 Blender 5.2 FBX 导出器在 MCP 执行上下文缺少 context.selected_objects 的问题；本卡只在任务专用临时目录验证并冻结兼容调用，不导出或修改正式业务资产。",
+  "expectedPaths": [
+    "开发管理/BlenderMCP FBX导出上下文验证记录.txt",
+    "开发管理/开发-技术经验.txt",
+    "开发管理/任务列表/审核与交接任务.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-BLENDER-MCP-FBX-CONTEXT-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03.txt",
+    "开发管理/任务归档/A-BLENDER-MCP-FBX-CONTEXT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/审核与交接任务.txt"
+}
+---TASK-BODY---
+# A-BLENDER-MCP-FBX-CONTEXT-01 · Blender MCP FBX导出上下文修复与烟测
+
+## 来源与当前边界
+
+- `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02` 的独立诊断在 Blender 5.2 FBX 导出器 `export_fbx_bin.save` 读取 `context.selected_objects` 时抛出 `AttributeError`，异常发生在写 FBX 前；任务内禁止第二次导出。
+- 已知源场景只有 root 与 mesh 时，FBX 导出器的 `use_selection=false` 分支可改为读取 `context.scene.objects`，理论上不需要缺失的选择集字段；本卡必须用真实 MCP 临时烟测证明，不能仅凭代码阅读宣告修复。
+- 本卡只修复项目在 `blender_lab/execute_blender_code` 上的 FBX 调用合同，不修改 Blender、Codex 或 MCP 供应商扩展，不恢复任何失败模型会话，不处理正式玩家美术质量。
+
+## 必查范围
+
+- `.agents/skills/tianzhang-blender-pipeline/SKILL.md` 与 `references/tool-routing.md` 的单路线、临时目录、失败停止和验证能力边界。
+- Blender 5.2 当前 `bpy.ops.export_scene.fbx` RNA 参数表，以及 `io_scene_fbx/export_fbx_bin.py` 中 `use_selection` 对 `context.selected_objects`／`context.scene.objects` 的直接分支。
+- `开发管理/正式玩家静态3D战斗棋子资产QA记录.txt` 中 02 卡的导出上下文失败证据；不得加载其中任何失败业务资产。
+- 当前常驻 Blender 进程、`blender_lab` 连通状态、任务专用临时目录和 `blender_headless_qa` 指定 Blender 5.2 factory-empty 回读入口。
+
+## 实施范围
+
+- 使用 `blender_lab` 在 `D:\Temp\TianZhang-Blender\blender-mcp-fbx-context-01\` 新建一次性无业务语义烟测：一个 Empty root、一个静态 Mesh、一个本地生成的不透明材质；不得读取或复制仓库角色资产。
+- 在同一次 `execute_blender_code` 内保存临时 `.blend`，记录打开／保存后的 Context 可用字段，证明失败根因确为选择集上下文，而非模型、材质、路径或 FBX 参数问题。
+- 导出前断言临时场景对象集合精确等于 root 与 mesh，且无 Armature、Action、Shape Key、脚本或额外集合；随后唯一一次调用 `bpy.ops.export_scene.fbx`，固定 `use_selection=false`，其余轴向／单位／动画参数与正式资产合同一致。
+- 对该唯一临时 FBX 使用 `blender_headless_qa` 做 factory-empty 回读；记录对象数、命名前缀、材质数、脚本自由、文件字节与 SHA-256，并把通过的调用前置条件写入验证记录和 `开发-技术经验`。
+- 完成时归档本卡，并仅解除 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 的机制 blocker；本卡不生产正式 FBX，也不解除 Profile 总门。
+
+## 禁止项
+
+- 不修改 `assets/source/`、`src/Assets/`、任何现有 `.blend`／FBX／贴图、角色任务 worktree 或 Unity。
+- 不修改、覆盖或补丁化 `C:\Users\WINDOWS\AppData\Roaming\Blender Foundation\Blender\5.2\extensions\user_default\mcp\`、Blender 安装目录、Codex MCP 配置或供应商代码。
+- 不把 `use_selection=true` 的失败调用再执行一次，不做第二次烟测导出、自动重试、CLI／`blender_run_script` 替代、第二 Blender 实例或第二工具路线。
+- 不把临时烟测成功解释为正式玩家资产业务通过；临时 `.blend`／FBX 不进入 Git 或项目 source。
+
+## 验证
+
+- `blender_lab` 只读证明当前 Context 字段与 FBX RNA 参数；任务专用临时目录在写入前不存在或为空，绝对路径保持在 `D:\Temp\TianZhang-Blender\blender-mcp-fbx-context-01\`。
+- 唯一临时 FBX 导出返回 `FINISHED`，没有选择集异常、路径警告或缺失文件；导出前后均证明没有业务资产输入。
+- `blender_headless_qa` 使用 `D:\Tools\Blender\5.2.0\blender.exe` 对唯一临时 FBX 回读，root／mesh 前缀、对象数、材质和 `script_free=true` 通过；明确记录其不证明美术质量、精确材质嵌入或 Unity 表现。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`、审核文本、预期路径 whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 真实 MCP 烟测证明：当场景已被精确限制为 root 与 mesh 时，`use_selection=false` 可以在当前 Blender 5.2 MCP Context 中唯一导出并通过 factory-empty 结构回读；调用合同、能力边界、哈希和失败停止规则均已进入项目事实源。
+- `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 只在上述证据完整后移除本卡 blocker 并进入 ready；不得在同一 run 顺带执行正式资产生产。
+
+## 停止条件
+
+- `use_selection=false` 仍触发上下文异常、导出器需要选择集／窗口／区域覆盖、唯一临时 FBX 不可回读，或结果要求修改供应商扩展。
+- 需要第二次导出、第二工具路线、正式资产输入、重启／接管未知 Blender、管理员权限或扩大到通用 MCP 重构时停止并将本卡转阻塞。
