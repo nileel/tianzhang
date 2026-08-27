@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：用户批准消除 EXP-UNITY-001 的裸 Builder 误报；精确符号、正反样本、允许路径和停止条件均已冻结，现已 ready。",
+  "stateReason": "2026-08-28：已删除 EXP-UNITY-001 的裸 builder／Builder 触发，冻结 U-URP 反例不再命中、U-CHAR 正例仍命中，匹配器测试通过；本卡完成归档并解锁 BattleSim 收窄卡。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-UNITY-001.txt",
@@ -61,6 +61,11 @@
 
 - 裸 `Builder` 误报消失，已知 Unity 正例仍命中；索引和经验卡语义一致，匹配器与 schema 无变化。
 - 本卡完成归档；BattleSim 收窄卡移除本 ID、转为 ready 并按固定顺序入队。
+
+## 完成证据
+
+- `tools/test-get-experience-risk-preflight.ps1` 通过；冻结 `U-URP-MIGRATE-01` 返回零命中，冻结 `U-CHAR-2D-TACTICAL-PROTO-01` 仍命中 `EXP-UNITY-001`，两者 digest 与首次报告一致。
+- `EXP-UNITY-001` 的 `must_read` 正文为 316 字；匹配器脚本、冻结卡、首次试运行报告和 schema 均未修改。
 
 ## 停止条件
 

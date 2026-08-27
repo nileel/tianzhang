@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-NARROW-UNITY-01"],
-  "stateReason": "2026-08-28：EXP-BS-003 的精确 1v1 收窄边界已冻结；因与 Unity 卡共享风险索引和匹配器测试文件，串行阻塞于 M-EXP-PREFLIGHT-NARROW-UNITY-01。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：M-EXP-PREFLIGHT-NARROW-UNITY-01 已完成归档；EXP-BS-003 的精确 1v1 收窄边界、正反样本、允许路径和停止条件均已冻结，现已 ready。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-BS-003.txt",

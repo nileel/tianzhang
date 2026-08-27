@@ -154,15 +154,18 @@
         "src/Assets/Scenes/AdventureScene.unity"
       ],
       "textPatterns": [
-        "builder",
-        "Builder",
         "EditorSceneManager.SaveScene",
+        "StartMenuSceneBuilder.Build",
+        "WorldSceneBuilder.Build",
+        "SettlementSceneBuilder.Build",
+        "AdventureSceneBuilder.Build",
+        "VisualBaselineBuilder",
         "场景重建",
         "重建场景"
       ],
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-001.txt#开工前",
       "gateRefs": [],
-      "lastVerified": "2026-08-26"
+      "lastVerified": "2026-08-28"
     },
     {
       "id": "EXP-UNITY-002",

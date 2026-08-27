@@ -206,6 +206,27 @@ try {
   Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-PATH-01')).Json.matched.Count -eq 0) 'case2: path only should miss'
   Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-TEXT-01')).Json.matched.Count -eq 0) 'case2: text only should miss'
 
+  # ---- 2a. Unity 场景重建精确符号命中，裸 Builder 只读引用不命中 ----
+  $caseRoot = Join-Path $tempRoot 'case2a-unity-scene-build'
+  $unityScenePath = 'src/Assets/Scenes/AdventureScene.unity'
+  $unityBuildSymbols = @(
+    'EditorSceneManager.SaveScene',
+    'StartMenuSceneBuilder.Build',
+    'WorldSceneBuilder.Build',
+    'SettlementSceneBuilder.Build',
+    'AdventureSceneBuilder.Build',
+    'VisualBaselineBuilder',
+    '场景重建',
+    '重建场景'
+  )
+  Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-UNITY-001' -Level 'notice' -Trigger 'path_and_text' -Domains @('unity') -Paths @($unityScenePath) -Texts $unityBuildSymbols)))
+  Set-Card $caseRoot (New-TaskCard -Id 'T-UNITY-BUILDER-READ-01' -Domain 'unity' -ExpectedPaths @($unityScenePath) -Bichan 'AdventureSceneBuilder 只读检查；不修改场景结构或调用保存链。') 'T-UNITY-BUILDER-READ-01'
+  Set-Card $caseRoot (New-TaskCard -Id 'T-UNITY-VISUAL-BUILD-01' -Domain 'unity' -ExpectedPaths @($unityScenePath) -Shishi '由 VisualBaselineBuilder 重建隔离视觉矩阵。') 'T-UNITY-VISUAL-BUILD-01'
+  Set-Card $caseRoot (New-TaskCard -Id 'T-UNITY-SAVE-01' -Domain 'unity' -ExpectedPaths @($unityScenePath) -Shishi '调用 AdventureSceneBuilder.Build 并核验 EditorSceneManager.SaveScene。') 'T-UNITY-SAVE-01'
+  Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-UNITY-BUILDER-READ-01')).Json.matched.Count -eq 0) 'case2a: read-only bare Builder reference should miss'
+  Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-UNITY-VISUAL-BUILD-01')).Json.matched[0] -ceq 'EXP-UNITY-001') 'case2a: exact VisualBaselineBuilder symbol should hit'
+  Assert-True ((Invoke-Ok $caseRoot @('-TaskId', 'T-UNITY-SAVE-01')).Json.matched[0] -ceq 'EXP-UNITY-001') 'case2a: exact Build/SaveScene symbols should hit'
+
   # ---- 3. explicit_only 不自动触发，显式引用后生效 ----
   $caseRoot = Join-Path $tempRoot 'case3'
   Set-Index $caseRoot (New-Index @((New-Exp -Id 'EXP-MGMT-001' -Level 'notice' -Trigger 'explicit_only')))
