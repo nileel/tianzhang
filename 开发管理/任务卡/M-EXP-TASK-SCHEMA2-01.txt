@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "management",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-PREFLIGHT-TRIAL-01"],
-  "stateReason": "只读试运行通过后实现兼容检查；本卡同时接受 schema 1/2 并校验 schema 2 投影，但绝不拒绝既有 schema 1 ready 卡。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：M-EXP-PREFLIGHT-TRIAL-01 收窄后复跑同十张冻结卡全部通过，高置信误报率 0.0%；本卡按原 external_execute/deepseek 路由解锁 ready，只实现 schema 1/2 兼容检查。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",

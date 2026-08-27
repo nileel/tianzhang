@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：M-EXP-PREFLIGHT-NARROW-UNITY-01 与 M-EXP-PREFLIGHT-NARROW-BS-01 均已完成归档；本卡恢复 ready，复跑提交 ccb1127b 的同十张冻结卡并重新判断全部阈值。通过前不解锁 M-EXP-TASK-SCHEMA2-01。",
+  "stateReason": "2026-08-28：收窄后复跑同十张冻结卡，3 个高置信命中均相关，误报率 0.0%；active、必读边界、平均 token 代理与 10 次匹配器运行全部通过。本卡完成归档并解锁 M-EXP-TASK-SCHEMA2-01。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md",
     "开发管理/任务列表/管理与自动化任务.txt",
@@ -60,6 +60,12 @@
 
 - active 种子为 8～12 条；每个普通原子样本 `must_read<=3` 且必读正文 `<=600` Unicode 字符；高置信误报率 `<15%`；平均 token 代理 `<=1000`；10 次回放无未解释匹配器失败。
 - 报告逐样本可追溯到冻结提交、路径和 digest，并明确继续／收窄／停止结论；全部通过时才解锁 `M-EXP-TASK-SCHEMA2-01`。
+
+## 2026-08-28 收窄后复跑证据
+
+- 当前索引 digest 为 `d46db414950ffe1f9ab8baa482bf8b8bc872feeed571eed704edf551e02b2769`；十个冻结 blob 的 SHA-256 与首次报告一致，匹配前后 digest 及匹配器 `taskCardDigest` 三方一致。
+- active 种子 8 条；单样本最多 1 条 `must_read`，最大正文 466 字；3 个高置信命中全部相关，无关命中率 `0/3，0.0%`；平均 token 代理 130.0；匹配器失败 `0/10`。
+- 项目外临时目录已清理；未修改冻结归档、匹配器、schema、规则或自动化入口。完整逐样本结果见既有报告路径。
 
 ## 停止条件
 
