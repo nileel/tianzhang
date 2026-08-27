@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-PREFLIGHT-NARROW-UNITY-01",
+  "title": "收窄 Unity 场景重建经验触发",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：用户批准消除 EXP-UNITY-001 的裸 Builder 误报；精确符号、正反样本、允许路径和停止条件均已冻结，现已 ready。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-UNITY-001.txt",
+    "tools/test-get-experience-risk-preflight.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-NARROW-UNITY-01.txt",
+    "开发管理/任务归档/M-EXP-PREFLIGHT-NARROW-UNITY-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-NARROW-BS-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-PREFLIGHT-NARROW-UNITY-01 · 收窄 Unity 场景重建经验触发
+
+## 来源与当前边界
+
+- 单一结果：让 `EXP-UNITY-001` 不再因裸 `builder` / `Builder` 命中只读引用，同时保留正式场景保存／重建链的确定性自动命中。
+- 直接事实源是批准设计 `docs/superpowers/specs/2026-08-28-preflight-trigger-narrowing-and-trial-rerun-design.md`、首次试运行报告、当前索引／经验卡和匹配器字面量合同。
+- 本卡只裁决 `EXP-UNITY-001`；不修改匹配器、冻结样本、试运行报告、场景、builder 或 schema。
+
+## 必查范围
+
+- `tools/get-experience-risk-preflight.ps1` 的 `Get-SectionBody`、haystack 和 `path_and_text` 完整逻辑单元；只读确认，不修改。
+- `开发管理/经验库/风险索引.json::EXP-UNITY-001` 与 `开发管理/经验库/经验卡/EXP-UNITY-001.txt` 完整对象／正文。
+- 冻结提交 `ccb1127bcd78d6bb192b4527a449acda41cfc782` 中 `U-URP-MIGRATE-01` 和 `U-CHAR-2D-TACTICAL-PROTO-01` 的标题、必查范围、实施范围。
+
+## 实施范围
+
+- 删除裸 `builder`、`Builder`；只保留 `EditorSceneManager.SaveScene`、四个正式 SceneBuilder 的精确 `.Build` 调用、`VisualBaselineBuilder` 与明确中文重建术语。
+- 同步经验卡适用／排除条件：只读检查、只列路径、仅渲染管线／材质迁移且不调用保存链均排除。
+- 在现有匹配器测试中增加“只读 AdventureSceneBuilder 不命中”和“VisualBaselineBuilder／精确保存调用命中”的正反例。
+- 聚焦回放确认 `U-URP-MIGRATE-01` 不再命中、`U-CHAR-2D-TACTICAL-PROTO-01` 仍命中；完成后归档本卡并只解锁 `M-EXP-PREFLIGHT-NARROW-BS-01`。
+
+## 禁止项
+
+- 不新增正则、排除字段、权重、第二索引或兼容分支，不改 `tools/get-experience-risk-preflight.ps1`。
+- 不改写冻结卡或首次试运行报告，不顺带收窄其他经验。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- 用冻结提交物化上述两张卡，调用同一只读匹配器核验一负一正。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理` 与 `git diff --check`。
+
+## 完成条件
+
+- 裸 `Builder` 误报消失，已知 Unity 正例仍命中；索引和经验卡语义一致，匹配器与 schema 无变化。
+- 本卡完成归档；BattleSim 收窄卡移除本 ID、转为 ready 并按固定顺序入队。
+
+## 停止条件
+
+- 只有修改匹配器、增加新 schema 语义或改写冻结样本才能同时排除反例并保留正例时停止；不得叠加补丁。

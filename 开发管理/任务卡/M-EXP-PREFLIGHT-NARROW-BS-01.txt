@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "M-EXP-PREFLIGHT-NARROW-BS-01",
+  "title": "收窄 BattleSim 双侧分支经验触发",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-EXP-PREFLIGHT-NARROW-UNITY-01"],
+  "stateReason": "2026-08-28：EXP-BS-003 的精确 1v1 收窄边界已冻结；因与 Unity 卡共享风险索引和匹配器测试文件，串行阻塞于 M-EXP-PREFLIGHT-NARROW-UNITY-01。",
+  "expectedPaths": [
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-BS-003.txt",
+    "tools/test-get-experience-risk-preflight.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-NARROW-BS-01.txt",
+    "开发管理/任务归档/M-EXP-PREFLIGHT-NARROW-BS-01.txt",
+    "开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-EXP-PREFLIGHT-NARROW-BS-01 · 收窄 BattleSim 双侧分支经验触发
+
+## 来源与当前边界
+
+- 单一结果：让 `EXP-BS-003` 精确限定 1v1 `Combat.Simulate` A/B 双侧分支，不再因 `Simulate2v2Detailed` 包含宽泛 `Simulate` 子串而命中。
+- 直接事实源是批准设计 `docs/superpowers/specs/2026-08-28-preflight-trigger-narrowing-and-trial-rerun-design.md`、首次试运行报告、当前索引／经验卡和匹配器字面量合同。
+- 本卡只裁决 `EXP-BS-003`；不修改匹配器、冻结样本、试运行报告、BattleSim 代码或 schema。
+
+## 必查范围
+
+- `tools/get-experience-risk-preflight.ps1` 的 `Get-SectionBody`、haystack 和 `path_and_text` 完整逻辑单元；只读确认，不修改。
+- `开发管理/经验库/风险索引.json::EXP-BS-003` 与 `开发管理/经验库/经验卡/EXP-BS-003.txt` 完整对象／正文。
+- 冻结提交 `ccb1127bcd78d6bb192b4527a449acda41cfc782` 中 `N-GROUP-02C` 的标题、必查范围、实施范围；`Combat.Simulate` 的 1v1 双侧结构只用于核验经验事实，不修改模拟器。
+
+## 实施范围
+
+- 删除 `Simulate`、`Simulate2v2`，增加精确 `Combat.Simulate`；保留 `符胆`、`雷劫`、`受击减防`、`物抗率`、`魂抗率` 等具名双侧机制。
+- 同步经验卡适用／排除条件：纯 `Simulate2v2` / `Simulate2v2Detailed` 候选、走位、占格或团队 AI 工作不自动命中；不能由精确术语表达的真实风险使用既有 `explicitRefs`。
+- 在现有匹配器测试中增加 `Simulate2v2Detailed` 不命中、精确 `Combat.Simulate` 命中的正反例。
+- 聚焦回放确认 `N-GROUP-02C` 仍命中 `EXP-BS-001` 且不再命中 `EXP-BS-003`；完成后归档本卡并只恢复原试运行卡 ready。
+
+## 禁止项
+
+- 不新增正则、排除字段、权重、第二索引或兼容分支，不改 `tools/get-experience-risk-preflight.ps1`。
+- 不改写冻结卡或首次试运行报告，不顺带修改 BattleSim 或其他经验。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-get-experience-risk-preflight.ps1`。
+- 用冻结提交物化 `N-GROUP-02C`，调用同一只读匹配器核验相关命中保留、误报消失。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths docs,开发管理` 与 `git diff --check`。
+
+## 完成条件
+
+- `Simulate2v2Detailed` 误报消失，精确 1v1 正例命中；索引和经验卡语义一致，匹配器与 schema 无变化。
+- 本卡完成归档；原试运行卡移除本 ID、转为 ready 并按固定顺序入队。
+
+## 停止条件
+
+- 只有修改匹配器、增加新 schema 语义或改写冻结样本才能排除 2v2 反例并保留 1v1 正例时停止；不得叠加补丁。

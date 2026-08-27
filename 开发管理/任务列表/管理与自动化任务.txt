@@ -6,16 +6,18 @@
 
 - 唯一批准规格为 `docs/superpowers/specs/2026-08-24-preventive-experience-memory-system-design.md`；原批准提交为 `ccb1127bcd78d6bb192b4527a449acda41cfc782`，每日候选采集修订提交为 `4bfc261d18fc609422c398dce1202948350d7e58`；证据不足种子的“不晋级终态”修订于 2026-08-27 获批、2026-08-28 实施。
 - `M-EXP-PREFLIGHT-01` 是不可调度汇总父项，只由 `M-EXP-PREFLIGHT-CLOSE-01` 在全部出口满足后关闭；不得创建覆盖整套系统的执行卡。
-- 依赖顺序固定为基础工具 → 10 条独立种子经验 → 只读试运行 → schema 1／2 支持 → L0 规则 →（小时自动化接入、每日候选收集器并行）→ ready schema 2 激活 → 20 个相关任务观察 → 独立门禁／非技术域决策 → 父项关闭。
+- 依赖顺序固定为基础工具 → 10 条独立种子经验 → 首次只读试运行 → Unity 触发收窄 → BattleSim 触发收窄 → 原冻结样本复跑 → schema 1／2 支持 → L0 规则 →（小时自动化接入、每日候选收集器并行）→ ready schema 2 激活 → 20 个相关任务观察 → 独立门禁／非技术域决策 → 父项关闭。
 - `M-EXP-PREFLIGHT-01A` 的返工正式提交 `bbae65133a1ff791a86b31f37e99a111d4679110` 已经 Codex 独立复审通过；基础工具归档，10 张预定种子核验卡均已达到真实终态，其中 8 条经验 active，Unity meta 与 namespace 两项因批准事实源穷尽而完成为不晋级。
-- `M-EXP-PREFLIGHT-TRIAL-01` 已满足 8～12 条 active 阈值并进入 ready；本次状态迁移未运行冻结样本。每日收集器、任务收尾 L0 合同、门禁与 schema 2 强制仍未实施。
+- 首次冻结十样本试运行的高置信误报率为 40.0%。用户已于 2026-08-28 批准按 `EXP-UNITY-001`、`EXP-BS-003` 两张独立收窄卡串行修正后，复用原试运行卡重跑同一冻结输入；当前只允许 Unity 收窄卡进入 ready。
 
 ## 任务
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-PREFLIGHT-TRIAL-01 | P1 | codex | 阻塞 | — | 冻结样本只读试运行与成本报告 | 开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt |
+| M-EXP-PREFLIGHT-NARROW-UNITY-01 | P1 | codex | 已排队 | — | 收窄 Unity 场景重建经验触发 | 开发管理/任务卡/M-EXP-PREFLIGHT-NARROW-UNITY-01.txt |
+| M-EXP-PREFLIGHT-NARROW-BS-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-NARROW-UNITY-01 | 收窄 BattleSim 双侧分支经验触发 | 开发管理/任务卡/M-EXP-PREFLIGHT-NARROW-BS-01.txt |
+| M-EXP-PREFLIGHT-TRIAL-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-NARROW-BS-01 | 冻结样本只读试运行与成本报告 | 开发管理/任务卡/M-EXP-PREFLIGHT-TRIAL-01.txt |
 | M-EXP-TASK-SCHEMA2-01 | P1 | deepseek | 阻塞 | M-EXP-PREFLIGHT-TRIAL-01 | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
 | M-EXP-L0-CONTRACT-01 | P1 | codex | 阻塞 | M-EXP-TASK-SCHEMA2-01 | L0、runnable 与强制点规则合同 | 开发管理/任务卡/M-EXP-L0-CONTRACT-01.txt |
 | M-EXP-HOURLY-PREFLIGHT-01 | P1 | deepseek | 阻塞 | M-EXP-L0-CONTRACT-01 | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |
@@ -33,7 +35,7 @@
 ## 执行边界
 
 - 基础工具和 10 张预定种子核验卡均已归档；8 条证据充分的经验 active，两条证据不足候选以“已核验、不晋级”终态归档，未创建 `EXP-UNITY-003/004` 或修改风险索引。
-- `M-EXP-PREFLIGHT-TRIAL-01` 冻结十样本回放的高置信误报率为 40.0%，达到停止条件；报告已记录在 `docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md`。本卡保持 blocked，只有后续独立任务收窄触发条件并重新通过试运行，才可归档并解锁 schema。
+- `M-EXP-PREFLIGHT-TRIAL-01` 首次冻结十样本回放的高置信误报率为 40.0%，达到停止条件；报告已记录在 `docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md`。`M-EXP-PREFLIGHT-NARROW-UNITY-01` 与 `M-EXP-PREFLIGHT-NARROW-BS-01` 必须依次完成，原试运行卡才恢复 ready；复跑通过前不得归档试运行卡或解锁 schema。
 - L0 同时冻结写前预检和任务收尾候选责任；只有 L0 完成后，小时入口与每日收集器才分别移除本前置。每日收集器不得因其实现可机械验收而绕过 Codex app automation 的主责边界。
 - ready schema 2 激活必须同时等待 `M-EXP-HOURLY-PREFLIGHT-01` 与 `M-EXP-DAILY-COLLECTOR-01`；任何一侧未完成时不得迁移 ready 卡。
 - 父项、观察后的门禁和扩域均不得被基础阶段顺带实施；新增门禁或域开放若超出本图，另建独立 initiative，不扩大当前卡。
