@@ -72,6 +72,10 @@ namespace TianZhang.Infrastructure.Persistence
             {
                 if (player == null || cultivation == null)
                     throw new ArgumentException("Player state presence is inconsistent.");
+                if (catalog == null ||
+                    !catalog.TryGetAppearanceProfile(player.appearanceProfileId, out _) &&
+                    !string.Equals(player.appearanceProfileId, AppearanceProfileData.NoneId, StringComparison.Ordinal))
+                    throw new ArgumentException("Player appearance profile is invalid.");
             }
             else if (HasCharacterPayload(player) || HasCultivationPayload(cultivation))
             {
@@ -127,6 +131,7 @@ namespace TianZhang.Infrastructure.Persistence
                  record.spellSlots != 0 || record.skillSlots != 0 ||
                  !string.IsNullOrEmpty(record.mainEquipmentBasicAttackProfileId) ||
                  !string.IsNullOrEmpty(record.unarmedBasicAttackProfileId) ||
+                 !string.IsNullOrEmpty(record.appearanceProfileId) ||
                  !string.IsNullOrEmpty(record.gongFaId) ||
                  !string.IsNullOrEmpty(record.realmStage) ||
                  record.realmMultiplier != 0f);
@@ -316,6 +321,7 @@ namespace TianZhang.Infrastructure.Persistence
         public int skillSlots;
         public string mainEquipmentBasicAttackProfileId;
         public string unarmedBasicAttackProfileId;
+        public string appearanceProfileId;
         public string gongFaId;
         public string realmStage;
         public float realmMultiplier;
@@ -345,6 +351,7 @@ namespace TianZhang.Infrastructure.Persistence
                 skillSlots = snapshot.AbilityLoadout.SkillSlots,
                 mainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId,
+                appearanceProfileId = snapshot.AppearanceProfileId,
                 gongFaId = snapshot.Progression.GongFaId,
                 realmStage = snapshot.Progression.RealmStage,
                 realmMultiplier = snapshot.Progression.RealmMultiplier,
@@ -373,7 +380,8 @@ namespace TianZhang.Infrastructure.Persistence
                     skillSlots),
                 new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier),
                 mainEquipmentBasicAttackProfileId,
-                unarmedBasicAttackProfileId);
+                unarmedBasicAttackProfileId,
+                appearanceProfileId);
         }
     }
 

@@ -17,6 +17,7 @@ namespace TianZhang.Tests
         private CharacterData definition;
         private ContentCatalogData catalog;
         private ItemData item;
+        private AppearanceProfileData appearance;
 
         [TearDown]
         public void TearDown()
@@ -24,10 +25,11 @@ namespace TianZhang.Tests
             if (definition != null) Object.DestroyImmediate(definition);
             if (catalog != null) Object.DestroyImmediate(catalog);
             if (item != null) Object.DestroyImmediate(item);
+            if (appearance != null) Object.DestroyImmediate(appearance);
         }
 
         [Test]
-        public void SchemaOneRoundTripIsCanonicalAndIdempotent()
+        public void SchemaTwoRoundTripIsCanonicalAndIdempotent()
         {
             GameRuntime source = CreateRuntimeWithInventory();
             string first = source.CaptureSaveJson();
@@ -41,10 +43,11 @@ namespace TianZhang.Tests
             Assert.That(restored.Navigation.AdventureId, Is.EqualTo("adventure_test"));
             Assert.That(restored.CaptureSave().inventory[0].quantity, Is.EqualTo(2));
             Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.EqualTo("basic_unarmed"));
+            Assert.That(restored.Player.AppearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
         }
 
         [Test]
-        public void SchemaOneDefaultNavigationRoundTripRemainsCanonical()
+        public void SchemaTwoDefaultNavigationRoundTripRemainsCanonical()
         {
             var source = new GameRuntime();
             string first = source.CaptureSaveJson();
@@ -53,6 +56,25 @@ namespace TianZhang.Tests
             restored.RestoreSaveJson(first, null);
 
             Assert.That(restored.CaptureSaveJson(), Is.EqualTo(first));
+        }
+
+        [Test]
+        public void SchemaOneDeserializeMigratesAppearanceToNoneAndResavesSchemaTwo()
+        {
+            GameRuntime source = CreateRuntimeWithInventory();
+            GameSaveEnvelope legacy = source.CaptureSave();
+            legacy.schemaVersion = GameSaveSerializer.LegacySchemaVersion;
+            legacy.player.appearanceProfileId = null;
+
+            GameSaveEnvelope migrated = GameSaveSerializer.Deserialize(JsonUtility.ToJson(legacy));
+
+            Assert.That(migrated.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+            Assert.That(migrated.player.appearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
+
+            var restored = new GameRuntime();
+            restored.RestoreSave(migrated, catalog);
+            Assert.That(restored.Player.AppearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
+            Assert.That(restored.CaptureSave().schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
         }
 
         [Test]
@@ -80,6 +102,16 @@ namespace TianZhang.Tests
             invalid.cultivation = includePlayerPayload ? null : donor.cultivation;
             if (!includePlayerPayload)
                 invalid.cultivation.foundationPhase = 1;
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
+        [Test]
+        public void UnknownAppearanceProfileFailsClosedWithoutReplacingAnyLiveOwner()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope invalid = runtime.CaptureSave();
+            invalid.player.appearanceProfileId = "appearance_unknown";
 
             AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
         }
@@ -153,8 +185,11 @@ namespace TianZhang.Tests
             item.itemId = "item_test";
             item.contentScope = InventoryGrantUseCase.ProductionContentScope;
             item.maxStack = 10;
+            appearance = ScriptableObject.CreateInstance<AppearanceProfileData>();
+            appearance.appearanceProfileId = AppearanceProfileData.NoneId;
             catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
             catalog.ReplaceEntries(null, null, new[] { item }, null);
+            catalog.SetAppearanceProfiles(new[] { appearance });
 
             var runtime = new GameRuntime();
             runtime.BeginNewGame(

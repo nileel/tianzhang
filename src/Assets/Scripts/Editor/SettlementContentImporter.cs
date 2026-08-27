@@ -175,8 +175,9 @@ namespace TianZhang.Editor
 
             try
             {
+                AppearanceProfileData[] appearanceProfiles = LoadAppearanceProfiles();
                 ValidateContentAssetLocations(preview);
-                CommitContentCatalog(preview);
+                CommitContentCatalog(preview, appearanceProfiles);
                 Debug.Log("[SettlementContentImporter] 正式内容目录导入完成");
             }
             finally
@@ -820,6 +821,37 @@ namespace TianZhang.Editor
             }
         }
 
+        private static AppearanceProfileData[] LoadAppearanceProfiles()
+        {
+            const string expectedPath = "Assets/Data/AppearanceProfiles/AppearanceProfile_none.asset";
+            UnityEngine.Object atExpectedPath = AssetDatabase.LoadMainAssetAtPath(expectedPath);
+            if (!(atExpectedPath is AppearanceProfileData profile))
+                throw new InvalidDataException($"The approved appearance profile asset is missing: {expectedPath}");
+            if (!profile.TryValidate(out string reason) ||
+                !string.Equals(profile.appearanceProfileId, AppearanceProfileData.NoneId, StringComparison.Ordinal))
+            {
+                throw new InvalidDataException($"The approved appearance profile asset is invalid: {reason}");
+            }
+
+            var foundIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string guid in AssetDatabase.FindAssets("t:AppearanceProfileData"))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var candidate = AssetDatabase.LoadAssetAtPath<AppearanceProfileData>(path);
+                if (candidate == null || !candidate.TryValidate(out reason) ||
+                    !foundIds.Add(candidate.appearanceProfileId) ||
+                    !string.Equals(path, expectedPath, StringComparison.Ordinal) ||
+                    !string.Equals(candidate.appearanceProfileId, AppearanceProfileData.NoneId, StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException("Appearance profile assets must contain only the canonical none profile.");
+                }
+            }
+
+            if (foundIds.Count != 1)
+                throw new InvalidDataException("Appearance profile catalog source is incomplete.");
+            return new[] { profile };
+        }
+
         private static void ValidateContentAssetLocation<T>(T source, string expectedPath, Func<T, string> getId)
             where T : ScriptableObject
         {
@@ -856,7 +888,9 @@ namespace TianZhang.Editor
             }
         }
 
-        private static void CommitContentCatalog(ContentCatalogImportPreview preview)
+        private static void CommitContentCatalog(
+            ContentCatalogImportPreview preview,
+            AppearanceProfileData[] appearanceProfiles)
         {
             const string characterPath = "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset";
             var existingCharacterGuid = AssetDatabase.AssetPathToGUID(characterPath);
@@ -894,6 +928,7 @@ namespace TianZhang.Editor
                 };
                 var catalog = UpsertCatalogAsset("Assets/Data/ContentCatalog/ContentCatalog.asset");
                 catalog.ReplaceEntries(settlements, enemies, items, bounties);
+                catalog.SetAppearanceProfiles(appearanceProfiles);
                 // 内容目录只保存唯一静态目录的单一引用；缺失或非法时导入失败关闭。
                 catalog.SetCharterRuleStaticCatalog(LoadCharterRuleStaticCatalog());
                 EditorUtility.SetDirty(catalog);

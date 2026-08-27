@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-27：A-CHAR-BATTLE-VISUAL-DIRECTION-01 已完成归档并固定 2D 战术精灵为正式战场角色方向；本卡已冻结仅含合法 none 档案的外观数据、存档迁移、目录与解析边界，非 none 正式资源仍须由后续独立资源卡提供。",
+  "stateReason": "2026-08-27：已完成合法 none 档案的外观目录、存档 schema 1 到 schema 2 迁移及两条无表现消费路径；非法非目录 ID 失败关闭，非 none 正式资源仍须由后续独立资源卡提供。",
   "expectedPaths": [
     "开发管理/任务列表/数据链路任务.txt",
     "开发管理/当前任务队列.txt",
@@ -79,6 +79,13 @@
 ## 完成条件
 
 - `none` 外观 ID 可原子保存恢复，非法或未目录化 ID 失败关闭；`CharacterVisualAssembler` 与 `PortraitComposer` 消费同一稳定身份结果；旧 schema 1 存档迁移后可确定性重存为 schema 2。
+
+## 完成记录
+
+- 新增唯一 `AppearanceProfiles.csv` 的 `none` 行及其生成 asset；内容目录只序列化该档案，并拒绝重复 ID、非 canonical asset 路径和非目录化 ID。
+- `CharacterRuntimeProfile`／快照／存档记录持久化稳定外观 ID；schema 1 读取迁移为 `none`，schema 2 保存不会改写非 none ID，未知非 none ID 在恢复前失败关闭。
+- `CharacterVisualAssembler` 与 `PortraitComposer` 都从 `ContentCatalogData` 解析同一 ID；`none` 不加载资源且返回无表现。
+- 已通过 `tools/check-data-chain.ps1`、`tools/check-unity-assembly-boundaries.ps1` 和 `tools/run-unity-editmode-tests.ps1`；EditMode 覆盖 CSV 严格性、目录唯一性、schema 迁移、未知 ID 拒绝及两条消费路径。
 
 ## 停止条件
 

@@ -159,11 +159,14 @@ namespace TianZhang.Tests
             Assert.AreEqual(99, item.maxStack);
             Assert.IsTrue(catalog.TryGetBounty("bounty_guanzhong_shijiahou", out var bounty));
             Assert.AreEqual("one_time", bounty.repeatPolicy);
+            Assert.IsTrue(catalog.TryGetAppearanceProfile("none", out var appearance));
+            Assert.IsTrue(appearance.IsNone);
             Assert.AreEqual(1, catalog.GetBountiesByIssuer("guanzhong_city").Count);
             Assert.IsTrue(catalog.TryGetAdventureMap("guanzhong_wild", out var adventure));
             Assert.AreEqual("adventure_node_start", adventure.nodes[0].nodeTypeId);
             Assert.IsFalse(catalog.TryGetEnemy("enemy_fengsun", out _));
             Assert.IsFalse(catalog.TryGetItem("item_unknown", out _));
+            Assert.IsFalse(catalog.TryGetAppearanceProfile("appearance_unknown", out _));
         }
 
         private static SettlementContentImporter.ContentCatalogImportPreview ParseProductionPreview()

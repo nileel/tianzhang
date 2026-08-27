@@ -5,7 +5,7 @@ namespace TianZhang.Character
     {
         public CharacterStateSnapshot(CharacterIdentitySnapshot identity, CharacterAttributesSnapshot attributes,
             CharacterResourcesSnapshot resources, AbilityLoadoutSnapshot abilityLoadout, CharacterProgressionSnapshot progression,
-            string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId)
+            string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -14,6 +14,9 @@ namespace TianZhang.Character
             Progression = progression ?? throw new System.ArgumentNullException(nameof(progression));
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
+            AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
+                ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
+                : appearanceProfileId;
         }
         public CharacterIdentitySnapshot Identity { get; }
         public CharacterAttributesSnapshot Attributes { get; }
@@ -22,5 +25,6 @@ namespace TianZhang.Character
         public CharacterProgressionSnapshot Progression { get; }
         public string MainEquipmentBasicAttackProfileId { get; }
         public string UnarmedBasicAttackProfileId { get; }
+        public string AppearanceProfileId { get; }
     }
 }

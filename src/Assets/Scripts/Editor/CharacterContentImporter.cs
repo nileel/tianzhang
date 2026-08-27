@@ -50,7 +50,124 @@ namespace TianZhang.Editor
         [MenuItem("天章/导入角色配置")]
         public static void ImportCharacterDefinitions()
         {
+            ImportAppearanceProfiles();
             ImportCharacters();
+        }
+
+        /// <summary>Parses the sole currently approved appearance profile table without writing assets.</summary>
+        public static AppearanceProfileData[] ParseAppearanceProfileDefinitions(string[] lines, string sourceName)
+        {
+            var profiles = new List<AppearanceProfileData>();
+            try
+            {
+                int headerLineIndex = CsvTableReader.FindHeaderIndex(lines);
+                string[] headers = CsvTableReader.FindHeader(lines);
+                CsvTableReader.RequireExactColumns(headers, sourceName, "appearanceProfileId");
+
+                var ids = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string line in lines.Skip(headerLineIndex + 1))
+                {
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+                        continue;
+
+                    string[] columns = CsvTableReader.ParseRow(line);
+                    if (columns.Length != headers.Length)
+                        throw new InvalidDataException($"{sourceName} row has {columns.Length} columns; expected {headers.Length}.");
+
+                    string id = CsvTableReader.GetRequiredValue(headers, columns, "appearanceProfileId", sourceName);
+                    if (!ids.Add(id))
+                        throw new InvalidDataException($"{sourceName} contains duplicate appearance profile ID '{id}'.");
+                    if (!string.Equals(id, AppearanceProfileData.NoneId, StringComparison.Ordinal))
+                        throw new InvalidDataException($"{sourceName} contains unapproved appearance profile ID '{id}'.");
+
+                    var profile = ScriptableObject.CreateInstance<AppearanceProfileData>();
+                    profile.appearanceProfileId = id;
+                    if (!profile.TryValidate(out string reason))
+                        throw new InvalidDataException($"{sourceName} appearance profile '{id}' is invalid: {reason}.");
+                    profiles.Add(profile);
+                }
+
+                if (profiles.Count != 1 || !string.Equals(profiles[0].appearanceProfileId, AppearanceProfileData.NoneId, StringComparison.Ordinal))
+                    throw new InvalidDataException($"{sourceName} must contain exactly the approved '{AppearanceProfileData.NoneId}' appearance profile.");
+
+                return profiles.ToArray();
+            }
+            catch
+            {
+                foreach (AppearanceProfileData profile in profiles)
+                    UnityEngine.Object.DestroyImmediate(profile);
+                throw;
+            }
+        }
+
+        private static void ImportAppearanceProfiles()
+        {
+            const string path = "Assets/DataConfig/AppearanceProfiles.csv";
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Appearance profile CSV was not found.", path);
+
+            AppearanceProfileData[] profiles = ParseAppearanceProfileDefinitions(File.ReadAllLines(path), path);
+            try
+            {
+                ValidateAppearanceProfileAssetPaths(profiles);
+                foreach (AppearanceProfileData profile in profiles)
+                {
+                    string assetPath = $"Assets/Data/AppearanceProfiles/AppearanceProfile_{profile.appearanceProfileId}.asset";
+                    var existing = AssetDatabase.LoadAssetAtPath<AppearanceProfileData>(assetPath);
+                    if (existing == null)
+                    {
+                        AssetCommitter.EnsureDirectory(assetPath);
+                        AssetDatabase.CreateAsset(profile, assetPath);
+                    }
+                    else
+                    {
+                        EditorUtility.CopySerialized(profile, existing);
+                        EditorUtility.SetDirty(existing);
+                    }
+                }
+            }
+            finally
+            {
+                foreach (AppearanceProfileData profile in profiles)
+                {
+                    if (!AssetDatabase.Contains(profile))
+                        UnityEngine.Object.DestroyImmediate(profile);
+                }
+            }
+        }
+
+        private static void ValidateAppearanceProfileAssetPaths(IReadOnlyCollection<AppearanceProfileData> profiles)
+        {
+            var canonicalPaths = profiles.ToDictionary(
+                profile => profile.appearanceProfileId,
+                profile => $"Assets/Data/AppearanceProfiles/AppearanceProfile_{profile.appearanceProfileId}.asset",
+                StringComparer.Ordinal);
+
+            foreach (string guid in AssetDatabase.FindAssets("t:AppearanceProfileData"))
+            {
+                string existingPath = AssetDatabase.GUIDToAssetPath(guid);
+                var existing = AssetDatabase.LoadAssetAtPath<AppearanceProfileData>(existingPath);
+                if (existing != null && !string.IsNullOrWhiteSpace(existing.appearanceProfileId) &&
+                    canonicalPaths.TryGetValue(existing.appearanceProfileId, out string canonicalPath) &&
+                    !string.Equals(existingPath, canonicalPath, StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException($"Appearance profile ID '{existing.appearanceProfileId}' has a non-canonical asset path '{existingPath}'.");
+                }
+            }
+
+            foreach (KeyValuePair<string, string> entry in canonicalPaths)
+            {
+                UnityEngine.Object atCanonicalPath = AssetDatabase.LoadMainAssetAtPath(entry.Value);
+                if (atCanonicalPath != null && !(atCanonicalPath is AppearanceProfileData))
+                    throw new InvalidDataException($"{entry.Value} conflicts with a non-AppearanceProfileData asset.");
+
+                var existing = atCanonicalPath as AppearanceProfileData;
+                if (existing != null && !string.IsNullOrWhiteSpace(existing.appearanceProfileId) &&
+                    !string.Equals(existing.appearanceProfileId, entry.Key, StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException($"{entry.Value} has a conflicting serialized appearance profile ID '{existing.appearanceProfileId}'.");
+                }
+            }
         }
 
         public static CharacterData[] ParseCharacterDefinitions(string[] lines, string sourceName)

@@ -1,3 +1,4 @@
+using TianZhang.Content;
 using TianZhang.Entity;
 
 namespace TianZhang.Character
@@ -7,7 +8,7 @@ namespace TianZhang.Character
     {
         public CharacterRuntimeProfile(CharacterIdentity identity, CharacterAttributes attributes, CharacterResources resources,
             AbilityLoadout abilityLoadout, CharacterProgressionRef progression,
-            string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId)
+            string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -16,12 +17,16 @@ namespace TianZhang.Character
             Progression = progression ?? throw new System.ArgumentNullException(nameof(progression));
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
+            AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
+                ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
+                : appearanceProfileId;
         }
         public CharacterIdentity Identity { get; } public CharacterAttributes Attributes { get; }
         public CharacterResources Resources { get; } public AbilityLoadout AbilityLoadout { get; }
         public CharacterProgressionRef Progression { get; }
         public string MainEquipmentBasicAttackProfileId { get; private set; }
         public string UnarmedBasicAttackProfileId { get; private set; }
+        public string AppearanceProfileId { get; private set; }
 
         public static CharacterRuntimeProfile FromDefinition(string characterId, CharacterData definition)
         {
@@ -36,7 +41,7 @@ namespace TianZhang.Character
             foreach (string skill in definition.equippedSkills ?? new string[0]) loadout.TryEquipSkill(skill);
             return new CharacterRuntimeProfile(new CharacterIdentity(characterId, definition.charName), attributes,
                 new CharacterResources(derived.MaxHealth, derived.MaxHealth, derived.MaxSpirit, derived.MaxSpirit), loadout, progression,
-                definition.mainEquipmentBasicAttackProfileId, definition.unarmedBasicAttackProfileId);
+                definition.mainEquipmentBasicAttackProfileId, definition.unarmedBasicAttackProfileId, AppearanceProfileData.NoneId);
         }
 
         public static CharacterRuntimeProfile FromSnapshot(CharacterStateSnapshot snapshot)
@@ -67,7 +72,8 @@ namespace TianZhang.Character
                     snapshot.Progression.RealmStage,
                     snapshot.Progression.RealmMultiplier),
                 snapshot.MainEquipmentBasicAttackProfileId,
-                snapshot.UnarmedBasicAttackProfileId);
+                snapshot.UnarmedBasicAttackProfileId,
+                snapshot.AppearanceProfileId);
             profile.Restore(snapshot);
             return profile;
         }
@@ -76,7 +82,7 @@ namespace TianZhang.Character
         {
             return new CharacterStateSnapshot(
                 Identity.Capture(), Attributes.Capture(), Resources.Capture(), AbilityLoadout.Capture(), Progression.Capture(),
-                MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId);
+                MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId, AppearanceProfileId);
         }
         public void Restore(CharacterStateSnapshot snapshot)
         {
@@ -85,6 +91,7 @@ namespace TianZhang.Character
             AbilityLoadout.Restore(snapshot.AbilityLoadout); Progression.Restore(snapshot.Progression);
             MainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId;
+            AppearanceProfileId = snapshot.AppearanceProfileId;
         }
     }
 }

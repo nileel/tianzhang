@@ -11,6 +11,7 @@ namespace TianZhang.Content
         [SerializeField] private EnemyData[] enemies = Array.Empty<EnemyData>();
         [SerializeField] private ItemData[] items = Array.Empty<ItemData>();
         [SerializeField] private BountyData[] bounties = Array.Empty<BountyData>();
+        [SerializeField] private AppearanceProfileData[] appearanceProfiles = Array.Empty<AppearanceProfileData>();
         [SerializeField] private CharterRuleStaticCatalogData charterRuleStaticCatalog;
         [SerializeField] private CharterSiteData[] charterSites = Array.Empty<CharterSiteData>();
         [SerializeField] private AdventureMapData[] adventureMaps = Array.Empty<AdventureMapData>();
@@ -90,6 +91,36 @@ namespace TianZhang.Content
         public bool TryGetBounty(string bountyId, out BountyData bounty)
         {
             return TryFind(bounties, bountyId, value => value.bountyId, out bounty);
+        }
+
+        /// <summary>Resolves only a unique valid profile serialized into this production catalog.</summary>
+        public bool TryGetAppearanceProfile(string appearanceProfileId, out AppearanceProfileData appearanceProfile)
+        {
+            appearanceProfile = null;
+            if (string.IsNullOrWhiteSpace(appearanceProfileId))
+                return false;
+
+            var seenIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AppearanceProfileData candidate in appearanceProfiles)
+            {
+                if (candidate == null || !candidate.TryValidate(out _) ||
+                    !seenIds.Add(candidate.appearanceProfileId))
+                {
+                    return false;
+                }
+
+                if (string.Equals(candidate.appearanceProfileId, appearanceProfileId, StringComparison.Ordinal))
+                    appearanceProfile = candidate;
+            }
+
+            return appearanceProfile != null;
+        }
+
+        public void SetAppearanceProfiles(AppearanceProfileData[] profiles)
+        {
+            appearanceProfiles = profiles == null
+                ? Array.Empty<AppearanceProfileData>()
+                : (AppearanceProfileData[])profiles.Clone();
         }
 
         public IReadOnlyList<BountyData> GetBountiesByIssuer(string issuerSettlementId)
