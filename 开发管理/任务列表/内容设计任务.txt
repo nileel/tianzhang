@@ -94,7 +94,6 @@
 | C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | C-STORY-WM-05B | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
 | C-KB-IDX-STORY-01 | P2 | codex | 阻塞 | — | 剧情事实速查卡 | 开发管理/任务卡/C-KB-IDX-STORY-01.txt |
 | C-KB-IDX-CULTIVATE-01 | P2 | codex | 阻塞 | — | 角色养成事实速查卡 | 开发管理/任务卡/C-KB-IDX-CULTIVATE-01.txt |
-| C-KB-IDX-MONSTER-01 | P2 | codex | 已排队 | — | 怪物事实速查卡 | 开发管理/任务卡/C-KB-IDX-MONSTER-01.txt |
 
 ## 世界主线拆分
 

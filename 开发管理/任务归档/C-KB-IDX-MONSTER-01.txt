@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-27 Codex 独立复审正式提交 fe456542b6322714ab0bc3d08450e5c1b034a14b 通过；典型怪物任务实际必读量、5 处路径#章节指针、L1 线索层边界与现有怪物事实均符合任务卡。",
   "expectedPaths": [
     "docs/怪物/怪物事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-MONSTER-01.txt",
