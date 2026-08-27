@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-27 负责人在当前 Codex 对话确认选择 Codex 按未通过审核清单返工。",
+  "stateReason": "2026-08-27 Codex 按负责人选择完成返工并闭环；提交 7bb0cfa6870e6a72ce4a87eb807997b414cfa138 已修正跨域来源路径、7 条悬念逐行指针与状态；典型剧情任务必读量为 L1 82 行及 5 份 L2 文件中的 8 个目标片段。",
   "expectedPaths": [
     "docs/剧情/剧情事实速查.txt",
     "开发管理/任务卡/C-KB-IDX-STORY-01.txt",
