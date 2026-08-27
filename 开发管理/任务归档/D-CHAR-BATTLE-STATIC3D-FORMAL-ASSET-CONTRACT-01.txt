@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-27：用户已批准正式静态3D方向与双资产前置，但当前仓库只有player／enemy_shijiahou稳定身份，没有两项正式资产或profile合同；本卡先冻结共同生产和批准输入。",
+  "stateReason": "2026-08-27：已冻结正式player／enemy_shijiahou双资产的稳定profile、路径、视觉边界、Blender／FBX坐标、六向、双输入QA与人工批准门；未生产资产、未导入Unity、未接线。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -63,3 +63,8 @@
 
 - 正式玩家身份或石甲兽视觉边界仍存在不可逆歧义，或必须消费未获当次授权的外部 credits。
 - 合同需要复用苻渊隔离资产、旧动画 3D 任务、第二正式提供器或改动战斗规则／存档。
+
+## 完成记录
+
+- 已创建 `docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md`，冻结两项资产的稳定来源身份、`presentationProfileId`、文件、材质、坐标、六向、单一路线、失败关闭和负责人批准矩阵。
+- 本卡未生产 source、启动 Blender、调用外部平台、消费 credits、修改 Unity 或解除双资产总门；后续两张独立资产卡仍须各自通过完整 QA 与负责人视觉批准。
