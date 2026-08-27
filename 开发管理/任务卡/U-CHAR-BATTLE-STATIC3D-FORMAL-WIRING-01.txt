@@ -1,0 +1,99 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
+  "title": "静态3D Provider与正式Adventure Marker所有权解耦",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-BATTLE-PRESENTATION-CONTRACT-01",
+    "U-CHAR-BATTLE-STATIC3D-PROFILES-01"
+  ],
+  "stateReason": "必须同时等待载体中立合同与正式玩家／石甲兽双Profile总门；本卡在一个原子结果中迁移正式Marker生命周期并持久化唯一静态3D provider。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/README.md",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SceneArchitectureValidator.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/SceneArchitectureEditorTests.cs",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs.meta",
+    "UNITY_STRUCTURE.runtime.md",
+    "UNITY_STRUCTURE.content.md",
+    "开发管理/正式静态3D战斗棋子Provider与Adventure解耦验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 · 静态3D Provider与正式Adventure Marker所有权解耦
+
+## 来源与当前边界
+
+- 当前真实所有者链为 `AdventureSceneInstaller.unitMarkerPrefab -> AdventureController -> EncounterCoordinator.TryBegin -> AdventureUnitSpawner.TrySpawn`；Spawner 同时创建快照与 Marker，`AdventureSpawnSet` 保存 Marker，Coordinator 直接销毁。
+- 本卡必须同时消费已完成的载体中立合同和正式玩家／石甲兽双 profile 总门；不允许出现 Adventure 已移除 Marker 但正式 provider 输入尚未完整的半迁移状态。
+- `ICombatPresentationSink`／`CombatHudSnapshot` 是独立 HUD 端口，保持不变。
+
+## 必查范围
+
+- `AdventureUnitSpawner`、`AdventureSpawnSet`、`AdventureController.Configure|BeginEncounter`、`EncounterCoordinator.Configure|TryBegin|RunCombat|ExecutePlayer|Complete|DestroyMarkers` 的完整逻辑单元和直接测试。
+- `AdventureSceneInstaller.Awake`、`AdventureSceneBuilder.Build`、`SceneArchitectureValidator` 的正式 Adventure 验证、`AdventureScene` 序列化 provider／Marker／比较入口引用。
+- 静态 3D profile catalog／set、两个批准 Prefab、载体中立端口与现有正式关中端到端链。
+
+## 实施范围
+
+- 实现唯一正式 `Static3DCombatUnitPresentationProvider`，拥有双 profile 解析、预检、实例创建、材质／底座／根节点事件、错误报告、按稳定 combatant ID 移除和整场清理；无 2D 或技术 Marker fallback。
+- `AdventureUnitSpawner` 只形成玩家／敌人快照与稳定内容引用，不实例化、染色或返回任何表现对象；`AdventureSpawnSet` 移除 `PlayerMarker`／`EnemyMarker`。
+- `EncounterCoordinator` 在创建 `CombatSession` 前一次性解析并预检全部 profile／格位／方向；通过后生成棋子。成功规则动作形成确定 `CombatActionResult` 后，Adventure 复制成只读事件投影；失败命令不伪造动作事件，表现失败不回写或重算规则。
+- 原子移除 Adventure 对具体 Marker 的创建、保存与销毁；战斗结束、失败退出和场景销毁只经表现端口按稳定 ID 清理。
+- `AdventureSceneInstaller` 序列化并验证唯一静态 3D provider；`AdventureSceneBuilder.Build()` 删除 `unitMarkerPrefab` 写入，确定性写入 provider 与批准目录／set，保存并重开验证。
+- 正式接线完成前从 build-enabled `AdventureScene` 移除 `VisualBaselineBoard`、`BattleVisualComparisonPanel` 与路线／模式按钮；保留比较资产、控制器、证据和直接测试，不建立第二正式 Adventure／Bootstrap。
+- `UnitMarker.prefab` 可保留为专用回归 fixture，但正式 Builder、场景和运行时不得再引用它。
+
+## 禁止项
+
+- 不修改 `ICombatPresentationSink`／`CombatHudSnapshot`，不建立统一 presenter／Hub，不让表现完成回调决定 CTB、AI、伤害、胜负或返回。
+- 不新增玩家运行时切换、同场双正式 provider、兼容分支、重试层、隐藏 2D／Marker fallback 或表现路线存档字段。
+- 不复用 `FuYuan_StaticChess`、`U-CHAR-3D-FORMAL-01`、VisualBaseline probe 或比较 UI 作为正式 provider。
+- 不手改 `AdventureScene.unity` YAML；只通过既有 Builder 持久化并重开验证。
+
+## 验证
+
+- `rg` 证明 Adventure 源码不再出现 `unitMarkerPrefab`、`PlayerMarker`、`EnemyMarker`、具体表现控制器或直接 `Destroy` 棋子对象；正式场景／Builder 对 `UnitMarker.prefab` 零引用。
+- 测试提供器与正式静态 3D provider 在相同战斗输入下得到一致快照、合法行动、伤害、胜负、奖励与保存结果；缺 profile／Prefab／材质在创建 `CombatSession` 前精确失败关闭。
+- `AdventureSceneBuilder.Build()` 后保存、关闭并重新打开 `AdventureScene`，唯一 provider 引用保持，`VisualBaselineBoard`／`BattleVisualComparisonPanel`／切换按钮不存在。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`。
+- `TianZhang.Editor.SceneArchitectureValidator.ValidateForBatchMode` 通过；预期路径 whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- build-enabled `AdventureScene` 只绑定一个正式静态 3D provider，玩家与石甲兽均按稳定 profile 生成、消费六类事件并精确清理。
+- Adventure／Combat 规则链不创建、保存、销毁或引用具体表现对象；规则、数值、奖励、返回与存档结果不依赖表现实现。
+- 技术 Marker、比较面板、VisualBaselineBoard、2D fallback 和玩家切换入口均不在正式链。
+
+## 停止条件
+
+- 任一前置未完成、用户 dirty changes 与 AdventureScene／Builder／测试产生实质冲突，或 Builder 无法确定性保存重开。
+- 需要 GameplayContracts 引用 Combat、让表现回调决定规则、建立第二正式链、使用苻渊／Marker fallback 或跨入 2D 实验切片。

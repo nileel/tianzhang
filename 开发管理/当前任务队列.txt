@@ -5,3 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| U-CHAR-BATTLE-PRESENTATION-CONTRACT-01 | codex_execute | codex | P1 | unity | implementation | 载体中立战斗棋子只读表现合同 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-CONTRACT-01.txt |
+| D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01 | codex_execute | codex | P1 | content | design | 正式玩家与石甲兽静态3D资产及双Profile合同 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01.txt |

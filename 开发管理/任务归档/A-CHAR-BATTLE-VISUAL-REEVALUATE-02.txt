@@ -1,0 +1,61 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-VISUAL-REEVALUATE-02",
+  "title": "战场角色2D与静态3D方向重新评估父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-08-27：全部子项完成，用户最终选择 B‘静态 3D’，现行方向事实与旧结论失效原因已同步。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-VISUAL-REEVALUATE-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-VISUAL-REEVALUATE-02 · 战场角色2D与静态3D方向重新评估父项
+
+## 来源与当前边界
+
+- 唯一批准规格是 `docs/superpowers/specs/2026-08-24-character-battle-visual-direction-reevaluation-design.md`。
+- 旧比较、两条路线调研与 pipeline、隔离 pilot、Unity 接入、可玩比较和成本证据均保留为历史证据。
+- 2026-08-27，用户最终选择 B“静态 3D”；本父项只汇总方向，不生产资产或修改 Unity。
+
+## 必查范围
+
+- 批准规格完整正文，特别是任务图、用户决定与父项关闭条件。
+- 全部直接子卡的完成归档、用户决定记录和现行 backlog。
+
+## 实施范围
+
+- 已把静态 3D 记录为正式战斗棋子默认方向。
+- 已把 2D 记录为开发期独立、非阻塞实验；正式游戏不提供玩家切换入口。
+- 已将后续模块化工作转交新的原子任务图，不解冻旧动画 3D 路线。
+
+## 禁止项
+
+- 不生产参考调研、详细方案、角色资产、模型或 Unity 接线。
+- 不以旧等权总分替代用户决定。
+- 不解冻 `U-CHAR-3D-FORMAL-01`，不把 `FuYuan_StaticChess` 改为正式资产。
+
+## 验证
+
+- 用户决定记录、现行方向事实、两张完成归档、backlog 与队列投影一致。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+
+## 完成条件
+
+- 已满足：用户选择静态 3D，新方向及旧结论失效原因已写入现行事实，父项关闭且没有越权解锁旧业务任务。
+
+## 停止条件
+
+- 若关闭需要新增第三路线、修改战斗规则或猜测用户偏好，则不得归档；本轮未命中。

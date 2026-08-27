@@ -1,0 +1,88 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-BATTLE-PRESENTATION-CONTRACT-01",
+  "title": "载体中立战斗棋子只读表现合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-27：用户已批准合同边界；实时 rg 确认旧枚举当前恰有定义、4个控制器和4个PlayMode测试共9个C#消费者，可作为首张原子叶子实施。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/README.md",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/StaticChessPresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TacticalSpritePresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpritePresentationController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleVisualComparisonController.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md",
+    "src/Assets/Tests/PlayMode/StaticChessPresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/BattleAnimationSpritePresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/BattleVisualComparisonPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/CombatUnitPresentationContractsTests.cs",
+    "src/Assets/Tests/EditMode/CombatUnitPresentationContractsTests.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "UNITY_STRUCTURE.assemblies.md",
+    "tools/check-unity-assembly-boundaries.ps1",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-CONTRACT-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-PRESENTATION-CONTRACT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-BATTLE-PRESENTATION-CONTRACT-01 · 载体中立战斗棋子只读表现合同
+
+## 来源与当前边界
+
+- 批准设计 §4.1、§4.2、§八切片 1、§9.1 与 §十是唯一语义合同。
+- 当前 `StaticChessPresentationEvent` 的实时基线是 9 个 C# 文件：一个定义、四个控制器、四个 PlayMode 测试；实施前必须重新用 `rg` 核对。
+- 当前 GameplayContracts 只依赖 Foundation；CombatPresentation asmdef 中 `TianZhang.Combat` 是未被代码消费的悬空引用。
+
+## 必查范围
+
+- `CombatPresentationContracts.cs` 的完整逻辑单元及 GameplayContracts／CombatPresentation README、asmdef。
+- 四个控制器的完整事件入口与四个 PlayMode 测试的事件矩阵。
+- `tools/check-unity-assembly-boundaries.ps1` 与 `AssemblyBoundaryEditorTests` 中两个程序集的精确期望。
+
+## 实施范围
+
+- 在现有 `TianZhang.Gameplay.Contracts` 中建立载体中立、只读的棋子表现合同：稳定 combatant ID、稳定 presentation profile ID、显示阵营角色、`q/r`、规则已确定的六向 facing、准备／生成／移除／整场清理和已提交规则结果的事件投影。
+- `StaticChessPresentationEvent` 必须原子改名为 `CombatUnitPresentationEvent`，一次覆盖当前九个文件；不保留兼容枚举，不复制 2D／3D 专属规则枚举。
+- 事件投影只复制已发生的起止格位、方向、命中目标 ID、逐目标最终伤害和死亡状态；不得携带 `CombatActionResult`、可写 `CombatantSnapshot`、AI、命令服务、存档对象或具体 Unity 类型。
+- 新棋子端口与 `ICombatPresentationSink`／`CombatHudSnapshot` 并存；后两者保持原名、原职责、原方法，不合并、不迁移、不新增总控 Hub。
+- 移除 `TianZhang.Features.CombatPresentation.asmdef` 的 `TianZhang.Combat` 引用，同步两个 README、`UNITY_STRUCTURE.assemblies.md`、程序集边界脚本和直接测试。
+- 本卡不修改 Adventure 的 Marker 创建／保存／销毁所有权，不修改 Installer、Builder、正式场景或 provider 接线。
+
+## 禁止项
+
+- GameplayContracts 不得引用 `TianZhang.Combat`、Adventure、`CombatActionResult`、Prefab、Renderer、Sprite、Mesh、`GameObject` 或任何具体提供器。
+- 不重命名或改造 HUD sink，不建立复合 presenter、事件 hub、兼容分支、fallback、重试层或新状态机。
+- 不提前修改 `AdventureUnitSpawner`、`AdventureSpawnSet`、`EncounterCoordinator`、`AdventureSceneInstaller`、`AdventureSceneBuilder` 或 `AdventureScene`。
+
+## 验证
+
+- 实施前 `rg -l --glob '*.cs' "StaticChessPresentationEvent" src/Assets/Scripts src/Assets/Tests` 必须仍只返回冻结的 9 个文件；若增加消费者则按停止条件处理。
+- 实施后仓库相关 C# 对 `StaticChessPresentationEvent` 零残留，九个文件全部使用 `CombatUnitPresentationEvent`。
+- `rg` 证明 GameplayContracts 没有 `CombatActionResult`、`TianZhang.Combat` 或 Unity 资产实现引用，HUD 两个公开类型保持原名。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`。
+- 相关路径变化后的 `check-task-cards`、预期路径 whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 只读合同可在不引用 Combat 或具体载体的情况下表达两类单位的生命周期、格位、方向和六类事件；旧枚举零残留。
+- CombatPresentation → Combat 程序集边已移除，结构事实与边界验证一致，现有 2D／静态 3D pilot 的直接测试继续通过。
+
+## 停止条件
+
+- 重新扫描发现第 10 个或更多消费者不在冻结路径中，或用户 dirty changes 与九文件原子改名无法无冲突合并。
+- 合同需要引用 Combat、Adventure、`CombatActionResult`、具体 Unity 资产或让表现返回值决定规则推进。
+- 需要提前改 Adventure Marker 所有权、正式场景接线或 HUD 端口。

@@ -1,0 +1,109 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-BATTLE-STATIC3D-PROFILES-01",
+  "title": "正式玩家与石甲兽静态3D Profile映射总门",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01",
+    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01"
+  ],
+  "stateReason": "正式接线前的双输入总门；必须同时消费已批准的正式玩家与石甲兽资产，建立载体中立内容映射和静态3D Prefab映射。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
+    "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
+    "src/Assets/Scripts/Modules/Content/README.md",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md",
+    "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs",
+    "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs.meta",
+    "src/Assets/Art/Characters/CombatPieces.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.mat",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.mat.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D_BaseColor.png",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D_BaseColor.png.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.mat",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.mat.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta",
+    "src/Assets/Data/CombatPresentationProfiles.meta",
+    "src/Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset",
+    "src/Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset.meta",
+    "src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset",
+    "src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset.meta",
+    "src/Assets/Tests/EditMode/CombatUnitPresentationProfileEditorTests.cs",
+    "src/Assets/Tests/EditMode/CombatUnitPresentationProfileEditorTests.cs.meta",
+    "UNITY_STRUCTURE.content.md",
+    "tools/check-data-chain.ps1",
+    "开发管理/正式玩家与石甲兽静态3D战斗棋子Profile映射QA记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-BATTLE-STATIC3D-PROFILES-01 · 正式玩家与石甲兽静态3D Profile映射总门
+
+## 来源与当前边界
+
+- 本卡同时依赖两张已通过负责人视觉批准的 source／Blender／FBX 资产卡；缺少任一方不得开始或部分提交。
+- 载体中立内容映射固定为 `player -> combat_player_default_v1`、`enemy_shijiahou -> combat_enemy_shijiahou_v1`。
+- 静态 3D provider 映射只引用两项正式 Prefab；`FuYuan_StaticChess` 不得出现在内容目录、profile set 或正式 Prefab 依赖中。
+
+## 必查范围
+
+- 两张资产卡归档、manifest、哈希、负责人批准和完整 QA 记录。
+- `TianZhang.Content` 当前 ScriptableObject 数据模式、CombatPresentation 模块边界、Editor Builder 持久化模式和直接测试。
+- 两个 source FBX／BaseColor 的精确绝对路径、导出轴、单位缩放、接地与 Unity importer 回读。
+
+## 实施范围
+
+- 建立 provider-neutral 的 `CombatUnitPresentationProfileCatalogData`，只保存稳定来源身份到稳定 profile ID 的只读映射，不保存 Prefab、Sprite、Mesh 或路线选择。
+- 建立静态 3D 专属 `Static3DCombatUnitPresentationProfileSet`，只保存稳定 profile ID 到已批准 Prefab 的映射和载体 QA 元数据。
+- 由 `FormalStatic3DCombatPieceBuilder` 原样导入两个冻结 FBX／BaseColor，确定性创建各自材质与 Prefab，并创建内容目录 asset 与静态 3D profile set；不手写 `.asset`／`.prefab` YAML。
+- Builder 必须在保存后重新加载两项 asset 和两项 Prefab，核验 ID 唯一、来源身份唯一、材质／关键组件完整、轴／尺度／接地／六向合同一致。
+- 本卡不修改 Adventure、Installer、正式场景、`AdventureUnitSpawner` 或 provider runtime 接线。
+
+## 禁止项
+
+- 不以对象名、`player`／`enemy` 临时颜色、技术 Marker 或运行时 fallback 代替 profile。
+- 不接入 `FuYuan_StaticChess`，不引用旧 `U-CHAR-3D-FORMAL-01` 或冻结动画／统一骨架资产。
+- 不把 Prefab／Mesh 引用放进 GameplayContracts／Content 的 provider-neutral 目录，不修改战斗规则、数值或存档 schema。
+
+## 验证
+
+- Builder 两次运行幂等；保存后重新加载目录、profile set、材质和 Prefab 均保持同一引用与稳定 ID。
+- `CombatUnitPresentationProfileEditorTests` 覆盖双输入完整、重复／未知 ID、缺 Prefab／材质／关键组件、方向合同失败、`FuYuan_StaticChess` 零正式引用和部分输入失败关闭。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- 预期路径 whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 正式玩家和石甲兽两项已批准 Unity Prefab、两个稳定 profile ID、provider-neutral 内容映射、静态 3D profile set 与 QA 同时通过；任一单角色结果都不算完成。
+- 正式接线卡只需消费这一个双输入总门，不需要猜测路径、颜色、对象名或 fallback。
+
+## 停止条件
+
+- 任一资产未获批准、哈希变化、Unity importer 需要重导出源 FBX、两项无法使用同一坐标／六向合同，或需要部分提交。
+- 需要让 Content／GameplayContracts 引用具体 Prefab、修改保存结构、使用苻渊／Marker fallback 或提前修改正式 Adventure。

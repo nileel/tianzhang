@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-BATTLE-PRESENTATION-MODULAR-01",
+  "title": "战斗棋子功能与表现模块化父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
+    "U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01"
+  ],
+  "stateReason": "2026-08-27：父项只汇总正式静态3D接线与非阻塞2D实验两个关闭叶子，不直接承担合同、资产、接线或实验实现。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-27-combat-piece-presentation-modularization-design.md",
+    "开发管理/战场角色视觉方向重新评估用户决定记录.txt",
+    "开发管理/设计-当前状态.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-BATTLE-PRESENTATION-MODULAR-01 · 战斗棋子功能与表现模块化父项
+
+## 来源与当前边界
+
+- 唯一直接设计事实源是 `docs/superpowers/specs/2026-08-27-combat-piece-presentation-modularization-design.md` 的用户已批准修订稿。
+- 本卡是汇总父项，不进入 ready 队列实施业务；五个切片由独立原子卡承担。
+- 旧 `U-CHAR-3D-FORMAL-01` 属于冻结的动画 3D 路线，不是本父项或任一子卡的前置、替代卡或复用入口。
+
+## 必查范围
+
+- 批准设计 §一～§十，特别是模块边界、事件流、五个实施切片、完成条件与停止条件。
+- `U-CHAR-BATTLE-PRESENTATION-CONTRACT-01`、正式双资产／profile 链、`U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01`、内容扩展规划卡和 `U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01` 的完成或非 ready 状态。
+
+## 实施范围
+
+- 只汇总依赖与关闭结果，不修改 C#、asmdef、场景、Prefab、数据或美术资产。
+- 正式链关闭叶子固定为 `U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01`；实验链关闭叶子固定为 `U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01`。
+- 切片 4 的首批扩展规划是正式 provider 完成后的下游内容通道，不阻塞本父项首轮模块化关闭，也不得改变已经冻结的 provider 合同。
+
+## 禁止项
+
+- 不把父项作为大型实现任务领取，不在父项内补做任一子卡。
+- 不新增运行时玩家切换、双正式提供器、总控 Hub、兼容分支、重试层或额外状态机。
+- 不恢复旧动画 3D、统一骨架或苻渊隔离样例的正式接入。
+
+## 验证
+
+- 核对五个切片依赖图、两个直接关闭叶子、现行 backlog 与队列投影一致。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+
+## 完成条件
+
+- 正式玩家与石甲兽双 profile 已批准，正式 Adventure 只装配一个静态 3D provider，Marker 所有权已从 Adventure 移除，HUD 端口保持独立。
+- 2D 已在非 BuildSettings、非正式 Adventure／Bootstrap 的独立实验入口消费同一合同；实验失败不阻塞正式链。
+- 静态 3D 内容扩展规划通道已保留为切片 3 下游，且不要求在父项关闭前生产额外角色。
+
+## 停止条件
+
+- 任一关闭叶子未完成，或完成事实需要读取具体表现实现才能证明规则结果。
+- 需要复用 `U-CHAR-3D-FORMAL-01`、把 2D 设为正式链前置、同场常驻双提供器或增加玩家切换。

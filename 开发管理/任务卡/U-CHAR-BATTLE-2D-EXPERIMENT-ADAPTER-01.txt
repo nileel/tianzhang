@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01",
+  "title": "非BuildSettings战斗棋子2D实验适配器",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-BATTLE-PRESENTATION-CONTRACT-01"
+  ],
+  "stateReason": "切片5只依赖载体中立合同；在非BuildSettings测试场景中适配既有2D pilot，不阻塞正式静态3D链。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpriteCombatUnitPresentationAdapter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpriteCombatUnitPresentationAdapter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md",
+    "src/Assets/Scripts/Editor/CombatPiece2DExperimentSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/CombatPiece2DExperimentSceneBuilder.cs.meta",
+    "src/Assets/Tests/Scenes.meta",
+    "src/Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity",
+    "src/Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity.meta",
+    "src/Assets/Tests/EditMode/CombatPiece2DExperimentEditorTests.cs",
+    "src/Assets/Tests/EditMode/CombatPiece2DExperimentEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/CombatPiece2DExperimentPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/CombatPiece2DExperimentPlayModeTests.cs.meta",
+    "UNITY_STRUCTURE.runtime.md",
+    "开发管理/战斗棋子2D实验适配器验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01 · 非BuildSettings战斗棋子2D实验适配器
+
+## 来源与当前边界
+
+- 只依赖已完成的载体中立合同；不依赖正式双资产、静态 3D profile、正式 wiring 或内容扩展。
+- 既有 `BattleAnimationSpritePresentationController` 与 `FuYuan_BattleAnimationSprite.prefab` 仍是隔离 pilot；本卡只用它们证明 2D 可以消费同一生命周期与事件合同。
+- 正式 `AdventureScene`、正式 `GameBootstrap` 和四个 enabled BuildSettings 场景不得被修改。
+
+## 必查范围
+
+- `CombatUnitPresentationEvent`、棋子生命周期／只读结果 DTO 与端口完整合同。
+- `BattleAnimationSpritePresentationController`、现有 2D Prefab／atlas、事件帧、六向、billboard／根节点行为和直接 PlayMode 测试。
+- `EditorBuildSettings.asset` 的四个正式场景只读基线与现有 Builder 持久化模式。
+
+## 实施范围
+
+- 以独立 `BattleAnimationSpriteCombatUnitPresentationAdapter` 适配现有 2D pilot，消费共同的准备、生成、移除、整场清理和六类只读事件；不向规则层回写。
+- 由专用 Editor Builder 创建 `Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity`，只含实验组合与测试输入，不包含第二个正式 Adventure、`AdventureSceneInstaller` 或 `GameBootstrap`。
+- 实验场景不得加入 `EditorBuildSettings`；测试必须断言四个正式 enabled 场景列表完全不变。
+- 2D 缺少实验 profile／Sprite／关键组件时只在实验入口精确失败关闭，不修改正式静态 3D profile、provider、场景或任务状态。
+
+## 禁止项
+
+- 不修改 build-enabled `AdventureScene`、`AdventureSceneBuilder`、正式 Installer、正式 profile 或静态 3D provider。
+- 不新增玩家运行时切换、第二正式 Adventure／Bootstrap、双正式 provider、2D→3D fallback、3D→2D fallback 或共享可写运行时状态。
+- 不把 2D 实验设为切片 2～4 的 blocker，不修改规则、数值、存档或表现路线字段。
+
+## 验证
+
+- EditMode：专用 Builder 两次运行幂等，实验 scene 保存并重开后 adapter／Prefab 引用保持；`EditorBuildSettings` 仍恰为四个正式场景且不含实验 scene。
+- PlayMode：同一测试事件流覆盖准备、生成、六方向、`Idle/Move/Attack/Hit/Cast/Death`、移除与整场清理；只读输入不被修改。
+- 正式 `AdventureScene.unity`、`AdventureSceneBuilder.cs`、Installer、profile asset 与静态 3D provider 在本卡 diff 中零变化。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`。
+- 预期路径 whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 既有 2D pilot 在一个非 BuildSettings、非正式 Adventure／Bootstrap 的实验入口消费同一只读合同并通过生命周期／六向／六事件测试；正式静态 3D 配置和运行结果不变。
+
+## 停止条件
+
+- 实现需要修改正式 Adventure／Bootstrap、正式 profile、静态 3D provider、战斗规则或保存结构。
+- 需要运行时玩家切换、同场双正式 provider、跨载体 fallback、第二正式场景链或用户 dirty changes 无法无冲突合并。

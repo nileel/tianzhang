@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01",
+  "title": "正式玩家与石甲兽静态3D资产及双Profile合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-27：用户已批准正式静态3D方向与双资产前置，但当前仓库只有player／enemy_shijiahou稳定身份，没有两项正式资产或profile合同；本卡先冻结共同生产和批准输入。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01.txt",
+    "开发管理/任务归档/D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01 · 正式玩家与石甲兽静态3D资产及双Profile合同
+
+## 来源与当前边界
+
+- 批准模块化设计 §五、§八切片 2、§9.2 和 §十规定正式玩家与石甲兽必须同时成为正式接线前置。
+- 当前稳定内容身份只有 `player` 与 `enemy_shijiahou`；仓库没有两项正式静态 3D 资产或 `presentationProfileId` 数据所有者。
+- `FuYuan_StaticChess` 只受 2026-08-21 隔离比较合同约束，禁止成为正式玩家资产；旧 `U-CHAR-3D-FORMAL-01` 也不构成批准输入。
+
+## 必查范围
+
+- 批准模块化设计完整正文与 `docs/superpowers/specs/2026-08-21-static-3d-chess-character-production-contract.md` 的范围、坐标、根节点语义、QA 和正式接入禁止项。
+- `player`／`enemy_shijiahou` 的现行内容身份、正式关中遭遇与当前缺失资产事实。
+- `tianzhang-blender-pipeline` 的路径、工具通道、坐标、导出、失败停止和证据合同。
+
+## 实施范围
+
+- 写出一份同时约束正式玩家与石甲兽的静态 3D 资产合同，冻结身份来源、视觉边界、单一工具路线、source／Blender／FBX／Unity 文件命名、材质、尺度、`Y=0` 接地、局部 `+Z` 正面、单位缩放、六方向 `90/150/210/270/330/30`、根节点表现和人工批准矩阵。
+- 载体中立稳定 profile ID 固定为 `combat_player_default_v1` 与 `combat_enemy_shijiahou_v1`；分别绑定稳定来源身份 `player` 与 `enemy_shijiahou`，不得以对象名、阵营颜色或 Prefab 名猜测。
+- 合同必须要求两项资产各自通过来源、哈希、材质、缩放、朝向、接地、六向、轮廓和负责人视觉批准；任一方缺失时双 profile 总门保持阻塞。
+- 若会消费外部 credits，合同只建立独立人工授权门，不在本卡消费 credits、生成模型或修改 Unity。
+
+## 禁止项
+
+- 不把苻渊隔离样例、旧动画 3D、统一骨架、技术 Marker、相近资源或另一条表现路线写成正式 fallback。
+- 不生产资产、不启动 Blender、不调用外部平台、不消费 credits、不修改 `src/Assets/`。
+- 不预设玩家运行时切换、同场双提供器、模型内部骨骼动画或多套 Pose 换模。
+
+## 验证
+
+- 规格自审：零 `TBD`／`TODO`，两项身份、两个 profile ID、精确输出文件、坐标、工具、人工门、失败停止和 QA 均无歧义。
+- `rg` 证明合同没有授权 `FuYuan_StaticChess`、`U-CHAR-3D-FORMAL-01`、技术 Marker 或正式 2D fallback。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+- 相关路径的 `check-task-cards`、whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 用户批准一份同时覆盖正式玩家和石甲兽、并能让两张资产生产卡在不猜测路径／身份／坐标／工具／QA 的情况下独立执行的冻结合同。
+
+## 停止条件
+
+- 正式玩家身份或石甲兽视觉边界仍存在不可逆歧义，或必须消费未获当次授权的外部 credits。
+- 合同需要复用苻渊隔离资产、旧动画 3D 任务、第二正式提供器或改动战斗规则／存档。

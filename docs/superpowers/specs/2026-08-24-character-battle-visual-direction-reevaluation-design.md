@@ -1,7 +1,7 @@
 # 战场角色 2D／静态 3D 表现方向重新评估设计
 
 日期：2026-08-24
-状态：本文根据 2026-08-24 手动只读审核修订并由用户明确批准；同日已建立完整任务图和首批 ready 投影，尚未开始业务实施
+状态：本文根据 2026-08-24 手动只读审核修订并由用户明确批准；2026-08-27 用户最终选择 B“静态 3D”，重新评估已完成
 
 ## 一、重新评估原因
 
@@ -304,3 +304,4 @@ A-CHAR-BATTLE-VISUAL-REEVALUATE-02
 - 最终 user decision 卡必须让用户运行游戏后回复；本文、参考调研、pipeline 方案或 Codex 技术复核均不能代替该决定。
 - 2026-08-25，`U-CHAR-BATTLE-VISUAL-PLAYABLE-COMPARE-02` 在同一 `AdventureScene/VisualBaselineBoard` 完成可运行入口：用户可切换冻结的 2D 动态战斗与静态 3D 动态路线，重复选择六方向和六个共同事件并复位。入口只编排既有隔离表现控制器，未接入正式单位、战斗规则或存档；技术复核确认 BaseColor、路线互斥、共同输入、事件与复位，未产生视觉胜者。用户决定仍等待同口径成本证据。
 - 2026-08-26，`D-CHAR-BATTLE-VISUAL-COST-EVIDENCE-01` 已按两条 pipeline、pilot 和 Unity 接入的实际记录形成同口径成本证据：2D source pilot 为 18 分钟、0 元／0 credits、7 次生成且 1 次失败返工，静态 3D cue source pilot 为 1 分钟、0 元／0 credits、5 次合成且无失败返工；2D Unity 接入只记录约 3 分钟，静态 3D Unity 接入的人工分钟未记录，明确保留为未知。该证据不合计总价、不估算批量折扣、不产生视觉或成本胜者；`A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 现只等待用户实际运行入口后的 A／B／C 回复。
+- 2026-08-27，用户最终选择 B“静态 3D”：正式游戏的战斗棋子优先采用静态 3D，2D 保留为独立、非阻塞的实验与调研方向；2D／3D 只在开发期组合中替换，正式游戏不提供玩家切换入口。旧 `2D:静态 3D = 42:30` 结论因证据不对称与成本模型不完整不再具有现行决策效力。`A-CHAR-BATTLE-VISUAL-USER-DECISION-02` 与父项 `A-CHAR-BATTLE-VISUAL-REEVALUATE-02` 已据此关闭；后续事实源转为[战斗棋子功能与表现模块化设计](2026-08-27-combat-piece-presentation-modularization-design.md)，不解冻或复用旧动画 3D 卡 `U-CHAR-3D-FORMAL-01`。

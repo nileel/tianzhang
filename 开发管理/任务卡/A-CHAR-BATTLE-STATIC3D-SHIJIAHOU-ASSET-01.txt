@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01",
+  "title": "石甲兽静态3D战斗棋子资产生产与批准",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-CHAR-BATTLE-STATIC3D-FORMAL-ASSET-CONTRACT-01"
+  ],
+  "stateReason": "等待用户批准正式双资产合同；本卡只生产enemy_shijiahou源资产和Blender／FBX QA，不导入Unity或接线。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.blend",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.fbx",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1_basecolor.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1_manifest.json",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1_contact-sheet.png",
+    "开发管理/石甲兽静态3D战斗棋子资产QA记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 · 石甲兽静态3D战斗棋子资产生产与批准
+
+## 来源与当前边界
+
+- 只消费用户批准的 `2026-08-27-formal-static-3d-combat-piece-asset-contract.md` 中 `enemy_shijiahou` 身份、重型四足轮廓、单一工具路线、文件、坐标和 QA。
+- 产物的载体中立 profile ID 是 `combat_enemy_shijiahou_v1`；现行 `Enemies.csv` 与正式关中遭遇只提供规则身份和数值，不提供 3D 资产。
+- 旧 `U-SHIJIAHOU-3D-PROTO-01` 与 `U-CHAR-3D-FORMAL-01` 属于冻结的旧动画／统一骨架路线，不是本卡输入。
+
+## 必查范围
+
+- 批准资产合同中石甲兽的完整身份、轮廓、source、Blender、FBX、材质、尺度、接地、朝向、六向和批准矩阵。
+- `src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`、正式 Adventure／悬赏中同一稳定敌人 ID，只读取身份与用途，不修改数值。
+- `tianzhang-blender-pipeline` 的工具路由、绝对路径、坐标、导出、回读、覆盖和失败停止规则。
+
+## 实施范围
+
+- 只生产一个石甲兽静态棋子 source／Blender／FBX 候选及唯一 BaseColor、manifest、固定视角联系表和 QA 记录。
+- Blender 候选必须无运行时骨骼动画，四足接地与身体包络通过，根在占地投影、局部 `+Z` 正面、单位缩放导出；六向只复用统一 yaw。
+- manifest 记录全部输入与输出 SHA-256、工具版本、来源、实际次数／费用／credits、坐标和验证结果。
+- 负责人对石甲兽身份、重型四足轮廓、材质、接地、尺度和六向可读性明确批准后，本卡才能完成。
+
+## 禁止项
+
+- 不修改敌人数值、AI、Combat、Adventure、Unity 场景、provider 或存档。
+- 不复用冻结旧动画卡、统一人形骨架、技术 Marker、相近怪物或未批准来源。
+- 不叠加第二工具路线、自动重试、运行时骨骼动画或私有朝向偏移。
+
+## 验证
+
+- 按 `tianzhang-blender-pipeline` 的批准单一路线完成 Blender／FBX factory-empty 回读、网格／材质／尺度／朝向／四足接地检查。
+- 固定正／侧／背及六向联系表由负责人完成视觉批准；哈希与 manifest 一致。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`。
+- 预期路径 whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 唯一石甲兽静态 3D source、`.blend`、FBX、BaseColor、manifest 和联系表均可复核，全部硬门与负责人视觉批准通过；尚未导入 Unity 或连接正式场景。
+
+## 停止条件
+
+- 需要未授权 credits、第二次生成／重试、恢复旧动画／统一骨架路线、扩大资产文件集或修改战斗规则／Unity 才能通过。
+- 身份、重型四足轮廓、材质、接地、局部轴、单位缩放、六向或哈希任一硬门失败。

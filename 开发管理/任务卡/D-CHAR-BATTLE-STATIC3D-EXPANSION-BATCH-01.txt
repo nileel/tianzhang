@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01",
+  "title": "静态3D战斗棋子首批内容扩展规格",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01"
+  ],
+  "stateReason": "切片4只在正式provider合同与关中首遇接线稳定后选择第一个额外内容批次；当前不猜测角色或敌人范围。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-08-27-static-3d-combat-piece-first-expansion-batch-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt",
+    "开发管理/任务归档/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 · 静态3D战斗棋子首批内容扩展规格
+
+## 来源与当前边界
+
+- 本卡只在正式静态 3D provider 与首个玩家／石甲兽遭遇接线完成后进入 ready。
+- 批准设计切片 4 只允许在 provider 合同不变的前提下逐批增加其他玩家、敌人和表现资料。
+- 当前用户没有指定第一个额外单位批次；本轮管理拆卡不得猜测为风隼、炎尾狐、雪影魔修或荒野散修。
+
+## 必查范围
+
+- 正式 wiring 归档、稳定 provider 合同、profile catalog／set schema 和双输入 QA。
+- 当时现行内容 backlog 与用户明确指定的稳定角色／敌人 ID；只读取被选批次的直接内容事实。
+
+## 实施范围
+
+- 只形成一个首批扩展规格，冻结精确单位 ID、批次大小、每单位独立资产结果、profile ID、source／Unity 路径、依赖、人工批准与验证矩阵。
+- 规格不得修改既有 provider 接口、正式玩家／石甲兽 profile、Adventure 接线或战斗规则。
+- 批次身份仍未由用户指定时，使用一次合法 decision checkpoint 等待，不生产资产或建立猜测性卡片。
+
+## 禁止项
+
+- 不在本卡生产模型、材质、Prefab、VFX、音效或 Unity 映射。
+- 不批量打包多个无法独立批准的单位，不把 2D 实验或苻渊样例设为前置。
+- 不改 provider 合同、正式场景、规则、数值或存档。
+
+## 验证
+
+- 规格自审零占位符；每个被选单位都有稳定内容 ID、唯一 profile ID、独立单一验收结果和精确路径。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`。
+- 相关路径 `check-task-cards`、whitespace 与暂存后 `git diff --cached --check`。
+
+## 完成条件
+
+- 用户批准一个不改变 provider 合同、可按单位独立生产与批准的首批静态 3D 内容扩展规格；本卡不声称资产已经生产。
+
+## 停止条件
+
+- 批次身份或数量未获用户决定，或扩展要求修改 provider／Adventure／Combat／存档合同。
+- 需要把多个单位、2D 实验或正式接线返工合并成一个资产任务。
