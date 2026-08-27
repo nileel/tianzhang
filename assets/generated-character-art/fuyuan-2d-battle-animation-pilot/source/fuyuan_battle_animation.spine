@@ -39,7 +39,7 @@
   },
   "tianzhangAtlas": {
     "grid": { "columns": 3, "rows": 6, "cellWidth": 768, "cellHeight": 768, "rowOrder": [ 0, 1, 2, 3, 4, 5 ] },
-    "pivot": [ 0.5, 0.18 ],
+    "pivot": [ 0.5, 0.010416667 ],
     "sourceMethod": "limited-frame-pawn",
     "states": {
       "idle": { "frames": 3, "events": { "start": 0, "end": 2 } },

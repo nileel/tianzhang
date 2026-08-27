@@ -78,6 +78,7 @@ namespace TianZhang.Editor
         public const int BattleAnimationFramesPerDirection = 3;
         public const float TacticalSpritePixelsPerUnit = 512f;
         public static readonly Vector2 TacticalSpritePivot = new Vector2(0.5f, 0.18f);
+        public static readonly Vector2 BattleAnimationSpritePivot = new Vector2(0.5f, 1f / 96f);
         public static readonly Vector3 StaticChessFigureEuler = new Vector3(-90f, 0f, 0f);
         public static readonly Vector3 StaticChessBaseScale = new Vector3(0.66f, 0.04f, 0.66f);
 
@@ -579,8 +580,8 @@ namespace TianZhang.Editor
                 manifest.atlasContract.columns != BattleAnimationFramesPerDirection || manifest.atlasContract.rows != 6 ||
                 manifest.atlasContract.cell.width != 768 || manifest.atlasContract.cell.height != 768 ||
                 manifest.atlasContract.atlas.width != 2304 || manifest.atlasContract.atlas.height != 4608 ||
-                Mathf.Abs(manifest.atlasContract.pivot.normalized[0] - TacticalSpritePivot.x) > 0.001f ||
-                Mathf.Abs(manifest.atlasContract.pivot.normalized[1] - TacticalSpritePivot.y) > 0.001f)
+                Mathf.Abs(manifest.atlasContract.pivot.normalized[0] - BattleAnimationSpritePivot.x) > 0.001f ||
+                Mathf.Abs(manifest.atlasContract.pivot.normalized[1] - BattleAnimationSpritePivot.y) > 0.001f)
                 throw new InvalidOperationException("Frozen battle animation manifest does not match the approved 6x3 atlas contract.");
             for (int state = 0; state < BattleAnimationStateCount; state++)
             {
@@ -639,7 +640,7 @@ namespace TianZhang.Editor
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
             settings.spriteAlignment = (int)SpriteAlignment.Custom;
-            settings.spritePivot = TacticalSpritePivot;
+            settings.spritePivot = BattleAnimationSpritePivot;
             importer.SetTextureSettings(settings);
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Multiple;
@@ -662,7 +663,7 @@ namespace TianZhang.Editor
                     name = BattleAnimationSpriteName(state, direction, frame),
                     rect = new Rect(frame * 768, direction * 768, 768, 768),
                     alignment = (int)SpriteAlignment.Custom,
-                    pivot = TacticalSpritePivot,
+                    pivot = BattleAnimationSpritePivot,
                 };
             }
             return sprites;

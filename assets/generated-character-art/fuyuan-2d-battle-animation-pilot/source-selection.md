@@ -14,6 +14,6 @@
 
 ## 选定母源与边界
 
-- 唯一母源：`source/fuyuan_battle_animation.spine`，SHA-256 `FB9D619F84A7D21C8B3F7F3B0641AABE201485911C809116F94ADC8764FC68D0`。它是可编辑的 Spine JSON 状态／事件／atlas 栅格时间线；不被运行时当作骨骼、Animator 或 SkinnedMeshRenderer。
-- 该选择的实际输出是六份三帧、六方向 RGBA raster atlas。四角透明、统一 `768×768` cell 与 `(0.5,0.18)` 脚底锚点由 `manifest.json` 冻结；任何 Unity 私有缩放、平移或镜像均不在本卡范围。
+- 唯一母源：`source/fuyuan_battle_animation.spine`，SHA-256 `973057B58EE5F4994F0E06F4047D2644658ADE3C41F87A527258CD2FE7A0D037`。它是可编辑的 Spine JSON 状态／事件／atlas 栅格时间线；不被运行时当作骨骼、Animator 或 SkinnedMeshRenderer。
+- 该选择的实际输出是六份三帧、六方向 RGBA raster atlas。四角透明、统一 `768×768` cell 与 `(0.5,0.010416667)`（左下原点 8 px）脚底锚点由 `manifest.json` 冻结；任何 Unity 私有缩放、平移或镜像均不在本卡范围。
 - 宽袖和双手在源图检查中保持连通可读；本次不含武器、地块、阴影、常驻特效、投射物、法阵、文字或 UI。固定 `VisualBaselineBoard` 的真实遮挡和多单位矩阵仍只由下游 `U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 在导入隔离 probe 后验证；本卡未复制资产到 `src/`。

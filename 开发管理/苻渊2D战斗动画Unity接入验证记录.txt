@@ -2,13 +2,14 @@
 
 任务：`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01`
 日期：2026-08-25
+接地修复复核：2026-08-27
 范围：隔离 `AdventureScene/VisualBaselineBoard`；不接入正式单位、战斗规则、方向、占格、装备、AI、结算或存档。
 
 ## 冻结输入与导入
 
 - 输入唯一来自 `assets/generated-character-art/fuyuan-2d-battle-animation-pilot/manifest.json` 和六份冻结 atlas；没有读取或导入 `.spine` 母源。
-- 目标为 `src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_<State>.png`。六份目标文件与 manifest SHA-256 一致：idle `DB5757F17C8F3474372B0C017FB04B3396E3AF17FC0734BB47F8D715151B67EC`、move `E1266201079379DA348674ACC6A63E08DE2B50DDB7B94E908B5005DA68B13562`、attack `53397BA3A011FE9C08F8FEB8B380CB88DAF1FB6DED529D38B64A68369CBA9046`、hit `AAEA9067512BDD903B92FD4520EB98273524A4DDD2B58D489DB015364ED11028`、cast `7428EF9489073A55DCCFB80D7928116AFD326248F35BAF93AF01969B77C9BB28`、death `8D7840EAB32B22A02E09E893043C83DEB35AF8F067C6E7BEF0101904D0890541`。
-- 每 atlas 是 `2304×4608` RGBA PNG；Unity importer 为 Sprite Multiple、六行三列、每 cell `768×768`、`512 PPU`、Custom pivot `(0.5,0.18)`、alpha transparency，无方向镜像／私有位移／私有缩放。
+- 目标为 `src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_<State>.png`。2026-08-27 统一重排后的六份目标文件与 manifest SHA-256 一致：idle `1909385200D5DA3C16CC35972E3A5840F3916A68A5DD01099591FA5FD60459F5`、move `046C0EB0699917C8F89BDD855934AE2305D1D77A7D09C666BE2812B9814D87E3`、attack `14DA367E2B2B0D406FCC015823BD3B9D31EBF19277B4B37402515E994B7A5DF4`、hit `7F6A9C185AD6F95E47096696F8682541F19B99887C8AA54374E50A3257258947`、cast `D6D8241C2370B32517AE45BC2AD52B88FAA740DF37219156E103487E30142AC0`、death `DD671DD4BC36352581FC01D942E8079432587ECBBD7163095DABC79A6FB05692`。
+- 每 atlas 是 `2304×4608` RGBA PNG；Unity importer 为 Sprite Multiple、六行三列、每 cell `768×768`、`512 PPU`、Custom pivot `(0.5,0.010416667)`、alpha transparency，无方向镜像／私有位移／私有缩放。六份 atlas 的 108 个 cell 最低非透明像素均位于左下原点 8 px，新 pivot 也是 8 px，接地误差为 `0 px / 0 world unit`；旧静态六向样张仍保持 `(0.5,0.18)`。
 
 ## 运行时所有者与隔离
 
@@ -27,6 +28,9 @@
 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1` | 通过 |
 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` | 通过 |
 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1` | 通过（19 assemblies、2 asmrefs） |
+| 2026-08-27 `dotnet build src/TianZhang.EditModeTests.csproj` | 通过（0 error；既有 warning） |
+| 2026-08-27 Unity EditMode／PlayMode | EditMode `423/423`、PlayMode `13/13` 通过；EditMode wrapper 仍命中既有 Windows 映射文件恢复错误，测试 XML 全通过且无关序列化副作用已精确还原。 |
+| 2026-08-27 atlas alpha／pivot 数值检查 | 六状态共 108 个 cell 均为最低 alpha `8 px`，pivot `8 px`，差值 `0`。 |
 
 ## 成本与未外推项
 

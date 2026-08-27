@@ -7,7 +7,7 @@
   "editableSource": {
     "path": "source/fuyuan_battle_animation.spine",
     "format": "Spine JSON timeline and atlas-grid source",
-    "sha256": "FB9D619F84A7D21C8B3F7F3B0641AABE201485911C809116F94ADC8764FC68D0",
+    "sha256": "973057B58EE5F4994F0E06F4047D2644658ADE3C41F87A527258CD2FE7A0D037",
     "selection": "有限帧／棋子化；Spine JSON 只保存六状态、事件和栅格时间线，不作为运行时骨骼或 Animator。"
   },
   "inputSha256": {
@@ -32,23 +32,23 @@
     "atlas": { "width": 2304, "height": 4608 },
     "directionOrder": [ 0, 1, 2, 3, 4, 5 ],
     "directionAngles": [ 90, 150, 210, 270, 330, 30 ],
-    "pivot": { "normalized": [ 0.5, 0.18 ], "pixelFromBottomLeft": [ 384, 138.24 ] },
+    "pivot": { "normalized": [ 0.5, 0.010416667 ], "pixelFromBottomLeft": [ 384, 8 ] },
     "cells": [
-      { "direction": 0, "frames": [ { "index": 0, "rect": [ 0, 0, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 1, "rect": [ 768, 0, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 2, "rect": [ 1536, 0, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] } ] },
-      { "direction": 1, "frames": [ { "index": 0, "rect": [ 0, 768, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 1, "rect": [ 768, 768, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 2, "rect": [ 1536, 768, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] } ] },
-      { "direction": 2, "frames": [ { "index": 0, "rect": [ 0, 1536, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 1, "rect": [ 768, 1536, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 2, "rect": [ 1536, 1536, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] } ] },
-      { "direction": 3, "frames": [ { "index": 0, "rect": [ 0, 2304, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 1, "rect": [ 768, 2304, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 2, "rect": [ 1536, 2304, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] } ] },
-      { "direction": 4, "frames": [ { "index": 0, "rect": [ 0, 3072, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 1, "rect": [ 768, 3072, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 2, "rect": [ 1536, 3072, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] } ] },
-      { "direction": 5, "frames": [ { "index": 0, "rect": [ 0, 3840, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 1, "rect": [ 768, 3840, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] }, { "index": 2, "rect": [ 1536, 3840, 768, 768 ], "footAnchor": [ 0.5, 0.18 ] } ] }
+      { "direction": 0, "frames": [ { "index": 0, "rect": [ 0, 0, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 1, "rect": [ 768, 0, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 2, "rect": [ 1536, 0, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] } ] },
+      { "direction": 1, "frames": [ { "index": 0, "rect": [ 0, 768, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 1, "rect": [ 768, 768, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 2, "rect": [ 1536, 768, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] } ] },
+      { "direction": 2, "frames": [ { "index": 0, "rect": [ 0, 1536, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 1, "rect": [ 768, 1536, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 2, "rect": [ 1536, 1536, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] } ] },
+      { "direction": 3, "frames": [ { "index": 0, "rect": [ 0, 2304, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 1, "rect": [ 768, 2304, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 2, "rect": [ 1536, 2304, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] } ] },
+      { "direction": 4, "frames": [ { "index": 0, "rect": [ 0, 3072, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 1, "rect": [ 768, 3072, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 2, "rect": [ 1536, 3072, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] } ] },
+      { "direction": 5, "frames": [ { "index": 0, "rect": [ 0, 3840, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 1, "rect": [ 768, 3840, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] }, { "index": 2, "rect": [ 1536, 3840, 768, 768 ], "footAnchor": [ 0.5, 0.010416667 ] } ] }
     ]
   },
   "states": {
-    "idle": { "file": "fuyuan_battle_idle.png", "framesPerDirection": 3, "events": { "start": 0, "end": 2 }, "sha256": "DB5757F17C8F3474372B0C017FB04B3396E3AF17FC0734BB47F8D715151B67EC" },
-    "move": { "file": "fuyuan_battle_move.png", "framesPerDirection": 3, "events": { "start": 0, "step": 1, "end": 2 }, "sha256": "E1266201079379DA348674ACC6A63E08DE2B50DDB7B94E908B5005DA68B13562" },
-    "attack": { "file": "fuyuan_battle_attack.png", "framesPerDirection": 3, "events": { "start": 0, "impact": 1, "end": 2 }, "sha256": "53397BA3A011FE9C08F8FEB8B380CB88DAF1FB6DED529D38B64A68369CBA9046" },
-    "hit": { "file": "fuyuan_battle_hit.png", "framesPerDirection": 3, "events": { "start": 0, "impact": 1, "end": 2 }, "sha256": "AAEA9067512BDD903B92FD4520EB98273524A4DDD2B58D489DB015364ED11028" },
-    "cast": { "file": "fuyuan_battle_cast.png", "framesPerDirection": 3, "events": { "start": 0, "release": 1, "end": 2 }, "sha256": "7428EF9489073A55DCCFB80D7928116AFD326248F35BAF93AF01969B77C9BB28" },
-    "death": { "file": "fuyuan_battle_death.png", "framesPerDirection": 3, "events": { "start": 0, "terminal": 2 }, "sha256": "8D7840EAB32B22A02E09E893043C83DEB35AF8F067C6E7BEF0101904D0890541" }
+    "idle": { "file": "fuyuan_battle_idle.png", "framesPerDirection": 3, "events": { "start": 0, "end": 2 }, "sha256": "1909385200D5DA3C16CC35972E3A5840F3916A68A5DD01099591FA5FD60459F5" },
+    "move": { "file": "fuyuan_battle_move.png", "framesPerDirection": 3, "events": { "start": 0, "step": 1, "end": 2 }, "sha256": "046C0EB0699917C8F89BDD855934AE2305D1D77A7D09C666BE2812B9814D87E3" },
+    "attack": { "file": "fuyuan_battle_attack.png", "framesPerDirection": 3, "events": { "start": 0, "impact": 1, "end": 2 }, "sha256": "14DA367E2B2B0D406FCC015823BD3B9D31EBF19277B4B37402515E994B7A5DF4" },
+    "hit": { "file": "fuyuan_battle_hit.png", "framesPerDirection": 3, "events": { "start": 0, "impact": 1, "end": 2 }, "sha256": "7F6A9C185AD6F95E47096696F8682541F19B99887C8AA54374E50A3257258947" },
+    "cast": { "file": "fuyuan_battle_cast.png", "framesPerDirection": 3, "events": { "start": 0, "release": 1, "end": 2 }, "sha256": "D6D8241C2370B32517AE45BC2AD52B88FAA740DF37219156E103487E30142AC0" },
+    "death": { "file": "fuyuan_battle_death.png", "framesPerDirection": 3, "events": { "start": 0, "terminal": 2 }, "sha256": "DD671DD4BC36352581FC01D942E8079432587ECBBD7163095DABC79A6FB05692" }
   },
   "export": {
     "tooling": [ "built-in ImageGen", "remove_chroma_key.py with border sampling, soft matte and despill", "System.Drawing uniform cell export" ],

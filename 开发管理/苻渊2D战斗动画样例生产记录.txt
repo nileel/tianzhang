@@ -17,8 +17,8 @@
 ## 选择与输出
 
 - 选定方法：有限帧／棋子化。攻击、受击、死亡均为六方向三帧源图试片；攻击为蓄势—命中—回收，受击为预冲击—冲击—恢复，死亡为开始—下沉—终态。
-- 唯一可编辑母源：`assets/generated-character-art/fuyuan-2d-battle-animation-pilot/source/fuyuan_battle_animation.spine`，SHA-256 `FB9D619F84A7D21C8B3F7F3B0641AABE201485911C809116F94ADC8764FC68D0`。
-- 输出：`idle`、`move`、`attack`、`hit`、`cast`、`death` 六份 `2304×4608` RGBA atlas；每份有方向 `0..5` 六行、每方向三帧、每格 `768×768`，统一 pivot `(0.5,0.18)`。
+- 唯一可编辑母源：`assets/generated-character-art/fuyuan-2d-battle-animation-pilot/source/fuyuan_battle_animation.spine`；2026-08-27 接地锚点同步后的 SHA-256 为 `973057B58EE5F4994F0E06F4047D2644658ADE3C41F87A527258CD2FE7A0D037`，并由 `manifest.json` 冻结。
+- 输出：`idle`、`move`、`attack`、`hit`、`cast`、`death` 六份 `2304×4608` RGBA atlas；每份有方向 `0..5` 六行、每方向三帧、每格 `768×768`。2026-08-27 统一重排后，全部帧的最低非透明像素位于左下原点 8 px，统一 pivot 修正为 `(0.5,0.010416667)`；旧静态六向样张的 `(0.5,0.18)` 不变。
 - 质量：源图检查确认苻渊身份、黑／灰／金主色、宽袖／双手和三项高风险动作语义；自动检查确认六状态、六向、等帧、RGBA、透明角、事件索引、锚点覆盖和 manifest 哈希。
 
 ## 未外推／下游

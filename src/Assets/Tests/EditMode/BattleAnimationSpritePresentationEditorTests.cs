@@ -36,7 +36,7 @@ namespace TianZhang.Tests.EditMode
                 Assert.AreEqual(SpriteImportMode.Multiple, importer.spriteImportMode);
                 Assert.AreEqual(VisualBaselineBuilder.TacticalSpritePixelsPerUnit, importer.spritePixelsPerUnit, 0.001f);
                 Assert.AreEqual((int)SpriteAlignment.Custom, settings.spriteAlignment);
-                Assert.Less(Vector2.Distance(settings.spritePivot, VisualBaselineBuilder.TacticalSpritePivot), 0.001f);
+                Assert.Less(Vector2.Distance(settings.spritePivot, VisualBaselineBuilder.BattleAnimationSpritePivot), 0.001f);
                 Assert.IsTrue(importer.alphaIsTransparency);
                 Assert.AreEqual(18, importer.spritesheet.Length);
 
@@ -46,7 +46,7 @@ namespace TianZhang.Tests.EditMode
                     SpriteMetaData metadata = importer.spritesheet[direction * 3 + frame];
                     Assert.AreEqual(VisualBaselineBuilder.BattleAnimationSpriteName(state, direction, frame), metadata.name);
                     Assert.AreEqual(new Rect(frame * 768, direction * 768, 768, 768), metadata.rect);
-                    Assert.Less(Vector2.Distance(metadata.pivot, VisualBaselineBuilder.TacticalSpritePivot), 0.001f);
+                    Assert.Less(Vector2.Distance(metadata.pivot, VisualBaselineBuilder.BattleAnimationSpritePivot), 0.001f);
                 }
             }
         }

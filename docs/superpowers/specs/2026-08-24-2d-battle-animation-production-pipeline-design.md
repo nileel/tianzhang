@@ -47,7 +47,7 @@ pilot 的第一阶段写入 `source-selection.md`，以四个方法作为待审�
 | `fuyuan_battle_idle.png`、`fuyuan_battle_move.png`、`fuyuan_battle_attack.png`、`fuyuan_battle_hit.png`、`fuyuan_battle_cast.png`、`fuyuan_battle_death.png` | 唯一的六个运行时 source atlas；不含地面、阴影、UI、文字或常驻特效。 |
 | `source/fuyuan_battle_animation.aseprite`、`.kra`、`.spine` 或 `.blend` | 仅选定方法对应的一份可编辑母源，其他三项不得伪造空文件。其路径和 SHA-256 由 manifest 固定。 |
 
-所有 atlas 的 alpha 四角为透明；人物的脚底锚点保持既有 `(0.5,0.18)` 语义，任意方向／帧相对该点的落地高度不允许以 Unity 私有位置或缩放补偿。角色帧不烘焙地块、接触阴影、法阵、投射物、命中效果、文字或遮挡物。角色相关动作可改变剪影；特效与规则事件仍属 Unity 表现层，必须有独立的所有者。
+所有 atlas 的 alpha 四角为透明；2026-08-27 统一重排后，人物的脚底锚点固定为 `(0.5,0.010416667)`，即左下原点 `(384,8)` px，与每格最低非透明像素重合。任意方向／帧相对该点的落地高度不允许以 Unity 私有位置或缩放补偿。角色帧不烘焙地块、接触阴影、法阵、投射物、命中效果、文字或遮挡物。角色相关动作可改变剪影；特效与规则事件仍属 Unity 表现层，必须有独立的所有者。
 
 ## 五、生产、修订与成本记录流程
 
@@ -63,7 +63,7 @@ pilot 的第一阶段写入 `source-selection.md`，以四个方法作为待审�
 
 ## 六、Unity 消费合同
 
-Unity 只消费 pilot 已冻结的六个 atlas，把它们原样复制为 `src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_<State>.png`，并保存其 `.meta`。导入固定为 Sprite、多 sprite grid、`512 PPU`、Custom pivot `(0.5,0.18)`、无方向私有缩放／平移／镜像；atlas 格网和帧数必须由 manifest 驱动并由 importer 验证，缺状态、缺方向、缺帧或不一致即失败关闭。
+Unity 只消费 pilot 已冻结的六个 atlas，把它们原样复制为 `src/Assets/Art/Characters/TacticalSprites/FuYuanBattle/FuYuan_Battle_<State>.png`，并保存其 `.meta`。导入固定为 Sprite、多 sprite grid、`512 PPU`、Custom pivot `(0.5,0.010416667)`、无方向私有缩放／平移／镜像；atlas 格网和帧数必须由 manifest 驱动并由 importer 验证，缺状态、缺方向、缺帧或不一致即失败关闭。
 
 当前 `TacticalSpritePresentationController` 与 `TacticalSpriteProbeMatrix` 是旧静态六向样张的所有者，不能被改写为动作资产的隐式 fallback。动态 pilot 必须使用受限的新 `BattleAnimationSpritePresentationController`，只消费既有 `StaticChessPresentationEvent` 和批准的 atlas；它只在角色根节点播放选定状态、在结束时复位，并只暴露既有一次性施法效果信号。不得写入 `Character.Facing`、格位、路径、伤害、状态、死亡结算、装备或存档。
 
@@ -92,7 +92,7 @@ Unity 只消费 pilot 已冻结的六个 atlas，把它们原样复制为 `src/A
 
 ### 已完成 Unity 接入事实
 
-- 2026-08-25，`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 已只消费上述冻结 atlas，原样复制为 `FuYuanBattle/FuYuan_Battle_<State>.png`，并以 manifest SHA-256、`6×3` grid、`512 PPU`、Custom pivot `(0.5,0.18)` 和事件帧验证导入。
+- 2026-08-25，`U-CHAR-2D-BATTLE-ANIM-INTEGRATION-01` 已只消费上述冻结 atlas，原样复制为 `FuYuanBattle/FuYuan_Battle_<State>.png`，并以 manifest SHA-256、`6×3` grid、`512 PPU`、Custom pivot 和事件帧验证导入；2026-08-27 图集统一重排后，战斗动画专用 pivot 随实际最低非透明像素修正为 `(0.5,0.010416667)`，旧静态六向样张仍保持 `(0.5,0.18)`。
 - 新 `BattleAnimationSpritePresentationController` 与 `FuYuan_BattleAnimationSprite` Prefab 只消费 `StaticChessPresentationEvent`；它选择同一状态的六方向三帧 atlas、仅在 cast release frame 发出一次效果信号并在结束复位根节点，不拥有方向、格位、伤害、状态、结算、装备或存档。
 - `AdventureScene/VisualBaselineBoard` 已建立默认关闭的 `BattleAnimationSpriteProbeGroup`。其显式 route 关闭旧静态 2D 与静态 3D probe；旧静态样张、相机、光照、地块和 `AdventureUnitSpawner` 不变。EditMode、PlayMode、资产版本、数据链和程序集边界通过；人工矩阵仍由后续用户可玩比较而非自动分数判定。
 
