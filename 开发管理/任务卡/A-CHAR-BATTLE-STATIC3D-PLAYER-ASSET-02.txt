@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02",
+  "title": "正式玩家静态3D战斗棋子新授权生产与批准",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-28：负责人已明确授权另立新任务，并允许一次新的 Blender 原生生产与一次 FBX 导出；旧失败卡及其资产只作失败证据，不作为本卡模型、材质、贴图、脚本或 manifest 输入。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.blend",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.fbx",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1_basecolor.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1_manifest.json",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1_contact-sheet.png",
+    "开发管理/正式玩家静态3D战斗棋子资产QA记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 · 正式玩家静态3D战斗棋子新授权生产与批准
+
+## 来源与当前边界
+
+- 负责人于 2026-08-28 明确回复“授权”，对应旧卡停止条件要求的“另立新任务并重新授权一次生产”。本卡只授权一次新的 Blender 原生生产和一次 FBX 导出，不恢复旧 run 或旧模型会话。
+- 继续消费 `docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md` 中正式 `player` 的身份、外观、文件、坐标、材质、六向和批准矩阵。
+- `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01`、其失败 worktree、失败 `.blend`／FBX／BaseColor／manifest／联系表及临时构建脚本只提供根因证据；不得复制、链接、append、导入或改写为本卡资产输入。
+- 载体中立 profile ID 仍为 `combat_player_default_v1`；本卡不建立 Unity profile 映射。
+
+## 必查范围
+
+- 冻结资产合同中正式玩家的完整身份、视觉边界、source、Blender、FBX、材质、尺度、接地、朝向、六向和批准矩阵。
+- `tianzhang-blender-pipeline` 的工具路由、绝对路径、坐标、导出、回读、覆盖和失败停止规则。
+- `开发管理/正式玩家静态3D战斗棋子资产QA记录.txt` 中旧卡唯一失败根因：BaseColor 相对路径在首次另存 `.blend` 时被重映射，以及联系表像素方向错误。
+- 新 worktree 中目标 source 目录必须在本卡写入前不存在；Git／LFS 边界继续遵守项目既有 `assets/source/` 显式纳入提交规则。
+
+## 实施范围
+
+- 只从冻结合同重新原生建模一个正式玩家静态棋子，生产唯一 `.blend`、FBX、BaseColor、manifest、10 格联系表和更新后的 QA 记录。
+- 新候选必须无运行时骨骼动画，人物双足接地 `Y=0`、根在占地投影、局部 `+Z` 正面、单位缩放；六向只使用统一 Y 轴 yaw `90/150/210/270/330/30`，不写角色私有补偿。
+- 在任何 FBX 导出前，先把当前 `.blend` 保存到精确最终路径，再建立相对 BaseColor 引用；必须证明 `bpy.path.abspath(image.filepath)` 精确等于最终 BaseColor 绝对路径、文件存在且当前 `.blend` 缺失文件为 0。
+- 在任何 FBX 导出前完成 10 格联系表：正、左、右、背及六个冻结 yaw 全部使用同一固定相机和灯光；标签、人物和地面必须正向，画面不得出现缺贴图粉色。先由当前负责人上下文实际查看联系表并确认自动硬门通过，再执行唯一一次 FBX 导出。
+- manifest 记录全部输入与输出 SHA-256、Blender 版本、`sourceRoute=blender_native`、`creditsUsed=0`、`externalSourceUsed=false`、`generationAttempts=0`、`fbxExportAttempts=1`、坐标、导出参数、回读结果和负责人批准状态。
+
+## 禁止项
+
+- 不修改 `src/Assets/`、Adventure、Combat、GameplayContracts、provider、场景、数值或存档。
+- 不复用旧失败玩家候选、苻渊、旧绑定人形、技术 Marker、相近模型、旧动画路线或任何外部资产来源。
+- 不叠加第二工具路线、第二次 FBX 导出、自动重试、换头、统一绑定、运行时骨骼动画、底座或私有朝向偏移。
+
+## 验证
+
+- FBX 导出前：目标五项 source 文件名唯一；当前 `.blend` 只有一个 root、一个静态 Mesh、一个命名材质和一个 BaseColor，缺失文件为 0；尺度、接地、局部轴、单位变换和 10 格联系表方向／材质全部通过。
+- FBX 导出后：使用 `blender_headless_qa` 对唯一 FBX 做 factory-empty 回读，并在同一 Blender 路线中核对层级、网格、材质、脚本、尺度、轴、接地和 BaseColor 引用。
+- 哈希与 manifest 精确一致；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`。
+- 预期路径 whitespace、任务投影检查和暂存后 `git diff --cached --check`。
+- 固定正／左／右／背及六向联系表仍须负责人对身份、轮廓、材质、尺度、接地和六向可读性明确批准。
+
+## 完成条件
+
+- 新授权生产的唯一正式玩家静态 3D `.blend`、FBX、BaseColor、manifest、联系表和 QA 均通过全部自动硬门及负责人视觉批准。
+- 本卡归档后，`U-CHAR-BATTLE-STATIC3D-PROFILES-01` 只移除本卡 blocker；石甲兽 blocker 未完成时继续保持阻塞。尚未导入 Unity 或连接正式场景。
+
+## 停止条件
+
+- 新 worktree 目标目录预存任何旧候选，或需要复用旧失败资产／脚本才能继续。
+- 需要第二次 FBX 导出、第二次生产、外部 credits、第二工具路线、扩大资产文件集或修改 Unity 才能通过。
+- BaseColor 绝对解析、缺失文件、联系表方向／材质、身份、接地、局部轴、单位缩放、factory-empty 或哈希任一硬门失败。

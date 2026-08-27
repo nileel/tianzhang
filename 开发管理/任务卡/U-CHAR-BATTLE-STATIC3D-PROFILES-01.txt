@@ -10,10 +10,10 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01",
+    "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02",
     "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01"
   ],
-  "stateReason": "正式接线前的双输入总门；必须同时消费已批准的正式玩家与石甲兽资产，建立载体中立内容映射和静态3D Prefab映射。",
+  "stateReason": "正式接线前的双输入总门；正式玩家输入已按负责人新授权改由 A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 生产，必须与石甲兽资产同时批准后才能建立载体中立内容映射和静态3D Prefab映射。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
