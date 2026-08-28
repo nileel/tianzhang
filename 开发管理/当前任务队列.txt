@@ -13,7 +13,7 @@
 | C-HS-YY-JD-01D | codex_review | codex | P2 | content | design | 金丹位格·金道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01D.txt |
 | C-HS-YY-JD-01E | codex_review | codex | P2 | content | design | 金丹位格·水道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01E.txt |
 | C-HS-YY-JD-01F | codex_review | codex | P2 | content | design | 金丹位格·观识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01F.txt |
-| C-HS-YY-JD-01G | external_execute | deepseek | P2 | content | design | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
+| C-HS-YY-JD-01G | codex_review | codex | P2 | content | design | 金丹位格·闻识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01G.txt |
 | C-HS-YY-JD-01H | external_execute | deepseek | P2 | content | design | 金丹位格·灵识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01H.txt |
 | C-HS-YY-JD-01I | external_execute | deepseek | P2 | content | design | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
 | C-HS-YY-JD-01J | external_execute | deepseek | P2 | content | design | 金丹位格·形识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
