@@ -173,3 +173,16 @@
 - 残留风险：三份文档为文本返工，未运行可执行构建/数值验证；具体位置名称为本批次候选名，复审通过前不进入正式显示事实；Codex 独立复审仍可能对内容措辞或索引理念摘要与文档的一致性提出新意见（索引 §六 驭机渡理念摘要沿用既有「御面」措辞，属本轮返工范围之外的历史差异，未改动）。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01I-2bd74e2f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01I 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01I
+- 候选提交：90e4cdd6fb08200ba7885cfd6c3f01c6ba456f59
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Soul_TRANSFORM01_渡魂津.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Soul_DOMAIN01_幽明原.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Soul_SOURCE_泥丸玄宫.txt
+- 已验证：pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK (1016 files checked)；git diff --check → clean；pwsh tools/check-pending-whitespace.ps1 (5 files) → OK；git diff --cached --check (via automation-finalize-commit.ps1) → clean；changed paths 精确等于 CandidatePaths（5 文件），工作树干净，candidate 为 base b050a435 的直接后继
+- 未验证：BattleSim 未运行（任务卡明确：不涉及数值强度无需运行）；check-data-chain.ps1 未运行（未涉及 CSV/asset 变化）；正式效果装配、MountainRiverRuleInstance 建立与首次验证未执行（按 2026-08-28 返工决议移后至原子稳定绑定之后）
+- 残留风险：内容为本批次候选名并标「⚠️ 已修改/未审核」，Codex 复审通过前不进入正式显示事实；正式效果装配、山河实例建立与首次验证仍待稳定绑定后由后续集成环节核验；未通过清单 01I 标题与分层返工行沿用旧口径「食识道路/谷神场」作为历史审核证据未一并改名（与 01F 等兄弟条目一致）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
