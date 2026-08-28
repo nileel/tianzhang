@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：正式双资产合同已完成归档；本卡按冻结的本地 Blender 原生单一路线生产 enemy_shijiahou 源资产和 Blender／FBX QA，不导入 Unity 或接线。",
+  "stateReason": "2026-08-28：本地 Blender 原生单一路线已完成 enemy_shijiahou 静态 source、冻结 FBX、唯一 BaseColor、manifest 与十视图联系表；源、factory-empty 回读和负责人视觉批准均通过，未导入 Unity 或建立 Profile 映射。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.fbx",
@@ -68,3 +68,10 @@
 
 - 需要未授权 credits、第二次生成／重试、恢复旧动画／统一骨架路线、扩大资产文件集或修改战斗规则／Unity 才能通过。
 - 身份、重型四足轮廓、材质、接地、局部轴、单位缩放、六向或哈希任一硬门失败。
+
+## 执行收口
+
+- 2026-08-28 已完成本地 Blender 5.2.0 LTS 原生 source、一次冻结 FBX 导出、唯一 BaseColor、manifest 与 `2200×960` 十视图联系表；未使用外部来源、credits 或生成式资产。
+- 独立 source 只含 `Shijiahou_Static3D_Root` 与 `Shijiahou_Static3D_Mesh`，唯一材质为 `Shijiahou_Static3D_Mat`；包络 X `-0.396615..0.396615`、Y `0..0.78`、Z `-0.48..0.58` m，四个承重足均接地。
+- factory-empty FBX 回读通过：`mesh_count=1`、`empty_count=1`、`material_count=1`、`missing_prefixes=[]`、`script_free=true`；负责人视觉批准通过。完整哈希、工具、实际次数和证据见 `开发管理/石甲兽静态3D战斗棋子资产QA记录.txt` 与同目录 manifest。
+- 本卡完成后仍只解除自身单项资产 blocker；双输入 Profile 总门继续等待 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03`，本卡未创建 Unity 文件或正式接线。

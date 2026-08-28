@@ -1,0 +1,51 @@
+# 石甲兽静态 3D 战斗棋子资产 QA 记录
+
+任务：`A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01`
+
+结论：**PASS／已批准**。本卡以本地 Blender 原生路线交付唯一静态石甲兽 source、冻结 FBX、唯一 BaseColor、manifest 和十视图联系表。未导入 Unity、未创建 Profile 映射、未改变敌人数值或战斗规则。
+
+## 事实源与生产边界
+
+- 冻结合同：`docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md`，SHA-256：`1839acaa3eb31f18a08a8adf62127808a514a9516cf5ba1021828f262f4fa80c`。
+- 身份档案：`docs/怪物/关陇玄域/石甲兽.txt`，SHA-256：`cac1024293232e66f2b503300f40f78a4f07a24290889d79d380b7b0a14e2a89`。
+- 规则身份：`src/Assets/DataConfig/Enemies.csv::enemy_shijiahou`；关中野外 encounter 与悬赏只用于确认同一稳定 ID，不作 3D 输入或数值修改。
+- 载体中立 profile ID：`combat_enemy_shijiahou_v1`；来源身份：`enemy_shijiahou`。
+- 工具与来源：Blender `5.2.0 LTS`（`D:/Tools/Blender/5.2.0/blender.exe`）本地原生建模；未使用外部来源、上传、下载、credits、生成式资产、旧动画／统一骨架路线或 Unity。
+- 实际计数：原生网格建模 1 次、冻结 FBX 导出 1 次、BaseColor／联系表均为本地 Blender 输出；`generationAttempts=0`、`creditsUsed=0`、`externalSourceUsed=false`。联系表在同一固定相机方案内输出 2 帧：首帧发现正交相机框取景过窄后，只改正镜头宽度并复核最终帧；未改模型、材质、source 或 FBX，未发生第二次 FBX 导出。
+
+## 源场景硬门
+
+- 独立 `.blend` 仅含场景 `Shijiahou_Static3D_Source`、根节点 `Shijiahou_Static3D_Root` 与其唯一子网格 `Shijiahou_Static3D_Mesh`；网格数据为 `Shijiahou_Static3D_MeshData`。
+- 658 顶点、1165 面；唯一材质槽为 `Shijiahou_Static3D_Mat`，只读取并内嵌 `shijiahou_static3d_v1_basecolor.png`。材质不透明、非发光、粗糙的低饱和深灰／土褐风化石面。
+- 无 Armature、Action、Shape Key、骨骼权重、运行时脚本或动画；根与网格的 Position／Rotation 均 `(0,0,0)`，Scale 均 `(1,1,1)`。
+- 局部米制包络：X `-0.396615..0.396615`、Y `0.000000..0.780000`、Z `-0.480000..0.580000`；符合合同上限。四个接地点分别覆盖左前、右前、左后、右后，最低承重面均为 `Y=0`。
+- 坐标为 `+Y` 上方、局部 `+Z` 正面；六向只复用表现根 Y 轴 `90/150/210/270/330/30` 度，无私有 yaw、镜像或缩放补偿。
+
+## Factory-empty FBX 回读
+
+- 命令通道：`blender_headless_qa.blender_verify_fbx_reimport`，同一 Blender 5.2.0 LTS；退出码 `0`，无超时。
+- 回读结果：`mesh_count=1`、`empty_count=1`、`material_count=1`；材质为 `Shijiahou_Static3D_Mat`，必须前缀缺失列表为空，`script_free=true`。
+- 该回读证明冻结 FBX 能在 factory-empty Blender 中恢复静态根、网格和材质；其能力边界不包括 Unity 运行表现。本卡没有导入 Unity。
+
+## 联系表与负责人视觉批准
+
+- `shijiahou_static3d_v1_contact-sheet.png` 为 `2200×960` 固定相机、固定双 Area Light 联系表，包含正、左、右、背及 yaw `90/150/210/270/330/30` 共十视图。
+- 视觉复核：各视图均可辨识低伏重型四足身体、头部、躯干、尾部、四个承重足与叠层石甲；材质保持哑光石面而非阵营色、发光甲缝、武器、翼、浮空部件或人形／双足结构。
+- 负责人：Codex task owner；批准时间：`2026-08-28T08:26:05+08:00`；对 `enemy_shijiahou` 身份、重型四足轮廓、石甲材质、尺度、四足接地和六向可读性签署 **approved**。
+
+## 文件证据
+
+| 文件 | 字节 | SHA-256 |
+|---|---:|---|
+| `shijiahou_static3d_v1.blend` | 288678 | `3e6b82b14fc855a1dd7437b1b98d5a2b70a6df3230bcba5a4de94404f75f638b` |
+| `shijiahou_static3d_v1.fbx` | 66892 | `1b1b9afd1f622396cc994a528a1579c244d08f1631095d09824299d75fe0e305` |
+| `shijiahou_static3d_v1_basecolor.png` | 13997 | `dc712e5ccce6c931543d56509b558ed3ae010311806368813e07f3f117e48321` |
+| `shijiahou_static3d_v1_manifest.json` | 5245 | `97231c30428fd15a903b29a2a39cbb90a3b3b71b1afd7189db97873741d42144` |
+| `shijiahou_static3d_v1_contact-sheet.png` | 2520814 | `39ac621d0d2229ee775fb1c70ce7db605e31353582a1207276ab31a57be2a067` |
+
+manifest 同时登记冻结输入和非自身输出 SHA-256、工具版本、来源、实际次数／费用／credits、坐标、导出设置与验证结果；本表补足 manifest 自身的不可递归 SHA-256 证据。
+
+## 后续边界
+
+- 完成此单项 source／FBX QA 不解除双资产总门；`U-CHAR-BATTLE-STATIC3D-PROFILES-01` 仍需正式玩家资产 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 同时通过。
+- 后续 Unity 卡才可原样导入已批准文件并建立两条 profile 映射；本卡未提前创建 `src/Assets/Art`、Prefab、材质、Provider 或 Adventure 接线。

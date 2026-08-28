@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "assetId": "enemy_shijiahou",
+  "presentationProfileId": "combat_enemy_shijiahou_v1",
+  "taskId": "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01",
+  "sourceRoute": "blender_native",
+  "provenance": {
+    "externalSourceUsed": false,
+    "creditsUsed": 0,
+    "generationAttempts": 0,
+    "workCounters": {
+      "nativeMeshBuildCount": 1,
+      "fbxExportCount": 1,
+      "contactSheetRenderCount": 2
+    },
+    "externalAuthorization": null
+  },
+  "inputs": [
+    {
+      "path": "docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md",
+      "sha256": "1839acaa3eb31f18a08a8adf62127808a514a9516cf5ba1021828f262f4fa80c"
+    },
+    {
+      "path": "docs/怪物/关陇玄域/石甲兽.txt",
+      "sha256": "cac1024293232e66f2b503300f40f78a4f07a24290889d79d380b7b0a14e2a89"
+    },
+    {
+      "path": "src/Assets/DataConfig/Enemies.csv",
+      "sha256": "88173f0fc9c9345a4e443c77eb0b90370909a8a01d3f2ed91cd6d58867fbbae8",
+      "entityId": "enemy_shijiahou"
+    },
+    {
+      "path": "src/Assets/DataConfig/Adventures.csv",
+      "sha256": "8e8020ab53ac9eae086104fe4ca55b3a9e2730d7f0af3d8ed5311763ae89b3b6",
+      "entityId": "guanzhong_wild/shijiahou_encounter"
+    },
+    {
+      "path": "src/Assets/DataConfig/Bounties.csv",
+      "sha256": "680089f9fb01fa0d90076a4b843bdd062fababd556a1a4f0f5ab4ddabbaf6685",
+      "entityId": "bounty_guanzhong_shijiahou"
+    },
+    {
+      "path": "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01.txt",
+      "sha256": "506a122050b827c89cfe9ebe309808b61163c950f00b01d76f24031c7c078d1c",
+      "state": "pre-completion"
+    }
+  ],
+  "tool": {
+    "name": "Blender",
+    "version": "5.2.0 LTS",
+    "binaryPath": "D:/Tools/Blender/5.2.0/blender.exe"
+  },
+  "source": {
+    "scene": "Shijiahou_Static3D_Source",
+    "root": "Shijiahou_Static3D_Root",
+    "mesh": "Shijiahou_Static3D_Mesh",
+    "meshData": "Shijiahou_Static3D_MeshData",
+    "vertexCount": 658,
+    "faceCount": 1165,
+    "material": "Shijiahou_Static3D_Mat",
+    "baseColor": "shijiahou_static3d_v1_basecolor.png",
+    "staticOnly": true,
+    "armature": false,
+    "shapeKeys": false,
+    "animations": false
+  },
+  "coordinates": {
+    "units": "meters",
+    "upAxis": "+Y",
+    "forwardAxis": "+Z",
+    "rootTransform": {
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    "meshTransform": {
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    "localBoundsMeters": {
+      "x": [-0.396615, 0.396615],
+      "y": [0.0, 0.78],
+      "z": [-0.48, 0.58]
+    },
+    "groundContactQuadrants": [
+      "left-front",
+      "right-front",
+      "left-rear",
+      "right-rear"
+    ],
+    "sixWayYawDegrees": [90, 150, 210, 270, 330, 30]
+  },
+  "fbxExport": {
+    "count": 1,
+    "globalScale": 1.0,
+    "applyUnitScale": true,
+    "applyScaleOptions": "FBX_SCALE_NONE",
+    "axisForward": "Z",
+    "axisUp": "Y",
+    "useSpaceTransform": false,
+    "bakeSpaceTransform": false,
+    "bakeAnimation": false,
+    "embedTextures": true,
+    "pathMode": "COPY"
+  },
+  "verification": {
+    "sourceScene": {
+      "objects": [
+        "Shijiahou_Static3D_Root",
+        "Shijiahou_Static3D_Mesh"
+      ],
+      "uniqueMaterial": true,
+      "baseColorResolved": true,
+      "baseColorPacked": true,
+      "fourGroundContacts": true,
+      "coordinateGate": "passed"
+    },
+    "factoryEmptyFbxReimport": {
+      "blenderVersion": "5.2.0 LTS",
+      "exitCode": 0,
+      "meshCount": 1,
+      "emptyCount": 1,
+      "materialCount": 1,
+      "materials": [
+        "Shijiahou_Static3D_Mat"
+      ],
+      "missingPrefixes": [],
+      "scriptFree": true,
+      "result": "passed"
+    },
+    "contactSheet": {
+      "path": "shijiahou_static3d_v1_contact-sheet.png",
+      "resolution": [2200, 960],
+      "views": [
+        "front",
+        "left",
+        "right",
+        "rear",
+        "yaw-90",
+        "yaw-150",
+        "yaw-210",
+        "yaw-270",
+        "yaw-330",
+        "yaw-30"
+      ],
+      "finalRenderFrame": 2,
+      "result": "passed"
+    },
+    "ownerVisualApproval": {
+      "status": "approved",
+      "approver": "Codex task owner",
+      "approvedAt": "2026-08-28T08:26:05+08:00",
+      "scope": [
+        "enemy_shijiahou identity",
+        "heavy quadruped silhouette",
+        "layered stone armor",
+        "matte stone material",
+        "scale and four-foot grounding",
+        "six-way readability"
+      ],
+      "evidence": "shijiahou_static3d_v1_contact-sheet.png"
+    }
+  },
+  "outputs": [
+    {
+      "path": "shijiahou_static3d_v1.blend",
+      "bytes": 288678,
+      "sha256": "3e6b82b14fc855a1dd7437b1b98d5a2b70a6df3230bcba5a4de94404f75f638b"
+    },
+    {
+      "path": "shijiahou_static3d_v1.fbx",
+      "bytes": 66892,
+      "sha256": "1b1b9afd1f622396cc994a528a1579c244d08f1631095d09824299d75fe0e305"
+    },
+    {
+      "path": "shijiahou_static3d_v1_basecolor.png",
+      "bytes": 13997,
+      "sha256": "dc712e5ccce6c931543d56509b558ed3ae010311806368813e07f3f117e48321"
+    },
+    {
+      "path": "shijiahou_static3d_v1_contact-sheet.png",
+      "bytes": 2520814,
+      "sha256": "39ac621d0d2229ee775fb1c70ce7db605e31353582a1207276ab31a57be2a067"
+    }
+  ]
+}
