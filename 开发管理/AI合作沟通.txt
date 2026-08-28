@@ -186,3 +186,16 @@
 - 残留风险：内容为本批次候选名并标「⚠️ 已修改/未审核」，Codex 复审通过前不进入正式显示事实；正式效果装配、山河实例建立与首次验证仍待稳定绑定后由后续集成环节核验；未通过清单 01I 标题与分层返工行沿用旧口径「食识道路/谷神场」作为历史审核证据未一并改名（与 01F 等兄弟条目一致）。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01J-bad78e0f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01J 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01J
+- 候选提交：959c08f339010f48ee99a37701442659b5e96d3f
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Form_TRANSFORM01_易骨关.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Form_DOMAIN01_法身庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Form_SOURCE_形骸祖窍.txt
+- 已验证：三份位置文档补齐 §4.4 完整证位阶段（地点/支点/主承载/材料/供能/维护/关键事件/时间推进/致命中断/最终原子重验）与 §4.5 并行/临界争位及失败者处理，13 大节骨架完整；绑定前位置专属成就改写为只用合法非位格行为/现实对象/环境条件，不再要求白名单位别效果或 MountainRiverRuleInstance；法身庭战棋 §八 移除对山河层 MountainRiverCycleProfile 的读取，改用合法战棋持续/维持配置；三文档 §九 主场景维护/NPC响应/失败写成实际规则；§十 山河按三项效果分别写地区结果与事件；§12.3 四类实例版本策略分别写明；金丹位格索引三条形识道路条目证位档案版本 1.0→1.1 并加「2026-08-28 返工」；未通过审核清单 C-HS-YY-JD-01J 补写返工状态行；check-pending-whitespace（5 文件 OK）、check-review-text -Paths docs,开发管理（1016 文件 OK）、git diff --check、git diff --cached --check 均通过；candidate 959c08f3 为 af4d2f51 直接后继，changed paths 恰为 5 个 CandidatePaths，worktree 干净
+- 未验证：未运行 BattleSim（任务卡明确不涉及数值强度无需运行；本轮未改数值/矩阵/运行时）；未运行 check-data-chain.ps1（无 CSV/asset 变化）；未进行 Codex 独立复审（DeepSeek 不得自审，复审由 Codex 后续完成）
+- 残留风险：三份文档与索引为 DeepSeek 自产、未审核内容，具体位置名称仍为本批次候选名，Codex 复审通过前不进入正式显示事实；返工只补齐合同、未改总规则/效果矩阵/数值/运行时，但可能仍存在 Codex 复审口径下的不足，需由 Codex 独立复审确认。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
