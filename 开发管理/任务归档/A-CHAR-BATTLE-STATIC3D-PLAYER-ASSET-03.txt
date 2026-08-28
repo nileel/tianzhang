@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：A-BLENDER-MCP-FBX-CONTEXT-01 已归档，真实 Blender 5.2 MCP 临时烟测以 use_selection=false 完成唯一导出并通过 factory-empty 回读；本卡现获一次新的 Blender 原生生产和一次 FBX 导出授权，01／02 卡失败资产与脚本不得作为输入。",
+  "stateReason": "2026-08-28：在独立 worktree 完成新的 Blender 原生正式玩家资产；唯一 use_selection=false FBX 导出、factory-empty 回读、哈希、十视图负责人视觉批准和版本检查均通过。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v1/formal_player_static3d_v1.fbx",
@@ -78,3 +78,10 @@
 - 机制卡未完成或其烟测条件不能在本卡精确重现；新 worktree 目标目录预存任何旧候选，或需要复用旧失败资产／脚本才能继续。
 - 需要第二次 FBX 导出、第二次生产、外部 credits、第二工具路线、Context override、供应商修改、扩大资产文件集或修改 Unity 才能通过。
 - BaseColor 绝对解析、缺失文件、联系表覆盖／方向／材质、身份、接地、局部轴、单位缩放、factory-empty 或哈希任一硬门失败。
+
+## 2026-08-28 · 实施结果
+
+- 新 source 目录只包含冻结的 `.blend`、FBX、BaseColor、manifest 和十格联系表；`sourceRoute=blender_native`、`creditsUsed=0`、`externalSourceUsed=false`、`generationAttempts=0`、`fbxExportAttempts=1`。
+- 导出前 Blender scene／View Layer 精确只有 `FormalPlayer_Static3D_Root` 与 `FormalPlayer_Static3D_Mesh`；BaseColor 的相对路径绝对解析、缺失文件、坐标、接地、单位缩放和联系表硬门全部通过。
+- 唯一正式 FBX 导出固定 `use_selection=false` 并通过 Blender 5.2.0 LTS factory-empty 回读；负责人已查看最终十格联系表并批准身份、轮廓、材质、尺度、接地与六向可读性。完整哈希和 QA 见 `开发管理/正式玩家静态3D战斗棋子资产QA记录.txt` 与 manifest。
+- 未修改 Unity、provider、Adventure、Combat、GameplayContracts、场景、数值或存档。石甲兽资产已先行完成归档，因此本卡完成后 `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 的双输入 blocker 全部解除并进入 ready。

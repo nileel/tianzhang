@@ -1,0 +1,111 @@
+{
+  "assetId": "formal_player_static3d_v1",
+  "sourceIdentity": "player",
+  "presentationProfileId": "combat_player_default_v1",
+  "sourceRoute": "blender_native",
+  "blenderVersion": "5.2.0 LTS",
+  "creditsUsed": 0,
+  "externalSourceUsed": false,
+  "generationAttempts": 0,
+  "fbxExportAttempts": 1,
+  "inputs": {
+    "contract": {
+      "path": "docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md",
+      "sha256": "1839ACAA3EB31F18A08A8ADF62127808A514A9516CF5BA1021828F262F4FA80C"
+    },
+    "taskCardBeforeArchive": {
+      "path": "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03.txt",
+      "sha256": "0A8393FE07B3CB58C10D7A1978C2AE7B4CA952DD6617DD1C6066656572EA8636"
+    }
+  },
+  "outputs": {
+    "blend": {
+      "path": "formal_player_static3d_v1.blend",
+      "sha256": "8BC85F786F2346F67B20C9F2EC21087021B1BEDEE2EAF5D3C12014EC6D9ADBAE"
+    },
+    "fbx": {
+      "path": "formal_player_static3d_v1.fbx",
+      "sha256": "B0BCB3F095F8F27396D0437EC517FCEB9CF57E3545494E4B8622DA97EA5E7497"
+    },
+    "baseColor": {
+      "path": "formal_player_static3d_v1_basecolor.png",
+      "sha256": "83A381A009D28706925837CCC60851F19FF561F5510F62161FCF654575B4916D",
+      "blendRelativePath": "//formal_player_static3d_v1_basecolor.png",
+      "blendAbsolutePathVerified": true
+    },
+    "contactSheet": {
+      "path": "formal_player_static3d_v1_contact-sheet.png",
+      "sha256": "7541096102D62DD94B2AE084E7F0DAA8F88EC74CCFEC0BD31659BF606AAC0A6C",
+      "sizePixels": [2100, 720]
+    }
+  },
+  "sourceScene": {
+    "root": "FormalPlayer_Static3D_Root",
+    "mesh": "FormalPlayer_Static3D_Mesh",
+    "material": "FormalPlayer_Static3D_Mat",
+    "rootTransform": { "position": [0, 0, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1] },
+    "meshTransform": { "position": [0, 0, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1] },
+    "sceneObjectCount": 2,
+    "meshCount": 1,
+    "materialCount": 1,
+    "armatureCount": 0,
+    "actionCount": 0,
+    "shapeKeyCount": 0,
+    "missingFiles": 0
+  },
+  "coordinateVerificationMeters": {
+    "rootLocalUp": "+Y",
+    "rootLocalForward": "+Z",
+    "bounds": {
+      "x": [-0.2599999905, 0.2599999905],
+      "y": [0.0, 1.0299999714],
+      "z": [-0.2349999845, 0.2350000143]
+    },
+    "grounding": "dual feet lowest load-bearing faces at Y=0",
+    "unitScale": [1, 1, 1]
+  },
+  "contactSheet": {
+    "cameraAndLighting": "single fixed QA camera and two fixed area lights for all panels",
+    "viewFrameCoverageMeters": { "horizontal": 39.1674594931, "vertical": 33.5721084705 },
+    "views": [
+      { "label": "Front", "yaw": 0 },
+      { "label": "Left", "yaw": 270 },
+      { "label": "Right", "yaw": 90 },
+      { "label": "Back", "yaw": 180 },
+      { "label": "Yaw 90", "yaw": 90 },
+      { "label": "Yaw 150", "yaw": 150 },
+      { "label": "Yaw 210", "yaw": 210 },
+      { "label": "Yaw 270", "yaw": 270 },
+      { "label": "Yaw 330", "yaw": 330 },
+      { "label": "Yaw 30", "yaw": 30 }
+    ],
+    "responsibleVisualApproval": "approved: neutral adult cultivator silhouette, broad travel robe, visible hands and feet, matte material, ground contact and six-direction readability inspected in the final contact sheet"
+  },
+  "fbxExport": {
+    "useSelection": false,
+    "globalScale": 1.0,
+    "applyUnitScale": true,
+    "applyScaleOptions": "FBX_SCALE_NONE",
+    "axisForward": "Z",
+    "axisUp": "Y",
+    "useSpaceTransform": false,
+    "bakeSpaceTransform": false,
+    "objectTypes": ["EMPTY", "MESH"],
+    "useTriangles": true,
+    "bakeAnimation": false,
+    "pathMode": "COPY",
+    "embedTextures": true
+  },
+  "factoryEmptyReimport": {
+    "blender": "D:/Tools/Blender/5.2.0/blender.exe",
+    "exitCode": 0,
+    "durationMs": 721,
+    "meshCount": 1,
+    "emptyCount": 1,
+    "materialCount": 1,
+    "materials": ["FormalPlayer_Static3D_Mat"],
+    "missingPrefixes": [],
+    "scriptFree": true
+  },
+  "approvalStatus": "approved"
+}

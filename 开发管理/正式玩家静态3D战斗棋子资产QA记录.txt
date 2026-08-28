@@ -84,3 +84,44 @@
 
 - 负责人于 2026-08-28 要求拆成两张任务：`A-BLENDER-MCP-FBX-CONTEXT-01` 只在 `D:\Temp\TianZhang-Blender\` 修复并烟测上下文合同；`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 只在机制卡完成后执行一次新的独立生产与一次正式 FBX 导出。
 - 03 卡不得复制、链接、append、导入或改写 01／02 卡的失败模型、材质、贴图、脚本、manifest 或 worktree 现场；Profile 总门改由 03 与石甲兽共同阻塞。
+
+---
+
+## `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 执行与批准
+
+结论：**PASS／已批准**。本卡在独立 worktree 从零用 Blender 5.2.0 LTS 原生建模；未读取、复制、链接、append 或导入 01／02 卡的失败资产、脚本或像素。`A-BLENDER-MCP-FBX-CONTEXT-01` 已归档的 `use_selection=false` 合同在导出前精确重现，且本卡只执行了一次正式 FBX 导出。
+
+### 来源、文件与哈希
+
+- 稳定来源身份为 `player`，固定 profile ID 为 `combat_player_default_v1`；表现为不指向任何命名 NPC 的中性成年修士棋偶。
+- 路线为 `blender_native`，`creditsUsed=0`、`externalSourceUsed=false`、`generationAttempts=0`、`fbxExportAttempts=1`。冻结合同输入 SHA-256：`1839ACAA3EB31F18A08A8ADF62127808A514A9516CF5BA1021828F262F4FA80C`。
+- source 目录只保留五项冻结文件；未写入 Unity、provider、Adventure、Combat、GameplayContracts、场景、数值或存档。
+
+| 文件 | SHA-256 | 结论 |
+|---|---|---|
+| `formal_player_static3d_v1.blend` | `8BC85F786F2346F67B20C9F2EC21087021B1BEDEE2EAF5D3C12014EC6D9ADBAE` | 仅一个 root 与一个静态 Mesh |
+| `formal_player_static3d_v1.fbx` | `B0BCB3F095F8F27396D0437EC517FCEB9CF57E3545494E4B8622DA97EA5E7497` | 唯一正式导出并 factory-empty 回读通过 |
+| `formal_player_static3d_v1_basecolor.png` | `83A381A009D28706925837CCC60851F19FF561F5510F62161FCF654575B4916D` | 唯一不透明 BaseColor |
+| `formal_player_static3d_v1_contact-sheet.png` | `7541096102D62DD94B2AE084E7F0DAA8F88EC74CCFEC0BD31659BF606AAC0A6C` | 2100×720，十视图最终联系人审阅通过 |
+| `formal_player_static3d_v1_manifest.json` | `CD092018D48A5E6939BC905DD2CDE5D89FD87A41E51A66302EB5C6A146471190` | 输入、输出、坐标、导出与回读事实已登记 |
+
+### Blender 源场景与材质硬门
+
+- 场景精确为 `FormalPlayer_Static3D_Root`（Empty）与其子级 `FormalPlayer_Static3D_Mesh`（Mesh）；一个网格、一个 `FormalPlayer_Static3D_Mat`、零 Armature、零 Action、零 Shape Key，root 和 mesh 的 Position／Rotation 均 `(0,0,0)`、Scale 均 `(1,1,1)`。
+- 唯一贴图以相对引用 `//formal_player_static3d_v1_basecolor.png` 保存；`bpy.path.abspath(image.filepath)` 精确解析至最终 BaseColor 绝对路径，文件存在，`get_blendfile_summary_missing_files` 返回 `missing_files=[]`。
+- 本地包络为 X `-0.2599999905..0.2599999905 m`、Y `0..1.0299999714 m`、Z `-0.2349999845..0.2350000143 m`；双足承重面接地 `Y=0`，根位于 `(0,0,0)`，局部 `+Y` 上方、`+Z` 正面，单位缩放通过。
+
+### 联系表与负责人视觉批准
+
+- 固定相机和两盏 Area 灯对正、左、右、背，以及 root Y yaw `90/150/210/270/330/30` 共十格作同一取景；`view_frame` 计算的水平／垂直覆盖分别为 `39.1674594931 m`／`33.5721084705 m`，大于完整棋偶与地面布局。
+- 负责人实际查看最终 2100×720 联系表：人物直立完整入框，标签可读，地面正向和双足接地清楚，无粉色缺贴图；中性修士轮廓、连贯旅行袍、可见双手双足、哑光低饱和材质及六向可读性均**明确批准**。
+
+### 唯一 FBX 导出与 factory-empty 回读
+
+- 导出前活动 Scene 与 View Layer 均精确只有 root／mesh；固定调用 `use_selection=false`、`global_scale=1`、`apply_unit_scale=true`、`FBX_SCALE_NONE`、`axis_forward=Z`、`axis_up=Y`、`use_space_transform=false`、`bake_space_transform=false`、`object_types={EMPTY,MESH}`、三角化、`bake_anim=false`、`path_mode=COPY`、`embed_textures=true`。导出返回 `FINISHED`，没有选择集异常。
+- `blender_headless_qa` 使用 `D:\Tools\Blender\5.2.0\blender.exe` factory-empty 回读唯一 FBX：exitCode `0`、721 ms、`mesh_count=1`、`empty_count=1`、`material_count=1`、材质 `FormalPlayer_Static3D_Mat`、`missing_prefixes=[]`、`script_free=true`。该回读证明结构可回导，不单独替代上述美术批准。
+
+### 后续边界
+
+- 石甲兽 `A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01` 已先行完成归档；本卡通过后，`U-CHAR-BATTLE-STATIC3D-PROFILES-01` 的双输入 blocker 全部解除并进入 ready。
+- 本卡不导入 Unity、不建立 profile 映射、不修改正式 provider 或场景；后续仅可消费已批准的 source 文件与 manifest。

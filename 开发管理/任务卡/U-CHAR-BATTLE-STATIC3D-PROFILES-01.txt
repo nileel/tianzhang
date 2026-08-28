@@ -8,12 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03",
-    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01"
-  ],
-  "stateReason": "正式接线前的双输入总门；02 卡失败后，负责人要求先独立修复 MCP FBX 导出上下文，再由 A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03 生产正式玩家输入；03 与石甲兽资产必须同时批准后才能建立载体中立内容映射和静态3D Prefab映射。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "正式玩家 A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03 与石甲兽 A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 均已完成归档，冻结 source、manifest、哈希、负责人批准和完整 QA 记录齐备；双输入总门现可开始建立载体中立内容映射和静态3D Prefab映射。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",

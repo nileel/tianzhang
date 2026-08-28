@@ -5,7 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03 | codex_execute | codex | P1 | content | implementation | 正式玩家静态3D战斗棋子机制修复后独立生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03.txt |
+| U-CHAR-BATTLE-STATIC3D-PROFILES-01 | codex_execute | codex | P1 | unity | implementation | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01 | codex_execute | codex | P2 | unity | implementation | 非BuildSettings战斗棋子2D实验适配器 | 开发管理/任务卡/U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01.txt |
 | C-HS-YY-JD-01A | codex_review | codex | P2 | content | design | 金丹位格·木道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01A.txt |
 | C-HS-YY-JD-01B | codex_review | codex | P2 | content | design | 金丹位格·火道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01B.txt |
