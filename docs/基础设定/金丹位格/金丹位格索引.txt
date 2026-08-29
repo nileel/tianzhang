@@ -2,7 +2,6 @@
 
 ✅ 已审核（2026-08-05 用户确认；Codex 建立具体位置登记与数量索引）
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记息识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
-⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：按 2026-08-28 统一返工决议返工灵识道路 3 个具体位置（补齐完整证位阶段、最终原子重验与并行／临界争位及失败者处理；绑定前专属成就只用合法非位格行为／现实对象／环境条件；移除启寂坛战棋对 `MountainRiverCycleProfile` 的依赖；证位档案版本升 1.1；更新审核记录），同步 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记食识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：按 2026-08-28 统一返工决议返工魂识道路 3 个具体位置（补齐完整证位阶段、最终原子重验与并行／临界争位及失败者处理；绑定前专属成就只用合法非位格行为／现实对象／环境条件；移除幽明原战棋对 `MountainRiverCycleProfile` 的依赖；证位档案版本升 1.1；更新审核记录），同步 §六；待 Codex 复审。
 ⚠️ 已修改/未审核；修改方：DeepSeek V4 Flash；变更范围：登记身识道路 3 个待审核具体位置条目（源位／化位／界位），同步 §一、§四、§五 与 §六；待 Codex 复审。
@@ -64,7 +63,7 @@
 | 当前具体位置合计 | 51 | 17 源位＋17 化位＋17 界位 |
 | 基础效果 | 51 | 与具体位置是不同对象，只是当前数量相同 |
 | 基础效果位别版本 | 153 | 每个 `effect_id` 各有源版、化版、界版 |
-| 已完成独立位置文档 | 51 | 木道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、火道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、土道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、金道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、水道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、观识道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、闻识道路 1 源位＋1 化位＋1 界位、灵识道路 1 源位＋1 化位＋1 界位、魂识道路 1 源位＋1 化位＋1 界位、形识道路 1 源位＋1 化位＋1 界位、意识道路 1 源位＋1 化位＋1 界位（2026-08-09 返工后；Codex 复审通过，计入已审核正式事实），阴道路 1 源位＋1 化位＋1 界位（2026-08-09 返工后；Codex 复审通过，计入已审核正式事实），阳道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宇道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宙道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实），因道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实），果道路 1 源位＋1 化位＋1 界位（2026-08-09 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
+| 已完成独立位置文档 | 51 | 木道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、火道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、土道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、金道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、水道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、观识道路 1 源位＋1 化位＋1 界位（2026-08-28 返工后；Codex 复审通过，计入已审核正式事实）、闻识道路 1 源位＋1 化位＋1 界位（2026-08-30 复审通过，计入已审核正式事实）、灵识道路 1 源位＋1 化位＋1 界位（2026-08-30 复审通过，计入已审核正式事实）、魂识道路 1 源位＋1 化位＋1 界位、形识道路 1 源位＋1 化位＋1 界位、意识道路 1 源位＋1 化位＋1 界位（2026-08-09 返工后；Codex 复审通过，计入已审核正式事实），阴道路 1 源位＋1 化位＋1 界位（2026-08-09 返工后；Codex 复审通过，计入已审核正式事实），阳道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宇道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；Codex 复审通过，计入已审核正式事实），宙道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实），因道路 1 源位＋1 化位＋1 界位（2026-08-08 本批次生产；内容与候选名待审核，未计入已审核正式事实），果道路 1 源位＋1 化位＋1 界位（2026-08-09 本批次生产；内容与候选名待审核，未计入已审核正式事实） |
 
 ## 五、十七道路初始结构
 
@@ -98,7 +97,7 @@
 > 注（2026-08-29 复审通过）：水道路 3 个初始具体位置（`JD_FiveElements_Water_SOURCE`、`JD_FiveElements_Water_TRANSFORM01`、`JD_FiveElements_Water_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-30 复审通过）：观识道路 3 个初始具体位置（`JD_SixConsciousness_Observe_SOURCE`、`JD_SixConsciousness_Observe_TRANSFORM01`、`JD_SixConsciousness_Observe_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-30 复审通过）：闻识道路 3 个初始具体位置（`JD_SixConsciousness_Hearing_SOURCE`、`JD_SixConsciousness_Hearing_TRANSFORM01`、`JD_SixConsciousness_Hearing_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
-> 注（2026-08-07 本批次）：灵识道路 3 个初始具体位置（`JD_SixConsciousness_Spirit_SOURCE`、`JD_SixConsciousness_Spirit_TRANSFORM01`、`JD_SixConsciousness_Spirit_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
+> 注（2026-08-30 复审通过）：灵识道路 3 个初始具体位置（`JD_SixConsciousness_Spirit_SOURCE`、`JD_SixConsciousness_Spirit_TRANSFORM01`、`JD_SixConsciousness_Spirit_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为已审核；本表结构数量不变。
 > 注（2026-08-07 本批次）：魂识道路 3 个初始具体位置（`JD_SixConsciousness_Soul_SOURCE`、`JD_SixConsciousness_Soul_TRANSFORM01`、`JD_SixConsciousness_Soul_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-08 本批次）：形识道路 3 个初始具体位置（`JD_SixConsciousness_Form_SOURCE`、`JD_SixConsciousness_Form_TRANSFORM01`、`JD_SixConsciousness_Form_DOMAIN01`）已完成独立文档并登记于 §六，内容状态为待审核；本表结构数量不变。
 > 注（2026-08-19 六识更名迁移）：见识→观识（`ROAD_SIGHT`→`ROAD_OBSERVE`）、息识→灵识（`ROAD_BREATH`→`ROAD_SPIRIT`）、食识→魂识（`ROAD_INGEST`→`ROAD_SOUL`，席位改名：百味玄关→泥丸玄宫、化津炉→渡魂津、谷神场→幽明原）、身识→形识（`ROAD_BODY`→`ROAD_FORM`）；12 个席位的旧 `positionId`、旧席位名与旧 `effect_id` 记录于 `开发管理/C-LORE-01-旧口径迁移映射表.txt`，存档与引用按该表 §八「十二个改名 positionId 确定性迁移策略」与「退役、合并与重定义效果读档策略」处理。
@@ -112,7 +111,7 @@
 
 ## 六、正式具体位置登记表
 
-本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、观识道路、闻识道路、灵识道路与魂识道路；2026-08-08，形识道路、意识道路、阴道路、阳道路、宇道路、宙道路与因道路；2026-08-09，果道路）现有 18 个待审核条目与 33 个已审核条目：
+本节按第二节字段登记已生产独立文档的具体位置条目；内容状态为「待审核」的条目不代表已审核正式事实。本批次（2026-08-07，木道路、火道路、土道路、金道路、水道路、观识道路、闻识道路、灵识道路与魂识道路；2026-08-08，形识道路、意识道路、阴道路、阳道路、宇道路、宙道路与因道路；2026-08-09，果道路）现有 15 个待审核条目与 36 个已审核条目：
 
 | `positionId` | 具体位置名称／`seatNameKey` | `road_id` | `positionType`／`positionNameKey` | 理念摘要 | 效果白名单摘要 | 证位档案标识与版本 | 位置档案版本 | 内容状态 | 审核记录 | 正式文档路径 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -137,9 +136,9 @@
 | `JD_SixConsciousness_Hearing_SOURCE` | 天籁元钟 | `ROAD_HEARING` | `SOURCE`／源位 | 闻识道路唯一根本来源与直接规则操作——「音律、律令、共鸣的声闻之道」的共同根本来源 | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` | `PROOF_HEARING_SOURCE_01` / 1.1 | 1.1 | 已审核 | Codex 复审通过（2026-08-30） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt` |
 | `JD_SixConsciousness_Hearing_TRANSFORM01` | 传响廊 | `ROAD_HEARING` | `TRANSFORM`／化位 | 闻识道路力量的一条固定传播／筛选途径——经传声／传振媒介对行动声讯作固定筛选（聆廊：预设行为类别声讯过滤；封廊：一类命令只许邻接或实体信使传令；振廊：固定频率增振或消振） | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` | `PROOF_HEARING_TRANSFORM01_01` / 1.1 | 1.1 | 已审核 | Codex 复审通过（2026-08-30） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt` |
 | `JD_SixConsciousness_Hearing_DOMAIN01` | 万籁场 | `ROAD_HEARING` | `DOMAIN`／界位 | 对区域内行动声迹与传令维持一条固定弱闻识规则的领域形态（行动声迹短暂回响的弱听取、远程协同只能传递粗命令的弱传令、强动作与脆弱结构持续受同一弱共振规则） | `HEARING_READ`、`HEARING_COMMAND`、`HEARING_RESONANCE` | `PROOF_HEARING_DOMAIN01_01` / 1.1 | 1.1 | 已审核 | Codex 复审通过（2026-08-30） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Hearing_DOMAIN01_万籁场.txt` |
-| `JD_SixConsciousness_Spirit_SOURCE` | 万灵枢 | `ROAD_SPIRIT` | `SOURCE`／源位 | 灵识道路唯一根本来源与直接规则操作——「灵气感应、气机调御与灵机唤醒」三通道（感应灵气、调御气机、唤醒灵机）的共同根本来源 | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` | `PROOF_SPIRIT_SOURCE_01` / 1.1 | 1.1 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核；2026-08-19 六识更名迁移；2026-08-28 返工） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Spirit_SOURCE_万灵枢.txt` |
-| `JD_SixConsciousness_Spirit_TRANSFORM01` | 驭机渡 | `ROAD_SPIRIT` | `TRANSFORM`／化位 | 灵识道路力量的一条固定传播／筛选途径——对灵气与灵性对象按固定条件感应／调御／唤醒（感面：一种灵气或气机固定监听一种状态变化并标记；御面：一种灵气或一类灵性对象固定执行一种调御或拒绝、暂停、改接操作；醒面：一类对象自动启用或关闭预设接口） | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` | `PROOF_SPIRIT_TRANSFORM01_01` / 1.1 | 1.1 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核；2026-08-19 六识更名迁移；2026-08-28 返工） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Spirit_TRANSFORM01_驭机渡.txt` |
-| `JD_SixConsciousness_Spirit_DOMAIN01` | 启寂坛 | `ROAD_SPIRIT` | `DOMAIN`／界位 | 对范围内灵气、公共灵性节点与器物维持一条固定弱灵识规则的领域形态（灵气状态对选定阵营粗显或一类气机被广域遮蔽的弱感应、公共灵性节点只接受登记阵营一类粗控制的弱调御、公共器物统一获得弱响应规则或外来灵性接口保持沉寂的弱唤醒） | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` | `PROOF_SPIRIT_DOMAIN01_01` / 1.1 | 1.1 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核；2026-08-19 六识更名迁移；2026-08-28 返工） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Spirit_DOMAIN01_启寂坛.txt` |
+| `JD_SixConsciousness_Spirit_SOURCE` | 万灵枢 | `ROAD_SPIRIT` | `SOURCE`／源位 | 灵识道路唯一根本来源与直接规则操作——「灵气感应、气机调御与灵机唤醒」三通道（感应灵气、调御气机、唤醒灵机）的共同根本来源 | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` | `PROOF_SPIRIT_SOURCE_01` / 1.1 | 1.1 | 已审核 | Codex 复审通过（2026-08-30） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Spirit_SOURCE_万灵枢.txt` |
+| `JD_SixConsciousness_Spirit_TRANSFORM01` | 驭机渡 | `ROAD_SPIRIT` | `TRANSFORM`／化位 | 灵识道路力量的一条固定传播／筛选途径——对灵气与灵性对象按固定条件感应／调御／唤醒（感面：一种灵气或气机固定监听一种状态变化并标记；御面：一种灵气或一类灵性对象固定执行一种调御或拒绝、暂停、改接操作；醒面：一类对象自动启用或关闭预设接口） | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` | `PROOF_SPIRIT_TRANSFORM01_01` / 1.1 | 1.1 | 已审核 | Codex 复审通过（2026-08-30） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Spirit_TRANSFORM01_驭机渡.txt` |
+| `JD_SixConsciousness_Spirit_DOMAIN01` | 启寂坛 | `ROAD_SPIRIT` | `DOMAIN`／界位 | 对范围内灵气、公共灵性节点与器物维持一条固定弱灵识规则的领域形态（灵气状态对选定阵营粗显或一类气机被广域遮蔽的弱感应、公共灵性节点只接受登记阵营一类粗控制的弱调御、公共器物统一获得弱响应规则或外来灵性接口保持沉寂的弱唤醒） | `SPIRIT_SENSE`、`SPIRIT_CONTROL`、`SPIRIT_AWAKEN` | `PROOF_SPIRIT_DOMAIN01_01` / 1.1 | 1.1 | 已审核 | Codex 复审通过（2026-08-30） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Spirit_DOMAIN01_启寂坛.txt` |
 | `JD_SixConsciousness_Soul_SOURCE` | 泥丸玄宫 | `ROAD_SOUL` | `SOURCE`／源位 | 魂识道路唯一根本来源与直接规则操作——「魂魄感应、魂魄缚记与引渡安魂」三通道（感应魂魄、魂魄缚记、引渡安魂）的共同根本来源 | `SOUL_SENSE`、`SOUL_BIND`、`SOUL_GUIDE` | `PROOF_SOUL_SOURCE_01` / 1.1 | 1.1 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核；2026-08-19 六识更名迁移——席位改名；2026-08-28 返工） | `docs/基础设定/金丹位格/源位/JD_SixConsciousness_Soul_SOURCE_泥丸玄宫.txt` |
 | `JD_SixConsciousness_Soul_TRANSFORM01` | 渡魂津 | `ROAD_SOUL` | `TRANSFORM`／化位 | 魂识道路力量的一条固定传播／筛选途径——对魂魄与魂息按固定条件监听／缚记／引渡（感面：一类魂息固定监听并标记；缚面：一类魂魄对象固定执行标记或缚魂；引面：一类亡魂按固定仪式自动引渡或安抚） | `SOUL_SENSE`、`SOUL_BIND`、`SOUL_GUIDE` | `PROOF_SOUL_TRANSFORM01_01` / 1.1 | 1.1 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核；2026-08-19 六识更名迁移——席位改名；2026-08-28 返工） | `docs/基础设定/金丹位格/化位/JD_SixConsciousness_Soul_TRANSFORM01_渡魂津.txt` |
 | `JD_SixConsciousness_Soul_DOMAIN01` | 幽明原 | `ROAD_SOUL` | `DOMAIN`／界位 | 对范围内魂息与亡魂维持一条固定弱魂识规则的领域形态（公开魂息对选定阵营粗显或一类魂息被广域遮蔽的弱感应、选定阵营残魂自动受缚或外来夺舍类魂体被粗排斥的弱缚记、不安魂息逐周期平息或粗阵营亡魂统一受引的弱安魂） | `SOUL_SENSE`、`SOUL_BIND`、`SOUL_GUIDE` | `PROOF_SOUL_DOMAIN01_01` / 1.1 | 1.1 | 待审核 | 待 Codex 复审（2026-08-07 本批次；候选名未审核；2026-08-19 六识更名迁移——席位改名；2026-08-28 返工） | `docs/基础设定/金丹位格/界位/JD_SixConsciousness_Soul_DOMAIN01_幽明原.txt` |
