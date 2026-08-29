@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-29：负责人已批准默认男主 v2 角色定义、生产链和完整绿幕原画提示词；本卡是该系列唯一首个 ready 叶子，只允许一次 ImageGen 与本地抠图，结果须负责人批准后才完成。",
+  "stateReason": "自动责任方确认阻塞：generated_concept_contract_violation",
   "expectedPaths": [
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json",
