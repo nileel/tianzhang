@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "正式玩家 A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03 与石甲兽 A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 均已完成归档，冻结 source、manifest、哈希、负责人批准和完整 QA 记录齐备；双输入总门现可开始建立载体中立内容映射和静态3D Prefab映射。",
+  "stateReason": "正式玩家冻结 FBX 在当前 Unity importer 中产生零顶点坐标，需要源 FBX 重导出或明确批准替换后才能重新置为 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
