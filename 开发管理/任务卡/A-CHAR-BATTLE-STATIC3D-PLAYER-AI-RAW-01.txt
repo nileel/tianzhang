@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01",
+  "title": "默认男主一次性 AI 静态3D原包生成与冻结",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01"
+  ],
+  "stateReason": "等待严格四视图完成归档；即使具名前置完成，也必须先取得负责人对平台、模型/服务、允许的最大 credits、唯一输入哈希和资产 ID 的交易前批准，才能补齐 automationInputs 并置为 ready。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_contact_sheet.png",
+    "开发管理/默认男主AI模型原包生成记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 · 默认男主一次性 AI 静态3D原包生成与冻结
+
+## 来源与当前边界
+
+- 只消费 `A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01` 已归档并获负责人批准的前/角色左/角色右/后四图及 manifest；不消费 v1 粗模、失败 FBX、苻渊模型或相近人物。
+- 本卡只负责一次外部 AI 3D 平台交易、原始下载包冻结和平台静态门；不启动 Blender、不清理模型、不导入 Unity。
+- 稳定资产 ID 仍为 `combat_player_default_v1`；外部来源路线固定为 `approved_multiview_external_ai_then_blender_cleanup`。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` §1.1、§4、§5.3、§7。
+- 已归档四视图卡、`开发管理/默认男主正式多视图生成记录.txt`、四图和 manifest 的精确路径、字节数与 SHA-256。
+- 负责人本次交易前批准记录：负责人、日期时间、平台、模型或服务、允许的最大 credits、唯一输入四视图哈希和资产 ID `combat_player_default_v1`。
+
+## ready 前准备
+
+- 只有四视图具名前置完成且交易前批准字段齐全时，才可把本卡转为 ready。
+- 转 ready 的同一管理切片必须向本卡写入只含 `assets/source/` 四视图与 input manifest 的 schema 5 `automationInputs`，逐项记录正字节数和 64 位 SHA-256；不得使用绝对路径、目录、通配符或 `assets/generated-character-art/` 路径。
+- 平台未定、最大 credits 未批、输入哈希变化或批准资产 ID 不一致时继续 blocked，不创建推测性默认值。
+
+## 实施范围
+
+- 在唯一批准平台按批准设置上传冻结四视图并发起一次静态 3D 生成；实际消耗不得超过批准最大 credits。
+- 记录平台任务 ID、输入哈希、模型/纹理设置、生成时间、实际 credits/费用、剩余额度、下载清单和每个文件 SHA-256。
+- 原始下载内容不改名、不拆散、不用 Blender/其他工具重写，原样封装为规范 ZIP；manifest 记录 ZIP 内真实文件名、格式、字节数、SHA-256、预授权与交易后事实。
+- 从平台原始预览或原包可直接读取的渲染形成联系表，只核对几何非空、正反侧身份可辨、服装层次存在和无明显缺肢；不在本卡修复。
+- 展示唯一原包联系表并取得负责人批准；未批准不得解锁 Blender 清理卡。
+
+## 禁止项
+
+- 未获完整交易前批准不得上传或消费；不得超出最大 credits、同时投递多个平台、使用免费重试、换模型或追加第二次生成。
+- 不自动绑定、不购买额外服务、不修改下载文件、不启动 Blender、不创建 FBX 修正版、不写 Unity。
+- 不用 v1、苻渊、其他角色或相近平台结果替代本次唯一四视图输入。
+
+## 验证
+
+- `automationInputs`、上传输入、平台记录、下载包与 manifest 的字节数/SHA-256逐项一致；平台任务和实际收费只有一次且未超批准值。
+- ZIP 可完整读取，manifest 能枚举内部全部文件；联系表证明非空且无明显缺肢，负责人明确批准唯一原包。
+- 运行 `tools/check-asset-versioning.ps1`、预期路径 whitespace、任务卡投影、审核文本和暂存后 `git diff --cached --check`；不运行 Blender、Unity 或 BattleSim。
+
+## 完成条件
+
+- 唯一平台任务在授权额度内完成，原始 ZIP、manifest、联系表和生成记录完整冻结，全部哈希一致并获负责人批准。
+- 本卡归档后才可移除 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04` 的直接 blocker，并为下游卡写入原包及相关 `assets/source/` 输入的精确 `automationInputs`。
+
+## 停止条件
+
+- 四视图或 manifest 哈希变化、预授权缺字段、平台要求额外付费、实际 credits 将超上限、生成失败、下载不完整/损坏、模型为空、身份明显错误、明显缺肢、用户拒绝原包，或需要第二次生成/换平台时立即停止。

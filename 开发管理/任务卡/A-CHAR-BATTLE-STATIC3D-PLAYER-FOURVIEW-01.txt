@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01",
+  "title": "默认男主严格建模四视图生产与批准",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01"
+  ],
+  "stateReason": "等待默认男主透明原画母版完成归档并冻结身份哈希；四视图完整提示词仍须在本卡执行前单独提交负责人逐字批准。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_fourview.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/prompts.md",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/manifest.json",
+    "开发管理/默认男主正式多视图生成记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01 · 默认男主严格建模四视图生产与批准
+
+## 来源与当前边界
+
+- 只消费 `A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01` 已归档的唯一透明母版及其 manifest；母版决定脸、发型、服装、比例、配色和身份，不在本卡重新设计。
+- 四视图是正式玩家 v2 的 AI 3D 几何输入，不是对话立绘、宣传图、Unity 资源或运行时战斗姿态。
+- 对话母版的单手剑指不进入建模视图；四视图统一使用自然对称放松站姿和清楚分离的手臂。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` §2、§4、§5.2、§7。
+- 已归档原画卡、`开发管理/默认男主正式原画生成记录.txt`、透明母版及 manifest 的路径、尺寸与 SHA-256。
+- `开发管理/苻渊Tripo严格轮四视图生成记录.txt` 与 `开发管理/苻渊Tripo严格轮二四视图修订记录.txt` 中角色左右语义、鼻尖方向、比例漂移、背面最小推断和侧向结构一致性失败经验。
+
+## 实施范围
+
+- 开始生成前先形成一份完整四视图提示词，明确四面板布局、同一身份不变量、近正交相机、七头身、自然放松站姿、背景/光照和全部禁止项；必须先提交负责人逐字批准。
+- 每份批准提示词只对应一次 ImageGen 调用。唯一调用产出一张含正面、角色左侧、角色右侧、背面四个独立完整全身面板的母图；只用本地确定性分槽裁切形成四张独立 PNG 和联系表，不用第二次生成或 AI 补画。
+- 角色左侧图必须是角色自身左侧靠近相机且鼻尖朝画面右；角色右侧图必须是角色自身右侧靠近相机且鼻尖朝画面左。左右不得用镜像冒充。
+- 四图保持同一脸型、头身比、发长/发束、衣片、领口、腰带、袖口、靴子和配色；背面不出现脸或三分之四角度，只作批准母版能够支持的最小后发、后袍和接缝推断。
+- 保存四张视图、无文字联系表、完整提示词、母版/输出哈希、分槽参数、身份对照和负责人批准结论。
+
+## 禁止项
+
+- 不沿用对话剑指姿态，不添加原画不存在的扣件、挂绳、纹样、开口、饰品、兵器、法器或特效。
+- 不以镜像、翻转标签或文件名掩盖错误侧向；不把纸偶比例、苻渊比例或其他角色侧背结构带入本角色。
+- 不自动重试、不生成第二张四视图母图、不逐槽 AI 修补；结果拒绝后必须先形成并批准新的完整提示词。
+- 不上传 AI 3D 平台、不消费 credits、不生成模型、不操作 Blender、不写 Unity。
+
+## 验证
+
+- 四图尺寸、相机高度、落脚线、头身比和背景一致；发顶、双手、袍摆和双脚完整入框。
+- 并排核对身份和服装连续性，按鼻尖方向核验左右语义；确认背面无脸、无正面复制、无新增物件。
+- 复算透明母版、四图、联系表和 manifest SHA-256；四张独立图必须能由唯一母图的本地分槽确定性重现。
+- 运行 `tools/check-asset-versioning.ps1`、预期路径 whitespace、任务卡投影、审核文本和暂存后 `git diff --cached --check`；不运行 Blender、Unity 或 BattleSim。
+
+## 完成条件
+
+- 唯一四面板母图经本地分槽形成前/角色左/角色右/后四张正式输入，全部客观门和负责人视觉批准通过，提示词与哈希记录完整。
+- 本卡归档后只移除 `A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01` 的具名 blocker；若平台、最大 credits 与交易前授权尚未完成，AI 原包卡继续 blocked。
+
+## 停止条件
+
+- 原画母版/manifest 缺失或哈希变化、四视图提示词未获批准、ImageGen 不可用、唯一结果出现身份/比例/发型/服装漂移、左右镜像或颠倒、背面伪造、解剖/裁切错误、用户拒绝结果，或需要第二次生成/AI 补画才能通过时停止。

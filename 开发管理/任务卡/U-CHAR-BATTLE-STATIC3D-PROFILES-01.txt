@@ -9,8 +9,10 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "正式玩家冻结 FBX 在当前 Unity importer 中产生零顶点坐标，需要源 FBX 重导出或明确批准替换后才能重新置为 ready。",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04"
+  ],
+  "stateReason": "等待 A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 完成默认男主 v2 source 与正式玩家 Unity importer 验收；玩家网格顶点位置非全零且三轴 bounds 非零后才可重新置为 ready。石甲兽正式 Unity 导入仍由本卡执行。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
@@ -20,13 +22,6 @@
     "src/Assets/Scripts/Modules/Features/CombatPresentation/README.md",
     "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs",
     "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs.meta",
-    "src/Assets/Art/Characters/CombatPieces.meta",
-    "src/Assets/Art/Characters/CombatPieces/Static3D.meta",
-    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer.meta",
-    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
-    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx.meta",
-    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png",
-    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png.meta",
     "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.mat",
     "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.mat.meta",
     "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab",
@@ -62,21 +57,23 @@
 
 ## 来源与当前边界
 
-- 本卡同时依赖两张已通过负责人视觉批准的 source／Blender／FBX 资产卡；缺少任一方不得开始或部分提交。
+- 本卡依赖 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04` 已通过当前 Unity importer 的默认男主 v2 FBX/BaseColor，以及已批准的石甲兽 source/FBX；缺少任一方不得开始或部分提交。
 - 载体中立内容映射固定为 `player -> combat_player_default_v1`、`enemy_shijiahou -> combat_enemy_shijiahou_v1`。
 - 静态 3D provider 映射只引用两项正式 Prefab；`FuYuan_StaticChess` 不得出现在内容目录、profile set 或正式 Prefab 依赖中。
+- 正式玩家视觉与 source 事实改读 `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` 和 v2 manifest；2026-08-27 合同继续约束稳定 ID、石甲兽及本规格保留的共同坐标/材质边界。
 
 ## 必查范围
 
-- 两张资产卡归档、manifest、哈希、负责人批准和完整 QA 记录。
+- 默认男主 v2 资产卡归档、manifest、Unity importer 数值、负责人十视图批准和完整 QA 记录。
+- 石甲兽资产卡归档、manifest、哈希、负责人批准和完整 QA 记录。
 - `TianZhang.Content` 当前 ScriptableObject 数据模式、CombatPresentation 模块边界、Editor Builder 持久化模式和直接测试。
-- 两个 source FBX／BaseColor 的精确绝对路径、导出轴、单位缩放、接地与 Unity importer 回读。
+- 已进入稳定 Unity 路径的玩家 FBX/BaseColor，以及石甲兽 source FBX/BaseColor 的精确绝对路径、导出轴、单位缩放、接地与 Unity importer 回读。
 
 ## 实施范围
 
 - 建立 provider-neutral 的 `CombatUnitPresentationProfileCatalogData`，只保存稳定来源身份到稳定 profile ID 的只读映射，不保存 Prefab、Sprite、Mesh 或路线选择。
 - 建立静态 3D 专属 `Static3DCombatUnitPresentationProfileSet`，只保存稳定 profile ID 到已批准 Prefab 的映射和载体 QA 元数据。
-- 由 `FormalStatic3DCombatPieceBuilder` 原样导入两个冻结 FBX／BaseColor，确定性创建各自材质与 Prefab，并创建内容目录 asset 与静态 3D profile set；不手写 `.asset`／`.prefab` YAML。
+- `FormalStatic3DCombatPieceBuilder` 只读验证已由 ASSET-04 导入的玩家 FBX/BaseColor，不复制、覆盖或重导出玩家源；它原样导入石甲兽冻结 FBX/BaseColor，确定性创建两项材质与 Prefab，并创建内容目录 asset 与静态 3D profile set；不手写 `.asset`／`.prefab` YAML。
 - Builder 必须在保存后重新加载两项 asset 和两项 Prefab，核验 ID 唯一、来源身份唯一、材质／关键组件完整、轴／尺度／接地／六向合同一致。
 - 本卡不修改 Adventure、Installer、正式场景、`AdventureUnitSpawner` 或 provider runtime 接线。
 
@@ -102,5 +99,5 @@
 
 ## 停止条件
 
-- 任一资产未获批准、哈希变化、Unity importer 需要重导出源 FBX、两项无法使用同一坐标／六向合同，或需要部分提交。
+- 任一资产未获批准、哈希变化、已验收玩家 Unity FBX/BaseColor 需要覆盖或重导出、石甲兽 Unity importer 失败、两项无法使用同一坐标／六向合同，或需要部分提交。
 - 需要让 Content／GameplayContracts 引用具体 Prefab、修改保存结构、使用苻渊／Marker fallback 或提前修改正式 Adventure。

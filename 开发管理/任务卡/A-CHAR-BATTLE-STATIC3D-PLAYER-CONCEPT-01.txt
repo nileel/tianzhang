@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01",
+  "title": "默认男主正式原画与透明对话立绘母版",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-29：负责人已批准默认男主 v2 角色定义、生产链和完整绿幕原画提示词；本卡是该系列唯一首个 ready 叶子，只允许一次 ImageGen 与本地抠图，结果须负责人批准后才完成。",
+  "expectedPaths": [
+    "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
+    "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json",
+    "assets/generated-character-art/dialogue-transparent/prompts.md",
+    "assets/generated-character-art/titled/formal-player-default-male-v1-approval-preview.png",
+    "开发管理/默认男主正式原画生成记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01 · 默认男主正式原画与透明对话立绘母版
+
+## 来源与当前边界
+
+- 用户已逐项批准一个无名、16 岁、关中小族出身的固定默认男主；完整身份、外貌、发型、服装、单手剑指、构图、统一画风和绿幕输出合同以 `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` 为准。
+- 本卡只生产正式透明全身对话立绘母版、暖灰审批预览、提示词/manifest 和生成记录；不生产四视图、3D、FBX、Unity 资产或 Profile。
+- 苻渊批准立绘只提供项目统一画风，不提供身份、年龄、脸、白发、胡须、服装、饰品、姿势或人物经历。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` §2、§3、§5.1、§7。
+- `assets/generated-character-art/README.md` 的用途目录、绿幕源图、本地透明处理和验收合同。
+- `assets/generated-character-art/dialogue-transparent/prompts.md` 的通用绿幕约束与现行本地抠图命令。
+- `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png`，只作项目画风参考；执行前核对文件存在并记录 SHA-256。
+
+## 实施范围
+
+- 使用 ImageGen，精确复用规格 §3 已由用户批准的完整提示词和唯一苻渊参考图，只执行一次生成调用；不得改词、追加隐式负面词或批量生成候选。
+- ImageGen 只产出临时纯 `#00ff00` 绿幕源图；随后精确执行规格冻结的本地 `remove_chroma_key.py` 命令，形成正式 RGBA 母版。绿幕过程图通过抠图验收后不进入项目正式路径。
+- 以正式 RGBA 母版本地合成一张无文字、无装饰的暖灰审批预览；预览不替代透明母版，不作为运行时分层事实源。
+- 在共享 `dialogue-transparent/prompts.md` 追加本角色的已批准完整提示词和固定抠图参数；manifest 与生成记录保存参考图、完整提示词、工具记录、尺寸、字节数、SHA-256、抠图参数和负责人批准状态。
+- 实际展示透明母版和暖灰预览，等待负责人对身份、年龄、发型、服装、单手剑指、双手双脚、画风和透明边缘明确批准。
+
+## 禁止项
+
+- 不把默认男主画成苻渊、古天乐、杨过或任何现有命名角色、真人肖像；只允许既定发型结构灵感。
+- 不添加武器、法器、盔甲、首饰、身份牌、宗门纹章、魔法效果、文字、印章、UI、水印、地面或投影。
+- 不自动重试、不生成第二张候选、不在结果被拒绝后自行改词；拒绝后必须先重新取得完整提示词批准。
+- 不创建四视图、不调用 AI 3D 平台、不操作 Blender、不写 `assets/source/` 或 `src/Assets/`。
+
+## 验证
+
+- 正式母版必须为 RGBA PNG，四角 alpha 为 0，全身、头发、两手、袍摆和双脚完整，无绿幕边、地面、投影、题字或裁切。
+- 暖灰预览与透明母版像素身份一致，只增加本地纯色背景；不得二次生成或重绘人物。
+- manifest、生成记录、提示词入口与最终文件字节数/SHA-256 精确一致；负责人批准结论必须明确记录。
+- 运行 `tools/check-asset-versioning.ps1`、预期路径 whitespace、任务卡投影、审核文本和暂存后 `git diff --cached --check`；不运行 Blender、Unity 或 BattleSim。
+
+## 完成条件
+
+- 唯一透明全身母版、暖灰预览、提示词、manifest 和生成记录齐全，客观门及负责人视觉批准全部通过。
+- 本卡归档后才可移除 `A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01` 的直接 blocker；四视图仍须在其卡内先取得完整提示词批准，不自动生成。
+
+## 停止条件
+
+- 参考图缺失或哈希不能记录、ImageGen 不可用、批准提示词需要改变、绿幕抠图破坏深色衣袍或发丝、解剖/身份/构图失败、用户拒绝结果，或需要第二次生成才能通过时立即停止并保留证据。

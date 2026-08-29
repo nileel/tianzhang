@@ -1,0 +1,93 @@
+---TASK-META---
+{
+  "schemaVersion": 1,
+  "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04",
+  "title": "默认男主v2静态3D清理与Unity importer验收",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01"
+  ],
+  "stateReason": "等待一次性 AI 原包完成归档并冻结唯一 ZIP/manifest；通过后只允许 Blender 清理与一次正式 FBX 导出，且必须先通过当前 Unity importer 顶点位置非全零及三轴 bounds 非零硬门。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_basecolor.png",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_manifest.json",
+    "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_contact-sheet.png",
+    "src/Assets/Art/Characters/CombatPieces.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png.meta",
+    "src/Assets/Tests/EditMode/FormalPlayerStatic3DImportEditorTests.cs",
+    "src/Assets/Tests/EditMode/FormalPlayerStatic3DImportEditorTests.cs.meta",
+    "开发管理/默认男主静态3D模型与Unity导入QA记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 · 默认男主v2静态3D清理与Unity importer验收
+
+## 来源与当前边界
+
+- 只消费 `A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01` 已归档并获负责人批准的唯一原始 ZIP/manifest，以及已批准四视图和透明母版；不得重新生成或重新设计角色。
+- 本卡是正式玩家 01/02 生产失败、03 在当前 Unity importer 中产生零顶点坐标后的第四张独立资产卡；v1 五件 source 和失败现场全部保留，不复制、链接、append、导入、覆盖或删除。
+- 本卡独占 v2 source、正式玩家稳定 Unity FBX/BaseColor/目录 `.meta` 和 importer 测试；不创建材质、Prefab、catalog、Profile、provider 或 Adventure 接线。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` §1.1、§4、§5.4、§7、§8。
+- 已归档 AI 原包卡、四视图卡、原画卡及其记录/manifest/哈希；schema 5 `automationInputs` 必须与主工作区冻结字节一致。
+- `docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md` 中本规格明确保留的单网格/单材质、尺度、接地、轴、六向和静态运行边界。
+- `开发管理/正式玩家静态3D战斗棋子资产QA记录.txt` 与 `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 的 Unity importer 零顶点坐标失败证据。
+- `tianzhang-blender-pipeline` 的绝对路径、坐标、导出、factory-empty 回读、覆盖和失败停止规则；Unity 6000.3.18f1 的当前 importer 与测试入口。
+
+## ready 前准备
+
+- AI 原包卡完成时向本卡写入 schema 5 `automationInputs`：唯一 raw ZIP、raw manifest、前/角色左/角色右/后四图及 input manifest，全部为 `assets/source/` 仓库相对路径、正字节数和 64 位 SHA-256。
+- 透明母版不进入 `automationInputs`；以 Git 跟踪路径、任务卡 digest 和 v2 manifest SHA-256 固定。
+- 任一输入缺失、哈希变化、预存 v2 最终文件或来源不唯一时保持 blocked，不创建候选。
+
+## 实施范围
+
+- 只对唯一批准原包修复拓扑、法线、UV、材质槽、静态姿态、比例、原点、命名和导出兼容性；不得改脸、发型、服装设计、配色、体型或添加配件。
+- 输出一个静态可见角色网格、一个命名材质和一张不透明非发光 BaseColor；3D 风格为低饱和、哑光、手绘大色块与二至三档 Toon 明暗，无骨骼、动画、Shape Key 或动态布料。
+- 双脚最低承重面为 `Y=0`，根在占地投影中心，本地 `+Z` 正面，单位缩放 1；含发顶最高点精确 `Y=1.03m`，水平包络不超过 `X=±0.30m`、`Z=±0.30m`，内部保持约七头身。
+- 在唯一正式 FBX 导出前完成十格联系表：固定正、角色左、角色右、背面及表现根 Y yaw `90/150/210/270/330/30`，全部使用同一固定相机和光照；负责人批准身份、轮廓、材质、尺度、接地和六向后才允许导出。
+- 使用一个已验证的 Blender 导出合同执行一次正式 FBX 导出；factory-empty 回读必须证明结构、材质、顶点位置与三轴 bounds 非零。
+- 把 v2 FBX/BaseColor 复制到稳定 Unity 文件名，生成对应 `.meta`，由持久化 `FormalPlayerStatic3DImportEditorTests` 读取 Unity 实际导入网格；不创建玩家材质或 Prefab。
+
+## 禁止项
+
+- 不修复、重导出、覆盖或删除 v1，不恢复 01/02/03 worktree、模型会话、脚本或候选，不使用苻渊、Marker、旧动画/统一骨架或相近模型 fallback。
+- 不发起第二次 AI 生成、换原包、改四视图、改角色设计、追加 credits 或使用第二工具路线。
+- 不叠加第二次正式 FBX 导出、私有旋转/缩放补偿、底座、额外材质、骨骼、动画、特效或运行时规则改动。
+- 不创建 `.mat`、Prefab、catalog、Profile、provider 或正式 Adventure 接线；这些仍属于下游任务。
+
+## 验证
+
+- Blender 源与 factory-empty FBX 回读：mesh 数量、顶点、三角形大于 0，顶点位置非全零，X/Y/Z 三轴 bounds 非零；单 root/mesh/material/BaseColor、无脚本/动画、尺度/接地/轴/六向合同全部通过。
+- Unity importer：mesh 数量、总顶点、三角形大于 0，所有顶点位置不能全为零，X/Y/Z 三轴 bounds 均大于 0；测试同时核对 `Y=1.03m`、水平包络、`Y=0`、`+Z` 和单位缩放。
+- v2 manifest 与 QA 记录保存所有输入/输出 SHA-256、Blender 版本、导出设置、回读数值、Unity importer 数值、测试日志和负责人十视图批准。
+- 运行 `tools/run-unity-editmode-tests.ps1`、`tools/check-data-chain.ps1 -FailOnMissingAssets`、`tools/check-asset-versioning.ps1`、预期路径 whitespace、任务卡投影、审核文本和暂存后 `git diff --cached --check`；不运行 BattleSim。
+
+## 完成条件
+
+- 唯一 v2 blend/FBX/BaseColor/manifest/十视图与稳定 Unity FBX/BaseColor/importer 测试齐全；Blender、Unity 数值硬门和负责人视觉批准全部通过。
+- 本卡归档后才可移除 `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 的当前 blocker。Profile 卡随后只读消费已导入玩家 FBX/BaseColor，并负责玩家材质/Prefab、石甲兽正式 Unity 导入、双 catalog/Profile 映射与综合测试。
+
+## 停止条件
+
+- 输入哈希不符、需要重新生成/换原包/改设计、无法在允许清理范围内修复、需要第二次正式 FBX 导出、factory-empty 回读为空、Unity importer 顶点位置全零、任一 bounds 轴为零、尺度/接地/轴失败、Unity 测试失败或需要替换已批准输入时立即停止并保留失败层证据。
