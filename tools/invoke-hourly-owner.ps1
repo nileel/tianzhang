@@ -460,7 +460,7 @@ function Invoke-CombinedValidation {
     try { $null = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $whitespacePath -ExpectedPaths $expected 2>&1) } finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { Stop-Hourly 'hourly_whitespace_failed' }
   }
-  $null = Invoke-GitText $Worktree @('diff', '--check', "$Base..$Head") 'hourly_diff_check_failed'
+  $null = Invoke-GitText $Worktree @('-c', 'core.whitespace=-blank-at-eol', 'diff', '--check', "$Base..$Head") 'hourly_diff_check_failed'
   Assert-Postcondition -Run $Run -Worktree $Worktree
   if (@($changed | Where-Object { $_ -match '^(docs/|src/Assets/(?:Resources|StreamingAssets)/|.+\.(?:csv|json)$)' }).Count -gt 0) {
     $dataChainExitCode = 1
@@ -935,7 +935,7 @@ function Apply-TerminatedMaintenanceDecision {
       AutomationVerify = '验证=终止投影与任务卡检查通过；后续=需要人工按当前事实重新发起'
       AutomationPlain = '发生=旧决策已停止；影响=任务保持阻塞；需要=如仍需继续请重新发起决策'
     }
-    $null = Invoke-GitText $worktree @('diff', '--check', "$latest..$formalHead") 'maintenance_decision_diff_check_failed'
+    $null = Invoke-GitText $worktree @('-c', 'core.whitespace=-blank-at-eol', 'diff', '--check', "$latest..$formalHead") 'maintenance_decision_diff_check_failed'
     $postcondition = if ([string]$Found.status -ceq 'expired') { @('-TaskId', [string]$record.taskId, '-Postcondition', 'MaintenanceExpiredBlocked') } else { @('-TaskId', [string]$record.taskId, '-Postcondition', 'CodexClosedOrNonReady') }
     $evidence = Invoke-JsonTool $checkerPath (@('-RepositoryRoot', $worktree) + $postcondition + '-OutputJson') 'maintenance_decision_postcondition_failed'
     if ([string]$evidence.status -cne 'ok') { Stop-Hourly 'maintenance_decision_postcondition_failed' }
@@ -1201,7 +1201,7 @@ function Apply-AnsweredReviewRework {
         AutomationPlain = "发生=负责人已选择 $targetLabel 返工；影响=任务已重新排队但尚未开始新 run；需要=无需再次手动确认"
       }
       if ((@(Get-ChangedPaths $worktree "$latest..$formalHead") -join "`0") -cne ($changedPaths -join "`0")) { Stop-Hourly 'review_rework_formal_paths_invalid' }
-      $null = Invoke-GitText $worktree @('diff', '--check', "$latest..$formalHead") 'review_rework_diff_check_failed'
+      $null = Invoke-GitText $worktree @('-c', 'core.whitespace=-blank-at-eol', 'diff', '--check', "$latest..$formalHead") 'review_rework_diff_check_failed'
       $postcondition = if ([string]$reply.optionKey -ceq 'A') { @('-Postcondition', 'ExternalDispatchReady', '-ExpectedOwner', 'deepseek') } else { @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', 'codex_execute') }
       $evidence = Invoke-JsonTool $checkerPath (@('-RepositoryRoot', $worktree, '-TaskId', [string]$record.taskId) + $postcondition + '-OutputJson') 'review_rework_postcondition_failed'
       if ([string]$evidence.status -cne 'ok') { Stop-Hourly 'review_rework_postcondition_failed' }

@@ -66,6 +66,49 @@ $directCalls = @($commands | Where-Object {
 Assert-Equal $directCalls.Count 1 'Invoke-Finalizer does not directly invoke finalizerPath exactly once'
 Assert-True $finalizerDefinition.Extent.Text.Contains('*>&1') 'Invoke-Finalizer does not contain all finalizer output streams'
 
+$rangeDiffCalls = @($ownerAst.FindAll({
+  param($node)
+  $node -is [Management.Automation.Language.CommandAst] -and
+  $node.GetCommandName() -ceq 'Invoke-GitText' -and
+  $node.Extent.Text.Contains("'diff'") -and
+  $node.Extent.Text.Contains("'--check'") -and
+  $node.Extent.Text.Contains('..')
+}, $true))
+Assert-Equal $rangeDiffCalls.Count 3 'Formal range diff --check invocation count changed'
+foreach ($call in $rangeDiffCalls) {
+  Assert-True $call.Extent.Text.Contains("@('-c', 'core.whitespace=-blank-at-eol', 'diff', '--check'") `
+    'A formal range diff --check invocation does not use the Unity semantic whitespace configuration'
+}
+
+$combinedValidationDefinition = @($ownerAst.FindAll({
+  param($node)
+  $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Invoke-CombinedValidation'
+}, $true))
+$maintenanceDecisionDefinition = @($ownerAst.FindAll({
+  param($node)
+  $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Apply-TerminatedMaintenanceDecision'
+}, $true))
+$reviewReworkDefinition = @($ownerAst.FindAll({
+  param($node)
+  $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Apply-AnsweredReviewRework'
+}, $true))
+Assert-Equal $combinedValidationDefinition.Count 1 'Invoke-CombinedValidation definition count changed'
+Assert-Equal $maintenanceDecisionDefinition.Count 1 'Apply-TerminatedMaintenanceDecision definition count changed'
+Assert-Equal $reviewReworkDefinition.Count 1 'Apply-AnsweredReviewRework definition count changed'
+
+$combinedText = $combinedValidationDefinition[0].Extent.Text
+$maintenanceText = $maintenanceDecisionDefinition[0].Extent.Text
+$reviewText = $reviewReworkDefinition[0].Extent.Text
+Assert-True ($combinedText.IndexOf('$whitespacePath', [StringComparison]::Ordinal) -ge 0 -and
+  $combinedText.IndexOf('$whitespacePath', [StringComparison]::Ordinal) -lt $combinedText.IndexOf('core.whitespace=-blank-at-eol', [StringComparison]::Ordinal)) `
+  'Ordinary formal validation no longer runs the precise whitespace checker before configured git diff --check'
+Assert-True ($maintenanceText.IndexOf('Invoke-Finalizer', [StringComparison]::Ordinal) -ge 0 -and
+  $maintenanceText.IndexOf('Invoke-Finalizer', [StringComparison]::Ordinal) -lt $maintenanceText.IndexOf('core.whitespace=-blank-at-eol', [StringComparison]::Ordinal)) `
+  'Maintenance decision validation no longer runs the finalizer before configured git diff --check'
+Assert-True ($reviewText.IndexOf('$whitespacePath', [StringComparison]::Ordinal) -ge 0 -and
+  $reviewText.IndexOf('$whitespacePath', [StringComparison]::Ordinal) -lt $reviewText.IndexOf('core.whitespace=-blank-at-eol', [StringComparison]::Ordinal)) `
+  'Review rework validation no longer runs the precise whitespace checker before configured git diff --check'
+
 $productionFinalizerAst = Get-ParsedAst $productionFinalizerPath
 $exitStatements = @($productionFinalizerAst.FindAll({ param($node) $node -is [Management.Automation.Language.ExitStatementAst] }, $true))
 Assert-Equal $exitStatements.Count 0 'Production finalizer must throw on failure and must not call exit'
