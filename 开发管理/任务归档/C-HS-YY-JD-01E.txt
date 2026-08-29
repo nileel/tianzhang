@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-29：Codex 独立复审正式提交 d570191a058ed0109b1116e915ab94ed494e67f5 通过；水道路三位置文档、索引登记与任务投影均符合任务卡和直接事实源。",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_FiveElements_Water_SOURCE_玄冥泉眼.txt",
     "docs/基础设定/金丹位格/化位/JD_FiveElements_Water_TRANSFORM01_潮衡渡.txt",
@@ -81,6 +81,10 @@
 
 - 用户指定 DeepSeek V4 Pro 0813 执行返工，完成后仍由 Codex 独立复审。
 - 绑定前的位置专属成就只使用候选人已有的合法非位格行为、现实对象与环境条件证明位置理念；不得要求尚未取得的正式效果槽、白名单内位格效果或 `MountainRiverRuleInstance`。实际效果装配、山河实例建立与首次验证移到原子稳定绑定之后；不修改总规则、效果矩阵、数值或运行时。
+
+## 完成记录
+
+- 2026-08-29：Codex 独立复审 DeepSeek V4 Pro 0813 正式提交 `d570191a058ed0109b1116e915ab94ed494e67f5`，结论通过。三份文档的绑定前专属成就仅使用已有合法非位格行为、现实对象与环境条件，未取得本位置效果槽或 `MountainRiverRuleInstance`；潮衡渡的固定渡口筛选与转化可与三项白名单效果逐项求交；沧溟泽国战棋未读取山河层 `MountainRiverCycleProfile`。完整证位、原子重验、并行／临界争位、主场景循环、分效山河结果及四类实例版本策略均符合直接规则。三个 `positionId`、白名单与源／化／界版本、索引登记和任务投影一致，未发现新增道路权限、效果、组合、数值或运行时改动。
 
 ## Codex 审核反馈（2026-08-08）
 
