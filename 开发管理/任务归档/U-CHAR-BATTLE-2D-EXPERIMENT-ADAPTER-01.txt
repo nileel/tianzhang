@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-28：载体中立表现合同已完成归档；切片 5 在非 BuildSettings 测试场景中适配既有 2D pilot，不阻塞正式静态 3D 链。",
+  "stateReason": "2026-08-29：既有苻渊 2D pilot 已在非 BuildSettings 实验场景消费载体中立的只读棋子表现合同；Builder、生命周期与六向六事件验证通过，正式四场景及静态 3D 链保持不变。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpriteCombatUnitPresentationAdapter.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/BattleAnimationSpriteCombatUnitPresentationAdapter.cs.meta",
@@ -71,11 +71,18 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`。
 - 预期路径 whitespace 与暂存后 `git diff --cached --check`。
 
+## 2026-08-29 · 实施结果
+
+- 新增独立 adapter，实现 `ICombatUnitPresentationPort` 的 Prepare、Spawn、Present、Remove 与 Clear。它只读取稳定 combatant ID、实验 profile、格位、朝向和已提交 target result；每次生成都使用既有 `FuYuan_BattleAnimationSprite.prefab` 的六向三帧 controller，未写入 Combat、Adventure 或保存状态。
+- 新增 Builder 与 `Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity`。场景只有实验 root、billboard 所需相机及 adapter 输入；没有 `AdventureSceneInstaller`、`GameBootstrap` 或第二正式场景链，也未加入 `EditorBuildSettings.asset`。
+- EditMode 通过 Builder 的连续两次重建和重开引用检查；PlayMode 以同一冻结 Prefab 实验输入覆盖六向及全部六类事件，并验证移动落点、移除／清理和只读 target result 未被修改。因实验场景故意不是 BuildSettings 成员，PlayMode 不使用 `SceneManager` 加载该场景；场景持久化与 BuildSettings 隔离由 EditMode 覆盖。
+- 已运行 `check-unity-assembly-boundaries.ps1`、`run-unity-editmode-tests.ps1`、`run-unity-playmode-tests.ps1` 并通过。详细证据见 `开发管理/战斗棋子2D实验适配器验证记录.txt`。
+
 ## 完成条件
 
-- 既有 2D pilot 在一个非 BuildSettings、非正式 Adventure／Bootstrap 的实验入口消费同一只读合同并通过生命周期／六向／六事件测试；正式静态 3D 配置和运行结果不变。
+- 既有 2D pilot 已在一个非 BuildSettings、非正式 Adventure／Bootstrap 的实验入口消费同一只读合同，并通过生命周期／六向／六事件测试；正式静态 3D 配置和运行结果未变。
 
 ## 停止条件
 
-- 实现需要修改正式 Adventure／Bootstrap、正式 profile、静态 3D provider、战斗规则或保存结构。
+- 需要修改正式 Adventure／Bootstrap、正式 profile、静态 3D provider、战斗规则或保存结构。
 - 需要运行时玩家切换、同场双正式 provider、跨载体 fallback、第二正式场景链或用户 dirty changes 无法无冲突合并。

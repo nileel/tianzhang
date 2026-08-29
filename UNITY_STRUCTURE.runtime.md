@@ -36,12 +36,17 @@
 
 `AdventureSceneInstaller` 显式绑定内容目录、冒险地图、环境档案、单位 Prefab、攻击档案与视图；`AdventureController`／`EncounterCoordinator` 把纯快照交给 Combat。CombatPresentation 只经 `ICombatCommandHandler` 和只读表现 DTO 连接，不拥有战斗规则。
 
+## 非正式 2D 合同实验
+
+`src/Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity` 不在 BuildSettings。`CombatPiece2DExperimentSceneBuilder` 只持久化实验相机、`BattleAnimationSpriteCombatUnitPresentationAdapter` 与既有 `FuYuan_BattleAnimationSprite.prefab` 引用；adapter 将 `ICombatUnitPresentationPort` 的准备、生成、事件、移除和清理投影为 2D pilot，不写 Combat、场景路由或保存状态。缺少实验 profile／Prefab／关键组件时在该入口失败关闭；不得接入 `AdventureScene`、`GameBootstrap` 或静态 3D provider。
+
 ## 验证提示
 
 - `SceneArchitectureEditorTests` 与 `SceneArchitectureValidator.ValidateForBatchMode`
 - `FeatureCompositionEditorTests`、`GameRuntimeTests`、`GameSaveEnvelopeTests`
 - `GuanzhongFormalEndToEndTests` 与 `GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`
+- `CombatPiece2DExperimentEditorTests` 验证 Builder 重建、场景重开与四个正式 BuildSettings 场景；`CombatPiece2DExperimentPlayModeTests` 用同一冻结 Prefab 输入覆盖六向、六事件和生命周期合同。
 
 ## 禁止修改
 

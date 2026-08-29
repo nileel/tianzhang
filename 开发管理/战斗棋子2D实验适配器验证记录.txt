@@ -1,0 +1,10 @@
+# 战斗棋子 2D 实验适配器验证记录
+
+## 2026-08-29 · U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01
+
+- `BattleAnimationSpriteCombatUnitPresentationAdapter` 仅在 `Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity` 的实验入口持有既有 `FuYuan_BattleAnimationSprite.prefab`。它实现 `ICombatUnitPresentationPort`，覆盖 Prepare、Spawn、Present、Remove、Clear，并只读取 descriptor／event projection／target result；无 Combat、Adventure、Bootstrap、存档或静态 3D provider 写入。
+- 实验 profile 固定为 `combat_piece_2d_experiment_fuyuan_v1`。Prefab、profile、controller 或唯一 SpriteRenderer 缺失时分别在该实验入口用稳定原因失败关闭；没有 2D／3D fallback 或玩家切换。
+- Builder 生成并重开 `Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity`；场景只含实验 root、相机和 adapter 输入，不含 `AdventureSceneInstaller` 或 `GameBootstrap`，并未写入 `EditorBuildSettings.asset`。
+- EditMode：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 通过；`CombatPiece2DExperimentEditorTests` 两次执行 Builder，确认 scene／Prefab 引用持久化，enabled BuildSettings 仍精确为 StartMenu、World、Settlement、Adventure 四场景且不含实验场景。
+- PlayMode：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1` 通过；测试以同一冻结 Prefab 构造实验输入，覆盖准备、生成、六方向、Idle／Move／Attack／Hit／Cast／Death、移除、整场清理和只读 target result 保持。实验 scene 故意不由 `SceneManager` 加载，避免把它加入 BuildSettings。
+- 边界：正式 `AdventureScene.unity`、`AdventureSceneBuilder.cs`、Installer、profile asset 与静态 3D provider 均未改动；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1` 通过。

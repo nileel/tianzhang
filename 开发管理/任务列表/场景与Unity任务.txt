@@ -30,7 +30,6 @@
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | — | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-PRESENTATION-CONTRACT-01、U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |
 | D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 | P2 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 静态3D战斗棋子首批内容扩展规格 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt |
-| U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01 | P2 | codex | 已排队 | — | 非BuildSettings战斗棋子2D实验适配器 | 开发管理/任务卡/U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | 苻渊 strict-round-02 四边面候选静态结构 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt |
