@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：是否批准当前透明母版与暖灰审批预览？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260830-CD8702E62EB4B6",
   "expectedPaths": [
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json",
@@ -76,6 +76,14 @@
     "taskContextDigest": "b08c3e0c4027d9f576d1c33cee5ee9394c43ef087e240cd73b582155e1c0bffa",
     "createdAt": "2026-08-30T18:11:15.1421894+08:00",
     "queueIndex": 1
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260830-CD8702E62EB4B6",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "7efd16b56c93f22d6b933fd6549cd47da1a9ce348674fecee57294b196f55d87"
   }
 }
 ---TASK-BODY---
