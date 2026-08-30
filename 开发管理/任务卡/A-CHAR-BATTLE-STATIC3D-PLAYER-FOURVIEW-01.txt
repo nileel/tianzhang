@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：是否逐字批准已记录的默认男主严格四视图完整提示词，并授权其对应的一次 ImageGen 调用？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260830-CDC21D07D26478",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
@@ -77,6 +77,14 @@
     "taskContextDigest": "1f7e81e7af124a82321ffa86940331b06e8e97261abea5df34c756732b5f0bd2",
     "createdAt": "2026-08-30T20:23:01.8113429+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260830-CDC21D07D26478",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "f8a5c2d4fef3d00e0faa6bcffe798381fce4770f52fc02f3b22e75b6381f8758"
   }
 }
 ---TASK-BODY---
