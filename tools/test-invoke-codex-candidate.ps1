@@ -19,6 +19,7 @@ $stateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId"
 $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
 $failureStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-failure"
 $pathMismatchStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-path-mismatch"
+$reviewStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-review"
 $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
@@ -98,11 +99,12 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot 'AGENTS.md') -Text '# Codex candidate fixture'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流规则.txt') -Text '# workflow rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI协作规则.txt') -Text '# collaboration rules'
+  Write-Utf8 -Path (Join-Path $mainRoot '开发管理/未通过审核清单.txt') -Text '# review list fixture'
   Write-Utf8 -Path (Join-Path $mainRoot 'fixture/rename-source.txt') -Text 'rename fixture'
   $metadata = [ordered]@{
     schemaVersion = 1; id = $taskId; title = 'Codex candidate fixture'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'
     domain = 'automation'; stage = 'implementation'; dispatchState = 'ready'; blockedBy = @(); stateReason = 'fixture'
-    expectedPaths = @('fixture/rename-source.txt', 'fixture/rename-target.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt', "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt")
+    expectedPaths = @('fixture/rename-source.txt', 'fixture/rename-target.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt', "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt", '开发管理/未通过审核清单.txt')
     sourceBacklog = '开发管理/任务列表/自动化任务.txt'
   }
   $card = @(
@@ -289,6 +291,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($trace -match '\[TZG_CODEX_CANDIDATE\]') 'Codex candidate prompt marker is missing'
   Assert-True ($trace -match 'claim') 'Codex candidate prompt omitted fixed claim boundary'
   Assert-True ($trace -match 'worktree') 'Codex candidate prompt omitted worktree boundary'
+  Assert-True ($trace.Contains('除 QueueMaintenance 外，不得从其他任务卡的 blockedBy 或 backlog 行的「阻塞于」投影移除当前 taskId')) 'Codex candidate prompt omitted the downstream dependency boundary'
+  Assert-True ($trace.Contains('只有正式结果进入 master 后，后续 QueueMaintenance 才按既有事实源同时更新下游任务卡和 backlog 投影')) 'Codex candidate prompt moved downstream dependency cleanup outside QueueMaintenance'
   Assert-True ($trace -match 'automation-finalize-commit\.ps1') 'Codex candidate prompt omitted the formal finalizer'
   Assert-True ($trace -match '-RequireAutomationMetadata') 'Codex candidate prompt omitted required automation metadata'
   Assert-True ($trace -match "-AutomationTask '$taskId'") 'Codex candidate prompt omitted the exact task metadata'
@@ -418,6 +422,33 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal ([string]$mismatch.detailCode) 'codex_canary_metadata_invalid' 'Codex canary mismatch failure code is unstable'
   $env:TZG_FAKE_CODEX_MISMATCH = $null
 
+  $reviewCardPath = Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"
+  $reviewCard = [IO.File]::ReadAllText($reviewCardPath).Replace('"route": "codex_execute"', '"route": "codex_review"')
+  [IO.File]::WriteAllText($reviewCardPath, $reviewCard, [Text.UTF8Encoding]::new($false))
+  $reviewQueuePath = Join-Path $mainRoot '开发管理/当前任务队列.txt'
+  $reviewQueue = [IO.File]::ReadAllText($reviewQueuePath).Replace('| codex_execute |', '| codex_review |')
+  [IO.File]::WriteAllText($reviewQueuePath, $reviewQueue, [Text.UTF8Encoding]::new($false))
+  Invoke-Git -Root $mainRoot -Arguments @('add', '--', "开发管理/任务卡/$taskId.txt", '开发管理/当前任务队列.txt') | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('commit', '-m', 'test: prepare Codex review prompt fixture') | Out-Null
+  $reviewBase = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
+  $reviewCardText = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($reviewCardPath)).TrimStart([char]0xFEFF)
+  $reviewDigest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($reviewCardText.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+  $reviewClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $reviewStateRoot -Owner codex -TaskId $taskId -Route codex_review -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $reviewBase -TaskCardDigest $reviewDigest)
+  $reviewRun = ($reviewClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$reviewRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$reviewRun.candidateBranch, [string]$reviewRun.worktree, $reviewBase) | Out-Null
+  Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
+  $reviewOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Review -RepositoryRoot ([string]$reviewRun.worktree) -TaskId $taskId -RunId ([string]$reviewRun.runId) -Model 'test-codex-model' -StateRoot $reviewStateRoot -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal $reviewOutput.Count 1 'Codex review wrapper output count mismatch'
+  $review = $reviewOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$review.status) 'completed' "Codex review prompt fixture failed: $($review | ConvertTo-Json -Compress -Depth 20)"
+  $reviewTrace = [IO.File]::ReadAllText($tracePath)
+  Assert-True ($reviewTrace -match 'Route: Review') 'Codex review prompt lost its route'
+  Assert-True ($reviewTrace.Contains('不得修改被审业务语义来消除缺口或制造通过')) 'Codex review prompt omitted the no-self-repair boundary'
+  Assert-True ($reviewTrace.Contains('结论通过时，只可更新任务生命周期、索引中的内容状态以及被审文件中明确存在的审核标记／审核记录')) 'Codex review prompt omitted the passing-review mutation boundary'
+  Assert-True ($reviewTrace.Contains('结论为部分通过或不通过时，保留被审业务文件，把当前任务设为 blocked 并移出 ready 队列')) 'Codex review prompt omitted the failed-review mutation boundary'
+  Assert-True ($reviewTrace.Contains('只有正式结果进入 master 后，后续 QueueMaintenance 才按既有事实源同时更新下游任务卡和 backlog 投影')) 'Codex review prompt omitted the QueueMaintenance dependency boundary'
+
   Write-Output 'test-invoke-codex-candidate: OK'
 } finally {
   $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure; $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $originalRenameCompressed; $env:TZG_FAKE_CODEX_TERMINAL_MODE = $originalTerminalMode
@@ -445,6 +476,11 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedPathMismatchState = [IO.Path]::GetFullPath($pathMismatchStateRoot)
     if (-not $resolvedPathMismatchState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedPathMismatchState) -cne "tzg-codex-candidate-test-$testId-path-mismatch") { throw "Unsafe Codex path-mismatch state cleanup: $resolvedPathMismatchState" }
     Remove-Item -LiteralPath $resolvedPathMismatchState -Recurse -Force
+  }
+  if (Test-Path -LiteralPath $reviewStateRoot) {
+    $resolvedReviewState = [IO.Path]::GetFullPath($reviewStateRoot)
+    if (-not $resolvedReviewState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedReviewState) -cne "tzg-codex-candidate-test-$testId-review") { throw "Unsafe Codex review state cleanup: $resolvedReviewState" }
+    Remove-Item -LiteralPath $resolvedReviewState -Recurse -Force
   }
   foreach ($scenarioStateRoot in $scenarioStateRoots) {
     if (Test-Path -LiteralPath $scenarioStateRoot) {

@@ -163,7 +163,7 @@ function New-Prompt {
   param([object]$Run, [AllowNull()][object]$ResumeContext, [string[]]$CandidatePaths)
   $routeInstruction = switch ($Route) {
     'Execution' { '按指定 codex_execute 任务实施。' }
-    'Review' { "按审核入口复审指定 codex_review 任务。结论为不通过或部分通过且需返工时，必须在开发管理/未通过审核清单.txt 使用三级标题 '### $TaskId · <标题>'，并以 '- 审核对象：正式提交 ``<完整 SHA>``；结论：不通过。' 或 '- 审核对象：正式提交 ``<完整 SHA>``；结论：部分通过，仍需返工。' 记录本轮被复审提交；完整 SHA 必须在修改任务卡前通过 git log -1 --format=%H -- 开发管理/任务卡/$TaskId.txt 取得。不得使用短 SHA、二级任务标题或「复审对象」等替代表述。" }
+    'Review' { "按审核入口复审指定 codex_review 任务。先以目标提交、任务卡完成条件和直接事实源形成通过／部分通过／不通过结论；不得修改被审业务语义来消除缺口或制造通过。结论通过时，只可更新任务生命周期、索引中的内容状态以及被审文件中明确存在的审核标记／审核记录，不得顺手补写规则或内容。结论为部分通过或不通过时，保留被审业务文件，把当前任务设为 blocked 并移出 ready 队列；必须在开发管理/未通过审核清单.txt 使用三级标题 '### $TaskId · <标题>'，并以 '- 审核对象：正式提交 ``<完整 SHA>``；结论：不通过。' 或 '- 审核对象：正式提交 ``<完整 SHA>``；结论：部分通过，仍需返工。' 记录本轮被复审提交；完整 SHA 必须在修改任务卡前通过 git log -1 --format=%H -- 开发管理/任务卡/$TaskId.txt 取得。不得使用短 SHA、二级任务标题或「复审对象」等替代表述。" }
     'QueueMaintenance' { '只做空队列维护，本轮不执行新增业务任务。先扫描各分线 backlog 中所有明确标为阻塞的任务；对阻塞描述中明确出现的稳定任务 ID，依次核对 开发管理/任务卡/<ID>.txt 与 开发管理/任务归档/<ID>.txt。backlog 中“阻塞”字样本身不能证明前置仍未完成：命名 blocker 在活跃任务卡和完成归档中都不存在时保持阻塞，不猜测完成状态；同一 ID 同时存在活跃任务卡与完成归档时保持阻塞，不提升下游任务。当本轮确认某个具名前置已完成并从直接下游卡移除该 ID，且本轮移除使该卡的 blockedBy 从非空变为空时，必须继续读取同一卡完整正文并收口这次状态事件：剩余动作若只是当前仓库与已批准事实即可完成的任务卡准备，例如实时路径扫描或字面量路径冻结，就在本轮完成准备并重新判断 runnable；唯一剩余条件若是负责人在两条可确定性形成完整 ready 卡的路线间选择，则按维护型决策终态处理；其他内容冻结、外部工作面、项目闸门、事实冲突或停止条件保持阻塞。不得顺带扫描其他原本就是 blockedBy=[] 的活跃卡，不得因准确的 stateReason 未变化而机械重写或制造维护提交。命名前置已完成但仍有其他真实条件时只在原说明失真时改写为实际剩余 blocker；全部前置已完成且现有事实足以形成完整任务卡时，同步 backlog、建立完整任务卡并按既有排序规则入队。完成全部阻塞项核对及上述直接受影响卡的收口后仍没有合法候选，才允许返回 no_candidate。' }
   }
   $resumeInstruction = if ($null -eq $ResumeContext) {
@@ -181,6 +181,7 @@ function New-Prompt {
     "TaskId: $TaskId"; "RunId: $RunId"; "Route: $Route"; "RepositoryRoot: $script:root"; "CandidateBranch: $($Run.candidateBranch)"; "BaseCommit: $($Run.baseCommit)"
     $routeInstruction; $resumeInstruction
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
+    '除 QueueMaintenance 外，不得从其他任务卡的 blockedBy 或 backlog 行的「阻塞于」投影移除当前 taskId，也不得顺带提升、重排或关闭下游任务。当前任务完成后，其他任务对它的具名前置引用继续保留；只有正式结果进入 master 后，后续 QueueMaintenance 才按既有事实源同时更新下游任务卡和 backlog 投影。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
     '当前 worktree 的验证若要求 dotnet build --no-restore 且对应项目缺少 obj/project.assets.json，先在同一 worktree 对该项目执行一次 dotnet restore 作为环境准备，再执行任务卡规定的 --no-restore build；不得改用主工作区、其他 worktree 或其 obj/bin 缓存。'
     "CandidatePaths: $pathText"
