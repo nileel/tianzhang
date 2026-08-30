@@ -1,0 +1,24 @@
+# M-EXP-TASK-SCHEMA2-01 · 任务卡 schema 1／2 与 riskPreflight 投影支持复审归档
+
+- 完成日期：2026-08-30
+- 修改方：DeepSeek V4 Pro 0813
+- 复审方：Codex
+- 结论：通过
+
+## 提交链
+
+- 首轮候选提交：`185c4e2a7916b57205a920fae31972a3fdef4951`；正式业务提交：`f3b5b1b48017b773aadacbbf168e12c13e3408af`。
+- 首轮复审提交：`3978b709554759d49f84b17f6884961ecbbcec6b`，要求 `explicitRefs` 只能引用 `explicit_only` 经验。
+- 定向返工候选提交：`dd171fd1dbe2cbd51b99033af60cb19ffee8ab2c`；正式业务提交：`ff236060ec7963ca7469fae82b97e98ee7ba65e9`。
+- 最终复审提交：`e39008d67155d6a905e228b79179dff68bf5715e`。
+
+## 复审结果
+
+- schema 1／2 兼容、schema 2 `riskPreflight` 字段集合和实时匹配投影具备确定性正反例；现有 schema 1 ready 卡继续合法。
+- 定向返工补齐 `explicitRefs` 引用非 `explicit_only` 经验的拒绝规则与负例，未引入第二套匹配逻辑，也未改写真实任务卡。
+- 最终复审通过；任务卡已归档，`codex_review` 队列投影已移除。
+
+## 验证
+
+- `tools/test-check-task-cards.ps1`、`tools/test-get-experience-risk-preflight.ps1` 和 `tools/check-task-cards.ps1 -OutputJson` 通过。
+- 任务卡 postcondition、审核文本、待提交路径空白与 Git diff 检查通过。
