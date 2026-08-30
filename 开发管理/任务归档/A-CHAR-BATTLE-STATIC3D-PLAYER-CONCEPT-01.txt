@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260830-CD8702E62EB4B6",
+  "stateReason": "2026-08-30：唯一透明母版与暖灰审批预览的客观门通过；负责人通过 DEC-20260830-CD8702E62EB4B6 选择 A 明确批准，产物哈希与记录冻结，本卡完成归档。",
   "expectedPaths": [
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json",

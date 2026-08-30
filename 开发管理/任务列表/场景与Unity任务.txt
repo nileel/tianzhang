@@ -19,7 +19,7 @@
 - 2026-08-28：双正式资产合同与载体中立表现合同的直接下游已完成解阻塞；正式玩家资产、石甲兽资产和非 BuildSettings 2D 实验适配器进入 ready，后续 Profile 总门仍等待两张正式资产卡同时完成。
 - 2026-08-28：`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02` 的 schema 5 run 在联系表硬门停止，人工诊断又确认 MCP FBX 导出上下文缺少 `selected_objects`，唯一导出未创建文件。负责人要求拆成独立机制修复卡与机制通过后的新资产卡；02 永久阻塞。`A-BLENDER-MCP-FBX-CONTEXT-01` 已用无业务语义临时场景证明 `use_selection=false` 的唯一导出和 factory-empty 回读，正式玩家输入改由已排队的 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 承担；Profile 总门继续等待 03 与石甲兽。
 - 2026-08-28：`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 已在独立 worktree 完成新的正式玩家 Blender 原生 source。唯一 `use_selection=false` FBX 导出、factory-empty 回读、BaseColor 相对绝对解析、哈希、十视图与负责人视觉批准全部通过；未修改 Unity 或正式接线。正式玩家与石甲兽两张资产卡现均已完成归档，`U-CHAR-BATTLE-STATIC3D-PROFILES-01` 的双输入 blocker 全部解除并进入 ready。
-- 2026-08-29：正式玩家 v1 冻结 FBX 在当前 Unity importer 中出现网格计数非零但全部顶点坐标与 bounds 为零；Profile 总门已退出 ready。负责人随后逐项批准无名 16 岁固定默认男主及「正式原画 -> 严格四视图 -> 一次 AI 原包 -> Blender 清理/Unity importer」v2 生产链。旧 v1 和失败现场只保留为证据；新链四卡已完整建立，首卡 `A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01` ready，其余依次 blocked，Profile 直接等待 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04`。
+- 2026-08-29：正式玩家 v1 冻结 FBX 在当前 Unity importer 中出现网格计数非零但全部顶点坐标与 bounds 为零；Profile 总门已退出 ready。负责人随后逐项批准无名 16 岁固定默认男主及「正式原画 -> 严格四视图 -> 一次 AI 原包 -> Blender 清理/Unity importer」v2 生产链。2026-08-30，唯一透明原画母版及暖灰预览完成客观验证并获负责人批准，`A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01` 已归档；`A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01` 解除具名前置并进入 ready，但必须先取得完整四视图提示词逐字批准，不能自动生成。旧 v1 和失败现场只保留为证据；Profile 继续直接等待 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04`。
 
 ## 任务
 
@@ -28,8 +28,7 @@
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01 | P1 | codex | 已排队 | — | 默认男主正式原画与透明对话立绘母版 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01 | 默认男主严格建模四视图生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt |
+| A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01 | P1 | codex | 已排队 | — | 默认男主严格建模四视图生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01 | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | 默认男主v2静态3D清理与Unity importer验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt |
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |

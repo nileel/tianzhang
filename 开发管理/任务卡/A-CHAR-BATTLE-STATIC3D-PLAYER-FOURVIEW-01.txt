@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01"
-  ],
-  "stateReason": "等待默认男主透明原画母版完成归档并冻结身份哈希；四视图完整提示词仍须在本卡执行前单独提交负责人逐字批准。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "默认男主透明原画母版已完成归档并冻结身份哈希；本卡下一步先形成完整四视图提示词并提交负责人逐字批准，获批前不得调用 ImageGen。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",

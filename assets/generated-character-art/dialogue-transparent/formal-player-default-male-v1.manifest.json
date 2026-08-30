@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "assetId": "formal-player-default-male-v1",
+  "purpose": "Canonical transparent full-body dialogue portrait and identity source for the unnamed default male player character.",
+  "approvedSource": {
+    "path": "C:\\Users\\WINDOWS\\.codex\\generated_images\\01a04d10-bade-7221-8a04-dbcde0b2a02d\\exec-1b0f38ad-b898-47fd-927c-c8ce0c2443df.png",
+    "width": 887,
+    "height": 1774,
+    "bytes": 1621601,
+    "sha256": "a1aae3b8a8e0f90c428b7e8818a045d428306725318a9d530f7ee02779722133",
+    "imageGenToolRecord": "Historical approved built-in ImageGen artifact identified by the exact source path; this task made no ImageGen call."
+  },
+  "styleReference": {
+    "path": "assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png",
+    "sha256": "082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65",
+    "usage": "Project-wide illustration style only; not an identity, appearance, costume, or pose source."
+  },
+  "approvedPrompt": {
+    "source": "docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md#3",
+    "approvedOn": "2026-08-29",
+    "verbatimCopy": "assets/generated-character-art/dialogue-transparent/prompts.md#无名默认男主（正式原画 v1）"
+  },
+  "localCutout": {
+    "executionCount": 1,
+    "method": "deterministic green-dominance alpha matte with partial-edge despill",
+    "keyGreen": 249,
+    "backgroundRule": "G >= 200 and G - max(R,B) >= 160 yields alpha 0",
+    "opaqueRule": "G - max(R,B) <= 0 yields alpha 255 with unchanged RGB",
+    "matteRule": "otherwise alpha = round(255 * (1 - min(1, (G - max(R,B)) / max(1, 249 - max(R,B)))))",
+    "despillRule": "only for 0 < alpha < 255, clamp G to max(R,B)"
+  },
+  "outputs": {
+    "transparentMaster": {
+      "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
+      "mode": "RGBA",
+      "width": 887,
+      "height": 1774,
+      "bytes": 1806843,
+      "sha256": "399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948"
+    },
+    "approvalPreview": {
+      "path": "assets/generated-character-art/titled/formal-player-default-male-v1-approval-preview.png",
+      "mode": "RGB",
+      "width": 887,
+      "height": 1774,
+      "background": "#d7d0c5",
+      "bytes": 942131,
+      "sha256": "21abc0a5a90e03ec5ebffe6d273c2714b9e171561fae8dfcd91e4843df28b5d4"
+    }
+  },
+  "validation": {
+    "transparentCorners": [0, 0, 0, 0],
+    "transparentPixels": 1065945,
+    "partialAlphaPixels": 11853,
+    "opaquePixels": 495740,
+    "opaqueRgbDriftPixels": 0,
+    "previewCompositeDriftPixels": 0
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedOn": "2026-08-30",
+    "decisionId": "DEC-20260830-CD8702E62EB4B6",
+    "source": "feishu_card",
+    "evidenceHash": "7efd16b56c93f22d6b933fd6549cd47da1a9ce348674fecee57294b196f55d87",
+    "required": [
+      "unnamed 16-year-old default male identity",
+      "hair and practical indigo robe",
+      "single-handed sword-finger pose",
+      "two complete hands and feet",
+      "project illustration style",
+      "transparent edge quality"
+    ],
+    "note": "The owner explicitly approved the frozen transparent master and warm-gray preview by selecting option A."
+  },
+  "scope": {
+    "imageGenCalledThisTask": false,
+    "newCharacterGenerated": false,
+    "fourViewCreated": false,
+    "blenderOrUnityModified": false
+  }
+}

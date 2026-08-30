@@ -1,0 +1,39 @@
+# 默认男主正式原画与透明对话立绘母版记录
+
+任务：`A-CHAR-BATTLE-STATIC3D-PLAYER-CONCEPT-01`
+
+当前结论：**客观透明处理与负责人最终视觉批准均已通过；透明母版和暖灰审批预览已冻结。** 本卡完成归档，并解除四视图任务的具名前置；四视图仍须在其任务卡内先取得完整提示词逐字批准，不能自动生成。
+
+## 冻结输入与边界
+
+- 正式身份、外貌、发型、服装、姿态、统一画风与完整提示词的唯一合同：`docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` §2、§3、§5.1、§7。
+- 唯一已批准绿幕过程源图：`C:\Users\WINDOWS\.codex\generated_images\01a04d10-bade-7221-8a04-dbcde0b2a02d\exec-1b0f38ad-b898-47fd-927c-c8ce0c2443df.png`。
+- 源图复核：`887×1774`、`1621601` 字节、SHA-256 `a1aae3b8a8e0f90c428b7e8818a045d428306725318a9d530f7ee02779722133`。
+- 项目画风参考：`assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png`，SHA-256 `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65`；只作项目级画风参考，不继承苻渊身份或外观。
+- 上游 ImageGen 记录仅为上述已批准的历史 source artifact；本任务没有调用 ImageGen、没有生成第二张人物候选，也没有修改人物 RGB、尺寸、构图或身份。
+
+## 一次性本地透明处理
+
+- 实际执行次数：`1`。
+- 方法：确定性绿色优势 alpha 蒙版。对每像素取 `anchor=max(R,B)`、`dominance=G-anchor`；`G>=200 && dominance>=160` 时 alpha 为 `0`，`dominance<=0` 时 alpha 为 `255`，其余 alpha 为 `round(255*(1-min(1,dominance/max(1,249-anchor))))`。
+- 去绿只应用于 `0<alpha<255` 的边缘：将 G 限制为不高于 `anchor`。所有 alpha 为 `255` 的像素 RGB 与绿幕源图同坐标字节保持一致。
+- 未修改共享 `remove_chroma_key.py`，未裁切、缩放、变形、重绘、修补或替换人物。
+
+## 输出与客观验证
+
+| 输出 | 模式／尺寸 | 字节 | SHA-256 |
+|---|---|---:|---|
+| `assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png` | RGBA，887×1774 | 1806843 | `399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948` |
+| `assets/generated-character-art/titled/formal-player-default-male-v1-approval-preview.png` | RGB，887×1774，纯 `#d7d0c5` 暖灰底 | 942131 | `21abc0a5a90e03ec5ebffe6d273c2714b9e171561fae8dfcd91e4843df28b5d4` |
+
+- 透明母版四角 alpha：`0, 0, 0, 0`。
+- alpha 统计：透明 `1065945`、部分透明 `11853`、完全不透明 `495740` 像素。
+- 逐像素复核：alpha 为 `255` 的 RGB 漂移为 `0`；暖灰预览与透明母版以同一纯色背景合成的像素漂移为 `0`。
+- 完整已批准提示词、源图身份、实际方法、输出哈希及批准状态写入 `assets/generated-character-art/dialogue-transparent/prompts.md` 和同目录 manifest。
+
+## 负责人视觉审批结论
+
+- 2026-08-30，负责人通过飞书卡片对决策 `DEC-20260830-CD8702E62EB4B6` 选择 `A（批准母版）`，回复结果为 `OPTION_ACCEPTED`。
+- 证据哈希：`7efd16b56c93f22d6b933fd6549cd47da1a9ce348674fecee57294b196f55d87`。
+- 批准范围：无名 16 岁默认男主身份、半束长发、深靛实用道袍、单手剑指、双手双脚完整、项目统一画风以及透明边缘。
+- 本结论只批准本记录所列固定 SHA-256 的透明母版与暖灰预览；没有新增生成、改词、补画、四视图或 3D 授权。
