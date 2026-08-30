@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "默认男主透明原画母版已完成归档并冻结身份哈希；本卡下一步先形成完整四视图提示词并提交负责人逐字批准，获批前不得调用 ImageGen。",
+  "stateReason": "等待负责人决定：是否逐字批准已记录的默认男主严格四视图完整提示词，并授权其对应的一次 ImageGen 调用？",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
@@ -26,7 +26,58 @@
     "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt",
     "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01",
+    "sourceRunId": "11a69870-2201-4086-ac69-56578196c4e0",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260830-CDC21D07D26478",
+    "question": "是否逐字批准已记录的默认男主严格四视图完整提示词，并授权其对应的一次 ImageGen 调用？",
+    "options": [
+      {
+        "key": "A",
+        "label": "逐字批准并授权唯一生成"
+      },
+      {
+        "key": "B",
+        "label": "拒绝本提示词并停止本卡"
+      },
+      {
+        "key": "C",
+        "label": "指定需要改写的提示词项"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "批准后只会执行该完整提示词对应的一次 ImageGen 调用；其余路径、任务生命周期和下游阻塞保持不变。",
+    "plainSummary": {
+      "situation": "是否逐字批准已记录的默认男主严格四视图完整提示词，并授权其对应的一次 ImageGen 调用？",
+      "impact": "批准后只会执行该完整提示词对应的一次 ImageGen 调用；其余路径、任务生命周期和下游阻塞保持不变。",
+      "action": "建议选择 A：逐字批准并授权唯一生成"
+    },
+    "checkpointCommit": "042ea7d3ac89b8cdfea7f1873a9fd73740621378",
+    "baseCommit": "fa4c5f6d4ac524c9a674181017fbe96a3a0d9c0f",
+    "branch": "codex/automation/codex/11a69870-2201-4086-ac69-56578196c4e0/candidate",
+    "changedPaths": [
+      "开发管理/默认男主正式多视图生成记录.txt",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/prompts.md"
+    ],
+    "verified": [
+      "冻结透明母版与画风参考的尺寸、字节数和 SHA-256",
+      "四面板、左右鼻尖方向、背面最小推断与禁用剑指的完整提示词合同",
+      "check-asset-versioning、check-review-text、任务卡投影、空白和提交差异检查",
+      "候选提交元数据、基线父提交与工作树清洁"
+    ],
+    "unverified": [
+      "负责人对完整提示词的逐字批准",
+      "唯一 ImageGen 调用及四视图输出的视觉和裁切验证"
+    ],
+    "residualRisk": "未获逐字批准不得调用 ImageGen；任何唯一结果失败都必须停止，不能自动重试或补画。",
+    "taskContextDigest": "1f7e81e7af124a82321ffa86940331b06e8e97261abea5df34c756732b5f0bd2",
+    "createdAt": "2026-08-30T20:23:01.8113429+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01 · 默认男主严格建模四视图生产与批准
