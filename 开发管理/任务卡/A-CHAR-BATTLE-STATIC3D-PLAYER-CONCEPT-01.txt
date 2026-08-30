@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：generated_concept_contract_violation",
+  "stateReason": "2026-08-30 用户确认沿用已批准的唯一绿幕源图，只授权更换本地抠图方法；禁止再次调用 ImageGen 或改变人物。源图身份、尺寸、字节数与 SHA-256 已冻结，本卡重新 ready。",
   "expectedPaths": [
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
     "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json",
@@ -31,6 +31,8 @@
 ## 来源与当前边界
 
 - 用户已逐项批准一个无名、16 岁、关中小族出身的固定默认男主；完整身份、外貌、发型、服装、单手剑指、构图、统一画风和绿幕输出合同以 `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` 为准。
+- 用户已于 2026-08-29 明确批准本卡唯一人物源图：`C:\Users\WINDOWS\.codex\generated_images\01a04d10-bade-7221-8a04-dbcde0b2a02d\exec-1b0f38ad-b898-47fd-927c-c8ce0c2443df.png`；固定为 `887×1774`、`1621601` 字节、SHA-256 `a1aae3b8a8e0f90c428b7e8818a045d428306725318a9d530f7ee02779722133`。它只作本卡绿幕过程输入，不进入项目正式路径。
+- 2026-08-30 用户确认沿用该源图，只允许更换本地抠图方法。该授权替代规格和本卡原先冻结的单一 `remove_chroma_key.py` 参数，但不改变已批准的人物、提示词、构图、画风、正式产物或下游身份合同。
 - 本卡只生产正式透明全身对话立绘母版、暖灰审批预览、提示词/manifest 和生成记录；不生产四视图、3D、FBX、Unity 资产或 Profile。
 - 苻渊批准立绘只提供项目统一画风，不提供身份、年龄、脸、白发、胡须、服装、饰品、姿势或人物经历。
 
@@ -40,25 +42,29 @@
 - `assets/generated-character-art/README.md` 的用途目录、绿幕源图、本地透明处理和验收合同。
 - `assets/generated-character-art/dialogue-transparent/prompts.md` 的通用绿幕约束与现行本地抠图命令。
 - `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png`，只作项目画风参考；执行前核对文件存在并记录 SHA-256。
+- 上述已批准唯一绿幕源图，以及同目录 `cutout-attempt-fixed-params.png`、`approval-preview-cutout-failed.png`；后两者只提供原固定参数误伤证据，不得作为人物输入。
 
 ## 实施范围
 
-- 使用 ImageGen，精确复用规格 §3 已由用户批准的完整提示词和唯一苻渊参考图，只执行一次生成调用；不得改词、追加隐式负面词或批量生成候选。
-- ImageGen 只产出临时纯 `#00ff00` 绿幕源图；随后精确执行规格冻结的本地 `remove_chroma_key.py` 命令，形成正式 RGBA 母版。绿幕过程图通过抠图验收后不进入项目正式路径。
+- 不调用 ImageGen；开始处理前必须重新核对唯一绿幕源图的字面量路径、尺寸、字节数和 SHA-256，任一不符立即停止。
+- 只执行一次确定性的本地非生成式透明处理。可以调整抠图参数或改用其他本地 alpha 提取方法，但不得修改共享抠图脚本来加入本角色专用行为；若现有工具无法在任务 worktree 内以一次性命令完成，则停止。
+- 允许的像素变化仅限 alpha 蒙版及部分透明边缘的去绿；画布保持 `887×1774`，不得裁切、缩放、变形、重绘、修补、生成或替换人物。所有最终 `alpha=255` 的人物像素 RGB 必须与唯一绿幕源图同坐标字节一致。
+- 绿幕过程图通过抠图验收后不进入项目正式路径。
 - 以正式 RGBA 母版本地合成一张无文字、无装饰的暖灰审批预览；预览不替代透明母版，不作为运行时分层事实源。
-- 在共享 `dialogue-transparent/prompts.md` 追加本角色的已批准完整提示词和固定抠图参数；manifest 与生成记录保存参考图、完整提示词、工具记录、尺寸、字节数、SHA-256、抠图参数和负责人批准状态。
+- 在共享 `dialogue-transparent/prompts.md` 追加本角色已批准的完整提示词、唯一源图身份和实际抠图方法；manifest 与生成记录保存参考图、完整提示词、原 ImageGen 工具记录、唯一源图尺寸／字节数／SHA-256、实际抠图参数和负责人批准状态。
 - 实际展示透明母版和暖灰预览，等待负责人对身份、年龄、发型、服装、单手剑指、双手双脚、画风和透明边缘明确批准。
 
 ## 禁止项
 
 - 不把默认男主画成苻渊、古天乐、杨过或任何现有命名角色、真人肖像；只允许既定发型结构灵感。
 - 不添加武器、法器、盔甲、首饰、身份牌、宗门纹章、魔法效果、文字、印章、UI、水印、地面或投影。
-- 不自动重试、不生成第二张候选、不在结果被拒绝后自行改词；拒绝后必须先重新取得完整提示词批准。
+- 本次恢复不拥有任何 ImageGen 调用权，不生成第二张候选，不改提示词；透明处理被拒绝后继续保持未完成，不得借机重新生成人物。
 - 不创建四视图、不调用 AI 3D 平台、不操作 Blender、不写 `assets/source/` 或 `src/Assets/`。
 
 ## 验证
 
-- 正式母版必须为 RGBA PNG，四角 alpha 为 0，全身、头发、两手、袍摆和双脚完整，无绿幕边、地面、投影、题字或裁切。
+- 唯一绿幕源图必须仍为 `887×1774`、`1621601` 字节且 SHA-256 精确为 `a1aae3b8a8e0f90c428b7e8818a045d428306725318a9d530f7ee02779722133`。
+- 正式母版必须为 `887×1774` RGBA PNG，四角 alpha 为 0，全身、头发、两手、袍摆和双脚完整，无绿幕边、地面、投影、题字或裁切；最终 `alpha=255` 的人物像素 RGB 与源图同坐标字节一致。
 - 暖灰预览与透明母版像素身份一致，只增加本地纯色背景；不得二次生成或重绘人物。
 - manifest、生成记录、提示词入口与最终文件字节数/SHA-256 精确一致；负责人批准结论必须明确记录。
 - 运行 `tools/check-asset-versioning.ps1`、预期路径 whitespace、任务卡投影、审核文本和暂存后 `git diff --cached --check`；不运行 Blender、Unity 或 BattleSim。
@@ -70,4 +76,4 @@
 
 ## 停止条件
 
-- 参考图缺失或哈希不能记录、ImageGen 不可用、批准提示词需要改变、绿幕抠图破坏深色衣袍或发丝、解剖/身份/构图失败、用户拒绝结果，或需要第二次生成才能通过时立即停止并保留证据。
+- 唯一源图缺失或身份不符、需要修改共享抠图脚本、任何本地方法仍破坏深色衣袍／发丝／解剖／身份／构图、用户拒绝透明边缘结果，或需要重新生成才能通过时立即停止并保留证据。
