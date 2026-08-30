@@ -5,7 +5,7 @@
 ## 实时入口与事实源
 
 - `codex-hourly-worker` 每小时 `:15` 前台调用 `tools/invoke-hourly-owner.ps1 -Owner codex -Action RunOnce -Model <实际 model>`；`deepseek-hourly-trigger` 每天仅在香港／北京时间谷价小时的 `00:45–08:45`（逐小时）、`12:45`、`13:45` 与 `18:45–23:45` 前台调用同一脚本并传入 `-Owner deepseek -Action RunOnce`。两个定时器继续独立运行，可分别开发不同 taskId。
-- automation 对话的长时间共享入口 cell 只等待同一前台调用；项目业务输出仍是单个结构化终态 JSON，Desktop 展示层在其后追加恰好一个简短 `::inbox-item`。触发层不读队列、任务卡或模型正文，也不管理任何 automation。automation memory 只记录本轮时间与脚本终态摘要，不参与项目事实、选题、runtime 或恢复判断。
+- automation 对话的长时间共享入口 cell 只等待同一前台调用；项目业务输出仍是单个结构化终态 JSON，Desktop 展示层在其后追加恰好一个简短 `::inbox-item`。触发层不读队列、任务卡或模型正文，也不管理任何 automation。触发器不读写 automation memory；脱敏终态由 automation 运行历史与原始 JSON 承载，memory 不参与项目事实、选题、runtime、恢复或结果判断。
 - 实时 prompt、schedule、folder、model、notification policy 和 enabled 状态以 automation 配置为准，只通过 Codex automation 管理能力变更，不编辑 TOML。
 - 任务唯一活跃事实是 `开发管理/当前任务队列.txt` 的有序行及同 ID `开发管理/任务卡/<ID>.txt`；交接、摘要和 runtime 只提供证据或诊断信息。
 

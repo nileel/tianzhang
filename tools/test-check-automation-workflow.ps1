@@ -17,8 +17,8 @@ $testId = [Guid]::NewGuid().ToString('N')
 $temporaryBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/')
 $testRoot = Join-Path $temporaryBase "tzg-workflow-check-test-$testId"
 $automationRoot = Join-Path $testRoot 'automations'
-$repositoryRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
-$checker = Join-Path $PSScriptRoot 'check-automation-workflow.ps1'
+  $repositoryRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+  $checker = Join-Path $PSScriptRoot 'check-automation-workflow.ps1'
 
 try {
   [IO.Directory]::CreateDirectory($automationRoot) | Out-Null
@@ -35,7 +35,7 @@ try {
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.mcp__node_repl__js' -and $prompts['codex-hourly-worker'] -match 'codex_model_metadata_invalid') 'Canonical Codex prompt is missing the request metadata channel'
   Assert-True ($prompts['codex-hourly-worker'] -match 'tools\.exec_command' -and $prompts['codex-hourly-worker'] -match 'tools\.write_stdin' -and $prompts['codex-hourly-worker'] -match 'yield_time_ms: 60000') 'Canonical Codex prompt is missing the exec_command/write_stdin polling contract'
   Assert-True ($prompts['codex-hourly-worker'] -match 'Script running with cell ID' -and $prompts['codex-hourly-worker'] -match '同一 cell 调用 `wait`') 'Canonical Codex prompt is missing the outer functions.exec wait contract'
-  Assert-True ($prompts['codex-hourly-worker'] -match '不读取队列或任务卡' -and $prompts['codex-hourly-worker'] -match 'Desktop automation memory' -and $prompts['codex-hourly-worker'] -match '恰好一个简短 `::inbox-item`' -and $prompts['codex-hourly-worker'] -match 'memory 不得改变固定命令') 'Canonical Codex prompt is missing the thin-trigger soft contract'
+  Assert-True ($prompts['codex-hourly-worker'] -match '不读取队列或任务卡' -and $prompts['codex-hourly-worker'] -match '不得读取、创建、更新或删除任何 `memory\.md`' -and $prompts['codex-hourly-worker'] -match 'automation 运行历史和原始 JSON 承载终态' -and $prompts['codex-hourly-worker'] -match '恰好一个 `::inbox-item`' -and $prompts['codex-hourly-worker'] -match '两者之间不得执行文件写入') 'Canonical Codex prompt is missing the thin-trigger memory prohibition contract'
   $codexCodeBlocks = @([regex]::Matches($prompts['codex-hourly-worker'], '(?s)```js\r?\n(?<body>.*?)\r?\n\s*```'))
   Assert-True ($codexCodeBlocks.Count -eq 1) 'Canonical Codex prompt must contain exactly one shared-entry cell'
   $longEntryCell = $codexCodeBlocks[0].Groups['body'].Value
@@ -47,7 +47,7 @@ try {
   Assert-True ($prompts['deepseek-hourly-trigger'] -match 'tools\.exec_command' -and $prompts['deepseek-hourly-trigger'] -match 'tools\.write_stdin' -and $prompts['deepseek-hourly-trigger'] -match 'yield_time_ms: 60000') 'Canonical DeepSeek prompt is missing the exec_command/write_stdin polling contract'
   Assert-True ($prompts['deepseek-hourly-trigger'] -match 'Script running with cell ID' -and $prompts['deepseek-hourly-trigger'] -match '同一 cell 调用 `wait`') 'Canonical DeepSeek prompt is missing the outer functions.exec wait contract'
   Assert-True ($prompts['deepseek-hourly-trigger'] -match 'deepseek_exec_session_invalid' -and $prompts['deepseek-hourly-trigger'] -match 'deepseek_shared_entrypoint_failed' -and $prompts['deepseek-hourly-trigger'] -match 'deepseek_terminal_json_invalid') 'Canonical DeepSeek prompt is missing stable trigger errors'
-  Assert-True ($prompts['deepseek-hourly-trigger'] -match '不读取队列、任务卡或业务事实' -and $prompts['deepseek-hourly-trigger'] -match 'Desktop automation memory' -and $prompts['deepseek-hourly-trigger'] -match '恰好一个简短 `::inbox-item`' -and $prompts['deepseek-hourly-trigger'] -match 'memory 不得改变固定命令') 'Canonical DeepSeek prompt is missing the thin-trigger soft contract'
+  Assert-True ($prompts['deepseek-hourly-trigger'] -match '不读取队列、任务卡或业务事实' -and $prompts['deepseek-hourly-trigger'] -match '不得读取、创建、更新或删除任何 `memory\.md`' -and $prompts['deepseek-hourly-trigger'] -match 'automation 运行历史和原始 JSON 承载终态' -and $prompts['deepseek-hourly-trigger'] -match '恰好一个 `::inbox-item`' -and $prompts['deepseek-hourly-trigger'] -match '两者之间不得执行文件写入') 'Canonical DeepSeek prompt is missing the thin-trigger memory prohibition contract'
   $deepseekCodeBlocks = @([regex]::Matches($prompts['deepseek-hourly-trigger'], '(?s)```js\r?\n(?<body>.*?)\r?\n\s*```'))
   Assert-True ($deepseekCodeBlocks.Count -eq 1) 'Canonical DeepSeek prompt must contain exactly one shared-entry cell'
   $deepseekEntryCell = $deepseekCodeBlocks[0].Groups['body'].Value
@@ -55,6 +55,13 @@ try {
   foreach ($retiredToken in @('shell_command', 'timeout_ms: 3060000', 'shouldSelfPause', 'tools.codex_app__automation_update', 'automation.toml')) {
     Assert-True (-not $prompts['deepseek-hourly-trigger'].Contains($retiredToken)) "Canonical DeepSeek prompt still contains retired token: $retiredToken"
   }
+  foreach ($promptId in @('codex-hourly-worker', 'deepseek-hourly-trigger')) {
+    foreach ($retiredMemoryContract in @('读取并在结束时更新本 automation 的 memory', '按 Desktop automation memory 合同读取并在结束时更新', 'memory 只记录本轮时间')) {
+      Assert-True (-not $prompts[$promptId].Contains($retiredMemoryContract)) "Canonical prompt retains retired memory contract: $promptId / $retiredMemoryContract"
+    }
+  }
+  Assert-True ($rules -match '触发器不读写 automation memory' -and $rules -match 'automation 运行历史与原始 JSON 承载') 'Workflow rules are missing the trigger memory prohibition contract'
+  Assert-True ($rules -notmatch 'automation memory 只记录本轮时间与脚本终态摘要') 'Workflow rules retain the old trigger memory write contract'
   foreach ($entry in $prompts.GetEnumerator()) { Write-Automation -Id $entry.Key -Status 'PAUSED' -Prompt $entry.Value }
   $paused = Invoke-Checker
   Assert-True ($paused.ExitCode -eq 0 -and $paused.Text -match 'check-automation-workflow: OK') "Paused contract failed: $($paused.Text)"
@@ -63,6 +70,14 @@ try {
   foreach ($entry in $prompts.GetEnumerator()) { Write-Automation -Id $entry.Key -Status 'ACTIVE' -Prompt $entry.Value }
   $active = Invoke-Checker -Active
   Assert-True ($active.ExitCode -eq 0) "Active contract failed: $($active.Text)"
+  $missingMemoryProhibition = $prompts['deepseek-hourly-trigger'].Replace('不得读取、创建、更新或删除任何 `memory.md`；', '')
+  Write-Automation -Id 'deepseek-hourly-trigger' -Status 'ACTIVE' -Prompt $missingMemoryProhibition
+  $missingMemory = Invoke-Checker
+  Assert-True ($missingMemory.ExitCode -ne 0) 'Checker accepted a trigger prompt missing the memory prohibition'
+  $oldMemoryWrite = $prompts['deepseek-hourly-trigger'] + "`n按 Desktop automation memory 合同读取并在结束时更新本 automation 的 memory；只记录本轮执行时间与脚本终态摘要。`n"
+  Write-Automation -Id 'deepseek-hourly-trigger' -Status 'ACTIVE' -Prompt $oldMemoryWrite
+  $retiredMemory = Invoke-Checker
+  Assert-True ($retiredMemory.ExitCode -ne 0) 'Checker accepted a trigger prompt with the retired memory write obligation'
   Write-Automation -Id 'deepseek-hourly-trigger' -Status 'ACTIVE' -Prompt 'tampered prompt'
   $tampered = Invoke-Checker
   Assert-True ($tampered.ExitCode -ne 0 -and $tampered.Text -match 'prompt does not match') 'Checker accepted a tampered trigger prompt'
