@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-30 Codex 复审正式提交 1def30589df80bcb046e8b6a99cd00ad76d942d5 部分通过：三份文档均未定义总规则要求的独立证位核心；阻塞等待定向返工",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_SixConsciousness_Form_SOURCE_形骸祖窍.txt",
     "docs/基础设定/金丹位格/化位/JD_SixConsciousness_Form_TRANSFORM01_易骨关.txt",
@@ -81,6 +81,12 @@
 
 - 用户指定 DeepSeek V4 Pro 0813 执行返工，完成后仍由 Codex 独立复审。
 - 绑定前的位置专属成就只使用候选人已有的合法非位格行为、现实对象与环境条件证明位置理念；不得要求尚未取得的正式效果槽、白名单内位格效果或 `MountainRiverRuleInstance`。实际效果装配、山河实例建立与首次验证移到原子稳定绑定之后；不修改总规则、效果矩阵、数值或运行时。
+
+## Codex 复审反馈（2026-08-30）
+
+- 审核对象：正式提交 `1def30589df80bcb046e8b6a99cd00ad76d942d5`；结论：部分通过，仍需返工。
+- 已通过：绑定前专属成就已改为合法非位格行为、现实对象与环境条件；完整阶段骨架、最终原子重验、并行／临界争位及失败者处理、主场景维护／NPC／失败、三效果山河结果与事件、四类实例版本策略均已补齐；法身庭战棋不再读取山河层 `MountainRiverCycleProfile`。
+- 共同返工：形骸祖窍、易骨关、法身庭的 §4.4 只定义真实地点、现实支点、兼容主承载、材料、供能、维护资源与护道力量，却未定义 `金丹位格证位与争位规则.txt` §四要求的独立证位核心及其准备、承载、受损与修复入口；三文档仅在致命中断句引用未定义的“证位核心被毁”。
 
 ## Codex 审核反馈（2026-08-08）
 

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-30 Codex 复审正式提交 9f00042e4f9e9715bc6de3d6d638196fac54e86c 部分通过：三份文档未定义独立证位核心，收缘庭战棋仍读取山河周期配置；阻塞等待定向返工",
   "expectedPaths": [
     "docs/基础设定/金丹位格/源位/JD_CauseEffect_Result_SOURCE_报成镜.txt",
     "docs/基础设定/金丹位格/化位/JD_CauseEffect_Result_TRANSFORM01_定谳门.txt",
@@ -81,6 +81,13 @@
 
 - 用户指定 DeepSeek V4 Pro 0813 执行返工，完成后仍由 Codex 独立复审。
 - 绑定前的位置专属成就只使用候选人已有的合法非位格行为、现实对象与环境条件证明位置理念；不得要求尚未取得的正式效果槽、白名单内位格效果或 `MountainRiverRuleInstance`。实际效果装配、山河实例建立与首次验证移到原子稳定绑定之后；不修改总规则、效果矩阵、数值或运行时。
+
+## Codex 复审反馈（2026-08-30）
+
+- 审核对象：正式提交 `9f00042e4f9e9715bc6de3d6d638196fac54e86c`；结论：部分通过，仍需返工。
+- 已通过：绑定前专属成就已改为合法非位格行为、现实对象与环境条件；完整阶段骨架、最终原子重验、并行／临界争位及失败者处理已补齐；实际效果装配与山河实例建立及首次验证均移至原子稳定绑定之后；15 个本批次 `positionId` 及全索引 51 个 `positionId` 均无重复，版本与路径一致。
+- 共同返工：报成镜、定谳门、收缘庭的 §4.4 未定义 `金丹位格证位与争位规则.txt` §四要求的独立证位核心及其准备、承载、受损与修复入口，只在致命中断句引用未定义的“证位核心被毁”。
+- 分层返工：收缘庭 §8.1 的战棋 `RESULT_REWRITE` 领域仍直接读取只属于山河层的 `MountainRiverCycleProfile`；须改用合法战棋持续／维持配置，并复核同节其他两项“按周期运行”的配置归属。
 
 ## Codex 复审反馈（2026-08-09）
 
