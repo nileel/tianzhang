@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260831-CD94AB5B801C8D",
+  "stateReason": "负责人于 DEC-20260831-CD94AB5B801C8D 选择 B 拒绝唯一四视图候选；本卡冻结，不得重试或复用该提示词，后续须先形成新的完整提示词并取得逐字批准。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
@@ -137,3 +137,9 @@
 ## 停止条件
 
 - 原画母版/manifest 缺失或哈希变化、四视图提示词未获批准、ImageGen 不可用、唯一结果出现身份/比例/发型/服装漂移、左右镜像或颠倒、背面伪造、解剖/裁切错误、用户拒绝结果，或需要第二次生成/AI 补画才能通过时停止。
+
+## 本轮拒绝结果
+
+- 负责人于 2026-08-31 对 `DEC-20260831-CD94AB5B801C8D` 选择 B（拒绝候选并停止，后续先重写并批准新提示词），回复为 `OPTION_ACCEPTED`，证据哈希为 `dc7e28f56e28460a7c98708b45c8f0cc14d317f1d5d68e5a71b71a9569fe55a9`。
+- 唯一 ImageGen 调用已消费；本卡不批准该候选四视图，不保留其作为 `assets/source/` 有效输入，不触发重试、补画、平台上传、credits、Blender 或 Unity 操作。
+- 本卡保持 `frozen`，下游 `A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01` 的具名前置不变。任何后续生成必须先形成新的完整提示词并获得负责人逐字批准。

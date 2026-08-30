@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01 | codex_execute | codex | P1 | content | implementation | 默认男主严格建模四视图生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01.txt |
 | C-HS-YY-JD-01I | codex_review | codex | P2 | content | design | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
 | C-HS-YY-JD-01J | codex_review | codex | P2 | content | design | 金丹位格·形识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
 | C-HS-YY-JD-01O | external_execute | deepseek | P2 | content | design | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |

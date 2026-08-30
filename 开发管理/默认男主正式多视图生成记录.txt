@@ -1,0 +1,43 @@
+# 默认男主正式严格四视图生成记录
+
+任务：`A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01`
+
+当前结论：负责人已于 2026-08-31 对 `DEC-20260831-CD94AB5B801C8D` 选择 B，拒绝唯一四视图候选。本卡已冻结；唯一一次内置 ImageGen 调用仍然已消费，但候选母图、四张分槽图、提示词和 manifest 不作为 `assets/source/` 有效输入保留。不得重试、补画、上传 AI 3D 平台、消费 credits、操作 Blender 或 Unity；任何后续生成都必须先形成新的完整提示词并获得逐字批准。
+
+## 冻结身份输入复核
+
+| 用途 | 项目路径 | 模式／尺寸 | 字节数 | SHA-256 | 使用边界 |
+|---|---|---|---:|---|---|
+| 唯一决定性身份母版 | `assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png` | RGBA，887×1774 | 1806843 | `399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948` | 决定无名 16 岁默认男主的身份、脸、发型、服装、比例和配色；不继承对话剑指姿态。 |
+| 项目级画风参照 | `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png` | RGBA，887×1774 | 1514901 | `082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65` | 只提供项目统一插画完成度；不提供苻渊身份、年龄、脸、发型、服装、姿态或饰物。 |
+
+以上两项已在本次 checkpoint 前按路径、模式、尺寸、字节数和 SHA-256 重算并与上游冻结记录一致。透明母版的批准结论为 2026-08-30 的 `DEC-20260830-CD8702E62EB4B6`（A：批准母版）；它不等于本卡四视图提示词或四视图结果的批准。
+
+## 已批准且已消费的唯一调用合同（历史）
+
+- 完整逐字提示词曾位于 `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/prompts.md#待逐字批准的唯一完整提示词`；候选被拒绝后该文本不再是可用提示词，也不保留为有效输入。
+- 负责人于本轮以 A 批准该完整文本，`decisionId=DEC-20260830-CDC21D07D26478`，证据哈希为 `f8a5c2d4fef3d00e0faa6bcffe798381fce4770f52fc02f3b22e75b6381f8758`。
+- 本批准对应的一次内置 ImageGen 调用已产出一张无文字、2×2 的严格前／侧／侧／背四面板母图；没有第二次生成、AI 补画、镜像或翻转。
+- 固定面板语义：角色左侧为角色自身左侧靠近相机、鼻尖朝画面右；角色右侧为角色自身右侧靠近相机、鼻尖朝画面左；背面不出现脸或三分之四转身。
+- 建模姿态固定为自然对称放松站姿、双臂低垂且清楚分离；不沿用对话剑指，也不使用 A/T、战斗、施法、胜利、走路或扭身姿态。
+- 若批准并完成唯一生成，四张独立图和无文字联系表只可由该母图按记录的像素裁切矩形本地确定性重现；不得镜像、翻转、第二次生成或 AI 补画。
+
+## 已拒绝的唯一结果与确定性分槽（审计）
+
+唯一母图曾作为候选写入 `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_fourview.png`，RGB `1254×1254`，`1567178` 字节，SHA-256 `55dd5769b8d46472174fa27cefac2995e6fd2d5aa2a3166de30021871736e156`；负责人拒绝后该文件不作为有效输入保留。
+
+| 语义视图 | 候选项目路径（已拒绝） | 母图像素裁切矩形 `(x,y,width,height)` | 尺寸 | 字节数 | SHA-256 | 方向复核 |
+|---|---|---|---|---:|---|---|
+| 正面 | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png` | `(0,0,627,627)` | 627×627 | 537581 | `4e6064dcbd2e1981b07049fedc654e83eb7b7524a43cf624db0451f1d62de4b4` | 正面 |
+| 角色自身右侧／鼻尖朝画面左 | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png` | `(627,0,627,627)` | 627×627 | 468372 | `c21f3d4626b8ff40d95d00ae68a2c39db01192529774e8ec988eb45a2018875d` | 严格侧面，鼻尖向左 |
+| 角色自身左侧／鼻尖朝画面右 | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png` | `(0,627,627,627)` | 627×627 | 460342 | `c1bc5a90b3fa6ccad9e635a28b35dd8625fafd0ce0762adc0df3c6403742b298` | 严格侧面，鼻尖向右 |
+| 背面 | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png` | `(627,627,627,627)` | 627×627 | 491079 | `7bad7d869c312041d27617446ed2d79f7b16b84fcc63c2c4c4031aeb3a40560d` | 无脸、无三分之四转身 |
+
+- 图像生成器把两个侧面放在与获批提示词的格位顺序相反的位置；这不是镜像或翻转。该已拒绝候选曾按实际鼻尖方向和角色自身侧向确定性命名。
+- 四张候选输出均只由上表给出的母图矩形进行像素裁切；没有缩放、旋转、镜像、翻转、重绘或 AI 修补。
+
+## 拒绝后的冻结边界
+
+- 唯一生成调用已消费。负责人以 B 拒绝候选，回复为 `OPTION_ACCEPTED`，证据哈希为 `dc7e28f56e28460a7c98708b45c8f0cc14d317f1d5d68e5a71b71a9569fe55a9`；本卡冻结，不改变下游 `A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01` 的具名前置。
+- 本记录保留哈希、裁切和方向事实以证明调用消费与拒绝范围；不把已拒绝候选当作可上传、可建模或可继续使用的四视图。
+- 后续只能先形成新的完整提示词并取得负责人逐字批准；不得自动重试。
