@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-CHAR-BATTLE-PRESENTATION-CONTRACT-01",
     "U-CHAR-BATTLE-STATIC3D-PROFILES-01"
   ],
-  "stateReason": "必须同时等待载体中立合同与正式玩家／石甲兽双Profile总门；本卡在一个原子结果中迁移正式Marker生命周期并持久化唯一静态3D provider。",
+  "stateReason": "2026-08-30：载体中立合同已完成归档；本卡只等待正式玩家／石甲兽双Profile总门，再在一个原子结果中迁移正式Marker生命周期并持久化唯一静态3D provider。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",

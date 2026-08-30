@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
-    "U-CHAR-BATTLE-2D-EXPERIMENT-ADAPTER-01"
+    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01"
   ],
-  "stateReason": "2026-08-27：父项只汇总正式静态3D接线与非阻塞2D实验两个关闭叶子，不直接承担合同、资产、接线或实验实现。",
+  "stateReason": "2026-08-30：非 BuildSettings 2D 实验关闭叶子已完成归档；父项只剩正式静态3D接线关闭叶子，且不直接承担合同、资产、接线或实验实现。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-27-combat-piece-presentation-modularization-design.md",
     "开发管理/战场角色视觉方向重新评估用户决定记录.txt",
