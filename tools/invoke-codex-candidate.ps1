@@ -105,13 +105,13 @@ function New-TerminalSchema {
       verified = @{ type = 'array'; items = @{ type = 'string' } }
       unverified = @{ type = 'array'; items = @{ type = 'string' } }
       residualRisk = @{ type = 'string' }; result = @{ type = 'string' }; impact = @{ type = 'string' }; verify = @{ type = 'string' }; plain = @{ type = 'string' }
-      decisionId = @{ type = 'string'; pattern = '^(?:|DEC-[0-9]{8}-[A-Z0-9]+)$' }
+      decisionId = @{ type = 'string'; pattern = '^(?:|DEC-[0-9]{8}-[A-Z0-9]+)$'; description = 'Schema filler. Direct and maintenance decisions return an empty string; the deterministic wrapper owns the final decision ID.' }
       decisionTaskId = @{ type = 'string' }
       question = @{ type = 'string' }
       options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') } }; required = @('key', 'label', 'targetState'); additionalProperties = $false } }
       recommendedOption = @{ type = 'string' }
       impactSummary = @{ type = 'string' }
-      plainSummary = @{ type = 'object'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
+      plainSummary = @{ type = 'object'; description = 'Schema filler for model output. The deterministic wrapper derives the direct-decision summary from validated semantic fields.'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
       detailCode = @{ type = 'string' }
     }
     required = @()
@@ -193,7 +193,7 @@ function New-Prompt {
     '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
     'QueueMaintenance 仅在本轮移除直接下游卡的最后一个具名前置、完整读卡后确认唯一剩余条件是负责人在两条可确定性形成 ready 卡的路线间选择时，返回 maintenance_decision。该候选提交只完成前置移除与准确阻塞事实，不写 automationDecision、不改 pending_decision、不入队；decisionTaskId 指向该下游卡，options 必须恰为 A/B/C 且 targetState 依次为 ready/ready/blocked，allowCustomReply 由共享入口固定为 false。decisionId 返回空字符串，由共享入口按事实摘要生成。'
-    '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及完整三选一决策卡字段。checkpoint 不得改变任务生命周期。'
+    '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption 和 impactSummary。direct needs_decision 的 decisionId 返回空字符串，plainSummary 三字段返回空字符串；固定 wrapper 会从 run/checkpoint 身份与上述已校验语义字段确定性生成它们。checkpoint 不得改变任务生命周期。'
     '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
     '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组，plainSummary 填三个空字符串；固定 wrapper 只按实际 status 核验必需字段。'
     '除 QueueMaintenance 的 no_candidate 外，最终只输出符合 schema 的 JSON 对象。'
@@ -258,25 +258,47 @@ function Invoke-Runner {
 
 function Assert-StringArray { param([object]$Value) if ($Value -is [string] -or $Value -isnot [Collections.IEnumerable]) { Stop-Candidate 'codex_terminal_invalid' }; foreach ($item in @($Value)) { if ([string]::IsNullOrWhiteSpace([string]$item)) { Stop-Candidate 'codex_terminal_invalid' } } }
 
+function Get-DirectDecisionId {
+  param([object]$Run, [string]$CheckpointCommit)
+  $startedAt = [DateTimeOffset]::MinValue
+  if (
+    [string]::IsNullOrWhiteSpace([string]$Run.runId) -or
+    [string]::IsNullOrWhiteSpace($CheckpointCommit) -or
+    -not [DateTimeOffset]::TryParse([string]$Run.startedAt, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$startedAt)
+  ) { Stop-Candidate 'codex_decision_invalid' }
+  $material = "$TaskId$([char]0)$([string]$Run.runId)$([char]0)$CheckpointCommit"
+  $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($material)))
+  "DEC-$($startedAt.ToString('yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture))-CD$($hash.Substring(0, 12))"
+}
+
 function Assert-Decision {
-  param([object]$Terminal, [string[]]$AllowedPaths, [string]$BaseCommit)
+  param([object]$Terminal, [string[]]$AllowedPaths, [object]$Run)
   foreach ($field in @('candidateCommit', 'changedPaths', 'verified', 'unverified', 'residualRisk', 'decisionId', 'question', 'options', 'recommendedOption', 'impactSummary', 'plainSummary')) { if ($Terminal.PSObject.Properties.Name -cnotcontains $field) { Stop-Candidate 'codex_terminal_invalid' } }
   $commit = [string]$Terminal.candidateCommit
-  if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne $commit -or (Invoke-GitText @('rev-list', '--count', "$BaseCommit..$commit")) -cne '1' -or (Invoke-GitText @('rev-parse', "$commit^")) -cne $BaseCommit) { Stop-Candidate 'codex_checkpoint_invalid' }
+  $baseCommit = [string]$Run.baseCommit
+  if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne $commit -or (Invoke-GitText @('rev-list', '--count', "$baseCommit..$commit")) -cne '1' -or (Invoke-GitText @('rev-parse', "$commit^")) -cne $baseCommit) { Stop-Candidate 'codex_checkpoint_invalid' }
   if (-not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-Candidate 'codex_checkpoint_dirty' }
-  $actual = @(Get-ChangedPaths -Range "$BaseCommit..$commit")
+  $actual = @(Get-ChangedPaths -Range "$baseCommit..$commit")
   $reported = @($Terminal.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
   if ($actual.Count -eq 0 -or ($actual -join "`0") -cne ($reported -join "`0")) { Stop-Candidate 'codex_checkpoint_paths_invalid' }
   foreach ($path in $actual) { if ($AllowedPaths -cnotcontains $path) { Stop-Candidate 'codex_checkpoint_paths_invalid' } }
   $options = @($Terminal.options)
   if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC') { Stop-Candidate 'codex_decision_invalid' }
-  foreach ($value in @([string]$Terminal.decisionId, [string]$Terminal.question, [string]$Terminal.recommendedOption, [string]$Terminal.impactSummary, [string]$Terminal.plainSummary.situation, [string]$Terminal.plainSummary.impact, [string]$Terminal.plainSummary.action)) { if ([string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_decision_invalid' } }
-  if ([string]$Terminal.decisionId -cnotmatch '^DEC-[0-9]{8}-[A-Z0-9]+$') { Stop-Candidate 'codex_decision_invalid' }
+  foreach ($value in @($options | ForEach-Object { [string]$_.label }) + @([string]$Terminal.question, [string]$Terminal.impactSummary)) { if ([string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_decision_invalid' } }
+  $recommendedOption = [string]$Terminal.recommendedOption
+  if ($recommendedOption -cnotin @('A', 'B', 'C')) { Stop-Candidate 'codex_decision_invalid' }
+  $recommendedLabel = [string](@($options | Where-Object { [string]$_.key -ceq $recommendedOption })[0].label)
+  $decisionId = Get-DirectDecisionId -Run $Run -CheckpointCommit $commit
+  $plainSummary = [ordered]@{
+    situation = [string]$Terminal.question
+    impact = [string]$Terminal.impactSummary
+    action = "建议选择 $recommendedOption：$recommendedLabel"
+  }
   [ordered]@{
-    category = 'decision_checkpoint'; decisionId = [string]$Terminal.decisionId; question = [string]$Terminal.question
-    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } }); recommendedOption = [string]$Terminal.recommendedOption
-    impactSummary = [string]$Terminal.impactSummary; plainSummary = $Terminal.plainSummary
-    checkpointCommit = $commit; baseCommit = $BaseCommit; branch = (Invoke-GitText @('branch', '--show-current')); changedPaths = $actual
+    category = 'decision_checkpoint'; decisionId = $decisionId; question = [string]$Terminal.question
+    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } }); recommendedOption = $recommendedOption
+    impactSummary = [string]$Terminal.impactSummary; plainSummary = $plainSummary
+    checkpointCommit = $commit; baseCommit = $baseCommit; branch = (Invoke-GitText @('branch', '--show-current')); changedPaths = $actual
     verified = @($Terminal.verified | ForEach-Object { [string]$_ }); unverified = @($Terminal.unverified | ForEach-Object { [string]$_ }); residualRisk = [string]$Terminal.residualRisk
   }
 }
@@ -424,7 +446,7 @@ try {
         ) {
           $result = [ordered]@{ status = 'blocked'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; detailCode = [string]$terminal.detailCode }
         } else {
-          $decision = Assert-Decision -Terminal $terminal -AllowedPaths $expectedPaths -BaseCommit ([string]$run.baseCommit)
+          $decision = Assert-Decision -Terminal $terminal -AllowedPaths $expectedPaths -Run $run
           $result = [ordered]@{ status = 'needs_decision'; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; candidateCommit = [string]$decision.checkpointCommit; candidateResult = $decision }
         }
       }

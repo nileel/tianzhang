@@ -7,6 +7,13 @@ function Assert-True { param([bool]$Condition, [string]$Message) if (-not $Condi
 function Assert-Equal { param($Actual, $Expected, [string]$Message) if ($Actual -cne $Expected) { throw "$Message (actual=$Actual expected=$Expected)" } }
 function Write-Utf8 { param([string]$Path, [string]$Text) [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null; [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false)) }
 function Invoke-Git { param([string]$Root, [string[]]$Arguments) $o = @(& git -C $Root @Arguments 2>&1); if ($LASTEXITCODE -ne 0) { throw "git failed: $($Arguments -join ' '): $(@($o) -join "`n")" }; (@($o) -join "`n").Trim() }
+function Get-ExpectedDirectDecisionId {
+  param([string]$TaskId, [object]$Run, [string]$CheckpointCommit)
+  $startedAt = [DateTimeOffset]::Parse([string]$Run.startedAt, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind)
+  $material = "$TaskId$([char]0)$([string]$Run.runId)$([char]0)$CheckpointCommit"
+  $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($material)))
+  "DEC-$($startedAt.ToString('yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture))-CD$($hash.Substring(0, 12))"
+}
 
 $testId = [Guid]::NewGuid().ToString('N')
 $tempBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/')
@@ -151,6 +158,10 @@ $optionsProperty = $schema.properties.PSObject.Properties['options']
 if ($null -ne $optionsProperty -and @($optionsProperty.Value.items.required) -cnotcontains 'targetState') {
   throw 'candidate output schema does not require targetState'
 }
+$decisionIdProperty = $schema.properties.PSObject.Properties['decisionId']
+if ($null -ne $decisionIdProperty -and [string]$decisionIdProperty.Value.description -cnotmatch 'deterministic wrapper') {
+  throw 'candidate output schema does not identify deterministic decision ID ownership'
+}
 $modelIndex = [Array]::IndexOf($CliArguments, '-m')
 $model = $CliArguments[$modelIndex + 1]
 if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
@@ -188,7 +199,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     [IO.File]::WriteAllBytes($queuePath, $originalQueue)
   } elseif ($mode -ceq 'blocked-dirty') {
     [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixture/dirty.txt'), 'dirty blocker fixture', [Text.UTF8Encoding]::new($false))
-  } elseif ($mode -cin @('checkpoint-valid', 'checkpoint-head-changed', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
+  } elseif ($mode -cin @('checkpoint-valid', 'checkpoint-empty-mechanical', 'checkpoint-empty-label', 'checkpoint-invalid-recommended', 'checkpoint-head-changed', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
     $sourcePath = Join-Path ([Environment]::CurrentDirectory) 'fixture/rename-source.txt'
     [IO.File]::WriteAllText($sourcePath, 'checkpoint fixture', [Text.UTF8Encoding]::new($false))
     & git add -- 'fixture/rename-source.txt'
@@ -198,6 +209,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $candidateCommit = if ($mode -ceq 'checkpoint-head-changed') { '' } else { $actualCommit }
     $changedPaths = if ($mode -ceq 'checkpoint-wrong-path') { @('fixture/wrong-path.txt') } else { @('fixture/rename-source.txt') }
     if ($mode -ceq 'checkpoint-incomplete-abc') { $options = @($options[0], $options[1]) }
+    if ($mode -ceq 'checkpoint-empty-label') { $options[1].label = '' }
   } elseif ($mode -ceq 'checkpoint-fake-sha') {
     $candidateCommit = '0' * 40
     $changedPaths = @('fixture/rename-source.txt')
@@ -208,9 +220,9 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     status = 'needs_decision'; identity = 'Codex'; model = $model; candidateCommit = $candidateCommit; expectedTransition = ''
     changedPaths = $changedPaths; verified = @('fixture evidence'); unverified = @('owner decision')
     residualRisk = 'fixture only'; result = ''; impact = ''; verify = ''; plain = ''
-    decisionId = 'DEC-20260811-CANDIDATEFIXTURE'; question = 'Choose the fixture outcome.'; options = $options
-    recommendedOption = 'A'; impactSummary = 'fixture impact'
-    plainSummary = [ordered]@{ situation = 'fixture situation'; impact = 'fixture impact'; action = 'choose A' }
+    decisionId = $(if ($mode -ceq 'checkpoint-empty-mechanical') { '' } else { 'DEC-20260811-CANDIDATEFIXTURE' }); question = 'Choose the fixture outcome.'; options = $options
+    recommendedOption = $(if ($mode -ceq 'checkpoint-invalid-recommended') { 'D' } else { 'A' }); impactSummary = 'fixture impact'
+    plainSummary = $(if ($mode -ceq 'checkpoint-empty-mechanical') { [ordered]@{ situation = ''; impact = ''; action = '' } } else { [ordered]@{ situation = 'fixture situation'; impact = 'fixture impact'; action = 'choose A' } })
     detailCode = 'combat_core_switch_contract_incomplete'
   }
 } elseif ($env:TZG_FAKE_CODEX_DIRTY_FAILURE -eq '1') {
@@ -303,6 +315,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($trace -match '不得把 result=、impact=、verify=、plain= 写入对应参数值') 'Codex candidate prompt did not reject JSON field prefixes inside metadata parameter values'
   Assert-True ($trace -notmatch '四值必须逐字满足以下格式[^\r\n]*result=问题=') 'Codex candidate prompt retained the ambiguous prefixed metadata grammar'
   Assert-True ($trace -match '技术失败同样先恢复工作树到本轮初始状态') 'Codex candidate prompt omitted the clean technical-failure boundary'
+  Assert-True ($trace -match 'direct needs_decision 的 decisionId 返回空字符串' -and $trace -match '固定 wrapper 会从 run/checkpoint 身份') 'Codex candidate prompt omitted deterministic direct-decision ownership'
   Assert-True ($trace -match '缺少 obj/project\.assets\.json' -and $trace -match '先在同一 worktree 对该项目执行一次 dotnet restore' -and $trace -match '不得改用主工作区、其他 worktree 或其 obj/bin 缓存') 'Codex candidate prompt omitted the fresh-worktree restore boundary'
   Assert-True ($trace -match '必须与该提交的四个元数据值逐字一致') 'Codex candidate prompt omitted terminal/commit value synchronization'
   Assert-True ($trace -match "BaseCommit: $base") 'Codex candidate prompt omitted the exact base commit'
@@ -331,7 +344,16 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal (Invoke-Git -Root ([string]$validCheckpoint.Run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex valid checkpoint is not the unique direct successor'
   Assert-Equal (Invoke-Git -Root ([string]$validCheckpoint.Run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex valid checkpoint worktree is dirty'
 
-  foreach ($invalidMode in @('checkpoint-head-changed', 'blocked-dirty', 'checkpoint-fake-sha', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
+  $normalizedCheckpoint = Invoke-TerminalScenario -Mode 'checkpoint-empty-mechanical'
+  $normalizedCommit = Invoke-Git -Root ([string]$normalizedCheckpoint.Run.worktree) -Arguments @('rev-parse', 'HEAD')
+  $expectedDecisionId = Get-ExpectedDirectDecisionId -TaskId $taskId -Run $normalizedCheckpoint.Run -CheckpointCommit $normalizedCommit
+  Assert-Equal ([string]$normalizedCheckpoint.Terminal.status) 'needs_decision' 'Codex did not normalize empty direct-decision mechanical fields'
+  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.decisionId) $expectedDecisionId 'Codex direct decision ID is not deterministic'
+  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.situation) 'Choose the fixture outcome.' 'Codex direct decision situation summary mismatch'
+  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.impact) 'fixture impact' 'Codex direct decision impact summary mismatch'
+  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.action) '建议选择 A：option A' 'Codex direct decision action summary mismatch'
+
+  foreach ($invalidMode in @('checkpoint-head-changed', 'blocked-dirty', 'checkpoint-fake-sha', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc', 'checkpoint-empty-label', 'checkpoint-invalid-recommended')) {
     $invalidCheckpoint = Invoke-TerminalScenario -Mode $invalidMode
     Assert-Equal ([string]$invalidCheckpoint.Terminal.status) 'failed' "Codex accepted invalid decision evidence: $invalidMode"
   }
