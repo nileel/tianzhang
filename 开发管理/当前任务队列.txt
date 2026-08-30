@@ -5,7 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-HS-YY-JD-01I | external_execute | deepseek | P2 | content | design | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
+| C-HS-YY-JD-01I | codex_review | codex | P2 | content | design | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
 | C-HS-YY-JD-01J | external_execute | deepseek | P2 | content | design | 金丹位格·形识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
 | C-HS-YY-JD-01O | external_execute | deepseek | P2 | content | design | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
 | C-HS-YY-JD-01P | external_execute | deepseek | P2 | content | design | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
