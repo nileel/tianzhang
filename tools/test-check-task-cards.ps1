@@ -680,6 +680,14 @@ try {
   Set-Backlog $schema2ExplicitGapRoot @($schema2ExplicitGapCard)
   Assert-Failure 'schema 2 explicitRef outside matched' $schema2ExplicitGapRoot 'riskPreflight explicitRef not in matched'
 
+  $schema2NonExplicitRefRoot = Join-Path $tempRoot 'schema2-non-explicit-ref'
+  Set-RiskIndex $schema2NonExplicitRefRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema2NonExplicitRefCard = Get-Schema2Metadata -Id 'T-S2-NONEXP-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001') -ExplicitRefs @('EXP-AUTO-001')
+  Set-Card $schema2NonExplicitRefRoot $schema2NonExplicitRefCard
+  Set-Queue $schema2NonExplicitRefRoot @($schema2NonExplicitRefCard)
+  Set-Backlog $schema2NonExplicitRefRoot @($schema2NonExplicitRefCard)
+  Assert-Failure 'schema 2 non-explicit_only explicitRef' $schema2NonExplicitRefRoot 'riskPreflight explicitRef not explicit_only'
+
   # ---- both schema ready accepted in the current compatibility stage ----
   $schema2BothRoot = Join-Path $tempRoot 'schema2-both-ready'
   Set-RiskIndex $schema2BothRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))

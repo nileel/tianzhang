@@ -5,7 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-TASK-SCHEMA2-01 | external_execute | deepseek | P1 | management | implementation | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
+| M-EXP-TASK-SCHEMA2-01 | codex_review | codex | P1 | management | implementation | 任务卡 schema 1／2 与 riskPreflight 投影支持 | 开发管理/任务卡/M-EXP-TASK-SCHEMA2-01.txt |
 | C-HS-YY-JD-01I | external_execute | deepseek | P2 | content | design | 金丹位格·魂识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01I.txt |
 | C-HS-YY-JD-01J | external_execute | deepseek | P2 | content | design | 金丹位格·形识道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01J.txt |
 | C-HS-YY-JD-01O | external_execute | deepseek | P2 | content | design | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |

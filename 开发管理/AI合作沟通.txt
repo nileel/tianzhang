@@ -238,3 +238,16 @@
 - 残留风险：具体位置名称（报成镜／定谳门／收缘庭）仍为本批次候选名，待 Codex 复审通过后才进入正式显示事实；三份证位档案的绑定前专属成就为候选措辞，若复审要求改措辞需按普通返工同步修改名称、路径与引用。未运行 BattleSim（任务不涉及数值强度）。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-TASK-SCHEMA2-01-1f9b1ad5 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-TASK-SCHEMA2-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-TASK-SCHEMA2-01
+- 候选提交：dd171fd1dbe2cbd51b99033af60cb19ffee8ab2c
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/check-task-cards.ps1、tools/test-check-task-cards.ps1
+- 已验证：tools/test-check-task-cards.ps1 → PASS（含新增负例 schema 2 non-explicit_only explicitRef）；tools/test-get-experience-risk-preflight.ps1 → PASS；tools/check-task-cards.ps1 -OutputJson → status=ok, cardCount=58, readyCount=6；git diff --check → 无空白/行尾错误；tools/check-pending-whitespace.ps1（2 个文件）→ OK；git status --short 干净，baseCommit 68fa51b3..HEAD 变更路径恰为两个授权文件
+- 未验证：未运行与本次改动无关的全项目回归（最小充分验证）；Codex 独立复审尚未执行（属后续审核方职责）
+- 残留风险：检查器新增直接读取 开发管理/经验库/风险索引.json 提取 explicit_only 集合，索引路径与 matcher 默认 IndexPath 保持一致，若未来索引路径调整需同步；校验顺序为先 explicitRef not in matched、后 not explicit_only，保留原有语义并叠加拒绝非 explicit_only 显式引用。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

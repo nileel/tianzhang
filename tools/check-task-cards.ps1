@@ -134,8 +134,18 @@ function Assert-Schema2Projection {
   $projectedGates = @($projection.gates | ForEach-Object { [string]$_ })
   Assert-Contract (Test-ArrayEquals $recomputedMatched $projectedMatched) "riskPreflight matched projection mismatch: $id"
   Assert-Contract (Test-ArrayEquals $recomputedGates $projectedGates) "riskPreflight gates projection mismatch: $id"
+  $indexPath = Join-Path $RepositoryRoot '开发管理/经验库/风险索引.json'
+  $explicitOnlyIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+  if (Test-Path -LiteralPath $indexPath -PathType Leaf) {
+    $indexText = Read-Utf8Text $indexPath
+    try { $index = $indexText | ConvertFrom-Json -Depth 100 } catch { throw "invalid risk index: $indexPath" }
+    foreach ($exp in @($index.experiences)) {
+      if ([string]$exp.triggerMode -ceq 'explicit_only') { [void]$explicitOnlyIds.Add([string]$exp.id) }
+    }
+  }
   foreach ($ref in @($projection.explicitRefs | ForEach-Object { [string]$_ })) {
     Assert-Contract ($projectedMatched -ccontains $ref) "riskPreflight explicitRef not in matched: $id"
+    Assert-Contract ($explicitOnlyIds.Contains($ref)) "riskPreflight explicitRef not explicit_only: $id"
   }
 }
 
