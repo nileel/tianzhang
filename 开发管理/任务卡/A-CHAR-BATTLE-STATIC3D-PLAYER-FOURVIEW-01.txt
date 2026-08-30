@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260830-CDC21D07D26478",
+  "stateReason": "等待负责人决定：唯一生成结果的两个侧面物理格位与获批提示词相反，但鼻尖方向正确且已无镜像地记录映射。是否接受此候选？",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
@@ -30,61 +30,58 @@
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01",
-    "sourceRunId": "11a69870-2201-4086-ac69-56578196c4e0",
+    "sourceRunId": "e69587a4-789a-4a5a-b52b-4d6f05182829",
     "owner": "codex",
     "route": "codex_execute",
-    "decisionId": "DEC-20260830-CDC21D07D26478",
-    "question": "是否逐字批准已记录的默认男主严格四视图完整提示词，并授权其对应的一次 ImageGen 调用？",
+    "decisionId": "DEC-20260831-CD94AB5B801C8D",
+    "question": "唯一生成结果的两个侧面物理格位与获批提示词相反，但鼻尖方向正确且已无镜像地记录映射。是否接受此候选？",
     "options": [
       {
         "key": "A",
-        "label": "逐字批准并授权唯一生成"
+        "label": "接受记录的侧向映射并批准候选"
       },
       {
         "key": "B",
-        "label": "拒绝本提示词并停止本卡"
+        "label": "拒绝候选并停止，后续先重写并批准新提示词"
       },
       {
         "key": "C",
-        "label": "指定需要改写的提示词项"
+        "label": "保留证据但不批准且不新建提示词"
       }
     ],
-    "recommendedOption": "A",
-    "impactSummary": "批准后只会执行该完整提示词对应的一次 ImageGen 调用；其余路径、任务生命周期和下游阻塞保持不变。",
+    "recommendedOption": "B",
+    "impactSummary": "接受会以 manifest 的实际鼻尖方向映射继续；拒绝不会触发重试，后续生成必须从新的完整提示词审批开始。",
     "plainSummary": {
-      "situation": "是否逐字批准已记录的默认男主严格四视图完整提示词，并授权其对应的一次 ImageGen 调用？",
-      "impact": "批准后只会执行该完整提示词对应的一次 ImageGen 调用；其余路径、任务生命周期和下游阻塞保持不变。",
-      "action": "建议选择 A：逐字批准并授权唯一生成"
+      "situation": "唯一生成结果的两个侧面物理格位与获批提示词相反，但鼻尖方向正确且已无镜像地记录映射。是否接受此候选？",
+      "impact": "接受会以 manifest 的实际鼻尖方向映射继续；拒绝不会触发重试，后续生成必须从新的完整提示词审批开始。",
+      "action": "建议选择 B：拒绝候选并停止，后续先重写并批准新提示词"
     },
-    "checkpointCommit": "042ea7d3ac89b8cdfea7f1873a9fd73740621378",
-    "baseCommit": "fa4c5f6d4ac524c9a674181017fbe96a3a0d9c0f",
-    "branch": "codex/automation/codex/11a69870-2201-4086-ac69-56578196c4e0/candidate",
+    "checkpointCommit": "9996bec76abd4008eaad51f683fda8f28983ce3a",
+    "baseCommit": "298169a5fa83a4f84a6accdb8b524928d8a86d82",
+    "branch": "codex/automation/codex/e69587a4-789a-4a5a-b52b-4d6f05182829/candidate",
     "changedPaths": [
       "开发管理/默认男主正式多视图生成记录.txt",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_fourview.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/manifest.json",
       "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/prompts.md"
     ],
     "verified": [
-      "冻结透明母版与画风参考的尺寸、字节数和 SHA-256",
-      "四面板、左右鼻尖方向、背面最小推断与禁用剑指的完整提示词合同",
-      "check-asset-versioning、check-review-text、任务卡投影、空白和提交差异检查",
-      "候选提交元数据、基线父提交与工作树清洁"
+      "按 A 批准提示词仅调用一次内置 ImageGen，未重试或补画。",
+      "四张 PNG 均与母图对应矩形逐像素一致。",
+      "SHA-256、尺寸、裁切矩形和侧向映射已写入 manifest。",
+      "check-asset-versioning、check-task-cards、check-review-text、空白与 Git diff 检查通过。"
     ],
     "unverified": [
-      "负责人对完整提示词的逐字批准",
-      "唯一 ImageGen 调用及四视图输出的视觉和裁切验证"
+      "负责人对唯一四视图候选的视觉批准。"
     ],
-    "residualRisk": "未获逐字批准不得调用 ImageGen；任何唯一结果失败都必须停止，不能自动重试或补画。",
+    "residualRisk": "唯一调用已消费；两个侧面落在与获批提示词相反的物理格位。已按实际鼻尖方向确定性映射，未镜像或翻转，但严格布局偏差需负责人裁决。",
     "taskContextDigest": "1f7e81e7af124a82321ffa86940331b06e8e97261abea5df34c756732b5f0bd2",
-    "createdAt": "2026-08-30T20:23:01.8113429+08:00",
+    "createdAt": "2026-08-31T00:26:32.9859765+08:00",
     "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20260830-CDC21D07D26478",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "f8a5c2d4fef3d00e0faa6bcffe798381fce4770f52fc02f3b22e75b6381f8758"
   }
 }
 ---TASK-BODY---
