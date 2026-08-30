@@ -7,4 +7,4 @@
 |----|------|------|--------|------|------|------|--------|
 | C-HS-YY-JD-01O | codex_review | codex | P2 | content | design | 金丹位格·宙道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01O.txt |
 | C-HS-YY-JD-01P | codex_review | codex | P2 | content | design | 金丹位格·因道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01P.txt |
-| C-HS-YY-JD-01Q | external_execute | deepseek | P2 | content | design | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
+| C-HS-YY-JD-01Q | codex_review | codex | P2 | content | design | 金丹位格·果道路三位置内容生产 | 开发管理/任务卡/C-HS-YY-JD-01Q.txt |
