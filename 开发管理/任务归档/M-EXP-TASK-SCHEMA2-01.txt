@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-08-30：正式提交 ff236060ec7963ca7469fae82b97e98ee7ba65e9 修复 explicitRefs 非 explicit_only 拒绝缺口并通过 Codex 独立复审；任务完成归档。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",

@@ -6,12 +6,6 @@
 
 ## 当前未通过/待复核项
 
-### M-EXP-TASK-SCHEMA2-01 · 任务卡 schema 1／2 与 riskPreflight 投影支持
-
-- 审核对象：正式提交 `f3b5b1b48017b773aadacbbf168e12c13e3408af`；结论：部分通过，仍需返工。
-- 已通过：schema 1 拒绝 `riskPreflight`、schema 2 精确字段结构、活动 ready 卡 `matched/gates` 实时重算、历史 schema 1／2 归档兼容及任务卡既定 fixture 均已实现；两组相关测试、全量任务卡检查和原提交空白检查均通过。
-- 返工一：批准规格限定 `explicitRefs` 只能保存规划者明确选择的 `explicit_only` 经验，但检查器当前只验证每个引用也出现在 `matched`。最小反例证明：普通 `path` 经验只要由 `expectedPaths` 独立命中，即使同时被错误写入 `explicitRefs` 也会通过。检查器须按风险索引拒绝任何非 `explicit_only` 的显式引用，并增加该负例测试。
-
 ### C-HS-YY-JD-01A～01Q · 统一返工决议
 
 - 2026-08-28，用户指定 `C-HS-YY-JD-01A～01Q` 全部由 DeepSeek V4 Pro 0813 定向返工，完成后仍由 Codex 独立复审。
