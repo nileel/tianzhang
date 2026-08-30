@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：唯一生成结果的两个侧面物理格位与获批提示词相反，但鼻尖方向正确且已无镜像地记录映射。是否接受此候选？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260831-CD94AB5B801C8D",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
@@ -82,6 +82,14 @@
     "taskContextDigest": "1f7e81e7af124a82321ffa86940331b06e8e97261abea5df34c756732b5f0bd2",
     "createdAt": "2026-08-31T00:26:32.9859765+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260831-CD94AB5B801C8D",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "B",
+    "source": "feishu_card",
+    "evidenceHash": "dc7e28f56e28460a7c98708b45c8f0cc14d317f1d5d68e5a71b71a9569fe55a9"
   }
 }
 ---TASK-BODY---
