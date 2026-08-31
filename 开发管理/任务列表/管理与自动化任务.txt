@@ -15,7 +15,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-READY-SCHEMA2-ACTIVATE-01 | P1 | deepseek | 阻塞 | M-EXP-HOURLY-PREFLIGHT-01 | ready 卡 schema 2 激活迁移 | 开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt |
+| M-EXP-READY-SCHEMA2-ACTIVATE-01 | P1 | deepseek | 已排队 | — | ready 卡 schema 2 激活迁移 | 开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt |
 | M-EXP-OBSERVE-20-01 | P2 | codex | 阻塞 | M-EXP-READY-SCHEMA2-ACTIVATE-01 | 技术与工作流 20 任务观察报告 | 开发管理/任务卡/M-EXP-OBSERVE-20-01.txt |
 | M-EXP-GATE-PWSH7-01 | P2 | deepseek | 阻塞 | M-EXP-OBSERVE-20-01 | PowerShell 7 经验独立门禁晋级 | 开发管理/任务卡/M-EXP-GATE-PWSH7-01.txt |
 | M-EXP-GATE-BS-TIMEOUT-01 | P2 | deepseek | 阻塞 | M-EXP-OBSERVE-20-01 | BattleSim 超时顺序经验独立门禁晋级 | 开发管理/任务卡/M-EXP-GATE-BS-TIMEOUT-01.txt |
@@ -29,6 +29,6 @@
 
 - 基础工具和 10 张预定种子核验卡均已归档；8 条证据充分的经验 active，两条证据不足候选以“已核验、不晋级”终态归档，未创建 `EXP-UNITY-003/004` 或修改风险索引。
 - `M-EXP-PREFLIGHT-TRIAL-01` 的首次回放误报率为 40.0%；两张独立收窄卡完成后，复跑同一冻结输入降为 0.0%，全部阈值通过。试运行卡及两张收窄卡均已归档，完整报告位于 `docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md`；schema 1／2 支持按独立卡继续。
-- L0 同时冻结写前预检和任务收尾候选责任；每日收集器已完成确定性入口、零候选实测和 Codex App automation 签收并归档，小时入口仍按独立卡继续。
-- ready schema 2 激活当前只等待 `M-EXP-HOURLY-PREFLIGHT-01`；该具名前置未完成时不得迁移 ready 卡。
+- L0 同时冻结写前预检和任务收尾候选责任；每日收集器与小时入口均已完成确定性入口、零候选实测和 Codex 签收并归档。
+- `M-EXP-HOURLY-PREFLIGHT-01` 已完成归档；ready schema 2 激活卡已恢复为 ready，仍须在其自身原子提交中迁移当时全部 ready 卡。
 - 父项、观察后的门禁和扩域均不得被基础阶段顺带实施；新增门禁或域开放若超出本图，另建独立 initiative，不扩大当前卡。
