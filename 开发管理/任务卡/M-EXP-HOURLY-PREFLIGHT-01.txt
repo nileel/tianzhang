@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "M-EXP-HOURLY-PREFLIGHT-01",
   "title": "小时入口与双 candidate 预检结果传递",
   "priority": "P1",
@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-L0-CONTRACT-01"],
-  "stateReason": "等待已包含 schema 前置的 L0 合同；在共享入口唯一接入一次预检结果，adapter/wrapper 只验证并传递，不迁移任务卡。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "L0 合同已完成；在共享入口唯一接入一次预检结果，adapter/wrapper 只验证并传递，不迁移任务卡。",
   "expectedPaths": [
     "tools/invoke-hourly-owner.ps1",
     "tools/hourly-owner-adapter.ps1",
@@ -29,7 +29,12 @@
     "开发管理/任务归档/M-EXP-HOURLY-PREFLIGHT-01.txt",
     "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # M-EXP-HOURLY-PREFLIGHT-01 · 小时入口与双 candidate 预检结果传递

@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "M-EXP-DAILY-COLLECTOR-01",
   "title": "每日确定性经验候选收集器与薄触发",
   "priority": "P1",
@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "M-EXP-L0-CONTRACT-01"
-  ],
-  "stateReason": "等待 L0 收尾候选合同；实现香港时间 00:10 的确定性收集、逐候选机械制卡、同提交回链和正反测试，不调用模型判断候选价值。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "L0 收尾候选合同已完成；实现香港时间 00:10 的确定性收集、逐候选机械制卡、同提交回链和正反测试，不调用模型判断候选价值。",
   "expectedPaths": [
     "tools/invoke-daily-experience-candidate-collector.ps1",
     "tools/test-daily-experience-candidate-collector.ps1",
@@ -22,7 +20,12 @@
     "开发管理/任务归档/M-EXP-DAILY-COLLECTOR-01.txt",
     "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # M-EXP-DAILY-COLLECTOR-01 · 每日确定性经验候选收集器与薄触发
