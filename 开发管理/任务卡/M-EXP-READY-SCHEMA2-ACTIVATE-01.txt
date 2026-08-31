@@ -9,8 +9,8 @@
   "domain": "management",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-HOURLY-PREFLIGHT-01", "M-EXP-DAILY-COLLECTOR-01"],
-  "stateReason": "等待 schema、L0、小时入口与每日候选收集器全部通过；本卡在一个原子提交中升级当时全部 ready 卡并立即拒绝 schema 1 ready，不保留 feature flag。",
+  "blockedBy": ["M-EXP-HOURLY-PREFLIGHT-01"],
+  "stateReason": "schema、L0 与每日候选收集器已通过；当前只等待小时入口完成，本卡随后在一个原子提交中升级当时全部 ready 卡并立即拒绝 schema 1 ready，不保留 feature flag。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",

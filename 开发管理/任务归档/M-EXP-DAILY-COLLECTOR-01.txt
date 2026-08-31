@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "L0 收尾候选合同已完成；实现香港时间 00:10 的确定性收集、逐候选机械制卡、同提交回链和正反测试，不调用模型判断候选价值。",
+  "stateReason": "确定性收集器与隔离测试已集成；零候选实测不写入，唯一 App automation 已按香港时间 00:10 启用并完成 view 签收。",
   "expectedPaths": [
     "tools/invoke-daily-experience-candidate-collector.ps1",
     "tools/test-daily-experience-candidate-collector.ps1",
@@ -71,6 +71,13 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`；测试兼容激活前 schema 1 ready 和激活后新整理卡 schema 2 实时投影。
 - 通过 automation 管理能力 view 唯一薄触发，确认 project/destination/model/reasoning/notification 与任务合同一致、香港时间每日仅一次 `00:10`、状态 ACTIVE；以结构化零候选 dry run 证明不写文件／不提交。
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1`、`tools/check-review-text.ps1 -Paths 开发管理,tools`、`tools/check-pending-whitespace.ps1` 和 `git diff --cached --check`。
+
+## 完成记录
+
+- `tools/invoke-daily-experience-candidate-collector.ps1` 与 `tools/test-daily-experience-candidate-collector.ps1` 已由正式提交 `1d35240b3013d99d728c761e339a22799bd5b465` 集成到 `master`；隔离测试覆盖零／多候选、跨日补收、阻塞映射、幂等、冲突、来源变化、提交失败、脏路径和集成锁并通过。
+- 在 `master=1d35240b3013d99d728c761e339a22799bd5b465` 上运行真实零候选 dry run，得到 `status=no_candidate`、`detailCode=no_pending_experience_candidates`；运行前后 HEAD 与工作区状态一致。
+- 唯一 `tzg-daily-experience-candidate-collector` 已通过 Codex App 配置为本地项目、香港时间每日 `00:10`、`gpt-5.6-terra/low`、仅失败通知并置为 `ACTIVE`；启用后已 view，prompt 精确调用已集成入口且明确不重试、不管理 automation。
+- 事故 run `d36af4f5-1bc5-417b-85ea-9c729c602391` 已按 schema 5 精确关闭，空 worktree／branch 已清理；当前 Codex／DeepSeek run 均为空，集成锁为空闲。
 
 ## 完成条件
 
