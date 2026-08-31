@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "旧候选已拒绝且旧调用不可复用；负责人已在当前对话批准方案 A 的新完整提示词代码块（SHA-256 fbc9b5e0f99e6e2c13d3d3835d9b6ebf264f58f1393c19a364e2e5a6f3946ee0）。本卡已解冻并进入 ready；新的唯一 ImageGen 调用尚未执行。",
+  "stateReason": "自动责任方确认阻塞：fourview_side_slots_swapped",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md",
     "docs/superpowers/specs/2026-08-31-formal-player-default-male-fourview-pose-revision-design.md",
