@@ -290,3 +290,16 @@
 - 残留风险：三份文档与索引仍为候选名并标「⚠️ 已修改/未审核」，独立证位核心命名（报成裁决核心／定谳门枢核心／收缘庭证位核心）为本轮新引入候选，是否满足《金丹位格证位与争位规则.txt》§四语义需 Codex 复审确认；收缘庭 §8 领域持续／维持费用与衰减节奏仅引用配置档案、未经 BattleSim 数值验证。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-HOURLY-PREFLIGHT-01-db1ef350 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-HOURLY-PREFLIGHT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-HOURLY-PREFLIGHT-01
+- 候选提交：4085ac0cd0096eda15c247ced2c7806e5fb192aa
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/check-automation-workflow.ps1、tools/hourly-owner-adapter.ps1、tools/invoke-codex-candidate.ps1、tools/invoke-deepseek-responsibility.ps1、tools/invoke-hourly-owner.ps1、tools/test-hourly-experience-preflight.ps1、tools/test-hourly-owner-adapter.ps1、tools/test-invoke-codex-candidate.ps1、tools/test-invoke-deepseek-responsibility.ps1
+- 已验证：tools/test-hourly-experience-preflight.ps1: PASS (Codex/DeepSeek 成功、过宽、缺指针、matcher 失败、投影失配、adapter QM 无参数)；tools/test-hourly-owner-adapter.ps1: OK；tools/test-hourly-task-input-materialization.ps1: PASS；tools/test-invoke-codex-candidate.ps1: OK (含 preflight 缺失/路径越界/digest 失配负例)；tools/test-invoke-deepseek-responsibility.ps1: OK (含 preflight 缺失/路径越界/digest 失配负例)；tools/test-check-automation-workflow.ps1: OK；tools/check-automation-workflow.ps1: OK；tools/check-task-cards.ps1: OK (cards=49 ready=2)；tools/check-pending-whitespace.ps1: OK (9 files)；git diff --check: clean
+- 未验证：共享入口 RunOnce 全量端到端（真实 DeepSeek gateway/claude CLI 模型 + 最新 master 重放/正式集成/交接提交）未在本 candidate 内执行，仅以函数导入与 fake-model 测试覆盖预检链路；真实 DeepSeek gateway 与 claude CLI 的 canary 身份探针未运行
+- 残留风险：真实小时轮次首次运行预检时，若 owner worktree 与主工作区风险索引出现未预期差异会触发 experience_preflight_binding_mismatch 闭锁进入 attention_required；该路径由确定性校验兜底且本 candidate 不触及索引/任务卡/runtime，失败不启动模型。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

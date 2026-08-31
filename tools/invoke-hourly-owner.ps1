@@ -25,6 +25,7 @@ $whitespacePath = Join-Path $PSScriptRoot 'check-pending-whitespace.ps1'
 $notificationPath = Join-Path $PSScriptRoot 'send-feishu-notification.ps1'
 $decisionSenderPath = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\send-decision.mjs'
 $decisionConsumerPath = Join-Path $PSScriptRoot 'feishu-decision-bridge\src\consume-reply.mjs'
+$matcherPath = Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1'
 
 . (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 . (Join-Path $PSScriptRoot 'hourly-integration-lock.ps1')
@@ -359,6 +360,45 @@ function New-CandidateWorktree {
   }
   Materialize-TaskAutomationInputs -Run $Run -Worktree $worktree
   $worktree
+}
+
+function Invoke-ExperiencePreflight {
+  param([object]$Run)
+  $worktree = Normalize-FullPath ([string]$Run.worktree)
+  $task = Read-RunTaskMetadata $Run
+  $metadata = $task.Metadata
+  if ([int]$metadata.schemaVersion -ne 2) { Stop-Hourly 'experience_preflight_schema_invalid' }
+  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $matcherPath -RepositoryRoot $worktree -TaskId ([string]$Run.taskId) 2>$null)
+  if ($LASTEXITCODE -ne 0) { Stop-Hourly 'experience_preflight_matcher_failed' }
+  $lines = @($output | ForEach-Object { [string]$_ } | Where-Object { $_ })
+  if ($lines.Count -ne 1) { Stop-Hourly 'experience_preflight_matcher_failed' }
+  try { $result = $lines[0] | ConvertFrom-Json -Depth 100 } catch { Stop-Hourly 'experience_preflight_matcher_failed' }
+  if ([string]$result.status -cne 'ok') { Stop-Hourly 'experience_preflight_overbroad' }
+  if ([string]$result.taskId -cne [string]$Run.taskId -or [string]$result.taskCardDigest -cne [string]$Run.taskCardDigest) { Stop-Hourly 'experience_preflight_binding_mismatch' }
+  $projection = $metadata.riskPreflight
+  $projectedMatched = @($projection.matched | ForEach-Object { [string]$_ })
+  $projectedGates = @($projection.gates | ForEach-Object { [string]$_ })
+  $recomputedMatched = @($result.matched | ForEach-Object { [string]$_ })
+  $recomputedGates = @($result.gates | ForEach-Object { [string]$_ })
+  if (($projectedMatched -join "`0") -cne ($recomputedMatched -join "`0") -or ($projectedGates -join "`0") -cne ($recomputedGates -join "`0")) { Stop-Hourly 'experience_preflight_projection_mismatch' }
+  if ([int]$result.mustReadChars -gt 600) { Stop-Hourly 'experience_preflight_overbroad' }
+  foreach ($pointer in @($result.gatePointers)) {
+    if ([string]::IsNullOrWhiteSpace([string]$pointer.id) -or [string]::IsNullOrWhiteSpace([string]$pointer.instructionRef)) { Stop-Hourly 'experience_preflight_gate_invalid' }
+  }
+  $bound = [ordered]@{
+    schemaVersion = 1
+    runId = [string]$Run.runId
+    taskId = [string]$Run.taskId
+    taskCardDigest = [string]$result.taskCardDigest
+    indexDigest = [string]$result.indexDigest
+    matched = @($result.matched | ForEach-Object { [string]$_ })
+    notice = @($result.notice | ForEach-Object { [string]$_ })
+    mustRead = @($result.mustRead | ForEach-Object { [ordered]@{ id = [string]$_.id; title = [string]$_.title; detailRef = [string]$_.detailRef; chars = [int]$_.chars; body = [string]$_.body } })
+    gates = @($result.gates | ForEach-Object { [string]$_ })
+    gatePointers = @($result.gatePointers | ForEach-Object { [ordered]@{ id = [string]$_.id; instructionRef = [string]$_.instructionRef } })
+    mustReadChars = [int]$result.mustReadChars
+  }
+  Write-PrivateJson 'preflight-results' "$($Run.runId).json" $bound
 }
 
 function Set-Attention {
@@ -1353,7 +1393,7 @@ $invocationMutex = $null
 $invocationHeld = $false
 try {
   $script:stage = 'dependencies'
-  foreach ($path in @($runtimePath, $selectorPath, $checkerPath, $taskStatePath, $finalizerPath, $whitespacePath, $notificationPath, $decisionSenderPath, $decisionConsumerPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_dependency_missing' } }
+  foreach ($path in @($runtimePath, $selectorPath, $checkerPath, $taskStatePath, $finalizerPath, $whitespacePath, $notificationPath, $decisionSenderPath, $decisionConsumerPath, $matcherPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_dependency_missing' } }
   if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot)) { Stop-Hourly 'hourly_repository_invalid' }
   $script:root = Normalize-FullPath (Resolve-Path -LiteralPath $RepositoryRoot).Path
   if (-not (Test-Path -LiteralPath (Join-Path $script:root '.git'))) { Stop-Hourly 'hourly_repository_invalid' }
@@ -1440,7 +1480,12 @@ try {
         $resumeContext = if ($null -ne $maintenanceAnswered) { [string]$maintenanceAnswered.acceptedPath } else { Apply-CheckpointToNewRun -Run $run -Restored $restored }
       }
       if ($null -eq $final) {
-        $candidateArgs = Get-HourlyCandidateArguments -Adapter $script:adapter -Run $run -StateRoot $script:effectiveStateRoot -TimeoutSeconds $ResponsibilityTimeoutSeconds -ResumeContextPath $resumeContext
+        $preflightResultPath = $null
+        if ([string]$run.route -cne 'queue_maintenance') {
+          $script:stage = 'experience_preflight'
+          $preflightResultPath = Invoke-ExperiencePreflight -Run $run
+        }
+        $candidateArgs = Get-HourlyCandidateArguments -Adapter $script:adapter -Run $run -StateRoot $script:effectiveStateRoot -TimeoutSeconds $ResponsibilityTimeoutSeconds -ResumeContextPath $resumeContext -PreflightResultPath $preflightResultPath
         $script:stage = 'candidate'
         $candidate = Invoke-JsonTool $script:adapter.candidateScript $candidateArgs 'hourly_candidate_failed'
         switch ([string]$candidate.status) {

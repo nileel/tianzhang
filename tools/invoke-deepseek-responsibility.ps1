@@ -11,6 +11,7 @@ param(
   [string]$RunId,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$ResumeContextPath,
+  [string]$PreflightResultPath,
   [ValidateRange(1, 86400)]
   [int]$ResponsibilityTimeoutSeconds = 3000
 )
@@ -42,6 +43,12 @@ function Assert-StableText {
 }
 
 function Normalize-FullPath { param([string]$Path) [IO.Path]::GetFullPath($Path).TrimEnd('\', '/') }
+
+function Get-NormalizedTextDigest {
+  param([string]$Path)
+  $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF)
+  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($text.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+}
 
 function Invoke-GitText {
   param([string[]]$Arguments, [string]$DetailCode = 'deepseek_git_failed')
@@ -132,6 +139,24 @@ function Read-ResumeContext {
   $context
 }
 
+function Read-PreflightResult {
+  param([string]$ExpectedTaskCardDigest)
+  if ([string]::IsNullOrWhiteSpace($PreflightResultPath)) { Stop-DeepSeek 'deepseek_preflight_required' }
+  $state = Normalize-FullPath $StateRoot
+  $path = Normalize-FullPath $PreflightResultPath
+  if (-not $path.StartsWith($state + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-DeepSeek 'deepseek_preflight_invalid' }
+  if ([IO.Path]::GetFileName($path) -cne "$RunId.json") { Stop-DeepSeek 'deepseek_preflight_invalid' }
+  Assert-PrivatePathAcl -Path $path
+  try { $result = [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50 } catch { Stop-DeepSeek 'deepseek_preflight_invalid' }
+  foreach ($field in @('runId', 'taskId', 'taskCardDigest', 'indexDigest', 'matched', 'notice', 'mustRead', 'gates', 'gatePointers')) {
+    if ($result.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_preflight_invalid' }
+  }
+  if ([string]$result.runId -cne $RunId -or [string]$result.taskId -cne $TaskId -or [string]$result.taskCardDigest -cne $ExpectedTaskCardDigest) { Stop-DeepSeek 'deepseek_preflight_invalid' }
+  $indexPath = Join-Path $script:resolvedRepositoryRoot '开发管理/经验库/风险索引.json'
+  if (-not (Test-Path -LiteralPath $indexPath -PathType Leaf) -or [string]$result.indexDigest -cne (Get-NormalizedTextDigest $indexPath)) { Stop-DeepSeek 'deepseek_preflight_invalid' }
+  $result
+}
+
 function Get-WorkingChangedPaths {
   @((Invoke-GitText @('-c', 'core.quotepath=false', 'diff', '--name-only', '--no-renames', 'HEAD')) -split '\r?\n' |
     Where-Object { $_ } | ForEach-Object { $_.Replace('\', '/') } | Sort-Object -Unique)
@@ -140,10 +165,21 @@ function Get-WorkingChangedPaths {
 function Quote-Single { param([string]$Value) "'" + $Value.Replace("'", "''") + "'" }
 
 function New-CandidatePrompt {
-  param([string[]]$CandidatePaths, [AllowNull()][object]$ResumeContext)
+  param([string[]]$CandidatePaths, [AllowNull()][object]$ResumeContext, [AllowNull()][object]$PreflightResult)
   $pathText = $CandidatePaths -join '|'
   $quotedRoot = Quote-Single $script:resolvedRepositoryRoot
   $quotedPaths = Quote-Single $pathText
+  $preflightText = if ($null -eq $PreflightResult) {
+    'No shared-entry preflight result was provided (queue maintenance or canary).'
+  } else {
+    $short = [ordered]@{
+      matched = @($PreflightResult.matched | ForEach-Object { [string]$_ })
+      notice = @($PreflightResult.notice | ForEach-Object { [string]$_ })
+      mustRead = @($PreflightResult.mustRead | ForEach-Object { [ordered]@{ id = [string]$_.id; title = [string]$_.title; detailRef = [string]$_.detailRef; body = [string]$_.body } })
+      gatePointers = @($PreflightResult.gatePointers | ForEach-Object { [ordered]@{ id = [string]$_.id; instructionRef = [string]$_.instructionRef } })
+    }
+    'Shared-entry verified preflight (bound to runId/taskId/task-card digest/index digest): ' + ($short | ConvertTo-Json -Compress -Depth 10)
+  }
   @(
     '[TZG_DEEPSEEK_CANDIDATE]'
     "TaskId: $TaskId"
@@ -157,6 +193,7 @@ function New-CandidatePrompt {
     ''
     'The fixed Windows entry already selected and atomically claimed this exact task. Do not scan the queue, claim another task, or modify runtime.'
     'Read AGENTS.md, CLAUDE.md, 开发管理/自动工作流规则.txt, 开发管理/AI协作规则.txt, 开发管理/DeepSeek工作提示词.txt, and the exact task card.'
+    "Preflight: $preflightText"
     'If the task card stateReason names a REV-* finding or says the task was returned by review, read only the matching review entry routed by 开发管理/审核入口.txt before editing.'
     'Implement and verify only this task in RepositoryRoot. Candidate changes are limited to CandidatePaths.'
     'Do not modify the task card, current queue, source backlog, task archive, AI合作沟通, main workspace, runtime, another worktree, or any branch other than the current candidate branch.'
@@ -469,8 +506,10 @@ try {
     }
     $candidatePaths = @(Get-CandidatePaths -Metadata $metadata)
     if ($candidatePaths.Count -eq 0) { Stop-DeepSeek 'deepseek_no_candidate_paths' }
+    $script:stage = 'preflight'
+    $preflightResult = Read-PreflightResult -ExpectedTaskCardDigest ([string]$run.taskCardDigest)
     $script:stage = 'candidate_cli'
-    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths -ResumeContext $resumeContext)
+    $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths -ResumeContext $resumeContext -PreflightResult $preflightResult)
     $script:stage = 'candidate_evidence'
     switch ([string]$terminal.status) {
       'completed' {

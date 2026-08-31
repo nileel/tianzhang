@@ -15,7 +15,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
-| M-EXP-HOURLY-PREFLIGHT-01 | P1 | deepseek | 已排队 | — | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |
+| M-EXP-HOURLY-PREFLIGHT-01 | P1 | codex | 已排队 | — | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |
 | M-EXP-DAILY-COLLECTOR-01 | P1 | codex | 已排队 | — | 每日确定性经验候选收集器与薄触发 | 开发管理/任务卡/M-EXP-DAILY-COLLECTOR-01.txt |
 | M-EXP-READY-SCHEMA2-ACTIVATE-01 | P1 | deepseek | 阻塞 | M-EXP-HOURLY-PREFLIGHT-01、M-EXP-DAILY-COLLECTOR-01 | ready 卡 schema 2 激活迁移 | 开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt |
 | M-EXP-OBSERVE-20-01 | P2 | codex | 阻塞 | M-EXP-READY-SCHEMA2-ACTIVATE-01 | 技术与工作流 20 任务观察报告 | 开发管理/任务卡/M-EXP-OBSERVE-20-01.txt |

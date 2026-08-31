@@ -10,6 +10,7 @@ param(
   [Parameter(Mandatory = $true)][string]$Model,
   [string]$StateRoot = (Join-Path $env:USERPROFILE '.codex\automation-state\tzg-hourly-controller-runtime'),
   [string]$ResumeContextPath,
+  [string]$PreflightResultPath,
   [ValidateRange(1, 86400)][int]$ResponsibilityTimeoutSeconds = 3000
 )
 
@@ -159,8 +160,26 @@ function Read-ResumeContext {
   $context
 }
 
+function Read-PreflightResult {
+  param([string]$ExpectedTaskCardDigest)
+  if ([string]::IsNullOrWhiteSpace($PreflightResultPath)) { Stop-Candidate 'codex_preflight_required' }
+  $state = Normalize-FullPath $StateRoot
+  $path = Normalize-FullPath $PreflightResultPath
+  if (-not $path.StartsWith($state + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-Candidate 'codex_preflight_invalid' }
+  if ([IO.Path]::GetFileName($path) -cne "$RunId.json") { Stop-Candidate 'codex_preflight_invalid' }
+  Assert-PrivatePathAcl -Path $path
+  try { $result = [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50 } catch { Stop-Candidate 'codex_preflight_invalid' }
+  foreach ($field in @('runId', 'taskId', 'taskCardDigest', 'indexDigest', 'matched', 'notice', 'mustRead', 'gates', 'gatePointers')) {
+    if ($result.PSObject.Properties.Name -cnotcontains $field) { Stop-Candidate 'codex_preflight_invalid' }
+  }
+  if ([string]$result.runId -cne $RunId -or [string]$result.taskId -cne $TaskId -or [string]$result.taskCardDigest -cne $ExpectedTaskCardDigest) { Stop-Candidate 'codex_preflight_invalid' }
+  $indexPath = Join-Path $script:root '开发管理/经验库/风险索引.json'
+  if (-not (Test-Path -LiteralPath $indexPath -PathType Leaf) -or [string]$result.indexDigest -cne (Get-NormalizedTextDigest $indexPath)) { Stop-Candidate 'codex_preflight_invalid' }
+  $result
+}
+
 function New-Prompt {
-  param([object]$Run, [AllowNull()][object]$ResumeContext, [string[]]$CandidatePaths)
+  param([object]$Run, [AllowNull()][object]$ResumeContext, [string[]]$CandidatePaths, [AllowNull()][object]$PreflightResult)
   $routeInstruction = switch ($Route) {
     'Execution' { '按指定 codex_execute 任务实施。' }
     'Review' { "按审核入口复审指定 codex_review 任务。先以目标提交、任务卡完成条件和直接事实源形成通过／部分通过／不通过结论；不得修改被审业务语义来消除缺口或制造通过。结论通过时，只可更新任务生命周期、索引中的内容状态以及被审文件中明确存在的审核标记／审核记录，不得顺手补写规则或内容。结论为部分通过或不通过时，保留被审业务文件，把当前任务设为 blocked 并移出 ready 队列；必须在开发管理/未通过审核清单.txt 使用三级标题 '### $TaskId · <标题>'，并以 '- 审核对象：正式提交 ``<完整 SHA>``；结论：不通过。' 或 '- 审核对象：正式提交 ``<完整 SHA>``；结论：部分通过，仍需返工。' 记录本轮被复审提交；完整 SHA 必须在修改任务卡前通过 git log -1 --format=%H -- 开发管理/任务卡/$TaskId.txt 取得。不得使用短 SHA、二级任务标题或「复审对象」等替代表述。" }
@@ -174,12 +193,24 @@ function New-Prompt {
     "已机械核验并重放 checkpoint。负责人回复上下文：$($ResumeContext | ConvertTo-Json -Compress -Depth 10)。只把它用于对应 decisionId，不恢复旧模型会话。"
   }
   $pathText = if ($CandidatePaths.Count -gt 0) { $CandidatePaths -join '|' } else { '<ACTUAL_CHANGED_PATHS_FROM_ALLOWED_QUEUE_MAINTENANCE_SET>' }
+  $preflightInstruction = if ($null -eq $PreflightResult) {
+    '本轮无共享入口预检结果（queue maintenance）。'
+  } else {
+    $short = [ordered]@{
+      matched = @($PreflightResult.matched | ForEach-Object { [string]$_ })
+      notice = @($PreflightResult.notice | ForEach-Object { [string]$_ })
+      mustRead = @($PreflightResult.mustRead | ForEach-Object { [ordered]@{ id = [string]$_.id; title = [string]$_.title; detailRef = [string]$_.detailRef; body = [string]$_.body } })
+      gatePointers = @($PreflightResult.gatePointers | ForEach-Object { [ordered]@{ id = [string]$_.id; instructionRef = [string]$_.instructionRef } })
+    }
+    '共享入口已验证预检结果（绑定 runId/taskId/任务卡 digest/索引 digest）：' + ($short | ConvertTo-Json -Compress -Depth 10)
+  }
   $finalizerCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $(Quote-Single $script:root) -ExpectedPaths $(Quote-Single $pathText) -CommitMessage $(Quote-Single "candidate($TaskId): Codex implementation") -RequireAutomationMetadata -AutomationTask $(Quote-Single $TaskId) -AutomationState 'completed' -AutomationResult '<RESULT>' -AutomationImpact '<IMPACT>' -AutomationVerify '<VERIFY>' -AutomationPlain '<PLAIN>'"
   @(
     '[TZG_CODEX_CANDIDATE]'
     "模型核验证明：外层已核验并传入 $Model；返回 model 必须精确等于该值。"
     "TaskId: $TaskId"; "RunId: $RunId"; "Route: $Route"; "RepositoryRoot: $script:root"; "CandidateBranch: $($Run.candidateBranch)"; "BaseCommit: $($Run.baseCommit)"
     $routeInstruction; $resumeInstruction
+    $preflightInstruction
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
     '除 QueueMaintenance 外，不得从其他任务卡的 blockedBy 或 backlog 行的「阻塞于」投影移除当前 taskId，也不得顺带提升、重排或关闭下游任务。当前任务完成后，其他任务对它的具名前置引用继续保留；只有正式结果进入 master 后，后续 QueueMaintenance 才按既有事实源同时更新下游任务卡和 backlog 投影。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
@@ -397,7 +428,11 @@ try {
       if ([string]$metadata.route -cne $expectedRoute -or [string]$metadata.owner -cne 'codex' -or [string]$metadata.dispatchState -cne 'ready') { Stop-Candidate 'codex_task_not_ready' }
       $expectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
     }
-    $runOutput = Invoke-Runner -Prompt (New-Prompt -Run $run -ResumeContext $resume -CandidatePaths $expectedPaths)
+    $preflightResult = $null
+    if ($Route -cne 'QueueMaintenance') {
+      $preflightResult = Read-PreflightResult -ExpectedTaskCardDigest ([string]$run.taskCardDigest)
+    }
+    $runOutput = Invoke-Runner -Prompt (New-Prompt -Run $run -ResumeContext $resume -CandidatePaths $expectedPaths -PreflightResult $preflightResult)
     $terminal = $runOutput.Terminal
     if ([string]$runOutput.Runner.status -cne 'ok' -or [string]$terminal.identity -cne 'Codex' -or [string]$terminal.model -cne $Model) { Stop-Candidate 'codex_runner_failed' }
     $head = Invoke-GitText @('rev-parse', 'HEAD'); $status = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')

@@ -33,10 +33,17 @@ Assert-Equal $deepseekFormal.subject 'feat(T-EXT): complete DeepSeek task' 'Deep
 Assert-Equal $deepseekFormal.state 'pending_review' 'DeepSeek formal state changed'
 
 $fakeRun = [pscustomobject]@{ route='codex_review'; worktree='C:\fixture'; taskId='T-1'; runId='R-1' }
-$codexArgs = Get-HourlyCandidateArguments -Adapter $codex -Run $fakeRun -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath 'C:\state\resume.json'
+$codexArgs = Get-HourlyCandidateArguments -Adapter $codex -Run $fakeRun -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath 'C:\state\resume.json' -PreflightResultPath 'C:\state\preflight.json'
 Assert-True ($codexArgs -contains 'Review' -and $codexArgs -contains 'gpt-test' -and $codexArgs -contains 'C:\state\resume.json') 'Codex candidate arguments are incomplete'
-$deepArgs = Get-HourlyCandidateArguments -Adapter $deepseek -Run ([pscustomobject]@{ route='external_execute'; worktree='C:\fixture'; taskId='T-2'; runId='R-2' }) -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath $null
+Assert-True ($codexArgs -contains '-PreflightResultPath' -and $codexArgs -contains 'C:\state\preflight.json') 'Codex candidate arguments are missing the preflight result path'
+$deepArgs = Get-HourlyCandidateArguments -Adapter $deepseek -Run ([pscustomobject]@{ route='external_execute'; worktree='C:\fixture'; taskId='T-2'; runId='R-2' }) -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath $null -PreflightResultPath 'C:\state\preflight.json'
 Assert-True ($deepArgs -contains 'Candidate' -and $deepArgs -notcontains 'gpt-test') 'DeepSeek candidate arguments are invalid'
+Assert-True ($deepArgs -contains '-PreflightResultPath') 'DeepSeek candidate arguments are missing the preflight result path'
+$qmArgs = Get-HourlyCandidateArguments -Adapter $codex -Run ([pscustomobject]@{ route='queue_maintenance'; worktree='C:\fixture'; taskId='QUEUE-MAINTENANCE'; runId='R-QM' }) -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath $null -PreflightResultPath $null
+Assert-True ($qmArgs -notcontains '-PreflightResultPath') 'QueueMaintenance candidate arguments must not include the preflight result path'
+$threwWithoutPath = $false
+try { $null = Get-HourlyCandidateArguments -Adapter $deepseek -Run ([pscustomobject]@{ route='external_execute'; worktree='C:\fixture'; taskId='T-3'; runId='R-3' }) -StateRoot 'C:\state' -TimeoutSeconds 10 -ResumeContextPath $null -PreflightResultPath $null } catch { $threwWithoutPath = $true }
+Assert-True $threwWithoutPath 'Non-queue-maintenance candidate without a preflight result path must fail'
 
 $source = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'hourly-owner-adapter.ps1'))
 Assert-True ($source -match 'Test-HourlyOwnerModelVerified') 'Owner adapter is missing the model verification guard'

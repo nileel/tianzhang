@@ -2,6 +2,7 @@
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'private-path-acl.ps1')
 
 function Assert-True { param([bool]$Condition, [string]$Message) if (-not $Condition) { throw $Message } }
 function Assert-Equal { param($Actual, $Expected, [string]$Message) if ($Actual -cne $Expected) { throw "$Message (actual=$Actual expected=$Expected)" } }
@@ -24,9 +25,10 @@ function Test-ConditionalRequiredSchema {
 }
 
 function Invoke-Wrapper {
-  param([string]$Action, [string]$Root, [string]$TaskId, [string]$RunId)
+  param([string]$Action, [string]$Root, [string]$TaskId, [string]$RunId, [string]$PreflightResultPath = $null)
   $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $wrapperPath, '-Action', $Action, '-RepositoryRoot', $Root, '-StateRoot', $stateRoot, '-ResponsibilityTimeoutSeconds', '30')
   if ($Action -ceq 'Candidate') { $arguments += @('-TaskId', $TaskId, '-RunId', $RunId) }
+  if (-not [string]::IsNullOrWhiteSpace($PreflightResultPath)) { $arguments += @('-PreflightResultPath', $PreflightResultPath) }
   $startInfo = [Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = 'pwsh'; $startInfo.WorkingDirectory = $Root; $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
   $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
@@ -36,6 +38,27 @@ function Invoke-Wrapper {
   $stdoutTask = $process.StandardOutput.ReadToEndAsync(); $stderrTask = $process.StandardError.ReadToEndAsync(); $process.WaitForExit()
   $stdout = $stdoutTask.GetAwaiter().GetResult().Trim(); $stderr = $stderrTask.GetAwaiter().GetResult().Trim(); $exitCode = $process.ExitCode; $process.Dispose()
   [pscustomobject]@{ ExitCode = $exitCode; Json = $stdout | ConvertFrom-Json -Depth 50; Stderr = $stderr }
+}
+
+function Get-TextDigest {
+  param([string]$Path)
+  $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF)
+  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($text.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+}
+
+function Write-PreflightResult {
+  param([string]$StateRoot, [string]$RunIdValue, [string]$TaskIdValue, [string]$TaskCardDigest, [string]$IndexDigest)
+  $directory = Join-Path $StateRoot 'preflight-results'
+  [IO.Directory]::CreateDirectory($directory) | Out-Null
+  Set-PrivatePathAcl -Path $directory -Directory
+  $path = Join-Path $directory "$RunIdValue.json"
+  $obj = [ordered]@{
+    schemaVersion = 1; runId = $RunIdValue; taskId = $TaskIdValue; taskCardDigest = $TaskCardDigest; indexDigest = $IndexDigest
+    matched = @(); notice = @(); mustRead = @(); gates = @(); gatePointers = @(); mustReadChars = 0
+  }
+  Write-Utf8 -Path $path -Text ($obj | ConvertTo-Json -Compress -Depth 20)
+  Set-PrivatePathAcl -Path $path
+  $path
 }
 
 $testId = [Guid]::NewGuid().ToString('N')
@@ -66,6 +89,7 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI协作规则.txt') -Text '# collaboration rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/DeepSeek工作提示词.txt') -Text '# DeepSeek prompt'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI合作沟通.txt') -Text '# communication'
+  Write-Utf8 -Path (Join-Path $mainRoot '开发管理/经验库/风险索引.json') -Text '{"schemaVersion":1,"experiences":[],"gates":[]}'
   $metadata = [ordered]@{
     schemaVersion = 1; id = $taskId; title = 'Candidate fixture'; priority = 'P1'; route = 'external_execute'; owner = 'deepseek'
     domain = 'automation'; stage = 'implementation'; dispatchState = 'ready'; blockedBy = @(); stateReason = 'fixture'
@@ -95,6 +119,7 @@ try {
   $baseCommit = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
   $cardText = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes((Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"))).TrimStart([char]0xFEFF)
   $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($cardText.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+  $indexDigest = Get-TextDigest (Join-Path $mainRoot '开发管理/经验库/风险索引.json')
   $claimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $stateRoot -Owner deepseek -TaskId $taskId -Route external_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $baseCommit -TaskCardDigest $digest)
   Assert-Equal $LASTEXITCODE 0 'Fixture claim failed'
   $run = ($claimOutput[0] | ConvertFrom-Json).run
@@ -148,7 +173,8 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $env:ANTHROPIC_BASE_URL = 'http://127.0.0.1:15721/claude-desktop'
   $env:TZG_FAKE_CLAUDE_RECORD = $recordPath
 
-  $candidate = Invoke-Wrapper -Action Candidate -Root ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId)
+  $preflightPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue ([string]$run.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  $candidate = Invoke-Wrapper -Action Candidate -Root ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId) -PreflightResultPath $preflightPath
   Assert-Equal $candidate.ExitCode 0 "Candidate wrapper process failed: $($candidate.Stderr)"
   Assert-Equal ([string]$candidate.Json.status) 'completed' "Candidate wrapper status mismatch: $($candidate.Json | ConvertTo-Json -Compress -Depth 20); stderr=$($candidate.Stderr)"
   Assert-Equal ([string]$candidate.Json.identity) 'DeepSeek V4 Pro 0813' 'Candidate identity mismatch'
@@ -197,11 +223,35 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$secondRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$secondRun.candidateBranch, [string]$secondRun.worktree, $baseCommit) | Out-Null
   $env:TZG_FAKE_CLAUDE_MODE = 'invalid-decision'
-  $invalidDecision = Invoke-Wrapper -Action Candidate -Root ([string]$secondRun.worktree) -TaskId $taskId -RunId ([string]$secondRun.runId)
+  $secondPreflightPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue ([string]$secondRun.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  $invalidDecision = Invoke-Wrapper -Action Candidate -Root ([string]$secondRun.worktree) -TaskId $taskId -RunId ([string]$secondRun.runId) -PreflightResultPath $secondPreflightPath
   Assert-Equal $invalidDecision.ExitCode 0 "Invalid-decision wrapper process failed: $($invalidDecision.Stderr)"
   Assert-Equal ([string]$invalidDecision.Json.status) 'failed' 'Invalid decision ID did not fail at the candidate boundary'
   Assert-Equal ([string]$invalidDecision.Json.detailCode) 'deepseek_decision_invalid' 'Invalid decision ID failure code mismatch'
   $env:TZG_FAKE_CLAUDE_MODE = $originalFakeMode
+
+  $secondCompleteOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action CompleteRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$secondRun.runId) -CompletionCategory failed -DetailCode fixture_invalid_decision)
+  Assert-Equal $LASTEXITCODE 0 'Invalid-decision fixture run did not close'
+  $thirdClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $stateRoot -Owner deepseek -TaskId $taskId -Route external_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $baseCommit -TaskCardDigest $digest)
+  Assert-Equal $LASTEXITCODE 0 'Preflight negative fixture claim failed'
+  $thirdRun = ($thirdClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$thirdRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$thirdRun.candidateBranch, [string]$thirdRun.worktree, $baseCommit) | Out-Null
+
+  $noPreflight = Invoke-Wrapper -Action Candidate -Root ([string]$thirdRun.worktree) -TaskId $taskId -RunId ([string]$thirdRun.runId)
+  Assert-Equal ([string]$noPreflight.Json.status) 'failed' 'Missing preflight result did not fail'
+  Assert-Equal ([string]$noPreflight.Json.detailCode) 'deepseek_preflight_required' 'Missing preflight result failure code mismatch'
+
+  $pathEscape = Invoke-Wrapper -Action Candidate -Root ([string]$thirdRun.worktree) -TaskId $taskId -RunId ([string]$thirdRun.runId) -PreflightResultPath 'C:\outside-tzg-preflight.json'
+  Assert-Equal ([string]$pathEscape.Json.status) 'failed' 'Preflight path escape did not fail'
+  Assert-Equal ([string]$pathEscape.Json.detailCode) 'deepseek_preflight_invalid' 'Preflight path escape failure code mismatch'
+
+  $mismatchPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue ([string]$thirdRun.runId) -TaskIdValue $taskId -TaskCardDigest ('0' * 64) -IndexDigest $indexDigest
+  $mismatch = Invoke-Wrapper -Action Candidate -Root ([string]$thirdRun.worktree) -TaskId $taskId -RunId ([string]$thirdRun.runId) -PreflightResultPath $mismatchPath
+  Assert-Equal ([string]$mismatch.Json.status) 'failed' 'Preflight digest mismatch did not fail'
+  Assert-Equal ([string]$mismatch.Json.detailCode) 'deepseek_preflight_invalid' 'Preflight digest mismatch failure code mismatch'
+  $thirdCompleteOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action CompleteRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$thirdRun.runId) -CompletionCategory failed -DetailCode fixture_preflight_negative)
+  Assert-Equal $LASTEXITCODE 0 'Preflight negative fixture run did not close'
 
   $canary = Invoke-Wrapper -Action Canary -Root $mainRoot -TaskId '' -RunId ''
   Assert-Equal ([string]$canary.Json.status) 'verified' 'Canary did not verify'

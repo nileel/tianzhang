@@ -90,7 +90,8 @@ function Get-HourlyCandidateArguments {
     [Parameter(Mandatory = $true)][object]$Run,
     [Parameter(Mandatory = $true)][string]$StateRoot,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds,
-    [AllowNull()][string]$ResumeContextPath
+    [AllowNull()][string]$ResumeContextPath,
+    [AllowNull()][string]$PreflightResultPath
   )
 
   if ([string]$Adapter.owner -ceq 'codex') {
@@ -113,6 +114,10 @@ function Get-HourlyCandidateArguments {
     )
   }
   if (-not [string]::IsNullOrWhiteSpace($ResumeContextPath)) { $arguments += @('-ResumeContextPath', $ResumeContextPath) }
+  if ([string]$Run.route -cne 'queue_maintenance') {
+    if ([string]::IsNullOrWhiteSpace($PreflightResultPath)) { throw 'Preflight result path is required for non-queue-maintenance candidates' }
+    $arguments += @('-PreflightResultPath', $PreflightResultPath)
+  }
   $arguments
 }
 

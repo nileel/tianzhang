@@ -55,7 +55,8 @@ $requiredScripts = @(
   'tools/invoke-codex-candidate.ps1', 'tools/codex-cli-session.ps1',
   'tools/invoke-deepseek-responsibility.ps1', 'tools/set-task-pending-review.ps1', 'tools/set-task-automation-state.ps1',
   'tools/automation-finalize-commit.ps1', 'tools/send-feishu-notification.ps1', 'tools/test-hourly-task-input-materialization.ps1',
-  'tools/get-project-summary-source.ps1', 'tools/test-get-project-summary-source.ps1'
+  'tools/get-project-summary-source.ps1', 'tools/test-get-project-summary-source.ps1',
+  'tools/get-experience-risk-preflight.ps1', 'tools/test-hourly-experience-preflight.ps1'
 )
 foreach ($relative in $requiredScripts) {
   $path = Join-Path $root $relative
@@ -100,6 +101,12 @@ Assert-Contract $taskStateDigestMatch.Success 'task state transition is missing 
 Assert-Contains $taskStateDigestMatch.Groups['body'].Value 'task state context digest' @('automationInputs =', 'path =', 'bytes =', 'sha256 =', 'sourceBacklog =')
 Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-pro', 'Test-HourlyOwnerModelVerified')
 Assert-DoesNotContain $adapter 'owner adapter' @('git ', 'hourly-automation-lease.ps1', 'Enter-TzgIntegrationLock', 'CompleteRun')
+$codexCandidate = Read-Utf8 (Join-Path $root 'tools/invoke-codex-candidate.ps1')
+$deepseekCandidate = Read-Utf8 (Join-Path $root 'tools/invoke-deepseek-responsibility.ps1')
+Assert-Contains $sharedEntry 'shared owner entry preflight' @('get-experience-risk-preflight.ps1', 'Invoke-ExperiencePreflight', 'preflight-results', 'experience_preflight_schema_invalid', 'experience_preflight_matcher_failed', 'experience_preflight_overbroad', 'experience_preflight_binding_mismatch', 'experience_preflight_projection_mismatch', 'experience_preflight_gate_invalid')
+Assert-Contains $adapter 'owner adapter preflight' @('PreflightResultPath', "'-PreflightResultPath'")
+Assert-Contains $codexCandidate 'Codex candidate preflight' @('PreflightResultPath', 'Read-PreflightResult', 'codex_preflight_required', 'codex_preflight_invalid')
+Assert-Contains $deepseekCandidate 'DeepSeek candidate preflight' @('PreflightResultPath', 'Read-PreflightResult', 'deepseek_preflight_required', 'deepseek_preflight_invalid')
 
 $rules = Read-Utf8 (Join-Path $root '开发管理/自动工作流规则.txt')
 $recovery = Read-Utf8 (Join-Path $root '开发管理/自动工作流恢复规则.txt')

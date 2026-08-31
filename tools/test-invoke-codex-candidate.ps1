@@ -15,6 +15,27 @@ function Get-ExpectedDirectDecisionId {
   "DEC-$($startedAt.ToString('yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture))-CD$($hash.Substring(0, 12))"
 }
 
+function Get-TextDigest {
+  param([string]$Path)
+  $text = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes($Path)).TrimStart([char]0xFEFF)
+  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($text.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+}
+
+function Write-PreflightResult {
+  param([string]$StateRoot, [string]$RunIdValue, [string]$TaskIdValue, [string]$TaskCardDigest, [string]$IndexDigest)
+  $directory = Join-Path $StateRoot 'preflight-results'
+  [IO.Directory]::CreateDirectory($directory) | Out-Null
+  Set-PrivatePathAcl -Path $directory -Directory
+  $path = Join-Path $directory "$RunIdValue.json"
+  $obj = [ordered]@{
+    schemaVersion = 1; runId = $RunIdValue; taskId = $TaskIdValue; taskCardDigest = $TaskCardDigest; indexDigest = $IndexDigest
+    matched = @(); notice = @(); mustRead = @(); gates = @(); gatePointers = @(); mustReadChars = 0
+  }
+  Write-Utf8 -Path $path -Text ($obj | ConvertTo-Json -Compress -Depth 20)
+  Set-PrivatePathAcl -Path $path
+  $path
+}
+
 $testId = [Guid]::NewGuid().ToString('N')
 $tempBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/')
 $testRoot = Join-Path $tempBase "tzg-codex-candidate-test-$testId"
@@ -51,9 +72,10 @@ function Invoke-TerminalScenario {
   $scenarioRun = ($claimOutput[0] | ConvertFrom-Json).run
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$scenarioRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$scenarioRun.candidateBranch, [string]$scenarioRun.worktree, $base) | Out-Null
+  $preflightPath = Write-PreflightResult -StateRoot $scenarioStateRoot -RunIdValue ([string]$scenarioRun.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
   $env:TZG_FAKE_CODEX_TERMINAL_MODE = $Mode
   try {
-    $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -ResponsibilityTimeoutSeconds 30)
+    $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -PreflightResultPath $preflightPath -ResponsibilityTimeoutSeconds 30)
   } finally {
     $env:TZG_FAKE_CODEX_TERMINAL_MODE = $null
   }
@@ -86,7 +108,8 @@ function Invoke-ResumeContextScenario {
   Write-Utf8 -Path $resumePath -Text ($context | ConvertTo-Json -Compress -Depth 20)
   Set-PrivatePathAcl -Path $resumePath
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
-  $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -ResumeContextPath $resumePath -ResponsibilityTimeoutSeconds 30)
+  $preflightPath = Write-PreflightResult -StateRoot $scenarioStateRoot -RunIdValue ([string]$scenarioRun.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -ResumeContextPath $resumePath -PreflightResultPath $preflightPath -ResponsibilityTimeoutSeconds 30)
   Assert-Equal $scenarioOutput.Count 1 "Codex resume context output count mismatch: $Mode"
   [pscustomobject]@{
     Terminal = ($scenarioOutput[0] | ConvertFrom-Json -Depth 50)
@@ -107,6 +130,7 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流规则.txt') -Text '# workflow rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI协作规则.txt') -Text '# collaboration rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/未通过审核清单.txt') -Text '# review list fixture'
+  Write-Utf8 -Path (Join-Path $mainRoot '开发管理/经验库/风险索引.json') -Text '{"schemaVersion":1,"experiences":[],"gates":[]}'
   Write-Utf8 -Path (Join-Path $mainRoot 'fixture/rename-source.txt') -Text 'rename fixture'
   $metadata = [ordered]@{
     schemaVersion = 1; id = $taskId; title = 'Codex candidate fixture'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'
@@ -137,6 +161,7 @@ try {
   $base = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
   $cardText = [Text.UTF8Encoding]::new($false, $true).GetString([IO.File]::ReadAllBytes((Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"))).TrimStart([char]0xFEFF)
   $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($cardText.Replace("`r`n", "`n").Replace("`r", "`n")))).ToLowerInvariant()
+  $indexDigest = Get-TextDigest (Join-Path $mainRoot '开发管理/经验库/风险索引.json')
   $claimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $stateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
   $run = ($claimOutput[0] | ConvertFrom-Json).run
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$run.worktree))) | Out-Null
@@ -282,7 +307,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Write-Utf8 -Path (Join-Path $fakeBin 'codex.cmd') -Text "@echo off`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"%~dp0fake-codex.ps1`" %*"
   $env:PATH = "$fakeBin;$originalPath"
   $env:TZG_FAKE_CODEX_TRACE = $tracePath
-  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId) -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
+  $mainPreflightPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue ([string]$run.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId) -Model 'test-codex-model' -StateRoot $stateRoot -PreflightResultPath $mainPreflightPath -ResponsibilityTimeoutSeconds 30)
   Assert-Equal $LASTEXITCODE 0 'Codex candidate wrapper process failed'
   Assert-Equal $output.Count 1 'Codex candidate wrapper output count mismatch'
   $candidate = $output[0] | ConvertFrom-Json -Depth 50
@@ -374,7 +400,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$pathMismatchRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$pathMismatchRun.candidateBranch, [string]$pathMismatchRun.worktree, $base) | Out-Null
   $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = '1'
-  $pathMismatchOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$pathMismatchRun.worktree) -TaskId $taskId -RunId ([string]$pathMismatchRun.runId) -Model 'test-codex-model' -StateRoot $pathMismatchStateRoot -ResponsibilityTimeoutSeconds 30)
+  $pathMismatchPreflight = Write-PreflightResult -StateRoot $pathMismatchStateRoot -RunIdValue ([string]$pathMismatchRun.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  $pathMismatchOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$pathMismatchRun.worktree) -TaskId $taskId -RunId ([string]$pathMismatchRun.runId) -Model 'test-codex-model' -StateRoot $pathMismatchStateRoot -PreflightResultPath $pathMismatchPreflight -ResponsibilityTimeoutSeconds 30)
   $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $null
   $pathMismatch = $pathMismatchOutput[0] | ConvertFrom-Json -Depth 30
   Assert-Equal ([string]$pathMismatch.status) 'failed' 'Codex candidate accepted rename-compressed terminal paths'
@@ -387,11 +414,29 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$failureRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$failureRun.candidateBranch, [string]$failureRun.worktree, $base) | Out-Null
   $env:TZG_FAKE_CODEX_DIRTY_FAILURE = '1'
-  $failureOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$failureRun.worktree) -TaskId $taskId -RunId ([string]$failureRun.runId) -Model 'test-codex-model' -StateRoot $failureStateRoot -ResponsibilityTimeoutSeconds 30)
+  $failurePreflight = Write-PreflightResult -StateRoot $failureStateRoot -RunIdValue ([string]$failureRun.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  $failureOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$failureRun.worktree) -TaskId $taskId -RunId ([string]$failureRun.runId) -Model 'test-codex-model' -StateRoot $failureStateRoot -PreflightResultPath $failurePreflight -ResponsibilityTimeoutSeconds 30)
   $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $null
   $failure = $failureOutput[0] | ConvertFrom-Json -Depth 30
   Assert-Equal ([string]$failure.status) 'failed' 'Codex dirty technical failure was not rejected'
   Assert-Equal ([string]$failure.detailCode) 'codex_failed_dirty_worktree' 'Codex dirty technical failure kept the misleading terminal-invalid code'
+
+  $negativeStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-negative"
+  $negativeClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $negativeStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
+  Assert-Equal $LASTEXITCODE 0 'Preflight negative fixture claim failed'
+  $negativeRun = ($negativeClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$negativeRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$negativeRun.candidateBranch, [string]$negativeRun.worktree, $base) | Out-Null
+  $codexNoPreflight = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$negativeRun.worktree) -TaskId $taskId -RunId ([string]$negativeRun.runId) -Model 'test-codex-model' -StateRoot $negativeStateRoot -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal ([string]($codexNoPreflight[0] | ConvertFrom-Json).status) 'failed' 'Codex missing preflight result did not fail'
+  Assert-Equal ([string]($codexNoPreflight[0] | ConvertFrom-Json).detailCode) 'codex_preflight_required' 'Codex missing preflight failure code mismatch'
+  $codexPathEscape = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$negativeRun.worktree) -TaskId $taskId -RunId ([string]$negativeRun.runId) -Model 'test-codex-model' -StateRoot $negativeStateRoot -PreflightResultPath 'C:\outside-tzg-preflight.json' -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal ([string]($codexPathEscape[0] | ConvertFrom-Json).status) 'failed' 'Codex preflight path escape did not fail'
+  Assert-Equal ([string]($codexPathEscape[0] | ConvertFrom-Json).detailCode) 'codex_preflight_invalid' 'Codex preflight path escape failure code mismatch'
+  $codexMismatchPath = Write-PreflightResult -StateRoot $negativeStateRoot -RunIdValue ([string]$negativeRun.runId) -TaskIdValue $taskId -TaskCardDigest ('0' * 64) -IndexDigest $indexDigest
+  $codexMismatch = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$negativeRun.worktree) -TaskId $taskId -RunId ([string]$negativeRun.runId) -Model 'test-codex-model' -StateRoot $negativeStateRoot -PreflightResultPath $codexMismatchPath -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal ([string]($codexMismatch[0] | ConvertFrom-Json).status) 'failed' 'Codex preflight digest mismatch did not fail'
+  Assert-Equal ([string]($codexMismatch[0] | ConvertFrom-Json).detailCode) 'codex_preflight_invalid' 'Codex preflight digest mismatch failure code mismatch'
 
   $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
   $qmTaskId = 'QUEUE-MAINTENANCE'
@@ -460,7 +505,8 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$reviewRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$reviewRun.candidateBranch, [string]$reviewRun.worktree, $reviewBase) | Out-Null
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
-  $reviewOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Review -RepositoryRoot ([string]$reviewRun.worktree) -TaskId $taskId -RunId ([string]$reviewRun.runId) -Model 'test-codex-model' -StateRoot $reviewStateRoot -ResponsibilityTimeoutSeconds 30)
+  $reviewPreflight = Write-PreflightResult -StateRoot $reviewStateRoot -RunIdValue ([string]$reviewRun.runId) -TaskIdValue $taskId -TaskCardDigest $reviewDigest -IndexDigest $indexDigest
+  $reviewOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Review -RepositoryRoot ([string]$reviewRun.worktree) -TaskId $taskId -RunId ([string]$reviewRun.runId) -Model 'test-codex-model' -StateRoot $reviewStateRoot -PreflightResultPath $reviewPreflight -ResponsibilityTimeoutSeconds 30)
   Assert-Equal $reviewOutput.Count 1 'Codex review wrapper output count mismatch'
   $review = $reviewOutput[0] | ConvertFrom-Json -Depth 30
   Assert-Equal ([string]$review.status) 'completed' "Codex review prompt fixture failed: $($review | ConvertTo-Json -Compress -Depth 20)"
@@ -503,6 +549,11 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedReviewState = [IO.Path]::GetFullPath($reviewStateRoot)
     if (-not $resolvedReviewState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedReviewState) -cne "tzg-codex-candidate-test-$testId-review") { throw "Unsafe Codex review state cleanup: $resolvedReviewState" }
     Remove-Item -LiteralPath $resolvedReviewState -Recurse -Force
+  }
+  if (Test-Path -LiteralPath $negativeStateRoot) {
+    $resolvedNegativeState = [IO.Path]::GetFullPath($negativeStateRoot)
+    if (-not $resolvedNegativeState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedNegativeState) -cne "tzg-codex-candidate-test-$testId-negative") { throw "Unsafe Codex negative state cleanup: $resolvedNegativeState" }
+    Remove-Item -LiteralPath $resolvedNegativeState -Recurse -Force
   }
   foreach ($scenarioStateRoot in $scenarioStateRoots) {
     if (Test-Path -LiteralPath $scenarioStateRoot) {
