@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-TASK-SCHEMA2-01"],
-  "stateReason": "等待 schema 1/2 兼容检查通过；本卡冻结写前预检与任务收尾候选自标记的手动、复审和自动责任，不修改脚本或 ready 卡。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-31：M-EXP-TASK-SCHEMA2-01 已完成归档，本轮移除唯一具名前置；现有任务卡已冻结完整事实源、路径、验证、完成与停止条件，进入 ready，待 Codex 将批准的 L0、runnable 与收尾候选职责合同写入三份稳定规则事实源。",
   "expectedPaths": [
     "AGENTS.md",
     "开发管理/状态与建议维护规则.txt",

@@ -8,15 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "C-HS-YY-JD-01I",
-    "C-HS-YY-JD-01J",
-    "C-HS-YY-JD-01O",
-    "C-HS-YY-JD-01P",
-    "C-HS-YY-JD-01Q"
-  ],
-  "stateReason": "2026-08-30：五张活跃道路子卡尚未完成，父任务只做跨道路收口不生产文档；其余十二张子卡已完成归档，剩余子卡全部完成后关闭。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-08-31：C-HS-YY-JD-01I、C-HS-YY-JD-01J、C-HS-YY-JD-01O、C-HS-YY-JD-01P、C-HS-YY-JD-01Q 均已完成归档，本轮解除全部具名前置；现有任务卡已冻结完整范围、路径、验证、完成与停止条件，进入 ready，待 Codex 只做 51 份位置文档与索引的跨道路一致性收口。",
   "expectedPaths": [
     "docs/基础设定/金丹位格/金丹位格索引.txt",
     "开发管理/任务列表/内容设计任务.txt",
