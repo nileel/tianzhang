@@ -47,11 +47,11 @@ function Get-TextDigest {
 }
 
 function Write-PreflightResult {
-  param([string]$StateRoot, [string]$RunIdValue, [string]$TaskIdValue, [string]$TaskCardDigest, [string]$IndexDigest)
+  param([string]$StateRoot, [string]$RunIdValue, [string]$TaskIdValue, [string]$TaskCardDigest, [string]$IndexDigest, [string]$FileName = $RunIdValue)
   $directory = Join-Path $StateRoot 'preflight-results'
   [IO.Directory]::CreateDirectory($directory) | Out-Null
   Set-PrivatePathAcl -Path $directory -Directory
-  $path = Join-Path $directory "$RunIdValue.json"
+  $path = Join-Path $directory "$FileName.json"
   $obj = [ordered]@{
     schemaVersion = 1; runId = $RunIdValue; taskId = $TaskIdValue; taskCardDigest = $TaskCardDigest; indexDigest = $IndexDigest
     matched = @(); notice = @(); mustRead = @(); gates = @(); gatePointers = @(); mustReadChars = 0
@@ -250,6 +250,16 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $mismatch = Invoke-Wrapper -Action Candidate -Root ([string]$thirdRun.worktree) -TaskId $taskId -RunId ([string]$thirdRun.runId) -PreflightResultPath $mismatchPath
   Assert-Equal ([string]$mismatch.Json.status) 'failed' 'Preflight digest mismatch did not fail'
   Assert-Equal ([string]$mismatch.Json.detailCode) 'deepseek_preflight_invalid' 'Preflight digest mismatch failure code mismatch'
+
+  $runIdMismatchPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue "$([string]$thirdRun.runId)-wrong" -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest -FileName ([string]$thirdRun.runId)
+  $runIdMismatch = Invoke-Wrapper -Action Candidate -Root ([string]$thirdRun.worktree) -TaskId $taskId -RunId ([string]$thirdRun.runId) -PreflightResultPath $runIdMismatchPath
+  Assert-Equal ([string]$runIdMismatch.Json.status) 'failed' 'Preflight runId mismatch did not fail'
+  Assert-Equal ([string]$runIdMismatch.Json.detailCode) 'deepseek_preflight_invalid' 'Preflight runId mismatch failure code mismatch'
+
+  $taskIdMismatchPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue ([string]$thirdRun.runId) -TaskIdValue "$taskId-wrong" -TaskCardDigest $digest -IndexDigest $indexDigest
+  $taskIdMismatch = Invoke-Wrapper -Action Candidate -Root ([string]$thirdRun.worktree) -TaskId $taskId -RunId ([string]$thirdRun.runId) -PreflightResultPath $taskIdMismatchPath
+  Assert-Equal ([string]$taskIdMismatch.Json.status) 'failed' 'Preflight taskId mismatch did not fail'
+  Assert-Equal ([string]$taskIdMismatch.Json.detailCode) 'deepseek_preflight_invalid' 'Preflight taskId mismatch failure code mismatch'
   $thirdCompleteOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action CompleteRun -StateRoot $stateRoot -Owner deepseek -RunId ([string]$thirdRun.runId) -CompletionCategory failed -DetailCode fixture_preflight_negative)
   Assert-Equal $LASTEXITCODE 0 'Preflight negative fixture run did not close'
 

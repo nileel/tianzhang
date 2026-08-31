@@ -22,11 +22,11 @@ function Get-TextDigest {
 }
 
 function Write-PreflightResult {
-  param([string]$StateRoot, [string]$RunIdValue, [string]$TaskIdValue, [string]$TaskCardDigest, [string]$IndexDigest)
+  param([string]$StateRoot, [string]$RunIdValue, [string]$TaskIdValue, [string]$TaskCardDigest, [string]$IndexDigest, [string]$FileName = $RunIdValue)
   $directory = Join-Path $StateRoot 'preflight-results'
   [IO.Directory]::CreateDirectory($directory) | Out-Null
   Set-PrivatePathAcl -Path $directory -Directory
-  $path = Join-Path $directory "$RunIdValue.json"
+  $path = Join-Path $directory "$FileName.json"
   $obj = [ordered]@{
     schemaVersion = 1; runId = $RunIdValue; taskId = $TaskIdValue; taskCardDigest = $TaskCardDigest; indexDigest = $IndexDigest
     matched = @(); notice = @(); mustRead = @(); gates = @(); gatePointers = @(); mustReadChars = 0
@@ -437,6 +437,14 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   $codexMismatch = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$negativeRun.worktree) -TaskId $taskId -RunId ([string]$negativeRun.runId) -Model 'test-codex-model' -StateRoot $negativeStateRoot -PreflightResultPath $codexMismatchPath -ResponsibilityTimeoutSeconds 30)
   Assert-Equal ([string]($codexMismatch[0] | ConvertFrom-Json).status) 'failed' 'Codex preflight digest mismatch did not fail'
   Assert-Equal ([string]($codexMismatch[0] | ConvertFrom-Json).detailCode) 'codex_preflight_invalid' 'Codex preflight digest mismatch failure code mismatch'
+  $codexRunIdMismatchPath = Write-PreflightResult -StateRoot $negativeStateRoot -RunIdValue "$([string]$negativeRun.runId)-wrong" -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest -FileName ([string]$negativeRun.runId)
+  $codexRunIdMismatch = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$negativeRun.worktree) -TaskId $taskId -RunId ([string]$negativeRun.runId) -Model 'test-codex-model' -StateRoot $negativeStateRoot -PreflightResultPath $codexRunIdMismatchPath -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal ([string]($codexRunIdMismatch[0] | ConvertFrom-Json).status) 'failed' 'Codex preflight runId mismatch did not fail'
+  Assert-Equal ([string]($codexRunIdMismatch[0] | ConvertFrom-Json).detailCode) 'codex_preflight_invalid' 'Codex preflight runId mismatch failure code mismatch'
+  $codexTaskIdMismatchPath = Write-PreflightResult -StateRoot $negativeStateRoot -RunIdValue ([string]$negativeRun.runId) -TaskIdValue "$taskId-wrong" -TaskCardDigest $digest -IndexDigest $indexDigest
+  $codexTaskIdMismatch = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$negativeRun.worktree) -TaskId $taskId -RunId ([string]$negativeRun.runId) -Model 'test-codex-model' -StateRoot $negativeStateRoot -PreflightResultPath $codexTaskIdMismatchPath -ResponsibilityTimeoutSeconds 30)
+  Assert-Equal ([string]($codexTaskIdMismatch[0] | ConvertFrom-Json).status) 'failed' 'Codex preflight taskId mismatch did not fail'
+  Assert-Equal ([string]($codexTaskIdMismatch[0] | ConvertFrom-Json).detailCode) 'codex_preflight_invalid' 'Codex preflight taskId mismatch failure code mismatch'
 
   $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
   $qmTaskId = 'QUEUE-MAINTENANCE'

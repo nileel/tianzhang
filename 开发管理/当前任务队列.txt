@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-HOURLY-PREFLIGHT-01 | external_execute | deepseek | P1 | automation | implementation | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |
+| M-EXP-HOURLY-PREFLIGHT-01 | codex_review | codex | P1 | automation | implementation | 小时入口与双 candidate 预检结果传递 | 开发管理/任务卡/M-EXP-HOURLY-PREFLIGHT-01.txt |

@@ -303,3 +303,16 @@
 - 残留风险：真实小时轮次首次运行预检时，若 owner worktree 与主工作区风险索引出现未预期差异会触发 experience_preflight_binding_mismatch 闭锁进入 attention_required；该路径由确定性校验兜底且本 candidate 不触及索引/任务卡/runtime，失败不启动模型。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-HOURLY-PREFLIGHT-01-bd622abb · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-HOURLY-PREFLIGHT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-HOURLY-PREFLIGHT-01
+- 候选提交：c569bfff3dcec09467ce5ebd52c783104001d2d7
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/test-invoke-codex-candidate.ps1、tools/test-invoke-deepseek-responsibility.ps1
+- 已验证：tools/test-invoke-codex-candidate.ps1 -> OK（含新增 runId/taskId 失配拒绝用例）；tools/test-invoke-deepseek-responsibility.ps1 -> OK（含新增 runId/taskId 失配拒绝用例）；tools/test-hourly-experience-preflight.ps1 -> PASS；tools/test-hourly-owner-adapter.ps1 -> OK；tools/test-hourly-task-input-materialization.ps1 -> PASS；tools/test-check-automation-workflow.ps1 -> OK；tools/check-automation-workflow.ps1 -> OK；tools/check-task-cards.ps1 -> OK (cards=48 ready=1)；tools/check-pending-whitespace.ps1 -> OK（2 文件）；git diff --check -> 无输出（干净）
+- 未验证：未运行 BattleSim / Unity build（本次为纯 PowerShell 测试改动，不涉及数值或 Unity）；未运行共享入口端到端 canary/claim/集成（属于共享入口在正式重放阶段的职责）
+- 残留风险：改动仅限两个测试文件，复用 wrapper 已实现的 *_preflight_invalid 拒绝路径；不改变生产行为或任务生命周期，残留风险很低。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
