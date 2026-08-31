@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-01：Codex 独立复审正式提交 cc2651890e0e421c99f3f7befad5e5bfb08e1e39 通过；两个 wrapper 均拒绝 preflight 结果的 runId、taskId 与任务卡 digest 失配，任务卡规定的预检、adapter、输入物化、wrapper 和静态检查均通过。本卡完成归档；下游具名前置待正式结果进入 master 后由 QueueMaintenance 统一处理。",
   "expectedPaths": [
     "tools/invoke-hourly-owner.ps1",
     "tools/hourly-owner-adapter.ps1",
