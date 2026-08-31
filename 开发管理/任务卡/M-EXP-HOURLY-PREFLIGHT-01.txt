@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 复审部分通过：预检实现与已覆盖验证通过，但 Codex／DeepSeek wrapper 缺少 runId、taskId 失配的拒绝测试，未满足本卡集成测试完成条件。",
   "expectedPaths": [
     "tools/invoke-hourly-owner.ps1",
     "tools/hourly-owner-adapter.ps1",
