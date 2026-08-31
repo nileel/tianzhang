@@ -20,6 +20,9 @@
 ## 共享内核与 owner adapter
 
 - 共享入口唯一实现 runtime `Show`／claim／状态写入、worktree 与 branch 生命周期、candidate 核验、路径冲突检查、最新 `master` 重放、正式提交、组合验证、排他集成、`CompleteRun`、通知和成功清理。
+- L0 强制期内，非 `queue_maintenance` run 仅由共享入口在 `New-CandidateWorktree` 及输入物化成功后、形成 `Get-HourlyCandidateArguments` 和调用 candidate script 前，对 owner worktree 的同一 taskId 运行唯一只读预检。共享入口核验实时匹配、schema 2 投影、门禁指针和 600 Unicode 字符边界后，才经既有私有路径与 ACL helper 写入 `StateRoot/preflight-results/<runId>.json`；该文件名绑定 runId，内容绑定 taskId、任务卡 digest 和索引 digest，不进入 Git 或 schema 5 runtime。
+- adapter／Codex／DeepSeek wrapper 对非 `queue_maintenance` 只接受批准 StateRoot 中上述精确绑定的结果，并把其中 `notice`、`mustRead` 正文和门禁指针直接放入首条责任提示；它们不自行决定是否运行预检，也不复制匹配算法。`queue_maintenance` 不运行业务预检、不传结果路径，但其创建或重新 ready 的卡必须通过 schema 2 投影检查。预检失败时不启动模型、不伪造零命中，沿用 `attention_required`、worktree 保留和稳定 `experience_preflight_*` detailCode；不增加 runtime、重试或 owner 专属分支。
+- 收尾候选检查只复用原任务本轮已有事实、diff 和验证，不新增模型调用。DeepSeek 仅在转 `codex_review` 前写 `provisional`；Codex 复审保留／修正时改为 `pending`、不成立时删除；Codex 自有完成任务在归档前直接写 `pending`。候选语义、查重、正式经验 ID、整理任务和风险索引均不属于 owner prompt、adapter 或 runtime 的职责。
 - `tools/hourly-owner-adapter.ps1` 只定义 owner 的 route、candidate 启动脚本、模型／身份和正式结果合同。adapter 不读写 runtime，不含 Git 集成、通知或清理逻辑。
 - Codex candidate 通过 `tools/invoke-codex-candidate.ps1` 和 `tools/codex-cli-session.ps1` 启动；必须使用 `codex exec --output-schema` 与 `--output-last-message` 的私有结构化终态，不从自然语言正文猜测状态。
 - Codex candidate 正常完成提交后，最终 `changedPaths` 只按 run 的 `baseCommit..HEAD` 执行 `git -c core.quotepath=false diff --name-only --no-renames` 生成并排序去重；文件移动必须同时报告源路径和目标路径，不得用 `git show --name-only`、rename detection 或其他压缩表示替代。共享入口继续按同一口径计算真实集合并要求终态精确相等。

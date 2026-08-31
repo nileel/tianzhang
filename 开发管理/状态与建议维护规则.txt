@@ -59,6 +59,13 @@ runnable 必须同时满足：状态待处理；前置完成；主责已授权�
 
 新卡完成时只移入精确路径 `开发管理/任务归档/<ID>.txt`；每张活跃卡的 `expectedPaths` 必须同时包含 `开发管理/任务卡/<ID>.txt` 与 `开发管理/任务归档/<ID>.txt`。凡任务可能创建、移动或首次导入 `src/Assets/` 下的 Unity 文件或目录，`expectedPaths` 必须同时列出目标及其对应 `.meta`；新目录本身的 `.meta` 也须列出。历史合并归档保持原样，默认检查不递归扫描。
 
+## 风险预检与收尾候选
+
+1. `riskPreflight` 是 schema 2 的确定性短投影。建立、重新 ready 或改变 `expectedPaths` 时，必须用唯一只读入口重新计算 `explicitRefs`、`matched` 和 `gates`；零命中也写入三个空数组。强制激活前，既有 schema 1 ready 卡继续合法；激活任务必须先在同一迁移中重算所有 ready 卡并升级为 schema 2，此后 schema 1 ready 一律拒绝。历史 completed 卡仍接受 schema 1／2，且不批量迁移。
+2. 强制期的 runnable／ready 合同同时要求 schema 2 投影实时一致；执行者写前必须重跑同一预检并消费其嵌入正文。`expectedPaths` 扩大、文档改为代码／数据／Unity 资产、直接调用者／运行时所有者／跨模块依赖新增、对象新增符号／实体／内容类型或技术路线变化时，暂停写入、重算投影并按任务原子性和停止条件重新判断。预检错误、门禁入口缺失、事实冲突或 `preflight_overbroad` 均不得伪造零命中继续。
+3. 原任务的 `## 经验候选` 仅保存批准规格规定的候选字段和本轮已证实事实：现象、根因、证据、可能复用范围、门禁可能及稳定候选 ID。它不承担查重、正式经验 ID 分配、整理任务建立或风险索引写入；没有候选时不写空章节。DeepSeek 只写 `provisional`，Codex 复审保留／修正时改为 `pending`、不成立时删除，Codex 自有完成任务在归档前直接写 `pending`；后续每日收集器才可把合法 `pending` 改为 `collected` 并回填整理任务 ID。
+4. 候选正文保留原 `经验领域`。机械投影固定为 `automation -> automation/AUTO`、`management -> management/MGMT`、`unity -> unity/UNITY`、`battlesim -> battlesim/BS`、`data -> data/DATA`、`content -> content/CONTENT`、`design -> management/MGMT`、`numeric -> battlesim/BS`；后两项是现行任务卡／经验 ID 枚举的映射例外。`design`、`content`、`numeric` 候选只可由后续收集器建立 blocked 整理卡，不因此开放领域或进入 ready 队列。
+
 ## 建议与闭环
 
 1. 设计/开发下一步建议只作索引，不作 `1` 的默认全文入口。

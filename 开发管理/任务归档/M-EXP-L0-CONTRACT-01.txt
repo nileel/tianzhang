@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-08-31：M-EXP-TASK-SCHEMA2-01 已完成归档，本轮移除唯一具名前置；现有任务卡已冻结完整事实源、路径、验证、完成与停止条件，进入 ready，待 Codex 将批准的 L0、runnable 与收尾候选职责合同写入三份稳定规则事实源。",
+  "stateReason": "2026-08-31：Codex 已将 L0 写前预检、schema 2 投影、范围变化、收尾候选及小时失败边界写入三份稳定规则事实源；下游具名前置与投影由正式结果进入 master 后的 QueueMaintenance 统一处理。",
   "expectedPaths": [
     "AGENTS.md",
     "开发管理/状态与建议维护规则.txt",
@@ -29,7 +29,7 @@
 
 ## 来源与当前边界
 
-- 单一结果：把批准规格中的 L0 路由、runnable／ready 投影、范围变化重算、任务收尾候选自标记和小时失败行为写入三个稳定规则事实源。
+- 单一结果：把批准规格中的 L0 路由、runnable／ready 投影、范围变化、任务收尾候选自标记和小时失败行为写入三个稳定规则事实源。
 - 本卡是跨 owner／手动与自动职责合同，主责固定 Codex；不修改任何 PowerShell 或任务卡 schema。
 - 候选检查只复用原任务本轮已有的事实、diff 和验证，不增加模型调用；没有候选时不写空章节。
 
@@ -71,3 +71,8 @@
 ## 停止条件
 
 - 三份规则对 shared owner、schema 激活时点、provisional／pending 责任、候选领域投影或失败行为存在冲突，或需要先修改脚本／任务卡才能表达稳定合同；停止并报告精确条款。
+
+## 完成记录
+
+- 2026-08-31：已将手动 L0 写前预检、schema 2 兼容与激活、范围变化重算、收尾候选责任、候选领域投影，以及共享入口唯一预检与失败关闭写入三份稳定规则事实源；未修改匹配器、owner prompt／adapter、runtime、风险索引或经验卡，且未产生经验候选。
+- 本候选仅归档原任务并移除其队列／backlog 投影；小时接入卡和每日收集器卡的具名前置及 backlog 投影保留，等待正式结果进入 master 后由 QueueMaintenance 按既有事实源统一处理。
