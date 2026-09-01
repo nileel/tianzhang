@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-01：Codex 独立复审通过；schema 1 completed 归档正例、schema 1 ready 拒绝和 schema 2 ready 实时投影均已验证。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",
