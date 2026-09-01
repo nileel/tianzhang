@@ -2,16 +2,52 @@
 {
   "schemaVersion": 1,
   "id": "A-CHAR-PORTRAIT-STYLE-01",
-  "title": "Toon 与模块化立绘风格样张",
+  "title": "默认男主模块化 UI 立绘八组合样张",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
-  "domain": "unity",
-  "stage": "verification",
+  "domain": "content",
+  "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": ["A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01"],
-  "stateReason": "2026-09-02：书面输入合同已获负责人批准；等待 A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01 建立一致的机器可读投影并冻结本卡的 UI 立绘生产职责与全部字面量路径。旧 3D Toon 路线不再属于本卡。",
+  "stateReason": "2026-09-02：等待前置卡正式进入 master 后由 QueueMaintenance 移除具名前置；本卡只生产和评审默认男主模块化 UI 立绘八组合，不含 3D Toon 或运行时接入。",
   "expectedPaths": [
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/base-face/face_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/base-face/face_young_defined_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/outfit/outfit_practical_long_robe_01__palette_indigo_cream_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/outfit/outfit_narrow_sleeve_travel_robe_01__palette_gray_brown_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/hands-front/hands_sword_finger_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-front/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-front/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h02_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f02_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f02_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f02_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f02_h02_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f01_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f01_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f01_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f01_h02_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f02_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f02_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f02_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/bust/portrait_style_male_f02_h02_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f01_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f01_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f01_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f01_h02_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h02_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/prompts.md",
+    "assets/generated-character-art/player-modular-portrait-style-v1/manifest.json",
+    "assets/generated-character-art/player-modular-portrait-style-v1/evidence/contact-sheet.png",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt",
@@ -20,33 +56,32 @@
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# A-CHAR-PORTRAIT-STYLE-01 · Toon 与模块化立绘风格样张
+# A-CHAR-PORTRAIT-STYLE-01 · 默认男主模块化 UI 立绘八组合样张
 
 ## 来源与当前边界
 
-- 只批准头像／剧情 UI 使用的 Toon 与玩家模块化全身立绘样张，不批量生产完整外观。
-- 战场角色必须按胜出路线重新生产适配固定战术镜头的姿态；现有立绘不得缩小、裁切或透视变形后直接投入战场。
+- 仅依据 `input-contract.json` 生产并评审默认男主的八种模块化 UI 立绘组合；不包含 3D Toon、Unity 或运行时接入。
 
 ## 必查范围
 
-- 角色美术设计、外观数据／PortraitComposer、已验证人形样例、现有 NPC 立绘和角色立绘生产规则。
+- 输入合同、批准母版及其 manifest、项目立绘 README。
 
 ## 实施范围
 
-- 评审 Toon 材质；立绘覆盖两个脸型、两种发型、两套服装的八种组合，并与现有 NPC 立绘并排比较；全身、半身、头像来自同一合成结果裁切。
+- 生产九个固定组件，以冻结层序确定性合成八个全身、八个半身和八个头像，并提交提示、manifest 与联系表供书面评审。
 
 ## 禁止项
 
-- 不为每个 UI 单独造身份结果，不依赖随机替代或逐图手修，不生产完整创角批次。
+- 不生成组合专用层、逐图补丁、随机替代或不同 UI 母版；不修改 Unity、CSV、存档、3D 资产或运行时。
 
 ## 验证
 
-- 八组合、锚点、遮挡、面部清晰度、裁切一致、Toon 固定镜头对比与资源登记；解阻塞前展开所有源图、导出、Unity、证据和登记路径。
+- 检查九组件、八组合、锚点、遮挡、裁切与像素哈希满足输入合同；全身、半身和头像只从同一 composite 裁切。
 
 ## 完成条件
 
-- Toon 与模块化立绘风格通过书面评审，组合稳定且可被正式替换与批量任务消费。
+- 八组合获得 UI 立绘风格与模块兼容性书面评审，所有字面量输出和 manifest 可复核。
 
 ## 停止条件
 
-- 样张必须依赖随机替代、不同 UI 母版、逐图修补或修改规则／装备／存档所有权时停止。
+- 任何组件必须仅在某一组合使用，或需要偏移、缩放、组合补丁、不同身份母版或修改运行时所有权时停止。

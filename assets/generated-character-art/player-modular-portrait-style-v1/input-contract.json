@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "contractId": "formal_player_modular_portrait_style_v1",
+  "approvedSources": {
+    "transparentMaster": { "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png", "width": 887, "height": 1774, "sha256": "399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948" },
+    "transparentMasterManifest": { "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json", "sha256": "a4d0d74986f1845fdcc4aac5478f73babe3ece959db7645bd6dcc6d7711d5a13" },
+    "styleReference": { "path": "assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png", "width": 887, "height": 1774, "sha256": "082fd5bcd152d008f9285383bf9b233d1d190de9cccad9a793d4c1f64ca38a65" }
+  },
+  "canvas": { "width": 887, "height": 1774, "origin": "top_left", "bodyCenterAxisX": 443, "ground": [443, 1695], "poseId": "standing_three_quarter_sword_finger_01" },
+  "fixedComponents": { "bodyTypeId": "body_male_young_standard_01", "skinToneId": "skin_warm_light_01", "hairColorId": "hair_color_ink_black_01", "handPoseId": "hands_sword_finger_01", "headwearVisualId": "none", "mainHandVisualId": "none", "artifactVisualId": "none" },
+  "facePresets": [
+    { "facePresetId": "face_young_refined_01", "description": "批准母版的窄椭圆脸、平直眉与沉静眼型" },
+    { "facePresetId": "face_young_defined_01", "description": "稍宽下颌、较明确眉峰；年龄、头骨、发际线和体型不变" }
+  ],
+  "hairStyles": [
+    { "hairStyleId": "hair_half_up_long_01", "description": "批准母版半束长发" },
+    { "hairStyleId": "hair_high_ponytail_01", "description": "高束马尾；保持黑发、前额清晰与共同头骨包络" }
+  ],
+  "outfits": [
+    { "outfitVisualId": "outfit_practical_long_robe_01", "outfitPaletteId": "palette_indigo_cream_01", "description": "批准母版实用长袍" },
+    { "outfitVisualId": "outfit_narrow_sleeve_travel_robe_01", "outfitPaletteId": "palette_gray_brown_01", "description": "灰褐窄袖行装；不改变身体、姿势或手位" }
+  ],
+  "samples": [
+    { "portraitSampleId": "portrait_style_male_f01_h01_o01", "facePresetId": "face_young_refined_01", "hairStyleId": "hair_half_up_long_01", "outfitVisualId": "outfit_practical_long_robe_01", "outfitPaletteId": "palette_indigo_cream_01", "compositePath": "composites/portrait_style_male_f01_h01_o01.png", "bustPath": "crops/bust/portrait_style_male_f01_h01_o01.png", "avatarPath": "crops/avatar/portrait_style_male_f01_h01_o01.png" },
+    { "portraitSampleId": "portrait_style_male_f01_h01_o02", "facePresetId": "face_young_refined_01", "hairStyleId": "hair_half_up_long_01", "outfitVisualId": "outfit_narrow_sleeve_travel_robe_01", "outfitPaletteId": "palette_gray_brown_01", "compositePath": "composites/portrait_style_male_f01_h01_o02.png", "bustPath": "crops/bust/portrait_style_male_f01_h01_o02.png", "avatarPath": "crops/avatar/portrait_style_male_f01_h01_o02.png" },
+    { "portraitSampleId": "portrait_style_male_f01_h02_o01", "facePresetId": "face_young_refined_01", "hairStyleId": "hair_high_ponytail_01", "outfitVisualId": "outfit_practical_long_robe_01", "outfitPaletteId": "palette_indigo_cream_01", "compositePath": "composites/portrait_style_male_f01_h02_o01.png", "bustPath": "crops/bust/portrait_style_male_f01_h02_o01.png", "avatarPath": "crops/avatar/portrait_style_male_f01_h02_o01.png" },
+    { "portraitSampleId": "portrait_style_male_f01_h02_o02", "facePresetId": "face_young_refined_01", "hairStyleId": "hair_high_ponytail_01", "outfitVisualId": "outfit_narrow_sleeve_travel_robe_01", "outfitPaletteId": "palette_gray_brown_01", "compositePath": "composites/portrait_style_male_f01_h02_o02.png", "bustPath": "crops/bust/portrait_style_male_f01_h02_o02.png", "avatarPath": "crops/avatar/portrait_style_male_f01_h02_o02.png" },
+    { "portraitSampleId": "portrait_style_male_f02_h01_o01", "facePresetId": "face_young_defined_01", "hairStyleId": "hair_half_up_long_01", "outfitVisualId": "outfit_practical_long_robe_01", "outfitPaletteId": "palette_indigo_cream_01", "compositePath": "composites/portrait_style_male_f02_h01_o01.png", "bustPath": "crops/bust/portrait_style_male_f02_h01_o01.png", "avatarPath": "crops/avatar/portrait_style_male_f02_h01_o01.png" },
+    { "portraitSampleId": "portrait_style_male_f02_h01_o02", "facePresetId": "face_young_defined_01", "hairStyleId": "hair_half_up_long_01", "outfitVisualId": "outfit_narrow_sleeve_travel_robe_01", "outfitPaletteId": "palette_gray_brown_01", "compositePath": "composites/portrait_style_male_f02_h01_o02.png", "bustPath": "crops/bust/portrait_style_male_f02_h01_o02.png", "avatarPath": "crops/avatar/portrait_style_male_f02_h01_o02.png" },
+    { "portraitSampleId": "portrait_style_male_f02_h02_o01", "facePresetId": "face_young_defined_01", "hairStyleId": "hair_high_ponytail_01", "outfitVisualId": "outfit_practical_long_robe_01", "outfitPaletteId": "palette_indigo_cream_01", "compositePath": "composites/portrait_style_male_f02_h02_o01.png", "bustPath": "crops/bust/portrait_style_male_f02_h02_o01.png", "avatarPath": "crops/avatar/portrait_style_male_f02_h02_o01.png" },
+    { "portraitSampleId": "portrait_style_male_f02_h02_o02", "facePresetId": "face_young_defined_01", "hairStyleId": "hair_high_ponytail_01", "outfitVisualId": "outfit_narrow_sleeve_travel_robe_01", "outfitPaletteId": "palette_gray_brown_01", "compositePath": "composites/portrait_style_male_f02_h02_o02.png", "bustPath": "crops/bust/portrait_style_male_f02_h02_o02.png", "avatarPath": "crops/avatar/portrait_style_male_f02_h02_o02.png" }
+  ],
+  "layerOrder": ["hair-back", "base-face", "outfit", "hands-front", "hair-front"],
+  "layerPaths": {
+    "hair-back": { "hair_half_up_long_01": "layers/hair-back/hair_half_up_long_01.png", "hair_high_ponytail_01": "layers/hair-back/hair_high_ponytail_01.png" },
+    "base-face": { "face_young_refined_01": "layers/base-face/face_young_refined_01.png", "face_young_defined_01": "layers/base-face/face_young_defined_01.png" },
+    "outfit": { "outfit_practical_long_robe_01__palette_indigo_cream_01": "layers/outfit/outfit_practical_long_robe_01__palette_indigo_cream_01.png", "outfit_narrow_sleeve_travel_robe_01__palette_gray_brown_01": "layers/outfit/outfit_narrow_sleeve_travel_robe_01__palette_gray_brown_01.png" },
+    "hands-front": { "hands_sword_finger_01": "layers/hands-front/hands_sword_finger_01.png" },
+    "hair-front": { "hair_half_up_long_01": "layers/hair-front/hair_half_up_long_01.png", "hair_high_ponytail_01": "layers/hair-front/hair_high_ponytail_01.png" }
+  },
+  "anchors": { "crown": [421,110], "hairlineCenter": [414,185], "templeScreenLeft": [369,222], "templeScreenRight": [488,226], "headCenter": [428,252], "eyeScreenLeft": [382,229], "eyeScreenRight": [423,225], "earRootScreenLeft": [361,255], "earRootScreenRight": [476,252], "chinCenter": [411,322], "napeCenter": [441,349], "neckScreenLeft": [395,367], "neckScreenRight": [485,373], "shoulderScreenLeft": [318,410], "shoulderScreenRight": [574,423], "raisedHandWrist": [337,553], "loweredHandWrist": [545,805], "waistCenter": [443,655], "ground": [443,1695], "jawTargets": { "face_young_refined_01": { "jawScreenLeft": [372,293], "jawScreenRight": [451,299] }, "face_young_defined_01": { "jawScreenLeft": [365,293], "jawScreenRight": [458,299] } } },
+  "tolerances": { "hairAndFacePx": 2, "jawTargetsPx": 2, "napeCenter": { "hairLayersPx": 2, "outfitCollarPx": 3 }, "otherGarmentSeamsPx": 3 },
+  "faceVariationRect": [340,165,155,190],
+  "compositing": { "pixelFormat": "sRGB 8-bit straight/unassociated RGBA", "alphaRule": "transparent pixels normalize to RGBA=(0,0,0,0)", "blendId": "rgba8_straight_source_over_v1", "resampling": "none", "pixelHash": "SHA-256(uint32be(width)+uint32be(height)+top-to-bottom RGBA bytes)" },
+  "crops": { "fullBody": [0,0,887,1774], "bust": [128,80,631,968], "avatar": [256,80,375,500] },
+  "requiredOutputs": ["prompts.md", "manifest.json", "evidence/contact-sheet.png"],
+  "approval": { "status": "approved", "approvedOn": "2026-09-02", "source": "owner_written_approval", "evidenceRef": "docs/superpowers/specs/2026-09-01-formal-player-modular-portrait-input-freeze-design.md" }
+}

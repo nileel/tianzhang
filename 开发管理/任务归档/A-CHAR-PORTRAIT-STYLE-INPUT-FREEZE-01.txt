@@ -1,0 +1,61 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01",
+  "title": "默认男主模块化 UI 立绘输入冻结",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-02：批准的书面输入合同已形成一致机器可读投影；稳定 ID、八组合、画布、锚点、图层、路径、裁切和批准来源均已冻结。后续卡仍保留具名前置，等待正式 QueueMaintenance。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-01-formal-player-modular-portrait-input-freeze-design.md",
+    "assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt"
+  ],
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01 · 默认男主模块化 UI 立绘输入冻结
+
+## 来源与当前边界
+
+- 唯一批准规格为 `docs/superpowers/specs/2026-09-01-formal-player-modular-portrait-input-freeze-design.md`；本卡只形成其机器可读投影和后续卡的职责投影。
+
+## 必查范围
+
+- 批准规格、默认男主母版及其 manifest、生产 README、原样张卡和 backlog 投影。
+
+## 实施范围
+
+- 建立 schema 1 `input-contract.json`，冻结九组件、八组合、五层、锚点、容差、合成、裁切、输出路径和批准证据；收窄原样张卡为 UI 立绘生产与评审。
+
+## 禁止项
+
+- 不调用 ImageGen、不生成或编辑图片，不修改 Unity、CSV、存档、运行时或 3D 资产，也不移除下游具名前置。
+
+## 验证
+
+- JSON 已按批准规格核对稳定 ID、八组合、画布、锚点、容差、路径、图层顺序、合成规则和裁切；批准母版与风格参考的尺寸和 SHA-256 可复核。
+
+## 完成条件
+
+- 合同和后续卡职责边界已冻结，后续生产无需猜测组件身份、组合矩阵、拼合锚点、路径或裁切。
+
+## 停止条件
+
+- 若需修改批准规格、Unity、CSV、存档、运行时、3D 资产或额外任务所有者则停止。
+
+## 完成记录
+
+- 已建立 `assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json`；其顶层字段严格对应批准规格，且记录批准母版、基准 manifest 与苻渊画风参考的路径和 SHA-256。
+- `A-CHAR-PORTRAIT-STYLE-01` 已收窄为默认男主模块化 UI 立绘八组合生产与评审，冻结全部九个组件、二十四个组合／裁切、提示、manifest 和联系表路径；3D Toon 和运行时职责已排除。
+- 本卡归档并从队列及 backlog 移除；未生成图像或写入 Unity、CSV、存档、3D 或运行时。下游具名前置保持不变，等待正式 QueueMaintenance。

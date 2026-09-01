@@ -335,3 +335,9 @@ assets/generated-character-art/player-modular-portrait-style-v1/
 - 原 `A-CHAR-PORTRAIT-STYLE-01` 只保留默认男主模块化 UI 立绘八组合生产与评审职责；
 - 后续任务可以仅凭稳定 ID、批准来源、完整画布、锚点表、图层顺序和字面量路径开始生产，不需要再次猜测输入；
 - 不产生图片、Unity、存档、3D 或运行时副作用。
+
+## 12. 实施投影记录
+
+- 2026-09-02：负责人已批准本书面输入合同；`A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01` 已将其逐字段投影到 `assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json`。
+- 投影固定记录批准母版、其 manifest 与项目画风参考的仓库路径及 SHA-256；其中批准母版为 `887×1774` RGBA，基准组合为 `f01/h01/o01`。
+- 本次只冻结输入，不生成图片、不建立 Unity／存档／3D／运行时引用。原样张卡仍保留具名前置，待正式结果进入 master 后由 QueueMaintenance 处理。
