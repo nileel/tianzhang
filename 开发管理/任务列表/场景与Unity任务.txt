@@ -56,7 +56,7 @@
 | A-CHAR-TRIPO-STRICT-SLOT-03 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-GEN-03 | 苻渊 Tripo 严格轮 slot-03 换绑验证 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-SLOT-03.txt |
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 冻结 | A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
 | U-SHIJIAHOU-3D-PROTO-01 | P1 | codex | 冻结 | U-CHAR-HUMANOID-PROTO-01 | 石甲兽重型四足技术样例 | 开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt |
-| A-CHAR-PORTRAIT-STYLE-01 | P1 | codex | 已排队 | — | 默认男主模块化 UI 立绘八组合样张 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt |
+| A-CHAR-PORTRAIT-STYLE-01 | P1 | codex | 待决定 | — | 默认男主模块化 UI 立绘八组合样张 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt |
 | U-CHAR-3D-FORMAL-01 | P1 | codex | 冻结 | A-CHAR-PORTRAIT-STYLE-01 | 正式 Adventure 3D 替换 | 开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt |
 | U-CHAR-CREATION-VISUAL-01 | P1 | codex | 冻结 | U-CHAR-3D-FORMAL-01 | 完整首版创角外观批次 | 开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |

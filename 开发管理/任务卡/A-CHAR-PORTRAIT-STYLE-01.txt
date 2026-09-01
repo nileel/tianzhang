@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-09-02：具名前置 A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01 已完成归档；当前仓库已有完整输入合同、预期路径、验证、完成条件和停止条件，本卡可按既定边界生产并评审默认男主模块化 UI 立绘八组合。",
+  "stateReason": "等待负责人决定：组件生产合同已冻结为九次唯一输入且禁止重试。是否批准按该合同生成并进入八组合视觉评审？",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_half_up_long_01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_high_ponytail_01.png",
@@ -53,8 +53,62 @@
     "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt",
     "开发管理/任务归档/A-CHAR-PORTRAIT-STYLE-01.txt"
   ],
-  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "A-CHAR-PORTRAIT-STYLE-01",
+    "sourceRunId": "d0a0b1fb-cfc8-4808-bbc9-3a2eff17430b",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260902-CD3DABC21EAF8F",
+    "question": "组件生产合同已冻结为九次唯一输入且禁止重试。是否批准按该合同生成并进入八组合视觉评审？",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准九次生成"
+      },
+      {
+        "key": "B",
+        "label": "修订提示合同"
+      },
+      {
+        "key": "C",
+        "label": "停止本卡"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 允许仅按 checkpoint 中的九次组件输入继续；B 保持任务可恢复以修改合同；C 停止且不生成任何组件。",
+    "plainSummary": {
+      "situation": "组件生产合同已冻结为九次唯一输入且禁止重试。是否批准按该合同生成并进入八组合视觉评审？",
+      "impact": "A 允许仅按 checkpoint 中的九次组件输入继续；B 保持任务可恢复以修改合同；C 停止且不生成任何组件。",
+      "action": "建议选择 A：批准九次生成"
+    },
+    "checkpointCommit": "ae18c25680fd09fa2e6fd2d4855cf81544582946",
+    "baseCommit": "812c04fae5e380377030b687c58c475237298240",
+    "branch": "codex/automation/codex/d0a0b1fb-cfc8-4808-bbc9-3a2eff17430b/candidate",
+    "changedPaths": [
+      "assets/generated-character-art/player-modular-portrait-style-v1/prompts.md"
+    ],
+    "verified": [
+      "组件提示合同限定为九次唯一组件输入",
+      "冻结画布、图层所有权、锚点、绿幕透明处理与停止条件",
+      "check-pending-whitespace",
+      "git diff --cached --check",
+      "git diff --check 基线至 checkpoint"
+    ],
+    "unverified": [
+      "九个组件的视觉质量、锚点接缝和八组合兼容性尚未生成"
+    ],
+    "residualRisk": "独立组件生成必须先获负责人对提示合同和九次固定生成预算的批准；未获批准不能开始生成。",
+    "taskContextDigest": "847a305ca1938a284eb106ae79928c162e5eba6e371eb2c615eb1bf0d0d11b86",
+    "createdAt": "2026-09-02T02:19:32.5067079+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # A-CHAR-PORTRAIT-STYLE-01 · 默认男主模块化 UI 立绘八组合样张
