@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "A-CHAR-PORTRAIT-STYLE-01",
   "title": "默认男主模块化 UI 立绘八组合样张",
   "priority": "P1",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01"],
-  "stateReason": "2026-09-02：等待前置卡正式进入 master 后由 QueueMaintenance 移除具名前置；本卡只生产和评审默认男主模块化 UI 立绘八组合，不含 3D Toon 或运行时接入。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-02：具名前置 A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01 已完成归档；当前仓库已有完整输入合同、预期路径、验证、完成条件和停止条件，本卡可按既定边界生产并评审默认男主模块化 UI 立绘八组合。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_half_up_long_01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_high_ponytail_01.png",
@@ -53,6 +53,7 @@
     "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt",
     "开发管理/任务归档/A-CHAR-PORTRAIT-STYLE-01.txt"
   ],
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
