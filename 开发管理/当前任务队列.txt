@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01 | codex_execute | codex | P1 | content | design | 默认男主模块化 UI 立绘输入冻结 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01.txt |

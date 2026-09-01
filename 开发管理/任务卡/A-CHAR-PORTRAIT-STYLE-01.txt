@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-08-27：D-CHAR-APPEARANCE-01 已归档；当前目录仅有 none 档案，尚无经批准的玩家脸型、发型、服装稳定 ID 及与 3D 模块配对的 2D 样张来源。未能冻结八组合的源图、导出、Unity、证据和登记字面量路径前保持阻塞。",
+  "blockedBy": ["A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01"],
+  "stateReason": "2026-09-02：书面输入合同已获负责人批准；等待 A-CHAR-PORTRAIT-STYLE-INPUT-FREEZE-01 建立一致的机器可读投影并冻结本卡的 UI 立绘生产职责与全部字面量路径。旧 3D Toon 路线不再属于本卡。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
