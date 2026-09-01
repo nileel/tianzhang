@@ -580,8 +580,8 @@ try {
 
   $archivePostconditionRoot = Join-Path $tempRoot 'archive-postcondition'
   $archiveFixture = New-Fixture $archivePostconditionRoot
-  $completedArchive = Copy-Metadata $archiveFixture.Ready
-  $completedArchive.dispatchState = 'completed'
+  # 迁移合同：schema 1 completed 归档仍合法，激活不批量迁移 completed 归档。
+  $completedArchive = Get-Metadata -Id 'T-READY-01' -Title '合法 ready 卡' -DispatchState 'completed' -StateReason '已完成归档'
   Set-Archive $archivePostconditionRoot $completedArchive
   Remove-Item -LiteralPath (Join-Path $archivePostconditionRoot '开发管理/任务卡/T-READY-01.txt') -Force
   Set-Queue $archivePostconditionRoot @()
@@ -591,7 +591,7 @@ try {
     '-Postcondition', 'CodexClosedOrNonReady',
     '-OutputJson'
   )
-  Assert-True ($archivePostcondition.ExitCode -eq 0) "exact completed archive should pass CodexClosedOrNonReady: $($archivePostcondition.Output)"
+  Assert-True ($archivePostcondition.ExitCode -eq 0) "schema 1 completed archive should pass CodexClosedOrNonReady: $($archivePostcondition.Output)"
   $archiveEvidence = $archivePostcondition.Output | ConvertFrom-Json
   Assert-True ($archiveEvidence.taskState -ceq 'completed') 'archive lifecycle evidence mismatch'
 

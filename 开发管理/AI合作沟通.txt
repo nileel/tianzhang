@@ -329,3 +329,16 @@
 - 残留风险：非 ready 的 schema 1 卡按原样保留，其后续重新 ready 必须生成 schema 2 实时投影（现由全局拒绝 + QueueMaintenance guard 双重约束）；本候选标 ⚠️ 未审核，等待 Codex 独立复审与共享入口正式集成。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-READY-SCHEMA2-ACTIVATE-01-f9a35a83 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-READY-SCHEMA2-ACTIVATE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-READY-SCHEMA2-ACTIVATE-01
+- 候选提交：237f66ae8eba83fec3415d642204e4ed98d30ae5
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/test-check-task-cards.ps1
+- 已验证：pwsh tools/test-check-task-cards.ps1 → PASS；pwsh tools/check-task-cards.ps1 -OutputJson → status=ok cardCount=46 readyCount=1（无 schema 1 ready）；pwsh tools/check-review-text.ps1 -Paths 开发管理,tools → OK（579 files）；git diff --check 与 check-pending-whitespace → OK
+- 未验证：未在本轮逐卡重跑 get-experience-risk-preflight（本轮仅改测试文件，未触及任何任务卡投影；激活迁移已在 aeabf192 完成并保留原预检证据）
+- 残留风险：纯测试覆盖修复，不改变检查器行为；生产侧 schema 1 completed 归档仍合法的逻辑未改动。残留风险仅在于后续若有人再次让 New-Fixture 的 ready 卡或 completed 归档 fixture 偏离本迁移合同，可能再度失去该覆盖。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
