@@ -9,8 +9,8 @@
   "domain": "management",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-READY-SCHEMA2-ACTIVATE-01"],
-  "stateReason": "等待强制激活；从激活提交后按固定纳入规则收集前 20 个相关完成任务，未满 20 个不得提前门禁或扩域。",
+  "blockedBy": [],
+  "stateReason": "强制激活已完成；等待激活提交后按固定纳入规则收集前 20 个相关完成任务及其 schema 2 预检证据，未满 20 个不得提前门禁或扩域。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-20-task-observation.md",
     "开发管理/任务列表/管理与自动化任务.txt",
