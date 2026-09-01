@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-09-01：具名前置 M-EXP-HOURLY-PREFLIGHT-01 已完成归档且无活跃同 ID 冲突；本卡的完整实施边界、冻结路径、验证、完成与停止条件已具备，已恢复 external_execute/deepseek/ready。",
+  "dispatchState": "blocked",
+  "blockedBy": ["M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01"],
+  "stateReason": "2026-09-01：首次恢复 ready 时仍为 schema 1，DeepSeek 写前预检以 experience_preflight_schema_invalid 失败；失败 run 已按精确 CompleteRun 合同关闭并保留证据。本卡恢复 blocked，直接依赖 M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01，待该修复归档后由正常 QueueMaintenance 以 schema 2 实时投影重新 ready。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",

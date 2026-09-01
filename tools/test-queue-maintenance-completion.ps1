@@ -21,16 +21,41 @@ $repository = Join-Path $tempRoot 'repository'
 $approvedStateParent = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex/automation-state')).TrimEnd('\', '/')
 $stateRoot = Join-Path $approvedStateParent "tzg-maintenance-completion-test-$testId"
 $toolsRoot = Join-Path $repository 'tools'
+$guardTracePath = Join-Path $tempRoot 'queue-guard-trace.txt'
+$originalGuardTrace = $env:TZG_QUEUE_GUARD_TRACE
+$originalMainRoot = $env:TZG_QUEUE_MAIN_ROOT
 
 try {
   [IO.Directory]::CreateDirectory($toolsRoot) | Out-Null
   foreach ($name in @(
-      'invoke-hourly-owner.ps1', 'hourly-automation-lease.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'set-task-automation-state.ps1',
+      'invoke-hourly-owner.ps1', 'hourly-automation-lease.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'get-experience-risk-preflight.ps1', 'set-task-automation-state.ps1',
       'set-task-pending-review.ps1', 'automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1',
       'send-feishu-notification.ps1', 'private-path-acl.ps1', 'hourly-integration-lock.ps1', 'hourly-owner-adapter.ps1'
     )) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $toolsRoot $name)
   }
+  Move-Item -LiteralPath (Join-Path $toolsRoot 'check-task-cards.ps1') -Destination (Join-Path $toolsRoot 'check-task-cards-core.ps1')
+  $checkerWrapper = @'
+#requires -Version 7.0
+param(
+  [string]$RepositoryRoot, [string]$TaskCardRoot = '开发管理/任务卡', [string]$QueuePath = '开发管理/当前任务队列.txt',
+  [string]$BacklogRoot = '开发管理/任务列表', [string]$TaskId, [string]$Postcondition, [string]$BaseCommit,
+  [string]$ExpectedRoute, [string]$ExpectedOwner, [switch]$OutputJson
+)
+if ([string]$Postcondition -ceq 'QueueMaintenanceReadySchema2Guard') {
+  [IO.File]::AppendAllText($env:TZG_QUEUE_GUARD_TRACE, "$Postcondition|$BaseCommit`n", [Text.UTF8Encoding]::new($false))
+}
+$arguments = @('-RepositoryRoot', $RepositoryRoot, '-TaskCardRoot', $TaskCardRoot, '-QueuePath', $QueuePath, '-BacklogRoot', $BacklogRoot)
+if (-not [string]::IsNullOrWhiteSpace($TaskId)) { $arguments += @('-TaskId', $TaskId) }
+if (-not [string]::IsNullOrWhiteSpace($Postcondition)) { $arguments += @('-Postcondition', $Postcondition) }
+if (-not [string]::IsNullOrWhiteSpace($BaseCommit)) { $arguments += @('-BaseCommit', $BaseCommit) }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedRoute)) { $arguments += @('-ExpectedRoute', $ExpectedRoute) }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedOwner)) { $arguments += @('-ExpectedOwner', $ExpectedOwner) }
+if ($OutputJson) { $arguments += '-OutputJson' }
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-task-cards-core.ps1') @arguments
+exit $LASTEXITCODE
+'@
+  Write-Utf8 (Join-Path $toolsRoot 'check-task-cards.ps1') $checkerWrapper
 
   $candidateSource = @'
 #requires -Version 7.0
@@ -55,6 +80,12 @@ $paths = @('开发管理/自动工作流状态.txt')
 & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'automation-finalize-commit.ps1') -RepositoryRoot $RepositoryRoot -ExpectedPaths ($paths -join '|') -CommitMessage 'candidate(QUEUE-MAINTENANCE): test ordinary completion' -RequireAutomationMetadata -AutomationTask 'QUEUE-MAINTENANCE' -AutomationState completed -AutomationResult $resultText -AutomationImpact $impactText -AutomationVerify $verifyText -AutomationPlain $plainText *> $null
 if ($LASTEXITCODE -ne 0) { throw 'fixture finalizer failed' }
 $commit = @(& git -C $RepositoryRoot rev-parse HEAD)[0]
+$mainRoot = $env:TZG_QUEUE_MAIN_ROOT
+$concurrentPath = Join-Path $mainRoot '开发管理/并发事实.txt'
+[IO.File]::WriteAllText($concurrentPath, "# 并发事实`n", [Text.UTF8Encoding]::new($false))
+& git -C $mainRoot add -- '开发管理/并发事实.txt'
+& git -C $mainRoot commit -q -m 'test: advance master before canonical replay'
+if ($LASTEXITCODE -ne 0) { throw 'fixture concurrent master commit failed' }
 $candidateResult = [ordered]@{
   category = 'completed'; expectedTransition = 'queue_ready_count=0'; changedPaths = $paths
   verified = @('ordinary QueueMaintenance fixture'); unverified = @(); residualRisk = 'none'
@@ -84,6 +115,9 @@ $json = [ordered]@{
   & git -C $repository add -A
   & git -C $repository commit -q -m 'test: seed ordinary queue maintenance'
   if ($LASTEXITCODE -ne 0) { throw 'fixture seed commit failed' }
+  $candidateBase = [string]@(& git -C $repository rev-parse HEAD)[0]
+  $env:TZG_QUEUE_GUARD_TRACE = $guardTracePath
+  $env:TZG_QUEUE_MAIN_ROOT = $repository
 
   $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $toolsRoot 'invoke-hourly-owner.ps1') -Owner codex -Action RunOnce -RepositoryRoot $repository -Model gpt-test -StateRoot $stateRoot 2>$null)
   Assert-True ($LASTEXITCODE -eq 0 -and $output.Count -eq 1) "Ordinary maintenance run failed: $($output -join ' | ')"
@@ -95,6 +129,13 @@ $json = [ordered]@{
   Assert-True ($terminal.PSObject.Properties.Name -cnotcontains 'decisionId') 'Ordinary maintenance unexpectedly returned decisionId'
   Assert-True ($terminal.PSObject.Properties.Name -cnotcontains 'decisionTaskId') 'Ordinary maintenance unexpectedly returned decisionTaskId'
   Assert-True ([string]$terminal.status -cne 'attention_required') 'Ordinary maintenance was misreported as attention_required'
+  $canonicalBase = [string]@(& git -C $repository rev-parse "$([string]$terminal.formalHead)^")[0]
+  Assert-True ($canonicalBase -cne $candidateBase) 'Fixture did not advance master between candidate and canonical replay'
+  $guardCalls = @([IO.File]::ReadAllLines($guardTracePath) | Where-Object { $_ })
+  Assert-True ($guardCalls.Count -eq 2) "Canonical and post-fast-forward checks did not both call the QueueMaintenance guard: $($guardCalls -join '|')"
+  foreach ($guardCall in $guardCalls) {
+    Assert-True ($guardCall -ceq "QueueMaintenanceReadySchema2Guard|$canonicalBase") "QueueMaintenance guard reused the candidate base instead of the latest canonical base: $guardCall"
+  }
 
   $runtimeOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $toolsRoot 'hourly-automation-lease.ps1') -Action Show -StateRoot $stateRoot -RepositoryRoot $repository 2>$null)
   Assert-True ($LASTEXITCODE -eq 0 -and $runtimeOutput.Count -eq 1) 'Fixture runtime Show failed'
@@ -103,6 +144,8 @@ $json = [ordered]@{
   Assert-True ([string]$runtime.integrationLockStatus -ceq 'none') 'Ordinary maintenance left the integration lock held'
   Write-Output 'test-queue-maintenance-completion: PASS'
 } finally {
+  $env:TZG_QUEUE_GUARD_TRACE = $originalGuardTrace
+  $env:TZG_QUEUE_MAIN_ROOT = $originalMainRoot
   if (Test-Path -LiteralPath $stateRoot) {
     $resolvedState = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $stateRoot).Path)
     Assert-True ($resolvedState.StartsWith($approvedStateParent + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and

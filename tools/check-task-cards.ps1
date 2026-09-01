@@ -7,8 +7,9 @@ param(
   [string]$QueuePath = '开发管理/当前任务队列.txt',
   [string]$BacklogRoot = '开发管理/任务列表',
   [string]$TaskId,
-  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview', 'MaintenancePendingDecision', 'MaintenanceResolvedReady', 'MaintenanceResolvedBlocked', 'MaintenanceExpiredBlocked')]
+  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview', 'MaintenancePendingDecision', 'MaintenanceResolvedReady', 'MaintenanceResolvedBlocked', 'MaintenanceExpiredBlocked', 'QueueMaintenanceReadySchema2Guard')]
   [string]$Postcondition,
+  [string]$BaseCommit,
   [ValidateSet('codex_execute', 'codex_review')]
   [string]$ExpectedRoute,
   [ValidateSet('deepseek', 'claude')]
@@ -33,6 +34,33 @@ function Read-Utf8Text {
   } catch {
     throw "invalid UTF-8: $Path"
   }
+}
+
+function Invoke-Git {
+  param([string]$Root, [string[]]$Arguments)
+  $start = [Diagnostics.ProcessStartInfo]::new()
+  $start.FileName = 'git'
+  $start.WorkingDirectory = $Root
+  $start.UseShellExecute = $false
+  $start.CreateNoWindow = $true
+  $start.RedirectStandardOutput = $true
+  $start.RedirectStandardError = $true
+  $start.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
+  $start.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
+  foreach ($argument in @('-C', $Root) + $Arguments) { $start.ArgumentList.Add($argument) }
+  $process = [Diagnostics.Process]::new()
+  $process.StartInfo = $start
+  Assert-Contract ($process.Start()) 'could not start git'
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $result = [pscustomobject]@{
+    ExitCode = $process.ExitCode
+    StdOut = $stdoutTask.GetAwaiter().GetResult()
+    StdErr = $stderrTask.GetAwaiter().GetResult()
+  }
+  $process.Dispose()
+  $result
 }
 
 function Normalize-Cell {
@@ -246,8 +274,8 @@ function Get-TableRows {
 }
 
 function Get-Card {
-  param([string]$Path, [switch]$AllowCompleted)
-  $text = Read-Utf8Text $Path
+  param([string]$Path, [switch]$AllowCompleted, [AllowEmptyString()][string]$Text)
+  $text = if ($PSBoundParameters.ContainsKey('Text')) { $Text.TrimStart([char]0xFEFF) } else { Read-Utf8Text $Path }
   $metaMarkers = [regex]::Matches($text, '(?m)^---TASK-META---\r?$')
   $bodyMarkers = [regex]::Matches($text, '(?m)^---TASK-BODY---\r?$')
   Assert-Contract ($metaMarkers.Count -eq 1) "metadata delimiter count invalid: $Path"
@@ -309,11 +337,18 @@ try {
   Assert-RepositoryRelativePath $BacklogRoot 'BacklogRoot'
   $hasTaskId = -not [string]::IsNullOrWhiteSpace($TaskId)
   $hasPostcondition = -not [string]::IsNullOrWhiteSpace($Postcondition)
+  $isQueueMaintenanceGuard = $Postcondition -ceq 'QueueMaintenanceReadySchema2Guard'
+  $hasBaseCommit = -not [string]::IsNullOrWhiteSpace($BaseCommit)
   $hasExpectedRoute = -not [string]::IsNullOrWhiteSpace($ExpectedRoute)
   $hasExpectedOwner = -not [string]::IsNullOrWhiteSpace($ExpectedOwner)
   $taskState = $null
   $taskExpectedPaths = $null
-  Assert-Contract ($hasTaskId -eq $hasPostcondition) 'TaskId and Postcondition must be provided together'
+  Assert-Contract ($hasTaskId -eq ($hasPostcondition -and -not $isQueueMaintenanceGuard)) 'TaskId is required for task-scoped postconditions and forbidden for QueueMaintenanceReadySchema2Guard'
+  if ($isQueueMaintenanceGuard) {
+    Assert-Contract $hasBaseCommit 'BaseCommit is required for QueueMaintenanceReadySchema2Guard'
+  } else {
+    Assert-Contract (-not $hasBaseCommit) 'BaseCommit is only valid for QueueMaintenanceReadySchema2Guard'
+  }
   if ($Postcondition -ceq 'CodexDispatchReady') {
     Assert-Contract $hasExpectedRoute 'ExpectedRoute is required for CodexDispatchReady'
   } else {
@@ -331,6 +366,19 @@ try {
       $TaskId -cnotin @('.', '..')
     ) "invalid TaskId: $TaskId"
   }
+  $resolvedBaseCommit = $null
+  $baseCardById = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal)
+  if ($isQueueMaintenanceGuard) {
+    Assert-Contract ($BaseCommit -ceq $BaseCommit.Trim()) 'BaseCommit must not contain surrounding whitespace'
+    Assert-Contract ($BaseCommit -cmatch '^[0-9a-f]{40,64}$') 'BaseCommit must be a full lowercase commit ID'
+    $baseResult = Invoke-Git $repositoryPath @('rev-parse', '--verify', "$BaseCommit^{commit}")
+    Assert-Contract ($baseResult.ExitCode -eq 0 -and $baseResult.StdOut.Trim() -cmatch '^[0-9a-f]{40,64}$') 'BaseCommit is not a resolvable commit'
+    $resolvedBaseCommit = $baseResult.StdOut.Trim()
+    $headResult = Invoke-Git $repositoryPath @('rev-parse', '--verify', 'HEAD^{commit}')
+    Assert-Contract ($headResult.ExitCode -eq 0 -and $headResult.StdOut.Trim() -cmatch '^[0-9a-f]{40,64}$') 'HEAD is not a resolvable commit'
+    $ancestorResult = Invoke-Git $repositoryPath @('merge-base', '--is-ancestor', $resolvedBaseCommit, $headResult.StdOut.Trim())
+    Assert-Contract ($ancestorResult.ExitCode -eq 0) 'BaseCommit must be an ancestor of current HEAD'
+  }
   $taskCardPath = Join-Path $repositoryPath $TaskCardRoot
   Assert-Contract (Test-Path -LiteralPath $taskCardPath -PathType Container) "missing task-card directory: $taskCardPath"
   $cards = @()
@@ -341,6 +389,25 @@ try {
     Assert-Contract (-not $cardById.ContainsKey($id)) "duplicate card ID: $id"
     $cardById[$id] = $card
     $cards += $card
+  }
+  if ($isQueueMaintenanceGuard) {
+    $treeResult = Invoke-Git $repositoryPath @('-c', 'core.quotepath=false', 'ls-tree', '-r', '--name-only', $resolvedBaseCommit, '--', $TaskCardRoot)
+    Assert-Contract ($treeResult.ExitCode -eq 0) 'could not enumerate BaseCommit task cards'
+    $prefix = $TaskCardRoot.TrimEnd('/') + '/'
+    $basePaths = @($treeResult.StdOut -split '\r?\n' | Where-Object {
+      $_.StartsWith($prefix, [StringComparison]::Ordinal) -and
+      $_.EndsWith('.txt', [StringComparison]::Ordinal) -and
+      -not $_.Substring($prefix.Length).Contains('/')
+    })
+    foreach ($relativePath in $basePaths) {
+      $showResult = Invoke-Git $repositoryPath @('show', "${resolvedBaseCommit}:$relativePath")
+      Assert-Contract ($showResult.ExitCode -eq 0) "could not read BaseCommit task card: $relativePath"
+      $baseCard = Get-Card -Path "${resolvedBaseCommit}:$relativePath" -Text $showResult.StdOut
+      $baseId = [string]$baseCard.Metadata.id
+      Assert-Contract ((Split-Path -Leaf $relativePath) -ceq "$baseId.txt") "BaseCommit filename/id mismatch: $relativePath"
+      Assert-Contract (-not $baseCardById.ContainsKey($baseId)) "duplicate BaseCommit card ID: $baseId"
+      $baseCardById[$baseId] = $baseCard
+    }
   }
   foreach ($card in $cards) {
     $id = [string]$card.Metadata.id
@@ -526,6 +593,15 @@ try {
     }
     Assert-Contract ([string]$metadata.dispatchState -ceq $expected[0] -and [string]$decision.status -ceq $expected[1]) "$Postcondition mismatch: $TaskId"
     $taskState = [string]$metadata.dispatchState
+  }
+  if ($isQueueMaintenanceGuard) {
+    foreach ($card in $readyCards) {
+      $id = [string]$card.Metadata.id
+      $enteredReady = -not $baseCardById.ContainsKey($id) -or [string]$baseCardById[$id].Metadata.dispatchState -cne 'ready'
+      if (-not $enteredReady) { continue }
+      Assert-Contract ([int]$card.Metadata.schemaVersion -eq 2) "QueueMaintenance ready transition requires schemaVersion=2: $id"
+      # Every current schema 2 ready card was structurally checked and recomputed through Assert-Schema2Projection above.
+    }
   }
 
   if ($OutputJson) {

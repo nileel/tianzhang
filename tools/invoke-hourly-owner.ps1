@@ -468,7 +468,7 @@ function Write-Handoff {
 }
 
 function Assert-Postcondition {
-  param([object]$Run, [string]$Worktree)
+  param([object]$Run, [string]$Worktree, [string]$BaseCommit)
   if ([string]$Run.candidateResult.expectedTransition -ceq 'maintenance_pending_decision') {
     $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-TaskId', [string]$Run.candidateResult.decisionTaskId, '-Postcondition', 'MaintenancePendingDecision', '-OutputJson') 'hourly_postcondition_failed'
     if ([string]$evidence.taskState -cne 'pending_decision') { Stop-Hourly 'hourly_postcondition_failed' }
@@ -476,8 +476,11 @@ function Assert-Postcondition {
     $postcondition = if ([string]$Run.candidateResult.resolutionState -ceq 'ready') { 'MaintenanceResolvedReady' } else { 'MaintenanceResolvedBlocked' }
     $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-TaskId', [string]$Run.candidateResult.decisionTaskId, '-Postcondition', $postcondition, '-OutputJson') 'hourly_postcondition_failed'
     if ([string]$evidence.taskState -cne [string]$Run.candidateResult.resolutionState) { Stop-Hourly 'hourly_postcondition_failed' }
+    if ([string]$Run.candidateResult.resolutionState -ceq 'ready') {
+      $null = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $BaseCommit, '-OutputJson') 'hourly_postcondition_failed'
+    }
   } elseif ([string]$Run.route -ceq 'queue_maintenance') {
-    $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-OutputJson') 'hourly_postcondition_failed'
+    $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $BaseCommit, '-OutputJson') 'hourly_postcondition_failed'
     if ([string]$Run.candidateResult.expectedTransition -cne "queue_ready_count=$([int]$evidence.readyCount)") { Stop-Hourly 'hourly_postcondition_failed' }
   } elseif ($Owner -ceq 'deepseek') {
     $evidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $Worktree, '-TaskId', [string]$Run.taskId, '-Postcondition', 'ExternalPendingReview', '-OutputJson') 'hourly_postcondition_failed'
@@ -501,7 +504,7 @@ function Invoke-CombinedValidation {
     if ($LASTEXITCODE -ne 0) { Stop-Hourly 'hourly_whitespace_failed' }
   }
   $null = Invoke-GitText $Worktree @('-c', 'core.whitespace=-blank-at-eol', 'diff', '--check', "$Base..$Head") 'hourly_diff_check_failed'
-  Assert-Postcondition -Run $Run -Worktree $Worktree
+  Assert-Postcondition -Run $Run -Worktree $Worktree -BaseCommit $Base
   if (@($changed | Where-Object { $_ -match '^(docs/|src/Assets/(?:Resources|StreamingAssets)/|.+\.(?:csv|json)$)' }).Count -gt 0) {
     $dataChainExitCode = 1
     Push-Location -LiteralPath $Worktree
@@ -630,7 +633,7 @@ function Build-And-IntegrateCandidate {
     if ((Invoke-GitText $script:root @('branch', '--show-current')) -cne 'master' -or (Invoke-GitText $script:root @('rev-parse', 'HEAD')) -cne $latest -or (Test-MainPathConflict $formalPaths)) { Stop-Hourly 'hourly_integration_precondition_changed' }
     $null = Invoke-GitText $script:root @('merge', '--ff-only', $formalHead) 'hourly_fast_forward_failed'
     if ((Invoke-GitText $script:root @('rev-parse', 'HEAD')) -cne $formalHead) { Stop-Hourly 'hourly_fast_forward_verification_failed' }
-    Assert-Postcondition -Run $Run -Worktree $script:root
+    Assert-Postcondition -Run $Run -Worktree $script:root -BaseCommit $latest
     $null = Invoke-Runtime -RuntimeAction UpdateRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; RunState = 'integrated'; CanonicalHead = $formalHead }
     $closed = Invoke-Runtime -RuntimeAction CompleteRun -Parameters @{ Owner = $Owner; RunId = [string]$Run.runId; CompletionCategory = 'success'; DetailCode = "commit_$($formalHead.Substring(0, 12))" }
     $resultStatus = if ([string]$Run.candidateResult.expectedTransition -ceq 'maintenance_pending_decision') { 'decision_requested' } elseif ([string]$Run.route -ceq 'queue_maintenance') { 'maintenance_completed' } else { 'completed' }

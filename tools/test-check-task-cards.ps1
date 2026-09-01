@@ -220,6 +220,23 @@ function Assert-OverrideFailure {
   Assert-True ($result.Output -match [regex]::Escape($Expected)) "$Name missing '$Expected': $($result.Output)"
 }
 
+function Invoke-FixtureGit {
+  param([string]$Root, [string[]]$Arguments)
+  $output = @(& git -C $Root @Arguments 2>&1)
+  if ($LASTEXITCODE -ne 0) { throw "fixture git failed: $($Arguments -join ' '): $($output -join "`n")" }
+  (@($output) -join "`n").Trim()
+}
+
+function Initialize-FixtureRepository {
+  param([string]$Root)
+  Invoke-FixtureGit $Root @('init', '-q', '-b', 'master') | Out-Null
+  Invoke-FixtureGit $Root @('config', 'user.name', 'Task Card Guard Test') | Out-Null
+  Invoke-FixtureGit $Root @('config', 'user.email', 'task-card-guard@example.invalid') | Out-Null
+  Invoke-FixtureGit $Root @('add', '-A') | Out-Null
+  Invoke-FixtureGit $Root @('commit', '-q', '-m', 'test: seed task-card transition base') | Out-Null
+  Invoke-FixtureGit $Root @('rev-parse', 'HEAD')
+}
+
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("check-task-cards-test-" + [guid]::NewGuid().ToString('N'))
 try {
   [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
@@ -591,6 +608,94 @@ try {
   )
   Assert-True ($staleArchivePostcondition.ExitCode -ne 0) 'stale backlog row after archive should fail CodexClosedOrNonReady'
   Assert-True ($staleArchivePostcondition.Output -match 'archived TaskId remains in backlog') "stale archive missing backlog diagnostic: $($staleArchivePostcondition.Output)"
+
+  # ---- QueueMaintenance ready schema 2 transition guard ----
+  $guardParameterRoot = Join-Path $tempRoot 'queue-ready-guard-parameters'
+  New-Fixture $guardParameterRoot | Out-Null
+  $guardParameterBase = Initialize-FixtureRepository $guardParameterRoot
+  Assert-OverrideFailure 'QueueMaintenance guard requires BaseCommit' $guardParameterRoot 'BaseCommit is required for QueueMaintenanceReadySchema2Guard' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard'
+  )
+  Assert-OverrideFailure 'global check forbids BaseCommit' $guardParameterRoot 'BaseCommit is only valid for QueueMaintenanceReadySchema2Guard' @(
+    '-BaseCommit', $guardParameterBase
+  )
+  Assert-OverrideFailure 'task-scoped postcondition forbids BaseCommit' $guardParameterRoot 'BaseCommit is only valid for QueueMaintenanceReadySchema2Guard' @(
+    '-TaskId', 'T-READY-01', '-Postcondition', 'CodexClosedOrNonReady', '-BaseCommit', $guardParameterBase
+  )
+  Assert-OverrideFailure 'QueueMaintenance guard forbids TaskId' $guardParameterRoot 'TaskId is required for task-scoped postconditions and forbidden for QueueMaintenanceReadySchema2Guard' @(
+    '-TaskId', 'T-READY-01', '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardParameterBase
+  )
+  Assert-OverrideFailure 'QueueMaintenance guard rejects non-full base' $guardParameterRoot 'BaseCommit must be a full lowercase commit ID' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', 'not-a-commit'
+  )
+  Assert-OverrideFailure 'QueueMaintenance guard rejects unresolvable base' $guardParameterRoot 'BaseCommit is not a resolvable commit' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', ('f' * 40)
+  )
+  Invoke-FixtureGit $guardParameterRoot @('switch', '-q', '-c', 'side') | Out-Null
+  Write-Utf8 (Join-Path $guardParameterRoot 'side-only.txt') 'side'
+  Invoke-FixtureGit $guardParameterRoot @('add', 'side-only.txt') | Out-Null
+  Invoke-FixtureGit $guardParameterRoot @('commit', '-q', '-m', 'test: side-only base') | Out-Null
+  $nonAncestorBase = Invoke-FixtureGit $guardParameterRoot @('rev-parse', 'HEAD')
+  Invoke-FixtureGit $guardParameterRoot @('switch', '-q', 'master') | Out-Null
+  Assert-OverrideFailure 'QueueMaintenance guard rejects non-ancestor base' $guardParameterRoot 'BaseCommit must be an ancestor of current HEAD' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $nonAncestorBase
+  )
+
+  $guardSchema1TransitionRoot = Join-Path $tempRoot 'queue-ready-guard-schema1-transition'
+  $guardSchema1Fixture = New-Fixture $guardSchema1TransitionRoot
+  $guardSchema1Base = Initialize-FixtureRepository $guardSchema1TransitionRoot
+  $guardSchema1Ready = Copy-Metadata $guardSchema1Fixture.Blocked
+  $guardSchema1Ready.dispatchState = 'ready'
+  $guardSchema1Ready.stateReason = 'fixture restored ready'
+  Set-Card $guardSchema1TransitionRoot $guardSchema1Ready
+  Set-Queue $guardSchema1TransitionRoot @($guardSchema1Fixture.Ready, $guardSchema1Ready)
+  Set-Backlog $guardSchema1TransitionRoot @($guardSchema1Fixture.Ready, $guardSchema1Ready)
+  Assert-OverrideFailure 'blocked schema 1 to ready schema 1 transition' $guardSchema1TransitionRoot 'QueueMaintenance ready transition requires schemaVersion=2: T-BLOCKED-01' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardSchema1Base
+  )
+
+  $guardSchema2TransitionRoot = Join-Path $tempRoot 'queue-ready-guard-schema2-transition'
+  $guardSchema2Fixture = New-Fixture $guardSchema2TransitionRoot
+  Set-RiskIndex $guardSchema2TransitionRoot
+  $guardSchema2Base = Initialize-FixtureRepository $guardSchema2TransitionRoot
+  $guardSchema2Ready = Get-Schema2Metadata -Id 'T-BLOCKED-01' -Title '合法 blocked 卡' -StateReason 'fixture restored ready with live projection'
+  Set-Card $guardSchema2TransitionRoot $guardSchema2Ready
+  Set-Queue $guardSchema2TransitionRoot @($guardSchema2Fixture.Ready, $guardSchema2Ready)
+  Set-Backlog $guardSchema2TransitionRoot @($guardSchema2Fixture.Ready, $guardSchema2Ready)
+  $guardSchema2Result = Invoke-Checker $guardSchema2TransitionRoot @('-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardSchema2Base, '-OutputJson')
+  Assert-True ($guardSchema2Result.ExitCode -eq 0) "blocked schema 1 to ready schema 2 transition should pass: $($guardSchema2Result.Output)"
+  $guardSchema2Evidence = $guardSchema2Result.Output | ConvertFrom-Json
+  Assert-True ([string]$guardSchema2Evidence.postcondition -ceq 'QueueMaintenanceReadySchema2Guard') 'QueueMaintenance guard JSON evidence lost its postcondition'
+
+  $guardNewSchema1Root = Join-Path $tempRoot 'queue-ready-guard-new-schema1'
+  $guardNewSchema1Fixture = New-Fixture $guardNewSchema1Root
+  $guardNewSchema1Base = Initialize-FixtureRepository $guardNewSchema1Root
+  $guardNewSchema1Card = Get-Metadata -Id 'T-NEW-READY-01' -Title '新建 ready schema 1 卡'
+  Set-Card $guardNewSchema1Root $guardNewSchema1Card
+  Set-Queue $guardNewSchema1Root @($guardNewSchema1Fixture.Ready, $guardNewSchema1Card)
+  Set-Backlog $guardNewSchema1Root @($guardNewSchema1Fixture.Ready, $guardNewSchema1Fixture.Blocked, $guardNewSchema1Card)
+  Assert-OverrideFailure 'new ready schema 1 card' $guardNewSchema1Root 'QueueMaintenance ready transition requires schemaVersion=2: T-NEW-READY-01' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardNewSchema1Base
+  )
+
+  $guardUnchangedSchema1Root = Join-Path $tempRoot 'queue-ready-guard-unchanged-schema1'
+  New-Fixture $guardUnchangedSchema1Root | Out-Null
+  $guardUnchangedSchema1Base = Initialize-FixtureRepository $guardUnchangedSchema1Root
+  $guardUnchangedSchema1 = Invoke-Checker $guardUnchangedSchema1Root @('-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardUnchangedSchema1Base)
+  Assert-True ($guardUnchangedSchema1.ExitCode -eq 0) "base/current ready schema 1 should remain legal: $($guardUnchangedSchema1.Output)"
+
+  $guardMissingArrayRoot = Join-Path $tempRoot 'queue-ready-guard-missing-array'
+  $guardMissingArrayFixture = New-Fixture $guardMissingArrayRoot
+  Set-RiskIndex $guardMissingArrayRoot
+  $guardMissingArrayBase = Initialize-FixtureRepository $guardMissingArrayRoot
+  $guardMissingArrayCard = Get-Schema2Metadata -Id 'T-BLOCKED-01' -Title '合法 blocked 卡' -StateReason 'fixture missing gates array'
+  $guardMissingArrayCard.riskPreflight.Remove('gates')
+  Set-Card $guardMissingArrayRoot $guardMissingArrayCard
+  Set-Queue $guardMissingArrayRoot @($guardMissingArrayFixture.Ready, $guardMissingArrayCard)
+  Set-Backlog $guardMissingArrayRoot @($guardMissingArrayFixture.Ready, $guardMissingArrayCard)
+  Assert-OverrideFailure 'ready schema 2 transition missing one required array' $guardMissingArrayRoot 'schema 2 riskPreflight field set must be exactly explicitRefs/matched/gates' @(
+    '-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardMissingArrayBase
+  )
 
   # ---- schema 2 compatibility: structural field contract ----
   $schema1RiskRoot = Join-Path $tempRoot 'schema1-risk-preflight'

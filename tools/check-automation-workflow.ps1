@@ -89,6 +89,11 @@ Assert-Contract $sharedDigestMatch.Success 'shared owner entry is missing Get-Ta
 Assert-Contains $sharedDigestMatch.Groups['body'].Value 'shared task context digest' @('automationInputs = @(', 'path =', 'bytes =', 'sha256 =', 'sourceBacklog =')
 $taskCards = Read-Utf8 (Join-Path $root 'tools/check-task-cards.ps1')
 Assert-Contains $taskCards 'task-card automation inputs' @('Assert-AutomationInputs', 'automationInputs requires route=codex_execute owner=codex', 'automationInputs path must be under assets/source/')
+Assert-Contains $taskCards 'QueueMaintenance ready schema 2 guard' @(
+  'QueueMaintenanceReadySchema2Guard', 'BaseCommit is required for QueueMaintenanceReadySchema2Guard',
+  "@('-c', 'core.quotepath=false', 'ls-tree'", '@(''show'', "${resolvedBaseCommit}:$relativePath")',
+  "@('merge-base', '--is-ancestor'", 'QueueMaintenance ready transition requires schemaVersion=2', 'Assert-Schema2Projection'
+)
 $combinedValidationMatch = [regex]::Match($sharedEntry, '(?s)function Invoke-CombinedValidation\s*\{(?<body>.*?)\r?\n\}\r?\n\r?\nfunction Test-MainPathConflict')
 Assert-Contract $combinedValidationMatch.Success 'shared owner entry is missing combined validation'
 $combinedValidation = $combinedValidationMatch.Groups['body'].Value
@@ -107,6 +112,15 @@ Assert-Contains $sharedEntry 'shared owner entry preflight' @('get-experience-ri
 Assert-Contains $adapter 'owner adapter preflight' @('PreflightResultPath', "'-PreflightResultPath'")
 Assert-Contains $codexCandidate 'Codex candidate preflight' @('PreflightResultPath', 'Read-PreflightResult', 'codex_preflight_required', 'codex_preflight_invalid')
 Assert-Contains $deepseekCandidate 'DeepSeek candidate preflight' @('PreflightResultPath', 'Read-PreflightResult', 'deepseek_preflight_required', 'deepseek_preflight_invalid')
+Assert-Contains $codexCandidate 'QueueMaintenance candidate schema 2 guard' @(
+  '新建 ready 卡或把非 ready 卡重新置为 ready 前', 'tools/get-experience-risk-preflight.ps1',
+  'status=preflight_overbroad', 'gatePointers', "'-Postcondition', 'QueueMaintenanceReadySchema2Guard'", "'-BaseCommit', [string]`$run.baseCommit"
+)
+Assert-Contains $sharedEntry 'QueueMaintenance canonical schema 2 guard' @(
+  "'-Postcondition', 'QueueMaintenanceReadySchema2Guard'", "'-BaseCommit', `$BaseCommit",
+  'Assert-Postcondition -Run $Run -Worktree $Worktree -BaseCommit $Base',
+  'Assert-Postcondition -Run $Run -Worktree $script:root -BaseCommit $latest'
+)
 
 $rules = Read-Utf8 (Join-Path $root '开发管理/自动工作流规则.txt')
 $recovery = Read-Utf8 (Join-Path $root '开发管理/自动工作流恢复规则.txt')

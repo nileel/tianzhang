@@ -45,6 +45,7 @@ $tracePath = Join-Path $testRoot 'codex-trace.txt'
 $approvedState = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\automation-state')).TrimEnd('\', '/')
 $stateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId"
 $qmStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm"
+$qmCompletedStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-qm-completed"
 $failureStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-failure"
 $pathMismatchStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-path-mismatch"
 $reviewStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-review"
@@ -56,6 +57,7 @@ $originalMismatch = $env:TZG_FAKE_CODEX_MISMATCH
 $originalDirtyFailure = $env:TZG_FAKE_CODEX_DIRTY_FAILURE
 $originalRenameCompressed = $env:TZG_FAKE_CODEX_RENAME_COMPRESSED
 $originalTerminalMode = $env:TZG_FAKE_CODEX_TERMINAL_MODE
+$originalQmComplete = $env:TZG_FAKE_CODEX_QM_COMPLETE
 $taskId = 'TASK-CODEX-CANDIDATE'
 $scenarioStateRoots = [Collections.Generic.List[string]]::new()
 . (Join-Path $PSScriptRoot 'private-path-acl.ps1')
@@ -122,7 +124,7 @@ function Invoke-ResumeContextScenario {
 try {
   [IO.Directory]::CreateDirectory((Join-Path $mainRoot 'tools')) | Out-Null
   [IO.Directory]::CreateDirectory($fakeBin) | Out-Null
-  foreach ($tool in @('automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1', 'check-task-cards.ps1', 'private-path-acl.ps1')) {
+  foreach ($tool in @('automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1', 'check-task-cards.ps1', 'get-experience-risk-preflight.ps1', 'private-path-acl.ps1')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $tool) -Destination (Join-Path $mainRoot "tools/$tool")
   }
   Write-Utf8 -Path (Join-Path $mainRoot '.gitignore') -Text ".worktrees/`n"
@@ -130,6 +132,7 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流规则.txt') -Text '# workflow rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/AI协作规则.txt') -Text '# collaboration rules'
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/未通过审核清单.txt') -Text '# review list fixture'
+  Write-Utf8 -Path (Join-Path $mainRoot '开发管理/自动工作流状态.txt') -Text "# 自动工作流状态`n`n维护摘要：待校准`n"
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/经验库/风险索引.json') -Text '{"schemaVersion":1,"experiences":[],"gates":[]}'
   Write-Utf8 -Path (Join-Path $mainRoot 'fixture/rename-source.txt') -Text 'rename fixture'
   $metadata = [ordered]@{
@@ -260,10 +263,31 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     detailCode = 'AUTOMATION_METADATA_CONTRACT_INVALID'
   }
 } elseif ($prompt.Contains('Route: QueueMaintenance')) {
-  $terminal = [ordered]@{
-    status = 'no_candidate'; identity = 'Codex'; model = $model
-    candidateCommit = ''; changedPaths = @(); verified = @(); unverified = @()
-    residualRisk = ''; result = ''; impact = ''; verify = ''; plain = ''
+  if ($env:TZG_FAKE_CODEX_QM_COMPLETE -eq '1') {
+    $statusPath = Join-Path ([Environment]::CurrentDirectory) '开发管理/自动工作流状态.txt'
+    $statusText = [IO.File]::ReadAllText($statusPath).Replace('维护摘要：待校准', '维护摘要：已校准')
+    [IO.File]::WriteAllText($statusPath, $statusText, [Text.UTF8Encoding]::new($false))
+    $resultText = '问题=维护摘要仍为旧值；完成=已校准候选阶段维护摘要'
+    $impactText = '影响=验证 QueueMaintenance candidate 过渡门；边界=未修改任务卡'
+    $verifyText = '验证=QueueMaintenanceReadySchema2Guard 通过；后续=由 canonical 重新核验'
+    $plainText = '发生=维护摘要已校准；影响=仅验证候选检查；需要=无需处理'
+    $commit = [string](& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
+      -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths '开发管理/自动工作流状态.txt' `
+      -CommitMessage 'test: complete QueueMaintenance candidate fixture' -RequireAutomationMetadata `
+      -AutomationTask 'QUEUE-MAINTENANCE' -AutomationState 'completed' -AutomationResult $resultText `
+      -AutomationImpact $impactText -AutomationVerify $verifyText -AutomationPlain $plainText | Select-Object -Last 1)
+    if ($LASTEXITCODE -ne 0) { throw 'fake QueueMaintenance commit failed' }
+    $terminal = [ordered]@{
+      status = 'completed'; identity = 'Codex'; model = $model; candidateCommit = $commit; expectedTransition = ''
+      changedPaths = @('开发管理/自动工作流状态.txt'); verified = @('QueueMaintenance guard fixture'); unverified = @()
+      residualRisk = 'none'; result = $resultText; impact = $impactText; verify = $verifyText; plain = $plainText
+    }
+  } else {
+    $terminal = [ordered]@{
+      status = 'no_candidate'; identity = 'Codex'; model = $model
+      candidateCommit = ''; changedPaths = @(); verified = @(); unverified = @()
+      residualRisk = ''; result = ''; impact = ''; verify = ''; plain = ''
+    }
   }
 } else {
   $taskId = 'TASK-CODEX-CANDIDATE'
@@ -478,6 +502,24 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($qmTrace -match '本轮不执行新增业务任务') 'QueueMaintenance prompt must not execute new business tasks'
   Assert-True ($qmTrace -match 'automation-finalize-commit\.ps1') 'QueueMaintenance prompt omitted the formal finalizer'
   Assert-True ($qmTrace -match '-RequireAutomationMetadata') 'QueueMaintenance prompt omitted required automation metadata'
+  Assert-True ($qmTrace.Contains('新建 ready 卡或把非 ready 卡重新置为 ready 前')) 'QueueMaintenance prompt omitted the create/re-ready boundary'
+  Assert-True ($qmTrace.Contains('tools/get-experience-risk-preflight.ps1')) 'QueueMaintenance prompt omitted the existing preflight entrypoint'
+  Assert-True ($qmTrace.Contains('同一提交写入 schemaVersion=2')) 'QueueMaintenance prompt omitted the same-commit schema 2 projection contract'
+  Assert-True ($qmTrace.Contains('status=preflight_overbroad') -and $qmTrace.Contains('gatePointers') -and $qmTrace.Contains('不得置为 ready')) 'QueueMaintenance prompt omitted deterministic preflight failure and gate-pointer handling'
+
+  $qmCompletedClaimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $qmCompletedStateRoot -Owner codex -TaskId $qmTaskId -Route queue_maintenance -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $queueDigest)
+  $qmCompletedRun = ($qmCompletedClaimOutput[0] | ConvertFrom-Json).run
+  [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$qmCompletedRun.worktree))) | Out-Null
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$qmCompletedRun.candidateBranch, [string]$qmCompletedRun.worktree, $base) | Out-Null
+  $env:TZG_FAKE_CODEX_QM_COMPLETE = '1'
+  $qmCompletedOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route QueueMaintenance -RepositoryRoot ([string]$qmCompletedRun.worktree) -TaskId $qmTaskId -RunId ([string]$qmCompletedRun.runId) -Model 'test-codex-model' -StateRoot $qmCompletedStateRoot -ResponsibilityTimeoutSeconds 30)
+  Remove-Item Env:TZG_FAKE_CODEX_QM_COMPLETE -ErrorAction SilentlyContinue
+  Assert-Equal $LASTEXITCODE 0 'Codex QueueMaintenance completed wrapper process failed'
+  Assert-Equal $qmCompletedOutput.Count 1 'Codex QueueMaintenance completed wrapper output count mismatch'
+  $qmCompleted = $qmCompletedOutput[0] | ConvertFrom-Json -Depth 30
+  Assert-Equal ([string]$qmCompleted.status) 'completed' "Codex QueueMaintenance completed fixture failed: $($qmCompleted | ConvertTo-Json -Compress -Depth 20)"
+  Assert-Equal ([string]$qmCompleted.candidateResult.expectedTransition) 'queue_ready_count=1' 'QueueMaintenance candidate did not derive readyCount through the transition guard'
+  Assert-True (@($qmCompleted.candidateResult.changedPaths) -ccontains '开发管理/自动工作流状态.txt') 'QueueMaintenance completed fixture lost its changed path'
 
   $canaryBase = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
   $canaryOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Canary -RepositoryRoot $mainRoot -TaskId 'CANARY' -RunId "CANARY-$testId" -Model 'test-codex-model' -StateRoot $stateRoot -ResponsibilityTimeoutSeconds 30)
@@ -527,7 +569,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
 
   Write-Output 'test-invoke-codex-candidate: OK'
 } finally {
-  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure; $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $originalRenameCompressed; $env:TZG_FAKE_CODEX_TERMINAL_MODE = $originalTerminalMode
+  $env:PATH = $originalPath; $env:TZG_FAKE_CODEX_TRACE = $originalTrace; $env:TZG_FAKE_CODEX_MISMATCH = $originalMismatch; $env:TZG_FAKE_CODEX_DIRTY_FAILURE = $originalDirtyFailure; $env:TZG_FAKE_CODEX_RENAME_COMPRESSED = $originalRenameCompressed; $env:TZG_FAKE_CODEX_TERMINAL_MODE = $originalTerminalMode; $env:TZG_FAKE_CODEX_QM_COMPLETE = $originalQmComplete
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     if (-not $resolved.StartsWith($tempBase + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolved) -cne "tzg-codex-candidate-test-$testId") { throw "Unsafe Codex candidate test cleanup: $resolved" }
@@ -542,6 +584,11 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     $resolvedQmState = [IO.Path]::GetFullPath($qmStateRoot)
     if (-not $resolvedQmState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedQmState) -cne "tzg-codex-candidate-test-$testId-qm") { throw "Unsafe Codex QueueMaintenance state cleanup: $resolvedQmState" }
     Remove-Item -LiteralPath $resolvedQmState -Recurse -Force
+  }
+  if (Test-Path -LiteralPath $qmCompletedStateRoot) {
+    $resolvedQmCompletedState = [IO.Path]::GetFullPath($qmCompletedStateRoot)
+    if (-not $resolvedQmCompletedState.StartsWith($approvedState + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $resolvedQmCompletedState) -cne "tzg-codex-candidate-test-$testId-qm-completed") { throw "Unsafe completed QueueMaintenance state cleanup: $resolvedQmCompletedState" }
+    Remove-Item -LiteralPath $resolvedQmCompletedState -Recurse -Force
   }
   if (Test-Path -LiteralPath $failureStateRoot) {
     $resolvedFailureState = [IO.Path]::GetFullPath($failureStateRoot)

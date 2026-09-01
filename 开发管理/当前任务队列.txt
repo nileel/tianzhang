@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-READY-SCHEMA2-ACTIVATE-01 | external_execute | deepseek | P1 | management | migration | ready 卡 schema 2 激活迁移 | 开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt |

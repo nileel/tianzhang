@@ -1,0 +1,101 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01",
+  "title": "QueueMaintenance ready schema 2 过渡门",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-01：已按批准设计完成 QueueMaintenance ready schema 2 过渡门；任务卡、candidate、canonical/fast-forward 编排回归与自动工作流合同检查通过。激活卡保持 blocked，等待后续正常 QueueMaintenance 用实时 schema 2 投影重新 ready。",
+  "expectedPaths": [
+    "tools/check-task-cards.ps1",
+    "tools/test-check-task-cards.ps1",
+    "tools/invoke-codex-candidate.ps1",
+    "tools/test-invoke-codex-candidate.ps1",
+    "tools/invoke-hourly-owner.ps1",
+    "tools/test-queue-maintenance-completion.ps1",
+    "tools/check-automation-workflow.ps1",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01.txt",
+    "开发管理/任务归档/M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01.txt",
+    "开发管理/任务卡/M-EXP-READY-SCHEMA2-ACTIVATE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01 · QueueMaintenance ready schema 2 过渡门
+
+## 来源与当前边界
+
+- 唯一批准设计：`docs/superpowers/specs/2026-09-01-queue-maintenance-ready-schema2-transition-guard-design.md`，设计提交 `e7749d1378ee80a531df59c7240c4f25daf7c047`。
+- 单一结果：QueueMaintenance 新建 ready 卡或把非 ready 卡恢复为 ready 时，candidate、canonical 重放和正式集成复查均拒绝 schema 1 或非实时 schema 2 投影，同时保持 base 与当前都为 ready 的既有 schema 1 卡合法。
+- 已证实根因是 QueueMaintenance 两层完成检查只调用普通全局任务卡检查，无法区分既有 ready schema 1 与本轮新进入 ready 的 schema 1；提示合同也未要求同提交写入现有预检生成的 schema 2 投影。
+
+## 必查范围
+
+- 批准设计全文，重点是第 3、5、6、7、8 节。
+- `tools/check-task-cards.ps1` 的参数合同、活动卡枚举、`Assert-Schema2Projection` 与所有 postcondition 分支。
+- `tools/invoke-codex-candidate.ps1` 的 QueueMaintenance 提示、candidate 完成检查及其直接测试。
+- `tools/invoke-hourly-owner.ps1` 的 canonical 重放、正式集成后 postcondition 复查及 `tools/test-queue-maintenance-completion.ps1` 的对应编排 fixture。
+- `开发管理/自动工作流规则.txt` 与 `开发管理/自动工作流恢复规则.txt` 的 schema 5、QueueMaintenance、失败关闭、canonical 重放和正式集成合同。
+
+## 实施范围
+
+- 扩展现有 `tools/check-task-cards.ps1`，新增 `QueueMaintenanceReadySchema2Guard` postcondition 与 `-BaseCommit`；该 postcondition 必须携带 BaseCommit，其他 postcondition 和全局检查不得携带。
+- BaseCommit 必须解析为提交且是当前 HEAD 的祖先；base 活动卡只用 `git ls-tree` 枚举并用 `git show <base>:<path>` 读取，base 缺失按不存在处理。
+- 命中集合严格为当前 ready 且 base 不存在，或 base 的 `dispatchState` 不是 ready；命中卡必须 schema 2，且 `riskPreflight` 只含 `explicitRefs/matched/gates` 三数组，并复用现有 `Assert-Schema2Projection` 实时重算验证。
+- Candidate、最新 master canonical 重放和正式 fast-forward 后复查调用同一 postcondition；canonical 必须使用实际重放 base 重新计算，不复用 candidate 命中列表。
+- QueueMaintenance 提示明确：新建或重新 ready 前调用现有预检，在同一提交写入 schema 2 与实时投影；预检失败、过宽或缺少门禁指针时不得 ready。
+- 完成时归档本卡；`M-EXP-READY-SCHEMA2-ACTIVATE-01` 只在本卡完成后由后续正常 QueueMaintenance 重新预检并以 schema 2 投影解阻塞，不在本卡直接激活。
+
+## 禁止项
+
+- 不新增脚本、runtime schema、自动修补器、全局 ready 入口重构、feature flag、重试层、兼容分支或第二套迁移机制。
+- 不修改风险索引、经验卡、预检匹配语义或全局 schema 2 激活时点。
+- Codex 复审返工回复和 decision checkpoint resume 等其他 ready 恢复入口是已知残余风险，不在本卡扩展处理。
+- 不开始或修改 `A-CHAR-PORTRAIT-STYLE-01`。
+
+## 验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-task-cards.ps1`，覆盖 base 不可解析、base 非祖先、blocked schema 1 -> ready schema 1 拒绝、正确 schema 2 过渡通过、新建 ready schema 1 拒绝、ready schema 1 保持通过、投影失配与缺少三数组字段拒绝。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-invoke-codex-candidate.ps1`，覆盖 QueueMaintenance 提示合同与 candidate 调用参数。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-queue-maintenance-completion.ps1`，覆盖 canonical 基于最新 base 重新判断过渡及正式集成复查。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps1`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理,tools`。
+- 预期路径 whitespace、`git diff --check` 与暂存后的 `git diff --cached --check`。
+
+## 完成条件
+
+- 三个 QueueMaintenance 阶段都调用同一过渡 postcondition，且 canonical 以最新 master base 独立重算。
+- 所有指定回归与静态检查通过，完整 diff 仅含冻结路径，形成单一路径限定提交并通过正式集成入口进入 master；若实时门禁变化则保留安全 candidate 并准确报告。
+- 本卡归档；激活卡保持 blocked 并依赖本卡归档事实，等待后续正常 QueueMaintenance 生成 schema 2 实时投影后再 ready。
+
+## 停止条件
+
+- 需要突破批准设计第 6 节路径上界，或必须新增脚本、runtime 字段、自动修补器、全局入口重构、feature flag、重试层、兼容分支或第二套迁移机制。
+- 预检失败、过宽、门禁指针缺失，新增直接调用者／跨模块依赖／技术路线导致任务不再原子，或正式集成门禁不满足。
+
+## 经验候选
+
+### CAND-M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：automation
+- 现象：兼容期全局检查允许既有 schema 1 ready 卡，也因此无法拒绝 QueueMaintenance 本轮新建或重新 ready 的 schema 1 卡；结果直到小时责任方写前预检才失败。
+- 已证实根因：需要前后状态语义的 invariant 只检查了当前快照，没有以明确 base commit 区分“持续 ready”与“本轮进入 ready”。
+- 可能复用范围：存在兼容旧状态、但新状态转换必须满足更强合同的自动化 postcondition、candidate/canonical 重放与正式集成复查。
+- 证据：批准设计 `e7749d1378ee80a531df59c7240c4f25daf7c047`、失败 run `33e3e59e-d132-4c64-b0e1-3b39aa9c63e9` 的 `experience_preflight_schema_invalid`、`tools/test-check-task-cards.ps1` 与 `tools/test-queue-maintenance-completion.ps1` 回归。
+- 门禁可能：yes
