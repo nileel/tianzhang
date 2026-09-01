@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "M-EXP-READY-SCHEMA2-ACTIVATE-01",
   "title": "ready 卡 schema 2 激活迁移",
   "priority": "P1",
@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01"],
-  "stateReason": "2026-09-01：首次恢复 ready 时仍为 schema 1，DeepSeek 写前预检以 experience_preflight_schema_invalid 失败；失败 run 已按精确 CompleteRun 合同关闭并保留证据。本卡恢复 blocked，直接依赖 M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01，待该修复归档后由正常 QueueMaintenance 以 schema 2 实时投影重新 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-01：QueueMaintenance 已确认 M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01 以 completed 状态归档，并对本卡实时预检得到 status=ok、零命中与零门禁；本卡已写入 schema 2 实时投影，恢复为 external_execute/deepseek/ready。",
   "expectedPaths": [
     "tools/check-task-cards.ps1",
     "tools/test-check-task-cards.ps1",
@@ -101,7 +101,12 @@
     "开发管理/任务卡/M-EXP-EXT-NUMERIC-01.txt",
     "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # M-EXP-READY-SCHEMA2-ACTIVATE-01 · ready 卡 schema 2 激活迁移
