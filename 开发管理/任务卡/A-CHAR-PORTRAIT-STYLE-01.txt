@@ -2,16 +2,35 @@
 {
   "schemaVersion": 2,
   "id": "A-CHAR-PORTRAIT-STYLE-01",
-  "title": "默认男主模块化 UI 立绘八组合样张",
+  "title": "默认男主四母图模块化 UI 立绘八组合样张",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：组件生产合同已冻结为九次唯一输入且禁止重试。是否批准按该合同生成并进入八组合视觉评审？",
+  "stateReason": "2026-09-02：负责人批准四母图替代设计并撤销九次独立组件路线；旧 DEC-20260902-CD3DABC21EAF8F checkpoint 已失效且不得重放。本卡冻结，等待当前 ComfyUI 试验证明可在不重画批准可见像素的前提下完成具名分层、透明边缘与来源重组；通过后本卡先建立精确遮罩和工作流，再以新 checkpoint 请求三个 GPT Image 2 编辑输入及预算的生产授权。",
   "expectedPaths": [
+    "docs/superpowers/specs/2026-09-02-formal-player-modular-portrait-four-master-design.md",
+    "assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json",
+    "assets/generated-character-art/player-modular-portrait-style-v1/prompts.md",
+    "assets/generated-character-art/player-modular-portrait-style-v1/sources/source_f02_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/sources/source_f01_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/sources/source_f01_h01_o02.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/edit/face_young_defined_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/edit/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/edit/outfit_narrow_sleeve_travel_robe_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/hair-back/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/hair-back/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/base-face/face_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/base-face/face_young_defined_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/outfit/outfit_practical_long_robe_01__palette_indigo_cream_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/outfit/outfit_narrow_sleeve_travel_robe_01__palette_gray_brown_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/hands-front/hands_sword_finger_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/hair-front/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/masks/layers/hair-front/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/workflows/four-master-layer-extraction.json",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_half_up_long_01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-back/hair_high_ponytail_01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/base-face/face_young_refined_01.png",
@@ -21,6 +40,10 @@
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hands-front/hands_sword_finger_01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-front/hair_half_up_long_01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/layers/hair-front/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/evidence/source-recompositions/source_f01_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/evidence/source-recompositions/source_f02_h01_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/evidence/source-recompositions/source_f01_h02_o01.png",
+    "assets/generated-character-art/player-modular-portrait-style-v1/evidence/source-recompositions/source_f01_h01_o02.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h01_o01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h01_o02.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/composites/portrait_style_male_f01_h02_o01.png",
@@ -45,7 +68,6 @@
     "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h01_o02.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h02_o01.png",
     "assets/generated-character-art/player-modular-portrait-style-v1/crops/avatar/portrait_style_male_f02_h02_o02.png",
-    "assets/generated-character-art/player-modular-portrait-style-v1/prompts.md",
     "assets/generated-character-art/player-modular-portrait-style-v1/manifest.json",
     "assets/generated-character-art/player-modular-portrait-style-v1/evidence/contact-sheet.png",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -58,85 +80,62 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "A-CHAR-PORTRAIT-STYLE-01",
-    "sourceRunId": "d0a0b1fb-cfc8-4808-bbc9-3a2eff17430b",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260902-CD3DABC21EAF8F",
-    "question": "组件生产合同已冻结为九次唯一输入且禁止重试。是否批准按该合同生成并进入八组合视觉评审？",
-    "options": [
-      {
-        "key": "A",
-        "label": "批准九次生成"
-      },
-      {
-        "key": "B",
-        "label": "修订提示合同"
-      },
-      {
-        "key": "C",
-        "label": "停止本卡"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 允许仅按 checkpoint 中的九次组件输入继续；B 保持任务可恢复以修改合同；C 停止且不生成任何组件。",
-    "plainSummary": {
-      "situation": "组件生产合同已冻结为九次唯一输入且禁止重试。是否批准按该合同生成并进入八组合视觉评审？",
-      "impact": "A 允许仅按 checkpoint 中的九次组件输入继续；B 保持任务可恢复以修改合同；C 停止且不生成任何组件。",
-      "action": "建议选择 A：批准九次生成"
-    },
-    "checkpointCommit": "ae18c25680fd09fa2e6fd2d4855cf81544582946",
-    "baseCommit": "812c04fae5e380377030b687c58c475237298240",
-    "branch": "codex/automation/codex/d0a0b1fb-cfc8-4808-bbc9-3a2eff17430b/candidate",
-    "changedPaths": [
-      "assets/generated-character-art/player-modular-portrait-style-v1/prompts.md"
-    ],
-    "verified": [
-      "组件提示合同限定为九次唯一组件输入",
-      "冻结画布、图层所有权、锚点、绿幕透明处理与停止条件",
-      "check-pending-whitespace",
-      "git diff --cached --check",
-      "git diff --check 基线至 checkpoint"
-    ],
-    "unverified": [
-      "九个组件的视觉质量、锚点接缝和八组合兼容性尚未生成"
-    ],
-    "residualRisk": "独立组件生成必须先获负责人对提示合同和九次固定生成预算的批准；未获批准不能开始生成。",
-    "taskContextDigest": "847a305ca1938a284eb106ae79928c162e5eba6e371eb2c615eb1bf0d0d11b86",
-    "createdAt": "2026-09-02T02:19:32.5067079+08:00",
-    "queueIndex": 0
-  }
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# A-CHAR-PORTRAIT-STYLE-01 · 默认男主模块化 UI 立绘八组合样张
+# A-CHAR-PORTRAIT-STYLE-01 · 默认男主四母图模块化 UI 立绘八组合样张
 
 ## 来源与当前边界
 
-- 仅依据 `input-contract.json` 生产并评审默认男主的八种模块化 UI 立绘组合；不包含 3D Toon、Unity 或运行时接入。
+- 事实源为批准的四母图设计、`input-contract.json` v2、批准默认男主透明母版及其 manifest、项目立绘 README。
+- 本卡只生产默认男主两脸型、两发型、两服装的模块化 UI 立绘样张；不包含 3D Toon、Unity、存档或运行时接入。
+- 旧“九次独立组件生成”提示与 checkpoint 已被四母图设计替代，不得恢复、吸收或重放。
 
 ## 必查范围
 
-- 输入合同、批准母版及其 manifest、项目立绘 README。
+- `docs/superpowers/specs/2026-09-02-formal-player-modular-portrait-four-master-design.md`。
+- `assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json` 与 `prompts.md`。
+- 批准母版、母版 manifest、项目立绘 README，以及 ComfyUI 实际节点／工作流能力。
 
 ## 实施范围
 
-- 生产九个固定组件，以冻结层序确定性合成八个全身、八个半身和八个头像，并提交提示、manifest 与联系表供书面评审。
+1. 以批准母版 `source_f01_h01_o01` 为唯一身份、姿势和注册基准，先形成三个冻结编辑遮罩和可复核的 ComfyUI 工作流；这一步不调用图像模型。
+2. 形成干净 checkpoint，向负责人展示三个完整提示、遮罩、工作流能力证据和调用预算；只有新决定明确批准后，才使用 GPT Image 2 各执行一次具名遮罩单变量编辑：只换脸、只换发型、只换服装。
+3. 遮罩外正式像素始终取批准母版；模型输出只在对应遮罩内成为来源像素。
+4. 建立一个可保存、可复核的 ComfyUI 工作流，只负责分割、图层蒙版、透明化、四来源重组、八组合、裁切和哈希，不用本地 FLUX 重画批准可见像素。
+5. 从四张完整母图提取九个稳定组件，先重组四张来源，再按固定层序组合八个全身、八个半身和八个头像，并提交 manifest 与联系表供书面评审。
+
+## 图层所有权
+
+- `base-face` 只拥有脸、头、耳、颈和联合包络下安全重叠；身体其余区域透明，不生成被服装遮住的完整裸模。
+- `outfit` 拥有完整着装身体轮廓、衣领、袖子、腰带、袍身和靴子，但不拥有裸露手、脸、头颈或头发。
+- `hands-front` 固定拥有两只裸露手及腕口安全重叠。
+- 同一发型的 `hair-front`／`hair-back` 按遮挡顺序划分，并在两套服装联合包络下保留安全重叠。
 
 ## 禁止项
 
-- 不生成组合专用层、逐图补丁、随机替代或不同 UI 母版；不修改 Unity、CSV、存档、3D 资产或运行时。
+- 不纯文本重新生成人物，不自动重试，不使用随机替代或第二身份母版。
+- 不用本地 FLUX 或其他扩散节点重画正式可见人物像素。
+- 不生成组合专用层、逐图补丁、覆盖图或运行时纠偏。
+- 不修改 Unity、CSV、存档、3D 资产或运行时所有权。
 
 ## 验证
 
-- 检查九组件、八组合、锚点、遮挡、裁切与像素哈希满足输入合同；全身、半身和头像只从同一 composite 裁切。
+- 三张单变量母图的规范化遮罩外像素相对批准母版零漂移；画布、中心轴、姿势、双手、手腕和落脚点不变。
+- 四张来源重组全部通过后才允许组合八矩阵；来源重组检查洞、双边、绿边、错层和结构丢失。
+- 八组合检查脸与发际线、耳根、后颈、领口、肩、袖口、手腕、腰线、衣摆、鞋底和前后发遮挡。
+- 全身、半身和头像只从同一 composite 固定裁切；重复运行产生相同解码像素哈希。
+- 运行任务卡、审核文本、数据链、空白和 Git 差异检查。
 
 ## 完成条件
 
-- 八组合获得 UI 立绘风格与模块兼容性书面评审，所有字面量输出和 manifest 可复核。
+- 一个批准基准母版、三个单变量完整编辑源、三个编辑遮罩、九个稳定组件、九个图层蒙版、一个 ComfyUI 工作流、四张来源重组、八组合及其固定裁切全部齐全可追溯。
+- 八组合获得 UI 立绘风格与模块兼容性书面批准；所有输出、遮罩、参数、节点版本和哈希记录在 manifest。
 
 ## 停止条件
 
-- 任何组件必须仅在某一组合使用，或需要偏移、缩放、组合补丁、不同身份母版或修改运行时所有权时停止。
+- 单变量编辑无法保持遮罩外批准身份、姿势或结构时停止。
+- 来源重组未通过，或必须重画批准可见像素才能分层时停止。
+- 任何组件只能用于某一组合，或需要偏移、缩放、旋转、组合补丁、不同身份母版时停止。
+- 隐藏区域缺失只记录精确遮罩；未经负责人另行批准不得补全。补全会改变批准可见像素时停止。
+- 需要修改 Unity、存档、3D 或运行时所有权时停止并重新判断原子性。
