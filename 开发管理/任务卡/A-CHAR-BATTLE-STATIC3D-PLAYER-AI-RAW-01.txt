@@ -9,10 +9,8 @@
   "domain": "content",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01"
-  ],
-  "stateReason": "等待严格四视图完成归档；即使具名前置完成，也必须先取得负责人对平台、模型/服务、允许的最大 credits、唯一输入哈希和资产 ID 的交易前批准，才能补齐 automationInputs 并置为 ready。",
+  "blockedBy": [],
+  "stateReason": "严格四视图已完成归档；仍须取得负责人对平台、模型/服务、允许的最大 credits、唯一输入哈希和资产 ID 的交易前批准，才能补齐 automationInputs 并置为 ready。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",

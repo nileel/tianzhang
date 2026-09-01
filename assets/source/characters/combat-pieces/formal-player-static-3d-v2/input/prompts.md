@@ -2,14 +2,14 @@
 
 任务：`A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01`
 
-状态：负责人已于 2026-08-31 在当前对话批准下方唯一完整提示词代码块；批准来源文件 SHA-256 为 `ab26b47b0576aa7adbb34034f1b0acb6cb57991b44da6ee47d889a185d29fbe0`，代码块规范化 UTF-8 为 `8174` 字节、SHA-256 为 `fbc9b5e0f99e6e2c13d3d3835d9b6ebf264f58f1393c19a364e2e5a6f3946ee0`。本批准只授权该代码块对应的一次内置 ImageGen 调用；调用尚未执行，旧提示词、旧批准和旧调用均不可复用。
+状态：负责人已于 2026-08-31 在当时对话批准下方唯一完整提示词代码块；批准来源文件 SHA-256 为 `ab26b47b0576aa7adbb34034f1b0acb6cb57991b44da6ee47d889a185d29fbe0`，代码块规范化 UTF-8 为 `8174` 字节、SHA-256 为 `fbc9b5e0f99e6e2c13d3d3835d9b6ebf264f58f1393c19a364e2e5a6f3946ee0`。该批准和对应调用均已消费；后续背视修复严格受两份 2026-08-31 修复设计约束。负责人于 2026-09-01 对固定候选 SHA-256 `2cc813319737a2e56d54a7936b24228e860ea50d5f960f9fb143695aeea477c1` 明确回复“这张是对的”，候选已晋升为规范母图并完成确定性四象限裁切；不得再复用本提示词、旧批准或任何已消费调用。
 
 ## 冻结参考
 
 - `assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png`：唯一决定性身份与姿势参考；RGBA `887×1774`、`1806843` 字节、SHA-256 `399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948`。它决定无名 16 岁默认男主的脸、半束长发、衣装、配色、七头身比例、右手剑指和自然不对称重心；四视图不继承其三分之四相机角度。
 - `assets/generated-character-art/dialogue-transparent/fu-yuan-hanhong-zhenjun-standing-black-gold-v1.png`：只作项目级插画完成度参照；不得借用苻渊的身份、年龄、脸、白发、服装、姿势或饰物。
 
-## 待逐字批准的唯一完整提示词
+## 已批准且已消费的唯一完整提示词（历史）
 
 ```text
 Use case: identity-and-pose-preserve
@@ -53,3 +53,10 @@ Reject the result if both arms hang down, the pose becomes symmetric or mannequi
 2. 唯一无文字四面板母图只按其实际像素面板边界本地确定性裁切；不缩放、翻转、镜像、重绘、补画或逐槽 AI 修补。
 3. 生成后才允许写入四张 PNG、无文字联系表和 `manifest.json`，并记录实际母图／输出 SHA-256、字节数、尺寸、裁切矩形、姿势与身份连续性以及负责人视觉批准结论。
 4. 若唯一结果出现身份、比例、发型、服装、姿势、左右语义、背面、解剖或裁切失败，立即停止；不得自动改词、重试、调用第二次 ImageGen 或以 AI 补画修复。
+
+## 最终批准结果
+
+- 最终背视遮挡修复合同：`docs/superpowers/specs/2026-08-31-formal-player-default-male-fourview-back-occlusion-repair-design.md`；它只允许修正右下背视格的右臂投影，并冻结前三格及其他身份、服装和布局事实。
+- 获批候选：`assets/source/characters/combat-pieces/formal-player-static-3d-v2/evidence/candidates/formal_player_default_male_fourview-back-occlusion-candidate-20260831.png`，RGB `1254×1254`，`1598278` 字节，SHA-256 `2cc813319737a2e56d54a7936b24228e860ea50d5f960f9fb143695aeea477c1`。
+- 负责人于 2026-09-01 在当前 Codex 对话明确回复“这张是对的”；该 UTF-8 文本的 SHA-256 为 `7a204e834c29f397f970607e606083c66596586066e74456666b362ad376ffe6`。
+- 规范母图与获批候选逐字节相同。四张正式输入仅按 `(0,0,627,627)`、`(627,0,627,627)`、`(0,627,627,627)`、`(627,627,627,627)` 确定性裁切；未缩放、旋转、镜像、翻转、重绘或 AI 修补。精确字节数、SHA-256、槽位方向和像素回读结论见同目录 `manifest.json`。

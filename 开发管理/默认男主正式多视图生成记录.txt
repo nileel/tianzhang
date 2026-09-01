@@ -2,7 +2,7 @@
 
 任务：`A-CHAR-BATTLE-STATIC3D-PLAYER-FOURVIEW-01`
 
-当前结论：负责人已于 2026-08-31 对 `DEC-20260831-CD94AB5B801C8D` 选择 B，拒绝唯一四视图候选；旧提示词对应的唯一一次内置 ImageGen 调用仍然已消费。负责人随后选择方案 A，并在当前对话批准新的完整提示词代码块；本卡已解冻进入 ready。新的唯一 ImageGen 调用尚未执行，不得复用旧提示词／旧批准／旧调用，也不得补画、上传 AI 3D 平台、消费 credits、操作 Blender 或 Unity。
+当前结论：负责人于 2026-09-01 对背视右手遮挡候选明确回复“这张是对的”，批准固定候选 SHA-256 `2cc813319737a2e56d54a7936b24228e860ea50d5f960f9fb143695aeea477c1`。该候选已逐字节复制为规范四面板母图，并按固定 2×2 象限无缩放裁切成 `front`、`face-left-side`、`face-right-side`、`back` 四张正式输入；母图、四图、裁切矩形、方向、哈希与批准证据均已写入 `input/manifest.json`。批准后没有再次生成或编辑图片，也没有上传 AI 3D 平台、消费 credits、操作 Blender 或 Unity。
 
 ## 冻结身份输入复核
 
@@ -22,12 +22,14 @@
 - 建模姿态固定为自然对称放松站姿、双臂低垂且清楚分离；不沿用对话剑指，也不使用 A/T、战斗、施法、胜利、走路或扭身姿态。
 - 若批准并完成唯一生成，四张独立图和无文字联系表只可由该母图按记录的像素裁切矩形本地确定性重现；不得镜像、翻转、第二次生成或 AI 补画。
 
-## 新完整提示词（已批准，待执行）
+## 新完整提示词与修复链（历史，均已消费）
 
 - 新文本位于 `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/prompts.md`，以已批准的姿势修订设计为唯一新增方向。
 - 新合同保留原画右手单手剑指、右前臂抬至下胸前、左臂自然下垂和轻微自然重心，同时要求右肘、前臂、手指、衣袖与躯干之间保持可读间隙；四个正交面板必须展示同一个冻结姿势。
 - 旧提示词、旧批准和旧调用不能复用或转移到新文本。负责人于 2026-08-31 在当前对话批准新完整提示词代码块；批准来源文件 SHA-256 为 `ab26b47b0576aa7adbb34034f1b0acb6cb57991b44da6ee47d889a185d29fbe0`，规范化代码块为 `8174` UTF-8 字节、SHA-256 为 `fbc9b5e0f99e6e2c13d3d3835d9b6ebf264f58f1393c19a364e2e5a6f3946ee0`。
-- 本批准只授权该代码块对应的一次新 ImageGen 调用；当前尚未调用，也没有创建新母图、分槽图或 manifest。
+- 本批准只授权该代码块对应的一次新 ImageGen 调用；该调用随后已消费。首个新候选通过了槽位口径订正，但背视右手、前臂与衣袖连接错误，已按任务卡记录归档为否决证据。
+- 负责人随后依次批准背视右手连接修复设计和背视右手遮挡修复设计；两次定点编辑各只执行一次、均未自动重试。第一张修正版因右手被错误抬到肩外高位而否决；第二张遮挡候选最终获批。
+- 各次错误图、尺寸、字节数、SHA-256、缺陷和停止原因保存在任务卡历史及对应 `evidence/rejected/` 路径；最终获批候选和正式裁切事实见本记录“最终批准结果与确定性分槽”。
 
 ## 已拒绝的唯一结果与确定性分槽（审计）
 
@@ -43,8 +45,26 @@
 - 图像生成器把两个侧面放在与获批提示词的格位顺序相反的位置；这不是镜像或翻转。该已拒绝候选曾按实际鼻尖方向和角色自身侧向确定性命名。
 - 四张候选输出均只由上表给出的母图矩形进行像素裁切；没有缩放、旋转、镜像、翻转、重绘或 AI 修补。
 
-## 旧候选拒绝后的边界
+## 旧候选拒绝后的边界（历史）
 
 - 唯一生成调用已消费。负责人以 B 拒绝候选，回复为 `OPTION_ACCEPTED`，证据哈希为 `dc7e28f56e28460a7c98708b45c8f0cc14d317f1d5d68e5a71b71a9569fe55a9`；本卡冻结，不改变下游 `A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01` 的具名前置。
 - 本记录保留哈希、裁切和方向事实以证明调用消费与拒绝范围；不把已拒绝候选当作可上传、可建模或可继续使用的四视图。
-- 新的完整提示词已经形成并获批准；后续只允许按批准代码块执行一次新的 ImageGen 调用。不得自动重试。
+- 后续新完整提示词与两份定点修复设计均已按各自批准边界消费；历史批准和调用不得再次复用。
+
+## 最终批准结果与确定性分槽
+
+最终候选位于 `assets/source/characters/combat-pieces/formal-player-static-3d-v2/evidence/candidates/formal_player_default_male_fourview-back-occlusion-candidate-20260831.png`，RGB `1254×1254`，`1598278` 字节，SHA-256 `2cc813319737a2e56d54a7936b24228e860ea50d5f960f9fb143695aeea477c1`。负责人于 2026-09-01 在当前 Codex 对话明确回复“这张是对的”；该 UTF-8 文本的 SHA-256 为 `7a204e834c29f397f970607e606083c66596586066e74456666b362ad376ffe6`。
+
+候选已逐字节复制到 `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_fourview.png`；规范母图与候选的字节数和 SHA-256 完全相同。随后仅按 2×2 等分象限进行本地确定性裁切：
+
+| 语义视图 | 正式项目路径 | 母图像素裁切矩形 `(x,y,width,height)` | 模式／尺寸 | 字节数 | SHA-256 | 方向与像素回读 |
+|---|---|---|---|---:|---|---|
+| 正面 | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png` | `(0,0,627,627)` | RGB，627×627 | 416613 | `2a8313b6e7312198c8be5cbd62651339c8bb8f5945639f2dcab768c3b2c65801` | 左上；与母图对应区域逐像素一致 |
+| `face-left-side` | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png` | `(627,0,627,627)` | RGB，627×627 | 385266 | `506578eca5e7cd04ca5c713ebac34998016d3d550c90344275028fc848e96c79` | 右上；鼻尖朝画面左；逐像素一致 |
+| `face-right-side` | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png` | `(0,627,627,627)` | RGB，627×627 | 376816 | `c4f0b8a3b12d908fdd62e938643cadeae5e3562c4090b5052328ed748cf09f31` | 左下；鼻尖朝画面右；逐像素一致 |
+| 背面 | `assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png` | `(627,627,627,627)` | RGB，627×627 | 398077 | `4497577b3fcea41b9ff71dc639916381d169245c312acb0e05f1a446a33ea5e9` | 右下；纯背视，右手与剑指由身体遮挡；逐像素一致 |
+
+- 本地裁切使用 Pillow 12.2.0；没有缩放、旋转、镜像、翻转、重绘或 AI 修补。
+- `input/manifest.json` 冻结身份母版、批准候选、规范母图、四张输出、裁切参数、平台方向、批准证据及本轮禁止项。
+- 透明身份母版重新核验为 `1806843` 字节、SHA-256 `399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948`；其 manifest 为 `3520` 字节、SHA-256 `a4d0d74986f1845fdcc4aac5478f73babe3ece959db7645bd6dcc6d7711d5a13`，与冻结输入一致。
+- 本次批准只完成四视图输入冻结。下游 AI 原包任务仍须另行取得平台、模型／服务、最大 credits、唯一输入哈希和稳定资产 ID 的交易前批准；本轮没有上传、收费、Blender 或 Unity 操作。
