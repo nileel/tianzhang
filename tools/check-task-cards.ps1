@@ -604,6 +604,10 @@ try {
     }
   }
 
+  foreach ($card in $readyCards) {
+    Assert-Contract ([int]$card.Metadata.schemaVersion -eq 2) "schema 1 ready is rejected: $($card.Metadata.id)"
+  }
+
   if ($OutputJson) {
     [Console]::Out.WriteLine(([ordered]@{
       status = 'ok'

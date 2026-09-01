@@ -183,8 +183,9 @@ function Set-Backlog {
 
 function New-Fixture {
   param([string]$Root)
-  $ready = Get-Metadata
+  $ready = Get-Schema2Metadata -Id 'T-READY-01' -Title '合法 ready 卡'
   $blocked = Get-Metadata -Id 'T-BLOCKED-01' -Title '合法 blocked 卡' -DispatchState 'blocked' -StateReason '等待外部输入'
+  Set-RiskIndex $Root
   Set-Card $Root $ready
   Set-Card $Root $blocked
   Set-Queue $Root @($ready)
@@ -475,12 +476,12 @@ try {
 
   $transitionRoot = Join-Path $tempRoot 'transition'
   $transition = New-Fixture $transitionRoot
-  $external = Get-Metadata -Route 'external_execute' -Owner 'deepseek'
+  $external = Get-Schema2Metadata -Id 'T-READY-01' -Title '合法 ready 卡' -Route 'external_execute' -Owner 'deepseek'
   Set-Card $transitionRoot $external
   Set-Queue $transitionRoot @($external)
   Set-Backlog $transitionRoot @($external, $transition.Blocked)
   Assert-Success 'external ready transition start' $transitionRoot
-  $review = Get-Metadata -Route 'codex_review' -Owner 'codex'
+  $review = Get-Schema2Metadata -Id 'T-READY-01' -Title '合法 ready 卡' -Route 'codex_review' -Owner 'codex'
   Set-Card $transitionRoot $review
   Set-Queue $transitionRoot @($review)
   Set-Backlog $transitionRoot @($review, $transition.Blocked)
@@ -679,10 +680,15 @@ try {
   )
 
   $guardUnchangedSchema1Root = Join-Path $tempRoot 'queue-ready-guard-unchanged-schema1'
-  New-Fixture $guardUnchangedSchema1Root | Out-Null
+  $guardUnchangedSchema1Fixture = New-Fixture $guardUnchangedSchema1Root
+  $guardUnchangedSchema1Legacy = Get-Metadata -Id 'T-READY-01' -Title '合法 ready 卡'
+  Set-Card $guardUnchangedSchema1Root $guardUnchangedSchema1Legacy
+  Set-Queue $guardUnchangedSchema1Root @($guardUnchangedSchema1Legacy)
+  Set-Backlog $guardUnchangedSchema1Root @($guardUnchangedSchema1Legacy, $guardUnchangedSchema1Fixture.Blocked)
   $guardUnchangedSchema1Base = Initialize-FixtureRepository $guardUnchangedSchema1Root
   $guardUnchangedSchema1 = Invoke-Checker $guardUnchangedSchema1Root @('-Postcondition', 'QueueMaintenanceReadySchema2Guard', '-BaseCommit', $guardUnchangedSchema1Base)
-  Assert-True ($guardUnchangedSchema1.ExitCode -eq 0) "base/current ready schema 1 should remain legal: $($guardUnchangedSchema1.Output)"
+  Assert-True ($guardUnchangedSchema1.ExitCode -ne 0) 'pre-existing ready schema 1 should be rejected after activation'
+  Assert-True ($guardUnchangedSchema1.Output -match 'schema 1 ready is rejected') 'pre-existing ready schema 1 rejection diagnostic missing'
 
   $guardMissingArrayRoot = Join-Path $tempRoot 'queue-ready-guard-missing-array'
   $guardMissingArrayFixture = New-Fixture $guardMissingArrayRoot
@@ -700,7 +706,7 @@ try {
   # ---- schema 2 compatibility: structural field contract ----
   $schema1RiskRoot = Join-Path $tempRoot 'schema1-risk-preflight'
   $schema1RiskFixture = New-Fixture $schema1RiskRoot
-  $schema1RiskCard = Copy-Metadata $schema1RiskFixture.Ready
+  $schema1RiskCard = Get-Metadata -Id 'T-READY-01' -Title '合法 ready 卡'
   $schema1RiskCard['riskPreflight'] = [ordered]@{ explicitRefs = @(); matched = @(); gates = @() }
   Set-Card $schema1RiskRoot $schema1RiskCard
   Set-Queue $schema1RiskRoot @($schema1RiskCard)
@@ -709,7 +715,7 @@ try {
 
   $schema2MissingRiskRoot = Join-Path $tempRoot 'schema2-missing-risk'
   $schema2MissingRiskFixture = New-Fixture $schema2MissingRiskRoot
-  $schema2MissingRiskCard = Copy-Metadata $schema2MissingRiskFixture.Ready
+  $schema2MissingRiskCard = Get-Metadata -Id 'T-READY-01' -Title '合法 ready 卡'
   $schema2MissingRiskCard.schemaVersion = 2
   Set-Card $schema2MissingRiskRoot $schema2MissingRiskCard
   Set-Queue $schema2MissingRiskRoot @($schema2MissingRiskCard)
@@ -793,17 +799,16 @@ try {
   Set-Backlog $schema2NonExplicitRefRoot @($schema2NonExplicitRefCard)
   Assert-Failure 'schema 2 non-explicit_only explicitRef' $schema2NonExplicitRefRoot 'riskPreflight explicitRef not explicit_only'
 
-  # ---- both schema ready accepted in the current compatibility stage ----
-  $schema2BothRoot = Join-Path $tempRoot 'schema2-both-ready'
-  Set-RiskIndex $schema2BothRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
-  $schema2BothS1 = Get-Metadata -Id 'T-S1-READY-01'
-  $schema2BothS2 = Get-Schema2Metadata -Id 'T-S2-READY-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001')
-  Set-Card $schema2BothRoot $schema2BothS1
-  Set-Card $schema2BothRoot $schema2BothS2
-  Set-Queue $schema2BothRoot @($schema2BothS1, $schema2BothS2)
-  Set-Backlog $schema2BothRoot @($schema2BothS1, $schema2BothS2)
-  $schema2Both = Invoke-Checker $schema2BothRoot
-  Assert-True ($schema2Both.ExitCode -eq 0) "schema 1 and schema 2 ready should both pass: $($schema2Both.Output)"
+  # ---- activation: schema 1 ready is rejected even alongside a legal schema 2 ready card ----
+  $schema1ReadyRejectedRoot = Join-Path $tempRoot 'schema1-ready-rejected'
+  Set-RiskIndex $schema1ReadyRejectedRoot @((New-Experience -Id 'EXP-AUTO-001' -Paths @('tools/foo.ps1')))
+  $schema1ReadyRejectedS1 = Get-Metadata -Id 'T-S1-READY-01'
+  $schema1ReadyRejectedS2 = Get-Schema2Metadata -Id 'T-S2-READY-01' -ExpectedPaths @('tools/foo.ps1') -Matched @('EXP-AUTO-001')
+  Set-Card $schema1ReadyRejectedRoot $schema1ReadyRejectedS1
+  Set-Card $schema1ReadyRejectedRoot $schema1ReadyRejectedS2
+  Set-Queue $schema1ReadyRejectedRoot @($schema1ReadyRejectedS1, $schema1ReadyRejectedS2)
+  Set-Backlog $schema1ReadyRejectedRoot @($schema1ReadyRejectedS1, $schema1ReadyRejectedS2)
+  Assert-Failure 'schema 1 ready rejected' $schema1ReadyRejectedRoot 'schema 1 ready is rejected'
 
   # ---- schema 2 non-ready keeps stale projection without recompute ----
   $schema2NonReadyRoot = Join-Path $tempRoot 'schema2-non-ready-stale'

@@ -316,3 +316,16 @@
 - 残留风险：改动仅限两个测试文件，复用 wrapper 已实现的 *_preflight_invalid 拒绝路径；不改变生产行为或任务生命周期，残留风险很低。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-READY-SCHEMA2-ACTIVATE-01-ce52bbaf · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-READY-SCHEMA2-ACTIVATE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-READY-SCHEMA2-ACTIVATE-01
+- 候选提交：b86b56e4ec88cedbbfb08b5115753acf09d8a0fc
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/check-task-cards.ps1、tools/test-check-task-cards.ps1
+- 已验证：tools/test-check-task-cards.ps1 → PASS（覆盖 schema 1 非 ready/归档仍合法、schema 1 ready 拒绝、schema 2 ready 零命中/正常/显式/旧投影失配）；tools/check-task-cards.ps1 -OutputJson → ok, cardCount=46, readyCount=1, 无 schema 1 ready；tools/get-experience-risk-preflight.ps1 -TaskId M-EXP-READY-SCHEMA2-ACTIVATE-01 → status=ok 零命中（taskCardDigest=37b3224d…, indexDigest=d46db414…）；tools/check-review-text.ps1 -Paths 开发管理,tools → OK（579 files）；tools/check-pending-whitespace.ps1 → OK（2 files, fix=False）；git diff --check 与暂存后 git diff --cached --check → 通过；tools/check-automation-workflow.ps1 → OK（guard 合同字符串仍保留）；tools/test-queue-maintenance-completion.ps1 → PASS（QueueMaintenance guard 路径兼容）
+- 未验证：Codex 独立复审尚未进行（本候选不自审、不预填审核结论）；共享入口最新 master 重放与正式集成未在本 candidate 内执行
+- 残留风险：非 ready 的 schema 1 卡按原样保留，其后续重新 ready 必须生成 schema 2 实时投影（现由全局拒绝 + QueueMaintenance guard 双重约束）；本候选标 ⚠️ 未审核，等待 Codex 独立复审与共享入口正式集成。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
