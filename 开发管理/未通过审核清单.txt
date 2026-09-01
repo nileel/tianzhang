@@ -6,6 +6,11 @@
 
 ## 当前未通过/待复核项
 
+### M-EXP-READY-SCHEMA2-ACTIVATE-01 · ready 卡 schema 2 激活迁移
+
+- 审核对象：正式提交 `aeabf192172278b6ffea74ab3430b44edde6a098`；结论：部分通过，仍需返工。
+- 缺口：`tools/test-check-task-cards.ps1` 的 completed archive fixture 已随默认 ready fixture 变为 schema 2，未再覆盖 schema 1 completed 归档仍合法的迁移合同。
+
 ### C-HS-YY-JD-01A～01Q · 统一返工决议
 
 - 2026-08-28，用户指定 `C-HS-YY-JD-01A～01Q` 全部由 DeepSeek V4 Pro 0813 定向返工，完成后仍由 Codex 独立复审。
