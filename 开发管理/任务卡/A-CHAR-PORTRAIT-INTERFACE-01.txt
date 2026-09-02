@@ -1,0 +1,102 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-INTERFACE-01",
+  "title": "默认男主标准接口模块化 UI 立绘库父项",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-PORTRAIT-INTERFACE-01A",
+    "A-CHAR-PORTRAIT-INTERFACE-01B",
+    "A-CHAR-PORTRAIT-INTERFACE-01C",
+    "A-CHAR-PORTRAIT-INTERFACE-01D",
+    "A-CHAR-PORTRAIT-INTERFACE-01E",
+    "A-CHAR-PORTRAIT-INTERFACE-01F",
+    "A-CHAR-PORTRAIT-INTERFACE-01G"
+  ],
+  "stateReason": "2026-09-03：负责人批准标准光头接口设计；本卡为不可调度汇总父项，只由 01G 在全部授权门、组件、矩阵与最终视觉批准成立后关闭。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01A.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01A.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01B.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01B.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01C.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01C.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01D.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01D.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01E.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01E.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01F.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01F.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01G.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01G.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-INTERFACE-01 · 默认男主标准接口模块化 UI 立绘库父项
+
+## 来源与当前边界
+
+- 唯一设计事实源是 docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md。
+- 本父项只汇总 01A～01G，不直接编写合同、调用图片模型、生产组件、操作 ComfyUI 或形成组合资产。
+- 旧 A-CHAR-PORTRAIT-STYLE-01 四母图路线保持冻结并由 01A 标记为被取代，不成为本父项前置。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
+- 01A～01G 的任务卡或完成归档，以及开发管理/当前任务队列.txt 的当前投影。
+- 开发管理/状态与建议维护规则.txt 与开发管理/AI协作规则.txt 中任务拆分、状态和授权边界。
+
+## 禁止项
+
+- 父项不得进入 ready、领取实现或代替任一叶子任务执行。
+- 不得越过 A、B、C1、C2 独立生产授权，也不得由本卡调用任何图片模型。
+- 不恢复旧四母图反向抠图路线，不在父项内添加组件补丁、第二套接口或额外子任务。
+
+## 子任务与依赖
+
+1. 01A：新合同、提示与 A 门 checkpoint 投影；首个 ready 叶子。
+2. 01B：A 门标准光头头部生产；阻塞于 01A 与负责人独立授权。
+3. 01C：B 门双年轻头／半束发／实用长袍最小兼容证明；阻塞于 01B 与 B 门授权。
+4. 01D：C1 门清癯老龄头接口证明；阻塞于 01C 与 C1 授权。
+5. 01E：C2 门剩余七个组件生产；阻塞于 01D 与 C2 授权。
+6. 01F：64 组合、192 裁切、分页联系表与确定性哈希；阻塞于 01E。
+7. 01G：负责人最终视觉批准、manifest 签收与父项关闭；阻塞于 01F。
+
+依赖图固定为 01A → 01B → 01C → 01D → 01E → 01F → 01G。父项永不进入 ready，不得逐轮补建已知子卡。
+
+## 实施范围
+
+- 只由 01G 在全部组件、矩阵、确定性检查和负责人书面批准成立后归档父项。
+- 子项状态变化时只解锁唯一直接下游；任何生产门仍需独立明确授权。
+
+## 验证
+
+- 01A～01G 的 ID、依赖、状态、expectedPaths 和队列投影一致。
+- 父项从不进入 ready，队列中同一时刻最多出现依赖已满足的最前叶子。
+- 运行任务卡、审核文本、空白与 Git 差异检查。
+
+## 完成条件
+
+- 十三个直接生成组件、64 个组合、192 张裁切、四页以上联系表与 manifest 全部通过。
+- 不存在反向抠图、组合补丁、接口变换、本地扩散重画或未授权图片调用。
+- 负责人批准最终联系表，01G 与父项在同一管理切片归档。
+
+## 停止条件
+
+- 任一生产门失败、预算未获授权、直接透明组件能力不成立，或最终组合要求第二套接口。

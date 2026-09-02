@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-INTERFACE-01B",
+  "title": "A 门标准光头头部生产",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-PORTRAIT-INTERFACE-01A"
+  ],
+  "stateReason": "等待 01A 完成合同与负责人对 A 门一次调用的独立明确授权。",
+  "expectedPaths": [
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/contact-sheet.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/validation.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/manifest.json",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01B.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01C.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01B.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-INTERFACE-01B · A 门标准光头头部生产
+
+## 来源与当前边界
+
+在负责人明确批准 A 门后，用唯一一次 GPT Image 2 调用生成并冻结年轻清秀标准光头头部接口。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
+- assets/generated-character-art/README.md 中透明立绘与正式资产规则。
+- 本卡直接前置的任务卡或完成归档；交接摘要不能替代组件、manifest 与验证原文。
+
+## 禁止项
+
+- 未取得本门独立生产授权时不得调用 GPT Image 2 或任何图片模型。
+- 不使用 FLUX、KSampler、LoRA、扩散重画、自动重试、绿幕回退、人工语义抠图、组合专用补丁或第二套头部接口。
+- 不修改 Unity、CSV、存档、3D 资产或运行时所有权。
+
+## 停止条件
+
+- 需要平移、缩放、旋转、再次重采样或组合专用覆盖才能连接标准接口。
+- 模型输出含不属于具名组件的头部、颈部皮肤、衣装、头发或胡须像素，且只能通过反向抠图清理。
+- 需要扩大图片调用预算、自动重试或改变已批准组件合同。
+
+## 实施范围
+
+- 只调用一次，输出原生透明 PNG，并执行唯一固定规范化。
+- 检查真实 Alpha、中央安全区、完整头骨、耳朵、颈部、身份、画风和接口遮罩。
+- 记录原生／规范哈希、参数、实际调用次数和失败证据。
+
+## 验证
+
+- 原生 1024×1536 与规范 887×1774 RGBA 合同成立，透明 RGB 为零。
+- 规范化重复运行解码像素哈希一致。
+- 负责人未视觉批准时不得解锁 01C。
+
+## 完成条件
+
+- 标准头部获得书面批准并冻结，或按停止条件形成唯一失败结论且不消费后续预算。

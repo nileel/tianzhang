@@ -1,0 +1,85 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-INTERFACE-01E",
+  "title": "C2 门剩余组件生产",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-PORTRAIT-INTERFACE-01D"
+  ],
+  "stateReason": "等待 C1 门通过及 C2 门七次调用独立授权。",
+  "expectedPaths": [
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_elder_broad_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_elder_broad_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/hair-back/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/hair-back/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/hair-front/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/hair-front/hair_high_ponytail_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/outfit-body/outfit_narrow_sleeve_travel_robe_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/outfit-body/outfit_narrow_sleeve_travel_robe_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/face-decoration/beard_short_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/face-decoration/beard_short_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/face-decoration/beard_goatee_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/face-decoration/beard_goatee_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/face-decoration/beard_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/face-decoration/beard_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/c2-components/contact-sheet.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/c2-components/validation.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/manifest.json",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01E.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01F.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01E.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-INTERFACE-01E · C2 门剩余组件生产
+
+## 来源与当前边界
+
+在 C2 独立授权后，以七次调用完成第二老龄头、高束马尾前后层、灰褐行装身体和三种胡须。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
+- assets/generated-character-art/README.md 中透明立绘与正式资产规则。
+- 本卡直接前置的任务卡或完成归档；交接摘要不能替代组件、manifest 与验证原文。
+
+## 禁止项
+
+- 未取得本门独立生产授权时不得调用 GPT Image 2 或任何图片模型。
+- 不使用 FLUX、KSampler、LoRA、扩散重画、自动重试、绿幕回退、人工语义抠图、组合专用补丁或第二套头部接口。
+- 不修改 Unity、CSV、存档、3D 资产或运行时所有权。
+
+## 停止条件
+
+- 需要平移、缩放、旋转、再次重采样或组合专用覆盖才能连接标准接口。
+- 模型输出含不属于具名组件的头部、颈部皮肤、衣装、头发或胡须像素，且只能通过反向抠图清理。
+- 需要扩大图片调用预算、自动重试或改变已批准组件合同。
+
+## 实施范围
+
+- 七次调用逐组件执行，不自动重试；失败即停止剩余调用。
+- 检查顶髻／马尾根归 hair-front、后发被身体遮挡、第二姿势保持头颈接口、胡须叠加于衣装之上。
+- 每个新组件先与全部既有相关组件交叉验证，再登记 manifest。
+
+## 验证
+
+- 对七个新组件逐项执行透明边界、规范化、零变换接口和全部既有相关组件交叉组合检查。
+
+## 完成条件
+
+- 累计十三个组件全部直接透明、规范化可重复、零变换兼容并获书面批准；否则形成唯一失败结论。

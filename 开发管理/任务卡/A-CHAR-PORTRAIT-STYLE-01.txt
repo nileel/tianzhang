@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "2026-09-02：负责人批准四母图替代设计并撤销九次独立组件路线；旧 DEC-20260902-CD3DABC21EAF8F checkpoint 已失效且不得重放。本卡冻结，等待当前 ComfyUI 试验证明可在不重画批准可见像素的前提下完成具名分层、透明边缘与来源重组；通过后本卡先建立精确遮罩和工作流，再以新 checkpoint 请求三个 GPT Image 2 编辑输入及预算的生产授权。",
+  "stateReason": "2026-09-03：四母图反向抠层路线已被 A-CHAR-PORTRAIT-INTERFACE-01 的标准光头核心接口设计取代。本卡及旧遮罩、ComfyUI 提取实验、三个单变量提示与全部旧 checkpoint 继续 frozen，不得调度、修补或消费图片额度。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-02-formal-player-modular-portrait-four-master-design.md",
     "assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json",
