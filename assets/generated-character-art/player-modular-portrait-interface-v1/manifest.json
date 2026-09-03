@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "contractId": "player_modular_portrait_standard_interface_v1",
+  "status": "a_gate_passed",
+  "gate": "A",
+  "taskId": "A-CHAR-PORTRAIT-INTERFACE-01B",
+  "actualImageCalls": 3,
+  "currentCheckpointCalls": 1,
+  "candidateComponent": {
+    "id": "head_young_refined_01",
+    "greenSource": {
+      "path": "evidence/gates/a-standard-head/attempt-03-green-source.png",
+      "sha256": "ccab700a990451fca4779ad56b766460532d62d2f0a47a43b346cc4d6748db29",
+      "usage": "evidence only; forbidden as a downstream generation reference or composition input"
+    },
+    "nativeRgba": {
+      "path": "sources/native/base-head/head_young_refined_01.png",
+      "sha256": "300e95347255ba2478ebe1d707b543ae30b13e7fed442b1f2ae5b9d4c3630590"
+    },
+    "normalizedRgba": {
+      "path": "layers/base-head/head_young_refined_01.png",
+      "sha256": "ca943d171bf99393a3ee47a03020952dcd4fb563392a96e2414b0c7894461abf"
+    }
+  },
+  "acceptedComponents": [
+    {
+      "id": "head_young_refined_01",
+      "downstreamGenerationReference": "sources/native/base-head/head_young_refined_01.png",
+      "formalCompositionInput": "layers/base-head/head_young_refined_01.png"
+    }
+  ],
+  "rejectedOutputs": [
+    {
+      "attempt": 1,
+      "path": "evidence/gates/a-standard-head/attempt-01-native-missing-alpha.png",
+      "sha256": "0889711fa8ba99918e0f61a9a6a4bfcd40414f20cedd66909f23fe5f961cc514",
+      "reason": "native PNG is RGB without alpha; checkerboard is baked into the image"
+    },
+    {
+      "attempt": 2,
+      "path": "evidence/gates/a-standard-head/attempt-02-native-missing-alpha.png",
+      "sha256": "e50e0ce5e0fc9e9a9b84bbd597a9e6f508c351f8ace5ec240a37eee9ee3b6291",
+      "reason": "native PNG is RGB without alpha; checkerboard is baked into the image"
+    }
+  ],
+  "interfaceFrozen": true,
+  "ownerVisualApproval": {
+    "approvedOn": "2026-09-03",
+    "decision": "approved",
+    "instruction": "do not pass the green-screen version to the next task"
+  },
+  "downstreamGates": {
+    "B": "owner authorized four B-gate image calls on 2026-09-03; execution remains blocked until 01B is formally integrated and dependency maintenance completes",
+    "C1": "not authorized and not consumed",
+    "C2": "not authorized and not consumed"
+  },
+  "validation": "evidence/gates/a-standard-head/validation.json",
+  "contactSheet": {
+    "path": "evidence/gates/a-standard-head/contact-sheet.png",
+    "sha256": "58a718b4e36b580a4387540271b94e569c118703344c87e752b5fc176867d224"
+  }
+}

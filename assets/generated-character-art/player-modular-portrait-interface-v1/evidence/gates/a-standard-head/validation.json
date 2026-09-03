@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "taskId": "A-CHAR-PORTRAIT-INTERFACE-01B",
+  "gate": "A",
+  "status": "passed",
+  "objectiveStatus": "passed",
+  "detailCode": "a_gate_passed",
+  "reference": {
+    "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
+    "role": "identity, age, temperament, and project style reference only",
+    "sha256": "399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948"
+  },
+  "checkpoint": {
+    "approvedOn": "2026-09-03",
+    "approval": "owner explicitly approved the proven Fu Yuan green-screen-to-RGBA route",
+    "designPath": "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
+    "inputContractPath": "assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json",
+    "promptPath": "assets/generated-character-art/player-modular-portrait-interface-v1/prompts.md",
+    "buildScriptPath": "assets/generated-character-art/player-modular-portrait-interface-v1/build_a_gate_outputs.py"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "route": "native transparent request",
+      "resultPath": "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/attempt-01-native-missing-alpha.png",
+      "sha256": "0889711fa8ba99918e0f61a9a6a4bfcd40414f20cedd66909f23fe5f961cc514",
+      "decodedMode": "RGB",
+      "failure": "checkerboard transparency pattern was baked into RGB pixels"
+    },
+    {
+      "attempt": 2,
+      "route": "native transparent request",
+      "resultPath": "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/attempt-02-native-missing-alpha.png",
+      "sha256": "e50e0ce5e0fc9e9a9b84bbd597a9e6f508c351f8ace5ec240a37eee9ee3b6291",
+      "decodedMode": "RGB",
+      "failure": "checkerboard transparency pattern was baked into RGB pixels despite an explicit prohibition"
+    },
+    {
+      "attempt": 3,
+      "route": "approved flat-green source followed by deterministic alpha extraction",
+      "resultPath": "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/attempt-03-green-source.png",
+      "sha256": "ccab700a990451fca4779ad56b766460532d62d2f0a47a43b346cc4d6748db29",
+      "decodedSize": [1024, 1536],
+      "decodedMode": "RGB",
+      "sampledKey": "#06ed0e",
+      "imageCallsInCheckpoint": 1
+    }
+  ],
+  "alphaExtraction": {
+    "tool": "C:/Users/WINDOWS/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+    "parameters": ["--auto-key", "border", "--soft-matte", "--transparent-threshold", "12", "--opaque-threshold", "128", "--despill", "--edge-contract", "1", "--force"],
+    "nativeOutput": {
+      "path": "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_refined_01.png",
+      "sha256": "300e95347255ba2478ebe1d707b543ae30b13e7fed442b1f2ae5b9d4c3630590",
+      "decodedSize": [1024, 1536],
+      "decodedMode": "RGBA",
+      "visibleBboxInclusive": [181, 173, 857, 1341],
+      "insideSafeRect": true,
+      "cornerAlpha": [0, 0, 0, 0],
+      "transparentPixels": 994545,
+      "partialAlphaPixels": 3451,
+      "opaquePixels": 574868,
+      "transparentRgbZero": true,
+      "opaqueRgbMatchesGreenSource": true
+    }
+  },
+  "normalization": {
+    "tool": "assets/generated-character-art/player-modular-portrait-interface-v1/build_a_gate_outputs.py",
+    "output": {
+      "path": "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_refined_01.png",
+      "sha256": "ca943d171bf99393a3ee47a03020952dcd4fb563392a96e2414b0c7894461abf",
+      "decodedSize": [887, 1774],
+      "decodedMode": "RGBA",
+      "visibleBboxInclusive": [60, 197, 845, 1549],
+      "cornerAlpha": [0, 0, 0, 0],
+      "transparentPixels": 797762,
+      "partialAlphaPixels": 13626,
+      "opaquePixels": 762150,
+      "transparentRgbZero": true,
+      "repeatHashMatched": true
+    }
+  },
+  "visualChecks": {
+    "completeSkullEarsAndNeck": true,
+    "containsOnlyBaseHeadPixels": true,
+    "identityAgeAndStyleMatch": true,
+    "visibleGreenSpill": false,
+    "ownerApproval": {
+      "approvedOn": "2026-09-03",
+      "decision": "approved",
+      "instruction": "green-screen source must not be passed to the next task"
+    }
+  },
+  "downstreamBudgetConsumed": 0,
+  "conclusion": "The approved green-screen checkpoint produced a deterministic RGBA A-gate component that passes objective pixel and interface checks and received explicit owner visual approval. The interface is frozen. Downstream generation may consume only the native RGBA path; formal composition may consume only the normalized RGBA path; the green source remains evidence-only."
+}

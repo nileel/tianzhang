@@ -1,0 +1,103 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-INTERFACE-01B",
+  "title": "A 门标准光头头部生产",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-03：负责人批准的绿幕 checkpoint 已消费唯一一次图片调用；RGBA 原生版与规范版通过 Alpha、安全区、透明 RGB、人物不透明像素保真和重复哈希检查，并获负责人视觉批准。接口已冻结；绿幕源图仅作 evidence，明确禁止传给 01C。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/prompts.md",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/build_a_gate_outputs.py",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/attempt-01-native-missing-alpha.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/attempt-02-native-missing-alpha.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/attempt-03-green-source.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/contact-sheet.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/a-standard-head/validation.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/manifest.json",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01B.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01C.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01B.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-INTERFACE-01B · A 门标准光头头部生产
+
+## 来源与当前边界
+
+在负责人明确批准 A 门后，用唯一一次 GPT Image 2 调用生成并冻结年轻清秀标准光头头部接口。
+
+## 完成记录
+
+- 首次自动化调用与本轮负责人重新授权的第二次调用均明确要求真实透明 Alpha；两份原生输出都是 `1024×1536`、8-bit、PNG Color Type 2（RGB），没有 Alpha 通道，并把棋盘格透明示意烘焙进 RGB 像素。
+- 两份失败输出、SHA-256、参考图、提示合同、请求参数和判定记录已保存在 A 门 evidence 与 manifest；没有任何输出被接受为组件。
+- 负责人批准改用项目既有的纯 `#00ff00` 绿幕源图与确定性去绿流程。该处理只从直接生成的独立 `base-head` 背景建立 Alpha，不从完整人物反向提取组件，也不修改人物内部不透明像素。
+- 新 checkpoint 的唯一一次图片调用生成绿幕源图 `attempt-03-green-source.png`；确定性去绿得到 RGBA 原生版 SHA-256 `300e95347255ba2478ebe1d707b543ae30b13e7fed442b1f2ae5b9d4c3630590`，固定规范化得到 RGBA 规范版 SHA-256 `ca943d171bf99393a3ee47a03020952dcd4fb563392a96e2414b0c7894461abf`。
+- 原生有效包围盒 `[181,173]–[857,1341]` 位于安全区，四角 Alpha 为零、透明 RGB 为零，574868 个全不透明人物像素与绿幕源图同坐标 RGB 一致；规范化重复运行哈希一致。
+- 负责人已视觉批准。下游生成注册只可读取 `sources/native/base-head/head_young_refined_01.png`，正式组合只可读取 `layers/base-head/head_young_refined_01.png`；绿幕源图与两份伪透明失败图均只作证据。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
+- assets/generated-character-art/README.md 中透明立绘与正式资产规则。
+- 本卡直接前置的任务卡或完成归档；交接摘要不能替代组件、manifest 与验证原文。
+
+## 禁止项
+
+- 未取得本门独立生产授权时不得调用 GPT Image 2 或任何图片模型。
+- 不使用 FLUX、KSampler、LoRA、扩散重画、自动重试、人工语义抠图、组合专用补丁或第二套头部接口。
+- 不修改 Unity、CSV、存档、3D 资产或运行时所有权。
+
+## 停止条件
+
+- 需要平移、缩放、旋转、再次重采样或组合专用覆盖才能连接标准接口。
+- 模型输出含不属于具名组件的头部、颈部皮肤、衣装、头发或胡须像素，且只能通过反向抠图清理。
+- 需要扩大新 checkpoint 的一次图片调用预算、自动重试或再次改变已批准组件合同。
+
+## 实施范围
+
+- 只调用一次，输出纯 `#00ff00` 绿幕上的独立头部源图；使用冻结参数确定性去绿得到原生画布 RGBA，再执行唯一固定规范化。
+- 检查真实 Alpha、中央安全区、完整头骨、耳朵、颈部、身份、画风和接口遮罩。
+- 记录原生／规范哈希、参数、实际调用次数和失败证据。
+
+## 验证
+
+- 绿幕源图背景均匀且主体不含键色；去绿后的原生 1024×1536 与规范 887×1774 RGBA 合同成立，透明 RGB 为零。
+- 规范化重复运行解码像素哈希一致。
+- 负责人未视觉批准时不得解锁 01C。
+
+## 完成条件
+
+- 标准头部获得书面批准并冻结，或按停止条件形成唯一失败结论且不消费后续预算。
+
+## 经验候选
+
+### CAND-A-CHAR-PORTRAIT-INTERFACE-01B-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：content
+- 现象：内置 ImageGen 在提示中明确要求真实透明 Alpha 后，连续两次返回 PNG Color Type 2（RGB），并把透明棋盘格烘焙进像素；仅检查文件扩展名或视觉棋盘格会把伪透明误判为可用组件并阻断后续接口任务链。
+- 已证实根因：当前内置生成入口没有保证把提示级“透明背景”兑现为文件级 Alpha 通道；提示语义与 PNG 编码能力不是同一门禁。项目既有苻渊透明立绘实际采用绿幕 RGB 源图加确定性 Alpha 提取，而非模型原生透明直出。
+- 可能复用范围：所有通过内置 ImageGen 生产角色立绘、纸娃娃组件、头发、衣装、胡须、战术精灵或其他需要真实透明边缘的 PNG 资产。
+- 证据：失败输出 SHA-256 `0889711fa8ba99918e0f61a9a6a4bfcd40414f20cedd66909f23fe5f961cc514` 与 `e50e0ce5e0fc9e9a9b84bbd597a9e6f508c351f8ace5ec240a37eee9ee3b6291` 均为 RGB；批准的绿幕 checkpoint 经冻结参数生成 RGBA 原生版 `300e95347255ba2478ebe1d707b543ae30b13e7fed442b1f2ae5b9d4c3630590`，规范版 `ca943d171bf99393a3ee47a03020952dcd4fb563392a96e2414b0c7894461abf`，客观检查与负责人视觉批准均通过。
+- 门禁可能：yes；图片生成后必须解码检查 PNG Color Type、Alpha 极值、四角 Alpha、透明 RGB 和可见包围盒。原生透明缺失时不得把棋盘格当透明，也不得自动重试同一路线；只有预先批准并冻结参数的绿幕 Alpha 提取 checkpoint 才可继续。

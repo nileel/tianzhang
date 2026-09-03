@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "player_modular_portrait_standard_interface_v1",
-  "status": "a_gate_checkpoint_ready",
+  "status": "a_gate_passed",
   "designSource": "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
   "supersedes": {
     "contract": "assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json",
@@ -18,8 +18,12 @@
   },
   "standardHead": {
     "id": "head_young_refined_01",
+    "modelSourcePath": "evidence/gates/a-standard-head/attempt-03-green-source.png",
+    "modelSourceUsage": "evidence only; forbidden as a downstream generation reference or composition input",
     "nativePath": "sources/native/base-head/head_young_refined_01.png",
     "normalizedPath": "layers/base-head/head_young_refined_01.png",
+    "downstreamGenerationReferencePath": "sources/native/base-head/head_young_refined_01.png",
+    "formalCompositionPath": "layers/base-head/head_young_refined_01.png",
     "ownership": "complete bald skull, face, ears, and downward neck only; no hair, beard, clothes, shoulders, or body",
     "frozenInterface": ["decoded RGBA pixels", "canvas registration", "scale", "orientation", "lighting", "skull envelope", "hairline", "ear roots", "neck overlap"]
   },
@@ -46,11 +50,16 @@
   },
   "gates": [
     { "id": "A", "budget": 1, "scope": ["head_young_refined_01"], "authorization": "owner approval recorded in A-CHAR-PORTRAIT-INTERFACE-01B stateReason" },
-    { "id": "B", "budget": 4, "scope": ["head_young_defined_01", "hair_half_up_long_01 back/front", "outfit_practical_sword_finger_01"], "authorization": "separate explicit approval required" },
+    { "id": "B", "budget": 4, "scope": ["head_young_defined_01", "hair_half_up_long_01 back/front", "outfit_practical_sword_finger_01"], "authorization": "owner approval recorded in A-CHAR-PORTRAIT-INTERFACE-01C stateReason on 2026-09-03" },
     { "id": "C1", "budget": 1, "scope": ["head_elder_ascetic_01"], "authorization": "separate explicit approval required" },
     { "id": "C2", "budget": 7, "scope": ["head_elder_authoritative_01", "hair_high_ponytail_01 back/front", "outfit_travel_relaxed_01", "three beard decorations"], "authorization": "separate explicit approval required" }
   ],
-  "modelRequest": { "model": "gpt-image-2", "background": "transparent", "output_format": "png", "nativeSize": "1024x1536" },
-  "validation": ["native PNG has real alpha", "component is contained in the native safeRect", "complete skull, ears, and neck", "identity and Chinese xianxia anime style", "normalization is deterministic", "no component transform, patch, reverse extraction, chroma key, semantic cutout, FLUX, KSampler, LoRA, or automatic retry"],
+  "modelRequest": { "model": "gpt-image-2", "background": "flat #00ff00 chroma field", "output_format": "png", "nativeSize": "1024x1536" },
+  "alphaExtraction": {
+    "tool": "C:/Users/WINDOWS/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+    "parameters": ["--auto-key", "border", "--soft-matte", "--transparent-threshold", "12", "--opaque-threshold", "128", "--despill", "--edge-contract", "1", "--force"],
+    "scope": "border-sampled chroma background alpha, partially transparent edge despill, and transparent-RGB zeroing only; no semantic mask, redraw, subject transform, or extraction from a complete character"
+  },
+  "validation": ["model source is RGB on a uniform #00ff00 field", "extracted native PNG has real alpha", "opaque subject pixels remain unchanged", "component is contained in the native safeRect", "complete skull, ears, and neck", "identity and Chinese xianxia anime style", "alpha extraction and normalization are deterministic", "no component transform, patch, reverse extraction, semantic cutout, FLUX, KSampler, LoRA, or automatic retry"],
   "failureHandling": "stop the current gate; preserve input, prompt, output, parameters, hashes, and interface failure; no retry or fallback without a new explicit checkpoint"
 }

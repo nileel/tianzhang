@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-PORTRAIT-INTERFACE-01B"
   ],
-  "stateReason": "等待标准头部批准及 B 门四次调用独立授权。",
+  "stateReason": "2026-09-03：负责人已明确授予 B 门四次图片调用；当前仅等待 01B 正式集成后的依赖维护，移除具名前置后可直接转 ready。后续生成注册只可读取 A 门 RGBA 原生版 sources/native/base-head/head_young_refined_01.png，正式组合只可读取规范 RGBA 版 layers/base-head/head_young_refined_01.png；绿幕源图是 evidence-only，禁止传入本任务。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_defined_01.png",
     "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_defined_01.png",
@@ -48,6 +48,10 @@
 
 在 B 门独立授权后，以四次调用形成年轻硬朗头、半束长发前后层和靛青长袍身体，并证明最小组合接口成立。
 
+2026-09-03，负责人已明确授予本门四次图片调用；无需再次请求同一预算授权。
+
+A 门标准头部的唯一生成注册输入是 `sources/native/base-head/head_young_refined_01.png`，唯一正式组合输入是 `layers/base-head/head_young_refined_01.png`。`evidence/gates/a-standard-head/attempt-03-green-source.png` 只用于审计，不是下游输入。
+
 ## 必查范围
 
 - docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
@@ -57,7 +61,8 @@
 ## 禁止项
 
 - 未取得本门独立生产授权时不得调用 GPT Image 2 或任何图片模型。
-- 不使用 FLUX、KSampler、LoRA、扩散重画、自动重试、绿幕回退、人工语义抠图、组合专用补丁或第二套头部接口。
+- 不使用 FLUX、KSampler、LoRA、扩散重画、自动重试、人工语义抠图、组合专用补丁或第二套头部接口。
+- 不得把 A 门绿幕源图、两份伪透明失败图或联系表传给图片模型；只传冻结的 RGBA 原生标准头部。
 - 不修改 Unity、CSV、存档、3D 资产或运行时所有权。
 
 ## 停止条件
@@ -68,7 +73,7 @@
 
 ## 实施范围
 
-- 四次调用各自只生产一个具名透明组件，不重试。
+- 四次调用各自在纯绿幕上直接生产一个具名独立组件，按冻结参数确定性提取 Alpha，不重试。
 - 组合两张头部 × 一套发型 × 一套衣装，固定层序且零变换。
 - 检查发际线、鬓角、耳根、后颈、领口、透明边缘和重复哈希。
 
