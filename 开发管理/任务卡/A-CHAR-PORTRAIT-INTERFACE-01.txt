@@ -11,14 +11,13 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "A-CHAR-PORTRAIT-INTERFACE-01A",
-    "A-CHAR-PORTRAIT-INTERFACE-01B",
     "A-CHAR-PORTRAIT-INTERFACE-01C",
     "A-CHAR-PORTRAIT-INTERFACE-01D",
     "A-CHAR-PORTRAIT-INTERFACE-01E",
     "A-CHAR-PORTRAIT-INTERFACE-01F",
     "A-CHAR-PORTRAIT-INTERFACE-01G"
   ],
-  "stateReason": "2026-09-03：01A 已完成，01B 的标准光头 RGBA 接口已获负责人视觉批准并冻结并等待正式集成；本卡仍为不可调度汇总父项，只由 01G 在后续授权门、组件、矩阵与最终视觉批准成立后关闭。",
+  "stateReason": "2026-09-03：01B 已正式集成，标准光头 RGBA 接口已获负责人视觉批准并冻结；01C 已获 B 门授权并进入 ready。本卡仍为不可调度汇总父项，只由 01G 在后续组件、矩阵与最终视觉批准成立后关闭。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",

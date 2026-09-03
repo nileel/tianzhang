@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-PORTRAIT-INTERFACE-01B"
-  ],
-  "stateReason": "2026-09-03：负责人已明确授予 B 门四次图片调用；当前仅等待 01B 正式集成后的依赖维护，移除具名前置后可直接转 ready。后续生成注册只可读取 A 门 RGBA 原生版 sources/native/base-head/head_young_refined_01.png，正式组合只可读取规范 RGBA 版 layers/base-head/head_young_refined_01.png；绿幕源图是 evidence-only，禁止传入本任务。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-03：01B 已以提交 3be8fed381da0b877990a84501342d4e83c13299 正式集成，A 门 RGBA 标准头部已批准冻结；负责人已明确授予 B 门四次图片调用，当前可执行。生成注册只可读取 sources/native/base-head/head_young_refined_01.png，正式组合只可读取 layers/base-head/head_young_refined_01.png；绿幕源图是 evidence-only，禁止传入本任务。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_defined_01.png",
     "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_defined_01.png",
