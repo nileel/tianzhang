@@ -1,0 +1,71 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-INTERFACE-01A",
+  "title": "标准接口合同与 A 门 checkpoint",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-03：已冻结标准接口 input contract 与 A 门唯一提示合同；A 门授权证据仍保留在 01B stateReason。旧四母图路线继续 frozen。本卡未调用图片模型，任务完成归档。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/prompts.md",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01A.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01B.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01A.txt"
+  ],
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-INTERFACE-01A · 标准接口合同与 A 门 checkpoint
+
+## 来源与当前边界
+
+已批准设计已投影为完整 input contract、逐门提示合同和一次调用的 A 门生产 checkpoint；本卡未调用图片模型。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md` 完整正文。
+- `assets/generated-character-art/README.md` 中透明立绘与正式资产规则。
+
+## 实施范围
+
+- 新建标准接口合同与 A 门提示合同；完成任务／backlog／队列归档投影。
+
+## 禁止项
+
+- 不调用 GPT Image 2 或任何图片模型；不修改 Unity、CSV、存档、3D 资产或运行时所有权。
+
+## 完成记录
+
+- 新合同冻结原生 `1024×1536`、中央 `[128,0,768,1536]` 安全区、一次固定规范化至 `887×1774`、13 个具名组件、固定层序、64 组合／192 裁切输出、manifest 字段和四道独立授权门。
+- `prompts.md` 冻结 A 门标准年轻清秀光头头部的唯一英文提示、参考输入、`background=transparent`、`output_format=png`、一次调用预算、验收与失败处理。
+- A 门只覆盖一次 GPT Image 2 调用；不包含 B、C1 或 C2 调用预算，亦未消费任何图片额度。
+- 旧 `A-CHAR-PORTRAIT-STYLE-01` 已明确为被标准光头接口合同取代并保持 frozen。
+- 01B 继续保留其具名前置引用；正式进入 master 后由后续 QueueMaintenance 依据已归档事实维护下游解除投影。
+
+## 验证
+
+- input contract、提示合同与 2026-09-03 设计的画布、组件、层序、门预算、组合矩阵及停止条件一致。
+- A 门提示只允许一个 `base-head` 输出；不含 B、C1、C2 授权或调用。
+- 已运行任务卡、审核文本、数据链、空白与 Git 差异检查。
+
+## 完成条件
+
+- 新合同和提示已形成可独立确认的 A 门 checkpoint；旧四母图提示和 checkpoint 已失效并保持 frozen。
+
+## 停止条件
+
+- 需要平移、缩放、旋转、再次重采样或组合专用覆盖才能连接标准接口。
+- 模型输出含不属于具名组件的头部、颈部皮肤、衣装、头发或胡须像素，且只能通过反向抠图清理。
+- 需要扩大图片调用预算、自动重试或改变已批准组件合同。

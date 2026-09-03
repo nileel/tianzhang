@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "2026-09-03：四母图反向抠层路线已被 A-CHAR-PORTRAIT-INTERFACE-01 的标准光头核心接口设计取代。本卡及旧遮罩、ComfyUI 提取实验、三个单变量提示与全部旧 checkpoint 继续 frozen，不得调度、修补或消费图片额度。",
+  "stateReason": "2026-09-03：四母图反向抠层路线已被 A-CHAR-PORTRAIT-INTERFACE-01 的标准光头核心接口合同取代。本卡及旧遮罩、ComfyUI 提取实验、三个单变量提示与全部旧 checkpoint 继续 frozen，不得调度、修补或消费图片额度。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-02-formal-player-modular-portrait-four-master-design.md",
     "assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json",
