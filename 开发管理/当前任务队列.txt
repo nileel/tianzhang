@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| A-CHAR-PORTRAIT-INTERFACE-01B | codex_execute | codex | P1 | content | implementation | A 门标准光头头部生产 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01B.txt |
