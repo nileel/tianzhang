@@ -10,7 +10,7 @@
   "stage": "design",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-09-03：设计已批准并经 DeepSeek 只读审核修订；本卡只做合同、提示和一次调用 A 门 checkpoint 投影，不调用图片模型。",
+  "stateReason": "2026-09-03：设计已批准并经 DeepSeek 只读审核修订；负责人已在当前对话明确回复‘批准’，授权 A 门最多一次 GPT Image 2 调用。该授权只供 01B 使用，本卡仍不调用图片模型。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
     "assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json",
@@ -60,7 +60,7 @@
 - 新建 assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json 与 prompts.md，冻结原生 1024×1536、中央裁切、887×1774 规范化、13 个组件、四道授权门和 64 组合合同。
 - 将旧 A-CHAR-PORTRAIT-STYLE-01 的 stateReason 改为被新父项取代并继续 frozen；不得删除其历史实验。
 - 完整形成 A 门标准光头提示、参考输入、background=transparent、output_format=png、一次调用预算、验收与失败处理。
-- 完成时只把 01B 转入等待负责人授权的非 ready 状态，不顺带调用模型。
+- 完成时核验并保留本卡 stateReason 中的负责人授权证据；授权仍有效时将 01B 转入 ready，但不在本卡顺带调用模型。
 
 ## 验证
 
@@ -72,3 +72,4 @@
 
 - 新合同和提示可直接形成 A 门独立授权决定；旧四母图提示和 checkpoint 明确失效。
 - 01B 的路径、输入、输出、预算、验证与停止条件已冻结。
+- A 门授权范围固定为最多一次 GPT Image 2 调用、无自动重试、仅生成标准光头头部；不包含 B、C1 或 C2 门预算。

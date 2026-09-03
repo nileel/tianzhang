@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-PORTRAIT-INTERFACE-01A"
   ],
-  "stateReason": "等待 01A 完成合同与负责人对 A 门一次调用的独立明确授权。",
+  "stateReason": "2026-09-03：负责人已在当前对话明确回复‘批准’，授权 A 门最多一次 GPT Image 2 调用；当前只等待 01A 完成并冻结合同，之后可进入 ready。授权不含自动重试及 B/C1/C2 门预算。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_refined_01.png",
     "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_refined_01.png",
