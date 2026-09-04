@@ -11,13 +11,14 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "A-CHAR-PORTRAIT-INTERFACE-01A",
+    "A-CHAR-PORTRAIT-REGISTER-01",
     "A-CHAR-PORTRAIT-INTERFACE-01C",
     "A-CHAR-PORTRAIT-INTERFACE-01D",
     "A-CHAR-PORTRAIT-INTERFACE-01E",
     "A-CHAR-PORTRAIT-INTERFACE-01F",
     "A-CHAR-PORTRAIT-INTERFACE-01G"
   ],
-  "stateReason": "2026-09-03：01B 已正式集成，标准光头 RGBA 接口已获负责人视觉批准并冻结；01C 已获 B 门授权并进入 ready。本卡仍为不可调度汇总父项，只由 01G 在后续组件、矩阵与最终视觉批准成立后关闭。",
+  "stateReason": "2026-09-04：标准头部画风已批准，但原位复核证明旧全身注册未成立。负责人授权 A-CHAR-PORTRAIT-REGISTER-01 重新处理现有五组件，01C 保留为其后的 B 门签收并已阻塞；父项继续只汇总，不直接执行。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -37,7 +38,9 @@
     "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01F.txt",
     "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01F.txt",
     "开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01G.txt",
-    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01G.txt"
+    "开发管理/任务归档/A-CHAR-PORTRAIT-INTERFACE-01G.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-REGISTER-01.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-REGISTER-01.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -52,32 +55,33 @@
 ## 来源与当前边界
 
 - 唯一设计事实源是 docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md。
-- 本父项只汇总 01A～01G，不直接编写合同、调用图片模型、生产组件、操作 ComfyUI 或形成组合资产。
+- 本父项只汇总 01A～01G 与负责人于 2026-09-04 新增的 REGISTER-01，不直接编写合同、调用图片模型、生产组件、操作 ComfyUI 或形成组合资产。
 - 旧 A-CHAR-PORTRAIT-STYLE-01 四母图路线保持冻结并由 01A 标记为被取代，不成为本父项前置。
 
 ## 必查范围
 
 - docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
-- 01A～01G 的任务卡或完成归档，以及开发管理/当前任务队列.txt 的当前投影。
+- 01A～01G 与 REGISTER-01 的任务卡或完成归档，以及开发管理/当前任务队列.txt 的当前投影。
 - 开发管理/状态与建议维护规则.txt 与开发管理/AI协作规则.txt 中任务拆分、状态和授权边界。
 
 ## 禁止项
 
 - 父项不得进入 ready、领取实现或代替任一叶子任务执行。
 - 不得越过 A、B、C1、C2 独立生产授权，也不得由本卡调用任何图片模型。
-- 不恢复旧四母图反向抠图路线，不在父项内添加组件补丁、第二套接口或额外子任务。
+- 不恢复旧四母图反向抠图路线，不在父项内添加组件补丁、第二套接口或未经负责人授权的额外子任务。
 
 ## 子任务与依赖
 
 1. 01A：新合同、提示与 A 门 checkpoint 投影；首个 ready 叶子。
 2. 01B：A 门标准光头头部生产；阻塞于 01A 与负责人独立授权。
-3. 01C：B 门双年轻头／半束发／实用长袍最小兼容证明；阻塞于 01B 与 B 门授权。
-4. 01D：C1 门清癯老龄头接口证明；阻塞于 01C 与 C1 授权。
-5. 01E：C2 门剩余七个组件生产；阻塞于 01D 与 C2 授权。
-6. 01F：64 组合、192 裁切、分页联系表与确定性哈希；阻塞于 01E。
-7. 01G：负责人最终视觉批准、manifest 签收与父项关闭；阻塞于 01F。
+3. REGISTER-01（A-CHAR-PORTRAIT-REGISTER-01）：复用现有五组件，确定全身布局并做一次固定入库校准；只交付可复核注册包，不增加生成额度。
+4. 01C：对 REGISTER-01 完成的双年轻头／半束发／实用长袍注册包做 B 门签收；阻塞于 REGISTER-01。
+5. 01D：C1 门清癯老龄头接口证明；阻塞于 01C 与 C1 授权。
+6. 01E：C2 门剩余七个组件生产；阻塞于 01D 与 C2 授权。
+7. 01F：64 组合、192 裁切、分页联系表与确定性哈希；阻塞于 01E。
+8. 01G：负责人最终视觉批准、manifest 签收与父项关闭；阻塞于 01F。
 
-依赖图固定为 01A → 01B → 01C → 01D → 01E → 01F → 01G。父项永不进入 ready，不得逐轮补建已知子卡。
+当前依赖图为 01A → 01B → REGISTER-01 → 01C → 01D → 01E → 01F → 01G。REGISTER-01 是本次负责人明确新增的资源重处理任务；后续原有门继续保留。父项永不进入 ready，不得逐轮补建已知子卡。
 
 ## 实施范围
 
@@ -86,14 +90,14 @@
 
 ## 验证
 
-- 01A～01G 的 ID、依赖、状态、expectedPaths 和队列投影一致。
+- 01A～01G 与 REGISTER-01 的 ID、依赖、状态、expectedPaths 和队列投影一致。
 - 父项从不进入 ready，队列中同一时刻最多出现依赖已满足的最前叶子。
 - 运行任务卡、审核文本、空白与 Git 差异检查。
 
 ## 完成条件
 
 - 十三个直接生成组件、64 个组合、192 张裁切、四页以上联系表与 manifest 全部通过。
-- 不存在反向抠图、组合补丁、接口变换、本地扩散重画或未授权图片调用。
+- 不存在反向抠图、组合补丁、组合阶段接口变换、本地扩散重画或未授权图片调用；REGISTER-01 只允许批准的一次固定入库校准。
 - 负责人批准最终联系表，01G 与父项在同一管理切片归档。
 
 ## 停止条件

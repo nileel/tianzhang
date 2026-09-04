@@ -7,10 +7,12 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",
-  "stage": "implementation",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "2026-09-03：01B 已以提交 3be8fed381da0b877990a84501342d4e83c13299 正式集成，A 门 RGBA 标准头部已批准冻结；负责人已明确授予 B 门四次图片调用，当前可执行。生成注册只可读取 sources/native/base-head/head_young_refined_01.png，正式组合只可读取 layers/base-head/head_young_refined_01.png；绿幕源图是 evidence-only，禁止传入本任务。",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-PORTRAIT-REGISTER-01"
+  ],
+  "stateReason": "2026-09-04：B 门四次生成额度已用完；原位复核证明头部特写与全身衣装比例、位置不一致，单纯放宽安全区不能通过。负责人授权新建 A-CHAR-PORTRAIT-REGISTER-01 重处理五个现有组件。本卡保留为后续 B 门签收，等待注册包完成后复核，不重新调用图片、不关闭业务任务。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_defined_01.png",
     "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_defined_01.png",
@@ -44,34 +46,34 @@
 
 ## 来源与当前边界
 
-在 B 门独立授权后，以四次调用形成年轻硬朗头、半束长发前后层和靛青长袍身体，并证明最小组合接口成立。
+本卡现保留为 B 门最小组合签收：等待 A-CHAR-PORTRAIT-REGISTER-01 完成现有五组件全身注册包，再核对两张头部共用同一发型和衣装的接口及负责人视觉批准。
 
-2026-09-03，负责人已明确授予本门四次图片调用；无需再次请求同一预算授权。
+2026-09-03 授予的四次 B 门图片调用已全部消费；不得把旧授权当成新额度。2026-09-04 原尺寸复核恢复了四个来源与 RGBA，哈希与旧运行一致，原位组合证据保存在新注册任务的冻结输入包。
 
-A 门标准头部的唯一生成注册输入是 `sources/native/base-head/head_young_refined_01.png`，唯一正式组合输入是 `layers/base-head/head_young_refined_01.png`。`evidence/gates/a-standard-head/attempt-03-green-source.png` 只用于审计，不是下游输入。
+A 门原生头部保留为源数据；其旧满幅特写坐标不能直接作为全身组合接口。后续仅消费 REGISTER-01 实际完成并经检查的统一 1024×1536 注册包及其当前合同；历史绿幕和旧规范图不混用为新组合输入。
 
 ## 必查范围
 
 - docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md 完整正文。
 - assets/generated-character-art/README.md 中透明立绘与正式资产规则。
-- 本卡直接前置的任务卡或完成归档；交接摘要不能替代组件、manifest 与验证原文。
+- A-CHAR-PORTRAIT-REGISTER-01 完成归档、registration.json、五个校准 RGBA、两张组合与 registered/validation.json；交接摘要不能替代组件、manifest 与验证原文。
 
 ## 禁止项
 
-- 未取得本门独立生产授权时不得调用 GPT Image 2 或任何图片模型。
+- 本卡不再调用任何图片模型；需要重画时必须另立新的明确授权 checkpoint。
 - 不使用 FLUX、KSampler、LoRA、扩散重画、自动重试、人工语义抠图、组合专用补丁或第二套头部接口。
-- 不得把 A 门绿幕源图、两份伪透明失败图或联系表传给图片模型；只传冻结的 RGBA 原生标准头部。
+- 不得用旧满幅特写、绿幕、伪透明图或按组合临时变换的组件代替已校准全身资源。
 - 不修改 Unity、CSV、存档、3D 资产或运行时所有权。
 
 ## 停止条件
 
-- 需要平移、缩放、旋转、再次重采样或组合专用覆盖才能连接标准接口。
+- REGISTER-01 的一次入库校准之外，组合阶段仍需要平移、缩放、旋转、再次重采样或组合专用覆盖才能连接接口。
 - 模型输出含不属于具名组件的头部、颈部皮肤、衣装、头发或胡须像素，且只能通过反向抠图清理。
 - 需要扩大图片调用预算、自动重试或改变已批准组件合同。
 
 ## 实施范围
 
-- 四次调用各自在纯绿幕上直接生产一个具名独立组件，按冻结参数确定性提取 Alpha，不重试。
+- 只消费 REGISTER-01 的已校准五组件；复核来源、参数和全身坐标一致性，不重复生产或再次校准。
 - 组合两张头部 × 一套发型 × 一套衣装，固定层序且零变换。
 - 检查发际线、鬓角、耳根、后颈、领口、透明边缘和重复哈希。
 
@@ -83,4 +85,4 @@ A 门标准头部的唯一生成注册输入是 `sources/native/base-head/head_y
 
 ## 完成条件
 
-- B 门五个累计组件形成可复核最小矩阵并获书面批准，或形成唯一失败结论。
+- B 门五个组件的最小矩阵及头身比例、发际线、耳根、后颈和领口均通过，并获负责人书面批准后归档。若仍失败，保留业务任务与具体证据交负责人判断，不以归档失败来解锁 C1。
