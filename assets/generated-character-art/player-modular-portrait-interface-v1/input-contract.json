@@ -1,65 +1,192 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "contractId": "player_modular_portrait_standard_interface_v1",
-  "status": "a_gate_passed",
+  "status": "b_minimal_registered_candidate_pending_b_gate_review",
   "designSource": "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
+  "registration": {
+    "taskId": "A-CHAR-PORTRAIT-REGISTER-01",
+    "registrationPath": "registration.json",
+    "builder": "build_registered_components.py",
+    "evidencePath": "evidence/gates/b-minimal/registered/validation.json"
+  },
   "supersedes": {
     "contract": "assets/generated-character-art/player-modular-portrait-style-v1/input-contract.json",
     "reason": "four-master reverse extraction cannot recover the hidden interface pixels"
   },
-  "nativeCanvas": { "width": 1024, "height": 1536, "safeRect": [128, 0, 768, 1536] },
-  "normalizedCanvas": {
-    "width": 887,
-    "height": 1774,
+  "sourceCanvas": {
+    "width": 1024,
+    "height": 1536,
+    "pixelFormat": "sRGB 8-bit straight/unassociated RGBA",
+    "usage": "immutable source inputs only; no central safety crop is applied to the registered package"
+  },
+  "registeredCanvas": {
+    "width": 1024,
+    "height": 1536,
     "origin": "top_left",
     "pixelFormat": "sRGB 8-bit straight/unassociated RGBA",
-    "normalization": "crop native safeRect once; premultiplied-alpha Lanczos resize once; restore straight alpha; set transparent pixels to RGBA=(0,0,0,0)",
+    "calibration": "one fixed per-component uniform scale and translation from the full native source; premultiplied-alpha Lanczos; transparent RGB set to zero",
     "compositionTransforms": "none"
+  },
+  "futureDisplayExport": {
+    "width": 887,
+    "height": 1774,
+    "status": "not approved by this task",
+    "rule": "a future display export must derive from an accepted registered composition and must not decide whether a component is usable"
   },
   "standardHead": {
     "id": "head_young_refined_01",
     "modelSourcePath": "evidence/gates/a-standard-head/attempt-03-green-source.png",
-    "modelSourceUsage": "evidence only; forbidden as a downstream generation reference or composition input",
+    "modelSourceUsage": "historical evidence only; forbidden as a downstream generation reference or composition input",
     "nativePath": "sources/native/base-head/head_young_refined_01.png",
-    "normalizedPath": "layers/base-head/head_young_refined_01.png",
-    "downstreamGenerationReferencePath": "sources/native/base-head/head_young_refined_01.png",
+    "nativeUsage": "immutable A-gate source audit only; it is a close-up source, not the current full-body registration reference",
+    "registeredPath": "layers/base-head/head_young_refined_01.png",
+    "downstreamGenerationReferencePath": "layers/base-head/head_young_refined_01.png",
     "formalCompositionPath": "layers/base-head/head_young_refined_01.png",
     "ownership": "complete bald skull, face, ears, and downward neck only; no hair, beard, clothes, shoulders, or body",
-    "frozenInterface": ["decoded RGBA pixels", "canvas registration", "scale", "orientation", "lighting", "skull envelope", "hairline", "ear roots", "neck overlap"]
+    "frozenInterface": [
+      "decoded RGBA pixels",
+      "registered 1024x1536 canvas position",
+      "head scale",
+      "orientation",
+      "lighting",
+      "skull envelope",
+      "hairline",
+      "ear roots",
+      "neck overlap"
+    ]
   },
-  "components": {
-    "base-head": ["head_young_refined_01", "head_young_defined_01", "head_elder_ascetic_01", "head_elder_authoritative_01"],
-    "hair-back": ["hair_half_up_long_01", "hair_high_ponytail_01"],
-    "hair-front": ["hair_half_up_long_01", "hair_high_ponytail_01"],
-    "outfit-body": ["outfit_practical_sword_finger_01", "outfit_travel_relaxed_01"],
-    "face-decoration": ["beard_light_mustache_goatee_01", "beard_goatee_01", "beard_elder_long_01"]
+  "registeredBMinimalComponents": {
+    "base-head": [
+      "head_young_refined_01",
+      "head_young_defined_01"
+    ],
+    "hair-back": [
+      "hair_half_up_long_01"
+    ],
+    "hair-front": [
+      "hair_half_up_long_01"
+    ],
+    "outfit-body": [
+      "outfit_practical_long_robe_01"
+    ]
   },
-  "componentCount": 13,
-  "outfitPoses": {
-    "outfit_practical_sword_finger_01": "pose_practical_sword_finger_01: three-quarter upright; right sword-finger at chest; relaxed lowered left arm; stable feet; indigo and cream robe with dark soft boots",
-    "outfit_travel_relaxed_01": "pose_travel_relaxed_01: same head and neck registration; three-quarter upright; both arms naturally lowered; one foot slightly forward; gray-brown narrow-sleeve travel wear with dark soft boots"
+  "plannedComponentScope": {
+    "base-head": [
+      "head_young_refined_01",
+      "head_young_defined_01",
+      "head_elder_ascetic_01",
+      "head_elder_authoritative_01"
+    ],
+    "hair-back": [
+      "hair_half_up_long_01",
+      "hair_high_ponytail_01"
+    ],
+    "hair-front": [
+      "hair_half_up_long_01",
+      "hair_high_ponytail_01"
+    ],
+    "outfit-body": [
+      "outfit_practical_long_robe_01",
+      "outfit_travel_relaxed_01"
+    ],
+    "face-decoration": [
+      "beard_light_mustache_goatee_01",
+      "beard_goatee_01",
+      "beard_elder_long_01"
+    ]
   },
-  "layerOrder": ["hair-back", "base-head", "outfit-body", "face-decoration", "hair-front"],
+  "layerOrder": [
+    "hair-back",
+    "base-head",
+    "outfit-body",
+    "face-decoration",
+    "hair-front"
+  ],
   "compatibility": {
-    "matrix": "4 heads x 2 hair styles x 2 outfits x 4 beard states = 64 composites",
-    "beardStates": ["none", "beard_light_mustache_goatee_01", "beard_goatee_01", "beard_elder_long_01"],
-    "outputsPerComposite": ["full-body", "bust", "avatar"],
-    "totalOutputs": 192,
-    "manifestKeys": ["headId", "hairId", "outfitId", "faceDecorationId", "cropId", "sourceHash"],
-    "contactSheet": "at most 16 composites per page; at least four pages"
+    "registeredCandidate": "2 heads x 1 hair style x 1 outfit = 2 full-body zero-transform composites",
+    "futureMatrix": "4 heads x 2 hair styles x 2 outfits x 4 beard states = 64 composites",
+    "futureBeardStates": [
+      "none",
+      "beard_light_mustache_goatee_01",
+      "beard_goatee_01",
+      "beard_elder_long_01"
+    ],
+    "futureOutputsPerComposite": [
+      "full-body",
+      "bust",
+      "avatar"
+    ]
   },
   "gates": [
-    { "id": "A", "budget": 1, "scope": ["head_young_refined_01"], "authorization": "owner approval recorded in A-CHAR-PORTRAIT-INTERFACE-01B stateReason" },
-    { "id": "B", "budget": 4, "scope": ["head_young_defined_01", "hair_half_up_long_01 back/front", "outfit_practical_sword_finger_01"], "authorization": "owner approval recorded in A-CHAR-PORTRAIT-INTERFACE-01C stateReason on 2026-09-03" },
-    { "id": "C1", "budget": 1, "scope": ["head_elder_ascetic_01"], "authorization": "separate explicit approval required" },
-    { "id": "C2", "budget": 7, "scope": ["head_elder_authoritative_01", "hair_high_ponytail_01 back/front", "outfit_travel_relaxed_01", "three beard decorations"], "authorization": "separate explicit approval required" }
+    {
+      "id": "A",
+      "budget": 1,
+      "scope": [
+        "head_young_refined_01"
+      ],
+      "authorization": "approved and historically frozen"
+    },
+    {
+      "id": "B",
+      "budget": 4,
+      "scope": [
+        "head_young_defined_01",
+        "hair_half_up_long_01 back/front",
+        "outfit_practical_long_robe_01"
+      ],
+      "authorization": "four calls consumed; this registration package is eligible for B-gate review but is not B-gate approval"
+    },
+    {
+      "id": "C1",
+      "budget": 1,
+      "scope": [
+        "head_elder_ascetic_01"
+      ],
+      "authorization": "separate explicit approval required"
+    },
+    {
+      "id": "C2",
+      "budget": 7,
+      "scope": [
+        "head_elder_authoritative_01",
+        "hair_high_ponytail_01 back/front",
+        "outfit_travel_relaxed_01",
+        "three beard decorations"
+      ],
+      "authorization": "separate explicit approval required"
+    }
   ],
-  "modelRequest": { "model": "gpt-image-2", "background": "flat #00ff00 chroma field", "output_format": "png", "nativeSize": "1024x1536" },
+  "modelRequest": {
+    "model": "gpt-image-2",
+    "background": "flat #00ff00 chroma field",
+    "outputFormat": "png",
+    "nativeSize": "1024x1536"
+  },
   "alphaExtraction": {
     "tool": "C:/Users/WINDOWS/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
-    "parameters": ["--auto-key", "border", "--soft-matte", "--transparent-threshold", "12", "--opaque-threshold", "128", "--despill", "--edge-contract", "1", "--force"],
+    "parameters": [
+      "--auto-key",
+      "border",
+      "--soft-matte",
+      "--transparent-threshold",
+      "12",
+      "--opaque-threshold",
+      "128",
+      "--despill",
+      "--edge-contract",
+      "1",
+      "--force"
+    ],
     "scope": "border-sampled chroma background alpha, partially transparent edge despill, and transparent-RGB zeroing only; no semantic mask, redraw, subject transform, or extraction from a complete character"
   },
-  "validation": ["model source is RGB on a uniform #00ff00 field", "extracted native PNG has real alpha", "opaque subject pixels remain unchanged", "component is contained in the native safeRect", "complete skull, ears, and neck", "identity and Chinese xianxia anime style", "alpha extraction and normalization are deterministic", "no component transform, patch, reverse extraction, semantic cutout, FLUX, KSampler, LoRA, or automatic retry"],
+  "validation": [
+    "frozen source hashes and RGBA formats match the A/B recovery evidence",
+    "each registered layer is 1024x1536 RGBA with zero transparent RGB",
+    "each named component has exactly one fixed uniform calibration transform",
+    "both composites reuse the exact same calibrated hair and outfit files with no composition transform",
+    "repeat builds have identical decoded pixel hashes",
+    "manual review covers hairline, temples, ear roots, back neck, collar, face visibility, hands and feet",
+    "a future display crop cannot replace B-gate registration review"
+  ],
   "failureHandling": "stop the current gate; preserve input, prompt, output, parameters, hashes, and interface failure; no retry or fallback without a new explicit checkpoint"
 }

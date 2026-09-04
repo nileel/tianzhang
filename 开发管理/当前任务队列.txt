@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-CHAR-PORTRAIT-REGISTER-01 | codex_execute | codex | P1 | content | implementation | 现有立绘组件全身注册与资源重处理 | 开发管理/任务卡/A-CHAR-PORTRAIT-REGISTER-01.txt |

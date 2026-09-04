@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "taskId": "A-CHAR-PORTRAIT-REGISTER-01",
+  "status": "registered_candidate_pending_b_gate_review",
+  "purpose": "One fixed full-body registration for the existing five B-gate components; calibration is performed once from each frozen native RGBA input, then composition is zero-transform.",
+  "sourceCanvas": {
+    "width": 1024,
+    "height": 1536,
+    "pixelFormat": "sRGB 8-bit straight RGBA"
+  },
+  "calibrationCanvas": {
+    "width": 1024,
+    "height": 1536,
+    "origin": "top_left",
+    "pixelFormat": "sRGB 8-bit straight RGBA",
+    "background": "transparent"
+  },
+  "resampling": {
+    "method": "premultiplied-alpha Lanczos",
+    "sourcePasses": 1,
+    "postcondition": "all fully transparent pixels are RGBA=(0,0,0,0)"
+  },
+  "composition": {
+    "layerOrder": [
+      "hair-back",
+      "base-head",
+      "outfit-body",
+      "hair-front"
+    ],
+    "transforms": "none",
+    "headCombinations": [
+      "head_young_refined_01",
+      "head_young_defined_01"
+    ],
+    "sharedComponents": [
+      "hair-back",
+      "outfit-body",
+      "hair-front"
+    ]
+  },
+  "sharedAnchors": {
+    "headFrame": [
+      375,
+      100,
+      675,
+      570
+    ],
+    "faceCenter": [
+      512,
+      350
+    ],
+    "neckCenter": [
+      512,
+      500
+    ],
+    "collarOverlap": [
+      460,
+      494,
+      565
+    ],
+    "footBaseline": 1526
+  },
+  "faceSamplePoints": [
+    {
+      "id": "eye",
+      "xy": [
+        505,
+        303
+      ]
+    },
+    {
+      "id": "nose",
+      "xy": [
+        451,
+        365
+      ]
+    },
+    {
+      "id": "mouth",
+      "xy": [
+        469,
+        408
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "head_young_refined_01",
+      "kind": "base-head",
+      "sourcePath": "sources/native/base-head/head_young_refined_01.png",
+      "sourceSha256": "300e95347255ba2478ebe1d707b543ae30b13e7fed442b1f2ae5b9d4c3630590",
+      "layerPath": "layers/base-head/head_young_refined_01.png",
+      "transform": {
+        "scale": 0.37,
+        "translate": [
+          320,
+          62
+        ]
+      }
+    },
+    {
+      "id": "head_young_defined_01",
+      "kind": "base-head",
+      "sourcePath": "sources/native/base-head/head_young_defined_01.png",
+      "sourceSha256": "6897d84e45c25af6513c3cf9eba88b14d61b4cd0fd960910f8974a9f864c6cac",
+      "layerPath": "layers/base-head/head_young_defined_01.png",
+      "transform": {
+        "scale": 0.37,
+        "translate": [
+          320,
+          62
+        ]
+      }
+    },
+    {
+      "id": "hair-back",
+      "kind": "hair-back",
+      "sourcePath": "sources/native/hair-back/hair_half_up_long_01.png",
+      "sourceSha256": "ed246e83cede2d5cdd98c181e100fb17582cbde503d56228388be5d8ba213e21",
+      "layerPath": "layers/hair-back/hair_half_up_long_01.png",
+      "transform": {
+        "scale": 0.48,
+        "translate": [
+          260,
+          10
+        ]
+      }
+    },
+    {
+      "id": "hair-front",
+      "kind": "hair-front",
+      "sourcePath": "sources/native/hair-front/hair_half_up_long_01.png",
+      "sourceSha256": "201f110ded83ca89081a91c7cf8587378ff47d76ee8325b00317ae9b300530bf",
+      "layerPath": "layers/hair-front/hair_half_up_long_01.png",
+      "transform": {
+        "scale": 0.48,
+        "translate": [
+          260,
+          10
+        ]
+      }
+    },
+    {
+      "id": "outfit-body",
+      "kind": "outfit-body",
+      "sourcePath": "sources/native/outfit-body/outfit_practical_long_robe_01.png",
+      "sourceSha256": "3f442b9d3f238fa046bb589d246e57b0972704e74a80d74d712fff2d8f13e25a",
+      "layerPath": "layers/outfit-body/outfit_practical_long_robe_01.png",
+      "transform": {
+        "scale": 0.78,
+        "translate": [
+          113,
+          400
+        ]
+      }
+    }
+  ],
+  "visualReview": {
+    "performed": true,
+    "reviewer": "Codex",
+    "scope": "Manual inspection of both registered 1024x1536 composites, the layout and the contact-sheet closeups.",
+    "checks": {
+      "faceNotCoveredByOutfit": true,
+      "headBodyProportionPlausible": true,
+      "hairlineAndTempleContinuous": true,
+      "earRootsVisibleOrNaturallyFramed": true,
+      "backNeckAndCollarConnected": true,
+      "handsAndFeetReadable": true,
+      "noScalpExposure": true
+    },
+    "notes": "The shared hair and robe join both young heads without facial occlusion, detached collar, visible scalp or unreadable hands and feet."
+  },
+  "generatedOutputs": {
+    "head_young_refined_01": {
+      "layerPath": "layers/base-head/head_young_refined_01.png",
+      "sha256": "d72391a3634b3ad755f991afa4144b0b23b120bcce2037ff33391ae82539c5ea",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "visibleBboxInclusive": [
+        385,
+        124,
+        639,
+        560
+      ],
+      "opaquePixels": 77182,
+      "partialAlphaPixels": 3451,
+      "transparentPixels": 1492231,
+      "transparentRgbZero": true,
+      "decodedPixelSha256": "edf12a261b19e79955bedcb8a48c6db6f52962910b7128fd2fa4336d648efbe2"
+    },
+    "head_young_defined_01": {
+      "layerPath": "layers/base-head/head_young_defined_01.png",
+      "sha256": "d933bd8119107246c14e9331f556f69a9ab6fcf7f4601086616ef434ad73c696",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "visibleBboxInclusive": [
+        383,
+        122,
+        647,
+        580
+      ],
+      "opaquePixels": 85910,
+      "partialAlphaPixels": 3589,
+      "transparentPixels": 1483365,
+      "transparentRgbZero": true,
+      "decodedPixelSha256": "b4c5c7ee8d721845d86d766e928d4db4d81161f31c88e7355e0694de3729ecb1"
+    },
+    "hair-back": {
+      "layerPath": "layers/hair-back/hair_half_up_long_01.png",
+      "sha256": "2fff98652adfce67869c4fe27bd31fa4436b7f1c61d84e31cbf349bf071b6221",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "visibleBboxInclusive": [
+        338,
+        65,
+        690,
+        698
+      ],
+      "opaquePixels": 115119,
+      "partialAlphaPixels": 15113,
+      "transparentPixels": 1442632,
+      "transparentRgbZero": true,
+      "decodedPixelSha256": "57e80997295d340cbf556881360ecd3399302bf27d589c227740dfed1e06c69d"
+    },
+    "hair-front": {
+      "layerPath": "layers/hair-front/hair_half_up_long_01.png",
+      "sha256": "4fe40996cf43b147928ca5ee132c7bdf751498b3ea5b943105e84864f26645a0",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "visibleBboxInclusive": [
+        339,
+        71,
+        715,
+        685
+      ],
+      "opaquePixels": 65212,
+      "partialAlphaPixels": 18088,
+      "transparentPixels": 1489564,
+      "transparentRgbZero": true,
+      "decodedPixelSha256": "c82ff191ac4992a999962d00703d94bd6af1d963c1890b022ba11f25617185ff"
+    },
+    "outfit-body": {
+      "layerPath": "layers/outfit-body/outfit_practical_long_robe_01.png",
+      "sha256": "021c10cbfc72ff7b1eb226fb13d8ed5725d9fb23ecfd55813a5bac98891e908f",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "visibleBboxInclusive": [
+        231,
+        491,
+        782,
+        1528
+      ],
+      "opaquePixels": 333464,
+      "partialAlphaPixels": 14139,
+      "transparentPixels": 1225261,
+      "transparentRgbZero": true,
+      "decodedPixelSha256": "905acad36a5e66ea1cd0edfe2bf572bb898b02aaccb9ad25e6cafa981b2245ee"
+    }
+  },
+  "composites": {
+    "head_young_refined_01": {
+      "path": "evidence/gates/b-minimal/registered/composite_young_refined.png",
+      "sha256": "524ebb222fcd6a5e90d7057bfd8a9ad2f236ee6d038e9dfe374fa41628e1e4cf",
+      "decodedPixelSha256": "418c6122f50f58e5de2319ed01142ece0316b81a5d378734160bbeddd0e4f64f"
+    },
+    "head_young_defined_01": {
+      "path": "evidence/gates/b-minimal/registered/composite_young_defined.png",
+      "sha256": "419b98a1d6a530e49d6cde6610213e091b5901b24f0c6c651621f351a736726c",
+      "decodedPixelSha256": "5a9b6f7ea3db3af3fca222235a470b76ce0db8bc0b61993fde7c1f1f307bb091"
+    }
+  }
+}

@@ -1,0 +1,114 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-PORTRAIT-REGISTER-01",
+  "title": "现有立绘组件全身注册与资源重处理",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-04：已用完整 1024×1536 原生 RGBA 对五个既有组件执行一次固定入库校准，形成两张零变换全身组合、布局、联系表和确定性验证；结果仅待 A-CHAR-PORTRAIT-INTERFACE-01C 的 B 门书面签收，不代签 B 门或解锁 C1/C2。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/prompts.md",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/manifest.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/registration.json",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/build_registered_components.py",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_defined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/hair-back/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/hair-front/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/outfit-body/outfit_practical_long_robe_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_refined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_defined_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/hair-back/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/hair-front/hair_half_up_long_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/layers/outfit-body/outfit_practical_long_robe_01.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/b-minimal/registered/layout.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/b-minimal/registered/composite_young_refined.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/b-minimal/registered/composite_young_defined.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/b-minimal/registered/contact-sheet.png",
+    "assets/generated-character-art/player-modular-portrait-interface-v1/evidence/gates/b-minimal/registered/validation.json",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-PORTRAIT-REGISTER-01.txt",
+    "开发管理/任务归档/A-CHAR-PORTRAIT-REGISTER-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-PORTRAIT-REGISTER-01 · 现有立绘组件全身注册与资源重处理
+
+## 来源与当前边界
+
+本归档只记录已冻结的 A 门标准头和四个 B 门恢复 RGBA 的全身注册结果；B 门书面签收仍由 `A-CHAR-PORTRAIT-INTERFACE-01C` 处理。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md` 的画布、标准接口、生产数据流和当前授权状态。
+- `assets/generated-character-art/README.md`、当前合同、manifest、A 门脚本与 B 门冻结来源／失败基线。
+- 五个原生 RGBA、两张注册组合和注册联系表。
+
+## 实施范围
+
+- 从五个来源输入一次重建固定全身注册层，并输出布局、两张组合、联系表和验证记录。
+- 同步设计、合同、提示与 manifest 到当前注册坐标和来源。
+- 将本卡归档并移出队列与 backlog，不处理下游依赖。
+
+## 禁止项
+
+- 不调用图片模型、不消费 C1/C2、不制作 Unity、CSV、3D 或其他角色资源。
+- 不在组合阶段引入缩放、平移、旋转、变形、局部遮罩或组合专用补丁。
+- 不将注册包写为 B 门已经批准，或提前改动 `A-CHAR-PORTRAIT-INTERFACE-01C`。
+
+## 完成记录
+
+- 已逐字节核对 A 门标准头与四个 B 门恢复 RGBA。四个恢复输入与冻结 `automationInputs` 的 SHA-256 一致；原始绿幕和历史失败组合没有进入正式组合。
+- `registration.json` 为五个具名组件固定一套等比缩放、平移和预乘 Alpha Lanczos 入库参数。所有校准层为同一 `1024×1536` RGBA 画布，透明 RGB 为零；不再用旧中央安全区裁掉有效发丝。
+- `build_registered_components.py` 只从五个 `sources/native` 输入一次重建校准层，并按 `hair-back → base-head → outfit-body → hair-front` 原位合成清秀头与硬朗头。组合阶段没有任何变换、专用遮罩、局部覆盖或按组合分支。
+- `validation.json` 记录来源与输出哈希、连续重建的解码像素一致性、同一前后发和衣装层在两张组合中的复用，以及眼、鼻、嘴三个样点均不被衣装或前发覆盖。
+- 已人工查看布局、两张全图和联系表接口近景：脸部可见，头身比例可用，发际线、太阳穴、耳根、后颈和领口相接，手势与足部可读，未见露头皮。结果仅具备交 B 门复核的资格。
+
+## 边界
+
+- 本任务没有调用图片模型、没有消费 C1/C2，也没有更改 Unity、CSV、3D、其他角色资源或下游任务卡。
+- `A-CHAR-PORTRAIT-INTERFACE-01C` 对本任务的具名前置保持不变；后续 QueueMaintenance 在正式结果进入 master 后才可依既有规则处理依赖投影。
+- 本次不批准 `887×1774` 展示导出，不标记 B 门通过，不提前解锁 C1/C2。
+
+## 验证
+
+- `python assets/generated-character-art/player-modular-portrait-interface-v1/build_registered_components.py`
+- `python -m json.tool assets/generated-character-art/player-modular-portrait-interface-v1/input-contract.json`
+- `python -m json.tool assets/generated-character-art/player-modular-portrait-interface-v1/manifest.json`
+- `python -m json.tool assets/generated-character-art/player-modular-portrait-interface-v1/registration.json`
+- 人工核验 `evidence/gates/b-minimal/registered/layout.png`、两张 `composite_*.png` 与 `contact-sheet.png`
+
+## 完成条件
+
+五个校准层、两张零变换组合、来源／输出哈希与视觉证据均已形成；注册包可交 B 门复核但不代替 B 门签收。
+
+## 停止条件
+
+若任何连接只能依靠局部变形、旋转、补画、语义抠图、组合专用补丁或新的图片调用，本任务必须保留证据并停止；本轮未触发该条件。
+
+## 经验候选
+
+### CAND-A-CHAR-PORTRAIT-REGISTER-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：content
+- 现象：具名独立组件即使都在同尺寸 RGBA 原生画布内，头部特写与全身衣装仍可能具有不兼容的主体比例和坐标；直接原位组合会让衣装遮住脸，或留下不连续的发际线与领口。
+- 已证实根因：B 门恢复图复现了头颈占画布约 76% 而衣装按全身填幅的尺度冲突；旧中央裁切还会丢失前发右侧有效像素。问题不是单一 Alpha 或包围盒门禁能够覆盖。
+- 可能复用范围：所有用独立生成的头、发、衣装或纸娃娃层，在从模型原生画布进入共同全身组件库前的注册工作。
+- 证据：`registration.json` 固定五个来源哈希和唯一入库参数；`validation.json` 证明五个校准 RGBA、透明 RGB、重复解码哈希、共享层复用和脸部样点；布局、两张组合与联系表完成了可视复核。
+- 门禁可能：yes；将独立组件视为可组合前，先在共同画布记录固定入库变换，连续重建并查看全图及发际线、耳根、后颈、衣领与脸部样点。组合阶段不得以组合专用变换或遮罩补救。
