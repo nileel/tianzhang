@@ -10,15 +10,13 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-PORTRAIT-INTERFACE-01A",
-    "A-CHAR-PORTRAIT-REGISTER-01",
     "A-CHAR-PORTRAIT-INTERFACE-01C",
     "A-CHAR-PORTRAIT-INTERFACE-01D",
     "A-CHAR-PORTRAIT-INTERFACE-01E",
     "A-CHAR-PORTRAIT-INTERFACE-01F",
     "A-CHAR-PORTRAIT-INTERFACE-01G"
   ],
-  "stateReason": "2026-09-04：标准头部画风已批准，但原位复核证明旧全身注册未成立。负责人授权 A-CHAR-PORTRAIT-REGISTER-01 重新处理现有五组件，01C 保留为其后的 B 门签收并已阻塞；父项继续只汇总，不直接执行。",
+  "stateReason": "2026-09-04：A-CHAR-PORTRAIT-INTERFACE-01A 与 A-CHAR-PORTRAIT-REGISTER-01 均已完成归档；01C 现等待负责人对已注册五组件作 B 门书面签收，后续 01D～01G 仍保持具名前置。父项继续只汇总，不直接执行。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",

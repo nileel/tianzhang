@@ -9,10 +9,8 @@
   "domain": "content",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-PORTRAIT-REGISTER-01"
-  ],
-  "stateReason": "2026-09-04：B 门四次生成额度已用完；原位复核证明头部特写与全身衣装比例、位置不一致，单纯放宽安全区不能通过。负责人授权新建 A-CHAR-PORTRAIT-REGISTER-01 重处理五个现有组件。本卡保留为后续 B 门签收，等待注册包完成后复核，不重新调用图片、不关闭业务任务。",
+  "blockedBy": [],
+  "stateReason": "2026-09-04：A-CHAR-PORTRAIT-REGISTER-01 已完成归档并交付五组件注册包；B 门仍须负责人对最小组合的视觉结果作书面签收。本卡继续阻塞，不重新调用图片、不关闭业务任务。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-interface-v1/sources/native/base-head/head_young_defined_01.png",
     "assets/generated-character-art/player-modular-portrait-interface-v1/layers/base-head/head_young_defined_01.png",
