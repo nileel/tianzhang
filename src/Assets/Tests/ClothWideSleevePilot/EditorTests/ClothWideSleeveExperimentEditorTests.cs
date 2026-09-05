@@ -10,6 +10,68 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
 {
     public sealed class ClothWideSleeveExperimentEditorTests
     {
+        [TestCase(2f)]
+        [TestCase(4f)]
+        [TestCase(6f)]
+        [TestCase(8f)]
+        [TestCase(9f)]
+        public void ActionBoundariesDoNotTeleportOrSnapPose(float boundary)
+        {
+            var before = ClothWideSleeveMotion.Evaluate(boundary - 0.0001f);
+            var after = ClothWideSleeveMotion.Evaluate(boundary + 0.0001f);
+            Assert.That(Mathf.Abs(after.distance - before.distance), Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(after.yawOffset - before.yawOffset), Is.LessThan(0.01f));
+            Assert.That(Mathf.Abs(after.armUp - before.armUp), Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(after.armForward - before.armForward), Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(after.forearm - before.forearm), Is.LessThan(0.001f));
+        }
+
+        [Test]
+        public void StopChangesVelocityInstantlyWithoutChangingPoseOrPositionDiscontinuously()
+        {
+            const float dt = 1f / 60f;
+            var before = ClothWideSleeveMotion.Evaluate(9f - dt);
+            var at = ClothWideSleeveMotion.Evaluate(9f);
+            var after = ClothWideSleeveMotion.Evaluate(9f + dt);
+            Assert.That((at.distance - before.distance) / dt, Is.EqualTo(1.25f).Within(0.0001f));
+            Assert.That((after.distance - at.distance) / dt, Is.Zero);
+            Assert.That(at.armUp, Is.EqualTo(before.armUp));
+            Assert.That(after.armUp, Is.EqualTo(before.armUp));
+            Assert.That(at.distance, Is.EqualTo(1.25f));
+        }
+
+        [Test]
+        public void AllRecordedActionStepsAreContinuousAndReturnToRest()
+        {
+            var previous = ClothWideSleeveMotion.Evaluate(0f);
+            for (int frame = 1; frame < 720; frame++)
+            {
+                var current = ClothWideSleeveMotion.Evaluate(frame / 60f);
+                Assert.That(Mathf.Abs(current.distance - previous.distance), Is.LessThanOrEqualTo(1.25f / 60f + 0.0001f));
+                Assert.That(Mathf.Abs(current.yawOffset - previous.yawOffset), Is.LessThan(5f));
+                previous = current;
+            }
+            Assert.That(previous.distance, Is.EqualTo(1.25f));
+            Assert.That(previous.armUp, Is.EqualTo(-0.62f));
+            Assert.That(previous.armForward, Is.Zero);
+            Assert.That(previous.yawOffset, Is.Zero);
+        }
+
+        [Test]
+        public void PairedSphereDistanceIncludesTheContinuousBridgeAndUnequalRadii()
+        {
+            var a = Vector3.zero;
+            var b = Vector3.up * 2f;
+            Assert.That(ClothWideSleeveCollisionProbe.ProxySignedDistance(Vector3.up, a, b, 0.5f, 0.5f),
+                Is.EqualTo(-0.5f).Within(0.001f), "The bridge is not a gap between two spheres.");
+            Assert.That(ClothWideSleeveCollisionProbe.ProxySignedDistance(Vector3.up + Vector3.right, a, b, 0.5f, 0.5f),
+                Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(ClothWideSleeveCollisionProbe.ProxySignedDistance(-Vector3.up, a, b, 0.5f, 0.25f),
+                Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(ClothWideSleeveCollisionProbe.ProxySignedDistance(Vector3.zero, a, Vector3.up * 0.1f, 1f, 0.2f),
+                Is.EqualTo(-1f).Within(0.001f), "Nested endpoints reduce to the enclosing sphere.");
+        }
+
         [Test]
         public void SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings()
         {
