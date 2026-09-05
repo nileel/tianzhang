@@ -13,12 +13,21 @@ namespace TianZhang.ClothWideSleevePilot
         private const int SimulationRate = 60;
         private const int CaptureStride = 5;
         private static readonly float[] SixDirectionYaw = { 90f, 150f, 210f, 270f, 330f, 30f };
+        public enum IsolationMode { Retest02, A_SkinOnly, B_NoBodyCollision, C_BodyCollision }
+        // Authored constraint-mask experiment for the frozen v001 FBX only. Evidence: isolation-03/analysis.json.
+        private static readonly int[] DiagnosedTorsoConflictVertices =
+        {
+            360, 361, 362, 363, 364, 365, 367, 369, 400, 401, 402, 403, 404, 405,
+            406, 407, 408, 409, 410, 411, 412, 413, 445, 447, 449, 451, 453, 455
+        };
 
         [SerializeField] private Animator animator;
         [SerializeField] private Transform motionRoot;
         [SerializeField] private Camera experimentCamera;
         [SerializeField] private Cloth sleeveCloth;
         [SerializeField] private SkinnedMeshRenderer sleeveRenderer;
+        [SerializeField] private IsolationMode isolationMode;
+        [SerializeField] private bool releaseDiagnosedTorsoPins;
 
         private HumanPoseHandler poseHandler;
         private HumanPose pose;
@@ -34,6 +43,7 @@ namespace TianZhang.ClothWideSleevePilot
         private string captureDirectory, actionLabel = "WARMUP";
         private Camera tacticalCamera, debugCamera;
         private ClothWideSleeveCollisionProbe probe;
+        private ClothWideSleeveSkinningProbe skinningProbe;
         private readonly List<FrameRecord> frames = new List<FrameRecord>();
         private readonly List<StepRecord> steps = new List<StepRecord>();
         private GUIStyle titleStyle, detailStyle;
@@ -43,6 +53,8 @@ namespace TianZhang.ClothWideSleevePilot
         public Cloth SleeveCloth => sleeveCloth;
         public SkinnedMeshRenderer SleeveRenderer => sleeveRenderer;
         private bool Capturing => !string.IsNullOrWhiteSpace(captureDirectory);
+        private bool Isolating => isolationMode != IsolationMode.Retest02;
+        private float Duration => Isolating ? 8f : TotalDurationSeconds;
 
         private IEnumerator Start()
         {
@@ -51,6 +63,20 @@ namespace TianZhang.ClothWideSleevePilot
                 throw new InvalidOperationException("The isolated Cloth pilot has invalid serialized references.");
 
             captureDirectory = ReadCommandLineValue("--capture-dir");
+            string isolationArgument = ReadCommandLineValue("--isolate-mode");
+            if (isolationArgument != null) isolationMode = ParseIsolationMode(isolationArgument);
+            if (ReadCommandLineValue("--release-conflicting-pins") == "true") releaseDiagnosedTorsoPins = true;
+            if (releaseDiagnosedTorsoPins)
+            {
+                var coefficients = sleeveCloth.coefficients;
+                ReleaseDiagnosedPins(coefficients);
+                sleeveCloth.coefficients = coefficients;
+            }
+            if (isolationMode == IsolationMode.B_NoBodyCollision)
+            {
+                sleeveCloth.sphereColliders = Array.Empty<ClothSphereColliderPair>();
+                sleeveCloth.capsuleColliders = Array.Empty<CapsuleCollider>();
+            }
             previousCaptureDelta = Time.captureDeltaTime;
             previousFrameRate = Application.targetFrameRate;
             previousVSync = QualitySettings.vSyncCount;
@@ -76,9 +102,10 @@ namespace TianZhang.ClothWideSleevePilot
             forearmIndex = RequireMuscle("Left Forearm Stretch");
             ConfigureViews();
             probe = new ClothWideSleeveCollisionProbe(sleeveCloth, sleeveRenderer);
+            if (Isolating) skinningProbe = new ClothWideSleeveSkinningProbe(sleeveRenderer, sleeveCloth);
 
             sleeveCloth.enabled = false;
-            ApplyPose(0, 0f);
+            ApplyPose(Isolating ? 1 : 0, 0f);
             // Exclude shader/window startup from the recorded trial; Cloth is still disabled.
             for (int i = 0; i < SimulationRate; i++) yield return new WaitForEndOfFrame();
             wallStart = Time.realtimeSinceStartup;
@@ -90,7 +117,7 @@ namespace TianZhang.ClothWideSleevePilot
         {
             if (!running) return;
             elapsed = Capturing ? simulationFrame / (float)SimulationRate : playbackTime;
-            if (elapsed >= TotalDurationSeconds)
+            if (elapsed >= Duration)
             {
                 running = false;
                 finished = true;
@@ -102,8 +129,8 @@ namespace TianZhang.ClothWideSleevePilot
                 return;
             }
 
-            int nextDirection = Mathf.FloorToInt(elapsed / ClothWideSleeveMotion.TrialSeconds);
-            trialTime = elapsed - nextDirection * ClothWideSleeveMotion.TrialSeconds;
+            int nextDirection = Isolating ? 1 : Mathf.FloorToInt(elapsed / ClothWideSleeveMotion.TrialSeconds);
+            trialTime = Isolating ? elapsed : elapsed - nextDirection * ClothWideSleeveMotion.TrialSeconds;
             bool reset = nextDirection != direction;
             if (reset)
             {
@@ -112,7 +139,7 @@ namespace TianZhang.ClothWideSleevePilot
                 frameWithinTrial = 0;
             }
             ApplyPose(direction, trialTime);
-            if (frameWithinTrial == 1)
+            if (frameWithinTrial == 1 && isolationMode != IsolationMode.A_SkinOnly)
             {
                 sleeveCloth.enabled = true;
                 sleeveCloth.ClearTransformMotion();
@@ -152,7 +179,9 @@ namespace TianZhang.ClothWideSleevePilot
                         direction = direction, yaw = SixDirectionYaw[direction], action = actionLabel,
                         clothEnabled = sleeveCloth.enabled, rootPosition = motionRoot.position,
                         rootRotation = motionRoot.rotation,
-                        measurement = sleeveCloth.enabled ? probe.Measure() : null
+                        measurement = !Isolating && sleeveCloth.enabled ? probe.Measure() : null,
+                        skinning = Isolating ? skinningProbe.Measure(simulationFrame % 60 == 0 ||
+                            simulationFrame == 295 || simulationFrame == 330 || simulationFrame == 475) : null
                     };
                     Texture2D texture = ScreenCapture.CaptureScreenshotAsTexture();
                     File.WriteAllBytes(Path.Combine(captureDirectory, "frame_" + frames.Count.ToString("D4") + ".png"),
@@ -166,7 +195,7 @@ namespace TianZhang.ClothWideSleevePilot
 
         private void ApplyPose(int facingIndex, float time)
         {
-            ClothWideSleeveMotion.Sample sample = ClothWideSleeveMotion.Evaluate(time);
+            ClothWideSleeveMotion.Sample sample = EvaluateMotion(time, Isolating);
             Array.Copy(baseMuscles, pose.muscles, baseMuscles.Length);
             pose.muscles[armUpIndex] = sample.armUp;
             pose.muscles[armForwardIndex] = sample.armForward;
@@ -214,12 +243,15 @@ namespace TianZhang.ClothWideSleevePilot
             }
             if (probe != null && debugCamera != null) probe.DrawOverlay(debugCamera);
             GUI.Box(new Rect(8, 8, Screen.width * 0.5f - 16, 98), GUIContent.none);
-            GUI.Label(new Rect(18, 12, 590, 28), "WIDE SLEEVE / RETEST 02 / UNITY CLOTH", titleStyle);
+            GUI.Label(new Rect(18, 12, 590, 28), releaseDiagnosedTorsoPins ? "PIN RELEASE 01 / 28 TARGETED VERTICES" :
+                Isolating ? "ISOLATION 03 / " + isolationMode :
+                "WIDE SLEEVE / RETEST 02 / UNITY CLOTH", titleStyle);
             GUI.Label(new Rect(18, 42, 590, 25), "Near | t=" + elapsed.ToString("F2") + "s | frame=" + simulationFrame +
                 " | yaw=" + (direction < 0 ? "warmup" : SixDirectionYaw[direction].ToString("F0")), detailStyle);
             GUI.Label(new Rect(18, 70, 590, 25), finished ? "COMPLETE - re-enter Play to replay" : actionLabel, detailStyle);
             GUI.Box(new Rect(Screen.width * 0.5f + 8, 8, Screen.width * 0.5f - 16, 55), GUIContent.none);
-            GUI.Label(new Rect(Screen.width * 0.5f + 18, 12, 620, 24), "X-RAY PROXIES (overlay, not extra colliders)", detailStyle);
+            GUI.Label(new Rect(Screen.width * 0.5f + 18, 12, 620, 24), "PROXIES: " + sleeveCloth.sphereColliders.Length +
+                " pairs | CLOTH " + (sleeveCloth.enabled ? "ON" : "OFF / skin only"), detailStyle);
             GUI.Label(new Rect(Screen.width * 0.5f + 18, 35, 620, 24), "Yellow: torso | Cyan: upper arm | Magenta: forearm", detailStyle);
             GUI.Box(new Rect(Screen.width * 0.5f + 8, Screen.height * 0.5f + 8, Screen.width * 0.5f - 16, 34), GUIContent.none);
             GUI.Label(new Rect(Screen.width * 0.5f + 18, Screen.height * 0.5f + 12, 600, 26), "TACTICAL: ortho 6.2 / fixed oblique camera", detailStyle);
@@ -238,16 +270,18 @@ namespace TianZhang.ClothWideSleevePilot
             }
             var report = new RuntimeReport
             {
-                unityVersion = Application.unityVersion, clothObject = sleeveCloth.name,
+                unityVersion = Application.unityVersion, clothObject = sleeveCloth.name, isolationMode = isolationMode.ToString(),
+                releaseDiagnosedTorsoPins = releaseDiagnosedTorsoPins,
                 simulationHz = SimulationRate, captureHz = SimulationRate / CaptureStride,
-                durationSeconds = TotalDurationSeconds, capturedFrames = frames.Count,
+                durationSeconds = Duration, capturedFrames = frames.Count,
                 wallSecondsIncludingCapture = Time.realtimeSinceStartup - wallStart,
                 vertexCount = sleeveRenderer.sharedMesh.vertexCount, pinnedVertices = pins,
                 bendingStiffness = sleeveCloth.bendingStiffness, stretchingStiffness = sleeveCloth.stretchingStiffness,
                 maximumDistance = maxDistance, colliderPairs = sleeveCloth.sphereColliders.Length,
                 selfCollisionVertices = collisionIndices.Count, tacticalOrthographicSize = TacticalOrthographicSize,
                 rendererLossyScale = sleeveRenderer.transform.lossyScale,
-                cameraEuler = experimentCamera.transform.eulerAngles, testedDirectionYaw = SixDirectionYaw,
+                cameraEuler = experimentCamera.transform.eulerAngles,
+                testedDirectionYaw = Isolating ? new[] { SixDirectionYaw[1] } : SixDirectionYaw,
                 frames = frames.ToArray(), steps = steps.ToArray()
             };
             File.WriteAllText(Path.Combine(captureDirectory, "runtime-report.json"), JsonUtility.ToJson(report, true));
@@ -258,6 +292,35 @@ namespace TianZhang.ClothWideSleevePilot
             int index = Array.IndexOf(HumanTrait.MuscleName, muscleName);
             if (index < 0) throw new InvalidOperationException("Missing humanoid muscle: " + muscleName);
             return index;
+        }
+
+        public static IsolationMode ParseIsolationMode(string value)
+        {
+            switch (value)
+            {
+                case "A": return IsolationMode.A_SkinOnly;
+                case "B": return IsolationMode.B_NoBodyCollision;
+                case "C": return IsolationMode.C_BodyCollision;
+                default: throw new ArgumentException("--isolate-mode must be A, B or C.");
+            }
+        }
+
+        public static void ReleaseDiagnosedPins(ClothSkinningCoefficient[] coefficients)
+        {
+            if (coefficients.Length != 456) throw new InvalidOperationException("Pin mask requires the frozen 456-vertex sleeve.");
+            float existingMaximum = 0f;
+            foreach (var coefficient in coefficients) existingMaximum = Mathf.Max(existingMaximum, coefficient.maxDistance);
+            foreach (int index in DiagnosedTorsoConflictVertices)
+                if (coefficients[index].maxDistance > 0.0001f)
+                    throw new InvalidOperationException("Diagnosed pin mask no longer matches this asset.");
+            foreach (int index in DiagnosedTorsoConflictVertices) coefficients[index].maxDistance = existingMaximum;
+        }
+
+        public static ClothWideSleeveMotion.Sample EvaluateMotion(float time, bool isolate)
+        {
+            var sample = ClothWideSleeveMotion.Evaluate(isolate && time >= 6f ? 0f : time);
+            if (isolate && time >= 6f) sample.action = "RECOVER AT REST";
+            return sample;
         }
 
         private static string ReadCommandLineValue(string key)
@@ -271,6 +334,7 @@ namespace TianZhang.ClothWideSleevePilot
         {
             if (poseHandler != null) poseHandler.Dispose();
             if (probe != null) probe.Dispose();
+            if (skinningProbe != null) skinningProbe.Dispose();
             if (!initialized) return;
             Time.captureDeltaTime = previousCaptureDelta;
             Application.targetFrameRate = previousFrameRate;
@@ -296,12 +360,14 @@ namespace TianZhang.ClothWideSleevePilot
             public Vector3 rootPosition;
             public Quaternion rootRotation;
             public ClothWideSleeveCollisionProbe.Measurement measurement;
+            public ClothWideSleeveSkinningProbe.Snapshot skinning;
         }
 
         [Serializable]
         private sealed class RuntimeReport
         {
-            public string unityVersion, clothObject;
+            public string unityVersion, clothObject, isolationMode;
+            public bool releaseDiagnosedTorsoPins;
             public int simulationHz, captureHz, capturedFrames, vertexCount, pinnedVertices, colliderPairs, selfCollisionVertices;
             public float durationSeconds, wallSecondsIncludingCapture, bendingStiffness, stretchingStiffness,
                 maximumDistance, tacticalOrthographicSize;

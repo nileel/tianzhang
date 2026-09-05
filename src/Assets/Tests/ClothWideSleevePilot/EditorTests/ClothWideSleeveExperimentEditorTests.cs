@@ -10,6 +10,31 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
 {
     public sealed class ClothWideSleeveExperimentEditorTests
     {
+        [Test]
+        public void IsolationHasExplicitGroupsAndDoesNotTurnOrMoveTheBody()
+        {
+            Assert.AreEqual(ClothWideSleevePilotController.IsolationMode.A_SkinOnly,
+                ClothWideSleevePilotController.ParseIsolationMode("A"));
+            Assert.AreEqual(ClothWideSleevePilotController.IsolationMode.B_NoBodyCollision,
+                ClothWideSleevePilotController.ParseIsolationMode("B"));
+            Assert.AreEqual(ClothWideSleevePilotController.IsolationMode.C_BodyCollision,
+                ClothWideSleevePilotController.ParseIsolationMode("C"));
+            Assert.Throws<System.ArgumentException>(() => ClothWideSleevePilotController.ParseIsolationMode("D"));
+            for (int frame = 0; frame < 480; frame++)
+            {
+                var sample = ClothWideSleevePilotController.EvaluateMotion(frame / 60f, true);
+                Assert.That(sample.yawOffset, Is.Zero);
+                Assert.That(sample.distance, Is.Zero);
+                if (frame >= 360)
+                {
+                    Assert.That(sample.armUp, Is.EqualTo(-0.62f));
+                    Assert.That(sample.armForward, Is.Zero);
+                }
+            }
+            Assert.That(ClothWideSleevePilotController.EvaluateMotion(8.5f, false).distance, Is.GreaterThan(0f),
+                "The original Retest 02 path must keep its movement trial.");
+        }
+
         [TestCase(2f)]
         [TestCase(4f)]
         [TestCase(6f)]
@@ -118,6 +143,27 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
             string sourceBlend = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "assets", "source",
                 "characters", "cloth-wide-sleeve-pilot", "TZ_ClothWideSleevePilot_v001.blend"));
             Assert.IsTrue(File.Exists(sourceBlend), "Editable Blender source is required beside the Unity pilot.");
+        }
+
+        [Test]
+        public void DiagnosedPinReleaseChangesOnly28FixedMaxDistancesWithoutChangingTheScene()
+        {
+            EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<ClothWideSleevePilotController>();
+            var before = controller.SleeveCloth.coefficients;
+            var changed = (ClothSkinningCoefficient[])before.Clone();
+            ClothWideSleevePilotController.ReleaseDiagnosedPins(changed);
+            Assert.AreEqual(96, before.Count(c => c.maxDistance <= 0.0001f));
+            Assert.AreEqual(68, changed.Count(c => c.maxDistance <= 0.0001f));
+            Assert.AreEqual(28, changed.Where((c, i) => c.maxDistance != before[i].maxDistance).Count());
+            Assert.AreEqual(before.Max(c => c.maxDistance), changed.Max(c => c.maxDistance));
+            for (int i = 0; i < changed.Length; i++)
+            {
+                Assert.AreEqual(before[i].collisionSphereDistance, changed[i].collisionSphereDistance);
+                if (before[i].maxDistance > 0.0001f) Assert.AreEqual(before[i].maxDistance, changed[i].maxDistance);
+            }
+            Assert.AreEqual(96, controller.SleeveCloth.coefficients.Count(c => c.maxDistance <= 0.0001f));
+            Assert.Throws<System.InvalidOperationException>(() => ClothWideSleevePilotController.ReleaseDiagnosedPins(changed));
         }
     }
 }

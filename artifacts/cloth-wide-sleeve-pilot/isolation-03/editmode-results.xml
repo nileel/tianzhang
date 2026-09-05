@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="10" result="Passed" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.3264106">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="443" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.326411" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1013" name="TianZhang.ClothWideSleevePilot.EditorTests.dll" fullname="D:/天章游戏开发/.worktrees/cloth-wide-sleeve-pilot/src/Library/ScriptAssemblies/TianZhang.ClothWideSleevePilot.EditorTests.dll" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.300355" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="18908" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1014" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.299691" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1015" name="ClothWideSleevePilot" fullname="TianZhang.ClothWideSleevePilot" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.299022" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1016" name="EditorTests" fullname="TianZhang.ClothWideSleevePilot.EditorTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.298506" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1001" name="ClothWideSleeveExperimentEditorTests" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.297815" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="ParameterizedMethod" id="1008" name="ActionBoundariesDoNotTeleportOrSnapPose" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.ActionBoundariesDoNotTeleportOrSnapPose" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.016849" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1003" name="ActionBoundariesDoNotTeleportOrSnapPose(2.0f)" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.ActionBoundariesDoNotTeleportOrSnapPose(2.0f)" methodname="ActionBoundariesDoNotTeleportOrSnapPose" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="377860122" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.009971" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1004" name="ActionBoundariesDoNotTeleportOrSnapPose(4.0f)" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.ActionBoundariesDoNotTeleportOrSnapPose(4.0f)" methodname="ActionBoundariesDoNotTeleportOrSnapPose" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1381135390" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.000161" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1005" name="ActionBoundariesDoNotTeleportOrSnapPose(6.0f)" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.ActionBoundariesDoNotTeleportOrSnapPose(6.0f)" methodname="ActionBoundariesDoNotTeleportOrSnapPose" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1721599802" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.000109" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1006" name="ActionBoundariesDoNotTeleportOrSnapPose(8.0f)" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.ActionBoundariesDoNotTeleportOrSnapPose(8.0f)" methodname="ActionBoundariesDoNotTeleportOrSnapPose" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="918522762" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.000083" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1007" name="ActionBoundariesDoNotTeleportOrSnapPose(9.0f)" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.ActionBoundariesDoNotTeleportOrSnapPose(9.0f)" methodname="ActionBoundariesDoNotTeleportOrSnapPose" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="2074990433" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.000133" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1010" name="AllRecordedActionStepsAreContinuousAndReturnToRest" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.AllRecordedActionStepsAreContinuousAndReturnToRest" methodname="AllRecordedActionStepsAreContinuousAndReturnToRest" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1166100601" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.008545" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1002" name="IsolationHasExplicitGroupsAndDoesNotTurnOrMoveTheBody" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.IsolationHasExplicitGroupsAndDoesNotTurnOrMoveTheBody" methodname="IsolationHasExplicitGroupsAndDoesNotTurnOrMoveTheBody" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1293165718" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.007165" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1011" name="PairedSphereDistanceIncludesTheContinuousBridgeAndUnequalRadii" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.PairedSphereDistanceIncludesTheContinuousBridgeAndUnequalRadii" methodname="PairedSphereDistanceIncludesTheContinuousBridgeAndUnequalRadii" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1942637517" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.001107" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1012" name="SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings" methodname="SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1416803030" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.255703" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1009" name="StopChangesVelocityInstantlyWithoutChangingPoseOrPositionDiscontinuously" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.StopChangesVelocityInstantlyWithoutChangingPoseOrPositionDiscontinuously" methodname="StopChangesVelocityInstantlyWithoutChangingPoseOrPositionDiscontinuously" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="1278562659" result="Passed" start-time="2026-09-05 14:42:43Z" end-time="2026-09-05 14:42:43Z" duration="0.000344" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
