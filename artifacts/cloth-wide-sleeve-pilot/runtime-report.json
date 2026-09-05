@@ -1,0 +1,21 @@
+{
+    "unityVersion": "6000.3.18f1",
+    "durationSeconds": 32.0,
+    "capturedFrames": 256,
+    "averageFramesPerSecond": 54.475677490234378,
+    "maximumFrameTimeMilliseconds": 2702.919189453125,
+    "clothVertices": 456,
+    "pinnedVertices": 96,
+    "maximumMotionConstraintMeters": 0.6399999856948853,
+    "selfCollisionVertices": 360,
+    "colliderPairs": 3,
+    "tacticalOrthographicSize": 6.199999809265137,
+    "testedDirectionYaw": [
+        90.0,
+        150.0,
+        210.0,
+        270.0,
+        330.0,
+        30.0
+    ]
+}
