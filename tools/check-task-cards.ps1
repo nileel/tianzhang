@@ -417,6 +417,8 @@ try {
     Assert-Contract ($expectedPaths -ccontains "开发管理/任务归档/$id.txt") "missing exact archive authorization: $id"
     if ([string]$card.Metadata.route -ceq 'codex_review') {
       Assert-Contract ($expectedPaths -ccontains '开发管理/未通过审核清单.txt') "missing review-list authorization: $id"
+      Assert-Contract ($expectedPaths -ccontains '开发管理/AI合作沟通.txt') "missing handoff authorization: $id"
+      Assert-Contract ($expectedPaths -ccontains "开发管理/AI合作归档/$id-交接归档.txt") "missing handoff archive authorization: $id"
     }
   }
 

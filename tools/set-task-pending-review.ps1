@@ -74,15 +74,23 @@ try {
     [string]$metadata.owner -cne 'deepseek' -or
     [string]$metadata.dispatchState -cne 'ready'
   ) { throw 'Task card is not external_execute/deepseek/ready' }
+  if ([int]$metadata.schemaVersion -ne 2) { throw 'Task card must use schemaVersion=2' }
   $expectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
   $sourceBacklog = [string]$metadata.sourceBacklog
   foreach ($requiredPath in @($cardRelativePath, '开发管理/当前任务队列.txt', $sourceBacklog)) {
     if ($expectedPaths -cnotcontains $requiredPath) { throw "Task expectedPaths does not authorize $requiredPath" }
   }
-  $reviewListPath = '开发管理/未通过审核清单.txt'
-  if ($expectedPaths -cnotcontains $reviewListPath) {
-    $metadata.expectedPaths = @($expectedPaths + $reviewListPath)
+  $reviewAuthorizationPaths = @(
+    '开发管理/未通过审核清单.txt'
+    '开发管理/AI合作沟通.txt'
+    "开发管理/AI合作归档/$TaskId-交接归档.txt"
+  )
+  $uniqueExpectedPaths = [Collections.Generic.List[string]]::new()
+  $seenExpectedPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+  foreach ($expectedPath in @($expectedPaths + $reviewAuthorizationPaths)) {
+    if ($seenExpectedPaths.Add($expectedPath)) { $uniqueExpectedPaths.Add($expectedPath) }
   }
+  $metadata.expectedPaths = @($uniqueExpectedPaths)
 
   $metadata.route = 'codex_review'
   $metadata.owner = 'codex'
@@ -90,6 +98,26 @@ try {
   $metadata.stateReason = 'DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审'
   foreach ($field in @('automationCheckpoint', 'automationReply')) {
     if ($metadata.PSObject.Properties.Name -contains $field) { $metadata.PSObject.Properties.Remove($field) }
+  }
+  $newCard = @(
+    '---TASK-META---',
+    ($metadata | ConvertTo-Json -Depth 100),
+    '---TASK-BODY---',
+    $match.Groups['body'].Value
+  ) -join "`n"
+  Write-Utf8Text -Path $cardPath -Text $newCard
+
+  $matcher = Join-Path $root 'tools\get-experience-risk-preflight.ps1'
+  if (-not (Test-Path -LiteralPath $matcher -PathType Leaf)) { throw 'Risk preflight matcher is missing' }
+  $explicitRefs = @($metadata.riskPreflight.explicitRefs | ForEach-Object { [string]$_ })
+  $preflightOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $matcher -RepositoryRoot $root -TaskId $TaskId 2>&1)
+  if ($LASTEXITCODE -ne 0 -or $preflightOutput.Count -ne 1) { throw 'Risk preflight recomputation failed' }
+  try { $preflight = $preflightOutput[0] | ConvertFrom-Json -Depth 100 } catch { throw 'Risk preflight recomputation failed' }
+  if ([string]$preflight.status -cne 'ok' -or [string]$preflight.taskId -cne $TaskId) { throw 'Risk preflight recomputation failed' }
+  $metadata.riskPreflight = [pscustomobject][ordered]@{
+    explicitRefs = [object[]]@($explicitRefs)
+    matched = [object[]]@($preflight.matched | ForEach-Object { [string]$_ })
+    gates = [object[]]@($preflight.gates | ForEach-Object { [string]$_ })
   }
   $newCard = @(
     '---TASK-META---',

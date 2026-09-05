@@ -16,13 +16,18 @@ $taskId = 'TASK-PENDING-REVIEW'
 try {
   [IO.Directory]::CreateDirectory((Join-Path $testRoot 'tools')) | Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $testRoot 'tools/check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $testRoot 'tools/get-experience-risk-preflight.ps1')
   $metadata = [ordered]@{
-    schemaVersion = 1; id = $taskId; title = 'Pending review fixture'; priority = 'P1'; route = 'external_execute'
+    schemaVersion = 2; id = $taskId; title = 'Pending review fixture'; priority = 'P1'; route = 'external_execute'
     owner = 'deepseek'; domain = 'automation'; stage = 'verification'; dispatchState = 'ready'; blockedBy = @()
     stateReason = 'fixture'; expectedPaths = @(
       'fixtures/business.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt',
-      "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt"
-    ); sourceBacklog = '开发管理/任务列表/自动化任务.txt'
+      "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt", '开发管理/任务归档/OTHER-TASK.txt',
+      '开发管理/未通过审核清单.txt', '开发管理/未通过审核清单.txt',
+      '开发管理/AI合作沟通.txt', '开发管理/AI合作沟通.txt'
+    ); sourceBacklog = '开发管理/任务列表/自动化任务.txt'; riskPreflight = [ordered]@{
+      explicitRefs = @(); matched = @(); gates = @()
+    }
   }
   $card = @(
     '---TASK-META---', ($metadata | ConvertTo-Json -Depth 10), '---TASK-BODY---', "# $taskId · Pending review fixture",
@@ -40,6 +45,15 @@ try {
     '| --- | --- | --- | --- | --- | --- | --- |',
     "| $taskId | P1 | deepseek | 已排队 | — | Pending review fixture | 开发管理/任务卡/$taskId.txt |"
   ) -join "`n")
+  Write-Utf8 -Path (Join-Path $testRoot '开发管理/经验库/风险索引.json') -Text (([ordered]@{
+    schemaVersion = 1
+    experiences = @([ordered]@{
+      id = 'EXP-AUTO-999'; title = 'handoff fixture'; preflightSummary = 'handoff fixture'; status = 'active'
+      level = 'notice'; triggerMode = 'path'; domains = @(); stages = @()
+      pathPatterns = @('开发管理/AI合作沟通.txt'); textPatterns = @(); detailRef = ''; gateRefs = @(); lastVerified = '2026-09-05'
+    })
+    gates = @()
+  } | ConvertTo-Json -Depth 10 -Compress))
   & git -C $testRoot init *> $null
   if ($LASTEXITCODE -ne 0) { throw 'Unable to initialize fixture repository' }
 
@@ -54,6 +68,13 @@ try {
   Assert-Equal ([string]$updatedMetadata.dispatchState) 'ready' 'Task state was not retained as ready'
   Assert-True (@($updatedMetadata.expectedPaths) -ccontains '开发管理/未通过审核清单.txt') 'Review-list authorization was not added'
   Assert-Equal (@($updatedMetadata.expectedPaths | Where-Object { $_ -ceq '开发管理/未通过审核清单.txt' }).Count) 1 'Review-list authorization was duplicated'
+  Assert-Equal (@($updatedMetadata.expectedPaths | Where-Object { $_ -ceq '开发管理/AI合作沟通.txt' }).Count) 1 'Handoff authorization was duplicated'
+  Assert-Equal (@($updatedMetadata.expectedPaths | Where-Object { $_ -ceq "开发管理/AI合作归档/$taskId-交接归档.txt" }).Count) 1 'Task handoff archive authorization was missing or duplicated'
+  Assert-Equal (@($updatedMetadata.expectedPaths | Where-Object { $_ -ceq '开发管理/任务归档/OTHER-TASK.txt' }).Count) 1 'Unrelated task path changed'
+  Assert-Equal (@($updatedMetadata.riskPreflight.matched).Count) 1 'Schema 2 risk projection was not recomputed'
+  Assert-Equal ([string]$updatedMetadata.riskPreflight.matched[0]) 'EXP-AUTO-999' 'Schema 2 risk projection matched the wrong experience'
+  Assert-Equal (@($updatedMetadata.riskPreflight.explicitRefs).Count) 0 'Schema 2 explicitRefs changed'
+  Assert-Equal (@($updatedMetadata.riskPreflight.gates).Count) 0 'Schema 2 gates changed unexpectedly'
   Assert-True (([IO.File]::ReadAllText((Join-Path $testRoot '开发管理/当前任务队列.txt'))) -match '\| codex_review \| codex \|') 'Queue projection was not updated'
   Assert-True (([IO.File]::ReadAllText((Join-Path $testRoot '开发管理/任务列表/自动化任务.txt'))) -match '\| codex \| 已排队 \|') 'Backlog projection was not updated'
 

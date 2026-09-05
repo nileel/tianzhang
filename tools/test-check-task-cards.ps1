@@ -37,7 +37,11 @@ function Get-Metadata {
     "开发管理/任务归档/$Id.txt"
   )
   if ($Route -ceq 'codex_review') {
-    $expectedPaths += '开发管理/未通过审核清单.txt'
+    $expectedPaths += @(
+      '开发管理/未通过审核清单.txt'
+      '开发管理/AI合作沟通.txt'
+      "开发管理/AI合作归档/$Id-交接归档.txt"
+    )
   }
   [ordered]@{
     schemaVersion = 1
@@ -119,7 +123,13 @@ function Get-Schema2Metadata {
     [string]$StateReason = $null
   )
   $expectedPaths = @($ExpectedPaths) + "开发管理/任务卡/$Id.txt" + "开发管理/任务归档/$Id.txt"
-  if ($Route -ceq 'codex_review') { $expectedPaths += '开发管理/未通过审核清单.txt' }
+  if ($Route -ceq 'codex_review') {
+    $expectedPaths += @(
+      '开发管理/未通过审核清单.txt'
+      '开发管理/AI合作沟通.txt'
+      "开发管理/AI合作归档/$Id-交接归档.txt"
+    )
+  }
   [ordered]@{
     schemaVersion = 2
     id = $Id
@@ -305,7 +315,11 @@ try {
   $reviewDispatchFixture = New-Fixture $reviewDispatchRoot
   $reviewDispatchCard = Copy-Metadata $reviewDispatchFixture.Ready
   $reviewDispatchCard.route = 'codex_review'
-  $reviewDispatchCard.expectedPaths += '开发管理/未通过审核清单.txt'
+  $reviewDispatchCard.expectedPaths += @(
+    '开发管理/未通过审核清单.txt'
+    '开发管理/AI合作沟通.txt'
+    '开发管理/AI合作归档/T-READY-01-交接归档.txt'
+  )
   Set-Card $reviewDispatchRoot $reviewDispatchCard
   Set-Queue $reviewDispatchRoot @($reviewDispatchCard)
   Set-Backlog $reviewDispatchRoot @($reviewDispatchCard, $reviewDispatchFixture.Blocked)
@@ -318,14 +332,20 @@ try {
   Assert-True ($reviewDispatch.ExitCode -eq 0) "ready review should pass CodexDispatchReady: $($reviewDispatch.Output)"
   Assert-True (($reviewDispatch.Output | ConvertFrom-Json).taskState -ceq 'ready') 'review evidence taskState mismatch'
 
-  $missingReviewAuthorizationRoot = Join-Path $tempRoot 'missing-review-authorization'
-  $missingReviewAuthorizationFixture = New-Fixture $missingReviewAuthorizationRoot
-  $missingReviewAuthorizationCard = Get-Metadata -Route 'codex_review' -Owner 'codex'
-  $missingReviewAuthorizationCard.expectedPaths = @($missingReviewAuthorizationCard.expectedPaths | Where-Object { $_ -cne '开发管理/未通过审核清单.txt' })
-  Set-Card $missingReviewAuthorizationRoot $missingReviewAuthorizationCard
-  Set-Queue $missingReviewAuthorizationRoot @($missingReviewAuthorizationCard)
-  Set-Backlog $missingReviewAuthorizationRoot @($missingReviewAuthorizationCard, $missingReviewAuthorizationFixture.Blocked)
-  Assert-Failure 'review card missing review-list authorization' $missingReviewAuthorizationRoot 'missing review-list authorization: T-READY-01'
+  foreach ($missingAuthorization in @(
+      @{ Name = 'review-list'; Path = '开发管理/未通过审核清单.txt'; Expected = 'missing review-list authorization: T-READY-01' },
+      @{ Name = 'handoff'; Path = '开发管理/AI合作沟通.txt'; Expected = 'missing handoff authorization: T-READY-01' },
+      @{ Name = 'handoff-archive'; Path = '开发管理/AI合作归档/T-READY-01-交接归档.txt'; Expected = 'missing handoff archive authorization: T-READY-01' }
+    )) {
+    $missingReviewAuthorizationRoot = Join-Path $tempRoot "missing-$($missingAuthorization.Name)-authorization"
+    $missingReviewAuthorizationFixture = New-Fixture $missingReviewAuthorizationRoot
+    $missingReviewAuthorizationCard = Get-Metadata -Route 'codex_review' -Owner 'codex'
+    $missingReviewAuthorizationCard.expectedPaths = @($missingReviewAuthorizationCard.expectedPaths | Where-Object { $_ -cne $missingAuthorization.Path })
+    Set-Card $missingReviewAuthorizationRoot $missingReviewAuthorizationCard
+    Set-Queue $missingReviewAuthorizationRoot @($missingReviewAuthorizationCard)
+    Set-Backlog $missingReviewAuthorizationRoot @($missingReviewAuthorizationCard, $missingReviewAuthorizationFixture.Blocked)
+    Assert-Failure "review card missing $($missingAuthorization.Name) authorization" $missingReviewAuthorizationRoot $missingAuthorization.Expected
+  }
 
   $externalDispatchRoot = Join-Path $tempRoot 'external-dispatch'
   $externalDispatchFixture = New-Fixture $externalDispatchRoot

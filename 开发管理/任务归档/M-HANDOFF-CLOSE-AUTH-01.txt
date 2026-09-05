@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "frozen",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "M-HOURLY-CHECK-01 已完成并通过双侧 canary；本卡仍由用户保留给另一独立 Sol 手动会话，保持 frozen，不入自动队列。实施前仍须暂停两个写入定时器并确认无活动 run。",
+  "stateReason": "已补齐新复审卡的当前交接与任务专属交接归档授权，转换器去重并重算 schema 2 风险投影，checker、规则与测试一致；规定回归和 Codex/DeepSeek 真实 canary 均通过。",
   "expectedPaths": [
     "tools/set-task-pending-review.ps1",
     "tools/check-task-cards.ps1",
