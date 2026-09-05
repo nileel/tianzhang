@@ -25,7 +25,7 @@
 - 一个 Quaternius Universal Base Characters Standard 免费绑定人体，Humanoid 有效；没有导入付费 Source 包。
 - 一只本轮新建的左宽袖，不读取或复用旧苻渊网格；456 顶点、432 四边面／864 三角面，袖根与袖口为预期开放边界，除此之外非流形边、退化边、零面积面均为 0。
 - Unity 内只有一个 Cloth：96 个固定袖根顶点、360 个自碰撞顶点、最大运动约束 0.64 m、3 组躯干／上臂／前臂球体对碰撞器、180 Hz Cloth solver。
-- 单角色 Development Player 最终实录平均 54.48 fps；最大帧时间 2702.92 ms 发生在启动／首帧捕获阶段。该数字只证明单角色小样能运行，不是同屏多角色性能结论。
+- 单角色 Development Player 最终实录平均 54.48 fps；最大帧时间 2702.92 ms。报告没有记录峰值所在帧，且采样包含截图开销，因此不能把该峰值解释为 Cloth 稳态成本。该数字只证明单角色小样能运行，不是同屏多角色性能结论。
 - 场景：`src/Assets/Tests/Scenes/ClothWideSleeveExperimentScene.unity`，没有加入 BuildSettings。
 - 可编辑源：本机项目路径 `assets/source/characters/cloth-wide-sleeve-pilot/TZ_ClothWideSleevePilot_v001.blend`；Git 规则将 `assets/source/` 作为本地源美术工作区忽略。
 - 冻结 FBX：`src/Assets/Tests/ClothWideSleevePilot/Models/TZ_ClothWideSleevePilot_v001.fbx`，SHA-256 `5BD14D613A68881ED5202F03CE6A494535382DBB541C5BC4310CC6A30E0367A4`。
