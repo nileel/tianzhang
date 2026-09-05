@@ -11,13 +11,36 @@ $repository = Join-Path $tempRoot 'repository'
 $approvedStateParent = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex/automation-state')).TrimEnd('\', '/')
 $stateRoot = Join-Path $approvedStateParent "tzg-maintenance-wait-test-$testId"
 $toolsRoot = Join-Path $repository 'tools'
+$checkerTracePath = Join-Path $tempRoot 'checker-trace.txt'
+$originalCheckerTrace = $env:TZG_MAINTENANCE_CHECK_TRACE
 try {
   [IO.Directory]::CreateDirectory($toolsRoot) | Out-Null
   foreach ($name in @(
-      'invoke-hourly-owner.ps1', 'hourly-automation-lease.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'set-task-automation-state.ps1',
+      'invoke-hourly-owner.ps1', 'hourly-automation-lease.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'get-experience-risk-preflight.ps1', 'set-task-automation-state.ps1',
       'set-task-pending-review.ps1', 'automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1',
       'send-feishu-notification.ps1', 'private-path-acl.ps1', 'hourly-integration-lock.ps1', 'hourly-owner-adapter.ps1'
     )) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $toolsRoot $name) }
+  Move-Item -LiteralPath (Join-Path $toolsRoot 'check-task-cards.ps1') -Destination (Join-Path $toolsRoot 'check-task-cards-core.ps1')
+  $checkerWrapper = @'
+#requires -Version 7.0
+param(
+  [string]$RepositoryRoot, [string]$TaskCardRoot = '开发管理/任务卡', [string]$QueuePath = '开发管理/当前任务队列.txt',
+  [string]$BacklogRoot = '开发管理/任务列表', [string]$TaskId, [string]$Postcondition, [string]$BaseCommit,
+  [string]$ExpectedRoute, [string]$ExpectedOwner, [switch]$OutputJson
+)
+[IO.File]::AppendAllText($env:TZG_MAINTENANCE_CHECK_TRACE, "$TaskId|$Postcondition`n", [Text.UTF8Encoding]::new($false))
+$arguments = @('-RepositoryRoot', $RepositoryRoot, '-TaskCardRoot', $TaskCardRoot, '-QueuePath', $QueuePath, '-BacklogRoot', $BacklogRoot)
+if (-not [string]::IsNullOrWhiteSpace($TaskId)) { $arguments += @('-TaskId', $TaskId) }
+if (-not [string]::IsNullOrWhiteSpace($Postcondition)) { $arguments += @('-Postcondition', $Postcondition) }
+if (-not [string]::IsNullOrWhiteSpace($BaseCommit)) { $arguments += @('-BaseCommit', $BaseCommit) }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedRoute)) { $arguments += @('-ExpectedRoute', $ExpectedRoute) }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedOwner)) { $arguments += @('-ExpectedOwner', $ExpectedOwner) }
+if ($OutputJson) { $arguments += '-OutputJson' }
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-task-cards-core.ps1') @arguments
+exit $LASTEXITCODE
+'@
+  Write-Utf8 (Join-Path $toolsRoot 'check-task-cards.ps1') $checkerWrapper
+  $env:TZG_MAINTENANCE_CHECK_TRACE = $checkerTracePath
   $candidateSource = @'
 #requires -Version 7.0
 param(
@@ -100,6 +123,7 @@ process.stdout.write('{"result":"PROVIDER_ACCEPTED"}\n');
   Assert-True ([string]$pendingMeta.dispatchState -ceq 'pending_decision' -and [string]$pendingMeta.automationDecision.status -ceq 'awaiting_reply' -and $pendingMeta.PSObject.Properties.Name -cnotcontains 'automationCheckpoint') 'First run did not establish the public maintenance projection'
   $recordPath = Join-Path $stateRoot "maintenance-decisions/$($first.decisionId).json"
   Assert-True (Test-Path -LiteralPath $recordPath -PathType Leaf) 'First run did not persist the private maintenance record'
+  if (Test-Path -LiteralPath $checkerTracePath) { Remove-Item -LiteralPath $checkerTracePath -Force }
 
   for ($runIndex = 1; $runIndex -le 2; $runIndex++) {
     $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $toolsRoot 'invoke-hourly-owner.ps1') -Owner codex -Action RunOnce -RepositoryRoot $repository -Model gpt-test -StateRoot $stateRoot 2>$null)
@@ -110,8 +134,11 @@ process.stdout.write('{"result":"PROVIDER_ACCEPTED"}\n');
     Assert-True ($null -eq $runtime.state.runs.codex -and $null -eq $runtime.state.runs.deepseek) "Waiting run $runIndex claimed runtime"
   }
   Assert-True (@([IO.File]::ReadAllLines($counterPath)).Count -eq 2) 'Each waiting RunOnce must consume exactly one reply snapshot'
+  $checkerCalls = @([IO.File]::ReadAllLines($checkerTracePath) | Where-Object { $_ })
+  Assert-True ($checkerCalls.Count -eq 2 -and @($checkerCalls | Where-Object { $_ -cne '|' }).Count -eq 0) "Each maintenance reply RunOnce must reuse exactly one empty-queue selector check: $($checkerCalls -join ',')"
   Write-Output 'test-queue-maintenance-waiting-run: PASS'
 } finally {
+  $env:TZG_MAINTENANCE_CHECK_TRACE = $originalCheckerTrace
   if (Test-Path -LiteralPath $stateRoot) {
     $resolvedState = (Resolve-Path -LiteralPath $stateRoot).Path
     Assert-True ($resolvedState.StartsWith($approvedStateParent + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and (Split-Path -Leaf $resolvedState) -ceq "tzg-maintenance-wait-test-$testId") 'Refusing to remove unsafe state fixture'

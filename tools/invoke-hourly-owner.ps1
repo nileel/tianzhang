@@ -364,6 +364,7 @@ function New-CandidateWorktree {
 
 function Invoke-ExperiencePreflight {
   param([object]$Run)
+  if (-not (Test-Path -LiteralPath $matcherPath -PathType Leaf)) { Stop-Hourly 'experience_preflight_matcher_failed' }
   $worktree = Normalize-FullPath ([string]$Run.worktree)
   $task = Read-RunTaskMetadata $Run
   $metadata = $task.Metadata
@@ -1396,7 +1397,7 @@ $invocationMutex = $null
 $invocationHeld = $false
 try {
   $script:stage = 'dependencies'
-  foreach ($path in @($runtimePath, $selectorPath, $checkerPath, $taskStatePath, $finalizerPath, $whitespacePath, $notificationPath, $decisionSenderPath, $decisionConsumerPath, $matcherPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_dependency_missing' } }
+  foreach ($path in @($runtimePath, $selectorPath, $checkerPath, $taskStatePath, $finalizerPath, $whitespacePath, $notificationPath, $decisionSenderPath, $decisionConsumerPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Stop-Hourly 'hourly_dependency_missing' } }
   if (-not [IO.Path]::IsPathFullyQualified($RepositoryRoot)) { Stop-Hourly 'hourly_repository_invalid' }
   $script:root = Normalize-FullPath (Resolve-Path -LiteralPath $RepositoryRoot).Path
   if (-not (Test-Path -LiteralPath (Join-Path $script:root '.git'))) { Stop-Hourly 'hourly_repository_invalid' }
@@ -1437,9 +1438,13 @@ try {
       $restored = $null
       if ([string]$answered.status -ceq 'answered') { $restored = Restore-AnsweredCheckpoint $answered }
       elseif ([string]$answered.status -ceq 'attention_required') { $final = $answered }
+      $selection = $null
+      if ($null -eq $final) {
+        $script:stage = 'selection'
+        $selection = Invoke-JsonTool $selectorPath @('-RepositoryRoot', $script:root, '-Owner', $Owner) 'hourly_selection_failed'
+      }
       if ($null -eq $final -and $Owner -ceq 'codex') {
-        $queueEvidence = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $script:root, '-OutputJson') 'hourly_task_projection_failed'
-        if ([int]$queueEvidence.readyCount -eq 0) {
+        if ([int]$selection.readyCount -eq 0) {
           $maintenance = Find-AnsweredMaintenanceDecision
           switch ([string]$maintenance.status) {
             'waiting' { $final = [ordered]@{ status = 'waiting_decision'; owner = $Owner; taskId = 'QUEUE-MAINTENANCE'; decisionTaskId = [string]$maintenance.taskId; decisionId = [string]$maintenance.decisionId; detailCode = 'maintenance_decision_no_reply'; cleanup = 'none' } }
@@ -1449,11 +1454,9 @@ try {
         }
       }
       if ($null -eq $final) {
-        $script:stage = 'selection'
         if ($null -ne $maintenanceAnswered) {
           $taskId = 'QUEUE-MAINTENANCE'; $route = 'queue_maintenance'; $digest = Get-NormalizedTextDigest (Join-Path $script:root '开发管理\当前任务队列.txt')
         } else {
-          $selection = Invoke-JsonTool $selectorPath @('-RepositoryRoot', $script:root, '-Owner', $Owner) 'hourly_selection_failed'
           if ([string]$selection.status -ceq 'selected') { $taskId = [string]$selection.taskId; $route = [string]$selection.route; $digest = [string]$selection.taskCardDigest }
           elseif ($Owner -ceq 'codex' -and [string]$selection.status -ceq 'no_candidate' -and [int]$selection.queueCount -eq 0 -and $null -eq $shown.state.runs.deepseek) { $taskId = 'QUEUE-MAINTENANCE'; $route = 'queue_maintenance'; $digest = Get-NormalizedTextDigest (Join-Path $script:root '开发管理\当前任务队列.txt') }
           else { $final = [ordered]@{ status = 'no_candidate'; owner = $Owner; detailCode = 'no_runnable_candidate' } }

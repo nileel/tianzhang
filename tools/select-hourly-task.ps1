@@ -106,10 +106,8 @@ try {
   }
   $queuePath = Join-Path $script:resolvedRepositoryRoot '开发管理\当前任务队列.txt'
   if (-not (Test-Path -LiteralPath $queuePath -PathType Leaf)) { throw 'Current queue is missing' }
-  $globalEvidence = Invoke-TaskCardCheck -Arguments @('-RepositoryRoot', $script:resolvedRepositoryRoot, '-OutputJson')
-  if ([string]$globalEvidence.status -cne 'ok') { throw 'Task-card projection is invalid' }
-
   $selected = $null
+  $selectionEvidence = $null
   $queueRows = @(Get-QueueRows -Path $queuePath)
   foreach ($row in $queueRows) {
     $matches = if ($Owner -ceq 'codex') {
@@ -129,8 +127,8 @@ try {
     } else {
       $evidenceArguments += @('-Postcondition', 'ExternalDispatchReady', '-ExpectedOwner', 'deepseek')
     }
-    $evidence = Invoke-TaskCardCheck -Arguments $evidenceArguments
-    if ([string]$evidence.status -cne 'ok' -or [string]$evidence.taskState -cne 'ready') {
+    $selectionEvidence = Invoke-TaskCardCheck -Arguments $evidenceArguments
+    if ([string]$selectionEvidence.status -cne 'ok' -or [string]$selectionEvidence.taskState -cne 'ready') {
       throw "Selected task is not dispatch-ready: $($row.taskId)"
     }
     $expectedCardPath = "开发管理/任务卡/$($row.taskId).txt"
@@ -150,6 +148,7 @@ try {
       route = [string]$row.route
       owner = $Owner
       queueCount = $queueRows.Count
+      readyCount = [int]$selectionEvidence.readyCount
       taskCardDigest = [string]$card.Digest
       expectedPaths = @($metadata.expectedPaths | ForEach-Object { [string]$_ })
       sourceBacklog = [string]$metadata.sourceBacklog
@@ -158,10 +157,13 @@ try {
   }
 
   if ($null -eq $selected) {
+    $selectionEvidence = Invoke-TaskCardCheck -Arguments @('-RepositoryRoot', $script:resolvedRepositoryRoot, '-OutputJson')
+    if ([string]$selectionEvidence.status -cne 'ok') { throw 'Task-card projection is invalid' }
     $selected = [ordered]@{
       status = 'no_candidate'
       owner = $Owner
       queueCount = $queueRows.Count
+      readyCount = [int]$selectionEvidence.readyCount
     }
   }
   [Console]::Out.WriteLine(($selected | ConvertTo-Json -Compress -Depth 20))

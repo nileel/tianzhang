@@ -7,16 +7,19 @@ function Assert-True { param([bool]$Condition, [string]$Message) if (-not $Condi
 function Assert-Equal { param($Actual, $Expected, [string]$Message) if ($Actual -cne $Expected) { throw "$Message (actual=$Actual expected=$Expected)" } }
 function Write-Utf8 { param([string]$Path, [string]$Text) [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null; [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false)) }
 function Invoke-Git { param([string]$Root, [string[]]$Arguments) & git -C $Root @Arguments *> $null; if ($LASTEXITCODE -ne 0) { throw "git failed: $($Arguments -join ' ')" } }
+function Reset-CheckerTrace { param([string]$Path) if (Test-Path -LiteralPath $Path) { Remove-Item -LiteralPath $Path -Force } }
+function Get-CheckerTrace { param([string]$Path) if (Test-Path -LiteralPath $Path) { @([IO.File]::ReadAllLines($Path) | Where-Object { $_ }) } else { @() } }
 
 function Write-TaskFixture {
   param([string]$Root, [string]$Id, [string]$Route, [string]$Owner, [string]$Title)
   $metadata = [ordered]@{
-    schemaVersion = 1; id = $Id; title = $Title; priority = 'P1'; route = $Route; owner = $Owner
+    schemaVersion = 2; id = $Id; title = $Title; priority = 'P1'; route = $Route; owner = $Owner
     domain = 'automation'; stage = 'implementation'; dispatchState = 'ready'; blockedBy = @()
     stateReason = 'selector fixture'; expectedPaths = @(
       "fixtures/$Id.txt", '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt',
       "开发管理/任务卡/$Id.txt", "开发管理/任务归档/$Id.txt"
-    ); sourceBacklog = '开发管理/任务列表/自动化任务.txt'
+    ); riskPreflight = [ordered]@{ explicitRefs = @(); matched = @(); gates = @() }
+    sourceBacklog = '开发管理/任务列表/自动化任务.txt'
   }
   $text = @(
     '---TASK-META---', ($metadata | ConvertTo-Json -Depth 10), '---TASK-BODY---', "# $Id · $Title",
@@ -34,14 +37,47 @@ function Invoke-Selector {
   $output[0] | ConvertFrom-Json -Depth 20
 }
 
+function Assert-SelectorFailure {
+  param([string]$Root, [string]$Owner, [string]$Message)
+  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $selectorPath -RepositoryRoot $Root -Owner $Owner 2>&1)
+  Assert-True ($LASTEXITCODE -ne 0) $Message
+  Assert-True (@($output | Where-Object { [string]$_ -match '"status":"failed"' }).Count -eq 1) "$Message did not return the stable failed result"
+}
+
 $testId = [Guid]::NewGuid().ToString('N')
 $temporaryBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/')
 $testRoot = Join-Path $temporaryBase "tzg-hourly-selector-test-$testId"
 $selectorPath = Join-Path $PSScriptRoot 'select-hourly-task.ps1'
+$checkerTracePath = Join-Path $testRoot 'checker-trace.txt'
+$originalCheckerTrace = $env:TZG_SELECTOR_CHECK_TRACE
+$originalForcedPostcondition = $env:TZG_SELECTOR_FORCE_BAD_POSTCONDITION
 
 try {
   [IO.Directory]::CreateDirectory((Join-Path $testRoot 'tools')) | Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $testRoot 'tools/check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $testRoot 'tools/get-experience-risk-preflight.ps1')
+  Move-Item -LiteralPath (Join-Path $testRoot 'tools/check-task-cards.ps1') -Destination (Join-Path $testRoot 'tools/check-task-cards-core.ps1')
+  $checkerWrapper = @'
+#requires -Version 7.0
+param(
+  [string]$RepositoryRoot, [string]$TaskCardRoot = '开发管理/任务卡', [string]$QueuePath = '开发管理/当前任务队列.txt',
+  [string]$BacklogRoot = '开发管理/任务列表', [string]$TaskId, [string]$Postcondition, [string]$BaseCommit,
+  [string]$ExpectedRoute, [string]$ExpectedOwner, [switch]$OutputJson
+)
+[IO.File]::AppendAllText($env:TZG_SELECTOR_CHECK_TRACE, "$TaskId|$Postcondition`n", [Text.UTF8Encoding]::new($false))
+if ($env:TZG_SELECTOR_FORCE_BAD_POSTCONDITION -ceq '1' -and $Postcondition -ceq 'CodexDispatchReady') { $ExpectedRoute = 'codex_review' }
+$arguments = @('-RepositoryRoot', $RepositoryRoot, '-TaskCardRoot', $TaskCardRoot, '-QueuePath', $QueuePath, '-BacklogRoot', $BacklogRoot)
+if (-not [string]::IsNullOrWhiteSpace($TaskId)) { $arguments += @('-TaskId', $TaskId) }
+if (-not [string]::IsNullOrWhiteSpace($Postcondition)) { $arguments += @('-Postcondition', $Postcondition) }
+if (-not [string]::IsNullOrWhiteSpace($BaseCommit)) { $arguments += @('-BaseCommit', $BaseCommit) }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedRoute)) { $arguments += @('-ExpectedRoute', $ExpectedRoute) }
+if (-not [string]::IsNullOrWhiteSpace($ExpectedOwner)) { $arguments += @('-ExpectedOwner', $ExpectedOwner) }
+if ($OutputJson) { $arguments += '-OutputJson' }
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-task-cards-core.ps1') @arguments
+exit $LASTEXITCODE
+'@
+  Write-Utf8 -Path (Join-Path $testRoot 'tools/check-task-cards.ps1') -Text $checkerWrapper
+  Write-Utf8 -Path (Join-Path $testRoot '开发管理/经验库/风险索引.json') -Text '{"schemaVersion":1,"experiences":[],"gates":[]}'
   Write-TaskFixture -Root $testRoot -Id 'TASK-DS-FIRST' -Route external_execute -Owner deepseek -Title 'DeepSeek first'
   Write-TaskFixture -Root $testRoot -Id 'TASK-CODEX' -Route codex_execute -Owner codex -Title 'Codex task'
   Write-TaskFixture -Root $testRoot -Id 'TASK-DS-SECOND' -Route external_execute -Owner deepseek -Title 'DeepSeek second'
@@ -59,16 +95,31 @@ try {
   Write-Utf8 -Path (Join-Path $testRoot '开发管理/当前任务队列.txt') -Text ($queue -join "`n")
   Write-Utf8 -Path (Join-Path $testRoot '开发管理/任务列表/自动化任务.txt') -Text ($backlog -join "`n")
   Invoke-Git -Root $testRoot -Arguments @('init')
+  $env:TZG_SELECTOR_CHECK_TRACE = $checkerTracePath
 
+  Reset-CheckerTrace $checkerTracePath
   $deepseek = Invoke-Selector -Root $testRoot -Owner deepseek
   Assert-Equal ([string]$deepseek.status) 'selected' 'DeepSeek selector did not select'
   Assert-Equal ([string]$deepseek.taskId) 'TASK-DS-FIRST' 'DeepSeek selector did not preserve queue order'
   Assert-Equal ([string]$deepseek.route) 'external_execute' 'DeepSeek route mismatch'
   Assert-True ([string]$deepseek.taskCardDigest -cmatch '^[0-9a-f]{64}$') 'Task-card digest is invalid'
   Assert-True (@($deepseek.expectedPaths) -ccontains 'fixtures/TASK-DS-FIRST.txt') 'Selector lost expected paths'
+  Assert-Equal ([int]$deepseek.readyCount) 3 'DeepSeek selector lost global ready count evidence'
+  Assert-Equal (@(Get-CheckerTrace $checkerTracePath).Count) 1 'DeepSeek unchanged candidate ran more than one full check'
+  Assert-Equal ([string]@(Get-CheckerTrace $checkerTracePath)[0]) 'TASK-DS-FIRST|ExternalDispatchReady' 'DeepSeek did not combine global and target validation'
 
+  Reset-CheckerTrace $checkerTracePath
   $codex = Invoke-Selector -Root $testRoot -Owner codex
   Assert-Equal ([string]$codex.taskId) 'TASK-CODEX' 'Codex selector did not skip DeepSeek row'
+  Assert-Equal ([int]$codex.readyCount) 3 'Codex selector lost global ready count evidence'
+  Assert-Equal (@(Get-CheckerTrace $checkerTracePath).Count) 1 'Codex unchanged candidate ran more than one full check'
+  Assert-Equal ([string]@(Get-CheckerTrace $checkerTracePath)[0]) 'TASK-CODEX|CodexDispatchReady' 'Codex did not combine global and target validation'
+
+  Reset-CheckerTrace $checkerTracePath
+  $env:TZG_SELECTOR_FORCE_BAD_POSTCONDITION = '1'
+  Assert-SelectorFailure -Root $testRoot -Owner codex -Message 'Selector accepted a bad target postcondition'
+  $env:TZG_SELECTOR_FORCE_BAD_POSTCONDITION = $null
+  Assert-Equal @(Get-CheckerTrace $checkerTracePath).Count 1 'Bad target postcondition ran more than one full check'
 
   $queueWithoutDeepSeek = @($queue | Where-Object { $_ -notmatch '^\| TASK-DS-' })
   Write-Utf8 -Path (Join-Path $testRoot '开发管理/当前任务队列.txt') -Text ($queueWithoutDeepSeek -join "`n")
@@ -80,11 +131,24 @@ try {
   }
   $backlogWithoutDeepSeek = @($backlog | ForEach-Object { if ($_ -match '^\| TASK-DS-') { $_.Replace('| 已排队 |', '| 阻塞 |') } else { $_ } })
   Write-Utf8 -Path (Join-Path $testRoot '开发管理/任务列表/自动化任务.txt') -Text ($backlogWithoutDeepSeek -join "`n")
+  Reset-CheckerTrace $checkerTracePath
   $none = Invoke-Selector -Root $testRoot -Owner deepseek
   Assert-Equal ([string]$none.status) 'no_candidate' 'DeepSeek no-candidate result mismatch'
+  Assert-Equal ([int]$none.readyCount) 1 'No-candidate selector lost global ready count evidence'
+  Assert-Equal @(Get-CheckerTrace $checkerTracePath).Count 1 'No-candidate selection ran more than one full check'
+  Assert-Equal ([string]@(Get-CheckerTrace $checkerTracePath)[0]) '|' 'No-candidate selection did not run the single global check'
+
+  $backlogPath = Join-Path $testRoot '开发管理/任务列表/自动化任务.txt'
+  $validBacklog = [IO.File]::ReadAllText($backlogPath)
+  Write-Utf8 -Path $backlogPath -Text $validBacklog.Replace('| 已排队 | — | Codex task |', '| 已排队 | — | Broken projection |')
+  Reset-CheckerTrace $checkerTracePath
+  Assert-SelectorFailure -Root $testRoot -Owner codex -Message 'Selector accepted a bad global projection'
+  Assert-Equal @(Get-CheckerTrace $checkerTracePath).Count 1 'Bad global projection ran more than one full check'
 
   Write-Output 'test-select-hourly-task: OK'
 } finally {
+  $env:TZG_SELECTOR_CHECK_TRACE = $originalCheckerTrace
+  $env:TZG_SELECTOR_FORCE_BAD_POSTCONDITION = $originalForcedPostcondition
   if (Test-Path -LiteralPath $testRoot) {
     $resolved = [IO.Path]::GetFullPath($testRoot)
     $prefix = $temporaryBase + [IO.Path]::DirectorySeparatorChar

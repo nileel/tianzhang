@@ -32,7 +32,10 @@ Assert-Contains $owner @(
   'allowCustomReply = $false',
   '[DateTimeOffset]::Now -gt $expiresAt'
 ) 'owner lifecycle'
-Assert-True ($owner.IndexOf('Find-AnsweredMaintenanceDecision', [StringComparison]::Ordinal) -lt $owner.LastIndexOf('Invoke-JsonTool $selectorPath', [StringComparison]::Ordinal)) 'Maintenance reply check is not before ordinary selection'
+$selectorCalls = [regex]::Matches($owner, [regex]::Escape('Invoke-JsonTool $selectorPath')).Count
+Assert-True ($selectorCalls -eq 1) "RunOnce must consume exactly one selector result (actual=$selectorCalls)"
+Assert-True ($owner.LastIndexOf('Invoke-JsonTool $selectorPath', [StringComparison]::Ordinal) -lt $owner.LastIndexOf('Find-AnsweredMaintenanceDecision', [StringComparison]::Ordinal)) 'Maintenance reply lookup must consume the already validated empty-queue selection evidence'
+Assert-Contains $owner @('$selection.readyCount', '$null -ne $maintenanceAnswered', '[string]$selection.status') 'single selection evidence flow'
 $senderOptionLines = @($owner -split '\r?\n' | Where-Object { $_.Contains('options = @($decision.options | ForEach-Object', [StringComparison]::Ordinal) })
 Assert-True ($senderOptionLines.Count -eq 1 -and $senderOptionLines[0].Contains('label = [string]$_.label', [StringComparison]::Ordinal) -and -not $senderOptionLines[0].Contains('targetState', [StringComparison]::Ordinal)) 'Sender does not strip targetState from bridge options'
 Assert-Contains $candidate @("'maintenance_decision'", "targetState = @{ type = 'string'", 'decisionTaskId', "'maintenance_resolution'") 'candidate contract'

@@ -20,6 +20,7 @@
 ## 共享内核与 owner adapter
 
 - 共享入口唯一实现 runtime `Show`／claim／状态写入、worktree 与 branch 生命周期、candidate 核验、路径冲突检查、最新 `master` 重放、正式提交、组合验证、排他集成、`CompleteRun`、通知和成功清理。
+- 每次未变化的选题只消费 `tools/select-hourly-task.ps1` 返回的一份完整检查证据：有 owner 候选时，selector 对目标调用一次带 dispatch-ready postcondition 的 `check-task-cards.ps1`，该同一次调用同时完成全局投影与所有 schema 2 风险投影校验；无 owner 候选时只调用一次无目标的全局检查。共享入口复用其中的 `readyCount` 判断空队列和维护回复，不得在 selector 前后重复启动同范围 checker。回复应用、checkpoint 恢复或其他步骤若先改变仓库任务投影，旧选择证据立即失效，后续选择必须在变化完成后重新调用 selector；claim 后任务摘要复核、candidate 后置条件、最新 `master` 正式重放检查、QueueMaintenance ready 过渡门与集成保护继续分别按其状态边界运行。本约束不建立跨轮缓存、增量检查器或新 runtime 状态。
 - L0 强制期内，非 `queue_maintenance` run 仅由共享入口在 `New-CandidateWorktree` 及输入物化成功后、形成 `Get-HourlyCandidateArguments` 和调用 candidate script 前，对 owner worktree 的同一 taskId 运行唯一只读预检。共享入口核验实时匹配、schema 2 投影、门禁指针和 600 Unicode 字符边界后，才经既有私有路径与 ACL helper 写入 `StateRoot/preflight-results/<runId>.json`；该文件名绑定 runId，内容绑定 taskId、任务卡 digest 和索引 digest，不进入 Git 或 schema 5 runtime。
 - adapter／Codex／DeepSeek wrapper 对非 `queue_maintenance` 只接受批准 StateRoot 中上述精确绑定的结果，并把其中 `notice`、`mustRead` 正文和门禁指针直接放入首条责任提示；它们不自行决定是否运行预检，也不复制匹配算法。`queue_maintenance` 不运行业务预检、不传结果路径，但其创建或重新 ready 的卡必须通过 schema 2 投影检查。预检失败时不启动模型、不伪造零命中，沿用 `attention_required`、worktree 保留和稳定 `experience_preflight_*` detailCode；不增加 runtime、重试或 owner 专属分支。
 - 收尾候选检查只复用原任务本轮已有事实、diff 和验证，不新增模型调用。DeepSeek 仅在转 `codex_review` 前写 `provisional`；Codex 复审保留／修正时改为 `pending`、不成立时删除；Codex 自有完成任务在归档前直接写 `pending`。候选语义、查重、正式经验 ID、整理任务和风险索引均不属于 owner prompt、adapter 或 runtime 的职责。
